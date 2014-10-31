@@ -102,7 +102,7 @@ init_hardware:
             call _program_vectors
             pop hl
 
-	    ld a, #0x0B			; irqs on except for parallel
+	    ld a, #0x08			; keyboard IRQ only
 	    out (0x60), a		; set up
 	    xor a
 	    out (0x90), a
@@ -381,7 +381,7 @@ addr_de:
 	    rr  d	; roll two bits into D
 	    srl a
 	    rr  d
-	    add #0x70	; screen start
+	    add #VIDEO_BASE_H	; screen start (0x7000 or 0x6000 for NC200)
 	    ld  e, d
 	    ld  d, a
 	    ret

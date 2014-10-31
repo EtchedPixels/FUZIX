@@ -1,3 +1,6 @@
+/* NC100 or NC200 - your choice */
+#define CONFIG_NC200
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -19,11 +22,18 @@
 /* As reported to user space - 4 banks, 16K page size */
 #define CONFIG_BANKS	4
 
-/* Vt definitions */
+/* VT definitions */
+#ifdef CONFIG_NC200
+#define VT_WIDTH	120
+#define VT_HEIGHT	21
+#define VT_RIGHT	119
+#define VT_BOTTOM	20
+#else
 #define VT_WIDTH	120
 #define VT_HEIGHT	10
 #define VT_RIGHT	119
 #define VT_BOTTOM	9
+#endif
 
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    ((char *)(0x0100))  /* also data base */
@@ -38,8 +48,10 @@
 
 /* Device parameters */
 #define NUM_DEV_TTY 3
-#define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
-                          /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
+#ifdef CONFIG_NC200
+#define NMOUNTS	2	  /* Floppy can also be mounted */
+#else
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
+#endif

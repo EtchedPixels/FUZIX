@@ -1,0 +1,19 @@
+The NC200 differs from the NC100 in various ways we care about
+
+- Video default is at 0xE000
+- Display height is doubled
+- Display is designed for 80 column x 16 lines in 6x8 characters (we need
+  a 6x8 font and driver for this)
+- Writing 1 to 0x70 bit 0 activates the backlight, 7 deactivates it
+- The keyboard is bit 3 as before but bit 4 is now power switch rather
+  than it causing an NMI (so we can do CP/M emulation)
+- serial interrupts are bit 2 on NC200 and bit 0 on NC100
+- NC200 requires keyboard interrupts are explicitly cleared, NC100
+  doesn't in fact care (but its harmless to do so)
+- Need to mask the serial interrupt when the line driver is off (may
+  need that on NC100 too ideally)
+- The keymap is slightly different (see ZCN)
+- There is a floppy drive, but where/how its wired is undocumented it seems
+  Obvious candidates are 0x80, 0xE0 and 0xF0. All other Amstrad devices use
+  a 765 controller except the PCW16.
+

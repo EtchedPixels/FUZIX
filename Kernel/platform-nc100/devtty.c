@@ -12,6 +12,7 @@
 __sfr __at 0xC0 uarta;
 __sfr __at 0xC1 uartb;
 
+__sfr __at 0x60 irqen;
 __sfr __at 0x90 irqmap;
 
 __sfr __at 0xB0 kmap0;
@@ -49,10 +50,12 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 	err = tty_open(minor, flag);
 	if (err)
 		return err;
-	if (minor == 2)
+	if (minor == 2) {
 		mod_control(0, 0x10);	/* turn on the line driver */
-	nap();
-	mod_control(0x06, 0x01);	/* 9600 baud */
+		nap();
+		mod_control(0x06, 0x01);	/* 9600 baud */
+		irqen = 0x0B;			/* Allow serial interrupts */
+	}
 	return (0);
 }
 
@@ -60,8 +63,10 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 int nc100_tty_close(uint8_t minor)
 {
 	tty_close(minor);
-	if (minor == 2)
+	if (minor == 2) {
+		irqen = 0x08;		/* mask serial interrupts */
 		mod_control(0x10, 0);	/* turn off the line driver */
+	}
 	return (0);
 }
 
@@ -95,7 +100,17 @@ void tty_putc(uint8_t minor, unsigned char c)
 /* Called to set baud rate etc */
 void tty_setup(uint8_t minor)
 {
-    minor;
+	uint16_t b;
+	if (minor == 1)
+		return;
+	b = ttydata[2].c_cflags & CBAUD;
+	if (b < B150)
+		b = B150;
+	if (b > B19200
+		b = B19200;
+	/* 0 = B150 .. 7 = B19200 in the same spacing and order as termios,
+	   how convenient */
+	mod_control(b - B150, 0x7);
 }
 
 /* For the moment */
@@ -162,6 +177,33 @@ static void keyproc(void)
 	}
 }
 
+#ifdef CONFIG_NC200
+static uint8_t keyboard[10][8] = {
+	{0, 0, 0, 10, '?' /*left */ ,'4', 0, 0},
+	{'9', 0, 0, 0, ' ', 27, 0,/*ctrl*/ 0/*func*/},
+	{0, '6', 0, '5', '\t', '1', 0/*sym*/, 0/*capslock*/},
+	{'d', 's', 0, 'e', 'w', 'q', '2', '3'},
+	{'f', 'r', 0, 'a', 'x', 'z', '7', '8'},
+	{'c', 'g', 'y', 't', 'v', 'b', 0, 0},
+	{'n', 'h', '/', '#', '?' /*right */ , 127, '?' /*down */ , '6'},
+	{'k', 'm', 'u', 0, '?' /*up */ , '\\', '=', 0},
+	{',', 'j', 'i', '\'', '[', ']', '-', 0},
+	{'.', 'o', 'l', ';', 'p', 8, '0', 0}
+};
+
+static uint8_t shiftkeyboard[10][8] = {
+	{0, 0, 0, 10, '?' /*left */ , '$', 0, 0},
+	{'(', 0, 0, 0, ' ', 3, 0, 0},
+	{0, '^', 0, '%', '\t', '!', 0, 0},
+	{'D', 'S', 0, 'E', 'W', 'Q', '"', '?' /* pound */ },
+	{'F', 'R', 0, 'A', 'X', 'Z', '&', '*'},
+	{'C', 'G', 'Y', 'T', 'V', 'B', 0, 0},
+	{'N', 'H', '?', '~', '?' /*right */ , 127, '?' /*down */ , '^'},
+	{'K', 'M', 'U', 0, '?' /*up */ , '|', '+', 0},
+	{'<', 'J', 'I', '@', '{', '}', '_', 0},
+	{'>', 'O', 'L', ':', 'P', 8, ')', 0 }
+};
+#else
 static uint8_t keyboard[10][8] = {
 	{0, 0, 0, 10, '?' /*left */ , 0, 0, 0},
 	{0, '5', 0, 0, ' ', 27, 0, 0},
@@ -187,6 +229,7 @@ static uint8_t shiftkeyboard[10][8] = {
 	{'<', 'J', 'I', '@', '{', '}', '_', '*'},
 	{'>', 'O', 'L', ':', 'P', 8, '(', ')'}
 };
+#endif
 
 static uint8_t capslock = 0;
 
@@ -252,7 +295,10 @@ void platform_interrupt(void)
 			keydecode();
 		timer_interrupt();
 	}
-
+	if (!(a & 16)) {
+		/* FIXME: Power button */
+		;
+	}
 	/* clear the mask */
 	irqmap = a;
 }
