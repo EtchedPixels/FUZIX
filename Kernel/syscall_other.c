@@ -505,9 +505,7 @@ int16_t _execve(void)
 #ifdef CONFIG_CPM_EMU
 	// Load the CP/M emulator if it is required
 	if (emu_ino) {
-		emu_size =
-		    (512 * emu_ino->c_node.i_size.o_blkno) +
-		    emu_ino->c_node.i_size.o_offset;
+		emu_size = emu_ino->c_node.i_size;
 		// round up to nearest multiple of 256 bytes, fit it in below ramtop
 		emu_ptr =
 		    (char *) (udata.u_top - ((emu_size + 255) & 0xff00));
