@@ -212,7 +212,8 @@ map_restore(*)	-	Restore to the saved mapping state
 
 			These two routines will be called with the same
 			common mapped in all cases. The state can therefore
-			be saved to common memory.
+			be saved to common memory. (A task switch will
+			exit via map_process_always rather than a restore).
 
 outchar(*)	-	Output the character in A to your debug device.
 			Affect no other registers
