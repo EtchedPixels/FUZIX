@@ -1,0 +1,23 @@
+This is the target for the SocZ80 128MHz FPGA Z80 platform.
+
+At this point in time it supports the following components
+
+- timer
+- ramdiscs
+- SD card
+- two serial ports (USB virtual and native)
+
+It does not support
+- speed setting on the uarts with the newer FPGA firmware
+- Other SPI interfaces
+- Ethernet
+- Flash memory
+- Real time clock
+
+This port is currently slightly bitrotted. It needs adapting to the BANK16K
+MMU mapping logic and the new style map_* interfaces that pass the page
+array in HL.
+
+This port is heavily based upon (and mostly consists of) code by Will
+Sowerbutts.
+
