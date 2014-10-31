@@ -80,7 +80,7 @@ static bool tty_writeready(uint8_t minor)
 
 extern void bugout(uint16_t c);
 
-void tty_putc(uint8_t minor, char c)
+void tty_putc(uint8_t minor, unsigned char c)
 {
     if (minor == 1) {
         bugout(c);
@@ -107,9 +107,22 @@ void tty_irq(void)
     }
 }
 
+/* Called to set baud rate etc */
+void tty_setup(uint8_t minor)
+{
+    minor;
+}
+
+/* For the moment */
+int tty_carrier(uint8_t minor)
+{
+    minor;
+    return 1;
+}
+
 /* Pending better ioctl bits set up for 9600 8N1 */
 
-void tty_init(void)
+void tty_init_port(void)
 {
     ctcmode = 0x36;
     ctc0 = 0x00;

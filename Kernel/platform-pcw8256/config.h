@@ -15,6 +15,8 @@
 #define MAX_MAPS 16
 #define MAX_SWAPS 16
 
+#define CONFIG_BANKS	4	/* 4 banks 16K page size */
+
 /* VT layer required */
 #define CONFIG_VT
 /* We want the 8x8 font */

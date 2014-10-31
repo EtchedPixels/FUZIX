@@ -4,6 +4,7 @@
 	        ; when they are first seen.	
 	        .area _CODE
 	        .area _CODE2
+		.area _DISCARD
 	        .area _CONST
 	        .area _DATA
 	        .area _INITIALIZED
