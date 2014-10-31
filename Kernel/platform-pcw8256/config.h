@@ -34,9 +34,6 @@
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
 
-#define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
-#define UDATA_SWAPSIZE	0
-
 #define BOOT_TTY	18
 
 #define CMDLINE		NULL
