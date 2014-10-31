@@ -1,6 +1,6 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-spec3 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-export TARGET= socz80
+export TARGET= z80pack
 export CPU = z80
 #export TARGET = 6809test
 #export CPU = 6809
@@ -139,21 +139,8 @@ uzi.bin: target $(OBJS)
 	$(MAKE) -C platform-$(TARGET) image
 endif
 
-# srec_cat -disable-sequence-warning uzi.ihx -intel -fill 0x00 0x0000 0x10000 -output uzi.bin -binary
-uzi.com: target $(OBJS) loader/loader.com tools/analysemap tools/memhogs
-	loader/makeloader loader/loader.com uzi.ihx uzi.com --zerotop
-
-sendcpm:	uzi.com
-	echo -n "!~!~!~" > /dev/ttyUSB1
-	sleep 0.1
-	echo "rboot 200" > /dev/ttyUSB1
-	sleep 0.1
-	sendcpm uzi.com
-	echo "uzi 1" > /dev/ttyUSB1
-
 clean:
 	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
-	+make -C loader clean
 	+make -C platform-$(TARGET) clean
 
 clean-all: clean
