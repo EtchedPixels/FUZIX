@@ -1,0 +1,45 @@
+An UZI target for z80pack.
+
+Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run UZI
+with one application per bank and the memory map currently is
+
+Bank 0:
+
+0000-0080	Vectors
+0081-0084	Saved CP/M command info
+0088		UZI kernel start
+????		UZI kernel end ~= A000
+End of kernel:	Common >= 0xF000
+		uarea
+		uarea stack
+		interrupt stack
+		bank switching code
+		user memory access copy
+		bank copy buffer because Z80Pack switching is slow
+		interrupt vectors and glue
+		[Possibly future move the buffers up here to allow for more
+		 disk and inode buffer ?]
+FFFF		Hard end of kernel room
+
+Bank 1 to Bank n:
+0000		Vector copy
+0080		free
+0100		Application
+ECFF		Application end
+ED00-EFFF	uarea stash
+
+CP/M emulation size is very limited short of figuring a hack way to have
+a shared emulator in highmem, even then not great.
+
+Disk swap device recommended
+
+
+Put the kernel at the end of a floppy image from cyl 60
+Add the fs in the first 60 cyls (390 blocks)
+Put the bootblock in sector 0
+
+dd the kernel image to offset 199680
+
+ie
+
+dd if=uzi.bin of=drivea.img bs=1 seek=199680 conv=nontruc

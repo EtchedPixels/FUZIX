@@ -1,0 +1,13 @@
+An UZI target for the Amstrad PCW series computers
+
+16K banked memory with flexible bank setting. Programs for now (until brk()
+is done right) get 64K in four consecutive page numbers. The UAREA is mapped
+high at 0xF900 with the process and irq stacks following and a copy of the
+common area beyond (so we have a sort of common code area as needed)
+
+The very top of memory must be free as the top of bank 3 (top of OS kernel
+mapping) is "magically" the keyboard mappings.
+
+Need to try and keep kernel under 48K or so to make it easier to handle the
+screen memory, fonts etc. We need to put the screen (720x256 pixels + roller
+ram table of 512 bytes or so = ~ 24K) in the low 128K

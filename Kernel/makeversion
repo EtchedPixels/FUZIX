@@ -1,0 +1,27 @@
+#!/bin/sh
+cat <<EOF > version.c
+#include "kernel.h"
+#include "version.h"
+
+/* Format is version/sysname/release/system */
+/* pack version first so we can use uname_str as a printf target */
+struct sysinfoblk sysinfo = {
+	sizeof(struct sysinfoblk),
+	CONFIG_BANKS,
+	UFTSIZE,
+	TICKSPERSEC,
+	0,
+	0,
+#ifdef CONFIG_PROFIL
+	CONF_PROFIL |
+#endif
+	0
+};
+/* Must follow immediately afterwards */
+/* Quoting to work around cc65 bug */
+const char uname_str[] = "$1\0""UZI+\0""$2\0""$3";
+EOF
+X=$(echo "$1XFuzix$2X$3X"|wc -c)
+echo "const uint8_t uname_len = "$X";" >>version.c
+
+

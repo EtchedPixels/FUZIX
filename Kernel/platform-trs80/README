@@ -1,0 +1,53 @@
+TRS80 Model 4/4P
+
+Requirements: 
+	128K RAM fitted
+	Hard disk drive (will be used for swap), or a suitable memory
+	expander board could be used with a bit of tweaking (or both!)
+
+Bank mapping on the trash 80 is a bit weird. We want to get two independent
+64K banks, but we can only have
+
+Port 0x84:
+	
+
+	0 / 1
+	0 / 2
+	0 / 3
+	2 / 1
+	3 / 1
+
+So we put the kernel in 0/3 which allows us to put the apps in 2/1. This
+means we need our kernel logic for things like bank copies not in common
+but in the low 32K.
+
+
+Unfortunately for anyone who wants to do expander board hacks the usual
+expander board hacks exchange 2/3 with other banks so unless you've also got
+the HD64180 mod you may be out of luck, and if you have well its not much
+like a Trash80 any more. Anyway if you want try you'd need to extend the
+0x84 port poking to also poke port 0x94 bits 0-4.
+
+Also we have to deal with the mapping maze on the TRS 80, not only are we
+banked but we have modes and also a pop up boot rom
+
+0x9C bit 0 controls the boot prom
+
+0x80 controls the mapping mode (bits 0/1 select a mode)
+
+Boot occurs in mode 0 with RAM at 0x4000-FFFF ready to load
+
+We need to stick it into mode 2 or 3
+
+2 = 0000-F3FF RAM
+    F400-F7FF keyboard
+    F800-FFFF Video
+
+3 = 0-FFFF RAM
+
+(and probably want to be in mode 3 and flip to 2 for video/kbd work)
+
+Need vid and kbd helps out of common therefore and to save/restore video map
+option on an irq while in kernel mode
+
+

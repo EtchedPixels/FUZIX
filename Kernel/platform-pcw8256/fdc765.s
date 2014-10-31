@@ -1,0 +1,248 @@
+;
+;		765 Floppy Controller Support
+;
+		.module fdc765
+
+		.include "kernel.def"
+		.include "../kernel.def"
+
+		.globl	_fd765_read_sector
+		.globl	_fd765_write_sector
+		.globl  _fd765_cmd2
+		.globl  _fd765_cmd3
+		.globl  _fd765_intwait
+		.globl  _fd765_buffer
+		.globl  _fd765_user
+		.globl  _fd765_rw_data
+		.globl  _fd765_cmdbuf
+		.globl  _fd765_statbuf
+
+		.globl  map_process_always
+		.globl	map_kernel
+
+		.area _COMMONMEM
+
+		FD_ST	.equ	0
+		FD_DT	.equ	1
+
+fd765_sendcmd:
+		in a, (FD_ST)
+		add a, a
+		jr nc, fd765_sendcmd		; busy
+		jp m, fd765_sendabort		; not expecting command ??
+		outi				; byte out
+		ex (sp), hl			; controller time
+		ex (sp), hl
+		ex (sp), hl
+		ex (sp), hl
+		jr nz, fd765_sendcmd		; next byte ?
+		ret
+fd765_sendabort:
+		or a				; NZ
+		; FIXME
+		ret
+
+fd765_status:
+		ld hl, #_fd765_statbuf
+fd765_status_1:
+		in a, (FD_ST)
+		add a, a
+		jr nc, fd765_status_1
+	        add a, a
+		ret nc				; bit 6 was clear, so done
+		ini
+		ex (sp), hl			; waste time for the 765
+		ex (sp), hl			; to recover
+		ex (sp), hl
+		ex (sp), hl
+		jr fd765_status_1
+
+fd765_status_a:
+		call fd765_status
+		ld h, #0
+		ld a, (_fd765_statbuf)
+		ld l, a
+		ret
+
+;
+;	We rely on this exiting with C = FD_DT
+;
+_fd765_intwait:
+		ld bc, #1 * 256 + FD_DT		; send SENSE INTERRUPT STATUS
+		in a, (0xF8)
+		bit 5, a
+		ret z				; wait for the 765 int to go off
+		ld hl, #fd765_sense		; a suitable 0x08 in the code
+		call fd765_sendcmd
+		call fd765_status_a
+		bit 7, a			; error
+		jr nz, _fd765_intwait
+		bit 6, a			; abnormal
+		ret nz
+		ld b, #0x14			; give the controller time
+fd765_wait:	ld a, #0xB3
+fd765_wait_1:	ex (sp), hl
+		ex (sp), hl
+		ex (sp), hl
+		ex (sp), hl
+		dec a
+		jr nz, fd765_wait_1
+		djnz fd765_wait
+		ret
+
+;		C points at FD_DT
+fd765_xfer_in:
+		in a, (FD_ST)
+		add a
+		jr nc, fd765_xfer_in		; bit 7 clear
+fd765_xfer_in2:
+		add a
+		jp p, fd765_xfer_error		; bit 5 clear (short data ???)
+		ini				; transfer a byte
+		jr nz, fd765_xfer_in		; next byte
+		dec e
+		jr nz, fd765_xfer_in
+;
+;		Sector transferred
+;
+fd765_xfer_done:ld a, #5
+		out (0xF8), a			; terminate flag set
+		ret
+fd765_xfer_error:
+		or a				; NZ
+		; FIXME
+		ret
+fd765_xfer_indi:
+		in a, (FD_ST)
+		add a
+		jr nc, fd765_xfer_indi		; bit 7 clear
+		di
+		jr fd765_xfer_in2
+
+;		C points at FD_DT
+fd765_xfer_out:
+		in a, (FD_ST)
+		add a
+		jr nc, fd765_xfer_out		; bit 7 clear
+fd765_xfer_out2:
+		add a
+		jp p, fd765_xfer_error		; bit 5 clear (short data ???)
+		ini				; transfer a byte
+		jr nz, fd765_xfer_in		; next byte
+		dec e
+		jr nz, fd765_xfer_in
+;
+;		Sector transferred
+;
+		ld a, #5
+		out (0xF8), a			; terminate flag set
+		ret
+
+fd765_xfer_outdi:
+		in a, (FD_ST)
+		add a
+		jr nc, fd765_xfer_outdi		; bit 7 clear
+		di
+		jr fd765_xfer_out2
+
+_fd765_read_sector:
+		ld a, i
+		push af
+		ld a, (_fd765_user)
+		or a
+		jr z, read_kern
+		call map_process_always
+read_kern:
+		ld a, #6
+		out (0xf8), a
+		call _fd765_intwait		; wait for controller
+		ld b, #9
+		ld hl, #_fd765_rw_data
+		call fd765_sendcmd
+		jr nz, read_failed
+		ld hl, (_fd765_buffer);
+		ld e, #2
+		ld b, #0			; 512 bytes
+		call fd765_xfer_in
+		jr nz, read_failed
+		call fd765_status_a
+		and #0xCB
+		jr nz, read_out
+		; read ok
+		ld hl, #0
+read_out:
+		call map_kernel
+		pop af
+		ret po
+		ei
+		ret
+read_failed:
+		ld hl, #-1
+		jr read_out
+
+_fd765_write_sector:
+		ld a, i
+		push af
+		ld a, (_fd765_user)
+		or a
+		jr z, write_kern
+		call map_process_always
+write_kern:
+		ld a, #6
+		out (0xf8), a
+		call _fd765_intwait		; wait for controller
+		ld b, #9
+		ld hl, #_fd765_rw_data
+		call fd765_sendcmd
+		jr nz, read_failed
+		ld hl, (_fd765_buffer);
+		ld e, #2
+		ld b, #0			; 512 bytes
+		call fd765_xfer_out
+		jr nz, read_failed
+		call fd765_status_a
+		and #0xCB		; FIXME - correct error mask ?
+		jr nz, read_out
+		; write ok
+		ld hl, #0
+		jr read_out
+
+_fd765_cmd2:	call _fd765_intwait
+		ld b, #2
+fd765_cmdop:
+		ld hl, #_fd765_cmdbuf
+		call fd765_sendcmd
+		jr nz, read_failed
+		call fd765_status_a
+		ret
+
+_fd765_cmd3:	call _fd765_intwait
+		ld b, #3
+		jr fd765_cmdop
+
+;
+;	Needs to land in common memory
+;
+
+_fd765_buffer:	.dw 0		; Buffer pointer
+_fd765_user:	.db 0		; 0 - kernel 1 - user
+
+_fd765_rw_data: .db 0x66	; Normal MFM read
+		.db 0		; Drive 0, head 0
+		.db 0		; cylinder
+		.db 0		; head
+		.db 2		; sector
+		.db 2		; 512 bytes
+		.db 2		; last sector
+		.db 0x2A	; gap length
+		.db 0xFF	; unused
+
+fd765_sense:	.db 0x08	; Sense interrupt
+
+_fd765_cmdbuf:	.db 0x0F
+		.db 0
+		.db 0
+		.db 0
+_fd765_statbuf:
+		.ds 8
+

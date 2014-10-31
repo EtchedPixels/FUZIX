@@ -1,0 +1,37 @@
+-mwxuy
+-i uzi.ihx
+-b _CODE=0x0088
+-b _COMMONMEM=0xF000
+-k /usr/share/sdcc/lib/z80
+-l z80
+platform-trs80/crt0.rel
+platform-trs80/commonmem.rel
+platform-trs80/trs80.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem.rel
+usermem_std-z80.rel
+platform-trs80/tricks.rel
+platform-trs80/main.rel
+timer.rel
+kdata.rel
+platform-trs80/devfd.rel
+platform-trs80/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+swap.rel
+single.rel
+vt.rel
+devsys.rel
+platform-trs80/devlpr.rel
+platform-trs80/devtty.rel
+-e

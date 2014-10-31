@@ -1,0 +1,8 @@
+A FUZIX target for z80pack.
+
+Test environment for a very squashed build to see what we can achieve in
+64K + disk banking and explore ROM banking ideas
+
+Not a useful target, but memory testing stuff
+
+

@@ -1,0 +1,606 @@
+Minimal Requirements
+--------------------
+
+- Z80 processor
+- 128K memory (the kernel itself wants between 32 and 40K R/O and about
+  8-16K R/W depending upon the configuration.
+- Some kind of memory banking giving a common area and multiple banks
+- A storage device, preferable hard disk or SD card or similar
+- A timer interrupt (but you can sort of run single user with just a serial
+  / keyboard irq)
+
+In the ideal world
+  256K of RAM or more
+  An RTC
+  16K flexible memory banking
+
+With a bit more work (ie the planning for it is in place but someone needs
+to do the work) it should also be possible to run with
+
+- Other 8bit processors with banked RAM (eg 6809)
+- The kernel code banked in ROM in 3 x 16K banks
+- Base/limit address space with a common area and ideally two ranges
+  (eg Z180)
+- 16/32bit processors with either segments, base/limit pairs or just
+  vfork() style switching
+
+Porting Fuzix to a new Z80 based machine generally requires the following
+
+- Pick an output device that is easy to drive (serial or video) and write a
+  mininal test output driver for it standalone. Serial is usually best if
+  you don't have a character mapped console
+
+- Extend that into a suitable boot loader, unless loading from existing
+  firmware (see tips below for CP/M booting)
+
+- Select the appropriate model
+
+  CONFIG_SINGLETASK
+  - single tasking (no fast swap device, limited memory). Processes are
+  run one at a time and the parent is run length compressed into upper
+  memory by default. This will provide all your pagemap helpers
+  automatically. This can (untested yet) be combined with SWAP_DEV if
+  you have a slow swap device to use other than RAM. With a fast swap
+  device and single process you can define SWAP_DEV and not define this.
+
+  CONFIG_MULTI
+  - multi process in memory at once (multiple non kernel banks)
+
+  SWAP_DEV
+  - swap device number if you have a suitable device for swap. This
+    is usually best done after it boots ok
+
+- Pick an appropriate platform to clone.
+
+- A lot of standard code is available to make porting easy
+
+ CONFIG_BANK16 selects support for four flexible 16K bank registers
+
+ CONFIG_BANK32 selects support for two flexible 32K bank registers
+
+ CONFIG_BANK_FIXED selects support for systems where you have a selector for
+ all of the lower parts of memory in banks, and a fixed common at the top.
+ It can also be used if the banking is more flexible but has annoying
+ restrictions like not being able to map banks into other addresses (eg MSX1)
+
+ CONFIG_BANK_LINEAR selects a system where memory is managed linearly with
+ base/limit pairs or similar and a common. This isn't yet tested but is
+ intended for Z180 and similar, and might be handy as a basis for M68K etc
+
+ CONFIG_USERMEM_C tells the kernel to use the standard C helpers for user
+ memory copying. Set this initially for new architectures or for 6502/809,
+ and define BANK_PROCESS and BANK_KERNEL to switch kernel/user space. Make
+ sure you keep the code in common. The Z80 tree has a standard asm version
+ that uses your map_process/map_kernel functions.
+
+ CONFIG_VT
+ VT_WIDTH, VT_HEIGHT, VT_RIGHT, VT_BOTTOM
+
+ Include a standard virtual terminal core based upon VT52 emulation
+
+ CONFIG_VT_SIMPLE
+
+ Lets you define VT_BASE and it will drive a character mapped display with
+ typical layout. You may need to wrap vt calls in page switches according
+ to your platform
+
+ CONFIG_FONT_8x8 and CONFIG_FONT_4x6 will include fonts. For 4x6 font usage
+ see nc100.s. The fonts are put in a special segment _FONT and your crt0.s
+ needs to decide where to place it. If you place it after the data then
+ the binman tool will relocate it to the end of the packed commonmem so it
+ can be moved into another segment (eg to be with the video screen data).
+ See pcw8256 for an example of this.
+
+- Set the basic system parameters
+
+ TICKSPERSEC	-	clock rate
+ PROGBASE	- 	low memory address fo applications (should be 0x100
+			to run standard binaries). Some bits of start.c
+			still break if this is not 0x0100
+ PROGTOP	- 	first byte above main memory, usually the start of
+	   		the udata area and common memory. Typically above
+			0xF000 but if your system has a fixed upper common
+			then this may need to be lower (eg 0xC000)
+ BOOT_TTY	-	the device you will use as your 'console' at boot
+			time
+
+ CMDLINE	-	pointer to a command line passed from the
+			loader/firmare. If booting from CP/M (see below) use
+			0x88
+
+ NUM_DEV_TTY	-	number of tty devices (video consoles/serial)
+
+ NDEVS		-	number of entries for disk/block devices at the
+			start of your device table
+ TTYDEV		-	device init will use as input/output (usually BOOT_TTY)
+
+ NBUFS		-	number of buffers for disk cache (each a bit of 512
+			bytes)
+
+ NMOUNTS	-	number of things that can be mounted at a time
+			(NDEVS or less)
+
+
+If you have non interrupt driven serial ports then poll them in your IRQ
+handler and provide a platform_idle which also polls the ports (makes it
+feel much snappier).
+
+Provide a putchar() that writes to your console correctly either via direct
+debug code or later via the tty helper. Provide a similar (register
+preserving) assembler hook in outchar. That gives you a usable kprintf in C
+and outhl/outde/outcharhex/.. series of methods in assembler for debugging.
+
+On a non single user system provide a pagemap_init which loads a list of
+page numbers via pagemap_add. The numbers must *not* include a page 0. If
+need be bias or xor with 0x80 or something. At boot you should have 2 or 4
+pages mapped (depending upon your kernel), one of which (usually the top) is
+common. Add all the pages that are not kernel.
+
+In the 16K bank case you then lastly add the common page. This will then be allocated
+to init and become the common for the init. That means you must keep kernel
+code/data below 0xC000. Right now that is easy enough but once we add TCP/IP
+might need banking.
+
+On 32K banking you can't do this so will need to play uarea swapping games
+and keep the top bank as a kernel bank. This is much uglier but unlike
+UZI180 only needs to swap uareas around on a true task switch.
+
+If your system has a fixed common area with single not flexible banks then
+load the bank selections into the table rather than just loading pages
+
+MAX_MAPS is the max number of pages (or banks whatever you have) that you
+can have. Set it to the largest you might need and load those present if
+your system comes in different memory sizes.
+
+If you are using swap then
+
+SWAPBASE	-	lowest address that will be swapped
+SWAPTOP		-	highest address that will be swapped
+			(TOP - BASE is usually a round number of blocks
+			 so you don't have to do disk gymnastics in the driver)
+			Include the uarea in the common bank.
+
+UDATA_BLOCKS	-	special use (set to 0)
+UDATA_SWAPSIZE
+SWAP_SIZE	-	number of disk blocks needed to hold all the swap
+			for one process
+MAX_SWAPS	-	largest number of SWAP_SIZE chunks that will be used
+			(bounded by disks/process table size/common sense)
+
+
+
+
+
+Functions to provide: (*) indicates they should be in COMMONMEM
+
+init_early	-	assembler function called right at the start, can be
+			NULL
+
+init_hardware	-	called before main and C entry
+
+			Set _ramsize
+			Set _procmem
+			call _program_vectors with HL = 0
+			(will map_kernel and set the RST vectors)
+			Enable any timers
+			Call _vtinit if you are using VT
+			Do *not* enable interrupts
+
+_program_vectors(*) -	Program the vectors
+
+			You can usually just re-use the default but this may
+			vary if you have odd commonmem setups
+
+_trap_monitor(*)    -	Return to ROM monitor/debugger or similar
+
+_trap_reboot(*)	-	Reboot the machine (may be useful to not do so
+			during debug)
+
+map_kernel(*)	-	Set the page mappings to those used by the kernel
+
+			Must damage no registers
+
+map_process_always(*)-	Set the page mappings to those of the current
+			process. These are held in the 4 bytes UDATA__U_PAGE
+
+map_process(*)	-	If HL is 0 map the kernel, if not map using the 4
+			bytes pointed to by HL
+
+map_save(*)	-	Save the current mapping state
+
+map_restore(*)	-	Restore to the saved mapping state
+
+			These two routines will be called with the same
+			common mapped in all cases. The state can therefore
+			be saved to common memory.
+
+outchar(*)	-	Output the character in A to your debug device.
+			Affect no other registers
+
+
+_switchout(*)	-	Switch out a task
+
+			Copy the one from an appropriate kernel type. This
+			will hopefully move into the core code soon
+
+_switchin(*)	-	Switch in a task
+
+			Make the task we want to run runnable. If it is no
+			disk and we are swapping then swap it in, if there
+			is no room in memory swap stuff out
+
+			Scary bits, copy from a suitable example and do not
+			debug after midnight.
+
+_dofork(*)	-	Create two instances of the same task
+
+			This varies by platform type and the code is fairly
+			scary. Copy a suitable example. This will also
+			hopefully end up in the core once it's stabilized.
+
+If you are using vt
+
+_scroll_up	-	Scroll display up one line
+
+			The vt layer will ask for the bottom line clear itself
+
+_scroll_down	-	Scroll display down one line
+
+			The vt layer will ask for the top line clear itself
+
+_plot_char	-	Write a character to the display. Passed arguments
+			are y, x and the character
+
+_clear_lines	-	clear the display from line y for n lines
+
+_clear_across	-	clear the current line from y,x for n characters
+
+_cursor_on	-	put the cursor at y,x
+
+_cursor_off	-	remove the cursor
+
+
+C interfaces
+------------
+
+Devices.c
+
+dev_tab is the device table for your platform indicating what is present.
+Usually best taken from another platform and hacked up
+
+bool validdev(uint16_t dev)
+
+Check a device is valid. Cut and paste, it just needs to live with the
+definition
+
+void device_init(void)
+
+Called early on before init runs so devices can do initialization before
+they are opened. May well be blank
+
+Devtty.c
+
+Define a TTYSIZE buffer for each device present
+Copy the struct s_queue from another filled in for your devices/buffers.
+
+Provide putchar(c) if it is not already provided by your asm code
+
+bool tty_writeready(uint8_t minor)
+
+Returns true fi you can write bytes to this port (1..n). For things like
+video consoles just return true
+
+void tty_putc(uint8_t minor, char c)
+
+Write a character to the tty minor
+
+int tty_carrier(uint8_t minor)
+
+Return 1 if carrier raised or you arenot implementing the carrier interfaces
+yet.
+
+void tty_setup(uint8_t minor)
+
+Do any tty set up required. Called on open and when the user changes the
+termios parameters for the tty so you can set speed etc.
+
+void platform_interrupt(void)
+
+Called every interrupt in kernel context with the process state saved. You
+may not sleep/taskswitch, you need to keep stack use fairly low. Every timer
+tick you should call timer_interrupt() and the OS will do its other
+housekeepking.
+
+Note: timer_interrupt may switch task and thus common so call it last unless
+you are sure you *really* understand what is going on with fork.
+
+If your tty devices are polled then poll them on the IRQ if not then handle
+them here. Either way call tty_inproc(minor, c) with the character to queue
+it for input. This may call back to your tty_putc.
+
+
+Main.c
+
+uint8_t *swapout_prepare_uarea(ptptr p)
+uint8_t *swapin_prepare_uarea(ptptr p)
+
+Just return NULL unless you are doing clever things with udata
+
+void platform_idle(void)
+
+Usually you want to either poll the non interrupt driven devices (ttys) or
+if they are IRQ driven then execute a halt instruction. In some cases you
+may want to enter a processor low power state or drop to the lowest clock
+speed.
+
+void do_beep(void)
+
+Provided for the vt driver. Make an irritating noise. The emulation is vt52
+so arguably the beep emulation should sound like someone stripping the gears
+on a tank while trying to reverse.
+
+void pagemap_init(void)
+
+See notes earlier - add your pages to the pagemap.
+
+
+Disk Devices
+
+_open(uint8_t minor, uint16_t flag)
+
+is called on opening. Usually it just checks minor is valid but could check
+if a disc is loaded etc
+
+_close(uint8_t minor)
+
+is called on close (eg to force a final flush or to unlock)
+
+_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+
+is called to read blocks. It has three modes
+
+	rawflag = 0
+
+	A normal read to kernel space. Must be supported. Fetch the
+	requested 512 byte block
+
+	udata.u_buf->bf_data is the buffer data to load into
+	udata.u_buf->bf_blk is the block number
+
+	If your media is 128 or 256 byte sectors you get to read several.
+
+	rawflag = 1 (optional)
+
+	Allows the char equivalent device to be opened for direct copies
+	to the userspace. This means the copy itself will need to be run
+	from common memory.
+
+	udata.u_count is the number of blocks
+	udata.u_base is the address
+	udata.u_offset.o_blkno is the starting block
+
+	Data goes to the current user process
+
+	rawflag = 2 (swap device only)
+
+	swapcnt is the number of blocks
+	swapbase is the starting address
+	swapproc is the process to swap in
+	swapblk is the block number to start at
+
+For a simple system you only need to implement rawflag = 0 and error = 1.
+rawflag = 2 will only occur if this is your SWAP_DEV. rawflag = 1 support
+may become mandatory as it'll be a good way to optimise execve().
+
+In the swap case beware of the following. You may get issued a request to
+write/read processes other than the current process. The map_process
+function is defined on 16K banked platforms to remap banks 0-2, as 3 is
+switched on task switching and holds the common copy, uarea and top of
+process. That means that while uput/uget do the right thing for the current
+process, it will *not* do so for addresses above 0xC000 of another process
+and this may require special handling.
+
+_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+
+Same arguments, other direction. This means a lot of drivers turn both into
+a call to a common transfer method.
+
+
+
+A Note On Geometry Mapping
+--------------------------
+
+The conventional mapping of block numbers is to start at track 0, side 0,
+sector 1 as block 0, and then follow the usual upward pattern. The OS
+reserves block 0 as a boot block, and puts the superblock at block 1.
+
+If you have a disc with a loadable kernel on it then put the kernel on the
+*end* of the disc. This means you get a smaller file system on the media but
+also means you don't to special case 'boot tracks' or waste any of a data
+disc.
+
+The limit on blocks is 65536. Be careful of wraps and overflows when mapping
+the geometry. With large media you can provide several 'disks' with
+different minor numbers and add 65536 blocks to the base depending upon the
+minor.
+
+Nothing stops a driver doing partition tables but we don't currently have a
+library for it.
+
+BinMan
+------
+
+BinMan processes the SDCC final output image from a ROMable format to
+something that fits disc loading. It moves the initializers into the
+initialized area (so crt0.s doesn't need to) and it then appends the common
+memory on the old initializer address and trims the image. It doesn't touch
+relocations. On startup crt0.s sorts out any mappings and then copies s__INITIALIZER
+into s__COMMONMEM for l__COMMONMEM before zeroing s__DATA for l__DATA
+
+Tips
+----
+The most important bit of debug initially is usually proving you got from
+your loader to crt0, and then tracking bank changes until the bank code
+works properly. On an emulated system you can make it print out bank
+switches in the emulator - very useful
+
+If you build a FUZIX kernel image so that cmdline is 0x0088 and it starts at
+0x0100 then you can run it from unbanked CP/M (banked CP/M may get a bit
+odd unless your crt0.s handles it specially).
+
+Hard Cases
+==========
+
+Machines with low banks and a single fixed common
+-------------------------------------------------
+This needs mucking around copying the udata area back and forth between the
+system and a cached copy (much as is needed on 32K banking). Take a look at
+the z80pack virtual platform and port to see how to do this. You can
+probably simply import z80pack and adjust the drivers. Note that z80pack
+supports multiple bank/fixed divides and numbers of banks, so you can bring
+z80pack up with your platform configuration
+
+You may have to decide between limited process size or being prepared to do
+copying tricks to copy big chunks of memory around. 
+
+If you have only a single user bank however it's easy - see z80pack-lite 8)
+
+Inflexible banking
+------------------
+Systems where some banks can only fit at some locations. In this case copy
+bank16k or bank32 as appropriate but update your swapper logic to find the
+owner of a page in the ranges you need and victimise them, or if they are
+not usefully flexible then set up fixed sets of them as "banks" and use the
+fixed bank model.
+
+The pagemap_alloc/realloc and friends will also need updating - perhaps with
+2 or more map tables.
+
+In other cases (eg the TRS80) you can only have one "high" bank mapped. This
+really limits the TRS80 to single task with floppy or swapping to disk with
+HD. Given the 128K limit that isn't too bad.
+
+The other examples are things like the Microbee (one 32K bank is flexible
+the other is very rigid), and things like the Sinclair Spectrum/Amstrad CPC boxes.
+
+Research Problems
+-----------------
+In theory the kernel could be built as 2 or 3 16K banks of pure code, plus data
+and some overspill in RAM. This might be very useful for Amstrad CPC type
+boxes or the Sinclair Spectrum 128+/+2/+3 type boxes with awkward mapping
+limits. Sadly sdcc isn't yet good enough to do this for you.
+
+Swapping Hints
+--------------
+
+Your swap device does not need to be a disk. If you have a really demented
+memory map and page limits it may actually make sense to treat all the near
+unusable memory as swap, especially in singletasking mode. In fact in
+singletasking mode your swap acts as a stack. Likewise if your system has
+lots of RAM accessible through a small window you can treat it as "swap"
+rather than process memory
+
+Known Performance Problems
+--------------------------
+
+execve pulls all pages into kernel maps and then copies them to the task.
+Fixing this is non trivial but may happen. If so then raw = 1 support for
+all disks will become mandatory.
+
+fork is generally used as fork/execve. This causes a copy which is somewhat
+surplus but is very bad on singletasking as it is both slow (the compressor
+wants rewriting in Z80 someone) and also may prevent the child task fitting.
+BSD unix implemented vfork() some systems implemented forkexecve(). We
+should probably support vfork().
+
+Other Processors
+----------------
+
+Currently only Z80 is supported. Clones should also work as should FPGA cores
+like T80. The current build uses no undocumented instructions in any core
+code.
+
+Z180 is not yet supported. This requires a rather unique memory banking
+module to be debugged plus some driver pieces. It should however then enable
+systems like N8VEM Mark IV and maybe even the 'Super TRS80' hacked hardware.
+
+Platform wise there are lots that could be supported. MSX is a notable gap,
+especially given that UZIX has some MSX code.
+
+It ought to be possible to port UZI to any other small processor with
+banking. That would include banked 6809/6309 systems and perhaps 65C816
+(Apple IIGS anyone ?) with a suitable compiler. The current core code has
+been test built purely to verify it seems ok on 6809 (gcc) and 6502 (cc65).
+Various endianisms in the core code have been fixed but there may be more.
+
+The constraints roughly speaking for any port are
+
+- banked memory
+- near full 8bit address space
+- some way to do udata. (or take the hit of making it a macro pointer)
+- an ANSI C compiler
+- timer interrupt, and preferably tty I/O interrupts
+- blocking disk I/O. Fundamental to the size and design of the UZI core is
+  the assumption that accessing user space and block I/O do not block and
+  reschedule
+- uniprocessor (well OK there are ways and means to do more but it won't be
+  too happy above a couple I suspect)
+
+Without banked memory but with a large address space you would need vfork()
+and relocatable binaries. Doable as AmigaOS showed but forget swapping.
+
+As far as I can tell we have suitable open toolchains for
+
+6809 (gcc fork) - although 6809 is well served by NitrOS/9. The core code
+has been built with gcc 6809 as a minimal sanity test.
+
+68HC11/2 (for the variants with banked RAM)
+
+TI990 (gcc development) - http://www.cozx.com/~dpitts/tigccinst.html
+(TI 99/4A anyone ;-))
+
+8086 is a gap but I'm working on pcc 8086 targets and could do with help
+there (http://pcc.ludd.ltu.se/). Once the compiler is done the port should
+be easy and cover both XT and 286.
+
+6502 is probably a cause too far (but prove me wrong...). The core code will
+build with cc65.
+
+658C16 seems to lack a serious open compiler although there is a tcc port !
+(snes-sdk)
+
+The ANSI ACK can build rather decent 8080 code. Whether the output would fit
+in 64K and anyone ever built a banked 8080 who knows 8)
+
+Various other early minicomputers probably also fit the target.
+
+Going to early 32bit CPU is hard because
+- not all of the core code is 32bit clean (I've tried to begin marking out
+  the argument parameters and the like to fix it)
+- the fs code knows that you can't write a size bigger than the filesystem
+  so other sanity checks would need adding
+
+A 2BSD/RetroBSD port might make a lot more sense anyway on such a system
+
+
+Other Things That Would Help
+----------------------------
+
+Teaching SDCC to generate better code. It's not bad but sometimes it makes a
+right mess, especially of long types. Someone also needs to write the
+longlongs signed mod function and fix the fact that discarding the output
+of a longlong call currently blows up sdcc.
+
+Writing a longlong implementation of mod for SDCC (needed for the C lib)
+
+We want 64bit time_t values in the ABI in order to get 2038 safety. We need
+32bit versions to support non Z80 systems perhaps using structs for time_t
+
+SDCC call by register
+
+A tool to take all the compiler asm output of FUZIX on Z80, identify common
+code blocks containing only internal references (jump/call) and (considering
+segments) turn chunks of them into calls (sort of an executable compress).
+O88 could do this for 8086. If we can shave a few K off this way it would
+be brilliant
+

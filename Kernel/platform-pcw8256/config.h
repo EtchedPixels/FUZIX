@@ -1,0 +1,54 @@
+/* Enable to make ^Z dump the inode table for debug */
+#undef CONFIG_IDUMP
+/* Enable to make ^A drop back into the monitor */
+#undef CONFIG_MONITOR
+/* Profil syscall support (not yet complete) */
+#define CONFIG_PROFIL
+/* Multiple processes in memory at once */
+#define CONFIG_MULTI
+/* Single tasking */
+#undef CONFIG_SINGLETASK
+/* 16K reported page size */
+#define CONFIG_PAGE_SIZE	16
+/* We use flexible 16K banks so use the helper */
+#define CONFIG_BANK16
+#define MAX_MAPS 16
+#define MAX_SWAPS 16
+
+/* VT layer required */
+#define CONFIG_VT
+/* We want the 8x8 font */
+#define CONFIG_FONT8X8
+/* Vt definitions */
+#define VT_WIDTH	90
+#define VT_HEIGHT	32
+#define VT_RIGHT	89
+#define VT_BOTTOM	31
+
+#define TICKSPERSEC 50   /* Ticks per second */
+#define PROGBASE    ((char *)(0x0100))  /* also data base */
+#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
+#define PROC_SIZE   64	  /* Memory needed per process */
+
+#define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need the low 256) */
+#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
+#define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
+
+#define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
+#define UDATA_SWAPSIZE	0
+
+#define BOOT_TTY	18
+
+#define CMDLINE		NULL
+
+/* Device parameters */
+#define NUM_DEV_TTY 3
+#define NDEVS    16       /* Devices 0..NDEVS-1 are capable of being mounted */
+                          /*  (add new mountable devices to beginning area.) */
+#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+#define SWAPDEV  5	  /* Device for swapping. */
+#define NBUFS    6        /* Number of block buffers */
+#define NMOUNTS	 2	  /* Number of mounts at a time */
+
+
+

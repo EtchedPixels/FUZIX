@@ -1,0 +1,156 @@
+#ifndef __TERMIOS_H
+#define __TERMIOS_H
+#ifndef __TYPES_H
+#include <types.h>
+#endif
+
+typedef uint16_t tcflag_t;
+typedef uint16_t speed_t;
+typedef uint8_t cc_t;
+
+#define NCCS 12
+struct termios {
+  tcflag_t c_iflag;
+  tcflag_t c_oflag;
+  tcflag_t c_cflag;
+  tcflag_t c_lflag;
+  cc_t c_cc[NCCS];
+};
+
+#define VEOF	0
+#define VEOL	1
+#define VERASE	2
+#define VINTR	3
+#define VKILL	4
+#define VMIN	4
+#define VQUIT	5
+#define VSTART	6
+#define VSTOP	7
+#define VSUSP	8
+#define VTIME	9
+#define VDSUSP	10
+#define VLNEXT	11
+
+#define BRKINT	0x0001
+#define ICRNL	0x0002
+#define IGNBRK	0x0004
+#define IGNCR	0x0008
+#define IGNPAR	0x0010
+#define INLCR	0x0020
+#define INPCK	0x0040
+#define ISTRIP	0x0080
+#define IUCLC	0x0100
+#define IXANY	0x0200
+#define IXOFF	0x0400
+#define PARMRK	0x0800
+
+#define OPOST	0x0001
+#define OLCUC	0x0002
+#define ONLCR	0x0004
+#define OCRNL	0x0008
+#define ONLRET	0x0010
+#define OFILL	0x0020
+#define NLDLY	0x0040
+#define NL0	0x0000
+#define NL1	0x0040
+#define CRDLY	0x0180
+#define CR0	0x0000
+#define CR1	0x0080
+#define CR2	0x0100
+#define CR3	0x0180
+#define TABDLY	0x0600
+#define TAB0	0x0000
+#define TAB1	0x0200
+#define TAB2	0x0400
+#define TAB3	0x0600
+#define BSDLY	0x0800
+#define BS0	0x0000
+#define BS1	0x0800
+#define VTDLY	0x1000
+#define VT0	0x0000
+#define VT1	0x1000
+#define FFDLY	0x2000
+#define FF0	0x0000
+#define FF1	0x2000
+
+#define B0	0x0000
+#define B50	0x0001
+#define B75	0x0002
+#define B110	0x0003
+#define B134	0x0004
+#define B150	0x0005
+#define B300	0x0006
+#define B600	0x0007
+#define B1200	0x0008
+#define B2400	0x0009
+#define B4800	0x000A
+#define B9600   0x000B
+#define B19200	0x000C
+#define B38400	0x000D
+#define B57600	0x000E
+#define B115200	0x000F
+
+#define CSIZE	0x0030
+#define CS5	0x0000
+#define CS6	0x0010
+#define CS7	0x0020
+#define CS8	0x0030
+#define CSTOPB	0x0040
+#define CREAD	0x0080
+#define PARENB	0x0100
+#define PARODD	0x0200
+#define HUPCL	0x0400
+#define CLOCAL	0x0800
+#define CRTSCTS 0x1000
+#define CBAUD	0x000F
+
+#define ECHO	0x0001
+#define ECHOE	0x0002
+#define ECHOK	0x0004
+#define ECHONL	0x0008
+#define ICANON	0x0010
+#define IEXTEN	0x0020
+#define ISIG	0x0040
+#define NOFLUSH	0x0080
+#define TOSTOP	0x0100
+#define XCASE	0x0200
+
+#define TCSANOW		0
+#define TCSADRAIN	1
+#define TCSAFLUSH	2
+
+#define TCIFLUSH	1
+#define TCOFLUSH	2
+#define TCIOFLUSH	3
+
+#define TCIOFF		0
+#define TCION		1
+#define TCOOFF		2
+#define TCOON		3
+
+#define TCGETS		1
+#define TCSETS		2
+#define TCSETSW		3
+#define TCSETSF		4
+#define TIOCINQ		5
+#define TIOCFLUSH	6
+#define TIOCHANGUP	7	/* vhangup() */
+
+
+extern speed_t cfgetispeed __P ((const struct termios *__termios_p));
+extern speed_t cfgetospeed __P ((const struct termios *__termios_p));
+extern int cfsetispeed __P ((struct termios *__termios_p, speed_t __speed));
+extern int cfsetospeed __P ((struct termios *__termios_p, speed_t __speed));
+
+extern void cfmakeraw  __P ((struct termios *__t));
+
+extern int tcsetattr __P ((int __fd, int __opt, const struct termios *__termios_p));
+extern int tcgetattr __P ((int __fildes, struct termios *__termios_p));
+extern int tcdrain __P ((int __fildes));
+extern int tcflow __P ((int __fildes, int __action));
+extern int tcflush __P ((int __fildes, int __queue_selector));
+extern int tcsendbreak __P ((int __fildes, int __duration));
+extern int tcgetpgrp __P ((int __fildes));
+extern int tcsetpgrp __P ((int __fildes, int __pgrp_id));
+
+#endif

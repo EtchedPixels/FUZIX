@@ -1,0 +1,165 @@
+Hot problem items
+-----------------
+__modslonglong is not found from base C lib ?
+
+
+tool to wrap the build and also make a Fuzix binary not a ROM image
+
+- Import other bits we can from BCC libs
+- Longlong in printf (plus other modern bits ?)
+- *nprintf
+- glue for Fuzix syscalls (uname, alarm etc)
+- Propogate "real" time_t into kernel
+- termios into kernel and match up with C library
+- memccpy
+- bits of libbsd
+- rest of opendir (telldir etc)
+Make exec* try via shell if ENOEXEC
+
+
+Add libm, and build stdio fprintf/fscanf and any other bloaty floaty bits
+with a libm define into libm and integer into libc
+
+Missing
+
+terminfo
+streams (intentional)
+X11 (right)
+
+DIR needs dd_loc, dd_size wiring up dirent tweaks in C code
+
+
+Errors: define the full range required by SVID
+
+getpgrp missing definition ?
+
+get/sethostname and domainname via userspace only
+
+sys/fp.h - not really that relevant but might as well have
+
+ieeefp.h ???
+
+sys/ipc.h
+sys/lock.h
+math.h (HUEGVAL)
+sys/msg.h
+
+sys/param.h	(now mostly needs to be via sysconf)
+sys/reg.h	(used for what ? ptrace ? )
+sys/sem.h
+
+setjmp.h	defines for size, sig* version
+
+sys/shm.h
+
+signal.h	signals 16-31 ??
+		sigaction bits need defining plus SA_NOCLDSTOP
+sys/statfs	need to add fakery for it
+
+stdio		_NFILE, L_ctermid, L_cuserid, P_tmpdir, L_tmpnam
+
+stropts.h 	(streams)
+
+termios.h	Define struct termio as well, need to double check all
+		flags isted are present + chars (eg VSWTCH, VEOL2)
+		Defines for the initial chars (CNUL, CDEL etc)
+		TCWINSZ + a few other oddments
+
+time.h		sort out CLK_TCK
+
+sys/tiuser	streams
+
+utmp.h		ut_exit ??? ACCOUNTING
+
+API functions
+
+Need
+----
+
+cfree(a,b,c)	-> free(a)
+ecvt()
+fcvt()
+frexp
+gcvt
+getw
+isnand()	'is nan ?'
+ldexp
+memccpy
+putw
+sighold
+sigignore
+sigpause
+sigrelse
+sigset
+ftw()
+poll() wrappers
+siglongjmp/sigsetjmp
+
+For Modern Stuff
+----------------
+snprintf
+sysconf
+pathconf
+
+TCP/IP stuff
+
+
+Commands Required
+-----------------
+cat
+cd
+chgrp
+chmod
+chown
+cmp
+cp
+cpio
+date
+dd
+df
+echo
+ed
+ex
+expr
+false
+find
+grep
+id
+kill
+line
+ln
+logname
+lp
+ls
+mkdir
+mv
+passwd
+pg
+pr
+pwd
+rm
+rmdir
+sed
+sh
+sleep
+sort
+stty
+su
+tail
+tar
+tee
+test
+touch
+tr
+true
+tty
+umask
+uname
+uucp		[duh ???]
+uulog
+uustart
+uux
+vi
+wait
+who
+

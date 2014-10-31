@@ -1,0 +1,2 @@
+- SIGSTOP/TSTP behaviour wrong
+- SIGCHLD not sent

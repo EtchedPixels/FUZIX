@@ -1,0 +1,36 @@
+-mwxuy
+-i uzi.ihx
+-b _DISCARD=0x5000
+-b _UDATA=0x5D00
+-b _CODE=0x6000
+-k /usr/share/sdcc/lib/z80
+-l z80
+platform-micropack/crt0.rel
+platform-micropack/commonmem.rel
+platform-micropack/z80pack.rel
+platform-micropack/main.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-micropack/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-micropack/devfd.rel
+platform-micropack/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+simple.rel
+swap.rel
+devsys.rel
+platform-micropack/devlpr.rel
+platform-micropack/devtty.rel
+-e
