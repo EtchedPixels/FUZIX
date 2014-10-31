@@ -1,0 +1,54 @@
+; socZ80 mnemonics for I/O ports etc
+
+UART0_STATUS                .equ 0x00
+UART0_DATA                  .equ 0x01
+
+TIMER_STATUS                .equ 0x10
+TIMER_COMMAND               .equ 0x11
+TIMER_VAL0                  .equ 0x14
+TIMER_VAL1                  .equ 0x15
+TIMER_VAL2                  .equ 0x16
+TIMER_VAL3                  .equ 0x17
+
+PPRO_FLASH_SPI_CHIPSELECT   .equ 0x18
+PPRO_FLASH_SPI_STATUS       .equ 0x19
+PPRO_FLASH_SPI_TX           .equ 0x1A
+PPRO_FLASH_SPI_RX           .equ 0x1B
+PPRO_FLASH_SPI_DIVISOR      .equ 0x1C
+
+SD_SPI_CHIPSELECT           .equ 0x30
+SD_SPI_STATUS               .equ 0x31
+SD_SPI_TX                   .equ 0x32
+SD_SPI_RX                   .equ 0x33
+SD_SPI_DIVISOR              .equ 0x34
+SD_SPI_GPIO		    .equ 0x35
+SD_SPI_MODE		    .equ 0x36
+
+GPIO_INPUT                  .equ 0x20
+GPIO_OUTPUT                 .equ 0x21
+
+UART1_STATUS                .equ 0x28
+UART1_DATA                  .equ 0x29
+
+CPU_CLKMOD                  .equ 0xF0
+
+MMU_SELECT                  .equ 0xF8
+MMU_PAGE17                  .equ 0xFA
+MMU_PERM                    .equ 0xFB
+MMU_FRAMEHI                 .equ 0xFC
+MMU_FRAMELO                 .equ 0xFD
+MMU_SELECT_PAGE17           .equ 0xFF
+MMU_PTR_VAL0                .equ 0xFC
+MMU_PTR_VAL1                .equ 0xFD
+MMU_PTR_VAL2                .equ 0xFE
+MMU_PTR_VAL3                .equ 0xFF
+
+; timer commands (write to TIMER_COMMAND register)
+TIMCMD_INTACK               .equ 0x00
+TIMCMD_UPRESET              .equ 0x01
+TIMCMD_UPLATCH              .equ 0x02
+TIMCMD_DOWNRESET            .equ 0x03
+TIMCMD_SEL_UPVAL            .equ 0x10
+TIMCMD_SEL_UPLATCH          .equ 0x11
+TIMCMD_SEL_DOWNVAL          .equ 0x12
+TIMCMD_SEL_DOWNRESET        .equ 0x13
