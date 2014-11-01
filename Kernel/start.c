@@ -10,6 +10,37 @@
  *	make the entire of this disappear after the initial _execve
  */
 
+static struct termios ttydflt = {
+	BRKINT | ICRNL,
+	OPOST | ONLCR,
+	CS8 | B9600 | CREAD | HUPCL,
+	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
+	{CTRL('D'), 0, 127, CTRL('C'),
+	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
+	 CTRL('Z'), CTRL('Y'), CTRL('V'), CTRL('O')
+	 }
+};
+
+void tty_init(void) {
+        struct termios *t = &ttydata[1];
+        int i;
+        for(i = 1; i <= NUM_DEV_TTY; i++) {
+		memcpy(t, &ttydflt, sizeof(struct termios));
+		t++;
+        }
+}
+
+void bufinit(void)
+{
+	bufptr bp;
+
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = false;
+	}
+}
+
+
 void create_init(void)
 {
 	uint8_t *j;

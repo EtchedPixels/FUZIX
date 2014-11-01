@@ -26,17 +26,6 @@
 struct termios ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 uint16_t tty_pgrp[NUM_DEV_TTY + 1];
 
-static struct termios ttydflt = {
-	BRKINT | ICRNL,
-	OPOST | ONLCR,
-	CS8 | B9600 | CREAD | HUPCL,
-	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
-	{CTRL('D'), 0, 127, CTRL('C'),
-	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
-	 CTRL('Z'), CTRL('Y'), CTRL('V'), CTRL('O')
-	 }
-};
-
 static bool stopflag[NUM_DEV_TTY + 1];	// Flag for ^S/^Q
 static bool flshflag[NUM_DEV_TTY + 1];	// Flag for ^O
 static bool deadflag[NUM_DEV_TTY + 1];  // True if hung up
@@ -413,15 +402,6 @@ void tty_carrier_raise(uint8_t minor)
 {
         if (ttydata[minor].c_cflag & HUPCL)
                 wakeup(&ttydata[minor].c_cflag);
-}
-
-void tty_init(void) {
-        struct termios *t = &ttydata[1];
-        int i;
-        for(i = 1; i <= NUM_DEV_TTY; i++) {
-		memcpy(t, &ttydflt, sizeof(struct termios));
-		t++;
-        }
 }
 
 /*

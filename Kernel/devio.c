@@ -165,16 +165,6 @@ bufptr freebuf(void)
 }
 
 
-void bufinit(void)
-{
-	bufptr bp;
-
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
-		bp->bf_dev = NO_DEVICE;
-		bp->bf_busy = false;
-	}
-}
-
 /*
  *	Helper for hinting that a buffer is not likely to be re-read rapidly
  *	Ignores the hint if the buffer is dirty, resets it if the buffer is
