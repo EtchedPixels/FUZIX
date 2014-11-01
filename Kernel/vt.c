@@ -30,6 +30,10 @@
  *	define CONFIG_VT_SIMPLE
  *	VT_BASE is the base address in kernelspace
  *	VT_WIDTH is the line width (including padding)
+ *
+ *	This code can be banked on its own. If you touch it on Z80 make
+ *	very sure you inspect the asm output for calls to compiler helpers
+ *	and don't add any.
  *	
  */
 
