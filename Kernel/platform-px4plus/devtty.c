@@ -3,6 +3,7 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <tty.h>
+#include <vt.h>
 #include <devtty.h>
 
 /* Console is only port we provide, port 2 there but used for floppies */
@@ -31,8 +32,8 @@ static bool tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    minor;c;
-    /* Fixme: wire in VT code */
+    minor;
+    vtoutput(&c, 1);
 }
 
 void tty_setup(uint8_t minor)

@@ -35,14 +35,6 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-void device_init(void)
-{
-  int i;
-  /* Add 4 swaps (128K) to use the entire RAM drive */
-  for (i = 0; i < MAX_SWAPS; i++)
-    swapmap_add(i);
-}
-
 __sfr __at 0x19 ioctrlr;
 
 /* FIXME: find correct initial value */

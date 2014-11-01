@@ -31,6 +31,7 @@
             ; imported symbols
             .globl _ramsize
             .globl _procmem
+	    .globl _vtinit
 
 	    .globl unix_syscall_entry
             .globl null_handler
@@ -85,6 +86,7 @@ init_hardware:
 	    ld a, #0xB		; OVF (timer), RXRDY (gapnio), 7508
 	    out (0x04), a
 
+	    call _vtinit
             im 1 ; set CPU interrupt mode
             ret
 

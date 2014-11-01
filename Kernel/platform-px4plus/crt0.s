@@ -15,22 +15,22 @@
         .area _BSEG
         .area _BSS
         .area _HEAP
-        ; note that areas below here may be overwritten by the heap at runtime, so
-        ; put initialisation stuff in here
-        .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
 
 	.area _DISCARD
 	.area _UDATA
+	; This is fixed up by the compile tool but we need it somewhere
+	; so the copier can fix it up !
+        .area _INITIALIZER
+
+	.area _FONT
+	.area _VIDEO
 
         ; imported symbols
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
-        .globl s__INITIALIZER
-        .globl s__COMMONMEM
-        .globl l__COMMONMEM
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top

@@ -1,9 +1,11 @@
 -mwxuy
 -i uzi.ihx
--b _DISCARD=0x5000
+-b _DISCARD=0x4000
 -b _UDATA=0xFD00
 -b _CODE=0x6000
 -b _DATA=0xE000
+-b _FONT=0x5000
+-b _INITIALIZER=0x3000
 -k /usr/share/sdcc/lib/z80
 -l z80
 platform-px4plus/crt0.rel
@@ -34,4 +36,8 @@ swap.rel
 devsys.rel
 platform-px4plus/devlpr.rel
 platform-px4plus/devtty.rel
+vt.rel
+font8x8.rel
+platform-px4plus/video.rel
+platform-px4plus/init.rel
 -e

@@ -8,6 +8,12 @@
 #define CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
+/* Video terminal, not a serial tty */
+#define CONFIG_VT
+/* We want the 8x8 font for now (actually we want 6x8) */
+#define CONFIG_FONT8X8
+/* And we only want 128 symbols of it (1K) for now */
+#define CONFIG_FONT8X8SMALL
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 /* Fixed banking */
@@ -26,7 +32,7 @@
    timer available, so needs some tweaking */
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    ((char *)(0x0100))  /* also data base */
-#define PROGTOP     ((char *)(0x7D00))  /* Top of program, base of U_DATA */
+#define PROGTOP     ((char *)(0x4000))  /* Top of program for debug */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
@@ -47,3 +53,10 @@
 #define NBUFS    6        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
+#define VT_WIDTH	30
+#define VT_HEIGHT	8
+#define VT_RIGHT	29
+#define VT_BOTTOM	7
+
+
+#define PFTABSIZE	4	/* All we have room for right now */
