@@ -32,3 +32,10 @@ In kernel execution modes we then are either
 and we will need to tuck the video code/font/framebuffer at 0xD000 or
 similar in RAM under the ROM area. May need to hide the floppy driver
 there too as its all a little bit tight
+
+In practice it appears the answer is
+
+1. Yes
+2. But only if the linker is taught to do banking. In fact once the linker
+does its own banking there is plenty of space although the bootloader might
+be a bit odd to make it work.
