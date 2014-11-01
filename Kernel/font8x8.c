@@ -6,7 +6,11 @@
  *	System font for 8x8 pixels. From the Linux font_8x8.c
  */
 
+#ifdef CONFIG_FONT8X8SMALL
+#define FONTDATAMAX 1024
+#else
 #define FONTDATAMAX 2048
+#endif
 
 const unsigned char fontdata_8x8[FONTDATAMAX] = {
 
@@ -1290,6 +1294,7 @@ const unsigned char fontdata_8x8[FONTDATAMAX] = {
 	0xfe, /* 11111110 */
 	0x00, /* 00000000 */
 
+#ifndef CONFIG_FONT8X8SMALL
 	/* 128 0x80 '€' */
 	0x7c, /* 01111100 */
 	0xc6, /* 11000110 */
@@ -2569,7 +2574,7 @@ const unsigned char fontdata_8x8[FONTDATAMAX] = {
 	0x00, /* 00000000 */
 	0x00, /* 00000000 */
 	0x00, /* 00000000 */
-
+#endif
 };
 
 #endif
