@@ -53,6 +53,7 @@
 
             .include "kernel.def"
             .include "../kernel.def"
+	    .include "nc100.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
@@ -334,9 +335,9 @@ _scroll_up:
 	    push af
 	    ld a, #0x43		; main memory, bank 3 (video etc)
 	    out (0x11), a
-	    ld hl, #0x7000 + 384
-	    ld de, #0x7000
-	    ld bc, #0x1000 - 384 - 1
+	    ld hl, #VIDEO_BASE + 384
+	    ld de, #VIDEO_BASE
+	    ld bc, #VIDEO_SIZE - 384 - 1
 	    ldir
 	    jr vtdone
 
@@ -348,9 +349,9 @@ _scroll_down:
 	    push af
 	    ld a, #0x43		; main memory, bank 3 (video etc)
 	    out (0x11), a
-	    ld hl, #0x7FFF
-	    ld de, #0x7FFF - 384
-	    ld bc, #0x1000 - 384 - 1
+	    ld hl, #VIDEO_BASE + 0xFFF
+	    ld de, #VIDEO_BASE + 0xFFF - 384
+	    ld bc, #VIDEO_SIZE - 384 - 1
 	    lddr
 vtdone:	    pop af
 	    out (0x11), a
@@ -381,7 +382,7 @@ addr_de:
 	    rr  d	; roll two bits into D
 	    srl a
 	    rr  d
-	    add #VIDEO_BASE_H	; screen start (0x7000 or 0x6000 for NC200)
+	    add #VIDEO_BASEH	; screen start (0x7000 or 0x6000 for NC200)
 	    ld  e, d
 	    ld  d, a
 	    ret

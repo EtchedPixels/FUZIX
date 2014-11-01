@@ -54,7 +54,11 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 		mod_control(0, 0x10);	/* turn on the line driver */
 		nap();
 		mod_control(0x06, 0x01);	/* 9600 baud */
+#ifdef CONFIG_NC200
+		irqen = 0x1C;
+#else
 		irqen = 0x0B;			/* Allow serial interrupts */
+#endif
 	}
 	return (0);
 }
@@ -64,7 +68,11 @@ int nc100_tty_close(uint8_t minor)
 {
 	tty_close(minor);
 	if (minor == 2) {
+#ifdef CONFIG_NC200
+		irqen = 0x18;
+#else
 		irqen = 0x08;		/* mask serial interrupts */
+#endif
 		mod_control(0x10, 0);	/* turn off the line driver */
 	}
 	return (0);
@@ -103,10 +111,10 @@ void tty_setup(uint8_t minor)
 	uint16_t b;
 	if (minor == 1)
 		return;
-	b = ttydata[2].c_cflags & CBAUD;
+	b = ttydata[2].c_cflag & CBAUD;
 	if (b < B150)
 		b = B150;
-	if (b > B19200
+	if (b > B19200)
 		b = B19200;
 	/* 0 = B150 .. 7 = B19200 in the same spacing and order as termios,
 	   how convenient */
@@ -266,6 +274,52 @@ static void keydecode(void)
 }
 
 
+#ifdef CONFIG_NC200
+
+void platform_interrupt(void)
+{
+	uint8_t a = irqmap;
+	uint8_t c;
+	if (!(a & 4)) {
+		/* FIXME: need to check uart itself to see wake cause */
+		wakeup(&ttydata[2]);
+		/* work around sdcc bug */
+		c = uarta;
+		tty_inproc(2, c);
+	}
+	if (!(a & 8)) {
+		keyin[0] = kmap0;
+		keyin[1] = kmap1;
+		keyin[2] = kmap2;
+		keyin[3] = kmap3;
+		keyin[4] = kmap4;
+		keyin[5] = kmap5;
+		keyin[6] = kmap6;
+		keyin[7] = kmap7;
+		keyin[8] = kmap8;
+		keyin[9] = kmap9;	/* This resets the scan for 10mS on */
+
+		newkey = 0;
+		keyproc();
+		if (keysdown < 3 && newkey)
+			keydecode();
+		timer_interrupt();
+	}
+	if (!(a & 16)) {
+		/* FIXME: Power button */
+		;
+	}
+	if (!(a & 32)) {
+		/* FIXME: FDC interrupt */
+		;
+	}
+	/* clear the mask */
+	irqmap = a;
+}
+
+
+#else
+
 void platform_interrupt(void)
 {
 	uint8_t a = irqmap;
@@ -295,13 +349,11 @@ void platform_interrupt(void)
 			keydecode();
 		timer_interrupt();
 	}
-	if (!(a & 16)) {
-		/* FIXME: Power button */
-		;
-	}
 	/* clear the mask */
 	irqmap = a;
 }
+
+#endif
 
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;

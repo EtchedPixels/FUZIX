@@ -5,6 +5,7 @@
 #include <devlpr.h>
 
 __sfr __at 0xa0 lpstat;
+__sfr __at 0x80 lpstat200;
 __sfr __at 0x40 lpdata;
 
 int lpr_open(uint8_t minor, uint16_t flag)
@@ -34,7 +35,11 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		ct = 0;
 
 		/* Try and balance polling and sleeping */
+#ifdef CONFIG_NC200
+		while (lpstat200 & 1) {
+#else
 		while (lpstat & 2) {
+#endif
 			ct++;
 			if (ct == 10000) {
 				udata.u_ptab->p_timeout = 3;
