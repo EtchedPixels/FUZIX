@@ -1,0 +1,37 @@
+-mwxuy
+-i uzi.ihx
+-b _DISCARD=0x5000
+-b _UDATA=0xFD00
+-b _CODE=0x6000
+-b _DATA=0xE000
+-k /usr/share/sdcc/lib/z80
+-l z80
+platform-px4plus/crt0.rel
+platform-px4plus/commonmem.rel
+platform-px4plus/px4plus.rel
+platform-px4plus/main.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-px4plus/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-px4plus/devfd.rel
+platform-px4plus/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+simple.rel
+swap.rel
+devsys.rel
+platform-px4plus/devlpr.rel
+platform-px4plus/devtty.rel
+-e

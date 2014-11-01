@@ -1,0 +1,34 @@
+A FUZIX target for the PX4plus
+
+Just playing to see if we can make it fit.
+
+The PX4Plus has 64K of RAM, and can overlay 6000-DFFF with one of two
+different ROMpacks (usually 'basic' and 'utility'). We build the kernel
+at 0x6000 but for now plonk it into RAM so we can debug it. The small 8K
+top window is awkward as we need to get udata and our kernel data/common in
+that space if possible. We can hide the font/video below that under the top of
+the ROM however.
+
+
+Intended Memory Map
+
+
+0x0000-0x00FF		Vectors
+0x0100-0x???? (RAM)	User program (and discard area)
+0xD000-0xDFFF		Framebuffer, font, video code
+0xE000-0xF7FFish	Data for kernel
+0xF800-0xFCFF		Common (currently ends FBCC)
+0xFD00-0xFFFF		Udata
+
+In kernel execution modes we then are either
+
+0x0000-0x00FF		Vectors
+0x0100-0x5FFF		Lower part of user
+0x6000-0xDFFF		Kernel code in ROM
+0xE000-0xF7FFish	Data for kernel
+0xF800-0xFCFF		Common (currently ends FBCC)
+0xFD00-0xFFFF		Udata
+
+and we will need to tuck the video code/font/framebuffer at 0xD000 or
+similar in RAM under the ROM area. May need to hide the floppy driver
+there too as its all a little bit tight
