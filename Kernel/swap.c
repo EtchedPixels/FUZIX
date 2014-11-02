@@ -81,7 +81,7 @@ int swapout(ptptr p)
 		/* Write to disk if the platform asks us */
 		if (ptr)
 			swapwrite(SWAPDEV, blk, UDATA_SWAPSIZE,
-				  (char *) p);
+				  ptr);
 #endif
 		/* Write the app (and possibly the uarea etc..) to disk */
 		swapwrite(SWAPDEV, blk + UDATA_BLOCKS, SWAPTOP - SWAPBASE,
