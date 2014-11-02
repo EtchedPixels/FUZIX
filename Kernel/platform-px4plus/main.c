@@ -30,3 +30,13 @@ void platform_interrupt(void)
 void map_init(void)
 {
 }
+
+void *swapout_prepare_uarea(ptptr p)
+{
+ return &udata;
+}
+
+void *swapin_prepare_uarea(ptptr p)
+{
+ return &udata;
+}

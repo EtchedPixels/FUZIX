@@ -1,4 +1,4 @@
-A FUZIX target for the PX4plus
+A FUZIX target for the PX4plus (and PX4 with 128K RAM disc)
 
 Just playing to see if we can make it fit.
 
@@ -14,7 +14,11 @@ Intended Memory Map
 
 
 0x0000-0x00FF		Vectors
-0x0100-0x???? (RAM)	User program (and discard area)
+0x0100-0x7CFF (RAM)	User program (and discard area)
+(could go to 0xBFFF for 48K but our swap is very limiting and might need
+ smarter algorithms for swap - eg 16K banking for swap alone)
+0x7D00-0xCFFF		Space for things we can bank under the ROM
+			(secondary floppy cache ??)
 0xD000-0xDFFF		Framebuffer, font, video code
 0xE000-0xF7FFish	Data for kernel
 0xF800-0xFCFF		Common (currently ends FBCC)
@@ -39,3 +43,14 @@ In practice it appears the answer is
 2. But only if the linker is taught to do banking. In fact once the linker
 does its own banking there is plenty of space although the bootloader might
 be a bit odd to make it work.
+
+A better layout given the 128K total swap limit might appear to be
+
+0x0000-0x00FF		Vectors
+0x0100-0x7CFF		Application
+0x7D00-0x7FFF		Uarea
+
+but we actually can't do this because the 32K ROM is always mapped from
+0x6000-0xDFFF and needs to access the Uarea
+
+
