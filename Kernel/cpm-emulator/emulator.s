@@ -1,5 +1,9 @@
     ; must begin on a page boundary (address % 256 == 0) to ensure
     ; the jump table is correctly aligned
+    ;
+    ; This varies by platform so we really want to make this relocatable
+    ; not linked per platform somehow
+    ;
     .org 0xf000
 startaddr:
 
@@ -13,6 +17,7 @@ ESC       EQU     1BH             ; ASCII ESCape Char
 
 TCGETS	  EQU     1               ; Fuzix - get tty data
 TCSETS    EQU     2               ; Fuzix - set tty data
+TIOCINQ   EQU	  5		  ; Fuzix - characters pending
 
 STDIN     EQU     0               ; file descriptor value of keyboard
 STDOUT    EQU     1               ; file descriptor value of display
@@ -541,7 +546,7 @@ Fcn17:	CALL	CkSrch		; Ensure Search File closed
 ;         case 18: return (255);			/* Search Next */
 
 ;
-;	FIXME: dir entries need to be bigger
+;	FIXME: dir entries need to be bigger ?
 ;
 Fcn18:	LD	HL,(dmaadr)
 	LD	(dmaSav),HL	; Save "real" DMA
@@ -621,8 +626,7 @@ Fcn33:	CALL	RWprep		; Prepare File for access
 
 ;....
 DoRead:
-	CALL	SkOff		; Seek to Offset (128-byte rec in Block)
-	CALL	SkBlk		; Seek to 512-byte Block
+	CALL	LSeek		; Seek to Offset (128-byte rec in Block)
 
 	CALL	BRead		; Read 1 Sector
 
@@ -687,8 +691,7 @@ Fcn34:	CALL	RWprep		; Prepare file for access
 
 ;....
 DoWrite:
-	CALL	SkOff		; Seek to Offset (128-byte rec in Block)
-	CALL	SkBlk		; Seek to 512-byte Block
+	CALL	LSeek		; Seek to Offset (128-byte rec in Block)
 
 	CALL	BWrit		; Write 1 Sector
 
@@ -1017,38 +1020,44 @@ GetNX:	LD	(IX+0),0
 ;
 ;	FIXME: we need to use lseek for Fuzix
 ;
-;.....
-; Seek Offset.  Uses Record Count to set 128-byte offset in 512-byte Sctr.
-
-SkOff:	LD	BC,0
-	PUSH	BC		; 0 Mode (Absolute Offset Position)
-	LD	IY,(_arg)	; Pt to current fcb
-	LD	A,(IY+32)	; Fetch Lo Byte of Offset
-	AND	03H		;  (kill all but mod 512, 2 bits)
-	LD	B,A
-	SRL	B
-	RR	C		;   Offset is pos'n within 512-byte Rec
-	JR	SeekV		;  ..finish in Common Code
-
-;.....
-; Seek Block.  Uses Record Count to set Div-512 Block Number
-
-SkBlk:	LD	HL,3		; 3 Mode (Absolute Block Position)
-	PUSH	HL		;  to Stk
-	LD	IY,(_arg)
-	LD	C,(IY+32)
-	LD	B,(IY+12)
-	SRL	B
-	RR	C
-	SRL	B
-	RR	C		;   Blk # is DIV 512
-SeekV:	PUSH	BC
-	LD	HL,(curFil)	;    fd
+LSeek:	LD	BC, 0		; Push 0 for absolute
+	PUSH	BC
+	LD	IY, (_arg)	; FCB
+	LD	C, (IY + 32)	; Pull the offset out of the FCB
+	LD	B, (IY + 12)	; This is in records (128 bytes)
+				; And may overflow 2^16 bytes
+	XOR	A
+	SLA	C		; C x 2, into carry
+	RL	B		; B x 2 picking up carry from C
+	RLA			; A x 2 picking up carry from B - now in 64's
+	SLA	C
+	RL	B
+	RLA			; now in 32's
+	SLA	C
+	RL	B
+	RLA			; now in 16's
+	SLA	C
+	RL	B
+	RLA			; now in 8's
+	SLA	C
+	RL	B
+	RLA			; now in 4's
+	SLA	C
+	RL	B
+	RLA			; now in 2's
+	SLA	C
+	RL	B
+	RLA			; now in bytes
+	LD	(LSeekData), BC	; low bits
+	LD	(LSeekData + 2), A	; high bit (top byte already clear)
+	LD	BC, LSeekData	; push pointer
+	PUSH	BC
+	LD	HL, (curFil)
 	PUSH	HL
-	LD	HL,9		;     UZI Seek Fcn #
+	LD	HL, 9		; _lseek()
 	PUSH	HL
-	RST	30H		;      Execute!
-	POP	BC
+	RST	30H		; Syscall
+	POP	BC		; Recover stack
 	POP	BC
 	POP	BC
 	POP	BC
@@ -1530,6 +1539,8 @@ dmaSav:	DEFW	0		; Temp storage of current DMA Address
 srchFD:	DEFW	0		; File Descriptor for Searches
 char:	DEFB	' '		; Byte storage for Conin/Conout
 cnt:	DEFW	0		; Count of waiting keys
+LSeekData:	DEFW	0	; Used for _lseek() syscalls
+		DEFW	0
 ttTermios:
 	DEFS	20		; Working TTY Port Settings
 ttTermios0:
