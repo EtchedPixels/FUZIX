@@ -286,7 +286,11 @@ _fd765_cmd3:	call _fd765_intwait
 		jr fd765_cmdop
 
 ;
-;	Needs to land in common memory
+;	Where to put this ? As we may flip between processes including high
+;	pages it is not clear where this data belongs. For now keep it in
+;	common. Swap + banked raises some architectural issues (where is the
+;	stack going ????) so it may be better to address this in the core
+;	swap code instead. For non swap cases common will do fine for now.
 ;
 
 _fd765_buffer:	.dw 0		; Buffer pointer
