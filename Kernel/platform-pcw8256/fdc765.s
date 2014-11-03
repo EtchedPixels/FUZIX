@@ -25,6 +25,11 @@
 		FD_ST	.equ	0
 		FD_DT	.equ	1
 
+;
+;	Issue a command to the 765 floppy controller. On the Amstrad we
+;	apparently have to twiddle our thumbs between bytes to keep the
+;	controller happy
+;
 fd765_sendcmd:
 		in a, (FD_ST)
 		add a, a
@@ -37,11 +42,20 @@ fd765_sendcmd:
 		ex (sp), hl
 		jr nz, fd765_sendcmd		; next byte ?
 		ret
+;
+;	Mid command send the controller said it was not expecting more
+;	command bytes. This means we screwed up
+;
 fd765_sendabort:
 		or a				; NZ
 		; FIXME
 		ret
 
+;
+;	Get the controller status int fd765_statbuf. Each command returns
+;	a series of status bytes. As with commands we have to collect the
+;	status data with pauses between bytes
+;
 fd765_status:
 		ld hl, #_fd765_statbuf
 fd765_status_1:
@@ -56,7 +70,10 @@ fd765_status_1:
 		ex (sp), hl
 		ex (sp), hl
 		jr fd765_status_1
-
+;
+;	The status bytes are all sent. Return with HL (and A) holding the
+;	first status byte
+;
 fd765_status_a:
 		call fd765_status
 		ld h, #0
@@ -67,11 +84,20 @@ fd765_status_a:
 ;
 ;	We rely on this exiting with C = FD_DT
 ;
+;	General trick, we load B with the command length and C with the
+;	FD_DT register in one go
+;
 _fd765_intwait:
 		ld bc, #1 * 256 + FD_DT		; send SENSE INTERRUPT STATUS
+		;
+		;	Check what is pending on the interrupt side
+		;
 		in a, (0xF8)
 		bit 5, a
 		ret z				; wait for the 765 int to go off
+		;
+		;	Send the sense command, get the status back
+		;
 		ld hl, #fd765_sense		; a suitable 0x08 in the code
 		call fd765_sendcmd
 		call fd765_status_a
@@ -90,6 +116,12 @@ fd765_wait_1:	ex (sp), hl
 		djnz fd765_wait
 		ret
 
+;
+;	Block transfer bytes from the controller. We play some cute games
+;	with flags in order to keep this loop tight. We do *not* have a lot
+;	of time here because the bytes flow from the FDC to us at media head
+;	speed and if we miss one we lose.
+;
 ;		C points at FD_DT
 fd765_xfer_in:
 		in a, (FD_ST)
@@ -112,6 +144,12 @@ fd765_xfer_error:
 		or a				; NZ
 		; FIXME
 		ret
+;
+;	We enter the block transfer loop here. The first time around
+;	the loop we spin until a byte is ready and then disable interrupts
+;	before reading the bytes. We don't re-enable IRQs that is up to
+;	our caller.
+;
 fd765_xfer_indi:
 		in a, (FD_ST)
 		add a
@@ -119,6 +157,12 @@ fd765_xfer_indi:
 		di
 		jr fd765_xfer_in2
 
+;
+;	Block transfer out. As with a block transfer from the controller we
+;	have to keep up so must do the transfer with interrupts off. Other
+;	that the direction this works the same as input. In fact if we were
+;	sure this wasn't ever going to end up in ROM we could self modify
+;
 ;		C points at FD_DT
 fd765_xfer_out:
 		in a, (FD_ST)
@@ -127,7 +171,7 @@ fd765_xfer_out:
 fd765_xfer_out2:
 		add a
 		jp p, fd765_xfer_error		; bit 5 clear (short data ???)
-		ini				; transfer a byte
+		outi				; transfer a byte
 		jr nz, fd765_xfer_in		; next byte
 		dec e
 		jr nz, fd765_xfer_in
@@ -145,17 +189,31 @@ fd765_xfer_outdi:
 		di
 		jr fd765_xfer_out2
 
+;
+;	Read a disc sector.
+;
 _fd765_read_sector:
 		ld a, i
 		push af
 		ld a, (_fd765_user)
 		or a
 		jr z, read_kern
+;
+;	FIXME: this isn't sufficient for swap because of the fact we
+;	may be swapping over the 48K boundary mark
+;
+;	Plus this is wrong as we need to pass HL = p->page of the task!
+;
 		call map_process_always
 read_kern:
 		ld a, #6
 		out (0xf8), a
 		call _fd765_intwait		; wait for controller
+		;
+		;	Send the rw_data command. The command has been
+		;	modified by the caller to be the right read/write
+		;	for the right track/sector
+		;
 		ld b, #9
 		ld hl, #_fd765_rw_data
 		call fd765_sendcmd
@@ -180,12 +238,19 @@ read_failed:
 		ld hl, #-1
 		jr read_out
 
+;
+;	Write a sector. Very similiar to reading a sector and could be
+;	be self modifying to save space.
+;
 _fd765_write_sector:
 		ld a, i
 		push af
 		ld a, (_fd765_user)
 		or a
 		jr z, write_kern
+;
+;	FIXME: as per read.
+;
 		call map_process_always
 write_kern:
 		ld a, #6
@@ -245,4 +310,3 @@ _fd765_cmdbuf:	.db 0x0F
 		.db 0
 _fd765_statbuf:
 		.ds 8
-
