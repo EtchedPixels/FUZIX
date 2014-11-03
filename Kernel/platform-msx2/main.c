@@ -25,10 +25,12 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i = /*FIXME*/ 16; /* in 16K banks */
-    /* Add all the RAM, except 0,1,2 , which is the kernel data/bss, add 3
+    /* Add all the RAM, except 0,1,2,3 which is the kernel data/bss, add 0
        last to become the common for init */
-    while (i > 0)
+    while (i > 3)
         pagemap_add(i--);
+    /* Init will pick this up correctly as its common */
+    pagemap_add(0);
 }
 
 void map_init(void)

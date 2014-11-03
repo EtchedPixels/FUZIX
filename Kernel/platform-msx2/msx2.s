@@ -159,14 +159,13 @@ map_process:
 ;
 map_kernel:
 	    push af
-	    xor a
+	    ld a, #3
 	    out (0xFC), a
-	    inc a
+	    dec a
 	    out (0xFD), a
-	    inc a
+	    dec a
 	    out (0xFE), a
-	    inc a
-	    out (0xFF), a
+	    ; and 0xFF is managed by task switches
 	    pop af
             ret
 map_process_2:
