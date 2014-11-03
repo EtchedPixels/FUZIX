@@ -1,3 +1,64 @@
+How To Build The Fuzix Kernel
+
+This assumes you are running Linux or *BSD or similar. For SDCC at least
+this recipe should work on Mac.
+
+- Ensure you have the correct compiler and tools installed
+
+  Z80:
+	SDCC 3.4 for the kernel
+	zmac for some of the boot blocks (making these build with sdasz80
+	would be a welcome contribution)
+
+  6502:
+	CC65 (You will need to build from the current source tree
+	at this point or the compiler will fail to build the code)
+
+  6809:
+	gcc-4.6.4 for m6809
+	lwtools
+
+
+- Set TARGET amd CPU in the top level Makefile
+
+- For SDCC pick one of the 3 lines with different allocs-per-node. 30,000
+  is a good development number, 200000 takes a while but produces better
+  code while 1000000 takes hours but produces a fair bit smaller binary
+
+- The path to the SDCC library is hardcoded in platform/*.lnk. That also
+  wants fixing. It expects it in /usr/share/sdcc/lib/z80
+
+- make will build an uzi.bin (will change to fuzix.bin when I get a round
+  tuit)
+
+- See the platform/README for further instructions on assembling a final
+  image. Usually you need to build a file system, dd the kernel into the
+  right spot so it occupies the end of the media and then dd the boot block
+  on the front.
+
+For testing:
+
+NC100 - includes the bits to run under nc100emu
+
+PCW8256 - boots under Joyce
+
+SocZ80 - real hardware only
+
+Z80Pack - Use Z80Pack 1.24 or higher
+
+
+Kernel Image Notes
+
+The Z80 image is usually built as an SDCC ihx file. SDCC output is intended for
+ROM use so the binman tool copies the INITIIALIZER segment to INITIALIZED, then
+discards the INITIALIZER. It packs the COMMON segment where INITIALIZER was and
+the FONT segment if present after it. crt0.s for the platform boot then copies
+those up to their correct high memory addresses.
+
+It doesn't have to work this way. The test px4plus code orders things
+differently and binman knows how to handle a few combinations of needs.
+
+
 --------------------------- Historical README files ------------------------------
 
        UZI180 - Unix Z80 Implementation for the Z-180 (UZI180)
