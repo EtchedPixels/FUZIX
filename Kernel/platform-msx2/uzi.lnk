@@ -1,0 +1,39 @@
+-mwxuy
+-i uzi.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF000
+-k /usr/share/sdcc/lib/z80
+-l z80
+platform-msx2/crt0.rel
+platform-msx2/commonmem.rel
+platform-msx2/msx2.rel
+platform-msx2/vdp.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-msx2/tricks.rel
+platform-msx2/main.rel
+timer.rel
+kdata.rel
+platform-msx2/devtty.rel
+platform-msx2/devfd.rel
+platform-msx2/devhd.rel
+platform-msx2/devlpr.rel
+platform-msx2/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+mm.rel
+swap.rel
+bank16k.rel
+tty.rel
+vt.rel
+devsys.rel
+usermem.rel
+usermem_std-z80.rel
+-e

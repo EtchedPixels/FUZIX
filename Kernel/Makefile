@@ -1,6 +1,6 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-spec3 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-export TARGET= nc100
+export TARGET= msx2
 export CPU = z80
 #export TARGET = 6809test
 #export CPU = 6809
