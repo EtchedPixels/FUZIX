@@ -87,7 +87,7 @@ OBJS  = $(COBJS) $(AOBJS)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(ASRCS:.s=.rst)
 
-all:	uzi.bin
+all:	fuzix.bin
 
 .SUFFIXES:		# delete the default suffixes
 .SUFFIXES: .c .s .rel
@@ -136,13 +136,13 @@ ifeq ($(CPU), z80)
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -f platform-$(TARGET)/uzi.lnk
 	
-uzi.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
+fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
 	tools/analysemap <uzi.map
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <uzi.map |sort -nr >hogs.txt
 	head -5 hogs.txt
 	makebin -s 65536 -p uzi.ihx >uzi.tmp
-	tools/binman uzi.tmp uzi.map uzi.bin
+	tools/binman uzi.tmp uzi.map fuzix.bin
 	$(MAKE) -C platform-$(TARGET) image
 else
 uzi.bin: target $(OBJS)
@@ -150,7 +150,7 @@ uzi.bin: target $(OBJS)
 endif
 
 clean:
-	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 
 clean-all: clean
