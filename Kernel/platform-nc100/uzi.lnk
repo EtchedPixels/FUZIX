@@ -2,7 +2,6 @@
 -i uzi.ihx
 -b _CODE=0x0
 -b _COMMONMEM=0xF000
--k /usr/share/sdcc/lib/z80
 -l z80
 platform-nc100/crt0.rel
 platform-nc100/commonmem.rel

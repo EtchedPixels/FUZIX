@@ -25,6 +25,10 @@ export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff
 export BINEXT = .rel
+#
+#	Adjust this as needed for your platform (or contribute a script
+#	to look in the usual places !)
+#
 ifeq ($(UNAME_S),Darwin)
 export LIBZ80=/usr/local/share/sdcc/lib/z80
 else

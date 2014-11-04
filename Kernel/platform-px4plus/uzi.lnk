@@ -6,7 +6,6 @@
 -b _DATA=0xE000
 -b _FONT=0x5000
 -b _INITIALIZER=0x3000
--k /usr/share/sdcc/lib/z80
 -l z80
 platform-px4plus/crt0.rel
 platform-px4plus/commonmem.rel
