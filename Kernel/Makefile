@@ -9,6 +9,8 @@ export CPU = z80
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
 
+UNAME_S := $(shell uname -s)
+
 ifeq ($(CPU),z80)
 export CROSS_AS=sdasz80
 export CROSS_LD=sdldz80
@@ -23,6 +25,11 @@ export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff
 export BINEXT = .rel
+ifeq ($(UNAME_S),Darwin)
+export LIBZ80=/usr/local/share/sdcc/lib/z80
+else
+export LIBZ80=/usr/share/sdcc/lib/z80
+endif
 else ifeq ($(CPU),6502)
 export CROSS_AS=ca65
 export CROSS_LD=cl65
@@ -134,7 +141,7 @@ font4x6.c: tools/make4x6
 
 ifeq ($(CPU), z80)
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
-	$(CROSS_LD) -n -f platform-$(TARGET)/uzi.lnk
+	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
 	
 fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
 	tools/analysemap <uzi.map
