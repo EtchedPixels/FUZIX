@@ -25,6 +25,8 @@
             ; imported symbols
             .globl _ramsize
             .globl _procmem
+	    .globl _msxmaps
+
             .globl _tty_inproc
             .globl unix_syscall_entry
             .globl trap_illegal
@@ -37,6 +39,10 @@
             .globl outnewline
             .globl outstring
             .globl outstringhex
+
+	    ; stuff to save
+	    .globl _vdpport
+	    .globl _infobits
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -78,6 +84,15 @@ init_early:
             ret
 
 init_hardware:
+	    ; save the useful bits of low memory first
+	    ld hl, (0x2B)
+	    ld (_infobits), a
+	    ld a, (0x06)
+	    ld (_vdpport), a
+
+	    ; Size RAM
+	    call size_memory
+
             ; set up interrupt vectors for the kernel mapped low page and
             ; data area
             ld hl, #0
@@ -95,6 +110,70 @@ init_hardware:
 
             .area _COMMONMEM
 
+;
+;	Called with interrupts off. See if we can work out how much RAM
+;	there is
+;
+size_memory:
+	    ld bc, #0x04FC		; bank 4, port 0xFC (MSX mapper)
+	    ld hl, #8			; good a target as any
+	    ld (hl), #0xAA		; we know there is a low page!
+ramscan_2:
+	    ld a, #0xAA
+ramscan:
+	    out (c), b
+	    cp (hl)			; is it 0xAA
+	    jr z, ramwrapped	; we've wrapped (hopefully)
+	    ld (hl), a
+	    cp (hl)
+	    jr nz, ramerror		; ermm.. help ???
+	    inc b
+	    jr nz, ramscan
+	    jr ramerror		; not an error we *could* have 256 pages!
+ramwrapped:
+	    ld a, #3
+	    out (c), a
+	    ld a, (hl)
+	    ld (hl), #0x55
+	    out (c), b
+	    ld a, (hl)
+	    cp #0x55
+	    jr z, ramerror		; Cool we wrapped both change to 0x55
+	    ; Fluke RAM was 0xAA already
+	    ld a, #3
+	    out (c), a
+	    ld a, #0xAA
+	    ld (hl), a		; put the marker back as 0xAA
+	    inc b
+	    jr nz, ramscan_2		; Continue our memory walk
+ramerror:   				; Ok so there are 256-b pages of 16K)
+	    ld a,#3
+	    out (c), a		; always put page 0 back
+
+	    ;
+	    ;	Address map back to normal so can update kernel data
+	    ;
+
+	    ld l, b
+	    ld h, #0
+	    ld a, l
+	    or a			; zero count -> 256 pages
+	    jr nz, pageslt256
+	    inc h
+pageslt256:
+	    ld (_msxmaps), hl
+	    add hl, hl			; x 16 for Kb
+	    add hl, hl
+	    add hl, hl
+	    add hl, hl
+
+	    ; set system RAM size in KB
+	    ld (_ramsize), hl
+	    ld de, #0xFFC0
+	    add hl, de		; subtract 48K for the kernel
+	    ld (_procmem), hl
+	    ret
+
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
 	    ; will exit with interrupts off
@@ -108,6 +187,7 @@ _program_vectors:
 	    call map_process
 
             ; write zeroes across all vectors
+	    ; on MSX this is probably the wrong thing to do!!! FIXME
             ld hl, #0
             ld de, #1
             ld bc, #0x007f ; program first 0x80 bytes only

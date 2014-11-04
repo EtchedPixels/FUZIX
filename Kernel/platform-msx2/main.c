@@ -4,7 +4,10 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint16_t vdpport = 0x98;
+/* These are set by the msx startup asm code */
+uint16_t vdpport;
+uint16_t infobits;
+uint16_t msxmaps;
 
 void platform_idle(void)
 {
@@ -24,7 +27,7 @@ void do_beep(void)
 
 void pagemap_init(void)
 {
-    int i = /*FIXME*/ 16; /* in 16K banks */
+    int i = msxmaps - 1;
     /* Add all the RAM, except 0,1,2,3 which is the kernel data/bss, add 0
        last to become the common for init */
     while (i > 3)
