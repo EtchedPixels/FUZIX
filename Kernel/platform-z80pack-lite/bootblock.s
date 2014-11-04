@@ -8,73 +8,79 @@
 ;	the OS on tracks 60+, which means we can put a file system in the
 ;	usual place providing its a bit smaller than a whole disc.
 ;
-;
-;	assemble me with zmac
-;
-		.org	0
+            .area boot (ABS)
+            .org 0
 
-start:		jr diskload
+start:      jr diskload
 
-rootdev:	.dw 0			; patched by hand
-swapdev:	.dw 0			; ditto
-		.dw 0			; spare
+rootdev:    .dw 0               ; patched by hand
+swapdev:    .dw 0               ; ditto
+            .dw 0               ; spare
 
-progress:	.db '/', '-', '\\', '|'
+progress:   .ascii '/'
+            .ascii '-'
+            .ascii '\\'
+            .ascii '|'
 
-diskload:	di
-		ld sp, stack
-		ld hl, 0x88
-		exx
-		xor a
-		ld h, a
-		ld b, a
-		out (17), a		; sector high always 0
-		out (10), a		; drive always 0
-		ld a, 59		; start on track 60
-		out (11), a
-		exx
-		ld c, 15		; number of tracks to load (48Kish)
-load_tracks:	in a, (11)
-		inc a			; track
-		out (11), a
-		xor a
-		out (12), a
-		ld b, 26		; sectors
-load_sectors:	exx
-		ld a, b
-		and 3
-		add progress
-		ld l, a
-		ld a, (hl)
-		out (01), a
-		ld a, 8
-		out (01), a
-		inc b
-		exx
+diskload:
+            di
+            ld sp, #stack
+            ld hl, #0x88
+            exx
+            xor a
+            ld h, a
+            ld b, a
+            out (#17), a        ; sector high always 0
+            out (#10), a        ; drive always 0
+            ld a, #59           ; start on track 60
+            out (#11), a
+            exx
+            ld c, #15           ; number of tracks to load (48Kish)
+load_tracks:
+            in a, (#11)
+            inc a               ; track
+            out (#11), a
+            xor a
+            out (#12), a
+            ld b, #26           ; sectors
+load_sectors:
+            exx
+            ld a, b
+            and #3
+            add #progress
+            ld l, a
+            ld a, (hl)
+            out (#01), a
+            ld a, #8
+            out (#01), a
+            inc b
+            exx
 
-		in a, (12)
-		inc a
-		out (12), a		; sector
-		ld a, l
-		out (15), a		; dma low
-		ld a, h
-		out (16), a		; dma high
-		xor a			; read
-		out (13), a		; go
-		in a, (14)		; status
-		ld de, 128
-		add hl, de
-		djnz load_sectors	; 26 sectors = 3328 bytes
-		dec c
-		jr nz, load_tracks
-		ld a, 0xc9		; to help debug
-		ld (start), a
-		ld a, 13
-		out (1), a
-		ld a, 10
-		out (1), a
-		jp 0x88
+            in a, (#12)
+            inc a
+            out (#12), a        ; sector
+            ld a, l
+            out (#15), a        ; dma low
+            ld a, h
+            out (#16), a        ; dma high
+            xor a               ; read
+            out (#13), a        ; go
+            in a, (#14)         ; status
+            ld de, #128
+            add hl, de
+            djnz load_sectors   ; 26 sectors = 3328 bytes
+            dec c
+            jr nz, load_tracks
+            ld a, #0xc9         ; to help debug
+            ld (start), a
+            ld a, #13
+            out (#1), a
+            ld a, #10
+            out (#1), a
+            jp 0x88
 
-		.ds 25
+            .ds #25
 stack:
-		.db 0xff
+            .db #0xff
+
+            .area _DATA         ; added to avoid linker warning
