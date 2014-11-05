@@ -99,7 +99,7 @@ Platforms
 =========
 * Z80Pack - used as a dev and test environment for both large swapping
 	mulitprocess and for small single tasking
-Amstrad NC100 - real hardware sanity check
+* Amstrad NC100 - real hardware sanity check
 
 Various other platforms are partly filled out to sanity check assumptions
 and start making progress on them. The main need there is now to tackle all
