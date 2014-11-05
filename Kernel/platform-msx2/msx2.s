@@ -94,8 +94,8 @@ init_hardware:
 	    ; save the useful bits of low memory first
 	    ld hl, (0x2B)
 	    ld (_infobits), a
-	    ld a, (0x07)
-	    ld (_vdpport), a
+;	    ld a, (0x07)
+;	    ld (_vdpport), a
 
 	    ; Size RAM
 	    call size_memory
@@ -110,12 +110,15 @@ init_hardware:
 	    ld a, #'Z'
 	    out (0x2F), a
 
-            im 1 			; set CPU interrupt mode
-	    call _vtinit		; init the console video
+	    ; Program the video engine
+	    call vdpinit
 
 	    ld a, #'I'
 	    out (0x2F), a
-	    call  vdpinit
+
+            im 1 			; set CPU interrupt mode
+	    call _vtinit		; init the console video
+
 	    ld a, #'X'
 	    out (0x2F), a
             ret

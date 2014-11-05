@@ -22,8 +22,6 @@
 ;	Register write value E to register A
 ;
 vdpout:	    ld bc, (_vdpport)
-	    ld bc, #0x98 ; hardcode for the moment
-	    inc c			; Write port
 	    out (c), e			; Write the data
 	    out (c), d			; and then the register | 0x80
 	    ret
@@ -37,13 +35,14 @@ vdpinit:    ld de, #0x8004		; M4 }
 	    call vdpout
 	    ld de, #0x8200		; characters at VRAM 0
 	    call vdpout
-	    ld de, #0x8320		; blink at 0x800
+	    ld de, #0x8320		; blink is unused
+	    call vdpout
 	    ld de, #0x8402		; font at 0x1000
 	    call vdpout
-	    ld de, #0x870F		; white text on black
+	    ld de, #0x87F1		; white text on black
 	    call vdpout
 	    ; FIXME: read reg 9 and set bit 7 to 0
-	    ld de, #0x8C00		; vanish for blink
+	    ld de, #0x8CF1		; blink
 	    call vdpout
 	    ld de, #0x8D33		; blink time
 	    call vdpout
@@ -55,6 +54,35 @@ vdpinit:    ld de, #0x8004		; M4 }
 	    call vdpout
 	    ; R45 - banking off ???
 	    ; Wipe ram ?
+
+;
+;	Move the font up
+;
+	    ld hl, #0x5000		; 0x4000 (write) + 0x1000 target
+	    ld bc, (_vdpport)
+	    exx
+	    ld hl, #0x0800		; Font in 40x25
+	    ld bc, (_vdpport)
+	    ld de, #2048		; 2K to copy
+vdpfontcp:
+	    out (c), l
+	    out (c), h
+	    dec c
+	    in a, (c)
+	    inc c
+	    inc hl
+	    exx
+	    out (c), l
+	    out (c), h
+	    dec c
+	    out (c), a
+	    inc c
+	    inc hl
+	    exx
+	    dec de
+	    ld a, d
+	    or e
+	    jr nz, vdpfontcp
             ret
 
 ;
@@ -75,11 +103,11 @@ _videopos:	; turn E=Y D=X into HL = addr
 	    push hl
 	    add hl, hl
 	    add hl, hl			; x 64
-	    ld a, e
+	    ld a, d
 	    pop de
 	    add hl, de			; x 80
-	    ld l, a
-	    ld h, b			; 0 for read 0x40 for write
+	    ld e, a
+	    ld d, b			; 0 for read 0x40 for write
 	    add hl, de			; + X
 	    ret
 ;
@@ -98,6 +126,7 @@ plotit:
 	    ld bc, (_vdpport)
 	    out (c), l			; address
 	    out (c), h			; address | 0x40
+	    dec c
 	    out (c), a			; character
 	    ret
 
@@ -117,6 +146,7 @@ scrollbuf:   .ds		80
 ;	We don't yet use attributes...
 ;
 _scroll_down:
+	    ret
 	    ld b, #23
 	    ld de, #0x730	; start of bottom line
 upline:
@@ -125,13 +155,16 @@ upline:
 	    ld hl, #scrollbuf
 	    out (c), e		; our position
 	    out (c), d
+	    dec c
 	    inir		; safe on MSX2 but not MSX1
+	    inc c
 	    ld hl, #0x4080	; go down one line and into write mode
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
 	    ld b, #0x80
 	    ld hl, #scrollbuf
+	    dec c
 	    otir		; video ptr is to the line below so keep going
 	    pop bc		; recover line counter
 	    ld hl, #0xffb0
@@ -141,6 +174,7 @@ upline:
 	    ret
 
 _scroll_up:
+	    ret
 	    ld b, #23
 	    ld de, #80		; start of second line
 downline:   push bc
@@ -148,7 +182,9 @@ downline:   push bc
 	    ld hl, #scrollbuf
 	    out (c), e
 	    out (c), d
+	    dec c
 	    inir
+	    inc c
 	    ld hl, #0x3FB0	; up 80 bytes in the low 12 bits, add 0x40
 				; for write ( we will carry one into the top
 				; nybble)
@@ -172,6 +208,7 @@ _clear_lines:
 	    push hl
 	    ld c, d
 	    ld d, #0
+	    ld b, #0x40
 	    call _videopos
 	    ld e, c
 	    ld bc, (_vdpport)
@@ -180,6 +217,7 @@ _clear_lines:
 				; Safe on MSX 2 to loop the data with IRQ on
 				; but *not* on MSX 1
             ld a, #' '
+	    dec c
 l2:	    ld b, #80    	
 l1:	    out (c), a		; Inner loop clears a line, outer counts
 				; need 20 clocks between writes. DJNZ is 13,
@@ -196,6 +234,7 @@ _clear_across:
 	    push bc
 	    push de
 	    push hl
+	    ld b, #0x40
 	    call _videopos
 	    ld a, c
 	    ld bc, (_vdpport)
@@ -203,6 +242,7 @@ _clear_across:
 	    out (c), h
 	    ld b, a
             ld a, #' '
+	    dec c
 l3:	    out (c), a
             djnz l1
 	    ret

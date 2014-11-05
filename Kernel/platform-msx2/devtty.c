@@ -40,10 +40,11 @@ bool tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
-	if (minor == 1) {
+//
+//	if (minor == 1) {
 		vtoutput(&c, 1);
-		return;
-	}
+//		return;
+//	}
 	tty_debug2 = c;	
 }
 
