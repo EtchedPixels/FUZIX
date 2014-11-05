@@ -9,8 +9,9 @@
 ;	usual place providing its a bit smaller than a whole disc.
 ;
 ;
-;	assemble me with zmac
+;	assemble with sdasz80
 ;
+		.area	ASEG(ABS)
 		.org	0
 
 start:		jr diskload
@@ -19,35 +20,35 @@ rootdev:	.dw 0			; patched by hand
 swapdev:	.dw 0			; ditto
 		.dw 0			; spare
 
-progress:	.db '/', '-', '\\', '|'
+progress:	.db '/', '-', '\', '|'
 
 diskload:	di
-		ld sp, stack
-		ld hl, 0x88
+		ld sp, #stack
+		ld hl, #0x88
 		exx
 		xor a
 		ld h, a
 		ld b, a
 		out (17), a		; sector high always 0
 		out (10), a		; drive always 0
-		ld a, 59		; start on track 60
+		ld a, #59		; start on track 60
 		out (11), a
 		exx
-		ld c, 15		; number of tracks to load (48Kish)
+		ld c, #15		; number of tracks to load (48Kish)
 load_tracks:	in a, (11)
 		inc a			; track
 		out (11), a
 		xor a
 		out (12), a
-		ld b, 26		; sectors
+		ld b, #26		; sectors
 load_sectors:	exx
 		ld a, b
-		and 3
-		add progress
+		and #3
+		add #progress
 		ld l, a
 		ld a, (hl)
 		out (01), a
-		ld a, 8
+		ld a, #8
 		out (01), a
 		inc b
 		exx
@@ -62,16 +63,16 @@ load_sectors:	exx
 		xor a			; read
 		out (13), a		; go
 		in a, (14)		; status
-		ld de, 128
+		ld de, #128
 		add hl, de
 		djnz load_sectors	; 26 sectors = 3328 bytes
 		dec c
 		jr nz, load_tracks
-		ld a, 0xc9		; to help debug
+		ld a, #0xc9		; to help debug
 		ld (start), a
-		ld a, 13
+		ld a, #13
 		out (1), a
-		ld a, 10
+		ld a, #10
 		out (1), a
 		jp 0x88
 

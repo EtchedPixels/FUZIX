@@ -4,62 +4,63 @@
     ; This varies by platform so we really want to make this relocatable
     ; not linked per platform somehow
     ;
-    .org 0xf000
+	.area	ASEG(ABS)
+	.org	0xf000
 startaddr:
 
-fcb       EQU     005CH           ; Default CP/M FCB
-buff      EQU     0080H           ; Default CP/M Buffer
-BS        EQU     08H             ; ASCII BackSpace
-TAB       EQU     09H             ; ASCII Horizontal Tab
-LF        EQU     0AH             ; ASCII Line Feed
-CR        EQU     0DH             ; ASCII Carriage Return
-ESC       EQU     1BH             ; ASCII ESCape Char
+fcb 	.EQU	0x005C		; Default CP/M FCB
+buff	.EQU	0x0080		; Default CP/M Buffer
+BS	.EQU	0x08		; ASCII BackSpace
+TAB 	.EQU	0x09		; ASCII Horizontal Tab
+LF	.EQU	0x0A		; ASCII Line Feed
+CR	.EQU	0x0D		; ASCII Carriage Return
+ESC	.EQU	0x1B		; ASCII ESCape Char
 
-TCGETS	  EQU     1               ; Fuzix - get tty data
-TCSETS    EQU     2               ; Fuzix - set tty data
-TIOCINQ   EQU	  5		  ; Fuzix - characters pending
+TCGETS	.EQU	1		; Fuzix - get tty data
+TCSETS	.EQU	2		; Fuzix - set tty data
+TIOCINQ	.EQU	5		; Fuzix - characters pending
 
-STDIN     EQU     0               ; file descriptor value of keyboard
-STDOUT    EQU     1               ; file descriptor value of display
+STDIN	.EQU	0	; file descriptor value of keyboard
+STDOUT	.EQU	1	; file descriptor value of display
 
 ; Initialize both FCB entries to blank values
 
-EStart:	LD	HL,fcbDat	; Move initial FCB
+EStart:	LD	HL,#fcbDat	; Move initial FCB
 	PUSH	HL
-	LD	DE,fcb		;  into
-	LD	BC,16		;   position
+	LD	DE,#fcb		;  into
+	LD	BC,#16		;   position
 	LDIR
 	POP	HL
-	LD	C,16		;    init 2nd entry
+	LD	C,#16		;    init 2nd entry
 	LDIR
 
 ; Catenate argv[] elements into default buffer
 
 	POP	IX		; Skip argc
 	POP	IX		;  Get Ptr to argv[]
-	LD	DE,buff+1	; Pt to CP/M Dflt Buffer
-	LD	C,0		;  Cnt to 0
+	LD	DE,#buff+1	; Pt to CP/M Dflt Buffer
+	LD	C,#0		;  Cnt to 0
 	INC	IX		;   Skip Argv[0]
 	INC	IX
-Cold0:	LD	L,(IX+0)	; Get Ptr to Arg element
+Cold0:	LD	L, 0(IX)	; Get Ptr to Arg element
 	INC	IX
-	LD	H,(IX+0)
+	LD	H, 0(IX)
 	INC	IX
 	LD	A,H
 	OR	L		; End?
 	JR	Z,Cold2		; ..exit if Yes
-	LD	A,' '		; Add space separator for args
+	LD	A,#' '		; Add space separator for args
 	LD	(DE),A
 	INC	DE
 	INC	C		;   bump count
 Cold1:	LD	A,(HL)
 	OR	A		; End of string?
 	JR	Z,Cold0		; ..try next if Yes
-	CP	'a'		; ensure
+	CP	#'a'		; ensure
 	JR	C,NoCap		;  it
-	CP	'z'+1		;   is
+	CP	#'z'+1		;   is
 	JR	NC,NoCap	;    UCase
-	AND	5FH
+	AND	#0x5F
 NoCap:	LD	(DE),A		; Move a byte
 	INC	HL
 	INC	C		;   bump count
@@ -70,21 +71,21 @@ NoCap:	LD	(DE),A		; Move a byte
 Cold2:	XOR	A
 	LD	(DE),A		;   Null-terminate for safety
 
-	LD	HL,buff		; Pt to count loc'n in buff
+	LD	HL,#buff	; Pt to count loc'n in buff
 	LD	(HL),C		;  save total arg count
 	INC	HL		;   advance to 1st char
-	LD	DE,fcb+1
+	LD	DE,#fcb+1
 	CALL	FilNm		; Get Name/Typ in 1st FCB
 	OR	A		;  (set End flag)
-	LD	DE,fcb+17	;   (prepare)
+	LD	DE,#fcb+17	;   (prepare)
 	CALL	NZ,FilNm	;    Get Tame/Typ in 2nd FCB if present
 
-	LD	DE,dir
-	LD	B,128
+	LD	DE,#dir
+	LD	B,#128
 	CALL	ZeroDE		; Clear Directory Buffer
 
-	LD	HL,0
-	LD	(0003H),HL	; Clear IOBYTE and Default Drive/User
+	LD	HL,#0
+	LD	(0x0003),HL	; Clear IOBYTE and Default Drive/User
 
 	JP	__bios		; Go to Cold Start setup
 
@@ -94,39 +95,39 @@ FilNm:	LD	A,(HL)		; Get char
 	INC	HL		;   bump
 	OR	A		; End of String?
 	RET	Z
-	CP	' '		; "Whitespace"?
+	CP	#' '		; "Whitespace"?
 	JR	Z,FilNm0	; ..jump if Yes
-	CP	TAB
+	CP	#TAB
 	JR	NZ,FilNm1	; ..jump if No
 FilNm0:	DEC	C		; Count down total length
 	LD	A,C		;  (prepare)
 	JR	NZ,FilNm	; ..loop if Not End
 	RET			;  ..else Exit showing EOL
 
-FilNm1:	LD	B,8		; Set length of Name field
+FilNm1:	LD	B,#8		; Set length of Name field
 	PUSH	DE		;   save Ptr to Name[0]
 	CALL	FilFl0		;  Get Name
 	POP	DE		;   restore Ptr to Name
 	OR	A
 	RET	Z		; ..return if End-of-Line
-	CP	' '
+	CP	#' '
 	RET	Z		; ..return if separator
-	CP	'.'
+	CP	#'.'
 	JR	Z,FilNm2	; ..bypass char skip
 
 FilNm3:	LD	A,(HL)
 	INC	HL
 	OR	A
 	RET	Z		; Exit if End of Line
-	CP	' '
+	CP	#' '
 	RET	Z		;  or End of Field
-	CP	'.'
+	CP	#'.'
 	JR	NZ,FilNm3	; ..loop til End or period
 
 FilNm2:	LD	A,E
-	ADD	A,8		; Adjust FCB ptr to type field
+	ADD	A,#8		; Adjust FCB ptr to type field
 	LD	E,A
-	LD	B,3
+	LD	B,#3
 			;..fall thru to get next char..
 ; Move bytes from (HL) to (DE) for Count in C, Count in B or Ch in {' ','.',0}
 
@@ -134,9 +135,9 @@ FilFld:	LD	A,(HL)		; Get Char
 	INC	HL		;   bump ptr
 	OR	A		; End of String?
 	RET	Z		; ..return if Yes
-FilFl0:	CP	'.'		; Period?
+FilFl0:	CP	#'.'		; Period?
 	RET	Z
-	CP	' '		; Space?
+	CP	#' '		; Space?
 	RET	Z
 	LD	(DE),A		; Else Store byte
 	INC	DE		;   bump dest ptr
@@ -144,12 +145,12 @@ FilFl0:	CP	'.'		; Period?
 	LD	A,C		;  (prepare)
 	RET	Z		; .return End if Yes
 	DJNZ	FilFld		; ..loop til field counter ends
-	OR	0FFH		; Return flag
+	OR	#0x0FF		; Return flag
 	RET
 
-fcbDat:	DEFB	0
-	DEFM	'           '
-	DEFB	0,0,0,0
+fcbDat:	.db	0
+	.ascii	'           '
+	.db	0,0,0,0
 
 ;==========================================================
 ;     Resident Portion of Basic Disk Operating System
@@ -162,49 +163,49 @@ __bdos:	JP	_bdos0
 ;.....
 ; BDOS Function Dispatch Table
 
-fcnTbl:	defw	Fcn0		; Warm Boot
-	defw	Fcn1		; ConIn
-	defw	Fcn2		; ConOut
-	defw	Fcn3		; Reader In
-	defw	Fcn4		; Punch Out
-	defw	Fcn5		; List Output
-	defw	Fcn6		; Direct Console IO
-	defw	Fcn7		; Get IOBYTE
-	defw	Fcn8		; Set IOBYTE
-	defw	Fcn9		; WrBuf
-	defw	Fcn10		; RdBuf
-	defw	Fcn11		; Get Console Status
-	defw	Fcn12		; Return Version #
-	defw	Fcn13		; Reset Disk Drive
-	defw	Fcn14		; Select Disk
-	defw	Fcn15		; Open File
-	defw	Fcn16		; Close File
-	defw	Fcn17		; Search First Occurance
-	defw	Fcn18		; Search Next Occurance
-	defw	Fcn19		; Delete File
-	defw	Fcn20		; Read File
-	defw	Fcn21		; Write File
-	defw	Fcn22		; Create File
-	defw	Fcn23		; Rename File
-	defw	Fcn24		; Return Disk Login Vector
-	defw	Fcn25		; Return Current Disk
-	defw	Fcn26		; Set DMA
-	defw	Fcn27		; Get Allocation Map
-	defw	Fcn28		; Write Protect Disk
-	defw	Fcn29		; Get R/O Vector Address
-	defw	Fcn30		; Set File Attributes
-	defw	Fcn31		; Get Disk Parameter Table Address
-	defw	Fcn32		; Set/Get User Code
-	defw	Fcn33		; Read Random
-	defw	Fcn34		; Write Random
-	defw	Fcn35		; Compute File Size
-	defw	Fcn36		; Set Random Record Field in FCB
-;	defw	Fcn37		; Reset Multiple Drives
-;	defw	null		; (Fcn38 not implemented)
-;	defw	Fcn39		; Get Fixed Disk Vector
-;	defw	Fcn40		; Write Random
-TBLSZ	 EQU  $-fcnTbl
-MAXFCN	 EQU  TBLSZ/2
+fcnTbl:	.dw	Fcn0		; Warm Boot
+	.dw	Fcn1		; ConIn
+	.dw	Fcn2		; ConOut
+	.dw	Fcn3		; Reader In
+	.dw	Fcn4		; Punch Out
+	.dw	Fcn5		; List Output
+	.dw	Fcn6		; Direct Console IO
+	.dw	Fcn7		; Get IOBYTE
+	.dw	Fcn8		; Set IOBYTE
+	.dw	Fcn9		; WrBuf
+	.dw	Fcn10		; RdBuf
+	.dw	Fcn11		; Get Console Status
+	.dw	Fcn12		; Return Version #
+	.dw	Fcn13		; Reset Disk Drive
+	.dw	Fcn14		; Select Disk
+	.dw	Fcn15		; Open File
+	.dw	Fcn16		; Close File
+	.dw	Fcn17		; Search First Occurance
+	.dw	Fcn18		; Search Next Occurance
+	.dw	Fcn19		; Delete File
+	.dw	Fcn20		; Read File
+	.dw	Fcn21		; Write File
+	.dw	Fcn22		; Create File
+	.dw	Fcn23		; Rename File
+	.dw	Fcn24		; Return Disk Login Vector
+	.dw	Fcn25		; Return Current Disk
+	.dw	Fcn26		; Set DMA
+	.dw	Fcn27		; Get Allocation Map
+	.dw	Fcn28		; Write Protect Disk
+	.dw	Fcn29		; Get R/O Vector Address
+	.dw	Fcn30		; Set File Attributes
+	.dw	Fcn31		; Get Disk Parameter Table Address
+	.dw	Fcn32		; Set/Get User Code
+	.dw	Fcn33		; Read Random
+	.dw	Fcn34		; Write Random
+	.dw	Fcn35		; Compute File Size
+	.dw	Fcn36		; Set Random Record Field in FCB
+;	.dw	Fcn37		; Reset Multiple Drives
+;	.dw	null		; (Fcn38 not implemented)
+;	.dw	Fcn39		; Get Fixed Disk Vector
+;	.dw	Fcn40		; Write Random
+TBLSZ	 .EQU	.-fcnTbl
+MAXFCN	 .EQU	TBLSZ/2
 
 ;------------------------------------------------
 ; bdos0()
@@ -213,18 +214,18 @@ MAXFCN	 EQU  TBLSZ/2
 _bdos0:	LD	(_arg),DE
 	LD	A,C
 	LD	(_call),A
-	CP	MAXFCN		; Legal Function?
-	LD	A,0FFH		;  Prepare Error code
+	CP	#MAXFCN		; Legal Function?
+	LD	A,#0xFF		;  Prepare Error code
 	LD	L,A
 	RET	NC		; ..return if Illegal
 	LD	(_userSP),SP
-	LD	SP,_Bstack
+	LD	SP,#_Bstack
 	PUSH	IX
 	PUSH	IY
-	LD	B,0		; Fcn # to Word
-	LD	HL,_bdosX
+	LD	B,#0		; Fcn # to Word
+	LD	HL,#_bdosX
 	PUSH	HL		;  (ret Addr to Stack)
-	LD	HL,fcnTbl
+	LD	HL,#fcnTbl
 	ADD	HL,BC
 	ADD	HL,BC		;   Pt to Fcn entry in Table
 	LD	A,(HL)
@@ -260,7 +261,7 @@ Fcn0:	JP	WBoot
 ;                 else return (0);
 
 Fcn6:	LD	A,E		; _arg in DE
-	CP	0FEH		; < 0FE ?
+	CP	#0x0FE		; < 0FE ?
 	JR	C,Fcn2		; ..jump if Write if Yes
 	PUSH	AF
 	CALL	BConSt		; Else get Console Status
@@ -279,11 +280,11 @@ Fcn6:	LD	A,E		; _arg in DE
 ;                 return (c);
 
 Fcn1:	CALL	BConIn		; Get Char from Bios
-Fcn1A:	LD	H,0
-	CP	0AH		; \n?
+Fcn1A:	LD	H,#0
+	CP	#0x0A		; \n?
 	LD	L,A		;  (prepare for return
 	RET	NZ		; ..return if Not
-	LD	L,0DH		; Else return CR
+	LD	L,#0x0D		; Else return CR
 	RET
 
 ;------------------------------------------------
@@ -326,7 +327,7 @@ Fcn4:	LD	C,E		; _arg in DE, need char in C
 ;                 break;
 
 Fcn5:	LD	A,E		; _arg in DE
-	CP	13		; \r?
+	CP	#13		; \r?
 	RET	Z
 	JP	List		; ..go to Bios
 
@@ -342,7 +343,7 @@ Fcn5:	LD	A,E		; _arg in DE
 				; Enter: DE -> String (arg)
 Fcn9:	LD	A,(DE)		; Get char
 	INC	DE		;   pt to Next
-	CP	'$'		; End?
+	CP	#'$'		; End?
 	RET	Z		; ..quit if Yes
 	LD	C,A
 	PUSH	DE
@@ -366,17 +367,17 @@ Fcn10:
 	ld	e,(hl)		; e - max chars
 	inc	hl
 	inc	hl
-	ld	d,0		; d - char cnt
+	ld	d,#0		; d - char cnt
 get:	push	hl
 	push	de
 	call	BConIn
 	pop	de
 	pop	hl
-	cp	8
+	cp	#8
 	jr	z,del
-	cp	7Fh
+	cp	#0x7F
 	jr	z,del
-	cp	3
+	cp	#3
 	jp	z,0
 	push	hl
 	push	de
@@ -387,7 +388,7 @@ get:	push	hl
 	pop	de
 	pop	hl
 	ld	(hl),a
-	cp	CR
+	cp	#CR
 	jr	z,eol
 	ld	a,e
 	cp	d
@@ -400,23 +401,23 @@ del:	ld	a,d
 	jr	z,get
 	push	hl
 	push	de
-	ld	c,8
+	ld	c,#8
 	call	BConOu
-	ld	c,' '
+	ld	c,#' '
 	call	BConOu
-	ld	c,8
+	ld	c,#8
 	call	BConOu
 	pop	de
 	pop	hl
 	dec	hl
 	dec	d
 	jr	get
-eol:	ld	(hl),0
+eol:	ld	(hl),#0
 eol1:	ld	a,d
 	pop	de
 	inc	de
 	ld	(de),a
-	ld	hl,0
+	ld	hl,#0
 	ret
 
 
@@ -428,7 +429,7 @@ Fcn11:	JP	BConSt
 ;------------------------------------------------
 ;         case 12:				/* Return Version # */
 
-Fcn12:	LD	HL,0022H	; Say this is CP/M 2.2
+Fcn12:	LD	HL,#0x0022	; Say this is CP/M 2.2
 	RET
 
 ;------------------------------------------------
@@ -436,7 +437,7 @@ Fcn12:	LD	HL,0022H	; Say this is CP/M 2.2
 ;              SDma(0x80);
 ;              break;
 Fcn13:
-	LD	BC,80h
+	LD	BC,#0x80
 	JP	BSDma
 
 ;------------------------------------------------
@@ -458,7 +459,7 @@ Fcn32:				; Return User 0
 ;     }
 ;     return (0);
 
-Exit0:	LD	HL,0
+Exit0:	LD	HL,#0
 	RET
 
 ;------------------------------------------------
@@ -478,7 +479,7 @@ Open1:	CALL	CkSrch		;  (Close Search File)
 ;     arg.recno = 0;
 
 	CALL	ZeroCR
-	LD	(IY+13),80h	; use S1 as file open flag
+	LD	13(IY),#0x80	; use S1 as file open flag
 
 	JR	Exit0		;  Return Dir Code for Entry
 
@@ -491,9 +492,9 @@ Open1:	CALL	CkSrch		;  (Close Search File)
 
 OpenF:	PUSH	DE		; Mode
 	PUSH	HL		;  Path
-	LD	HL,1		;   Fuzix Open Fcn #
+	LD	HL,#1		;   Fuzix Open Fcn #
 	PUSH	HL
-	RST	30H		;    _open (Path, Mode);
+	RST	0x30		;    _open (Path, Mode);
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -508,11 +509,11 @@ OpenF:	PUSH	DE		; Mode
 ;     if (close (arg->desc) == -1)
 
 Fcn16:	LD	IY,(_arg)
-	LD	(IY+13),0	; clear file open flag
+	LD	13(IY),#0	; clear file open flag
 
-	LD	HL,11		; Fuzix sync function #
+	LD	HL,#11		; Fuzix sync function #
 	PUSH	HL
-	RST	30H		; Execute!
+	RST	0x30		; Execute!
 	POP	BC		; Clean Stack
 
 	JP	Exit0		; Return OK
@@ -521,9 +522,9 @@ Fcn16:	LD	IY,(_arg)
 ; Close file descriptor
 
 CloseV:	PUSH	DE
-	LD	HL,2		;  Fuzix Close Fcn #
+	LD	HL,#2		;  Fuzix Close Fcn #
 	PUSH	HL
-	RST	30H		;   Execute!
+	RST	0x30		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	RET
@@ -532,10 +533,10 @@ CloseV:	PUSH	DE
 ;         case 17:					/* Search First */
 
 Fcn17:	CALL	CkSrch		; Ensure Search File closed
-	LD	HL,'.'		; Open current directory
+	LD	HL,#'.'		; Open current directory
 	LD	(RName),HL	;  store name in Secondary work string
-	LD	DE,0		; Open Read-Only
-	LD	HL,RName
+	LD	DE,#0		; Open Read-Only
+	LD	HL,#RName
 	CALL	OpenF		;  _open ('.', 0);
 	RET	Z		; HL = -1, A = 0 if Can't Open
 
@@ -550,12 +551,12 @@ Fcn17:	CALL	CkSrch		; Ensure Search File closed
 ;
 Fcn18:	LD	HL,(dmaadr)
 	LD	(dmaSav),HL	; Save "real" DMA
-Fcn18A:	LD	HL,dir+16
+Fcn18A:	LD	HL,#dir+16
 	LD	(dmaadr),HL	;  Set DMA for Dir Op'n
-	LD	A,16		;  Getdirent
-	LD	DE,32		;  Len of Dir entries
+	LD	A,#16		;  Getdirent
+	LD	DE,#32		;  Len of Dir entries
 	CALL	RdWrt0		;   Read an Entry
-	JR	C,Fcn18E	; Error if Carry Set
+	JR	C,#Fcn18E	; Error if Carry Set
 	OR	A		; Read Ok?
 	JR	Z,Fcn18E	; ..Return HL=-1 if EOF
 	CALL	ChkDir		; Else Set Dir to CP/M, Check Match
@@ -563,19 +564,19 @@ Fcn18A:	LD	HL,dir+16
 	JR	NZ,Fcn18A	; ..loop if No Match
 
 	LD	A,(_call)
-	CP	15		; Is this a File Open internal Call?
-	LD	HL,0		;  (set Success, Index 0)
+	CP	#15		; Is this a File Open internal Call?
+	LD	HL,#0		;  (set Success, Index 0)
 	JR	Z,Fcn18X	; ..exit now if Yes
 
-	LD	HL,dir		; Else
+	LD	HL,#dir		; Else
 	LD	DE,(dmaSav)	;  Move Dir Buffer to "real" DMA
-	LD	BC,128
+	LD	BC,#128
 	LDIR
 	LD	L,B		; Use 0 in BC
 	LD	H,C		;   to show Index 0 (success)
 	JR	Fcn18X		;  ..exit
 
-Fcn18E:	LD	HL,-1
+Fcn18E:	LD	HL,#-1
 Fcn18X:	LD	DE,(dmaSav)
 	LD	(dmaadr),DE	; Restore "real" DMA Addr
 	RET
@@ -589,9 +590,9 @@ Fcn19:	CALL	CkSrch		; Ensure Search file closed
 				; DE -> arg
 	CALL	GetNam		;  Parse to String
 	PUSH	HL		; String
-	LD	HL,6		;  UZI Unlink Fcn #
+	LD	HL,#6		;  UZI Unlink Fcn #
 	PUSH	HL
-	RST	30H		;   Execute!
+	RST	0x30		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 
@@ -603,7 +604,7 @@ Fcn19:	CALL	CkSrch		; Ensure Search file closed
 	INC	A		; FF->0?
 	JP	NZ,Exit0	;  return Ok if No
 
-ExitM1:	LD	HL,-1
+ExitM1:	LD	HL,#-1
 	RET
 
 
@@ -616,10 +617,10 @@ Fcn33:	CALL	RWprep		; Prepare File for access
 	JP	Z,Exit1
 
 	LD	IY,(_arg)
-	LD	A,(IY+33)	; Set Record Count from
-	LD	(IY+32),A	; Random Record number
-	LD	A,(IY+34)	;
-	LD	(IY+12),A	;
+	LD	A,33(IY)	; Set Record Count from
+	LD	32(IY),A	; Random Record number
+	LD	A,34(IY)	;
+	LD	12(IY),A	;
 
 	CALL	DoRead
 	JR	RWEx
@@ -633,7 +634,7 @@ DoRead:
 	PUSH	AF
 	LD	DE,(curFil)
 ;;;;	CALL	CloseV		; Close the file
-	LD	DE,0
+	LD	DE,#0
 	LD	(curFil),DE
 	POP	AF
 
@@ -681,10 +682,10 @@ Fcn34:	CALL	RWprep		; Prepare file for access
 	JP	Z,Exit1
 
 	LD	IY,(_arg)
-	LD	A,(IY+33)	; Set Record Count from
-	LD	(IY+32),A	; Random Record number
-	LD	A,(IY+34)	;
-	LD	(IY+12),A	;
+	LD	A,33(IY)	; Set Record Count from
+	LD	32(IY),A	; Random Record number
+	LD	A,34(IY)	;
+	LD	12(IY),A	;
 
 	CALL	DoWrite
 	JR	RWEx
@@ -698,7 +699,7 @@ DoWrite:
 	PUSH	AF
 	LD	DE,(curFil)
 ;;;;	CALL	CloseV		; Close the file
-	LD	DE,0
+	LD	DE,#0
 	LD	(curFil),DE
 	POP	AF
 
@@ -735,14 +736,14 @@ Fcn21A:	CALL	DoWrite		;   Write
 ;     desc = creat (getname (blk), 0666);
 
 Fcn22:	CALL	CkSrch		; Ensure Search file closed
-	LD	HL,0666Q	; Own/Grp/Oth are Read/Execute
+	LD	HL,#0q0666	; Own/Grp/Oth are Read/Execute
 	PUSH	HL		; DE -> arg
-	LD	HL, 502H	; O_CREAT|O_RDWR|O_TRUNC
+	LD	HL,#0x502	; O_CREAT|O_RDWR|O_TRUNC
 	CALL	GetNam		;  This name string
 	PUSH	HL
-	LD	HL,1		;   Fuzix open Fcn #
+	LD	HL,#1		;   Fuzix open Fcn #
 	PUSH	HL
-	RST	30H		;    Execute!
+	RST	0x30		;    Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -776,15 +777,15 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	DE		; Save FCB Ptr
 	CALL	GetNam		;  parse to UZI String
 
-	LD	HL,FName
-	LD	DE,RName
-	LD	BC,12
+	LD	HL,#FName
+	LD	DE,#RName
+	LD	BC,#12
 	LDIR			; Copy to Rename string
 
 ;     FName = getname (arg+16);
 
 	POP	DE		; DE -> _arg
-	LD	HL,16
+	LD	HL,#16
 	ADD	HL,DE		; Offset to New Name
 	EX	DE,HL
 	CALL	GetNam		;  parse it returning HL -> FName
@@ -792,11 +793,11 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 ;     if (link (RName, FName) < 0) {
 
 	PUSH	HL		; New Name
-	LD	HL,RName	;  Old Name
+	LD	HL,#RName	;  Old Name
 	PUSH	HL
-	LD	HL,5		;   UZI link Fcn #
+	LD	HL,#5		;   UZI link Fcn #
 	PUSH	HL
-	RST	30H		;    Execute!
+	RST	0x30		;    Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -807,22 +808,22 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 ;     }
 ;     if (unlink (RName) < 0) {
 
-	LD	HL,RName	; Old Name
+	LD	HL,#RName	; Old Name
 	PUSH	HL
-	LD	HL,6		;  UZI unlink Fcn #
+	LD	HL,#6		;  UZI unlink Fcn #
 	PUSH	HL
-	RST	30H		;   Execute!
+	RST	0x30		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	JP	NC,Exit0	;   exit w/0 if Ok
 
 ;         unlink (FName);
 				; Else remove the new iNode
-	LD	HL,FName	; New Name
+	LD	HL,#FName	; New Name
 	PUSH	HL
-	LD	HL,6		;  UZI unlink Fcn #
+	LD	HL,#6		;  UZI unlink Fcn #
 	PUSH	HL
-	RST	30H		;   Execute!
+	RST	0x30		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 
@@ -839,7 +840,7 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 ;         case 24: return (1);			/* Return Disk Login Vector */
 
 Fcn24:
-Exit1:	LD	HL,1
+Exit1:	LD	HL,#1
 	RET
 
 ;------------------------------------------------
@@ -854,13 +855,13 @@ Fcn26:	LD	C,E
 ;         case 27: return (-1)			/* Get Allocation Map */
 ;         case 29: return (-1)			/* Get R/O Vector Address */
 Fcn27:
-Fcn29:	LD	HL,-1
+Fcn29:	LD	HL,#-1
 	RET
 
 ;------------------------------------------------
 ;         case 31: return (&dpb);		/* Get Disk Param Table Addr */
 
-Fcn31:	LD	HL,dpb
+Fcn31:	LD	HL,#dpb
 	RET
 ; }
 
@@ -871,12 +872,12 @@ Fcn31:	LD	HL,dpb
 				; DE -> fcb
 Fcn35:	CALL	CkSrch		; Ensure Search file closed
 	CALL	GetNam		;  parse to UZI String
-	LD	DE,stBuf
+	LD	DE,#stBuf
 	PUSH	DE		; &statbuf
 	PUSH	HL		;  dname
-	LD	HL,15		;   UZI stat Fcn #
+	LD	HL,#15		;   UZI stat Fcn #
 	PUSH	HL
-	RST	30H		;    Execute!
+	RST	0x30		;    Execute!
 	POP	BC		; Clean Stk
 	POP	BC
 	POP	BC
@@ -892,7 +893,7 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 ;	FIXME: offset is now a simple number so this is wrong
 ;
 	LD	HL,(stBuf+14)	; Get Offset
-	LD	DE,127
+	LD	DE,#127
 	ADD	HL,DE		;  round up to next 128-byte block
 	ADD	HL,HL		;   Shift so H has 128-byte blk #
 	LD	E,H		;    position in DE
@@ -900,9 +901,9 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 	ADD	HL,HL		;  * 2
 	ADD	HL,HL		;   * 4 for 128-byte Block Count
 	ADD	HL,DE		; Now have CP/M Record Size
-	LD	(IY+33),L
-	LD	(IY+34),H	;  Store in RR fields in FCB
-	LD	(IY+35),D	; (D = 0)
+	LD	33(IY),L
+	LD	34(IY),H	;  Store in RR fields in FCB
+	LD	35(IY),D	; (D = 0)
 
 ;		return (0);
 
@@ -913,13 +914,13 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 ;	    else {
 ;		(int)fcb+33 = 0;
 
-Fcn35X:	LD	(IY+33),0
-	LD	(IY+34),0
-	LD	(IY+35),0
+Fcn35X:	LD	33(IY),#0
+	LD	34(IY),#0
+	LD	35(IY),#0
 
 ;		return (-1);
 
-	LD	HL,-1
+	LD	HL,#-1
 ;	    }
 	RET
 
@@ -927,13 +928,13 @@ Fcn35X:	LD	(IY+33),0
 ;         case 36:			/* Set Random Record Field in FCB */
 
 Fcn36:	LD	IY,(_arg)
-	LD	A,(IY+32)	; Fetch RecNo
-	LD	(IY+33),A	;  place in LSB of RR field (r0)
-	LD	A,(IY+12)
-	LD	(IY+34),A	;  set (r1)
-	LD	(IY+35),0	;  Clear Hi byte of RR (r2)
+	LD	A,32(IY)	; Fetch RecNo
+	LD	33(IY),A	;  place in LSB of RR field (r0)
+	LD	A,12(IY)
+	LD	34(IY),A	;  set (r1)
+	LD	35(IY),#0	;  Clear Hi byte of RR (r2)
 
-	LD	HL,0		; Return Ok
+	LD	HL,#0		; Return Ok
 	RET
 
 ;===========================================================
@@ -948,7 +949,7 @@ Fcn36:	LD	IY,(_arg)
 
 ;     p = name;
 				; Enter: DE -> FCB drive byte
-GetNam:	LD	IX,FName	; Dest to string
+GetNam:	LD	IX,#FName	; Dest to string
 	EX	DE,HL
 	PUSH	HL		;   (save)
 	INC	HL		;  adv to 1st char of FN
@@ -958,37 +959,37 @@ GetNam:	LD	IX,FName	; Dest to string
 ;         if (!blk->name[j] || blk->name[j] == ' ')
 ;             break;
 
-	LD	B,8
+	LD	B,#8
 GetN0:	LD	A,(HL)
 	INC	HL
 	OR	A
 	JR	Z,GetN1
-	CP	' '
+	CP	#' '
 	JR	Z,GetN1
 
 ;         *p++ = chlower (blk->name[j]);
 
 	CALL	ChLower
-	LD	(IX+0),A
+	LD	0(IX),A
 	INC	IX
 	DJNZ	GetN0
 ;     }
 
 GetN1:	POP	HL
-	LD	DE,9
+	LD	DE,#9
 	ADD	HL,DE		; Pt to 1st char of FT
 	LD	A,(HL)
-	CP	' '		; Any Type?
+	CP	#' '		; Any Type?
 	JR	Z,GetNX		; ..quit if Not
 
 ;     *p++ = '.';
 
-	LD	(IX+0),'.'
+	LD	0(IX),#'.'
 	INC	IX
 
 ;     for (j = 0; j < 3; ++j)
 
-	LD	B,3
+	LD	B,#3
 
 ;     {
 ;         if (!blk->ext[j] || blk->ext[j] == ' ')
@@ -996,35 +997,35 @@ GetN1:	POP	HL
 
 GetN2:	LD	A,(HL)
 	INC	HL
-	CP	' '
+	CP	#' '
 	JR	Z,GetNX
 
 ;         *p++ = chlower (blk->ext[j]);
 
 	CALL	ChLower
-	LD	(IX+0),A
+	LD	0(IX),A
 	INC	IX
 	DJNZ	GetN2
 
 ;     }
 ;     *p = '\0';
 
-GetNX:	LD	(IX+0),0
+GetNX:	LD	0(IX),#0
 
 ;     return (name);
 
-	LD	HL,FName
+	LD	HL,#FName
 	RET
 ; }
 
 ;
 ;	FIXME: we need to use lseek for Fuzix
 ;
-LSeek:	LD	BC, 0		; Push 0 for absolute
+LSeek:	LD	BC,#0		; Push 0 for absolute
 	PUSH	BC
 	LD	IY, (_arg)	; FCB
-	LD	C, (IY + 32)	; Pull the offset out of the FCB
-	LD	B, (IY + 12)	; This is in records (128 bytes)
+	LD	C, 32(IY)	; Pull the offset out of the FCB
+	LD	B, 12(IY)	; This is in records (128 bytes)
 				; And may overflow 2^16 bytes
 	XOR	A
 	SLA	C		; C x 2, into carry
@@ -1050,13 +1051,13 @@ LSeek:	LD	BC, 0		; Push 0 for absolute
 	RLA			; now in bytes
 	LD	(LSeekData), BC	; low bits
 	LD	(LSeekData + 2), A	; high bit (top byte already clear)
-	LD	BC, LSeekData	; push pointer
+	LD	BC, #LSeekData	; push pointer
 	PUSH	BC
 	LD	HL, (curFil)
 	PUSH	HL
-	LD	HL, 9		; _lseek()
+	LD	HL,#9		; _lseek()
 	PUSH	HL
-	RST	30H		; Syscall
+	RST	0x30		; Syscall
 	POP	BC		; Recover stack
 	POP	BC
 	POP	BC
@@ -1070,11 +1071,11 @@ LSeek:	LD	BC, 0		; Push 0 for absolute
 ; Exit : A = 0 and HL = -1 if Error, A <> 0 if Ok
 
 RWprep:	CALL	CkSrch		; Ensure Search file closed
-	LD	HL,13		; offset to S1 (file open flag)
+	LD	HL,#13		; offset to S1 (file open flag)
 	ADD	HL,DE
 	LD	A,(HL)
-	AND	80h
-	LD	HL,-1
+	AND	#0x80
+	LD	HL,#-1
 	RET	Z
 
 	CALL	GetNam		;  Parse FCB Fn.Ft to String
@@ -1086,7 +1087,7 @@ RWprep:	CALL	CkSrch		; Ensure Search file closed
 	RET
 
 COpen:	PUSH	HL
-	LD	DE,CName
+	LD	DE,#CName
 chk:	LD	A,(DE)
 	CP	(HL)		; compare filename with cached name
 	JR	NZ,differ
@@ -1111,13 +1112,13 @@ differ:	LD	HL,(Cfd)
 	CALL	NZ,CloseV	; close old file
 	POP	HL		; restore file name
 	CALL	Ccopy
-op1:	LD	DE,2		; open for R/W
+op1:	LD	DE,#2		; open for R/W
 	CALL	OpenF
 	LD	(Cfd),HL
 	RET
 
 Ccopy:	PUSH	HL
-	LD	DE,CName
+	LD	DE,#CName
 cpy:	LD	A,(HL)
 	LD	(DE),A
 	INC	HL
@@ -1132,38 +1133,38 @@ cpy:	LD	A,(HL)
 ; Ambiguously compare FCB FN.FT at dir to that passed at arg, returning Zero
 ; if Match, Non-Zero if mismatch.
 
-ChkDir:	LD	DE,dir
-	LD	HL,dir+16+2	; Pt to 1st char of Name
+ChkDir:	LD	DE,#dir
+	LD	HL,#dir+16+2	; Pt to 1st char of Name
 	XOR	A
 	LD	(DE),A		; Zero Drive field
 	INC	DE		;  Pt to 1st char of FN
-	LD	B,8
+	LD	B,#8
 	CALL	ChkD0		;   Fix Name
-	LD	B,3
+	LD	B,#3
 	CALL	ChkD0		;    & Type
-	LD	B,21
+	LD	B,#21
 	CALL	ZeroDE		;     Clear rest of Dir entry
 
 	LD	DE,(_arg)
 	INC	DE		; Pt to 1st char of FN
 	LD	A,(DE)
-	CP	' '		; Any Name present?
+	CP	#' '		; Any Name present?
 	JR	NZ,ChkFN0	; ..jump if Yes
-	LD	HL,8
+	LD	HL,#8
 	ADD	HL,DE		;  Else offset to 1st char of FT
 	LD	A,(HL)
-	CP	' '		;   Type present?
-	LD	A,0FFH		;    (Assume Error)
+	CP	#' '		;   Type present?
+	LD	A,#0x0FF		;    (Assume Error)
 	RET	Z		;     Return w/Err Flag if no Type either
 
-ChkFN0:	LD	HL,dir+1	; Else Compare name/type fields
-	LD	B,11
+ChkFN0:	LD	HL,#dir+1	; Else Compare name/type fields
+	LD	B,#11
 			; Ambiguous FN.FT compare of (HL) to (DE)
 ChkL:	LD	A,(DE)
-	CP	'?'		; Accept anything?
+	CP	#'?'		; Accept anything?
 	JR	Z,ChkL0		; ..jump if ambiguous
 	XOR	(HL)
-	AND	7FH		; Match?
+	AND	#0x7F		; Match?
 	RET	NZ		; .Return Non-Zero if Not
 ChkL0:	INC	HL
 	INC	DE
@@ -1175,15 +1176,15 @@ ChkL0:	INC	HL
 ; Parse FileSpec addressed by HL into FN.FT Spec addressed by DE.
 
 ChkD0:	LD	A,(HL)		; Get Char
-	CP	'a'
+	CP	#'a'
 	JR	C,ChkD1
-	CP	'z'+1
+	CP	#'z'+1
 	JR	NC,ChkD1
-	AND	5FH		; Convert to Uppercase
+	AND	#0x5F		; Convert to Uppercase
 ChkD1:	OR	A		; End of String?
 	JR	Z,ChkDE		; ..jump if End
 	INC	HL		;     (bump Inp Ptr if Not End)
-	CP	'.'
+	CP	#'.'
 	JR	Z,ChkDE		;  ..or Period field separator
 	LD	(DE),A		; Store char
 	INC	DE		;  bump Dest
@@ -1192,11 +1193,11 @@ ChkD2:	LD	A,(HL)		; Get Next
 	OR	A
 	RET	Z		;  Exit at End of string
 	INC	HL		;   (adv to next)
-	CP	'.'
+	CP	#'.'
 	RET	Z		;   or field separator
 	JR	ChkD2		;  ..loop til end found
 
-ChkDE:	LD	A,' '		; Fill rest w/Spaces
+ChkDE:	LD	A,#' '		; Fill rest w/Spaces
 ChkD3:	INC	B
 	DEC	B		; More in field?
 	RET	Z		; ..exit if Not
@@ -1220,7 +1221,7 @@ CkSrch:	PUSH	DE		; Save Regs
 	LD	A,D
 	OR	E		; Anything open?
 	CALL	NZ,CloseV	;  Close file if Yes
-	LD	HL,0
+	LD	HL,#0
 	LD	(srchFD),HL	;   Mark as closed
 	POP	HL		;    (ignore Errors)
 	POP	DE
@@ -1230,28 +1231,28 @@ CkSrch:	PUSH	DE		; Save Regs
 ; Bump current Record # for sequential R/W operations
 
 IncCR:	LD	IY,(_arg)
-	INC	(IY+32)		; Bump Lo byte
+	INC	32(IY)		; Bump Lo byte
 	RET	NZ
-	INC	(IY+12)		; Bump Hi byte
+	INC	12(IY)		; Bump Hi byte
 	RET
 
 ;.....
 ; Init Current Record #
 
 ZeroCR:	LD	IY,(_arg)
-	LD	(IY+32),0	; Clear Lo Byte
-	LD	(IY+12),0	; Clear Hi Byte
+	LD	32(IY),#0	; Clear Lo Byte
+	LD	12(IY),#0	; Clear Hi Byte
 	RET
 
 ;.....
 ; Convert char in A to Lowercase Ascii
 
 ChLower:
-	CP	'A'
+	CP	#'A'
 	RET	C
-	CP	'Z'+1
+	CP	#'Z'+1
 	RET	NC
-	OR	20H		; Convert to Lcase
+	OR	#0x20		; Convert to Lcase
 	RET
 
 ;= = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -1269,22 +1270,22 @@ ChLower:
 ;     char junk3;
 ; };
 
-_arg:	DEFW	00		; Argument passed to Bdos	(char *arg;)
-_call:	DEFB	0		; Bdos Function #		(char call;)
-FName:	DEFM	'            '	; Storage for FCB "name" String
-RName:	DEFM	'            '	; 2nd Storage for FCB "name" String (rename)
+_arg:	.dw	00		; Argument passed to Bdos	(char *arg;)
+_call:	.db	0		; Bdos Function #		(char call;)
+FName:	.ascii	'            '	; Storage for FCB "name" String
+RName:	.ascii	'            '	; 2nd Storage for FCB "name" String (rename)
 
-CName:	DEFM	'            '	; cached filename
-	DEFB	0
-Cfd:	DEFW	-1		; cached file descriptor
+CName:	.ascii	'            '	; cached filename
+	.db	0
+Cfd:	.dw	-1		; cached file descriptor
 
-curFil:	DEFW	00		; Storage for File Descriptor of FCB
+curFil:	.dw	00		; Storage for File Descriptor of FCB
 				;  (set by Bdos, Used by Bios)
-stBuf:	DEFS	30		; Buffer for stat() results
+stBuf:	.ds	30		; Buffer for stat() results
 
-DOSSIZ	  EQU  $-EStart
-RESV	EQU	100H-(DOSSIZ&0FFH)
-	DEFS	RESV		; Pad to make Bios start on even mult of 256
+DOSSIZ	  .EQU  .-EStart
+RESV	.EQU	0x100-(DOSSIZ&0x0FF)
+	.ds	RESV		; Pad to make Bios start on even mult of 256
 
 ;============================================================
 ; The Bios Jump table MUST start on an even MOD 256 boundary
@@ -1312,21 +1313,21 @@ BWrit:	JP	Write		; 14 Write Sector
 ; Cold Entry.  Set up CP/M vectors and Stack, Get
 ; Current TTY Parms, Save for Exit, and begin
 
-__cold:	LD	A,0C3H
-	LD	HL,__bdos
+__cold:	LD	A,#0x0C3
+	LD	HL,#__bdos
 	LD	SP,HL		; Set CP/M Stack for execution
-	LD	(0005H),A	;  Set Bdos Vector
-	LD	(0006H),HL
-	LD	HL,WBoot
-	LD	(0000H),A	;   Set Bios Warm Boot Vector
-	LD	(0001H),HL
+	LD	(0x0005),A	;  Set Bdos Vector
+	LD	(0x0006),HL
+	LD	HL,#WBoot
+	LD	(0x0000),A	;   Set Bios Warm Boot Vector
+	LD	(0x0001),HL
 
-	LD	HL,ttTermios0	; & buf
-	LD	DE,TCGETS	;  ioctl fcn to Get Parms
+	LD	HL,#ttTermios0	; & buf
+	LD	DE,#TCGETS	;  ioctl fcn to Get Parms
 	CALL	IoCtl		;   Execute ioctl fcn on STDIN
-	LD	HL,ttTermios0
-	LD	DE,ttTermios
-	LD	BC, 20
+	LD	HL,#ttTermios0
+	LD	DE,#ttTermios
+	LD	BC, #20
 	LDIR			;  Move to Work Area
 		; Now we need to Change Modes defined in DEVTTY as:
 		;   RAW    = 20H	(0000040)
@@ -1334,53 +1335,53 @@ __cold:	LD	A,0C3H
 		;   ECHO   = 08H	(0000010)
 		;   CBREAK = 02H	(0000002)
 		;   COOKED = 00H	(0000000)
-	LD	HL, 0
+	LD	HL, #0
 	; Turn all the input and output magic off
 	LD	(ttTermios), HL
 	LD	(ttTermios + 2), HL
 	XOR	A
 	LD	(ttTermios+6), A	; Echo etch off
 	LD	A, (ttTermios+7)
-	AND	0xF0		; canonical processing off
+	AND	#0xF0		; canonical processing off
 	LD	(ttTermios+7), A
-	LD	HL, 1			; VTIME 0
+	LD	HL, #1			; VTIME 0
 	LD	(ttTermios+8), HL	; VMIN 1
-	LD	HL, ttTermios
-	LD	DE, TCSETS
+	LD	HL, #ttTermios
+	LD	DE, #TCSETS
 	CALL	IoCtl			; Set terminal bits 
 	
-	CALL	0100H		;  ..Execute!
+	CALL	0x0100		;  ..Execute!
 
 ;.....
 ; 1 - Warm Boot Vector (Exits back to UZI)		{exit (0);}
 ;     TTY Port Settings are restored to original state.
 
-Exit:	LD	C,0Dh
+Exit:	LD	C,#0x0D
 	CALL	ConOut
-	LD	C,0Ah
+	LD	C,#0x0A
 	CALL	ConOut
-	LD	HL,ttTermios0	; & buf
-	LD	DE,TCSETS	;  ioctl fcn to Set Parms
+	LD	HL,#ttTermios0	; & buf
+	LD	DE,#TCSETS	;  ioctl fcn to Set Parms
 	CALL	IoCtl		;   Execute ioctl Fcn on STDIN
 
-	LD	HL,0		; Exit Good Status
+	LD	HL,#0		; Exit Good Status
 	PUSH	HL
 	PUSH	HL		;  UZI Fcn 0 (_exit)
-	RST	30H		;   Execute!
+	RST	0x30		;   Execute!
 	DI
 	HALT
 
 ;.....
 ; 2 - Return Console Input Status
 
-ConSt:	LD	HL,cnt		; &buf
-	LD	DE,TIOCINQ	;  ioctl fcn to read queue count
+ConSt:	LD	HL,#cnt		; &buf
+	LD	DE,#TIOCINQ	;  ioctl fcn to read queue count
 	CALL	IoCtl		;   Execute ioctl on STDIN
 	LD	HL,(cnt)
 	LD	A,H
 	OR	L		; Anything There?
 	RET	Z		; ..return Zero if Not
-	OR	0FFH		; Else signify char waiting
+	OR	#0x0FF		; Else signify char waiting
 	RET
 
 ;.....
@@ -1388,15 +1389,15 @@ ConSt:	LD	HL,cnt		; &buf
 
 ConIn:	call	ConSt
 	jr	z,ConIn
-	LD	HL,1		; 1 char
+	LD	HL,#1		; 1 char
 	PUSH	HL
-	LD	DE,char		;  Addr to put char
+	LD	DE,#char		;  Addr to put char
 	PUSH	DE
-	LD	L,STDIN		;   fd
+	LD	L,#STDIN		;   fd
 	PUSH	HL
-	LD	L,7		;    UZI Read Fcn
+	LD	L,#7		;    UZI Read Fcn
 ChrV0:	PUSH	HL
-	RST	30H		;     Execute
+	RST	0x30		;     Execute
 	POP	BC
 	POP	BC
 	POP	BC
@@ -1408,14 +1409,14 @@ ChrV0:	PUSH	HL
 ; 4 - Write Char in C to Console		{write (stdout, &char, 1);}
 
 ConOut:	LD	A,C
-	LD	DE,char
+	LD	DE,#char
 	LD	(DE),A		; Stash char
-	LD	HL,1		; 1 char
+	LD	HL,#1		; 1 char
 	PUSH	HL
 	PUSH	DE		;  Addr to get char
-	LD	L,STDOUT	;   fd
+	LD	L,#STDOUT	;   fd
 	PUSH	HL
-	LD	L,8		;    UZI Write Fcn
+	LD	L,#8		;    UZI Write Fcn
 	JR	ChrV0		;   ..go to common code
 
 ;.....
@@ -1433,7 +1434,7 @@ SecTrn:	XOR	A		; Bios Fcn 16.  These are No-Ops
 ;.....
 ; 9 - Select Disk.  Simply return the DPH pointer
 
-SelDsk:	LD	HL,dph		; Return DPH Pointer
+SelDsk:	LD	HL,#dph		; Return DPH Pointer
 	RET
 
 ;.....
@@ -1445,16 +1446,16 @@ SetDMA:	LD	(dmaadr),BC	; Save Address
 ;.....
 ; 13 - Read a "Sector" to DMA Address		{read (curFil, dmaadr, 128);}
 
-Read:	LD	A,7		; Set UZI Read Fcn
+Read:	LD	A,#7		; Set UZI Read Fcn
 	CALL	RdWrt		;  Do the work
 	RET	C		; ..exit if Error
 	OR	A		; 0 bytes Read?
 	JR	Z,XErr1		; ..Return Error if Yes (EOF)
-	SUB	128		; A full 128 bytes Read?
+	SUB	#128		; A full 128 bytes Read?
 	RET	Z		;   return Ok if Yes
 	LD	DE,(dmaadr)
 	ADD	HL,DE		; Else offset to byte after end
-Feof:	LD	(HL),1AH	;  stuff EOF in case of text
+Feof:	LD	(HL),#0x1A	;  stuff EOF in case of text
 	INC	HL
 	INC	A
 	JR	NZ,Feof
@@ -1463,17 +1464,17 @@ Feof:	LD	(HL),1AH	;  stuff EOF in case of text
 ;.....
 ; 14 - Write a "Sector" from DMA Address	{write (curFil, dmaadr, 128);}
 
-Write:	LD	A,8		; Set UZI Write Fcn
+Write:	LD	A,#8		; Set UZI Write Fcn
 	CALL	RdWrt		;  Do the work
 	RET	C		; ..exit if Error
-	SUB	128		; Good Write?
+	SUB	#128		; Good Write?
 	RET	Z		;   return Ok if Yes
 XErr1:	SCF
 	JR	XErr		;  Else Return Error
 
 ; Common Read/Write Support Routine
 
-RdWrt:	LD	DE,128		; 1 "Sector" char
+RdWrt:	LD	DE,#128		; 1 "Sector" char
 			; Entry Point accessed by Search Next (BDos)
 RdWrt0:	PUSH	DE
 	LD	HL,(dmaadr)	;  from here
@@ -1482,14 +1483,14 @@ RdWrt0:	PUSH	DE
 	PUSH	HL
 	LD	E,A		;    Position R/W Fcn #
 	PUSH	DE
-	RST	30H		;     Execute!
+	RST	0x30		;     Execute!
 	POP	BC		; Clear Stack
 	POP	BC
 	POP	BC
 	POP	BC
 	LD	A,L		; Shuffle possible byte quantity
 	RET	NC		; ..return if No Error
-XErr:	LD	A,01H		; Else Signal Error (keeping Carry)
+XErr:	LD	A,#0x01		; Else Signal Error (keeping Carry)
 	RET
 
 ;==========================================================
@@ -1503,11 +1504,11 @@ XErr:	LD	A,01H		; Else Signal Error (keeping Carry)
 
 IoCtl:	PUSH	HL		; &buf
 	PUSH	DE		;  ioctl fcn
-	LD	E,STDIN		;   fd
+	LD	E,#STDIN		;   fd
 	PUSH	DE
-	LD	E,29		;    Fuzix ioctl Fcn #
+	LD	E,#29		;    Fuzix ioctl Fcn #
 	PUSH	DE
-	RST	30H		;     Execute!
+	RST	0x30		;     Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -1516,43 +1517,44 @@ IoCtl:	PUSH	HL		; &buf
 
 ;- - - - - - - - - - Data Structures - - - - - - - - -
 
-dph:	DEFW	0		; Ptr to Skew Table
-	DEFW	0,0,0		; Scratch Words for BDos use
-	DEFW	dir		; Ptr to Directory Buffer
-	DEFW	dpb		; Ptr to DPB
-	DEFW	0		; Ptr to Disk Checksum Buffer
-	DEFW	0		; Ptr to ALV Buffer
+dph:	.dw	0		; Ptr to Skew Table
+	.dw	0,0,0		; Scratch Words for BDos use
+	.dw	dir		; Ptr to Directory Buffer
+	.dw	dpb		; Ptr to DPB
+	.dw	0		; Ptr to Disk Checksum Buffer
+	.dw	0		; Ptr to ALV Buffer
 
 
-dpb:	DEFW	64		; Dummy Disk Parameter Block
-	DEFB	4
-	DEFB	15
-	DEFW	0FFFFH
-	DEFW	1023
-	DEFB	0FFH,0
-	DEFB	0,0,0,0
+dpb:	.dw	64		; Dummy Disk Parameter Block
+	.db	4
+	.db	15
+	.dw	0x0FFFF
+	.dw	1023
+	.db	0x0FF,0
+	.db	0,0,0,0
 
 ;----------------------- Data -----------------------
 
-dmaadr:	DEFW	0080H		; Read/Write Transfer Addr   (char *dmaadr;)
-dmaSav:	DEFW	0		; Temp storage of current DMA Address
-srchFD:	DEFW	0		; File Descriptor for Searches
-char:	DEFB	' '		; Byte storage for Conin/Conout
-cnt:	DEFW	0		; Count of waiting keys
-LSeekData:	DEFW	0	; Used for _lseek() syscalls
-		DEFW	0
+dmaadr:	.dw	0x0080		; Read/Write Transfer Addr   (char *dmaadr;)
+dmaSav:	.dw	0		; Temp storage of current DMA Address
+srchFD:	.dw	0		; File Descriptor for Searches
+char:	.db	' '		; Byte storage for Conin/Conout
+cnt:	.dw	0		; Count of waiting keys
+LSeekData:	.dw	0	; Used for _lseek() syscalls
+		.dw	0
 ttTermios:
-	DEFS	20		; Working TTY Port Settings
+	.ds	20		; Working TTY Port Settings
 ttTermios0:
-	DEFS	20		; Initial TTY Port Settings
+	.ds	20		; Initial TTY Port Settings
 
-dir:	DEFS	128		; Directory Buffer
+dir:	.ds	128		; Directory Buffer
 
-	DEFS	128
+	.ds	128
 _Bstack:
-_userSP:DEFW    0       ; WRS: important that we write data all the way to the very last byte used
+_userSP:.dw    0       ; WRS: important that we write data all the way to the very last byte used
 
-BIOSIZ	EQU	$-__bios
-CPMSIZ	EQU	$-__bdos
+BIOSIZ	.EQU	.-__bios
+CPMSIZ	.EQU	.-__bdos
 
-        .end startaddr
+;       .end
+
