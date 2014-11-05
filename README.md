@@ -15,102 +15,91 @@ OMU also got blended in
 What does FUZIX have over UZI
 =============================
 
-<ul>
-<li>Support for multiple processes in banked memory (as per UZI180) but
+* Support for multiple processes in banked memory (as per UZI180) but
 	with Minix style chmem and efficient use of bank allocations.
-<li>Support for multiple processes via hard disk or non mappable RAM
-	drive switching (as per UZI, UZIX).
-<li>The ability to run single tasking on small devices, for bring up
-	and for standalone tool execution
-<li>Support for "real" swapping combined with banked memory.
-<li>Proper sane off_t and lseek
-<li>Normal dev_t
-<li>30 character filenames
-<li>Proper sane time_t
-<li>System 5 signals (half baked)
-<li>Posix termios (does all the original UZI tty did but much can be added)
-<li>Blocking on carrier for terminals
-<li>Optimisations to avoid bogus uarea copying compared to UZI180
-<li>More modern system call API: 3 argument open, mkdir, rmdir, rename,
+* Support for multiple processes via hard disk or non mappable RAM
+    drive switching (as per UZI, UZIX).
+* The ability to run single tasking on small devices, for bring up
+    and for standalone tool execution
+* Support for "real" swapping combined with banked memory.
+* Proper sane off_t and lseek
+* Normal dev_t
+* 30 character filenames
+* Proper sane time_t
+* System 5 signals (half baked)
+* Posix termios (does all the original UZI tty did but much can be added)
+* Blocking on carrier for terminals
+* Optimisations to avoid bogus uarea copying compared to UZI180
+* More modern system call API: 3 argument open, mkdir, rmdir, rename,
 	chroot (with correct .. semantics), fchdir, fchmod, fchown, fstat,
 	fcntl, setpgrp, sighold and friends, waitpid, setpgrp, nice
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
-<li>Address validation checks on all syscall copies
-<li>Builds with a modern ANSI C compiler (SDCC)
-<li>Core code can be built for 6809 and 6502 so should be far more
+* Address validation checks on all syscall copies
+* Builds with a modern ANSI C compiler (SDCC)
+* Core code can be built for 6809 and 6502 so should be far more
 	portable
-<li>Core architecture designed to support building and maintaining
+* Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
-<li>Helpers to make many bits of implementation wrappers to core code
-<li>Lots more bugs right now
-</ul>
+* Helpers to make many bits of implementation wrappers to core code
+* Lots more bugs right now
 
 What does UZI have over FUZIX
 =============================
-<ul>
-<li>Can run in 64K of RAM (32K kernel/32K user). FUZIX would need
+
+* Can run in 64K of RAM (32K kernel/32K user). FUZIX would need
 	banked ROM or similar to pull this off.
-</ul>
 
 What do the UZI branches have that FUZIX has not yet integrated
 ===============================================================
 
-<ul>
-<li>Minimal TCP/IP (UZIX 2.0). Unfortunately the original TCP was never
+* Minimal TCP/IP (UZIX 2.0). Unfortunately the original TCP was never
 released openly.
-<li>Symbolic links (UZIX)
-<li>Various clever fusions of syscalls that may save a few bytes
+* Symbolic links (UZIX)
+* Various clever fusions of syscalls that may save a few bytes
 	(UZIX)
-<li>setprio (UZIX)
-<li>Rather crude loadable drivers (UZIX)
-<li>Use of __naked and __asm for Z80 specific bits to avoid more
+* setprio (UZIX)
+* Rather crude loadable drivers (UZIX)
+* Use of __naked and __asm for Z80 specific bits to avoid more
 	.S files than are needed (UMZIX)
-</ul>
 
 Plus OMU has a really clever function passing trick for open/creat and
 friends, while UMZIX has a neat unified "make anything" function.
 
 What Key Features Are Missing Still
 ===================================
-<ul>
-<li>ptrace, core dumps, ulimit
-<li>root reserved disk blocks
-<li>banked executables
-<li>TCP/IP
-<li>select/poll()
-<li>Z180 banking support
-<li>/dev/tty alias
-<li>Support for > 32MB filesystems (but first figure out how to fsck
+* ptrace, core dumps, ulimit
+* root reserved disk blocks
+* banked executables
+* TCP/IP
+* select/poll()
+* Z180 banking support
+* /dev/tty alias
+* Support for > 32MB filesystems (but first figure out how to fsck
 	a giant fs on a slow 8bit micro!)
-<li>Uptime
-<li>Smarter scheduler
-<li>Optimisations for disk block/inode allocator (2.11BSD)
-<li>CP/M emulator has not yet been ported to FUZIX syscall API
-</ul>
+* Uptime
+* Smarter scheduler
+* Optimisations for disk block/inode allocator (2.11BSD)
+* CP/M emulator has not yet been ported to FUZIX syscall API
 
 
 Tool Issues
 ===========
-<ul>
-<li>No useful 8086 compiler option (started work on pcc 8086 but help
+* No useful 8086 compiler option (started work on pcc 8086 but help
 	needed)
-<li>6809 gcc and cc65 don't have long long 64bit (for sane time_t)
-<li>SDCC has long long bugs and gaps
-<li>SDCC can generate ROMmable binaries but not banked ones
-<li>SDCC has no register passing function call support, and for some
+* 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
+* SDCC has long long bugs and gaps
+* SDCC can generate ROMmable binaries but not banked ones
+* SDCC has no register passing function call support, and for some
 	stuff it really shows
-<li>SDCC generates quite bloaty small applications. Needs research
+* SDCC generates quite bloaty small applications. Needs research
 	on how to improve.
-<li>None of the above have an O88 style common sequence compressor
-</ul>
+* None of the above have an O88 style common sequence compressor
 
 Platforms
 =========
-<ul>
-<li>Z80Pack - used as a dev and test environment for both large swapping
+* Z80Pack - used as a dev and test environment for both large swapping
 	mulitprocess and for small single tasking
-<li>Amstrad NC100 - real hardware sanity check
-</ul>
+Amstrad NC100 - real hardware sanity check
 
 Various other platforms are partly filled out to sanity check assumptions
 and start making progress on them. The main need there is now to tackle all
