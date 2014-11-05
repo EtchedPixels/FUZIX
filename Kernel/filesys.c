@@ -36,9 +36,9 @@ inoptr n_open(char *uname, inoptr *parent)
 
 inoptr kn_open(char *name, inoptr *parent)
 {
-    inoptr wd;     /* the directory we are currently searching. */
+    staticfast inoptr wd;     /* the directory we are currently searching. */
     register char *np = name;
-    inoptr ninode;
+    staticfast inoptr ninode;
     inoptr temp;
 
 #ifdef DEBUG

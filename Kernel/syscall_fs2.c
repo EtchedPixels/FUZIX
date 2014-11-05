@@ -408,9 +408,9 @@ int16_t _open(void)
 {
 	int8_t uindex;
 	int8_t oftindex;
-	inoptr ino;
+	staticfast inoptr ino;
 	int16_t perm;
-	inoptr parent;
+	staticfast inoptr parent;
 	char fname[FILENAME_LEN + 1];
 	int trunc;
 	int r;
