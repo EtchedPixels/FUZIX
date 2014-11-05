@@ -27,7 +27,7 @@ put inside itself!
 
 int16_t _rename(void)
 {
-	inoptr srci, srcp, dsti, dstp;
+	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
 	int ret = -1;
 
@@ -394,6 +394,7 @@ int16_t _execve(void)
 	int j;
 	uint16_t top = (uint16_t)ramtop;
 	uint8_t c;
+	uint16_t blocks;
 
 	kputs("execve\n");
 
@@ -547,7 +548,12 @@ int16_t _execve(void)
 	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
 	 */
 	progptr = PROGBASE + 512;	// we copied the first block already
-	for (blk = 1; blk <= ino->c_node.i_size >> 9; ++blk) {
+
+	/* Compute this once otherwise each loop we must recalculate this
+	   as the compiler isn't entitled to assume the loop didn't change it */
+	blocks = ino->c_node.i_size >> 9;
+
+	for (blk = 1; blk <= blocks; ++blk) {
 		buf = bread(ino->c_dev, bmap(ino, blk, 1), 0);
 		uput(buf, progptr, 512);
 		bufdiscard((bufptr) buf);
