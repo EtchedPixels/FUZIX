@@ -1,0 +1,39 @@
+-mwxuy
+-i uzi.ihx
+-b _CODE=0x0088
+-b _COMMONMEM=0xF000
+-k /usr/share/sdcc/lib/z80
+-l z80
+platform-pcw8256/crt0.rel
+platform-pcw8256/commonmem.rel
+platform-pcw8256/pcw8256.rel
+bank16k.rel
+platform-pcw8256/main.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem_std-z80.rel
+platform-pcw8256/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-pcw8256/devfd.rel
+platform-pcw8256/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+vt.rel
+platform-pcw8256/devlpr.rel
+platform-pcw8256/devtty.rel
+platform-pcw8256/fdc765.rel
+-e

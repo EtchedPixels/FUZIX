@@ -1,8 +1,19 @@
 # SDCC stuff
-*.lnk
 *.lst
 *.map
 *.mem
 *.rel
 *.rst
 *.sym
+*.asm
+*.ihx
+Kernel/platform
+Kernel/fuzix.bin
+Kernel/hogs.txt
+Kernel/tools/analysemap
+Kernel/tools/binman
+Kernel/tools/make4x6
+Kernel/tools/memhogs
+Kernel/uzi.cdb
+Kernel/uzi.tmp
+Kernel/version.c
