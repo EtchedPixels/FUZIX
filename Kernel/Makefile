@@ -1,7 +1,8 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-spec3 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-export TARGET= msx2
+#export TARGET = msx2
 export CPU = z80
+#export TARGET = pcw8256
 #export TARGET = 6809test
 #export CPU = 6809
 #export TARGET = 6502test
@@ -118,7 +119,7 @@ $(AOBJS): %$(BINEXT): %.s
 version.c: makeversion
 	./makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
-toosl/analysemap: tools/analysemap.c
+tools/analysemap: tools/analysemap.c
 
 tools/memhogs: tools/analysemap
 	cp tools/analysemap tools/memhogs
@@ -150,7 +151,7 @@ uzi.bin: target $(OBJS)
 endif
 
 clean:
-	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.tmp platform fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 
 clean-all: clean
