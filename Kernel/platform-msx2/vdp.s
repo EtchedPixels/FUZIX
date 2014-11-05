@@ -123,6 +123,7 @@ plotit:
 	    ld b, #0x40			; writing
 	    call _videopos
 	    ld a, c
+plotit2:
 	    ld bc, (_vdpport)
 	    out (c), l			; address
 	    out (c), h			; address | 0x40
@@ -256,12 +257,23 @@ _cursor_on:
 	    push de
 	    push hl
 	    ld (cursorpos), de
-	    ld c, #'_'
-            call plotit
-	    ret
+	    ld b, #0x00			; reading
+	    call _videopos
+	    ld a, c
+	    ld bc, (_vdpport)
+	    out (c), l			; address
+	    out (c), h			; address
+	    dec c
+	    in a, (c)			; character
+	    ld (cursorpeek), a		; save it away
+	    set 6, h			; make it a write command
+	    ld a, #'_'			; write the cursor
+	    jp plotit2
+
 _cursor_off:
 	    ld de, (cursorpos)
-	    ld c, #' '
+	    ld a, (cursorpeek)
+	    ld c, a
 	    call plotit
 	    ret
 ;
@@ -269,3 +281,4 @@ _cursor_off:
 ;
 	    .area _DATA
 cursorpos:  .dw 0
+cursorpeek: .db 0
