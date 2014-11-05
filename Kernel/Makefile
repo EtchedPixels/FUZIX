@@ -129,7 +129,7 @@ $(AOBJS): %$(BINEXT): %.s
 version.c: makeversion
 	./makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
-toosl/analysemap: tools/analysemap.c
+tools/analysemap: tools/analysemap.c
 
 tools/memhogs: tools/analysemap
 	cp tools/analysemap tools/memhogs
@@ -161,7 +161,7 @@ uzi.bin: target $(OBJS)
 endif
 
 clean:
-	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.tmp platform fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 
 clean-all: clean
