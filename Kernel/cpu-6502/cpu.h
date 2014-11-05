@@ -19,3 +19,5 @@ extern void irqrestore(irqflags_t f);
 extern void *memcpy(void *, void *, size_t);
 extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
+
+#define staticfast	static

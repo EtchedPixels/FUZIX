@@ -26,4 +26,6 @@ extern void irqrestore(irqflags_t f);
 
 extern int16_t strlen(const char *p);
 
+#define	staticfast	static
+
 #endif
