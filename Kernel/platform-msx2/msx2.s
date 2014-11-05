@@ -44,6 +44,11 @@
 	    .globl _vdpport
 	    .globl _infobits
 
+	    ;
+	    ; vdp - we must initialize this bit early for the vt
+	    ;
+	    .globl vdpinit
+
             .include "kernel.def"
             .include "../kernel.def"
 
@@ -79,15 +84,17 @@ _trap_reboot:
             .area _CODE
 
 init_early:
-	    ld a, #0x33			; multibyte/ascii
-	    out (0x2E), a
+	    ld a, #'F'
+	    out (0x2F), a
             ret
 
 init_hardware:
+	    ld a, #'U'
+	    out (0x2F), a
 	    ; save the useful bits of low memory first
 	    ld hl, (0x2B)
 	    ld (_infobits), a
-	    ld a, (0x06)
+	    ld a, (0x07)
 	    ld (_vdpport), a
 
 	    ; Size RAM
@@ -100,8 +107,17 @@ init_hardware:
             call _program_vectors
             pop hl
 
+	    ld a, #'Z'
+	    out (0x2F), a
+
             im 1 			; set CPU interrupt mode
 	    call _vtinit		; init the console video
+
+	    ld a, #'I'
+	    out (0x2F), a
+	    call  vdpinit
+	    ld a, #'X'
+	    out (0x2F), a
             ret
 
 
@@ -133,7 +149,6 @@ ramscan:
 ramwrapped:
 	    ld a, #3
 	    out (c), a
-	    ld a, (hl)
 	    ld (hl), #0x55
 	    out (c), b
 	    ld a, (hl)
@@ -169,7 +184,7 @@ pageslt256:
 
 	    ; set system RAM size in KB
 	    ld (_ramsize), hl
-	    ld de, #0xFFC0
+	    ld de, #0xFFD0
 	    add hl, de		; subtract 48K for the kernel
 	    ld (_procmem), hl
 	    ret

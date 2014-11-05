@@ -15,17 +15,21 @@
 
 	    .globl _vdpport
 
+	    .globl vdpinit
+
 	    .area _CODE
 ;
 ;	Register write value E to register A
 ;
 vdpout:	    ld bc, (_vdpport)
-	    out (c), e
-	    out (c), d
+	    ld bc, #0x98 ; hardcode for the moment
+	    inc c			; Write port
+	    out (c), e			; Write the data
+	    out (c), d			; and then the register | 0x80
 	    ret
 
 ;
-;	FIXME: table.. and move into init ROM
+;	FIXME: table.. and move into init RAM
 ;
 vdpinit:    ld de, #0x8004		; M4 }
 	    call vdpout 		;    }	80x25 mode

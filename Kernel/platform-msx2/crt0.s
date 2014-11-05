@@ -30,13 +30,21 @@
 		.globl s__INITIALIZER
 	        .globl kstack_top
 
-	        ; startup code @0
+		; Just for the benefit of the map file
+		.globl start
+
+	        ; startup code @0x100
 	        .area _CODE
 
 ;
 ; Execution begins with us correctly mapped and at 0x0x100
 ;
 start:		di
+		; Debug port
+		ld a, #0x23
+	        out (0x2e), a
+		ld a, #'@'
+		out (0x2f), a
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
 		ld hl, #s__INITIALIZER
