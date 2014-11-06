@@ -27,6 +27,7 @@
 	.globl _kernel_flag
 	.globl _inint
 	.globl _platform_interrupt
+	.globl platform_interrupt_all
 
         .module syscall
 
@@ -272,6 +273,11 @@ interrupt_handler:
             ld hl, (_system_tick_counter)
             inc hl
             ld (_system_tick_counter), hl
+
+	    ; Some platforms (MSX for example) have devices we *must*
+	    ; service irrespective of kernel state in order to shut them
+	    ; up. This code must be in common and use small amounts of stack
+	    call platform_interrupt_all
 	    ; FIXME: add profil support here (need to keep profil ptrs
 	    ; unbanked if so ?)
 
@@ -298,8 +304,8 @@ interrupt_handler:
 	    ; need to map anyway for trap_signal
 	    ;
 	    ld a, (_kernel_flag)
-	    push af
 	    or a
+	    push af
 	    jr nz, in_kernel
 
             ; we're not in kernel mode, check for signals and fault
@@ -349,6 +355,7 @@ int_switch:
             or a
             jr nz, interrupt_return
 
+	    ; FIXME: check kernel mode flag ?
             ; we're not in kernel mode, check for signals
             call dispatch_process_signal
 	    ; FIXME: we should loop for multiple signals probably
@@ -369,7 +376,7 @@ interrupt_return:
             pop af
             ex af, af'
             ei
-            ret
+            reti
 
 ;  Enter with HL being the signal to send ourself
 trap_signal:
@@ -432,6 +439,7 @@ nmi_handler:
 _di:		ld a, i
 		push af
 		pop hl
+		di
 		ret
 
 _irqrestore:	pop hl		; sdcc needs to get register arg passing
