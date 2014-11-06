@@ -33,10 +33,11 @@ vdpout:	    ld bc, (_vdpport)
 vdpinit:    ld de, #0x8004		; M4 }
 	    call vdpout 		;    }	80x25 mode
 	    ld de, #0x8170		; M1 }  screen on, virq on hirq off
+					; F0 ????
 	    call vdpout
-	    ld de, #0x8200		; characters at VRAM 0
+	    ld de, #0x8203		; characters at VRAM 0
 	    call vdpout
-	    ld de, #0x8320		; blink is unused
+	    ld de, #0x832F		; blink is unused
 	    call vdpout
 	    ld de, #0x8402		; font at 0x1000
 	    call vdpout
