@@ -309,7 +309,7 @@ map_kernel_data:
 ; emulator debug port for now
 outchar:
 	    push af
-outcharw:
 	    out (0x2F), a
+	    pop af
             ret
 
