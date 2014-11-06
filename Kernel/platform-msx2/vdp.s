@@ -161,11 +161,11 @@ upline:
 	    dec c
 	    inir		; safe on MSX2 but not MSX1
 	    inc c
-	    ld hl, #0x4080	; go down one line and into write mode
+	    ld hl, #0x4050	; go down one line and into write mode
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
-	    ld b, #0x80
+	    ld b, #0x50
 	    ld hl, #scrollbuf
 	    dec c
 	    otir		; video ptr is to the line below so keep going
@@ -195,7 +195,7 @@ downline:   push bc
 	    out (c), l
 	    out (c), h
 	    ld hl, #scrollbuf
-	    ld b, #0x80
+	    ld b, #80
 	    otir
 	    pop bc
 	    ld hl, #80
