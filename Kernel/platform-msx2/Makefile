@@ -3,7 +3,7 @@ CSRCS = devtty.c devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c
 
 ASRCS = msx2.s crt0.s vdp.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s bootrom.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
@@ -23,3 +23,5 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
+	dd if=../fuzix.bin of=../fuzix.com bs=256 skip=1
+	dd if=../fuzix.bin of=../fuzix.cart bs=16384 conv=sync

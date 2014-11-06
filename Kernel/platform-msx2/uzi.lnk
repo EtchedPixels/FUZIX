@@ -1,8 +1,9 @@
 -mwxuy
 -i uzi.ihx
--b _CODE=0x0100
+-b _CODE=0x0000
 -b _COMMONMEM=0xF000
 -l z80
+platform-msx2/bootrom.rel
 platform-msx2/crt0.rel
 platform-msx2/commonmem.rel
 platform-msx2/msx2.rel

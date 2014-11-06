@@ -2,6 +2,7 @@
 	        ; WRS: Note we list all our segments here, even though
 	        ; we don't use them all, because their ordering is set
 	        ; when they are first seen.	
+		.area _BOOT
 	        .area _CODE
 	        .area _CODE2
 		.area _VIDEO
