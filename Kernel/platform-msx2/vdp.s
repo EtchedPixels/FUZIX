@@ -16,6 +16,7 @@
 	    .globl _vdpport
 
 	    .globl vdpinit
+	    .globl platform_interrupt_all
 
 	    .area _CODE
 ;
@@ -282,3 +283,14 @@ _cursor_off:
 	    .area _DATA
 cursorpos:  .dw 0
 cursorpeek: .db 0
+
+	    .area _COMMONMEM
+
+;
+;	FIXME: should use vdpport, but right now vdpport is in data not
+;	common space.
+;
+platform_interrupt_all:
+	    ld c, #0x99
+	    in a, (c)
+	    ret

@@ -237,10 +237,8 @@ _program_vectors:
 ;
 map_process_always:
 	    push hl
-	    push af
 	    ld hl, #U_DATA__U_PAGE
 	    call map_process_2
-	    pop af
 	    pop hl
 	    ret
 ;
@@ -251,23 +249,18 @@ map_process:
 	    or l
 	    jr nz, map_process_2
 ;
-;	Map in the kernel below the current common, all registers preserved
-;	This maps 0-3 but I guess we should save the map from the boot
-;	somehow and use that?
+;	Map in the kernel below the current common, go via the helper
+;	so our cached copy is correct.
 ;
 map_kernel:
-	    push af
-	    ld a, #3
-	    out (0xFC), a
-	    dec a
-	    out (0xFD), a
-	    dec a
-	    out (0xFE), a
-	    ; and 0xFF is managed by task switches
-	    pop af
-            ret
+	    push hl
+	    ld hl, #map_kernel_data
+	    call map_process_2
+	    pop hl
+	    ret
 map_process_2:
 	    push de
+	    push af
 	    ld de, #map_table	; Write only so cache in RAM
 	    ld a, (hl)
 	    ld (de), a
@@ -282,9 +275,8 @@ map_process_2:
 	    ld a, (hl)		; Next 16K. Leave the common for the task
 	    out (0xFE), a	; switcher
 	    ld (de), a
+	    pop af
 	    pop de
-				; NOTE: map_restore relies on the HL for
-				; exit of this
             ret
 ;
 ;	Restore a saved mapping. We are guaranteed that we won't switch
@@ -292,10 +284,8 @@ map_process_2:
 ;
 map_restore:
 	    push hl
-	    push af
 	    ld hl,#map_savearea
 	    call map_process_2	; Put the mapper back right
-	    pop af
 	    pop hl
 	    ret
 ;
@@ -313,6 +303,8 @@ map_table:
 	    .db 0,0,0,0	
 map_savearea:
 	    .db 0,0,0,0
+map_kernel_data:
+	    .db 3,2,1,4
 
 ; emulator debug port for now
 outchar:

@@ -30,12 +30,18 @@ void pagemap_init(void)
     int i = msxmaps - 1;
     /* Add all the RAM, except 0,1,2,3 which is the kernel data/bss, add 0
        last to become the common for init */
-    while (i > 3)
+    while (i > 4)
         pagemap_add(i--);
     /* Init will pick this up correctly as its common */
-    pagemap_add(0);
+    pagemap_add(4);
 }
 
 void map_init(void)
 {
+}
+
+
+void platform_interrupt(void)
+{
+	timer_interrupt();
 }

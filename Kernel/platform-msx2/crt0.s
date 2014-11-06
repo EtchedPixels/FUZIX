@@ -39,7 +39,14 @@
 ;
 ; Execution begins with us correctly mapped and at 0x0x100
 ;
+; We assume here that the kernel packs below 48K for now we've got a few
+; KBytes free but revisit as needed
+;
 start:		di
+	        ld a, #4		; 0 holds 8K of stuff we might want
+                out (0xff), a		; if we go the OS route, so use 4
+					; plus "0" is magic so this saves
+					; shifting them all by one.
 		; Debug port
 		ld a, #0x23
 	        out (0x2e), a

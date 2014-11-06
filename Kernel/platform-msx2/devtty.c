@@ -161,7 +161,7 @@ static void keydecode(void)
 
 #endif
 
-void platform_interrupt(void)
+void tty_interrupt(void)
 {
 #if 0
 	uint8_t a = irqmap;
