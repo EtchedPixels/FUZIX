@@ -116,11 +116,16 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* Our standard layout begins with the code */
 	start = s__CODE;
+
 	/* TODO: Support a proper discardable high discard in other mappings */
 
+	/* In an environment with a single process mapped we put the discard
+	   area into process space, so it will be below the kernel in most
+	   cases. In that case we start on the DISCARD segment if need be */
 	/* Low discard (pure swap model) */
-	if (s__DISCARD && s__DISCARD < s__CODE) {
+	if (s__DISCARD && s__DISCARD < start) {
 		start = s__DISCARD;
 		if (s__DISCARD + l__DISCARD > s__CODE) {
 			fprintf(stderr,
