@@ -24,6 +24,8 @@
 	    .globl map_save
 	    .globl map_restore
 
+	    .globl platform_interrupt_all
+
             ; exported debugging tools
             .globl _trap_monitor
             .globl outchar
@@ -59,6 +61,8 @@ _trap_monitor:
 _trap_reboot:
 	    di
 	    halt
+platform_interrupt_all:
+	    ret
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)

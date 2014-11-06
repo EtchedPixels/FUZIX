@@ -30,6 +30,7 @@
 	    ; need the font
 	    .globl _font4x6
 	    .globl _vtinit
+	    .globl platform_interrupt_all
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -79,6 +80,9 @@ _trap_monitor:
 _trap_reboot:
 	    xor a
 	    out (0x70), a
+
+platform_interrupt_all:
+            ret
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)

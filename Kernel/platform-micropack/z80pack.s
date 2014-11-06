@@ -23,6 +23,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl platform_interrupt_all
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -54,6 +55,7 @@
 _trap_monitor:
 	    ld a, #128
 	    out (29), a
+platform_interrupt_all:
 	    ret
 
 _trap_reboot:

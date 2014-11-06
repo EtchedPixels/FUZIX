@@ -14,6 +14,7 @@
 	    .globl _kernel_flag
 	    .globl map_save
 	    .globl map_restore
+	    .globl platform_interrupt_all
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -83,6 +84,9 @@ _trap_monitor:
 	    di
 	    halt
 	    jr _trap_monitor
+
+platform_interrupt_all:
+	    ret
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)

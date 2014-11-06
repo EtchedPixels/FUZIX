@@ -16,6 +16,7 @@
             .globl _tty_outproc
 	    .globl map_kernel
 	    .globl map_process
+	    .globl platform_interrupt_all
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -94,6 +95,8 @@ _trap_monitor:
             jp 0x0000
             ; it's never a dull day with ROM around!
 
+platform_interrupt_all:
+	    ret
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
