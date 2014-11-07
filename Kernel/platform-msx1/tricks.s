@@ -57,6 +57,16 @@ _switchout:
         xor a
         ld (_inint), a
 
+	; Stash the uarea back into process memory
+	; We need to flip to the process map to copy this high
+	call map_process_always
+	ld hl, #U_DATA
+	ld de, #U_DATA_STASH
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+	; Then flip back as we need to call getproc
+	call map_kernel
+
         ; find another process to run (may select this one again)
         call _getproc
 
@@ -81,10 +91,33 @@ _switchin:
 
         ld hl, #P_TAB__P_PAGE_OFFSET+3	; Common
 	add hl, de		; process ptr
-	ld a, (hl)
-	out (0xFF), a		; *CAUTION* our stack just left the building
 
-	; ------- No stack -------
+	call map_process
+
+	; ------- No stack from here as we will LDIR over it
+
+	exx			; thank goodness for exx 8)
+	ld hl, #U_DATA_STASH
+	ld de, #U_DATA
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+	exx
+
+	; ------- No stack still -------
+
+	; Restore the stack into the newly copied stack udata. We do this
+	; earlier than most ports as the convoluted banking means we need
+	; a stack to flip back to kernel mappings
+	;
+	; FIXME: should look at making this the usual way around ?
+	;
+        ld sp, (U_DATA__U_SP)
+	; ------- stack good -------
+
+	; Map kernel memory back so we can actually get our hands on the
+	; process table data
+	call map_kernel
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
@@ -100,15 +133,6 @@ _switchin:
         ld hl, #0
         ld (_runticks), hl
 
-        ; restore machine state -- note we may be returning from either
-        ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
-
-	; ---- New task stack ----
-
-	ld hl, #0
-	add hl, sp
-
         pop iy
         pop ix
         pop hl ; return code
@@ -121,8 +145,6 @@ _switchin:
         ret ; return with interrupts on
 
 switchinfail:
-	; This will crap somewhere random in the stack space of the failure
-	; case. We aren't coming back, it doesn't matter
 	call outhl
         ld hl, #badswitchmsg
         call outstring
@@ -205,43 +227,10 @@ _dofork:
 ;	and map_restore
 ;
 fork_copy:
-	ld hl, (U_DATA__U_TOP)
-	ld de, #0x0fff
-	add hl, de		; + 0x1000 (-1 for the rounding to follow)
-	ld a, h
-	rlca
-	rlca			; get just the number of banks in the bottom
-				; bits
-	and #3
-	inc a			; and round up to the next bank
-	ld b, a
-	; we need to copy the relevant chunks
-	ld hl, (fork_proc_ptr)
-	ld de, #P_TAB__P_PAGE_OFFSET
-	add hl, de
-	; hl now points into the child pages
-	ld de, #U_DATA__U_PAGE
-	; and de is the parent
-fork_next:
-	ld a,(hl)
-	out (0xFD), a		; 0x4000 map the child
-	ld c, a
-	inc hl
-	ld a, (de)
-	out (0xFE), a		; 0x8000 maps the parent
-	inc de
-	exx
-	ld hl, #0x8000		; copy the bank
-	ld de, #0x4000
-	ld bc, #0x4000		; we copy the whole bank, we could optimise
-				; further
-	ldir
-	exx
-	call map_kernel		; put the maps back so we can look in p_tab
-	djnz fork_next
-	ld a, c
-	out (0xFF), a		; our last bank repeats up to common
-	; --- we are now on the stack copy, parent stack is locked away ---
+; FIXME: copy the 32K bank from one chunk of megaram to the other
+;
+;	See bankfork on z80pack for guidance on udata stash etc
+;
 	ret			; this stack is copied so safe to return on
 
 	

@@ -2,7 +2,7 @@
 ;	    MSX2 hardware support
 ;
 
-            .module msx2
+            .module msx1
 
             ; exported symbols
             .globl init_early
@@ -25,7 +25,6 @@
             ; imported symbols
             .globl _ramsize
             .globl _procmem
-	    .globl _msxmaps
 
             .globl _tty_inproc
             .globl unix_syscall_entry
@@ -134,12 +133,16 @@ init_hardware:
 ;	there is
 ;
 size_memory:
-	    ; set system RAM size in KB
-	    ld hl, #64
-	    ld (_ramsize), hl
-	    ld de, #0xFFD0
-	    add hl, de		; subtract 48K for the kernel
+	    call megaram_scan
+	    ld l, a
+	    ld h, #0
+	    add hl, hl
+	    add hl, hl
+	    add hl, hl			; megaram for the user space
 	    ld (_procmem), hl
+	    ld de, #0x40		; main memory for kernel
+	    add hl, de
+	    ld (_ramsize), hl
 	    ret
 
 _program_vectors:
@@ -186,6 +189,10 @@ _program_vectors:
 ;	All registers preserved
 ;
 map_process_always:
+	    push hl
+	    ld hl, #U_DATA__U_PAGE
+	    call map_process_2
+	    pop hl
 	    ret
 ;
 ;	HL is the page table to use, A is eaten, HL is eaten
@@ -195,24 +202,104 @@ map_process:
 	    or l
 	    jr nz, map_process_2
 ;
-;	Map in the kernel below the current common, go via the helper
-;	so our cached copy is correct.
+;	Map in the kernel low area (0x0000-0x7FFF)
 ;
 map_kernel:
+	    push af
+	    ld a, i
+	    push af
+	    di
+	    ld a, #'K'
+	    out (0x2f), a
+	    ld a, (map_cache)	; Already mapped
+	    or a
+	    jr z, map_kernel_out
+	    push bc
+	    push de
+	    push hl
+	    call restoreslotmap
+	    xor a
+	    ld (map_cache), a
+	    pop hl
+	    pop de
+	    pop bc
+map_kernel_out:
+	    ld a, #'k'
+	    out (0x2f), a
+	    pop af
+	    jp po, map_kernel_di
+	    ei
+map_kernel_di:
+	    pop af
 	    ret
 map_process_2:
+	    push af
+	    ld a, i
+	    push af
+	    di
+	    push de
+	    ld a, #'U'
+	    out (0x2f), a
+	    ld a, (map_cache)
+	    or a
+	    jr nz, inter_mega
+	    ld a, #'M'
+	    out (0x2f), a
+	    call map_megaram
+	    ld a, #'m'
+	    out (0x2f), a
+inter_mega:
+	    ld a, (hl)
+	    ld (map_cache), a
+	    dec a		; turn the bank number into 0 offset
+	    add a, a
+	    add a, a		; 4 pages per process
+	    out (0x8E), a
+	    ld (0), a
+	    inc a
+	    ld (1), a
+	    inc a
+	    ld (0x4000), a
+	    inc a
+	    ld (0x4001), a
+	    in a, (0x8E)
+	    pop de
+	    ld a, #'u'
+	    out (0x2f), a
+	    pop af
+	    jp po, map_proc_di
+	    ei
+map_proc_di:pop af
             ret
 ;
 ;	Restore a saved mapping. We are guaranteed that we won't switch
 ;	common copy between save and restore. Preserve all registers
 ;
 map_restore:
+	    push hl
+	    push af
+	    ld hl, #map_saved
+	    ld a, (hl)		; Kernel ?
+	    or a
+	    jr nz, map_ruser
+	    ld hl, #0		; Do a kernel remap not a user one
+map_ruser:
+	    call map_process	; Map it
+	    pop af
+	    pop hl
 	    ret
 ;
-;	Save the current mapping.
+;	Save the current mapping (trivial)
 ;
 map_save:
+	    push af
+	    ld a, (map_cache)
+	    ld (map_saved), a
+	    pop af
 	    ret
+
+map_cache:  .db 0
+map_saved:  .db 0
 
 ; emulator debug port for now
 outchar:
@@ -235,21 +322,24 @@ outchar:
 	    .area _HIGHCODE
 setslot0:
 	    push bc
-	    in a, (0xA8)
-	    and #0xFC
-	    ld b, a
+	    push de
+	    ld a, #'S'
+	    out (0x2f), a
+	    ld a, #'0'
+	    out (0x2f), a
 	    ld a, d
-	    and #0x03
-	    or b
-	    ld b, a		; Final mapping
+	    call outcharhex
+	    ld a, e
+	    call outcharhex
 	    in a, (0xA8)
-	    and #0x3C
+	    and #0xFC		; For final setting
+	    ld b, a
+	    and #0x3C		; For setting sslot
 	    ld c, a
 	    ld a, d
 	    and #0xC3
 	    or c
-	    ld c, a		; Temporary mapping for SSLOT crap
-	    out (0xA8), a
+	    out (0xA8), a	; Map the right slot in bank 0 and 3
 	    ld a, e
 	    and #0x03
 	    ld e, a
@@ -258,8 +348,14 @@ setslot0:
 	    and #0xFC
 	    or e
 	    ld (0xFFFF), a	; Set SSLOT
-	    ld a, b		; Final PSLOT (unmap the SSLOT)
+	    ld a, d
+	    and #0x03
+	    or b
 	    out (0xA8), a
+	    call outcharhex
+	    ld a, #'/'
+	    out (0x2f), a
+	    pop de
 	    pop bc
 	    ret
 
@@ -269,21 +365,24 @@ setslot0:
 
 setslot1:
 	    push bc
-	    in a, (0xA8)
-	    and #0xF3
-	    ld b, a
+	    push de
+	    ld a, #'S'
+	    out (0x2f), a
+	    ld a, #'1'
+	    out (0x2f), a
 	    ld a, d
-	    and #0x0C
-	    or b
-	    ld b, a		; Final mapping
+	    call outcharhex
+	    ld a, e
+	    call outcharhex
 	    in a, (0xA8)
-	    and #0x33
+	    and #0xF3		; For final setting
+	    ld b, a
+	    and #0x33		; For setting sslot
 	    ld c, a
 	    ld a, d
 	    and #0xCC
 	    or c
-	    ld c, a		; Temporary mapping for SSLOT crap
-	    out (0xA8), a
+	    out (0xA8), a	; Map the right slot in bank 1 and 3
 	    ld a, e
 	    and #0x0C
 	    ld e, a
@@ -292,105 +391,99 @@ setslot1:
 	    and #0xF3
 	    or e
 	    ld (0xFFFF), a	; Set SSLOT
-	    ld a, b		; Final PSLOT (unmap the SSLOT)
+	    ld a, d
+	    and #0x0C
+	    or b
 	    out (0xA8), a
+	    call outcharhex
+	    ld a, #'/'
+	    out (0x2f), a
+	    pop de
 	    pop bc
 	    ret
 
 ;
-;	Sufficient ?? FIXME - maybe wrong approach anyway
+;	Save the slot/subslot map. This requires much mucking about
+;	remapping the top bank
 ;
 saveslotmap:
-	    in a, (0xA8)
-	    ld (slot), a	; Slots
+	    ld hl, #slotsave
+	    ld bc, #0x05A8	; count for slots (+ 1 for ini), port
+	    ini
+	    in d, (c)		; Load again for working
+	    ld e, #0		; Slot number
+saveslotmap1:
+	    ld a, d
+	    and #0x3f		; Mask off top bank
+	    or e
+	    out (c), a
 	    ld a, (0xFFFF)
 	    cpl
-	    ld (slots), a
+	    ld (hl), a
+	    inc hl
+	    ld a, #0x40
+	    add e
+	    ld e, a
+	    djnz saveslotmap1
+	    out (c), d
 	    ret
 
 restoreslotmap:
-	    ld a, (slot)
-	    out (0xA8), a
-	    ld a, (slots)
-	    ld (0xFFFF), a
+	    ld hl, #slotsave
+	    ld bc, #0x05A8
+	    outi
+	    in d, (c)
+	    ld e, #0		; Slot number
+resslotmap1:
+	    ld a, d
+	    and #0x3f		; Mask off top bank
+	    or e
+	    out (c), a
+	    ld a, (hl)
+	    ld (0xFFFF), a	; Load the subslot into each
+	    inc hl
+	    ld a, #0x40
+	    add e
+	    ld e, a
+	    djnz resslotmap1
+	    out (c), d
 	    ret
 
-;
-;	Can't be in common as we bugger about with 0xC000+
-;
-	    .area _HIGHCODE
+slotsave:   .db 0
+	    .db 0, 0, 0, 0
 
-systemslotmap:
+slotexpanded:
+	    push hl
+	    push de
 	    in a, (0xA8)
-	    ld (system_pslot), a
-	    ld d, a		; need this in a register
-	    and #0x3F		; all but top 16K
+	    call outcharhex
+	    in a, (0xA8)
 	    ld e, a
-	    and #3		; Low 16K
-	    rrca		; Into the top 16K space
-	    rrca
-	    or e
-	    ld (system_pslot0), a
-	    out (0xA8), a
-	    ld a, (0xFFFF)
-	    ld a, d
-	    out (0xA8), a	; Put things back to sanity
-	    cpl
-	    ld (system_sslot0), a
-	    ld a, d
 	    and #0x3F
-	    ld e, a
+	    ld d, a
 	    and #0x0C
 	    rlca
 	    rlca
 	    rlca
 	    rlca
-	    or e
-	    ld (system_pslot1), a
+	    or d
+	    push af
+	    call outcharhex
+	    pop af
 	    out (0xA8), a
-	    ld a, (0xFFFF)
-	    ld a, d
-	    out (0xA8), a
-	    cpl
-	    ld (system_sslot1), a
-	    ret
-
-system_pslot0:	.db 0		; Keep paired..
-system_sslot0:	.db 0
-system_pslot1:	.db 0
-system_sslot1:	.db 0
-system_pslot:	.db 0
-
-;
-;	Map the system as we recorded it in systemslotmap
-;
-;	Must reside below 0xC000
-;
-map_system:
-	    ld c, #0xA8
-	    in b, (c)
-	    ld de, (system_pslot0)	; e=pslot0, d=sslot0
-	    out (c), e
-	    ld a, d
-	    ld (0xFFFF), a
-	    out (c), b
-	    ld de, (system_pslot1)	; e=pslot1, d=sslot1
-	    out (c), e
-	    ld a, d
-	    ld (0xFFFF), a
-	    out (c), b
-	    ld a, (system_pslot)
-	    out (c), a
-	    ret
-
-slotexpanded:
-	    push hl
 	    ld hl, #0xFFFF
 	    ld a, (hl)		; Read cpl value
 	    cpl			; A is now the write value
 	    ld (hl), a		; Write it
 	    cpl
 	    cp (hl)
+	    jr z, isexp
+	    ld a, #'N'
+	    out (0x2f), a
+isexp:
+	    ld a,e
+	    out (0xA8), a
+	    pop de
 	    pop hl
 	    ret			; Z = Expanded
 
@@ -408,21 +501,32 @@ slotscan1:
 	    ld d, #0
 nextslot:
 	    ld e, #0
-nextexpanded:
 	    call setslot1
 	    exx
 	    call callhl		; Scan
 	    exx
 	    call slotexpanded
 	    jr nz, noexpanded
+	    jr expanders
+nextexpanded:
+	    call setslot1
+	    exx
+;	    call callhl		; Scan
+	    exx
+expanders:
 	    ld a, #0x55
 	    add e
 	    ld e, a
+	    ld a, #'.'
+	    out (0x2f), a
 	    jr nc, nextexpanded
 noexpanded:
-	    inc e
-	    bit 2, e
-	    jr z, nextslot
+	    ld a, #'|'
+	    out (0x2f), a
+	    ld a, d
+	    add #0x55
+	    ld d, a
+	    jr nc, nextslot
 	    call restoreslotmap
 	    ret
 
@@ -430,30 +534,46 @@ callhl:	    jp (hl)
 
 megaset0:   xor a
 megaset:    out (c), a		; ROM mode
-	    ld (0x5fff), a	; page A
-	    in a, (c)
+	    ld (hl), a		; page A
+	    in a, (c)		; RAM mode
 	    ret
 ;
 ;	Hunt for a MegaRAM (assumes c set correctly by caller)
 ;
-megaram_p:   call megaset0
-	    ld a, b		; Just using d for check code
-	    ld (0x5FFF), a	; Now should store this either way
+;	The basic idea is
+;		Stick it in paging mode
+;		Page it to 0
+;		Stick it in RAM mode
+;		Write a value
+;		Stick it back in paging mode
+;		Write 0
+;
+;	If it's a MegaRAM the memory will remain as the value, if it's real RAM
+;	it will be zeroed by the paging write back
+;
+megaram_p:
+	    ld d, (hl)
 	    call megaset0
-	    ld a, (0x5FFF)
+	    ld (hl), b		; Now should store this either way
+	    call megaset0	; Should not change if megaram
+	    ld a, (hl)
+	    ld (hl), d		; Restore old bits
 	    cp b		; Z = MegaRAM (probably)
 	    ret
 
 megaram_chk:
-	    ld bc, #0xA58E
+	    ld hl, #0x5FFF
+	    ld bc, #0xA58E	; A5 is the pattern we use
 	    call megaram_p
 	    ret nz		; Not MegaRAM
-	    ld c, #0x5A
+	    ld b, #0x5A
 	    call megaram_p	; Paranoia check
 	    ret
 
 megaram_scan_f:
+	    push hl
 	    call megaram_chk
+	    pop hl
 	    ret nz
 	    exx
 	    ld (megaram_i), de	; save de' (slot/subslot info)
@@ -470,9 +590,11 @@ megaram_scan:
 	    ld a, d
 	    or e
 	    jr z, megaram_no
+	    ld a, #'M'
+	    out (0x2f), a
 	    call setslot1	; select the megaram
 	    ld bc, #0x8E
-	    ld hl, #0x5fff
+	    ld hl, #0x4000
 	    call megaset0
 	    ld (hl), #0x55
 megaram_size:

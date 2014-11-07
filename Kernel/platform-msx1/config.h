@@ -28,7 +28,7 @@
 
 #define TICKSPERSEC 50   /* Ticks per second (actually should be dynamic FIXME) */
 #define PROGBASE    ((char *)(0x0100))  /* also data base */
-#define PROGTOP     ((char *)(0x8000))  /* Top of program */
+#define PROGTOP     ((char *)(0x7D00))  /* Top of program (uarea stash) */
 
 #define BOOT_TTY (512 + 1)        /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
