@@ -9,6 +9,8 @@
 	        .area _CONST
 		.area _DISCARD
 	        .area _DATA
+	        ; Must be over 0x8000 for HIGHCODE
+	        .area _HIGHCODE
 	        .area _INITIALIZED
 	        .area _BSEG
 	        .area _BSS

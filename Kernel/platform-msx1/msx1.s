@@ -221,3 +221,297 @@ outchar:
 	    pop af
             ret
 
+;
+;	On entry D is repeating slot pattern, E repeating SSLOT pattern
+;
+;
+;	We play with 0x0000-0x7FFF (for user mappings) and with
+;	0xC000-0xFFFF (for the stupid sslot stuff), so this wants to live
+;	in 0x8000-0xBFFF. We must also be very careful with our sslot
+;	read/writes as while we do the sslot jiggery-pokery we have unmapped
+;	our stack.
+;
+;
+	    .area _HIGHCODE
+setslot0:
+	    push bc
+	    in a, (0xA8)
+	    and #0xFC
+	    ld b, a
+	    ld a, d
+	    and #0x03
+	    or b
+	    ld b, a		; Final mapping
+	    in a, (0xA8)
+	    and #0x3C
+	    ld c, a
+	    ld a, d
+	    and #0xC3
+	    or c
+	    ld c, a		; Temporary mapping for SSLOT crap
+	    out (0xA8), a
+	    ld a, e
+	    and #0x03
+	    ld e, a
+	    ld a, (0xFFFF)
+	    cpl
+	    and #0xFC
+	    or e
+	    ld (0xFFFF), a	; Set SSLOT
+	    ld a, b		; Final PSLOT (unmap the SSLOT)
+	    out (0xA8), a
+	    pop bc
+	    ret
+
+;
+;	This can't live low as its used by _HIGHCODE stuff
+;
+
+setslot1:
+	    push bc
+	    in a, (0xA8)
+	    and #0xF3
+	    ld b, a
+	    ld a, d
+	    and #0x0C
+	    or b
+	    ld b, a		; Final mapping
+	    in a, (0xA8)
+	    and #0x33
+	    ld c, a
+	    ld a, d
+	    and #0xCC
+	    or c
+	    ld c, a		; Temporary mapping for SSLOT crap
+	    out (0xA8), a
+	    ld a, e
+	    and #0x0C
+	    ld e, a
+	    ld a, (0xFFFF)
+	    cpl
+	    and #0xF3
+	    or e
+	    ld (0xFFFF), a	; Set SSLOT
+	    ld a, b		; Final PSLOT (unmap the SSLOT)
+	    out (0xA8), a
+	    pop bc
+	    ret
+
+;
+;	Sufficient ?? FIXME - maybe wrong approach anyway
+;
+saveslotmap:
+	    in a, (0xA8)
+	    ld (slot), a	; Slots
+	    ld a, (0xFFFF)
+	    cpl
+	    ld (slots), a
+	    ret
+
+restoreslotmap:
+	    ld a, (slot)
+	    out (0xA8), a
+	    ld a, (slots)
+	    ld (0xFFFF), a
+	    ret
+
+;
+;	Can't be in common as we bugger about with 0xC000+
+;
+	    .area _HIGHCODE
+
+systemslotmap:
+	    in a, (0xA8)
+	    ld (system_pslot), a
+	    ld d, a		; need this in a register
+	    and #0x3F		; all but top 16K
+	    ld e, a
+	    and #3		; Low 16K
+	    rrca		; Into the top 16K space
+	    rrca
+	    or e
+	    ld (system_pslot0), a
+	    out (0xA8), a
+	    ld a, (0xFFFF)
+	    ld a, d
+	    out (0xA8), a	; Put things back to sanity
+	    cpl
+	    ld (system_sslot0), a
+	    ld a, d
+	    and #0x3F
+	    ld e, a
+	    and #0x0C
+	    rlca
+	    rlca
+	    rlca
+	    rlca
+	    or e
+	    ld (system_pslot1), a
+	    out (0xA8), a
+	    ld a, (0xFFFF)
+	    ld a, d
+	    out (0xA8), a
+	    cpl
+	    ld (system_sslot1), a
+	    ret
+
+system_pslot0:	.db 0		; Keep paired..
+system_sslot0:	.db 0
+system_pslot1:	.db 0
+system_sslot1:	.db 0
+system_pslot:	.db 0
+
+;
+;	Map the system as we recorded it in systemslotmap
+;
+;	Must reside below 0xC000
+;
+map_system:
+	    ld c, #0xA8
+	    in b, (c)
+	    ld de, (system_pslot0)	; e=pslot0, d=sslot0
+	    out (c), e
+	    ld a, d
+	    ld (0xFFFF), a
+	    out (c), b
+	    ld de, (system_pslot1)	; e=pslot1, d=sslot1
+	    out (c), e
+	    ld a, d
+	    ld (0xFFFF), a
+	    out (c), b
+	    ld a, (system_pslot)
+	    out (c), a
+	    ret
+
+slotexpanded:
+	    push hl
+	    ld hl, #0xFFFF
+	    ld a, (hl)		; Read cpl value
+	    cpl			; A is now the write value
+	    ld (hl), a		; Write it
+	    cpl
+	    cp (hl)
+	    pop hl
+	    ret			; Z = Expanded
+
+slot:	    .db 0
+slots:	    .db 0
+
+;
+;	Scan slot 1 for all the slots and subslots. For each slot/sub
+;	call hl' with the registers exchanged for the scanner routines
+;	use
+;
+slotscan1:
+	    call saveslotmap
+
+	    ld d, #0
+nextslot:
+	    ld e, #0
+nextexpanded:
+	    call setslot1
+	    exx
+	    call callhl		; Scan
+	    exx
+	    call slotexpanded
+	    jr nz, noexpanded
+	    ld a, #0x55
+	    add e
+	    ld e, a
+	    jr nc, nextexpanded
+noexpanded:
+	    inc e
+	    bit 2, e
+	    jr z, nextslot
+	    call restoreslotmap
+	    ret
+
+callhl:	    jp (hl)
+
+megaset0:   xor a
+megaset:    out (c), a		; ROM mode
+	    ld (0x5fff), a	; page A
+	    in a, (c)
+	    ret
+;
+;	Hunt for a MegaRAM (assumes c set correctly by caller)
+;
+megaram_p:   call megaset0
+	    ld a, b		; Just using d for check code
+	    ld (0x5FFF), a	; Now should store this either way
+	    call megaset0
+	    ld a, (0x5FFF)
+	    cp b		; Z = MegaRAM (probably)
+	    ret
+
+megaram_chk:
+	    ld bc, #0xA58E
+	    call megaram_p
+	    ret nz		; Not MegaRAM
+	    ld c, #0x5A
+	    call megaram_p	; Paranoia check
+	    ret
+
+megaram_scan_f:
+	    call megaram_chk
+	    ret nz
+	    exx
+	    ld (megaram_i), de	; save de' (slot/subslot info)
+	    exx
+	    ret
+megaram_i:  .dw 0
+
+megaram_scan:
+	    exx
+	    ld hl, #megaram_scan_f
+	    exx
+	    call slotscan1
+	    ld de, (megaram_i)
+	    ld a, d
+	    or e
+	    jr z, megaram_no
+	    call setslot1	; select the megaram
+	    ld bc, #0x8E
+	    ld hl, #0x5fff
+	    call megaset0
+	    ld (hl), #0x55
+megaram_size:
+	    ld a, b
+	    call megaset
+	    ld a, (hl)
+	    cp #0x55
+	    jr z, megawrap_maybe
+megaram_size2:
+	    inc b
+	    jr nz, megaram_size
+megaram_sized:
+	    call restoreslotmap
+	    ; b is the size in 8K pages
+            ld a, b
+	    rra
+	    rra
+	    and #0x3F
+	    ret nz
+	    add #0x40
+	    ret
+megaram_no:
+	    xor a
+	    ret
+
+megawrap_maybe:
+	    call megaset0
+	    ld (hl), #0xAA
+	    ld a, b
+	    call megaset
+	    ld a, (hl)
+	    cp #0xAA		; both patterns worked
+	    jr z, megaram_sized
+	    jr megaram_size2	; false alarm, carry on
+
+map_megaram:
+	    ld de, (megaram_i)
+	    push de
+	    call setslot0
+	    pop de
+	    call setslot1
+	    ret
