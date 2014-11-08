@@ -36,7 +36,7 @@
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
 
-#define BOOT_TTY	18
+#define BOOT_TTY	(512 + 1)
 
 #define CMDLINE		NULL
 
