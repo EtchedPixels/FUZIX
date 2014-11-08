@@ -11,3 +11,47 @@ mapping) is "magically" the keyboard mappings.
 Need to try and keep kernel under 48K or so to make it easier to handle the
 screen memory, fonts etc. We need to put the screen (720x256 pixels + roller
 ram table of 512 bytes or so = ~ 24K) in the low 128K
+
+
+Building A Boot Image
+---------------------
+
+edit Makefile and set it to z80, platform pcw8256
+make clean; make
+cd platform-pcw8256/BOOTBLOCK
+zmac 765.s
+
+
+# Make a blank disc
+dd if=/dev/zero of=bootdisk.raw bs=512 count=360
+# Add the boot block in sector 0
+dd if=platform-pcw8256/BOOBLOCK/765.cim of=bootdisk.raw conv=notrunc
+# Add the kernel
+dd if=fuzix.bin of=bootdisk.raw bs=512 seek=1 conv=notrunc
+
+# Start the emulator
+xjoyce
+
+Hit F3 (Boot from alternative disc)
+Boot From
+	=>Other
+Enter filename for disc image
+	Disc file...
+		select bootdisk.raw
+	Advanced
+		Raw disc image file
+	OK
+	OK
+
+Should boot and detect the drives then prompt bootdev:
+
+At that point the keyboard should work.
+
+The floppy driver is incomplete but given a rootfs image on /dev/fd1 you
+should be able to at least get it to mount
+
+device 0 = fd0 1 = fd1
+
+
+Mixed boot/root images are not currently supported (this just needs a modified
+boot block that starts at a different offset)
