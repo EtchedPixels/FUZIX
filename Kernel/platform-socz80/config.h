@@ -19,14 +19,14 @@
 #define PROGBASE    ((char *)(0x0100))  /* also data base */
 #define PROGTOP     ((char *)(0xF900))  /* Top of program, base of U_DATA */
 
-#define BOOT_TTY 37       /* Set this to default device for stdio, stderr */
+#define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
 /* We borrow the CP/M command line */
 #define CMDLINE	0x81
 
 /* Device parameters */
-#define NUM_DEV_TTY (512 + 2)
+#define NUM_DEV_TTY 2
 #define NUM_DEV_SD 28
 #define NUM_DEV_RD 4
 

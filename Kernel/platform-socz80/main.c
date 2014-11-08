@@ -63,3 +63,7 @@ void pagemap_init(void)
      */
     pagemap_add(3);
 }
+
+void map_init(void)
+{
+}

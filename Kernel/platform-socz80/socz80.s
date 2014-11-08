@@ -16,6 +16,9 @@
             .globl _tty_outproc
 	    .globl map_kernel
 	    .globl map_process
+	    .globl map_process_always
+	    .globl map_save
+	    .globl map_restore
 	    .globl platform_interrupt_all
 
             ; exported debugging tools
@@ -350,86 +353,41 @@ _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
             di ; just to be sure
             pop de ; temporarily store return address
-            pop hl ; function argument -- base page number
+            pop hl ; function argument -- page table of this process
             push hl ; put stack back as it was
             push de
-            ld a, #0x0E ; use 0xe000 for mapping
-            out (MMU_SELECT), a
-            ld a, l
-            out (MMU_FRAMELO), a
-            ld a, h
-            out (MMU_FRAMEHI), a
+
+	    call map_process
 
             ; write zeroes across all vectors
-            ld hl, #0xE000
-            ld de, #0xE001
-            ld bc, #0x007f ; program first 0x80 bytes only
+            ld hl, #0x0
+            ld de, #0x1
+            ld bc, #0x7f ; program first 0x80 bytes only
             ld (hl), #0x00
             ldir
 
             ; now install the interrupt vector at 0x0038
             ld a, #0xC3 ; JP instruction
-            ld (0xE038), a
+            ld (0x38), a
             ld hl, #interrupt_handler
-            ld (0xE039), hl
+            ld (0x39), hl
 
             ; set restart vector for UZI system calls
-            ld (0xE030), a   ;  (rst 30h is unix function call vector)
+            ld (0x30), a   ;  (rst 30h is unix function call vector)
             ld hl, #unix_syscall_entry
-            ld (0xE031), hl
+            ld (0x31), hl
 
             ; Set vector for Illegal Instructions (this is presuambly a Z180 CPU feature? Z80 doesn't do this)
-            ld (0xE000), a   
+            ld (0x0), a
             ld hl, #trap_illegal   ;   to Our Trap Handler
-            ld (0xE001), hl
+            ld (0x1), hl
 
-            ld (0xE066), a  ; Set vector for NMI
+            ld (0x66), a  ; Set vector for NMI
             ld hl, #nmi_handler
-            ld (0xE067), hl
+            ld (0x0067), hl
 
-            ; now prepare the top page of memory for this process; it will need
-            ; a copy of the code located there (we take this from our SRAM page)
-            pop de  ; return address
-            pop hl  ; base page number
-            push hl
-            push de
-
-            ld de, #0x000f  ; advance HL to top page of process memory
-            add hl, de
-
-            ; program MMU (frame E is still selected)
-            ld a, l
-            out (MMU_FRAMELO), a
-            ld a, h
-            out (MMU_FRAMEHI), a
-
-            ; load SRAM in frame D
-            ld a, #0x0d
-            out (MMU_SELECT), a
-            ld a, #0x20
-            out (MMU_FRAMEHI), a
-            ld a, #0x01
-            out (MMU_FRAMELO), a
-
-            ; copy the code only, not the udata or stacks.
-            ld de, #(0xE000 + U_DATA__PAGEOFFSET + U_DATA__TOTALSIZE)   ; to process RAM
-            ld hl, #(0xD000 + U_DATA__PAGEOFFSET + U_DATA__TOTALSIZE)   ; from SRAM
-            ld bc, #(0x1000 - U_DATA__PAGEOFFSET - U_DATA__TOTALSIZE)   ; count
-            ldir                                    ; copy copy copy
-
-            ; put the MMU back as it was -- we're in kernel mode so this is predictable
-            xor a
-            out (MMU_FRAMEHI), a
-            ld a, #0x0d
-            out (MMU_FRAMELO), a
-
-            ld a, #0x0e
-            out (MMU_SELECT), a
-            out (MMU_FRAMELO), a
-            xor a
-            out (MMU_FRAMEHI), a
-
-            ret
+	    call map_kernel
+	    ret
 
 mmumsg:     .ascii "MMU page "
             .db 0
@@ -468,47 +426,64 @@ dumpnextframe:
 
             .area _COMMONMEM
 
-; map process into address space
-; first page address is in HL
-; destroys HL, BC, AF, does not use DE
+;
+; Mapping routines. Not yet all fixed up for the new style memory management
+;
+; Note: we don't flip the common space here, it's handled on task switch and
+; in some cases in the swap driver
+;
+; HL points to the page array for this task, or NULL for kernel
+; Preserve all but a, hl
 map_process:
 	    ld a, h
  	    or l
-	    jr nz, map_process_user
+	    jr nz, map_process_always
 	    ld hl, #OS_BANK
-	    jr map_restore
+	    jr map_loadhl
 
-map_process_user:
-	    ld a, (hl)
-	    inc hl
-	    ld h, (hl)
-	    ld l, a
+;
+; map the current process, preserves all registers
+;
+map_process_always:
+	    push hl
+	    ld hl, #U_DATA__U_PAGE
+	    call map_loadhl
+	    pop hl
+	    ret
+;
+; map the kernel. preserves all registers
+;
+map_kernel:
+	    push hl
+	    ld hl, #OS_BANK
+	    call map_loadhl
+	    pop hl
+	    ret
+;
+; HL points to the four logical pages to restore. Preserve registers.
+; As our MMU is 4K each page is 4 logical pages. We could add a bank4k but
+; it's not clear its actually worth the effort - feel free however 8)
+;
 map_restore:
-            ; examine 0 page
-            xor a
-            out (MMU_SELECT), a
-            ; if HL is the mapping already loaded, abort early
-            in a, (MMU_FRAMEHI)
-            cp h
-            jr nz, map_process_go
-            in a, (MMU_FRAMELO)
-            cp l
-            ret z
-map_process_go:
-            ; now setup the MMU
-            ld b, #15
-            ld c, #1 ; this is the next frame to be remapped
-map_process_next:
-            ld a, h
-            out (MMU_FRAMEHI), a
-            ld a, l
-            out (MMU_FRAMELO), a
-            ld a, c
-            out (MMU_SELECT), a
-            inc c
-            inc hl
-            djnz map_process_next
+	    push hl
+	    ld hl, #saved_map
+	    call map_loadhl
+	    pop hl
             ret
+
+map_save:
+	    ; FIXME: Save the current mapping registers. Preserves all
+	    ; registers
+	    ret
+
+map_loadhl:
+	    ; FIXME: Load the mapping from HL. We want to load at least the
+	    ; low 48K of mappings and on here arguably we want to load all
+	    ; but the last 4K (however watch the fork copy if so)
+	    ret
+
+	    ; FIXME: need bigger space and to plan this out better
+saved_map:  .db 0, 0, 0, 0
 
             ; Load page HL into frame A
             ; Return old mapping in DE
@@ -530,12 +505,7 @@ mmu_map_page_fast:
             out (MMU_FRAMELO), a
             ret
 
-map_kernel:
-	    ld hl, #0
-            jp map_process
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
