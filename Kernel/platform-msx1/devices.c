@@ -1,6 +1,8 @@
 #include <kernel.h>
+#include <printf.h>
 #include <version.h>
 #include <kdata.h>
+#include <devices.h>
 #include <devhd.h>
 #include <devfd.h>
 #include <devlpr.h>
@@ -33,6 +35,18 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+/*
+ *	We may want to do this differently in the end but report the
+ *	cartridge hashes found.
+ *
+ *	A4B6 = Sony HBD-F1
+ *	3B49 = Sony HBK-30
+ */
 void device_init(void)
 {
+  int i;
+  for (i = 0; i < 16; i++) {
+    if (slot_table[i])
+      kprintf("%d.%d: %x\n", (i>>2) & 3, i & 3, slot_table[i]);
+  }
 }

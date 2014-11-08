@@ -14,6 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _slot_table
 
 	    ; video driver
 	    .globl _vtinit
@@ -143,6 +144,7 @@ size_memory:
 	    ld de, #0x40		; main memory for kernel
 	    add hl, de
 	    ld (_ramsize), hl
+	    call rom_scan
 	    ret
 
 _program_vectors:
@@ -637,3 +639,75 @@ map_megaram:
 	    pop de
 	    call setslot1
 	    ret
+
+;
+;	Find each rom and insert it by hash code into the slot table. We
+;	can then use this to find out where things like floppy drives have
+;	been hidden. Right now we are only scanning 0x4000-0x7FFF, but we
+;	will probably need to scan 0x8000-0xBFFF as well eventually (which
+;	will be a right PITA as we'll need slotscan2 and all the supporting
+;	logic to be in 0x0000-0x3FFF!)
+;
+rom_scan:
+	    ld hl, #rom_scan_f
+	    exx
+	    call slotscan1
+	    ret
+
+rom_scan_f:
+	    ld a, #'*'
+	    out (0x2f), a
+	    ld a, (0x4000)
+	    cp #'A'
+	    ret nz
+	    ld a, (0x4001)
+	    cp #'B'
+	    ret nz
+	    ;
+	    ; ROM found. Preserve HL as its the call vector
+	    ;
+	    ld a, #'R'
+	    out (0x2f), a
+	    push hl
+	    ld hl, #0x4002
+	    ld bc, #2048
+	    ld de, #0
+	    ; Use the low 2K as a checksum identifier
+rom_scan_1:
+	    ld a, (hl)
+	    add e
+	    ld e, a
+	    ld a, d
+	    adc #0
+	    ld d, a
+	    inc hl
+	    djnz rom_scan_1
+	    dec c
+	    jr nz,rom_scan_1
+	    exx
+	    push de	;slot info
+	    exx
+	    pop bc
+	    ld a, b
+	    and #0x0C
+	    ld b, a
+	    ld a, c
+	    and #0x03
+            or b
+	    add a
+	    ld c, a
+	    ld b, #0
+	    ld hl, #_slot_table
+	    add hl, bc
+	    ld (hl), e
+	    inc hl
+	    ld (hl), d
+	    pop hl
+	    ret
+
+; Needs to be outside of 0x4000-0x7FFF
+_slot_table:
+	    .dw 0,0,0,0
+	    .dw 0,0,0,0
+	    .dw 0,0,0,0
+	    .dw 0,0,0,0
