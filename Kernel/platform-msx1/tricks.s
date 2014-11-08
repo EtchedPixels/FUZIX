@@ -18,6 +18,8 @@
         .globl interrupt_handler
         .globl dispatch_process_signal
 	.globl map_kernel
+	.globl map_process_always
+	.globl map_process
 	.globl _ramtop
 
         ; imported debug symbols
@@ -89,7 +91,7 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
-        ld hl, #P_TAB__P_PAGE_OFFSET+3	; Common
+        ld hl, #P_TAB__P_PAGE_OFFSET	; Common
 	add hl, de		; process ptr
 
 	call map_process
