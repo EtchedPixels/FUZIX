@@ -502,9 +502,9 @@ void kprintf(const char *fmt, ...)
 				v = va_arg(ap, int);
 				if (*fmt == 'x')
 					kputhex(v);
-				if (*fmt == 'd')
+				else if (*fmt == 'd')
 					kputnum(v);
-				if (*fmt == 'u')
+				else if (*fmt == 'u')
 					kputunum(v);
 				fmt++;
 				continue;
