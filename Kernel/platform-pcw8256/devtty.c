@@ -242,7 +242,7 @@ static void keydecode(void)
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-        kprintf("ttyinproc %d\n", (int) c);
+/*        kprintf("ttyinproc %d\n", (int) c); */
 	tty_inproc(1, c);
 }
 
