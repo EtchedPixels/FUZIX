@@ -1,0 +1,29 @@
+An FUZIX target for ZX Spectrum 128.
+
+Big part of the code was taken from z80pack and msx1 ports.
+
+ZX Spectrum has a memory layout like follows:
+
+0000-3FFF	ROM
+4000-57FF	Screen pixel data
+5800-5AFF	Screen attributes data
+5B00-FFFF	RAM
+
+1 memory bank exists at 0xC000, one of 6 16384-byte pages can be mapped there.
+
+So the fuzix port is limited to those features:
+
+1) Code1 segment should be flashed into ROM (instead of BASIC-128 in a simplest case).
+2) We have memory "hole" at screen area (4000-5AFF), which we can not use for code or data.
+   So we can not allow Code1 to be larger than 0x4000 bytes.
+3) We need to store some bootloader procedure in Code1, which should read fuzix image
+   data from somewhere (for now this is done via emulator hack) and place it in RAM at
+   correct addresses.
+4) Common area can not be at F000 as usual because F000 belongs to banking area.
+5) Maximum user program size is 16384 bytes.
+6) ZX Spectrum 128 had not any official floppy disk controller. Third-party hardware
+   (like popular in Eastern Europe Betadisk Interface) was designed to be compatible 
+   with old software, so contains some terrible features like FDC port visibility 
+   limited to 256-bytes long area of ROM. Outside this area any requests to FDC ports 
+   are ignored. This makes disk driver implementation very tricky until we have more 
+   smart linker.
