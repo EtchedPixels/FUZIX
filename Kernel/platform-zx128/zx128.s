@@ -140,18 +140,15 @@ switch_bank:
 
 map_kernel:
         push af
+map_kernel_nopush:          ; to avoid double af pushing when called from map_process
         xor a
-        ld (current_map), a
-        ld bc, #0x7ffd
-        out (c), a
-        pop af
-        ret
+        jr switch_bank
 
 map_process:
         push af
         ld a, h
         or l
-        jr z, map_kernel
+        jr z, map_kernel_nopush
         ld a, (hl)
         jr switch_bank
 
