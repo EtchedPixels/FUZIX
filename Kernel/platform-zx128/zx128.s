@@ -105,7 +105,7 @@ _program_vectors:
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
-<<<<<<< HEAD
+
 switch_bank:
         di                  ; TODO: we need to call di() instead
         ld (current_map), a
@@ -125,20 +125,21 @@ switch_bank:
         ret
 
 map_kernel:
+
         ld (place_for_a), a
 map_kernel_nosavea:          ; to avoid double reg A saving
         xor a
-<<<<<<< HEAD
         jr switch_bank
 
 map_process:
-        ld (place_for_a), a
-=======
         ld (current_map), a
         ld bc, #0x7ffd
         out (c), a
         pop af
         ret
+map_kernel_nopush:          ; to avoid double af pushing when called from map_process
+        xor a
+        jr switch_bank
 
 map_process:
         push af
