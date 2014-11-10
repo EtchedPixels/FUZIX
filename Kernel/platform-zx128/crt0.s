@@ -7,12 +7,13 @@
         ; we don't use them all, because their ordering is set
         ; when they are first seen.
         .area _CODE
+        .area _DATA
+        .area _COMMONMEM
         .area _CODE2
         .area _VIDEO
         .area _DISCARD      ; not discarded yet
         .area _CONST
         .area _FONT
-        .area _DATA
         .area _INITIALIZED
         .area _BSEG
         .area _BSS
@@ -22,7 +23,6 @@
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
-        .area _COMMONMEM
 
         ; imported symbols
         .globl _fuzix_main

@@ -3,6 +3,7 @@
 -b _CODE=0x0000
 -b _CODE2=0x5B00
 -b _COMMONMEM=0xF000
+-b _UDATA=0xFC00
 -l z80
 platform-zx128/crt0.rel
 platform-zx128/commonmem.rel

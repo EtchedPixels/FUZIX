@@ -159,7 +159,7 @@ map_process_always:
 
 map_save:
         push af
-        in a, (current_map)
+        ld a, (current_map)
         ld (map_store), a
         pop af
         ret
