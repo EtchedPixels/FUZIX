@@ -126,32 +126,43 @@ init_hardware:
 _program_vectors:
         ret
 
-        ; below is code which was copied from z80pack, so it's useless for zx128
+        ; bank switching procedure. On entrance:
+        ;  A - bank number to set
+        ;  stack: AF, (return address)
+switch_bank:
+        ld (current_map), a
+        push bc
+        ld bc, #0x7ffd
+        out (c), a
+        pop bc
+        pop af
+        ret
+
 map_kernel:
         push af
         xor a
-        ; out (21), a
+        ld (current_map), a
+        ld bc, #0x7ffd
+        out (c), a
         pop af
         ret
 
 map_process:
+        push af
         ld a, h
         or l
         jr z, map_kernel
         ld a, (hl)
-        ; out (21), a
-        ret
+        jr switch_bank
 
 map_process_always:
         push af
         ld a, (U_DATA__U_PAGE)
-        ; out (21), a
-        pop af
-        ret
+        jr switch_bank
 
 map_save:
         push af
-        in a, (21)
+        in a, (current_map)
         ld (map_store), a
         pop af
         ret
@@ -159,10 +170,11 @@ map_save:
 map_restore:
         push af
         ld a, (map_store)
-        ; out (21), a
-        pop af
-        ret
+        jr switch_bank
 
+current_map:                ; place to store current page number. Is needed
+        .db 0               ; because we have no ability to read 7ffd port
+                            ; to detect what page is mapped currently 
 map_store:
         .db 0
 
