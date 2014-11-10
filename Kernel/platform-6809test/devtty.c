@@ -44,7 +44,7 @@ bool tty_writeready(uint8_t minor)
 	return c & 1;
 }
 
-void tty_putc(uint8_t minor, char c)
+void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
 #if 0
@@ -54,6 +54,18 @@ void tty_putc(uint8_t minor, char c)
 	}
 #endif	
 	*uarta = c;
+}
+
+void tty_setup(uint8_t minor)
+{
+    minor;
+}
+
+/* For the moment */
+int tty_carrier(uint8_t minor)
+{
+    minor;
+    return 1;
 }
 
 void platform_interrupt(void)

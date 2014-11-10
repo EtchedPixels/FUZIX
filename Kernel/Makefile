@@ -1,9 +1,9 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-spec3 platform-trs80 platform-z80pack platform-z80pack-lite 
+TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-export TARGET= msx2
-export CPU = z80
-#export TARGET = 6809test
-#export CPU = 6809
+#export TARGET= zx128
+#export CPU = z80
+export TARGET = 6809test
+export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -47,6 +47,7 @@ export CROSS_CC = m6809-unknown-gcc
 #export CROSS_CCOPTS=-Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CCOPTS=-c -Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export ASOPTS=
+export BINEXT = .o
 endif
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -156,7 +157,7 @@ fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
 	tools/binman uzi.tmp uzi.map fuzix.bin
 	$(MAKE) -C platform-$(TARGET) image
 else
-uzi.bin: target $(OBJS)
+fuzix.bin: target $(OBJS)
 	$(MAKE) -C platform-$(TARGET) image
 endif
 

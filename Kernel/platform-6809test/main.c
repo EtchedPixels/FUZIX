@@ -48,3 +48,6 @@ void pagemap_init(void)
     pagemap_add(0x86);
 }
 
+void map_init(void)
+{
+}

@@ -17,16 +17,16 @@ $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %$(BINEXT): %.s
-	$(CROSS_AS) $(ASOPTS) $< -o $*$(BINEXT)
+	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	$(CROSS_LD) -o uzi.bin --map uzi.map -nostdlib crt0.o commonmem.o \
+	$(CROSS_LD) -o ../fuzix.bin --map ../uzi.map -nostdlib crt0.o commonmem.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
-	../tty.o ../devnull.o ../devzero.o ../devproc.o ../devmem.o \
+	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../usermem_std-6809.o devlpr.o devtty.o libc.o

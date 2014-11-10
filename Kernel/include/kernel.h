@@ -536,7 +536,7 @@ void idump(void);
 bool validdev(uint16_t dev);
 
 /* usermem.c */
-usize_t valaddr(char *base, usize_t size);
+usize_t valaddr(const char *base, usize_t size);
 int uget(const void *userspace_source, void *dest, usize_t count);
 int16_t  ugetc(const void *userspace_source);
 uint16_t ugetw(const void *userspace_source);
@@ -685,7 +685,7 @@ void updoff(void);
 int stcpy(inoptr ino, char *buf);
 bool rargs (char **userspace_argv, struct s_argblk *argbuf);
 char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
-extern int unlinki(inoptr ino, inoptr pino, char *fname);
+extern int16_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* timer.c */
 void rdtime(time_t *tloc);

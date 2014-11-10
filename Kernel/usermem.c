@@ -9,7 +9,7 @@
 #include <printf.h>
 
 /* This checks to see if a user-supplied address is legitimate */
-usize_t valaddr(char *base, usize_t size)
+usize_t valaddr(const char *base, usize_t size)
 {
 	if (base < (char *)PROGBASE || base + size < base)
 		size = 0;
@@ -141,7 +141,7 @@ int _uput(const uint8_t *source, uint8_t *user, usize_t count)
 {
 	uint8_t tmp;
 	while(count--) {
-		tmp = *source++
+		tmp = *source++;
 		BANK_PROCESS;
 		*user++ = tmp;
 		BANK_KERNEL;

@@ -33,7 +33,8 @@ void swapmap_add(uint8_t swap)
 	swapmap[swapptr++] = swap;
 }
 
-static int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes, char *buf)
+static int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
+                    uint8_t *buf)
 {
 	swapbase = buf;
 	swapcnt = nbytes;
@@ -43,7 +44,7 @@ static int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes, char *buf)
 
 
 static int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-		     char *buf)
+		     uint8_t *buf)
 {
 	swapbase = buf;
 	swapcnt = nbytes;

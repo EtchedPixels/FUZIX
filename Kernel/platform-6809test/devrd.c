@@ -25,7 +25,7 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
             udata.u_error = EIO;
             return -1;
         }
-        block = udata.u_offset.o_blkno;
+        block = udata.u_offset >> 9;
         block_xfer = dlen >> 9;
         map = 1;
     } else { /* rawflag == 0 */

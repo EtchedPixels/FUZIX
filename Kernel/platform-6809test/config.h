@@ -14,6 +14,7 @@
 #define BANK_KERNEL	*((volatile uint8_t *)0xff91) |= 1
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
+#define CONFIG_BANKS	4
 #define MAX_MAPS 16
 /* And swapping */
 #define SWAPDEV 6	/* FIXME */
@@ -39,7 +40,7 @@
 #define PROGBASE    ((char *)(0x0100))  /* also data base */
 #define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
 
-#define BOOT_TTY 3        /* Set this to default device for stdio, stderr */
+#define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
                             /* Temp FIXME set to serial port for debug ease */
 
