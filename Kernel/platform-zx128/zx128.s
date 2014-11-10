@@ -16,7 +16,6 @@
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
-        .globl _system_tick_counter
         .globl platform_interrupt_all
 
         .globl map_kernel
@@ -89,6 +88,7 @@ _fd_bankcmd:
 init_early:
         ld bc, #0x7ffd
         xor a
+        ld (current_map), a
         out (c), a            ; set page 0 at 0xC000
         ret
 
