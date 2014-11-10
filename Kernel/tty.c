@@ -330,7 +330,7 @@ int tty_inproc(uint8_t minor, unsigned char c)
 
 	/* All modes come here */
 	if (c == '\n') {
-		if ((td->c_oflag & OPOST | ONLCR) == OPOST | ONLCR)
+		if ((td->c_oflag & (OPOST | ONLCR)) == (OPOST | ONLCR))
 			tty_echo(minor, '\r');
 	}
 
