@@ -164,12 +164,12 @@ copy_pixel_line:
         ; TODO: the LDIR way should be much faster
 
 _scroll_down:
-        ; set HL = (0,0), DE = (0, 1)
+        ; set HL = (0,22), DE = (0, 23)
         xor a
         ld d, a
         ld h, a
-        ld l, a
-        ld e, #1
+        ld l, #22
+        ld e, #23
         ld c, #23           ; 23 lines to move
 
 loop_scroll_down:
@@ -183,8 +183,8 @@ loop_scroll_down:
         pop de
         pop hl
 
-        inc l
-        inc e
+        dec l
+        dec e
         dec c
         jr nz, loop_scroll_down
 
@@ -192,12 +192,12 @@ loop_scroll_down:
 
 
 _scroll_up:
-        ; set HL = (0,23), DE = (0, 22)
+        ; set HL = (0,1), DE = (0, 0)
         xor a
         ld d, a
+        ld e, a
         ld h, a
-        ld l, #23
-        ld e, #22
+        ld l, #1
         ld c, #23           ; 23 lines to move
 
 loop_scroll_up:
@@ -211,8 +211,8 @@ loop_scroll_up:
         pop de
         pop hl
 
-        dec l
-        dec e
+        inc l
+        inc e
         dec c
         jr nz, loop_scroll_up
 

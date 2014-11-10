@@ -36,6 +36,7 @@
 ; 
 ; This function can have no arguments or auto variables.
 _switchout:
+        ret
         di
         call _chksigs
         ; save machine state
@@ -78,6 +79,7 @@ swapped: .ascii "_switchin: SWAPPED"
             .db 13, 10, 0
 
 _switchin:
+        ret
         di
         pop bc  ; return address
         pop de  ; new process pointer
