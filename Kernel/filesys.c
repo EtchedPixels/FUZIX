@@ -37,7 +37,6 @@ inoptr n_open(char *uname, inoptr *parent)
 inoptr kn_open(char *name, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
-    register char *np = name;
     staticfast inoptr ninode;
     inoptr temp;
 
@@ -1017,7 +1016,7 @@ static struct mount *newfstab(void)
     return NULL;
 }
 
-static struct mount *fs_tab_get(uint16_t dev)
+struct mount *fs_tab_get(uint16_t dev)
 {
     struct mount *m = fs_tab;
     int i;
