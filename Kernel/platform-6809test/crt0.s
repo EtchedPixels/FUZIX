@@ -10,7 +10,10 @@
 	        .globl kstack_top
 
 	        ; startup code @0
-	        .area .text
+	        .area .start
+		jmp start
+
+		.area .text
 
 start:		orcc #0x10		; interrupts definitely off
 		lds #kstack_top

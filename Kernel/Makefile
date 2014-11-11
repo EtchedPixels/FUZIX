@@ -1,9 +1,9 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-export TARGET= msx1
-export CPU = z80
-#export TARGET = 6809test
-#export CPU = 6809
+#export TARGET= msx1
+#export CPU = z80
+export TARGET = dragon
+export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -42,10 +42,13 @@ export CROSS_CCOPTS=-c -Or -t c128 -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform
 export BINEXT = .o
 else
 export CROSS_AS=m6809-unknown-as
-export CROSS_LD=m6809-unknown-ld
+export CROSS_LD=lwlink
 export CROSS_CC = m6809-unknown-gcc
 #export CROSS_CCOPTS=-Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
-export CROSS_CCOPTS=-c -Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CC_SEG2=-mcode-section=.text2
+export CROSS_CC_SEGDISC=-mcode-section=.discard
+export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.video
 export ASOPTS=
 export BINEXT = .o
 endif

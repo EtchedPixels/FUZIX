@@ -21,7 +21,7 @@
 #define SWAP_SIZE   0x80 	/* 64K blocks */
 /* FIXME */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0x8000	/* uarea so its a round number of sectors */
 #define UDATA_BLOCKS	0	/* We swap the uarea in the data */
 #define UDATA_SWAPSIZE	0
 #define MAX_SWAPS	32

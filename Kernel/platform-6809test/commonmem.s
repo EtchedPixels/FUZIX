@@ -12,7 +12,7 @@
         .globl istack_top
         .globl istack_switched_sp
 
-        .area _COMMONMEM
+        .area .udata
 
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
