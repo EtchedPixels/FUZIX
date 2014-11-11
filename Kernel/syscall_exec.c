@@ -4,6 +4,15 @@
 #include <printf.h>
 #include <timer.h>
 
+static void close_on_exec(void)
+{
+	int j;
+	for (j = UFTSIZE - 1; j >= 0; --j) {
+		if (udata.u_cloexec & (1 << j))
+			doclose(j);
+	}
+	udata.u_cloexec = 0;
+}
 
 /* User's execve() call. All other flavors are library routines. */
 /*******************************************
@@ -18,27 +27,29 @@ char *envp[];
 
 int16_t _execve(void)
 {
-	inoptr ino, emu_ino;
-	unsigned char *buf;
-	blkno_t blk;
+	staticfast inoptr ino, emu_ino;
+	staticfast unsigned char *buf;
+	staticfast blkno_t blk;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
-	struct s_argblk *abuf, *ebuf;
+	staticfast struct s_argblk *abuf, *ebuf;
 	int16_t (**sigp) ();
 	int argc;
 	uint16_t emu_size, emu_copy;
 	uint8_t *progptr, *emu_ptr, *emu_base;
-	int j;
-	uint16_t top = (uint16_t)ramtop;
+	staticfast uint16_t top;
 	uint8_t c;
 	uint16_t blocks;
 
 	kputs("execve\n");
 
+	top = (uint16_t)ramtop;
+
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
 
 	kputs("Found it\n");
+
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
@@ -134,11 +145,7 @@ int16_t _execve(void)
 	/* At this point, we are committed to reading in and
 	 * executing the program. */
 
-	for (j = 0; j < UFTSIZE; ++j) {
-		if (udata.u_cloexec & (1 << j))
-			doclose(j);
-	}
-	udata.u_cloexec = 0;
+	close_on_exec();
 
 #ifdef CONFIG_CPM_EMU
 	// Load the CP/M emulator if it is required
