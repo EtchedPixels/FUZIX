@@ -39,8 +39,8 @@
 
 
 static int vtmode;
-static char cursorx;
-static char cursory;
+static signed char cursorx;
+static signed char cursory;
 static int ncursory;
 
 static void cursor_fix(void)
