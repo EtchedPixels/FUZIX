@@ -204,7 +204,7 @@ int16_t _rmdir(void)
 	}
 
 	/* Parent must be writable */
-	if (!getperm(parent) & OTH_WR)
+	if (!(getperm(parent) & OTH_WR))
 		goto nogood;
 
 	/* Remove the directory entry */
