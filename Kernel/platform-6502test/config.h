@@ -15,6 +15,7 @@
 /* TODO: these need to be defined as the code to flip the banks over */
 #define BANK_PROCESS
 #define BANK_KERNEL
+#define CONFIG_BANKS	1
 
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
