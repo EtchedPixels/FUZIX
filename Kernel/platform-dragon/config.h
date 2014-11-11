@@ -13,6 +13,8 @@
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_BANKS	1
+/* Banked Kernel: need to fix GCC first */
+#undef CONFIG_BANKED
 /* FIXME */
 #define BANK_PROCESS	*((volatile uint8_t *)0xff91) &= ~1
 #define BANK_KERNEL	*((volatile uint8_t *)0xff91) |= 1

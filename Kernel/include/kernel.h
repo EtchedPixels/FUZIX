@@ -522,152 +522,149 @@ struct selmap {
 
 /* functions in common memory */
 
-/* switches to a temporary stack in common memory */
-void tempstack(void); 
-
 /* debug functions */
-void trap_monitor(void);
-void idump(void);
+COMMON void trap_monitor(void);
+CODE1 void idump(void);
 
 /* start.c */
 
-/* kdata.c */
-bool validdev(uint16_t dev);
+/* platform/device.c */
+CODE1 bool validdev(uint16_t dev);
 
 /* usermem.c */
-usize_t valaddr(const char *base, usize_t size);
-int uget(const void *userspace_source, void *dest, usize_t count);
-int16_t  ugetc(const void *userspace_source);
-uint16_t ugetw(const void *userspace_source);
-int ugets(const void *userspace_source, void *dest, usize_t maxlen);
-int uput (const void *source,   void *userspace_dest, usize_t count);
-int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
-int uputw(uint16_t value, void *userspace_dest);
-int uzero(void *userspace_dest, usize_t count);
+CODE2 usize_t valaddr(const char *base, usize_t size);
+CODE2 int uget(const void *userspace_source, void *dest, usize_t count);
+CODE2 int16_t  ugetc(const void *userspace_source);
+CODE2 uint16_t ugetw(const void *userspace_source);
+CODE2 int ugets(const void *userspace_source, void *dest, usize_t maxlen);
+CODE2 int uput (const void *source,   void *userspace_dest, usize_t count);
+CODE2 int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
+CODE2 int uputw(uint16_t value, void *userspace_dest);
+CODE2 int uzero(void *userspace_dest, usize_t count);
 
 /* usermem.c or usermem_std.s */
-usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
-int16_t _ugetc(const uint8_t *user);
-uint16_t _ugetw(const uint16_t *user);
-int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
-int _uput(const uint8_t *source, uint8_t *user, usize_t count);
-int _uputc(uint16_t value,  uint8_t *user);
-int _uputw(uint16_t value,  uint16_t *user);
-int _uzero(uint8_t *user, usize_t count);
+COMMON usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
+COMMON int16_t _ugetc(const uint8_t *user);
+COMMON uint16_t _ugetw(const uint16_t *user);
+COMMON int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
+COMMON int _uput(const uint8_t *source, uint8_t *user, usize_t count);
+COMMON int _uputc(uint16_t value,  uint8_t *user);
+COMMON int _uputw(uint16_t value,  uint16_t *user);
+COMMON int _uzero(uint8_t *user, usize_t count);
 
-/* tricks.s */
-void switchout(void);
-void doexec(void *start_addr);
-void switchin(ptptr process);
-int16_t dofork(ptptr child);
+/* platform/tricks.s */
+COMMON void switchout(void);
+COMMON void doexec(void *start_addr);
+COMMON void switchin(ptptr process);
+COMMON int16_t dofork(ptptr child);
 
 /* devio.c */
-uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
-void brelse(void *bp);
-void bawrite(void *bp);
-int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
-void *tmpbuf(void);
-void *zerobuf(void);
-void bufsync(void);
-bufptr bfind(uint16_t dev, blkno_t blk);
-bufptr freebuf(void);
-void bufinit(void);
-void bufdiscard(bufptr bp);
-void bufdump (void);
-int bdread(bufptr bp);
-int bdwrite(bufptr bp);
-int cdread(uint16_t dev, uint8_t flag);
-int d_open(uint16_t dev, uint8_t flag);
-int d_close(uint16_t dev);
-int d_ioctl(uint16_t dev, uint16_t request, char *data);
-int cdwrite(uint16_t dev, uint8_t flag);
-bool insq(struct s_queue *q, char c);
-bool remq(struct s_queue *q, char *cp);
-void clrq(struct s_queue *q);
-bool uninsq(struct s_queue *q, char *cp);
-int psleep_flags(void *event, unsigned char flags);
-int nxio_open(uint8_t minor, uint16_t flag);
-int no_open(uint8_t minor, uint16_t flag);
-int no_close(uint8_t minor);
-int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
-int no_ioctl(uint8_t minor, uint16_t a, char *b);
+CODE1 uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
+CODE1 void brelse(void *bp);
+CODE1 void bawrite(void *bp);
+CODE1 int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
+CODE1 void *tmpbuf(void);
+CODE1 void *zerobuf(void);
+CODE1 void bufsync(void);
+CODE1 bufptr bfind(uint16_t dev, blkno_t blk);
+CODE1 bufptr freebuf(void);
+CODE1 void bufinit(void);
+CODE1 void bufdiscard(bufptr bp);
+CODE1 void bufdump (void);
+CODE1 int bdread(bufptr bp);
+CODE1 int bdwrite(bufptr bp);
+CODE1 int cdread(uint16_t dev, uint8_t flag);
+CODE1 int d_open(uint16_t dev, uint8_t flag);
+CODE1 int d_close(uint16_t dev);
+CODE1 int d_ioctl(uint16_t dev, uint16_t request, char *data);
+CODE1 int cdwrite(uint16_t dev, uint8_t flag);
+CODE1 bool insq(struct s_queue *q, char c);
+CODE1 bool remq(struct s_queue *q, char *cp);
+CODE1 void clrq(struct s_queue *q);
+CODE1 bool uninsq(struct s_queue *q, char *cp);
+CODE1 int psleep_flags(void *event, unsigned char flags);
+CODE1 int nxio_open(uint8_t minor, uint16_t flag);
+CODE1 int no_open(uint8_t minor, uint16_t flag);
+CODE1 int no_close(uint8_t minor);
+CODE1 int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
+CODE1 int no_ioctl(uint8_t minor, uint16_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
-inoptr n_open(char *uname, inoptr *parent); 
+CODE1 inoptr n_open(char *uname, inoptr *parent);
 /* open file, "name" in kernel address space */
-inoptr kn_open(char *uname, inoptr *parent); 
-inoptr i_open(uint16_t dev, uint16_t ino);
-inoptr srch_dir(inoptr wd, char *compname);
-inoptr srch_mt(inoptr ino);
-bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
-void filename(char *userspace_upath, char *name);
+CODE1 inoptr kn_open(char *uname, inoptr *parent);
+CODE1 inoptr i_open(uint16_t dev, uint16_t ino);
+CODE1 inoptr srch_dir(inoptr wd, char *compname);
+CODE1 inoptr srch_mt(inoptr ino);
+CODE1 bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
+CODE1 void filename(char *userspace_upath, char *name);
 /* return true if n1 == n2 */
-bool namecomp(char *n1, char *n2); 
-inoptr newfile(inoptr pino, char *name);
-fsptr getdev(uint16_t dev);
-bool baddev(fsptr dev);
-uint16_t i_alloc(uint16_t devno);
-void i_free(uint16_t devno, uint16_t ino);
-blkno_t blk_alloc(uint16_t devno);
-void blk_free(uint16_t devno, blkno_t blk);
-int8_t oft_alloc(void);
-void oft_deref(int8_t of);
+CODE1 bool namecomp(char *n1, char *n2);
+CODE1 inoptr newfile(inoptr pino, char *name);
+CODE1 fsptr getdev(uint16_t dev);
+CODE1 bool baddev(fsptr dev);
+CODE1 uint16_t i_alloc(uint16_t devno);
+CODE1 void i_free(uint16_t devno, uint16_t ino);
+CODE1 blkno_t blk_alloc(uint16_t devno);
+CODE1 void blk_free(uint16_t devno, blkno_t blk);
+CODE1 int8_t oft_alloc(void);
+CODE1 void oft_deref(int8_t of);
 /* returns index of slot, or -1 on failure */
-int8_t uf_alloc(void); 
+CODE1 int8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
-int8_t uf_alloc_n(int n); 
-void i_ref(inoptr ino);
-void i_deref(inoptr ino);
-void wr_inode(inoptr ino);
-bool isdevice(inoptr ino);
-void f_trunc(inoptr ino);
-void freeblk(uint16_t dev, blkno_t blk, uint8_t level);
-blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
-void validblk(uint16_t dev, blkno_t num);
-inoptr getinode(uint8_t uindex);
-bool super(void);
-bool esuper(void);
-uint8_t getperm(inoptr ino);
-void setftime(inoptr ino, uint8_t flag);
-uint16_t getmode(inoptr ino);
-struct mount *fs_tab_get(uint16_t dev);
+CODE1 int8_t uf_alloc_n(int n);
+CODE1 void i_ref(inoptr ino);
+CODE1 void i_deref(inoptr ino);
+CODE1 void wr_inode(inoptr ino);
+CODE1 bool isdevice(inoptr ino);
+CODE1 void f_trunc(inoptr ino);
+CODE1 void freeblk(uint16_t dev, blkno_t blk, uint8_t level);
+CODE1 blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
+CODE1 void validblk(uint16_t dev, blkno_t num);
+CODE1 inoptr getinode(uint8_t uindex);
+CODE1 bool super(void);
+CODE1 bool esuper(void);
+CODE1 uint8_t getperm(inoptr ino);
+CODE1 void setftime(inoptr ino, uint8_t flag);
+CODE1 uint16_t getmode(inoptr ino);
+CODE1 struct mount *fs_tab_get(uint16_t dev);
 /* returns true on failure, false on success */
-bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
-void magic(inoptr ino);
+CODE1 bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
+CODE1 void magic(inoptr ino);
 
 /* inode.c */
-void readi(inoptr ino, uint8_t flag);
-void writei(inoptr ino, uint8_t flag);
-int16_t doclose (uint8_t uindex);
-inoptr rwsetup (bool is_read, uint8_t *flag);
+CODE1 void readi(inoptr ino, uint8_t flag);
+CODE1 void writei(inoptr ino, uint8_t flag);
+CODE1 int16_t doclose (uint8_t uindex);
+CODE1 inoptr rwsetup (bool is_read, uint8_t *flag);
 
 /* mm.c */
-unsigned int uputsys(unsigned char *from, unsigned int size);
-unsigned int ugetsys(unsigned char *to, unsigned int size);
+CODE2 unsigned int uputsys(unsigned char *from, unsigned int size);
+CODE2 unsigned int ugetsys(unsigned char *to, unsigned int size);
 
 /* process.c */
-void psleep(void *event);
-void wakeup(void *event);
-void pwake(ptptr p);
-ptptr getproc(void);
-void newproc(ptptr p);
-ptptr ptab_alloc(void);
-void ssig(ptptr proc, uint16_t sig);
-void chksigs(void);
-void program_vectors(uint16_t *pageptr);
-void sgrpsig(uint16_t pgrp, uint16_t sig);
-void unix_syscall(void);
-void timer_interrupt(void);
-void doexit (int16_t val, int16_t val2);
-void panic(char *deathcry);
-void exec_or_die(void);
+CODE2 void psleep(void *event);
+CODE2 void wakeup(void *event);
+CODE2 void pwake(ptptr p);
+CODE2 ptptr getproc(void);
+CODE2 void newproc(ptptr p);
+CODE2 ptptr ptab_alloc(void);
+CODE2 void ssig(ptptr proc, uint16_t sig);
+CODE2 void chksigs(void);
+COMMON void program_vectors(uint16_t *pageptr);
+CODE2 void sgrpsig(uint16_t pgrp, uint16_t sig);
+CODE2 void unix_syscall(void);
+CODE2 void timer_interrupt(void);
+CODE2 void doexit (int16_t val, int16_t val2);
+CODE2 void panic(char *deathcry);
+CODE2 void exec_or_die(void);
 
 /* select.c */
-extern void seladdwait(struct selmap *s);
-extern void selrmwait(struct selmap *s);
-extern void selwake(struct selmap *s);
-extern int _select(void);
+CODE2 extern void seladdwait(struct selmap *s);
+CODE2 extern void selrmwait(struct selmap *s);
+CODE2 extern void selwake(struct selmap *s);
+CODE2 extern int _select(void);
 
 /* swap.c */
 extern ptptr swapproc;
@@ -675,96 +672,96 @@ extern uint8_t *swapbase;
 extern unsigned int swapcnt;
 extern blkno_t swapblk;
 
-extern void swapmap_add(uint8_t swap);
-extern ptptr swapneeded(ptptr p, int selfok);
-extern void swapper(ptptr p);
+CODE2 extern void swapmap_add(uint8_t swap);
+CODE2 extern ptptr swapneeded(ptptr p, int selfok);
+CODE2 extern void swapper(ptptr p);
 
-/* syscalls_fs.c, syscalls_proc.c, syscall_other.c */
-void updoff(void);
-int stcpy(inoptr ino, char *buf);
-bool rargs (char **userspace_argv, struct s_argblk *argbuf);
-char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
-extern int16_t unlinki(inoptr ino, inoptr pino, char *fname);
+/* syscalls_fs.c, syscalls_proc.c, syscall_other.c etc */
+CODE2 void updoff(void);
+CODE2 int stcpy(inoptr ino, char *buf);
+CODE2 bool rargs (char **userspace_argv, struct s_argblk *argbuf);
+CODE2 char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
+CODE2 extern int16_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* timer.c */
-void rdtime(time_t *tloc);
-void rdtime32(uint32_t *tloc);
-void wrtime(time_t *tloc);
-extern void updatetod(void);
+CODE2 void rdtime(time_t *tloc);
+CODE2 void rdtime32(uint32_t *tloc);
+CODE2 void wrtime(time_t *tloc);
+CODE2 extern void updatetod(void);
 
 /* provided by architecture or helpers */
-void device_init(void);	/* provided by platform */
-void pagemap_init(void);
-void pagemap_add(uint8_t page);
-void pagemap_free(ptptr p);
-int pagemap_alloc(ptptr p);
-int pagemap_realloc(uint16_t p);
-uint16_t pagemap_mem_used(void);
-uint8_t *swapout_prepare_uarea(ptptr p);
-uint8_t *swapin_prepare_uarea(ptptr p);
-void map_init(void);
-void platform_idle(void);
+CODE2 void device_init(void);	/* provided by platform */
+CODE2 void pagemap_init(void);
+CODE2 void pagemap_add(uint8_t page);
+CODE2 void pagemap_free(ptptr p);
+CODE2 int pagemap_alloc(ptptr p);
+CODE2 int pagemap_realloc(uint16_t p);
+CODE2 uint16_t pagemap_mem_used(void);
+CODE2 uint8_t *swapout_prepare_uarea(ptptr p);
+CODE2 uint8_t *swapin_prepare_uarea(ptptr p);
+CODE2 void map_init(void);
+CODE2 void platform_idle(void);
 extern uint8_t *ramtop;	     /* Note: ramtop must be in common in some cases */
-extern void platform_interrupt(void);
+CODE2 extern void platform_interrupt(void);
 
-int16_t __exit(void);        /* FUZIX system call 0 */
-int16_t _open(void);         /* FUZIX system call 1 */
-int16_t _close(void);        /* FUZIX system call 2 */
-int16_t _rename(void);       /* FUZIX system call 3 */
-int16_t _mknod(void);        /* FUZIX system call 4 */
-int16_t _link(void);         /* FUZIX system call 5 */
-int16_t _unlink(void);       /* FUZIX system call 6 */
-int16_t _read(void);         /* FUZIX system call 7 */
-int16_t _write(void);        /* FUZIX system call 8 */
-int16_t _lseek(void);        /* FUZIX system call 9 */
-int16_t _chdir(void);        /* FUZIX system call 10 */
-int16_t _sync(void);         /* FUZIX system call 11 */
-int16_t _access(void);       /* FUZIX system call 12 */
-int16_t _chmod(void);        /* FUZIX system call 13 */
-int16_t _chown(void);        /* FUZIX system call 14 */
-int16_t _stat(void);         /* FUZIX system call 15 */
-int16_t _fstat(void);        /* FUZIX system call 16 */
-int16_t _dup(void);          /* FUZIX system call 17 */
-int16_t _getpid(void);       /* FUZIX system call 18 */
-int16_t _getppid(void);      /* FUZIX system call 19 */
-int16_t _getuid(void);       /* FUZIX system call 20 */
-int16_t _umask(void);        /* FUZIX system call 21 */
-int16_t _getfsys(void);      /* FUZIX system call 22 */
-int16_t _execve(void);       /* FUZIX system call 23 */
-int16_t _getdirent(void);    /* FUZIX system call 24 */
-int16_t _setuid(void);       /* FUZIX system call 25 */
-int16_t _setgid(void);       /* FUZIX system call 26 */
-int16_t _time(void);         /* FUZIX system call 27 */
-int16_t _stime(void);        /* FUZIX system call 28 */
-int16_t _ioctl(void);        /* FUZIX system call 29 */
-int16_t _brk(void);          /* FUZIX system call 30 */
-int16_t _sbrk(void);         /* FUZIX system call 31 */
-int16_t _fork(void);         /* FUZIX system call 32 */
-int16_t _mount(void);        /* FUZIX system call 33 */
-int16_t _umount(void);       /* FUZIX system call 34 */
-int16_t _signal(void);       /* FUZIX system call 35 */
-int16_t _dup2(void);         /* FUZIX system call 36 */
-int16_t _pause(void);        /* FUZIX system call 37 */
-int16_t _alarm(void);        /* FUZIX system call 38 */
-int16_t _kill(void);         /* FUZIX system call 39 */
-int16_t _pipe(void);         /* FUZIX system call 40 */
-int16_t _getgid(void);       /* FUZIX system call 41 */
-int16_t _times(void);        /* FUZIX system call 42 */
-int16_t _utime(void);        /* FUZIX system call 43 */
-int16_t _geteuid(void);      /* FUZIX system call 44 */
-int16_t _getegid(void);      /* FUZIX system call 45 */
-int16_t _chroot(void);       /* FUZIX system call 46 */
-int16_t _fcntl(void);        /* FUZIX system call 47 */
-int16_t _fchdir(void);       /* FUZIX system call 48 */
-int16_t _fchmod(void);       /* FUZIX system call 49 */
-int16_t _fchown(void);       /* FUZIX system call 50 */
-int16_t _mkdir(void);	     /* FUZIX system call 51 */
-int16_t _rmdir(void);        /* FUZIX system call 52 */
-int16_t _setpgrp(void);	     /* FUZIX system call 53 */
-int16_t _uname(void);	     /* FUZIX system call 54 */
-int16_t _waitpid(void);	     /* FUZIX system call 55 */
-int16_t _profil(void);	     /* FUZIX system call 56 */
-int16_t _uadmin(void);	     /* FUZIX system call 57 */
-int16_t _nice(void);         /* FUZIX system call 58 */
-int16_t _sigdisp(void);	     /* FUZIX system call 59 */
+CODE2 int16_t __exit(void);        /* FUZIX system call 0 */
+CODE2 int16_t _open(void);         /* FUZIX system call 1 */
+CODE2 int16_t _close(void);        /* FUZIX system call 2 */
+CODE2 int16_t _rename(void);       /* FUZIX system call 3 */
+CODE2 int16_t _mknod(void);        /* FUZIX system call 4 */
+CODE2 int16_t _link(void);         /* FUZIX system call 5 */
+CODE2 int16_t _unlink(void);       /* FUZIX system call 6 */
+CODE2 int16_t _read(void);         /* FUZIX system call 7 */
+CODE2 int16_t _write(void);        /* FUZIX system call 8 */
+CODE2 int16_t _lseek(void);        /* FUZIX system call 9 */
+CODE2 int16_t _chdir(void);        /* FUZIX system call 10 */
+CODE2 int16_t _sync(void);         /* FUZIX system call 11 */
+CODE2 int16_t _access(void);       /* FUZIX system call 12 */
+CODE2 int16_t _chmod(void);        /* FUZIX system call 13 */
+CODE2 int16_t _chown(void);        /* FUZIX system call 14 */
+CODE2 int16_t _stat(void);         /* FUZIX system call 15 */
+CODE2 int16_t _fstat(void);        /* FUZIX system call 16 */
+CODE2 int16_t _dup(void);          /* FUZIX system call 17 */
+CODE2 int16_t _getpid(void);       /* FUZIX system call 18 */
+CODE2 int16_t _getppid(void);      /* FUZIX system call 19 */
+CODE2 int16_t _getuid(void);       /* FUZIX system call 20 */
+CODE2 int16_t _umask(void);        /* FUZIX system call 21 */
+CODE2 int16_t _getfsys(void);      /* FUZIX system call 22 */
+CODE2 int16_t _execve(void);       /* FUZIX system call 23 */
+CODE2 int16_t _getdirent(void);    /* FUZIX system call 24 */
+CODE2 int16_t _setuid(void);       /* FUZIX system call 25 */
+CODE2 int16_t _setgid(void);       /* FUZIX system call 26 */
+CODE2 int16_t _time(void);         /* FUZIX system call 27 */
+CODE2 int16_t _stime(void);        /* FUZIX system call 28 */
+CODE2 int16_t _ioctl(void);        /* FUZIX system call 29 */
+CODE2 int16_t _brk(void);          /* FUZIX system call 30 */
+CODE2 int16_t _sbrk(void);         /* FUZIX system call 31 */
+CODE2 int16_t _fork(void);         /* FUZIX system call 32 */
+CODE2 int16_t _mount(void);        /* FUZIX system call 33 */
+CODE2 int16_t _umount(void);       /* FUZIX system call 34 */
+CODE2 int16_t _signal(void);       /* FUZIX system call 35 */
+CODE2 int16_t _dup2(void);         /* FUZIX system call 36 */
+CODE2 int16_t _pause(void);        /* FUZIX system call 37 */
+CODE2 int16_t _alarm(void);        /* FUZIX system call 38 */
+CODE2 int16_t _kill(void);         /* FUZIX system call 39 */
+CODE2 int16_t _pipe(void);         /* FUZIX system call 40 */
+CODE2 int16_t _getgid(void);       /* FUZIX system call 41 */
+CODE2 int16_t _times(void);        /* FUZIX system call 42 */
+CODE2 int16_t _utime(void);        /* FUZIX system call 43 */
+CODE2 int16_t _geteuid(void);      /* FUZIX system call 44 */
+CODE2 int16_t _getegid(void);      /* FUZIX system call 45 */
+CODE2 int16_t _chroot(void);       /* FUZIX system call 46 */
+CODE2 int16_t _fcntl(void);        /* FUZIX system call 47 */
+CODE2 int16_t _fchdir(void);       /* FUZIX system call 48 */
+CODE2 int16_t _fchmod(void);       /* FUZIX system call 49 */
+CODE2 int16_t _fchown(void);       /* FUZIX system call 50 */
+CODE2 int16_t _mkdir(void);	     /* FUZIX system call 51 */
+CODE2 int16_t _rmdir(void);        /* FUZIX system call 52 */
+CODE2 int16_t _setpgrp(void);	     /* FUZIX system call 53 */
+CODE2 int16_t _uname(void);	     /* FUZIX system call 54 */
+CODE2 int16_t _waitpid(void);	     /* FUZIX system call 55 */
+CODE2 int16_t _profil(void);	     /* FUZIX system call 56 */
+CODE2 int16_t _uadmin(void);	     /* FUZIX system call 57 */
+CODE2 int16_t _nice(void);         /* FUZIX system call 58 */
+CODE2 int16_t _sigdisp(void);	     /* FUZIX system call 59 */
 #endif /* __FUZIX__KERNEL_DOT_H__ */

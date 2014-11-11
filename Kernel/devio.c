@@ -208,6 +208,10 @@ udata.u_base should be consulted instead.
 Any device other than a disk will have only raw access.
 **********************************************************************/
 
+/* FIXME: To do banking without true 'far' pointers we need to figure
+   out some scheme to do a bank call here - do we need a dev_tab bank
+   entry perhaps ? */
+
 int bdread(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;

@@ -24,3 +24,10 @@ extern size_t strlen(const char *);
 
 /* FIXME: need to add 64bit helper/struct magic for this compiler */
 typedef unsigned long	time_t;
+
+/* We don't yet have bank attributes and banking for Z80 */
+#define CODE1
+#define CODE2
+#define COMMON
+#define VIDEO
+#define DISCARD

@@ -27,3 +27,18 @@ extern size_t strlen(const char *);
 
 /* FIXME: should be 64bits - need to add helpers and struct variants */
 typedef unsigned long long time_t;
+
+#ifdef CONFIG_BANKED
+#define CODE1	__attribute__((far(1)))
+#define CODE2   __attribute__((far(2)))
+#define COMMON
+#define DISCARD __attribute__((far(3)))
+#define VIDEO   __attribute__((far(4)))
+#else
+/* Bank attributes for 6809 in banked code mode */
+#define CODE1
+#define CODE2
+#define COMMON
+#define VIDEO
+#define DISCARD
+#endif

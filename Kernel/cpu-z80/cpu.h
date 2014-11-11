@@ -30,4 +30,11 @@ extern int16_t strlen(const char *p);
 
 typedef unsigned long long time_t;
 
+/* We don't yet have bank attributes and banking for Z80 */
+#define CODE1
+#define CODE2
+#define COMMON
+#define VIDEO
+#define DISCARD
+
 #endif
