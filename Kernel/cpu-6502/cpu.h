@@ -21,3 +21,6 @@ extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
 
 #define staticfast	static
+
+/* FIXME: need to add 64bit helper/struct magic for this compiler */
+typedef unsigned long	time_t;

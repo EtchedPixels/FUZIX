@@ -28,4 +28,6 @@ extern int16_t strlen(const char *p);
 
 #define	staticfast	static
 
+typedef unsigned long long time_t;
+
 #endif

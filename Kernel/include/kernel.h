@@ -73,7 +73,6 @@ typedef struct s_queue {
 
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
-typedef unsigned long long time_t;
 
 struct tms {
 	clock_t  tms_utime;

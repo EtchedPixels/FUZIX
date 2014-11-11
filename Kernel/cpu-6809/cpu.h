@@ -24,3 +24,6 @@ extern size_t strlen(const char *);
 /* 6809 doesn't benefit from making a few key variables in
    non-reentrant functions static */
 #define staticfast	auto
+
+/* FIXME: should be 64bits - need to add helpers and struct variants */
+typedef unsigned long long time_t;
