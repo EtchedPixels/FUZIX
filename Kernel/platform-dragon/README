@@ -1,0 +1,13 @@
+Dragon Experimental Build
+
+Currently we build for a Dragon64 but are not doing anything but initial
+boot testing work
+
+Memory usage:
+
+The Dragon 64 has 2x32K banks of RAM which isn't sufficient but also 16K
+of cartridge space that can appear at 0xC000->0xF??? and two ROMs
+
+
+This is a very experimental build to see what might be possible if we either
+replaced the ROM images or used a cartridge or both.
