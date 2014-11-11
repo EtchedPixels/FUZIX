@@ -17,7 +17,7 @@
 #endif
 
 
-char *swapbase;
+uint8_t *swapbase;
 unsigned int swapcnt;
 blkno_t swapblk;
 ptptr swapproc;			/* Target process space */
@@ -128,7 +128,7 @@ static void swapin(ptptr p)
 #ifdef UDATA_SWAPSIZE
 	ptr = swapin_prepare_uarea(p);
 	if (ptr)
-		swapread(SWAPDEV, blk, UDATA_SWAPSIZE, (char *) &udata);
+		swapread(SWAPDEV, blk, UDATA_SWAPSIZE, (uint8_t *) &udata);
 #endif
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);

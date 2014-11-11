@@ -33,7 +33,7 @@ extern uint16_t runticks;  /* Number of ticks current process has been swapped i
 extern time_t tod;      /* Time of day */
 extern clock_t ticks;    /* Cumulative tick counter, in minutes and ticks  */
 
-extern char *swapbase;  /* Used by device driver for swapping */
+extern uint8_t *swapbase;  /* Used by device driver for swapping */
 extern unsigned swapcnt;
 extern blkno_t swapblk;
 

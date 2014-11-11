@@ -671,7 +671,7 @@ extern int _select(void);
 
 /* swap.c */
 extern ptptr swapproc;
-extern char *swapbase;
+extern uint8_t *swapbase;
 extern unsigned int swapcnt;
 extern blkno_t swapblk;
 
