@@ -1,9 +1,9 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite 
 
-#export TARGET= zx128
-#export CPU = z80
-export TARGET = 6809test
-export CPU = 6809
+export TARGET= msx1
+export CPU = z80
+#export TARGET = 6809test
+#export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -73,7 +73,7 @@ CDSRCS = start.c
 C1SRCS =  version.c kdata.c filesys.c
 C1SRCS += inode.c syscall_fs.c process.c usermem.c timer.c
 C2SRCS =  devio.c syscall_proc.c
-C2SRCS += syscall_fs2.c syscall_other.c
+C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c
 C2SRCS += bank16k.c bank32k.c bankfixed.c single.c simple.c
 C2SRCS += tty.c devsys.c
 C2SRCS += mm.c swap.c
