@@ -10,8 +10,8 @@ struct termios {
   tcflag_t c_iflag;
   tcflag_t c_oflag;
   tcflag_t c_cflag;
-  tcflag_t c_lflag;
-  cc_t c_cc[NCCS];
+  tcflag_t c_lflag;	/* 8 bytes */
+  cc_t c_cc[NCCS];	/* + 12 -> 20 total */
 };
 
 #define VMIN		0	/* Supported */
@@ -141,8 +141,21 @@ struct termios {
 /* Character Input Queue size */
 #define TTYSIZ 132
 
-extern struct termios ttydata[NUM_DEV_TTY + 1];
-extern uint16_t tty_pgrp[NUM_DEV_TTY + 1];
+/* Group the tty into a single object. That lets 8bit processors keep all
+   the data indexed off a single register */
+struct tty {
+    uint16_t pgrp;
+    uint8_t flag;		/* Use uint8 pad - makes the whole struct
+                                   24 byte - a nice number for CPUs with no 
+                                   multiplier */
+    uint8_t pad0;
+#define TTYF_STOP	1
+#define TTYF_DISCARD	2
+#define TTYF_DEAD	4
+    struct termios termios;
+};
+
+extern struct tty ttydata[NUM_DEV_TTY + 1];
 
 extern CODE1 void tty_init(void);
 

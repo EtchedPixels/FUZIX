@@ -23,19 +23,14 @@
  *	Add a small echo buffer to each tty
  */
 
-struct termios ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
-uint16_t tty_pgrp[NUM_DEV_TTY + 1];
-
-static bool stopflag[NUM_DEV_TTY + 1];	// Flag for ^S/^Q
-static bool flshflag[NUM_DEV_TTY + 1];	// Flag for ^O
-static bool deadflag[NUM_DEV_TTY + 1];  // True if hung up
+struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	uint16_t nread;
 	unsigned char c;
 	struct s_queue *q;
-	struct termios *t;
+	struct tty *t;
 
 	rawflag;
 	flag;			// shut up compiler
@@ -51,7 +46,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	nread = 0;
 	while (nread < udata.u_count) {
 		for (;;) {
-		        if (deadflag[minor]) {
+		        if (t->flag & TTYF_DEAD) {
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
@@ -69,11 +64,11 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		++nread;
 
 		/* return according to mode */
-		if (!(t->c_lflag & ICANON)) {
-			if (nread >= t->c_cc[VMIN])
+		if (!(t->termios.c_lflag & ICANON)) {
+			if (nread >= t->termios.c_cc[VMIN])
 				break;
 		} else {
-			if (nread == 1 && (c == t->c_cc[VEOF])) {
+			if (nread == 1 && (c == t->termios.c_cc[VEOF])) {
 				/* ^D */
 				nread = 0;
 				break;
@@ -91,7 +86,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	struct termios *t;
+	struct tty *t;
 	int towrite;
 	uint8_t c;
 
@@ -110,26 +105,26 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	while (udata.u_count-- != 0) {
 		for (;;) {	/* Wait on the ^S/^Q flag */
-		        if (deadflag[minor]) {
+		        if (t->flag & TTYF_DEAD) {
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
-			if (!stopflag[minor])
+			if (!(t->flag & TTYF_STOP))
 				break;
-			if (psleep_flags(&stopflag[minor], flag))
+			if (psleep_flags(&t->flag, flag))
 				return -1;
 		}
 
-		if (!flshflag[minor]) {
+		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
 				c = *udata.u_base;
 			else
 				c = ugetc(udata.u_base);
 
-			if (t->c_oflag & OPOST) {
-				if (c == '\n' && (t->c_oflag & ONLCR))
+			if (t->termios.c_oflag & OPOST) {
+				if (c == '\n' && (t->termios.c_oflag & ONLCR))
 					tty_putc_wait(minor, '\r');
-				if (c == '\r' && (t->c_oflag & OCRNL))
+				if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
 			tty_putc_wait(minor, c);
@@ -141,7 +136,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 int tty_open(uint8_t minor, uint16_t flag)
 {
-	struct termios *t;
+	struct tty *t;
 
 	/* FIXME : open/carrier logic is needed here, definitely before we
 	   enable ptys */
@@ -154,31 +149,33 @@ int tty_open(uint8_t minor, uint16_t flag)
 		udata.u_error = ENODEV;
 		return (-1);
 	}
+
+	t = &ttydata[minor];
+
 	/* Hung up but not yet cleared of users */
-	if (deadflag[minor]) {
+	if (t->flag & TTYF_DEAD) {
 	        udata.u_error = ENXIO;
 	        return -1;
         }
 
-	t = &ttydata[minor];
 
 	/* If there is no controlling tty for the process, establish it */
 	if (!udata.u_ptab->p_tty && !(flag & O_NOCTTY)) {
 		udata.u_ptab->p_tty = minor;
-		tty_pgrp[minor] = udata.u_ptab->p_pgrp;
+		t->pgrp = udata.u_ptab->p_pgrp;
 	}
 	tty_setup(minor);
-	if ((t->c_cflag & CLOCAL) || (flag & O_NDELAY))
+	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 	        return 0;
 
         if (!tty_carrier(minor)) {
-                if (psleep_flags(&t->c_cflag, flag))
+                if (psleep_flags(&t->termios.c_cflag, flag))
                         return -1;
         }
         /* Carrier spiked ? */
-        if (deadflag[minor]) {
+        if (t->flag & TTYF_DEAD) {
                 udata.u_error = ENXIO;
-                deadflag[minor] = 0;
+                t->flag &= ~TTYF_DEAD;
                 return -1;
         }
         return 0;
@@ -190,32 +187,34 @@ int tty_close(uint8_t minor)
 	if (minor == udata.u_ptab->p_tty)
 		udata.u_ptab->p_tty = 0;
         /* If we were hung up then the last opener has gone away */
-        deadflag[minor] = 0;
+        ttydata[minor].flag &= ~TTYF_DEAD;
 	return (0);
 }
 
 int tty_ioctl(uint8_t minor, uint16_t request, char *data)
 {				/* Data in User Space */
+        struct tty *t;
 	if (!minor)
 		minor = udata.u_ptab->p_tty;
 	if (minor < 1 || minor > NUM_DEV_TTY + 1) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
-	if (deadflag[minor]) {
+        t = &ttydata[minor];
+	if (t->flag & TTYF_DEAD) {
 	        udata.u_error = ENXIO;
 	        return -1;
         }
 	switch (request) {
 	case TCGETS:
-		uput(&ttydata[minor], data, sizeof(struct termios));
+		uput(&ttydata[minor].termios, data, sizeof(struct termios));
 		break;
 	case TCSETSW:
 		/* We don't have an output queue really so for now drop
 		   through */
 	case TCSETS:
 	case TCSETSF:
-		uget(data, &ttydata[minor], sizeof(struct termios));
+		uget(data, &ttydata[minor].termios, sizeof(struct termios));
 		if (request == TCSETSF)
 			clrq(&ttyinq[minor]);
                 tty_setup(minor);
@@ -249,16 +248,15 @@ int tty_ioctl(uint8_t minor, uint16_t request, char *data)
 int tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
-	struct termios *td;
+	struct tty *t;
 	struct s_queue *q = &ttyinq[minor];
 	int canon;
-	uint16_t pgrp = tty_pgrp[minor];
 	uint8_t wr;
 
-	td = &ttydata[minor];
-	canon = td->c_lflag & ICANON;
+	t = &ttydata[minor];
+	canon = t->termios.c_lflag & ICANON;
 
-	if (td->c_iflag & ISTRIP)
+	if (t->termios.c_iflag & ISTRIP)
 		c &= 0x7f;	/* Strip off parity */
 	if (canon && !c)
 		return 1;	/* Simply quit if Null character */
@@ -272,55 +270,55 @@ int tty_inproc(uint8_t minor, unsigned char c)
 		trap_monitor();
 #endif
 
-	if (c == '\r' && (td->c_iflag & ICRNL))
+	if (c == '\r' && (t->termios.c_iflag & ICRNL))
 		c = '\n';
-	if (c == '\n' && (td->c_iflag & INLCR))
+	if (c == '\n' && (t->termios.c_iflag & INLCR))
 		c = '\r';
 
-	if (td->c_lflag & ISIG) {
-		if (c == td->c_cc[VINTR]) {	/* ^C */
-			sgrpsig(pgrp, SIGINT);
+	if (t->termios.c_lflag & ISIG) {
+		if (c == t->termios.c_cc[VINTR]) {	/* ^C */
+			sgrpsig(t->pgrp, SIGINT);
 			clrq(q);
-			stopflag[minor] = flshflag[minor] = false;
+			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
 			return 1;
-		} else if (c == td->c_cc[VQUIT]) {	/* ^\ */
-			sgrpsig(pgrp, SIGQUIT);
+		} else if (c == t->termios.c_cc[VQUIT]) {	/* ^\ */
+			sgrpsig(t->pgrp, SIGQUIT);
 			clrq(q);
-			stopflag[minor] = flshflag[minor] = false;
+			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
 			return 1;
 		}
 	}
-	if (c == td->c_cc[VDISCARD]) {	/* ^O */
-		flshflag[minor] = !flshflag[minor];
+	if (c == t->termios.c_cc[VDISCARD]) {	/* ^O */
+	        t->flag ^= TTYF_DISCARD;
 		return 1;
 	}
-	if (td->c_iflag & IXON) {
-		if (c == td->c_cc[VSTOP]) {	/* ^S */
-			stopflag[minor] = true;
+	if (t->termios.c_iflag & IXON) {
+		if (c == t->termios.c_cc[VSTOP]) {	/* ^S */
+		        t->flag |= TTYF_STOP;
 			return 1;
 		}
-		if (c == td->c_cc[VSTART]) {	/* ^Q */
-			stopflag[minor] = false;
-			wakeup(&stopflag[minor]);
+		if (c == t->termios.c_cc[VSTART]) {	/* ^Q */
+		        t->flag &= ~TTYF_STOP;
+			wakeup(&t->flag);
 			return 1;
 		}
 	}
 	if (canon) {
-		if (c == td->c_cc[VERASE]) {
+		if (c == t->termios.c_cc[VERASE]) {
 			if (uninsq(q, &oc)) {
-				if (oc == '\n' || oc == td->c_cc[VEOL])
+				if (oc == '\n' || oc == t->termios.c_cc[VEOL])
 					insq(q, oc);	/* Don't erase past nl */
-				else if (td->c_lflag & ECHOE)
+				else if (t->termios.c_lflag & ECHOE)
 					tty_erase(minor);
 				return 1;
-			} else if (c == td->c_cc[VKILL]) {
+			} else if (c == t->termios.c_cc[VKILL]) {
 				while (uninsq(q, &oc)) {
 					if (oc == '\n'
-					    || oc == td->c_cc[VEOL]) {
+					    || oc == t->termios.c_cc[VEOL]) {
 						insq(q, oc);	/* Don't erase past nl */
 						break;
 					}
-					if (td->c_lflag & ECHOK)
+					if (t->termios.c_lflag & ECHOK)
 						tty_erase(minor);
 				}
 				return 1;
@@ -330,7 +328,7 @@ int tty_inproc(uint8_t minor, unsigned char c)
 
 	/* All modes come here */
 	if (c == '\n') {
-		if ((td->c_oflag & (OPOST | ONLCR)) == (OPOST | ONLCR))
+		if ((t->termios.c_oflag & (OPOST | ONLCR)) == (OPOST | ONLCR))
 			tty_echo(minor, '\r');
 	}
 
@@ -340,8 +338,8 @@ int tty_inproc(uint8_t minor, unsigned char c)
 	else if (minor < PTY_OFFSET)
 		tty_putc_wait(minor, '\007');	/* Beep if no more room */
 
-	if (!canon || c == td->c_cc[VEOL] || c == '\n'
-	    || c == td->c_cc[VEOF])
+	if (!canon || c == t->termios.c_cc[VEOL] || c == '\n'
+	    || c == t->termios.c_cc[VEOF])
 		wakeup(q);
 	return wr;
 }
@@ -354,7 +352,7 @@ void tty_outproc(uint8_t minor)
 
 void tty_echo(uint8_t minor, unsigned char c)
 {
-	if (ttydata[minor].c_lflag & ECHO)
+	if (ttydata[minor].termios.c_lflag & ECHO)
 		tty_putc_wait(minor, c);
 }
 
@@ -382,26 +380,28 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
 
 void tty_hangup(uint8_t minor)
 {
+        struct tty *t = &ttydata[minor];
         /* Kill users */
-        sgrpsig(tty_pgrp[minor], SIGHUP);
+        sgrpsig(t->pgrp, SIGHUP);
         /* Stop any new I/O with errors */
-        deadflag[minor] = 1;
+        t->flag |= TTYF_DEAD;
         /* Wake up read/write */
         wakeup(&ttyinq[minor]);
-        wakeup(&stopflag[minor]);
+        /* Wake stopped stuff */
+        wakeup(&t->flag);
         /* and deadflag will clear when the last user goes away */
 }
 
 void tty_carrier_drop(uint8_t minor)
 {
-        if (ttydata[minor].c_cflag & HUPCL)
+        if (ttydata[minor].termios.c_cflag & HUPCL)
                 tty_hangup(minor);
 }
 
 void tty_carrier_raise(uint8_t minor)
 {
-        if (ttydata[minor].c_cflag & HUPCL)
-                wakeup(&ttydata[minor].c_cflag);
+        if (ttydata[minor].termios.c_cflag & HUPCL)
+                wakeup(&ttydata[minor].termios.c_cflag);
 }
 
 /*
