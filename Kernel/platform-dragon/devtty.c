@@ -42,22 +42,26 @@ bool tty_writeready(uint8_t minor)
 	return c & 16;	/* TX DATA empty */
 }
 
+/* For DragonPlus we should perhaps support both monitors 8) */
+
 void tty_putc(uint8_t minor, unsigned char c)
 {
-#if 0
 	if (minor == 1) {
+		/* FIXME: Once we do machine types the later COCO2 isn't
+		   so brainless. Or we should perhaps use bitmap modes */
+		c &= 0x5f;
 		vtoutput(&c, 1);
-		return;
-	}
-#endif	
-	*uart_data = c;	/* Data */
+	} else
+		*uart_data = c;	/* Data */
 }
 
 void tty_setup(uint8_t minor)
 {
-	/* FIXME: do proper mode setting */
-	*uart_command = 0x01;	/* DTR high, IRQ enabled, TX irq disabled 8N1 */
-	*uart_control = 0x1E;	/* 9600 baud */
+	if (minor == 2) {
+		/* FIXME: do proper mode setting */
+		*uart_command = 0x01;	/* DTR high, IRQ enabled, TX irq disabled 8N1 */
+		*uart_control = 0x1E;	/* 9600 baud */
+	}
 }
 
 int tty_carrier(uint8_t minor)
