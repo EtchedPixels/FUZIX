@@ -45,7 +45,7 @@ export CROSS_AS=m6809-unknown-as
 export CROSS_LD=lwlink
 export CROSS_CC = m6809-unknown-gcc
 #export CROSS_CCOPTS=-Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
-export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -mfar-stack-param -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
 export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
