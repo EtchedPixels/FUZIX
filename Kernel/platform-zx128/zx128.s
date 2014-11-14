@@ -121,6 +121,7 @@ switch_bank:
         ld a, (place_for_c)
         ld c, a
         ld a, (place_for_a)
+<<<<<<< HEAD
         ei
         ret
 
@@ -137,21 +138,21 @@ map_process:
         out (c), a
         pop af
         ret
-map_kernel_nopush:          ; to avoid double af pushing when called from map_process
+map_kernel_nopush:          ; to avoid double af pushing
         xor a
         jr switch_bank
 
 map_process:
-        push af
+        ld (place_for_a), a
         ld a, h
         or l
-        jr z, map_kernel_nosavea
+        jr z, map_kernel_nopush
         ld a, (hl)
         jr switch_bank
 
 map_process_always:
         ld (place_for_a), a
-        ld a, (U_DATA__U_PAGE)
+        ld a, (current_process_map)
         jr switch_bank
 
 map_save:
@@ -171,6 +172,11 @@ current_map:                ; place to store current page number. Is needed
                             ; to detect what page is mapped currently 
 map_store:
         .db 0
+
+
+current_process_map:
+        .db 0
+
 
 place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
         .db 0               ; Here we store A when needed
