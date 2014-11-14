@@ -22,10 +22,10 @@ static struct termios ttydflt = {
 };
 
 void tty_init(void) {
-        struct termios *t = &ttydata[1];
+        struct tty *t = &ttydata[1];
         int i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
-		memcpy(t, &ttydflt, sizeof(struct termios));
+		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
 		t++;
         }
 }
