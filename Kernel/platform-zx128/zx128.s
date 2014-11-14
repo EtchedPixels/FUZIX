@@ -131,41 +131,51 @@ _program_vectors:
         ;  stack: AF, (return address)
 switch_bank:
         ld (current_map), a
-        push bc
+        ld a, b
+        ld (place_for_b), a
+        ld a, c
+        ld (place_for_c), a
         ld bc, #0x7ffd
         out (c), a
-        pop bc
-        pop af
+        and #0xff
+        jr z, sb_restore
+        ld (current_process_map), a
+sb_restore:
+        ld a, (place_for_b)
+        ld b, a
+        ld a, (place_for_c)
+        ld c, a
+        ld a, (place_for_a)
         ret
 
 map_kernel:
-        push af
-map_kernel_nopush:          ; to avoid double af pushing when called from map_process
+        ld (place_for_a), a
+map_kernel_nosavea:          ; to avoid double af pushing when called from map_process
         xor a
         jr switch_bank
 
 map_process:
-        push af
+        ld (place_for_a), a
         ld a, h
         or l
-        jr z, map_kernel_nopush
+        jr z, map_kernel_nosavea
         ld a, (hl)
         jr switch_bank
 
 map_process_always:
-        push af
-        ld a, (U_DATA__U_PAGE)
+        ld (place_for_a), a
+        ld a, (current_process_map)
         jr switch_bank
 
 map_save:
-        push af
+        ld (place_for_a), a
         ld a, (current_map)
         ld (map_store), a
-        pop af
+        ld a, (place_for_a)
         ret
 
 map_restore:
-        push af
+        ld (place_for_a), a
         ld a, (map_store)
         jr switch_bank
 
@@ -173,6 +183,16 @@ current_map:                ; place to store current page number. Is needed
         .db 0               ; because we have no ability to read 7ffd port
                             ; to detect what page is mapped currently 
 map_store:
+        .db 0
+
+current_process_map:
+        .db 0
+
+place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
+        .db 0               ; Here we store A when needed
+place_for_b:                ; And BC - here
+        .db 0
+place_for_c:
         .db 0
 
 ; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
