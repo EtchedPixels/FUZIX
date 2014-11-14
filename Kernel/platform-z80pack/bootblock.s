@@ -76,6 +76,6 @@ load_sectors:	exx
 		out (1), a
 		jp 0x88
 
-		.ds 25
+		.ds 26
 stack:
 		.db 0xff

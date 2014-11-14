@@ -23,3 +23,6 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
+	sdasz80 -o bootblock.s
+	sdldz80 -m -i bootblock.rel
+	makebin -s 128 bootblock.ihx > bootblock.bin
