@@ -339,7 +339,7 @@ void timer_interrupt(void)
 #include "syscall_name.h"
 #endif
 
-int16_t kernel_flag = 1;	/* true when in a syscall etc, maintained by the
+extern int16_t kernel_flag;	/* true when in a syscall etc, maintained by the
 				   asm interfaces but visible in C */
 
 // Fuzix system call handler
