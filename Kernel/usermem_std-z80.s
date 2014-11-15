@@ -118,6 +118,7 @@ uput_l:	ld a, (hl)
 
 uput_out:
 	pop ix
+	ld hl, #0
 	ret
 
 
