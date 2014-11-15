@@ -1,42 +1,54 @@
-	        ; Ordering of segments for the linker.
-	        ; WRS: Note we list all our segments here, even though
-	        ; we don't use them all, because their ordering is set
-	        ; when they are first seen.	
-
-        	; imported symbols
+        	; exported symbols
 	        .export start
+
+		; imported symbols
+		.import init_early
+		.import init_hardware
+		.import _fuzix_main
+
+		.import  __BSS_RUN__, __BSS_SIZE__
+
 
 	        ; startup code @0
 	        .code
+		.include "zeropage.inc"
 
 start:		
-;		orcc #0x10		; interrupts definitely off
-;		lds #kstack_top
-		; move the common memory where it belongs    
-		; we do this dowards, not out of any concern about
-		; about overlap (although its correct for this) but because
-		; it deals with linker reloc limits nicely
-;		ldd #s__INITIALIZER
-;		addd #l__COMMONMEM
-;		tfr d,x
-;		ldd #s__COMMONMEM
-;		addd #l__COMMONMEM
-;		tfr d,y
+		sei			; interrupts off
+		cld			; decimal off
+		ldx #$FF
+		txs			; Stack (6502 not C)
 		
-;copier:		lda ,-x
-;		sta ,-y
-;		cmpy #s__COMMONMEM
-;		bgt copier
+		lda #<kstack_top	; C stack
+		sta sp
+		lda #>kstack_top
+		sta sp+1 
 
-;wiper:		ldx #s__DATA
-;		ldd #l__DATA
-;		clr ,x+
-;		subd #1
-;		bne wiper
+		ld a,#<__BSS_RUN__
+		sta ptr1
+		ld a,#>__BSS_RUN__
+		sta ptr1+1
+		lda #0
+		tay
 
-;		jsr init_early
-;		jsr init_hardware
-;		jsr _fuzix_main
-;		orcc #0x10
-;stop:		bra stop
+		ldx #>__BSS_SIZE__
+		beq bss_wipe_tail
+bss_wiper_1:	sta (ptr1),y
+		iny
+		bne bss_wiper_1
+		inc ptr1+1
+		dex
+		bne bss_wiper_1
 
+bss_wipe_tail:
+		cpy #<__BSS_SIZE__
+		beq gogogo
+		sta (ptr1),y
+		iny
+		bne bss_wipe_tail
+
+		jsr init_early
+		jsr init_hardware
+		jsr _fuzix_main		; Should never return
+		sei			; Spin
+stop:		bra stop

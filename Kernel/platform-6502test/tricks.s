@@ -1,5 +1,5 @@
 ;
-;	6809 version
+;	6502 version
 ;
         .export _switchout
         .export _switchin
@@ -27,8 +27,9 @@ _ramtop:
 ; 
 ; This function can have no arguments or auto variables.
 _switchout:
-;	orcc #0x10		; irq off
-;        jsr _chksigs
+	sei
+
+        jsr _chksigs
 ;
 ;        ; save machine state
 ;        ldd #0 ; return code set here is ignored, but _switchin can 
@@ -44,9 +45,9 @@ _switchout:
 ;        ; find another process to run (may select this one again) returns it
 ;        ; in X
 ;        jsr _getproc
-;        jsr _switchin
-;        ; we should never get here
-;        jsr _trap_monitor
+        jsr _switchin
+        ; we should never get here
+        jsr _trap_monitor
 
 badswitchmsg: .asciiz "_switchin: FAIL\r\n"
 

@@ -12,6 +12,10 @@
 
         .segment "COMMONMEM"
 
+;
+;	In 6502 land these are the C stacks, we will need to handle the
+;	hardware stack separately, and also to save sp,sp+1 etc on irqs
+;
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstack_base:

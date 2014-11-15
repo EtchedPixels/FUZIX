@@ -31,8 +31,8 @@ trapmsg2:   .asciiz ", PC="
 tm_user_sp: .word 0
 
 _trap_monitor:
-;	    orcc #0x10
-;	    bra _trap_monitor
+	    sei
+	    bra _trap_monitor
 
 _trap_reboot:
 ;	    lda 0xff90
@@ -40,15 +40,14 @@ _trap_reboot:
 ;	    jmp 0
 
 _di:
-;	    tfr cc,b		; return the old irq state
-;	    orcc #0x10
+	    sei			; FIXME: save old state in return to C
 	    rts
 _ei:
-;	    andcc #0xef
+	    cli			; on 6502 cli enables IRQs!!!
 	    rts
 
-_irqrestore:			; B holds the data
-;	    tfr b,cc
+_irqrestore:
+	    ; FIXME - pull off C stack
 	    rts
 
 ; -----------------------------------------------------------------------------
@@ -60,14 +59,18 @@ init_early:
             rts
 
 init_hardware:
-;            ; set system RAM size
-;	    ldd #256
-;	    std _ramsize
-;	    ldd #192
-;	    std _procmem
-;
+            ; set system RAM size for test purposes
+	    lda #1
+	    sta _ramsize+1
+	    dea
+	    sta _ramsize
+	    sta _procmem+1
+	    lda #192
+	    sta _procmem
+
 ;	    ; Our vectors are in high memory unlike Z80 but we still
 ;	    ; need vectors
+;	    FIXME: need to make a C call here
 ;	    ldx #0
 ;            jsr _program_vectors
 
@@ -86,26 +89,25 @@ _program_vectors:
 
 ;	    jsr map_process
 
-;	    ldx #0xFFF2
-;	    ldd #badswi_handler
-;	    std ,y++
-;	    std ,y++			; SWI2 and 3 both bad SWI
-;	    ldd #firq_handler
-;	    std ,y++
+	    lda #<vector
+	    sta 0xFFFE
+	    lda #>vector
+	    sta 0xFFFF
+	    jsr map_kernel
+	    rts
+
+
+vector:
+	    ; FIXME: decide whether its an IRQ or syscall and branch
+
 ;            ldd #interrupt_handler
-;	    std ,y++
 ;            ldd #unix_syscall_entry
-;	    stx ,y++
-;	    ldd #nmi_handler
-;	    stx ,y
-;	    jsr map_kernel
 	    rts
 
 ;
 ;	Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
 ;
-;
-;	All registers preserved
+;	Pass the table pointer in zero page ?
 ;
 map_process_always:
 ;	    pshs y,u
