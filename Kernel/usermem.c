@@ -13,7 +13,7 @@ usize_t valaddr(const char *base, usize_t size)
 {
 	if (base < (const char *)PROGBASE || base + size < base)
 		size = 0;
-	if (base + size > (const char *)udata.u_top)
+	else if (base + size > (const char *)udata.u_top)
 		size = (char *)udata.u_top - base;
 	if (size == 0)
 		udata.u_error = EFAULT;
