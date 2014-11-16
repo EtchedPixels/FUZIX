@@ -33,7 +33,7 @@
 /* Simple text mode */
 #define CONFIG_VT_SIMPLE
 /* Vt definitions */
-#define VT_BASE		0x0400	/* Default video text mode base */
+#define VT_BASE		(uint8_t *)0x0400	/* Default video text mode base */
 #define VT_WIDTH	32
 #define VT_HEIGHT	24
 #define VT_RIGHT	31

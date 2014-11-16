@@ -1,12 +1,11 @@
 section .vectors load 0x0100
-section .discard load 0x2000
-section .data
-section .bss
-section _COMMONMEM load 0x8000
-section .text2
-section .video
-section .romvectors load 0xBFF0
 section .udata load 0x7D00
+section _COMMONMEM high 0x7D00
+section .text2
+section .bss
+section .data
+section .discard
 section .start load 0xC000
 section .text
+section .video
 

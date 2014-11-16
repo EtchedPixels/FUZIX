@@ -14,6 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _kernel_flag
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -186,3 +187,5 @@ outcharw:
 	    beq outcharw
 	    sta 0xff04
 	    puls b,pc
+
+_kernel_flag: .db 1

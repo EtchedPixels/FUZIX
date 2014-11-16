@@ -17,20 +17,20 @@
 	sta 0xff07
 
 	; 0.9Mhz
-	lda 0xffd6	; R0
-	lda 0xffd8	; R1
+	sta 0xffd6	; R0
+	sta 0xffd8	; R1
 	; Put the video at 0x400
-	lda 0xffd2	; F6 to F1 clear F0 set
-	lda 0xffd0
-	lda 0xffce
-	lda 0xffcc
-	lda 0xffca
-	lda 0xffc8
-	lda 0xffc7
+	sta 0xffd2	; F6 to F1 clear F0 set
+	sta 0xffd0
+	sta 0xffce
+	sta 0xffcc
+	sta 0xffca
+	sta 0xffc8
+	sta 0xffc7
 	; SAM into ascii mode
-	lda 0xffc0
-	lda 0xffc2
-	lda 0xffc4
+	sta 0xffc0
+	sta 0xffc2
+	sta 0xffc4
 
 	; PIA0 A is all input
 	; PIA0 B is all output
