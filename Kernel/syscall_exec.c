@@ -41,14 +41,10 @@ int16_t _execve(void)
 	uint8_t c;
 	uint16_t blocks;
 
-	kputs("execve\n");
-
 	top = (uint16_t)ramtop;
 
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
-
-	kputs("Found it\n");
 
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
@@ -72,7 +68,6 @@ int16_t _execve(void)
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
-	kputs("Magic\n");
 
 	/*
 	 *	Executables might be CP/M or Fuzix (we don't support legacy
