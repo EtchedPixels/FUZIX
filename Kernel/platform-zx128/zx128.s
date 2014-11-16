@@ -136,6 +136,7 @@ switch_bank:
         ld a, c
         ld (place_for_c), a
         ld bc, #0x7ffd
+        ld a, (current_map)
         out (c), a
         and #0xff
         jr z, sb_restore
