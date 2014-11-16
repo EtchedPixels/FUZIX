@@ -1,0 +1,47 @@
+6502 test sketching out
+
+This is not a complete port, but a sketch in progress to test that it should
+be possible to run FUZIX on a banked 6502 such as the Commodore 6509 based
+systems.
+
+The 6509 also provides an opportunity to test a very different banking
+model. There is no common area on a 6509 based system. Address 0 sets the
+64K bank to be used and swaps wholesale between banks. Address 1 set the
+bank used on two specific instructions LDA (foo),y and STA (foo),y. In other
+words the only interbank feature you have is far data pointers.
+
+
+For Fuzix this should mean we can 
+
+- select fixed banks so we hand each task a bank
+- make map_kernel/map_process/map_* in general mostly no-ops. We do
+  need to save address 1 on map_save/restore in case the kernel is mid
+  far access
+- add a new section "STUBS" which is copied to the same spot in each bank
+  and contains mini wrappers for syscall, interrupts, doexec and signal
+  dispatch
+
+Interrupts simply flip bank and go via a C __interrupt wrapper which saves
+the C stack state for the kernel, then runs the IRQ handler, then returns
+back.
+
+ISSUE: need to figure where to save the __interrupt bits as we task switch
+in irq cases
+
+
+System calls far copy the syscall code and the arguments into the udata
+rather than fishing them off the stack as Z80 does. They then switch to the
+kernel stack, set up the C stack and run the system call. When it returns
+for that process context we copy back the error and return values into the
+user bank, and bankflip back.
+
+In both cases we need to also pull over the pending signal and the vector
+for it as we need to dispatch the signal from the user bank. (*TODO*)
+
+
+The other odd case is doexec. When we exec a process we don't return via
+the system call path but instead directly exit kernel mode and jump to the
+new stack/pc. This is arguably a wart and we should instead patch the return
+stack (and fix start up). For now however we need a stub of code to do the
+dispatch. Basically we set the sp in the user bank, switch to the user bank
+and jump to the target
