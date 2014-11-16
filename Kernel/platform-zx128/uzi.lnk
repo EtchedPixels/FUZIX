@@ -9,6 +9,7 @@ platform-zx128/commonmem.rel
 platform-zx128/zx128.rel
 platform-zx128/zxvideo.rel
 platform-zx128/main.rel
+platform-zx128/devfd.rel
 start.rel
 version.rel
 lowlevel-z80.rel
