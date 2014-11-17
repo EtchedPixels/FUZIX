@@ -284,12 +284,6 @@ interrupt_handler:
             ; don't allow us to run re-entrant, we've only got one interrupt stack
             ld a, (U_DATA__U_ININTERRUPT)
             or a
-	    jr z, noree
-	    push af
-	    ld a, #'#'
-	    out (21), a
-	    pop af
-noree:
             jp nz, interrupt_return
             inc a
             ld (U_DATA__U_ININTERRUPT), a
@@ -314,8 +308,6 @@ noree:
 	    push af
 	    jr nz, in_kernel
 
-	    ld a, #'U'
-	    out (0x01), a
             ; we're not in kernel mode, check for signals and fault
 	    ld a, #0xC3
 	    cp b		; should be a jump
