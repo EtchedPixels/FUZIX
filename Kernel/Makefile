@@ -1,9 +1,9 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite 
+TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-dragon
 
 #export TARGET= zx128
 #export CPU = z80
-export TARGET = 6809test
-export CPU = 6809
+export TARGET = zx128
+export CPU = z80
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -42,10 +42,14 @@ export CROSS_CCOPTS=-c -Or -t c128 -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform
 export BINEXT = .o
 else
 export CROSS_AS=m6809-unknown-as
-export CROSS_LD=m6809-unknown-ld
+export CROSS_LD=lwlink
 export CROSS_CC = m6809-unknown-gcc
 #export CROSS_CCOPTS=-Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
-export CROSS_CCOPTS=-c -Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -mfar-stack-param -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
+export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
+export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
+export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.video -mfar-code-page=4
 export ASOPTS=
 export BINEXT = .o
 endif
@@ -70,13 +74,15 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 #
 
 CDSRCS = start.c
-C1SRCS =  version.c kdata.c filesys.c
-C1SRCS += inode.c syscall_fs.c process.c usermem.c timer.c
-C2SRCS =  devio.c syscall_proc.c
-C2SRCS += syscall_fs2.c syscall_other.c
-C2SRCS += bank16k.c bank32k.c bankfixed.c single.c simple.c
-C2SRCS += tty.c devsys.c
-C2SRCS += mm.c swap.c
+C1SRCS =  version.c filesys.c devio.c kdata.c
+C1SRCS += inode.c tty.c
+#
+#	Keep all of the syscalls in C2SRCS
+#
+C2SRCS =  syscall_proc.c syscall_fs.c
+C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c process.c
+C2SRCS += simple.c single.c bank16k.c bank32k.c bankfixed.c
+C2SRCS += devsys.c mm.c swap.c usermem.c timer.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font8x8.c
 
@@ -110,7 +116,7 @@ target:
 	$(MAKE) -C platform-$(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
 
 $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) $<
