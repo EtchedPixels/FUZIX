@@ -13,6 +13,12 @@ __sfr __at 0x81 track;
 __sfr __at 0x82 sector;
 __sfr __at 0x83 data;
 
+__sfr __at 0x91 dh;
+__sfr __at 0x93 dl;
+__sfr __at 0x71 bh;
+__sfr __at 0x73 bl;
+__sfr __at 0x75 start;
+
 int fd_open(uint8_t minor, uint16_t flag)
 {
     flag;
@@ -23,8 +29,30 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-
 static int fd_transfer(bool is_read, uint8_t rawflag)
+{
+	blkno_t block;
+	uint16_t dptr;
+
+	if (rawflag != 0)
+		return 0;
+	
+	dptr = (uint16_t)udata.u_buf->bf_data;
+	block = udata.u_buf->bf_blk;
+
+	if (!is_read)
+		kprintf("WRITING!!!!\r\n");
+
+	bh = (block >> 8);
+	bl = (block & 0xFF);
+	dh = dptr >> 8;
+	dl = dptr & 0xFF;
+	start = 0;
+
+	return 1;
+}
+
+/*static int fd_transfer(bool is_read, uint8_t rawflag)
 {
 	blkno_t block;
 	uint8_t* dptr;
@@ -33,8 +61,6 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
 
 	uint8_t sec, trk, side;
 
-	if (rawflag != 0)
-		return 0;
 
 	dptr = (uint8_t*)udata.u_buf->bf_data;
 	block = udata.u_buf->bf_blk;
@@ -59,12 +85,15 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
 			if (is_read)
 				*(dptr++) = data;
 			else
+			{
 				data = *(dptr++);
+				kprintf(".");
+			}
 		sec++;
 		sector = sec;
 	}
 	return 1;
-}
+}*/
 
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
