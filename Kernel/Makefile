@@ -47,11 +47,19 @@ export CROSS_AS=m6809-unknown-as
 export CROSS_LD=lwlink
 export CROSS_CC = m6809-unknown-gcc
 #export CROSS_CCOPTS=-Wall -O2 -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+<<<<<<< HEAD
 export CROSS_CCOPTS=-c -Wall -Os -msoft-reg-count=0 -mfar-stack-param -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
 export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
 export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
+=======
+export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -mfar-stack-param -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
+export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
+export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
+export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.video -mfar-code-page=4
+>>>>>>> Makefile
 export ASOPTS=
 export BINEXT = .o
 endif
