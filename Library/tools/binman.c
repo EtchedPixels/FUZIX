@@ -21,19 +21,11 @@ static unsigned int s__DATA;
 static void ProcessMap(FILE *fp)
 {
   char buf[512];
-  int addr = 0;
-  int naddr;
-  char name[100];
-  char nname[100];
-  int hogs = 0;
   
   while(fgets(buf, 511, fp)) {
     char *p1 = strtok(buf," \t\n");
     char *p2 = NULL;
-    int match = 0;
     
-    match = memcmp(buf, "     000", 8);
-
     if (p1)
       p2 = strtok(NULL, " \t\n");
 
@@ -55,7 +47,6 @@ static void ProcessMap(FILE *fp)
 int main(int argc, char *argv[])
 {
   FILE *map, *bin;
-  int tail;
 
   if (argc != 4) {
     fprintf(stderr, "%s: [binary] [map] [output]\n", argv[0]);
@@ -84,6 +75,7 @@ int main(int argc, char *argv[])
     perror(argv[3]);
     exit(1);
   }
+  memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZER);
   /* Write out everything that is data, omit everything that will 
      be zapped */
   if (fwrite(buf + 0x100, s__DATA - 0x100, 1, bin) != 1) {

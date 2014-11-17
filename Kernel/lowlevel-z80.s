@@ -344,7 +344,7 @@ in_kernel:
 	    ; mapping as it will vary during kernel activity and the kernel
 	    ; wants it put back as it was before
 in_kernel_2:
-	   call map_restore
+	    call map_restore
 int_switch:
             ld sp, (istack_switched_sp)	; stack back
 
@@ -446,8 +446,9 @@ _irqrestore:	pop hl		; sdcc needs to get register arg passing
 		pop af		; so badly
 		jp po, was_di
 		ei
-was_di:
-		push af
+		jr irqres_out
+was_di:		di
+irqres_out:	push af
 		jp (hl)
 
 

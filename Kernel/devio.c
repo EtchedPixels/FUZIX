@@ -208,6 +208,10 @@ udata.u_base should be consulted instead.
 Any device other than a disk will have only raw access.
 **********************************************************************/
 
+/* FIXME: To do banking without true 'far' pointers we need to figure
+   out some scheme to do a bank call here - do we need a dev_tab bank
+   entry perhaps ? */
+
 int bdread(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
@@ -514,3 +518,46 @@ void kprintf(const char *fmt, ...)
 		fmt++;
 	}
 }
+
+#ifdef CONFIG_IDUMP
+
+void idump(void)
+{
+	inoptr ip;
+	ptptr pp;
+	extern struct cinode i_tab[];
+
+	kprintf("Err %d root %d\n", udata.u_error, root - i_tab);
+	kputs("\tMAGIC\tDEV\tNUM\tMODE\tNLINK\t(DEV)\tREFS\tDIRTY\n");
+
+	for (ip = i_tab; ip < i_tab + ITABSIZE; ++ip) {
+		kprintf("%d\t%d\t%d\t%u\t0%o\t",
+			ip - i_tab, ip->c_magic, ip->c_dev, ip->c_num,
+			ip->c_node.i_mode);
+		kprintf("%d\t%d\t%d\t%d\n",	/* line split for compiler */
+			ip->c_node.i_nlink, ip->c_node.i_addr[0],
+			ip->c_refs, ip->c_dirty);
+		if (!ip->c_magic)
+			break;
+	}
+
+	kputs
+	    ("\n\tSTAT\tWAIT\tPID\tPPTR\tALARM\tPENDING\tIGNORED\tCHILD\n");
+	for (pp = ptab; pp < ptab + PTABSIZE /*maxproc */ ; ++pp) {
+		if (pp->p_status == P_EMPTY)
+			continue;
+		kprintf("%d\t%d\t0x%x\t%d\t",
+			pp - ptab, pp->p_status, pp->p_wait, pp->p_pid);
+		kprintf("%d\t%d\t0x%lx\t0x%lx\n",
+			pp->p_pptr - ptab, pp->p_alarm, pp->p_pending,
+			pp->p_ignored);
+	}
+
+	bufdump();
+
+	kprintf("insys %d ptab %d call %d cwd %d sp 0x%x\n",
+		udata.u_insys, udata.u_ptab - ptab, udata.u_callno,
+		udata.u_cwd - i_tab, udata.u_sp);
+}
+
+#endif

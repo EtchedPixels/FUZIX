@@ -23,10 +23,10 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	$(CROSS_LD) -o uzi.bin --mapfile uzi.map -C ld65.cfg crt0.o commonmem.o \
+	$(CROSS_LD) -o ../fuzix.bin --mapfile ../uzi.map -C ld65.cfg crt0.o commonmem.o \
 	p6502.o ../start.o ../version.o ../lowlevel-6502.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
-	../tty.o ../devnull.o ../devzero.o ../devproc.o ../devmem.o \
+	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_exec.o \
 	../usermem.o devlpr.o devtty.o libc.o 

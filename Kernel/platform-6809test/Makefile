@@ -23,10 +23,11 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin --map ../uzi.map -nostdlib crt0.o commonmem.o \
+	$(CROSS_LD) --raw -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	crt0.o commonmem.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
+	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec.o \
 	../usermem_std-6809.o devlpr.o devtty.o libc.o

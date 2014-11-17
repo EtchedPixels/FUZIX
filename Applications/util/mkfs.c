@@ -28,7 +28,7 @@ direct dirbuf[32] = { ROOTINODE, ".", ROOTINODE, ".." };
 struct dinode inode[8];
 struct filesys fs_tab;
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     uint16 fsize, isize;
     struct stat statbuf;
@@ -74,7 +74,7 @@ main(int argc, char *argv[])
 }
 
 
-mkfs(uint16 fsize, uint16 isize)
+int mkfs(uint16 fsize, uint16 isize)
 {
     uint16 j;
     char *zeros;
@@ -142,7 +142,7 @@ mkfs(uint16 fsize, uint16 isize)
 }
 
 
-dwrite(uint16 blk, char *addr)
+int dwrite(uint16 blk, char *addr)
 {
     int write();
         

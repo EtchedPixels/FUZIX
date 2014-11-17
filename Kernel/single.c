@@ -50,7 +50,7 @@ int pagemap_realloc(uint16_t size)
 
 uint16_t pagemap_mem_used(void)
 {
-	uint16_t mem = PROGTOP - ramtop + udata.u_top;
+	uint16_t mem = PROGTOP - ramtop + (uint16_t)udata.u_top;
 	return mem >> 10;
 }
 

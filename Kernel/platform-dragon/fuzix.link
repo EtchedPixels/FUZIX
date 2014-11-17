@@ -1,0 +1,11 @@
+section .vectors load 0x0100
+section .udata load 0x7D00
+section _COMMONMEM high 0x7D00
+section .text2
+section .bss
+section .data
+section .discard
+section .start load 0xC000
+section .text
+section .video
+

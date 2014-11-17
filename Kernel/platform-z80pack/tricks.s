@@ -221,15 +221,18 @@ _dofork:
         add hl, de
         ; load p_page
         ld c, (hl)
-	ld hl, (U_DATA__U_PAGE)
-	ld a, l
+	; load existing page ptr
+	push af
+	ld a, c
+	call outcharhex
+	pop af
+	ld a, (U_DATA__U_PAGE)
 
 	call bankfork			;	do the bank to bank copy
 
 	; Copy done
 
-	ld hl, (U_DATA__U_PAGE)	; parent memory
-        ld a, l
+	ld a, (U_DATA__U_PAGE)	; parent memory
 	out (21), a		; Switch context to parent
 
 	; We are going to copy the uarea into the parents uarea stash
@@ -239,6 +242,7 @@ _dofork:
 	ld de, #U_DATA_STASH	; target process
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
+	; Return to the kernel mapping
 	xor a
 	out (21), a
         ; now the copy operation is complete we can get rid of the stuff
@@ -279,9 +283,9 @@ _swapstack:
 ;	Assumption - fits into a fixed number of whole 256 byte blocks
 ;
 bankfork:
-;	ld bc, #(0xC000 - 768)		;	48K minus the uarea stash
+;	ld bc, #(0xF000 - 768)		;	60K minus the uarea stash
 
-	ld b, #0xBD		; C0 x 256 minus 3 sets for the uarea stash
+	ld b, #0xED		; F0 x 256 minus 3 sets for the uarea stash
 	ld hl, #0		; base of memory to fork (vectors included)
 bankfork_1:
 	push bc			; Save our counter and also child offset
@@ -292,7 +296,7 @@ bankfork_1:
 	ldir			; copy into the bounce buffer
 	pop de			; recover source of copy to bounce
 				; as destination in new bank
-	pop bc			; recover child port number
+	pop bc			; recover child page number
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
@@ -303,7 +307,7 @@ bankfork_1:
 	ldir			; copy into the child
 	pop bc			; recover the bank pointers
 	ex de, hl		; destination is now source for next bank
-	ld a, b			; parent back is wanted in a
+	ld a, b			; parent bank is wanted in a
 	pop bc
 	djnz bankfork_1		; rinse, repeat
 	ret

@@ -28,18 +28,15 @@ Bank 1 to Bank n:
 ECFF		Application end
 ED00-EFFF	uarea stash
 
-CP/M emulation size is very limited short of figuring a hack way to have
-a shared emulator in highmem, even then not great.
-
 Disk swap device recommended
-
 
 Put the kernel at the end of a floppy image from cyl 60
 Add the fs in the first 60 cyls (390 blocks)
+
 Put the bootblock in sector 0
 
 dd the kernel image to offset 199680
 
 ie
 
-dd if=uzi.bin of=drivea.img bs=1 seek=199680 conv=nontruc
+dd if=fuzix.bin of=drivea.cpm bs=1 seek=199680 conv=nontruc

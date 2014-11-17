@@ -27,6 +27,8 @@
 
 	    .globl _fd_bankcmd
 
+	    .globl _kernel_flag
+
             ; exported debugging tools
             .globl _trap_monitor
             .globl outchar
@@ -201,6 +203,9 @@ map_restore:
 	    ret	    
 map_store:
 	    .db 0
+
+_kernel_flag:
+	    .db 1
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
