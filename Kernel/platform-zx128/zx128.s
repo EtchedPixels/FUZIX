@@ -25,6 +25,7 @@
         .globl map_restore
 
         .globl _fd_bankcmd
+        .globl _kernel_flag
 
         ; exported debugging tools
         .globl _trap_monitor
@@ -137,7 +138,7 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
-        out (c), a
+        ;out (c), a
         and #0xff
         jr z, sb_restore
         ld (current_process_map), a
@@ -200,3 +201,5 @@ place_for_c:
 outchar:
         out (#0x15), A
         ret
+_kernel_flag:
+        .db 1
