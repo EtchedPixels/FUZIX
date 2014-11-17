@@ -98,7 +98,7 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag;minor;
-    kprintf("Reading block %d\r\n",udata.u_buf->bf_blk );
+//    kprintf("Reading block %d\r\n",udata.u_buf->bf_blk );
     return fd_transfer(true, rawflag);
 }
 
