@@ -115,7 +115,15 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
+<<<<<<< HEAD
         out (c), a
+=======
+        ;out (c), a
+        and #0xff
+        jr z, sb_restore
+        ld (current_process_map), a
+sb_restore:
+>>>>>>> zx128: kernel_flag
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)
@@ -190,4 +198,8 @@ outchar:
         out (#0x15), A
         ret
 _kernel_flag:
+<<<<<<< HEAD
         .db 1
+=======
+        .db 1
+>>>>>>> zx128: kernel_flag
