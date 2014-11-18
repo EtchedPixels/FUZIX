@@ -130,6 +130,7 @@ _program_vectors:
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
 switch_bank:
+        di                  ; TODO: we need to call di() instead
         ld (current_map), a
         ld a, b
         ld (place_for_b), a
@@ -143,6 +144,7 @@ switch_bank:
         ld a, (place_for_c)
         ld c, a
         ld a, (place_for_a)
+        ei
         ret
 
 map_kernel:
