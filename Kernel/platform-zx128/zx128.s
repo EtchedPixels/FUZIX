@@ -115,21 +115,17 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
-<<<<<<< HEAD
         out (c), a
-=======
-        ;out (c), a
         and #0xff
         jr z, sb_restore
         ld (current_process_map), a
 sb_restore:
->>>>>>> zx128: kernel_flag
+        out (c), a
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)
         ld c, a
         ld a, (place_for_a)
-<<<<<<< HEAD
         ei
         ret
 
@@ -160,7 +156,7 @@ map_process:
 
 map_process_always:
         ld (place_for_a), a
-        ld a, (current_process_map)
+        ld a, (U_DATA__U_PAGE)
         jr switch_bank
 
 map_save:
@@ -185,7 +181,6 @@ map_store:
 current_process_map:
         .db 0
 
-
 place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
         .db 0               ; Here we store A when needed
 place_for_b:                ; And BC - here
@@ -198,8 +193,5 @@ outchar:
         out (#0x15), A
         ret
 _kernel_flag:
-<<<<<<< HEAD
         .db 1
-=======
-        .db 1
->>>>>>> zx128: kernel_flag
+
