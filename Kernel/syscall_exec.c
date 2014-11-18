@@ -114,7 +114,7 @@ int16_t _execve(void)
 		goto nogood3;	/* SN */
 
 	/* This must be the last test as it makes changes if it works */
-	if (pagemap_realloc(top))
+	if (pagemap_realloc(top - PROGBASE))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
