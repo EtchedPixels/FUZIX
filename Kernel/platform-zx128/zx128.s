@@ -137,11 +137,7 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
-;        out (c), a
-        and #0xff
-        jr z, sb_restore
-        ld (current_process_map), a
-sb_restore:
+        out (c), a
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)
@@ -165,7 +161,7 @@ map_process:
 
 map_process_always:
         ld (place_for_a), a
-        ld a, (current_process_map)
+        ld a, (U_DATA__U_PAGE)
         jr switch_bank
 
 map_save:
@@ -184,9 +180,6 @@ current_map:                ; place to store current page number. Is needed
         .db 0               ; because we have no ability to read 7ffd port
                             ; to detect what page is mapped currently 
 map_store:
-        .db 0
-
-current_process_map:
         .db 0
 
 place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.

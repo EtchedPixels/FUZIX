@@ -35,7 +35,7 @@
 
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    ((char *)(0xC000))  /* also data base */
-#define PROGTOP     ((char *)(0xFFFF))  /* Top of program, base of U_DATA copy */
+#define PROGTOP     ((char *)(0xFD00))  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   16	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
