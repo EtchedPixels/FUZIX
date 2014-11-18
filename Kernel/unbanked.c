@@ -15,11 +15,25 @@
  *	support one linear block but the hole manager can manage multiple non linear
  *	chunks if need be.
  *
- *	We run with common 0 at physical 0x0 holding the vectors (why copy them!)
- *	The bank area then runs from 0x0100 -> PAGE_TOP. The common 1 area is 
- *	mapped to the uarea/common of this process. This costs us memory for the
- *	common code copies but saves us doing the uarea copying dance that
- *	UZI180 does
+ *	The proposed way to run Z180 is
+ *
+ *	User Space
+ *	0-xxxx		Mapped to physical blocks holding user binary, vectors
+ *			and some small stubs to switch bank
+ *	xxxx-FFFF	Mapped to somewhere like ROM (stray write protection)
+ *
+ *	Kernel Space
+ *	0-EFFF		Kernel image including other end of stubs
+ *	F000		Udata of process (plus window space to make user
+ *			copies easier)
+ *
+ *	(the upper being exchanged temporarily to access user memory, or we
+ *	could put the copiers above F000 and switch the 0-EFFF bank but that
+ *	makes irq handling uglier I suspect)
+ *
+ *	For 8086 we actually want two holes in some cases, one for cs: and one
+ *	for ds: but we don't have all the vector hassle as we have a vaguely
+ *	real notion of user/supervisor state.
  */
 
 #include <kernel.h>
