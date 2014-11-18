@@ -51,7 +51,6 @@ void create_init(void)
 	const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
 
-
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
 	udata.u_top = 4096;	/* Plenty for the boot */
