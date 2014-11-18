@@ -3,6 +3,11 @@
 #include <printf.h>
 
 #ifdef CONFIG_BANK32
+
+#ifndef bank32_invalidate_cache
+#define bank32_invalidate_cache(x) do {} while(0)
+#endif
+
 /*
  * Map handling: We have flexible paging. Each map table consists of a set of pages
  * with the last page repeated to fill any holes.
@@ -13,6 +18,24 @@
  *
  * We have at least one potential oddball to cater for here later. The Sam Coupe has
  * 32K banking but you can pick blocks to bank high or low on a 16K alignment.
+ *
+ * If you have a system which has the top 32K fixed and the lower 32K as pages
+ * then you have a choice to make. You can use the fixed bank module and limit
+ * process sizes to 32K or you can do this
+ *
+ * - Build the kernel to use a low 32K bank and shove the rest as high up as
+ *   you can
+ * - On switchin/out do the uarea copies as required already
+ * - Use the remaining upper space as a cache for the bits of the top of big
+ *   processes and remember the current cached page
+ * - In switchin check if the two pages are different, if so check the top
+ *   page against the cache and copy out the old cache to its true page, and
+ *   then copy in the new one
+ * - Provide a bank32_invalidate_cache definition to clear the cached page
+ *   when it is freed.
+ *
+ *   If you are also doing swapping then you need to account for the cache
+ *   by providing a swap_flush_cache() method (see swap.c)
  * 
  */
 
@@ -36,8 +59,10 @@ void pagemap_free(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
 	pfree[pfptr--] = *ptr;
-	if (*ptr != ptr[1])
+	if (*ptr != ptr[1]) {
 		pfree[pfptr--] = ptr[1];
+                bank32_invalidate_cache(ptr[1]);
+        }
 }
 
 static int maps_needed(uint16_t top)

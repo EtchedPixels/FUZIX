@@ -16,6 +16,9 @@
 #define UDATA_BLOCKS	0
 #endif
 
+#ifndef swap_flush_cache
+#define swap_flush_cache(p)	do {} while(0)
+#endif
 
 uint8_t *swapbase;
 unsigned int swapcnt;
@@ -74,6 +77,7 @@ int swapout(ptptr p)
 		/* Are we out of swap ? */
 		if (swapptr == 0)
 			return ENOMEM;
+                swap_flush_cache(p);
 		map = swapmap[--swapptr];
 		blk = map * SWAP_SIZE;
 #ifdef UDATA_SWAPSIZE
