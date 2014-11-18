@@ -45,10 +45,12 @@ void bufinit(void)
 void create_init(void)
 {
 	uint8_t *j;
-	/* userspace: PROGLOAD +
-               0    1    2    3    4   5  6  7  8  9  A  B  C */
-	static const char arg[] =
-	    { '/', 'i', 'n', 'i', 't', 0, 0, 1, 1, 0, 0, 0, 0 };
+
+	/* userspace (offset from PROGBASE): 0x0000+ 0   1   2   3   4   5   6   7   8   9   A   B   C */
+	/* FIXME: big-endian only */
+	const char arg[] =
+	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
+
 
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
