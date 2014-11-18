@@ -30,7 +30,7 @@ int match(char *cmd);
 void usage(void);
 void prmode(int mode);
 int ls(char *path);
-int chmod( char *path, char *modes);
+int chmod(char *modes, char *path);
 int mknod( char *path, char *modes, char *devs);
 int mkdir(char *path);
 int get( char *arg, int binflag);
@@ -377,7 +377,7 @@ int ls(char *path)
     return 0;
 }
 
-int chmod( char *path, char *modes)
+int chmod(char *modes, char *path)
 {
     int mode;
 
