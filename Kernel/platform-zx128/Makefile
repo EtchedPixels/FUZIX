@@ -3,7 +3,7 @@ CSRCS = devtty.c devfd.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s zx128.s zxvideo.s
-ASRCS += tricks.s commonmem.s udata.s
+ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

@@ -129,7 +129,6 @@ _program_vectors:
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
-        ;  stack: AF, (return address)
 switch_bank:
         ld (current_map), a
         ld a, b
@@ -138,7 +137,7 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
-        ;out (c), a
+;        out (c), a
         and #0xff
         jr z, sb_restore
         ld (current_process_map), a
@@ -152,7 +151,7 @@ sb_restore:
 
 map_kernel:
         ld (place_for_a), a
-map_kernel_nosavea:          ; to avoid double af pushing when called from map_process
+map_kernel_nosavea:          ; to avoid double reg A saving
         xor a
         jr switch_bank
 
