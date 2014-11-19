@@ -85,7 +85,7 @@ int pagemap_alloc(ptptr p)
 int pagemap_realloc(uint16_t size)
 {
 	int have = maps_needed(udata.u_top);
-	int want = maps_needed(PROGBASE + size);
+	int want = maps_needed((uint16_t)PROGBASE + size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
 	int i;
 	irqflags_t irq;

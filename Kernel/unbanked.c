@@ -255,7 +255,7 @@ static int pagemap_can_alloc(uint16_t size)
 int pagemap_realloc(uint16_t size)
 {
 	/* convert size to desired u_top */
-	size += PROGBASE;
+	size += (uint16_t)PROGBASE;
 	if (size == udata.u_top)
 		return 0;
 	if (size > udata.u_top && pagemap_can_alloc(size))
