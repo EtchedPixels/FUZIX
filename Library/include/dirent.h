@@ -30,7 +30,7 @@ struct dirent {
 
 /* Internal version */
 struct __dirent {
-	long		d_ino;
+	int 		d_ino;
 	char		d_name[30];
 };
 

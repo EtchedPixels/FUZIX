@@ -92,13 +92,14 @@ _fd765_intwait:
 		;
 		;	Check what is pending on the interrupt side
 		;
+		ld hl, #0xffff			; report -1 if not pending
 		in a, (0xF8)
 		bit 5, a
 		ret z				; wait for the 765 int to go off
 		;
 		;	Send the sense command, get the status back
 		;
-		ld hl, #fd765_sense		; a suitable 0x08 in the code
+		ld hl, #fd765_sense		; sense command
 		call fd765_sendcmd
 		call fd765_status_a
 		bit 7, a			; error
@@ -223,11 +224,12 @@ read_kern:
 		ld b, #0			; 512 bytes
 		call fd765_xfer_in
 		jr nz, read_failed
-		call fd765_status_a
-		and #0xCB
-		jr nz, read_out
-		; read ok
+read_status:					; clean up is shared
+		call fd765_status_a		; with write method
 		ld hl, #0
+		and #0xF8
+		jr nz, read_failed
+		; read ok
 read_out:
 		call map_kernel
 		pop af
@@ -235,7 +237,7 @@ read_out:
 		ei
 		ret
 read_failed:
-		ld hl, #-1
+		dec hl
 		jr read_out
 
 ;
@@ -265,12 +267,7 @@ write_kern:
 		ld b, #0			; 512 bytes
 		call fd765_xfer_out
 		jr nz, read_failed
-		call fd765_status_a
-		and #0xCB		; FIXME - correct error mask ?
-		jr nz, read_out
-		; write ok
-		ld hl, #0
-		jr read_out
+		jr read_status
 
 _fd765_cmd2:	call _fd765_intwait
 		ld b, #2
