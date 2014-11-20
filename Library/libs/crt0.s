@@ -55,14 +55,12 @@ start2:		ld hl, #l__DATA - 1	 ; work around linker limit
 		ld (hl), #0
 		ldir
 		call gsinit
-		pop hl			; environ
+
+		ld hl, #4
+		add hl, sp
 		ld (_environ), hl
-		pop de			; argv
-		pop bc			; argc
 		ld hl, #_exit		; return vector
-		ex (sp), hl		; swap it with the provided
-		push bc			; return address
-		push de			; re-stack arguments
+		push hl
 		jp _main		; go
 
 		.area _GSINIT
