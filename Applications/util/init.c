@@ -47,6 +47,9 @@ int main(int argc, char *argv[])
     close(2);
     dup(fdtty1);
 
+    /* start with a clean environment */
+    environ = 0;
+
     putstr("init version 0.8\n");
     
     /* then call the login procedure on it */
@@ -92,7 +95,7 @@ int login(char *ttyname)
             putenv("PATH=:/bin:/usr/bin");
             strcpy(buf, "CTTY=");
             strcat(buf, ttyname);
-            putenv(buf);
+            putenv(strdup(buf));
 
             /* make stdin, stdout and stderr point to fdtty */
 
@@ -152,15 +155,15 @@ void spawn(struct passwd *pwd)
 
     strcpy(buf, "LOGNAME=");
     strcat(buf, pwd->pw_name);
-    putenv(buf);
+    putenv(strdup(buf));
 
     strcpy(buf, "HOME=");
     strcat(buf, pwd->pw_dir);
-    putenv(buf);
+    putenv(strdup(buf));
 
     strcpy(buf, "SHELL=");
     strcat(buf, pwd->pw_shell);
-    putenv(buf);
+    putenv(strdup(buf));
 
     /*chdir(pwd->pw_dir);*/
 
