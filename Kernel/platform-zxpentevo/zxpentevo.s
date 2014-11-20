@@ -43,6 +43,7 @@
 
         .include "kernel.def"
         .include "../kernel.def"
+        .include "pages.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
@@ -87,10 +88,11 @@ _fd_bankcmd:
         .area _CODE
 
 init_early:
-        ld bc, #0x7ffd
-        xor a
+;        ld bc, #0x7ffd
+;        xor a
+	ld a,#kernel_page
         ld (current_map), a
-        out (c), a            ; set page 0 at 0xC000
+;        out (c), a            ; set page 0 at 0xC000
         ret
 
 init_hardware:
@@ -136,9 +138,12 @@ switch_bank:
         ld (place_for_b), a
         ld a, c
         ld (place_for_c), a
-        ld bc, #0x7ffd
-        ld a, (current_map)
-        out (c), a
+
+;        ld bc, #0x7ffd
+;        ld a, (current_map)
+;        out (c), a
+	setmw3 a
+        
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)

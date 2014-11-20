@@ -9,8 +9,13 @@ uint8_t *ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
-  pagemap_add(1);
+  // 0 1 2 5 - used by kernel
+  
+  // Add free pages
   pagemap_add(3);
+  pagemap_add(4);
+  pagemap_add(6);
+  pagemap_add(7);
 }
 
 /* The uarea is already synched to the stash which is written with the
