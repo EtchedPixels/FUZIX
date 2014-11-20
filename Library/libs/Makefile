@@ -2,8 +2,8 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
-CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
-#CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
+#CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
+CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
 #--oldralloc
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
@@ -29,7 +29,7 @@ SRC_C += setvbuf.c sleep.c sprintf.c stat.c stdio0.c strcasecmp.c
 SRC_C += strdup.c stricmp.c strncasecmp.c
 SRC_C += strnicmp.c strsep.c
 SRC_C += strtod.c strtol.c system.c time.c tmpnam.c ttyname.c
-SRC_C += tzset.c ultoa.c ungetc.c utent.c utsname.c
+SRC_C += tzset.c ungetc.c utent.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # tty layer
