@@ -21,7 +21,7 @@ static int extras;
    if( r == 0 )  len = strlen(var);
    else          len = r-var;
 
-   for(p=environ; *p; p++)
+   for(p=environ; p && *p; p++)
    {
       if( memcmp(var, *p, len) == 0 && (*p)[len] == '=' )
       {
