@@ -1,0 +1,38 @@
+-mwxuy
+-i uzi.ihx
+-b _CODE=0x0000
+-b _COMMONMEM=0x5B00
+-l z80
+platform-zxpentevo/crt0.rel
+platform-zxpentevo/commonmem.rel
+platform-zxpentevo/zxpentevo.rel
+platform-zxpentevo/zxvideo.rel
+platform-zxpentevo/main.rel
+platform-zxpentevo/devfd.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem_std-z80.rel
+platform-zxpentevo/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-zxpentevo/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+platform-zxpentevo/devtty.rel
+-e

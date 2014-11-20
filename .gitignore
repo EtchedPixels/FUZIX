@@ -1,8 +1,20 @@
 # SDCC stuff
-*.lnk
+# *.lnk
 *.lst
 *.map
 *.mem
 *.rel
 *.rst
 *.sym
+*.asm
+fuzix.bin
+hogs.txt
+uzi.cdb
+uzi.ihx
+uzi.tmp
+version.c
+platform
+analysemap
+binman
+make4x6
+memhogs
