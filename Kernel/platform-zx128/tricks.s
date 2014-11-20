@@ -197,7 +197,7 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	; Need to write a new 47.25K bank copy here, then copy the live uarea
+	; Need to write a new 16K bank copy here, then copy the live uarea
 	; into the stash of the new process
 
         ; --------- copy process ---------
@@ -216,7 +216,8 @@ _dofork:
 
 	ld hl, (U_DATA__U_PAGE)	; parent memory
         ld a, l
-	out (21), a		; Switch context to parent
+	ld bc, #0x7ffd
+	out (c), a		; Switch context to parent
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -225,8 +226,10 @@ _dofork:
 	ld de, #U_DATA_STASH	; target process
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
+
+	ld bc, #0x7ffd
 	xor a
-	out (21), a
+	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
         pop bc
@@ -265,14 +268,15 @@ _swapstack:
 ;	Assumption - fits into a fixed number of whole 256 byte blocks
 ;
 bankfork:
-;	ld bc, #(0xC000 - 768)		;	48K minus the uarea stash
+;	ld bc, #(0x4000 - 768)		;	16K minus the uarea stash
 
-	ld b, #0xBD		; C0 x 256 minus 3 sets for the uarea stash
-	ld hl, #0		; base of memory to fork (vectors included)
+	ld b, #0x3D		; 40 x 256 minus 3 sets for the uarea stash
+	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	out (21), a		; switch to parent bank
+	ld bc, #0x7ffd
+	out (c), a		; switch to parent bank
 	ld de, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the bounce buffer
@@ -282,8 +286,9 @@ bankfork_1:
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
-	out (21), a
 	push bc			; save the bank pointers
+	ld bc, #0x7ffd
+	out (c), a
 	ld hl, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the child
