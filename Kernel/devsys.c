@@ -52,6 +52,7 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
   case 2:
     return udata.u_count;
   case 1:
+    /* FIXME: this needs to be a per CPU value */
     if (udata.u_offset < 0x0100) {
       udata.u_error = EPERM;
       return -1;
