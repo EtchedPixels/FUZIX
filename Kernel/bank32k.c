@@ -67,8 +67,10 @@ void pagemap_free(ptptr p)
 
 static int maps_needed(uint16_t top)
 {
-	/* FIXME: unhardwire the 4K common assumption */
-	uint16_t needed = top + 0xFFF;	/* 0x1000 common - 1 for shift and inc */
+	/* On many platforms if you touch this or PROGTOP you must
+	   touch tricks.s */
+	uint16_t needed = top + 0xFFFF - PROGTOP;
+	/* Usually we have 0x1000 common - 1 for shift and inc */
 	if (needed & 0x8000)
 		return 2;
 	return return 1;
