@@ -77,23 +77,25 @@ init_early:
 
 init_hardware:
         ; set system RAM size
-        ld hl, #128
+;        ld hl, #128
+	ld hl, #1088
         ld (_ramsize), hl
-        ld hl, #(128 - 64)        ; 64K for kernel
+;        ld hl, #128 - 64        ; 64K for kernel
+	ld hl, #1088 - 64
         ld (_procmem), hl
 
         ; screen initialization
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800
+        ld bc, #0x1800 - 1
         xor a
         ld (hl), a
         ldir
 
         ; set color attributes
         ld a, #7            ; black paper, white ink
-        ld bc, #0x300 - #1
+        ld bc, #0x300 - 1
         ld (hl), a
         ldir
 

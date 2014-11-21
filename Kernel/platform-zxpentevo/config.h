@@ -21,8 +21,11 @@
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 6 16K banks, 1 is for kernel needs */
-#define MAX_MAPS	5
+#define MAX_MAPS	64
 #define MAP_SIZE	0x4000U
+
+/* Process table size. */
+#define PTABSIZE 64
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
@@ -54,3 +57,4 @@
 #undef  SWAPDEV           /* Do not use swap */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+
