@@ -23,7 +23,8 @@
 #define CONFIG_BANKS	1
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0100))  /* also data base */
+#define PROGBASE    ((char *)(0x0000))  /* also data base */
+#define PROGLOAD    ((char *)(0x0100))
 #define PROGTOP     ((char *)(0x7D00))  /* Top of program, base of U_DATA */
 #define PROC_SIZE   32		  /* Memory needed per process */
 

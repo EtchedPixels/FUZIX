@@ -28,7 +28,8 @@
 #define VT_BOTTOM	31
 
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0100))  /* also data base */
+#define PROGBASE    ((char *)(0x0000))  /* memory base of program */
+#define PROGLOAD    ((char *)(0x0100))  /* load base of program */
 #define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
 #define PROC_SIZE   64	  /* Memory needed per process */
 

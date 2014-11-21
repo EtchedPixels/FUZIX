@@ -127,13 +127,16 @@ int16_t _execve(void)
 	if (ino->c_node.i_mode & SET_GID)
 		udata.u_egid = ino->c_node.i_gid;
 
+	/* FIXME: In the execve case we may on some platforms have space
+	   below PROGLOAD to clear... */
+
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(buf, PROGBASE, 512);	/* Move 1st Block to user bank */
+	uput(buf, PROGLOAD, 512);	/* Move 1st Block to user bank */
 	brelse(buf);
 
-	c = ugetc(PROGBASE);
+	c = ugetc(PROGLOAD);
 	if (c != 0xC3)
 		kprintf("Botched uput\n");
 
@@ -186,7 +189,7 @@ int16_t _execve(void)
 	 *  same buffer to avoid cycling our small cache on this. Indirect blocks
 	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
 	 */
-	progptr = PROGBASE + 512;	// we copied the first block already
+	progptr = PROGLOAD + 512;	// we copied the first block already
 
 	/* Compute this once otherwise each loop we must recalculate this
 	   as the compiler isn't entitled to assume the loop didn't change it */
@@ -235,7 +238,7 @@ int16_t _execve(void)
 		doexec(emu_base);
 	else
 #endif
-		doexec(PROGBASE);
+		doexec(PROGLOAD);
 
 	// tidy up in various failure modes:
       nogood3:

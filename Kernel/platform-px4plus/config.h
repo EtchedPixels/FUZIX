@@ -31,7 +31,8 @@
 /* FIXME: the OVL timer isn't quite 100/sec and we have an accurate 1Hz
    timer available, so needs some tweaking */
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0100))  /* also data base */
+#define PROGBASE    ((char *)(0x0000))  /* also data base */
+#define PROGLOAD    ((char *)(0x0100))
 #define PROGTOP     ((char *)(0x4000))  /* Top of program for debug */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks (with uarea means 31K max app size) */

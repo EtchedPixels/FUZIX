@@ -40,8 +40,9 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((uint8_t *)(0x8000))  /* also data base */
-#define PROGTOP     ((uint8_t *)(0xff00))  /* Top of program */
+#define PROGBASE    ((uint8_t *)(0x0000))  /* also data base */
+#define PROGLOAD    ((uint8_t *)(0x0000))  /* also data base */
+#define PROGTOP     ((uint8_t *)(0x7C00))  /* Top of program */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

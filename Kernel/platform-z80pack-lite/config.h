@@ -12,10 +12,11 @@
 #undef CONFIG_CPM_EMU
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0100))  /* also data base */
+#define PROGBASE    ((char *)(0x0000))
+#define PROGLOAD    ((char *)(0x0100))  /* also data base */
 #define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA copy */
 
-#define BOOT_TTY 9        /* Set this to default device for stdio, stderr */
+#define BOOT_TTY 513      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
 /* We need a tidier way to do this from the loader */
