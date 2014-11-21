@@ -244,6 +244,7 @@ _cursor_off:
 
         ; FIXME: now this is_do_silent_click actually
 _do_beep:
+
         ld e, #0xFF         ; length
         ld c, #0xFE         ; beeper port
         ld l, #0x10         ; beeper bit

@@ -55,6 +55,7 @@ void kputchar(char c)
 {
 	if (c == '\n')
 		tty_putc(0, '\r');
+
 	tty_putc(0, c);
 }
 

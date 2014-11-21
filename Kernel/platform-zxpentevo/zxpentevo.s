@@ -24,7 +24,6 @@
         .globl map_save
         .globl map_restore
 
-        .globl _fd_bankcmd
         .globl _kernel_flag
 
         ; exported debugging tools
@@ -51,7 +50,7 @@
             .area _COMMONMEM
 
 _trap_monitor:
-        ld a, #128
+        ;ld a, #128
         ; out (29), a ; TODO: go where? BASIC48?
 platform_interrupt_all:
         ret
@@ -59,47 +58,28 @@ platform_interrupt_all:
 _trap_reboot:
         rst 0
 
-;
-;    We need the right bank present when we cause the transfer
-;
-_fd_bankcmd:
-        ret
-        pop de        ; return
-        pop bc        ; command
-        pop hl        ; bank
-        push hl
-        push bc
-        push de        ; fix stack
-        ld a, i
-        di
-        push af        ; save DI state
-        call map_process    ; HL alread holds our bank
-        ld a, c        ; issue the command
-        ; out (13), a        ;
-        call map_kernel    ; return to kernel mapping
-        pop af
-        ret po
-        ei
-        ret
-
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
         .area _CODE
 
+; Memory map in kernel mode
+; 0x0000 - memory window 0 - page 0 
+; 0x4000 - memory window 1 - page 5
+; 0x8000 - memory window 0 - page 2
+; 0xC000 - memory window 0 - page 1 (kernel_page, switch to process)
+
 init_early:
-;        ld bc, #0x7ffd
-;        xor a
 	ld a,#kernel_page
         ld (current_map), a
-;        out (c), a            ; set page 0 at 0xC000
+        setmw3 #kernel_page
         ret
 
 init_hardware:
         ; set system RAM size
         ld hl, #128
         ld (_ramsize), hl
-        ld hl, #(128 - 48)        ; 48K for kernel
+        ld hl, #(128 - 64)        ; 64K for kernel
         ld (_procmem), hl
 
         ; screen initialization
@@ -127,8 +107,7 @@ init_hardware:
 
         ; our vectors are in ROM, so nothing to do here
 _program_vectors:
-        ret
-
+	ret
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
 switch_bank:
@@ -139,10 +118,8 @@ switch_bank:
         ld a, c
         ld (place_for_c), a
 
-;        ld bc, #0x7ffd
-;        ld a, (current_map)
-;        out (c), a
-	setmw3 a
+        ld a, (current_map)
+	setmw3a
         
         ld a, (place_for_b)
         ld b, a
@@ -155,7 +132,8 @@ switch_bank:
 map_kernel:
         ld (place_for_a), a
 map_kernel_nosavea:          ; to avoid double reg A saving
-        xor a
+;        xor a
+	ld a,#kernel_page
         jr switch_bank
 
 map_process:
@@ -198,7 +176,8 @@ place_for_c:
 
 ; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
 outchar:
-        out (#0x15), A
+
         ret
+
 _kernel_flag:
         .db 1

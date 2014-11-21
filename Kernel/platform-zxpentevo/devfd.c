@@ -8,6 +8,7 @@
 #include <printf.h>
 #include <devfd.h>
 
+/*
 __sfr __at 0x80 control;
 __sfr __at 0x81 track;
 __sfr __at 0x82 sector;
@@ -18,38 +19,58 @@ __sfr __at 0x93 dl;
 __sfr __at 0x71 bh;
 __sfr __at 0x73 bl;
 __sfr __at 0x75 start;
+*/
+
+// RAMdisk
+#define RD_PAGE_START	200
+#define RD_SIZE		40
 
 int fd_open(uint8_t minor, uint16_t flag)
 {
-    flag;
-    if(minor != 0) {
-        udata.u_error = ENODEV;
-        return -1;
-    }
-    return 0;
+#if 1
+	flag;
+	if(minor != 0) {
+        	udata.u_error = ENODEV;
+        	return -1;
+	}
+	return 0;
+#else
+	minor; flag;
+	udata.u_error = ENODEV;
+	return -1;
+#endif
 }
 
 static int fd_transfer(bool is_read, uint8_t rawflag)
 {
+
+#if 0
 	blkno_t block;
-	uint16_t dptr;
+	uint8_t* dptr;
 
 	if (rawflag != 0)
 		return 0;
 	
-	dptr = (uint16_t)udata.u_buf->bf_data;
+	dptr = udata.u_buf->bf_data;
 	block = udata.u_buf->bf_blk;
 
 	if (!is_read)
 		kprintf("WRITING!!!!\r\n");
 
-	bh = (block >> 8);
-	bl = (block & 0xFF);
-	dh = dptr >> 8;
-	dl = dptr & 0xFF;
-	start = 0;
+	memset(dptr,0, BLKSIZE);
+
+//	bh = (block >> 8);
+//	bl = (block & 0xFF);
+//	dh = dptr >> 8;
+//	dl = dptr & 0xFF;
+//	start = 0;
 
 	return 1;
+#else
+	is_read; rawflag;
+	udata.u_error = ENODEV;
+	return -1;
+#endif
 }
 
 /*static int fd_transfer(bool is_read, uint8_t rawflag)
