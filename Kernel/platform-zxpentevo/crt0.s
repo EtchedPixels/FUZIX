@@ -31,10 +31,15 @@
         .globl init_early
         .globl init_hardware
         .globl s__INITIALIZER
+        .globl l__INITIALIZER
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__INITIALIZED
+        .globl l__INITIALIZED
         .globl s__DATA
         .globl l__DATA
+        .globl s__BSS
+        .globl l__BSS
         .globl kstack_top
 
 
@@ -95,27 +100,28 @@ rst38e:
         jp nmi_handler
 
 
-; Memory map in kernel mode
-; 0x0000 - memory window 0 - page 0 
-; 0x4000 - memory window 1 - page 5
-; 0x8000 - memory window 0 - page 2
-; 0xC000 - memory window 0 - page 1 (default page, switch to process)
-
 ; CONTINUE STARTUP CODE
 init_continue:
         ld sp, #kstack_top
 
-        ; Place switching page to it place (page 1 to win 3)
-        setmw3 #kernel_page
-
         ; Configure memory map
         call init_early
 
-        ; move the common memory where it belongs    
-        ld hl, #s__INITIALIZER
-        ld de, #s__COMMONMEM
-        ld bc, #l__COMMONMEM
-        ldir
+	; move the common memory where it belongs
+;        ld hl, #s__INITIALIZER
+;        ld de, #s__COMMONMEM
+;        ld bc, #l__COMMONMEM
+;        ldir
+
+	ld	bc, #l__INITIALIZER
+	ld	a, b
+	or	a, c
+	jr	Z, gsinit_next
+	ld	de, #s__INITIALIZED
+	ld	hl, #s__INITIALIZER
+	ldir
+gsinit_next:
+
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
