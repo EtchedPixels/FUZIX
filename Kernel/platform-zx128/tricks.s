@@ -36,7 +36,6 @@
 ; 
 ; This function can have no arguments or auto variables.
 _switchout:
-        ret
         di
         call _chksigs
         ; save machine state
@@ -56,13 +55,15 @@ _switchout:
 	; Stash the uarea back into process memory
 	ld hl, (U_DATA__U_PAGE)
 	ld a, l
-	out (21), a
+	ld bc, #0x7ffd
+	out (c), a
 	ld hl, #U_DATA
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	xor a
-	out (21), a
+	ld bc, #0x7ffd
+	out (c), a
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -79,7 +80,6 @@ swapped: .ascii "_switchin: SWAPPED"
             .db 13, 10, 0
 
 _switchin:
-        ret
         di
         pop bc  ; return address
         pop de  ; new process pointer
@@ -90,7 +90,8 @@ _switchin:
         push bc ; restore stack
 
 	xor a
-	out (21), a
+	ld bc, #0x7ffd
+	out (c), a
 
 	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
@@ -98,9 +99,8 @@ _switchin:
 	pop de
 
         ld a, (hl)
-
 	; Pages please !
-	out (21), a
+	out (c), a      ; BC still contains 0x7ffd
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -113,7 +113,7 @@ _switchin:
 	exx
 
 	xor a
-	out (21), a
+	out (c), a      ; and again 0x7ffd in BC
         
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
