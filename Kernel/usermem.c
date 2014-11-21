@@ -11,7 +11,9 @@
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const char *base, usize_t size)
 {
-	if (base < (const char *)PROGBASE || base + size < base)
+	/* FIXME: for Z80 we should make this a udata field so that cp/m
+	   emulation alone can touch below 0x100 */
+	if (!base || base < (const char *)PROGBASE || base + size < base)
 		size = 0;
 	else if (base + size > (const char *)udata.u_top)
 		size = (char *)udata.u_top - base;
