@@ -111,7 +111,7 @@ void tty_setup(uint8_t minor)
 	uint16_t b;
 	if (minor == 1)
 		return;
-	b = ttydata[2].c_cflag & CBAUD;
+	b = ttydata[2].termios.c_cflag & CBAUD;
 	if (b < B150)
 		b = B150;
 	if (b > B19200)
