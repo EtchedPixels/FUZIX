@@ -108,22 +108,13 @@ init_continue:
         call init_early
 
 	; move the common memory where it belongs
-;        ld hl, #s__INITIALIZER
-;        ld de, #s__COMMONMEM
-;        ld bc, #l__COMMONMEM
-;        ldir
+        ld hl, #s__INITIALIZER
+        ld de, #s__COMMONMEM
+        ld bc, #l__COMMONMEM
+        ldir
 
-	ld	bc, #l__INITIALIZER
-	ld	a, b
-	or	a, c
-	jr	Z, gsinit_next
-	ld	de, #s__INITIALIZED
-	ld	hl, #s__INITIALIZER
-	ldir
-gsinit_next:
-
-        ; then zero the data area
-        ld hl, #s__DATA
+	; then zero the data area
+	ld hl, #s__DATA
         ld de, #s__DATA + 1
         ld bc, #l__DATA - 1
         ld (hl), #0

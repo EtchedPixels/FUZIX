@@ -57,7 +57,7 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
 	if (!is_read)
 		kprintf("WRITING!!!!\r\n");
 
-	memset(dptr,0, BLKSIZE);
+//	memset(dptr,0, BLKSIZE);
 
 //	bh = (block >> 8);
 //	bl = (block & 0xFF);
@@ -69,7 +69,7 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
 #else
 	is_read; rawflag;
 	udata.u_error = ENODEV;
-	return -1;
+	return 0;
 #endif
 }
 
