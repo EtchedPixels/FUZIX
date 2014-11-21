@@ -14,6 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _kernel_flag
 
 	    ; for the PCMCIA disc driver
 	    .globl _rd_memcpy
@@ -247,7 +248,12 @@ map_save:
 
 map_savearea:
 	    .db 0,0,0,0
-	    
+
+;
+; has to live in common
+;
+_kernel_flag:
+	   .db 1
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
