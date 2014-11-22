@@ -1,7 +1,5 @@
 ;
-;	Common on z80pack is at 0xC000 as defined by hardware. We need to
-; look at sensible uses for the rest of it (eg relocating and extending the
-; buffer cache)
+;	Common on z80pack is at 0xF000 as defined by hardware.
 ;
 
         .module commonmem
