@@ -409,6 +409,7 @@ int16_t _open(void)
 	int8_t uindex;
 	int8_t oftindex;
 	staticfast inoptr ino;
+	inoptr itmp;
 	int16_t perm;
 	staticfast inoptr parent;
 	char fname[FILENAME_LEN + 1];
@@ -471,11 +472,16 @@ int16_t _open(void)
 		udata.u_error = EISDIR;
 		goto cantopen;
 	}
+	itmp = ino;
+	/* d_open may block and thus ino may become invalid as may
+	   parent (but we don't need it again) */
 	if (isdevice(ino)
 	    && d_open((int) ino->c_node.i_addr[0], flag) != 0) {
 		udata.u_error = ENXIO;
 		goto cantopen;
 	}
+	/* get the static pointer back */
+	ino = itmp;
 	if (trunc && getmode(ino) == F_REG) {
 		f_trunc(ino);
 		for (j = 0; j < OFTSIZE; ++j)
@@ -498,6 +504,8 @@ int16_t _open(void)
 	if (getmode(ino) == F_PIPE && of_tab[oftindex].o_refs == 1
 	    && !(flag & O_NDELAY))
 		psleep(ino);
+
+        /* From the moment of the psleep ino is invalid */
 
 	return (uindex);
       idrop:
