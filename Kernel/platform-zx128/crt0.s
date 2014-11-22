@@ -91,11 +91,6 @@ init_continue:
         ; Configure memory map
         call init_early
 
-        ; move the common memory where it belongs    
-        ld hl, #s__INITIALIZER
-        ld de, #s__COMMONMEM
-        ld bc, #l__COMMONMEM
-        ldir
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1

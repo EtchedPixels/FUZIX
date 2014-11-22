@@ -44,7 +44,8 @@ void bufinit(void)
 void create_init(void)
 {
 	uint8_t *j;
-	/* userspace (offset to PROGBASE): 0x0000+ 0   1   2   3   4   5   6   7   8   9   A   B   C */
+	/* userspace (offset from PROGBASE): 0x0000+ 0   1   2   3   4   5   6   7   8   9   A   B   C */
+	/* FIXME: big-endian only */
 	const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
 

@@ -4,15 +4,16 @@
 #include <tty.h>
 #include <devsys.h>
 #include <devtty.h>
-#include <devfd.h>
+// #include <devfd.h>
+#include <devsd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
 
-  /* 0: /dev/fd		Floppy disk block devices */
-  {  fd_open,     no_close,   fd_read,  fd_write,  no_ioctl },
+  /* 0: /dev/sd		SD-card block devices */
+  {  sd_open,     sd_close,    sd_read,   sd_write,   no_ioctl },
   /* 1: /dev/tty	TTY devices */
   {  tty_open,     tty_close,   tty_read,  tty_write,  tty_ioctl },
   /* 2: /dev/mem etc	System devices (one offs) */
@@ -32,5 +33,5 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-
+	sd_init();
 }
