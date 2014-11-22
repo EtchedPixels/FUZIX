@@ -33,11 +33,11 @@
 #define PROGBASE    0x0000	/* memory base of program */
 #define PROGLOAD    0x0100	/* load base of program */
 #define PROGTOP     0xF000  	/* Top of program, base of U_DATA */
-#define PROC_SIZE   64	  	/* Memory needed per process */
 
-#define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need the low 256) */
+#define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need all of it FIXME) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xF400	/* vectors. We have to swap 256 bytes of
+                                   common as well */
 
 #define BOOT_TTY	(512 + 1)
 
