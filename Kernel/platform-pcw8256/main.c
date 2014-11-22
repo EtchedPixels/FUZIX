@@ -4,7 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint8_t *ramtop;
+uint16_t ramtop;
 
 /* Kernel is 0-3 screen for now is 4 and bits of 5
    Apps 6,7,8,9,10,11,12,13,14,15 etc
