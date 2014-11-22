@@ -127,7 +127,7 @@ static int count(uint8_t ** sp, uint16_t * lp)
 
 static int do_swap_out(uint8_t * s, uint16_t l)
 {
-	uint8_t *p = ramtop - 1;
+	uint8_t *p = (uint8_t *)(ramtop - 1);
 
 //  Xpanic("do_swap_out ");
 //  Xout((uint16_t)s);
@@ -164,10 +164,10 @@ static int do_swap_out(uint8_t * s, uint16_t l)
 	*p-- = (uint16_t) ramtop >> 8;
 	*p = (uint16_t) ramtop & 0xFF;
 //  Xpanic("Ramtop was ");
-//  Xout((uint16_t)ramtop);
-	ramtop = p;
+//  Xout(ramtop);
+	ramtop = (uint16_t)p;
 //  Xpanic(" now ");
-//  Xout((uint16_t)ramtop);
+//  Xout(ramtop);
 //  Xpanic("\r\n");
 	s;
 	l;
@@ -212,7 +212,9 @@ static void unpack(uint8_t * d, uint8_t * p, uint16_t l)
 
 static void do_swap_in(uint8_t * d, uint16_t l)
 {
-	uint8_t *p = (uint8_t *) (ramtop[0] | (((uint16_t) ramtop[1]) << 8));	/* Recover old base pointer */
+	uint8_t *p;
+	p = (uint8_t *) ramtop;
+	p = (uint8_t *) (p[0] | (((uint16_t) p[1]) << 8));	/* Recover old base pointer */
 //  Xout(ramtop[1]);
 //  Xout(ramtop[2]);
 //  Xpanic("Entry Ramtop: ");
@@ -220,7 +222,7 @@ static void do_swap_in(uint8_t * d, uint16_t l)
 //  Xpanic("New Ramtop: ");
 //  Xout((uint16_t)p);
 	unpack(d, p, l);
-	ramtop = p;
+	ramtop = (uint16_t)p;
 //  Xpanic("\r\n");
 }
 #endif
@@ -233,7 +235,7 @@ static void Xmemcpy(uint8_t * d, uint8_t * s, uint16_t l)
 
 static int do_swap_out(uint8_t * p, uint16_t l)
 {
-	uint16_t room = (uint16_t) ramtop - udata.u_top;
+	uint16_t room = ramtop - udata.u_top;
 	uint8_t *d;
 
 	Xpanic("len ");
@@ -244,7 +246,7 @@ static int do_swap_out(uint8_t * p, uint16_t l)
 		return -1;
 	ramtop -= l + 2;
 	Xpanic("ramtop now ");
-	Xout((uint16_t) ramtop);
+	Xout(ramtop);
 	d = (uint8_t *) ramtop;
 	d[0] = l & 0xFF;
 	d[1] = l >> 8;
@@ -269,7 +271,7 @@ static void do_swap_in(uint8_t * d, uint16_t l)
 
 int swapout(ptptr p)
 {
-	uint8_t *oldtop = ramtop;
+	uint16_t oldtop = ramtop;
 	p;
 //  Xpanic("Swapout");
 //  Xout((uint16_t)udata.u_ptab);

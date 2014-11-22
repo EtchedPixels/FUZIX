@@ -22,14 +22,14 @@ int pagemap_alloc(ptptr p)
 
 int pagemap_realloc(uint16_t size)
 {
-  if (size >= (uint16_t) ramtop)
+  if (size >= ramtop)
     return ENOMEM;
   return 0;
 }
 
 uint16_t pagemap_mem_used(void)
 {
-  return ((uint16_t)(PROGTOP - PROGBASE)) >> 10;
+  return (PROGTOP - PROGBASE) >> 10;
 }
 
 void pagemap_init(void)

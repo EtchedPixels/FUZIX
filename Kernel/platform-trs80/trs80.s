@@ -16,6 +16,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
+	    .globl _kernel_flag
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -120,6 +121,8 @@ opsave:	    .db 0x36
 _opreg:	    .db 0x36	; kernel map, 80 columns
 _modout:    .db 0x50	; 80 column, sound enabled, altchars off,
 			; external I/O enabled, 4MHz
+_kernel_flag:
+	    .db 1	; We start in kernel mode
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0

@@ -25,6 +25,8 @@
         .globl map_save
         .globl map_restore
 
+	.globl _kernel_flag
+
         .globl _fd_bankcmd
 
         ; exported debugging tools
@@ -170,3 +172,6 @@ map_store:
 outchar:
         out (#0x15), A
         ret
+
+_kernel_flag:
+	.db 1

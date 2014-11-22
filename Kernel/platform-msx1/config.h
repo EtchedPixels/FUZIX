@@ -27,9 +27,9 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second (actually should be dynamic FIXME) */
-#define PROGBASE    ((char *)(0x0000))  /* also data base */
-#define PROGLOAD    ((char *)(0x0100)) 
-#define PROGTOP     ((char *)(0x7D00))  /* Top of program (uarea stash) */
+#define PROGBASE    0x0000  /* also data base */
+#define PROGLOAD    0x0100 
+#define PROGTOP     0x7D00  /* Top of program (uarea stash) */
 
 #define BOOT_TTY (512 + 1)        /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

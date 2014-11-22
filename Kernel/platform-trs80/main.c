@@ -4,7 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint8_t *ramtop = PROGTOP;
+uint16_t ramtop = PROGTOP;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */

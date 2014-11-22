@@ -17,6 +17,7 @@
             .globl init_hardware
             .globl _program_vectors
             .globl _system_tick_counter
+	    .globl _kernel_flag
 
 	    .globl map_kernel
 	    .globl map_process
@@ -147,3 +148,7 @@ map_restore:
 outchar:
 	    out (0x01), a
             ret
+
+; needs to be common
+_kernel_flag:
+	   .db 1

@@ -1,6 +1,10 @@
 /* NC100 or NC200 - your choice */
 #define CONFIG_NC200
 
+#ifdef CONFIG_NC200
+#define CONFIG_CPM_EMU
+#endif
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -36,10 +40,9 @@
 #endif
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0000))  /* also data base */
-#define PROGLOAD    ((char *)(0x0100))
-#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
-//#define PROC_SIZE   64	  /* Memory needed per process (for now) */
+#define PROGBASE    0x0000 	/* also data base */
+#define PROGLOAD    0x0100
+#define PROGTOP     0xF000 	/* Top of program, base of U_DATA */
 
 #define BOOT_TTY (512+1)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

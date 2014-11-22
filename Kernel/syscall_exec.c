@@ -35,13 +35,13 @@ int16_t _execve(void)
 	staticfast struct s_argblk *abuf, *ebuf;
 	int16_t (**sigp) ();
 	int argc;
-	uint16_t emu_size, emu_copy;
-	uint8_t *progptr, *emu_ptr, *emu_base;
+	uint16_t emu_size, emu_copy, progptr;
+	uint16_t emu_ptr, emu_base;
 	staticfast uint16_t top;
 	uint8_t c;
 	uint16_t blocks;
 
-	top = (uint16_t)ramtop;
+	top = ramtop;
 
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
@@ -76,7 +76,7 @@ int16_t _execve(void)
 	if (buf[3] == 'F' && buf[4] == 'Z' && buf[5] == 'X' && buf[6] == '1') {
 		top = buf[7] | ((unsigned int)buf[8] << 8);
 		if (top == 0)	/* Legacy 'all space' binary */
-			top = (uint16_t)ramtop;
+			top = ramtop;
 		emu_ino = 0;	// no emulation, thanks
 	} else {
 #ifdef CONFIG_CPM_EMU
@@ -88,7 +88,7 @@ int16_t _execve(void)
 			udata.u_error = ENOEXEC;
 			goto nogood2;
 		}
-		top = (uint16_t)ramtop;
+		top = ramtop;
 #else
 		emu_size;
 		emu_copy;
@@ -133,10 +133,10 @@ int16_t _execve(void)
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(buf, PROGLOAD, 512);	/* Move 1st Block to user bank */
+	uput(buf, (uint8_t *)PROGLOAD, 512);	/* Move 1st Block to user bank */
 	brelse(buf);
 
-	c = ugetc(PROGLOAD);
+	c = ugetc((uint8_t *)PROGLOAD);
 	if (c != 0xC3)
 		kprintf("Botched uput\n");
 
@@ -150,15 +150,14 @@ int16_t _execve(void)
 	if (emu_ino) {
 		emu_size = emu_ino->c_node.i_size;
 		// round up to nearest multiple of 256 bytes, fit it in below ramtop
-		emu_ptr =
-		    (char *) (udata.u_top - ((emu_size + 255) & 0xff00));
+		emu_ptr = udata.u_top - ((emu_size + 255) & 0xff00);
 		emu_base = emu_ptr;
 		blk = 0;
 
 		while (emu_size) {
 			buf = bread(emu_ino->c_dev, bmap(emu_ino, blk, 1), 0);	// read block
 			emu_copy = min(512, emu_size);
-			uput(buf, emu_ptr, emu_copy);	// copy to userspace
+			uput(buf, (uint8_t *)emu_ptr, emu_copy);	// copy to userspace
 			bufdiscard((bufptr) buf);
 			brelse((bufptr) buf);	// release block
 			// adjust pointers
@@ -174,11 +173,11 @@ int16_t _execve(void)
 		 * of process memory
 		 */
 
-		uzero(emu_ptr, top - emu_ptr);
+		uzero((uint8_t *)emu_ptr, top - emu_ptr);
 	} else
 #endif
 	{
-		emu_base = (uint8_t *)top;
+		emu_base = top;
 	}
 
 	/* emu_base now points at the byte after the last byte the program can occupy */
@@ -197,7 +196,7 @@ int16_t _execve(void)
 
 	for (blk = 1; blk <= blocks; ++blk) {
 		buf = bread(ino->c_dev, bmap(ino, blk, 1), 0);
-		uput(buf, progptr, 512);
+		uput(buf, (uint8_t *)progptr, 512);
 		bufdiscard((bufptr) buf);
 		brelse((bufptr) buf);
 		progptr += 512;
@@ -206,7 +205,7 @@ int16_t _execve(void)
 	udata.u_break = (int) progptr;	//  Set initial break for program
 
 	// zero all remaining process memory above the last block loaded.
-	uzero(progptr, emu_base - progptr);
+	uzero((uint8_t *)progptr, emu_base - progptr);
 
 	// Turn off caught signals
 	for (sigp = udata.u_sigvec; sigp < udata.u_sigvec + NSIGS; ++sigp)

@@ -4,7 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint8_t *ramtop = PROGTOP;
+uint16_t ramtop = PROGTOP;
 
 
 void pagemap_init(void)

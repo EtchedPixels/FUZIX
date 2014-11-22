@@ -17,7 +17,9 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
-/* We have 1 bank at C000 with 6 possible pages to map, but I'm not sure if CONFIG_BANK_FIXED is our choise. */
+/* We have 1 bank at C000 with 6 possible pages to map, but I'm not sure
+   if CONFIG_BANK_FIXED is our choice. */
+
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 6 16K banks, 1 is for kernel needs */
@@ -34,14 +36,15 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    ((char *)(0xC000))  /* also data base */
-#define PROGTOP     ((char *)(0xFFFF))  /* Top of program, base of U_DATA copy */
+#define PROGBASE    0xC000  /* also data base */
+#define PROGLOAD    0xC000  /* also data base */
+#define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   16	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0
 
-#define BOOT_TTY (1)      /* Set this to default device for stdio, stderr */
+#define BOOT_TTY (512+1)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
 /* We need a tidier way to do this from the loader */

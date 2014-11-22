@@ -14,6 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _kernel_flag
 
 	    ; video driver
 	    .globl _vtinit
@@ -77,6 +78,9 @@ _trap_reboot:
 ;FIXME: TODO
 	    di
 	    halt
+
+_kernel_flag:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)

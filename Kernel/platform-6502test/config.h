@@ -42,11 +42,11 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0200))  /* also data base */
-#define PROGLOAD    ((char *)(0x0200))
-#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
+#define PROGBASE    0x0200  /* also data base */
+#define PROGLOAD    0x0200
+#define PROGTOP     0xF000  /* Top of program, base of U_DATA */
 
-#define BOOT_TTY 3        /* Set this to default device for stdio, stderr */
+#define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
                             /* Temp FIXME set to serial port for debug ease */
 

@@ -62,14 +62,14 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
-	uput(arg, PROGLOAD, sizeof(arg));
+	uput(arg, (void *)PROGLOAD, sizeof(arg));
 	/* Poke in arv[0] - FIXME: Endianisms...  */
-	uputw((uint16_t)PROGLOAD + 1, PROGLOAD + 7);
+	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
 	/* Set up things to look like the process is calling _execve() */
-	udata.u_argn = (uint16_t) PROGLOAD;
-	udata.u_argn1 = (uint16_t)PROGLOAD + 0x7;	/* Arguments (just "/init") */
-	udata.u_argn2 = (uint16_t)PROGLOAD + 0xb;	/* Environment (none) */
+	udata.u_argn = PROGLOAD;
+	udata.u_argn1 = PROGLOAD + 0x7;	/* Arguments (just "/init") */
+	udata.u_argn2 = PROGLOAD + 0xb;	/* Environment (none) */
 }
 
 void fuzix_main(void)

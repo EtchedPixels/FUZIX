@@ -8,6 +8,8 @@
 #define CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
+/* CPM emulation capable */
+#define CONFIG_CPM_EMU
 /* 16K reported page size */
 #define CONFIG_PAGE_SIZE	16
 /* We use flexible 16K banks so use the helper */
@@ -28,10 +30,10 @@
 #define VT_BOTTOM	31
 
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0000))  /* memory base of program */
-#define PROGLOAD    ((char *)(0x0100))  /* load base of program */
-#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
-#define PROC_SIZE   64	  /* Memory needed per process */
+#define PROGBASE    0x0000	/* memory base of program */
+#define PROGLOAD    0x0100	/* load base of program */
+#define PROGTOP     0xF000  	/* Top of program, base of U_DATA */
+#define PROC_SIZE   64	  	/* Memory needed per process */
 
 #define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */

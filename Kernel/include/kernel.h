@@ -554,7 +554,7 @@ COMMON int _uzero(uint8_t *user, usize_t count);
 
 /* platform/tricks.s */
 COMMON void switchout(void);
-COMMON void doexec(void *start_addr);
+COMMON void doexec(uint16_t start_addr);
 COMMON void switchin(ptptr process);
 COMMON int16_t dofork(ptptr child);
 
@@ -701,7 +701,8 @@ CODE2 uint8_t *swapout_prepare_uarea(ptptr p);
 CODE2 uint8_t *swapin_prepare_uarea(ptptr p);
 CODE2 void map_init(void);
 CODE2 void platform_idle(void);
-extern uint8_t *ramtop;	     /* Note: ramtop must be in common in some cases */
+/* Will need a uptr_t eventually */
+extern uint16_t ramtop;	     /* Note: ramtop must be in common in some cases */
 CODE2 extern void platform_interrupt(void);
 
 CODE2 int16_t __exit(void);        /* FUZIX system call 0 */

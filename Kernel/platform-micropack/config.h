@@ -23,10 +23,10 @@
 #define CONFIG_BANKS	1
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0000))  /* also data base */
-#define PROGLOAD    ((char *)(0x0100))
-#define PROGTOP     ((char *)(0x7D00))  /* Top of program, base of U_DATA */
-#define PROC_SIZE   32		  /* Memory needed per process */
+#define PROGBASE    0x0000	/* also data base */
+#define PROGLOAD    0x0100
+#define PROGTOP     0x7D00	/* Top of program, base of U_DATA */
+#define PROC_SIZE   32		/* Memory needed per process */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
