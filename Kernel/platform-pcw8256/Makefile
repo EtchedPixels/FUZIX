@@ -2,7 +2,6 @@
 CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c
 
-# Need common listed first so we know where the udata map lives
 ASRCS =  crt0.s commonmem.s pcw8256.s
 ASRCS += tricks.s fdc765.s
 
