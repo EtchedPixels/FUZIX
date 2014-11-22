@@ -127,8 +127,6 @@ init_hardware:
 
             .area _COMMONMEM
 
-_kernel_flag:
-	    .db 1
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
@@ -246,22 +244,6 @@ map_restore:push hl
 	    pop af
             pop hl
             ret
-;
-;	These are in common, that means that on a system that switches
-; common by task there are multiple copies of this information.
-;
-; Safe IFF we always reload the *full* map when task switching (we do)
-;
-map_current:
-	    .db 0		; need this tracked
-	    .db 0		; hardware ports are write only
-	    .db 0
-; Safe because we never task switch from an IRQ while in kernel mode.
-; In user mode we won't restore the saved area anyway
-map_save_area:
-	    .db 0
-	    .db 0
-	    .db 0
 
 
 _bugout:    pop hl
@@ -295,6 +277,7 @@ outcharl:
 	    pop af
 	    out (0xE0), a
 	    ret
+
 
 	    .area _CODE
 
@@ -471,3 +454,30 @@ clearal:
 
 roller:	    .db 0
 cursorpos:  .dw 0
+
+;
+;	We need map_current to be at least 256 bytes into common as we
+;	swap the first 256 bytes.
+;
+;	FIXME: should we teach the tools about a 'commondata' ?
+;
+	    .area _COMMONMEM
+;
+;	These are in common, that means that on a system that switches
+; common by task there are multiple copies of this information.
+;
+; Safe IFF we always reload the *full* map when task switching (we do)
+;
+map_current:
+	    .db 0		; need this tracked
+	    .db 0		; hardware ports are write only
+	    .db 0
+; Safe because we never task switch from an IRQ while in kernel mode.
+; In user mode we won't restore the saved area anyway
+map_save_area:
+	    .db 0
+	    .db 0
+	    .db 0
+
+_kernel_flag:
+	    .db 1
