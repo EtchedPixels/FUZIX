@@ -104,10 +104,10 @@ init_hardware:
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800
-        xor a
-        ld (hl), a
-        ldir
+        ld bc, #0x1800            ; There should be 0x17FF, but we are going
+        xor a                     ; to copy additional byte to avoid need of
+        ld (hl), a                ; DE and HL increment before attribute
+        ldir                      ; initialization (2 bytes of RAM economy)
 
         ; set color attributes
         ld a, #7            ; black paper, white ink

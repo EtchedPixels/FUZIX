@@ -43,7 +43,7 @@
         ; startup code
         .area _CODE
 init:
-        jp 0x003
+        jp 0x003            ; workaround for lowlevel-z80.s check for C3 at 0000
         di
 
         ; if any button is pressed during reset - boot BASIC48
