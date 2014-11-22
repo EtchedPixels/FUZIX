@@ -5,9 +5,9 @@
 /* Profil syscall support (not yet complete) */
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* Single tasking */
-#define CONFIG_SINGLETASK
+#undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 

@@ -37,7 +37,7 @@ int sd_write(uint8_t minor, uint8_t rawflag, uint8_t flag){
 }
 
 int sd_init(){
-
+	kprintf("Probe Z-Controller SD-card...\r\n" );
 	return (0);
 }
 
