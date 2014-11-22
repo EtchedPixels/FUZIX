@@ -5,9 +5,9 @@
 /* Profil syscall support (not yet complete) */
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* Single tasking */
-#define CONFIG_SINGLETASK
+#undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
@@ -44,7 +44,7 @@
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0
 
-#define BOOT_TTY (512+1)  /* Set this to default device for stdio, stderr */
+#define BOOT_TTY (1)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
 /* We need a tidier way to do this from the loader */
