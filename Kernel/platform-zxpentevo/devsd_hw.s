@@ -1,10 +1,14 @@
             .module devsd_hw
 
+		.globl  ZSD_INIT
+		.globl  ZSD_CMP
+		.globl  ZSD_RDMULTI
+		.globl  ZSD_WRMULTI
+		.globl  ZSD_SHAD_STORE
+		.globl  ZSD_SHAD_RESTORE
+
 P_DATA	.equ 0X57
 P_CONF	.equ 0X77
-
-SDCTL	.equ 0xFF57
-SDDATA	.equ 0x7F57
 
 CMD_09		.equ 0X49	;SEND_CSD
 CMD_12		.equ 0X4C	;STOP_TRANSMISSION
@@ -32,15 +36,7 @@ ACMD_41		.equ 0X69	;SD_SEND_OP_COND
 ;A=0-ימידיבליתבדיס נעןûלב ץףנוûמן
 ;A=1-כבעפב מו מבךהומב ילי מו ןפקופילב
 
-;ןג‎בס פן‏כב קטןהב הלס עבגןפש ף SD
-
-TABLSDZ:	.dw SD_INIT			;0 נבעבםופעןק מו פעוגץופ, מב קשטןהו A
-						;ףםןפעי קשûו נועקשו 2 תמב‏ומיס
-		.dw SD_CMP			;1 נעןקועכב מבלי‏יס SD כבעפש
-		.dw RDMULTI			;2 ‏פומיו ףוכפןעןק, כןל-קן ק "A"
-		.dw WRMULTI			;3 תבניףר ףוכפןעןק
-
-SD_INIT:	CALL CS_HIGH
+ZSD_INIT:	CALL CS_HIGH
 		LD BC,#P_DATA
 		LD DE,#0x10FF
 		OUT (C),E
@@ -99,6 +95,7 @@ ZAW005:		LD HL,#CMD16
 		CALL IN_OOUT
 		AND A
 		JR NZ,ZAW005
+		
 CS_HIGH:	PUSH AF
 		LD A,#3
 		OUT (P_CONF),A
@@ -146,7 +143,7 @@ OUT_COM:	PUSH BC
 		POP BC
 		RET
 
-SD_CMP:		LD A,#CMD_58
+ZSD_CMP:	LD A,#CMD_58
 		LD BC,#P_DATA
 		CALL OUT_COM
 		CALL IN_OOUT
@@ -176,7 +173,7 @@ SECM200:	PUSH HL
 		NOP
 		IN H,(C)
 		INC A
-;--sfs		JP Z,SD_CARD_LOST
+		JP Z,SD_CARD_LOST
 		DEC A
 		BIT 6,A
 		POP HL
@@ -207,6 +204,11 @@ SECN200:	POP AF
 		POP HL
 		RET
 
+SD_CARD_LOST:
+		ld SP,(SP_STORE)
+		ld a,#1
+		ret
+
 IN_OOUT:	PUSH DE
 		LD DE,#0x30FF
 IN_WAIT:	IN A,(P_DATA)
@@ -221,32 +223,8 @@ CMD00:		.db 0X40,0X00,0X00,0X00,0X00,0X95		;GO_IDLE_STATE
 CMD08:		.db 0X48,0X00,0X00,0X01,0XAA,0X87		;SEND_IF_COND
 CMD16:		.db 0X50,0X00,0X00,0X02,0X00,0XFF		;SET_BLOCKEN
 
-RD_SECT:		PUSH BC
-
-;		LD A,IYL
-;		.db 0xFD
-;		ld a,l
-		;
-		BIT 1,A
-		JR NZ,RD_SECT3			;וףלי הלס קמוûמוך 
-		AND A
-		JR NZ,RD_SECT2
-RD_SECT3:
-;		LD A,(R_7FFD)
-
-;		LD BC,(B0_CPU2)
-		JR Z,RD_SECT1
-;		LD BC,(B1_CPU2)
-RD_SECT1:	
-;		PEC_ON SHADOW_BF
-;		LD A,B
-;		OR 0X37
-;		LD B,A
-;		LD A,C
-;		LD C,LOW (WIN_A0)
-;		OUT (C),A
-;		PEC_OFF SHADOW_BF
-RD_SECT2:	LD BC,#P_DATA
+RD_SECT:	PUSH BC
+		LD BC,#P_DATA
 		INIR
 		NOP
 		INIR
@@ -254,11 +232,6 @@ RD_SECT2:	LD BC,#P_DATA
 		IN A,(C)
 		NOP
 		IN A,(C)
-;		PEC_ON SHADOW_BF
-;		LD BC,WIN_P6
-;		XOR A
-;		OUT (C),A
-;		PEC_OFF SHADOW_BF
 		POP BC
 		RET
 
@@ -275,7 +248,8 @@ WR_SECT:	PUSH BC
 		POP BC
 		RET
 
-RDMULTI:	EX AF,AF'	;'
+ZSD_RDMULTI:	LD (SP_STORE),SP
+		EX AF,AF'	;'
 		LD A,#CMD_18
 		CALL SECM200
 		EX AF,AF'	;'
@@ -294,7 +268,8 @@ RDMULT1:	EX AF,AF'	;'
 		JR NZ,.-4
 		JP CS_HIGH
 
-WRMULTI:	EX AF,AF'	;'
+ZSD_WRMULTI:	LD (SP_STORE),SP
+		EX AF,AF'	;'
 		LD A,#CMD_25
 		CALL SECM200
 		CALL IN_OOUT
@@ -317,3 +292,27 @@ WRMULT1:	EX AF,AF'	;'
 		INC A
 		JR NZ,.-4
 		JP CS_HIGH
+
+ZSD_SHAD_STORE:
+		EX AF,AF'	;'
+		ld bc,#0xFFBF
+		in a,(c)
+		ld (shad_mode),a
+		and a,#0xFE
+		out (c),a
+		EX AF,AF'	;'
+		ret
+
+ZSD_SHAD_RESTORE:
+		EX AF,AF'	;'
+		ld bc,#0xFFBF
+		ld a,(shad_mode)
+		out (c),a
+		EX AF,AF'	;'
+		ret
+
+
+.area _DATA
+
+SP_STORE:	.dw 0x0000
+shad_mode:	.db 00

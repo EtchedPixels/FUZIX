@@ -13,7 +13,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 // -----------------------------------------------------------------
 
   /* 0: /dev/sd		SD-card block devices */
-  {  sd_open,     sd_close,    sd_read,   sd_write,   no_ioctl },
+  {  sd_open,     no_close,    sd_read,   sd_write,   no_ioctl },
   /* 1: /dev/tty	TTY devices */
   {  tty_open,     tty_close,   tty_read,  tty_write,  tty_ioctl },
   /* 2: /dev/mem etc	System devices (one offs) */
