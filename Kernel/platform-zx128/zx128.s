@@ -16,7 +16,6 @@
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
-        .globl _system_tick_counter
         .globl platform_interrupt_all
 
         .globl map_kernel
@@ -28,6 +27,7 @@
 	.globl _kernel_flag
 
         .globl _fd_bankcmd
+        .globl _kernel_flag
 
         ; exported debugging tools
         .globl _trap_monitor
@@ -91,6 +91,7 @@ _fd_bankcmd:
 init_early:
         ld bc, #0x7ffd
         xor a
+        ld (current_map), a
         out (c), a            ; set page 0 at 0xC000
         ret
 
@@ -105,10 +106,10 @@ init_hardware:
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800
-        xor a
-        ld (hl), a
-        ldir
+        ld bc, #0x1800            ; There should be 0x17FF, but we are going
+        xor a                     ; to copy additional byte to avoid need of
+        ld (hl), a                ; DE and HL increment before attribute
+        ldir                      ; initialization (2 bytes of RAM economy)
 
         ; set color attributes
         ld a, #7            ; black paper, white ink
@@ -128,50 +129,79 @@ init_hardware:
 _program_vectors:
         ret
 
-        ; below is code which was copied from z80pack, so it's useless for zx128
-map_kernel:
-        push af
-        xor a
-        ; out (21), a
-        pop af
+        ; bank switching procedure. On entrance:
+        ;  A - bank number to set
+switch_bank:
+        di                  ; TODO: we need to call di() instead
+        ld (current_map), a
+        ld a, b
+        ld (place_for_b), a
+        ld a, c
+        ld (place_for_c), a
+        ld bc, #0x7ffd
+        ld a, (current_map)
+        out (c), a
+        ld a, (place_for_b)
+        ld b, a
+        ld a, (place_for_c)
+        ld c, a
+        ld a, (place_for_a)
+        ei
         ret
+
+map_kernel:
+        ld (place_for_a), a
+map_kernel_nosavea:          ; to avoid double reg A saving
+        xor a
+        jr switch_bank
 
 map_process:
+        ld (place_for_a), a
         ld a, h
         or l
-        jr z, map_kernel
+        jr z, map_kernel_nosavea
         ld a, (hl)
-        ; out (21), a
-        ret
+        jr switch_bank
 
 map_process_always:
-        push af
+        ld (place_for_a), a
         ld a, (U_DATA__U_PAGE)
-        ; out (21), a
-        pop af
-        ret
+        jr switch_bank
 
 map_save:
-        push af
-        in a, (21)
+        ld (place_for_a), a
+        ld a, (current_map)
         ld (map_store), a
-        pop af
+        ld a, (place_for_a)
         ret
 
 map_restore:
-        push af
+        ld (place_for_a), a
         ld a, (map_store)
-        ; out (21), a
-        pop af
-        ret
+        jr switch_bank
 
+current_map:                ; place to store current page number. Is needed
+        .db 0               ; because we have no ability to read 7ffd port
+                            ; to detect what page is mapped currently 
 map_store:
+        .db 0
+
+place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
+        .db 0               ; Here we store A when needed
+place_for_b:                ; And BC - here
+        .db 0
+place_for_c:
         .db 0
 
 ; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
 outchar:
         out (#0x15), A
         ret
+<<<<<<< HEAD
 
 _kernel_flag:
 	.db 1
+=======
+_kernel_flag:
+        .db 1
+>>>>>>> 23a5e496d3e31fef5c566130fcc3ab973c5ede4c
