@@ -114,11 +114,16 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         fd_dmal = dptr & 0xFF;
         fd_dmah = dptr >> 8;
 
+#ifdef CONFIG_SWAP_ONLY
+        /* No banking problems in swap only mode */
+        fd_cmd = 1 - is_read;
+#else
         if (map == 0)
             fd_cmd = 1 - is_read;
         else	/* RAW I/O - switch to user bank and issue command via
                    a helper in common */
             fd_bankcmd(1 - is_read, page);
+#endif
 
         st = fd_status;
         /* Real disks would need retries */
