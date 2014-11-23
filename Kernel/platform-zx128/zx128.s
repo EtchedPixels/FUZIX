@@ -24,8 +24,6 @@
         .globl map_save
         .globl map_restore
 
-	.globl _kernel_flag
-
         .globl _fd_bankcmd
         .globl _kernel_flag
 
@@ -198,6 +196,7 @@ outchar:
         out (#0x15), A
         ret
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 _kernel_flag:
 	.db 1
@@ -205,3 +204,7 @@ _kernel_flag:
 _kernel_flag:
         .db 1
 >>>>>>> 23a5e496d3e31fef5c566130fcc3ab973c5ede4c
+=======
+_kernel_flag:
+        .db 1
+>>>>>>> 05fbdedc03bfad36848e83e42e6013dd82fc5357

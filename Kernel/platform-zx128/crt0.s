@@ -92,6 +92,12 @@ init_continue:
         ; Configure memory map
         call init_early
 
+<<<<<<< HEAD
+=======
+        ; our COMMONMEM is located in main code-data blob, so we
+        ; do not need to move it manually
+
+>>>>>>> 05fbdedc03bfad36848e83e42e6013dd82fc5357
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1

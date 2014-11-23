@@ -50,10 +50,14 @@
 #define UDATA_SWAPSIZE	0
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define BOOT_TTY (512+1)  /* Set this to default device for stdio, stderr */
 =======
 #define BOOT_TTY (256 + 1)      /* Set this to default device for stdio, stderr */
 >>>>>>> 23a5e496d3e31fef5c566130fcc3ab973c5ede4c
+=======
+#define BOOT_TTY (256 + 1)  /* Set this to default device for stdio, stderr */
+>>>>>>> 05fbdedc03bfad36848e83e42e6013dd82fc5357
                           /* In this case, the default is the first TTY device */
 
 /* We need a tidier way to do this from the loader */
