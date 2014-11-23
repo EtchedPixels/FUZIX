@@ -25,7 +25,7 @@
 #define MAP_SIZE	0x4000U
 
 /* Process table size. */
-#define PTABSIZE 16
+#define PTABSIZE 64
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
