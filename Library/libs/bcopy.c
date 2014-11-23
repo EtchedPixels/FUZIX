@@ -7,7 +7,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-void bcopy(const void *src, void *dest, size_t len)
-{
-   (void)memmove(dest, src, len);
+void bcopy(const void *src, void *dest, size_t len) {
+    (void)memmove(dest, src, len);
 }

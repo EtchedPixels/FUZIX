@@ -1,7 +1,7 @@
 /*
  * getpwnam.c - This file is part of the libc-8086/pwd package for ELKS,
  * Copyright (C) 1995, 1996 Nat Friedman <ndf@linux.mit.edu>.
- * 
+ *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
  *  License as published by the Free Software Foundation; either
@@ -26,27 +26,24 @@
 
 
 struct passwd *
-getpwnam(const char * name)
-{
-  int passwd_fd;
-  struct passwd * passwd;
+getpwnam(const char * name) {
+    int passwd_fd;
+    struct passwd * passwd;
 
-  if (name==NULL)
-    {
-      errno=EINVAL;
-      return NULL;
+    if (name==NULL) {
+        errno=EINVAL;
+        return NULL;
     }
 
-  if ((passwd_fd=open("/etc/passwd", O_RDONLY))<0)
+    if ((passwd_fd=open("/etc/passwd", O_RDONLY))<0)
+        return NULL;
+
+    while ((passwd=__getpwent(passwd_fd))!=NULL)
+        if (!strcmp(passwd->pw_name, name)) {
+            close(passwd_fd);
+            return passwd;
+        }
+
+    close(passwd_fd);
     return NULL;
-
-  while ((passwd=__getpwent(passwd_fd))!=NULL)
-    if (!strcmp(passwd->pw_name, name))
-      {
-	close(passwd_fd);
-	return passwd;
-      }	  
-
-  close(passwd_fd);
-  return NULL;
 }

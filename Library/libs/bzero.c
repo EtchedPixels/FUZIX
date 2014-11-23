@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-void bzero(void *dest, int len)
-{
-   (void) memset(dest, '\0', len);
+void bzero(void *dest, int len) {
+    (void) memset(dest, '\0', len);
 }

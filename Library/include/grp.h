@@ -10,10 +10,10 @@
 
 /* The group structure */
 struct group {
-	char	*gr_name;	/* Group name.	*/
-	char	*gr_passwd;	/* Password.	*/
-	int	gr_gid; 	/* Group ID.	*/
-	char	**gr_mem;	/* Member list. */
+    char	*gr_name;	/* Group name.	*/
+    char	*gr_passwd;	/* Password.	*/
+    int	gr_gid; 	/* Group ID.	*/
+    char	**gr_mem;	/* Member list. */
 };
 
 extern void setgrent __P((void));

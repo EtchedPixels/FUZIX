@@ -16,14 +16,13 @@ size_t strcspn(char *string, char *set)
     char *start;
 
     start = string;
-    while (*string)
-    {
-	setptr = set;
-	do
-	    if (*setptr == *string)
-		goto break2;
-	while (*setptr++);
-	++string;
+    while (*string) {
+        setptr = set;
+        do
+            if (*setptr == *string)
+                goto break2;
+        while (*setptr++);
+        ++string;
     }
 break2:
     return string - start;

@@ -1,4 +1,4 @@
-/*************************** CLOCK ************************************/  
+/*************************** CLOCK ************************************/
 
 #include <types.h>
 #include <unistd.h>
@@ -8,11 +8,10 @@
 
 /* FIXME: CLOCKS_PER_SEC query */
 
-clock_t clock(void)
-{
-	struct tms __tms;
-	times(&__tms);
-	return (__tms.tms_utime * CLOCKS_PER_SEC);
+clock_t clock(void) {
+    struct tms __tms;
+    times(&__tms);
+    return (__tms.tms_utime * CLOCKS_PER_SEC);
 }
 
 

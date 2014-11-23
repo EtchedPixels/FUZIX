@@ -8,12 +8,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-int remove(__const char *src)
-{
-   int er = errno;
-   int rv = unlink(src);
-   if( rv < 0 && errno == EISDIR )
-      rv = rmdir(src);
-   if( rv >= 0 ) errno = er;
-   return rv;
+int remove(__const char *src) {
+    int er = errno;
+    int rv = unlink(src);
+    if( rv < 0 && errno == EISDIR )
+        rv = rmdir(src);
+    if( rv >= 0 ) errno = er;
+    return rv;
 }
