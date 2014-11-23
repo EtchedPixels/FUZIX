@@ -10,11 +10,11 @@ typedef uint8_t cc_t;
 
 #define NCCS 12
 struct termios {
-  tcflag_t c_iflag;
-  tcflag_t c_oflag;
-  tcflag_t c_cflag;
-  tcflag_t c_lflag;
-  cc_t c_cc[NCCS];
+    tcflag_t c_iflag;
+    tcflag_t c_oflag;
+    tcflag_t c_cflag;
+    tcflag_t c_lflag;
+    cc_t c_cc[NCCS];
 };
 
 #define VEOF	0

@@ -6,19 +6,16 @@
 #include <string.h>
 #include <ctype.h>
 
-int strncasecmp(const char *s, const char *d, size_t l)
-{
-   while(l>0)
-   {
-      if( *s != *d )
-      {
-	 if( tolower(*s) != tolower(*d) )
-	    return *s - *d;
-      }
-      else
-	 if( *s == '\0' ) return 0;
-      s++; d++; l--;
-   }
-   return 0;
+int strncasecmp(const char *s, const char *d, size_t l) {
+    while(l>0) {
+        if( *s != *d ) {
+            if( tolower(*s) != tolower(*d) )
+                return *s - *d;
+        } else if( *s == '\0' ) return 0;
+        s++;
+        d++;
+        l--;
+    }
+    return 0;
 }
 

@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 
-double atof(const char *p)
-{
-   return strtod(p, (char**)0);
+double atof(const char *p) {
+    return strtod(p, (char**)0);
 }
