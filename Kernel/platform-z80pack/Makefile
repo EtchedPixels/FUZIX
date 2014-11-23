@@ -1,25 +1,31 @@
 
-CSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c
+DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s z80pack.s
 ASRCS += tricks.s commonmem.s
 
-COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-OBJS  = $(COBJS) $(AOBJS)
+COBJS = $(CSRCS:.c=.rel)
+DOBJS = $(patsubst ../dev/z80pack/%.c,%.rel, $(DSRCS))
+
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS)
 
 CROSS_CCOPTS += -I../dev/z80pack/
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
+JUNK = *.rel *.lst *.asm *.sym *.rst
 
 all:	$(OBJS)
+
+$(AOBJS): %.rel: %.s
+	$(CROSS_AS) $(ASOPTS) $<
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
-	$(CROSS_AS) $(ASOPTS) $<
+$(DOBJS): %.rel: ../dev/z80pack/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
