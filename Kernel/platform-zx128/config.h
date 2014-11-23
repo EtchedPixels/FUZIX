@@ -17,11 +17,12 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
-/* We have 1 bank at C000 with 6 possible pages to map, but I'm not sure
-   if CONFIG_BANK_FIXED is our choice. */
+/* We have 1 bank at C000 with 6 possible pages to map.
+   Our choise should be CONFIG_BANK_FIXED, but we are. 
+   using custom implementation of it */
 
-/* Fixed banking */
-#define CONFIG_BANK_FIXED
+#undef CONFIG_BANK_FIXED
+
 /* 6 16K banks, 1 is for kernel needs */
 #define MAX_MAPS	5
 #define MAP_SIZE	0x4000U
