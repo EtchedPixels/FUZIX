@@ -17,21 +17,22 @@
 
 /* Moved out of struct to keep SDCC generating what we want */
 static FILE string[1] = {
-	{0, 0, /* TODO sdcc bug (unsigned char *)-1 */ 0xffff,
-	 0, (unsigned char *) -1, -1,
-	 _IOFBF | __MODE_WRITE}
+    {
+        0, 0, /* TODO sdcc bug (unsigned char *)-1 */ 0xffff,
+        0, (unsigned char *) -1, -1,
+        _IOFBF | __MODE_WRITE
+    }
 };
 
 
-int sprintf(char *sp, char *fmt, ...)
-{
-	va_list ptr;
-	int rv;
+int sprintf(char *sp, char *fmt, ...) {
+    va_list ptr;
+    int rv;
 
-	va_start(ptr, fmt);
-	string->bufpos = (unsigned char *) sp;
-	rv = vfprintf(string, fmt, ptr);
-	va_end(ptr);
-	*(string->bufpos) = 0;
-	return rv;
+    va_start(ptr, fmt);
+    string->bufpos = (unsigned char *) sp;
+    rv = vfprintf(string, fmt, ptr);
+    va_end(ptr);
+    *(string->bufpos) = 0;
+    return rv;
 }

@@ -8,8 +8,7 @@
 
 extern void __do_exit(int rv);
 
-void exit(int status)
-{
-  __do_exit(status);
-  _exit(status);
+void exit(int status) {
+    __do_exit(status);
+    _exit(status);
 }

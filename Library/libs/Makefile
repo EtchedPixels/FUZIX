@@ -2,8 +2,10 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
-#CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
-CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
+
+CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
+#CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
+
 #--oldralloc
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
@@ -60,13 +62,18 @@ syscall.l: fuzix/syslib.l
 	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
 sdccz80.lib:
-	../tools/libclean
+	#../tools/libclean
+	./libclean
 
 syslib.lib: syscall.l libc.l sdccz80.lib
 	cat libc.l syscall.l >syslib.l
 	cp sdccz80.lib syslib.lib
 	$(AR) rc syslib.lib @syslib.l
 	$(AR) s syslib.lib
+
+fuzix/syslib.l:
+	../tools/syscall
+	make -C fuzix
 
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
@@ -79,5 +86,5 @@ $(OBJ_C):%.rel: %.c
 
 
 clean:
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ libc.l
-	(cd fuzix; make clean)
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l
+	make -C fuzix clean

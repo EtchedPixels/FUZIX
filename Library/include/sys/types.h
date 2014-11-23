@@ -7,6 +7,9 @@
 /* USER! basic data types */
 /* ! uchar & uint is counterparts and must be declared simultaneously */
 
+// SDCC not supports type double. float instead.
+#define double float
+
 #ifndef uchar_is_defined
 #define uchar_is_defined
 typedef unsigned char uchar;

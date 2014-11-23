@@ -43,14 +43,14 @@
 
 /* signals values */
 typedef enum {
-	__NOTASIGNAL = 0,
-	_SIGLAST = 30000
+    __NOTASIGNAL = 0,
+    _SIGLAST = 30000
 } signal_t;
 
 #define sigmask(sig) (1UL<<((sig)-1)) 	/* signal mask */
 
 typedef uint32_t sigset_t;	/* at least 16 bits: use 32 in user space */
-				/* for expansion space */
+/* for expansion space */
 /* Type of a signal handler.  */
 typedef void (*sighandler_t) __P((signal_t));
 

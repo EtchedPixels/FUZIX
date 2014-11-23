@@ -5,9 +5,9 @@
 /* Profil syscall support (not yet complete) */
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* Single tasking */
-#define CONFIG_SINGLETASK
+#undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
@@ -36,16 +36,20 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second */
+<<<<<<< HEAD
 #define PROGBASE    0xC000  /* also data base */
 #define PROGLOAD    0xC000  /* also data base */
 #define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
+=======
+#define PROGBASE    ((char *)(0xC000))  /* also data base */
+#define PROGTOP     ((char *)(0xFD00))  /* Top of program, base of U_DATA copy */
+>>>>>>> a33c011aef268aa89b5951135b9127d15ef0173e
 #define PROC_SIZE   16	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0
 
-#define BOOT_TTY (512+1)  /* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
+#define BOOT_TTY (256 + 1)      /* Set this to default device for stdio, stderr */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
