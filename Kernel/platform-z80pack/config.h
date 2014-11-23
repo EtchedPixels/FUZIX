@@ -30,9 +30,6 @@
 #define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS	64	/* The full drive would actually be 85! */
 
-#define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
-#define UDATA_SWAPSIZE	0
-
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
