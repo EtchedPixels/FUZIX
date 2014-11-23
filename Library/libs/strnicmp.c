@@ -9,16 +9,15 @@
 
 /********************** Function strnicmp ************************************/
 
-int strnicmp(char *s, char *d, size_t l)
-{
-	while (l-- != 0) {
-		unsigned char sc = *(uchar *) s++, dc = *(uchar *) d++;
+int strnicmp(char *s, char *d, size_t l) {
+    while (l-- != 0) {
+        unsigned char sc = *(uchar *) s++, dc = *(uchar *) d++;
 
-		if (sc != dc) {
-			if (_tolower(sc) != _tolower(dc))
-				return (int) (char) (sc - dc);
-		} else if (sc == '\0')
-			break;
-	}
-	return 0;
+        if (sc != dc) {
+            if (_tolower(sc) != _tolower(dc))
+                return (int) (char) (sc - dc);
+        } else if (sc == '\0')
+            break;
+    }
+    return 0;
 }

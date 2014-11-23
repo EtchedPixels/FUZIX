@@ -27,13 +27,13 @@
 
 
 struct sgttyb {
-	char sg_ispeed, sg_ospeed;
-	char sg_erase, sg_kill;
-	int sg_flags;
+    char sg_ispeed, sg_ospeed;
+    char sg_erase, sg_kill;
+    int sg_flags;
 };
 
 struct tchars {
-	char	t_intrc,t_quit,t_start,t_stop,t_eof;
+    char	t_intrc,t_quit,t_start,t_stop,t_eof;
 };
 
 #define stty( fd, s)	(ioctl(fd, TIOCSETP, s))

@@ -15,13 +15,12 @@
 #include "printf.h"
 #include "stdarg.h"
 
-int printf(char *fmt, ...)
-{
-	va_list ptr;
-	int rv;
+int printf(char *fmt, ...) {
+    va_list ptr;
+    int rv;
 
-	va_start(ptr, fmt);
-	rv = vfprintf(stdout, fmt, ptr);
-	va_end(ptr);
-	return rv;
+    va_start(ptr, fmt);
+    rv = vfprintf(stdout, fmt, ptr);
+    va_end(ptr);
+    return rv;
 }

@@ -2,16 +2,21 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdcc
+
+CODELOC= 0xC000
+
 #CC_OPT = -mz80 -c --opt-code-size --std-c89 --max-allocs-per-node 2000000 -I../../Library/include
 CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include
 #--oldralloc
 ASM_OPT = -l -o -s
-LINKER_OPT = --code-loc 0 -mz80 --nostdlib --no-std-crt0
+LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(CODELOC) --data-loc  0
 
 .SUFFIXES: .c .rel
 
 
-SRCS  = basename.c \
+SRCS  = basename.c
+
+SRCS_NO  = \
 	bd.c \
 	cal.c \
 	cat.c \
@@ -82,10 +87,11 @@ $(OBJS): $(SRCS)
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 %: %.rel
-	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $< $(LIBS)
+	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $<  $(LIBS) -o $@.ihex
+	hex2bin  $@.ihex
 
 clean:
-	rm -f $(OBJS) $(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk
+	rm -f $(OBJS) $(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihex *.bin
 
 rmbak:
 	rm -f *~ core

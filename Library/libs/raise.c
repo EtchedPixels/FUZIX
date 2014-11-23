@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int raise(int signo)
-{
-   return kill(getpid(), signo);
+int raise(int signo) {
+    return kill(getpid(), signo);
 }
