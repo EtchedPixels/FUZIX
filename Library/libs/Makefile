@@ -61,8 +61,7 @@ syscall.l: fuzix/syslib.l
 	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
 sdccz80.lib:
-	#../tools/libclean
-	./libclean
+	../tools/libclean
 
 syslib.lib: syscall.l libc.l sdccz80.lib
 	cat libc.l syscall.l >syslib.l
