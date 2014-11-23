@@ -66,7 +66,7 @@ showsign:
     return (cnt);
 }
 
-static int vfprintf(FILE * op, char *fmt, va_list ap) {
+int vfprintf(FILE * op, char *fmt, va_list ap) {
     register int i, ljustf, lval, preci, dpoint, width, radix, cnt = 0;
     char pad, sign, hash;
     register char *ptmp, *add;

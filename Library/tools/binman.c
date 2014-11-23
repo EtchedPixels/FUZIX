@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZER);
     /* Write out everything that is data, omit everything that will
        be zapped */
-    if (fwrite(buf + 0x100, s__DATA - 0x100, 1, bin) != 1) {
+    if (fwrite(buf + 0xC000, s__DATA - 0xC000, 1, bin) != 1) {
         perror(argv[3]);
         exit(1);
     }
