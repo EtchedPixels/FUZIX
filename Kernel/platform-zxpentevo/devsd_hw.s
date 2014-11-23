@@ -296,13 +296,13 @@ WRMULT1:	EX AF,AF'	;'
 ZSD_SHAD_STORE:
 		push	af
 		push	bc
-		
+
 		ld bc,#0xFFBF
 		in a,(c)
 		ld (shad_mode),a
 		and a,#0xFE
 		out (c),a
-		
+
 		pop	bc
 		pop	af
 		ret

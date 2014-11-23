@@ -110,6 +110,7 @@ _switchin:
 
         ld a, (hl)
 	; Pages please !
+	cpl		; inverse page number!
 	out (c), a      ; BC still contains win3 port
 
         ; bear in mind that the stack will be switched now, so we can't use it
@@ -123,7 +124,7 @@ _switchin:
 	exx
 
 ;	xor a
-	ld a,#kernel_page
+	ld a,#0xFF-kernel_page ; inverse page number!
 	out (c), a      ; and again win3 port in BC
         
         ; check u_data->u_ptab matches what we wanted
