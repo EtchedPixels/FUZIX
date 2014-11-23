@@ -1,0 +1,2 @@
+Common blocks that are used by multiple platforms so are best kept
+as shared parts each platform can build and include
