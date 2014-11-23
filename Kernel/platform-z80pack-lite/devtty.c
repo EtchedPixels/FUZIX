@@ -19,7 +19,7 @@ char tbuf3[TTYSIZ];
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 }
+    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
     {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
@@ -45,7 +45,7 @@ static bool tty_writeready(uint8_t minor)
     return s & 2;
 }
 
-void tty_putc(uint8_t minor, char c)
+void tty_putc(uint8_t minor, unsigned char c)
 {
     if (minor == 1)
         tty1data = c;
@@ -76,3 +76,15 @@ void tty_pollirq(void)
     if (tty3stat & 2)
         wakeup(&ttydata[3]);
 }    
+
+void tty_setup(uint8_t minor)
+{
+    minor;
+}
+
+/* For the moment */
+int tty_carrier(uint8_t minor)
+{
+    minor;
+    return 1;
+}

@@ -11,10 +11,12 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
+#define CONFIG_BANKS 1
+
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0000))
-#define PROGLOAD    ((char *)(0x0100))  /* also data base */
-#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA copy */
+#define PROGBASE    0x0000
+#define PROGLOAD    0x0100  /* also data base */
+#define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
 
 #define BOOT_TTY 513      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

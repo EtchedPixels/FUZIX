@@ -12,3 +12,14 @@ void platform_idle(void)
 }
 
 /* The simple support does all the rest of the work for us */
+
+void platform_interrupt(void)
+{
+ tty_pollirq();
+ timer_interrupt();
+}
+
+/* Nothing to do for the map of init */
+void map_init(void)
+{
+}

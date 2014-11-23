@@ -39,6 +39,18 @@ int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return fd_transfer(false, minor, rawflag);
 }
 
+int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+{
+    flag;
+    return fd_transfer(true, minor + 8, rawflag);
+}
+
+int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+{
+    flag;
+    return fd_transfer(false, minor + 8, rawflag);
+}
+
 /* We will wrap on big disks if we ever try and support the Z80Pack P:
    that wants different logic */
 static void fd_geom(int minor, blkno_t block)
@@ -67,7 +79,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     if(rawflag == 1) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset.o_blkno;
+        block = udata.u_offset >> BLKSHIFT;
         block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
 #ifdef SWAPDEV
@@ -78,7 +90,14 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         block = swapblk;
         block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
-#endif        
+        /*
+         *	In the z80pack case this is simpler than usual. Be very
+         *	careful how you implement the swap device. On most platforms
+         *	we have user space in part of the "common" which means you
+         *	must be prepared to switch common segment as well during
+         *	a swap, or to perform mapping games using the banks
+         */
+#endif
     } else { /* rawflag == 0 */
         dptr = (uint16_t)udata.u_buf->bf_data;
         block = udata.u_buf->bf_blk;
@@ -95,11 +114,16 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         fd_dmal = dptr & 0xFF;
         fd_dmah = dptr >> 8;
 
+#ifdef CONFIG_SWAP_ONLY
+        /* No banking problems in swap only mode */
+        fd_cmd = 1 - is_read;
+#else
         if (map == 0)
             fd_cmd = 1 - is_read;
         else	/* RAW I/O - switch to user bank and issue command via
                    a helper in common */
             fd_bankcmd(1 - is_read, page);
+#endif
 
         st = fd_status;
         /* Real disks would need retries */
@@ -117,7 +141,17 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
 int fd_open(uint8_t minor, uint16_t flag)
 {
     flag;
-    if(minor >= 16 || !sectrack[minor]) {
+    if(minor >= 8 || !sectrack[minor]) {
+        udata.u_error = ENODEV;
+        return -1;
+    }
+    return 0;
+}
+
+int hd_open(uint8_t minor, uint16_t flag)
+{
+    flag;
+    if(minor >= 8 || !sectrack[minor + 8]) {
         udata.u_error = ENODEV;
         return -1;
     }
