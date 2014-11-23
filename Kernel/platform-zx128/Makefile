@@ -1,5 +1,5 @@
 
-CSRCS = devtty.c
+CSRCS = devtty.c devfd.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s zx128.s zxvideo.s

@@ -41,7 +41,11 @@ int pagemap_alloc(ptptr p)
 
 int pagemap_realloc(uint16_t size)
 {
+<<<<<<< HEAD
 	if (size >= (uint16_t) ramtop)
+=======
+	if (size + (uint16_t)PROGBASE >= (uint16_t) ramtop)
+>>>>>>> 23a5e496d3e31fef5c566130fcc3ab973c5ede4c
 		return ENOMEM;
 	udata.u_ptab->p_page = 1;
 	udata.u_page = 1;
