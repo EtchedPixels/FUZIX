@@ -7,12 +7,13 @@
         ; we don't use them all, because their ordering is set
         ; when they are first seen.
         .area _CODE
+        .area _COMMONMEM
+        .area _DATA
         .area _CODE2
         .area _VIDEO
         .area _DISCARD      ; not discarded yet
         .area _CONST
         .area _FONT
-        .area _DATA
         .area _INITIALIZED
         .area _BSEG
         .area _BSS
@@ -22,7 +23,6 @@
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
-        .area _COMMONMEM
 
         ; imported symbols
         .globl _fuzix_main
@@ -43,6 +43,7 @@
         ; startup code
         .area _CODE
 init:
+        jp 0x003            ; workaround for lowlevel-z80.s check for C3 at 0000
         di
 
         ; if any button is pressed during reset - boot BASIC48
@@ -67,7 +68,7 @@ jump_to_basic_start:
 jump_to_basic_end:
 
         ; spacer
-        .ds 0x0E
+        .ds 0x0B
 
         ; .org 0x0030       ; syscall entry
         jp unix_syscall_entry
@@ -91,11 +92,6 @@ init_continue:
         ; Configure memory map
         call init_early
 
-        ; move the common memory where it belongs    
-        ld hl, #s__INITIALIZER
-        ld de, #s__COMMONMEM
-        ld bc, #l__COMMONMEM
-        ldir
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
