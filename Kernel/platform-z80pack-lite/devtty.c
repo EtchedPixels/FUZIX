@@ -76,3 +76,15 @@ void tty_pollirq(void)
     if (tty3stat & 2)
         wakeup(&ttydata[3]);
 }    
+
+void tty_setup(uint8_t minor)
+{
+    minor;
+}
+
+/* For the moment */
+int tty_carrier(uint8_t minor)
+{
+    minor;
+    return 1;
+}

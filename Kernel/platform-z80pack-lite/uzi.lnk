@@ -10,7 +10,8 @@ platform-z80pack-lite/main.rel
 start.rel
 version.rel
 lowlevel-z80.rel
-platform-z80pack-lite/usermem.rel
+usermem.rel
+usermem_std-z80.rel
 platform-z80pack-lite/tricks.rel
 timer.rel
 kdata.rel

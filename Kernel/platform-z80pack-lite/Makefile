@@ -3,7 +3,7 @@ CSRCS = devlpr.c devtty.c ../dev/z80pack/devfd.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s z80pack.s
-ASRCS += tricks.s usermem.s commonmem.s
+ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

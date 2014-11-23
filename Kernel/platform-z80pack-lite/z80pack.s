@@ -24,6 +24,9 @@
 	    .globl map_process_always
 	    .globl _fd_bankcmd
 	    .globl platform_interrupt_all
+	    .globl map_save
+	    .globl map_restore
+	    .globl _kernel_flag
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -36,18 +39,16 @@
             .globl _tty_inproc
             .globl istack_top
             .globl istack_switched_sp
-            .globl dispatch_process_signal
             .globl unix_syscall_entry
-            .globl trap_illegal
-            .globl _timer_interrupt
             .globl outcharhex
             .globl outhl, outde, outbc
             .globl outnewline
             .globl outstring
             .globl outstringhex
 	    .globl nmi_handler
-	    .globl _tty_pollirq
-	    .globl _ssig
+	    .globl null_handler
+	    .globl interrupt_handler
+	    
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -201,151 +202,25 @@ map_process_a:
 	    out (21), a
             ret
 
-;
-;	Very simple IRQ handler, we get interrupts at 100Hz and we have to
-;	poll ttys from it. The more logic we could move to common code here the
-;	better. 
-;
-interrupt_handler:
-            ; store machine state
-            ; we arrive here via the trampoline at 0038h with interrupts disabled
-            ; save CPU registers (restored in _IRET)
-            ex af,af'
-            push af
-            ex af,af'
-            exx
-            push bc
-            push de
-            push hl
-            exx
-            push af
-            push bc
-            push de
-            push hl
-            push ix
-            push iy
-
-            ld hl, (_system_tick_counter)
-            inc hl
-            ld (_system_tick_counter), hl
-	    ; FIXME: add profil support here (need to keep profil ptrs
-	    ; unbanked if so ?)
-
-            ; don't allow us to run re-entrant, we've only got one interrupt stack
-            ld a, (U_DATA__U_ININTERRUPT)
-            or a
-            jp nz, interrupt_return
-            inc a
-            ld (U_DATA__U_ININTERRUPT), a
-
-            ; switch stacks
-            ld (istack_switched_sp), sp
-	    ; the istack is not banked (very important!)
-            ld sp, #istack_top
-
-            ; remember MMU mapping
+map_save:
+	    push af
 	    in a, (21)
-            push af ; store MMU mapping
-
-            ; do we need to map in the kernel?
-	    or a
-	    jr z, in_kernel
-
-            ; we're not in kernel mode, check for signals and fault
-	    ; might be good to fix all the vectors in this case ?
-	    ld a, (0)
-	    cp #0xC3		; should be a jump
-	    jr z, nofault
-	    ld a, #0xC3		; put it back
-	    ld (0), a
-	    ld hl, #11		; SIGSEGV
-	    call trap_signal	; signal the user with a fault
-	    
-nofault:
-	    xor a
-	    out (21), a
-in_kernel:
-            ; set inint to true
-            ld a, #1
-            ld (_inint), a
-
-	    ; our tty devices are polled so we need to check the fifo
-	    ; on interrupt
-	    call _tty_pollirq
-	    ; this may task switch if not within a system call
-	    ; if we switch then istack_switched_sp is out of date.
-	    ; When this occurs we will exit via the resume path 
-            call _timer_interrupt
-
-            xor a
-            ld (_inint), a
-
-	    ; we may have changed mapping once we allow for brk and low
-	    ; stack or disk swapping
-            pop af ; recover previous MMU mapping
-	    or a   ; kernel mode is always the same
-	    jr z, in_kernel_2
-	    ld hl, #U_DATA__U_PAGE	; recover the current mapping
-	    ld a, (hl)
-in_kernel_2:
-	    out (21), a
-
-            ld sp, (istack_switched_sp)	; stack back
-
-            xor a
-            ld (U_DATA__U_ININTERRUPT), a
-
-            ld a, (U_DATA__U_INSYS)
-            or a
-            jr nz, interrupt_return
-
-            call dispatch_process_signal
-
-interrupt_return:
-            pop iy
-            pop ix
-            pop hl
-            pop de
-            pop bc
-            pop af
-            exx
-            pop hl
-            pop de
-            pop bc
-            exx
-            ex af, af'
-            pop af
-            ex af, af'
-            ei
-            ret
-
-;  Enter with HL being the signal to send ourself
-trap_signal:
-            push hl
-	    ld hl, (U_DATA__U_PTAB);
-            push hl
-            call _ssig
-            pop hl
-            pop hl
+	    ld (saved_map), a
+	    pop af
 	    ret
 
-;  Called from process context (hopefully)
-null_handler:
-	    ; kernel jump to NULL is bad
-	    in a, (21)
-	    or a
-	    jp z, trap_illegal
-	    ; user is merely not good
-            ld hl, #7
-            push hl
-	    ld hl, (U_DATA__U_PTAB)
-            push hl
-	    ld hl, #10		; signal (getpid(), SIGBUS)
-            rst #0x30		; syscall
-            pop hl
-            pop hl
-            ld hl, #0
-            rst #0x30		; exit
+map_restore:
+	    push af
+	    ld a, (saved_map)
+	    out (21), a
+	    pop af
+	    ret
+
+saved_map:  .db 0
+
+_kernel_flag:
+	    .db 1
+
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF

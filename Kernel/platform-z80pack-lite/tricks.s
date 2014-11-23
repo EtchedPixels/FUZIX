@@ -17,7 +17,6 @@
         .globl unix_syscall_entry
         .globl interrupt_handler
         .globl dispatch_process_signal
-	.globl bankfork
 	.globl _swapper
 	.globl _swapout
 	.globl map_process_a
