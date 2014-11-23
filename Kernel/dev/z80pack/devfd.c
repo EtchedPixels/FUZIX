@@ -82,6 +82,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         block = udata.u_offset >> BLKSHIFT;
         block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
+#ifdef SWAPDEV
     } else if (rawflag == 2) {		/* Swap device special */
         dlen = swapcnt;
         dptr = (uint16_t)swapbase;
@@ -96,6 +97,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
          *	must be prepared to switch common segment as well during
          *	a swap, or to perform mapping games using the banks
          */
+#endif
     } else { /* rawflag == 0 */
         dptr = (uint16_t)udata.u_buf->bf_data;
         block = udata.u_buf->bf_blk;
