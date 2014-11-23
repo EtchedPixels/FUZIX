@@ -14,7 +14,7 @@ static unsigned char zsd_wrblk(unsigned char count, unsigned long nsect, void* b
 
 unsigned char sd_blockdev_count=0;
 
-// offset block for reading (+2 = 1024 bytes)
+// offset block for reading (first sector of UZI image)
 unsigned long part_offset=2048;
 
 // 

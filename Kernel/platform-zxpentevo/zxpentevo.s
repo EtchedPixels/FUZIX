@@ -77,10 +77,10 @@ init_early:
 
 init_hardware:
         ; set system RAM size
-;        ld hl, #128
 	ld hl, #1088
         ld (_ramsize), hl
-;        ld hl, #128 - 64        ; 64K for kernel
+
+	; 64K for kernel
 	ld hl, #1088 - 64
         ld (_procmem), hl
 
@@ -88,7 +88,7 @@ init_hardware:
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800 - 1
+        ld bc, #0x1800
         xor a
         ld (hl), a
         ldir

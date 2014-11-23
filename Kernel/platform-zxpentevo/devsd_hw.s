@@ -22,7 +22,7 @@ CMD_59		.equ 0X7B	;CRC_ON_OFF
 ACMD_41		.equ 0X69	;SD_SEND_OP_COND
 
 
-            .area _CODE
+            .area _CODE2
 
 ;LAST UPDATE: 30.03.2014 savelij
 
@@ -294,21 +294,29 @@ WRMULT1:	EX AF,AF'	;'
 		JP CS_HIGH
 
 ZSD_SHAD_STORE:
-		EX AF,AF'	;'
+		push	af
+		push	bc
+		
 		ld bc,#0xFFBF
 		in a,(c)
 		ld (shad_mode),a
 		and a,#0xFE
 		out (c),a
-		EX AF,AF'	;'
+		
+		pop	bc
+		pop	af
 		ret
 
 ZSD_SHAD_RESTORE:
-		EX AF,AF'	;'
+		push	af
+		push	bc
+
 		ld bc,#0xFFBF
 		ld a,(shad_mode)
 		out (c),a
-		EX AF,AF'	;'
+
+		pop	bc
+		pop	af
 		ret
 
 
