@@ -24,10 +24,11 @@
         .globl map_save
         .globl map_restore
 
+
 	.globl _kernel_flag
 
         .globl _fd_bankcmd
-        .globl _kernel_flag
+
 
         ; exported debugging tools
         .globl _trap_monitor
@@ -60,29 +61,6 @@ platform_interrupt_all:
 _trap_reboot:
         rst 0
 
-;
-;    We need the right bank present when we cause the transfer
-;
-_fd_bankcmd:
-        ret
-        pop de        ; return
-        pop bc        ; command
-        pop hl        ; bank
-        push hl
-        push bc
-        push de        ; fix stack
-        ld a, i
-        di
-        push af        ; save DI state
-        call map_process    ; HL alread holds our bank
-        ld a, c        ; issue the command
-        ; out (13), a        ;
-        call map_kernel    ; return to kernel mapping
-        pop af
-        ret po
-        ei
-        ret
-
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
@@ -106,10 +84,10 @@ init_hardware:
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800
-        xor a
-        ld (hl), a
-        ldir
+        ld bc, #0x1800            ; There should be 0x17FF, but we are going
+        xor a                     ; to copy additional byte to avoid need of
+        ld (hl), a                ; DE and HL increment before attribute
+        ldir                      ; initialization (2 bytes of RAM economy)
 
         ; set color attributes
         ld a, #7            ; black paper, white ink
@@ -197,7 +175,7 @@ place_for_c:
 outchar:
         out (#0x15), A
         ret
-
 _kernel_flag:
+
 	.db 1
 

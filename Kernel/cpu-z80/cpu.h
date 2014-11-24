@@ -16,6 +16,9 @@ typedef uint16_t irqflags_t;
 extern irqflags_t di(void);
 extern void irqrestore(irqflags_t f);
 
+/* Z80 binaries start with a JP */
+#define EMAGIC    0xc3    /* Header of executable */
+
 /* compiler provides optimised versions of these: */
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
 #define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)

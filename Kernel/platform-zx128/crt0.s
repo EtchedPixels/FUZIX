@@ -43,6 +43,7 @@
         ; startup code
         .area _CODE
 init:
+        jp 0x003            ; workaround for lowlevel-z80.s check for C3 at 0000
         di
 
         ; if any button is pressed during reset - boot BASIC48
@@ -67,7 +68,7 @@ jump_to_basic_start:
 jump_to_basic_end:
 
         ; spacer
-        .ds 0x0E
+        .ds 0x0B
 
         ; .org 0x0030       ; syscall entry
         jp unix_syscall_entry
@@ -90,6 +91,11 @@ init_continue:
 
         ; Configure memory map
         call init_early
+
+
+        ; our COMMONMEM is located in main code-data blob, so we
+        ; do not need to move it manually
+
 
         ; then zero the data area
         ld hl, #s__DATA

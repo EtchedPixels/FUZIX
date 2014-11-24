@@ -54,7 +54,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #define NSIGS	  32      /* Number of signals <= 32 */
 #define ROOTINODE 1       /* Inode # of / for all mounted filesystems. */
-#define EMAGIC    0xc3    /* Header of executable */
 #define CMAGIC    24721   /* Random number for cinode c_magic */
 #define SMOUNTED  12742   /* Magic number to specify mounted filesystem */
 

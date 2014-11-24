@@ -17,11 +17,12 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
-/* We have 1 bank at C000 with 6 possible pages to map, but I'm not sure
-   if CONFIG_BANK_FIXED is our choice. */
+/* We have 1 bank at C000 with 6 possible pages to map.
+   Our choise should be CONFIG_BANK_FIXED, but we are. 
+   using custom implementation of it */
 
-/* Fixed banking */
-#define CONFIG_BANK_FIXED
+#undef CONFIG_BANK_FIXED
+
 /* 6 16K banks, 1 is for kernel needs */
 #define MAX_MAPS	5
 #define MAP_SIZE	0x4000U
@@ -49,7 +50,12 @@
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0
 
+<<<<<<< HEAD
 #define BOOT_TTY (256 + 1)      /* Set this to default device for stdio, stderr */
+=======
+#define BOOT_TTY (1)  /* Set this to default device for stdio, stderr */
+                          /* In this case, the default is the first TTY device */
+>>>>>>> c103736b64837907612eda8ef99c5ffd61e3a31d
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */

@@ -20,6 +20,8 @@ extern void *memcpy(void *, void *, size_t);
 extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
 
+#define EMAGIC    0x4C    /* Header of executable (JMP) */
+
 #define staticfast	static
 
 /* FIXME: need to add 64bit helper/struct magic for this compiler */

@@ -6,11 +6,14 @@
 
 uint16_t ramtop = PROGTOP;
 
-
 void pagemap_init(void)
 {
-  pagemap_add(1);
-  pagemap_add(3);
+
+  uint8_t pages[] = { 1, 3, 4, 6, 7 };
+  uint8_t i;
+  for (i = 0; i < sizeof(pages); i++)
+    pagemap_add(i);
+
 }
 
 /* The uarea is already synched to the stash which is written with the

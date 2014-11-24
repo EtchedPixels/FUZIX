@@ -58,12 +58,15 @@ int16_t _execve(void)
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
 
-    /****************************************
-     * Get magic number into var magic
-     * C3    : executable file no C/D sep.
-     * 00FF  :     "        "  with C/D sep. (not supported in FUZIX)
-     * other : maybe shell script (nogood2)
-     ****************************************/
+	/* Magic numbers
+		0xC3 xx xx	- Z80 with 0x100 entry
+		0x4C xx xx	- 6502
+		0x0E xx xx	- 6809
+
+	   others TBD
+
+	   FIXME: need to modify header design to include base addr page
+	*/
 	if ((*buf & 0xff) != EMAGIC) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
@@ -99,7 +102,7 @@ int16_t _execve(void)
 	}
 
 	/* Binary doesn't fit */
-	if (top < ino->c_node.i_size + 1024) {
+	if (top - PROGBASE < ino->c_node.i_size + 1024) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
