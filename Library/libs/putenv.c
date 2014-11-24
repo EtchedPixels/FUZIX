@@ -9,7 +9,6 @@
 extern char ** environ;
 #define ADD_NUM 4
 
-<<<<<<< HEAD
 int putenv(char *var)
 {
 static char ** mall_env;
@@ -50,6 +49,7 @@ static int extras;
    extras--;
 
    return 0;
+
 }
 
 
