@@ -3,13 +3,14 @@ ASM = sdasz80
 AR = sdar
 LINKER = sdcc
 
-CODELOC= 0xC000
+PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 #CC_OPT = -mz80 -c --opt-code-size --std-c89 --max-allocs-per-node 2000000 -I../../Library/include
 CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include
 #--oldralloc
 ASM_OPT = -l -o -s
-LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(CODELOC) --data-loc  0
+LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
+BINMAN = ../../Library/tools/binman
 
 .SUFFIXES: .c .rel
 
@@ -86,10 +87,12 @@ $(OBJS): $(SRCS)
 
 %: %.rel
 	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $< $(LIBS) -o $@.ihx
-	hex2bin  $@.ihx
+	makebin -s 65536 $@.ihx $@.tmp
+	$(BINMAN) $(PROGLOAD) $@.tmp $@.map $@
+	chmod +x $@
 
 clean:
-	rm -f $(OBJS) $(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.bin
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp
 
 rmbak:
 	rm -f *~ core
