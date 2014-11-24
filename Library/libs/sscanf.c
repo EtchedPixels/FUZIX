@@ -3,7 +3,7 @@
  *
  * 19-OCT-88: Dale Schumacher
  * > John Stanley has again been a great help in debugging, particularly
- * > with the printf/scanf functions which are his creation.  
+ * > with the printf/scanf functions which are his creation.
  *
  *    Dale Schumacher                         399 Beacon Ave.
  *    (alias: Dalnefre')                      St. Paul, MN  55104
@@ -17,19 +17,19 @@
 #include <string.h>
 #include <stdarg.h>
 
-int sscanf(char * sp, const char * fmt, ...)
-{
-static FILE  string[1] =
-{
-   {0, (char*)(unsigned) -1, 0, 0, (char*) (unsigned) -1, -1,
-    _IOFBF | __MODE_READ}
-};
+int sscanf(char * sp, const char * fmt, ...) {
+    static FILE  string[1] = {
+        {
+            0, (char*)(unsigned) -1, 0, 0, (char*) (unsigned) -1, -1,
+            _IOFBF | __MODE_READ
+        }
+    };
 
-  va_list ptr;
-  int rv;
-  va_start(ptr, fmt);
-  string->bufpos = sp;
-  rv = vfscanf(string,fmt,ptr);
-  va_end(ptr);
-  return rv;
+    va_list ptr;
+    int rv;
+    va_start(ptr, fmt);
+    string->bufpos = sp;
+    rv = vfscanf(string,fmt,ptr);
+    va_end(ptr);
+    return rv;
 }

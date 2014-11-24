@@ -1,4 +1,5 @@
-CSRCS = devtty.c
+
+CSRCS = devtty.c devfd.c
 CSRCS += devices.c main.c
 
 CSRCS2 = bankzx128.c

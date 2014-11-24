@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-int bcmp(const void *dest, const void *src, int len)
-{
-   return memcmp(dest, src, len);
+int bcmp(const void *dest, const void *src, int len) {
+    return memcmp(dest, src, len);
 }

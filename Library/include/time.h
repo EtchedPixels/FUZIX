@@ -12,20 +12,20 @@ typedef long clock_t;
 #endif
 
 struct tm {
-	int tm_sec;
-	int tm_min;
-	int tm_hour;
-	int tm_mday;
-	int tm_mon;
-	int tm_year;
-	int tm_wday;
-	int tm_yday;
-	int tm_isdst;
+    int tm_sec;
+    int tm_min;
+    int tm_hour;
+    int tm_mday;
+    int tm_mon;
+    int tm_year;
+    int tm_wday;
+    int tm_yday;
+    int tm_isdst;
 };
 
 struct timezone {
-	int tz_minuteswest;	/* minutes west of Greenwich */
-	int tz_dsttime; 	/* type of dst correction */
+    int tz_minuteswest;	/* minutes west of Greenwich */
+    int tz_dsttime; 	/* type of dst correction */
 };
 
 #define __isleap(year)	\

@@ -4,7 +4,22 @@
 #	IMHO beats forking the library or building a private copy.
 #
 #
-cp /opt/sdcc/share/sdcc/lib/z80/z80.lib tmp.lib
+# cp /opt/sdcc/share/sdcc/lib/z80/z80.lib tmp.lib
+INFILE="z80.lib"
+LIBDIRS=`../../Kernel/tools/sdcc-path z80 lib`
+
+FOUND=
+
+for i in $LIBDIRS ; do
+	echo "Search z80.lib in: "$i
+	if [[ -f "$i"/"$INFILE" ]]; then
+		FOUND="$i/$INFILE"
+		break
+	fi
+done
+
+echo "Found: $FOUND"
+cp -f "$FOUND" tmp.lib
 #
 #	Scrub the functions we don't want to inherit
 #	Need to review setjmp and maybe a couple of others

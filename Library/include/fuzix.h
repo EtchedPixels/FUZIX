@@ -5,7 +5,7 @@
 
 /*
  *	FUZIX constants
- */	 
+ */
 
 #define __MAXPID 32000
 #define NSIGS	16
@@ -69,7 +69,7 @@
 #define A_SWAPCTL		16	/* Unimplemented */
 #define A_CONFIG		17	/* Unimplemented */
 #define A_FTRACE		18	/* Unimplemented: 
-                                          Hook to the syscall trace debug */
+Hook to the syscall trace debug */
 #define AD_NOSYNC		1	/* Unimplemented */
 
 /* waitpid options */
@@ -152,36 +152,35 @@
  */
 
 typedef struct {
-  uint16_t t_time;
-  uint16_t t_data;
+    uint16_t t_time;
+    uint16_t t_data;
 } _uzitime_t;
 
 struct _uzitms {
-  _uzitime_t tms_utime;
-  _uzitime_t tms_stime;
-  _uzitime_t tms_cutime;
-  _uzitime_t tms_cstime;
-  _uzitime_t tms_etime;
+    _uzitime_t tms_utime;
+    _uzitime_t tms_stime;
+    _uzitime_t tms_cutime;
+    _uzitime_t tms_cstime;
+    _uzitime_t tms_etime;
 };
 
 typedef struct {
-  uint16_t o_blkno;
-  int16_t o_offset;
+    uint16_t o_blkno;
+    int16_t o_offset;
 } _uzioff_t;
 
-struct  _uzistat
-{
-	int16_t    st_dev;
-	uint16_t   st_ino;
-	uint16_t   st_mode;
-	uint16_t   st_nlink;
-	uint16_t   st_uid;
-	uint16_t   st_gid;
-	uint16_t   st_rdev;
-	_uzioff_t  st_size;
-	_uzitime_t st_atime;
-	_uzitime_t st_mtime;
-	_uzitime_t st_ctime;
+struct  _uzistat {
+    int16_t    st_dev;
+    uint16_t   st_ino;
+    uint16_t   st_mode;
+    uint16_t   st_nlink;
+    uint16_t   st_uid;
+    uint16_t   st_gid;
+    uint16_t   st_rdev;
+    _uzioff_t  st_size;
+    _uzitime_t st_atime;
+    _uzitime_t st_mtime;
+    _uzitime_t st_ctime;
 };
 
 typedef void (*sighandler_t)(int);
@@ -189,13 +188,13 @@ typedef void (*sighandler_t)(int);
 #define  SIG_IGN   (sighandler_t)1
 
 struct _uzisysinfoblk {
-  uint8_t infosize;		/* For expandability */
-  uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
-  uint8_t max_open;
-  uint16_t ticks;		/* Tick rate in HZ */
-  uint16_t memk;		/* Memory in KB */
-  uint16_t usedk;		/* Used memory in KB */
-  uint16_t config;		/* Config flag mask */
+    uint8_t infosize;		/* For expandability */
+    uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
+    uint8_t max_open;
+    uint16_t ticks;		/* Tick rate in HZ */
+    uint16_t memk;		/* Memory in KB */
+    uint16_t usedk;		/* Used memory in KB */
+    uint16_t config;		/* Config flag mask */
 };
 
 /*
@@ -219,7 +218,7 @@ struct tty_data {
 #define TIOCFLUSH 6
 #define TIOCGETC  7
 #define TIOCSETC  8
-              /* UZI280 extensions used by UZI180 in the CP/M 2.2 Emulator */
+/* UZI280 extensions used by UZI180 in the CP/M 2.2 Emulator */
 #define TIOCTLSET 9     /* Don't parse ctrl-chars */
 #define TIOCTLRES 10    /* Normal Parse */
 
@@ -241,34 +240,32 @@ typedef long off_t;
 typedef uint16_t nlink_t;
 typedef int16_t dev_t;
 typedef uint16_t ino_t;
- 
+
 struct tms {
-  clock_t tms_utime;
-  clock_t tms_stime;
-  clock_t tms_cutime;
-  clock_t tms_cstime;
-  clock_t tms_etime;
+    clock_t tms_utime;
+    clock_t tms_stime;
+    clock_t tms_cutime;
+    clock_t tms_cstime;
+    clock_t tms_etime;
 };
 
-struct stat
-{
-	dev_t      st_dev;
-	ino_t      st_ino;
-	mode_t     st_mode;
-	nlink_t    st_nlink;
-	uid_t      st_uid;
-	gid_t      st_gid;
-	uint16_t   st_rdev;
-	off_t      st_size;
-	time_t     st_atime;
-	time_t     st_mtime;
-	time_t     st_ctime;
+struct stat {
+    dev_t      st_dev;
+    ino_t      st_ino;
+    mode_t     st_mode;
+    nlink_t    st_nlink;
+    uid_t      st_uid;
+    gid_t      st_gid;
+    uint16_t   st_rdev;
+    off_t      st_size;
+    time_t     st_atime;
+    time_t     st_mtime;
+    time_t     st_ctime;
 };
 
-struct dirent
-{
-         ino_t	d_ino;
-         char	d_name[30];	/* 14 currently used */
+struct dirent {
+    ino_t	d_ino;
+    char	d_name[30];	/* 14 currently used */
 };
 
 extern int errno;
