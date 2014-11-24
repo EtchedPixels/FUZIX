@@ -27,7 +27,6 @@
 
 		.area _CODE
 
-		.ds 0x100
 ; start at 0x100
 start:		jp start2
 		.db 'F'
