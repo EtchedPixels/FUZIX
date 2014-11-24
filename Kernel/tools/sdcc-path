@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [[ "$#" -lt 2 ]]; then
+	printf "sdcc-path - shows search paths of sdcc compiler\n"
+	printf "Usage:\n\tsdcc-path <arch> <path mode>\n\t"
+	printf "Where:\n\t\t"
+	printf "<arch>=mcs51/z80/z180/r2k/r3ka/gbz80/tlcs90/ds390/pic16/pic14/TININative/ds400/hc08/s08/stm8\n\t\t"
+	printf "<path mode>=bin/data/include/lib/libpath\n\n\t\t"
+	printf "bin     - paths SDCC-binary search dirs\n\t\t"
+	printf "data    - paths SDCC-data search dirs\n\t\t"
+	printf "include - paths SDCC-include search dirs\n\t\t"
+	printf "lib     - paths SDCC-lib search dirs\n\t\t"
+	printf "libpath - paths SDCC-libpath search dirs\n\t\t"
+	printf "\n"
+	exit 0
+fi
+
+ARCH="$1"
+
+FROM=
+TO=
+
+case "$2" in
+	"bin" )
+        	FROM="programs:"
+		TO="datadir:" ;;
+	"data" )
+        	FROM="datadir:"
+		TO="includedir:" ;;
+	"include" )
+        	FROM="includedir:"
+		TO="libdir:" ;;
+
+	"lib" )
+        	FROM="libdir:"
+		TO="libpath:" ;;
+	
+	"libpath" )
+        	FROM="libpath:"
+		TO="" ;;
+esac
+
+sdcc -c -m$ARCH --print-search-dirs | sed -n /^"$FROM"/,/^"$TO"/p | sed /^"$FROM"/d | sed /^"$TO"/d

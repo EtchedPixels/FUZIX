@@ -2,6 +2,8 @@
 
         .module crt0
 
+	.include "pages.def"
+	
         ; Ordering of segments for the linker.
         ; WRS: Note we list all our segments here, even though
         ; we don't use them all, because their ordering is set
@@ -29,10 +31,15 @@
         .globl init_early
         .globl init_hardware
         .globl s__INITIALIZER
+        .globl l__INITIALIZER
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__INITIALIZED
+        .globl l__INITIALIZED
         .globl s__DATA
         .globl l__DATA
+        .globl s__BSS
+        .globl l__BSS
         .globl kstack_top
 
 
@@ -40,66 +47,74 @@
         .globl nmi_handler
         .globl interrupt_handler
 
-        ; startup code
+	;
+        ; Startup code
+        ;
         .area _CODE
-init:
-        jp 0x003            ; workaround for lowlevel-z80.s check for C3 at 0000
+
+; Interrupt vector tables
+
+;       rst 0
+init:	jp .+3			; // *((char*)0) == 0xC3
         di
+        jp init_continue
+rst0e:
 
-        ; if any button is pressed during reset - boot BASIC48
-        in a, (#0xFE)       ; only low 5 bits of 0xFE port contains key info. Bit is 0 when corresponding key of any half row is pressed.
-        or #0xE0            ; so setting high 3 bits to 1
-        add #1              ; and check if we got 0xFF
+;       rst 8
+	.ds 8 - (rst0e-init)
+	reti
+rst8e:
 
-        jp z, init_continue
+;       rst 10
+	.ds 0x10 - (rst8e-init)
+	reti
+rst10e:
 
-        ; otherwise perform ROM bank switch and goto 0x0000
-        ld de, #0x4000
-        ld hl, #jump_to_basic_start
-        ld bc, #jump_to_basic_start - #jump_to_basic_end
-        ldir
-        jp 0x4000
+;       rst 18
+	.ds 0x18 - (rst10e-init)
+	reti
+rst18e:
 
-jump_to_basic_start:
-        ld bc, #0x7FFD
-        ld a, #0x10
-        out (c), a
-        jp 0
-jump_to_basic_end:
+;       rst 20
+	.ds 0x20 - (rst18e-init)
+	reti
+rst20e:
 
-        ; spacer
-        .ds 0x0B
+;       rst 28
+	.ds 0x28 - (rst20e-init)
+	reti
+rst28e:
 
-        ; .org 0x0030       ; syscall entry
+;---    rst 30 syscall entry
+	.ds 0x30 - (rst28e-init)
         jp unix_syscall_entry
+rst30e:
 
-        .ds 0x05            ; spacer
+;---    rst 38 interrupt handler (timer 20ms)
+	.ds 0x38 - (rst30e-init)
+	jp interrupt_handler
+rst38e:
 
-        ; .org 0x0038       ; interrupt handler
-        jp interrupt_handler
-        .ds 0x2B
-
-        ; .org 0x0066       ; nmi handler
+;---    rst 66 NMI handler
+	.ds 0x66 - (rst38e-init)
         jp nmi_handler
 
+
+; CONTINUE STARTUP CODE
 init_continue:
         ld sp, #kstack_top
-
-        ; hack for emulator. Read remaining fuzix part to RAM from fuzix.bin
-        ld bc, #0x1ee7
-        in a, (c)
 
         ; Configure memory map
         call init_early
 
+	; move the common memory where it belongs
+;        ld hl, #s__INITIALIZER
+;        ld de, #s__COMMONMEM
+;        ld bc, #l__COMMONMEM
+;        ldir
 
-
-        ; our COMMONMEM is located in main code-data blob, so we
-        ; do not need to move it manually
-
-
-        ; then zero the data area
-        ld hl, #s__DATA
+	; then zero the data area
+	ld hl, #s__DATA
         ld de, #s__DATA + 1
         ld bc, #l__DATA - 1
         ld (hl), #0
