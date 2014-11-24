@@ -68,6 +68,10 @@ syslib.lib: syscall.l libc.l sdccz80.lib
 	$(AR) rc syslib.lib @syslib.l
 	$(AR) s syslib.lib
 
+fuzix/syslib.l:
+	../tools/syscall
+	make -C fuzix
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -79,5 +83,5 @@ $(OBJ_C):%.rel: %.c
 
 
 clean:
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ libc.l
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l
 	(cd fuzix; make clean)
