@@ -6,17 +6,16 @@ LINKER = sdcc
 CODELOC= 0xC000
 
 #CC_OPT = -mz80 -c --opt-code-size --std-c89 --max-allocs-per-node 2000000 -I../../Library/include
-CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include
-#--oldralloc
+CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include 
+# --oldralloc
 ASM_OPT = -l -o -s
 LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(CODELOC) --data-loc  0
 
 .SUFFIXES: .c .rel
 
 
-SRCS  = basename.c
-
-SRCS_NO  = \
+SRCS  = basename.c \
+	ssh.c \
 	bd.c \
 	cal.c \
 	cat.c \
@@ -57,7 +56,6 @@ SRCS_NO  = \
 	rm.c \
 	rmdir.c \
 	sleep.c \
-	ssh.c \
 	su.c \
 	sync.c \
 	termcap.c \
