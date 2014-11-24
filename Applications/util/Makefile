@@ -15,14 +15,10 @@ LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(CODELOC) --data-loc  0
 
 
 SRCS  = basename.c \
-<<<<<<< HEAD
 	init.c \
 	ssh.c
-
 SRCS_NO  = \
-=======
 	ssh.c \
->>>>>>> fdd1fcf0f8da7599f88377eb2456fd728a04ec73
 	bd.c \
 	cal.c \
 	cat.c \
@@ -93,13 +89,10 @@ $(OBJS): $(SRCS)
 
 %: %.rel
 	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $<  $(LIBS) -o $@.ihex
-<<<<<<< HEAD
 	makebin -s 65536 $@.ihex $@.tmp
 	../../Library/tools/binman $@.tmp $@.map $@
 	#dd if=$@.bin of=$@ skip=49152 bs=1
-=======
 	hex2bin  $@.ihex
->>>>>>> fdd1fcf0f8da7599f88377eb2456fd728a04ec73
 
 clean:
 	rm -f $(OBJS) $(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihex *.bin
