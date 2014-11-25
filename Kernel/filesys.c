@@ -34,12 +34,14 @@ inoptr n_open(char *uname, inoptr *parent)
     return r;
 }
 
-inoptr kn_open(char *name, inoptr *parent)
+inoptr kn_open(char *namep, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
     staticfast inoptr ninode;
     inoptr temp;
+    staticfast char *name;
 
+    name = namep;
 #ifdef DEBUG
     kprintf("kn_open(\"%s\")\n", name);
 #endif
