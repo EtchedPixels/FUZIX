@@ -13,24 +13,14 @@
 
 /* Returned by `div' */
 typedef struct {
-<<<<<<< HEAD
     int	quot;		/* Quotient */
     int	rem;		/* Remainder */
-=======
-	int	quot;		/* Quotient */
-	int	rem;		/* Remainder */
->>>>>>> e059da05c2a2aa98ddc3528dd44c116c02b12a91
 } div_t;
 
 /* Returned by `ldiv' */
 typedef struct {
-<<<<<<< HEAD
     long int quot;		/* Quotient */
     long int rem;		/* Remainder */
-=======
-	long int quot;		/* Quotient */
-	long int rem;		/* Remainder */
->>>>>>> e059da05c2a2aa98ddc3528dd44c116c02b12a91
 } ldiv_t;
 
 /* For program termination */
@@ -61,11 +51,7 @@ extern char *ltostr __P((long value, int radix));
 
 extern long strtol __P ((const char * nptr, char ** endptr, int base));
 extern unsigned long strtoul __P ((const char * nptr,
-<<<<<<< HEAD
-                                   char ** endptr, int base));
-=======
 				   char ** endptr, int base));
->>>>>>> e059da05c2a2aa98ddc3528dd44c116c02b12a91
 #ifndef __HAS_NO_DOUBLES__
 extern double strtod __P ((const char * nptr, char ** endptr));
 #endif
