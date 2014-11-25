@@ -123,6 +123,17 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+        printf("Scanning data from 0x%x to 0x%x\n",
+                s__DATA, s__DATA + l__DATA);
+	base = s__DATA;
+	while (base < s__DATA + l__DATA) {
+	        if (buf[base] && buf[base] != 0xFF) {
+	                fprintf(stderr, "0x%04x:0x%02x\n",
+	                        base, (unsigned char)buf[base]);
+                }
+                base++;
+        }
+
 	/* Our standard layout begins with the code */
 	start = s__CODE;
 
@@ -215,7 +226,6 @@ int main(int argc, char *argv[])
                 /* Common may follow but only if we didn't relocate it */
 		if (reloc == 0 && end < s__COMMONMEM +  l__COMMONMEM)
 		        end = s__COMMONMEM + l__COMMONMEM;
-		printf("End at 0x%04x\n", end);
 
                 /* Packed image with common over initializer */
 		if (!s__DISCARD || pack_discard) {
@@ -223,6 +233,8 @@ int main(int argc, char *argv[])
 			printf("\nPacked image %d bytes, for RAM target\n",
 			       end);
 		}
+		else
+		        printf("End at 0x%04x\n", end);
 	} else {
 		printf("ROM target: leaving\n");
 		exit(0);
