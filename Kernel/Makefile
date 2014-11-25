@@ -1,9 +1,9 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-dragon
 
-#export TARGET= zx128
-#export CPU = z80
-export TARGET = dragon
-export CPU = 6809
+export TARGET= z80pack
+export CPU = z80
+#export TARGET = dragon
+#export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -20,7 +20,7 @@ export CROSS_CC=sdcc
 export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
 #export CROSS_CCOPTS+=--nostdlib --nostdinc -Isdcclib/include 
 export CROSS_CC_SEG2=--codeseg CODE2
-export CROSS_CC_SEGDISC=--codeseg DISCARD
+export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff
