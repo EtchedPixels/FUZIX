@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 static unsigned char buf[65536];
+static unsigned char out[65536];
 
 static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, s__VIDEO, l__INITIALIZED,
@@ -86,6 +87,8 @@ int main(int argc, char *argv[])
 	int start;
 	unsigned int end;
 	int reloc = 0;
+	int pack_discard = 0;
+	int base;
 
 	if (argc != 4) {
 		fprintf(stderr, "%s: [binary] [map] [output]\n", argv[0]);
@@ -102,6 +105,10 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	fclose(bin);
+
+        /* Start with the output matching the input */
+	memcpy(out, buf, 65536);
+
 	map = fopen(argv[2], "r");
 	if (map == NULL) {
 		perror(argv[2]);
@@ -136,32 +143,42 @@ int main(int argc, char *argv[])
 		printf("Discard at %04x (%d bytes), space %d\n",
 		       s__DISCARD, l__DISCARD,
 		       s__CODE - s__DISCARD - l__DISCARD);
-	}
+	} else if (s__DISCARD && s__DISCARD < s__COMMONMEM) {
+		/* Discard may also be set up high below the common */
+	        pack_discard = 1;
+        }
 
 	end = s__INITIALIZER;
 
 	if (s__CODE2 < 0x10000) {
 		/* Move the initialized data into the right spot rather than sdcc's
 		   assumption of being ROM code */
-		memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER,
+		memcpy(out + s__INITIALIZED, buf + s__INITIALIZER,
 		       l__INITIALIZED);
 		if (l__GSFINAL || l__GSINIT)
 			fprintf(stderr, "Warning %s contains gs code.\n",
 				argv[1]);
 		/* Pack any common memory on the end of the main code/memory if its
 		   relocated */
-		if (!s__DISCARD || s__DISCARD > s__CODE) {
+		if (!s__DISCARD || pack_discard) {
+		        base = s__INITIALIZER;
 			tail = l__COMMONMEM;
-			memcpy(buf + s__INITIALIZER, buf + s__COMMONMEM,
+			memcpy(out + base, buf + s__COMMONMEM,
 			       l__COMMONMEM);
+			base += l__COMMONMEM;
 			/* If we have the font packed high then add it to the image */
 			if (l__FONT && s__FONT > s__INITIALIZER) {
-				memmove(buf + s__INITIALIZER +
-					l__COMMONMEM, buf + s__FONT,
-					l__FONT);
+				memcpy(out + base, buf + s__FONT, l__FONT);
 				tail += l__FONT;
+				base += l__FONT;
 			}
 			end = s__COMMONMEM + l__COMMONMEM + l__FONT;
+			if (pack_discard) {
+			        memcpy(out + base, buf + s__DISCARD, l__DISCARD);
+			        base += l__DISCARD;
+			        tail += l__DISCARD;
+			        end += l__DISCARD;
+                        }
 			reloc = 1;
 		}
 
@@ -201,8 +218,8 @@ int main(int argc, char *argv[])
 		printf("End at 0x%04x\n", end);
 
                 /* Packed image with common over initializer */
-		if (!s__DISCARD || s__DISCARD > s__CODE) {
-			end = s__INITIALIZER + tail - start;
+		if (!s__DISCARD || pack_discard) {
+			end = base;
 			printf("\nPacked image %d bytes, for RAM target\n",
 			       end);
 		}
@@ -216,7 +233,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	printf("Image file: %04X to %04X\n", start, end);
-	if (fwrite(buf + start, end - start + 1, 1, bin) !=
+	if (fwrite(out + start, end - start + 1, 1, bin) !=
 	    1) {
 		perror(argv[3]);
 		exit(1);
