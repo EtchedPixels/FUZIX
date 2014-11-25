@@ -24,17 +24,7 @@ struct runload loadavg[3] = {
 	{ 254, 0 }	/* 180 sets of 5 seconds per 15 minutes */
 };
 
-/* We keep the boot up strings in the buffer pool then toss them! 8) */
-
-struct blkbuf bufpool[NBUFS] = {
-	{"FUZIX version %s\n"
-	 "Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
-	 "Copyright (C) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
-	 "Copyright (c) 2013 Will Sowerbutts <will@sowerbutts.com>\n"
-	 "Copyright (c) 2014 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",},
-	{"WARNING: Increase PTABSIZE to %d to use available RAM\n",},
-	{"%dkB total RAM, %dkB available to processes (%d processes max)\n",},
-};
+struct blkbuf bufpool[NBUFS];
 
 struct p_tab ptab[PTABSIZE];
 struct oft of_tab[OFTSIZE];	/* Open File Table */
