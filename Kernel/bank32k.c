@@ -4,8 +4,9 @@
 
 #ifdef CONFIG_BANK32
 
-#ifndef bank32_invalidate_cache
-#define bank32_invalidate_cache(x) do {} while(0)
+/* 32K common, ldir copying to use for 48K apps */
+#ifndef CONFIG_COMMON_COPY
+#define invalidate_cache(x) do {} while(0)
 #endif
 
 /*
@@ -61,7 +62,7 @@ void pagemap_free(ptptr p)
 	pfree[pfptr--] = *ptr;
 	if (*ptr != ptr[1]) {
 		pfree[pfptr--] = ptr[1];
-                bank32_invalidate_cache(ptr[1]);
+                invalidate_cache((uint16_t)ptr[1]);
         }
 }
 
@@ -73,7 +74,7 @@ static int maps_needed(uint16_t top)
 	/* Usually we have 0x1000 common - 1 for shift and inc */
 	if (needed & 0x8000)
 		return 2;
-	return return 1;
+	return 1;
 }
 
 /*
@@ -85,7 +86,6 @@ int pagemap_alloc(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
 	int needed = maps_needed(udata.u_top);
-	int i;
 
 #ifdef SWAPDEV
 	/* Throw our toys out of our pram until we have enough room */
@@ -107,12 +107,17 @@ int pagemap_alloc(ptptr p)
 
 /*
  *	Reallocate the maps for a process
+ *
+ *	Subtlety: On a 32K box we have the udata area being copied to/from
+ *	the stash. As we always realloc for the live process we don't have
+ *	to worry about this in the 32K + common case because we'll switchin
+ *	at one size, and switchout at the other and the udata will just get
+ *	saved/restored to the right places.
  */
 int pagemap_realloc(uint16_t size) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
-	int i;
 
 	/* If we are shrinking then free pages and propogate the
 	   common page into the freed spaces */
