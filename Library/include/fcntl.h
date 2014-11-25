@@ -35,12 +35,12 @@
 #define F_SETLKW	7
 
 typedef struct flock {
-    short l_type;
-    short l_whence;
-    long l_start;
-    long l_len;
-    short l_sysid;
-    pid_t l_pid;
+   short l_type;
+   short l_whence;
+   long l_start;
+   long l_len;
+   short l_sysid;
+   pid_t l_pid;
 } flock_t;
 
 #define FNDELAY		O_NDELAY

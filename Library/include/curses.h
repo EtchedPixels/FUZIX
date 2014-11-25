@@ -82,25 +82,25 @@ typedef int bool;
 
 /* Type declarations. */
 typedef struct {
-    int	   _cury;			/* current pseudo-cursor */
-    int	   _curx;
-    int	   _maxy;			/* max coordinates */
-    int	   _maxx;
-    int	   _begy;			/* origin on screen */
-    int	   _begx;
-    int	   _flags;			/* window properties */
-    int	   _attrs;			/* attributes of written characters */
-    int	   _tabsize;			/* tab character size */
-    bool	   _clear;			/* causes clear at next refresh */
-    bool	   _leave;			/* leaves cursor as it happens */
-    bool	   _scroll;			/* allows window scrolling */
-    bool	   _nodelay;			/* input character wait flag */
-    bool	   _keypad;			/* flags keypad key mode active */
-    int	 **_line;			/* pointer to line pointer array */
-    int	  *_minchng;			/* First changed character in line */
-    int	  *_maxchng;			/* Last changed character in line */
-    int	   _regtop;			/* Top/bottom of scrolling region */
-    int	   _regbottom;
+  int	   _cury;			/* current pseudo-cursor */
+  int	   _curx;
+  int	   _maxy;			/* max coordinates */
+  int	   _maxx;
+  int	   _begy;			/* origin on screen */
+  int	   _begx;
+  int	   _flags;			/* window properties */
+  int	   _attrs;			/* attributes of written characters */
+  int	   _tabsize;			/* tab character size */
+  bool	   _clear;			/* causes clear at next refresh */
+  bool	   _leave;			/* leaves cursor as it happens */
+  bool	   _scroll;			/* allows window scrolling */
+  bool	   _nodelay;			/* input character wait flag */
+  bool	   _keypad;			/* flags keypad key mode active */
+  int	 **_line;			/* pointer to line pointer array */
+  int	  *_minchng;			/* First changed character in line */
+  int	  *_maxchng;			/* Last changed character in line */
+  int	   _regtop;			/* Top/bottom of scrolling region */
+  int	   _regbottom;
 } WINDOW;
 
 /* External variables */
@@ -165,12 +165,12 @@ _PROTOTYPE( int mvcur, (int _oldy, int _oldx, int _newy, int _newx) );
 _PROTOTYPE( int mvinch, (int _y, int _x) );
 _PROTOTYPE( int mvprintw, (int _y, int _x, char *_fmt, ...) );
 _PROTOTYPE( int mvscanw, (int _y, int _x, char *_fmt, char *_A1, int _A2,
-                          int _A3, int _A4, int _A5) );
+						int _A3, int _A4, int _A5) );
 _PROTOTYPE( int mvwin, (WINDOW *_win, int _begy, int _begx) );
 _PROTOTYPE( int mvwinch, (WINDOW *_win, int _y, int _x) );
 _PROTOTYPE( int mvwprintw, (WINDOW *_win, int _y, int _x, char *_fmt, ...) );
 _PROTOTYPE( int mvwscanw, (WINDOW *_win, int _y, int _x, char *_fmt, char *_A1,
-                           int _A2, int _A3, int _A4, int _A5) );
+					int _A2, int _A3, int _A4, int _A5) );
 _PROTOTYPE( WINDOW *newwin, (int _num_lines, int _num_cols, int _y, int _x));
 _PROTOTYPE( void nl, (void));
 _PROTOTYPE( void nocbreak, (void));
@@ -189,14 +189,14 @@ _PROTOTYPE( int saveoldterm, (void));
 _PROTOTYPE( int saveterm, (void));
 _PROTOTYPE( int savetty, (void));
 _PROTOTYPE( int scanw, (char *_fmt, char *_A1, int _A2, int _A3, int _A4,
-                        int _A5) );
+					int _A5) );
 _PROTOTYPE( void scroll, (WINDOW *_win) );
 _PROTOTYPE( void scrollok, (WINDOW *_win, bool _flag) );
 _PROTOTYPE( int setscrreg, (int _top, int _bottom) );
 _PROTOTYPE( int setterm, (char *_type) );
 _PROTOTYPE( int setupterm, (void));
 _PROTOTYPE( WINDOW *subwin, (WINDOW *_orig, int _nlines, int _ncols, int _y,
-                             int _x));
+					int _x));
 _PROTOTYPE( int tabsize, (int _ts) );
 _PROTOTYPE( void touchwin, (WINDOW *_win) );
 _PROTOTYPE( int waddch, (WINDOW *_win, int _c) );
@@ -219,7 +219,7 @@ _PROTOTYPE( void wnoutrefresh, (WINDOW *_win) );
 _PROTOTYPE( int wprintw, (WINDOW *win, char *fmt, ...));
 _PROTOTYPE( void wrefresh, (WINDOW *_win) );
 _PROTOTYPE( int wscanw, (WINDOW *_win, char *_fmt, char *_A1, int _A2, int _A3,
-                         int _A4, int _A5) );
+							int _A4, int _A5) );
 _PROTOTYPE( int wsetscrreg, (WINDOW *_win, int _top, int _bottom) );
 _PROTOTYPE( int wtabsize, (WINDOW *_win, int _ts) );
 

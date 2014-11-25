@@ -87,5 +87,6 @@ $(OBJ_C):%.rel: %.c
 
 clean:
 
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l fuzix/syslib.l  libc.l
-	make -C fuzix clean
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l
+	(cd fuzix; make clean)
+

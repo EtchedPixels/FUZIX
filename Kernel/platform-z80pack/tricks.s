@@ -266,13 +266,6 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
-;
-;	We can keep a stack in common because we will complete our
-;	use of it before we switch common block. In this case we have
-;	a true common so it's even easier.
-;
-	.ds 128
-_swapstack:
 
 ;
 ;	This is related so we will keep it here. Copy the process memory
@@ -317,3 +310,11 @@ bankfork_1:
 ;
 bouncebuffer:
 	.ds 256
+;
+;	We can keep a stack in common because we will complete our
+;	use of it before we switch common block. In this case we have
+;	a true common so it's even easier. This can share with the bounce
+;	buffer used by bankfork as we won't switchin mid way through the
+;	banked fork() call.
+;
+_swapstack:
