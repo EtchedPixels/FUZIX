@@ -8,7 +8,6 @@
         ; when they are first seen.
         .area _CODE
         .area _CODE2
-	.area _DISCARD		;	 not discarded yet
         .area _CONST
         .area _DATA
         .area _INITIALIZED
@@ -20,6 +19,7 @@
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+	.area _DISCARD
         .area _COMMONMEM
 
         ; imported symbols
@@ -29,6 +29,8 @@
         .globl s__INITIALIZER
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__DISCARD
+        .globl l__DISCARD
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
@@ -46,6 +48,10 @@ init:
 	ld hl, #s__INITIALIZER
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
+	ldir
+	; and the discard
+	ld de, #s__DISCARD
+	ld bc, #l__DISCARD
 	ldir
 	; then zero the data area
 	ld hl, #s__DATA
