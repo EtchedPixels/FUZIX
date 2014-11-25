@@ -1,6 +1,6 @@
 #undef DEBUG			/* turn this on to enable syscall tracing */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
-#undef	DEBUGREALLYHARD		/* turn on getproc dumping */
+#undef DEBUGREALLYHARD		/* turn on getproc dumping */
 
 #include <kernel.h>
 #include <timer.h>
@@ -278,6 +278,34 @@ ptptr ptab_alloc(void)
 	return newp;
 }
 
+/* Follow Unix tradition with load reporting (or more accurately it
+   is pre-Unix from Tenex) */
+
+void load_average(void)
+{
+	struct runload *r;
+	static uint8_t utick;
+	uint8_t i;
+	uint8_t nr;
+
+	utick++;
+	if (utick < 50)
+		return;
+
+	utick = 0;
+
+	/* Every 5 seconds */
+	i = 0;
+	r = &loadavg[0];
+	nr = nready;
+
+	while (i++ < 3) {
+		r->average = ((((r->average - (nr << 8)) * r->exponent) +
+				((unsigned long)nr) << 16)) >> 8;
+		r++;
+	}
+}
+
 /* This is the clock interrupt routine.   Its job is to increment the clock
  * counters, increment the tick count of the running process, and either
  * switch it out if it has been in long enough and is in user space or mark
@@ -290,11 +318,12 @@ ptptr ptab_alloc(void)
 void timer_interrupt(void)
 {
 	/* Increment processes and global tick counters */
-	if (udata.u_ptab->p_status == P_RUNNING)
+	if (udata.u_ptab->p_status == P_RUNNING) {
 		if (udata.u_insys)
 			udata.u_stime++;
 		else
 			udata.u_utime++;
+	}
 	ticks++;
 
 	/* Do once-per-decisecond things */
@@ -432,8 +461,6 @@ void chksigs(void)
 			kprintf("about to process signal %d\n", j);
 #endif
 			udata.u_cursig = j;
-			/* FIXME: multiple signal processing here and in
-			   lowlevel-$cpu.s */
 			break;
 		}
 	}

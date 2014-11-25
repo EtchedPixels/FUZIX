@@ -60,6 +60,15 @@ typedef struct devsw {
 
 extern struct devsw dev_tab[];
 
+// Load management
+struct runload {
+	/* exponent is 8.8 fixed point */
+	uint8_t exponent;
+	uint16_t average;
+};
+
+extern struct runload loadavg[];
+
 // the system call dispatch table
 #define UZI_SYSCALL_COUNT 61
 typedef int16_t (*syscall_t)(void);

@@ -18,6 +18,12 @@ clock_t ticks;			// system tick counter
 
 int16_t acct_fh = -1;		/* Accounting file handle */
 
+struct runload loadavg[3] = {
+	{ 235, 0 },	/* 12 sets of 5 seconds per minute */
+	{ 251, 0 },	/* 60 sets of 5 seconds per 5 minutes */
+	{ 254, 0 }	/* 180 sets of 5 seconds per 15 minutes */
+};
+
 /* We keep the boot up strings in the buffer pool then toss them! 8) */
 
 struct blkbuf bufpool[NBUFS] = {
