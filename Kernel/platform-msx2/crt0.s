@@ -7,7 +7,6 @@
 	        .area _CODE2
 		.area _VIDEO
 	        .area _CONST
-		.area _DISCARD
 	        .area _DATA
 	        .area _INITIALIZED
 	        .area _BSEG
@@ -19,6 +18,7 @@
 	        .area _GSINIT
 	        .area _GSFINAL
 	        .area _COMMONMEM
+		.area _DISCARD
 
         	; imported symbols
         	.globl _fuzix_main
@@ -26,6 +26,8 @@
 	        .globl init_hardware
 	        .globl s__DATA
 	        .globl l__DATA
+	        .globl s__DISCARD
+	        .globl l__DISCARD
 	        .globl s__COMMONMEM
 	        .globl l__COMMONMEM
 		.globl s__INITIALIZER
@@ -54,10 +56,14 @@ start:		di
 		ld a, #'@'
 		out (0x2f), a
 		ld sp, #kstack_top
-		; move the common memory where it belongs    
+		; move the common memory where it belongs
 		ld hl, #s__INITIALIZER
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
+		ldir
+		; move the discardable memory where it belongs    
+		ld de, #s__DISCARD
+		ld bc, #l__DISCARD
 		ldir
 		; then zero the data area
 		ld hl, #s__DATA
