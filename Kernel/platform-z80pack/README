@@ -9,6 +9,7 @@ Bank 0:
 0081-0084	Saved CP/M command info
 0088		UZI kernel start
 ????		UZI kernel end ~= A000
+E000		Discard (blown away by user processes)
 End of kernel:	Common >= 0xF000
 		uarea
 		uarea stack
@@ -39,4 +40,4 @@ dd the kernel image to offset 199680
 
 ie
 
-dd if=fuzix.bin of=drivea.cpm bs=1 seek=199680 conv=nontruc
+dd if=fuzix.bin of=drivea.cpm bs=1 seek=199680 conv=notrunc

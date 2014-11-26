@@ -450,7 +450,7 @@ clearal:
 
 ;
 ;	Need to live outside of common/code. Take care not to access them
-;	with the video bank mapped
+;	with the video bank mapped. Must start as zero
 ;
 	    .area _DATA
 

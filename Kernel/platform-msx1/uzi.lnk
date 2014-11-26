@@ -2,6 +2,7 @@
 -i uzi.ihx
 -b _CODE=0x0000
 -b _COMMONMEM=0xF000
+-b _DISCARD=0xE000
 -l z80
 platform-msx1/bootrom.rel
 platform-msx1/crt0.rel

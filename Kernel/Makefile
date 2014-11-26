@@ -1,3 +1,4 @@
+
 # Makefile must be redable
 
 # List of possible targets
@@ -28,7 +29,7 @@ export CROSS_LD=sdldz80
 export CROSS_CC=sdcc
 export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
 export CROSS_CC_SEG2=--codeseg CODE2
-export CROSS_CC_SEGDISC=--codeseg DISCARD
+export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff

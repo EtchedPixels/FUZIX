@@ -2,6 +2,7 @@
 -i uzi.ihx
 -b _CODE=0x0088
 -b _COMMONMEM=0xF000
+-b _DISCARD=0xE000
 -l z80
 platform-z80pack-lite/crt0.rel
 platform-z80pack-lite/commonmem.rel

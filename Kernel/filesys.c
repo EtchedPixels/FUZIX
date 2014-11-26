@@ -34,12 +34,14 @@ inoptr n_open(char *uname, inoptr *parent)
     return r;
 }
 
-inoptr kn_open(char *name, inoptr *parent)
+inoptr kn_open(char *namep, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
     staticfast inoptr ninode;
     inoptr temp;
+    staticfast char *name;
 
+    name = namep;
 #ifdef DEBUG
     kprintf("kn_open(\"%s\")\n", name);
 #endif
@@ -465,10 +467,11 @@ bool baddev(fsptr dev)
 
 uint16_t i_alloc(uint16_t devno)
 {
-    fsptr dev;
-    blkno_t blk;
+    staticfast fsptr dev;
+    staticfast blkno_t blk;
     struct dinode *buf;
-    int j, k;
+    staticfast uint16_t j;
+    uint16_t k;
     unsigned ino;
 
     if(baddev(dev = getdev(devno)))

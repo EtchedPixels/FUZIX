@@ -703,6 +703,8 @@ CODE2 void platform_idle(void);
 /* Will need a uptr_t eventually */
 extern uint16_t ramtop;	     /* Note: ramtop must be in common in some cases */
 CODE2 extern void platform_interrupt(void);
+COMMON void invalidate_cache(uint16_t page);
+COMMON void flush_cache(ptptr p);
 
 CODE2 int16_t __exit(void);        /* FUZIX system call 0 */
 CODE2 int16_t _open(void);         /* FUZIX system call 1 */

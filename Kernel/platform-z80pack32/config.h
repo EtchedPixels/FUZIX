@@ -10,24 +10,25 @@
 #undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
-/* Fixed banking */
-#define CONFIG_BANK_FIXED
-/* 8 60K banks, 1 is kernel */
+/* 32K banking */
+#define CONFIG_BANK32
+/* but with the high block copied on switch as needed */
+#define CONFIG_COMMON_COPY
+/* 8 32K banks, 1 is kernel */
 #define MAX_MAPS	7
-#define MAP_SIZE	0xF000U
+#define MAP_SIZE	0x8000U
 
 /* Banks as reported to user space */
-#define CONFIG_BANKS	1
+#define CONFIG_BANKS	2
 
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xED00  /* Top of program, base of U_DATA copy */
-#define PROC_SIZE   60	  /* Memory needed per process */
+#define PROGTOP     0xBC00  /* Top of program, base of U_DATA copy */
 
-#define SWAP_SIZE   0x78 	/* 60K in blocks (we actually don't need the low 256) */
+#define SWAP_SIZE   0x60 	/* 48K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS	64	/* The full drive would actually be 85! */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */

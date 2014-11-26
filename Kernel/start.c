@@ -88,14 +88,21 @@ void fuzix_main(void)
 		panic("no tty");
 
 	/* Sign on messages (stashed in a buffer so we can bin them */
-	kprintf((char *)bufpool[0].bf_data, uname_str);
+	kprintf(
+	 "FUZIX version %s\n"
+	 "Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
+	 "Copyright (C) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
+	 "Copyright (c) 2013 Will Sowerbutts <will@sowerbutts.com>\n"
+	 "Copyright (c) 2014 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
+	                                         uname_str);
 
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
 	maxproc = procmem / PROC_SIZE;
 	/* Check we don't exceed the process table size limit */
 	if (maxproc > PTABSIZE) {
-		kprintf((char *)bufpool[1].bf_data, maxproc);
+		kprintf("WARNING: Increase PTABSIZE to %d to use available RAM\n",
+		                maxproc);
 		maxproc = PTABSIZE;
 	}
 #else
@@ -105,8 +112,7 @@ void fuzix_main(void)
 	maxproc = PTABSIZE;
 #endif
 	/* Parameters message */
-	kprintf((char *)bufpool[2].bf_data, ramsize, procmem, maxproc);
-	/* Now blow away the strings */
+	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	pagemap_init();
 

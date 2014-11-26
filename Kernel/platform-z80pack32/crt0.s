@@ -8,9 +8,10 @@
         ; when they are first seen.
         .area _CODE
         .area _CODE2
+	.area _CODE3
         .area _CONST
-        .area _DATA
         .area _INITIALIZED
+        .area _DATA
         .area _BSEG
         .area _BSS
         .area _HEAP

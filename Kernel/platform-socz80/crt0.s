@@ -8,7 +8,6 @@
         ; when they are first seen.
         .area _CODE
         .area _CODE2
-	.area _DISCARD
         .area _CONST
         .area _DATA
         .area _INITIALIZED
@@ -21,6 +20,7 @@
         .area _GSINIT
         .area _GSFINAL
         .area _COMMONMEM
+	.area _DISCARD
 
         ; imported symbols
         .globl _fuzix_main
@@ -33,6 +33,8 @@
         .globl l__BSS
         .globl s__DATA
         .globl l__DATA
+        .globl s__DISCARD
+        .globl l__DISCARD
         .globl kstack_top
         .globl _trap_monitor
 
@@ -63,16 +65,12 @@ stop:   halt
         .area _GSINIT
 gsinit::
         ld bc, #l__INITIALIZER
-        ld a, b
-        or a, c
-        jr Z, gsinit_next
         ld de, #s__INITIALIZED
         ld hl, #s__INITIALIZER
         ldir
-gsinit_next:
-        ; other module's code is appended here
-
-        .area _GSFINAL
+        ld de, #s__DISCARD
+        ld bc, #l__DISCARD
+        ldir
         ; we clear _DATA and _BSS
         ld bc, #l__BSS
         ld de, #s__BSS

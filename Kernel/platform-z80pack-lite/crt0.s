@@ -9,7 +9,6 @@
         .area _CODE
         .area _CODE2
         .area _CONST
-	.area _DISCARD
         .area _DATA
         .area _INITIALIZED
         .area _BSEG
@@ -20,6 +19,7 @@
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+	.area _DISCARD
         .area _COMMONMEM
 
         ; imported symbols
