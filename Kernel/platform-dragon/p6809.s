@@ -32,10 +32,7 @@
             include "kernel.def"
             include "../kernel09.def"
 
-; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xF000 upwards)
-; -----------------------------------------------------------------------------
-            .area _COMMONMEM
+            .area .common
 
 trapmsg:    .ascii "Trapdoor: SP="
             .db 0
@@ -64,9 +61,6 @@ _irqrestore:			; B holds the data
 	    tfr b,cc
 	    rts
 
-; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
-; -----------------------------------------------------------------------------
             .area .text
 
 init_early:
@@ -76,8 +70,12 @@ init_hardware:
             ; set system RAM size
 	    ldd #64
 	    std _ramsize
-	    ldd #32
+	    ldd #56
 	    std _procmem
+	    ; Turn on PIA  CB1 (50Hz interrupt)
+	    lda 0xFF03
+	    ora #1
+	    sta 0xFF03
             rts
 
 
@@ -99,25 +97,44 @@ init_hardware:
 	    .area .romvectors
 
 	    .dw 0x3634		; Reserved
-	    .dw 0x0100
-	    .dw 0x0103
-	    .dw 0x010f
-	    .dw 0x010c
-	    .dw 0x0106
-	    .dw 0x0109
+            .dw 0x0100		; SWI3
+	    .dw 0x0103		; SWI2
+	    .dw 0x010f		; FIRQ
+	    .dw 0x010c		; IRQ
+	    .dw 0x0106		; SWI
+	    .dw 0x0109		; NMI
 	    .dw 0xC000		; Unused (reset)
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
 
-            .area _COMMONMEM
+            .area .common
 
 ;
 ;	In the Dragon64 case our vectors live in a fixed block
 ;
 _program_vectors:
-	    rts
+	    pshs cc
+	    orcc #0x10
+	    lda #0x0E
+	    sta 0		; NULL pointer trap
+; FIXME: add a target address for NULL execution
+	    ldd #0xFFD5
+	    cmpx #0		; Kernel or user ?
+	    beq setsamvec
+	    ldx #0x100
+vecl:	    SAM_KERNEL		; Copy vectors
+	    ldd ,x
+	    SAM_USER
+	    std ,x+
+	    cmpx #0x112
+	    bne vecl
+	    ; in SAM_USER so we hit the right page
+	    ldd #0xFFD4
+setsamvec:  std 4		; [4] can now be used for SAM_RESTORE
+	    SAM_KERNEL
+	    puls cc,pc
 
 ;
 ;	FIXME:
@@ -132,50 +149,17 @@ badswi_handler:
 ;	SAM ffd4/d5 reading turns off/on the upper 32K of RAM at 0x0-0x7FFF
 ;	SAM ffde/ffdf makes it appear at 0x8000-0xffef (ff00... is  hardwired)
 ;	PIA 1 B side data reg (ff22) bit 2 switches between the two ROMs
-;	
 ;
-;
-;	All registers preserved
+;	This basically means that all the mapping has to be inlined. If we
+;	ever support the DragonPlus we'll need to rather carefully address
+; 	the case of flipping user bank between 0/A/B
 ;
 map_process_always:
-	    pshs a
-map_process_2:
-	    lda 0xffdf			; RAM please
-	    lda #0
-	    sta cart_map
-	    puls a, pc    
-
 map_process:
-	    cmpx #0
-	    bne map_process_always
-;
-;	Map in the kernel below the current common, all registers preserved
-;
 map_kernel:
-	    pshs a
-map_kernel_2:
-	    lda 0xffde			; RAM out (cart in hopefully)
-	    lda #1
-	    sta cart_map
-	    puls a, pc
-
 map_restore:
-	    pshs a
-	    lda saved_map
-	    cmpa #0
-	    beq map_process_2
-	    bra map_kernel_2
-;
-;	Save the current mapping.
-;
 map_save:
-	    pshs a
-	    lda cart_map
-	    sta saved_map
-	    puls a,pc
-
-saved_map:  .db 0
-cart_map:   .db 0	    
+	    rts
 
 ; outchar: Wait for UART TX idle, then print the char in a
 
@@ -187,5 +171,7 @@ outcharw:
 	    beq outcharw
 	    sta 0xff04
 	    puls b,pc
+
+	    .area .data
 
 _kernel_flag: .db 1

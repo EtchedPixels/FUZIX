@@ -13,6 +13,7 @@
 	.globl	_udivhi3
 	.globl	_umodhi3
 	.globl  _mulhi3
+	.globl _swab
 
 	; debugging aids
 	.globl outcharhex
@@ -56,39 +57,46 @@
         include "platform/kernel.def"
         include "kernel09.def"
 
-        .area _COMMONMEM
+        .area .common
 
-; entry point for UZI system calls
+; entry point for Fuzix system calls
 ;
 ; Called by swi, which has already saved our CPU state for us
 ;
+; The lack of shared RAM leads to the rather ugly SAM_ macros needing to
+; be here for SAM based boxes as we have no valid stack at this point
+;
 unix_syscall_entry:
-        orcc #0x10		; interrupts off
-	; FIXME: save the zero page ptr ??
-
+	SAM_KERNEL	; stack now invalid
 	; make sure the interrupt logic knows we are in kernel mode
 	lda #1
 	sta _kernel_flag
 
-;FIXME
-;
-; locate function call arguments on the userspace stack
-;        ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
-;        add hl, sp
-;        ; save system call number
-;        ld a, (hl)
-;        ld (U_DATA__U_CALLNO), a
-;        ; advance to syscall arguments
-;        inc hl
-;        inc hl
-;        ; copy arguments to common memory
-;        ld bc, #8      ; four 16-bit values
-;        ld de, #U_DATA__U_ARGN
-;        ldir           ; copy
-
-        ; save process stack pointer
+	leax 12,s	; stacked by the swi
+	ldy #U_DATA__U_ARGN
+	SAM_USER
+	ldd ,x++	; copy arguments
+	SAM_KERNEL
+	std ,y++
+	SAM_USER
+	ldd ,x++
+	SAM_KERNEL
+	std ,y++
+	SAM_USER
+	ldd ,x++
+	SAM_KERNEL
+	std ,y++
+	SAM_USER
+	ldd ,x++
+	SAM_KERNEL
+	std ,y++
+	SAM_USER
+	ldd 4,s		; X register -> syscall number
+	SAM_KERNEL
+	std U_DATA__U_CALLNO
+        ; save process stack pointer (in user page)
         sts U_DATA__U_SYSCALL_SP
-        ; switch to kernel stack
+        ; switch to kernel stack (makes our stack valid again)
         lds #kstack_top
 
         ; map in kernel keeping common
@@ -111,12 +119,17 @@ unix_syscall_entry:
 
         ; switch back to user stack
         lds U_DATA__U_SYSCALL_SP
+	; stack is no longer valid
 
+	SAM_USER
+	; stack is now valid but user stack
         ; check for signals, call the handlers
         jsr dispatch_process_signal
 
+	SAM_KERNEL
         ; check if error condition to be signalled on return
         ldd U_DATA__U_ERROR
+	beq not_error
 	ldx #-1	
         ; error code in d, result in x
         bra unix_return
@@ -126,12 +139,17 @@ not_error:
         ldx U_DATA__U_RETVAL
 	ldd #0
 unix_return:
-	; zero page restore ??
-        andcc #0xef
+	; we never make a syscall from in kernel space
+	SAM_USER
 	rti
 
+;
+;	In SAM land this function is called on the user stack with the user
+;	memory mapped, we must rts on the right bank !
+;
 dispatch_process_signal:
         ; check if any signal outstanding
+	SAM_KERNEL
         ldb U_DATA__U_CURSIG
         beq dosigrts
         ; put number on the stack as the argument for the signal handler
@@ -155,6 +173,7 @@ dispatch_process_signal:
 	clr ,y
 
         ldu #signal_return
+	SAM_USER
         pshs u      ; push return address
 
         andcc #0xef
@@ -167,6 +186,8 @@ signal_return:
 ;	FIXME: port over the Z80 loop and check for next signal
 ;
 dosigrts:
+	; right stack for the rts instruction
+	SAM_USER
         rts
 
 _doexec:
@@ -181,19 +202,34 @@ _doexec:
 	; preserves x
         jsr map_process_always
 
-        lds U_DATA__U_ISP
-
         ; u_data.u_insys = false
         clr U_DATA__U_INSYS
-	andcc #0xef
+	; At this point the stack goes invalid
+        lds U_DATA__U_ISP
+	andcc #0xef			; IRQs on
+	SAM_USER			; Stack valid, go to user code
         jmp ,x
 
 ;
-;	Very simple IRQ handler, we get interrupts at 50Hz and we have to
+;	Very simple IRQ handler, we get interrupts and we may have to
 ;	poll ttys from it. The more logic we could move to common here the
 ;	better.
 ;
+;	For SAM based machines this involves some craziness as we have no
+;	common inter-bank RAM. In the SAM case we will always enter with
+;	the kernel mapped, but our stack on entry is likely to be invalid
+;
+;	Thus we have to have inlined SAM conditionals - bletch
+;
+;	Y is used for the SAM logic so preserve it always
+;
 interrupt_handler:
+	    SAM_SAVE		; loads Y
+	    SAM_KERNEL
+
+	    ; Do not use the stack before the switch...
+
+
             ; machine state stored by the cpu
 	    ; save zero page ??
             ldd _system_tick_counter
@@ -211,13 +247,16 @@ interrupt_handler:
 
             ; switch stacks
             sts istack_switched_sp
-	    ; the istack is not banked (very important!)
-            lds #istack_top
-	    ; FIXME: check store/dec order might need to be -2 here!!!!
+	    ; Unlike Z80 even the istack is banked, it's only valid on SAM
+	    ; based boxes when SAM_KERNEL is true
+            lds #istack_top-2
+	    ; FIXME: check store/dec order might not need to be -2 here!!!!
 
 	    jsr map_save
 
+	    SAM_USER
 	    lda 0		; save address 0 contents for checking
+	    SAM_KERNEL
 
 	    ; preserves registers
 	    jsr map_kernel
@@ -226,14 +265,14 @@ interrupt_handler:
 	    ; need to map anyway for trap_signal
 	    ;
 	    ldb _kernel_flag
-	    pshs b
+	    pshs b,cc
 	    bne in_kernel
 
             ; we're not in kernel mode, check for signals and fault
-	    cmpa #0xA5		;FIXME correct code needed!!
+            cmpa #0x0E		; JMP at 0
 	    beq nofault
 	    jsr map_process_always ; map the process
-	    lda #0xA5		; put it back
+	    lda #0x0E		; put it back
 	    sta 0		; write
 	    jsr map_kernel	; restore the map
 	    ldx #11		; SIGSEGV
@@ -248,11 +287,17 @@ in_kernel:
 	    ; this may task switch if not within a system call
 	    ; if we switch then istack_switched_sp is out of date.
 	    ; When this occurs we will exit via the resume path 
+	    ;
+	    ; Y is caller saves so we'll get the right Y back
+	    ; for our SAM_RESTORE
+	    inc 0x200
+;	    lda 0xFF03
+;	    lda 0xFF02
             jsr _platform_interrupt
 
             clr _inint
 
-	    puls b			; Z = in kernel
+	    puls b,cc			; Z = in kernel
 	    bne in_kernel_2
 
 	    ; On a return to user space always do a new map, we may have
@@ -263,41 +308,47 @@ in_kernel:
 	    ; mapping as it will vary during kernel activity and the kernel
 	    ; wants it put back as it was before
 in_kernel_2:
-	   jsr map_restore
+	    jsr map_restore
 int_switch:
             lds istack_switched_sp	; stack back
             clr U_DATA__U_ININTERRUPT
             lda U_DATA__U_INSYS
             bne interrupt_return
 
+	    SAM_USER
             ; we're not in kernel mode, check for signals
+	    ; runs off the user stack so need user ram mapped on a SAM
+	    ; based platform
+	    pshs y
             jsr dispatch_process_signal
+	    puls y
 
 interrupt_return:
-	    ; restore zero page ??
-            andcc #0xef
-            rts
+	    SAM_RESTORE			; uses the saved Y
+            rti
 
 ;  Enter with X being the signal to send ourself
 trap_signal:
-	    ldy U_DATA__U_PTAB
-	    pshs x,y
+	    pshs x
+	    ldx U_DATA__U_PTAB	;  ssig(pid, X)
             jsr _ssig
-	    puls x,y,pc
+	    puls x,pc
 
 ;  Called from process context (hopefully)
 null_handler:
+	    SAM_KERNEL
 	    ; kernel jump to NULL is bad
 	    lda U_DATA__U_INSYS
 	    beq trap_illegal
+	    SAM_USER
 	    ; user is merely not good
 	    ; check order of push arguments !!
             ldx #7
 	    ldy U_DATA__U_PTAB
 	    ldd #10		;	signal (getpid(), SIGBUS)
-	    pshs d,x,y
+	    pshs d,y
 	    swi
-	    puls d,x,y
+	    puls d,y
 	    ldd #0
 	    tfr d,x
 	    pshs d,x
@@ -321,13 +372,14 @@ nmimsg:     .ascii "[NMI]"
             .db 13,10,0
 
 nmi_handler:
+	SAM_KERNEL
+	lds #istack_top - 2		; We aren't coming back so this is ok
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
         jsr _trap_monitor
 
 
-	.area _COMMONMEM
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; outstring: Print the string at X until 0 byte is found
@@ -483,3 +535,9 @@ _mulhi3:
 	mul
 	leax  d,x
 	puls	d,pc  ; kill D to remove initial push
+
+_swab:
+	exg x,d		; into accumulator
+	exg a,b		; swap bytes over
+	exg d,x		; back into result
+	rts

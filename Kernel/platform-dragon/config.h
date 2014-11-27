@@ -15,9 +15,10 @@
 #define CONFIG_BANKS	1
 /* Banked Kernel: need to fix GCC first */
 #undef CONFIG_BANKED
-/* FIXME */
-#define BANK_PROCESS	*((volatile uint8_t *)0xff91) &= ~1
-#define BANK_KERNEL	*((volatile uint8_t *)0xff91) |= 1
+/* We use the C code for usermem and pray it doesn't use the stack for the
+   copies */
+#define BANK_PROCESS	*((volatile uint8_t *)0xffd4) = 0
+#define BANK_KERNEL	*((volatile uint8_t *)0xffd5) = 0
 /* And swapping */
 #define SWAPDEV 6	/* FIXME */
 #define SWAP_SIZE   0x80 	/* 64K blocks */
@@ -31,7 +32,7 @@
 /* Simple text mode */
 #define CONFIG_VT_SIMPLE
 /* Vt definitions */
-#define VT_BASE		(uint8_t *)0x0200	/* Default video text mode base */
+#define VT_BASE		(uint8_t *)0x6000	/* Default video text mode base */
 #define VT_WIDTH	32
 #define VT_HEIGHT	16
 #define VT_RIGHT	31
@@ -60,5 +61,5 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
-#define NMOUNTS	 3	  /* Number of mounts at a time */
+#define NBUFS    6       /* Number of block buffers */
+#define NMOUNTS	 2	  /* Number of mounts at a time */
