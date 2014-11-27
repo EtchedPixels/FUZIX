@@ -40,7 +40,7 @@
 
 static int vtmode;
 static signed char cursorx;
-static signed char cursory;
+static signed char cursory = VT_INITIAL_LINE;
 static int ncursory;
 
 static void cursor_fix(void)
@@ -191,6 +191,7 @@ void vtinit(void)
 
 #ifdef CONFIG_VT_SIMPLE
 
+
 static unsigned char *cpos;
 static unsigned char csave;
 
@@ -208,12 +209,12 @@ void cursor_on(int8_t y, int8_t x)
 {
 	cpos = char_addr(y, x);
 	csave = *cpos;
-	*cpos = '_';
+	*cpos = VT_MAP_CHAR('_');
 }
 
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
-	*char_addr(y, x) = c;
+	*char_addr(y, x) = VT_MAP_CHAR(c);
 }
 
 void clear_lines(int8_t y, int8_t ct)
@@ -228,9 +229,17 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	memset(s, ' ', l);
 }
 
+/* FIXME: these should use memmove */
+
 void scroll_up(void)
 {
-	memcpy(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
+	unsigned char *p = VT_BASE;
+	int n = VT_WIDTH * VT_BOTTOM;
+	while (n--) {
+		*p = p[VT_WIDTH];
+		p++;
+	}
+//	memcpy(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
 }
 
 void scroll_down(void)

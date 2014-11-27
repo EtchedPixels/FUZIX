@@ -47,9 +47,6 @@ bool tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	if (minor == 1) {
-		/* FIXME: Once we do machine types the later COCO2 isn't
-		   so brainless. Or we should perhaps use bitmap modes */
-		c &= 0x5f;
 		vtoutput(&c, 1);
 	} else
 		*uart_data = c;	/* Data */

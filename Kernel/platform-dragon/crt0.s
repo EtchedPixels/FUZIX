@@ -11,27 +11,21 @@
 
 	        ; startup code @0
 	        .area .start
-		jmp start
+
+start:
+		jmp main
+
+bootme:
+		lda 0xff22		; Switcher is in both images
+		anda #0xFB		; at the same address
+		sta 0xff22		; ROM switch
+		jmp main
 
 		.area .text
 
-start:		orcc #0x10		; interrupts definitely off
+main:		orcc #0x10		; interrupts definitely off
 		lds #kstack_top
-		; move the common memory where it belongs    
-		; we do this dowards, not out of any concern about
-		; about overlap (although its correct for this) but because
-		; it deals with linker reloc limits nicely
-;		ldd #s__INITIALIZER
-;		addd #l__COMMONMEM
-;		tfr d,x
-;		ldd #s__COMMONMEM
-;		addd #l__COMMONMEM
-;		tfr d,y
-		
-;copier:		lda ,-x
-;		sta ,-y
-;		cmpy #s__COMMONMEM
-;		bgt copier
+
 
 ;wiper:		ldx #s__DATA
 ;		ldd #l__DATA

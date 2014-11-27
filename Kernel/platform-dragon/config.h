@@ -24,8 +24,6 @@
 /* FIXME */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* uarea so its a round number of sectors */
-#define UDATA_BLOCKS	0	/* We swap the uarea in the data */
-#define UDATA_SWAPSIZE	0
 #define MAX_SWAPS	32
 
 /* Video terminal, not a serial tty */
@@ -33,16 +31,22 @@
 /* Simple text mode */
 #define CONFIG_VT_SIMPLE
 /* Vt definitions */
-#define VT_BASE		(uint8_t *)0x0400	/* Default video text mode base */
+#define VT_BASE		(uint8_t *)0x0200	/* Default video text mode base */
 #define VT_WIDTH	32
-#define VT_HEIGHT	24
+#define VT_HEIGHT	16
 #define VT_RIGHT	31
-#define VT_BOTTOM	23
+#define VT_BOTTOM	15
+#define VT_INITIAL_LINE	4
+
+extern unsigned char vt_mangle_6847(unsigned char c);
+#define VT_MAP_CHAR(x)	vt_mangle_6847(x)
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    0x0000  /* also data base */
-#define PROGLOAD    0x0000  /* also data base */
-#define PROGTOP     0x7C00  /* Top of program */
+/* FIXME: This will move once we put the display in the kernel bank and
+   sort the banker out */
+#define PROGBASE    0x0800  /* also data base */
+#define PROGLOAD    0x0800  /* also data base */
+#define PROGTOP     0x7800  /* Top of program */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

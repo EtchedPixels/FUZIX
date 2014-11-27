@@ -74,7 +74,7 @@ init_early:
 
 init_hardware:
             ; set system RAM size
-	    ldd #96
+	    ldd #64
 	    std _ramsize
 	    ldd #32
 	    std _procmem
