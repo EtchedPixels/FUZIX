@@ -47,7 +47,9 @@ What does UZI have over FUZIX
 =============================
 
 * Can run in 64K of RAM (32K kernel/32K user). FUZIX would need
-	banked ROM or similar to pull this off.
+	banked ROM or similar to pull this off. If you have banked
+	ROM then our kernel footprint in RAM is about 8K plus userspace
+	plus any framebuffers and similar overhead.
 
 What do the UZI branches have that FUZIX has not yet integrated
 ===============================================================
