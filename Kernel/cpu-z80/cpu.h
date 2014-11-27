@@ -40,4 +40,7 @@ typedef unsigned long long time_t;
 #define VIDEO
 #define DISCARD
 
+#define cpu_to_le16(x)	(x)
+#define le16_to_cpu(x)	(x)
+
 #endif
