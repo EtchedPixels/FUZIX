@@ -1,34 +1,13 @@
 
-<<<<<<< .merge_file_lDH1lF
-# Makefile must be redable
-
-# List of possible targets
-TARGET_LIST = platform-nc100	platform-micropack platform-pcw8256 
-TARGET_LIST+= platform-socz80	platform-trs80 platform-dragon
-TARGET_LIST+= platform-z80pack	platform-z80pack-lite 
-TARGET_LIST+= platform-zx128	platform-zxpentevo
-
-CPU_LIST=z80 6502
-
-# TARGET must be defined as external
-ifndef TARGET
-export TARGET= zxpentevo
-endif
-
-ifndef CPU
-export CPU = z80
-endif
-
-=======
 #export TARGET= z80pack32
 #export CPU = z80
 export TARGET = dragon
 export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
->>>>>>> .merge_file_1IuJvF
+
 export VERSION = "0.1"
-export SUBVERSION = "ac1"
+export SUBVERSION = "ac1-erkinalp0"
 
 UNAME_S := $(shell uname -s)
 
