@@ -22,8 +22,12 @@ $(AOBJS): %$(BINEXT): %.s
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
-image:
+d64_1.rom: setup.s
+	lwasm -r -o d64_1.rom setup.s
+
+image: d64_1.rom
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	setup.o \
 	crt0.o commonmem.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
@@ -31,3 +35,5 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../single.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec.o \
 	../usermem_std-6809.o devlpr.o devtty.o libc.o ../vt.o
+	../tools/decbdragon < ../fuzix.bin d64_1.decb d64_2.rom cart1.rom cart2.rom
+	dd if=d64_1.decb of=d64_1.rom bs=1024 seek=1 conv=notrunc
