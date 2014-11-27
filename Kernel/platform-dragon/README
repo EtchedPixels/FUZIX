@@ -3,6 +3,21 @@ Dragon Experimental Build
 Currently we build for a Dragon64 but are not doing anything but initial
 boot testing work
 
+Set Up
+
+Get a copy of xroar, you *do not need* any ROM images
+Instal lwtools and your preferred 6809 gcc
+Set the Makefile to build for Dragon
+make
+
+copy the platform/*.rom files into your xroar working directory
+
+xroar -machine dragon64 -cart-rom cart1.rom -cart-rom2 cart2.rom -cart
+becker
+
+
+
+
 Dragon & COCO Memory Mapping Notes:
 
 These platforms are built around the 6883 SAM multiplexor for the 6809
