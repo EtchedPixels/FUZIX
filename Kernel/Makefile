@@ -1,9 +1,9 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
-export TARGET= z80pack32
-export CPU = z80
-#export TARGET = dragon
-#export CPU = 6809
+#export TARGET= z80pack32
+#export CPU = z80
+export TARGET = dragon
+export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -49,7 +49,7 @@ export CROSS_CCOPTS=-c -Wall -O2 -msoft-reg-count=4 -mfar-stack-param -I$(ROOT_D
 export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
 export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
-export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.video -mfar-code-page=4
+export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
 export ASOPTS=
 export BINEXT = .o
 endif
@@ -150,10 +150,13 @@ tools/make4x6: tools/make4x6.c
 font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
+tools/decbdragon: tools/decbdragon.c
+
+
 ifeq ($(CPU), z80)
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
-	
+
 fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
 	tools/analysemap <uzi.map
 	-cp hogs.txt hogs.txt.old
@@ -163,7 +166,7 @@ fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
 	tools/binman uzi.tmp uzi.map fuzix.bin
 	$(MAKE) -C platform-$(TARGET) image
 else
-fuzix.bin: target $(OBJS)
+fuzix.bin: target $(OBJS) tools/decbdragon
 	$(MAKE) -C platform-$(TARGET) image
 endif
 
