@@ -1,6 +1,16 @@
 #ifndef __VT_DOT_H__
 #define __VT_DOT_H__
 
+/* Optional defines */
+
+#ifndef VT_MAP_CHAR
+#define VT_MAP_CHAR(x) 	(x)
+#endif
+
+#ifndef VT_INITIAL_LINE
+#define VT_INITIAL_LINE 0
+#endif
+
 /* Core functions */
 void vtoutput(unsigned char *p, unsigned int len);
 void vtinit(void);
