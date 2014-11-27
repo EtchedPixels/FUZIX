@@ -4,22 +4,6 @@
 #include <printf.h>
 #include <devtty.h>
 
-/* The uarea is already synched to the stash which is written with the
-   process */
-uint8_t *swapout_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
-}
-
-/* The switchin code will move the uarea into the process itself, we just
-   need to fix up the u_page pointer */
-uint8_t *swapin_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
-}
-
 void platform_idle(void)
 {
 }
@@ -39,4 +23,12 @@ void pagemap_init(void)
 
 void map_init(void)
 {
+}
+
+unsigned char vt_mangle_6847(unsigned char c)
+{
+	if (c >= 96)
+		c -= 32;
+	c &= 0x3F;
+	return c;
 }
