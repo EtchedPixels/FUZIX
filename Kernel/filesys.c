@@ -444,8 +444,8 @@ fsptr getdev(uint16_t dev)
         return NULL;
     }
     rdtime(&t);
-    devfs->s_time = (uint32_t)t;
-    devfs->s_timeh = (uint8_t)(t >> 32);
+    devfs->s_time = t.low;
+    devfs->s_timeh = t.high;
     devfs->s_fmod = true;
     ((bufptr)devfs)->bf_dirty = true;
     return devfs;

@@ -35,7 +35,7 @@ void rdtime(time_t *tloc)
 void rdtime32(uint32_t *tloc)
 {
         irqflags_t irq = di();
-        *tloc = (uint32_t)tod;
+        *tloc = tod.low;
 	irqrestore(irq);
 }
 
@@ -58,6 +58,7 @@ void updatetod(void)
 	if (++tod_deci != 10)
 		return;
         tod_deci = 0;
-        tod++;
+        if (!++tod.low)
+		++tod.high;
 }
 #endif				/* NO_RTC */

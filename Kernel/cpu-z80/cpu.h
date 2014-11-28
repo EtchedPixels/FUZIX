@@ -31,7 +31,11 @@ extern int16_t strlen(const char *p);
 
 #define	staticfast	static
 
-typedef unsigned long long time_t;
+/* Must match native ordering of long long */
+typedef struct {
+	uint32_t low;
+	uint32_t high;
+} time_t;
 
 /* We don't yet have bank attributes and banking for Z80 */
 #define CODE1

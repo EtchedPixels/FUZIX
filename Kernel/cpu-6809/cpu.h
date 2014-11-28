@@ -28,7 +28,10 @@ extern uint16_t swab(uint16_t);
 #define staticfast	auto
 
 /* FIXME: should be 64bits - need to add helpers and struct variants */
-typedef unsigned long long time_t;
+typedef struct {
+   uint32_t low;
+   uint32_t high;
+} time_t;
 
 #define cpu_to_le16(x)	swab(x)
 #define le16_to_cpu(x)	swab(x)
