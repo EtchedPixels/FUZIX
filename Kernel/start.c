@@ -10,7 +10,7 @@
  *	make the entire of this disappear after the initial _execve
  */
 
-static struct termios ttydflt = {
+static const struct termios ttydflt = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
 	CS8 | B9600 | CREAD | HUPCL,
@@ -26,6 +26,7 @@ void tty_init(void) {
         int i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
 		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
+		kprintf("%x: %x\n", &t->termios, t->termios.c_lflag);
 		t++;
         }
 }
