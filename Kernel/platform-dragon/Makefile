@@ -3,7 +3,7 @@ CSRCS = devlpr.c devtty.c devrd.c
 CSRCS += devices.c main.c libc.c
 
 ASRCS = p6809.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s usermem_sam.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -28,7 +28,7 @@ d64_1.rom: setup.s
 image: d64_1.rom
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	setup.o \
-	crt0.o commonmem.o \
+	crt0.o commonmem.o usermem_sam.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
