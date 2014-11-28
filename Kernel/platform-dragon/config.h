@@ -8,17 +8,11 @@
 #undef CONFIG_MULTI
 /* Single tasking - for now while we get it booting */
 #undef CONFIG_SINGLETASK
-/* Use C helpers for usermem */
-#define CONFIG_USERMEM_C
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_BANKS	1
 /* Banked Kernel: need to fix GCC first */
 #undef CONFIG_BANKED
-/* We use the C code for usermem and pray it doesn't use the stack for the
-   copies */
-#define BANK_PROCESS	*((volatile uint8_t *)0xffd4) = 0
-#define BANK_KERNEL	*((volatile uint8_t *)0xffd5) = 0
 /* And swapping */
 #define SWAPDEV 6	/* FIXME */
 #define SWAP_SIZE   0x80 	/* 64K blocks */
