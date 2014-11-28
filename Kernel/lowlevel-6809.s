@@ -13,7 +13,10 @@
 	.globl	_udivhi3
 	.globl	_umodhi3
 	.globl  _mulhi3
-	.globl _swab
+	.globl	_ashlhi3
+	.globl	_lshrhi3
+	.globl	___ashlsi3
+	.globl	_swab
 
 	; debugging aids
 	.globl outcharhex
@@ -229,7 +232,6 @@ interrupt_handler:
 
 	    ; Do not use the stack before the switch...
 
-
             ; machine state stored by the cpu
 	    ; save zero page ??
             ldd _system_tick_counter
@@ -290,9 +292,6 @@ in_kernel:
 	    ;
 	    ; Y is caller saves so we'll get the right Y back
 	    ; for our SAM_RESTORE
-	    inc 0x200
-;	    lda 0xFF03
-;	    lda 0xFF02
             jsr _platform_interrupt
 
             clr _inint
@@ -460,7 +459,7 @@ div0msg	.ascii	'Divby0'
 	.db	13,10,0
 ;
 ;	Maths helpers - could be called from anywhere in C code
-;	From the GCC
+;	From the GCC support code (except for swab)
 ;
 _umodhi3:
 	ldd	2,s
@@ -541,3 +540,55 @@ _swab:
 	exg a,b		; swap bytes over
 	exg d,x		; back into result
 	rts
+
+_ashlhi3:
+	pshs	x
+_ashlhi3_1:
+	leax	-1,x
+	cmpx	#-1
+	beq	_ashlhi3_2
+	aslb
+	rola
+	bra	_ashlhi3_1
+_ashlhi3_2:
+	puls	x,pc
+
+___ashlsi3:
+	pshs	u
+	cmpb	#16
+	blt	try8
+	subb	#16
+	; Shift by 16
+	ldu	2,x
+	stu	,x
+try8:
+	cmpb	#8
+	blt	try_rest
+	subb	#8
+	; Shift by 8
+
+try_rest:
+	tstb
+	beq	done
+do_rest:
+	; Shift by 1
+	asl	3,x
+	rol	2,x
+	rol	1,x
+	rol	,x
+	decb
+	bne	do_rest
+done:
+	puls	u,pc
+
+_lshrhi3:
+	pshs	x
+_lshrhi3_1:
+	leax	-1,x
+	cmpx	#-1
+	beq	_lshrhi3_2
+	lsra
+	rorb
+	bra	_lshrhi3_1
+_lshrhi3_2:
+	puls	x,pc
