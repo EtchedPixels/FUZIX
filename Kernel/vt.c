@@ -233,13 +233,7 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 
 void scroll_up(void)
 {
-	unsigned char *p = VT_BASE;
-	int n = VT_WIDTH * VT_BOTTOM;
-	while (n--) {
-		*p = p[VT_WIDTH];
-		p++;
-	}
-//	memcpy(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
+	memcpy(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
 }
 
 void scroll_down(void)
