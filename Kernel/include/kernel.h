@@ -62,8 +62,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NO_FILE   (0xFF)
 
 typedef struct s_queue {
-    char *q_base;    /* Pointer to data */
-    char *q_head;    /* Pointer to addr of next char to read. */
+    unsigned char *q_base;    /* Pointer to data */
+    unsigned char *q_head;    /* Pointer to addr of next char to read. */
     char *q_tail;    /* Pointer to where next char to insert goes. */
     int   q_size;    /* Max size of queue */
     int   q_count;   /* How many characters presently in queue */
@@ -577,10 +577,10 @@ CODE1 int d_open(uint16_t dev, uint8_t flag);
 CODE1 int d_close(uint16_t dev);
 CODE1 int d_ioctl(uint16_t dev, uint16_t request, char *data);
 CODE1 int cdwrite(uint16_t dev, uint8_t flag);
-CODE1 bool insq(struct s_queue *q, char c);
-CODE1 bool remq(struct s_queue *q, char *cp);
+CODE1 bool insq(struct s_queue *q, unsigned char c);
+CODE1 bool remq(struct s_queue *q, unsigned char *cp);
 CODE1 void clrq(struct s_queue *q);
-CODE1 bool uninsq(struct s_queue *q, char *cp);
+CODE1 bool uninsq(struct s_queue *q, unsigned char *cp);
 CODE1 int psleep_flags(void *event, unsigned char flags);
 CODE1 int nxio_open(uint8_t minor, uint16_t flag);
 CODE1 int no_open(uint8_t minor, uint16_t flag);

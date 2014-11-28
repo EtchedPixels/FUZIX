@@ -331,7 +331,7 @@ int no_ioctl(uint8_t minor, uint16_t a, char *b)
  */
 
 /* add something to the tail of the queue. */
-bool insq(struct s_queue * q, char c)
+bool insq(struct s_queue * q, unsigned char c)
 {
 	bool r;
 
@@ -352,7 +352,7 @@ bool insq(struct s_queue * q, char c)
 
 
 /* Remove something from the head of the queue. */
-bool remq(struct s_queue * q, char *cp)
+bool remq(struct s_queue * q, unsigned char *cp)
 {
 	bool r;
 
@@ -386,7 +386,7 @@ void clrq(struct s_queue *q)
 
 
 /* Remove something from the tail; the most recently added char. */
-bool uninsq(struct s_queue *q, char *cp)
+bool uninsq(struct s_queue *q, unsigned char *cp)
 {
 	bool r;
 	irqflags_t irq = di();
