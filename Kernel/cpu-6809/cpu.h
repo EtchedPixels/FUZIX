@@ -18,7 +18,7 @@ extern void irqrestore(irqflags_t f);
 
 #define EMAGIC    0x0E    /* Header of executable  (JMP) */
 
-extern void *memcpy(void *, void *, size_t);
+extern void *memcpy(void *, const void *, size_t);
 extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
 extern uint16_t swab(uint16_t);
