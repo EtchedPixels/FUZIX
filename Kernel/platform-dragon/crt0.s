@@ -26,13 +26,6 @@ bootme:
 main:		orcc #0x10		; interrupts definitely off
 		lds #kstack_top
 
-
-;wiper:		ldx #s__DATA
-;		ldd #l__DATA
-;		clr ,x+
-;		subd #1
-;		bne wiper
-
 		jsr init_early
 		jsr init_hardware
 		jsr _fuzix_main

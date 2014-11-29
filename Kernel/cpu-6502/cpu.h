@@ -24,8 +24,10 @@ extern size_t strlen(const char *);
 
 #define staticfast	static
 
-/* FIXME: need to add 64bit helper/struct magic for this compiler */
-typedef unsigned long	time_t;
+typedef struct {
+  uint32_t low;
+  uint32_t high;
+} time_t;
 
 /* We don't yet have bank attributes and banking for Z80 */
 #define CODE1

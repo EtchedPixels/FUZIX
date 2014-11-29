@@ -321,8 +321,8 @@ int16_t _utime(void)
 	uget(buf, t, 2 * sizeof(time_t));
 	/* FIXME: needs updating once we pack top bits
 	   elsewhere in the inode */
-	ino->c_node.i_atime = t[0];
-	ino->c_node.i_mtime = t[1];
+	ino->c_node.i_atime = t[0].low;
+	ino->c_node.i_mtime = t[1].low;
 	setftime(ino, C_TIME);
 	i_deref(ino);
 	return (0);

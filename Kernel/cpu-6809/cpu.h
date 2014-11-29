@@ -18,16 +18,23 @@ extern void irqrestore(irqflags_t f);
 
 #define EMAGIC    0x0E    /* Header of executable  (JMP) */
 
-extern void *memcpy(void *, void *, size_t);
+extern void *memcpy(void *, const void *, size_t);
 extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
+extern uint16_t swab(uint16_t);
 
 /* 6809 doesn't benefit from making a few key variables in
    non-reentrant functions static */
 #define staticfast	auto
 
 /* FIXME: should be 64bits - need to add helpers and struct variants */
-typedef unsigned long long time_t;
+typedef struct {
+   uint32_t low;
+   uint32_t high;
+} time_t;
+
+#define cpu_to_le16(x)	swab(x)
+#define le16_to_cpu(x)	swab(x)
 
 #ifdef CONFIG_BANKED
 #define CODE1	__attribute__((far("1")))

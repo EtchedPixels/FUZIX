@@ -1,7 +1,13 @@
 Dragon Experimental Build
 
 Currently we build for a Dragon64 but are not doing anything but initial
-boot testing work
+boot testing work. As we replace the ROMs it is kind of cheating. It won't
+run on a Dragon 32 right now because it assumes the two page switching and
+also it uses both ROMs on the 64. With banking it could in theory fit
+entirely in a banked cartridge on COCO or COCO2 or Dragon32, but the
+emulator doesn't emulate this and there is some hackery to be done to make
+banking work ! On a COCO with text mode you'd get about 24K out of the 32K
+RAM available for the user process.
 
 Set Up
 
@@ -15,8 +21,12 @@ copy the platform/*.rom files into your xroar working directory
 xroar -machine dragon64 -cart-rom cart1.rom -cart-rom2 cart2.rom -cart
 becker
 
+Boot Sequence
 
-
+The first ROM image is currently mostly empty. It contains a small bootstrap
+that sets up the SAM (this must be done from ROM), clears low memory and
+then unpacks the kernel data and other RAM based bits as a DECB stream.
+Once unpacked it flips ROM and enters the kernel crt0.
 
 Dragon & COCO Memory Mapping Notes:
 
@@ -72,7 +82,8 @@ low (there is no access to the high RAM with the cartridge paged in).
 Equally we want user space to run from low addresses (for commonality) and
 we want to protect kernel data from user accidents.
 
-The map we use is thus
+The map we are forced to use to handle the DragonPlus and to make the other
+cases for userspace sane are:
 
 Kernel
 	0xC000-0xFEFF		Cartridge OS image
@@ -82,50 +93,53 @@ User
 	0xC000-0xFEFF		Cartridge OS image
 	0x0000-0x7FFF		RAM0 (or any other bank)
 
+or (on a 64K box) in theory
+
+User
+	0x0000-0xDFFF		User
+	0xE000-0xFFFF		RAM1 top used for display and kernel
+
+To do that latter requires adding some additional vectors and bounce points
+in the bottom 0x200 bytes of the RAM0 data area which for big processes do
+
+	move stack down into the low space
+	switch in catridge/ROM
+	copy and restack the syscall arguments
+	jsr rom interrupt vector
+	switch out catridge/ROM
+	switch stack back
+
+and similar without the argument shuffle for interrupts.
+
 this allows us to use all the banks effectively for 32K apps on all the
 combinations. It also allows us to use some banks in the fat COCO2 case to
 allow ~64K userspace apps
 
-The downside is that the interrupt handling and syscall entry are
-interesting as we have no common RAM to use for the stack as we switch
-around.
+interrupt handling and syscall entry are interesting as we have no common RAM
 
-As a result we are going to need to make stuff like syscall
-
-	map kernel RAM high
-	set kernel stack in highspace
-	enter syscall path
-	save registers and stuff
-	copy arguments into udata
-	jump back into a RAM 0 address
-	remap the catridge slot
-	jump into a cartridge helper
-	cartridge helper maps kernel pages low
-	shift S by $8000 bytes
-	do the actual syscall
-	in cartridge code switch the low memory back to RAM 0 (user)
-	jump into ram0
-	switch the kernel RAM high
-	shift S by $8000 bytes
-	restore everything
-	switch the ROM back in
-	return to user
-
-Thankfully the IRQ path can be a lot cleaner as we have nothing to save
-but the entry/exit registers
+To handle this the 6809 low-level code is polluted by SAM_ macros that sane
+boxes can leave as blank. On a SAM based box we play pingpoing with the
+banks using inline code (as the stack keeps vanishing under us) and the
+map_ helpers are no-ops (we can't remap in a subroutine really). On a sane
+box it works like you'd expect.
 
 The video is fortunately simpler as the top bit for the CPU accesses via
 the SAM uses the P bit as A15. The video takes B15 from the SAM not via P
 (unclear how this works on DragonPlus and this is complicated on the 'fat'
- COCO add-ons as the video can be moved into high space too)
+ COCO add-ons as the video can be moved into high space too. The DragonPlus
+fortunately has its own video anyway).
 
 This basic setup should be compatible with any 6883/74LS783 based system
-with 64K of RAM and at least 16K of ROM we can hide in. Note that the SAM
+with 64K of RAM and at least 32K of ROM we can hide in. Note that the SAM
 decoder doesn't require the other 32K of ROM decodes is ROM, it can be RAM.
 However the COCO and Dragon don't allow for them being RAM.
 
 In theory Dragon32 + DragonPlus would also work but the lack of common RAM
-might make the the bank switch syscall path truely epic
+might make the the bank switch syscall path truely epic, ditto using the
+64K to hold two user apps providing one is under 24K. Not impossible - we'd
+need to stash the real "user" page map in address in the kernel map at say
+address 6 when we flipped task and fixed in the user map. SAM_USER would
+then become sta [6]. Something like that anyway.
 
 Disks
 
@@ -163,3 +177,4 @@ Becker port at 0xFF40 (FF46 ? on Dragon)
 IDE: FF70-FF78 - data latched (write high/load, read low/high) [0-7 IDE regs
 		8 maps the latches]
 
+Graphics option to do a less ugly console

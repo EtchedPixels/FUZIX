@@ -34,9 +34,12 @@ samwipe:
 	deca
 	bne samwipe
 
-	sta 0xffc7	; Display at 0x200
+	sta 0xffcf	;
+	sta 0xffd1	; Display at 0x6000
+	sta 0xffd3	; In the upper bank
 	;FIXME - DD or DB needed to get it right
 	sta 0xffdd	; 64K dynamic RAM
+	sta 0xffd5	; Use RAM bank 1 at 0x0000 (providing ffde is clear)
 
 	; PIA0 A is all input
 	; PIA0 B is all output
@@ -72,14 +75,14 @@ samwipe:
 	;
 	; Say hello
 	;
-	ldx #0x200
+	ldx #0x6000
 cls:	lda #' '
 	sta ,x+
-	cmpx #0x800
+	cmpx #0x6200
 	bne cls
 
-	ldu #0x0200	; U is our screen pointer
-	lds #0x7ffe
+	ldu #0x6000	; U is our screen pointer
+	lds #0x0400	; Somewhere safe out of the way
 	ldx #hello
 	bsr strout
 
@@ -87,7 +90,7 @@ cls:	lda #' '
 	;	Clear memory (we ought to tidily clear bits listed in
 	;	a tweaked DECB but what the heck..
 
-	ldx #0x800
+	ldx #0x6200
 wiper:
 	clr ,x+
 	cmpx #0x8000

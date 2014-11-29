@@ -76,9 +76,113 @@ void tty_interrupt(void)
 	}	
 }
 
+static uint8_t keymap[8];
+static uint8_t keyin[8];
+static uint8_t keybyte, keybit;
+static uint8_t newkey;
+static int keysdown = 0;
+static uint8_t shiftmask[8] = {
+	0, 0x40, 0, 0, 0, 0, 0, 0x40
+};
+
+static uint8_t rbit[8] = {
+	0xFE,
+	0xFD,
+	0xFB,
+	0xF7,
+	0xEF,
+	0xDF,
+	0xBF,
+	0x7F,
+};
+
+/* Row inputs: multiplexed with the joystick */
+static volatile uint8_t *pia_row = (uint8_t *)0xFF00;
+/* Columns for scanning: multiplexed with the printer port */
+static volatile uint8_t *pia_col = (uint8_t *)0xFF02;
+/* Control */
+static volatile uint8_t *pia_ctrl = (uint8_t *)0xFF03;
+
+static void keyproc(void)
+{
+	int i;
+	uint8_t key;
+
+	for (i = 0; i < 8; i++) {
+		/* We do the scan in software on the Dragon */
+		*pia_col = rbit[i];
+		keyin[i] = ~*pia_row;
+		key = keyin[i] ^ keymap[i];
+		if (key) {
+			int n;
+			int m = 1;
+			for (n = 0; n < 7; n++) {
+				if ((key & m) && (keymap[i] & m)) {
+					if (!(shiftmask[i] & m))
+						keysdown--;
+				}
+				if ((key & m) && !(keymap[i] & m)) {
+					if (!(shiftmask[i] & m))
+						keysdown++;
+					keybyte = i;
+					keybit = n;
+					newkey = 1;
+				}
+				m += m;
+			}
+		}
+		keymap[i] = keyin[i];
+	}
+}
+
+static uint8_t keyboard[8][7] = {
+	{ '0', '8', '@', 'h', 'p', 'x', 10 },
+	{ '1', '9', 'a', 'i', 'q', 'y', 0 /* clear - used as ctrl*/ },
+	{ '2', ':', 'b', 'j', 'r', 'z', 27 /* break (used for esc) */ },
+	{ '3', ';', 'c', 'k', 's', '^' /* up */, 0 /* NC */ },
+	{ '4', ',', 'd', 'l', 't', '|' /* down */, 0 /* NC */ },
+	{ '5', '-', 'e', 'm', 'u', 8 /* left */, 0 /* NC */ },
+	{ '6', '.', 'f', 'n', 'v', '\t' /* right */, 0 /* NC */ },
+	{ '7', '/', 'g', 'o', 'w', ' ', 0 /* shift */ },
+};
+
+static uint8_t shiftkeyboard[8][7] = {
+	{ '_', '(', '\\', 'H', 'P', 'X', 10 },
+	{ '!', ')', 'A', 'I', 'Q', 'Y', 0 /* clear */ },
+	{ '"', '*', 'B', 'J', 'R', 'Z', 3 /* break */ },
+	{ '#', '+', 'C', 'K', 'S', '[' /* up */, 0 /* NC */ },
+	{ '$', '<', 'D', 'L', 'T', ']' /* down */, 0 /* NC */ },
+	{ '%', '=', 'E', 'M', 'U', '{' /* left */, 0 /* NC */ },
+	{ '&', '>', 'F', 'N', 'V', '}' /* right */, 0 /* NC */ },
+	{ '\'', '?', 'G', 'O', 'W', ' ', 0 /* shift */ },
+};
+
+static void keydecode(void)
+{
+	uint8_t c;
+
+	if (keymap[7] & 64)	/* shift */
+		c = shiftkeyboard[keybyte][keybit];
+	else
+		c = keyboard[keybyte][keybit];
+	if (keymap[1] & 64) {	/* control */
+		if (c > 31 && c < 96)
+			c &= 31;
+	}
+	tty_inproc(1, c);
+}
+
 void platform_interrupt(void)
 {
-	timer_interrupt();
+	uint8_t i = *pia_ctrl;
+	if (i & 0x80) {
+		*pia_col;
+		newkey = 0;
+		keyproc();
+		if (keysdown < 3 && newkey)
+			keydecode();
+		timer_interrupt();
+	}
 }
 
 /* This is used by the vt asm code, but needs to live at the top of the kernel */

@@ -10,7 +10,7 @@
  *	make the entire of this disappear after the initial _execve
  */
 
-static struct termios ttydflt = {
+static const struct termios ttydflt = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
 	CS8 | B9600 | CREAD | HUPCL,
@@ -26,6 +26,7 @@ void tty_init(void) {
         int i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
 		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
+		kprintf("%x: %x\n", &t->termios, t->termios.c_lflag);
 		t++;
         }
 }
@@ -44,10 +45,12 @@ void bufinit(void)
 void create_init(void)
 {
 	uint8_t *j;
+
 	/* userspace (offset from PROGBASE): 0x0000+ 0   1   2   3   4   5   6   7   8   9   A   B   C */
 	/* FIXME: big-endian only */
 	const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
+
 
 	init_process = ptab_alloc();
 	kprintf("init PID is %d\r\n", init_process);
@@ -64,7 +67,7 @@ void create_init(void)
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
 	uput(arg, (void *)PROGLOAD, sizeof(arg));
-	/* Poke in arv[0] - FIXME: Endianisms...  */
+	/* Poke in argv[0] - FIXME: Endianisms...  */
 	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
 	/* Set up things to look like the process is calling _execve() */
