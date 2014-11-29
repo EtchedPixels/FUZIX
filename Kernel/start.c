@@ -47,7 +47,7 @@ void create_init(void)
 	uint8_t *j;
 	/* userspace: PROGLOAD +
                0    1    2    3    4   5  6  7  8  9  A  B  C */
-	const char arg[] =
+	static const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, 1, 1, 0, 0, 0, 0 };
 
 	init_process = ptab_alloc();
@@ -64,7 +64,7 @@ void create_init(void)
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
 	uput(arg, (void *)PROGLOAD, sizeof(arg));
-	/* Poke in arv[0] - FIXME: Endianisms...  */
+	/* Poke in argv[0] - FIXME: Endianisms...  */
 	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
 	/* Set up things to look like the process is calling _execve() */
