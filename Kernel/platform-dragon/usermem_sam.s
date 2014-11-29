@@ -23,23 +23,28 @@
 	.area .common
 
 __ugetc:
+	pshs cc		; save IRQ state
+	orcc #0x10
 	SAM_USER
 	ldb ,x
+	SAM_KERNEL
 	lda #0
 	tfr d,x
-	SAM_KERNEL
-	rts
+	puls cc,pc	; back and return
 
 __ugetw:
+	pshs cc
+	orcc #0x10
 	SAM_USER
 	ldx ,x
 	SAM_KERNEL
-	rts
+	puls cc,pc
 
 __uget:
-	pshs u,y
-	ldu 6,s		; user address
-	ldy 8,s		; count
+	pshs u,y,cc
+	ldu 8,s		; user address
+	ldy 10,s	; count
+	orcc #0x10
 ugetl:
 	lda ,x++
 	SAM_USER
@@ -48,12 +53,13 @@ ugetl:
 	leay -1,y
 	cmpy #0
 	bne ugetl
-	puls u,y,pc
+	puls u,y,cc,pc
 
 __ugets:
-	pshs u,y
-	ldu 6,s		; user address
-	ldy 8,s		; count
+	pshs u,y,cc
+	ldu 8,s		; user address
+	ldy 10,s		; count
+	orcc #0x10
 ugetsl:
 	SAM_USER
 	lda ,x++
@@ -66,46 +72,56 @@ ugetsl:
 	ldx #0xffff	; unterminated - error
 	lda #0
 	sta -1,u	; force termination
-	puls u,y,pc
+	puls u,y,cc,pc
 
 ugetse:
 	SAM_KERNEL
 	sta ,u
 	ldx #0
-	puls u,y,pc
+	puls u,y,cc,pc
 
 
 __uputc:
+	pshs cc
+	orcc #0x10
+	ldd 4,s
 	SAM_USER
+	exg d,x
 	stb ,x
 	SAM_KERNEL
-	rts
+	puls cc,pc
 
 __uputw:
+	pshs cc
+	orcc #0x10
+	ldd 4,s
 	SAM_USER
-	ldb 2,s
-	stb ,x
+	exg d,x
+	std ,x
 	SAM_KERNEL
-	rts
+	puls cc,pc
 
+;	X = source, user, size on stack
 __uput:
-	pshs u,y
-	ldu 6,s		; user address
-	ldy 8,s		; count
+	pshs u,y,cc
+	orcc #0x10
+	ldu 8,s		; user address
+	ldy 10,s	; count
 uputl:
-	SAM_USER
 	lda ,x++
-	SAM_KERNEL
+	SAM_USER
 	sta ,u++
+	SAM_KERNEL
 	leay -1,y
 	cmpy #0
 	bne uputl
-	puls u,y,pc
+	puls u,y,cc,pc
 
 __uzero:
-	pshs y
+	pshs y,cc
 	lda #0
-	ldy 6,s
+	ldy 8,s
+	orcc #0x10
 	SAM_USER
 uzloop:
 	sta ,x+
@@ -113,4 +129,4 @@ uzloop:
 	cmpy #0
 	bne uzloop
 	SAM_KERNEL
-	puls y,pc
+	puls y,cc,pc
