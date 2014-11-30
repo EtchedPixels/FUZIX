@@ -37,8 +37,10 @@ void xfs_init();
 void panic(char *s);
 void bufsync (void);
 char *zerobuf (void);
-int super();
+int super(void);
 
+#define swizzle16(x)	(x)
+#define swizzle32(x)	(x)
 
 typedef struct s_queue {
     char *q_base;    /* Pointer to data */

@@ -33,7 +33,7 @@ int32_t _lseek( int16_t file, int32_t offset, int16_t flag)
             of_tab[oftno].o_ptr += offset;
             break;
         case 2:
-            of_tab[oftno].o_ptr = ino->c_node.i_size + offset;
+            of_tab[oftno].o_ptr = swizzle32(ino->c_node.i_size) + offset;
             break;
         default:
             udata.u_error = EINVAL;
@@ -62,12 +62,12 @@ void readi( inoptr ino )
 
             /* See of end of file will limit read */
             toread = udata.u_count =
-                min(udata.u_count, ino->c_node.i_size-udata.u_offset);
+                min(udata.u_count, swizzle32(ino->c_node.i_size)-udata.u_offset);
             goto loop;
 
         case F_BDEV:
             toread = udata.u_count;
-            dev = *(ino->c_node.i_addr);
+            dev = swizzle16(*(ino->c_node.i_addr));
 
 loop:
             while (toread)
@@ -110,7 +110,7 @@ void writei( inoptr ino)
     {
 
         case F_BDEV:
-            dev = *(ino->c_node.i_addr);
+            dev = swizzle16(*(ino->c_node.i_addr));
         case F_DIR:
         case F_REG:
             towrite = udata.u_count;
@@ -137,8 +137,8 @@ loop:
             }
 
             /* Update size if file grew */
-            if ( udata.u_offset > ino->c_node.i_size) {
-                ino->c_node.i_size = udata.u_offset;
+            if ( udata.u_offset > swizzle32(ino->c_node.i_size)) {
+                ino->c_node.i_size = swizzle32(udata.u_offset);
                 ino->c_dirty = 1;
             }
             break;

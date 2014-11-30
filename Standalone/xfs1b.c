@@ -44,8 +44,8 @@ int _mknod( char *name, int16_t mode, int16_t dev)
         goto nogood2;
 
     /* Initialize mode and dev */
-    ino->c_node.i_mode = mode & ~udata.u_mask;
-    ino->c_node.i_addr[0] = isdevice(ino) ? dev : 0;
+    ino->c_node.i_mode = swizzle16(mode & ~udata.u_mask);
+    ino->c_node.i_addr[0] = swizzle16(isdevice(ino) ? dev : 0);
     setftime(ino, A_TIME|M_TIME|C_TIME);
     wr_inode(ino);
 
@@ -82,7 +82,7 @@ void _sync(void)
 
     for (j=0; j < NDEVS; ++j)
     {
-        if (fs_tab[j].s_mounted == SMOUNTED && fs_tab[j].s_fmod)
+        if (swizzle16(fs_tab[j].s_mounted) == SMOUNTED && fs_tab[j].s_fmod)
         {
             fs_tab[j].s_fmod = 0;
             buf = bread(j, 1, 1);
@@ -179,13 +179,13 @@ int _chmod( char *path, int16_t mode)
     ifnot (ino = n_open(path,NULLINOPTR))
         return (-1);
 
-    if (ino->c_node.i_uid != udata.u_euid && !super())
+    if (swizzle16(ino->c_node.i_uid) != udata.u_euid && !super())
     {
         i_deref(ino);
         udata.u_error = EPERM;
         return(-1);
     }
-    ino->c_node.i_mode = (mode & MODE_MASK) | (ino->c_node.i_mode & F_MASK);
+    ino->c_node.i_mode = swizzle16((mode & MODE_MASK) | (swizzle16(ino->c_node.i_mode) & F_MASK));
     setftime(ino, C_TIME);
     i_deref(ino);
     return(0);
@@ -202,15 +202,15 @@ int _chown( char *path, int owner, int group)
     ifnot (ino = n_open(path,NULLINOPTR))
         return (-1);
 
-    if (ino->c_node.i_uid != udata.u_euid && !super())
+    if (swizzle16(ino->c_node.i_uid) != udata.u_euid && !super())
     {
         i_deref(ino);
         udata.u_error = EPERM;
         return(-1);
     }
 
-    ino->c_node.i_uid = owner;
-    ino->c_node.i_gid = group;
+    ino->c_node.i_uid = swizzle16(owner);
+    ino->c_node.i_gid = swizzle16(group);
     setftime(ino, C_TIME);
     i_deref(ino);
     return(0);
@@ -256,19 +256,19 @@ void stcpy( inoptr ino, struct uzi_stat *buf)
 {
     struct uzi_stat *b = (struct uzi_stat *)buf;
 
-    b->st_dev = ino->c_dev;
-    b->st_ino = ino->c_num;
-    b->st_mode = ino->c_node.i_mode;
-    b->st_nlink = ino->c_node.i_nlink;
-    b->st_uid = ino->c_node.i_uid;
-    b->st_gid = ino->c_node.i_gid;
+    b->st_dev = swizzle16(ino->c_dev);
+    b->st_ino = swizzle16(ino->c_num);
+    b->st_mode = swizzle16(ino->c_node.i_mode);
+    b->st_nlink = swizzle16(ino->c_node.i_nlink);
+    b->st_uid = swizzle16(ino->c_node.i_uid);
+    b->st_gid = swizzle16(ino->c_node.i_gid);
 
-    b->st_rdev = ino->c_node.i_addr[0];
+    b->st_rdev = swizzle16(ino->c_node.i_addr[0]);
 
-    b->st_size = ino->c_node.i_size;
-    b->fst_atime = ino->c_node.i_atime;
-    b->fst_mtime = ino->c_node.i_mtime;
-    b->fst_ctime = ino->c_node.i_ctime;
+    b->st_size = swizzle32(ino->c_node.i_size);
+    b->fst_atime = swizzle32(ino->c_node.i_atime);
+    b->fst_mtime = swizzle32(ino->c_node.i_mtime);
+    b->fst_ctime = swizzle32(ino->c_node.i_ctime);
 }
 
 
@@ -339,12 +339,13 @@ int _umask( int mask)
 int _getfsys(int dev,char * buf)
 {
     udata.u_error = 0;
-    if (dev < 0 || dev >= NDEVS || fs_tab[dev].s_mounted != SMOUNTED)
+    if (dev < 0 || dev >= NDEVS || swizzle16(fs_tab[dev].s_mounted) != SMOUNTED)
     {
         udata.u_error = ENXIO;
         return(-1);
     }
 
+    /* FIXME: endiam swapping here */
     bcopy((char *)&fs_tab[dev],(char *)buf,sizeof(struct filesys));
     return(0);
 }
@@ -411,7 +412,7 @@ int _mount( char *spec, char *dir, int rwflag)
         udata.u_error = ENOTDIR;
         goto nogood;
     }
-    dev = (int)sino->c_node.i_addr[0];
+    dev = (int)swizzle16(sino->c_node.i_addr[0]);
 
     if ( dev >= NDEVS ) // || d_open(dev))
     {
@@ -463,7 +464,7 @@ int _umount(char *spec)
         goto nogood;
     }
 
-    dev = (int)sino->c_node.i_addr[0];
+    dev = (int)swizzle16(sino->c_node.i_addr[0]);
     //ifnot (validdev(dev))
     //{
     //    udata.u_error = ENXIO;
