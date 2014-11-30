@@ -25,6 +25,7 @@ char zero512[512];
 direct dirbuf[64] = { {ROOTINODE,"."},
                       {ROOTINODE,".."} };
 struct dinode inode[8];
+int swizzling = 0;
 
 void mkfs(uint16_t fsize, uint16_t isize);
 void dwrite(uint16_t blk, char *addr);
@@ -35,6 +36,11 @@ int main(int argc, char **argv)
 {
     uint16_t fsize, isize;
 
+    if (argv[1] && strcmp(argv[1], "-X") == 0) {
+        swizzling = 1;
+        argv++;
+        argc--;
+    }
     if (argc != 4)
     {
         printf("Usage: mkfs device isize fsize\n");
@@ -80,41 +86,46 @@ void mkfs(uint16_t fsize, uint16_t isize)
 
     /* Initialize the super-block */
 
-    fs_super.s_mounted = SMOUNTED; /* Magic number */
-    fs_super.s_isize =  isize;
-    fs_super.s_fsize =  fsize;
-    fs_super.s_nfree =  1;
+    fs_super.s_mounted = swizzle16(SMOUNTED); /* Magic number */
+    fs_super.s_isize =  swizzle16(isize);
+    fs_super.s_fsize =  swizzle16(fsize);
+    fs_super.s_nfree =  swizzle16(1);
     fs_super.s_free[0] =  0;
     fs_super.s_tfree =  0;
     fs_super.s_ninode = 0;
-    fs_super.s_tinode =  8 * (isize-2) - 2;
+    fs_super.s_tinode =  swizzle16(8 * (isize-2) - 2);
 
     /* Free each block, building the free list */
     for (j= fsize-1; j >= isize+1; --j)
     {
-        if (fs_super.s_nfree == 50)
+        int n;
+        if (swizzle16(fs_super.s_nfree) == 50)
         {
             dwrite(j, (char *)&fs_super.s_nfree);
             fs_super.s_nfree = 0;
         }
 
-        ++fs_super.s_tfree;
-        fs_super.s_free[(fs_super.s_nfree)++] = j;
+        fs_super.s_tfree = swizzle16(swizzle16(fs_super.s_tfree)+1);
+        n = swizzle16(fs_super.s_nfree);
+        fs_super.s_free[n++] = swizzle16(j);
+        fs_super.s_nfree = swizzle16(n);
     }
 
     /* The inodes are already zeroed out */
     /* create the root dir */
     inode[ROOTINODE].i_mode = F_DIR | (0777 & MODE_MASK);
-    inode[ROOTINODE].i_nlink = 3;
-    inode[ROOTINODE].i_size = 64;
-    inode[ROOTINODE].i_addr[0] = isize;
+    inode[ROOTINODE].i_nlink = swizzle16(3);
+    inode[ROOTINODE].i_size = swizzle32(64);
+    inode[ROOTINODE].i_addr[0] = swizzle16(isize);
 
     /* Reserve reserved inode */
-    inode[0].i_nlink = 1;
+    inode[0].i_nlink = swizzle16(1);
     inode[0].i_mode = ~0;
 
     dwrite(2, (char *)inode);
 
+    dirbuf[0].d_ino = swizzle16(dirbuf[0].d_ino);
+    dirbuf[1].d_ino = swizzle16(dirbuf[1].d_ino);
     dwrite(isize,(char *)dirbuf);
 
     /* Write out super block */
