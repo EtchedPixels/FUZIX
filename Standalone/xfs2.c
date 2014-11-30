@@ -900,7 +900,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
                 }
                 ******/
                 i = (bn>>sh) & 0xff;
-                if ((swizzle16(nb) = ((blkno_t *)bp)[i]))
+                if ((swizzle16(nb) == ((blkno_t *)bp)[i]))
                     brelse(bp);
                 else
                 {
@@ -1024,6 +1024,8 @@ int fmount(int dev, inoptr ino)
     brelse((bufptr)buf);
     
     /* See if there really is a filesystem on the device */
+    if (fp->s_mounted == SMOUNTED_WRONGENDIAN)
+     swizzling = 1;
     if (swizzle16(fp->s_mounted) != SMOUNTED ||
          swizzle16(fp->s_isize) >= swizzle16(fp->s_fsize))
         return (-1);
