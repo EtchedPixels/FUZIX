@@ -5,6 +5,7 @@
 #define ROOTDEV 0
 #define ROOTINODE 1
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */
+#define SMOUNTED_WRONGENDIAN 50737   /* byteflipped */
 #define CMAGIC   24721
 #define UFTSIZE 10
 #define NSIGS 16
