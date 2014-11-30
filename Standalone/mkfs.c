@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 		argc--;
 	}
 	if (argc != 4) {
-		printf("Usage: mkfs device isize fsize\n");
+		printf("Usage: mkfs [-X] device isize fsize\n");
 		return -1;
 	}
 

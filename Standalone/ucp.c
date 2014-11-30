@@ -25,6 +25,7 @@ char *month[] =
     "May", "Jun", "Jul", "Aug",
     "Sep", "Oct", "Nov", "Dec" };
 
+int swizzling = 0;
 
 int match(char *cmd);
 void usage(void);

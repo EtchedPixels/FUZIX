@@ -40,8 +40,9 @@ void bufsync (void);
 char *zerobuf (void);
 int super(void);
 
-#define swizzle16(x)	(x)
-#define swizzle32(x)	(x)
+extern uint16_t swizzle16(uint32_t v);
+extern uint32_t swizzle32(uint32_t v);
+extern int swizzling;
 
 typedef struct s_queue {
     char *q_base;    /* Pointer to data */
