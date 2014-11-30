@@ -3,8 +3,8 @@
 U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
-U_STASH_HIGH		    .equ 0xBD00	      ; BD00-BFFF
-U_STASH_LOW		    .equ 0x7D00	      ; 7D00-BFFF
+U_DATA_STASH		    .equ 0x7D00	      ; 0x7D00-0x7FFF
 
+; as far as I can tell either is allowed by the spec
 
-NMOS_Z80		    .equ 0
+NMOS_Z80		    .equ 1
