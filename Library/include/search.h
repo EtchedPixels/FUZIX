@@ -12,6 +12,7 @@ typedef int (*__compar_fn_t) __P((__ptr_t, __ptr_t));
 
 /* for use with hsearch(3) */
 
+
 typedef struct entry { char *key; char *data; } ENTRY;
 typedef enum { FIND, ENTER } ACTION;
 
@@ -45,11 +46,12 @@ extern void twalk __P((void * __root, __action_fn_t action));
 
 
 extern void * lfind __P((void * __key, void * __base,
-			 size_t * __nmemb, size_t __size,
-			 __compar_fn_t __compar));
+                         size_t * __nmemb, size_t __size,
+                         __compar_fn_t __compar));
 
 extern void * lsearch __P((void * __key, void * __base,
-			 size_t * __nmemb, size_t __size,
-			 __compar_fn_t __compar));
+                           size_t * __nmemb, size_t __size,
+                           __compar_fn_t __compar));
+
 
 #endif /* search.h */

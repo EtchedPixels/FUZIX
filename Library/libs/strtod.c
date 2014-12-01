@@ -1,7 +1,7 @@
 /*
  * strtod.c - This file is part of the libc-8086 package for ELKS,
  * Copyright (C) 1995, 1996 Nat Friedman <ndf@linux.mit.edu>.
- * 
+ *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
  *  License as published by the Free Software Foundation; either
@@ -20,80 +20,67 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-double strtod(const char *nptr, char ** endptr)
-{
-  unsigned short negative;
-  double number;
-  double fp_part;
-  int exponent;
-  unsigned short exp_negative;
+double strtod(const char *nptr, char ** endptr) {
+    unsigned short negative;
+    double number;
+    double fp_part;
+    int exponent;
+    unsigned short exp_negative;
 
-  *endptr = NULL;
+    *endptr = NULL;
 
-  /* advance beyond any leading whitespace */
-  while (isspace(*nptr))
-    nptr++;
+    /* advance beyond any leading whitespace */
+    while (isspace(*nptr))
+        nptr++;
 
-  /* check for optional '+' or '-' */
-  negative=0;
-  if (*nptr=='-')
-    {
-      negative=1;
-      nptr++;
-    }
-  else
-    if (*nptr=='+')
-      nptr++;
+    /* check for optional '+' or '-' */
+    negative=0;
+    if (*nptr=='-') {
+        negative=1;
+        nptr++;
+    } else if (*nptr=='+')
+        nptr++;
 
-  number=0;
-  while (isdigit(*nptr))
-    {
-      number=number*10+(*nptr-'0');
-      nptr++;
+    number=0;
+    while (isdigit(*nptr)) {
+        number=number*10+(*nptr-'0');
+        nptr++;
     }
 
-  if (*nptr=='.')
-    {
-      nptr++;
-      fp_part=0;
-      while (isdigit(*nptr))
-	{
-	  fp_part=fp_part/10.0 + (*nptr-'0')/10.0;
-	  nptr++;
-	}
-      number+=fp_part;
+    if (*nptr=='.') {
+        nptr++;
+        fp_part=0;
+        while (isdigit(*nptr)) {
+            fp_part=fp_part/10.0 + (*nptr-'0')/10.0;
+            nptr++;
+        }
+        number+=fp_part;
     }
 
-  if (*nptr=='e' || *nptr=='E')
-    {
-      nptr++;
-      exp_negative=0;
-      if (*nptr=='-')
-	{
-	  exp_negative=1;
-	  nptr++;
-	}
-      else
-	if (*nptr=='+')
-	  nptr++;
+    if (*nptr=='e' || *nptr=='E') {
+        nptr++;
+        exp_negative=0;
+        if (*nptr=='-') {
+            exp_negative=1;
+            nptr++;
+        } else if (*nptr=='+')
+            nptr++;
 
-      exponent=0;
-      while (isdigit(*nptr))
-	{
-	  exponent=exponent*10+(*nptr-'0');
-	  exponent++;
-	  nptr++;
-	}
+        exponent=0;
+        while (isdigit(*nptr)) {
+            exponent=exponent*10+(*nptr-'0');
+            exponent++;
+            nptr++;
+        }
     }
 
-  while (exponent)
-    {
-      if (exp_negative)
-	number/=10;
-      else
-	number*=10;
-      exponent--;
+    while (exponent) {
+        if (exp_negative)
+            number/=10;
+        else
+            number*=10;
+        exponent--;
     }
-  *endptr = (char *)nptr;
-  return (negative ? -number:number);
+    *endptr = (char *)nptr;
+    return (negative ? -number:number);
 }

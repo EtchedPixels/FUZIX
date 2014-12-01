@@ -37,13 +37,18 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    0xC000  /* also data base */
-#define PROGLOAD    0xC000  /* also data base */
-#define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
+
+
+#define PROGBASE    ((char *)(0xC000))  /* also data base */
+#define PROGTOP     ((char *)(0xFD00))  /* Top of program, base of U_DATA copy */
+
 #define PROC_SIZE   16	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0
+
+
+
 
 #define BOOT_TTY (1)  /* Set this to default device for stdio, stderr */
 

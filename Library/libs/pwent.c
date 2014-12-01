@@ -1,7 +1,7 @@
 /*
  * pwent.c - This file is part of the libc-8086/pwd package for ELKS,
  * Copyright (C) 1995, 1996 Nat Friedman <ndf@linux.mit.edu>.
- * 
+ *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
  *  License as published by the Free Software Foundation; either
@@ -34,31 +34,28 @@
 static int pw_fd = -1;
 
 void
-setpwent(void)
-{
-  if (pw_fd!=-1)
-    close(pw_fd);
+setpwent(void) {
+    if (pw_fd!=-1)
+        close(pw_fd);
 
-  pw_fd=open("/etc/passwd", O_RDONLY);
+    pw_fd=open("/etc/passwd", O_RDONLY);
 }
 
 void
-endpwent(void)
-{
-  if (pw_fd!=-1)
-    close(pw_fd);
-  pw_fd=-1;
+endpwent(void) {
+    if (pw_fd!=-1)
+        close(pw_fd);
+    pw_fd=-1;
 }
 
 struct passwd *
-getpwent(void)
-{
-  if (pw_fd==-1)
-    setpwent();
-  if (pw_fd!=-1)
-    return __getpwent(pw_fd);
-  return NULL;  
+getpwent(void) {
+    if (pw_fd==-1)
+        setpwent();
+    if (pw_fd!=-1)
+        return __getpwent(pw_fd);
+    return NULL;
 }
 
 
- 
+

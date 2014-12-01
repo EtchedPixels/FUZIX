@@ -3,12 +3,15 @@ ASM = sdasz80
 AR = sdar
 LINKER = sdcc
 
+
+
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 #CC_OPT = -mz80 -c --opt-code-size --std-c89 --max-allocs-per-node 2000000 -I../../Library/include
-CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include
-#--oldralloc
+CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../Library/include 
+# --oldralloc
 ASM_OPT = -l -o -s
+
 LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
 BINMAN = ../../Library/tools/binman
 
@@ -16,6 +19,10 @@ BINMAN = ../../Library/tools/binman
 
 
 SRCS  = basename.c \
+	init.c \
+	ssh.c
+SRCS_NO  = \
+	ssh.c \
 	bd.c \
 	cal.c \
 	cat.c \
@@ -56,7 +63,6 @@ SRCS  = basename.c \
 	rm.c \
 	rmdir.c \
 	sleep.c \
-	ssh.c \
 	su.c \
 	sync.c \
 	termcap.c \
@@ -86,13 +92,15 @@ $(OBJS): $(SRCS)
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 %: %.rel
-	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $< $(LIBS) -o $@.ihx
-	makebin -s 65536 $@.ihx $@.tmp
-	$(BINMAN) $(PROGLOAD) $@.tmp $@.map $@
-	chmod +x $@
+	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $<  $(LIBS) -o $@.ihex
+	makebin -s 65536 $@.ihex $@.tmp
+	../../Library/tools/binman $@.tmp $@.map $@
+	#dd if=$@.bin of=$@ skip=49152 bs=1
+	hex2bin  $@.ihex
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp
+	rm -f $(OBJS) $(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihex *.bin
+
 
 rmbak:
 	rm -f *~ core

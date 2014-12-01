@@ -1,4 +1,5 @@
 # CODE 1
+
 CSRCS = devices.c main.c devtty.c
 # CODE 2
 CSRCS2 = devsd.c
@@ -14,7 +15,9 @@ OBJS  = $(COBJS) $(AOBJS) $(COBJS2)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(CSRCS:.c=.rst)
 JUNK += $(CSRCS2:.c=.lst) $(CSRCS2:.c=.asm) $(CSRCS2:.c=.sym) $(CSRCS2:.c=.rst)
-JUNK += $(ASRCS:.s=.lst) $(ASRCS:.s=.sym)  $(ASRCS:.s=.rst)
+
+JUNK += $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(ASRCS:.s=.rst)
+
 
 all:	$(OBJS)
 

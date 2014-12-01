@@ -6,7 +6,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int mkfifo(const char *path, mode_t mode)
-{
-   return mknod(path, mode | S_IFIFO, 0);
+int mkfifo(const char *path, mode_t mode) {
+    return mknod(path, mode | S_IFIFO, 0);
 }

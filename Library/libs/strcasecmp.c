@@ -6,18 +6,15 @@
 #include <string.h>
 #include <ctype.h>
 
-int strcasecmp(const char *s, const char *d)
-{
-   for(;;)
-   {
-      if( *s != *d )
-      {
-	 if( tolower(*s) != tolower(*d) )
-	    return *s - *d;
-      }
-      else if( *s == '\0' ) break;
-      s++; d++;
-   }
-   return 0;
+int strcasecmp(const char *s, const char *d) {
+    for(;;) {
+        if( *s != *d ) {
+            if( tolower(*s) != tolower(*d) )
+                return *s - *d;
+        } else if( *s == '\0' ) break;
+        s++;
+        d++;
+    }
+    return 0;
 }
 

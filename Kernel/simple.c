@@ -24,7 +24,7 @@ int pagemap_realloc(uint16_t size)
 {
   if (size + (uint16_t)PROGBASE >= (uint16_t) ramtop)
     return ENOMEM;
-  return 0;
+  else return 0;
 }
 
 uint16_t pagemap_mem_used(void)

@@ -19,7 +19,7 @@ void pagemap_init(void)
   pagemap_add(7);
   */
   unsigned char i;
-  for(i=128; i<192; i++){
+  for(i=128; i<(128+16); i++){
 	 pagemap_add(i);
   }
 }

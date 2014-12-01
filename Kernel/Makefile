@@ -1,4 +1,3 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
 #export TARGET= z80pack32
 #export CPU = z80
@@ -6,10 +5,13 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export CPU = 6809
 export TARGET = zx128
 export CPU = z80
-endif
+#export TARGET = dragon
+#export CPU = 6809
+#export TARGET = 6502test
+#export CPU = 6502
 
 export VERSION = "0.1"
-export SUBVERSION = "ac1"
+export SUBVERSION = "ac1-erkinalp0"
 
 UNAME_S := $(shell uname -s)
 

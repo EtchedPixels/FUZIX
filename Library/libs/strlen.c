@@ -7,19 +7,19 @@
 #include <string.h>
 
 /********************** Function strlen ************************************/
-size_t strlen(char *str) __naked
-{
-__asm
-        pop     bc
-        pop     hl
-        push    hl
-        push    bc
-        xor     a, a
-        ld      b, a
-        ld      c, a
-        cpir
-        ld      hl, #-1
-        sbc     hl, bc  ; C flag still cleared from xor above.
-        ret
-__endasm;
+size_t strlen(char *str) __naked {
+    __asm
+    pop     bc
+    pop     hl
+    push    hl
+    push    bc
+    xor     a, a
+    ld      b, a
+    ld      c, a
+    cpir
+    ld      hl, #-1
+    sbc     hl, bc  ;
+    C flag still cleared from xor above.
+    ret
+    __endasm;
 }

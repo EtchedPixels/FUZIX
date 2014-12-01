@@ -22,14 +22,14 @@
 #define DEAD_PROCESS 8
 
 struct utmp {
-	short	ut_type;		/* type of login */
-	int	ut_pid; 		/* pid of login-process */
-	char	ut_line[UT_LINESIZE];	/* devicename of tty -"/dev/", null-term */
-	char	ut_id[2];		/* abbrev. ttyname, as 01, s1 etc. */
-	time_t	ut_time;		/* login time */
-	char	ut_user[UT_NAMESIZE];	/* username, not null-term */
-	char	ut_host[UT_HOSTSIZE];	/* hostname for remote login... */
-	long	ut_addr;		/* IP addr of remote host */
+    short	ut_type;		/* type of login */
+    int	ut_pid; 		/* pid of login-process */
+    char	ut_line[UT_LINESIZE];	/* devicename of tty -"/dev/", null-term */
+    char	ut_id[2];		/* abbrev. ttyname, as 01, s1 etc. */
+    time_t	ut_time;		/* login time */
+    char	ut_user[UT_NAMESIZE];	/* username, not null-term */
+    char	ut_host[UT_HOSTSIZE];	/* hostname for remote login... */
+    long	ut_addr;		/* IP addr of remote host */
 };
 
 extern void		setutent __P((void));

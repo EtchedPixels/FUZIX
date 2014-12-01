@@ -1,7 +1,7 @@
 /*
  * grent.c - This file is part of the libc-8086/grp package for ELKS,
  * Copyright (C) 1995, 1996 Nat Friedman <ndf@linux.mit.edu>.
- * 
+ *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
  *  License as published by the Free Software Foundation; either
@@ -31,27 +31,24 @@
 static int grp_fd=-1;
 
 void
-setgrent(void)
-{
-  if (grp_fd!=-1)
-    close(grp_fd);
-  grp_fd=open("/etc/group", O_RDONLY);
+setgrent(void) {
+    if (grp_fd!=-1)
+        close(grp_fd);
+    grp_fd=open("/etc/group", O_RDONLY);
 }
 
 void
-endgrent(void)
-{
- if (grp_fd!=-1)
-   close(grp_fd);
- grp_fd=-1;
+endgrent(void) {
+    if (grp_fd!=-1)
+        close(grp_fd);
+    grp_fd=-1;
 }
 
 struct group *
-getgrent(void)
-{
-  if (grp_fd==-1)
-    return NULL;
-  return __getgrent(grp_fd);
+getgrent(void) {
+    if (grp_fd==-1)
+        return NULL;
+    return __getgrent(grp_fd);
 }
 
 

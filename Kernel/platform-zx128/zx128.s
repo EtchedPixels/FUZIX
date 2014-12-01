@@ -24,7 +24,11 @@
         .globl map_save
         .globl map_restore
 
-        .globl _kernel_flag
+
+	.globl _kernel_flag
+
+        .globl _fd_bankcmd
+
 
         ; exported debugging tools
         .globl _trap_monitor
@@ -194,4 +198,3 @@ outchar:
         ret
 _kernel_flag:
         .db 1
-

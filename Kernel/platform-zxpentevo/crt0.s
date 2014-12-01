@@ -55,9 +55,10 @@
 ; Interrupt vector tables
 
 ;       rst 0
-init:
+
+init:	jp .+3			; // *((char*)0) == 0xC3
         di
-        jp z, init_continue
+        jp init_continue
 rst0e:
 
 ;       rst 8
@@ -125,7 +126,7 @@ init_continue:
 
         ; Call the C main routine
         call _fuzix_main
-    
+
         ; main shouldn't return, but if it does...
         di
 stop:   halt

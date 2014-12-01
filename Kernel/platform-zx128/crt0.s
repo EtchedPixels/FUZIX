@@ -104,7 +104,7 @@ init_continue:
 
         ; Call the C main routine
         call _fuzix_main
-    
+
         ; main shouldn't return, but if it does...
         di
 stop:   halt

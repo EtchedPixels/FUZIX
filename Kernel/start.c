@@ -50,8 +50,13 @@ void create_init(void)
 	/* FIXME: big-endian only */
 	const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 
 	init_process = ptab_alloc();
+	kprintf("init PID is %d\r\n", init_process);
 	udata.u_ptab = init_process;
 	udata.u_top = 4096;	/* Plenty for the boot */
 	map_init();
@@ -69,9 +74,10 @@ void create_init(void)
 	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
 	/* Set up things to look like the process is calling _execve() */
-	udata.u_argn = PROGLOAD;
-	udata.u_argn1 = PROGLOAD + 0x7;	/* Arguments (just "/init") */
-	udata.u_argn2 = PROGLOAD + 0xb;	/* Environment (none) */
+	udata.u_argn = (uint16_t) PROGBASE;
+	udata.u_argn1 = (uint16_t)(PROGBASE + 0x07);	/* Arguments (just "/init") */
+	udata.u_argn2 = (uint16_t)(PROGBASE + 0x0b);	/* Environment (none) */
+
 }
 
 void fuzix_main(void)

@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-char *rindex(__const char *src, int chr)
-{
-  return strrchr(src, chr);
+char *rindex(__const char *src, int chr) {
+    return strrchr(src, chr);
 }
