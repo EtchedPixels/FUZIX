@@ -118,7 +118,7 @@ inoptr srch_dir(inoptr wd, register char *compname)
     register int nblocks;
     unsigned inum;
 
-    nblocks = (wd->c_node.i_size + 511) >> 9;
+    nblocks = (swizzle32(wd->c_node.i_size) + 511) >> 9;
 
     for (curblock=0; curblock < nblocks; ++curblock)
     {
@@ -127,7 +127,7 @@ inoptr srch_dir(inoptr wd, register char *compname)
         {
             if (namecomp(compname,buf[curentry].d_name))
             {
-                inum = buf[curentry&0x0f].d_ino;
+                inum = swizzle16(buf[curentry&0x0f].d_ino);
                 brelse((bufptr)buf);
                 return(i_open(wd->c_dev, inum));
             }
@@ -234,12 +234,12 @@ inoptr i_open( register int dev, register unsigned ino)
 found:
     if (new)
     {
-        if (nindex->c_node.i_nlink || nindex->c_node.i_mode & F_MASK)
+        if (nindex->c_node.i_nlink || swizzle16(nindex->c_node.i_mode) & F_MASK)
             goto badino;
     }
     else
     {
-        ifnot (nindex->c_node.i_nlink && nindex->c_node.i_mode & F_MASK)
+        ifnot (nindex->c_node.i_nlink && swizzle16(nindex->c_node.i_mode) & F_MASK)
             goto badino;
     }
 
@@ -304,7 +304,7 @@ int ch_link( inoptr wd, char *oldname, char *newname, inoptr nindex)
 #endif
 
     if (nindex)
-        curentry.d_ino = nindex->c_num;
+        curentry.d_ino = swizzle16(nindex->c_num);
     else
         curentry.d_ino = 0;
 
@@ -323,8 +323,9 @@ int ch_link( inoptr wd, char *oldname, char *newname, inoptr nindex)
     setftime(wd, A_TIME|M_TIME|C_TIME);     /* Sets c_dirty */
 
     /* Update file length to next block */
-    if (wd->c_node.i_size&511)
-        wd->c_node.i_size += 512 - (wd->c_node.i_size&511);
+    if (swizzle32(wd->c_node.i_size)&511)
+        wd->c_node.i_size =
+          swizzle32(wd->c_node.i_size) + 512 - (swizzle16(wd->c_node.i_size)&511);
 
     return (1);
 }
@@ -390,11 +391,11 @@ inoptr newfile( inoptr pino, char *name)
         goto nogood;
 
     /* BIG FIX:  user/group setting was missing  SN */		/*280*/
-    nindex->c_node.i_uid = udata.u_euid;			/*280*/
-    nindex->c_node.i_gid = udata.u_egid;			/*280*/
+    nindex->c_node.i_uid = swizzle16(udata.u_euid);		/*280*/
+    nindex->c_node.i_gid = swizzle16(udata.u_egid);		/*280*/
 
-    nindex->c_node.i_mode = F_REG;   /* For the time being */
-    nindex->c_node.i_nlink = 1;
+    nindex->c_node.i_mode = swizzle16(F_REG);   /* For the time being */
+    nindex->c_node.i_nlink = swizzle16(1);
     nindex->c_node.i_size = 0;
     for (j=0; j <20; j++)
         nindex->c_node.i_addr[j] = 0;
@@ -437,7 +438,7 @@ fsptr getdev( int devno)
 
 int baddev(fsptr dev)
 {
-    return (dev->s_mounted != SMOUNTED);
+    return (swizzle16(dev->s_mounted) != SMOUNTED);
 }
 
 
@@ -462,12 +463,16 @@ unsigned i_alloc(int devno)
 tryagain:
     if (dev->s_ninode)
     {
+        int i;
+
         ifnot (dev->s_tinode)
             goto corrupt;
-        ino = dev->s_inode[--dev->s_ninode];
-        if (ino < 2 || ino >= (dev->s_isize-2)*8)
+        i = swizzle16(dev->s_ninode);
+        ino = swizzle16(dev->s_inode[--i]);
+        dev->s_ninode = swizzle16(i);
+        if (ino < 2 || ino >= (swizzle16(dev->s_isize)-2)*8)
             goto corrupt;
-        --dev->s_tinode;
+        dev->s_tinode = swizzle16(swizzle16(dev->s_tinode)-1);
         return(ino);
     }
 
@@ -481,7 +486,7 @@ tryagain:
         for (j=0; j < 8; j++)
         {
             ifnot (buf[j].i_mode || buf[j].i_nlink)
-                dev->s_inode[k++] = 8*(blk-2) + j;
+                dev->s_inode[k++] = swizzle16(8*(blk-2) + j);
             if (k==50)
             {
                 brelse((bufptr)buf);
@@ -500,12 +505,12 @@ done:
         return(0);
     }
 
-    dev->s_ninode = k;
+    dev->s_ninode = swizzle16(k);
     goto tryagain;
 
 corrupt:
     printf("i_alloc: corrupt superblock\n");
-    dev->s_mounted = 1;
+    dev->s_mounted = swizzle16(1);
     udata.u_error = ENOSPC;
     return(0);
 }
@@ -523,12 +528,15 @@ void i_free( int devno, unsigned ino)
     if (baddev(dev = getdev(devno)))
         return;
 
-    if (ino < 2 || ino >= (dev->s_isize-2)*8)
+    if (ino < 2 || ino >= (swizzle16(dev->s_isize)-2)*8)
         panic("i_free: bad ino");
 
-    ++dev->s_tinode;
-    if (dev->s_ninode < 50)
-        dev->s_inode[dev->s_ninode++] = ino;
+    dev->s_tinode = swizzle16(swizzle16(dev->s_tinode) + 1);
+    if (swizzle16(dev->s_ninode) < 50) {
+        int i = swizzle16(dev->s_ninode);
+        dev->s_inode[i++] = swizzle16(ino);
+        dev->s_ninode = swizzle16(i);
+   }
 }
 
 
@@ -542,20 +550,23 @@ blkno_t blk_alloc( int devno )
     register blkno_t newno;
     blkno_t *buf; /*, *bread(); -- HP */
     register int j;
+    int i;
 
     if (baddev(dev = getdev(devno)))
         goto corrupt2;
 
-    if (dev->s_nfree <= 0 || dev->s_nfree > 50)
+    if (swizzle16(dev->s_nfree) <= 0 || swizzle16(dev->s_nfree) > 50)
         goto corrupt;
 
-    newno = dev->s_free[--dev->s_nfree];
+    i = swizzle16(dev->s_nfree);
+    newno = swizzle16(dev->s_free[--i]);
+    dev->s_nfree=swizzle16(i);
     ifnot (newno)
     {
         if (dev->s_tfree != 0)
             goto corrupt;
         udata.u_error = ENOSPC;
-        ++dev->s_nfree;
+        dev->s_nfree=swizzle16(swizzle16(dev->s_nfree)+1);
         return(0);
     }
 
@@ -576,7 +587,7 @@ blkno_t blk_alloc( int devno )
 
     ifnot (dev->s_tfree)
         goto corrupt;
-    --dev->s_tfree;
+    dev->s_tfree=swizzle16(swizzle16(dev->s_tfree)-1);
 
     /* Zero out the new block */
     buf = (blkno_t *)bread(devno, newno, 2);
@@ -586,7 +597,7 @@ blkno_t blk_alloc( int devno )
 
 corrupt:
     printf("blk_alloc: corrupt\n");
-    dev->s_mounted = 1;
+    dev->s_mounted = swizzle16(1);
 corrupt2:
     udata.u_error = ENOSPC;
     return(0);
@@ -600,6 +611,7 @@ void blk_free( int devno, blkno_t blk)
 {
     register fsptr dev;
     register char *buf;
+    int b;
 
     ifnot (blk)
         return;
@@ -617,8 +629,10 @@ void blk_free( int devno, blkno_t blk)
         dev->s_nfree = 0;
     }
 
-    ++dev->s_tfree;
-    dev->s_free[(dev->s_nfree)++] = blk;
+    dev->s_tfree = swizzle16(swizzle16(dev->s_tfree)+1);
+    b = swizzle16(dev->s_nfree);
+    dev->s_free[b++] = swizzle16(blk);
+    dev->s_nfree=swizzle16(b);
 }
 
 
@@ -696,6 +710,8 @@ void i_ref( inoptr ino)
 
 void i_deref(inoptr ino)
 {
+    unsigned int m;
+
     magic(ino);
 
     ifnot (ino->c_refs)
@@ -704,15 +720,17 @@ void i_deref(inoptr ino)
     /* If the inode has no links and no refs, it must have
        its blocks freed. */
 
-    ifnot (--ino->c_refs || ino->c_node.i_nlink)
+    ifnot (--ino->c_refs || ino->c_node.i_nlink) {
 /*
  SN  (mcy)
 */
-        if (((ino->c_node.i_mode & F_MASK) == F_REG) ||
-            ((ino->c_node.i_mode & F_MASK) == F_DIR) ||
-            ((ino->c_node.i_mode & F_MASK) == F_PIPE))
-                f_trunc(ino);
 
+     m = swizzle16(ino->c_node.i_mode);
+        if (((m & F_MASK) == F_REG) ||
+            ((m & F_MASK) == F_DIR) ||
+            ((m & F_MASK) == F_PIPE))
+                f_trunc(ino);
+    }
     /* If the inode was modified, we must write it to disk. */
     if (!(ino->c_refs) && ino->c_dirty)
     {
@@ -749,14 +767,14 @@ void wr_inode(inoptr ino)
 /* isdevice(ino) returns true if ino points to a device */
 int isdevice(inoptr ino)
 {
-    return (ino->c_node.i_mode & 020000);
+    return (swizzle16(ino->c_node.i_mode) & 020000);
 }
 
 
 /* This returns the device number of an inode representing a device */
 int devnum(inoptr ino)
 {
-    return (*(ino->c_node.i_addr));
+    return (swizzle16(*(ino->c_node.i_addr)));
 }
 
 
@@ -772,14 +790,14 @@ void f_trunc(inoptr ino)
     dev = ino->c_dev;
 
     /* First deallocate the double indirect blocks */
-    freeblk(dev, ino->c_node.i_addr[19], 2);
+    freeblk(dev, swizzle16(ino->c_node.i_addr[19]), 2);
 
     /* Also deallocate the indirect blocks */
-    freeblk(dev, ino->c_node.i_addr[18], 1);
+    freeblk(dev, swizzle16(ino->c_node.i_addr[18]), 1);
 
     /* Finally, free the direct blocks */
     for (j=17; j >= 0; --j)
-        freeblk(dev, ino->c_node.i_addr[j], 0);
+        freeblk(dev, swizzle16(ino->c_node.i_addr[j]), 0);
 
     bzero((char *)ino->c_node.i_addr, sizeof(ino->c_node.i_addr));
 
@@ -801,7 +819,7 @@ void freeblk(int dev, blkno_t blk, int level)
     {
         buf = (blkno_t *)bread(dev, blk, 0);
         for (j=255; j >= 0; --j)
-            freeblk(dev, buf[j], level-1);
+            freeblk(dev, swizzle16(buf[j]), level-1);
         brelse((bufptr)buf);
     }
 
@@ -834,11 +852,11 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
          * blocks 0..17 are direct blocks
          */
         if(bn < 18) {
-                nb = ip->c_node.i_addr[bn];
+                nb = swizzle16(ip->c_node.i_addr[bn]);
                 if(nb == 0) {
                         if(rwflg || (nb = blk_alloc(dev))==0)
                                 return(NULLBLK);
-                        ip->c_node.i_addr[bn] = nb;
+                        ip->c_node.i_addr[bn] = swizzle16(nb);
                         ip->c_dirty = 1;
                 }
                 return(nb);
@@ -866,7 +884,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
         {
                 if(rwflg || !(nb = blk_alloc(dev)))
                         return(NULLBLK);
-                ip->c_node.i_addr[20-j] = nb;
+                ip->c_node.i_addr[20-j] = swizzle16(nb);
                 ip->c_dirty = 1;
         }
 
@@ -882,7 +900,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
                 }
                 ******/
                 i = (bn>>sh) & 0xff;
-                if ((nb = ((blkno_t *)bp)[i]))
+                if ((swizzle16(nb) == ((blkno_t *)bp)[i]))
                     brelse(bp);
                 else
                 {
@@ -890,7 +908,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
                                 brelse(bp);
                                 return(NULLBLK);
                         }
-                        ((blkno_t *)bp)[i] = nb;
+                        ((blkno_t *)bp)[i] = swizzle16(nb);
                         bawrite(bp);
                 }
                 sh -= 8;
@@ -912,7 +930,7 @@ void validblk(int dev, blkno_t num)
     if (devptr->s_mounted == 0)
         panic("validblk: not mounted");
 
-    if (num < devptr->s_isize || num >= devptr->s_fsize)
+    if (num < swizzle16(devptr->s_isize) || num >= swizzle16(devptr->s_fsize))
         panic("validblk: invalid blk");
 }
 
@@ -961,10 +979,10 @@ int getperm(inoptr ino)
     if (super())
         return(07);
 
-    mode = ino->c_node.i_mode;
-    if (ino->c_node.i_uid == udata.u_euid)
+    mode = swizzle16(ino->c_node.i_mode);
+    if (swizzle16(ino->c_node.i_uid) == udata.u_euid)
         mode >>= 6;
-    else if (ino->c_node.i_gid == udata.u_egid)
+    else if (swizzle16(ino->c_node.i_gid) == udata.u_egid)
         mode >>= 3;
 
     return(mode & 07);
@@ -988,7 +1006,7 @@ void setftime(inoptr ino, int flag)
 
 int getmode(inoptr ino)
 {
-    return( ino->c_node.i_mode & F_MASK);
+    return( swizzle16(ino->c_node.i_mode) & F_MASK);
 }
 
 
@@ -1006,8 +1024,10 @@ int fmount(int dev, inoptr ino)
     brelse((bufptr)buf);
     
     /* See if there really is a filesystem on the device */
-    if (fp->s_mounted != SMOUNTED ||
-         fp->s_isize >= fp->s_fsize)
+    if (fp->s_mounted == SMOUNTED_WRONGENDIAN)
+     swizzling = 1;
+    if (swizzle16(fp->s_mounted) != SMOUNTED ||
+         swizzle16(fp->s_isize) >= swizzle16(fp->s_fsize))
         return (-1);
 
     fp->s_mntpt = ino;

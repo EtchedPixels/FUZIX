@@ -1,15 +1,10 @@
-	        ; Ordering of segments for the linker.
-	        ; WRS: Note we list all our segments here, even though
-	        ; we don't use them all, because their ordering is set
-	        ; when they are first seen.	
-
         	; imported symbols
         	.globl _fuzix_main
 	        .globl init_early
 	        .globl init_hardware
 	        .globl kstack_top
 
-	        ; startup code @0
+	        ; startup code
 	        .area .start
 
 start:

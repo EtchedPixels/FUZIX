@@ -4,3 +4,5 @@ U_DATA                      .equ 0xF000       ; (this is struct u_data from kern
 U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
 U_DATA_STASH		    .equ 0xED00	      ; ED00-EFFF
+
+NMOS_Z80		    .equ 0

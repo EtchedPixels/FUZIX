@@ -27,7 +27,7 @@ bool timer_expired(timer_t timer_val)
 void rdtime(time_t *tloc)
 {
         irqflags_t irq = di();
-        *tloc = tod;
+        memcpy(tloc, &tod, sizeof(tod));
 	irqrestore(irq);
 }
 
@@ -42,7 +42,7 @@ void rdtime32(uint32_t *tloc)
 void wrtime(time_t *tloc)
 {
         irqflags_t irq = di();
-        tod = *tloc;
+        memcpy(&tod, tloc, sizeof(tod));
 #ifdef CONFIG_RTC
 	machine_set_clock(tloc);
 #endif

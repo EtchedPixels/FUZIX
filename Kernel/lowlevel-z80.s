@@ -430,29 +430,6 @@ nmi_handler:
 
 
 	.area _COMMONMEM
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-		; IRQ helpers, in common as they may get used by common C
-		; code (and are tiny)
-
-_di:		ld a, i
-		push af
-		pop hl
-		di
-		ret
-
-_irqrestore:	pop hl		; sdcc needs to get register arg passing
-		pop af		; so badly
-		jp po, was_di
-		ei
-		jr irqres_out
-was_di:		di
-irqres_out:	push af
-		jp (hl)
-
-
-
 
 ; outstring: Print the string at (HL) until 0 byte is found
 ; destroys: AF HL
@@ -530,3 +507,12 @@ numeral:add a, #0x30 ; start at '0' (0x30='0')
         call outchar
         ret
 
+;
+;	Pull in the CPU specific workarounds
+;
+
+	.if NMOS_Z80
+	.include "lowlevel-z80-nmos.s"
+	.else
+	.include "lowlevel-z80-cmos.s"
+	.endif

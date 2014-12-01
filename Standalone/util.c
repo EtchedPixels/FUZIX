@@ -13,6 +13,8 @@ int dev_fd;
 int dev_offset;
 struct u_data udata;
 
+extern int swizzling;
+
 int fd_open(char *name)
 {
     char *namecopy, *sd;
@@ -42,4 +44,24 @@ void panic(char *s)
 {
     fprintf(stderr, "panic: %s\n", s);
     exit(1);
+}
+
+uint16_t swizzle16(uint32_t v)
+{
+  if (v & 0xFFFF0000UL) {
+    fprintf(stderr, "swizzle16 given a 32bit input\n");
+    exit(1);
+  }
+  if (swizzling)
+    return (v & 0xFF) << 8 | ((v & 0xFF00) >> 8);
+  else return v;
+}
+
+uint32_t swizzle32(uint32_t v)
+{
+  if (!swizzling)
+    return v;
+
+  return (v & 0xFF) << 24 | (v & 0xFF00) << 8 | (v & 0xFF0000) >> 8 |
+    (v & 0xFF000000) >> 24;
 }

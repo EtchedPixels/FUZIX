@@ -5,6 +5,7 @@
 #define ROOTDEV 0
 #define ROOTINODE 1
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */
+#define SMOUNTED_WRONGENDIAN 50737   /* byteflipped */
 #define CMAGIC   24721
 #define UFTSIZE 10
 #define NSIGS 16
@@ -37,8 +38,11 @@ void xfs_init();
 void panic(char *s);
 void bufsync (void);
 char *zerobuf (void);
-int super();
+int super(void);
 
+extern uint16_t swizzle16(uint32_t v);
+extern uint32_t swizzle32(uint32_t v);
+extern int swizzling;
 
 typedef struct s_queue {
     char *q_base;    /* Pointer to data */

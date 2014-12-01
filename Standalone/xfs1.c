@@ -196,7 +196,7 @@ int _creat(char *name, int16_t mode)
         if (parent && (ino = newfile(parent,name)))
             /* Parent was derefed in newfile */
         {
-            ino->c_node.i_mode = (F_REG | (mode & MODE_MASK & ~udata.u_mask));
+            ino->c_node.i_mode = swizzle16(F_REG | (mode & MODE_MASK & ~udata.u_mask));
             setftime(ino, A_TIME|M_TIME|C_TIME);
             /* The rest of the inode is initialized in newfile() */
             wr_inode(ino);
@@ -266,7 +266,7 @@ int _link( char *name1, char *name2)
         goto nogood;
 
     /* Update the link count. */
-    ++ino->c_node.i_nlink;
+    ino->c_node.i_nlink = swizzle16(swizzle16(ino->c_node.i_nlink)+1);
     wr_inode(ino);
     setftime(ino, C_TIME);
 
@@ -312,11 +312,12 @@ int _unlink(char *path)
 
     /* Decrease the link count of the inode */
 
-    ifnot (ino->c_node.i_nlink--)
+    if (ino->c_node.i_nlink == 0)
     {
-        ino->c_node.i_nlink += 2;
+        ino->c_node.i_nlink = swizzle16(swizzle16(ino->c_node.i_nlink)+2);
         printf("_unlink: bad nlink\n");
-    }
+    } else
+        ino->c_node.i_nlink = swizzle16(swizzle16(ino->c_node.i_nlink)-1);
     setftime(ino, C_TIME);
     i_deref(pino);
     i_deref(ino);
@@ -397,5 +398,5 @@ inoptr rwsetup( int rwflag, int d, char *buf, int nbytes)
 
 int psize(inoptr ino)
 {
-    return (ino->c_node.i_size);
+    return swizzle32(ino->c_node.i_size);
 }
