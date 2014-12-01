@@ -32,72 +32,66 @@ Note that a pointer to a buffer structure is the same as a pointer to
 the data.  This is very important.
 **********************************************************************/
 
-uint16_t bufclock = 0;         /* Time-stamp counter for LRU */
+uint16_t bufclock = 0;		/* Time-stamp counter for LRU */
 struct blkbuf bufpool[NBUFS];
 
 char *bread(int dev, blkno_t blk, int rewrite)
 {
-    register bufptr bp;
+	register bufptr bp;
 
 /*printf("Reading block %d\n", blk);*/
 
-    bp = bfind (dev, blk);
-    if (bp)
-    {
-        if (bp->bf_busy)
-            panic ("want busy block");
-        goto done;
-    }
-    bp = freebuf();
-    bp->bf_dev = dev;
-    bp->bf_blk = blk;
+	bp = bfind(dev, blk);
+	if (bp) {
+		if (bp->bf_busy)
+			panic("want busy block");
+		goto done;
+	}
+	bp = freebuf();
+	bp->bf_dev = dev;
+	bp->bf_blk = blk;
 
-    /* If rewrite is set, we are about to write over the entire block,
-       so we don't need the previous contents */
+	/* If rewrite is set, we are about to write over the entire block,
+	   so we don't need the previous contents */
 
-    ifnot (rewrite)
-        if (bdread (bp) == -1)
-        {
-            udata.u_error = EIO;
-            return 0;
-        }
-
-/*--    if (rewrite == 2)--*/
-/*--        bzero (bp->bf_data, 512);--*/
+	ifnot(rewrite)
+	    if (bdread(bp) == -1) {
+		udata.u_error = EIO;
+		return 0;
+	}
 
 done:
-    bp->bf_busy = 1;
-    bp->bf_time = ++bufclock;  /* Time stamp it */
-    return (bp->bf_data);
+	bp->bf_busy = 1;
+	bp->bf_time = ++bufclock;	/* Time stamp it */
+	return (bp->bf_data);
 }
 
 
 void brelse(bufptr bp)
 {
 /*printf("Releasing block %d (0)\n", bp->bf_blk);*/
-    bfree (bp, 0);
+	bfree(bp, 0);
 }
 
 void bawrite(bufptr bp)
 {
 /*printf("Releasing block %d (1)\n", bp->bf_blk);*/
-    bfree (bp, 1);
+	bfree(bp, 1);
 }
 
 int bfree(bufptr bp, int dirty)
 {
 /*printf("Releasing block %d (%d)\n", bp->bf_blk, dirty);*/
-    bp->bf_dirty |= dirty;
-    bp->bf_busy = 0;
+	bp->bf_dirty |= dirty;
+	bp->bf_busy = 0;
 
-    if (dirty == 2)   /* Extra dirty */
-    {
-        if (bdwrite (bp) == -1)
-            udata.u_error = EIO;
-        bp->bf_dirty = 0;
-        return (-1);
-    }
-    return (0);
+	if (dirty == 2) {	/* Extra dirty */
+		if (bdwrite(bp) == -1)
+			udata.u_error = EIO;
+		bp->bf_dirty = 0;
+		return (-1);
+	}
+	return (0);
 }
 
 
@@ -105,113 +99,106 @@ int bfree(bufptr bp, int dirty)
  * garbage contents.  It is essentially a malloc for the kernel.
  * Free it with brelse()!
  */
-char *
-tmpbuf ()
+char *tmpbuf()
 {
-    bufptr bp;
-    bufptr freebuf();
+	bufptr bp;
+	bufptr freebuf();
 
 /*printf("Allocating temp block\n");*/
-    bp = freebuf();
-    bp->bf_dev = -1;
-    bp->bf_busy = 1;
-    bp->bf_time = ++bufclock;   /* Time stamp it */
-    return (bp->bf_data);
+	bp = freebuf();
+	bp->bf_dev = -1;
+	bp->bf_busy = 1;
+	bp->bf_time = ++bufclock;	/* Time stamp it */
+	return (bp->bf_data);
 }
 
 
-char *zerobuf (void)
+char *zerobuf(void)
 {
-    char *b;
-    char *tmpbuf();
+	char *b;
+	char *tmpbuf();
 
-    b = tmpbuf();
-    bzero (b, 512);
-    return (b);
+	b = tmpbuf();
+	bzero(b, 512);
+	return (b);
 }
 
 
-void bufsync (void)
+void bufsync(void)
 {
-    register bufptr bp;
+	register bufptr bp;
 
-    for (bp=bufpool; bp < bufpool+NBUFS; ++bp)
-    {
-        if (bp->bf_dev != -1 && bp->bf_dirty)
-        {
-            bdwrite (bp);
-            if (!bp->bf_busy)
-                bp->bf_dirty = 0;
-        }
-    }
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bp->bf_dev != -1 && bp->bf_dirty) {
+			bdwrite(bp);
+			if (!bp->bf_busy)
+				bp->bf_dirty = 0;
+		}
+	}
 }
 
 #ifndef ASM_BUFIO
 
-bufptr bfind (int dev, blkno_t blk)
+bufptr bfind(int dev, blkno_t blk)
 {
-    register bufptr bp;
+	register bufptr bp;
 
-    for (bp=bufpool; bp < bufpool+NBUFS; ++bp)
-    {
-        if (bp->bf_dev == dev && bp->bf_blk == blk)
-            return (bp);
-    }
-    return (NULL);
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bp->bf_dev == dev && bp->bf_blk == blk)
+			return (bp);
+	}
+	return (NULL);
 }
 
 
 bufptr freebuf(void)
 {
-    register bufptr bp;
-    register bufptr oldest;
-    register int oldtime;
+	register bufptr bp;
+	register bufptr oldest;
+	register int oldtime;
 
-    /* Try to find a non-busy buffer and write out the data if it is dirty */
-    oldest = NULL;
-    oldtime = 0;
-    for (bp=bufpool; bp < bufpool+NBUFS; ++bp)
-    {
-        if (bufclock - bp->bf_time >= oldtime && !bp->bf_busy)
-        {
-            oldest = bp;
-            oldtime = bufclock - bp->bf_time;
-        }
-    }
-    ifnot (oldest)
-        panic ("no free buffers");
+	/* Try to find a non-busy buffer and write out the data if it is dirty */
+	oldest = NULL;
+	oldtime = 0;
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bufclock - bp->bf_time >= oldtime && !bp->bf_busy) {
+			oldest = bp;
+			oldtime = bufclock - bp->bf_time;
+		}
+	}
+	ifnot(oldest)
+	    panic("no free buffers");
 
-    if (oldest->bf_dirty)
-    {
-        if (bdwrite (oldest) == -1)
-            udata.u_error = EIO;
-        oldest->bf_dirty = 0;
-    }
-    return (oldest);
+	if (oldest->bf_dirty) {
+		if (bdwrite(oldest) == -1)
+			udata.u_error = EIO;
+		oldest->bf_dirty = 0;
+	}
+	return (oldest);
 }
 
 #endif
-        
 
-void bufinit (void)
+
+void bufinit(void)
 {
-    register bufptr bp;
+	register bufptr bp;
 
-    for (bp=bufpool; bp < bufpool+NBUFS; ++bp)
-    {
-        bp->bf_dev = -1;
-    }
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		bp->bf_dev = -1;
+	}
 }
 
 
-void bufdump (void)
+void bufdump(void)
 {
-    register bufptr j;
+	register bufptr j;
 
-    printf ("\ndev\tblock\tdirty\tbusy\ttime clock %d\n", bufclock);
-    for (j=bufpool; j < bufpool+NBUFS; ++j)
-        printf ("%d\t%u\t%d\t%d\t%u\n",
-            j->bf_dev,j->bf_blk,j->bf_dirty,j->bf_busy,j->bf_time);
+	printf("\ndev\tblock\tdirty\tbusy\ttime clock %d\n", bufclock);
+	for (j = bufpool; j < bufpool + NBUFS; ++j)
+		printf("%d\t%u\t%d\t%d\t%u\n",
+		       j->bf_dev, j->bf_blk, j->bf_dirty, j->bf_busy,
+		       j->bf_time);
 }
 
 
@@ -226,28 +213,28 @@ and are handed a device number.  Udata.u_base, count, and offset have
 the rest of the data.
 **********************************************************************/
 
-int bdread (bufptr bp)
+int bdread(bufptr bp)
 {
 //    printf("bdread(fd=%d, block %d)\n", dev_fd, bp->bf_blk);
 
-    udata.u_buf = bp;
-    if (lseek(dev_fd, dev_offset + (((int)bp->bf_blk) * 512), SEEK_SET) == -1)
-        perror("lseek");
-    if(read(dev_fd, bp->bf_data, 512) != 512)
-        panic("read() failed");
+	udata.u_buf = bp;
+	if (lseek
+	    (dev_fd, dev_offset + (((int) bp->bf_blk) * 512),
+	     SEEK_SET) == -1)
+		perror("lseek");
+	if (read(dev_fd, bp->bf_data, 512) != 512)
+		panic("read() failed");
 
-    return 0;
+	return 0;
 }
 
 
-int bdwrite (bufptr bp)
+int bdwrite(bufptr bp)
 {
-    udata.u_buf = bp;
+	udata.u_buf = bp;
 
-    lseek(dev_fd, dev_offset + (((int)bp->bf_blk) * 512), SEEK_SET);
-    if(write(dev_fd, bp->bf_data, 512) != 512)
-        panic("write() failed");
-    return 0;
+	lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512), SEEK_SET);
+	if (write(dev_fd, bp->bf_data, 512) != 512)
+		panic("write() failed");
+	return 0;
 }
-
-
