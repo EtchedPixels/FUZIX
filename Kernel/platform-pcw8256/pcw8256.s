@@ -127,6 +127,8 @@ init_hardware:
 
             .area _COMMONMEM
 
+_kernel_flag:
+	    .db 1
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0

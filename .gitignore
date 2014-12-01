@@ -1,5 +1,5 @@
 # SDCC stuff
-# *.lnk
+*.bak
 *.lst
 *.map
 *.mem

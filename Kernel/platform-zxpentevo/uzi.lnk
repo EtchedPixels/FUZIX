@@ -8,7 +8,8 @@ platform-zxpentevo/commonmem.rel
 platform-zxpentevo/zxpentevo.rel
 platform-zxpentevo/zxvideo.rel
 platform-zxpentevo/main.rel
-platform-zxpentevo/devfd.rel
+platform-zxpentevo/devsd.rel
+platform-zxpentevo/devsd_hw.rel
 start.rel
 version.rel
 lowlevel-z80.rel
