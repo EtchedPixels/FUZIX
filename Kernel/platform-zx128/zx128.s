@@ -109,6 +109,7 @@ _program_vectors:
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
+
 switch_bank:
         di                  ; TODO: we need to call di() instead
         ld (current_map), a
@@ -119,6 +120,11 @@ switch_bank:
         ld bc, #0x7ffd
         ld a, (current_map)
         out (c), a
+        and #0xff
+        jr z, sb_restore
+        ld (current_process_map), a
+sb_restore:
+        out (c), a
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)
@@ -128,8 +134,19 @@ switch_bank:
         ret
 
 map_kernel:
+
         ld (place_for_a), a
 map_kernel_nosavea:          ; to avoid double reg A saving
+        xor a
+        jr switch_bank
+
+map_process:
+        ld (current_map), a
+        ld bc, #0x7ffd
+        out (c), a
+        pop af
+        ret
+map_kernel_nopush:          ; to avoid double af pushing
         xor a
         jr switch_bank
 
@@ -137,7 +154,7 @@ map_process:
         ld (place_for_a), a
         ld a, h
         or l
-        jr z, map_kernel_nosavea
+        jr z, map_kernel_nopush
         ld a, (hl)
         jr switch_bank
 
@@ -164,6 +181,10 @@ current_map:                ; place to store current page number. Is needed
 map_store:
         .db 0
 
+
+current_process_map:
+        .db 0
+
 place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
         .db 0               ; Here we store A when needed
 place_for_b:                ; And BC - here
@@ -176,6 +197,4 @@ outchar:
         out (#0x15), A
         ret
 _kernel_flag:
-
-	.db 1
-
+        .db 1

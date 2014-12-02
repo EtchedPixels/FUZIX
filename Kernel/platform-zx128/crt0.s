@@ -7,8 +7,8 @@
         ; we don't use them all, because their ordering is set
         ; when they are first seen.
         .area _CODE
-        .area _COMMONMEM
         .area _DATA
+        .area _COMMONMEM
         .area _CODE2
         .area _VIDEO
         .area _DISCARD      ; not discarded yet
@@ -92,12 +92,6 @@ init_continue:
         ; Configure memory map
         call init_early
 
-
-
-        ; our COMMONMEM is located in main code-data blob, so we
-        ; do not need to move it manually
-
-
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
@@ -110,9 +104,10 @@ init_continue:
 
         ; Call the C main routine
         call _fuzix_main
-    
+
         ; main shouldn't return, but if it does...
         di
 stop:   halt
         jr stop
+
 

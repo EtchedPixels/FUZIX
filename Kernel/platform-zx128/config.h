@@ -51,6 +51,7 @@
 
 
 #define BOOT_TTY (1)  /* Set this to default device for stdio, stderr */
+
                           /* In this case, the default is the first TTY device */
 
 /* We need a tidier way to do this from the loader */

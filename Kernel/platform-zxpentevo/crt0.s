@@ -55,6 +55,7 @@
 ; Interrupt vector tables
 
 ;       rst 0
+
 init:	jp .+3			; // *((char*)0) == 0xC3
         di
         jp init_continue
@@ -108,10 +109,10 @@ init_continue:
         call init_early
 
 	; move the common memory where it belongs
-;        ld hl, #s__INITIALIZER
-;        ld de, #s__COMMONMEM
-;        ld bc, #l__COMMONMEM
-;        ldir
+        ld hl, #s__INITIALIZER
+        ld de, #s__COMMONMEM
+        ld bc, #l__COMMONMEM
+        ldir
 
 	; then zero the data area
 	ld hl, #s__DATA
@@ -125,7 +126,7 @@ init_continue:
 
         ; Call the C main routine
         call _fuzix_main
-    
+
         ; main shouldn't return, but if it does...
         di
 stop:   halt

@@ -1,8 +1,12 @@
 
 #export TARGET= z80pack32
 #export CPU = z80
-export TARGET = dragon
-export CPU = 6809
+#export TARGET = dragon
+#export CPU = 6809
+export TARGET = zx128
+export CPU = z80
+#export TARGET = dragon
+#export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 

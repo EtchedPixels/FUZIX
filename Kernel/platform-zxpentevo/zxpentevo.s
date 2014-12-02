@@ -81,6 +81,7 @@ init_hardware:
         ld (_ramsize), hl
 
 	; 64K for kernel
+
 	ld hl, #1088 - 64
         ld (_procmem), hl
 
@@ -88,7 +89,7 @@ init_hardware:
         ; clear
         ld hl, #0x4000
         ld de, #0x4001
-        ld bc, #0x1800
+        ld bc, #0x1800 - 1
         xor a
         ld (hl), a
         ldir

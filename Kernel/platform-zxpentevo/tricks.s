@@ -2,9 +2,7 @@
 ; TODO: this code is copied from z80pack. Need to rewrite for zx128.
 
         .module tricks
-
 	.include "pages.def"
-
 
         .globl _ptab_alloc
         .globl _newproc
@@ -98,6 +96,7 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
+
 ;	xor a
 ;	ld bc, #0x7ffd
 ;	out (c), a
@@ -113,6 +112,7 @@ _switchin:
 	cpl		; inverse page number!
 	out (c), a      ; BC still contains win3 port
 
+
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
 
@@ -123,10 +123,9 @@ _switchin:
 	ldir
 	exx
 
-;	xor a
-	ld a,#0xFF-kernel_page ; inverse page number!
-	out (c), a      ; and again win3 port in BC
-        
+	xor a
+	out (21),a
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
@@ -228,10 +227,12 @@ _dofork:
 
 	ld hl, (U_DATA__U_PAGE)	; parent memory
         ld a, l
-        
+
+
 ;	ld bc, #0x7ffd
 ;	out (c), a		; Switch context to parent
 	setmw3a
+
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -246,6 +247,7 @@ _dofork:
 ;	out (c), a
 	setmw3 #kernel_page
 
+
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
         pop bc
@@ -256,7 +258,7 @@ _dofork:
         ld  hl, (fork_proc_ptr)
         push hl
         call _newproc
-        pop bc 
+        pop bc
 
         ; runticks = 0;
         ld hl, #0

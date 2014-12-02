@@ -50,7 +50,10 @@ void create_init(void)
 	/* FIXME: big-endian only */
 	const char arg[] =
 	    { '/', 'i', 'n', 'i', 't', 0, 0, (uint16_t)(PROGBASE + 1) & 0xFF, (uint16_t)(PROGBASE + 1) >> 8, 0, 0, 0, 0 };
+<<<<<<< HEAD
+=======
 
+>>>>>>> master
 
 	init_process = ptab_alloc();
 	kprintf("init PID is %d\r\n", init_process);

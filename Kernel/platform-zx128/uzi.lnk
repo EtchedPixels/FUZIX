@@ -1,7 +1,8 @@
 -mwxuy
 -i uzi.ihx
 -b _CODE=0x0000
--b _COMMONMEM=0x5B00
+-b _DATA=0x5B00
+-b _UDATA=0xFC00
 -l z80
 platform-zx128/crt0.rel
 platform-zx128/commonmem.rel
@@ -35,4 +36,5 @@ platform-zx128/bankzx128.rel
 swap.rel
 devsys.rel
 platform-zx128/devtty.rel
+platform-zx128/udata.rel
 -e
