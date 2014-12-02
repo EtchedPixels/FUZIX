@@ -13,14 +13,14 @@
 
 /* Returned by `div' */
 typedef struct {
-	int	quot;		/* Quotient */
-	int	rem;		/* Remainder */
+    int	quot;		/* Quotient */
+    int	rem;		/* Remainder */
 } div_t;
 
 /* Returned by `ldiv' */
 typedef struct {
-	long int quot;		/* Quotient */
-	long int rem;		/* Remainder */
+    long int quot;		/* Quotient */
+    long int rem;		/* Remainder */
 } ldiv_t;
 
 /* For program termination */

@@ -27,6 +27,10 @@
 
 		.area _CODE
 
+
+; not need for pentevo
+;		.ds 0x100
+
 ; start at 0x100
 start:		jp start2
 		.db 'F'

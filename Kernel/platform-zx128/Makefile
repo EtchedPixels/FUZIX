@@ -1,10 +1,11 @@
+
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
 CSRCS2 = bankzx128.c
 
 ASRCS = crt0.s zx128.s zxvideo.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s udata.s
 
 COBJS = $(CSRCS:.c=.rel)
 COBJS2	 = $(CSRCS2:.c=.rel)

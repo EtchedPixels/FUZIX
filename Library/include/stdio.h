@@ -41,16 +41,16 @@ typedef off_t fpos_t;
 /* when you add or change fields here, be sure to change the initialization
  * in stdio_init and fopen */
 struct __stdio_file {
-	uchar	*bufpos;	/* the next byte to write to or read from */
-	uchar	*bufread;	/* the end of data returned by last read() */
-	uchar	*bufwrite;	/* highest address writable by macro */
-	uchar	*bufstart;	/* the start of the buffer */
-	uchar	*bufend;	/* the end of the buffer; ie the byte after
+    uchar	*bufpos;	/* the next byte to write to or read from */
+    uchar	*bufread;	/* the end of data returned by last read() */
+    uchar	*bufwrite;	/* highest address writable by macro */
+    uchar	*bufstart;	/* the start of the buffer */
+    uchar	*bufend;	/* the end of the buffer; ie the byte after
 				   the last malloc()ed byte */
-	int	fd;		/* the file descriptor associated with the stream */
-	int	mode;
-	char	unbuf[8];	/* The buffer for 'unbuffered' streams */
-	struct __stdio_file * next;
+    int	fd;		/* the file descriptor associated with the stream */
+    int	mode;
+    char	unbuf[8];	/* The buffer for 'unbuffered' streams */
+    struct __stdio_file * next;
 };
 
 #define EOF	(-1)

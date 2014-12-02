@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-long labs(long arg1)
-{
-   return arg1>0?arg1:-arg1;
+long labs(long arg1) {
+    return arg1>0?arg1:-arg1;
 }

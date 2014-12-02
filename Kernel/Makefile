@@ -1,13 +1,17 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
 #export TARGET= z80pack32
 #export CPU = z80
-export TARGET = dragon
-export CPU = 6809
+#export TARGET = dragon
+#export CPU = 6809
+export TARGET = zx128
+export CPU = z80
+#export TARGET = dragon
+#export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
+
 export VERSION = "0.1"
-export SUBVERSION = "ac1"
+export SUBVERSION = "ac1-erkinalp0"
 
 UNAME_S := $(shell uname -s)
 
@@ -15,16 +19,14 @@ ifeq ($(CPU),z80)
 export CROSS_AS=sdasz80
 export CROSS_LD=sdldz80
 export CROSS_CC=sdcc
-#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --Werror --stack-auto --constseg CONST
-#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --Werror --stack-auto --constseg CONST
 export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
-#export CROSS_CCOPTS+=--nostdlib --nostdinc -Isdcclib/include 
 export CROSS_CC_SEG2=--codeseg CODE2
 export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff
 export BINEXT = .rel
+
 #
 #	Adjust this as needed for your platform (or contribute a script
 #	to look in the usual places !)
@@ -34,6 +36,7 @@ export LIBZ80=/usr/local/share/sdcc/lib/z80
 else
 export LIBZ80=/usr/share/sdcc/lib/z80
 endif
+
 else ifeq ($(CPU),6502)
 export CROSS_AS=ca65
 export CROSS_LD=cl65
@@ -154,6 +157,7 @@ tools/decbdragon: tools/decbdragon.c
 
 
 ifeq ($(CPU), z80)
+LIBZ80+=$(addprefix -k , $(shell ./tools/sdcc-path z80 lib) )
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
 

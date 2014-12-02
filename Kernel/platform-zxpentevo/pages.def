@@ -1,0 +1,25 @@
+; Macros for pages switching
+
+; PAGE, where kernel placed. Must be non-zero
+kernel_page	.equ	0x01
+
+; Port for switch page in differen memory window
+mwin0_port	.equ	0x37F7
+mwin1_port	.equ	0x77F7
+mwin2_port	.equ	0xB7F7
+mwin3_port	.equ	0xF7F7
+
+; Set page to win3 (if page not in A-register)
+.macro setmw3 page
+     ld bc,#mwin3_port
+     ld a,page
+     cpl
+     out (c),a
+.endm
+
+; Set page to win3 (if page in A-register)
+.macro setmw3a page
+     ld bc,#mwin3_port
+     cpl
+     out (c),a
+.endm

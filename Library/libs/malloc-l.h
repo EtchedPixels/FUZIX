@@ -29,9 +29,9 @@
 #endif
 
 typedef struct mem_cell {
-	struct mem_cell *next;	/* A pointer to the next mem */
-	unsigned int size;	/* An int >= sizeof pointer */
-	char *depth;		/* For the alloca hack */
+    struct mem_cell *next;	/* A pointer to the next mem */
+    unsigned int size;	/* An int >= sizeof pointer */
+    char *depth;		/* For the alloca hack */
 } mem;
 
 #define m_size(p)  ((p)[0].size)		/* For malloc */

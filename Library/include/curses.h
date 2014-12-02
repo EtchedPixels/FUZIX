@@ -202,7 +202,7 @@ _PROTOTYPE( void touchwin, (WINDOW *_win) );
 _PROTOTYPE( int waddch, (WINDOW *_win, int _c) );
 _PROTOTYPE( int waddstr, (WINDOW *_win, char *_str) );
 _PROTOTYPE( int wbox, (WINDOW *_win, int _ymin, int _xmin, int _ymax,
-				int _xmax, unsigned int _v, unsigned int _h) );
+                       int _xmax, unsigned int _v, unsigned int _h) );
 _PROTOTYPE( void wclear, (WINDOW *_win) );
 _PROTOTYPE( int wclrtobot, (WINDOW *_win) );
 _PROTOTYPE( int wclrtoeol, (WINDOW *_win) );

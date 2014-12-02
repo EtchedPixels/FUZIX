@@ -4,9 +4,10 @@
 
 #ifdef CONFIG_BANK32
 
-/* 32K common, ldir copying to use for 48K apps */
-#ifndef CONFIG_COMMON_COPY
-#define invalidate_cache(x) do {} while(0)
+
+#ifndef bank32_invalidate_cache
+#define bank32_invalidate_cache(x) do {} while(0)
+
 #endif
 
 /*
@@ -62,7 +63,7 @@ void pagemap_free(ptptr p)
 	pfree[pfptr--] = *ptr;
 	if (*ptr != ptr[1]) {
 		pfree[pfptr--] = ptr[1];
-                invalidate_cache((uint16_t)ptr[1]);
+                bank32_invalidate_cache(ptr[1]);
         }
 }
 
@@ -116,7 +117,7 @@ int pagemap_alloc(ptptr p)
  */
 int pagemap_realloc(uint16_t size) {
 	int have = maps_needed(udata.u_top);
-	int want = maps_needed(size);
+	int want = maps_needed((uint16_t)PROGBASE + size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
 
 	/* If we are shrinking then free pages and propogate the

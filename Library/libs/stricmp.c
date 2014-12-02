@@ -8,16 +8,15 @@
 #include <ctype.h>
 
 /********************** Function stricmp ************************************/
-int stricmp(char *s, char *d)
-{
-	for (;;) {
-		unsigned char sc = *(uchar *) s++, dc = *(uchar *) d++;
+int stricmp(char *s, char *d) {
+    for (;;) {
+        unsigned char sc = *(uchar *) s++, dc = *(uchar *) d++;
 
-		if (sc != dc) {
-			if (_tolower(sc) != _tolower(dc))
-				return (int) (char) (sc - dc);
-		} else if (sc == '\0')
-			break;
-	}
-	return 0;
+        if (sc != dc) {
+            if (_tolower(sc) != _tolower(dc))
+                return (int) (char) (sc - dc);
+        } else if (sc == '\0')
+            break;
+    }
+    return 0;
 }

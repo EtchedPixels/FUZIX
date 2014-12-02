@@ -5,16 +5,15 @@
  * This is a combined alloca/malloc package. It uses a classic algorithm
  * and so may be seen to be quite slow compared to more modern routines
  * with 'nasty' distributions.
- */  
-    
+ */
+
 #include "malloc-l.h"
 
-void *calloc(unsigned int elm, unsigned int sz) 
-{
-	register unsigned v = elm * sz;
-	register void *ptr = malloc(v);
-	
-	if (ptr)
-		memset(ptr, 0, v);
-	return ptr;
+void *calloc(unsigned int elm, unsigned int sz) {
+    register unsigned v = elm * sz;
+    register void *ptr = malloc(v);
+
+    if (ptr)
+        memset(ptr, 0, v);
+    return ptr;
 }
