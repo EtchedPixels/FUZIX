@@ -34,6 +34,6 @@ struct dirent *readdir(DIR * dir)
 	buf->d_off = -1;	/* FIXME */
 	buf->d_reclen = len + 1;
 	strncpy(buf->d_name, (char *) direntry.d_name, len - 2);
-	buf->d_name[len - 1] = 0;
+	buf->d_name[len - 2] = 0;
 	return buf;
 }
