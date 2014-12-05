@@ -27,7 +27,7 @@
             .globl _ramsize
             .globl _procmem
             .globl unix_syscall_entry
-	    .globl nmi_handler
+	    .globl fd_nmi_handler
 
             include "kernel.def"
             include "../kernel09.def"
@@ -86,7 +86,7 @@ init_hardware:
 	    jmp badswi_handler			; 0x100
 	    jmp badswi_handler			; 0x103
 	    jmp unix_syscall_entry 		; 0x106
-	    jmp nmi_handler			; 0x109
+	    jmp fd_nmi_handler			; 0x109
 	    jmp interrupt_handler		; 0x10C
 	    jmp firq_handler			; 0x10F
 

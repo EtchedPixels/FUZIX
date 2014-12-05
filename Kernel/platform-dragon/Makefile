@@ -1,9 +1,9 @@
 
-CSRCS = devlpr.c devtty.c devrd.c
+CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c libc.c
 
 ASRCS = p6809.s crt0.s
-ASRCS += tricks.s commonmem.s usermem_sam.s
+ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -30,7 +30,7 @@ image: d64_1.rom
 	setup.o \
 	crt0.o commonmem.o usermem_sam.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
+	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../single.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec.o \
