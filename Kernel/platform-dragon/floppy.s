@@ -97,7 +97,10 @@ fdsetup:
 	sta	<FDCTRK		; reset track register
 	pshs	x,y
 	cmpa	TRACK,x		; target track
-	beq	fdiosetup
+;
+;	FIXME: what have we screwed up here so this always branches ???
+;
+;	beq	fdiosetup
 
 	sta	<FDCTRK		; target
 	;
