@@ -18,6 +18,7 @@ timer.rel
 kdata.rel
 platform-trs80/devfd.rel
 platform-trs80/floppy.rel
+platform-trs80/devhd.rel
 platform-trs80/devices.rel
 devio.rel
 filesys.rel

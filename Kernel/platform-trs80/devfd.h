@@ -12,4 +12,4 @@ uint16_t fd_operation(uint8_t *cmd, uint8_t *driveptr);
 uint16_t fd_motor_on(uint16_t drivesel);
 uint16_t fd_motor_off(uint16_t driveptr);
 
-#endif /* __DEVRD_DOT_H__ */
+#endif /* __DEVFD_DOT_H__ */

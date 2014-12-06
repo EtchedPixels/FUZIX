@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c
+CSRCS = devlpr.c devtty.c devfd.c devhd.c
 CSRCS += devices.c main.c
 
 ASRCS = trs80.s crt0.s
