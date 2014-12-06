@@ -30,7 +30,7 @@
             .globl unix_syscall_entry
             .globl trap_illegal
             .globl outcharhex
-	    .globl nmi_handler
+	    .globl fd_nmi_handler
 	    .globl null_handler
 
             .include "kernel.def"
@@ -158,7 +158,7 @@ _program_vectors:
             ld (0x0001), hl
 
             ld (0x0066), a  ; Set vector for NMI
-            ld hl, #nmi_handler
+            ld hl, #fd_nmi_handler
             ld (0x0067), hl
 
 ;
