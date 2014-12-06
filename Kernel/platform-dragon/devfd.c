@@ -5,8 +5,8 @@
 
 #define MAX_FD	4
 
-#define OPDIR_READ	0
-#define OPDIR_NONE	1
+#define OPDIR_NONE	0
+#define OPDIR_READ	1
 #define OPDIR_WRITE	2
 
 #define FD_READ		0x88	/* 2797 needs 0x88, 1797 needs 0x80 */
@@ -42,6 +42,9 @@ static void fd_motor_timeout(void)
  *	for our usage but would break for single density media.
  */
 
+/* static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x40 }; - COCO */
+static uint8_t selmap[4] = {0x00, 0x01, 0x02, 0x03 };
+
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     blkno_t block;
@@ -50,9 +53,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int tries;
     uint8_t err;
     uint8_t *driveptr = fd_tab + minor;
-    uint16_t cmd[5];
-
-    /* FIXME: raw is broken unless nicely aligned */
+    uint8_t cmd[6];
 
     if(rawflag)
         goto bad2;
@@ -60,7 +61,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     fd_motor_busy();		/* Touch the motor timer first so we don't
                                    go and turn it off as we are doing this */
     if (fd_selected != minor) {
-        uint8_t err = fd_motor_on(driveptr);
+        uint8_t err = fd_motor_on(selmap[minor]);
         if (err)
             goto bad;
     }
@@ -68,17 +69,19 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
+//    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 18;
-    cmd[2] = (block % 18) + 1;	/*eww.. */
-    cmd[3] = minor;	/* FIXME: other bits ? */
-    cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[5] = block << 8;
-    cmd[6] = block & 0xFF;
+    cmd[1] = block / 9;		/* 2 sectors per block */
+    cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
+    cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
+    cmd[4] = dptr >> 8;
+    cmd[5] = dptr & 0xFF;
         
     while (ct < 2) {
-        for (tries = 0; tries < 3 ; tries++) {
+        for (tries = 0; tries < 4 ; tries++) {
+//            kprintf("Issue command: %d drive %d sec %d\n", cmd[0], minor, cmd[2]);
             err = fd_operation(cmd, driveptr);
+//            kprintf("Issue command: return %d\n", err);
             if (err == 0)
                 break;
             if (tries > 1)
@@ -87,7 +90,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* FIXME: should we try the other half and then bale out ? */
         if (tries == 3)
             goto bad;
-        cmd[5]++;	/* Move on 256 bytes in the buffer */
+        cmd[4]++;	/* Move on 256 bytes in the buffer */
         cmd[2]++;	/* Next sector for 2nd block */
         ct++;
     }

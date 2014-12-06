@@ -40,14 +40,11 @@ trapmsg2:   .ascii ", PC="
             .db 0
 tm_user_sp: .dw 0
 
+_trap_reboot:
 _trap_monitor:
-	    orcc #0x10
+	    cwai #0
 	    bra _trap_monitor
 
-_trap_reboot:
-	    lda 0xff90
-	    anda #0xfc		; map in the ROM
-	    jmp 0
 
 _di:
 	    tfr cc,b		; return the old irq state
@@ -164,14 +161,21 @@ map_save:
 ; outchar: Wait for UART TX idle, then print the char in a
 
 outchar:
-	    pshs b
-outcharw:
-	    ldb 0xff05
-	    bitb #0x04
-	    beq outcharw
-	    sta 0xff04
-	    puls b,pc
+;	    pshs b
+;outcharw:
+	    pshs x
+	    ldx traceptr
+	    sta ,x+
+	    stx traceptr
+	    puls x, pc
+;	    ldb 0xff05
+;	    bitb #0x04
+;	    beq outcharw
+;	    sta 0xff04
+;	    puls b,pc
 
 	    .area .data
 
 _kernel_flag: .db 1
+traceptr:
+	   .dw 0x6000

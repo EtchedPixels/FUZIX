@@ -9,7 +9,7 @@ int fd_open(uint8_t minor, uint16_t flag);
 /* low level interface */
 uint8_t fd_reset(uint8_t *drive);
 uint8_t fd_operation(uint16_t *cmd, uint8_t *drive);
-uint8_t fd_motor_on(uint8_t *drive);
+uint8_t fd_motor_on(uint8_t drive);
 uint8_t fd_motor_off(void);
 
 #endif /* __DEVFD_DOT_H__ */

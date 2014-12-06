@@ -12,20 +12,20 @@
 ;
 ;	MMIO for the floppy controller
 ;
+;	For a Dragon cartridge
 ;
-;	These four are a normal WD2797 under DragonDOS
+FDCCTRL	EQU	0xFF48
+;
+;	0-1: drive select
+;	2: motor on
+;	3: density
+;	4: precomp
+;	5: nmi mode
 ;
 FDCREG	EQU	0xFF40
 FDCTRK	EQU	0xFF41
 FDCSEC	EQU	0xFF42
 FDCDATA	EQU	0xFF43
-;
-;	This is the control logic
-;
-FDCCTRL	EQU	0xFF48		; drive select and motors
-; 	bit5: NMI enable, 4: Precomp ?, 3: Density, 2: Motor, 
-;	bits 0-1 are drive nymber 0-3
-
 
 ;
 ;	Structures we use
@@ -41,9 +41,8 @@ TRKCOPY	EQU	0
 CMD	EQU	0
 TRACK	EQU	1
 SECTOR	EQU	2
-DRIVESEL EQU	3
-DIRECT	EQU	4		; 0 = read 2 = write 1 = status
-DATA	EQU	5
+DIRECT	EQU	3		; 0 = read 2 = write 1 = status
+DATA	EQU	4
 
 	.area	.text
 ;
@@ -75,36 +74,42 @@ waitdisk:
 waitdisk_l:
 	leax	-1,x
 	beq	forceint	; try forcing an interrupt
-	lda	FDCREG
+	lda	<FDCREG
 	bita	#0x01
 	bne	waitdisk_l
 	rts			; done, idle EQ true
 forceint:			; no response, bigger stick
 	lda	#0xD0		; reset
-	sta	FDCREG
+	sta	<FDCREG
 	nop
 	exg	a,a
 	exg	a,a
-	lda	FDCREG		; read to reset int status
+	lda	<FDCREG		; read to reset int status
 	; ?? what to do next ??
 	lda	#0xff		; force NEQ
 	rts
 
-;
 ;	Set up the disk. On entry y points to our per drive data and
 ;	x points to the command block
 ;
 fdsetup:
 	lda	TRKCOPY,y
-	sta	FDCTRK		; reset track register
+	sta	<FDCTRK		; reset track register
 	pshs	x,y
 	cmpa	TRACK,x		; target track
 	beq	fdiosetup
+
+	sta	<FDCTRK		; target
+	;
+	;	So we can verify
+	;
+	lda	SECTOR,x
+	sta	<FDCSEC
 	;
 	;	Need to seek the disk
 	;
 	lda	#0x14
-	sta	FDCREG		; seek
+	sta	<FDCREG		; seek
 	nop
 	exg	a,a
 	exg	a,a
@@ -116,8 +121,8 @@ fdsetup:
 	; seek failed, not good
 setuptimeout:			; NE = bad
 	puls	x,y
-	lda	FDCTRK		; we have no idea where we are
-	sta	TRKCOPY,y	; so remember what the drive reported
+	ldb	<FDCTRK		; we have no idea where we are
+	stb	TRKCOPY,y	; so remember what the drive reported
 	rts
 ;
 ;	Head in the right place
@@ -126,22 +131,23 @@ fdiosetup:
 	puls	x,y
 	lda	TRACK,x
 	sta	TRKCOPY,y	; remember we arrived
-	ldb	FDCCTRL
-	andb	#0xEF
+	ldb	fdcctrl
+	andb	#0xEF		; precomp
 	cmpa	#22
 	blo	noprecomp
 	orb	#0x10
 noprecomp:
-	stb	FDCCTRL		; precomp configured
+	orb	#0x20		; NMI/halt on
+	stb	<FDCCTRL		; precomp configured
 	lda	SECTOR,x
-	sta	FDCSEC
-	lda	FDCREG		; clear any pending int
+	sta	<FDCSEC
+	lda	<FDCREG		; clear any pending int
 	lda	CMD,x		; command to issue
 	ldy	#fdxferdone
 	sty	nmivector	; so our NMI handler will clean up
 	ldy	#0		; timeout handling
-	orcc	#0x10		; irqs off or we'll miss bytes
-	sta	FDCREG		; issue the command
+	orcc	#0x50		; irqs off or we'll miss bytes
+	sta	<FDCREG		; issue the command
 	nop			; give the FDC a moment to think
 	exg	a,a
 	exg	a,a
@@ -154,22 +160,22 @@ noprecomp:
 ;	Status registers
 ;
 fdxferdone:
-	andcc	#0xef
-	lda	FDCREG
+	ldb	fdcctrl
+	stb	<FDCCTRL
+	lda	<FDCREG
 	anda	#0x7C		; Returns with A holding the status bits
 	rts
 ;
 ;	Relies on B being 2...
 ;
 wait_drq:
-	bitb	FDCREG
+	bitb	<FDCREG
 	bne	drq_on
 	leay	-1,y
 	bne	wait_drq
 	;
 	;	Timed out - reset etc to clean up ??
 	;
-	andcc	#0xef
 	lda	#0xff		; our error code
 	rts
 
@@ -177,27 +183,86 @@ wait_drq:
 ;	Once the controller decides it is finished it will flag an NMI
 ;	and the NMI will switch the PC on the return to fdxferdone.
 ;
-;	Begin the actual copy
+;	Begin the actual copy to disk
 ;
 drq_on:
-	ldy	DATA,x
+	ldx	DATA,x
+	lda	,x+
+	bra	drq_go
 drq_loop:
-	ldb	,y+
-	stb	FDCDATA		; hardware will stall this for us
-	sta	FDCREG
+	sync
+drq_go:
+	sta	<FDCDATA
+	lda	,x+
 	bra	drq_loop
 
 ;
-;	Write to the disk
+;	Read from the disk
 ;
 fdio_in:
-	ldy	DATA,x
+	ldx	DATA,x
+fdio_dwait:
+	ldb	<FDCREG
+	bitb	#0x02
+	bne	fdio_go
+	leay	-1,y
+	bne	fdio_dwait
+	ldb	fdcctrl
+	stb	<FDCCTRL
+	lda	#0xff
+	rts
+;
+;	Now do the data
+;
 fdio_loop:
-	ldb	FDCDATA		; Sync is done by hardware
-	stb	,y+
-	bra	fdio_loop	; exit is via NMI to fdxferdone
+	sync
+fdio_go:
+	ldb	<0xFF22		; clear the FIR (PIA1DB)
+	lda	<FDCDATA
+	sta	,x+
+	bra	fdio_loop
 
+;
+;	PIA management
+;
+piasave:
+	pshs	x,y
+	ldx	#0xFF01		; PIA0CRA
+	ldy	#pia_stash
+	lda	,x
+	sta	,y+
+	anda	#0xFC
+	sta	,x++		; move on to 0CRB
+	lda	,x
+	sta	,y+
+	anda	#0xFC
+	sta	,x
+	leax	0x1e,x		; PIA1CRA
+	lda	,x
+	sta	,y+
+	anda	#0xFC
+	sta	,x++		; on to PIA1CRB
+	lda	,x
+	sta	,y
+	ora	#0x37
+	sta	,x		; floppy FIR enabled
+	puls	x,y,pc
 
+piaload:
+	; Must leave B untouched
+	pshs	x,y
+	ldx	#0xFF01
+	ldy	#pia_stash
+	lda	,y+
+	sta	,x++
+	lda	,y+
+	sta	,x
+	leax	0x1e,x
+	lda	,y+
+	sta	,x++
+	lda	,y+
+	sta	,x
+	puls	x,y,pc
 ;
 ;	C glue interface.
 ;
@@ -212,9 +277,16 @@ fdio_loop:
 ;	fd_reset(uint16_t *drive)
 ;
 _fd_reset:
-	pshs	x,y
+	pshs	x,y,dp
+	lda	#0xFF
+	tfr	a,dp
+	ldb	fdcctrl
+	stb	<FDCCTRL
+	lda	#0x01
+	sta	<FDCSEC
 	lda	#0x00		; seek
-	sta	FDCREG
+	sta	<FDCTRK
+	sta	<FDCREG
 	nop
 	exg	a,a
 	exg	a,a
@@ -225,8 +297,8 @@ _fd_reset:
 	beq	rstff		; Total fail
 	anda	#0x10		; Error bit from the reset
 rstff:
-	tfr a,b
-	puls	x, y, pc
+	tfr 	a,b
+	puls	x,y,dp,pc
 ;
 ;	fd_operation(uint16_t *cmd, uint16_t *drive)
 ;
@@ -234,19 +306,26 @@ rstff:
 ;	running.
 ;
 _fd_operation:
-	pshs y
-	ldy 4,s		; Drive struct
-	jsr fdsetup	; Set up for a command
-	puls y
-	tfr a,b		; Status code or 0xFF for total failure
-	rts
+	pshs y,cc,dp
+	lda	#0xFF
+	tfr	a,dp
+	orcc	#0x40		; Make sure FIR is off
+	jsr	piasave
+	ldy	6,s		; Drive struct
+	jsr	fdsetup		; Set up for a command
+	tfr	a,b		; Status code or 0xFF for total failure
+	bsr	piaload
+	puls	y,cc,dp,pc	; Restore IRQ state etc
 ;
-;	C interface fd_motor_on(uint8 drive)
+;	C interface fd_motor_on(uint8 drivesel)
 ;
 ;	Selects this drive and turns on the motors
 ;
 _fd_motor_on:
-	pshs y
+	pshs	y,dp
+	lda	#0xFF
+	tfr	a,dp
+
 	;
 	;	Select drive B, turn on motor if needed
 	;
@@ -259,21 +338,21 @@ _fd_motor_on:
 ;
 motor_was_on:
 	ldb	#0
-	puls	y,pc
+	puls	y,dp,pc
 ;
 ;	Select our drive
 ;
 notsel:
-	orb	#0xA8		; NMI, motor on, density + our drive id
-	lda	FDCCTRL
-	stb	FDCCTRL
-	bita	#0x08
+	orb	#0x04		; motor on, single density + our drive id
+	stb	<FDCCTRL
+	stb	fdcctrl
+	bita	#0x4
 	bne	motor_was_on
 	jsr	disknap
 	; FIXME: longer motor spin up delay goes here
 	jsr	waitdisk
-	tfr a,b		; return in the right place
-	puls y,pc
+	tfr	a,b		; return in the right place
+	puls	y,dp,pc
 
 ;
 ;	C interface fd_motor_off(void)
@@ -281,19 +360,22 @@ notsel:
 ;	Turns off the drive motors, deselects all drives
 ;
 _fd_motor_off:
-	pshs y
+	pshs	y,dp
+	lda	#0xFF
+	tfr	a,dp
+
 ;
 ;	Deselect drives and turn off motor
 ;
 	ldb	motor_running
 	beq	no_work_motor
 	; Should we seek to track 0 ?
-	ldb	FDCCTRL
+	ldb	<FDCCTRL
 	andb	#0xF0
-	stb	FDCCTRL
+	stb	<FDCCTRL
 	clr	motor_running
 no_work_motor:
-	puls y,pc
+	puls y,dp,pc
 
 	.area .data
 
@@ -304,4 +386,11 @@ curdrive:
 
 	.area .bss
 motor_running:
+	.byte	0
+fdcctrl:
+	.byte	0
+pia_stash:
+	.byte	0
+	.byte	0
+	.byte	0
 	.byte	0
