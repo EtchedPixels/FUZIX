@@ -447,8 +447,8 @@ static void putdigit0(unsigned char c)
 static void putdigit(unsigned char c, unsigned char *flag)
 {
 	if (c || *flag) {
-		putdigit0(c);
 		*flag |= c;
+		putdigit0(c);
 	}
 }
 
