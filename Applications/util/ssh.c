@@ -51,6 +51,7 @@ main(int argc, char *argval[])
         for (i = 0; i < MAX_ARGS; i++) arg[i][0] = (char) 0;
         do {
             printf("ssh%c ", cprompt);
+            fflush(stdout);
             fgets(buf, 127, stdin);
             if (feof(stdin)) return 0;     /* user typed ^D ? */
             buf[strlen(buf) - 1] = '\0';   /* Strip newline from fgets */
