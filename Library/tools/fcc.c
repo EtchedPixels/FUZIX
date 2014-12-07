@@ -289,7 +289,7 @@ static void build_command(void)
     add_argument("--no-std-crt0");
     add_argument("--nostdlib");
     add_argument("--code-loc");
-    add_argument("0x0");
+    add_argument("0x100");
     add_argument("--data-loc");
     add_argument("0x0");
   }
