@@ -38,10 +38,10 @@ static void _wqsort(void *basep, int lo, int hi,
       base[i] = *p;
       while (i < j)
       {
-	 while (((*cmp) ((base + j), p)) <= 0)
+	 while (((*cmp) ((base + j), p)) > 0)
 	    --j;
 	 base[i] = base[j];
-	 while ((i < j) && (((*cmp) ((base + i), p)) > 0))
+	 while ((i < j) && (((*cmp) ((base + i), p)) <= 0))
 	    ++i;
 	 base[j] = base[i];
       }
@@ -75,10 +75,10 @@ static void _lqsort(long *base, int lo, int hi, int (*cmp)(const void *, const v
       base[i] = *p;
       while (i < j)
       {
-	 while (((*cmp) ((base + j), p)) <= 0)
+	 while (((*cmp) ((base + j), p)) > 0)
 	    --j;
 	 base[i] = base[j];
-	 while ((i < j) && (((*cmp) ((base + i), p)) > 0))
+	 while ((i < j) && (((*cmp) ((base + i), p)) <= 0))
 	    ++i;
 	 base[j] = base[i];
       }
@@ -114,10 +114,10 @@ static void _nqsort(void *basep, int lo, int hi, int size,
       p = _qbuf;
       while (i < j)
       {
-	 while (((*cmp) ((base + size * j), p)) <= 0)
+	 while (((*cmp) ((base + size * j), p)) > 0)
 	    --j;
 	 moveitem((base + size * i), (base + size * j), size);
-	 while ((i < j) && (((*cmp) ((base + size * i), p)) > 0))
+	 while ((i < j) && (((*cmp) ((base + size * i), p)) <= 0))
 	    ++i;
 	 moveitem((base + size * j), (base + size * i), size);
       }
