@@ -26,7 +26,7 @@ static void _wqsort(void *basep, int lo, int hi,
    int   k;
    register int i, j, t;
    register int *p = &k;
-   char *base = basep;
+   short *base = basep;
 
    while (hi > lo)
    {
