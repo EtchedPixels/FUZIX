@@ -9,9 +9,7 @@
         .area _CODE
         .area _COMMONMEM
         .area _DATA
-        .area _CODE2
         .area _VIDEO
-        .area _DISCARD      ; not discarded yet
         .area _CONST
         .area _FONT
         .area _INITIALIZED
@@ -23,18 +21,24 @@
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+        .area _DISCARD
+	; In high space
+        .area _CODE2
 
         ; imported symbols
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
         .globl s__INITIALIZER
+        .globl l__INITIALIZER
+        .globl s__INITIALIZED
         .globl s__COMMONMEM
         .globl l__COMMONMEM
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
 
+	.globl mdv_boot
 
         .globl unix_syscall_entry
         .globl nmi_handler
@@ -86,14 +90,30 @@ init_continue:
         ld sp, #kstack_top
 
         ; hack for emulator. Read remaining fuzix part to RAM from fuzix.bin
-        ld bc, #0x1ee7
-        in a, (c)
+;        ld bc, #0x1ee7
+;        in a, (c)
+	ld hl, #0x4000
+	ld de, #0x4001
+	ld (hl), #0
+	ld bc, #0x1800
+	ldir
+	ld (hl), #0x7
+	ld bc, #0x02ff
+	ldir
+
+	call mdv_boot
 
         ; Configure memory map
         call init_early
 
         ; our COMMONMEM is located in main code-data blob, so we
         ; do not need to move it manually
+
+	; initialized data
+	ld hl, #s__INITIALIZER
+	ld de, #s__INITIALIZED
+	ld bc, #l__INITIALIZER
+	ldir
 
         ; then zero the data area
         ld hl, #s__DATA

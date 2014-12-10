@@ -2,6 +2,7 @@
 -i uzi.ihx
 -b _CODE=0x0000
 -b _COMMONMEM=0x5B00
+-b _CODE2=0xC000
 -l z80
 platform-zx128/crt0.rel
 platform-zx128/commonmem.rel
@@ -17,6 +18,8 @@ timer.rel
 kdata.rel
 usermem.rel
 platform-zx128/devices.rel
+platform-zx128/devmdv.rel
+platform-zx128/microdrive.rel
 devio.rel
 filesys.rel
 process.rel
