@@ -52,7 +52,7 @@ unix_sig_exit:
 
 
 ;
-;	doexec is a special case syscal exit path. As we may have no
+;	doexec is a special case syscall exit path. As we may have no
 ;	common we have to hand the last bits off to the platform code
 ;
 _doexec
