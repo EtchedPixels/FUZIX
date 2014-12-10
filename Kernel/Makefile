@@ -1,9 +1,9 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
-#export TARGET= z80pack32
-#export CPU = z80
-export TARGET = dragon
-export CPU = 6809
+export TARGET= zx128
+export CPU = z80
+#export TARGET = dragon
+#export CPU = 6809
 #export TARGET = 6502test
 #export CPU = 6502
 export VERSION = "0.1"
@@ -152,12 +152,13 @@ font4x6.c: tools/make4x6
 
 tools/decbdragon: tools/decbdragon.c
 
+tools/bintomdv: tools/bintomdv.c
 
 ifeq ($(CPU), z80)
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
 
-fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman
+fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv
 	tools/analysemap <uzi.map
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <uzi.map |sort -nr >hogs.txt
