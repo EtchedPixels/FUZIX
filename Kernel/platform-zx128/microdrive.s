@@ -28,16 +28,11 @@
 		.globl _mdv_bwrite
 		.globl mdv_boot
 
-		.globl HBP
-
 		; imports
 		.globl _mdv_sector
 		.globl _mdv_buf
 		.globl _mdv_hdr_buf
 		.globl _mdv_len
-
-		.globl mdv_sync
-		.globl mdv_get_blk
 
 SECTORID	.equ	0x08		; FIXME - set real format up!
 CSUM		.equ	0x0E		; FIXME ditto
@@ -190,28 +185,36 @@ hdr_fail:
 ;	give up after 3 loops of the tape exactly.
 ;
 mdv_find_hdr:	ld bc, #2048		; worst case is 4 times round the tape
-		push bc
-		call mdv_get_hdr
+
+mdv_find_hdr_l:	push bc
+		call mdv_get_hdr	; Fetch any header
+		pop bc
+		jr nz, mdv_find_hdr_bad	; If it didn't work check the error
 		ld hl, #_mdv_hdr_buf
-		ld a, (hl)
+		ld a, (hl)		; Was it data ?
 		cp #1
-		ret nz			; NZ, 1 = not a header
-		jr nz, mdv_find_hdr_bad
+		jr nz, mdv_find_hdr_next; NZ, 1 = not a header
 		ld hl, #_mdv_hdr_buf + SECTORID
 		ld a, (_mdv_sector)
 		cp (hl)
-		pop bc
 		ret z			; found it
-mdv_find_hdr_2:
+		; Sector header, valid, but not the one we wanted
+mdv_find_hdr_next:
+		; Count down through our tape scan
 		dec bc
 		ld a, b
 		or c
-		jr nz, mdv_find_hdr	; keep looking
+		jr nz, mdv_find_hdr_l	; keep looking
 		inc a			; NZ
 		ret
+		;
+		; Error 3 from mdv_get_hdr means there was nothing found
+		; on the tape, so no point trying further. Otherwise it was
+		; just a bad header, and we can carry on
+		;
 mdv_find_hdr_bad:
 		cp #3			; 3 = give up now
-		jr nz, mdv_find_hdr_2
+		jr nz, mdv_find_hdr_next
 		or a			; will be > 0
 		ret			; NZ
 
@@ -365,9 +368,6 @@ _mdv_bwrite:
 ;	causes a stack overwrite, that's operator error!
 
 mdv_boot:
-
-		ld (0xfffe), sp
-		ld sp, #0xfffe
 ;
 ;	Spin up the boot volume
 ;
@@ -386,7 +386,6 @@ mdv_boot_loop:
 ;	the next block ok
 ;
 		call mdv_get_hdr
-HBP:
 		jr nz, mdv_bad
 		call mdv_get_blk
 		jr nz, mdv_bad
@@ -417,6 +416,8 @@ HBP:
 		ldir
 		call done_all		; check if we are complete
 		jr z, mdv_boot_done
+		ld hl, #0x4000		; we may have reloaded over this
+		ld (_mdv_buf), hl
 not_fk:		pop hl
 		dec hl
 		ld a, h
@@ -433,7 +434,6 @@ mdv_bad:	cp #3
 mdv_boot_done:
 		ld a, #0x7
 		out (0xFE), a
-		ld sp, (0xfffe)
 		ret
 
 done_all:	ld hl, #0x585B		; check data is loaded
@@ -444,7 +444,7 @@ done_1:		cp (hl)
 		inc hl
 		djnz done_1
 		ld hl, #0x58C0		; and code
-		ld b, #0x3E		; but not FE-FFFF
+		ld b, #0x3f
 done_2:		cp (hl)
 		ret nz
 		inc hl
