@@ -49,6 +49,9 @@
             .area _COMMONMEM
 
 _trap_monitor:
+	di
+	halt
+
         ld a, #128
         ; out (29), a ; TODO: go where? BASIC48?
 platform_interrupt_all:
