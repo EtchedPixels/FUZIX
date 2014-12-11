@@ -34,6 +34,12 @@
 		.globl _mdv_hdr_buf
 		.globl _mdv_len
 
+
+;
+;	Temporary 512 byte buffer used during boot only
+;
+MDV_BOOT_BUF	.equ	0xB000
+
 SECTORID	.equ	0x08		; FIXME - set real format up!
 CSUM		.equ	0x0E		; FIXME ditto
 
@@ -371,7 +377,7 @@ mdv_boot:
 ;
 ;	Spin up the boot volume
 ;
-		ld hl, #0x4000
+		ld hl, #MDV_BOOT_BUF
 		ld (_mdv_buf), hl
 		ld a, #1
 		out (0xfe), a		; blue
@@ -411,12 +417,12 @@ mdv_boot_loop:
 		out (0xfe), a		; loading stripes
 		ld d, a			; high byte of address
 		ld e, #0
-		ld hl, (_mdv_buf)
+		ld hl, #MDV_BOOT_BUF
 		ld bc, #512
 		ldir
 		call done_all		; check if we are complete
 		jr z, mdv_boot_done
-		ld hl, #0x4000		; we may have reloaded over this
+		ld hl, #MDV_BOOT_BUF		; we may have reloaded over this
 		ld (_mdv_buf), hl
 not_fk:		pop hl
 		dec hl
@@ -432,7 +438,7 @@ mdv_bad:	cp #3
 		jr not_fk
 
 mdv_boot_done:
-		ld a, #0x7
+		xor a
 		out (0xFE), a
 		ret
 
