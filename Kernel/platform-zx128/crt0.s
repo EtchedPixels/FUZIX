@@ -38,11 +38,11 @@
         .globl l__DATA
         .globl kstack_top
 
-	.globl mdv_boot
-
         .globl unix_syscall_entry
         .globl nmi_handler
         .globl interrupt_handler
+
+	.include "kernel.def"
 
         ; startup code
         .area _CODE
@@ -87,8 +87,6 @@ jump_to_basic_end:
         jp nmi_handler
 
 init_continue:
-        ld sp, #kstack_top
-
         ; hack for emulator. Read remaining fuzix part to RAM from fuzix.bin
 ;        ld bc, #0x1ee7
 ;        in a, (c)
@@ -101,7 +99,19 @@ init_continue:
 	ld bc, #0x02ff
 	ldir
 
+;
+;	These hooks will be platform/dev specific
+;
+	.if MICRODRIVE_BOOT
+	.globl mdv_boot
+
+boot_stack .equ 0xc000
+	ld sp, #boot_stack
 	call mdv_boot
+	.endif
+
+
+        ld sp, #kstack_top
 
         ; Configure memory map
         call init_early
