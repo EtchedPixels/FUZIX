@@ -30,7 +30,7 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (rawflag)
 		goto bad;
 
-	mdv_motor_on(minor);
+	mdv_motor_on(minor + 1);
 	/* FIXME: support swap ? */
 	mdv_sector = mdvmap[minor][udata.u_buf->bf_blk];
 	mdv_buf = udata.u_buf->bf_data;
@@ -71,6 +71,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 		udata.u_error = ENODEV;
 		return -1;
 	}
+	mdv_motor_on(minor + 1);
 	t = tmpbuf();
 	mdv_buf = t;
 	mdv_sector = 1;
@@ -80,6 +81,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 		err = mdv_bread();
 		if (err) {
 			kprintf("mdv_open: maps bad: %d\n", err);
+			mdv_motor_off();
 			udata.u_error = ENXIO;
 			return -1;
 		}
@@ -87,6 +89,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 	}
 	brelse(t);	
 	mdv_valid |= 1 << minor;
+	mdv_motor_off();
 	return 0;
 }
 
