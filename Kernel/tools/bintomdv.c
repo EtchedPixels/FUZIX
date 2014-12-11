@@ -66,7 +66,7 @@ static void mdv_write_tape(FILE *fp)
   }
 
   dl = 0xC000;
-  while(dl < 0xFE00) {
+  while(dl < 0x10000) {
     mdv_make_hdr(buf);
     mdv_write(fp, buf, 15);
     mdv_make_bufhdr(buf, dl>> 8, &data[dl]);
