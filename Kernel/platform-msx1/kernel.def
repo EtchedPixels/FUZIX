@@ -8,3 +8,7 @@ U_DATA_STASH		    .equ 0x7D00	      ; 0x7D00-0x7FFF
 ; as far as I can tell either is allowed by the spec
 
 NMOS_Z80		    .equ 1
+
+; Where is the character font preloaded for us on this box
+
+VRAM_CH			    .equ 1

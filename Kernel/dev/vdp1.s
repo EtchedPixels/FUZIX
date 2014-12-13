@@ -29,7 +29,7 @@ vdpinit:    ld de, #0x8000		; M4 }
 	    call vdpout
 	    ld de, #0x8300		; blink is unused
 	    call vdpout
-	    ld de, #0x8401		; font at 0x0800
+	    ld de, #0x8400 + VRAM_CH	; font at 0x0800
 	    call vdpout
 	    ld de, #0x87F5		; white text on black
 ;	Fall through...
