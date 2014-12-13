@@ -1,12 +1,5 @@
 ;
-;	Z80Pack hardware support
-;
-;
-;	This goes straight after udata for common. Because of that the first
-;	256 bytes get swapped to and from disk with the uarea (512 byte disk
-;	blocks). This isn't a problem but don't put any variables in here.
-;
-;	If you make this module any shorter, check what follows next
+;	MTX512 hardware support
 ;
 
 
@@ -41,6 +34,9 @@
             .globl null_handler
 	    .globl nmi_handler
             .globl interrupt_handler
+
+	    .globl vdpinit
+	    .globl _vtinit
 
             .globl outcharhex
             .globl outhl, outde, outbc
@@ -88,6 +84,9 @@ init_hardware:
             call _program_vectors
             pop hl
 
+	    ; Program the video engine
+	    call vdpinit
+
 	    ; FIXME: set up interrupt timer on the CTC
 	    ; 08 is channel 0, which is input for vdp
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
@@ -96,6 +95,9 @@ init_hardware:
 	    ; 0C-0F are A data, B data, A ctrl, B ctrl 
 
             im 1 ; set CPU interrupt mode
+
+	    call _vtinit		; init the console video
+
             ret
 
 _sil_memcpy:
