@@ -5,7 +5,7 @@
 #include <devtty.h>
 
 uint16_t ramtop = PROGTOP;
-uint16_t vdpport = 0x01 + 256 * 40;	/* port and width */
+uint16_t vdpport = 0x02 + 256 * 40;	/* port and width */
 
 void pagemap_init(void)
 {
