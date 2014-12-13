@@ -1,7 +1,8 @@
 -mwxuy
 -i uzi.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xC000
+-b _COMMONMEM=0xF000
+-b _DISCARD=0xD000
 -l z80
 platform-mtx/crt0.rel
 platform-mtx/commonmem.rel
