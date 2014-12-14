@@ -48,7 +48,8 @@ void panic(char *s)
 
 uint16_t swizzle16(uint32_t v)
 {
-	if (v & 0xFFFF0000UL) {
+        int top = v & 0xFFFF0000UL;
+	if (top && top != 0xFFFF0000) {
 		fprintf(stderr, "swizzle16 given a 32bit input\n");
 		exit(1);
 	}

@@ -128,7 +128,7 @@ void pass1(void)
         if (ino.i_mode == 0)
             continue;
 
-        mode = swizzle16(ino.i_mode & F_MASK);
+        mode = swizzle16(ino.i_mode) & F_MASK;
         /* FIXME: named pipes.. */
 
         /* Check mode */
@@ -146,9 +146,9 @@ void pass1(void)
         ++icount;
         /* Check size */
 
-        if (swizzle16(ino.i_size) < 0) {
+        if (swizzle32(ino.i_size) < 0) {
             printf("Inode %d offset is negative with value of %ld. Fix? ",
-                    n, (long)ino.i_size);
+                    n, (long)swizzle32(ino.i_size));
             if (yes()) {
                 ino.i_size = 0;
                 iwrite(n, &ino);
@@ -163,15 +163,15 @@ void pass1(void)
                     (swizzle16(ino.i_addr[b]) < swizzle16(superblock.s_isize) ||
                             swizzle16(ino.i_addr[b]) >= swizzle16(superblock.s_fsize))) {
                     printf("Inode %d singly ind. blk %d out of range, val = %u. Zap? ",
-                            n, b, ino.i_addr[b]);
+                            n, b, swizzle16(ino.i_addr[b]));
                     if (yes()) {
                         ino.i_addr[b] = 0;
                         iwrite(n, &ino);
                     }
                 }
-                if (ino.i_addr[b] != 0 && swizzle16(ino.i_size) < 18*512) {
+                if (ino.i_addr[b] != 0 && swizzle32(ino.i_size) < 18*512) {
                     printf("Inode %d singly ind. blk %d past end of file, val = %u. Zap? ",
-                            n, b, ino.i_addr[b]);
+                            n, b, swizzle16(ino.i_addr[b]));
                     if (yes()) {
                         ino.i_addr[b] = 0;
                         iwrite(n, &ino);
@@ -200,7 +200,7 @@ void pass1(void)
                 }
             }
             /* Check the rest */
-            for (bno = 0; bno <= swizzle16(ino.i_size)/512; ++bno) {
+            for (bno = 0; bno <= swizzle32(ino.i_size)/512; ++bno) {
                 b = getblkno(&ino, bno);
 
                 if (b != 0 && (b < swizzle16(superblock.s_isize) || b >= swizzle16(superblock.s_fsize))) {
