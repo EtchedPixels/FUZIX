@@ -1,14 +1,14 @@
             .module vdp
 
 	    ; video driver
-	    .globl _scroll_up
-	    .globl _scroll_down
-	    .globl _plot_char
-	    .globl _clear_lines
-	    .globl _clear_across
-	    .globl _cursor_on
-	    .globl _cursor_off
-	    .globl _cursorpos
+	    .globl scroll_up
+	    .globl scroll_down
+	    .globl plot_char
+	    .globl clear_lines
+	    .globl clear_across
+	    .globl cursor_on
+	    .globl cursor_off
+	    .globl cursorpos
 
 	    .globl _vdpport
 
@@ -46,7 +46,7 @@ vdpout:	    ld bc, (_vdpport)
 ;
 
 
-_videopos:	; turn E=Y D=X into HL = addr
+videopos:	; turn E=Y D=X into HL = addr
 	        ; pass B = 0x40 if writing
 	        ; preserves C
 	    ld a, e			; 0-24 Y
@@ -68,7 +68,10 @@ _videopos:	; turn E=Y D=X into HL = addr
 ;
 ;	Eww.. wonder if VT should provide a hint that its the 'next char'
 ;
-_plot_char: pop hl
+		.if VDP_DIRECT
+_plot_char:
+		.endif
+plot_char:  pop hl
 	    pop de			; D = x E = y
 	    pop bc
 	    push bc
@@ -76,7 +79,7 @@ _plot_char: pop hl
 	    push hl
 plotit:
 	    ld b, #0x40			; writing
-	    call _videopos
+	    call videopos
 	    ld a, c
 plotit2:
 	    ld bc, (_vdpport)
@@ -101,7 +104,10 @@ scrollbuf:   .ds		40
 ;
 ;	We don't yet use attributes...
 ;
+		.if VDP_DIRECT
 _scroll_down:
+		.endif
+scroll_down:
 	    ret
 	    ld b, #23
 	    ld de, #0x3C0	; start of bottom line
@@ -129,7 +135,10 @@ upline:
 	    djnz upline
 	    ret
 
+		.if VDP_DIRECT
 _scroll_up:
+		.endif
+scroll_up:
 	    ret
 	    ld b, #23
 	    ld de, #40		; start of second line
@@ -157,7 +166,10 @@ downline:   push bc
 	    djnz downline
 	    ret
 
+		.if VDP_DIRECT
 _clear_lines:
+		.endif
+clear_lines:
 	    pop hl
 	    pop de	; E = line, D = count
 	    push de
@@ -165,7 +177,7 @@ _clear_lines:
 	    ld c, d
 	    ld d, #0
 	    ld b, #0x40
-	    call _videopos
+	    call videopos
 	    ld e, c
 	    ld bc, (_vdpport)
 	    out (c), l
@@ -183,7 +195,10 @@ l1:	    out (c), a		; Inner loop clears a line, outer counts
 	    jr nz, l2
 	    ret
 
+		.if VDP_DIRECT
 _clear_across:
+		.endif
+clear_across:
 	    pop hl
 	    pop de	; DE = coords
 	    pop bc	; C = count
@@ -191,7 +206,7 @@ _clear_across:
 	    push de
 	    push hl
 	    ld b, #0x40
-	    call _videopos
+	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
 	    out (c), l
@@ -206,14 +221,17 @@ l3:	    out (c), a
 ;
 ;	FIXME: should use attribute blink flag not a char
 ;
+		.if VDP_DIRECT
 _cursor_on:
+		.endif
+cursor_on:
 	    pop hl
 	    pop de
 	    push de
 	    push hl
 	    ld (cursorpos), de
 	    ld b, #0x00			; reading
-	    call _videopos
+	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
 	    out (c), l			; address
@@ -225,7 +243,10 @@ _cursor_on:
 	    ld a, #'_'			; write the cursor
 	    jp plotit2
 
+		.if VDP_DIRECT
 _cursor_off:
+		.endif
+cursor_off:
 	    ld de, (cursorpos)
 	    ld a, (cursorpeek)
 	    ld c, a

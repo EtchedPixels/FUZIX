@@ -3,11 +3,24 @@
             .include "kernel.def"
             .include "../kernel.def"
 
-	    .include "../dev/vdp1.s"
 
 
 	    .area _COMMONMEM
 
+	    .globl _cursor_on
+	    .globl _cursor_off
+	    .globl _clear_across
+	    .globl _clear_lines
+	    .globl _scroll_up
+	    .globl _scroll_down
+	    .globl _plot_char
+
+;
+; VDP routines are directly hooked into the vt layer
+;
+VDP_DIRECT	.equ	1
+
+	    .include "../dev/vdp1.s"
 ;
 ;	FIXME: should use vdpport, but right now vdpport is in data not
 ;	common space.
