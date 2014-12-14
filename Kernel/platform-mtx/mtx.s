@@ -65,9 +65,28 @@ _trap_reboot:
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
+
+	    .area _CONST
+crtcmap:
+	    .db	   0x77, 0x50, 0x5c, 0x09, 0x1e, 0x03, 0x18, 0x1b
+	    .db    0x00, 0x09, 0x60, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00
+
             .area _CODE
 
 init_early:
+;
+;	Bring up the 80 column card early so it can be used for debug
+;
+	    ld hl, #crtcmap
+	    xor a
+	    ld bc, #0x1139		; 17 commands to port 0x38/39
+init6845:
+	    dec c
+	    out (c), a
+	    inc c
+	    inc a
+	    outi
+	    jr nz, init6845
             ret
 
 init_hardware:
@@ -92,7 +111,15 @@ init_hardware:
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
             ; 0A is channel 2, output for DATA ser 1 }
 	    ; 0B is channel 3, counting CSTTE edges (cpu clocks) at 4MHz
-	    ; 0C-0F are A data, B data, A ctrl, B ctrl 
+
+	    xor a
+	    out (0x08), a		; vector 0
+	    ld a, #0x97
+	    out (0x08), a		; CTC 0 as our IRQ source
+	    ld a, #0x05
+	    out (0x08), a		; Timer constant (gives us 10Hz)
+					; should be 0x06 for NTSC boxes
+					; FIXME - how to tell ?
 
             im 1 ; set CPU interrupt mode
 
@@ -185,7 +212,7 @@ map_kernel:
 	    push af
 	    ld a, #0x80		; ROM off bank 0
 	    ; the map port is write only, so keep a local stash
-	    ld (map_save), a
+	    ld (map_copy), a
 	    out (0), a
 	    pop af
             ret

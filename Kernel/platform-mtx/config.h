@@ -12,6 +12,8 @@
 #define CONFIG_CPM_EMU
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
+/* Multiple VT support */
+#define CONFIG_VT_MULTI
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 10 48K banks, 1 is kernel */
@@ -39,7 +41,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2	/* Will be 4 two monitors, two serial */
+#define NUM_DEV_TTY 4	/* Will be 4 two monitors, two serial */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  ((8*256) + 0)  /* Device for swapping. - first silicon disk */
@@ -47,7 +49,7 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Terminal definitions */
-#define VT_WIDTH	40
+#define VT_WIDTH	vt_twidth[curtty]
 #define VT_HEIGHT	24
-#define VT_RIGHT	39
+#define VT_RIGHT	vt_tright[curtty]
 #define VT_BOTTOM	23
