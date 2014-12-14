@@ -19,7 +19,7 @@
 ;	Don't provide the global vt hooks in vdp1.s, we want to wrap them
 ;	for our dual monitor setup
 ;
-VDP_DIRECT   equ	0
+VDP_DIRECT   .equ	0
 
 	    .area _COMMONMEM
 
