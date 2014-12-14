@@ -43,8 +43,12 @@ videopos6:
 	     ld e, a
 	     ld d, #0
 	     add hl, de			; and X
+	     ld de, (crtcbase)		; adjust for CRTC base
+	     add hl, de
+	     ld a, h
+	     and #7			; wrap
+	     ld h, a
 	     ret
-
 
 ;
 ;	This is a bit different as we support both the vdp1 and the 6845
@@ -77,24 +81,87 @@ _clear_across:
 	     ld a, (_curtty)
 	     or a
 	     jp nz, clear_across
+	     pop hl
+	     pop de
+	     pop bc
+	     push bc
+	     push de
+	     push hl
+	     call videopos6		; HL is now the offset we need
+	     ld b, c
+clearbyte:
+	     ld a, #' '
+	     out (0x32), a
+	     ld a, #7
+	     out (0x32), a
+	     ld a, h
+	     or #0xc0
+	     out (0x31), a
+	     ld a, l
+	     out (0x30), a
+	     inc hl
+	     djnz clearbyte
 	     ret
 
 _clear_lines:
 	     ld a, (_curtty)
 	     or a
 	     jp nz, clear_lines
+	     pop hl
+	     pop de
+	     push de		; E = line, D = count
+	     push hl
+	     ld c,d		; Lines to copy
+	     ld d, #0		; E = y, D = X
+	     ld b, #80
+	     call videopos6	; find our offset in HL
+clearonel:
+	     push bc
+clearone:
+	     ld a, #' '
+	     out (0x32), a
+	     ld a, #7
+	     out (0x33), a
+	     ld a, h
+	     or #0xc0
+	     out (0x31), a
+	     ld a, l
+	     out (0x30), a
+	     inc hl
+             djnz clearone
+	     pop bc
+	     dec c
+	     jr nz, clearonel
 	     ret
 
 _scroll_up:  ld a, (_curtty)
 	     or a
 	     jp nz, scroll_up
+
+	     ld hl, (crtcbase)
+	     ld de, #80
+do_scroll:
+	     add hl, de
+	     ld a, #12
+	     out (0x38), a
+	     ld a, h
+	     and #0x07
+	     ld h, a
+	     out (0x39), a
+	     ld a, #13
+	     out (0x38), a
+	     ld a, l
+	     out (0x39), a
+	     ld (crtcbase), hl
 	     ret
 
 _scroll_down:
 	     ld a, (_curtty)
 	     or a
 	     jp nz, scroll_down
-	     ret
+	     ld hl, (crtcbase)
+	     ld de, #0xFF80
+	     jr do_scroll
 
 _plot_char:
 	     ld a, (_curtty)
@@ -126,4 +193,10 @@ _plot_char:
 ;	common space.
 ;
 platform_interrupt_all:
-	    ret
+	     in a, (2)
+	     ret
+
+	     .area _DATA
+
+crtcbase:
+	    .dw 0
