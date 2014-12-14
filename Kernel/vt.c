@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <vt.h>
+#include <devtty.h>
 
 #ifdef CONFIG_VT
 /*
@@ -38,10 +39,10 @@
  */
 
 
-static int vtmode;
+static uint8_t vtmode;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
-static int ncursory;
+static signed char ncursory;
 
 static void cursor_fix(void)
 {
@@ -188,6 +189,26 @@ void vtinit(void)
 	cursor_on(0, 0);
 }
 
+#ifdef CONFIG_VT_MULTI
+
+void vt_save(struct vt_switch *vt)
+{
+	cursor_off();
+	vt->vtmode = vtmode;
+	vt->cursorx = cursorx;
+	vt->cursory = cursory;
+	vt->ncursory = ncursory;
+}
+
+void vt_load(struct vt_switch *vt)
+{
+	vtmode = vt->vtmode;
+	cursorx = vt->cursorx;
+	cursory = vt->cursory;
+	ncursory = vt->ncursory;
+	cursor_on(cursory, cursorx);
+}
+#endif
 
 #ifdef CONFIG_VT_SIMPLE
 

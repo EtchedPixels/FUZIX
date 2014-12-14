@@ -11,9 +11,19 @@
 #define VT_INITIAL_LINE 0
 #endif
 
+struct vt_switch {
+  uint8_t vtmode;
+  signed char cursorx;
+  signed char cursory;
+  signed char ncursory;
+};
+
 /* Core functions */
 void vtoutput(unsigned char *p, unsigned int len);
 void vtinit(void);
+/* Mode switcher functions */
+void vt_save(struct vt_switch *vt);
+void vt_load(struct vt_switch *vt);
 /* Platform functions */
 void clear_lines(int8_t y, int8_t ct);
 void clear_across(int8_t y, int8_t x, int16_t l);
