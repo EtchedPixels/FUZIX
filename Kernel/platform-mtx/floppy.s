@@ -83,12 +83,23 @@ fdsetup:
 	out	(FDCTRK), a
 	cp	TRACK(ix)
 	jr	z, fdiosetup
-
 	;
 	;	So we can verify
 	;
+	bit	4, SECTOR(ix)	; side ?
+	ld	a, (fdcctrl)
+	jr	z, seekside1
+	set	1, a
+	jr 	seekside
+seekside1:
+	res	1, a
+seekside:
+	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
+	inc a
 	out	(FDCSEC), a
+	ld	a, TRACK(ix)
+	out	(FDCDATA), a	; target
 	;
 	;	Need to seek the disk
 	;
@@ -101,18 +112,23 @@ fdsetup:
 	call	waitdisk
 	jr	nz, setuptimeout
 	and	#0x18		; error bits
-	jr	z, fdiosetup
+	jr	z, seekgood
 	; seek failed, not good
 setuptimeout:			; NE = bad
 	ld	a, #0xff	; we have no idea where we are, force a seek
 	ld	(de), a		; zap track info
 	ret
 ;
+;	Seek worked ok
+;
+seekgood:
+	in	a, (FDCREG)
+	ld	a, TRACK(ix)
+	ld	(de), a		; save track
+;
 ;	Head in the right place
 ;
 fdiosetup:
-	ld	a, TRACK(ix)
-	ld	(de), a		; save track
 ;	cmp	#22		; FIXME
 ;	jr	nc, noprecomp
 ;	ld	a, (fdcctrl)
@@ -121,7 +137,7 @@ fdiosetup:
 ;noprecomp:
 	ld	a, (fdcctrl)
 ;precomp1:
-	bit	3, SECTOR(ix)	; check if we need side 1
+	bit	4, SECTOR(ix)	; check if we need side 1
 	jr	nz, fdio_s1
 	res	1, a
 	jr	fdio_setsec
@@ -129,7 +145,7 @@ fdio_s1:set	1, a
 fdio_setsec:
 	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
-	and	#7		; remove side bit
+	inc	a		; 1 based
 	out	(FDCSEC), a
 	in	a, (FDCREG)	; Clear any pending status
 

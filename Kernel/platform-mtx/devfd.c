@@ -3,6 +3,11 @@
 #include <printf.h>
 #include <devfd.h>
 
+/*
+ *	TODO: Debug, low density is half the sectors/track,
+ *	what to do about 80 v 40 track ?
+ *
+ */
 /* Two drives but minors 2,3 are single density mode */
 #define MAX_FD	4
 
@@ -15,7 +20,7 @@
 
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
-static uint8_t fd_tab[MAX_FD];
+static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF };
 
 /*
  *	We only support normal block I/O
@@ -28,7 +33,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int ct = 0;
     int tries;
     uint8_t err = 0;
-    uint8_t *driveptr = fd_tab + minor;
+    uint8_t *driveptr = &fd_tab[minor & 1];
     uint8_t cmd[6];
 
     if(rawflag)
@@ -43,16 +48,17 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
-//    kprintf("Issue command: drive %d\n", minor);
+    kprintf("Issue command: drive %d block %d\n", minor, block);
     cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 8;		/* 2 sectors per block */
-    cmd[2] = ((block & 7) << 1) + 1;
+    cmd[1] = block / 16;		/* 2 sectors per block */
+    cmd[2] = ((block & 15) << 1); /* 0 - 1 base is corrected in asm */
     cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
     cmd[4] = dptr & 0xFF;
     cmd[5] = dptr >> 8;
 
     while (ct < 2) {
         for (tries = 0; tries < 4 ; tries++) {
+            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
