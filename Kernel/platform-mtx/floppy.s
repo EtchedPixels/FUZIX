@@ -96,6 +96,7 @@ seekside1:
 seekside:
 	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
+	and 	#15
 	inc a
 	out	(FDCSEC), a
 	ld	a, TRACK(ix)
@@ -145,6 +146,7 @@ fdio_s1:set	1, a
 fdio_setsec:
 	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
+	and 	#15
 	inc	a		; 1 based
 	out	(FDCSEC), a
 	in	a, (FDCREG)	; Clear any pending status
