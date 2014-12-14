@@ -114,12 +114,10 @@ init_hardware:
 
 	    xor a
 	    out (0x08), a		; vector 0
-	    ld a, #0x97
+	    ld a, #0xA5
 	    out (0x08), a		; CTC 0 as our IRQ source
-	    ld a, #0x05
-	    out (0x08), a		; Timer constant (gives us 10Hz)
-					; should be 0x06 for NTSC boxes
-					; FIXME - how to tell ?
+	    ld a, #0xFC
+	    out (0x08), a		; Timer constant
 
             im 1 ; set CPU interrupt mode
 
