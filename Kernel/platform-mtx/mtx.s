@@ -14,6 +14,7 @@
 
 	    .globl map_kernel
 	    .globl map_process
+	    .globl map_process_a
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
@@ -226,6 +227,7 @@ map_process_a:
 map_process_always:
 	    push af
 	    ld a, (U_DATA__U_PAGE)
+map_set_a:
 	    ld (map_copy), a
 	    out (0), a
 	    pop af
@@ -239,9 +241,8 @@ map_save:
 map_restore:
 	    push af
 	    ld a, (map_store)
-	    out (0), a
-	    pop af
-	    ret	    
+	    jr map_set_a
+
 map_store:
 	    .db 0
 map_copy:

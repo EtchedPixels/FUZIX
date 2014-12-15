@@ -1,6 +1,5 @@
 ;
-;	This is heavily based on the Z80Pack platform code. Only the
-; constants have changed.
+;	This is heavily based on the Z80Pack platform code.
 ;
         .module tricks
 
@@ -20,6 +19,11 @@
         .globl interrupt_handler
         .globl dispatch_process_signal
 	.globl _swapper
+
+	.globl map_kernel
+	.globl map_process
+	.globl map_process_a
+	.globl map_process_always
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -54,14 +58,12 @@ _switchout:
 
 	; Stash the uarea back into process memory
 	ld hl, (U_DATA__U_PAGE)
-	ld a, l
-	out (0), a
+	call map_process_always
 	ld hl, #U_DATA
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
-	ld a, #0x80		; kernel
-	out (0), a
+	call map_kernel
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -87,8 +89,7 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
-	ld a, #0x80
-	out (0), a	; kernel
+	call map_kernel
 
 	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
@@ -111,10 +112,9 @@ _switchin:
 	pop de
 	pop hl
 	ld a, (hl)
-
 not_swapped:
 	; Pages please !
-	out (0), a
+	call map_process_a
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -126,8 +126,7 @@ not_swapped:
 	ldir
 	exx
 
-	ld a, #0x80		; kernel back please
-	out (0), a
+	call map_kernel
         
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
@@ -232,8 +231,7 @@ _dofork:
 
 	; Copy done
 
-	ld a, (U_DATA__U_PAGE)	; parent memory
-	out (0), a		; Switch context to parent
+	call map_process_always
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -243,8 +241,8 @@ _dofork:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	; Return to the kernel mapping
-	ld a, #0x80
-	out (0), a
+	call map_kernel
+
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
         pop bc
@@ -281,7 +279,7 @@ bankfork:
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	out (0), a		; switch to parent bank
+	call map_process_a
 	ld de, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the bounce buffer
@@ -291,7 +289,7 @@ bankfork_1:
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
-	out (0), a
+	call map_process_a
 	push bc			; save the bank pointers
 	ld hl, #bouncebuffer
 	ld bc, #256
