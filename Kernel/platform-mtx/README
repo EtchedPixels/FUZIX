@@ -31,3 +31,17 @@ has an SD card. Not supported, if you want it supported fix MEMU ;-)
 
 
 
+On the MEMU emulator you can do a fast load for testing as follows
+
+./fullcpm.sh -iobyte 0x80 -addr 0x0100 -mem /tmp/fuzix.com -addr 0x0100
+-serial2-out /dev/tty -diag-console -sdx-mfloppy mfloppy/ref.fs -sdx-tracks
+-40
+
+(and add -diag-whatever as needed)
+
+This flips the box into pure RAM mode, loads the image at 0x100 and runs it
+fro there with the root floppy as mfloppy/ref.fs which needs to be a
+suitable image. I'm currently using a 40 track image, but 80 should work
+fine too (40 in 80 won't yet). It's quicker than booting CP/M and loading
+the image.
+
