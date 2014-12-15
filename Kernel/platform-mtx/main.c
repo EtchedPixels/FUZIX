@@ -6,29 +6,37 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t vdpport = 0x02 + 256 * 40;	/* port and width */
+uint8_t membanks;
 
 void pagemap_init(void)
 {
  int i;
- /* Ten banks (should check memory size) FIXME */
- for (i = 0x81; i < 0x8A; i++)
+ /* Up to ten banks */
+ for (i = 0x81; i <= membanks; i++)
   pagemap_add(i);
 }
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
-   for the polled ports */
+   for the polled ports. We don't need this on MTX, but we probably do for
+   MEMU */
+
 void platform_idle(void)
 {
-  /* We don't want an idle poll and IRQ driven tty poll at the same moment */
   irqflags_t irq = di();
-//  tty_pollirq(); 
+  tty_interrupt();
   irqrestore(irq);
 }
 
 void platform_interrupt(void)
 {
- kbd_interrupt();
- timer_interrupt();
+  extern uint8_t irqvector;
+
+  if (irqvector == 1) {
+    tty_interrupt();
+    return;
+  }
+  kbd_interrupt();
+  timer_interrupt();
 }
 
 /* Nothing to do for the map of init */

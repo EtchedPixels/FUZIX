@@ -87,10 +87,20 @@ int tty_carrier(uint8_t minor)
 
 static uint8_t dart_setup[] = {
 	1, 0x19,
-	2, 0x00,
-	3, 0xC1,	/* 8bit */
-	4, 0x04,	/* 8N1 */
-	5, 0x72,	/* Tx 8bit, enabled, rts on */
+	2, 0x04,	/* Vector */
+	3, 0x00,
+	4, 0x00,
+	5, 0x00,
+};
+
+/* Baud rates for Z80 DART */
+static uint8_t dartbaud[] = {
+	0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x80, 0x40, 0x20,
+	0x10, 0x08, 0x04, 0x02, 0x01, 0x00, 0x00, 0x00
+};
+
+static uint8_t dartbits[] = {
+	0x00, 0x40, 0x80, 0xC0
 };
 
 void tty_setup(uint8_t minor)
@@ -98,13 +108,36 @@ void tty_setup(uint8_t minor)
 	irqflags_t flags;
 	int i;
 	char *p = dart_setup;
+	struct tty *t = &ttydata[minor];
+	uint8_t cf = t->termios.c_cflag;
+	uint8_t r;
+
+	if ((cf & CBAUD) < B150) {
+		cf &= ~CBAUD;
+		cf |= B150;
+	}
+	if ((cf & CBAUD) > B19200) {
+		cf &= ~CBAUD;
+		cf |= B19200;
+	}
+	r = dartbits[(cf & CSIZE) >> 4];
+	dart_setup[5] = 0x01 | r;
+	dart_setup[9] = 0x8A | r >> 1;
+	r = 0x04;
+	if (cf & PARENB) {
+		r |= 1;
+		if (!(cf & PARODD))
+			r|=2;
+	}
+	dart_setup[7] = r;
+	dart_setup[7] = r;
 
 	if (minor == 1) {
-		ctc1 = 0x7F;
-		ctc1 = 0x02;	/* FIXME set by baud rate */
+		ctc1 = 0x45;
+		ctc1 = dartbaud[cf & CBAUD];
 	} else {
-		ctc2 = 0x7F;
-		ctc2 = 0x02;
+		ctc2 = 0x45;
+		ctc1 = dartbaud[cf & CBAUD];
 	}
 	flags = di();
 	for (i = 0; i < 10; i++) {
@@ -116,6 +149,23 @@ void tty_setup(uint8_t minor)
 	irqrestore(flags);
 }
 
+int mtxtty_close(uint8_t minor)
+{
+	irqflags_t flags;
+	int err = tty_close(minor);
+
+	flags = di();
+	if (minor == 3) {
+		serialAc = 0x05;
+		serialAc = 0x00;	/* Drop DTR/RTS */
+	}
+	if (minor == 4) {
+		serialBc = 0x05;
+		serialBc = 0x00;	/* Drop DTR/RTS */
+	}
+	irqrestore(flags);
+	return err;
+}
 
 static uint16_t keymap[8];
 static uint16_t keyin[8];
@@ -223,7 +273,7 @@ void kbd_interrupt(void)
 		keydecode();
 }
 
-void serial_interrupt(void)
+void tty_interrupt(void)
 {
 	uint8_t r;
 
@@ -234,14 +284,18 @@ void serial_interrupt(void)
 			tty_inproc(3, r);
 			r = serialAc;
 		}
+		if (!(r & 0x08))
+			tty_carrier_drop(3);
 		r = serialBc;
 		while (r & 0x01) {
 			r = serialBd;
 			tty_inproc(4, r);
 			r = serialBc;
 		}
+		serialAc = 0x07 << 3;	/* Return from interrupt */
+		if (!(r & 0x08))
+			tty_carrier_drop(4);
 	}
-	serialAc = 0x07 << 3;	/* Return from interrupt */
 }
 
 /* This is used by the vt asm code, but needs to live in the kernel */

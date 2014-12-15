@@ -22,6 +22,7 @@
 	    .globl _sil_memcpy
 
 	    .globl _kernel_flag
+	    .globl _irqvector
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -30,6 +31,7 @@
             ; imported symbols
             .globl _ramsize
             .globl _procmem
+	    .globl _membanks
 
 	    .globl unix_syscall_entry
             .globl null_handler
@@ -52,6 +54,18 @@
 ; COMMON MEMORY BANK (0xC000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+;
+;	This is linked straight after the udata block so is 256 byte
+; aligned. Put the im2 table first
+;
+	     .globl intvectors
+
+intvectors:
+	    .dw ctc0_int	; VDP counting timer
+	    .dw bogus_int	; Baud generator
+	    .dw bogus_int	; Baud generator
+	    .dw trace_int	; can be used for CPU tracing etc
+	    .dw serial_int	; we don't use the vector mod functions
 
 _trap_monitor:
 	    di
@@ -62,6 +76,54 @@ _trap_reboot:
 	    xor a
 	    out (0),a		; ROM mode, we are in common so survive
 	    rst 0		; kaboom
+
+_irqvector:
+	    .db 0		; used to identify the vector in question
+
+ctc0_int:   push af
+	    xor a
+	    ld (_irqvector), a
+	    pop af
+	    jp interrupt_handler
+trace_int:
+bogus_int:  reti
+serial_int:
+	    push af
+	    ld a, #1
+	    ld (_irqvector), a
+	    pop af
+	    jp interrupt_handler
+
+; Kernel is in 0x80 so we just need to count the banks that differ
+size_ram:
+	    ld hl, #0x1000	; good as anywhere
+	    ld bc, #0x8100	; port 0 in c, b = 0x81
+size_next:
+	    out (c), b
+	    ld a, #0xA5
+	    ld (hl), a
+	    cp (hl)
+	    jr nz, size_nonram
+	    cpl
+	    ld (hl), a
+	    cp (hl)
+	    jr nz, size_nonram
+	    inc b
+	    ld a, #0x8B
+	    cp b
+	    jr nz, size_next	; All banks done
+size_nonram:
+	    ld a, #0x80
+	    out (c), a		; Return to kernel
+	    res 7,b		; Clear the flag so we just have banks
+	    dec b		; Last valid bank
+	    ld a, b
+	    ld (_membanks), a
+	    ld hl, #0
+	    ld de, #48
+sizer:	    add hl, de
+	    djnz sizer
+	    ret
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
@@ -91,11 +153,12 @@ init6845:
             ret
 
 init_hardware:
+	    call size_ram
 	    ; FIXME: do proper size checker
             ; set system RAM size (hardcoded for now)
-            ld hl, #480
             ld (_ramsize), hl
-            ld hl, #(480-48)		; 64K for kernel
+	    and a
+	    sbc hl, de			; DE will hold 48 at this point
             ld (_procmem), hl
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
@@ -107,20 +170,22 @@ init_hardware:
 	    ; Program the video engine
 	    call vdpinit
 
-	    ; FIXME: set up interrupt timer on the CTC
-	    ; 08 is channel 0, which is input for vdp
+	    ; 08 is channel 0, which is input from VDP
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
             ; 0A is channel 2, output for DATA ser 1 }
 	    ; 0B is channel 3, counting CSTTE edges (cpu clocks) at 4MHz
 
 	    xor a
 	    out (0x08), a		; vector 0
-	    ld a, #0xA5
+	    ld a, #0xC5
 	    out (0x08), a		; CTC 0 as our IRQ source
-	    ld a, #0xFC
+	    ld a, #0x01
 	    out (0x08), a		; Timer constant
 
-            im 1 ; set CPU interrupt mode
+	    ld hl, #intvectors		; Work around SDCC crappiness
+	    ld a, h
+	    ld i, a
+            im 2 ; set CPU interrupt mode
 
 	    call _vtinit		; init the console video
 

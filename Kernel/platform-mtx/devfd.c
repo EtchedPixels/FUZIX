@@ -48,7 +48,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
-    kprintf("Issue command: drive %d block %d\n", minor, block);
+//    kprintf("Issue command: drive %d block %d\n", minor, block);
     cmd[0] = is_read ? FD_READ : FD_WRITE;
     cmd[1] = block / 16;		/* 2 sectors per block */
     cmd[2] = ((block & 15) << 1); /* 0 - 1 base is corrected in asm */
@@ -58,7 +58,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     while (ct < 2) {
         for (tries = 0; tries < 4 ; tries++) {
-            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
+//            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
