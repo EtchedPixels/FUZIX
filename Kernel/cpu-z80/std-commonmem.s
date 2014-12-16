@@ -2,6 +2,8 @@
 ;
 ;	Standard Z80 common memory area blocks.
 ;
+;	Must remain a multiple of 256 bytes
+;
         ; exported symbols
         .globl _ub
         .globl _udata
