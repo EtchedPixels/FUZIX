@@ -54,7 +54,7 @@ _plot_char:
         rl b
         ld c, a
 
-        ld hl, #_fontdata_8x8
+        ld hl, #_fontdata_8x8 - 256
         add hl, bc          ; hl points to first byte of char data
 
         ; printing
