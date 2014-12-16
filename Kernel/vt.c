@@ -193,7 +193,6 @@ void vtinit(void)
 
 void vt_save(struct vt_switch *vt)
 {
-	cursor_off();
 	vt->vtmode = vtmode;
 	vt->cursorx = cursorx;
 	vt->cursory = cursory;
@@ -206,7 +205,6 @@ void vt_load(struct vt_switch *vt)
 	cursorx = vt->cursorx;
 	cursory = vt->cursory;
 	ncursory = vt->ncursory;
-	cursor_on(cursory, cursorx);
 }
 #endif
 
