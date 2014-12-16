@@ -35,12 +35,11 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2}
 };
 
-/* tty1 is the screen tty2 is the debug port */
+/* tty1 is the screen tty2 is vdp screen */
 
 /* Output for the system console (kprintf etc) */
 void kputchar(char c)
 {
-	/* Debug port for bringup */
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
@@ -58,15 +57,17 @@ bool tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	minor;
+	irqflags_t irq;
 
 	if (minor < 3) {
+		irq = di();
 		if (curtty != minor - 1) {
 			vt_save(&ttysave[curtty]);
 			curtty = minor - 1;
 			vt_load(&ttysave[curtty]);
 		}
 		vtoutput(&c, 1);
+		irqrestore(irq);
 		return;
 	}
 	if (minor == 3)
@@ -181,13 +182,13 @@ __sfr __at 0x06 keyporth;
 static void keyproc(void)
 {
 	int i;
-	uint8_t key;
+	uint16_t key;
 
 	for (i = 0; i < 8; i++) {
 		/* Set the row */
 		keyport = 0xff - (1 << i);
 		/* Read the matrix lines - 10 bit wide */
-		keyin[i] = (keyport | ((uint16_t)keyporth << 8)) ^ 0xffff;
+		keyin[i] = (keyport | ((uint16_t)keyporth << 8)) ^ 0x03ff;
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
@@ -213,9 +214,9 @@ static void keyproc(void)
 }
 
 static uint8_t keyboard[8][10] = {
-	{'1', '3', '5', '7', '9' , '-', '\\', 0/*page */, 3/*brk*/, 0xF1/*f1*/},
+	{'1', '3', '5', '7', '9' , '-', '\\', 0/*page */, 3/*brk*/, 0/*f1*/},
 	{ 27, '2', '4', '6', '8', '0', '^', 0/*eol*/, 8, 0/*f5*/},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', 0/*up*/, 9, 0xF2/*f2*/ },
+	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', 0/*up*/, 9, 0/*f2*/ },
 	{'q', 'e', 't' , 'u', 'o', '@', 10, 8/*left*/, 127, 0 /* f6 */ },
 	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', 0/*right*/, 0, 0/*f7*/ },
 	{ 'a', 'd', 'g', 'j', 'l', ':', 13, 12/*home*/, 0, 0 /*f3 */ },
@@ -224,9 +225,9 @@ static uint8_t keyboard[8][10] = {
 };
 
 static uint8_t shiftkeyboard[8][10] = {
-	{'!', '#', '%', '\'', ')' , '=', '|', 0/*page */, 3/*brk*/, 0/*f1*/},
+	{'!', '#', '%', '\'', ')' , '=', '|', 0/*page */, 3/*brk*/, 0xF1/*f1*/},
 	{ 27, '"', '$', '&', '(', 0, '~', 0/*eol*/, 8, 0/*f5*/},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '{', 0/*up*/, 9, 0/*f2*/ },
+	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '{', 0/*up*/, 9, 0xF2/*f2*/ },
 	{'q', 'e', 't' , 'u', 'o', '`', 10, 8/*left*/, 127, 0 /* f6 */ },
 	{ 0/*capsl*/, 's', 'f', 'h', 'k', '+', '}', 0/*right*/, 0, 0/*f7*/ },
 	{ 'a', 'd', 'g', 'j', 'l', '*', 13, 12/*home*/, 0, 0 /*f3 */ },
@@ -240,13 +241,6 @@ static void keydecode(void)
 {
 	uint8_t c;
 
-	if ((keybyte == 0xF1 || keybyte == 0xF2)
-					&& inputtty != keybyte - 0xF1) {
-		inputtty = keybyte - 0xF1;
-		vt_save(&ttysave[inputtty]);
-		vt_load(&ttysave[inputtty]);
-		return;
-	}
 	if (keybyte == 4 && keybit == 0) {
 		capslock = 1 - capslock;
 		return;
@@ -256,13 +250,23 @@ static void keydecode(void)
 		c = shiftkeyboard[keybyte][keybit];
 	else
 		c = keyboard[keybyte][keybit];
+
+	if (c == 0xF1 || c == 0xF2) {
+		if (inputtty != c - 0xF1) {
+			inputtty = c - 0xF1;
+		}
+		return;
+	}
+
+
 	if (keymap[2] & 1) {	/* control */
 		if (c > 31 && c < 96)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	tty_inproc(inputtty + 1, c);
+	if (c)
+		tty_inproc(inputtty + 1, c);
 }
 
 void kbd_interrupt(void)
