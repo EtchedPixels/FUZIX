@@ -2,7 +2,7 @@
 -i uzi.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _DISCARD=0xD000
+-b _DISCARD=0xD800
 -l z80
 platform-mtx/crt0.rel
 platform-mtx/commonmem.rel
@@ -32,6 +32,7 @@ syscall_other.rel
 tty.rel
 vt.rel
 platform-mtx/vdp.rel
+font6x8.rel
 mm.rel
 bankfixed.rel
 swap.rel
