@@ -12,7 +12,7 @@ void pagemap_init(void)
 {
  int i;
  /* Up to ten banks */
- for (i = 0x81; i <= membanks; i++)
+ for (i = 0x81; i < 0x80 + membanks; i++)
   pagemap_add(i);
 }
 
