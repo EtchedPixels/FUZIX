@@ -1,21 +1,27 @@
-The MTX512 has the following relevant features
+The following MTX512 features are supported
+- 6845 based colour text display attributes yet) as /dev/tty1
+- Keyboard including F1/F2 to switch tty
+- SDX WD1791 style floppy controller at 0x10
+- Silicon discs. These are mapped as device 8 not as /dev/hd because their
+  contents (on real ones) vanish if you power off. The default build will
+  blindly use the first silicon disc as swap
+- CTC timers
+- Z80 DART RS232
+- Printer
 
-- "FDX" WD1791 floppy (and an actual DMA controller) at 0x40
-  SASI interface for floppies
-  (Not in emulator)
-- "SDX" WD1791 style floppy (and no DMA controller) at 0x10
-- 9918/29 VDP graphics (equivalent to MSX1 but on ports 1/2) - interrupts
-  are fed to the CTC however
-- Separate 80 column card (text mode only) (6845 on port 0x38/39)
-  this has its own memory port poked via port 30,31 (set 31 
-  bits 2-0 to the high address bits, bit 5 for attr, 6 for ascii, 7 for write
-  then port 30 for the low bits. Port 32 is the data port (read after write
-  before), port 33 for read/write is the attribute byte
-- "silicon disc" (aka RAM discs) on 0x50-53 54-57 58-5b 5c-5f
-- CTC timer (at CPU speed so can support single step)
-- RS232 (Z80 DART)
-- Sound (SN76489A) on I/O port 6, (strobe on port 3, 32uS reqired post
-  strobe)
+The following are not yet supported
+- Colour/attributes on the display (general vt change)
+- VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
+  interrupts fed into CTC#0 as /dev/tty2. This is partly implemented but
+  scrolling has yet to be debugged!
+- FDX SASI DMA controller
+- SN76489A sound (no sound layer in Fuzix yet)
+
+The Rememorizer and Rememotech are not supported. Adding support for them
+should not be difficult.
+
+
+Memory Management
 
 Memory is split into four banks the decode for which is dependent upon
 whether the box is in "ROM based" or "RAM based" mode. The memory is then
@@ -23,13 +29,15 @@ switched in 48K banks with a 16K true common.
 
 All memory management is controlled by the page port (port 0). Bit 7 is set
 to 1 to turn the ROMs off, bit 4-6 detemine the rom page address, bits 0-3
-select the RAM bank.
+select the RAM bank. The port is *write only*.
 
 Note that Rememorizer is different, it allows 0x0f to be written to the
 low 3 bits of port 0, then port 0xd2, d0, d1 control the 3 16K banks and also
-has an SD card. Not supported, if you want it supported fix MEMU ;-)
+has an SD card. Under Rememorizer you could instead do a 16K banked port and
+get better performance and memory usage.
 
 
+Loading
 
 On the MEMU emulator you can do a fast load for testing as follows
 
