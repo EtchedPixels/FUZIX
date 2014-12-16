@@ -39,6 +39,7 @@
             .globl interrupt_handler
 
 	    .globl vdpinit
+	    .globl vdpload
 	    .globl _vtinit
 
             .globl outcharhex
@@ -169,6 +170,7 @@ init_hardware:
 
 	    ; Program the video engine
 	    call vdpinit
+	    call vdpload
 
 	    ; 08 is channel 0, which is input from VDP
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13

@@ -19,6 +19,7 @@
         .area _GSINIT
         .area _GSFINAL
 	.area _DISCARD
+	.area _FONT
         .area _COMMONMEM
 
         ; imported symbols
@@ -28,6 +29,8 @@
         .globl s__INITIALIZER
         .globl s__DATA
         .globl l__DATA
+        .globl s__FONT
+        .globl l__FONT
         .globl s__DISCARD
         .globl l__DISCARD
         .globl s__COMMONMEM
@@ -48,6 +51,10 @@ init:
 	ld hl, #s__INITIALIZER
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
+	ldir
+	; font
+	ld de, #s__FONT
+	ld bc, #l__FONT
 	ldir
 	; and the discard
 	ld de, #s__DISCARD

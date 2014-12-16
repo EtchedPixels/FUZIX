@@ -13,8 +13,9 @@
 	    .globl _cursor_off
 	    .globl _cursor_on
 	    .globl _plot_char
+	    .globl vdpload
 
-
+	    .globl _fontdata_6x8
 ;
 ;	Don't provide the global vt hooks in vdp1.s, we want to wrap them
 ;	for our dual monitor setup
@@ -22,6 +23,36 @@
 VDP_DIRECT   .equ	0
 
 	    .area _COMMONMEM
+
+;
+;	Font uploader
+;
+vdpload:
+	     ld hl, #_fontdata_6x8
+	     ; Remember the first 32 symbols (256 bytes) are unused
+	     ld de, #0x4000 + 0x1900 	; write to 0x4000 + fontbase
+	     ld bc, (_vdpport)		; port
+	     ld b, #0			; but we want 256 not the rows
+	     ld a, #3
+vdploadl:
+	     push af
+vdploadl2:
+	     out (c), e		; select target
+	     out (c), d
+	     dec c		; write font byte
+	     ld a, (hl)
+	     rlca		; font packed left
+	     rlca
+	     out (c), a
+	     inc c
+	     inc de
+	     inc hl
+	     djnz vdploadl2	; 256 bytes done
+	     pop af
+	     dec a
+	     jr nz, vdploadl	; 768 bytes total
+	     ret
+
 
 ;
 ;	Turn co-ordinates D,E into offset HL
@@ -49,7 +80,6 @@ videopos6:
 	     and #7			; wrap
 	     ld h, a
 	     ret
-
 ;
 ;	This is a bit different as we support both the vdp1 and the 6845
 ; port
