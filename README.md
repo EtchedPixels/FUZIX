@@ -1,7 +1,7 @@
 FuzixOS: Because Small Is Beautiful
 
 This is the initial public tree for the FuzixOS project. It is not yet useful although you can build and boot it and run
-test application code. A lot of work is needed on the utilities and libraries yet.
+test application code. A lot of work is needed on the utilities and libraries.
 
 FUZIX
 =====
@@ -100,17 +100,17 @@ Tool Issues
 
 Platforms
 =========
-* Amstrad NC100 - real hardware sanity check
+* Amstrad NC100/NC200 - real hardware sanity check
 * Amstrad PCW8256 - boots to loading init, floppy driver bugs to chase
 * Dragon64 - abused as an emulator 6809 test environment (replaces all the system ROMs)
+* Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
 * MSX - initial booting work done, cartridge boot needs debugging. Next stop is
 a keyboard driver.
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
+* ZX Spectrum - can boot to loading a file system
 
 Various other platforms are partly filled out to sanity check assumptions
 and start making progress on them. The main need there is now to tackle all
 the billion different ways of interfacing the floppy controllers.
-
-
 
