@@ -1,6 +1,6 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
-export TARGET= zx128
+export TARGET= mtx
 export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
@@ -84,7 +84,7 @@ C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c process.c
 C2SRCS += simple.c single.c bank16k.c bank32k.c bankfixed.c
 C2SRCS += devsys.c mm.c swap.c usermem.c timer.c
 CVIDEOSRCS = vt.c
-CFONTSRCS = font4x6.c font8x8.c
+CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
 
 ASRCS =  lowlevel-$(CPU).s usermem_std-$(CPU).s
