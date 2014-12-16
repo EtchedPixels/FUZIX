@@ -4,7 +4,7 @@ Big TODO Items Before 0.1 Release
 o 	BSD groups can be done but do we care ?
 IP	Termios and speed hooks to tty drivers
 DONE	hangup ioctl (vhangup) plus hangups for group leader exits
-o	rename should delete old files it renames over
+DONE	rename should delete old files it renames over
 o	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
 IP	SYS5 signal holding
 o	ptrace
@@ -13,6 +13,7 @@ o	time_t bits hidden in inode
 o	n_openw() - as n_open but errors on R/O mount or media, getinodew ??
 	and update setftime ?
 o	RTC setting
+o	Lock clock to RTC seconds
 o	Can we make the mount point buffers writable to disk too so we can
 	drop the quiet ones when busy ?
 o	Simplify exec logic and split into multiple functions
@@ -31,17 +32,16 @@ o	Rewrite the compressor in assembler
 o	Support 'raw' I/O on files
 o	Make execve use this to avoid all the copies
 o	Vfork
-o	Make mount pin a buffer rather than keeping mount blocks around
+DONE	Make mount pin a buffer rather than keeping mount blocks around
 	unused.
 
 Maybe
 -----
 o	Different magic for "big" fs - 32bit block numbers only on raw
 	devices. Split blkno_t into blkno_t blknodev_t or similar
-o	Rewrite the compressor in assembler
-IP	Carrier handling for tty devices
+DONE	Carrier handling for tty devices
 o	Revoke 8)
-o	Uptime/loadaverage/swapfree etc data
+IP	Uptime/loadaverage/swapfree etc data
 o	Virtual device hooks for networking
 o	Pty/tty devices
 o	Finish select/poll

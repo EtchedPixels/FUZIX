@@ -41,7 +41,7 @@ int16_t _rename(void)
 	/* n_open will wipe u_rename if it walks that inode
 	   so it tells us whether we are trying to create a loop */
 	udata.u_rename = srci;
-	/* Destination must not exist, but parent must */
+	/* Destination maybe does not exist, but parent must */
 	filename(dst, fname);
 	dsti = n_open(dst, &dstp);
 	/* Destination not found, but neither is the directory to
