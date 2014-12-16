@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devfd.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t vdpport = 0x02 + 256 * 40;	/* port and width */
@@ -36,6 +37,7 @@ void platform_interrupt(void)
     return;
   }
   kbd_interrupt();
+  fd_motor_timer();
   timer_interrupt();
 }
 

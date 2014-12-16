@@ -22,6 +22,17 @@ static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
 static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF };
 
+void fd_motor_timer(void)
+{
+    if (motorct) {
+        motorct--;
+        if (motorct == 0) {
+            fd_motor_off();
+            fd_selected = 0xFF;
+        }
+    }
+}
+
 /*
  *	We only support normal block I/O
  */
@@ -35,15 +46,19 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t err = 0;
     uint8_t *driveptr = &fd_tab[minor & 1];
     uint8_t cmd[6];
+    irqflags_t irq;
 
     if(rawflag)
         goto bad2;
 
+    irq = di();
     if (fd_selected != minor) {
         uint8_t err = fd_motor_on(minor|(minor > 1 ? 0: 0x10));
         if (err)
             goto bad;
+        motorct = 150;	/* 3 seconds */
     }
+    irqrestore(irq);
 
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
