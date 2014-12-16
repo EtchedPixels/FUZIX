@@ -26,6 +26,8 @@
  *
  */
 
+#include <config.h>
+
 #ifdef CONFIG_FONT6X8
 
 #define ______ 0x00
