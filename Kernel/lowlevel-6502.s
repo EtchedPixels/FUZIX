@@ -13,8 +13,18 @@
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall_i
+	.import nmi_trap
+	.import map_restore
+	.import map_save
+	.import map_process_always
+	.import map_kernel
+	.import _platform_interrupt_i
+	.import platform_doexec
+	.import _inint
 
 	.include "platform/zeropage.inc"
+	.include "platform/kernel.def"
+	.include "kernel02.def"
 
 	.segment "COMMONMEM"
 ;
@@ -55,11 +65,11 @@ unix_sig_exit:
 ;	doexec is a special case syscall exit path. As we may have no
 ;	common we have to hand the last bits off to the platform code
 ;
-_doexec
+_doexec:
 	sei
 	lda #0
 	sta _kernel_flag
-	call map_process_always
+	jsr map_process_always
 	jmp platform_doexec
 
 ;
@@ -81,7 +91,7 @@ interrupt_handler:
 	lda _kernel_flag
 	bne interrupt_k
 	jsr map_process_always		; may have switched task
-	jr int_switch
+	jmp int_switch
 interrupt_k:
 	jsr map_restore
 int_switch:
@@ -100,13 +110,13 @@ outstring:
 	sta ptr1
 	stx ptr1+1
 	ldy #0
-outstringhexl:
+outstringl:
 	lda (ptr1),y
 	cmp #0
 	beq outdone1
-	call outcharhex
+	jsr outcharhex
 	iny
-	jmp outstringhexl
+	jmp outstringl
 
 outstringhex:	; string in X,A
 	sta ptr1
@@ -116,7 +126,7 @@ outstringhexl:
 	lda (ptr1),y
 	cmp #0
 	beq outdone1
-	call outcharhex
+	jsr outcharhex
 	iny
 	jmp outstringhexl
 
@@ -127,6 +137,7 @@ outnewline:
 	lda #10
 	jsr outchar
 	pla
+outdone1:
 	rts
 
 outcharhex:
@@ -136,9 +147,11 @@ outcharhex:
 	lsr a
 	lsr a
 	lsr a
-	add #'0'
+	clc
+	adc #48			; ascii zero
 	jsr outchar
 	pla
 	and #$0f
-	add #'0'
+	clc
+	adc #48
 	jmp outchar

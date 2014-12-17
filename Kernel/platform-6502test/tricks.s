@@ -6,6 +6,8 @@
         .export _dofork
 	.export _ramtop
 
+	.import _chksigs
+	.import _trap_monitor
 
         .include "kernel.def"
         .include "../kernel02.def"

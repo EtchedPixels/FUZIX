@@ -5,6 +5,7 @@
 		.import init_early
 		.import init_hardware
 		.import _fuzix_main
+		.import kstack_top
 
 		.import  __BSS_RUN__, __BSS_SIZE__
 
@@ -24,9 +25,9 @@ start:
 		lda #>kstack_top
 		sta sp+1 
 
-		ld a,#<__BSS_RUN__
+		lda #<__BSS_RUN__
 		sta ptr1
-		ld a,#>__BSS_RUN__
+		lda #>__BSS_RUN__
 		sta ptr1+1
 		lda #0
 		tay
@@ -46,9 +47,9 @@ bss_wipe_tail:
 		sta (ptr1),y
 		iny
 		bne bss_wipe_tail
-
+gogogo:
 		jsr init_early
 		jsr init_hardware
 		jsr _fuzix_main		; Should never return
 		sei			; Spin
-stop:		bra stop
+stop:		jmp stop

@@ -23,11 +23,18 @@
 	    .import _procmem
 	    .import nmi_handler
 	    .import unix_syscall_entry
+	    .import _kernel_flag
+	    .import kstack_top
+	    .import istack_switched_sp
 
             .include "kernel.def"
             .include "../kernel02.def"
 	    .include "zeropage.inc"
 
+;
+;	syscall is jsr [$00fe]
+;
+syscall	     =  $FE
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
@@ -115,12 +122,10 @@ program_vectors_k:
 	    ; However tempting it may be to use BRK for system calls we
 	    ; can't do this on an NMOS 6502 because the chip has brain
 	    ; dead IRQ handling buts that could simply "lose" the syscall!
-	    lda #JSR
-	    sta syscall
 	    lda #<syscall_entry
-	    sta syscall+1
+	    sta syscall
 	    lda #>syscall_entry
-	    sta syscall+2
+	    sta syscall+1
 	    jsr map_kernel
 	    rts
 
@@ -155,28 +160,30 @@ map_process_always:
 	    ldx #>U_DATA__U_PAGE
 	    jsr map_process_2
 	    pla
-	    ret
+	    rts
 ;
 ;	X,A points to the map table of this process
 ;
 map_process:
 	    cmp #0
 	    bne map_process_2
-	    cpx
+	    cpx #0
 	    bne map_process_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;
 map_kernel:
+	    pha
 	    lda #1	; for 6509 clean up any far copy ptr
 	    sta 1
+	    pla
 	    rts
 
 ; X,A holds the map table of this process
 map_process_2:
+	    sta ptr1
 	    tya
 	    pha
-	    sta ptr1
 	    sty ptr1+1
 	    ldy #0
 	    lda (ptr1),y	; 4 bytes if needed
@@ -247,7 +254,7 @@ vector:
 	    inx
 	    inx
 	    lda $0100,X
-	    and a, $10
+	    and #$10
 ;
 ;	FIXME: either don't care about brk or ship it somewhere like
 ;	kill -SIGTRAP
@@ -265,7 +272,7 @@ vector:
 ;	Stack has gone for a walk if we were not coming from kernel
 	    tsx
 	    stx istack_switched_sp		; in uarea/stacks
-	    ldx #0xC0
+	    ldx #$C0
 	    txs					; our istack
 	    jsr interrupt_handler
 	    ldx istack_switched_sp
@@ -287,6 +294,7 @@ vector_um:
 	    pla					; discard saved idirect
 
 irqout:
+bogon:
 	    pla
 	    tya
 	    pla
@@ -308,16 +316,19 @@ syscall_entry:
 	    sta ptr2
 	    lda #>U_DATA__U_ARGN
 	    sta ptr2+1
-	    lda #1
-	    sta 1		; magic far copy hackery
 
-	    ldx #0
-	    txy
-copy_args:  lda (ptr1), x	; copy the arguments from current bank
-	    sta (ptr2), y	; will write into bank 1
-	    inx
+	    ldy #0
+
+copy_args:  lda (ptr1),y	; copy the arguments from current bank
+	    tax
+	    lda #1
+	    sta 1		; bank 1 please
+	    txa
+	    sta (ptr2),y	; will write into bank 1
+	    lda #0
+	    sta 1
 	    iny
-	    cpx #8
+	    cpy #8
 	    bne copy_args
 	    ldy tmp1		; syscall code
 	    ;
@@ -328,7 +339,7 @@ copy_args:  lda (ptr1), x	; copy the arguments from current bank
 	    sta 0		; kernel banks
 	    sta 1
 ;
-;	We are now suddenely in the kernel copy of this, and our stack is
+;	We are now suddenly in the kernel copy of this, and our stack is
 ;	missing in action. Access to userspace is not available
 ;
 ;	On a 6509 this also means our C stack is missing in action, which
