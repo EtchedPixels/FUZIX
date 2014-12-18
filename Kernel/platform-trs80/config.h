@@ -42,8 +42,6 @@
 
 /* Device parameters */
 #define NUM_DEV_TTY 3
-#define NDEVS    17       /* Devices 0..NDEVS-1 are capable of being mounted */
-                          /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  5	  /* Device for swapping. */
 #define NBUFS    10       /* Number of block buffers */
