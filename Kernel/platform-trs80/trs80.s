@@ -55,15 +55,19 @@ tm_stack:
             .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 tm_stack_top:
 
+;
+;	Can't di halt as it breaks sdltrs 8(
+;
 _trap_monitor:
-	    ld a, #128
-	    out (0x28), a
+	    jr _trap_monitor
+
 platform_interrupt_all:
+	    in a,(0xef)
 	    ret
 
 _trap_reboot:
-	    ld a, #1
-	    out (0x28), a
+	   di
+	   halt
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xEA00, only accessible when the kernel is mapped)
@@ -104,8 +108,6 @@ init_hardware:
             ld hl, #(128-64)		; 64K for kernel
             ld (_procmem), hl
 
-	    ; 100Hz timer on
-
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
             ld hl, #0
             push hl
@@ -113,6 +115,12 @@ init_hardware:
             pop hl
 
             im 1 ; set CPU interrupt mode
+
+	    ; interrupt mask
+	    ; 60Hz timer on
+
+	    ld a, #0x24		; 0x20 for serial
+	    out (0xe0), a
             ret
 
 
@@ -211,8 +219,10 @@ map_process_a:			; used by bankfork
 
 map_process_always:
 	    push af
+	    push hl
 	    ld hl, #U_DATA__U_PAGE
 	    call map_process_hl
+	    pop hl
 	    pop af
 	    ret
 
