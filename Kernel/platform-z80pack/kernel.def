@@ -5,4 +5,6 @@ U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
 U_DATA_STASH		    .equ 0xED00	      ; ED00-EFFF
 
+PROG_BASE		    .equ 0
+
 NMOS_Z80		    .equ 0
