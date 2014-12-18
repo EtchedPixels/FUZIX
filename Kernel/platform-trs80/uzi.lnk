@@ -2,7 +2,7 @@
 -i uzi.ihx
 -b _CODE=0x0100
 -b _DISCARD=0xD000
--b _COMMONMEM=0xEA00
+-b _COMMONMEM=0xE800
 -l z80
 platform-trs80/crt0.rel
 platform-trs80/commonmem.rel
