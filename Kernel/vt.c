@@ -216,12 +216,14 @@ static unsigned char csave;
 
 static uint8_t *char_addr(unsigned int y1, unsigned char x1)
 {
-	return VT_BASE + VT_WIDTH * y1 + x1;
+	/* See SDCC bug #2332 */
+	return VT_BASE + VT_WIDTH * y1 + (uint16_t)x1;
 }
 
 void cursor_off(void)
 {
-	*cpos = csave;
+	if (cpos)
+		*cpos = csave;
 }
 
 void cursor_on(int8_t y, int8_t x)
