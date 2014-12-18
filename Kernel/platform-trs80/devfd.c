@@ -9,12 +9,12 @@
 #define OPDIR_READ	1
 #define OPDIR_WRITE	2
 
-#define FD_READ		0x88	/* 2797 needs 0x88, 1797 needs 0x80 */
-#define FD_WRITE	0xA8	/* Likewise A8 v A0 */
+#define FD_READ		0x80	/* 2797 needs 0x88, 1797 needs 0x80 */
+#define FD_WRITE	0xA0	/* Likewise A8 v A0 */
 
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
-static uint8_t fd_tab[MAX_FD];
+static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
 /*
  *	We only support normal block I/O for the moment. We do need to
@@ -37,15 +37,19 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         goto bad2;
 
     if (fd_selected != minor) {
-        uint8_t err = fd_motor_on(selmap[minor]);
+        uint8_t err;
+        /* FIXME: We force DD for now */
+        err = fd_motor_on(selmap[minor]|0x80);
         if (err)
             goto bad;
     }
 
+    if (*driveptr == 0xFF)
+        fd_reset(driveptr);
+
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
-//    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = is_read ? FD_READ : FD_WRITE;
     cmd[1] = block / 9;		/* 2 sectors per block */
     cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
@@ -62,7 +66,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
                 fd_reset(driveptr);
         }
         /* FIXME: should we try the other half and then bale out ? */
-        if (tries == 3)
+        if (tries == 4)
             goto bad;
         cmd[5]++;	/* Move on 256 bytes in the buffer */
         cmd[2]++;	/* Next sector for 2nd block */

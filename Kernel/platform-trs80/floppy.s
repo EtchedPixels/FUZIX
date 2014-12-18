@@ -58,13 +58,27 @@ nap:	dec	bc
 ;	The motor off logic is driven from hardware
 ;
 fd_nmi_handler:
+	push	af
+	push	bc
+	ld 	a, (fdc_active)
+	or	a
+	jr 	z, boring_nmi
 	xor	a
 	out	(FDCINT), a
 	ld	bc, #100
 	call	nap
+	pop	bc
+	pop	af
 	pop	af		; discard return address
 	jp	fdio_nmiout	; and jump
 
+;
+;	FIXME: check for motor off here
+;
+boring_nmi:
+	pop	bc
+	pop	af
+	retn
 ;
 ;	Wait for the drive controller to become ready
 ;	Preserve HL, DE
@@ -85,7 +99,7 @@ waitdisk_l:
 	jr	nz, waitdisk_l
 	ld	a, #0xD0	; reset
 	out	(FDCREG), a
-	ex	(sp), hl
+	ex	(sp),hl
 	ex	(sp),hl
 	ex	(sp),hl
 	ex	(sp),hl
@@ -103,22 +117,22 @@ fdsetup:
 	ld	a, (de)
 	out	(FDCTRK), a
 	cp	TRACK(ix)
-	jr	z, fdiosetup
+;	jr	z, fdiosetup
 
 	;
 	;	So we can verify
 	;
-	ld	a, SECTOR(ix)
+	ld	a, TRACK(ix)
 	out	(FDCDATA), a
+	ld	a, SECTOR(ix)
+	out	(FDCSEC), a
 	;
 	;	Need to seek the disk
 	;
-	ld	a, #0x14	; seek
+	ld	a, #0x18	; seek
 	out	(FDCREG), a
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
+	ld	b, #100
+seekwt:	djnz	seekwt
 	call	waitdisk
 	jr	nz, setuptimeout
 	and	#0x18		; error bits
@@ -152,16 +166,16 @@ fdiosetup:
 	ld	de, #0		; timeout handling
 	
 	out	(FDCREG), a	; issue the command
-	ex	(sp),hl	; give the FDC a moment to think
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
+	ld	b, #0
+rwiowt:	djnz	rwiowt
 	ld	a, DIRECT(ix)
 	dec	a
 	ld	a, (fdcctrl)
 	ld	d, a			; we need this in a register
 					; to meet timing
-	set	6,d			; halt mode bit
+	ld	a, #1
+	ld	(fdc_active), a		; NMI pop and jump
+;	set	6,d			; halt mode bit
 	jr	z, fdio_in
 	jr	nc, fdio_out
 ;
@@ -170,6 +184,8 @@ fdiosetup:
 fdxferdone:
 	ei
 fdxferdone2:
+	xor	a
+	ld	(fdc_active), a
 	in	a, (FDCREG)
 	and	#0x19		; Error bits + busy
 	bit	0, a		; Wait for busy to drop, return in a
@@ -178,7 +194,7 @@ fdxferdone2:
 	out	(FDCCTRL), a
 	jr	fdxferdone2
 ;
-;	Write to the disk - HL points to the target buffer
+;	Read from the disk - HL points to the target buffer
 ;
 fdio_in:
 	ld	e, #0x16		; bits to check
@@ -263,20 +279,20 @@ _fd_reset:
 	out	(FDCSEC), a
 	xor	a
 	out	(FDCTRK), a
+	ld	a, #0x0C
 	out	(FDCREG), a	; restore
-	dec	a
+	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
-	ex	(sp),hl		; give the FDC a moment to think
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
+	ld	b, #0
+_fdr_wait:
+	djnz	_fdr_wait
 	
 	call	waitdisk
 	cp	#0xff
 	ret	z
-	and	#0x10		; Error bit from the reset
+	and	#0x99		; Error bit from the reset
 	ret	nz
-	ld	(hl), a		; Track 0 correctly hit
+	ld	(hl), a		; Track 0 correctly hit (so 0)
 	ret
 ;
 ;	fd_operation(uint16_t *cmd, uint16_t *drive)
@@ -332,13 +348,10 @@ _fd_motor_on:
 ;	Select our drive
 ;
 notsel:
-	ld	h, a		; save state as it was
-	or	l
+	ld	a, l
 	out 	(FDCCTRL), a
 	out	(FDCCTRL), a	; TRS80 erratum apparently needs this
 	ld	(fdcctrl), a
-	bit	4, h		; FIXME - motor bit
-	jr	nz, motor_was_on
 	ld	bc, #0x7F00	; Long delay (may need FE or FF for some disks)
 	call	nap
 	; FIXME: longer motor spin up delay goes here (0.5 or 1 second)
@@ -368,11 +381,11 @@ _fd_motor_off:
 	ld	(motor_running), a
 	ret
 
-	.area _COMMONDATA
 curdrive:
 	.db	0xff
 motor_running:
 	.db	0
 fdcctrl:
 	.db	0
-  
+fdc_active:
+	.db	0
