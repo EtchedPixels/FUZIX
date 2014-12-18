@@ -3,6 +3,7 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <tty.h>
+#include <vt.h>
 #include <devtty.h>
 #include <stdarg.h>
 
@@ -31,8 +32,8 @@ static bool tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    minor;c;
-    /* call vt driver */
+    if (minor == 1)
+        vtoutput(&c, 1);
 }
 
 void tty_pollirq(void)

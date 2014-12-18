@@ -32,7 +32,7 @@ syscall_other.rel
 tty.rel
 mm.rel
 swap.rel
-single.rel
+bankfixed.rel
 vt.rel
 devsys.rel
 platform-trs80/devlpr.rel

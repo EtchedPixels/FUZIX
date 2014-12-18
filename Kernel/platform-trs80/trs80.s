@@ -12,6 +12,7 @@
             .globl _system_tick_counter
 	    .globl map_kernel
 	    .globl map_process
+	    .globl map_process_a
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
@@ -33,11 +34,14 @@
 	    .globl fd_nmi_handler
 	    .globl null_handler
 
+	    .globl s__COMMONMEM
+	    .globl l__COMMONMEM
+
             .include "kernel.def"
             .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xF000 upwards)
+; COMMON MEMORY BANK (0xEA00 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
@@ -62,7 +66,7 @@ _trap_reboot:
 	    out (0x28), a
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (below 0xEA00, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .area _CODE
 
@@ -76,7 +80,7 @@ init_early:
 
             ; load the 6845 parameters
 	    ld hl, #_ctc6845
-	    ld b, #1588
+	    ld bc, #1588
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
 	    out (0x89), a		; data
@@ -117,8 +121,8 @@ init_hardware:
 
             .area _COMMONMEM
 
-opsave:	    .db 0x36
-_opreg:	    .db 0x36	; kernel map, 80 columns
+opsave:	    .db 0x06
+_opreg:	    .db 0x06	; kernel map, 80 columns
 _modout:    .db 0x50	; 80 column, sound enabled, altchars off,
 			; external I/O enabled, 4MHz
 _kernel_flag:
@@ -162,26 +166,19 @@ _program_vectors:
             ld (0x0067), hl
 
 ;
-;	Fixed mapping set up for the TRS80 4/4P
+;	Mapping set up for the TRS80 4/4P
 ;
-;	Kernel runs mode 2, U64K/U32 mapped at L64K/U32
+;	The top 32K bank holds kernel code and pieces of common memory
+;	The lower 32K is switched between the various user banks. On a
+;	4 or 4P without add in magic thats 0x62 and 0x63 mappings.
 ;
-map_kernel_a:
-	    ld a, i
-	    push af
-	    di
-	    ld a, (_opreg)
-	    and #0xAC
-	    or #0x12
-	    ld (_opreg), a
-	    out (0x84), a
-	    pop af
-	    ret po
-	    ei
-            ret
 map_kernel:
 	    push af
-	    call map_kernel_a
+	    ld a, (_opreg)
+	    and #0x8C		; keep video bits
+	    or #0x02		; map 2, base memory
+	    ld (_opreg), a
+	    out (0x84), a
 	    pop af
 	    ret
 ;
@@ -191,32 +188,37 @@ map_process:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
-	    call map_process_always_a
-	    ret
-
-map_process_always_a:
-	    push af
+map_process_hl:
 	    ld a, (_opreg)
-	    and #0xAC
-	    or #0x43
+	    and #0x8C
+	    or (hl)		; udata page
 	    ld (_opreg), a
 	    out (0x84), a
-	    pop af
             ret
 
-map_process_always:
-	    ld a, i
+map_process_a:			; used by bankfork
 	    push af
-	    di
-	    call map_process_always_a
+	    push bc
+	    ld b, a
+	    ld a, (_opreg)
+	    and #0x8C
+	    or b
+	    ld (_opreg), a
+	    out (0x84), a
+	    pop bc
 	    pop af
-	    ret po
-	    ei
+	    ret
+
+map_process_always:
+	    push af
+	    ld hl, #U_DATA__U_PAGE
+	    call map_process_hl
+	    pop af
 	    ret
 
 map_save:   push af
 	    ld a, (_opreg)
-	    and #0x53
+	    and #0x73
 	    ld (opsave), a
 	    pop af
 	    ret
@@ -227,137 +229,16 @@ map_restore:
 	    ld a, (opsave)
 	    ld b, a
 	    ld a, (_opreg)
-	    and #0xAC
+	    and #0x8C
 	    or b
 	    ld (_opreg), a
 	    out (0x84), a
+	    pop bc
+	    pop af
 	    ret
 	    
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
-            out (0x01), a
+;            out (0x01), a
             ret
-
-nap:
-	; FIXME
-	   ret
-;
-;	Idle the WD1772
-;
-_fd_idle:
-	    in a, (0xF0)
-	    rra
-	    jr c, _fd_idle
-	    ld l, a
-	    ld h, #0
-	    ret
-
-;
-;	See to a given track in C
-;
-_fd_seek:
-	    ld a, c
-	    out (0xF1), a		; track #
-	    ld a, #0x1B			; Seek
-	    out (0xF0), a
-	    call nap
-	    call _fd_idle
-	    and #0x10
-	    ret
-
-
-;
-;	Write a 256 byte block to disk. Need to add precomp etc to this
-;	HL = pointer to data
-;	A = bank info (0 kernel, !0 user). We don't handle swap to floppy.
-;
-;
-_fd_write:
-	    or a
-	    jr z, _fd_kwrite
-	    call map_process_always
-_fd_kwrite:
-	    ld bc, #0x00F3		; port F3, 256 bytes
-	    ld a, i
-	    push af
-	    ld a, #0xAC			; Write
-	    out (0xF0), a
-	    call nap
-_fd_writel:
-	    in a, (0xF0)
-	    bit 1, a
-	    jr z, _fd_writec
-	    di
-_fd_writeb:
-	    otir
-	    ei
-	    call _fd_idle
-	    and #0x5C
-fd_wout:
-	    ld l, a
-	    call map_kernel
-	    pop af
-	    ret po
-	    ei
-	    ret
-_fd_writec: 
-	    bit 2, a
-	    jr nz, _fd_writel
-	    ld a, #0xff
-	    jr fd_wout
-
-
-
-;
-;	Read a 256 byte block from disk. Need to add precomp etc to this
-;	HL = pointer to data
-;	A = bank info (0 kernel, !0 user). We don't handle swap to floppy.
-;
-;
-_fd_read:
-	    or a
-	    jr z, _fd_kwrite
-	    call map_process_always
-_fd_kread:
-	    ld bc, #0x00F3		; port F3, 256 bytes
-	    ld a, i
-	    push af
-	    ld a, #0x8C			; Read
-	    out (0xF0), a
-	    call nap
-_fd_readl:
-	    in a, (0xF0)
-	    bit 1, a
-	    jr z, _fd_readc
-	    di
-_fd_readb:
-	    inir
-	    ei
-	    call _fd_idle
-	    and #0x5C
-fd_rout:
-	    ld l, a
-	    pop af
-	    ret po
-	    ei
-	    ret
-_fd_readc: 
-	    bit 2, a
-	    jr nz, _fd_readl
-	    ld a, #0xff
-	    jr fd_rout
-
-_fdc_idle:
-	; FIXME
-	ret
-;
-;	Restore the current drive to track 0 (error recovery)
-;
-_fd_reset:
-	    ld a, #0xB
-	    out (0xF0), a
-	    call nap
-	    call _fdc_idle
-	    and #0x10
-	    ret

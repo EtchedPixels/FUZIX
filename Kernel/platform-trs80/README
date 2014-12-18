@@ -1,53 +1,75 @@
 TRS80 Model 4/4P
+(or right now more accurately sdltrs/xtrs)
+
+Emulator Bugs:
+	The emulator is horribly insecure, it's default is to allow all
+	sorts of direct access to things. Even if you turn this off I've
+	had it segfault with FUZIX bugs which suggests its not too secure.
+
+	Repeating instructions like LDIR appear to be misemulated. LDIR
+	is performed an emulated block copy, not as an iterated LDI. The
+	real processor actually implements LDIR as  "LDI, if not done
+	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
+	be affected.
 
 Requirements: 
 	128K RAM fitted
 	Hard disk drive (will be used for swap), or a suitable memory
 	expander board could be used with a bit of tweaking (or both!)
 
-Bank mapping on the trash 80 is a bit weird. We want to get two independent
-64K banks, but we can only have
+Memory Map:
+	Base memory 0-FFFF (with a fair bit of slack) is used for the kernel
+	User processes run 0-7FFF in bank U64L32 or U64U32, in both cases
+	with the upper 32K being kept as the kernel bank.
 
-Port 0x84:
-	
+	It would be good to support 64K processes using the bank32 model.
+	Before that can be done however the TRS80 will need a custom
+	user copy function to deal with access to the upper 32K by mapping
+	it low instead. It will also need the location of the uarea stash to
+	be binary size dependent. Swapper write out is also fairly hairy
+	for the same reasons. So for now we just handle a pair of 32K
+	processes.
 
-	0 / 1
-	0 / 2
-	0 / 3
-	2 / 1
-	3 / 1
+	Processes that don't fit are swapped to hard disk. Without swap you
+	can run a pair of 32K processes, just enough for stuff like
+	bootstrap.
 
-So we put the kernel in 0/3 which allows us to put the apps in 2/1. This
-means we need our kernel logic for things like bank copies not in common
-but in the low 32K.
+Drivers:
+	80 column display is done
+	Keyboard is not started
+	Floppy and Hard disk are fleshed out but not yet tested (need kbd
+	first)
+	Hard disk needs to read block 0, and handle partitions of some form
+	including finding where 'swap' lives
+
+Adding Support For Other Banked RAM:
+	See trs80.s, and the various map_* functions. These can be extended
+	to use U_DATA__U_PAGE+1 to carry a second byte of data. The
+	main.c for the platform sets up the pagemaps as a 16bit value
+	which currently is just the opreg bits for the two banks.
+
+	map_save/restore will also need to handle any sub banking
+	arrangement.
+
+	Finally up MAX_BANKS in platform/config.h accordingly.
 
 
-Unfortunately for anyone who wants to do expander board hacks the usual
-expander board hacks exchange 2/3 with other banks so unless you've also got
-the HD64180 mod you may be out of luck, and if you have well its not much
-like a Trash80 any more. Anyway if you want try you'd need to extend the
-0x84 port poking to also poke port 0x94 bits 0-4.
+Setting It Up
 
-Also we have to deal with the mapping maze on the TRS 80, not only are we
-banked but we have modes and also a pop up boot rom
-
-0x9C bit 0 controls the boot prom
-
-0x80 controls the mapping mode (bits 0/1 select a mode)
-
-Boot occurs in mode 0 with RAM at 0x4000-FFFF ready to load
-
-We need to stick it into mode 2 or 3
-
-2 = 0000-F3FF RAM
-    F400-F7FF keyboard
-    F800-FFFF Video
-
-3 = 0-FFFF RAM
-
-(and probably want to be in mode 3 and flip to 2 for video/kbd work)
-
-Need vid and kbd helps out of common therefore and to save/restore video map
-option on an irq while in kernel mode
-
+	# Tool to make disk images
+	make tools/makejv3
+	# Double density single sided 40 track boot disk
+	tools/makejv3 dd40s /dev/zero mydisk.jv3
+	# Build boot block (not yet converted to sdasz80)
+	zmac platform/z80boot.s
+	# Build kernel (edit Makefile, set target then)
+	make
+	# Add pieces to the disk (boot block in sector 0, kernel at end)
+	dd if=zout/trs80load.cim of=mydisk.jv3 bs=1 seek=8704 conv=notrunc
+	dd if=fuzix.bin of=mydisk.jv3 bs=1 seek=142336 conv=notrunc
+	# Once we get that far you can also put a filesystem in the lower
+	# blocks
+	#
+	sdltrs -emtsafe -disk0 mydisk.jv3 -model 4p
+	#
 

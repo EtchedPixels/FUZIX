@@ -1,5 +1,6 @@
-; 2013-12-21 William R Sowerbutts
-
+;
+;	This is heavily based on the Z80Pack platform code.
+;
         .module tricks
 
         .globl _ptab_alloc
@@ -18,7 +19,11 @@
         .globl interrupt_handler
         .globl dispatch_process_signal
 	.globl _swapper
-	.globl _swapout
+
+	.globl map_kernel
+	.globl map_process
+	.globl map_process_a
+	.globl map_process_always
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -32,8 +37,6 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
 ; 
 ; This function can have no arguments or auto variables.
 _switchout:
@@ -53,6 +56,15 @@ _switchout:
         xor a
         ld (_inint), a
 
+	; Stash the uarea back into process memory
+	ld hl, (U_DATA__U_PAGE)
+	call map_process_always
+	ld hl, #U_DATA
+	ld de, #U_DATA_STASH
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+	call map_kernel
+
         ; find another process to run (may select this one again)
         call _getproc
 
@@ -64,40 +76,73 @@ _switchout:
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
+swapped: .ascii "_switchin: SWAPPED"
+            .db 13, 10, 0
+
 _switchin:
         di
         pop bc  ; return address
         pop de  ; new process pointer
+;
+;	FIXME: do we actually *need* to restore the stack !
+;
         push de ; restore stack
         push bc ; restore stack
 
+	call map_kernel
+
+	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
+	pop de
 
         ld a, (hl)
+
 	or a
 	jr nz, not_swapped
 
+	;
+	;	We are still on the departing processes stack, which is
+	;	fine for now.
+	;
+	ld sp, #_swapstack
+	push hl
 	push de
 	call _swapper
 	pop de
-
+	pop hl
+	ld a, (hl)
 not_swapped:
+	; Pages please !
+	call map_process_a
+
+        ; bear in mind that the stack will be switched now, so we can't use it
+	; to carry values over this point
+
+	exx			; thank goodness for exx 8)
+	ld hl, #U_DATA_STASH
+	ld de, #U_DATA
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+	exx
+
+	call map_kernel
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
-        sbc hl, de              ; subtract, result will be zero if DE==HL
+        sbc hl, de              ; subtract, result will be zero if DE==IX
         jr nz, switchinfail
 
-	ld hl, #P_TAB__P_STATUS_OFFSET
-	add hl, de
+	; wants optimising up a bit
+	ld ix, (U_DATA__U_PTAB)
         ; next_process->p_status = P_RUNNING
-        ld (hl), #P_RUNNING
-	ld de, #P_TAB__P_PAGE_OFFSET - P_TAB__P_STATUS_OFFSET
-	add hl, de
-	ld a, (hl)
-	ld (U_DATA__U_PAGE), a
+        ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 
+	; Fix the moved page pointers
+	; Just do one byte as that is all we use on this platform
+	ld a, P_TAB__P_PAGE_OFFSET(ix)
+	ld (U_DATA__U_PAGE), a
         ; runticks = 0
         ld hl, #0
         ld (_runticks), hl
@@ -105,6 +150,7 @@ not_swapped:
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
         ld sp, (U_DATA__U_SP)
+
         pop iy
         pop ix
         pop hl ; return code
@@ -117,6 +163,7 @@ not_swapped:
         ret ; return with interrupts on
 
 switchinfail:
+	call outhl
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
@@ -163,10 +210,38 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ld hl, (U_DATA__U_PTAB)
-	push hl
-	call _swapout
-	pop hl
+	; Need to write a new 47.25K bank copy here, then copy the live uarea
+	; into the stash of the new process
+
+        ; --------- copy process ---------
+
+        ld hl, (fork_proc_ptr)
+        ld de, #P_TAB__P_PAGE_OFFSET
+        add hl, de
+        ; load p_page
+        ld c, (hl)
+	; load existing page ptr
+	push af
+	ld a, c
+	call outcharhex
+	pop af
+	ld a, (U_DATA__U_PAGE)
+
+	call bankfork			;	do the bank to bank copy
+
+	; Copy done
+
+	call map_process_always
+
+	; We are going to copy the uarea into the parents uarea stash
+	; we must not touch the parent uarea after this point, any
+	; changes only affect the child
+	ld hl, #U_DATA		; copy the udata from common into the
+	ld de, #U_DATA_STASH	; target process
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+	; Return to the kernel mapping
+	call map_kernel
 
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -190,3 +265,52 @@ _dofork:
 	; if it had done a switchout().
         ret
 
+;
+;	This is related so we will keep it here. Copy the process memory
+;	for a fork. a is the page base of the parent, c of the child
+;
+;	Assumption - fits into a fixed number of whole 256 byte blocks
+;
+bankfork:
+;	ld bc, #(0xC000 - 768)		;	48K minus the uarea stash
+
+	ld b, #0xBD		; C0 x 256 minus 3 sets for the uarea stash
+	ld hl, #0		; base of memory to fork (vectors included)
+bankfork_1:
+	push bc			; Save our counter and also child offset
+	push hl
+	call map_process_a
+	ld de, #bouncebuffer
+	ld bc, #256
+	ldir			; copy into the bounce buffer
+	pop de			; recover source of copy to bounce
+				; as destination in new bank
+	pop bc			; recover child page number
+	push bc
+	ld b, a			; save the parent bank id
+	ld a, c			; switch to the child
+	call map_process_a
+	push bc			; save the bank pointers
+	ld hl, #bouncebuffer
+	ld bc, #256
+	ldir			; copy into the child
+	pop bc			; recover the bank pointers
+	ex de, hl		; destination is now source for next bank
+	ld a, b			; parent bank is wanted in a
+	pop bc
+	djnz bankfork_1		; rinse, repeat
+	ret
+
+;
+;	For the moment
+;
+bouncebuffer:
+	.ds 256
+;
+;	We can keep a stack in common because we will complete our
+;	use of it before we switch common block. In this case we have
+;	a true common so it's even easier. This can share with the bounce
+;	buffer used by bankfork as we won't switchin mid way through the
+;	banked fork() call.
+;
+_swapstack:

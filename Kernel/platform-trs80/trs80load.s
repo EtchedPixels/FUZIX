@@ -3,7 +3,7 @@
 ;
 	    .org 0x0
 start:
-	    ld a, 0x36			; kernel map, 80 column
+	    ld a, 0x06			; kernel map, 80 column, no remap
 	    out (0x84), a
 	    ld a, 0x50			; 80 column, sound, altchars off,
 					; ext I/O on , 4MHz
@@ -106,7 +106,7 @@ nextsec:
 	    ld a, (secnum)
 	    inc a
 	    ld (secnum), a
-	    cp 11
+	    cp 19
 	    jr z, lastsec
 	    push hl
 	    call floppy_read

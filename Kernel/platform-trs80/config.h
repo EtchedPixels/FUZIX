@@ -5,13 +5,17 @@
 /* Profil syscall support (not yet complete) */
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* Single tasking */
-#define CONFIG_SINGLETASK
+#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* Simple character addressed device */
 #define CONFIG_VT_SIMPLE
+/* Banked memory set up */
+#define CONFIG_BANK_FIXED
+#define MAX_MAPS	2
+#define MAP_SIZE	0x8000
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
@@ -25,14 +29,14 @@
 #define TICKSPERSEC 60   /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0xEA00  /* Top of program, base of U_DATA */
-#define PROC_SIZE   64	  /* Memory needed per process */
+#define PROGTOP     0x7D00  /* Top of program, base of U_DATA */
+#define PROC_SIZE   32 	    /* Memory needed per process */
 
-#define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need quite all) */
+#define SWAP_SIZE   0x40 	/* 32K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xF400	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
 
-#define MAX_SWAPS	8	/* Should be plenty */
+#define MAX_SWAPS	16	/* Should be plenty */
 
 #define BOOT_TTY (512 + 1)      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -43,11 +47,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  5	  /* Device for swapping. */
+#define SWAPDEV  (258)	  /* Device for swapping (2nd hd). */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
-
-
-
-
 

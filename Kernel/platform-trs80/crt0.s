@@ -45,6 +45,7 @@ start:
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
+		; then the discard
 		ld de, #s__DISCARD
 		ld bc, #l__DISCARD
 		ldir
@@ -65,22 +66,3 @@ start:
 		di
 stop:		halt
 		jr stop
-
-
-
-
-clear:
-		ld a, b
-		or a
-		jr nz, clear_1
-		ld a, c
-		cp #2
-		ret c
-clear_1:
-		dec bc
-		ld (hl), #0
-		ld d, h
-		ld e, l
-		inc de
-		ldir
-		ret
