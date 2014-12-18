@@ -17,15 +17,11 @@ void pagemap_init(void)
   pagemap_add(i);
 }
 
-/* On idle we spin checking for the terminals. Gives us more responsiveness
-   for the polled ports. We don't need this on MTX, but we probably do for
-   MEMU */
-
 void platform_idle(void)
 {
-  irqflags_t irq = di();
-  tty_interrupt();
-  irqrestore(irq);
+    __asm
+    halt
+    __endasm;
 }
 
 void platform_interrupt(void)
