@@ -22,6 +22,7 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
+	    .globl map_process_a
 	    .globl map_save
 	    .globl map_restore
 
@@ -181,6 +182,7 @@ map_process:
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
+map_process_a:
 	    out (21), a
             ret
 map_process_always:
