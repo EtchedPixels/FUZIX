@@ -1,6 +1,6 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
 
-export TARGET= mtx
+export TARGET= trs80
 export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
@@ -153,6 +153,8 @@ font4x6.c: tools/make4x6
 tools/decbdragon: tools/decbdragon.c
 
 tools/bintomdv: tools/bintomdv.c
+
+tools/makejv3: tools/makejv3.c
 
 ifeq ($(CPU), z80)
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
