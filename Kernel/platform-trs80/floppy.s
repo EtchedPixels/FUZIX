@@ -20,7 +20,7 @@
 FDCREG	.equ	0xF0
 FDCTRK	.equ	0xF1
 FDCSEC	.equ	0xF2
-FDCDATA	.equ	0x43
+FDCDATA	.equ	0xF3
 FDCCTRL	.equ	0xF4
 FDCINT	.equ	0xE4
 ;
@@ -109,7 +109,7 @@ fdsetup:
 	;	So we can verify
 	;
 	ld	a, SECTOR(ix)
-	out	(FDCSEC), a
+	out	(FDCDATA), a
 	;
 	;	Need to seek the disk
 	;
@@ -186,7 +186,7 @@ fdio_in:
 fdio_inl:
 	in	a, (FDCREG)
 	and	e
-	jr	z, fdio_in
+	jr	z, fdio_inl
 	ini
 	di
 	ld	a, d
