@@ -40,6 +40,8 @@ void psleep(void *event)
 	udata.u_ptab->p_waitno = ++waitno;
 	nready--;
 
+	/* FIXME: we don't want to restore interrupts here, but what
+	   is the consequence */
 	irqrestore(irq);
 	switchout();		/* Switch us out, and start another process */
 	/* Switchout doesn't return in this context until we have been switched back in, of course. */
