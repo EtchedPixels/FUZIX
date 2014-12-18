@@ -26,7 +26,6 @@ void tty_init(void) {
         int i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
 		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
-		kprintf("%x: %x\n", &t->termios, t->termios.c_lflag);
 		t++;
         }
 }
@@ -90,7 +89,7 @@ void fuzix_main(void)
 	kprintf(
 	 "FUZIX version %s\n"
 	 "Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
-	 "Copyright (C) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
+	 "Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 	 "Copyright (c) 2013 Will Sowerbutts <will@sowerbutts.com>\n"
 	 "Copyright (c) 2014 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 	                                         uname_str);
