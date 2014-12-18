@@ -22,14 +22,14 @@
 /* Vt definitions */
 #define VT_BASE		((uint8_t *)0xF800)
 #define VT_WIDTH	80
-#define VT_HEIGHT	25
+#define VT_HEIGHT	24
 #define VT_RIGHT	79
-#define VT_BOTTOM	24
+#define VT_BOTTOM	23
 
 #define TICKSPERSEC 60   /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0x7D00  /* Top of program, base of U_DATA */
+#define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks */
