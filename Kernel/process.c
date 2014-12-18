@@ -271,8 +271,10 @@ ptptr ptab_alloc(void)
 		if (pagemap_alloc(newp) == 0) {
 			newp->p_status = P_FORKING;
 			nproc++;
-		} else
+		} else {
 			udata.u_error = ENOMEM;
+			newp = NULL;
+                }
 	}
 	irqrestore(irq);
 	if (newp)
