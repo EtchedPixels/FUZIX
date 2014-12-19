@@ -99,16 +99,21 @@ _switchin:
 	add hl, de	; process ptr
 	pop de
 
+	;
+	;	Always use the swapstack, otherwise when we call map_kernel
+	;	having copied the udata stash back to udata we will crap
+	;	somewhere up the stackframe and it's then down to luck
+	;	if those bytes are discarded or not.
+	;
+	;	Yes - this was a bitch to debug, please don't break it !
+	;
+	ld sp, #_swapstack
+
         ld a, (hl)
 
 	or a
 	jr nz, not_swapped
 
-	;
-	;	We are still on the departing processes stack, which is
-	;	fine for now.
-	;
-	ld sp, #_swapstack
 	push hl
 	push de
 	call _swapper
