@@ -25,7 +25,7 @@ void pagemap_free(ptptr p)
 
 int pagemap_alloc(ptptr p)
 {
-#ifdef SWAP_DEV
+#ifdef SWAPDEV
 	if (pfptr == 0) {
 		swapneeded(p, 1);
 	}
