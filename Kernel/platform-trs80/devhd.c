@@ -28,6 +28,9 @@ __sfr __at 0xCF hd_cmd;
 #define HDCMD_INIT	0x60	/* Ditto */
 #define HDCMD_SEEK	0x70
 
+/* Used by the asm helpers */
+uint8_t hd_page;
+
 /* Seek and restore low 4 bits are the step rate, read/write support
    multi-sector mode but not all emulators do .. */
 
@@ -43,8 +46,6 @@ static uint8_t hd_waitready(void)
 	return st;
 }
 
-
-
 /* Wait for DRQ or an error */
 static uint8_t hd_waitdrq(void)
 {
@@ -58,22 +59,13 @@ static uint8_t hd_waitdrq(void)
 /* FIXME: move this to asm in _COMMONMEM and support banks and swap */
 static uint8_t hd_xfer(bool is_read, uint16_t addr)
 {
-	int ct = 256;
-	uint8_t *ptr = (uint8_t *)addr;
-
 	/* Error ? */
 	if (hd_status & 0x01)
 		return hd_status;
-	if (is_read) {
-		/* Ought to check DRQ per byte ? */
-		while (ct--) {
-			*ptr++ = hd_data;
-		}
-	} else {
-		while (ct--) {
-			hd_data = *ptr++;
-		}
-	}
+	if (is_read)
+		hd_xfer_in(addr);
+	else
+		hd_xfer_out(addr);
 	/* Should be returning READY, and maybe SEEKDONE */
 	return hd_status;
 }
@@ -87,21 +79,31 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
 	blkno_t block;
 	uint16_t dptr;
-	int ct = 0;
+	uint16_t ct = 0;
 	int tries;
 	uint8_t err = 0;
 	uint8_t cmd = HDCMD_READ;
 	uint8_t head;
 	uint8_t sector;
+	uint16_t nblock;
 
-	if (rawflag)
+	if (rawflag == 0) {
+		dptr = (uint16_t)udata.u_buf->bf_data;
+		block = udata.u_buf->bf_blk;
+		nblock = 2;
+		hd_page = 0;		/* Kernel */
+	} else if (rawflag == 2) {
+		nblock = swapcnt >> 8;	/* in 256 byte chunks */
+		dptr = (uint16_t)swapbase;
+		hd_page = swapproc->p_page;
+		block = swapblk;
+		kprintf("Swapping for page %x %d blocks\n", hd_page, nblock);
+	} else
 		goto bad2;
 
 	if (!is_read)
 		cmd = HDCMD_WRITE;
 
-	dptr = (uint16_t) udata.u_buf->bf_data;
-	block = udata.u_buf->bf_blk;
 
 	/* We assume 32 sectors per track for now. From our 512 byte
 	   PoV that's 16 */
@@ -122,7 +124,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	hd_precomp = 0;		/* FIXME */
 	hd_sdh = 0x80 | head | (minor << 3);
 
-	while (ct < 2) {
+	while (ct < nblock) {
 		for (tries = 0; tries < 4; tries++) {
 			/* issue the command */
 			hd_cmd = cmd;

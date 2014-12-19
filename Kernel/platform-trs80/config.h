@@ -47,7 +47,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  (258)	  /* Device for swapping (2nd hd). */
+#define SWAPDEV  (256)	  /* Device for swapping (1st hd). */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

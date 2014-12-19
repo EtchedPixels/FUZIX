@@ -19,6 +19,12 @@
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
 
+	    ; hard disk helpers
+	    .globl _hd_xfer_in
+	    .globl _hd_xfer_out
+	    ; and the page from the C code
+	    .globl _hd_page
+
             ; exported debugging tools
             .globl _trap_monitor
             .globl outchar
@@ -41,7 +47,7 @@
             .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xEA00 upwards)
+; COMMON MEMORY BANK (0xE800 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
@@ -252,3 +258,32 @@ map_restore:
 outchar:
 ;            out (0x01), a
             ret
+
+;
+;	Swap helpers
+;
+_hd_xfer_in:
+	   pop de
+	   pop hl
+	   push hl
+	   push de
+	   ld a, (_hd_page)
+	   or a
+	   call nz, map_process_a
+	   ld bc, #0xC8			; 256 bytes from 0xC8
+	   inir
+	   call map_kernel
+	   ret
+
+_hd_xfer_out:
+	   pop de
+	   pop hl
+	   push hl
+	   push de
+	   ld a, (_hd_page)
+	   or a
+	   call nz, map_process_a
+	   ld bc, #0xC8			; 256 bytes to 0xC8
+	   otir
+	   call map_kernel
+	   ret
