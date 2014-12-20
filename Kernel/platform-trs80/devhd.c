@@ -7,8 +7,8 @@
 #include <printf.h>
 #include <devhd.h>
 
-__sfr __at 0xC0 hd_wpbits;
-__sfr __at 0xC1 hd_ctrl;
+__sfr __at 0xC0 hd_wpbits;	/* Write protect and IRQ (not used) */
+__sfr __at 0xC1 hd_ctrl;	/* Reset and enable bits */
 __sfr __at 0xC8 hd_data;
 __sfr __at 0xC9 hd_precomp;	/* W/O */
 __sfr __at 0xC9 hd_err;		/* R/O */
@@ -28,6 +28,12 @@ __sfr __at 0xCF hd_cmd;
 #define HDCMD_INIT	0x60	/* Ditto */
 #define HDCMD_SEEK	0x70
 
+#define HDCTRL_SOFTRESET	0x10
+#define HDCTRL_ENABLE		0x08
+#define HDCTRL_WAITENABLE	0x04
+
+#define HDSDH_ECC256		0x80
+
 /* Used by the asm helpers */
 uint8_t hd_page;
 
@@ -36,7 +42,7 @@ uint8_t hd_page;
 
 #define MAX_HD	4
 
-/* Wait for DRQ or an error */
+/* Wait for the drive to show ready */
 static uint8_t hd_waitready(void)
 {
 	uint8_t st;
@@ -97,7 +103,6 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		dptr = (uint16_t)swapbase;
 		hd_page = swapproc->p_page;
 		block = swapblk;
-		kprintf("Swapping for page %x %d blocks\n", hd_page, nblock);
 	} else
 		goto bad2;
 
@@ -115,16 +120,20 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	hd_precomp = 0x20;	/* For now, matches an ST506 */
 	hd_seccnt = 1;
-	sector = ((block & 15) << 1) + 1;
- 	hd_secnum = sector;
-	hd_cyllo = (block >> 6) & 0xFF;
-	hd_cylhi = (block >> 14) & 0xFF;
-	head = (block >> 4) & 3;
-
-	hd_precomp = 0;		/* FIXME */
-	hd_sdh = 0x80 | head | (minor << 3);
+	block <<= 1;		/* Into 256 byte blocks, limits us to 32MB
+				   so ought to FIXME */
 
 	while (ct < nblock) {
+		/* 32 sectors per track assumed for now */
+		sector = (block & 31) + 1;
+		head = (block >> 5) & 3;
+		/* Head next bits, plus drive */
+		hd_sdh = 0x80 | head | (minor << 3);
+		hd_secnum = sector;
+		/* cylinder bits */
+		hd_cyllo = (block >> 7) & 0xFF;
+		hd_cylhi = (block >> 15) & 0xFF;
+
 		for (tries = 0; tries < 4; tries++) {
 			/* issue the command */
 			hd_cmd = cmd;
@@ -136,11 +145,13 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 				/* Ready, no error ? */
 				if ((err & 0x41) == 0x40)
 					break;
-			}
+			} else
+				kprintf("hd%d: err %x\n", minor, err);
 
 			if (tries > 1) {
 				hd_cmd = HDCMD_RESTORE;
-				hd_waitready();
+				if (hd_waitready() & 1)
+					kprintf("hd%d: restore error %z\n", minor, err);
 			}
 		}
 		/* FIXME: should we try the other half and then bale out ? */
@@ -148,7 +159,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			goto bad;
 		ct++;
 		dptr += 256;
-		hd_secnum = sector + 1;
+		block ++;
 	}
 	return 1;
 bad:
