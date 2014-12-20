@@ -256,7 +256,7 @@ map_restore:
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
-;            out (0x01), a
+            out (0xEB), a
             ret
 
 ;
