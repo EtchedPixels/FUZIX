@@ -10,7 +10,6 @@
 ;		- track dependant for double density based on trsdos dir pos
 ;
 ;
-
 	.globl _fd_reset
 	.globl _fd_operation
 	.globl _fd_motor_on
@@ -175,7 +174,6 @@ rwiowt:	djnz	rwiowt
 					; to meet timing
 	ld	a, #1
 	ld	(fdc_active), a		; NMI pop and jump
-;	set	6,d			; halt mode bit
 	jr	z, fdio_in
 	jr	nc, fdio_out
 ;
@@ -216,7 +214,8 @@ fdio_inbyte:
 ;	Read from the disk - HL points to the target buffer
 ;
 fdio_out:
-	ld	bc, #FDCDATA + 0xFF00	; 256 bytes/sector, c is our port
+	set	6,d			; halt mode bit
+	ld	c, #FDCDATA		; C is our port
 	ld	e, #0x76
 fdio_outl:
 	in	a, (FDCREG)		; Wait for DRQ (or error)

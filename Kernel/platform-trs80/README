@@ -16,6 +16,8 @@ Requirements:
 	128K RAM fitted
 	Hard disk drive (will be used for swap), or a suitable memory
 	expander board could be used with a bit of tweaking (or both!)
+	*** NOTE: the current code will simply swap blindly all over the first
+	hard disk ***
 
 Memory Map:
 	Base memory 0-FFFF (with a fair bit of slack) is used for the kernel
@@ -36,9 +38,10 @@ Memory Map:
 
 Drivers:
 	80 column display is done
-	Keyboard is not started
-	Floppy and Hard disk are fleshed out but not yet tested (need kbd
-	first)
+	Keyboard is done
+	Floppy and Hard disk are done and minimally tested
+	Floppy drivers do not yet deal with double sided disks or sd/dd
+	media detection
 	Hard disk needs to read block 0, and handle partitions of some form
 	including finding where 'swap' lives
 
@@ -72,4 +75,4 @@ Setting It Up
 	#
 	sdltrs -emtsafe -disk0 mydisk.jv3 -model 4p
 	#
-
+	# and remember to mark the fd volume as writeable

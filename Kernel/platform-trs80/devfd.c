@@ -98,6 +98,7 @@ int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    flag;
+    flag;rawflag;minor;
+//    return 0;
     return fd_transfer(minor, false, rawflag);
 }
