@@ -33,6 +33,10 @@ __sfr __at 0x58 fdc_devsel;	/* Whch controller to use */
 #define HDCMD_INIT	0x60	/* Ditto */
 #define HDCMD_SEEK	0x70
 
+#define RATE_2MS	0x04	/* 2ms step rate for hd (conservative) */
+#define RATE_6MS	0x06	/* 6ms step for floppy (3ms is probably fine
+				   for most) */
+
 #define HDSDH_ECC256		0x80
 
 /* Used by the asm helpers */
@@ -119,8 +123,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (!is_read)
 		cmd = HDCMD_WRITE;
 
-
-	hd_precomp = 0x20;	/* For now, matches an ST506 */
+	/* We don't touch precomp and hope the firmware set it right */
 	hd_seccnt = 1;
 
 	while (ct < nblock) {
@@ -188,11 +191,13 @@ int hd_open(uint8_t minor, uint16_t flag)
 		return -1;
 	}
 	fdc_devsel = 1;
-	if (minor <= MAX_HD)
+	if (minor <= MAX_HD) {
 		hd_sdh = 0xA0 | (minor << 3);
-	else
+		hd_cmd = HDCMD_RESTORE | RATE_2MS;
+	} else {
 		hd_sdh = 0x38 | minor << 1;
-	hd_cmd = HDCMD_RESTORE;
+		hd_cmd = HDCMD_RESTORE | RATE_6MS;
+	}
 	if (hd_waitready() & 1) {
 		if ((hd_err & 0x12) == 0x12)
 			return -ENODEV;
