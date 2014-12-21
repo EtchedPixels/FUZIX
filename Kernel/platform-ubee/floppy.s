@@ -2,26 +2,22 @@
 ;	Core floppy routines for the TRS80 1791 FDC
 ;	Based on the 6809 code
 ;
-;	FIXME: better drive spin up wait
 ;	FIXME: double sided media
 ;	FIXME: correct step rates (per drive ?)
 ;	FIXME: precompensation
-;		- not on single density
-;		- track dependant for double density based on trsdos dir pos
-;
+;	FIXME: density, size etc
 ;
 	.globl _fd_reset
 	.globl _fd_operation
 	.globl _fd_motor_on
-	.globl _fd_motor_off
 	.globl fd_nmi_handler
 
-FDCREG	.equ	0xF0
-FDCTRK	.equ	0xF1
-FDCSEC	.equ	0xF2
-FDCDATA	.equ	0xF3
-FDCCTRL	.equ	0xF4
-FDCINT	.equ	0xE4
+FDCREG	.equ	0x40
+FDCTRK	.equ	0x41
+FDCSEC	.equ	0x42
+FDCDATA	.equ	0x43
+FDCCTRL	.equ	0x48
+
 ;
 ;	interrupt register reports 0x80 for interrut, 0x40 for drq
 ;	(0x20 is the unrelated reset button)
@@ -54,7 +50,7 @@ nap:	dec	bc
 	jr	nz, nap
 	ret
 ;
-;	The motor off logic is driven from hardware
+;	NMI logic for DreamDisc
 ;
 fd_nmi_handler:
 	push	af
@@ -62,10 +58,6 @@ fd_nmi_handler:
 	ld 	a, (fdc_active)
 	or	a
 	jr 	z, boring_nmi
-	xor	a
-	out	(FDCINT), a
-	ld	bc, #100
-	call	nap
 	pop	bc
 	pop	af
 	pop	af		; discard return address
@@ -113,6 +105,30 @@ waitdisk_l:
 ;	DE points to the track reg copy
 ;
 fdsetup:
+;
+;	Are we on side 0 or side 1 ?
+;
+	ld	a, SECTOR(ix)
+	cp 	#11
+	jr	c, side0
+;
+;	Set up for side 1 access
+;
+	sub	#10
+	ld	SECTOR(ix), a
+	ld	a, (fdcctrl)
+	set	2, a		; correct for standard FDC not DreamDisc
+	jr	side1
+side0:
+	ld	a, (fdcctrl)
+	res	2, a
+side1:
+;
+;	FIXME: do we need to precompensation ?
+;
+	ld	(fdcctrl), a
+	out	(FDCCTRL), a
+
 	ld	a, (de)
 	out	(FDCTRK), a
 	cp	TRACK(ix)
@@ -128,7 +144,8 @@ fdsetup:
 	;
 	;	Need to seek the disk
 	;
-	ld	a, #0x18	; seek
+	ld	a, #0x19	; seek at 6ms steps. Slightly conservative
+				; to allow for older drives
 	out	(FDCREG), a
 	ld	b, #100
 seekwt:	djnz	seekwt
@@ -147,15 +164,7 @@ setuptimeout:			; NE = bad
 fdiosetup:
 	ld	a, TRACK(ix)
 	ld	(de), a		; save track
-;	cmp	#22		; FIXME
-;	jr	nc, noprecomp
-;	ld	a, (fdcctrl)
-;	or	#0x10		; Precomp on
-;	jr	precomp1
-;noprecomp:
-	ld	a, (fdcctrl)
-;precomp1:
-	out	(FDCCTRL), a
+
 	ld	a, SECTOR(ix)
 	out	(FDCSEC), a
 	in	a, (FDCREG)	; Clear any pending status
@@ -196,7 +205,7 @@ fdxferdone2:
 ;
 fdio_in:
 	ld	e, #0x16		; bits to check
-	ld	bc, #FDCDATA		; 256 bytes/sector, c is our port
+	ld	bc, #FDCDATA		; 512 bytes/sector, c is our port
 fdio_inl:
 	in	a, (FDCREG)
 	and	e
@@ -208,6 +217,10 @@ fdio_inbyte:
 	out	(FDCCTRL), a		; stalls
 	ini
 	jr	nz, fdio_inbyte
+fdio_inbyte2:
+	out	(FDCCTRL), a		; stalls
+	ini
+	jr	nz, fdio_inbyte2
 	jr	fdxferdone
 
 ;
@@ -226,10 +239,6 @@ fdio_outl:
 	in	a, (FDCREG)		; No longer busy ??
 	rra
 	jr	nc, fdxferbad		; Bugger... 
-	ld	a, #0xC0		; Turn on magic floppy NMI interface
-	out	(FDCINT), a
-	ld	b, #50			; Spin for it
-spin1:	djnz	spin1
 	ld	b, (hl)			; Next byte
 	inc	hl
 fdio_waitlock:
@@ -278,7 +287,7 @@ _fd_reset:
 	out	(FDCSEC), a
 	xor	a
 	out	(FDCTRK), a
-	ld	a, #0x0C
+	ld	a, #0x0D	; use 6ms stepping
 	out	(FDCREG), a	; restore
 	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
@@ -320,13 +329,12 @@ _fd_operation:
 ;	C interface fd_motor_on(uint16_t drivesel)
 ;
 ;	Selects this drive and turns on the motors. Also pass in the
-;	choice of density
+;	choice of density. For the standard uBee disk that is
 ;
-;	bits 0-3:	select that drive
-;	bit 4:		side (must rewrite each drive change)
-;	bit 5:		precompensation (not set here but in the I/O ops)
-;	bit 6:		synchronize I/O by stalling the CPU (don't set this)
-;	bit 7:		set for double density (MFM)
+;	bits 0-1:	select drive
+;	bit 2:		side (must rewrite each drive change)
+;			(handled elsewhere)
+;	bit 3:		density (set = DD)
 ;
 ;
 _fd_motor_on:
@@ -335,14 +343,10 @@ _fd_motor_on:
 	push	hl
 	push	de
 	;
-	;	Select drive B, turn on motor if needed
+	;	Select drive B
 	;
-	ld	a,(motor_running)	; nothing selected
-	or	a
-	jr	z, notsel
-
 	cp	l
-	jr	z,  motor_was_on
+	jr	z,  was_selected
 ;
 ;	Select our drive
 ;
@@ -359,31 +363,12 @@ notsel:
 ;
 ;	All is actually good
 ;
-motor_was_on:
+was_selected:
 	ld	hl, #0
-	ret
-
-;
-;	C interface fd_motor_off(void)
-;
-;	Turns off the drive motors, deselects all drives
-;
-_fd_motor_off:
-	ld	a, (motor_running)
-	or	a
-	ret	z
-	; Should we seek to track 0 ?
-	in	a, (FDCCTRL)
-	and	#0xF0		; clear drive bits
-	out	(FDCCTRL), a
-	xor	a
-	ld	(motor_running), a
 	ret
 
 curdrive:
 	.db	0xff
-motor_running:
-	.db	0
 fdcctrl:
 	.db	0
 fdc_active:

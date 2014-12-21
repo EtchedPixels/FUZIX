@@ -9,8 +9,8 @@
 #define OPDIR_READ	1
 #define OPDIR_WRITE	2
 
-#define FD_READ		0x80	/* 2797 needs 0x88, 1797 needs 0x80 */
-#define FD_WRITE	0xA0	/* Likewise A8 v A0 */
+#define FD_READ		0x80
+#define FD_WRITE	0xA0
 
 __sfr __at 0x58	fdc_devsel;
 
@@ -24,9 +24,9 @@ static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
  */
 
 /* Standard FDC */
-static uint8_t selmap[4] = { 0x01, 0x02, 0x03, 0x04 };
-#define FDC_SIDE1	0x08
-#define FDC_DOUBLE	0x10
+static uint8_t selmap[4] = { 0x00, 0x01, 0x02, 0x03 };
+#define FDC_SIDE1	0x04
+#define FDC_DOUBLE	0x08
 #define FDC_SINGLE	0x00
 
 /* DreamDisc FDC */
@@ -64,30 +64,24 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
-    /* Q: should we go with 512 bytes/sector format ? */
     cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 9;		/* 2 sectors per block */
-    cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
+    /* Double sided assumed FIXME */
+    cmd[1] = block / 20;
+    /* floppy.s will sort the side out */
+    cmd[2] = ((block % 20) << 1) + 1;
     cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
     cmd[4] = dptr & 0xFF;
     cmd[5] = dptr >> 8;
 
-    while (ct < 2) {
-        for (tries = 0; tries < 4 ; tries++) {
-            err = fd_operation(cmd, driveptr);
-            if (err == 0)
-                break;
-            if (tries > 1)
-                fd_reset(driveptr);
-        }
-        /* FIXME: should we try the other half and then bale out ? */
-        if (tries == 4)
-            goto bad;
-        cmd[5]++;	/* Move on 256 bytes in the buffer */
-        cmd[2]++;	/* Next sector for 2nd block */
-        ct++;
-    }
-    return 1;
+    for (tries = 0; tries < 4 ; tries++) {
+        err = fd_operation(cmd, driveptr);
+        if (err == 0)
+            break;
+        if (tries > 1)
+            fd_reset(driveptr);
+   }
+   if (tries != 4)
+       return 1;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:
