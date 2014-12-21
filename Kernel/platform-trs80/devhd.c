@@ -62,7 +62,6 @@ static uint8_t hd_waitdrq(void)
 	return st;
 }
 
-/* FIXME: move this to asm in _COMMONMEM and support banks and swap */
 static uint8_t hd_xfer(bool is_read, uint16_t addr)
 {
 	/* Error ? */
