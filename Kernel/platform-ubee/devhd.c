@@ -1,5 +1,10 @@
 /*
- *	WD1010 hard disk driver
+ *	The MicroBee 128 shipped with a WD1002-05 and various small drives.
+ *
+ *	The driver is based on the TRS80 WD1010 driver. The 1002-05 is a 1010
+ *	with additional glue chips that also manage and front up a floppy
+ *	controller for us including the DMA management. It's actually a better
+ *	floppy controller than almost anything that followed it !
  */
 
 #include <kernel.h>
@@ -18,6 +23,7 @@ __sfr __at 0x46 hd_sdh;
 __sfr __at 0x47 hd_status;	/* R/O */
 __sfr __at 0x47 hd_cmd;
 __sfr __at 0x48 hd_fdcside;	/* Side select for FDC */
+__sfr __at 0x58 fdc_devsel;	/* Whch controller to use */
 
 #define HDCMD_RESTORE	0x10
 #define HDCMD_READ	0x20
@@ -35,7 +41,11 @@ uint8_t hd_page;
 /* Seek and restore low 4 bits are the step rate, read/write support
    multi-sector mode but not all emulators do .. */
 
-#define MAX_HD	4
+#define MAX_HD	3	/* devsel 3 means floppy */
+#define MAX_FDC	4
+
+static int spt[7] = { 32, 32, 32, 18, 18, 18, 18 };
+static int heads[7] = { 4, 4, 4, 2, 2, 2, 2 };
 
 /* Wait for the drive to show ready */
 static uint8_t hd_waitready(void)
@@ -57,7 +67,6 @@ static uint8_t hd_waitdrq(void)
 	return st;
 }
 
-/* FIXME: move this to asm in _COMMONMEM and support banks and swap */
 static uint8_t hd_xfer(bool is_read, uint16_t addr)
 {
 	/* Error ? */
@@ -105,29 +114,26 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		cmd = HDCMD_WRITE;
 
 
-	/* We assume 32 sectors per track for now. From our 512 byte
-	   PoV that's 16 */
-
-	/* For our test purposes we use a disk with 32 sectors, 4 heads so
-	   our blocks map out as   00cccccc ccCCCCCC CCHHSSSS
-
-	   This matches a real ST506 which is 153 cyls, 4 heads, 32 sector */
-
 	hd_precomp = 0x20;	/* For now, matches an ST506 */
 	hd_seccnt = 1;
 	block <<= 1;		/* Into 256 byte blocks, limits us to 32MB
 				   so ought to FIXME */
 
 	while (ct < nblock) {
-		/* 32 sectors per track assumed for now */
-		sector = (block & 31) + 1;
-		head = (block >> 5) & 3;
+		uint16_t b = block / spt[minor];
+		sector = block % spt[minor];
+		head = b % heads[minor];
 		/* Head next bits, plus drive */
 		hd_sdh = 0x80 | head | (minor << 3);
 		hd_secnum = sector;
+
+		if (minor >= MAX_HD)
+			hd_fdcside = head;
+
 		/* cylinder bits */
-		hd_cyllo = (block >> 7) & 0xFF;
-		hd_cylhi = (block >> 15) & 0xFF;
+		b /= heads[minor];
+		hd_cyllo = (b >> 7) & 0xFF;
+		hd_cylhi = (b >> 15) & 0xFF;
 
 		for (tries = 0; tries < 4; tries++) {
 			/* issue the command */
@@ -170,22 +176,30 @@ bad2:
 int hd_open(uint8_t minor, uint16_t flag)
 {
 	flag;
-	if (minor >= MAX_HD) {
+	if (minor >= MAX_HD + MAX_FDC) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
-
+	fdc_devsel = 1;
+	hd_sdh = 0x80 | (minor << 3);
+	hd_cmd = HDCMD_RESTORE;
+	if (hd_waitready() & 1) {
+		if ((hd_err & 0x12) == 0x12)
+			return -ENODEV;
+	}
 	return 0;
 }
 
 int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	flag;
+	fdc_devsel = 1;
 	return hd_transfer(minor, true, rawflag);
 }
 
 int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	flag;
+	fdc_devsel = 1;
 	return hd_transfer(minor, false, rawflag);
 }
