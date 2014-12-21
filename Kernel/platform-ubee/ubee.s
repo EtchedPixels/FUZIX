@@ -237,7 +237,7 @@ _hd_xfer_in:
 	   ld a, (_hd_page)
 	   or a
 	   call nz, map_process_a
-	   ld bc, #0x48			; 512 bytes from 0x48
+	   ld bc, #0x40			; 512 bytes from 0x40
 	   inir
 	   inir
 	   call map_kernel
@@ -251,7 +251,7 @@ _hd_xfer_out:
 	   ld a, (_hd_page)
 	   or a
 	   call nz, map_process_a
-	   ld bc, #0x48			; 512 bytes to 0x48
+	   ld bc, #0x40			; 512 bytes to 0x40
 	   otir
 	   otir
 	   call map_kernel

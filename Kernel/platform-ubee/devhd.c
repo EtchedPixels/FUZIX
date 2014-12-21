@@ -38,13 +38,19 @@ __sfr __at 0x58 fdc_devsel;	/* Whch controller to use */
 /* Used by the asm helpers */
 uint8_t hd_page;
 
-/* Seek and restore low 4 bits are the step rate, read/write support
-   multi-sector mode but not all emulators do .. */
+/* Seek and restore low 4 bits are the step rate which we need to sort out
+   FIXME */
 
 #define MAX_HD	3	/* devsel 3 means floppy */
 #define MAX_FDC	4
 
-static int spt[7] = { 32, 32, 32, 18, 18, 18, 18 };
+/* Standard formats for Microbee:
+	40 x 2 x 10 x 512 double sided 5.25
+	80 x 2 x 10 x 512 single sided 3.5
+	80 x 2 x 10 x 512 double sided 3.5
+
+	For now just use double sided : FIXME */
+static int spt[7] = { 16, 16, 16, 10, 10, 10, 10 };
 static int heads[7] = { 4, 4, 4, 2, 2, 2, 2 };
 
 /* Wait for the drive to show ready */
@@ -100,10 +106,10 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (rawflag == 0) {
 		dptr = (uint16_t)udata.u_buf->bf_data;
 		block = udata.u_buf->bf_blk;
-		nblock = 2;
+		nblock = 1;
 		hd_page = 0;		/* Kernel */
 	} else if (rawflag == 2) {
-		nblock = swapcnt >> 8;	/* in 256 byte chunks */
+		nblock = swapcnt >> 9;	/* in 512 byte chunks */
 		dptr = (uint16_t)swapbase;
 		hd_page = swapproc->p_page;
 		block = swapblk;
@@ -116,19 +122,21 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	hd_precomp = 0x20;	/* For now, matches an ST506 */
 	hd_seccnt = 1;
-	block <<= 1;		/* Into 256 byte blocks, limits us to 32MB
-				   so ought to FIXME */
 
 	while (ct < nblock) {
 		uint16_t b = block / spt[minor];
 		sector = block % spt[minor];
 		head = b % heads[minor];
-		/* Head next bits, plus drive */
-		hd_sdh = 0x80 | head | (minor << 3);
-		hd_secnum = sector;
-
-		if (minor >= MAX_HD)
+		if (minor < MAX_HD) {
+			/* ECC, 512 bytes, head and drive */
+			hd_sdh = 0xA0 | head | (minor << 3);
+		} else {
+			/* Floppy setup */
 			hd_fdcside = head;
+			/* CRC, 512 bytes, head (0/1), FDC unit, fdc number */
+			hd_sdh = 0x38 | head | ((minor - MAX_HD) << 1);
+		}
+		hd_secnum = sector;
 
 		/* cylinder bits */
 		b /= heads[minor];
@@ -155,11 +163,10 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 					kprintf("hd%d: restore error %z\n", minor, err);
 			}
 		}
-		/* FIXME: should we try the other half and then bale out ? */
 		if (tries == 3)
 			goto bad;
 		ct++;
-		dptr += 256;
+		dptr += 512;
 		block ++;
 	}
 	return 1;
@@ -181,7 +188,10 @@ int hd_open(uint8_t minor, uint16_t flag)
 		return -1;
 	}
 	fdc_devsel = 1;
-	hd_sdh = 0x80 | (minor << 3);
+	if (minor <= MAX_HD)
+		hd_sdh = 0xA0 | (minor << 3);
+	else
+		hd_sdh = 0x38 | minor << 1;
 	hd_cmd = HDCMD_RESTORE;
 	if (hd_waitready() & 1) {
 		if ((hd_err & 0x12) == 0x12)
