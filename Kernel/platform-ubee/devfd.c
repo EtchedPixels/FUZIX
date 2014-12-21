@@ -12,6 +12,8 @@
 #define FD_READ		0x80	/* 2797 needs 0x88, 1797 needs 0x80 */
 #define FD_WRITE	0xA0	/* Likewise A8 v A0 */
 
+__sfr __at 0x58	fdc_devsel;
+
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
 static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -21,7 +23,19 @@ static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
  *	add swapping!
  */
 
-static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x08 };
+/* Standard FDC */
+static uint8_t selmap[4] = { 0x01, 0x02, 0x03, 0x04 };
+#define FDC_SIDE1	0x08
+#define FDC_DOUBLE	0x10
+#define FDC_SINGLE	0x00
+
+/* DreamDisc FDC */
+static uint8_t selmap_dd[4] = { 0x01, 0x02, 0x04, 0x08 };
+#define DDC_SIDE1	0x10
+#define DDC_RATESEL	0x20
+#define DDC_DOUBLE	0x00
+#define DDC_SINGLE	0x40
+
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
@@ -38,8 +52,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     if (fd_selected != minor) {
         uint8_t err;
-        /* FIXME: We force DD for now */
-        err = fd_motor_on(selmap[minor]|0x80);
+        /* FIXME: We force DD for now. Side isn't handled here */
+        err = fd_motor_on(selmap[minor]|FDC_DOUBLE);
         if (err)
             goto bad;
     }
@@ -50,6 +64,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_buf->bf_data;
     block = udata.u_buf->bf_blk;
 
+    /* Q: should we go with 512 bytes/sector format ? */
     cmd[0] = is_read ? FD_READ : FD_WRITE;
     cmd[1] = block / 9;		/* 2 sectors per block */
     cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
@@ -93,12 +108,13 @@ int fd_open(uint8_t minor, uint16_t flag)
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag;
+    fdc_devsel = 0;
     return fd_transfer(minor, true, rawflag);
 }
 
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag;rawflag;minor;
-//    return 0;
+    fdc_devsel = 0;
     return fd_transfer(minor, false, rawflag);
 }
