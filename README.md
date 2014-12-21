@@ -106,6 +106,7 @@ Platforms
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
 * MSX - initial booting work done, cartridge boot needs debugging. Next stop is
 a keyboard driver.
+* TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
 * ZX Spectrum - can boot to loading a file system
