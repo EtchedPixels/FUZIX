@@ -51,21 +51,9 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
-
-tm_stack:
-            .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-tm_stack_top:
-
-;
-;	Can't di halt as it breaks sdltrs 8(
-;
 _trap_monitor:
-	    jr _trap_monitor
+	    di
+	    halt
 
 platform_interrupt_all:
 	    in a,(0xef)
@@ -76,7 +64,7 @@ _trap_reboot:
 	   halt
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xEA00, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .area _CODE
 
