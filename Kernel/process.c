@@ -330,7 +330,8 @@ void timer_interrupt(void)
 	}
 	ticks++;
 
-	/* Do once-per-decisecond things */
+	/* Do once-per-decisecond things - this doesn't work out well on
+	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == TICKSPERSEC / 10) {
 		static ptptr p;
 
