@@ -28,6 +28,8 @@ __sfr __at 0xCF hd_cmd;
 #define HDCMD_INIT	0x60	/* Ditto */
 #define HDCMD_SEEK	0x70
 
+#define RATE_2MS	0x04	/* 2ms step rate for hd (conservative) */
+
 #define HDCTRL_SOFTRESET	0x10
 #define HDCTRL_ENABLE		0x08
 #define HDCTRL_WAITENABLE	0x04
@@ -178,7 +180,12 @@ int hd_open(uint8_t minor, uint16_t flag)
 		udata.u_error = ENODEV;
 		return -1;
 	}
-
+	hd_sdh = 0xA0 | (minor << 3);
+	hd_cmd = HDCMD_RESTORE | RATE_2MS;
+	if (hd_waitready() & 1) {
+		if ((hd_err & 0x12) == 0x12)
+			return -ENODEV;
+	}
 	return 0;
 }
 
