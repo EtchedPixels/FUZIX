@@ -687,6 +687,7 @@ CODE2 void rdtime(time_t *tloc);
 CODE2 void rdtime32(uint32_t *tloc);
 CODE2 void wrtime(time_t *tloc);
 CODE2 extern void updatetod(void);
+CODE2 extern void inittod(void);
 
 /* provided by architecture or helpers */
 CODE2 void device_init(void);	/* provided by platform */
@@ -700,6 +701,8 @@ CODE2 uint8_t *swapout_prepare_uarea(ptptr p);
 CODE2 uint8_t *swapin_prepare_uarea(ptptr p);
 CODE2 void map_init(void);
 CODE2 void platform_idle(void);
+CODE2 uint8_t rtc_secs(void);
+
 /* Will need a uptr_t eventually */
 extern uint16_t ramtop;	     /* Note: ramtop must be in common in some cases */
 CODE2 extern void platform_interrupt(void);

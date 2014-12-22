@@ -43,9 +43,6 @@ void wrtime(time_t *tloc)
 {
         irqflags_t irq = di();
         memcpy(&tod, tloc, sizeof(tod));
-#ifdef CONFIG_RTC
-	machine_set_clock(tloc);
-#endif
 	irqrestore(irq);
 }
 
@@ -61,4 +58,38 @@ void updatetod(void)
         if (!++tod.low)
 		++tod.high;
 }
+#else
+
+static uint8_t rtcsec;
+
+/*
+ *	We use the seconds counter on the RTC as a time counter and lock our
+ *	time progression to it. This avoids doing horrible piles of math to
+ *	use the RTC itself and avoids problems with non Y2K devices.
+ *
+ *	We allow for multi-second leaps. On boxes with many of the directly
+ *	interfaced floppy controllers we can reasonably expect to lose IRQ
+ *	service for annoyingly long times.
+ */
+void updatetod(void)
+{
+	uint8_t rtcnew = rtc_secs();	/* platform function */
+	int8_t slide;
+
+	if (rtcnew == rtcsec)
+		return;
+	slide = rtcnew - rtcsec;	/* Seconds elapsed */
+	if (slide < 0)
+		slide += 60;		/* Seconds wrapped */
+	tod.low += slide;
+	if (tod.low < slide)		/* 32bit wrap ? */
+		tod.high++;
+	rtcsec = rtcnew;
+}
+
+void inittod(void)
+{
+	rtcsec = rtc_secs();
+}
+
 #endif				/* NO_RTC */
