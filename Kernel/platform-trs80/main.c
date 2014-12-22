@@ -49,8 +49,13 @@ __sfr __at 0xB1 rtc_sech;
 
 uint8_t rtc_secs(void)
 {
-  /* BCD encoded */
-  return rtc_secl + 10 * rtc_sech;
+    uint8_t sl, rv;
+    /* BCD encoded */
+    do {
+        sl = rtc_secl;
+        rv = sl + rtc_sech * 10;
+    } while (sl != rtc_secl);
+    return rv;
 }
 
 #endif
