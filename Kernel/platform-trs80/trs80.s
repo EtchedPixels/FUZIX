@@ -78,12 +78,13 @@ init_early:
 
             ; load the 6845 parameters
 	    ld hl, #_ctc6845
-	    ld bc, #1588
+	    ld bc, #0x1088
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
 	    out (0x89), a		; data
 	    inc hl
-	    djnz ctcloop
+	    dec b
+	    jr nc, ctcloop
 
    	    ; clear screen
 	    ld hl, #0xF800
