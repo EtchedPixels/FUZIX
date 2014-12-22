@@ -102,8 +102,11 @@ ctcloop:    out (c), b			; register
 	    dec b
 	    jr nc, ctcloop
 	    ; ensure the CTC clock is right
-	    xor a
+	    ld a, #0
 	    in a, (9)			; manual says in but double check
+	    in a, (0x1C)
+	    and #0x7F
+	    out (0x1C), a		; ensure we are in simple mode for now
    	    ; clear screen
 	    ld hl, #0xF000
 	    ld (hl), #'*'		; debugging aid in top left
@@ -126,6 +129,15 @@ init_hardware:
             push hl
             call _program_vectors
             pop hl
+
+	    ;
+	    ; set up the RTC driven periodic timer. The PIA should already
+	    ; have been configured for us
+	    ;
+	    ld a, #0x0A			; PIR timer
+	    out (0x04), a
+	    ld a, #0x1001		; 64 ints/second
+	    out (0x06), a
 
             im 1 ; set CPU interrupt mode
 
@@ -181,11 +193,10 @@ _program_vectors:
             ld (0x0067), hl
 
 ;
-;	Mapping set up for the TRS80 4/4P
+;	Mapping set up for the Microbee
 ;
 ;	The top 32K bank holds kernel code and pieces of common memory
-;	The lower 32K is switched between the various user banks. On a
-;	4 or 4P without add in magic thats 0x62 and 0x63 mappings.
+;	The lower 32K is switched between the various user banks.
 ;
 map_kernel:
 	    push af
@@ -194,9 +205,7 @@ map_kernel:
 	    out (0x50), a
 	    pop af
 	    ret
-;
-;	Userspace mapping is mode 3, U64K/L32 mapped at L64K/L32
-;
+
 map_process:
 	    ld a, h
 	    or l
