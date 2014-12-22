@@ -34,4 +34,5 @@ swap.rel
 devsys.rel
 platform-z80pack/devlpr.rel
 platform-z80pack/devtty.rel
+platform-z80pack/devrtc.rel
 -e
