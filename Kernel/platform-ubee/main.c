@@ -57,3 +57,12 @@ void pagemap_init(void)
 #endif
 /* and if we ever poke at the 1024 stuff its bit 7-5/1-0 */
 }
+
+__sfr __at 0x04 rtc_c;
+__sfr __at 0x06 rtc_d;
+
+uint8_t rtc_secs(void)
+{
+	rtc_c = 0x00;
+	return rtc_d;
+}

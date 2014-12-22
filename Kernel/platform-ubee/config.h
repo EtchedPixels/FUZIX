@@ -1,3 +1,5 @@
+/* We have an RTC */
+#define CONFIG_RTC
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -26,7 +28,7 @@
 #define VT_RIGHT	79
 #define VT_BOTTOM	23
 
-#define TICKSPERSEC 60   /* Ticks per second */
+#define TICKSPERSEC 64   /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
 #define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */

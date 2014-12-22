@@ -36,6 +36,8 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   int i;
+  /* Time of day clock */
+  inittod();
   /* Add 64 swaps (2MB) */
   for (i = MAX_SWAPS - 1 ; i >= 0; i--)
     swapmap_add(i);
