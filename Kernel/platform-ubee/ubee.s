@@ -82,19 +82,28 @@ to_reboot:
 	    out (0x50), a
 	    jp 0xE000
 	
-;_ctc6845:				; registers in reverse order
-;	    .db 99, 80, 85, 10, 25, 4, 24, 24, 0, 9, 101, 9, 0, 0, 0, 0
-init_early:
 ;
-;            ; load the 6845 parameters
-;	    ld hl, #_ctc6845
-;	    ld bc, #1588
-;ctcloop:    out (c), b			; register
-;	    ld a, (hl)
-;	    out (0x89), a		; data
-;	    inc hl
-;	    djnz ctcloop
+;	This setting list comes from the Microbee 256TC documentation
+;	and is the quoted table for 80x25 mode
+;
+_ctc6845:				; registers in reverse order
+	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
+	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
 
+init_early:
+
+            ; load the 6845 parameters
+	    ld hl, #_ctc6845
+	    ld bc, #0x100C
+ctcloop:    out (c), b			; register
+	    ld a, (hl)
+	    out (0x0D), a		; data
+	    inc hl
+	    dec b
+	    jr nc, ctcloop
+	    ; ensure the CTC clock is right
+	    xor a
+	    in a, (9)			; manual says in but double check
    	    ; clear screen
 	    ld hl, #0xF000
 	    ld (hl), #'*'		; debugging aid in top left
