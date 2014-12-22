@@ -1,11 +1,12 @@
 Minimal Requirements
 --------------------
 
-- Z80 processor
-- 128K memory (the kernel itself wants between 32 and 40K R/O and about
-  8-16K R/W depending upon the configuration.
+- 6809 or Z80 processor
+- 128K memory for Z80 (the kernel itself wants between 32 and 40K R/O and about
+  8-16K R/W depending upon the configuration. For 6809 the kernel compiles
+  to about 24K so a single bank 64K machine just about works.
 - Some kind of memory banking giving a common area and multiple banks
-- A storage device, preferable hard disk or SD card or similar
+- A storage device, preferably hard disk or SD card or similar
 - A timer interrupt (but you can sort of run single user with just a serial
   / keyboard irq)
 
@@ -17,7 +18,6 @@ In the ideal world
 With a bit more work (ie the planning for it is in place but someone needs
 to do the work) it should also be possible to run with
 
-- Other 8bit processors with banked RAM (eg 6809)
 - The kernel code banked in ROM in 3 x 16K banks
 - Base/limit address space with a common area and ideally two ranges
   (eg Z180)
@@ -54,14 +54,19 @@ Porting Fuzix to a new Z80 based machine generally requires the following
 
 - A lot of standard code is available to make porting easy
 
- CONFIG_BANK16 selects support for four flexible 16K bank registers
+ CONFIG_BANK16 selects support for four flexible 16K bank registers. The non
+ common kernel & data parts must all fit below 0xC000, common goes higher.
 
- CONFIG_BANK32 selects support for two flexible 32K bank registers
+ CONFIG_BANK32 selects support for two flexible 32K bank registers.
+ Currently this is a very specialised port and requires a lot of extra work.
 
  CONFIG_BANK_FIXED selects support for systems where you have a selector for
  all of the lower parts of memory in banks, and a fixed common at the top.
  It can also be used if the banking is more flexible but has annoying
- restrictions like not being able to map banks into other addresses (eg MSX1)
+ restrictions like not being able to map banks into other addresses (eg
+ MSX1). This is by far the easiest model to bring up and usually the best
+ starting point as you can simply .include most of the code needed (follow
+ platforms such as MTX512 or z80pack as examples).
 
  CONFIG_BANK_LINEAR selects a system where memory is managed linearly with
  base/limit pairs or similar and a common. This isn't yet tested but is
@@ -84,11 +89,11 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  typical layout. You may need to wrap vt calls in page switches according
  to your platform
 
- CONFIG_FONT_8x8 and CONFIG_FONT_4x6 will include fonts. For 4x6 font usage
- see nc100.s. The fonts are put in a special segment _FONT and your crt0.s
- needs to decide where to place it. If you place it after the data then
- the binman tool will relocate it to the end of the packed commonmem so it
- can be moved into another segment (eg to be with the video screen data).
+ CONFIG_FONT8x8, CONFIG_FONT6x8 and CONFIG_FONT_4x6 will include fonts.
+ For 4x6 font usage see nc100.s. The fonts are put in a special segment _FONT
+ and your crt0.s needs to decide where to place it. If you place it after the
+ data then the binman tool will relocate it to the end of the packed commonmem
+ so it  can be moved into another segment (eg to be with the video screen data).
  See pcw8256 for an example of this.
 
 - Set the basic system parameters
@@ -102,23 +107,20 @@ Porting Fuzix to a new Z80 based machine generally requires the following
 			0xF000 but if your system has a fixed upper common
 			then this may need to be lower (eg 0xC000)
  BOOT_TTY	-	the device you will use as your 'console' at boot
-			time
+			time. 513 is the first tty, 514 the second etc
 
  CMDLINE	-	pointer to a command line passed from the
-			loader/firmare. If booting from CP/M (see below) use
-			0x88
+			loader/firmware. If booting from CP/M (see below) use
+			0x88. Optional.
 
  NUM_DEV_TTY	-	number of tty devices (video consoles/serial)
 
- NDEVS		-	number of entries for disk/block devices at the
-			start of your device table
  TTYDEV		-	device init will use as input/output (usually BOOT_TTY)
 
  NBUFS		-	number of buffers for disk cache (each a bit of 512
 			bytes)
 
  NMOUNTS	-	number of things that can be mounted at a time
-			(NDEVS or less)
 
 
 If you have non interrupt driven serial ports then poll them in your IRQ
@@ -136,10 +138,10 @@ need be bias or xor with 0x80 or something. At boot you should have 2 or 4
 pages mapped (depending upon your kernel), one of which (usually the top) is
 common. Add all the pages that are not kernel.
 
-In the 16K bank case you then lastly add the common page. This will then be allocated
-to init and become the common for the init. That means you must keep kernel
-code/data below 0xC000. Right now that is easy enough but once we add TCP/IP
-might need banking.
+In the 16K bank case you then lastly add the common page. This will then be
+allocated to init and become the common for the init. That means you must
+keep kernel code/data below 0xC000. Right now that is easy enough but once
+we add TCP/IP might need banking.
 
 On 32K banking you can't do this so will need to play uarea swapping games
 and keep the top bank as a kernel bank. This is much uglier but unlike
@@ -167,8 +169,9 @@ SWAP_SIZE	-	number of disk blocks needed to hold all the swap
 MAX_SWAPS	-	largest number of SWAP_SIZE chunks that will be used
 			(bounded by disks/process table size/common sense)
 
-
-
+Swap requires specific support in the disk device you plan to use for swap.
+See for example the TRS80 hard disk driver. Swap on a box using 16K or 32K
+banking is complicated so start out without swap or with fixed banks.
 
 
 Functions to provide: (*) indicates they should be in COMMONMEM
@@ -191,7 +194,8 @@ _program_vectors(*) -	Program the vectors
 			You can usually just re-use the default but this may
 			vary if you have odd commonmem setups
 
-_trap_monitor(*)    -	Return to ROM monitor/debugger or similar
+_trap_monitor(*)    -	Return to ROM monitor/debugger or similar. If you
+			have none probably just spin.
 
 _trap_reboot(*)	-	Reboot the machine (may be useful to not do so
 			during debug)
@@ -297,7 +301,7 @@ Write a character to the tty minor
 
 int tty_carrier(uint8_t minor)
 
-Return 1 if carrier raised or you arenot implementing the carrier interfaces
+Return 1 if carrier raised or you are not implementing the carrier interfaces
 yet.
 
 void tty_setup(uint8_t minor)
@@ -325,7 +329,7 @@ Main.c
 uint8_t *swapout_prepare_uarea(ptptr p)
 uint8_t *swapin_prepare_uarea(ptptr p)
 
-Just return NULL unless you are doing clever things with udata
+Not needed unless you are doing clever things with udata
 
 void platform_idle(void)
 
@@ -477,12 +481,9 @@ fixed bank model.
 The pagemap_alloc/realloc and friends will also need updating - perhaps with
 2 or more map tables.
 
-In other cases (eg the TRS80) you can only have one "high" bank mapped. This
-really limits the TRS80 to single task with floppy or swapping to disk with
-HD. Given the 128K limit that isn't too bad.
-
 The other examples are things like the Microbee (one 32K bank is flexible
-the other is very rigid), and things like the Sinclair Spectrum/Amstrad CPC boxes.
+the other is very rigid), and things like the Sinclair Spectrum/Amstrad CPC
+boxes.
 
 Research Problems
 -----------------
@@ -501,6 +502,15 @@ singletasking mode your swap acts as a stack. Likewise if your system has
 lots of RAM accessible through a small window you can treat it as "swap"
 rather than process memory
 
+If you have a "swap" which is actually inconveniently banked memory (eg with
+a small window) or memory accessed via a fast I/O interface using things
+like inir/otir you have two choices. You could make it a real device so you
+can also put filesystems on it, or you could hardcode its use into switchin
+and switchout as part of the process task switch. This latter approach is
+usually slightly faster and means you can combine fast RAM based flipping
+with a real disk swap device.
+
+
 Known Performance Problems
 --------------------------
 
@@ -517,16 +527,16 @@ should probably support vfork().
 Other Processors
 ----------------
 
-Currently only Z80 is supported. Clones should also work as should FPGA cores
-like T80. The current build uses no undocumented instructions in any core
-code.
+Currently only Z80 is properly supported. Clones should also work as should
+FPGA cores like T80. The current build uses no undocumented instructions in
+any core code.
+
+The 6809 port builds a kernel that has been tested to the point of mounting
+the root file system but no userspace work has been done at this point.
 
 Z180 is not yet supported. This requires a rather unique memory banking
 module to be debugged plus some driver pieces. It should however then enable
 systems like N8VEM Mark IV and maybe even the 'Super TRS80' hacked hardware.
-
-Platform wise there are lots that could be supported. MSX is a notable gap,
-especially given that UZIX has some MSX code.
 
 It ought to be possible to port UZI to any other small processor with
 banking. That would include banked 6809/6309 systems and perhaps 65C816
@@ -537,7 +547,7 @@ Various endianisms in the core code have been fixed but there may be more.
 The constraints roughly speaking for any port are
 
 - banked memory
-- near full 8bit address space
+- near full 16bit address space
 - some way to do udata. (or take the hit of making it a macro pointer)
 - an ANSI C compiler
 - timer interrupt, and preferably tty I/O interrupts
@@ -591,11 +601,6 @@ Teaching SDCC to generate better code. It's not bad but sometimes it makes a
 right mess, especially of long types. Someone also needs to write the
 longlongs signed mod function and fix the fact that discarding the output
 of a longlong call currently blows up sdcc.
-
-Writing a longlong implementation of mod for SDCC (needed for the C lib)
-
-We want 64bit time_t values in the ABI in order to get 2038 safety. We need
-32bit versions to support non Z80 systems perhaps using structs for time_t
 
 SDCC call by register
 
