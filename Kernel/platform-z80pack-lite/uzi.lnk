@@ -33,4 +33,5 @@ single.rel
 devsys.rel
 platform-z80pack-lite/devlpr.rel
 platform-z80pack-lite/devtty.rel
+platform-z80pack-lite/devrtc.rel
 -e

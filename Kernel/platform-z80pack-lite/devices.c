@@ -6,6 +6,7 @@
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
+#include <devrtc.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -36,4 +37,5 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+    zrtc_init();
 }

@@ -1,5 +1,5 @@
 
-DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c
+DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c
 CSRCS = devices.c main.c
 
 ASRCS = crt0.s z80pack.s
