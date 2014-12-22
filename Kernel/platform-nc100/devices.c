@@ -34,6 +34,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+  inittod();
   nc100_tty_init();
 }
 
