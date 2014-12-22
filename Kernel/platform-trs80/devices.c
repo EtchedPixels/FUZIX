@@ -36,7 +36,11 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   int i;
+#ifdef CONFIG_RTC
+  /* Time of day clock */
+  inittod();
+#endif
   /* Add 64 swaps (2MB) */
-  for (i = 0; i < MAX_SWAPS; i++)
+  for (i = MAX_SWAPS - 1 ; i >= 0; i--)
     swapmap_add(i);
 }

@@ -1,3 +1,8 @@
+/* Set if you want RTC support and have an RTC on ports 0xB0-0xBC */
+#define CONFIG_RTC
+
+
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
