@@ -14,10 +14,7 @@
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
-        .globl mmu_map_page
         .globl map_process
-        .globl mmu_state_dump
-        .globl mmu_map_page_fast
         .globl interrupt_handler
 
         ; imported debug symbols
@@ -73,13 +70,22 @@ _switchin:
         ld iy, #0
         add iy, de
 
-        ld h, P_TAB__P_PAGE_OFFSET+1(iy)
-        ld l, P_TAB__P_PAGE_OFFSET(iy)
-        push de
-        ld de, #0x0f
-        add hl, de
-        pop de ; keep new process pointer in DE so we can compare with
-	       ; it after the switch
+	; keep new process pointer in DE so we can compare with
+	; it after the switch
+
+	; Get our page pointer for the top bank
+        ld l, P_TAB__P_PAGE_OFFSET+3(iy)
+	; Convert it into an MMU frame
+	sla l
+	rla
+	sla l
+	rla
+	and #3
+	ld h, a
+	; We want the very top frame
+	inc l
+	inc l
+	inc l
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -92,6 +98,8 @@ _switchin:
         out (MMU_FRAMEHI), a
         ld a, l
         out (MMU_FRAMELO), a
+
+	; ------------- Our stack just left the building ---------------
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab

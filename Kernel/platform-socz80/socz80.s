@@ -20,13 +20,10 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
+	    .globl _kernel_flag
 
             ; exported debugging tools
             .globl _trap_monitor
-            .globl mmu_map_page
-            .globl mmu_map_page_fast
-            .globl map_process
-            .globl mmu_state_dump
             .globl outchar
 
             ; imported symbols
@@ -39,6 +36,7 @@
             .globl dispatch_process_signal
             .globl unix_syscall_entry
             .globl trap_illegal
+	    .globl null_handler
             .globl _timer_interrupt
 	    .globl nmi_handler
             .globl outnibble
@@ -56,6 +54,8 @@
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+_kernel_flag:
+	    .db 1	; We start in kernel mode
 
 trapmsg:    .ascii "Trapdoor: SP="
             .db 0
@@ -200,7 +200,7 @@ init_hardware:
             out (UART1_STATUS), a
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
-            ld hl, #OS_BANK
+            ld hl, #0
             push hl
             call _program_vectors
             pop hl
@@ -221,7 +221,7 @@ _tty_writeready:
             jr z, uart0wr
             cp #2
             jr z, uart1wr
-                            call _trap_monitor
+            call _trap_monitor
             ret ; not a console we recognise
 uart1wr:    in a, (UART1_STATUS)
             jr testready
@@ -382,6 +382,10 @@ _program_vectors:
             ld hl, #trap_illegal   ;   to Our Trap Handler
             ld (0x1), hl
 
+            ld (0x0000), a
+            ld hl, #null_handler   ;   to Our Trap Handler
+            ld (0x0001), hl
+
             ld (0x66), a  ; Set vector for NMI
             ld hl, #nmi_handler
             ld (0x0067), hl
@@ -438,7 +442,7 @@ map_process:
 	    ld a, h
  	    or l
 	    jr nz, map_process_always
-	    ld hl, #OS_BANK
+	    ld hl, #os_bank
 	    jr map_loadhl
 
 ;
@@ -455,15 +459,12 @@ map_process_always:
 ;
 map_kernel:
 	    push hl
-	    ld hl, #OS_BANK
+	    ld hl, #os_bank
 	    call map_loadhl
 	    pop hl
 	    ret
-;
-; HL points to the four logical pages to restore. Preserve registers.
-; As our MMU is 4K each page is 4 logical pages. We could add a bank4k but
-; it's not clear its actually worth the effort - feel free however 8)
-;
+os_bank:    .db 0, 1, 2, 3	; first 64K
+
 map_restore:
 	    push hl
 	    ld hl, #saved_map
@@ -474,38 +475,89 @@ map_restore:
 map_save:
 	    ; FIXME: Save the current mapping registers. Preserves all
 	    ; registers
+	    push hl
+	    ld hl, (map_current)
+	    ld (saved_map), hl
+	    ld hl, (map_current + 2)
+	    ld (saved_map + 2), hl
+	    pop hl
 	    ret
 
 map_loadhl:
-	    ; FIXME: Load the mapping from HL. We want to load at least the
-	    ; low 48K of mappings and on here arguably we want to load all
-	    ; but the last 4K (however watch the fork copy if so)
+	    ;
+	    ;	Switch all but the top page frame according to the passed
+	    ;	page set. We have to do some work as we've got a rather
+	    ;	fancy MMU while Fuzix is expecting simple banks
+	    ;
+	    push af
+	    push bc
+	    push de
+	    ld de, #map_current
+	    push hl
+	    ldi
+	    ldi
+	    ldi
+	    ldi
+	    pop hl
+	    ld bc, #MMU_SELECT	; 	page 0, MMU select for port
+	    xor a
+	    call map4
+	    call map4
+	    call map4
+	    call map3		;	top 4K is common memory
+	    pop de
+	    pop bc
+	    pop af
 	    ret
 
-	    ; FIXME: need bigger space and to plan this out better
+;
+;	Map the 4 pages indicated by the 16K page number at (hl)
+;	into the banks starting at B. The caller must point C at
+;	MMU_SELECT (where it will remain)
+;
+;	Returns hl pointing to the next page number, B indexing the next bank
+;
+
+map3:	    push hl
+	    ld a, #3
+	    jr map3or4
+
+map4:	    push hl
+	    ld a, #4
+map3or4:
+	    ; Load the frame pointer first to free up a register
+	    ld e, (hl)		;	pageframe (in 16K terms)
+
+	    add b		;	stop point
+	    ld l, a		; 	save stop marker
+
+	    ; Convert the frame pointer to something useful
+	    sla e		;	into 8K
+	    rla
+	    sla e		;	into 4K pages
+	    rla			;
+	    and #0x03		;	clean top bits
+	    ld d, a
+map4loop:
+	    out (c), b		;	page to update
+	    ld a, d
+	    out (MMU_FRAMEHI), a
+	    ld a, e
+	    out (MMU_FRAMELO), a
+	    inc b		;	next frame in the MMU
+	    inc e		;	next 4K page
+				;	A 16K block will never span
+				;	a higher power of 2, so d never
+				;	needs to change
+	    ld a, b
+	    cp l
+	    jr nz, map4loop
+	    pop hl
+	    inc hl
+	    ret
+
 saved_map:  .db 0, 0, 0, 0
-
-            ; Load page HL into frame A
-            ; Return old mapping in DE
-mmu_map_page:
-            out (MMU_SELECT), a
-            ld c, #MMU_FRAMEHI
-            in d, (c)
-            out (c), h
-            inc c ; c is now MMU_FRAMELO
-            in e, (c)
-            out (c), l
-            ret
-
-            ; remap page (used after mmu_map_page)
-mmu_map_page_fast:
-            ld a, h
-            out (MMU_FRAMEHI), a
-            ld a, l
-            out (MMU_FRAMELO), a
-            ret
-
-
+map_current: .db 0, 0, 0, 0
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
