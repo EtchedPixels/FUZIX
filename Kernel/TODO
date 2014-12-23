@@ -12,8 +12,8 @@ o	Core dumps
 o	time_t bits hidden in inode
 o	n_openw() - as n_open but errors on R/O mount or media, getinodew ??
 	and update setftime ?
-o	RTC setting
-o	Lock clock to RTC seconds
+NA	RTC setting
+DONE	Lock clock to RTC seconds
 o	Can we make the mount point buffers writable to disk too so we can
 	drop the quiet ones when busy ?
 o	Simplify exec logic and split into multiple functions
@@ -24,6 +24,9 @@ o	Can we make inodes partially pageable given our on disk guarantees ?
 	objects and less memory usage. Might be nicer alternative to the BSD
 	inode shrinking hack (although that would fix the time_t question!)
 o	Finish the cpm emulator port
+o	Make object alignments 16bit friendly
+o	Add fields to binaries giving load page (so can load Z80 0x8000
+	binaries safely etc)
 
 Big Speed Up Points
 -------------------
