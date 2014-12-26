@@ -149,7 +149,8 @@ int16_t _time(void)
 			uzero(&t.high, sizeof(t.high));
 			return 0;
 		default:
-			return -EINVAL;
+			udata.u_error = EINVAL;
+			return -1;
 	}
 }
 
@@ -165,10 +166,15 @@ Set Clock Time (Currently unimplemented).
 When active, must be SuperUser to Set Time.
 ********************************************/
 #define tvec (time_t *)udata.u_argn
+#define type (uint16_t)udata.u_argn1
 
 int16_t _stime(void)
 {
 	time_t t;
+	if (type != 0) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
 	if (uget(&t, tvec, sizeof(t)) || esuper())
 		return -1;
 	wrtime(&t);
@@ -176,7 +182,7 @@ int16_t _stime(void)
 }
 
 #undef tvec
-
+#undef type
 
 
 /*******************************************

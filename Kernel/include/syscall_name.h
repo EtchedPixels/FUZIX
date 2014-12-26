@@ -92,7 +92,7 @@ int syscall_args[NR_SYSCALL] = {
 	1, //setuid
 	1, //setgid
 	2, //_time
-	1, //stime
+	2, //stime
 	3, //ioctl
 	1, //brk
 	1, //sbrk
