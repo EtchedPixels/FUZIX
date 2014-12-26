@@ -33,10 +33,13 @@ struct _uzisysinfoblk {
   uint8_t infosize;		/* For expandability */
   uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
   uint8_t max_open;
+  uint8_t pad;
   uint16_t ticks;		/* Tick rate in HZ */
   uint16_t memk;		/* Memory in KB */
   uint16_t usedk;		/* Used memory in KB */
   uint16_t config;		/* Config flag mask */
+  uint16_t loadavg[3];
+  uint32_t spare;
 };
 
 /*

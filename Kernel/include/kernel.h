@@ -495,12 +495,15 @@ struct sysinfoblk {
   uint8_t infosize;		/* For expandability */
   uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
   uint8_t max_open;
+  uint8_t spare;
   uint16_t ticks;		/* Tick rate in HZ */
   uint16_t memk;		/* Memory in KB */
   uint16_t usedk;		/* Used memory in KB */
   uint16_t config;		/* Config flag mask */
 #define CONF_PROFIL		1
 #define CONF_NET		2	/* Hah.. 8) */
+  uint16_t loadavg[3];
+  uint32_t spare2;
     			        /* Followed by uname strings */
 };
 
