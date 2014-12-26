@@ -127,23 +127,34 @@ int16_t _setgid(void)
 
 
 /*******************************************
-time (tvec)                      Function 27
+time (int type, tvec)            Function 27
+uint16_t type;
 time_t *tvec;
 ============================================
 Read Clock Time/Date to User Buffer.
 ********************************************/
 #define tvec (time_t *)udata.u_argn
+#define type (uint16_t)udata.u_argn1
 
 int16_t _time(void)
 {
 	time_t t;
-	rdtime(&t);
-	uput(&t, tvec, sizeof(t));
-	return (0);
+	switch (type) {
+		case 0:
+			rdtime(&t);
+			uput(&t, tvec, sizeof(t));
+			return (0);
+		case 1:
+			uput(&t.low, &ticks, sizeof(ticks));
+			uzero(&t.high, sizeof(t.high));
+			return 0;
+		default:
+			return -EINVAL;
+	}
 }
 
 #undef tvec
-
+#undef type
 
 
 /*******************************************
