@@ -8,7 +8,8 @@ int main(int argc, char *argv[])
 {
   int v;
   FILE *fp;
-  unsigned char buf[8];
+  unsigned char buf[10];
+  unsigned short top;
 
   if (argc != 2 && argc != 3) {
     fprintf(stderr, "%s [executable] {size}\n", argv[0]);
@@ -22,22 +23,21 @@ int main(int argc, char *argv[])
     perror(argv[1]);
     exit(1);
   }
-  if (fread(buf, 8, 1, fp) != 1) {
+  if (fread(buf, 10, 1, fp) != 1) {
     fprintf(stderr, "%s: too short ?\n", argv[0]);
     exit(1);
   }
-  if (buf[0] != 0xC3 || buf[3] != 'U' || buf[4] != 'Z') {
-    fprintf(stderr, "%s: not an UZI binary format.\n", argv[1]);
+  if (buf[0] != 0xC3 || buf[3] != 'F' || buf[4] != 'Z'|| buf[5] != 'X' ||
+    buf[6] != '1') {
+    fprintf(stderr, "%s: not a Fuzix binary format.\n", argv[1]);
     exit(1);
   }
   if (argc == 2) {
-    if (buf[5] == 'I')
-      printf("classic UZI binary.\n");
-    else if (buf[5] & 0x80)
-      printf("chmem UZI binary set at %d bytes.\n", 
-        (buf[5] & 0x7F) << 9);
+    top = buf[8] | (buf[9] << 8);
+    if (top)
+      printf("Fuzix binary set at %d bytes.\n", top);
     else
-      printf("UZI binary with unknown tail byte %d\n", buf[5]);
+      printf("Fuzix binary, set to allocate all available.\n");
     exit(0);
   }
       
@@ -45,12 +45,10 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%s: invalid chmem value '%s'.\n", argv[0], argv[2]);
     exit(1);
   }
-  if (v == 0)
-    buf[5] = 'I';
-  else
-    buf[5] = ((v + 511) >> 9) | 0x80;
+  buf[8] = v & 0xFF;
+  buf[9] = v >> 8;
   rewind(fp);
-  if(fwrite(buf, 8, 1, fp) != 1) {
+  if(fwrite(buf, 10, 1, fp) != 1) {
     fprintf(stderr, "%s: write error.\n", argv[0]);
     exit(1);
   }
