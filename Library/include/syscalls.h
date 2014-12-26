@@ -117,7 +117,7 @@ extern int _getdirent(int fd, void *buf, int len);
 extern int _stat(const char *path, struct _uzistat *s);
 extern int _fstat(int fd, struct _uzistat *s);
 extern int _getfsys(int dev, struct _uzifilesys *fs);
-extern int _time(time_t *t);
+extern int _time(time_t *t, uint16_t clock);
 extern int _stime(const time_t *t);
 extern int _times(struct tms *t);
 extern int _utime(const char *file, time_t *buf);

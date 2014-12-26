@@ -10,9 +10,9 @@ time_t time(time_t *t)
 {
   time_t tmp;
   if (t) {
-    _time(t);
+    _time(t, 0);
     return *t;
   }
-  _time(&tmp);
+  _time(&tmp, 0);
   return tmp;
 }
