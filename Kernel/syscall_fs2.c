@@ -639,7 +639,7 @@ int16_t _fcntl(void)
 #undef data
 
 /*******************************************
-uname (buf)                      Function 54
+uname (buf, len)                 Function 54
 char *buf;
 uint16_t len;
 
