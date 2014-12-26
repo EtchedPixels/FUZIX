@@ -63,9 +63,8 @@ int16_t _execve(void)
 		0x4C xx xx	- 6502
 		0x0E xx xx	- 6809
 
-	   others TBD
+	   followed by a base page for the executable
 
-	   FIXME: need to modify header design to include base addr page
 	*/
 	if ((*buf & 0xff) != EMAGIC) {
 		udata.u_error = ENOEXEC;
@@ -77,10 +76,18 @@ int16_t _execve(void)
 	 *	UZI binaries).
 	 */
 	if (buf[3] == 'F' && buf[4] == 'Z' && buf[5] == 'X' && buf[6] == '1') {
-		top = buf[7] | ((unsigned int)buf[8] << 8);
+		top = buf[8] | ((unsigned int)buf[9] << 8) - PROGLOAD;
 		if (top == 0)	/* Legacy 'all space' binary */
 			top = ramtop;
 		emu_ino = 0;	// no emulation, thanks
+		/* Don't load binaries for the wrong base page, eg spectrum
+		   binaries on a sane box */
+		if (buf[7] != PROGLOAD >> 8) {
+			/* We could be smarter, move this page up and
+			   see if it still fits... ? */
+			udata.u_error = ENOEXEC;
+			goto nogood2;
+		}
 	} else {
 #ifdef CONFIG_CPM_EMU
 		// open the emulator code on disk
