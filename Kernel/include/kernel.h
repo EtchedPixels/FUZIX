@@ -70,9 +70,6 @@ typedef struct s_queue {
     int   q_wakeup;  /* Threshold for waking up processes waiting on queue */
 } queue_t;
 
-/* User's structure for times() system call */
-typedef unsigned long clock_t;
-
 struct tms {
 	clock_t  tms_utime;
 	clock_t  tms_stime;

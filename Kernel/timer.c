@@ -3,23 +3,27 @@
 #include <timer.h>
 #include <printf.h>
 
-/* WRS: simple timer functions */
+/* WRS: simple timer functions
+
+   These use a 16bit "miniticks" to keep the generated code nice
+*/
+
 timer_t set_timer_duration(uint16_t duration)
 {
-    timer_t a;
+	timer_t a;
 	if (duration & 0x8000) {
 		kprintf("bad timer duration 0x%x\n", duration);
 	}
-    /* obvious code is return (miniticks+duration), however we have to do */
-    /* it this longwinded way or sdcc doesn't load miniticks atomically */
-    a = ticks.mini;
-    a += duration;
-    return a;
+	/* obvious code is return (miniticks+duration), however we have to do */
+	/* it this longwinded way or sdcc doesn't load miniticks atomically */
+	a = ticks.h.low;
+	a += duration;
+	return a;
 }
 
 bool timer_expired(timer_t timer_val)
 {
-	return ((timer_val - ticks.mini) & 0x8000);
+	return ((timer_val - ticks.h.low) & 0x8000);
 }
 
 /*-----------------------------------------------------------*/

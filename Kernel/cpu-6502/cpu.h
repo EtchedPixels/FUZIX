@@ -24,10 +24,21 @@ extern size_t strlen(const char *);
 
 #define staticfast	static
 
+/* User's structure for times() system call */
+typedef unsigned long clock_t;
+
 typedef struct {
   uint32_t low;
   uint32_t high;
 } time_t;
+
+typedef union {            /* this structure is endian dependent */
+    clock_t  full;         /* 32-bit count of ticks since boot */
+    union {
+      uint16_t low;         /* 16-bit count of ticks since boot */
+      uint16_t high;
+    } h;
+} ticks_t;
 
 /* We don't yet have bank attributes and banking for Z80 */
 #define CODE1
