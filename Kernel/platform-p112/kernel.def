@@ -10,8 +10,6 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 FIRST_RAM_BANK              .equ 0x00         ; all memory is RAM on P112
 RAM_KB                      .equ 1024
 Z180_IO_BASE                .equ 0x00
-P112_IDE_BASE               .equ 0x50
-P112_IDE_DATA               .equ (P112_IDE_BASE+0x08)
 
 ; Believe most P112 kits shipped with 16MHz oscillators, I have tried faster 
 ; (18.432MHz) but this made the machine unstable.
