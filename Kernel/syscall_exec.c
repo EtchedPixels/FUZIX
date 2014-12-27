@@ -54,6 +54,11 @@ int16_t _execve(void)
 
 	setftime(ino, A_TIME);
 
+	if (ino->c_node.i_size == 0) {
+		udata.u_error = ENOEXEC;
+		goto nogood2;
+	}
+
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
 
@@ -75,9 +80,11 @@ int16_t _execve(void)
 	 *	UZI binaries).
 	 */
 	if (buf[3] == 'F' && buf[4] == 'Z' && buf[5] == 'X' && buf[6] == '1') {
-		top = buf[8] | ((unsigned int)buf[9] << 8) - PROGLOAD;
+		top = buf[8] | ((unsigned int)buf[9] << 8);
 		if (top == 0)	/* Legacy 'all space' binary */
 			top = ramtop;
+		else	/* Requested an amount, so adjust for the base */
+			top += PROGLOAD;
 		emu_ino = 0;	// no emulation, thanks
 		/* Don't load binaries for the wrong base page, eg spectrum
 		   binaries on a sane box */
@@ -146,7 +153,7 @@ int16_t _execve(void)
 	brelse(buf);
 
 	c = ugetc((uint8_t *)PROGLOAD);
-	if (c != 0xC3)
+	if (c != EMAGIC)
 		kprintf("Botched uput\n");
 
 	/* At this point, we are committed to reading in and

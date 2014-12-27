@@ -38,7 +38,10 @@ start:		jp start2
 ;	Borrowed idea from UMZIX - put the info in known places then
 ;	we can write "size" tools
 ;
-		.db 0			; base page to load
+;
+;	FIXME: we need to automate the load page setting
+;
+		.db 0x01		; page to load at
 		.dw 0			; chmem ("0 - 'all'")
 		.dw s__DATA		; gives us code size info
 		.dw s__BSS		; gives us data size info
