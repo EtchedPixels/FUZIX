@@ -20,7 +20,6 @@
 	; platform provided functions
 	.globl map_kernel
 	.globl map_process_always
-        .globl map_process
         .globl map_save
         .globl map_restore
 	.globl outchar
