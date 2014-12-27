@@ -1,0 +1,11 @@
+This is UZI for the N8VEM Mark IV SBC
+By Will Sowerbutts <will@sowerbutts.com>
+
+Assumes an N8VEM Mark IV SBC fitted with 512KB RAM, with the RS232 port as
+tty1, and the RS422 port as tty2. Does not yet support any ECB peripheral
+boards.
+
+To build, edit ../Makefile to read:
+
+export TARGET= n8vem-mark4
+export CPU = z180

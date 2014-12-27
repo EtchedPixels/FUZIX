@@ -1,0 +1,17 @@
+; UZI mnemonics for memory addresses etc
+
+U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
+NMOS_Z80                    .equ 0
+
+OS_BANK                     .equ 0x00         ; value from include/kernel.h
+
+; N8VEM Mark IV mnemonics
+FIRST_RAM_BANK              .equ 0x80         ; low 512K of physical memory is ROM/ECB window.
+RAM_KB                      .equ 512
+Z180_IO_BASE                .equ 0x40
+MARK4_IDE_BASE              .equ 0x80
+MARK4_IDE_DATA              .equ MARK4_IDE_BASE
+
+; No standard clock speed for the Mark IV board, but this is a common choice.
+CPU_CLOCK_KHZ               .equ 36864        ; 18.432MHz * 2

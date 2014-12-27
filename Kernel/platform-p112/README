@@ -1,0 +1,11 @@
+This is UZI for the DX-Designs P112
+By Will Sowerbutts <will@sowerbutts.com>
+
+Assumes a P112 fitted with 1024KB RAM and G-IDE
+
+Only supported storage device at this time is the G-IDE
+
+To build, edit ../Makefile to read:
+
+export TARGET= p112
+export CPU = z180
