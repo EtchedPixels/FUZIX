@@ -34,6 +34,7 @@ static void write_call(int n)
     case 0:  
       fprintf(fp, "\tld hl, %d\n", n);
       fprintf(fp, "\tjp syscall\n");
+      break;
     case 1:
       fprintf(fp, "\tpush hl\n");
       fprintf(fp, "\tld hl, %d\n", n);
@@ -42,25 +43,25 @@ static void write_call(int n)
       fprintf(fp, "\tret\n");
       break;
     case 2:
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpush de\n\tpush bc\n");
+      fprintf(fp, "\tpop hl\n\tpop de\n\tpop bc\n\tpush de\n\tpush bc\n\tpush hl\n");
       fprintf(fp, "\tld hl, %d\n", n);
       fprintf(fp, "\tcall syscall\n");
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpush de\n\tpush bc\n");
-      fprintf(fp, "\tret\n");
+      fprintf(fp, "\tpop ix\n\tpop de\n\tpop bc\n\tpush de\n\tpush bc\n");
+      fprintf(fp, "\tjp (ix)\n");
       break;
     case 3:
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpop hl\n\tpush de\n\tpush bc\n\tpush hl\n");
+      fprintf(fp, "\tpop ix\n\tpop de\n\tpop bc\n\tpop hl\n\tpush de\n\tpush bc\n\tpush hl\n\tpush ix\n");
       fprintf(fp, "\tld hl, %d\n", n);
       fprintf(fp, "\tcall syscall\n");
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpop ix\n\tpush de\n\tpush bc\n\tpush ix\n");
-      fprintf(fp, "\tret\n");
+      fprintf(fp, "\tpop ix\n\tpop de\n\tpop bc\n\tpop iy\n\tpush de\n\tpush bc\n\tpush iy\n");
+      fprintf(fp, "\tjp (ix)\n");
       break;
     case 4:
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpop hl\n\tpop ix\n\tpush de\n\tpush bc\n\tpush hl\n\tpush ix\n");
+      fprintf(fp, "\tpop ix\n\tpop de\n\tpop bc\n\tpop hl\n\tpop iy\n\tpush de\n\tpush bc\n\tpush hl\n\tpush iy\n\tpush ix\n");
       fprintf(fp, "\tld hl, %d\n", n);
       fprintf(fp, "\tcall syscall\n");
-      fprintf(fp, "\tpop de\n\tpop bc\n\tpop ix\n\tpop iy\n\tpush de\n\tpush bc\n\tpush ix\n\tpush iy\n");
-      fprintf(fp, "\tret\n");
+      fprintf(fp, "\tpop ix\n\tpop de\n\tpop bc\n\tpop iy\n\tpop af\n\tpush de\n\tpush bc\n\tpush iy\n\tpush af\n");
+      fprintf(fp, "\tjp (ix)\n");
       break;
   }
   fclose(fp);
