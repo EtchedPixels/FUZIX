@@ -154,7 +154,7 @@ void fuzix_main(void)
 		memset(bootline, 0, BOOTLINE_LEN);
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
-				root_dev = bootdevice(bootline);
+        root_dev = bootdevice(bootline);
 	}
 
 	/* Mount the root device */
