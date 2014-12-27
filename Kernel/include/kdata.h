@@ -33,10 +33,6 @@ extern uint16_t runticks;  /* Number of ticks current process has been swapped i
 
 extern time_t tod;      /* Time of day */
 
-typedef union {            /* this structure is endian dependent */
-    clock_t  full;         /* 32-bit count of ticks since boot */
-    uint16_t mini;         /* 16-bit count of ticks since boot */
-} ticks_t;
 extern ticks_t ticks;
 
 extern uint8_t *swapbase;  /* Used by device driver for swapping */
