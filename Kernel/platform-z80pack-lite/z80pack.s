@@ -17,7 +17,6 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
-            .globl _system_tick_counter
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_a

@@ -16,7 +16,6 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-            .globl _system_tick_counter
 	    .globl _kernel_flag
 
 	    .globl map_kernel

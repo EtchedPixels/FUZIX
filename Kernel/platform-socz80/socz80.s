@@ -10,7 +10,6 @@
             .globl page17out
             .globl interrupt_handler
             .globl _program_vectors
-            .globl _system_tick_counter
             .globl _tty_putc
             .globl _tty_writeready
             .globl _tty_outproc
