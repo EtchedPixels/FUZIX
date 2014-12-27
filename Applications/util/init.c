@@ -10,8 +10,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 
-extern char **environ;
-
 char *argp[] = { "sh", NULL };
 
 #define crlf   write(1, "\n", 1)
@@ -47,10 +45,7 @@ int main(int argc, char *argv[])
     close(2);
     dup(fdtty1);
 
-    /* start with a clean environment */
-    environ = 0;
-
-    putstr("init version 0.8\n");
+    putstr("init version 0.8.1ac\n");
     
     /* then call the login procedure on it */
 
@@ -68,6 +63,43 @@ int main(int argc, char *argv[])
         
         crlf;
     }
+}
+
+static char *env[10];
+static int envn;
+#if 1
+static char hex(char *av, int b)
+{
+    unsigned int x = (unsigned int)av;
+    x >>= b;
+    x &= 15;
+    if (x < 10)
+        x += '0';
+    else
+        x += 'A' - 10;
+    return (char)x;
+}
+#endif
+static void envset(char *a, char *b)
+{
+    int al = strlen(a);
+    static char hptr[5];
+    char *tp = sbrk(al + strlen(b) + 2);
+    if (tp == (char *)-1) {
+        putstr("out of memory.\n");
+        return;
+    }
+    strcpy(tp, a);
+    tp[al]='=';
+    strcpy(tp + al + 1, b);
+    env[envn++] = tp;
+#if 0    
+    hptr[0] = hex(tp,12);
+    hptr[1] = hex(tp,8);
+    hptr[2] = hex(tp,4);
+    hptr[3] = hex(tp,0);
+    putstr(hptr);
+#endif    
 }
 
 int login(char *ttyname)
@@ -91,11 +123,8 @@ int login(char *ttyname)
             }
             
             /* here we are inside child's context of execution */
-            
-            putenv("PATH=:/bin:/usr/bin");
-            strcpy(buf, "CTTY=");
-            strcat(buf, ttyname);
-            putenv(strdup(buf));
+            envset("PATH", "/bin:/usr/bin");     
+            envset("CTTY", ttyname);
 
             /* make stdin, stdout and stderr point to fdtty */
 
@@ -153,17 +182,9 @@ void spawn(struct passwd *pwd)
 
     /* setup user environment variables */
 
-    strcpy(buf, "LOGNAME=");
-    strcat(buf, pwd->pw_name);
-    putenv(strdup(buf));
-
-    strcpy(buf, "HOME=");
-    strcat(buf, pwd->pw_dir);
-    putenv(strdup(buf));
-
-    strcpy(buf, "SHELL=");
-    strcat(buf, pwd->pw_shell);
-    putenv(strdup(buf));
+    envset("LOGNAME", pwd->pw_name);
+    envset("HOME", pwd->pw_dir);
+    envset("SHELL", pwd->pw_shell);
 
     /*chdir(pwd->pw_dir);*/
 
@@ -182,7 +203,8 @@ void spawn(struct passwd *pwd)
     argp[0] = buf;
     argp[1] = NULL;
 
-    execve(pwd->pw_shell, argp, environ);
+    putstr(pwd->pw_shell);
+    execve(pwd->pw_shell, argp, env);
     putstr("login: can't execute shell\n");
     exit(1);
 }
