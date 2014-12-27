@@ -13,8 +13,7 @@ uint8_t ticks_this_dsecond;
 inoptr root;
 uint16_t waitno;
 time_t tod;			// time of day
-clock_t ticks;			// 32-bit system tick counter
-uint16_t miniticks;     // 16-bit system tick counter
+ticks_t ticks;
 
 int16_t acct_fh = -1;		/* Accounting file handle */
 

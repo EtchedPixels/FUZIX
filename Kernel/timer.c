@@ -12,14 +12,14 @@ timer_t set_timer_duration(uint16_t duration)
 	}
     /* obvious code is return (miniticks+duration), however we have to do */
     /* it this longwinded way or sdcc doesn't load miniticks atomically */
-    a = miniticks;
+    a = ticks.mini;
     a += duration;
     return a;
 }
 
 bool timer_expired(timer_t timer_val)
 {
-	return ((timer_val - miniticks) & 0x8000);
+	return ((timer_val - ticks.mini) & 0x8000);
 }
 
 /*-----------------------------------------------------------*/

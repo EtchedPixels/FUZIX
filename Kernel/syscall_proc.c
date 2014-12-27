@@ -144,7 +144,7 @@ int16_t _time(void)
 			uput(&t, tvec, sizeof(t));
 			return (0);
 		case 1:
-			uput(&t.low, &ticks, sizeof(ticks));
+			uput(&t.low, &ticks.full, sizeof(ticks));
 			uzero(&t.high, sizeof(t.high));
 			return 0;
 		default:
