@@ -12,12 +12,6 @@
         .globl platform_interrupt_all
         .globl _trap_monitor
 
-        .globl map_kernel
-        .globl map_process_always
-        .globl map_save
-        .globl map_restore
-        ;.globl map_process_only
-
         ; imported symbols
         .globl z180_init_hardware
         .globl z180_init_early
@@ -84,75 +78,6 @@ ocloop: in0 a, (ASCI_STAT0)
 platform_interrupt_all:
         ret
 
-map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
-        push af
-.if DEBUGBANK
-        ld a, #'K'
-        call outchar
-.endif
-        ld a, #(OS_BANK + FIRST_RAM_BANK)
-        out0 (MMU_BBR), a
-        pop af
-        ret
-
-; this "map_process" business makes no sense on mark4 since we'd switch stacks
-; and the RET would thus lose its return address. oh damn. I suppose we could
-; pop the stack address into hl, then jp (hl) or whatever. let's try and get by
-; without it.
-;
-; map_process: ; if HL=0 call map_kernel, else map the full 64K in bank pointed to by HL
-;             ld a, h
-;             or l
-;             jr z, map_kernel
-;             ld a, (hl)
-;             out0 (MMU_BBR), a
-;             out0 (MMU_CBR), a
-;             ret
-
-; map_process_only: ; as map_process, but does not modify common memory
-;             ld a, h
-;             or l
-;             jr z, map_kernel
-;             ld a, (hl)
-;             out0 (MMU_BBR), a
-;             ret
-
-map_process_always: ; map the process into the low 60K based on current common mem (which is unchanged)
-        push af
-.if DEBUGBANK
-        ld a, #'='
-        call outchar
-.endif
-        ld a, (U_DATA__U_PAGE)
-        out0 (MMU_BBR), a
-.if DEBUGBANK
-        call outcharhex
-.endif
-        ; MMU_CBR is left unchanged
-        pop af
-        ret
-
-map_save:   ; save the current process/kernel mapping
-        push af
-        in0 a, (MMU_BBR)
-        ld (map_store), a
-        pop af
-        ret
-
-map_restore: ; restore the saved process/kernel mapping
-        push af
-.if DEBUGBANK
-        ld a, #'-'
-        call outchar
-.endif
-        ld a, (map_store)
-        out0 (MMU_BBR), a
-.if DEBUGBANK
-        call outcharhex
-.endif
-        pop af
-        ret
-
 _trap_monitor:
         di
         call outnewline
@@ -173,6 +98,3 @@ _trap_monitor:
         call outnewline
         halt
         jr _trap_monitor
-
-map_store:  ; storage for map_save/map_restore
-        .db 0

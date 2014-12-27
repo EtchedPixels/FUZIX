@@ -1,4 +1,4 @@
-This is UZI for the N8VEM Mark IV SBC
+This is Fuzix for the N8VEM Mark IV SBC
 By Will Sowerbutts <will@sowerbutts.com>
 
 Assumes an N8VEM Mark IV SBC fitted with 512KB RAM, with the RS232 port as

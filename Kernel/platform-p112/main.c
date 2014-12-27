@@ -24,7 +24,7 @@ void pagemap_init(void)
 {
     int i;
 
-    /* N8VEM SBC Mark IV has RAM in the top 512K of physical memory. 
+    /* P112 has RAM across the full physical 1MB address space
      * First 64K is used by the kernel. 
      * Each process gets the full 64K for now.
      * Page size is 4KB. */
@@ -36,7 +36,7 @@ void pagemap_init(void)
 void platform_idle(void)
 {
     /* Let's go to sleep while we wait for something to interrupt us;
-     * Makes the Mark IV's run LED go red, which amuses me greatly. */
+     * sadly no fun LED to change colour */
     __asm
         halt
     __endasm;

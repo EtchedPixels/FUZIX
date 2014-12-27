@@ -26,6 +26,9 @@
         .globl _switchout
         .globl _dofork
         .globl map_kernel
+        .globl map_process_always
+        .globl map_save
+        .globl map_restore
         .globl unix_syscall_entry
         .globl null_handler
         .globl nmi_handler
@@ -720,3 +723,53 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
         jp _trap_monitor
+
+map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
+        push af
+.if DEBUGBANK
+        ld a, #'K'
+        call outchar
+.endif
+        ld a, #(OS_BANK + FIRST_RAM_BANK)
+        out0 (MMU_BBR), a
+        pop af
+        ret
+
+map_process_always: ; map the process into the low 60K based on current common mem (which is unchanged)
+        push af
+.if DEBUGBANK
+        ld a, #'='
+        call outchar
+.endif
+        ld a, (U_DATA__U_PAGE)
+        out0 (MMU_BBR), a
+.if DEBUGBANK
+        call outcharhex
+.endif
+        ; MMU_CBR is left unchanged
+        pop af
+        ret
+
+map_save:   ; save the current process/kernel mapping
+        push af
+        in0 a, (MMU_BBR)
+        ld (map_store), a
+        pop af
+        ret
+
+map_restore: ; restore the saved process/kernel mapping
+        push af
+.if DEBUGBANK
+        ld a, #'-'
+        call outchar
+.endif
+        ld a, (map_store)
+        out0 (MMU_BBR), a
+.if DEBUGBANK
+        call outcharhex
+.endif
+        pop af
+        ret
+
+map_store:  ; storage for map_save/map_restore
+        .db 0
