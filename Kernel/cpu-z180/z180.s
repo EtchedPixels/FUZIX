@@ -431,6 +431,59 @@ _dofork:
 ;;             call outnewline
 ;;             ret
 ;; ;------------------------------------------------------------------------------
+;; dmamsg1:    .ascii "[DMA source="
+;;             .db 0
+;; dmamsg2:    .ascii ", dest="
+;;             .db 0
+;; dmamsg3:    .ascii ", count="
+;;             .db 0
+;; dmamsg4:    .ascii "]"
+;;             .db 13, 10, 0
+;; 
+;; dump_dma_state:
+;;         push af
+;;         push hl
+;;         push de
+;;         push bc
+;; 
+;;         ld hl, #dmamsg1
+;;         call outstring
+;; 
+;;         in0 a, (DMA_SAR0B)
+;;         call outcharhex
+;;         in0 a, (DMA_SAR0H)
+;;         call outcharhex
+;;         in0 a, (DMA_SAR0L)
+;;         call outcharhex
+;;         
+;;         ld hl, #dmamsg2
+;;         call outstring
+;; 
+;;         in0 a, (DMA_DAR0B)
+;;         call outcharhex
+;;         in0 a, (DMA_DAR0H)
+;;         call outcharhex
+;;         in0 a, (DMA_DAR0L)
+;;         call outcharhex
+;; 
+;;         ld hl, #dmamsg3
+;;         call outstring
+;; 
+;;         in0 a, (DMA_BCR0H)
+;;         call outcharhex
+;;         in0 a, (DMA_BCR0L)
+;;         call outcharhex
+;; 
+;;         ld hl, #dmamsg4
+;;         call outstring
+;; 
+;;         pop bc
+;;         pop de
+;;         pop hl
+;;         pop af
+;;         ret
+;; 
+;; 
 ;; dumpbuf: .ds 16
 ;; 
 ;; dump_process_memory:
@@ -443,7 +496,7 @@ _dofork:
 ;;         xor a
 ;;         out0 (DMA_SAR0H), a
 ;;         out0 (DMA_SAR0L), a
-;;         ld a, #(OS_BANK + MARK4_RAM_BANK_OFFSET)
+;;         ld a, #((OS_BANK + FIRST_RAM_BANK) >> 4)
 ;;         out0 (DMA_DAR0B), a
 ;; 
 ;; nextblock:
