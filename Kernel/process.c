@@ -3,7 +3,6 @@
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 
 #include <kernel.h>
-#include <timer.h>
 #include <kdata.h>
 #include <printf.h>
 

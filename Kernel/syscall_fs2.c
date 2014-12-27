@@ -2,7 +2,6 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 /*
  *	File system related calls that are not continually used (so

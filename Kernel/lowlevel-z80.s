@@ -35,7 +35,6 @@
         .globl unix_syscall_entry
 	.globl _chksigs
 	.globl null_handler
-	.globl _system_tick_counter
 	.globl unix_syscall_entry
 	.globl dispatch_process_signal
         .globl _doexec
@@ -269,10 +268,6 @@ interrupt_handler:
             push hl
             push ix
             push iy
-
-            ld hl, (_system_tick_counter)
-            inc hl
-            ld (_system_tick_counter), hl
 
 	    ; Some platforms (MSX for example) have devices we *must*
 	    ; service irrespective of kernel state in order to shut them

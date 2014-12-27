@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 #undef DEBUG
 

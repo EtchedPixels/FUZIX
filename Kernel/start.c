@@ -1,6 +1,5 @@
 #include <kernel.h>
 #include <version.h>
-#include <timer.h>
 #include <kdata.h>
 #include <printf.h>
 #include <tty.h>

@@ -7,14 +7,14 @@ char *cmdline = (char *) CMDLINE;
 char bootline[2];
 uint16_t ramsize, procmem, maxproc, nproc, nready;
 uint16_t runticks;
-uint16_t system_tick_counter;
 bool inint;
 uint8_t root_dev = DEFAULT_ROOT;
 uint8_t ticks_this_dsecond;
 inoptr root;
 uint16_t waitno;
 time_t tod;			// time of day
-clock_t ticks;			// system tick counter
+clock_t ticks;			// 32-bit system tick counter
+uint16_t miniticks;     // 16-bit system tick counter
 
 int16_t acct_fh = -1;		/* Accounting file handle */
 

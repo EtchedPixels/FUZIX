@@ -3,23 +3,23 @@
 #include <timer.h>
 #include <printf.h>
 
-/* the interrupt handler increments this after every timer interrupt */
-uint16_t system_timer;
-
-/* WRS: timer functions */
+/* WRS: simple timer functions */
 timer_t set_timer_duration(uint16_t duration)
 {
+    timer_t a;
 	if (duration & 0x8000) {
 		kprintf("bad timer duration 0x%x\n", duration);
 	}
-	return (system_timer + duration);
+    /* obvious code is return (miniticks+duration), however we have to do */
+    /* it this longwinded way or sdcc doesn't load miniticks atomically */
+    a = miniticks;
+    a += duration;
+    return a;
 }
 
 bool timer_expired(timer_t timer_val)
 {
-	if ((timer_val - system_timer) > 0x7fff)
-		return true;
-	return false;
+	return ((timer_val - miniticks) & 0x8000);
 }
 
 /*-----------------------------------------------------------*/
