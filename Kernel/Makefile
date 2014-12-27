@@ -11,13 +11,13 @@ export SUBVERSION = "ac1"
 
 UNAME_S := $(shell uname -s)
 
-ifeq ($(CPU),z80)
+ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
 export CROSS_AS=sdasz80
 export CROSS_LD=sdldz80
 export CROSS_CC=sdcc
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --Werror --stack-auto --constseg CONST
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --Werror --stack-auto --constseg CONST
-export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
+export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
 #export CROSS_CCOPTS+=--nostdlib --nostdinc -Isdcclib/include 
 export CROSS_CC_SEG2=--codeseg CODE2
 export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
@@ -30,9 +30,9 @@ export BINEXT = .rel
 #	to look in the usual places !)
 #
 ifeq ($(UNAME_S),Darwin)
-export LIBZ80=/usr/local/share/sdcc/lib/z80
+export LIBZ80=/usr/local/share/sdcc/lib/$(CPU)
 else
-export LIBZ80=/usr/share/sdcc/lib/z80
+export LIBZ80=/usr/share/sdcc/lib/$(CPU)
 endif
 else ifeq ($(CPU),6502)
 export CROSS_AS=ca65
@@ -110,10 +110,14 @@ all:	fuzix.bin
 .SUFFIXES:		# delete the default suffixes
 .SUFFIXES: .c .s .rel
 
+usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
+
+lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
+
 target:
-	-rm platform
+	-rm -f platform
 	ln -sf platform-$(TARGET) platform
-	$(MAKE) -C platform-$(TARGET)
+	+make -C platform-$(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
@@ -156,7 +160,7 @@ tools/bintomdv: tools/bintomdv.c
 
 tools/makejv3: tools/makejv3.c
 
-ifeq ($(CPU), z80)
+ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
 
@@ -167,10 +171,10 @@ fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv
 	head -5 hogs.txt
 	makebin -s 65536 -p uzi.ihx >uzi.tmp
 	tools/binman uzi.tmp uzi.map fuzix.bin
-	$(MAKE) -C platform-$(TARGET) image
+	+make -C platform-$(TARGET) image
 else
 fuzix.bin: target $(OBJS) tools/decbdragon
-	$(MAKE) -C platform-$(TARGET) image
+	+make -C platform-$(TARGET) image
 endif
 
 clean:
