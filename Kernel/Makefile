@@ -158,13 +158,16 @@ tools/decbdragon: tools/decbdragon.c
 
 tools/bintomdv: tools/bintomdv.c
 
+cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
+	+make -C cpm-loader
+
 tools/makejv3: tools/makejv3.c
 
 ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
 uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
 
-fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv
+fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
 	tools/analysemap <uzi.map
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <uzi.map |sort -nr >hogs.txt
