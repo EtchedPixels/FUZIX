@@ -77,10 +77,6 @@ unix_syscall_entry:
         push ix
         push iy
 
-	; make sure the interrupt logic knows we are in kernel mode
-	ld a, #1
-	ld (_kernel_flag), a
-
         ; locate function call arguments on the userspace stack
         ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
         add hl, sp
@@ -102,6 +98,10 @@ unix_syscall_entry:
 
         ; map in kernel keeping common
 	call map_kernel
+
+	; make sure the interrupt logic knows we are in kernel mode (flag lives in kernel bank)
+	ld a, #1
+	ld (_kernel_flag), a
 
         ; re-enable interrupts
         ei
