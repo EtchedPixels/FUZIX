@@ -106,6 +106,8 @@ Platforms
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
 * MSX - initial booting work done, cartridge boot needs debugging. Next stop is
 a keyboard driver.
+* N8VEM-MarkIV - Supports the board, IDE and SD interfaces but not yet ECB
+* P112 - P112 board with 1MB and G-IDE, only G-IDE is supported
 * TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
