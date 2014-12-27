@@ -3,6 +3,32 @@
 #include <kdata.h>
 #include <printf.h>
 
+static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
+{
+	blkno_t blk;
+	uint8_t *buf;
+	while(len) {
+		uint16_t cp = min(len, 512);
+		blk = bmap(i, bl, 1);
+		if (blk == NULLBLK)
+			uzero((uint8_t *)base, 512);
+		else {
+			buf = bread(i->c_dev, blk, 0);
+			if (buf == NULL) {
+				kprintf("bload failed.\n");
+				return -1;
+			}
+			uput(buf, (uint8_t *)base, cp);
+			bufdiscard((bufptr)buf);
+			brelse((bufptr)buf);
+		}
+		base += cp;
+		len -= cp;
+		bl++;
+	}
+	return 0;
+}
+
 static void close_on_exec(void)
 {
 	int j;
@@ -38,7 +64,8 @@ int16_t _execve(void)
 	uint16_t emu_ptr, emu_base;
 	staticfast uint16_t top;
 	uint8_t c;
-	uint16_t blocks;
+	uint16_t bin_size;
+	uint16_t bss = 0;
 
 	top = ramtop;
 
@@ -94,6 +121,8 @@ int16_t _execve(void)
 			udata.u_error = ENOEXEC;
 			goto nogood2;
 		}
+		/* Add in the zero data space */
+		bss = buf[14] | (buf[15] << 8);
 	} else {
 #ifdef CONFIG_CPM_EMU
 		// open the emulator code on disk
@@ -113,12 +142,13 @@ int16_t _execve(void)
 		goto nogood2;
 #endif
 	}
-
 	/* Binary doesn't fit */
-	if (top - PROGBASE < ino->c_node.i_size + 1024) {
+	if (top - PROGBASE < ino->c_node.i_size + 1024 + bss) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
+
+	bin_size = ino->c_node.i_size;
 
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
@@ -164,32 +194,21 @@ int16_t _execve(void)
 #ifdef CONFIG_CPM_EMU
 	// Load the CP/M emulator if it is required
 	if (emu_ino) {
+		/* FIXME: check for daft or non fitting sizes */
 		emu_size = emu_ino->c_node.i_size;
 		// round up to nearest multiple of 256 bytes, fit it in below ramtop
 		emu_ptr = udata.u_top - ((emu_size + 255) & 0xff00);
 		emu_base = emu_ptr;
-		blk = 0;
 
-		while (emu_size) {
-			buf = bread(emu_ino->c_dev, bmap(emu_ino, blk, 1), 0);	// read block
-			emu_copy = min(512, emu_size);
-			uput(buf, (uint8_t *)emu_ptr, emu_copy);	// copy to userspace
-			bufdiscard((bufptr) buf);
-			brelse((bufptr) buf);	// release block
-			// adjust pointers
-			emu_ptr += emu_copy;
-			emu_size -= emu_copy;
-			blk++;
-		}
-		// close emulator file
+		bload(emu_ino, 0, emu_base, emu_size);
+		/* FIXME: check error return, do something sane */
 		i_deref(emu_ino);
 
 		/*
 		 * zero out the remainder of memory between the top of the emulator and top
 		 * of process memory
 		 */
-
-		uzero((uint8_t *)emu_ptr, top - emu_ptr);
+		uzero((uint8_t *)emu_ptr + emu_size, top - emu_ptr);
 	} else
 #endif
 	{
@@ -208,20 +227,17 @@ int16_t _execve(void)
 
 	/* Compute this once otherwise each loop we must recalculate this
 	   as the compiler isn't entitled to assume the loop didn't change it */
-	blocks = ino->c_node.i_size >> 9;
 
-	for (blk = 1; blk <= blocks; ++blk) {
-		buf = bread(ino->c_dev, bmap(ino, blk, 1), 0);
-		uput(buf, (uint8_t *)progptr, 512);
-		bufdiscard((bufptr) buf);
-		brelse((bufptr) buf);
-		progptr += 512;
+	if (bin_size > 512) {
+		bin_size -= 512;
+		bload(ino, 1, progptr, bin_size);
+		progptr += bin_size;
 	}
-	i_deref(ino);
-	udata.u_break = (int) progptr;	//  Set initial break for program
 
 	// zero all remaining process memory above the last block loaded.
 	uzero((uint8_t *)progptr, emu_base - progptr);
+
+	udata.u_break = (int) progptr + bss;	//  Set initial break for program
 
 	// Turn off caught signals
 	for (sigp = udata.u_sigvec; sigp < udata.u_sigvec + NSIGS; ++sigp)

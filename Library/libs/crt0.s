@@ -21,9 +21,8 @@
 		.globl _environ
 
 		.globl s__DATA
-		.globl s__BSS
 		.globl l__DATA
-		.globl l__BSS
+		.globl s__INITIALIZED
 
 		.area _CODE
 
@@ -38,19 +37,20 @@ start:		jp start2
 ;	Borrowed idea from UMZIX - put the info in known places then
 ;	we can write "size" tools
 ;
+;	This is confusing. SDCC doesn't produce a BSS, instead it
+;	produces an INITIALIZED (which everyone else calls DATA) and a
+;	DATA which everyone else would think of as BSS.
 ;
 ;	FIXME: we need to automate the load page setting
 ;
 		.db 0x01		; page to load at
 		.dw 0			; chmem ("0 - 'all'")
-		.dw s__DATA		; gives us code size info
-		.dw s__BSS		; gives us data size info
-		.dw l__BSS		; bss size info
+		.dw s__INITIALIZED	; gives us code size info
+		.dw s__DATA		; gives us data size info
+		.dw l__DATA		; bss size info
 		.dw 0			; spare
 
 start2:		ld hl, #l__DATA - 1	 ; work around linker limit
-		ld de, #l__BSS
-		add hl, de
 		ld b, h
 		ld c, l
 		ld hl, #s__DATA
@@ -67,6 +67,10 @@ start2:		ld hl, #l__DATA - 1	 ; work around linker limit
 		jp _main		; go
 
 		.area _GSINIT
+;
+;	FIXME: we want to work this into the C code so it's not
+; automatically sucking in any of stdio at all.
+;
 gsinit:
 		call ___stdio_init_vars
 ;
