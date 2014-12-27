@@ -38,7 +38,7 @@ int pagemap_alloc(ptptr p)
 /* Realloc is trivial - we can't do anything useful */
 int pagemap_realloc(uint16_t size)
 {
-	if (size >= MAP_SIZE)
+	if (size > MAP_SIZE)
 		return ENOMEM;
 	return 0;
 }
