@@ -88,7 +88,7 @@ int syscall_args[NR_SYSCALL] = {
 	1, //umask
 	2, //_getfsys
 	3, //execve
-	2, //_getdirent
+	3, //_getdirent
 	1, //setuid
 	1, //setgid
 	2, //_time
@@ -97,9 +97,9 @@ int syscall_args[NR_SYSCALL] = {
 	1, //brk
 	1, //sbrk
 	0, //fork
-	2, //mount
+	3, //mount
 	1, //umount
-	3, //signal
+	2, //signal
 	2, //dup2
 	1, //_pause
 	1, //alarm
