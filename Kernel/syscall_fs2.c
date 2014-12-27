@@ -657,6 +657,9 @@ int16_t _uname(void)
                 size = len;
 	sysinfo.memk = procmem;
 	sysinfo.usedk = pagemap_mem_used();
+	sysinfo.loadavg[0] = loadavg[0].average;
+	sysinfo.loadavg[1] = loadavg[1].average;
+	sysinfo.loadavg[2] = loadavg[2].average;
 	uput(&sysinfo, buf, size);
 	return size;
 }
