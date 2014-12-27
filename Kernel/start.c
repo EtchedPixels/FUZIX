@@ -71,6 +71,25 @@ void create_init(void)
 	udata.u_argn2 = PROGLOAD + 0xb;	/* Environment (none) */
 }
 
+/* to sensibly parse device names this needs to be platform-specific,
+   so for now it only parses device numbers */
+unsigned int bootdevice(char *s)
+{
+    unsigned int r = 0;
+
+    while(*s == ' ')
+        s++;
+
+    while(true){
+        if(*s >= '0' && *s <= '9'){
+            r = (r*10) + (*s - '0');
+        }else{
+            return r;
+        }
+        s++;
+    }
+}
+
 void fuzix_main(void)
 {
 	/* setup state */
@@ -89,7 +108,7 @@ void fuzix_main(void)
 	 "FUZIX version %s\n"
 	 "Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
 	 "Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
-	 "Copyright (c) 2013 Will Sowerbutts <will@sowerbutts.com>\n"
+	 "Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
 	 "Copyright (c) 2014 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 	                                         uname_str);
 
@@ -114,8 +133,8 @@ void fuzix_main(void)
 	pagemap_init();
 
 	create_init();
-        kprintf("%x:%x\n", udata.u_page, udata.u_page2);
-        kprintf("%x:%x\n", udata.u_ptab->p_page, udata.u_ptab->p_page2);
+        kprintf("%x:%x, %x:%x\n", udata.u_page, udata.u_page2,
+                udata.u_ptab->p_page, udata.u_ptab->p_page2);
 	kputs("Enabling interrupts ... ");
         ei();
 	kputs("ok.\n");
@@ -125,19 +144,17 @@ void fuzix_main(void)
 
 	root_dev = DEFAULT_ROOT;
 	if (cmdline && *cmdline) {
-		while (*cmdline == ' ')
-			++cmdline;
-		root_dev = *cmdline - '0';
+		root_dev = bootdevice(cmdline);
 	} else {
 		kputs("bootdev: ");
 		udata.u_base = bootline;
 		udata.u_sysio = 1;
-		udata.u_count = 2;
+		udata.u_count = BOOTLINE_LEN-1;
 		udata.u_euid = 0;	/* Always begin as superuser */
+		memset(bootline, 0, BOOTLINE_LEN);
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
-		if (*bootline >= '0')
-			root_dev = *bootline - '0';
+				root_dev = bootdevice(bootline);
 	}
 
 	/* Mount the root device */
