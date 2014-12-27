@@ -2,9 +2,17 @@
  */
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+
+#define EOF	(-1)
+
+static int _getchar(void)
+{
+	static char ch;
+	return (read(0, &ch, 1) == 1) ? ch : EOF;
+}
 
 static char *_gets(char *buf, int len)
 {
@@ -12,16 +20,6 @@ static char *_gets(char *buf, int len)
 
 	while (i < len) {
 		if ((ch = _getchar()) == EOF && i == 0)
-			return NULL;
-#if 0
-		if (ch >= ' ')
-			_putchar(ch);
-		else {
-			_putchar('^');
-			_putchar(ch + '@');
-		}
-#endif
-		if ((ch == 'C' & 037) || (ch == 'Z' & 037))
 			return NULL;
 		if (ch == '\n' || ch == '\r')
 			break;
@@ -40,8 +38,7 @@ char *getpass(char *prompt)
 	int tv;
 
 	/* display the prompt */
-	fputs(prompt, stdout);
-	fflush(stdout);
+	write(2, prompt, strlen(prompt));
 
 	tv = tcgetattr(0, &t);
 	ol = t.c_lflag;
