@@ -100,7 +100,7 @@ ctcloop:    out (c), b			; register
 	    out (0x0D), a		; data
 	    inc hl
 	    dec b
-	    jr nc, ctcloop
+	    jp po, ctcloop		; check V not C
 	    ; ensure the CTC clock is right
 	    ld a, #0
 	    in a, (9)			; manual says in but double check
