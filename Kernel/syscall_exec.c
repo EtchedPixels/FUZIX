@@ -55,6 +55,11 @@ int16_t _execve(void)
 
 	setftime(ino, A_TIME);
 
+	if (ino->c_node.i_size == 0) {
+		udata.u_error = ENOEXEC;
+		goto nogood2;
+	}
+
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
 
@@ -149,7 +154,7 @@ int16_t _execve(void)
 	brelse(buf);
 
 	c = ugetc((uint8_t *)PROGLOAD);
-	if (c != 0xC3)
+	if (c != EMAGIC)
 		kprintf("Botched uput\n");
 
 	/* At this point, we are committed to reading in and
