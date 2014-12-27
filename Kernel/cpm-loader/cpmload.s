@@ -30,7 +30,7 @@ doload:
     jp (hl)                         ; run image
 endloader:                          ; end of code to copy
 
-    ; the data is in a trailer, with a 6-byte header:
+    ; the data is in a trailer, with a 4-byte header:
 load_address:
     .ds 2
 load_length:
