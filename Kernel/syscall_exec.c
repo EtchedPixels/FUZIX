@@ -2,7 +2,6 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 static void close_on_exec(void)
 {

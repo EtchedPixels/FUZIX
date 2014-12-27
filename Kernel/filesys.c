@@ -2,7 +2,6 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 /* N_open is given a string containing a path name in user space,
  * and returns an inode table pointer.  If it returns NULL, the file

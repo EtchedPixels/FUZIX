@@ -20,7 +20,6 @@
 	; platform provided functions
 	.globl map_kernel
 	.globl map_process_always
-        .globl map_process
         .globl map_save
         .globl map_restore
 	.globl outchar
@@ -35,7 +34,6 @@
         .globl unix_syscall_entry
 	.globl _chksigs
 	.globl null_handler
-	.globl _system_tick_counter
 	.globl unix_syscall_entry
 	.globl dispatch_process_signal
         .globl _doexec
@@ -79,10 +77,6 @@ unix_syscall_entry:
         push ix
         push iy
 
-	; make sure the interrupt logic knows we are in kernel mode
-	ld a, #1
-	ld (_kernel_flag), a
-
         ; locate function call arguments on the userspace stack
         ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
         add hl, sp
@@ -104,6 +98,10 @@ unix_syscall_entry:
 
         ; map in kernel keeping common
 	call map_kernel
+
+	; make sure the interrupt logic knows we are in kernel mode (flag lives in kernel bank)
+	ld a, #1
+	ld (_kernel_flag), a
 
         ; re-enable interrupts
         ei
@@ -269,10 +267,6 @@ interrupt_handler:
             push hl
             push ix
             push iy
-
-            ld hl, (_system_tick_counter)
-            inc hl
-            ld (_system_tick_counter), hl
 
 	    ; Some platforms (MSX for example) have devices we *must*
 	    ; service irrespective of kernel state in order to shut them

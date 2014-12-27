@@ -4,7 +4,8 @@
 #include <stdbool.h>
 
 extern char *cmdline;
-extern char bootline[2];
+#define BOOTLINE_LEN 6
+extern char bootline[BOOTLINE_LEN];
 
 extern struct u_block ub;
 extern struct u_data udata;
@@ -31,7 +32,8 @@ extern uint8_t ticks_this_dsecond;       /* Tick counter for counting off one de
 extern uint16_t runticks;  /* Number of ticks current process has been swapped in */
 
 extern time_t tod;      /* Time of day */
-extern clock_t ticks;    /* Cumulative tick counter, in minutes and ticks  */
+extern clock_t ticks;      /* 32-bit count of ticks since boot */
+extern uint16_t miniticks; /* 16-bit count of ticks since boot */
 
 extern uint8_t *swapbase;  /* Used by device driver for swapping */
 extern unsigned swapcnt;

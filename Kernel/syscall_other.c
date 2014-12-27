@@ -2,7 +2,6 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 /*
  *	More obscure syscalls that it might be useful to pull out of the main

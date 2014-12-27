@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <timer.h>
 
 /* Writei (and readi) need more i/o error handling */
 void readi(inoptr ino, uint8_t flag)
