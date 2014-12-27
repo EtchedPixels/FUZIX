@@ -79,9 +79,9 @@ int main(int argc, char *argv[])
   ProcessMap(map);
   fclose(map);
   
-  bin = fopen(argv[argp++], "w");
+  bin = fopen(argv[argp], "w");
   if (bin == NULL) {
-    perror(argv[argp - 1]);
+    perror(argv[argp]);
     exit(1);
   }
   memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZER);
@@ -92,5 +92,6 @@ int main(int argc, char *argv[])
    exit(1);
   }
   fclose(bin);
+  printf("%s: %d bytes from %d\n", argv[argp], s__DATA - progload, progload);
   exit(0);
 }

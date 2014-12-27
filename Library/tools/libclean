@@ -3,22 +3,8 @@
 #	Clean the supplied SDCC library of stuff we don't want. This
 #	IMHO beats forking the library or building a private copy.
 #
-
-# Look for the sdcc library in one of the common locations
-for f in /opt/sdcc/share/sdcc/lib/z80/z80.lib \
-         /usr/local/share/sdcc/lib/z80/z80.lib \
-         /usr/share/sdcc/lib/z80/z80.lib; do
-    if [ -e $f ]; then
-        cp $f tmp.lib
-        break
-    fi;
-done
-
-if [ ! -e tmp.lib ]; then
-    echo "Cannot find sdcc z80.lib"
-    exit 1
-fi
-
+#
+cp /opt/sdcc/share/sdcc/lib/z80/z80.lib tmp.lib
 #
 #	Scrub the functions we don't want to inherit
 #	Need to review setjmp and maybe a couple of others

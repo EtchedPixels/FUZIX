@@ -76,8 +76,6 @@ OBJS = $(SRCS:.c=.rel)
 
 LIBS = ../../Library/libs/syslib.lib
 
-FCC = ../../Library/tools/fcc
-
 APPS = $(OBJS:.rel=)
 
 all: $(APPS)
@@ -85,10 +83,13 @@ all: $(APPS)
 $(OBJS): $(SRCS)
 
 .c.rel:
-	$(FCC) -c $<
+	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 %: %.rel
-	$(FCC) $< -o $@
+	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $< $(LIBS) -o $@.ihx
+	makebin -s 65536 $@.ihx $@.tmp
+	$(BINMAN) $(PROGLOAD) $@.tmp $@.map $@
+	chmod +x $@
 
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp

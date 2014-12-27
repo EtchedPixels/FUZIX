@@ -256,7 +256,7 @@ static int do_command(void)
 {
   pid_t pid, w;
   int status;
-
+  
   if (verbose)
     printf("\n\n");
   argvec[argp] = NULL;
@@ -334,7 +334,7 @@ static void build_command(void)
     autotarget();
   add_option("-o", target);
   if (mode == MODE_LINK) {
-    add_argument("/home/btg/projects/fuzix/Library/libs/crt0.rel");
+    add_argument("/opt/fcc/lib/crt0.rel");
   }
   if (srchead)
     add_argument_list(srchead);
@@ -430,8 +430,8 @@ int main(int argc, const char *argv[]) {
       }
     }
   }
-  add_include_path("/home/btg/projects/fuzix/Library/include/");
-  add_library_path("/home/btg/projects/fuzix/Library/libs/");
+  add_include_path("/opt/fcc/include/");
+  add_library_path("/opt/fcc/lib/");
   add_library("c");
 
   build_command();
@@ -449,7 +449,7 @@ int main(int argc, const char *argv[]) {
   if (ret)
     exit(ret);
   argp = 0;
-  add_argument("/home/btg/projects/fuzix/Library/tools/binman");
+  add_argument("/opt/fcc/bin/binman");
   add_argument(t);
   add_argument(rebuildname("", target, "map"));
   add_argument(chopname(target));
