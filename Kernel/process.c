@@ -327,8 +327,8 @@ void timer_interrupt(void)
 		else
 			udata.u_utime++;
 	}
-	ticks++;
-	miniticks++;
+
+	ticks.full++;
 
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
