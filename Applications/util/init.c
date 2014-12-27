@@ -67,19 +67,7 @@ int main(int argc, char *argv[])
 
 static char *env[10];
 static int envn;
-#if 1
-static char hex(char *av, int b)
-{
-    unsigned int x = (unsigned int)av;
-    x >>= b;
-    x &= 15;
-    if (x < 10)
-        x += '0';
-    else
-        x += 'A' - 10;
-    return (char)x;
-}
-#endif
+
 static void envset(char *a, char *b)
 {
     int al = strlen(a);
@@ -93,13 +81,6 @@ static void envset(char *a, char *b)
     tp[al]='=';
     strcpy(tp + al + 1, b);
     env[envn++] = tp;
-#if 0    
-    hptr[0] = hex(tp,12);
-    hptr[1] = hex(tp,8);
-    hptr[2] = hex(tp,4);
-    hptr[3] = hex(tp,0);
-    putstr(hptr);
-#endif    
 }
 
 int login(char *ttyname)
@@ -203,7 +184,6 @@ void spawn(struct passwd *pwd)
     argp[0] = buf;
     argp[1] = NULL;
 
-    putstr(pwd->pw_shell);
     execve(pwd->pw_shell, argp, env);
     putstr("login: can't execute shell\n");
     exit(1);
