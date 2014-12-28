@@ -3,10 +3,6 @@
 
 long _pathconf(int name)
 {
-  struct _uzisysinfoblk info;
-  
-  _uname(&info, sizeof(info));
-
   switch(name) {
     case _PC_LINK_MAX:
       return 65535;
