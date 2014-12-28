@@ -19,7 +19,7 @@ struct sysinfoblk sysinfo = {
 };
 /* Must follow immediately afterwards */
 /* Quoting to work around cc65 bug */
-const char uname_str[] = "$1\0""UZI+\0""$2\0""$3";
+const char uname_str[] = "$1\0""Fuzix\0""$2\0""$3";
 EOF
 X=$(echo "$1XFuzix$2X$3X"|wc -c)
 echo "const uint8_t uname_len = "$X";" >>version.c
