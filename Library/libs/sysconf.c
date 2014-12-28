@@ -15,7 +15,7 @@ long sysconf(int name)
     case _SC_ARG_MAX:
       return 512;
     case _SC_CHILD_MAX:
-      /* nproc -1 ? */
+      return info.nproc - 1;
     case _SC_HOST_NAME_MAX:
       /* we will implement get/sethostname and domain name in userspace */
       return 256;
