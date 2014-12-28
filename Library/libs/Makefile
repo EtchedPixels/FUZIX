@@ -30,7 +30,7 @@ SRC_C += strdup.c stricmp.c strncasecmp.c
 SRC_C += strnicmp.c strsep.c
 SRC_C += strtod.c strtol.c system.c time.c tmpnam.c ttyname.c
 SRC_C += tzset.c ungetc.c utent.c utsname.c
-SRC_C += vfprintf.c vprintf.c wait.c xitoa.c
+SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c

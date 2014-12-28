@@ -43,7 +43,10 @@ extern int pause __P((void));
 extern int fork __P((void));
 extern char *getcwd __P((char *, int));
 
-extern long sysconf(int name);
+extern long sysconf __P((int name));
+extern long fpathconf __P((int fd, int name));
+extern long pathconf __P((const char *path, int name));
+extern long _pathconf __P((int name));
 
 #define _SC_ARG_MAX		1
 #define _SC_CHILD_MAX		2
@@ -67,6 +70,29 @@ extern long sysconf(int name);
 #define _SC_JOB_CONTROL		19
 #define _SC_SAVED_IDS		20
 
+#define _SC_FUZIX_LOADAVG1	64
+#define _SC_FUZIX_LOADAVG5	65
+#define _SC_FUZIX_LOADAVG15	66
+
+#define _PC_LINK_MAX		1
+#define _PC_MAX_CANON		2
+#define _PC_MAX_INPUT		3
+#define _PC_NAME_MAX		4
+#define _PC_PATH_MAX		5
+#define _PC_PIPE_BUF		6
+#define _PC_CHOWN_RESTRICTED	7
+#define _PC_NO_TRUNC		8
+#define _PC_VDISABLE		9
+
+#define _POSIX_LINK_MAX		_pathconf(_PC_LINK_MAX)
+#define _POSIX_MAX_CANON	_pathconf(_PC_MAX_CANON)
+#define _POSIX_MAX_INPUT	_pathconf(_PC_MAX_INPUT)
+#define _POSIX_NAME_MAX		_pathconf(_PC_NAME_MAX)
+#define _POSIX_PATH_MAX		_pathconf(_PC_PATH_MAX)
+#define _POSIX_PIPE_BUF		_pathconf(_PC_PIPE_BUF)
+#define _POSIX_CHOWN_RESTRICTED _pathconf(_PC_CHOWN_RESTRICTED)
+#define _POSIX_NO_TRUNC		_pathconf(_PC_NO_TRUNC)
+
 extern int gethostname(char *name, size_t len);
 extern int sethostname(const char *name, size_t len);
 
@@ -85,16 +111,5 @@ extern void exit __P((int));
 #define F_LOCK	1
 #define F_TLOCK	2
 #define F_TEST	3
-
-
-#define _PC_LINK_MAX	0
-#define _PC_MAX_CANON	1
-#define _PC_MAX_INPUT	2
-#define _PC_NAME_MAX	3
-#define _PC_PATH_MAX	4
-#define _PC_PIPE_BUF	5
-#define _PC_CHOWN_RESTRICTED	6
-#define _PC_NO_TRUNC	7
-#define _PC_VDISABLE	8
 
 #endif /* __UNISTD_H */

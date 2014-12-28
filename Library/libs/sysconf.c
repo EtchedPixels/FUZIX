@@ -53,6 +53,12 @@ long sysconf(int name)
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
       return 1;
+    case _SC_FUZIX_LOADAVG1:
+      return info.loadavg[0];
+    case _SC_FUZIX_LOADAVG5:
+      return info.loadavg[1];
+    case _SC_FUZIX_LOADAVG15:
+      return info.loadavg[2];
     default:
       errno = EINVAL;
       return -1;
