@@ -9,6 +9,7 @@ struct sysinfoblk sysinfo = {
 	sizeof(struct sysinfoblk),
 	CONFIG_BANKS,
 	UFTSIZE,
+	PTABSIZE,
 	TICKSPERSEC,
 	0,
 	0,

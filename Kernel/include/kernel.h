@@ -137,6 +137,18 @@ struct  stat    /* Really only used by libc */
 	uint32_t  st_ctime;
 };
 
+/* We use the Linux one for compatibility. There's no real Unix 'standard'
+   for such things */
+
+struct hd_geometry {
+	uint8_t heads;
+	uint8_t sectors;
+	uint16_t cylinders;
+	uint32_t start;
+};
+#define HDIO_GETGEO		0x0101
+#define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
+
 /* Bit masks for i_mode and st_mode */
 
 #define OTH_EX  0001
@@ -492,7 +504,7 @@ struct sysinfoblk {
   uint8_t infosize;		/* For expandability */
   uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
   uint8_t max_open;
-  uint8_t spare;
+  uint8_t nproc;		/* Number of processes */
   uint16_t ticks;		/* Tick rate in HZ */
   uint16_t memk;		/* Memory in KB */
   uint16_t usedk;		/* Used memory in KB */
