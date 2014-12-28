@@ -33,7 +33,7 @@ struct _uzisysinfoblk {
   uint8_t infosize;		/* For expandability */
   uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
   uint8_t max_open;
-  uint8_t pad;
+  uint8_t nproc;		/* Number of processes */
   uint16_t ticks;		/* Tick rate in HZ */
   uint16_t memk;		/* Memory in KB */
   uint16_t usedk;		/* Used memory in KB */
@@ -63,6 +63,15 @@ struct _uzifilesys {
     uint16_t      s_tinode;
     uint16_t	  s_mntpt;
 };
+
+struct hd_geometry {
+	uint8_t heads;
+	uint8_t sectors;
+	uint16_t cylinders;
+	uint32_t start;
+};
+#define HDIO_GETGEO		0x0101
+#define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
 extern int _exit(int code);
 extern int alarm(int16_t secs);
