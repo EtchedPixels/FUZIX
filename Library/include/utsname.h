@@ -16,4 +16,3 @@ struct utsname {
 extern int uname __P ((struct utsname * __utsbuf));
 
 #endif
-
