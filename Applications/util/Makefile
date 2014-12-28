@@ -32,6 +32,7 @@ SRCS  = basename.c \
 	echo.c \
 	ed.c \
 	false.c \
+	fdisk.c \
 	fsck.c \
 	grep.c \
 	id.c \
