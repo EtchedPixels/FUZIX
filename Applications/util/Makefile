@@ -37,6 +37,7 @@ SRCS  = banner.c \
 	ed.c \
 	false.c \
 	fdisk.c \
+	fgrep.c \
 	fsck.c \
 	grep.c \
 	id.c \
