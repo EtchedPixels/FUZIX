@@ -23,6 +23,7 @@ SRCS  = banner.c \
 	chgrp.c \
 	chmod.c \
 	chown.c \
+	cksum.c \
 	cmp.c \
 	cp.c \
 	cut.c \
