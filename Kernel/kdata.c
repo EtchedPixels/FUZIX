@@ -8,7 +8,7 @@ char bootline[BOOTLINE_LEN];
 uint16_t ramsize, procmem, maxproc, nproc, nready;
 uint16_t runticks;
 bool inint;
-uint16_t root_dev = DEFAULT_ROOT;
+uint16_t root_dev;
 uint8_t ticks_this_dsecond;
 inoptr root;
 uint16_t waitno;
