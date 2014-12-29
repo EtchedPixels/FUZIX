@@ -29,6 +29,7 @@ SRCS  = banner.c \
 	cut.c \
 	date.c \
 	dd.c \
+	decomp16.c \
 	df.c \
 	dirname.c \
 	du.c \
