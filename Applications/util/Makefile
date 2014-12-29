@@ -15,13 +15,15 @@ BINMAN = ../../Library/tools/binman
 .SUFFIXES: .c .rel
 
 
-SRCS  = basename.c \
+SRCS  = banner.c \
+	basename.c \
 	bd.c \
 	cal.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \
 	chown.c \
+	cmp.c \
 	cp.c \
 	cut.c \
 	date.c \
@@ -43,6 +45,7 @@ SRCS  = basename.c \
 	ls.c \
 	mkdir.c \
 	mkfs.c \
+	mkfifo.c \
 	mknod.c \
 	more.c \
 	mount.c \
