@@ -48,8 +48,9 @@
 
 /* Hardware parameters */
 #define Z180_IO_BASE       0x40
+#define MARK4_IO_BASE      0x80
 
 #define DEVICE_IDE                  /* enable if IDE interface present */
-#define IDE_REG_BASE       0x80
+#define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_FIRST
