@@ -6,21 +6,30 @@
 /*
  *	Logic for select
  *
- *	Q: where to hide pipe selmaps ?
+ *	Each selectable object needs 3 words of memory (assuming max
+ *	16 processes).  If we go over that then this logic is ok but
+ *	we would need to trim pipe buffers slightly.
  *
- *	Could have a generic selmap set for 'all pipes' - ugly but keeps
- *	costs down.
+ *	While they are 16bits we can instead hide them in the inode copy
+ *	in memory for free.
+ *
+ *	Inode direct block numbers are used as follows
+ *	File/Directory: 0-19 all hold disk pointers (not selectable anyway)
+ *	Device: 0 holds the device ident, 17-19 hold the select map
+ *	Pipe: 0-16 (direct blocks) hold the pipe data block pointers
+ *					  17-19 hold the select map
+ *	Socket: TODO
  */
 
 void seladdwait(struct selmap *s)
 {
-  int16_t p = udata.u_ptab - ptab;
+  uint16_t p = udata.u_ptab - ptab;
   s->map[p>>3] |= (1 << (p & 7));
 }
 
 void selrmwait(struct selmap *s)
 {
-  int16_t p = udata.u_ptab - ptab;
+  uint16_t p = udata.u_ptab - ptab;
   s->map[p>>3] &= ~(1 << (p & 7));
 }
 
@@ -32,6 +41,43 @@ void selwake(struct selmap *s)
       pwake(p);
     p++;
   }
+}
+
+/* Set our select bits on the inode */
+int selwait_inode(inoptr i, uint8_t mask, uint8_t setit) {
+  struct selmap *s = (struct selmap *)(&i->c_node.i_addr[17]);
+  uint8_t bit = udata.u_ptab - ptab;
+  uint8_t mask = 1 << (bit & 7);
+  uint8_t bset = bit & setit;
+  bit >>= 3;
+
+  if (mask & SELECT_IN) {
+    s->map[mask] &= ~bit;
+    s->map[mask] |= bset;
+  }
+  s++;
+  if (mask & SELECT_OUT) {
+    s->map[mask] &= ~bit;
+    s->map[mask] |= bset;
+  }
+  s++;
+  if (mask & SELECT_EX) {
+    s->map[mask] &= ~bit;
+    s->map[mask] |= bset;
+  }
+}
+
+/* Wake an inode for select */
+int selwake_inode(inoptr i, uint16_t mask) {
+  struct selmap *s = (struct selmap *)(&i->c_node.i_addr[17]);
+  if (mask & SELECT_IN)
+    selwake(s);
+  s++;
+  if (mask & SELECT_OUT)
+    selwake(s);
+  s++;
+  if (mask & SELECT_EX)
+    selwake(s);
 }
 
 #define nfd (uint16_t)udata.u_argn
@@ -61,6 +107,7 @@ int _select(void)
         if (ino == NULLINODE)
           return -1;
         switch(getmode(ino)) {
+        /* Device types that automatically report some ready states */
         case F_BDEV:      
         case F_REG:
           outr |= m;
@@ -71,11 +118,12 @@ int _select(void)
           /* TODO */
           break;
         case F_CDEV:
-          /* Not fatal: counts as read/write ready */
+          /* If unsupported we report the device as read/write ready */
           if (d_ioctl(ino->c_node.i_addr[0], SELECT_BEGIN, &n) == -1) {
             udata.u_error = 0;
             n = SELECT_IN|SELECT_OUT;
           }
+          /* Set the outputs */
           if (n & SELECT_IN)
             inr |= m;
           if (n & SELECT_OUT)
@@ -84,19 +132,24 @@ int _select(void)
             exr |= m;
           break;
       }
+      m << = 1;		/* Next fd mask */
     }
-    m << = 1;
-    sumo = inr | outr | exr;
-    if (psleep_flags(&udata.p_tab->p_timeout, 0) == -1)
+    inr &= in;		/* Don't reply with bits not being selected */
+    outr &= out;
+    exr &= ex;
+    sumo = inr | outr | exr;	/* Are we there yet ? */
+    if (!sumo && psleep_flags(&udata.p_tab->p_timeout, 0) == -1)
       break;
   }
   while (!sumo && udata.p_tab->p_timeout != 1);
   
-  /* FIXME: write back properly */
-  *inp = inr;
-  *outp = outr;
-  *exp = exr;
+  /* Return the values to user space */
+  uputw(inr, base);
+  uputw(outr, base + 4);
+  uputw(exr, base + 8)
 
+  /* Tell the device less people care, we may want to remove all this
+     and just select check. The 0 check we could do instead is cheap */
   m = 1;
   for (i = 0; i < nfd; i++) {
     if (sum & m) {
