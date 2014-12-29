@@ -3,7 +3,7 @@ By Will Sowerbutts <will@sowerbutts.com>
 
 Assumes an N8VEM Mark IV SBC fitted with 512KB RAM, with the RS232 port as
 tty1, and the RS422 port as tty2. Does not yet support any ECB peripheral
-boards.
+boards. On-board IDE and SD mass storage interfaces are both supported.
 
 To build, edit ../Makefile to read:
 

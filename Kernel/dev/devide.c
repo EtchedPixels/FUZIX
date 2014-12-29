@@ -63,28 +63,15 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <timer.h>
-#include "devide.h"
+#include <devide.h>
+#include <mbr.h>
 
-typedef struct {
-    unsigned char status;
-    unsigned char chs_first[3];
-    unsigned char type;
-    unsigned char chs_last[3];
-    unsigned long lba_first;
-    unsigned long lba_count;
-} partition_table_entry_t;
+#define DRIVE_COUNT 2   /* range 1 -- 4 */
+#define MAX_SLICES 63
 
-#define MBR_ENTRY_COUNT 4
-typedef struct {
-    unsigned char bootcode[446];
-    partition_table_entry_t partition[MBR_ENTRY_COUNT];
-    unsigned int signature;
-} master_boot_record_t;
-
-#define DRIVE_COUNT 2
-static unsigned char ide_drives_present; /* bitmap */
-static unsigned long ide_partition_start[DRIVE_COUNT];
-static unsigned int  ide_slice_count[DRIVE_COUNT];
+static uint8_t  ide_drives_present; /* bitmap */
+static uint32_t ide_partition_start[DRIVE_COUNT];
+static uint8_t  ide_slice_count[DRIVE_COUNT];
 
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
 __sfr __at IDE_REG_COMMAND   ide_reg_command;
@@ -100,7 +87,7 @@ __sfr __at IDE_REG_LBA_3     ide_reg_lba_3;
 __sfr __at IDE_REG_SEC_COUNT ide_reg_sec_count;
 __sfr __at IDE_REG_STATUS    ide_reg_status;
 
-static void devide_read_data(void *buffer, unsigned char ioport) __naked
+static void devide_read_data(void *buffer, uint8_t ioport) __naked
 {
     buffer; ioport; /* silence compiler warning */
     __asm
@@ -118,7 +105,7 @@ static void devide_read_data(void *buffer, unsigned char ioport) __naked
     __endasm;
 }
 
-static void devide_write_data(void *buffer, unsigned char ioport) __naked
+static void devide_write_data(void *buffer, uint8_t ioport) __naked
 {
     buffer; ioport; /* silence compiler warning */
     __asm
@@ -146,9 +133,9 @@ static void devide_delay(void)
         platform_idle();
 }
 
-static bool devide_wait(unsigned char bits)
+static bool devide_wait(uint8_t bits)
 {
-    unsigned char status;
+    uint8_t status;
     timer_t timeout;
 
     timeout = set_timer_ms(500);
@@ -171,7 +158,7 @@ static bool devide_wait(unsigned char bits)
     };
 }
 
-static bool devide_read_sector(unsigned char *buffer)
+static bool devide_read_sector(uint8_t *buffer)
 {
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
         return false;
@@ -181,7 +168,7 @@ static bool devide_read_sector(unsigned char *buffer)
     return true;
 }
 
-static bool devide_write_sector(unsigned char *buffer)
+static bool devide_write_sector(uint8_t *buffer)
 {
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
         return false;
@@ -196,9 +183,9 @@ static bool devide_write_sector(unsigned char *buffer)
 
 static int devide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    unsigned char *target, *p;
-    unsigned long lba;
-    unsigned char drive;
+    uint8_t *target, *p;
+    uint32_t lba;
+    uint8_t drive;
 
     drive = minor >> 6;
     minor = minor & 0x3F;
@@ -213,7 +200,7 @@ static int devide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     if(minor > 0){
         /* minor 1+ are slices located within the partition */
         lba += (ide_partition_start[drive]);
-        lba += ((unsigned long)(minor-1) << 16);
+        lba += ((uint32_t)(minor-1) << SLICE_SIZE_LOG2_SECTORS);
     }
 
 #if 0
@@ -223,7 +210,7 @@ static int devide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     ide_reg_lba_0 = lba;
 #else
     /* sdcc sadly unable to figure this out for itself yet */
-    p = (unsigned char *)&lba;
+    p = (uint8_t *)&lba;
     ide_reg_lba_3 = (p[3] & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
     ide_reg_lba_2 = p[2];
     ide_reg_lba_1 = p[1];
@@ -249,7 +236,7 @@ xferfail:
 
 int devide_open(uint8_t minor, uint16_t flags)
 {
-    unsigned char drive;
+    uint8_t drive;
     flags; /* not used */
 
     drive = minor >> 6;
@@ -274,10 +261,9 @@ int devide_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return devide_transfer(minor, false, rawflag);
 }
 
-void devide_init_drive(unsigned char drive)
+void devide_init_drive(uint8_t drive)
 {
-    unsigned char *buffer, i, select;
-    master_boot_record_t *mbr;
+    uint8_t *buffer, select;
 
     switch(drive){
         case 0: select = 0xE0; break;
@@ -313,7 +299,7 @@ void devide_init_drive(unsigned char drive)
     ide_reg_command = IDE_CMD_IDENTIFY;
 
     /* allocate temporary sector buffer memory */
-    buffer = (unsigned char *)tmpbuf();
+    buffer = (uint8_t *)tmpbuf();
 
     if(!devide_read_sector(buffer))
         goto failout;
@@ -340,23 +326,7 @@ void devide_init_drive(unsigned char drive)
     /* if we get this far the drive is apparently present and functioning */
     ide_drives_present |= (1 << drive);
 
-    /* check for MBR table signature */
-    mbr = (master_boot_record_t*)buffer;
-    if(mbr->signature != 0xaa55){
-        kputs("no partition table\n");
-        goto failout;
-    }
-
-    /* look for a fuzix partition (type 0x5A) */
-    for(i=0; i<MBR_ENTRY_COUNT; i++){
-        if(mbr->partition[i].type == 0x5A){
-            ide_partition_start[drive] = mbr->partition[i].lba_first;
-            ide_slice_count[drive] = mbr->partition[i].lba_count >> 16;
-            break;
-        }
-    }
-
-    kprintf("%d slices\n", ide_slice_count[drive]);
+    parse_partition_table(buffer, &ide_partition_start[drive], &ide_slice_count[drive], MAX_SLICES);
 
 failout:
     brelse((bufptr)buffer);
@@ -364,7 +334,7 @@ failout:
 
 void devide_init(void)
 {
-    unsigned char d;
+    uint8_t d;
 
     ide_drives_present = 0;
 

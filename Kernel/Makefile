@@ -183,6 +183,7 @@ endif
 clean:
 	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.tmp platform fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
+	+make -C cpm-loader clean
 
 clean-all: clean
 	$(foreach target,$(TARGET_LIST), make -C $(target) clean;)

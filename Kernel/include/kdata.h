@@ -17,7 +17,7 @@ extern uint16_t nproc;	   /* Current number of processes */
 extern uint16_t nready;	   /* Number of ready processes */
 
 extern inoptr root;        /* Address of root dir in inode table */
-extern uint8_t root_dev;   /* Device number of root filesystem. */
+extern uint16_t root_dev;  /* Device number of root filesystem. */
 
 extern struct blkbuf bufpool[NBUFS];
 extern struct p_tab ptab[PTABSIZE];
