@@ -35,6 +35,7 @@ SRCS  = banner.c \
 	du.c \
 	echo.c \
 	ed.c \
+	env.c \
 	false.c \
 	fdisk.c \
 	fgrep.c \
@@ -46,6 +47,7 @@ SRCS  = banner.c \
 	ll.c \
 	ln.c \
 	ls.c \
+	man.c \
 	mkdir.c \
 	mkfs.c \
 	mkfifo.c \
