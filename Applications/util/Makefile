@@ -41,6 +41,7 @@ SRCS  = banner.c \
 	fgrep.c \
 	fsck.c \
 	grep.c \
+	head.c \
 	id.c \
 	init.c \
 	kill.c \
