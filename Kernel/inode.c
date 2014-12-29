@@ -110,6 +110,8 @@ void writei(inoptr ino, uint8_t flag)
 
 	case F_PIPE:
 		ispipe = true;
+		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
+		   in one go - needs merging into the loop */
 		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
 					ino->c_node.i_size) {
 			if (ino->c_refs == 1) {	/* No readers */
