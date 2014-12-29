@@ -56,4 +56,8 @@ struct stat {
 	time_t	st_ctime;	/* file creation time */
 };
 
+/* Weird location but for historical reasons */
+
+extern int mkfifo(const char *pathname, mode_t mode);
+
 #endif
