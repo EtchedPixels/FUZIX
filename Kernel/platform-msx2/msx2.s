@@ -44,6 +44,8 @@
 	    ; stuff to save
 	    .globl _vdpport
 	    .globl _infobits
+        .globl slotrom
+        .globl slotram
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -82,6 +84,12 @@ _trap_reboot:
 _kernel_flag:
 	    .db 1
 
+
+slotrom:
+        .db 0
+slotram:
+        .db 0
+
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
@@ -115,7 +123,10 @@ init_hardware:
 	    out (0x2F), a
 
 	    ; Program the video engine
-	    call vdpinit
+	    ; FIXME:  disable for now and initalize in bootstrap using the bios
+	    ;         current implementation only works when booting from msx-dos
+	    ;         because font data is wiped from vram on mode change
+	    ; call vdpinit
 
 	    ld a, #'I'
 	    out (0x2F), a
