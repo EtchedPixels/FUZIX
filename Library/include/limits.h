@@ -23,6 +23,5 @@
 #ifndef RAND_MAX
 #define RAND_MAX	INT_MAX
 #endif
-#endif
 
 #endif
