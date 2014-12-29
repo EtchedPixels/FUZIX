@@ -15,10 +15,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "config.h"
 #include "cpu.h"
 
-#ifndef DEFAULT_ROOT
-#define DEFAULT_ROOT 0
-#endif
-
 #ifndef NULL
 #define NULL (void *)0
 #endif
