@@ -64,6 +64,7 @@ SRCS  = banner.c \
 	rmdir.c \
 	sleep.c \
 	ssh.c \
+	sum.c \
 	su.c \
 	sync.c \
 	termcap.c \
