@@ -148,7 +148,7 @@ int vfprintf(FILE * op, char *fmt, va_list ap)
 
 			case 'd':	/* Signed decimal */
 			case 'i':
-				ptmp = ltoa((long) ((lval) ?
+				ptmp = ltostr((long) ((lval) ?
 						    va_arg(ap, long) :
 						    va_arg(ap, short)),
 					    tmp, 10);
@@ -181,7 +181,7 @@ int vfprintf(FILE * op, char *fmt, va_list ap)
 			      usproc:val = lval ? va_arg(ap, unsigned long) :
 				    va_arg(ap,
 					   unsigned short);
-				ptmp = ultoa(val, tmp + 4, radix);
+				ptmp = ultostr(val, tmp + 4, radix);
 				add = "";
 				if (hash) {
 					if (radix == 2)
