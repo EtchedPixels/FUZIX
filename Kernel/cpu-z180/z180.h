@@ -46,6 +46,9 @@ __sfr __at (Z180_IO_BASE + 0x1B) ASCI_ASTC0H;   /* ASCI time constant register c
 __sfr __at (Z180_IO_BASE + 0x1C) ASCI_ASTC1L;   /* ASCI time constant register channel 1 low  */
 __sfr __at (Z180_IO_BASE + 0x1D) ASCI_ASTC1H;   /* ASCI time constant register channel 1 high */
 
+__sfr __at (Z180_IO_BASE + 0x0A) CSIO_CNTR;     /* CSI/O control/status register              */
+__sfr __at (Z180_IO_BASE + 0x0B) CSIO_TRDR;     /* CSI/O transmit/receive data register       */
+
 __sfr __at (0xE0)                ESCC_CTRL_A;   /* ESCC Channel A control register            */
 __sfr __at (0xE1)                ESCC_DATA_A;   /* ESCC Channel A data register               */
 __sfr __at (0xE2)                ESCC_CTRL_B;   /* ESCC Channel B control register            */

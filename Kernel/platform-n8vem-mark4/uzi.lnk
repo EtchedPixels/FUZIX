@@ -33,5 +33,7 @@ swap.rel
 devsys.rel
 platform-n8vem-mark4/devtty.rel
 platform-n8vem-mark4/devide.rel
+platform-n8vem-mark4/devsd.rel
+platform-n8vem-mark4/devsdspi.rel
 platform-n8vem-mark4/mbr.rel
 -e

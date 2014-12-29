@@ -54,3 +54,6 @@
 #define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_FIRST
+
+#define DEVICE_SD
+#define SD_DRIVE_COUNT 1
