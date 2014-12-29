@@ -65,13 +65,17 @@ SRCS  = banner.c \
 	pwd.c \
 	rm.c \
 	rmdir.c \
+	sed.c \
 	sleep.c \
 	ssh.c \
+	sort.c \
 	sum.c \
 	su.c \
 	sync.c \
+	tee.c \
 	termcap.c \
 	tget.c \
+	tail.c \
 	touch.c \
 	tr.c \
 	true.c \
