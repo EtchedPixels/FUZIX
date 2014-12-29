@@ -26,8 +26,8 @@ void sd_spi_raise_cs(uint8_t drive);
 void sd_spi_lower_cs(uint8_t drive);
 void sd_spi_transmit_byte(uint8_t drive, uint8_t byte);
 uint8_t sd_spi_receive_byte(uint8_t drive);
-bool sd_spi_receive_to_memory(uint8_t drive, uint8_t *ptr, unsigned int length);
-bool sd_spi_transmit_from_memory(uint8_t drive, uint8_t *ptr, unsigned int length);
+bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length);
+bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, unsigned int length);
 
 /* Definitions for MMC/SDC command */
 #define CMD0    (0x40+0)    /* GO_IDLE_STATE */
