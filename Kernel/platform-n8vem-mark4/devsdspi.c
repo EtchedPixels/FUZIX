@@ -1,6 +1,7 @@
 /*-----------------------------------------------------------------------*/
 /* N8VEM Mark IV Z180 CSI/O SPI SD driver                                */
 /* 2014-12-27 Will Sowerbutts                                            */
+/* 2014-12-29 Optimised for size/speed                                   */
 /*-----------------------------------------------------------------------*/
 
 #include <kernel.h>
@@ -23,26 +24,35 @@
 
 __sfr __at (MARK4_IO_BASE + 0x09) MARK4_SD;
 
-/* the CSI/O and SD card send bits in opposite orders, so we need to flip them over */
-static const uint8_t reverse_byte[256] = {
-    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
-    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
-    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
-    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
-    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
-    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
-    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
-    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
-    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
-    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
-    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
-    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
-    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
-    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
-    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
-    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
-};
-
+/* the CSI/O and SD card send the bits of each byte in opposite orders, so we need to flip them over */
+static uint8_t reverse_byte(uint8_t byte) __naked
+{
+    /* code by John Metcalf, from http://www.retroprogramming.com/2014/01/fast-z80-bit-reversal.html */
+    __asm
+        ld hl, #2
+        add hl, sp
+        ld a, (hl)
+reverse_byte_a:
+        ; reverse bits in A
+        ld l,a    ; a = 76543210
+        rlca
+        rlca      ; a = 54321076
+        xor l
+        and #0xAA
+        xor l     ; a = 56341270
+        ld l,a
+        rlca
+        rlca
+        rlca      ; a = 41270563
+        rrc l     ; l = 05634127
+        xor l
+        and #0x66
+        xor l     ; a = 01234567
+        ld l, a   ; return value in L
+        ret
+    __endasm;
+    byte; /* squelch compiler warning */
+}
 
 void sd_spi_clock(uint8_t drive, bool go_fast)
 {
@@ -77,7 +87,7 @@ void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
     drive; /* not used */
 
     /* reverse the bits before we busywait */
-    byte = reverse_byte[byte];
+    byte = reverse_byte(byte);
 
     /* wait for any current transmit operation to complete */
     do{
@@ -106,46 +116,91 @@ uint8_t sd_spi_receive_byte(uint8_t drive)
     while(CSIO_CNTR & CSIO_CNTR_RE);
 
     /* read byte */
-    return reverse_byte[CSIO_TRDR];
+    return reverse_byte(CSIO_TRDR);
 }
 
-bool sd_spi_receive_to_memory(uint8_t drive, uint8_t *ptr, unsigned int length)
+#if 0
+/* WRS: measured byte transfer time as 16.88us with Z180 @ 36.864MHz */
+bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length)
 {
-    unsigned char c;
-    drive; /* not used */
-
-    /* wait for any current transmit or receive operation to complete */
-    do{
-        c = CSIO_CNTR;
-    }while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
-
-    while(length){
-        /* enable receive operation */
-        CSIO_CNTR = c | CSIO_CNTR_RE;
-
-        /* wait for receive to complete */
-        do{
-            c = CSIO_CNTR;
-        }while(c & CSIO_CNTR_RE);
-
-        /* read byte */
-        *ptr = reverse_byte[CSIO_TRDR];
-
-        /* next byte */
-        ptr++;
-        length--;
+    while(length--){
+        *(ptr++) = sd_spi_receive_byte(drive);
     }
-
     return true;
 }
-
-bool sd_spi_transmit_from_memory(uint8_t drive, uint8_t *ptr, int length)
+#else
+/* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
+   three times faster. Main change is to start the next receive operation 
+   as soon as possible and overlap the loop housekeeping with the receive. */
+bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length) __naked
 {
-    unsigned char c, b;
+    __asm
+waitrx: 
+        in0 a, (_CSIO_CNTR)     ; wait for any current transmit or receive operation to complete
+        tst a, #0x30
+        jr nz, waitrx
+        set 5, a                ; set CSIO_CNTR_RE, enable receive operation for first byte
+        out0 (_CSIO_CNTR), a
+        ld h, a                 ; stash value for reuse later
+        ; load parameters from the stack
+        ld iy, #3
+        add iy, sp
+        ld e, 0(iy)             ; ptr -> DE
+        ld d, 1(iy)
+        ld c, 2(iy)             ; count -> BC
+        ld b, 3(iy)
+rxnextbyte:
+        dec bc                  ; length--
+        ld a, b
+        or c
+        jr nz, waitrx2
+        res 5, h                ; final byte: clear CSIO_CNTR_RE bit in H
+waitrx2:
+        ld l, c                 ; store C temporarily
+        ld c, #_CSIO_CNTR       ; load IO port address
+waitrx3:
+        tstio #0x20             ; test bits in IO port (C)
+        jr nz, waitrx3          ; wait for receive to complete
+        in0 a, (_CSIO_TRDR)     ; load received byte
+        out0 (_CSIO_CNTR), h    ; start next receive (or NOP, if this is the final byte)
+        ld c, l                 ; restore C
+        ; reverse bits in A
+        ld l,a    ; a = 76543210
+        rlca
+        rlca      ; a = 54321076
+        xor l
+        and #0xAA
+        xor l     ; a = 56341270
+        ld l,a
+        rlca
+        rlca
+        rlca      ; a = 41270563
+        rrc l     ; l = 05634127
+        xor l
+        and #0x66
+        xor l     ; a = 01234567
+        ld (de), a              ; store reversed byte value
+        inc de                  ; ptr++
+        bit 5, h
+        jr nz, rxnextbyte       ; go again if not yet done
+        ld l, #1                ; return true
+        ret
+    __endasm;
+    drive; ptr; length; /* squelch compiler warnings */
+}
+#endif
+
+#if 0
+/* WRS: measured byte transfer time as 10.36us with Z180 @ 36.864MHz */
+bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, unsigned int length)
+{
+    register uint8_t c, b, e;
     drive; /* not used */
 
+    e = (CSIO_CNTR & ~CSIO_CNTR_RE) | CSIO_CNTR_TE;
+
     while(length){
-        b = reverse_byte[*ptr];
+        b = reverse_byte(*ptr);
 
         /* wait for transmit to complete */
         do{
@@ -154,7 +209,7 @@ bool sd_spi_transmit_from_memory(uint8_t drive, uint8_t *ptr, int length)
 
         /* write the byte and enable transmitter */
         CSIO_TRDR = b;
-        CSIO_CNTR = c | CSIO_CNTR_TE;
+        CSIO_CNTR = e;
 
         /* next byte */
         ptr++;
@@ -162,3 +217,53 @@ bool sd_spi_transmit_from_memory(uint8_t drive, uint8_t *ptr, int length)
     }
     return true;
 }
+#else
+/* WRS: measured byte transfer time as 5.64us with Z180 @ 36.864MHz */
+bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, unsigned int length) __naked
+{
+    __asm
+        ; load parameters from the stack
+        ld iy, #3
+        add iy, sp
+        ld e, 0(iy)             ; ptr -> DE
+        ld d, 1(iy)
+        ld l, 2(iy)             ; count -> HL
+        ld h, 3(iy)
+        in0 a, (_CSIO_CNTR)
+        and #0xDF               ; mask off RE bit
+        or #0x10                ; set TE bit
+        ld b, a                 ; B now contains CNTR register value to start transmission
+txnextbyte:
+        ld a, (de)
+        ; reverse bits in A
+        ld c,a
+        rlca
+        rlca
+        xor c
+        and #0xAA
+        xor c
+        ld c,a
+        rlca
+        rlca
+        rlca
+        rrc c
+        xor c
+        and #0x66
+        xor c
+        ld c, #_CSIO_CNTR       ; load IO port address
+waittx: 
+        tstio #0x10             ; test bits in IO port (C)
+        jr nz, waittx           ; wait for transmit to complete
+        out0 (_CSIO_TRDR), a    ; write byte to transmit
+        out0 (_CSIO_CNTR), b    ; start transmit
+        inc de                  ; ptr++
+        dec hl                  ; length--
+        ld a, h
+        or l
+        jr nz, txnextbyte       ; length != 0, go again
+        ld l, #1                ; return true
+        ret
+    __endasm;
+    drive; ptr; length; /* squelch compiler warnings */
+}
+#endif
