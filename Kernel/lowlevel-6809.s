@@ -232,12 +232,6 @@ interrupt_handler:
 
 	    ; Do not use the stack before the switch...
 
-            ; machine state stored by the cpu
-	    ; save zero page ??
-            ldd _system_tick_counter
-	    addd #1
-            std _system_tick_counter
-
 	    ; FIXME: add profil support here (need to keep profil ptrs
 	    ; unbanked if so ?)
 
