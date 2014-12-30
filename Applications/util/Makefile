@@ -89,6 +89,7 @@ SRCS  = banner.c \
 	wc.c \
 	which.c \
 	whoami.c \
+	write.c \
 	xargs.c \
 	yes.c
 
