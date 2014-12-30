@@ -18,21 +18,48 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
  */
 
 #include <stdio.h>
-#include <unix.h>
+#include <string.h>
+#include <fcntl.h>
+#include <fuzix.h>
 
 long lseek(uchar, long, uchar);
 
 int dev;
 
-direct dirbuf[32] = { ROOTINODE, ".", ROOTINODE, ".." };
+#define SMOUNTED	12472
+#define ROOTINODE	1
+
+typedef uint16_t blkno_t;
+typedef struct {
+        uint16_t o_blkno;
+        int16_t  o_offset;
+} uzioff_t;
+
+struct dinode {
+    uint16_t i_mode;
+    uint16_t i_nlink;
+    uint16_t i_uid;
+    uint16_t i_gid;
+    uzioff_t   i_size;
+    uint32_t   i_atime;         /* Breaks in 2038 */
+    uint32_t   i_mtime;         /* Need to hide some extra bits ? */
+    uint32_t   i_ctime;         /* 24 bytes */
+    blkno_t  i_addr[20];
+};               /* Exactly 64 bytes long! */
+
+direct dirbuf[32] = { {ROOTINODE, "."}, {ROOTINODE, ".."} };
 struct dinode inode[8];
-struct filesys fs_tab;
+struct _uzifilesys fs_tab;
+
+int yes(void);
+void mkfs(uint16_t fsize, uint16_t isize);
+void dwrite(uint16_t blk, char *addr);
+char *zerobuf();
 
 int main(int argc, char *argv[])
 {
-    uint16 fsize, isize;
+    uint16_t fsize, isize;
     struct stat statbuf;
-    int atoi(), yes(), stat(), open();
 
     if (argc != 4) {
 	fprintf(stderr, "usage: mkfs device isize fsize\n");
@@ -49,8 +76,8 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    isize = (uint16) atoi(argv[2]);
-    fsize = (uint16) atoi(argv[3]);
+    isize = (uint16_t) atoi(argv[2]);
+    fsize = (uint16_t) atoi(argv[3]);
 
     if (fsize < 3 || isize < 2 || isize >= fsize) {
 	fprintf(stderr, "mkfs: bad parameter values\n");
@@ -70,15 +97,14 @@ int main(int argc, char *argv[])
 
     mkfs(fsize, isize);
 
-    exit(0);
+    return 0;
 }
 
 
-int mkfs(uint16 fsize, uint16 isize)
+void mkfs(uint16_t fsize, uint16_t isize)
 {
-    uint16 j;
+    uint16_t j;
     char *zeros;
-    char *zerobuf();
 
     /* Zero out the blocks */
     printf("Zeroizing i-blocks...\n");
@@ -142,10 +168,8 @@ int mkfs(uint16 fsize, uint16 isize)
 }
 
 
-int dwrite(uint16 blk, char *addr)
+void dwrite(uint16_t blk, char *addr)
 {
-    int write();
-        
     lseek(dev, blk * 512L, 0);
     write(dev, addr, 512);
 }
@@ -154,7 +178,7 @@ char *zerobuf()
 {
     static char buf[512];
     
-    blkclr(buf, 512);
+    bzero(buf, 512);
     return buf;
 }
 
