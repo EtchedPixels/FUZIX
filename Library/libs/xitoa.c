@@ -1,10 +1,11 @@
-/* numeric/string conversions package
- */  
-    
+/*
+ *	Internal wrapper for ltostr. Ought to go away
+ */
 #include <stdlib.h>
-    
-/*********************** xitoa.c ***************************/ 
-char *_itoa(int i) 
+
+/*********************** xitoa.c ***************************/
+char *_itoa(int i)
 {
-	return ltostr((long) i, 10);
-} 
+	static char buf[16];
+	return ltostr((long) i, buf, 10);
+}
