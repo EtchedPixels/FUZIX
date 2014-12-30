@@ -59,6 +59,7 @@ SRCS  = banner.c \
 	mount.c \
 	mv.c \
 	od.c \
+	pagesize.c \
 	passwd.c \
 	patchcpm.c \
 	printenv.c \
