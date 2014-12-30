@@ -89,6 +89,7 @@ SRCS  = banner.c \
 	wc.c \
 	which.c \
 	whoami.c \
+	xargs.c \
 	yes.c
 
 OBJS = $(SRCS:.c=.rel)
