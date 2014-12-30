@@ -18,67 +18,94 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
  */
 
 #include <stdio.h>
-#include <unix.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-long lseek(uchar, long, uchar);
+typedef uint16_t blkno_t;
+
+struct dinode {
+    uint16_t i_mode;
+    uint16_t i_nlink;
+    uint16_t i_uid;
+    uint16_t i_gid;
+    off_t    i_size;
+    uint32_t   i_atime;		/* Breaks in 2038 */
+    uint32_t   i_mtime;		/* Need to hide some extra bits ? */
+    uint32_t   i_ctime;		/* 24 bytes */
+    blkno_t  i_addr[20];
+};               /* Exactly 64 bytes long! */
+
+#define FILESYS_TABSIZE 50
+
+struct filesys {
+    int16_t       s_mounted;
+#define SMOUNTED  12742   /* Magic number to specify mounted filesystem */
+    uint16_t      s_isize;
+    uint16_t      s_fsize;
+    uint16_t      s_nfree;
+    blkno_t       s_free[FILESYS_TABSIZE];
+    int16_t       s_ninode;
+    uint16_t      s_inode[FILESYS_TABSIZE];
+    uint8_t       s_fmod;
+    uint8_t       s_timeh;	/* bits 32-40: FIXME - wire up */
+    uint32_t      s_time;
+    blkno_t       s_tfree;
+    uint16_t      s_tinode;
+    void *        s_mntpt;     /* Mount point */
+};
+
+#define FILENAME_LEN	30
+#define DIR_LEN		32
+typedef struct direct {
+    uint16_t   d_ino;
+    char     d_name[FILENAME_LEN];
+} direct;
 
 int dev;
 
-direct dirbuf[32] = { ROOTINODE, ".", ROOTINODE, ".." };
+#define ROOTINODE 1       /* Inode # of / for all mounted filesystems. */
+
+direct dirbuf[64] = { {ROOTINODE, "."}, {ROOTINODE, ".."} };
 struct dinode inode[8];
 struct filesys fs_tab;
 
-int main(int argc, char *argv[])
+void dwrite(uint16_t blk, char *addr)
 {
-    uint16 fsize, isize;
-    struct stat statbuf;
-    int atoi(), yes(), stat(), open();
-
-    if (argc != 4) {
-	fprintf(stderr, "usage: mkfs device isize fsize\n");
-	exit(-1);
+    if (lseek(dev, blk * 512L, 0) == -1) {
+        perror("lseek");
+        exit(1);
     }
-
-    if (stat(argv[1], &statbuf) != 0) {
-        fprintf(stderr, "mkfs: can't stat %s\n", argv[1]);
-        exit(-1);
+    if (write(dev, addr, 512) != 512) {
+        perror("write");
+        exit(1);
     }
+}
+
+char *zerobuf(void)
+{
+    static char buf[512];
     
-    if ((statbuf.st_mode & F_BDEV) != F_BDEV) {
-        fprintf(stderr, "mkfs: %s is not a block device\n", argv[1]);
-        exit(-1);
-    }
-
-    isize = (uint16) atoi(argv[2]);
-    fsize = (uint16) atoi(argv[3]);
-
-    if (fsize < 3 || isize < 2 || isize >= fsize) {
-	fprintf(stderr, "mkfs: bad parameter values\n");
-	exit(-1);
-    }
-
-    printf("Making filesystem on device %s with isize %u fsize %u. Confirm? ",
-	   argv[1], isize, fsize);
-    if (!yes())
-	exit(-1);
-
-    dev = open(argv[1], O_RDWR);
-    if (dev < 0) {
-        fprintf(stderr, "mkfs: can't open device %s\n", argv[1]);
-        exit(-1);
-    }
-
-    mkfs(fsize, isize);
-
-    exit(0);
+    memset(buf, 0, 512);
+    return buf;
 }
 
 
-int mkfs(uint16 fsize, uint16 isize)
+int yes(void)
 {
-    uint16 j;
+    char line[20];
+
+    if (!fgets(line, sizeof(line), stdin) || (*line != 'y' && *line != 'Y'))
+	return (0);
+
+    return (1);
+}
+
+void mkfs(uint16_t fsize, uint16_t isize)
+{
+    uint16_t j;
     char *zeros;
-    char *zerobuf();
 
     /* Zero out the blocks */
     printf("Zeroizing i-blocks...\n");
@@ -117,10 +144,9 @@ int mkfs(uint16 fsize, uint16 isize)
     /* The inodes are already zeroed out */
     /* create the root dir */
 
-    inode[ROOTINODE].i_mode = F_DIR | (0777 & MODE_MASK);
+    inode[ROOTINODE].i_mode = S_IFDIR | 0777;
     inode[ROOTINODE].i_nlink = 3;
-    inode[ROOTINODE].i_size.o_blkno = 0;
-    inode[ROOTINODE].i_size.o_offset = 32;
+    inode[ROOTINODE].i_size = 64;
     inode[ROOTINODE].i_addr[0] = isize;
 
     /* Reserve reserved inode */
@@ -141,30 +167,49 @@ int mkfs(uint16 fsize, uint16 isize)
     printf("Done.\n");
 }
 
-
-int dwrite(uint16 blk, char *addr)
+int main(int argc, char *argv[])
 {
-    int write();
-        
-    lseek(dev, blk * 512L, 0);
-    write(dev, addr, 512);
-}
+    uint16_t fsize, isize;
+    struct stat statbuf;
 
-char *zerobuf()
-{
-    static char buf[512];
+    if (argc != 4) {
+	fprintf(stderr, "usage: mkfs device isize fsize\n");
+	exit(-1);
+    }
+
+    if (stat(argv[1], &statbuf) != 0) {
+        fprintf(stderr, "mkfs: can't stat %s\n", argv[1]);
+        exit(-1);
+    }
     
-    blkclr(buf, 512);
-    return buf;
+    if (!S_ISBLK(statbuf.st_mode)) {
+        fprintf(stderr, "mkfs: %s is not a block device\n", argv[1]);
+        exit(-1);
+    }
+
+    isize = (uint16_t) atoi(argv[2]);
+    fsize = (uint16_t) atoi(argv[3]);
+
+    if (fsize < 3 || isize < 2 || isize >= fsize) {
+	fprintf(stderr, "mkfs: bad parameter values\n");
+	exit(-1);
+    }
+
+    printf("Making filesystem on device %s with isize %u fsize %u. Confirm? ",
+	   argv[1], isize, fsize);
+    if (!yes())
+	exit(-1);
+
+    dev = open(argv[1], O_RDWR);
+    if (dev < 0) {
+        fprintf(stderr, "mkfs: can't open device %s\n", argv[1]);
+        exit(-1);
+    }
+
+    mkfs(fsize, isize);
+
+    exit(0);
 }
 
 
-int yes()
-{
-    char line[20];
 
-    if (!fgets(line, sizeof(line), stdin) || (*line != 'y' && *line != 'Y'))
-	return (0);
-
-    return (1);
-}
