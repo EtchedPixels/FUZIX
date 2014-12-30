@@ -42,18 +42,17 @@
 
 /* data structure for stat() */
 struct stat {
-	dev_t	st_dev; 	/* device number */
-	ino_t	st_ino; 	/* inode number */
-	mode_t	st_mode;	/* file mode */
-	nlink_t	st_nlink;	/* number of links */
-	uid_t	st_uid; 	/* owner id */
-	gid_t	st_gid; 	/* owner group */
-	dev_t	st_rdev;	/* */
-	/* These four have to be fixed up by the wrapper */
-	off_t	st_size;	/* file size */
-	time_t	st_atime;	/* last access time */
-	time_t	st_mtime;	/* last modification time */
-	time_t	st_ctime;	/* file creation time */
+	dev_t    st_dev;
+	ino_t    st_ino;
+	mode_t   st_mode;
+	nlink_t  st_nlink;
+	uid_t    st_uid;
+	gid_t    st_gid;
+	uint16_t st_rdev;
+	off_t    st_size;
+	time_t   st_atime;
+	time_t   st_mtime;
+	time_t   st_ctime;
 };
 
 #endif
