@@ -111,9 +111,11 @@ struct termios {
 #define ICANON	0x0010
 #define IEXTEN	0x0020
 #define ISIG	0x0040
-#define NOFLUSH	0x0080
+#define NOFLSH	0x0080
 #define TOSTOP	0x0100
 #define XCASE	0x0200
+
+#define _POSIX_VDISABLE	'\0'
 
 #define TCSANOW		0
 #define TCSADRAIN	1
