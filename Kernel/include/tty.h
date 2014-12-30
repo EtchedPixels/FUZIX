@@ -136,6 +136,10 @@ struct termios {
 
 #define TIOCHANGUP	7	/* vhangup() */
 
+#define KBMAPSIZE	0x20
+#define KBMAPGET	0x21
+#define VTSIZE		0x22
+
 #define CTRL(c)  (c & 0x1f)
 
 /* Character Input Queue size */
