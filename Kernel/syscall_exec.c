@@ -60,7 +60,7 @@ int16_t _execve(void)
 	staticfast struct s_argblk *abuf, *ebuf;
 	int16_t (**sigp) ();
 	int argc;
-	uint16_t emu_size, emu_copy, progptr;
+	uint16_t emu_size, progptr;
 	uint16_t emu_ptr, emu_base;
 	staticfast uint16_t top;
 	uint8_t c;
@@ -136,7 +136,6 @@ int16_t _execve(void)
 		top = ramtop;
 #else
 		emu_size;
-		emu_copy;
 		emu_ptr;
 		udata.u_error = ENOEXEC;
 		goto nogood2;
