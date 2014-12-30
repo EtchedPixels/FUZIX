@@ -23,34 +23,6 @@
 /* waitpid options */
 #define WNOHANG		1	/* don't support others yet */
 
-
-/* Bits 0-7 are saved, bits 8-15 are discard post open. Not all are handled
-   in the kernel yet */
-#define O_RDONLY        0
-#define O_WRONLY        1
-#define O_RDWR          2
-#define O_ACCMODE(x)	((x) & 3)
-#define O_APPEND	4
-#define O_SYNC		8
-#define O_NDELAY	16
-#define O_CREAT		256
-#define O_EXCL		512
-#define O_TRUNC		1024
-#define O_NOCTTY	2048
-#define O_CLOEXEC	4096
-
-#define F_GETFL		0
-#define F_SETFL		1
-#define F_GETFD		2
-#define F_SETFD		3
-#define F_DUPFD		4
-
-#define FNDELAY		O_NDELAY
-
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-
 /*
  * Error codes
  */
