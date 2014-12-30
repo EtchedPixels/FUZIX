@@ -40,6 +40,32 @@
 
 #define S_ISDEV(m)	(((m) & S_IFCHR) == S_IFCHR)
 
+/* Bit masks for i_mode and st_mode */
+
+#define OTH_EX  0001
+#define OTH_WR  0002
+#define OTH_RD  0004
+#define GRP_EX  0010
+#define GRP_WR  0020
+#define GRP_RD  0040
+#define OWN_EX  0100
+#define OWN_WR  0200
+#define OWN_RD  0400
+
+#define SAV_TXT 01000
+#define SET_GID 02000
+#define SET_UID 04000
+
+#define MODE_MASK 07777
+
+#define F_REG   0100000
+#define F_DIR   040000
+#define F_PIPE  010000
+#define F_BDEV  060000  // important that F_BDEV & F_CDEV != 0 (see isdevice() function)
+#define F_CDEV  020000
+
+#define F_MASK  0170000
+
 /* data structure for stat() */
 struct stat {
 	dev_t    st_dev;
