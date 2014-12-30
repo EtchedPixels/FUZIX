@@ -13,6 +13,29 @@
 extern int errno;
 extern int syscall(int callno, ...);
 
+/*
+ *      FUZIX structures (_xx forms for ones that don't match the POSIX
+ *      API versions)
+ */
+
+typedef struct {
+	uint16_t t_time;
+	uint16_t t_data;
+} _uzitime_t;
+
+struct _uzitms {
+	_uzitime_t tms_utime;
+	_uzitime_t tms_stime;
+	_uzitime_t tms_cutime;
+	_uzitime_t tms_cstime;
+	_uzitime_t tms_etime;
+};
+
+typedef struct {
+	uint16_t o_blkno;
+	int16_t  o_offset;
+} _uzioff_t;
+
 struct  _uzistat
 {
 	int16_t    st_dev;
@@ -22,24 +45,20 @@ struct  _uzistat
 	uint16_t   st_uid;
 	uint16_t   st_gid;
 	uint16_t   st_rdev;
-	uint32_t   st_size;
-	uint32_t   st_atime;
-	uint32_t   st_mtime;
-	uint32_t   st_ctime;
-	uint32_t   st_timeh;	/* Time high bytes */
+	_uzioff_t  st_size;
+	_uzitime_t st_atime;
+	_uzitime_t st_mtime;
+	_uzitime_t st_ctime;
 };
 
 struct _uzisysinfoblk {
-  uint8_t infosize;		/* For expandability */
-  uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
-  uint8_t max_open;
-  uint8_t nproc;		/* Number of processes */
-  uint16_t ticks;		/* Tick rate in HZ */
-  uint16_t memk;		/* Memory in KB */
-  uint16_t usedk;		/* Used memory in KB */
-  uint16_t config;		/* Config flag mask */
-  uint16_t loadavg[3];
-  uint32_t spare;
+	uint8_t  infosize;            /* For expandability */
+	uint8_t  banks;               /* Banks in our 64K (and thus pagesize) */
+	uint8_t  max_open;
+	uint16_t ticks;               /* Tick rate in HZ */
+	uint16_t memk;                /* Memory in KB */
+	uint16_t usedk;               /* Used memory in KB */
+	uint16_t config;              /* Config flag mask */
 };
 
 /*
@@ -74,15 +93,14 @@ struct hd_geometry {
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
 extern int _exit(int code);
-extern int alarm(int16_t secs);
 extern int open(const char *path, int flags, ...);
 extern int close(int fd);
 extern int creat(const char *path, mode_t mode);
-extern int mknod(const char *path, mode_t mode, dev_t dev);
 extern int link(const char *path, const char *path2);
 extern int unlink(const char *path);
 extern int read(int fd, char *buf, int len);
 extern int write(int fd, const char *buf, int len);
+extern int seek(int fd, int offset, int mode);
 extern int chdir(const char *path);
 extern int sync(void);
 extern int access(const char *path, int way);
@@ -103,9 +121,9 @@ extern void *sbrk(intptr_t increment);
 extern pid_t fork(void);
 extern int mount(const char *dev, const char *path, int flags);
 extern int umount(const char *dev);
-extern sighandler_t signal(int signum, sighandler_t sighandler);
+extern int signal(int signum, sighandler_t sighandler);
 extern int dup2(int oldfd, int newfd);
-extern int _pause(unsigned int dsecs);
+extern int pause(void);
 extern int kill(pid_t pid, int sig);
 extern int pipe(int *pipefds);
 extern gid_t getgid(void);
@@ -116,7 +134,7 @@ extern int fcntl(int fd, int cmd, ...);
 extern int fchdir(int fd);
 extern int fchmod(int fd, mode_t mode);
 extern int fchown(int fd, uid_t owner, gid_t group);
-extern int mkdir(const char *path, mode_t mode);
+extern int mkdir(const char *path);
 extern int rmdir(const char *path);
 extern pid_t setpgrp(void);
 extern int waitpid(pid_t pid, int *status, int options);
@@ -128,14 +146,14 @@ extern int rename(const char *path, const char *newpath);
 extern int _getdirent(int fd, void *buf, int len);
 extern int _stat(const char *path, struct _uzistat *s);
 extern int _fstat(int fd, struct _uzistat *s);
-extern int _getfsys(int dev, struct _uzifilesys *fs);
-extern int _time(time_t *t, uint16_t clock);
-extern int _stime(const time_t *t, uint16_t clock);
-extern int _times(struct tms *t);
-extern int _utime(const char *file, time_t *buf);
-extern int _uname(struct _uzisysinfoblk *uzib, int len);
+extern int _getfsys(int dev, char *buf);
+extern int _time(_uzitime_t *t);
+extern int _stime(const _uzitime_t *t);
+extern int _alarm(int16_t decisecs);
+extern int _times(struct _uzitms *t);
+extern int _utime(const char *file, _uzitime_t *buf);
+extern int _uname(struct _uzisysinfoblk *uzib);
 extern int _profil(void *samples, uint16_t offset, uint16_t size, int16_t scale);
-extern int _lseek(int fd, off_t *offset, int mode);
 
 /* C library provided syscall emulation */
 extern int stat(const char *path, struct stat *s);
