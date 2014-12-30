@@ -47,6 +47,7 @@ SRCS  = banner.c \
 	kill.c \
 	ll.c \
 	ln.c \
+	logname.c \
 	ls.c \
 	man.c \
 	mkdir.c \

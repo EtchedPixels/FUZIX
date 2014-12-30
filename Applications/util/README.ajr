@@ -1,0 +1,56 @@
+This is version 0.1 of my port of the the GNU shutils. This package
+consists of clones of some of the shell utilities rewritten to be as compact
+as possible for use in the elks project. Included in this version are pretty
+complete versions of basename, dirname, false, pwd, true, whoami and yes and 
+versions of logname and uname which should work, but logname will not compile
+until linux-86 libc has a getlogin() function, and the uname() function
+currently returns an error under elksemu.
+
+While the code is based around the GNU sh-utils 1.12, with inspiration from
+tiny-utils, I have re-written alot of code, and this should not be
+considered to be a version of sh-utils.
+
+To compile all the utilities, edit Make.defs to choose the binary format, as 
+for tiny-utils, then type make, and they will be built and copied into the 
+bin directory. From here, install where you want to use them.
+
+Almost all of the utilities have had features removed to make them smaller.
+All of them no longer recognise the --help and --version switches and many
+have had other switches removed. Switches must be specified in the form -s,
+not --switch as they can be in the GNU utils. The options available for each
+util are as follows. Please view the relevant man pages for info on what
+these options do. (Eventually I will write man pages for these, if noone
+else does it first.) If I have removed an option which you think is vital,
+please E-mail ajr@ecs.soton.ac.uk me letting me know why and I may add it, 
+or better still send me a patch.
+
+basename name [suffix]
+
+dirname filename
+
+false
+
+logname
+
+pwd
+
+true
+
+uname [-s] [-n] [-r] [-v] [-m [-a]
+
+whoami
+
+yes [string...]
+
+true and false are usually written as shell scripts, but I have written them
+as binaries because elks does not have a true shell yet, and the binaries
+produced are much smaller than the original scripts.
+
+If you think that there is anything wrong or missing about any of this
+package please let me know and I will fix it, but remember that the purpose
+fo the package is a set of very small utilities to be used on low poweres
+machines running elks, and features that carry alot of bulk will need a very
+good reason to be included.
+
+Alistair Riddoch
+ajr@ecs.soton.ac.uk
