@@ -147,7 +147,7 @@ void nc100_tty_init(void)
   uarta;
 }
 
-static uint8_t keymap[10];
+uint8_t keymap[10];
 static uint8_t keyin[10];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
