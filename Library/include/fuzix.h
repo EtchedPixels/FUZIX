@@ -20,4 +20,11 @@
                                           Hook to the syscall trace debug */
 #define AD_NOSYNC		1	/* Unimplemented */
 
+#define FILENAME_LEN    30
+#define DIR_LEN         32
+typedef struct direct {
+    uint16_t   d_ino;
+    char     d_name[FILENAME_LEN];
+} direct;
+
 #endif
