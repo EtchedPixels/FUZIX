@@ -4,6 +4,8 @@
 #include <printf.h>
 #include <tty.h>
 
+#define BAD_ROOT_DEV 0xFFFF
+
 /*
  *	Put nothing here that cannot be discarded. We will eventually
  *	make the entire of this disappear after the initial _execve
@@ -73,19 +75,21 @@ void create_init(void)
 
 /* to sensibly parse device names this needs to be platform-specific,
    so for now it only parses device numbers */
-unsigned int bootdevice(char *s)
+uint16_t bootdevice(char *s)
 {
     unsigned int r = 0;
 
+    /* skip spaces */
     while(*s == ' ')
         s++;
 
     while(true){
         if(*s >= '0' && *s <= '9'){
             r = (r*10) + (*s - '0');
-        }else{
+        }else if(*s == '\r' || *s == '\n' || *s == 0){
             return r;
-        }
+        }else
+            return BAD_ROOT_DEV;
         s++;
     }
 }
@@ -142,10 +146,11 @@ void fuzix_main(void)
 	/* initialise hardware devices */
 	device_init();
 
-	root_dev = DEFAULT_ROOT;
-	if (cmdline && *cmdline) {
+	root_dev = BAD_ROOT_DEV;
+	if (cmdline && *cmdline)
 		root_dev = bootdevice(cmdline);
-	} else {
+	
+        while(root_dev == BAD_ROOT_DEV){
 		kputs("bootdev: ");
 		udata.u_base = bootline;
 		udata.u_sysio = 1;
@@ -154,7 +159,7 @@ void fuzix_main(void)
 		memset(bootline, 0, BOOTLINE_LEN);
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
-        root_dev = bootdevice(bootline);
+		root_dev = bootdevice(bootline);
 	}
 
 	/* Mount the root device */

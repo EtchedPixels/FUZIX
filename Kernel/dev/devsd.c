@@ -33,8 +33,8 @@ static int sd_readwrite(uint8_t minor, uint8_t rawflag, bool do_write);
 static int sd_spi_init(uint8_t drive);
 static void sd_spi_release(uint8_t drive);
 static int sd_spi_wait_ready(uint8_t drive);
-static bool sd_spi_transmit_block(uint8_t drive, void *ptr, unsigned int length);
-static bool sd_spi_receive_block(uint8_t drive, void *ptr, unsigned int length);
+static bool sd_spi_transmit_sector(uint8_t drive, void *ptr, unsigned int length);
+static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length);
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
 static uint32_t sd_get_size_sectors(uint8_t drive);
 static bool sd_read_sector(uint8_t drive, void *ptr, uint32_t lba);
@@ -233,7 +233,7 @@ static int sd_spi_wait_ready(uint8_t drive)
     return res;
 }
 
-static bool sd_spi_transmit_block(uint8_t drive, void *ptr, unsigned int length)
+static bool sd_spi_transmit_sector(uint8_t drive, void *ptr, unsigned int length)
 {
     unsigned char reply;
 
@@ -241,7 +241,7 @@ static bool sd_spi_transmit_block(uint8_t drive, void *ptr, unsigned int length)
         return false; /* failed */
 
     sd_spi_transmit_byte(drive, 0xFE);
-    sd_spi_transmit_from_memory(drive, ptr, length);
+    sd_spi_transmit_block(drive, ptr, length);
     sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
     sd_spi_transmit_byte(drive, 0xFF);
     reply = sd_spi_receive_byte(drive);
@@ -250,7 +250,7 @@ static bool sd_spi_transmit_block(uint8_t drive, void *ptr, unsigned int length)
     return true; /* hooray! */
 }
 
-static bool sd_spi_receive_block(uint8_t drive, void *ptr, unsigned int length)
+static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length)
 {
     unsigned int timer;
     unsigned char b;
@@ -260,7 +260,7 @@ static bool sd_spi_receive_block(uint8_t drive, void *ptr, unsigned int length)
     do{
         b = sd_spi_receive_byte(drive);
         if(timer_expired(timer)){
-            kputs("sd_spi_receive_block: timeout\n");
+            kputs("sd_spi_receive_sector: timeout\n");
             return false;
         }
     }while(b == 0xFF);
@@ -268,7 +268,7 @@ static bool sd_spi_receive_block(uint8_t drive, void *ptr, unsigned int length)
     if(b != 0xFE)
         return false; /* failed */
 
-    return sd_spi_receive_to_memory(drive, ptr, length); /* returns true on success */
+    return sd_spi_receive_block(drive, ptr, length); /* returns true on success */
 }
 
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
@@ -325,7 +325,7 @@ static uint32_t sd_get_size_sectors(uint8_t drive)
     unsigned char csd[16], n;
     uint32_t sectors = 0;
 
-    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_receive_block(drive, csd, 16)){
+    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_receive_sector(drive, csd, 16)){
         if ((csd[0] >> 6) == 1) {	/* SDC ver 2.00 */
             sectors = ((uint32_t)csd[9] + (uint32_t)((unsigned int)csd[8] << 8) + 1) << 10;
         } else {					/* SDC ver 1.XX or MMC*/
@@ -347,7 +347,7 @@ static bool sd_read_sector(uint8_t drive, void *ptr, uint32_t lba)
             lba = lba << 9; /* multiply by 512 to get byte address */
 
         if(sd_send_command(drive, CMD17, lba) == 0)
-            r = sd_spi_receive_block(drive, ptr, 512);
+            r = sd_spi_receive_sector(drive, ptr, 512);
 
         sd_spi_release(drive);
     }
@@ -364,7 +364,7 @@ static bool sd_write_sector(uint8_t drive, void *ptr, uint32_t lba)
             lba = lba << 9; /* multiply by 512 to get byte address */
 
         if(sd_send_command(drive, CMD24, lba) == 0)
-            r = sd_spi_transmit_block(drive, ptr, 512);
+            r = sd_spi_transmit_sector(drive, ptr, 512);
 
         sd_spi_release(drive);
     }

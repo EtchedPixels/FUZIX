@@ -14,7 +14,7 @@ JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASR
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE2 -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
@@ -24,4 +24,4 @@ clean:
 
 image:
 	dd if=../fuzix.bin of=../fuzix.com bs=256 skip=1
-	dd if=../fuzix.bin of=../fuzix.cart bs=16384 conv=sync
+	dd if=../fuzix.bin of=../fuzix.rom bs=16384 conv=sync
