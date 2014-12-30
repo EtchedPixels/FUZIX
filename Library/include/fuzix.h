@@ -20,9 +20,6 @@
                                           Hook to the syscall trace debug */
 #define AD_NOSYNC		1	/* Unimplemented */
 
-/* waitpid options */
-#define WNOHANG		1	/* don't support others yet */
-
 /*
  *	TTY interfaces - may change pending review
  */

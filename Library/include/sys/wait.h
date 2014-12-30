@@ -6,6 +6,8 @@
 
 /* Bits in the third argument to `waitpid'.  */
 #define WNOHANG 	1	/* Don't block waiting.  */
+
+#if 0 /* XXX - Not yet supported */
 #define WUNTRACED	2	/* Report status of stopped children.  */
 
 /* Everything extant so far uses these same bits.  */
@@ -33,6 +35,7 @@
 /* Macros for constructing status values.  */
 #define W_EXITCODE(ret, sig)	((ret) << 8 | (sig))
 #define W_STOPCODE(sig) ((sig) << 8 | 0x7f)
+#endif
 
 /* Special values for the PID argument to `waitpid' and `wait4'.  */
 #define WAIT_ANY	(-1)	/* Any process.  */
