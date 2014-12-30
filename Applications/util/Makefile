@@ -82,12 +82,14 @@ SRCS  = banner.c \
 	tr.c \
 	true.c \
 	umount.c \
+	uname.c \
 	uniq.c \
 	uud.c \
 	uue.c \
 	wc.c \
 	which.c \
-	whoami.c
+	whoami.c \
+	yes.c
 
 OBJS = $(SRCS:.c=.rel)
 
