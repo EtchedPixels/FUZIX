@@ -143,7 +143,7 @@ void tty_init_port(void)
 
 /*********************** Keyboard **************************/
 
-static uint8_t keymap[12];
+uint8_t keymap[12];
 static uint8_t *keyin = (uint8_t *)0xFFF0;
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
