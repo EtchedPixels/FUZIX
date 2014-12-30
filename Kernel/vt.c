@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include <tty.h>
 #include <vt.h>
 #include <devtty.h>
 
@@ -181,6 +182,24 @@ void vtoutput(unsigned char *p, unsigned int len)
 	}
 	cursor_on(cursory, cursorx);
 }
+
+int vt_ioctl(uint8_t minor, uint16_t request, char *data)
+{
+	/* FIXME: need to address the multiple vt switching case
+	   here.. probably need to switch vt */
+	if (minor <= MAX_VT) {
+		switch(request) {
+			case KBMAPSIZE:
+				return KEY_ROWS << 8 | KEY_COLS;
+			case KBMAPGET:
+				return uput(keymap, data, sizeof(keymap));
+			case VTSIZE:
+				return VT_HEIGHT << 8 | VT_WIDTH;
+		}
+	}
+	return tty_ioctl(minor, request, data);
+}
+
 
 void vtinit(void)
 {
