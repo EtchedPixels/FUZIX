@@ -44,31 +44,31 @@ void selwake(struct selmap *s)
 }
 
 /* Set our select bits on the inode */
-int selwait_inode(inoptr i, uint8_t mask, uint8_t setit) {
+int selwait_inode(inoptr i, uint8_t smask, uint8_t setit) {
   struct selmap *s = (struct selmap *)(&i->c_node.i_addr[17]);
   uint8_t bit = udata.u_ptab - ptab;
   uint8_t mask = 1 << (bit & 7);
   uint8_t bset = bit & setit;
   bit >>= 3;
 
-  if (mask & SELECT_IN) {
+  if (smask & SELECT_IN) {
     s->map[mask] &= ~bit;
     s->map[mask] |= bset;
   }
   s++;
-  if (mask & SELECT_OUT) {
+  if (smask & SELECT_OUT) {
     s->map[mask] &= ~bit;
     s->map[mask] |= bset;
   }
   s++;
-  if (mask & SELECT_EX) {
+  if (smask & SELECT_EX) {
     s->map[mask] &= ~bit;
     s->map[mask] |= bset;
   }
 }
 
 /* Wake an inode for select */
-int selwake_inode(inoptr i, uint16_t mask) {
+void selwake_inode(inoptr i, uint16_t mask) {
   struct selmap *s = (struct selmap *)(&i->c_node.i_addr[17]);
   if (mask & SELECT_IN)
     selwake(s);
@@ -78,6 +78,33 @@ int selwake_inode(inoptr i, uint16_t mask) {
   s++;
   if (mask & SELECT_EX)
     selwake(s);
+}
+
+static int pipesel_begin(inoptr i, uint8_t bits)
+{
+  uint16_t mask = 0;
+  pipesel++;
+  /* Data or EOF */
+  if (i->c_node.i_size || !i->c_refs)
+    mask |= SELECT_IN;
+  /* Enough room to be worth waking - keep wakeup rate down */
+  if (i->c_node.i_size < 8 * BLKSIZE)
+    mask |= SELECT_OUT;
+  selwait_inode(i, bits, 1);
+  return mask & bits;  
+}
+
+static int pipesel_end(inoptr i)
+{
+  pipesel--;
+  /* Clear out wait masks */
+  selwait(i, SELECT_IN|SELECT_OUT|SELECT_EX, 0);
+}
+
+void selwake_pipe(inoptr i, uint16_t mask)
+{
+  if (pipesel)
+    selwake_inode(i);
 }
 
 #define nfd (uint16_t)udata.u_argn
@@ -103,6 +130,14 @@ int _select(void)
     m = 1;
     for (i = 0; i < nfd; i++) {
       if (sum & m) {
+        if (in & m)
+          n = SELECT_IN;
+        else
+          n = 0;
+        if (out & m)
+          n |= SELECT_OUT;
+        if (ex & m)
+          n |= SELECT_EX;
         ino = getinode(i);
         if (ino == NULLINODE)
           return -1;
@@ -115,14 +150,15 @@ int _select(void)
           inr |=  m;
           break;
         case F_PIPE:
-          /* TODO */
-          break;
+          n = pipesel_begin(ino, n);
+          goto setbits;
         case F_CDEV:
           /* If unsupported we report the device as read/write ready */
           if (d_ioctl(ino->c_node.i_addr[0], SELECT_BEGIN, &n) == -1) {
             udata.u_error = 0;
             n = SELECT_IN|SELECT_OUT;
           }
+setbits:
           /* Set the outputs */
           if (n & SELECT_IN)
             inr |= m;
@@ -143,6 +179,8 @@ int _select(void)
   }
   while (!sumo && udata.p_tab->p_timeout != 1);
   
+  udata.p_tab->p_timeout = 0;
+
   /* Return the values to user space */
   uputw(inr, base);
   uputw(outr, base + 4);
@@ -154,9 +192,14 @@ int _select(void)
   for (i = 0; i < nfd; i++) {
     if (sum & m) {
       ino = getinode(i);
-      if (getmode(ino) == F_CDEV)
-        d_ioctl(ino->c_node.i_addr[0], SELECT_END, NULL);
-      /* FIXME - pipe */
+      switch(getmode(ino))
+      {
+        case F_CDEV:
+          d_ioctl(ino->c_node.i_addr[0], SELECT_END, NULL);
+          break;
+        case F_PIPE:
+          pipesel_end(ino);
+      }
     }
     m <<= 1;
   }
