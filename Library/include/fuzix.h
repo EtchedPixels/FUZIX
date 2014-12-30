@@ -20,37 +20,4 @@
                                           Hook to the syscall trace debug */
 #define AD_NOSYNC		1	/* Unimplemented */
 
-/*
- *	TTY interfaces - may change pending review
- */
-
-struct tty_data {
-    char t_ispeed;
-    char t_ospeed;
-    char t_erase;
-    char t_kill;
-    int  t_flags;
-};
-
-#define TIOCGETP  0
-#define TIOCSETP  1
-#define TIOCSETN  2
-#define TIOCEXCL  3     /** currently not implemented  SN **/
-#define UARTSLOW  4     /* Normal interrupt routine (UZI280) */
-#define UARTFAST  5     /* Fast interrupt routine for modem usage (UZI280) */
-#define TIOCFLUSH 6
-#define TIOCGETC  7
-#define TIOCSETC  8
-              /* UZI280 extensions used by UZI180 in the CP/M 2.2 Emulator */
-#define TIOCTLSET 9     /* Don't parse ctrl-chars */
-#define TIOCTLRES 10    /* Normal Parse */
-
-#define XTABS   0006000
-#define RAW     0000040
-#define CRMOD   0000020
-#define ECHO    0000010
-#define LCASE   0000004
-#define CBREAK  0000002
-#define COOKED  0000000
-
 #endif
