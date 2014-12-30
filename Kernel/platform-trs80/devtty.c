@@ -107,7 +107,7 @@ int tty_carrier(uint8_t minor)
 }
 
 
-static uint8_t keymap[8];
+uint8_t keymap[8];
 static uint8_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
