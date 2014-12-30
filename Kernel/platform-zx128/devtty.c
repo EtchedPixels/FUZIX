@@ -11,6 +11,7 @@ char tbuf1[TTYSIZ];
 /* buffer for port scan procedure */
 uint8_t keybuf[8];
 /* keyboard state on previous execution. Initialized with all 0x1F (everything released) */
+/* FIXME: needs inverting */
 uint8_t keymap[8] = { 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F };
 
 static uint8_t keybyte, keybit;
