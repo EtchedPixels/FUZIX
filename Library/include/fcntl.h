@@ -1,6 +1,8 @@
 #ifndef _FCNTL_H
 #define _FCNTL_H
 
+#include <sys/types.h>
+
 /* Bits 0-7 are saved, bits 8-15 are discard post open. Not all are handled
    in the kernel yet */
 #define O_RDONLY        0
