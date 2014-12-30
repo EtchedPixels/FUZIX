@@ -6,6 +6,7 @@
 #include <devlpr.h>
 #include <devsys.h>
 #include <tty.h>
+#include <vt.h>
 #include <devtty.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -15,7 +16,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/hd		Hard disc block devices (and RAM etc) */
   {  hd_open,     no_close,    hd_read,   hd_write,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,     tty_close,   tty_read,  tty_write,  tty_ioctl },
+  {  tty_open,     tty_close,   tty_read,  tty_write,  vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
   {  lpr_open,     no_close,   no_rdwr,   lpr_write,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */

@@ -62,7 +62,7 @@ void tty_setup(uint8_t minor)
 }
 
 
-static uint8_t keymap[11];
+uint8_t keymap[11];
 static uint8_t keyin[11];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
