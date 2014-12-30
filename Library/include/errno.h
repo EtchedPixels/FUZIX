@@ -45,10 +45,10 @@
 #define ERANGE          34              /* Result too large */
 #define EWOULDBLOCK	35		/* Operation would block */
 #define ENOTEMPTY	36		/* Directory is not empty */
-#define ENAMETOOLONG    37              /* File name too long */
+#define ENAMETOOLONG    63              /* File name too long */
 
 
-#define __ERRORS	38
+#define __ERRORS	64
 
 extern int sys_nerr;
 extern char *sys_errlist[];
