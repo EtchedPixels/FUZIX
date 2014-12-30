@@ -60,8 +60,6 @@ SRCS  = basename.c \
 	ssh.c \
 	su.c \
 	sync.c \
-	termcap.c \
-	tget.c \
 	touch.c \
 	tr.c \
 	true.c \
