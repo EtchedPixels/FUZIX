@@ -70,6 +70,7 @@ SRCS  = banner.c \
 	sleep.c \
 	ssh.c \
 	sort.c \
+	stty.c \
 	sum.c \
 	su.c \
 	sync.c \
