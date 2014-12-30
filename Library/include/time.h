@@ -6,11 +6,6 @@
 #include <stddef.h>
 #include <syscalls.h>
 
-#ifndef CLOCK_T
-#define CLOCK_T
-typedef long clock_t;
-#endif
-
 struct tm {
 	int tm_sec;
 	int tm_min;

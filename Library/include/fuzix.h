@@ -53,17 +53,6 @@ struct tty_data {
 #define CBREAK  0000002
 #define COOKED  0000000
 
-/*
- *	Native structures that are actually created by libc not the kernel
- */
-
-typedef unsigned long long time_t;
-typedef unsigned long clock_t;
-typedef long off_t;
-typedef uint16_t nlink_t;
-typedef int16_t dev_t;
-typedef uint16_t ino_t;
- 
 struct dirent
 {
          ino_t	d_ino;

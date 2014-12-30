@@ -47,14 +47,15 @@ typedef long key_t;
 
 /* Unix types for properties */
 typedef uint16_t mode_t;
-typedef int32_t off_t;
-typedef uint16_t dev_t;
+typedef long off_t;
+typedef int16_t dev_t;
 typedef uint16_t gid_t;
 typedef uint16_t uid_t;
 typedef uint16_t nlink_t;
 typedef int16_t pid_t;
 typedef uint16_t ino_t;
 
-typedef int64_t time_t;
+typedef unsigned long long time_t;
+typedef unsigned long clock_t;
 
 #endif
