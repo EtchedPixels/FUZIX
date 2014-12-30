@@ -53,11 +53,4 @@ struct tty_data {
 #define CBREAK  0000002
 #define COOKED  0000000
 
-struct dirent
-{
-         ino_t	d_ino;
-         char	d_name[30];	/* 14 currently used */
-};
-
-
 #endif
