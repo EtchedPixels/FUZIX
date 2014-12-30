@@ -32,6 +32,7 @@ SRCS  = banner.c \
 	decomp16.c \
 	df.c \
 	dirname.c \
+	dosread.c \
 	du.c \
 	echo.c \
 	ed.c \
