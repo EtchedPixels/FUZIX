@@ -9,4 +9,8 @@ extern signed char vt_twidth[2];
 extern signed char vt_tright[2];
 extern uint8_t curtty;
 
+#define KEY_ROWS	8
+#define KEY_COLS	16
+extern uint16_t keymap[8];
+
 #endif

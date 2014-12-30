@@ -2,6 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <tty.h>
+#include <vt.h>
 #include <devfd.h>
 #include <devsil.h>
 #include <devsys.h>
@@ -17,7 +18,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/hd		Hard disc block devices (hdx - not supported yet) */
   {  no_open,      no_close,    no_rdwr,  no_rdwr,   no_ioctl   },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,     mtxtty_close,tty_read, tty_write,  tty_ioctl },
+  {  tty_open,     mtxtty_close,tty_read, tty_write,  vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
   {  lpr_open,     lpr_close,   no_rdwr,  lpr_write,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */

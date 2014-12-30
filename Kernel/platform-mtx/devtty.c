@@ -168,7 +168,7 @@ int mtxtty_close(uint8_t minor)
 	return err;
 }
 
-static uint16_t keymap[8];
+uint16_t keymap[8];
 static uint16_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
