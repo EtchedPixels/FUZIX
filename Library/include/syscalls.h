@@ -45,20 +45,24 @@ struct  _uzistat
 	uint16_t   st_uid;
 	uint16_t   st_gid;
 	uint16_t   st_rdev;
-	_uzioff_t  st_size;
-	_uzitime_t st_atime;
-	_uzitime_t st_mtime;
-	_uzitime_t st_ctime;
+	uint32_t   st_size;
+	uint32_t   st_atime;
+	uint32_t   st_mtime;
+	uint32_t   st_ctime;
+	uint32_t   st_timeh;	/* Time high bytes */
 };
 
 struct _uzisysinfoblk {
-	uint8_t  infosize;            /* For expandability */
-	uint8_t  banks;               /* Banks in our 64K (and thus pagesize) */
+	uint8_t  infosize;		/* For expandability */
+	uint8_t  banks;			/* Banks in our 64K (and thus pagesize) */
 	uint8_t  max_open;
-	uint16_t ticks;               /* Tick rate in HZ */
-	uint16_t memk;                /* Memory in KB */
-	uint16_t usedk;               /* Used memory in KB */
-	uint16_t config;              /* Config flag mask */
+	uint8_t  nproc;			/* Number of processes */
+	uint16_t ticks;			/* Tick rate in HZ */
+	uint16_t memk;			/* Memory in KB */
+	uint16_t usedk;			/* Used memory in KB */
+	uint16_t config;		/* Config flag mask */
+	uint16_t loadavg[3];
+	uint32_t spare2;
 };
 
 /*
@@ -147,11 +151,11 @@ extern int _getdirent(int fd, void *buf, int len);
 extern int _stat(const char *path, struct _uzistat *s);
 extern int _fstat(int fd, struct _uzistat *s);
 extern int _getfsys(uint16_t dev, char *buf);
-extern int _time(_uzitime_t *t);
+extern int _time(unsigned long long *t, uint16_t type);
 extern int _stime(const _uzitime_t *t);
 extern int _times(struct _uzitms *t);
 extern int _utime(const char *file, _uzitime_t *buf);
-extern int _uname(struct _uzisysinfoblk *uzib);
+extern int _uname(struct _uzisysinfoblk *uzib, uint16_t len);
 extern int _profil(void *samples, uint16_t offset, uint16_t size, int16_t scale);
 extern int _lseek(int fd, off_t *offset, int mode);
 extern int _pause(unsigned int dsecs);
