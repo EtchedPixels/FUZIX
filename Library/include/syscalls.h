@@ -146,7 +146,7 @@ extern int rename(const char *path, const char *newpath);
 extern int _getdirent(int fd, void *buf, int len);
 extern int _stat(const char *path, struct _uzistat *s);
 extern int _fstat(int fd, struct _uzistat *s);
-extern int _getfsys(int dev, char *buf);
+extern int _getfsys(uint16_t dev, char *buf);
 extern int _time(_uzitime_t *t);
 extern int _stime(const _uzitime_t *t);
 extern int _times(struct _uzitms *t);
