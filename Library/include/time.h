@@ -30,7 +30,7 @@ extern char *tzname[2];
 extern int daylight;
 extern long timezone;
 
-extern long clock __P ((void));
+extern clock_t clock __P ((void));
 extern time_t mktime __P ((struct tm * __tp));
 extern double difftime __P ((time_t *__time2, time_t *__time1));
 
