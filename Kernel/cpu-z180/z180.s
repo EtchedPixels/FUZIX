@@ -60,10 +60,10 @@ z180_init_early:
         in0 a, (MMU_BBR)
         cp #(OS_BANK + FIRST_RAM_BANK)
         jr z, dommu             ; we're in position already
-        cp #15
-        jr nc, finalcopy        ; we're running above 64K
-        ; we are running at least in part below 64K -- copy us up to 128KB temporarily
-        ld a, #0x02
+        cp #(OS_BANK + FIRST_RAM_BANK + 0x10)
+        jr nc, finalcopy        ; greater than -- we're running above 64K
+        ; we are running at least in part in the first 64K of RAM -- copy us up to 128KB temporarily
+        ld a, #((0x20 + FIRST_RAM_BANK) >> 4)
         call copykernel
 .if DEBUGCOMMON
         ld a, #'<'
@@ -73,7 +73,8 @@ z180_init_early:
         ld a, #'='
         call outchar
 .endif
-        ld a, #0x20             ; reprogram the MMU to use the copy at 128KB
+        ; reprogram the MMU to use the copy at 128KB
+        ld a, #(0x20 + FIRST_RAM_BANK)
         out0 (MMU_BBR), a
         out0 (MMU_CBR), a
 .if DEBUGCOMMON
@@ -96,7 +97,8 @@ dommu:
         ld a, #'='
         call outchar
 .endif
-        ld a, #(OS_BANK + FIRST_RAM_BANK)   ; reprogram MMU to use copy at physical
+        ; reprogram the MMU to use the copy at bottom of RAM
+        ld a, #(OS_BANK + FIRST_RAM_BANK)
         out0 (MMU_BBR), a       ; low 60K
         out0 (MMU_CBR), a       ; upper 4K (including our stack)
 .if DEBUGCOMMON
