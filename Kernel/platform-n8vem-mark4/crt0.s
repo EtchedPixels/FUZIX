@@ -7,6 +7,7 @@
         ; we don't use them all, because their ordering is set
         ; when they are first seen.
         .area _CODE
+        .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
         .area _CONST
         .area _DATA

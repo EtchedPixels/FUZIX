@@ -57,3 +57,6 @@
 
 #define DEVICE_SD
 #define SD_DRIVE_COUNT 1
+
+/* We have a DS1302, we can read the time of day from it */
+#define CONFIG_RTC

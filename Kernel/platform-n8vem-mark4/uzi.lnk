@@ -36,4 +36,6 @@ platform-n8vem-mark4/devide.rel
 platform-n8vem-mark4/devsd.rel
 platform-n8vem-mark4/devsdspi.rel
 platform-n8vem-mark4/mbr.rel
+platform-n8vem-mark4/ds1302.rel
+platform-n8vem-mark4/ds1302-mark4.rel
 -e

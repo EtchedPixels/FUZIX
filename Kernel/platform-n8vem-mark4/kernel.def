@@ -10,6 +10,7 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 FIRST_RAM_BANK              .equ 0x80         ; low 512K of physical memory is ROM/ECB window.
 RAM_KB                      .equ 512
 Z180_IO_BASE                .equ 0x40
+MARK4_IO_BASE               .equ 0x80
 
 ; No standard clock speed for the Mark IV board, but this is a common choice.
 CPU_CLOCK_KHZ               .equ 36864        ; 18.432MHz * 2
