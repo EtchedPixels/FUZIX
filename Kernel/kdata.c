@@ -30,7 +30,7 @@ struct oft of_tab[OFTSIZE];	/* Open File Table */
 struct cinode i_tab[ITABSIZE];	/* In-core inode table */
 struct mount fs_tab[NMOUNTS];	/* In-core mount table */
 
-const syscall_t syscall_dispatch[UZI_SYSCALL_COUNT] = {
+const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	__exit,			/* FUZIX system call 0 */
 	_open,			/* FUZIX system call 1 */
 	_close,			/* FUZIX system call 2 */

@@ -1,5 +1,5 @@
 -mwxuy
--i uzi.ihx
+-i fuzix.ihx
 -b _DISCARD=0x4000
 -b _UDATA=0xFD00
 -b _CODE=0x6000

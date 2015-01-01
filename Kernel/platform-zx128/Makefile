@@ -28,4 +28,4 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	../tools/bintomdv ../uzi.tmp fuzix.cart fuzixboot.mdv
+	../tools/bintomdv ../fuzix.tmp fuzix.cart fuzixboot.mdv

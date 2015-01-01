@@ -142,6 +142,10 @@ version.c: makeversion
 
 tools/analysemap: tools/analysemap.c
 
+tools/bihx: tools/bihx.c
+
+tools/binmunge: tools/binmunge.c
+
 tools/memhogs: tools/analysemap
 	cp tools/analysemap tools/memhogs
 
@@ -164,16 +168,16 @@ cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
 tools/makejv3: tools/makejv3.c
 
 ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
-uzi.ihx: target $(OBJS) platform-$(TARGET)/uzi.lnk
-	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/uzi.lnk
+fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk
+	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-fuzix.bin: uzi.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
-	tools/analysemap <uzi.map
+fuzix.bin: fuzix.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
+	tools/analysemap <fuzix.map
 	-cp hogs.txt hogs.txt.old
-	tools/memhogs <uzi.map |sort -nr >hogs.txt
+	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
-	makebin -s 65536 -p uzi.ihx >uzi.tmp
-	tools/binman uzi.tmp uzi.map fuzix.bin
+	makebin -s 65536 -p fuzix.ihx >fuzix.tmp
+	tools/binman fuzix.tmp fuzix.map fuzix.bin
 	+make -C platform-$(TARGET) image
 else
 fuzix.bin: target $(OBJS) tools/decbdragon
@@ -181,7 +185,7 @@ fuzix.bin: target $(OBJS) tools/decbdragon
 endif
 
 clean:
-	rm -f $(OBJS) $(JUNK) uzi.cdb uzi.com uzi.tmp platform fuzix.bin uzi.map uzi.noi uzi.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 	+make -C cpm-loader clean
 

@@ -1,5 +1,5 @@
 -mwxuy
--i uzi.ihx
+-i fuzix.ihx
 -b _CODE=0x0088
 -b _CODE3=0xC000
 -b _COMMONMEM=0xF000
