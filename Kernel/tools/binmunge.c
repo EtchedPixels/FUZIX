@@ -18,8 +18,8 @@ unsigned char buf[NBANKS][65536];
 unsigned int size[NBANKS];
 FILE *fptr[NBANKS];
 int v;
-static int nextfix = 0xFE00;	/* FIXME */
-static int lastfix = 0x10000;
+static int nextfix;
+static int lastfix;
 
 struct stubmap {
   struct stubmap *next;
@@ -180,13 +180,21 @@ int main(int argc, char *argv[])
   char in[256];
   char bin[64];
   int banks;
+  int sb, ss;
 
   if (argv[1] && strcmp(argv[1], "-v") == 0)
     v = 1;
-  if (argc != 1 + v) {
-    fprintf(stderr, "%s -v\n", argv[0]);
+  if (argc != 2 + v) {
+    fprintf(stderr, "%s -v stubstart-size\n", argv[0]);
     exit(1);
   }
+  if (sscanf(argv[1+v], "%x-%x", &sb, &ss) != 2) {
+    fprintf(stderr, "%s: invalid stub info\n", argv[0]);
+    exit(1);
+  }
+
+  nextfix = sb;
+  lastfix = sb + (ss & ~3);
   
   r = fopen("relocs.dat", "r");
   if (r == NULL) {
