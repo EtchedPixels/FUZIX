@@ -1,0 +1,176 @@
+SDCC itself does not support code banking, only data banking. Even the data
+banking isn't truely "far" pointers so is mostly useless.
+
+To do code banking Fuzix uses a modifed version of the SDCC 3.4.1 linker
+code. This avoids the need to specify far functions and banks inline in the
+code itself an allows us to fix up the banking semi-automatically. Currently
+it's not smart enough to lay out the banks itself.
+
+
+How it works
+
+sdldz80 takes a -r flag. In the presence of the -r flag it assumes for now
+
+Code Segments:
+	_CODE		is "bank 1"
+	_CODE2		is "bank 2"
+	_CODE3		is "bank 3"
+	_VIDEO		is "bank 3"
+	_DISCARD	is "bank 3"
+	_COMMONMEM	is common (bank 0)
+
+Data Segments:
+	_CONST		is common (bank 0)
+	_INITIALIZED	is common (bank 0)
+	_DATA		is common (bank 0)
+	_FONT		is "bank 3"
+	_COMMONDATA	is common (bank 0)
+
+To be added is the notion of data segments containing only pointer
+references in segment. In particular so we can add _CONST2 which is data
+in bank2 for functions in bank2, and referenced only from bank2.
+
+That will improve syscall table behaviour.
+
+For each relocation sdldz80 checks if it is a relocation between two banks
+and the target bank is non zero. If it is then it outputs an entry
+giving the relocation information.
+
+For all relocations the linker then performs a normal unbanked fixup. The
+linker outputs all the data into a bihx format file which is basically
+packaged ihx. bihx then splits it into a set of ihx files for each bank plus
+relocs.dat which is the relocations. The ihx files are turned into binary
+images.
+
+binmunge reads the relocs and banks and converts as follows
+
+Code
+	0xCD (CALL) in the byte before a relocation is patched to an RST
+	RST8 - bank 1
+	RST10 - bank 2
+	RST18 - bank 3
+
+	0xC3 (JUMP) is turned into a jump into a stub
+
+	Anything else is considered an error
+
+Data
+	Each entry is turned into a stub. Identical entries are turned into
+	the same stub call
+
+Only 16bit relocations are processed. Weird tricks like &function >> 8 may
+break. Hopefully SDCC never decides to create one behind our back.
+
+
+Stubs
+
+The scripts scan for a _STUBS section. This is overwritten by the linker
+with 4 bytes per stub needed. Each stub takes the form
+
+	RSTxx
+	.dw address		; real target address
+	RET
+
+and the address in the data is replaced with the address of the stub.
+
+
+This is done to process tables. It means that function tables like device or
+syscall tables correctly generate inter bank calls.
+
+
+
+RST Handlers
+
+SDCC is completely unaware of the banking. While this makes near calls
+faster and avoids all the far stack crap, it means that some stack games are
+needed in the stubs in order to restore the previous bank on return. In
+particular because SDCC always uses stack based argument passing the stack
+needs shuffling.
+
+We have two options, one is to shuffle the stack around (and hide the extra
+info in the stack), the other is to keep a separate bank stack, remembering
+however that we regularly use other stacks and reload sp -> not fun.
+
+
+So we end up needing something like
+
+;
+;	On entry A is the target bank number, all other registers are
+;	cannon fodder except for IX (although we can trash IX providing
+;	we restore it on retv)
+;
+rstbank:
+	pop hl		; return address (pointer to real call vector)
+	pop bc		; first argument
+	exx
+	pop hl		; arguments 2-4 (potentially)
+	pop de
+	pop bc
+	exx
+	ld e, (hl)	; get the call target
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		; save the true return address 
+;
+;	We could take an IRQ after loading a with rombank but the IRQ
+;	return path will always put us back in the same bank, so the
+;	answer will still be correct at the end of the interrupt handler
+;
+	ld hl, rombank	; save the banking setting
+	ld h, (hl)	; doing it this way around we can
+	push hl		; preserve A 
+	exx		; push up to 4 arguments back
+	push bc
+	push de
+	push hl
+	exx
+	push bc
+	ld hl, #retv	; push our return address
+	push hl
+	ex de, hl
+;
+;	The ordering here is critical. If we take an IRQ as we bank the
+;	irq restore may see the rombank write before we do the out. This way
+;	around it will restore the new bank, and our out will be a no-op
+;
+	ld (rombank), a
+	out (bank), a
+	jp (hl)		; invoke the banked C method
+
+retv:	pop de		; pull off 4 arguments in DE and HLDEBC'
+	exx
+	pop hl	
+	pop de
+	pop bc
+	exx
+	pop af		; pull off the banking info
+	; Ordering here is also vital for IRQ
+	ld bc, #0x7ffd	
+	ld (rombank), a	; unbank
+	out (c), a
+	pop bc		; recover real return address in BC
+	push de		; now push the 4 potential arguments back
+	exx
+	push bc
+	push de
+	push hl
+	exx
+	push bc		; hl must be preserved so return via push bc/ret
+	ret
+
+	.org 8
+rst8:	ld a, #0x18	; Screen in bank 7, 48K rom present, bank 0
+	jp rstbank
+
+	.org 0x10
+rst10:	ld a, #0x19	; Screen in bank 7, 48K rom present, bank 1
+	jp rstbank
+
+	.org 0x18
+rst18:	ld a, #23	; Screen in bank 7, 48K rom present, bank 7
+	jp rstbank
+
+
+
+
