@@ -65,6 +65,9 @@ void updatetod(void)
 #else
 
 static uint8_t rtcsec;
+#ifdef CONFIG_RTC_INTERVAL
+static uint8_t tod_deci;
+#endif
 
 /*
  *	We use the seconds counter on the RTC as a time counter and lock our
@@ -77,8 +80,18 @@ static uint8_t rtcsec;
  */
 void updatetod(void)
 {
-	uint8_t rtcnew = rtc_secs();	/* platform function */
+	uint8_t rtcnew;
 	int8_t slide;
+
+#ifdef CONFIG_RTC_INTERVAL
+	/* on some platforms reading the RTC is expensive so we don't do it
+	   every decisecond. */
+	if(++tod_deci != CONFIG_RTC_INTERVAL)
+	    return;
+	tod_deci = 0;
+#endif
+
+	rtcnew = rtc_secs();		/* platform function */
 
 	if (rtcnew == rtcsec)
 		return;
