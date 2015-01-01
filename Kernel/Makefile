@@ -13,7 +13,7 @@ UNAME_S := $(shell uname -s)
 
 ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
 export CROSS_AS=sdasz80
-export CROSS_LD=sdldz80
+export CROSS_LD=tools/bankld/sdldz80
 export CROSS_CC=sdcc
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --Werror --stack-auto --constseg CONST
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -mz80 -I$(ROOT_DIR)/cpu-z80 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --Werror --stack-auto --constseg CONST
@@ -162,13 +162,16 @@ tools/decbdragon: tools/decbdragon.c
 
 tools/bintomdv: tools/bintomdv.c
 
+tools/bankld/sdldz80:
+	(cd tools/bankld; make)
+
 cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
 	+make -C cpm-loader
 
 tools/makejv3: tools/makejv3.c
 
 ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
-fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk
+fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
 fuzix.bin: fuzix.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
@@ -176,8 +179,8 @@ fuzix.bin: fuzix.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv 
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
-	makebin -s 65536 -p fuzix.ihx >fuzix.tmp
-	tools/binman fuzix.tmp fuzix.map fuzix.bin
+	tools/bihx fuzix.ihx
+	tools/binprep
 	+make -C platform-$(TARGET) image
 else
 fuzix.bin: target $(OBJS) tools/decbdragon
@@ -190,4 +193,5 @@ clean:
 	+make -C cpm-loader clean
 
 clean-all: clean
+	(cd tools/bankld; make clean)
 	$(foreach target,$(TARGET_LIST), make -C $(target) clean;)
