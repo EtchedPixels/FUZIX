@@ -34,4 +34,6 @@ devsys.rel
 platform-p112/devtty.rel
 platform-p112/devide.rel
 platform-p112/mbr.rel
+platform-p112/ds1302.rel
+platform-p112/ds1302-p112.rel
 -e
