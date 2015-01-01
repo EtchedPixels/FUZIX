@@ -175,7 +175,6 @@ fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
 fuzix.bin: fuzix.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
-	tools/analysemap <fuzix.map
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
