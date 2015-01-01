@@ -1,3 +1,17 @@
+/* Simple IDE interface */
+#define CONFIG_IDE
+#define IDE_REG_DATA		0xA3
+#define IDE_REG_ERROR		0xA7
+#define IDE_REG_FEATURES	0xA7
+#define IDE_REG_SEC_COUNT	0xAB
+#define IDE_REG_LBA_0		0xAF
+#define IDE_REG_LBA_1		0xB3
+#define IDE_REG_LBA_2		0xB7
+#define IDE_REG_LBA_3		0xBB
+#define IDE_REG_DEVHEAD		0xBB
+#define IDE_REG_STATUS		0xBF
+#define IDE_REG_COMMAND		0xBF
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -37,7 +51,7 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    0xC000  /* also data base */
+#define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0xC000  /* also data base */
 #define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   16	  /* Memory needed per process */

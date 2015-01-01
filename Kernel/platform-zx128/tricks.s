@@ -251,13 +251,6 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
-;
-;	We can keep a stack in common because we will complete our
-;	use of it before we switch common block. In this case we have
-;	a true common so it's even easier.
-;
-	.ds 128
-_swapstack:
 
 ;
 ;	This is related so we will keep it here. Copy the process memory
@@ -267,12 +260,16 @@ _swapstack:
 ;
 ;	Assumption - fits into a fixed number of whole 256 byte blocks
 ;
+;
+;	Note: this needs reviewing. We now have a lot more program memory
+;	we can use with a lazy copying model
+;
 bankfork:
 ;	ld bc, #(0x4000 - 768)		;	16K minus the uarea stash
 
 	ld b, #0x3D		; 40 x 256 minus 3 sets for the uarea stash
-	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
+	ld hl, #0xC000		; base of memory to fork (vectors included)
 	push bc			; Save our counter and also child offset
 	push hl
 	ld bc, #0x7ffd
@@ -302,5 +299,11 @@ bankfork_1:
 ;
 ;	For the moment
 ;
+	.area _COMMONDATA
 bouncebuffer:
 	.ds 256
+;	We can keep a stack in common because we will complete our
+;	use of it before we switch common block. In this case we have
+;	a true common so it's even easier. We never use both at once
+;	so share with bouncebuffer
+_swapstack:

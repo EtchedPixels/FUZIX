@@ -1,14 +1,6 @@
 ;
 ;    ZX Spectrum 128 hardware support
 ;
-;
-;    This goes straight after udata for common. Because of that the first
-;    256 bytes get swapped to and from disk with the uarea (512 byte disk
-;    blocks). This isn't a problem but don't put any variables in here.
-;
-;    If you make this module any shorter, check what follows next
-;
-
 
         .module zx128
 
@@ -44,7 +36,7 @@
         .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xF000 upwards)
+; COMMON MEMORY BANK (below 0xC000)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
@@ -52,8 +44,6 @@ _trap_monitor:
 	di
 	halt
 
-        ld a, #128
-        ; out (29), a ; TODO: go where? BASIC48?
 platform_interrupt_all:
         ret
 
@@ -61,7 +51,7 @@ _trap_reboot:
         rst 0
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (above 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
         .area _CODE
 
@@ -157,6 +147,15 @@ map_restore:
         ld a, (map_store)
         jr switch_bank
 
+
+; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
+outchar:
+        out (#0x15), A
+        ret
+_kernel_flag:
+        .db 1
+
+	.area _COMMONDATA
 current_map:                ; place to store current page number. Is needed
         .db 0               ; because we have no ability to read 7ffd port
                             ; to detect what page is mapped currently 
@@ -169,10 +168,3 @@ place_for_b:                ; And BC - here
         .db 0
 place_for_c:
         .db 0
-
-; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
-outchar:
-        out (#0x15), A
-        ret
-_kernel_flag:
-        .db 1

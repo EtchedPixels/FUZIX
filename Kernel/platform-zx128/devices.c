@@ -5,13 +5,18 @@
 #include <devsys.h>
 #include <vt.h>
 #include <devmdv.h>
+#include <devide.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/fd		Floppy disc block devices, or microdrive etc */
   {  mdv_open,     mdv_close,    mdv_read,   mdv_write,   no_ioctl },
+#ifdef CONFIG_IDE
   /* 1: /dev/hd		Hard disc block devices */
-  {  no_open,      no_close,    no_rdwr,   no_rdwr,   no_ioctl },
+  {  devide_open,  no_close, devide_read,   devide_write,   no_ioctl },
+#else
+  {  no_open,  no_close, no_read,   no_write,   no_ioctl },
+#endif
   /* 2: /dev/tty	TTY devices */
   {  tty_open,     tty_close,   tty_read,  tty_write,  vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
@@ -33,5 +38,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-
+#ifdef CONFIG_IDE
+  devide_init();
+#endif
 }

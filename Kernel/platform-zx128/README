@@ -1,5 +1,43 @@
 An FUZIX target for ZX Spectrum 128.
 
+This is mid rework as a banked platform test be warned.
+
+The new memory layout looks like this
+
+
+0000-3FFF	ROM (we hack it a bit to allow for our RST and IRQ vectors
+	        but in theory we can avoid that)
+4000-7FFF	Kernel data, common read/write space, constants, common read
+		only, plenty of space
+8000-BFFF	_DISCARD area - blown away when we exec init
+C000-FFFF
+	0:	Kernel CODE (full)
+	1:	Kernel CODE2 (full)
+	2:	Mapped at 0x8000-0xBFFF
+	3:	User process
+	4:	User process
+	5:	Mapped at 0x4000-0x7FFF
+	6:	User process
+	7:	CODE3, Display + Video, Font (fairly full)
+
+Which gives us the ability to run 16K and 32K processes although we'd need
+to do bank exchanges to keep 2 x32K in memory at once (one in 2/3 one in
+4/7 and doing a block exchange of the memory).
+
+Making the base kernel use the low ROM space is surprisingly pointless. We
+could just about squash it in with screen at 0x4000 and claim back page 7.
+
+Moving the entire kernel into a banked cartridge gets us more banks for user
+processes but leaves us with common at 0x4000 so its tight below 0x8000
+
+The other half of the problem on the ZX Spectrum128 is the fact binaries
+must be linked with a different base (0xC000 for 16K, 0x8000 for 32K).
+
+
+
+
+
+
 Big part of the code was taken from z80pack and msx1 ports.
 
 ZX Spectrum has a memory layout like follows:

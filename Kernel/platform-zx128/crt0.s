@@ -1,29 +1,37 @@
-; 2013-12-18 William R Sowerbutts
-
         .module crt0
 
-        ; Ordering of segments for the linker.
-        ; WRS: Note we list all our segments here, even though
-        ; we don't use them all, because their ordering is set
-        ; when they are first seen.
-        .area _CODE
-        .area _COMMONMEM
-        .area _DATA
-        .area _VIDEO
-        .area _CONST
-        .area _FONT
+	; Loaded at 0x4000 and the lowest available RAM (the display we keep
+	; in bank 7 and mapped high).
+	.area _COMMONDATA
         .area _INITIALIZED
+        .area _DATA
         .area _BSEG
         .area _BSS
+	; These are loaded as low as we can in memory. If we are using an
+	; interface 1 cartridge then _CONST to the end of _STUBS can live in
+	; ROM. Right now we still need to fiddle with RO as we don't use the
+	; IM2 hack and we'll need to modify SDCC and the bank linker not to
+	; use RST to avoid this.
+        .area _CONST
+        .area _COMMONMEM
+	.area _STUBS
         .area _HEAP
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+        .area _CODE
+	.area _CODE2
+	;
+	; Code3 sits above the display area along with the font and video
+	; code so that they can access the display easily.
+	;
+	.area _CODE3
+        .area _VIDEO
+        .area _FONT
+	; Discard is dumped in at 0x8000 and will be blown away later.
         .area _DISCARD
-	; In high space
-        .area _CODE2
 
         ; imported symbols
         .globl _fuzix_main
@@ -143,3 +151,6 @@ boot_stack .equ 0xc000
 stop:   halt
         jr stop
 
+	.area _STUBS
+stubs:
+	.ds 384
