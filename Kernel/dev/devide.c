@@ -73,9 +73,13 @@ static uint8_t  ide_drives_present; /* bitmap */
 static uint32_t ide_partition_start[DRIVE_COUNT];
 static uint8_t  ide_slice_count[DRIVE_COUNT];
 
+#ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
-__sfr __at IDE_REG_COMMAND   ide_reg_command;
+#endif
+#ifdef IDE_REG_CONTROL
 __sfr __at IDE_REG_CONTROL   ide_reg_control;
+#endif
+__sfr __at IDE_REG_COMMAND   ide_reg_command;
 __sfr __at IDE_REG_DATA      ide_reg_data;
 __sfr __at IDE_REG_DEVHEAD   ide_reg_devhead;
 __sfr __at IDE_REG_ERROR     ide_reg_error;
@@ -275,6 +279,8 @@ void devide_init_drive(uint8_t drive)
     ide_partition_start[drive] = 0;
     ide_slice_count[drive] = 0;
 
+    /* Reset depends upon the presence of alt control, which is optional */
+#ifdef IDE_REG_CONTROL
     /* reset the drive */
     ide_reg_devhead = select;
     ide_reg_control = 0x06; /* assert reset, no interrupts */
@@ -283,6 +289,7 @@ void devide_init_drive(uint8_t drive)
     devide_delay();
     if(!devide_wait(IDE_STATUS_READY))
         return;
+#endif
 
 #ifdef IDE_8BIT_ONLY
     /* set 8-bit mode -- mostly only supported by CF cards */
