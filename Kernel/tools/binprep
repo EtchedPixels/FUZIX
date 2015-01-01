@@ -1,8 +1,11 @@
 #!/bin/sh
 tools/bihx fuzix.ihx
 if grep -q _STUBS fuzix.map ; then
-	tools/bmunge
+	BASE=`grep "s__STUBS " fuzix.map |cut -b10-13`
+	LEN=`grep "l__STUBS " fuzix.map |cut -b10-13`
+	tools/binmunge $BASE-$LEN
 else
+	tools/analysemap <fuzix.map
 	makebin -s 65536 -p common.ihx >fuzix.tmp
 	tools/binman fuzix.tmp fuzix.map fuzix.bin
 fi
