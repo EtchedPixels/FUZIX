@@ -83,7 +83,7 @@ ctcloop:    out (c), b			; register
 	    out (0x89), a		; data
 	    inc hl
 	    dec b
-	    jp po, ctcloop
+	    jp p, ctcloop
 
    	    ; clear screen
 	    ld hl, #0xF800
