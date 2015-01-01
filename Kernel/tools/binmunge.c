@@ -146,6 +146,8 @@ int stub_code(char *name)
     return 1;
   if(strcmp(name, "_DISCARD") == 0)
     return 1;
+  if(strncmp(name, "_BOOT", 5) == 0)
+    return 1;
   /* Data */
   if(strcmp(name, "_INITIALIZER") == 0)
     return 0;
