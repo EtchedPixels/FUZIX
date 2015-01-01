@@ -9,6 +9,7 @@
 #include <signal.h>
 #endif
 #include <sys/stat.h>
+#include <sys/times.h>
 
 extern int errno;
 extern int syscall(int callno, ...);
