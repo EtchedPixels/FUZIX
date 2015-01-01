@@ -1,25 +1,25 @@
 -mwxuy
--i uzi.ihx
+-i fuzix.ihx
 -b _CODE=0x0100
 -b _DISCARD=0xD000
 -b _COMMONMEM=0xE800
 -l z80
-platform-trs80/crt0.rel
-platform-trs80/commonmem.rel
-platform-trs80/trs80.rel
+platform-ubee/crt0.rel
+platform-ubee/commonmem.rel
+platform-ubee/ubee.rel
 start.rel
 version.rel
 lowlevel-z80.rel
 usermem.rel
 usermem_std-z80.rel
-platform-trs80/tricks.rel
-platform-trs80/main.rel
+platform-ubee/tricks.rel
+platform-ubee/main.rel
 timer.rel
 kdata.rel
-platform-trs80/devfd.rel
-platform-trs80/floppy.rel
-platform-trs80/devhd.rel
-platform-trs80/devices.rel
+platform-ubee/devfd.rel
+platform-ubee/floppy.rel
+platform-ubee/devhd.rel
+platform-ubee/devices.rel
 devio.rel
 filesys.rel
 process.rel
@@ -35,6 +35,6 @@ swap.rel
 bankfixed.rel
 vt.rel
 devsys.rel
-platform-trs80/devlpr.rel
-platform-trs80/devtty.rel
+platform-ubee/devlpr.rel
+platform-ubee/devtty.rel
 -e

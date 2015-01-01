@@ -387,7 +387,7 @@ void unix_syscall(void)
 	/* Fuzix saves the Stack Pointer and arguments in the
 	 * Assembly Language Function handler in lowlevel.s
 	 */
-	if (udata.u_callno >= UZI_SYSCALL_COUNT) {
+	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
 		udata.u_error = EINVAL;
 	} else {
 #ifdef DEBUG
