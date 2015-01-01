@@ -1021,7 +1021,7 @@ parse()
 
                                 case 'r':
                                 case 'R':
-                                        if (is_sdld() && !(TARGET_IS_Z80 || TARGET_IS_GB))
+                                        if (is_sdld() && !TARGET_IS_GB)
                                                 rflag = 1;
                                         else
                                                 goto err;
