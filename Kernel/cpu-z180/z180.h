@@ -49,9 +49,17 @@ __sfr __at (Z180_IO_BASE + 0x1D) ASCI_ASTC1H;   /* ASCI time constant register c
 __sfr __at (Z180_IO_BASE + 0x0A) CSIO_CNTR;     /* CSI/O control/status register              */
 __sfr __at (Z180_IO_BASE + 0x0B) CSIO_TRDR;     /* CSI/O transmit/receive data register       */
 
+/* On Z80182 the MIMIC, ESCC, PIA and MISC registers are at fixed addresses */
 __sfr __at (0xE0)                ESCC_CTRL_A;   /* ESCC Channel A control register            */
 __sfr __at (0xE1)                ESCC_DATA_A;   /* ESCC Channel A data register               */
 __sfr __at (0xE2)                ESCC_CTRL_B;   /* ESCC Channel B control register            */
 __sfr __at (0xE3)                ESCC_DATA_B;   /* ESCC Channel B data register               */
+
+__sfr __at (0xED)                PORT_A_DDR;    /* Port A data direction register             */
+__sfr __at (0xEE)                PORT_A_DATA;   /* Port A data register                       */
+__sfr __at (0xE4)                PORT_B_DDR;    /* Port B data direction register             */
+__sfr __at (0xE5)                PORT_B_DATA;   /* Port B data register                       */
+__sfr __at (0xDD)                PORT_C_DDR;    /* Port C data direction register             */
+__sfr __at (0xDE)                PORT_C_DATA;   /* Port C data register                       */
 
 #endif

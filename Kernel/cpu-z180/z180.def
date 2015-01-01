@@ -63,6 +63,13 @@ ESCC_DATA_A                 .equ 0xE1                   ; ESCC Channel A data re
 ESCC_CTRL_B                 .equ 0xE2                   ; ESCC Channel B control register
 ESCC_DATA_B                 .equ 0xE3                   ; ESCC Channel B data register
 
+PORT_A_DDR                  .equ 0xED                   ; Port A data direction register
+PORT_A_DATA                 .equ 0xEE                   ; Port A data register
+PORT_B_DDR                  .equ 0xE4                   ; Port B data direction register
+PORT_B_DATA                 .equ 0xE5                   ; Port B data register
+PORT_C_DDR                  .equ 0xDD                   ; Port C data direction register
+PORT_C_DATA                 .equ 0xDE                   ; Port C data register
+
 Z182_SYSCONFIG              .equ 0xEF                   ; System Configuration Register
 Z182_ROMBR                  .equ 0xE8                   ; ROMBR register
 
