@@ -70,6 +70,7 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
 #endif
     }
     ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
     irqrestore(irq);
 }
 
