@@ -171,6 +171,10 @@ static int bankmagic(struct areax *ax)
 {
         struct area *a = ax->a_bap;
         int c;
+
+        /* Not banked */
+        if (rflag == 0)
+                return 0;
         
         /* Hack: fix me up */
         if (strcmp(a->a_id, "_FONT") == 0)
