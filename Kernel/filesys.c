@@ -1011,7 +1011,7 @@ static struct mount *newfstab(void)
     struct mount *m = fs_tab;
     int i;
     for (i = 0; i < NMOUNTS; i++) {
-        if (m->m_dev != NO_DEVICE)
+        if (m->m_dev == NO_DEVICE)
             return m;
         m++;
     }
