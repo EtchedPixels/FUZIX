@@ -38,6 +38,14 @@ if [ ! -e ${UTILDIR}/init ]; then
 	exit 1
 fi
 
+if [ -e $DISK1 ]; then
+	rm $DISK1
+fi
+
+if [ -e $DISK2 ]; then
+	rm $DISK2
+fi
+
 $MKFS $DISK1 8 390
 if [ $? != 0 ]; then
 	echo "$0: Error creating first disk"
