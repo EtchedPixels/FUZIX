@@ -4,7 +4,7 @@
 
 #define _BIG_MACHINE_
 
-#include <sgtty.h>
+#include <termios.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -109,7 +109,7 @@ extern int COLS;			/* terminal width */
 extern bool NONL;			/* \n causes CR too ? */
 extern WINDOW *curscr;			/* the current screen image */
 extern WINDOW *stdscr;			/* the default screen window */
-extern struct sgttyb _orig_tty, _tty;
+extern struct termios _orig_tty, _tty;
 
 extern unsigned int ACS_ULCORNER;	/* terminal dependent block grafic */
 extern unsigned int ACS_LLCORNER;	/* charcters.  Forget IBM, we are */
