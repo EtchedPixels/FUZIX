@@ -4,7 +4,8 @@ AR = sdar
 LINKER = sdldz80
 #CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
 CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
-#--oldralloc
+# for stuff that gives sdcc nightmares
+CC_NOOPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../include
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
 SRC_CRT0 = crt0.s
@@ -38,7 +39,7 @@ SRC_C += cfmakeraw.c cfspeed.c revoke.c
 # scanf
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
 # Seems to give the compiler a hard time
-#SRC_C += regexp.c
+SRC_HARD += regexp.c
 # Not supported yet
 #SRC_C += initgroups.c
 # Pieces we inherit in this case from the compiler library instead
@@ -48,7 +49,8 @@ SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
 OBJ_C = $(SRC_C:.c=.rel)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
+OBJ_HARD = $(SRC_HARD:.c=.rel)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
 all: syslib.lib crt0.rel
 
@@ -82,6 +84,8 @@ $(OBJ_CRT0):%.rel: %.s
 $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
+$(OBJ_HARD):%.rel: %.c
+	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
 clean:
 	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l
