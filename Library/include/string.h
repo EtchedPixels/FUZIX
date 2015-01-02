@@ -39,6 +39,7 @@ extern void * memmove __P ((void*, const void*, size_t));
 extern char *index __P ((const char *, int));
 extern char *rindex __P ((const char *, int));
 extern void bcopy __P ((const void*, void*, size_t));
+extern void bzero __P ((void*, int));
 
 /* Othe common BSD functions */
 extern char *strpbrk __P ((const char *, const char *));
