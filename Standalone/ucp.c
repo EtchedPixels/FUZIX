@@ -13,6 +13,7 @@ HP
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <libgen.h>
 #include "fuzix_fs.h"
 
 #define UCP_VERSION  "1.1ac"
@@ -20,6 +21,7 @@ HP
 int16_t *syserror = (int16_t*)&udata.u_error;
 static char cwd[100];
 static char line[128];
+char *nextline = NULL;
 char *month[] =
 { "Jan", "Feb", "Mar", "Apr",
     "May", "Jun", "Jul", "Aug",
@@ -48,6 +50,8 @@ int main(argc, argval)
     int  rdev;
     char cmd[30], arg1[30], arg2[30], arg3[30];
     int  count;
+    int  interactive;
+    int  pending_line = 0;
     struct filesys fsys;
     int  j, retc;
     /*--    char *argv[5];--*/
@@ -58,8 +62,19 @@ int main(argc, argval)
        else
        rdev = atoi(argval[1]);
        */
-    if (argc > 1) 
+    if (argc == 2) {
         fd_open(argval[1]);
+        interactive = 1;
+    } else if (argc == 3) {
+        fd_open(argval[1]);
+        strncpy(&line[0], argval[2], 127);
+        line[127] = '\0';
+        interactive = 0;
+    } else {
+        printf("Usage: ucp FILE [COMMAND]\n");
+        exit(1);
+    }
+
     rdev = 0;
 
     xfs_init(rdev);
@@ -67,19 +82,42 @@ int main(argc, argval)
 
     printf("Fuzix UCP version " UCP_VERSION ". Type ? for help.\n");
 
-    for (;;) {
-        printf("unix: ");
-        if (fgets(line, 128, stdin) == NULL) {
-            xfs_end();
-            exit(1);
+    do {
+        if (interactive && !pending_line) {
+            printf("unix: ");
+            if (fgets(line, 128, stdin) == NULL) {
+                xfs_end();
+                exit(1);
+            }
         }
+
+        if (!pending_line) {
+            nextline = strchr(&line[0], ';');
+	    if (nextline != NULL) {
+                nextline[0] = '\0';
+                nextline++;
+            }
+        }
+
         cmd[0] = '\0';
         *arg1 = '\0';
         arg2[0] = '\0';
         arg3[0] = '\0';
-        count = sscanf(line, "%s %s %s %s", cmd, arg1, arg2, arg3);
-        if (count == 0 || cmd[0] == '\0')
-            continue;
+
+        if (pending_line) {
+            count = sscanf(nextline, "%s %s %s %s", cmd, arg1, arg2, arg3);
+            nextline = NULL;
+            pending_line = 0;
+            if (count == 0 || cmd[0] == '\0')
+                continue;
+        } else {
+            count = sscanf(line, "%s %s %s %s", cmd, arg1, arg2, arg3);
+            if (nextline != NULL) {
+                pending_line = 1;
+            }
+            if (count == 0 || cmd[0] == '\0')
+                continue;
+        }
 
         _sync();
 
@@ -92,15 +130,15 @@ int main(argc, argval)
 
             case 1:         /* ls */
                 if (*arg1)
-                    ls(arg1);
+                    retc = ls(arg1);
                 else
-                    ls(".");
+                    retc = ls(".");
                 break;
 
             case 2:         /* cd */
                 if (*arg1) {
                     strcpy(cwd, arg1);
-                    if (_chdir(arg1) != 0) {
+                    if ((retc = _chdir(arg1)) != 0) {
                         printf("cd: error number %d\n", *syserror);
                     }
                 }
@@ -108,52 +146,52 @@ int main(argc, argval)
 
             case 3:         /* mkdir */
                 if (*arg1)
-                    mkdir(arg1);
+                    retc = mkdir(arg1);
                 break;
 
             case 4:         /* mknod */
                 if (*arg1 && *arg2 && *arg3)
-                    mknod(arg1, arg2, arg3);
+                    retc = mknod(arg1, arg2, arg3);
                 break;
 
             case 5:         /* chmod */
                 if (*arg1 && *arg2)
-                    chmod(arg1, arg2);
+                    retc = chmod(arg1, arg2);
                 break;
 
             case 6:         /* get */
                 if (*arg1)
-                    get(arg1, 0);
+                    retc = get(arg1, 0);
                 break;
 
             case 7:         /* bget */
                 if (*arg1)
-                    get(arg1, 1);
+                    retc = get(arg1, 1);
                 break;
 
             case 8:         /* put */
                 if (*arg1)
-                    put(arg1, 0);
+                    retc = put(arg1, 0);
                 break;
 
             case 9:         /* bput */
                 if (*arg1)
-                    put(arg1, 1);
+                    retc = put(arg1, 1);
                 break;
 
             case 10:        /* type */
                 if (*arg1)
-                    type(arg1);
+                    retc = type(arg1);
                 break;
 
             case 11:        /* dump */
                 if (*arg1)
-                    fdump(arg1);
+                    retc = fdump(arg1);
                 break;
 
             case 12:        /* rm */
                 if (*arg1)
-                    unlink(arg1);
+                    retc = unlink(arg1);
                 break;
 
             case 13:        /* df */
@@ -172,32 +210,38 @@ int main(argc, argval)
 
             case 14:        /* rmdir */
                 if (*arg1)
-                    rmdir(arg1);
+                    retc = rmdir(arg1);
                 break;
 
             case 15:        /* mount */
                 if (*arg1 && *arg2)
-                    if (_mount(arg1, arg2, 0) != 0) {
+                    if ((retc = _mount(arg1, arg2, 0)) != 0) {
                         printf("Mount error: %d\n", *syserror);
                     }
                 break;
 
             case 16:        /* umount */
                 if (*arg1)
-                    if (_umount(arg1) != 0) {
+                    if ((retc = _umount(arg1)) != 0) {
                         printf("Umount error: %d\n", *syserror);
                     }
                 break;
 
             case 50:        /* help */
                 usage();
+                retc = 0;
                 break;
 
             default:        /* ..else.. */
                 printf("Unknown command, type ? for help.\n");
+                retc = -1;
                 break;
         }           /* End Switch */
-    }
+    } while (interactive || pending_line);
+
+    _sync();
+
+    return retc;
 }
 
 
@@ -473,7 +517,7 @@ int get( char *arg, int binflag)
         printf("Source file not found\n");
         return (-1);
     }
-    d = _creat(arg, 0666);
+    d = _creat(basename(arg), 0666);
     if (d < 0) {
         printf("Cant open unix file error %d\n", *syserror);
         return (-1);
