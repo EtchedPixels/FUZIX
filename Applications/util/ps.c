@@ -1,6 +1,9 @@
-#include <stdio.h>
+#include <proc.h>
 #include <pwd.h>
-#include <unix.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <strings.h>
+#include <unistd.h>
 
 #define	F_a	0x01		/* all users flag */
 #define	F_h	0x02		/* no header flag */
@@ -27,10 +30,9 @@ char *mapstat(char s)
 
 int do_ps(void)
 {
-    ptptr pp;
     int i, j, uid, pfd, ptsize;
-    int open(), ioctl(), read(), close(), getuid();
     struct passwd *pwd;
+    struct p_tab *pp;
     struct p_tab ptab[PTABSIZE];
     char name[10], uname[20];
 
@@ -50,8 +52,8 @@ int do_ps(void)
     if (ptsize > PTABSIZE) ptsize = PTABSIZE;
     
     for (i = 0; i < ptsize; ++i) {
-        if (read(pfd, &ptab[i], sizeof(struct p_tab)) !=
-                                sizeof(struct p_tab)) {
+        if (read(pfd, (char * ) &ptab[i], sizeof(struct p_tab)) !=
+                                          sizeof(struct p_tab)) {
             fprintf(stderr, "ps: error reading from /dev/proc\n");
             close(pfd);
             return 1;
