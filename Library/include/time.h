@@ -39,17 +39,18 @@ extern clock_t clock __P ((void));
 extern time_t mktime __P ((struct tm * __tp));
 extern double difftime __P ((time_t *__time2, time_t *__time1));
 
-extern time_t *gtime(time_t *tvec);
 
 extern void __tm_conv __P((struct tm *tmbuf, time_t *t, int offset));
-extern void __asctime __P((char *, struct tm *));
 extern char *asctime __P ((struct tm * __tp));
+extern char *asctime_r __P((struct tm *, char * __buf));
 extern char *ctime __P ((time_t * __tp));
+extern char *ctime_r __P ((time_t * __tp, char * __buf));
 extern void tzset __P ((void));
 
 extern struct tm *gmtime __P ((time_t *__tp));
 extern struct tm *localtime __P ((time_t * __tp));
-extern unsigned long convtime __P ((time_t *time_field));
+extern struct tm *gmtime_r(time_t *tvec, struct tm *result);
+extern struct tm *localtime_r(time_t *tvec, struct tm *result);
 
 typedef int clockid_t;
 

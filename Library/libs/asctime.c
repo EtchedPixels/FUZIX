@@ -16,7 +16,7 @@ static void hit(char *buf, int val)
 static char days[] = "SunMonTueWedThuFriSat";
 static char mons[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
-void __asctime(char *buffer, struct tm *ptm)
+char *asctime_r(struct tm *ptm, char *buffer)
 {
 	int year;
 
@@ -38,6 +38,7 @@ void __asctime(char *buffer, struct tm *ptm)
 	hit(buffer + 21, year / 100);
 	hit(buffer + 22, year / 10);
 	hit(buffer + 23, year);
+	return buffer;
 }
 
 /* asctime - convert date and time to ascii.
@@ -49,6 +50,5 @@ char *asctime(struct tm *timeptr)
 
 	if (timeptr == 0)
 		return 0;
-	__asctime(timebuf, timeptr);
-	return timebuf;
+	return asctime_r(timeptr, timebuf);
 }
