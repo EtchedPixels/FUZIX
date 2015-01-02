@@ -46,4 +46,3 @@ extern pid_t waitpid __P((pid_t pid, int *__stat_loc, int options));
 #define	wait(statloc)	waitpid(WAIT_ANY, statloc, 0)
 
 #endif
-
