@@ -18,6 +18,11 @@ typedef unsigned int uint;
 typedef uint16_t size_t;
 #endif
 
+#ifndef __SSIZE_T_DEFINED
+#define __SSIZE_T_DEFINED
+typedef int16_t ssize_t;
+#endif
+
 #if !defined (__STDC__)
 /* C types */
 typedef unsigned long uint32_t;
