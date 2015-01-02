@@ -65,4 +65,6 @@ extern void sigrelse(int sig);
 extern void sigignore(int sig);
 extern sighandler_t sigset(int sig, sighandler_t disp);
 
+typedef int sig_atomic_t;
+
 #endif
