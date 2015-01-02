@@ -274,7 +274,7 @@ void execute(int set_mp, char *file)
 	pid_t pid;
 	int r, status;
 	int last;
-	void (*isav)(signal_t sig), (*qsav)(signal_t sig), (*tsav)(signal_t sig);
+	void (*isav)(int sig), (*qsav)(int sig), (*tsav)(int sig);
 
 	if (tty) {
 		/* Must run this through a pager. */

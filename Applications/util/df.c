@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	}
     } else {
 	for (j = 0; j < 8; ++j) {
-	    if ((_getfsys(j, (char *) &fsys) == 0) && fsys.s_mounted) {
+	    if ((_getfsys(j, &fsys) == 0) && fsys.s_mounted) {
 		Total = iflag ? 8 * (fsys.s_isize - 2) : fsys.s_fsize;
 		Used  = iflag ? Total - fsys.s_tinode :
 		                Total - fsys.s_isize - fsys.s_tfree;

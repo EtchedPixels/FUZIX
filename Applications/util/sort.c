@@ -197,7 +197,7 @@ int length(char *line);
 void copy(char *dest, char *src);
 char *msbrk(int size);
 void mbrk(char *address);
-void catch(signal_t dummy);
+void catch(int dummy);
 
 /* Table of all chars. 0 means no special meaning. */
 char table[256] = {
@@ -1175,7 +1175,7 @@ void mbrk(char *address)
   if (brk(address) == -1) error(TRUE, "Cannot reset memory", NIL_PTR);
 }
 
-void catch(signal_t dummy) /* to satisfy the prototype */
+void catch(int dummy) /* to satisfy the prototype */
 {
   register int i;
 
