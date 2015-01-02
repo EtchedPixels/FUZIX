@@ -56,6 +56,7 @@ libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
 syscall.l: fuzix/syslib.l
+	../tools/syscall
 	(cd fuzix; make)
 	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
@@ -83,5 +84,5 @@ $(OBJ_C):%.rel: %.c
 
 
 clean:
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l
 	(cd fuzix; make clean)
