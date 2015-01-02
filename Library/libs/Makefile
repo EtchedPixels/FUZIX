@@ -32,7 +32,7 @@ SRC_C += setvbuf.c settimeofday.c sleep.c sprintf.c stat.c stdio0.c
 SRC_C += strcasecmp.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnicmp.c strsep.c
 SRC_C += strtod.c strtol.c system.c time.c tmpnam.c ttyname.c
-SRC_C += tzset.c ungetc.c utent.c utsname.c
+SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # tty layer

@@ -3,7 +3,6 @@
 
 #include <time.h>
 
-#ifdef _BSD_SOURCE
 
 typedef unsigned long suseconds_t;
 
@@ -11,6 +10,10 @@ struct timeval {
   time_t tv_sec;
   suseconds_t tv_usec;
 };
+
+extern int utimes(const char *filename, const struct timeval times[2]);
+
+#ifdef _BSD_SOURCE
 
 extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 extern int settimeofday(struct timeval *tv, const struct timezone *tz);
