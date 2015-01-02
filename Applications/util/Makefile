@@ -77,8 +77,6 @@ SRCS  = banner.c \
 	su.c \
 	sync.c \
 	tee.c \
-	termcap.c \
-	tget.c \
 	tail.c \
 	touch.c \
 	tr.c \
