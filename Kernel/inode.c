@@ -25,6 +25,7 @@ void readi(inoptr ino, uint8_t flag)
 		toread = udata.u_count;
 		goto loop;
 
+        case F_SOCK:
 	case F_PIPE:
 		ispipe = true;
 		while (ino->c_node.i_size == 0 && !(flag & O_NDELAY)) {
@@ -177,7 +178,11 @@ void writei(inoptr ino, uint8_t flag)
 		if (udata.u_count != -1)
 			udata.u_offset += udata.u_count;
 		break;
-
+#ifdef CONFIG_NET
+	case F_SOCK:
+		udata.u_count = sock_write(ino, flag);
+		break;
+#endif
 	default:
 		udata.u_error = ENODEV;
 	}
@@ -193,10 +198,14 @@ int16_t doclose(uint8_t uindex)
 
 	oftindex = udata.u_files[uindex];
 
-	if (isdevice(ino)
-	        && ino->c_refs == 1 && of_tab[oftindex].o_refs == 1)
-		d_close((int) (ino->c_node.i_addr[0]));
-
+	if (ino->c_refs == 1 && of_tab[oftindex].o_refs == 1) {
+		if (isdevice(ino))
+			d_close((int) (ino->c_node.i_addr[0]));
+#ifdef CONFIG_NET
+		if (issocket(ino)
+			sock_close(ino);
+#endif
+	}
 	udata.u_files[uindex] = NO_FILE;
 	udata.u_cloexec &= ~(1 << uindex);
 	oft_deref(oftindex);

@@ -170,6 +170,7 @@ struct hd_geometry {
 #define F_PIPE  010000
 #define F_BDEV  060000  // important that F_BDEV & F_CDEV != 0 (see isdevice() function)
 #define F_CDEV  020000
+#define F_SOCK	0140000
 
 #define F_MASK  0170000
 
