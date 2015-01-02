@@ -328,8 +328,6 @@ void timer_interrupt(void)
 			udata.u_utime++;
 	}
 
-	ticks.full++;
-
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == TICKSPERSEC / 10) {
@@ -337,6 +335,7 @@ void timer_interrupt(void)
 
 		/* Update global time counters */
 		ticks_this_dsecond = 0;
+		ticks.full++;
 
 		/* Update process alarm clocks and timeouts */
 		for (p = ptab; p < ptab + maxproc; ++p) {

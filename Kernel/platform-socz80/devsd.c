@@ -201,7 +201,7 @@ int sd_spi_init(void)
     /* Enter Idle state */
     if (sd_send_command(CMD0, 0) == 1) {
         /* initialisation timeout 1 second */
-        timer = set_timer_duration(TICKSPERSEC);
+        timer = set_timer_sec(1);
         if (sd_send_command(CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
             /* Get trailing return value of R7 resp */
             for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte();
@@ -256,7 +256,7 @@ int sd_spi_wait_ready(void)
     unsigned char res;
     timer_t timer;
 
-    timer = set_timer_duration(TICKSPERSEC/10); /* 100ms */
+    timer = set_timer_ms(100); /* 100ms */
     sd_spi_receive_byte();
     do{
         res = sd_spi_receive_byte();
@@ -287,7 +287,7 @@ int sd_spi_receive_block(void *ptr, int length)
     unsigned int timer;
     unsigned char b;
 
-    timer = set_timer_duration(TICKSPERSEC/5); /* 200ms */
+    timer = set_timer_ms(200); /* 200ms */
 
     do{
         b = sd_spi_receive_byte();
