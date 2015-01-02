@@ -29,10 +29,14 @@ export BINEXT = .rel
 #	Adjust this as needed for your platform (or contribute a script
 #	to look in the usual places !)
 #
-ifeq ($(UNAME_S),Darwin)
-export LIBZ80=/usr/local/share/sdcc/lib/$(CPU)
+ifeq ($(SDCC_LIB), "")
+  ifeq ($(UNAME_S),Darwin)
+    export LIBZ80=/usr/local/share/sdcc/lib/$(CPU)
+  else
+    export LIBZ80=/usr/share/sdcc/lib/$(CPU)
+  endif
 else
-export LIBZ80=/usr/share/sdcc/lib/$(CPU)
+  export LIBZ80=$(SDCC_LIB)/$(CPU)
 endif
 else ifeq ($(CPU),6502)
 export CROSS_AS=ca65
