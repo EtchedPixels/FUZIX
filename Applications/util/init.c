@@ -18,7 +18,7 @@ int  login(char *);
 void spawn(struct passwd *);
 int  showfile(char *);
 void putstr(char *);
-void sigalarm(unsigned int);
+void sigalarm(int);
 
 int main(int argc, char *argv[])
 {
@@ -189,7 +189,7 @@ void spawn(struct passwd *pwd)
     exit(1);
 }
 
-void sigalarm(unsigned int sig)
+void sigalarm(int sig)
 {
     return;
 }
