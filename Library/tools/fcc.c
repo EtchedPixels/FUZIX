@@ -256,7 +256,7 @@ static int do_command(void)
 {
   pid_t pid, w;
   int status;
-  
+
   if (verbose)
     printf("\n\n");
   argvec[argp] = NULL;
@@ -324,20 +324,28 @@ static void build_command(void)
   if (mode == MODE_ASM)
     add_argument("-S");
   if (mode == MODE_OBJ) {
-    if (srchead == NULL || srchead->next != NULL) {
-      fprintf(stderr, "The -c option can only accept a single input right now.\n");
+    if (srchead == NULL) {
+      fprintf(stderr, "The -c option requires an input.\n");
       exit(1);
     }
     add_argument("-c");
   }
-  if (target == NULL)
-    autotarget();
-  add_option("-o", target);
   if (mode == MODE_LINK) {
+    if (target == NULL)
+      autotarget();
+    if (target == NULL) {
+      fprintf(stderr, "no target.\n");
+      exit(1);
+    }
+    add_option("-o", target);
     add_argument("/opt/fcc/lib/crt0.rel");
   }
-  if (srchead)
-    add_argument_list(srchead);
+  if (srchead) {
+    if (mode == MODE_OBJ)
+      add_argument(srchead->p);
+    else
+      add_argument_list(srchead);
+  }
   else {
     fprintf(stderr, "fcc: No sources specified.\n");
     exit(1);
@@ -434,8 +442,16 @@ int main(int argc, const char *argv[]) {
   add_library_path("/opt/fcc/lib/");
   add_library("c");
 
-  build_command();
-  ret = do_command();
+  if (mode == MODE_OBJ) {
+    while (srchead) {
+      build_command();
+      ret = do_command();
+      if (ret)
+        break;
+      srchead = srchead->next;
+      argp = 0;
+    }
+  }
   if (mode != MODE_LINK || ret)
     exit(ret);
   argp = 0;
