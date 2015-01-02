@@ -12,11 +12,12 @@ SRC_CRT0 = crt0.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
 SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.rel)
-SRC_C =  abort.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
-SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c errno.c error.c execl.c execv.c
-SRC_C += execvp.c exit.c fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
+SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c err.c errno.c error.c
+SRC_C += execl.c execv.c execvp.c exit.c
+SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fprintf.c fputc.c fputs.c fread.c free.c
 SRC_C += fsetpos.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getopt.c

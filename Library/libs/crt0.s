@@ -19,6 +19,7 @@
 		.globl _main
 		.globl _exit
 		.globl _environ
+		.globl ___argv
 
 		.globl s__DATA
 		.globl l__DATA
@@ -62,6 +63,11 @@ start2:		ld hl, #l__DATA - 1	 ; work around linker limit
 		ld hl, #4
 		add hl, sp
 		ld (_environ), hl
+		pop de			; argc
+		pop hl			; argv
+		push hl
+		ld (___argv), hl	; needed for stuff like err()
+		push de
 		ld hl, #_exit		; return vector
 		push hl
 		jp _main		; go
