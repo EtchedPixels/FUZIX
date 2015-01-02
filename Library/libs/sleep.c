@@ -8,10 +8,10 @@
 unsigned int sleep(unsigned int seconds)
 {
 	time_t end, now;
-	_time(&end, 0);
+	_time(&end, 1);
 	end += seconds;
 	if (_pause(seconds * 10) == 0)
 		return 0;
-	_time(&now, 0);
+	_time(&now, 1);
 	return (int)(end - now);
 }
