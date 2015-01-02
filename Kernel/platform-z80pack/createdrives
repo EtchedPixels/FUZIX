@@ -108,19 +108,19 @@ for FILE in $DISK2BINS; do
 	fi
 done
 
-mkdir /tmp/ucp
-echo "root::0:0:superuser:/root:/bin/ssh" > /tmp/ucp/passwd
-echo "root::0:root" > /tmp/ucp/group
-echo "rootfs / rootfs rw 0 0" > /tmp/ucp/mtab
+TMPUCP = `mktemp -d /tmp/ucpXXXXXXXX`
+echo "root::0:0:superuser:/root:/bin/ssh" > $TMPUCP/passwd
+echo "root::0:root" > $TMPUCP/group
+echo "rootfs / rootfs rw 0 0" > $TMPUCP/mtab
 
-$UCP $DISK1 "cd /etc ; bget /tmp/ucp/passwd" &> /dev/null
-$UCP $DISK1 "cd /etc ; bget /tmp/ucp/group" &> /dev/null
-$UCP $DISK1 "cd /etc ; bget /tmp/ucp/mtab" &> /dev/null
+$UCP $DISK1 "cd /etc ; bget $TMPUCP/passwd" &> /dev/null
+$UCP $DISK1 "cd /etc ; bget $TMPUCP/group" &> /dev/null
+$UCP $DISK1 "cd /etc ; bget $TMPUCP/mtab" &> /dev/null
 
-rm /tmp/ucp/passwd
-rm /tmp/ucp/group
-rm /tmp/ucp/mtab
-rmdir /tmp/ucp
+rm $TMPUCP/passwd
+rm $TMPUCP/group
+rm $TMPUCP/mtab
+rmdir $TMPUCP
 
 mv $DISK1 ${DISK1}.tmp
 dd if=$KERNEL of=$DISK1 bs=1 seek=199680 conv=notrunc
