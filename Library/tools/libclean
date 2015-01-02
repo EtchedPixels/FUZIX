@@ -6,10 +6,12 @@
 #
 UNAME_S=`uname -s`
 
-if [ "${UNAME_S}" = "Darwin" ]; then
-	SDCC_LIB="/usr/local/share/sdcc/lib"
-else
-	SDCC_LIB="/usr/share/sdcc/lib"
+if [ x"$SDCC_LIB" = "x" ]; then
+	if [ "${UNAME_S}" = "Darwin" ]; then
+		SDCC_LIB="/usr/local/share/sdcc/lib"
+	else
+		SDCC_LIB="/usr/share/sdcc/lib"
+	fi
 fi
 
 cp ${SDCC_LIB}/z80/z80.lib tmp.lib
