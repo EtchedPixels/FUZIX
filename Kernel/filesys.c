@@ -437,7 +437,7 @@ fsptr getdev(uint16_t dev)
 
     mnt = fs_tab_get(dev);
 
-    if (!mnt || !(devfs = mnt->m_fs) || devfs->s_mounted) {
+    if (!mnt || !(devfs = mnt->m_fs) || devfs->s_mounted == 0) {
         panic("getdev: bad dev");
         /* Return needed to persuade SDCC all is ok */
         return NULL;
@@ -1011,7 +1011,7 @@ static struct mount *newfstab(void)
     struct mount *m = fs_tab;
     int i;
     for (i = 0; i < NMOUNTS; i++) {
-        if (m->m_dev != NO_DEVICE)
+        if (m->m_dev == NO_DEVICE)
             return m;
         m++;
     }

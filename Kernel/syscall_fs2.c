@@ -382,7 +382,7 @@ int16_t _acct(void)
 int16_t _getfsys(void)
 {
         struct mount *m = fs_tab_get(dev);
-	if (dev == NO_DEVICE  || m == NULL) {
+	if (m == NULL || m->m_dev == NO_DEVICE) {
 		udata.u_error = ENXIO;
 		return (-1);
 	}
