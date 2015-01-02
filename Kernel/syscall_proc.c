@@ -398,7 +398,7 @@ int16_t _pause(void)
 		udata.u_ptab->p_timeout = t + 1;
 	psleep(0);
 	/* Were we interrupted ? */
-	if (!t || udata.u_ptab->p_timeout) {
+	if (!t || udata.u_ptab->p_timeout > 1) {
 		udata.u_error = EINTR;
 		/* Our timeout is automatically cleared on syscall exit */
 		return (-1);
