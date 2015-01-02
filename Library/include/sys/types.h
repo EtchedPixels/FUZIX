@@ -56,5 +56,5 @@ typedef int16_t pid_t;
 typedef uint16_t ino_t;
 
 typedef int64_t time_t;
-
+typedef int32_t clock_t;
 #endif

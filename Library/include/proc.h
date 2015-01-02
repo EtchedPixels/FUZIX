@@ -1,6 +1,8 @@
 #ifndef __PROC_H
 #define __PROC_H
 
+#include <sys/types.h>
+
 /* Process table p_status values */
 
 #define P_EMPTY         0    /* Unused slot */
