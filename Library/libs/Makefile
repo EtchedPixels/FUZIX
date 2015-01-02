@@ -12,7 +12,7 @@ SRC_CRT0 = crt0.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
 SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.rel)
-SRC_C =  __hz.c abort.c asctime.c assert.c atexit.c
+SRC_C =  abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c errno.c error.c execl.c execv.c

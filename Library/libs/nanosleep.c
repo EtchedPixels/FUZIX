@@ -5,38 +5,61 @@
 /* Ok so this doesn't score too highly on accuracy but it'll wrap code using
    the modern API's for long sleeps just fine */
 
-int clock_nanosleep(clockid_t clock, int flags, const struct timespec *req, struct timespec *rem)
+int clock_nanosleep(clockid_t clock, int flags, const struct timespec *reqp, struct timespec *rem)
 {
-  time_t tbase;
-  time_t tend;
-  uint16_t t = req->tv_sec * 10;
-  long nsec = req->tv_nsec;
+  struct timespec tbase, tend, req;
+  uint16_t t;
 
-  if (clock != CLOCK_REALTIME && clock != CLOCK_MONOTONIC) {
-   errno = EINVAL;
+  if (clock_gettime(clock, &tbase))
    return -1;
-  }
+ 
+  req.tv_sec = reqp->tv_sec;
+  req.tv_nsec = reqp->tv_nsec;
 
-  /* Will be 0-9 range so avoid costly divides */
-  while(nsec > 50000000UL) {
-    nsec -= 50000000UL;
+  /* Absolute time means we are handed a time relative to system 0 not
+     a time relative to 'now' */
+  if (flags & TIMER_ABSTIME) {
+    req.tv_sec -= tbase.tv_sec;
+    req.tv_nsec -= tbase.tv_nsec;
+    if (req.tv_nsec < 0) {
+     req.tv_nsec += 1000000L;
+     --req.tv_sec;
+    }
+    if (req.tv_sec < 0)
+     return 0;
+    /* req is now the relative time for all cases */
+  }
+  /* Convert duration into 16bit 10ths of a second */
+  t = ((uint16_t)req.tv_sec) * 10;
+  while(req.tv_nsec > 100000000UL) {
+    req.tv_nsec -= 100000000UL;
     t++;
   }
- 
-  if (_time(&tbase, clock) == -1)
-    return -1;
+  if (t == 0 || _pause(t) == 0)
+    return 0;
+  /* When did we finish */
+  clock_gettime(clock, &tend);
 
-  if (flags & TIMER_ABSTIME) {
-   if (tbase < req->tv_sec)
-    return 0;
-   t += (tbase - req->tv_sec) * 10;
-  }
-  if (_pause(t) == 0)
-    return 0;
-  _time(&tend, clock);
-  if (rem) {
-    rem->tv_sec = tbase + t/10 - tend;
-    rem->tv_nsec = 0;
+  /* Work out the time left avoiding divisions */
+  if (!(flags  & TIMER_ABSTIME)) {
+    tend.tv_sec -= tbase.tv_sec;
+    tend.tv_nsec -= tbase.tv_nsec;
+    if (tend.tv_nsec < 0) {
+     tend.tv_sec--;
+     tend.tv_nsec += 1000000000UL;
+   }
+   if (tend.tv_sec < 0)
+      return 0;
+   if (rem) {
+     rem->tv_sec = tend.tv_sec;
+     rem->tv_nsec = tend.tv_nsec;
+   }
+  } else {
+    /* In absolute mode rem is req, easy as that */
+    if (rem) {
+      rem->tv_sec = reqp->tv_sec;
+      rem->tv_nsec = reqp->tv_nsec;
+    }
   }
   return -1;
 }
