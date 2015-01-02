@@ -6,11 +6,6 @@
 #include <stddef.h>
 #include <syscalls.h>
 
-#ifndef CLOCK_T
-#define CLOCK_T
-typedef long clock_t;
-#endif
-
 struct tm {
 	int tm_sec;
 	int tm_min;
@@ -35,7 +30,7 @@ extern char *tzname[2];
 extern int daylight;
 extern long timezone;
 
-extern long clock __P ((void));
+extern clock_t clock __P ((void));
 extern time_t mktime __P ((struct tm * __tp));
 extern double difftime __P ((time_t *__time2, time_t *__time1));
 
