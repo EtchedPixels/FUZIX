@@ -23,6 +23,11 @@ struct timezone {
 	int tz_dsttime; 	/* type of dst correction */
 };
 
+struct timespec {
+	time_t tv_sec;
+	long tv_nsec;
+};
+
 #define __isleap(year)	\
 	((year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0))
 
@@ -46,5 +51,21 @@ extern struct tm *gmtime __P ((time_t *__tp));
 extern struct tm *localtime __P ((time_t * __tp));
 extern unsigned long convtime __P ((time_t *time_field));
 
+typedef int clockid_t;
+
 #define CLOCKS_PER_SEC	100		/* FIXME: sysconf */
+
+#define CLOCK_REALTIME	0
+#define CLOCK_MONOTONIC 1
+
+extern int clock_getres(clockid_t clk_id,  struct timespec *res);
+extern int clock_gettime(clockid_t clk_id,  struct timespec *tp);
+extern int clock_nanosleep(clockid_t clk_id, int flags,
+	const struct timespec *request, struct timespec *remain);
+extern int clock_settime(clockid_t clk_id,  const struct timespec *tp);
+
+#define TIMER_ABSTIME	1
+
+extern int nanosleep(const struct timespec *request, struct timespec *remain);
+
 #endif

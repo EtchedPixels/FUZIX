@@ -93,6 +93,10 @@ extern long _pathconf __P((int name));
 #define _POSIX_CHOWN_RESTRICTED _pathconf(_PC_CHOWN_RESTRICTED)
 #define _POSIX_NO_TRUNC		_pathconf(_PC_NO_TRUNC)
 
+/* POSIX: show that the clock_ API is present */
+#define _POSIX_TIMERS
+#define _POSIX_MONTONIC_CLOCK
+
 extern int gethostname(char *name, size_t len);
 extern int sethostname(const char *name, size_t len);
 
