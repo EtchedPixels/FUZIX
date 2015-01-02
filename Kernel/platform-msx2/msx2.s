@@ -44,8 +44,8 @@
 	    ; stuff to save
 	    .globl _vdpport
 	    .globl _infobits
-        .globl slotrom
-        .globl slotram
+	    .globl _slotrom
+	    .globl _slotram
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -83,12 +83,6 @@ _trap_reboot:
 
 _kernel_flag:
 	    .db 1
-
-
-slotrom:
-        .db 0
-slotram:
-        .db 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
@@ -273,6 +267,7 @@ map_kernel:
 	    call map_process_2
 	    pop hl
 	    ret
+
 map_process_2:
 	    push de
 	    push af
@@ -320,11 +315,15 @@ map_savearea:
 	    .db 0,0,0,0
 map_kernel_data:
 	    .db 3,2,1,4
+_slotrom:
+        .db 0
+_slotram:
+        .db 0
 
 ; emulator debug port for now
 outchar:
 	    push af
 	    out (0x2F), a
 	    pop af
-            ret
+	    ret
 

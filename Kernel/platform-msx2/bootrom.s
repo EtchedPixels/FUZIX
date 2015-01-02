@@ -6,9 +6,11 @@
 		.dw 0,0,0,0,0,0
 
 		.globl enaslt
-		.globl slotrom
-		.globl slotram
+		.globl _slotrom
+		.globl _slotram
 		.globl find_ram
+		.globl kstack_top
+
 
 		; At this point the BIOS has detected the cartridge AB signature and
 		; jumped here; we have the rom bios in bank 0, ram in bank 3, and rom
@@ -23,31 +25,63 @@ bootstrap:
 		ld ix,#0x00d5
 		call #0x015f
 
+		; read slot registers from bios before overwritting them
 		call find_ram
-		ld (slotram),a
-		call find_rom
-		ld (slotrom),a
-
-		; set cartridge rom in bank 0 and ram in bank 2
-		ld hl,#0
-		call enaslt
-		ld a,(slotram)
 		ld hl,#0x8000
-		call enaslt
-		ld a, #3
+		call enaslt		; set bank 2 to ram
+
+		ld a, #4
 		out (0xFE),a
 
+		call find_ram
+		ld d,a
+		call find_rom
+		ld e,a
+		exx
+
+		ld hl,#0xc000
+		ld sp,#0xa000	; keep stack in ram
+		call enaslt		; set bank 3 to rom
+
+		; copy kernel page 0 from bank 3 to ram in bank 2
+		; it contains the common area if the rom > 48Kb
+		ld hl, #0xc000
+		ld de, #0x8000
+		ld bc, #0x4000
+		ldir
+		exx
+
+		push de
+		ld hl,#0xc000	; set bank 3 back to ram
+		ld a,d
+		call enaslt
+		pop de			; store slot data in ram now
+		ld a, #4
+		out (0xFF),a
+		ld a,d
+		ld (_slotram),a
+		ld a,e
+		ld (_slotrom),a
+
+		ld sp, #kstack_top	; move stack to final location
+
+		; set cartridge rom in bank 0
+		ld hl,#0
+		call enaslt
+
 		; copy kernel page 3 to ram
+		ld a, #3
+		out (0xFE),a
 		ld hl, #0x0
 		ld de, #0x8000
 		ld bc, #0x4000
 		ldir
 
 		; set ram in bank 0 and cartridge rom in bank 2
-		ld a,(slotram)
+		ld a,(_slotram)
 		ld hl,#0
 		call enaslt
-		ld a,(slotrom)
+		ld a,(_slotrom)
 		ld hl,#0x8000
 		call enaslt
 
@@ -72,9 +106,11 @@ bootstrap:
 		out (0xFD), a
 		ld a, #1
 		out (0xFE), a
+		ld a, #4
+		out (0xFF),a
 
 		; set bank 2 to ram
-		ld a,(slotram)
+		ld a,(_slotram)
 		ld hl,#0x8000
 		call enaslt
 
