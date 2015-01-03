@@ -29,7 +29,7 @@ export BINEXT = .rel
 #	Adjust this as needed for your platform (or contribute a script
 #	to look in the usual places !)
 #
-ifeq ($(SDCC_LIB), "")
+ifeq ($(SDCC_LIB),)
   ifeq ($(UNAME_S),Darwin)
     export LIBZ80=/usr/local/share/sdcc/lib/$(CPU)
   else
@@ -167,7 +167,7 @@ tools/decbdragon: tools/decbdragon.c
 tools/bintomdv: tools/bintomdv.c
 
 tools/bankld/sdldz80:
-	(cd tools/bankld; make)
+	(cd tools/bankld; +make)
 
 cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
 	+make -C cpm-loader
@@ -178,7 +178,7 @@ ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
 fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-fuzix.bin: fuzix.ihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
+fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
