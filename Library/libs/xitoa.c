@@ -6,6 +6,5 @@
 /*********************** xitoa.c ***************************/
 char *_itoa(int i)
 {
-	static char buf[16];
-	return ltostr((long) i, buf, 10);
+    return _ltoa((long)i);
 }

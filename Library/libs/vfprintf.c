@@ -148,10 +148,9 @@ int vfprintf(FILE * op, char *fmt, va_list ap)
 
 			case 'd':	/* Signed decimal */
 			case 'i':
-				ptmp = ltostr((long) ((lval) ?
+				ptmp = __ltostr((long) ((lval) ?
 						    va_arg(ap, long) :
-						    va_arg(ap, short)),
-					    tmp, 10);
+						    va_arg(ap, short)), 10);
 				goto printit;
 
 			case 'b':	/* Unsigned binary */
@@ -181,7 +180,7 @@ int vfprintf(FILE * op, char *fmt, va_list ap)
 			      usproc:val = lval ? va_arg(ap, unsigned long) :
 				    va_arg(ap,
 					   unsigned short);
-				ptmp = ultostr(val, tmp + 4, radix);
+				ptmp = __ultostr(val, radix);
 				add = "";
 				if (hash) {
 					if (radix == 2)

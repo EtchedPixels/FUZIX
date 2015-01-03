@@ -46,8 +46,8 @@ extern char *_itoa __P((int value));
 extern char *_ltoa __P((long value));
 extern char *_ultoa __P((unsigned long value));
 
-extern char *ultostr __P((unsigned long value, char *buf, int radix));
-extern char *ltostr __P((long value, char *buf, int radix));
+extern char *__ultostr __P((unsigned long value, int radix));
+extern char *__ltostr __P((long value, int radix));
 
 extern long strtol __P ((const char * nptr, char ** endptr, int base));
 extern unsigned long strtoul __P ((const char * nptr,
