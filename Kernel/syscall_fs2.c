@@ -183,10 +183,8 @@ int16_t _access(void)
 
 static int16_t chmod_op(inoptr ino)
 {
-	if (ino->c_node.i_uid != udata.u_euid && esuper()) {
-		i_deref(ino);
+	if (ino->c_node.i_uid != udata.u_euid && esuper())
 		return (-1);
-	}
 
 	ino->c_node.i_mode =
 	    (mode & MODE_MASK) | (ino->c_node.i_mode & F_MASK);
@@ -241,10 +239,8 @@ int16_t _fchmod(void)
 
 static int chown_op(inoptr ino)
 {
-	if (ino->c_node.i_uid != udata.u_euid && esuper()) {
-		i_deref(ino);
+	if (ino->c_node.i_uid != udata.u_euid && esuper())
 		return (-1);
-	}
 	ino->c_node.i_uid = owner;
 	ino->c_node.i_gid = group;
 	setftime(ino, C_TIME);
