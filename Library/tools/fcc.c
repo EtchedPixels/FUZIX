@@ -8,6 +8,7 @@
  *	spraying support files everwhere
  */
 
+#define FCC_DIR		    "/opt/fcc"
 
 #define MODE_LINK		0
 #define MODE_OBJ		1
@@ -338,7 +339,7 @@ static void build_command(void)
       exit(1);
     }
     add_option("-o", target);
-    add_argument("/opt/fcc/lib/crt0.rel");
+    add_argument(FCC_DIR "/lib/crt0.rel");
   }
   if (srchead) {
     if (mode == MODE_OBJ)
@@ -438,8 +439,8 @@ int main(int argc, const char *argv[]) {
       }
     }
   }
-  add_include_path("/opt/fcc/include/");
-  add_library_path("/opt/fcc/lib/");
+  add_include_path(FCC_DIR "/include/");
+  add_library_path(FCC_DIR "/lib/");
   add_library("c");
 
   if (mode == MODE_OBJ) {
@@ -468,7 +469,7 @@ int main(int argc, const char *argv[]) {
   if (ret)
     exit(ret);
   argp = 0;
-  add_argument("/opt/fcc/bin/binman");
+  add_argument(FCC_DIR "/bin/binman");
   add_argument(t);
   add_argument(rebuildname("", target, "map"));
   add_argument(chopname(target));

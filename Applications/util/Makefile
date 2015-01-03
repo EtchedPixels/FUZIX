@@ -2,6 +2,7 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdcc
+FCC = ../../Library/tools/fcc
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
@@ -38,7 +39,6 @@ SRCS  = banner.c \
 	du.c \
 	echo.c \
 	ed.c \
-	env.c \
 	false.c \
 	fdisk.c \
 	fgrep.c \
@@ -83,7 +83,6 @@ SRCS  = banner.c \
 	tr.c \
 	true.c \
 	umount.c \
-	uname.c \
 	uniq.c \
 	uud.c \
 	uue.c \
@@ -112,13 +111,10 @@ $(OBJSBAD): $(SRCSBAD)
 	$(CC) $(CC_CRAP) $(@:.rel=.c)
 
 .c.rel:
-	$(CC) $(CC_OPT) $(@:.rel=.c)
+	$(FCC) -c $<
 
 %: %.rel
-	$(LINKER) $(LINKER_OPT) ../../Library/libs/crt0.rel $< $(LIBS) -o $@.ihx
-	makebin -s 65536 $@.ihx $@.tmp
-	$(BINMAN) $(PROGLOAD) $@.tmp $@.map $@
-	chmod +x $@
+	$(FCC) $< -o $@
 
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp
