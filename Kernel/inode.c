@@ -26,6 +26,10 @@ void readi(inoptr ino, uint8_t flag)
 		goto loop;
 
         case F_SOCK:
+#ifdef CONFIG_NET
+                if (is_netd())
+                        return netd_sock_read(ino, flag);
+#endif
 	case F_PIPE:
 		ispipe = true;
 		while (ino->c_node.i_size == 0 && !(flag & O_NDELAY)) {
@@ -109,6 +113,13 @@ void writei(inoptr ino, uint8_t flag)
 		towrite = udata.u_count;
 		goto loop;
 
+#ifdef CONFIG_NET
+	case F_SOCK:
+		if (!is_netd()) {
+			udata.u_count = sock_write(ino, flag);
+			break;
+		}
+#endif
 	case F_PIPE:
 		ispipe = true;
 		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
@@ -178,11 +189,6 @@ void writei(inoptr ino, uint8_t flag)
 		if (udata.u_count != -1)
 			udata.u_offset += udata.u_count;
 		break;
-#ifdef CONFIG_NET
-	case F_SOCK:
-		udata.u_count = sock_write(ino, flag);
-		break;
-#endif
 	default:
 		udata.u_error = ENODEV;
 	}
