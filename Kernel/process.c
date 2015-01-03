@@ -432,35 +432,38 @@ void sgrpsig(uint16_t pgrp, uint16_t sig)
 void chksigs(void)
 {
 	uint8_t j;
+	uint32_t pending = udata.u_ptab->p_pending & ~udata.u_ptab->p_held;
+	int16_t (**svec)() = &udata.u_sigvec[0];
+	uint32_t m;
 
 	// any signals pending?
-	if (!(udata.u_ptab->p_pending & ~udata.u_ptab->p_held)) {
+	if (!pending)
 		return;
-	}
+
 	// dispatch the lowest numbered signal
 	for (j = 1; j < NSIGS; ++j) {
-		if (!
-		    (sigmask(j) & udata.u_ptab->p_pending & ~udata.u_ptab->
-		     p_held))
+		svec++;
+		m = sigmask(j);
+		if (!(m & pending))
 			continue;
 		/* This is more complex than in V7 - we have multiple
 		   behaviours (plus the unimplemented as yet core dump) */
-		if (udata.u_sigvec[j] == SIG_DFL) {
+		if (*svec == SIG_DFL) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
 			if (j == SIGCHLD || j == SIGURG ||
-			    j == SIGIO || j == SIGCONT)
+			    j == SIGIO || j == SIGCONT) {
+				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
+			}
 			/* FIXME: core dump on some signals */
 #ifdef DEBUG
 			kputs("process terminated by signal: ");
 #endif
 			doexit(0, j);
-		}
-
-		if (udata.u_sigvec[j] != SIG_IGN) {
+		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
-			udata.u_ptab->p_pending &= ~sigmask(j);	// unset the bit
+			udata.u_ptab->p_pending &= ~m;	// unset the bit
 #ifdef DEBUG
 			kprintf("about to process signal %d\n", j);
 #endif
