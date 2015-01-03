@@ -16,7 +16,7 @@ timer_t set_timer_duration(uint16_t duration)
 	}
 	/* obvious code is return (miniticks+duration), however we have to do */
 	/* it this longwinded way or sdcc doesn't load miniticks atomically */
-	/* sdcc bug: ordering affects result */
+	/* sdcc 3.4.0 bug: ordering affects result */
 	a = duration;
 	a += ticks.h.low;
 
