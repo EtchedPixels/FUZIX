@@ -178,7 +178,7 @@ void writei(inoptr ino, uint8_t flag)
 		if (!ispipe) {
 			if (udata.u_offset > ino->c_node.i_size) {
 				ino->c_node.i_size = udata.u_offset;
-				ino->c_dirty = 1;
+				ino->c_flags |= CDIRTY;
 			}
 		}
 		break;
