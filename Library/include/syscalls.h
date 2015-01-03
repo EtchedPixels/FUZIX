@@ -123,6 +123,7 @@ extern int waitpid(pid_t pid, int *status, int options);
 extern int uadmin(int cmd, int ctrl, void *ptr);
 extern int nice(int prio);
 extern int rename(const char *path, const char *newpath);
+extern int flock(int fd, int op);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);

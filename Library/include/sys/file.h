@@ -12,4 +12,11 @@
 
 #endif
 
+#define	LOCK_SH		0
+#define LOCK_EX		1
+#define LOCK_UN		2
+#define LOCK_NB		O_NDELAY
+
+extern int flock(int fd, int operation);
+
 #endif
