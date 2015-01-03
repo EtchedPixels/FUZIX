@@ -57,8 +57,16 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 					uputc(c, udata.u_base);
 				break;
 			}
+			if (!(t->termios.c_lflag & ICANON)) {
+			        uint8_t n = t->termios.c_cc[VTIME];
+			        if (n)
+			                udata.u_ptab->p_timeout = n + 1;
+                        }
 			if (psleep_flags(q, flag))
-				return -1;
+			        return -1;
+                        /* timer expired */
+                        if (udata.u_ptab->p_timeout == 1)
+                                goto out;
 		}
 
 		++nread;
@@ -79,6 +87,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 		++udata.u_base;
 	}
+out:
 	wakeup(&q->q_count);
 	return nread;
 }
@@ -124,7 +133,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			if (t->termios.c_oflag & OPOST) {
 				if (c == '\n' && (t->termios.c_oflag & ONLCR))
 					tty_putc_wait(minor, '\r');
-				if (c == '\r' && (t->termios.c_oflag & OCRNL))
+				else if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
 			tty_putc_wait(minor, c);
@@ -244,7 +253,6 @@ int tty_ioctl(uint8_t minor, uint16_t request, char *data)
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
  */
-
 int tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
@@ -277,12 +285,12 @@ int tty_inproc(uint8_t minor, unsigned char c)
 
 	if (t->termios.c_lflag & ISIG) {
 		if (c == t->termios.c_cc[VINTR]) {	/* ^C */
-			sgrpsig(t->pgrp, SIGINT);
-			clrq(q);
-			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
-			return 1;
+		        wr = SIGINT;
+			goto sigout;
 		} else if (c == t->termios.c_cc[VQUIT]) {	/* ^\ */
-			sgrpsig(t->pgrp, SIGQUIT);
+		        wr = SIGQUIT;
+sigout:
+			sgrpsig(t->pgrp, wr);
 			clrq(q);
 			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
 			return 1;
@@ -305,24 +313,11 @@ int tty_inproc(uint8_t minor, unsigned char c)
 	}
 	if (canon) {
 		if (c == t->termios.c_cc[VERASE]) {
-			if (uninsq(q, &oc)) {
-				if (oc == '\n' || oc == t->termios.c_cc[VEOL])
-					insq(q, oc);	/* Don't erase past nl */
-				else if (t->termios.c_lflag & ECHOE)
-					tty_erase(minor);
-				return 1;
-			} else if (c == t->termios.c_cc[VKILL]) {
-				while (uninsq(q, &oc)) {
-					if (oc == '\n'
-					    || oc == t->termios.c_cc[VEOL]) {
-						insq(q, oc);	/* Don't erase past nl */
-						break;
-					}
-					if (t->termios.c_lflag & ECHOK)
-						tty_erase(minor);
-				}
-				return 1;
-			}
+		        wr = ECHOE;
+		        goto eraseout;
+		} else if (c == t->termios.c_cc[VKILL]) {
+		        wr = ECHOK;
+		        goto eraseout;
 		}
 	}
 
@@ -342,6 +337,19 @@ int tty_inproc(uint8_t minor, unsigned char c)
 	    || c == t->termios.c_cc[VEOF])
 		wakeup(q);
 	return wr;
+
+eraseout:
+	while (uninsq(q, &oc)) {
+		if (oc == '\n' || oc == t->termios.c_cc[VEOL]) {
+			insq(q, oc);	/* Don't erase past nl */
+			break;
+		}
+		if (t->termios.c_lflag & wr)
+			tty_erase(minor);
+                if (wr == ECHOE)
+                        break;
+	}
+	return 1;
 }
 
 /* called when a UART transmitter is ready for the next character */

@@ -148,7 +148,7 @@ struct termios {
 /* Group the tty into a single object. That lets 8bit processors keep all
    the data indexed off a single register */
 struct tty {
-    uint16_t pgrp;
+    /* Put flag first: makes it cheaper when short of registers */
     uint8_t flag;		/* Use uint8 pad - makes the whole struct
                                    24 byte - a nice number for CPUs with no 
                                    multiplier */
@@ -156,6 +156,7 @@ struct tty {
 #define TTYF_STOP	1
 #define TTYF_DISCARD	2
 #define TTYF_DEAD	4
+    uint16_t pgrp;
     struct termios termios;
 };
 
