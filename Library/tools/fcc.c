@@ -302,7 +302,7 @@ static void build_command(void)
     add_argument("-funsigned-char");
   if (debug == 1)
     add_argument("--debug");
-  /* Turn -O1/2/3 into something meanngful */
+  /* Turn -O1/2/3 into something meaningful */
   if (opt != NULL) {
     if (optcode > 0)
       add_argument("--max-allocs-per-node");
