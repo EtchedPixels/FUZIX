@@ -43,7 +43,8 @@
 /* math software */
 #define EDOM            33              /* Argument too large */
 #define ERANGE          34              /* Result too large */
-#define EWOULDBLOCK	35		/* Operation would block */
+#define EWOULDBLOCK	EAGAIN		/* Operation would block */
+#define ENOLOCK		35		/* Lock table full */
 #define ENOTEMPTY	36		/* Directory is not empty */
 #define ENAMETOOLONG    37              /* File name too long */
 
