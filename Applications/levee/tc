@@ -1,0 +1,32 @@
+    if (!(ttytype = getenv("TERM"))) {
+	S1("TERM not set");
+	exit(6);
+    }
+    if (tgetent(tc, ttytype) != 1) {
+	sprintf(Msg, "Can't load %s", ttytype);
+	S;
+	exit(7);
+    }
+    ospeed = newmode.c_cflag & CBAUD;
+    LI = tgetnum("li") - 1;
+    CO = tgetnum("co");
+    if (!(s = Tgetstr("pc")))
+	PC = '\0';
+    else
+	PC = *s;
+
+    CD = Tgetstr("cd");
+    CE = Tgetstr("ce");
+    CL = Tgetstr("cl");
+    CM = Tgetstr("cm");
+    SE = Tgetstr("se");
+    SO = Tgetstr("so");
+#ifdef linux
+    CF = Tgetstr("vi");
+    CN = Tgetstr("ve");
+#else
+    CF = Tgetstr("CF");
+    CN = Tgetstr("CN");
+#endif
+    if (CF && !CN)
+	CN = Tgetstr("CO");

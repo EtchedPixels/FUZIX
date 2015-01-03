@@ -1,0 +1,7 @@
+If you wish to have your copy of Levee as a family mode application, all
+you need to do is bind it.  It's already set up as a family mode application-
+there are some small differences for input (dos lv sees ^C and treats it
+like an ordinary character; os2 lv never sees ^C, because it's eaten by trap
+handlers) and redirectability (os2 lv uses getch() - a microsoft library
+function; dos vi uses dos function 0x07 - "get raw character from stdin,
+whatever that may be") but these shouldn't be a problem.

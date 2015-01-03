@@ -1,0 +1,873 @@
+    Levee.					A Screen Oriented Editor.
+
+    USAGE
+	lv [+address] [file ...]
+
+    SYNOPSIS
+	Levee is a screen oriented  editor based on the  Unix editor
+    "vi".  It provides a terse,  powerful way to enter and edit text
+    (however,  if you want a word-processor,  you're better off with
+    WordStar.)
+
+    DESCRIPTION
+	Levee is a moded editor.  It operates in 3 modes  -- visual,
+    command, and insert.  Most of the editing work is done is visual
+    mode,  file reading and  writing is  done in  command mode,  and
+    insert mode does what you would expect.
+	When you enter Levee,  you may specify  an  address to start
+    editing at.  These addresses  are in the same  format as command
+    mode addresses,  except that a naked + will put  you at the very
+    end of the file.
+
+      Levee is copyright (c) 1982-1997 by David L. Parsons. (see
+      the notice at the end of this document for distribution terms)
+
+    Levee.					A Screen Oriented Editor.
+    COMMANDS
+
+    Command mode commands:
+
+	    These commands are used for  editing new files,  writing
+	modified files,  changing options, doing substitutions,  and
+	a subset of  the visual commands.  They take as  input whole
+	lines,  terminated  by  return (to execute),  or  escape (to
+	abort.)
+	    
+	    Command mode is reached by typing ":" or "Q" from visual
+	mode.  If you enter command  mode by typing ":",  Levee will
+	execute  one  command,   then return  to  visual  mode after
+	prompting you  with  "[more]".   If you type anything except
+	a space or return, Levee will accept another command, and so
+	forth.  If,  however, you enter command mode via "Q",  Levee
+	will  remain in  command mode  until  you enter the "visual"
+	command.
+
+			A NOTE ON COMMAND SYNTAX
+	    A command may be preceded by an optional line-range.  If
+	you do not provide a line-range,  Levee will use the default
+	line-range shown by the command.  A line-range is one or two
+	address specifications in the following format:
+	
+		(.|$|'x|#) [ (+|-) (/patt/|?patt?|#) ]
+
+		    .  => current line.
+		    $  => last line.
+		    'x => the line with mark x on it.
+		    #  => line #.
+	    
+	    For example, ".-5,.+5p" will print every line within ten
+	lines of the current line.  "$-5" is the fifth line from the
+	end of the file,  and "/end/+2"  is the second line past the
+	next  occurrence  of  the  pattern "end".  Patterns  may  be
+	regular expressions (see below.)
+	    
+	    Also,  a naked line-range will  set the current  line to
+	the first line in the range  and print all the lines in that
+	range. "1,10" sets the current line to 1,  then prints lines
+	1 to 10.
+
+	    If you specify a non-existent line in a range, the comm-
+	and will abort and Levee will tell you "bad address".
+
+    Regular expressions:
+	    Levee gives  special meanings to  some characters during
+	a pattern match.  The character "." will match any one char,
+	the character "*" will match zero or  more occurances of the
+	previous char ( so, a* will match 'a','aa','aaa', etc, or it
+	will match nothing at all). If a pattern begins with "^", it
+	will  only match  at the  beginning of a line,  and patterns
+	ending with a "$" will only match at the end of a line.
+
+    Levee.					A Screen Oriented Editor.
+	    Brackets ('[]') have special meaning as well.  They mean
+	match any one of the characters inside the brackets. '[abc]'
+	will  match  'a', 'b', or 'c'.  You may  specify  a range of
+	characters inside brackets by using a dash (-). '[a-z]' will
+	match any lowercase alphabetic character.  If ^ is the first
+	character  in  the  bracket,  it means match  any  character
+	except those in the brackets.   '[^abc]' will match anything
+	except 'a','b', or 'c'.
+
+	    Backslash takes away  special  meaning  for these chars,
+	but '\t' specifies  a  tab,  and \( & \)  delimit  arguments
+	inside a pattern (used only by :substitute.)    The patterns
+	\< and \> have special  meaning,  too;  they match the start
+	and end of alpha-numeric tokens.
+
+	    If you  turn off  the editor variable  'magic',  none of
+	the above  characters will  have special  meaning  inside of
+	a pattern (see 'set').
+
+	    Some example patterns:
+
+		^end$		Find a line that is just 'end'.
+		[Ee][Nn][Dd]	Find a 'end', ignoring case.
+		[A-Za-z][A-Za-z0-9]* Find the next identifier.
+		(\*.*\*)	Find the next one-line pascal
+				comment.
+		\<the\>		Find the next occurance of `the'.
+
+    Levee.					A Screen Oriented Editor.
+
+---------------
+    args
+	show the current argument list, if one exists. The file that you
+    are currently editing will be framed by '[' and ']'.
+
+---------------
+    (.,.) change
+	delete lines, then enter insert mode.
+
+---------------
+    (.,.) delete
+	delete lines. Deleted lines are stored in a Yank Buffer for
+    later putback with "put".
+
+---------------
+    edit[!] [file]
+	Discard the current file and start editing a new one. If
+    changes were made to the current file, you must enter "edit!"
+    to force Levee to discard the changes. If you do not specify
+    a filename, Levee will try to reedit the current filename.
+
+	When Levee reads in a new file, it will tell you how many
+    bytes it read in, or [overflow] if the file is larger than the
+    internal buffer (currently 32760 bytes.)
+
+---------------
+    execmode
+	Remain in command mode until you use the "visual" command.
+    
+---------------
+    file [name]
+	Echo what the current filename is, its status, and the current
+    line. If you provide it with a name, it will change the filename
+    to that.
+
+---------------
+    (.) insert
+	Insert text above the current line. If you specify a line number,
+    Levee will make that the current line, then insert above it.
+
+	Commands within insert mode:
+	    ^W   => back over the last word you entered.
+	    ^H   => back over one character.
+	    ^U   => back over all input on this line.
+	    ^V   => escape the next character typed.
+		    ^V^H will put a ^H into the file.
+	    ESC  => exit insert mode.
+	    ^D   => If at start of line, reduce indentation 'shiftwidth'
+		    columns.
+	    ^T   => If at start of line, increase indentation
+		    'shiftwidth' columns.
+
+	When in insert mode, Levee will not allow you to enter any control
+    characters except return and tab.  Return ends input on this line and
+    opens a new line for input.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+    map[!] [key [text]]
+	Define/list macros.  There are 3 forms of map:
+
+	    1) map.         This lists all the active macros.
+	    2) map (key).   This shows the macro associated with (key),
+			    if any.
+	    3) map (key) (text)
+			    This maps (key) to (text). You may map any
+			    key except ":" and escape. In the normal
+			    form (map), the macro will be effective
+			    in visual mode, but in the alternate form,
+			    (map!), the macro will be effective in
+			    insert and command modes.
+
+	For example, if you map!ped return to "hello world", every time
+    you entered a return in command or visual mode, the string "hello
+    world" would pop up.
+
+---------------
+    next [file ...]
+	Edit the next file in the arglist, or edit a new arglist. Levee
+    takes its initial arglist off the command line when you execute it.
+    If "autowrite" is set, Levee will write out the changes to the
+    current file before editing the next one.
+
+---------------
+    (.) open
+	Insert below the current line. Otherwise just like insert.
+
+---------------
+    previous
+	Edit the previous file in the arglist. Otherwise, like next.
+
+---------------
+    (.,.) print
+	Display lines without changing the current line.
+
+---------------
+    (.) put
+	Put the contents of the yank buffer back on the line below
+    the current line. If you specify a line, it resets the current
+    line, then puts the yank buffer back. The yank buffer is filled
+    by the delete, change, or yank commands. Put does not destroy
+    the yank buffer, so you may put back text multiple times.
+
+---------------
+    quit[!]
+	Exit Levee. If you want to discard changes, use "quit!"
+
+---------------
+    (.) read [file]
+	put the contents of 'file' after the current line.
+
+---------------
+    rm file
+	Delete 'file' from disk.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+    set [option=value]
+	Set a tunable variable. Levee has a dozen or so user-definable
+    variables which you can twiddle via this command. There are boolean,
+    integer, and string variables that you can set. A string or integer
+    variable is set by 'set xxx=yyy', a boolean variable is set via
+    'set xxx' or 'set noxxx'.
+
+	Here are the settable variables (and abbreviations):
+	    tabsize	(ts)	tab stop.
+	    shiftwidth	(sw)	columns to shift on ^D, ^T, >>, or <<
+	    scroll		number of lines to scroll on ^D, ^U
+	    autoindent	(ai)	supply indentation during insert mode.
+	    autowrite	(aw)	write out changes before :next, :prev
+	    autocopy	(ac)	make backup copies of before writing.
+	    list		display tabs as ^I, end of line as $.
+	    magic		use regular expressions in searches.
+	    suffix		if the filename does not have a . in
+				it, supply the suffix. (this is the
+				only string variable.)
+	    overwrite	(ow)	destroy old file first, then write.
+	    beautify	(be)	When set, Levee will not allow insert
+				of any control character except tab
+				and return unless you escape it with
+				ctrl-V.
+	    wrapscan		searches wrap around end of buffer.
+	    ignorecase	(ic)	Ignore the case of alphabetic characters
+				during searches.
+	    mapslash		(ST version only) Map '/' in filenames to
+				'\'.  If the environment contains `mapslash'
+				when levee is called, this variable will
+				default to true, otherwise it defaults to
+				false. (See the documentation for the
+				Teeny-shell on how the teeny-shell interprets
+				`mapslash')
+	    lines (li)		(ST version only) How many lines on the display.
+				This is primarily for running levee through
+				the serial port - put set li=xx into your
+				LVRC for a xx line terminal.
+	    cols (co)		(ST version only) How many columns on the
+				display.  Like the lines variable, it's for
+				running levee through the serial port.
+	    
+	You may set multiple variables on one line, as in 'set ws noai'.
+    To see the current settings of these variables, :set -- without any
+    arguments -- will show the current settings.
+
+	At startup, Levee looks in the environment variable LVRC for
+    a list of variables to set (GEMDOS/MS-DOS). LVRC is one line
+    of the form 'option=value ...'. If you have a LVRC defined that
+    is 'ts=4 ow nows', Levee will set tabsize to 4, turn on overwrite,
+    and turn off wrapscan.
+
+	If you are using RMX, Levee looks in the file ":home:r?lvrc"
+    for initialization. If you are using Osy/SWOs, Levee looks in the
+    file "*.lvrc". The format of these files are different from the
+    LVRC variable -- see "source" for more information.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+    source file
+	Take command mode commands from 'file'. These commands can be
+    any legal command, except "visual". If a error happens during
+    execution of 'file', Levee abandons that level of source'ing.
+
+	In Osy/SWOs, there are a few differences in insert mode from
+    within a sourced file. No character has special meaning except a
+    line  containing nothing but a period, which terminates insert mode.
+    For example:
+
+	    :commands
+		.
+		.
+	    :insert
+		blah blah blah blah blah blah
+		blah blah blah blah blah blah
+		blah blah blah blah blah blah
+	    .
+	    :more commands
+
+	If you are running Levee under any other operating system,
+    you cannot do a insert from a :source file.
+
+NOTE:	If you are running Levee on RMX or Osy/SWOs, it will read
+    ":home:r?lvrc" or "*.lvrc" at startup. These can consist of any
+    legal command mode instruction, just like any other source file.
+	    
+---------------
+    (.,.)substitute(delim)patt(delim)repl(delim)[qcpg]
+    (.,.)substitute&
+	Search for patt and replace it with repl. Levee will look for
+    patt once on each line and replace it with repl. The delimiter
+    may be any ascii character.
+
+	The pattern is a regular expression, just like a search
+    pattern.
+
+	You may include parts of the pattern in the replacement string;
+    A '&' in the replacement pattern copies in the whole source pattern,
+    so if you do a 'sub/this/& and that/g', every instance of 'this'
+    will be replaced with 'this and that'.  Also, you may pull parts of
+    the pattern out by using the \( and \) argument meta-characters.
+    Arguments gotten by \( & \) are put into the replacement string
+    everywhere you do a \1..\9 [ \1 is the first argument you set up
+    with \( & \) ]. So, if you want to reverse the order of two substrings,
+    you can do 'sub/\(string1\)\(string2\)/\2\1/'.
+
+	substitute& redoes the last substitution.
+
+	Options:
+	    q,c  => before doing the substitute, display the affected
+		    line and wait for you to type a character. If you
+		    type 'y', it will do the substitution. 'q' aborts
+		    the substitute,  'a'  does the rest of the change
+		    without prompting, and 'n' does not do it.
+	    p    => print the affected lines after the change.
+	    g    => do the change globally. That is, do it for every
+		    occurence  of patt on a  line,  rather than just
+		    once.
+	
+    Levee.					A Screen Oriented Editor.
+---------------
+    undo
+	Undo the last modification to the file (except :edit, :next, :rm,
+    or :write.) You can only undo the last change to a file -- undo counts
+    as a change. :undo followed by :undo does nothing to the file.
+
+---------------
+    unmap (key)
+	Undefine a macro (see map).
+
+---------------
+    visual [list]
+	If you entered command mode by "Q" or "execmode", return to
+    visual mode.  If you provide an argument list, it also does a
+    `:next' on that list.
+
+---------------
+    version
+	Show which version of levee this is.
+
+---------------
+    (.,.) write [file]
+	Write lines to a file. If you write the everything to 'file',
+    the filename is set to 'file', and if you do not specify a file,
+    Levee will write to the filename.
+
+---------------
+    (.,.) wq [file]
+	Write to a file, then quit.
+
+---------------
+    (.,.) yank
+	Yank lines from the file into the yank buffer, for later
+    putback with "put".
+
+---------------
+    xit[!]
+	Write changes to the current file, then exit. If there are
+    more files in the arglist, use "xit!"
+
+---------------
+    ![command]
+	Execute command.
+
+	Example:
+	    !ls    => does a 'ls'.
+
+	This command is available only under GEMDOS, MSDOS, and RMX.
+
+---------------
+    ($)=
+	Give the line number of the addressed line. /end/= gives you
+    the line number of the next line with a 'end' on it.
+
+---------------
+    Levee.					A Screen Oriented Editor.
+    Visual mode commands.
+	    Visual mode commands move you around  and modify the file.
+	There are movement commands to move the cursor by a variety of
+	objects.
+
+	    In the description,  a (#)  means a optional  count.  If a
+	command has a optional count,  it will tell you what the count
+	does in parenthesis.  A (*) means that the command can be used
+	in the delete, yank, and change commands.
+
+	    Counts are made up by  entering digits.  If you type '45',
+	the count will be set to 45. To cancel a count, type ESC.
+
+	    This section discusses 'whitespace' occasionally.
+	Whitespace is tabs, spaces, and end of line.
+
+    How the display works.
+	
+	    Characters  are  displayed  on  the  screen  as  you would
+	expect,  except that  nonprinting characters are  shown as ^x,
+	and tabs  expand to  spaces ( unless you  set the option list,
+	then they show as ^I.)  When sitting on a control character or
+	tab, the cursor is placed on the FIRST character displayed. If
+	you move the cursor to  any other part of them ( via j or k --
+	see below), any changes will start at the next character.
+	
+	    Levee  does  not  display a end of  file marker, but lines
+	past the end of the file are denoted by ~ lines.
+
+	    If list is  set,  tabs  display as ^I, and the end of line
+	displays as $.
+
+	    If a  line is too long for the screen,  it will  just dis-
+	appear off the end of the screen.
+
+	    Levee will handle any screen resolution and any monospaced
+	font you hand it ( if you are running in low resolution, Levee
+	will give you a 25x40 window, for example.)
+
+    Levee.					A Screen Oriented Editor.
+---------------
+	^A
+    Show a debugging message at the bottom of the screen. This is not at
+    all useful unless you are debugging the editor. Ignore it.
+
+---------------
+	(#)^D
+    Scroll the screen down a half screen. If a count is specified, scroll
+    down the specified number of lines.
+
+---------------
+	^E
+    Scroll down 1 line (shorthand for 1^D )
+
+---------------
+	^G
+    Show file statistics. Exactly like ':file'.
+
+(*)------------
+	(#)^H
+    Move the cursor left one (count) chars.
+
+---------------
+	^I
+    Redraw the screen.
+
+(*)------------
+	(#)^J
+    Move down one (count) lines. When you use ^J and ^K (below) to move
+    up or down lines, the cursor will remain in the same column, even if
+    it is in the middle of a tabstop or past the end of a line.
+
+(*)------------
+	(#)^K
+    Move up one (count) lines.
+
+(*)------------
+	(#)^L
+    Move right one (count) characters.
+
+(*)------------
+	(#)^M
+    Move to the first nonwhite space on the next line. If a count is specified,
+    move to the first nonwhite count lines down.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+	(#)^U
+    Scroll the screen up a half page. If a count is specified, scroll up
+    count lines.
+
+---------------
+	^Y
+    Scroll the screen up 1 line (shorthand for 1^U.)
+
+---------------
+	(#)a
+    Insert text AFTER the cursor. If you give a count, the insertion will
+    be repeated count times ( 40i-ESC will give you a line of 40 dashes).
+
+    The commands in insert mode are the same for visual and command mode.
+
+(*)------------
+	(#)b
+    Move to the beginning of the last word (the count'th word back).
+    A word is a collection of alphanumeric characters (a-z0-9$_#) or
+    any other nonwhite character (i.e. anything but space, tab, eoln).
+
+---------------
+	c
+    Change a object. Change deletes an object, then enters insert mode without
+    redrawing the screen. When you tell it the object to be changed, Levee
+    puts a '$' on the last character of the object. You cannot change
+    backwards.
+
+    The object may be any visual mode command marked with a '(*)'. For
+    example, 'c4l' will change the next 4 characters on the line to something
+    else. (4cl does the same thing -- 4c4l changes the next 16 characters on
+    this line.)
+
+    'cc' will change whole lines.
+
+    When changing, deleting, or yanking a object, it will be placed into
+    a yank buffer, where it can be retrieved by the 'p' or 'P' commands.
+    
+---------------
+	(#)d
+    Delete an object. Like 'cc', 'dd' effects whole lines.
+
+(*)------------
+	(#)e
+    Move to the end of the current word.
+
+(*)------------
+	(#)f(x)
+    Find the next (count'th) occurance of a character on the current line.
+    For example, if the cursor is sitting on the first character of the
+    line 'abcdef', typing "ff" will put the cursor on the 'f'.
+    
+(*)------------
+	(#)h
+    Move left one (count) characters. Exactly like ^H.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+	(#)i
+    Start inserting characters at the cursor. If you specify a count,
+    the insertion will be duplicated count times.
+
+(*)------------
+	(#)j
+    Move down one (count) lines. Exactly like ^J.
+
+(*)------------
+	(#)k
+    Move up one (count) lines. Exactly like ^K.
+
+(*)------------
+	(#)l
+    Move right one (count) character. Exactly like ^L.
+
+---------------
+	m(x)
+    Set the marker (x). There are 26 markers available (a-z). You may
+    move to a marker by use of the ' or ` commands.
+
+(*)------------
+	n
+    Find the next occurance of a search pattern. When you do a search with
+    a / or ? command, Levee will remember the pattern and the direction you
+    searched in. 'n' will search in the same direction for the pattern, 'N'
+    searches in the opposite direction.
+
+---------------
+	o
+    Open a line below the current line for insertion.
+
+---------------
+	p
+    Put yanked/deleted text back after the cursor. Text is yanked
+    by the delete (d,x,X,D), change (c,C,s,S), and yank (y,Y) commands.
+
+---------------
+	(#)r(x)
+    Replace characters (up to end of line) with (x). '4ra' will change the
+    next 4 characters after the cursor into 'aaaa'.
+
+---------------
+	(#)s
+    change one (count) characters. Shorthand for (#)cl.
+
+(*)------------
+	(#)t(x)
+    Move up to a character on the current line. If you are on the first
+    character of the line 'abcdef' and you type 'tf', you will end up sitting
+    on the 'e'.
+
+---------------
+	u
+    Undo last modification. You can undo ANY modification command except
+    :edit, :next, :rm, or :write. (Just like :undo).
+
+    Levee.					A Screen Oriented Editor.
+(*)------------
+	(#)v
+    Move back to the very end of the previous (count'th) word.
+    See 'b' for the definition of a word.
+
+(*)------------
+	(#)w
+    Move up to the very beginning of the next (count'th) word.
+
+---------------
+	(#)x
+    Delete one (count) characters forward. Shorthand for (#)dl.
+
+---------------
+	y
+    Yank an object for later use by put. 'yy' yanks whole lines.
+
+---------------
+	A
+    Append text at the end of the line. Shorthand for $a.
+
+(*)------------
+	(#)B
+    Move to the beginning of the current word. Exactly like 'b'.
+
+    NOTE: this is incorrect. the capitalized word movement commands should,
+    and will in the future, be used for movement by space-delimited words.
+
+---------------
+	C
+    Change to the end of the line. Shorthand for c$.
+
+---------------
+	D
+    Delete to the end of the line. Shorthand for d$.
+
+(*)------------
+	(#)F(x)
+    Move to the first (count'th) previous occurance of a character on the
+    current line. If you are sitting at the end of the line 'abcdef', typing
+    "Fa" will move you back to the 'a' at the start of the line.
+
+(*)------------
+	(#)G
+    Goto line. If you specify a count, Levee will move to that line, and if
+    there is no count, Levee moves to the absolute end of the file.
+
+    To get to the start of the file, type "1G". To the end, just "G".
+
+(*)------------
+	H
+    Move to the first nonwhite character at the top of the screen.
+
+---------------
+	I
+    Insert at the end of the current line. Shorthand for $i.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+	(#)J
+    Join two (count+1) lines together. Joining appends the second line at
+    the end of the first, putting a space between them. If the first line
+    ends in whitespace, Levee will not put in a space.
+
+(*)------------
+	L
+    Move to the last nonwhite character on the last line of the screen.
+
+(*)------------
+	M
+    Move to the first nonwhite character in the middle of the screen.
+
+---------------
+	O
+    Open a line above the current line. Otherwise works just like 'o'.
+
+---------------
+	P
+    Put back the yank buffer at the cursor. Otherwise works just like 'p'.
+
+---------------
+	Q
+    Enter and remain in command mode. Just like the command :exec. To get
+    back to visual mode, you must enter the command ':visual'.
+
+---------------
+	R
+    Replace mode. A limited subset of insert mode that overwrites characters
+    up to end of line. All of the normal insert mode commands apply.
+    If you overwrite a character, then back over it with ^H,^U, or ^W, it
+    will reappear after you exit Replace mode.
+
+    Escape exits replace mode.
+
+    NOTE: due to a bug, entering a <return> in Replace mode will drop you
+    back into visual mode with an error. The replacements you have made
+    will remain.
+
+---------------
+	S
+    Change characters backwards. Shorthand for (#)ch.
+
+(*)------------
+	(#)T(x)
+    Move back to character on current line. If you are on the last character
+    of the line 'abcdef', typing "Ta" will move you back to the 'b'.
+
+(*)------------
+	(#)W
+    Move to end of word. Exactly like 'e'.
+
+---------------
+	(#)X
+    Delete characters backwards. Shorthand for (#)dh.
+
+    Levee.					A Screen Oriented Editor.
+---------------
+	Y
+    Yank to end of line. Shorthand for y$.
+
+---------------
+	ZZ
+    Write changes to current file and exit if last file in arglist.
+    Exactly like :xit.
+
+(*)------------
+	(#)$
+    Move to end of line. If you give a count, move to the end of the (count-1)
+    line down (so 2$ moves you to the end of the next line.).
+
+(*)------------
+	%
+    Find matching bracket, parenthesis, or squiggly bracket. If you are not
+    sitting on a '[]{}()', Levee will search forward for one of them on the
+    current line, then match whatever it finds.
+
+(*)------------
+	^
+    Move to the first nonwhite character on the current line.
+
+(*)------------
+	&
+    Redo last substitution command.
+
+(*)------------
+	(#){
+    Move to the beginning of the count'th paragraph back. A paragraph is
+    delimited by a blank line.
+
+(*)------------
+	(#)}
+    Move to the end of the count'th paragraph forward.
+
+(*)------------
+	(#)(
+    Move to the beginning of the count'th sentence back. A sentence is
+    delimited by a ., a !, or a ? followed by a space, a tab, or end of line.
+
+(*)------------
+	(#))
+    Move to the end of the count'th sentence forward.
+
+(*)------------
+	(#)-
+    Move to the (count'th) previous line, first nonwhite.
+
+(*)------------
+	(#)+
+    Move to the (count'th) next line, first nonwhite.
+
+---------------
+	(#)~
+    Change the case of the next count characters. Upper case becomes lowercase,
+    lowercase becomes uppercase.
+
+    Levee.					A Screen Oriented Editor.
+(*)------------
+	`(x)
+    Move to the exact position of mark (x). There is a special mark for some
+    of the visual mode move ment commands -- '' will move you to where you
+    were before the last (,),',`,G,/,?,n,N command.
+
+---------------
+	:
+    Execute one command mode command. When the command is done, it will return
+    to visual mode if it produces one line of output, but if it scrolls the
+    screen, Levee will prompt [more] before returning to visual mode. If you
+    type a : in response to the [more] prompt, Levee will remain in command
+    mode for one more command.
+
+---------------
+	(#)<(#)
+    Shift one (count) objects left. If you specify a second count, Levee will
+    shift the object left that many columns -- if you do not, they will be sh
+    shifted shiftwidth columns.
+
+    This is a nondestructive shift. If the shift would carry past the left
+    margin, the objects will be moved up to the left margin but no farther.
+
+    Like the other object movement commands, '<<' will affect whole lines.
+
+---------------
+	(#)>(#)
+    Shift one (count) objects right. Just like <, except it will not shift
+    objects past the right margin of the screen. If you do shift an object
+    past the right margin of the screen, all of its indent will be removed
+    and it will end up by the left margin.
+
+---------------
+	.
+    Repeat last modification command. (except undo)
+
+(*)------------
+	?
+    Search for pattern backwards. Escape aborts the search pattern, and a
+    empty pattern means search for the last pattern again.
+
+(*)------------
+	/
+    Search for pattern forwards. Otherwise like ?.
+
+(*)------------
+	(#)|
+    Move to specified column. If you don't have a count, move to column 0.
+
+    Levee.					A Screen Oriented Editor.
+
+
+    LIMITATIONS
+	Levee can only edit files up to 256000 characters long. ^M is used
+    as its internal line separator, so inserting ^M will have interesting
+    consequences.
+
+    BUGS
+	Probably infinite.
+
+    AUTHOR
+			David L. Parsons (orc)
+
+	    Testing, suggestions, and impractical design goals by:
+			    Jim Bolland.
+			    John Tainter.
+			    John Plocher.
+
+    Levee.					A Screen Oriented Editor.
+
+    COPYRIGHT
+  
+   Copyright (c) 1982-1997 David L Parsons
+   All rights reserved.
+  
+   Redistribution and use in source and binary forms are permitted
+   provided that the above copyright notice and this paragraph are
+   duplicated in all such forms and that any documentation,
+   advertising materials, and other materials related to such
+   distribution and use acknowledge that the software was developed
+   by David L Parsons (orc@pell.chi.il.us).  My name may not be used
+   to endorse or promote products derived from this software without
+   specific prior written permission.  THIS SOFTWARE IS PROVIDED
+   AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+   WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
+   FITNESS FOR A PARTICULAR PURPOSE.
+ 
+    Levee.					A Screen Oriented Editor.
+			    I N D E X
+	Are you kidding?
