@@ -309,15 +309,21 @@ int16_t _utime(void)
 	inoptr ino;
 	time_t t[2];
 
-	if (!valaddr(buf, 2 * sizeof(time_t)))
-		return (-1);
 	if (!(ino = n_open(file, NULLINOPTR)))
 		return (-1);
-	if (ino->c_node.i_uid != udata.u_euid && esuper()) {
-		i_deref(ino);
-		return (-1);
-	}
-	uget(buf, t, 2 * sizeof(time_t));
+	/* Special case in the Unix API - NULL means now */
+	if (buf) {
+	        if (ino->c_node.i_uid != udata.u_euid && esuper())
+			goto out;
+		if (!valaddr(buf, 2 * sizeof(time_t)))
+			goto out2;
+		uget(buf, t, 2 * sizeof(time_t));
+	} else {
+	        if (!(getperm(ino) & OTH_WR))
+			goto out;
+	        rdtime(&t[0]);
+	        memcpy(&t[1], &t[0], sizeof(t[1]));
+        }
 	/* FIXME: needs updating once we pack top bits
 	   elsewhere in the inode */
 	ino->c_node.i_atime = t[0].low;
@@ -325,6 +331,11 @@ int16_t _utime(void)
 	setftime(ino, C_TIME);
 	i_deref(ino);
 	return (0);
+out:
+	udata.u_error = EPERM;
+out2:
+	i_deref(ino);
+	return -1;
 }
 
 #undef file
