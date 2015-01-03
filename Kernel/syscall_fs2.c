@@ -689,9 +689,10 @@ int16_t _flock(void)
 	inoptr ino;
 	struct oft *o;
 	staticfast uint8_t c;
-	staticfast uint8_t lock = lockop & ~LOCK_NB;
+	staticfast uint8_t lock
 	staticfast int self;
-	
+
+	lock = lockop & ~LOCK_NB;
 	self = 0;
 
 	if (lock > LOCK_UN) {
