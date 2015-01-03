@@ -36,7 +36,8 @@
 		; Just for the benefit of the map file
 		.globl start
 		.globl enaslt
-		.globl slotram
+		.globl _slotram
+		.globl _slotrom
 		.globl find_ram
 
 	        ; startup code @0x100
@@ -58,28 +59,33 @@ start:
 		out (0x2f), a
 
 		; read slot before switching ram page
-		ld a,(slotram)
+		ld a,(_slotram)
 		ld hl,#0x4000
 		call enaslt
 
-		ld a, #4            ; 0 holds 8K of stuff we might want
-		out (0xff), a       ; if we go the OS route, so use 4
-		                    ; plus "0" is magic so this saves
-                            ; shifting them all by one.
-
-
-		ld sp, #kstack_top
-
+		ld a,(_slotram)
+		ld d,a
+		ld a,(_slotrom)
+		ld e,a
+		exx
 		; move the common memory where it belongs
 		ld hl, #s__INITIALIZER
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
 
-		; move the discardable memory where it belongs    
+		; move the discardable memory where it belongs
 		ld de, #s__DISCARD
 		ld bc, #l__DISCARD
 		ldir
+
+		exx
+		; restore slot data
+		ld a,d
+		ld (_slotram),a
+		ld a,e
+		ld (_slotrom),a
+
 
 		; then zero the data area
 		ld hl, #s__DATA

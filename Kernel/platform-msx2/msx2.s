@@ -14,6 +14,8 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _mapslot_bank1
+	    .globl _mapslot_bank2
 	    .globl _kernel_flag
 
 	    ; video driver
@@ -44,8 +46,8 @@
 	    ; stuff to save
 	    .globl _vdpport
 	    .globl _infobits
-        .globl slotrom
-        .globl slotram
+	    .globl _slotrom
+	    .globl _slotram
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -83,12 +85,6 @@ _trap_reboot:
 
 _kernel_flag:
 	    .db 1
-
-
-slotrom:
-        .db 0
-slotram:
-        .db 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
@@ -273,6 +269,7 @@ map_kernel:
 	    call map_process_2
 	    pop hl
 	    ret
+
 map_process_2:
 	    push de
 	    push af
@@ -314,17 +311,136 @@ map_save:   push hl
 	    pop hl
 	    ret
 
+;
+;	Slot mapping functions.
+;
+;   necessary to access memory mapped io ports used by certain devices
+;   (e.g ide, sd devices)
+;
+;   These need to go in bank0; cannot be in the common area because
+;   they do switch bank3 to access the subslot register. And neither
+;   can be in bank1 or 2 because those are the ones usually used to
+;   map the io ports.
+;
+;   XXX: this code is duplicated in _BOOT, but I see no way to remove it from
+;         from there and still be able to boot; specially if we have a >48Kb kernel
+
+		.area _CODE
+
+_mapslot_bank1:
+		ld hl,#0x4000
+		jp mapslot
+_mapslot_bank2:
+		ld hl,#0x8000
+		jp mapslot
+mapslot:
+		call setprm         ; calculate bit pattern and mask code
+		jp m, mapsec        ; if expanded set secondary first
+		in a,(0xa8)
+		and c
+		or b
+		out (0xa8),a        ; set primary slot
+		ret
+mapsec:
+		push hl
+		; here need to store the slot that is being set....
+		call setexp         ; set secondary slot
+		pop hl
+		jr mapslot
+
+		; calculate bit pattern and mask
+setprm:
+		di
+		push af
+		ld a,h
+		rlca
+		rlca
+		and #3
+		ld e,a              ; bank number
+		ld a,#0xC0
+setprm1:
+		rlca
+		rlca
+		dec e
+		jp p, setprm1
+		ld e,a              ; mask pattern
+		cpl
+		ld c,a              ; inverted mask pattern
+		pop af
+		push af
+		and #3              ; extract xxxxxxPP
+		inc a
+		ld b,a
+		ld a,#0xAB
+setprm2:
+		add a,#0x55
+		djnz setprm2
+		ld d,a              ; primary slot bit pattern
+		and e
+		ld b,a
+		pop af
+		and a               ; if expanded slot set sign flag
+		ret
+
+		; set secondary slot
+setexp:
+		push af
+		ld a,d
+		and #0xC0          ; get slot number for bank 3
+		ld c,a
+		pop af
+		push af
+		ld d,a
+		in a,(0xa8)
+		ld b,a
+		and #0x3F
+		or c
+		out (0xa8),a        ; set bank 3 to target slot
+		ld a,d
+		rrca
+		rrca
+		and #3
+		ld d,a
+		ld a,#0xAB          ; secondary slot to bit pattern
+setexp1:
+		add a,#0x55
+		dec d
+		jp p,setexp1
+		and e
+		ld d,a
+		ld a,e
+		cpl
+		ld h,a
+		ld a,(0xffff)       ; read and update secondary slot register
+		cpl
+		ld l,a
+		and h               ; strip off old bits
+		or d                ; add new bits
+		ld (0xffff),a
+		ld a,b
+		out (0xa8),a        ; restore status
+		pop af
+		and #3
+		ret
+
+		.area _COMMONMEM
+
+
 map_table:
 	    .db 0,0,0,0	
 map_savearea:
 	    .db 0,0,0,0
 map_kernel_data:
 	    .db 3,2,1,4
+_slotrom:
+        .db 0
+_slotram:
+        .db 0
 
 ; emulator debug port for now
 outchar:
 	    push af
 	    out (0x2F), a
 	    pop af
-            ret
+	    ret
 
