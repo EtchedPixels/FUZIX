@@ -451,7 +451,10 @@ int main(int argc, const char *argv[]) {
       srchead = srchead->next;
       argp = 0;
     }
-  }
+  } else {
+      build_command();
+      ret = do_command();
+  }  
   if (mode != MODE_LINK || ret)
     exit(ret);
   argp = 0;
