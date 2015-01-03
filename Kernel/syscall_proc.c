@@ -276,7 +276,7 @@ int16_t _waitpid(void)
 	}
 
 	/* See if we have any children. */
-	for (p = ptab; p < ptab + maxproc; ++p) {
+	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status && p->p_pptr == udata.u_ptab
 		    && p != udata.u_ptab)
 			goto ok;
@@ -293,7 +293,7 @@ int16_t _waitpid(void)
 			udata.u_error = EINTR;
 			return (-1);
 		}
-		for (p = ptab; p < ptab + maxproc; ++p) {
+		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_status == P_ZOMBIE
 			    && p->p_pptr == udata.u_ptab) {
 				if (pid == -1 || p->p_pid == pid
@@ -499,7 +499,7 @@ int16_t _kill(void)
 	if (pid == 0)
 		udata.u_argn = -udata.u_ptab->p_pgrp;
 
-	for (p = ptab; p < ptab + maxproc; ++p) {
+	for (p = ptab; p < ptab_end; ++p) {
 		/* No overlap here */
 		if (-p->p_pgrp == pid || p->p_pid == pid) {
 			f = 1;	/* Found */

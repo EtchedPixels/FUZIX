@@ -139,6 +139,10 @@ void fuzix_main(void)
 #else
 	maxproc = PTABSIZE;
 #endif
+        /* Used as a stop marker to make compares fast on process
+           scheduling and the like */
+        ptab_end = &ptab[maxproc];
+
 	/* Parameters message */
 	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();

@@ -21,6 +21,7 @@ extern uint16_t root_dev;  /* Device number of root filesystem. */
 
 extern struct blkbuf bufpool[NBUFS];
 extern struct p_tab ptab[PTABSIZE];
+extern struct p_tab *ptab_end;
 extern struct oft of_tab[OFTSIZE];       /* Open File Table */
 extern struct cinode i_tab[ITABSIZE];    /* In-core inode table */
 extern struct mount fs_tab[NMOUNTS];	 /* Mount table */

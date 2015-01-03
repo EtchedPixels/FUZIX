@@ -61,7 +61,7 @@ void wakeup(void *event)
 	kprintf("wakeup(0x%x)\n", event);
 #endif
 	irq = di();
-	for (p = ptab; p < ptab + maxproc; ++p) {
+	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status > P_RUNNING && p->p_wait == event) {
 #ifdef DEBUG
 			kprintf("wakeup: found proc 0x%x pid %d\n",
@@ -102,7 +102,7 @@ ptptr getproc(void)
 #ifdef DEBUG
 #ifdef DEBUGREALLYHARD
 	kputs("getproc start ... ");
-	for (pp = ptab; pp < ptab + maxproc; pp++)
+	for (pp = ptab; pp < ptab_end; pp++)
 		kprintf("ptab[0x%x]: pid=%d uid=%d status=%d, page=0x%x\n",
 			pp, pp->p_pid, pp->p_uid, pp->p_status,
 			pp->p_page);
@@ -116,7 +116,7 @@ ptptr getproc(void)
 
 	for (;;) {
 		getproc_nextp++;
-		if (getproc_nextp >= ptab + maxproc) {
+		if (getproc_nextp >= ptab_end) {
 			getproc_nextp = ptab;
 		}
 
@@ -247,7 +247,7 @@ ptptr ptab_alloc(void)
 	udata.u_error = EAGAIN;
 
 	irq = di();
-	for (p = ptab; p < ptab + maxproc; p++)
+	for (p = ptab; p < ptab_end; p++)
 		if (p->p_status == P_EMPTY) {
 			newp = p;
 			break;
@@ -262,7 +262,7 @@ ptptr ptab_alloc(void)
 			if (nextpid++ > MAXPID)
 				nextpid = 20;
 			newp->p_pid = nextpid;
-			for (p = ptab; p < ptab + maxproc; p++)
+			for (p = ptab; p < ptab_end; p++)
 				if (p->p_status != P_EMPTY
 				    && p->p_pid == nextpid)
 					newp->p_pid = 0;	/* try again */
@@ -338,7 +338,7 @@ void timer_interrupt(void)
 		ticks.full++;
 
 		/* Update process alarm clocks and timeouts */
-		for (p = ptab; p < ptab + maxproc; ++p) {
+		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_alarm) {
 				p->p_alarm--;
 				if (!p->p_alarm)
@@ -421,7 +421,7 @@ void unix_syscall(void)
 void sgrpsig(uint16_t pgrp, uint16_t sig)
 {
 	ptptr p;
-	for (p = ptab; p < ptab + maxproc; ++p) {
+	for (p = ptab; p < ptab_end; ++p) {
 		if (-p->p_pgrp == pgrp)
 			ssig(p, sig);
 	}
@@ -577,7 +577,7 @@ void doexit(int16_t val, int16_t val2)
 	       2 * sizeof(clock_t));
 
 	/* See if we have any children. Set child's parents to our parent */
-	for (p = ptab; p < ptab + maxproc; ++p) {
+	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status && p->p_pptr == udata.u_ptab
 		    && p != udata.u_ptab)
 			p->p_pptr = udata.u_ptab->p_pptr;

@@ -172,7 +172,7 @@ static ptptr swapvictim(ptptr p, int notself)
 			}
 		}
 		c++;
-		if (c > ptab + maxproc)
+		if (c > ptab_end)
 			c = ptab;
 	}
 	while (c != getproc_nextp);
