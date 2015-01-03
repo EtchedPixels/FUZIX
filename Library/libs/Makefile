@@ -72,7 +72,7 @@ syslib.lib: syscall.l libc.l sdccz80.lib
 	cp sdccz80.lib syslib.lib
 	$(AR) rc syslib.lib @syslib.l
 	$(AR) s syslib.lib
-	ln -s syslib.lib c.lib
+	ln -sf syslib.lib c.lib
 
 fuzix/syslib.l:
 	../tools/syscall
