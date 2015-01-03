@@ -84,9 +84,9 @@ int16_t _sync(void)
 	/* Write out modified inodes */
 
 	for (ino = i_tab; ino < i_tab + ITABSIZE; ++ino)
-		if (ino->c_refs > 0 && ino->c_dirty != 0) {
+		if (ino->c_refs > 0 && (ino->c_flags & CDIRTY)) {
 			wr_inode(ino);
-			ino->c_dirty = 0;
+			ino->c_flags &= ~CDIRTY;
 		}
 
         /* This now also indirectly does the superblocks as they
