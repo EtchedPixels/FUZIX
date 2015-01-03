@@ -321,7 +321,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     if(udata.u_error)
         return false;
 
-    setftime(wd, A_TIME|M_TIME|C_TIME);     /* Sets c_dirty */
+    setftime(wd, A_TIME|M_TIME|C_TIME);     /* Sets CDIRTY */
 
     /* Update file length to next block */
     if(wd->c_node.i_size & BLKMASK)
@@ -652,13 +652,39 @@ int8_t oft_alloc(void)
     return -1;
 }
 
+/*
+ *	To minimise storage we don't track exclusive locks explicitly. We know
+ *	that if we are dropping an exclusive lock then we must be the owner,
+ *	and if we are dropping a lock that is not exclusive we must own one of
+ *	the non exclusive locks.
+ */
+void deflock(struct oft *ofptr)
+{
+    inoptr i = ofptr->o_inode;
+    uint8_t c = i->c_flags & CFLOCK;
 
+    if (ofptr->o_access & O_FLOCK) {
+        if (c == CFLEX)
+            c = 0;
+        else
+            c--;
+        i->c_flags = (i->c_flags & ~CFLOCK) | c;
+        wakeup(&i->c_flags);
+    }
+}
+
+/*
+ *	Drop a reference in the open file table. If this is the last reference
+ *	from a user file table then drop any file locks, dereference the inode
+ *	and mark empty
+ */
 void oft_deref(int8_t of)
 {
     struct oft *ofptr;
 
     ofptr = of_tab + of;
     if(!(--ofptr->o_refs) && ofptr->o_inode) {
+        deflock(ofptr);
         i_deref(ofptr->o_inode);
         ofptr->o_inode = NULLINODE;
     }
@@ -726,7 +752,7 @@ void i_deref(inoptr ino)
             f_trunc(ino);
 
     /* If the inode was modified, we must write it to disk. */
-    if(!(ino->c_refs) && ino->c_dirty)
+    if(!(ino->c_refs) && (ino->c_flags & CDIRTY))
     {
         if(!(ino->c_node.i_nlink))
         {
@@ -753,7 +779,7 @@ void wr_inode(inoptr ino)
     buf =(struct dinode *)bread(ino->c_dev, blkno,0);
     memcpy((char *)((char **)&buf[ino->c_num & 0x07]), (char *)(&ino->c_node), 64);
     bfree((bufptr)buf, 2);
-    ino->c_dirty = false;
+    ino->c_flags &= ~CDIRTY;
 }
 
 
@@ -793,7 +819,7 @@ void f_trunc(inoptr ino)
 
     memset((char *)ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
 
-    ino->c_dirty = true;
+    ino->c_flags |= CDIRTY;
     ino->c_node.i_size = 0;
 }
 
@@ -846,7 +872,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
             if(rwflg ||(nb = blk_alloc(dev))==0)
                 return(NULLBLK);
             ip->c_node.i_addr[bn] = nb;
-            ip->c_dirty = true;
+            ip->c_flags |= CDIRTY;
         }
         return(nb);
     }
@@ -871,7 +897,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
         if(rwflg || !(nb = blk_alloc(dev)))
             return(NULLBLK);
         ip->c_node.i_addr[20-j] = nb;
-        ip->c_dirty = true;
+        ip->c_flags |= CDIRTY;
     }
 
     /* fetch through the indirect blocks
@@ -989,7 +1015,7 @@ uint8_t getperm(inoptr ino)
 */
 void setftime(inoptr ino, uint8_t flag)
 {
-    ino->c_dirty = true;
+    ino->c_flags |= CDIRTY;
 
     if(flag & A_TIME)
         rdtime32(&(ino->c_node.i_atime));

@@ -536,7 +536,7 @@ void idump(void)
 			ip->c_node.i_mode);
 		kprintf("%d\t%d\t%d\t%d\n",	/* line split for compiler */
 			ip->c_node.i_nlink, ip->c_node.i_addr[0],
-			ip->c_refs, ip->c_dirty);
+			ip->c_refs, ip->c_flags);
 		if (!ip->c_magic)
 			break;
 	}

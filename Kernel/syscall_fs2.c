@@ -676,3 +676,93 @@ int16_t _uname(void)
 }
 
 #undef buf
+
+/**************************************
+flock(fd, lockop)	    Function 60
+int file;
+int lockop;
+
+Perform locking upon a file.
+**************************************/
+
+#define file (uint16_t)udata.u_argn
+#define lockop (uint16_t)udata.u_argn1
+
+int16_t _flock(void)
+{
+	inoptr ino;
+	struct oft *o;
+	staticfast uint8_t c;
+	staticfast uint8_t lock = lockop & ~LOCK_NB;
+	staticfast int self;
+	
+	self = 0;
+
+	if (lock > LOCK_UN) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+
+	if ((ino = getinode(file)) == NULLINODE)
+		return -1;
+	o = &of_tab[udata.u_files[file]];
+
+	c = ino->c_flags & CFLOCK;
+
+	/* Upgrades and downgrades. Check if we are in fact doing a no-op */
+	if (o->o_access & O_FLOCK) {
+		self = 1;
+		/* Shared or exclusive to shared can't block and is easy */
+		if (lock == LOCK_SH) {
+			if (c == CFLEX)
+				c = 1;
+			goto done;
+		}
+		/* Exclusive to exclusive - no op */
+		if (c == CFLEX && lock == LOCK_EX)
+			return 0;
+		/* Shared to exclusive - handle via the loop */
+	}
+		
+		
+	/* Unlock - drop the locks, mark us not a lock holder. Doesn't block */
+	if (lockop == LOCK_UN) {
+		o->o_access &= ~O_FLOCK;
+		deflock(o);
+		return 0;
+	}
+
+	do {
+		/* Exclusive lock must have no holders */
+		if (c == self && lock == LOCK_EX) {
+			c = CFLEX;
+			goto done;
+		}
+		if (c < CFMAX) {
+			c++;
+			goto done;
+		}
+		if (c == CFMAX) {
+			udata.u_error = ENOLCK;
+			return -1;
+		}
+		/* LOCK_NB is defined as O_NDELAY... */
+		if (psleep_flags(&ino->c_flags, (lockop & LOCK_NB)))
+			return -1;
+		/* locks will hopefully have changed .. */
+		c = ino->c_flags & CFLOCK;
+	} while (1);
+
+done:
+	if (o->o_access & O_FLOCK)
+		deflock(o);
+	ino->c_flags &= ~CFLOCK;
+	ino->c_flags |= c;
+	o->o_access |= O_FLOCK;
+	wakeup(&ino->c_flags);
+	return 0;
+}
+
+
+#undef file
+#undef lockop

@@ -1,4 +1,4 @@
-#define NR_SYSCALL 60
+#define NR_SYSCALL 61
 
 char *syscall_name[NR_SYSCALL] = {
 	"_exit",
@@ -61,6 +61,7 @@ char *syscall_name[NR_SYSCALL] = {
 	"uadmin",
 	"nice",
 	"_sigdisp",
+	"flock",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -123,5 +124,6 @@ int syscall_args[NR_SYSCALL] = {
 	4, //_profil
 	3, //uadmin
 	1, //nice
-	2  //_sigdisp
+	2, //_sigdisp
+	2, //flock
 };

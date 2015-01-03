@@ -183,7 +183,11 @@ typedef struct cinode { // note: exists in memory *and* on disk
     uint16_t   c_num;             /* Inode # */
     dinode     c_node;
     uint8_t    c_refs;            /* In-core reference count */
-    bool       c_dirty;           /* Modified flag. */
+    uint8_t    c_flags;           
+#define CDIRTY		0x80	/* Modified flag. */
+#define CFLOCK		0x0F	/* flock bits */
+#define CFLEX		0x0F	/* locked exclusive */
+#define CFMAX		0x0E	/* highest shared lock count permitted */
 } cinode, *inoptr;
 
 #define NULLINODE ((inoptr)NULL)
@@ -431,13 +435,14 @@ struct s_argblk {
 #define O_APPEND	4
 #define O_SYNC		8
 #define O_NDELAY	16
+#define O_FLOCK		128		/* Cannot be user set */
 #define O_CREAT		256
 #define O_EXCL		512
 #define O_TRUNC		1024
 #define O_NOCTTY	2048
 #define O_CLOEXEC	4096
 
-#define O_BADBITS	(32 | 64 | 128 | 8192 | 16384 | 32768U)
+#define O_BADBITS	(32 | 64 | O_FLOCK | 8192 | 16384 | 32768U)
 
 #define F_GETFL		0
 #define F_SETFL		1
@@ -447,6 +452,11 @@ struct s_argblk {
 
 #define FNDELAY		O_NDELAY
 
+#define LOCK_SH		0
+#define LOCK_EX		1
+#define LOCK_UN		2		/* Must be highest */
+
+#define LOCK_NB		O_NDELAY	/* Must be O_NDELAY */
 
 /*
  * Error codes
@@ -488,7 +498,8 @@ struct s_argblk {
 #define EDOM            33              /* Argument too large */
 #define ERANGE          34              /* Result too large */
 
-#define EWOULDBLOCK	35		/* Operation would block */
+#define EWOULDBLOCK	EAGAIN		/* Operation would block */
+#define ENOLCK		35		/* Lock table full */
 #define ENOTEMPTY	36		/* Directory is not empty */
 #define ENAMETOOLONG    37              /* File name too long */
 
@@ -619,6 +630,7 @@ CODE1 void i_free(uint16_t devno, uint16_t ino);
 CODE1 blkno_t blk_alloc(uint16_t devno);
 CODE1 void blk_free(uint16_t devno, blkno_t blk);
 CODE1 int8_t oft_alloc(void);
+CODE1 void deflock(struct oft *ofptr);
 CODE1 void oft_deref(int8_t of);
 /* returns index of slot, or -1 on failure */
 CODE1 int8_t uf_alloc(void);
@@ -780,13 +792,15 @@ CODE2 int16_t _fcntl(void);        /* FUZIX system call 47 */
 CODE2 int16_t _fchdir(void);       /* FUZIX system call 48 */
 CODE2 int16_t _fchmod(void);       /* FUZIX system call 49 */
 CODE2 int16_t _fchown(void);       /* FUZIX system call 50 */
-CODE2 int16_t _mkdir(void);	     /* FUZIX system call 51 */
+CODE2 int16_t _mkdir(void);	   /* FUZIX system call 51 */
 CODE2 int16_t _rmdir(void);        /* FUZIX system call 52 */
-CODE2 int16_t _setpgrp(void);	     /* FUZIX system call 53 */
-CODE2 int16_t _uname(void);	     /* FUZIX system call 54 */
-CODE2 int16_t _waitpid(void);	     /* FUZIX system call 55 */
-CODE2 int16_t _profil(void);	     /* FUZIX system call 56 */
-CODE2 int16_t _uadmin(void);	     /* FUZIX system call 57 */
+CODE2 int16_t _setpgrp(void);	   /* FUZIX system call 53 */
+CODE2 int16_t _uname(void);	   /* FUZIX system call 54 */
+CODE2 int16_t _waitpid(void);	   /* FUZIX system call 55 */
+CODE2 int16_t _profil(void);	   /* FUZIX system call 56 */
+CODE2 int16_t _uadmin(void);	   /* FUZIX system call 57 */
 CODE2 int16_t _nice(void);         /* FUZIX system call 58 */
-CODE2 int16_t _sigdisp(void);	     /* FUZIX system call 59 */
+CODE2 int16_t _sigdisp(void);	   /* FUZIX system call 59 */
+CODE2 int16_t _flock(void);	   /* FUZIX system call 60 */
+
 #endif /* __FUZIX__KERNEL_DOT_H__ */
