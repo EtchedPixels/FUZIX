@@ -64,7 +64,7 @@ Setting It Up
 	# Double density single sided 40 track boot disk
 	tools/makejv3 dd40s /dev/zero mydisk.jv3
 	# Build boot block (not yet converted to sdasz80)
-	zmac platform/z80boot.s
+	zmac platform-trs80/trs80load.s
 	# Build kernel (edit Makefile, set target then)
 	make
 	# Add pieces to the disk (boot block in sector 0, kernel at end)
