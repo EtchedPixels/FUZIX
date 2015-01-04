@@ -8,5 +8,7 @@ extern void nc100_tty_init(void);
 extern uint8_t keymap[10];
 #define KEY_ROWS	10
 #define KEY_COLS	8
+extern uint8_t keyboard[8][10];
+extern uint8_t shiftkeyboard[8][10];
 
 #endif

@@ -19,6 +19,8 @@
 #undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
+/* We have a key that needs remapping into unicode space */
+#define CONFIG_UNIKEY
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define MAX_MAPS 16
