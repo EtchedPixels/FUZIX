@@ -50,6 +50,7 @@ void fstabinit(void)
 	}
 }
 
+/* FIXME: pass remainder of boot argument to init, also word align */
 void create_init(void)
 {
 	uint8_t *j;
