@@ -219,7 +219,11 @@ int vt_inproc(uint8_t minor, unsigned char c)
 		tty_inproc(minor, 0xC2);
 		return tty_inproc(minor, 0xBD);
 	}
-	f (c == KEY_EURO) {
+	if (c == KEY_DOT) {
+		tty_inproc(minor, 0xC2);
+		return tty_inproc(minor, 0xB7);
+	}
+	if (c == KEY_EURO) {
 		tty_inproc(minor, 0xE2);
 		tty_inproc(minor, 0x82);
 		return tty_inproc(minor, 0xAC);
