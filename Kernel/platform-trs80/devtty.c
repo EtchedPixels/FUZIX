@@ -160,7 +160,7 @@ static uint8_t keyboard[8][8] = {
 	{ 0, 0, 0, 0, 0xF1, 0xF2, 0xF3, 0 }
 };
 
-static uint8_t shiftkeyboard[8][10] = {
+static uint8_t shiftkeyboard[8][8] = {
 	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
 	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
 	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
