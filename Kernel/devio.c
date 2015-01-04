@@ -257,6 +257,9 @@ int d_open(uint16_t dev, uint8_t flag)
 }
 
 
+/* FIXME: on the last close we ought to flush/invalidate any bufs
+   for this device so we can support swapping between media properly
+   (right now the cache is so small it happens to work...) */
 int d_close(uint16_t dev)
 {
 	if (!validdev(dev))
