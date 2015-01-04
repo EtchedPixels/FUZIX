@@ -139,7 +139,6 @@ upline:
 _scroll_up:
 		.endif
 scroll_up:
-	    ret
 	    ld b, #23
 	    ld de, #40		; start of second line
 downline:   push bc
@@ -156,6 +155,7 @@ downline:   push bc
 	    add hl, de
 	    out (c), l
 	    out (c), h
+	    dec c
 	    ld hl, #scrollbuf
 	    ld b, #0x40
 	    otir		; FIXME: is otir ok for MSX 1 ???
