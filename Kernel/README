@@ -28,8 +28,7 @@ this recipe should work on Mac.
 - The path to the SDCC library is hardcoded in platform/*.lnk. That also
   wants fixing. It expects it in /usr/share/sdcc/lib/z80
 
-- make will build an uzi.bin (will change to fuzix.bin when I get a round
-  tuit)
+- make will build a fuzix.bin
 
 - See the platform/README for further instructions on assembling a final
   image. Usually you need to build a file system, dd the kernel into the
