@@ -1,5 +1,5 @@
 
-CSRCS = ../dev/devsd.c ../dev/mbr.c devfd.c devhd.c devlpr.c
+CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c devtty.c
 DSRCS = devmegasd.c
 ASRCS = msx2.s crt0.s vdp.s

@@ -49,6 +49,8 @@
 /* Hardware parameters */
 #define Z180_IO_BASE       0x00
 
+#define MAX_BLKDEV  2		    /* 2 IDE drives */
+
 #define DEVICE_IDE                  /* enable if IDE interface present */
 #define IDE_REG_BASE       0x50
 #define IDE_REG_CS0_FIRST

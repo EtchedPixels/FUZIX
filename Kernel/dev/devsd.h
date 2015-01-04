@@ -15,9 +15,6 @@
 
 
 /* public interface */
-int devsd_open(uint8_t minor, uint16_t flags);
-int devsd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int devsd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 void devsd_init(void);
 
 /* platform-specific SPI functions */

@@ -36,6 +36,7 @@ vt.rel
 devsys.rel
 usermem.rel
 usermem_std-z80.rel
+platform-msx2/blkdev.rel
 platform-msx2/devsd.rel
 platform-msx2/devmegasd.rel
 platform-msx2/mbr.rel

@@ -1,46 +1,80 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <blkdev.h>
 
 typedef struct {
-    unsigned char status;
-    unsigned char chs_first[3];
-    unsigned char type;
-    unsigned char chs_last[3];
-    unsigned long lba_first;
-    unsigned long lba_count;
+    uint8_t  status;
+    uint8_t  chs_first[3];
+    uint8_t  type;
+    uint8_t  chs_last[3];
+    uint32_t lba_first;
+    uint32_t lba_count;
 } partition_table_entry_t;
 
 #define MBR_ENTRY_COUNT 4
+#define MBR_SIGNATURE 0xAA55
 typedef struct {
-    unsigned char bootcode[446];
+    uint8_t bootcode[446];
     partition_table_entry_t partition[MBR_ENTRY_COUNT];
-    unsigned int signature;
-} master_boot_record_t;
+    uint16_t signature;
+} boot_record_t;
 
-void parse_partition_table(void *buffer, uint32_t *first_lba, uint8_t *slice_count, uint8_t max_slices)
+void mbr_parse(blkdev_t *blk, char letter)
 {
-    master_boot_record_t *mbr = (master_boot_record_t*)buffer;
-    uint16_t slices = 0;
+    boot_record_t *br;
     uint8_t i;
+    uint32_t lba = 0, ep_offset = 0, br_offset = 0;
+    uint8_t next = 0;
 
-    /* check for MBR table signature */
-    if(mbr->signature != 0xaa55){
-        kputs("no partition table\n");
-        return;
-    }
+    /* allocate temporary memory */
+    br = (boot_record_t *)tmpbuf();
 
-    /* look for a fuzix partition (type 0x5A) */
-    for(i=0; i<MBR_ENTRY_COUNT; i++){
-        if(mbr->partition[i].type == 0x5A){
-            *first_lba = mbr->partition[i].lba_first;
-            slices = mbr->partition[i].lba_count >> SLICE_SIZE_LOG2_SECTORS;
-            if(slices > max_slices)
-                slices = max_slices;
-            *slice_count = slices;
-            break;
-        }
-    }
+    do{
+	if(!blk->transfer(blk->drive_number, lba, br, true) || br->signature != MBR_SIGNATURE)
+	    break;
 
-    kprintf("%d slices\n", slices);
+	if(next < 4 && lba != 0){ 
+	    /* we just loaded the first extended boot record */
+	    ep_offset = lba;
+	    next = 4;
+	    kputs("< ");
+	}
+
+	br_offset = lba;
+	lba = 0;
+
+	for(i=0; i<MBR_ENTRY_COUNT && next < MAX_PARTITIONS; i++){
+	    switch(br->partition[i].type){
+		case 0:
+		    break;
+		case 0x05:
+		case 0x0f:
+		case 0x85:
+		    /* Extended boot record, or chained table; in principle a drive should contain
+		       at most one extended partition so this code is OK even for parsing the MBR.
+		       Chained EBR addresses are relative to the start of the extended partiton. */
+		    lba = ep_offset + br->partition[i].lba_first;
+		    if(next >= 4)
+			break;
+		    /* we include all primary partitions but we deliberately knobble the size in 
+		       order to prevent catastrophic accidents */
+		    br->partition[i].lba_count = 2;
+		    /* fall through */
+		default:
+		    /* Regular partition: In EBRs these are relative to the EBR (not the disk, nor
+		       the extended partition) */
+		    blk->lba_first[next] = br_offset + br->partition[i].lba_first;
+		    blk->lba_count[next] = br->partition[i].lba_count;
+		    kprintf("hd%c%d ", letter, 1+next);
+		    next++;
+	    }
+	}
+    }while(lba);
+
+    if(next >= 4)
+	kputs("> ");
+
+    /* release temporary memory */
+    brelse((bufptr)br);
 }
