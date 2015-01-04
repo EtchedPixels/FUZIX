@@ -159,6 +159,8 @@ struct tty {
     struct termios termios;
 };
 
+#define CTRL(x)		((x)&0x1F)
+
 extern struct tty ttydata[NUM_DEV_TTY + 1];
 
 extern CODE1 void tty_init(void);

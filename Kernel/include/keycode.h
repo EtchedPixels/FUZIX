@@ -9,7 +9,6 @@
  */
 
 
-#define CTRL(x)		((x)&0x1F)
 #define ESC(x)		(0x80|(x))
 
 #define KEY_DEL		0x7F
@@ -30,6 +29,10 @@
 #define KEY_EXTRA	ESC('e')
 #define KEY_PRINT	ESC(']')
 #define KEY_STOP	CTRL('C')
+#define KEY_DELR	ESC('r')
+#define KEY_PLUS	ESC('+')
+#define KEY_MINUS	ESC('-')
+#define KEY_EXIT	ESC('q')
 
 #define KEY_F1		ESC('1')
 #define KEY_F2		ESC('2')
@@ -48,5 +51,6 @@
 #define KEY_POUND	0x80
 #define KEY_HALF	0x81
 #define KEY_EURO	0x82
+#define KEY_DOT		0x83
 
 #endif
