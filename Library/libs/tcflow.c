@@ -1,7 +1,10 @@
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
 
-int tcflush(int fd, int q)
+int tcflow(int fd, int action)
 {
-  return ioctl(fd, TIOCFLUSH, q);
+	/* TODO */
+	errno = EINVAL;
+	return -1;
 }

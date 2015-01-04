@@ -117,7 +117,7 @@ $(OBJSBAD): $(SRCSBAD)
 	$(FCC) $< -o $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
 
 rmbak:
 	rm -f *~ core

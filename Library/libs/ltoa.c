@@ -4,7 +4,7 @@
  */
 
 
-char * ultoa(unsigned long val)
+char *_ultoa(unsigned long val)
 {
    char *p;
    static char buf[12];
@@ -21,12 +21,12 @@ char * ultoa(unsigned long val)
    return p;
 }
 
-char * ltoa(long val)
+char *_ltoa(long val)
 {
    char *p;
    int flg = 0;
    if( val < 0 ) { flg++; val= -val; }
-   p = ultoa(val);
+   p = _ultoa(val);
    if(flg) *--p = '-';
    return p;
 }
