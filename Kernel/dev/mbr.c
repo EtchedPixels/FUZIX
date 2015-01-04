@@ -23,7 +23,7 @@ typedef struct {
 void mbr_parse(blkdev_t *blk, char letter)
 {
     boot_record_t *br;
-    uint8_t i;
+    uint8_t i, maxbr = 50;
     uint32_t lba = 0, ep_offset = 0, br_offset = 0;
     uint8_t next = 0;
 
@@ -32,6 +32,10 @@ void mbr_parse(blkdev_t *blk, char letter)
 
     do{
 	if(!blk->transfer(blk->drive_number, lba, br, true) || br->signature != MBR_SIGNATURE)
+	    break;
+
+	/* avoid an infinite loop where extended boot records form a loop */
+	if(--maxbr == 0)
 	    break;
 
 	if(next < 4 && lba != 0){ 
