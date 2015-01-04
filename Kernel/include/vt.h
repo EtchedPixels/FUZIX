@@ -1,6 +1,8 @@
 #ifndef __VT_DOT_H__
 #define __VT_DOT_H__
 
+#include <keycode.h>
+
 /* Optional defines */
 
 #ifndef MAX_VT
@@ -38,5 +40,6 @@ void scroll_down(void);
 void plot_char(int8_t y, int8_t x, uint16_t c);
 void do_beep(void);
 int vt_ioctl(uint8_t minor, uint16_t op, char *ptr);
+int vt_inproc(uint8_t minor, unsigned char c);
 
 #endif

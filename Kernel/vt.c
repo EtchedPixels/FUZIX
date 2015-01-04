@@ -193,6 +193,14 @@ int vt_ioctl(uint8_t minor, uint16_t request, char *data)
 				return KEY_ROWS << 8 | KEY_COLS;
 			case KBMAPGET:
 				return uput(keymap, data, sizeof(keymap));
+			case KBSETTRANS:
+				if (esuper())
+					return -1;
+				if (uget(keyboard, data, sizeof(keyboard)) == -1)
+					return -1;
+				return uget(shiftkeyboard,
+					data + sizeof(keyboard),
+					sizeof(shiftkeyboard));
 			case VTSIZE:
 				return VT_HEIGHT << 8 | VT_WIDTH;
 		}
@@ -200,6 +208,29 @@ int vt_ioctl(uint8_t minor, uint16_t request, char *data)
 	return tty_ioctl(minor, request, data);
 }
 
+int vt_inproc(uint8_t minor, unsigned char c)
+{
+#ifdef CONFIG_UNIKEY
+	if (c == KEY_POUND) {
+		tty_inproc(minor, 0xC2);
+		return tty_inproc(minor, 0xA3);
+	}
+	if (c == KEY_HALF) {
+		tty_inproc(minor, 0xC2);
+		return tty_inproc(minor, 0xBD);
+	}
+	f (c == KEY_EURO) {
+		tty_inproc(minor, 0xE2);
+		tty_inproc(minor, 0x82);
+		return tty_inproc(minor, 0xAC);
+	}
+#endif
+	if (c > 0x9F) {
+		tty_inproc(minor, KEY_ESC);
+		c &= 0x7F;
+	}
+	return tty_inproc(minor, c);
+}
 
 void vtinit(void)
 {
