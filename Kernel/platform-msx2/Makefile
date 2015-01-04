@@ -1,17 +1,23 @@
 
-CSRCS = devtty.c devfd.c devhd.c devlpr.c
-CSRCS += devices.c main.c
-
+CSRCS = ../dev/devsd.c ../dev/mbr.c devfd.c devhd.c devlpr.c
+CSRCS += devices.c main.c devtty.c
+DSRCS = devmegasd.c
 ASRCS = msx2.s crt0.s vdp.s
 ASRCS += tricks.s commonmem.s bootrom.s
 
+CROSS_CCOPTS += -I../dev/
+
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-OBJS  = $(COBJS) $(AOBJS)
+DOBJS = $(DSRCS:.c=.rel)
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
 
 all:	$(OBJS)
+
+$(DOBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE2 -c $<

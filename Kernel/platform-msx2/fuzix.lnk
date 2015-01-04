@@ -18,9 +18,6 @@ platform-msx2/main.rel
 timer.rel
 kdata.rel
 platform-msx2/devtty.rel
-platform-msx2/devfd.rel
-platform-msx2/devhd.rel
-platform-msx2/devlpr.rel
 platform-msx2/devices.rel
 devio.rel
 filesys.rel
@@ -39,4 +36,7 @@ vt.rel
 devsys.rel
 usermem.rel
 usermem_std-z80.rel
+platform-msx2/devsd.rel
+platform-msx2/devmegasd.rel
+platform-msx2/mbr.rel
 -e
