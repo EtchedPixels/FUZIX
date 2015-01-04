@@ -9,5 +9,7 @@ void tty_irq(void);
 #define KEY_ROWS	12
 #define KEY_COLS	8
 extern uint8_t keymap[12];
+extern uint8_t keyboard[12][8];
+extern uint8_t shiftkeyboard[12][8];
 
 #endif
