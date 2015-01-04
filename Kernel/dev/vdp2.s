@@ -173,7 +173,6 @@ upline:
 	    ret
 
 _scroll_up:
-	    ret
 	    ld b, #23
 	    ld de, #80		; start of second line
 downline:   push bc
@@ -190,6 +189,7 @@ downline:   push bc
 	    add hl, de
 	    out (c), l
 	    out (c), h
+	    dec c
 	    ld hl, #scrollbuf
 	    ld b, #80
 	    otir
