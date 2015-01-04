@@ -4,6 +4,7 @@
 #include <devfd.h>
 #include <devsys.h>
 #include <devlpr.h>
+#include <devtty.h>
 #include <tty.h>
 #include <vt.h>
 

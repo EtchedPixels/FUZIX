@@ -21,6 +21,8 @@
 
 /* VT layer required */
 #define CONFIG_VT
+/* Has soem keys in the unicode range */
+#define CONFIG_UNIKEY
 /* We want the 8x8 font */
 #define CONFIG_FONT8X8
 /* Vt definitions */

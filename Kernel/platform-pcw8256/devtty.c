@@ -70,7 +70,7 @@ static void dartwr(uint8_t minor, uint8_t r, uint8_t v)
     irqrestore(irq);
 }
 
-static bool tty_writeready(uint8_t minor)
+bool tty_writeready(uint8_t minor)
 {
     if (minor == 1)
         return 1;	/* VT */
@@ -189,33 +189,31 @@ static void keyproc(void)
 }
 
 uint8_t keyboard[12][8] = {
-	{'2', '3', '6', '9', 0x81 /* paste */ ,0x91, '0', 0x93 /* F3 */},
-	{'1', '5', '4', '8', 0x82 /* copy */, 0x83 /* cut */, 0x84 /* PTR */, 0x85 /* EXIT */},
-	{'+', '@', 0, '7', '>', 13, ']', 127},
-	{'.', '?', ';', '<', 'p', '[', '-', '='},
+	{'2', '3', '6', '9', KEY_PASTE ,KEY_F1, '0', KEY_F3},
+	{'1', '5', '4', '8', KEY_COPY, KEY_CUT, KEY_PRINT, KEY_EXIT},
+	{KEY_PLUS, KEY_HALF, 0, '7', '#', 13, ']', KEY_DELR},
+	{'.', '/', ';', '$'/*FIXME*/, 'p', '[', '-', '='},
 	{',', 'm', 'k', 'l', 'i', 'o', '9', '0'},
 	{' ', 'n', 'j', 'h', 'y', 'u', '7', '8'},
-	{'v', 'b', 'f', 'g', 't', 'r', 's', '6'},
+	{'v', 'b', 'f', 'g', 't', 'r', '5', '6'},
 	{'x', 'c', 'd', 's', 'w', 'e', '3', '4'},
 	{'z', 0, 'a', '\t', 'q', 27, '2', '1'},
-	{8, 0, 0, 0, 0, 0, 0, 0},	/* FIXME: js line */
-	{0, '.', 13, 97, '-', 85/*cancel*/, 86/*extra*/, 0x95},
+	{KEY_DEL, '.', 13, KEY_F7, KEY_MINUS, KEY_CANCEL, 0, KEY_F5},	/* FIXME: js line */
+	{0, 0, 0, 0, 0, 0, 0, 0},
 	{0, 0, 0, 0, 0, 0, 0, 0}	/* FIXME: js 2 */
 };
 
-/* FIXME: shift symbols need double checking */
 uint8_t shiftkeyboard[12][8] = {
-	{'2', '3', '6', '9', 0x81 /* paste */ ,0x91, '0', 0x93 /* F3 */},
-	{'1', '5', '4', '8', 0x82 /* copy */, 0x83 /* cut */, 0x84 /* PTR */, 0x85 /* EXIT */},
-	{'+', 189/*half*/, 0, '7', '`', 13, ']', 127},
-	{'.', '/', ':', '<', 'P', '[', '_', '+'},
-	{',', 'M', 'K', 'L', 'I', 'O', '{', '}'},
+	{'2', '3', '6', '9', KEY_PASTE, KEY_F2, '0', KEY_F4},
+	{'1', '5', '4', '8', KEY_COPY, KEY_CUT, KEY_PRINT, KEY_EXIT},
+	{KEY_PLUS, '@', 0, '7', '>', 13, '}', KEY_DELR},
+	{KEY_DOT, '?', ':', '<', 'P', '{', '_', '+'},
+	{'\'', 'M', 'K', 'L', 'I', 'O', '(', ')'},
 	{' ', 'N', 'J', 'H', 'Y', 'U', '&', '*'},
-	{'V', 'B', 'F', 'G', 'T', 'R', '%', '^'/* cent */},
-	{'X', 'C', 'D', 'S', 'W', 'E', '$'/*FIXME £ */, '$'},
-	{'Z', 0, 'A', '\t', 'Q', 27, '"', '\''},
-	{8, 0, 0, 0, 0, 0, 0, 0},	/* FIXME: js line */
-	{0, '.', 13, 97, '-', 85/*cancel*/, 86/*extra*/, 0x95},
+	{'V', 'B', 'F', 'G', 'T', 'R', '%', '^'},
+	{'X', 'C', 'D', 'S', 'W', 'E', KEY_POUND, '$'},
+	{'Z', 0, 'A', '\t', 'Q', KEY_STOP, '"', '!'},
+	{0, 0, 0, 0, 0, 0, 0, 0},	/* FIXME: js 1 */
 	{0, 0, 0, 0, 0, 0, 0, 0}	/* FIXME: js 2 */
 };
 
@@ -243,7 +241,7 @@ static void keydecode(void)
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 /*        kprintf("ttyinproc %d\n", (int) c); */
-	tty_inproc(1, c);
+	vt_inproc(1, c);
 }
 
 /* FIXME: keyboard repeat
