@@ -149,26 +149,26 @@ static void keyproc(void)
 	}
 }
 
-static uint8_t keyboard[8][8] = {
+uint8_t keyboard[8][8] = {
 	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
 	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
 	{'x', 'y', 'z', '[', '\\', ']', '^', '_' },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{13, 12, 3, 0/*up*/, 0/*down*/, 8/* left */, 0/*right*/, ' '},
-	{ 0, 0, 0, 0, 0xF1, 0xF2, 0xF3, 0 }
+	{13, 12, 3, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
 };
 
-static uint8_t shiftkeyboard[8][8] = {
+uint8_t shiftkeyboard[8][8] = {
 	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
 	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
 	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
 	{'X', 'Y', 'Z', '{', '|', '}', '^', '_' },
 	{'0', '!', '"', '#', '$', '%', '&', '\'' },
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
-	{13, 12, 3, 0/*up*/, 0/*down*/, 8/* left */, 0/*right*/, ' '},
-	{ 0, 0, 0, 0, 0xF1, 0xF2, 0xF3, 0 }
+	{13, 12, 3, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
 };
 
 static uint8_t capslock = 0;
@@ -215,7 +215,7 @@ static void keydecode(void)
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c)
-		tty_inproc(1, c);
+		vt_inproc(1, c);
 }
 
 void kbd_interrupt(void)
