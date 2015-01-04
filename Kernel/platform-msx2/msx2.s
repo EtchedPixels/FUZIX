@@ -141,25 +141,26 @@ init_hardware:
             .area _COMMONMEM
 
 ;
-;	Called with interrupts off. See if we can work out how much RAM
-;	there is
+; Size currently selected memory mapper
 ;
 size_memory:
-	    ld bc, #0x04FC		; bank 4, port 0xFC (MSX mapper)
+	    ld bc, #0x03FC		; make sure ram page 3 is selected
+	    out (c), b
 	    ld hl, #8			; good a target as any
 	    ld (hl), #0xAA		; we know there is a low page!
+	    ld bc, #0x04FC		; continue with page 4
 ramscan_2:
 	    ld a, #0xAA
 ramscan:
 	    out (c), b
 	    cp (hl)			; is it 0xAA
-	    jr z, ramwrapped	; we've wrapped (hopefully)
+	    jr z, ramwrapped		; we've wrapped (hopefully)
 	    ld (hl), a
 	    cp (hl)
 	    jr nz, ramerror		; ermm.. help ???
 	    inc b
 	    jr nz, ramscan
-	    jr ramerror		; not an error we *could* have 256 pages!
+	    jr ramerror			; not an error we *could* have 256 pages!
 ramwrapped:
 	    ld a, #3
 	    out (c), a
@@ -172,17 +173,18 @@ ramwrapped:
 	    ld a, #3
 	    out (c), a
 	    ld a, #0xAA
-	    ld (hl), a		; put the marker back as 0xAA
+	    ld (hl), a			; put the marker back as 0xAA
 	    inc b
 	    jr nz, ramscan_2		; Continue our memory walk
-ramerror:   				; Ok so there are 256-b pages of 16K)
+ramerror:   				; Ok so there are 256-b-3 pages of 16K)
 	    ld a,#3
-	    out (c), a		; always put page 0 back
-
+	    out (c), a			; always put page 0 back
 	    ;
 	    ;	Address map back to normal so can update kernel data
 	    ;
-
+	    dec b			; take into account we started at page 3
+	    dec b
+	    dec b
 	    ld l, b
 	    ld h, #0
 	    ld a, l
@@ -199,7 +201,7 @@ pageslt256:
 	    ; set system RAM size in KB
 	    ld (_ramsize), hl
 	    ld de, #0xFFD0
-	    add hl, de		; subtract 48K for the kernel
+	    add hl, de			; subtract 48K for the kernel
 	    ld (_procmem), hl
 	    ret
 
@@ -433,9 +435,9 @@ map_savearea:
 map_kernel_data:
 	    .db 3,2,1,4
 _slotrom:
-        .db 0
+	    .db 0
 _slotram:
-        .db 0
+	    .db 0
 
 ; emulator debug port for now
 outchar:
