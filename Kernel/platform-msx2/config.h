@@ -43,3 +43,5 @@
 
 #define DEVICE_SD
 #define SD_DRIVE_COUNT 1
+
+#define MAX_BLKDEV 1      /* Single SD drive */

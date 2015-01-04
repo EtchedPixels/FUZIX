@@ -21,9 +21,6 @@
 */
 
 void devide_init(void);
-int  devide_open(uint8_t minor, uint16_t flags);
-int  devide_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int  devide_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 
 #ifdef IDE_REG_BASE
 #ifdef IDE_REG_CS0_FIRST

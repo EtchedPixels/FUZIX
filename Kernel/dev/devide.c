@@ -3,60 +3,8 @@
 /* 2014-11-02 Will Sowerbutts (unreleased UZI-mark4)                     */
 /* 2014-12-22 WRS ported to Fuzix                                        */
 /* 2014-12-25 WRS updated to also support P112 GIDE                      */
+/* 2015-01-04 WRS updated to new blkdev API                              */
 /*-----------------------------------------------------------------------*/
-
-/* Minor numbers
-
-   The kernel identifies our storage devices with an 8-bit minor number.
-
-   The top two bits of the minor identify the drive, allowing a maximum of four
-   drives, the current hardware supports only two but future controllers may
-   support more.
-   
-   The bottom six bits of the minor identify the slice number. Slice 0
-   addresses "the whole drive", with no translation. Due to limitations within
-   the kernel only the first 32MB can currently be accessed through slice 0.
-
-   Slice 0 is intended to be used primarily for writing a partition table to
-   the drive, although it can also be used to store a single Fuzix filesystem
-   on an unpartitioned disk.
-   
-   Slices 1+ are stored in a partition on the drive. The partition is stored in
-   a PC-style MBR partition table and must be a primary partition of type 0x5A.
-   Only the first suitable partition is found. Multiple filesystems are stored
-   in this partition by dividing it into 32MB slices.
-
-   To create the required device nodes, use:
-
-       mknod /dev/hda 60660 0
-       mknod /dev/hdb 60660 64
-       mknod /dev/hdc 60660 128
-       mknod /dev/hdd 60660 192
-
-       mknod /dev/hda1 60660 1
-       mknod /dev/hda2 60660 2
-       mknod /dev/hda3 60660 3
-       ...
-       mknod /dev/hda63 60660 63
-
-       mknod /dev/hdb1 60660 65
-       mknod /dev/hdb2 60660 66
-       mknod /dev/hdb3 60660 67
-       ...
-       mknod /dev/hdb63 60660 127
-
-       mknod /dev/hdc1 60660 129
-       mknod /dev/hdc2 60660 130
-       mknod /dev/hdc3 60660 131
-       ...
-       mknod /dev/hdc63 60660 191
-
-       mknod /dev/hdd1 60660 193
-       mknod /dev/hdd2 60660 194
-       mknod /dev/hdd3 60660 195
-       ...
-       mknod /dev/hdd63 60660 255
-*/
 
 #include <kernel.h>
 #include <kdata.h>
@@ -64,14 +12,9 @@
 #include <stdbool.h>
 #include <timer.h>
 #include <devide.h>
-#include <mbr.h>
+#include <blkdev.h>
 
 #define DRIVE_COUNT 2   /* range 1 -- 4 */
-#define MAX_SLICES 63
-
-static uint8_t  ide_drives_present; /* bitmap */
-static uint32_t ide_partition_start[DRIVE_COUNT];
-static uint8_t  ide_slice_count[DRIVE_COUNT];
 
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
@@ -127,16 +70,6 @@ static void devide_write_data(void *buffer, uint8_t ioport) __naked
     __endasm;
 }
 
-static void devide_delay(void)
-{
-    timer_t timeout;
-
-    timeout = set_timer_ms(25);
-
-    while(!timer_expired(timeout))
-        platform_idle();
-}
-
 static bool devide_wait(uint8_t bits)
 {
     uint8_t status;
@@ -162,122 +95,71 @@ static bool devide_wait(uint8_t bits)
     };
 }
 
-static bool devide_read_sector(uint8_t *buffer)
+static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
 {
-    if(!devide_wait(IDE_STATUS_DATAREQUEST))
-        return false;
-
-    devide_read_data(buffer, IDE_REG_DATA);
-
-    return true;
-}
-
-static bool devide_write_sector(uint8_t *buffer)
-{
-    if(!devide_wait(IDE_STATUS_DATAREQUEST))
-        return false;
-
-    devide_write_data(buffer, IDE_REG_DATA);
-
-    if(!devide_wait(IDE_STATUS_READY))
-        return false;
-
-    return true;
-}
-
-static int devide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
-{
-    uint8_t *target, *p;
-    uint32_t lba;
-    uint8_t drive;
-
-    drive = minor >> 6;
-    minor = minor & 0x3F;
-
-    if(rawflag == 0) {
-        target = udata.u_buf->bf_data;
-        lba = udata.u_buf->bf_blk;
-    }else
-        goto xferfail;
-
-    /* minor 0 is the whole disk and requires no translation */
-    if(minor > 0){
-        /* minor 1+ are slices located within the partition */
-        lba += (ide_partition_start[drive]);
-        lba += ((uint32_t)(minor-1) << SLICE_SIZE_LOG2_SECTORS);
-    }
-
 #if 0
     ide_reg_lba_3 = ((lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
     ide_reg_lba_2 = (lba >> 16);
     ide_reg_lba_1 = (lba >> 8);
     ide_reg_lba_0 = lba;
-#else
+#else 
     /* sdcc sadly unable to figure this out for itself yet */
-    p = (uint8_t *)&lba;
+    uint8_t *p = (uint8_t *)&lba;
     ide_reg_lba_3 = (p[3] & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
     ide_reg_lba_2 = p[2];
     ide_reg_lba_1 = p[1];
     ide_reg_lba_0 = p[0];
 #endif
-    ide_reg_sec_count = 1;
 
-    if(is_read){
-        ide_reg_command = IDE_CMD_READ_SECTOR;
-        if(!devide_read_sector(target))
-            goto xferfail;
-    }else{
-        ide_reg_command = IDE_CMD_WRITE_SECTOR;
-        if(!devide_write_sector(target))
-            goto xferfail;
+    if(!devide_wait(IDE_STATUS_READY))
+	return false;
+
+    ide_reg_sec_count = 1;
+    ide_reg_command = read_notwrite ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR;
+
+    if(!devide_wait(IDE_STATUS_DATAREQUEST))
+        return false;
+
+    if(read_notwrite)
+	devide_read_data(buffer, IDE_REG_DATA);
+    else{
+	devide_write_data(buffer, IDE_REG_DATA);
+	if(!devide_wait(IDE_STATUS_READY))
+	    return false;
     }
 
-    return 1;
-xferfail:
-    udata.u_error = EIO;
-    return -1;
+    return true;
 }
 
-int devide_open(uint8_t minor, uint16_t flags)
+/****************************************************************************/
+/* Code below this point used only once, at startup, so we want it to live  */
+/* in the DISCARD segment. sdcc only allows us to specify one segment for   */
+/* each source file. This "solution" is a bit (well, very) hacky ...        */
+/****************************************************************************/
+static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+
+static void devide_delay(void)
 {
-    uint8_t drive;
-    flags; /* not used */
+    timer_t timeout;
 
-    drive = minor >> 6;
-    minor = minor & 0x3F;
+    timeout = set_timer_ms(25);
 
-    if(ide_drives_present & (1 << drive) && (minor == 0 || minor < ide_slice_count[drive]))
-        return 0;
-
-    udata.u_error = ENODEV;
-    return -1;
+    while(!timer_expired(timeout))
+        platform_idle();
 }
 
-int devide_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    flag; /* not used */
-    return devide_transfer(minor, true, rawflag);
-}
-
-int devide_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    flag; /* not used */
-    return devide_transfer(minor, false, rawflag);
-}
-
-void devide_init_drive(uint8_t drive)
+static void devide_init_drive(uint8_t drive)
 {
     uint8_t *buffer, select;
+    uint32_t size;
 
     switch(drive){
-        case 0: select = 0xE0; break;
-        case 1: select = 0xF0; break;
+	case 0: select = 0xE0; break;
+	case 1: select = 0xF0; break;
         default: return;
     }
 
-    kprintf("hd%c: ", 'a' + drive);
-    ide_partition_start[drive] = 0;
-    ide_slice_count[drive] = 0;
+    kprintf("IDE drive %d: ", drive);
 
     /* Reset depends upon the presence of alt control, which is optional */
 #ifdef IDE_REG_CONTROL
@@ -303,38 +185,32 @@ void devide_init_drive(uint8_t drive)
     /* confirm drive has LBA support */
     if(!devide_wait(IDE_STATUS_READY))
         return;
+
+    /* send identify command */
     ide_reg_command = IDE_CMD_IDENTIFY;
 
     /* allocate temporary sector buffer memory */
     buffer = (uint8_t *)tmpbuf();
 
-    if(!devide_read_sector(buffer))
-        goto failout;
+    if(!devide_wait(IDE_STATUS_DATAREQUEST))
+	goto failout;
+
+    devide_read_data(buffer, IDE_REG_DATA);
 
     if(!(buffer[99] & 0x02)){
         kputs("LBA unsupported.\n");
         goto failout;
     }
 
-    /* read first sector (looking for the partition table) */
-    if(!devide_wait(IDE_STATUS_READY))
-        goto failout;
+    /* read out the drive's sector count */
+    size = *((uint32_t*)&buffer[120]);
 
-    ide_reg_devhead = select;
-    ide_reg_lba_2 = 0;
-    ide_reg_lba_1 = 0;
-    ide_reg_lba_0 = 0;
-    ide_reg_sec_count = 1;
-    ide_reg_command = IDE_CMD_READ_SECTOR;
+    /* done with our temporary memory */
+    brelse((bufptr)buffer);
 
-    if(!devide_read_sector(buffer))
-        goto failout;
+    blkdev_add(devide_transfer_sector, drive, size);
 
-    /* if we get this far the drive is apparently present and functioning */
-    ide_drives_present |= (1 << drive);
-
-    parse_partition_table(buffer, &ide_partition_start[drive], &ide_slice_count[drive], MAX_SLICES);
-
+    return;
 failout:
     brelse((bufptr)buffer);
 }
@@ -342,8 +218,6 @@ failout:
 void devide_init(void)
 {
     uint8_t d;
-
-    ide_drives_present = 0;
 
     for(d=0; d<DRIVE_COUNT; d++)
         devide_init_drive(d);

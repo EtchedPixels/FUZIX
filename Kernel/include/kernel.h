@@ -88,8 +88,6 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BLKSHIFT	9
 #define BLKMASK		511
 
-#define SLICE_SIZE_LOG2_SECTORS 16    /* 32MB slices */
-
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
    some more care on copies, block indexes and directory ops */

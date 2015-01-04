@@ -1,6 +1,7 @@
 /*-----------------------------------------------------------------------*/
 /* Fuzix SD card driver                                                  */
 /* 2014-12-28 Will Sowerbutts                                            */
+/* 2015-01-04 WRS updated to new blkdev API                              */
 /*                                                                       */
 /* Based on UZI-socz80 SD card driver, which was itself based on:        */
 /*   MMCv3/SDv1/SDv2 (in SPI mode) control module  (C)ChaN, 2007         */
@@ -8,28 +9,18 @@
 /* and http://elm-chan.org/docs/mmc/mmc_e.html                           */
 /*-----------------------------------------------------------------------*/
 
-/* Minor numbers: See comments in devide.c, exactly the same scheme is used here. */
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <timer.h>
 #include <devsd.h>
 #include <stdbool.h>
-#include <mbr.h>
-#include "config.h"
+#include <blkdev.h>
 
-#define MAX_SLICES 63
-
-/* keep track of current card type, UZI partition offset */
-static uint8_t  sd_drive_present; /* bitmap */
-static uint8_t  sd_card_type[SD_DRIVE_COUNT];
-static uint32_t sd_partition_start[SD_DRIVE_COUNT];
-static uint8_t  sd_slice_count[SD_DRIVE_COUNT];
+static uint8_t sd_card_type[SD_DRIVE_COUNT];
 
 /* internal functions */
 static void sd_init_drive(uint8_t drive);
-static int sd_readwrite(uint8_t minor, uint8_t rawflag, bool do_write);
 static int sd_spi_init(uint8_t drive);
 static void sd_spi_release(uint8_t drive);
 static int sd_spi_wait_ready(uint8_t drive);
@@ -37,176 +28,34 @@ static bool sd_spi_transmit_sector(uint8_t drive, void *ptr, unsigned int length
 static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length);
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
 static uint32_t sd_get_size_sectors(uint8_t drive);
-static bool sd_read_sector(uint8_t drive, void *ptr, uint32_t lba);
-static bool sd_write_sector(uint8_t drive, void *ptr, uint32_t lba);
 
-int devsd_open(uint8_t minor, uint16_t flags)
+static bool devsd_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
 {
-    uint8_t drive;
-    flags; /* not used */
+    uint8_t attempt;
+    bool success;
 
-    drive = minor >> 6;
-    minor = minor & 0x3F;
+    if(!(sd_card_type[drive] & CT_BLOCK))
+	lba <<= 9; /* multiply by 512 to convert block to byte address */
 
-    if(sd_drive_present & (1 << drive) && (minor == 0 || minor < sd_slice_count[drive]))
-        return 0;
+    for(attempt=0; attempt<8; attempt++){
+	if(sd_send_command(drive, read_notwrite ? CMD17 : CMD24, lba) == 0){
+	    if(read_notwrite)
+		success = sd_spi_receive_sector(drive, buffer, 512);
+	    else
+		success = sd_spi_transmit_sector(drive, buffer, 512);
+	}else
+	    success = false;
 
-    udata.u_error = ENODEV;
-    return -1;
-}
+	sd_spi_release(drive);
 
-int devsd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    flag; /* not used */
-    return sd_readwrite(minor, rawflag, false);
-}
+	if(success)
+	    return 1;
 
-int devsd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    flag; /* not used */
-    return sd_readwrite(minor, rawflag, true);
-}
-
-void devsd_init(void)
-{
-    uint8_t d;
-
-    sd_drive_present = 0;
-    for(d=0; d<SD_DRIVE_COUNT; d++)
-        sd_init_drive(d);
-}
-
-static int sd_readwrite(uint8_t minor, uint8_t rawflag, bool do_write)
-{
-    uint32_t lba;
-    int attempt;
-    void *target;
-    uint8_t drive;
-
-    drive = minor >> 6;
-    minor = minor & 0x3F;
-
-    if(rawflag == 0){
-        target = udata.u_buf->bf_data;
-
-        for(attempt=0; attempt<5; attempt++){
-            lba = udata.u_buf->bf_blk;
-
-            /* minor 0 is the whole drive, without translation */
-            if(minor > 0){
-                lba += sd_partition_start[drive];
-                lba += ((unsigned long)(minor-1) << SLICE_SIZE_LOG2_SECTORS);
-            }
-            if(do_write){
-                if(sd_write_sector(drive, udata.u_buf->bf_data, lba))
-                    return 1;
-            }else{
-                if(sd_read_sector(drive, udata.u_buf->bf_data, lba))
-                    return 1;
-            }
-            kputs("sd: failed, retrying.\n");
-        }
+	kputs("sd: failed, retrying.\n");
     }
 
     udata.u_error = EIO;
     return -1;
-}
-
-static void sd_init_drive(uint8_t drive)
-{
-    uint32_t sector_count;
-    unsigned char *sector;
-
-    sd_partition_start[drive] = 0;
-    sd_slice_count[drive] = 0;
-
-    kprintf("sd%c: ", 'a'+drive);
-    sd_card_type[drive] = sd_spi_init(drive);
-
-    if(!(sd_card_type[drive] & (~CT_BLOCK))){
-        kprintf("no card found\n");
-        return;
-    }
-    
-    /* read and compute card size */
-    sector_count = sd_get_size_sectors(drive);
-    if(!sector_count){
-        kputs("weird card\n");
-        return;
-    }
-
-    /* read partition table, locate the UZI partition */
-    sector = (unsigned char*)tmpbuf();
-
-    if(!sd_read_sector(drive, sector, 0)){
-        kprintf("failed to read partition table\n");
-        goto failout;
-    }
-
-    /* if we get this far the drive is probably ok */
-    sd_drive_present |= (1 << drive);
-
-    /* look for our partition */
-    parse_partition_table(sector, &sd_partition_start[drive], &sd_slice_count[drive], MAX_SLICES);
-
-failout:
-    brelse((bufptr)sector);
-}
-
-static int sd_spi_init(uint8_t drive)
-{
-    unsigned char n, cmd, card_type, ocr[4];
-    timer_t timer;
-
-    sd_spi_raise_cs(drive);
-
-    sd_spi_clock(drive, false);
-    for (n = 20; n; n--)
-        sd_spi_receive_byte(drive); /* 160 dummy clocks */
-
-    card_type = 0;
-    /* Enter Idle state */
-    if (sd_send_command(drive, CMD0, 0) == 1) {
-        /* initialisation timeout 1 second */
-        timer = set_timer_sec(1);
-        if (sd_send_command(drive, CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
-            /* Get trailing return value of R7 resp */
-            for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
-            /* The card can work at vdd range of 2.7-3.6V */
-            if (ocr[2] == 0x01 && ocr[3] == 0xAA) {
-                /* Wait for leaving idle state (ACMD41 with HCS bit) */
-                while(!timer_expired(timer) && sd_send_command(drive, ACMD41, (uint32_t)1 << 30));
-                /* Check CCS bit in the OCR */
-                if (!timer_expired(timer) && sd_send_command(drive, CMD58, 0) == 0) {
-                    for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
-                    card_type = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;   /* SDv2 */
-                }
-            }
-        } else { /* SDSC or MMC */
-            if (sd_send_command(drive, ACMD41, 0) <= 1) {
-                /* SDv1 */
-                card_type = CT_SD1;
-                cmd = ACMD41;
-            } else {
-                /* MMCv3 */
-                card_type = CT_MMC;
-                cmd = CMD1;
-            }
-            /* Wait for leaving idle state */
-            while(!timer_expired(timer) && sd_send_command(drive, cmd, 0));
-            /* Set R/W block length to 512 */
-            if(timer_expired || sd_send_command(drive, CMD16, 512) != 0)
-                card_type = 0;
-        }
-    }
-    sd_spi_release(drive);
-
-    if (card_type) {
-        sd_spi_clock(drive, true); /* up to 20MHz should be OK */
-        return card_type;
-    }
-
-    return 0; /* failed */
 }
 
 static void sd_spi_release(uint8_t drive)
@@ -320,6 +169,99 @@ static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     return res;         /* Return with the response value */
 }
 
+/****************************************************************************/
+/* Code below this point used only once, at startup, so we want it to live  */
+/* in the DISCARD segment. sdcc only allows us to specify one segment for   */
+/* each source file. This "solution" is a bit (well, very) hacky ...        */
+/****************************************************************************/
+static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+
+void devsd_init(void)
+{
+    uint8_t d;
+
+    for(d=0; d<SD_DRIVE_COUNT; d++)
+        sd_init_drive(d);
+}
+
+static void sd_init_drive(uint8_t drive)
+{
+    uint32_t sector_count;
+
+    kprintf("SD drive %d: ", drive);
+    sd_card_type[drive] = sd_spi_init(drive);
+
+    if(!(sd_card_type[drive] & (~CT_BLOCK))){
+        kprintf("no card found\n");
+        return;
+    }
+    
+    /* read and compute card size */
+    sector_count = sd_get_size_sectors(drive);
+    if(!sector_count){
+        kputs("weird card\n");
+        return;
+    }
+
+    blkdev_add(devsd_transfer_sector, drive, sector_count);
+}
+
+static int sd_spi_init(uint8_t drive)
+{
+    unsigned char n, cmd, card_type, ocr[4];
+    timer_t timer;
+
+    sd_spi_raise_cs(drive);
+
+    sd_spi_clock(drive, false);
+    for (n = 20; n; n--)
+        sd_spi_receive_byte(drive); /* 160 dummy clocks */
+
+    card_type = 0;
+    /* Enter Idle state */
+    if (sd_send_command(drive, CMD0, 0) == 1) {
+        /* initialisation timeout 1 second */
+        timer = set_timer_sec(1);
+        if (sd_send_command(drive, CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
+            /* Get trailing return value of R7 resp */
+            for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
+            /* The card can work at vdd range of 2.7-3.6V */
+            if (ocr[2] == 0x01 && ocr[3] == 0xAA) {
+                /* Wait for leaving idle state (ACMD41 with HCS bit) */
+                while(!timer_expired(timer) && sd_send_command(drive, ACMD41, (uint32_t)1 << 30));
+                /* Check CCS bit in the OCR */
+                if (!timer_expired(timer) && sd_send_command(drive, CMD58, 0) == 0) {
+                    for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
+                    card_type = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;   /* SDv2 */
+                }
+            }
+        } else { /* SDSC or MMC */
+            if (sd_send_command(drive, ACMD41, 0) <= 1) {
+                /* SDv1 */
+                card_type = CT_SD1;
+                cmd = ACMD41;
+            } else {
+                /* MMCv3 */
+                card_type = CT_MMC;
+                cmd = CMD1;
+            }
+            /* Wait for leaving idle state */
+            while(!timer_expired(timer) && sd_send_command(drive, cmd, 0));
+            /* Set R/W block length to 512 */
+            if(timer_expired || sd_send_command(drive, CMD16, 512) != 0)
+                card_type = 0;
+        }
+    }
+    sd_spi_release(drive);
+
+    if (card_type) {
+        sd_spi_clock(drive, true); /* up to 20MHz should be OK */
+        return card_type;
+    }
+
+    return 0; /* failed */
+}
+
 static uint32_t sd_get_size_sectors(uint8_t drive)
 {
     unsigned char csd[16], n;
@@ -336,38 +278,4 @@ static uint32_t sd_get_size_sectors(uint8_t drive)
     }
     sd_spi_release(drive);
     return sectors;
-}
-
-static bool sd_read_sector(uint8_t drive, void *ptr, uint32_t lba)
-{
-    bool r = false;
-
-    if(sd_card_type[drive] != CT_NONE){
-        if(!(sd_card_type[drive] & CT_BLOCK))
-            lba = lba << 9; /* multiply by 512 to get byte address */
-
-        if(sd_send_command(drive, CMD17, lba) == 0)
-            r = sd_spi_receive_sector(drive, ptr, 512);
-
-        sd_spi_release(drive);
-    }
-
-    return r;
-}
-
-static bool sd_write_sector(uint8_t drive, void *ptr, uint32_t lba)
-{
-    bool r = false;
-
-    if(sd_card_type[drive] != CT_NONE){
-        if(!(sd_card_type[drive] & CT_BLOCK))
-            lba = lba << 9; /* multiply by 512 to get byte address */
-
-        if(sd_send_command(drive, CMD24, lba) == 0)
-            r = sd_spi_transmit_sector(drive, ptr, 512);
-
-        sd_spi_release(drive);
-    }
-
-    return r;
 }
