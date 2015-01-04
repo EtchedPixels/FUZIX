@@ -99,7 +99,7 @@ static void keyproc(void)
 	}
 }
 
-static uint8_t keyboard[10][8] = {
+uint8_t keyboard[10][8] = {
 	{0, 0, 0, 10, '?' /*left */ , 0, 0, 0},
 	{0, '5', 0, 0, ' ', 27, 0, 0},
 	{0, 0, 0, 0, '\t', '1', 0, 0},
@@ -112,7 +112,7 @@ static uint8_t keyboard[10][8] = {
 	{'.', 'o', 'l', ';', 'p', 8, '9', '0'}
 };
 
-static uint8_t shiftkeyboard[10][8] = {
+uint8_t shiftkeyboard[10][8] = {
 	{0, 0, 0, 10, '?' /*left */ , 0, 0, 0},
 	{0, '%', 0, 0, ' ', 3, 0, 0},
 	{0, 0, 0, 0, '\t', '!', 0, 0},

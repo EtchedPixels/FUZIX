@@ -12,5 +12,7 @@ extern uint8_t curtty;
 #define KEY_ROWS	8
 #define KEY_COLS	16
 extern uint16_t keymap[8];
+extern uint8_t keyboard[8][10];
+extern uint8_t shiftkeyboard[8][10];
 
 #endif

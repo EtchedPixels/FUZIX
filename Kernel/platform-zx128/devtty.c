@@ -18,7 +18,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 
-static uint8_t keyboard[8][5] = {
+uint8_t keyboard[8][5] = {
 	{ ' ',  0,  'm', 'n', 'b' },
 	{  13, 'l', 'k', 'j', 'h',},
 	{ 'p', 'o', 'i', 'u', 'y',},
@@ -30,7 +30,7 @@ static uint8_t keyboard[8][5] = {
 };
 
 /* SYMBOL SHIFT MODE */
-static uint8_t keyboard_ss[8][5] = {
+uint8_t shiftkeyboard[8][5] = {
 	{ ' ',  0,  '.', ',', '*' },
 	{  13, '=', '+', '-', '^',},
 	{ '"', ';',  0 ,  0 ,  0 ,},
@@ -144,7 +144,7 @@ static void keydecode(void)
 
 	if (ss)
 	{
-		c = keyboard_ss[keybyte][keybit];
+		c = shiftkeyboard[keybyte][keybit];
 	}
 	else {
 		c = keyboard[keybyte][keybit];

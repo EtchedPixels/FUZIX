@@ -188,7 +188,7 @@ static void keyproc(void)
 	}
 }
 
-static uint8_t keyboard[12][8] = {
+uint8_t keyboard[12][8] = {
 	{'2', '3', '6', '9', 0x81 /* paste */ ,0x91, '0', 0x93 /* F3 */},
 	{'1', '5', '4', '8', 0x82 /* copy */, 0x83 /* cut */, 0x84 /* PTR */, 0x85 /* EXIT */},
 	{'+', '@', 0, '7', '>', 13, ']', 127},
@@ -204,7 +204,7 @@ static uint8_t keyboard[12][8] = {
 };
 
 /* FIXME: shift symbols need double checking */
-static uint8_t shiftkeyboard[12][8] = {
+uint8_t shiftkeyboard[12][8] = {
 	{'2', '3', '6', '9', 0x81 /* paste */ ,0x91, '0', 0x93 /* F3 */},
 	{'1', '5', '4', '8', 0x82 /* copy */, 0x83 /* cut */, 0x84 /* PTR */, 0x85 /* EXIT */},
 	{'+', 189/*half*/, 0, '7', '`', 13, ']', 127},

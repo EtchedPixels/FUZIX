@@ -103,7 +103,7 @@ static void keyproc(void)
 /* TODO: use locale indicator in addr 002c BIOS, for now only
          international layout */
 
-static uint8_t keyboard[11][8] = {
+uint8_t keyboard[11][8] = {
 	{'0','1','2', '3','4','5','6','7'},
 	{'8','9','-','=','\\','[',']',';'},
 	{ 0,  0, ',', '.','/',' ','a','b'},
@@ -113,11 +113,11 @@ static uint8_t keyboard[11][8] = {
 	{ 0 , 0 , 0 ,  0 , 0 , 0 , 0 , 0 }, /* f3 f2 f1 code caps graph ctrl shift */
 	{ 0 , 0, 27 , '\t',24 ,8 , 0 , 13}, /* ret select bs stop tab esc f5 f4 */
 	{32 ,12,  0 , 127, 0 , 0 , 0 , 0 }, /* right down up left del ins home space */
-    {'*','+','/','0','1' ,'2','3','4'}, /* numeric keyboard */
-    {'5','6','7','8','9' ,'-',',','.'}
+	{'*','+','/','0','1' ,'2','3','4'}, /* numeric keyboard */
+	{'5','6','7','8','9' ,'-',',','.'}
 };
 
-static uint8_t shiftkeyboard[11][8] = {
+uint8_t shiftkeyboard[11][8] = {
 	{')','!','@', '#','$','%','^','&'},
 	{'*','(','_','+','|','{','}',':'},
 	{'"','~','<','>','?',' ','A','B'},
@@ -127,8 +127,8 @@ static uint8_t shiftkeyboard[11][8] = {
 	{ 0 , 0 , 0 ,  0 , 0 , 0 , 0 , 0 }, /* f3 f2 f1 code caps graph ctrl shift */
 	{ 0 , 0, 27 , '\t',24 ,8 , 0 , 13}, /* ret select bs stop tab esc f5 f4 */
 	{32 ,12,  0 , 127, 0 , 0 , 0 , 0 }, /* right down up left del ins home space */
-    {'*','+','/','0','1' ,'2','3','4'}, /* numeric keyboard */
-    {'5','6','7','8','9' ,'-',',','.'}
+	{'*','+','/','0','1' ,'2','3','4'}, /* numeric keyboard */
+	{'5','6','7','8','9' ,'-',',','.'}
 };
 
 static uint8_t capslock = 0;
