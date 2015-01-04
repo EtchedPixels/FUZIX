@@ -135,7 +135,7 @@ static void keyproc(void)
 	}
 }
 
-static uint8_t keyboard[8][7] = {
+uint8_t keyboard[8][7] = {
 	{ '0', '8', '@', 'h', 'p', 'x', 10 },
 	{ '1', '9', 'a', 'i', 'q', 'y', 0 /* clear - used as ctrl*/ },
 	{ '2', ':', 'b', 'j', 'r', 'z', 27 /* break (used for esc) */ },
@@ -146,7 +146,7 @@ static uint8_t keyboard[8][7] = {
 	{ '7', '/', 'g', 'o', 'w', ' ', 0 /* shift */ },
 };
 
-static uint8_t shiftkeyboard[8][7] = {
+uint8_t shiftkeyboard[8][7] = {
 	{ '_', '(', '\\', 'H', 'P', 'X', 10 },
 	{ '!', ')', 'A', 'I', 'Q', 'Y', 0 /* clear */ },
 	{ '"', '*', 'B', 'J', 'R', 'Z', 3 /* break */ },
