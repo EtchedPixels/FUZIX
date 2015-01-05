@@ -108,7 +108,7 @@ for FILE in $DISK2BINS; do
 	fi
 done
 
-TMPUCP = `mktemp -d /tmp/ucpXXXXXXXX`
+TMPUCP=`mktemp -d /tmp/ucpXXXXXXXX`
 echo "root::0:0:superuser:/root:/bin/ssh" > $TMPUCP/passwd
 echo "root::0:root" > $TMPUCP/group
 echo "rootfs / rootfs rw 0 0" > $TMPUCP/mtab
