@@ -10,10 +10,20 @@
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
+#ifdef CONFIG_PROPIO2
+char tbufp[TTYSIZ];
+
+__sfr __at (PROPIO2_IO_BASE + 0x00) PROPIO2_STAT;
+__sfr __at (PROPIO2_IO_BASE + 0x01) PROPIO2_TERM;
+#endif
+
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
     {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
+#ifdef CONFIG_PROPIO2
+    {   tbufp,   tbufp,   tbufp,   TTYSIZ,   0,   TTYSIZ/2 },
+#endif
 };
 
 void tty_setup(uint8_t minor)
@@ -42,6 +52,14 @@ void tty_pollirq_asci1(void)
     }
 }
 
+#ifdef CONFIG_PROPIO2
+void tty_poll_propio2(void)
+{
+    while(PROPIO2_STAT & 0x20)
+        tty_inproc(3, PROPIO2_TERM);
+}
+#endif
+
 void tty_putc(uint8_t minor, unsigned char c)
 {
     switch(minor){
@@ -53,6 +71,12 @@ void tty_putc(uint8_t minor, unsigned char c)
             while(!(ASCI_STAT1 & 2));
             ASCI_TDR1 = c;
             break;
+#ifdef CONFIG_PROPIO2
+        case 3:
+            while(!(PROPIO2_STAT & 0x10));
+            PROPIO2_TERM = c;
+            break;
+#endif
     }
 }
 
@@ -65,8 +89,7 @@ bool tty_writeready(uint8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-    tty_putc(1, c);
+    tty_putc(TTYDEV - 512, c);
     if(c == '\n')
-        tty_putc(1, '\r');
+        tty_putc(TTYDEV - 512, '\r');
 }
-

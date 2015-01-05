@@ -16,6 +16,11 @@ void z180_timer_interrupt(void)
     a = TIME_TMDR0L;
     a = TIME_TCR;
 
+#ifdef CONFIG_PROPIO2
+    /* The PropIO2 does not have an interrupt on keypress. */
+    tty_poll_propio2();
+#endif
+
     timer_interrupt();
 }
 
