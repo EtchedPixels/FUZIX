@@ -23,7 +23,7 @@ typedef struct {
 void mbr_parse(blkdev_t *blk, char letter)
 {
     boot_record_t *br;
-    uint8_t i, maxbr = 50;
+    uint8_t i, seen = 0;
     uint32_t lba = 0, ep_offset = 0, br_offset = 0;
     uint8_t next = 0;
 
@@ -35,10 +35,10 @@ void mbr_parse(blkdev_t *blk, char letter)
 	    break;
 
 	/* avoid an infinite loop where extended boot records form a loop */
-	if(--maxbr == 0)
+	if(seen >= 50)
 	    break;
 
-	if(next < 4 && lba != 0){ 
+	if(seen == 1){ 
 	    /* we just loaded the first extended boot record */
 	    ep_offset = lba;
 	    next = 4;
@@ -70,10 +70,11 @@ void mbr_parse(blkdev_t *blk, char letter)
 		       the extended partition) */
 		    blk->lba_first[next] = br_offset + br->partition[i].lba_first;
 		    blk->lba_count[next] = br->partition[i].lba_count;
-		    kprintf("hd%c%d ", letter, 1+next);
 		    next++;
+		    kprintf("hd%c%d ", letter, next);
 	    }
 	}
+	seen++;
     }while(lba);
 
     if(next >= 4)
