@@ -70,8 +70,8 @@ void mbr_parse(blkdev_t *blk, char letter)
 		       the extended partition) */
 		    blk->lba_first[next] = br_offset + br->partition[i].lba_first;
 		    blk->lba_count[next] = br->partition[i].lba_count;
-		    kprintf("hd%c%d ", letter, 1+next);
 		    next++;
+		    kprintf("hd%c%d ", letter, next);
 	    }
 	}
     }while(lba);
