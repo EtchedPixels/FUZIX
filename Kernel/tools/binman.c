@@ -15,18 +15,10 @@ static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
 static void ProcessMap(FILE * fp)
 {
 	char buf[512];
-	int addr = 0;
-	int naddr;
-	char name[100];
-	char nname[100];
-	int hogs = 0;
 
 	while (fgets(buf, 511, fp)) {
 		char *p1 = strtok(buf, " \t\n");
 		char *p2 = NULL;
-		int match = 0;
-
-		match = memcmp(buf, "     000", 8);
 
 		if (p1)
 			p2 = strtok(NULL, " \t\n");
@@ -120,6 +112,14 @@ int main(int argc, char *argv[])
 	if (s__COMMONMEM > 0xFFFF || s__COMMONMEM + l__COMMONMEM > 0xFFFF) {
 		fprintf(stderr, "Move common down by at least %d bytes\n",
 			s__COMMONMEM + l__COMMONMEM - 0xFFFF);
+		exit(1);
+	}
+
+	/* linker will allow us to overlap _DISCARD (which may grow)
+	   with _COMMONMEM. */
+	if(s__DISCARD && s__DISCARD+l__DISCARD > s__COMMONMEM){
+		fprintf(stderr, "Move _DISCARD down by at least %d bytes\n",
+			s__DISCARD + l__DISCARD - s__COMMONMEM);
 		exit(1);
 	}
 
