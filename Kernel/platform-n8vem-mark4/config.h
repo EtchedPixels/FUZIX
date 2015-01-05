@@ -32,16 +32,9 @@
 #define SWAPTOP	    0xFF00	/* can we stop at the top? not sure how. let's stop short. */
 #define MAX_SWAPS	10	    /* Well, that depends really, hmmmmmm. Pick a number, any number. */
 
-#define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
-
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
 
-/* Device parameters */
-#define NUM_DEV_TTY 2
-
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 //#define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
@@ -52,14 +45,35 @@
 
 #define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
-#define DEVICE_IDE                  /* enable if IDE interface present */
+/* On-board IDE on Mark IV */
+#define DEVICE_IDE
 #define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_FIRST
 
+/* On-board SD on Mark IV */
 #define DEVICE_SD
 #define SD_DRIVE_COUNT 1
 
-/* We have a DS1302, we can read the time of day from it */
+/* On-board DS1302 on Mark IV, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
+
+/* Optional PropIOv2 board on ECB bus */
+//#define CONFIG_PROPIO2		/* #define CONFIG_PROPIO2 to enable as tty3 */
+#define PROPIO2_IO_BASE		0xA8
+
+/* Device parameters */
+#ifdef CONFIG_PROPIO2
+	#define NUM_DEV_TTY 3
+
+	/* PropIO as the console */
+	#define BOOT_TTY (512 + 3)
+#else
+	#define NUM_DEV_TTY 2
+
+	/* ASCI0 as the console */
+	#define BOOT_TTY (512 + 1)
+#endif
+
+#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
