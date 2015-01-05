@@ -4,17 +4,14 @@
 #include <stdbool.h>
 #include <tty.h>
 #include <devtty.h>
-#include "config.h"
 #include <z180.h>
+#include <n8vem.h>
 
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
 #ifdef CONFIG_PROPIO2
 char tbufp[TTYSIZ];
-
-__sfr __at (PROPIO2_IO_BASE + 0x00) PROPIO2_STAT;
-__sfr __at (PROPIO2_IO_BASE + 0x01) PROPIO2_TERM;
 #endif
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
@@ -40,16 +37,14 @@ int tty_carrier(uint8_t minor)
 
 void tty_pollirq_asci0(void)
 {
-    while(ASCI_STAT0 & 0x80){
+    while(ASCI_STAT0 & 0x80)
         tty_inproc(1, ASCI_RDR0);
-    }
 }
 
 void tty_pollirq_asci1(void)
 {
-    while(ASCI_STAT1 & 0x80){
+    while(ASCI_STAT1 & 0x80)
         tty_inproc(2, ASCI_RDR1);
-    }
 }
 
 #ifdef CONFIG_PROPIO2

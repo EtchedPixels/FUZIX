@@ -45,20 +45,22 @@
 
 #define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
-#define DEVICE_IDE                  /* enable if IDE interface present */
+/* On-board IDE on Mark IV */
+#define DEVICE_IDE
 #define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_FIRST
 
+/* On-board SD on Mark IV */
 #define DEVICE_SD
 #define SD_DRIVE_COUNT 1
 
-/* We have a DS1302, we can read the time of day from it */
+/* On-board DS1302 on Mark IV, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
 
-/* We have a PropIOv2 board */
-#define CONFIG_PROPIO2
+/* Optional PropIOv2 board on ECB bus */
+//#define CONFIG_PROPIO2		/* #define CONFIG_PROPIO2 to enable as tty3 */
 #define PROPIO2_IO_BASE		0xA8
 
 /* Device parameters */
@@ -70,7 +72,7 @@
 #else
 	#define NUM_DEV_TTY 2
 
-	/* ANSI0 as the console */
+	/* ASCI0 as the console */
 	#define BOOT_TTY (512 + 1)
 #endif
 
