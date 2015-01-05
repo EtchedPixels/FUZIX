@@ -167,7 +167,7 @@ tools/decbdragon: tools/decbdragon.c
 tools/bintomdv: tools/bintomdv.c
 
 tools/bankld/sdldz80:
-	(cd tools/bankld; +make)
+	+(cd tools/bankld; make)
 
 cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
 	+make -C cpm-loader
