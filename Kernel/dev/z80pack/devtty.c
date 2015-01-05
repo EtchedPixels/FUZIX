@@ -32,7 +32,7 @@ void kputchar(char c)
     tty_putc(1, c);
 }
 
-static bool tty_writeready(uint8_t minor)
+bool tty_writeready(uint8_t minor)
 {
     uint8_t s;
 
