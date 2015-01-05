@@ -115,6 +115,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* linker will allow us to overlap _DISCARD (which may grow)
+	   with with _COMMONMEM. */
+	if(s__DISCARD && s__DISCARD+l__DISCARD > s__COMMONMEM){
+		fprintf(stderr, "Move _DISCARD down by at least %d bytes\n",
+			s__DISCARD + l__DISCARD - s__COMMONMEM);
+		exit(1);
+	}
+
         printf("Scanning data from 0x%x to 0x%x\n",
                 s__DATA, s__DATA + l__DATA);
 	base = s__DATA;
