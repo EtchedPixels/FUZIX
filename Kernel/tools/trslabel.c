@@ -39,8 +39,7 @@ int main(int argc, const char *argv[]) {
   p.g.seek = 0;
   p.g.secsize = 8;
   
-  p.cyl[0] = 0;
-  p.cyl[1] = p.g.cyl - 32;
+  p.cyl[0] = p.g.cyl - 32;
   p.type[0] = 0x55;
   p.type[1] = 0x56;
 
