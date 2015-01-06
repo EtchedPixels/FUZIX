@@ -39,6 +39,8 @@ struct minipart {
 struct minipart_lba {
   struct diskgeom g;
   uint16_t cyl[15];
+  uint8_t type[15];
+  uint8_t gap;
   uint32_t lba[15];
 };
 
