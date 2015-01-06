@@ -41,7 +41,7 @@
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
 
-#define MAX_SWAPS	16	/* Should be plenty */
+#define MAX_SWAPS	64	/* Should be plenty (2MB!) */
 
 #define BOOT_TTY (512 + 1)      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -52,7 +52,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  (256)	  /* Device for swapping (1st hd). */
+#define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

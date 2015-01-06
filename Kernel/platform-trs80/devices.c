@@ -34,14 +34,13 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+DISCARDABLE
+
 void device_init(void)
 {
-  int i;
 #ifdef CONFIG_RTC
   /* Time of day clock */
   inittod();
 #endif
-  /* Add 64 swaps (2MB) */
-  for (i = MAX_SWAPS - 1 ; i >= 0; i--)
-    swapmap_add(i);
+  hd_probe();
 }

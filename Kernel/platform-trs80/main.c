@@ -32,16 +32,6 @@ void platform_interrupt(void)
   timer_interrupt();
 }
 
-void map_init(void)
-{
-}
-
-void pagemap_init(void)
-{
- pagemap_add(0x63);	/* Mode 3, U64K low 32K mapped as low 32K */
- pagemap_add(0x73);	/* Mode 3, U64K high 32K mapped as low 32K */
-}
-
 #ifdef CONFIG_RTC
 
 __sfr __at 0xB0 rtc_secl;
@@ -59,3 +49,15 @@ uint8_t rtc_secs(void)
 }
 
 #endif
+
+DISCARDABLE
+
+void map_init(void)
+{
+}
+
+void pagemap_init(void)
+{
+ pagemap_add(0x63);	/* Mode 3, U64K low 32K mapped as low 32K */
+ pagemap_add(0x73);	/* Mode 3, U64K high 32K mapped as low 32K */
+}
