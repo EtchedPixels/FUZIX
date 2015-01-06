@@ -2,7 +2,7 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdcc
-FCC = ../../Library/tools/fcc
+FCC = ../../Library/bin/fcc
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
@@ -13,7 +13,7 @@ CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../../
 CC_CRAP = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../../Library/include
 ASM_OPT = -l -o -s
 LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
-BINMAN = ../../Library/tools/binman
+BINMAN = ../../Library/bin/binman
 
 .SUFFIXES: .c .rel
 

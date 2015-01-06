@@ -2,12 +2,12 @@
 
 CFLAGS += -I../Kernel/include
 
-all: tools/syscall tools/binman tools/fcc
+all: bin/syscall bin/binman bin/fcc
 
 clean:
-	rm -f tools/syscall tools/binman tools/fcc
+	rm -f bin/syscall bin/binman bin/fcc
 
-tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
-tools/syscall-z88dk: tools/syscall-z88dk.c ../Kernel/include/syscall_name.h
+bin/syscall: bin/syscall.c ../Kernel/include/syscall_name.h
+bin/syscall-z88dk: bin/syscall-z88dk.c ../Kernel/include/syscall_name.h
 
-tools/binman: tools/binman.c
+bin/binman: bin/binman.c

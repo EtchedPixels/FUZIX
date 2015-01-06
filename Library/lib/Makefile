@@ -60,12 +60,12 @@ libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
 syscall.l: fuzix/syslib.l
-	../tools/syscall
+	../bin/syscall
 	(cd fuzix; make)
 	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
 sdccz80.lib:
-	../tools/libclean
+	../bin/libclean
 
 syslib.lib: syscall.l libc.l sdccz80.lib
 	cat libc.l syscall.l >syslib.l
@@ -75,7 +75,7 @@ syslib.lib: syscall.l libc.l sdccz80.lib
 	ln -sf syslib.lib c.lib
 
 fuzix/syslib.l:
-	../tools/syscall
+	../bin/syscall
 	make -C fuzix
 
 $(OBJ_ASM):%.rel: %.s
