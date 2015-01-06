@@ -247,7 +247,7 @@ void hd_probe(void)
 	unsigned int i;
 	uint8_t *d = tmpbuf();
 	/* Second half of second block */
-	struct minipart *p = (struct minipart *)(d + 384);
+	struct minipart *p = (struct minipart *)(d + 128);
 	for (dev = 0; dev < 4; dev++) {
 		hd_sdh = 0x80 | (dev << 3);
 		hd_cmd = HDCMD_RESTORE | RATE_4MS;
@@ -257,7 +257,7 @@ void hd_probe(void)
 		}
 		hd_seccnt = 1;
 		hd_sdh = 0x80 | (dev << 3);
-		hd_secnum = 1;
+		hd_secnum = 2;
 		hd_cyllo = 0;
 		hd_cylhi = 0;
 		hd_cmd = HDCMD_READ;
