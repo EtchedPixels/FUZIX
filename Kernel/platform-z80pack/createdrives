@@ -4,8 +4,8 @@ BASEDIR=`dirname $0`
 UTILDIR="${BASEDIR}/../../Applications/util"
 UCP="${BASEDIR}/../../Standalone/ucp"
 MKFS="${BASEDIR}/../../Standalone/mkfs"
-DISK1BINS="cat cp df fdisk fsck kill ln ls mkdir mknod mount prtroot ps ssh rm rmdir"
-DISK2BINS="bd cut chgrp chmod chown date dd du echo ed false grep id mkfs more mv printenv prtroot pwd sleep su sync touch tr true wc which"
+DISK1BINS="cat cp df fdisk fsck kill ln ls mkdir mknod mount ps ssh rm rmdir"
+DISK2BINS="banner basename bd cal chgrp chmod chown cksum cmp cut date dd decomp16 dirname dosread du echo ed false fgrep fsck grep head id init ll logname man mkfs mkfifo more mv od pagesize passwd patchcpm printenv prtroot pwd sleep sort stty sum su sync tee tail touch tr true umount uniq uud uue wc which who whoami write xargs sed yes"
 DISK1DIRS="dev bin etc lib root home usr tmp"
 DISK2DIRS="bin cpm"
 DEVS="fd0 60644 0
@@ -108,7 +108,7 @@ for FILE in $DISK2BINS; do
 	fi
 done
 
-TMPUCP = `mktemp -d /tmp/ucpXXXXXXXX`
+TMPUCP=`mktemp -d /tmp/ucpXXXXXXXX`
 echo "root::0:0:superuser:/root:/bin/ssh" > $TMPUCP/passwd
 echo "root::0:root" > $TMPUCP/group
 echo "rootfs / rootfs rw 0 0" > $TMPUCP/mtab
