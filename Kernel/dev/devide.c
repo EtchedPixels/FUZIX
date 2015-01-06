@@ -97,6 +97,7 @@ static bool devide_wait(uint8_t bits)
 
 static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
 {
+    /* FIXME: only safe for LE, and only sensible for Z80/Z180 */
 #if 0
     ide_reg_lba_3 = ((lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
     ide_reg_lba_2 = (lba >> 16);
@@ -150,6 +151,7 @@ static void devide_delay(void)
 
 static void devide_init_drive(uint8_t drive)
 {
+    blkdev_t *blk;
     uint8_t *buffer, select;
     uint32_t size;
 
@@ -208,7 +210,13 @@ static void devide_init_drive(uint8_t drive)
     /* done with our temporary memory */
     brelse((bufptr)buffer);
 
-    blkdev_add(devide_transfer_sector, drive, size);
+    blk = blkdev_alloc();
+    if (blk) {
+        blk->transfer = devide_transfer_sector;
+        blk->drive_number = drive;
+        blk->drive_lba_count = size;
+        blkdev_scan(blk, SWAPSCAN);
+    }
 
     return;
 failout:

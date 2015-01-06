@@ -120,32 +120,31 @@ int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return blkdev_transfer(minor, false, rawflag);
 }
 
-void blkdev_add(transfer_function_t transfer, uint8_t drive_number, uint32_t lba_count)
+/* FIXME: this would tidier and handle odd partition types sanely if split
+   into blkdev_alloc() - just returns a device, and blkdev_scan() */
+
+blkdev_t *blkdev_alloc(void)
 {
-    char letter;
-    blkdev_t *blk = NULL;
-
-    letter = 'a';
-    blk = &blkdev_table[0];
-
-    /* find an empty slot */
-    while(blk <= &blkdev_table[MAX_BLKDEV-1]){
-	if(blk->drive_lba_count == 0){
-	    blk->drive_lba_count = lba_count;
-	    blk->drive_number = drive_number;
-	    blk->transfer = transfer;
-
-	    /* now we parse the partition table; might need a hook for platforms to
-	       parse their platform-specific partition table first? eg P112 has its
-	       own partitioning scheme */
-	    kprintf("hd%c: ", letter);
-	    mbr_parse(blk, letter);
-	    kputchar('\n');
-	    return;
-	}
-	blk++;
-	letter++;
+    blkdev_t *blk = &blkdev_table[0];
+    while (blk < &blkdev_table[MAX_BLKDEV-1]) {
+        /* Cheapest to scan for an 8 or 16bit field and to make it start
+           the struct */
+        if (blk->transfer == NULL)
+            return blk;
+        blk++;
     }
+    kputs("blkdev: full\n");
+    return NULL;
+}
 
-    kputs("blkdev: full!\n");
+/* Flags is not used yet but will be needed (eg for swap scans) */
+void blkdev_scan(blkdev_t *blk, uint8_t flags)
+{
+    uint8_t letter = 'a' + (blk - blkdev_table);
+
+    flags;
+
+    kprintf("hd%c: ", letter);
+    mbr_parse(blk, letter);
+    kputchar('\n');
 }
