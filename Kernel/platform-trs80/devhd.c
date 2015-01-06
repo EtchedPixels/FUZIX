@@ -79,7 +79,7 @@ static uint8_t hd_xfer(bool is_read, uint16_t addr)
 		hd_xfer_in(addr);
 	else
 		hd_xfer_out(addr);
-	/* Should beeturning READY, and maybe SEEKDONE */
+	/* Should be returning READY, and maybe SEEKDONE */
 	return hd_status;
 }
 
@@ -231,7 +231,7 @@ static void hd_swapon(struct minipart *p, unsigned int d, unsigned int i)
 	   We need 32K per process: hardwire it here - FIX if you change
 	   the mapping model */
 
-	swap_dev = d << 4 + i + 1 + 0x100;
+	swap_dev = (d << 4) + i + 1 + 0x100;
 
 	if (cyls >= MAX_SWAPS)
 		cyls = MAX_SWAPS - 1;
