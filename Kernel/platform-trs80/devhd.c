@@ -77,11 +77,6 @@ static uint8_t hd_xfer(bool is_read, uint16_t addr)
 	return hd_status;
 }
 
-/*
- *	We only support normal block I/O for the moment. We do need to
- *	add swapping!
- */
-
 static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
 	blkno_t block;
