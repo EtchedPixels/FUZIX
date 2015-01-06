@@ -2,20 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 
 /*
  *	Wrap the sdcc compiler tools into something more Unixlike and without
  *	spraying support files everwhere
  */
 
-#define FCC_DIR		    "/opt/fcc"
-
 #define MODE_LINK		0
 #define MODE_OBJ		1
 #define MODE_CPP		2
 #define MODE_ASM		3
 static int mode = MODE_LINK;
+
+#define LIBDIR			"%s/../lib"
+#define INCDIR			"%s/../include/"
+#define BINMAN_PATH		"%s/../bin/binman"
+#define CRT0_PATH		"%s/../lib/crt0.rel"
 static char *workdir;		/* Working directory */
+static char *basedir;		/* Program directory */
+static char *libdir;		/* Libraries directory */
+static char *incdir;		/* Headers directory */
+static char *binmanpath;	/* Path to binman */
+static char *crt0path;		/* Path to crt0 */
 
 static int verbose = 0;
 
@@ -339,7 +348,7 @@ static void build_command(void)
       exit(1);
     }
     add_option("-o", target);
-    add_argument(FCC_DIR "/lib/crt0.rel");
+    add_argument(crt0path);
   }
   if (srchead) {
     if (mode == MODE_OBJ)
@@ -359,7 +368,27 @@ int main(int argc, const char *argv[]) {
   const char *p;
   char *t;
   int i;
+  int baselen, len;
   int ret;
+
+  basedir = dirname((char *) argv[0]);
+  baselen = strlen(basedir);
+
+  len = baselen + strlen(LIBDIR) - 1;
+  libdir = malloc(len);
+  snprintf(libdir, len, "%s/../lib/", basedir);
+
+  len = baselen + strlen(INCDIR) - 1;
+  incdir = malloc(len);
+  snprintf(incdir, len, "%s/../include/", basedir);
+
+  len = baselen + strlen(BINMAN_PATH) - 1;
+  binmanpath = malloc(len);
+  snprintf(binmanpath, len, "%s/../bin/binman", basedir);
+
+  len = baselen + strlen(CRT0_PATH) - 1;
+  crt0path = malloc(len);
+  snprintf(crt0path, len, "%s/../lib/crt0.rel", basedir);
   
   for(i = 1; i < argc; i++) {
     p = argv[i];
@@ -439,8 +468,8 @@ int main(int argc, const char *argv[]) {
       }
     }
   }
-  add_include_path(FCC_DIR "/include/");
-  add_library_path(FCC_DIR "/lib/");
+  add_include_path(incdir);
+  add_library_path(libdir);
   add_library("c");
 
   if (mode == MODE_OBJ) {
@@ -469,7 +498,7 @@ int main(int argc, const char *argv[]) {
   if (ret)
     exit(ret);
   argp = 0;
-  add_argument(FCC_DIR "/bin/binman");
+  add_argument(binmanpath);
   add_argument(t);
   add_argument(rebuildname("", target, "map"));
   add_argument(chopname(target));
