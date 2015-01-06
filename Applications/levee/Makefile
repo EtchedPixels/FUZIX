@@ -12,7 +12,7 @@ levee: $(OBJS)
 $(OBJS): $(CSRCS)
 
 .c.rel:
-	fcc -O2 -c $(@:.rel=.c)
+	fcc -O3 -c $(@:.rel=.c)
 
 clean:
 	rm -rf $(OBJS) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.rel *.asm levee levee.bin
