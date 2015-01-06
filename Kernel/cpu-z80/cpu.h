@@ -58,4 +58,5 @@ typedef union {            /* this structure is endian dependent */
 #define cpu_to_le16(x)	(x)
 #define le16_to_cpu(x)	(x)
 
+#define DISCARDABLE 	static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
 #endif

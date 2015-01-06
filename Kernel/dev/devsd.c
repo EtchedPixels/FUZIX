@@ -174,7 +174,8 @@ static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
 /* in the DISCARD segment. sdcc only allows us to specify one segment for   */
 /* each source file. This "solution" is a bit (well, very) hacky ...        */
 /****************************************************************************/
-static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+
+DISCARDABLE
 
 void devsd_init(void)
 {
