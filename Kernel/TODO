@@ -16,7 +16,7 @@ NA	RTC setting
 DONE	Lock clock to RTC seconds
 o	Can we make the mount point buffers writable to disk too so we can
 	drop the quiet ones when busy ?
-o	Simplify exec logic and split into multiple functions
+IP	Simplify exec logic and split into multiple functions
 o	Add "shared lib" (or more accurately copied lib) support for libc
 	to keep binary size small
 o	Can we make inodes partially pageable given our on disk guarantees ?
@@ -24,8 +24,8 @@ o	Can we make inodes partially pageable given our on disk guarantees ?
 	objects and less memory usage. Might be nicer alternative to the BSD
 	inode shrinking hack (although that would fix the time_t question!)
 o	Finish the cpm emulator port
-o	Make object alignments 16bit friendly
-o	Add fields to binaries giving load page (so can load Z80 0x8000
+IP	Make object alignments 16bit friendly
+DONE	Add fields to binaries giving load page (so can load Z80 0x8000
 	binaries safely etc)
 
 Big Speed Up Points
@@ -44,7 +44,7 @@ o	Different magic for "big" fs - 32bit block numbers only on raw
 	devices. Split blkno_t into blkno_t blknodev_t or similar
 DONE	Carrier handling for tty devices
 o	Revoke 8)
-IP	Uptime/loadaverage/swapfree etc data
+DONE	Uptime/loadaverage/swapfree etc data
 o	Virtual device hooks for networking
 o	Pty/tty devices
 o	Finish select/poll
