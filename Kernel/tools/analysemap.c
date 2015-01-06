@@ -21,9 +21,13 @@ int main(int argc, char *argv[])
   char name[100];
   char nname[100];
   int hogs = 0;
+  int all = 0;
   
   if (strstr(argv[0], "memhog"))
     hogs = 1;
+  if (argv[1] && strcmp(argv[1], "-a") == 0)
+    all = 1;
+
   
   while(fgets(buf, 511, stdin)) {
     char *p1 = strtok(buf," \t\n");
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
       if (strstr(p2, "_start")) {
         sscanf(p1, "%x", &naddr);
         strcpy(nname, p2);
-        if (addr && !is_discard(addr)) {
+        if (addr && (all || !is_discard(addr)) ) {
           name[strlen(name)-6]=0;
           printf("%d: %s\n", naddr-addr, name);
         }
