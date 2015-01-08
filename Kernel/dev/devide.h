@@ -64,6 +64,7 @@ void devide_init(void);
 /* IDE command codes */
 #define IDE_CMD_READ_SECTOR     0x20
 #define IDE_CMD_WRITE_SECTOR    0x30
+#define IDE_CMD_FLUSH_CACHE     0xE7
 #define IDE_CMD_IDENTIFY        0xEC
 #define IDE_CMD_SET_FEATURES    0xEF
 
