@@ -33,7 +33,7 @@ void mbr_parse(blkdev_t *blk, char letter)
     br = (boot_record_t *)tmpbuf();
 
     do{
-	if(!blk->transfer(blk->drive_number, lba, br, true) || br->signature != MBR_SIGNATURE)
+	if(!blk->transfer(blk->drive_number, lba, br, true) || le16_to_cpu(br->signature) != MBR_SIGNATURE)
 	    break;
 
 	/* avoid an infinite loop where extended boot records form a loop */
@@ -60,18 +60,18 @@ void mbr_parse(blkdev_t *blk, char letter)
 		    /* Extended boot record, or chained table; in principle a drive should contain
 		       at most one extended partition so this code is OK even for parsing the MBR.
 		       Chained EBR addresses are relative to the start of the extended partiton. */
-		    lba = ep_offset + br->partition[i].lba_first;
+		    lba = ep_offset + le32_to_cpu(br->partition[i].lba_first);
 		    if(next >= 4)
 			break;
 		    /* we include all primary partitions but we deliberately knobble the size in 
 		       order to prevent catastrophic accidents */
-		    br->partition[i].lba_count = 2;
+		    br->partition[i].lba_count = cpu_to_le32(2);
 		    /* fall through */
 		default:
 		    /* Regular partition: In EBRs these are relative to the EBR (not the disk, nor
 		       the extended partition) */
-		    blk->lba_first[next] = br_offset + br->partition[i].lba_first;
-		    blk->lba_count[next] = br->partition[i].lba_count;
+		    blk->lba_first[next] = br_offset + le32_to_cpu(br->partition[i].lba_first);
+		    blk->lba_count[next] = le32_to_cpu(br->partition[i].lba_count);
 		    next++;
 		    kprintf("hd%c%d ", letter, next);
 	    }
