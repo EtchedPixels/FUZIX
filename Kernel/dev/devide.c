@@ -130,15 +130,30 @@ static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bo
 	devide_write_data(buffer, IDE_REG_DATA);
 	if(!devide_wait(IDE_STATUS_READY))
 	    return false;
-	/* flush the cache after each write */
-	if(drive_flags[drive] & FLAG_WRITE_CACHE){
-	    ide_reg_command = IDE_CMD_FLUSH_CACHE;
-	    if(!devide_wait(IDE_STATUS_READY))
-		return false;
-	}
     }
 
     return true;
+}
+
+static int devide_flush_cache(uint8_t drive)
+{
+    if(drive_flags[drive] & FLAG_WRITE_CACHE){
+	ide_reg_lba_3 = ((drive == 0) ? 0xE0 : 0xF0); // select drive
+
+	if(!devide_wait(IDE_STATUS_READY)){
+	    udata.u_error = EIO;
+	    return -1;
+	}
+
+	ide_reg_command = IDE_CMD_FLUSH_CACHE;
+
+	if(!devide_wait(IDE_STATUS_READY)){
+	    udata.u_error = EIO;
+	    return -1;
+	}
+    }
+
+    return 0;
 }
 
 /****************************************************************************/
@@ -228,6 +243,7 @@ static void devide_init_drive(uint8_t drive)
 	goto failout;
 
     blk->transfer = devide_transfer_sector;
+    blk->flush = devide_flush_cache;
     blk->drive_number = drive;
 
     /* read out the drive's sector count */
