@@ -87,6 +87,7 @@ int16_t _sync(void)
 		if (ino->c_refs > 0 && (ino->c_flags & CDIRTY)) {
 			wr_inode(ino);
 			ino->c_flags &= ~CDIRTY;
+			/* WRS: also call d_flush(ino->c_dev) here? */
 		}
 
         /* This now also indirectly does the superblocks as they

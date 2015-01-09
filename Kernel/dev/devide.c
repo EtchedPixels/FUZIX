@@ -16,6 +16,9 @@
 
 #define DRIVE_COUNT 2   /* range 1 -- 4 */
 
+static uint8_t drive_flags[DRIVE_COUNT];
+#define FLAG_WRITE_CACHE 1
+
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
 #endif
@@ -132,6 +135,27 @@ static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bo
     return true;
 }
 
+static int devide_flush_cache(uint8_t drive)
+{
+    if(drive_flags[drive] & FLAG_WRITE_CACHE){
+	ide_reg_lba_3 = ((drive == 0) ? 0xE0 : 0xF0); // select drive
+
+	if(!devide_wait(IDE_STATUS_READY)){
+	    udata.u_error = EIO;
+	    return -1;
+	}
+
+	ide_reg_command = IDE_CMD_FLUSH_CACHE;
+
+	if(!devide_wait(IDE_STATUS_READY)){
+	    udata.u_error = EIO;
+	    return -1;
+	}
+    }
+
+    return 0;
+}
+
 /****************************************************************************/
 /* Code below this point used only once, at startup, so we want it to live  */
 /* in the DISCARD segment. sdcc only allows us to specify one segment for   */
@@ -153,13 +177,14 @@ static void devide_init_drive(uint8_t drive)
 {
     blkdev_t *blk;
     uint8_t *buffer, select;
-    uint32_t size;
 
     switch(drive){
 	case 0: select = 0xE0; break;
 	case 1: select = 0xF0; break;
         default: return;
     }
+
+    drive_flags[drive] = 0;
 
     kprintf("IDE drive %d: ", drive);
 
@@ -204,19 +229,31 @@ static void devide_init_drive(uint8_t drive)
         goto failout;
     }
 
+    if( !(((uint16_t*)buffer)[82] == 0x0000 && ((uint16_t*)buffer)[83] == 0x0000) ||
+         (((uint16_t*)buffer)[82] == 0xFFFF && ((uint16_t*)buffer)[83] == 0xFFFF) ){
+	/* command set notification is supported */
+	if(buffer[164] & 0x20){
+	    /* write cache is supported */
+	    drive_flags[drive] |= FLAG_WRITE_CACHE;
+	}
+    }
+
+    blk = blkdev_alloc();
+    if(!blk)
+	goto failout;
+
+    blk->transfer = devide_transfer_sector;
+    blk->flush = devide_flush_cache;
+    blk->drive_number = drive;
+
     /* read out the drive's sector count */
-    size = *((uint32_t*)&buffer[120]);
+    blk->drive_lba_count = *((uint32_t*)&buffer[120]);
 
     /* done with our temporary memory */
     brelse((bufptr)buffer);
 
-    blk = blkdev_alloc();
-    if (blk) {
-        blk->transfer = devide_transfer_sector;
-        blk->drive_number = drive;
-        blk->drive_lba_count = size;
-        blkdev_scan(blk, SWAPSCAN);
-    }
+    /* scan partitions */
+    blkdev_scan(blk, SWAPSCAN);
 
     return;
 failout:

@@ -596,6 +596,7 @@ CODE1 int cdread(uint16_t dev, uint8_t flag);
 CODE1 int d_open(uint16_t dev, uint8_t flag);
 CODE1 int d_close(uint16_t dev);
 CODE1 int d_ioctl(uint16_t dev, uint16_t request, char *data);
+CODE1 int d_flush(uint16_t dev);
 CODE1 int cdwrite(uint16_t dev, uint8_t flag);
 CODE1 bool insq(struct s_queue *q, unsigned char c);
 CODE1 bool remq(struct s_queue *q, unsigned char *cp);
@@ -607,6 +608,7 @@ CODE1 int no_open(uint8_t minor, uint16_t flag);
 CODE1 int no_close(uint8_t minor);
 CODE1 int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
 CODE1 int no_ioctl(uint8_t minor, uint16_t a, char *b);
+CODE1 int no_flush(uint8_t minor);
 
 /* filesys.c */
 /* open file, "name" in user address space */
