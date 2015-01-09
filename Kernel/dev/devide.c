@@ -204,7 +204,7 @@ static void devide_init_drive(uint8_t drive)
     }
 
     /* read out the drive's sector count */
-    size = *((uint32_t*)&buffer[120]);
+    size = le32_to_cpu(*((uint32_t*)&buffer[120]));
 
     /* done with our temporary memory */
     brelse((bufptr)buffer);
