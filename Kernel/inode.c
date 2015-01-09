@@ -198,6 +198,7 @@ int16_t doclose(uint8_t uindex)
 {
 	int8_t oftindex;
 	inoptr ino;
+	uint16_t flush_dev = NO_DEVICE;
 
 	if (!(ino = getinode(uindex)))
 		return (-1);
@@ -207,14 +208,20 @@ int16_t doclose(uint8_t uindex)
 	if (ino->c_refs == 1 && of_tab[oftindex].o_refs == 1) {
 		if (isdevice(ino))
 			d_close((int) (ino->c_node.i_addr[0]));
+		if (getmode(ino) == F_REG && O_ACCMODE(of_tab[oftindex].o_access))
+			flush_dev = ino->c_dev;
 #ifdef CONFIG_NET
-		if (issocket(ino)
+		if (issocket(ino))
 			sock_close(ino);
 #endif
 	}
 	udata.u_files[uindex] = NO_FILE;
 	udata.u_cloexec &= ~(1 << uindex);
 	oft_deref(oftindex);
+
+	/* if we closed a file in write mode, flush the device's cache after inode has been deferenced */
+	if(flush_dev != NO_DEVICE)
+		d_flush(flush_dev);
 
 	return (0);
 }

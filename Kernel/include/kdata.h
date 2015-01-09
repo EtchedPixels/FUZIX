@@ -53,6 +53,7 @@ typedef int (*dev_init_t)(void);
 typedef int (*dev_open_t)(uint8_t minor, uint16_t flag);
 typedef int (*dev_close_t)(uint8_t minor);
 typedef int (*dev_ioctl_t)(uint8_t minor, uint16_t request, char *data); // note: data is in userspace
+typedef int (*dev_flush_t)(uint8_t minor);
 
 typedef struct devsw {
     dev_open_t dev_open;  /* The routines for reading, etc */
@@ -60,6 +61,7 @@ typedef struct devsw {
     dev_read_t dev_read;  /* Offset would be ignored for block devices */
     dev_write_t dev_write; /* Blkno and offset ignored for tty, etc. */
     dev_ioctl_t dev_ioctl; /* Count is rounded to 512 for block devices */
+    dev_flush_t dev_flush; /* Flush device write cache */
 } devsw;
 
 extern struct devsw dev_tab[];
