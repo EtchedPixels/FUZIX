@@ -1,11 +1,11 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon
+TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502
 
-export TARGET= trs80
-export CPU = z80
+#export TARGET= trs80
+#export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
-#export TARGET = 6502test
-#export CPU = 6502
+export TARGET = tgl6502
+export CPU = 6502
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
 
