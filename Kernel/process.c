@@ -1,5 +1,5 @@
-#undef DEBUG			/* turn this on to enable syscall tracing */
-#undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
+#define DEBUG			/* turn this on to enable syscall tracing */
+#define DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 
 #include <kernel.h>
@@ -101,12 +101,12 @@ ptptr getproc(void)
 	ptptr haltafter;
 #ifdef DEBUG
 #ifdef DEBUGREALLYHARD
+	ptptr pp;
 	kputs("getproc start ... ");
 	for (pp = ptab; pp < ptab_end; pp++)
 		kprintf("ptab[0x%x]: pid=%d uid=%d status=%d, page=0x%x\n",
 			pp, pp->p_pid, pp->p_uid, pp->p_status,
 			pp->p_page);
-	*/
 #endif
 #endif
 	    /* yes please, interrupts on. */
