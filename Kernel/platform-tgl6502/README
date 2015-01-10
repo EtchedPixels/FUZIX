@@ -1,13 +1,19 @@
 Initial 6502 experimentation for the tgl6502 - as an experimental target
 to play with 6502isms easily
 
+See:
+http://thegaragelab.com/programming-the-tgl-6502/
+
+You need a cc65 git tree, released cc65 can't compile Fuzix as it lacks a
+compiler bug fix I contributed.
+
 Our memory mapping looks like this
 
 	0x0000		ZP
 	0x0100		6502 Stack (per proc) 
 	0x0200		C stack (per proc)
 	0x0400		I stack (per proc)
-	0x0500		UData per proc
+	0x0500		Udata actual data per proc
 	0x0600+		Common copy
 
 	0x2000		Kernel data	(8K)
@@ -28,7 +34,20 @@ We hackishly chop up and share the 6502 256 byte system stack. Probably we
 should just check for overflows and kill, or perhaps copy stacks in/out if
 it would otherwise run out ?
 
-
 Memory set up for now is banking, because we'll need swap and bank16k+swap
 still needs significant work on the I/O side of things.
+
+Lots of memory to save in kernel space by making the common and data copies
+come from a bank we then switch out, along perhaps with the const data from
+what would be discard areas on the Z80.
+
+
+
+To build:
+Set the platform/target
+make clean
+make
+tools/tglsplice
+
+and you'll get a 6502.rom
 
