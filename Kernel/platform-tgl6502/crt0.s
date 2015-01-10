@@ -27,7 +27,7 @@
 
 		sei			; interrupts off
 		cld			; decimal off
-		ldx #$00
+		ldx #$FF
 		txs			; Stack (6502 not C)
 
 ;
