@@ -38,16 +38,12 @@
 ;	On completion U_DATA__U_ERROR an U_DATA__U_RETVAL hold the returns
 ;
 unix_syscall_entry:
-	sty U_DATA__U_CALLNO	; Save the syscall code
+	jsr map_kernel		; Ensure kernel is mapped (no-op in some cases)
 	lda #1
 	sta _kernel_flag	; In kernel mode
-	jsr map_kernel		; Ensure kernel is mapped (no-op in some cases)
 	cli			; Interrupts now ok
 	jsr _unix_syscall_i	; Enter C space via the __interrupt wrapper
 	sei			; Interrupts back off
-	pha
-	txa
-	pha			; Save return code
 	lda #0
 	sta _kernel_flag
 unix_sig_exit:
