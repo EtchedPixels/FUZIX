@@ -18,6 +18,7 @@
 
 static uint8_t drive_flags[DRIVE_COUNT];
 #define FLAG_WRITE_CACHE 1
+#define FLAG_CACHE_DIRTY 2
 
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
@@ -130,6 +131,7 @@ static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bo
 	devide_write_data(buffer, IDE_REG_DATA);
 	if(!devide_wait(IDE_STATUS_READY))
 	    return false;
+	drive_flags[drive] |= FLAG_CACHE_DIRTY;
     }
 
     return true;
@@ -137,7 +139,10 @@ static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bo
 
 static int devide_flush_cache(uint8_t drive)
 {
-    if(drive_flags[drive] & FLAG_WRITE_CACHE){
+    /* check drive has a cache and was written to since the last flush */
+    if(drive_flags[drive] & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)
+		    == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
+	drive_flags[drive] &= ~FLAG_CACHE_DIRTY;
 	ide_reg_lba_3 = ((drive == 0) ? 0xE0 : 0xF0); // select drive
 
 	if(!devide_wait(IDE_STATUS_READY)){

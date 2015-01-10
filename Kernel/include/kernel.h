@@ -507,6 +507,7 @@ struct s_argblk {
  */
 #define SELECT_BEGIN		0x8000
 #define SELECT_END		0x8001
+#define BLOCK_FLUSH_CACHE       0x8002
 
 struct sysinfoblk {
   uint8_t infosize;		/* For expandability */
@@ -608,7 +609,6 @@ CODE1 int no_open(uint8_t minor, uint16_t flag);
 CODE1 int no_close(uint8_t minor);
 CODE1 int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
 CODE1 int no_ioctl(uint8_t minor, uint16_t a, char *b);
-CODE1 int no_flush(uint8_t minor);
 
 /* filesys.c */
 /* open file, "name" in user address space */
