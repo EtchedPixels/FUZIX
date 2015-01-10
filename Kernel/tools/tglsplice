@@ -1,0 +1,11 @@
+#!/bin/sh
+dd if=fuzix.bin of=tmp_fuzix.b0 bs=8192 count=1
+dd if=fuzix.bin of=tmp_fuzix.v bs=1 skip=49146 count=6
+dd if=/dev/zero of=tmp_fuzix.b1 bs=8186 count=1
+
+cat tmp_fuzix.b0 tmp_fuzix.b1 tmp_fuzix.v >6502.rom
+dd if=fuzix.bin bs=8192 skip=1 seek=2 of=6502.rom
+
+rm tmp_fuzix.b0 tmp_fuzix.v tmp_fuzix.b1
+
+
