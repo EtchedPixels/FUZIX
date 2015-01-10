@@ -1,5 +1,5 @@
-#define DEBUG			/* turn this on to enable syscall tracing */
-#define DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
+#undef DEBUG			/* turn this on to enable syscall tracing */
+#undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 
 #include <kernel.h>
