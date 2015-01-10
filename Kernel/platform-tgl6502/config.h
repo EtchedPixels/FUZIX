@@ -15,20 +15,20 @@
 /* For now used BANK_FIXED as we don't yet have sane swap with 16K maps */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 2
-#define MAP_SIZE 0xC000
+#define MAP_SIZE 0xE000
 
 /* And swapping */
 #define SWAPDEV 	257	/* FIXME */
-#define SWAP_SIZE   	0x60 	/* 48K in blocks */
+#define SWAP_SIZE   	0x70 	/* 56K in blocks */
 #define SWAPBASE    	0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    	0xC000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    	0xE000	/* vectors so its a round number of sectors */
 /* FIXME: we need to swap the udata separately */
 #define MAX_SWAPS	32
 
 #define TICKSPERSEC 10	    /* Ticks per second */
-#define PROGBASE    0x0200  /* also data base */
-#define PROGLOAD    0x0200
-#define PROGTOP     0xC000  /* Top of program */
+#define PROGBASE    0x2000  /* also data base */
+#define PROGLOAD    0x2000
+#define PROGTOP     0xE000  /* Top of program */
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 

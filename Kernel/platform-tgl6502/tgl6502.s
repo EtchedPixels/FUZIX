@@ -92,7 +92,6 @@ init_hardware:
 	    sta _ramsize
 	    lda #120
 	    sta _procmem
-
             jsr program_vectors_k
 
             rts
@@ -125,7 +124,7 @@ program_vectors_k:
 	    sta $FFFB
 	    ; However tempting it may be to use BRK for system calls we
 	    ; can't do this on an NMOS 6502 because the chip has brain
-	    ; dead IRQ handling buts that could simply "lose" the syscall!
+	    ; dead IRQ handling bits that could simply "lose" the syscall!
 	    lda #<syscall_entry
 	    sta syscall
 	    lda #>syscall_entry
@@ -160,9 +159,13 @@ program_vectors_k:
 ;
 map_process_always:
 	    pha
+	    txa
+	    pha
 	    lda #<U_DATA__U_PAGE
 	    ldx #>U_DATA__U_PAGE
 	    jsr map_process_2
+	    pla
+	    tax
 	    pla
 	    rts
 ;
@@ -182,6 +185,8 @@ map_process:
 ;
 map_kernel:
 	    pha
+	    txa
+	    pha
 				; Common is left untouched as is ZP and S
 	    lda #$01		; Kernel RAM at 0x2000-0x3FFF
 	    sta $FF8B		; 
@@ -199,6 +204,8 @@ map_kernel:
 	    inx
 	    stx $FF91
 	    pla
+	    tax
+	    pla
 	    rts
 
 ; X,A holds the map table of this process
@@ -206,9 +213,10 @@ map_process_2:
 	    sta ptr1
 	    tya
 	    pha
-	    sty ptr1+1
+	    stx ptr1+1
 	    ldy #0
 	    lda (ptr1),y	; 4 bytes if needed
+	    tax
 	    jsr restore_bits
 	    pla
 	    tay
@@ -252,12 +260,13 @@ restore_bits:
 				; we go to proper banking
 	    rts
 
-;	Save the current mapping.
 ;
-;	FIXME: need to copy the 8 byte area
+;	Save the current mapping.
+;	May not be sufficient if we want IRQs on while doing page tricks
 ;
 map_save:
 	    pha
+	    lda U_DATA__U_PAGE
 	    sta saved_map
 	    pla
 	    rts

@@ -1,6 +1,6 @@
 
 CSRCS = devtty.c devrd.c
-CSRCS += devices.c main.c libc.c
+CSRCS += devices.c main.c
 
 ASRCS = tgl6502.s crt0.s
 ASRCS += tricks.s commonmem.s
@@ -29,4 +29,4 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_exec.o \
-	../usermem.o ../usermem_std-6502.o devtty.o libc.o 
+	../usermem.o ../usermem_std-6502.o devtty.o
