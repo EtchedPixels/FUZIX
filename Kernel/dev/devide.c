@@ -97,19 +97,18 @@ static bool devide_wait(uint8_t bits)
 
 static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
 {
-    /* FIXME: only safe for LE, and only sensible for Z80/Z180 */
-#if 0
-    ide_reg_lba_3 = ((lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
-    ide_reg_lba_2 = (lba >> 16);
-    ide_reg_lba_1 = (lba >> 8);
-    ide_reg_lba_0 = lba;
-#else 
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     /* sdcc sadly unable to figure this out for itself yet */
     uint8_t *p = (uint8_t *)&lba;
     ide_reg_lba_3 = (p[3] & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
     ide_reg_lba_2 = p[2];
     ide_reg_lba_1 = p[1];
     ide_reg_lba_0 = p[0];
+#else
+    ide_reg_lba_3 = ((lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
+    ide_reg_lba_2 = (lba >> 16);
+    ide_reg_lba_1 = (lba >> 8);
+    ide_reg_lba_0 = lba;
 #endif
 
     if(!devide_wait(IDE_STATUS_READY))
@@ -205,7 +204,7 @@ static void devide_init_drive(uint8_t drive)
     }
 
     /* read out the drive's sector count */
-    size = *((uint32_t*)&buffer[120]);
+    size = le32_to_cpu(*((uint32_t*)&buffer[120]));
 
     /* done with our temporary memory */
     brelse((bufptr)buffer);
