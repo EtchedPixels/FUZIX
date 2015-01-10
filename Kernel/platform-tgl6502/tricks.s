@@ -9,6 +9,8 @@
 	.import _chksigs
 	.import _trap_monitor
 
+	.import map_kernel
+
 	.import	_newproc
 	.import _getproc
 	.import _runticks
@@ -167,12 +169,13 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	; --------- we switch stack copies in this call -----------
-;	jsr fork_copy			; copy 0x000 to udata.u_top and the
-					; uarea and return on the childs
-					; common
+	;
+	;	Assumes ptr1 still holds the new process ptr
+	;
 
+	jsr fork_copy
 
+	; --------- we switch stack copies here -----------
 	lda U_DATA__U_PAGE
 	sta $FF8A			; switch to child and child stack
 					; and zero page etc
@@ -208,46 +211,58 @@ _dofork:
 	; if it had done a switchout().
         rts
 
-fork_copy:
-;	ldd U_DATA__U_TOP
-;	addd #0x0fff		; + 0x1000 (-1 for the rounding to follow)
-;	lsra		
-;	lsra
-;	lsra
-;	lsra
-;	lsra			; bits 2/1 for 8K pages
-;	anda #6			; lose bit 0
-;	adda #2			; and round up to the next bank (but in 8K terms)
 ;
-;	ldx fork_proc_ptr
-;	ldy P_TAB__P_PAGE_OFFSET,x
-;	; y now points to the child page pointers
-;	ldx U_DATA__U_PAGE
-;	; and x to the parent
-;fork_next:
-;	ld a,(hl)
-;	out (0x11), a		; 0x4000 map the child
-;	ld c, a
-;	inc hl
-;	ld a, (de)
-;	out (0x12), a		; 0x8000 maps the parent
-;	inc de
-;	exx
-;	ld hl, #0x8000		; copy the bank
-;	ld de, #0x4000
-;	ld bc, #0x4000		; we copy the whole bank, we could optimise
-;				; further
-;	ldir
-;	exx
-;	call map_kernel		; put the maps back so we can look in p_tab
-; FIXME: can't map_kernel here - we've been playing with the maps, fix
-; directly
-;	suba #1
-;	bne fork_next
-
-;	ld a, c
-;	out (0x13), a		; our last bank repeats up to common
-	; --- we are now on the stack copy, parent stack is locked away ---
-;	rts			; this stack is copied so safe to return on
-
+;	On entry ptr1 points to the process table of the child, and
+;	the U_DATA is still not fully modified so holds the parents bank
+;	number.
+;
+fork_copy:
+	ldx U_DATA__U_PAGE
+	ldy #P_TAB__P_PAGE_OFFSET
+	lda (ptr1),y		; child->p_page
+	tay
+	lda #0			; each bank is 56K
+copy_loop:
+	stx $FF8C		; 0x4000
+	sty $FF8D		; 0x6000
+	pha			; Oh for a 65C02 8)
+	tya
+	pha
+	txa
+	pha
+	jsr bank2bank		; copies 8K
+	pla
+	tax
+	pla
+	tay
+	pla
+	inx
+	iny
+	clc
+	adc #1
+	cmp #8
+	bne copy_loop
+	jmp map_kernel		; put the kernel mapping back as it should be
 	
+bank2bank:			;	copy 4K between the blocks mapped
+				;	at 0x4000 and 0x6000
+	lda #$40
+	sta ptr3+1
+	lda #$60
+	sta ptr4+1
+	lda #0
+	sta ptr3
+	sta ptr4
+	tay
+	ldx #$20		;	32 x 256 bytes = 8K
+copy1:
+	lda (ptr3),y
+	sta (ptr4),y
+	iny
+	bne copy1
+	inc ptr3+1
+	inc ptr4+1
+	dex
+	bne copy1
+	rts
+
