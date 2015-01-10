@@ -437,7 +437,9 @@ copy_args:  lda (ptr1),y	; copy the arguments from current bank
 
 
 platform_doexec:
-	    jmp $2000		; FIXME: should jump to argument really
+	    stx ptr1+1
+	    sta ptr1
+	    jmp (ptr1)		; 0x2000 usually
 
 ;
 ;	Straight jumps no funny banking issues
@@ -447,6 +449,3 @@ _unix_syscall_i:
 _platform_interrupt_i:
 	    jmp _platform_interrupt
 
-	    .segment "ZEROPAGE"
-
-zp_intvec:	.byte 0

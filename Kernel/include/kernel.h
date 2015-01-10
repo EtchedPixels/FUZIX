@@ -573,9 +573,9 @@ COMMON int _uzero(uint8_t *user, usize_t count);
 
 /* platform/tricks.s */
 COMMON void switchout(void);
-COMMON void doexec(uint16_t start_addr);
-COMMON void switchin(ptptr process);
-COMMON int16_t dofork(ptptr child);
+COMMON void __fastcall__ doexec(uint16_t start_addr);
+COMMON void __fastcall__ switchin(ptptr process);
+COMMON int16_t __fastcall__ dofork(ptptr child);
 
 /* devio.c */
 CODE1 uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
@@ -667,12 +667,12 @@ CODE2 unsigned int ugetsys(unsigned char *to, unsigned int size);
 CODE2 void psleep(void *event);
 CODE2 void wakeup(void *event);
 CODE2 void pwake(ptptr p);
-CODE2 ptptr getproc(void);
-CODE2 void newproc(ptptr p);
+CODE2 ptptr __fastcall__ getproc(void);
+CODE2 void __fastcall__ newproc(ptptr p);
 CODE2 ptptr ptab_alloc(void);
 CODE2 void ssig(ptptr proc, uint16_t sig);
 CODE2 void chksigs(void);
-COMMON void program_vectors(uint16_t *pageptr);
+COMMON void __fastcall__ program_vectors(uint16_t *pageptr);
 CODE2 void sgrpsig(uint16_t pgrp, uint16_t sig);
 CODE2 void unix_syscall(void);
 CODE2 void timer_interrupt(void);

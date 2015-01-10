@@ -96,7 +96,7 @@ ptptr getproc_nextp = &ptab[0];
 
 #ifndef CONFIG_SINGLETASK
 
-ptptr getproc(void)
+ptptr __fastcall__ getproc(void)
 {
 	ptptr haltafter;
 #ifdef DEBUG
@@ -146,7 +146,7 @@ ptptr getproc(void)
  *	be blissfully unaware of its cut down environment.
  */
 
-ptptr getproc(void)
+ptptr __fastcall__ getproc(void)
 {
 	ptptr p = udata.u_ptab;
 
@@ -189,7 +189,7 @@ ptptr getproc(void)
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
  */
-void newproc(ptptr p)
+void __fastcall__ newproc(ptptr p)
 {				/* Passed New process table entry */
 	uint8_t *j;
 	irqflags_t irq;

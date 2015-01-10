@@ -8,8 +8,10 @@
         .export kstack_top
         .export istack_top
         .export istack_switched_sp
+	.export CTemp
 
         .segment "COMMONDATA"
+	.include "zeropage.inc"
 
 ;
 ;	In 6502 land these are the C stacks, we will need to handle the
@@ -28,3 +30,12 @@ istack_base:
 	.res 254,0
 istack_top:
 istack_switched_sp: .word 0
+;
+;	Finally we tack the ZP save area for interrupts on the end
+;
+; Swap space for the the C temporaries (FIXME - we stash sp twice right now)
+;
+CTemp:
+	.res    2               ; sp
+	.res    2               ; sreg
+        .res    (zpsavespace-4) ; Other stuff

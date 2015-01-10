@@ -47,6 +47,9 @@ typedef union {            /* this structure is endian dependent */
 #define cpu_to_le16(x)	swab(x)
 #define le16_to_cpu(x)	swab(x)
 
+/* 6809 gcc already uses register calling whenever it can */
+#define __fastcall__
+
 #ifdef CONFIG_BANKED
 #define CODE1	__attribute__((far("1")))
 #define CODE2   __attribute__((far("2")))

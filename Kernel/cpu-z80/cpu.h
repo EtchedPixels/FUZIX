@@ -55,6 +55,9 @@ typedef union {            /* this structure is endian dependent */
 #define VIDEO
 #define DISCARD
 
+/* No fastcall in SDCC */
+#define __fastcall__
+
 #define cpu_to_le16(x)	(x)
 #define le16_to_cpu(x)	(x)
 #define cpu_to_le32(x)	(x)

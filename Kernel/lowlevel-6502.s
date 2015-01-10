@@ -21,6 +21,7 @@
 	.import _platform_interrupt_i
 	.import platform_doexec
 	.import _inint
+	.import CTemp
 
 	.include "platform/zeropage.inc"
 	.include "platform/kernel.def"
@@ -60,11 +61,12 @@ unix_sig_exit:
 ;
 ;	doexec is a special case syscall exit path. As we may have no
 ;	common we have to hand the last bits off to the platform code
+;	x,a holds the target address
 ;
 _doexec:
 	sei
-	lda #0
-	sta _kernel_flag
+	ldy #0
+	sty _kernel_flag
 	jsr map_process_always
 	jmp platform_doexec
 
@@ -76,7 +78,11 @@ _doexec:
 ;	Caller on the exit side is responsible for stack switches and
 ;	checking for signals
 ;
+;	The C world here is fairly ugly. We have to stash various bits of
+;	zero page magic because its not re-entrant.
+;
 interrupt_handler:
+	jsr stash_zp			; Save zero page bits
 	jsr map_save
 	jsr map_kernel
 	lda #1
@@ -91,9 +97,31 @@ interrupt_handler:
 interrupt_k:
 	jsr map_restore
 int_switch:
+	jsr stash_zp			; Zero page stuff reverse
 	lda #0
 	sta _inint
 	rts
+
+;
+;	The following is taken from the debugger example as referenced in
+;	the compiler documentation. We swap a stashed ZP in our commondata
+;	with an IRQ handler one. The commondata is per process and we depend
+;	upon this to make it all work
+;
+; Swap the C temporaries
+;
+stash_zp:
+        ldy     #zpsavespace-1
+Swap1:  ldx     CTemp,y
+        lda     <sp,y
+        sta     CTemp,y
+        txa
+        sta     sp,y
+        dey
+        bpl     Swap1
+        rts
+
+
 
 nmi_handler:
 	ldx #>nmi_trap

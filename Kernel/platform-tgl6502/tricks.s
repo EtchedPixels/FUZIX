@@ -69,7 +69,7 @@ _switchout:
 badswitchmsg: .asciiz "_switchin: FAIL\r\n"
 
 ;
-;	Fixme: pull the C argument off into x,a
+;	On entry x,a holds the process to switch in
 ;
 _switchin:
 	sei
