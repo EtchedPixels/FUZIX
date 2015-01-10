@@ -191,9 +191,10 @@ fuzix.bin: target $(OBJS) tools/decbdragon
 endif
 
 clean:
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 	+make -C cpm-loader clean
+	+make -C tools/bankld clean
 
 clean-all: clean
 	(cd tools/bankld; make clean)
