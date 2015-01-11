@@ -122,6 +122,7 @@ void bufsync(void)
 			bdwrite(bp);
 			if (!bp->bf_busy)
 				bp->bf_dirty = false;
+			d_flush(bp->bf_dev);
 		}
 	}
 }
@@ -281,6 +282,13 @@ int d_ioctl(uint16_t dev, uint16_t request, char *data)
 	}
 
 	return 0;
+}
+
+int d_flush(uint16_t dev)
+{
+	if (!validdev(dev))
+		panic("d_flush: bad device");
+	return (*dev_tab[major(dev)].dev_ioctl) (minor(dev), BLOCK_FLUSH_CACHE, 0);
 }
 
 /*
