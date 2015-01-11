@@ -126,7 +126,7 @@ int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 blkdev_t *blkdev_alloc(void)
 {
     blkdev_t *blk = &blkdev_table[0];
-    while (blk < &blkdev_table[MAX_BLKDEV-1]) {
+    while (blk <= &blkdev_table[MAX_BLKDEV-1]) {
         /* Cheapest to scan for an 8 or 16bit field and to make it start
            the struct */
         if (blk->transfer == NULL)
