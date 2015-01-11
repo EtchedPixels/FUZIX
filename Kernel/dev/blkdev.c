@@ -120,6 +120,25 @@ int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return blkdev_transfer(minor, false, rawflag);
 }
 
+int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
+{
+    blkdev_t *blk;
+    data; /* unused */
+
+    if(request != BLOCK_FLUSH_CACHE){
+	udata.u_error = ENXIO;
+	return -1;
+    }
+
+    /* we trust that blkdev_open() has already verified that this minor number is valid */
+    blk = &blkdev_table[minor >> 4];
+
+    if(blk->flush)
+	return blk->flush(blk->drive_number);
+    else
+	return 0;
+}
+
 /* FIXME: this would tidier and handle odd partition types sanely if split
    into blkdev_alloc() - just returns a device, and blkdev_scan() */
 
