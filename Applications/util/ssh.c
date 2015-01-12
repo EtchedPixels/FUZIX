@@ -24,7 +24,7 @@ char eline[45];		    /* Line for Search command */
 char cmd[50], arg[MAX_ARGS][50];
 
 
-main(int argc, char *argval[])
+int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
     int   login_sh, pid, sig, stat, count, asis, i;
@@ -154,7 +154,7 @@ main(int argc, char *argval[])
                             *tp++ = '/';
                         for (i = 0; (*tp++ = cmd[i++]) != '\0'; )
                             ;
-                        execve(eline, argv, environ);
+                        execve(eline, (const char **)argv, (const char **)environ);
                     }
                     printf("ssh: %s?\n", buf);      /* Say we can't exec */
                     exit(1);
