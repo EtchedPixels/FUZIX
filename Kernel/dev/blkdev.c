@@ -125,10 +125,8 @@ int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
     blkdev_t *blk;
     data; /* unused */
 
-    if (request != BLKFLSBUF) {
-	udata.u_error = ENXIO;
+    if (request != BLKFLSBUF)
 	return -1;
-    }
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk = &blkdev_table[minor >> 4];
