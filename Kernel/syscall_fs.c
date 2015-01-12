@@ -257,23 +257,26 @@ int16_t _ioctl(void)
 	uint16_t dev;
 
 	if ((ino = getinode(fd)) == NULLINODE)
-		return (-1);
+		return -1;
 
 	if (!(isdevice(ino))) {
 		udata.u_error = ENOTTY;
-		return (-1);
+		return -1;
 	}
+
+	if ((request & IOCTL_SUPER) && esuper())
+	        return -1;
 
 	if (!(getperm(ino) & OTH_WR)) {
 		udata.u_error = EPERM;
-		return (-1);
+		return -1;
 	}
 
 	dev = ino->c_node.i_addr[0];
 
 	/* top bit of request is reserved for kernel originated magic */
 	if (d_ioctl(dev, request & 0x7FFF, data))
-		return (-1);
+		return -1;
 	return (0);
 }
 
