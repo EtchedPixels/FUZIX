@@ -16,6 +16,7 @@
 	.import _runticks
 	.import _inint
 	.import outstring
+	.import outxa
 	.import outcharhex
 
         .include "kernel.def"
@@ -75,10 +76,13 @@ _switchin:
 	sei
 	sta	ptr1
 	stx	ptr1+1
+;	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
+;	pha
+;	jsr	outcharhex
+;	pla
 	sta	$FF8A		; switches zero page, stack memory area
-
 	; ------- No stack -------
 
         ; check u_data->u_ptab matches what we wanted

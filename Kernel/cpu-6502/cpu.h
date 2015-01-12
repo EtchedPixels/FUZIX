@@ -14,11 +14,11 @@ typedef int16_t susize_t;
 
 extern void ei(void);
 extern irqflags_t di(void);
-extern void irqrestore(irqflags_t f);
+extern void __fastcall__ irqrestore(irqflags_t f);
 
-extern void *memcpy(void *, void *, size_t);
-extern void *memset(void *, int, size_t);
-extern size_t strlen(const char *);
+extern void * __fastcall__ memcpy(void *, void *, size_t);
+extern void * __fastcall__ memset(void *, int, size_t);
+extern size_t __fastcall__ strlen(const char *);
 
 #define EMAGIC    0x4C    /* Header of executable (JMP) */
 

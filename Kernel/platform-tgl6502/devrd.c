@@ -1,6 +1,5 @@
 /* 
- * NC100 RD PCMCIA driver
- *
+ * ROMdisc hack for testing
  */
 
 #include <kernel.h>
@@ -16,8 +15,12 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     int dlen;
     int ct = 0;
     int map;
+    irqflags_t irq;
+    uint8_t old;
+    uint16_t romd_roff;
+    uint8_t romd_rmap;
 
-    /* FIXME: raw is broken unless nicely aligned */
+    /* RAW won't work yet this is just an initial hack */
     if(rawflag) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
@@ -35,19 +38,29 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
         block_xfer = 1;
         map = 0;
     }
-    block += 2*320;	/* ramdisc starts at 320K in */
-        
+
     while (ct < block_xfer) {
-/*        rd_memcpy(is_read, map, dptr, block); */
+        /* Offset of block within an 8K bank (high byte) */
+        romd_roff = (block << 9);
+        /* 8K block we need to select */
+        romd_rmap = 0x48 + (block >> 4);
+        /* Hack for now for testing */
+        irq = di();
+        old = *(uint8_t *)0xFF91;
+        *(uint8_t *)0xFF91 = romd_rmap;
+        if (is_read)
+            memcpy((void *)dptr, (void *)(0xE000 + romd_roff), 512);
+        *(uint8_t *)0xFF91 = old;
+        irqrestore(irq);
         block++;
         ct++;
+        dptr+=512;
     }
     return ct;
 }
 
 int rd_open(uint8_t minor, uint16_t flag)
 {
-    flag;
     if(minor != 0) {
         udata.u_error = ENODEV;
         return -1;
@@ -57,13 +70,11 @@ int rd_open(uint8_t minor, uint16_t flag)
 
 int rd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    flag;minor;
     return rd_transfer(true, rawflag);
 }
 
 int rd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    flag;minor;
     return rd_transfer(false, rawflag);
 }
 

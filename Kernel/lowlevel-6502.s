@@ -9,6 +9,7 @@
 	.export outstringhex
 	.export outnewline
 	.export outcharhex
+	.export outxa
 
 	.import outchar
 	.import _kernel_flag
@@ -171,11 +172,27 @@ outcharhex:
 	lsr a
 	lsr a
 	lsr a
+	cmp #9
+	bcc deci1
+	clc
+	adc #7
+deci1:
 	clc
 	adc #48			; ascii zero
 	jsr outchar
 	pla
 	and #$0f
+	cmp #9
+	bcc deci2
+	clc
+	adc #7
+deci2:
 	clc
 	adc #48
 	jmp outchar
+
+outxa:	pha
+	txa
+	jsr outcharhex
+	pla
+	jmp outcharhex

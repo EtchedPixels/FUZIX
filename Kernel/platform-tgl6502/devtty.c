@@ -9,7 +9,7 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart = (uint8_t *)0xFF00;
+static volatile uint8_t *uart = (volatile uint8_t *)0xFF00;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -53,8 +53,20 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
+void tty_poll(void)
+{
+        uint8_t x;
+        
+        x = uart[1] & 4;
+        if (x) {
+        	x = uart[2];
+		tty_inproc(1, x);
+	}
+}
+                
 void platform_interrupt(void)
 {
+	tty_poll();
 	timer_interrupt();
 }
 

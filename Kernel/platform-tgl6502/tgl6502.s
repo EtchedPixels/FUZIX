@@ -35,6 +35,7 @@
 	    .import _unix_syscall
 	    .import _platform_interrupt
 	    .import _kernel_flag
+	    .import copycommon
 
             .include "kernel.def"
             .include "../kernel02.def"
@@ -107,9 +108,7 @@ _program_vectors:
 	    ; will exit with interrupts off
 	    sei
 	    ;
-	    ; Fixme: block copy stubs segment as well if 6509.
-	    ;
-
+	    jsr copycommon
 	    ; our C caller will invoke us with the pointer in x,a
 	    ; just pass it on
 	    jsr map_process

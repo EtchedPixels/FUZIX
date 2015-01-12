@@ -8,6 +8,9 @@ uint8_t kernel_flag = 0;
 
 void platform_idle(void)
 {
+    irqflags_t flags = di();
+    tty_poll();
+    irqrestore(flags);
 }
 
 void do_beep(void)
@@ -22,9 +25,9 @@ void do_beep(void)
 void pagemap_init(void)
 {
     /* We treat RAM as 2 48K banks + 16K of kernel data */
-    /* 0-3 kernel, 4-9 Bank 0, 10-15 bank 1 */
-    pagemap_add(4);
-    pagemap_add(10);
+    /* 2-8 proc1, 9-15 proc2, 1 kernel data, 0 spare */
+    pagemap_add(9);
+    pagemap_add(2);
 }
 
 void map_init(void)

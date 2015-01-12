@@ -1,5 +1,6 @@
         	; exported symbols
 	        .export start
+		.export copycommon
 
 		; imported symbols
 		.import init_early
@@ -13,7 +14,6 @@
 		.import	 __DATA_LOAD__, __DATA_RUN__, __DATA_SIZE__
 		.import	 __COMMONMEM_LOAD__, __COMMONMEM_RUN__, __COMMONMEM_SIZE__
 		.importzp	ptr1, ptr2, tmp1
-
 
 	        ; startup code @0
 	        .code
@@ -55,6 +55,10 @@ start:					; Map ROM at 0x4000-0xFFFF
 		stx $FF90
 		inx
 		stx $FF91
+		lda #$02
+		sta $FF8A		; Common for init at 0x0000
+		lda #$01		; Kernel data at 0x4000
+		sta $FF8B
 
 		lda #<kstack_top	; C stack
 		sta sp
@@ -112,22 +116,9 @@ gogogo:
 
 		jsr	copyloop
 
-	        lda     #<__COMMONMEM_LOAD__         ; Source pointer
-	        sta     ptr1
-	        lda     #>__COMMONMEM_LOAD__
-	        sta     ptr1+1
 
-	        lda     #<__COMMONMEM_RUN__          ; Target pointer
-	        sta     ptr2
-	        lda     #>__COMMONMEM_RUN__
-	        sta     ptr2+1
 
-	        ldx     #<~__COMMONMEM_SIZE__
-	        lda     #>~__COMMONMEM_SIZE__        ; Use -(__DATASIZE__+1)
-	        sta     tmp1
-
-		jsr	copyloop
-
+		jsr	copycommon
 
 		lda #'x'
 		sta $FF03
@@ -168,6 +159,34 @@ copyloop:
 		rts
 
 ; Done
+
+
+;
+;	This is also used at runtime so split it off as a helper
+;
+copycommon:
+		pha
+		txa
+		pha
+	        lda     #<__COMMONMEM_LOAD__         ; Source pointer
+	        sta     ptr1
+	        lda     #>__COMMONMEM_LOAD__
+	        sta     ptr1+1
+
+	        lda     #<__COMMONMEM_RUN__          ; Target pointer
+	        sta     ptr2
+	        lda     #>__COMMONMEM_RUN__
+	        sta     ptr2+1
+
+	        ldx     #<~__COMMONMEM_SIZE__
+	        lda     #>~__COMMONMEM_SIZE__        ; Use -(__DATASIZE__+1)
+	        sta     tmp1
+
+		jsr	copyloop
+		pla
+		tax
+		pla
+		rts
 
 		.segment "VECTORS"
 		.addr	vector
