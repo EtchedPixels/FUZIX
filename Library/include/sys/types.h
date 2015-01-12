@@ -2,7 +2,22 @@
 #define _SYS_TYPES_H
 
 #include <stddef.h>
+
+#if defined (__STDC__)
 #include <stdint.h>
+#else
+/* C types */
+typedef unsigned long uint32_t;
+typedef signed long int32_t;
+typedef unsigned short uint16_t;
+typedef signed short int16_t;
+typedef unsigned char uint8_t;
+typedef signed char int8_t;
+
+/* C99 */
+typedef int16_t intptr_t;
+typedef uint16_t uintptr_t;
+#endif
 
 /* USER! basic data types */
 /* ! uchar & uint is counterparts and must be declared simultaneously */
@@ -23,19 +38,6 @@ typedef uint16_t size_t;
 typedef int16_t ssize_t;
 #endif
 
-#if !defined (__STDC__)
-/* C types */
-typedef unsigned long uint32_t;
-typedef signed long int32_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-
-/* C99 */
-typedef int16_t intptr_t;
-typedef uint16_t uintptr_t;
-#endif
 
 /* Unix historic */
 typedef unsigned char uchar_t;
@@ -60,6 +62,10 @@ typedef uint16_t nlink_t;
 typedef int16_t pid_t;
 typedef uint16_t ino_t;
 
+#if defined(NO_64BIT)
+typedef uint32_t time_t;
+#else
 typedef int64_t time_t;
+#endif
 typedef int32_t clock_t;
 #endif
