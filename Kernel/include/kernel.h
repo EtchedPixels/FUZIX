@@ -507,6 +507,7 @@ struct s_argblk {
  */
 #define SELECT_BEGIN		0x8000
 #define SELECT_END		0x8001
+#define BLOCK_FLUSH_CACHE       0x8002
 
 struct sysinfoblk {
   uint8_t infosize;		/* For expandability */
@@ -596,6 +597,7 @@ CODE1 int cdread(uint16_t dev, uint8_t flag);
 CODE1 int d_open(uint16_t dev, uint8_t flag);
 CODE1 int d_close(uint16_t dev);
 CODE1 int d_ioctl(uint16_t dev, uint16_t request, char *data);
+CODE1 int d_flush(uint16_t dev);
 CODE1 int cdwrite(uint16_t dev, uint8_t flag);
 CODE1 bool insq(struct s_queue *q, unsigned char c);
 CODE1 bool remq(struct s_queue *q, unsigned char *cp);
