@@ -17,10 +17,10 @@ extern char * strncpy __P ((const char*, const char*, size_t));
 extern int strncmp __P((const char*, const char*, size_t));
 
 extern int stricmp __P((const char*, const char*));
-extern strnicmp __P((const char*, const char*, size_t));
+extern int strnicmp __P((const char*, const char*, size_t));
 
 extern int strcasecmp __P((const char*, const char*));
-extern strncasecmp __P((const char*, const char*, size_t));
+extern int strncasecmp __P((const char*, const char*, size_t));
 
 extern char * strchr __P ((const char*, int));
 extern char * strrchr __P ((const char*, int));
