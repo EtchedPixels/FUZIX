@@ -128,9 +128,9 @@ static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bo
 	devide_read_data(buffer, IDE_REG_DATA);
     else{
 	devide_write_data(buffer, IDE_REG_DATA);
+	drive_flags[drive] |= FLAG_CACHE_DIRTY;
 	if(!devide_wait(IDE_STATUS_READY))
 	    return false;
-	drive_flags[drive] |= FLAG_CACHE_DIRTY;
     }
 
     return true;
