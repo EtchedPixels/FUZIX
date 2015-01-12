@@ -288,7 +288,7 @@ int d_flush(uint16_t dev)
 {
 	if (!validdev(dev))
 		panic("d_flush: bad device");
-	return (*dev_tab[major(dev)].dev_ioctl) (minor(dev), BLOCK_FLUSH_CACHE, 0);
+	return (*dev_tab[major(dev)].dev_ioctl) (minor(dev), BLKFLSBUF, 0);
 }
 
 /*
