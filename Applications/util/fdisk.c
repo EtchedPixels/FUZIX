@@ -316,9 +316,11 @@ void help(void)
     fflush(stdout);
 }
 
+static unsigned char ptbl[512];
+
 void list_partition(char *devname)
 {
-    unsigned char ptbl[512],*partition;
+    unsigned char *partition;
     unsigned long seccnt;
     int i;
 

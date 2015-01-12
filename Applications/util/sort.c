@@ -681,10 +681,12 @@ void incr(int si, int ei)
  * puts it into the line1 and line2 arrays. It then calls the cmp () routine
  * with the field describing the arguments.
  */
+
+
 int cmp_fields(char *el1, char *el2)
 {
+  static char line1[LINE_SIZE], line2[LINE_SIZE];
   int i, ret;
-  char line1[LINE_SIZE], line2[LINE_SIZE];
 
   for (i = 0; i < field_cnt; i++) {	/* Setup line parts */
 	build_field(line1, &fields[i + 1], el1);
@@ -1088,7 +1090,7 @@ MERGE *skip_lines(MERGE *smallest, int file_cnt)
 /* Uniq_lines () prints only the uniq lines out of the fd of the merg struct. */
 void uniq_lines(MERGE *merg)
 {
-  char lastline[LINE_SIZE];	/* Buffer to hold last line */
+  static char lastline[LINE_SIZE];	/* Buffer to hold last line */
 
   for (;;) {
 	put_line(merg->line);	/* Print this line */
@@ -1110,7 +1112,7 @@ void uniq_lines(MERGE *merg)
 void check_file(int fd, char *file)
 {
   register MERGE *merg;		/* 1 file only */
-  char lastline[LINE_SIZE];	/* Save last line */
+  static char lastline[LINE_SIZE];	/* Save last line */
   register int ret;		/* ret status of compare */
 
   if (fd == 0) file = "stdin";

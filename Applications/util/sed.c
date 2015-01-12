@@ -245,7 +245,7 @@ static int bcount = 0;		/* # tagged patterns in current RE */
 static int eflag;		/* -e option flag */
 static int gflag;		/* -g option flag */
 
-int main(int argc, char **argv);
+int main(int argc, char *argv[]);
 static void compile(void);
 static int cmdcomp(char cchar);
 static char *rhscomp(char *rhsp, int delim);
