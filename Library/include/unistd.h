@@ -40,7 +40,7 @@ extern int execvpe __P((char *pathname, char *argv[], char *envp[]));
 extern char *ttyname __P((int));
 extern int system __P((char *));
 extern int pause __P((void));
-extern int fork __P((void));
+extern pid_t fork __P((void));
 extern char *getcwd __P((char *, int));
 
 extern long sysconf __P((int name));

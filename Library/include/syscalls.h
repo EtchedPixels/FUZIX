@@ -74,7 +74,6 @@ struct hd_geometry {
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
 extern int _exit(int code);
-extern int alarm(int16_t secs);
 extern int open(const char *path, int flags, ...);
 extern int close(int fd);
 extern int creat(const char *path, mode_t mode);
