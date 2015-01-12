@@ -142,8 +142,6 @@ struct hd_geometry {
 	uint16_t cylinders;
 	uint32_t start;
 };
-#define HDIO_GETGEO		0x0101
-#define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
 /* Bit masks for i_mode and st_mode */
 
@@ -507,8 +505,26 @@ struct s_argblk {
  */
 #define SELECT_BEGIN		0x8000
 #define SELECT_END		0x8001
-#define BLOCK_FLUSH_CACHE       0x8002
 
+#define IOCTL_SUPER		0x4000	/* superuser needed */
+
+/*
+ *	Ioctl ranges
+ *	00xx		-	tty/vt
+ *	01xx		-	disk
+ */
+
+/*
+ *	Disk ioctls
+ */
+
+#define HDIO_GETGEO		0x0101
+#define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
+#define BLKFLSBUF		0x4103	/* Use the Linux name */
+
+/*
+ *	System info shared with user space
+ */
 struct sysinfoblk {
   uint8_t infosize;		/* For expandability */
   uint8_t banks;		/* Banks in our 64K (and thus pagesize) */

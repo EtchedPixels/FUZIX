@@ -125,7 +125,7 @@ int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
     blkdev_t *blk;
     data; /* unused */
 
-    if(request != BLOCK_FLUSH_CACHE){
+    if (request != BLKFLSBUF) {
 	udata.u_error = ENXIO;
 	return -1;
     }
@@ -133,7 +133,7 @@ int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk = &blkdev_table[minor >> 4];
 
-    if(blk->flush)
+    if (blk->flush)
 	return blk->flush(blk->drive_number);
     else
 	return 0;
