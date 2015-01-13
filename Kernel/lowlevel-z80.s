@@ -3,11 +3,16 @@
 ; collect this here to minimise the amount of platform specific gloop
 ; involved in a port
 ;
+; Some features are controlled by Z80_TYPE which should be declared in
+; platform/kernel.def as one of the following values:
+;     0   CMOS Z80
+;     1   NMOS Z80
+;     2   Z180
+;
 ;	Based upon code (C) 2013 William R Sowerbutts
 ;
 
 	.module lowlevel
-
 
 	; debugging aids
 	.globl outcharhex
@@ -28,14 +33,11 @@
 	.globl _platform_interrupt
 	.globl platform_interrupt_all
 
-        .module syscall
-
         ; exported symbols
         .globl unix_syscall_entry
 	.globl _chksigs
 	.globl null_handler
 	.globl unix_syscall_entry
-	.globl dispatch_process_signal
         .globl _doexec
         .globl trap_illegal
 	.globl nmi_handler
@@ -48,13 +50,18 @@
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
-        .globl dispatch_process_signal
 	.globl istack_switched_sp
 	.globl istack_top
 	.globl _ssig
 
         .include "platform/kernel.def"
         .include "kernel.def"
+
+; these make the code below more readable. sdas allows us only to 
+; test if an expression is zero or non-zero.
+CPU_CMOS_Z80	    .equ    Z80_TYPE-0
+CPU_NMOS_Z80	    .equ    Z80_TYPE-1
+CPU_Z180	    .equ    Z80_TYPE-2
 
         .area _COMMONMEM
 
@@ -282,6 +289,20 @@ interrupt_handler:
             inc a
             ld (U_DATA__U_ININTERRUPT), a
 
+.ifeq CPU_Z180
+            ; On Z180 we have more than one IRQ, so we need to track of which one
+            ; we arrived through. The IRQ handler sets irqvector_hw when each
+            ; interrupt arrives. If we are not already handling an interrupt then
+            ; we copy this into _irqvector which is the value the kernel code
+            ; examines (and will not change even if reentrant interrupts arrive). 
+            ; Generally the only place that irqvector_hw should be used is in 
+            ; the platform_interrupt_all routine.
+            .globl hw_irqvector
+            .globl _irqvector
+            ld a, (hw_irqvector)
+            ld (_irqvector), a
+.endif
+
             ; switch stacks
             ld (istack_switched_sp), sp
 	    ; the istack is not banked (very important!)
@@ -370,7 +391,12 @@ interrupt_return:
             pop af
             ex af, af'
             ei
+.ifeq CPU_Z180
+            ; WRS - we could examine hw_irqvector and return with ret/reti as appropriate?
+            ret
+.else
             reti
+.endif
 
 ;  Enter with HL being the signal to send ourself
 trap_signal:
@@ -505,8 +531,8 @@ numeral:add a, #0x30 ; start at '0' (0x30='0')
 ;	Pull in the CPU specific workarounds
 ;
 
-	.if NMOS_Z80
+.ifeq CPU_NMOS_Z80
 	.include "lowlevel-z80-nmos.s"
-	.else
+.else
 	.include "lowlevel-z80-cmos.s"
-	.endif
+.endif
