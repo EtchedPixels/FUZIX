@@ -10,6 +10,7 @@
         .globl _program_vectors
         .globl _copy_and_map_process
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment
+        .globl hw_irqvector
         .globl _irqvector
         .globl _kernel_flag
 
@@ -571,7 +572,8 @@ interrupt_table:
         .dw z180_irq_unused         ;     15
         .dw z180_irq_unused         ;     16
 
-_irqvector: .db 0
+hw_irqvector:	.db 0
+_irqvector:	.db 0
 
 z80_irq:
         push af
@@ -593,7 +595,7 @@ z180_irq3:
         ld a, #3
         ; fall through -- timer is likely to be the most common, we'll save it the jr
 z180_irqgo:
-        ld (_irqvector), a
+        ld (hw_irqvector), a
         ; quick and dirty way to debug which interrupt is jamming us up ...
         ;    add #0x30
         ;    .globl outchar
