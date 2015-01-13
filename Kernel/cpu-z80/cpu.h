@@ -8,6 +8,7 @@ typedef signed char int8_t;
 typedef int16_t arg_t;			/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
+typedef uint16_t uaddr_t;		/* User address */
 
 #define ei()   do {__asm ei __endasm; } while(0);
 
@@ -18,6 +19,9 @@ extern void irqrestore(irqflags_t f);
 
 /* Z80 binaries start with a JP */
 #define EMAGIC    0xc3    /* Header of executable */
+/* Allow a minimum of 512 bytes gap between stack and top of allocations */
+#define brk_limit() (udata.u_syscall_sp - 512)
+
 
 /* compiler provides optimised versions of these: */
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)

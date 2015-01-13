@@ -11,6 +11,7 @@ typedef uint8_t irqflags_t;
 typedef int16_t arg_t;
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
+typedef uint16_t uaddr_t;
 
 extern void ei(void);
 extern irqflags_t di(void);
@@ -21,6 +22,7 @@ extern void * __fastcall__ memset(void *, int, size_t);
 extern size_t __fastcall__ strlen(const char *);
 
 #define EMAGIC    0x4C    /* Header of executable (JMP) */
+#define brk_limit() ramtop	/* Stack is preallocated */
 
 #define staticfast	static
 
@@ -40,7 +42,7 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* We don't yet have bank attributes and banking for Z80 */
+/* We don't yet have bank attributes and banking for 6502 */
 #define CODE1
 #define CODE2
 #define COMMON
