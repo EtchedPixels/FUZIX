@@ -7,4 +7,4 @@ U_STASH_HIGH		    .equ 0xBD00	      ; BD00-BFFF
 U_STASH_LOW		    .equ 0x7D00	      ; 7D00-BFFF
 
 
-NMOS_Z80		    .equ 0
+Z80_TYPE		    .equ 0

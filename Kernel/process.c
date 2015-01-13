@@ -109,8 +109,6 @@ ptptr __fastcall__ getproc(void)
 			pp->p_page);
 #endif
 #endif
-	    /* yes please, interrupts on. */
-	    ei();
 
 	haltafter = getproc_nextp;
 
@@ -133,6 +131,11 @@ ptptr __fastcall__ getproc(void)
 		/* Take a nap: not that it makes much difference to power on most
 		   Z80 type devices */
 		if (getproc_nextp == haltafter) {
+			/* we have only one interrupt stack so we can't take interrupts */
+			if(udata.u_ininterrupt)
+				panic("getproc: cannot ei");
+			/* yes please, interrupts on (WRS: they probably are already on?) */
+			ei();
 			platform_idle();
 		}
 	}
@@ -149,9 +152,6 @@ ptptr __fastcall__ getproc(void)
 ptptr __fastcall__ getproc(void)
 {
 	ptptr p = udata.u_ptab;
-
-	/* yes please, interrupts on. */
-	ei();
 
 #ifdef DEBUGREALLYHARD
 	kputs("getproc(");
@@ -179,6 +179,7 @@ ptptr __fastcall__ getproc(void)
 		default:
 			/* Wait for an I/O operation to let us run, don't run
 			   other tasks */
+			ei();
 			platform_idle();
 		}
 	}

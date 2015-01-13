@@ -7,4 +7,4 @@ U_DATA_STASH		    .equ 0xED00	      ; ED00-EFFF
 
 PROG_BASE		    .equ 0
 
-NMOS_Z80		    .equ 0
+Z80_TYPE		    .equ 0

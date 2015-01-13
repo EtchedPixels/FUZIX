@@ -2,7 +2,6 @@
 
 U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
-NMOS_Z80                    .equ 0
 
 OS_BANK                     .equ 0x00         ; value from include/kernel.h
 
@@ -10,6 +9,7 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 FIRST_RAM_BANK              .equ 0x00         ; all memory is RAM on P112
 RAM_KB                      .equ 1024
 Z180_IO_BASE                .equ 0x00
+Z80_TYPE		    .equ 2
 
 ; Believe most P112 kits shipped with 16MHz oscillators, I have tried faster 
 ; (18.432MHz) but this made the machine unstable.

@@ -5,4 +5,4 @@ U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
 ; as far as I can tell either is allowed by the spec
 
-NMOS_Z80		    .equ 1
+Z80_TYPE		    .equ 1
