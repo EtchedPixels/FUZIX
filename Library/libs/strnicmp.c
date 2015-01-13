@@ -9,10 +9,10 @@
 
 /********************** Function strnicmp ************************************/
 
-int strnicmp(char *s, char *d, size_t l)
+int strnicmp(const char *s, const char *d, size_t l)
 {
 	while (l-- != 0) {
-		unsigned char sc = *(uchar *) s++, dc = *(uchar *) d++;
+		unsigned char sc = *(const uchar *) s++, dc = *(const uchar *) d++;
 
 		if (sc != dc) {
 			if (_tolower(sc) != _tolower(dc))

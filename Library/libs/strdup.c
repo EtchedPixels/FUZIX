@@ -8,10 +8,10 @@
 #include "string.h"
     
 /********************** Function strdup ************************************/ 
-char *strdup(char *s) 
+char *strdup(const char *s) 
 {
-	register size_t len = strlen(s) + 1;
-	register char *p = (char *) malloc(len);
+	size_t len = strlen(s) + 1;
+	char *p = (char *) malloc(len);
 
 	if (p)
 		memcpy(p, s, len);	/* Faster than strcpy */

@@ -17,7 +17,7 @@
  * 3. else search in current directory
  * 4. else return NULL (execve() interpretes NULL as non existent file!)
  */ 
-char *_findPath(char *path) 
+const char *_findPath(const char *path) 
 {
 	char *p;
 	const char *envp;
@@ -51,12 +51,16 @@ char *_findPath(char *path)
 	return NULL;
 }
 
-int execl(char *pathP, char *arg0) 
+#ifndef __CC65__
+
+/* FIXME: The 6502 calling sequence means these need a different implementation */
+int execl(const char *pathP, const char *arg0, ...) 
 {
 	return execve(pathP, &arg0, environ);
 }
 
-int execlp(char *pathP, char *arg0) 
+int execlp(const char *pathP, const char *arg0, ...) 
 {
 	return execve(_findPath(pathP), &arg0, environ);
 }
+#endif

@@ -20,13 +20,13 @@ extern void setpwent __P((void));
 extern void endpwent __P((void));
 extern struct passwd *getpwent __P((void));
 
-extern int putpwent __P((struct passwd * __p, FILE * __f));
+extern int putpwent __P((const struct passwd * __p, FILE * __f));
 extern int getpw __P((uid_t uid, char *buf));
 
 extern struct passwd *fgetpwent __P((FILE * file));
 
 extern struct passwd *getpwuid __P((uid_t __uid));
-extern struct passwd *getpwnam __P((char *));
+extern struct passwd *getpwnam __P((const char *));
 
 extern struct passwd * __getpwent __P((int passwd_fd));
 

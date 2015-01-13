@@ -13,9 +13,9 @@
  */
 
 #include "printf.h"
-#include "stdarg.h"
+#include <stdarg.h>
 
-int printf(char *fmt, ...)
+int printf(const char *fmt, ...)
 {
 	va_list ptr;
 	int rv;

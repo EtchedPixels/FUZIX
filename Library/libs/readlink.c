@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <syscalls.h>
 
-int readlink(char *name, char *buf, int size) 
+int readlink(const char *name, char *buf, int size) 
 {
 	int sts, fd = open(name, O_SYMLINK|O_RDONLY);
 

@@ -42,7 +42,7 @@ STATIC void __stdio_close_all(VOID)
 	}
 }
 
-STATIC void __stdio_init_vars()
+STATIC void __stdio_init_vars(void)
 {
 	if (isatty(1))
 		stdout->mode |= _IOLBF;

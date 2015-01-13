@@ -14,7 +14,7 @@
 
 #include "printf.h"
 
-int fprintf(FILE * fp, char *fmt, ...)
+int fprintf(FILE * fp, const char *fmt, ...)
 {
 	va_list ptr;
 	int rv;

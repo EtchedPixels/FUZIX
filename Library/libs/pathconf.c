@@ -5,7 +5,7 @@ long _pathconf(int name)
 {
   switch(name) {
     case _PC_LINK_MAX:
-      return 65535;
+      return 65535L;
     case _PC_MAX_CANON:
     case _PC_MAX_INPUT:
       return 132;		/* In theory must be 256+ .. */
@@ -26,7 +26,7 @@ long _pathconf(int name)
   return -1;
 }
 
-long pathconf(char *p, int name)
+long pathconf(const char *p, int name)
 {
   p;
   return _pathconf(name);

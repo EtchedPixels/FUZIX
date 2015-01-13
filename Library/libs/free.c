@@ -66,7 +66,8 @@ void free(void *ptr)
 		 * tho.
 		 */
 #ifdef __MINI_MALLOC__
-		if (__alloca_alloc == __mini_malloc && __freed_list) {
+                /* FIXME: void * cast appears to be a cc65 bug */
+		if (__alloca_alloc == (void *)__mini_malloc && __freed_list) {
 			chk = __freed_list;
 			__freed_list = m_next(__freed_list);
 			goto try_this;

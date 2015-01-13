@@ -65,6 +65,7 @@ ASRCS += syscall__profil.s
 ASRCS += syscall_uadmin.s
 ASRCS += syscall_nice.s
 ASRCS += syscall__sigdisp.s
+ASRCS += syscall_flock.s
 
 
 ASRCALL = $(ASRCS) $(ASYS)

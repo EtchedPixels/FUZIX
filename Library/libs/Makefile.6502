@@ -1,0 +1,87 @@
+CC = cl65
+ASM = ca65
+AR = sar65
+LINKER = ld65
+CC_OPT = -O -D__STDC__ --all-fastcall -c -O -I../include/ -I../include/6502/
+ASM_OPT = -l -o -s
+LINKER_OPT = -m -i -o
+SRC_CRT0 = crt0.s
+OBJ_CRT0 = $(SRC_CRT0:.s=.o)
+SRC_ASM =
+OBJ_ASM = $(SRC_ASM:.s=.o)
+SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
+SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
+SRC_C += clock_gettime.c clock_getres.c clock_settime.c
+SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c err.c errno.c error.c
+SRC_C += execl.c execv.c execvp.c exit.c
+SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
+SRC_C += fgetpos.c fgets.c fopen.c fprintf.c fputc.c fputs.c fread.c free.c
+SRC_C += fsetpos.c ftell.c fwrite.c getcwd.c
+SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getopt.c
+SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
+SRC_C += gmtime.c gmtime_r.c grent.c index.c isatty.c itoa.c killpg.c
+SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
+SRC_C += malloc.c mkfifo.c nanosleep.c opendir.c pause.c perror.c
+SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c pwent.c qsort.c
+SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
+SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
+SRC_C += setvbuf.c settimeofday.c sleep.c sprintf.c stat.c stdio0.c
+SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
+SRC_C += strnicmp.c strsep.c
+SRC_C += strtol.c system.c time.c tmpnam.c ttyname.c
+SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
+SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
+SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
+# tty layer
+SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
+SRC_C += cfmakeraw.c cfspeed.c revoke.c
+# scanf
+SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
+# Seems to give the compiler a hard time
+SRC_HARD += regexp.c
+# Not supported yet
+#SRC_C += initgroups.c
+# Pieces we inherit in this case from the compiler library instead
+#SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
+#SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
+#SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
+#SRC_C += memchr.c memcmp.c memcpy.c memset.c
+
+OBJ_C = $(SRC_C:.c=.o)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
+
+all: syslib.lib crt0.rel
+
+libc.l:%.l:$(OBJ_ALL)
+	ls $(OBJ_ALL) > libc.l
+
+syscall.l: fuzix/syslib.l
+#	../tools/syscall-6502
+#	(cd fuzix; make)
+#	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
+
+syslib.lib: syscall.l libc.l
+	cat libc.l syscall.l >syslib.l
+	$(AR) rc syslib.lib @syslib.l
+	$(AR) s syslib.lib
+	ln -sf syslib.lib c.lib
+
+fuzix/syslib.l:
+#	../tools/syscall-6502
+#	make -C fuzix-6502
+
+$(OBJ_ASM):%.o: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
+
+$(OBJ_CRT0):%.o: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
+
+$(OBJ_C):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+$(OBJ_HARD):%.o: %.c
+	$(CC) $(CC_NOOPT) $(@:.o=.c)
+
+clean:
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l
+	(cd fuzix-6502; make clean)

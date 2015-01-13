@@ -137,7 +137,7 @@ pututline(const struct utmp * utmp_entry)
 
   /* Ignoring untrapped errors */
   errno=xerrno;
-  return utmp_entry;
+  return (struct utmp *)utmp_entry;
 }
 
 void

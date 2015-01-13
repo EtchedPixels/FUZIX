@@ -21,7 +21,7 @@ extern void endgrent __P((void));
 extern struct group *getgrent __P((void));
 
 extern struct group *getgrgid __P((const gid_t gid));
-extern struct group *getgrnam __P((char * name));
+extern struct group *getgrnam __P((const char * name));
 
 extern struct group * fgetgrent __P((FILE * file));
 

@@ -14,7 +14,7 @@
  *
  * But first we check to see if there's space in the buffer.
  */ 
-int fwrite(void *buf, size_t size, size_t nelm, FILE * fp) 
+int fwrite(const void *buf, size_t size, size_t nelm, FILE * fp) 
 {
 	int len;
 	register int v;

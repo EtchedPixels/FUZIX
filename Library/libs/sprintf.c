@@ -17,13 +17,13 @@
 
 /* Moved out of struct to keep SDCC generating what we want */
 static FILE string[1] = {
-	{0, 0, /* TODO sdcc bug (unsigned char *)-1 */ 0xffff,
+	{0, 0, (unsigned char *) -1,
 	 0, (unsigned char *) -1, -1,
 	 _IOFBF | __MODE_WRITE}
 };
 
 
-int sprintf(char *sp, char *fmt, ...)
+int sprintf(char *sp, const char *fmt, ...)
 {
 	va_list ptr;
 	int rv;

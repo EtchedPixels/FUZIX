@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <paths.h>
 
-int execvp(char *pathP, char *argv[]) 
+int execvp(const char *pathP, const char *argv[]) 
 {
-	return execve(_findPath(pathP), argv, environ);
+	return execve(_findPath(pathP), argv, (void *)environ);
 }

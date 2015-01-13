@@ -27,18 +27,18 @@ extern unsigned int sleep __P((unsigned int seconds));
 
 extern char **environ;
 
-extern char * _findPath __P((char *pathname));
-extern int execl __P((char *pathname, char *arg0, ...));
-extern int execle __P((char *pathname, char *arg0, ...));
-extern int execlp __P((char *pathname, char *arg0, ...));
-extern int execlpe __P((char *pathname, char *arg0, ...));
-extern int execv __P((char *pathname, char *argv[]));
-extern int exect __P((char *pathname, char *argv[], char *envp[]));
-extern int execvp __P((char *pathname, char *argv[]));
-extern int execvpe __P((char *pathname, char *argv[], char *envp[]));
+extern const char * _findPath __P((const char *pathname));
+extern int execl __P((const char *pathname, const char *arg0, ...));
+extern int execle __P((const char *pathname, const char *arg0, ...));
+extern int execlp __P((const char *pathname, const char *arg0, ...));
+extern int execlpe __P((const char *pathname, const char *arg0, ...));
+extern int execv __P((const char *pathname, const char *argv[]));
+extern int execve __P((const char *pathname, const char *argv[], const char *envp[]));
+extern int execvp __P((const char *pathname, const char *argv[]));
+extern int execvpe __P((const char *pathname, const char *argv[], const char *envp[]));
 
 extern char *ttyname __P((int));
-extern int system __P((char *));
+extern int system __P((const char *));
 extern int pause __P((void));
 extern pid_t fork __P((void));
 extern char *getcwd __P((char *, int));

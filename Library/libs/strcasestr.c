@@ -12,7 +12,7 @@ char *strcasestr(const char *needle, const char *haystack)
     /* check the lead byte here for speed */
     if (tolower(*haystack) == c) {
       if (strncasecmp(needle, haystack, s) == 0)
-        return haystack;
+        return (char *)haystack;
     }
     haystack++;
   }

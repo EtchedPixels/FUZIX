@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <syscalls.h>
 
-int lstat(char *name, struct stat *buf)
+int lstat(const char *name, struct stat *buf)
 {
 	int sts, fd = open(name, O_SYMLINK|O_RDONLY);
 

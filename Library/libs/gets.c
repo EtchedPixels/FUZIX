@@ -21,7 +21,7 @@ char *gets(char *str) /* BAD function; DON'T use it! */
 	return (((c == EOF) && (p == str)) ? NULL : str);/* NULL == EOF */
 }
 
-int puts(void *str) 
+int puts(const void *str) 
 {
 	register int n;
 	if (((n = fputs(str, stdout)) == EOF) 

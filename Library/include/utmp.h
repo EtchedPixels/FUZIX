@@ -33,11 +33,11 @@ struct utmp {
 };
 
 extern void		setutent __P((void));
-extern void		utmpname __P((char *));
+extern void		utmpname __P((const char *));
 extern struct utmp *	getutent __P((void));
-extern struct utmp *	getutid __P((struct utmp *));
-extern struct utmp *	getutline __P((struct utmp *));
-extern struct utmp *	pututline __P((struct utmp *));
+extern struct utmp *	getutid __P((const struct utmp *));
+extern struct utmp *	getutline __P((const struct utmp *));
+extern struct utmp *	pututline __P((const struct utmp *));
 extern void		endutent __P((void));
 
 struct utmp *		__getutent __P((int));

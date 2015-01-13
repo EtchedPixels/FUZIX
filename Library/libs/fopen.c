@@ -13,7 +13,7 @@
  * stdio.h show the other names.
  */ 
 
-FILE * __fopen(char *fname, int fd, FILE * fp, char *mode) 
+FILE * __fopen(const char *fname, int fd, FILE * fp, const char *mode) 
 {
 	uint open_mode = 0;
 	

@@ -14,7 +14,7 @@
 
 #include "printf.h"
 
-int vprintf(char *fmt, va_list ap)
+int vprintf(const char *fmt, va_list ap)
 {
 	return vfprintf(stdout, fmt, ap);
 }

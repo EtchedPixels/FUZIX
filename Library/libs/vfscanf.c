@@ -108,7 +108,7 @@ double fp_scan(int neg, int eneg, int n, int frac, int expo, int fraclen)
 
 #endif
 
-int vfscanf(FILE *fp, char *fmt, va_list ap)
+int vfscanf(FILE *fp, const char *fmt, va_list ap)
 {
    long n;
    int c, width, lval, cnt = 0;

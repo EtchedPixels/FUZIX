@@ -18,9 +18,10 @@ Cambridge, MA 02139, USA.  */
 
 #include <string.h>
 
-char *strsep(char **pp, char *delim)
+char *strsep(char **pp, const char *delim)
 {
-  char *p, *q;
+  const char *p;
+  char *q;
 
   if (!(p = *pp))
     return 0;
@@ -31,5 +32,5 @@ char *strsep(char **pp, char *delim)
     }
   else
     *pp = 0;
-  return p;
+  return (char *)p;
 }

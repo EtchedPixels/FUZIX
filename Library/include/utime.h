@@ -9,6 +9,6 @@ struct utimbuf {
     time_t modtime; /* modification time */
 };
 
-extern int utime __P ((char *__filename, struct utimbuf *__utimebuf));
+extern int utime __P ((const char *__filename, const struct utimbuf *__utimebuf));
 
 #endif

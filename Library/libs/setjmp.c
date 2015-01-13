@@ -6,6 +6,7 @@
  */
 #include <setjmp.h>
 
+#if defined(__SDCC_z80) || defined(__SDCC_z180)
 static int _lngjmprv = 1;
 
 int setjmp (jmp_buf env) __naked /* int jmp_buf[7] */
@@ -145,3 +146,4 @@ __asm
 __endasm;
 }
 
+#endif

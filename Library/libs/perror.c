@@ -5,16 +5,16 @@
 #include <string.h>
 #include <errno.h>
 
-static void wr2(char *str)
+static void wr2(const char *str)
 {
-	char *p = str;
+	const char *p = str;
 
 	while (*p)
 		++p;
 	write(2, str, (unsigned int) (p - str));
 }
 
-void perror(char *str)
+void perror(const char *str)
 {
 	if (!str)
 		str = "error";
