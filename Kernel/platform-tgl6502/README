@@ -51,3 +51,33 @@ tools/tglsplice
 
 and you'll get a 6502.rom
 
+TODO
+----
+- usermem functionality
+- debug syscall paths
+- memory layout for apps - do we go for compile time stack setting with
+  the ease of brk() handling and nice mappings that gives us ?
+- Core kernel knows about brk() and stacks. What it knows is unfortunately
+  wrong for 6502.
+- Build a libc
+
+Fairly Essential Optimsations To Do For A Box This Slow on RAM
+--------------------------------------------------------------
+
+- Fast copy via spi buffer hack
+- Use bank mode not 48K fixed so we can get more processes in (we don't
+  have user overlapping common so swap can be done eventually too)
+- Only copy the needed memory when forking, not 48K (in theory we are copying
+  low->brk, sp->top, S->top of page, and Z)
+- execve direct read to usermem (core change)
+- vfork()
+
+
+Other Questions
+---------------
+
+- What would it take to make ld65 generate banked binaries for 6502 boxes.
+  The C argument stack is separate from the call/return stack so the usual
+  horrible argument magic is avoided. It would just need stubs for inter
+  bank calling added by the linker somehow, along with allowing multiple
+  memory regions at the same address with different output files
