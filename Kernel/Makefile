@@ -42,7 +42,7 @@ else ifeq ($(CPU),6502)
 export CROSS_AS=ca65
 export CROSS_LD=cl65
 export CROSS_CC=cl65
-export CROSS_CCOPTS=--all-fastcall -c -Or -t none -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=--all-fastcall -c -O -t none -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
 export BINEXT = .o
 else
