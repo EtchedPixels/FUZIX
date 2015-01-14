@@ -62,6 +62,7 @@ char *syscall_name[NR_SYSCALL] = {
 	"nice",
 	"_sigdisp",
 	"flock",
+	"getpgrp",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -126,4 +127,5 @@ int syscall_args[NR_SYSCALL] = {
 	1, //nice
 	2, //_sigdisp
 	2, //flock
+	0, //getpgrp
 };

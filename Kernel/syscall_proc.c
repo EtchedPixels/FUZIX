@@ -553,3 +553,13 @@ int16_t _setpgrp(void)
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	return (0);
 }
+
+/*******************************************
+getpgrp (void)                    Function 61
+********************************************/
+
+int16_t _getpgrp(void)
+{
+	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
+	return (0);
+}

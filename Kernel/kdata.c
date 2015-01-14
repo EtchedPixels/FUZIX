@@ -91,5 +91,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_profil,		/* FUZIX system call 56 */
 	_uadmin,		/* FUZIX systen call 57 */
 	_nice,			/* FUZIX system call 58 */
-	_sigdisp		/* FUZIX system call 59 */
+	_sigdisp,		/* FUZIX system call 59 */
+	_flock,			/* FUZIX system call 60 */
+	_getpgrp,		/* FUZIX system call 61 */
 };
