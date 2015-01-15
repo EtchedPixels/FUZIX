@@ -74,7 +74,7 @@ struct runload {
 extern struct runload loadavg[];
 
 // the system call dispatch table
-#define FUZIX_SYSCALL_COUNT 62
+#define FUZIX_SYSCALL_COUNT 63
 typedef int16_t (*syscall_t)(void);
 extern const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT];
 

@@ -554,12 +554,23 @@ int16_t _setpgrp(void)
 	return (0);
 }
 
-/*******************************************
+/********************************************
 getpgrp (void)                    Function 61
-********************************************/
+*********************************************/
 
 int16_t _getpgrp(void)
 {
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	return (0);
+}
+
+/*******************************************
+_sched_yield (void)              Function 62
+********************************************/
+
+int16_t _sched_yield(void)
+{
+	if (nready > 1)
+		switchin(getproc());
+	return 0;
 }

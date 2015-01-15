@@ -124,6 +124,7 @@ extern int nice(int prio);
 extern int rename(const char *path, const char *newpath);
 extern int flock(int fd, int op);
 extern pid_t getpgrp(void);
+extern int sched_yield(void);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);

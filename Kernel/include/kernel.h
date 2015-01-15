@@ -819,5 +819,6 @@ CODE2 int16_t _nice(void);         /* FUZIX system call 58 */
 CODE2 int16_t _sigdisp(void);	   /* FUZIX system call 59 */
 CODE2 int16_t _flock(void);	   /* FUZIX system call 60 */
 CODE2 int16_t _getpgrp(void);	   /* FUZIX system call 61 */
+CODE2 int16_t _sched_yield(void);  /* FUZIX system call 62 */
 
 #endif /* __FUZIX__KERNEL_DOT_H__ */
