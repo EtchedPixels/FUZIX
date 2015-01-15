@@ -515,7 +515,11 @@ struct s_argblk {
  */
 
 /*
- *	Disk ioctls
+ *	TTY ioctls 00xx (see tty.h)
+ */
+
+/*
+ *	Disk ioctls 01xx
  */
 
 #define HDIO_GETGEO		0x0101
