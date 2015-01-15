@@ -1,14 +1,35 @@
 CC = cl65
 ASM = ca65
-AR = sar65
+AR = ar65
 LINKER = ld65
 CC_OPT = -O -D__STDC__ --all-fastcall -c -O -I../include/ -I../include/6502/
-ASM_OPT = -l -o -s
+ASM_OPT = -o
 LINKER_OPT = -m -i -o
-SRC_CRT0 = crt0.s
+SRC_CRT0 = crt0_6502.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.o)
+#
+#	Library routines. cc65 has its own library which has some overlap.
+#	For standalone things like abs and strings we try and favour the C
+#	library lib but we use our stdio etc
+#
+#	Fix me there pmemalign and a couple of other standard funcs we
+#	don't have. Calling these will result in a mess but once we've fixed
+#	our library to cover them it should be fine. There are also some we
+#	have through the cc65 lib but need in other ports (strxfrm, strftime,
+#	snprintf, vsnprintf etc)
+#
+#	FIXME:
+#	Due to ctype differences we can't use the stricmp/strcasecmp and
+#	friends in the CC lib. We should import the useful functions and
+#	tweak them to fit our libc.
+#
+#	FIXME2:
+#	The cc65 libc printf/scanf type helpers are rather nicely done and
+#	very tightly coded. We want to make use of them eventually
+#
+#
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
@@ -28,7 +49,7 @@ SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
 SRC_C += setvbuf.c settimeofday.c sleep.c sprintf.c stat.c stdio0.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnicmp.c strsep.c
-SRC_C += strtol.c system.c time.c tmpnam.c ttyname.c
+SRC_C += system.c time.c tmpnam.c ttyname.c
 SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
@@ -42,28 +63,23 @@ SRC_HARD += regexp.c
 # Not supported yet
 #SRC_C += initgroups.c
 # Pieces we inherit in this case from the compiler library instead
-#SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
+#SRC_C += strcpy.c strlen.c abs.c atoi.c atol.c labs.c
 #SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
-#SRC_C += memchr.c memcmp.c memcpy.c memset.c
+#SRC_C += memchr.c memcmp.c memcpy.c memset.c strtol.c
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
 
-all: syslib.lib crt0.rel
-
-libc.l:%.l:$(OBJ_ALL)
-	ls $(OBJ_ALL) > libc.l
+all: syslib.lib crt0_6502.o
 
 syscall.l: fuzix/syslib.l
 #	../tools/syscall-6502
 #	(cd fuzix; make)
 #	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
-syslib.lib: syscall.l libc.l
-	cat libc.l syscall.l >syslib.l
-	$(AR) rc syslib.lib @syslib.l
-	$(AR) s syslib.lib
+syslib.lib: syscall.l
+	$(AR) a syslib.lib $(OBJ_C)
 	ln -sf syslib.lib c.lib
 
 fuzix/syslib.l:
