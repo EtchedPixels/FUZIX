@@ -65,10 +65,10 @@ unix_sig_exit:
 ;	x,a holds the target address
 ;
 _doexec:
-	sei
 	ldy #0
 	sty _kernel_flag
 	jsr map_process_always
+	sei
 	jmp platform_doexec
 
 ;
