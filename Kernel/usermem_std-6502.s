@@ -77,26 +77,14 @@ __uget_done:
 		tax
 		rts
 
-__ugets:	ldy #'>'
-		sty $FF03
-		sta tmp2
+__ugets:	sta tmp2
 		stx tmp2+1		; save the count
-		jsr outxa
-		lda #':'
-		sta $FF03
 		jsr cpopax		; pop the destination
 		sta ptr2		; (ptr2) is our target
 		stx ptr2+1
-		jsr outxa
-		lda #':'
-		sta $FF03
 		jsr cpopax		; (ptr2) is our source
 		sta ptr3
 		stx ptr3+1
-		jsr outxa
-
-		lda #10
-		sta $FF03
 
 		ldy #0			; counter
 
