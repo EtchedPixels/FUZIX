@@ -7,6 +7,13 @@
 #include <printf.h>
 #include <devrd.h>
 
+uint16_t romd_roff;
+uint8_t romd_rmap;
+uint8_t romd_bank;
+
+extern void __fastcall__ rd_copyin(uint16_t addr);
+
+
 static int rd_transfer(bool is_read, uint8_t rawflag)
 {
     blkno_t block;
@@ -16,15 +23,12 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     int ct = 0;
     int map;
     irqflags_t irq;
-    uint8_t old;
-    uint16_t romd_roff;
-    uint8_t romd_rmap;
 
     /* RAW won't work yet this is just an initial hack */
     if(rawflag) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
-        if (dptr & 0x1FF) {
+        if (dptr & 0x1FF || 1 /* BROKEN */) {
             udata.u_error = EIO;
             return -1;
         }
@@ -44,13 +48,18 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
         romd_roff = (block << 9);
         /* 8K block we need to select */
         romd_rmap = 0x48 + (block >> 4);
-        /* Hack for now for testing */
+        /* Map it over a page we are not copying into */
+        if (dptr >= 0xC000) {
+            romd_roff += 0xA000;
+            romd_bank = 0;
+        } else {
+            romd_roff += 0xC000;
+            romd_bank = 1;
+        }
         irq = di();
-        old = *(uint8_t *)0xFF91;
-        *(uint8_t *)0xFF91 = romd_rmap;
-        if (is_read)
-            memcpy((void *)dptr, (void *)(0xE000 + romd_roff), 512);
-        *(uint8_t *)0xFF91 = old;
+        if (is_read) {
+            rd_copyin(dptr);
+        }
         irqrestore(irq);
         block++;
         ct++;

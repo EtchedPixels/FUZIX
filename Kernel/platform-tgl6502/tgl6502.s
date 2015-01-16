@@ -35,9 +35,9 @@
 	    .import _unix_syscall
 	    .import _platform_interrupt
 	    .import _kernel_flag
-	    .import copycommon
 
-	    .import incaxy		; from the C runtime
+	    .import outcharhex
+	    .import outxa
 
             .include "kernel.def"
             .include "../kernel02.def"
@@ -119,7 +119,6 @@ _program_vectors:
 	    ; will exit with interrupts off
 	    sei
 	    ;
-	    jsr copycommon
 	    ; our C caller will invoke us with the pointer in x,a
 	    ; just pass it on
 	    jsr map_process
@@ -169,6 +168,9 @@ program_vectors_k:
 ;
 ;	save/restore are used so that the kernel can play with its internal
 ;	banking/mappings without having to leave interrupts off all the time
+;
+;	ptr1 and tmp1 may be destroyed by these methods, but no other
+;	temporaries.
 ;
 map_process_always:
 	    pha
@@ -290,12 +292,6 @@ saved_map:  .byte 0
 ; corrupting other registers
 
 outchar:
-	    pha
-outcharw:
-	    lda $FF01
-	    and #4
-	    beq outcharw
-	    pla
 	    sta $FF03
 	    rts
 
@@ -371,7 +367,7 @@ syscall_entry:
 	    ; to the user stack we'll have finished with them
 	    lda sp
 	    ldx sp+1
-	    jsr incaxy
+	    jsr cincaxy
 	    sta sp
 	    stx sp+1
 
@@ -471,13 +467,19 @@ platform_doexec:
 ;
 	    stx ptr1+1
 	    sta ptr1
+
+	    ldy #'E'
+	    sty $FF03
+	    jsr outxa
 ;
 ;	Set up the C stack
 ;
 	    lda U_DATA__U_ISP
 	    sta sp
-	    lda U_DATA__U_ISP+1
-            sta sp+1
+	    ldx U_DATA__U_ISP+1
+            stx sp+1
+
+	    jsr outxa
 ;
 ;	Set up the 6502 stack
 ;
@@ -493,3 +495,49 @@ _unix_syscall_i:
 _platform_interrupt_i:
 	    jmp _platform_interrupt
 
+
+;
+;	Hack for common runtime helper (fixme move helpers to common)
+;
+cincaxy:sty tmp1
+	clc
+	adc tmp1
+	bcc incaxy2
+	inx
+incaxy2:rts
+
+;
+;	ROM disc copier (needs to be in common), call with ints off
+;
+;	AX = ptr, length always 512, src and page in globals
+;
+
+	.import _romd_bank, _romd_roff, _romd_rmap;
+	.export _rd_copyin
+
+_rd_copyin:
+	sta ptr1
+	stx ptr1+1		; Save the target
+	ldy _romd_bank		; 0 = A0, 1 = C0, pick based on target
+	lda $FF8F,y		;
+	pha
+	lda _romd_rmap
+	sta $FF8F,y
+	lda _romd_roff
+	sta ptr2
+	lda _romd_roff+1
+	sta ptr2+1
+	ldy #0
+	ldx #2
+rd_cl:	lda (ptr2),y
+	sta (ptr1),y
+	iny
+	bne rd_cl
+	inc ptr1+1
+	inc ptr2+1
+	dex
+	bne rd_cl
+	pla
+	ldy _romd_bank
+	sta $FF8F,y
+	rts
