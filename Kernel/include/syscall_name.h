@@ -1,4 +1,4 @@
-#define NR_SYSCALL 61
+#define NR_SYSCALL 63
 
 char *syscall_name[NR_SYSCALL] = {
 	"_exit",
