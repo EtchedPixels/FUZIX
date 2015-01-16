@@ -12,6 +12,8 @@
 #undef CONFIG_SINGLETASK
 #define CONFIG_BANKS	2
 
+#define CONFIG_CALL_R2L		/* Runtime stacks arguments backwards */
+
 /* For now used BANK_FIXED as we don't yet have sane swap with 16K maps */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 2

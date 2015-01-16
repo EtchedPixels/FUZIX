@@ -54,7 +54,6 @@ int16_t _execve(void)
 {
 	staticfast inoptr ino, emu_ino;
 	staticfast unsigned char *buf;
-	staticfast blkno_t blk;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	staticfast struct s_argblk *abuf, *ebuf;
@@ -256,8 +255,13 @@ int16_t _execve(void)
 	brelse(ebuf);
 
 	// Shove argc and the address of argv just below envp
+#ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
 	uputw((uint16_t) nargv, nenvp - 1);
 	uputw((uint16_t) argc, nenvp - 2);
+#else
+	uputw((uint16_t) nargv, nenvp - 1);
+	uputw((uint16_t) argc, nenvp - 2);
+#endif
 
 	// Set stack pointer for the program
 	udata.u_isp = nenvp - 2;
