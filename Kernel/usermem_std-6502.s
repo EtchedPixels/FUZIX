@@ -6,83 +6,231 @@
 		.export __uput, __uputc, __uputw, __uzero
 
 		.import map_kernel, map_process_always
+		.import outxa
 		.import popax
-		.importzp ptr1, tmp1
+		.importzp ptr2, tmp2
 ;
-;	TO DO: Possibly easier to write them in C with just the _c helpers
-;	but for speed would be best the block ones are asm.
+;	These are intended as reference implementations to get a platform
+;	booting. There are several things to consider once you are running
 ;
+;	If your common memory is in RAM you could make uget/uput/uzero all
+;	a single self modifying routine. We don't do it here as it's
+;	reference code
 ;
-;	These methods are intended for a 6502. The 6509 will need something
-;	quite different (and in truth rather more elegant!)
+;	If you have flexibility in the banking then odds-on it will be much
+;	faster to map a bank somewhere and copy via the mapping while taking
+;	care to deal with moving between banks
+;
+;	If you don't have the flexibility then depending upon your map
+;	routines it is likely to be faster to double buffer.
+;
+;	These methods are intended for a 6502. The 6509 has far copiers
+;	using the (foo),y addressing. In those cases you can remove the map_
+;	calls but need to deal with the lack of (foo),x to do bank to bank.
+;
+;	ptr1 and tmp1 are reserved for map_* functions
+;
 ;
 		.segment "COMMONMEM"
 
-__uget:		rts
+; user, dst, count(count in ax)
+;
+;	Decidedly unoptimised (even the 6502 could manage a word a switch)
+;
+__uget:		sta tmp2
+		stx tmp2+1		; save the count
+		jsr popax		; pop the destination
+		sta ptr2		; (ptr2) is our target
+		stx ptr2+1
+		jsr popax		; (ptr2) is our source
+		sta ptr2
+		stx ptr2+1
 
-__ugetc:	sta ptr1
-		stx ptr1+1
-		jsr map_process_always
-		ldy #0
-		lda (ptr1),y
-		jmp map_kernel
+		ldy #0			; counter
 
-__ugetw:	sta ptr1
-		stx ptr1+1
-		jsr map_process_always
-		ldy #1
-		lda (ptr1),y
+		ldx tmp2+1		; how many 256 byte blocks
+		beq __uget_tail		; if none skip to the tail
+
+__uget_blk:
+		jsr map_process_always	; map the user process in
+		lda (ptr2), y		; get a byte of user data
+		jsr map_kernel		; map the kernel back in
+		sta (ptr2), y		; save it to the kernel buffer
+		iny			; move on one
+		bne __uget_blk		; not finished a block ?
+		inc ptr2+1		; move src ptr 256 bytes on
+		inc ptr2+1		; move dst ptr the same
+		dex			; one less block to do
+		bne __uget_blk		; out of blocks ?
+
+__uget_tail:	cpy tmp2		; finished ?
+		beq __uget_done
+
+		jsr map_process_always	; map the user process
+		lda (ptr2),y		; get a byte of user data
+		jsr map_kernel		; map the kernel back in
+		sta (ptr2),y		; save it to the kernel buffer
+		iny			; move on
+		bne __uget_tail		; always taken (y will be non zero)
+
+__uget_done:
+		lda #0
 		tax
-		dey
-		lda (ptr1),y
-		jmp map_kernel
+		rts
 
 __ugets:	rts
-__uput:		rts
+		sta tmp2
+		stx tmp2+1		; save the count
+		jsr popax		; pop the destination
+		sta ptr2		; (ptr2) is our target
+		stx ptr2+1
+		jsr popax		; (ptr2) is our source
+		sta ptr2
+		stx ptr2+1
 
-__uputc:	sta ptr1
-		stx ptr1+1
+		ldy #0			; counter
+
+		ldx tmp2+1		; how many 256 byte blocks
+		beq __uget_tail		; if none skip to the tail
+
+__ugets_blk:
+		jsr map_process_always	; map the user process in
+		lda (ptr2), y		; get a byte of user data
+		beq __ugets_end
+		jsr map_kernel		; map the kernel back in
+		sta (ptr2), y		; save it to the kernel buffer
+		iny			; move on one
+		bne __ugets_blk		; not finished a block ?
+		inc ptr2+1		; move src ptr 256 bytes on
+		inc ptr2+1		; move dst ptr the same
+		dex			; one less block to do
+		bne __ugets_blk		; out of blocks ?
+
+__ugets_tail:	cpy tmp2		; finished ?
+		beq __ugets_bad
+
+		jsr map_process_always	; map the user process
+		lda (ptr2),y		; get a byte of user data
+		jsr map_kernel		; map the kernel back in
+		sta (ptr2),y		; save it to the kernel buffer
+		iny			; move on
+		bne __ugets_tail	; always taken (y will be non zero)
+
+__ugets_bad:
+		dey
+		lda #0
+		sta (ptr2), y		; terminate kernel buffer
+		lda #$FF		; string too large
+__ugets_end:				; A holds 0 or -1
+		tax			; return $FFFF or $0
+		rts
+
+__ugetc:	sta ptr2
+		stx ptr2+1
+__uget_ptr2:
 		jsr map_process_always
-		jsr popax
 		ldy #0
-		sta (ptr1),y
+		lda (ptr2),y
 		jmp map_kernel
 
-__uputw:	sta ptr1
-		stx ptr1+1
+__ugetw:	sta ptr2
+		stx ptr2+1
+		jsr map_process_always
+		ldy #1
+		lda (ptr2),y
+		tax
+		dey
+		lda (ptr2),y
+		jmp map_kernel
+
+
+__uput:		rts
+		sta tmp2
+		stx tmp2+1
+		jsr popax
+		sta ptr2
+		stx ptr2+1
+		jsr popax
+		sta ptr2
+		stx ptr2+1
+
+		ldy #0
+
+		ldx tmp2+1
+		beq __uput_tail
+__uput_blk:
+		jsr map_kernel
+		lda (ptr2), y
+		jsr map_process_always
+		sta (ptr2), y
+		iny
+		bne __uput_blk
+		inc ptr2+1
+		inc ptr2+1
+		dex
+		bne __uput_blk
+
+__uput_tail:	cpy tmp2
+		beq __uput_done
+		jsr map_kernel
+		lda (ptr2),y
+		jsr map_process_always
+		sta (ptr2),y
+		iny
+		bne __uput_tail
+
+__uput_done:
+		jsr map_kernel
+		lda #0
+		tax
+		rts
+
+__uputc:	rts
+		sta ptr2
+		stx ptr2+1
+		jsr outxa
 		jsr map_process_always
 		jsr popax
 		ldy #0
-		sta (ptr1),y
+		sta (ptr2),y
+		jmp map_kernel
+
+__uputw:	sta ptr2
+		stx ptr2+1
+		jsr outxa
+		jsr map_process_always
+		jsr popax
+		ldy #0
+		sta (ptr2),y
 		txa
 		iny
-		sta (ptr1),y
+		sta (ptr2),y
 		jmp map_kernel
 
-__uzero:	sta tmp1
-		stx tmp1+1
+__uzero:	sta tmp2
+		stx tmp2+1
 		jsr map_process_always
 		jsr popax		; ax is now the usermode address
-		sta ptr1
-		stx ptr1+1
+		sta ptr2
+		stx ptr2+1
 
 		ldy #0
 		tya
 
-		ldx tmp1+1		; more than 256 bytes
+		ldx tmp2+1		; more than 256 bytes
 		beq __uzero_tail	; no - just do dribbles
 __uzero_blk:
-		sta (ptr1),y
+		sta (ptr2),y
 		iny
 		bne __uzero_blk
-		inc ptr1+1		; next 256 bytes
+		inc ptr2+1		; next 256 bytes
 		dex			; are we done with whole blocks ?
 		bne __uzero_blk
 
 __uzero_tail:
-		cpy tmp1
+		cpy tmp2
 		beq __uzero_done
-		sta (ptr1),y
+		sta (ptr2),y
 		iny
 		bne __uzero_tail
 __uzero_done:	rts
