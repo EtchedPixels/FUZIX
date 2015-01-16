@@ -11,6 +11,7 @@
 	.import		__DATA_SIZE__, __BSS_SIZE__
 	.import		__exit
 	.import		_environ
+	.import		_main
 
         .include        "zeropage.inc"
 
@@ -48,8 +49,8 @@ start:
 ; Need to save the environment ptr. The rest of the stack should be
 ; fine.
 ;
-	lda	_sp
-	ldx	_sp+1
+	lda	sp
+	ldx	sp+1
 	clc
 	adc	#4
 	bcc	l1
@@ -57,7 +58,7 @@ start:
 l1:	sta	_environ
 	stx	_environ+1
 	ldy	#4
-        jsr     callmain
+        jsr     _main
 
 ; Call the module destructors. This is also the exit() entry.
 
