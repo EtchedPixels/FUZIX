@@ -62,12 +62,6 @@ l1:	sta	_environ
 
 ; Call the module destructors. This is also the exit() entry.
 
-_exit:  pha
-	txa
-	pha
-	jsr     donelib         ; Run module destructors
-	pla
-	tax
-	pla
+_exit:
 	jmp	__exit		; exit syscall, AX holds our return code
 				; for a fastcall return to nowhere.
