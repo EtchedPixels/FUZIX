@@ -5,18 +5,21 @@
 ; and Ullrich von Bassewitz <uz@cc65.org> 2014-08-22, Greg King
 ;
 
-        .import         initlib, donelib
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
 	.import		_exit
-	.import		_environ
+	.export		_environ
+	.export		initmainargs
 	.import		_main
+	.import		popax
+	.import		___stdio_init_vars
+
+	.export __STARTUP__ : absolute = 1;
 
         .include        "zeropage.inc"
 
-; Place the startup code in a special segment.
+.segment "STARTUP"
 
-.segment        "STARTUP"
 	jmp	start
 
 	.byte	'F'
@@ -30,6 +33,7 @@
 	.word	__BSS_SIZE__
 	.word	0
 
+
 ;
 ;	On entry sp/sp+1 have been set up by the kernel (this has to be
 ;	done in kernel as we might take a signal very early on). Above the
@@ -40,14 +44,12 @@
 ;	for us and we are ready to roll.
 ;
 start:
-; Call the module constructors.
-        jsr     initlib
-
 ; Push the command-line arguments; and, call main().
 ;
 ; Need to save the environment ptr. The rest of the stack should be
 ; fine.
 ;
+	jsr	___stdio_init_vars
 	lda	sp
 	ldx	sp+1
 	clc
@@ -56,10 +58,17 @@ start:
 	inx
 l1:	sta	_environ
 	stx	_environ+1
-	ldy	#4
+	jsr	popax		; Pull argv off the stack leaving argc
+	ldy	#2		; 2 bytes of args
         jsr     _main
 
 ; Call the module destructors. This is also the exit() entry.
 
 	jmp	_exit		; exit syscall, AX holds our return code
 				; for a fastcall return to nowhere.
+
+initmainargs:			; Hardcoded compiler dumbness
+	rts
+
+	.bss
+_environ:	.word	0
