@@ -61,7 +61,7 @@ void create_init(void)
 
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
-	udata.u_top = 4096;	/* Plenty for the boot */
+	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
 	map_init();
 	newproc(init_process);
 
