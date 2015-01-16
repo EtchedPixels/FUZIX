@@ -74,18 +74,14 @@ OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
 
 all: syslib.lib crt0_6502.o
 
-syscall.l: fuzix/syslib.l
-#	../tools/syscall-6502
-#	(cd fuzix; make)
-#	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
+fuzix6502/Makefile: ../tools/syscall_6502.c ../../Kernel/include/syscall_name.h
+	(cd ..; make tools/syscall_6502)
+	../tools/syscall_6502
 
-syslib.lib: syscall.l $(OBJ_C)
+syslib.lib: fuzix6502/Makefile $(OBJ_C)
+	(cd fuzix6502; make)
 	$(AR) a syslib.lib $(OBJ_C)
 	ln -sf syslib.lib c.lib
-
-fuzix/syslib.l:
-#	../tools/syscall-6502
-#	make -C fuzix-6502
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
@@ -101,4 +97,4 @@ $(OBJ_HARD):%.o: %.c
 
 clean:
 	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l
-	(cd fuzix-6502; make clean)
+	(cd fuzix6502; make clean)
