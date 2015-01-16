@@ -11,3 +11,7 @@ rm tmp_fuzix.b0 tmp_fuzix.v tmp_fuzix.b1
 if [ -e tgl_rootfs ] ; then
 	dd if=tgl_rootfs of=6502.rom bs=1 seek=65536 count=65536 conv=notrunc
 fi
+
+if [ -e tgl_monitor ] ; then
+	dd if=tgl_monitor of=6502.rom bs=1 seek=8192 count=8180 conv=notrunc
+fi

@@ -51,6 +51,16 @@ tools/tglsplice
 
 and you'll get a 6502.rom
 
+If you have a filesystem tgl_rootfs of 64K it will add this into the ROM
+image at the top. (Note this may move in future as the top block may become
+reserved for the tgl code).
+
+If you have a monitor then put it in binary form in tgl_monitor and it'll
+be merged with the image. The monitor will be mapped at 0xE000 and entered
+at that address. It must fit in the 8K minus the vectors. On entry there
+isn't really any RAM free as such but 1F00-1FFF is probably a fairly safe
+place to store workspace without trashing the Fuzix image.
+
 TODO
 ----
 - usermem functionality
