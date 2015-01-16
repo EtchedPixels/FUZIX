@@ -23,6 +23,7 @@ SRC_C += fsetpos.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += gmtime.c gmtime_r.c grent.c index.c isatty.c itoa.c killpg.c
+SRC_C += libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c nanosleep.c opendir.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c pwent.c qsort.c

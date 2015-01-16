@@ -60,3 +60,4 @@ struct lconv *localeconv(void)
 	return &C_lc;
 }
 
+/* FIXME: add nl_langinfo() */
