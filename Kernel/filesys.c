@@ -342,7 +342,7 @@ void filename(char *userspace_upath, char *name)
     char *ptr;
 
     buf = tmpbuf();
-    if(ugets(userspace_upath, buf, 512)) {
+    if(ugets(userspace_upath, buf, 512) == -1) {
         brelse(buf);
         *name = '\0';
         return;          /* An access violation reading the name */
