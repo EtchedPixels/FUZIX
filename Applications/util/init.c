@@ -123,6 +123,7 @@ int login(char *ttyname)
              * and a shell is spawned */
 
             for (;;) {
+                short attempt=0;
                 putstr("login: ");
                 while (read(0, buf, 20) < 0);    /* EINTR might happens because of the alarm() call below */
 
@@ -141,7 +142,9 @@ int login(char *ttyname)
                     } else {
                         p = "";
                     }
-                    if (strcmp(p, pwd->pw_passwd) == 0) spawn(pwd);
+                    attempt++;
+                    if (strcmp(p, pwd->pw_passwd) == 0) {attempt=0; spawn(pwd);}
+                    else if (attempt>=5) backoff(attempt);
                 }
 
                 putstr("Login incorrect\n\n");
@@ -151,6 +154,11 @@ int login(char *ttyname)
             }
         }
     }
+}
+
+void backoff (int attempt) {
+    putstr("\nBe patient. Too many incorrect logins at a time\n");
+    sleep((attempt>14)?7200:(60<<attempt));
 }
 
 void spawn(struct passwd *pwd)
