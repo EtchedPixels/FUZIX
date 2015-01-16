@@ -52,8 +52,17 @@ syscall	     =  $FE
 
 nmi_trap:
 _trap_monitor:
+;
+;	Put the ROM back as it was at entry including the second 8K bank we
+;	only use for vectors, then jump to $E000 which should enter whatever
+;	monitor was put there.
+;
 	    sei
-	    jmp _trap_monitor
+	    ldx #$40
+	    stx $FF90		; $C000
+	    inx
+	    stx $FF91		; $E000
+	    jmp $E000
 
 _trap_reboot:
 	    jmp _trap_reboot	; FIXME: original ROM map and jmp
@@ -113,14 +122,17 @@ _program_vectors:
 	    ; just pass it on
 	    jsr map_process
 program_vectors_k:
-	    lda #<vector
-	    sta $FFFE
-	    lda #>vector
-	    sta $FFFF
-	    lda #<nmi_handler
-	    sta $FFFA
-	    lda #>nmi_handler
-	    sta $FFFB
+;
+;	These are in common ROM space in our case
+;
+;	    lda #<vector
+;	    sta $FFFE
+;	    lda #>vector
+;	    sta $FFFF
+;	    lda #<nmi_handler
+;	    sta $FFFA
+;	    lda #>nmi_handler
+;	    sta $FFFB
 	    ; However tempting it may be to use BRK for system calls we
 	    ; can't do this on an NMOS 6502 because the chip has brain
 	    ; dead IRQ handling bits that could simply "lose" the syscall!
@@ -311,12 +323,11 @@ vector:
 	    pha
 	    tsx					; and save the 6502 stack ptr
 	    stx istack_switched_sp		; in uarea/stacks
-
 ;
-;	Hope the user hasn't gone over 192 bytes of 6502 stack !
+;	Hope the user hasn't used all the CPU stack
 ;
-	    ldx #$40				; guess at reserving some istack
-	    txs					; our istack
+;	FIXME: we should check here if S is too low and if so set it high
+;	and deliver SIGKILL
 ;
 ;	Configure the C stack to the i stack
 ;
@@ -362,13 +373,13 @@ syscall_entry:
 
 	    ldy #0
 
-copy_args:  lda (ptr1),y	; copy the arguments from current bank
-	    sta (ptr2),y	; will write into bank 1
+copy_args:  lda (ptr1),y	; copy the arguments over
+	    sta (ptr2),y
 	    iny
 	    cpy #8
 	    bne copy_args
 	    ;
-	    ; Now we need to bank and stack switch
+	    ; Now we need to stack switch
 	    ;
 	    lda sp
 	    pha
@@ -377,13 +388,14 @@ copy_args:  lda (ptr1),y	; copy the arguments from current bank
 	    tsx
 	    stx U_DATA__U_SP
 ;
-;	We try and divide our previous stack resource up between user
-;	and kernel. It's not clear if we should do this, copy the stack
-;	or do something clever I've not thought of yet. Possibly we should
-;	see if there is enough stack and if not copy and screw about ?
+;	We save a copy of the high byte of sp here as we may need it to get
+;	the brk() syscall right.
 ;
-	    ldx #$80
-	    txs			; Switch to the working stack
+	    sta U_DATA__U_SP + 1
+;
+;
+;	FIXME: we should check here if there is enough 6502 stack left
+;	and if so either copy and switch stacks or kill the process
 ;
 ;	Set up the C stack
 ;
@@ -419,7 +431,7 @@ copy_args:  lda (ptr1),y	; copy the arguments from current bank
 	    pla
 	    sta ptr1+1
 	    pla
-	    sta ptr1+1
+	    sta ptr1
 ;
 ;	Copy the return data over
 ;
@@ -445,9 +457,24 @@ copy_args:  lda (ptr1),y	; copy the arguments from current bank
 
 
 platform_doexec:
+;
+;	Start address of executable
+;
 	    stx ptr1+1
 	    sta ptr1
-	    jmp (ptr1)		; 0x2000 usually
+;
+;	Set up the C stack
+;
+	    lda U_DATA__U_ISP
+	    sta sp
+	    lda U_DATA__U_ISP+1
+            sta sp+1
+;
+;	Set up the 6502 stack
+;
+	    ldx #$ff
+	    txs
+	    jmp (ptr1)		; Enter user application
 
 ;
 ;	Straight jumps no funny banking issues
