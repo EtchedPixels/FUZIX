@@ -57,7 +57,7 @@ start:					; Map ROM at 0x4000-0xFFFF
 		stx $FF91
 		lda #$02
 		sta $FF8A		; Common for init at 0x0000
-		lda #$01		; Kernel data at 0x4000
+		lda #$01		; Kernel data at 0x2000
 		sta $FF8B
 
 		lda #<kstack_top	; C stack
