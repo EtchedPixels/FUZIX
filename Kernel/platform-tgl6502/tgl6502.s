@@ -37,6 +37,8 @@
 	    .import _kernel_flag
 	    .import copycommon
 
+	    .import incaxy		; from the C runtime
+
             .include "kernel.def"
             .include "../kernel02.def"
 	    .include "zeropage.inc"
@@ -353,33 +355,51 @@ irqout:
 	    pla
 	    rti
 
-
-;	    X, A holds the syscall block
-;	    Y holds the call code
-;	    We assume the kernel is in bank 0
+;
+;	    sp/sp+1 are the C stack of the userspace
+;	    with the syscall number in X
+;	    Y indicates the number of bytes of argument
 ;
 syscall_entry:
+	    php
 	    sei
-	    sty U_DATA__U_CALLNO
-	    pha
-	    txa
-	    pha
-	    sta ptr1
-	    stx ptr1+1
-	    lda #<U_DATA__U_ARGN
-	    sta ptr2
-	    lda #>U_DATA__U_ARGN
-	    sta ptr2+1
+	    cld
+
+	    stx U_DATA__U_CALLNO
+
+	    ; Remove the arguments. This is fine as by the time we go back
+	    ; to the user stack we'll have finished with them
+	    lda sp
+	    ldx sp+1
+	    jsr incaxy
+	    sta sp
+	    stx sp+1
 
 	    ldy #0
+	    ;
+	    ;	We copy the arguments but need to deal with the compiler
+	    ;   stacking in the reverse order. At this point ptr1 points
+	    ;	to the last byte of the arguments (first argument). We go
+	    ;	down the stack copying words up the argument list.
+	    ;
 
-copy_args:  lda (ptr1),y	; copy the arguments over
-	    sta (ptr2),y
+copy_args:
+	    lda (ptr1),y		; copy the arguments over
+	    sta U_DATA__U_ARGN,x
 	    iny
+            inx
+	    lda (ptr1),y
+	    sta U_DATA__U_ARGN,x
+            iny
+            dex
+            dex
+	    dex
 	    cpy #8
 	    bne copy_args
+
 	    ;
-	    ; Now we need to stack switch
+	    ; Now we need to stack switch. Save the adjusted stack we want
+	    ; for return
 	    ;
 	    lda sp
 	    pha
@@ -428,33 +448,22 @@ copy_args:  lda (ptr1),y	; copy the arguments over
 	    sta sp+1
 	    pla
 	    sta sp
-	    pla
-	    sta ptr1+1
-	    pla
-	    sta ptr1
-;
-;	Copy the return data over
-;
-	    ldy #8		; write them after the argument block
-	    lda U_DATA__U_ERROR
-
-	    sta (ptr1), y
-	    iny
-	    lda U_DATA__U_ERROR+1
-	    sta (ptr1),y
-	    iny
-	    lda U_DATA__U_RETVAL
-	    sta (ptr1),y
-	    iny
-	    lda U_DATA__U_RETVAL+1
-	    sta (ptr1), y
 ;
 ;	FIXME: do signal dispatch - this will need C stack fixing, and
 ;	basically signal dispatch is __interrupt.
 ;
+;	We may be in decimal mode beyond this line.. take care
+;
+	    plp
+
+;	Copy the return data over
+;
+	    ldy U_DATA__U_RETVAL
+	    ldx U_DATA__U_RETVAL+1
+;	Also sets Z for us
+	    lda U_DATA__U_ERROR
 
 	    rts
-
 
 platform_doexec:
 ;
