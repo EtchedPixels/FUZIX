@@ -19,6 +19,7 @@ void spawn(struct passwd *);
 int  showfile(char *);
 void putstr(char *);
 void sigalarm(int);
+void backoff(int);
 
 int main(int argc, char *argv[])
 {
