@@ -7,7 +7,6 @@
 
 		.import map_kernel, map_process_always
 		.import outxa
-		.import popax
 		.importzp ptr2, tmp2
 ;
 ;	These are intended as reference implementations to get a platform
@@ -39,12 +38,12 @@
 ;
 __uget:		sta tmp2
 		stx tmp2+1		; save the count
-		jsr popax		; pop the destination
+		jsr cpopax		; pop the destination
 		sta ptr2		; (ptr2) is our target
 		stx ptr2+1
-		jsr popax		; (ptr2) is our source
-		sta ptr2
-		stx ptr2+1
+		jsr cpopax		; (ptr2) is our source
+		sta ptr3
+		stx ptr3+1
 
 		ldy #0			; counter
 
@@ -53,13 +52,13 @@ __uget:		sta tmp2
 
 __uget_blk:
 		jsr map_process_always	; map the user process in
-		lda (ptr2), y		; get a byte of user data
+		lda (ptr3), y		; get a byte of user data
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2), y		; save it to the kernel buffer
 		iny			; move on one
 		bne __uget_blk		; not finished a block ?
 		inc ptr2+1		; move src ptr 256 bytes on
-		inc ptr2+1		; move dst ptr the same
+		inc ptr3+1		; move dst ptr the same
 		dex			; one less block to do
 		bne __uget_blk		; out of blocks ?
 
@@ -67,7 +66,7 @@ __uget_tail:	cpy tmp2		; finished ?
 		beq __uget_done
 
 		jsr map_process_always	; map the user process
-		lda (ptr2),y		; get a byte of user data
+		lda (ptr3),y		; get a byte of user data
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2),y		; save it to the kernel buffer
 		iny			; move on
@@ -78,15 +77,26 @@ __uget_done:
 		tax
 		rts
 
-__ugets:	rts
+__ugets:	ldy #'>'
+		sty $FF03
 		sta tmp2
 		stx tmp2+1		; save the count
-		jsr popax		; pop the destination
+		jsr outxa
+		lda #':'
+		sta $FF03
+		jsr cpopax		; pop the destination
 		sta ptr2		; (ptr2) is our target
 		stx ptr2+1
-		jsr popax		; (ptr2) is our source
-		sta ptr2
-		stx ptr2+1
+		jsr outxa
+		lda #':'
+		sta $FF03
+		jsr cpopax		; (ptr2) is our source
+		sta ptr3
+		stx ptr3+1
+		jsr outxa
+
+		lda #10
+		sta $FF03
 
 		ldy #0			; counter
 
@@ -95,13 +105,13 @@ __ugets:	rts
 
 __ugets_blk:
 		jsr map_process_always	; map the user process in
-		lda (ptr2), y		; get a byte of user data
+		lda (ptr3), y		; get a byte of user data
 		beq __ugets_end
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2), y		; save it to the kernel buffer
 		iny			; move on one
 		bne __ugets_blk		; not finished a block ?
-		inc ptr2+1		; move src ptr 256 bytes on
+		inc ptr3+1		; move src ptr 256 bytes on
 		inc ptr2+1		; move dst ptr the same
 		dex			; one less block to do
 		bne __ugets_blk		; out of blocks ?
@@ -110,7 +120,8 @@ __ugets_tail:	cpy tmp2		; finished ?
 		beq __ugets_bad
 
 		jsr map_process_always	; map the user process
-		lda (ptr2),y		; get a byte of user data
+		lda (ptr3),y		; get a byte of user data
+		beq __ugets_end
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2),y		; save it to the kernel buffer
 		iny			; move on
@@ -121,8 +132,14 @@ __ugets_bad:
 		lda #0
 		sta (ptr2), y		; terminate kernel buffer
 		lda #$FF		; string too large
-__ugets_end:				; A holds 0 or -1
-		tax			; return $FFFF or $0
+		tax			; return $FFFF
+		rts
+
+__ugets_end:
+		jsr map_kernel
+		lda #0
+		sta (ptr2), y
+		tax
 		rts
 
 __ugetc:	sta ptr2
@@ -144,15 +161,14 @@ __ugetw:	sta ptr2
 		jmp map_kernel
 
 
-__uput:		rts
-		sta tmp2
+__uput:		sta tmp2
 		stx tmp2+1
-		jsr popax
+		jsr cpopax	; dest
 		sta ptr2
 		stx ptr2+1
-		jsr popax
-		sta ptr2
-		stx ptr2+1
+		jsr cpopax	; source
+		sta ptr3
+		stx ptr3+1
 
 		ldy #0
 
@@ -160,20 +176,20 @@ __uput:		rts
 		beq __uput_tail
 __uput_blk:
 		jsr map_kernel
-		lda (ptr2), y
+		lda (ptr3), y
 		jsr map_process_always
 		sta (ptr2), y
 		iny
 		bne __uput_blk
 		inc ptr2+1
-		inc ptr2+1
+		inc ptr3+1
 		dex
 		bne __uput_blk
 
 __uput_tail:	cpy tmp2
 		beq __uput_done
 		jsr map_kernel
-		lda (ptr2),y
+		lda (ptr3),y
 		jsr map_process_always
 		sta (ptr2),y
 		iny
@@ -185,21 +201,18 @@ __uput_done:
 		tax
 		rts
 
-__uputc:	rts
-		sta ptr2
+__uputc:	sta ptr2
 		stx ptr2+1
-		jsr outxa
 		jsr map_process_always
-		jsr popax
+		jsr cpopax
 		ldy #0
 		sta (ptr2),y
 		jmp map_kernel
 
 __uputw:	sta ptr2
 		stx ptr2+1
-		jsr outxa
 		jsr map_process_always
-		jsr popax
+		jsr cpopax
 		ldy #0
 		sta (ptr2),y
 		txa
@@ -210,7 +223,7 @@ __uputw:	sta ptr2
 __uzero:	sta tmp2
 		stx tmp2+1
 		jsr map_process_always
-		jsr popax		; ax is now the usermode address
+		jsr cpopax		; ax is now the usermode address
 		sta ptr2
 		stx ptr2+1
 
@@ -233,4 +246,25 @@ __uzero_tail:
 		sta (ptr2),y
 		iny
 		bne __uzero_tail
-__uzero_done:	rts
+__uzero_done:	jmp map_kernel
+
+
+;
+;	We need this helper in common, no easy way to put it without further
+;	work. We should plonk the runtime in common, we have room and its
+;	a) easier b) means we can share it with userspace (iffy but doable)
+;
+
+cpopax:		ldy #1
+		lda (sp),y
+		tax
+		dey
+		lda (sp),y
+		inc sp
+		beq n1
+		inc sp
+		beq n2
+		rts
+n1:		inc sp
+n2:		inc sp+1
+		rts
