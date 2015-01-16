@@ -5,7 +5,6 @@
 ; and Ullrich von Bassewitz <uz@cc65.org> 2014-08-22, Greg King
 ;
 
-        .export         _exit
         .import         initlib, donelib
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
@@ -62,6 +61,5 @@ l1:	sta	_environ
 
 ; Call the module destructors. This is also the exit() entry.
 
-_exit:
 	jmp	_exit		; exit syscall, AX holds our return code
 				; for a fastcall return to nowhere.
