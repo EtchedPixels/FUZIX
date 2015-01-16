@@ -82,6 +82,11 @@ _doexec:
 ;	The C world here is fairly ugly. We have to stash various bits of
 ;	zero page magic because its not re-entrant.
 ;
+;	stash_zp must bappen *before* we change mapping so the zp stash
+;	must be in common. The map routines are allowed to use _tmp1 and
+;	_ptr1 which will upset userspace terribly if they are not saved and
+;	properly restored!
+;
 interrupt_handler:
 	jsr stash_zp			; Save zero page bits
 	jsr map_save
