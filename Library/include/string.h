@@ -41,7 +41,7 @@ extern char *rindex __P ((const char *, int));
 extern void bcopy __P ((const void*, void*, size_t));
 extern void bzero __P ((void*, int));
 
-/* Othe common BSD functions */
+/* Other common BSD functions */
 extern char *strpbrk __P ((const char *, const char *));
 extern char *strsep __P ((char **, const char *));
 extern char *strstr __P ((const char *, const char *));
@@ -53,6 +53,11 @@ extern size_t strlcpy __P((char *, const char *, size_t));
 extern size_t strlcat __P((char *, const char *, size_t));
 
 extern char *strcasestr __P((const char *, const char *));
+
+/* Later ISOisms */
+extern size_t strnlen __P((const char *, size_t));
+extern size_t strxfrm __P((char *, const char *, size_t));
+extern int strcoll __P((const char *s1, const char *s2));
 
 #ifdef	z80
 #pagma inline(memcpy)

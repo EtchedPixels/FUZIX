@@ -79,6 +79,8 @@ extern void *lsearch __P((void *key, void *base, size_t *num, size_t size, cmp_f
 extern void *_qbuf;
 extern void qsort __P((void *base, size_t num, size_t size, cmp_func_t cmp));
 
+#define mb_len(a,b)	strnlen(a,b)
+
 extern int opterr;
 extern int optind;
 extern char *optarg;
