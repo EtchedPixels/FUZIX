@@ -9,7 +9,7 @@
         .import         initlib, donelib
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
-	.import		__exit
+	.import		_exit
 	.import		_environ
 	.import		_main
 
@@ -63,5 +63,5 @@ l1:	sta	_environ
 ; Call the module destructors. This is also the exit() entry.
 
 _exit:
-	jmp	__exit		; exit syscall, AX holds our return code
+	jmp	_exit		; exit syscall, AX holds our return code
 				; for a fastcall return to nowhere.
