@@ -184,7 +184,7 @@ void spawn(struct passwd *pwd)
     argp[0] = buf;
     argp[1] = NULL;
 
-    execve(pwd->pw_shell, argp, env);
+    execve(pwd->pw_shell, (void *)argp, (void *)env);
     putstr("login: can't execute shell\n");
     exit(1);
 }
