@@ -183,7 +183,6 @@ _dofork:
 	lda U_DATA__U_PAGE
 	sta $FF8A			; switch to child and child stack
 					; and zero page etc
-
 	; We are now in the kernel child context
 
         ; now the copy operation is complete we can get rid of the stuff
@@ -244,7 +243,7 @@ copy_loop:
 	iny
 	clc
 	adc #1
-	cmp #8
+	cmp #7
 	bne copy_loop
 	jmp map_kernel		; put the kernel mapping back as it should be
 	
