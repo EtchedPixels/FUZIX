@@ -306,6 +306,13 @@ outchar:
 ;	we can use the shorter one for the CMOS chip
 ;
 vector:
+	    lda #')'
+	    sta $FF03
+	    pla
+	    tax
+	    pla
+	    jsr outxa
+	    jmp _trap_monitor
 	    pha
 	    txa
 	    pha
@@ -386,10 +393,10 @@ syscall_entry:
 	    tya
 	    jsr outcharhex
 	    pla
-	    iny
-	    dey
+	    cpy #0
 	    beq noargs
 copy_args:
+	    dey
 	    lda (ptr1),y		; copy the arguments over
 	    sta U_DATA__U_ARGN+1,x
 	    dey
@@ -397,7 +404,7 @@ copy_args:
 	    sta U_DATA__U_ARGN,x
             inx
 	    inx
-            dey
+	    cpy #0
 	    bne copy_args
 noargs:
 	    ldx #'Y'
@@ -411,12 +418,12 @@ noargs:
 	    lda sp+1
 	    pha
 	    tsx
-	    stx U_DATA__U_SP
+	    stx U_DATA__U_SYSCALL_SP
 ;
 ;	We save a copy of the high byte of sp here as we may need it to get
 ;	the brk() syscall right.
 ;
-	    sta U_DATA__U_SP + 1
+	    sta U_DATA__U_SYSCALL_SP + 1
 ;
 ;
 ;	FIXME: we should check here if there is enough 6502 stack left
@@ -447,7 +454,7 @@ noargs:
 ;
 ;	Correct the system stack
 ;
-	    ldx U_DATA__U_SP
+	    ldx U_DATA__U_SYSCALL_SP
 	    txs
 ;
 ;	From that recover the C stack and the syscall buf ptr
