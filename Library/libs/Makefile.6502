@@ -2,7 +2,7 @@ CC = cl65
 ASM = ca65
 AR = ar65
 LINKER = ld65
-CC_OPT = -O -D__STDC__ --all-fastcall -c -O -I../include/ -I../include/6502/
+CC_OPT = -t none -O -D__STDC__ --all-fastcall -c -O -I../include/ -I../include/6502/
 ASM_OPT = -o
 LINKER_OPT = -m -i -o
 SRC_CRT0 = crt0_6502.s
@@ -30,7 +30,7 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #	very tightly coded. We want to make use of them eventually
 #
 #
-SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c atoi.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c err.c errno.c error.c
