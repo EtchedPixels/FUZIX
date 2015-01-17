@@ -370,6 +370,10 @@ syscall_entry:
 
 	    stx U_DATA__U_CALLNO
 
+	    ; No arguments - skip all the copying and stack bits
+	    cpy #0
+	    beq noargs
+
 	    ; Remove the arguments. This is fine as by the time we go back
 	    ; to the user stack we'll have finished with them
 	    lda sp
@@ -387,12 +391,6 @@ syscall_entry:
 	    ;	down the stack copying words up the argument list.
 	    ;
 	    ldx #0
-	    pha
-	    tya
-	    jsr outcharhex
-	    pla
-	    cpy #0
-	    beq noargs
 copy_args:
 	    dey
 	    lda (ptr1),y		; copy the arguments over
@@ -488,7 +486,6 @@ platform_doexec:
 	    ldx U_DATA__U_ISP+1
             stx sp+1
 
-	    jsr outxa
 ;
 ;	Set up the 6502 stack
 ;
