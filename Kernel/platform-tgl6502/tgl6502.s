@@ -386,8 +386,6 @@ syscall_entry:
 	    ;	to the last byte of the arguments (first argument). We go
 	    ;	down the stack copying words up the argument list.
 	    ;
-	    ldx #'S'
-	    stx $FF03
 	    ldx #0
 	    pha
 	    tya
@@ -407,8 +405,6 @@ copy_args:
 	    cpy #0
 	    bne copy_args
 noargs:
-	    ldx #'Y'
-	    stx $FF03
 	    ;
 	    ; Now we need to stack switch. Save the adjusted stack we want
 	    ; for return
@@ -435,9 +431,6 @@ noargs:
 	    sta sp
 	    lda #>kstack_top
 	    sta sp+1
-
-	    ldx #'S'
-	    stx $FF03
 
 	    cli
 ;
@@ -487,9 +480,6 @@ platform_doexec:
 	    stx ptr1+1
 	    sta ptr1
 
-	    ldy #'E'
-	    sty $FF03
-	    jsr outxa
 ;
 ;	Set up the C stack
 ;
