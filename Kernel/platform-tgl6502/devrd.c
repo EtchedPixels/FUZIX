@@ -45,7 +45,7 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
 
     while (ct < block_xfer) {
         /* Offset of block within an 8K bank (high byte) */
-        romd_roff = (block << 9);
+        romd_roff = (block << 9) & 0x1FFF ;
         /* 8K block we need to select */
         romd_rmap = 0x48 + (block >> 4);
         /* Map it over a page we are not copying into */
@@ -57,6 +57,8 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
             romd_bank = 1;
         }
         irq = di();
+//        kprintf("RD: map %d, roff %x bank %d dptr %x\n",
+//            romd_rmap, romd_roff, romd_bank, dptr);
         if (is_read) {
             rd_copyin(dptr);
         }
