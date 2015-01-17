@@ -1,5 +1,7 @@
 #define NR_SYSCALL 63
 
+#define VARARGS 	-1
+
 char *syscall_name[NR_SYSCALL] = {
 	"_exit",
 	"open",
@@ -68,7 +70,7 @@ char *syscall_name[NR_SYSCALL] = {
 
 int syscall_args[NR_SYSCALL] = {
 	1, //_exit
-	3, //open
+	VARARGS, //open
 	1, //close
 	2, //rename
 	3, //mknod
