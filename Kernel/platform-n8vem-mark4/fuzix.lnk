@@ -39,4 +39,5 @@ platform-n8vem-mark4/mbr.rel
 platform-n8vem-mark4/blkdev.rel
 platform-n8vem-mark4/ds1302.rel
 platform-n8vem-mark4/ds1302-mark4.rel
+platform-n8vem-mark4/monitor.rel
 -e

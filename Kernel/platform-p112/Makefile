@@ -1,6 +1,6 @@
 CSRCS += devices.c main.c devtty.c
 DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ds1302.c
-ASRCS = crt0.s z180.s commonmem.s p112.s ds1302-p112.s
+ASRCS = crt0.s z180.s commonmem.s p112.s ds1302-p112.s monitor.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
