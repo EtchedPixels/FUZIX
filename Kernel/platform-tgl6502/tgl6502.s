@@ -366,33 +366,42 @@ syscall_entry:
 	    ; Remove the arguments. This is fine as by the time we go back
 	    ; to the user stack we'll have finished with them
 	    lda sp
+	    sta ptr1
 	    ldx sp+1
+	    stx ptr1+1
 	    jsr cincaxy
 	    sta sp
 	    stx sp+1
 
-	    ldy #0
 	    ;
 	    ;	We copy the arguments but need to deal with the compiler
 	    ;   stacking in the reverse order. At this point ptr1 points
 	    ;	to the last byte of the arguments (first argument). We go
 	    ;	down the stack copying words up the argument list.
 	    ;
-
+	    ldx #'S'
+	    stx $FF03
+	    ldx #0
+	    pha
+	    tya
+	    jsr outcharhex
+	    pla
+	    iny
+	    dey
+	    beq noargs
 copy_args:
 	    lda (ptr1),y		; copy the arguments over
-	    sta U_DATA__U_ARGN,x
-	    iny
-            inx
+	    sta U_DATA__U_ARGN+1,x
+	    dey
 	    lda (ptr1),y
 	    sta U_DATA__U_ARGN,x
-            iny
-            dex
-            dex
-	    dex
-	    cpy #8
+            inx
+	    inx
+            dey
 	    bne copy_args
-
+noargs:
+	    ldx #'Y'
+	    stx $FF03
 	    ;
 	    ; Now we need to stack switch. Save the adjusted stack we want
 	    ; for return
@@ -419,6 +428,9 @@ copy_args:
 	    sta sp
 	    lda #>kstack_top
 	    sta sp+1
+
+	    ldx #'S'
+	    stx $FF03
 
 	    cli
 ;
