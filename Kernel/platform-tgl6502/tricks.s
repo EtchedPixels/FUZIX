@@ -67,7 +67,8 @@ _switchout:
         ; we should never get here
         jsr _trap_monitor
 
-badswitchmsg: .asciiz "_switchin: FAIL\r\n"
+badswitchmsg: .byte "_switchin: FAIL"
+	.byte 13, 10, 0
 
 ;
 ;	On entry x,a holds the process to switch in
@@ -76,14 +77,25 @@ _switchin:
 	sei
 	sta	ptr1
 	stx	ptr1+1
-;	jsr	outxa
+	; Take a second saved set as we are going to swap stacks and ZP
+	; with a CPU that hasn't got sufficient registers to keep it on
+	; CPU
+	sta	switch_proc_ptr
+	stx	switch_proc_ptr+1
+	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
 ;	pha
 ;	jsr	outcharhex
 ;	pla
 	sta	$FF8A		; switches zero page, stack memory area
-	; ------- No stack -------
+	; ------- New stack and ZP -------
+
+	; Set ptr1 back up (the old ptr1 was on the other ZP)
+	lda	switch_proc_ptr
+	sta	ptr1
+	lda	switch_proc_ptr+1
+	sta	ptr1+1
 
         ; check u_data->u_ptab matches what we wanted
 	lda	U_DATA__U_PTAB
@@ -119,9 +131,9 @@ swtchdone:
         rts
 
 switchinfail:
-	lda	ptr1
-	jsr	outcharhex
 	lda	ptr1+1
+	jsr	outcharhex
+	lda	ptr1
 	jsr	outcharhex
         lda	#<badswitchmsg
 	ldx	#>badswitchmsg
@@ -129,7 +141,10 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jmp _trap_monitor
 
-; FIXME: put this in ZP ?
+; Must not put this in ZP ?
+;
+; Move to commondata ??
+;
 fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
@@ -180,7 +195,12 @@ _dofork:
 	jsr fork_copy
 
 	; --------- we switch stack copies here -----------
-	lda U_DATA__U_PAGE
+        lda fork_proc_ptr
+	ldx fork_proc_ptr+1
+	sta ptr1
+	stx ptr1+1
+	ldy #P_TAB__P_PAGE_OFFSET
+	lda (ptr1),y
 	sta $FF8A			; switch to child and child stack
 					; and zero page etc
 	; We are now in the kernel child context
@@ -269,3 +289,10 @@ copy1:
 	bne copy1
 	rts
 
+;
+;	The switch proc pointer cannot live anywhere in common as we switch
+;	common on process switch
+;
+	.data
+
+switch_proc_ptr: .word 0
