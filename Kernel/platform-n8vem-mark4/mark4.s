@@ -7,10 +7,9 @@
         ; exported symbols
         .globl init_early
         .globl init_hardware
+        .globl inchar
         .globl outchar
-        .globl outcharhex
         .globl platform_interrupt_all
-        .globl _trap_monitor
 
         ; imported symbols
         .globl z180_init_hardware
@@ -75,26 +74,14 @@ ocloop: in0 a, (ASCI_STAT0)
         pop bc
         ret
 
-platform_interrupt_all:
+; inchar: Wait for character on UART, return in A
+; destroys: AF
+inchar:
+        in0 a, (ASCI_STAT0)
+        rlca
+        jr nc, inchar
+        in0 a, (ASCI_RDR0)
         ret
 
-_trap_monitor:
-        di
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        halt
-        jr _trap_monitor
+platform_interrupt_all:
+        ret

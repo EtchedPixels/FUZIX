@@ -13,4 +13,5 @@ Z80_TYPE		    .equ 2
 
 ; Believe most P112 kits shipped with 16MHz oscillators, I have tried faster 
 ; (18.432MHz) but this made the machine unstable.
+USE_FANCY_MONITOR           .equ 1            ; disabling this saves around 0.5KB
 CPU_CLOCK_KHZ               .equ 16000        ; 16MHz is the stock crystal

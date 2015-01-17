@@ -7,6 +7,7 @@
         ; exported symbols
         .globl init_early
         .globl init_hardware
+        .globl inchar
         .globl outchar
         .globl outstring
         .globl outcharhex
@@ -99,26 +100,13 @@ ocloop:     in0 a, (ESCC_CTRL_A)
         pop bc
         ret
 
-platform_interrupt_all:
+; inchar: Wait for character on UART, return in A
+inchar:
+        in0 a, (ESCC_CTRL_A)    ; bit 0 is "rx ready" (1=ready)
+        rrca
+        jr nc, inchar
+        in0 a, (ESCC_DATA_A)
         ret
 
-_trap_monitor:
-        di
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        pop hl
-        call outhl
-        call outnewline
-        halt
-        jr _trap_monitor
+platform_interrupt_all:
+        ret

@@ -37,4 +37,5 @@ platform-p112/blkdev.rel
 platform-p112/mbr.rel
 platform-p112/ds1302.rel
 platform-p112/ds1302-p112.rel
+platform-p112/monitor.rel
 -e
