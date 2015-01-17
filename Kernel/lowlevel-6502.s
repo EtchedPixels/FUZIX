@@ -144,7 +144,7 @@ outstringl:
 	lda (ptr1),y
 	cmp #0
 	beq outdone1
-	jsr outcharhex
+	jsr outchar
 	iny
 	jmp outstringl
 
@@ -177,7 +177,7 @@ outcharhex:
 	lsr a
 	lsr a
 	lsr a
-	cmp #9
+	cmp #10
 	bcc deci1
 	clc
 	adc #7
@@ -187,7 +187,7 @@ deci1:
 	jsr outchar
 	pla
 	and #$0f
-	cmp #9
+	cmp #10
 	bcc deci2
 	clc
 	adc #7
