@@ -64,7 +64,7 @@ l1:	sta	_environ
 
 ; Call the module destructors. This is also the exit() entry.
 
-	jmp	_exit		; exit syscall, AX holds our return code
+	jmp	_exit		; exit cleanup, AX holds our return code
 				; for a fastcall return to nowhere.
 
 initmainargs:			; Hardcoded compiler dumbness

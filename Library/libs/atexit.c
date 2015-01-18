@@ -30,8 +30,11 @@ struct exit_table __on_exit_table[MAXONEXIT];
 
 void __do_exit(int rv)
 {
-	register int count = __on_exit_count - 1;
-	register vfuncp ptr;
+	/* Static to work around a bug in cc65 */
+	static int count;
+	vfuncp ptr;
+
+	count = __on_exit_count - 1;
 	__on_exit_count = -1;	/* ensure no more will be added */
 
 	/* In reverse order */
