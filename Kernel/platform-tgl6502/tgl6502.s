@@ -38,6 +38,7 @@
 
 	    .import outcharhex
 	    .import outxa
+	    .import incaxy
 
             .include "kernel.def"
             .include "../kernel02.def"
@@ -380,7 +381,7 @@ syscall_entry:
 	    sta ptr1
 	    ldx sp+1
 	    stx ptr1+1
-	    jsr cincaxy
+	    jsr incaxy
 	    sta sp
 	    stx sp+1
 
@@ -501,16 +502,6 @@ _unix_syscall_i:
 _platform_interrupt_i:
 	    jmp _platform_interrupt
 
-
-;
-;	Hack for common runtime helper (fixme move helpers to common)
-;
-cincaxy:sty tmp1
-	clc
-	adc tmp1
-	bcc incaxy2
-	inx
-incaxy2:rts
 
 ;
 ;	ROM disc copier (needs to be in common), call with ints off

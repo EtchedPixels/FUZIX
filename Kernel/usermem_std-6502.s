@@ -6,7 +6,7 @@
 		.export __uput, __uputc, __uputw, __uzero
 
 		.import map_kernel, map_process_always
-		.import outxa
+		.import outxa, popax
 		.importzp ptr2, tmp2
 ;
 ;	These are intended as reference implementations to get a platform
@@ -38,10 +38,10 @@
 ;
 __uget:		sta tmp2
 		stx tmp2+1		; save the count
-		jsr cpopax		; pop the destination
+		jsr popax		; pop the destination
 		sta ptr2		; (ptr2) is our target
 		stx ptr2+1
-		jsr cpopax		; (ptr2) is our source
+		jsr popax		; (ptr2) is our source
 		sta ptr3
 		stx ptr3+1
 
@@ -79,10 +79,10 @@ __uget_done:
 
 __ugets:	sta tmp2
 		stx tmp2+1		; save the count
-		jsr cpopax		; pop the destination
+		jsr popax		; pop the destination
 		sta ptr2		; (ptr2) is our target
 		stx ptr2+1
-		jsr cpopax		; (ptr2) is our source
+		jsr popax		; (ptr2) is our source
 		sta ptr3
 		stx ptr3+1
 
@@ -151,10 +151,10 @@ __ugetw:	sta ptr2
 
 __uput:		sta tmp2
 		stx tmp2+1
-		jsr cpopax	; dest
+		jsr popax	; dest
 		sta ptr2
 		stx ptr2+1
-		jsr cpopax	; source
+		jsr popax	; source
 		sta ptr3
 		stx ptr3+1
 
@@ -192,7 +192,7 @@ __uput_done:
 __uputc:	sta ptr2
 		stx ptr2+1
 		jsr map_process_always
-		jsr cpopax
+		jsr popax
 		ldy #0
 		sta (ptr2),y
 		jmp map_kernel
@@ -200,7 +200,7 @@ __uputc:	sta ptr2
 __uputw:	sta ptr2
 		stx ptr2+1
 		jsr map_process_always
-		jsr cpopax
+		jsr popax
 		ldy #0
 		sta (ptr2),y
 		txa
@@ -211,7 +211,7 @@ __uputw:	sta ptr2
 __uzero:	sta tmp2
 		stx tmp2+1
 		jsr map_process_always
-		jsr cpopax		; ax is now the usermode address
+		jsr popax		; ax is now the usermode address
 		sta ptr2
 		stx ptr2+1
 
@@ -237,22 +237,3 @@ __uzero_tail:
 __uzero_done:	jmp map_kernel
 
 
-;
-;	We need this helper in common, no easy way to put it without further
-;	work. We should plonk the runtime in common, we have room and its
-;	a) easier b) means we can share it with userspace (iffy but doable)
-;
-
-cpopax:		ldy #1
-		lda (sp),y
-		tax
-		dey
-		lda (sp),y
-		inc sp
-		beq n1
-		inc sp
-		beq n2
-		rts
-n1:		inc sp
-n2:		inc sp+1
-		rts
