@@ -20,6 +20,8 @@ export CROSS_CC=sdcc
 export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --Werror --stack-auto --constseg CONST
 #export CROSS_CCOPTS+=--nostdlib --nostdinc -Isdcclib/include 
 export CROSS_CC_SEG2=--codeseg CODE2
+# For now but we are overspilling in a lot of configs so will need a real CODE3
+export CROSS_CC_SEG3=--codeseg CODE2
 export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
@@ -50,6 +52,8 @@ export CROSS_CCOPTS=--all-fastcall -c -O -t none -I$(ROOT_DIR)/cpu-6502 -I$(ROOT
 #
 export CROSS_CC_SEG1=--code-name SEG1
 export CROSS_CC_SEG2=--code-name SEG2
+# 6502 we need a real SEG3 to make it fit
+export CROSS_CC_SEG3=--code-name SEG3
 export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
 export BINEXT = .o
 else
@@ -60,6 +64,8 @@ export CROSS_CC = m6809-unknown-gcc
 export CROSS_CCOPTS=-c -Wall -Os -msoft-reg-count=0 -mfar-stack-param -I$(ROOT_DIR)/cpu-6809 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG1=-mcode-section=.text -mfar-code-page=1
 export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
+#Given the compactness we don't need a CODE3 segment really
+export CROSS_CC_SEG3=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
 export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
 export ASOPTS=
@@ -94,7 +100,11 @@ C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c syscall_fs.c
 C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c process.c
 C2SRCS += simple.c single.c bank16k.c bank32k.c bankfixed.c
-C2SRCS += devsys.c mm.c swap.c usermem.c timer.c
+#
+#	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
+#	need to do this on Z80 as well
+#
+C3SRCS = devsys.c mm.c swap.c usermem.c timer.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
@@ -105,12 +115,13 @@ ASRCS =  lowlevel-$(CPU).s usermem_std-$(CPU).s
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 C1OBJS = $(C1SRCS:.c=$(BINEXT))
 C2OBJS = $(C2SRCS:.c=$(BINEXT))
+C3OBJS = $(C3SRCS:.c=$(BINEXT))
 CFONTOBJS = $(CFONTSRCS:.c=$(BINEXT))
 CVIDEOOBJS = $(CVIDEOSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
 
-CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(CFONTSRCS) $(CVIDEOSRCS)
-COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(CFONTOBJS) $(CVIDEOOBJS)
+CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(CFONTSRCS) $(CVIDEOSRCS)
+COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS)
 
 OBJS  = $(COBJS) $(AOBJS)
 
@@ -139,6 +150,9 @@ $(CDOBJS): %$(BINEXT): %.c
 
 $(C2OBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) $<
+
+$(C3OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) $<
 
 $(CFONTOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_FONT) $<
