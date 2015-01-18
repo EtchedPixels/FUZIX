@@ -11,15 +11,19 @@
 		.import nmi_handler
 
 		.import  __BSS_RUN__, __BSS_SIZE__
+		.import	 __CODE_LOAD__, __CODE_RUN__, __CODE_SIZE__
 		.import	 __DATA_LOAD__, __DATA_RUN__, __DATA_SIZE__
 		.import	 __COMMONMEM_LOAD__, __COMMONMEM_RUN__, __COMMONMEM_SIZE__
 		.import	 __STUBS_LOAD__, __STUBS_RUN__, __STUBS_SIZE__
 		.importzp	ptr1, ptr2, tmp1
 
 	        ; startup code @0
-	        .code
 		.include "zeropage.inc"
 
+;
+;	So we end up first in the ROM
+;
+	        .segment "START"
 ;
 ;	We are entered in ROM 8K bank $40, at virtual address $C000
 ;
@@ -112,11 +116,26 @@ gogogo:
 	        sta     ptr2+1
 
 	        ldx     #<~__DATA_SIZE__
-	        lda     #>~__DATA_SIZE__        ; Use -(__DATASIZE__+1)
+	        lda     #>~__DATA_SIZE__        ; Use -(__DATA_SIZE__+1)
 	        sta     tmp1
 
 		jsr	copyloop
 
+	        lda     #<__CODE_LOAD__         ; Source pointer
+	        sta     ptr1
+	        lda     #>__CODE_LOAD__
+	        sta     ptr1+1
+
+	        lda     #<__CODE_RUN__          ; Target pointer
+	        sta     ptr2
+	        lda     #>__CODE_RUN__
+	        sta     ptr2+1
+
+	        ldx     #<~__CODE_SIZE__
+	        lda     #>~__CODE_SIZE__        ; Use -(__CODE_SIZE__+1)
+	        sta     tmp1
+
+		jsr	copyloop
 	        lda     #<__STUBS_LOAD__         ; Source pointer
 	        sta     ptr1
 	        lda     #>__STUBS_LOAD__
