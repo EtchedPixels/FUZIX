@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     close(2);
     dup(fdtty1);
 
-    putstr("init version 0.8.1ac\n");
+    putstr("init version 0.8.1ac-1erkinalp-0ac\n");
     
     if (pid=fork()) execve("/bin/sh",rc_arg,NULL);
     else waitpid(pid,NULL,0);
