@@ -14,10 +14,10 @@ Our memory mapping looks like this
 	0x0200		C stack (per proc)
 	0x0400		I stack (per proc)
 	0x0500		Udata actual data per proc
-	0x0600+		Common copy
+	0x0600+		Common copy and compiler runtime
 
 	0x2000		Kernel data	(8K)
-	0x4000		Kernel data	(48K)
+	0x4000		Kernel code	(48K)
 
 This ensures we can do all our stack flips in one operation when we switch
 process in switchin.
@@ -27,12 +27,11 @@ process in switchin.
 
 Lots not yet done:
 
-tricks.s is basically stubs for the 6502 code
 signal checks are not being done on the syscall path (or irq path)
 
-We hackishly chop up and share the 6502 256 byte system stack. Probably we
-should just check for overflows and kill, or perhaps copy stacks in/out if
-it would otherwise run out ?
+Checking on the 6502 stack. Probably we should just check for overflows and
+kill, or perhaps copy stacks in/out IFF it would otherwise run out (as 
+Apple ProDOS seems to)
 
 Memory set up for now is banking, because we'll need swap and bank16k+swap
 still needs significant work on the I/O side of things.
@@ -40,7 +39,6 @@ still needs significant work on the I/O side of things.
 Lots of memory to save in kernel space by making the common and data copies
 come from a bank we then switch out, along perhaps with the const data from
 what would be discard areas on the Z80.
-
 
 
 To build:
@@ -63,13 +61,14 @@ place to store workspace without trashing the Fuzix image.
 
 TODO
 ----
-- usermem functionality
-- debug syscall paths
-- memory layout for apps - do we go for compile time stack setting with
-  the ease of brk() handling and nice mappings that gives us ?
-- Core kernel knows about brk() and stacks. What it knows is unfortunately
-  wrong for 6502.
-- Build a libc
+- Signal handling paths
+- Fix brk() checking
+- Interrupts
+- Real I/O device
+- Fix up all the C library stubs that use time_t. The kernel uses 64bits
+  but the user code is packing them to 4 bytes. Needs some kind of define
+  to pad up the structs that matter. 6809 will need the same but
+  other-endian.
 
 Fairly Essential Optimsations To Do For A Box This Slow on RAM
 --------------------------------------------------------------
@@ -81,13 +80,21 @@ Fairly Essential Optimsations To Do For A Box This Slow on RAM
   low->brk, sp->top, S->top of page, and Z)
 - execve direct read to usermem (core change)
 - vfork()
+- usermem functions that use banking tricks
+- map_save/restore copy/restore entries for kernel mode so we can take an
+  interrupt when we are pulling banking tricks
 
-
-Other Questions
----------------
+General 650x Questions
+---------------------- 
 
 - What would it take to make ld65 generate banked binaries for 6502 boxes.
   The C argument stack is separate from the call/return stack so the usual
   horrible argument magic is avoided. It would just need stubs for inter
   bank calling added by the linker somehow, along with allowing multiple
   memory regions at the same address with different output files
+
+- Would using a relocatable binary format make more sense given how varied
+  6502 maps are. cc65 can already generate a quite usable format.
+
+- Is it worth having standardised usermem_ helpers and entry/exit code for 6509
+
