@@ -80,7 +80,7 @@ void readi(inoptr ino, uint8_t flag)
 	case F_CDEV:
 		udata.u_count = cdread(ino->c_node.i_addr[0], flag);
 
-		if (udata.u_count != -1)
+		if (udata.u_count != (usize_t)-1)
 			udata.u_offset += udata.u_count;
 		break;
 
@@ -127,7 +127,7 @@ void writei(inoptr ino, uint8_t flag)
 		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
 					ino->c_node.i_size) {
 			if (ino->c_refs == 1) {	/* No readers */
-				udata.u_count = -1;
+				udata.u_count = (usize_t)-1;
 				udata.u_error = EPIPE;
 				ssig(udata.u_ptab, SIGPIPE);
 				return;

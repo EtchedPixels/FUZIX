@@ -145,7 +145,7 @@ int16_t _access(void)
 	inoptr ino;
 	uint16_t euid;
 	uint16_t egid;
-	uint16_t retval;
+	int16_t retval;
 
 	if ((mode & 07) && !ugetc(path)) {
 		udata.u_error = ENOENT;
