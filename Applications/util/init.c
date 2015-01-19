@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 
+
 char *argp[] = { "sh", NULL };
 
 #define crlf   write(1, "\n", 1)
@@ -24,7 +25,7 @@ void backoff(int);
 int main(int argc, char *argv[])
 {
     int fdtty1, sh_pid, pid;
-
+    char* rc_arg={"/etc/rc",NULL};
     signal(SIGINT, SIG_IGN);
 
     /* remove any stale /etc/mtab file */
@@ -48,6 +49,8 @@ int main(int argc, char *argv[])
 
     putstr("init version 0.8.1ac\n");
     
+    if (pid=fork()) execve("/bin/sh",rc_arg,NULL);
+    else waitpid(pid,NULL,0);
     /* then call the login procedure on it */
 
     for (;;) {
