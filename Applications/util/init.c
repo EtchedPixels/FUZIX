@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <sys/wait.h>
 
 
 char *argp[] = { "sh", NULL };
