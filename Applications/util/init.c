@@ -26,7 +26,7 @@ void backoff(int);
 int main(int argc, char *argv[])
 {
     int fdtty1, sh_pid, pid;
-    char* rc_arg·[]={"/etc/rc",NULL};
+    char* rc_arg·[]={"sh","/etc/rc",NULL};
     signal(SIGINT, SIG_IGN);
 
     /* remove any stale /etc/mtab file */
