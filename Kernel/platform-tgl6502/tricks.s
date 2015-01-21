@@ -82,7 +82,7 @@ _switchin:
 	; CPU
 	sta	switch_proc_ptr
 	stx	switch_proc_ptr+1
-	jsr	outxa
+;	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
 ;	pha
