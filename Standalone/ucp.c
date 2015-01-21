@@ -48,7 +48,7 @@ int main(argc, argval)
     char *argval[];
 {
     int  rdev;
-    char cmd[30], arg1[30], arg2[30], arg3[30];
+    char cmd[30], arg1[1024], arg2[30], arg3[30];
     int  count;
     int  interactive;
     int  pending_line = 0;
