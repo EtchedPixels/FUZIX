@@ -3,9 +3,35 @@ By Will Sowerbutts <will@sowerbutts.com>
 
 Assumes a P112 fitted with 1024KB RAM and G-IDE
 
-Only supported storage device at this time is the G-IDE
+Supported hardware:
+ - Real time clock
+ - SMC floppy disk drive controller
+ - G-IDE hard disk drive controller
+ - First serial port (ESCC channel A, tty0)
 
-To build, edit ../Makefile to read:
+To build the kernel, edit the CPU and TARGET lines in Kernel/Makefile to read:
+    export TARGET=p112
+    export CPU=z180
+Then run "make clean; make all" in the "Kernel" directory.
 
-export TARGET= p112
-export CPU = z180
+There are two ways to boot the system.
+
+The file "Kernel/platform-p112/fuzix.com" is a CP/M executable which will load
+and boot the Fuzix kernel from within CP/M on the P112. This works well,
+however the kernel is now starting to get quite large and may be too large for
+CP/M to load.
+
+The file "Kernel/platform-p112/fuzix-boot.fdd" can be used to make a bootable
+floppy disk. Write the file to the first few tracks of a floppy disk, then put
+it in the first floppy drive and tell the P112 ROM to boot from floppy (for
+example by typing "Z1" in the P112 ROM monitor). This will load and boot the
+kernel, and does not suffer from the same kernel size restrictions as the CP/M
+loading method. To write the fuzix-boot.fdd file to a floppy under Linux you
+can use dd as follows;
+  dd if=fuzix-boot.fdd bs=512 of=/dev/fd0
+
+The resulting floppy disk can currently be used only for the kernel, a separate
+floppy disk or IDE hard disk must be used to hold the root file system. In the
+future it should be possible to port the UZI-180 "insboot" program so that the
+floppy boot sector can read the kernel directly out of a Fuzix file system on
+the floppy disk.

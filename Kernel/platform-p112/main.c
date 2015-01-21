@@ -4,6 +4,9 @@
 #include <devtty.h>
 #include <z180.h>
 #include "config.h"
+#ifdef CONFIG_P112_FLOPPY
+#include "devfd.h"
+#endif
 
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
@@ -15,6 +18,10 @@ void z180_timer_interrupt(void)
     /* we have to read both of these registers in order to reset the timer */
     a = TIME_TMDR0L;
     a = TIME_TCR;
+
+#ifdef CONFIG_P112_FLOPPY
+    fd_tick();
+#endif
 
     timer_interrupt();
 }

@@ -36,12 +36,9 @@ init_early:
         ld a, #0x0c
         out0 (0x92), a
 
-        ; unmap ROM
-        xor a
-        out0 (Z182_ROMBR), a
-
+        ; Z80182: disable ROM, entire physical address space maps to RAM
         in0 a, (Z182_SYSCONFIG)
-        or #0x08            ; disable ROM chip select (is this required as well as setting Z182_ROMBR?)
+        set 3, a
         out0 (Z182_SYSCONFIG), a
 
         jp z180_init_early

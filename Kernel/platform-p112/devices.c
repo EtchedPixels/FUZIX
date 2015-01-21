@@ -7,12 +7,19 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <ds1302.h>
+#ifdef CONFIG_P112_FLOPPY
+#include "devfd.h"
+#endif
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 /*   open	    close	read		write		ioctl */
   {  blkdev_open,   no_close,	blkdev_read,	blkdev_write,	blkdev_ioctl },	/* 0: /dev/hd -- standard block device interface */
+#ifdef CONFIG_P112_FLOPPY
+  {  fd_open,	    fd_close,	fd_read,	fd_write,	no_ioctl },	/* 1: /dev/fd -- floppy drive */
+#else
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl },	/* 1: unused slot */
+#endif
   {  tty_open,	    tty_close,	tty_read,	tty_write,	tty_ioctl },	/* 2: /dev/tty -- serial ports */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl },	/* 3: unused slot */
   {  no_open,	    no_close,	sys_read,	sys_write,	sys_ioctl  },	/* 4: /dev/mem etc	System devices (one offs) */

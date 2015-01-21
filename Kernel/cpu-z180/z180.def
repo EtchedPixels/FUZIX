@@ -71,7 +71,9 @@ PORT_C_DDR                  .equ 0xDD                   ; Port C data direction 
 PORT_C_DATA                 .equ 0xDE                   ; Port C data register
 
 Z182_SYSCONFIG              .equ 0xEF                   ; System Configuration Register
-Z182_ROMBR                  .equ 0xE8                   ; ROMBR register
+Z182_RAMUBR                 .equ 0xE6                   ; RAM upper boundary register
+Z182_RAMLBR                 .equ 0xE7                   ; RAM lower boundary register
+Z182_ROMBR                  .equ 0xE8                   ; ROM boundary register
 
 ; Debugging
 DEBUGBANK   .equ 0
