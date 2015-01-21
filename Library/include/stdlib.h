@@ -62,11 +62,8 @@ extern int putenv __P((char *));
 extern int setenv __P((char *, char *, int));
 extern void unsetenv __P((char *));
 
-typedef void (*atexit_t) __P((int));
-typedef void (*onexit_t) __P((int, void *));
+typedef void (*atexit_t) __P((void));
 extern int atexit __P((atexit_t));
-extern int on_exit __P((onexit_t, void *arg));
-extern onexit_t __cleanup;
 
 extern char *crypt __P((char *__key, char *__salt));
 

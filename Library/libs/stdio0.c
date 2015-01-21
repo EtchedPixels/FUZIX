@@ -26,7 +26,7 @@ FILE stderr[1] = {
 
 /* Call the stdio initialiser; it's main job it to call atexit */
 
-STATIC void __stdio_close_all(VOID)
+STATIC void __stdio_close_all(void)
 {
 	FILE *fp = __IO_list;
 
