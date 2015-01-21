@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+        echo "Syntax: $0 filename isize bsize"
+        echo ""
+        echo "For a 1.44MB floppy disk, use isize=64, bsize=2880"
+        echo "For a 32MB (or larger) hard disk, use isize=256, bsize=65535"
+        exit 1
+fi
+
+../mkfs $1 $2 $3
+../ucp $1 < ucp-script.txt
+../fsck $1
