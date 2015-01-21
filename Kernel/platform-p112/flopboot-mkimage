@@ -1,0 +1,33 @@
+#!/usr/bin/env python
+
+import sys
+
+def load_bootstrap(filename):
+    f = open(filename, 'rb')
+    f.seek(0xF800)
+    return f.read(512)
+
+def stamp_bootstrap(sector, kernel):
+    # trim off dummy configuration
+    sector = sector[:510]
+
+    # penultimate byte is number of sectors to load
+    sector += chr( (len(kernel)+511)/512 )
+
+    # compute the final byte (checksum, verified by the ROM)
+    b = sum(ord(c) for c in sector)
+    sector += chr(-b & 0xff)
+
+    return sector
+
+# load the floppy boot sector
+bootstrap = load_bootstrap(sys.argv[1])
+
+# load the kernel image
+kernel = open(sys.argv[2], 'rb').read()
+
+# make the boot image
+image = stamp_bootstrap(bootstrap, kernel) + kernel
+
+# write output file
+open(sys.argv[3], 'wb').write(image)
