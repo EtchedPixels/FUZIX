@@ -7,7 +7,7 @@ Supported hardware:
  - Real time clock
  - SMC floppy disk drive controller
  - G-IDE hard disk drive controller
- - First serial port (ESCC channel A, tty0)
+ - First serial port (ESCC channel A, tty1)
 
 To build the kernel, edit the CPU and TARGET lines in Kernel/Makefile to read:
     export TARGET=p112
@@ -35,3 +35,6 @@ floppy disk or IDE hard disk must be used to hold the root file system. In the
 future it should be possible to port the UZI-180 "insboot" program so that the
 floppy boot sector can read the kernel directly out of a Fuzix file system on
 the floppy disk.
+
+When booting the system from CP/M you can specify the root filesystem device
+number on the command line after the command name.

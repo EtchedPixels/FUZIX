@@ -12,7 +12,7 @@ CROSS_CCOPTS += -I../dev/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
-all:	$(OBJS)
+all:	$(OBJS) diskboot.bin
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
@@ -24,9 +24,14 @@ $(DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader
+	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader diskboot.bin
 
 z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
+
+diskboot.bin:	diskboot.s
+	$(CROSS_AS) $(ASOPTS) diskboot.s
+	sdldz80 -nmi diskboot.rel
+	makebin -s 65536 diskboot.ihx | dd bs=512 skip=125 count=1 of=diskboot.bin
 
 image:
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
