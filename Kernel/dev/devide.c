@@ -198,7 +198,7 @@ static void devide_init_drive(uint8_t drive)
     ide_reg_devhead = select;
     ide_reg_control = 0x06; /* assert reset, no interrupts */
     devide_delay();
-    ide_reg_control = 0x02; /* release reset, no interruptst */
+    ide_reg_control = 0x02; /* release reset, no interrupts */
     devide_delay();
     if(!devide_wait(IDE_STATUS_READY))
         return;
@@ -218,6 +218,7 @@ static void devide_init_drive(uint8_t drive)
         return;
 
     /* send identify command */
+    ide_reg_devhead = select;
     ide_reg_command = IDE_CMD_IDENTIFY;
 
     /* allocate temporary sector buffer memory */
