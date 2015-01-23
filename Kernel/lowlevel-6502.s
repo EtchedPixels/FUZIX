@@ -10,6 +10,7 @@
 	.export outnewline
 	.export outcharhex
 	.export outxa
+	.export stash_zp
 
 	.import outchar
 	.import _kernel_flag
@@ -88,7 +89,7 @@ _doexec:
 ;	properly restored!
 ;
 interrupt_handler:
-	jsr stash_zp			; Save zero page bits
+; Our caller will deal with ZP via stash_sp and any platform magic
 	jsr map_save
 	jsr map_kernel
 	lda #1
@@ -103,7 +104,6 @@ interrupt_handler:
 interrupt_k:
 	jsr map_restore
 int_switch:
-	jsr stash_zp			; Zero page stuff reverse
 	lda #0
 	sta _inint
 	rts

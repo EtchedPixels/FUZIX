@@ -35,6 +35,8 @@
 	    .import _unix_syscall
 	    .import _platform_interrupt
 	    .import _kernel_flag
+	    .import stash_zp
+	    .import pushax
 
 	    .import outcharhex
 	    .import outxa
@@ -307,13 +309,6 @@ outchar:
 ;	we can use the shorter one for the CMOS chip
 ;
 vector:
-	    lda #')'
-	    sta $FF03
-	    pla
-	    tax
-	    pla
-	    jsr outxa
-	    jmp _trap_monitor
 	    pha
 	    txa
 	    pha
@@ -321,12 +316,12 @@ vector:
 	    pha
 	    cld
 ;
+;	Q: do we want to spot brk() instructions and signal them ?
+;
+;
 ;	Save the old stack ptr
 ;
-	    lda sp				; put the C stack 
-	    pha					; on the 6502 stack
-	    lda sp+1
-	    pha
+	    jsr stash_zp			; Save zero page bits
 	    tsx					; and save the 6502 stack ptr
 	    stx istack_switched_sp		; in uarea/stacks
 ;
@@ -347,18 +342,61 @@ vector:
 ;
 	    ldx istack_switched_sp
 	    txs					; recover 6502 stack
-	    pla					; recover C stack
-	    sta sp+1				; from 6502 stack
-	    pla
-	    sta sp+1
+	    jsr stash_zp			; restore zero page bits
+;
+;	Signal handling on 6502 is foul as the C stack may be inconsistent
+;	during an IRQ. We push a new complete rti frame below the official
+;	one, along with a vector and the signal number. The glue in the
+;	app is expected to switch to a signal stack or similar, pop the
+;	values, invoke the signal handler and then return.
+;
+;	FIXME: at the moment the irqout path will not check for multiple
+;	signals so the next one gets delivered next irq.
+;
+;
+	    lda U_DATA__U_CURSIG
+	    beq irqout
+	    tay
+	    tsx
+	    txa
+	    sec
+	    sbc #6			; move down past the existing rti
+	    tax
+	    txs
+	    lda #>irqout
+	    pha
+	    lda #<irqout
+	    pha				; stack a return vector
+	    tya
+	    pha				; stack signal number
+	    ldx #0
+	    stx U_DATA__U_CURSIG
+	    asl a
+	    tay
+	    lda U_DATA__U_SIGVEC,y	; Our vector (low)
+	    pha				; stack half of vector
+	    lda U_DATA__U_SIGVEC+1,y	; High half
+	    pha				; stack rest of vector
+	    txa
+	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta U_DATA__U_SIGVEC+1,y
+	    lda #<PROGLOAD + 20
+	    pha
+	    lda #>PROGLOAD + 20
+	    lda #0
+	    pha				; dummy flags, with irq enable
+	    rti	    			; return on the fake frame
+					; if the handler returns
+					; rather than doing a longjmp
+					; we'll end up at irqout and pop the
+					; real frame
 irqout:
 	    pla
-	    tya
+	    tay
 	    pla
-	    txa
+	    tax
 	    pla
 	    rti
-
 ;
 ;	    sp/sp+1 are the C stack of the userspace
 ;	    with the syscall number in X
@@ -455,10 +493,63 @@ noargs:
 	    sta sp+1
 	    pla
 	    sta sp
-;
-;	FIXME: do signal dispatch - this will need C stack fixing, and
-;	basically signal dispatch is __interrupt.
-;
+	    lda U_DATA__U_CURSIG
+	    beq syscout
+	    tay
+
+	    tsx				; Move past existing return stack
+	    dex
+	    dex
+	    dex
+	    txs
+
+	    ;
+	    ;	The signal handler might make syscalls so we need to get
+	    ;	our return saved and return the right value!
+	    ;
+	    lda U_DATA__U_ERROR
+	    pha
+	    lda U_DATA__U_RETVAL
+	    pha
+	    lda U_DATA__U_RETVAL+1
+	    pha
+	    lda #>sigret		; Return address
+	    pha
+	    lda #<sigret
+	    pha
+
+	    tya
+	    pha				; signal
+	    ldx #0
+	    stx U_DATA__U_CURSIG
+	    asl a
+	    tay
+	    lda U_DATA__U_SIGVEC,y	; Our vector
+	    pha
+	    lda U_DATA__U_SIGVEC+1,y
+	    pha
+	    txa
+	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta U_DATA__U_SIGVEC+1,y
+
+	    ; Invoke the helper with signal and vector stacked
+	    ; it will then return to syscout and recover the original
+	    ; frame. If the handler made syscalls then
+	    jmp (PROGLOAD + 20)
+
+	    ;
+	    ; FIXME: should loop for more signals if appropriate
+	    ;
+sigret:
+	    pla		; Unstack the syscall return pieces
+	    tax
+	    pla
+	    tay
+	    pla
+	    plp		; from original stack frame
+	    rts
+
+syscout:
 ;	We may be in decimal mode beyond this line.. take care
 ;
 	    plp

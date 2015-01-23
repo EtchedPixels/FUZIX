@@ -33,9 +33,7 @@ extern void irqrestore(irqflags_t f);
 
 extern int16_t strlen(const char *p);
 
-#define	staticfast	static
-
-/* User's structure for times() system call */
+#define	staticfast	static/* User's structure for times() system call */
 typedef unsigned long clock_t;
 
 /* Must match native ordering of long long */

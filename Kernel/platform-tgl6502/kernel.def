@@ -5,3 +5,4 @@ U_DATA                      .set $0200
 ; 256+256+256 bytes.
 U_DATA__TOTALSIZE           .set $300        
 
+PROGLOAD		    .set $2000
