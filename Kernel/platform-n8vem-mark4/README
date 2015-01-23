@@ -1,11 +1,53 @@
 This is Fuzix for the N8VEM Mark IV SBC
 By Will Sowerbutts <will@sowerbutts.com>
 
-Assumes an N8VEM Mark IV SBC fitted with 512KB RAM, with the RS232 port as
-tty1, and the RS422 port as tty2. Does not yet support any ECB peripheral
-boards. On-board IDE and SD mass storage interfaces are both supported.
+Supported hardware:
+ - Real time clock
+ - IDE interface
+ - SD interface
+ - RS232 serial port (ASCI channel 0, tty1)
+ - RS422 serial port (ASCI channel 1, tty2)
+ - PropIO V2 serial port (tty3, optional)
 
-To build, edit ../Makefile to read:
+The PropIO V2 can be enabled by editing config.h and setting PROPIO2_IO_BASE to
+the base IO port address of the board. If enabled, the PropIO will be used as
+the system console.
 
-export TARGET= n8vem-mark4
-export CPU = z180
+To build the kernel, edit the CPU and TARGET lines in Kernel/Makefile to read:
+    export TARGET=n8vem-mark4
+    export CPU=z180
+Then run "make clean; make all" in the "Kernel" directory.
+
+There are two ways to boot the system.
+
+The file "Kernel/platform-n8vem-mark4/fuzix.com" is a CP/M executable which
+will load and boot the Fuzix kernel from within CP/M. This works well, however
+the kernel is now starting to get quite large and may be too large for CP/M to
+load.
+
+The file "Kernel/platform-n8vem-mark4/diskboot.bin" is an UNA BIOS compatible
+boot sector which will allow the system to be booted directly from an IDE or SD
+drive. The boot sector will load the kernel image starting from the third
+sector of the drive.
+
+The kernel image (fuzix.bin) should be written to the disk drive from the third
+sector onwards, in the space before the first partition starts. Be careful to
+ensure there is sufficient space before the first partition to hold the kernel
+or you risk overwriting the filesystem in the first partition! Modern disk
+partitioning programs generally start the first partition at 1MB (sector 2048)
+and thus allow plenty of space.
+
+To check the space before the first partition, use "fdisk -l /dev/sdX" and
+check the value in the "Start" column for the first partition. If this number
+is 128 or larger, there is sufficient space.
+
+To write the boot sector to a disk drive, without overwriting the partition
+table, you can use dd as follows;
+    dd if=diskboot.bin bs=446 count=1 of=/dev/sdX
+
+To write the kernel image to the disk drive, use dd as follows;
+    dd if=fuzix.bin bs=512 seek=2 of=/dev/sdX
+
+When booting the system from both UNA BIOS and CP/M you can specify the root
+filesystem device number on the command line after the command name or unit
+number.
