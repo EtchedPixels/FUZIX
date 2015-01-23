@@ -25,13 +25,17 @@ int clock_gettime(clockid_t clk_id, struct timespec *res)
 {
   int r;
   unsigned long d;
+  __ktime_t tmp;
+
   res->tv_nsec = 0;
   switch(clk_id) {
   case CLOCK_REALTIME:
-    _time(&res->tv_sec, 0);
+    _time(&tmp, 0);
+    res->tv_sec = tmp.time;
     return 0;
   case CLOCK_MONOTONIC:
-    _time(&res->tv_sec, 1);
+    _time(&tmp, 1);
+    res->tv_sec = tmp.time;
     d = res->tv_sec;
     /* We know that this wraps at 2^32 ticks which also means we know
        it'll fit 32bits */

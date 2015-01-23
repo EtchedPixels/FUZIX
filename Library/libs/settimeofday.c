@@ -7,7 +7,7 @@ int settimeofday(struct timeval *tv, const struct timezone *tz)
 {
   int ret = 0;
   if (tv) {
-    ret = _stime(&tv->tv_sec, 0);
+    ret = stime(&tv->tv_sec);
   }
   return ret;
 }

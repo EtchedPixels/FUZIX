@@ -31,7 +31,7 @@ char *syscall_name[NR_SYSCALL] = {
 	"setuid",
 	"setgid",
 	"_time",
-	"stime",
+	"_stime",
 	"ioctl",
 	"brk",
 	"sbrk",

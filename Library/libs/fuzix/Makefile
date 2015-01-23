@@ -33,7 +33,7 @@ ASRCS += syscall__getdirent.s
 ASRCS += syscall_setuid.s
 ASRCS += syscall_setgid.s
 ASRCS += syscall__time.s
-ASRCS += syscall_stime.s
+ASRCS += syscall__stime.s
 ASRCS += syscall_ioctl.s
 ASRCS += syscall_brk.s
 ASRCS += syscall_sbrk.s
@@ -66,6 +66,8 @@ ASRCS += syscall_uadmin.s
 ASRCS += syscall_nice.s
 ASRCS += syscall__sigdisp.s
 ASRCS += syscall_flock.s
+ASRCS += syscall_getpgrp.s
+ASRCS += syscall_yield.s
 
 
 ASRCALL = $(ASRCS) $(ASYS)

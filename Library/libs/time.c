@@ -8,11 +8,11 @@
  */
 time_t time(time_t *t)
 {
-  time_t tmp;
-  if (t) {
-    _time(t, 0);
-    return *t;
-  }
+  static time_t tr;
+  __ktime_t tmp;
   _time(&tmp, 0);
-  return tmp;
+  tr = tmp.time;
+  if (t)
+    *t = tr;
+  return tr;
 }
