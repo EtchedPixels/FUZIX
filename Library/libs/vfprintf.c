@@ -177,10 +177,10 @@ int vfprintf(FILE * op, const char *fmt, va_list ap)
 				/* fall thru */
 
 			case 'u':	/* Unsigned decimal */
-			      usproc:val = lval ? va_arg(ap, unsigned long) :
-				    va_arg(ap,
-					   unsigned short);
-				ptmp = __ultostr(val, radix);
+			usproc:
+				val = lval ? va_arg(ap, unsigned long) :
+				    va_arg(ap, unsigned short);
+				ptmp = __ultostr(val, radix < 0 ? -radix : radix);
 				add = "";
 				if (hash) {
 					if (radix == 2)
