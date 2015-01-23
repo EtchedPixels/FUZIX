@@ -108,7 +108,8 @@ int16_t _mknod(void)
 	}
 
 	filename(name, fname);
-	if ((ino = newfile(parent, fname)) != NULL)
+	ino = newfile(parent, fname);
+	if(!ino)
 		goto nogood3;	/* parent inode is derefed in newfile. SN */
 
 	/* Initialize mode and dev */
