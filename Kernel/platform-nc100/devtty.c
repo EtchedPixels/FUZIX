@@ -86,15 +86,6 @@ void kputchar(char c)
 	tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
-{
-	uint8_t c;
-	if (minor == 1)
-		return 1;
-	c = uartb;
-	return c & 1;
-}
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
@@ -102,6 +93,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		vtoutput(&c, 1);
 		return;
 	}
+	while(!(uartb & 1));
 	uarta = c;
 }
 
@@ -281,8 +273,6 @@ void platform_interrupt(void)
 	uint8_t a = irqmap;
 	uint8_t c;
 	if (!(a & 4)) {
-		/* FIXME: need to check uart itself to see wake cause */
-		wakeup(&ttydata[2]);
 		/* work around sdcc bug */
 		c = uarta;
 		tty_inproc(2, c);
@@ -324,8 +314,6 @@ void platform_interrupt(void)
 {
 	uint8_t a = irqmap;
 	uint8_t c;
-	if (!(a & 2))
-		wakeup(&ttydata[2]);
 	if (!(a & 1)) {
 		/* work around sdcc bug */
 		c = uarta;

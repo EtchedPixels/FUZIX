@@ -195,7 +195,6 @@ extern CODE1 void tty_putc_wait(uint8_t minor, unsigned char c);
 
 /* provided by platform */
 extern struct s_queue ttyinq[NUM_DEV_TTY + 1];
-extern CODE2 bool tty_writeready(uint8_t minor);
 extern CODE2 void tty_putc(uint8_t minor, unsigned char c);
 extern CODE2 void tty_setup(uint8_t minor);
 extern CODE2 int tty_carrier(uint8_t minor);

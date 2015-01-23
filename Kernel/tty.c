@@ -25,6 +25,18 @@
 
 struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 
+#ifdef CONFIG_DEV_PTY
+void tty_putc_demux(uint8_t minor, unsigned char c)
+{
+	if (minor >= PTY_OFFSET)
+		pty_putc(minor, c);
+	else
+		tty_putc(minor, c);
+}
+#else
+#define tty_putc_demux(m,c) tty_putc(m,c)
+#endif
+
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	uint16_t nread;
@@ -132,11 +144,11 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 			if (t->termios.c_oflag & OPOST) {
 				if (c == '\n' && (t->termios.c_oflag & ONLCR))
-					tty_putc_wait(minor, '\r');
+					tty_putc_demux(minor, '\r');
 				else if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
-			tty_putc_wait(minor, c);
+			tty_putc_demux(minor, c);
 		}
 		++udata.u_base;
 	}
@@ -331,7 +343,7 @@ sigout:
 	if (wr)
 		tty_echo(minor, c);
 	else if (minor < PTY_OFFSET)
-		tty_putc_wait(minor, '\007');	/* Beep if no more room */
+		tty_putc_demux(minor, '\007');	/* Beep if no more room */
 
 	if (!canon || c == t->termios.c_cc[VEOL] || c == '\n'
 	    || c == t->termios.c_cc[VEOF])
@@ -361,30 +373,16 @@ void tty_outproc(uint8_t minor)
 void tty_echo(uint8_t minor, unsigned char c)
 {
 	if (ttydata[minor].termios.c_lflag & ECHO)
-		tty_putc_wait(minor, c);
+		tty_putc_demux(minor, c);
 }
 
 void tty_erase(uint8_t minor)
 {
-	tty_putc_wait(minor, '\b');
-	tty_putc_wait(minor, ' ');
-	tty_putc_wait(minor, '\b');
+	tty_putc_demux(minor, '\b');
+	tty_putc_demux(minor, ' ');
+	tty_putc_demux(minor, '\b');
 }
 
-
-void tty_putc_wait(uint8_t minor, unsigned char c)
-{
-#ifdef CONFIG_DEV_PTY
-	if (minor >= PTY_OFFSET)
-		ptty_putc_wait(minor, c);
-	else
-#endif
-	if (!udata.u_ininterrupt) {
-		while (!tty_writeready(minor))
-			psleep(&ttydata[minor]);
-	}
-	tty_putc(minor, c);
-}
 
 void tty_hangup(uint8_t minor)
 {
@@ -501,7 +499,7 @@ int pty_ioctl(uint8_t minor, uint16_t request, char *data)
 	return tty_ioctl(minor + PTY_OFFSET, rawflag, flag);
 }
 
-void pty_putc_wait(uint8_t minor, char c)
+void pty_putc(uint8_t minor, char c)
 {
 	struct s_queue q = &ptyq[minor + PTY_OFFSET + PTY_PAIR];
 	/* tty output queue to pty */

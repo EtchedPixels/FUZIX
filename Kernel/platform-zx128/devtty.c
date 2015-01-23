@@ -59,13 +59,6 @@ void kputchar(char c)
 	tty_putc(0, c);
 }
 
-/* Both console and debug port are always ready */
-bool tty_writeready(uint8_t minor)
-{
-	minor;
-	return 1;
-}
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;

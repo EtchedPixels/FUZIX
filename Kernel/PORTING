@@ -290,11 +290,6 @@ Copy the struct s_queue from another filled in for your devices/buffers.
 
 Provide putchar(c) if it is not already provided by your asm code
 
-bool tty_writeready(uint8_t minor)
-
-Returns true fi you can write bytes to this port (1..n). For things like
-video consoles just return true
-
 void tty_putc(uint8_t minor, char c)
 
 Write a character to the tty minor
