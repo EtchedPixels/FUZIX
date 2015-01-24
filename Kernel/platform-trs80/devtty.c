@@ -29,23 +29,14 @@ void kputchar(char c)
     tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
-{
-    uint8_t reg;
-    if (minor == 1)
-        return 1;
-    reg = tr1865_status;
-    if (reg & 0x40)
-        return 1;
-    return 0;
-}
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
     if (minor == 1)
         vtoutput(&c, 1);
-    if (minor == 2)
+    if (minor == 2){
+	while(!(tr1865_status & 0x40));
         tr1865_rxtx = c;
+    }
 }
 
 void tty_interrupt(void)

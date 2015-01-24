@@ -11,7 +11,6 @@
             .globl interrupt_handler
             .globl _program_vectors
             .globl _tty_putc
-            .globl _tty_writeready
             .globl _tty_outproc
 	    .globl map_kernel
 	    .globl map_process
@@ -205,32 +204,6 @@ init_hardware:
             pop hl
 
             im 1 ; set CPU interrupt mode
-            ret
-
-
-; tty_writeready(uint8_t minor, uint8_t char)
-_tty_writeready:
-            ; stack has: return address, minor
-            ;                   0 1      2    
-            ; set HL to point to character on stack
-            ld hl, #2
-            add hl,sp
-            ld a, (hl) ; load tty device minor number
-            cp #1
-            jr z, uart0wr
-            cp #2
-            jr z, uart1wr
-            call _trap_monitor
-            ret ; not a console we recognise
-uart1wr:    in a, (UART1_STATUS)
-            jr testready
-uart0wr:    in a, (UART0_STATUS)
-            ; fall through
-testready:  bit 6, a ; transmitter busy?
-            jr nz, notready ; 0=idle, 1=busy
-            ld l, #1
-            ret
-notready:   ld l, #0
             ret
 
 

@@ -70,14 +70,6 @@ static void dartwr(uint8_t minor, uint8_t r, uint8_t v)
     irqrestore(irq);
 }
 
-bool tty_writeready(uint8_t minor)
-{
-    if (minor == 1)
-        return 1;	/* VT */
-    else
-        return dartrr(minor, 0) & 4;
-}
-
 extern void bugout(uint16_t c);
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -85,8 +77,12 @@ void tty_putc(uint8_t minor, unsigned char c)
     if (minor == 1) {
         bugout(c);
         vtoutput(&c, 1);
+	return;
     }
-    else if (minor == 2)
+
+    while(!(dartrr(minor, 0) & 4));
+
+    if (minor == 2)
         dart0d = c;
     else
         dart1d = c;
