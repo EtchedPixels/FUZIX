@@ -19,7 +19,7 @@
  *	We've got 128K - 8 banks of 16K, of which the kernel eats one for data
  *	(Kernel code is in the ROM banks which are separate)
  */
-#define CONFIG_BANK16
+#define CONFIG_BANK16_LOW
 #define MAX_MAPS 7
 
 #if 0
@@ -34,6 +34,7 @@
 #endif
 
 #define TICKSPERSEC 10	    /* Ticks per second */
+#define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x2000  /* also data base */
 #define PROGLOAD    0x2000
 #define PROGTOP     0xC000  /* Top of program (for debug for now, can go to 10000) */

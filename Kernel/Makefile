@@ -99,7 +99,7 @@ C1SRCS += inode.c tty.c
 #
 C2SRCS =  syscall_proc.c syscall_fs.c
 C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c process.c
-C2SRCS += simple.c single.c bank16k.c bank32k.c bankfixed.c
+C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c
 #
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well

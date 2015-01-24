@@ -24,7 +24,7 @@ void do_beep(void)
 
 void pagemap_init(void)
 {
-    /* Really 8K banks 0,1,2,... but we pair them up so we have
+    /* Really 8K banks 0,1,2,... but we pair them up so we have */
     /* 8 x 16 banks numbered 0,2,4,.... , 0 is the kernel, init starts in 2 */
     pagemap_add(14);
     pagemap_add(12);
@@ -37,4 +37,6 @@ void pagemap_init(void)
 
 void map_init(void)
 {
+    udata.u_page = 0x0202;
+    udata.u_page2 = 0x0202;
 }
