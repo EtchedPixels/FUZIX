@@ -25,36 +25,30 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	int c = udata.u_count;
 	char *p = udata.u_base;
-	uint16_t ct;
 
 	minor;
 	rawflag;
 	flag;			// shut up compiler
 
 	while (c-- > 0) {
-		ct = 0;
-
-		/* Try and balance polling and sleeping */
 #ifdef CONFIG_NC200
 		while (lpstat200 & 1) {
 #else
 		while (lpstat & 2) {
 #endif
-			ct++;
-			if (ct == 10000) {
-				udata.u_ptab->p_timeout = 3;
+			if (need_resched()) {
 				if (psleep_flags(NULL, flag)) {
 					if (udata.u_count)
 						udata.u_error = 0;
 					return udata.u_count;
 				}
-				ct = 0;
 			}
 		}
 		/* Data */
 		lpdata = ugetc(p++);
 		/* Strobe */
 		mod_control(0, 0x40);
+		/* Delay a bit more ??? */
 		mod_control(0x40, 0);
 	}
 	return udata.u_count;
