@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%s: too short ?\n", argv[0]);
     exit(1);
   }
-  if (buf[0] != 0xC3 || buf[3] != 'F' || buf[4] != 'Z'|| buf[5] != 'X' ||
+  /* FIXME : add 6809 but remember its big endian! */
+  if ((buf[0] != 0x4C && buf[0] != 0xC3) || buf[3] != 'F' || buf[4] != 'Z'|| buf[5] != 'X' ||
     buf[6] != '1') {
     fprintf(stderr, "%s: not a Fuzix binary format.\n", argv[1]);
     exit(1);
