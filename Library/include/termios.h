@@ -17,36 +17,38 @@ struct termios {
   cc_t c_cc[NCCS];
 };
 
-#define VEOF	0
-#define VEOL	1
-#define VERASE	2
-#define VINTR	3
-#define VKILL	4
-#define VMIN	4
-#define VQUIT	5
-#define VSTART	6
-#define VSTOP	7
-#define VSUSP	8
-#define VTIME	9
-#define VDSUSP	10
-#define VLNEXT	11
+#define VMIN		0	/* Supported */
+#define VEOF		0	/* Supported */
+#define VTIME		1
+#define VEOL		1	/* partial - FIXME, EOF in input */
+#define VERASE		2	/* Supported */
+#define VINTR		3	/* Supported */
+#define VKILL		4	/* Supported */
+#define VQUIT		5	/* Supported */
+#define VSTART		6	/* Supported */
+#define VSTOP		7	/* Supported */
+#define VSUSP		8
+#define VDSUSP		9
+#define VLNEXT		10
+#define VDISCARD	11	/* Supported */
 
 #define BRKINT	0x0001
-#define ICRNL	0x0002
+#define ICRNL	0x0002	/* Supported */
 #define IGNBRK	0x0004
 #define IGNCR	0x0008
 #define IGNPAR	0x0010
-#define INLCR	0x0020
+#define INLCR	0x0020	/* Supported */
 #define INPCK	0x0040
-#define ISTRIP	0x0080
+#define ISTRIP	0x0080	/* Supported */
 #define IUCLC	0x0100
 #define IXANY	0x0200
 #define IXOFF	0x0400
 #define PARMRK	0x0800
+#define IXON	0x1000
 
-#define OPOST	0x0001
+#define OPOST	0x0001	/* Supported */
 #define OLCUC	0x0002
-#define ONLCR	0x0004
+#define ONLCR	0x0004	/* Supported */
 #define OCRNL	0x0008
 #define ONLRET	0x0010
 #define OFILL	0x0020
@@ -104,13 +106,13 @@ struct termios {
 #define CRTSCTS 0x1000
 #define CBAUD	0x000F
 
-#define ECHO	0x0001
-#define ECHOE	0x0002
-#define ECHOK	0x0004
+#define ECHO	0x0001	/* Supported */
+#define ECHOE	0x0002	/* Supported */
+#define ECHOK	0x0004	/* Supported */
 #define ECHONL	0x0008
-#define ICANON	0x0010
+#define ICANON	0x0010	/* Supported */
 #define IEXTEN	0x0020
-#define ISIG	0x0040
+#define ISIG	0x0040	/* Supported */
 #define NOFLSH	0x0080
 #define TOSTOP	0x0100
 #define XCASE	0x0200
