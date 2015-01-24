@@ -81,6 +81,8 @@
 
 #define TSTOP_DEF	'\23'	/* ^S */
 
+#define TDISCARD_DEF	'\30'	/* ^X */
+
 #define TMIN_DEF	1
 
 #define TTIME_DEF	0
