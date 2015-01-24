@@ -379,9 +379,13 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
 		ptty_putc_wait(minor, c);
 	else
 #endif
+        /* For slower platforms it's not worth the task switching and return
+           costs versus waiting a bit. A box with tx interrupts and sufficient
+           performance can buffer or sleep in in tty_putc instead. */
 	if (!udata.u_ininterrupt) {
 		while (!tty_writeready(minor))
-			psleep(&ttydata[minor]);
+		        if (need_resched())
+				psleep(&ttydata[minor]);
 	}
 	tty_putc(minor, c);
 }
