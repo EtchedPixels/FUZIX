@@ -240,31 +240,33 @@ _dofork:
 ;	number.
 ;
 fork_copy:
-	ldx U_DATA__U_PAGE
 	ldy #P_TAB__P_PAGE_OFFSET
-	lda (ptr1),y		; child->p_page
-	tay
-	lda #0			; each bank is 56K
+	ldx #0
+	stx tmp1		; last bank copied (to spot end mark dups)
 copy_loop:
-	stx $FF8C		; 0x4000
-	sty $FF8D		; 0x6000
-	pha			; Oh for a 65C02 8)
+	lda U_DATA__U_PAGE,x
+	sta $FF8C		; 0x4000
+	cmp tmp1		; last map ?
+	beq done_early		; repeating page -> end of a shorter process
+	lda (ptr1),y		; child->p_pag[n]
+	sta $FF8D		; 0x6000
 	tya
 	pha
 	txa
 	pha
 	jsr bank2bank		; copies 8K
+	inc $FF8C		; next 8K
+	inc $FF8D
+	jsr bank2bank
 	pla
 	tax
 	pla
 	tay
-	pla
-	inx
 	iny
-	clc
-	adc #1
-	cmp #7
+	inx
+	cpx #4
 	bne copy_loop
+done_early:
 	jmp map_kernel		; put the kernel mapping back as it should be
 	
 bank2bank:			;	copy 4K between the blocks mapped

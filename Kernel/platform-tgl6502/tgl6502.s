@@ -229,13 +229,27 @@ map_kernel:
 ; X,A holds the map table of this process
 map_process_2:
 	    sta ptr1
+	    stx ptr1+1
 	    tya
 	    pha
-	    stx ptr1+1
 	    ldy #0
 	    lda (ptr1),y	; 4 bytes if needed
-	    tax
-	    jsr restore_bits
+	    clc
+	    adc #1
+	    sta $FF8B		; 0x2000 takes on the upper half of the map
+	    ldy #1
+	    ldx #0
+map_proc_l:
+	    lda (ptr1),y	; do pages 1-3 as maps 2-7
+	    sta $FF8C,x
+	    inx
+	    clc
+	    adc #1
+	    sta $FF8C,x
+	    inx
+	    iny
+	    cpy #4
+	    bne map_proc_l
 	    pla
 	    tay
 	    rts
@@ -249,8 +263,26 @@ map_restore:
 	    pha
 	    txa
 	    pha
-	    ldx saved_map
-	    jsr restore_bits
+	    tya
+	    pha
+	    ldx saved_map	; First bank we skip half of
+	    inx
+	    stx $FF8B		; 0x2000 takes on the upper half of the map
+	    ldy #1
+	    ldx #0
+restore_n:
+	    lda saved_map,y	; do pages 1-3 as maps 2-7
+	    sta $FF8C,x
+	    inx
+	    clc
+	    adc #1
+	    sta $FF8C,x
+	    inx
+	    iny
+	    cpy #4
+	    bne restore_n
+	    pla
+	    tay
 	    pla
 	    tax
 	    pla
@@ -284,12 +316,21 @@ restore_bits:
 ;
 map_save:
 	    pha
-	    lda U_DATA__U_PAGE
-	    sta saved_map
+	    tya
+	    pha
+	    ldy #0
+map_save_l:				; save the four entries
+	    lda U_DATA__U_PAGE,y
+	    sta saved_map,y
+	    iny
+	    cpy #4
+	    bne map_save_l 
+	    pla
+	    tay
 	    pla
 	    rts
 
-saved_map:  .byte 0
+saved_map:  .byte 0, 0, 0, 0
 
 ; outchar: Wait for UART TX idle, then print the char in a without
 ; corrupting other registers

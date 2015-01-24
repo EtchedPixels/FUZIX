@@ -14,11 +14,15 @@
 
 #define CONFIG_CALL_R2L		/* Runtime stacks arguments backwards */
 
-/* For now used BANK_FIXED as we don't yet have sane swap with 16K maps */
-#define CONFIG_BANK_FIXED
-#define MAX_MAPS 2
-#define MAP_SIZE 0xE000
+/*
+ *	The banking is really 8K banks but we run with them in pairs
+ *	We've got 128K - 8 banks of 16K, of which the kernel eats one for data
+ *	(Kernel code is in the ROM banks which are separate)
+ */
+#define CONFIG_BANK16
+#define MAX_MAPS 7
 
+#if 0
 /* And swapping */
 #define SWAPDEV 	257	/* FIXME */
 #define SWAP_SIZE   	0x70 	/* 56K in blocks */
@@ -26,11 +30,13 @@
 #define SWAPTOP	    	0xE000	/* vectors so its a round number of sectors */
 /* FIXME: we need to swap the udata separately */
 #define MAX_SWAPS	32
+/* TODO */
+#endif
 
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x2000  /* also data base */
 #define PROGLOAD    0x2000
-#define PROGTOP     0xE000  /* Top of program */
+#define PROGTOP     0xC000  /* Top of program (for debug for now, can go to 10000) */
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 

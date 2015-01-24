@@ -24,9 +24,14 @@ void do_beep(void)
 
 void pagemap_init(void)
 {
-    /* We treat RAM as 2 48K banks + 16K of kernel data */
-    /* 2-8 proc1, 9-15 proc2, 1 kernel data, 0 spare */
-    pagemap_add(9);
+    /* Really 8K banks 0,1,2,... but we pair them up so we have
+    /* 8 x 16 banks numbered 0,2,4,.... , 0 is the kernel, init starts in 2 */
+    pagemap_add(14);
+    pagemap_add(12);
+    pagemap_add(10);
+    pagemap_add(8);
+    pagemap_add(6);
+    pagemap_add(4);
     pagemap_add(2);
 }
 
