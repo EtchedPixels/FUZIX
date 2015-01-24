@@ -324,7 +324,7 @@ map_save_l:				; save the four entries
 	    sta saved_map,y
 	    iny
 	    cpy #4
-	    bne map_save_l 
+	    bne map_save_l
 	    pla
 	    tay
 	    pla
