@@ -230,7 +230,8 @@ testready:  bit 6, a ; transmitter busy?
             jr nz, notready ; 0=idle, 1=busy
             ld l, #1
             ret
-notready:   ld l, #0
+notready:   ld l, #-1	; Don't spin, fast CPU, enormous FIFO
+	    ld h, l
             ret
 
 
