@@ -79,7 +79,7 @@ void mbr_parse(blkdev_t *blk, char letter)
 	seen++;
     }while(lba);
 
-    if(next >= 4)
+    if(ep_offset && next >= 4)
 	kputs("> ");
 
     /* release temporary memory */
