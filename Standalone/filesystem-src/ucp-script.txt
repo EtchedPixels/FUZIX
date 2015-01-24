@@ -2,6 +2,11 @@ cd /
 mkdir bin
 mkdir dev
 mkdir etc
+mkdir tmp
+chmod 0775 bin
+chmod 0775 dev
+chmod 0775 etc
+chmod 01777 tmp
 
 cd /dev
 mknod tty1  20660 513
@@ -84,11 +89,9 @@ mknod proc  20660 1027
 cd /etc
 bget etc-files/issue
 bget etc-files/motd
-bget etc-files/mtab
 bget etc-files/passwd
 chmod 0644 issue
 chmod 0644 motd
-chmod 0644 mtab
 chmod 0644 passwd
 
 cd /
