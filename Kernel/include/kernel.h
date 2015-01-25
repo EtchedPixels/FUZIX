@@ -84,6 +84,7 @@ struct tms {
 #define C_TIME 4
 
 typedef int32_t off_t;	/* 32MB file and fs size limit */
+typedef uint32_t uoff_t;	/* Internal use so we can keep the compiler happy */
 
 typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define NULLBLK ((blkno_t)-1)
@@ -115,7 +116,7 @@ typedef struct dinode {
     uint16_t i_nlink;
     uint16_t i_uid;
     uint16_t i_gid;
-    off_t    i_size;
+    uoff_t    i_size;		/* Never negative */
     uint32_t   i_atime;		/* Breaks in 2038 */
     uint32_t   i_mtime;		/* Need to hide some extra bits ? */
     uint32_t   i_ctime;		/* 24 bytes */
