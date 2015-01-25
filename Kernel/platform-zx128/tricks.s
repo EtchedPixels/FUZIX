@@ -17,7 +17,6 @@
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
-        .globl dispatch_process_signal
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex

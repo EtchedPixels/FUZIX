@@ -1,5 +1,5 @@
 /* Simple IDE interface */
-#define CONFIG_IDE
+//#define CONFIG_IDE
 #define IDE_REG_DATA		0xA3
 #define IDE_REG_ERROR		0xA7
 #define IDE_REG_FEATURES	0xA7
