@@ -15,7 +15,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/hd		Hard disc block devices */
   {  devide_open,  no_close, devide_read,   devide_write,   no_ioctl },
 #else
-  {  no_open,  no_close, no_read,   no_write,   no_ioctl },
+  {  no_open,  no_close, no_rdwr,   no_rdwr,   no_ioctl },
 #endif
   /* 2: /dev/tty	TTY devices */
   {  tty_open,     tty_close,   tty_read,  tty_write,  vt_ioctl },
