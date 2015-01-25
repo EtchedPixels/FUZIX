@@ -19,6 +19,7 @@ extern void irqrestore(irqflags_t f);
 
 /* Z80 binaries start with a JP */
 #define EMAGIC    0xc3    /* Header of executable */
+#define EMAGIC_2  0x18	  /* JR */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
 
