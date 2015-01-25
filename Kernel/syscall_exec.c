@@ -13,6 +13,7 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 		if (blk == NULLBLK)
 			uzero((uint8_t *)base, 512);
 		else {
+#ifdef CONFIG_LEGACY_EXEC
 			buf = bread(i->c_dev, blk, 0);
 			if (buf == NULL) {
 				kprintf("bload failed.\n");
@@ -21,6 +22,17 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			uput(buf, (uint8_t *)base, cp);
 			bufdiscard((bufptr)buf);
 			brelse((bufptr)buf);
+#else
+			/* Might be worth spotting sequential blocks and
+			   merging ? */
+			udata.u_offset = blk << 9;
+			udata.u_count = 512;
+			udata.u_base = (uint8_t *)base;
+			if (cdread(i->c_dev, 0) < 0) {
+				kprintf("bload failed.\n");
+				return -1;
+			}
+#endif
 		}
 		base += cp;
 		len -= cp;
