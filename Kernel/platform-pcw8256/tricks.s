@@ -13,7 +13,6 @@
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
-        .globl dispatch_process_signal
 	.globl map_process
 	.globl map_kernel
 	.globl _swapper
