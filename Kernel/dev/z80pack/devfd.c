@@ -79,6 +79,10 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     if(rawflag == 1) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
+        if ((dlen|udata.u_offset) & 0x7F) {
+            udata.u_error = EIO;
+            return -1;
+        }
         block = udata.u_offset >> BLKSHIFT;
         block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
