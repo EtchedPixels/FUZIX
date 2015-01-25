@@ -640,33 +640,60 @@ _platform_interrupt_i:
 ;
 ;	AX = ptr, length always 512, src and page in globals
 ;
+;	Uses ptr3/4 as 1/2 are reserved for the mappers
+;
 
-	.import _romd_bank, _romd_roff, _romd_rmap;
+	.export _romd_bank, _romd_roff, _romd_rmap, _romd_mapu
 	.export _rd_copyin
 
 _rd_copyin:
-	sta ptr1
-	stx ptr1+1		; Save the target
+	sta ptr3
+	stx ptr3+1		; Save the target
+
+	;
+	;	We must flip banks before we play mmu pokery, or it will
+	; undo all our work. This means our variables must be commondata
+	;
+	lda _romd_mapu
+	beq rd_kmap
+	jsr map_process_always
+rd_kmap:
 	ldy _romd_bank		; 0 = A0, 1 = C0, pick based on target
 	lda $FF8F,y		;
-	pha
+	pha			; Save the old mapping
 	lda _romd_rmap
 	sta $FF8F,y
 	lda _romd_roff
-	sta ptr2
+	sta ptr4
 	lda _romd_roff+1
-	sta ptr2+1
+	sta ptr4+1
 	ldy #0
 	ldx #2
-rd_cl:	lda (ptr2),y
-	sta (ptr1),y
+rd_cl:	lda (ptr4),y
+	sta (ptr3),y
 	iny
 	bne rd_cl
-	inc ptr1+1
-	inc ptr2+1
+	inc ptr3+1
+	inc ptr4+1
 	dex
 	bne rd_cl
 	pla
+	ldx rd_kmap
+	bne rd_mapback
 	ldy _romd_bank
 	sta $FF8F,y
 	rts
+rd_mapback:
+	jsr map_kernel
+	rts
+
+	.segment "COMMONDATA"
+
+_romd_roff:
+	.res 2
+_romd_rmap:
+	.res 1
+_romd_bank:
+	.res 1
+_romd_mapu:
+	.res 1

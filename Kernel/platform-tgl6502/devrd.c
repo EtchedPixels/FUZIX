@@ -7,9 +7,10 @@
 #include <printf.h>
 #include <devrd.h>
 
-uint16_t romd_roff;
-uint8_t romd_rmap;
-uint8_t romd_bank;
+extern uint16_t romd_roff;
+extern uint8_t romd_rmap;
+extern uint8_t romd_bank;
+extern uint8_t romd_mapu;
 
 extern void __fastcall__ rd_copyin(uint16_t addr);
 
@@ -28,19 +29,20 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     if(rawflag) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
-        if (dptr & 0x1FF || 1 /* BROKEN */) {
+        /* Must be block aligned but otherwise we are happy */
+        if ((udata.u_offset|dlen) & 0x1FF) {
             udata.u_error = EIO;
             return -1;
         }
         block = udata.u_offset >> 9;
         block_xfer = dlen >> 9;
-        map = 1;
+        romd_mapu = 1;
     } else { /* rawflag == 0 */
         dlen = 512;
         dptr = (uint16_t)udata.u_buf->bf_data;
         block = udata.u_buf->bf_blk;
         block_xfer = 1;
-        map = 0;
+        romd_mapu = 0;
     }
 
     while (ct < block_xfer) {
