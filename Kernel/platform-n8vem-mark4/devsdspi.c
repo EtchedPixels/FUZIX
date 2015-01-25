@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include "config.h"
 #include <z180.h>
+#include <blkdev.h>
 
 #define CSIO_CNTR_TE           (1<<4)   /* transmit enable */
 #define CSIO_CNTR_RE           (1<<5)   /* receive enable */
@@ -119,20 +120,16 @@ uint8_t sd_spi_receive_byte(uint8_t drive)
     return reverse_byte(CSIO_TRDR);
 }
 
-#if 0
-/* WRS: measured byte transfer time as 16.88us with Z180 @ 36.864MHz */
-bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length)
-{
-    while(length--){
-        *(ptr++) = sd_spi_receive_byte(drive);
-    }
-    return true;
-}
-#else
+/****************************************************************************/
+/* The innermost part of the transfer routines has to live in common memory */
+/* since it must be able to bank switch to the user memory bank.            */
+/****************************************************************************/
+COMMON_MEMORY
+
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
    three times faster. Main change is to start the next receive operation 
    as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length) __naked
+bool sd_spi_receive_sector(uint8_t drive) __naked
 {
     __asm
 waitrx: 
@@ -142,13 +139,15 @@ waitrx:
         set 5, a                ; set CSIO_CNTR_RE, enable receive operation for first byte
         out0 (_CSIO_CNTR), a
         ld h, a                 ; stash value for reuse later
-        ; load parameters from the stack
-        ld iy, #3
-        add iy, sp
-        ld e, 0(iy)             ; ptr -> DE
-        ld d, 1(iy)
-        ld c, 2(iy)             ; count -> BC
-        ld b, 3(iy)
+
+        ; load parameters
+        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        ld bc, #512                             ; sector size
+        push af                                 ; stash is_user flag (we cannot load it again after we remap)
+        or a
+        jr z, rxnextbyte
+        call map_process_always                 ; map user process
 rxnextbyte:
         dec bc                  ; length--
         ld a, b
@@ -183,52 +182,23 @@ waitrx3:
         inc de                  ; ptr++
         bit 5, h
         jr nz, rxnextbyte       ; go again if not yet done
-        ld l, #1                ; return true
-        ret
+        jr transferdone         ; we are done
     __endasm;
-    drive; ptr; length; /* squelch compiler warnings */
+    drive; /* squelch compiler warnings */
 }
-#endif
 
-#if 0
-/* WRS: measured byte transfer time as 10.36us with Z180 @ 36.864MHz */
-bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, unsigned int length)
-{
-    register uint8_t c, b, e;
-    drive; /* not used */
-
-    e = (CSIO_CNTR & ~CSIO_CNTR_RE) | CSIO_CNTR_TE;
-
-    while(length){
-        b = reverse_byte(*ptr);
-
-        /* wait for transmit to complete */
-        do{
-            c = CSIO_CNTR;
-        }while(c & CSIO_CNTR_TE);
-
-        /* write the byte and enable transmitter */
-        CSIO_TRDR = b;
-        CSIO_CNTR = e;
-
-        /* next byte */
-        ptr++;
-        length--;
-    }
-    return true;
-}
-#else
-/* WRS: measured byte transfer time as 5.64us with Z180 @ 36.864MHz */
-bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, unsigned int length) __naked
+bool sd_spi_transmit_sector(uint8_t drive) __naked
 {
     __asm
-        ; load parameters from the stack
-        ld iy, #3
-        add iy, sp
-        ld e, 0(iy)             ; ptr -> DE
-        ld d, 1(iy)
-        ld l, 2(iy)             ; count -> HL
-        ld h, 3(iy)
+        ; load parameters
+        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        ld hl, #512                             ; sector size
+        push af                                 ; stash is_user flag (we cannot load it again after we remap)
+        or a
+        jr z, gotransmit
+        call map_process_always                 ; map user process
+gotransmit:
         in0 a, (_CSIO_CNTR)
         and #0xDF               ; mask off RE bit
         or #0x10                ; set TE bit
@@ -261,9 +231,12 @@ waittx:
         ld a, h
         or l
         jr nz, txnextbyte       ; length != 0, go again
+transferdone:                   ; note this code is shared with sd_spi_receive_block
         ld l, #1                ; return true
-        ret
+        pop af                  ; recover is_user flag
+        or a
+        ret z                   ; return if kernel still mapped
+        jp map_kernel           ; else map kernel and return
     __endasm;
-    drive; ptr; length; /* squelch compiler warnings */
+    drive; /* squelch compiler warnings */
 }
-#endif
