@@ -3,25 +3,42 @@
 
 /* block device drives should call blkdev_add() for each block device found,
    and implement a sector transfer function matching the following prototype. */
-typedef bool (*transfer_function_t)(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite);
-typedef int (*flush_function_t)(uint8_t drive);
+typedef uint8_t (*transfer_function_t)(void);
+typedef int (*flush_function_t)(void);
 
 /* the following details should be required only by partition parsing code */
-#define MAX_PARTITIONS 15		    /* must be at least 4, at most 15 */
+#define MAX_PARTITIONS 15                   /* must be at least 4, at most 15 */
 typedef struct {
-    transfer_function_t transfer;	    /* function to read and write sectors */
-    flush_function_t flush;		    /* flush device cache */
-    uint32_t drive_lba_count;		    /* count of sectors on raw disk device */
-    uint32_t lba_first[MAX_PARTITIONS];	    /* LBA of first sector of each partition; 0 if partition absent */
-    uint32_t lba_count[MAX_PARTITIONS];	    /* count of sectors in each partition; 0 if partition absent */
-    uint8_t drive_number;		    /* driver's drive number */
+    uint8_t driver_data;                    /* opaque parameter used by underlying driver (should be first) */
+    transfer_function_t transfer;           /* function to read and write sectors */
+    flush_function_t flush;                 /* flush device cache */
+    uint32_t drive_lba_count;               /* count of sectors on raw disk device */
+    uint32_t lba_first[MAX_PARTITIONS];     /* LBA of first sector of each partition; 0 if partition absent */
+    uint32_t lba_count[MAX_PARTITIONS];     /* count of sectors in each partition; 0 if partition absent */
 } blkdev_t;
 
-/* public interface */
+/* Holds the parameters for the current block operation.
+ * Block I/O being single threaded is deep in the design of UZI/FUZIX
+ * so let's make good use of every advantage we can from it. */
+struct blkparam {
+    /* do not change the order without adjusting BLKPARAM_*_OFFSET macros below */
+    void *addr;                             /* address for transfer buffer */
+    bool is_user;                           /* true: addr is in user memory, false: addr is in kernel memory */
+    blkdev_t *blkdev;                       /* active block device */
+    uint32_t lba;                           /* LBA for first sectors to transfer */
+    uint8_t nblock;                         /* number of sectors to transfer */
+    bool is_read;                           /* true: read sectors, false: write sectors */
+};
+/* macros that inline assembler code can use to access blkparam fields */
+#define BLKPARAM_ADDR_OFFSET    0
+#define BLKPARAM_IS_USER_OFFSET 2
+
+extern struct blkparam blk_op;
+
 /* public interface */
 extern blkdev_t *blkdev_alloc(void);
 extern void blkdev_scan(blkdev_t *blk, uint8_t flags);
-#define SWAPSCAN	0x01
+#define SWAPSCAN    0x01
 extern int blkdev_open(uint8_t minor, uint16_t flags);
 extern int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag);

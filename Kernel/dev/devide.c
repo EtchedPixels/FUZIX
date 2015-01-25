@@ -4,6 +4,7 @@
 /* 2014-12-22 WRS ported to Fuzix                                        */
 /* 2014-12-25 WRS updated to also support P112 GIDE                      */
 /* 2015-01-04 WRS updated to new blkdev API                              */
+/* 2015-01-25 WRS updated to newer blkdev API                            */
 /*-----------------------------------------------------------------------*/
 
 #include <kernel.h>
@@ -14,11 +15,12 @@
 #include <devide.h>
 #include <blkdev.h>
 
-#define DRIVE_COUNT 2   /* range 1 -- 4 */
+#define DRIVE_COUNT 2           /* at most 2 drives without adjusting DRIVE_NR_MASK */
 
-static uint8_t drive_flags[DRIVE_COUNT];
-#define FLAG_WRITE_CACHE 1
-#define FLAG_CACHE_DIRTY 2
+/* we use the bits in the driver_data field of blkdev_t as follows: */
+#define DRIVE_NR_MASK    0x01   /* low bit used to select the drive number -- extend if more required */
+#define FLAG_CACHE_DIRTY 0x40
+#define FLAG_WRITE_CACHE 0x80
 
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
@@ -38,41 +40,8 @@ __sfr __at IDE_REG_LBA_3     ide_reg_lba_3;
 __sfr __at IDE_REG_SEC_COUNT ide_reg_sec_count;
 __sfr __at IDE_REG_STATUS    ide_reg_status;
 
-static void devide_read_data(void *buffer, uint8_t ioport) __naked
-{
-    buffer; ioport; /* silence compiler warning */
-    __asm
-            pop de              ; return address
-            pop hl              ; buffer address
-            pop bc              ; IO port number (in c)
-            push bc             ; restore stack
-            push hl
-            push de
-
-            ld b, #0            ; setup count
-            inir                ; first 256 bytes
-            inir                ; second 256 bytes
-            ret
-    __endasm;
-}
-
-static void devide_write_data(void *buffer, uint8_t ioport) __naked
-{
-    buffer; ioport; /* silence compiler warning */
-    __asm
-            pop de              ; return address
-            pop hl              ; buffer address
-            pop bc              ; IO port number (in c)
-            push bc             ; restore stack
-            push hl
-            push de
-
-            ld b, #0            ; setup count
-            otir                ; first 256 bytes
-            otir                ; second 256 bytes
-            ret
-    __endasm;
-}
+static void devide_read_data(void);
+static void devide_write_data(void);
 
 static bool devide_wait(uint8_t bits)
 {
@@ -99,49 +68,59 @@ static bool devide_wait(uint8_t bits)
     };
 }
 
-static bool devide_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
+static uint8_t devide_transfer_sector(void)
 {
+    uint8_t drive;
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
+    uint8_t *p;
+#endif
+
+    drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     /* sdcc sadly unable to figure this out for itself yet */
-    uint8_t *p = (uint8_t *)&lba;
-    ide_reg_lba_3 = (p[3] & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
-    ide_reg_lba_2 = p[2];
-    ide_reg_lba_1 = p[1];
-    ide_reg_lba_0 = p[0];
+    p = ((uint8_t *)&blk_op.lba)+3;
+    ide_reg_lba_3 = (*(p--) & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
+    ide_reg_lba_2 = *(p--);
+    ide_reg_lba_1 = *(p--);
+    ide_reg_lba_0 = *p;
 #else
-    ide_reg_lba_3 = ((lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
-    ide_reg_lba_2 = (lba >> 16);
-    ide_reg_lba_1 = (lba >> 8);
-    ide_reg_lba_0 = lba;
+    ide_reg_lba_3 = ((blk_op.lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
+    ide_reg_lba_2 = (blk_op.lba >> 16);
+    ide_reg_lba_1 = (blk_op.lba >> 8);
+    ide_reg_lba_0 = blk_op.lba;
 #endif
 
     if(!devide_wait(IDE_STATUS_READY))
-	return false;
+	return 0;
 
     ide_reg_sec_count = 1;
-    ide_reg_command = read_notwrite ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR;
+    ide_reg_command = blk_op.is_read ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR;
 
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
-        return false;
+        return 0;
 
-    if(read_notwrite)
-	devide_read_data(buffer, IDE_REG_DATA);
+    if(blk_op.is_read)
+	devide_read_data();
     else{
-	devide_write_data(buffer, IDE_REG_DATA);
-	drive_flags[drive] |= FLAG_CACHE_DIRTY;
+	devide_write_data();
 	if(!devide_wait(IDE_STATUS_READY))
-	    return false;
+	    return 0;
+	blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
     }
 
-    return true;
+    return 1;
 }
 
-static int devide_flush_cache(uint8_t drive)
+static int devide_flush_cache(void)
 {
+    uint8_t drive;
+
+    drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+
     /* check drive has a cache and was written to since the last flush */
-    if(drive_flags[drive] & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)
-		    == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
-	drive_flags[drive] &= ~FLAG_CACHE_DIRTY;
+    if(blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)
+		                 == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
 	ide_reg_lba_3 = ((drive == 0) ? 0xE0 : 0xF0); // select drive
 
 	if(!devide_wait(IDE_STATUS_READY)){
@@ -155,9 +134,54 @@ static int devide_flush_cache(uint8_t drive)
 	    udata.u_error = EIO;
 	    return -1;
 	}
+
+        /* drive cache is now clean */
+	blk_op.blkdev->driver_data &= ~FLAG_CACHE_DIRTY;
     }
 
     return 0;
+}
+
+/****************************************************************************/
+/* The innermost part of the transfer routines has to live in common memory */
+/* since it must be able to bank switch to the user memory bank.            */
+/****************************************************************************/
+COMMON_MEMORY
+
+static void devide_read_data(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            ld b, #0                                ; setup count
+            ld c, #IDE_REG_DATA                     ; setup port number
+            or a                                    ; test is_user
+            jr z, goread                            ; just start the transfer if kernel memory
+            call map_process_always                 ; else map user memory first
+goread:     inir                                    ; transfer first 256 bytes
+            inir                                    ; transfer second 256 bytes
+            or a                                    ; test is_user
+            ret z                                   ; done if kernel memory transfer
+            jp map_kernel                           ; else map kernel then return
+    __endasm;
+}
+
+static void devide_write_data(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            ld b, #0                                ; setup count
+            ld c, #IDE_REG_DATA                     ; setup port number
+            or a                                    ; test is_user
+            jr z, gowrite                           ; just start the transfer if kernel memory
+            call map_process_always                 ; else map user memory first
+gowrite:    otir                                    ; transfer first 256 bytes
+            otir                                    ; transfer second 256 bytes
+            or a                                    ; test is_user
+            ret z                                   ; done if kernel memory transfer
+            jp map_kernel                           ; else map kernel then return
+    __endasm;
 }
 
 /****************************************************************************/
@@ -165,7 +189,7 @@ static int devide_flush_cache(uint8_t drive)
 /* in the DISCARD segment. sdcc only allows us to specify one segment for   */
 /* each source file. This "solution" is a bit (well, very) hacky ...        */
 /****************************************************************************/
-static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+DISCARDABLE
 
 static void devide_delay(void)
 {
@@ -187,8 +211,6 @@ static void devide_init_drive(uint8_t drive)
 	case 1: select = 0xF0; break;
         default: return;
     }
-
-    drive_flags[drive] = 0;
 
     kprintf("IDE drive %d: ", drive);
 
@@ -227,20 +249,14 @@ static void devide_init_drive(uint8_t drive)
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
 	goto failout;
 
-    devide_read_data(buffer, IDE_REG_DATA);
+    blk_op.is_user = false;
+    blk_op.addr = buffer;
+    blk_op.nblock = 1;
+    devide_read_data();
 
     if(!(buffer[99] & 0x02)){
         kputs("LBA unsupported.\n");
         goto failout;
-    }
-
-    if( !(((uint16_t*)buffer)[82] == 0x0000 && ((uint16_t*)buffer)[83] == 0x0000) ||
-         (((uint16_t*)buffer)[82] == 0xFFFF && ((uint16_t*)buffer)[83] == 0xFFFF) ){
-	/* command set notification is supported */
-	if(buffer[164] & 0x20){
-	    /* write cache is supported */
-	    drive_flags[drive] |= FLAG_WRITE_CACHE;
-	}
     }
 
     blk = blkdev_alloc();
@@ -249,7 +265,16 @@ static void devide_init_drive(uint8_t drive)
 
     blk->transfer = devide_transfer_sector;
     blk->flush = devide_flush_cache;
-    blk->drive_number = drive;
+    blk->driver_data = drive & DRIVE_NR_MASK;
+
+    if( !(((uint16_t*)buffer)[82] == 0x0000 && ((uint16_t*)buffer)[83] == 0x0000) ||
+         (((uint16_t*)buffer)[82] == 0xFFFF && ((uint16_t*)buffer)[83] == 0xFFFF) ){
+	/* command set notification is supported */
+	if(buffer[164] & 0x20){
+	    /* write cache is supported */
+            blk->driver_data |= FLAG_WRITE_CACHE;
+	}
+    }
 
     /* read out the drive's sector count */
     blk->drive_lba_count = le32_to_cpu(*((uint32_t*)&buffer[120]));
