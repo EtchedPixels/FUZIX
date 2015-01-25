@@ -2,6 +2,7 @@
 /* Fuzix SD card driver                                                  */
 /* 2014-12-28 Will Sowerbutts                                            */
 /* 2015-01-04 WRS updated to new blkdev API                              */
+/* 2015-01-25 WRS updated to newer blkdev API                            */
 /*                                                                       */
 /* Based on UZI-socz80 SD card driver, which was itself based on:        */
 /*   MMCv3/SDv1/SDv2 (in SPI mode) control module  (C)ChaN, 2007         */
@@ -23,26 +24,39 @@ static uint8_t sd_card_type[SD_DRIVE_COUNT];
 static void sd_init_drive(uint8_t drive);
 static int sd_spi_init(uint8_t drive);
 static void sd_spi_release(uint8_t drive);
-static int sd_spi_wait_ready(uint8_t drive);
-static bool sd_spi_transmit_sector(uint8_t drive, void *ptr, unsigned int length);
-static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length);
+static bool sd_spi_wait_ready(uint8_t drive);
+static bool sd_spi_receive_prepare(uint8_t drive);
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
-static uint32_t sd_get_size_sectors(uint8_t drive);
 
-static bool devsd_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, bool read_notwrite)
+static uint8_t devsd_transfer_sector(void)
 {
-    uint8_t attempt;
+    uint8_t attempt, drive, reply;
     bool success;
 
-    if(!(sd_card_type[drive] & CT_BLOCK))
-	lba <<= 9; /* multiply by 512 to convert block to byte address */
+    drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
 
     for(attempt=0; attempt<8; attempt++){
-	if(sd_send_command(drive, read_notwrite ? CMD17 : CMD24, lba) == 0){
-	    if(read_notwrite)
-		success = sd_spi_receive_sector(drive, buffer, 512);
-	    else
-		success = sd_spi_transmit_sector(drive, buffer, 512);
+	if(sd_send_command(drive, blk_op.is_read ? CMD17 : CMD24, 
+                    /* for byte addressed cards, shift LBA to convert to byte address */
+                    (blk_op.blkdev->driver_data & CT_BLOCK) ? blk_op.lba : (blk_op.lba << 9)
+                    ) == 0){
+	    if(blk_op.is_read){
+                success = sd_spi_receive_prepare(drive);
+                if(success)
+                    sd_spi_receive_sector(drive);
+            }else{
+                success = false;
+                if(sd_spi_wait_ready(drive)){
+                    sd_spi_transmit_byte(drive, 0xFE);
+                    sd_spi_transmit_sector(drive);
+                    sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
+                    sd_spi_transmit_byte(drive, 0xFF);
+                    reply = sd_spi_receive_byte(drive);
+                    if((reply & 0x1f) != 0x05)
+                        return false; /* failed */
+                    return true; /* hooray! */
+                }
+            }
 	}else
 	    success = false;
 
@@ -55,7 +69,7 @@ static bool devsd_transfer_sector(uint8_t drive, uint32_t lba, void *buffer, boo
     }
 
     udata.u_error = EIO;
-    return -1;
+    return 0;
 }
 
 static void sd_spi_release(uint8_t drive)
@@ -64,42 +78,28 @@ static void sd_spi_release(uint8_t drive)
     sd_spi_receive_byte(drive);
 }
 
-static int sd_spi_wait_ready(uint8_t drive)
+static bool sd_spi_wait_ready(uint8_t drive)
 {
-    unsigned char res;
+    uint8_t res;
     timer_t timer;
 
-    timer = set_timer_ms(100);
+    timer = set_timer_ms(500);
     sd_spi_receive_byte(drive);
-    do{
+
+    while(true){
         res = sd_spi_receive_byte(drive);
+        if(res == 0xFF)
+            return true;
         if(timer_expired(timer)){
-            kputs("sd_spi_wait_ready: timeout\n");
+            kputs("sd: timeout\n");
             break;
         }
-    }while ((res != 0xFF));
+    }
 
-    return res;
+    return false;
 }
 
-static bool sd_spi_transmit_sector(uint8_t drive, void *ptr, unsigned int length)
-{
-    unsigned char reply;
-
-    if(sd_spi_wait_ready(drive) != 0xFF)
-        return false; /* failed */
-
-    sd_spi_transmit_byte(drive, 0xFE);
-    sd_spi_transmit_block(drive, ptr, length);
-    sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
-    sd_spi_transmit_byte(drive, 0xFF);
-    reply = sd_spi_receive_byte(drive);
-    if((reply & 0x1f) != 0x05)
-        return false; /* failed */
-    return true; /* hooray! */
-}
-
-static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length)
+static bool sd_spi_receive_prepare(uint8_t drive)
 {
     unsigned int timer;
     unsigned char b;
@@ -109,15 +109,12 @@ static bool sd_spi_receive_sector(uint8_t drive, void *ptr, unsigned int length)
     do{
         b = sd_spi_receive_byte(drive);
         if(timer_expired(timer)){
-            kputs("sd_spi_receive_sector: timeout\n");
+            kputs("sd: timeout\n");
             return false;
         }
     }while(b == 0xFF);
 
-    if(b != 0xFE)
-        return false; /* failed */
-
-    return sd_spi_receive_block(drive, ptr, length); /* returns true on success */
+    return (b == 0xFE); /* true on success */
 }
 
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
@@ -134,7 +131,7 @@ static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     /* Select the card and wait for ready */
     sd_spi_raise_cs(drive);
     sd_spi_lower_cs(drive);
-    if (sd_spi_wait_ready(drive) != 0xFF) 
+    if(!sd_spi_wait_ready(drive))
         return 0xFF;
 
     /* Send command packet */
@@ -146,11 +143,11 @@ static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     sd_spi_transmit_byte(drive, (unsigned char)arg);         /* Argument[7..0] */
 #else
     /* sdcc sadly unable to figure this out for itself yet */
-    p = (unsigned char *)&arg;
-    sd_spi_transmit_byte(drive, p[3]);                       /* Argument[31..24] */
-    sd_spi_transmit_byte(drive, p[2]);                       /* Argument[23..16] */
-    sd_spi_transmit_byte(drive, p[1]);                       /* Argument[15..8] */
-    sd_spi_transmit_byte(drive, p[0]);                       /* Argument[7..0] */
+    p = ((unsigned char *)&arg)+3;
+    sd_spi_transmit_byte(drive, *(p--));                     /* Argument[31..24] */
+    sd_spi_transmit_byte(drive, *(p--));                     /* Argument[23..16] */
+    sd_spi_transmit_byte(drive, *(p--));                     /* Argument[15..8] */
+    sd_spi_transmit_byte(drive, *p);                         /* Argument[7..0] */
 #endif
     /* there's only a few commands (in native mode) that need correct CRCs */
     n = 0x01;                                                /* Dummy CRC + Stop */
@@ -188,29 +185,43 @@ void devsd_init(void)
 static void sd_init_drive(uint8_t drive)
 {
     blkdev_t *blk;
-    uint32_t sector_count;
+    unsigned char csd[16], n;
+    uint8_t card_type;
 
     kprintf("SD drive %d: ", drive);
-    sd_card_type[drive] = sd_spi_init(drive);
+    card_type = sd_spi_init(drive);
 
-    if(!(sd_card_type[drive] & (~CT_BLOCK))){
+    if(!(card_type & (~CT_BLOCK))){
         kprintf("no card found\n");
         return;
     }
+
+    blk = blkdev_alloc();
+    if(!blk)
+        return;
+
+    blk->transfer = devsd_transfer_sector;
+    blk->driver_data = (drive & DRIVE_NR_MASK) | card_type;
     
     /* read and compute card size */
-    sector_count = sd_get_size_sectors(drive);
-    if(!sector_count){
-        kputs("weird card\n");
-        return;
+    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_receive_prepare(drive)){
+        for(n=0; n<16; n++)
+            csd[n] = sd_spi_receive_byte(drive);
+        if ((csd[0] >> 6) == 1) {
+            /* SDC ver 2.00 */
+            blk->drive_lba_count = ((uint32_t)csd[9] 
+                                   + (uint32_t)((unsigned int)csd[8] << 8) + 1) << 10;
+        } else {
+            /* SDC ver 1.XX or MMC*/
+            n = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
+            blk->drive_lba_count = (csd[8] >> 6) + ((unsigned int)csd[7] << 2) 
+                                   + ((unsigned int)(csd[6] & 3) << 10) + 1;
+            blk->drive_lba_count <<= (n-9);
+        }
     }
-    blk = blkdev_alloc();
-    if (blk) {
-        blk->transfer = devsd_transfer_sector;
-        blk->drive_number = drive;
-        blk->drive_lba_count = sector_count;
-        blkdev_scan(blk, 0);
-    }
+    sd_spi_release(drive);
+
+    blkdev_scan(blk, 0);
 }
 
 static int sd_spi_init(uint8_t drive)
@@ -224,7 +235,7 @@ static int sd_spi_init(uint8_t drive)
     for (n = 20; n; n--)
         sd_spi_receive_byte(drive); /* 160 dummy clocks */
 
-    card_type = 0;
+    card_type = CT_NONE;
     /* Enter Idle state */
     if (sd_send_command(drive, CMD0, 0) == 1) {
         /* initialisation timeout 1 second */
@@ -256,7 +267,7 @@ static int sd_spi_init(uint8_t drive)
             while(!timer_expired(timer) && sd_send_command(drive, cmd, 0));
             /* Set R/W block length to 512 */
             if(timer_expired || sd_send_command(drive, CMD16, 512) != 0)
-                card_type = 0;
+                card_type = CT_NONE;
         }
     }
     sd_spi_release(drive);
@@ -266,23 +277,5 @@ static int sd_spi_init(uint8_t drive)
         return card_type;
     }
 
-    return 0; /* failed */
-}
-
-static uint32_t sd_get_size_sectors(uint8_t drive)
-{
-    unsigned char csd[16], n;
-    uint32_t sectors = 0;
-
-    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_receive_sector(drive, csd, 16)){
-        if ((csd[0] >> 6) == 1) {	/* SDC ver 2.00 */
-            sectors = ((uint32_t)csd[9] + (uint32_t)((unsigned int)csd[8] << 8) + 1) << 10;
-        } else {					/* SDC ver 1.XX or MMC*/
-            n = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
-            sectors = (csd[8] >> 6) + ((unsigned int)csd[7] << 2) + ((unsigned int)(csd[6] & 3) << 10) + 1;
-            sectors = sectors << (n - 9);
-        }
-    }
-    sd_spi_release(drive);
-    return sectors;
+    return CT_NONE; /* failed */
 }
