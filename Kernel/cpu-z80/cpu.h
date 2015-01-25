@@ -66,5 +66,6 @@ typedef union {            /* this structure is endian dependent */
 #define cpu_to_le32(x)	(x)
 #define le32_to_cpu(x)	(x)
 
-#define DISCARDABLE 	static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+#define DISCARDABLE     static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+#define COMMON_MEMORY   static void COMMONSEG(void)  __naked { __asm .area _COMMONMEM __endasm; }
 #endif
