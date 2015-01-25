@@ -250,7 +250,7 @@ _doexec:
         ex de, hl
 
 	; for the relocation engine - tell it where it is
-	ld iy, PROGLOAD
+	ld iy, #PROGLOAD
         ei
         jp (hl)
 
