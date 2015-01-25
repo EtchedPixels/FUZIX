@@ -36,11 +36,11 @@ void mbr_parse(char letter)
 
     blk_op.is_read = true;
     blk_op.is_user = false;
-    blk_op.nblock = 1;
     blk_op.addr = br;
     blk_op.lba = 0;
 
     do{
+        blk_op.nblock = 1;
         if(!blk_op.blkdev->transfer() || le16_to_cpu(br->signature) != MBR_SIGNATURE)
 	    break;
 
