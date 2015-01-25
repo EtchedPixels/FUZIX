@@ -25,7 +25,6 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     int map;
     irqflags_t irq;
 
-    /* RAW won't work yet this is just an initial hack */
     if(rawflag) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
