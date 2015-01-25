@@ -18,8 +18,6 @@
 #include <stdbool.h>
 #include <blkdev.h>
 
-static uint8_t sd_card_type[SD_DRIVE_COUNT];
-
 /* internal functions */
 static void sd_init_drive(uint8_t drive);
 static int sd_spi_init(uint8_t drive);
@@ -52,9 +50,7 @@ static uint8_t devsd_transfer_sector(void)
                     sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(drive, 0xFF);
                     reply = sd_spi_receive_byte(drive);
-                    if((reply & 0x1f) != 0x05)
-                        return false; /* failed */
-                    return true; /* hooray! */
+                    success = ((reply & 0x1f) == 0x05);
                 }
             }
 	}else
