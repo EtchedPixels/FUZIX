@@ -13,14 +13,16 @@
 #define FD_WRITE	0xA0	/* Likewise A8 v A0 */
 
 static uint8_t motorct;
-static uint8_t fd_selected = 0xFF;
-static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Extern as they live in common */
+extern uint8_t fd_map, fd_tab[MAX_FD];
+extern uint8_t fd_selected;
+extern uint8_t fd_cmd[6];
 
 /*
  *	We only support normal block I/O for the moment. We do need to
  *	add swapping!
  */
-
 static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x08 };
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
@@ -31,9 +33,9 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = fd_tab + minor;
-    uint8_t cmd[6];
+    uint8_t nblock;
 
-    if(rawflag)
+    if(rawflag == 2)
         goto bad2;
 
     if (fd_selected != minor) {
@@ -47,19 +49,29 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     if (*driveptr == 0xFF)
         fd_reset(driveptr);
 
-    dptr = (uint16_t)udata.u_buf->bf_data;
-    block = udata.u_buf->bf_blk;
+    fd_map = rawflag;
+    if (rawflag == 0) {
+        dptr = (uint16_t)udata.u_buf->bf_data;
+        block = udata.u_buf->bf_blk;
+        nblock = 2;
+    } else {
+        if ((udata.u_offset|udata.u_count) & 0x1FF)
+            goto bad2;
+        dptr = (uint16_t)udata.u_base;
+        block = udata.u_offset >> 9;
+        nblock = udata.u_count >> 8;
+    }
 
-    cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 9;		/* 2 sectors per block */
-    cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
-    cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[4] = dptr & 0xFF;
-    cmd[5] = dptr >> 8;
+    fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
+    fd_cmd[1] = block / 9;		/* 2 sectors per block */
+    fd_cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
+    fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
+    fd_cmd[4] = dptr & 0xFF;
+    fd_cmd[5] = dptr >> 8;
 
-    while (ct < 2) {
+    while (ct < nblock) {
         for (tries = 0; tries < 4 ; tries++) {
-            err = fd_operation(cmd, driveptr);
+            err = fd_operation(driveptr);
             if (err == 0)
                 break;
             if (tries > 1)
@@ -68,8 +80,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* FIXME: should we try the other half and then bale out ? */
         if (tries == 4)
             goto bad;
-        cmd[5]++;	/* Move on 256 bytes in the buffer */
-        cmd[2]++;	/* Next sector for 2nd block */
+        fd_cmd[5]++;	/* Move on 256 bytes in the buffer */
+        fd_cmd[2]++;	/* Next sector for 2nd block */
         ct++;
     }
     return 1;

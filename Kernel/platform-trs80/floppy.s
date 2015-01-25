@@ -15,6 +15,11 @@
 	.globl _fd_motor_on
 	.globl _fd_motor_off
 	.globl fd_nmi_handler
+	.globl _fd_map
+	.globl _fd_selected
+	.globl _fd_tab
+	.globl _fd_cmd
+	.globl map_kernel, map_process_always
 
 FDCREG	.equ	0xF0
 FDCTRK	.equ	0xF1
@@ -300,22 +305,25 @@ _fdr_wait:
 ;	running.
 ;
 _fd_operation:
+	ld	a, (_fd_map)
+	or	a
+	call	nz, map_process_always
 	pop	bc		; return address
-	pop	hl		; command
 	pop	de		; drive track ptr
 	push	de
-	push	hl
 	push	bc
 	push	ix
-	push	hl
-	pop	ix
+	ld	ix, #_fd_cmd
 	ld	l, DATA(ix)
 	ld	h, DATA+1(ix)
 	call	fdsetup		; Set up for a command
 	ld	l, a
 	ld	h, #0
 	pop	ix
-	ret
+	ld	a, (_fd_map)
+	or	a
+	ret	z
+	jp	map_kernel
 ;
 ;	C interface fd_motor_on(uint16_t drivesel)
 ;
@@ -388,3 +396,11 @@ fdcctrl:
 	.db	0
 fdc_active:
 	.db	0
+_fd_map:
+	.db	0
+_fd_selected:
+	.db	0xFF
+_fd_tab:
+	.db	0xFF, 0xFF, 0xFF, 0xFF
+_fd_cmd:
+	.ds	6

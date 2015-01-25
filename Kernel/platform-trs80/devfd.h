@@ -8,7 +8,7 @@ int fd_open(uint8_t minor, uint16_t flag);
 
 /* low level interface */
 uint16_t fd_reset(uint8_t *driveptr);
-uint16_t fd_operation(uint8_t *cmd, uint8_t *driveptr);
+uint16_t fd_operation(uint8_t *driveptr);
 uint16_t fd_motor_on(uint16_t drivesel);
 uint16_t fd_motor_off(uint16_t driveptr);
 

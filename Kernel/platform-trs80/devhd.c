@@ -105,6 +105,13 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		block = udata.u_buf->bf_blk;
 		nblock = 2;
 		hd_page = 0;		/* Kernel */
+	} else if (rawflag == 1) {
+		if ((udata.u_offset|udata.u_count) & 0x1FF)
+			goto bad2;
+		dptr = (uint16_t)udata.u_base;
+		nblock = udata.u_count >> 9;
+		block = udata.u_offset >> 9;
+		hd_page = udata.u_page;
 	} else if (rawflag == 2) {
 		nblock = swapcnt >> 8;	/* in 256 byte chunks */
 		dptr = (uint16_t)swapbase;
