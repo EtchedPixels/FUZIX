@@ -292,7 +292,7 @@ struct mount {
 #define SIGSYS		31
 #define	SIGUNUSED	31
 
-#define  SIG_DFL   (int16_t (*)())0
+#define  SIG_DFL   (int16_t (*)())0	/* Must be 0 */
 #define  SIG_IGN   (int16_t (*)())1
 
 #define sigmask(sig)    (1UL<<(sig))
