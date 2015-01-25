@@ -63,17 +63,14 @@ int pagemap_alloc(ptptr p)
 	int needed = maps_needed(udata.u_top);
 	int i;
 
-	kprintf("pagemap_alloc, need %d (top %u)\n", needed, udata.u_top);
 #ifdef SWAPDEV
 	/* Throw our toys out of our pram until we have enough room */
 	while (needed > pfptr)
 		if (swapneeded(p, 1) == NULL)
 			return ENOMEM;
 #else
-	if (needed > pfptr)	/* We have no swap so poof... */ {
-	 kprintf("%d free, %d needed\n", pfptr, needed);
+	if (needed > pfptr)	/* We have no swap so poof... */
 		return ENOMEM;
-        }
 #endif
 
 	/* Pages in the low then repeat the top one */
@@ -100,8 +97,6 @@ int pagemap_realloc(uint16_t size)
 
 	/* If we are shrinking then free pages and propogate the
 	   common page into the freed spaces */
-        kprintf("Maps were %x %x\n", udata.u_page, udata.u_page2);
-        kprintf("have %d want %d\n", have, want);
 	if (want == have)
 		return 0;
 	if (have > want) {
