@@ -34,8 +34,6 @@ uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
 	register bufptr bp;
 
 	if ((bp = bfind(dev, blk)) != NULL) {
-		if (bp->bf_busy)
-			panic("want busy block");
 		goto done;
 	}
 	bp = freebuf();
