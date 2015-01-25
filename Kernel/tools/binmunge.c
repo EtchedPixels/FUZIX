@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <getopt.h>
 
 #define NBANKS	4
 
@@ -20,6 +21,7 @@ FILE *fptr[NBANKS];
 int v;
 static int nextfix;
 static int lastfix;
+static int stub_all;
 
 struct stubmap {
   struct stubmap *next;
@@ -169,7 +171,8 @@ static void process_stub(char *p)
     fprintf(stderr, "Invalid relocation link %s\n", p);
     exit(1);
   }
-  if (stub_code(name))
+  /* If we are stubbing the lot then code is handled as data is */
+  if (stub_code(name) && !stub_all)
     code_reloc(b1, addr, b2);
   else
     data_reloc(b1, addr, b2);
@@ -183,14 +186,23 @@ int main(int argc, char *argv[])
   char bin[64];
   int banks;
   int sb, ss;
+  int opt;
 
-  if (argv[1] && strcmp(argv[1], "-v") == 0)
-    v = 1;
-  if (argc != 2 + v) {
+  while ((opt = getopt(argc, "av")) != -1) {
+    switch (opt) {
+      case 'a':
+        stub_all = 1;
+        break;
+      case 'v':
+        v = 1;
+        break;
+    }
+  }
+  if (argc != optind + 1) {
     fprintf(stderr, "%s -v stubstart-size\n", argv[0]);
     exit(1);
   }
-  if (sscanf(argv[1+v], "%x-%x", &sb, &ss) != 2) {
+  if (sscanf(argv[optind], "%x-%x", &sb, &ss) != 2) {
     fprintf(stderr, "%s: invalid stub info\n", argv[0]);
     exit(1);
   }
