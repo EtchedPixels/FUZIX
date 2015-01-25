@@ -67,5 +67,7 @@ typedef union {            /* this structure is endian dependent */
 #define le32_to_cpu(x)	(x)
 
 #define DISCARDABLE     static void DISCARDSEG(void) __naked { __asm .area _DISCARD __endasm; }
+/* Do not use COMMON_MEMORY except for __asm code blocks. The SDCC helpers are not
+   loaded into common */
 #define COMMON_MEMORY   static void COMMONSEG(void)  __naked { __asm .area _COMMONMEM __endasm; }
 #endif
