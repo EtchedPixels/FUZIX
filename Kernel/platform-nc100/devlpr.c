@@ -46,9 +46,8 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		}
 		/* Data */
 		lpdata = ugetc(p++);
-		/* Strobe */
+		/* Strobe (1uS) */
 		mod_control(0, 0x40);
-		/* Delay a bit more ??? */
 		mod_control(0x40, 0);
 	}
 	return udata.u_count;
