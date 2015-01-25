@@ -12,3 +12,6 @@ Z80_TYPE		    .equ 1
 ; Where is the character font preloaded for us on this box
 
 VRAM_CH			    .equ 1
+
+PROGBASE		    .equ 0x0000
+PROGLOAD		    .equ 0x0100

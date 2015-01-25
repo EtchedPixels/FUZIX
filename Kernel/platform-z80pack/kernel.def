@@ -5,6 +5,7 @@ U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
 U_DATA_STASH		    .equ 0xED00	      ; ED00-EFFF
 
-PROG_BASE		    .equ 0
+PROGBASE		    .equ 0x0000
+PROGLOAD		    .equ 0x0100
 
 Z80_TYPE		    .equ 0

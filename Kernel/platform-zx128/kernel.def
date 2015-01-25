@@ -7,7 +7,8 @@ U_DATA_STASH		    .equ 0xFD00	      ; BD00-BFFF
 
 Z80_TYPE		    .equ 1
 
-PROG_BASE		    .equ 0xC000
+PROGBASE		    .equ 0xC000
+PROGLOAD		    .equ 0xC000
 
 ;
 ; Ways we may boot

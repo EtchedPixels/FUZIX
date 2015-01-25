@@ -248,6 +248,9 @@ _doexec:
         ld (U_DATA__U_INSYS), a
 
         ex de, hl
+
+	; for the relocation engine - tell it where it is
+	ld iy, PROGLOAD
         ei
         jp (hl)
 
