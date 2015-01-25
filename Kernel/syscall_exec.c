@@ -16,7 +16,7 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			uint8_t *buf;
 			buf = bread(i->c_dev, blk, 0);
 			if (buf == NULL) {
-				kprintf("bload failed.\n");
+				kputs("bload failed.\n");
 				return -1;
 			}
 			uput(buf, (uint8_t *)base, cp);
@@ -29,7 +29,7 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			udata.u_count = 512;
 			udata.u_base = (uint8_t *)base;
 			if (cdread(i->c_dev, 0) < 0) {
-				kprintf("bload failed.\n");
+				kputs("bload failed.\n");
 				return -1;
 			}
 #endif
@@ -68,12 +68,13 @@ int16_t _execve(void)
 	staticfast unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
-	staticfast struct s_argblk *abuf, *ebuf;
+	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uint16_t progptr;
 	staticfast uint16_t top;
-	uint16_t bin_size;
-	uint16_t bss = 0;
+	uint16_t bin_size;	/* Will need to be bigger on some cpus */
+	uint16_t bss;
+	char *p;
 
 	top = ramtop;
 
@@ -91,7 +92,7 @@ int16_t _execve(void)
 
 	if (ino->c_node.i_size == 0) {
 		udata.u_error = ENOEXEC;
-		goto nogood2;
+		goto nogood;
 	}
 
 	/* Read in the first block of the new program */
@@ -115,16 +116,19 @@ int16_t _execve(void)
 	 *	wrap the binaries and do the emulator load so we can clean up
 	 *	all the kernel code for this case). We don't really want to end
 	 *	up with CP/M, o65 and other emulations in kernel!
+	 *
+	 *	Use p to persuade sdcc not to generate shite code
 	 */
-	if (buf[3] != 'F' || buf[4] != 'Z' || buf[5] != 'X' || buf[6] != '1' ||
+	p = buf + 3;
+
+	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ !='1' || 
 		/* Don't load binaries for the wrong base page, eg spectrum
 		   binaries on a sane box. 0 indicates a relocatable binary */
-		(buf[7] && buf[7] != PROGLOAD >> 8)) {
+		(*p && *p != PROGLOAD >> 8)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
-
-	top = buf[8] | ((unsigned int)buf[9] << 8);
+	top = *++p + (*p << 8);
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
@@ -133,12 +137,13 @@ int16_t _execve(void)
 	bss = buf[14] | (buf[15] << 8);
 
 	/* Binary doesn't fit */
-	if (top - PROGBASE < ino->c_node.i_size + 1024 + bss) {
+	bin_size = ino->c_node.i_size;
+	progptr = bin_size + 1024 + bss;
+	if (top - PROGBASE < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
 
-	bin_size = ino->c_node.i_size;
 
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
