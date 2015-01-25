@@ -74,7 +74,7 @@ int16_t _execve(void)
 	staticfast uint16_t top;
 	uint16_t bin_size;	/* Will need to be bigger on some cpus */
 	uint16_t bss;
-	char *p;
+	uint8_t *p;
 
 	top = ramtop;
 
