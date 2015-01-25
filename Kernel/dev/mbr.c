@@ -22,18 +22,26 @@ typedef struct {
     uint16_t signature;
 } boot_record_t;
 
-void mbr_parse(blkdev_t *blk, char letter)
+void mbr_parse(char letter)
 {
     boot_record_t *br;
     uint8_t i, seen = 0;
-    uint32_t lba = 0, ep_offset = 0, br_offset = 0;
+    uint32_t ep_offset = 0, br_offset = 0;
     uint8_t next = 0;
+
+    kprintf("hd%c: ", letter);
 
     /* allocate temporary memory */
     br = (boot_record_t *)tmpbuf();
 
+    blk_op.is_read = true;
+    blk_op.is_user = false;
+    blk_op.nblock = 1;
+    blk_op.addr = br;
+    blk_op.lba = 0;
+
     do{
-	if(!blk->transfer(blk->drive_number, lba, br, true) || le16_to_cpu(br->signature) != MBR_SIGNATURE)
+        if(!blk_op.blkdev->transfer() || le16_to_cpu(br->signature) != MBR_SIGNATURE)
 	    break;
 
 	/* avoid an infinite loop where extended boot records form a loop */
@@ -42,13 +50,13 @@ void mbr_parse(blkdev_t *blk, char letter)
 
 	if(seen == 1){ 
 	    /* we just loaded the first extended boot record */
-	    ep_offset = lba;
+	    ep_offset = blk_op.lba;
 	    next = 4;
 	    kputs("< ");
 	}
 
-	br_offset = lba;
-	lba = 0;
+	br_offset = blk_op.lba;
+	blk_op.lba = 0;
 
 	for(i=0; i<MBR_ENTRY_COUNT && next < MAX_PARTITIONS; i++){
 	    switch(br->partition[i].type){
@@ -60,7 +68,7 @@ void mbr_parse(blkdev_t *blk, char letter)
 		    /* Extended boot record, or chained table; in principle a drive should contain
 		       at most one extended partition so this code is OK even for parsing the MBR.
 		       Chained EBR addresses are relative to the start of the extended partiton. */
-		    lba = ep_offset + le32_to_cpu(br->partition[i].lba_first);
+		    blk_op.lba = ep_offset + le32_to_cpu(br->partition[i].lba_first);
 		    if(next >= 4)
 			break;
 		    /* we include all primary partitions but we deliberately knobble the size in 
@@ -70,14 +78,14 @@ void mbr_parse(blkdev_t *blk, char letter)
 		default:
 		    /* Regular partition: In EBRs these are relative to the EBR (not the disk, nor
 		       the extended partition) */
-		    blk->lba_first[next] = br_offset + le32_to_cpu(br->partition[i].lba_first);
-		    blk->lba_count[next] = le32_to_cpu(br->partition[i].lba_count);
+		    blk_op.blkdev->lba_first[next] = br_offset + le32_to_cpu(br->partition[i].lba_first);
+		    blk_op.blkdev->lba_count[next] = le32_to_cpu(br->partition[i].lba_count);
 		    next++;
 		    kprintf("hd%c%d ", letter, next);
 	    }
 	}
 	seen++;
-    }while(lba);
+    }while(blk_op.lba);
 
     if(ep_offset && next >= 4)
 	kputs("> ");

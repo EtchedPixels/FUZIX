@@ -51,6 +51,7 @@
 */
 
 static blkdev_t blkdev_table[MAX_BLKDEV];
+struct blkparam blk_op;
 
 int blkdev_open(uint8_t minor, uint16_t flags)
 {
@@ -71,38 +72,56 @@ int blkdev_open(uint8_t minor, uint16_t flags)
     return -1;
 }
 
-static int blkdev_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
 {
-    void *target;
-    uint32_t lba;
-    uint8_t partition;
-    blkdev_t *blk;
+    uint8_t partition, n, count=0;
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
-    blk = &blkdev_table[minor >> 4];
+    blk_op.blkdev = &blkdev_table[minor >> 4];
     partition = minor & 0x0F;
 
-    if(rawflag == 0) {
-        target = udata.u_buf->bf_data;
-        lba = udata.u_buf->bf_blk;
-    }else
-        goto xferfail;
+    switch(rawflag){
+        case 0:
+            /* read single 512-byte sector to buffer in kernel memory */
+            blk_op.nblock = 1;
+            blk_op.lba = udata.u_buf->bf_blk;
+            blk_op.addr = udata.u_buf->bf_data;
+            blk_op.is_user = false;
+            break;
+        case 1:
+            /* read some number of 512-byte sectors directly to user memory */
+            blk_op.nblock = (udata.u_count >> BLKSHIFT);
+            if((udata.u_count | (uint16_t)udata.u_offset) & BLKMASK)
+                panic("blkdev: not integral");
+            blk_op.lba = (udata.u_offset >> BLKSHIFT);
+            blk_op.addr = udata.u_base;
+            blk_op.is_user = true;
+            break;
+        default:
+            goto xferfail;
+    }
 
     if(partition == 0){
 	/* partition 0 is the whole disk and requires no translation */
-	if(lba >= blk->drive_lba_count)
+	if(blk_op.lba >= blk_op.blkdev->drive_lba_count)
 	    goto xferfail;
     }else{
 	/* partitions 1+ require us to add in an offset */
-	if(lba >= blk->lba_count[partition-1])
+	if(blk_op.lba >= blk_op.blkdev->lba_count[partition-1])
 	    goto xferfail;
 
-	lba += blk->lba_first[partition-1];
+	blk_op.lba += blk_op.blkdev->lba_first[partition-1];
     }
 
-    if(blk->transfer(blk->drive_number, lba, target, is_read))
-	return 1; /* 10/10, would transfer sectors again */
+    while(blk_op.nblock){
+        n = blk_op.blkdev->transfer();
+        if(n == 0)
+            goto xferfail;
+        blk_op.nblock -= n;
+        count += n;
+    }
 
+    return count; /* 10/10, would transfer sectors again */
 xferfail:
     udata.u_error = EIO;
     return -1;
@@ -111,28 +130,29 @@ xferfail:
 int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag; /* not used */
-    return blkdev_transfer(minor, true, rawflag);
+    blk_op.is_read = true;
+    return blkdev_transfer(minor, rawflag);
 }
 
 int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag; /* not used */
-    return blkdev_transfer(minor, false, rawflag);
+    blk_op.is_read = false;
+    return blkdev_transfer(minor, rawflag);
 }
 
 int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
 {
-    blkdev_t *blk;
     data; /* unused */
 
     if (request != BLKFLSBUF)
 	return -1;
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
-    blk = &blkdev_table[minor >> 4];
+    blk_op.blkdev = &blkdev_table[minor >> 4];
 
-    if (blk->flush)
-	return blk->flush(blk->drive_number);
+    if (blk_op.blkdev->flush)
+	return blk_op.blkdev->flush();
     else
 	return 0;
 }
@@ -159,9 +179,9 @@ void blkdev_scan(blkdev_t *blk, uint8_t flags)
 {
     uint8_t letter = 'a' + (blk - blkdev_table);
 
-    flags;
+    flags; /* not used */
 
-    kprintf("hd%c: ", letter);
-    mbr_parse(blk, letter);
+    blk_op.blkdev = blk;
+    mbr_parse(letter);
     kputchar('\n');
 }
