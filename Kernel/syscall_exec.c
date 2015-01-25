@@ -6,7 +6,6 @@
 static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 {
 	blkno_t blk;
-	uint8_t *buf;
 	while(len) {
 		uint16_t cp = min(len, 512);
 		blk = bmap(i, bl, 1);
@@ -14,6 +13,7 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			uzero((uint8_t *)base, 512);
 		else {
 #ifdef CONFIG_LEGACY_EXEC
+			uint8_t *buf;
 			buf = bread(i->c_dev, blk, 0);
 			if (buf == NULL) {
 				kprintf("bload failed.\n");
@@ -64,17 +64,14 @@ char *envp[];
 
 int16_t _execve(void)
 {
-	staticfast inoptr ino, emu_ino;
+	staticfast inoptr ino;
 	staticfast unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	staticfast struct s_argblk *abuf, *ebuf;
-	int16_t (**sigp) ();
 	int argc;
-	uint16_t emu_size, progptr;
-	uint16_t emu_ptr, emu_base;
+	uint16_t progptr;
 	staticfast uint16_t top;
-	uint8_t c;
 	uint16_t bin_size;
 	uint16_t bss = 0;
 
@@ -108,50 +105,33 @@ int16_t _execve(void)
 	   followed by a base page for the executable
 
 	*/
-	if ((*buf & 0xff) != EMAGIC) {
+	if (*buf  != EMAGIC && *buf != EMAGIC_2) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
 	/*
-	 *	Executables might be CP/M or Fuzix (we don't support legacy
-	 *	UZI binaries).
+	 *	Executables must be in FUZIX format (we'll let the CP/M emul
+	 *	wrap the binaries and do the emulator load so we can clean up
+	 *	all the kernel code for this case). We don't really want to end
+	 *	up with CP/M, o65 and other emulations in kernel!
 	 */
-	if (buf[3] == 'F' && buf[4] == 'Z' && buf[5] == 'X' && buf[6] == '1') {
-		top = buf[8] | ((unsigned int)buf[9] << 8);
-		if (top == 0)	/* Legacy 'all space' binary */
-			top = ramtop;
-		else	/* Requested an amount, so adjust for the base */
-			top += PROGLOAD;
-		emu_ino = 0;	// no emulation, thanks
+	if (buf[3] != 'F' || buf[4] != 'Z' || buf[5] != 'X' || buf[6] != '1' ||
 		/* Don't load binaries for the wrong base page, eg spectrum
-		   binaries on a sane box */
-		if (buf[7] != PROGLOAD >> 8) {
-			/* We could be smarter, move this page up and
-			   see if it still fits... ? */
-			udata.u_error = ENOEXEC;
-			goto nogood2;
-		}
-		/* Add in the zero data space */
-		bss = buf[14] | (buf[15] << 8);
-	} else {
-#ifdef CONFIG_CPM_EMU
-		// open the emulator code on disk
-		emu_ino = kn_open(CPM_EMULATOR_FILENAME, NULLINOPTR);
-		if (!emu_ino) {
-			kprintf("Cannot load emulator: %s\n",
-				CPM_EMULATOR_FILENAME);
-			udata.u_error = ENOEXEC;
-			goto nogood2;
-		}
-		top = ramtop;
-#else
-		emu_size;
-		emu_ptr;
+		   binaries on a sane box. 0 indicates a relocatable binary */
+		(buf[7] && buf[7] != PROGLOAD >> 8)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
-#endif
 	}
+
+	top = buf[8] | ((unsigned int)buf[9] << 8);
+	if (top == 0)	/* Legacy 'all space' binary */
+		top = ramtop;
+	else	/* Requested an amount, so adjust for the base */
+		top += PROGLOAD;
+
+	bss = buf[14] | (buf[15] << 8);
+
 	/* Binary doesn't fit */
 	if (top - PROGBASE < ino->c_node.i_size + 1024 + bss) {
 		udata.u_error = ENOMEM;
@@ -192,40 +172,10 @@ int16_t _execve(void)
 	uput(buf, (uint8_t *)PROGLOAD, 512);	/* Move 1st Block to user bank */
 	brelse(buf);
 
-	c = ugetc((uint8_t *)PROGLOAD);
-	if (c != EMAGIC)
-		kprintf("Botched uput\n");
-
 	/* At this point, we are committed to reading in and
 	 * executing the program. */
 
 	close_on_exec();
-
-#ifdef CONFIG_CPM_EMU
-	// Load the CP/M emulator if it is required
-	if (emu_ino) {
-		/* FIXME: check for daft or non fitting sizes */
-		emu_size = emu_ino->c_node.i_size;
-		// round up to nearest multiple of 256 bytes, fit it in below ramtop
-		emu_ptr = udata.u_top - ((emu_size + 255) & 0xff00);
-		emu_base = emu_ptr;
-
-		bload(emu_ino, 0, emu_base, emu_size);
-		/* FIXME: check error return, do something sane */
-		i_deref(emu_ino);
-
-		/*
-		 * zero out the remainder of memory between the top of the emulator and top
-		 * of process memory
-		 */
-		uzero((uint8_t *)emu_ptr + emu_size, top - emu_ptr);
-	} else
-#endif
-	{
-		emu_base = top;
-	}
-
-	/* emu_base now points at the byte after the last byte the program can occupy */
 
 	/*
 	 *  Read in the rest of the program, block by block
@@ -244,19 +194,19 @@ int16_t _execve(void)
 		progptr += bin_size;
 	}
 
+	/* Should be smarter on the uzero: bank align the clearance */
 	// zero all remaining process memory above the last block loaded.
-	uzero((uint8_t *)progptr, emu_base - progptr);
+	uzero((uint8_t *)progptr, top - progptr);
 
 	udata.u_break = (int) progptr + bss;	//  Set initial break for program
 
-	// Turn off caught signals
-	for (sigp = udata.u_sigvec; sigp < udata.u_sigvec + NSIGS; ++sigp)
-		*sigp = SIG_DFL;
+	/* Turn off caught signals */
+	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
 
 	// place the arguments, environment and stack at the top of userspace memory,
 
 	// Write back the arguments and the environment
-	nargv = wargs(((char *) emu_base - 2), abuf, &argc);
+	nargv = wargs(((char *) top - 2), abuf, &argc);
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with Program invocation name
@@ -279,21 +229,12 @@ int16_t _execve(void)
 	udata.u_isp = nenvp - 2;
 
 	// Start execution (never returns)
-#ifdef CONFIG_CPM_EMU
-	if (emu_ino)
-		doexec(emu_base);
-	else
-#endif
-		doexec(PROGLOAD);
+	doexec(PROGLOAD);
 
 	// tidy up in various failure modes:
-      nogood3:
+nogood3:
 	brelse(abuf);
 	brelse(ebuf);
-#ifdef CONFIG_CPM_EMU
-	if (emu_ino)
-		i_deref(emu_ino);
-#endif
       nogood2:
 	brelse(buf);
       nogood:
