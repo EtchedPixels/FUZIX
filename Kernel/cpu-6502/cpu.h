@@ -22,6 +22,7 @@ extern void * __fastcall__ memset(void *, int, size_t);
 extern size_t __fastcall__ strlen(const char *);
 
 #define EMAGIC    0x4C    /* Header of executable (JMP) */
+#define EMAGIC_2  0x18	  /* CLC BCC foo */
 /* High byte is saved, low byte is a mystery so take worst case. Also allow
    a bit less as C stack is not return stack */
 #define brk_limit() ((udata.u_syscall_sp | 0xFF) - 384)

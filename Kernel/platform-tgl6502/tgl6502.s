@@ -624,6 +624,8 @@ platform_doexec:
 ;
 	    ldx #$ff
 	    txs
+	    ldx #>PROGLOAD	; For the relocation engine
+	    lda #ZPBASE
 	    jmp (ptr1)		; Enter user application
 
 ;
