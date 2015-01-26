@@ -5,7 +5,8 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
-typedef int16_t arg_t;			/* Holds arguments */
+typedef int16_t  arg_t;			/* Holds arguments */
+typedef uint16_t uarg_t;		/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* User address */
