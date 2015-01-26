@@ -34,25 +34,27 @@ uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
 	register bufptr bp;
 
 	if ((bp = bfind(dev, blk)) != NULL) {
-		if (bp->bf_busy)
+		if (bp->bf_busy == BF_BUSY)
 			panic("want busy block");
-		goto done;
-	}
-	bp = freebuf();
-	bp->bf_dev = dev;
-	bp->bf_blk = blk;
+		else if (bp->bf_busy == BF_FREE)
+			bp->bf_busy = BF_BUSY;
+		/* BF_SUPERBLOCK is fine */
+	} else {
+		bp = freebuf();
+		bp->bf_dev = dev;
+		bp->bf_blk = blk;
+		bp->bf_busy = BF_BUSY;
 
-	/* If rewrite is set, we are about to write over the entire block,
-	   so we don't need the previous contents */
-	if (!rewrite) {
-		if (bdread(bp) == -1) {
-			udata.u_error = EIO;
-			return (NULL);
+		/* If rewrite is set, we are about to write over the entire block,
+		   so we don't need the previous contents */
+		if (!rewrite) {
+			if (bdread(bp) == -1) {
+				udata.u_error = EIO;
+				return (NULL);
+			}
 		}
 	}
 
-      done:
-	bp->bf_busy = 1;
 	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return (bp->bf_data);
 }
@@ -74,7 +76,9 @@ int bfree(bufptr bp, uint8_t dirty)
 {				/* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 	if (dirty)
 		bp->bf_dirty = true;
-	bp->bf_busy = false;
+	
+	if(bp->bf_busy == BF_BUSY) /* do not free BF_SUPERBLOCK */
+		bp->bf_busy = BF_FREE;
 
 	if (dirty > 1) {	// immediate writeback
 		if (bdwrite(bp) == -1)
@@ -96,7 +100,7 @@ void *tmpbuf(void)
 
 	bp = freebuf();
 	bp->bf_dev = NO_DEVICE;
-	bp->bf_busy = true;
+	bp->bf_busy = BF_BUSY;
 	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp->bf_data;
 }
@@ -120,7 +124,7 @@ void bufsync(void)
 	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
 		if ((bp->bf_dev != NO_DEVICE) && bp->bf_dirty) {
 			bdwrite(bp);
-			if (!bp->bf_busy)
+			if (bp->bf_busy == BF_FREE)
 				bp->bf_dirty = false;
 			d_flush(bp->bf_dev);
 		}
@@ -149,7 +153,7 @@ bufptr freebuf(void)
 	oldest = NULL;
 	oldtime = 0;
 	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
-		if (bufclock - bp->bf_time >= oldtime && !bp->bf_busy) {
+		if (bufclock - bp->bf_time >= oldtime && bp->bf_busy == BF_FREE) {
 			oldest = bp;
 			oldtime = bufclock - bp->bf_time;
 		}
@@ -176,16 +180,6 @@ void bufdiscard(bufptr bp)
 	if (!bp->bf_dirty)
 		/* Make this the oldest buffer */
 		bp->bf_time = bufclock - 1000;
-}
-
-void bufdump(void)
-{
-	bufptr j;
-
-	kprintf("\ndev\tblock\tdirty\tbusy\ttime clock %d\n", bufclock);
-	for (j = bufpool; j < bufpool + NBUFS; ++j)
-		kprintf("%d\t%u\t%d\t%d\t%u\n", j->bf_dev, j->bf_blk,
-			j->bf_dirty, j->bf_busy, j->bf_time);
 }
 
 
@@ -531,6 +525,16 @@ void kprintf(const char *fmt, ...)
 }
 
 #ifdef CONFIG_IDUMP
+
+void bufdump(void)
+{
+	bufptr j;
+
+	kprintf("\ndev\tblock\tdirty\tbusy\ttime clock %d\n", bufclock);
+	for (j = bufpool; j < bufpool + NBUFS; ++j)
+		kprintf("%d\t%u\t%d\t%d\t%u\n", j->bf_dev, j->bf_blk,
+			j->bf_dirty, j->bf_busy, j->bf_time);
+}
 
 void idump(void)
 {

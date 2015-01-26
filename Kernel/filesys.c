@@ -1071,9 +1071,11 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
         udata.u_error = EMFILE;
         return true;	/* Table is full */
     }
-    /* Pin the buffer at dev 0 blk 1, it will only be released
-       by umount */
+
+    /* Pin the buffer with the superblock (block 1), it 
+     * will only be released by umount */
     fp = (filesys *)bread(dev, 1, 0);
+    ((bufptr)fp)->bf_busy = BF_SUPERBLOCK; /* really really busy */
 
     //   kprintf("fp->s_mounted=0x%x, fp->s_isize=0x%x, fp->s_fsize=0x%x\n", 
     //   fp->s_mounted, fp->s_isize, fp->s_fsize);

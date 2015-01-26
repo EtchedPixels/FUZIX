@@ -71,6 +71,7 @@ void main(int argc, char *argv[])
     long skipval;
     long intotal;
     long outtotal;
+    long inmax;
     char *buf;
 
     infile = NULL;
@@ -79,6 +80,7 @@ void main(int argc, char *argv[])
     skipval = 0;
     blocksize = 512;
     count = 0x7fffffff;
+    inmax = 0;
 
     while (--argc > 0) {
 	str = *++argv;
@@ -204,6 +206,8 @@ void main(int argc, char *argv[])
 	    goto cleanup;
 	}
     }
+    if(count != 0x7fffffff)
+        inmax = count * blocksize;
     while ((incc = read(infd, buf, blocksize)) > 0) {
 	intotal += incc;
 	cp = buf;
@@ -222,6 +226,8 @@ void main(int argc, char *argv[])
 	    cp += outcc;
 	    incc -= outcc;
 	}
+        if(inmax && intotal >= inmax)
+            break;
     }
 
     if (incc < 0)

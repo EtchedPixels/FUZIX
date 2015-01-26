@@ -93,6 +93,11 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BLKSHIFT	9
 #define BLKMASK		511
 
+/* we need a busier-than-busy state for superblocks, so that if those blocks
+ * are read by userspace through bread() they are not subsequently freed by 
+ * bfree() until the filesystem is unmounted */
+typedef enum { BF_FREE=0, BF_BUSY, BF_SUPERBLOCK } bf_busy_t;
+
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
    some more care on copies, block indexes and directory ops */
@@ -101,7 +106,7 @@ typedef struct blkbuf {
     uint16_t    bf_dev;
     blkno_t     bf_blk;
     bool        bf_dirty;
-    bool        bf_busy;
+    bf_busy_t   bf_busy;
     uint16_t    bf_time;         /* LRU time stamp */
 } blkbuf, *bufptr;
 
