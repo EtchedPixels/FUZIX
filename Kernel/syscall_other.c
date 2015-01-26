@@ -350,7 +350,6 @@ int16_t _umount(void)
 
 	_sync();
 
-	mnt->m_fs->s_mounted = 0;
 	i_deref(mnt->m_fs->s_mntpt);
 	/* Give back the buffer we pinned at mount time */
 	bfree((bufptr)mnt->m_fs, 2);
