@@ -352,6 +352,7 @@ int16_t _umount(void)
 
 	i_deref(mnt->m_fs->s_mntpt);
 	/* Give back the buffer we pinned at mount time */
+	((bufptr)mnt->m_fs)->bf_busy = BF_BUSY; /* downgrade from BF_SUPERBLOCK */
 	bfree((bufptr)mnt->m_fs, 2);
 	/* Vanish the entry */
 	mnt->m_dev = NO_DEVICE;

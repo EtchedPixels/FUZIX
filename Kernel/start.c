@@ -37,7 +37,7 @@ void bufinit(void)
 
 	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
 		bp->bf_dev = NO_DEVICE;
-		bp->bf_busy = false;
+		bp->bf_busy = BF_FREE;
 	}
 }
 
