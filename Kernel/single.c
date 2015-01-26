@@ -4,9 +4,9 @@
 
 /*
  *	Support for single tasking systems where there is not enough memory for
- *	multiple tasks and where there is no suitable swap device. This configuration
- *	is suitable for systems with over about 96K of RAM and nothing but a floppy
- *	drive.
+ *	multiple tasks and where there is no suitable swap device. This
+ *	configuration can be useful for boot disks/standalone tools or to run
+ *	apps on boxes otherwise incapable of running Fuzix code.
  *
  *	To use this method of operation you should do the following
  *
@@ -15,6 +15,16 @@
  *
  *	If you don't have a "true" common area then your code that calls swap
  *	helpers while banked will need to copy ramtop between the banks
+ *
+ *	Set:
+ *	SWAPDEV to provide your own swap routines (eg to high memory) rather
+ *	than use the simple (slow) ones provided as reference.
+ *
+ *	Note:
+ *	Unlike most other ports ramtop moves as processes are squashed up in
+ *	high memory.
+ *	This is actually not the simplest way to bring up a platform. If you
+ *	have real banking then start with bankfixed.c
  */
 
 

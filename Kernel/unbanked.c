@@ -34,6 +34,12 @@
  *	For 8086 we actually want two holes in some cases, one for cs: and one
  *	for ds: but we don't have all the vector hassle as we have a vaguely
  *	real notion of user/supervisor state.
+ *
+ *	Set:
+ *	CONFIG_BANKED_LINEAR
+ *	COMMON_BANKS	-	number of 256 byte pages of udata etc needed
+ *				with each process
+ *
  */
 
 #include <kernel.h>

@@ -3,8 +3,24 @@
 #include <printf.h>
 
 /*
- *	16K memory banks with the common in the bottom bank. Currently only used
- *	for the 6502 CPU.
+ *	This module manages a system with flexible 16K sized banks. It assumes
+ *	that the udata and kernel common/stacks/other overheads are mapped at the
+ *	bottom of available memory. (0 to PROGBASE - 1)
+ *
+ *	If the memory is mapped with the common at the top (16K banks for Z80
+ *	for example) then use bank16k.c
+ *
+ *	Other requirements:
+ *	- If you are using swap your swap driver must know how to remap and access
+ *	  any process memory for the other processes
+ *	- 16bit address space (under 64K is fine, over is not)
+ *
+ *	Set:
+ *	CONFIG_BANK16_LOW
+ *	MAX_MAPS	to the largest number of free pages there can be
+ *	SWAPDEV		if using swap
+ *
+ *	Page numbers must not include 0 (0 is taken as swapped)
  */
 
 
@@ -113,10 +129,6 @@ int pagemap_realloc(uint16_t size)
 	   unchanged at the top */
 	if (want - have > pfptr)
 		return ENOMEM;
-	/* We don't want to take an interrupt here while our page mappings are
-	   incomplete. We may restore bogus mappings and then take a second IRQ
-	   into hyperspace */
-        irq = di();
 
         /* We have common low so we must only touch the higher pages. This is
            different from the high common case */
@@ -129,12 +141,7 @@ int pagemap_realloc(uint16_t size)
 	/* Copy the updated allocation into the ptab */
 	udata.u_ptab->p_page = udata.u_page;
 	udata.u_ptab->p_page2 = udata.u_page2;
-	/* Now fix the vectors up - they've potentially teleported up to 48K up
-	   the user address space, we need to put a copy back in low memory before
-	   we switch to this memory map */
-	program_vectors(&udata.u_page);
 
-	irqrestore(irq);
 	return 0;
 }
 

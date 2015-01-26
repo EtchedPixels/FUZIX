@@ -1,3 +1,24 @@
+/*
+ *	This module manages a system with flexible 16K sized banks. It assumes
+ *	that the udata and kernel common/stacks/other overheads are mapped at the
+ *	very top of available memory. (PROGTOP to 0xFFFF)
+ *
+ *	If the memory is mapped with the common at the bottom (16K banks for 6502
+ *	for example) then use bank16k_low.c
+ *
+ *	Other requirements:
+ *	- If you are using swap your swap driver must know how to remap and access
+ *	  any process memory for the other processes
+ *	- 16bit address space (under 64K is fine, over is not)
+ *
+ *	Set:
+ *	CONFIG_BANK16
+ *	MAX_MAPS	to the largest number of free pages there can be
+ *	SWAPDEV		if using swap
+ *	PROGTOP		first byte above process space
+ *
+ *	Page numbers must not include 0 (0 is taken as swapped)
+ */
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
