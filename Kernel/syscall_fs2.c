@@ -8,7 +8,7 @@
  *	we can potentially bank them out if we do a 32K/32K mode)
  */
 
-static int16_t chdiroot_op(inoptr ino, inoptr * p)
+static arg_t chdiroot_op(inoptr ino, inoptr * p)
 {
 	if (getmode(ino) != F_DIR) {
 		udata.u_error = ENOTDIR;
@@ -26,7 +26,7 @@ static int16_t chdiroot_op(inoptr ino, inoptr * p)
  ********************************************/
 #define dir (char *)udata.u_argn
 
-int16_t _chdir(void)
+arg_t _chdir(void)
 {
 	inoptr newcwd;
 
@@ -43,7 +43,7 @@ int16_t _chdir(void)
  ********************************************/
 #define fd (int16_t)udata.u_argn
 
-int16_t _fchdir(void)
+arg_t _fchdir(void)
 {
 	inoptr newcwd;
 
@@ -61,7 +61,7 @@ int16_t _fchdir(void)
  ********************************************/
 #define dir (char *)udata.u_argn
 
-int16_t _chroot(void)
+arg_t _chroot(void)
 {
 	inoptr newroot;
 
@@ -85,7 +85,7 @@ int16_t _chroot(void)
 #define mode (int16_t)udata.u_argn1
 #define dev  (int16_t)udata.u_argn2
 
-int16_t _mknod(void)
+arg_t _mknod(void)
 {
 	inoptr ino;
 	inoptr parent;
@@ -140,7 +140,7 @@ int16_t _mknod(void)
 #define path (char *)udata.u_argn
 #define mode (int16_t)udata.u_argn1
 
-int16_t _access(void)
+arg_t _access(void)
 {
 	inoptr ino;
 	uint16_t euid;
@@ -182,7 +182,7 @@ int16_t _access(void)
 
 #define mode (int16_t)udata.u_argn1
 
-static int16_t chmod_op(inoptr ino)
+static arg_t chmod_op(inoptr ino)
 {
 	if (ino->c_node.i_uid != udata.u_euid && esuper())
 		return (-1);
@@ -202,7 +202,7 @@ static int16_t chmod_op(inoptr ino)
  ********************************************/
 #define path (char *)udata.u_argn
 
-int16_t _chmod(void)
+arg_t _chmod(void)
 {
 	inoptr ino;
 	int ret;
@@ -223,7 +223,7 @@ int16_t _chmod(void)
  ********************************************/
 #define fd (int16_t)udata.u_argn
 
-int16_t _fchmod(void)
+arg_t _fchmod(void)
 {
 	inoptr ino;
 
@@ -259,7 +259,7 @@ static int chown_op(inoptr ino)
  ********************************************/
 #define path (char *)udata.u_argn
 
-int16_t _chown(void)
+arg_t _chown(void)
 {
 	inoptr ino;
 	int ret;
@@ -281,7 +281,7 @@ int16_t _chown(void)
  ********************************************/
 #define fd (int16_t)udata.u_argn
 
-int16_t _fchown(void)
+arg_t _fchown(void)
 {
 	inoptr ino;
 
@@ -301,7 +301,7 @@ int16_t _fchown(void)
 #define file (char *)udata.u_argn
 #define buf (char *)udata.u_argn1
 
-int16_t _utime(void)
+arg_t _utime(void)
 {
 	inoptr ino;
 	time_t t[2];
@@ -348,7 +348,7 @@ out2:
  *******************************************/
 #define fd (int16_t)udata.u_argn
 
-int16_t _acct(void)
+arg_t _acct(void)
 {
 #ifdef CONFIG_ACCT
         inoptr inode;
@@ -387,7 +387,7 @@ int16_t _acct(void)
 #define dev (uint16_t)udata.u_argn
 #define buf (struct filesys *)udata.u_argn1
 
-int16_t _getfsys(void)
+arg_t _getfsys(void)
 {
         struct mount *m = fs_tab_get(dev);
 	if (m == NULL || m->m_dev == NO_DEVICE) {
@@ -411,7 +411,7 @@ int16_t mode;
 #define flag (uint16_t)udata.u_argn1
 #define mode (uint16_t)udata.u_argn2
 
-int16_t _open(void)
+arg_t _open(void)
 {
 	int8_t uindex;
 	int8_t oftindex;
@@ -538,7 +538,7 @@ char *name2;
 #define name1 (char *)udata.u_argn
 #define name2 (char *)udata.u_argn1
 
-int16_t _link(void)
+arg_t _link(void)
 {
 	inoptr ino;
 	inoptr ino2;
@@ -603,7 +603,7 @@ int16_t _link(void)
 #define request (int)udata.u_argn1
 #define data (int)udata.u_argn2
 
-int16_t _fcntl(void)
+arg_t _fcntl(void)
 {
 	uint8_t *acc;
 	int newd;
@@ -657,7 +657,7 @@ with node name. Rest is up to the libc.
 #define buf (char *)udata.u_argn
 #define len (uint16_t)udata.u_argn1
 
-int16_t _uname(void)
+arg_t _uname(void)
 {
         uint16_t size = sizeof(sysinfo) + uname_len;
         if (size > len)
@@ -685,7 +685,7 @@ Perform locking upon a file.
 #define file (uint16_t)udata.u_argn
 #define lockop (uint16_t)udata.u_argn1
 
-int16_t _flock(void)
+arg_t _flock(void)
 {
 	inoptr ino;
 	struct oft *o;

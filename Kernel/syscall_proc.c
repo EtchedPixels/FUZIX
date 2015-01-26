@@ -10,7 +10,7 @@ Getpid ()                        Function 18
 Return Process ID Number (PID) to Caller.
 ********************************************/
 
-int16_t _getpid(void)
+arg_t _getpid(void)
 {
 	return (udata.u_ptab->p_pid);
 }
@@ -22,7 +22,7 @@ Getppid ()                       Function 19
 Return Parent's Process ID Number (PPID).
 ********************************************/
 
-int16_t _getppid(void)
+arg_t _getppid(void)
 {
 	return (udata.u_ptab->p_pptr->p_pid);
 }
@@ -34,7 +34,7 @@ Getuid ()                        Function 20
 Return User ID Number (UID) to Caller.
 ********************************************/
 
-int16_t _getuid(void)
+arg_t _getuid(void)
 {
 	return (udata.u_ptab->p_uid);
 }
@@ -46,7 +46,7 @@ Geteuid ()                       Function 44
 Return Effective User ID Number (EUID).
 ********************************************/
 
-int16_t _geteuid(void)
+arg_t _geteuid(void)
 {
 	return (udata.u_euid);
 }
@@ -58,7 +58,7 @@ Getgid ()                        Function 41
 Return Group ID Number (GID) to Caller.
 ********************************************/
 
-int16_t _getgid(void)
+arg_t _getgid(void)
 {
 	return (udata.u_gid);
 }
@@ -70,7 +70,7 @@ Getegid ()                       Function 45
 Return Effective Group ID Number (EGID).
 ********************************************/
 
-int16_t _getegid(void)
+arg_t _getegid(void)
 {
 	return (udata.u_egid);
 }
@@ -84,9 +84,9 @@ int uid;
 Set User ID Number (UID) of Process.  Must
 be SuperUser or owner, else Error (EPERM).
 ********************************************/
-#define uid (int)udata.u_argn
+#define uid (uint16_t)udata.u_argn
 
-int16_t _setuid(void)
+arg_t _setuid(void)
 {
 	if (super() || udata.u_ptab->p_uid == uid) {
 		udata.u_ptab->p_uid = uid;
@@ -110,7 +110,7 @@ User or in Group to Set, else Error (EPERM).
 ********************************************/
 #define gid (int16_t)udata.u_argn
 
-int16_t _setgid(void)
+arg_t _setgid(void)
 {
 	if (super() || udata.u_gid == gid) {
 		udata.u_gid = gid;
@@ -135,7 +135,7 @@ Read Clock Time/Date to User Buffer.
 #define tvec (time_t *)udata.u_argn
 #define type (uint16_t)udata.u_argn1
 
-int16_t _time(void)
+arg_t _time(void)
 {
 	time_t t;
 	switch (type) {
@@ -167,7 +167,7 @@ When active, must be SuperUser to Set Time.
 #define tvec (time_t *)udata.u_argn
 #define type (uint16_t)udata.u_argn1
 
-int16_t _stime(void)
+arg_t _stime(void)
 {
 	time_t t;
 	if (type != 0) {
@@ -190,7 +190,7 @@ char *buf;
 ********************************************/
 #define buf (char *)udata.u_argn
 
-int16_t _times(void)
+arg_t _times(void)
 {
 	irqflags_t irq;
 
@@ -215,18 +215,18 @@ char *addr;
 ********************************************/
 #define addr (char *)udata.u_argn
 
-int16_t _brk(void)
+arg_t _brk(void)
 {
 	/* FIXME: when we start building binaries with the stack embedded in them
 	   they will need a different test.. */
 	/* Don't allow break to be set past user's stack pointer */
     /*** St. Nitschke allow min. of 512 bytes for Stack ***/
-	if (addr >= (char *) (udata.u_syscall_sp) - 512) {
+	if (addr >= (char *) brk_limit()) {
 		kprintf("%d: out of memory\n", udata.u_ptab->p_pid);
 		udata.u_error = ENOMEM;
 		return (-1);
 	}
-	udata.u_break = (unsigned) addr;
+	udata.u_break = (uaddr_t) addr;
 	return (0);
 }
 
@@ -238,11 +238,11 @@ int16_t _brk(void)
 sbrk (incr)                      Function 31
 uint16_t incr;
 ********************************************/
-#define incr (uint16_t)udata.u_argn
+#define incr (usize_t)udata.u_argn
 
-int16_t _sbrk(void)
+arg_t _sbrk(void)
 {
-	unsigned oldbrk;
+	uaddr_t oldbrk;
 
 	udata.u_argn += (oldbrk = udata.u_break);
 	if ((unsigned) udata.u_argn < oldbrk)
@@ -265,7 +265,7 @@ int options;
 #define statloc (int *)udata.u_argn1
 #define options (int)udata.u_argn2
 
-int16_t _waitpid(void)
+arg_t _waitpid(void)
 {
 	ptptr p;
 	int retval;
@@ -331,7 +331,7 @@ int16_t val;
 ********************************************/
 #define val (int16_t)udata.u_argn
 
-int16_t __exit(void)
+arg_t __exit(void)
 {
 	doexit(val, 0);
 	return 0;		// ... yeah. that might not happen.
@@ -343,11 +343,11 @@ int16_t __exit(void)
 fork ()                          Function 32
 ********************************************/
 
-int16_t _fork(void)
+arg_t _fork(void)
 {
 	// allocate new process
 	struct p_tab *new_process;
-	int16_t r;
+	arg_t r;
 	irqflags_t irq;
 
 	new_process = ptab_alloc();
@@ -390,7 +390,7 @@ uint16_t t;
 
 #define t (int16_t)udata.u_argn
 
-int16_t _pause(void)
+arg_t _pause(void)
 {
 	/* 0 is a traditional "pause", n is a timeout for doing
 	   sleep etc without ugly alarm hacks */
@@ -415,9 +415,9 @@ int16_t sig;
 int16_t (*func)();
 ********************************************/
 #define sig (int16_t)udata.u_argn
-#define func (int16_t (*)())udata.u_argn1
+#define func (int (*)())udata.u_argn1
 
-int16_t _signal(void)
+arg_t _signal(void)
 {
 	int16_t retval;
 	irqflags_t irq;
@@ -462,7 +462,7 @@ int16_t disp;
 #define disp (int16_t)udata.u_argn1
 
 /* Implement sighold/sigrelse */
-int16_t _sigdisp(void)
+arg_t _sigdisp(void)
 {
 	if (sig < 1 || sig >= NSIGS || sig == SIGKILL || sig == SIGSTOP) {
 		udata.u_error = EINVAL;
@@ -486,7 +486,7 @@ int16_t sig;
 #define pid (int16_t)udata.u_argn
 #define sig (int16_t)udata.u_argn1
 
-int16_t _kill(void)
+arg_t _kill(void)
 {
 	ptptr p;
 	int f = 0, s = 0;
@@ -529,13 +529,13 @@ int16_t _kill(void)
 
 /*******************************************
 _alarm (secs)                    Function 38
-uint16_t secs;
+uarg_t secs;
 ********************************************/
-#define secs (int16_t)udata.u_argn
+#define secs (uarg_t)udata.u_argn
 
-int16_t _alarm(void)
+arg_t _alarm(void)
 {
-	int16_t retval;
+	arg_t retval;
 
 	retval = udata.u_ptab->p_alarm / 10;
 	udata.u_ptab->p_alarm = secs * 10;
@@ -548,7 +548,7 @@ int16_t _alarm(void)
 setpgrp (void)                    Function 53
 ********************************************/
 
-int16_t _setpgrp(void)
+arg_t _setpgrp(void)
 {
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	return (0);
@@ -558,7 +558,7 @@ int16_t _setpgrp(void)
 getpgrp (void)                    Function 61
 *********************************************/
 
-int16_t _getpgrp(void)
+arg_t _getpgrp(void)
 {
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	return (0);
@@ -568,7 +568,7 @@ int16_t _getpgrp(void)
 _sched_yield (void)              Function 62
 ********************************************/
 
-int16_t _sched_yield(void)
+arg_t _sched_yield(void)
 {
 	if (nready > 1)
 		switchin(getproc());

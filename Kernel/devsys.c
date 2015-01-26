@@ -70,7 +70,7 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 #define PIO_TABSIZE	1
 #define PIO_ENTRYSIZE	2
 
-int sys_ioctl(uint8_t minor, uint16_t request, char *data)
+int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 {
 	if (minor != 3) {
           udata.u_error = ENOTTY;

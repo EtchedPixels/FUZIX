@@ -22,7 +22,7 @@ void updoff(void)
 
 /* We copy the 32bit offset in and out rather than passing it
    as a 32bit OS might */
-int16_t _lseek(void)
+arg_t _lseek(void)
 {
 	inoptr ino;
 	struct oft *o;
@@ -77,7 +77,7 @@ bad:
   sync()
  ********************************************/
 
-int16_t _sync(void)
+arg_t _sync(void)
 {
 	inoptr ino;
 
@@ -108,7 +108,7 @@ int16_t _sync(void)
 #define path (char *)udata.u_argn
 #define buf (char *)udata.u_argn1
 
-int16_t _stat(void)
+arg_t _stat(void)
 {
 	inoptr ino;
 	if (!(ino = n_open(path, NULLINOPTR)))
@@ -130,7 +130,7 @@ int16_t _stat(void)
 #define fd (int16_t)udata.u_argn
 #define buf (char *)udata.u_argn1
 
-int16_t _fstat(void)
+arg_t _fstat(void)
 {
 	inoptr ino;
 
@@ -154,7 +154,7 @@ int stcpy(inoptr ino, char *buf)
 }
 
 
-int16_t dup_op(int fd, int base)
+arg_t dup_op(int fd, int base)
 {
 	int8_t newd;
 
@@ -173,7 +173,7 @@ int16_t dup_op(int fd, int base)
  ********************************************/
 #define oldd (uint16_t)udata.u_argn
 
-int16_t _dup(void)
+arg_t _dup(void)
 {
 	int8_t newd;
 	if (getinode(oldd) == NULLINODE)
@@ -198,7 +198,7 @@ int16_t _dup(void)
 #define oldd (int16_t)udata.u_argn
 #define newd (int16_t)udata.u_argn1
 
-int16_t _dup2(void)
+arg_t _dup2(void)
 {
 
 	if (getinode(oldd) == NULLINODE)
@@ -228,7 +228,7 @@ int16_t _dup2(void)
  ********************************************/
 #define mask (int16_t)udata.u_argn
 
-int16_t _umask(void)
+arg_t _umask(void)
 {
 	int omask;
 
@@ -251,7 +251,7 @@ int16_t _umask(void)
 #define request (int)udata.u_argn1
 #define data (char *)udata.u_argn2
 
-int16_t _ioctl(void)
+arg_t _ioctl(void)
 {
 	inoptr ino;
 	uint16_t dev;
@@ -292,7 +292,7 @@ int16_t uindex;
 ********************************************/
 #define uindex (int8_t)udata.u_argn
 
-int16_t _close(void)
+arg_t _close(void)
 {
 	return (doclose(uindex));
 }
@@ -306,7 +306,7 @@ int fildes[];
 ********************************************/
 #define fildes (int16_t *)udata.u_argn
 
-int16_t _pipe(void)
+arg_t _pipe(void)
 {
 	int8_t u1, u2, oft1, oft2;
 	inoptr ino;
@@ -364,7 +364,7 @@ char *path;
 #define path (char *)udata.u_argn
 
 /* Helper for the bits shared with rename */
-int16_t unlinki(inoptr ino, inoptr pino, char *fname)
+arg_t unlinki(inoptr ino, inoptr pino, char *fname)
 {
 	if (getmode(ino) == F_DIR) {
 		udata.u_error = EISDIR;
@@ -385,7 +385,7 @@ int16_t unlinki(inoptr ino, inoptr pino, char *fname)
 }
 
 /* kind of pinned here by unlinki() */
-int16_t _unlink(void)
+arg_t _unlink(void)
 {
 	inoptr ino;
 	inoptr pino;
@@ -421,7 +421,7 @@ uint16_t nbytes;
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
-int16_t _read(void)
+arg_t _read(void)
 {
 	inoptr ino;
 	uint8_t flag;
@@ -456,7 +456,7 @@ uint16_t nbytes;
  *	Trivial helper to isolate directory size changes
  *	if we make them.
  */
-int16_t _getdirent(void)
+arg_t _getdirent(void)
 {
         if (nbytes < 32) {
                 udata.u_error = ENOSPC;
@@ -481,7 +481,7 @@ uint16_t nbytes;
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
-int16_t _write(void)
+arg_t _write(void)
 {
 	inoptr ino;
 	uint8_t flag;

@@ -322,7 +322,7 @@ int no_rdwr(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return -1;
 }
 
-int no_ioctl(uint8_t minor, uint16_t a, char *b)
+int no_ioctl(uint8_t minor, uarg_t a, char *b)
 {
 	minor;
 	a;

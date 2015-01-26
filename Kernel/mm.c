@@ -2,7 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 
-unsigned int uputsys(unsigned char *from, unsigned int size)
+unsigned int uputsys(unsigned char *from, usize_t size)
 {
 	if (udata.u_sysio)
 		memcpy(udata.u_base, from, size);
@@ -11,7 +11,7 @@ unsigned int uputsys(unsigned char *from, unsigned int size)
 	return size;
 }
 
-unsigned int ugetsys(unsigned char *to, unsigned int size)
+unsigned int ugetsys(unsigned char *to, usize_t size)
 {
 	if (udata.u_sysio)
 		memcpy(to, udata.u_base, size);

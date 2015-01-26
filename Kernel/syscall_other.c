@@ -24,7 +24,7 @@ put inside itself!
 #define src (char *)udata.u_argn
 #define dst (char *)udata.u_argn1
 
-int16_t _rename(void)
+arg_t _rename(void)
 {
 	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
@@ -109,7 +109,7 @@ int16_t _rename(void)
 #define name (char *)udata.u_argn
 #define mode (int16_t)udata.u_argn1
 
-int16_t _mkdir(void)
+arg_t _mkdir(void)
 {
 	inoptr ino;
 	inoptr parent;
@@ -172,7 +172,7 @@ char *path;
 ********************************************/
 #define path (char *)udata.u_argn
 
-int16_t _rmdir(void)
+arg_t _rmdir(void)
 {
 	inoptr ino;
 	inoptr parent;
@@ -245,7 +245,7 @@ int16_t _rmdir(void)
 #define dir (char *)udata.u_argn1
 #define flags (int)udata.u_argn2
 
-int16_t _mount(void)
+arg_t _mount(void)
 {
 	inoptr sino, dino;
 	uint16_t dev;
@@ -312,7 +312,7 @@ int16_t _mount(void)
  ********************************************/
 #define spec (char *)udata.u_argn
 
-int16_t _umount(void)
+arg_t _umount(void)
 {
 	inoptr sino;
 	uint16_t dev;
@@ -371,9 +371,9 @@ int16_t _umount(void)
 /*******************************************
 profil (samples, size, offset, scale) Function 56
 char *samples;
-uint16_t offset;
-uint16_t size;
-uint8_t scale;
+usize_t offset;
+usize_t size;
+uint16_t scale;
 ********************************************/
 
 #define samples (char *)udata.u_argn
@@ -381,7 +381,7 @@ uint8_t scale;
 #define size 	(usize_t)udata.u_argn2
 #define scale	(uint16_t)udata.u_argn3
 
-int16_t _profil(void)
+arg_t _profil(void)
 {
 #ifdef CONFIG_PROFIL
 	/* For performance reasons scale as
@@ -422,7 +422,7 @@ char *ptr;
 #define func (int16_t)udata.u_argn1
 #define ptr  (char *)udata.u_argn2
 
-int16_t _uadmin(void)
+arg_t _uadmin(void)
 {
 	if (!esuper())
 		return -1;
@@ -443,7 +443,7 @@ int16_t pri;
 ********************************************/
 #define pri (int16_t)udata.u_argn
 
-int16_t _nice(void)
+arg_t _nice(void)
 {
 	ptptr p = udata.u_ptab;
 	int16_t np;

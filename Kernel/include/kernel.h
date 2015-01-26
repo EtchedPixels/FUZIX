@@ -325,7 +325,7 @@ typedef struct p_tab {
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
     struct p_tab *p_pptr;      /* Process parent's table entry */
-    uint16_t    p_alarm;        /* Centiseconds until alarm goes off */
+    uarg_t      p_alarm;        /* Centiseconds until alarm goes off */
     uint16_t    p_exitval;      /* Exit value */
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
@@ -350,8 +350,8 @@ typedef struct p_tab {
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
     void *	p_profbuf;
-    uint16_t	p_profsize;
-    uint16_t	p_profoff;
+    uaddr_t	p_profsize;
+    uaddr_t	p_profoff;
 #endif    
 } p_tab, *ptptr;
 
@@ -374,7 +374,7 @@ typedef struct u_data {
     arg_t       u_argn3;        /* args n-3, n-2, n-1, and n */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
-    int16_t     (*u_sigvec[NSIGS])();   /* Array of signal vectors */
+    int     (*u_sigvec[NSIGS])();   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
     char *      u_base;         /* Source or dest for I/O */
@@ -390,7 +390,7 @@ typedef struct u_data {
     uint16_t    u_gid;
     uint16_t    u_euid;
     uint16_t    u_egid;
-    uint16_t    u_break;        /* Top of data space */
+    uaddr_t     u_break;        /* Top of data space */
     char        u_name[8];      /* Name invoked with */
     clock_t     u_utime;        /* Elapsed ticks in user mode */
     clock_t     u_stime;        /* Ticks in system mode */
@@ -604,7 +604,7 @@ COMMON int _uzero(uint8_t *user, usize_t count);
 
 /* platform/tricks.s */
 COMMON void switchout(void);
-COMMON void __fastcall__ doexec(uint16_t start_addr);
+COMMON void __fastcall__ doexec(uaddr_t start_addr);
 COMMON void __fastcall__ switchin(ptptr process);
 COMMON int16_t __fastcall__ dofork(ptptr child);
 
@@ -638,7 +638,7 @@ CODE1 int nxio_open(uint8_t minor, uint16_t flag);
 CODE1 int no_open(uint8_t minor, uint16_t flag);
 CODE1 int no_close(uint8_t minor);
 CODE1 int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
-CODE1 int no_ioctl(uint8_t minor, uint16_t a, char *b);
+CODE1 int no_ioctl(uint8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
@@ -692,8 +692,8 @@ CODE1 int16_t doclose (uint8_t uindex);
 CODE1 inoptr rwsetup (bool is_read, uint8_t *flag);
 
 /* mm.c */
-CODE2 unsigned int uputsys(unsigned char *from, unsigned int size);
-CODE2 unsigned int ugetsys(unsigned char *to, unsigned int size);
+CODE2 unsigned int uputsys(unsigned char *from, usize_t size);
+CODE2 unsigned int ugetsys(unsigned char *to, usize_t size);
 
 /* process.c */
 CODE2 void psleep(void *event);
@@ -756,7 +756,7 @@ CODE2 extern void inittod(void);
 /* provided by architecture or helpers */
 CODE2 void device_init(void);	/* provided by platform */
 CODE2 void pagemap_init(void);
-CODE2 void pagemap_add(uint8_t page);
+CODE2 void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 CODE2 void pagemap_free(ptptr p);
 CODE2 int pagemap_alloc(ptptr p);
 CODE2 int pagemap_realloc(uint16_t p);
@@ -773,68 +773,68 @@ CODE2 extern void platform_interrupt(void);
 COMMON void invalidate_cache(uint16_t page);
 COMMON void flush_cache(ptptr p);
 
-CODE2 int16_t __exit(void);        /* FUZIX system call 0 */
-CODE2 int16_t _open(void);         /* FUZIX system call 1 */
-CODE2 int16_t _close(void);        /* FUZIX system call 2 */
-CODE2 int16_t _rename(void);       /* FUZIX system call 3 */
-CODE2 int16_t _mknod(void);        /* FUZIX system call 4 */
-CODE2 int16_t _link(void);         /* FUZIX system call 5 */
-CODE2 int16_t _unlink(void);       /* FUZIX system call 6 */
-CODE2 int16_t _read(void);         /* FUZIX system call 7 */
-CODE2 int16_t _write(void);        /* FUZIX system call 8 */
-CODE2 int16_t _lseek(void);        /* FUZIX system call 9 */
-CODE2 int16_t _chdir(void);        /* FUZIX system call 10 */
-CODE2 int16_t _sync(void);         /* FUZIX system call 11 */
-CODE2 int16_t _access(void);       /* FUZIX system call 12 */
-CODE2 int16_t _chmod(void);        /* FUZIX system call 13 */
-CODE2 int16_t _chown(void);        /* FUZIX system call 14 */
-CODE2 int16_t _stat(void);         /* FUZIX system call 15 */
-CODE2 int16_t _fstat(void);        /* FUZIX system call 16 */
-CODE2 int16_t _dup(void);          /* FUZIX system call 17 */
-CODE2 int16_t _getpid(void);       /* FUZIX system call 18 */
-CODE2 int16_t _getppid(void);      /* FUZIX system call 19 */
-CODE2 int16_t _getuid(void);       /* FUZIX system call 20 */
-CODE2 int16_t _umask(void);        /* FUZIX system call 21 */
-CODE2 int16_t _getfsys(void);      /* FUZIX system call 22 */
-CODE2 int16_t _execve(void);       /* FUZIX system call 23 */
-CODE2 int16_t _getdirent(void);    /* FUZIX system call 24 */
-CODE2 int16_t _setuid(void);       /* FUZIX system call 25 */
-CODE2 int16_t _setgid(void);       /* FUZIX system call 26 */
-CODE2 int16_t _time(void);         /* FUZIX system call 27 */
-CODE2 int16_t _stime(void);        /* FUZIX system call 28 */
-CODE2 int16_t _ioctl(void);        /* FUZIX system call 29 */
-CODE2 int16_t _brk(void);          /* FUZIX system call 30 */
-CODE2 int16_t _sbrk(void);         /* FUZIX system call 31 */
-CODE2 int16_t _fork(void);         /* FUZIX system call 32 */
-CODE2 int16_t _mount(void);        /* FUZIX system call 33 */
-CODE2 int16_t _umount(void);       /* FUZIX system call 34 */
-CODE2 int16_t _signal(void);       /* FUZIX system call 35 */
-CODE2 int16_t _dup2(void);         /* FUZIX system call 36 */
-CODE2 int16_t _pause(void);        /* FUZIX system call 37 */
-CODE2 int16_t _alarm(void);        /* FUZIX system call 38 */
-CODE2 int16_t _kill(void);         /* FUZIX system call 39 */
-CODE2 int16_t _pipe(void);         /* FUZIX system call 40 */
-CODE2 int16_t _getgid(void);       /* FUZIX system call 41 */
-CODE2 int16_t _times(void);        /* FUZIX system call 42 */
-CODE2 int16_t _utime(void);        /* FUZIX system call 43 */
-CODE2 int16_t _geteuid(void);      /* FUZIX system call 44 */
-CODE2 int16_t _getegid(void);      /* FUZIX system call 45 */
-CODE2 int16_t _chroot(void);       /* FUZIX system call 46 */
-CODE2 int16_t _fcntl(void);        /* FUZIX system call 47 */
-CODE2 int16_t _fchdir(void);       /* FUZIX system call 48 */
-CODE2 int16_t _fchmod(void);       /* FUZIX system call 49 */
-CODE2 int16_t _fchown(void);       /* FUZIX system call 50 */
-CODE2 int16_t _mkdir(void);	   /* FUZIX system call 51 */
-CODE2 int16_t _rmdir(void);        /* FUZIX system call 52 */
-CODE2 int16_t _setpgrp(void);	   /* FUZIX system call 53 */
-CODE2 int16_t _uname(void);	   /* FUZIX system call 54 */
-CODE2 int16_t _waitpid(void);	   /* FUZIX system call 55 */
-CODE2 int16_t _profil(void);	   /* FUZIX system call 56 */
-CODE2 int16_t _uadmin(void);	   /* FUZIX system call 57 */
-CODE2 int16_t _nice(void);         /* FUZIX system call 58 */
-CODE2 int16_t _sigdisp(void);	   /* FUZIX system call 59 */
-CODE2 int16_t _flock(void);	   /* FUZIX system call 60 */
-CODE2 int16_t _getpgrp(void);	   /* FUZIX system call 61 */
-CODE2 int16_t _sched_yield(void);  /* FUZIX system call 62 */
+CODE2 arg_t __exit(void);        /* FUZIX system call 0 */
+CODE2 arg_t _open(void);         /* FUZIX system call 1 */
+CODE2 arg_t _close(void);        /* FUZIX system call 2 */
+CODE2 arg_t _rename(void);       /* FUZIX system call 3 */
+CODE2 arg_t _mknod(void);        /* FUZIX system call 4 */
+CODE2 arg_t _link(void);         /* FUZIX system call 5 */
+CODE2 arg_t _unlink(void);       /* FUZIX system call 6 */
+CODE2 arg_t _read(void);         /* FUZIX system call 7 */
+CODE2 arg_t _write(void);        /* FUZIX system call 8 */
+CODE2 arg_t _lseek(void);        /* FUZIX system call 9 */
+CODE2 arg_t _chdir(void);        /* FUZIX system call 10 */
+CODE2 arg_t _sync(void);         /* FUZIX system call 11 */
+CODE2 arg_t _access(void);       /* FUZIX system call 12 */
+CODE2 arg_t _chmod(void);        /* FUZIX system call 13 */
+CODE2 arg_t _chown(void);        /* FUZIX system call 14 */
+CODE2 arg_t _stat(void);         /* FUZIX system call 15 */
+CODE2 arg_t _fstat(void);        /* FUZIX system call 16 */
+CODE2 arg_t _dup(void);          /* FUZIX system call 17 */
+CODE2 arg_t _getpid(void);       /* FUZIX system call 18 */
+CODE2 arg_t _getppid(void);      /* FUZIX system call 19 */
+CODE2 arg_t _getuid(void);       /* FUZIX system call 20 */
+CODE2 arg_t _umask(void);        /* FUZIX system call 21 */
+CODE2 arg_t _getfsys(void);      /* FUZIX system call 22 */
+CODE2 arg_t _execve(void);       /* FUZIX system call 23 */
+CODE2 arg_t _getdirent(void);    /* FUZIX system call 24 */
+CODE2 arg_t _setuid(void);       /* FUZIX system call 25 */
+CODE2 arg_t _setgid(void);       /* FUZIX system call 26 */
+CODE2 arg_t _time(void);         /* FUZIX system call 27 */
+CODE2 arg_t _stime(void);        /* FUZIX system call 28 */
+CODE2 arg_t _ioctl(void);        /* FUZIX system call 29 */
+CODE2 arg_t _brk(void);          /* FUZIX system call 30 */
+CODE2 arg_t _sbrk(void);         /* FUZIX system call 31 */
+CODE2 arg_t _fork(void);         /* FUZIX system call 32 */
+CODE2 arg_t _mount(void);        /* FUZIX system call 33 */
+CODE2 arg_t _umount(void);       /* FUZIX system call 34 */
+CODE2 arg_t _signal(void);       /* FUZIX system call 35 */
+CODE2 arg_t _dup2(void);         /* FUZIX system call 36 */
+CODE2 arg_t _pause(void);        /* FUZIX system call 37 */
+CODE2 arg_t _alarm(void);        /* FUZIX system call 38 */
+CODE2 arg_t _kill(void);         /* FUZIX system call 39 */
+CODE2 arg_t _pipe(void);         /* FUZIX system call 40 */
+CODE2 arg_t _getgid(void);       /* FUZIX system call 41 */
+CODE2 arg_t _times(void);        /* FUZIX system call 42 */
+CODE2 arg_t _utime(void);        /* FUZIX system call 43 */
+CODE2 arg_t _geteuid(void);      /* FUZIX system call 44 */
+CODE2 arg_t _getegid(void);      /* FUZIX system call 45 */
+CODE2 arg_t _chroot(void);       /* FUZIX system call 46 */
+CODE2 arg_t _fcntl(void);        /* FUZIX system call 47 */
+CODE2 arg_t _fchdir(void);       /* FUZIX system call 48 */
+CODE2 arg_t _fchmod(void);       /* FUZIX system call 49 */
+CODE2 arg_t _fchown(void);       /* FUZIX system call 50 */
+CODE2 arg_t _mkdir(void);	 /* FUZIX system call 51 */
+CODE2 arg_t _rmdir(void);        /* FUZIX system call 52 */
+CODE2 arg_t _setpgrp(void);	 /* FUZIX system call 53 */
+CODE2 arg_t _uname(void);	 /* FUZIX system call 54 */
+CODE2 arg_t _waitpid(void);	 /* FUZIX system call 55 */
+CODE2 arg_t _profil(void);	 /* FUZIX system call 56 */
+CODE2 arg_t _uadmin(void);	 /* FUZIX system call 57 */
+CODE2 arg_t _nice(void);         /* FUZIX system call 58 */
+CODE2 arg_t _sigdisp(void);	 /* FUZIX system call 59 */
+CODE2 arg_t _flock(void);	 /* FUZIX system call 60 */
+CODE2 arg_t _getpgrp(void);	 /* FUZIX system call 61 */
+CODE2 arg_t _sched_yield(void);  /* FUZIX system call 62 */
 
 #endif /* __FUZIX__KERNEL_DOT_H__ */

@@ -62,7 +62,7 @@ char *envp[];
 #define argv (char **)udata.u_argn1
 #define envp (char **)udata.u_argn2
 
-int16_t _execve(void)
+arg_t _execve(void)
 {
 	staticfast inoptr ino;
 	staticfast unsigned char *buf;
