@@ -8,6 +8,8 @@
 #include <timer.h>
 #include <stdbool.h>
 #include "config.h"
+#include <blkdev.h>
+#include "msx2.h"
 
 /*
  * MegaFlashRom SCC+ SD contains an slot expander with several devices.
@@ -35,8 +37,6 @@
 
 #ifdef DEVICE_SD
 
-extern int mapslot_bank1(uint8_t slot);
-extern uint8_t slotram;
 
 /* slot and subslot containing the sd interface */
 uint8_t slotmfr;
@@ -129,30 +129,125 @@ uint8_t sd_spi_receive_byte(uint8_t drive)
     return c;
 }
 
-bool sd_spi_receive_block(uint8_t drive, uint8_t *ptr, unsigned int length)
+/*
+ * Block transfer is now equivalent to memory copy from MegaSD mapped i/o to a ram page.
+ * Target page is always mapped to slot_page2, and the target address offset accordingly.
+ *
+ */
+bool sd_spi_receive_sector(uint8_t drive) __naked
 {
-    drive; /* not used */
+    __asm
 
-    sd_spi_map_interface();
+    ; map sd interface
+    ;
+    ld a,(_slotmfr)
+    call _mapslot_bank1
+    ld a, #MSD_PAGE
+    ld (MFR_BANKSEL0),a
 
-    while(length--) *ptr++ = readb(MSD_RDWR);
+    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
+    ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)
+    push af
+    or a
+    jr z, starttx
 
-    sd_spi_unmap_interface();
+    ; map process target page in slot_page2 if needed
+    ;
+    ld a,d
+    and #0xC0
+    rlca
+    rlca    ;  a contains the page to map
+    ld b,#0
+    ld c,a
+    ld hl,#U_DATA__U_PAGE
+    add hl,bc
+    ld a,(hl)
+    out(_RAM_PAGE2),a
 
-    return true;
+starttx:
+    ; calculate offset address in target page
+    ld a,d
+    and #0x3F
+    or #0x80
+    ld d,a
+    ld hl,#MSD_RDWR
+    ld bc,#512
+    jp looptxrx
+    __endasm;
+
+    drive; /* silence compiler warning */
 }
 
-bool sd_spi_transmit_block(uint8_t drive, uint8_t *ptr, int length)
+bool sd_spi_transmit_sector(uint8_t drive) __naked
 {
-    drive; /* not used */
+    __asm
 
-    sd_spi_map_interface();
+    ; map sd interface
+    ;
+    ld a,(_slotmfr)
+    call _mapslot_bank1
+    ld a, #MSD_PAGE
+    ld (MFR_BANKSEL0),a
 
-    while(length--) writeb(*(ptr++), MSD_RDWR);
+    ; map process target page in slot_page2
+    ;
+    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
+    ld de, (_blk_op+BLKPARAM_ADDR_OFFSET);
+    push af
+    or a
+    jr z, startrx
 
-    sd_spi_unmap_interface();
+    ; map process target page in slot_page2 if needed
+    ;
+    ld a,d
+    and #0xC0
+    rlca
+    rlca    ;  a contains the page to map
+    ld b,#0
+    ld c,a
+    ld hl,#U_DATA__U_PAGE
+    add hl,bc
+    ld a,(hl)
+    out(_RAM_PAGE2),a
 
-    return true;
+startrx:
+    ; calculate offset address in target page
+    ld a,d
+    and #0x3F
+    or #0x80
+    ld d,a
+    ld hl,#MSD_RDWR
+    ex de,hl
+    ld bc,#512
+looptxrx:
+    ldi	; 16x ldi: 19% faster
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    ldi
+    jp pe, looptxrx
+
+    ; unmap interface
+    ;
+    ld a,(_slotram)
+    call _mapslot_bank1
+    pop af
+    or a
+    ret z
+    jp _map_kernel
+    __endasm;
+    drive; /* silence compiler warning */
 }
 
 #endif

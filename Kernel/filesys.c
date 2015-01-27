@@ -828,7 +828,7 @@ void f_trunc(inoptr ino)
 void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 {
     blkno_t *buf;
-    int8_t j;
+    int16_t j;
 
     if(!blk)
         return;

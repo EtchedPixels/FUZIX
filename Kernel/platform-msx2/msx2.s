@@ -11,6 +11,7 @@
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_process
+	    .globl _map_kernel
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
@@ -141,12 +142,12 @@ init_hardware:
             .area _COMMONMEM
 
 ;
-; Size currently selected memory mapper
+; Size currently selected memory mapper (this should be done during bootstrap)
 ;
 size_memory:
 	    ld bc, #0x03FC		; make sure ram page 3 is selected
 	    out (c), b
-	    ld hl, #8			; good a target as any
+	    ld hl, #3FFF		; careful, there is code in page 3
 	    ld (hl), #0xAA		; we know there is a low page!
 	    ld bc, #0x04FC		; continue with page 4
 ramscan_2:
@@ -155,9 +156,6 @@ ramscan:
 	    out (c), b
 	    cp (hl)			; is it 0xAA
 	    jr z, ramwrapped		; we've wrapped (hopefully)
-	    ld (hl), a
-	    cp (hl)
-	    jr nz, ramerror		; ermm.. help ???
 	    inc b
 	    jr nz, ramscan
 	    jr ramerror			; not an error we *could* have 256 pages!
@@ -265,6 +263,7 @@ map_process:
 ;	Map in the kernel below the current common, go via the helper
 ;	so our cached copy is correct.
 ;
+_map_kernel:
 map_kernel:
 	    push hl
 	    ld hl, #map_kernel_data

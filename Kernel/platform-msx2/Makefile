@@ -17,7 +17,7 @@ JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASR
 all:	$(OBJS)
 
 $(DOBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE2 -c $<
