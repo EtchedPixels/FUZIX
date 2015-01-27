@@ -11,6 +11,7 @@
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_process
+	    .globl _map_kernel
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
@@ -262,6 +263,7 @@ map_process:
 ;	Map in the kernel below the current common, go via the helper
 ;	so our cached copy is correct.
 ;
+_map_kernel:
 map_kernel:
 	    push hl
 	    ld hl, #map_kernel_data
