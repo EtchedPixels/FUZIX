@@ -30,7 +30,7 @@ extern size_t __fastcall__ strlen(const char *);
 
 /* High byte is saved, low byte is a mystery so take worst case. Also allow
    a bit less as C stack is not return stack */
-#define brk_limit() ((udata.u_syscall_sp | 0xFF) - 384)
+#define brk_limit() ((((uint16_t)udata.u_syscall_sp) | 0xFF) - 384)
 
 #define staticfast	static
 
