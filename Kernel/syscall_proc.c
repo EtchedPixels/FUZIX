@@ -415,7 +415,7 @@ int16_t sig;
 int16_t (*func)();
 ********************************************/
 #define sig (int16_t)udata.u_argn
-#define func (int (*)())udata.u_argn1
+#define func (int (*)(int))udata.u_argn1
 
 arg_t _signal(void)
 {

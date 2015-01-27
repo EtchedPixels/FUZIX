@@ -434,7 +434,7 @@ void chksigs(void)
 {
 	uint8_t j;
 	uint32_t pending = udata.u_ptab->p_pending & ~udata.u_ptab->p_held;
-	int16_t (**svec)() = &udata.u_sigvec[0];
+	int (**svec)(int) = &udata.u_sigvec[0];
 	uint32_t m;
 
 	// any signals pending?

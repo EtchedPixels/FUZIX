@@ -298,8 +298,8 @@ struct mount {
 #define SIGSYS		31
 #define	SIGUNUSED	31
 
-#define  SIG_DFL   (int16_t (*)())0	/* Must be 0 */
-#define  SIG_IGN   (int16_t (*)())1
+#define  SIG_DFL   (int (*)(int))0	/* Must be 0 */
+#define  SIG_IGN   (int (*)(int))1
 
 #define sigmask(sig)    (1UL<<(sig))
 
@@ -374,7 +374,7 @@ typedef struct u_data {
     arg_t       u_argn3;        /* args n-3, n-2, n-1, and n */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
-    int     (*u_sigvec[NSIGS])();   /* Array of signal vectors */
+    int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
     char *      u_base;         /* Source or dest for I/O */
