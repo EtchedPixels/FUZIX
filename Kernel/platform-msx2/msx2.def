@@ -1,0 +1,14 @@
+; msx2 fixed i/o ports and memory mapped i/o addresses
+
+SLOT_SEL		    .equ 0xA8         ; primary slot select register
+SUBSLOT_SEL		    .equ 0xFFFF       ; seconday slot select register
+
+PAGE0_BASE		    .equ 0x0000
+PAGE1_BASE		    .equ 0x4000
+PAGE2_BASE		    .equ 0x8000
+PAGE3_BASE		    .equ 0xC000
+
+RAM_PAGE0		    .equ 0xFC         ; memory mapper registers
+RAM_PAGE1		    .equ 0xFD
+RAM_PAGE2		    .equ 0xFE
+RAM_PAGE3		    .equ 0xFF
