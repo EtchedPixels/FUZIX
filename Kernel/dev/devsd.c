@@ -49,8 +49,11 @@ static uint8_t devsd_transfer_sector(void)
                     sd_spi_transmit_sector(drive);
                     sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(drive, 0xFF);
-                    reply = sd_spi_receive_byte(drive);
-                    success = ((reply & 0x1f) == 0x05);
+                    if (sd_spi_wait_ready(drive)) {
+                        reply = sd_spi_receive_byte(drive);
+                        success = ((reply & 0x1f) == 0x05);
+		    } else
+		        success = false;
                 }
             }
 	}else
@@ -80,19 +83,17 @@ static bool sd_spi_wait_ready(uint8_t drive)
     timer_t timer;
 
     timer = set_timer_ms(500);
-    sd_spi_receive_byte(drive);
+    res = sd_spi_receive_byte(drive);
 
-    while(true){
+    while(res != 0xFF){
         res = sd_spi_receive_byte(drive);
-        if(res == 0xFF)
-            return true;
         if(timer_expired(timer)){
             kputs("sd: timeout\n");
-            break;
+            return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 static bool sd_spi_receive_prepare(uint8_t drive)
