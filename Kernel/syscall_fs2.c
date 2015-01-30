@@ -551,6 +551,11 @@ arg_t _link(void)
 	if (getmode(ino) == F_DIR && esuper())
 		goto nogood;
 
+	if (ino->c_node.i_nlink == 0xFFFF) {
+		udata.u_error = EMLINK;
+		goto nogood;
+	}
+
 	/* Make sure file2 doesn't exist, and get its parent */
 	if ((ino2 = n_open(name2, &parent2)) != NULL) {
 		i_deref(ino2);

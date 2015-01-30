@@ -125,6 +125,11 @@ arg_t _mkdir(void)
 		return (-1);
 	}
 
+	if (parent->c_node.i_nlink == 0xFFFF) {
+		udata.u_error = EMLINK;
+		goto nogood2;
+	}
+
 	filename(name, fname);
 
 	i_ref(parent);		/* We need it again in a minute */
