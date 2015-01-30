@@ -59,6 +59,8 @@ typedef union {            /* this structure is endian dependent */
 #define VIDEO
 #define DISCARD
 
+/* SDCC is arsy about unused parameters */
+#define used(x)	x
 /* No fastcall in SDCC */
 #define __fastcall__
 
