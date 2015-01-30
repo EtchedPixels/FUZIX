@@ -32,8 +32,8 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	struct s_queue *q;
 	struct tty *t;
 
-	rawflag;
-	flag;			// shut up compiler
+	used(rawflag);
+	used(flag);			/* shut up compiler */
 
 	/* Minor == 0 means that it is the controlling tty of the process */
 	if (!minor)
@@ -99,8 +99,8 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	int towrite;
 	uint8_t c;
 
-	rawflag;
-	flag;			// shut up compiler
+	used(rawflag);
+	used(flag);
 
 	/* Minor == 0 means that it is the controlling tty of the process */
 	if (!minor)
@@ -200,7 +200,7 @@ int tty_close(uint8_t minor)
 	return (0);
 }
 
-int tty_ioctl(uint8_t minor, uint16_t request, char *data)
+int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
 	if (!minor)
