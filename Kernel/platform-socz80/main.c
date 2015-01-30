@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <tty.h>
+#include <printf.h>
 
 uint16_t ramtop = PROGTOP;
 
@@ -13,7 +14,7 @@ void platform_idle(void)
 }
 
 __sfr __at 0x00 uart0_status;
-__sfr __at 0x00 uart0_data;
+__sfr __at 0x01 uart0_data;
 __sfr __at 0x10 timer_status;
 __sfr __at 0x11 timer_command;
 __sfr __at 0x28 uart1_status;
@@ -25,26 +26,27 @@ void platform_interrupt(void)
     uint8_t st1 = uart1_status;
     uint8_t ts = timer_status;
     uint8_t d;
-    
+
     if (ts & 0x80)
         timer_command = 0; 	/* Ack the timer */
     if (st0 & 0xC0) {
+        kprintf("st0 %x\n", st0);    
+        uart0_status = st0 & 0xFC;
         if (st0 & 0x80) { 	/* RX data */
             d = uart0_data;
             tty_inproc(1, d);
         }
         if (st0 & 0x40)		/* TX idle */
             tty_outproc(1);
-        uart0_status = st0 & 0xFC;
     }
     if (st1 & 0xC0) {
+        uart1_status = st1 & 0xFC;
         if (st1 & 0x80) { 	/* RX data */
             d = uart1_data;
             tty_inproc(2, d);
         }
         if (st1 & 0x40)		/* TX idle */
             tty_outproc(2);
-        uart1_status = st1 & 0xFC;
     }
     if (ts & 0x80)
         timer_interrupt();
