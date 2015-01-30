@@ -191,7 +191,7 @@ static ptptr swapvictim(ptptr p, int notself)
 		return udata.u_ptab;
 	return r;
 #else
-	p;
+	used(p);
 	if (notself)
 		panic("bad notself\n");
 	return udata.u_ptab;
