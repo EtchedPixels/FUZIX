@@ -18,7 +18,8 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
   unsigned char *addr = (unsigned char *) ptab;
 
-  rawflag;flag;
+  used(rawflag);
+  used(flag);
 
   switch(minor){
   case 0:
@@ -43,9 +44,8 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-  unsigned char *addr = (unsigned char *) ptab;
-
-  rawflag;flag;
+  used(rawflag);
+  used(flag);
 
   switch(minor){
   case 0:
