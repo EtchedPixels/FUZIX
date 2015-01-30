@@ -291,8 +291,8 @@ int d_flush(uint16_t dev)
 
 int nxio_open(uint8_t minor, uint16_t flag)
 {
-	minor;
-	flag;
+	used(minor);
+	used(flag);
 	udata.u_error = ENXIO;
 	return -1;
 }
@@ -302,31 +302,31 @@ int nxio_open(uint8_t minor, uint16_t flag)
  */
 int no_open(uint8_t minor, uint16_t flag)
 {
-	minor;
-	flag;
+	used(minor);
+	used(flag);
 	return 0;
 }
 
 int no_close(uint8_t minor)
 {
-	minor;
+	used(minor);
 	return 0;
 }
 
 int no_rdwr(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	minor;
-	rawflag;
-	flag;
+	used(minor);
+	used(rawflag);
+	used(flag);
 	udata.u_error = EINVAL;
 	return -1;
 }
 
 int no_ioctl(uint8_t minor, uarg_t a, char *b)
 {
-	minor;
-	a;
-	b;
+	used(minor);
+	used(a);
+	used(b);
 	udata.u_error = ENOTTY;
 	return -1;
 }
