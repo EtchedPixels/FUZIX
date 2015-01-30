@@ -183,7 +183,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 	cursor_on(cursory, cursorx);
 }
 
-int vt_ioctl(uint8_t minor, uint16_t request, char *data)
+int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 {
 	/* FIXME: need to address the multiple vt switching case
 	   here.. probably need to switch vt */
