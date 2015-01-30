@@ -1,0 +1,44 @@
+This is an initial 'gee it compiles' work in progress initial 68000 port
+
+Don't expect it to do anything !
+
+
+Notes:
+	Memory below $0800 is supervisor only (traps)
+
+Need to support 'resident' style binaries
+Start of disk boot block info ?
+
+Tidy up di/ei usage - we don't want to turn on hblank at random in our ei
+stuff!!!
+
+First boot sector loaded into buffer. must checksum to $1234
+then executed. Must be PI
+
+Eventually need multi-segment executables
+
+
+Interrupts
+
+2 - hblank
+4 - vblank
+6 - mfp (but is magic)
+
+$100 - mfp parallel
+$104 - mfp rs232 carrier det
+$108 - mfp rs232 cts
+$10c - mfp blitter done
+$110 - mfp timer d
+$114 - mfp timer c (200Hz)
+$118 - mfp midi/kbd
+$11c - floppy/hd req
+$120 - hblank counter (timer B)
+$124 - rs232 tx error
+$128 - rs232 tx empty
+$12c - rs232 rx error
+$130 - rs232 rx full
+$134 - mfp timer a
+$138 - rs232 ring det
+$13c - mono/colour detect
+
+
