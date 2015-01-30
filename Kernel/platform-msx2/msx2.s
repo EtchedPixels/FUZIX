@@ -147,7 +147,7 @@ init_hardware:
 size_memory:
 	    ld bc, #0x03FC		; make sure ram page 3 is selected
 	    out (c), b
-	    ld hl, #3FFF		; careful, there is code in page 3
+	    ld hl, #0x3FFF		; careful, there is code in page 3
 	    ld (hl), #0xAA		; we know there is a low page!
 	    ld bc, #0x04FC		; continue with page 4
 ramscan_2:
