@@ -28,23 +28,23 @@ void platform_interrupt(void)
     
     if (ts & 0x80)
         timer_command = 0; 	/* Ack the timer */
-    if (st0 & 0x81) {
-        uart0_status = st0 & 0xFC;
+    if (st0 & 0xC0) {
         if (st0 & 0x80) { 	/* RX data */
             d = uart0_data;
             tty_inproc(1, d);
         }
-        if (st0 & 0x01)		/* TX idle */
+        if (st0 & 0x40)		/* TX idle */
             tty_outproc(1);
+        uart0_status = st0 & 0xFC;
     }
-    if (st1 & 0x81) {
-        uart1_status = st1 & 0xFC;
-        if (st0 & 0x80) { 	/* RX data */
+    if (st1 & 0xC0) {
+        if (st1 & 0x80) { 	/* RX data */
             d = uart1_data;
             tty_inproc(2, d);
         }
-        if (st1 & 0x01)		/* TX idle */
+        if (st1 & 0x40)		/* TX idle */
             tty_outproc(2);
+        uart1_status = st1 & 0xFC;
     }
     if (ts & 0x80)
         timer_interrupt();
