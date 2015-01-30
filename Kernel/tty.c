@@ -382,7 +382,7 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
 #endif
         /* For slower platforms it's not worth the task switching and return
            costs versus waiting a bit. A box with tx interrupts and sufficient
-           performance can buffer or sleep in in tty_putc instead.
+           performance can buffer or sleep in tty_putc instead.
 
            The driver should return 1 - send bytes, 0 - spinning may be useful,
            -1 - blocked, don't spin (eg flow controlled) */
