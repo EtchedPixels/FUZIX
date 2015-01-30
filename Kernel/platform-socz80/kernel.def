@@ -5,3 +5,5 @@ U_DATA__PAGEOFFSET          .equ 0x0900       ; U_DATA % 0x1000
 U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
 
 Z80_TYPE		    .equ 0	      ; Actually a T80
+
+PROGLOAD		    .equ 0x100

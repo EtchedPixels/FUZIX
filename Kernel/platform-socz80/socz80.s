@@ -32,7 +32,6 @@
             .globl _tty_inproc
             .globl istack_top
             .globl istack_switched_sp
-            .globl dispatch_process_signal
             .globl unix_syscall_entry
             .globl trap_illegal
 	    .globl null_handler

@@ -23,3 +23,4 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
+	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
