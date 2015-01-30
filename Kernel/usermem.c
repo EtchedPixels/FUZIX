@@ -8,6 +8,9 @@
 #include <kdata.h>
 #include <printf.h>
 
+/* Flat mode has to use its own valaddr */
+#ifndef CONFIG_FLAT
+
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const char *base, usize_t size)
 {
@@ -21,6 +24,8 @@ usize_t valaddr(const char *base, usize_t size)
 		udata.u_error = EFAULT;
 	return size;
 }
+#endif
+
 
 int uget(const void *user, void *dst, usize_t count)
 {
@@ -177,4 +182,61 @@ int _uzero(uint8_t *user, usize_t count)
 	return 0;
 }
 
+#endif
+#ifdef CONFIG_USERMEM_DIRECT
+
+/* Systems where all memory is always mapped for live processes and kernel */
+
+usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+{
+	memcpy(dest, user, count);
+	return 0;
+}
+
+int16_t _ugetc(const uint8_t *user)
+{
+	return *user;
+}
+
+uint16_t _ugetw(const uint16_t *user)
+{
+	return *user;
+}
+
+int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
+{
+	while(count--) {
+		*dest = *user++;
+		if (*dest == '\0')
+			return 0;
+		dest++;
+	}
+	/* Ensure terminated */
+	dest[-1] = '\0';
+	return -1;
+}
+
+int _uput(const uint8_t *source, uint8_t *user, usize_t count)
+{
+	memcpy(user, source, count);
+	return 0;
+}
+
+int _uputc(uint16_t value,  uint8_t *user)
+{
+	*user = value;
+	return 0;
+}
+
+int _uputw(uint16_t value,  uint16_t *user)
+{
+	*user = value;
+	return 0;
+}
+
+int _uzero(uint8_t *user, usize_t count)
+{
+	memset(user, 0, count);
+	return 0;
+}
 #endif
