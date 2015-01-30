@@ -305,7 +305,7 @@ void load_average(void)
 
 	while (i++ < 3) {
 		r->average = ((((r->average - (nr << 8)) * r->exponent) +
-				((unsigned long)nr) << 16)) >> 8;
+				(((unsigned long)nr) << 16)) >> 8);
 		r++;
 	}
 }
