@@ -169,7 +169,7 @@ extern CODE1 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern CODE1 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern CODE1 int tty_open(uint8_t minor, uint16_t flag);
 extern CODE1 int tty_close(uint8_t minor);
-extern CODE1 int tty_ioctl(uint8_t minor, uint16_t request, char *data);
+extern CODE1 int tty_ioctl(uint8_t minor, uarg_t request, char *data);
 
 extern CODE1 void tty_hangup(uint8_t minor);
 extern CODE1 void tty_carrier_drop(uint8_t minor);

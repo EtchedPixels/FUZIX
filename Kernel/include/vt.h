@@ -39,7 +39,7 @@ void scroll_up(void);
 void scroll_down(void);
 void plot_char(int8_t y, int8_t x, uint16_t c);
 void do_beep(void);
-int vt_ioctl(uint8_t minor, uint16_t op, char *ptr);
+int vt_ioctl(uint8_t minor, uarg_t op, char *ptr);
 int vt_inproc(uint8_t minor, unsigned char c);
 
 #endif
