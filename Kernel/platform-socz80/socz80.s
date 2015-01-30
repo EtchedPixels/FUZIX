@@ -144,17 +144,17 @@ init_hardware:
             res 7, a ; clear any outstanding interrupt
             out (TIMER_STATUS), a
 
-;            ; program UART0 for interrupts on RX (not TX ... yet)
-;            in a, (UART0_STATUS)
-;            and #0xF0 ; clear bottom four bits only
-;            or  #0x0c ; enable TX & RX ints
-;            out (UART0_STATUS), a
+            ; program UART0 for interrupts on RX (not TX ... yet)
+            in a, (UART0_STATUS)
+            and #0xF0 ; clear bottom four bits only
+            or  #0x08 ; enable RX   // TX & RX ints was 0xc
+            out (UART0_STATUS), a
 
             ; program UART1 similarly
-;            in a, (UART1_STATUS)
-;            and #0xF0 ; clear bottom four bits only
-;            or  #0x0c ; enable TX & RX ints
-;            out (UART1_STATUS), a
+            in a, (UART1_STATUS)
+            and #0xF0 ; clear bottom four bits only
+            or  #0x0c ; enable TX & RX ints
+            out (UART1_STATUS), a
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
             ld hl, #0
