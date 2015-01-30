@@ -20,6 +20,7 @@
 	    .globl map_restore
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
+	    .globl _irqwork
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -97,7 +98,31 @@ _trap_monitor:
             ; it's never a dull day with ROM around!
 
 platform_interrupt_all:
+	    in a,(TIMER_STATUS)
+	    bit 7, a
+	    jr z, not_timer
+	    ld a,(_irqwork)
+	    set 0, a
+	    ld (_irqwork),a
+	    xor a
+	    out (TIMER_STATUS),a
+not_timer:
+	    in a,(UART0_STATUS)
+	    ld b, a
+	    and #0xC0
+	    ret z
+	    ld a, #0xfc
+	    and b
+	    out (UART0_STATUS),a
+	    and #0xC0
+	    ld hl,#_irqwork
+	    or (hl)
+	    ld (hl),a
 	    ret
+
+; FIXME: this in common is not ideal but not clear where it should go
+; to allow queued stuff to be handled reliably
+_irqwork:   .dw 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
@@ -275,6 +300,33 @@ readlastbytes:
             inir
             ret
 
+mmu_state_dump:
+            push bc
+            push hl
+            ld c, #0
+            ld b, #16
+dumpnextframe:
+            ld hl, #mmumsg
+            call outstring
+            ld a, c
+            out (MMU_SELECT), a
+            call outnibble
+            ld a, #':'
+            call outchar
+            ld a, #' '
+            call outchar
+            in a, (MMU_FRAMEHI)
+            ld h, a
+            in a, (MMU_FRAMELO)
+            ld l, a
+            call outhl
+            call outnewline
+            inc c
+            djnz dumpnextframe
+            pop hl
+            pop bc
+            ret
+
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -327,33 +379,6 @@ _program_vectors:
 
 mmumsg:     .ascii "MMU page "
             .db 0
-
-mmu_state_dump:
-            push bc
-            push hl
-            ld c, #0
-            ld b, #16
-dumpnextframe:
-            ld hl, #mmumsg
-            call outstring
-            ld a, c
-            out (MMU_SELECT), a
-            call outnibble
-            ld a, #':'
-            call outchar
-            ld a, #' '
-            call outchar
-            in a, (MMU_FRAMEHI)
-            ld h, a
-            in a, (MMU_FRAMELO)
-            ld l, a
-            call outhl
-            call outnewline
-            inc c
-            djnz dumpnextframe
-            pop hl
-            pop bc
-            ret
 
 
 ;

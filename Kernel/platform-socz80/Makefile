@@ -1,23 +1,31 @@
 
-CSRCS = devlpr.c devtty.c devsd.c devrd.c
+CSRCS = devlpr.c devtty.c devrd.c devsdspi.c
 CSRCS += devices.c main.c
 
-ASRCS = crt0.s devsd_hw.s devrd_hw.s socz80.s
+ASRCS = crt0.s devrd_hw.s socz80.s
 ASRCS += tricks.s usermem.s commonmem.s
+
+DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
+DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-OBJS  = $(COBJS) $(AOBJS)
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
+CROSS_CCOPTS += -I../dev/
+
+JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
 all:	$(OBJS)
+
+$(AOBJS): %.rel: %.s
+	$(CROSS_AS) $(ASOPTS) $<
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
-	$(CROSS_AS) $(ASOPTS) $<
+$(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 

@@ -18,8 +18,6 @@ lowlevel-z80.rel
 timer.rel
 kdata.rel
 platform-socz80/devrd.rel
-platform-socz80/devsd.rel
-platform-socz80/devsd_hw.rel
 platform-socz80/devrd_hw.rel
 platform-socz80/devices.rel
 devio.rel
@@ -36,4 +34,8 @@ mm.rel
 devsys.rel
 platform-socz80/devlpr.rel
 platform-socz80/devtty.rel
+platform-socz80/devsd.rel
+platform-socz80/blkdev.rel
+platform-socz80/mbr.rel
+platform-socz80/devsdspi.rel
 -e
