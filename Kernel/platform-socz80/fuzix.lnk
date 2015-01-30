@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0088
--b _COMMONMEM=0xF800
+-b _COMMONMEM=0xF700
 -b _DISCARD=0xE000
 -l z80
 platform-socz80/crt0.rel
@@ -10,7 +10,7 @@ platform-socz80/socz80.rel
 start.rel
 version.rel
 usermem.rel
-platform-socz80/usermem.rel
+usermem_std-z80.rel
 platform-socz80/tricks.rel
 platform-socz80/main.rel
 bank16k.rel
