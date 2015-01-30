@@ -53,6 +53,9 @@ typedef union {            /* this structure is endian dependent */
 /* 6809 gcc already uses register calling whenever it can */
 #define __fastcall__
 
+/* Sane behaviour for unused parameters */
+#define used(x)
+
 #ifdef CONFIG_BANKED
 #define CODE1	__attribute__((far("1")))
 #define CODE2   __attribute__((far("2")))
