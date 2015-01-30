@@ -1,38 +1,46 @@
+/*
+ *	Implement binary loading for 32bit platforms. We use the ucLinux binflat
+ *	format with a simple magic number tweak to avoid confusion with ucLinux
+ */
+
 #include <kernel.h>
+#include <kernel32.h>
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
 
-static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
+#define ARGBUF_SIZE	2048
+
+struct binfmt_flat {
+	uint8_t magic[4];
+	uint32_t rev;
+	uint32_t entry;
+	uint32_t data_start;
+	uint32_t data_end;
+	uint32_t bss_end;
+	uint32_t stack_size;
+	uint32_t reloc_start;
+	uint32_t reloc_count;
+	uint32_t flags;
+	uint32_t filler[6];
+};
+
+static int bload(inoptr i, uint16_t bl, void *base, uint32_t len)
 {
 	blkno_t blk;
 	while(len) {
 		uint16_t cp = min(len, 512);
 		blk = bmap(i, bl, 1);
 		if (blk == NULLBLK)
-			uzero((uint8_t *)base, 512);
+			uzero(base, 512);
 		else {
-#ifdef CONFIG_LEGACY_EXEC
-			uint8_t *buf;
-			buf = bread(i->c_dev, blk, 0);
-			if (buf == NULL) {
-				kputs("bload failed.\n");
-				return -1;
-			}
-			uput(buf, (uint8_t *)base, cp);
-			bufdiscard((bufptr)buf);
-			brelse((bufptr)buf);
-#else
-			/* Might be worth spotting sequential blocks and
-			   merging ? */
 			udata.u_offset = (off_t)blk << 9;
 			udata.u_count = 512;
-			udata.u_base = (uint8_t *)base;
+			udata.u_base = base;
 			if (cdread(i->c_dev, 0) < 0) {
 				kputs("bload failed.\n");
 				return -1;
 			}
-#endif
 		}
 		base += cp;
 		len -= cp;
@@ -51,6 +59,44 @@ static void close_on_exec(void)
 	udata.u_cloexec = 0;
 }
 
+static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
+{
+	if (bf->rev != 4)
+		return 0;
+	if (bf->entry >= bf->data_start)
+		return 0;
+	if (bf->data_start > bf->data_end)
+		return 0;
+	if (bf->data_end < bf->bss_end)
+		return 0;
+	if (bf->bss_end + bf->stack_size < bf->bss_end)
+		return 0;
+	if (bf->data_end > ino->c_node.i_size)
+		return 0;
+	if (bf->bss_end - bf->data_end < 4 * bf->reloc_count)
+		bf->bss_end = bf->data_end + 4 * bf->reloc_count;
+	if (bf->reloc_start + bf->reloc_count * 4 > ino->c_node.i_size ||
+		bf->reloc_start + bf->reloc_count * 4 < bf->reloc_start)
+		return 0;
+	if (bf->flags != 1)
+		return 0;
+	return 1;
+}
+
+/* For now we load the binary in one block, including code/data/bss. We can
+   look at better formats, split binaries etc later maybe */
+static void relocate(struct binfmt_flat *bf, void *progbase, uint32_t size)
+{
+	uint32_t *rp = progbase + bf->reloc_start;
+	uint32_t n = bf->reloc_count;
+	while (n--) {
+		uint32_t v = *rp++;
+		if (v < size && !(v&1))	/* Revisit for non 68K */
+			*((uint32_t *)(rp + v)) += (uint32_t)progbase;
+	}
+}
+
+
 /* User's execve() call. All other flavors are library routines. */
 /*******************************************
 execve (name, argv, envp)        Function 23
@@ -64,19 +110,16 @@ char *envp[];
 
 arg_t _execve(void)
 {
-	staticfast inoptr ino;
-	staticfast unsigned char *buf;
+	struct binfmt_flat *binflat;
+	inoptr ino;
+	unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
 	int argc;
-	uint16_t progptr;
-	staticfast uint16_t top;
-	uint16_t bin_size;	/* Will need to be bigger on some cpus */
-	uint16_t bss;
-	uint8_t *p;
-
-	top = ramtop;
+	uint32_t bin_size;	/* Will need to be bigger on some cpus */
+	void *progbase, *top;
+	uaddr_t go;
 
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
@@ -97,69 +140,42 @@ arg_t _execve(void)
 
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
+	binflat = (struct binfmt_flat *)buf;
 
-	/* Magic numbers
-		0xC3 xx xx	- Z80 with 0x100 entry
-		0x4C xx xx	- 6502
-		0x0E xx xx	- 6809
-
-	   followed by a base page for the executable
-
-	*/
-	if (*buf  != EMAGIC && *buf != EMAGIC_2) {
+	/* Hard coded for our 68K format. We don't quite use the ucLinux
+	   names, we don't want to load a ucLinux binary in error! */
+	if (buf == NULL || memcmp(buf, "bF68", 4) ||
+		!valid_hdr(ino, binflat)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
-	/*
-	 *	Executables must be in FUZIX format (we'll let the CP/M emul
-	 *	wrap the binaries and do the emulator load so we can clean up
-	 *	all the kernel code for this case). We don't really want to end
-	 *	up with CP/M, o65 and other emulations in kernel!
-	 *
-	 *	Use p to persuade sdcc not to generate shite code
-	 */
-	p = buf + 3;
+	/* Memory needed */
+	bin_size = binflat->bss_end + binflat->stack_size;
 
-	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ !='1' || 
-		/* Don't load binaries for the wrong base page, eg spectrum
-		   binaries on a sane box. 0 indicates a relocatable binary */
-		(*p && *p != PROGLOAD >> 8)) {
-		udata.u_error = ENOEXEC;
+	/* Gather the arguments, and put them in temporary buffers. */
+	abuf = (struct s_argblk *) kmalloc(ARGBUF_SIZE);
+	if (abuf == NULL) {
+		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
-	top = *++p + (*p << 8);
-	if (top == 0)	/* Legacy 'all space' binary */
-		top = ramtop;
-	else	/* Requested an amount, so adjust for the base */
-		top += PROGLOAD;
-
-	bss = buf[14] | (buf[15] << 8);
-
-	/* Binary doesn't fit */
-	bin_size = ino->c_node.i_size;
-	progptr = bin_size + 1024 + bss;
-	if (top - PROGBASE < progptr || progptr < bin_size) {
+	/* Put environment in another buffer. */
+	ebuf = (struct s_argblk *) kmalloc(ARGBUF_SIZE);
+	if (ebuf == NULL) {
+		kfree(abuf);
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
 
-
-	/* Gather the arguments, and put them in temporary buffers. */
-	abuf = (struct s_argblk *) tmpbuf();
-	/* Put environment in another buffer. */
-	ebuf = (struct s_argblk *) tmpbuf();
-
 	/* Read args and environment from process memory */
 	if (rargs(argv, abuf) || rargs(envp, ebuf))
-		goto nogood3;	/* SN */
+		goto nogood3;
 
 	/* This must be the last test as it makes changes if it works */
-	if (pagemap_realloc(top - MAPBASE))
+	if (pagemap_realloc(bin_size))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
-	udata.u_top = top;
 
 	/* setuid, setgid if executable requires it */
 	if (ino->c_node.i_mode & SET_UID)
@@ -168,14 +184,14 @@ arg_t _execve(void)
 	if (ino->c_node.i_mode & SET_GID)
 		udata.u_egid = ino->c_node.i_gid;
 
-	/* FIXME: In the execve case we may on some platforms have space
-	   below PROGLOAD to clear... */
-
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(buf, (uint8_t *)PROGLOAD, 512);	/* Move 1st Block to user bank */
-	brelse(buf);
+	
+	progbase = pagemap_base();
+	top = progbase + bin_size;
+
+	uput(buf, (uint8_t *)progbase, 512);	/* Move 1st Block to user bank */
 
 	/* At this point, we are committed to reading in and
 	 * executing the program. */
@@ -188,61 +204,59 @@ arg_t _execve(void)
 	 *  same buffer to avoid cycling our small cache on this. Indirect blocks
 	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
 	 */
-	progptr = PROGLOAD + 512;	// we copied the first block already
 
 	/* Compute this once otherwise each loop we must recalculate this
 	   as the compiler isn't entitled to assume the loop didn't change it */
 
-	if (bin_size > 512) {
-		bin_size -= 512;
-		bload(ino, 1, progptr, bin_size);
-		progptr += bin_size;
-	}
+	bin_size = binflat->reloc_start + 4 * binflat->reloc_count;
+	if (bin_size > 512)
+		bload(ino, 1, progbase + 512, bin_size - 512);
+	
+	go = (uint32_t)progbase + binflat->entry;
 
-	/* Should be smarter on the uzero: bank align the clearance */
-	// zero all remaining process memory above the last block loaded.
-	uzero((uint8_t *)progptr, top - progptr);
+	relocate(binflat, progbase, bin_size);
+	/* This may wipe the relocations */	
+	uzero(progbase + binflat->data_end, 
+		binflat->bss_end - binflat->data_end + binflat->stack_size);
 
-	udata.u_break = (int) progptr + bss;	//  Set initial break for program
+	brelse(buf);
+
+	/* brk eats into the stack allocation */
+	udata.u_break = (uaddr_t)(progbase + binflat->bss_end);
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
 
-	// place the arguments, environment and stack at the top of userspace memory,
+	/* place the arguments, environment and stack at the top of userspace memory. */
 
-	// Write back the arguments and the environment
-	nargv = wargs(((char *) top - 2), abuf, &argc);
+	/* Write back the arguments and the environment */
+	nargv = wargs(((char *) top - 4), abuf, &argc);
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
-	// Fill in udata.u_name with Program invocation name
-	uget((void *) ugetw(nargv), udata.u_name, 8);
+	/* Fill in udata.u_name with Program invocation name */
+	uget((void *) ugetl(nargv, NULL), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
-	brelse(abuf);
-	brelse(ebuf);
+	kfree(abuf);
+	kfree(ebuf);
 
-	// Shove argc and the address of argv just below envp
-#ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
-	uputw((uint16_t) nargv, nenvp - 1);
-	uputw((uint16_t) argc, nenvp - 2);
-#else
-	uputw((uint16_t) nargv, nenvp - 1);
-	uputw((uint16_t) argc, nenvp - 2);
-#endif
+	/* Shove argc and the address of argv just below envp */
+	uputl((uint32_t) nargv, nenvp - 1);
+	uputl((uint32_t) argc, nenvp - 2);
 
 	// Set stack pointer for the program
-	udata.u_isp = nenvp - 2;
+	udata.u_isp = nenvp - 4;
 
 	// Start execution (never returns)
-	doexec(PROGLOAD);
+	doexec(go);
 
 	// tidy up in various failure modes:
 nogood3:
-	brelse(abuf);
-	brelse(ebuf);
-      nogood2:
+	kfree(abuf);
+	kfree(ebuf);
+nogood2:
 	brelse(buf);
-      nogood:
+nogood:
 	i_deref(ino);
 	return (-1);
 }
@@ -251,32 +265,37 @@ nogood3:
 #undef argv
 #undef envp
 
-/* SN    TODO      max (1024) 512 bytes for argv
-               and max  512 bytes for environ
-*/
+/* TODO        max (1024) 512 bytes for argv
+ *             and max 512 bytes for environ
+ */
 
 bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 {
 	char *ptr;		/* Address of base of arg strings in user space */
 	uint8_t c;
 	uint8_t *bufp;
+	int err;
 
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
 
-	while ((ptr = (char *) ugetw(userspace_argv++)) != NULL) {
+	while ((ptr = (char *) ugetl(userspace_argv++, &err)) != NULL) {
+		if (err)
+			return true;
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
 		do {
 			*bufp++ = c = ugetc(ptr++);
-			if (bufp > argbuf->a_buf + 500) {
+			if (bufp > argbuf->a_buf + ARGBUF_SIZE - 12) {
 				udata.u_error = E2BIG;
 				return true;	// failed
 			}
 		}
 		while (c);
 	}
-	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;	/*Store total string size. */
-	return false;		// success
+	/*Store total string size. */
+	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;
+	/* Success */
+	return false;
 }
 
 
@@ -306,13 +325,14 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
-		uputw((uint16_t) ptr, argv++);
+		uputl((uint32_t) ptr, argv++);
 		if (argc) {
 			do
 				++ptr;
 			while (*sptr++);
 		}
 	}
-	uputw(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
+	uputl(0, argv);
 	return ((char **) argbase);
 }
+

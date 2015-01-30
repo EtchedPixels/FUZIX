@@ -232,7 +232,7 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 	struct oft *oftp;
 
 	udata.u_sysio = false;	/* I/O to user data space */
-	udata.u_base = (char *) udata.u_argn1;	/* buf */
+	udata.u_base = (unsigned char *) udata.u_argn1;	/* buf */
 	udata.u_count = (susize_t) udata.u_argn2;	/* nbytes */
 
 	if ((ino = getinode(udata.u_argn)) == NULLINODE) {

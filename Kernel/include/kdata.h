@@ -3,12 +3,16 @@
 
 #include <stdbool.h>
 
-extern char *cmdline;
+extern unsigned char *cmdline;
 #define BOOTLINE_LEN 6
-extern char bootline[BOOTLINE_LEN];
+extern unsigned char bootline[BOOTLINE_LEN];
 
 extern struct u_block ub;
+
+/* Some platforms define udata for things like register globals */
+#ifndef udata
 extern struct u_data udata;
+#endif
 
 extern uint16_t maxproc;   /* Actual max number of processes */
 extern uint16_t ramsize;
@@ -52,7 +56,7 @@ typedef int (*dev_write_t)(uint8_t minor, uint8_t rawflag, uint8_t flag);
 typedef int (*dev_init_t)(void);
 typedef int (*dev_open_t)(uint8_t minor, uint16_t flag);
 typedef int (*dev_close_t)(uint8_t minor);
-typedef int (*dev_ioctl_t)(uint8_t minor, uint16_t request, char *data); // note: data is in userspace
+typedef int (*dev_ioctl_t)(uint8_t minor, uarg_t request, char *data); // note: data is in userspace
 
 typedef struct devsw {
     dev_open_t dev_open;  /* The routines for reading, etc */
@@ -75,7 +79,7 @@ extern struct runload loadavg[];
 
 // the system call dispatch table
 #define FUZIX_SYSCALL_COUNT 63
-typedef int16_t (*syscall_t)(void);
+typedef arg_t (*syscall_t)(void);
 extern const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT];
 
 #endif

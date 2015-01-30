@@ -4,8 +4,10 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
-export TARGET = tgl6502
-export CPU = 6502
+#export TARGET = tgl6502
+#export CPU = 6502
+export TARGET=atarist
+export CPU = 68000
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
 
@@ -26,7 +28,9 @@ export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_FONT=--constseg FONT
 export CROSS_CC_VIDEO=--codeseg VIDEO
 export ASOPTS=-plosff
+export ASMEXT = .s
 export BINEXT = .rel
+export BITS=16
 #
 #	Adjust this as needed for your platform (or contribute a script
 #	to look in the usual places !)
@@ -55,8 +59,10 @@ export CROSS_CC_SEG2=--code-name SEG2
 # 6502 we need a real SEG3 to make it fit
 export CROSS_CC_SEG3=--code-name SEG3
 export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
+export ASMEXT = .s
 export BINEXT = .o
-else
+export BITS=16
+else ifeq ($(CPU),6809)
 export CROSS_AS=m6809-unknown-as
 export CROSS_LD=lwlink
 export CROSS_CC = m6809-unknown-gcc
@@ -69,7 +75,24 @@ export CROSS_CC_SEG3=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mfar-code-page=3
 export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
 export ASOPTS=
+export ASMEXT = .s
 export BINEXT = .o
+export BITS=16
+else
+export CROSS_LD=m68k-linux-gnu-ld
+export CROSS_CC = m68k-linux-gnu-gcc
+export CROSS_CCOPTS=-c -fno-builtin -Wall -Os -m68000 -mshort -I$(ROOT_DIR)/cpu-68000 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_AS=$(CROSS_CC) $(CROSS_CCOPTS) #-Wa,-M
+export CROSS_CC_SEG1=
+export CROSS_CC_SEG2=
+export CROSS_CC_SEG3=
+# Fixme: we should split discard off
+export CROSS_CC_SEGDISC=
+export CROSS_CC_VIDEO=
+export ASOPTS=
+export ASMEXT = .S
+export BINEXT = .o
+export BITS=32
 endif
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -98,8 +121,8 @@ C1SRCS += inode.c tty.c
 #	Keep all of the syscalls in C2SRCS
 #
 C2SRCS =  syscall_proc.c syscall_fs.c
-C2SRCS += syscall_fs2.c syscall_other.c syscall_exec.c process.c
-C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c
+C2SRCS += syscall_fs2.c syscall_other.c syscall_exec$(BITS).c process.c malloc.c
+C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c flat.c
 #
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
@@ -109,7 +132,7 @@ CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
 
-ASRCS =  lowlevel-$(CPU).s usermem_std-$(CPU).s
+ASRCS =  lowlevel-$(CPU)$(ASMEXT) usermem_std-$(CPU)$(ASMEXT)
 
 
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
@@ -118,20 +141,19 @@ C2OBJS = $(C2SRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
 CFONTOBJS = $(CFONTSRCS:.c=$(BINEXT))
 CVIDEOOBJS = $(CVIDEOSRCS:.c=$(BINEXT))
-AOBJS = $(ASRCS:.s=$(BINEXT))
+AOBJS = $(ASRCS:$(ASMEXT)=$(BINEXT))
 
 CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(CFONTSRCS) $(CVIDEOSRCS)
 COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS)
 
 OBJS  = $(COBJS) $(AOBJS)
 
-
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(ASRCS:.s=.rst)
+JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:$(ASMEXT)=.lst) $(ASRCS:$(ASMEXT)=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(ASRCS:$(ASMEXT)=.rst)
 
 all:	fuzix.bin
 
 .SUFFIXES:		# delete the default suffixes
-.SUFFIXES: .c .s .rel
+.SUFFIXES: .c .s .rel .S
 
 usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
 
@@ -160,7 +182,7 @@ $(CFONTOBJS): %$(BINEXT): %.c
 $(CVIDEOOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_VIDEO) $<
 
-$(AOBJS): %$(BINEXT): %.s
+$(AOBJS): %$(BINEXT): %$(ASMEXT)
 	$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<
 
 version.c: makeversion

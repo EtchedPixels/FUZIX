@@ -64,7 +64,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 typedef struct s_queue {
     unsigned char *q_base;    /* Pointer to data */
     unsigned char *q_head;    /* Pointer to addr of next char to read. */
-    char *q_tail;    /* Pointer to where next char to insert goes. */
+    unsigned char *q_tail;    /* Pointer to where next char to insert goes. */
     int   q_size;    /* Max size of queue */
     int   q_count;   /* How many characters presently in queue */
     int   q_wakeup;  /* Threshold for waking up processes waiting on queue */
@@ -330,6 +330,9 @@ typedef struct p_tab {
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t	p_page2;	/* It's really four bytes for the platform */
+#ifdef udata
+    struct u_data *p_udata;	/* Udata pointer for platforms using dynamic udata */
+#endif
     /* Update kernel.def if you change fields above this comment */
     /* Everything below here is overlaid by time info at exit */
     uint16_t    p_priority;     /* Process priority */
@@ -377,7 +380,7 @@ typedef struct u_data {
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
-    char *      u_base;         /* Source or dest for I/O */
+    uint8_t *   u_base;         /* Source or dest for I/O */
     usize_t     u_count;        /* Amount for I/O */
     off_t       u_offset;       /* Place in file for I/O */
     struct blkbuf *u_buf;
@@ -744,7 +747,7 @@ CODE2 void updoff(void);
 CODE2 int stcpy(inoptr ino, char *buf);
 CODE2 bool rargs (char **userspace_argv, struct s_argblk *argbuf);
 CODE2 char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
-CODE2 extern int16_t unlinki(inoptr ino, inoptr pino, char *fname);
+CODE2 extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* timer.c */
 CODE2 void rdtime(time_t *tloc);
@@ -759,8 +762,8 @@ CODE2 void pagemap_init(void);
 CODE2 void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 CODE2 void pagemap_free(ptptr p);
 CODE2 int pagemap_alloc(ptptr p);
-CODE2 int pagemap_realloc(uint16_t p);
-CODE2 uint16_t pagemap_mem_used(void);
+CODE2 int pagemap_realloc(usize_t p);
+CODE2 uaddr_t pagemap_mem_used(void);
 CODE2 uint8_t *swapout_prepare_uarea(ptptr p);
 CODE2 uint8_t *swapin_prepare_uarea(ptptr p);
 CODE2 void map_init(void);
@@ -768,7 +771,7 @@ CODE2 void platform_idle(void);
 CODE2 uint8_t rtc_secs(void);
 
 /* Will need a uptr_t eventually */
-extern uint16_t ramtop;	     /* Note: ramtop must be in common in some cases */
+extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */
 CODE2 extern void platform_interrupt(void);
 COMMON void invalidate_cache(uint16_t page);
 COMMON void flush_cache(ptptr p);
@@ -836,5 +839,9 @@ CODE2 arg_t _sigdisp(void);	 /* FUZIX system call 59 */
 CODE2 arg_t _flock(void);	 /* FUZIX system call 60 */
 CODE2 arg_t _getpgrp(void);	 /* FUZIX system call 61 */
 CODE2 arg_t _sched_yield(void);  /* FUZIX system call 62 */
+
+#if defined(CONFIG_32BIT)
+#include "kernel32.h"
+#endif
 
 #endif /* __FUZIX__KERNEL_DOT_H__ */

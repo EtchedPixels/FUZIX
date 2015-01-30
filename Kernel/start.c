@@ -84,7 +84,7 @@ void create_init(void)
 
 /* to sensibly parse device names this needs to be platform-specific,
    so for now it only parses device numbers */
-uint16_t bootdevice(char *s)
+uint16_t bootdevice(unsigned char *s)
 {
     unsigned int r = 0;
 

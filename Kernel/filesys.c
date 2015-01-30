@@ -283,7 +283,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     for(;;)
     {
         udata.u_count = DIR_LEN;
-        udata.u_base  =(char *)&curentry;
+        udata.u_base  =(unsigned char *)&curentry;
         udata.u_sysio = true;
         readi(wd, 0);
 
@@ -314,7 +314,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     }
 
     udata.u_count = DIR_LEN;
-    udata.u_base  = (char*)&curentry;
+    udata.u_base  = (unsigned char*)&curentry;
     udata.u_sysio = true;
     writei(wd, 0);
 
