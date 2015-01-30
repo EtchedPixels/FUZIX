@@ -439,7 +439,7 @@ arg_t _signal(void)
 		}
 		udata.u_ptab->p_ignored &= ~sigmask(sig);
 	}
-	retval = (int) udata.u_sigvec[sig];
+	retval = (arg_t) udata.u_sigvec[sig];
 	if (sig != SIGKILL && sig != SIGSTOP)
 		udata.u_sigvec[sig] = func;
 	irqrestore(irq);
