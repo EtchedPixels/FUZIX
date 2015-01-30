@@ -483,30 +483,37 @@ outnewline:
         call outchar
         ret
 
-outhl:  ; prints HL in hex. Destroys AF.
+outhl:  ; prints HL in hex.
+	push af
         ld a, h
         call outcharhex
         ld a, l
         call outcharhex
+	pop af
         ret
 
-outbc:  ; prints BC in hex. Destroys AF.
+outbc:  ; prints BC in hex.
+	push af
         ld a, b
         call outcharhex
         ld a, c
         call outcharhex
+	pop af
         ret
 
-outde:  ; prints DE in hex. Destroys AF.
+outde:  ; prints DE in hex.
+	push af
         ld a, d
         call outcharhex
         ld a, e
         call outcharhex
+	pop af
         ret
 
 ; print the byte in A as a two-character hex value
 outcharhex:
         push bc
+	push af
         ld c, a  ; copy value
         ; print the top nibble
         rra
@@ -517,6 +524,7 @@ outcharhex:
         ; print the bottom nibble
         ld a, c
         call outnibble
+	pop af
         pop bc
         ret
 
@@ -527,8 +535,7 @@ outnibble:
         jr c, numeral ; less than 10?
         add a, #0x07 ; start at 'A' (10+7+0x30=0x41='A')
 numeral:add a, #0x30 ; start at '0' (0x30='0')
-        call outchar
-        ret
+        jp outchar
 
 ;
 ;	Pull in the CPU specific workarounds

@@ -559,9 +559,9 @@ saved_map:  .db 0, 0, 0, 0
 map_current: .db 0, 0, 0, 0
 
 ; outchar: Wait for UART TX idle, then print the char in A
-; destroys: AF
 outchar:
             push bc
+	    push af
             ld b, a
             ; wait for transmitter to be idle
 ocloop:     in a, (UART0_STATUS)
@@ -570,5 +570,6 @@ ocloop:     in a, (UART0_STATUS)
             ; now output the char to serial port
             ld a, b
             out (UART0_DATA), a
+	    pop af
             pop bc
             ret
