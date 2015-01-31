@@ -62,10 +62,32 @@ char *envp[];
 #define argv (char **)udata.u_argn1
 #define envp (char **)udata.u_argn2
 
+/* Magic numbers
+
+	0xC3 xx xx	- Z80 with 0x100 entry
+	0x4C xx xx	- 6502
+	0x0E xx xx	- 6809
+
+   followed by a base page for the executable
+
+*/
+static int header_ok(uint8_t *pp)
+{
+	register uint8_t *p = pp;
+	if (*p != EMAGIC && *p != EMAGIC_2)
+		return 0;
+	p += 3;
+	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
+		return 0;
+	if (*p && *p != (PROGLOAD >> 8))
+		return 0;
+	return 1;
+}
+
 arg_t _execve(void)
 {
 	staticfast inoptr ino;
-	staticfast unsigned char *buf;
+	unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
@@ -74,7 +96,6 @@ arg_t _execve(void)
 	staticfast uint16_t top;
 	uint16_t bin_size;	/* Will need to be bigger on some cpus */
 	uint16_t bss;
-	uint8_t *p;
 
 	top = ramtop;
 
@@ -98,43 +119,17 @@ arg_t _execve(void)
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
 
-	/* Magic numbers
-		0xC3 xx xx	- Z80 with 0x100 entry
-		0x4C xx xx	- 6502
-		0x0E xx xx	- 6809
-
-	   followed by a base page for the executable
-
-	*/
-	if (*buf  != EMAGIC && *buf != EMAGIC_2) {
+	if (!header_ok(buf)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
-
-	/*
-	 *	Executables must be in FUZIX format (we'll let the CP/M emul
-	 *	wrap the binaries and do the emulator load so we can clean up
-	 *	all the kernel code for this case). We don't really want to end
-	 *	up with CP/M, o65 and other emulations in kernel!
-	 *
-	 *	Use p to persuade sdcc not to generate shite code
-	 */
-	p = buf + 3;
-
-	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ !='1' || 
-		/* Don't load binaries for the wrong base page, eg spectrum
-		   binaries on a sane box. 0 indicates a relocatable binary */
-		(*p && *p != PROGLOAD >> 8)) {
-		udata.u_error = ENOEXEC;
-		goto nogood2;
-	}
-	top = *++p + (*p << 8);
+	top = *(uint16_t *)(buf + 8);
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += PROGLOAD;
 
-	bss = buf[14] | (buf[15] << 8);
+	bss = *(uint16_t *)(buf + 14);
 
 	/* Binary doesn't fit */
 	bin_size = ino->c_node.i_size;
@@ -143,7 +138,6 @@ arg_t _execve(void)
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
-
 
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
