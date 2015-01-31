@@ -36,8 +36,8 @@ What does FUZIX have over UZI
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots on both Z80 and 6809
-* Core code can be built for Z80, 6809 and 6502 so should be far more
+* Kernel boots on both 6502, 6809 and Z80
+* Core code can be built for 6502, 6809, 68000 and Z80 so should be far more
 	portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
@@ -50,7 +50,8 @@ What does UZI have over FUZIX
 * Can run in 64K of RAM (32K kernel/32K user). FUZIX would need
 	banked ROM or similar to pull this off. If you have banked
 	ROM then our kernel footprint in RAM is about 8K plus userspace
-	plus any framebuffers and similar overhead.
+	plus any framebuffers and similar overhead. On a 6809 it's just
+	about possible to run in a straight 64K
 
 What do the UZI branches have that FUZIX has not yet integrated
 ===============================================================
@@ -81,7 +82,7 @@ What Key Features Are Missing Still
 * Uptime
 * Smarter scheduler
 * Optimisations for disk block/inode allocator (2.11BSD)
-* CP/M emulator has not yet been ported to FUZIX syscall API
+* CP/M emulator has not yet been debugged on the FUZIX syscall API
 
 
 Tool Issues
@@ -103,11 +104,12 @@ Platforms
 * Amstrad PCW8256 - boots to loading init, floppy driver bugs to chase
 * Dragon64 - abused as an emulator 6809 test environment (replaces all the system ROMs)
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
-* MSX - initial booting work done, cartridge boot needs debugging. Next stop is
-a keyboard driver.
+* MSX - basic functionality
 * N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the 
 ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * P112 - Supports the floppy disk controller, ESCC serial ports, and optional G-IDE interface.
+* SocZ80 - 128MHz extreme Z80 FPGA machine. Boots to shell, drivers need work
+* TGL6502 - Test 6502ish environment
 * TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
