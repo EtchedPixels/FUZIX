@@ -1,4 +1,5 @@
 ; 2013-12-21 William R Sowerbutts
+; 2015-01-30 Alan Cox
 
         .module tricks
 
@@ -24,7 +25,14 @@
         .include "../kernel.def"
         .include "kernel.def"
 
-        .area _COMMONMEM
+;
+;	These do not need to be in common memory as we don't have to
+;	pull udata remapping tricks on a 16K banked system. In the case of
+;	SocZ80 they *MUST NOT* be in common as they reload the MMU page for
+;	0xF000. That takes multiple instructions and the code will vanish
+;	midstream if it is in common space!
+;
+	.area _CODE2
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -193,10 +201,13 @@ _dofork:
         ; load into MMU
         ld a, #0x0F
         out (MMU_SELECT), a
-        ld a, d
+        ld a, h
         out (MMU_FRAMEHI), a
-        ld a, e
+        ld a, l
         out (MMU_FRAMELO), a
+
+	ld a,#'!'
+	call outchar
 
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -267,9 +278,6 @@ bank_copy:
 
 	; save the parent mapping
 	ld b, a
-	call outcharhex
-	ld a, c
-	call outcharhex
         ; store the old MMU mapping
         ld a, #0x0E
         out (MMU_SELECT), a
@@ -290,8 +298,8 @@ bank_copy:
 
         ; child base page is in c parent in b
 	ld d,#0
-	ld l,d
-	ld c,a
+	ld l, d
+	ld a, c
 	sla a
 	rl d
 	sla a
@@ -308,6 +316,7 @@ bank_copy:
 	rl d
 	sla a
 	rl d           ; de now holds the src pointer
+	ld e, a
 
         ld b, #4 ; we're going to copy 16K
 copynextpage:
@@ -329,6 +338,8 @@ copynextpage:
         push hl
         push de
         push bc
+	call outde
+	call outhl
 
         ld hl, #0xe000
         ld de, #0xd000

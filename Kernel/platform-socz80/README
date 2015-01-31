@@ -5,7 +5,7 @@ At this point in time it supports the following components
 - timer
 - ramdiscs
 - SD card
-- two serial ports (USB virtual and native)
+- two serial ports (USB virtual and native) (currently not quite working)
 
 It does not support
 - speed setting on the uarts with the newer FPGA firmware
@@ -21,3 +21,13 @@ array in HL.
 This port is heavily based upon (and mostly consists of) code by Will
 Sowerbutts.
 
+
+
+MMU
+---
+
+The MMU has 4K pages, but we use them in 16K blocks. It also supports both
+read-only pages and an MMU bypass for copying memory. The read-only bit
+isn't yet used but ought to be used to protect kernel space. The bypass mode
+is used and any code using it *MUST* not use it from an IRQ or if it does
+must save/restore it properly.
