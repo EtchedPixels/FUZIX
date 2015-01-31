@@ -58,8 +58,6 @@ _switchout:
         ; we should never get here
         call _trap_monitor
 
-badswitchmsg: .ascii "_switchin: FAIL"
-            .db 13, 10, 0
 _switchin:
         di
         pop bc  ; return address
@@ -132,9 +130,8 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        call nz, _trap_monitor
+        jp _trap_monitor
 
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 _dofork:
         ; always disconnect the vehicle battery before performing maintenance
@@ -168,50 +165,154 @@ _dofork:
         ; Hurray.
         ld (U_DATA__U_SP), sp
 
-        ; now we're in a safe state for _switchin to return in the parent
-	; process.
+	;
+	; We will return on the parent stack with everything copied. We can
+	; thus return safely down the stack as we switch stacks below
+	;
 
-        ; --------- copy process ---------
+	call fork_copy
+
+	;
+        ; switch into the child process context
+        ; get address of top page
+	;
+        ld hl, (fork_proc_ptr)
+        ld de, #P_TAB__P_PAGE_OFFSET + 3
+        add hl, de
+        ; load p_page[3]
+        ld l, (hl)
+	ld h, #0
+	add hl, hl
+	add hl, hl
+	inc hl		; last one of the group
+	inc hl
+	inc hl
+	push hl
+	call outhl
+	pop hl
+        ; load into MMU
+        ld a, #0x0F
+        out (MMU_SELECT), a
+        ld a, d
+        out (MMU_FRAMEHI), a
+        ld a, e
+        out (MMU_FRAMELO), a
+
+        ; now the copy operation is complete we can get rid of the stuff
+        ; _switchin will be expecting from our copy of the stack.
+        pop bc
+        pop bc
+        pop bc
+
+        ; Make a new process table entry, etc.
+        ld  hl, (fork_proc_ptr)
+        push hl
+        call _newproc
+        pop bc 
+
+        ; runticks = 0;
+        ld hl, #0
+        ld (_runticks), hl
+
+        ; in the child process, fork() returns zero.
+        ret
+
+
+fork_copy:
+	; child mapping
+	ld hl, (fork_proc_ptr)
+	ld de, #P_TAB__P_PAGE_OFFSET
+	add hl, de
+	; parent mapping to be copied
+	ld de, #U_DATA__U_PAGE
+
+;
+;	Walk the 16K banks using a generic code pattern
+;	bank_copy is invoked with registers saved and the
+;	parent and child in a nd c
+;
+
+	ld a, #4
+	ld b, #0		; not a valid page
+nextbank:
+	push af
+	ld c, (hl)
+	inc hl
+	ld a, (de)
+	inc de
+	cp b
+	jr z, done		; repeated map, means all we need is copied
+	ld b, a
+	push bc
+	push de
+	push hl
+	call bank_copy		; copies the 16K
+	pop hl
+	pop de
+	pop bc
+	pop af
+	dec a
+	jr nz, nextbank	
+	ret
+done:
+	pop af
+	ret
+
+
+;
+;	Copy 16K from bank b to bank a (as seen by the software 16K paging).
+;	In fact we need to move blocks of four pages.
+;
+bank_copy:
+
+	; save the parent mapping
+	ld b, a
+	call outcharhex
+	ld a, c
+	call outcharhex
         ; store the old MMU mapping
         ld a, #0x0E
         out (MMU_SELECT), a
         in a, (MMU_FRAMEHI)
-        ld b, a
+        ld d, a
         in a, (MMU_FRAMELO)
-        ld c, a
-        push bc
+        ld e, a
+        push de
         ld a, #0x0D
         out (MMU_SELECT), a
         in a, (MMU_FRAMEHI)
-        ld b, a
+        ld d, a
         in a, (MMU_FRAMELO)
-        ld c, a
-        push bc
+        ld e, a
+        push de
 
-        ; Copy entire 64k process into Child's address space
-        ; note source base page is in DE
-        ; dest base page is in (_ub+OPAGE) which is in 0xF000, which will not
-	; be available after we start remapping
-        ; we can do the copy in frame 0xE000 and 0xF000
+        ; Copy a 16K bank
 
-        ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET
-        add hl, de
-        ; load child base page
-        ld e, (hl)
-        inc hl
-        ld d, (hl)
-        ld hl, #0x1000 ; +16MB, this puts the destination pointer into uncached DRAM.
+        ; child base page is in c parent in b
+	ld d,#0
+	ld l,d
+	ld c,a
+	sla a
+	rl d
+	sla a
+	rl d
+	ld e, a
+	ld h,#0x10     ; +16MB, this puts the destination pointer into uncached DRAM.
         add hl, de     ; this is so we don't obliterate the read cache (the cache is
                        ; direct mapped and so the parent and child processes are cache
                        ; aliases of each other)
 
-        ld de, (U_DATA__U_PAGE) ; load parent page base page
+	ld a, b	       ; parent
+	ld d, #0
+	sla a
+	rl d
+	sla a
+	rl d           ; de now holds the src pointer
 
-        ld b, #16 ; we're going to copy 0x0000 ... 0xFFFF
+        ld b, #4 ; we're going to copy 16K
 copynextpage:
         ; map source page at E000
-        LD A, #0x0E
+        LD a, #0x0E
         out (MMU_SELECT), a
         ld a, d
         out (MMU_FRAMEHI), a
@@ -260,45 +361,11 @@ copynextpage:
         out (MMU_FRAMEHI), a
         ld a, c
         out (MMU_FRAMELO), a
-        ; --------- copy completed ---------
 
-        ; switch into the child process context
-        ; get address of top page: fork_proc_ptr->p_page + 0x0f
-        ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET
-        add hl, de
-        ; load p_page
-        ld e, (hl)
-        inc hl
-        ld d, (hl)
-        ; add 0x000F
-        ld hl, #0x000F
-        add hl, de
-        ; load into MMU
-        ld a, #0x0F
-        out (MMU_SELECT), a
-        ld a, h
-        out (MMU_FRAMEHI), a
-        ld a, l
-        out (MMU_FRAMELO), a
+	ret
 
-        ; now the copy operation is complete we can get rid of the stuff
-        ; _switchin will be expecting from our copy of the stack.
-        pop bc
-        pop bc
-        pop bc
-
-        ; Make a new process table entry, etc.
-        ld  hl, (fork_proc_ptr)
-        push hl
-        call _newproc
-        pop bc 
-
-        ; runticks = 0;
-        ld hl, #0
-        ld (_runticks), hl
-
-        ; in the child process, fork() returns zero.
-        ld  hl, #0
-        ret
-
+	.area _DATA
+fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
+	.area _CONST
+badswitchmsg: .ascii "_switchin: FAIL"
+            .db 13, 10, 0
