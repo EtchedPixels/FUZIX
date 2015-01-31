@@ -144,8 +144,8 @@ waitrx:
         ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
         ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
         ld bc, #512                             ; sector size
-        push af                                 ; stash is_user flag (we cannot load it again after we remap)
         or a
+        push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
         jr z, rxnextbyte
         call map_process_always                 ; map user process
 rxnextbyte:
@@ -194,8 +194,8 @@ bool sd_spi_transmit_sector(uint8_t drive) __naked
         ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
         ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
         ld hl, #512                             ; sector size
-        push af                                 ; stash is_user flag (we cannot load it again after we remap)
         or a
+        push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
         jr z, gotransmit
         call map_process_always                 ; map user process
 gotransmit:
@@ -233,8 +233,7 @@ waittx:
         jr nz, txnextbyte       ; length != 0, go again
 transferdone:                   ; note this code is shared with sd_spi_receive_block
         ld l, #1                ; return true
-        pop af                  ; recover is_user flag
-        or a
+        pop af                  ; recover is_user bit in Z flag
         ret z                   ; return if kernel still mapped
         jp map_kernel           ; else map kernel and return
     __endasm;
