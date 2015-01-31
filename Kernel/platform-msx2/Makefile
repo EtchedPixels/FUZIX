@@ -1,6 +1,6 @@
 
 CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c devfd.c devhd.c devlpr.c
-CSRCS += devices.c main.c devtty.c
+CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c
 DSRCS = devmegasd.c
 ASRCS = msx2.s crt0.s vdp.s
 ASRCS += tricks.s commonmem.s bootrom.s

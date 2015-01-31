@@ -38,8 +38,14 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+DISCARDABLE
+
 void device_init(void)
 {
+#ifdef CONFIG_RTC
+    inittod();
+#endif
+
     if (megasd_probe()) {
         /* probe for megaflash rom sd */
         devsd_init();
