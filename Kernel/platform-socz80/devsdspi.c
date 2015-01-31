@@ -84,6 +84,7 @@ bool sd_spi_receive_sector(uint8_t drive) __naked
     call nz,map_process_always
     call rx256
     call rx256
+xferout:
     pop af
     call nz,map_kernel
     ret
@@ -111,8 +112,6 @@ bool sd_spi_transmit_sector(uint8_t drive) __naked
     ld bc, #SD_SPI_RX * 256
     otir
     otir
-    pop af
-    call nz,map_kernel
-    ret
+    jr xferout
   __endasm;
 }
