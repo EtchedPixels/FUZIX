@@ -213,7 +213,7 @@ testready:  bit 6, a ; transmitter busy?
             jr nz, notready ; 0=idle, 1=busy
             ld l, #1
             ret
-notready:   ld l, #-1	; Don't spin, fast CPU, enormous FIFO
+notready:   ld l, #0	; FIXME: sort IRQ return -1 (Don't spin, fast CPU, enormous FIFO
 	    ld h, l
             ret
 
