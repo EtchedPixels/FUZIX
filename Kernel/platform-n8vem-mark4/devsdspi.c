@@ -146,8 +146,7 @@ waitrx:
         ld bc, #512                             ; sector size
         or a
         push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
-        jr z, rxnextbyte
-        call map_process_always                 ; map user process
+        call nz, map_process_always             ; map user process
 rxnextbyte:
         dec bc                  ; length--
         ld a, b
@@ -196,8 +195,7 @@ bool sd_spi_transmit_sector(uint8_t drive) __naked
         ld hl, #512                             ; sector size
         or a
         push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
-        jr z, gotransmit
-        call map_process_always                 ; map user process
+        call nz, map_process_always             ; map user process
 gotransmit:
         in0 a, (_CSIO_CNTR)
         and #0xDF               ; mask off RE bit
