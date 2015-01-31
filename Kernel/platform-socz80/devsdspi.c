@@ -109,7 +109,7 @@ bool sd_spi_transmit_sector(uint8_t drive) __naked
     push af
     call nz,map_process_always
     ld a,#0xFF
-    ld bc, #SD_SPI_RX * 256
+    ld bc, #SD_SPI_TX
     otir
     otir
     jr xferout
