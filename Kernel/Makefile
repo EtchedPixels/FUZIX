@@ -8,6 +8,9 @@ export CPU = z80
 #export CPU = 6502
 #export TARGET=atarist
 #export CPU = 68000
+#export TARGET = 8086test
+#export CPU = 8086
+
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
 
@@ -78,7 +81,7 @@ export ASOPTS=
 export ASMEXT = .s
 export BINEXT = .o
 export BITS=16
-else
+else ifeq ($(CPU),68000)
 export CROSS_LD=m68k-linux-gnu-ld
 export CROSS_CC = m68k-linux-gnu-gcc
 export CROSS_CCOPTS=-c -fno-builtin -Wall -Os -m68000 -mshort -I$(ROOT_DIR)/cpu-68000 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
@@ -93,6 +96,21 @@ export ASOPTS=
 export ASMEXT = .S
 export BINEXT = .o
 export BITS=32
+else
+export CROSS_LD=ld86
+export CROSS_CC = bcc
+export CROSS_CCOPTS=-c -ansi -0 -O -I$(ROOT_DIR)/cpu-8086 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_AS=$(CROSS_CC) $(CROSS_CCOPTS)
+export CROSS_CC_SEG1=
+export CROSS_CC_SEG2=
+export CROSS_CC_SEG3=
+# Fixme: we should split discard off
+export CROSS_CC_SEGDISC=
+export CROSS_CC_VIDEO=
+export ASOPTS=
+export ASMEXT = .S
+export BINEXT = .o
+export BITS=16
 endif
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))

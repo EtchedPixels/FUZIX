@@ -1,0 +1,4 @@
+8086 test sketching out
+
+Getting the bcc compiler bits working. Ideally we'll switch to pcc once it
+works
