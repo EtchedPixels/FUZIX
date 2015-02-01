@@ -152,6 +152,10 @@ void fuzix_main(void)
 
 	create_init();
 	kputs("Enabling interrupts ... ");
+
+	/* runtime configurable, defaults to build time setting */
+	ticks_per_dsecond = TICKSPERSEC / 10;
+
         ei();
 	kputs("ok.\n");
 

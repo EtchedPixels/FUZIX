@@ -67,8 +67,10 @@ void device_init(void)
     }
     if ((infobits & INTFREQ_MASK) == INTFREQ_60Hz) {
 	kprintf("60Hz\n");
+	ticks_per_dsecond = 6;
     } else {
 	kprintf("50Hz\n");
+	ticks_per_dsecond = 5;
     }
 
     if (megasd_probe()) {
