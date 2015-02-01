@@ -16,9 +16,8 @@ bootme:
 	sta 0xff22		; after this we are in the other rom
 
 main:
-	; Optimise all this to use the direct page register as 0xffxx
 	orcc #0x10
-	; Memory 64K dynamic (I guess...)
+	; Optimise all this to use the direct page register as 0xffxx
 	lda #0xFF
 	tfr a,dp	; So we can short form all our I/O operations
 
@@ -28,32 +27,34 @@ main:
 ;	Start by resetting the SAM registers in case we are a soft reset
 ;
 	lda #0x10
-	ldx #0xffc0	; SAM
+	ldx #0xffc0	; SAM registers 0xffc0-0xffdf
 samwipe:
-	sta ,x++	; X is now 0xffd0
+	sta ,x++	;
 	deca
 	bne samwipe
 
 	sta 0xffcf	;
 	sta 0xffd1	; Display at 0x6000
-	sta 0xffd3	; In the upper bank
+	sta 0xffd3	; In the upper bank (= 0xe000)
 	;FIXME - DD or DB needed to get it right
+	; Memory 64K dynamic (I guess...)
 	sta 0xffdd	; 64K dynamic RAM
 	sta 0xffd5	; Use RAM bank 1 at 0x0000 (providing ffde is clear)
 
+;	Configure PIAs
 	; PIA0 A is all input
 	; PIA0 B is all output
 	; PIA1 A is mixed, both the same (input 0 only)
 
 	lda #0x04
-	sta 0xff23	; Set 0xFF22 to be data
+	sta 0xff23	; Set 0xFF22 to access data register
 	sta 0xff22	; Ensure we don't glitch the ROM select bit
 
 	clr 0xff01	; Control to zero - direction accessible
 	clr 0xff03
 	clr 0xff21	; Do both PIA devices
 	clr 0xff23
-	clr 0xff00
+	clr 0xff00	; PIA0 A all input
 	lda #0xff
 	sta 0xff02	; Set PIA0 B as output (keyboard matrix)
 	lda #0x34
