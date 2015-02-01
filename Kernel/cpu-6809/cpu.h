@@ -9,6 +9,7 @@ typedef signed int size_t;
 typedef uint8_t irqflags_t;
 
 typedef int16_t arg_t;
+typedef uint16_t uarg_t;		/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* A user address must fit this */
