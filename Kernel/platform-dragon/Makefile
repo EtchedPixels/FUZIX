@@ -9,7 +9,8 @@ COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
 OBJS  = $(COBJS) $(AOBJS)
 
-JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
+JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o) \
+       d64_1.decb d64_1.rom d64_2.rom cart1.rom cart2.rom
 
 all:	$(OBJS)
 
