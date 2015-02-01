@@ -27,7 +27,6 @@ d64_1.rom: setup.s
 
 image: d64_1.rom
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
-	setup.o \
 	crt0.o commonmem.o usermem_sam.o \
 	p6809.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
