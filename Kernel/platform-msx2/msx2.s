@@ -44,11 +44,12 @@
             .globl outstring
             .globl outstringhex
 
-	    ; stuff to save
-	    .globl _vdpport
-	    .globl _infobits
+
 	    .globl _slotrom
 	    .globl _slotram
+	    .globl _vdpport
+	    .globl _infobits
+	    .globl _machine_type
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -93,19 +94,9 @@ _kernel_flag:
             .area _CODE
 
 init_early:
-	    ld a, #'F'
-	    out (0x2F), a
-            ret
+	    ret
 
 init_hardware:
-	    ld a, #'U'
-	    out (0x2F), a
-	    ; save the useful bits of low memory first
-	    ld hl, (0x2B)
-	    ld (_infobits), a
-;	    ld a, (0x07)
-;	    ld (_vdpport), a
-
 	    ; Size RAM
 	    call size_memory
 
@@ -436,6 +427,12 @@ map_kernel_data:
 _slotrom:
 	    .db 0
 _slotram:
+	    .db 0
+_vdpport:
+	    .dw 0
+_infobits:
+	    .dw 0
+_machine_type:
 	    .db 0
 
 ; emulator debug port for now

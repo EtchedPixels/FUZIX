@@ -46,8 +46,6 @@ int megasd_probe()
     uint8_t *sigp = (uint8_t *) MSD_MAGIC_ADDR;
     uint8_t slot = 1;
 
-    kprintf("MegaSD...");
-
     for (slot = 1; slot < 3; slot++) {
         /* try to find MegaFlashRom signature in slots 1 and 2 */
         slotmfr = 0x80 | MSD_SUBSLOT << 2 | slot;
@@ -57,12 +55,11 @@ int megasd_probe()
             goto found;
     }
     mapslot_bank1(slotram);
-    kprintf("not found\n");
     return 0;
 
 found:
     mapslot_bank1(slotram);
-    kprintf("found in slot %d-3\n", slot);
+    kprintf("MegaSD found in slot %d-3\n", slot);
     return 1;
 }
 
