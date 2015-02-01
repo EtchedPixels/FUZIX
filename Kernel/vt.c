@@ -150,6 +150,7 @@ static int escout(unsigned char c)
 	}
 	if (c == 'Y')
 		return 2;
+
 	return 0;
 }
 
@@ -227,6 +228,10 @@ int vt_inproc(uint8_t minor, unsigned char c)
 		tty_inproc(minor, 0xE2);
 		tty_inproc(minor, 0x82);
 		return tty_inproc(minor, 0xAC);
+	}
+        if (c == KEY_YEN) {
+		tty_inproc(minor, 0xC2);
+		return tty_inproc(minor, 0xA5);
 	}
 #endif
 	if (c > 0x9F) {
