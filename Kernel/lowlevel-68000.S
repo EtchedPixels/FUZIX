@@ -37,6 +37,11 @@ irqrestore:
 		rts
 
 doexec:
+		;
+		;	FIXME: we need to reset sp (we effectively longjmp
+		; 	in supervisor space), then push the values. If we
+		;	don't then the supervisor stack will go awry
+		;
 		move.l (sp)+,a0			; throw the return address
 		clr.w -(sp)			; set up the status register
 		move.l U_DATA__U_ISP,a0
