@@ -38,4 +38,5 @@ platform-socz80/devsd.rel
 platform-socz80/blkdev.rel
 platform-socz80/mbr.rel
 platform-socz80/devsdspi.rel
+platform-socz80/ethernet.rel
 -e

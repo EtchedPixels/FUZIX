@@ -8,6 +8,7 @@
 #include <devtty.h>
 #include <devsd.h>
 #include <blkdev.h>
+#include <deveth.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -24,6 +25,11 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,      no_close,    sys_read,  sys_write,  sys_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
+  {  no_open,      no_close,    sys_read,  sys_write,  sys_ioctl  },
+  {  no_open,      no_close,    sys_read,  sys_write,  sys_ioctl  },
+  {  no_open,      no_close,    sys_read,  sys_write,  sys_ioctl  },
+  /* 8: Ethernet */
+  {  eth_open,     eth_close,   eth_read,  eth_write,  eth_ioctl  },
 };
 
 bool validdev(uint16_t dev)
@@ -39,4 +45,5 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   devsd_init();
+  deveth_init();
 }

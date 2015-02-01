@@ -11,7 +11,9 @@
 
 
 #include <kernel.h>
-
+#include <kdata.h>
+#include <deveth.h>
+#include <printf.h>
 
 __sfr __at 0x38 eth_chipselect;
 __sfr __at 0x39 eth_status;
@@ -20,6 +22,8 @@ __sfr __at 0x3b eth_rx;
 __sfr __at 0x3c eth_divisor;
 __sfr __at 0x3d eth_gpio;
 __sfr __at 0x3e eth_spimode;
+
+static int eth_present;
 
 /* In bank 0 */
 #define ERDPTL		0x00
@@ -120,244 +124,294 @@ __sfr __at 0x3e eth_spimode;
 #define BFC		0xA0
 #define RST		0xFF
 
-#define REG_SLOW	0x100		/* Driver only flag */
+#define REG_SLOW	0x100	/* Driver only flag */
 
 struct encrxhdr {
-  uint16_t next;		/* Little endian */
-  uint16_t length;
-  uint16_t status;		/* Status - high 16 */
+	uint16_t next;		/* Little endian */
+	uint16_t length;
+	uint16_t status;	/* Status - high 16 */
 #define FRAME_GOOD	0x80	/* Double check 0x80 or 0x01 */
 };
 
 static uint8_t ethernap(void) __naked
 {
-  __asm
-      push bc
-      ld bc, #0x00F8		; 0x0028 ought to work - check and tune
-dellp:djnz dellp		; 255 * 13 + 8 (3323 clocks) per cycle
-      dec c
-      jr nz,dellp
-      pop bc
-      ret
-  __endasm
+	__asm
+		push bc
+		ld bc,#0x00F8	; 0x0028 ought to work - check and tune
+	dellp:	djnz dellp	;255 *13 + 8(3323 clocks) per cycle
+		dec c
+		jr nz, dellp
+		pop bc
+		ret
+	__endasm;
 }
-  
+
 /* Don't inline these, the call/return is budgeted into the delay
    requirements! */
 static void eth_select(void)
 {
-  eth_chipselect = 0xFE;
+	eth_chipselect = 0xFE;
 }
 
 static void eth_deselect(void)
 {
-  eth_rx;
-  eth_rx;
-  eth_chipselect = 0xFF;
+	eth_rx;
+	eth_rx;
+	eth_chipselect = 0xFF;
 }
 
 /* Write a command to the registers */
 static void eth_cmd(uint8_t reg, uint8_t val)
 {
-  eth_select();
-  eth_tx = reg;
-  eth_tx = val;
-  eth_deselect();
+	eth_select();
+	eth_tx = reg;
+	eth_tx = val;
+	eth_deselect();
 }
 
 /* Write a 16bit command to a register pair */
 static void eth_cmd16(uint8_t reg, uint16_t val)
 {
-  eth_cmd(reg++, val & 0xFF);
-  eth_cmd(reg, val >> 8);
+	eth_cmd(reg++, val & 0xFF);
+	eth_cmd(reg, val >> 8);
 }
 
-static uint8_t eth_read(uint16_t reg)
+static uint8_t eth_get(uint16_t reg)
 {
-  uint8_t r;
-  eth_select();
-  eth_tx = reg & 0xFF;
-  eth_tx = 0;
-  if (reg & REG_SLOW)
-    eth_tx = 0;
-  r = eth_rx;
-  eth_deselect();
+	uint8_t r;
+	eth_select();
+	eth_tx = reg & 0xFF;
+	eth_tx = 0;
+	if (reg & REG_SLOW)
+		eth_tx = 0;
+	r = eth_rx;
+	eth_deselect();
+	return r;
 }
 
-static uint16_t phy_cmd16(uint8_t r, uint16_t cmd)
+/* Select banks */
+static void eth_bank(uint8_t bank)
 {
-  eth_bank(2);
-  eth_cmd(WCR|MIREGADR, r);
-  eth_cmd16(WCR|MIWRL, cmd);
-  eth_bank(3);
-  while(eth_read(REG_SLOW|MISTAT) & 1);
+	if (bank != 3)
+		eth_cmd(BFC | ECON1, 0x03);	/* Clear bank bits */
+	if (bank)
+		eth_cmd(BFS | ECON1, bank);	/* Set needed bits */
+}
+
+
+static void phy_cmd16(uint8_t r, uint16_t cmd)
+{
+	eth_bank(2);
+	eth_cmd(WCR | MIREGADR, r);
+	eth_cmd16(WCR | MIWRL, cmd);
+	eth_bank(3);
+	while (eth_get(REG_SLOW | MISTAT) & 1);
 }
 
 static uint16_t phy_read(uint8_t r)
 {
-  eth_bank(2);
-  eth_cmd(WCR|MIREGADR, r);
-  eth_cmd(WCR|MICMD, 0x01);
-  eth_bank(3);
-  while(eth_read(REG_SLOW|MISTAT) & 1);
-  eth_bank(2);
-  eth_cmd(WCR|MICMD, 0x00);
-  return eth_read(REG_SLOW|MIRDL) | (eth_readb(REG_SLOW|MIRDH) << 8);
-}
-  
-/* Select banks */
-static void eth_bank(uint8_t bank)
-{
-  if (bank != 3)
-    ethercmd(BFC|ECON1, 0x03);		/* Clear bank bits */
-  if (bank)
-    ethercmd(BFS|ECON1, bank);		/* Set needed bits */
+	eth_bank(2);
+	eth_cmd(WCR | MIREGADR, r);
+	eth_cmd(WCR | MICMD, 0x01);
+	eth_bank(3);
+	while (eth_get(REG_SLOW | MISTAT) & 1);
+	eth_bank(2);
+	eth_cmd(WCR | MICMD, 0x00);
+	return eth_get(REG_SLOW | MIRDL) | (eth_get(REG_SLOW | MIRDH) <<
+					    8);
 }
 
 /* Reset the controller by waggling the GPIO */
 static void ethernet_reset(void)
 {
-  eth_gpio = 0;
-  ethernap();
-  eth_gpio = 1;
+	eth_gpio = 0;
+	ethernap();
+	eth_gpio = 1;
 }
 
-/* Initialize the Ethernet wing */
-
-int dev_eth_init(void)
-{
-  eth_divisor = 6;	/* 9.3MHz (device limit is 10) */
-  if (eth_divisor == 0xFF)	/* Hardware absent */
-    return -1;
-  eth_spimode = 0;
-  eth_chipselect = 0xff;
-  eth_gpio = 1;
-  eth_cmd(RST|ECON1, 0xff);
-  ethernap();
-
-  /* Wait for the NIC to stabilize */
-  while(!(eth_read(ESTAT) & 1);
-
-  eth_bank(0);
-  eth_cmd16(WCR|ERXSTL, 0);
-  eth_cmd16(WCR|ERXRDPTL, 0);
-  eth_cmd16(WCR|ERXNDL, 0x0BFF);
-  eth_cmd16(WCR|ETXSTL, 0x0C00);
-  eth_cmd16(WCR|ETXNDL, 0x11FF);
-  eth_bank(1);
-  eth_cmd16(WCR|EPMM0, 0x303F);
-  eth_cmd16(WCR|EPMCSL, 0xF7F9);
-  eth_cmd(BFS|ERXFCON, 0x01);
-  eth_bank(2);
-  eth_cmd(WCR|MACON2, 0x00);
-  
-  if (eth_read(REG_SLOW | MACON2)) {
-    kputs("eth: stuck in reset.\n");
-    return -1;
-  }
-  eth_cmd(WCR|MACON1, 0x0d);
-  if (eth_read(REG_SLOW | MACON1) != 0x0d) {
-    kputs("eth: macon1 fail.\n");
-    return -1;
-  }
-  eth_cmd(BFS|MACON3, 0x32);
-  eth_cmd16(WCR|MAIPGL, 0x0C12);
-  eth_cmd(WCR|MABBIPG, 0x12);
-  eth_cmd16(WCR|MAMXFL, 0x05DC);
-
-  if (eth_read(REG_SLOW | MACON1) != 0x0d) {
-    kputs("eth: macon1 fail2.\n");
-    return -1;
-  }
-  eth_bank(3);
-  /* Set the mac to AAAAAAC0FFEE for now FIXME */
-  eth_cmd16(WCR|MAADR5, 0xAAAA);
-  eth_cmd16(WCR|MAADR3, 0xC0AA);
-  eth_cmd16(WCR|MAADR1, 0xEEFF);
-  phy_cmd16(0x01, 0x1000);
-  eth_bank(0);
-  eth_cmd(BFS|EIE, 0xc0);
-  eth_cmd(BFS|ECON1, 0x04);
-  return 0;
-}
 
 /*
  *	Wait until free and then send a packet. We don't have an interrupt
  *	mechanism for the SPI ethernet on the SocZ80 although we could add
  *	one via a GPIO if it turns out useful
  */
-int dev_eth_send(uint8_t *packet, int len)
+int eth_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-  eth_bank(0);
-  while (eth_read(ECON1) & 0x8) {
-    /* Not ready */
-    if (!(eth_read(EIR) & 2)) {
-      /* Errata fix */
-      eth_cmd(BFS|ECON1, 0x80);
-      eth_cmd(BFC|ECON1, 0x80);
-    }
-    _yield();
-    /* May have switched bank */
-    eth_bank(0);
-  }
-  /*
-   *	Load the packet up
-   */
-  eth_cmd16(WCR|EWRPTL, 0x0C00);
-  eth_cmd16(WCR|ETXNDL, 0x0C00 + len);
-  eth_cmd(WBM, 0x07);
-  eth_chipselect = 0xFE;
-  eth_tx = WBM
-  /* should do this bit in asm as an otir */
-  while(len--) {
-    eth_tx = *packet;
-    packet++;
-  }
-  eth_deselect();
-  /*
-   *	Start transmit
-   */
-  eth_cmd(BFS|ECON1, 0x08);
-  return 0;
+	uint8_t *packet = (uint8_t *)udata.u_offset;
+	uint16_t len = udata.u_count;
+
+	used(minor);
+	used(rawflag);
+	used(flag);
+
+	if (len > 1514) {
+		udata.u_error = EFBIG;
+		return -1;
+	}
+	eth_bank(0);
+	while (eth_get(ECON1) & 0x8) {
+		/* Not ready */
+		if (!(eth_get(EIR) & 2)) {
+			/* Errata fix */
+			eth_cmd(BFS | ECON1, 0x80);
+			eth_cmd(BFC | ECON1, 0x80);
+		}
+		_sched_yield();
+		/* FIXME: check link up */
+		/* May have switched bank */
+		eth_bank(0);
+	}
+	/*
+	 *    Load the packet up
+	 */
+	eth_cmd16(WCR | EWRPTL, 0x0C00);
+	eth_cmd16(WCR | ETXNDL, 0x0C00 + len);
+	eth_cmd(WBM, 0x07);
+	eth_chipselect = 0xFE;
+	eth_tx = WBM;
+
+	while (len--)
+		eth_tx = ugetc(packet++);
+	eth_deselect();
+	/*
+	 *    Start transmit
+	 */
+	eth_cmd(BFS | ECON1, 0x08);
+	return len;
 }
 
 /*
  *	Check with the phy if the link is up
  */
-int dev_eth_up(void)
+int eth_up(void)
 {
-  return phyread(0x11) & 4);
+	return phy_read(0x11) & 4;
 }
 
-static int eth_readpkt(uint8_t *packet, int len)
+static void eth_readpkt(uint8_t * packet, int len)
 {
-  eth_select();
-  eth_tx = RBM;
-  while (len--)
-    eth_tx = 0;
-    *packet++ = eth_rx;
-  }
-  eth_deselect();
+	uint8_t c;
+	eth_select();
+	eth_tx = RBM;
+	while (len--) {
+		eth_tx = 0;
+		c = eth_rx;	/* SDCC 3.4.0 will miscompile I/O as arguments */
+		uputc(c, packet++);
+	}
+	eth_deselect();
 }
 
-int dev_eth_read(struct encrxhdr *eth, uint8_t *packet, int len)
+int eth_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-  int r = -EIO;
-  eth_bank(1);
-  if (!eth_read(EPKTCNT))	/* Any packets waiting ? */
-    return -EAGAIN;
-  eth_bank(0);
-  eth_cmd16(WCR|ERDPTL, eth_rxnext);
-  eth_readpkt(hdr, 6);
-  eth_rxnext = hdr->next;
-  if (hdr->status & FRAME_GOOD) {
-    len = min(len, hdr->length - 4);
-    eth_readpkt(packet, len);
-    r = len;
-  }
-  if (eth_rxnext > 0x0BFF)
-    eth_rxnext = 0x0BFF;
-  eth_cmd16(WCR|RXRDPTL, eth_rxnext);
-  eth_cmd(BFS|ECON2. 0x40);
-  return r;
+	static struct encrxhdr eth;
+	static uint16_t eth_rxnext = 0;
+	uint8_t *packet = (uint8_t *)udata.u_offset;
+	uint16_t len = udata.u_count;
+	int r = -EIO;
+
+	used(flag);
+	used(rawflag);
+	used(minor);
+
+	/* Check carrier ?? */
+
+	eth_bank(1);
+
+	/* We have no IRQ so no sane blocking model .. yet */
+	if (!eth_get(EPKTCNT))	/* Any packets waiting ? */
+		return -EAGAIN;
+	eth_bank(0);
+	eth_cmd16(WCR | ERDPTL, eth_rxnext);
+	eth_readpkt((uint8_t *)&eth, 6);
+	eth_rxnext = eth.next;
+	if (eth.status & FRAME_GOOD) {
+		len = min(len, eth.length - 4);
+		eth_readpkt(packet, len);
+		r = len;
+	}
+	if (eth_rxnext > 0x0BFF)
+		eth_rxnext = 0x0BFF;
+	eth_cmd16(WCR | ERXRDPTL, eth_rxnext);
+	eth_cmd(BFS | ECON2, 0x40);
+	return r;
+}
+
+int eth_open(uint8_t minor, uint16_t flag)
+{
+	used(flag);
+	if (minor || !eth_present)
+		return -ENXIO;
+	return 0;
+}
+
+int eth_close(uint8_t minor)
+{
+	used(minor);
+	return 0;
+}
+
+int eth_ioctl(uint8_t minor, uarg_t arg, char *data)
+{
+	used(minor);
+	used(arg);
+	used(data);
+	return -1;
+}
+
+DISCARDABLE
+/* Initialize the Ethernet wing */
+void deveth_init(void)
+{
+	eth_divisor = 6;	/* 9.3MHz (device limit is 10) */
+	if (eth_divisor == 0xFF)	/* Hardware absent */
+		return;
+	eth_spimode = 0;
+	eth_chipselect = 0xff;
+	eth_gpio = 1;
+	eth_cmd(RST | ECON1, 0xff);
+	ethernap();
+
+	/* Wait for the NIC to stabilize */
+	while (!(eth_get(ESTAT) & 1));
+
+	eth_bank(0);
+	eth_cmd16(WCR | ERXSTL, 0);
+	eth_cmd16(WCR | ERXRDPTL, 0);
+	eth_cmd16(WCR | ERXNDL, 0x0BFF);
+	eth_cmd16(WCR | ETXSTL, 0x0C00);
+	eth_cmd16(WCR | ETXNDL, 0x11FF);
+	eth_bank(1);
+	eth_cmd16(WCR | EPMM0, 0x303F);
+	eth_cmd16(WCR | EPMCSL, 0xF7F9);
+	eth_cmd(BFS | ERXFCON, 0x01);
+	eth_bank(2);
+	eth_cmd(WCR | MACON2, 0x00);
+	if (eth_get(REG_SLOW | MACON2)) {
+		kputs("eth: stuck in reset.\n");
+		return;
+	}
+	eth_cmd(WCR | MACON1, 0x0d);
+	if (eth_get(REG_SLOW | MACON1) != 0x0d) {
+		kputs("eth: macon1 fail.\n");
+		return;
+	}
+	eth_cmd(BFS | MACON3, 0x32);
+	eth_cmd16(WCR | MAIPGL, 0x0C12);
+	eth_cmd(WCR | MABBIPG, 0x12);
+	eth_cmd16(WCR | MAMXFLL, 0x05DC);
+	if (eth_get(REG_SLOW | MACON1) != 0x0d) {
+		kputs("eth: macon1 fail2.\n");
+		return;
+	}
+	eth_bank(3);
+	/* Set the mac to AAAAAAC0FFEE for now FIXME */
+	eth_cmd16(WCR | MAADR5, 0xAAAA);
+	eth_cmd16(WCR | MAADR3, 0xC0AA);
+	eth_cmd16(WCR | MAADR1, 0xEEFF);
+	phy_cmd16(0x01, 0x1000);
+	eth_bank(0);
+	eth_cmd(BFS | EIE, 0xc0);
+	eth_cmd(BFS | ECON1, 0x04);
+	eth_present = 1;
+	kputs("eth: ethernet detected.\n");
 }

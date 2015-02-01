@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devrd.c devsdspi.c
+CSRCS = devlpr.c devtty.c devrd.c devsdspi.c ethernet.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s devrd_hw.s socz80.s
