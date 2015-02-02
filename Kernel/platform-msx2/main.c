@@ -4,9 +4,6 @@
 #include <printf.h>
 #include <devtty.h>
 
-/* These are set by the msx startup asm code */
-uint16_t vdpport = 0x99 + 256 * 80;
-uint16_t infobits;
 uint16_t msxmaps;
 
 void platform_idle(void)

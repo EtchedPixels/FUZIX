@@ -35,6 +35,7 @@ extern ptptr init_process;  /* The process table address of the first process. *
 extern bool inint;     /* flag is set whenever interrupts are being serviced */
 
 extern uint8_t ticks_this_dsecond;       /* Tick counter for counting off one decisecond */
+extern uint8_t ticks_per_dsecond;	 /* Ticks per decisecond at machine interrupt rate rate */
 extern uint16_t runticks;  /* Number of ticks current process has been swapped in */
 
 extern time_t tod;      /* Time of day */

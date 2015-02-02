@@ -9,7 +9,7 @@
  */
 
 
-#define ESC(x)		(0x80|(x))
+#define ESC(x)		(0x80|(uint8_t)(x))
 
 #define KEY_DEL		0x7F
 #define KEY_BS		CTRL('H')
@@ -52,5 +52,5 @@
 #define KEY_HALF	0x81
 #define KEY_EURO	0x82
 #define KEY_DOT		0x83
-
+#define KEY_YEN		0x84
 #endif

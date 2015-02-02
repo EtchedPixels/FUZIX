@@ -10,11 +10,11 @@ uint16_t runticks;
 bool inint;
 uint16_t root_dev;
 uint8_t ticks_this_dsecond;
+uint8_t ticks_per_dsecond;
 inoptr root;
 uint16_t waitno;
 time_t tod;			// time of day
 ticks_t ticks;
-
 int16_t acct_fh = -1;		/* Accounting file handle */
 
 struct runload loadavg[3] = {

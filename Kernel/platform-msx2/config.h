@@ -23,7 +23,7 @@
 #define VT_RIGHT	79
 #define VT_BOTTOM	23
 
-#define TICKSPERSEC 50   /* Ticks per second (actually should be dynamic FIXME) */
+#define TICKSPERSEC 60	    /* default value, it will be upated on device_init */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA */
@@ -45,3 +45,5 @@
 #define SD_DRIVE_COUNT 1
 
 #define MAX_BLKDEV 1      /* Single SD drive */
+#define CONFIG_RTC
+//#define CONFIG_RTC_RP5C01_NVRAM
