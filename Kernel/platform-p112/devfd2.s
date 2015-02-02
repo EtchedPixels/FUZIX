@@ -8,6 +8,8 @@
         .z180
 
         ; imported symbols
+        .globl map_kernel
+        .globl map_process_always
         .globl _devfd_dtbl
 
         ; exported sybols
@@ -18,6 +20,7 @@
         .globl _devfd_sector
         .globl _devfd_error
         .globl _devfd_buffer
+        .globl _devfd_userbuf
         .globl _fd_tick
 
         .include "kernel.def"
@@ -69,16 +72,18 @@ DRR     .equ    FDCBAS+7        ; Data Rate Register/Disk Changed Bit in B7
 
 MONTIM  .equ    250             ; Motor On time (Seconds * TICKSPERSEC)
 
-; Offsets in Drive Data Table (defined at end of this module)
-oFLG    .equ    0               ; 0 = Not Logged, 1 = Drive Logged
-oPRM1   .equ    1               ; Step Rate (B7-4), HUT (3-0)
-oPRM2   .equ    2               ; Hd Load in 4mS steps (0=infinite)
-oGAP3   .equ    3               ; Gap 3 Length for Read
-oSPT    .equ    4               ; Sectors-per-Track
-oSEC1   .equ    5               ; First Sector Number
-oFMT    .equ    6               ; Bit-mapped Format byte
-oSPIN   .equ    7               ; Spinup delay (1/20-secs)
-oTRK    .equ    8               ; Current Head Position (Track)
+; Offsets into _devfd_dtbl
+oFLG    .equ    0               ; logged:  0 = Not Logged, 1 = Drive Logged
+oPRM1   .equ    1               ; cbyte0:  Step Rate (B7-4), HUT (3-0)
+oPRM2   .equ    2               ; cbyte1:  Hd Load in 4mS steps (0=infinite)
+oGAP3   .equ    3               ; gap3:    Gap 3 Length for Read
+oSPT    .equ    4               ; spt:     Sectors-per-Track
+oSEC1   .equ    5               ; sector1: First Sector Number
+oFMT    .equ    6               ; format:  Bit-mapped Format byte
+oSPIN   .equ    7               ; spinup:  Spinup delay (1/20-secs)
+oTRK    .equ    8               ; curtrk:  Current Head Position (Track)
+oNCYL   .equ    9               ; ncyl:    Number of cylinders
+TBLSIZ  .equ    10              ; sizeof() entry in _devfd_dtbl
 
 ;-------------------------------------------------------------
 ; Determine if the controller exists and a drive is attached
@@ -403,49 +408,6 @@ SEEKX:  POP     BC              ; Restore Regs
         POP     HL
         RET
 
-;-------------------------------------------------------------
-; FDCMD - Send Command to DP-8473 FDC
-; Enter:  B = # of Bytes in Command, C = Command Byte
-;        HL -> Buffer for Read/Write Data (If Needed)
-; Exit : AF = Status byte
-; Uses : AF.  All other registers preserved/unused
-
-FdCmd:  PUSH    HL              ; Save regs (for Exit)
-        PUSH    BC
-        PUSH    HL              ;   save pointer for possible Transfer
-        CALL    Motor           ; Ensure motors are On
-        LD      HL,#comnd       ; Point to Command Block
-        LD      (HL),C          ;  command passed in C
-        LD      C,#DR           ;   DP8473 Data Port
-OtLoop: CALL    WRdy            ; Wait for RQM (hoping DIO is Low) (No Ints)
-        OUTI                    ; Output Command bytes to FDC
-        JR      NZ,OtLoop       ; ..loop til all bytes sent
-
-        POP     HL              ; Restore Possible Transfer Addr
-FdCi1:  CALL    WRdy
-        BIT     5,A             ; In Execution Phase?
-        JR      Z,FdcRes        ; ..jump if Not to check result
-        BIT     6,A             ; Write?
-        JR      NZ,FdCi2        ; ..jump if Not to Read
-        OUTI                    ; Else Write a Byte from (HL) to (C)
-        JR      FdCi1           ;   and check for next
-
-FdCi2:  INI                     ; Read a byte from (C) to (HL)
-        JR      FdCi1           ;   and check for next
-
-FdcRes: LD      HL,#st0         ; Point to Status Result area
-IsGo:   CALL    WRdy
-;;---   CALL    _ei             ;  (Ints Ok now)
-        BIT     4,A             ; End of Status/Result?
-        JR      Z,FdcXit        ; ..exit if So
-        BIT     6,A             ; Another byte Ready?
-        JR      Z,FdcXit        ; ..exit if Not
-        INI                     ; Else Read Result/Status Byte
-        JR      IsGo            ; ..loop for next
-
-FdcXit: POP     BC              ; Restore Regs
-        POP     HL
-        RET
 
 ;-------------------------------------------------------------
 ; Check for Proper Termination of Seek/Recalibrate Actions by
@@ -525,21 +487,6 @@ WRdyT0: DEC     BC
         JR      WRdyT0          ;  ..else loop to try again
  
 ;-------------------------------------------------------------
-; Wait for FDC RQM to become Ready, return DIO status in
-; Zero Flag.  Pause before reading status port (~12 mS
-; specified, some assumed in code).
-
-WRdy:   ;DI                     ; No Ints while we are doing I/O
-                                ;  (entry to avoid Disabling Ints)
-WRdy1:  LD      A,(dlyCnt)      ; Get delay count
-WRdy0:  DEC     A               ;  count down
-        JR      NZ,WRdy0        ;   for ~6 uS Delay
-WRdyL:  IN      A,(MSR)         ; Read Main Status Register
-        BIT     7,A             ; Interrupt Present?
-        RET     NZ              ;  Return if So
-        JR      WRdyL           ;   Else Loop
-
-;-------------------------------------------------------------
 ; Return Pointer to Parameters of selected Drive
 ; Enter: A = Drive (0..3)
 ; Exit : HL -> Parameter entry of drive
@@ -595,66 +542,101 @@ ActivA: LD      (active),A      ;    save
         OUT     (DCR),A         ;     and Command!
         RET
 
-;------------------- Data Storage Area -----------------------
-; Disk and Drive parameters are dictated by table entries.  While
-; not all parameters are implemented in this module, they may be
-; added as desired.  A bit-mapped byte is used defined as:
+;-------------------------------------------------------------
+; FDCMD - Send Command to DP-8473 FDC
+; Enter:  B = # of Bytes in Command, C = Command Byte
+;        HL -> Buffer for Read/Write Data (If Needed)
+; Exit : AF = Status byte
+; Uses : AF.  All other registers preserved/unused
 
-; D D D D D D D D               Format Byte
-; 7 6 5 4 3 2 1 0
-; | | | | | | +-+----- Sector Size: 000=128, 001=256, 010=512, 011=1024 bytes
-; | | | | +-+--------- Disk Size: 00=fixed disk, 01=8", 10=5.25", 11=3.5"
-; | | | +------------- 0 = Normal 300 RPM MFM,    1 = "High-Density" Drive
-; | | +--------------- 0 = Single-Sided,          1 = Double-Sided
-; | +----------------- 0 = Double-Density,        1 = Single-Density
-; +------------------- 0 = 250 kbps (normal MFM), 1 = 500 kbps (Hi-Density)
+FdCmd:  PUSH    HL              ; Save regs (for Exit)
+        PUSH    BC
+        PUSH    DE
 
-IBMPC3  .equ    0xAE    ; 10101110B     ; HD,  DD, DS, 3.5",   512-byte Sctrs (1.44 MB)
-UZIHD3  .equ    0xAF    ; 10101111B     ; HD,  DD, DS, 3.5",  1024-byte Sctrs (1.76 MB)
-IBMPC5  .equ    0xAA    ; 10101010B     ; HD,  DD, DS, 5.25",  512-byte Sctrs (1.2 MB)
-UZIHD5  .equ    0xAB    ; 10101011B     ; HD,  DD, DS, 5.25", 1024-byte Sctrs (1.44 MB)
-DSQD3   .equ    0x2F    ; 00101111B     ; MFM, DD, DS, 3.5",  1024-byte Sctrs (800 KB)
-DSDD3   .equ    0x2E    ; 00101110B     ; MFM, DD, DS, 3.5",   512-byte Sctrs (800 KB)
-DSQD5   .equ    0x2B    ; 00101011B     ; MFM, DD, DS, 5.25", 1024-byte Sctrs (800 KB)
-DSDD5   .equ    0x2A    ; 00101010B     ; MFM, DD, DS, 5.25",  512-byte Sctrs (800 KB)
+        PUSH    HL              ; save pointer for possible Transfer
+        CALL    Motor           ; Ensure motors are On
+        LD      HL,#comnd       ; Point to Command Block
+        LD      (HL),C          ;  command passed in C
+        LD      C,#DR           ;   DP8473 Data Port
+        LD      A,(_devfd_userbuf)
+        LD      D,A             ; store userbuf flag in D
+OtLoop: CALL    WRdy            ; Wait for RQM (hoping DIO is Low) (No Ints)
+        OUTI                    ; Output Command bytes to FDC
+        JR      NZ,OtLoop       ; ..loop til all bytes sent
+        POP     HL              ; Restore Possible Transfer Addr
 
-_devfd_dtbl:                            ; Drive Param Table.  1 Entry Per Drive.
-        .db 0, 0xCF,   1,  27, 18,  1, IBMPC3, 10, 0, 160
-        ;   |     |    |    |   |   |    |      |  |    +- Number of Cylinders
-        ;   |     |    |    |   |   |    |      |  +- Current Track Number
-        ;   |     |    |    |   |   |    |      +- Spinup (1/20-secs)
-        ;   |     |    |    |   |   |    +-- Format Byte (See above)
-        ;   |     |    |    |   |   +------- First Sector Number
-        ;   |     |    |    |   +------- Physical Sectors-Per-Track
-        ;   |     |    |    +----------- Gap3 (Size 512=27, 1024=13)
-        ;   |     |    +---------------- Hd Load in 4mS steps (0=inf)
-        ;   |     +--------------------- Step Rate (B7-4) = 4mS (2's compl)
-        ;                                   HUT (B3-0) = 240 mS
-        ;   +--------------------------- Drive Logged (FF), Unlogged (0)
-TBLSIZ   .equ  . - _devfd_dtbl
-        .db 0, 0xCF,   1,  27,  18, 1, IBMPC3, 10, 0, 160
-        .db 0, 0xCF,   1,  27,  18, 1, IBMPC3, 10, 0, 160
-        .db 0, 0xCF,   1,  27,  18, 1, IBMPC3, 10, 0, 160
+        CALL    FdCmdXfer       ; Do the data transfer (using code in _COMMONMEM)
 
-; -->>> NOTE: Do NOT move these next two variables out of sequence !!! <<<--
-motim:  .db     0               ; Motor On Time Counter
-mtm:    .db     0               ; Floppy Spinup Time down-counter
+        LD      HL,#st0         ; Point to Status Result area
+IsGo:   CALL    WRdy
+        BIT     4,A             ; End of Status/Result?
+        JR      Z,FdcXit        ; ..exit if So
+        BIT     6,A             ; Another byte Ready?
+        JR      Z,FdcXit        ; ..exit if Not
+        INI                     ; Else Read Result/Status Byte
+        JR      IsGo            ; ..loop for next
+FdcXit: 
+        POP     DE              ; Restore Regs
+        POP     BC
+        POP     HL
+        RET
+
+;------------------------------------------------------------
+; COMMON MEMORY
+;------------------------------------------------------------
+        .area _COMMONMEM
+
+; inner section of FdCmd routine, has to touch buffers etc
+FdCmdXfer:
+        BIT     0,D             ; Buffer in user memory?
+        CALL    NZ, map_process_always
+
+FdCi1:  CALL    WRdy
+        BIT     5,A             ; In Execution Phase?
+        JR      Z,FdCmdXferDone ; ... tidy up and return if not
+        BIT     6,A             ; Write?
+        JR      NZ,FdCi2        ; ... jump if Not to Read
+        OUTI                    ; Write a Byte from (HL) to (C)
+        JR      FdCi1           ; check for next byte
+FdCi2:  INI                     ; Read a byte from (C) to (HL)
+        JR      FdCi1           ; check for next byte
+FdCmdXferDone:
+        BIT     0,D             ; Buffer in user memory?
+        RET     Z               ; done if not
+        JP      map_kernel      ; else remap kernel and return
+
+;-------------------------------------------------------------
+; Wait for FDC RQM to become Ready, return DIO status in
+; Zero Flag.  Pause before reading status port (~12 mS
+; specified, some assumed in code).
+
+WRdy:
+WRdy1:  LD      A,(dlyCnt)      ; Get delay count
+WRdy0:  DEC     A               ;  count down
+        JR      NZ,WRdy0        ;   for ~6 uS Delay
+
+WRdyL:  IN      A,(MSR)         ; Read Main Status Register
+        BIT     7,A             ; Interrupt Present?
+        RET     NZ              ;  Return if So
+        JR      WRdyL           ;   Else Loop
 
 dlyCnt: .db     (CPU_CLOCK_KHZ/1000)    ; Delay to avoid over-sampling status register
 
-;------------------------------------------------------------------------------
+;------------------------------------------------------------
+; DATA MEMORY
+;------------------------------------------------------------
          .area _DATA
 
 drive:  .ds     1               ; (minor) Currently Selected Drive
 active: .ds     1               ; Current bits written to Dev Contr Reg (DCR)
-;;--block:      DEFS    1               ; Index in Buffer for desired 512-byte block
-;;--buffer:     DEFS    1024            ; Physical Sector Buffer.  Max Possible Size
 
 _devfd_sector:  .ds     1
 _devfd_track:   .ds     1               ; LSB used as Head # in DS formats
 _devfd_error:   .ds     1
 _devfd_buffer:  .ds     2
+_devfd_userbuf: .ds     1
 
+; DISK Subsystem Variable Storage
 comnd:  .ds     1               ; Storage for Command in execution
 hdr:    .ds     1               ; Head (B2), Drive (B0,1)
 trk:    .ds     1               ; Track (t)
@@ -666,7 +648,6 @@ gpl:    .ds     1               ; Gap Length
 dtl:    .ds     1               ; Data Length
 
 ; FDC Operation Result Storage Area
-
 st0:    .ds     1               ; Status Byte 0
 st1:    .ds     1               ; Status Byte 1 (can also be PCN)
         .ds     1               ; ST2 - Status Byte 2
@@ -675,9 +656,9 @@ st1:    .ds     1               ; Status Byte 1 (can also be PCN)
         .ds     1               ; RR - Sector #
         .ds     1               ; RN - Sector Size
 
-actDma: .ds     2               ; 16-bit DMA Address
-
-; DISK Subsystem Variable Storage
+; -->>> NOTE: Do NOT move these next two variables out of sequence !!! <<<--
+motim:  .ds     1               ; Motor On Time Counter
+mtm:    .ds     1               ; Floppy Spinup Time down-counter
 
 rdOp:   .ds     1               ; Read/write flag
 retrys: .ds     1               ; Number of times to try Opns
