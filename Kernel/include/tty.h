@@ -193,9 +193,15 @@ extern CODE1 void tty_echo(uint8_t minor, unsigned char c);
 extern CODE1 void tty_erase(uint8_t minor);
 extern CODE1 void tty_putc_wait(uint8_t minor, unsigned char c);
 
+typedef enum {
+    TTY_READY_NOW=1,    /* port is ready immediately */
+    TTY_READY_SOON=0,   /* we'll be ready shortly, kernel should spin, polling the port repeatedly */
+    TTY_READY_LATER=-1  /* we'll be a long time, put this process to sleep and schedule another */
+} ttyready_t;
+
 /* provided by platform */
 extern struct s_queue ttyinq[NUM_DEV_TTY + 1];
-extern CODE2 bool tty_writeready(uint8_t minor);
+extern CODE2 ttyready_t tty_writeready(uint8_t minor);
 extern CODE2 void tty_putc(uint8_t minor, unsigned char c);
 extern CODE2 void tty_setup(uint8_t minor);
 extern CODE2 int tty_carrier(uint8_t minor);
