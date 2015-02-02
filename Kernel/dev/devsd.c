@@ -25,6 +25,7 @@ static void sd_spi_release(uint8_t drive);
 static bool sd_spi_wait_ready(uint8_t drive);
 static bool sd_spi_receive_prepare(uint8_t drive);
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
+static uint8_t sd_spi_receive_byte_when_ready(uint8_t drive);
 
 static uint8_t devsd_transfer_sector(void)
 {
@@ -49,7 +50,8 @@ static uint8_t devsd_transfer_sector(void)
                     sd_spi_transmit_sector(drive);
                     sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(drive, 0xFF);
-                    reply = sd_spi_receive_byte(drive);
+                    /* sd card may return 0xFF while writing */
+                    reply = sd_spi_receive_byte_when_ready(drive);
                     success = ((reply & 0x1f) == 0x05);
                 }
             }
@@ -74,25 +76,42 @@ static void sd_spi_release(uint8_t drive)
     sd_spi_receive_byte(drive);
 }
 
+static uint8_t sd_spi_receive_byte_when_ready(uint8_t drive)
+{
+    uint8_t res;
+    timer_t timer;
+
+    res = sd_spi_receive_byte(drive);
+    if (res != 0xFF)
+	return res;
+
+    timer = set_timer_ms(500);
+    while(res == 0xFF){
+        res = sd_spi_receive_byte(drive);
+        if(timer_expired(timer)){
+            kputs("sd: timeout\n");
+        }
+    }
+    return res;
+}
+
 static bool sd_spi_wait_ready(uint8_t drive)
 {
     uint8_t res;
     timer_t timer;
 
     timer = set_timer_ms(500);
-    sd_spi_receive_byte(drive);
+    res = sd_spi_receive_byte(drive);
 
-    while(true){
+    while(res != 0xFF){
         res = sd_spi_receive_byte(drive);
-        if(res == 0xFF)
-            return true;
         if(timer_expired(timer)){
             kputs("sd: timeout\n");
-            break;
+            return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 static bool sd_spi_receive_prepare(uint8_t drive)

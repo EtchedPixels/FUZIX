@@ -38,6 +38,9 @@
 		.globl enaslt
 		.globl _slotram
 		.globl _slotrom
+		.globl _vdpport
+		.globl _infobits
+		.globl _machine_type
 		.globl find_ram
 
 	        ; startup code @0x100
@@ -67,7 +70,11 @@ start:
 		ld d,a
 		ld a,(_slotrom)
 		ld e,a
+		ld bc,(_infobits)
+		ld hl,(_vdpport)
+		ld a,(_machine_type)
 		exx
+		ex af,af'
 		; move the common memory where it belongs
 		ld hl, #s__INITIALIZER
 		ld de, #s__COMMONMEM
@@ -80,12 +87,15 @@ start:
 		ldir
 
 		exx
+		ex af,af'
+		ld (_infobits),bc
+		ld (_vdpport),hl
+		ld (_machine_type),a
 		; restore slot data
 		ld a,d
 		ld (_slotram),a
 		ld a,e
 		ld (_slotrom),a
-
 
 		; then zero the data area
 		ld hl, #s__DATA

@@ -6,8 +6,12 @@
 		.dw 0,0,0,0,0,0
 
 		.globl enaslt
+		;  data to save from bios
 		.globl _slotrom
 		.globl _slotram
+		.globl _vdpport
+		.globl _infobits
+		.globl _machine_type
 		.globl find_ram
 		.globl kstack_top
 
@@ -37,11 +41,21 @@ bootstrap:
 		ld d,a
 		call find_rom
 		ld e,a
+
+		; read machine info bits
+		ld bc,(0x002b)	; localization and interrupt frequency
+		ld hl,(0x0006)	; vdp ports
+		inc h
+		inc l
+		ld a,(0x002d)	; machine type
+
+		ex af,af'
+		ld a,e
 		exx
 
 		ld hl,#0xc000
 		ld sp,#0xa000	; keep stack in ram
-		call enaslt		; set bank 3 to rom
+		call enaslt	; set bank 3 to rom
 
 		; copy kernel page 0 from bank 3 to ram in bank 2
 		; it contains the common area if the rom > 48Kb
@@ -49,23 +63,33 @@ bootstrap:
 		ld de, #0x8000
 		ld bc, #0x4000
 		ldir
-		exx
 
+		exx
 		push de
+		push bc
+		push hl
 		ld hl,#0xc000	; set bank 3 back to ram
 		ld a,d
 		call enaslt
-		pop de			; store slot data in ram now
+		pop hl
+		pop bc
+		pop de
+
 		ld a, #4
 		out (0xFF),a
 		ld a,d
 		ld (_slotram),a
 		ld a,e
 		ld (_slotrom),a
+		ld (_infobits),bc
+		ld (_vdpport),hl
+		ex af,af'
+		ld (_machine_type),a
 
 		ld sp, #kstack_top	; move stack to final location
 
 		; set cartridge rom in bank 0
+		ld a,e
 		ld hl,#0
 		call enaslt
 

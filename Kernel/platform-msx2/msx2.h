@@ -20,5 +20,31 @@ extern int mapslot_bank1(uint8_t slot);
 extern int mapslot_bank2(uint8_t slot);
 
 extern uint8_t slotram;
+extern uint8_t slotrom;
+extern uint8_t machine_type;
+extern uint16_t infobits;
+
+#define MACHINE_MSX1	0
+#define MACHINE_MSX2	1
+#define MACHINE_MSX2P	2
+#define MACHINE_MSXTR	3
+
+#define CHARSET_MASK	(0xF)
+#define CHARSET_JPN	0
+#define CHARSET_INT	1
+#define CHARSET_KR	2
+
+#define INTFREQ_MASK	(1 << 7)
+#define DATEFMT_MASK	(7 << 4)
+#define INTFREQ_60Hz	0
+#define INTFREQ_50Hz	1
+
+#define KBDTYPE_MASK	(0xF)
+#define KBDTYPE_JPN	0
+#define KBDTYPE_INT	1
+#define KBDTYPE_FR	2
+#define KBDTYPE_UK	3
+#define KBDTYPE_DIN	4
+#define KBDTYPE_ES	6
 
 #endif
