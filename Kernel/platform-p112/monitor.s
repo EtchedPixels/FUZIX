@@ -1,19 +1,32 @@
 ; 2015-01-17 William R Sowerbutts
+
                 .module monitor
                 .include "kernel.def"
+                .globl _trap_monitor
+                .globl map_kernel
 
-.ifne USE_FANCY_MONITOR
+; -----------------------------------------------------------------------------
+.ifne USE_FANCY_MONITOR ; -----------------------------------------------------
+                .area _CODE ; actual monitor lives in kernel bank
                 .include "../lib/monitor-z80.s"
-.else
+
+                .area _COMMONMEM ; just a stub goes in common memory
+_trap_monitor:
+                di
+                call map_kernel
+                jp monitor_entry
+
+
+; -----------------------------------------------------------------------------
+.else ; MICRO MONITOR ---------------------------------------------------------
                 .globl outchar
                 .globl outnewline
                 .globl outhl
-                .globl _trap_monitor
 
-                ; micro monitor -
-                ; just dumps a few words from the stack
+                .area _COMMONMEM
 _trap_monitor:  di
                 call outnewline
+                ; just dump a few words from the stack
                 ld b, #50
 stacknext:      pop hl
                 call outhl

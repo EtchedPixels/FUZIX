@@ -9,11 +9,10 @@
 ;   I arg1         - input from port address arg1
 ;   O arg1 arg2    - output arg2 to port address arg1
 
-                .module monitor-z80
                 .z80
 
                 ; exported symbols
-                .globl _trap_monitor
+                .globl monitor_entry
 
                 ; imported symbols
                 .globl inchar
@@ -23,10 +22,12 @@
                 .globl outnewline
                 .globl outstring
 
-                .area _COMMONMEM
+                ; NOTE: no .area declaration -- this file should be
+                ; .include'd from platform code (see monitor.s in
+                ; platform-p112 or platform-n8vem-mark4)
 
 ; expect to arrive here with return PC on stack
-_trap_monitor:  di                      ; turn off pesky interrupts
+monitor_entry:  di                      ; turn off pesky interrupts
                 ld hl, #0
                 add hl, sp              ; save SP
                 pop bc                  ; save PC
