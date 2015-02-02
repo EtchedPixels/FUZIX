@@ -384,11 +384,13 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
            costs versus waiting a bit. A box with tx interrupts and sufficient
            performance can buffer or sleep in tty_putc instead.
 
-           The driver should return 1 - send bytes, 0 - spinning may be useful,
-           -1 - blocked, don't spin (eg flow controlled) */
+           The driver should return a value from the ttyready_t enum:
+            1 (TTY_READY_NOW) -- send bytes now
+            0 (TTY_READY_SOON) -- spinning may be useful
+           -1 (TTY_READY_LATER) -- blocked, don't spin (eg flow controlled) */
 	if (!udata.u_ininterrupt) {
-		while ((t = tty_writeready(minor)) != 1)
-		        if (t || need_resched())
+		while ((t = tty_writeready(minor)) != TTY_READY_NOW)
+		        if (t != TTY_READY_SOON || need_resched())
 				psleep(&ttydata[minor]);
 	}
 	tty_putc(minor, c);
