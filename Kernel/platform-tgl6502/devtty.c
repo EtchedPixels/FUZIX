@@ -30,9 +30,9 @@ void kputchar(uint8_t c)
 	tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
-        return 1;
+        return TTY_READY_NOW;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)

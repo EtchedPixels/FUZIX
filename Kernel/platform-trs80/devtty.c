@@ -29,15 +29,13 @@ void kputchar(char c)
     tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t reg;
     if (minor == 1)
-        return 1;
+        return TTY_READY_NOW;
     reg = tr1865_status;
-    if (reg & 0x40)
-        return 1;
-    return 0;
+    return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)

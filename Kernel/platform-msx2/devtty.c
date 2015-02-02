@@ -95,10 +95,10 @@ void kputchar(char c)
 }
 
 /* Both console and debug port are always ready */
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
 	minor;
-	return 1;
+	return TTY_READY_NOW;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
