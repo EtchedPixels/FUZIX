@@ -98,14 +98,13 @@ _trap_monitor:
             ; it's never a dull day with ROM around!
 
 platform_interrupt_all:
+	    ld hl,#_irqwork
 	    in a,(TIMER_STATUS)
 	    bit 7, a
 	    jr z, not_timer
-	    ld a,(_irqwork)
-	    set 0, a
-	    ld (_irqwork),a
+	    set 0, (hl)
 	    xor a
-	    out (TIMER_STATUS),a
+	    out (TIMER_COMMAND),a
 not_timer:
 	    in a,(UART0_STATUS)
 	    ld b, a
@@ -115,7 +114,6 @@ not_timer:
 	    and b
 	    out (UART0_STATUS),a
 	    and #0xC0
-	    ld hl,#_irqwork
 	    or (hl)
 	    ld (hl),a
 	    ret

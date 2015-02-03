@@ -18,7 +18,7 @@ __sfr __at 0x01 uart0_data;
 __sfr __at 0x28 uart1_status;
 __sfr __at 0x29 uart1_data;
 
-extern uint16_t irqwork;
+extern uint8_t irqwork;
 
 void platform_interrupt(void)
 {
