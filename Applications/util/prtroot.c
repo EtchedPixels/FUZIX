@@ -15,9 +15,11 @@
  *  5 Oct 1992	- Use readdir (kjb)
  * 26 Nov 1994	- Flag -r: print just the root device (kjb)
  * 19 May 2001  - Ported to UZI180
+ *  3 Feb 015   - Flag -i: initialise the /etc/mtab file (WRS)
  */
 
 #include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -28,16 +30,28 @@
 #define UNKNOWN_DEV	"/dev/unknown"
 #define ROOT		"/"
 
-int rflag;
+int rflag = 0;
+int iflag = 0;
 
 void done(const char *name, int status)
 {
-    write(1, name, strlen(name));
-    if (rflag) {
-	write(1, "\n", 1);
-	exit(status);
+    int fd;
+
+    if(iflag){
+        fd = open("/etc/mtab", O_CREAT | O_TRUNC | O_WRONLY, 0644);
+        if(fd < 0){
+            perror("prtroot: cannot open /etc/mtab: ");
+            exit(1);
+        }
+    }else{ /* !iflag */
+        fd = 1;
     }
-    write(1, MESSAGE, sizeof(MESSAGE));
+
+    write(fd, name, strlen(name));
+    if (rflag)
+        write(fd, "\n", 1);
+    else
+        write(fd, MESSAGE, sizeof(MESSAGE)-1); /* do not write the terminating NUL */
 
     exit(status);
 }
@@ -45,11 +59,17 @@ void done(const char *name, int status)
 int main(int argc, const char *argv[])
 {
     DIR *dp;
+    int i;
     struct dirent *entry;
     struct stat filestat, rootstat;
     static char namebuf[sizeof(DEV_PATH) + MAXNAMLEN + 1];
 
-    rflag = (argc > 1 && strcmp(argv[1], "-r") == 0);
+    for(i=1; i<argc; i++){
+        if(strcmp(argv[i], "-r") == 0)
+            rflag = 1;
+        else if(strcmp(argv[i], "-i") == 0)
+            iflag = 1;
+    }
 
     if (stat(ROOT, &rootstat) == 0
 	&& (dp = opendir(DEV_PATH)) != (DIR *) NULL) {
