@@ -22,14 +22,12 @@
 static void sd_init_drive(uint8_t drive);
 static int sd_spi_init(uint8_t drive);
 static void sd_spi_release(uint8_t drive);
-static bool sd_spi_wait_ready(uint8_t drive);
-static bool sd_spi_receive_prepare(uint8_t drive);
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
-static uint8_t sd_spi_receive_byte_when_ready(uint8_t drive);
+static uint8_t sd_spi_wait(uint8_t drive, bool want_ff);
 
 static uint8_t devsd_transfer_sector(void)
 {
-    uint8_t attempt, drive, reply;
+    uint8_t attempt, drive;
     bool success;
 
     drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
@@ -40,19 +38,17 @@ static uint8_t devsd_transfer_sector(void)
                     (blk_op.blkdev->driver_data & CT_BLOCK) ? blk_op.lba : (blk_op.lba << 9)
                     ) == 0){
 	    if(blk_op.is_read){
-                success = sd_spi_receive_prepare(drive);
+                success = (sd_spi_wait(drive, false) == 0xFE);
                 if(success)
                     sd_spi_receive_sector(drive);
             }else{
                 success = false;
-                if(sd_spi_wait_ready(drive)){
+                if(sd_spi_wait(drive, true) == 0xFF){
                     sd_spi_transmit_byte(drive, 0xFE);
                     sd_spi_transmit_sector(drive);
                     sd_spi_transmit_byte(drive, 0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(drive, 0xFF);
-                    /* sd card may return 0xFF while writing */
-                    reply = sd_spi_receive_byte_when_ready(drive);
-                    success = ((reply & 0x1f) == 0x05);
+                    success = ((sd_spi_wait(drive, false) & 0x1F) == 0x05);
                 }
             }
 	}else
@@ -76,60 +72,29 @@ static void sd_spi_release(uint8_t drive)
     sd_spi_receive_byte(drive);
 }
 
-static uint8_t sd_spi_receive_byte_when_ready(uint8_t drive)
-{
-    uint8_t res;
-    timer_t timer;
-
-    res = sd_spi_receive_byte(drive);
-    if (res != 0xFF)
-	return res;
-
-    timer = set_timer_ms(500);
-    while(res == 0xFF){
-        res = sd_spi_receive_byte(drive);
-        if(timer_expired(timer)){
-            kputs("sd: timeout\n");
-        }
-    }
-    return res;
-}
-
-static bool sd_spi_wait_ready(uint8_t drive)
-{
-    uint8_t res;
-    timer_t timer;
-
-    timer = set_timer_ms(500);
-    res = sd_spi_receive_byte(drive);
-
-    while(res != 0xFF){
-        res = sd_spi_receive_byte(drive);
-        if(timer_expired(timer)){
-            kputs("sd: timeout\n");
-            return false;
-        }
-    }
-
-    return true;
-}
-
-static bool sd_spi_receive_prepare(uint8_t drive)
+static uint8_t sd_spi_wait(uint8_t drive, bool want_ff)
 {
     unsigned int timer;
     unsigned char b;
 
-    timer = set_timer_ms(250);
+    timer = set_timer_ms(500);
 
-    do{
+    while(true){
         b = sd_spi_receive_byte(drive);
+        if(want_ff){
+            if(b == 0xFF)
+                break;
+        }else{
+            if(b != 0xFF)
+                break;
+        }
         if(timer_expired(timer)){
             kputs("sd: timeout\n");
-            return false;
+            break;
         }
-    }while(b == 0xFF);
+    }
 
-    return (b == 0xFE); /* true on success */
+    return b;
 }
 
 static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
@@ -146,7 +111,7 @@ static int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     /* Select the card and wait for ready */
     sd_spi_raise_cs(drive);
     sd_spi_lower_cs(drive);
-    if(!sd_spi_wait_ready(drive))
+    if(sd_spi_wait(drive, true) != 0xFF)
         return 0xFF;
 
     /* Send command packet */
@@ -219,7 +184,7 @@ static void sd_init_drive(uint8_t drive)
     blk->driver_data = (drive & DRIVE_NR_MASK) | card_type;
     
     /* read and compute card size */
-    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_receive_prepare(drive)){
+    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_wait(drive, false) == 0xFE){
         for(n=0; n<16; n++)
             csd[n] = sd_spi_receive_byte(drive);
         if ((csd[0] >> 6) == 1) {
