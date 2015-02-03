@@ -87,10 +87,10 @@ void tty_putc(uint8_t minor, unsigned char c)
     }
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
     minor;
-    return 1;
+    return TTY_READY_NOW;
 }
 
 /* kernel writes to system console -- never sleep! */

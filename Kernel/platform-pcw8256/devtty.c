@@ -70,12 +70,12 @@ static void dartwr(uint8_t minor, uint8_t r, uint8_t v)
     irqrestore(irq);
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
     if (minor == 1)
-        return 1;	/* VT */
+        return TTY_READY_NOW;
     else
-        return dartrr(minor, 0) & 4;
+        return (dartrr(minor, 0) & 4) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 extern void bugout(uint16_t c);

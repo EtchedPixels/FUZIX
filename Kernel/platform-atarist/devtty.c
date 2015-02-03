@@ -33,13 +33,13 @@ void kputchar(char c)
 	tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
 	uint8_t c;
 	if (minor == 1)
-		return 1;
+		return TTY_READY_NOW;
 	c = *uart_status;
-	return c & 16;	/* TX DATA empty */
+	return (c & 16) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
 }
 
 /* For DragonPlus we should perhaps support both monitors 8) */

@@ -45,14 +45,14 @@ void kputchar(char c)
 	tty_putc(1, c);
 }
 
-bool tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
 	uint8_t reg = 0xFF;
 	if (minor == 3)
 		reg = serialAc;
 	if (minor == 4)
 		reg = serialBc;
-	return reg & 4;
+	return (reg & 4) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
