@@ -35,3 +35,5 @@ unsigned char vt_mangle_6847(unsigned char c)
 
 u_block uarea_block[PTABSIZE];
 uaddr_t ramtop;
+
+void *screenbase;

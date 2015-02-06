@@ -31,4 +31,5 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec32.o \
 	../usermem_std-68000.o devlpr.o devtty.o libc.o ../vt.o ../malloc.o \
-	/usr/lib/gcc/m68k-linux-gnu/4.9.1/libgcc.a >../fuzix.map
+	../font8x8.o \
+	/usr/lib64/gcc/m68k-atari-mint/4.6.4/mshort/libgcc.a  >../fuzix.map

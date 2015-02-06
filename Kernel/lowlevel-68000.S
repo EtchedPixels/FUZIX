@@ -4,14 +4,15 @@
 #include "kernel-68000.def"
 
 .mri 0
-		.globl di,ei,irqrestore
-		.globl doexec
+		.globl _di,_ei,_irqrestore
+		.globl _doexec
+		.globl _get_usp, _set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
 .mri 1
-get_usp:	move.l	usp,a0
+_get_usp:	move.l	usp,a0
 		rts
 
-set_usp:	move.l 4(sp),a0
+_set_usp:	move.l 4(sp),a0
 		move.l a0,usp
 		rts
 
@@ -19,24 +20,24 @@ set_usp:	move.l 4(sp),a0
  *	We don't currently have any fine grained IRQ control. We need to fix
  *	that!
  */
-di:
+_di:
 		move.w sr,d0
 		and.w #$0700,d0
 		or.w #$0700,sr
 		rts
 
-ei:
+_ei:
 		and.w #$F8FF,sr
 		rts
 
-irqrestore:
+_irqrestore:
 		move.w sr,d0
 		and.w #$F8FF,d0
 		or.w 4(sp),d0
 		move.w d0,sr
 		rts
 
-doexec:
+_doexec:
 		;
 		;	FIXME: we need to reset sp (we effectively longjmp
 		; 	in supervisor space), then push the values. If we
@@ -93,7 +94,7 @@ trap14:		movem.l a2-a6/d2-d7,-(sp)
 		move.b d0,kernel_flag
 		; FIXME: EI per platform really
 		and.w #$F8FF,sr
-		bsr unix_syscall
+		bsr _unix_syscall
 		; FIXME: signal handling in the C code or not ?
 	        or.w #$0700,sr
 		move.w U_DATA__U_ERROR,d1
@@ -129,37 +130,37 @@ struninitialized:
 ;
 #if 0
 _intvector1:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt1
+		bsr _interrupt1
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector2:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt3
+		bsr _interrupt3
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector3:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt3
+		bsr _interrupt3
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector4:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt4
+		bsr _interrupt4
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector5:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt5
+		bsr _interrupt5
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector6:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt6
+		bsr _interrupt6
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
 _intvector7:	movem.l a0-a6/d0-d7,-(sp)
-		jsr _interrupt7
+		bsr _interrupt7
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 #endif
@@ -167,11 +168,11 @@ sig_or_die:
 		tst.b kernel_flag
 		beq sig_user
 		move.b (sp),d0
-		jsr outcharhex
+		bsr outcharhex
 		lea panic_sig,a0
-		jsr outstring
+		bsr outstring
 		lea panic_sig2,a0
-		jsr panic			; won't return
+		bsr _panic			; won't return
 panic_sig:	ascii ": signal in kernel mode."
 		byte 13,10
 panic_sig2:	asciz ": ksig"
@@ -179,7 +180,7 @@ panic_sig2:	asciz ": ksig"
 
 sig_user:	movem.l a0-a6/d0-d7,-(sp)
 		move.l (U_DATA__U_PTAB),-(sp)
-		jsr ssig
+		bsr _ssig
 		adda #4,sp
 		; Do signal processing bit here if we return
 		movem.l (sp)+,a0-a6/d0-d7

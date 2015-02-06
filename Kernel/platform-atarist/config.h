@@ -15,15 +15,14 @@
 #define CONFIG_USERMEM_DIRECT
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* Simple text mode */
-#define CONFIG_VT_SIMPLE
+#define CONFIG_FONT8X8			/* 8bit font needed */
 /* Vt definitions */
-#define VT_BASE		(uint8_t *)0x6000	/* Default video text mode base */
-#define VT_WIDTH	32
-#define VT_HEIGHT	16
-#define VT_RIGHT	31
-#define VT_BOTTOM	15
-#define VT_INITIAL_LINE	4
+/* Hard coded for now */
+#define VT_WIDTH	80
+#define VT_HEIGHT	50
+#define VT_RIGHT	79
+#define VT_BOTTOM	49
+#define VT_INITIAL_LINE	15
 
 #define TICKSPERSEC 100   /* Ticks per second */
 
