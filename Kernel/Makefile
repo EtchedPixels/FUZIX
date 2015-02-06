@@ -1,13 +1,13 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502
 
-export TARGET= trs80
-export CPU = z80
+#export TARGET= trs80
+#export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
 #export TARGET = tgl6502
 #export CPU = 6502
-#export TARGET=atarist
-#export CPU = 68000
+export TARGET=atarist
+export CPU = 68000
 #export TARGET = 8086test
 #export CPU = 8086
 
@@ -82,8 +82,8 @@ export ASMEXT = .s
 export BINEXT = .o
 export BITS=16
 else ifeq ($(CPU),68000)
-export CROSS_LD=m68k-linux-gnu-ld
-export CROSS_CC = m68k-linux-gnu-gcc
+export CROSS_LD=m68k-atari-mint-ld
+export CROSS_CC = m68k-atari-mint-gcc
 export CROSS_CCOPTS=-c -fno-builtin -Wall -Os -m68000 -mshort -I$(ROOT_DIR)/cpu-68000 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_AS=$(CROSS_CC) $(CROSS_CCOPTS) #-Wa,-M
 export CROSS_CC_SEG1=
