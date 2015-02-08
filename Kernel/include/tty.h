@@ -201,10 +201,10 @@ typedef enum {
 
 /* provided by platform */
 extern struct s_queue ttyinq[NUM_DEV_TTY + 1];
-extern CODE2 ttyready_t tty_writeready(uint8_t minor);
-extern CODE2 void tty_putc(uint8_t minor, unsigned char c);
-extern CODE2 void tty_setup(uint8_t minor);
-extern CODE2 int tty_carrier(uint8_t minor);
+extern int ttyready_t tty_writeready(uint8_t minor);
+extern void tty_putc(uint8_t minor, unsigned char c);
+extern void tty_setup(uint8_t minor);
+extern int tty_carrier(uint8_t minor);
 /* PTY pieces: 8 ptys both sides of */
 #ifdef CONFIG_PTY_DEV
 #define PTY_BUFFERS \
