@@ -146,27 +146,26 @@ void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
       buf[sbank][ptr] = da & 0xFF;
       buf[sbank][ptr+1] = da >> 8;
       break;
-    case 0xF5:	/* PUSH AF CALL POP AF */
-      if (buf[sbank][ptr] != 0xCD) {
-        fprintf(stderr, "Bad format for relocated long call at%04x\n", ptr);
+    case 0xCD:	/* PUSH AF CALL POP AF */
+      if (buf[sbank][ptr-2] != 0xF5|| buf[sbank][ptr+2] != 0xF1) {
+        fprintf(stderr, "Bad format for relocated long call at %04x (%02x %02x %02x %02x %02x\n",
+          ptr, buf[sbank][ptr-2], buf[sbank][ptr-1], buf[sbank][ptr], buf[sbank][ptr+1], buf[sbank][ptr+2]);
         exit(1);
       }
       if (v)
-        printf("Converting CALL at %04x\n", ptr);
+        printf("Converting CALL at %04x from bank %d to bank %d\n", ptr,
+          sbank, dbank);
       /* Turn the push af into a call */
-      buf[sbank][ptr-1] = 0xCD;
+      buf[sbank][ptr-2] = 0xCD;
       /* Move the address along */
-      buf[sbank][ptr+3] = buf[sbank][ptr+2];
       buf[sbank][ptr+2] = buf[sbank][ptr+1];
+      buf[sbank][ptr+1] = buf[sbank][ptr];
       /* Fit in the actual call target */
       da = get_bank_function(sbank, dbank);
       /* Sequence is now CALL __bank_sbank_dbank DW target */
-      buf[sbank][ptr] = da & 0xFF;
-      buf[sbank][ptr+1] = da >> 8;
+      buf[sbank][ptr-1] = da & 0xFF;
+      buf[sbank][ptr] = da >> 8;
       break;
-    case 0xCD:
-      fprintf(stderr, "File already processed or short call at %04x!\n", ptr);
-      exit(1);
     default:
       fprintf(stderr, "Bad relocation in code %04X: %02X\n",
         ptr-1, buf[sbank][ptr-1]);
@@ -240,17 +239,19 @@ static void scan_symbols(FILE *f)
   char *sym;
   unsigned int addr;
 
-  while(fgets(buf, 255, stdin)) {
-    if (memcmp(buf, "      0000", 10))
+  while(fgets(buf, 255, f)) {
+    if (memcmp(buf, "     0000", 9))
       continue;
     /* Looks like a symbol */
-    if (sscanf(buf+6, "%x", &addr) != 1)
+    if (sscanf(buf+5, "%x", &addr) != 1)
       continue;
     /* Smells like a symbol */
-    sym = strtok(buf+16, " \n\t");
+    sym = strtok(buf+15, " \n\t");
     if (!sym)
       continue;
     /* Guess it's a symbol then */
+    if (v && strstr(sym, "_bank_"))
+      printf("Add symbol %s %x\n", sym, addr);
     add_symbol(sym, addr);
   }
 }    
