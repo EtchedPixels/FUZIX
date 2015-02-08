@@ -96,7 +96,7 @@ ptptr getproc_nextp = &ptab[0];
 
 #ifndef CONFIG_SINGLETASK
 
-ptptr __fastcall__ getproc(void)
+ptptr getproc(void)
 {
 	ptptr haltafter;
 #ifdef DEBUG
