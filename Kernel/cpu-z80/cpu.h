@@ -60,17 +60,8 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* We don't yet have bank attributes and banking for Z80 */
-#define CODE1
-#define CODE2
-#define COMMON
-#define VIDEO
-#define DISCARD
-
 /* SDCC is arsy about unused parameters */
 #define used(x)	x
-/* No fastcall in SDCC */
-#define __fastcall__
 
 #define cpu_to_le16(x)	(x)
 #define le16_to_cpu(x)	(x)
