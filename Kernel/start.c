@@ -77,9 +77,9 @@ void create_init(void)
 	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
 	/* Set up things to look like the process is calling _execve() */
-	udata.u_argn = PROGLOAD;
-	udata.u_argn1 = PROGLOAD + 0x7;	/* Arguments (just "/init") */
-	udata.u_argn2 = PROGLOAD + 0xb;	/* Environment (none) */
+	udata.u_argn =  (arg_t)PROGLOAD;
+	udata.u_argn1 = (arg_t)(PROGLOAD + 0x7); /* Arguments (just "/init") */
+	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
 }
 
 /* to sensibly parse device names this needs to be platform-specific,
