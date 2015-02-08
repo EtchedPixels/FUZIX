@@ -13,3 +13,5 @@ export ASOPTS=
 export ASMEXT = .s
 export BINEXT = .o
 export BITS=16
+
+tools/decbdragon: tools/decbdragon.c
