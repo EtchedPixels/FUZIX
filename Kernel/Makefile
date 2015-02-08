@@ -1,6 +1,6 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502
 
-export TARGET= trs80
+export TARGET= zx128
 export CPU = z80
 #export TARGET = dragon
 #export CPU = 6809
@@ -60,7 +60,7 @@ CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
 
-ASRCS =  lowlevel-$(CPU)$(ASMEXT) usermem_std-$(CPU)$(ASMEXT)
+ASRCS =  lowlevel-$(CPU)$(BANKED)$(ASMEXT) usermem_std-$(CPU)$(BANKED)$(ASMEXT)
 
 
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
