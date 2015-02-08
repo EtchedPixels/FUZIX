@@ -149,7 +149,7 @@ ptptr getproc(void)
  *	be blissfully unaware of its cut down environment.
  */
 
-ptptr __fastcall__ getproc(void)
+ptptr getproc(void)
 {
 	ptptr p = udata.u_ptab;
 
@@ -190,7 +190,7 @@ ptptr __fastcall__ getproc(void)
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
  */
-void __fastcall__ newproc(ptptr p)
+void newproc(ptptr p)
 {				/* Passed New process table entry */
 	uint8_t *j;
 	irqflags_t irq;
