@@ -36,7 +36,9 @@
 ; This function can have no arguments or auto variables.
 _switchout:
         di
+	push af
         call _chksigs
+	pop af
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
@@ -65,7 +67,9 @@ _switchout:
 	out (c), a
 
         ; find another process to run (may select this one again)
+	push af
         call _getproc
+	pop af
 
         push hl
         call _switchin
@@ -238,7 +242,9 @@ _dofork:
         ; Make a new process table entry, etc.
         ld  hl, (fork_proc_ptr)
         push hl
+	push af
         call _newproc
+	pop af
         pop bc 
 
         ; runticks = 0;
