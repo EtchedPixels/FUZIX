@@ -18,6 +18,9 @@ UNAME_S := $(shell uname -s)
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
+all:	fuzix.bin
+
+
 include cpu-$(CPU)/rules.mk
 -include platform-$(TARGET)/rules.mk
 
@@ -75,8 +78,6 @@ OBJS  = $(COBJS) $(AOBJS)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:$(ASMEXT)=.lst) $(ASRCS:$(ASMEXT)=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(ASRCS:$(ASMEXT)=.rst)
 
-all:	fuzix.bin
-
 .SUFFIXES:		# delete the default suffixes
 .SUFFIXES: .c .s .rel .S
 
@@ -113,51 +114,12 @@ $(AOBJS): %$(BINEXT): %$(ASMEXT)
 version.c: makeversion
 	./makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
-tools/analysemap: tools/analysemap.c
-
-tools/bihx: tools/bihx.c
-
-tools/binmunge: tools/binmunge.c
-
-tools/memhogs: tools/analysemap
-	cp tools/analysemap tools/memhogs
-
-tools/binman: tools/binman.c
-
 tools/filesizes: tools/filesizes.c
 
 tools/make4x6: tools/make4x6.c
 
 font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
-
-tools/decbdragon: tools/decbdragon.c
-
-tools/bintomdv: tools/bintomdv.c
-
-tools/bankld/sdldz80:
-	+(cd tools/bankld; make)
-
-cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
-	+make -C cpm-loader
-
-tools/makejv3: tools/makejv3.c
-
-ifneq (,$(filter $(CPU),z80 z180)) # matches CPU = z80 or z180
-fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
-	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
-
-fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin
-	-cp hogs.txt hogs.txt.old
-	tools/memhogs <fuzix.map |sort -nr >hogs.txt
-	head -5 hogs.txt
-	tools/bihx fuzix.ihx
-	tools/binprep
-	+make -C platform-$(TARGET) image
-else
-fuzix.bin: target $(OBJS) tools/decbdragon
-	+make -C platform-$(TARGET) image
-endif
 
 clean:
 	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
@@ -168,3 +130,6 @@ clean:
 clean-all: clean
 	(cd tools/bankld; make clean)
 	$(foreach target,$(TARGET_LIST), make -C $(target) clean;)
+
+include cpu-$(CPU)/image.mk
+-include platform-$(TARGET)/image.mk
