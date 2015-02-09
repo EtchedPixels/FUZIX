@@ -179,16 +179,83 @@ place_for_b:                ; And BC - here
 place_for_c:
         .db 0
 
+	.area _COMMONMEM
 ;
 ;	Banking helpers
 ;
+;	FIXME: use real bank asssignments (0 is not 0 etc)
+;
 __bank_0_1:
+	ld a, #1
+bankina0:
+	call switch_bank   ; Move to new bank
+	pop hl		   ; Return address (points to true function address)
+	ld e, (hl)	   ; DE = function to call
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		   ; Restore corrected return pointer
+	ex de, hl
+	call callhl	   ; call the function
+	xor a		   ; return to bank 0
+	jp switch_bank
+callhl:	jp (hl)
 __bank_0_2:
+	ld a, #2
+	jr bankina0
 __bank_0_3:
+	ld a, #3
+	jr bankina0
+
 __bank_1_2:
+	ld a, #2
+bankina1:
+	call switch_bank   ; Move to new bank
+	pop hl		   ; Return address (points to true function address)
+	ld e, (hl)	   ; DE = function to call
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		   ; Restore corrected return pointer
+	ex de, hl
+	call callhl	   ; call the function
+	ld a, #1	   ; return to bank 0
+	jp switch_bank
 __bank_1_3:
+	ld a, #3
+	jr bankina1
 __bank_2_1:
+	ld a, #1
+bankina2:
+	call switch_bank   ; Move to new bank
+	pop hl		   ; Return address (points to true function address)
+	ld e, (hl)	   ; DE = function to call
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		   ; Restore corrected return pointer
+	ex de, hl
+	call callhl	   ; call the function
+	ld a, #2	   ; return to bank 0
+	jp switch_bank
 __bank_2_3:
+	ld a, #3
+	jr bankina2
 __bank_3_1:
+	ld a, #1
+bankina3:
+	call switch_bank   ; Move to new bank
+	pop hl		   ; Return address (points to true function address)
+	ld e, (hl)	   ; DE = function to call
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		   ; Restore corrected return pointer
+	ex de, hl
+	call callhl	   ; call the function
+	ld a, #2	   ; return to bank 0
+	jp switch_bank
+
 __bank_3_2:
-	ret
+	ld a, #2
+	jr bankina3
