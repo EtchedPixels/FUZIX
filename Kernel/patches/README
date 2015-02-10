@@ -1,0 +1,13 @@
+SDCC:
+
+	This patch adds 
+
+	1. Helpers to cut down the size of C code for function entry. Right
+	   now the __enter and __enter_s must be in common memory.
+
+	2. An option --external-banker that keeps 4 byte stack offsets for
+	   arguments so the linker can patch up banked binaries. Unbanked
+	   code is called via push af call foo pop af
+
+
+

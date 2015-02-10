@@ -1,0 +1,126 @@
+diff -u --recursive sdcc-342/src/z80/gen.c sdcc/src/z80/gen.c
+--- sdcc-342/src/z80/gen.c	2014-12-23 21:02:39.000000000 +0000
++++ sdcc/src/z80/gen.c	2015-02-08 16:37:36.657585246 +0000
+@@ -4241,7 +4241,11 @@
+         {
+           spillPair (PAIR_HL);
+           fetchPairLong (PAIR_HL, AOP (IC_LEFT (ic)), ic, 0);
++          if (z80_opts.externalBanker)
++            emit2 ("push af;noopt");
+           emit2 ("call __sdcc_call_hl");
++          if (z80_opts.externalBanker)
++            emit2 ("pop af;noopt");
+         }
+       freeAsmop (IC_LEFT (ic), NULL);
+     }
+@@ -4266,9 +4270,20 @@
+           else
+             {
+               bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
++              if (z80_opts.externalBanker) {
++                /* When running with an external banker we push a spare word on
++                   the stack frames. The linker and banker will use this on the
++                   call/return paths between banks, while for in-bank calls its
++                   about as efficient as we get without special casing pointers
++                   to functions */
++                emit2 ("push af;noopt");
++                jump = 0;
++              }
+               emit2 ("%s %s", jump ? "jp" : "call",
+                 (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+               regalloc_dry_run_cost += 3;
++              if (z80_opts.externalBanker)
++                emit2 ("pop af;noopt");
+             }
+         }
+     }
+@@ -4492,6 +4507,12 @@
+         }
+     }
+ 
++  /* We have 4 byte stacked on a call for an external banker and must
++     do our own adjustment. Any explicit 'far' has already been done
++     and is different, so don't adjust twice */
++  if (z80_opts.externalBanker && !FUNC_BANKED(ftype))
++    _G.stack.param_offset += 2;
++
+   if (bcInUse)
+     {
+       emit2 ("push bc");
+@@ -4507,6 +4528,7 @@
+     }
+ 
+   _G.calleeSaves.pushedDE = deInUse;
++  
+ 
+   /* adjust the stack for the function */
+ //  _G.stack.last = sym->stack;
+@@ -4532,6 +4554,23 @@
+       if (!regalloc_dry_run)
+         _G.omitFramePtr = TRUE;
+     }
++  else if (!_G.omitFramePtr && IS_Z80 && optimize.codeSize && sym->stack < 256) 
++    {
++      /* The Z80 entry is very bulky, so for a small code binary turn it
++         into a helper call. Bonus points for them using an RST. Even as
++         a call this saves us 5 bytes per entry with no stack adjust and
++         10 per function with. Using an RST saves us 7 and 12. We could
++         slightly improve the call case by spotting common values and
++         having multiple helpers */
++      if (sym->stack > 2)
++        emit2 ("!enterss", -sym->stack);
++      else {
++        /* for 1 or 2 bytes its cheaper to adjust the stack inline */
++        emit2 ("!enters");
++        adjustStack (-sym->stack, !IS_TLCS90, TRUE, TRUE, !IY_RESERVED);
++      }
++      _G.stack.pushed = 0;
++    }
+   else if (sym->stack)
+     {
+       if (!_G.omitFramePtr)
+diff -u --recursive sdcc-342/src/z80/main.c sdcc/src/z80/main.c
+--- sdcc-342/src/z80/main.c	2014-04-12 11:07:57.000000000 +0100
++++ sdcc/src/z80/main.c	2015-02-08 12:21:15.856874934 +0000
+@@ -40,6 +40,7 @@
+ #define OPTION_RESERVE_IY      "--reserve-regs-iy"
+ #define OPTION_OLDRALLOC       "--oldralloc"
+ #define OPTION_FRAMEPOINTER    "--fno-omit-frame-pointer"
++#define OPTION_EXTBANKER       "--external-banker"
+ 
+ static char _z80_defaultRules[] = {
+ #include "peeph.rul"
+@@ -75,6 +76,7 @@
+   {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
+   {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
+   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
++  {0, OPTION_EXTBANKER,       &z80_opts.externalBanker, "Generate call and return frames for an external banker"},
+   {0, NULL}
+ };
+ 
+diff -u --recursive sdcc-342/src/z80/mappings.i sdcc/src/z80/mappings.i
+--- sdcc-342/src/z80/mappings.i	2013-09-11 16:56:01.000000000 +0100
++++ sdcc/src/z80/mappings.i	2015-02-03 10:16:32.602194299 +0000
+@@ -67,6 +67,11 @@
+ 		"push\tix\n"
+ 		"ld\tix,#0\n"
+ 		"add\tix,sp" },
++    { "enterss",
++		"call __enter_s\n"
++		".db %d" },
++    { "enters",
++		"call __enter" },
+     { "pusha", 
+       		"push af\n"
+       		"push\tbc\n"
+diff -u --recursive sdcc-342/src/z80/z80.h sdcc/src/z80/z80.h
+--- sdcc-342/src/z80/z80.h	2013-09-11 14:45:45.000000000 +0100
++++ sdcc/src/z80/z80.h	2015-02-08 12:09:45.168082313 +0000
+@@ -26,6 +26,7 @@
+     int port_back;
+     int reserveIY;
+     int noOmitFramePtr;
++    int externalBanker;
+   }
+ Z80_OPTS;
+ 
