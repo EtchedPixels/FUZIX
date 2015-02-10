@@ -328,8 +328,8 @@ interrupt_handler:
 	    ld a, (_kernel_flag)
 	    or a
 	    push af
+.ifeq PROGBASE
 	    jr nz, in_kernel
-
             ; we're not in kernel mode, check for signals and fault
 	    ld a, #0xC3
 	    cp b		; should be a jump
@@ -343,6 +343,7 @@ interrupt_handler:
 
 nofault:
 in_kernel:
+.endif
             ; set inint to true
             ld a, #1
             ld (_inint), a
