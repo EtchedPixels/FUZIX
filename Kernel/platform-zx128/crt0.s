@@ -1,34 +1,39 @@
         .module crt0
 
-	; Loaded at 0x4000 and the lowest available RAM (the display we keep
-	; in bank 7 and mapped high).
+	;
+	;	Our common and data live in 0x4000-0x7FFF
+	;
+        .area _COMMONMEM
+	.area _STUBS
 	.area _COMMONDATA
+        .area _CONST
         .area _INITIALIZED
+	;
+	;	We move	INITIALIZER into INITIALIZED at preparation time
+	;	then pack COMMONMEM.. end of INITIALIZED after DISCARD
+	;	in the load image. Beyond that point we just zero.
+	;
         .area _DATA
         .area _BSEG
         .area _BSS
-	; These are loaded as low as we can in memory. If we are using an
-	; interface 1 cartridge then _CONST to the end of _STUBS can live in
-	; ROM. Right now we still need to fiddle with RO as we don't use the
-	; IM2 hack and we'll need to modify SDCC and the bank linker not to
-	; use RST to avoid this.
-        .area _CONST
-        .area _COMMONMEM
-	.area _STUBS
         .area _HEAP
-        ; note that areas below here may be overwritten by the heap at runtime, so
-        ; put initialisation stuff in here
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+	;
+	;	All our code is banked at 0xC000
+	;
         .area _CODE
 	.area _CODE2
 	;
 	; Code3 sits above the display area along with the font and video
-	; code so that they can access the display easily.
+	; code so that they can access the display easily. It lives at
+	; 0xDB00 therefore
 	;
 	.area _CODE3
         .area _VIDEO
+
+	; FIXME: We should switch to the ROM font and an ascii remap ?
         .area _FONT
 	; Discard is dumped in at 0x8000 and will be blown away later.
         .area _DISCARD
@@ -37,13 +42,13 @@
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
-        .globl s__INITIALIZER
-        .globl l__INITIALIZER
-        .globl s__INITIALIZED
-        .globl s__COMMONMEM
         .globl l__COMMONMEM
-        .globl s__DATA
-        .globl l__DATA
+        .globl l__STUBS
+        .globl l__COMMONDATA
+        .globl l__INITIALIZED
+	.globl l__CONST
+	.globl s__DISCARD
+	.globl l__DISCARD
         .globl kstack_top
 
         .globl unix_syscall_entry
@@ -55,72 +60,36 @@
         ; startup code
         .area _CODE
 init:
-        jp 0x003            ; workaround for lowlevel-z80.s check for C3 at 0000
+	jp init1	;	0xC000 - entry point
+	jp init2	;	0xC003 - entry point for .sna debug hacks
+init1:
         di
 
-        ; if any button is pressed during reset - boot BASIC48
-        in a, (#0xFE)       ; only low 5 bits of 0xFE port contains key info. Bit is 0 when corresponding key of any half row is pressed.
-        or #0xE0            ; so setting high 3 bits to 1
-        add #1              ; and check if we got 0xFF
+	;  We need to wipe the BSS etc, then copy the initialized data
+	;  and common etc from where they've been stuffed above the
+	;  discard segment loaded into 0x8000
 
-        jp z, init_continue
-
-        ; otherwise perform ROM bank switch and goto 0x0000
-        ld de, #0x4000
-        ld hl, #jump_to_basic_start
-        ld bc, #jump_to_basic_start - #jump_to_basic_end
-        ldir
-        jp 0x4000
-
-jump_to_basic_start:
-        ld bc, #0x7FFD
-        ld a, #0x10
-        out (c), a
-        jp 0
-jump_to_basic_end:
-
-        ; spacer
-        .ds 0x0B
-
-        ; .org 0x0030       ; syscall entry
-        jp unix_syscall_entry
-
-        .ds 0x05            ; spacer
-
-        ; .org 0x0038       ; interrupt handler
-        jp interrupt_handler
-        .ds 0x2B
-
-        ; .org 0x0066       ; nmi handler
-        jp nmi_handler
-
-init_continue:
-        ; hack for emulator. Read remaining fuzix part to RAM from fuzix.bin
-;        ld bc, #0x1ee7
-;        in a, (c)
 	ld hl, #0x4000
 	ld de, #0x4001
+	ld bc, #0x3FFF
 	ld (hl), #0
-	ld bc, #0x1800
 	ldir
-	ld (hl), #0x7
-	ld bc, #0x02ff
+	ld hl, #s__DISCARD
+	ld de, #l__DISCARD
+	add hl, de		; linker dumbness workarounds
+	ld de, #0x4000
+	ld bc, #l__COMMONMEM
+	ldir
+	ld bc, #l__STUBS
+	ldir
+	ld bc, #l__COMMONDATA
+	ldir
+	ld bc, #l__CONST
+	ldir
+	ld bc, #l__INITIALIZED
 	ldir
 
-;
-;	These hooks will be platform/dev specific
-;
-	.if MICRODRIVE_BOOT
-	.globl mdv_boot
-
-boot_stack .equ 0xc000
-	ld sp, #boot_stack
-	push af
-	call mdv_boot
-	pop af
-	.endif
-
-
+init2:
         ld sp, #kstack_top
 
         ; Configure memory map
@@ -128,26 +97,16 @@ boot_stack .equ 0xc000
         call init_early
 	pop af
 
-        ; our COMMONMEM is located in main code-data blob, so we
-        ; do not need to move it manually
-
-	; initialized data
-	ld hl, #s__INITIALIZER
-	ld de, #s__INITIALIZED
-	ld bc, #l__INITIALIZER
-	ldir
-
-        ; then zero the data area
-        ld hl, #s__DATA
-        ld de, #s__DATA + 1
-        ld bc, #l__DATA - 1
-        ld (hl), #0
-        ldir
-
         ; Hardware setup
 	push af
         call init_hardware
 	pop af
+
+l1:	ld a, #7
+	out (0xfe), a
+	xor a
+	out (0xfe), a
+	jr l1
 
         ; Call the C main routine
 	push af

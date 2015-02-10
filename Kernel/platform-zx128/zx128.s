@@ -9,6 +9,7 @@
         .globl init_hardware
         .globl _program_vectors
         .globl platform_interrupt_all
+	.globl interrupt_handler
 
         .globl map_kernel
         .globl map_process
@@ -65,12 +66,17 @@ _trap_reboot:
 ; -----------------------------------------------------------------------------
         .area _CODE
 
+;
+;	The memory banker will deal with the map setting
+;
 init_early:
-        ld bc, #0x7ffd
-        xor a
-        ld (current_map), a
-        out (c), a            ; set page 0 at 0xC000
+;        ld bc, #0x7ffd
+;        xor a
+;        ld (current_map), a
+;        out (c), a            ; set page 0 at 0xC000
         ret
+
+	.area _VIDEO
 
 init_hardware:
         ; set system RAM size
@@ -79,10 +85,13 @@ init_hardware:
         ld hl, #(128 - 48)        ; 48K for kernel
         ld (_procmem), hl
 
+	ld a, #4
+	out (0xfe), a
+l2:	jr l2
         ; screen initialization
         ; clear
-        ld hl, #0x4000
-        ld de, #0x4001
+        ld hl, #0xC000
+        ld de, #0xC001
         ld bc, #0x1800            ; There should be 0x17FF, but we are going
         xor a                     ; to copy additional byte to avoid need of
         ld (hl), a                ; DE and HL increment before attribute
@@ -94,7 +103,29 @@ init_hardware:
         ld (hl), a
         ldir
 
-        im 1 ; set CPU interrupt mode
+	; set up the interrupt vectors at 0xFFF4 in each bank we use for
+	; kernel. This is a standard spectrum trick from the game world. The
+	; interrupt vectors are in ROM and there is no mechanism to make
+	; them call your own code. Instead we use IM2 and autovectors.
+	; The spectrum bus value is not predictable so IM2 will jump through
+	; a vector at I + (random 8bit value).
+	; We point I at a chunk of empty ROM that holds 0xFF 0xFF .. for at
+	; least 256 bytes. Our IRQ will jump to 0xFFFF which we set to be a
+	; JR instruction. 0x0000 is a fixed ROM constant which forms a
+	; backward jump to 0xFFF4, where we can finally grab the IRQ.
+	;
+	; We must keep the Spectrum 48K ROM image mapped at all times. The
+	; 128K image hasn't got the 0xFF space we use!
+	;
+	xor a
+	call setvectors
+	ld a, #1
+	call setvectors
+	ld a, #7
+	call setvectors
+	ld a, #0x39
+	ld i, a
+;        im 2 ; set CPU interrupt mode
         ret
 
 ;------------------------------------------------------------------------------
@@ -102,12 +133,30 @@ init_hardware:
 
         .area _COMMONMEM
 
-        ; our vectors are in ROM, so nothing to do here
 _program_vectors:
-        ret
+	pop bc
+	pop de
+	pop iy			;	task ptr
+	push iy
+	push de
+	push bc
+	ld a, P_TAB__P_PAGE_OFFSET+1(iy)	; high page of the pair
+setvectors:
+	call switch_bank
+	ld a, #0x19
+	ld (0xffff), a		;	JR (plus ROM at 0 gives JR $FFF4)
+	ld a, #0xC3		;	JP
+	ld (0xFFF4), a
+	ld hl, #interrupt_handler
+	ld (0xFFF5), a		;	to IRQ handler
+	ret
+
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
+	;
+	; FIXME: we can probably stack BC now we are banking sanely
+	;
 switch_bank:
         di                  ; TODO: we need to call di() instead
         ld (current_map), a
@@ -117,13 +166,14 @@ switch_bank:
         ld (place_for_c), a
         ld bc, #0x7ffd
         ld a, (current_map)
+	or #0x18	   ; Spectrum 48K ROM, Screen in Bank 7
         out (c), a
         ld a, (place_for_b)
         ld b, a
         ld a, (place_for_c)
         ld c, a
         ld a, (place_for_a)
-        ei
+;FIXME      ei
         ret
 
 map_kernel:
@@ -183,10 +233,15 @@ place_for_c:
 ;
 ;	Banking helpers
 ;
-;	FIXME: use real bank asssignments (0 is not 0 etc)
+;	Logical		Physical
+;	0		COMMON (0x4000)
+;	1		0
+;	2		1
+;	3		7
+;
 ;
 __bank_0_1:
-	ld a, #1
+	xor a		   ; switch to physical bank 0 (logical 1)
 bankina0:
 	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
@@ -196,19 +251,20 @@ bankina0:
 	inc hl
 	push hl		   ; Restore corrected return pointer
 	ex de, hl
-	call callhl	   ; call the function
-	xor a		   ; return to bank 0
-	jp switch_bank
-callhl:	jp (hl)
+	call callhl	   ; can't optimise - we need the stack depth right
+	ret
+callhl:	jp (hl)		   ; calls from bank 0 are different to the others
+			   ; we started in common so we don't need to map
+			   ; the old state back
 __bank_0_2:
-	ld a, #2
+	ld a, #1	   ; logical 2 -> physical 1
 	jr bankina0
 __bank_0_3:
-	ld a, #3
+	ld a, #7	   ; logical 3 -> physical 7
 	jr bankina0
 
 __bank_1_2:
-	ld a, #2
+	ld a, #1
 bankina1:
 	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
@@ -218,14 +274,22 @@ bankina1:
 	inc hl
 	push hl		   ; Restore corrected return pointer
 	ex de, hl
+	call outhl
 	call callhl	   ; call the function
-	ld a, #1	   ; return to bank 0
-	jp switch_bank
+	xor a		   ; return to bank 1 (physical 0)
+	call switch_bank
+l1:	ld c, #0xfe
+	ld a, #2
+	out (c), a
+	ld b, #0
+	out (c),b
+	jr l1
+
 __bank_1_3:
-	ld a, #3
+	ld a, #7
 	jr bankina1
 __bank_2_1:
-	ld a, #1
+	xor a
 bankina2:
 	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
@@ -236,13 +300,13 @@ bankina2:
 	push hl		   ; Restore corrected return pointer
 	ex de, hl
 	call callhl	   ; call the function
-	ld a, #2	   ; return to bank 0
+	ld a, #1	   ; return to bank 2
 	jp switch_bank
 __bank_2_3:
-	ld a, #3
+	ld a, #7
 	jr bankina2
 __bank_3_1:
-	ld a, #1
+	xor a
 bankina3:
 	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
@@ -253,9 +317,9 @@ bankina3:
 	push hl		   ; Restore corrected return pointer
 	ex de, hl
 	call callhl	   ; call the function
-	ld a, #2	   ; return to bank 0
+	ld a, #7	   ; return to bank 0
 	jp switch_bank
 
 __bank_3_2:
-	ld a, #2
+	ld a, #1
 	jr bankina3

@@ -1,7 +1,7 @@
 -mwxuy
 -r
 -i fuzix.ihx
--b _COMMONDATA=0x4000
+-b _COMMONMEM=0x4000
 -b _CODE=0xC000
 -b _CODE2=0xC000
 -b _CODE3=0xDB00
