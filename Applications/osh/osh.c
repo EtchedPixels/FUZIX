@@ -173,6 +173,7 @@ static	const struct sbicmd {
 	{ "fd2",	SBI_FD2      },
 	{ "goto",	SBI_GOTO     },
 	{ "if",		SBI_IF       },
+	{ "help",	SBI_HELP     },
 	{ "login",	SBI_LOGIN    },
 	{ "newgrp",	SBI_NEWGRP   },
 	{ "set",	SBI_SET      },
@@ -1952,7 +1953,17 @@ execute1(struct tnode *t)
 				EXIT(status);
 		}
 		return;
-
+	case SBI_HELP:
+		fd_print(FD1,"        .      goto      source                    ");
+		fd_print(FD1,"        :        if        trap                    ");
+		fd_print(FD1,"    alias      help       umask                    ");
+		fd_print(FD1,"       cd     login     unalias                    ");
+		fd_print(FD1,"    chdir    newgrp       unset                    ");
+		fd_print(FD1,"     echo       set    unsetenv                    ");
+		fd_print(FD1,"     exec     unset     version                    ");
+		fd_print(FD1,"     exit    setenv        wait                    ");
+		fd_print(FD1,"      fd2     shift                                ");
+		break;
 	case SBI_LOGIN:
 	case SBI_NEWGRP:
 		/*
