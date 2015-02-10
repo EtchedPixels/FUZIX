@@ -32,6 +32,16 @@
         .globl outstring
         .globl outstringhex
 
+	.globl __bank_0_1
+	.globl __bank_0_2
+	.globl __bank_0_3
+	.globl __bank_1_2
+	.globl __bank_1_3
+	.globl __bank_2_1
+	.globl __bank_2_3
+	.globl __bank_3_1
+	.globl __bank_3_2
+
         .include "kernel.def"
         .include "../kernel.def"
 
@@ -168,3 +178,17 @@ place_for_b:                ; And BC - here
         .db 0
 place_for_c:
         .db 0
+
+;
+;	Banking helpers
+;
+__bank_0_1:
+__bank_0_2:
+__bank_0_3:
+__bank_1_2:
+__bank_1_3:
+__bank_2_1:
+__bank_2_3:
+__bank_3_1:
+__bank_3_2:
+	ret

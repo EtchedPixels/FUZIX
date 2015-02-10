@@ -32,6 +32,14 @@ extern void irqrestore(irqflags_t f);
 #define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)
 #define strchr(s, c) __builtin_strchr(s, c)
 #define memset(dst, c, n) __builtin_memset(dst, c, n)
+#else
+typedef uint16_t size_t;
+extern void *memcpy(void *dest, const void *src, size_t n);
+extern char *strcpy(char *dest, const char *src);
+extern char *strncpy(char *dest, const char *src, size_t n);
+extern char *strchr(const char *s, int c);
+extern void *memset(void *dest, int c, size_t n);
+#endif
 
 extern int16_t strlen(const char *p);
 
@@ -52,17 +60,8 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* We don't yet have bank attributes and banking for Z80 */
-#define CODE1
-#define CODE2
-#define COMMON
-#define VIDEO
-#define DISCARD
-
 /* SDCC is arsy about unused parameters */
 #define used(x)	x
-/* No fastcall in SDCC */
-#define __fastcall__
 
 #define cpu_to_le16(x)	(x)
 #define le16_to_cpu(x)	(x)
@@ -73,4 +72,3 @@ typedef union {            /* this structure is endian dependent */
 /* Do not use COMMON_MEMORY except for __asm code blocks. The SDCC helpers are not
    loaded into common */
 #define COMMON_MEMORY   static void COMMONSEG(void)  __naked { __asm .area _COMMONMEM __endasm; }
-#endif

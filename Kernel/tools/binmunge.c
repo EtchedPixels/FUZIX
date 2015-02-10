@@ -1,7 +1,5 @@
 /*
  *	Fix up the given binary block with the reloc data
- *
- *	Patch RST lines into the relevant places, generate stub info
  */
 
 #include <stdio.h>
@@ -23,9 +21,18 @@ static int nextfix;
 static int lastfix;
 static int stub_all;
 
+struct symbol {
+  struct symbol *next;
+  char *name;
+  unsigned int val;
+};
+
+struct symbol *symbols;
+
 struct stubmap {
   struct stubmap *next;
-  int bank;
+  int sbank;
+  int dbank;
   uint16_t addr;
   uint16_t target;
 };
@@ -45,14 +52,43 @@ unsigned int resize(int b)
   return size[b];
 }
 
+void add_symbol(char *name, unsigned int val)
+{
+  struct symbol *s = malloc(sizeof(struct symbol) + strlen(name) + 1);
+  if (s == NULL) {
+    fprintf(stderr, "Out of memory.\n");
+    exit(1);
+  }
+  s->name = (char *)(s + 1);
+  s->val = val;
+  strcpy(s->name, name);
+  s->next = symbols;
+  symbols = s;
+}
+  
+unsigned int get_bank_function(int sbank, int dbank)
+{
+   struct symbol *s = symbols; 
+   char name[32];
+   sprintf(name, "__bank_%d_%d", sbank, dbank);
+   while (s) {
+     if (strcmp(s->name, name) == 0)
+       return s->val;
+     s = s->next;
+  }
+  fprintf(stderr, "Symbol '%s' is missing for banked use.\n", name);
+  exit(1);
+}
+
 /* FIXME: */
-int stubmap(uint16_t v, int bank)
+int stubmap(uint16_t v, int sbank, int dbank)
 {
   struct stubmap *s = stubs;
   struct stubmap **p = &stubs;
+  uint16_t da;
 
   while(s) {
-    if (s->bank == bank && s->addr == v) {
+    if (s->sbank == sbank && s->addr == v && s->dbank == dbank) {
       stubdup++;
       return s->target;
     }
@@ -66,17 +102,27 @@ int stubmap(uint16_t v, int bank)
   }
   *p = s;
   s->next = NULL;
-  s->bank = bank;
+  s->sbank = sbank;
+  s->dbank = dbank;
   s->addr = v;
   s->target = nextfix;
   if (nextfix == lastfix) {
     fprintf(stderr, "Out of fix space (%d stubs used).\n", stubct);
     exit(1);
   }
-  buf[0][nextfix++] = 0xC7 + 8 * bank;	/* RST */
+  /* FIXME: we could have per bank stubs in ROM and not waste precious
+     common memory here */
+  da = get_bank_function(sbank, dbank);
+  /* Call */
+  buf[0][nextfix++] = 0xCD;
+  /* Bank function */
+  buf[0][nextfix++] = da & 0xFF;
+  buf[0][nextfix++] = da >> 8;
+  /* Defw address */
   buf[0][nextfix++] = v & 0xFF;	/* Target */
   buf[0][nextfix++] = v >> 8;
-  buf[0][nextfix++] = 0xC9;	/* RET */
+  /* Ret */
+  buf[0][nextfix++] = 0xC9;
   stubct++;
   return s->target;
 }
@@ -95,22 +141,31 @@ void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
   switch(buf[sbank][ptr-1]) {
     case 0xC3:	/* JP - needs stub */
       if (v)
-        printf("Converting JP at %04x to RST/RET stub\n", ptr);
-      da = stubmap(buf[sbank][ptr] + (buf[sbank][ptr+1] << 8), dbank);
+        printf("Converting JP at %04x to stub\n", ptr);
+      da = stubmap(buf[sbank][ptr] + (buf[sbank][ptr+1] << 8), sbank, dbank);
       buf[sbank][ptr] = da & 0xFF;
       buf[sbank][ptr+1] = da >> 8;
       break;
-    case 0xCD:	/* CALL */
+    case 0xCD:	/* PUSH AF CALL POP AF */
+      if (buf[sbank][ptr-2] != 0xF5|| buf[sbank][ptr+2] != 0xF1) {
+        fprintf(stderr, "Bad format for relocated long call at %04x (%02x %02x %02x %02x %02x\n",
+          ptr, buf[sbank][ptr-2], buf[sbank][ptr-1], buf[sbank][ptr], buf[sbank][ptr+1], buf[sbank][ptr+2]);
+        exit(1);
+      }
       if (v)
-        printf("Converting CALL at %04x to RST\n", ptr);
-      buf[sbank][ptr-1] = 0xC7 + 8 * dbank;	/* RST 8/16/24 */
+        printf("Converting CALL at %04x from bank %d to bank %d\n", ptr,
+          sbank, dbank);
+      /* Turn the push af into a call */
+      buf[sbank][ptr-2] = 0xCD;
+      /* Move the address along */
+      buf[sbank][ptr+2] = buf[sbank][ptr+1];
+      buf[sbank][ptr+1] = buf[sbank][ptr];
+      /* Fit in the actual call target */
+      da = get_bank_function(sbank, dbank);
+      /* Sequence is now CALL __bank_sbank_dbank DW target */
+      buf[sbank][ptr-1] = da & 0xFF;
+      buf[sbank][ptr] = da >> 8;
       break;
-    case 0xC7:	/* RST */
-    case 0xCF:
-    case 0xD7:
-    case 0xDF:
-      fprintf(stderr, "File already processed!\n");
-      exit(1);
     default:
       fprintf(stderr, "Bad relocation in code %04X: %02X\n",
         ptr-1, buf[sbank][ptr-1]);
@@ -128,7 +183,7 @@ void data_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
   if (v)
     printf("Stubhooking %04x for data reference.\n", ptr);  
   /* Find the stub for it */
-  na = stubmap(n, dbank);
+  na = stubmap(n, sbank, dbank);
   if (na == -1) {
     fprintf(stderr, "No stub match: stubs stale\n");
     exit(1);
@@ -178,6 +233,28 @@ static void process_stub(char *p)
     data_reloc(b1, addr, b2);
 }
 
+static void scan_symbols(FILE *f)
+{
+  char buf[256];
+  char *sym;
+  unsigned int addr;
+
+  while(fgets(buf, 255, f)) {
+    if (memcmp(buf, "     0000", 9))
+      continue;
+    /* Looks like a symbol */
+    if (sscanf(buf+5, "%x", &addr) != 1)
+      continue;
+    /* Smells like a symbol */
+    sym = strtok(buf+15, " \n\t");
+    if (!sym)
+      continue;
+    /* Guess it's a symbol then */
+    if (v && strstr(sym, "_bank_"))
+      printf("Add symbol %s %x\n", sym, addr);
+    add_symbol(sym, addr);
+  }
+}    
 
 int main(int argc, char *argv[])
 {
@@ -188,7 +265,7 @@ int main(int argc, char *argv[])
   int sb, ss;
   int opt;
 
-  while ((opt = getopt(argc, "av")) != -1) {
+  while ((opt = getopt(argc, argv, "av")) != -1) {
     switch (opt) {
       case 'a':
         stub_all = 1;
@@ -210,6 +287,15 @@ int main(int argc, char *argv[])
   nextfix = sb;
   lastfix = sb + (ss & ~3);
   
+  r = fopen("fuzix.map", "r");
+  if (r == NULL) {
+    perror("fuzix.map");
+    exit(1);
+  }
+  scan_symbols(r);
+  fclose(r);
+  
+ 
   r = fopen("relocs.dat", "r");
   if (r == NULL) {
     perror("relocs.dat");

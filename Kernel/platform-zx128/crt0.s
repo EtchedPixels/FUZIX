@@ -115,14 +115,18 @@ init_continue:
 
 boot_stack .equ 0xc000
 	ld sp, #boot_stack
+	push af
 	call mdv_boot
+	pop af
 	.endif
 
 
         ld sp, #kstack_top
 
         ; Configure memory map
+	push af
         call init_early
+	pop af
 
         ; our COMMONMEM is located in main code-data blob, so we
         ; do not need to move it manually
@@ -141,10 +145,14 @@ boot_stack .equ 0xc000
         ldir
 
         ; Hardware setup
+	push af
         call init_hardware
+	pop af
 
         ; Call the C main routine
+	push af
         call _fuzix_main
+	pop af
     
         ; main shouldn't return, but if it does...
         di
@@ -153,4 +161,4 @@ stop:   halt
 
 	.area _STUBS
 stubs:
-	.ds 384
+	.ds 768

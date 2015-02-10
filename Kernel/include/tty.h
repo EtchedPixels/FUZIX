@@ -163,35 +163,35 @@ struct tty {
 
 extern struct tty ttydata[NUM_DEV_TTY + 1];
 
-extern CODE1 void tty_init(void);
+extern void tty_init(void);
 
-extern CODE1 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int tty_open(uint8_t minor, uint16_t flag);
-extern CODE1 int tty_close(uint8_t minor);
-extern CODE1 int tty_ioctl(uint8_t minor, uarg_t request, char *data);
+extern int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int tty_open(uint8_t minor, uint16_t flag);
+extern int tty_close(uint8_t minor);
+extern int tty_ioctl(uint8_t minor, uarg_t request, char *data);
 
-extern CODE1 void tty_hangup(uint8_t minor);
-extern CODE1 void tty_carrier_drop(uint8_t minor);
-extern CODE1 void tty_carrier_raise(uint8_t minor);
+extern void tty_hangup(uint8_t minor);
+extern void tty_carrier_drop(uint8_t minor);
+extern void tty_carrier_raise(uint8_t minor);
 
-extern CODE1 int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int ptty_open(uint8_t minor, uint16_t flag);
-extern CODE1 int ptty_close(uint8_t minor);
-extern CODE1 int ptty_ioctl(uint8_t minor, uint16_t request, char *data);
+extern int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int ptty_open(uint8_t minor, uint16_t flag);
+extern int ptty_close(uint8_t minor);
+extern int ptty_ioctl(uint8_t minor, uint16_t request, char *data);
 
-extern CODE1 int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern CODE1 int pty_open(uint8_t minor, uint16_t flag);
-extern CODE1 int pty_close(uint8_t minor);
-extern CODE1 int pty_ioctl(uint8_t minor, uint16_t request, char *data);
+extern int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
+extern int pty_open(uint8_t minor, uint16_t flag);
+extern int pty_close(uint8_t minor);
+extern int pty_ioctl(uint8_t minor, uint16_t request, char *data);
 
-extern CODE1 int tty_inproc(uint8_t minor, unsigned char c);
-extern CODE1 void tty_outproc(uint8_t minor);
-extern CODE1 void tty_echo(uint8_t minor, unsigned char c);
-extern CODE1 void tty_erase(uint8_t minor);
-extern CODE1 void tty_putc_wait(uint8_t minor, unsigned char c);
+extern int tty_inproc(uint8_t minor, unsigned char c);
+extern void tty_outproc(uint8_t minor);
+extern void tty_echo(uint8_t minor, unsigned char c);
+extern void tty_erase(uint8_t minor);
+extern void tty_putc_wait(uint8_t minor, unsigned char c);
 
 typedef enum {
     TTY_READY_NOW=1,    /* port is ready immediately */
@@ -201,10 +201,10 @@ typedef enum {
 
 /* provided by platform */
 extern struct s_queue ttyinq[NUM_DEV_TTY + 1];
-extern CODE2 ttyready_t tty_writeready(uint8_t minor);
-extern CODE2 void tty_putc(uint8_t minor, unsigned char c);
-extern CODE2 void tty_setup(uint8_t minor);
-extern CODE2 int tty_carrier(uint8_t minor);
+extern ttyready_t tty_writeready(uint8_t minor);
+extern void tty_putc(uint8_t minor, unsigned char c);
+extern void tty_setup(uint8_t minor);
+extern int tty_carrier(uint8_t minor);
 /* PTY pieces: 8 ptys both sides of */
 #ifdef CONFIG_PTY_DEV
 #define PTY_BUFFERS \

@@ -1,5 +1,5 @@
 CSRCS = devtty.c bankzx128.c devices.c main.c devmdv.c
-DSRCS = ../dev/devide.c ../dev/mbr.c
+DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 
 ASRCS = crt0.s zx128.s zxvideo.s microdrive.s
 ASRCS += tricks.s commonmem.s

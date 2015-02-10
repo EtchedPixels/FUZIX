@@ -72,3 +72,4 @@
 #undef  SWAPDEV           /* Do not use swap */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+#define MAX_BLKDEV 2	    /* 2 IDE drives, 1 SD drive */

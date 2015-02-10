@@ -14,8 +14,8 @@ platform-zx128/zxvideo.rel
 platform-zx128/main.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-usermem_std-z80.rel
+lowlevel-z80-banked.rel
+usermem_std-z80-banked.rel
 platform-zx128/tricks.rel
 timer.rel
 kdata.rel
@@ -42,4 +42,5 @@ devsys.rel
 platform-zx128/devtty.rel
 platform-zx128/devide.rel
 platform-zx128/mbr.rel
+platform-zx128/blkdev.rel
 -e
