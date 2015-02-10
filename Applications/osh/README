@@ -1,0 +1,62 @@
+Welcome to Osh (V6Shell) - osh-20150115 !
+
+The osh package provides two ports of the original /bin/sh from
+Sixth Edition (V6) UNIX (circa 1975).
+
+Osh(1) is an enhanced, backward-compatible port of the Sixth Edition
+Thompson shell.  Sh6(1) is an unenhanced port of the shell, and
+glob(1) is a port of its global command.  Together, sh6 and glob
+provide a user interface which is backward compatible with that
+provided by the Sixth Edition Thompson shell and global command,
+but without the obvious enhancements found in osh.
+
+The original Thompson shell was principally written by Ken Thompson
+of Bell Labs.
+
+Notice that this package also includes the following shell utilities:
+
+	if(1)   - conditional command (ported from Sixth Edition UNIX)
+
+	goto(1) - transfer command (ported from Sixth Edition UNIX)
+
+	fd2(1)  - redirect from/to file descriptor 2
+
+-------
+See the INSTALL file for build and install instructions.
+
+-------
+The osh package should build successfully on any POSIX-compliant
+UNIX system.  It has been reported to build successfully on the
+following systems:
+
+	System		Releases / Distributions / Additional Info
+	----------------------------------------------------------
+	DragonFly BSD	2.0.1
+	FreeBSD		6.1, 7.0, 8.2
+	Mac OS X	10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10
+	NetBSD		2.1, 3.1.1, 4.0, 4.0.1, 5.0, 5.1, 6.1
+	OpenBSD		4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.0, 5.4
+	OpenSolaris	2008.05, 2008.11, 2009.06 (See last example
+			in EXAMPLES section of INSTALL file.)
+	GNU/Linux	CentOS 6.2, Debian 7.8 (wheezy), Linpus,
+			Slackware 13.0, Ubuntu 10.04.[34] LTS
+
+If your system is not reported above, simply try to build the osh
+package to see if it works or not.  In either case, please report
+the results to the developer if possible.  The resulting "config.h"
+file and the compiler name/version is most helpful.
+
+Please send osh bug reports to <bugs (at) v6shell (dot) org>.  Before
+reporting a bug, please try to reproduce it with the latest version
+of the code.  With bug reports, please try to ensure that enough
+information to reproduce the problem is enclosed.  Also, if a known
+fix for it exists, then please include that as well.
+
+If you have any comments or questions about this software, I encourage
+you to contact me via email.  Thanks & Enjoy!
+
+Jeffrey Allen Neitzel
+<jan (at) v6shell (dot) org>
+http://v6shell.org/						2015/01/15
+
+@(#)$Id: 806cb8300ff429faea7de3c3ca7e9a0ffbdf3b9e $

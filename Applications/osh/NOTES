@@ -1,0 +1,169 @@
+This file provides an implementation overview of the software
+released as part of the osh project, focusing on history and
+compatibility since these are the primary project objectives.
+
+---------------------------------------
+Historical notes for osh(1) and sh6(1):
+
+The Thompson shell, by Ken Thompson of Bell Labs, was distributed
+as the standard command interpreter through Sixth Edition UNIX.
+Then, in the Seventh Edition, it was replaced by the Bourne shell.
+However, the Thompson shell was still distributed with the system
+as osh because of known portability problems with the Bourne shell's
+memory management in Seventh Edition UNIX.
+
+The name of the Thompson shell's binary executable was `sh'.
+It was installed as `/bin/sh' through Sixth Edition UNIX and
+made use of the following external utilities:
+
+	1) /bin/exit was used to terminate command files.
+
+	2) /bin/goto was used to transfer the shell's control
+	   from one point to another within a command file.
+
+	3) /bin/if was used to evaluate conditional expressions.
+	   This is the predecessor of test(1), which was first
+	   released in Seventh Edition UNIX.
+
+	4) /etc/glob was used to expand `*', `?', and `[...]'
+	   in command arguments.
+
+The functionality of each of the above-mentioned utilities is
+provided here.  However, the `exit' utility is implemented as a
+special built-in command for both osh(1) and sh6(1).
+
+For osh(1), ports of `glob', `goto', and `if' are built into the
+shell.  For sh6(1), however, each of these utilities remains as an
+external utility.
+
+For sh6(1), the Thompson-shell port's binary executable has been
+renamed from `sh' to `sh6' to avoid name conflict and confusion
+with the system shell, sh(1), on modern UNIX systems.  The `glob'
+utility is installed into a subdirectory of /usr/local/libexec by
+default, rather than being installed into the /etc directory.  The
+`goto' and `if' utilities, along with `fd2', are installed into
+the previously mentioned subdirectory of /usr/local/libexec by
+default to avoid conflict and confusion on modern UNIX systems.
+
+Additionally, see the glob(1), goto(1), and if(1) manual pages for
+full details regarding the ports of the above-mentioned utilities.
+
+--------------------------------------------
+sh6(1), osh(1), and shells(5) (/etc/shells):
+
+Since sh6(1) does not read any startup files, it should not be added
+to the shell database (see shells(5)) unless the system administrator
+is willing to deal with this fact.  However, osh(1) should be added to
+/etc/shells since it is a login shell.
+
+-------------------------------
+Compatibility notes for osh(1):
+
+This is an enhanced, backward-compatible port of the Thompson shell
+from Sixth Edition UNIX.  However, when it is known to differ in
+some way from the original, this fact is indicated with a `(+)' in
+the osh(1) manual page.
+
+Unlike the original, this port of the shell can handle 8-bit character
+sets, as well as the UTF-8 encoding.  The original, on the other
+hand, can only handle 7-bit ASCII.
+
+Further details regarding some of the known differences:
+
+1) This port of the shell uses PATH to search for external commands,
+   but the original always uses the equivalent of `.:/bin:/usr/bin'.
+   The sh(1) manual page from Sixth Edition UNIX reads as follows:
+
+       If  the  first argument is the name of an executable file,
+       it is invoked; otherwise the string `/bin/'  is  prepended
+       to  the  argument.   (In  this way most standard commands,
+       which reside in `/bin', are found.)  If no such command is
+       found,  the  string  `/usr'  is further prepended (to give
+       `/usr/bin/command') and another attempt is made to execute
+       the resulting file.  (Certain lesser-used commands live in
+       `/usr/bin'.)
+
+   ...
+   The primary reason this port of the shell uses PATH instead of a
+   procedure like that described above is for both user convenience
+   and security.  The behavior described above can conceivably be
+   quite dangerous as an unchangeable default.
+
+   Using PATH allows the user to choose the search behavior.
+   If search behavior like that of the original is desired, the
+   user can set PATH to a value of `.:/bin:/usr/bin' in order to
+   accomplish this.
+
+2) This port of the shell integrates the previously external `echo',
+   `fd2', `glob', `goto', and `if' shell utilities as special built-in
+   commands in order to improve shell performance and reliability.
+   This does not change the user-visible behavior of the shell or
+   utilities.
+
+3) This port of the shell prints a progname prefix (e.g., `osh: ')
+   for all diagnostics.  This results in `osh: file: cannot open'
+   instead of `file: cannot open', `osh: syntax error' instead of
+   `syntax error', and so forth.
+
+4) This port of the shell ignores the first line of a command file
+   if it begins with `#!' in order to play nicely with kernels which
+   support the `#!' mechanism.  For example, the first line might be
+   `#!/usr/local/bin/osh' or `#!/usr/bin/env osh'.  This is just for
+   user convenience in the face of conflicting shell languages.
+
+5) The original implementation of the shell does shell accounting
+   in order to record command execution data; this port does not.
+
+-------------------------------
+Compatibility notes for sh6(1):
+
+This is a port of the Thompson shell from Sixth Edition UNIX.
+However, when it is known to differ in some way from the original,
+this fact is indicated with a `(+)' in the sh6(1) manual page.
+
+Like the original, this port of the shell is not 8-bit clean as it
+uses the high-order bit of characters for quoting.  Thus, the only
+complete character set it can handle is 7-bit ASCII.
+
+Aside from those differences which are detailed either here or in
+the manual page, the CHANGES6 file contains further information
+regarding how this port differs from the original.
+
+Further details regarding the substantial differences:
+
+1) This port of the shell uses PATH to search for external commands,
+   but the original always uses the equivalent of `.:/bin:/usr/bin'.
+   The sh(1) manual page from Sixth Edition UNIX reads as follows:
+
+       If  the  first argument is the name of an executable file,
+       it is invoked; otherwise the string `/bin/'  is  prepended
+       to  the  argument.   (In  this way most standard commands,
+       which reside in `/bin', are found.)  If no such command is
+       found,  the  string  `/usr'  is further prepended (to give
+       `/usr/bin/command') and another attempt is made to execute
+       the resulting file.  (Certain lesser-used commands live in
+       `/usr/bin'.)
+
+   ...
+   The primary reason this port of the shell uses PATH instead of a
+   procedure like that described above is for both user convenience
+   and security.  The behavior described above can conceivably be
+   quite dangerous as an unchangeable default.
+
+   Using PATH allows the user to choose the search behavior.
+   If search behavior like that of the original is desired, the
+   user can set PATH to a value of `.:/bin:/usr/bin' in order to
+   accomplish this.
+
+2) This port of the shell ignores the first line of a command file
+   if it begins with `#!' in order to play nicely with kernels which
+   support the `#!' mechanism.  For example, the first line might be
+   `#!/usr/local/bin/sh6' or `#!/usr/bin/env sh6'.  This is just for
+   user convenience in the face of conflicting shell languages.
+
+3) The original implementation of the shell does shell accounting
+   in order to record command execution data; this port does not.
+
+Jeffrey Allen Neitzel						2015/01/15
+
+@(#)$Id: b8a263c9af94e2c5ee98f16fc98dd716d0d58f9d $

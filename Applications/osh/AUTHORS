@@ -1,0 +1,85 @@
+The original Thompson shell was principally written by Ken Thompson
+of Bell Labs.  However, it should be noted that other individuals
+at Bell Labs also had a role in its development: Dennis M. Ritchie,
+M. D. McIlroy, J. F. Ossanna, and quite likely others as well.
+
+Jeffrey Allen Neitzel is the principal developer and maintainer of
+the enhanced, backward-compatible port of the Sixth Edition (V6)
+UNIX Thompson shell (and all other software) released as part of
+the osh project.
+
+============
+Definitions:
+	compatibility - backward compatibility
+
+	osh - enhanced port of the Sixth Edition (V6) UNIX Thompson shell
+
+	sh6 - port of the Sixth Edition (V6) UNIX Thompson shell
+		(sh6 references implicitly include glob(6))
+===
+
+Notice that I have released three different implementations of
+osh(1) since July 2003.  The origin and primary objectives of
+each one are described below.
+
+================================
+[osh-030730 through osh-060124]:
+	The first implementation was originally authored by Gunnar
+	Ritter as osh-020214/osh.c and was then adopted by Jeffrey
+	Allen Neitzel.
+
+	Unfortunately, the design of Gunnar's implementation was
+	incompatible with the Thompson shell in several respects.
+	Thus, it required a lot of workarounds in order to fix the
+	design incompatibilities.
+
+	I modified Gunnar's design to separate command-line parsing
+	and execution so that the shell could at least be compatible
+	in the most basic sense.  The only catch was that word
+	splitting was still incompatible.  Thus, this partial
+	solution was always destined for eventual replacement.
+
+	Primary objective was compatibility.
+===
+
+====================================
+[osh-20061230 through osh-20100228]:
+	The second implementation was originally authored by Ken
+	Thompson as Sixth Edition UNIX /usr/source/s2/sh.c and was
+	then ported by Jeffrey Allen Neitzel for personal use in
+	January 2004.
+
+	I eventually released it as sh6(1) in osh-060124.  Then,
+	after its release, I realized that the design of the original
+	shell (see: osh-060124/*6.c) offered a far better starting
+	point for making osh(1) truly backward-compatible with the
+	Thompson shell.
+
+	Bothered by the fact that osh(1) still had incompatible
+	word-splitting behavior, I abandoned the design used in the
+	first implementation, adapted sh6.c and glob6.c, copied
+	them to osh.c, and began working on it during my free time
+	in 2006.  Finally, I released the new implementation of
+	osh(1) in osh-20061230.
+
+	Primary objective was compatibility.
+===
+
+===================================
+[osh-20100430 through osh-current]:
+	The third implementation continues with primary objectives
+	of compatibility and long-term stability.  Consequently,
+	all new features (if/when added) must work in concert
+	with primary objectives.  Otherwise, they will not
+	be added.
+===
+
+I wish to thank the original authors very much for their efforts.
+Without their previous work, none of this software or documentation
+would exist today.
+
+See the DEDICATIONS file for further info.
+
+Jeffrey Allen Neitzel						2015/01/15
+
+@(#)$Id: f0180289f2f9b7d0e6d3b7c20904f2562b3f2aff $

@@ -1,0 +1,17 @@
+From the outset, I have dedicated all releases of the osh project
+to the individuals at Bell Labs who started the UNIX ball rolling
+in 1969.
+
+Due to the untimely passing of Dennis M. Ritchie (dmr), I hereby
+dedicate osh-20111027 (and all future osh releases) in his memory.
+
+	* Dennis Ritchie Home Page - http://cm.bell-labs.com/who/dmr/
+
+	* Rob Pike's Google+ post sharing news of dmr's passing -
+	  https://plus.google.com/u/0/101960720994009339267/posts/ENuEDDYfvKP
+
+See the AUTHORS file for further info about origins of this software.
+
+Jeffrey Allen Neitzel						2015/01/15
+
+@(#)$Id: 277358a6d989b66aa057fe21046aa746e16126c8 $

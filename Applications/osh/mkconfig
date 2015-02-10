@@ -1,0 +1,123 @@
+#!/bin/sh -
+#
+# @(#)$Id: c0bfe3ef99498e37aaab239f7f2e7c85a48056e8 $
+#
+# Write out an appropriate "config.h" file.
+# This script is invoked automatically from the Makefile.
+# Thus, the user does not need to run it manually.
+#
+# Exit w/ a status of 0 on success.
+# Exit w/ a status of 1 on error.
+# --
+# Jeffrey Allen Neitzel
+#
+
+CONFIG_H="config.h"
+rm -f $CONFIG_H
+trap 'status=$? ; rm -f $CONFIG_H ; exit $status' HUP INT QUIT TERM
+
+#
+# This function searches for the pathname of utility and defines
+# constant w/ the resulting value.  If utility cannot be found,
+# constant is defined as the empty string.
+#
+# usage: definePathnameConstant constant utility
+#
+definePathnameConstant()
+{
+	const="$1" ; util="$2"
+	dirlist="/bin /sbin /usr/bin /usr/sbin /usr/libexec /usr/games"
+	moderr="	  Modify value in \"$CONFIG_H\" if this is incorrect."
+	modout="	/* Modify value if incorrect. */"
+	for dir in $dirlist ; do
+		if test -f "$dir/$util" -a -x "$dir/$util" ; then
+			pname="$dir/$util" ; break
+		else
+			pname=""
+		fi
+	done
+
+	#echo "$PATH" >&2
+	wpname="`which $util </dev/null 2>/dev/null | grep -v 'not found'`"
+	#echo "$wpname" >&2
+	if test X"$pname" != X -a \( \
+		X"$wpname" = X -o X"$wpname" = X"$pname" \
+	\) ; then
+		(echo "$PROGNAME: $const == \"$pname\"";echo "$moderr") >&2
+		def="#define	$const	\"$pname\"$modout"
+	elif test X"$wpname" != X ; then
+		(echo "$PROGNAME: $const == \"$wpname\"";echo "$moderr") >&2
+		def="#define	$const	\"$wpname\"$modout"
+	else
+		# This should rarely be true, but it is possible.
+		(echo "$PROGNAME: $const == \"\"";echo "$moderr") >&2
+		def="#define	$const	\"\"$modout"
+	fi
+
+	echo "$def"
+}
+
+UNAME_S="`uname -s`"
+UNAME_SRM="`uname -srm`"
+PROGNAME="`basename $0`"
+if test $# -ne 0 ; then echo 'usage: $(SHELL) ./'"$PROGNAME" >&2 ; exit 1 ; fi
+if test X"$UNAME_S" = X -o X"$UNAME_SRM" = X ; then
+	echo "$PROGNAME: Fatal uname(1) error" >&2 ; exit 1
+fi
+
+cat <<EOI >$CONFIG_H
+/*
+ * osh - an enhanced port of the Sixth Edition (V6) UNIX Thompson shell
+ */
+/*
+ * _XOPEN_SOURCE and/or _BSD_SOURCE should be defined only if needed
+ * to avoid compilation errors or warnings for the osh package on a
+ * given system.  The systems where these feature test macros are
+ * (known to be) needed are defined in the mkconfig script.
+ *
+ * This includes only Linux and SunOS (Solaris/OpenSolaris)
+ * at the present time.
+ *
+ *	Configured for: $UNAME_SRM
+ */
+
+#ifndef	CONFIG_H
+#define	CONFIG_H
+
+`definePathnameConstant PATH_LOGIN  login`
+`definePathnameConstant PATH_NEWGRP newgrp`
+#define	OSH_UNAME_SRM	"$UNAME_SRM"
+
+EOI
+
+case "$UNAME_S" in
+*BSD|Darwin|DragonFly)
+	echo "/* $UNAME_S: No need for _XOPEN_SOURCE or _BSD_SOURCE */" \
+		>>$CONFIG_H
+	;;
+Linux)
+	echo '#define	_XOPEN_SOURCE	600L'  >>$CONFIG_H
+	echo '#define	_BSD_SOURCE'           >>$CONFIG_H
+	;;
+SunOS)
+	( echo '#define	CONFIG_SUNOS' ; echo ) >>$CONFIG_H
+	echo '#define	_XOPEN_SOURCE	600L'  >>$CONFIG_H
+	;;
+*)
+	#
+	# This may or may not cause a compilation error.
+	# Simply try it to see if it works or not.
+	#
+	echo "$PROGNAME: WARNING: Check \"$CONFIG_H\" if compilation fails." >&2
+	cat <<EOI >>$CONFIG_H
+/*
+ * WARNING: $UNAME_SRM: Unknown system
+ *
+ * Please report this result to the developer if possible.
+ */
+EOI
+	;;
+esac
+
+echo                             >>$CONFIG_H
+echo '#endif	/* !CONFIG_H */' >>$CONFIG_H
