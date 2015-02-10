@@ -1,0 +1,155 @@
+.\"
+.\" Copyright (c) 2005-2015
+.\"	Jeffrey Allen Neitzel <jan (at) v6shell (dot) org>.
+.\"	All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY JEFFREY ALLEN NEITZEL ``AS IS'', AND ANY
+.\" EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED.  IN NO EVENT SHALL JEFFREY ALLEN NEITZEL BE LIABLE FOR ANY
+.\" DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+.\" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+.\" AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+.\" OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\" USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	@(#)$Id: 5b2a93c8510e40b3cc8dc98cf0e6cde7cfe42534 $
+.\"
+.\" Includes public domain content derived from:
+.\"		- /usr/src/bin/ksh/sh.1
+.\"			$OpenBSD: sh.1,v 1.91 2011/09/03 22:59:08 jmc Exp $
+.\"
+.TH FD2 1 "@OSH_DATE@" "@OSH_VERSION@" "General Commands"
+.SH NAME
+fd2 \- redirect from/to file descriptor 2
+.SH SYNOPSIS
+.B fd2
+[\fB\-e\fR] [\fB\-f\fR \fIfile\fR] [\fB\-\-\fR] \fIcommand\fR [\fIarg ...\fR]
+.SH DESCRIPTION
+Since the Sixth Edition UNIX shell provides
+no way to redirect the diagnostic output,
+.B fd2
+makes this possible by executing the specified
+.I command
+with the given arguments
+and redirecting file descriptor 2 (standard error)
+to file descriptor 1 (standard output) by default.
+.PP
+The options are as follows:
+.TP
+.B \-e
+Causes all conventional output from
+.I command
+to be redirected to the standard error
+as diagnostic output.
+.TP
+.BI \-f \ file
+Causes all diagnostic output from
+.I command
+to be redirected to \fIfile\fR,
+which is created if it does not exist.
+If it already exists,
+all diagnostic output is appended
+to the end of \fIfile\fR.
+.TP
+.B \-\-
+Causes
+.B fd2
+to stop further option processing,
+forcing it to treat all following arguments
+as \fIcommand\fR [\fIarg ...\fR] .
+.SH "EXIT STATUS"
+If
+.B fd2
+detects an error,
+it prints an appropriate diagnostic
+and exits with a non-zero status.
+Otherwise,
+the exit status is that
+of the executed command.
+.SH ENVIRONMENT
+.TP
+.B EXECSHELL
+If set to a non-empty string,
+the value of this variable is taken as the
+path name of the shell which is invoked to
+execute the specified command when it does not
+begin with the proper magic number
+or a `#!shell' sequence.
+.TP
+.B PATH
+If set to a non-empty string,
+the value of this variable is taken as the
+sequence of directories which is used to
+search for the specified command.
+.SH EXAMPLES
+The examples below which refer to `/tmp/$$' assume
+that this directory exists and is writable by the user.
+The following command line:
+.PP
+.RS 6
+fd2 \-e echo progname: Error message
+.RE
+.PP
+causes all conventional output from
+.I echo
+to be redirected to the standard error
+as diagnostic output.
+The following command line:
+.PP
+.RS 6
+fd2 make foo >/tmp/$$/foo.outerr
+.RE
+.PP
+causes all conventional and diagnostic output from
+.I make
+to be redirected to the file `/tmp/$$/foo.outerr',
+which is first created by the shell.
+In contrast:
+.PP
+.RS 6
+fd2 \-f /tmp/$$/foo.err make foo >/tmp/$$/foo.out
+.RE
+.PP
+causes all conventional output to be redirected
+to the file `/tmp/$$/foo.out',
+which is created by the shell.
+All diagnostic output is redirected
+to the file `/tmp/$$/foo.err',
+which is created by
+.B fd2
+if it does not already exist.
+.SH "SEE ALSO"
+osh(1),
+sh6(1)
+.PP
+Osh home page:
+http://v6shell.org/
+.SH AUTHOR
+This implementation of
+.B fd2
+is written by Jeffrey Allen Neitzel.
+.SH LICENSE
+See either the LICENSE file which is distributed with
+.B osh
+or
+http://v6shell.org/license/
+for full details.
+.SH COPYRIGHT
+.nf
+Copyright (c) 2005-2015
+	Jeffrey Allen Neitzel.  All rights reserved.
+
+Copyright (c) 1985, 1989, 1991, 1993
+	The Regents of the University of California.  All rights reserved.
+.fi

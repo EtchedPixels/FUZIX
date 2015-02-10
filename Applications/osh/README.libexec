@@ -1,0 +1,16 @@
+This directory is installed as part of the osh package.
+It contains the following sh6(1) external utilities:
+
+	fd2(1)  - redirect from/to file descriptor 2
+
+	glob(1) - global command (file name generation)
+
+	goto(1) - transfer command
+
+	if(1)   - conditional command
+
+Jeffrey Allen Neitzel
+<jan (at) v6shell (dot) org>
+http://v6shell.org/						2015/01/15
+
+@(#)$Id: e68b19eff9aa1dbd9c986a8dbdca4d9977d7e655 $

@@ -1,0 +1,139 @@
+.\"
+.\" Copyright (c) 2004-2015
+.\"	Jeffrey Allen Neitzel <jan (at) v6shell (dot) org>.
+.\"	All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY JEFFREY ALLEN NEITZEL ``AS IS'', AND ANY
+.\" EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED.  IN NO EVENT SHALL JEFFREY ALLEN NEITZEL BE LIABLE FOR ANY
+.\" DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+.\" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+.\" AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+.\" OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\" USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	@(#)$Id: 0deb55088cba3c12151f54eff7092c1644245ddc $
+.\"
+.\"	Derived from: Sixth Edition UNIX /usr/man/man1/goto.1
+.\"
+.\" Copyright (C) Caldera International Inc.  2001-2002.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code and documentation must retain the above
+.\"    copyright notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed or owned by Caldera
+.\"      International, Inc.
+.\" 4. Neither the name of Caldera International, Inc. nor the names of other
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\"
+.\" USE OF THE SOFTWARE PROVIDED FOR UNDER THIS LICENSE BY CALDERA
+.\" INTERNATIONAL, INC. AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL CALDERA INTERNATIONAL, INC. BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.TH GOTO 1 "@OSH_DATE@" "@OSH_VERSION@" "General Commands"
+.SH NAME
+goto \- transfer command
+.SH SYNOPSIS
+.B goto
+\fIlabel\fR [\fI...\fR]
+.SH DESCRIPTION
+.B Goto
+is allowed only when the shell is taking
+commands from a seekable command file (see
+.IR lseek (2)).
+.PP
+The entire command file is searched for a line beginning
+with a \fB:\fR as the first non-blank character,
+followed by one or more blanks,
+and then the
+.IR label .
+If such a line is found,
+.B goto
+repositions the command-file offset to
+the line after the label and exits.
+This causes the shell to transfer
+to the labelled line.
+.PP
+\fB:\fR is a special command which causes
+the shell to do nothing.
+.SH "EXIT STATUS"
+The
+.B goto
+command exits with one of the following values:
+.TP
+0
+The label was found.
+.TP
+1
+The label was not found.
+.TP
+2
+An error was detected.
+.SH "SEE ALSO"
+if(1),
+osh(1),
+sh6(1)
+.PP
+Osh home page:
+http://v6shell.org/
+.SH COMPATIBILITY
+The
+.B goto
+command from Sixth Edition UNIX
+requires \fB:\fR to be the first character
+on the labelled line.
+Otherwise,
+the label cannot be found.
+.PP
+This port differs in that \fB:\fR may be preceded by blanks.
+This allows labelled lines to be indented so that complex
+command files might be easier to read and understand.
+.SH HISTORY
+A
+.B goto
+command
+appeared as
+.I /bin/goto
+in Third Edition UNIX.
+.SH LICENSE
+See either the LICENSE file which is distributed with
+.B osh
+or
+http://v6shell.org/license/
+for full details.
+.SH COPYRIGHT
+.nf
+Copyright (c) 2004-2015
+	Jeffrey Allen Neitzel.  All rights reserved.
+
+Copyright (c) 2001-2002
+	Caldera International Inc.  All rights reserved.
+.fi

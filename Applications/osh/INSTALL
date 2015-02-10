@@ -1,0 +1,170 @@
+Build and install instructions for osh!
+
+--------
+SYNOPSIS
+	env [variable=value ...] make [target ...]
+	make [variable=value ...] [target ...]
+
+If the defaults described below match your desires and/or the
+requirements of your system, you can build and install the entire
+osh package by doing the following.
+
+	% make
+	# make install
+
+...
+Otherwise, continue reading for full build and install details.
+See the EXAMPLES section at the end of this file for additional
+help if needed.
+
+---------
+VARIABLES
+The Makefile defines the following configuration variables (default
+value listed).  The user can modify the default configuration by
+passing the desired variable=value pair(s) on the command line.
+
+	DESTDIR		Unset by default.  This may be used as a
+			target directory for building/packaging
+			binary packages if needed.
+
+	PREFIX		Defaults to /usr/local.  This is the target
+			directory where BINDIR, LIBEXECDIR, DOCDIR,
+			MANDIR, and SYSCONFDIR are located by default.
+
+	BINDIR		Defaults to $(PREFIX)/bin.
+			This is the target directory where
+			the osh and sh6 binaries are installed.
+
+	LIBEXECDIR	Defaults to $(PREFIX)/libexec/$(OSH_VERSION).
+			This is the target directory where the sh6 external
+			utility binaries (glob, if, goto, fd2) are installed
+			and where sh6 expects to find them.
+
+	DOCDIR		Defaults to $(PREFIX)/share/doc/$(OSH_VERSION).
+			This is the target directory for the [ACDILNPR]*
+			package documentation files.
+
+	EXPDIR		Defaults to $(DOCDIR)/examples.  This is the
+			target directory for the examples/* files.
+
+	MANDIR		Defaults to $(PREFIX)/share/man/man1.  This is
+			the target directory where the manual pages are
+			installed.
+
+	SYSCONFDIR	Defaults to $(PREFIX)/etc.  This is the target
+			directory where osh searches for its system-wide
+			rc (init and logout) files if such files are
+			available on the system.  See also:
+
+				http://v6shell.org/rc_files
+
+			...
+			for example rc files.
+
+	INSTALL		Defaults to /usr/bin/install.  The install(1)
+			utility is used to copy the resulting binaries,
+			manual pages, and other files to final targets.
+
+Mac OS X only:
+The following configuration variables specify the desired target
+architecture(s) for compiling universal binaries and/or 64-bit
+binaries and/or 32-bit binaries for Mac OS X running on Intel
+and PowerPC Macs.
+
+	OSXCFLAGS	Unset by default.
+
+	OSXLDFLAGS	Unset by default.
+
+			Possible value(s) for OSXCFLAGS and OSXLDFLAGS may
+			include one or more of the following on supported
+			systems:
+
+				-arch x86_64, -arch ppc64, -arch i386, -arch ppc
+
+			...
+			See also EXAMPLES.
+
+-------
+TARGETS
+The following targets are available.
+
+	all		Default target is the same as typing `make'.
+			Compiles everything and generates manual pages.
+
+	oshall		Compiles osh and generates manual pages.
+
+	sh6all		Compiles sh6, glob, if, goto, fd2 and
+			generates manual pages.
+
+	check		Runs the regression test suite with osh and sh6.
+
+	check-newlog	Generates new test logs for the osh and sh6
+			regression test suite.
+
+	install		Installs all binaries and manual pages.
+
+	install-oshall	Installs osh binary and manual pages.
+
+	install-sh6all	Installs sh6all binaries and manual pages.
+
+	install-doc	Installs package documentation.
+
+	install-exp	Installs examples.
+
+	clean-obj	Removes all object files.
+
+	clean		Removes all binaries, object files, and other
+			files generated during the build.
+
+--------
+EXAMPLES
+The following compiles osh for /opt/local.
+Then, it installs the osh binary into /opt/local/bin, manual pages
+into /opt/local/share/man/man1, package documentation and examples
+into /opt/local/share/doc/$(OSH_VERSION), and also sets SYSCONFDIR
+to /opt/local/etc.
+
+	% make PREFIX=/opt/local oshall
+	# make PREFIX=/opt/local install-oshall install-doc install-exp
+
+The following compiles sh6, glob, if, goto, and fd2 for /usr/pkg.
+Then, it installs these binaries into /usr/pkg/bin, manual pages
+into /usr/pkg/share/man/man1, and package documentation into
+/usr/pkg/share/doc/$(OSH_VERSION).
+
+	% make PREFIX=/usr/pkg sh6all
+	# make PREFIX=/usr/pkg install-sh6all install-doc
+
+The following compiles everything, configuring the shell to search
+for its system-wide rc files in /etc instead of /usr/local/etc by
+default.  Then, it installs the entire osh package, including package
+documentation and examples, into the default location.
+
+	% make SYSCONFDIR=/etc
+	# make install install-doc install-exp
+
+The following compiles each program as a 2-way 64/32-bit universal
+binary for Mac OS X running on Intel Macs.  Then, it installs the
+entire osh package, including package documentation and examples,
+into the default location.
+ 
+	% make OSXCFLAGS='-arch x86_64 -arch i386' \
+	       OSXLDFLAGS='-arch x86_64 -arch i386'
+	# make install install-doc install-exp
+
+The following compiles and installs the entire osh package, including
+package documentation and examples, into the default location on
+OpenSolaris.
+
+	% uname -srvm
+	SunOS 5.11 snv_111b i86pc
+	% which cc gmake ginstall
+	/usr/gnu/bin/cc
+	/usr/bin/gmake
+	/usr/bin/ginstall
+	% gmake
+	# gmake INSTALL=/usr/bin/ginstall install install-doc install-exp
+
+Jeffrey Allen Neitzel						2015/01/15
+
+@(#)$Id: 2af1847e4076dc383f80ead16189115a799842c3 $

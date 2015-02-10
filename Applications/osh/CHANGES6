@@ -1,0 +1,489 @@
+The following list describes the changes made to the original source
+code for the Sixth Edition (V6) UNIX Thompson shell and global
+command in porting them to run on modern UNIX systems.
+
+-------------------------------------------------------------------------------
+[osh-current] (development):
+	* Work In Progress ( see http://v6shell.org/src/current/ )
+
+-------------------------------------------------------------------------------
+[osh-20150115] (latest):
+sh6.c:
+	* Silenced a GCC warning (-Wmaybe-uninitialized) in execute().
+
+-------------------------------------------------------------------------------
+[osh-20141024]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20140820]:
+Makefile:
+	* Added LIBEXECDIR, and changed glob6 to glob .
+
+	* Updated so libexec directory & utilities only install for sh6 .
+
+	* Added README.libexec; install it into LIBEXECDIR as README .
+
+INSTALL, NOTES:
+	* Updated as needed to document changes.
+
+defs.h, fd2.c, glob.c, if.c, sh6.c:
+	* Changed how sh6 finds its external utilities (glob, fd2, goto, if)
+	  and how its external utilities that invoke external utilities
+	  (glob, fd2, if) find fd2, goto, and if.  NOTE: goto is a special
+	  case since it invokes nothing.  In short, PATH is no longer
+	  searched.  LIBEXECDIR is used instead.  See INSTALL, NOTES,
+	  and defs.h for further info.
+
+sh6.1:
+	* Added info about LIBEXECDIR to the sh6 manual page.
+
+glob.[1c]:
+	* Moved / renamed glob6.[1c] to glob.[1c] .
+
+-------------------------------------------------------------------------------
+[osh-20140410]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20131109]:
+sh6.1:
+	* Changed `LICENSE' to LICENSE to match the other manual pages.
+
+-------------------------------------------------------------------------------
+[osh-20130331]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20120604]:
+sh6:
+	* Added missing `Command line overflow' diagnostic.
+
+sh6.1:
+	* Mirrored osh.1 changes where appropriate.
+
+-------------------------------------------------------------------------------
+[osh-20120102]:
+err.h:
+	* Added DEBUG_GLOB definition (undefined by default) for
+	  printf debugging in sh6.c and glob6.c if/when needed.
+
+sh6.1:
+	* Removed sed(1) from "SEE ALSO" section.
+
+-------------------------------------------------------------------------------
+[osh-20111129-p1]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20111129]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20111027]:
+sh6.c, glob6.c:
+	* Updated to better align w/ osh code w/o changing visible behavior.
+
+*6.1:
+	* Updated to match style changes in other manual pages.
+
+-------------------------------------------------------------------------------
+[osh-20100430]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20100228]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20091218]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20091127]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20091122]:
+sh6.c:
+	* Increased apid[] buffer size to 33 via DOLMAX; this allows $$
+	  to correctly represent shell's process ID on systems where
+	  process IDs > 99999 are possible.
+
+glob6.c:
+	* Changed ERR_ALTOOLONG to ERR_E2BIG.
+
+*6.1:
+	* Added COPYRIGHT section headings, and added copyright notices.
+
+-------------------------------------------------------------------------------
+[osh-20091029]:
+sh6.c:
+	* Wrap WCOREDUMP(s) w/ #ifdef WCOREDUMP ... #endif .
+
+sh6.1:
+	* Change example in "I/O redirection" subsection that could
+	  confuse new users.
+
+-------------------------------------------------------------------------------
+[osh-20090527]:
+sh6.c:
+	* Replaced err(), prn(), prs(), and xputc() w/ err() and fd_print()
+	  from err.c .
+
+	* Added sh_errexit() to handle all error exit scenarios for the shell.
+	  This function is called by err().
+
+	* Copied prsig() from osh.c; changed pwait() to use it for printing
+	  termination messages.
+
+glob6.c:
+	* Replaced gerr() w/ err() and ut_errexit() from err.c .
+
+-------------------------------------------------------------------------------
+[osh-20081213]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20081122]:
+sh6.c:
+	* Fixed a bug introduced in osh-20081026 where the shell incorrectly
+	  prints a process ID w/ an empty termination message upon receipt
+	  of the SIGINT signal in certain cases.  For example:
+
+		% sleep 10 | sleep 20 | sleep 30 ; wait
+		^C
+		2845:
+		2846:
+
+	  This example should only print three newlines to the standard error
+	  on SIGINT, not one newline and two process IDs w/ empty messages.
+	  Now, it behaves as expected.
+
+-------------------------------------------------------------------------------
+[osh-20081026]:
+	* Moved common definitions for these programs to "defs.h".
+
+sh6.c:
+	* Included "sh.h" for needed declarations.
+
+	* Synced `struct tnode' w/ osh.c by changing the order of the `nav'
+	  and `nflags' members.
+
+	* Changed calls to err() to use the diagnostics defined in "defs.h".
+
+glob6.c:
+	* Added a base reallocation multiplier to gavnew().  This doubles the
+	  number of new arguments for which to reallocate memory when the
+	  current allocation will not be large enough for the resulting
+	  argument vector.  This reduces the number of realloc()s required
+	  for very large argument vectors while allowing the first malloc()
+	  to be a relatively small allocation for up to 126 matching
+	  file-name arguments.
+
+	* Changed calls to gerr() to use the diagnostics defined in "defs.h".
+
+-------------------------------------------------------------------------------
+[osh-20080629]:
+sh6.c:
+	* Changed the way that the shell deals w/ the SIGTERM signal so that
+	  it only sets SIGTERM to its default action for child processes if
+	  it was set to its default action when the shell started.
+
+	* Changed the code to use sasignal() instead of signal(3).
+
+sh6.1.in:
+	* Updated the documentation as needed to reflect changes to the code.
+
+-------------------------------------------------------------------------------
+[osh-20080109]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20070707]:
+	* No user-visible changes.
+
+-------------------------------------------------------------------------------
+[osh-20070324]:
+	* No changes.
+
+-------------------------------------------------------------------------------
+[osh-20070321]:
+	* Imported the project into a local subversion repository.
+
+	* Changed the all of the code to "#include <stdbool.h>" and to use
+	  the "bool" data-type macro where appropriate.
+
+	* User-visible changes?  None.
+
+-------------------------------------------------------------------------------
+[osh-20070131]:
+sh6.c:
+	* Changed the way SIGINT and SIGQUIT are handled so that the shell's
+	  child processes also ignore these signals when the shell and its
+	  parent process do.  See the "Signals" subsection of sh6(1) for a
+	  complete description of the new behavior.  Notice that this is the
+	  same behavior found in osh(1).
+
+glob6.c:
+	* Changed the glob6 non-zero exit status so that it is always 2 when
+	  any error is encountered.  This preserves compatibility w/ the
+	  original, which never caused the shell to terminate a command file
+	  when a globbing error occurred.
+
+-------------------------------------------------------------------------------
+[osh-20061230]:
+sh6.c	1.3 (jneitzel) 2006/09/15:
+	* The shell now ignores any `#!shell' sequence which occurs as the
+	  first line of a regular file.  For example, the first line might
+	  be `#!/usr/local/bin/sh6', `#!/usr/bin/env sh6', or similar.
+	  However, it is important to notice that the original Thompson shell
+	  did not do anything of the sort.  This change simply adds a degree
+	  of convenience and flexibility for the user.
+
+	* After the shell is invoked and initializes itself, it closes
+	  unneeded file descriptors.  Changed when this is done so that it
+	  does not break x-only scripts if they are supported on a particular
+	  UNIX system.
+
+	* The shell no longer exits w/ an explicit non-zero status if a read(2)
+	  from the input file descriptor fails.  It now exits silently w/ the
+	  current value of the global variable status in such a case.
+
+	* The shell now exits silently w/ a zero status if the input file
+	  descriptor refers to a directory.  The reason for this change is
+	  because invoking the shell as `sh6 file', `sh6 <file', `sh6 - <file',
+	  or similar can possibly cause the user's terminal to freak out on
+	  some systems if `file' is a directory.  This change simply adds a
+	  degree of predictability and eliminates the possible need for a
+	  terminal reset in such cases.
+
+	* Added explicit checks to ensure that file descriptors 0, 1, and 2
+	  are open.  If any of them is not open, the shell exits w/ a non-zero
+	  status and prints a diagnostic if possible.
+
+	* Changed how SIGINT and SIGQUIT are ignored for `&' commands.
+	  This change causes a `&' command to ignore these signals even
+	  in those cases where the main shell process ($$) does not, such
+	  as when executing a command file.
+
+	* Added an additional `: cannot open' diagnostic for those cases where
+	  `/dev/null' must be opened for a `&' command, but the shell's attempt
+	  to do so fails.
+
+	* Changed the `try again' diagnostic to `Cannot fork - try again'
+	  since it more accurately describes the error condition.  The
+	  "try again" portion of the diagnostic indicates that the
+	  inability to fork(2) may be a temporary condition.
+
+	* Trim the directory name used for `chdir dir' so that the user can
+	  quote it if needed.
+
+	* Trim the file name used for `<file', `>file', and `>>file' so that
+	  the user can quote it if needed.
+
+	* Parse each command line into a dynamically allocated tree of tnode
+	  structures rather than using a statically allocated intptr_t buffer.
+
+	  Remember that malloc(3) did not exist in Sixth Edition UNIX;
+	  alloc(III) did exist, but /bin/sh did not use it.
+
+glob6.c	1.3 (jneitzel) 2006/09/23:
+	* Improved the quoting behavior for the sake of convenience,
+	  flexibility, and usability.
+
+	* Improved the behavior of `[...]' range matching (e.g., `[a-z]') so
+	  that it adheres to the documentation (see glob6(1)).  This means
+	  that an invalid range such as `[z-a]' matches nothing and that
+	  `[a-m-z]' is equivalent to `[a-mz-]' instead of `[a-z]'.
+
+	* Dynamically allocate memory for the generated argument list rather
+	  than using statically allocated buffers.  The total length of the
+	  generated argument list is limited to a maximum of ARG_MAX bytes.
+	  An `Arg list too long' diagnostic is printed if this limit is
+	  exceeded or if pexec() fails and sets errno to E2BIG.  Of course,
+	  `Out of memory' is printed if glob6 runs out of memory.
+
+	  Remember that malloc(3) did not exist in Sixth Edition UNIX;
+	  alloc(III) did exist, but /etc/glob did not use it.
+
+-------------------------------------------------------------------------------
+[osh-060124]:
+	This is the initial public release for the following ports of the
+	original Sixth Edition UNIX source code.
+
+sh6.c	1.2 (jneitzel) 2006/01/09:
+	* Deny set-ID execution.  If the effective user (group) ID of the sh6
+	  process is not equal to its real user (group) ID, it shall now print
+	  a diagnostic and exit with a non-zero status.
+
+	* Use geteuid(2) instead of getuid(2) to determine whether to print
+	  the `% ' prompt for a regular user or the `# ' prompt for the
+	  superuser.
+
+	* Cause the shell to ignore SIGINT, SIGQUIT, and SIGTERM when invoked
+	  as an interactive shell.  The original Thompson shell did not do
+	  this.  In Sixth Edition UNIX, the login(1) utility invoked the shell
+	  in the following way:
+
+		execl("/bin/sh", "-", (char *)0);
+
+	  ...
+	  This caused the invoked login shell to ignore SIGINT and SIGQUIT.
+	  However, this was not the case for a non-login interactive shell
+	  invoked by a user.
+
+	* When invoked as `cat <runcom | sh6' or `sh6 <runcom', cause the
+	  shell to not print prompts to file descriptor 2.
+
+	* Fixed a file descriptor leak in the creation of pipelines where any
+	  of the commands is a shell special command.  A pipeline such as
+	  `echo hello | : | grep h' is one way to demonstrate this leak in
+	  an unfixed copy of the shell.
+
+	* The shell no longer attempts to open `file' in a pipeline of the
+	  following form:
+
+		% echo hello | cat <file | grep h
+
+	  ...
+	  since `cat' will never read from the opened file.  This fix causes
+	  the shell to silently ignore the ambiguous redirect, adhering to
+	  the behavior originally documented in sh(1) (see sh6(1)).
+
+	* The shell no longer attempts to create `file' in a pipeline of the
+	  following form:
+
+		% echo hello | cat >file | grep h
+
+	  ...
+	  since `cat' will never write to the created file.  This fix causes
+	  the shell to silently ignore the ambiguous redirect, adhering to
+	  the behavior originally documented in sh(1) (see sh6(1)).
+
+	* The shell no longer breaks pipelines of the following form:
+
+		% ( ( echo hello ) | ( cat ) | ( grep h ) ) >file &
+
+	  ...
+	  This fix further limits when `/dev/null' is opened as input for `&'
+	  commands so that doing so cannot replace the read end of a pipe
+	  previously set up by the shell, adhering to the behavior originally
+	  documented in sh(1) (see sh6(1)).
+
+	* Added explicit error detection in those cases where the original
+	  Thompson shell did not do so.  For example, the original Thompson
+	  shell did not check the value returned by dup(2) or pipe(2).
+
+	* Changed all of the close(2)/dup(2) sequences for file descriptors
+	  0 and 1 to simply call dup2(2) instead.
+
+	* Changed all of the calls to exit(3) which happen in the child process
+	  after a successful call to fork(2) to _exit(2) instead.
+
+	* Added `exit' as a special command which is built into the shell.
+	  Its usage is the same as that of the external `exit' utility found
+	  in Sixth Edition UNIX.
+
+	* Define explicit exit status for special commands, external commands,
+	  and shell errors.
+
+	* Removed the `: too large' diagnostic, and added a `: cannot execute'
+	  diagnostic for external-command execution errors.  The `No shell!'
+	  and `: not found' diagnostics, however, are unchanged.
+
+	* Use pexec() (see pexec.h) for external command execution to
+	  give more flexible and predictable command search behavior.
+
+glob6.c	1.2 (jneitzel) 2006/01/09:
+	* Deny set-ID execution.  If the effective user (group) ID of the
+	  glob6 process is not equal to its real user (group) ID, it shall
+	  now print a diagnostic and exit with a non-zero status.
+
+	* Increased the size of the argument-list buffers to allow generation
+	  of longer argument lists.
+
+	* Added a `Pattern too long' diagnostic for those cases where the
+	  total length of a pattern argument is >= PATH_MAX (or 1024).  If
+	  such an error is encountered, glob6 exits with a non-zero status.
+
+	* Handle quoted arguments specially so that path names containing
+	  blanks can be successfully globbed.
+
+	* Use pexec() (see pexec.h) for command execution to give
+	  more flexible and predictable command search behavior.
+
+-------------------------------------------------------------------------------
+[Unreleased]:
+	The following ports of the original Sixth Edition UNIX source code
+	were never released to the public.
+
+sh6.c	1.1 (jneitzel) 2004/01/26:
+	* Changed the source file name from `sh.c' to `sh6.c' and the
+	  resulting binary name from `sh' to `sh6' to avoid name conflict
+	  and confusion with the system shell, sh(1), on modern UNIX systems.
+
+	* Transformed the source code from K&R C into ANSI C.
+
+	* This is nothing more than a simple port to modern UNIX systems.
+	  It is now 64-bit clean.  At least, this is true for the 64-bit
+	  systems to which the porter has access.
+
+	* Removed support for the shell's accounting of process times (see
+	  times(3)) which allowed the shell to record command execution data
+	  in a log file.
+
+	* Fixed a buffer overflow in the word() function.
+
+glob6.c	1.1 (jneitzel) 2004/01/26:
+	* Changed the source file name from `glob.c' to `glob6.c' and
+	  the resulting binary name from `glob' to `glob6', matching
+	  the similar change to the name of the shell (see above).
+
+	* Transformed the source code from K&R C into ANSI C.
+
+	* This is nothing more than a simple port to modern UNIX systems.
+
+	* Fixed possible overflow of the argument-list buffers
+	  in the cat() function.
+
+-------------------------------------------------------------------------------
+[Original]:
+	Here is some pertinent information about the original files.
+
+The following description refers to Sixth Edition (V6) UNIX obtained from:
+
+	http://www.tuhs.org/Archive/PDP-11/Distributions/research/Dennis_v6/
+
+...
+A portion of the `http://www.tuhs.org/Archive/PDP-11/Distributions/DETAILS'
+file reads as follows:
+
+Dennis_v6
+---------
+
+v6root.gz, v6src.gz and v6doc.gz are a set of three RK05 images of Sixth
+Edition with root, /usr and documentation, from Dennis Ritchie. The tape
+bootstraps are not included. The most recent timestamp on any file is
+July 19th 1975.
+
+v6root.tar.gz, v6src.tar.gz and v6doc.tar.gz are tar archives of the
+three RK05 images.
+
+...
+The following files and the corresponding manual pages were all
+obtained from the tar archives described above:
+
+sh.c:
+    What: Original source code for the Sixth Edition (V6) UNIX Thompson shell
+    Date: July 17, 1975
+    From: Sixth Edition UNIX /usr/source/s2/sh.c
+
+glob.c:
+    What: Original source code for the Sixth Edition (V6) UNIX global command
+    Date: May 14, 1975
+    From: Sixth Edition UNIX /usr/source/s1/glob.c
+
+Jeffrey Allen Neitzel						2015/01/15
+
+@(#)$Id: 64a2622fba7fdca51b8f7c58c0f81058530b04c3 $

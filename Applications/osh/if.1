@@ -1,0 +1,406 @@
+.\"
+.\" Copyright (c) 2004-2015
+.\"	Jeffrey Allen Neitzel <jan (at) v6shell (dot) org>.
+.\"	All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY JEFFREY ALLEN NEITZEL ``AS IS'', AND ANY
+.\" EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED.  IN NO EVENT SHALL JEFFREY ALLEN NEITZEL BE LIABLE FOR ANY
+.\" DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+.\" LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+.\" AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+.\" OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\" USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	@(#)$Id: fbc12533c990f6850ea3a2f5b7f4f9168c518f80 $
+.\"
+.\"	Derived from: Sixth Edition UNIX /usr/man/man1/if.1
+.\"
+.\" Copyright (C) Caldera International Inc.  2001-2002.  All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code and documentation must retain the above
+.\"    copyright notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed or owned by Caldera
+.\"      International, Inc.
+.\" 4. Neither the name of Caldera International, Inc. nor the names of other
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\"
+.\" USE OF THE SOFTWARE PROVIDED FOR UNDER THIS LICENSE BY CALDERA
+.\" INTERNATIONAL, INC. AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL CALDERA INTERNATIONAL, INC. BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" Includes content derived from:
+.\"		- /usr/src/bin/test/test.1
+.\"			$OpenBSD: test.1,v 1.30 2010/09/11 20:54:22 jmc Exp $
+.\"			$NetBSD: test.1,v 1.6 1995/03/21 07:04:03 cgd Exp $
+.\"
+.\" Copyright (c) 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the Institute of Electrical and Electronics Engineers, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	@(#)test.1	8.1 (Berkeley) 5/31/93
+.\"
+.\" Includes public domain content derived from:
+.\"		- /usr/src/bin/ksh/sh.1
+.\"			$OpenBSD: sh.1,v 1.91 2011/09/03 22:59:08 jmc Exp $
+.\"
+.TH IF 1 "@OSH_DATE@" "@OSH_VERSION@" "General Commands"
+.SH NAME
+if \- conditional command
+.SH SYNOPSIS
+.B if
+[\fIexpression\fR [\fIcommand\fR [\fIarg ...\fR]]]
+.SH DESCRIPTION
+.B If
+evaluates the specified
+.IR expression ,
+and if its value is true,
+returns a zero exit status or executes
+the specified
+.I command
+with the given arguments.
+Otherwise,
+it returns a non-zero exit status.
+When
+.I expression
+is not specified,
+.B if
+also returns a non-zero exit status.
+.PP
+The following primaries are used to construct
+.IR expression :
+.TP 10
+\fB{\fR \fIcommand\fR [\fIarg ...\fR] \fB}\fR
+The specified \fIcommand\fR is executed with the
+given arguments to obtain its exit status.
+A zero status is \fItrue\fR;
+a non-zero status is \fIfalse\fR.
+.TP
+.BI \-d \ file
+True if \fIfile\fR exists and is a directory.
+.TP
+.BI \-e \ file
+True if \fIfile\fR exists.
+.TP
+.BI \-f \ file
+True if \fIfile\fR exists and is a regular file.
+.TP
+.BI \-h \ file
+True if \fIfile\fR exists and is a symbolic link.
+.TP
+.BI \-r \ file
+True if \fIfile\fR exists and is readable.
+.TP
+.BI \-s \ file
+True if \fIfile\fR exists and has a size greater than zero bytes.
+.TP
+.BI \-t \ fildes
+True if the file whose file descriptor number is
+.I fildes
+is open and associated with a terminal device.
+.I Fildes
+must be a decimal digit (0 \- 9).
+.TP
+.BI \-w \ file
+True if \fIfile\fR exists and is writable.
+.TP
+.BI \-x \ file
+True if \fIfile\fR exists and is executable,
+or if \fIfile\fR is a searchable directory.
+.TP
+.IB file1 \ \-ef \ file2
+True if \fIfile1\fR and \fIfile2\fR both exist and refer
+to the same file (same device, same inode).
+.TP
+.IB file1 \ \-nt \ file2
+True if \fIfile1\fR and \fIfile2\fR both exist
+and last data-modification time of \fIfile1\fR
+is newer than that of \fIfile2\fR.
+.TP
+.IB file1 \ \-ot \ file2
+True if \fIfile1\fR and \fIfile2\fR both exist
+and last data-modification time of \fIfile1\fR
+is older than that of \fIfile2\fR.
+.TP
+.IB s1 \ = \ s2
+True if the strings
+.I s1
+and
+.I s2
+are equal.
+.TP
+.IB s1 \ != \ s2
+True if the strings
+.I s1
+and
+.I s2
+are not equal.
+.TP
+.IB s1 \ < \ s2
+True if the string
+.I s1
+comes before
+.I s2
+according to their ASCII character values.
+.\" according to the ASCII values
+.\" of their characters.
+.TP
+.IB s1 \ > \ s2
+True if the string
+.I s1
+comes after
+.I s2
+according to their ASCII character values.
+.\" according to the ASCII values
+.\" of their characters.
+.TP
+.IB n1 \ \-eq \ n2
+True if the integers
+.I n1
+and
+.I n2
+are algebraically equal.
+.TP
+.IB n1 \ \-ne \ n2
+True if the integers
+.I n1
+and
+.I n2
+are not algebraically equal.
+.TP
+.IB n1 \ \-gt \ n2
+True if the integer
+.I n1
+is algebraically greater than the integer
+.IR n2 .
+.TP
+.IB n1 \ \-ge \ n2
+True if the integer
+.I n1
+is algebraically greater than
+or equal to the integer
+.IR n2 .
+.TP
+.IB n1 \ \-lt \ n2
+True if the integer
+.I n1
+is algebraically less than the integer
+.IR n2 .
+.TP
+.IB n1 \ \-le \ n2
+True if the integer
+.I n1
+is algebraically less than
+or equal to the integer
+.IR n2 .
+.PP
+These primaries may also be combined
+with the following operators:
+.TP 10
+.BI ! \ expression
+unary
+.I negation
+operator
+.TP
+.IB expression1 \ \-a \ expression2
+binary
+.I and
+operator
+.TP
+.IB expression1 \ \-o \ expression2
+binary
+.I or
+operator
+.TP
+.BI ( \ expression \ )
+parentheses for grouping
+.PP
+.B \-a
+has higher precedence than
+.BR \-o .
+Notice that all of the operators and flags
+are separate arguments to
+.BR if .
+Notice also that parentheses are meaningful
+to the shell and must be escaped.
+.PP
+Symbolic links are followed for all
+\fIfile\fR-related primaries except
+.BR \-h .
+.SH "EXIT STATUS"
+The
+.B if
+command exits with one of the following values:
+.TP
+0
+The expression was true (see below).
+.TP
+1
+The expression was false or was not specified.
+.TP
+2
+An error was detected.
+.TP
+125
+The specified command was found
+but did not begin with the proper
+magic number or a `#!shell' sequence,
+and a valid shell was not specified by
+EXECSHELL
+with which to execute it.
+.TP
+126
+The specified command was found
+but could not be executed.
+.TP
+127
+The specified command was not found.
+.PP
+If the expression is true and if
+.I command
+is specified and executed,
+the exit status is that of the executed
+.IR command .
+.SH ENVIRONMENT
+Notice that the concept of `user environment'
+was not defined in Sixth Edition UNIX.
+Thus,
+use of the following environment variables
+by this port of the conditional command is an enhancement:
+.TP
+.B EXECSHELL
+If set to a non-empty string,
+the value of this variable is taken as the
+path name of the shell which is invoked to
+execute the specified command when it does not
+begin with the proper magic number
+or a `#!shell' sequence.
+.TP
+.B PATH
+If set to a non-empty string,
+the value of this variable is taken as the
+sequence of directories which is used to
+search for the specified command.
+Notice that the
+conditional command from Sixth Edition UNIX
+always used the equivalent of `.:/bin:/usr/bin',
+not PATH.
+.SH "SEE ALSO"
+goto(1),
+osh(1),
+sh6(1),
+test(1)
+.PP
+Osh home page:
+http://v6shell.org/
+.SH COMPATIBILITY
+The
+.B if
+command from Sixth Edition UNIX
+does not support the
+.BR < ,
+.BR > ,
+.BR \-d ,
+.BR \-e ,
+.BR \-f ,
+.BR \-h ,
+.BR \-s ,
+.BR \-t ,
+.BR \-x ,
+.BR \-ef ,
+.BR \-nt ,
+.BR \-ot ,
+.BR \-eq ,
+.BR \-ne ,
+.BR \-gt ,
+.BR \-ge ,
+.BR \-lt ,
+and
+.B \-le
+operators.
+.PP
+In addition to supporting the above operators,
+this port also differs from the original in that
+the exit status returned varies according to whether
+the expression is true or false,
+as is the case with
+.IR test (1).
+.SH HISTORY
+An
+.B if
+command
+appeared as
+.I /bin/if
+in Third Edition UNIX.
+.SH LICENSE
+See either the LICENSE file which is distributed with
+.B osh
+or
+http://v6shell.org/license/
+for full details.
+.SH COPYRIGHT
+.nf
+Copyright (c) 2004-2015
+	Jeffrey Allen Neitzel.  All rights reserved.
+
+Copyright (c) 2001-2002
+	Caldera International Inc.  All rights reserved.
+
+Copyright (c) 1985, 1989, 1991, 1993
+	The Regents of the University of California.  All rights reserved.
+.fi
