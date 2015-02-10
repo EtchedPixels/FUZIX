@@ -1,6 +1,7 @@
 /*
  * osh.c - an enhanced port of the Sixth Edition (V6) UNIX Thompson shell
  */
+ /* Interactive help added by Erkin Alp Güney
 /*-
  * Copyright (c) 2004-2015
  *	Jeffrey Allen Neitzel <jan (at) v6shell (dot) org>.
