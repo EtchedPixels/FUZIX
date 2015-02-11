@@ -32,7 +32,7 @@
 #define CONFIG_FONT8X8SMALL
 
 /* We have 1 bank at C000 with 6 possible pages to map.
-   Our choise should be CONFIG_BANK_FIXED, but we are. 
+   Our choice should be CONFIG_BANK_FIXED, but we are.
    using custom implementation of it */
 
 #undef CONFIG_BANK_FIXED
@@ -52,9 +52,9 @@
 
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
-#define PROGLOAD    0xC000  /* also data base */
+#define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
-#define PROC_SIZE   16	  /* Memory needed per process */
+#define PROC_SIZE   32	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
 #define UDATA_SWAPSIZE	0

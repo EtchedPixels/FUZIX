@@ -90,6 +90,7 @@ init1:
 	ldir
 
 init2:
+	di
         ld sp, #kstack_top
 
         ; Configure memory map
@@ -101,12 +102,6 @@ init2:
 	push af
         call init_hardware
 	pop af
-
-l1:	ld a, #7
-	out (0xfe), a
-	xor a
-	out (0xfe), a
-	jr l1
 
         ; Call the C main routine
 	push af

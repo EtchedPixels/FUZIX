@@ -182,7 +182,7 @@ static int bankmagic(struct areax *ax)
         if (strcmp(a->a_id, "_VIDEO") == 0)
                 return 3;
         if (strcmp(a->a_id, "_DISCARD") == 0)
-                return 3;
+                return 0;
         if (strncmp(a->a_id, "_CODE", 5))
                 return 0;
         if (a->a_id[5] == 0)	/* We count _CODE and _CODE1 both as first bank */

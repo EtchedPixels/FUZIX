@@ -1,5 +1,9 @@
 ;
 ;        zx128 vt primitives
+;
+;	FIXME: adjust for correct stack offsets in banked mode (only
+;	plot_char done so far)
+;
 
         .module zx128
 
@@ -30,17 +34,19 @@ videopos:
         ld e,a
         ld a,d
         and #0x18
-        or #0x40
+        or #0xC0	    ; not 0x40 as in screen 7
         ld d,a
         ret
 
 _plot_char:
+	pop iy
         pop hl
         pop de              ; D = x E = y
         pop bc
         push bc
         push de
         push hl
+	push iy
 
         call videopos
 

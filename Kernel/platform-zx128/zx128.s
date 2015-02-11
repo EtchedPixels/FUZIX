@@ -85,9 +85,6 @@ init_hardware:
         ld hl, #(128 - 48)        ; 48K for kernel
         ld (_procmem), hl
 
-	ld a, #4
-	out (0xfe), a
-l2:	jr l2
         ; screen initialization
         ; clear
         ld hl, #0xC000
@@ -117,12 +114,7 @@ l2:	jr l2
 	; We must keep the Spectrum 48K ROM image mapped at all times. The
 	; 128K image hasn't got the 0xFF space we use!
 	;
-	xor a
-	call setvectors
-	ld a, #1
-	call setvectors
-	ld a, #7
-	call setvectors
+	call setallvectors
 	ld a, #0x39
 	ld i, a
 ;        im 2 ; set CPU interrupt mode
@@ -151,6 +143,15 @@ setvectors:
 	ld (0xFFF5), a		;	to IRQ handler
 	ret
 
+setallvectors:
+	call map_save
+	xor a
+	call setvectors
+	ld a, #1
+	call setvectors
+	ld a, #7
+	call setvectors
+	jp map_restore
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
@@ -243,13 +244,17 @@ place_for_c:
 __bank_0_1:
 	xor a		   ; switch to physical bank 0 (logical 1)
 bankina0:
-	call switch_bank   ; Move to new bank
+	;
+	;	Get the target address first, otherwise we will change
+	;	bank and read it from the wrong spot!
+	;
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
+	call switch_bank   ; Move to new bank
 	ex de, hl
 	call callhl	   ; can't optimise - we need the stack depth right
 	ret
@@ -266,24 +271,17 @@ __bank_0_3:
 __bank_1_2:
 	ld a, #1
 bankina1:
-	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
+	call switch_bank   ; Move to new bank
 	ex de, hl
-	call outhl
 	call callhl	   ; call the function
 	xor a		   ; return to bank 1 (physical 0)
-	call switch_bank
-l1:	ld c, #0xfe
-	ld a, #2
-	out (c), a
-	ld b, #0
-	out (c),b
-	jr l1
+	jp switch_bank
 
 __bank_1_3:
 	ld a, #7
@@ -291,13 +289,13 @@ __bank_1_3:
 __bank_2_1:
 	xor a
 bankina2:
-	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
+	call switch_bank   ; Move to new bank
 	ex de, hl
 	call callhl	   ; call the function
 	ld a, #1	   ; return to bank 2
@@ -308,13 +306,13 @@ __bank_2_3:
 __bank_3_1:
 	xor a
 bankina3:
-	call switch_bank   ; Move to new bank
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
+	call switch_bank   ; Move to new bank
 	ex de, hl
 	call callhl	   ; call the function
 	ld a, #7	   ; return to bank 0
