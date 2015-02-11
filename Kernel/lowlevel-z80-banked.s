@@ -559,6 +559,7 @@ numeral:add a, #0x30 ; start at '0' (0x30='0')
 ;
 ;	These are needed by the experimental SDCC size optimisations
 ;
+	.area _COMMONMEM
 
 	.globl __enter, __enter_s
 
