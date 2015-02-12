@@ -49,6 +49,11 @@ on the 128.
 
 TODO:
 
+Write appropriate bankfixed.c routines
+Hook swap
+Swap over IDE
+
+
 Set vectors for syscalls somewhere safe and common (can't use the normal RST
 ones). Need a reloc hack to pick syscall method ??
 
