@@ -41,6 +41,16 @@ uint8_t sd_spi_receive_byte(uint8_t drive);
 bool sd_spi_receive_sector(uint8_t drive);
 bool sd_spi_transmit_sector(uint8_t drive);
 
+#ifdef _SD_PRIVATE
+
+/* internal functions */
+void sd_spi_release(uint8_t drive);
+int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
+uint8_t sd_spi_wait(uint8_t drive, bool want_ff);
+void sd_init_drive(uint8_t drive);
+int sd_spi_init(uint8_t drive);
+uint8_t devsd_transfer_sector(void);
+
 /* Definitions for MMC/SDC command */
 #define CMD0    (0x40+0)    /* GO_IDLE_STATE */
 #define CMD1    (0x40+1)    /* SEND_OP_COND (MMC) */
@@ -70,5 +80,7 @@ bool sd_spi_transmit_sector(uint8_t drive);
 
 /* Low four bits of driver_data are available to store drive number */
 #define DRIVE_NR_MASK 0x0F
+
+#endif
 
 #endif /* __DEVSD_DOT_H__ */
