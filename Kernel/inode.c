@@ -56,7 +56,7 @@ void readi(inoptr ino, uint8_t flag)
 			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
-			if(!ispipe && amount == BLKSIZE && bfind(dev, pblk) == 0){
+			if(!ispipe && amount == BLKSIZE && !udata.u_sysio && bfind(dev, pblk) == 0){
 				/* we can transfer direct from disk to the userspace buffer */
 				uostash = udata.u_offset;	            /* stash file offset */
 				ucstash = udata.u_count;		    /* stash byte count */
