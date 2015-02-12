@@ -16,6 +16,9 @@
         .globl map_process_always
         .globl map_save
         .globl map_restore
+	.globl map_process_save
+	.globl map_kernel_restore
+	.globl current_map
 
         .globl _kernel_flag
 
@@ -42,6 +45,16 @@
 	.globl __bank_2_3
 	.globl __bank_3_1
 	.globl __bank_3_2
+
+	.globl __stub_0_1
+	.globl __stub_0_2
+	.globl __stub_0_3
+	.globl __stub_1_2
+	.globl __stub_1_3
+	.globl __stub_2_1
+	.globl __stub_2_3
+	.globl __stub_3_1
+	.globl __stub_3_2
 
         .include "kernel.def"
         .include "../kernel.def"
@@ -70,36 +83,6 @@ _trap_reboot:
 ;	The memory banker will deal with the map setting
 ;
 init_early:
-;        ld bc, #0x7ffd
-;        xor a
-;        ld (current_map), a
-;        out (c), a            ; set page 0 at 0xC000
-        ret
-
-	.area _VIDEO
-
-init_hardware:
-        ; set system RAM size
-        ld hl, #128
-        ld (_ramsize), hl
-        ld hl, #(128 - 48)        ; 48K for kernel
-        ld (_procmem), hl
-
-        ; screen initialization
-        ; clear
-        ld hl, #0xC000
-        ld de, #0xC001
-        ld bc, #0x1800            ; There should be 0x17FF, but we are going
-        xor a                     ; to copy additional byte to avoid need of
-        ld (hl), a                ; DE and HL increment before attribute
-        ldir                      ; initialization (2 bytes of RAM economy)
-
-        ; set color attributes
-        ld a, #7            ; black paper, white ink
-        ld bc, #0x300 - #1
-        ld (hl), a
-        ldir
-
 	; set up the interrupt vectors at 0xFFF4 in each bank we use for
 	; kernel. This is a standard spectrum trick from the game world. The
 	; interrupt vectors are in ROM and there is no mechanism to make
@@ -117,7 +100,33 @@ init_hardware:
 	call setallvectors
 	ld a, #0x39
 	ld i, a
-;        im 2 ; set CPU interrupt mode
+        im 2 ; set CPU interrupt mode
+        ret
+
+	.area _VIDEO
+
+init_hardware:
+        ; set system RAM size
+        ld hl, #128
+        ld (_ramsize), hl
+        ld hl, #(128 - 64)        ; 64K for kernel/screen/etc
+        ld (_procmem), hl
+
+        ; screen initialization
+        ; clear
+        ld hl, #0xC000
+        ld de, #0xC001
+        ld bc, #0x1800            ; There should be 0x17FF, but we are going
+        xor a                     ; to copy additional byte to avoid need of
+        ld (hl), a                ; DE and HL increment before attribute
+        ldir                      ; initialization (2 bytes of RAM economy)
+
+        ; set color attributes
+        ld a, #7            ; black paper, white ink
+        ld bc, #0x300 - #1
+        ld (hl), a
+        ldir
+
         ret
 
 ;------------------------------------------------------------------------------
@@ -133,80 +142,102 @@ _program_vectors:
 	push de
 	push bc
 	ld a, P_TAB__P_PAGE_OFFSET+1(iy)	; high page of the pair
+
 setvectors:
+	call map_save
 	call switch_bank
-	ld a, #0x19
+	ld a, #0x18
 	ld (0xffff), a		;	JR (plus ROM at 0 gives JR $FFF4)
 	ld a, #0xC3		;	JP
 	ld (0xFFF4), a
 	ld hl, #interrupt_handler
-	ld (0xFFF5), a		;	to IRQ handler
+	ld (0xFFF5), hl		;	to IRQ handler
+	call map_restore
 	ret
 
 setallvectors:
-	call map_save
 	xor a
 	call setvectors
 	ld a, #1
 	call setvectors
 	ld a, #7
-	call setvectors
-	jp map_restore
+	jp setvectors
 
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
-	;
-	; FIXME: we can probably stack BC now we are banking sanely
-	;
+
 switch_bank:
-        di                  ; TODO: we need to call di() instead
+	; Write the store first, that way any interrupt will restore
+	; the new bank and our out will just be a no-op
         ld (current_map), a
-        ld a, b
-        ld (place_for_b), a
-        ld a, c
-        ld (place_for_c), a
+	push bc
         ld bc, #0x7ffd
-        ld a, (current_map)
 	or #0x18	   ; Spectrum 48K ROM, Screen in Bank 7
         out (c), a
-        ld a, (place_for_b)
-        ld b, a
-        ld a, (place_for_c)
-        ld c, a
-        ld a, (place_for_a)
-;FIXME      ei
+	pop bc
         ret
 
-map_kernel:
-        ld (place_for_a), a
-map_kernel_nosavea:          ; to avoid double reg A saving
-        xor a
-        jr switch_bank
 
+;
+;	These are incomplete - or at least someone somewhere has to do the
+;	exchange hackery as we've only got a 16K window so can't flip 0x8000
+;	directly.
+;
 map_process:
-        ld (place_for_a), a
         ld a, h
         or l
         jr z, map_kernel_nosavea
+	push af
         ld a, (hl)
-        jr switch_bank
+	call switch_bank
+	pop af
+	ret
+
+map_process_save:
+	push af
+	ld a, (current_map)
+	ld (ksave_map), a
+	pop af
 
 map_process_always:
-        ld (place_for_a), a
+	push af
+	ld a, (current_map)
+	ld (ksave_map), a
         ld a, (U_DATA__U_PAGE)
-        jr switch_bank
+	call switch_bank
+	pop af
+	ret
+
+;
+;	This may look odd. However the kernel is banked so any
+;	invocation of kernel code in fact runs common code and the
+;	common code will bank in the right kernel bits for us when it calls
+;	out of common into banked code. We do a restore to handle all the
+;	callers who do map_process_always/map_kernel pairs. Probably we
+;	should have some global change to map_process_save/map_kernel_restore
+;
+map_kernel:
+map_kernel_nosavea:          ; to avoid double reg A saving
+map_kernel_restore:
+	push af
+	ld a, (ksave_map)
+	call switch_bank
+	pop af
+	ret
 
 map_save:
-        ld (place_for_a), a
+	push af
         ld a, (current_map)
         ld (map_store), a
-        ld a, (place_for_a)
+	pop af
         ret
 
 map_restore:
-        ld (place_for_a), a
+	push af
         ld a, (map_store)
-        jr switch_bank
+        call switch_bank
+	pop af
+	ret
 
 
 ; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
@@ -223,11 +254,7 @@ current_map:                ; place to store current page number. Is needed
 map_store:
         .db 0
 
-place_for_a:                ; When change mapping we can not use stack since it is located at the end of banked area.
-        .db 0               ; Here we store A when needed
-place_for_b:                ; And BC - here
-        .db 0
-place_for_c:
+ksave_map:
         .db 0
 
 	.area _COMMONMEM
@@ -321,3 +348,78 @@ bankina3:
 __bank_3_2:
 	ld a, #1
 	jr bankina3
+
+;
+;	Stubs from common are the easy case and use HL
+;
+__stub_0_1:
+	xor a
+	call switch_bank
+	jp (hl)
+
+__stub_0_2:
+	ld a,#1
+	call switch_bank
+	jp (hl)
+
+__stub_0_3:
+	ld a,#7
+	call switch_bank
+	jp (hl)
+
+;
+;	Other stubs need some stack munging and use DE 
+;
+__stub_1_2:
+	ld a, #1
+__stub_1_a:
+	pop hl		; the return
+	ex (sp), hl	; write it over the discad
+	call switch_bank
+	ex de, hl
+	call callhl
+	xor a
+	call switch_bank
+	pop de
+	push de		; dummy the caller will discard
+	push de
+	ret
+__stub_1_3:
+	ld a, #7
+	jr __stub_1_a
+
+__stub_2_1:
+	xor a
+__stub_2_a:
+	pop hl		; the return
+	ex (sp), hl	; write it over the discad
+	call switch_bank
+	ex de, hl	; DE is our target
+	call callhl
+	ld a,#1
+	call switch_bank
+	pop de
+	push de		; dummy the caller will discard
+	push de
+	ret
+__stub_2_3:
+	ld a, #7
+	jr __stub_2_a
+
+__stub_3_1:
+	xor a
+__stub_3_a:
+	pop hl		; the return
+	ex (sp), hl	; write it over the discad
+	call switch_bank
+	ex de, hl
+	call callhl
+	ld a,#7
+	call switch_bank
+	pop de
+	push de		; dummy the caller will discard
+	push de
+	ret
+__stub_3_2:
+	ld a, #1
+	jr __stub_3_a
