@@ -8,7 +8,7 @@ uint16_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
-  uint8_t pages[] = { 1, 3, 4, 6, 7 };
+  uint8_t pages[] = { 6, 4, 3, 2 };
   uint8_t i;
   for (i = 0; i < sizeof(pages); i++)
     pagemap_add(i);
