@@ -17,6 +17,7 @@
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
+	.globl current_map
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -58,11 +59,12 @@ _switchout:
 	ld a, l
 	ld bc, #0x7ffd
 	out (c), a
+
 	ld hl, #U_DATA
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
-	xor a
+	ld a, (current_map)
 	ld bc, #0x7ffd
 	out (c), a
 
@@ -82,8 +84,15 @@ badswitchmsg: .ascii "_switchin: FAIL"
 swapped: .ascii "_switchin: SWAPPED"
             .db 13, 10, 0
 
+;
+;	FIXME: update this to use both pages and do the needed exchange
+;	on low pages.
+;
+;	FIXME: need to add swap to this yet 8(
+;
 _switchin:
         di
+	pop hl	; far padding
         pop bc  ; return address
         pop de  ; new process pointer
 ;
@@ -91,19 +100,21 @@ _switchin:
 ;
         push de ; restore stack
         push bc ; restore stack
+	push hl ; far padding
 
-	xor a
-	ld bc, #0x7ffd
-	out (c), a
 
 	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
 	pop de
 
+	; We are in DI so we can poke these directly but must not use the
+	; stack for this bit
+
         ld a, (hl)
 	; Pages please !
-	out (c), a      ; BC still contains 0x7ffd
+	ld bc, #0x7ffd
+	out (c), a
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -115,8 +126,9 @@ _switchin:
 	ldir
 	exx
 
-	xor a
-	out (c), a      ; and again 0x7ffd in BC
+	ld a, (current_map)
+	ld bc, #0x7ffd
+	out (c), a
         
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
@@ -231,7 +243,7 @@ _dofork:
 	ldir
 
 	ld bc, #0x7ffd
-	xor a
+	ld a, (current_map)
 	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -268,6 +280,10 @@ _dofork:
 ;
 ;	Note: this needs reviewing. We now have a lot more program memory
 ;	we can use with a lazy copying model
+;
+;
+;	FIXME: need to make this copy 0xC000-0xFFFF bank to bank
+;	and 0x8000 to the other bank
 ;
 bankfork:
 ;	ld bc, #(0x4000 - 768)		;	16K minus the uarea stash
