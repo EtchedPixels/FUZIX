@@ -72,7 +72,7 @@
  *              VOID    rele3()         lkrloc3.c
  *              VOID    relp3()         lkrloc3.c
  *              VOID    relr3()         lkrloc3.c
- *              VOId    relt3()         lkrloc3.c
+ *              VOID    relt3()         lkrloc3.c
  *
  *      side effects:
  *              Refer to the called relocation functions.
