@@ -16,7 +16,7 @@
 unsigned char buf[NBANKS][65536];
 unsigned int size[NBANKS];
 FILE *fptr[NBANKS];
-int v;
+int v = 0;
 static int nextfix;
 static int lastfix;
 static int stub_all;
@@ -65,12 +65,10 @@ void add_symbol(char *name, unsigned int val)
   s->next = symbols;
   symbols = s;
 }
-  
-unsigned int get_bank_function(int sbank, int dbank)
+
+unsigned int find_symbol(const char *name)
 {
    struct symbol *s = symbols; 
-   char name[32];
-   sprintf(name, "__bank_%d_%d", sbank, dbank);
    while (s) {
      if (strcmp(s->name, name) == 0)
        return s->val;
@@ -79,8 +77,21 @@ unsigned int get_bank_function(int sbank, int dbank)
   fprintf(stderr, "Symbol '%s' is missing for banked use.\n", name);
   exit(1);
 }
+  
+unsigned int get_bank_function(int sbank, int dbank)
+{
+   char name[32];
+   sprintf(name, "__bank_%d_%d", sbank, dbank);
+   return find_symbol(name);
+}
 
-/* FIXME: */
+unsigned int get_stub_function(int sbank, int dbank)
+{
+   char name[32];
+   sprintf(name, "__stub_%d_%d", sbank, dbank);
+   return find_symbol(name);
+}
+
 int stubmap(uint16_t v, int sbank, int dbank)
 {
   struct stubmap *s = stubs;
@@ -106,23 +117,25 @@ int stubmap(uint16_t v, int sbank, int dbank)
   s->dbank = dbank;
   s->addr = v;
   s->target = nextfix;
-  if (nextfix == lastfix) {
+  if (nextfix >= lastfix) {
     fprintf(stderr, "Out of fix space (%d stubs used).\n", stubct);
     exit(1);
   }
   /* FIXME: we could have per bank stubs in ROM and not waste precious
      common memory here */
-  da = get_bank_function(sbank, dbank);
-  /* Call */
-  buf[0][nextfix++] = 0xCD;
-  /* Bank function */
+  da = get_stub_function(sbank, dbank);
+  if (sbank) /* LD DE */
+    buf[0][nextfix++] = 0x11;
+  else	/* LD HL */
+    buf[0][nextfix++] = 0x21;
+  /* LD DE, targetaddr */
+  buf[0][nextfix++] = v & 0xFF;
+  buf[0][nextfix++] = v >> 8;
+  /* JP */
+  buf[0][nextfix++] = 0xC3;
+  /* stub helper */
   buf[0][nextfix++] = da & 0xFF;
   buf[0][nextfix++] = da >> 8;
-  /* Defw address */
-  buf[0][nextfix++] = v & 0xFF;	/* Target */
-  buf[0][nextfix++] = v >> 8;
-  /* Ret */
-  buf[0][nextfix++] = 0xC9;
   stubct++;
   return s->target;
 }
@@ -130,14 +143,17 @@ int stubmap(uint16_t v, int sbank, int dbank)
 void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
 {
   int da;
+
   if (ptr == 0) {
     fprintf(stderr, "Nonsense zero based code relocation.\n");
     exit(1);
   }
+
   if (dbank == 0 || dbank >= NBANKS) {
     fprintf(stderr, "Invalid bank %d\n", dbank);
     exit(1);
   }
+
   switch(buf[sbank][ptr-1]) {
     case 0xC3:	/* JP - needs stub */
       if (v)
@@ -177,6 +193,8 @@ void data_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
   int na;
   uint16_t n;
   
+  if (dbank == 0)
+    return;
   /* Get the target */
   n = buf[sbank][ptr] + (buf[sbank][ptr+1]<<8);
 
@@ -191,6 +209,8 @@ void data_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
   /* Patch in the revised destination address */
   buf[sbank][ptr] = na & 255;
   buf[sbank][ptr+1] = na >> 8;
+  if (v)
+    printf("Patched %04x to %04x\n", ptr, na);
 }
 
 int stub_code(char *name)
@@ -250,11 +270,41 @@ static void scan_symbols(FILE *f)
     if (!sym)
       continue;
     /* Guess it's a symbol then */
-    if (v && strstr(sym, "_bank_"))
+    if (v && (strstr(sym, "_bank_") || strstr(sym, "_stub_")))
       printf("Add symbol %s %x\n", sym, addr);
     add_symbol(sym, addr);
   }
 }    
+
+static void move_initializers(void)
+{
+  unsigned int s_initsrc;
+  unsigned int s_initdst;
+  unsigned int l_init;
+
+  s_initsrc = find_symbol("s__INITIALIZER");
+  s_initdst = find_symbol("s__INITIALIZED");
+  l_init = find_symbol("l__INITIALIZER");
+  if (v)
+    printf("Moving %d bytes from %x to %x for initialization\n",
+      l_init, s_initsrc, s_initdst);
+  memcpy(buf[0] + s_initdst, buf[0] + s_initsrc, l_init);
+}
+
+static void zero_data(void)
+{
+  unsigned int seg, len;
+  seg = find_symbol("s__DATA");
+  len = find_symbol("l__DATA");
+  if (v)
+    printf("Zeroing %x for %d\n", seg, len);
+  memset(buf[0] + seg, 0, len);
+  seg = find_symbol("s__BSS");
+  len = find_symbol("l__BSS");
+  if (v)
+    printf("Zeroing %u for %d\n", seg, len);
+  memset(buf[0] + seg, 0, len);
+}
 
 int main(int argc, char *argv[])
 {
@@ -333,6 +383,9 @@ int main(int argc, char *argv[])
     process_stub(in + 1);
   }
   fclose(r);
+
+  move_initializers();
+  zero_data();		/* For SNA mode */
 
   for (banks = 0; banks < 4; banks++) {
     if (fptr[banks]) {
