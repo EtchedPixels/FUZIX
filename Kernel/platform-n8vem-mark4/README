@@ -13,9 +13,8 @@ The PropIO V2 can be enabled by editing config.h and setting PROPIO2_IO_BASE to
 the base IO port address of the board. If enabled, the PropIO will be used as
 the system console.
 
-To build the kernel, edit the CPU and TARGET lines in Kernel/Makefile to read:
+To build the kernel, edit the TARGET line in Kernel/Makefile to read:
     export TARGET=n8vem-mark4
-    export CPU=z180
 Then run "make clean; make all" in the "Kernel" directory.
 
 There are two ways to boot the system.
