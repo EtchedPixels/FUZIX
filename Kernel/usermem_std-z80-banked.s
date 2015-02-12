@@ -23,8 +23,8 @@
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_always
-	.globl  map_kernel
+	.globl  map_process_save
+	.globl  map_kernel_restore
 ;
 ;	We need these in common as they bank switch
 ;
@@ -61,10 +61,10 @@ __uputc:
 	push de
 	push bc
 	push iy
-	call map_process_always
+	call map_process_save
 	ld (hl), e
 uputc_out:
-	jp map_kernel			; map the kernel back below common
+	jp map_kernel_restore			; map the kernel back below common
 
 __uputw:
 	pop iy
@@ -75,11 +75,11 @@ __uputw:
 	push de
 	push bc
 	push iy
-	call map_process_always
+	call map_process_save
 	ld (hl), e
 	inc hl
 	ld (hl), d
-	jp map_kernel
+	jp map_kernel_restore
 
 __ugetc:
 	pop de
@@ -88,10 +88,10 @@ __ugetc:
 	push hl
 	push bc
 	push de
-	call map_process_always
+	call map_process_save
         ld l, (hl)
 	ld h, #0
-	jp map_kernel
+	jp map_kernel_restore
 
 __ugetw:
 	pop de
@@ -100,12 +100,12 @@ __ugetw:
 	push hl
 	push bc
 	push de
-	call map_process_always
+	call map_process_save
         ld a, (hl)
 	inc hl
 	ld h, (hl)
 	ld l, a
-	jp map_kernel
+	jp map_kernel_restore
 
 __uput:
 	push ix
@@ -116,9 +116,9 @@ __uput:
 	
 uput_l:	ld a, (hl)
 	inc hl
-	call map_process_always
+	call map_process_save
 	ld (de), a
-	call map_kernel
+	call map_kernel_restore
 	inc de
 	djnz uput_l
 	dec c
@@ -138,10 +138,10 @@ __uget:
 	jr z, uput_out			; but count is at this point magic
 	
 uget_l:
-	call map_process_always
+	call map_process_save
 	ld a, (hl)
 	inc hl
-	call map_kernel
+	call map_kernel_restore
 	ld (de), a
 	inc de
 	djnz uget_l
@@ -157,10 +157,10 @@ __ugets:
 	jr z, ugets_bad			; but count is at this point magic
 	
 ugets_l:
-	call map_process_always
+	call map_process_save
 	ld a, (hl)
 	inc hl
-	call map_kernel
+	call map_kernel_restore
 	ld (de), a
 	or a
 	jr z, ugets_good
@@ -191,7 +191,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_always
+	call map_process_save
 	ld (hl), #0
 	dec bc
 	ld a, b
