@@ -1,9 +1,6 @@
 ;
 ;        zx128 vt primitives
 ;
-;	FIXME: adjust for correct stack offsets in banked mode (only
-;	plot_char done so far)
-;
 
         .module zx128
 
@@ -76,10 +73,12 @@ plot_char_loop:
 
 
 _clear_lines:
+	pop bc
         pop hl
         pop de              ; E = line, D = count
         push de
         push hl
+	push bc
 
 clear_next_line:
         push de
@@ -102,12 +101,14 @@ clear_next_line:
 
 
 _clear_across:
+	pop iy
         pop hl
         pop de              ; DE = coords 
         pop bc              ; C = count
         push bc
         push de
         push hl
+	push iy
         call videopos       ; first pixel line of first character in DE
         push de
         pop hl              ; copy to hl
@@ -225,10 +226,12 @@ loop_scroll_up:
         ret
 
 _cursor_on:
+	pop bc
         pop hl
         pop de
         push de
         push hl
+	push bc
         ld (cursorpos), de
 
         call videopos
