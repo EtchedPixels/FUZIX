@@ -1,5 +1,5 @@
 /* Simple IDE interface */
-//#define CONFIG_IDE
+#define CONFIG_IDE
 #define IDE_REG_DATA		0xA3
 #define IDE_REG_ERROR		0xA7
 #define IDE_REG_FEATURES	0xA7
@@ -53,7 +53,7 @@
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xFC00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   32	  /* Memory needed per process */
 
 #define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
