@@ -9,9 +9,8 @@ Supported hardware:
  - G-IDE hard disk drive controller
  - First serial port (ESCC channel A, tty1)
 
-To build the kernel, edit the CPU and TARGET lines in Kernel/Makefile to read:
+To build the kernel, edit the TARGET line in Kernel/Makefile to read:
     export TARGET=p112
-    export CPU=z180
 Then run "make clean; make all" in the "Kernel" directory.
 
 There are two ways to boot the system.
