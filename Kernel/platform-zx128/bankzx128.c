@@ -6,7 +6,9 @@
 /* This is copied version of bankfixed.c
    The only difference is pagemap_realloc function.
    Since we have PROGBASE at 0xC000, pagemap_realloc
-   returned ENOMEM even when 0 bytes were requested */
+   returned ENOMEM even when 0 bytes were requested
+
+   FIXME: need to redo this in pairs and add swap */
 
 /* Kernel is 0, apps 1,2,3 etc */
 static unsigned char pfree[MAX_MAPS];
