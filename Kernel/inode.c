@@ -11,8 +11,6 @@ void readi(inoptr ino, uint8_t flag)
 	unsigned char *bp;
 	uint16_t dev;
 	bool ispipe;
-	off_t uostash;
-	usize_t ucstash;
 
 	dev = ino->c_dev;
 	ispipe = false;
@@ -56,8 +54,11 @@ void readi(inoptr ino, uint8_t flag)
 			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
+#ifdef CONFIG_LARGE_IO_DIRECT
 			if(!ispipe && amount == BLKSIZE && !udata.u_sysio && bfind(dev, pblk) == 0){
 				/* we can transfer direct from disk to the userspace buffer */
+				off_t uostash;
+				usize_t ucstash;
 				uostash = udata.u_offset;	            /* stash file offset */
 				ucstash = udata.u_count;		    /* stash byte count */
 				udata.u_count = amount;                     /* transfer one sector */
@@ -65,7 +66,9 @@ void readi(inoptr ino, uint8_t flag)
 				((*dev_tab[major(dev)].dev_read) (minor(dev), 1, 0)); /* read */
 				udata.u_offset = uostash;		    /* restore file offset */
 				udata.u_count = ucstash;                    /* restore byte count */
-			}else{
+			}else
+#endif
+			{
 				/* we transfer through the buffer pool */
 				if (pblk == NULLBLK)
 					bp = zerobuf();

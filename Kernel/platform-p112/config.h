@@ -12,6 +12,8 @@
 #undef CONFIG_CPM_EMU
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
+/* Permit large I/O requests to bypass cache and go direct to userspace */
+#define CONFIG_LARGE_IO_DIRECT
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	16
 #define MAP_SIZE	0xF000U
