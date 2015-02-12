@@ -1,3 +1,30 @@
+diff -u --recursive sdcc-342/src/SDCCglue.c sdcc/src/SDCCglue.c
+--- sdcc-342/src/SDCCglue.c	2014-12-21 01:04:47.000000000 +0000
++++ sdcc/src/SDCCglue.c	2015-02-12 01:31:04.802185062 +0000
+@@ -1527,14 +1527,22 @@
+                   emitDebugSym (oBuf, sym);
+                   dbuf_printf (oBuf, " == .\n");
+                 }
+-              dbuf_printf (oBuf, "%s:\n", sym->rname);
+               /* special case for character strings */
+               if (IS_ARRAY (sym->type) && IS_CHAR (sym->type->next) && SPEC_CVAL (sym->etype).v_char)
+                 {
++                  
++                  if (options.const_seg)
++                  {
++                    dbuf_tprintf (&code->oBuf, "\t!area\n", options.const_seg);
++                  }
++                  dbuf_printf (oBuf, "%s:\n", sym->rname);
+                   printChar (oBuf, SPEC_CVAL (sym->etype).v_char, size);
++                  if (options.const_seg)
++                    dbuf_tprintf (oBuf, "\t!areacode\n", options.code_seg);
+                 }
+               else
+                 {
++                  dbuf_printf (oBuf, "%s:\n", sym->rname);
+                   dbuf_tprintf (oBuf, "\t!ds\n", (unsigned int) size & 0xffff);
+                 }
+             }
 diff -u --recursive sdcc-342/src/z80/gen.c sdcc/src/z80/gen.c
 --- sdcc-342/src/z80/gen.c	2014-12-23 21:02:39.000000000 +0000
 +++ sdcc/src/z80/gen.c	2015-02-08 16:37:36.657585246 +0000
