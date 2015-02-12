@@ -1,12 +1,11 @@
 -mwxuy
 -r
 -i fuzix.ihx
--b _COMMONMEM=0x4000
+-b _COMMONDATA=0x4000
 -b _CODE=0xC000
 -b _CODE2=0xC000
 -b _CODE3=0xDB00
 -b _DISCARD=0x8000
--l z80
 platform-zx128/crt0.rel
 platform-zx128/commonmem.rel
 platform-zx128/zx128.rel
@@ -41,6 +40,7 @@ swap.rel
 devsys.rel
 platform-zx128/devtty.rel
 platform-zx128/devide.rel
+platform-zx128/devide_discard.rel
 platform-zx128/mbr.rel
 platform-zx128/blkdev.rel
 -e

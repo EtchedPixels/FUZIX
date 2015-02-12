@@ -1,13 +1,14 @@
 CSRCS = devtty.c bankzx128.c devices.c main.c devmdv.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
-
+DDSRCS = ../dev/devide_discard.c
 ASRCS = crt0.s zx128.s zxvideo.s microdrive.s
 ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
+DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -23,6 +24,9 @@ $(COBJS): %.rel: %.c
 $(DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
+$(DDOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
@@ -30,4 +34,4 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	../tools/bintomdv ../fuzix.tmp fuzix.cart fuzixboot.mdv
+	( cd ..; tools/bin2sna fuzix.sna )
