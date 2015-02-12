@@ -24,7 +24,7 @@ Code Segments:
 	_CODE2		is "bank 2"
 	_CODE3		is "bank 3"
 	_VIDEO		is "bank 3"
-	_DISCARD	is "bank 3"
+	_DISCARD	is common (bank 0)
 	_COMMONMEM	is common (bank 0)
 
 Data Segments:
@@ -76,33 +76,36 @@ break. Hopefully SDCC never decides to create one behind our back.
 
 Stubs:
 
-	CALL __bank_n_from_m
-	defw xx
-	RET
+either
+
+	LD DE, #function
+	JP __stub_n_from_m
+
+or
+
+	LD HL, #function
+	JP __stub_n_from_0
+
 
 The stubs may live in the bank of the invoking function, while __bank_x is
-common
+common.
 
 This is done to process tables. It means that function tables like device or
 syscall tables correctly generate inter bank calls.
 
 Banking Handlers
 
+See platform-zx128/zx128.s
 
-__bank_0_from_1:
-	POP HL			; return
-	LD DE, (HL)
-	INC HL
-	LD D, (HL)
-	INC HL
-	PUSH HL			; true return
-	LD A, #bank0op
-	OUT (port), A
-	EX DE, HL
-	CALL __callhl
-__bank1_ret:
-	LD A, #1
-	OUT (port), A
-	RET
-__callhl:
-	JP (HL)
+
+Assumptions
+
+__sdcc_callhl
+__enter
+__enter_s
+
+must live in common memory
+
+You must use a sdcc support library modified to expect 'far' style offsets
+on helpers, but they may be banked.
+
