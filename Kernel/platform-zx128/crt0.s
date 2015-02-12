@@ -3,9 +3,9 @@
 	;
 	;	Our common and data live in 0x4000-0x7FFF
 	;
+	.area _COMMONDATA
         .area _COMMONMEM
 	.area _STUBS
-	.area _COMMONDATA
         .area _CONST
         .area _INITIALIZED
 	;
