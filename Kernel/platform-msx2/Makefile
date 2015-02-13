@@ -1,7 +1,10 @@
 
-CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c devfd.c devhd.c devlpr.c
+DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c 
+CSRCS = devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c
-DSRCS = devmegasd.c
+COMMON_CSRCS = devmegasd.c
+DISCARD_CSRCS = discard.c
+DISCARD_DSRCS = ../dev/devsd_discard.c
 ASRCS = msx2.s crt0.s vdp.s
 ASRCS += tricks.s commonmem.s bootrom.s
 
@@ -10,21 +13,32 @@ CROSS_CCOPTS += -I../dev/
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DOBJS = $(DSRCS:.c=.rel)
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
+COMMON_COBJS = $(COMMON_CSRCS:.c=.rel)
+DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
+DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_COBJS) $(DISCARD_DOBJS) $(COMMON_COBJS)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
 
 all:	$(OBJS)
 
-$(DOBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
+$(AOBJS): %.rel: %.s
+	$(CROSS_AS) $(ASOPTS) $<
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE2 -c $<
 
-$(AOBJS): %.rel: %.s
-	$(CROSS_AS) $(ASOPTS) $<
+$(COMMON_COBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
 
+$(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(DISCARD_COBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(DISCARD_DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 

@@ -15,6 +15,7 @@ version.rel
 lowlevel-z80.rel
 platform-msx2/tricks.rel
 platform-msx2/main.rel
+platform-msx2/discard.rel
 timer.rel
 kdata.rel
 platform-msx2/devtty.rel
@@ -38,6 +39,7 @@ usermem.rel
 usermem_std-z80.rel
 platform-msx2/blkdev.rel
 platform-msx2/devsd.rel
+platform-msx2/devsd_discard.rel
 platform-msx2/devmegasd.rel
 platform-msx2/mbr.rel
 platform-msx2/devrtc.rel
