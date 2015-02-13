@@ -8,26 +8,9 @@ uint16_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
-  uint8_t pages[] = { 6, 4, 3, 2 };
-  uint8_t i;
-  for (i = 0; i < sizeof(pages); i++)
-    pagemap_add(i);
-}
-
-/* The uarea is already synched to the stash which is written with the
-   process */
-uint8_t *swapout_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
-}
-
-/* The switchin code will move the uarea into the process itself, we just
-   need to fix up the u_page pointer */
-uint8_t *swapin_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
+  /* The live process also has 2 and the non running one 4 */
+  pagemap_add(6);
+  pagemap_add(3);
 }
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
