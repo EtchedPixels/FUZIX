@@ -31,11 +31,8 @@
 #undef CONFIG_FONT8X8
 #undef CONFIG_FONT8X8SMALL
 
-/* We have 1 bank at C000 with 6 possible pages to map.
-   Our choice should be CONFIG_BANK_FIXED, but we are.
-   using custom implementation of it */
-
-#undef CONFIG_BANK_FIXED
+/* Two fixed banks in use */
+#define CONFIG_BANK_FIXED
 
 /* We have two mappings from our 128K of memory */
 #define MAX_MAPS	2
