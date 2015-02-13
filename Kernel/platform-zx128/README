@@ -49,7 +49,6 @@ on the 128.
 
 TODO:
 
-Write appropriate bankfixed.c routines
 Hook swap
 Swap over IDE
 
@@ -98,3 +97,25 @@ Kernel in base 0x4000->0xFFFF (minus one screen), user in dock perhaps ?
 Would be tight for kernel but give 2 x 32K apps if supported relocations.
 
 Might need OS partly in cartridge ROM to make it work (certainly for 80col)
+
+
+Other questions:
+
+Spectrum 48K using DivIDE or Microdrive and Interface 2 banked cartridge.
+In this case the kernel ends up in the low 16K banked with video at 0x4000.
+That would make data/common very tight indeed.
+
+Spectrum 128K with Interface 2 banked cartridges is similar to base ZX128
+but frees more pages for user apps.
+
+Spectrum 128K with the ZXMMC etc - in these cases we have 16K banked RAM in
+low memory as well (in the 128K) as high.  For the 128K it offers the option to
+bank the kernel high along with the display, and run user processes in low
+memory. As we can put the kernel data in a low bank it also means we can
+put a small common at the top of each bank and run with nearly 64K available
+to each user process (but with the copying costs on switches)
+
+Spectrum 48K with ZXMMC etc. In this case the screen being stuck at 0x4000
+rather limits the options beyond a ZX128 like set up but with kernel low
+just as with cartridge.
+
