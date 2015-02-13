@@ -2,7 +2,7 @@
 ;        zx128 vt primitives
 ;
 
-        .module zx128
+        .module zxvideo
 
         ; exported symbols
         .globl _plot_char
@@ -13,8 +13,6 @@
         .globl _clear_lines
         .globl _clear_across
         .globl _do_beep
-
-        .globl _fontdata_8x8
 
         .area _VIDEO
 
@@ -47,8 +45,18 @@ _plot_char:
 
         call videopos
 
+	;
+	;	TODO: Map char 0x60 to a grave accent bitmap rather
+	;	than fudging with a quote
+	;
+
         ld b, #0            ; calculating offset in font table
         ld a, c
+	cp #0x60
+	jr nz, nofiddle
+	ld a, #0x27
+nofiddle:
+	or a		    ; clear carry
         rla
         rl b
         rla
@@ -57,8 +65,9 @@ _plot_char:
         rl b
         ld c, a
 
-        ld hl, #_fontdata_8x8 - 256
+        ld hl, #0x3C00	    ; ROM font
         add hl, bc          ; hl points to first byte of char data
+
 
         ; printing
         ld c, #8

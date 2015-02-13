@@ -27,9 +27,9 @@
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* We want the 8x8 font */
-#define CONFIG_FONT8X8
-#define CONFIG_FONT8X8SMALL
+/* We don't need a font: We will use the ROM font */
+#undef CONFIG_FONT8X8
+#undef CONFIG_FONT8X8SMALL
 
 /* We have 1 bank at C000 with 6 possible pages to map.
    Our choice should be CONFIG_BANK_FIXED, but we are.
@@ -37,9 +37,9 @@
 
 #undef CONFIG_BANK_FIXED
 
-/* 6 16K banks, 1 is for kernel needs */
-#define MAX_MAPS	5
-#define MAP_SIZE	0x4000U
+/* We have two mappings from our 128K of memory */
+#define MAX_MAPS	2
+#define MAP_SIZE	0x8000U
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
