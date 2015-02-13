@@ -51,19 +51,34 @@ void readi(inoptr ino, uint8_t flag)
 
 	      loop:
 		while (toread) {
-			if ((pblk =
-			     bmap(ino, udata.u_offset >> BLKSHIFT,
-				  1)) != NULLBLK)
-				bp = bread(dev, pblk, 0);
-			else
-				bp = zerobuf();
+			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
+			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
-			amount =
-			    min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
+#ifdef CONFIG_LARGE_IO_DIRECT
+			if(!ispipe && amount == BLKSIZE && !udata.u_sysio && bfind(dev, pblk) == 0){
+				/* we can transfer direct from disk to the userspace buffer */
+				off_t uostash;
+				usize_t ucstash;
+				uostash = udata.u_offset;	            /* stash file offset */
+				ucstash = udata.u_count;		    /* stash byte count */
+				udata.u_count = amount;                     /* transfer one sector */
+				udata.u_offset = ((off_t)pblk) << BLKSHIFT; /* replace with sector offset on device */
+				((*dev_tab[major(dev)].dev_read) (minor(dev), 1, 0)); /* read */
+				udata.u_offset = uostash;		    /* restore file offset */
+				udata.u_count = ucstash;                    /* restore byte count */
+			}else
+#endif
+			{
+				/* we transfer through the buffer pool */
+				if (pblk == NULLBLK)
+					bp = zerobuf();
+				else
+					bp = bread(dev, pblk, 0);
 
-			uputsys(bp + (udata.u_offset & BLKMASK), amount);
+				uputsys(bp + (udata.u_offset & BLKMASK), amount);
 
-			brelse(bp);
+				brelse(bp);
+			}
 
 			udata.u_base += amount;
 			udata.u_offset += amount;
@@ -145,7 +160,7 @@ void writei(inoptr ino, uint8_t flag)
 	      loop:
 
 		while (towrite) {
-			amount = min(towrite, 512 - (udata.u_offset&BLKMASK));
+			amount = min(towrite, BLKSIZE - (udata.u_offset&BLKMASK));
 
 			if ((pblk =
 			     bmap(ino, udata.u_offset >> BLKSHIFT,
