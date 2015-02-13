@@ -281,13 +281,17 @@ bankina0:
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
+	ld bc, (current_map)	; get current bank into B
 	call switch_bank   ; Move to new bank
-	ex de, hl
-	call callhl	   ; can't optimise - we need the stack depth right
-	ret
-callhl:	jp (hl)		   ; calls from bank 0 are different to the others
-			   ; we started in common so we don't need to map
-			   ; the old state back
+	; figure out which bank to map on the return path
+	ld a, c
+	or a
+	jr z, __retmap1
+	dec a
+	jr z, __retmap2
+	jr __retmap3
+
+callhl:	jp (hl)
 __bank_0_2:
 	ld a, #1	   ; logical 2 -> physical 1
 	jr bankina0
@@ -305,6 +309,7 @@ bankina1:
 	inc hl
 	push hl		   ; Restore corrected return pointer
 	call switch_bank   ; Move to new bank
+__retmap1:
 	ex de, hl
 	call callhl	   ; call the function
 	xor a		   ; return to bank 1 (physical 0)
@@ -323,6 +328,7 @@ bankina2:
 	inc hl
 	push hl		   ; Restore corrected return pointer
 	call switch_bank   ; Move to new bank
+__retmap2:
 	ex de, hl
 	call callhl	   ; call the function
 	ld a, #1	   ; return to bank 2
@@ -340,6 +346,7 @@ bankina3:
 	inc hl
 	push hl		   ; Restore corrected return pointer
 	call switch_bank   ; Move to new bank
+__retmap3:
 	ex de, hl
 	call callhl	   ; call the function
 	ld a, #7	   ; return to bank 0
@@ -351,6 +358,11 @@ __bank_3_2:
 
 ;
 ;	Stubs from common are the easy case and use HL
+;
+;	FIXME: if we ever stub a function that is in discard/common and
+;	which calls into code that bank switches then returns this will
+;	break. If that happens then these will need munging into the
+;	method used in __bank_0_x (ick)
 ;
 __stub_0_1:
 	xor a
