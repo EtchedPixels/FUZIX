@@ -17,10 +17,9 @@ void pagemap_init(void)
    for the polled ports */
 void platform_idle(void)
 {
-  /* We don't want an idle poll and IRQ driven tty poll at the same moment */
-  irqflags_t irq = di();
-  tty_pollirq(); 
-  irqrestore(irq);
+ __asm
+  halt
+ __endasm;
 }
 
 void platform_interrupt(void)
