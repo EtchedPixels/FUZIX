@@ -29,7 +29,7 @@ void kputchar(char c)
 	tty_putc(1, c);
 }
 
-static ttyready_t tty_writeready(uint8_t minor)
+int8_t tty_writeready(uint8_t minor)
 {
 	minor;
 	return TTY_READY_NOW;
