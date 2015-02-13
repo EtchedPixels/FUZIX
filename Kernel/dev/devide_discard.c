@@ -23,6 +23,7 @@
 /* each source file.                                                        */
 /****************************************************************************/
 
+#ifdef IDE_REG_CONTROL
 static void devide_delay(void)
 {
     timer_t timeout;
@@ -32,6 +33,7 @@ static void devide_delay(void)
     while(!timer_expired(timeout))
        platform_idle();
 }
+#endif
 
 void devide_init_drive(uint8_t drive)
 {
@@ -95,7 +97,6 @@ void devide_init_drive(uint8_t drive)
     if(!blk)
 	goto failout;
 
-    kputs("BAL");
     blk->transfer = devide_transfer_sector;
     blk->flush = devide_flush_cache;
     blk->driver_data = drive & DRIVE_NR_MASK;
