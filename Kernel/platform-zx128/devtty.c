@@ -160,7 +160,7 @@ static void keydecode(void)
 			else if (c == ' ')
 				c = KEY_STOP;	/* ^C map for BREAK */
 			else if (c >= '5' && c <= '8')
-				c = cursor[c - '5']; 
+				c = cursor[c - '5'];
 		}
 	}
 
