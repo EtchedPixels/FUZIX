@@ -1,9 +1,12 @@
 #include <kernel.h>
 #include <tty.h>
 #include <vt.h>
-#include <devtty.h>
 
 #ifdef CONFIG_VT
+
+
+#include <devtty.h>
+
 /*
  *	Mini vt52 terminal emulation
  *
