@@ -1,14 +1,16 @@
-CSRCS += devices.c main.c devtty.c devsdspi.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
-DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/ds1302_discard.c
 ASRCS = crt0.s z180.s commonmem.s mark4.s ds1302-mark4.s monitor.s
+CSRCS += devices.c main.c devtty.c devsdspi.c
+DISCARD_CSRCS = discard.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/ds1302_discard.c
+DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
+DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
+DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DDOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -25,7 +27,10 @@ $(COBJS): %.rel: %.c
 $(DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DISCARD_COBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:

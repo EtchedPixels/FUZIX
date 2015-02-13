@@ -14,6 +14,8 @@
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
+/* Platform defined bootdevice() */
+#define CONFIG_BOOTDEVICE
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	16
 #define MAP_SIZE	0xF000U
