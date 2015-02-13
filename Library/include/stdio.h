@@ -125,10 +125,13 @@ extern int fsetpos __P((FILE *fp, fpos_t *pos));
 extern int printf __P((const char*, ...));
 extern int fprintf __P((FILE*, const char*, ...));
 extern int sprintf __P((char*, const char*, ...));
+extern int snprintf __P((char*, size_t, const char*, ...));
 
 extern int vprintf __P((const char*, va_list));
 extern int vfprintf __P((FILE*, const char*, va_list));
+extern int _vfnprintf __P((FILE*, size_t, const char*, va_list));
 extern int vsprintf __P((char*, const char*, va_list));
+extern int vsnprintf __P((char*, size_t, const char*, va_list));
 
 extern int scanf __P((const char*, ...));
 extern int fscanf __P((FILE*, const char*, ...));

@@ -22,7 +22,7 @@ extern void _fnum(double val, char fmt, int prec, char *ptmp);
  * Output the given field in the manner specified by the arguments. Return
  * the number of characters output.
  */
-static int prtfld(FILE * op, unsigned char *buf, int ljustf, char sign,
+static int prtfld(FILE * op, size_t maxlen, size_t ct, unsigned char *buf, int ljustf, char sign,
 		  char pad, int width, int preci, int buffer_mode)
 {
 	register unsigned char ch;
@@ -59,14 +59,15 @@ static int prtfld(FILE * op, unsigned char *buf, int ljustf, char sign,
 			ch = pad;	/* right padding */
 			--width;
 		}
-		putc(ch, op);
+		if (ct++ < maxlen)
+                        putc(ch, op);
 		if (ch == '\n' && buffer_mode == _IOLBF)
 			fflush(op);
 	}
 	return (cnt);
 }
 
-int vfprintf(FILE * op, const char *fmt, va_list ap)
+int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 {
 	register int i, ljustf, lval, preci, dpoint, width, radix, cnt = 0;
 	char pad, sign, hash;
@@ -223,7 +224,7 @@ int vfprintf(FILE * op, const char *fmt, va_list ap)
 			      chrpad:sign =
 				    '\0';
 			      printit:cnt +=
-				    prtfld(op, (unsigned char *) ptmp,
+				    prtfld(op, maxlen, cnt, (unsigned char *) ptmp,
 					   ljustf, sign, pad, width, preci,
 					   buffer_mode);
 				break;
@@ -249,8 +250,10 @@ int vfprintf(FILE * op, const char *fmt, va_list ap)
 				goto charout;
 			}
 		} else {
-		      charout:putc(*fmt, op);
-					/* normal char out */
+		      charout:
+			/* normal char out */
+		        if (cnt < maxlen)
+		                putc(*fmt, op);
 			++cnt;
 			if (*fmt == '\n' && buffer_mode == _IOLBF)
 				fflush(op);
@@ -263,4 +266,9 @@ int vfprintf(FILE * op, const char *fmt, va_list ap)
 	if (buffer_mode == _IOLBF)
 		op->bufwrite = op->bufstart;
 	return (cnt);
+}
+
+int vfprintf(FILE * op, const char *fmt, va_list ap)
+{
+        return _vfnprintf(op, ~0, fmt, ap);
 }

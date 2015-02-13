@@ -30,8 +30,41 @@ int sprintf(char *sp, const char *fmt, ...)
 
 	va_start(ptr, fmt);
 	string->bufpos = (unsigned char *) sp;
-	rv = vfprintf(string, fmt, ptr);
+	rv = _vfnprintf(string, ~0, fmt, ptr);
 	va_end(ptr);
+	*(string->bufpos) = 0;
+	return rv;
+}
+
+int snprintf(char *sp, size_t size, const char *fmt, ...)
+{
+	va_list ptr;
+	int rv;
+
+	va_start(ptr, fmt);
+	string->bufpos = (unsigned char *) sp;
+	rv = _vfnprintf(string, size, fmt, ptr);
+	va_end(ptr);
+	*(string->bufpos) = 0;
+	return rv;
+}
+
+int vsnprintf(char *sp, size_t size, const char *fmt, va_list ptr)
+{
+	int rv;
+
+	string->bufpos = (unsigned char *) sp;
+	rv = _vfnprintf(string, size, fmt, ptr);
+	*(string->bufpos) = 0;
+	return rv;
+}
+
+int vsprintf(char *sp, const char *fmt, va_list ptr)
+{
+	int rv;
+
+	string->bufpos = (unsigned char *) sp;
+	rv = _vfnprintf(string, ~0, fmt, ptr);
 	*(string->bufpos) = 0;
 	return rv;
 }
