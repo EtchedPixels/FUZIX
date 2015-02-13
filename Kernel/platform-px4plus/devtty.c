@@ -24,7 +24,7 @@ void kputchar(char c)
 }
 
 /* It's the console display, always ready */
-static ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
     minor;
     return TTY_READY_NOW;

@@ -4,7 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint8_t *ramtop = PROGTOP;
+uint16_t ramtop = PROGTOP;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
@@ -31,12 +31,3 @@ void map_init(void)
 {
 }
 
-void *swapout_prepare_uarea(ptptr p)
-{
- return &udata;
-}
-
-void *swapin_prepare_uarea(ptptr p)
-{
- return &udata;
-}

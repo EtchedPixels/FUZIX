@@ -31,17 +31,14 @@
 /* FIXME: the OVL timer isn't quite 100/sec and we have an accurate 1Hz
    timer available, so needs some tweaking */
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0000))  /* also data base */
-#define PROGLOAD    ((char *)(0x0100))
-#define PROGTOP     ((char *)(0x4000))  /* Top of program for debug */
+#define PROGBASE    0x0000  /* also data base */
+#define PROGLOAD    0x0100
+#define PROGTOP     0x4000  /* Top of program for debug */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks (with uarea means 31K max app size) */
-#define SWAPBASE    0x0100	/* We swap the lot in one, include the */
-#define SWAPTOP	    0x7C00	/* vectors so its a round number of sectors */
+#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
+#define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS	4	/* We have a whopping 128K of RAMDISC! */
-
-#define UDATA_SWAPSIZE 0x0400	/* Write udata plus 0-0x0100 */
-#define UDATA_BLOCKS 2
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
