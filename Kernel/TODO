@@ -32,8 +32,9 @@ Big Speed Up Points
 -------------------
 
 o	Rewrite the compressor in assembler
-o	Support 'raw' I/O on files
-o	Make execve use this to avoid all the copies
+IP	Support 'raw' I/O on files	(done for O_DIRECT read and as an
+	optimisation). Needs cleaning up.
+DONE	Make execve use this to avoid all the copies
 o	Vfork
 DONE	Make mount pin a buffer rather than keeping mount blocks around
 	unused.
@@ -48,3 +49,4 @@ DONE	Uptime/loadaverage/swapfree etc data
 o	Virtual device hooks for networking
 o	Pty/tty devices
 o	Finish select/poll
+o	Support for o65 binary format
