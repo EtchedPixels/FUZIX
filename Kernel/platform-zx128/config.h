@@ -27,6 +27,8 @@
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
+/* Keyboard contains not ascii symbols */
+#define CONFIG_UNIKEY
 /* We don't need a font: We will use the ROM font */
 #undef CONFIG_FONT8X8
 #undef CONFIG_FONT8X8SMALL
