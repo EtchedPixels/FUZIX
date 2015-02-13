@@ -2,6 +2,12 @@
 #include <kdata.h>
 #include <printf.h>
 
+#if defined(CONFIG_LARGE_IO_DIRECT)
+#define read_policy_direct(dev, pblk, flag)	(!udata.u_sysio)
+#elif (NBUFS >= 32)
+#define read_policy_direct(dev, pblk, flag)	(flag & O_DIRECT)
+#endif
+
 /* Writei (and readi) need more i/o error handling */
 void readi(inoptr ino, uint8_t flag)
 {
@@ -54,8 +60,8 @@ void readi(inoptr ino, uint8_t flag)
 			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
-#ifdef CONFIG_LARGE_IO_DIRECT
-			if(!ispipe && amount == BLKSIZE && !udata.u_sysio && bfind(dev, pblk) == 0){
+#if defined(read_policy_direct)
+			if (!ispipe && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
 				/* we can transfer direct from disk to the userspace buffer */
 				off_t uostash;
 				usize_t ucstash;
@@ -66,7 +72,7 @@ void readi(inoptr ino, uint8_t flag)
 				((*dev_tab[major(dev)].dev_read) (minor(dev), 1, 0)); /* read */
 				udata.u_offset = uostash;		    /* restore file offset */
 				udata.u_count = ucstash;                    /* restore byte count */
-			}else
+			} else
 #endif
 			{
 				/* we transfer through the buffer pool */

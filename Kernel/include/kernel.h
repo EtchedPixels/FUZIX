@@ -444,6 +444,7 @@ struct s_argblk {
 #define O_APPEND	4
 #define O_SYNC		8
 #define O_NDELAY	16
+#define O_DIRECT	32
 #define O_FLOCK		128		/* Cannot be user set */
 #define O_CREAT		256
 #define O_EXCL		512
@@ -451,7 +452,7 @@ struct s_argblk {
 #define O_NOCTTY	2048
 #define O_CLOEXEC	4096
 
-#define O_BADBITS	(32 | 64 | O_FLOCK | 8192 | 16384 | 32768U)
+#define O_BADBITS	(64 | O_FLOCK | 8192 | 16384 | 32768U)
 
 #define F_GETFL		0
 #define F_SETFL		1
