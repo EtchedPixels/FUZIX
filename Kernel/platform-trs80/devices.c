@@ -34,13 +34,3 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-DISCARDABLE
-
-void device_init(void)
-{
-#ifdef CONFIG_RTC
-  /* Time of day clock */
-  inittod();
-#endif
-  hd_probe();
-}

@@ -19,6 +19,7 @@ kdata.rel
 platform-trs80/devfd.rel
 platform-trs80/floppy.rel
 platform-trs80/devhd.rel
+platform-trs80/devhd_discard.rel
 platform-trs80/devices.rel
 devio.rel
 filesys.rel
@@ -37,4 +38,5 @@ vt.rel
 devsys.rel
 platform-trs80/devlpr.rel
 platform-trs80/devtty.rel
+platform-trs80/discard.rel
 -e
