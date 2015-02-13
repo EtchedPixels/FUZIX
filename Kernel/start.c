@@ -83,12 +83,9 @@ void create_init(void)
 	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
 }
 
-#ifdef CONFIG_BOOTDEVICE
-extern uint16_t bootdevice(unsigned char *s);
-#else
 /* to sensibly parse device names this needs to be platform-specific,
    this default version parses minor numbers only */
-uint16_t bootdevice(unsigned char *s)
+uint16_t default_bootdevice(unsigned char *s)
 {
     unsigned int r = 0;
 
@@ -106,7 +103,6 @@ uint16_t bootdevice(unsigned char *s)
         s++;
     }
 }
-#endif
 
 uint16_t get_root_dev(void)
 {
