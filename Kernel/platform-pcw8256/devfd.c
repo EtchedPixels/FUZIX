@@ -19,7 +19,7 @@ static uint8_t type[2];
 #define TYPE_THREE	1
 #define TYPE_THREE_FIVE	2
 static uint8_t motorct;
-static uint8_t devsel = -1;
+static int8_t devsel = -1;
 
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
