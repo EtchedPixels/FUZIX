@@ -357,37 +357,36 @@ __bank_3_2:
 	jr bankina3
 
 ;
-;	Stubs from common are the easy case and use HL
+;	Stubs need some stack munging and use DE
 ;
-;	FIXME: if we ever stub a function that is in discard/common and
-;	which calls into code that bank switches then returns this will
-;	break. If that happens then these will need munging into the
-;	method used in __bank_0_x (ick)
-;
+
 __stub_0_1:
 	xor a
+__stub_0_a:
+	pop hl		; the return
+	ex (sp), hl	; write it over the discard
+	ld bc, (current_map)
 	call switch_bank
-	jp (hl)
-
+	ld a, c
+	or a
+	jr z, __stub_1_ret
+	dec a
+	jr z, __stub_2_ret
+	jr __stub_3_ret
 __stub_0_2:
-	ld a,#1
-	call switch_bank
-	jp (hl)
-
+	ld a, #1
+	jr __stub_0_a
 __stub_0_3:
-	ld a,#7
-	call switch_bank
-	jp (hl)
+	ld a, #7
+	jr __stub_0_a
 
-;
-;	Other stubs need some stack munging and use DE 
-;
 __stub_1_2:
 	ld a, #1
 __stub_1_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
 	call switch_bank
+__stub_1_ret:
 	ex de, hl
 	call callhl
 	xor a
@@ -406,6 +405,7 @@ __stub_2_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
 	call switch_bank
+__stub_2_ret:
 	ex de, hl	; DE is our target
 	call callhl
 	ld a,#1
@@ -424,6 +424,7 @@ __stub_3_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
 	call switch_bank
+__stub_3_ret:
 	ex de, hl
 	call callhl
 	ld a,#7

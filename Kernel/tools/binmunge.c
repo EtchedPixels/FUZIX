@@ -124,11 +124,8 @@ int stubmap(uint16_t v, int sbank, int dbank)
   /* FIXME: we could have per bank stubs in ROM and not waste precious
      common memory here */
   da = get_stub_function(sbank, dbank);
-  if (sbank) /* LD DE */
-    buf[0][nextfix++] = 0x11;
-  else	/* LD HL */
-    buf[0][nextfix++] = 0x21;
   /* LD DE, targetaddr */
+  buf[0][nextfix++] = 0x11;
   buf[0][nextfix++] = v & 0xFF;
   buf[0][nextfix++] = v >> 8;
   /* JP */
