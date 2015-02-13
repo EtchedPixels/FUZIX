@@ -3,9 +3,9 @@
 #include <printf.h>
 
 #if defined(CONFIG_LARGE_IO_DIRECT)
-#define read_policy_direct(dev, pblk, flag)	(!udata.u_sysio)
+#define read_direct(flag)		(!udata.u_sysio)
 #elif (NBUFS >= 32)
-#define read_policy_direct(dev, pblk, flag)	(flag & O_DIRECT)
+#define read_direct(flag)		(flag & O_DIRECT)
 #endif
 
 /* Writei (and readi) need more i/o error handling */
@@ -60,7 +60,7 @@ void readi(inoptr ino, uint8_t flag)
 			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
-#if defined(read_policy_direct)
+#if defined(read_direct)
 			if (!ispipe && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
 				/* we can transfer direct from disk to the userspace buffer */
 				off_t uostash;
