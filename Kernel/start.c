@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <tty.h>
+#include <config.h>
 
 #define BAD_ROOT_DEV 0xFFFF
 
@@ -82,8 +83,11 @@ void create_init(void)
 	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
 }
 
+#ifdef CONFIG_BOOTDEVICE
+extern uint16_t bootdevice(unsigned char *s);
+#else
 /* to sensibly parse device names this needs to be platform-specific,
-   so for now it only parses device numbers */
+   this default version parses minor numbers only */
 uint16_t bootdevice(unsigned char *s)
 {
     unsigned int r = 0;
@@ -102,6 +106,29 @@ uint16_t bootdevice(unsigned char *s)
         s++;
     }
 }
+#endif
+
+uint16_t get_root_dev(void)
+{
+	uint16_t rd = BAD_ROOT_DEV;
+	char bootline[10];
+
+	if (cmdline && *cmdline)
+		rd = bootdevice(cmdline);
+
+	while(rd == BAD_ROOT_DEV){
+		kputs("bootdev: ");
+		udata.u_base = (uint8_t*)&bootline;
+		udata.u_sysio = 1;
+		udata.u_count = sizeof(bootline)-1;
+		udata.u_euid = 0;	/* Always begin as superuser */
+
+		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
+		rd = bootdevice(bootline);
+	}
+
+	return rd;
+}
 
 void fuzix_main(void)
 {
@@ -116,14 +143,14 @@ void fuzix_main(void)
 	if (d_open(TTYDEV, 0) != 0)
 		panic("no tty");
 
-	/* Sign on messages (stashed in a buffer so we can bin them */
+	/* Sign on messages */
 	kprintf(
-	 "FUZIX version %s\n"
-	 "Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
-	 "Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
-	 "Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
-	 "Copyright (c) 2014-2015 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
-	                                         uname_str);
+			"FUZIX version %s\n"
+			"Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
+			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
+			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
+			"Copyright (c) 2014-2015 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
+			uname_str);
 
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
@@ -131,7 +158,7 @@ void fuzix_main(void)
 	/* Check we don't exceed the process table size limit */
 	if (maxproc > PTABSIZE) {
 		kprintf("WARNING: Increase PTABSIZE to %d to use available RAM\n",
-		                maxproc);
+				maxproc);
 		maxproc = PTABSIZE;
 	}
 #else
@@ -140,45 +167,29 @@ void fuzix_main(void)
 #else
 	maxproc = PTABSIZE;
 #endif
-        /* Used as a stop marker to make compares fast on process
-           scheduling and the like */
-        ptab_end = &ptab[maxproc];
+	/* Used as a stop marker to make compares fast on process
+	   scheduling and the like */
+	ptab_end = &ptab[maxproc];
 
 	/* Parameters message */
 	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	fstabinit();
 	pagemap_init();
-
 	create_init();
-	kputs("Enabling interrupts ... ");
 
 	/* runtime configurable, defaults to build time setting */
 	ticks_per_dsecond = TICKSPERSEC / 10;
 
-        ei();
+	kputs("Enabling interrupts ... ");
+	ei();
 	kputs("ok.\n");
 
 	/* initialise hardware devices */
 	device_init();
 
-	root_dev = BAD_ROOT_DEV;
-	if (cmdline && *cmdline)
-		root_dev = bootdevice(cmdline);
-	
-        while(root_dev == BAD_ROOT_DEV){
-		kputs("bootdev: ");
-		udata.u_base = bootline;
-		udata.u_sysio = 1;
-		udata.u_count = BOOTLINE_LEN-1;
-		udata.u_euid = 0;	/* Always begin as superuser */
-		memset(bootline, 0, BOOTLINE_LEN);
-
-		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
-		root_dev = bootdevice(bootline);
-	}
-
 	/* Mount the root device */
+	root_dev = get_root_dev();
 	kprintf("Mounting root fs (root_dev=%d): ", root_dev);
 
 	if (fmount(root_dev, NULLINODE, 0))

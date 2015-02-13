@@ -4,7 +4,6 @@
 
 p_tab *init_process;
 unsigned char *cmdline = (unsigned char *) CMDLINE;
-unsigned char bootline[BOOTLINE_LEN];
 uint16_t ramsize, procmem, maxproc, nproc, nready;
 uint16_t runticks;
 bool inint;

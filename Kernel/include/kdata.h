@@ -4,8 +4,6 @@
 #include <stdbool.h>
 
 extern unsigned char *cmdline;
-#define BOOTLINE_LEN 6
-extern unsigned char bootline[BOOTLINE_LEN];
 
 extern struct u_block ub;
 
