@@ -26,24 +26,21 @@
 		.globl _mdv_motor_off
 		.globl _mdv_bread
 		.globl _mdv_bwrite
-		.globl mdv_boot
 
 		; imports
 		.globl _mdv_sector
 		.globl _mdv_buf
 		.globl _mdv_hdr_buf
 		.globl _mdv_len
+		.globl _mdv_page
 
+		.globl map_process_save
+		.globl map_kernel_restore
 
-;
-;	Temporary 512 byte buffer used during boot only
-;
-MDV_BOOT_BUF	.equ	0xB000
+		.area _COMMONMEM
 
 SECTORID	.equ	0x08		; FIXME - set real format up!
 CSUM		.equ	0x0E		; FIXME ditto
-
-		.area _CODE
 
 nap_1ms:	push de
 		ld de, #87
@@ -223,7 +220,6 @@ mdv_find_hdr_bad:
 		jr nz, mdv_find_hdr_next
 		or a			; will be > 0
 		ret			; NZ
-
 ;
 ;	Load the data for a microdrive block. It's assumed you just found
 ;	the right header then called this
@@ -344,116 +340,37 @@ ret0:
 ;
 ;	int mdv_motor_on(uint8_t drive)
 ;
-_mdv_motor_on:	pop hl
+_mdv_motor_on:	pop de
+		pop hl
 		pop af
 		push af
 		push hl
+		push de
 		call mdv_motor
 		jr ret0
 ;
 ;	int mdv_read(void)
 ;	mdv_sector and mdv_buf have been set up ready
 ;
+;	This relies on the fact data is effectively common space on the
+;	ZX128. It will break if this ceases to be true.
+;
 _mdv_bread:
+		ld a, (_mdv_page)
+		or a
+		push af
+		call z, map_process_save
 		call mdv_fetch
 		jr z, ret0
 		ld l, a
 		xor a
 		ld h, a
+		pop af
+		call z, map_kernel_restore
 		ret
 
 _mdv_bwrite:
 		ld hl, #0xffff		; not done yet
 		ret
 
-
-;
-;	Bootstrap logic. This is used when the cartridge powers up
-;	in order to load the rest of the kernel from the boot microdrive
-;	Interrupts are off, stack is valid. We don't check if the tape
-;	causes a stack overwrite, that's operator error!
-
-mdv_boot:
-;
-;	Spin up the boot volume
-;
-		ld hl, #MDV_BOOT_BUF
-		ld (_mdv_buf), hl
-		ld a, #1
-		out (0xfe), a		; blue
-		call mdv_motor
-		ld hl, #1024		; 4 trips round the tape
-mdv_boot_loop:
-		push hl
-;
-;	Each loop we fetch a block and if its an 'FK' block then we
-;	load it into RAM at the given offset for 512 bytes. We assume that
-;	the mdv is created with sufficient interleave we can keep pulling
-;	the next block ok
-;
-		call mdv_get_hdr
-		jr nz, mdv_bad
-		call mdv_get_blk
-		jr nz, mdv_bad
-		ld ix, #_mdv_hdr_buf
-		ld a, #'F'		; magic for kernel blocks
-		cp 4(ix)
-		jr nz, not_fk
-		ld a, #'K'
-		cp 5(ix)
-		jr nz, not_fk
-		ld hl, #0x5800		; attribute memory
-		ld d, #0
-		ld e, 1(ix)
-		add hl, de
-		ld (hl), #0x1f
-		inc hl
-		ld (hl), #0x1f
-;
-;	We may ldir over _mdv_hdr_buf so do the attributes then
-;	follow up with the block copy
-;
-		ld a, 1(ix)
-		out (0xfe), a		; loading stripes
-		ld d, a			; high byte of address
-		ld e, #0
-		ld hl, #MDV_BOOT_BUF
-		ld bc, #512
-		ldir
-		call done_all		; check if we are complete
-		jr z, mdv_boot_done
-		ld hl, #MDV_BOOT_BUF		; we may have reloaded over this
-		ld (_mdv_buf), hl
-not_fk:		pop hl
-		dec hl
-		ld a, h
-		or l
-		jr nz, mdv_boot_loop
-mdv_fail:	ld a, #2
-		out (0xfe), a		; red border
-failed:		jr failed
-
-mdv_bad:	cp #3
-		jr z, mdv_fail		; give up return
-		jr not_fk
-
-mdv_boot_done:
-		xor a
-		out (0xFE), a
-		ret
-
-done_all:	ld hl, #0x585B		; check data is loaded
-		ld b, #0x44
-		ld a, #0x1f
-done_1:		cp (hl)
-		ret nz
-		inc hl
-		djnz done_1
-		ld hl, #0x58C0		; and code
-		ld b, #0x3f
-done_2:		cp (hl)
-		ret nz
-		inc hl
-		djnz done_2
-		ret			; Z
 

@@ -21,26 +21,44 @@ uint8_t mdv_sector;
 uint8_t *mdv_buf;
 uint8_t mdv_hdr_buf[15];
 uint16_t mdv_len;
+uint8_t mdv_page;
 
 static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
 	int err;
 	irqflags_t irq;
+	uint16_t block, nblock;
 
-	if (rawflag)
+	if (rawflag == 2)
 		goto bad;
+	if (rawflag == 0) {
+		mdv_buf = udata.u_buf->bf_data;
+		block = udata.u_buf->bf_blk;
+		nblock = 1;
+		mdv_page = 0;
+	} else {
+		/* Direct to user */
+		if ((udata.u_offset|udata.u_count) & 0x1FF)
+			goto bad;
+		mdv_buf = (uint8_t *)udata.u_buf->bf_blk;
+		nblock = udata.u_count >> 9;
+		block = udata.u_offset >> 9;
+		mdv_page = 1;
+	}
 
 	mdv_motor_on(minor + 1);
-	/* FIXME: support swap ? */
-	mdv_sector = mdvmap[minor][udata.u_buf->bf_blk];
-	mdv_buf = udata.u_buf->bf_data;
 
-	irq = di();	
-	if (is_read)
-		err = mdv_bread();
-	else
-		err = mdv_bwrite();
-	irqrestore(irq);
+	while(nblock--) {
+		mdv_sector = mdvmap[minor][block++];
+		irq = di();
+		if (is_read)
+			err = mdv_bread();
+		else
+			err = mdv_bwrite();
+		irqrestore(irq);
+		mdv_buf += 512;
+	}
+	/* Should be timer based for the motor */
 	mdv_motor_off();
 	return 0;
 bad:
@@ -75,6 +93,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 	t = tmpbuf();
 	mdv_buf = t;
 	mdv_sector = 1;
+	mdv_page = 0;
 	err = mdv_bread();
 	if (err) {
 		mdv_sector = 128;
@@ -87,6 +106,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 		}
 		kprintf("mdv_open: had to use secondary map\n");
 	}
+	memcpy(mdvmap[minor], t, 256);
 	brelse(t);	
 	mdv_valid |= 1 << minor;
 	mdv_motor_off();

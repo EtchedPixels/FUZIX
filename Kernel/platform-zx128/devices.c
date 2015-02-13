@@ -10,12 +10,8 @@
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
-#ifdef CONFIG_MDV
-  /* 0: /dev/fd		Floppy disc block devices, or microdrive etc */
-  {  mdv_open,     mdv_close,    mdv_read,   mdv_write,   no_ioctl },
-#else
+  /* 0: /dev/fd		Floppy disc block devices */
   {  no_open,      no_close,     no_rdwr,   no_rdwr,   no_ioctl },
-#endif
 #ifdef CONFIG_IDE
   /* 1: /dev/hd		Hard disc block devices */
   {  blkdev_open,  no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl },
@@ -28,7 +24,12 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,      no_close,     sys_read,      sys_write,     sys_ioctl  },
-  /* Pack to 7 with nxio if adding private devices and start at 8 */
+  /* 5: Pack to 7 with nxio if adding private devices and start at 8 */
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  /* 8: /dev/mdv		Microdrive */
+  {  mdv_open,     mdv_close,    mdv_read,   mdv_write,   no_ioctl },
 };
 
 bool validdev(uint16_t dev)
