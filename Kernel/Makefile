@@ -17,9 +17,12 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all:	fuzix.bin
 
-
--include platform-$(TARGET)/rules.mk
+# Platform propertyies
+include platform-$(TARGET)/target.mk
+# CPU properties
 include cpu-$(CPU)/rules.mk
+# Overrides (optional)
+-include platform-$(TARGET)/rules.mk
 
 
 

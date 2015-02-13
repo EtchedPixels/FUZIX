@@ -1,7 +1,6 @@
 #
 #	ZX128 uses banked kernel images
 #
-export CPU = z80
 CROSS_CCOPTS += --external-banker
 #
 # Tell the core code we are using the banked helpers
