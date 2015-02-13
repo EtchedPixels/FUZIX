@@ -16,7 +16,6 @@
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
-        .globl dispatch_process_signal
 	.globl _swapper
 	.globl _swapout
 
