@@ -31,6 +31,7 @@ mm.rel
 bankfixed.rel
 swap.rel
 devsys.rel
+platform-n8vem-mark4/discard.rel
 platform-n8vem-mark4/devtty.rel
 platform-n8vem-mark4/devide.rel
 platform-n8vem-mark4/devide_discard.rel

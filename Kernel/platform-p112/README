@@ -36,4 +36,6 @@ floppy boot sector can read the kernel directly out of a Fuzix file system on
 the floppy disk.
 
 When booting the system from CP/M you can specify the root filesystem device
-number on the command line after the command name.
+number on the command line after the command name. This can be specified as
+either a decimal number, or as a a device name (without the /dev prefix). For
+example hda, hdb, hda1, hda2, fd0, fd1, etc.

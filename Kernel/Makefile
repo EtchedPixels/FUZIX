@@ -17,7 +17,7 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 all:	fuzix.bin
 
-# Platform propertyies
+# Platform properties
 include platform-$(TARGET)/target.mk
 # CPU properties
 include cpu-$(CPU)/rules.mk
