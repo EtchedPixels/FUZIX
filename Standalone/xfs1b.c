@@ -444,10 +444,3 @@ int _umount(char *spec)
 	i_deref(sino);
 	return (-1);
 }
-
-int _time(int tvec[])
-{
-	udata.u_error = 0;
-	// rdtime(tvec);  /* In machdep.c */
-	return (0);
-}
