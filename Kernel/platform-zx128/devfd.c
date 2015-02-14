@@ -10,16 +10,13 @@
 #define OPDIR_WRITE	2
 
 #define FD_READ		0x80
-#define FD_WRITE	0xA0
-#define FD_WRITE_PCOMP	0xA4
+#define FD_WRITE	0xA2
 
 /*
  *	TODO:
  *	- detect SD v DD and handle 256 byte sectors
  *	- detect SS v DS
  */
-
-static uint8_t motorct;
 
 /* We are a bit rude with this as we just bash it without sharing */
 __sfr __at 0x1F control;
@@ -39,6 +36,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t *driveptr = fd_tab + minor;
     uint8_t nblock;
     uint8_t cval;
+    uint8_t sec;
 
     if(rawflag == 2)
         goto bad2;
@@ -60,7 +58,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
     fd_cmd[1] = block / 20;
-    fd_cmd[2] = (block % 20) + 1;
+    sec = (block % 20) + 1;
     fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
     fd_cmd[4] = dptr & 0xFF;
     fd_cmd[5] = dptr >> 8;
@@ -72,10 +70,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 
     while (ct < nblock) {
-        if (fd_cmd[2] > 10)
+        if (sec > 10) {
             control = cval | 2;
-        else
+            fd_cmd[2] = sec - 10;
+        } else {
             control = cval;
+            fd_cmd[2] = sec;
+        }
         if (!is_read && fd_cmd[1] > 64)
             fd_cmd[0] |= 4;	/* Write precompensation on */
 
@@ -89,9 +90,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* FIXME: need to do SD v DD detection */
         if (tries == 4)
             goto bad;
-        /* FIXME: this doesn't work for a big raw read that changes track */
         fd_cmd[5]+= 2;	/* Move on 512 bytes in the buffer */
-        fd_cmd[2]++;	/* Next sector */
+        sec++;
+        /* Step a track */
+        if (sec > 20) {
+            sec = 1;
+            fd_cmd[1]++;
+        }
         ct++;
     }
     return 1;

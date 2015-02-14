@@ -36,11 +36,21 @@
 ;	0xA0 - write + 0x02 for spin up etc, + 0x08? for precomp
 ;	0xD0 - reset (then wait about 1mS)
 ;
+;
+;	This code ought to work on the Plus-D as well with a few changes
+;
+;	The +D uses ports
+;	0xE3	status/cmd
+;	0xEB	track
+;	0xF3	sector
+;	0xFB	data
+;	0xEF	control
+;	bits 0-1: drive select
+;	bit 7: side select
+;
 
 	.globl _fd_reset
 	.globl _fd_operation
-	.globl _fd_motor_on
-	.globl _fd_motor_off
 	.globl _fd_selected
 	.globl _fd_tab
 	.globl _fd_cmd
@@ -335,35 +345,10 @@ _fd_operation:
 	ld	h, #0
 	pop	ix
 	ret
-;
-;	C interface fd_motor_on(uint16_t drivesel)
-;
-;	Selects this drive and turns on the motors. Also pass in the
-;	choice of density
-;
-;	bits 0-3:	select that drive
-;	bit 4:		side (must rewrite each drive change)
-;	bit 5:		precompensation (not set here but in the I/O ops)
-;	bit 6:		synchronize I/O by stalling the CPU (don't set this)
-;	bit 7:		set for double density (MFM)
-;
-;
-_fd_motor_on:
-	ret
-
-;
-;	C interface fd_motor_off(void)
-;
-;	Turns off the drive motors, deselects all drives
-;
-_fd_motor_off:
-	ret
 
 	.area _COMMONDATA
 curdrive:
 	.db	0xff
-motor_running:
-	.db	0
 fdcctrl:
 	.db	0
 fdc_active:
