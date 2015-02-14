@@ -1,6 +1,6 @@
 
-DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c 
-CSRCS = devfd.c devhd.c devlpr.c
+CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
+CSRCS += devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c
 COMMON_CSRCS = devmegasd.c
 DISCARD_CSRCS = discard.c
