@@ -15,6 +15,7 @@ Z80_TYPE		    .equ 2
 ; (18.432MHz) but this made the machine unstable.
 USE_FANCY_MONITOR           .equ 1            ; disabling this saves around 0.5KB
 CPU_CLOCK_KHZ               .equ 16000        ; 16MHz is the stock crystal
+TICKSPERSEC                 .equ 40           ; timer interrupt rate (Hz)
 
 PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100

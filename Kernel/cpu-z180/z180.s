@@ -46,11 +46,6 @@
         .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; Constant used for timer configuration
-; -----------------------------------------------------------------------------
-TIMER_TICK_RATE = 100 ; Hz
-
-; -----------------------------------------------------------------------------
 ; Initialisation code
 ; -----------------------------------------------------------------------------
         .area _DISCARD
@@ -181,7 +176,7 @@ z180_init_hardware:
         ; set up system tick timer
         xor a
         out0 (TIME_TCR), a
-        ld hl, #(CPU_CLOCK_KHZ * (1000/20) / TIMER_TICK_RATE) ; timer ticks at PHI/20
+        ld hl, #(CPU_CLOCK_KHZ * (1000/20) / TICKSPERSEC) ; timer ticks at PHI/20
         out0 (TIME_RLDR0L), l
         out0 (TIME_RLDR0H), h
         ld a, #0x11         ; enable downcounting and interrupts for timer 0 only

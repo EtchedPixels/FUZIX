@@ -21,11 +21,11 @@
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
 
-#define TICKSPERSEC 100U   /* Ticks per second */
+#define TICKSPERSEC 40U     /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
-#define PROC_SIZE   64	  /* Memory needed per process */
+#define PROC_SIZE   64      /* Memory needed per process */
 
 /* WRS: this is probably wrong -- we want to swap the full 64K minus the common code */
 /* For now let's just use something and fix this up later when we have a swap device */
