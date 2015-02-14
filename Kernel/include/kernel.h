@@ -580,12 +580,6 @@ struct selmap {
 extern void trap_monitor(void);
 extern void idump(void);
 
-/* start.c */
-#ifndef CONFIG_BOOTDEVICE
-#define default_bootdevice	bootdevice
-#endif
-extern uint16_t default_bootdevice(unsigned char *s);
-
 /* platform/device.c */
 extern bool validdev(uint16_t dev);
 

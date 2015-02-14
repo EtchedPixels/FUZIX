@@ -83,25 +83,118 @@ void create_init(void)
 	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
 }
 
-/* to sensibly parse device names this needs to be platform-specific,
-   this default version parses minor numbers only */
-uint16_t default_bootdevice(unsigned char *s)
+/* Parse boot device name, based on platform defined BOOTDEVICENAMES string.
+ *
+ * This string is a list of device driver names delimited by commas. Device
+ * driver names should be listed in the same order as entries in dev_tab.
+ * Unbootable slots should be listed with an empty name. The position in the
+ * list of names specifies the top 8 bits of the minor number.
+ *
+ * Names which end in a # character expect a letter suffix which specifies bits
+ * 4--7 of the minor number.
+ *
+ * All names can be followed by an index number which is added to the minor
+ * number. The user can provide only this index number, in which case it
+ * specifies the full minor number.
+ *
+ * Some example BOOTDEVICENAMES:
+ * "hd#,fd"
+ *    hda   gives 0x0000
+ *    hda1  gives 0x0001
+ *    hdc   gives 0x0020
+ *    hdc3  gives 0x0023
+ *    fd0   gives 0x0100
+ *    fd15  gives 0x010F
+ *    17    gives 0x0011
+ *
+ * "fd,hd#,,ram"  (slot 2 in dev_tab is the tty device which is unbootable)
+ *    fd0   gives 0x0000
+ *    fd1   gives 0x0001
+ *    hda1  gives 0x0101
+ *    hdc3  gives 0x0123
+ *    ram7  gives 0x0307
+ *    17    gives 0x0011
+ */
+
+#ifndef BOOTDEVICENAMES
+#define BOOTDEVICENAMES "" /* numeric parsing only */
+#endif
+
+uint16_t bootdevice(const char *devname)
 {
-    unsigned int r = 0;
+	bool match = true;
+	unsigned int b = 0, n = 0;
+	const char *p, *bdn = BOOTDEVICENAMES;
+	char c, pc;
 
-    /* skip spaces */
-    while(*s == ' ')
-        s++;
+	/* skip spaces at start of string */
+	while(*devname == ' '){
+		devname++;
+	}
 
-    while(true){
-        if(*s >= '0' && *s <= '9'){
-            r = (r*10) + (*s - '0');
-        }else if(*s == '\r' || *s == '\n' || *s == 0){
-            return r;
-        }else
-            return BAD_ROOT_DEV;
-        s++;
-    }
+	p = devname;
+
+	/* first we try to the match device name */
+	while(true){
+		pc = *p;
+		if(pc >= 'A' && pc <= 'Z')
+			pc |= 0x20; /* lower case */
+		c = *bdn;
+
+		if(!c){
+			/* end of device names string */
+			break;
+		}else if(c == ','){
+			/* next device driver */
+			if(match == true && p != devname)
+				break;
+			p = devname;
+			b += 0x100;
+			match = true;
+			bdn++;
+			continue;
+		}else if(match && c == '#'){
+			/* parse device drive letter */
+			if(pc < 'a' || pc > 'p')
+				return BAD_ROOT_DEV;
+			b += ((pc-'a') << 4);
+			p++;
+			break;
+		}else if(match && pc != c){
+			match = false;
+		}
+		p++;
+		bdn++;
+	}
+
+	/* if we didn't match a device name, start over */
+	if(!match){
+		b = 0;
+		p = devname;
+	}
+
+	/* then we read an index number */
+	while(*p >= '0' && *p <= '9'){
+		n = (n*10) + (*p - '0');
+		p++;
+		match = true;
+	}
+
+	/* string ends in junk? */
+	switch(*p) {
+		case 0:
+		case '\n':
+		case '\r':
+		case ' ':
+			break;
+		default:
+			return BAD_ROOT_DEV;
+	}
+
+	if(match)
+		return (b + n);
+	else
+		return BAD_ROOT_DEV;
 }
 
 uint16_t get_root_dev(void)
@@ -117,7 +210,7 @@ uint16_t get_root_dev(void)
 		udata.u_base = (uint8_t*)&bootline;
 		udata.u_sysio = 1;
 		udata.u_count = sizeof(bootline)-1;
-		udata.u_euid = 0;	/* Always begin as superuser */
+		udata.u_euid = 0;		/* Always begin as superuser */
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
 		rd = bootdevice(bootline);

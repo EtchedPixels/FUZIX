@@ -14,8 +14,6 @@
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
-/* Platform defined bootdevice() */
-#define CONFIG_BOOTDEVICE
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	8
 #define MAP_SIZE	0xF000U
@@ -38,6 +36,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
+#define BOOTDEVICENAMES "hd#"
 
 //#define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
 #define NBUFS    10       /* Number of block buffers */
