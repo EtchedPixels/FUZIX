@@ -8,6 +8,7 @@
 	.area _STUBS
         .area _CONST
         .area _INITIALIZED
+        .area _INITIALIZER
 	;
 	;	We move	INITIALIZER into INITIALIZED at preparation time
 	;	then pack COMMONMEM.. end of INITIALIZED after DISCARD
@@ -17,7 +18,6 @@
         .area _BSEG
         .area _BSS
         .area _HEAP
-        .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
 	;
