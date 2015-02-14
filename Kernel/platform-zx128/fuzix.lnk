@@ -22,6 +22,8 @@ usermem.rel
 platform-zx128/devices.rel
 platform-zx128/devmdv.rel
 platform-zx128/microdrive.rel
+platform-zx128/devfd.rel
+platform-zx128/disciple.rel
 devio.rel
 filesys.rel
 process.rel

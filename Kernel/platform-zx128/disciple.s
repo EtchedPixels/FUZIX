@@ -359,6 +359,7 @@ _fd_motor_on:
 _fd_motor_off:
 	ret
 
+	.area _COMMONDATA
 curdrive:
 	.db	0xff
 motor_running:
