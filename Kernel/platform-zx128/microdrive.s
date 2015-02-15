@@ -39,8 +39,8 @@
 
 		.area _COMMONMEM
 
-SECTORID	.equ	0x08		; FIXME - set real format up!
-CSUM		.equ	0x0E		; FIXME ditto
+SECTORID	.equ	0x01
+CSUM		.equ	0x0E
 
 nap_1ms:	push de
 		ld de, #87
@@ -279,6 +279,7 @@ mdv_fetch:	call mdv_find_hdr		; nz = not found
 ;	Turn all motors off
 ;
 mdv_motors_off:	ld a, #0xff
+		ld bc, #0x08EF
 		jr mdv_motor_a
 ;
 ;	Turn on motor for microdrive unit A
@@ -333,6 +334,8 @@ mdv_spin_up:
 ;	int mdv_motors_off(void)
 ;
 _mdv_motor_off:	call mdv_motors_off
+		xor a
+		out (0xfe), a
 ret0:
 		ld hl, #0
 		ret
@@ -359,14 +362,16 @@ _mdv_bread:
 		ld a, (_mdv_page)
 		or a
 		push af
-		call z, map_process_save
+		call nz, map_process_save
 		call mdv_fetch
-		jr z, ret0
+		jr nz, poprete
+		xor a
+poprete:
 		ld l, a
 		xor a
 		ld h, a
 		pop af
-		call z, map_kernel_restore
+		call nz, map_kernel_restore
 		ret
 
 _mdv_bwrite:
