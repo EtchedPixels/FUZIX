@@ -713,6 +713,8 @@ int yes(void)
     char line[20];
     /*int  fgets(); -- HP */
 
+    fflush(stdout);
+
     if (!fgets(line, sizeof(line), stdin) || (*line != 'y' && *line != 'Y'))
 	return (0);
 
