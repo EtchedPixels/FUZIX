@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     printf("Changing password for %s\n", pwd->pw_name);
-    if ( ((getuid() != 0)||(pwd->pw_uid=0)) && (pwd->pw_passwd[0] != 0) ) {
+    if ( ((getuid() != 0)||(pwd->pw_uid==0)) && (pwd->pw_passwd[0] != 0) ) {
 	pbuf = getpass("Old password: ");
 	salt[0] = pwd->pw_passwd[0];
 	salt[1] = pwd->pw_passwd[1];
