@@ -96,6 +96,8 @@ int yes(void)
 {
     char line[20];
 
+    fflush(stdout);
+
     if (!fgets(line, sizeof(line), stdin) || (*line != 'y' && *line != 'Y'))
 	return (0);
 

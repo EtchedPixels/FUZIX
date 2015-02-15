@@ -7,6 +7,7 @@ UZI (Unix Z80 Implementation) Utilities:  xfs2.c
  */
 
  /*LINTLIBRARY*/
+#include <time.h>
 #include <stdio.h>
 #include <strings.h>
 #include <stdint.h>
@@ -961,14 +962,17 @@ int getperm(inoptr ino)
  */
 void setftime(inoptr ino, int flag)
 {
+	time_t now;
 	ino->c_dirty = 1;
 
-	//if (flag & A_TIME)
-	//    rdtime(&(ino->c_node.i_atime));
-	//if (flag & M_TIME)
-	//    rdtime(&(ino->c_node.i_mtime));
-	//if (flag & C_TIME)
-	//    rdtime(&(ino->c_node.i_ctime));
+	now = time(NULL);
+
+	if (flag & A_TIME)
+		ino->c_node.i_atime = now;
+	if (flag & M_TIME)
+		ino->c_node.i_mtime = now;
+	if (flag & C_TIME)
+		ino->c_node.i_ctime = now;
 }
 
 
