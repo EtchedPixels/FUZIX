@@ -35,3 +35,4 @@ clean:
 
 image:
 	( cd ..; tools/bin2sna fuzix.sna )
+	( cd ..; tools/bin2z80 fuzix.z80 )
