@@ -13,6 +13,8 @@ tools/bintomdv: tools/bintomdv.c
 
 tools/bin2sna: tools/bin2sna.c
 
+tools/bin2z80: tools/bin2z80.c
+
 tools/bankld/sdldz80:
 	+(cd tools/bankld; make)
 
