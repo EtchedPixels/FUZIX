@@ -85,13 +85,14 @@ int sd_spi_init(uint8_t drive)
 
     sd_spi_clock(drive, false);
     for (n = 20; n; n--)
-        sd_spi_receive_byte(drive); /* 160 dummy clocks */
+        sd_spi_receive_byte(drive); /* send dummy clocks -- at least 80 required; we send 160 */
 
     card_type = CT_NONE;
+
     /* Enter Idle state */
     if (sd_send_command(drive, CMD0, 0) == 1) {
-        /* initialisation timeout 1 second */
-        timer = set_timer_sec(1);
+        /* initialisation timeout 2 seconds */
+        timer = set_timer_sec(2);
         if (sd_send_command(drive, CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
             /* Get trailing return value of R7 resp */
             for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
@@ -118,7 +119,7 @@ int sd_spi_init(uint8_t drive)
             /* Wait for leaving idle state */
             while(!timer_expired(timer) && sd_send_command(drive, cmd, 0));
             /* Set R/W block length to 512 */
-            if(timer_expired || sd_send_command(drive, CMD16, 512) != 0)
+            if(timer_expired(timer) || sd_send_command(drive, CMD16, 512) != 0)
                 card_type = CT_NONE;
         }
     }
