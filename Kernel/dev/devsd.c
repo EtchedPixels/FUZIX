@@ -104,7 +104,7 @@ int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     }
 
     /* Select the card and wait for ready */
-    sd_spi_raise_cs(drive);
+    sd_spi_release(drive); /* raise CS, then sends 8 clocks (some cards require this) */
     sd_spi_lower_cs(drive);
     if(sd_spi_wait(drive, true) != 0xFF)
         return 0xFF;
@@ -133,7 +133,7 @@ int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg)
     /* Receive command response */
     if (cmd == CMD12) 
         sd_spi_receive_byte(drive);     /* Skip a stuff byte when stop reading */
-    n = 10;                             /* Wait for a valid response in timeout of 10 attempts */
+    n = 20;                             /* Wait for a valid response */
     do{
         res = sd_spi_receive_byte(drive);
     }while ((res & 0x80) && --n);
