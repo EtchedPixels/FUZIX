@@ -121,7 +121,7 @@ int login(char *ttyname)
 
             /* loop until a valid user name is entered
              * and a shell is spawned */
-
+#ifndef SINGLE_USER
             for (;;) {
                 putstr("login: ");
                 while (read(0, buf, 20) < 0);    /* EINTR might happens because of the alarm() call below */
@@ -149,6 +149,16 @@ int login(char *ttyname)
                 alarm(2);
                 pause();
             }
+#else
+	{pwd->pd_uid=0;
+	 pwd->pw_gid=0;
+	 pwd->pw_passwd=0;
+	 strcpy(pwd->pw_name,"root");
+	 strcpy(pwd->pw_dir,"/");
+	 strcpy(pwd->pw_shell,"/bin/sh");
+	 spawn(pwd);
+	 }
+#endif
         }
     }
 }
