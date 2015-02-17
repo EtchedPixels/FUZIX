@@ -88,11 +88,16 @@ be SuperUser or owner, else Error (EPERM).
 
 arg_t _setuid(void)
 {
+#ifndef SINGLE_USER
 	if (super() || udata.u_ptab->p_uid == uid) {
 		udata.u_ptab->p_uid = uid;
 		udata.u_euid = uid;
 		return (0);
 	}
+#else
+	udata.u_ptab->p_uid = udata.u_euid = 0;
+	return (0);
+#endif
 	udata.u_error = EPERM;
 	return (-1);
 }
@@ -112,11 +117,16 @@ User or in Group to Set, else Error (EPERM).
 
 arg_t _setgid(void)
 {
+#ifndef SINGLE_USER
 	if (super() || udata.u_gid == gid) {
 		udata.u_gid = gid;
 		udata.u_egid = gid;
 		return (0);
 	}
+#else
+	udata.u_gid = udata.u_egid = 0;
+	return (0);
+#endif
 	udata.u_error = EPERM;
 	return (-1);
 }
