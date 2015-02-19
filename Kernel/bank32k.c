@@ -34,6 +34,8 @@
  *   then copy in the new one
  * - Provide a bank32_invalidate_cache definition to clear the cached page
  *   when it is freed.
+ * - Switch stacks when you switch to and from full kernel mapping to user
+ *   mappings as there is no common space for the kernel stacks.
  *
  *   If you are also doing swapping then you need to account for the cache
  *   by providing a swap_flush_cache() method (see swap.c)
