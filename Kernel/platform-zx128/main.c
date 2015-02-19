@@ -8,8 +8,8 @@ uint16_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
-  /* The live process also has 2 and the non running one 4 */
-  pagemap_add(6);
+  /* The live process also has 2 and the non running one 6 */
+  pagemap_add(4);
   pagemap_add(3);
 }
 
