@@ -1,5 +1,7 @@
-; 2013-12-21 William R Sowerbutts
-; TODO: this code is copied from z80pack. Need to rewrite for zx128.
+; Based on the Z80 Pack banked code
+;
+; Should unify this somewhat with lib/banked
+;
 
         .module tricks
 
@@ -32,8 +34,6 @@
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
 ; This function can have no arguments or auto variables.
 _switchout:
         di
@@ -58,6 +58,7 @@ _switchout:
 	ld hl, (U_DATA__U_PAGE)
 	ld a, l
 	ld bc, #0x7ffd
+	or #0x18
 	out (c), a
 
 	ld hl, #U_DATA
@@ -103,15 +104,17 @@ _switchin:
 	push hl ; far padding
 
 
-	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
-	pop de
 
 	; We are in DI so we can poke these directly but must not use the
 	; stack for this bit
 
         ld a, (hl)
+	or #0x18
+
+	; Need to deal with swap here
+
 	; Pages please !
 	ld bc, #0x7ffd
 	out (c), a
@@ -126,10 +129,21 @@ _switchin:
 	ldir
 	exx
 
+	;
+	;	 Get our stack back
+	;
+
 	ld a, (current_map)
 	ld bc, #0x7ffd
 	out (c), a
         
+	;	Is our low data in 0x8000 already or do we need to flip
+	;	it with bank 6
+
+	ld a, (low_bank)
+	cp (hl)
+	call nz, fliplow
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
@@ -218,14 +232,32 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET
+        ld de, #P_TAB__P_PAGE_OFFSET;		bank number
         add hl, de
         ; load p_page
         ld c, (hl)
 	ld hl, (U_DATA__U_PAGE)
 	ld a, l
 
+	;
+	; Copy the high page via the bounce buffer
+	;
+
+	push hl
 	call bankfork			;	do the bank to bank copy
+	pop hl
+
+	; FIXME: if we support small apps at C000-FBFF we need to tweak this
+	; Now copy the 0x8000-0xBFFF area directly
+
+	ld a, #0x06 + 0x18		;	low page alternate
+	ld bc, #0x7ffd
+	out (c), a
+
+	ld hl, #0x8000			; 	Fixed
+	ld de, #0xC000			;	Page we just mapped in
+	ld bc, #16384
+	ldir
 
 	; Copy done
 
@@ -242,11 +274,22 @@ _dofork:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 
+	;
+	; And back into the child
+	;
 	ld bc, #0x7ffd
 	ld a, (current_map)
 	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
+
+	;
+	; FIXME: at this point we may need to swap the page ptrs of the parent
+	; and child so that we end up with the right one owning 0x8000.
+	; Either that or we make the switchin/switchout intelligent about
+	; the exchange on a task switch over.
+	;
+
         pop bc
         pop bc
         pop bc
@@ -281,14 +324,9 @@ _dofork:
 ;	Note: this needs reviewing. We now have a lot more program memory
 ;	we can use with a lazy copying model
 ;
-;
-;	FIXME: need to make this copy 0xC000-0xFFFF bank to bank
-;	and 0x8000 to the other bank
-;
 bankfork:
-;	ld bc, #(0x4000 - 768)		;	16K minus the uarea stash
-
-	ld b, #0x3D		; 40 x 256 minus 3 sets for the uarea stash
+	or #0x18		; ROM bits for the bank
+	ld b, #0x3C		; 40 x 256 minus 4 sets for the uarea stash/irqs
 bankfork_1:
 	ld hl, #0xC000		; base of memory to fork (vectors included)
 	push bc			; Save our counter and also child offset
@@ -306,6 +344,7 @@ bankfork_1:
 	ld a, c			; switch to the child
 	push bc			; save the bank pointers
 	ld bc, #0x7ffd
+	or #0x18		; ROM bits
 	out (c), a
 	ld hl, #bouncebuffer
 	ld bc, #256
@@ -316,7 +355,42 @@ bankfork_1:
 	pop bc
 	djnz bankfork_1		; rinse, repeat
 	ret
+;
+;	Flip low banks over. Interrupts must be off as the low banks don't
+;	have the IM2 vectors
+;
+fliplow:
+	exx
+	ld hl, #0x8000
+	ld de, #0xc000
+	ld a, #6 + 0x18
+	ld bc, #0x7ffd
+	out (c), a
+	;
+	;	No stack use between here and restoring the map
+	;
+flip2:
+	ld b, #0		; 16K in 256 bytes
+flip1:
+	ld c, (hl)
+	ld a, (de)
+	ex de, hl
+	ld (hl), c
+	ld (de), a
+	inc hl
+	inc de
+	djnz flip1
+	xor a
+	cp d			; Wrapped to 0x0000 ?
+	jr nz, flip2
 
+	ld a, (current_map)
+	ld bc, #0x7ffd
+	out (c), a
+	exx
+	ld a, (hl)		; Update low bank number
+	ld (low_bank), a
+	ret
 ;
 ;	For the moment
 ;
@@ -328,3 +402,5 @@ bouncebuffer:
 ;	a true common so it's even easier. We never use both at once
 ;	so share with bouncebuffer
 _swapstack:
+low_bank:
+	.db 0
