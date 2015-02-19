@@ -16,7 +16,7 @@ C000-FFFF
 	3:	User process
 	4:	User process
 	5:	Mapped at 0x4000-0x7FFF (Kernel data/common)
-	6:	User process
+	6:	User process (holds the 0x8000-BFFF of the other task)
 	7:	CODE3, Display + Video (plenty of room)
 
 Which gives us the ability to run 16K and 32K processes although we'd need
