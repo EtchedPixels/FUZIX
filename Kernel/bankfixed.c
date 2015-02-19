@@ -81,6 +81,7 @@ uint16_t pagemap_mem_used(void)
 	return (pfmax - pfptr) * (MAP_SIZE >> 10);
 }
 
+#ifdef SWAPDEV
 /*
  *	Swap out the memory of a process to make room
  *	for something else
@@ -93,29 +94,24 @@ int swapout(ptptr p)
 
 	swapproc = p;
 
-	if (page) {
+	if (!page)
+		panic("%x: process already swapped!\n", p);
 #ifdef DEBUG
-		kprintf("Swapping out %x (%d)\n", p, p->p_page);
+	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif
-		/* Are we out of swap ? */
-		map = swapmap_alloc();
-		if (map == 0)
-			return ENOMEM;
-                flush_cache(p);
-		blk = map * SWAP_SIZE;
-		/* Write the app (and possibly the uarea etc..) to disk */
-		swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-			  SWAPBASE);
-		pagemap_free(p);
-		p->p_page = 0;
-		p->p_page2 = map;
+	/* Are we out of swap ? */
+	map = swapmap_alloc();
+	if (map == 0)
+		return ENOMEM;
+	blk = map * SWAP_SIZE;
+	/* Write the app (and possibly the uarea etc..) to disk */
+	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
+		  SWAPBASE);
+	pagemap_free(p);
+	p->p_page = 0;
+	p->p_page2 = map;
 #ifdef DEBUG
-		kprintf("%x: swapout done %d\n", p, p->p_page);
-#endif
-	}
-#ifdef DEBUG
-	else
-		kprintf("%x: process already swapped!\n", p);
+	kprintf("%x: swapout done %d\n", p, p->p_page);
 #endif
 	return 0;
 }
@@ -145,5 +141,7 @@ void swapin(ptptr p)
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif
 }
+
+#endif
 
 #endif
