@@ -155,4 +155,92 @@ uint16_t pagemap_mem_used(void)
 	return pfptr << 4;
 }
 
+#ifdef SWAPDEV
+
+/*
+ *	Swap out the memory of a process to make room
+ *	for something else. For bank16k do this as four operations
+ *	ready for when we pass page values not processes to the drivers
+ */
+
+int swapout(ptptr p)
+{
+	uint16_t page = p->p_page;
+	uint16_t blk;
+	uint16_t map;
+	uint16_t base = SWAPBASE;
+	uint16_t size = (0x4000 - SWAPBASE) >> 9;
+
+	swapproc = p;
+
+	if (page)
+		panic("%x: process already swapped!\n", p);
+#ifdef DEBUG
+	kprintf("Swapping out %x (%d)\n", p, p->p_page);
+#endif
+
+	/* Are we out of swap ? */
+	map = swapmap_alloc();
+	if (map == 0)
+		return ENOMEM;
+	blk = map * SWAP_SIZE;
+	/* Write the app (and possibly the uarea etc..) to disk */
+	for (i = 0; i < 4; i ++) {
+		swapwrite(SWAPDEV, blk, size, base);
+		base += 0x4000;
+		/* Last bank is determined by SWAP SIZE. We do the maths
+		   in 512's (0x60 = 0xC000) */
+		if (i == 3)
+			size = SWAP_SIZE - 0x60;
+		else
+			size = 0x20;
+	}
+	pagemap_free(p);
+	p->p_page = 0;
+	p->p_page2 = map;
+
+#ifdef DEBUG
+	kprintf("%x: swapout done %d\n", p, p->p_page);
+#endif
+	return 0;
+}
+
+/*
+ * Swap ourself in: must be on the swap stack when we do this
+ */
+void swapin(ptptr p)
+{
+	uint16_t blk = p->p_page2 * SWAP_SIZE;
+	uint16_t base = SWAPBASE;
+	uint16_t size = (0x4000 - SWAPBASE) >> 9;
+
+#ifdef DEBUG
+	kprintf("Swapin %x, %d\n", p, p->p_page);
+#endif
+	if (!p->p_page) {
+		kprintf("%x: nopage!\n", p);
+		return;
+	}
+
+	/* Return our swap */
+	swapmap_add(p->p_page2);
+
+	swapproc = p;		/* always ourself */
+	for (i = 0; i < 4; i ++) {
+		swapread(SWAPDEV, blk, size, base);
+		base += 0x4000;
+		/* Last bank is determined by SWAP SIZE. We do the maths
+		   in 512's (0x60 = 0xC000) */
+		if (i == 3)
+			size = SWAP_SIZE - 0x60;
+		else
+			size = 0x20;	/* 16 K */
+	}
+#ifdef DEBUG
+	kprintf("%x: swapin done %d\n", p, p->p_page);
+#endif
+}
+
+#endif
+
 #endif
