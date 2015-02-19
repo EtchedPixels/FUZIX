@@ -11,10 +11,6 @@
 
 #ifdef SWAPDEV
 
-#ifndef UDATA_SWAPSIZE
-#define UDATA_BLOCKS	0
-#endif
-
 #ifndef CONFIG_COMMON_COPY
 #define flush_cache(p)	do {} while(0)
 #endif
@@ -63,9 +59,6 @@ int swapout(ptptr p)
 	uint16_t page = p->p_page;
 	uint16_t blk;
 	uint16_t map;
-#ifdef UDATA_SWAPSIZE
-	uint8_t *ptr;
-#endif
 
 	swapproc = p;
 
@@ -79,16 +72,8 @@ int swapout(ptptr p)
                 flush_cache(p);
 		map = swapmap[--swapptr];
 		blk = map * SWAP_SIZE;
-#ifdef UDATA_SWAPSIZE
-		/* Allow the platform to do things like handle the uarea stash */
-		ptr = swapout_prepare_uarea(p);
-		/* Write to disk if the platform asks us */
-		if (ptr)
-			swapwrite(SWAPDEV, blk, UDATA_SWAPSIZE,
-				  ptr);
-#endif
 		/* Write the app (and possibly the uarea etc..) to disk */
-		swapwrite(SWAPDEV, blk + UDATA_BLOCKS, SWAPTOP - SWAPBASE,
+		swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
 			  SWAPBASE);
 		pagemap_free(p);
 		p->p_page = 0;
@@ -110,9 +95,6 @@ int swapout(ptptr p)
 static void swapin(ptptr p)
 {
 	uint16_t blk = p->p_page2 * SWAP_SIZE;
-#ifdef UDATA_SWAPSIZE
-	uint8_t *ptr;
-#endif
 
 #ifdef DEBUG
 	kprintf("Swapin %x, %d\n", p, p->p_page);
@@ -126,13 +108,8 @@ static void swapin(ptptr p)
 	swapmap[swapptr++] = p->p_page2;
 
 	swapproc = p;		/* always ourself */
-	swapread(SWAPDEV, blk + UDATA_BLOCKS, SWAPTOP - SWAPBASE,
+	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE,
 		 SWAPBASE);
-#ifdef UDATA_SWAPSIZE
-	ptr = swapin_prepare_uarea(p);
-	if (ptr)
-		swapread(SWAPDEV, blk, UDATA_SWAPSIZE, (uint8_t *) &udata);
-#endif
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif
