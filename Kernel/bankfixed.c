@@ -33,6 +33,10 @@
 
 #ifdef CONFIG_BANK_FIXED
 
+#ifndef CONFIG_COMMON_COPY
+#define flush_cache(p)	do {} while(0)
+#endif
+
 /* Kernel is 0, apps 1,2,3 etc */
 static unsigned char pfree[MAX_MAPS];
 static unsigned char pfptr = 0;
@@ -75,6 +79,71 @@ int pagemap_realloc(uint16_t size)
 uint16_t pagemap_mem_used(void)
 {
 	return (pfmax - pfptr) * (MAP_SIZE >> 10);
+}
+
+/*
+ *	Swap out the memory of a process to make room
+ *	for something else
+ */
+int swapout(ptptr p)
+{
+	uint16_t page = p->p_page;
+	uint16_t blk;
+	uint16_t map;
+
+	swapproc = p;
+
+	if (page) {
+#ifdef DEBUG
+		kprintf("Swapping out %x (%d)\n", p, p->p_page);
+#endif
+		/* Are we out of swap ? */
+		map = swapmap_alloc();
+		if (map == 0)
+			return ENOMEM;
+                flush_cache(p);
+		blk = map * SWAP_SIZE;
+		/* Write the app (and possibly the uarea etc..) to disk */
+		swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
+			  SWAPBASE);
+		pagemap_free(p);
+		p->p_page = 0;
+		p->p_page2 = map;
+#ifdef DEBUG
+		kprintf("%x: swapout done %d\n", p, p->p_page);
+#endif
+	}
+#ifdef DEBUG
+	else
+		kprintf("%x: process already swapped!\n", p);
+#endif
+	return 0;
+}
+
+/*
+ * Swap ourself in: must be on the swap stack when we do this
+ */
+void swapin(ptptr p)
+{
+	uint16_t blk = p->p_page2 * SWAP_SIZE;
+
+#ifdef DEBUG
+	kprintf("Swapin %x, %d\n", p, p->p_page);
+#endif
+	if (!p->p_page) {
+		kprintf("%x: nopage!\n", p);
+		return;
+	}
+
+	/* Return our swap */
+	swapmap_add(p->p_page2);
+
+	swapproc = p;		/* always ourself */
+	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE,
+		 SWAPBASE);
+#ifdef DEBUG
+	kprintf("%x: swapin done %d\n", p, p->p_page);
+#endif
 }
 
 #endif
