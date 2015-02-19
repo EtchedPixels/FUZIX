@@ -65,14 +65,24 @@
             .area _COMMONMEM
 
 _trap_monitor:
+	;
+	;	Not so much a monitor as wait for space
+	;
+	ld a, #0x7F
+	in a, (0xFE)
+	rra
+	jr c, _trap_monitor
+
+_trap_reboot:
 	di
-	halt
+	im 1
+	ld bc, #0x7ffd
+	xor a		; 128K ROM, initial banks, low screen
+	out (c), a
+        rst 0		; Into the ROM
 
 platform_interrupt_all:
         ret
-
-_trap_reboot:
-        rst 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (above 0xC000, only accessible when the kernel is mapped)
@@ -239,10 +249,11 @@ map_restore:
 	pop af
 	ret
 
-
-; outchar: TODO: add something here (char in A). Current port #15 is emulator stub
+;
+;	We have no easy serial debug output instead just breakpoint this
+;	address when debugging.
+;
 outchar:
-        out (#0x15), A
         ret
 _kernel_flag:
         .db 1
