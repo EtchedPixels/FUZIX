@@ -55,9 +55,6 @@
 #define PROGTOP     0xFC00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   32	  /* Memory needed per process */
 
-#define UDATA_BLOCKS	0	/* We swap the stash not the uarea */
-#define UDATA_SWAPSIZE	0
-
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
