@@ -31,7 +31,7 @@ void swapmap_add(uint8_t swap)
 	swapmap[swapptr++] = swap;
 }
 
-static int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
+int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
                     uint8_t *buf)
 {
 	swapbase = buf;
@@ -41,7 +41,7 @@ static int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
 }
 
 
-static int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
+int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
 		     uint8_t *buf)
 {
 	swapbase = buf;
@@ -92,7 +92,7 @@ int swapout(ptptr p)
 /*
  * Swap ourself in: must be on the swap stack when we do this
  */
-static void swapin(ptptr p)
+void swapin(ptptr p)
 {
 	uint16_t blk = p->p_page2 * SWAP_SIZE;
 

@@ -737,9 +737,16 @@ extern uint8_t *swapbase;
 extern unsigned int swapcnt;
 extern blkno_t swapblk;
 
+extern int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
+                    uint8_t *buf);
+extern int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
+		     uint8_t *buf);
+
 extern void swapmap_add(uint8_t swap);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
+extern int swapout(ptptr p);
+extern void swapin(ptptr p);
 
 /* syscalls_fs.c, syscalls_proc.c, syscall_other.c etc */
 extern void updoff(void);
@@ -763,8 +770,6 @@ extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
 extern int pagemap_realloc(usize_t p);
 extern uaddr_t pagemap_mem_used(void);
-extern uint8_t *swapout_prepare_uarea(ptptr p);
-extern uint8_t *swapin_prepare_uarea(ptptr p);
 extern void map_init(void);
 extern void platform_idle(void);
 extern uint8_t rtc_secs(void);
