@@ -743,6 +743,7 @@ extern int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
 		     uint8_t *buf);
 
 extern void swapmap_add(uint8_t swap);
+extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
 extern int swapout(ptptr p);
