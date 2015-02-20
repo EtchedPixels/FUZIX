@@ -242,8 +242,6 @@ int cdwrite(uint16_t dev, uint8_t flag)
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 1, flag));
 }
 
-// WRS: swapread(), swapwrite() removed.
-
 int d_open(uint16_t dev, uint8_t flag)
 {
 	if (!validdev(dev))
@@ -282,6 +280,8 @@ int d_flush(uint16_t dev)
 {
 	if (!validdev(dev))
 		panic("d_flush: bad device");
+        /* Until we do a device specific flush for bigger boxen */
+        _sync();
 	return (*dev_tab[major(dev)].dev_ioctl) (minor(dev), BLKFLSBUF, 0);
 }
 
