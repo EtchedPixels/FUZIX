@@ -15,6 +15,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl enaslt
 	    .globl _mapslot_bank1
 	    .globl _mapslot_bank2
 	    .globl _kernel_flag
@@ -314,18 +315,15 @@ map_save:   push hl
 ;   can be in bank1 or 2 because those are the ones usually used to
 ;   map the io ports.
 ;
-;   XXX: this code is duplicated in _BOOT, but I see no way to remove it from
-;         from there and still be able to boot; specially if we have a >48Kb kernel
-
 		.area _CODE
 
 _mapslot_bank1:
 		ld hl,#0x4000
-		jp mapslot
+		jr enaslt
 _mapslot_bank2:
 		ld hl,#0x8000
-		jp mapslot
-mapslot:
+
+enaslt:
 		call setprm         ; calculate bit pattern and mask code
 		jp m, mapsec        ; if expanded set secondary first
 		in a,(0xa8)
@@ -338,7 +336,7 @@ mapsec:
 		; here need to store the slot that is being set....
 		call setexp         ; set secondary slot
 		pop hl
-		jr mapslot
+		jr enaslt
 
 		; calculate bit pattern and mask
 setprm:

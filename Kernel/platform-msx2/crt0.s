@@ -2,7 +2,6 @@
 	        ; WRS: Note we list all our segments here, even though
 	        ; we don't use them all, because their ordering is set
 	        ; when they are first seen.	
-		.area _BOOT
 	        .area _CODE
 	        .area _CODE2
 		.area _VIDEO
@@ -41,10 +40,11 @@
 		.globl _vdpport
 		.globl _infobits
 		.globl _machine_type
-		.globl find_ram
 
 	        ; startup code @0x100
 	        .area _CODE
+
+		.include "msx2.def"
 
 ;
 ; Execution begins with us correctly mapped and at 0x0x100
@@ -55,26 +55,28 @@
 		.ds 0x100
 start:
 		di
-		; Debug port
 		ld a, #0x23
-		out (0x2e), a
+		out (OPENMSX_DEBUG1), a
 		ld a, #'@'
-		out (0x2f), a
+		out (OPENMSX_DEBUG2), a
+		;
+		; unstash info bits
+		;
+		pop af
+		pop hl
+		pop bc
+		pop de
 
-		; read slot before switching ram page
-		ld a,(_slotram)
-		ld hl,#0x4000
+		ld sp, #kstack_top
+		;
+		; set ram in slot_page1
+		;
+		ex af,af'
+		ld a,d
+		exx
+		ld hl, #PAGE1_BASE
 		call enaslt
 
-		ld a,(_slotram)
-		ld d,a
-		ld a,(_slotrom)
-		ld e,a
-		ld bc,(_infobits)
-		ld hl,(_vdpport)
-		ld a,(_machine_type)
-		exx
-		ex af,af'
 		; move the common memory where it belongs
 		ld hl, #s__INITIALIZER
 		ld de, #s__COMMONMEM
@@ -108,6 +110,6 @@ start:
 		call init_hardware
 		call _fuzix_main
 		di
-stop:	halt
+stop:		halt
 		jr stop
 
