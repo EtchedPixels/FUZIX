@@ -73,6 +73,6 @@ Setting It Up
 	# Once we get that far you can also put a filesystem in the lower
 	# blocks
 	#
-	sdltrs -emtsafe -disk0 mydisk.jv3 -model 4p
+	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3 -model 4p
 	#
 	# and remember to mark the fd volume as writeable
