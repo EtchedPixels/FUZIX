@@ -41,6 +41,9 @@ void platform_interrupt(void)
         case Z180_INT0:
             tty_pollirq_escc();
             return;
+        case Z180_INT2:
+            tty_pollirq_com1();
+            return;
         case Z180_INT_TIMER0:
             z180_timer_interrupt(); 
             return;

@@ -1,9 +1,10 @@
+#define _DEVTTY_PRIVATE
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <z180.h>
 #include "config.h"
+#include <z180.h>
 #ifdef CONFIG_P112_FLOPPY
 #include "devfd.h"
 #endif
@@ -28,3 +29,20 @@ void map_init(void)
     copy_and_map_process(&init_process->p_page);
     /* kernel bank udata (0x300 bytes) is never used again -- could be reused? */
 }
+
+/* called from devices.c to set up tty5 */
+void tty_hw_init(void)
+{
+    /* Note: setup for tty1, tty2 (ESCC) is found in p112.s */
+
+    /* setup for tty5 (16550) for 115200,8n1 */
+    /* 37C655GT feature: Out2 in MCR is the master UART interrupt enable */
+    TTY_COM1_MCR = 0x0B; /* disable loopback, set DTR and RTS, enable Out2 */
+    TTY_COM1_LCR = 0x80; /* enable DLAB to access divisor */
+    TTY_COM1_DLL = 0x01; /* program divisor for 115200bps */
+    TTY_COM1_DLM = 0x00;
+    TTY_COM1_LCR = 0x03; /* disable DLAB, program 8 bits, no parity */
+    TTY_COM1_FCR = 0x07; /* enable and clear FIFOs, interrupt threshold 1 byte */
+    TTY_COM1_IER = 0x01; /* enable only receive interrupts */
+}
+

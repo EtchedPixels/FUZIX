@@ -550,8 +550,8 @@ _dofork:
         ; MUST arrange for this table to be 32-byte aligned
         ; linked immediately after commonmem.s
 interrupt_table:
-        .dw z180_irq_unused         ;     1    INT1 external interrupt - ? disconnected
-        .dw z180_irq_unused         ;     2    INT2 external interrupt - SD card socket event
+        .dw z180_irq1               ;     1    INT1 external interrupt - ? disconnected
+        .dw z180_irq2               ;     2    INT2 external interrupt - SD card socket event
         .dw z180_irq3               ;     3    Timer 0
         .dw z180_irq_unused         ;     4    Timer 1
         .dw z180_irq_unused         ;     5    DMA 0
@@ -575,15 +575,15 @@ z80_irq:
         xor a
         jr z180_irqgo
 
-; z180_irq1:
-;         push af
-;         ld a, #1
-;         jr z180_irqgo
-; 
-; z180_irq2:
-;         push af
-;         ld a, #2
-;         jr z180_irqgo
+z180_irq1:
+        push af
+        ld a, #1
+        jr z180_irqgo
+
+z180_irq2:
+        push af
+        ld a, #2
+        jr z180_irqgo
 
 z180_irq3:
         push af
