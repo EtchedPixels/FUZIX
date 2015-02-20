@@ -6,29 +6,29 @@ this recipe should work on Mac.
 - Ensure you have the correct compiler and tools installed
 
   Z80:
-	SDCC 3.4 for the kernel
+	SDCC 3.4 for the kernel (3.4.2 recommended)
 	zmac for some of the boot blocks (making these build with sdasz80
 	would be a welcome contribution)
 
   6502:
-	CC65 (You will need to build from the current source tree
-	at this point or the compiler will fail to build the code)
+	CC65 (You will need to build from the fork in EtchedPixels github
+	at this point to get --all-fastcall)
 
   6809:
-	gcc-4.6.4 for m6809
+	gcc-4.6.4 for m6809	[Hint: build it on 32bit]
 	lwtools
 
 
-- Set TARGET amd CPU in the top level Makefile
+- Set TARGET in the top level Makefile
 
 - For SDCC pick one of the 3 lines with different allocs-per-node. 30,000
   is a good development number, 200000 takes a while but produces better
   code while 1000000 takes hours but produces a fair bit smaller binary
 
-- The path to the SDCC library is hardcoded in platform/*.lnk. That also
-  wants fixing. It expects it in /usr/share/sdcc/lib/z80
+- The path to the SDCC library is guessed by the Makefile but can be set
+  by exporting SDCC_LIB to point at the "/lib" directory of SDCC.
 
-- make will build a fuzix.bin
+- make will build a fuzix.bin, and on some other platforms other files.
 
 - See the platform/README for further instructions on assembling a final
   image. Usually you need to build a file system, dd the kernel into the
@@ -39,13 +39,21 @@ For testing:
 
 6809 - uses xroar, but replaces the ROMs with the built image
 
+MSX2 - OpenMSX (currently you need a snapshot to get the SD card working)
+
 MTX512 - uses memu. Not yet tested on a Remomotech
 
+N8VEM Mark 4 - real hardware only
+
 NC100 - includes the bits to run under nc100emu
+
+PC112 - real hardware only
 
 PCW8256 - boots under Joyce
 
 SocZ80 - real hardware only
+
+TGL6502 - uses the emulator code that goes with the tgl6502 distro
 
 TRS80 - tested on sdltrs
 
