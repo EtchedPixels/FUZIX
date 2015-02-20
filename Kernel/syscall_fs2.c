@@ -186,6 +186,10 @@ static arg_t chmod_op(inoptr ino)
 {
 	if (ino->c_node.i_uid != udata.u_euid && esuper())
 		return (-1);
+	if (ino->c_flags & CRDONLY) {
+		udata.u_error = EROFS;
+		return -1;
+	}
 
 	ino->c_node.i_mode =
 	    (mode & MODE_MASK) | (ino->c_node.i_mode & F_MASK);
@@ -242,6 +246,10 @@ static int chown_op(inoptr ino)
 {
 	if (ino->c_node.i_uid != udata.u_euid && esuper())
 		return (-1);
+	if (ino->c_flags & CRDONLY) {
+		udata.u_error = EROFS;
+		return -1;
+	}
 	ino->c_node.i_uid = owner;
 	ino->c_node.i_gid = group;
 	setftime(ino, C_TIME);
@@ -308,6 +316,10 @@ arg_t _utime(void)
 
 	if (!(ino = n_open(file, NULLINOPTR)))
 		return (-1);
+	if (ino->c_flags & CRDONLY) {
+		udata.u_error = EROFS;
+		goto out2;
+	}
 	/* Special case in the Unix API - NULL means now */
 	if (buf) {
 	        if (ino->c_node.i_uid != udata.u_euid && esuper())
@@ -363,6 +375,10 @@ arg_t _acct(void)
                         udata.u_error = EINVAL;
                         return -1;
                 }
+		if (ino->c_flags & CRDONLY) {
+			udata.u_error = EROFS;
+			return -1;
+		}
         	acct_fh = udata.u_files[fd];
         	++of_tab[acct_fh].o_refs;
         }
@@ -473,11 +489,17 @@ arg_t _open(void)
 	perm = getperm(ino);
 	if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
 		udata.u_error = EPERM;
-		goto cantopen;
+		goto idrop;
 	}
-	if (getmode(ino) == F_DIR && w) {
-		udata.u_error = EISDIR;
-		goto cantopen;
+	if (w) {
+		if (getmode(ino) == F_DIR ) {
+			udata.u_error = EISDIR;
+			goto idrop;
+		}
+		if (ino->c_flags & CRDONLY) {
+			udata.u_error = EROFS;
+			goto idrop;
+		}
 	}
 	itmp = ino;
 	/* d_open may block and thus ino may become invalid as may
@@ -485,12 +507,13 @@ arg_t _open(void)
 	if (isdevice(ino)
 	    && d_open((int) ino->c_node.i_addr[0], flag) != 0) {
 		udata.u_error = ENXIO;
-		goto cantopen;
+		goto idrop;
 	}
 	/* get the static pointer back */
 	ino = itmp;
 	if (trunc && getmode(ino) == F_REG) {
-		f_trunc(ino);
+		if (f_trunc(ino))
+			goto idrop;
 		for (j = 0; j < OFTSIZE; ++j)
 			/* Arguably should fix at read/write */
 			if (of_tab[j].o_inode == ino)

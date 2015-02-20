@@ -187,6 +187,7 @@ inoptr i_open(uint16_t dev, uint16_t ino)
 {
     struct dinode *buf;
     inoptr nindex, j;
+    struct mount *m;
     bool isnew = false;
 
     if(!validdev(dev))
@@ -201,9 +202,11 @@ inoptr i_open(uint16_t dev, uint16_t ino)
         }
     }
 
+    m = fs_tab_get(dev);
+
     /* Maybe make this DEBUG only eventually - the fs_tab_get cost
        is higher than ideal */
-    if(ino < ROOTINODE || ino >= (fs_tab_get(dev)->m_fs->s_isize - 2) * 8) {
+    if(ino < ROOTINODE || ino >= (m->m_fs->s_isize - 2) * 8) {
         kputs("i_open: bad inode number\n");
         return NULLINODE;
     }
@@ -232,7 +235,7 @@ inoptr i_open(uint16_t dev, uint16_t ino)
     nindex->c_dev = dev;
     nindex->c_num = ino;
     nindex->c_magic = CMAGIC;
-
+    nindex->c_flags = (m->m_flags & MS_RDONLY) ? CRDONLY : 0;
 found:
     if(isnew) {
         if(nindex->c_node.i_nlink || nindex->c_node.i_mode & F_MASK)
@@ -265,6 +268,10 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     struct direct curentry;
     int i;
 
+    if (wd->c_flags & CRDONLY) {
+        udata.u_error = EROFS;
+        return false;
+    }
     if(!(getperm(wd) & OTH_WR))
     {
         udata.u_error = EPERM;
@@ -394,6 +401,11 @@ inoptr newfile(inoptr pino, char *name)
     uint8_t j;
 
     /* First see if parent is writeable */
+    if (pino->c_flags & CRDONLY) {
+        udata.u_error = EROFS;
+        goto nogood;
+    }
+
     if(!(getperm(pino) & OTH_WR))
         goto nogood;
 
@@ -468,6 +480,7 @@ uint16_t i_alloc(uint16_t devno)
 {
     staticfast fsptr dev;
     staticfast blkno_t blk;
+    staticfast struct mount *m;
     struct dinode *buf;
     staticfast uint16_t j;
     uint16_t k;
@@ -475,6 +488,7 @@ uint16_t i_alloc(uint16_t devno)
 
     if(baddev(dev = getdev(devno)))
         goto corrupt;
+    m = fs_tab_get(devno);
 
 tryagain:
     if(dev->s_ninode) {
@@ -800,11 +814,15 @@ uint16_t devnum(inoptr ino)
 /* F_trunc frees all the blocks associated with the file, if it
  * is a disk file.
  */
-void f_trunc(inoptr ino)
+int f_trunc(inoptr ino)
 {
     uint16_t dev;
     int8_t j;
 
+    if (ino->c_flags & CRDONLY) {
+        udata.u_error = EROFS;
+        return -1;
+    }
     dev = ino->c_dev;
 
     /* First deallocate the double indirect blocks */
@@ -821,6 +839,7 @@ void f_trunc(inoptr ino)
 
     ino->c_flags |= CDIRTY;
     ino->c_node.i_size = 0;
+    return 0;
 }
 
 
@@ -1015,6 +1034,9 @@ uint8_t getperm(inoptr ino)
 */
 void setftime(inoptr ino, uint8_t flag)
 {
+    if (ino->c_flags & CRDONLY)
+        return;
+
     ino->c_flags |= CDIRTY;
 
     if(flag & A_TIME)

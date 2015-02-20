@@ -191,6 +191,7 @@ typedef struct cinode { // note: exists in memory *and* on disk
     uint8_t    c_refs;            /* In-core reference count */
     uint8_t    c_flags;           
 #define CDIRTY		0x80	/* Modified flag. */
+#define CRDONLY		0x40	/* On a read only file system */
 #define CFLOCK		0x0F	/* flock bits */
 #define CFLEX		0x0F	/* locked exclusive */
 #define CFMAX		0x0E	/* highest shared lock count permitted */
@@ -672,7 +673,7 @@ extern void i_ref(inoptr ino);
 extern void i_deref(inoptr ino);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
-extern void f_trunc(inoptr ino);
+extern int f_trunc(inoptr ino);
 extern void freeblk(uint16_t dev, blkno_t blk, uint8_t level);
 extern blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
 extern void validblk(uint16_t dev, blkno_t num);
