@@ -22,6 +22,10 @@ mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
 mknod tty4  20660 516
+mknod tty5  20660 517
+mknod tty6  20660 518
+mknod tty7  20660 519
+mknod tty8  20660 520
 mknod hda   60660 0
 mknod hda1  60660 1
 mknod hda2  60660 2
