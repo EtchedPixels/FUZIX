@@ -174,7 +174,7 @@ int swapout(ptptr p)
 	swapproc = p;
 
 	if (page)
-		panic("%x: process already swapped!\n", p);
+		panic("process already swapped!\n");
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif
