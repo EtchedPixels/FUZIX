@@ -61,7 +61,7 @@ void readi(inoptr ino, uint8_t flag)
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
 #if defined(read_direct)
-			if (!ispipe && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
+			if (!ispipe && pblk != NULLBLK && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
 				/* we can transfer direct from disk to the userspace buffer */
 				off_t uostash;
 				usize_t ucstash;
