@@ -466,7 +466,7 @@ fsptr getdev(uint16_t dev)
 /* Returns true if the magic number of a superblock is corrupt.
 */
 
-bool baddev(fsptr dev)
+bool inline baddev(fsptr dev)
 {
     return(dev->s_mounted != SMOUNTED);
 }
