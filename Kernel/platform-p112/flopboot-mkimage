@@ -29,5 +29,10 @@ kernel = open(sys.argv[2], 'rb').read()
 # make the boot image
 image = stamp_bootstrap(bootstrap, kernel) + kernel
 
+# pad image to even sector boundary
+pad = len(image) % 512
+if pad:
+    image += chr(0xE5) * (512-pad)
+
 # write output file
 open(sys.argv[3], 'wb').write(image)
