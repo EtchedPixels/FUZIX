@@ -61,7 +61,7 @@ static int hd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         ramd_uaddr = (uint16_t)udata.u_base;
         ramd_off = udata.u_offset << 1;
         /* Should check this higher up ? */
-        if ((ramd_size & 0x1FF) || (ramd_off & 0x1FF))
+        if (((uint16_t)ramd_size | ramd_off) & BLKMASK)
             return -EIO;
     } else if (rawflag == 2) {		/* Swap device special */
         ramd_size = swapcnt << 9;

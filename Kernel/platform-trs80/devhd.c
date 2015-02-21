@@ -76,7 +76,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		nblock = 2;
 		hd_page = 0;		/* Kernel */
 	} else if (rawflag == 1) {
-		if ((udata.u_offset|udata.u_count) & 0x1FF)
+		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
 			goto bad2;
 		dptr = (uint16_t)udata.u_base;
 		nblock = udata.u_count >> 9;

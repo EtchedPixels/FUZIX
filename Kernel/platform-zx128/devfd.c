@@ -49,7 +49,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         block = udata.u_buf->bf_blk;
         nblock = 1;
     } else {
-        if ((udata.u_offset|udata.u_count) & 0x1FF)
+        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
             goto bad2;
         dptr = (uint16_t)udata.u_base;
         block = udata.u_offset >> 9;

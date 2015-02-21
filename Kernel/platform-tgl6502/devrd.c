@@ -29,7 +29,7 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
         /* Must be block aligned but otherwise we are happy */
-        if ((udata.u_offset|dlen) & 0x1FF) {
+        if (((uint16_t)udata.u_offset|dlen) & BLKMASK) {
             udata.u_error = EIO;
             return -1;
         }

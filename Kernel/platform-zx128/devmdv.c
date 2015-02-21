@@ -38,7 +38,7 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		mdv_page = 0;
 	} else {
 		/* Direct to user */
-		if ((udata.u_offset|udata.u_count) & 0x1FF)
+		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
 			goto bad;
 		mdv_buf = (uint8_t *)udata.u_buf->bf_blk;
 		nblock = udata.u_count >> 9;

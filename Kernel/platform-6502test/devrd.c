@@ -21,7 +21,7 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     if(rawflag) {
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
-        if (dptr & 0x1FF) {
+        if (((uint16_t)udata.u_offset|dptr) & BLKMASK) {
             udata.u_error = EIO;
             return -1;
         }
