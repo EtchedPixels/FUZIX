@@ -104,6 +104,10 @@ int tty_carrier(uint8_t minor)
     return 0;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+        used(minor);
+}
 
 uint8_t keymap[8];
 static uint8_t keyin[8];
