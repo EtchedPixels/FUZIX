@@ -58,7 +58,7 @@ void readi(inoptr ino, uint8_t flag)
 
 	      loop:
 		while (toread) {
-			amount = min(toread, BLKSIZE - (udata.u_offset&BLKMASK));
+			amount = min(toread, BLKSIZE - BLKOFF(udata.u_offset));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
 #if defined(read_direct)
@@ -82,7 +82,7 @@ void readi(inoptr ino, uint8_t flag)
 				else
 					bp = bread(dev, pblk, 0);
 
-				uputsys(bp + (udata.u_offset & BLKMASK), amount);
+				uputsys(bp + BLKOFF(udata.u_offset), amount);
 
 				brelse(bp);
 			}
@@ -163,7 +163,7 @@ void writei(inoptr ino, uint8_t flag)
 	      loop:
 
 		while (towrite) {
-			amount = min(towrite, BLKSIZE - (udata.u_offset&BLKMASK));
+			amount = min(towrite, BLKSIZE - BLKOFF(udata.u_offset));
 
 			if ((pblk =
 			     bmap(ino, udata.u_offset >> BLKSHIFT,
@@ -175,7 +175,7 @@ void writei(inoptr ino, uint8_t flag)
 			 */
 			bp = bread(dev, pblk, (amount == BLKSIZE));
 
-			ugetsys(bp + (udata.u_offset & BLKMASK), amount);
+			ugetsys(bp + BLKOFF(udata.u_offset), amount);
 
 			/* FIXME: O_SYNC */
 			bawrite(bp);
