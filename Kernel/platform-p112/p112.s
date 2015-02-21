@@ -50,7 +50,7 @@ init_hardware:
         ld hl, #(RAM_KB-64)        ; 64K for kernel
         ld (_procmem), hl
 
-        ; enable ASCI interrupts
+        ; configure ASCI UART
         ; in0 a, (ASCI_STAT0)
         ; or #0x08                ; enable ASCI0 receive interrupts
         ; out0 (ASCI_STAT0), a
@@ -64,10 +64,16 @@ init_hardware:
         ; and #0x7f               ; disable RDRF interrupt inhibit
         ; out0 (ASCI_ASEXT1), a
 
-        ; enable ESCC interrupts
-        ld bc, #0x0114 ; write register 1, 0x14: enable receive interrupts only
+        ; configure ESCC UART
+        ld bc, #0x0F01 ; write register 15, disable CTS status interrupts, expose WR7'
         call write_escc
-        ld bc, #0x0908 ; write register 9, 0x08: master interrupt enable
+        ld bc, #0x0760 ; write register 7', enable TX interrupt only when FIFO is empty, extended read mode
+        call write_escc
+        ; WRS: Note that WR3 "obey CTS pin" for transmit control is not useful
+        ; as it also uses the DCD pin for receiver enable. Shame.
+        ld bc, #0x0110 ; write register 1, enable receive interrupts
+        call write_escc
+        ld bc, #0x0908 ; write register 9, master interrupt enable
         call write_escc
 
         jp z180_init_hardware

@@ -7,7 +7,14 @@ Supported hardware:
  - Real time clock
  - SMC floppy disk drive controller
  - G-IDE hard disk drive controller
- - First serial port (ESCC channel A, tty1)
+ - Serial ports:
+   tty1: ESCC channel A (RS232 levels on P4, standard boot ROM uses this port)
+   tty2: ESCC channel B (TTL levels on P14 header; untested)
+   tty3: ASCI channel 0 (TTL levels on P14 header; untested)
+   tty4: ASCI channel 1 (TTL levels on P14 header; untested)
+   tty5: SMC 16550A (RS232 levels on P8)
+
+The serial ports require the use of RTS/CTS flow control.
 
 To build the kernel, edit the TARGET line in Kernel/Makefile to read:
     export TARGET=p112

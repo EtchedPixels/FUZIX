@@ -67,9 +67,7 @@ void wakeup(void *event)
 			kprintf("wakeup: found proc 0x%x pid %d\n",
 				p, p->p_pid);
 #endif
-			p->p_status = P_READY;
-			p->p_wait = NULL;
-			nready++;
+			pwake(p);
 		}
 	}
 	irqrestore(irq);

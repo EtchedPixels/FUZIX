@@ -35,7 +35,7 @@
 #define BOOTDEVICENAMES "hd#,fd"
 
 /* Device parameters */
-#define NUM_DEV_TTY 4
+#define NUM_DEV_TTY 5
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */

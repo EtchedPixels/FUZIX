@@ -39,4 +39,5 @@ void device_init(void)
 {
     devide_init();
     ds1302_init();
+    tty_hw_init();
 }
