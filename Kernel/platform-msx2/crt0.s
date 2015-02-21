@@ -31,6 +31,9 @@
 	        .globl l__COMMONMEM
 		.globl s__INITIALIZER
 	        .globl kstack_top
+		.globl _ramsize
+		.globl _procmem
+		.globl _msxmaps
 
 		; Just for the benefit of the map file
 		.globl start
@@ -60,12 +63,13 @@ start:
 		ld a, #'@'
 		out (OPENMSX_DEBUG2), a
 		;
-		; unstash info bits
+		; unstash info bits and memory size
 		;
 		pop af
 		pop hl
 		pop bc
 		pop de
+		pop ix
 
 		ld sp, #kstack_top
 		;
@@ -105,6 +109,22 @@ start:
 		ld bc, #l__DATA - 1
 		ld (hl), #0
 		ldir
+
+		; finally update memory size
+		;
+		push ix
+		pop hl
+		ld (_msxmaps), hl
+		add hl, hl			; x 16 for Kb
+		add hl, hl
+		add hl, hl
+		add hl, hl
+
+		; set system RAM size in KB
+		ld (_ramsize), hl
+		ld de, #0xFFD0
+		add hl, de			; subtract 48K for the kernel
+		ld (_procmem), hl
 
 		call init_early
 		call init_hardware

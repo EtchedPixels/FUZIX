@@ -36,6 +36,12 @@ bootstrap:
 		ld hl,#PAGE2_BASE
 		call enaslt
 
+		;
+		; find ram size
+		;
+		call size_memory
+		push hl
+
 		ld b,#3	    ; starting ram page (copy to 3,2,1,4)
 		ld c,#2	    ; starting rom page (copy from 2,3,4,5,6,7,8,9)
 
@@ -82,15 +88,19 @@ done:
 		call find_rom
 		ld e,a
 
+		pop hl				; re-stash ram size
+
 		ld a, #4
 		out (RAM_PAGE3),a
+
+		ld sp,#0xe100
+		push hl
 
 		ld bc,(BIOS_VERSION1)		; localization and interrupt frequency
 		ld hl,(BIOS_VDP_IOPORT) 	; vdp ports
 		inc h
 		inc l
 		ld a,(BIOS_MACHINE_TYPE)	; machine type
-		ld sp,#0xe100
 		push de
 		push bc
 		push hl
@@ -113,6 +123,60 @@ done:
 		; jump to start while keeping rom in page 1 (we are running from it)
 		; will switch to all-ram in there
 		jp 0x100
+
+
+		;
+		; Size currently selected memory mapper
+		;
+size_memory:
+		ld bc, #0x03FE		; make sure ram page 3 is selected
+		out (c), b
+		ld hl, #0x8000
+		ld (hl), #0xAA		; we know there is a low page!
+		ld bc, #0x04FE		; continue with page 4
+ramscan_2:
+		ld a, #0xAA
+ramscan:
+		out (c), b
+		cp (hl)			; is it 0xAA
+		jr z, ramwrapped	; we've wrapped (hopefully)
+		inc b
+		jr nz, ramscan
+		jr ramerror		; not an error we *could* have 256 pages!
+ramwrapped:
+		ld a, #3
+		out (c), a
+		ld (hl), #0x55
+		out (c), b
+		ld a, (hl)
+		cp #0x55
+		jr z, ramerror		; Cool we wrapped both change to 0x55
+		; Fluke RAM was 0xAA already
+		ld a, #3
+		out (c), a
+		ld a, #0xAA
+		ld (hl), a			; put the marker back as 0xAA
+		inc b
+		jr nz, ramscan_2		; Continue our memory walk
+ramerror:   				; Ok so there are 256-b-3 pages of 16K)
+		ld a,#3
+		out (c), a			; always put page 0 back
+		;
+		;	Address map back to normal so can update kernel data
+		;
+		dec b			; take into account we started at page 3
+		dec b
+		dec b
+		ld l, b
+		ld h, #0
+		ld a, l
+		or a			; zero count -> 256 pages
+		jr nz, pageslt256
+		inc h
+pageslt256:
+		; hl contains num of pages
+		ret
+
 
 
 		; find slot currently set in page 1
