@@ -42,7 +42,8 @@ void readi(inoptr ino, uint8_t flag)
 			if (ino->c_refs == 1)	/* No writers */
 				break;
 			/* Sleep if empty pipe */
-			psleep(ino);
+			if (psleep_flags(ino, flag))
+			        break;
 		}
 		toread = udata.u_count = min(udata.u_count, ino->c_node.i_size);
 		if (toread == 0) {
@@ -120,7 +121,6 @@ void writei(inoptr ino, uint8_t flag)
 	bool ispipe;
 	blkno_t pblk;
 	uint16_t dev;
-	bool ndelay = (flag & O_NDELAY) ? 1 : 0;
 
 	dev = ino->c_dev;
 
@@ -154,11 +154,8 @@ void writei(inoptr ino, uint8_t flag)
 				return;
 			}
 			/* Sleep if empty pipe */
-			if (ndelay) {
-				udata.u_error = EWOULDBLOCK;
-				return;
-			}
-			psleep(ino);
+			if (psleep_flags(ino, flag))
+			        return;
 		}
 		/* Sleep if empty pipe */
 		goto loop;
