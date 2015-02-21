@@ -40,4 +40,8 @@ BIOS_VDP_IOPORT		    .equ 0x0006
 OPENMSX_DEBUG1		    .equ 0x2E
 OPENMSX_DEBUG2		    .equ 0x2F
 
+;
+; TurboR CPU mode select
+;
+BIOS_CHGCPU		    .equ 0x180
 

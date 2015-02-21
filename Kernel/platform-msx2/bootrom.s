@@ -23,6 +23,14 @@ bootstrap:
 		di
 		ld sp,#0xf340       ; temporary stack
 
+		;
+		; enable R800 CPU if available
+		;
+		ld a,(BIOS_CHGCPU)
+		cp  #0xC3
+		ld  a,#0x81		    ; run only in rom mode, as we do not use BIOS better save 4 ram pages
+		call z,#BIOS_CHGCPU
+
 		; FIXME: init vdp using bios so that font is in place after vdpinit
 		ld a,#0x50
 		ld (0xf3ae),a

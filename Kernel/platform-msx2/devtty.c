@@ -161,6 +161,11 @@ void kbd_interrupt(void)
 		keydecode();
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    minor;
+}
+
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
 
