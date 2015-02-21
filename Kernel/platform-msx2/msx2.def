@@ -12,3 +12,32 @@ RAM_PAGE0		    .equ 0xFC         ; memory mapper registers
 RAM_PAGE1		    .equ 0xFD
 RAM_PAGE2		    .equ 0xFE
 RAM_PAGE3		    .equ 0xFF
+
+;
+; ASCII 8Kb Mapper addresses
+;
+ASCII8_PAGE0_BASE	    .equ 0x4000
+ASCII8_PAGE1_BASE	    .equ 0x6000
+ASCII8_PAGE2_BASE	    .equ 0x8000
+ASCII8_PAGE3_BASE	    .equ 0xA000
+
+ASCII8_ROM_PAGE0	    .equ 0x6000
+ASCII8_ROM_PAGE1	    .equ 0x6800
+ASCII8_ROM_PAGE2	    .equ 0x7000
+ASCII8_ROM_PAGE3	    .equ 0x7800
+
+;
+; BIOS machine info addresses
+;
+BIOS_VERSION1		    .equ 0x002B
+BIOS_VERSION2		    .equ 0x002C
+BIOS_MACHINE_TYPE	    .equ 0x002D
+BIOS_VDP_IOPORT		    .equ 0x0006
+
+;
+; OpenMSX Debug ports
+;
+OPENMSX_DEBUG1		    .equ 0x2E
+OPENMSX_DEBUG2		    .equ 0x2F
+
+

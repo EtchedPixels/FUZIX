@@ -15,6 +15,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl enaslt
 	    .globl _mapslot_bank1
 	    .globl _mapslot_bank2
 	    .globl _kernel_flag
@@ -25,11 +26,6 @@
             ; exported debugging tools
             .globl _trap_monitor
             .globl outchar
-
-            ; imported symbols
-            .globl _ramsize
-            .globl _procmem
-	    .globl _msxmaps
 
             .globl _tty_inproc
             .globl unix_syscall_entry
@@ -97,9 +93,6 @@ init_early:
 	    ret
 
 init_hardware:
-	    ; Size RAM
-	    call size_memory
-
             ; set up interrupt vectors for the kernel mapped low page and
             ; data area
             ld hl, #0
@@ -131,68 +124,6 @@ init_hardware:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
-
-;
-; Size currently selected memory mapper (this should be done during bootstrap)
-;
-size_memory:
-	    ld bc, #0x03FC		; make sure ram page 3 is selected
-	    out (c), b
-	    ld hl, #0x3FFF		; careful, there is code in page 3
-	    ld (hl), #0xAA		; we know there is a low page!
-	    ld bc, #0x04FC		; continue with page 4
-ramscan_2:
-	    ld a, #0xAA
-ramscan:
-	    out (c), b
-	    cp (hl)			; is it 0xAA
-	    jr z, ramwrapped		; we've wrapped (hopefully)
-	    inc b
-	    jr nz, ramscan
-	    jr ramerror			; not an error we *could* have 256 pages!
-ramwrapped:
-	    ld a, #3
-	    out (c), a
-	    ld (hl), #0x55
-	    out (c), b
-	    ld a, (hl)
-	    cp #0x55
-	    jr z, ramerror		; Cool we wrapped both change to 0x55
-	    ; Fluke RAM was 0xAA already
-	    ld a, #3
-	    out (c), a
-	    ld a, #0xAA
-	    ld (hl), a			; put the marker back as 0xAA
-	    inc b
-	    jr nz, ramscan_2		; Continue our memory walk
-ramerror:   				; Ok so there are 256-b-3 pages of 16K)
-	    ld a,#3
-	    out (c), a			; always put page 0 back
-	    ;
-	    ;	Address map back to normal so can update kernel data
-	    ;
-	    dec b			; take into account we started at page 3
-	    dec b
-	    dec b
-	    ld l, b
-	    ld h, #0
-	    ld a, l
-	    or a			; zero count -> 256 pages
-	    jr nz, pageslt256
-	    inc h
-pageslt256:
-	    ld (_msxmaps), hl
-	    add hl, hl			; x 16 for Kb
-	    add hl, hl
-	    add hl, hl
-	    add hl, hl
-
-	    ; set system RAM size in KB
-	    ld (_ramsize), hl
-	    ld de, #0xFFD0
-	    add hl, de			; subtract 48K for the kernel
-	    ld (_procmem), hl
-	    ret
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
@@ -314,18 +245,15 @@ map_save:   push hl
 ;   can be in bank1 or 2 because those are the ones usually used to
 ;   map the io ports.
 ;
-;   XXX: this code is duplicated in _BOOT, but I see no way to remove it from
-;         from there and still be able to boot; specially if we have a >48Kb kernel
-
 		.area _CODE
 
 _mapslot_bank1:
 		ld hl,#0x4000
-		jp mapslot
+		jr enaslt
 _mapslot_bank2:
 		ld hl,#0x8000
-		jp mapslot
-mapslot:
+
+enaslt:
 		call setprm         ; calculate bit pattern and mask code
 		jp m, mapsec        ; if expanded set secondary first
 		in a,(0xa8)
@@ -338,7 +266,7 @@ mapsec:
 		; here need to store the slot that is being set....
 		call setexp         ; set secondary slot
 		pop hl
-		jr mapslot
+		jr enaslt
 
 		; calculate bit pattern and mask
 setprm:

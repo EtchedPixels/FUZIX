@@ -44,4 +44,5 @@ clean:
 
 image:
 	dd if=../fuzix.bin of=../fuzix.com bs=256 skip=1
-	dd if=../fuzix.bin of=../fuzix.rom bs=16384 conv=sync
+	dd if=../fuzix_boot.bin of=../fuzix.ascii8.rom skip=1 bs=16384 conv=sync
+	dd if=../fuzix.bin of=../fuzix.ascii8.rom seek=1 bs=16384 conv=sync

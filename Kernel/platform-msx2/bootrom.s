@@ -1,3 +1,6 @@
+		;
+		;  bootstrap for ASCII 8kb mapped rom
+		;
 		.area _BOOT
 
 		.db 'A'
@@ -5,20 +8,17 @@
 		.dw bootstrap
 		.dw 0,0,0,0,0,0
 
-		.globl enaslt
-		;  data to save from bios
-		.globl _slotrom
-		.globl _slotram
-		.globl _vdpport
-		.globl _infobits
-		.globl _machine_type
+		.include "msx2.def"
 		.globl find_ram
-		.globl kstack_top
-
+		.globl enaslt
 
 		; At this point the BIOS has detected the cartridge AB signature and
-		; jumped here; we have the rom bios in bank 0, ram in bank 3, and rom
-		; in bank 1 (this code).
+		; jumped here; we have the rom bios in slot_page 0, ram in slot_page 3, and rom
+		; in slot_page 1 (this code).
+		;
+		; Kernel is in mapped ROM pages 0x02 to 0x08, this code is in page 0x00
+		; We just set RAM in slot_page 2 and copy over the kernel in chunks of 8K
+		;
 bootstrap:
 		di
 		ld sp,#0xf340       ; temporary stack
@@ -29,124 +29,160 @@ bootstrap:
 		ld ix,#0x00d5
 		call #0x015f
 
-		; read slot registers from bios before overwritting them
+		;
+		; set ram in slot_page 2
+		;
 		call find_ram
-		ld hl,#0x8000
-		call enaslt		; set bank 2 to ram
+		ld hl,#PAGE2_BASE
+		call enaslt
 
-		ld a, #4
-		out (0xFE),a
+		;
+		; find ram size
+		;
+		call size_memory
+		push hl
 
-		call find_ram
+		ld b,#3	    ; starting ram page (copy to 3,2,1,4)
+		ld c,#2	    ; starting rom page (copy from 2,3,4,5,6,7,8,9)
+
+nextrampage:
+		ld a, b
+		out (RAM_PAGE2),a
+
+		ld a,c
+		ld (ASCII8_ROM_PAGE1),a
+
+		exx
+		ld hl, #ASCII8_PAGE1_BASE
+		ld de, #PAGE2_BASE
+		ld bc, #0x2000
+		ldir
+		exx
+
+		inc c
+		ld a,c
+		ld (ASCII8_ROM_PAGE1),a
+
+		exx
+		ld hl, #ASCII8_PAGE1_BASE
+		ld de, #PAGE2_BASE+0x2000
+		ld bc, #0x2000
+		ldir
+		exx
+
+		inc c
+		dec b
+		ld a,b
+		cp #3
+		jr z, done
+		or a
+		jr nz, nextrampage
+		ld b, #4
+		jr nextrampage
+done:
+		;
+		; Collect BIOS info bits and stash to ram
+		;
+		call find_ram		; this requires ram page 0 in slot_page 3
 		ld d,a
 		call find_rom
 		ld e,a
 
-		; read machine info bits
-		ld bc,(0x002b)	; localization and interrupt frequency
-		ld hl,(0x0006)	; vdp ports
+		pop hl				; re-stash ram size
+
+		ld a, #4
+		out (RAM_PAGE3),a
+
+		ld sp,#0xe100
+		push hl
+
+		ld bc,(BIOS_VERSION1)		; localization and interrupt frequency
+		ld hl,(BIOS_VDP_IOPORT) 	; vdp ports
 		inc h
 		inc l
-		ld a,(0x002d)	; machine type
-
-		ex af,af'
-		ld a,e
-		exx
-
-		ld hl,#0xc000
-		ld sp,#0xa000	; keep stack in ram
-		call enaslt	; set bank 3 to rom
-
-		; copy kernel page 0 from bank 3 to ram in bank 2
-		; it contains the common area if the rom > 48Kb
-		ld hl, #0xc000
-		ld de, #0x8000
-		ld bc, #0x4000
-		ldir
-
-		exx
+		ld a,(BIOS_MACHINE_TYPE)	; machine type
 		push de
 		push bc
 		push hl
-		ld hl,#0xc000	; set bank 3 back to ram
+		push af
+
+		;
+		; prepare for all-ram
+		;
 		ld a,d
-		call enaslt
-		pop hl
-		pop bc
-		pop de
-
-		ld a, #4
-		out (0xFF),a
-		ld a,d
-		ld (_slotram),a
-		ld a,e
-		ld (_slotrom),a
-		ld (_infobits),bc
-		ld (_vdpport),hl
-		ex af,af'
-		ld (_machine_type),a
-
-		ld sp, #kstack_top	; move stack to final location
-
-		; set cartridge rom in bank 0
-		ld a,e
-		ld hl,#0
+		ld hl,#PAGE0_BASE
 		call enaslt
 
-		; copy kernel page 3 to ram
 		ld a, #3
-		out (0xFE),a
-		ld hl, #0x0
-		ld de, #0x8000
-		ld bc, #0x4000
-		ldir
-
-		; set ram in bank 0 and cartridge rom in bank 2
-		ld a,(_slotram)
-		ld hl,#0
-		call enaslt
-		ld a,(_slotrom)
-		ld hl,#0x8000
-		call enaslt
-
-		; copy kernel pages 2 and 1 to ram
+		out (RAM_PAGE0), a
 		ld a, #2
-		out (0xFC),a
-		ld hl, #0x4000
-		ld de, #0x0
-		ld bc, #0x4000
-		ldir
+		out (RAM_PAGE1), a
 		ld a, #1
-		out (0xFC),a
-		ld hl, #0x8000
-		ld de, #0x0
-		ld bc, #0x4000
-		ldir
-
-		; prepare mapped ram pages for all-ram
-		ld a, #3
-		out (0xFC), a
-		ld a, #2
-		out (0xFD), a
-		ld a, #1
-		out (0xFE), a
-		ld a, #4
-		out (0xFF),a
-
-		; set bank 2 to ram
-		ld a,(_slotram)
-		ld hl,#0x8000
-		call enaslt
+		out (RAM_PAGE2), a
 
 		; jump to start while keeping rom in page 1 (we are running from it)
 		; will switch to all-ram in there
 		jp 0x100
 
 
+		;
+		; Size currently selected memory mapper
+		;
+size_memory:
+		ld bc, #0x03FE		; make sure ram page 3 is selected
+		out (c), b
+		ld hl, #0x8000
+		ld (hl), #0xAA		; we know there is a low page!
+		ld bc, #0x04FE		; continue with page 4
+ramscan_2:
+		ld a, #0xAA
+ramscan:
+		out (c), b
+		cp (hl)			; is it 0xAA
+		jr z, ramwrapped	; we've wrapped (hopefully)
+		inc b
+		jr nz, ramscan
+		jr ramerror		; not an error we *could* have 256 pages!
+ramwrapped:
+		ld a, #3
+		out (c), a
+		ld (hl), #0x55
+		out (c), b
+		ld a, (hl)
+		cp #0x55
+		jr z, ramerror		; Cool we wrapped both change to 0x55
+		; Fluke RAM was 0xAA already
+		ld a, #3
+		out (c), a
+		ld a, #0xAA
+		ld (hl), a			; put the marker back as 0xAA
+		inc b
+		jr nz, ramscan_2		; Continue our memory walk
+ramerror:   				; Ok so there are 256-b-3 pages of 16K)
+		ld a,#3
+		out (c), a			; always put page 0 back
+		;
+		;	Address map back to normal so can update kernel data
+		;
+		dec b			; take into account we started at page 3
+		dec b
+		dec b
+		ld l, b
+		ld h, #0
+		ld a, l
+		or a			; zero count -> 256 pages
+		jr nz, pageslt256
+		inc h
+pageslt256:
+		; hl contains num of pages
+		ret
+
+
+
 		; find slot currently set in page 1
 		; returns slot in reg a using FxxxSSPP format (see enaslt)
 find_rom:
-		in a,(0xa8)
+		in a,(SLOT_SEL)
 		rrca
 		rrca
 		and #3
@@ -173,7 +209,7 @@ find_rom0:
 		; find slot currently set in page 3
 		; returns slot in reg a using FxxxSSPP format (see enaslt)
 find_ram:
-		in a,(0xa8)
+		in a,(SLOT_SEL)
 		rlca
 		rlca
 		and #3
@@ -211,10 +247,10 @@ find_ram0:
 enaslt:
 		call selprm         ; calculate bit pattern and mask code
 		jp m, eneslt        ; if expanded set secondary first
-		in a,(0xa8)
+		in a,(SLOT_SEL)
 		and c
 		or b
-		out (0xa8),a        ; set primary slot
+		out (SLOT_SEL),a        ; set primary slot
 		ret
 eneslt:
 		push hl
@@ -265,11 +301,11 @@ selexp:
 		pop af
 		push af
 		ld d,a
-		in a,(0xa8)
+		in a,(SLOT_SEL)
 		ld b,a
 		and #0x3F
 		or c
-		out (0xa8),a        ; set bank 3 to target slot
+		out (SLOT_SEL),a        ; set bank 3 to target slot
 		ld a,d
 		rrca
 		rrca
@@ -285,14 +321,14 @@ selexp1:
 		ld a,e
 		cpl
 		ld h,a
-		ld a,(0xffff)       ; read and update secondary slot register
+		ld a,(SUBSLOT_SEL)       ; read and update secondary slot register
 		cpl
 		ld l,a
 		and h               ; strip off old bits
 		or d                ; add new bits
-		ld (0xffff),a
+		ld (SUBSLOT_SEL),a
 		ld a,b
-		out (0xa8),a        ; restore status
+		out (SLOT_SEL),a        ; restore status
 		pop af
 		and #3
 		ret
