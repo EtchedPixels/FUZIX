@@ -1,4 +1,57 @@
-First wild guess at an MSX2 target
+Fuzix for MSX2/2+/TurboR
 
-And it is exactly that a guess 8)
+Current status
 
+	Boots to shell and runs some userland utils.
+	There are some video glitches in real hardware not visible in the emulator.
+	MegaSD support, no floppy driver. RTC support.
+	Keyboard support for international, Japan, UK, and Spanish layouts.
+
+	Only one memory mapper can be used at the moment. Not sure is possible to use
+	more than one because of performance penalty due to full slot/subslot 
+	switching compared to just ram page switching. Maybe feasible in TurboR.
+
+	Switches to R800 CPU ROM mode on boot if available.
+
+TODO/Ongoing
+
+	Sunrise CF-IDE interface
+	Improved video driver
+
+Running in real hardware
+
+	You need an MSX2 with a memory mapper with at least 128K RAM and a
+	MegaFlashROM with SD card interface.
+
+	Build and copy the kernel (fuzix.ascii8.rom) to an sdcard or to a floppy disk
+	and flash it from MSX-DOS using the OPFXSD tool.
+
+	Make sure you use OPFXSD v1.13 or later.
+
+	The mapper type should be detected automatically and reported as ascii8.
+
+	### WARNING: do not flash fuzix as the main kernel ###
+
+	When flashing is complete, insert an sdcard containing a fuzix filesystem
+	and reboot.
+
+	You can build and generate a fuzix filesystem image using the tool
+	'build-filesystem' which can found in ./Standalone.
+
+Running in openmsx:
+
+	You need a recent snapshot of openmsx, openmsx-0.11.0 contains sd card
+	emulation bugs that have been fixed as a result of fuzix development.
+
+	Before using openmsx you need to set up your MegaFlashROM_SCC+_SD emulated
+	interface so that it can be detected by Fuzix. You need a MSX-DOS hdd image
+	that can boot from the IDE interface. Copy inside opfxsd.com, nextor.rom,
+	dskrom.rom, romdisk.dsk and recovery.rom, then start openmsx with both IDE
+	and MegaFlashROM_SCC+_SD extensions. From MSX-DOS flash the interface
+	as described in the MegaFlashROM user manual.
+
+	To run FUZIX just do:
+
+	# openmsx -extb MegaFlashROM_SCC+_SD -carta fuzix.ascii8.rom -extc debugdevice -hda fuzixfs.img -machine Panasonic_FS-A1GT
+
+	It should detect the MegaSD interface in slot 2-3
