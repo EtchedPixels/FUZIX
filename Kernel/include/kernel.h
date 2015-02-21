@@ -93,6 +93,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BLKSHIFT	9
 #define BLKMASK		511
 
+/* Help the 8bit compilers out by preventing any 32bit promotions */
+#define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
+
 /* we need a busier-than-busy state for superblocks, so that if those blocks
  * are read by userspace through bread() they are not subsequently freed by 
  * bfree() until the filesystem is unmounted */
