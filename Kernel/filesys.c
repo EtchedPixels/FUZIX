@@ -331,8 +331,8 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     setftime(wd, A_TIME|M_TIME|C_TIME);     /* Sets CDIRTY */
 
     /* Update file length to next block */
-    if(wd->c_node.i_size & BLKMASK)
-        wd->c_node.i_size += BLKSIZE - (wd->c_node.i_size & BLKMASK);
+    if(BLKOFF(wd->c_node.i_size))
+        wd->c_node.i_size += BLKSIZE - BLKOFF(wd->c_node.i_size);
 
     return true; // success
 }
