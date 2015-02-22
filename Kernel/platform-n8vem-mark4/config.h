@@ -63,12 +63,10 @@
 	#define NUM_DEV_TTY 3
 
 	/* PropIO as the console */
-	#define BOOT_TTY (512 + 3)
+	#define TTYDEV   (512+3)  /* System console (used by kernel, init) */
 #else
 	#define NUM_DEV_TTY 2
 
 	/* ASCI0 as the console */
-	#define BOOT_TTY (512 + 1)
+	#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #endif
-
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */

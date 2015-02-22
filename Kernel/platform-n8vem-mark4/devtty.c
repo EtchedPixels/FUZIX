@@ -89,7 +89,7 @@ ttyready_t tty_writeready(uint8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-    tty_putc(TTYDEV - 512, c);
+    tty_putc(TTYDEV & 0xFF, c);
     if(c == '\n')
-        tty_putc(TTYDEV - 512, '\r');
+        tty_putc(TTYDEV & 0xFF, '\r');
 }

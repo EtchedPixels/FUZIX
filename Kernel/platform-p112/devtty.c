@@ -116,6 +116,7 @@ void tty_pollirq_com1(void)
     while(true){
         iir = TTY_COM1_IIR;
         lsr = TTY_COM1_LSR;
+
         /* IIR bits
          * 3 2 1 0
          * -------
@@ -300,7 +301,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-    tty_putc(1, c);
+    tty_putc(TTYDEV & 0xFF, c);
     if(c == '\n')
-        tty_putc(1, '\r');
+        tty_putc(TTYDEV & 0xFF, '\r');
 }
