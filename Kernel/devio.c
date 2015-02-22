@@ -546,26 +546,29 @@ void idump(void)
 	kputs("\tMAGIC\tDEV\tNUM\tMODE\tNLINK\t(DEV)\tREFS\tDIRTY\n");
 
 	for (ip = i_tab; ip < i_tab + ITABSIZE; ++ip) {
-		kprintf("%d\t%d\t%d\t%u\t0%o\t",
+		if(ip->c_magic != CMAGIC)
+			continue;
+		kprintf("%d\t%d\t%d\t%u\t%d\t",
 			ip - i_tab, ip->c_magic, ip->c_dev, ip->c_num,
 			ip->c_node.i_mode);
 		kprintf("%d\t%d\t%d\t%d\n",	/* line split for compiler */
 			ip->c_node.i_nlink, ip->c_node.i_addr[0],
 			ip->c_refs, ip->c_flags);
-		if (!ip->c_magic)
-			break;
 	}
 
 	kputs
-	    ("\n\tSTAT\tWAIT\tPID\tPPTR\tALARM\tPENDING\tIGNORED\tCHILD\n");
+	    ("\n\tSTAT\tWAIT\tPID\tPPTR\tALARM\tPENDING\t\tIGNORED\n");
 	for (pp = ptab; pp < ptab + PTABSIZE /*maxproc */ ; ++pp) {
 		if (pp->p_status == P_EMPTY)
 			continue;
 		kprintf("%d\t%d\t0x%x\t%d\t",
 			pp - ptab, pp->p_status, pp->p_wait, pp->p_pid);
-		kprintf("%d\t%d\t0x%lx\t0x%lx\n",
-			pp->p_pptr - ptab, pp->p_alarm, pp->p_pending,
-			pp->p_ignored);
+		kprintf("%d\t%d\t0x%x%x\t0x%x%x\n",
+			pp->p_pptr - ptab, pp->p_alarm, 
+			/* kprintf has no %lx so we write out 32-bit
+			 * values as two 16-bit values instead */
+			(uint16_t)(pp->p_pending >> 16), (uint16_t)pp->p_pending,
+			(uint16_t)(pp->p_ignored >> 16), (uint16_t)pp->p_ignored);
 	}
 
 	bufdump();
