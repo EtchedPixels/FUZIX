@@ -239,6 +239,7 @@ arg_t _execve(void)
 
 	kfree(abuf);
 	kfree(ebuf);
+	i_deref(ino);
 
 	/* Shove argc and the address of argv just below envp */
 	uputl((uint32_t) nargv, nenvp - 1);
