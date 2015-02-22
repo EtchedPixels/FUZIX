@@ -214,6 +214,7 @@ arg_t _execve(void)
 
 	brelse(abuf);
 	brelse(ebuf);
+	i_deref(ino);
 
 	// Shove argc and the address of argv just below envp
 #ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
