@@ -75,6 +75,11 @@ void tty_putc(uint8_t minor, unsigned char c)
     }
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    minor;
+}
+
 ttyready_t tty_writeready(uint8_t minor)
 {
     minor;
