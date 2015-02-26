@@ -27,9 +27,6 @@
 #define PROGTOP     0xF800  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   64      /* Memory needed per process */
 
-#define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
-
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#,fd"
@@ -37,7 +34,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 5
 
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

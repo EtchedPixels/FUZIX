@@ -33,6 +33,20 @@ static void devide_delay(void)
     while(!timer_expired(timeout))
        platform_idle();
 }
+
+/* Reset depends upon the presence of alt control, which is optional */
+void devide_reset(void)
+{
+    kputs("IDE reset\n");
+
+    /* reset both drives */
+    ide_reg_devhead = 0xE0; /* select master */
+    ide_reg_control = 0x06; /* assert reset, no interrupts */
+    devide_delay();
+
+    ide_reg_control = 0x02; /* release reset, no interrupts */
+    devide_delay();
+}
 #endif
 
 void devide_init_drive(uint8_t drive)
@@ -48,24 +62,13 @@ void devide_init_drive(uint8_t drive)
 
     kprintf("IDE drive %d: ", drive);
 
-    /* Reset depends upon the presence of alt control, which is optional */
-#ifdef IDE_REG_CONTROL
-    /* reset the drive */
-    ide_reg_devhead = select;
-    ide_reg_control = 0x06; /* assert reset, no interrupts */
-    devide_delay();
-    ide_reg_control = 0x02; /* release reset, no interrupts */
-    devide_delay();
-    if(!devide_wait(IDE_STATUS_READY))
-        return;
-#endif
-
 #ifdef IDE_8BIT_ONLY
     /* set 8-bit mode -- mostly only supported by CF cards */
     ide_reg_devhead = select;
     if(!devide_wait(IDE_STATUS_READY))
         return;
-    ide_reg_features = 0x01;
+
+    ide_reg_features = 0x01; /* Enable 8-bit PIO transfer mode (CFA feature set only) */
     ide_reg_command = IDE_CMD_SET_FEATURES;
 #endif
 
@@ -128,6 +131,10 @@ failout:
 void devide_init(void)
 {
     uint8_t d;
+
+#ifdef IDE_REG_CONTROL
+    devide_reset();
+#endif
 
     for(d=0; d<DRIVE_COUNT; d++)
         devide_init_drive(d);

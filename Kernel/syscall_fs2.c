@@ -507,7 +507,7 @@ arg_t _open(void)
 	if (isdevice(ino)
 	    && d_open((int) ino->c_node.i_addr[0], flag) != 0) {
 		udata.u_error = ENXIO;
-		goto idrop;
+		goto cantopen;
 	}
 	/* get the static pointer back */
 	ino = itmp;

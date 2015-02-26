@@ -30,6 +30,7 @@
 monitor_entry:  di                      ; turn off pesky interrupts
                 ld hl, #0
                 add hl, sp              ; save SP
+                ld (entry_sp), hl       ; save to memory
                 pop bc                  ; save PC
                 ld sp, #monitor_stack
                 push bc                 ; orig PC
@@ -282,6 +283,9 @@ arg2:           .ds 2
 ; input buffer
 linebuffer:     .ds 20
 linebuffer_end:
+
+; keep a record of the entry SP -- I always forget to write it down!
+entry_sp:       .ds 2
 
 ; stack
                 .ds 40

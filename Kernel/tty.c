@@ -154,7 +154,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 	   and inode somehow ??? */
 	if (!minor)
 		minor = udata.u_ptab->p_tty;
-	if (minor < 1 || minor > NUM_DEV_TTY + 1) {
+	if (minor < 1 || minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
 		return (-1);
 	}
