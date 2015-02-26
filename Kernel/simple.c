@@ -71,7 +71,6 @@ int swapout(ptptr p)
 	map = swapmap_alloc();
 	if (map == 0)
 		return ENOMEM;
-	flush_cache(p);
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
