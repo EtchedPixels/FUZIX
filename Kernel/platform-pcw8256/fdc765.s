@@ -275,6 +275,7 @@ fd765_cmdop:
 		ld hl, #_fd765_cmdbuf
 		call fd765_sendcmd
 		jr nz, read_failed
+		call _fd765_intwait
 		call fd765_status_a
 		ret
 

@@ -120,6 +120,11 @@ int tty_carrier(uint8_t minor)
     return 1;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    minor;
+}
+
 /* Pending better ioctl bits set up for 9600 8N1 */
 
 void tty_init_port(void)

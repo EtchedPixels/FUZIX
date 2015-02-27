@@ -170,6 +170,7 @@ int swapout(ptptr p)
 	uint16_t map;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
+	uint16_t i;
 
 	swapproc = p;
 
@@ -186,7 +187,7 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	for (i = 0; i < 4; i ++) {
-		swapwrite(SWAPDEV, blk, size, base);
+		swapwrite(SWAPDEV, blk, size, (uint8_t *)base);
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
@@ -213,6 +214,7 @@ void swapin(ptptr p)
 	uint16_t blk = p->p_page2 * SWAP_SIZE;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
+	uint16_t i;
 
 #ifdef DEBUG
 	kprintf("Swapin %x, %d\n", p, p->p_page);
@@ -227,7 +229,7 @@ void swapin(ptptr p)
 
 	swapproc = p;		/* always ourself */
 	for (i = 0; i < 4; i ++) {
-		swapread(SWAPDEV, blk, size, base);
+		swapread(SWAPDEV, blk, size, (uint8_t *)base);
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
