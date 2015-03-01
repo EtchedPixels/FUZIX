@@ -3,6 +3,7 @@
 ;
         .module tricks
 
+        .globl _swapout
         .globl _newproc
         .globl _chksigs
         .globl _getproc
