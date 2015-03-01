@@ -55,4 +55,3 @@ typedef union {            /* this structure is endian dependent */
 /* Sane behaviour for unused parameters */
 #define used(x)
 
-#endif
