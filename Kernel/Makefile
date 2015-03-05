@@ -1,4 +1,4 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3
+TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2
 
 #export TARGET = 8086test
 #export TARGET = atarist
@@ -11,14 +11,15 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = nc100
 #export TARGET = p112
 #export TARGET = pcw8256
-export TARGET = plus3
+#export TARGET = plus3
 #export TARGET = px4plus
 #export TARGET = tgl6502
 #export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
-#export TARGET= zx128
+#export TARGET = zeta-v2
+#export TARGET = zx128
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
