@@ -53,10 +53,10 @@ mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
 mknod tty4  20660 516
-mknod hda   60660 0
-mknod hda1  60660 1
-mknod fd0   60660 256
-mknod fd1   60660 257
+mknod fd0   60660 0
+mknod fd1   60660 1
+mknod rd0   60660 256
+mknod rd1   60660 257
 mknod null  20666 1024
 mknod mem   20660 1025
 mknod zero  20444 1026
