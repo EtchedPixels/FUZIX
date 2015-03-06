@@ -82,7 +82,7 @@ void sd_spi_clock(bool go_fast)
 void sd_spi_raise_cs(void)
 {
     sd_spi_map_interface();
-    writeb(0, MSD_DEVSEL);
+    writeb(sd_drive, MSD_DEVSEL);
 
     /* reading from MSD_CS raises CS for all cards */
 
