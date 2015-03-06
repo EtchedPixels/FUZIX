@@ -14,8 +14,8 @@
 	.globl map_restore
 	.globl _kernel_flag
 	.globl _irqvector
-        .globl platform_interrupt_all
-	.globl map_table
+	.globl platform_interrupt_all
+	.globl mpgsel_cache
 	.globl _kernel_pages
 
         ; imported symbols
@@ -245,7 +245,7 @@ map_kernel:
 map_process_2:
 	push de
 	push af
-	ld de,#map_table		; paging registers are write only
+	ld de,#mpgsel_cache		; paging registers are write only
 					; so cache their content in RAM
 	ld a,(hl)			; memory page number for bank #0
 	ld (de),a
@@ -277,25 +277,30 @@ map_restore:
 	ret
 
 ;=========================================================================
-; map_save - save the current page mapping
+; map_save - save the current page mapping to map_savearea
 ; Inputs: none
 ; Outputs: none
 ;=========================================================================
 map_save:
 	push hl
-	ld hl,(map_table)
+	ld hl,(mpgsel_cache)
 	ld (map_savearea),hl
-	ld hl,(map_table+2)
+	ld hl,(mpgsel_cache+2)
 	ld (map_savearea+2),hl
 	pop hl
 	ret
 
-map_table:
-	.db	32,33,34,35
+; MPGSEL registers are read only, so their content is cached here
+mpgsel_cache:
+	.db	0,0,0,0
+
+; kernel page mapping
 _kernel_pages:
 	.db	32,33,34,35
+
+; memory page mapping save area for map_save/map_restore
 map_savearea:
-	.db	32,33,34,35
+	.db	0,0,0,0
 
 ; has to live in common
 _kernel_flag:

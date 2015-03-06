@@ -98,9 +98,7 @@ int ramdisk_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
 #ifdef DEBUG
 		kprintf("page_cpy(src_page=%x, src_offset=%x, dst_page=%x, dst_offset=%x, cpy_count=%x)\n", src_page, src_offset, dst_page, dst_offset, cpy_count);
 #endif
-		__critical {
-			page_copy();
-		}
+		page_copy();
 		xfer_count -= cpy_count;
 		buffer_addr += cpy_count;
 		rd_addr += cpy_count;
