@@ -74,18 +74,15 @@ void sd_spi_unmap_interface()
     mapslot_bank1(slotram);
 }
 
-void sd_spi_clock(uint8_t drive, bool go_fast)
+void sd_spi_clock(bool go_fast)
 {
-    drive; /* not used */
     go_fast;
 }
 
-void sd_spi_raise_cs(uint8_t drive)
+void sd_spi_raise_cs(void)
 {
-    drive; /* not used */
-
     sd_spi_map_interface();
-    writeb(drive, MSD_DEVSEL);
+    writeb(0, MSD_DEVSEL);
 
     /* reading from MSD_CS raises CS for all cards */
 
@@ -94,17 +91,13 @@ void sd_spi_raise_cs(uint8_t drive)
     sd_spi_unmap_interface();
 }
 
-void sd_spi_lower_cs(uint8_t drive)
+void sd_spi_lower_cs(void)
 {
-    drive; /* not used */
-
     /* happens automatically when sending */
 }
 
-void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
+void sd_spi_transmit_byte(unsigned char byte)
 {
-    drive; /* not used */
-
     sd_spi_map_interface();
 
     writeb(byte, MSD_RDWR);
@@ -112,10 +105,9 @@ void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
     sd_spi_unmap_interface();
 }
 
-uint8_t sd_spi_receive_byte(uint8_t drive)
+uint8_t sd_spi_receive_byte(void)
 {
     unsigned char c;
-    drive; /* not used */
 
     sd_spi_map_interface();
 
@@ -131,7 +123,7 @@ uint8_t sd_spi_receive_byte(uint8_t drive)
  * Target page is always mapped to slot_page2, and the target address offset accordingly.
  *
  */
-bool sd_spi_receive_sector(uint8_t drive) __naked
+bool sd_spi_receive_sector(void) __naked
 {
     __asm
 
@@ -171,11 +163,9 @@ starttx:
     ld bc,#512
     jp looptxrx
     __endasm;
-
-    drive; /* silence compiler warning */
 }
 
-bool sd_spi_transmit_sector(uint8_t drive) __naked
+bool sd_spi_transmit_sector(void) __naked
 {
     __asm
 
@@ -244,7 +234,6 @@ looptxrx:
     ret z
     jp _map_kernel
     __endasm;
-    drive; /* silence compiler warning */
 }
 
 #endif

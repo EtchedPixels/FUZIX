@@ -55,10 +55,9 @@ reverse_byte_a:
     byte; /* squelch compiler warning */
 }
 
-void sd_spi_clock(uint8_t drive, bool go_fast)
+void sd_spi_clock(bool go_fast)
 {
     unsigned char c;
-    drive; /* not used */
 
     c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
     if(!go_fast)
@@ -66,26 +65,23 @@ void sd_spi_clock(uint8_t drive, bool go_fast)
     CSIO_CNTR = c;
 }
 
-void sd_spi_raise_cs(uint8_t drive)
+void sd_spi_raise_cs(void)
 {
-    drive; /* not used */
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     MARK4_SD = MARK4_SD & (~MARK4_SD_CS);
 }
 
-void sd_spi_lower_cs(uint8_t drive)
+void sd_spi_lower_cs(void)
 {
-    drive; /* not used */
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     MARK4_SD = MARK4_SD | MARK4_SD_CS;
 }
 
-void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
+void sd_spi_transmit_byte(unsigned char byte)
 {
     unsigned char c;
-    drive; /* not used */
 
     /* reverse the bits before we busywait */
     byte = reverse_byte(byte);
@@ -100,10 +96,9 @@ void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
     CSIO_CNTR = c | CSIO_CNTR_TE;
 }
 
-uint8_t sd_spi_receive_byte(uint8_t drive)
+uint8_t sd_spi_receive_byte(void)
 {
     unsigned char c;
-    drive; /* not used */
 
     /* wait for any current transmit or receive operation to complete */
     do{
@@ -129,7 +124,7 @@ COMMON_MEMORY
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
    three times faster. Main change is to start the next receive operation 
    as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_sector(uint8_t drive) __naked
+bool sd_spi_receive_sector(void) __naked
 {
     __asm
 waitrx: 
@@ -183,10 +178,9 @@ waitrx3:
         jr nz, rxnextbyte       ; go again if not yet done
         jr transferdone         ; we are done
     __endasm;
-    drive; /* squelch compiler warnings */
 }
 
-bool sd_spi_transmit_sector(uint8_t drive) __naked
+bool sd_spi_transmit_sector(void) __naked
 {
     __asm
         ; load parameters
@@ -235,5 +229,4 @@ transferdone:                   ; note this code is shared with sd_spi_receive_b
         ret z                   ; return if kernel still mapped
         jp map_kernel           ; else map kernel and return
     __endasm;
-    drive; /* squelch compiler warnings */
 }
