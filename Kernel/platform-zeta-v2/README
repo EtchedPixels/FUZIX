@@ -113,5 +113,5 @@ cat fuzix_48k.rom zeta_v2_rootfs.img > fuzix_zeta_v2_bootfs.rom
 6. Program the image (fuzix_zeta_v2_bootfs.rom) to the Flash ROM using an
 EPROM programmer
 
-7. Power on the the system. At bootdev: prompt enter either or device number 256 to boot from the RAM disk.
+7. Power on the the system. At bootdev: prompt enter either rd0 or device number 256 to boot from the RAM disk.
 
