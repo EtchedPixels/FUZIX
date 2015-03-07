@@ -128,6 +128,10 @@ int tty_carrier(uint8_t minor)
     return 1;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    minor;
+}
 
 #define SER_INIT	0x4F	/*  1 stop,no parity,8bit,16x */
 #define SER_RXTX	0x37
