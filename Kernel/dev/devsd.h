@@ -33,22 +33,25 @@
 void devsd_init(void);
 
 /* platform-specific SPI functions */
-void sd_spi_clock(uint8_t drive, bool go_fast); 
-void sd_spi_raise_cs(uint8_t drive);
-void sd_spi_lower_cs(uint8_t drive);
-void sd_spi_transmit_byte(uint8_t drive, uint8_t byte);
-uint8_t sd_spi_receive_byte(uint8_t drive);
-bool sd_spi_receive_sector(uint8_t drive);
-bool sd_spi_transmit_sector(uint8_t drive);
+void sd_spi_clock(bool go_fast); 
+void sd_spi_raise_cs(void);
+void sd_spi_lower_cs(void);
+void sd_spi_transmit_byte(uint8_t byte);
+uint8_t sd_spi_receive_byte(void);
+bool sd_spi_receive_sector(void);
+bool sd_spi_transmit_sector(void);
+
+/* for platforms which support multiple SD cards */
+extern uint8_t sd_drive; /* current card/drive number */
 
 #ifdef _SD_PRIVATE
 
 /* internal functions */
-void sd_spi_release(uint8_t drive);
-int sd_send_command(uint8_t drive, unsigned char cmd, uint32_t arg);
-uint8_t sd_spi_wait(uint8_t drive, bool want_ff);
-void sd_init_drive(uint8_t drive);
-int sd_spi_init(uint8_t drive);
+void sd_spi_release(void);
+int sd_send_command(unsigned char cmd, uint32_t arg);
+uint8_t sd_spi_wait(bool want_ff);
+void sd_init_drive(void);
+int sd_spi_init(void);
 uint8_t devsd_transfer_sector(void);
 
 /* Definitions for MMC/SDC command */
