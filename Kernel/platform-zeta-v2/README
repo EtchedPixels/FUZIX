@@ -53,10 +53,10 @@ mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
 mknod tty4  20660 516
-mknod hda   60660 0
-mknod hda1  60660 1
-mknod fd0   60660 256
-mknod fd1   60660 257
+mknod fd0   60660 0
+mknod fd1   60660 1
+mknod rd0   60660 256
+mknod rd1   60660 257
 mknod null  20666 1024
 mknod mem   20660 1025
 mknod zero  20444 1026
@@ -107,11 +107,11 @@ chmod 0755 umount
 exit
 
 5. Create ROM image:
-dd if=fuzix.rom of=fuzix_48k.rom bs=48k count=1 conv=syn
+dd if=fuzix.rom of=fuzix_48k.rom bs=48k count=1 conv=sync
 cat fuzix_48k.rom zeta_v2_rootfs.img > fuzix_zeta_v2_bootfs.rom
 
 6. Program the image (fuzix_zeta_v2_bootfs.rom) to the Flash ROM using an
 EPROM programmer
 
-7. Power on the the system. Enter device number 256 to boot from the RAM disk.
+7. Power on the the system. At bootdev: prompt enter either rd0 or device number 256 to boot from the RAM disk.
 

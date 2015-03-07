@@ -18,6 +18,7 @@
         .globl interrupt_handler
 	.globl map_kernel
 	.globl _ramtop
+	.globl mpgsel_cache
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -232,6 +233,7 @@ fork_next:
 	call map_kernel		; put the maps back so we can look in p_tab
 	djnz fork_next
 	ld a, c
+	ld (mpgsel_cache+3),a	; cache the page number
 	out (MPGSEL_3), a	; our last bank repeats up to common
 	; --- we are now on the stack copy, parent stack is locked away ---
 	ret			; this stack is copied so safe to return on

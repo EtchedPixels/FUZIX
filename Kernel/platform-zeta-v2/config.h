@@ -35,7 +35,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
-#define BOOTDEVICENAMES "fd,hd#"
+#define BOOTDEVICENAMES "fd,rd"
 
 //#define SWAPDEV  (256 + 1)  /* Device for swapping */
 #define NBUFS    10       /* Number of block buffers */
