@@ -48,9 +48,21 @@ static void mdv_make_bufhdr(uint8_t *buf, uint8_t rec, uint8_t *bits)
 
 static uint8_t blank[512];
 static uint8_t sectormap[512];
+static uint8_t fsmap[512];
 
+static uint8_t *mdv_fs_get(FILE *fsp)
+{
+  int err = fread(fsmap, 512, 1, fsp);
+  if (err < 0) {
+    perror("read");
+    exit(1);
+  }
+  if (err == 0)	/* EOF - blank to end */
+    return blank;
+  return fsmap;
+}
 
-static void mdv_write_tape(FILE *fp)
+static void mdv_write_tape(FILE *fp, FILE *fsp)
 {
   uint8_t buf[528];
   uint8_t *bits;
@@ -62,8 +74,13 @@ static void mdv_write_tape(FILE *fp)
     mdv_write(fp, buf, 15);
     if (block == 1 || block == 128)
       bits = sectormap;
-    else
-      bits = blank;
+    else {
+      if (fsp == NULL)
+        bits = blank;
+      else
+        /* Our blocks are in order so we can simply pull the next one */
+        bits = mdv_fs_get(fsp);
+    }
     mdv_make_bufhdr(buf, block, bits);
     mdv_write(fp, buf, 528);
     block++;
@@ -91,10 +108,11 @@ static void mdv_make_map(void) {
 void main(int argc, char *argv[])
 {
   FILE *fp;
+  FILE *fsp = NULL;
   uint8_t zero = 0;
 
-  if (argc != 2) {
-    fprintf(stderr, "%s: microdrive.mdr\n", argv[0]);
+  if (argc != 2 && argc != 3) {
+    fprintf(stderr, "%s: microdrive.mdr [filesystem]\n", argv[0]);
     exit(1);
   }
 
@@ -104,7 +122,14 @@ void main(int argc, char *argv[])
     perror(argv[1]);
     exit(1);
   }
-  mdv_write_tape(fp);
+  if (argc == 3) {
+    fsp = fopen(argv[2], "r");
+    if (fsp == NULL) {
+      perror(argv[2]);
+      exit(1);
+    }
+  }
+  mdv_write_tape(fp, fsp);
   fwrite(&zero, 1, 1, fp);
   fclose(fp);
   exit(0);
