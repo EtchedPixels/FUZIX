@@ -23,7 +23,9 @@ config FACTOR
     Factor integers.
 */
 
-#include "toys.h"
+#include  <stdio.h>
+#include  <ctype.h>
+#include  <string.h>
 
 static void factor(char *s)
 {
@@ -37,7 +39,7 @@ static void factor(char *s)
 
     l = strtol(s, &s, 0);
     if (*s && !isspace(*s)) {
-      error_msg("%s: not integer", err);
+      fprintf(stderr,"%s: not integer", err);
 
       return;
     }
@@ -79,7 +81,7 @@ static void factor(char *s)
   }
 }
 
-void main(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
   if (argc > 1) {
     char **ss;
