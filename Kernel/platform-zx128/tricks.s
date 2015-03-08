@@ -362,7 +362,6 @@ bankfork_1:
 ;	have the IM2 vectors
 ;
 fliplow:
-	ret			; FIXME
 	exx
 	ld hl, #0x8000
 	ld de, #0xc000
