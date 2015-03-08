@@ -77,6 +77,7 @@ extern FILE stderr[1];
 #define getchar()	getc(stdin)
 
 extern char *gets __P((char *));
+extern char *gets_s __P((char *, size_t));
 
 extern int _putchar __P((int));
 extern int _getchar __P((void));
