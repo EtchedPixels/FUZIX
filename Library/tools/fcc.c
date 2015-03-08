@@ -24,6 +24,20 @@ struct arglist {
   char p[0];
 };
 
+static void oom(void)
+{
+  fprintf(stderr, "Out of memory.\n");
+  exit(1);
+}
+
+static char *mstrdup(const char *p)
+{
+  char *n = strdup(p);
+  if (n == NULL)
+    oom();
+  return n;
+}
+
 static void not_null(const char *p)
 {
   if (p == NULL) {
@@ -105,7 +119,7 @@ static void set_target(const char *p)
     fprintf(stderr, "-o cannot be used twice.\n");
     exit(1);
   }
-  target = strdup(p);
+  target = mstrdup(p);
 }
 
 static const char *opt;
@@ -118,7 +132,7 @@ static void set_optimize(const char *p)
     fprintf(stderr, "fcc: -O cannot be used twice.\n");
     exit(1);
   }
-  opt = strdup(p);
+  opt = mstrdup(p);
   if (*opt && sscanf(opt, "%d", &optcode) != 1) {
     fprintf(stderr, "fcc: -O requires a value\n");
     exit(1);
@@ -136,7 +150,7 @@ static void set_map(const char *p)
     fprintf(stderr, "-M cannot be used twice.\n");
     exit(1);
   }
-  map = strdup(p);
+  map = mstrdup(p);
 }
 
 static const char *cpu;
@@ -148,11 +162,28 @@ static void set_cpu(const char *p)
     fprintf(stderr, "-m cannot be used twice.\n");
     exit(1);
   }
-  cpu = strdup(p);
+  cpu = mstrdup(p);
   if (strcmp(cpu, "z80") && strcmp(cpu, "z180")) {
     fprintf(stderr,"fcc: only z80 and z180 targets currently handled.\n");
     exit(1);
   }
+}
+
+static const char *platform = "";
+
+static void set_platform(const char *p)
+{
+  char *n;
+  not_null(p);
+  if (*platform) {
+    fprintf(stderr, "-t cannot be used twice.\n");
+    exit(1);
+  }
+  n = malloc(strlen(p) + 2);
+  if (n == NULL)
+    oom();
+  sprintf(n, "-%s", p);
+  platform = n;
 }
 
 static int debug;
@@ -183,7 +214,7 @@ static char *rebuildname(const char *r, const char *i, char *ext)
 
 static char *chopname(const char *i)
 {
-  char *p = strdup(i);
+  char *p = mstrdup(i);
   char *t;
   if (p == NULL) {
     fprintf(stderr, "Out of memory.\n");
@@ -282,6 +313,8 @@ static int do_command(void)
 
 static void build_command(void)
 {
+  char buf[128];
+
   add_argument("sdcc");
   /* Set up the basic parameters we will inflict on the user */
   add_argument("--std-c99");
@@ -290,7 +323,11 @@ static void build_command(void)
     add_argument("--no-std-crt0");
     add_argument("--nostdlib");
     add_argument("--code-loc");
-    add_argument("0x100");
+    /* FIXME: we need a nice way to avoid these being special cased */
+    if (strcmp(platform, "-zx128") == 0)
+      add_argument("0x8000");
+    else
+      add_argument("0x100");
     add_argument("--data-loc");
     add_argument("0x0");
   }
@@ -339,7 +376,8 @@ static void build_command(void)
       exit(1);
     }
     add_option("-o", target);
-    add_argument(FCC_DIR "/lib/crt0.rel");
+    snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s.rel", platform);
+    add_argument(buf);
   }
   if (srchead) {
     if (mode == MODE_OBJ)
@@ -360,6 +398,7 @@ int main(int argc, const char *argv[]) {
   char *t;
   int i;
   int ret;
+  char buf[128];
   
   for(i = 1; i < argc; i++) {
     p = argv[i];
@@ -422,6 +461,12 @@ int main(int argc, const char *argv[]) {
           else
             set_map(p + 2);
           break;
+        case 't':
+          if (p[2] == 0)
+            set_platform(argv[++i]);
+          else
+            set_platform(p + 2);
+          break;
         case 'g':
           debug = 1;
           break;
@@ -441,7 +486,8 @@ int main(int argc, const char *argv[]) {
   }
   add_include_path(FCC_DIR "/include/");
   add_library_path(FCC_DIR "/lib/");
-  add_library("c");
+  snprintf(buf, sizeof(buf), "c%s", platform);
+  add_library(buf);
 
   if (mode == MODE_OBJ) {
     while (srchead) {
