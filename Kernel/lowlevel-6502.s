@@ -15,7 +15,6 @@
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall_i
-	.import nmi_trap
 	.import map_restore
 	.import map_save
 	.import map_process_always
@@ -24,6 +23,7 @@
 	.import platform_doexec
 	.import _inint
 	.import CTemp
+	.import _trap_monitor
 
 	.include "platform/zeropage.inc"
 	.include "platform/kernel.def"
@@ -63,7 +63,8 @@ unix_sig_exit:
 ;
 ;	doexec is a special case syscall exit path. As we may have no
 ;	common we have to hand the last bits off to the platform code
-;	x,a holds the target address
+;	x,a holds the target address. This routine is in common and is the
+;	one case we can and do want to have fastcall.
 ;
 _doexec:
 	ldy #0
@@ -127,14 +128,14 @@ Swap1:  ldx     CTemp,y
         bpl     Swap1
         rts
 
-
-
 nmi_handler:
 	ldx #>nmi_trap
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp nmi_stop
+	jmp _trap_monitor
+nmi_trap:
+	.byte "NMI!", 0
 
 outstring:
 	sta ptr1
