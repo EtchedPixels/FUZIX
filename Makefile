@@ -6,11 +6,11 @@ TOP = .
 OBJ = $(TOP)/.obj/$(PLATFORM)
 hide = @
 
-LIBC = $(OBJ)/Library/libc.a
 all: $(LIBC)
 
 include $(TOP)/Build/platforms/$(PLATFORM).mk
 include $(TOP)/Library/build.mk
+include $(TOP)/Applications/build.mk
 
 clean:
 	@echo CLEAN
