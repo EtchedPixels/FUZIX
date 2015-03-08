@@ -86,6 +86,11 @@ int tty_carrier(uint8_t minor)
 	return (reg & 8) ? 1 : 0;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+	used(minor);
+}
+
 static uint8_t dart_setup[] = {
 	1, 0x19,
 	2, 0x04,	/* Vector */
