@@ -72,9 +72,10 @@ _switchout:
         ; find another process to run (may select this one again)
 	push af
         call _getproc
-	pop af
+	pop af		; tidy this stack stuff up ex (sp), hl ??
 
         push hl
+	push af
         call _switchin
 
         ; we should never get here
@@ -140,6 +141,7 @@ _switchin:
 	;	Is our low data in 0x8000 already or do we need to flip
 	;	it with bank 6
 
+	inc hl			; get our low bank (2nd entry)
 	ld a, (low_bank)
 	cp (hl)
 	call nz, fliplow
@@ -360,6 +362,7 @@ bankfork_1:
 ;	have the IM2 vectors
 ;
 fliplow:
+	ret			; FIXME
 	exx
 	ld hl, #0x8000
 	ld de, #0xc000
