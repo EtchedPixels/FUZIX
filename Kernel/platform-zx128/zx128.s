@@ -10,6 +10,7 @@
         .globl _program_vectors
         .globl platform_interrupt_all
 	.globl interrupt_handler
+	.globl unix_syscall_entry
 
         .globl map_kernel
         .globl map_process
@@ -159,9 +160,12 @@ setvectors:
 	ld a, #0x18
 	ld (0xffff), a		;	JR (plus ROM at 0 gives JR $FFF4)
 	ld a, #0xC3		;	JP
-	ld (0xFFF4), a
+	ld (0xFFF4), a		;	FFF4-6 are the interrupt vector
+	ld (0xFFF7), a		;	FFF7-9 are syscall
 	ld hl, #interrupt_handler
 	ld (0xFFF5), hl		;	to IRQ handler
+	ld hl, #unix_syscall_entry
+	ld (0xFFF8), hl		;	system calls (can't use RST on this box)
 	call map_restore
 	ret
 
