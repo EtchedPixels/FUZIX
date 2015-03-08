@@ -83,6 +83,11 @@ void tty_setup(uint8_t minor)
 	minor;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+	minor;
+}
+
 void update_keyboard(void)
 {
 	/* We need this assembler code because SDCC __sfr cannot handle 16-bit addresses. And because it is much faster, of course  */
