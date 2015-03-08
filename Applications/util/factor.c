@@ -14,11 +14,6 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-(Note: some build infrastructure in the kconfig directory is still GPLv2,
-cleaning that out is a TODO item, but it doesn't affect the resulting
-binary.)
-USE_FACTOR(NEWTOY(factor, 0, TOYFLAG_USR|TOYFLAG_BIN))
-
 config FACTOR
   bool "factor"
   default y
