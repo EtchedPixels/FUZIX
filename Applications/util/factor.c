@@ -77,7 +77,7 @@ static void factor(char *s)
         l /= ll;
       }
     }
-    xputc('\n');
+    putc(stderr,'\n');
   }
 }
 
