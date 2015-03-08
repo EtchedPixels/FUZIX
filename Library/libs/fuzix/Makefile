@@ -4,7 +4,7 @@ CROSS_LD=sdldz80
 CROSS_AR=sdar
 ASOPTS=
 
-ASYS=syscall.s
+ASYS=syscall$(PLATFORM).s
 ASRCS = syscall__exit.s
 ASRCS += syscall_open.s
 ASRCS += syscall_close.s
