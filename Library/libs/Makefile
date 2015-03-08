@@ -3,8 +3,8 @@ ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
 # This gets set for 'awkward' devices like ZX128
-#PLATFORM = -zx128
-PLATFORM =
+PLATFORM = -zx128
+#PLATFORM =
 export PLATFORM
 #CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
 CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
@@ -78,7 +78,7 @@ syslib$(PLATFORM).lib: syscall.l libc.l sdccz80.lib
 	cp sdccz80.lib syslib$(PLATFORM).lib
 	$(AR) rc syslib$(PLATFORM).lib @syslib.l
 	$(AR) s syslib$(PLATFORM).lib
-	ln -sf syslib$(PLARFORM).lib c$(PLATFORM).lib
+	ln -sf syslib$(PLATFORM).lib c$(PLATFORM).lib
 
 fuzix/syslib.l:
 	../tools/syscall
