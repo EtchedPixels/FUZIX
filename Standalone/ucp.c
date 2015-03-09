@@ -87,7 +87,7 @@ int main(argc, argval)
             printf("unix: ");
             if (fgets(line, 128, stdin) == NULL) {
                 xfs_end();
-                exit(1);
+                exit(retc);
             }
         }
 
@@ -126,7 +126,7 @@ int main(argc, argval)
         switch (match(cmd)) {
             case 0:         /* exit */
                 xfs_end();
-                exit(1);
+                exit(retc);
 
             case 1:         /* ls */
                 if (*arg1)

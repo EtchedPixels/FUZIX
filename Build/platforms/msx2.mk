@@ -30,4 +30,5 @@ $(OBJ)/Applications/%: LDFLAGS = \
 	--data-loc 0
 
 include $(TOP)/Build/sdcc-rules.mk
+include $(TOP)/Build/host-rules.mk
 

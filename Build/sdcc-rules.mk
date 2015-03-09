@@ -50,10 +50,11 @@ $(LIBCLEAN): $(SDCC_LIBS)/$(ARCH).lib
 		putchar.rel heap.rel fstubs.rel setjmp.rel errno.rel \
 		rand.rel _calloc.rel _malloc.rel _realloc.rel _free.rel \
 		printf_large.rel puts.rel gets.rel assert.rel time.rel \
-		tolower.rel toupper.rel _ltoa.rel _itoa.rel abs.rel
+		tolower.rel toupper.rel _ltoa.rel _itoa.rel abs.rel \
+		vprintf.rel vfprintf.rel sprintf.rel
 
 # Assembly files which need to be preprocessed --- run through cpp first.
-$(OBJ)/%.s: %.S
+$(OBJ)/%.s: $(TOP)/%.S
 	@echo CPP $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CPP) $(INCLUDES) $(DEFINES) -o $@ $<
@@ -72,13 +73,13 @@ $(OBJ)/%.$O: $(OBJ)/%.s
 	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $<
 
 # Ordinary C files.
-$(OBJ)/%.$O: %.c
+$(OBJ)/%.$O: $(TOP)/%.c
 	@echo CC $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $<
 
 # Assembly files which don't need to be preprocessed.
-$(OBJ)/%.$O: %.s
+$(OBJ)/%.$O: $(TOP)/%.s
 	@echo AS $@
 	@mkdir -p $(dir $@)
 	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $<
@@ -91,7 +92,7 @@ $(OBJ)/%.$A:
 	$(hide) $(AR) -rc $@ $^
 
 # Executables. Add object files by adding prerequisites.
-$(OBJ)/Applications/%: $(OBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEAN)
+$(OBJ)/Applications/%: $(HOSTOBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEAN)
 	@echo LINK $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CC) $(LDFLAGS) $(INCLUDES) $(DEFINES) \
@@ -99,12 +100,9 @@ $(OBJ)/Applications/%: $(OBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEAN)
 	$(hide) makebin -p -s 65535 $@.ihx $@.bin
 	$(hide) $< $@.bin $@.map $@
 
-$(OBJ)/Library/tools/binman: $(TOP)/Library/tools/binman.c
-	@echo HOSTCC $@
-	@mkdir -p $(dir $@)
-	$(hide) $(HOSTCC) -o $@ $^
-
 $(OBJ)/Applications/%: INCLUDES += -I$(TOP)/Library/include
 $(OBJ)/Library/%: INCLUDES += -I$(TOP)/Library/include
 $(OBJ)/Library/%: INCLUDES += -I$(OBJ)/Library/libs/fuzix
+
+$(HOSTOBJ)/Library/tools/binman: $(HOSTOBJ)/Library/tools/binman.o
 
