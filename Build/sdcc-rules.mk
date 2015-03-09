@@ -22,9 +22,14 @@ trim_after_section = \
 find_section = \
 	$(call trim_after_section, $(call trim_before_named_section, $1, $2))
 
+# Fetch information about the SDCC installation: we'll need to know
+# where SDCC's libraries and headers are later.
+
 search_dirs = $(shell $(CC) --print-search-dirs -m$(ARCH))
-SDCC_INCLUDES = $(call find_section, $(search_dirs), includedir:)
+SDCC_INCLUDES = $(patsubst %, -I%, \
+		$(call find_section, $(search_dirs), includedir:))
 SDCC_LIBS = $(firstword $(call find_section, $(search_dirs), libdir:))
+SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES)
 
 # Forget default suffix rules.
 .SUFFIXES:
@@ -54,29 +59,36 @@ $(LIBCLEAN): $(SDCC_LIBS)/$(ARCH).lib
 		vprintf.rel vfprintf.rel sprintf.rel
 
 # Assembly files which need to be preprocessed --- run through cpp first.
-$(OBJ)/%.s: $(TOP)/%.S
-	@echo CPP $@
-	@mkdir -p $(dir $@)
-	$(hide) $(CPP) $(INCLUDES) $(DEFINES) -o $@ $<
-
-# Likewise, for dynamically generated assembly files.
-.PRECIOUS: $(OBJ)/%.s
-$(OBJ)/%.s: $(OBJ)/%.S
-	@echo CPP $@
-	@mkdir -p $(dir $@)
-	$(hide) $(CPP) $(INCLUDES) $(DEFINES) -o $@ $<
-
-# Dynamically generated preprocessed assembly files.
-$(OBJ)/%.$O: $(OBJ)/%.s
+$(OBJ)/%.$O: $(TOP)/%.S
 	@echo AS $@
 	@mkdir -p $(dir $@)
-	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $<
+	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
+		-MM -MF $(basename $@).d -MT $@ $<
+	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
+		-o $(basename $@).s $<
+	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
+
+# Likewise, for dynamically generated assembly files.
+$(OBJ)/%.$O: $(OBJ)/%.S
+	@echo AS $@
+	@mkdir -p $(dir $@)
+	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
+		-MM -MF $(basename $@).d -MT $@ $<
+	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
+		-o $(basename $@).s $<
+	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
 
 # Ordinary C files.
 $(OBJ)/%.$O: $(TOP)/%.c
 	@echo CC $@
 	@mkdir -p $(dir $@)
+	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) \
+		-M $< | sed -e '1s!^[^:]*!$@!' > $(basename $@).d
 	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $<
+
+# Tell make how to generate .d files, to stop it confusing them with
+# executables.
+$(OBJ)/%.d: $(OBJ)/%.$O ;
 
 # Assembly files which don't need to be preprocessed.
 $(OBJ)/%.$O: $(TOP)/%.s
@@ -98,11 +110,14 @@ $(OBJ)/Applications/%: $(HOSTOBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEA
 	$(hide) $(CC) $(LDFLAGS) $(INCLUDES) $(DEFINES) \
 		-o $@.ihx $(wordlist 2, 999, $^)
 	$(hide) makebin -p -s 65535 $@.ihx $@.bin
-	$(hide) $< $@.bin $@.map $@
+	$(hide) $< $@.bin $@.map $@ > /dev/null
 
+# Ensure that various things know where their headers are.
 $(OBJ)/Applications/%: INCLUDES += -I$(TOP)/Library/include
 $(OBJ)/Library/%: INCLUDES += -I$(TOP)/Library/include
 $(OBJ)/Library/%: INCLUDES += -I$(OBJ)/Library/libs/fuzix
 
+# Z80 binaries (which we're assuming here) require massaging before they're
+# valid Fuzix binaries. This tool does that.
 $(HOSTOBJ)/Library/tools/binman: $(HOSTOBJ)/Library/tools/binman.o
 
