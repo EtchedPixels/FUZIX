@@ -148,11 +148,11 @@ init_hardware:
 _program_vectors:
 	pop bc
 	pop de
-	pop iy			;	task ptr
-	push iy
+	pop hl			;	task page ptr
+	push hl
 	push de
 	push bc
-	ld a, P_TAB__P_PAGE_OFFSET+1(iy)	; high page of the pair
+	ld a, (hl)		; high page of the pair
 
 setvectors:
 	call map_save
