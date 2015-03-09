@@ -7,7 +7,9 @@ OBJ = $(TOP)/.obj/$(PLATFORM)
 HOSTOBJ = $(TOP)/.obj/host
 hide = @
 
-all: $(OBJ)/filesystem.img
+FILESYSTEM = filesystem-$(PLATFORM).img
+
+all: $(FILESYSTEM)
 
 include $(TOP)/Build/platforms/$(PLATFORM).mk
 include $(TOP)/Library/build.mk

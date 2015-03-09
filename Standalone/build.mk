@@ -13,7 +13,7 @@ binaries := $(subst ../../Applications, Applications, $(binaries))
 binaries := $(filter Applications/%, $(binaries))
 binaries := $(patsubst %, $(OBJ)/%, $(binaries))
 
-$(OBJ)/filesystem.img: $(TOP)/Standalone/filesystem-src/ucp-script.txt \
+$(FILESYSTEM): $(TOP)/Standalone/filesystem-src/ucp-script.txt \
 		$d/ucp $d/mkfs $(binaries)
 	@echo FILESYSTEM $@
 	@mkdir -p $(dir $@)
