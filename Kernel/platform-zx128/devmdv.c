@@ -40,7 +40,7 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		/* Direct to user */
 		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
 			goto bad;
-		mdv_buf = (uint8_t *)udata.u_buf->bf_blk;
+		mdv_buf = (uint8_t *)udata.u_base;
 		nblock = udata.u_count >> 9;
 		block = udata.u_offset >> 9;
 		mdv_page = 1;
@@ -50,6 +50,7 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	while(nblock--) {
 		mdv_sector = mdvmap[minor][block++];
+//		kprintf("Load sector %d to %d:%x\n", mdv_sector, mdv_page, mdv_buf);
 		irq = di();
 		if (is_read)
 			err = mdv_bread();
