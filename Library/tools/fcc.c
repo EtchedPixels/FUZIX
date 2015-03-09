@@ -19,6 +19,8 @@ static char *workdir;		/* Working directory */
 
 static int verbose = 0;
 
+static unsigned int progbase = 0x0100;	/* Program base */
+
 struct arglist {
   struct arglist *next;
   char p[0];
@@ -184,6 +186,8 @@ static void set_platform(const char *p)
     oom();
   sprintf(n, "-%s", p);
   platform = n;
+  if (strcmp(platform, "-zx128") == 0)
+    progbase = 0x8000;
 }
 
 static int debug;
@@ -323,11 +327,8 @@ static void build_command(void)
     add_argument("--no-std-crt0");
     add_argument("--nostdlib");
     add_argument("--code-loc");
-    /* FIXME: we need a nice way to avoid these being special cased */
-    if (strcmp(platform, "-zx128") == 0)
-      add_argument("0x8000");
-    else
-      add_argument("0x100");
+    snprintf(buf, sizeof(buf), "%d", progbase);
+    add_argument(mstrdup(buf));
     add_argument("--data-loc");
     add_argument("0x0");
   }
@@ -377,7 +378,7 @@ static void build_command(void)
     }
     add_option("-o", target);
     snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s.rel", platform);
-    add_argument(buf);
+    add_argument(mstrdup(buf));
   }
   if (srchead) {
     if (mode == MODE_OBJ)
@@ -516,6 +517,8 @@ int main(int argc, const char *argv[]) {
     exit(ret);
   argp = 0;
   add_argument(FCC_DIR "/bin/binman");
+  snprintf(buf, sizeof(buf), "%x", progbase);
+  add_argument(buf);
   add_argument(t);
   add_argument(rebuildname("", target, "map"));
   add_argument(chopname(target));
