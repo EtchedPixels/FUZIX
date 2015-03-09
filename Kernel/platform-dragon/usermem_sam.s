@@ -42,8 +42,8 @@ __ugetw:
 
 __uget:
 	pshs u,y,cc
-	ldu 8,s		; user address
-	ldy 10,s	; count
+	ldu 7,s		; user address
+	ldy 9,s		; count
 	orcc #0x10
 ugetl:
 	lda ,x++
@@ -57,8 +57,8 @@ ugetl:
 
 __ugets:
 	pshs u,y,cc
-	ldu 8,s		; user address
-	ldy 10,s		; count
+	ldu 7,s		; user address
+	ldy 9,s		; count
 	orcc #0x10
 ugetsl:
 	SAM_USER
@@ -84,7 +84,7 @@ ugetse:
 __uputc:
 	pshs cc
 	orcc #0x10
-	ldd 4,s
+	ldd 3,s
 	SAM_USER
 	exg d,x
 	stb ,x
@@ -94,7 +94,7 @@ __uputc:
 __uputw:
 	pshs cc
 	orcc #0x10
-	ldd 4,s
+	ldd 3,s
 	SAM_USER
 	exg d,x
 	std ,x
@@ -105,8 +105,8 @@ __uputw:
 __uput:
 	pshs u,y,cc
 	orcc #0x10
-	ldu 8,s		; user address
-	ldy 10,s	; count
+	ldu 7,s		; user address
+	ldy 9,s		; count
 uputl:
 	lda ,x++
 	SAM_USER
@@ -120,7 +120,7 @@ uputl:
 __uzero:
 	pshs y,cc
 	lda #0
-	ldy 8,s
+	ldy 7,s
 	orcc #0x10
 	SAM_USER
 uzloop:
