@@ -14,7 +14,7 @@ ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
 SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
-SRC_ASM =
+SRC_ASM = enter.s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
