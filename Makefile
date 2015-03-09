@@ -15,6 +15,7 @@ include $(TOP)/Build/platforms/$(PLATFORM).mk
 include $(TOP)/Library/build.mk
 include $(TOP)/Applications/build.mk
 include $(TOP)/Standalone/build.mk
+-include $(shell find $(OBJ) $(HOSTOBJ) -name "*.d")
 
 clean:
 	@echo CLEAN
