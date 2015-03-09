@@ -28,7 +28,7 @@ __ugetc:
 	SAM_USER
 	ldb ,x
 	SAM_KERNEL
-	lda #0
+	clra
 	tfr d,x
 	puls cc,pc	; back and return
 
@@ -51,7 +51,6 @@ ugetl:
 	sta ,u+
 	SAM_KERNEL
 	leay -1,y
-	cmpy #0
 	bne ugetl
 	puls u,y,cc,pc
 
@@ -67,13 +66,11 @@ ugetsl:
 	SAM_KERNEL
 	sta ,u+
 	leay -1,y
-	cmpy #0
 	bne ugetsl
 	ldx #0xffff	; unterminated - error
 	lda #0
 	sta -1,u	; force termination
 	puls u,y,cc,pc
-
 ugetse:
 	SAM_KERNEL
 	sta ,u
@@ -113,7 +110,6 @@ uputl:
 	sta ,u+
 	SAM_KERNEL
 	leay -1,y
-	cmpy #0
 	bne uputl
 	puls u,y,cc,pc
 
@@ -126,7 +122,6 @@ __uzero:
 uzloop:
 	sta ,x+
 	leay -1,y
-	cmpy #0
 	bne uzloop
 	SAM_KERNEL
 	puls y,cc,pc
