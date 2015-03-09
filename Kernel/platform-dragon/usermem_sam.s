@@ -46,9 +46,9 @@ __uget:
 	ldy 9,s		; count
 	orcc #0x10
 ugetl:
-	lda ,x++
+	lda ,x+
 	SAM_USER
-	sta ,u++
+	sta ,u+
 	SAM_KERNEL
 	leay -1,y
 	cmpy #0
@@ -62,10 +62,10 @@ __ugets:
 	orcc #0x10
 ugetsl:
 	SAM_USER
-	lda ,x++
+	lda ,x+
 	beq ugetse
 	SAM_KERNEL
-	sta ,u++
+	sta ,u+
 	leay -1,y
 	cmpy #0
 	bne ugetsl
@@ -108,9 +108,9 @@ __uput:
 	ldu 7,s		; user address
 	ldy 9,s		; count
 uputl:
-	lda ,x++
+	lda ,x+
 	SAM_USER
-	sta ,u++
+	sta ,u+
 	SAM_KERNEL
 	leay -1,y
 	cmpy #0
