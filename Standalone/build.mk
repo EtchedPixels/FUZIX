@@ -26,3 +26,7 @@ $(FILESYSTEM): $(TOP)/Standalone/filesystem-src/ucp-script.txt \
 		$(TOP)/Standalone/filesystem-src/ucp-script.txt \
 		| $d/ucp $@ > /dev/null
 
+install:: $d/chmem $d/mkfs $d/fsck $d/size $d/ucp
+	@echo INSTALL standalone tools
+	$(hide) mkdir -p $(PREFIX)/bin
+	$(hide) cp $^ $(PREFIX)/bin

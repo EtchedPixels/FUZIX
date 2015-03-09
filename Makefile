@@ -1,3 +1,5 @@
+hide = @
+
 ifeq ($(PLATFORM),,)
 $(error You must specify PLATFORM=something --- look in Build/platforms.)
 endif
@@ -5,7 +7,7 @@ endif
 TOP = .
 OBJ = $(TOP)/.obj/$(PLATFORM)
 HOSTOBJ = $(TOP)/.obj/host
-hide = @
+PREFIX = /usr/local
 
 FILESYSTEM = filesystem-$(PLATFORM).img
 
