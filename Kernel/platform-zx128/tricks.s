@@ -20,6 +20,7 @@
         .globl unix_syscall_entry
         .globl interrupt_handler
 	.globl current_map
+	.globl _ptab
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -66,6 +67,7 @@ _switchout:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
 
@@ -135,16 +137,20 @@ _switchin:
 	;
 
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
         
 	;	Is our low data in 0x8000 already or do we need to flip
-	;	it with bank 6
+	;	it with bank 6. low_bank holds the page pointer of the
+	;	task owning the space
 
-	inc hl			; get our low bank (2nd entry)
-	ld a, (low_bank)
-	cp (hl)
+	push de
+	or a
+	ld de, (low_bank)
+	sbc hl, de
 	call nz, fliplow
+	pop de
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
@@ -197,10 +203,12 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         di ; should already be the case ... belt and braces.
 
+	pop bc
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
         push de
+	push bc
 
         ld (fork_proc_ptr), hl
 
@@ -234,8 +242,9 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET;		bank number
+        ld de, #P_TAB__P_PAGE_OFFSET	;	bank number
         add hl, de
+	ld (low_bank), hl		;	low bank will become the child
         ; load p_page
         ld c, (hl)
 	ld hl, (U_DATA__U_PAGE)
@@ -265,6 +274,7 @@ _dofork:
 
 	ld hl, (U_DATA__U_PAGE)	; parent memory
         ld a, l
+	or #0x18		; get the right ROMs
 	ld bc, #0x7ffd
 	out (c), a		; Switch context to parent
 
@@ -281,6 +291,7 @@ _dofork:
 	;
 	ld bc, #0x7ffd
 	ld a, (current_map)
+	or #0x18
 	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -387,11 +398,11 @@ flip1:
 	jr nz, flip2
 
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
 	exx
-	ld a, (hl)		; Update low bank number
-	ld (low_bank), a
+	ld (low_bank), hl	; Update low bank pointer
 	ret
 ;
 ;	For the moment
@@ -405,4 +416,5 @@ bouncebuffer:
 ;	so share with bouncebuffer
 _swapstack:
 low_bank:
-	.db 0
+	.dw _ptab + P_TAB__P_PAGE_OFFSET	; Init starts owning this
+
