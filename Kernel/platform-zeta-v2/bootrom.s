@@ -15,7 +15,7 @@ start:
 		out (MPGENA),a		; enable paging
 
 		; copy FUZIX kernel to RAM
-		; 3 pages, starting from ROM page 0, RAM page 32
+		; 4 pages, starting from ROM page 0, RAM page 32
 		xor a
 kernel_copy:
 		out (MPGSEL_1),a	; map ROM page to bank #1
@@ -26,22 +26,22 @@ kernel_copy:
 		ld bc,#0x4000		; count - 16 KiB
 		ldir			; copy it
 		sub a,#31		; next ROM page = RAM page - 32 + 1
-		cp #3			; are we there yet (RAM page == 3?)
+		cp #4			; are we there yet (RAM page == 4?)
 		jr nz,kernel_copy
 
 		; copy data to RAM disk
-		; 16 pages, starting from ROM page 3, RAM page 48
-		ld a,#3
+		; 16 pages, starting from ROM page 4, RAM page 48
+		ld a,#4
 ramdisk_copy:
 		out (MPGSEL_1),a	; map ROM page to bank #1
-		add #45			; RAM page = ROM page + 45
+		add #44			; RAM page = ROM page + 44
 		out (MPGSEL_2),a	; map RAM page to bank #2
 		ld hl,#0x4000		; source - bank #1 offset
 		ld de,#0x8000		; destination - bank #2 offset
 		ld bc,#0x4000		; count - 16 KiB
 		ldir			; copy it
-		sub #44			; next ROM page = RAM page - 45 + 1
-		cp #19			; are we there yet (RAM page == 3 + 16?)
+		sub #43			; next ROM page = RAM page - 44 + 1
+		cp #20			; are we there yet (RAM page == 4 + 16?)
 		jr nz,ramdisk_copy
 
 		; scary... switching memory bank under our feet
