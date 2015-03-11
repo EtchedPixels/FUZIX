@@ -11,6 +11,7 @@ export CROSS_CC_SEG1=--code-name SEG1
 export CROSS_CC_SEG2=--code-name SEG2
 # 6502 we need a real SEG3 to make it fit
 export CROSS_CC_SEG3=--code-name SEG3
+export CROSS_CC_VIDEO=--code-name SEG3
 export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
 export ASMEXT = .s
 export BINEXT = .o

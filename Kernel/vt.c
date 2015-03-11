@@ -193,6 +193,7 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 	   here.. probably need to switch vt */
 	if (minor <= MAX_VT) {
 		switch(request) {
+#ifdef KEY_ROWS
 			case KBMAPSIZE:
 				return KEY_ROWS << 8 | KEY_COLS;
 			case KBMAPGET:
@@ -205,6 +206,7 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 				return uget(shiftkeyboard,
 					data + sizeof(keyboard),
 					sizeof(shiftkeyboard));
+#endif					
 			case VTSIZE:
 				return VT_HEIGHT << 8 | VT_WIDTH;
 		}

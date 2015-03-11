@@ -26,16 +26,14 @@ __sfr __at 0x36 sd_spi_mode;		/* only on later VHDL */
 #define SD_SPI_TX 0x32
 #define SD_SPI_RX 0x33
 
-void sd_spi_mode0(uint8_t drive)
+void sd_spi_mode0(void)
 {
-  used(drive);
   sd_spi_mode = 0;
 }
 
-void sd_spi_clock(uint8_t drive, bool go_fast)
+void sd_spi_clock(bool go_fast)
 {
-  used(drive);
-//  sd_spi_mode0(drive);
+//  sd_spi_mode0();
   /* Currently the sd driver just uses 'slow' and 'fast'. That's ok for
      sd but mmc really needs to be 16MHz */
   if (go_fast)
@@ -44,28 +42,24 @@ void sd_spi_clock(uint8_t drive, bool go_fast)
     sd_spi_divisor = 255;
 }
 
-void sd_spi_raise_cs(uint8_t drive)
+void sd_spi_raise_cs(void)
 {
-  used(drive);
   sd_spi_chipselect = 0xFF;
 }
 
-void sd_spi_lower_cs(uint8_t drive)
+void sd_spi_lower_cs(void)
 {
-  used(drive);
   sd_spi_chipselect = 0xFE;
 }
 
-void sd_spi_transmit_byte(uint8_t drive, unsigned char byte)
+void sd_spi_transmit_byte(unsigned char byte)
 {
-  used(drive);
   sd_spi_tx = byte;
 }
 
-uint8_t sd_spi_receive_byte(uint8_t drive)
+uint8_t sd_spi_receive_byte(void)
 {
   uint8_t r;
-  used(drive);
   sd_spi_tx = 0xFF;
   r = sd_spi_rx;
   return r;
@@ -73,9 +67,8 @@ uint8_t sd_spi_receive_byte(uint8_t drive)
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(uint8_t drive) __naked
+bool sd_spi_receive_sector(void) __naked
 {
-  used(drive);
   __asm
     ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET);
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET);
@@ -99,9 +92,8 @@ rx256_1:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t drive) __naked
+bool sd_spi_transmit_sector(void) __naked
 {
-  used(drive);
   __asm
     ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)

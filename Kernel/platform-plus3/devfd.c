@@ -57,7 +57,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (track[minor] != rwcmd[2]) {
             seekcmd[1] = 1 << minor;
             seekcmd[2] = rwcmd[2];
-            fdc_seek();
+            fdc_seek();		/* FIXME: error handling */
         }
         for (tries = 0; tries < 4 ; tries++) {
             /* FIXME: need to return status properly and mask it */

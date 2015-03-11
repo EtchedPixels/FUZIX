@@ -2,15 +2,19 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
+# This gets set for 'awkward' devices like ZX128
+PLATFORM = -zx128
+#PLATFORM =
+export PLATFORM
 #CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
 CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
 # for stuff that gives sdcc nightmares
 CC_NOOPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../include
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
-SRC_CRT0 = crt0.s
+SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
-SRC_ASM =
+SRC_ASM = enter.s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -56,7 +60,7 @@ OBJ_C = $(SRC_C:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib.lib crt0.rel
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -69,12 +73,12 @@ syscall.l: fuzix/syslib.l
 sdccz80.lib:
 	../tools/libclean
 
-syslib.lib: syscall.l libc.l sdccz80.lib
+syslib$(PLATFORM).lib: syscall.l libc.l sdccz80.lib
 	cat libc.l syscall.l >syslib.l
-	cp sdccz80.lib syslib.lib
-	$(AR) rc syslib.lib @syslib.l
-	$(AR) s syslib.lib
-	ln -sf syslib.lib c.lib
+	cp sdccz80.lib syslib$(PLATFORM).lib
+	$(AR) rc syslib$(PLATFORM).lib @syslib.l
+	$(AR) s syslib$(PLATFORM).lib
+	ln -sf syslib$(PLATFORM).lib c$(PLATFORM).lib
 
 fuzix/syslib.l:
 	../tools/syscall

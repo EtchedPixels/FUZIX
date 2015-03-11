@@ -239,6 +239,7 @@ _doexec:
 	; re-order this)
         call map_process_always
 
+	pop af ; pop far data
         pop bc ; return address
         pop de ; start address
         ;; push de ; restore stack ... but we're about to discard SP anyway!
