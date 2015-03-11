@@ -22,12 +22,24 @@ uint8_t *mdv_buf;
 uint8_t mdv_hdr_buf[15];
 uint16_t mdv_len;
 uint8_t mdv_page;
+static uint8_t mdv_tick;
+static uint8_t mdv_minor;
+
+void mdv_timer(void)
+{
+	if (mdv_tick) {
+		mdv_tick--;
+		if (mdv_tick == 0)
+			mdv_motor_off();
+	}
+}
 
 static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
 	int err;
 	irqflags_t irq;
 	uint16_t block, nblock;
+	uint8_t on = 0;
 
 	if (rawflag == 2)
 		goto bad;
@@ -46,7 +58,17 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		mdv_page = 1;
 	}
 
-	mdv_motor_on(minor + 1);
+	irq = di();
+	if (mdv_minor != minor) {
+		mdv_tick = 0;
+		mdv_motor_off();
+	}
+	if (mdv_tick == 0)
+		on = 1;
+	mdv_tick = 250;
+	irqrestore(irq);
+	if (on)
+		mdv_motor_on(minor + 1);
 
 	while(nblock--) {
 		mdv_sector = mdvmap[minor][block++];
@@ -59,8 +81,6 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		irqrestore(irq);
 		mdv_buf += 512;
 	}
-	/* Should be timer based for the motor */
-	mdv_motor_off();
 	return 0;
 bad:
 	udata.u_error = EIO;

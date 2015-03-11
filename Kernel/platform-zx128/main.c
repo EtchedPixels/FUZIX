@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devmdv.h>
 
 uint16_t ramtop = PROGTOP;
 
@@ -25,6 +26,7 @@ void platform_idle(void)
 void platform_interrupt(void)
 {
  tty_pollirq();
+ mdv_timer();
  timer_interrupt();
 }
 

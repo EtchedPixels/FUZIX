@@ -13,5 +13,8 @@ int mdv_motor_off(void);
 int mdv_bread(void);
 int mdv_bwrite(void);
 
+/* tiner */
+void mdv_timer(void);
+
 #endif /* __DEVMDV_DOT_H__ */
 
