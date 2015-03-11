@@ -96,8 +96,9 @@ clear_next_line:
         ld c, #32           ; clear 32 cols
         push bc
         push de
+	push af
         call _clear_across
-
+	pop af
         pop hl              ; clear stack
         pop hl
 
