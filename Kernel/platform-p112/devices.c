@@ -8,7 +8,7 @@
 #include <blkdev.h>
 #include <ds1302.h>
 #ifdef CONFIG_P112_FLOPPY
-#include "devfd.h"
+#include <devfd.h>
 #endif
 
 struct devsw dev_tab[] =  /* The device driver switch table */

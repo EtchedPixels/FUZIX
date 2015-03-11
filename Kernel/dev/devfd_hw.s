@@ -4,8 +4,12 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; 2015-01-17 Will Sowerbutts: Ported to sdas/Fuzix from UZI-180
 
-        .module devfd2
-        .z180
+        .module devfd_hw
+
+CPU_Z180	.equ	Z80_TYPE-2
+.ifeq	CPU_Z180
+	.z180
+.endif
 
         ; imported symbols
         .globl map_kernel
@@ -23,8 +27,9 @@
         .globl _devfd_userbuf
         .globl _fd_tick
 
-        .include "kernel.def"
+        .include "../platform/kernel.def"
         .include "../kernel.def"
+
 
 ;------------------------------------------------------------------------------
         .area _CODE
@@ -38,10 +43,10 @@
 ;       | | +------------ 1 = Enable Drive 1 Motor
 ;       | +-------------- 1 = Enable Drive 2 Motor
 ;       +---------------- 1 = Enable Drive 3 Motor
-;    093        -  (Not Used)
-;    094        - Data-Rate Select (Write) / Main Status Register (Read)
-;       7 6 5 4 3 2 1 0                         (Write)
 
+;    FDC_MSR    - Main Status Register (Read)
+;       7 6 5 4 3 2 1 0                         (Write)
+;
 ;       7 6 5 4 3 2 1 0                         (Read)
 ;       | | | | +-+-+-+-- Drives Seeking (0=B0 Set, 1=B1 Set,.. 3=B3 Set)
 ;       | | | +---------- 1 = Command In Progress, 0 = Command Ended
@@ -49,27 +54,16 @@
 ;       | +-------------- 1 = Read,                0 = Write
 ;       +---------------- 1 = Request for Master,  0 = Internal Execution
 ;
-;    095        - Data/Command Register         (Read/Write)
+;    FDC_DATA   - Data/Command Register         (Read/Write)
 ;                               (Byte Writes/Reads)
-;    096        -  (Not Used)
-;    097        - Data Rate Register (Write) / Disk Changed Bit (Read)
+;
+;    FDC_CCR    - Data Rate Register (Write)
 ;       7 6 5 4 3 2 1 0                         (Write)
 ;       | | | | | | +-+-- 00=500 kb/s, RPM/LC Hi, 01=250/300 kb/s (RPM/LC Lo)
 ;       | | | | | |       10=250 kb/s, RPM/LC Lo, 11=1000 kb/s (RPM/LC Hi/Lo)
 ;       +-+-+-+-+-+------  (Not Used)
 ;
-;       7 6 5 4 3 2 1 0                         (Read)
-;       | +-+-+-+-+-+-+-- (Tri-State, used for HD Controller)
-;       +---------------- 1 = Disk Changed  (latched complement of DSKCHG inp)
-;
-;    0A0        - DMA I/O Select Port (DMA configuration Only)
 ;-------------------------------------------------------------
-FDCBAS  .equ    0x90            ; SMC 37C665 Controller Base Address
-DCR     .equ    FDCBAS+2        ; Drive Control Register
-MSR     .equ    FDCBAS+4        ; Main Status Register
-DR      .equ    FDCBAS+5        ; Data Register
-DRR     .equ    FDCBAS+7        ; Data Rate Register/Disk Changed Bit in B7
-
 MONTIM  .equ    250             ; Motor On time (Seconds * TICKSPERSEC)
 
 ; Offsets into _devfd_dtbl
@@ -109,7 +103,7 @@ _devfd_init:
 indel1: DJNZ    indel1          ;    (settle)
         CALL    Activ8          ;  then bring out of Reset
 indel2: DJNZ    indel2          ;    (settle, B already =0)
-        IN      A,(MSR)
+        IN      A,(FDC_MSR)
         CP      #0x80           ; Do we have correct Ready Status?
         JR      NZ,NoDrv        ; ..exit Error if Not
 
@@ -216,19 +210,19 @@ FhdrX:  LD      L,A
 Spec:   CALL    WRdyT           ; Wait for RQM (hope DIO is Low!), Disable Ints
         RET     C               ; ..Error if Timed Out
         LD      A,#0x03         ; Do an FDC Specify Command
-        OUT     (DR),A
+        OUT     (FDC_DATA),A
 
         CALL    WRdyT
         RET     C               ; ..Error if Timed Out
         LD      A,oPRM1(IY)     ;  first Rate Byte (Step Rate, HUT)
-        OUT     (DR),A
+        OUT     (FDC_DATA),A
 
         CALL    WRdyT
         RET     C               ; ..Error if Timed Out
         LD      A,oPRM2(IY)     ; Get Head Load Time
         ADD     A,A             ;  Shift value left (doubles count)
         INC     A               ;   Set LSB for Non-DMA Operation
-        OUT     (DR),A
+        OUT     (FDC_DATA),A
         XOR     A               ;  Return Ok Flag
         RET
 
@@ -342,13 +336,17 @@ Setup:  LD      A,(drive)
         LD      A,#0x02         ;  (Prepare for 250 kbps)
         JR      Z,StSiz0        ; ..jump if No
         LD      A,#0x01         ; Else set to 300 kbps (@360 rpm = 250kbps)
-StSiz0: OUT     (DRR),A         ; Set Rate in FDC Reg
+StSiz0: OUT     (FDC_CCR),A     ; Set Rate in FDC Reg
         LD      D,A             ;   preserve Rate bits
+.ifeq CPU_Z180
         IN0     A,(0x1F)        ; Read Z80182 CPU Cntrl Reg (B7=1 if Hi Speed)
         RLA                     ;  Speed to Bit Carry..Turbo?
-        LD      A,#(CPU_CLOCK_KHZ/1000)         ;   (Get Processor Rate in MHz)
+        LD      A,#(CPU_CLOCK_KHZ/1000)	; (Get Processor Rate in MHz)
         JR      C,StSiz1        ;  ..jump if Turbo for longer delay
-        SRL     A               ;  Else divide rate by 2
+.else
+	LD	A,#(CPU_CLOCK_KHZ/1000)	; (Get Processor Rate in MHz)
+.endif
+        SRL     A               ;  Divide rate by 2
 StSiz1: INC     D
         DEC     D               ; 500 kb/s (Hi-Speed) Rate (D=0)?
         JR      NZ,StSiz2       ; ..jump if Not
@@ -419,14 +417,14 @@ SEEKX:  POP     BC              ; Restore Regs
 FdcDn:  PUSH    HL              ; Don't alter regs
 FdcDn0: CALL    WRdy1
         LD      A,#8            ; Sense Interrupt Status Comnd
-        OUT     (DR),A
+        OUT     (FDC_DATA),A
         CALL    WRdy1
-        IN      A,(DR)          ; Get first Result Byte (ST0)
+        IN      A,(FDC_DATA)    ; Get first Result Byte (ST0)
         LD      L,A
         CP      #0x80           ; Invalid Command?
         JR      Z,FdcDn0        ; ..jump to exit if So
         CALL    WRdy1
-        IN      A,(DR)          ; Read Second Result Byte (Trk #)
+        IN      A,(FDC_DATA)          ; Read Second Result Byte (Trk #)
         LD      C,A             ; ..into C
         LD      A,L
         BIT     5,A             ; Command Complete?
@@ -481,7 +479,7 @@ WRdyT0: DEC     BC
         OR      C               ; Timed Out?
         SCF                     ;  (set Error Flag in case)
         RET     Z               ; ..return Error Flag if Yes
-        IN      A,(MSR)         ; Read Status Reg
+        IN      A,(FDC_MSR)     ; Read Status Reg
         AND     #0x80           ; Interrupt Present (also kill Carry)?
         RET     NZ              ; ..return Ok if Yes
         JR      WRdyT0          ;  ..else loop to try again
@@ -530,7 +528,7 @@ TDone:  INC     HL              ; Advance ptr to watchdog/spinup timer (mtm)
 ; Motor Off routine.  Force Off to delay on next select
 ; Enter: None. (Motoff)
 ;        A = FDC Device Control Reg bits (Activ8/ActivA)
-; Exit : A = Current DCR Register / "active" byte settings
+; Exit : A = Current FDC_DOR Register / "active" byte settings
 ; Uses : AF
 
 MotOff: XOR     A
@@ -539,7 +537,7 @@ MotOff: XOR     A
         AND     #7              ;  strip off Motor bits
 Activ8: OR      #4              ;   (ensure FDC out of Reset)
 ActivA: LD      (active),A      ;    save
-        OUT     (DCR),A         ;     and Command!
+        OUT     (FDC_DOR),A     ;     and Command!
         RET
 
 ;-------------------------------------------------------------
@@ -557,7 +555,7 @@ FdCmd:  PUSH    HL              ; Save regs (for Exit)
         CALL    Motor           ; Ensure motors are On
         LD      HL,#comnd       ; Point to Command Block
         LD      (HL),C          ;  command passed in C
-        LD      C,#DR           ;   DP8473 Data Port
+        LD      C,#FDC_DATA     ;   FDC Data Port
         LD      A,(_devfd_userbuf)
         LD      D,A             ; store userbuf flag in D
 OtLoop: CALL    WRdy            ; Wait for RQM (hoping DIO is Low) (No Ints)
@@ -615,7 +613,7 @@ WRdy1:  LD      A,(dlyCnt)      ; Get delay count
 WRdy0:  DEC     A               ;  count down
         JR      NZ,WRdy0        ;   for ~6 uS Delay
 
-WRdyL:  IN      A,(MSR)         ; Read Main Status Register
+WRdyL:  IN      A,(FDC_MSR)     ; Read Main Status Register
         BIT     7,A             ; Interrupt Present?
         RET     NZ              ;  Return if So
         JR      WRdyL           ;   Else Loop
@@ -628,7 +626,7 @@ dlyCnt: .db     (CPU_CLOCK_KHZ/1000)    ; Delay to avoid over-sampling status re
          .area _DATA
 
 drive:  .ds     1               ; (minor) Currently Selected Drive
-active: .ds     1               ; Current bits written to Dev Contr Reg (DCR)
+active: .ds     1               ; Current bits written to FDC_DOR
 
 _devfd_sector:  .ds     1
 _devfd_track:   .ds     1               ; LSB used as Head # in DS formats
