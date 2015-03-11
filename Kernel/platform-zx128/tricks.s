@@ -145,12 +145,11 @@ _switchin:
 	;	it with bank 6. low_bank holds the page pointer of the
 	;	task owning the space
 
-	push de
+	ld hl, (low_bank)	; who owns low memory
 	or a
-	ld de, (low_bank)
 	sbc hl, de
-	call nz, fliplow
-	pop de
+	call nz, fliplow	; not us - need to fix that up
+	ld (low_bank), de	; we own it now
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
@@ -242,9 +241,9 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
+	ld (low_bank), hl		;	low bank will become the child
         ld de, #P_TAB__P_PAGE_OFFSET	;	bank number
         add hl, de
-	ld (low_bank), hl		;	low bank will become the child
         ; load p_page
         ld c, (hl)
 	ld hl, (U_DATA__U_PAGE)
@@ -401,7 +400,6 @@ flip1:
 	ld bc, #0x7ffd
 	out (c), a
 	exx
-	ld (low_bank), hl	; Update low bank pointer
 	ret
 ;
 ;	For the moment
@@ -415,5 +413,5 @@ bouncebuffer:
 ;	so share with bouncebuffer
 _swapstack:
 low_bank:
-	.dw _ptab + P_TAB__P_PAGE_OFFSET	; Init starts owning this
+	.dw _ptab			; Init starts owning this
 
