@@ -272,11 +272,10 @@ _dofork:
 
 	; Copy done
 
-	ld hl, (U_DATA__U_PAGE)	; parent memory
-        ld a, l
+	ld a, (U_DATA__U_PAGE)	; parent memory
 	or #0x18		; get the right ROMs
 	ld bc, #0x7ffd
-	out (c), a		; Switch context to parent
+	out (c), a		; Switch context to parent in 0xC000+
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -287,7 +286,7 @@ _dofork:
 	ldir
 
 	;
-	; And back into the child
+	; And back into the kernel
 	;
 	ld bc, #0x7ffd
 	ld a, (current_map)
@@ -340,8 +339,8 @@ _dofork:
 bankfork:
 	or #0x18		; ROM bits for the bank
 	ld b, #0x3C		; 40 x 256 minus 4 sets for the uarea stash/irqs
-bankfork_1:
 	ld hl, #0xC000		; base of memory to fork (vectors included)
+bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
 	ld bc, #0x7ffd
