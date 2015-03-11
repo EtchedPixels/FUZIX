@@ -3,6 +3,9 @@
 #include <printf.h>
 #include <devtty.h>
 #include "config.h"
+#ifdef CONFIG_FLOPPY
+#include "devfd.h"
+#endif
 
 extern unsigned char irqvector;
 
@@ -21,6 +24,9 @@ void platform_interrupt(void)
 		case 1:
 #ifdef CONFIG_PPP
 			tty_poll_ppp()
+#endif
+#ifdef CONFIG_FLOPPY
+			fd_tick();
 #endif
 			timer_interrupt(); 
 			return;

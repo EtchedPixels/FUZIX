@@ -10,8 +10,8 @@ Supported hardware:
 
 Memory allocation (16 KiB pages):
 - ROM pages:	0 - 31
-  - Kernel image:	0 - 2 - copied by bootrom.s to pages 32 - 34
-  - RAM disk image:	3 - 19 - copied by bootrom.s to pages 48 - 63
+  - Kernel image:	0 - 3 - copied by bootrom.s to pages 32 - 35
+  - RAM disk image:	4 - 19 - copied by bootrom.s to pages 48 - 63
 - RAM pages:	32 - 63
   - Kernel pages:	32 - 34
   - Common page:	35
@@ -107,8 +107,8 @@ chmod 0755 umount
 exit
 
 5. Create ROM image:
-dd if=fuzix.rom of=fuzix_48k.rom bs=48k count=1 conv=sync
-cat fuzix_48k.rom zeta_v2_rootfs.img > fuzix_zeta_v2_bootfs.rom
+dd if=fuzix.rom of=fuzix_64k.rom bs=64k count=1 conv=sync
+cat fuzix_64k.rom zeta_v2_rootfs.img > fuzix_zeta_v2_bootfs.rom
 
 6. Program the image (fuzix_zeta_v2_bootfs.rom) to the Flash ROM using an
 EPROM programmer
