@@ -55,6 +55,11 @@ void tty_putc(uint8_t minor, unsigned char c)
         tty3data = c;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    used(minor);
+}
+
 /* Called every timer tick */
 void tty_pollirq(void)
 {
@@ -79,12 +84,12 @@ void tty_pollirq(void)
 
 void tty_setup(uint8_t minor)
 {
-    minor;
+    used(minor);
 }
 
 /* For the moment */
 int tty_carrier(uint8_t minor)
 {
-    minor;
+    used(minor);
     return 1;
 }
