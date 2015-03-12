@@ -253,9 +253,7 @@ _dofork:
 	; Copy the high page via the bounce buffer
 	;
 
-	push hl
 	call bankfork			;	do the bank to bank copy
-	pop hl
 
 	; FIXME: if we support small apps at C000-FBFF we need to tweak this
 	; Now copy the 0x8000-0xBFFF area directly
@@ -393,7 +391,7 @@ flip1:
 	djnz flip1
 	xor a
 	cp d			; Wrapped to 0x0000 ?
-	jr nz, flip2
+	jr nz, flip1
 
 	ld a, (current_map)
 	or #0x18
