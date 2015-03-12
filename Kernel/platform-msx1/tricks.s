@@ -16,7 +16,6 @@
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
-        .globl dispatch_process_signal
 	.globl map_kernel
 	.globl map_process_always
 	.globl map_process
