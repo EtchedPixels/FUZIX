@@ -41,6 +41,7 @@ SRCS  = banner.c \
 	du.c \
 	echo.c \
 	ed.c \
+	factor.c \
 	false.c \
 	fdisk.c \
 	fgrep.c \
