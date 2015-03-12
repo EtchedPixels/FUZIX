@@ -375,7 +375,7 @@ arg_t _acct(void)
                         udata.u_error = EINVAL;
                         return -1;
                 }
-		if (ino->c_flags & CRDONLY) {
+		if (inode->c_flags & CRDONLY) {
 			udata.u_error = EROFS;
 			return -1;
 		}
