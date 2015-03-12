@@ -11,7 +11,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include "devfd.h"
+#include <devfd.h>
 
 /* functions implemented in devfd2.s */
 extern int devfd_init(uint8_t minor);

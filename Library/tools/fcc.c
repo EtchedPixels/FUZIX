@@ -64,6 +64,18 @@ static struct arglist *arg_make(const char *p)
   return x;
 }
 
+struct arglist *machead, *mactail;
+
+static void add_macro(const char *p)
+{
+  struct arglist *a = arg_make(p);
+  if (machead == NULL)
+    machead = a;
+  else
+    mactail->next = a;
+  mactail = a;
+}
+
 struct arglist *srchead, *srctail;
 
 static void add_source(const char *p)
@@ -336,7 +348,7 @@ static void build_command(void)
   if (pedantic == 0)
     add_argument("--less-pedantic");
   if (werror == 1)
-    add_argument("-Werror");
+    add_argument("--Werror");
   if (unschar == 1)
     add_argument("-funsigned-char");
   if (debug == 1)
@@ -354,6 +366,8 @@ static void build_command(void)
   }
   /* Always size optimise */
   add_argument("--opt-code-size");
+  /* Macros */
+  add_argument_list(machead);
   /* Paths */
   add_option_list("-I", includehead);
   if (mode == MODE_LINK)
@@ -426,6 +440,9 @@ int main(int argc, const char *argv[]) {
           add_argument("-v");
           do_command();
           exit(0);
+        case 'D':
+          add_macro(p);
+          break;
         case 'l':
           add_library(p+2);
           break;
