@@ -358,7 +358,6 @@ int eth_ioctl(uint8_t minor, uarg_t arg, char *data)
 	return -1;
 }
 
-DISCARDABLE
 /* Initialize the Ethernet wing */
 void deveth_init(void)
 {

@@ -35,6 +35,7 @@ devsys.rel
 platform-socz80/devlpr.rel
 platform-socz80/devtty.rel
 platform-socz80/devsd.rel
+platform-socz80/devsd_discard.rel
 platform-socz80/blkdev.rel
 platform-socz80/mbr.rel
 platform-socz80/devsdspi.rel
