@@ -35,7 +35,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
-#define BOOTDEVICENAMES "fd,hd#"
+#define BOOTDEVICENAMES "fd,rd"
 
 //#define SWAPDEV  (256 + 1)  /* Device for swapping */
 #define NBUFS    10       /* Number of block buffers */
@@ -46,6 +46,9 @@
 /* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
+
+/* Floppy support */
+#define CONFIG_FLOPPY		/* # define CONFIG_FLOPPY to enable floppy */
 
 /* Optional ParPortProp board connected to PPI */
 //#define CONFIG_PPP		/* #define CONFIG_PPP to enable as tty3 */

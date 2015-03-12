@@ -14,6 +14,8 @@ PROGLOAD		.equ	0x0100
 
 CONSOLE_RATE		.equ	38400
 
+CPU_CLOCK_KHZ		.equ	20000
+
 ; Z80 CTC ports
 CTC_CH0		.equ	0x20	; CTC channel 0 and interrupt vector
 CTC_CH1		.equ	0x21	; CTC channel 1 (periodic interrupts)

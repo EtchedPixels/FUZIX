@@ -20,6 +20,7 @@
         .globl unix_syscall_entry
         .globl interrupt_handler
 	.globl current_map
+	.globl _ptab
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -66,15 +67,17 @@ _switchout:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
 
         ; find another process to run (may select this one again)
 	push af
         call _getproc
-	pop af
+	pop af		; tidy this stack stuff up ex (sp), hl ??
 
         push hl
+	push af
         call _switchin
 
         ; we should never get here
@@ -134,15 +137,19 @@ _switchin:
 	;
 
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
         
 	;	Is our low data in 0x8000 already or do we need to flip
-	;	it with bank 6
+	;	it with bank 6. low_bank holds the page pointer of the
+	;	task owning the space
 
-	ld a, (low_bank)
-	cp (hl)
-	call nz, fliplow
+	ld hl, (low_bank)	; who owns low memory
+	or a
+	sbc hl, de
+	call nz, fliplow	; not us - need to fix that up
+	ld (low_bank), de	; we own it now
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
@@ -195,10 +202,12 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         di ; should already be the case ... belt and braces.
 
+	pop bc
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
         push de
+	push bc
 
         ld (fork_proc_ptr), hl
 
@@ -232,7 +241,8 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET;		bank number
+	ld (low_bank), hl		;	low bank will become the child
+        ld de, #P_TAB__P_PAGE_OFFSET	;	bank number
         add hl, de
         ; load p_page
         ld c, (hl)
@@ -261,10 +271,10 @@ _dofork:
 
 	; Copy done
 
-	ld hl, (U_DATA__U_PAGE)	; parent memory
-        ld a, l
+	ld a, (U_DATA__U_PAGE)	; parent memory
+	or #0x18		; get the right ROMs
 	ld bc, #0x7ffd
-	out (c), a		; Switch context to parent
+	out (c), a		; Switch context to parent in 0xC000+
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -275,10 +285,11 @@ _dofork:
 	ldir
 
 	;
-	; And back into the child
+	; And back into the kernel
 	;
 	ld bc, #0x7ffd
 	ld a, (current_map)
+	or #0x18
 	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -327,8 +338,8 @@ _dofork:
 bankfork:
 	or #0x18		; ROM bits for the bank
 	ld b, #0x3C		; 40 x 256 minus 4 sets for the uarea stash/irqs
-bankfork_1:
 	ld hl, #0xC000		; base of memory to fork (vectors included)
+bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
 	ld bc, #0x7ffd
@@ -385,11 +396,10 @@ flip1:
 	jr nz, flip2
 
 	ld a, (current_map)
+	or #0x18
 	ld bc, #0x7ffd
 	out (c), a
 	exx
-	ld a, (hl)		; Update low bank number
-	ld (low_bank), a
 	ret
 ;
 ;	For the moment
@@ -403,4 +413,5 @@ bouncebuffer:
 ;	so share with bouncebuffer
 _swapstack:
 low_bank:
-	.db 0
+	.dw _ptab			; Init starts owning this
+

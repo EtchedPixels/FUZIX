@@ -21,7 +21,6 @@
 	    .export _di
 	    .export _ei
 	    .export _irqrestore
-	    .export nmi_trap
 	    .export vector
 
 	    .import interrupt_handler
@@ -55,7 +54,6 @@ syscall	     =  $FE
 ; -----------------------------------------------------------------------------
             .segment "COMMONMEM"
 
-nmi_trap:
 _trap_monitor:
 ;
 ;	Put the ROM back as it was at entry including the second 8K bank we

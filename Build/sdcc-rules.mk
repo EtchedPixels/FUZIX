@@ -124,7 +124,10 @@ $(OBJ)/Applications/%: $(HOSTOBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEA
 	$(hide) $(CC) $(LDFLAGS) $(INCLUDES) $(DEFINES) \
 		-o $@.ihx $(wordlist 2, 999, $^)
 	$(hide) makebin -p -s 65535 $@.ihx $@.bin
-	$(hide) $< $@.bin $@.map $@ > /dev/null
+	$(hide) $< $(PROGBASE) $@.bin $@.map $@ > /dev/null
+
+# Default PROGBASE assumes CP/M.
+PROGBASE = 0x0100
 
 # Ensure that various things know where their headers are.
 $(OBJ)/Applications/%: INCLUDES += -I$(TOP)/Library/include

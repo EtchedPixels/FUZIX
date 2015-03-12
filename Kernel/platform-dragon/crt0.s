@@ -21,6 +21,13 @@ bootme:
 main:		orcc #0x10		; interrupts definitely off
 		lds #kstack_top
 
+		ldx #__sectionbase_.bss__
+		ldy #__sectionlen_.bss__
+		clra
+bss_wipe:	sta ,x+
+		leay -1,y
+		bne bss_wipe
+
 		jsr init_early
 		jsr init_hardware
 		jsr _fuzix_main

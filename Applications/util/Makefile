@@ -3,6 +3,8 @@ ASM = sdasz80
 AR = sdar
 LINKER = sdcc
 FCC = ../../Library/tools/fcc
+#PLATFORM =
+PLATFORM = -tzx128
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
@@ -39,6 +41,7 @@ SRCS  = banner.c \
 	du.c \
 	echo.c \
 	ed.c \
+	factor.c \
 	false.c \
 	fdisk.c \
 	fgrep.c \
@@ -111,10 +114,10 @@ $(OBJSBAD): $(SRCSBAD)
 	$(CC) $(CC_CRAP) $(@:.rel=.c)
 
 .c.rel:
-	$(FCC) -c $<
+	$(FCC) $(PLATFORM) -c $<
 
 %: %.rel
-	$(FCC) $< -o $@
+	$(FCC) $(PLATFORM) $< -o $@
 
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin

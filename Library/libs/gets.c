@@ -21,6 +21,17 @@ char *gets(char *str) /* BAD function; DON'T use it! */
 	return (((c == EOF) && (p == str)) ? NULL : str);/* NULL == EOF */
 }
 
+char *gets_s(char *str,size_t maxlen)
+{
+	register int c;
+	register char *p=str;
+
+	while ( (((c = getc(stdin)) != EOF) && (c != '\n')) && ( p - str < maxlen) )
+		*p++=c;
+	*p='\0';
+	return (((c == EOF) && (p == str)) ? NULL : str);/* NULL == EOF */
+}
+
 int puts(const void *str) 
 {
 	register int n;

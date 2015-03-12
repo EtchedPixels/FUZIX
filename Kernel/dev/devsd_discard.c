@@ -28,20 +28,18 @@
 
 void devsd_init(void)
 {
-    uint8_t d;
-
-    for(d=0; d<SD_DRIVE_COUNT; d++)
-        sd_init_drive(d);
+    for(sd_drive=0; sd_drive<SD_DRIVE_COUNT; sd_drive++)
+        sd_init_drive();
 }
 
-void sd_init_drive(uint8_t drive)
+void sd_init_drive(void)
 {
     blkdev_t *blk;
     unsigned char csd[16], n;
     uint8_t card_type;
 
-    kprintf("SD drive %d: ", drive);
-    card_type = sd_spi_init(drive);
+    kprintf("SD drive %d: ", sd_drive);
+    card_type = sd_spi_init();
 
     if(!(card_type & (~CT_BLOCK))){
         kprintf("no card found\n");
@@ -53,12 +51,12 @@ void sd_init_drive(uint8_t drive)
         return;
 
     blk->transfer = devsd_transfer_sector;
-    blk->driver_data = (drive & DRIVE_NR_MASK) | card_type;
+    blk->driver_data = (sd_drive & DRIVE_NR_MASK) | card_type;
     
     /* read and compute card size */
-    if(sd_send_command(drive, CMD9, 0) == 0 && sd_spi_wait(drive, false) == 0xFE){
+    if(sd_send_command(CMD9, 0) == 0 && sd_spi_wait(false) == 0xFE){
         for(n=0; n<16; n++)
-            csd[n] = sd_spi_receive_byte(drive);
+            csd[n] = sd_spi_receive_byte();
         if ((csd[0] >> 6) == 1) {
             /* SDC ver 2.00 */
             blk->drive_lba_count = ((uint32_t)csd[9] 
@@ -71,43 +69,43 @@ void sd_init_drive(uint8_t drive)
             blk->drive_lba_count <<= (n-9);
         }
     }
-    sd_spi_release(drive);
+    sd_spi_release();
 
     blkdev_scan(blk, 0);
 }
 
-int sd_spi_init(uint8_t drive)
+int sd_spi_init(void)
 {
     unsigned char n, cmd, card_type, ocr[4];
     timer_t timer;
 
-    sd_spi_raise_cs(drive);
+    sd_spi_raise_cs();
 
-    sd_spi_clock(drive, false);
+    sd_spi_clock(false);
     for (n = 20; n; n--)
-        sd_spi_receive_byte(drive); /* send dummy clocks -- at least 80 required; we send 160 */
+        sd_spi_receive_byte(); /* send dummy clocks -- at least 80 required; we send 160 */
 
     card_type = CT_NONE;
 
     /* Enter Idle state */
-    if (sd_send_command(drive, CMD0, 0) == 1) {
+    if (sd_send_command(CMD0, 0) == 1) {
         /* initialisation timeout 2 seconds */
         timer = set_timer_sec(2);
-        if (sd_send_command(drive, CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
+        if (sd_send_command(CMD8, (uint32_t)0x1AA) == 1) {    /* SDHC */
             /* Get trailing return value of R7 resp */
-            for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
+            for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte();
             /* The card can work at vdd range of 2.7-3.6V */
             if (ocr[2] == 0x01 && ocr[3] == 0xAA) {
                 /* Wait for leaving idle state (ACMD41 with HCS bit) */
-                while(!timer_expired(timer) && sd_send_command(drive, ACMD41, (uint32_t)1 << 30));
+                while(!timer_expired(timer) && sd_send_command(ACMD41, (uint32_t)1 << 30));
                 /* Check CCS bit in the OCR */
-                if (!timer_expired(timer) && sd_send_command(drive, CMD58, 0) == 0) {
-                    for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte(drive);
+                if (!timer_expired(timer) && sd_send_command(CMD58, 0) == 0) {
+                    for (n = 0; n < 4; n++) ocr[n] = sd_spi_receive_byte();
                     card_type = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;   /* SDv2 */
                 }
             }
         } else { /* SDSC or MMC */
-            if (sd_send_command(drive, ACMD41, 0) <= 1) {
+            if (sd_send_command(ACMD41, 0) <= 1) {
                 /* SDv1 */
                 card_type = CT_SD1;
                 cmd = ACMD41;
@@ -117,16 +115,16 @@ int sd_spi_init(uint8_t drive)
                 cmd = CMD1;
             }
             /* Wait for leaving idle state */
-            while(!timer_expired(timer) && sd_send_command(drive, cmd, 0));
+            while(!timer_expired(timer) && sd_send_command(cmd, 0));
             /* Set R/W block length to 512 */
-            if(timer_expired(timer) || sd_send_command(drive, CMD16, 512) != 0)
+            if(timer_expired(timer) || sd_send_command(CMD16, 512) != 0)
                 card_type = CT_NONE;
         }
     }
-    sd_spi_release(drive);
+    sd_spi_release();
 
     if (card_type) {
-        sd_spi_clock(drive, true); /* up to 20MHz should be OK */
+        sd_spi_clock(true); /* up to 20MHz should be OK */
         return card_type;
     }
 
