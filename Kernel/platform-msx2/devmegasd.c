@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include "config.h"
 #include <blkdev.h>
+#include <devsd.h>
 #include "msx2.h"
 
 /*
