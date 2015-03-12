@@ -29,7 +29,7 @@ search_dirs = $(shell $(CC) --print-search-dirs -m$(ARCH))
 SDCC_INCLUDES = $(patsubst %, -I%, \
 		$(call find_section, $(search_dirs), includedir:))
 SDCC_LIBS = $(firstword $(call find_section, $(search_dirs), libdir:))
-SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES)
+SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES))
 
 # Forget default suffix rules.
 .SUFFIXES:
@@ -38,6 +38,12 @@ SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES)
 # be configurable).
 O = rel
 A = lib
+
+# This rule is used as a hook to add behaviour before any source file is built.
+# It's mostly used to set up the platform symlink.
+
+.PHONY: paths
+paths: ;
 
 # Location of standard libraries.
 LIBC = $(OBJ)/Library/libc.$A
@@ -59,27 +65,35 @@ $(LIBCLEAN): $(SDCC_LIBS)/$(ARCH).lib
 		vprintf.rel vfprintf.rel sprintf.rel
 
 # Assembly files which need to be preprocessed --- run through cpp first.
-$(OBJ)/%.$O: $(TOP)/%.S
+$(OBJ)/%.$O: $(TOP)/%.S |paths
 	@echo AS $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
 		-MM -MF $(basename $@).d -MT $@ $<
 	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
 		-o $(basename $@).s $<
-	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
+	$(hide) $(AS) $(ASFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
 
 # Likewise, for dynamically generated assembly files.
-$(OBJ)/%.$O: $(OBJ)/%.S
+$(OBJ)/%.$O: $(OBJ)/%.S |paths
 	@echo AS $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
 		-MM -MF $(basename $@).d -MT $@ $<
 	$(hide) $(CPP) $(INCLUDES) $(SDCC_INCLUDE_PATH) $(DEFINES) \
 		-o $(basename $@).s $<
-	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
+	$(hide) $(AS) $(ASFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $(basename $@).s
 
 # Ordinary C files.
-$(OBJ)/%.$O: $(TOP)/%.c
+$(OBJ)/%.$O: $(TOP)/%.c |paths
+	@echo CC $@
+	@mkdir -p $(dir $@)
+	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) \
+		-M $< | sed -e '1s!^[^:]*!$@!' > $(basename $@).d
+	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $<
+
+# Dynamically generated C files.
+$(OBJ)/%.$O: $(OBJ)/%.c |paths
 	@echo CC $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) \
@@ -91,10 +105,10 @@ $(OBJ)/%.$O: $(TOP)/%.c
 $(OBJ)/%.d: $(OBJ)/%.$O ;
 
 # Assembly files which don't need to be preprocessed.
-$(OBJ)/%.$O: $(TOP)/%.s
+$(OBJ)/%.$O: $(TOP)/%.s |paths
 	@echo AS $@
 	@mkdir -p $(dir $@)
-	$(hide) $(AS) $(INCLUDES) $(DEFINES) -c -o $@ $<
+	$(hide) $(AS) $(ASFLAGS) $(INCLUDES) $(DEFINES) -c -o $@ $<
 
 # Libraries.
 $(OBJ)/%.$A:

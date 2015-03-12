@@ -18,13 +18,13 @@ $(FILESYSTEM): $(TOP)/Standalone/filesystem-src/ucp-script.txt \
 	@echo FILESYSTEM $@
 	@mkdir -p $(dir $@)
 	$(hide) rm -f $@
-	$(hide) $d/mkfs $@ 64 2880
+	$(hide) $(HOSTOBJ)/Standalone/mkfs $@ 64 2880
 	$(hide) sed \
 		-e 's!usr-files!$(TOP)/Standalone/filesystem-src/usr-files!g' \
 		-e 's!etc-files!$(TOP)/Standalone/filesystem-src/etc-files!g' \
 		-e 's![./]*Applications!$(OBJ)/Applications!g' \
 		$(TOP)/Standalone/filesystem-src/ucp-script.txt \
-		| $d/ucp $@ > /dev/null
+		| $(HOSTOBJ)/Standalone/ucp $@ > /dev/null
 
 install:: $d/chmem $d/mkfs $d/fsck $d/size $d/ucp
 	@echo INSTALL standalone tools
