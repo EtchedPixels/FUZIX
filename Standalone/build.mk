@@ -1,3 +1,4 @@
+# Don't use this inside recipes; only use it in dependency lists
 d := $(HOSTOBJ)/Standalone
 
 $d/chmem: $d/chmem.o
@@ -24,7 +25,7 @@ $(FILESYSTEM): $(TOP)/Standalone/filesystem-src/ucp-script.txt \
 		-e 's!etc-files!$(TOP)/Standalone/filesystem-src/etc-files!g' \
 		-e 's![./]*Applications!$(OBJ)/Applications!g' \
 		$(TOP)/Standalone/filesystem-src/ucp-script.txt \
-		| $(HOSTOBJ)/Standalone/ucp $@ > /dev/null
+			| $(HOSTOBJ)/Standalone/ucp $@ > /dev/null
 
 install:: $d/chmem $d/mkfs $d/fsck $d/size $d/ucp
 	@echo INSTALL standalone tools
