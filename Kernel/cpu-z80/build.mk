@@ -1,17 +1,17 @@
 
 # Common flags for all kernel object files.
-$o/%.$O: \
+$(OBJ)/Kernel/%.$O: \
 	INCLUDES += \
-		-I$s/cpu-$(ARCH) \
-		-I$s/platform-$(PLATFORM) \
-		-I$s/include
+		-I$(TOP)/Kernel/cpu-$(ARCH) \
+		-I$(TOP)/Kernel/platform-$(PLATFORM) \
+		-I$(TOP)/Kernel/include
 
-$o/%.$O: \
+$(OBJ)/Kernel/%.$O: \
 	CFLAGS += \
 		--stack-auto \
 		--constseg CONST
 
-$o/%.$O: \
+$(OBJ)/Kernel/%.$O: \
 	ASFLAGS += \
 		-plosff
 

@@ -1,23 +1,15 @@
 include $(TOP)/Kernel/tools/bankld/build.mk
 include $(TOP)/Kernel/tools/build.mk
-
-# Shortcuts for use in dependency lists. Don't use these inside recipes
-# (the values may have changed by the time they're expanded).
-s := $(TOP)/Kernel
-o := $(OBJ)/Kernel
-t := $(HOSTOBJ)/Kernel/tools
-p := platform-$(PLATFORM)
-
-include $s/cpu-$(ARCH)/build.mk
+include $(TOP)/Kernel/cpu-$(ARCH)/build.mk
 
 # Ensure that the platform symlink is set up for before building any
 # kernel object.
 
-$o/%.$O: ASFLAGS += -I$o
-$o/%.$O: CFLAGS += -I$o
-paths: $o/platform
+$(OBJ)/Kernel/%.$O: ASFLAGS += -I$(OBJ)/Kernel
+$(OBJ)/Kernel/%.$O: CFLAGS += -I$(OBJ)/Kernel
+paths: $(OBJ)/Kernel/platform
 
-$o/platform:
+$(OBJ)/Kernel/platform:
 	@echo SYMLINK $@
 	@mkdir -p $(dir $@)
 	$(hide) ln -sf $(abspath $(TOP)/Kernel/platform-$(PLATFORM)) \
@@ -38,41 +30,64 @@ $o/platform:
 # with the framebuffer when doing video output.
 
 SEGMENT = $(error Object file $@ doesn't have a segment specified)
-$o/%.$O: CFLAGS += $(SEGMENT)
+$(OBJ)/Kernel/%.$O: CFLAGS += $(SEGMENT)
 
 # Discardable.
 
-$o/start.$O $o/dev/devsd_discard.$O: \
+$(OBJ)/Kernel/start.$O \
+$(OBJ)/Kernel/dev/devsd_discard.$O: \
 	SEGMENT = $(CFLAGS_SEGDISC)
 
 # Segment 1.
 
-$o/version.$O $o/filesys.$O $o/devio.$O $o/kdata.$O $o/inode.$O $o/tty.$O: \
+$(OBJ)/Kernel/version.$O \
+$(OBJ)/Kernel/filesys.$O \
+$(OBJ)/Kernel/devio.$O \
+$(OBJ)/Kernel/kdata.$O \
+$(OBJ)/Kernel/inode.$O \
+$(OBJ)/Kernel/tty.$O: \
 	SEGMENT = $(CFLAGS_SEG1)
 
 # Segment 2 --- syscalls.
 
-$o/syscall_proc.$O $o/syscall_fs.$O $o/syscall_fs2.$O $o/syscall_other.$O \
-$o/syscall_exec16.$O $o/syscall_exec32.$O $o/process.$O $o/malloc.$O \
-$o/simple.$O $o/single.$O $o/bank16k.$O $o/bank16k_low.$O $o/bank32k.$O \
-$o/bankfixed.$O $o/flat.$O: \
+$(OBJ)/Kernel/syscall_proc.$O \
+$(OBJ)/Kernel/syscall_fs.$O \
+$(OBJ)/Kernel/syscall_fs2.$O \
+$(OBJ)/Kernel/syscall_other.$O \
+$(OBJ)/Kernel/syscall_exec16.$O \
+$(OBJ)/Kernel/syscall_exec32.$O \
+$(OBJ)/Kernel/process.$O \
+$(OBJ)/Kernel/malloc.$O \
+$(OBJ)/Kernel/simple.$O \
+$(OBJ)/Kernel/single.$O \
+$(OBJ)/Kernel/bank16k.$O \
+$(OBJ)/Kernel/bank16k_low.$O \
+$(OBJ)/Kernel/bank32k.$O \
+$(OBJ)/Kernel/bankfixed.$O \
+$(OBJ)/Kernel/flat.$O: \
 	SEGMENT = $(CFLAGS_SEG2)
 
 # Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 # need to do this on Z80 as well
 
-$o/devsys.$O $o/mm.$O $o/swap.$O $o/usermem.$O $o/timer.$O: \
+$(OBJ)/Kernel/devsys.$O \
+$(OBJ)/Kernel/mm.$O \
+$(OBJ)/Kernel/swap.$O \
+$(OBJ)/Kernel/usermem.$O \
+$(OBJ)/Kernel/timer.$O: \
 	SEGMENT = $(CFLAGS_SEG3)
 
 # Video and font stuff go in their own segments.
 
-$o/vt.$O: \
+$(OBJ)/Kernel/vt.$O: \
 	SEGMENT = $(CFLAGS_VIDEO)
 
-$o/font4x6.$O $o/font6x8.$O $o/font8x8.$O: \
+$(OBJ)/Kernel/font4x6.$O \
+$(OBJ)/Kernel/font6x8.$O \
+$(OBJ)/Kernel/font8x8.$O: \
 	SEGMENT = $(CFLAGS_FONT)
 
-$o/version.c: $s/makeversion
+$(OBJ)/Kernel/version.c: $(TOP)/Kernel/makeversion
 	@echo MAKEVERSION $@
 	@mkdir -p $(dir $@)
 	$(hide) (cd $(dir $@) && $(abspath $<) $(VERSION) $(SUBVERSION) $(PLATFORM))
@@ -83,24 +98,24 @@ $o/version.c: $s/makeversion
 # it's the core platform-independent bits of kernel.
 
 KERNEL_OBJS = \
-	$o/devio.$O \
-	$o/devsys.$O \
-	$o/filesys.$O \
-	$o/inode.$O \
-	$o/kdata.$O \
-	$o/malloc.$O \
-	$o/mm.$O \
-	$o/process.$O \
-	$o/start.$O \
-	$o/swap.$O \
-	$o/syscall_fs.$O \
-	$o/syscall_fs2.$O \
-	$o/syscall_other.$O \
-	$o/syscall_proc.$O \
-	$o/timer.$O \
-	$o/tty.$O \
-	$o/usermem.$O \
-	$o/version.$O \
+	$(OBJ)/Kernel/devio.$O \
+	$(OBJ)/Kernel/devsys.$O \
+	$(OBJ)/Kernel/filesys.$O \
+	$(OBJ)/Kernel/inode.$O \
+	$(OBJ)/Kernel/kdata.$O \
+	$(OBJ)/Kernel/malloc.$O \
+	$(OBJ)/Kernel/mm.$O \
+	$(OBJ)/Kernel/process.$O \
+	$(OBJ)/Kernel/start.$O \
+	$(OBJ)/Kernel/swap.$O \
+	$(OBJ)/Kernel/syscall_fs.$O \
+	$(OBJ)/Kernel/syscall_fs2.$O \
+	$(OBJ)/Kernel/syscall_other.$O \
+	$(OBJ)/Kernel/syscall_proc.$O \
+	$(OBJ)/Kernel/timer.$O \
+	$(OBJ)/Kernel/tty.$O \
+	$(OBJ)/Kernel/usermem.$O \
+	$(OBJ)/Kernel/version.$O \
 
-include $s/$p/build.mk
+include $(TOP)/Kernel/platform-$(PLATFORM)/build.mk
 
