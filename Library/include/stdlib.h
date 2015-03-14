@@ -67,7 +67,7 @@ extern int atexit __P((atexit_t));
 
 extern char *crypt __P((char *__key, char *__salt));
 
-typedef int (*cmp_func_t) __P((void *, void *));
+typedef int (*cmp_func_t) __P((const void *, const void *));
 
 extern int _bsearch;
 extern void *bsearch __P((void *key, void *base, size_t num, size_t size, cmp_func_t cmp));

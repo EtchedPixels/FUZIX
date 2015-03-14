@@ -122,7 +122,7 @@ extern int fchown(int fd, uid_t owner, gid_t group);
 extern int mkdir(const char *path, mode_t mode);
 extern int rmdir(const char *path);
 extern pid_t setpgrp(void);
-extern int waitpid(pid_t pid, int *status, int options);
+extern pid_t waitpid(pid_t pid, int *status, int options);
 extern int uadmin(int cmd, int ctrl, void *ptr);
 extern int nice(int prio);
 extern int rename(const char *path, const char *newpath);
