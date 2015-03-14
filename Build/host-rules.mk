@@ -9,9 +9,9 @@ HOSTCFLAGS = \
 $(HOSTOBJ)/%.o: $(TOP)/%.c
 	@echo HOSTCC $@
 	@mkdir -p $(dir $@)
-	$(hide) $(HOSTCC) $(HOSTCFLAGS) \
+	$(hide) $(HOSTCC) $(HOSTCFLAGS) $(INCLUDES) \
 		-MM -MF $(basename $@).d -MT $(basename $@).o $<
-	$(hide) $(HOSTCC) $(HOSTCFLAGS) -c -o $(basename $@).o $<
+	$(hide) $(HOSTCC) $(HOSTCFLAGS) $(INCLUDES) -c -o $(basename $@).o $<
 
 # Tell make how to generate .d files, to stop it confusing them with
 # executables.
