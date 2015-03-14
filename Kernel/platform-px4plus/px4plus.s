@@ -22,6 +22,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _kernel_flag
 
 	    .globl platform_interrupt_all
 
@@ -62,6 +63,12 @@ _trap_reboot:
 	    halt
 platform_interrupt_all:
 	    ret
+
+;
+;	FIXME: this probably needs to be a new "commondata" area
+;
+_kernel_flag:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)

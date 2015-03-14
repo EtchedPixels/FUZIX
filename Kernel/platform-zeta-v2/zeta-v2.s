@@ -63,12 +63,12 @@ init_hardware:
 	out (UART0_DLL),a		; set low byte of divisor
 	ld a,#CONSOLE_DIVISOR_HIGH	; baud rate divisor - high byte
 	out (UART0_DLH),a		; set high byte of divisor
-	ld a,#3				; value for LCR and MCR
+	ld a,#0x03				; value for LCR and MCR
 	out (UART0_LCR),a		; 8 bit data, 1 stop, no parity
 	out (UART0_MCR),a		; DTR ON, RTS ON
-	ld a,#6				; disable and reset FIFOs
+	ld a,#0x06			; disable and clear FIFOs
 	out (UART0_FCR),a
-	ld a,#1				; enable receive data available
+	ld a,#0x01			; enable receive data available
 	out (UART0_IER),a		; interrupt
 	; initialize CTC
 	ld a,#0x47			; counter mode, disable interrupts

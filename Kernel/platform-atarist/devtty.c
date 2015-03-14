@@ -67,6 +67,11 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+	/* For now.. probably worth using tx ints */
+}
+
 void tty_interrupt(void)
 {
 	uint8_t r = *uart_status;

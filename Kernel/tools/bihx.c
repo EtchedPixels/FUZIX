@@ -101,7 +101,7 @@ void split_bihx(char *name)
     else if (*buf == 'B')
       save_patch_rule(fr, buf);
     else
-      fprintf(stderr, "%s: invalid bihx line.\n", name, buf);
+      fprintf(stderr, "%s: invalid bihx line: %s.\n", name, buf);
   }
   fclose(fp);
   fclose(fr);
@@ -117,6 +117,3 @@ int main(int argc, char *argv[])
   close_segs();
   bin_segs();
 }
-
-      
-      

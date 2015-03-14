@@ -46,6 +46,11 @@ void tty_setup(uint8_t minor)
 	minor;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+	minor;
+}
+
 int tty_carrier(uint8_t minor)
 {
         minor;

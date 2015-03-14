@@ -12,7 +12,7 @@ PROGLOAD		.equ	0x0100
 
 ; Zeta SBC V2 mnemonics for I/O ports etc
 
-CONSOLE_RATE		.equ	38400
+CONSOLE_RATE		.equ	9600
 
 CPU_CLOCK_KHZ		.equ	20000
 
@@ -24,7 +24,7 @@ CTC_CH3		.equ	0x23	; CTC channel 3 (PPI interrupt)
 
 ; 37C65 FDC ports
 FDC_CCR		.equ	0x28	; Configuration Control Register (W/O)
-FDC_MSR		.equ	0x30	; 8272 Main Status Register (R/O?)
+FDC_MSR		.equ	0x30	; 8272 Main Status Register (R/O)
 FDC_DATA	.equ	0x31	; 8272 Data Port (R/W)
 FDC_DOR		.equ	0x38	; Digital Output Register (W/O)
 FDC_TC		.equ	0x38	; Pulse terminal count (R/O)

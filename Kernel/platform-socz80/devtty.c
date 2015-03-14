@@ -36,3 +36,8 @@ int tty_carrier(uint8_t minor)
     minor;
     return 1;
 }
+
+void tty_sleeping(uint8_t minor)
+{
+    minor;
+}

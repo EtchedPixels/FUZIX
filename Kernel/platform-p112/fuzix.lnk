@@ -42,5 +42,5 @@ platform-p112/ds1302_discard.rel
 platform-p112/ds1302-p112.rel
 platform-p112/monitor.rel
 platform-p112/devfd.rel
-platform-p112/devfd2.rel
+platform-p112/devfd_hw.rel
 -e

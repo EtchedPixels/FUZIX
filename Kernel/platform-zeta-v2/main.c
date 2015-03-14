@@ -4,7 +4,7 @@
 #include <devtty.h>
 #include "config.h"
 #ifdef CONFIG_FLOPPY
-#include "devfd.h"
+#include <devfd.h>
 #endif
 
 extern unsigned char irqvector;
@@ -31,7 +31,7 @@ void platform_interrupt(void)
 			timer_interrupt(); 
 			return;
 		case 2:
-			tty_interrupt();
+			tty_pollirq_uart0();
 			return;
 		default:
 			return;

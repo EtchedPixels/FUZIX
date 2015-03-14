@@ -5,7 +5,7 @@ CSRCS += devices.c main.c
 ASRCS = crt0.s devrd_hw.s socz80.s
 ASRCS += tricks.s usermem.s commonmem.s
 
-DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
+DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c ../dev/devsd_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 
 COBJS = $(CSRCS:.c=.rel)
