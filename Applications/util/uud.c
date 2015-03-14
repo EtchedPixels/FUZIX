@@ -33,7 +33,6 @@ int  partn, lens;
 int  debug = 0, nochk = 0, onedone = 0;
 int  chtbl[NCHARS], cdlen[NORMLEN + 3];
 
-int  main(int argc, char **argv);
 char *getnword(char *str, int n);
 void gettable(void);
 void decode(void);
@@ -44,7 +43,7 @@ int main(int argc, char *argv[])
     int mode;
     register int i, j;
     char *curarg;
-    char dest[FILELEN], buf[LINELEN];
+    static char dest[FILELEN], buf[LINELEN];
 
     while ((curarg = argv[1]) != NULL && curarg[0] == '-') {
 	if (((curarg[1] == 'd') || (curarg[1] == 'D')) &&
@@ -202,7 +201,7 @@ void gettable(void)
 {
     register int c, n = 0;
     register char *cpt;
-    char buf[LINELEN];
+    static char buf[LINELEN];
 
     for (c = 0; c < NCHARS; c++) chtbl[c] = -1;
 
@@ -245,7 +244,7 @@ void decode(void)
     register int *trtbl = chtbl;
     register int n, c, rlen;
     register unsigned int len;
-    char buf[LINELEN], outl[LINELEN];
+    static char buf[LINELEN], outl[LINELEN];
 
     loop {
 	if (fgets(buf, sizeof buf, inpf) == NULL) {

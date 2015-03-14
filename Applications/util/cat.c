@@ -61,7 +61,7 @@ int open_file(char *new_filename)
 int output_file(int fd)
 {
     int bytes_read;
-    char buff[BUFFER_SIZE];
+    static char buff[BUFFER_SIZE];
 
     while ((bytes_read = read(fd, buff, BUFFER_SIZE)) > 0)
 	write(STDOUT_FILENO, buff, bytes_read);

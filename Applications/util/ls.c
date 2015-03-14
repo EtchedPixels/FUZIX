@@ -152,7 +152,7 @@ static void lsfile(char *name, struct stat *statbuf, int flags)
 
     struct passwd *pwd;
     struct group *grp;
-    char buf[PATHLEN], *cp = buf;
+    static char buf[PATHLEN], *cp = buf;
     int len;
 
     *cp = '\0';
@@ -217,7 +217,8 @@ void main(int argc, char *argv[])
     BOOL endslash;
     DIR *dirp;
     int i;
-    char *cp, *name, **newlist, fullname[PATHLEN];
+    char *cp, *name, **newlist;
+	static char fullname[PATHLEN];
 
     if ((list = (char **) malloc(LISTSIZE * sizeof(char *))) == NULL) {
 	fprintf(stderr, "No memory for ls buffer\n");

@@ -65,7 +65,6 @@ static int match(FILE *input, char *label, char *filename);
 static char *get_line(FILE *input);
 static char *map_nocase(char *line);
 static void error_exit(const char *s);
-void regerror(const char *msg);
 
 
 int main(int argc, char *argv[])
@@ -290,14 +289,6 @@ static char *map_nocase(char *line)
   } while (*line++ != '\0');
 
   return mapped;
-}
-
-
-/* Regular expression code calls this routine to print errors. */
-
-void regerror(const char *s)
-{
-  fprintf(stderr, "regexp: %s\n", s);
 }
 
 

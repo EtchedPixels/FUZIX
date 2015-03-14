@@ -14,7 +14,6 @@ int  next;
 int  bytespresent;
 
 
-int  main(int argc, char **argv);
 long offset(int argc, char *argv[], int k);
 void dumpfile(void);
 void wdump(short *words, int k, int radix);

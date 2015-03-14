@@ -110,7 +110,7 @@ static void docommands(void)
     NUM num2;
     BOOL have1;
     BOOL have2;
-    char buf[USERSIZE];
+    static char buf[USERSIZE];
 
     while (TRUE) {
 	intflag = FALSE;
@@ -569,7 +569,7 @@ static LEN findstring(LINE *lp, char *str, LEN len, LEN offset)
 static void addlines(NUM num)
 {
     int len;
-    char buf[USERSIZE + 1];
+    static char buf[USERSIZE + 1];
 
     while (fgets(buf, sizeof(buf), stdin)) {
 	if ((buf[0] == '.') && (buf[1] == '\n') && (buf[2] == '\0'))

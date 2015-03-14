@@ -35,7 +35,6 @@ int  rflag, errors;
 struct stat st;
 char path[PATH_MAX + 1];
 
-int main(int argc, char **argv);
 mode_t parsemode(char *symbolic, mode_t oldmode);
 int do_change(char *name);
 void usage(void);

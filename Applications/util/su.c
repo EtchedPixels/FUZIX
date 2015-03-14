@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     }
     setgid(pwd->pw_gid);
     setuid(pwd->pw_uid);
-    execve(shell, argv, environ);
+    execve(shell, (const char**)argv, (const char**)environ);
 
     fprintf(stderr, "%s: no shell\n", argv[0]);
     return (3);

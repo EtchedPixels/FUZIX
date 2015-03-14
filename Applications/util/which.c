@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
     int  quit, found;
     char *envpath;
     char *path, *cp;
-    char buf[200];
-    char patbuf[512];
+    static char buf[200];
+    static char patbuf[512];
 
     if (argc < 2) {
 	fprintf(stderr, "Usage: which cmd [cmd, ..]\n");

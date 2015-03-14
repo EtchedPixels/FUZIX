@@ -27,10 +27,10 @@ void main(int argc, char *argv[])
 	long		pos;
 	char		*bp1;
 	char		*bp2;
-	char		buf1[512];
-	char		buf2[512];
-	struct	stat	statbuf1;
-	struct	stat	statbuf2;
+	static char		buf1[512];
+	static char		buf2[512];
+	static struct	stat	statbuf1;
+	static struct	stat	statbuf2;
 
 	if (argc < 3) {
 		eputstr(argv[0]);
