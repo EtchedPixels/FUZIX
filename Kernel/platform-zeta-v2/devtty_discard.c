@@ -10,7 +10,7 @@ extern unsigned char uart0_type;
 
 unsigned char uart0_detect();
 
-/* uart0_init - detect UART type, enable FIFO if present
+/* uart0_init - detect UART type, print it, enable FIFO if present
  */
 void uart0_init() {
 	const char *uart_name;
@@ -46,6 +46,8 @@ void uart0_init() {
 	kprintf(".\n");
 }
 
+/* uart0_init - detect UART type and capabilities
+ */
 unsigned char uart0_detect() {
 	unsigned char type, scratch;
 
