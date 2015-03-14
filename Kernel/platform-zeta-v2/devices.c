@@ -26,15 +26,10 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 
 bool validdev(uint16_t dev)
 {
-    /* This is a bit uglier than needed but the right hand side is
-       a constant this way */
-    if(dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) + 255)
-        return false;
-    else
-        return true;
-}
-
-void device_init(void)
-{
-    ds1302_init();
+	/* This is a bit uglier than needed but the right hand side is
+	 a constant this way */
+	if(dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) + 255)
+		return false;
+	else
+		return true;
 }
