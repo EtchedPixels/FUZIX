@@ -187,6 +187,7 @@ bget ../../Applications/util/whoami
 bget ../../Applications/util/write
 bget ../../Applications/util/xargs
 bget ../../Applications/util/yes
+bget ../../Applications/levee/levee
 chmod 0755 banner
 chmod 0755 basename
 chmod 0755 bd
