@@ -133,6 +133,7 @@ bget ../../Applications/util/dosread
 bget ../../Applications/util/du
 bget ../../Applications/util/echo
 bget ../../Applications/util/ed
+bget ../../Applications/util/factor
 bget ../../Applications/util/false
 bget ../../Applications/util/fdisk
 bget ../../Applications/util/fgrep

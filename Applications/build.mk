@@ -25,6 +25,7 @@ $(OBJ)/Applications/util/dosread:  $(OBJ)/Applications/util/dosread.$O
 $(OBJ)/Applications/util/du:       $(OBJ)/Applications/util/du.$O
 $(OBJ)/Applications/util/echo:     $(OBJ)/Applications/util/echo.$O
 $(OBJ)/Applications/util/ed:       $(OBJ)/Applications/util/ed.$O
+$(OBJ)/Applications/util/factor:   $(OBJ)/Applications/util/factor.$O
 $(OBJ)/Applications/util/false:    $(OBJ)/Applications/util/false.$O
 $(OBJ)/Applications/util/fdisk:    $(OBJ)/Applications/util/fdisk.$O
 $(OBJ)/Applications/util/fgrep:    $(OBJ)/Applications/util/fgrep.$O
