@@ -132,7 +132,7 @@ println(void)
 static char hexdig[] = "0123456789ABCDEF";
 
 int PROC
-format(char *out, unsigned c)
+format(char *out, unsigned short c)
 /* format: put a displayable version of c into out */
 {
     if (c >= ' ' && c < '') {
