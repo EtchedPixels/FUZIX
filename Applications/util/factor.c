@@ -86,7 +86,7 @@ int main(int argc,char *argv[])
   if (argc > 1) {
     char **ss;
 
-    for (ss = argv[0]; *ss; ss++) factor(*ss);
+    for (ss = argv; *ss; ss++) factor(*ss);
   } else for (;;) {
     char *s = 0;
     size_t len = 0;
