@@ -315,10 +315,11 @@ static void eth_readpkt(uint8_t * packet, int len)
 	eth_deselect();
 }
 
+static uint16_t eth_rxnext = 0;
+
 int eth_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	static struct encrxhdr eth;
-	static uint16_t eth_rxnext = 0;
 	uint8_t *packet = (uint8_t *)udata.u_offset;
 	uint16_t len = udata.u_count;
 	int r = -EIO;
