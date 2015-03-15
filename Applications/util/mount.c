@@ -2,18 +2,25 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-char tmp[256];
+/* Assumed length of a line in /etc/mtab */
+#define MTAB_LINE 160
 
 int lsmtab(void)
 {
     FILE *f;
-    static char dev[20], mntpt[20], fstype[20], rwflag[20];
+	char tmp[MTAB_LINE];
+	char* dev;
+	char* mntpt;
+	char* fstype;
+	char* rwflag;
     
     f = fopen("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, 256, f)) {
-            sscanf(tmp, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
+        while (fgets(tmp, sizeof(tmp), f)) {
+			dev = strtok(tmp, " ");
+			mntpt = strtok(NULL, " ");
+			fstype = strtok(NULL, " ");
+			rwflag = strtok(NULL, "\n");
             if (strcmp(fstype, "swap") == 0)
                 printf("%s is swapspace\n", dev);
             else
@@ -30,6 +37,7 @@ int add2mtab(char *dev, char *mntpt, char *fstype, char *rwflag)
 {
     FILE *inpf, *outf;
     char *tmp_fname;
+	int c;
 
     if ((tmp_fname = tmpnam(NULL)) == NULL) {
         perror("Error getting temporary file name");
@@ -42,8 +50,11 @@ int add2mtab(char *dev, char *mntpt, char *fstype, char *rwflag)
         exit(1);
     }
     if (inpf) {
-        while (fgets(tmp, 255, inpf)) {
-            fprintf(outf, "%s", tmp);
+		for (;;) {
+			c = fgetc(inpf);
+			if (c == EOF)
+				break;
+			fputc(c, outf);
         }
         fclose(inpf);
     }
@@ -60,7 +71,7 @@ int add2mtab(char *dev, char *mntpt, char *fstype, char *rwflag)
     return 0;
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     if (argc == 1) {
         lsmtab();
