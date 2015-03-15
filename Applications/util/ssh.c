@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
 
 extern char **environ;      /* Location of Envp from executable Header */
@@ -21,16 +22,16 @@ extern char **environ;      /* Location of Envp from executable Header */
 char buf[128];
 char eline[45];		    /* Line for Search command */
 
-char cmd[50], arg[MAX_ARGS][50];
-
+char* cmd;
+char* arg[MAX_ARGS];
 
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
-    int   login_sh, pid, sig, stat, count, asis, i;
+    int   login_sh, pid, sig, stat, asis, i;
     char  cprompt;
     char  *home;
-    char  *argv[MAX_ARGS+1];
+    const char  *argv[MAX_ARGS+1];
 
     login_sh = 0;
     if (argval[0][0] == '-') login_sh = 1;
@@ -47,8 +48,7 @@ int main(int argc, char *argval[])
     cprompt = (getuid() == 0) ? '#' : '$';
 
     for (;;) {
-        cmd[0] = (char) 0;
-        for (i = 0; i < MAX_ARGS; i++) arg[i][0] = (char) 0;
+        for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
         do {
             printf("ssh%c ", cprompt);
             fflush(stdout);
@@ -57,10 +57,9 @@ int main(int argc, char *argval[])
             buf[strlen(buf) - 1] = '\0';   /* Strip newline from fgets */
         }
         while (buf[0] == (char) 0);
-        count = sscanf(buf, "%s %s %s %s %s %s %s %s %s %s %s",
-                            cmd,
-                            arg[0], arg[1], arg[2], arg[3], arg[4],
-                            arg[5], arg[6], arg[7], arg[8], arg[9]);
+		cmd = strtok(buf, " \t");
+		for (i = 0; i < MAX_ARGS; i++)
+			arg[i] = strtok(NULL, " \t");
 
         /* Check for User-Requested Exit back to Login Prompt */
         if (strcmp(cmd, "exit") == 0)
@@ -129,7 +128,7 @@ int main(int argc, char *argval[])
         else {
             argv[0] = cmd;                  /* Build Argv Pointer Array */
             for (i = 0; i < MAX_ARGS; ++i)
-               argv[i+1] = *arg[i] ? arg[i] : (char *) NULL;
+               argv[i+1] = arg[i];
 
             if ((pid = fork()) == -1) {     /* Try to spawn new Process */
                 printf("ssh: can't fork\n");
@@ -154,9 +153,9 @@ int main(int argc, char *argval[])
                             *tp++ = '/';
                         for (i = 0; (*tp++ = cmd[i++]) != '\0'; )
                             ;
-                        execve(eline, (const char **)argv, (const char **)environ);
+                        execve(eline, argv, (const char**) environ);
                     }
-                    printf("ssh: %s?\n", buf);      /* Say we can't exec */
+                    printf("ssh: %s?\n", cmd);      /* Say we can't exec */
                     exit(1);
                 }                                   /* Parent is in context */
                 wait(0);                    /* Parent waits for completion */
