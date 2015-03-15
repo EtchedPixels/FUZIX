@@ -242,7 +242,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 	    while (p && width-- && c)
 	    {
 	       n = (n * base) + (p - digits);
-	       c = getc(fp);
+	       c = fgetc(fp);
 	     zeroin:
 	       p = ((unsigned char *)
 		    strchr(digits, toupper(c)));
@@ -311,7 +311,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 		  goto fdone;
 	       }
 	       fstate = fp_ns[trans][fstate];
-	       c = getc(fp);
+	       c = fgetc(fp);
 	    }
 
 	  fdone:
