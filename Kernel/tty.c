@@ -237,6 +237,12 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
         case TIOCHANGUP:
                 tty_hangup(minor);
                 return 0;
+	case TIOCOSTOP:
+		t->flag |= TTYF_STOP;
+		break;
+	case TIOCOSTART:
+		t->flag &= ~TTYF_STOP;
+		break;
 	default:
 		udata.u_error = ENOTTY;
 		return (-1);

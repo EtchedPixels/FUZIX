@@ -36,7 +36,7 @@ int ls(char *path);
 int chmod(char *modes, char *path);
 int mknod( char *path, char *modes, char *devs);
 int mkdir(char *path);
-int get( char *arg, int binflag);
+int get( char *src, char *dest, int binflag);
 int put( char *arg, int binflag);
 int type( char *arg);
 int fdump(char *arg);
@@ -53,7 +53,7 @@ int main(argc, argval)
     int  interactive;
     int  pending_line = 0;
     struct filesys fsys;
-    int  j, retc;
+    int  j, retc = 0;
     /*--    char *argv[5];--*/
 
     /*
@@ -87,7 +87,7 @@ int main(argc, argval)
             printf("unix: ");
             if (fgets(line, 128, stdin) == NULL) {
                 xfs_end();
-                exit(1);
+                exit(retc);
             }
         }
 
@@ -126,7 +126,7 @@ int main(argc, argval)
         switch (match(cmd)) {
             case 0:         /* exit */
                 xfs_end();
-                exit(1);
+                exit(retc);
 
             case 1:         /* ls */
                 if (*arg1)
@@ -161,12 +161,12 @@ int main(argc, argval)
 
             case 6:         /* get */
                 if (*arg1)
-                    retc = get(arg1, 0);
+                    retc = get(arg1, *arg2 ? arg2 : arg1, 0);
                 break;
 
             case 7:         /* bget */
                 if (*arg1)
-                    retc = get(arg1, 1);
+                    retc = get(arg1, *arg2 ? arg2 : arg1, 1);
                 break;
 
             case 8:         /* put */
@@ -306,7 +306,7 @@ void usage(void)
     printf("mkdir dirname\n");
     printf("mknod name mode dev#\n");
     printf("chmod mode path\n");
-    printf("[b]get cpmfile\n");
+    printf("[b]get sourcefile [destfile]\n");
     printf("[b]put uzifile\n");
     printf("type|cat filename\n");
     printf("dump filename\n");
@@ -351,7 +351,7 @@ int ls(char *path)
 
     d = _open(path, 0);
     if (d < 0) {
-        printf("ls: can't open %s\n", path);
+        fprintf(stderr, "ls: can't open %s\n", path);
         return -1;
     }
     while (_read(d, (char *) &buf, 16) == 16) {
@@ -368,7 +368,7 @@ int ls(char *path)
         strcat(dname, buf.d_name);
 
         if (_stat(dname, &statbuf) != 0) {
-            printf("ls: can't stat %s\n", dname);
+            fprintf(stderr, "ls: can't stat %s\n", dname);
             break;
         }
         st = (statbuf.st_mode & F_MASK);
@@ -430,20 +430,20 @@ int chmod(char *modes, char *path)
     mode = -1;
     sscanf(modes, "%o", &mode);
     if (mode == -1) {
-        printf("chmod: bad mode\n");
+        fprintf(stderr, "chmod: bad mode\n");
         return (-1);
     }
     /* Preserve the type if not specified */
     if (mode < 10000) {
         struct uzi_stat st;
         if (_stat(path, &st) != 0) {
-            printf("chmod: can't stat file %d\n", *syserror);
+            fprintf(stderr, "chmod: can't stat file '%s': %d\n", path, *syserror);
             return -1;
         }
         mode = (st.st_mode & ~0x7777) | mode;
     }
     if (_chmod(path, mode)) {
-        printf("chmod: error %d\n", *syserror);
+        fprintf(stderr, "chmod: error %d\n", *syserror);
         return (-1);
     }
     return 0;
@@ -458,21 +458,21 @@ int mknod( char *path, char *modes, char *devs)
     mode = -1;
     sscanf(modes, "%o", &mode);
     if (mode == -1) {
-        printf("mknod: bad mode\n");
+        fprintf(stderr, "mknod: bad mode\n");
         return (-1);
     }
     if ((mode & F_MASK) != F_BDEV && (mode & F_MASK) != F_CDEV) {
-        printf("mknod: mode is not device\n");
+        fprintf(stderr, "mknod: mode is not device\n");
         return (-1);
     }
     dev = -1;
     sscanf(devs, "%d", &dev);
     if (dev == -1) {
-        printf("mknod: bad device\n");
+        fprintf(stderr, "mknod: bad device\n");
         return (-1);
     }
     if (_mknod(path, mode, dev) != 0) {
-        printf("_mknod: error %d\n", *syserror);
+        fprintf(stderr, "_mknod: error %d\n", *syserror);
         return (-1);
     }
     return (0);
@@ -485,19 +485,19 @@ int mkdir(char *path)
     char dot[100];
 
     if (_mknod(path, 040000 | 0777, 0) != 0) {
-        printf("mkdir: mknod error %d\n", *syserror);
+        fprintf(stderr, "mkdir: mknod error %d\n", *syserror);
         return (-1);
     }
     strcpy(dot, path);
     strcat(dot, "/.");
     if (_link(path, dot) != 0) {
-        printf("mkdir: link \".\" error %d\n", *syserror);
+        fprintf(stderr, "mkdir: link \".\" error %d\n", *syserror);
         return (-1);
     }
     strcpy(dot, path);
     strcat(dot, "/..");
     if (_link(".", dot) != 0) {
-        printf("mkdir: link \"..\" error %d\n", *syserror);
+        fprintf(stderr, "mkdir: link \"..\" error %d\n", *syserror);
         return (-1);
     }
     return (0);
@@ -505,21 +505,21 @@ int mkdir(char *path)
 
 
 
-int get( char *arg, int binflag)
+int get( char *src, char *dest, int binflag)
 {
     FILE *fp;
     int d;
     char cbuf[512];
     int nread;
 
-    fp = fopen(arg, binflag ? "rb" : "r");
+    fp = fopen(src, binflag ? "rb" : "r");
     if (fp == NULL) {
-        printf("Source file not found\n");
+        fprintf(stderr, "Source file '%s' not found\n", src);
         return (-1);
     }
-    d = _creat(basename(arg), 0666);
+    d = _creat(basename(dest), 0666);
     if (d < 0) {
-        printf("Cant open unix file error %d\n", *syserror);
+        fprintf(stderr, "Can't open destination file '%s'; error %d\n", dest, *syserror);
         return (-1);
     }
     for (;;) {
@@ -527,7 +527,7 @@ int get( char *arg, int binflag)
         if (nread == 0)
             break;
         if (_write(d, cbuf, nread) != nread) {
-            printf("_write error %d\n", *syserror);
+            fprintf(stderr, "_write error %d\n", *syserror);
             fclose(fp);
             _close(d);
             return (-1);
@@ -549,19 +549,19 @@ int put( char *arg, int binflag)
 
     fp = fopen(arg, binflag ? "wb" : "w");
     if (fp == NULL) {
-        printf("Cant open destination file.\n");
+        fprintf(stderr, "Can't open destination file.\n");
         return (-1);
     }
     d = _open(arg, 0);
     if (d < 0) {
-        printf("Cant open unix file error %d\n", *syserror);
+        fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
         if ((nread = _read(d, cbuf, 512)) == 0)
             break;
         if (fwrite(cbuf, 1, nread, fp) != nread) {
-            printf("fwrite error");
+            fprintf(stderr, "fwrite error");
             fclose(fp);
             _close(d);
             return (-1);
@@ -581,7 +581,7 @@ int type( char *arg)
 
     d = _open(arg, 0);
     if (d < 0) {
-        printf("Cant open unix file error %d\n", *syserror);
+        fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
@@ -609,7 +609,7 @@ int fdump(char *arg)
     printf("Dump starting.\n");
     d = _open(arg, 0);
     if (d < 0) {
-        printf("Cant open unix file error %d\n", *syserror);
+        fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
@@ -627,15 +627,15 @@ int unlink( char *path)
     struct uzi_stat statbuf;
 
     if (_stat(path, &statbuf) != 0) {
-        printf("unlink: can't stat %s\n", path);
+        fprintf(stderr, "unlink: can't stat %s\n", path);
         return (-1);
     }
     if ((statbuf.st_mode & F_MASK) == F_DIR) {
-        printf("unlink: %s is a directory\n", path);
+        fprintf(stderr, "unlink: %s is a directory\n", path);
         return (-1);
     }
     if (_unlink(path) != 0) {
-        printf("unlink: _unlink errn=or %d\n", *syserror);
+        fprintf(stderr, "unlink: _unlink errn=or %d\n", *syserror);
         return (-1);
     }
     return (0);
@@ -650,16 +650,16 @@ int rmdir(char *path)
     int fd;
 
     if (_stat(path, &statbuf) != 0) {
-        printf("rmdir: can't stat %s\n", path);
+        fprintf(stderr, "rmdir: can't stat %s\n", path);
         return (-1);
     }
     if ((statbuf.st_mode & F_DIR) == 0) {
         /*-- Constant expression !!!  HFB --*/
-        printf("rmdir: %s is not a directory\n", path);
+        fprintf(stderr, "rmdir: %s is not a directory\n", path);
         return (-1);
     }
     if ((fd = _open(path, 0)) < 0) {
-        printf("rmdir: %s is unreadable\n", path);
+        fprintf(stderr, "rmdir: %s is unreadable\n", path);
         return (-1);
     }
     while (_read(fd, (char *) &dir, sizeof(dir)) == sizeof(dir)) {
@@ -667,7 +667,7 @@ int rmdir(char *path)
             continue;
         if (!strcmp(dir.d_name, ".") || !strcmp(dir.d_name, ".."))
             continue;
-        printf("rmdir: %s is not empty\n", path);
+        fprintf(stderr, "rmdir: %s is not empty\n", path);
         _close(fd);
         return (-1);
     }
@@ -676,16 +676,16 @@ int rmdir(char *path)
     strcpy(newpath, path);
     strcat(newpath, "/.");
     if (_unlink(newpath) != 0) {
-        printf("rmdir: can't unlink \".\"  error %d\n", *syserror);
+        fprintf(stderr, "rmdir: can't unlink \".\"  error %d\n", *syserror);
         /*return (-1); */
     }
     strcat(newpath, ".");
     if (_unlink(newpath) != 0) {
-        printf("rmdir: can't unlink \"..\"  error %d\n", *syserror);
+        fprintf(stderr, "rmdir: can't unlink \"..\"  error %d\n", *syserror);
         /*return (-1); */
     }
     if (_unlink(path) != 0) {
-        printf("rmdir: _unlink error %d\n", *syserror);
+        fprintf(stderr, "rmdir: _unlink error %d\n", *syserror);
         return (-1);
     }
     return (0);

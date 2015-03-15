@@ -9,4 +9,6 @@ extern int eth_ioctl(uint8_t minor, uarg_t arg, char *data);
 
 extern void deveth_init(void);
 
+extern void eth_poll(void);
+
 #endif

@@ -2,21 +2,24 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-char tmp[256];
+/* Assumed length of a line in /etc/mtab */
+#define MTAB_LINE 160
 
 char *getdev(char *arg)
 {
     FILE *f;
-    static char dev[20], mntpt[20], fstype[20], rwflag[20];
+	char tmp[MTAB_LINE];
+	char* dev;
+	char* mntpt;
     
     f = fopen("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, 256, f)) {
-            sscanf(tmp, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
+        while (fgets(tmp, sizeof(tmp), f)) {
+			dev = strtok(tmp, " ");
+			mntpt = strtok(NULL, " ");
             if ((strcmp(dev, arg) == 0) || (strcmp(mntpt, arg) == 0)) {
                 fclose(f);
-                return dev;
+                return strdup(dev);
             }
         }
         fclose(f);
@@ -30,7 +33,9 @@ int rm_mtab(char *devname)
 {
     FILE *inpf, *outf;
     char *tmp_fname;
-    static char dev[20], mntpt[20], fstype[20], rwflag[20];
+	char tmp[MTAB_LINE];
+	char* dev;
+	char* mntpt;
 
     if ((tmp_fname = tmpnam(NULL)) == NULL) {
         perror("Error getting temporary file name");
@@ -46,8 +51,9 @@ int rm_mtab(char *devname)
         perror("Can't create temporary file");
         exit(1);
     }
-    while (fgets(tmp, 255, inpf)) {
-        sscanf(tmp, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
+    while (fgets(tmp, sizeof(tmp), inpf)) {
+		dev = strtok(tmp, " ");
+		mntpt = strtok(NULL, " ");
         if (strcmp(dev, devname) == 0) {
             continue;
         } else {

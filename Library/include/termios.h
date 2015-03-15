@@ -139,7 +139,8 @@ struct termios {
 #define TIOCINQ		5
 #define TIOCFLUSH	6
 #define TIOCHANGUP	7	/* vhangup() */
-
+#define TIOCOSTOP	8
+#define TIOCOSTART	9
 
 extern speed_t cfgetispeed __P ((const struct termios *__termios_p));
 extern speed_t cfgetospeed __P ((const struct termios *__termios_p));

@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <tty.h>
 #include <printf.h>
+#include <deveth.h>
 
 uint16_t ramtop = PROGTOP;
 
@@ -45,8 +46,10 @@ void platform_interrupt(void)
         if (st1 & 0x40)		/* TX idle */
             tty_outproc(2);
     }
-    if (ts & 1)
+    if (ts & 1) {
+        eth_poll();
         timer_interrupt();
+    }
 }
 
 void pagemap_init(void)
