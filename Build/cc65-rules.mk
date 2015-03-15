@@ -122,7 +122,7 @@ $(OBJ)/%.$A:
 	$(hide) $(AR) a $@ $^
 
 # Executables. Add object files by adding prerequisites.
-$(OBJ)/Applications/%: $(CRT0) $(LIBC) $(LIBRUNTIME)
+$(OBJ)/Applications/%.exe: $(CRT0) $(LIBC) $(LIBRUNTIME)
 	@echo LINK $@
 	@mkdir -p $(dir $@)
 	$(hide) $(LD) $(LDFLAGS) -o $@ --start-group $^ --end-group
@@ -131,9 +131,12 @@ $(OBJ)/Applications/%: $(CRT0) $(LIBC) $(LIBRUNTIME)
 PROGBASE = 0x0100
 
 # Ensure that various things know where their headers are.
-$(OBJ)/Applications/%: INCLUDES += -I$(TOP)/Library/include -I$(TOP)/Library/include/6502
-$(OBJ)/Library/%: INCLUDES += -I$(TOP)/Library/include -I$(TOP)/Library/include/6502
-$(OBJ)/Library/%: INCLUDES += -I$(OBJ)/Library/libs/fuzix -I$(TOP)/Library/include/6502
+$(OBJ)/Applications/%: private INCLUDES += \
+	-I$(TOP)/Library/include -I$(TOP)/Library/include/6502
+$(OBJ)/Library/libs/%: private INCLUDES += \
+	-I$(TOP)/Library/include -I$(TOP)/Library/include/6502
+$(OBJ)/Library/libs/%: private INCLUDES += \
+	-I$(OBJ)/Library/libs/fuzix -I$(TOP)/Library/include/6502
 
 # Z80 binaries (which we're assuming here) require massaging before they're
 # valid Fuzix binaries. This tool does that.

@@ -74,14 +74,17 @@ $(OBJ)/%.$A:
 	$(hide) $(AR) qcs $@ $^
 
 # Executables. Add object files by adding prerequisites.
-$(OBJ)/Applications/%: $(CRT0) $(LIBC) $(LIBGCC)
+$(OBJ)/Applications/%.exe: $(CRT0) $(LIBC) $(LIBGCC)
 	@echo LINK $@
 	@mkdir -p $(dir $@)
 	$(hide) $(LD) $(LDFLAGS) -o $@.elf --start-group $^ --end-group
 	$(hide) $(OBJCOPY) --output-target binary $@.elf $@
 
 # Ensure that various things know where their headers are.
-$(OBJ)/Applications/%: INCLUDES += -I$(TOP)/Library/include -I$(TOP)/Library/include/$(ARCH)
-$(OBJ)/Library/%: INCLUDES += -I$(TOP)/Library/include -I$(TOP)/Library/include/$(ARCH)
-$(OBJ)/Library/%: INCLUDES += -I$(OBJ)/Library/libs/fuzix -I$(TOP)/Library/include/$(ARCH)
+$(OBJ)/Applications/%: private INCLUDES += \
+	-I$(TOP)/Library/include -I$(TOP)/Library/include/$(ARCH)
+$(OBJ)/Library/libs/%: private INCLUDES += \
+	-I$(TOP)/Library/include -I$(TOP)/Library/include/$(ARCH)
+$(OBJ)/Library/libs/%: private INCLUDES += \
+	-I$(OBJ)/Library/libs/fuzix -I$(TOP)/Library/include/$(ARCH)
 

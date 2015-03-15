@@ -1,18 +1,18 @@
 
 # Common flags for all kernel object files.
 $(OBJ)/Kernel/%.$O: \
-	INCLUDES += \
+	private INCLUDES += \
 		-I$(TOP)/Kernel/cpu-$(ARCH) \
 		-I$(TOP)/Kernel/platform-$(PLATFORM) \
 		-I$(TOP)/Kernel/include
 
 $(OBJ)/Kernel/%.$O: \
-	CFLAGS += \
+	private CFLAGS += \
 		--stack-auto \
 		--constseg CONST
 
 $(OBJ)/Kernel/%.$O: \
-	ASFLAGS += \
+	private ASFLAGS += \
 		-plosff
 
 # Flags for each segment type.

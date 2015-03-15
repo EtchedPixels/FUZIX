@@ -3,8 +3,7 @@ KERNEL = $(TOP)/fuzix-$(PLATFORM).com
 kerneltool = $(HOSTOBJ)/Kernel/tools
 platform = platform-$(PLATFORM)
 
-$(OBJ)/Kernel/%.$O: EXTRA += $(OBJ)/Kernel/platform
-$(OBJ)/Kernel/%.$O: INCLUDES += -I$(TOP)/Kernel/dev
+$(OBJ)/Kernel/%.$O: private INCLUDES += -I$(TOP)/Kernel/dev
 
 KERNEL_OBJS += \
 	$(OBJ)/Kernel/$(platform)/commonmem.$O \

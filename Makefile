@@ -1,5 +1,12 @@
 hide = @
 
+need := 3.82
+rightversion := $(filter $(need), \
+	$(firstword $(sort $(MAKE_VERSION) $(need))))
+ifeq ($(rightversion),)
+$(error You must have make version $(need) or above)
+endif
+
 ifeq ($(PLATFORM),,)
 $(error You must specify PLATFORM=something --- look in Build/platforms.)
 endif

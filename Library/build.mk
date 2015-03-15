@@ -240,5 +240,5 @@ $(OBJ)/Library/libs/fuzix/numbers.h: $(HOSTOBJ)/Library/tools/mknumbers
 	$(hide) $< > $@
 
 $(HOSTOBJ)/Library/tools/mknumbers: $(HOSTOBJ)/Library/tools/mknumbers.o
-$(HOSTOBJ)/Library/tools/mknumbers.o: INCLUDES += -I$(TOP)/Kernel/include
+$(HOSTOBJ)/Library/tools/mknumbers.o: private INCLUDES += -I$(TOP)/Kernel/include
 

@@ -95,88 +95,88 @@ fs_files = \
 	/etc/issue              0644 $(TOP)/Standalone/filesystem-src/etc-files/issue \
 	/etc/motd               0644 $(TOP)/Standalone/filesystem-src/etc-files/motd \
 	/etc/passwd             0644 $(TOP)/Standalone/filesystem-src/etc-files/passwd \
-	/bin/banner             0755 $(OBJ)/Applications/util/banner \
-	/bin/basename           0755 $(OBJ)/Applications/util/basename \
-	/bin/bd                 0755 $(OBJ)/Applications/util/bd \
-	/bin/cal                0755 $(OBJ)/Applications/util/cal \
-	/bin/cat                0755 $(OBJ)/Applications/util/cat \
-	/bin/chgrp              0755 $(OBJ)/Applications/util/chgrp \
-	/bin/chmod              0755 $(OBJ)/Applications/util/chmod \
-	/bin/chown              0755 $(OBJ)/Applications/util/chown \
-	/bin/cksum              0755 $(OBJ)/Applications/util/cksum \
-	/bin/cmp                0755 $(OBJ)/Applications/util/cmp \
-	/bin/cp                 0755 $(OBJ)/Applications/util/cp \
-	/bin/cut                0755 $(OBJ)/Applications/util/cut \
-	/bin/date               0755 $(OBJ)/Applications/util/date \
-	/bin/dd                 0755 $(OBJ)/Applications/util/dd \
-	/bin/dirname            0755 $(OBJ)/Applications/util/dirname \
-	/bin/dosread            0755 $(OBJ)/Applications/util/dosread \
-	/bin/du                 0755 $(OBJ)/Applications/util/du \
-	/bin/echo               0755 $(OBJ)/Applications/util/echo \
-	/bin/factor             0755 $(OBJ)/Applications/util/factor \
-	/bin/false              0755 $(OBJ)/Applications/util/false \
-	/bin/fdisk              0755 $(OBJ)/Applications/util/fdisk \
-	/bin/fgrep              0755 $(OBJ)/Applications/util/fgrep \
-	/bin/grep               0755 $(OBJ)/Applications/util/grep \
-	/bin/head               0755 $(OBJ)/Applications/util/head \
-	/bin/id                 0755 $(OBJ)/Applications/util/id \
-	/bin/init               0755 $(OBJ)/Applications/util/init \
-	/bin/kill               0755 $(OBJ)/Applications/util/kill \
-	/bin/ll                 0755 $(OBJ)/Applications/util/ll \
-	/bin/ln                 0755 $(OBJ)/Applications/util/ln \
-	/bin/logname            0755 $(OBJ)/Applications/util/logname \
-	/bin/ls                 0755 $(OBJ)/Applications/util/ls \
-	/bin/mkdir              0755 $(OBJ)/Applications/util/mkdir \
-	/bin/mkfs               0755 $(OBJ)/Applications/util/mkfs \
-	/bin/mkfifo             0755 $(OBJ)/Applications/util/mkfifo \
-	/bin/more               0755 $(OBJ)/Applications/util/more \
-	/bin/mv                 0755 $(OBJ)/Applications/util/mv \
-	/bin/od                 0755 $(OBJ)/Applications/util/od \
-	/bin/pagesize           0755 $(OBJ)/Applications/util/pagesize \
-	/bin/passwd             0755 $(OBJ)/Applications/util/passwd \
-	/bin/patchcpm           0755 $(OBJ)/Applications/util/patchcpm \
-	/bin/printenv           0755 $(OBJ)/Applications/util/printenv \
-	/bin/prtroot            0755 $(OBJ)/Applications/util/prtroot \
-	/bin/ps                 0755 $(OBJ)/Applications/util/ps \
-	/bin/pwd                0755 $(OBJ)/Applications/util/pwd \
-	/bin/rm                 0755 $(OBJ)/Applications/util/rm \
-	/bin/rmdir              0755 $(OBJ)/Applications/util/rmdir \
-	/bin/sleep              0755 $(OBJ)/Applications/util/sleep \
-	/bin/sort               0755 $(OBJ)/Applications/util/sort \
-	/bin/stty               0755 $(OBJ)/Applications/util/stty \
-	/bin/sum                0755 $(OBJ)/Applications/util/sum \
-	/bin/su                 0755 $(OBJ)/Applications/util/su \
-	/bin/sync               0755 $(OBJ)/Applications/util/sync \
-	/bin/tee                0755 $(OBJ)/Applications/util/tee \
-	/bin/tail               0755 $(OBJ)/Applications/util/tail \
-	/bin/touch              0755 $(OBJ)/Applications/util/touch \
-	/bin/tr                 0755 $(OBJ)/Applications/util/tr \
-	/bin/true               0755 $(OBJ)/Applications/util/true \
-	/bin/uniq               0755 $(OBJ)/Applications/util/uniq \
-	/bin/uue                0755 $(OBJ)/Applications/util/uue \
-	/bin/wc                 0755 $(OBJ)/Applications/util/wc \
-	/bin/which              0755 $(OBJ)/Applications/util/which \
-	/bin/who                0755 $(OBJ)/Applications/util/who \
-	/bin/whoami             0755 $(OBJ)/Applications/util/whoami \
-	/bin/write              0755 $(OBJ)/Applications/util/write \
-	/bin/xargs              0755 $(OBJ)/Applications/util/xargs \
-	/bin/yes                0755 $(OBJ)/Applications/util/yes \
-	/bin/df                 0755 $(OBJ)/Applications/util/df \
-	/bin/umount             0755 $(OBJ)/Applications/util/umount \
-	/bin/mount              0755 $(OBJ)/Applications/util/mount \
-	/bin/fsck               0755 $(OBJ)/Applications/util/fsck \
-	/bin/man                0755 $(OBJ)/Applications/util/man \
-	/bin/mknod              0755 $(OBJ)/Applications/util/mknod \
-	/bin/uud                0755 $(OBJ)/Applications/util/uud \
-	/bin/ssh                0755 $(OBJ)/Applications/util/ssh \
-	/bin/ed                 0755 $(OBJ)/Applications/util/ed \
+	/bin/banner             0755 $(OBJ)/Applications/util/banner.exe \
+	/bin/basename           0755 $(OBJ)/Applications/util/basename.exe \
+	/bin/bd                 0755 $(OBJ)/Applications/util/bd.exe \
+	/bin/cal                0755 $(OBJ)/Applications/util/cal.exe \
+	/bin/cat                0755 $(OBJ)/Applications/util/cat.exe \
+	/bin/chgrp              0755 $(OBJ)/Applications/util/chgrp.exe \
+	/bin/chmod              0755 $(OBJ)/Applications/util/chmod.exe \
+	/bin/chown              0755 $(OBJ)/Applications/util/chown.exe \
+	/bin/cksum              0755 $(OBJ)/Applications/util/cksum.exe \
+	/bin/cmp                0755 $(OBJ)/Applications/util/cmp.exe \
+	/bin/cp                 0755 $(OBJ)/Applications/util/cp.exe \
+	/bin/cut                0755 $(OBJ)/Applications/util/cut.exe \
+	/bin/date               0755 $(OBJ)/Applications/util/date.exe \
+	/bin/dd                 0755 $(OBJ)/Applications/util/dd.exe \
+	/bin/dirname            0755 $(OBJ)/Applications/util/dirname.exe \
+	/bin/dosread            0755 $(OBJ)/Applications/util/dosread.exe \
+	/bin/du                 0755 $(OBJ)/Applications/util/du.exe \
+	/bin/echo               0755 $(OBJ)/Applications/util/echo.exe \
+	/bin/factor             0755 $(OBJ)/Applications/util/factor.exe \
+	/bin/false              0755 $(OBJ)/Applications/util/false.exe \
+	/bin/fdisk              0755 $(OBJ)/Applications/util/fdisk.exe \
+	/bin/fgrep              0755 $(OBJ)/Applications/util/fgrep.exe \
+	/bin/grep               0755 $(OBJ)/Applications/util/grep.exe \
+	/bin/head               0755 $(OBJ)/Applications/util/head.exe \
+	/bin/id                 0755 $(OBJ)/Applications/util/id.exe \
+	/bin/init               0755 $(OBJ)/Applications/util/init.exe \
+	/bin/kill               0755 $(OBJ)/Applications/util/kill.exe \
+	/bin/ll                 0755 $(OBJ)/Applications/util/ll.exe \
+	/bin/ln                 0755 $(OBJ)/Applications/util/ln.exe \
+	/bin/logname            0755 $(OBJ)/Applications/util/logname.exe \
+	/bin/ls                 0755 $(OBJ)/Applications/util/ls.exe \
+	/bin/mkdir              0755 $(OBJ)/Applications/util/mkdir.exe \
+	/bin/mkfs               0755 $(OBJ)/Applications/util/mkfs.exe \
+	/bin/mkfifo             0755 $(OBJ)/Applications/util/mkfifo.exe \
+	/bin/more               0755 $(OBJ)/Applications/util/more.exe \
+	/bin/mv                 0755 $(OBJ)/Applications/util/mv.exe \
+	/bin/od                 0755 $(OBJ)/Applications/util/od.exe \
+	/bin/pagesize           0755 $(OBJ)/Applications/util/pagesize.exe \
+	/bin/passwd             0755 $(OBJ)/Applications/util/passwd.exe \
+	/bin/patchcpm           0755 $(OBJ)/Applications/util/patchcpm.exe \
+	/bin/printenv           0755 $(OBJ)/Applications/util/printenv.exe \
+	/bin/prtroot            0755 $(OBJ)/Applications/util/prtroot.exe \
+	/bin/ps                 0755 $(OBJ)/Applications/util/ps.exe \
+	/bin/pwd                0755 $(OBJ)/Applications/util/pwd.exe \
+	/bin/rm                 0755 $(OBJ)/Applications/util/rm.exe \
+	/bin/rmdir              0755 $(OBJ)/Applications/util/rmdir.exe \
+	/bin/sleep              0755 $(OBJ)/Applications/util/sleep.exe \
+	/bin/sort               0755 $(OBJ)/Applications/util/sort.exe \
+	/bin/stty               0755 $(OBJ)/Applications/util/stty.exe \
+	/bin/sum                0755 $(OBJ)/Applications/util/sum.exe \
+	/bin/su                 0755 $(OBJ)/Applications/util/su.exe \
+	/bin/sync               0755 $(OBJ)/Applications/util/sync.exe \
+	/bin/tee                0755 $(OBJ)/Applications/util/tee.exe \
+	/bin/tail               0755 $(OBJ)/Applications/util/tail.exe \
+	/bin/touch              0755 $(OBJ)/Applications/util/touch.exe \
+	/bin/tr                 0755 $(OBJ)/Applications/util/tr.exe \
+	/bin/true               0755 $(OBJ)/Applications/util/true.exe \
+	/bin/uniq               0755 $(OBJ)/Applications/util/uniq.exe \
+	/bin/uue                0755 $(OBJ)/Applications/util/uue.exe \
+	/bin/wc                 0755 $(OBJ)/Applications/util/wc.exe \
+	/bin/which              0755 $(OBJ)/Applications/util/which.exe \
+	/bin/who                0755 $(OBJ)/Applications/util/who.exe \
+	/bin/whoami             0755 $(OBJ)/Applications/util/whoami.exe \
+	/bin/write              0755 $(OBJ)/Applications/util/write.exe \
+	/bin/xargs              0755 $(OBJ)/Applications/util/xargs.exe \
+	/bin/yes                0755 $(OBJ)/Applications/util/yes.exe \
+	/bin/df                 0755 $(OBJ)/Applications/util/df.exe \
+	/bin/umount             0755 $(OBJ)/Applications/util/umount.exe \
+	/bin/mount              0755 $(OBJ)/Applications/util/mount.exe \
+	/bin/fsck               0755 $(OBJ)/Applications/util/fsck.exe \
+	/bin/man                0755 $(OBJ)/Applications/util/man.exe \
+	/bin/mknod              0755 $(OBJ)/Applications/util/mknod.exe \
+	/bin/uud                0755 $(OBJ)/Applications/util/uud.exe \
+	/bin/ssh                0755 $(OBJ)/Applications/util/ssh.exe \
+	/bin/ed                 0755 $(OBJ)/Applications/util/ed.exe \
 
 # These are bigger than average.
 ifneq ($(WANT_LARGE_APPLICATIONS),n)
 
 fs_files += \
-	/bin/decomp16           0755 $(OBJ)/Applications/util/decomp16 \
-	/bin/levee              0755 $(OBJ)/Applications/levee/levee \
+	/bin/decomp16           0755 $(OBJ)/Applications/util/decomp16.exe \
+	/bin/levee              0755 $(OBJ)/Applications/levee/levee.exe \
 
 endif
 
@@ -187,7 +187,8 @@ get_source_files_from_list = \
 		)
 
 $(FILESYSTEM): $(TOP)/Standalone/filesystem-src/populatefs.awk \
-		$d/ucp $d/mkfs $(MAKEFILE) $(call get_source_files_from_list, $(fs_files))
+		$d/ucp $d/mkfs $d/fsck $(MAKEFILE) \
+		$(call get_source_files_from_list, $(fs_files))
 	@echo FILESYSTEM $@
 	@mkdir -p $(dir $@)
 	$(hide) rm -f $@
@@ -196,6 +197,7 @@ $(FILESYSTEM): $(TOP)/Standalone/filesystem-src/populatefs.awk \
 		| gawk 'BEGIN { RS = " "; } { printf("%s ", $$0); if (n%3 == 2) { printf "\n"; } n++; }' \
 		| gawk -f $(TOP)/Standalone/filesystem-src/populatefs.awk \
 		| $(HOSTOBJ)/Standalone/ucp $@ > /dev/null
+	$(hide) $(HOSTOBJ)/Standalone/fsck $@
 
 install:: $d/chmem $d/mkfs $d/fsck $d/size $d/ucp
 	@echo INSTALL standalone tools
