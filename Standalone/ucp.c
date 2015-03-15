@@ -53,7 +53,7 @@ int main(argc, argval)
     int  interactive;
     int  pending_line = 0;
     struct filesys fsys;
-    int  j, retc;
+    int  j, retc = 0;
     /*--    char *argv[5];--*/
 
     /*
