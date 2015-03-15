@@ -9,9 +9,9 @@
     
 #include "malloc-l.h"
 
-void *calloc(unsigned int elm, unsigned int sz) 
+void *calloc(size_t elm, size_t sz) 
 {
-	register unsigned v = elm * sz;
+	register size_t v = elm * sz;
 	register void *ptr = malloc(v);
 	
 	if (ptr)
