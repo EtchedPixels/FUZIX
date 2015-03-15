@@ -7,13 +7,13 @@
 #include <string.h>
     
 /********************** Function memchr ************************************/ 
-void *memchr(void *str, int c, size_t l) 
+void *memchr(const void *str, int c, size_t l) 
 {
-	register char *p = (char *) str;
+	register const char *p = str;
 
 	while (l-- != 0) {
 		if (*p == c)
-			return p;
+			return (void*) p;
 		p++;
 	}
 	return NULL;

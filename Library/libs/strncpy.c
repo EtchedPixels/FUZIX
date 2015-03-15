@@ -7,9 +7,10 @@
 #include <string.h>
     
 /********************** Function strncpy ************************************/ 
-char *strncpy(char *d, char *s, size_t l) 
+char *strncpy(char *d, const char *s, size_t l) 
 {
-	register char *s1 = d, *s2 = s;
+	register char *s1 = d;
+	register const char *s2 = s;
 
 	while (l) {
 		l--;

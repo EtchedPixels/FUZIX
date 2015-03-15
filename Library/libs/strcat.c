@@ -7,7 +7,7 @@
 #include <string.h>
     
 /********************** Function strcat ************************************/ 
-char *strcat(char *d, char *s) 
+char *strcat(char *d, const char *s) 
 {
 	strcpy(d + strlen(d), s);
 	return d;
