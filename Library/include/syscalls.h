@@ -74,8 +74,9 @@ struct hd_geometry {
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
 struct times;
-struct utsname;
 struct tms;
+struct utimbuf;
+struct utsname;
 
 extern void _exit(int code);
 extern int open(const char *path, int flags, ...);
@@ -150,7 +151,7 @@ extern int alarm(uint16_t seconds);
 extern time_t time(time_t *t);
 extern int stime(const time_t *t);
 extern int times(struct tms *tms);
-//extern int utime(const char *filename, const struct utimbuf *utim);
+extern int utime(const char *filename, const struct utimbuf *utim);
 extern int uname(struct utsname *buf);
 extern int profil(unsigned short *bufbase, size_t bufsize, unsigned long offset,
                   unsigned int scale);
