@@ -60,7 +60,7 @@ static int prtfld(FILE * op, size_t maxlen, size_t ct, unsigned char *buf, int l
 			--width;
 		}
 		if (ct++ < maxlen)
-                        putc(ch, op);
+                        fputc(ch, op);
 		if (ch == '\n' && buffer_mode == _IOLBF)
 			fflush(op);
 	}
@@ -253,7 +253,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 		      charout:
 			/* normal char out */
 		        if (cnt < maxlen)
-		                putc(*fmt, op);
+		                fputc(*fmt, op);
 			++cnt;
 			if (*fmt == '\n' && buffer_mode == _IOLBF)
 				fflush(op);
