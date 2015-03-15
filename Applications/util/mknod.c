@@ -2,15 +2,25 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+static long parse_number(const char* p, int base)
+{
+	char* end;
+	unsigned long result;
+	
+	errno = 0;
+	result = strtoul(p, &end, base);
+	if (errno || *end)
+		return -1;
+	return result;
+}
 
 int do_mknod(char *path, char *modes, char *devs)
 {
     int mode;
     int dev;
 
-    mode = -1;
-    sscanf(modes, "%o", &mode);
-    if (mode == -1) {
+	mode = parse_number(modes, 8);
+    if (mode < 0) {
         printf("mknod: bad mode\n");
         return (-1);
     }
@@ -20,7 +30,8 @@ int do_mknod(char *path, char *modes, char *devs)
         return (-1);
     }
 
-    if (sscanf(devs, "%d", &dev) != 1) {
+	dev = parse_number(devs, 10);
+	if (dev < 0) {
         printf("mknod: bad device\n");
         return (-1);
     }

@@ -6,6 +6,9 @@
 #include <dirent.h>
 #include <errno.h>
 
+/* Assumed length of a line in /etc/mtab */
+#define MTAB_LINE 160
+
 const char *devname(dev_t);
 const char *mntpoint(const char *);
 void df_path(const char *path);
@@ -116,13 +119,15 @@ void df_dev(dev_t dev)
 void df_all(void)
 {
     FILE *f;
-    static char tmp[256];
-    static char dev[20], mntpt[20], fstype[20], rwflag[20];
+	char tmp[MTAB_LINE];
+	char* dev;
+	char* mntpt;
     
     f = fopen("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, 256, f)) {
-            sscanf(tmp, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
+        while (fgets(tmp, sizeof(MTAB_LINE), f)) {
+			dev = strtok(tmp, " ");
+			mntpt = strtok(NULL, " ");
             df_path(mntpt);
         }
         fclose(f);
@@ -164,16 +169,18 @@ const char *devname(dev_t devno)
 const char *mntpoint(const char *devname)
 {
     FILE *f;
-    static char tmp[256];
-    static char dev[20], mntpt[20], fstype[20], rwflag[20];
+	char tmp[MTAB_LINE];
+	char* dev;
+	char* mntpt;
     
     f = fopen("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, 256, f)) {
-            sscanf(tmp, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
+        while (fgets(tmp, sizeof(tmp), f)) {
+			dev = strtok(tmp, " ");
+			mntpt = strtok(NULL, " ");
             if (strcmp(dev, devname) == 0) {
                 fclose(f);
-                return mntpt;
+                return strdup(mntpt);
             }
         }
         fclose(f);
