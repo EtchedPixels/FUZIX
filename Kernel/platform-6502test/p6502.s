@@ -415,3 +415,16 @@ copy_args:  lda (ptr1),y	; copy the arguments from current bank
 ;
 
 	    rts
+
+; FIXME: these are stubbed out and not working
+.export _platform_interrupt_i
+.export _tty_sleeping
+.export _unix_syscall_i
+.export platform_doexec
+.export CTemp
+_platform_interrupt_i:
+_tty_sleeping:
+_unix_syscall_i:
+platform_doexec:
+CTemp:
+	jmp platform_doexec

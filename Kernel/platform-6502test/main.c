@@ -4,6 +4,8 @@
 #include <printf.h>
 #include <devtty.h>
 
+uint8_t kernel_flag = 0;
+
 /* The uarea is already synched to the stash which is written with the
    process */
 uint8_t *swapout_prepare_uarea(ptptr p)
