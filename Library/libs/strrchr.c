@@ -7,9 +7,9 @@
 #include <string.h>
     
 /********************** Function strrchr ************************************/ 
-char *strrchr(char *s, int c) 
+char *strrchr(const char *s, int c) 
 {
-	register char *p = s + strlen(s);
+	register const char *p = s + strlen(s);
 	 
 	/* For null it's just like strlen */ 
 	if (c == '\0')

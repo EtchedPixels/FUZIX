@@ -12,8 +12,8 @@ extern char * strcat __P ((char*, const char*));
 extern char * strcpy __P ((char*, const char*));
 extern int strcmp __P ((const char*, const char*));
 
-extern char * strncat __P ((const char*, const char*, size_t));
-extern char * strncpy __P ((const char*, const char*, size_t));
+extern char * strncat __P ((char*, const char*, size_t));
+extern char * strncpy __P ((char*, const char*, size_t));
 extern int strncmp __P((const char*, const char*, size_t));
 
 extern int stricmp __P((const char*, const char*));

@@ -1,31 +1,22 @@
-#include <string.h>
+/*
+ * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
+ * This file is licensed under the terms of the MIT open source license.
+ */
 
-/* Z80 rewrite from UMZIX */
+#include	<string.h>
 
-void *memcpy(void *dst, void *src, size_t count) __naked
+void *
+memcpy(void *s1, const void *s2, register size_t n)
 {
-__asm
-        push    ix
-        ld      ix,#0
-        add     ix,sp
-	
-        ld e, 4(ix)
-        ld d, 5(ix)
-        ld l, 6(ix)
-        ld h, 7(ix)
-        ld c, 8(ix)
-        ld b, 9(ix)
-	push de
-        ld      a,b
-        or      c
-        jr      z,_skip
+	register char *p1 = s1;
+	register const char *p2 = s2;
 
-        ldir
 
-_skip:
-	pop hl
-
-	pop ix
-	ret
-__endasm;
+	if (n) {
+		n++;
+		while (--n > 0) {
+			*p1++ = *p2++;
+		}
+	}
+	return s1;
 }

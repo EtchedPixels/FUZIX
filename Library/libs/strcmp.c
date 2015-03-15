@@ -7,7 +7,7 @@
 #include <string.h>
     
 /********************** Function strcmp ************************************/ 
-int strcmp(char *d, char *s) 
+int strcmp(const char *d, const char *s) 
 {
 	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
 
