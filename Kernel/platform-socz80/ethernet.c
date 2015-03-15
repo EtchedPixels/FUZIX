@@ -25,6 +25,8 @@ __sfr __at 0x3e eth_spimode;
 
 static int eth_present;
 
+static uint8_t ewait, enowait;
+
 /* In bank 0 */
 #define ERDPTL		0x00
 #define ERDPTH		0x01
@@ -234,6 +236,10 @@ static void ethernet_reset(void)
  *	Wait until free and then send a packet. We don't have an interrupt
  *	mechanism for the SPI ethernet on the SocZ80 although we could add
  *	one via a GPIO if it turns out useful
+ *
+ *	Caution: We could have two threads of execution doing a read and
+ *	a write. We won't pre-empt mid write but we may have a read poll
+ *	running, so we must shut that off
  */
 int eth_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
@@ -248,6 +254,10 @@ int eth_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		udata.u_error = EFBIG;
 		return -1;
 	}
+
+	/* Stop any read polling */
+	enowait++;
+
 	eth_bank(0);
 	while (eth_get(ECON1) & 0x8) {
 		/* Not ready */
@@ -277,6 +287,10 @@ int eth_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	 *    Start transmit
 	 */
 	eth_cmd(BFS | ECON1, 0x08);
+
+	/* Permit read polling to resume if active */
+	enowait--;
+
 	return len;
 }
 
@@ -315,11 +329,20 @@ int eth_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	/* Check carrier ?? */
 
+	/* Wait for packet: bank must always be 1 before we set ewait */
 	eth_bank(1);
 
-	/* We have no IRQ so no sane blocking model .. yet */
-	if (!eth_get(EPKTCNT))	/* Any packets waiting ? */
-		return -EAGAIN;
+	/* We have no IRQ so its polled */
+	while (eth_get(EPKTCNT) == 0) {
+		ewait = 1;
+		/* We will task switch to something else or idle and
+		   in doing so enable interrupts for other tasks */
+		if (psleep_flags(&eth_present, flag))
+			return -1;
+	}
+	/* Ensure ewait is clear before we re-enable interrupts */
+	ewait = 0;
+
 	eth_bank(0);
 	eth_cmd16(WCR | ERDPTL, eth_rxnext);
 	eth_readpkt((uint8_t *)&eth, 6);
@@ -334,6 +357,16 @@ int eth_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	eth_cmd16(WCR | ERXRDPTL, eth_rxnext);
 	eth_cmd(BFS | ECON2, 0x40);
 	return r;
+}
+
+void eth_poll(void)
+{
+	if (!ewait || enowait)
+		return;
+	/* if we are waiting for ethernet we are in bank 1, see
+	   eth_read */
+	if (eth_get(EPKTCNT))
+		wakeup(&eth_present);
 }
 
 int eth_open(uint8_t minor, uint16_t flag)
