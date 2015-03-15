@@ -6,6 +6,8 @@ AR = sdar
 
 ARCH = z80
 
+WANT_LARGE_APPLICATIONS = y
+
 # Find what load address the kernel wants.
 PROGLOAD = $(shell \
 	(cat $(TOP)/Kernel/platform-$(PLATFORM)/config.h && echo PROGLOAD) | \
