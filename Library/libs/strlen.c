@@ -1,16 +1,17 @@
-/* string.c
- * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
- * This file is part of the Linux-8086 C library and is distributed
- * under the GNU Library General Public License.
+/*
+ * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
+ * This file is licensed under the terms of the MIT open source license.
  */
 
-#include <string.h>
+#include	<string.h>
 
-/********************** Function strlen ************************************/
-size_t strlen(const char *str)
+size_t
+strlen(const char *org)
 {
-	const char* start = str;
-	while (*str++)
-		;
-	return str - start;
+	register const char *s = org;
+
+	while (*s++)
+		/* EMPTY */ ;
+
+	return --s - org;
 }
