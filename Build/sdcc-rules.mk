@@ -34,6 +34,11 @@ SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES))
 # Forget default suffix rules.
 .SUFFIXES:
 
+# Libc configuration.
+WANT_FUZIX_FLOAT = n
+WANT_FUZIX_STRINGLIB = n
+WANT_FUZIX_NUMBERSLIB = n
+
 # Object file and library extensions (sdcc use non-standard ones so it needs to
 # be configurable).
 O = rel
@@ -48,21 +53,39 @@ paths: ;
 # Location of standard libraries.
 LIBC = $(OBJ)/Library/libc.$A
 CRT0 = $(OBJ)/Library/libs/fuzix/crt0.$(ARCH).$O
-LIBCLEAN = $(OBJ)/Library/libclean.$A
-.SECONDARY: $(CRT0) $(LIBC) $(LIBCLEAN)
+LIBRUNTIME = $(OBJ)/Library/libruntime.$A
+.SECONDARY: $(CRT0) $(LIBC) $(LIBRUNTIME)
+
+# The cleaned up version of the sdcc runtime library includes these objects
+# only.
+libruntime_objects = \
+divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel \
+modmixed.rel mul.rel mulchar.rel heap.rel memmove.rel strcpy.rel strlen.rel \
+abs.rel crtcall.rel crtenter.rel setjmp.rel _atof.rel _schar2fs.rel \
+_sint2fs.rel _slong2fs.rel _uchar2fs.rel _uint2fs.rel _ulong2fs.rel \
+_fs2schar.rel _fs2sint.rel _fs2slong.rel _fs2uchar.rel _fs2uint.rel \
+_fs2ulong.rel _fsadd.rel _fsdiv.rel _fsmul.rel _fssub.rel _fseq.rel _fsgt.rel \
+_fslt.rel _fsneq.rel fabsf.rel frexpf.rel ldexpf.rel expf.rel powf.rel \
+sincosf.rel sinf.rel cosf.rel logf.rel log10f.rel sqrtf.rel tancotf.rel \
+tanf.rel cotf.rel asincosf.rel asinf.rel acosf.rel atanf.rel atan2f.rel \
+sincoshf.rel sinhf.rel coshf.rel tanhf.rel floorf.rel ceilf.rel modff.rel \
+_divslong.rel _modslong.rel _modulong.rel _divulong.rel _mullong.rel \
+_mullonglong.rel _divslonglong.rel _divulonglong.rel _modslonglong.rel \
+_modulonglong.rel _ltoa.rel _atoi.rel \
+abs.rel labs.rel \
+_strcat.rel _strchr.rel _strcmp.rel _strcspn.rel _strncat.rel _strncmp.rel \
+strxfrm.rel _strncpy.rel _strpbrk.rel _strrchr.rel _strspn.rel _strstr.rel \
+_strtok.rel _memchr.rel _memcmp.rel _memcpy.rel _memset.rel _itoa.rel _ltoa.rel \
+
 
 # Create libclean by taking sdcc's standard library and chopping out
 # everything which is duplicated in the Fuzix standard library.
-$(LIBCLEAN): $(SDCC_LIBS)/$(ARCH).lib
-	@echo LIBCLEAN $@
-	@mkdir -p $(dir $@)
-	$(hide) cp $< $@
-	$(hide) $(AR) d $@ \
-		putchar.rel heap.rel fstubs.rel setjmp.rel errno.rel \
-		rand.rel _calloc.rel _malloc.rel _realloc.rel _free.rel \
-		printf_large.rel puts.rel gets.rel assert.rel time.rel \
-		tolower.rel toupper.rel _ltoa.rel _itoa.rel abs.rel \
-		vprintf.rel vfprintf.rel sprintf.rel
+$(LIBRUNTIME): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
+	@echo LIBRUNTIME $@
+	$(hide) rm -rf $@.tmp
+	$(hide) mkdir -p $@.tmp
+	$(hide) (cd $@.tmp && $(AR) x $< $(libruntime_objects))
+	$(hide) $(AR) q $@ $(patsubst %, $@.tmp/%, $(libruntime_objects))
 
 # Assembly files which need to be preprocessed --- run through cpp first.
 $(OBJ)/%.$O: $(TOP)/%.S |paths
@@ -118,7 +141,7 @@ $(OBJ)/%.$A:
 	$(hide) $(AR) -rc $@ $^
 
 # Executables. Add object files by adding prerequisites.
-$(OBJ)/Applications/%: $(HOSTOBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBCLEAN)
+$(OBJ)/Applications/%: $(HOSTOBJ)/Library/tools/binman $(CRT0) $(LIBC) $(LIBRUNTIME)
 	@echo LINK $@
 	@mkdir -p $(dir $@)
 	$(hide) $(CC) $(LDFLAGS) $(INCLUDES) $(DEFINES) \

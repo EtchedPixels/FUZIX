@@ -7,7 +7,8 @@ CC65_DIR = $(dir $(shell which $(CC)))/../share/cc65
 CC65_LIBDIR = $(CC65_DIR)/lib/
 
 # Libc configuration.
-HAS_FLOAT = n
+WANT_FUZIX_FLOAT = n
+WANT_FUZIX_STRINGLIB = n
 
 # Forget default suffix rules.
 .SUFFIXES:
