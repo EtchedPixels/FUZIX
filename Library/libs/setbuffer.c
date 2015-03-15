@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void setbuffer(FILE * fp, char * buf, unsigned int size)
+void setbuffer(FILE * fp, char * buf, size_t size)
 {
    fflush(fp);
    if( fp->mode & __MODE_FREEBUF ) free(fp->bufstart);

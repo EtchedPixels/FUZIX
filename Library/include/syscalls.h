@@ -73,7 +73,12 @@ struct hd_geometry {
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
-extern int _exit(int code);
+struct times;
+struct tms;
+struct utimbuf;
+struct utsname;
+
+extern void _exit(int code);
 extern int open(const char *path, int flags, ...);
 extern int close(int fd);
 extern int creat(const char *path, mode_t mode);
@@ -118,7 +123,7 @@ extern int fchown(int fd, uid_t owner, gid_t group);
 extern int mkdir(const char *path, mode_t mode);
 extern int rmdir(const char *path);
 extern pid_t setpgrp(void);
-extern int waitpid(pid_t pid, int *status, int options);
+extern pid_t waitpid(pid_t pid, int *status, int options);
 extern int uadmin(int cmd, int ctrl, void *ptr);
 extern int nice(int prio);
 extern int rename(const char *path, const char *newpath);

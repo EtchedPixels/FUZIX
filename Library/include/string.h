@@ -12,8 +12,8 @@ extern char * strcat __P ((char*, const char*));
 extern char * strcpy __P ((char*, const char*));
 extern int strcmp __P ((const char*, const char*));
 
-extern char * strncat __P ((const char*, const char*, size_t));
-extern char * strncpy __P ((const char*, const char*, size_t));
+extern char * strncat __P ((char*, const char*, size_t));
+extern char * strncpy __P ((char*, const char*, size_t));
 extern int strncmp __P((const char*, const char*, size_t));
 
 extern int stricmp __P((const char*, const char*));
@@ -39,7 +39,7 @@ extern void * memmove __P ((void*, const void*, size_t));
 extern char *index __P ((const char *, int));
 extern char *rindex __P ((const char *, int));
 extern void bcopy __P ((const void*, void*, size_t));
-extern void bzero __P ((void*, int));
+extern void bzero __P ((void*, size_t));
 
 /* Other common BSD functions */
 extern char *strpbrk __P ((const char *, const char *));

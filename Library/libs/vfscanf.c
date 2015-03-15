@@ -17,13 +17,14 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
 
 /* #define	skip()	do{c=getc(fp); if (c<1) goto done;}while(isspace(c))*/
 
-#define	skip()	while(isspace(c)) { if ((c=getc(fp))<1) goto done; }
+#define	skip()	while(isspace(c)) { if ((c=fgetc(fp))<1) goto done; }
 
 /* fp scan actions */
 #define F_NADA	0	/* just change state */
@@ -50,7 +51,7 @@
 #define FC_SIGN		3
 
 /* given transition,state do what action? */
-int fp_do[][NSTATE] = {
+static const uint8_t fp_do[][NSTATE] = {
 	{F_INT,F_INT,F_INT,
 	 F_FRAC,F_FRAC,
 	 F_EXP,F_EXP,F_EXP},	/* see digit */
@@ -63,7 +64,7 @@ int fp_do[][NSTATE] = {
 	 F_ESIGN,F_QUIT,F_QUIT},	/* see sign */
 };
 /* given transition,state what is new state? */
-int fp_ns[][NSTATE] = {
+static const uint8_t fp_ns[][NSTATE] = {
 	{FS_DIGS,FS_DIGS,FS_DIGS,
 	 FS_DD,FS_DD,
 	 FS_EDIGS,FS_EDIGS,FS_EDIGS},	/* see digit */
@@ -76,7 +77,7 @@ int fp_ns[][NSTATE] = {
 	 FS_ESIGN,0,0},	/* see sign */
 };
 /* which states are valid terminators? */
-int fp_sval[NSTATE] = {
+static const uint8_t fp_sval[NSTATE] = {
 	0,0,1,0,1,0,0,1
 };
 
@@ -124,7 +125,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
    if (!*fmt)
       return (0);
 
-   c = getc(fp);
+   c = fgetc(fp);
    while (c > 0)
    {
       store = 0;
@@ -207,7 +208,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 	       }
 	       else if (c == '0')
 	       {
-		  c = getc(fp);
+		  c = fgetc(fp);
 		  if (c < 1)
 		     goto savnum;
 		  if ((c != 'x')
@@ -241,7 +242,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 	    while (p && width-- && c)
 	    {
 	       n = (n * base) + (p - digits);
-	       c = getc(fp);
+	       c = fgetc(fp);
 	     zeroin:
 	       p = ((unsigned char *)
 		    strchr(digits, toupper(c)));
@@ -310,7 +311,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 		  goto fdone;
 	       }
 	       fstate = fp_ns[trans][fstate];
-	       c = getc(fp);
+	       c = fgetc(fp);
 	    }
 
 	  fdone:
@@ -409,7 +410,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
 	    {
 	       if (store)
 		  *p++ = c;
-	       if (((c = getc(fp)) < 1) ||
+	       if (((c = fgetc(fp)) < 1) ||
 		   (--width == 0))
 		  break;
 
@@ -444,7 +445,7 @@ int vfscanf(FILE *fp, const char *fmt, va_list ap)
        cmatch:
 	 if (c != *fmt)
 	    break;
-	 c = getc(fp);
+	 c = fgetc(fp);
       }
 
       if (!*++fmt)

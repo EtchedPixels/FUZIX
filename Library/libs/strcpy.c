@@ -7,7 +7,7 @@
 #include <string.h>
     
 /********************** Function strcpy ************************************/ 
-char *strcpy(char *d, char *s) 
+char *strcpy(char *d, const char *s) 
 {
 	return memcpy(d, s, strlen(s) + 1);
 }
