@@ -136,6 +136,9 @@ struct termios {
 
 #define TIOCHANGUP	7	/* vhangup() */
 
+#define TIOCOSTOP	8
+#define TIOCOSTART	9
+
 #define KBMAPSIZE	0x20
 #define KBMAPGET	0x21
 #define VTSIZE		0x22

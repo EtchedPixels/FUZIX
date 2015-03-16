@@ -1,6 +1,7 @@
 /*
  * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
- * This file is licensed under the terms of the MIT open source license.
+ * This file is licensed under the terms of the 3-clause BSD open source
+ * license.
  */
 #include	<string.h>
 
