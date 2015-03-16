@@ -44,4 +44,5 @@ platform-msx2/devmegasd.rel
 platform-msx2/mbr.rel
 platform-msx2/devrtc.rel
 platform-msx2/rp5c01.rel
+platform-msx2/v99xx.rel
 -e
