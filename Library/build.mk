@@ -30,7 +30,6 @@ libsrcnames = \
 	creat.c \
 	crypt.c \
 	ctime.c \
-	ctype.c \
 	difftime.c \
 	err.c \
 	errno.c \
@@ -156,6 +155,21 @@ libsrcnames = \
 	vsscanf.c \
 	wait.c \
 	xitoa.c \
+	toupper.c \
+	tolower.c \
+	toascii.c \
+	isascii.c \
+	isalnum.c \
+	isalpha.c \
+	iscntrl.c \
+	isdigit.c \
+	isgraph.c \
+	islower.c \
+	ispunct.c \
+	isspace.c \
+	isupper.c \
+	isxdigit.c \
+	isoctal.c \
 	
 ifneq ($(WANT_FUZIX_FLOAT),n)
 
