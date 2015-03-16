@@ -28,7 +28,6 @@ KERNEL_OBJS += \
 	$(OBJ)/Kernel/dev/rp5c01.$O \
 	$(OBJ)/Kernel/lowlevel-z80.$O \
 	$(OBJ)/Kernel/syscall_exec16.$O \
-	$(OBJ)/Kernel/usermem.$O \
 	$(OBJ)/Kernel/usermem_std-z80.$O \
 	$(OBJ)/Kernel/vt.$O \
 
@@ -50,47 +49,47 @@ $(OBJ)/Kernel/dev/rp5c01.$O:            SEGMENT = $(CFLAGS_SEG2)
 
 .DELETE_ON_ERROR: $(OBJ)/Kernel/fuzix.bin
 $(OBJ)/Kernel/fuzix.bin: $(KERNEL_OBJS) \
-		|$(kerneltool)/bihx \
+		$(kerneltool)/bihx \
 		$(kerneltool)/memhogs \
 		$(kerneltool)/binman \
 		$(kerneltool)/bankld/sdldz80
 	@echo LINK $@
-	@mkdir -p $(dir $@)/kernel
+	@mkdir -p $(OBJ)/kernel
 	$(hide) $(kerneltool)/bankld/sdldz80 \
 		-n \
 		-k $(SDCC_LIBS) \
 		-mwxuy \
-		-i $(dir $@)/kernel/image.ihx \
+		-i $(OBJ)/kernel/image.ihx \
 		-b _CODE=0x0000 \
 		-b _COMMONMEM=0xf000 \
 		-b _DISCARD=0xe000 \
 		-l z80 \
-		$^
-	$(hide) (cd $(dir $@)/kernel && $(abspath $(kerneltool)/bihx) image.ihx)
-	$(hide) mv $(dir $@)/hogs.txt $(dir $@)/hogs.txt.old 2> /dev/null || true
+		$(KERNEL_OBJS)
+	$(hide) (cd $(OBJ)/kernel && $(abspath $(kerneltool)/bihx) image.ihx)
+	$(hide) mv $(KERNEL:.com=.hogs.txt) $(KERNEL:.com=.hogs.txt.old) 2> /dev/null || true
 	$(hide) $(kerneltool)/memhogs \
-		< $(dir $@)/kernel/image.map | sort -nr > $(dir $@)/hogs.txt
+		< $(OBJ)/kernel/image.map | sort -nr > $(KERNEL:.com=.hogs.txt)
 	$(hide) $(kerneltool)/binman \
-		$(dir $@)/kernel/common.bin \
-		$(dir $@)/kernel/image.map \
+		$(OBJ)/kernel/common.bin \
+		$(OBJ)/kernel/image.map \
 		$@
 
 .DELETE_ON_ERROR: $(OBJ)/Kernel/fuzix-boot.bin
 $(OBJ)/Kernel/fuzix-boot.bin: $(OBJ)/Kernel/$(platform)/bootrom.$O \
-		|$(kerneltool)/bihx \
+		$(kerneltool)/bihx \
 		$(kerneltool)/bankld/sdldz80
 	@echo LINK $@
-	@mkdir -p $(dir $@)/boot
+	@mkdir -p $(OBJ)/boot
 	$(hide) $(kerneltool)/bankld/sdldz80 \
 		-n \
 		-k $(SDCC_LIBS) \
 		-mwxuy \
-		-i $(dir $@)/boot/image.ihx \
+		-i $(OBJ)/boot/image.ihx \
 		-b _BOOT=0x4000 \
 		-l z80 \
-		$^
-	$(hide) (cd $(dir $@)/boot && $(abspath $(HOSTOBJ)/Kernel/tools/bihx) image.ihx)
-	$(hide) mv $(dir $@)/boot/common.bin $@
+		$<
+	$(hide) (cd $(OBJ)/boot && $(abspath $(HOSTOBJ)/Kernel/tools/bihx) image.ihx)
+	$(hide) mv $(OBJ)/boot/common.bin $@
 
 $(KERNEL): $(OBJ)/Kernel/fuzix.bin $(OBJ)/Kernel/fuzix-boot.bin
 	@echo KERNEL $@
