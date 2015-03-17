@@ -44,7 +44,7 @@ SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
 SRC_C += toupper.c tolower.c toascii.c isascii.c isalnum.c isalpha.c
 SRC_C += iscntrl.c isdigit.c isgraph.c islower.c ispunct.c isspace.c
-SRC_C += isupper.c isxdigit.c isoctal.c 
+SRC_C += isupper.c isxdigit.c isblank.c 
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
