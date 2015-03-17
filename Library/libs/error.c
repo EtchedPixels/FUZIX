@@ -49,6 +49,6 @@ char *strerror(int err)
 		}
 	}
 UErr:	strcpy(retbuf, "Unknown error ");
-	itoa(err, retbuf + strlen(retbuf), 10);
+	strncat(retbuf, _itoa(err), 10);
 	return retbuf;
 }
