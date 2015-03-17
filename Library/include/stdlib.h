@@ -35,7 +35,6 @@ extern int rand __P((void));
 extern void srand __P((uint seed));
 
 extern char *__longtoa __P((unsigned long, char *, int, char, char));
-extern char *itoa __P((int value, char *strP, int radix));
 extern char *ultoa __P((unsigned long value, char *strP, int radix));
 extern char *ltoa __P((long value, char *strP, int radix));
 
