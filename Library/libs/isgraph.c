@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <ctype.h>
 
 int isgraph(int c)
