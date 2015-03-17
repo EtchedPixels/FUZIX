@@ -15,8 +15,11 @@
 
 extern ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream) {
 	register int c;
-	register char *p = *lineptr;
-	if (!(*lineptr)) *lineptr=malloc(64); /* Minimal size possible */
+	register char *p;
+	if (!(*lineptr)) {
+		p=malloc(64);
+		if (!p) return -1; else *lineptr=p;
+	} /* Minimal size possible */
 	while ((c = getc(stream)) != EOF) {
 		*p++ = c;
 		if (c == delim) break;
