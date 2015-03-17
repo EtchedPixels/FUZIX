@@ -51,6 +51,10 @@ extern char *__ltostr __P((long value, int radix));
 extern long strtol __P ((const char * nptr, char ** endptr, int base));
 extern unsigned long strtoul __P ((const char * nptr,
 				   char ** endptr, int base));
+
+extern int mkstemp(char *template);
+extern int mkstemps(char *template, int suffix);
+
 #ifndef __HAS_NO_DOUBLES__
 extern double strtod __P ((const char * nptr, char ** endptr));
 #endif
