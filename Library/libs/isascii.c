@@ -1,7 +1,9 @@
+#include <stdint.h>
 #include <ctype.h>
 
 int isascii(int c)
 {
-	return (c >= 0) && (c <= 127);
+	uint8_t cb = c;
+	return (cb >= 0) && (cb <= 127);
 }
 
