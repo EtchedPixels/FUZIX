@@ -169,7 +169,7 @@ libsrcnames = \
 	isspace.c \
 	isupper.c \
 	isxdigit.c \
-	isoctal.c \
+	isblank.c \
 	
 ifneq ($(WANT_FUZIX_FLOAT),n)
 
