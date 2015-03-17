@@ -8,6 +8,7 @@
             .globl init_early
             .globl init_hardware
             .globl interrupt_handler
+	    .globl platform_interrupt_all
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_process
@@ -50,7 +51,7 @@
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
 	    ;
-	    .globl vdpinit
+	    .globl _vdpinit
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -103,11 +104,7 @@ init_hardware:
 	    ld a, #'Z'
 	    out (0x2F), a
 
-	    ; Program the video engine
-	    ; FIXME:  disable for now and initalize in bootstrap using the bios
-	    ;         current implementation only works when booting from msx-dos
-	    ;         because font data is wiped from vram on mode change
-	    ; call vdpinit
+	    call _vdpinit
 
 	    ld a, #'I'
 	    out (0x2F), a
@@ -124,6 +121,11 @@ init_hardware:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
+
+platform_interrupt_all:
+	    ld bc,(_vdpport)
+	    in a, (c)
+	    ret
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0

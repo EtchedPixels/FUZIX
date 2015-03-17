@@ -17,6 +17,8 @@
 /* As reported to user space - 4 banks, 16K page size */
 #define CONFIG_BANKS	4
 
+#define CONFIG_FONT6X8
+
 /* Vt definitions */
 #define VT_WIDTH	80
 #define VT_HEIGHT	24

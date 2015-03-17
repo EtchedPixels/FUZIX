@@ -31,12 +31,6 @@ bootstrap:
 		ld  a,#0x81		    ; run only in rom mode, as we do not use BIOS better save 4 ram pages
 		call z,#BIOS_CHGCPU
 
-		; FIXME: init vdp using bios so that font is in place after vdpinit
-		ld a,#0x50
-		ld (0xf3ae),a
-		ld ix,#0x00d5
-		call #0x015f
-
 		;
 		; set ram in slot_page 2
 		;
