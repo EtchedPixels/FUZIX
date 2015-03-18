@@ -38,8 +38,8 @@ extern char *__longtoa __P((unsigned long, char *, int, char, char));
 extern char *ultoa __P((unsigned long value, char *strP, int radix));
 extern char *ltoa __P((long value, char *strP, int radix));
 
-extern int atoi __P((char *str));
-extern long atol __P((char *strP));
+extern int atoi __P((const char *str));
+extern long atol __P((const char *strP));
 
 extern char *_itoa __P((int value));
 extern char *_ltoa __P((long value));
