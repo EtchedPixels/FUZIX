@@ -256,3 +256,9 @@ $(OBJ)/Library/libs/fuzix/numbers.h: $(HOSTOBJ)/Library/tools/mknumbers
 $(HOSTOBJ)/Library/tools/mknumbers: $(HOSTOBJ)/Library/tools/mknumbers.o
 $(HOSTOBJ)/Library/tools/mknumbers.o: private INCLUDES += -I$(TOP)/Kernel/include
 
+all:: $(HOSTOBJ)/Library/tests/ctype
+	@echo TEST $<
+	$(hide) $<
+
+$(HOSTOBJ)/Library/tests/ctype: $(HOSTOBJ)/Library/tests/ctype.o
+
