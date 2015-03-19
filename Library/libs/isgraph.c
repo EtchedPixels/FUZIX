@@ -1,10 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isgraph
 int isgraph(int c)
-{
-	uint8_t cb = c;
-	return (cb >= 33) && (cb <= 126);
-}
+{ return (c >= 33) && (c <= 126); }
 

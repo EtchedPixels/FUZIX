@@ -1,10 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isdigit
 int isdigit(int c)
-{
-	uint8_t bc = c;
-	return (bc >= '0') && (bc <= '9');
-}
+{ return (c >= '0') && (c <= '9'); }
 

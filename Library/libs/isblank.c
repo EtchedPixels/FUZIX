@@ -1,10 +1,8 @@
 #include <stdint.h>
-#include <ctype.h>
-#include <string.h>
 
-#undef isspace
-int isspace(int c)
-{
-	return !!strchr(" \t\n\r\f\v", c);
-}
+#define HAVE_STATIC_INLINE 0
+#include <ctype.h>
+
+int isblank(int c)
+{ return (c == ' ') || (c == '\t'); }
 

@@ -1,9 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isupper
 int isupper(int c)
-{
-	uint8_t bc = c;
-	return (bc >= 'A') && (bc <= 'Z');
-}
+{ return (c >= 'A') && (c <= 'Z'); }
+

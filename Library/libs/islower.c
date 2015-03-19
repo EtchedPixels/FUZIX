@@ -1,9 +1,9 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef islower
 int islower(int c)
-{
-	uint8_t bc = c;
-	return (bc >= 'a') && (bc <= 'z');
-}
+{ return (c >= 'a') && (c <= 'z'); }
+
+

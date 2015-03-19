@@ -1,9 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef iscntrl
 int iscntrl(int c)
-{
-	uint8_t bc = c;
-	return ((bc >= 0) && (bc <= 31)) || (bc == 127);
-}
+{ return ((c >= 0) && (c <= 31)) || (c == 127); }
+

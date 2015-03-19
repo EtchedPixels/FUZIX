@@ -3,10 +3,71 @@
 #ifndef __CTYPE_H
 #define __CTYPE_H
 
-extern int toupper(int c);
-extern int tolower(int c);
+#if !defined(__CC65__)
+	#if !defined HAVE_STATIC_INLINE
+		#define HAVE_STATIC_INLINE 1
+	#endif
+#endif
 
-#define toascii(c) ((c) & 0x7f)
+#if HAVE_STATIC_INLINE
+
+static inline int isalpha(int c)
+{ return ((c|0x20) >= 'a') && ((c|0x20) <= 'z'); }
+
+static inline int isblank(int c)
+{ return (c == ' ') || (c == '\t'); }
+
+static inline int isascii(int c)
+{ return (c >= 0) && (c <= 127); }
+
+static inline int iscntrl(int c)
+{ return ((c >= 0) && (c <= 31)) || (c == 127); }
+
+static inline int isdigit(int c)
+{ return (c >= '0') && (c <= '9'); }
+
+static inline int isgraph(int c)
+{ return (c >= 33) && (c <= 126); }
+
+static inline int islower(int c)
+{ return (c >= 'a') && (c <= 'z'); }
+
+static inline int isprint(int c)
+{ return (c >= 32) && (c <= 126); }
+
+static inline int isspace(int c)
+{ return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') ||
+         (c == '\v') || (c == '\f'); }
+
+static inline int isupper(int c)
+{ return (c >= 'A') && (c <= 'Z'); }
+
+static inline int isalnum(int c)
+{ return isdigit(c) || isalpha(c); }
+
+static inline int ispunct(int c)
+{ return isascii(c) && !iscntrl(c) && !isalnum(c) && !isspace(c); }
+
+static inline int isxdigit(int c)
+{ return isdigit(c) || (((c|0x20) >= 'a') && ((c|0x20) <= 'f')); }
+
+static inline int tolower(int c)
+{
+	if (isupper(c))
+		c ^= 0x20;
+	return c;
+}
+
+static inline int toupper(int c)
+{
+	if (islower(c))
+		c ^= 0x20;
+	return c;
+}
+
+#define isdecimal isdigit
+
+#else
 
 extern int isalnum(int c);
 extern int isalpha(int c);
@@ -22,24 +83,10 @@ extern int isspace(int c);
 extern int isupper(int c);
 extern int isxdigit(int c);
 
-#define isalnum(c) (isdigit(c) && isalpha(c))
-#define isalpha(c) ((c&0x20 >= 'a') && (c&0x20 <= 'z'))
-#define isblank(c) ((c == ' ') || (c == '\t'))
-#define isascii(c) ((c >= 0) && (c <= 127))
-#define iscntrl(c) (((c >= 0) && (c <= 31)) || (c == 127))
-#define isdigit(c) ((c >= '0') && (c <= '9'))
-#define isgraph(c) ((c >= 33) && (c <= 126))
-#define islower(c) ((c >= 'a') && (c <= 'z'))
-#define ispunct(c) (!iscntrl(c) && !isalpha(c) && !isspace(c))
-
-#define isprint(c) ((c >= 32) && (c <= 126))
-#define isspace(c) ((c == ' ') || (c == '\t') || \
-					(c == '\n') || (c == '\r') || \
-					(c == '\v'))
-#define isupper(c) ((c >= 'A') && (c <= 'Z'))
-#define isxdigit(c) (isdigit(c) || ((c&0x20 >= 'a') && (c&0x20 <= 'z')))
-
 #define isdecimal(c) isdigit(c)
+
+#endif
+
 #define _tolower(c) tolower(c)
 #define _toupper(c) toupper(c)
 

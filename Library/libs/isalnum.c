@@ -1,9 +1,7 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isalnum
 int isalnum(int c)
-{
-	uint8_t bc = c;
-	return isalpha(c) || ((bc >= '0') && (bc <= '9'));
-}
+{ return isdigit(c) || isalpha(c); }

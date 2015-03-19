@@ -1,10 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isascii
 int isascii(int c)
-{
-	uint8_t cb = c;
-	return (cb >= 0) && (cb <= 127);
-}
+{ return (c >= 0) && (c <= 127); }
 

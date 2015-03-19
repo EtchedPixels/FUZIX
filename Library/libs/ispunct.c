@@ -1,9 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef ispunct
 int ispunct(int c)
-{
-	return !iscntrl(c) && !isalpha(c) && !isspace(c);
-}
+{ return isascii(c) && !iscntrl(c) && !isalnum(c) && !isspace(c); }
 

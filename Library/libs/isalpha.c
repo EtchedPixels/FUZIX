@@ -1,11 +1,8 @@
 #include <stdint.h>
+
+#define HAVE_STATIC_INLINE 0
 #include <ctype.h>
 
-#undef isalpha
 int isalpha(int c)
-{
-	uint8_t bc = c;
-	bc = bc & 0x20;
-	return (bc >= 'a') && (bc <= 'z');
-}
+{ return ((c|0x20) >= 'a') && ((c|0x20) <= 'z'); }
 
