@@ -79,6 +79,9 @@ extern FILE stderr[1];
 extern char *gets __P((char *));
 extern char *gets_s __P((char *, size_t));
 
+extern ssize_t getdelim __P((char **, size_t*, int, FILE *));
+extern ssize_t getline __P((char **, size_t*, FILE *));
+
 extern int _putchar __P((int));
 extern int _getchar __P((void));
 
