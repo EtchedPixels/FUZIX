@@ -51,6 +51,12 @@ _switchout:
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
+	;
+	; We are now running on the sleeping process stack. The switchin
+	; will simply go back to the saved SP above and discard anything
+	; here
+	;
+
         ; set inint to false
         xor a
         ld (_inint), a
@@ -62,6 +68,7 @@ _switchout:
 	or #0x18
 	out (c), a
 
+	; This includes the stacks, so be careful on restore
 	ld hl, #U_DATA
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
@@ -74,8 +81,9 @@ _switchout:
         ; find another process to run (may select this one again)
 	push af
         call _getproc
-	pop af		; tidy this stack stuff up ex (sp), hl ??
-
+	pop af		; we can't optimise this as the linker
+			; is entitled to patch the 5 bytes here into a
+			; banked call
         push hl
 	push af
         call _switchin
@@ -110,8 +118,8 @@ _switchin:
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
 
-	; We are in DI so we can poke these directly but must not use the
-	; stack for this bit
+	; We are in DI so we can poke these directly but must not invoke
+	; any code outside of common
 
         ld a, (hl)
 	or #0x18
@@ -122,10 +130,16 @@ _switchin:
 	ld bc, #0x7ffd
 	out (c), a
 
-        ; bear in mind that the stack will be switched now, so we can't use it
-	; to carry values over this point
-
-	exx			; thank goodness for exx 8)
+	;	Copy the stash from the user page back down into common
+	;	At this point we've just overwritten the live stack, and need
+	;	to avoid using our stack until we've restored SP or we
+	;	may crap on existing stack contents with unfortunate
+	;	results
+	;
+	;	The alternate registers are free - we use them for the
+	;	block copy and for the flipper
+	;
+	exx
 	ld hl, #U_DATA_STASH
 	ld de, #U_DATA
 	ld bc, #U_DATA__TOTALSIZE
@@ -133,7 +147,7 @@ _switchin:
 	exx
 
 	;
-	;	 Get our stack back
+	;	 Remap the kernel proper
 	;
 
 	ld a, (current_map)
@@ -148,13 +162,46 @@ _switchin:
 	ld hl, (low_bank)	; who owns low memory
 	or a
 	sbc hl, de
-	call nz, fliplow	; not us - need to fix that up
+	jr z, nofliplow	; not us - need to fix that up. Preserves DE
+;
+;	Flip low banks over. Interrupts must be off as the low banks don't
+;	have the IM2 vectors
+;
+fliplow:
+	exx
+	ld hl, #0x8000
+	ld de, #0xc000
+	ld a, #6 + 0x18
+	ld bc, #0x7ffd
+	out (c), a
+flip2:
+	ld b, #0		; 16K in 256 bytes
+flip1:
+	ld c, (hl)
+	ld a, (de)
+	ex de, hl
+	ld (hl), c
+	ld (de), a
+	inc hl
+	inc de
+	djnz flip1
+	xor a
+	cp d			; Wrapped to 0x0000 ?
+	jr nz, flip1
+
+	ld a, (current_map)
+	or #0x18
+	ld bc, #0x7ffd
+	out (c), a
+	exx
 	ld (low_bank), de	; we own it now
+
+nofliplow:
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
-        sbc hl, de              ; subtract, result will be zero if DE==IX
+        sbc hl, de              ; subtract, result will be zero if DE == HL
         jr nz, switchinfail
 
 	; wants optimising up a bit
@@ -173,6 +220,10 @@ _switchin:
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
         ld sp, (U_DATA__U_SP)
+
+	;
+	; We can now use the stack again
+	;
 
         pop iy
         pop ix
@@ -292,13 +343,6 @@ _dofork:
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
 
-	;
-	; FIXME: at this point we may need to swap the page ptrs of the parent
-	; and child so that we end up with the right one owning 0x8000.
-	; Either that or we make the switchin/switchout intelligent about
-	; the exchange on a task switch over.
-	;
-
         pop bc
         pop bc
         pop bc
@@ -363,41 +407,6 @@ bankfork_1:
 	ld a, b			; parent back is wanted in a
 	pop bc
 	djnz bankfork_1		; rinse, repeat
-	ret
-;
-;	Flip low banks over. Interrupts must be off as the low banks don't
-;	have the IM2 vectors
-;
-fliplow:
-	exx
-	ld hl, #0x8000
-	ld de, #0xc000
-	ld a, #6 + 0x18
-	ld bc, #0x7ffd
-	out (c), a
-	;
-	;	No stack use between here and restoring the map
-	;
-flip2:
-	ld b, #0		; 16K in 256 bytes
-flip1:
-	ld c, (hl)
-	ld a, (de)
-	ex de, hl
-	ld (hl), c
-	ld (de), a
-	inc hl
-	inc de
-	djnz flip1
-	xor a
-	cp d			; Wrapped to 0x0000 ?
-	jr nz, flip1
-
-	ld a, (current_map)
-	or #0x18
-	ld bc, #0x7ffd
-	out (c), a
-	exx
 	ret
 ;
 ;	For the moment
