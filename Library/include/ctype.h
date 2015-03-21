@@ -3,6 +3,8 @@
 #ifndef __CTYPE_H
 #define __CTYPE_H
 
+#include <stdint.h>
+
 #if !defined(__CC65__)
 	#if !defined HAVE_STATIC_INLINE
 		#define HAVE_STATIC_INLINE 1
@@ -12,35 +14,36 @@
 #if HAVE_STATIC_INLINE
 
 static inline int isalpha(int c)
-{ return ((c|0x20) >= 'a') && ((c|0x20) <= 'z'); }
+{ return (((uint8_t)c|0x20) >= 'a') && (((uint8_t)c|0x20) <= 'z'); }
 
 static inline int isblank(int c)
-{ return (c == ' ') || (c == '\t'); }
+{ return ((uint8_t)c == ' ') || ((uint8_t)c == '\t'); }
 
 static inline int isascii(int c)
-{ return (c >= 0) && (c <= 127); }
+{ return ((uint8_t)c >= 0) && ((uint8_t)c <= 127); }
 
 static inline int iscntrl(int c)
-{ return ((c >= 0) && (c <= 31)) || (c == 127); }
+{ return (((uint8_t)c >= 0) && ((uint8_t)c <= 31)) || ((uint8_t)c == 127); }
 
 static inline int isdigit(int c)
-{ return (c >= '0') && (c <= '9'); }
+{ return ((uint8_t)c >= '0') && ((uint8_t)c <= '9'); }
 
 static inline int isgraph(int c)
-{ return (c >= 33) && (c <= 126); }
+{ return ((uint8_t)c >= 33) && ((uint8_t)c <= 126); }
 
 static inline int islower(int c)
-{ return (c >= 'a') && (c <= 'z'); }
+{ return ((uint8_t)c >= 'a') && ((uint8_t)c <= 'z'); }
 
 static inline int isprint(int c)
-{ return (c >= 32) && (c <= 126); }
+{ return ((uint8_t)c >= 32) && ((uint8_t)c <= 126); }
 
 static inline int isspace(int c)
-{ return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') ||
-         (c == '\v') || (c == '\f'); }
+{ return ((uint8_t)c == ' ') || ((uint8_t)c == '\t') ||
+         ((uint8_t)c == '\n') || ((uint8_t)c == '\r') ||
+         ((uint8_t)c == '\v') || ((uint8_t)c == '\f'); }
 
 static inline int isupper(int c)
-{ return (c >= 'A') && (c <= 'Z'); }
+{ return ((uint8_t)c >= 'A') && ((uint8_t)c <= 'Z'); }
 
 static inline int isalnum(int c)
 { return isdigit(c) || isalpha(c); }
@@ -49,19 +52,19 @@ static inline int ispunct(int c)
 { return isascii(c) && !iscntrl(c) && !isalnum(c) && !isspace(c); }
 
 static inline int isxdigit(int c)
-{ return isdigit(c) || (((c|0x20) >= 'a') && ((c|0x20) <= 'f')); }
+{ return isdigit(c) || ((((uint8_t)c|0x20) >= 'a') && (((uint8_t)c|0x20) <= 'f')); }
 
 static inline int tolower(int c)
 {
 	if (isupper(c))
-		c ^= 0x20;
+		return (uint8_t)c ^ 0x20;
 	return c;
 }
 
 static inline int toupper(int c)
 {
 	if (islower(c))
-		c ^= 0x20;
+		return (uint8_t)c ^ 0x20;
 	return c;
 }
 

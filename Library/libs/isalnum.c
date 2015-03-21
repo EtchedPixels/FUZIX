@@ -4,4 +4,4 @@
 #include <ctype.h>
 
 int isalnum(int c)
-{ return isdigit(c) || isalpha(c); }
+{ return isdigit((uint8_t) c) || isalpha((uint8_t) c); }
