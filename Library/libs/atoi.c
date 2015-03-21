@@ -4,7 +4,7 @@
 #include <stdlib.h>
     
 /**************************** atoi.c ****************************/ 
-int atoi(char *str) 
+int atoi(const char *str) 
 {
 	return (int) strtol(str, NULL, 10);
 }

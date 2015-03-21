@@ -1,12 +1,14 @@
-#include <stdint.h>
+/* This file has a unit test in Library/test/ctype.c. If you change this file,
+ * please make sure the test still runs. */
 
-#define HAVE_STATIC_INLINE 0
+#if !defined __TESTING__
 #include <ctype.h>
+#endif
 
 int toupper(int c)
 {
 	if (islower(c))
-		c ^= 0x20;
+		c = c^0x20;
 	return c;
 }
 

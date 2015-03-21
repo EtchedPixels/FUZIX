@@ -1,7 +1,12 @@
-#include <stdint.h>
+/* This file has a unit test in Library/test/ctype.c. If you change this file,
+ * please make sure the test still runs. */
 
-#define HAVE_STATIC_INLINE 0
+#if !defined __TESTING__
+#include <stdint.h>
 #include <ctype.h>
+#endif
 
 int isalnum(int c)
-{ return isdigit((uint8_t) c) || isalpha((uint8_t) c); }
+{
+	return isalpha(c) || isdigit(c);
+}

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include <ctype.h>
 
 typedef int (*ctype_fn)(int c);
@@ -38,56 +39,67 @@ define_sys(toupper);
 
 /* Now import the Fuzix ones. */
 
+#define __TESTING__
+
 #undef isalnum
 #define isalnum fuzix_isalnum
+#include "../libs/isalnum.c"
 
 #undef isalpha
 #define isalpha fuzix_isalpha
+#include "../libs/isalpha.c"
 
 #undef isascii
 #define isascii fuzix_isascii
+#include "../libs/isascii.c"
 
 #undef isblank
 #define isblank fuzix_isblank
+#include "../libs/isblank.c"
 
 #undef iscntrl
 #define iscntrl fuzix_iscntrl
+#include "../libs/iscntrl.c"
 
 #undef isdigit
 #define isdigit fuzix_isdigit
+#include "../libs/isdigit.c"
 
 #undef isgraph
 #define isgraph fuzix_isgraph
+#include "../libs/isgraph.c"
 
 #undef islower
 #define islower fuzix_islower
+#include "../libs/islower.c"
 
 #undef isprint
 #define isprint fuzix_isprint
+#include "../libs/isprint.c"
 
 #undef ispunct
 #define ispunct fuzix_ispunct
+#include "../libs/ispunct.c"
 
 #undef isspace
 #define isspace fuzix_isspace
+#include "../libs/isspace.c"
 
 #undef isupper
 #define isupper fuzix_isupper
+#include "../libs/isupper.c"
 
 #undef isxdigit
 #define isxdigit fuzix_isxdigit
+#include "../libs/isxdigit.c"
 
 #undef tolower
 #define tolower fuzix_tolower
+#include "../libs/tolower.c"
 
 #undef toupper
 #define toupper fuzix_toupper
-
-#undef _tolower
-#undef _toupper
-
-#undef __CTYPE_H
-#include "../include/ctype.h"
+#include "../libs/toupper.c"
 
 static bool failed = false;
 

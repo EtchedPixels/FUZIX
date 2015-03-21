@@ -42,9 +42,9 @@ SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
-SRC_C += toupper.c tolower.c toascii.c isascii.c isalnum.c isalpha.c
-SRC_C += iscntrl.c isdigit.c isgraph.c islower.c ispunct.c isspace.c
-SRC_C += isupper.c isxdigit.c isblank.c tolower.c toupper.c
+SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
+SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
+SRC_C += isxdigit.c
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c

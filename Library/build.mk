@@ -72,7 +72,6 @@ libsrcnames = \
 	grent.c \
 	index.c \
 	isatty.c \
-	itoa.c \
 	killpg.c \
 	libintl.c \
 	localtim.c \
@@ -166,6 +165,7 @@ libsrcnames = \
 	isgraph.c \
 	islower.c \
 	ispunct.c \
+	isprint.c \
 	isspace.c \
 	isupper.c \
 	isxdigit.c \

@@ -1,11 +1,15 @@
-#include <stdint.h>
+/* This file has a unit test in Library/test/ctype.c. If you change this file,
+ * please make sure the test still runs. */
 
-#define HAVE_STATIC_INLINE 0
+#if !defined __TESTING__
+#include <stdint.h>
 #include <ctype.h>
+#endif
 
 int isxdigit(int c)
 {
-	return (((uint8_t)c >= '0') && ((uint8_t)c <= '9')) ||
-		((((uint8_t)c|0x20) >= 'a') && (((uint8_t)c|0x20) <= 'f'));
+	uint8_t bc = c;
+	return isdigit(bc)
+		|| ((bc >= 'a') && (bc <= 'f'))
+		|| ((bc >= 'A') && (bc <= 'F'));
 }
-

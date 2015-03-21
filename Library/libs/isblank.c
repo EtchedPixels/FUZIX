@@ -1,8 +1,15 @@
-#include <stdint.h>
+/* This file has a unit test in Library/test/ctype.c. If you change this file,
+ * please make sure the test still runs. */
 
-#define HAVE_STATIC_INLINE 0
+#if !defined __TESTING__
+#include <stdint.h>
 #include <ctype.h>
+#include <string.h>
+#endif
 
 int isblank(int c)
-{ return (c == ' ') || (c == '\t'); }
+{
+	uint8_t cb = c;
+	return (cb == ' ') || (c == '\t');
+}
 

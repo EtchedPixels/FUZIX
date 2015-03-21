@@ -1,8 +1,13 @@
-#include <stdint.h>
+/* This file has a unit test in Library/test/ctype.c. If you change this file,
+ * please make sure the test still runs. */
 
-#define HAVE_STATIC_INLINE 0
+#if !defined __TESTING__
+#include <stdint.h>
 #include <ctype.h>
+#endif
 
 int isalpha(int c)
-{ return ((c|0x20) >= 'a') && ((c|0x20) <= 'z'); }
+{
+	return isupper(c) || islower(c);
+}
 

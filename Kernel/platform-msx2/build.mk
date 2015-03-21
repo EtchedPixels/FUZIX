@@ -26,26 +26,30 @@ KERNEL_OBJS += \
 	$(OBJ)/Kernel/dev/devsd_discard.$O \
 	$(OBJ)/Kernel/dev/mbr.$O \
 	$(OBJ)/Kernel/dev/rp5c01.$O \
+	$(OBJ)/Kernel/dev/v99xx.$O \
 	$(OBJ)/Kernel/lowlevel-z80.$O \
 	$(OBJ)/Kernel/syscall_exec16.$O \
 	$(OBJ)/Kernel/usermem_std-z80.$O \
 	$(OBJ)/Kernel/vt.$O \
+	$(OBJ)/Kernel/font6x8.$O \
 
 # Set segments of platform-specific files.
 
-$(OBJ)/Kernel/$(platform)/devrtc.$O:    SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/$(platform)/devfd.$O:     SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/$(platform)/devhd.$O:     SEGMENT = $(CFLAGS_SEG2)
-$(OBJ)/Kernel/$(platform)/devlpr.$O:    SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/$(platform)/devices.$O:   SEGMENT = $(CFLAGS_SEG2)
-$(OBJ)/Kernel/$(platform)/main.$O:      SEGMENT = $(CFLAGS_SEG2)
-$(OBJ)/Kernel/$(platform)/devtty.$O:    SEGMENT = $(CFLAGS_SEG2)
+$(OBJ)/Kernel/$(platform)/devlpr.$O:    SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/$(platform)/devmegasd.$O: SEGMENT = --codeseg COMMONMEM
+$(OBJ)/Kernel/$(platform)/devrtc.$O:    SEGMENT = $(CFLAGS_SEG2)
+$(OBJ)/Kernel/$(platform)/devtty.$O:    SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/$(platform)/discard.$O:   SEGMENT = $(CFLAGS_SEGDISC)
+$(OBJ)/Kernel/$(platform)/main.$O:      SEGMENT = $(CFLAGS_SEG2)
+$(OBJ)/Kernel/$(platform)/vdp.$O:       SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/dev/blkdev.$O:            SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/dev/devsd.$O:             SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/dev/mbr.$O:               SEGMENT = $(CFLAGS_SEG2)
 $(OBJ)/Kernel/dev/rp5c01.$O:            SEGMENT = $(CFLAGS_SEG2)
+$(OBJ)/Kernel/dev/v99xx.$O:             SEGMENT = $(CFLAGS_SEG2)
 
 .DELETE_ON_ERROR: $(OBJ)/Kernel/fuzix.bin
 $(OBJ)/Kernel/fuzix.bin: $(KERNEL_OBJS) \

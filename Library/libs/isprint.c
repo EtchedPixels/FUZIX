@@ -4,10 +4,12 @@
 #if !defined __TESTING__
 #include <stdint.h>
 #include <ctype.h>
+#include <string.h>
 #endif
 
-int iscntrl(int c)
+int isprint(int c)
 {
-	uint8_t bc = c;
-	return ((bc >= 0) && (bc <= 31)) || (bc == 127);
+	uint8_t cb = c;
+	return (cb >= 32) && (cb <= 126);
 }
+
