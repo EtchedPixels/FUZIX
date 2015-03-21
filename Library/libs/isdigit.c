@@ -8,7 +8,6 @@
 
 int isdigit(int c)
 {
-	uint8_t bc = c;
-	return (bc >= '0') && (bc <= '9');
+	return ((uint8_t)c >= '0') && ((uint8_t)c <= '9');
 }
 

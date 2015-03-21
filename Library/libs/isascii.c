@@ -4,11 +4,11 @@
 #if !defined __TESTING__
 #include <stdint.h>
 #include <ctype.h>
+#undef isascii
 #endif
 
 int isascii(int c)
 {
-	uint8_t cb = c;
-	return (cb >= 0) && (cb <= 127);
+	return !((uint8_t)c & 0x80);
 }
 

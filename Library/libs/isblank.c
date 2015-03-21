@@ -9,7 +9,6 @@
 
 int isblank(int c)
 {
-	uint8_t cb = c;
-	return (cb == ' ') || (c == '\t');
+	return ((uint8_t)c == ' ') || ((uint8_t)c == '\t');
 }
 

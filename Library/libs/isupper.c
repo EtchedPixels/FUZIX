@@ -8,6 +8,5 @@
 
 int isupper(int c)
 {
-	uint8_t bc = c;
-	return (bc >= 'A') && (bc <= 'Z');
+	return ((uint8_t)c >= 'A') && ((uint8_t)c <= 'Z');
 }

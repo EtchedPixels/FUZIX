@@ -8,7 +8,6 @@
 
 int isgraph(int c)
 {
-	uint8_t cb = c;
-	return (cb >= 33) && (cb <= 126);
+	return ((uint8_t)c >= 33) && ((uint8_t)c <= 126);
 }
 

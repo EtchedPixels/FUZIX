@@ -124,12 +124,15 @@ static void test(int i)
 	TEST(isupper);
 	TEST(isxdigit);
 
-	if (sys_tolower(i) != fuzix_tolower(i))
-		printf("FAIL sys_tolower(%d)=%d; fuzix_tolower(%d)=%d\n",
-			i, sys_tolower(i), i, fuzix_tolower(i));
-	if (sys_toupper(i) != fuzix_toupper(i))
-		printf("FAIL sys_toupper(%d)=%d; fuzix_toupper(%d)=%d\n",
-			i, sys_toupper(i), i, fuzix_toupper(i));
+	if (i != EOF)
+	{
+		if (sys_tolower(i) != fuzix_tolower(i))
+			printf("FAIL sys_tolower(%d)=%d; fuzix_tolower(%d)=%d\n",
+				i, sys_tolower(i), i, fuzix_tolower(i));
+		if (sys_toupper(i) != fuzix_toupper(i))
+			printf("FAIL sys_toupper(%d)=%d; fuzix_toupper(%d)=%d\n",
+				i, sys_toupper(i), i, fuzix_toupper(i));
+	}
 }
 
 int main(int argc, const char* argv[])

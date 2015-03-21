@@ -8,6 +8,5 @@
 
 int islower(int c)
 {
-	uint8_t bc = c;
-	return (bc >= 'a') && (bc <= 'z');
+	return ((uint8_t)c >= 'a') && ((uint8_t)c <= 'z');
 }
