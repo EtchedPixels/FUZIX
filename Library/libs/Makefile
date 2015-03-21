@@ -19,7 +19,7 @@ OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
-SRC_C += creat.c crypt.c ctime.c ctype.c difftime.c err.c errno.c error.c
+SRC_C += creat.c crypt.c ctime.c difftime.c err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fprintf.c fputc.c fputs.c fread.c free.c
@@ -41,6 +41,10 @@ SRC_C += strtod.c strtol.c system.c time.c tmpfile.c tmpnam.c ttyname.c
 SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
+# ctype
+SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
+SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
+SRC_C += isxdigit.c
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
