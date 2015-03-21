@@ -9,7 +9,6 @@
 
 int isprint(int c)
 {
-	uint8_t cb = c;
-	return (cb >= 32) && (cb <= 126);
+	return ((uint8_t)c >= 32) && ((uint8_t)c <= 126);
 }
 

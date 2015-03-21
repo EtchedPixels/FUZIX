@@ -3,12 +3,14 @@
 
 #if !defined __TESTING__
 #include <ctype.h>
+#include <stdint.h>
 #endif
 
 int tolower(int c)
 {
-	if (isupper(c))
-		c = c^0x20;
-	return c;
+	uint8_t cb = c;
+	if ((cb >= 'A') && (cb <= 'Z'))
+		cb ^= 0x20;
+	return cb;
 }
 

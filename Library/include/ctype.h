@@ -3,10 +3,10 @@
 #ifndef __CTYPE_H
 #define __CTYPE_H
 
+#include <stdint.h>
+
 extern int toupper(int c);
 extern int tolower(int c);
-
-#define toascii(c) ((c) & 0x7f)
 
 extern int isalnum(int c);
 extern int isalpha(int c);
@@ -20,10 +20,11 @@ extern int ispunct(int c);
 extern int isspace(int c);
 extern int isupper(int c);
 extern int isxdigit(int c);
-extern int isoctal(int c);
+
+#define isascii(c) (!((uint8_t)c & 0x80))
+#define toascii(c) ((c) & 0x7f)
 
 #define isdecimal isdigit
-#define isprint(c) (!iscntrl(c))
 #define _tolower tolower
 #define _toupper toupper
 
