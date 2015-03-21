@@ -25,6 +25,8 @@
 	        .globl init_hardware
 	        .globl s__DATA
 	        .globl l__DATA
+	        .globl s__FONT
+	        .globl l__FONT
 	        .globl s__DISCARD
 	        .globl l__DISCARD
 	        .globl s__COMMONMEM
@@ -86,6 +88,20 @@ start:
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
+
+		; move font where it belongs
+		; FIXME: font6x8 is shifted the wrong way for msx vdp
+		;        so correct it here for now
+		ld de, #s__FONT
+		ld bc, #l__FONT
+cpfont:
+		sla (hl)
+		sla (hl)
+		ldi
+		ld a,b
+		or c
+		jr nz, cpfont
+
 
 		; move the discardable memory where it belongs
 		ld de, #s__DISCARD

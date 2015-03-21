@@ -109,6 +109,8 @@ extern FILE *__fopen __P((const char*, int, FILE*, const char*));
 #define freopen(__file, __mode, __fp) __fopen((__file), -1, (__fp), (__mode))
 #define fdopen(__file, __mode)	__fopen((char*)0, (__file), (FILE*)0, (__mode))
 
+extern FILE *tmpfile __P((void));
+
 extern int fputs __P((const void *, FILE*));
 extern int puts __P((const void *));
 

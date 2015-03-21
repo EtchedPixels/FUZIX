@@ -23,12 +23,10 @@ config FACTOR
     Factor integers.
 */
 
-#include  <stdlib.h>
 #include  <stdio.h>
 #include  <ctype.h>
 #include  <string.h>
-
-#define LINE_MAX 80
+#include  <stdlib.h>
 
 static void factor(char *s)
 {
@@ -84,17 +82,18 @@ static void factor(char *s)
   }
 }
 
+#define LINE_MAX 256
+
 int main(int argc,char *argv[])
 {
   if (argc > 1) {
     char **ss;
 
-    for (ss = &argv[0]; *ss; ss++) factor(*ss);
+    for (ss = argv; *ss; ss++) factor(*ss);
   } else for (;;) {
     char s[LINE_MAX];
-    size_t len = 0;
 
-    if (!gets_s(s, sizeof(s))) break;
+    if (NULL == gets_s(s, LINE_MAX)) break;
     factor(s);
   }
 }

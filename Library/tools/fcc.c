@@ -151,6 +151,12 @@ static void set_optimize(const char *p)
     fprintf(stderr, "fcc: -O requires a value\n");
     exit(1);
   }
+  if (optcode > 4)
+    optcode = 4;
+  if (optcode < 0) {
+    fprintf(stderr, "fcc: negative optimisation is silly.\n");
+    exit(1);
+  }
   if (*opt == 0)
     optcode = 1;
 }
@@ -353,19 +359,22 @@ static void build_command(void)
     add_argument("-funsigned-char");
   if (debug == 1)
     add_argument("--debug");
-  /* Turn -O1/2/3 into something meaningful */
+  /* Turn -O1/2/3/4 into something meaningful */
   if (opt != NULL) {
     if (optcode > 0)
       add_argument("--max-allocs-per-node");
     if (optcode == 1)
       add_argument("30000");
-    if (optcode == 2)
+    if (optcode == 2 || optcode == 3)
       add_argument("100000");
-    if (optcode == 3)
+    if (optcode == 4)
       add_argument("250000");
+    if (optcode > 2)
+      add_argument("-D__FUZIX_OPT_SPEED__");
   }
-  /* Always size optimise */
-  add_argument("--opt-code-size");
+  /* Size optimise for all but high -O values */
+  if (opt == NULL || optcode < 3)
+    add_argument("--opt-code-size");
   /* Macros */
   add_argument_list(machead);
   /* Paths */
