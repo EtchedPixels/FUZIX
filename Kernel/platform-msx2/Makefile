@@ -1,11 +1,11 @@
 
 CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
 CSRCS += devfd.c devhd.c devlpr.c
-CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c
+CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c ../dev/v99xx.c vdp.c
 COMMON_CSRCS = devmegasd.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devsd_discard.c
-ASRCS = msx2.s crt0.s vdp.s
+ASRCS = msx2.s crt0.s
 ASRCS += tricks.s commonmem.s bootrom.s
 
 CROSS_CCOPTS += -I../dev/

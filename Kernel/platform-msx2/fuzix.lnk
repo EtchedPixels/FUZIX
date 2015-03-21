@@ -3,6 +3,7 @@
 -b _CODE=0x0000
 -b _COMMONMEM=0xF000
 -b _DISCARD=0xE000
+-b _FONT=0xFA00
 -l z80
 platform-msx2/crt0.rel
 platform-msx2/commonmem.rel
@@ -35,6 +36,7 @@ vt.rel
 devsys.rel
 usermem.rel
 usermem_std-z80.rel
+font6x8.rel
 platform-msx2/blkdev.rel
 platform-msx2/devsd.rel
 platform-msx2/devsd_discard.rel
@@ -42,4 +44,5 @@ platform-msx2/devmegasd.rel
 platform-msx2/mbr.rel
 platform-msx2/devrtc.rel
 platform-msx2/rp5c01.rel
+platform-msx2/v99xx.rel
 -e

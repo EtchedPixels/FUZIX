@@ -35,12 +35,11 @@ extern int rand __P((void));
 extern void srand __P((uint seed));
 
 extern char *__longtoa __P((unsigned long, char *, int, char, char));
-extern char *itoa __P((int value, char *strP, int radix));
 extern char *ultoa __P((unsigned long value, char *strP, int radix));
 extern char *ltoa __P((long value, char *strP, int radix));
 
-extern int atoi __P((char *str));
-extern long atol __P((char *strP));
+extern int atoi __P((const char *str));
+extern long atol __P((const char *strP));
 
 extern char *_itoa __P((int value));
 extern char *_ltoa __P((long value));
@@ -52,6 +51,10 @@ extern char *__ltostr __P((long value, int radix));
 extern long strtol __P ((const char * nptr, char ** endptr, int base));
 extern unsigned long strtoul __P ((const char * nptr,
 				   char ** endptr, int base));
+
+extern int mkstemp(char *template);
+extern int mkstemps(char *template, int suffix);
+
 #ifndef __HAS_NO_DOUBLES__
 extern double strtod __P ((const char * nptr, char ** endptr));
 #endif

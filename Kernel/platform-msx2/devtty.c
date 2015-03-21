@@ -46,11 +46,9 @@ ttyready_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
-//
-//	if (minor == 1) {
-		vtoutput(&c, 1);
-//		return;
-//	}
+
+	vtoutput(&c, 1);
+
 	tty_debug2 = c;
 }
 
@@ -134,7 +132,7 @@ static void keydecode(void)
 
 	/* TODO: function keys (F1-F10), graph, code */
 
-	tty_inproc(1, c);
+	vt_inproc(1, c);
 }
 
 void update_keyboard()
