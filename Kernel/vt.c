@@ -182,6 +182,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 				cursory = ncursory;
 			if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 				cursorx = ncursorx;
+			vtmode = 0;
 		}
 	}
 	cursor_on(cursory, cursorx);
