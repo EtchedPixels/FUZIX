@@ -1,19 +1,19 @@
 -mwxuy
 -i fuzix.ihx
+-b _COMMONMEM=0x0100
+-b _UDATA=0x5D00
 -b _DISCARD=0x4000
--b _UDATA=0xFD00
 -b _CODE=0x6000
--b _DATA=0xE000
--b _FONT=0x5000
--b _INITIALIZER=0x3000
+-b _CODE3=0x6000
 -l z80
+-r
 platform-px4plus/crt0.rel
 platform-px4plus/commonmem.rel
 platform-px4plus/px4plus.rel
 platform-px4plus/main.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+lowlevel-z80-banked.rel
 platform-px4plus/tricks.rel
 timer.rel
 kdata.rel
