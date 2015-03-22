@@ -239,6 +239,9 @@ static void process_stub(char *p)
 {
   int b1, b2, addr;
   char name[65];
+
+  if (strlen(p) > 4 && !isspace(p[8]))
+    fprintf(stderr, "Overflow: %s", p);
   if (sscanf(p, "%02x %04x %02x %64s", &b1, &addr, &b2, name) != 4) {
     fprintf(stderr, "Invalid relocation link %s\n", p);
     exit(1);
