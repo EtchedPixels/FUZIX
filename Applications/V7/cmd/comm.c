@@ -15,6 +15,7 @@ char ldr[3][3] = { "", "\t", "\t\t" };
 
 FILE *ib1;
 FILE *ib2;
+char lb1[LB], lb2[LB];
 
 
 FILE *openfil(const char *s)
@@ -95,7 +96,6 @@ int compare(char *a, char *b)
 int main(int argc, const char *argv[])
 {
 	int l;
-	char lb1[LB], lb2[LB];
 
 	if (argc > 1) {
 		if (*argv[1] == '-' && argv[1][1] != 0) {

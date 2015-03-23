@@ -39,7 +39,7 @@ int choose(char a[], int n)
 {
 	/* pick and return one at random from the n choices in a */
 	/* The last one is moved to replace the one chosen */
-	register j, t;
+	register int j, t;
 
 	if (n <= 0)
 		error("null choice");
@@ -57,7 +57,7 @@ void shuffle(void)
 	/* uses the random number generator `rand' in the C library */
 	/* assumes that `srand' has already been called */
 
-	register i;
+	register int i;
 
 	for (i = 0; i < DECK; ++i)
 		deck[i] = (i % 13) + 1;	/* seed the deck */
@@ -78,7 +78,7 @@ int draw(void)
 
 int empty(HAND h)
 {
-	register i;
+	register int i;
 
 	for (i = 1; i <= CTYPE; ++i) {
 		if (h[i] != 0 && h[i] != 4)
@@ -125,7 +125,7 @@ char *cname[] = {
 
 void stats(void)
 {
-	register i, ct, b;
+	register int i, ct, b;
 
 	if (proflag)
 		printf("Pro level\n");
@@ -153,7 +153,7 @@ void stats(void)
 
 void phand(HAND h)
 {
-	register i, j;
+	register int i, j;
 
 	j = 0;
 
@@ -163,7 +163,7 @@ void phand(HAND h)
 			continue;
 		}
 		if (h[i]) {
-			register k;
+			register int k;
 			k = h[i];
 			while (k--)
 				printf("%s ", cname[i]);
@@ -214,7 +214,7 @@ const char *inst[] = {
 
 void instruct(void)
 {
-	register char **cpp;
+	register const char **cpp;
 
 	printf("\n");
 
@@ -231,7 +231,7 @@ void madebook(int x)
 
 void score(void)
 {
-	register my, your, i;
+	register int my, your, i;
 
 	my = your = 0;
 
@@ -264,7 +264,7 @@ void score(void)
 int guess(void)
 {
 	/* get the guess from the tty and return it... */
-	register g, go;
+	register int g, go;
 
 	go = 0;
 
@@ -365,7 +365,7 @@ void heguessed(int d)
 int myguess(void)
 {
 
-	register i, lg, t;
+	register int i, lg, t;
 
 	if (empty(myhand))
 		return (NOMORE);
@@ -432,7 +432,7 @@ int move(HAND hs, HAND ht, int g, int v)
 {
 	/* hand hs has made a guess, g, directed towards ht */
 	/* v on indicates that the guess was made by the machine */
-	register d;
+	register int d;
 	const char *sp, *tp;
 
 	sp = tp = "I";
@@ -511,7 +511,7 @@ void game(void)
 
 	for (;;) {
 
-		register g;
+		register int g;
 
 
 		/* you make repeated guesses */

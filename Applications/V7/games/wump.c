@@ -120,12 +120,12 @@ int rnum(int n)
 		first[1] = ((uint32_t) t) >> 16;
 		srand((first[1] * first[0]) ^ first[1]);
 	}
-	return ((rand() / 32768.0) * n);
+	return (((long)rand() / 32768L) * n);
 }
 
 int rin(void)
 {
-	register n, c;
+	register int n, c;
 
 	n = 0;
 	c = getchar();
@@ -144,10 +144,10 @@ int rin(void)
 	return (n);
 }
 
-int near(struct room *ap, int ahaz)
+int isnear(struct room *ap, int ahaz)
 {
 	register struct room *p;
-	register haz, i;
+	register int haz, i;
 
 	p = ap;
 	haz = ahaz;
@@ -168,7 +168,7 @@ int icomp(const void *v1, const void *v2)
 int tunnel(int i)
 {
 	register struct room *p;
-	register n, j;
+	register int n, j;
 	int c;
 
 	c = 20;
@@ -295,15 +295,15 @@ int main(int argc, char *argv[])
 		goto loop;
 	}
 	for (i = 0; i < NTUNN; i++)
-		if (near(&room[p->tunn[i]], WUMP))
+		if (isnear(&room[p->tunn[i]], WUMP))
 			goto nearwump;
-	if (near(p, WUMP)) {
+	if (isnear(p, WUMP)) {
 	      nearwump:
 		printf("I smell a wumpus\n");
 	}
-	if (near(p, BAT))
+	if (isnear(p, BAT))
 		printf("Bats nearby\n");
-	if (near(p, PIT))
+	if (isnear(p, PIT))
 		printf("I feel a draft\n");
 	printf("There are tunnels to");
 	for (i = 0; i < NTUNN; i++)

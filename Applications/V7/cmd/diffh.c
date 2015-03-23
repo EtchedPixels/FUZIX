@@ -166,7 +166,7 @@ int cmp(const char *s, const char *t)
 int easysynch(void)
 {
 	int i, j;
-	register k, m;
+	register int k, m;
 	char *s0, *s1;
 	for (i = j = 1; i < RANGE && j < RANGE; i++, j++) {
 		s0 = getl(0, n0 + i);

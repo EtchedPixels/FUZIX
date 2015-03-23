@@ -106,7 +106,7 @@ void ex(char *s)
 
 void init(void)
 {
-	register i, c;
+	register int i, c;
 	register char *cp;
 	register char *ocp;
 	register int n;

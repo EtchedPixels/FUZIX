@@ -13,7 +13,7 @@ FILE	*os;
 
 int main(int argc, const char *argv[])
 {
-	register i, c, f;
+	register int i, c, f;
 	int iflg = 0;
 
 	for(i=1; i<argc; i++)

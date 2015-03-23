@@ -86,7 +86,7 @@ void diag(const char *s, const char *arg)
 char *getline(void)
 {
 
-	register c;
+	register int c;
 	register char *linep;
 	char *endlinep;
 
@@ -260,7 +260,7 @@ void putout(char *strt, char *end)
 
 void getsort(void)
 {
-	register c;
+	register int c;
 	register char *tilde, *linep, *ref;
 	char *p1a, *p1b, *p2a, *p2b, *p3a, *p3b, *p4a, *p4b;
 	int w;

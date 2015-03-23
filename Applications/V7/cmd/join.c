@@ -12,14 +12,14 @@
 #define F1 0
 #define F2 1
 #define	NFLD	20	/* max field per line */
-#define comp() cmp(ppi[F1][j1],ppi[F2][j2])
+#define comp() cmp(ppi[F1][jf1],ppi[F2][jf2])
 
 FILE *f[2];
 char buf[2][BUFSIZ];	/*input lines */
 char *ppi[2][NFLD];	/* pointers to fields in lines */
 char *s1,*s2;
-int	j1	= 1;	/* join of this field of file 1 */
-int	j2	= 1;	/* join of this field of file 2 */
+int	jf1	= 1;	/* join of this field of file 1 */
+int	jf2	= 1;	/* join of this field of file 2 */
 int	olist[2*NFLD];	/* output these fields */
 int	olistf[2*NFLD];	/* from these files */
 int	no;	/* number of entries in olist */
@@ -69,12 +69,12 @@ int output(int on1, int on2)	/* print items from olist */
 	const char *temp;
 
 	if (no <= 0) {	/* default case */
-		printf("%s", on1? ppi[F1][j1]: ppi[F2][j2]);
+		printf("%s", on1? ppi[F1][jf1]: ppi[F2][jf2]);
 		for (i = 0; i < on1; i++)
-			if (i != j1)
+			if (i != jf1)
 				printf("%c%s", sep1, ppi[F1][i]);
 		for (i = 0; i < on2; i++)
-			if (i != j2)
+			if (i != jf2)
 				printf("%c%s", sep1, ppi[F2][i]);
 		printf("\n");
 	} else {
@@ -139,11 +139,11 @@ int main(int argc, const char *argv[])
 			break;
 		case 'j':
 			if (argv[1][2] == '1')
-				j1 = atoi(argv[2]);
+				jf1 = atoi(argv[2]);
 			else if (argv[1][2] == '2')
-				j2 = atoi(argv[2]);
+				jf2 = atoi(argv[2]);
 			else
-				j1 = j2 = atoi(argv[2]);
+				jf1 = jf2 = atoi(argv[2]);
 			argc--;
 			argv++;
 			break;
@@ -154,11 +154,11 @@ int main(int argc, const char *argv[])
 	for (i = 0; i < no; i++)
 		olist[i]--;	/* 0 origin */
 	if (argc != 3)
-		errx(1, "usage: join [-j1 x -j2 y] [-o list] file1 file2");
-	j1--;
-	j2--;	/* everyone else believes in 0 origin */
-	s1 = ppi[F1][j1];
-	s2 = ppi[F2][j2];
+		errx(1, "usage: join [-jf1 x -jf2 y] [-o list] file1 file2");
+	jf1--;
+	jf2--;	/* everyone else believes in 0 origin */
+	s1 = ppi[F1][jf1];
+	s2 = ppi[F2][jf2];
 	if (argv[1][0] == '-')
 		f[F1] = stdin;
 	else if ((f[F1] = fopen(argv[1], "r")) == NULL)

@@ -89,7 +89,7 @@ void score(void)
 
 void delete(int sig)
 {
-	if (rights + wrongs == 0.) {
+	if (rights + wrongs == 0) {
 		printf("\n");
 		exit(0);
 	}
