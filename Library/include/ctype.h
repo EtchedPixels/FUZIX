@@ -16,6 +16,7 @@ extern int iscntrl(int c);
 extern int isdigit(int c);
 extern int isgraph(int c);
 extern int islower(int c);
+extern int isprint(int c);
 extern int ispunct(int c);
 extern int isspace(int c);
 extern int isupper(int c);
