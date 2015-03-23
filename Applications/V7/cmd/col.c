@@ -16,12 +16,13 @@
 
 char *page[PL];
 char lbuff[LINELN], *line;
+char fbuff[BUFSIZ];
 int bflag, xflag, fflag;
 int half;
 int cp, lp;
 int ll, llh, mustwr;
 int pcp = 0;
-char *pgmname;
+const char *pgmname;
 
 
 void outc(char c)
@@ -179,13 +180,12 @@ int main(int argc, const char *argv[])
 	int i;
 	int greek;
 	register int c;
-	char fbuff[BUFSIZ];
 
 	setbuf(stdout, fbuff);
 	pgmname = argv[0];
 
 	for (i = 1; i < argc; i++) {
-		register char *p;
+		register const char *p;
 		if (*argv[i] != '-') {
 			fprintf(stderr, "%s: bad option %s\n",
 				pgmname, argv[i]);

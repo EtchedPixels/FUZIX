@@ -21,7 +21,7 @@ const char *nsep = "\0\0.\0 \0 \0\0";
 void printt(const char *s, long a)
 {
 	char digit[9];
-	register i;
+	register int i;
 	char c;
 	int nonzero;
 
@@ -46,7 +46,7 @@ int main(int argc, const char *argv[])
 {
 	struct tms buffer, obuffer;
 	int status;
-	register p;
+	register int p;
 	time_t before, after;
 
 	if (argc <= 1)

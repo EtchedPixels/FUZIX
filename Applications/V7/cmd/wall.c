@@ -8,13 +8,14 @@
 #define	USERS	50
 
 char mesg[3000];
+char buf[BUFSIZ];
 int msize;
 struct utmp utmp[USERS];
 
 void sendmes(char *tty)
 {
-	register i;
-	char t[50], buf[BUFSIZ];
+	register int i;
+	char t[50];
 	FILE *f;
 
 	i = fork();
@@ -40,7 +41,7 @@ void sendmes(char *tty)
 
 int main(int argc, const char *argv[])
 {
-	register i;
+	register int i;
 	register struct utmp *p;
 	FILE *f;
 

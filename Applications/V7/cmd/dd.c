@@ -167,7 +167,7 @@ void sigterm(int sig)
 
 void flsh(void)
 {
-	register c;
+	register int c;
 
 	if(obc) {
 		if(obc == obs)
@@ -443,7 +443,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"bad arg: %s\n", string);
 		exit(0);
 	}
-	if(conv == null && cflag&(LCASE|UCASE))
+	/* BUG: (void*) cast here is for a cc65 bug */
+	if(conv == (void*)null && cflag&(LCASE|UCASE))
 		conv = cnull;
 	if (ifile)
 		ibf = open(ifile, 0);
@@ -463,7 +464,8 @@ int main(int argc, char *argv[])
 	}
 	if (bs) {
 		ibs = obs = bs;
-		if (conv == null)
+		/* BUG: (void*) cast here is for a cc65 bug */
+		if (conv == (void*)null)
 			fflag++;
 	}
 	if(ibs == 0 || obs == 0) {

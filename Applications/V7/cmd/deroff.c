@@ -47,7 +47,7 @@ int rdelim = NOCHAR;
 
 
 int argc;
-char **argv;
+const char **argv;
 
 char fname[50];
 FILE *files[15];
@@ -422,7 +422,7 @@ void work(void)
 int main(int ac, const char *av[])
 {
 	register int i;
-	register char *p;
+	register const char *p;
 	static char onechar[2] = "X";
 
 	argc = ac - 1;

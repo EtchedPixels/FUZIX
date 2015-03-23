@@ -38,6 +38,7 @@ struct diff d13[NC];
 struct diff d23[NC];
 struct diff de[NC];
 char line[256];
+char block[512];
 FILE *fp[3];
 int linct[3] = { 0, 0, 0 };
 
@@ -54,7 +55,7 @@ int debug = 0;
 
 void repos(int nchar)
 {
-	register i;
+	register int i;
 	for (i = 0; i < 2; i++)
 		fseek(fp[i], (long) -nchar, 1);
 }
@@ -82,7 +83,7 @@ int number(char **lc)
 
 int getline(FILE * b)
 {
-	register i, c;
+	register int i, c;
 	for (i = 0; i < sizeof(line) - 1; i++) {
 		c = getc(b);
 		if (c == EOF)
@@ -278,8 +279,7 @@ int edit(struct diff *diff, int dup, int j)
 /*		regurgitate */
 void edscript(int n)
 {
-	register j, k;
-	char block[512];
+	register int j, k;
 	for (n = n; n > 0; n--) {
 		prange(&de[n].old);
 		fseek(fp[2], (long) de[n].new.from, 0);
