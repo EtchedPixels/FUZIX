@@ -9,48 +9,38 @@ top window is awkward as we need to get udata and our kernel data/common in
 that space if possible. We can hide the font/video below that under the top of
 the ROM however.
 
+Banked Memory Map
+-----------------
 
-Intended Memory Map
+0x0000-0x00FF		Vectors (which IM ? PX8 is IM2)
+0x0100-0x5FFF		Kernel mappings
+0x6000-0xDFFF		Switched segments 8/16/32K ROM x 2 or RAM
+	0x6000-0xDFFF	Application space (32K) [need to use a bit under
+			as 120K not 128K of swap]
+	0x6000-0xDFFF	CODE1/CODE2 } Both with copies of some of common
+	0x6000-0xDFFF	CODE3/Video } and rodata at same address range
+	[ Do we want to generate interleaved banking ? ]
+
+0xE000-0xFCFF		Writable kernel data
+			Framebuffer (4K)
+0xFD00-0xFFFF		UDATA
+
+We also need to put a catalogue in the middle of one of the two ROM blocks
+annoyingly. However that plays into our hands in other ways as we can
+minimally fake a disk rom holding a CP/M app which in fact runs the OS.
 
 
-0x0000-0x00FF		Vectors
-0x0100-0x7CFF (RAM)	User program (and discard area)
-(could go to 0xBFFF for 48K but our swap is very limiting and might need
- smarter algorithms for swap - eg 16K banking for swap alone)
-0x7D00-0xCFFF		Space for things we can bank under the ROM
-			(secondary floppy cache ??)
-0xD000-0xDFFF		Framebuffer, font, video code
-0xE000-0xF7FFish	Data for kernel
-0xF800-0xFCFF		Common (currently ends FBCC)
-0xFD00-0xFFFF		Udata
+Applications are swapped to/from the PX4Plus RAM disc (120K) allowing about
+4 apps of just under 32K each. Storage I/O is via the serial floppy and/or
+optional RAM/ROM cartriges. External 128K cartridges would also work for
+swap with floppy for OS. If the swap is custom handled in switching then
+we can switch the 32K rather than copy and gain another process, plus real
+floppy swap option.
 
-In kernel execution modes we then are either
+CP/M BIOS can be used (it's another 32K map over 0-7FFF, but as that maps
+over the vectors we must ensure its always called with interrupts off).
 
-0x0000-0x00FF		Vectors
-0x0100-0x5FFF		Lower part of user
-0x6000-0xDFFF		Kernel code in ROM
-0xE000-0xF7FFish	Data for kernel
-0xF800-0xFCFF		Common (currently ends FBCC)
-0xFD00-0xFFFF		Udata
-
-and we will need to tuck the video code/font/framebuffer at 0xD000 or
-similar in RAM under the ROM area. May need to hide the floppy driver
-there too as its all a little bit tight
-
-In practice it appears the answer is
-
-1. Yes
-2. But only if the linker is taught to do banking. In fact once the linker
-does its own banking there is plenty of space although the bootloader might
-be a bit odd to make it work.
-
-A better layout given the 128K total swap limit might appear to be
-
-0x0000-0x00FF		Vectors
-0x0100-0x7CFF		Application
-0x7D00-0x7FFF		Uarea
-
-but we actually can't do this because the 32K ROM is always mapped from
-0x6000-0xDFFF and needs to access the Uarea
-
+The PX-8 is different: There is only a single 32K system ROM, but no video
+overhead. In theory its sufficient if we are replacing the OS ROM, and using
+the intelligent RAM disc, or the homebrew 512K one, plus floppies
 

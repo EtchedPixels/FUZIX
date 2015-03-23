@@ -22,6 +22,7 @@ extern int isupper(int c);
 extern int isxdigit(int c);
 
 #define isascii(c) (!((uint8_t)c & 0x80))
+#define toascii(c) ((c) & 0x7f)
 
 #define isdecimal isdigit
 #define _tolower tolower

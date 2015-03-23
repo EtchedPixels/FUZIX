@@ -37,7 +37,7 @@ What does FUZIX have over UZI
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
 * Kernel boots on both 6502, 6809 and Z80
-* Core code can be built for 6502, 6809, 68000 and Z80 so should be far more
+* Core code can be built for 6502, 6809, 68000, 8086 and Z80 so should be far more
 	portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
@@ -113,7 +113,7 @@ ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
 * Zeta v2 - initial port running to user space
-* ZX Spectrum - can boot to run init, debugging needed to get to shell
+* ZX Spectrum 128K - can boot to shell but needs swap adding to get further
 
 Various other platforms are partly filled out to sanity check assumptions
 and start making progress on them. The main need there is now to tackle all

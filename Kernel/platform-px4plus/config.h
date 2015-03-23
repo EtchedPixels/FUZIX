@@ -12,8 +12,6 @@
 #define CONFIG_VT
 /* We want the 8x8 font for now (actually we want 6x8) */
 #define CONFIG_FONT8X8
-/* And we only want 128 symbols of it (1K) for now */
-#define CONFIG_FONT8X8SMALL
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 /* Fixed banking */
@@ -31,14 +29,16 @@
 /* FIXME: the OVL timer isn't quite 100/sec and we have an accurate 1Hz
    timer available, so needs some tweaking */
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    0x0000  /* also data base */
-#define PROGLOAD    0x0100
-#define PROGTOP     0x4000  /* Top of program for debug */
+#define PROGBASE    0x6000  /* also data base */
+#define PROGLOAD    0x6000
+#define PROGTOP     0xDD00  /* Top of program */
 
-#define SWAP_SIZE   0x40 	/* 32K in blocks (with uarea means 31K max app size) */
-#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
-#define MAX_SWAPS	4	/* We have a whopping 128K of RAMDISC! */
+/* FIXME: treat the banks of the ramdisc as memory not swap, also trim
+   to 30K as only have 120K of RAMdisc */
+#define SWAP_SIZE   0x3C 	/* 30K in blocks (with uarea means 29.25K max app size) */
+#define SWAPBASE    (uint8_t *)0x5D00	/* We swap the lot in one, include the */
+#define SWAPTOP	    (uint8_t *)0xDD00	/* vectors so its a round number of sectors */
+#define MAX_SWAPS	4	/* We have a whopping 120K of RAMDISC! */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -60,4 +60,4 @@
 #define VT_BOTTOM	7
 
 
-#define PFTABSIZE	4	/* All we have room for right now */
+#define PFTABSIZE	5	/* All we have room for right now */

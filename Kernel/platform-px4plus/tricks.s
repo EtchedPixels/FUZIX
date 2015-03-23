@@ -37,7 +37,9 @@
 ; This function can have no arguments or auto variables.
 _switchout:
         di
+	push af
         call _chksigs
+	pop af
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
@@ -53,10 +55,14 @@ _switchout:
         ld (_inint), a
 
         ; find another process to run (may select this one again)
+	push af
         call _getproc
+	pop af
 
         push hl
+	push af
         call _switchin
+	pop af
 
         ; we should never get here
         call _trap_monitor
@@ -68,6 +74,7 @@ swapped: .ascii "_switchin: SWAPPED"
 
 _switchin:
         di
+	pop hl
         pop bc  ; return address
         pop de  ; new process pointer
 ;
@@ -75,6 +82,7 @@ _switchin:
 ;
         push de ; restore stack
         push bc ; restore stack
+	push hl
 
 	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
@@ -95,11 +103,15 @@ _switchin:
 	; We will always swap out the current process
 	ld hl, (U_DATA__U_PTAB)
 	push hl
+	push af
 	call _swapout
+	pop af
 	pop hl
 	pop hl
 	push de
+	push af
 	call _swapper
+	pop af
 	pop de
 	pop hl
 	ld a, (hl)
@@ -156,10 +168,12 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         di ; should already be the case ... belt and braces.
 
+	pop bc
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
         push de
+	push bc
 
         ld (fork_proc_ptr), hl
 
@@ -189,7 +203,9 @@ _dofork:
 
 	ld hl, (U_DATA__U_PTAB)
 	push hl
+	push af
 	call _swapout
+	pop af
 	pop hl
 
         ; now the copy operation is complete we can get rid of the stuff
@@ -201,7 +217,9 @@ _dofork:
         ; Make a new process table entry, etc.
         ld  hl, (fork_proc_ptr)
         push hl
+	push af
         call _newproc
+	pop af
         pop bc 
 
         ; runticks = 0;
