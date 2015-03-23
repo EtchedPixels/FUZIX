@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
     
 /* Find file in pathes:
  * 1. /name or ./name or ../name is already qualified names
@@ -62,5 +63,19 @@ int execl(const char *pathP, const char *arg0, ...)
 int execlp(const char *pathP, const char *arg0, ...) 
 {
 	return execve(_findPath(pathP), &arg0, environ);
+}
+#else
+int execl(const char *pathP, const char *arg0, ...) 
+{
+	/* BUG: this should be ENOSYS, but Fuzix doesn't have that yet */
+	errno = EINVAL;
+	return -1;
+}
+
+int execlp(const char *pathP, const char *arg0, ...) 
+{
+	/* BUG: this should be ENOSYS, but Fuzix doesn't have that yet */
+	errno = EINVAL;
+	return -1;
 }
 #endif

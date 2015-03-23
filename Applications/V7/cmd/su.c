@@ -12,9 +12,9 @@ struct passwd *pwd;
 
 /* FIXME: su - and other semantics of later su versions */
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
-	register const char **p;
+	register char **p;
 	const char *nptr;
 	char *password;
 	int badsw = 0;

@@ -42,7 +42,7 @@
 #define EMPTYS if(stkerr != 0){printf("stack empty\n"); return(1);}
 #define EMPTYSR(x) if(stkerr !=0){printf("stack empty\n");pushp(x);return(1);}
 #define error(p)	{printf(p); continue; }
-#define errorrt(p)	{printf(p); return(1); }
+#define errorrt(p)	{printf(p); return NULL; }
 
 struct blk {
 	char *rd;
@@ -78,7 +78,7 @@ void seekc(struct blk *hptr, int n);
 void sdump(char *s1, struct blk *hptr);
 struct blk *copy(struct blk *hptr, int size);
 struct blk *salloc(int size);
-int log2(long n);
+int intlog2(long n);
 void load(void);
 int cond(char c);
 int command(void);
@@ -103,8 +103,8 @@ struct blk *pop(void);
 void pushp(struct blk *p);
 void onintr(int sig);
 void init(int argc, char *argv[]);
-struct blk *exp(struct blk *base, struct blk *ex);
-struct blk *sqrt(struct blk *p);
+struct blk *expr(struct blk *base, struct blk *ex);
+struct blk *squareroot(struct blk *p);
 struct blk *removr(struct blk *p, int n);
 int dscale(void);
 struct blk *scalint(struct blk *p);
@@ -143,7 +143,7 @@ long obase;
 int fw, fw1, ll;
 void (*outdit) (struct blk *, int);
 int logo;
-int log10;
+int intlog10;
 int count;
 char *pp;
 char *dummy;
@@ -269,7 +269,7 @@ void commnds(void)
 				savk = k;
 			}
 			arg1 = add0(p, n);
-			arg2 = sqrt(arg1);
+			arg2 = squareroot(arg1);
 			sputc(arg2, savk);
 			pushp(arg2);
 			continue;
@@ -289,7 +289,7 @@ void commnds(void)
 				error("exp too big\n");
 			}
 			savk = sunputc(arg2);
-			p = exp(arg2, arg1);
+			p = expr(arg2, arg1);
 			release(arg2);
 			rewind(arg1);
 			c = sgetc(arg1);
@@ -398,7 +398,7 @@ void commnds(void)
 						l = l * 100 + sbackc(q);
 				}
 			}
-			logo = log2(l);
+			logo = intlog2(l);
 			obase = l;
 			release(basptr);
 			if (sign == 1)
@@ -774,6 +774,7 @@ struct blk *div(struct blk *ddivd, struct blk *ddivr)
 	p = salloc(0);
 	if (length(ddivr) == 0) {
 		pushp(ddivr);
+		/* BUG: this returns NULL, which will cause a crash later */
 		errorrt("divide by 0\n");
 	}
 	divsign = remsign = 0;
@@ -914,6 +915,7 @@ int dscale(void)
 	if (sfbeg(dr) == 1 || (sfbeg(dr) == 0 && sbackc(dr) == 0)) {
 		sputc(dr, skr);
 		pushp(dr);
+		/* BUG: this returns NULL, which will cause a crash later */
 		errorrt("divide by 0\n");
 	}
 	c = k - skd + skr;
@@ -959,7 +961,7 @@ struct blk *removr(struct blk *p, int n)
 	return (r);
 }
 
-struct blk *sqrt(struct blk *p)
+struct blk *squareroot(struct blk *p)
 {
 	struct blk *t;
 	struct blk *r, *q, *s;
@@ -1012,7 +1014,7 @@ struct blk *sqrt(struct blk *p)
 	return (r);
 }
 
-struct blk *exp(struct blk *base, struct blk *ex)
+struct blk *expr(struct blk *base, struct blk *ex)
 {
 	register struct blk *r, *e, *p;
 	struct blk *e1, *t, *cp;
@@ -1098,7 +1100,7 @@ void init(int argc, char *argv[])
 	basptr = salloc(1);
 	sputc(basptr, 10);
 	obase = 10;
-	log10 = log2(10L);
+	intlog10 = intlog2(10L);
 	ll = 70;
 	fw = 1;
 	fw1 = 0;
@@ -1431,7 +1433,7 @@ void print(struct blk *hptr)
 		return;
 	}
 	create(strptr);
-	dig = log10 * sc;
+	dig = intlog10 * sc;
 	dout = ((dig / 10) + dig) / logo;
 	dec = getdec(p, sc);
 	p = removc(p, sc);
@@ -1757,7 +1759,7 @@ struct blk *scale(struct blk *p, int n)
 	t = add0(p, n);
 	q = salloc(1);
 	sputc(q, n);
-	s = exp(inbas, q);
+	s = expr(inbas, q);
 	release(q);
 	q = div(t, s);
 	release(t);
@@ -1889,7 +1891,7 @@ void load(void)
 	return;
 }
 
-int log2(long n)
+int intlog2(long n)
 {
 	register int i;
 
@@ -2118,7 +2120,7 @@ void garbage(char *s)
 
 void redef(struct blk *p)
 {
-	register offset;
+	register int offset;
 	register char *newp;
 
 	if ((int) p->beg & 01) {

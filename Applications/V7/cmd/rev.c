@@ -12,7 +12,7 @@ FILE *input;
 
 int main(int argc, char *argv[])
 {
-	register i, c;
+	register int i, c;
 	input = stdin;
 	do {
 		if (argc > 1) {

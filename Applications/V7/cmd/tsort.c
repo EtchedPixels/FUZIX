@@ -79,7 +79,7 @@ int cmp(const char *s, const char *t)
 
 /*	turn a string into a node pointer
 */
-struct nodelist *index(const char *s)
+struct nodelist *stringindex(const char *s)
 {
 	register struct nodelist *i;
 	register const char *t;
@@ -163,8 +163,8 @@ int main(int argc, const char *argv[])
 			break;
 		if (x != 2)
 			error("odd data", empty);
-		i = index(precedes);
-		j = index(follows);
+		i = stringindex(precedes);
+		j = stringindex(follows);
 		if (i == j || present(i, j))
 			continue;
 		t = (struct predlist *) malloc(sizeof(struct predlist));

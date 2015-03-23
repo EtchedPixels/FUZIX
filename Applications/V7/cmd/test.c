@@ -30,14 +30,7 @@ void synbad(const char *s1, const char *s2)
 	exit(255);
 }
 
-int length(char *s)
-{
-	char *es = s;
-	while (*es++);
-	return (es - s - 1);
-}
-
-char *nxtarg(int mt)
+const char *nxtarg(int mt)
 {
 	if (ap >= ac) {
 		if (mt) {
@@ -49,7 +42,7 @@ char *nxtarg(int mt)
 	return (av[ap++]);
 }
 
-int tio(char *a, int f)
+int tio(const char *a, int f)
 {
 	/* FIXME: should use stat and parse permissions */
 	f = open(a, f);
@@ -60,7 +53,7 @@ int tio(char *a, int f)
 	return (0);
 }
 
-int ftype(char *f)
+int ftype(const char *f)
 {
 	struct stat statb;
 
@@ -71,7 +64,7 @@ int ftype(char *f)
 	return (FIL);
 }
 
-int fsizep(char *f)
+int fsizep(const char *f)
 {
 	struct stat statb;
 	if (stat(f, &statb) < 0)
@@ -83,15 +76,15 @@ int fsizep(char *f)
 int e3(void)
 {
 	int p1;
-	register char *a;
-	char *p2;
+	register const char *a;
+	const char *p2;
 	int int1, int2;
 
-	extern int exp(void);
+	extern int expr(void);
 
 	a = nxtarg(0);
 	if (EQ(a, "(")) {
-		p1 = exp();
+		p1 = expr();
 		if (!EQ(nxtarg(0), ")"))
 			synbad(") expected", "");
 		return (p1);
@@ -133,7 +126,7 @@ int e3(void)
 		return (!EQ(nxtarg(0), a));
 
 	if (EQ(a, "-l")) {
-		int1 = length(p2);
+		int1 = strlen(p2);
 		p2 = nxtarg(0);
 	} else {
 		int1 = atoi(a);
@@ -174,13 +167,13 @@ int e1(void)
 	return (p1);
 }
 
-int exp(void)
+int expr(void)
 {
 	int p1;
 
 	p1 = e1();
 	if (EQ(nxtarg(1), "-o"))
-		return (p1 | exp());
+		return (p1 | expr());
 	ap--;
 	return (p1);
 }
@@ -199,5 +192,5 @@ int main(int argc, const char *argv[])
 	argv[ac] = 0;
 	if (ac <= 1)
 		exit(1);
-	exit(exp()? 0 : 1);
+	exit(expr()? 0 : 1);
 }

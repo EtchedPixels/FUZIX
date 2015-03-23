@@ -134,7 +134,7 @@ loop:
 	return(c);
 }
 
-pgetc(int i)
+int pgetc(int i)
 {
 	register int c;
 
@@ -286,7 +286,7 @@ void mopen(char **ap)
 void print(char *fp, char **argp)
 {
 	struct stat sbuf;
-	register sncol;
+	register int sncol;
 	register const char *sheader;
 	register char *cbuf;
 	char linebuf[150], *cp;

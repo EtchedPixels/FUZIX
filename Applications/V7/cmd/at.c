@@ -64,7 +64,7 @@ void onintr(int sig)
 	exit(1);
 }
 
-char *prefix(char *begin, char *full)
+const char *prefix(const char *begin, const char *full)
 {
 	int c;
 	while (c = *begin++) {
@@ -78,10 +78,10 @@ char *prefix(char *begin, char *full)
 	return (full);
 }
 
-int makeutime(char *pp)
+int makeutime(const char *pp)
 {
 	register int val;
-	register char *p;
+	register const char *p;
 
 	/* p points to a user time */
 	p = pp;
@@ -168,7 +168,7 @@ int makeuday(int argc, const char *argv[])
 	/* first of all, what's today */
 	time_t tm;
 	int found = -1;
-	char **ps;
+	const char **ps;
 	struct tm *detail;
 	struct monstr *pt;
 
@@ -244,7 +244,7 @@ void filename(char *dir, int y, int d, int t)
 	}
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	register int c;
 	char pwbuf[100];

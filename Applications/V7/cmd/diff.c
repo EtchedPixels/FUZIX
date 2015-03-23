@@ -1,4 +1,4 @@
-/* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
+const /* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
 /* ANSIfied for FUZIX */
 
 /*	diff - differential file comparison
@@ -106,6 +106,7 @@ int status = 2;
 int anychange = 0;
 char *empty = "";
 int bflag;
+char buf[512];
 
 char *tempfile;			/*used when comparing against std input */
 char *dummy;			/*used in resetting storage search ptr */
@@ -121,7 +122,7 @@ void sdone(int sig)
 	done();
 }
 
-void mesg(char *s, char *t)
+void mesg(const char *s, const char *t)
 {
 	fprintf(stderr, "diff: %s%s\n", s, t);
 }
@@ -194,7 +195,7 @@ void unsort(struct line *f, int l, int *b)
 
 int skipline(int f)
 {
-	register i;
+	register int i;
 	for (i = 1; getc(input[f]) != '\n'; i++);
 	return (i);
 }
@@ -202,7 +203,6 @@ int skipline(int f)
 void filename(char **pa1, char **pa2)
 {
 	register char *a1, *b1, *a2;
-	char buf[512];
 	struct stat stbuf;
 	int i, f;
 	a1 = *pa1;
@@ -243,8 +243,8 @@ int readhash(FILE * f)
 {
 	long sum;
 	register unsigned shift;
-	register space;
-	register t;
+	register int space;
+	register int t;
 	sum = 1;
 	space = 0;
 	if (!bflag)
@@ -278,10 +278,10 @@ int readhash(FILE * f)
 	return ((short) low(sum) + (short) high(sum));
 }
 
-void prepare(int i, char *arg)
+void prepare(int i, const char *arg)
 {
 	register struct line *p;
-	register j, h;
+	register int j, h;
 	if ((input[i] = fopen(arg, "r")) == NULL) {
 		mesg("cannot open ", arg);
 		done();
@@ -299,7 +299,7 @@ void prepare(int i, char *arg)
 
 void prune(void)
 {
-	register i, j;
+	register int i, j;
 	for (pref = 0; pref < len[0] && pref < len[1] &&
 	     file[0][pref + 1].value == file[1][pref + 1].value; pref++);
 	for (suff = 0; suff < len[0] - pref && suff < len[1] - pref &&
@@ -426,7 +426,7 @@ int stone(int *a, int n, int *b, int *c)
 to confounding by hashing (which result in "jackpot")
 2.  collect random access indexes to the two files */
 
-void check(const char *argv[])
+void check(char *argv[])
 {
 	register int i, j;
 	int jackpot;
@@ -537,7 +537,7 @@ void change(int a, int b, int c, int d)
 		prints(".\n");
 }
 
-void output(const char *argv[])
+void output(char *argv[])
 {
 	int m;
 	register int i0, i1, j1;
@@ -575,10 +575,10 @@ void output(const char *argv[])
 		change(1, 0, 1, len[1]);
 }
 
-int main(int argc, const char *argv[])
+int main(int argc,  char *argv[])
 {
 	register int k;
-	const char **args;
+	char **args;
 
 	args = argv;
 	if (argc > 3 && *argv[1] == '-') {
@@ -596,7 +596,7 @@ int main(int argc, const char *argv[])
 				bflag = 1;
 				break;
 			case 'h':
-				execv("/usr/lib/diffh", args);
+				execv("/usr/lib/diffh", (const char**)args);
 				mesg("cannot find diffh", empty);
 				done();
 			}

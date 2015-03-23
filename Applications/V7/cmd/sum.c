@@ -10,7 +10,7 @@
 int main(int argc, const char *argv[])
 {
 	register unsigned sum;
-	register i, c;
+	register int i, c;
 	register FILE *f;
 	register long nbytes;
 	int errflg = 0;
@@ -39,8 +39,9 @@ int main(int argc, const char *argv[])
 		}
 		if (ferror(f)) {
 			errflg++;
+			/* BUG: cast here is to work around a cc65 bug */
 			fprintf(stderr, "sum: read error on %s\n",
-				argc > 1 ? argv[i] : "-");
+				argc > 1 ? argv[i] : (const char*)"-");
 		}
 		printf("%05u%6ld", sum, (nbytes + BUFSIZ - 1) / BUFSIZ);
 		if (argc > 2)

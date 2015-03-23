@@ -28,6 +28,8 @@ void setup(char *pw)
 	long seed;
 
 	strncpy(buf, pw, 8);
+	/* Overwrites the argv array so that the password doesn't show up in the
+	 * process listing. */
 	while (*pw)
 		*pw++ = '\0';
 	buf[8] = buf[0];
@@ -72,7 +74,7 @@ void setup(char *pw)
 		t2[t1[i]&MASK] = i;
 }
 
-int main(int argc, const char *argv[])
+int main(int argc, char *argv[])
 {
 	int i, n1, n2;
 
