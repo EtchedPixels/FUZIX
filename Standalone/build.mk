@@ -170,6 +170,41 @@ fs_files = \
 	/bin/uud                0755 $(OBJ)/Applications/util/uud.exe \
 	/bin/ssh                0755 $(OBJ)/Applications/util/ssh.exe \
 	/bin/ed                 0755 $(OBJ)/Applications/util/ed.exe \
+	/bin/arithmetic         0755 $(OBJ)/Applications/V7/games/arithmetic.exe \
+    /usr/games/backgammon   0755 $(OBJ)/Applications/V7/games/backgammon.exe \
+    /usr/games/fish         0755 $(OBJ)/Applications/V7/games/fish.exe \
+    /usr/games/wump         0755 $(OBJ)/Applications/V7/games/wump.exe \
+    /bin/ac                 0755 $(OBJ)/Applications/V7/cmd/ac.exe \
+    /bin/at                 0755 $(OBJ)/Applications/V7/cmd/at.exe \
+    /bin/atrun              0755 $(OBJ)/Applications/V7/cmd/atrun.exe \
+    /bin/col                0755 $(OBJ)/Applications/V7/cmd/col.exe \
+    /bin/comm               0755 $(OBJ)/Applications/V7/cmd/comm.exe \
+    /bin/cron               0755 $(OBJ)/Applications/V7/cmd/cron.exe \
+    /bin/crypt              0755 $(OBJ)/Applications/V7/cmd/crypt.exe \
+    /bin/dc                 0755 $(OBJ)/Applications/V7/cmd/dc.exe \
+    /bin/dd                 0755 $(OBJ)/Applications/V7/cmd/dd.exe \
+    /bin/deroff             0755 $(OBJ)/Applications/V7/cmd/deroff.exe \
+    /bin/diff3              0755 $(OBJ)/Applications/V7/cmd/diff3.exe \
+    /bin/diff               0755 $(OBJ)/Applications/V7/cmd/diff.exe \
+    /bin/diffh              0755 $(OBJ)/Applications/V7/cmd/diffh.exe \
+    /bin/join               0755 $(OBJ)/Applications/V7/cmd/join.exe \
+    /bin/look               0755 $(OBJ)/Applications/V7/cmd/look.exe \
+    /bin/makekey            0755 $(OBJ)/Applications/V7/cmd/makekey.exe \
+    /bin/mesg               0755 $(OBJ)/Applications/V7/cmd/mesg.exe \
+    /bin/newgrp             0755 $(OBJ)/Applications/V7/cmd/newgrp.exe \
+    /bin/pr                 0755 $(OBJ)/Applications/V7/cmd/pr.exe \
+    /bin/ptx                0755 $(OBJ)/Applications/V7/cmd/ptx.exe \
+    /bin/rev                0755 $(OBJ)/Applications/V7/cmd/rev.exe \
+    /bin/split              0755 $(OBJ)/Applications/V7/cmd/split.exe \
+    /bin/su                 0755 $(OBJ)/Applications/V7/cmd/su.exe \
+    /bin/sum                0755 $(OBJ)/Applications/V7/cmd/sum.exe \
+    /bin/test               0755 $(OBJ)/Applications/V7/cmd/test.exe \
+    /bin/time               0755 $(OBJ)/Applications/V7/cmd/time.exe \
+    /bin/tsort              0755 $(OBJ)/Applications/V7/cmd/tsort.exe \
+    /bin/wall               0755 $(OBJ)/Applications/V7/cmd/wall.exe \
+
+# These don't work yet. \
+    /bin/accton             0755 $(OBJ)/Applications/V7/cmd/accton.exe \
 
 # These are bigger than average.
 ifneq ($(WANT_LARGE_APPLICATIONS),n)
