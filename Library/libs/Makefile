@@ -3,7 +3,7 @@ ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
 # This gets set for 'awkward' devices like ZX128
-PLATFORM = -zx128
+#PLATFORM = -zx128
 #PLATFORM =
 export PLATFORM
 #CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
@@ -44,7 +44,7 @@ SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
 SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
 SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
-SRC_C += isxdigit.c
+SRC_C += isxdigit.c toupper.c tolower.c
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
