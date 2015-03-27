@@ -127,8 +127,8 @@ ptptr swapneeded(ptptr p, int notself)
 
 /*
  *	Called from switchin when we discover that we want to run
- *	a swapped process. As all our processes are the same size
- *	for now this remains fairly simple.
+ *	a swapped process. We let pagemap_alloc cause any needed swap
+ *	out of idle processes.
  */
 void swapper(ptptr p)
 {
