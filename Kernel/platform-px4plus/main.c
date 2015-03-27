@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devfd.h>
 
 uint16_t ramtop = PROGTOP;
 
@@ -26,8 +27,39 @@ void platform_interrupt(void)
   timer_interrupt();
 }
 
-/* Nothing to do for the map of init */
+extern uint8_t map_translate[MAX_MAPS];
+
+/* Add map numbers. These are logical mappings one of which is the current
+   memory image and the others indexes into the sidecar or cartridge memory.
+
+   Put map #1 last as it means "in memory" and we want it for init */
+
+void pagemap_init(void)
+{
+	uint8_t n = procmem / 32;
+	uint8_t *p = map_translate;
+	uint8_t nv = 0xFF;
+	uint8_t ct;
+	uint8_t i;
+
+	if (!sidecar && carttype != 2)
+	 panic("No suitable memory extension");
+	n /= 32;
+	/* Handle sidecar memory */
+	if (sidecar) {
+		nv = n - 4;	/* Number of non sidecar blocks (including in RAM) */
+		ct = 0x83;	/* 0x80-0x83 are sidecar maps */
+	} else
+		ct = n;		/* 1..n are cartridge (1 = in memory) */
+
+	for (i = n; i > 0; i--) {
+		if (i == nv)
+			ct = nv;
+		*p++ = ct--;
+		pagemap_add(i);
+	}
+}
+
 void map_init(void)
 {
 }
-

@@ -3,44 +3,42 @@ A FUZIX target for the PX4plus (and PX4 with 128K RAM disc)
 Just playing to see if we can make it fit.
 
 The PX4Plus has 64K of RAM, and can overlay 6000-DFFF with one of two
-different ROMpacks (usually 'basic' and 'utility'). We build the kernel
-at 0x6000 but for now plonk it into RAM so we can debug it. The small 8K
-top window is awkward as we need to get udata and our kernel data/common in
-that space if possible. We can hide the font/video below that under the top of
-the ROM however.
+different ROMpacks (usually 'basic' and 'utility'). Our kernel is a two
+ROM set of 'P' type ROMs that can be plugged into the ROMpack sockets to
+give a resident CP/M app that can be run as "B:FUZIX"
+
 
 Banked Memory Map
 -----------------
 
 0x0000-0x00FF		Vectors (which IM ? PX8 is IM2)
-0x0100-0x5FFF		Kernel mappings
+0x0100-0x01FF		Needed by resident OS (or could rewrite bits and
+			save them)
+0x0200-0x5FFF		Kernel mappings
 0x6000-0xDFFF		Switched segments 8/16/32K ROM x 2 or RAM
 	0x6000-0xDFFF	Application space (32K) [need to use a bit under
 			as 120K not 128K of swap]
-	0x6000-0xDFFF	CODE1/CODE2 } Both with copies of some of common
-	0x6000-0xDFFF	CODE3/Video } and rodata at same address range
-	[ Do we want to generate interleaved banking ? ]
+	0x6000-0xDFFF	CODE1/CODE2
+	0x6000-0xDFFF	CODE3/Video/FONT
+	[ Do we want to generate interleaved banking or stubs in all banks ? ]
+	[ Could also save space by putting CONST at the top of both ROM
+	  images ? ]
 
-0xE000-0xFCFF		Writable kernel data
-			Framebuffer (4K)
-0xFD00-0xFFFF		UDATA
+0xE000-0xFBFF		Currently unused
+0xFC00-0xFFFF		Framebuffer (2K)
 
-We also need to put a catalogue in the middle of one of the two ROM blocks
-annoyingly. However that plays into our hands in other ways as we can
-minimally fake a disk rom holding a CP/M app which in fact runs the OS.
+We need to keep EF28 clear so we can set it to 1 for resident mode warm
+start when we do suspend/resume.
 
+Applications are switched to/from the 128K side car or built in 128K ramdisc
+on the plus. Alternatively they can be switched to/from the 32K or 64K
+cartridge module on the PX4 (or in theory both).
 
-Applications are swapped to/from the PX4Plus RAM disc (120K) allowing about
-4 apps of just under 32K each. Storage I/O is via the serial floppy and/or
-optional RAM/ROM cartriges. External 128K cartridges would also work for
-swap with floppy for OS. If the swap is custom handled in switching then
-we can switch the 32K rather than copy and gain another process, plus real
-floppy swap option.
-
-CP/M BIOS can be used (it's another 32K map over 0-7FFF, but as that maps
-over the vectors we must ensure its always called with interrupts off).
+Storage I/O is via the serial floppy and/or optional ROM cartriges. The
+floppy interface will also be usable for swap (once it works)
 
 The PX-8 is different: There is only a single 32K system ROM, but no video
 overhead. In theory its sufficient if we are replacing the OS ROM, and using
 the intelligent RAM disc, or the homebrew 512K one, plus floppies
 
+The PX4 has a parallel port, can we run an SD card off it ?

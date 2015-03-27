@@ -19,6 +19,12 @@
 	.globl _swapper
 	.globl _swapout
 
+	.globl _map_translate
+	.globl _map_live
+	.globl _sidecar_copy
+	.globl _cartridge_copy
+	.globl _make_mapped
+
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
@@ -89,25 +95,24 @@ _switchin:
 	add hl, de	; process ptr
 	pop de
 
-        ld a, (hl)
+	;
+	;	Always use the swapstack, otherwise when we call map_kernel
+	;	having copied the udata stash back to udata we will crap
+	;	somewhere up the stackframe and it's then down to luck
+	;	if those bytes are discarded or not.
+	;
+	;	Yes - this was a bitch to debug, please don't break it !
+	;
+	ld sp, #_swapstack
 
+        ld a, (hl)
 	or a
 	jr nz, not_swapped
 
 	;
-	;	We are still on the departing processes stack, which is
-	;	fine for now.
+	;	Let the swapper run
 	;
-	ld sp, #_swapstack
 	push hl
-	; We will always swap out the current process
-	ld hl, (U_DATA__U_PTAB)
-	push hl
-	push af
-	call _swapout
-	pop af
-	pop hl
-	pop hl
 	push de
 	push af
 	call _swapper
@@ -116,8 +121,17 @@ _switchin:
 	pop hl
 	ld a, (hl)
 
-not_swapped:        
+not_swapped:
+	;
+	; 	On the PX4 this is only half the game. The process we want
+	;	is probably stuffed into the sidecar or cartridge
+	;
+	;	Make bank A mapped bank. Preserves DE, trashes AF,BC,HL
+	;
+	call _make_mapped
+	;
         ; check u_data->u_ptab matches what we wanted
+	;
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE==IX
@@ -201,15 +215,26 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ld hl, (U_DATA__U_PTAB)
-	push hl
-	push af
-	call _swapout
-	pop af
-	pop hl
-
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
+        ; --------- copy process ---------
+
+        ld hl, (fork_proc_ptr)
+        ld de, #P_TAB__P_PAGE_OFFSET
+        add hl, de
+        ; load p_page
+        ld c, (hl)
+	; load existing page ptr
+	push af
+	ld a, c
+	call outcharhex
+	pop af
+	ld a, (U_DATA__U_PAGE)
+
+	call bankfork			;	do the bank to bank copy
+
+	; Fix up stack
+
         pop bc
         pop bc
         pop bc
@@ -231,6 +256,43 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
+
+;
+;	A is the parent C is the child bank. Both of these are of course
+;	logical banks. The logical bank of A right now is 1 (in memory),
+;	but this will all change
+;
+;	We do a copy to the I/O mapped sidecar or cartridge rather than the
+;	usual LDIR. We also update our logical mapping table as we
+;	effectively swapped ram between parent and child.
+;
+bankfork:
+	push af
+	ld b, #0
+	ld hl, #_map_translate
+	add hl, bc
+	push hl
+	ld a, (hl)
+	bit 7, a
+	jr nz, copy_to_sidecar
+	;
+	; Forking to cartridge
+	;
+	call _cartridge_copy
+	jr bankcopy_done
+copy_to_sidecar:
+	call _sidecar_copy
+bankcopy_done:
+	pop hl		; child translation entry
+	ld a, (hl)	; entry that was allocated
+	ld (hl), #1	; child is now main memory
+	ld de, (_map_live)	; parent entry
+	ld (de), a		; parent now gets "new" entry as child has
+				; the RAM
+	ld (_map_live), hl	; live task map
+	ld b, #0
+	pop af
+	ret
 ;
 ;	We can keep a stack in common because we will complete our
 ;	use of it before we switch common block. In this case we have

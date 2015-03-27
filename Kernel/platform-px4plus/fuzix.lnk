@@ -1,6 +1,6 @@
 -mwxuy
 -i fuzix.ihx
--b _COMMONMEM=0x0100
+-b _COMMONMEM=0x0200
 -b _UDATA=0x5D00
 -b _DISCARD=0x4000
 -b _CODE=0x6000
@@ -14,11 +14,15 @@ platform-px4plus/main.rel
 start.rel
 version.rel
 lowlevel-z80-banked.rel
+usermem_std-z80-banked.rel
 platform-px4plus/tricks.rel
+platform-px4plus/swapdev.rel
 timer.rel
 kdata.rel
 usermem.rel
 platform-px4plus/devfd.rel
+platform-px4plus/romdisc.rel
+platform-px4plus/sio.rel
 platform-px4plus/devices.rel
 devio.rel
 filesys.rel
@@ -31,7 +35,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
-simple.rel
+bankfixed.rel
 swap.rel
 devsys.rel
 platform-px4plus/devlpr.rel

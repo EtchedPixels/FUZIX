@@ -14,14 +14,12 @@
 #define CONFIG_FONT8X8
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
-/* Fixed banking */
-#undef CONFIG_BANK_FIXED
+/* Fixed banking (although we must do magic in tricks.s to fake banking */
+#define CONFIG_BANK_FIXED
+#define MAX_MAPS	7
+#define MAP_SIZE	0x8000
 /* Swap only */
-#define CONFIG_SWAP_ONLY
-/* Simple user copies for now (change when ROM the kernel) */
-#define CONFIG_USERMEM_C
-#define BANK_KERNEL
-#define BANK_PROCESS
+#undef CONFIG_SWAP_ONLY
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
@@ -35,10 +33,10 @@
 
 /* FIXME: treat the banks of the ramdisc as memory not swap, also trim
    to 30K as only have 120K of RAMdisc */
-#define SWAP_SIZE   0x3C 	/* 30K in blocks (with uarea means 29.25K max app size) */
+#define SWAP_SIZE   0x40 	/* 32K in blocks (with uarea means 31.25K max app size) */
 #define SWAPBASE    (uint8_t *)0x5D00	/* We swap the lot in one, include the */
 #define SWAPTOP	    (uint8_t *)0xDD00	/* vectors so its a round number of sectors */
-#define MAX_SWAPS	4	/* We have a whopping 120K of RAMDISC! */
+#define MAX_SWAPS	4	/* We have a whopping 128K of RAMDISC! */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */

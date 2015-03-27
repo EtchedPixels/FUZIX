@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c
+CSRCS = devlpr.c devtty.c devfd.c sio.c
 CSRCS += devices.c
 
 CCSRCS = main.c
@@ -7,7 +7,7 @@ CCSRCS = main.c
 CDSRCS = init.c
 
 ASRCS = crt0.s px4plus.s video.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s swapdev.s romdisc.s
 
 COBJS = $(CSRCS:.c=.rel)
 CCOBJS = $(CCSRCS:.c=.rel)

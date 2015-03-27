@@ -1,14 +1,6 @@
 ;
-;	Z80Pack hardware support
+;	PX4 Plus hardware support
 ;
-;
-;	This goes straight after udata for common. Because of that the first
-;	256 bytes get swapped to and from disk with the uarea (512 byte disk
-;	blocks). This isn't a problem but don't put any variables in here.
-;
-;	If you make this module any shorter, check what follows next
-;
-
 
             .module px4plus
 
@@ -22,7 +14,11 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_process_save
+	    .globl map_kernel_restore
 	    .globl _kernel_flag
+	    .globl _sidecar
+	    .globl _carttype
 
 	    .globl platform_interrupt_all
 
@@ -34,39 +30,31 @@
             .globl _ramsize
             .globl _procmem
 	    .globl _vtinit
+	    .globl _cartridge_size
 
 	    .globl unix_syscall_entry
             .globl null_handler
 	    .globl nmi_handler
             .globl interrupt_handler
 
-	    ; RAM drive
-	    .globl _hd_xferin
-	    .globl _hd_xferout
-	    .globl _ramd_off
-	    .globl _ramd_size
-	    .globl _ramd_uaddr
+	    ; ROM interfaces
+	    .globl _rom_sidecar_read
+	    .globl _rom_cartridge_read
+	    .globl _romd_off
+	    .globl _romd_size
+	    .globl _romd_addr
+	    .globl _romd_mode
 
 
 	    .globl __bank_0_1
-	    .globl __bank_0_2
 	    .globl __bank_0_3
-	    .globl __bank_1_2
 	    .globl __bank_1_3
-	    .globl __bank_2_1
-	    .globl __bank_2_3
 	    .globl __bank_3_1
-	    .globl __bank_3_2
 
 	    .globl __stub_0_1
-	    .globl __stub_0_2
 	    .globl __stub_0_3
-	    .globl __stub_1_2
 	    .globl __stub_1_3
-	    .globl __stub_2_1
-	    .globl __stub_2_3
 	    .globl __stub_3_1
-	    .globl __stub_3_2
 
 
             .include "kernel.def"
@@ -86,10 +74,26 @@ platform_interrupt_all:
 	    ret
 
 ;
-;	FIXME: this probably needs to be a new "commondata" area
+;	FIXME: this probably needs to be a new "commondata" area so we can
 ;
 _kernel_flag:
 	    .db 1
+kernel_map:			; Last kernel map we were using
+	    .db 0xA2
+saved_map:			; Saved mapping for IRQ entry/exit
+	    .db 0
+_sidecar:
+	    .db 0
+_carttype:
+	    .db 0
+_romd_off:
+	    .dw 0
+_romd_size:
+	    .dw 0
+_romd_addr:
+	    .dw 0
+_romd_mode:
+	    .db 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
@@ -97,14 +101,40 @@ _kernel_flag:
             .area _CODE
 
 init_early:
+	    ld a, (0xF53F)		; BIOS cartridge type
+	    ld (_carttype), a
             ret
 
 init_hardware:
             ; set system RAM size
-	    ; Not strictly correct FIXME: set right when ROM the image
+	    ; We have 64K RAM + 64K ROM to immediate hand, but we should
+	    ; try and include the "swap" like RAM here to give a sensible
+	    ; number, as we won't treat it as disk
             ld hl, #64
+	    in a, (0x94)
+	    add a
+	    jr nc, notplus
+	    ld hl, #192			; Sidecar always has 128K on the PX4
+					; PX8 version is 120K if we ever do
+					; PX8
+	    ld a, #1
+	    ld (_sidecar), a		; Sidecar present
+notplus:    ; Not a PX4plus or PX4 with sidecar
+	    ; See if we have a RAM cartridge fitted
+	    ld a, (_carttype)
+	    cp #2
+	    jr nz, noramcart
+	    push hl
+	    push af
+	    call _cartridge_size
+	    pop af
+	    pop de
+	    add hl, de
+noramcart:
             ld (_ramsize), hl
-            ld hl, #32			; 32K for kernel
+	    or a
+            ld de, #32			; 32K for kernel
+	    sbc hl, de
             ld (_procmem), hl
 
             ; set up interrupt vectors for the kernel
@@ -169,14 +199,40 @@ _program_vectors:
 
 	    ; falls through
 
-	    ; Map functions are trivial for now
-	    ; FIXME: will need to play with BANKR once we ROM the image
 map_kernel: 
+map_kernel_restore:
+	    push af
+	    ld a, (kernel_map)
+	    out (0x05), a
+	    pop af
+	    ret
 map_process:
+	    ld a, h
+	    or l
+	    jr z, map_kernel
 map_process_always:
+map_process_save:
+	    push af
+	    in a,(0x05)
+	    cp #0x42			; Already in user map
+	    jr z, reto
+	    ld (kernel_map), a
+            ld a, #0x42			; user map (ROMs out)
+	    out (0x05), a
+reto:
+	    pop af
+	    ret
+
 map_save:
+	    in a, (0x05)
+	    ld (saved_map), a
+	    ret
 map_restore:
-	    ret	    
+	    ld a, (saved_map)
+	    and #0xF0
+	    or #0x02
+	    out (0x05), a
+	    ret
 
 ; outchar: Wait for UART TX idle, then print the char in A
 outchar:
@@ -189,101 +245,20 @@ outcharw:
 	    out (0x14), a	 
             ret
 
-;
-;	RAM disc
-;
-_hd_xferin:
-;
-;	Load the full 24 bit address to start
-;
-	xor a		;	 always aligned
-	out (0x90), a
-	ld hl, #_ramd_off + 1
-	ld de, (_ramd_size)
-hd_xiloop:
-	ld a, (hl)
-	out (0x91), a
-	inc hl
-	ld a, (hl)
-	out (0x92), a
-	ld bc, #0x93
-;
-;	With a 256 byte block it autoincrements
-;
-	ld hl, (_ramd_uaddr)
-	inir
-	dec d
-	ret z
-;
-;	Move on a block
-;
-	ld (_ramd_uaddr), hl
-	ld hl, #_ramd_off + 1
-	inc (hl)
-	jr nz, hd_xiloop
-	inc hl
-	inc (hl)
-	dec hl
-	jr hd_xiloop
 
-_hd_xferout:
-;
-;	Load the full 24 bit address to start
-;
-	xor a		;	 always aligned
-	out (0x90), a
-	ld hl, #_ramd_off + 1
-	ld de, (_ramd_size)
-hd_xoloop:
-	ld a, (hl)
-	out (0x91), a
-	inc hl
-	ld a, (hl)
-	out (0x92), a
-	ld bc, #0x93
-;
-;	With a 256 byte block it autoincrements
-;
-	ld hl, (_ramd_uaddr)
-	otir
-	dec d
-	ret z
-;
-;	Move on a block
-;
-	ld (_ramd_uaddr), hl
-	ld hl, #_ramd_off + 1
-	inc (hl)
-	jr nz, hd_xoloop
-	inc hl
-	inc (hl)
-	dec hl
-	jr hd_xiloop
-
-
-;
-;	FIXME
-current_map:
-	.byte 0
-switch_bank:
-	ret
 ;
 ;
 ;	Banking helpers
 ;
-;	FIXME: these are from zx128 - not yet converted to px4plus. We
-; should also be able to dump all to/from bank2 versions
-;
-;
 ;	Logical		Physical
-;	0		COMMON (0x4000)
-;	1		0
-;	2		1
-;	3		7
+;	0		COMMON
+;	1		ROM1
+;	2		*unused*
+;	3		ROM2
 ;
 ;
 __bank_0_1:
-	xor a		   ; switch to physical bank 0 (logical 1)
+	ld a, #0xA2	   ; switch to 32K ROM 1
 bankina0:
 	;
 	;	Get the target address first, otherwise we will change
@@ -295,158 +270,98 @@ bankina0:
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
-	ld bc, (current_map)	; get current bank into B
-	call switch_bank   ; Move to new bank
+	ld c, #0x05
+	in b, (c)
+	out (c), a
 	; figure out which bank to map on the return path
-	ld a, c
-	or a
+	ld a, #0xA2
+	cp b
 	jr z, __retmap1
-	dec a
-	jr z, __retmap2
 	jr __retmap3
 
 callhl:	jp (hl)
-__bank_0_2:
-	ld a, #1	   ; logical 2 -> physical 1
-	jr bankina0
+
 __bank_0_3:
-	ld a, #7	   ; logical 3 -> physical 7
+	ld a, #0xE2	   ; 32K ROM 2
 	jr bankina0
 
-__bank_1_2:
-	ld a, #1
-bankina1:
+__bank_1_3:
+	ld a, #0xE2	   ; 32K ROM 2
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
-	call switch_bank   ; Move to new bank
+	out (0x05), a
 __retmap1:
 	ex de, hl
 	call callhl	   ; call the function
-	xor a		   ; return to bank 1 (physical 0)
-	jp switch_bank
+	ld a,#0xA2	   ; return to ROM1
+	out (0x05), a
+	ret
 
-__bank_1_3:
-	ld a, #7
-	jr bankina1
-__bank_2_1:
-	xor a
-bankina2:
-	pop hl		   ; Return address (points to true function address)
-	ld e, (hl)	   ; DE = function to call
-	inc hl
-	ld d, (hl)
-	inc hl
-	push hl		   ; Restore corrected return pointer
-	call switch_bank   ; Move to new bank
-__retmap2:
-	ex de, hl
-	call callhl	   ; call the function
-	ld a, #1	   ; return to bank 2
-	jp switch_bank
-__bank_2_3:
-	ld a, #7
-	jr bankina2
 __bank_3_1:
-	xor a
-bankina3:
+	ld a,#0xA2	   ; 32K ROM 1
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
 	inc hl
 	ld d, (hl)
 	inc hl
 	push hl		   ; Restore corrected return pointer
-	call switch_bank   ; Move to new bank
+	out (0x05), a
 __retmap3:
 	ex de, hl
 	call callhl	   ; call the function
-	ld a, #7	   ; return to bank 0
-	jp switch_bank
-
-__bank_3_2:
-	ld a, #1
-	jr bankina3
+	ld a, #0xE2	   ; return to ROM 2
+	out (0x05), a
+	ret
 
 ;
 ;	Stubs need some stack munging and use DE
 ;
-
 __stub_0_1:
-	xor a
+	ld a, #0xA2
 __stub_0_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discard
-	ld bc, (current_map)
-	call switch_bank
-	ld a, c
-	or a
+	ld c, #0x05
+	in b, (c)
+	out (c), a
+	ld a, #0xA2
+	cp b
 	jr z, __stub_1_ret
-	dec a
-	jr z, __stub_2_ret
 	jr __stub_3_ret
-__stub_0_2:
-	ld a, #1
-	jr __stub_0_a
 __stub_0_3:
-	ld a, #7
+	ld a, #0xE2
 	jr __stub_0_a
 
-__stub_1_2:
-	ld a, #1
-__stub_1_a:
+__stub_1_3:
+	ld a, #0xE2
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
-	call switch_bank
+	out (0x05), a
 __stub_1_ret:
 	ex de, hl
 	call callhl
-	xor a
-	call switch_bank
+	ld a, #0xA2
+	out (0x05), a
 	pop de
 	push de		; dummy the caller will discard
 	push de
 	ret
-__stub_1_3:
-	ld a, #7
-	jr __stub_1_a
-
-__stub_2_1:
-	xor a
-__stub_2_a:
-	pop hl		; the return
-	ex (sp), hl	; write it over the discad
-	call switch_bank
-__stub_2_ret:
-	ex de, hl	; DE is our target
-	call callhl
-	ld a,#1
-	call switch_bank
-	pop de
-	push de		; dummy the caller will discard
-	push de
-	ret
-__stub_2_3:
-	ld a, #7
-	jr __stub_2_a
 
 __stub_3_1:
-	xor a
-__stub_3_a:
+	ld a, #0xA2
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
-	call switch_bank
+	out (0x05), a
 __stub_3_ret:
 	ex de, hl
 	call callhl
-	ld a,#7
-	call switch_bank
+	ld a,#0xE2
+	out (0x05), a
 	pop de
 	push de		; dummy the caller will discard
 	push de
 	ret
-__stub_3_2:
-	ld a, #1
-	jr __stub_3_a
