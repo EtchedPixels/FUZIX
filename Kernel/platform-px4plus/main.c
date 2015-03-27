@@ -28,6 +28,7 @@ void platform_interrupt(void)
 }
 
 extern uint8_t map_translate[MAX_MAPS];
+extern uint8_t *map_live;
 
 /* Add map numbers. These are logical mappings one of which is the current
    memory image and the others indexes into the sidecar or cartridge memory.
@@ -58,6 +59,7 @@ void pagemap_init(void)
 		*p++ = ct--;
 		pagemap_add(i);
 	}
+	map_live = p - 1;	/* We add RAM last */
 }
 
 void map_init(void)

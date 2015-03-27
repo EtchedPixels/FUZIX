@@ -109,7 +109,15 @@ int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
                 /* We need a special I/O helper for swapping out as we may
                    be swapping memory from an I/O mapped ram device to
                    the floppy disc */
-                read_from_bank(page, dptr, buf + 0x09, 128);
+                if (rawflag == 0)
+                    memcpy(buf + 0x09, (uint8_t *)dptr, 128);
+                else {
+                    romd_off = dptr;
+                    romd_addr = (uint16_t)buf + 0x09;
+                    romd_size = 128;
+                    romd_mode = page;
+                    read_from_bank();
+                }
                 sio_write(buf, 0x89);
                 err = sio_read(buf, 0x06);
                 if (!err)

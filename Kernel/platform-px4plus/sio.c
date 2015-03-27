@@ -24,6 +24,13 @@ void deselect_sio(int old)
 __sfr __at 0x14 artwr;
 __sfr __at 0x15 artsr;
 
+/*
+ *	FIXME:
+ *	For these functions we need to switch to a different very fast IRQ
+ *	handler which simply counts timer ticks, then when we finish the
+ *	sio transfers we can run all the missed timer handling.
+ */
+
 void sio_write(uint8_t *buf, int len)
 {
   while(len--) {

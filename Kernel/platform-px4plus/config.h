@@ -16,7 +16,7 @@
 #undef CONFIG_CPM_EMU
 /* Fixed banking (although we must do magic in tricks.s to fake banking */
 #define CONFIG_BANK_FIXED
-#define MAX_MAPS	7
+#define MAX_MAPS	7		/* also appears in kernel.def */
 #define MAP_SIZE	0x8000
 /* Swap only */
 #undef CONFIG_SWAP_ONLY
@@ -48,7 +48,7 @@
 #define NUM_DEV_TTY 2
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  (256 + 0)  /* Device for swapping. (ram drive) */
+#define SWAPDEV  (1)	  /* Device for swapping. (second floppy) */
 #define NBUFS    6        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
@@ -57,5 +57,3 @@
 #define VT_RIGHT	29
 #define VT_BOTTOM	7
 
-
-#define PFTABSIZE	5	/* All we have room for right now */
