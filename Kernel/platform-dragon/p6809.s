@@ -114,7 +114,7 @@ init_hardware:
 _program_vectors:
 	    pshs cc
 	    orcc #0x10
-	    lda #0x0E
+	    lda #0x7E
 	    sta 0		; NULL pointer trap
 ; FIXME: add a target address for NULL execution
 	    ldd #0xFFD5

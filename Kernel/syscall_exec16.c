@@ -66,7 +66,7 @@ char *envp[];
 
 	0xC3 xx xx	- Z80 with 0x100 entry
 	0x4C xx xx	- 6502
-	0x0E xx xx	- 6809
+	0x7E xx xx	- 6809
 
    followed by a base page for the executable
 

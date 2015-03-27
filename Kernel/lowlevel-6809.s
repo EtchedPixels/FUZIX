@@ -265,10 +265,10 @@ interrupt_handler:
 	    bne in_kernel
 
             ; we're not in kernel mode, check for signals and fault
-            cmpa #0x0E		; JMP at 0
+            cmpa #0x7E		; JMP at 0
 	    beq nofault
 	    jsr map_process_always ; map the process
-	    lda #0x0E		; put it back
+	    lda #0x7E		; put it back
 	    sta 0		; write
 	    jsr map_kernel	; restore the map
 	    ldx #11		; SIGSEGV

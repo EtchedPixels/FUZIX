@@ -18,7 +18,7 @@ extern void ei(void);
 extern irqflags_t di(void);
 extern void irqrestore(irqflags_t f);
 
-#define EMAGIC    0x0E    /* Header of executable  (JMP) */
+#define EMAGIC    0x7E    /* Header of executable  (JMP) */
 #define EMAGIC_2  0x20    /* BRA */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
