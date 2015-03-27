@@ -58,8 +58,10 @@ int main(int argc, char **argv)
     bcopy(buf, (char *) &superblock, sizeof(struct filesys));
 
     /* Verify the fsize and isize parameters */
-    if (superblock.s_mounted == SMOUNTED_WRONGENDIAN)
+    if (superblock.s_mounted == SMOUNTED_WRONGENDIAN) {
         swizzling = 1;
+        printf("Detected endianness inverse of host\n");
+    }
 
     if (swizzle16(superblock.s_mounted) != SMOUNTED) {
         printf("Device %d has invalid magic number %d. Fix? ", dev, superblock.s_mounted);
