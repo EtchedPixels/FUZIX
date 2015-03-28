@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     /* Verify the fsize and isize parameters */
     if (superblock.s_mounted == SMOUNTED_WRONGENDIAN) {
         swizzling = 1;
-        printf("Detected endianness inverse of host\n");
+        printf("Checking file system with reversed byte order.\n");
     }
 
     if (swizzle16(superblock.s_mounted) != SMOUNTED) {
