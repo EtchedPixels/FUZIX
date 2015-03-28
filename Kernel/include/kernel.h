@@ -217,7 +217,7 @@ typedef struct direct {
  */
 #define FILESYS_TABSIZE 50
 typedef struct filesys { // note: exists in mem and on disk
-    int16_t       s_mounted;
+    uint16_t       s_mounted;
     uint16_t      s_isize;
     uint16_t      s_fsize;
     uint16_t      s_nfree;

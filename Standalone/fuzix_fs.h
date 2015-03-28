@@ -134,7 +134,7 @@ typedef struct cinode {
 } cinode, *inoptr;
 
 typedef struct filesys {
-    int16_t       s_mounted;
+    uint16_t      s_mounted;
     uint16_t      s_isize;
     uint16_t      s_fsize;
     int16_t       s_nfree;
