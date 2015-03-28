@@ -21,6 +21,8 @@
 	    .globl _carttype
 
 	    .globl platform_interrupt_all
+	    .globl interrupt_fast
+	    .globl _sio_count
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -106,6 +108,13 @@ init_early:
             ret
 
 init_hardware:
+	    ; FIXME: set video base and display properties first
+	    ld a, #VIDBAEE
+	    out (0x08), a		; Video at 0xF800
+	    ; Reset hardware scrolling
+	    ld a, #0x80			; On, Y offset 0
+	    out (0x09), a
+
             ; set system RAM size
 	    ; We have 64K RAM + 64K ROM to immediate hand, but we should
 	    ; try and include the "swap" like RAM here to give a sensible
@@ -137,35 +146,7 @@ noramcart:
 	    sbc hl, de
             ld (_procmem), hl
 
-            ; set up interrupt vectors for the kernel
-            ld hl, #0
-            push hl
-	    push af
-            call _program_vectors
-	    pop af
-            pop hl
-
-	    ; IRQ enables
-	    ld a, #0xB		; OVF (timer), RXRDY (gapnio), 7508
-	    out (0x04), a
-
-	    push af
-	    call _vtinit
-	    pop af
-            im 1 ; set CPU interrupt mode
-            ret
-
-
-;------------------------------------------------------------------------------
-; COMMON MEMORY PROCEDURES FOLLOW
-
-            .area _COMMONMEM
-
-
-_program_vectors:
-            ; we are called, with interrupts disabled, by both newproc() and crt0
-	    ; will exit with interrupts off
-
+	    ; We don't bank 0x00-0xFF so we can do the vectors once at boot
             ; write zeroes across all vectors
             ld hl, #0
             ld de, #1
@@ -193,11 +174,26 @@ _program_vectors:
             ld hl, #nmi_handler
             ld (0x0067), hl
 
-	    ; our platform has a "true" common area, if it did not we would
-	    ; need to copy the "common" code into the common area of the new
-	    ; process.
+	    ; IRQ enables
+	    ld a, #0xB		; OVF (timer), RXRDY (gapnio), 7508
+	    out (0x04), a
 
-	    ; falls through
+	    push af
+	    call _vtinit
+	    pop af
+            im 1 ; set CPU interrupt mode
+            ret
+
+
+;------------------------------------------------------------------------------
+; COMMON MEMORY PROCEDURES FOLLOW
+
+            .area _COMMONMEM
+
+
+_program_vectors:
+	    ret
+
 
 map_kernel: 
 map_kernel_restore:

@@ -41,10 +41,12 @@ void sio_write(uint8_t *buf, int len)
 
 int sio_read(uint8_t *buf, int len)
 {
-  /* FIXME: timeouts etc */
   while(len--) {
     while(!(artsr & 2))
-      *buf++ = artwr;
+     if (sio_count >= 1000)		/* 10 seconds */
+      return -ETIMEDOUT;
+    *buf++ = artwr;
+    sio_count = 0;
   }
   return 0;
 }
