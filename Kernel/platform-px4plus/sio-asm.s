@@ -4,6 +4,11 @@
 
 		.module sioasm
 
+		.globl _sio_set_irq
+		.globl _sio_release_irq
+
+		.globl interrupt_handler
+
 		.area _CODE
 
 _sio_set_irq:
@@ -16,16 +21,18 @@ _sio_set_irq:
 	ld (0x0039), hl
 	ret
 
+;
+;	Returns the number of missed interrupts in HL
+;
 _sio_release_irq:
 	ld a, r
 	push af
 	di
 	ld a, #0x0B			; FRC, ART and 7508
 	out (4), a
-	ld hl, (_sio_count)
-	ld (_missed_interrupts), hl
 	ld hl, #interrupt_handler
 	ld (0x0039), hl
+	ld hl, (_sio_count)
 	pop af
 	ret po		; CMOS
 	ei
@@ -47,8 +54,6 @@ interrupt_fast:
 	    pop af
 	    ret
 _sio_count:
-	    .db 0
-_missed_interrupts:
 	    .db 0
 
 
