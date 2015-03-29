@@ -18,9 +18,6 @@
 ;	up the table. That makes all the magic going on conveniently
 ;	invisible to the core code.
 ;
-;	FIXME: The 128K sidecar has a notion of open/closed. Open allows
-;	accesses, closes saves power. We need to support this.
-;
 
 		.globl _cartridge_copy
 		.globl _cartridge_size
@@ -163,7 +160,12 @@ _sidecar_copy:
 		push bc
 		push de
 		push hl
-		and #0x7F	; strip the magic bit for the bank code
+		ld d, a		; save bank
+		in a, (0x94)
+		or #0x02	; memory power save off
+		out (0x94), a
+		ld a, #0x7F	; strip the magic bit for the bank code
+		and d
 		ld e, #0
 		rra
 		rl e
@@ -180,6 +182,9 @@ sidecar_cnext:
 		inc e		; next page
 		dec d		; count of pages to do
 		jr nz, sidecar_cnext
+		in a, (0x94)
+		and #0xFD	; memory power save on
+		out (0x94), a
 		pop hl
 		pop de
 		pop bc
@@ -194,7 +199,12 @@ _sidecar_exchange:
 		push bc
 		push de
 		push hl
-		and #0x7F	; strip the magic bit for the bank code
+		ld d, a		; save bank
+		in a, (0x94)
+		or #0x02	; power save off
+		out (0x94), a
+		ld a, #0x7F	; strip the magic bit for the bank code
+		and d
 		ld e, #0
 		rra
 		rl e
@@ -223,6 +233,9 @@ sidecar_xnl:
 		inc e		; next page
 		dec d		; count of pages to do
 		jr nz, sidecar_xnext
+		in a, (0x94)
+		and #0xFD	; memory power save on
+		out (0x94), a
 		pop hl
 		pop de
 		pop bc
@@ -292,6 +305,12 @@ _read_from_bank:	; (page, dptr, buf) always 128 bytes
 		;
 		; Pull it from the sidecar (0x80-0x83)
 		;
+		ld d, a			; save bank
+		in a, (0x94)
+		or #0x02		; power save off
+		out (0x94), a
+		ld a, #0x7F		; strip the magic bit for the bank code
+		and d
 		ld b, #0
 		rra			; effectively multiply by 32768
 		rr b			; 0x0 or 0x80
@@ -308,6 +327,9 @@ _read_from_bank:	; (page, dptr, buf) always 128 bytes
 		ld bc, #0x8093		; 128 count, port 92)
 		ld hl, (_romd_addr)
 		inir			; 128 bytes into hl
+		in a, (0x94)
+		and #0xFD		; memory power save on
+		out (0x94), a
 		ret
 ;
 ;		2 is the low 32K, 3 the high
