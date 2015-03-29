@@ -43,8 +43,8 @@ int sio_read(uint8_t *buf, int len)
 {
   while(len--) {
     while(!(artsr & 2))
-     if (sio_count >= 1000)		/* 10 seconds */
-      return -ETIMEDOUT;
+     if (sio_count >= 100)		/* 10 seconds */
+      return -EIO;
     *buf++ = artwr;
     sio_count = 0;
   }

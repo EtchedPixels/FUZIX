@@ -23,6 +23,7 @@ usermem.rel
 platform-px4plus/devfd.rel
 platform-px4plus/romdisc.rel
 platform-px4plus/sio.rel
+platform-px4plus/sio-asm.rel
 platform-px4plus/devices.rel
 devio.rel
 filesys.rel

@@ -13,5 +13,6 @@ extern int sio_read(uint8_t *buf, int len);
 /* These don't truely belong here but it will do for now */
 extern void read_from_bank(void);
 
+extern uint8_t sio_count;	/* 10ths of a second */
 
 #endif

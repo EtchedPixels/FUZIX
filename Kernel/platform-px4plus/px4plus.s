@@ -21,8 +21,6 @@
 	    .globl _carttype
 
 	    .globl platform_interrupt_all
-	    .globl interrupt_fast
-	    .globl _sio_count
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -109,7 +107,7 @@ init_early:
 
 init_hardware:
 	    ; FIXME: set video base and display properties first
-	    ld a, #VIDBAEE
+	    ld a, #VIDBASE
 	    out (0x08), a		; Video at 0xF800
 	    ; Reset hardware scrolling
 	    ld a, #0x80			; On, Y offset 0

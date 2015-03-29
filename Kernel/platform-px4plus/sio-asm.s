@@ -6,6 +6,7 @@
 
 		.globl _sio_set_irq
 		.globl _sio_release_irq
+		.globl _sio_count
 
 		.globl interrupt_handler
 
@@ -48,7 +49,7 @@ interrupt_fast:
 	    push hl
 	    ld a, #4
 	    out (2), a			; ack the FRC interrupt
-	    ld hl, _sio_count
+	    ld hl, #_sio_count
 	    inc (hl)
 	    pop hl
 	    pop af

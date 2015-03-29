@@ -6,7 +6,7 @@ CCSRCS = main.c
 
 CDSRCS = init.c
 
-ASRCS = crt0.s px4plus.s video.s
+ASRCS = crt0.s px4plus.s video.s sio-asm.s
 ASRCS += tricks.s commonmem.s swapdev.s romdisc.s
 
 COBJS = $(CSRCS:.c=.rel)
