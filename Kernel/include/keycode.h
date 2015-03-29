@@ -14,6 +14,9 @@
 #define KEY_DEL		0x7F
 #define KEY_BS		CTRL('H')
 #define KEY_ESC		CTRL('[')
+#define KEY_TAB		CTRL('I')
+#define KEY_ENTER	CTRL('J')
+#define KEY_CLEAR	CTRL('L')
 
 #define KEY_LEFT	ESC('D')
 #define KEY_RIGHT	ESC('C')
@@ -21,6 +24,7 @@
 #define KEY_DOWN	ESC('B')
 
 #define KEY_HOME	ESC('H')
+#define KEY_HELP	ESC('h')
 #define KEY_INSERT	ESC('i')
 #define KEY_COPY	ESC('c')
 #define KEY_PASTE	ESC('v')
@@ -33,6 +37,7 @@
 #define KEY_PLUS	ESC('+')
 #define KEY_MINUS	ESC('-')
 #define KEY_EXIT	ESC('q')
+#define KEY_PAUSE	ESC('p')
 
 #define KEY_F1		ESC('1')
 #define KEY_F2		ESC('2')

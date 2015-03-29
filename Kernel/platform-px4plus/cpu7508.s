@@ -82,9 +82,11 @@ c7508_1sec:
 c7508_keyin:
 		ld l, a
 		ld h, #0
+		push hl
 		push af
 		call _key_pressed
 		pop af
+		pop hl
 		ret
 
 ;

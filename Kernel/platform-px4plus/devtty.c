@@ -6,7 +6,11 @@
 #include <vt.h>
 #include <devtty.h>
 
-/* Console is only port we provide, port 2 there but used for floppies */
+/* Console is only port we provide, port 2 there but used for floppies.
+   Eventually wants supporting but needs some tricky handling of flow
+   control as a single UART is switched multiple ways including for
+   the fd */
+
 char tbuf1[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
@@ -50,4 +54,76 @@ int tty_carrier(uint8_t minor)
 {
     minor;
     return 1;
+}
+
+/*
+ *	Keyboard interface. This is not a make break interface except for
+ *	the shift keys. We don't support item keyboards just the standard
+ *	ones.
+ */
+
+static uint8_t shifts = 0;
+#define SHIFT_CTRL	(1 << 2)
+#define SHIFT_LSHIFT	(1 << 3)
+#define SHIFT_CAPSLOCK	(1 << 4)
+#define SHIFT_GRPH	(1 << 5)
+#define SHIFT_RSHIFT	(1 << 6)
+#define SHIFT_NUM	(1 << 7)
+
+/* Map table. Interleave original and shift as the low bits are never 8-15 */
+static uint8_t keymap[] = {
+    KEY_ESC, KEY_PAUSE, KEY_HELP, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
+    KEY_ESC, KEY_PAUSE, KEY_HELP, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
+    KEY_STOP, '1', '2', '3', '4', '5', '6', '7',
+    KEY_STOP, '!', '"', KEY_POUND, '$', '%', '&', '\'',
+    'q', 'w', 'e', 'r', 't', 'y', 'u', 'i',
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+    'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',
+    'D', 'F', 'G', 'H', 'J', 'K', 'L', '+',
+    'b', 'n', 'm', ',', '.', '/', '[', ']',
+    'B', 'N', 'M', '<', '>', '?', '{', '}',
+    '8', '9', '0', '-', '^', KEY_UP, KEY_BS, KEY_TAB,
+    '(', ')', '_', '=', '~', KEY_UP, KEY_HOME, KEY_TAB,
+    'o', 'p', '@', KEY_LEFT, KEY_DOWN, KEY_RIGHT, 'a', 's',
+    'O', 'P', '`', KEY_LEFT, KEY_DOWN, KEY_RIGHT, 'A', 'S',
+    ':', KEY_ENTER, '\\', ' ', 'z', 'x', 'c', 'v',
+    '*', KEY_ENTER, '|', ' ', 'Z', 'X', 'C', 'V',
+    KEY_INSERT, KEY_DEL, 0, 0, 0, 0, 0, 0,
+    KEY_PRINT, KEY_CLEAR
+};
+
+static uint8_t key_decoder(uint8_t c)
+{
+    if (shifts & (SHIFT_LSHIFT|SHIFT_RSHIFT))
+        c |= 8;
+    c = keymap[c];
+    if (c >= 'a' && c <= 'z') {
+        if (shifts & SHIFT_CTRL)
+            c -= 64;
+        else if (shifts & SHIFT_CAPSLOCK)
+            c -= 32;
+    } else if (c >= 'A' && c <= 'Z' && (shifts & SHIFT_CTRL))
+        c -= 32;
+
+    /* We don't use graph or num currently */
+    return c;
+}
+
+
+void key_pressed(uint16_t code)
+{
+    uint8_t c = code;
+    uint8_t clow = c & 7;
+
+    if (c >= 0xB0)
+        shifts |= clow;
+    else if (c >= 0xA0)
+        shifts &= ~clow;
+    else if (c <= 0x81) {
+        /* Typed symbol */
+        c = key_decoder(c);	/* Consider shifts */
+        if (c)
+            tty_inproc(1, c);
+    }
+        
 }
