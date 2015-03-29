@@ -143,7 +143,12 @@ then become sta [6]. Something like that anyway.
 
 Disks
 
-Not supported yet.
+Virtual disk drives over "DriveWire" are supported. For real machines
+it uses a bit-banging serial interface on the printer port.
+For XRoar it is using the Becker interface, which is supported by the
+DW4 server by Aaron Wolfe https://sites.google.com/site/drivewire4/
+
+Real disk controllers are not supported yet.
 
 With an expander we should look across all the cartridges to find out which
 one is us and which one (should be slot #4) contains a cartridge with DK at
@@ -154,8 +159,6 @@ extender currently but you can have a disk, becker port and "wrong" ROMs in
 one slot!
 
 Also to consider
-
-DriveWire - over Beckerport - serial 'virtual disk' protocol
 
 CoCoSDC: SDC virtual disk including LBA mode interface for SD hard disk and
 also flash for catridge slots (banked). Looks ideal but not documented
@@ -172,7 +175,7 @@ Delta:	WD2791
 
 RSDOS:	WD1793
 
-Becker port at 0xFF40 (FF46 ? on Dragon)
+Hardware Becker port at 0xFF40 (FF46 ? on Dragon)
 
 IDE: FF70-FF78 - data latched (write high/load, read low/high) [0-7 IDE regs
 		8 maps the latches]
