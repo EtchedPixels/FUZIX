@@ -114,7 +114,7 @@ void mkfs(uint16_t fsize, uint16_t isize)
 
 	/* The inodes are already zeroed out */
 	/* create the root dir */
-	inode[ROOTINODE].i_mode = F_DIR | (0777 & MODE_MASK);
+	inode[ROOTINODE].i_mode = swizzle16(F_DIR | (0777 & MODE_MASK));
 	inode[ROOTINODE].i_nlink = swizzle16(3);
 	inode[ROOTINODE].i_size = swizzle32(64);
 	inode[ROOTINODE].i_addr[0] = swizzle16(isize);

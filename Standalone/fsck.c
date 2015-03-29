@@ -264,7 +264,7 @@ void pass2(void)
             superblock.s_tfree = swizzle16(swizzle16(superblock.s_tfree)+1);
             s = swizzle16(superblock.s_nfree);
             superblock.s_free[s++] = swizzle16(j);
-            superblock.s_nfree = s;
+            superblock.s_nfree = swizzle16(s);
         }
     }
 
