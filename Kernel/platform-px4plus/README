@@ -1,6 +1,5 @@
-A FUZIX target for the PX4plus (and PX4 with 128K RAM disc)
-
-Just playing to see if we can make it fit.
+A FUZIX target for the PX4plus (and PX4 with either the 128K sidecar or a
+RAM cartridge of at least 32K size).
 
 The PX4Plus has 64K of RAM, and can overlay 6000-DFFF with one of two
 different ROMpacks (usually 'basic' and 'utility'). Our kernel is a two

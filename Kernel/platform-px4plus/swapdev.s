@@ -18,6 +18,9 @@
 ;	up the table. That makes all the magic going on conveniently
 ;	invisible to the core code.
 ;
+;	FIXME: The 128K sidecar has a notion of open/closed. Open allows
+;	accesses, closes saves power. We need to support this.
+;
 
 		.globl _cartridge_copy
 		.globl _cartridge_size
