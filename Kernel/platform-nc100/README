@@ -39,7 +39,7 @@ then
 dd if=myfs of=mycard.img bs=16384 seek=20 conv=notrunc
 
 
-To boot from NC100emu use nc100emu.s. Compile it with zmac and use the
+To boot from NC100emu use nc100emu.s. Compile it with sdas80 and use the
 resulting nc100.cim as the bootscript for the emulator.
 
 TODO
