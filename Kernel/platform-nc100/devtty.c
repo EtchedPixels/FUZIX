@@ -81,9 +81,12 @@ int nc100_tty_close(uint8_t minor)
 /* Output for the system console (kprintf etc) */
 void kputchar(char c)
 {
-	if (c == '\n')
+	if (c == '\n') {
 		tty_putc(1, '\r');
+		tty_putc(2, '\r');
+	}
 	tty_putc(1, c);
+	tty_putc(2, c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
@@ -236,7 +239,7 @@ uint8_t shiftkeyboard[10][8] = {
 	{'D', 'S', 0, 'E', 'W', 'Q', '"', KEY_POUND },
 	{'F', 'R', 0, 'A', 'X', 'Z', 0, '$'},
 	{'C', 'G', 'Y', 'T', 'V', 'B', 0, 0},
-	{'N', 'H', '?', '~', KEY_RIGHT , 127, '?' KEY_DOWN , '^'},
+	{'N', 'H', '?', '~', KEY_RIGHT , 127, KEY_DOWN , '^'},
 	{'K', 'M', 'U', 0, KEY_UP, '|', '&', '+'},
 	{'<', 'J', 'I', '@', '{', '}', '_', '*'},
 	{'>', 'O', 'L', ':', 'P', 8, '(', ')'}
