@@ -1,9 +1,5 @@
 /* NC100 or NC200 - your choice */
-#define CONFIG_NC200
-
-#ifdef CONFIG_NC200
-#define CONFIG_CPM_EMU
-#endif
+/*#define CONFIG_NC200 */
 
 /* We have an RTC */
 #define CONFIG_RTC
