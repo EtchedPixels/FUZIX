@@ -145,7 +145,7 @@ inoptr srch_mt(inoptr ino)
 	inoptr i_open();
 
 	for (j = 0; j < NDEVS; ++j)
-		if (fs_tab[j].s_mounted == SMOUNTED
+		if (swizzle16(fs_tab[j].s_mounted) == SMOUNTED
 		    && fs_tab[j].s_mntpt == ino) {
 			i_deref(ino);
 			return (i_open(j, ROOTINODE));
@@ -184,7 +184,7 @@ inoptr i_open(register int dev, register unsigned ino)
 		}
 	}
 
-	if (ino < ROOTINODE || ino >= (fs_tab[dev].s_isize - 2) * 8) {
+	if (ino < ROOTINODE || ino >= (swizzle16(fs_tab[dev].s_isize) - 2) * 8) {
 		printf("i_open: bad inode number\n");
 		return (NULLINODE);
 	}
@@ -968,11 +968,11 @@ void setftime(inoptr ino, int flag)
 	now = time(NULL);
 
 	if (flag & A_TIME)
-		ino->c_node.i_atime = now;
+		ino->c_node.i_atime = swizzle32(now);
 	if (flag & M_TIME)
-		ino->c_node.i_mtime = now;
+		ino->c_node.i_mtime = swizzle32(now);
 	if (flag & C_TIME)
-		ino->c_node.i_ctime = now;
+		ino->c_node.i_ctime = swizzle32(now);
 }
 
 

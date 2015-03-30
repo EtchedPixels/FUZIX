@@ -136,7 +136,7 @@ void pass1(void)
         /* Check mode */
         if (mode != F_REG && mode != F_DIR && mode != F_BDEV && mode != F_CDEV) {
             printf("Inode %d with mode 0%o is not of correct type. Zap? ",
-                    n, ino.i_mode);
+                    n, swizzle16(ino.i_mode));
             if (yes()) {
                 ino.i_mode = 0;
                 ino.i_nlink = 0;
@@ -180,7 +180,7 @@ void pass1(void)
                     }
                 }
                 if (ino.i_addr[b] != 0)
-                    bitmap[ino.i_addr[b]] = 1;
+                    bitmap[swizzle16(ino.i_addr[b])] = 1;
             }
 
             /* Check the double indirect blocks */
@@ -198,7 +198,7 @@ void pass1(void)
                         }
                     }
                     if (buf[b] != 0)
-                        bitmap[buf[b]] = 1;
+                        bitmap[swizzle16(buf[b])] = 1;
                 }
             }
             /* Check the rest */
@@ -298,7 +298,7 @@ void pass3(void)
     for (n = ROOTINODE; n < 8 * (swizzle16(superblock.s_isize) - 2); ++n) {
         iread(n, &ino);
 
-        mode = swizzle16(ino.i_mode & F_MASK);
+        mode = swizzle16(ino.i_mode) & F_MASK;
         if (mode != F_REG && mode != F_DIR)
             continue;
 
@@ -464,7 +464,7 @@ void ckdir(uint16_t inum, uint16_t pnum, char *name)
             strcpy(ename, name);
             strcat(ename, dentry.d_name);
             strcat(ename, "/");
-            ckdir(dentry.d_ino, inum, ename);
+            ckdir(swizzle16(dentry.d_ino), inum, ename);
         }
     }
     --depth;
@@ -510,13 +510,14 @@ void pass5(void)
                     ino.i_nlink = 0;
                     ino.i_mode = 0;
                     iwrite(n, &ino);
-                    ++superblock.s_tinode;
+                    superblock.s_tinode =
+                                swizzle16(swizzle16(superblock.s_tinode) + 1);
                     dwrite((blkno_t) 1, (char *) &superblock);
                 }
             } else {
 #if 0
                 printf("Inode %d has become detached. Link count is %d. Fix? ",
-                        n, ino.i_nlink);
+                        n, swizzle16(ino.i_nlink));
                 if (yes()) {
                     ino.i_nlink = 1;
                     iwrite(n, &ino);
@@ -678,9 +679,9 @@ blkno_t blk_alloc0(struct filesys *filesys)
 
     ifnot (filesys->s_nfree) {
         buf = (blkno_t *) daread(newno);
-        filesys->s_nfree = swizzle16(buf[0]);
+        filesys->s_nfree = buf[0];
         for (j = 0; j < 50; j++) {
-            filesys->s_free[j] = swizzle16(buf[j + 1]);
+            filesys->s_free[j] = buf[j + 1];
         }
     }
 
