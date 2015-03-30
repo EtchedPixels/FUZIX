@@ -23,4 +23,4 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	dd if=bootblock.cim of=../uzi.bin bs=1 seek=256 conv=notrunc
+	dd if=bootblock.cim of=../fuzix.bin bs=1 seek=256 conv=notrunc
