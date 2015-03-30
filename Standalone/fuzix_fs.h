@@ -1,7 +1,5 @@
 #define __UZIFS_DOT_H__
 
-#include <stdio.h>
-
 #define ROOTDEV 0
 #define ROOTINODE 1
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */

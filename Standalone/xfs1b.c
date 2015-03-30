@@ -3,6 +3,7 @@
  ***************************************************/
 
  /*LINTLIBRARY*/
+#include <stddef.h>
 #include <stdint.h>
 #include <strings.h>
 #include "fuzix_fs.h"
