@@ -5,6 +5,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <audio.h>
 
 /* psleep() puts a process to sleep on the given event.  If another
  * process is runnable, it switches out the current one and starts the
@@ -350,6 +351,9 @@ void timer_interrupt(void)
 			}
 		}
 		updatetod();
+#ifdef CONFIG_AUDIO
+		audio_tick();
+#endif
 	}
 #ifndef CONFIG_SINGLETASK
 	/* Check run time of current process */

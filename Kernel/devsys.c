@@ -2,6 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <devsys.h>
+#include <audio.h>
 
 /*
  *	System devices:
@@ -10,6 +11,7 @@
  *	Minor 	1	mem
  *	Minor	2	zero
  *	Minor	3	proc
+ *	Minor	64	audio
  *
  *	Use Minor 128+ for platform specific devices
  */
@@ -72,6 +74,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 {
+#ifdef CONFIG_AUDIO
+	if (minor == 64)
+		return audio_ioctl(request, data);
+#endif
 	if (minor != 3) {
           udata.u_error = ENOTTY;
 	  return -1;
