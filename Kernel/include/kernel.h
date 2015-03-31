@@ -545,6 +545,15 @@ struct s_argblk {
 #define BLKFLSBUF		0x4103	/* Use the Linux name */
 
 /*
+ *	Sound ioctls 02xx (see audio.h)
+ */
+
+
+/*
+ *	Graphics ioctls 03xx (see graphics.h)
+ */
+
+/*
  *	System info shared with user space
  */
 struct sysinfoblk {
