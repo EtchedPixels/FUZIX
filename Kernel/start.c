@@ -83,6 +83,8 @@ void create_init(void)
 	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
 }
 
+#ifndef BOOTDEVICE
+
 /* Parse boot device name, based on platform defined BOOTDEVICENAMES string.
  *
  * This string is a list of device driver names delimited by commas. Device
@@ -218,6 +220,13 @@ uint16_t get_root_dev(void)
 
 	return rd;
 }
+#else
+
+inline uint16_t get_root_dev(void)
+{
+	return BOOTDEVICE;
+}
+#endif
 
 void fuzix_main(void)
 {
