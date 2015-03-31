@@ -14,9 +14,9 @@ U_DATA__U_ARGN              equ (U_DATA+18)  ; uint16_t
 U_DATA__U_ARGN1             equ (U_DATA+20)  ; uint16_t
 U_DATA__U_ARGN2             equ (U_DATA+22)  ; uint16_t
 U_DATA__U_ARGN3             equ (U_DATA+24)  ; uint16_t
-U_DATA__U_SIGVEC            equ (U_DATA+26)  ; table of function pointers (void *)
-U_DATA__U_ISP               equ (U_DATA+58)  ; void * (initial stack pointer when _exec()ing)
-U_DATA__U_TOP               equ (U_DATA+60)  ; uint16_t
+U_DATA__U_ISP               equ (U_DATA+26)  ; void * (initial stack pointer when _exec()ing)
+U_DATA__U_TOP               equ (U_DATA+28)  ; uint16_t
+U_DATA__U_SIGVEC            equ (U_DATA+30)  ; table of function pointers (void *)
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      equ 0
