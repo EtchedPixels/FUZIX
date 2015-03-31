@@ -18,6 +18,7 @@ struct display {
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918	128	/* Not neccessarily MSX... */
 #define HW_VDP_9938	129
+#define HW_TRS80GFX	130	/* TRS80 model 4 graphics board */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
@@ -62,6 +63,26 @@ struct attribute {
 #define GFX_OP_XOR	3
   uint8_t flags;
 };
+
+/* Returned from a successful GFXIOC_MAP */
+struct videomap {
+  uaddr_t mmio;			/* Memory mapped register base */
+  uaddr_t pio;			/* I/O space register base */
+  uaddr_t fbmem;		/* Frame buffer memory */
+  usize_t fbsize;
+  uint8_t mmio_seg;		/* For the 8086 */
+  uint8_t fbmem_seg;
+  uint8_t spacing;		/* Multiplier for non standard register spacing */
+  uint8_t flags;		/* Which maps are valid */
+#define MAP_MMIO	1
+#define MAP_MMIO_SEG	2
+#define MAP_PIO		4
+#define MAP_FBMEM	8
+#define MAP_FBMEM_SEG	16
+#define MAP_FBMEM_SIMPLE 32	/* Normal mapping of linear framebuffer as
+				   mode would imply */
+};
+
 
 #define GFX_BUFLEN		64	/* Default buffer length  (128 byte) */
 
