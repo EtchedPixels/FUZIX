@@ -22,6 +22,8 @@
 #define MAX_MAPS 16
 /* We want the 4x6 font */
 #define CONFIG_FONT_4X6
+/* We have audio (just about) */
+#define CONFIG_AUDIO
 
 /* As reported to user space - 4 banks, 16K page size */
 #define CONFIG_BANKS	4
@@ -51,11 +53,12 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
 #ifdef CONFIG_NC200
 #define NMOUNTS	2	  /* Floppy can also be mounted */
 #else
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
+#define BOOTDEVICE 0x0100	/* Only one possible option */
 #endif

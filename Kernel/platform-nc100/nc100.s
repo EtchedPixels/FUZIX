@@ -32,6 +32,10 @@
 	    .globl _font4x6
 	    .globl _vtinit
 	    .globl platform_interrupt_all
+	    .globl _video_setpixel
+	    .globl _video_cmd
+	    .globl _video_attr
+	    .globl _video_op
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -62,21 +66,10 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
-
-tm_stack:
-            .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-tm_stack_top:
-
 _trap_monitor:
 	    di
 	    halt
 	    jr _trap_monitor
-
 
 _trap_reboot:
 	    xor a
@@ -590,3 +583,159 @@ _cursor_off:
 	    ld de, (_cursorpos)
 	    jr cursor_do
 
+;
+;	Entered with HL pointing to the co-ordinates
+;	Returns with HL pointing to the byte address of the pixel
+;	A holding the pixel mask
+;	C holding the bit number
+;	DE holding the screen byte address
+;
+coords:
+	    ld a, (hl)		; low bits of X
+	    and #7		; pixel
+	    ld c, a
+	    ld a, (hl)
+	    ld de, #0		; clear D - and keep D at zero
+	    rra
+	    rra
+	    rra			; A is the byte offset
+	    inc hl
+	    bit 0, (hl)
+	    jr z, xonleft
+	    set 5,a		; right hand side
+xonleft:
+	    inc hl
+	    ld a, (hl)		; y low (no y high needed) 0-63 or 0-127 */
+	    add a		; x 2
+	    ld l, a
+	    ld h, d		; zero
+	    add hl, hl		; x 4
+	    add hl, hl		; x 8
+	    add hl, hl		; x 16
+	    add hl, hl		; x 32
+	    add hl, hl		; x 64	lines into bytes offset
+	    add hl, de		; pixel in this byte
+	    ex de, hl
+	    ld hl, #setpixel_bittab
+	    ld b, d		; zero
+	    add hl, bc
+	    ld a, (hl)		; our pixel mask
+	    ex de, hl
+	    ret
+
+setpixel_optab:
+	    nop				;
+	    or (hl)			; COPY
+	    nop
+	    or (hl)			; SET
+	    cpl				; complement pixel mask
+	    and (hl)			; CLEAR by anding with mask
+	    nop
+	    xor (hl)			; INVERT
+setpixel_bittab:
+	    .db 128,64,32,16,8,4,2,1
+
+_video_setpixel:
+	    in a, (0x11)
+	    push af
+	    ld a, #0x43			; Map the display
+	    out (0x11), a
+	    call video_setpixel
+	    pop af
+	    out (0x11), a
+	    ret
+
+video_setpixel:
+	    ld a, (_video_attr + 2)	; mode
+	    or a			; copy ?
+	    jr nz, setpixel_notdraw
+	    ld a, (_video_attr)		; ink
+	    or a			; white ?
+	    jr nz, setpixel_notdraw	; a = 1 = set so good
+	    ld a, #2			; clear
+setpixel_notdraw:
+	    ld e, a
+	    ld d, #0
+	    ld hl, #setpixel_optab
+	    add hl, de
+	    ld a, (hl)
+	    ld (setpixel_opcode), a	; Self modifying
+	    inc hl
+	    ld a, (hl)
+	    ld (setpixel_opcode+1), a	; Self modifying
+	    ld bc, (_video_op)	; B is the count
+	    ld a, b
+	    and #0x1f		; max 31 pixels per op
+	    ret z
+	    push bc
+	    ld hl, #_video_op + 2	; co-ordinate pairs
+setpixel_loop:
+	    push hl
+	    call coords
+setpixel_opcode:
+	    nop			; nop or cpl
+	    ld a, (hl)		; screen
+	    ld (hl), a		; store back to display
+	    pop hl
+	    inc hl
+	    inc hl
+	    inc hl
+	    inc hl
+	    pop bc
+	    djnz setpixel_loop
+	    ret
+
+;
+;	Need different logic for NC200 ?
+;
+_video_cmd:
+	    in a, (0x11)
+	    push af
+	    ld a, #0x43			; Map the display
+	    out (0x11), a
+	    call video_cmd
+	    pop af
+	    out (0x11), a
+	    ret
+
+video_cmd:
+	    ld hl, #_video_op
+	    ld e, (hl)		; offset
+	    inc hl
+	    ld a, (hl)
+	    cp #0x10
+	    ret nc		; over end
+	    ld d, a
+	    inc hl
+	    ld a, (hl)		; count
+	    cp #124		; 2 bytes offset, 2 bytes length, 124 data
+	    ret nc
+	    ld c, a
+	    inc hl
+	    ld a, (hl)
+	    or a
+	    ret nz		; too big
+	    ld b, a
+	    push hl
+	    ld l, e
+	    ld h, d
+	    add hl, bc		; end offset
+	    ld a, h
+	    cp #0x10
+	    jr c, cmd_over	; doesn't fit
+	    ld hl, #VIDEO_BASE
+	    add hl, de		; offset
+	    ex de, hl
+	    pop hl		; input buffer
+	    ldir
+	    ret
+cmd_over:   pop hl
+	    ret
+
+;
+;	Needed here so they don't vanish when we map the screen
+;
+_video_op:
+	    .ds 128
+_video_attr:
+	    .ds 4

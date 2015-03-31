@@ -31,9 +31,12 @@ bank16k.rel
 tty.rel
 vt.rel
 devsys.rel
+audio.rel
 usermem.rel
 usermem_std-z80.rel
 platform-nc100/devlpr.rel
 platform-nc100/devtty.rel
+platform-nc100/devaudio.rel
+platform-nc100/devgfx.rel
 font4x6.rel
 -e
