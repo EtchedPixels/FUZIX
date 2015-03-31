@@ -1,0 +1,106 @@
+Graphics is still a prototype.
+
+The proposed method of operation is as follows
+
+Issue ioctl(ttyfd, GFXIOC_GETINFO , &display)
+
+An error means no graphics support, otherwise you get the display data for
+the default mode.
+
+If it reports GFX_PALETTE then you can get the palette entries and try
+and set them.
+
+If it reports GFX_MULTIMODE then you can call GFXIOC_GETMODE with a uint8_t
+set and get back a full buffer of the display for that mode.
+
+The formats defined so far are
+
+FMT_MONO_BW		Black with white monochrome bitmap. The data
+			is on lines stride pixels wide, bit 7 is left
+FMT_MONO_WB		Ditto but white with black
+
+These are the most common small device modes and are defined this way to
+avoid needing palette support on the tiniest devices.
+
+FMT_COLOUR4		2bit packed pixel
+FMT_COLOUR16		4bit packed pixel
+FMT_SPECTRUM		ZX Spectrum
+FMT_VDP			VDP display (which is mostly plain weird)
+
+Hardware types are defined for
+
+HW_UNACCEL		Just a framebuffer of some kind
+HW_VDP_9918		MSX1, MTX and similar
+HW_VDP_9938		MSX2
+
+It's assumed that for some stuff certain apps will want to go direct to GPU
+hence this information.
+
+The properties are
+
+GFX_MAPPABLE		Can be accessed if mapped as part of process memory
+			(Mostly for 16/32bit platforms)
+GFX_PALETTE		Has a colour palette palette ioctls
+GFX_OFFSCREEN		It is meaningful to write or read memory in the full
+			physical range not just the displayed window
+GFX_VBLANK		Supports wait for vblank
+GFX_ENABLE		Graphics mode must be enabled/disabled (ie its not
+			just the text mode too)
+GFX_MULTIMODE		There are multiple display modes possible
+GFX_PALETTE_SET		The colour table is settable
+
+Memory holds the amount of RAM for hardware where this also matters (VDP
+primarily ?, otherwise 0)
+
+Commands are again organised to try and minimise size for small devices
+
+GFX_BLTAL_CG		Rectangular blit or byte aligned blocks from CPU to
+			the screen
+GFX_BLTAL_GC		The reverse
+GFX_SETPIXEL		Plot a list of pixels
+GFX_HLINE		Horizontal line (on many devices even for software
+			this can be done with optimised methods)
+GFX_VLINE		Similar for verticals
+GFX_LINE		Arbitrary line from A to B, for accelerator hardware
+GFX_BLT_GG		Arbitrary screen to screen memory copy. Mainly for
+			things like VDP2
+GFX_BLT_CG		As the aligned blit but any alignment
+GFX_BLT_GC		Ditto in reverse
+GFX_RECT		Solid rectangle (or patterned if supported)
+GFX_RAW			Direct command streams (eg VDP). Device specific
+GFX_RAWCOPY		For non mapped non accelerated screens, each command
+			describes a block copy
+
+MODE_XOR		XOR drawing mode is supported
+MODE_PATTERN		8x8 Pattern fill is allowed
+
+There are things that need covering if they make sense
+- Sprite discovery, description, setup and movement
+- Blit with stencil
+
+The attributes describe colours and drawing modes.
+
+The basic idea is that a typical 8bit unaccelerated device need only support
+a few minimal operations and most ioctls can be completely ignored but we
+still can support smarter devices while having a direct route for accelerators
+for those cases they are needed (eg games)
+
+HLINE is worth having because in most cases that is faster if done by
+masking the ends and just setting/clearing/cpl the midstream bytes
+
+VLINE is a repeated operation while adding scanline of bytes
+
+RECT covers both and also the useful to optimise case of narrow rectangles
+where its a 1 or 2 byte wide drawing done akin to vline optimisations
+
+The BLTAL blit operations try and keep the logic simple and the code fast
+for the faster paths. It's sufficient for a lot of stuff including 8 pixel
+aligned font work, bitmaps, and double buffering work.
+
+
+Need to decide on the best approach for text and fonts
+
+Some hand optimised standard asm implementations of the rect/vline/hline and
+blits would also be worth having.
+
+
