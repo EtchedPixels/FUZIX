@@ -13,10 +13,10 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = p112
 #export TARGET = pcw8256
 #export TARGET = plus3
-export TARGET = px4plus
+#export TARGET = px4plus
 #export TARGET = socz80
 #export TARGET = tgl6502
-#export TARGET = trs80
+export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
@@ -70,7 +70,7 @@ C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c flat.c
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
 #
-C3SRCS = devsys.c mm.c swap.c usermem.c timer.c
+C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
