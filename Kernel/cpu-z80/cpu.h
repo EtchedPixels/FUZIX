@@ -17,6 +17,8 @@ typedef uint16_t irqflags_t;
 
 extern irqflags_t di(void);
 extern void irqrestore(irqflags_t f);
+extern void out(uint8_t addr, uint8_t val);
+extern uint8_t in(uint8_t addr);
 
 /* Z80 binaries start with a JP */
 #define EMAGIC    0xc3    /* Header of executable */

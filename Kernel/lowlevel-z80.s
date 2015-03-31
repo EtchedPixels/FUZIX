@@ -44,6 +44,8 @@
 	.globl interrupt_handler
 	.globl _di
 	.globl _irqrestore
+	.globl _out
+	.globl _in
 
         ; imported symbols
         .globl _trap_monitor
@@ -536,6 +538,24 @@ outnibble:
         add a, #0x07 ; start at 'A' (10+7+0x30=0x41='A')
 numeral:add a, #0x30 ; start at '0' (0x30='0')
         jp outchar
+
+;
+;	I/O helpers for cases we don't use __sfr
+;
+_out:
+	pop hl
+	pop bc
+	out (c), b
+	push bc
+	jp (hl)
+
+_in:
+	pop hl
+	pop bc
+	push bc
+	push hl
+	in l, (c)
+	ret
 
 ;
 ;	Pull in the CPU specific workarounds
