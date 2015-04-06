@@ -35,6 +35,6 @@ image: d64_1.rom
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../simple.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../usermem_std-6809.o devlpr.o devtty.o libc.o ../vt.o
+	devlpr.o devtty.o libc.o ../vt.o
 	../tools/decbdragon < ../fuzix.bin d64_1.decb d64_2.rom cart1.rom cart2.rom
 	dd if=d64_1.decb of=d64_1.rom bs=1024 seek=1 conv=notrunc
