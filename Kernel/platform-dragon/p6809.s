@@ -165,6 +165,10 @@ outchar:
 ;outcharw:
 	    pshs x
 	    ldx traceptr
+	    cmpa #0x60		; mangle for 6847 VDU charset
+	    blo lc
+	    suba #0x20
+lc	    anda #0x3F
 	    sta ,x+
 	    stx traceptr
 	    puls x,pc
