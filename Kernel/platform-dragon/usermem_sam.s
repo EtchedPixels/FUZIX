@@ -116,7 +116,7 @@ uputl:
 __uzero:
 	pshs y,cc
 	lda #0
-	ldy 7,s
+	ldy 5,s
 	orcc #0x10
 	SAM_USER
 uzloop:
