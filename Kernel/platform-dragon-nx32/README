@@ -1,0 +1,19 @@
+Dragon (32 or 64) + external memory cartridge
+
+This port is for running FUZIX on real Dragons using an external
+memory cartridge which is being prototyped.
+
+The cartridge can have from 2 to 256 banks of 32KB each. It will
+map the active bank at 0x8000-0xFEFF and use the EXMEM (SLENB) signal to
+hide the internal ROMs. Writing the bank number to FFBF selects the
+bank and activates the cartridge. Writing to FFBE deactivates the
+cartridge. It is only active if the SAM is in map type 0.
+
+The port reserves the internal RAM at 0-0x7FFF plus bank 0 for the kernel.
+
+The port can use DriveWire to mount a root filesystem, and is
+able to execute init. syscalls and fork have not been tested.
+Swapping out to disk does not work yet.
+
+There is not much 6809 userspace work done.
+
