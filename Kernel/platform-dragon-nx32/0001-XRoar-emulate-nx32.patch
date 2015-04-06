@@ -1,0 +1,126 @@
+From ec8a5f08542ab23bb11a47f42423779244fd8072 Mon Sep 17 00:00:00 2001
+From: Tormod Volden <debian.tormod@gmail.com>
+Date: Sat, 10 Jan 2015 12:40:36 +0100
+Subject: [PATCH] XRoar: Emulate Tormod's memory cartridge on Dragon 32
+
+* This patch is for the XRoar emulator at http://www.6809.org.uk/xroar/ *
+* It is based off the dev-0.33 branch. *
+
+EXTBANKS is the number of 32KB banks and can be 1, 4 or 16.
+
+Writing a number to 0xFFBF activates the corresponding bank,
+available at 0x8000-0xFFEF. Writing to 0xFFBE deactivates the
+cartridge, and makes the internal ROM available again.
+
+The cartridge is only activated in SAM map type 0 (it keeps
+track of it by "listening" on 0xFFDE/F).
+
+Note that the cartridge "firmware" is subject to change.
+
+Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+---
+ src/machine.c |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/src/machine.c b/src/machine.c
+index 20cbcec..1556ae1 100644
+--- a/src/machine.c
++++ b/src/machine.c
+@@ -60,6 +60,13 @@
+ #include "xconfig.h"
+ #include "xroar.h"
+ 
++/* number of 32KB banks in external memory cartridge: 1, 4 or 16 */
++#define EXTBANKS 4
++static uint8_t extmem[0x8000 * EXTBANKS];
++static _Bool extmem_map;
++static _Bool extmem_ty;
++static uint8_t extmem_bank;
++
+ unsigned int machine_ram_size = 0x10000;  /* RAM in bytes, up to 64K */
+ uint8_t machine_ram[0x10000];
+ static uint8_t *machine_rom;
+@@ -938,6 +945,8 @@ void machine_reset(_Bool hard) {
+ 	}
+ 	if (hard) {
+ 		initialise_ram();
++		extmem_map = 0;
++		extmem_ty = 0;
+ 	}
+ 	mc6821_reset(PIA0);
+ 	mc6821_reset(PIA1);
+@@ -1087,6 +1096,11 @@ static uint8_t read_cycle(void *m, uint16_t A) {
+ 	 * produce a different "null" result on his 16K CoCo */
+ 	if (is_ram_access)
+ 		read_D = 0xff;
++	/* external memory cartridge */
++	if (A < 0xff00 && (A > 0xbfff || (!extmem_ty && extmem_map && A > 0x7fff))) {
++		read_D = extmem[0x8000 * extmem_bank + (A & 0x7fff)];
++		S = 8; /* decoder disabled */
++	}
+ 	switch (S) {
+ 		case 0:
+ 			if (Z < machine_ram_size)
+@@ -1170,6 +1184,23 @@ static void write_cycle(void *m, uint16_t A, uint8_t D) {
+ 		update_vdg_mode();
+ 	}
+ 	_Bool is_ram_access = do_cpu_cycle(A, 0, &S, &Z);
++	/* external memory cartridge */
++	if ((A & ~1) == 0xFFDE) {
++		extmem_ty = A & 1;
++		LOG_PRINT("Switching to SAM map type %d\n", extmem_ty);
++	}
++	if ((A & ~1) == 0xFFBE) {
++		extmem_map = A & 1;
++		extmem_bank = D & (EXTBANKS - 1);
++		if (extmem_map)
++			LOG_DEBUG(3, "Switching to bank %d\n", extmem_bank);
++		else
++			LOG_DEBUG(3, "Switching off bank %d\n", extmem_bank);
++	}
++	if (A < 0xff00 && (A > 0xbfff || (!extmem_ty && extmem_map && A > 0x7fff))) {
++		extmem[0x8000 * extmem_bank + (A & 0x7fff)] = D;
++		S = 8; /* decoder disabled */
++	}
+ 	if ((S & 4) || unexpanded_dragon32) {
+ 		switch (S) {
+ 			case 1:
+@@ -1256,6 +1287,11 @@ uint8_t machine_read_byte(uint16_t A) {
+ 	_Bool is_ram_access = debug_cpu_cycle(A, 1, &S, &Z);
+ 	if (is_ram_access)
+ 		D = 0xff;
++	/* external memory cartridge */
++	if (A < 0xff00 && (A > 0xbfff || (!extmem_ty && extmem_map && A > 0x7fff))) {
++		D = extmem[0x8000 * extmem_bank + (A & 0x7fff)];
++		S = 8; /* decoder disabled */
++	}
+ 	switch (S) {
+ 		case 0:
+ 			if (Z < machine_ram_size)
+@@ -1321,6 +1357,23 @@ void machine_write_byte(uint16_t A, uint8_t D) {
+ 		update_vdg_mode();
+ 	}
+ 	_Bool is_ram_access = debug_cpu_cycle(A, 0, &S, &Z);
++	/* external memory cartridge */
++	if ((A & ~1) == 0xFFDE) {
++		extmem_ty = A & 1;
++		LOG_PRINT("Switching to SAM map type %d\n", extmem_ty);
++	}
++	if ((A & ~1) == 0xFFBE) {
++		extmem_map = A & 1;
++		extmem_bank = D & (EXTBANKS - 1);
++		if (extmem_map)
++			LOG_DEBUG(3, "Switching to bank %d\n", extmem_bank);
++		else
++			LOG_DEBUG(3, "Switching off bank %d\n", extmem_bank);
++	}
++	if (A < 0xff00 && (A > 0xbfff || (!extmem_ty && extmem_map && A > 0x7fff))) {
++		extmem[0x8000 * extmem_bank + (A & 0x7fff)] = D;
++		S = 8; /* decoder disabled */
++	}
+ 	if ((S & 4) || unexpanded_dragon32) {
+ 		switch (S) {
+ 			case 1:
+-- 
+1.7.9.5
+
