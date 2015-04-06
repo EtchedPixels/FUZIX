@@ -1100,7 +1100,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     ((bufptr)fp)->bf_busy = BF_SUPERBLOCK; /* really really busy */
 
 #ifdef DEBUG
-    kprintf("fp->s_mounted=0x%x, fp->s_isize=0x%x, fp->s_fsize=0x%x\n", 
+    kprintf("fp->s_mounted=0x%x, fp->s_isize=0x%x, fp->s_fsize=0x%x\n",
     fp->s_mounted, fp->s_isize, fp->s_fsize);
 #endif
 
