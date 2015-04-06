@@ -167,7 +167,7 @@ outchar:
 	    ldx traceptr
 	    sta ,x+
 	    stx traceptr
-	    puls x, pc
+	    puls x,pc
 ;	    ldb 0xff05
 ;	    bitb #0x04
 ;	    beq outcharw
