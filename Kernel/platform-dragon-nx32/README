@@ -17,3 +17,36 @@ Swapping out to disk does not work yet.
 
 There is not much 6809 userspace work done.
 
+
+Using DriveWire
+
+For bootstrapping, the fuzix.bin DECB binary must be loaded into
+internal RAM and cartridge bank 0. This is currently done over
+DriveWire, using a "DWLOAD" program tweaked for FUZIX. The changes
+from stock DWLOAD are:
+- do not enable interrupts upon execution of the payload
+- jmp instead of jsr so that stack is not used
+- default name of payload is "fuzix.bin"
+- activate cartridge memory when writing payload to RAM
+Additionally it is built to run from 0x600 so that FUZIX can
+be loaded anywhere from 0x800 and up.
+
+ lwasm --pragma=condundefzero -r -b -odwfuz.bin dwload.asm -DFUZIX -DRAMORG=0x600
+Or for an emulator with Becker port:
+ lwasm --pragma=condundefzero -r -b -odwfuzb.bin dwload.asm -DFUZIX -DRAMORG=0x600 -DBECKER
+For XRoar, just add -load dwfuzb.bin to its invocation, and on the Dragon:
+ EXEC&H600
+
+To make an audio file for loading DWLOAD via the cassette port:
+ makewav -r -c -odwfuz.wav dwfuz.bin
+The makewav utility can be found at toolshed.sf.net
+On the Dragon type: CLOADM:EXEC&H600
+
+If you already have DWLOAD (in patched BASIC ROM), you can build
+the FUZIZ loader as a "dweeb":
+ lwasm -r -b -oDWFUZ dwload.asm -DFUZIX -DRAMORG=0x600 -DDWEEB 
+On the Dragon type: DLOAD"DWFUZ" 
+
+Note that if using the DW4 DriveWire server, all files must be padded to
+a multiple of 256 bytes! Use for instance Kernel/tools/pad256
+
