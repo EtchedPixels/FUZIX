@@ -1099,8 +1099,10 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     fp = (filesys *)bread(dev, 1, 0);
     ((bufptr)fp)->bf_busy = BF_SUPERBLOCK; /* really really busy */
 
-    //   kprintf("fp->s_mounted=0x%x, fp->s_isize=0x%x, fp->s_fsize=0x%x\n", 
-    //   fp->s_mounted, fp->s_isize, fp->s_fsize);
+#ifdef DEBUG
+    kprintf("fp->s_mounted=0x%x, fp->s_isize=0x%x, fp->s_fsize=0x%x\n", 
+    fp->s_mounted, fp->s_isize, fp->s_fsize);
+#endif
 
     /* See if there really is a filesystem on the device */
     if(fp->s_mounted != SMOUNTED  ||  fp->s_isize >= fp->s_fsize) {
