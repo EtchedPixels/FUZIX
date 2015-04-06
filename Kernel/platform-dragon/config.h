@@ -36,7 +36,7 @@
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
 
-#define TICKSPERSEC 100   /* Ticks per second */
+#define TICKSPERSEC 50   /* Ticks per second */
 /* FIXME: This will move once we put the display in the kernel bank and
    sort the banker out */
 #define PROGBASE    0x0800  /* also data base */
