@@ -18,6 +18,9 @@
 /* And swapping */
 #undef SWAPDEV
 
+/* Until the Becker and floppy driver support raw I/O */
+#define CONFIG_LEGACY_EXEC
+
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* Simple text mode */
