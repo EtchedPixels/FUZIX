@@ -33,3 +33,4 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	devlpr.o devtty.o libc.o ../vt.o
+	../tools/pad256 ../fuzix.bin
