@@ -33,6 +33,7 @@
 		.globl _mdv_hdr_buf
 		.globl _mdv_len
 		.globl _mdv_page
+		.globl _mdv_csum
 
 		.globl map_process_save
 		.globl map_kernel_restore
@@ -155,7 +156,6 @@ mdv_hdr_only:
 		or a
 		ret
 
-
 ;
 ;	Load the next header, well probably header - you might get the
 ;	start of a data chunk, in which case try again
@@ -261,6 +261,55 @@ failblk:
 		ret
 
 ;
+;	IRQ had must be off here...
+;
+mdv_put_blk:	ld a, #0xE6
+		out (0xEF), a			; Write mode
+		ld de, #0x0168			; Wait for record
+		call nap			; May need to be a shade
+						; longer. Compare timings
+						; with Sinclair ROM
+		ld hl, #_mdv_hdr_buf		; Header to write first
+		ld a, (_mdv_csum)
+		ld e, a
+		ld a, #0x03			; Magneta border
+		out (0xFE), a
+		ld a, #0xE2
+		out (0xEF), a			; Ready...
+		nop				; FIXME: use a shorter
+		nop				; way to wait 24 clocks
+		nop
+		nop
+		nop
+		nop
+		ld c, #0xE7			; Data port
+		ld b, #0x1E			; Header
+		otir				; Header bytes out
+		ld hl, (_mdv_buf)
+		otir				; First 256 data
+		otir				; Last 256 data
+		out (c), e			; and the checksum
+		ld a, #0xE6
+		out (0xEF), a
+		xor a
+		out (0xFE), a			; Back in black
+		ld a, #0xEE
+		out (0xEF), a			; Writing off
+		xor a
+		ret
+
+;
+;	Write a sector from memory
+;
+mdv_store:	in a, (0xef)
+		and #1
+		jr nz, mdv_put_wp		; write protected
+		call mdv_find_hdr		; find the header we want
+		call z, mdv_put_blk		; write the block after it
+		ret				; done
+mdv_put_wp:	ld a, #4			; write protected - fail
+		ret
+;
 ;	Load a sector into memory.
 ;
 mdv_fetch:	call mdv_find_hdr		; nz = not found
@@ -364,6 +413,7 @@ _mdv_bread:
 		push af
 		call nz, map_process_save
 		call mdv_fetch
+mdv_bout:
 		jr nz, poprete
 		xor a
 poprete:
@@ -375,7 +425,10 @@ poprete:
 		ret
 
 _mdv_bwrite:
-		ld hl, #0xffff		; not done yet
-		ret
-
+		ld a, (_mdv_page)
+		or a
+		push af
+		call nz, map_process_save
+		call mdv_store
+		jr mdv_bout
 
