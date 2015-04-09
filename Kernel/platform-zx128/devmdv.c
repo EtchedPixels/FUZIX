@@ -17,11 +17,12 @@ static unsigned char mdvmap[MAX_MDV][256];
 static uint8_t mdv_valid;
 
 /* Used by the asm helpers */
-uint8_t mdv_sector;
 uint8_t *mdv_buf;
 uint8_t mdv_hdr_buf[15];
+uint8_t mdv_sector;
 uint16_t mdv_len;
 uint8_t mdv_page;
+uint8_t mdv_csum;
 static uint8_t mdv_tick;
 static uint8_t mdv_minor;
 
