@@ -73,7 +73,7 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	$(AR) -c -m syslib$(PLATFORM).lib syslib.l
+	$(AR) -c syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib c$(PLATFORM).lib
 
 fuzix$(PLATFORM)/syslib.l:
