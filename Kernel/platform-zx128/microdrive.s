@@ -20,6 +20,10 @@
 ;	don't have that. Instead we keep a blockmap table in physical 1 and
 ;	128.
 ;
+;
+;	FIXME: currently if we find the block but get a bad csum we can
+;	loop effectively forever.
+;
 		.module microdrive
 
 		.globl _mdv_motor_on
@@ -31,6 +35,7 @@
 		.globl _mdv_sector
 		.globl _mdv_buf
 		.globl _mdv_hdr_buf
+		.globl _mdv_w_hdr_buf
 		.globl _mdv_len
 		.globl _mdv_page
 		.globl _mdv_csum
@@ -42,6 +47,7 @@
 
 SECTORID	.equ	0x01
 CSUM		.equ	0x0E
+MAP_PREAMBLE	.equ	0x0C
 
 nap_1ms:	push de
 		ld de, #87
@@ -57,18 +63,28 @@ napl:		dec de
 ;	Must preserve E
 ;
 mdv_csum_hdr:
+		ld hl, #_mdv_hdr_buf	; header buffer
+mdv_csum_hdr_2:
+		ld bc, #0x0E01		; 14 bytes
+		call mdv_csum_data
+		cp (hl)
+		ret
+mdv_csum_w_hdr:
+		ld hl, #_mdv_w_hdr_buf + MAP_PREAMBLE
+		jr mdv_csum_hdr_2
+
+mdv_csum_data:
 		xor a
-		ld b, #14
-		ld hl, #_mdv_hdr_buf
-csum_hdr:				; check the header is valid
+csum_data2:
 		add (hl)
 		adc #1
 		inc hl
-		jr z, csum_h0
+		jr z, csum_d2
 		dec a
-csum_h0:
-		djnz csum_hdr
-		cp (hl)
+csum_d2:
+		djnz csum_data2
+		dec c
+		jr nz, csum_data2
 		ret
 
 ;
@@ -237,26 +253,14 @@ mdv_get_blk:	ld hl, #0x0F02		; 15 + 2 loops (data) + csum in e
 		; Sum the header block
 		call mdv_csum_hdr
 		jr nz, failblk
-
-
 		ld hl, (_mdv_buf)	; now the data
 		ld bc, #2		; 2 x 256 byte runs
-		xor a
-csum_data2:
-		add (hl)
-		adc #1
-		inc hl
-		jr z, csum_d2
-		dec a
-csum_d2:
-		djnz csum_data2
-		dec c
-		jr nz, csum_data2
-		cp e				; expected csum
-		ret z				; good block
+		call mdv_csum_data	; checksum data into a
+		cp e			; expected csum
+		ret z			; good block
 		ld a, #2
 		out (0xfe), a
-			; try again
+		; try again
 failblk:
 		ret
 
@@ -269,7 +273,7 @@ mdv_put_blk:	ld a, #0xE6
 		call nap			; May need to be a shade
 						; longer. Compare timings
 						; with Sinclair ROM
-		ld hl, #_mdv_hdr_buf		; Header to write first
+		ld hl, #_mdv_w_hdr_buf		; Header to write first
 		ld a, (_mdv_csum)
 		ld e, a
 		ld a, #0x03			; Magneta border
@@ -283,7 +287,7 @@ mdv_put_blk:	ld a, #0xE6
 		nop
 		nop
 		ld c, #0xE7			; Data port
-		ld b, #0x1E			; Header
+		ld b, #0x0F			; Header
 		otir				; Header bytes out
 		ld hl, (_mdv_buf)
 		otir				; First 256 data
@@ -299,11 +303,37 @@ mdv_put_blk:	ld a, #0xE6
 		ret
 
 ;
+;	Template for writes
+buftmplt:
+		.db 0, 0, 0, 0
+		.db 0, 0, 0, 0
+		.db 0, 0, 0xff, 0xff		; preamble
+		.db 0				; block not header
+		.db 0				; sector
+		.db 0				; length low
+		.db 2				; length high
+		.ascii "FUZIX     "		; filler basically
+;
 ;	Write a sector from memory
 ;
-mdv_store:	in a, (0xef)
+mdv_store:	ld hl, (_mdv_buf)
+		ld bc, #2			; 512 bytes
+		call mdv_csum_data		; checksum into A
+		ld (_mdv_csum), a		; save ready to write
+		;
+		; Now fill in the header on the data bloc
+		;
+		ld hl, #buftmplt
+		ld de, #_mdv_w_hdr_buf
+		ld bc, #14+MAP_PREAMBLE
+		ldir
+		ld a, (_mdv_sector)		; fill in the sector
+		ld (_mdv_w_hdr_buf + MAP_PREAMBLE + 1), a
+		call mdv_csum_w_hdr		; checksum
+		ld (hl), a			; fill in the checksum
+		in a, (0xef)
 		and #1
-		jr nz, mdv_put_wp		; write protected
+		jr z, mdv_put_wp		; write protected
 		call mdv_find_hdr		; find the header we want
 		call z, mdv_put_blk		; write the block after it
 		ret				; done

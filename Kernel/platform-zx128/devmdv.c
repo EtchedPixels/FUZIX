@@ -19,6 +19,8 @@ static uint8_t mdv_valid;
 /* Used by the asm helpers */
 uint8_t *mdv_buf;
 uint8_t mdv_hdr_buf[15];
+uint8_t mdv_w_hdr_buf[15+12];
+
 uint8_t mdv_sector;
 uint16_t mdv_len;
 uint8_t mdv_page;
@@ -80,6 +82,11 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		else
 			err = mdv_bwrite();
 		irqrestore(irq);
+		if (err) {
+			kprintf("mdv%d: %c error %d\n", minor, "wr"[is_read],
+				err);
+			goto bad;
+		}
 		mdv_buf += 512;
 	}
 	return 0;
