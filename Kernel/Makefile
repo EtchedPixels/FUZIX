@@ -16,12 +16,12 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = px4plus
 #export TARGET = socz80
 #export TARGET = tgl6502
-export TARGET = trs80
+#export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
 #export TARGET = zeta-v2
-#export TARGET = zx128
+export TARGET = zx128
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
@@ -137,7 +137,7 @@ font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
 	+make -C platform-$(TARGET) clean
 	+make -C cpm-loader clean
 	+make -C tools/bankld clean
