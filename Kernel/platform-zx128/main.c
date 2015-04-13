@@ -12,6 +12,10 @@ void pagemap_init(void)
   /* The live process also has 2 and the non running one 6 */
   pagemap_add(4);
   pagemap_add(3);
+  /* Swap */
+  swapmap_add(0);
+  swapmap_add(1);
+  swapmap_add(2);
 }
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness

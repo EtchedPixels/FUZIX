@@ -42,6 +42,8 @@
 
 		.globl map_process_save
 		.globl map_kernel_restore
+		.globl current_map
+		.globl switch_bank
 
 		.area _COMMONMEM
 
@@ -438,27 +440,30 @@ _mdv_motor_on:	pop de
 ;	ZX128. It will break if this ceases to be true.
 ;
 _mdv_bread:
+		ld de, (current_map)		; Current map into e
 		ld a, (_mdv_page)
 		or a
+		ld a, e				; Save old map
 		push af
-		call nz, map_process_save
-		call mdv_fetch
+		call nz, switch_bank		; Switch if mdv_page set
+		call mdv_fetch			; Do the I/O
 mdv_bout:
-		jr nz, poprete
+		jr nz, poprete			; Error codes for C
 		xor a
 poprete:
 		ld l, a
 		xor a
 		ld h, a
 		pop af
-		call nz, map_kernel_restore
+		call nz, switch_bank		; Switch bank if needed
 		ret
 
 _mdv_bwrite:
+		ld de, (current_map)
 		ld a, (_mdv_page)
 		or a
-		push af
-		call nz, map_process_save
+		ld a, e
+		call nz, switch_bank
 		call mdv_store
 		jr mdv_bout
 

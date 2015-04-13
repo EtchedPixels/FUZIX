@@ -20,6 +20,7 @@
 	.globl map_process_save
 	.globl map_kernel_restore
 	.globl current_map
+	.globl switch_bank
 
         .globl _kernel_flag
 
