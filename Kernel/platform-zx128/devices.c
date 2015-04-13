@@ -48,4 +48,7 @@ void device_init(void)
 #ifdef CONFIG_IDE
   devide_init();
 #endif
+  /* Hack for now - we need to open the swap to get the map. Should
+     we open swap nicely somewhere generic ? */
+  d_open(SWAPDEV, 0);
 }

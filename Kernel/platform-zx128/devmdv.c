@@ -10,7 +10,7 @@
 #include <printf.h>
 #include <devmdv.h>
 
-#define MAX_MDV		2		/* for now */
+#define MAX_MDV		4		/* for now */
 
 /* Should probably have a max and a max open to keep the maps managable */
 static unsigned char mdvmap[MAX_MDV][256];
