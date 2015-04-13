@@ -106,7 +106,7 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		  SWAPBASE);
+		  (uint8_t *)SWAPBASE);
 	pagemap_free(p);
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -136,7 +136,7 @@ void swapin(ptptr p)
 
 	swapproc = p;		/* always ourself */
 	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		 SWAPBASE);
+		 (uint8_t *)SWAPBASE);
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif
