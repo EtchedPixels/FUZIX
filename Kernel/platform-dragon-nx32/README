@@ -17,6 +17,10 @@ Swapping out to disk does not work yet.
 
 There is not much 6809 userspace work done.
 
+Emulating in XRoar
+
+XRoar can be patched with the included 0001-XRoar-emulate-nx32.patch
+to emulate this memory cartridge.
 
 Using DriveWire
 
