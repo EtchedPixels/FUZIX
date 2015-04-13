@@ -4,7 +4,7 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
-typedef signed int size_t;
+typedef unsigned int size_t;
 
 typedef uint8_t irqflags_t;
 
@@ -18,7 +18,7 @@ extern void ei(void);
 extern irqflags_t di(void);
 extern void __fastcall__ irqrestore(irqflags_t f);
 
-extern void * __fastcall__ memcpy(void *, void *, size_t);
+extern void * __fastcall__ memcpy(void *, const void *, size_t);
 extern void * __fastcall__ memset(void *, int, size_t);
 extern size_t __fastcall__ strlen(const char *);
 

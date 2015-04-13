@@ -213,7 +213,7 @@ void run(char * argv0, char ** argv)
 			wait(NULL);
 			return;
 	}
-	execvp(argv0, argv);
+	execvp(argv0, (const char**) argv);
 	perror("argv0");
 	exit(1);
 }

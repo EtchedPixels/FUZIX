@@ -135,6 +135,9 @@ void trim_trailing_spaces(char *);
 void usage(void);
 void yearly(int);
 
+int days[12][MAXDAYS];
+char lineout[80];
+
 int main(int argc, char *argv[])
 {
     struct tm *local_time;
@@ -226,8 +229,6 @@ void j_yearly(int year)
 {
     char *p;
     int col, *dp, i, month, row, which_cal;
-    int days[12][MAXDAYS];
-    char lineout[80];
 
     sprintf(lineout, "%d", year);
     center(lineout, J_WEEK_LEN * 2 + J_HEAD_SEP, 0);
@@ -263,8 +264,6 @@ void yearly(int year)
 {
     char *p;
     int col, *dp, i, month, row, which_cal;
-    int days[12][MAXDAYS];
-    char lineout[80];
 
     sprintf(lineout, "%d", year);
     center(lineout, WEEK_LEN * 3 + HEAD_SEP * 2, 0);

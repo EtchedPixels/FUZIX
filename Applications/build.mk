@@ -1,0 +1,138 @@
+# Simple, one-source-file utilities that live in Applications/util.
+# Ideally we'd like to do this using a pattern (something like
+# .../%: .../%.o), but Make doesn't support adding prerequisites
+# via pattern rules. So we have to list each one individually.
+# We could automate this using make scripting, but it'd actually be
+# more code and about 1000% less understandable.
+$(OBJ)/Applications/util/banner.exe:   $(OBJ)/Applications/util/banner.$O
+$(OBJ)/Applications/util/basename.exe: $(OBJ)/Applications/util/basename.$O
+$(OBJ)/Applications/util/bd.exe:       $(OBJ)/Applications/util/bd.$O
+$(OBJ)/Applications/util/cal.exe:      $(OBJ)/Applications/util/cal.$O
+$(OBJ)/Applications/util/cat.exe:      $(OBJ)/Applications/util/cat.$O
+$(OBJ)/Applications/util/chgrp.exe:	   $(OBJ)/Applications/util/chgrp.$O
+$(OBJ)/Applications/util/chmod.exe:    $(OBJ)/Applications/util/chmod.$O
+$(OBJ)/Applications/util/chown.exe:    $(OBJ)/Applications/util/chown.$O
+$(OBJ)/Applications/util/cksum.exe:    $(OBJ)/Applications/util/cksum.$O
+$(OBJ)/Applications/util/cmp.exe:      $(OBJ)/Applications/util/cmp.$O
+$(OBJ)/Applications/util/cp.exe:       $(OBJ)/Applications/util/cp.$O
+$(OBJ)/Applications/util/cut.exe:      $(OBJ)/Applications/util/cut.$O
+$(OBJ)/Applications/util/date.exe:     $(OBJ)/Applications/util/date.$O
+$(OBJ)/Applications/util/dd.exe:       $(OBJ)/Applications/util/dd.$O
+$(OBJ)/Applications/util/decomp16.exe: $(OBJ)/Applications/util/decomp16.$O
+$(OBJ)/Applications/util/df.exe:       $(OBJ)/Applications/util/df.$O
+$(OBJ)/Applications/util/dirname.exe:  $(OBJ)/Applications/util/dirname.$O
+$(OBJ)/Applications/util/dosread.exe:  $(OBJ)/Applications/util/dosread.$O
+$(OBJ)/Applications/util/du.exe:       $(OBJ)/Applications/util/du.$O
+$(OBJ)/Applications/util/echo.exe:     $(OBJ)/Applications/util/echo.$O
+$(OBJ)/Applications/util/ed.exe:       $(OBJ)/Applications/util/ed.$O
+$(OBJ)/Applications/util/factor.exe:   $(OBJ)/Applications/util/factor.$O
+$(OBJ)/Applications/util/false.exe:    $(OBJ)/Applications/util/false.$O
+$(OBJ)/Applications/util/fdisk.exe:    $(OBJ)/Applications/util/fdisk.$O
+$(OBJ)/Applications/util/fgrep.exe:    $(OBJ)/Applications/util/fgrep.$O
+$(OBJ)/Applications/util/fsck.exe:     $(OBJ)/Applications/util/fsck.$O
+$(OBJ)/Applications/util/grep.exe:     $(OBJ)/Applications/util/grep.$O
+$(OBJ)/Applications/util/head.exe:     $(OBJ)/Applications/util/head.$O
+$(OBJ)/Applications/util/id.exe:       $(OBJ)/Applications/util/id.$O
+$(OBJ)/Applications/util/init.exe:     $(OBJ)/Applications/util/init.$O
+$(OBJ)/Applications/util/kill.exe:     $(OBJ)/Applications/util/kill.$O
+$(OBJ)/Applications/util/ll.exe:       $(OBJ)/Applications/util/ll.$O
+$(OBJ)/Applications/util/ln.exe:       $(OBJ)/Applications/util/ln.$O
+$(OBJ)/Applications/util/logname.exe:  $(OBJ)/Applications/util/logname.$O
+$(OBJ)/Applications/util/ls.exe:       $(OBJ)/Applications/util/ls.$O
+$(OBJ)/Applications/util/man.exe:      $(OBJ)/Applications/util/man.$O
+$(OBJ)/Applications/util/mkdir.exe:    $(OBJ)/Applications/util/mkdir.$O
+$(OBJ)/Applications/util/mkfs.exe:     $(OBJ)/Applications/util/mkfs.$O
+$(OBJ)/Applications/util/mkfifo.exe:   $(OBJ)/Applications/util/mkfifo.$O
+$(OBJ)/Applications/util/mknod.exe:    $(OBJ)/Applications/util/mknod.$O
+$(OBJ)/Applications/util/more.exe:     $(OBJ)/Applications/util/more.$O
+$(OBJ)/Applications/util/mount.exe:    $(OBJ)/Applications/util/mount.$O
+$(OBJ)/Applications/util/mv.exe:       $(OBJ)/Applications/util/mv.$O
+$(OBJ)/Applications/util/od.exe:       $(OBJ)/Applications/util/od.$O
+$(OBJ)/Applications/util/pagesize.exe: $(OBJ)/Applications/util/pagesize.$O
+$(OBJ)/Applications/util/passwd.exe:   $(OBJ)/Applications/util/passwd.$O
+$(OBJ)/Applications/util/patchcpm.exe: $(OBJ)/Applications/util/patchcpm.$O
+$(OBJ)/Applications/util/printenv.exe: $(OBJ)/Applications/util/printenv.$O
+$(OBJ)/Applications/util/prtroot.exe:  $(OBJ)/Applications/util/prtroot.$O
+$(OBJ)/Applications/util/ps.exe:       $(OBJ)/Applications/util/ps.$O
+$(OBJ)/Applications/util/pwd.exe:      $(OBJ)/Applications/util/pwd.$O
+$(OBJ)/Applications/util/rm.exe:       $(OBJ)/Applications/util/rm.$O
+$(OBJ)/Applications/util/rmdir.exe:    $(OBJ)/Applications/util/rmdir.$O
+$(OBJ)/Applications/util/sleep.exe:    $(OBJ)/Applications/util/sleep.$O
+$(OBJ)/Applications/util/ssh.exe:      $(OBJ)/Applications/util/ssh.$O
+$(OBJ)/Applications/util/sort.exe:     $(OBJ)/Applications/util/sort.$O
+$(OBJ)/Applications/util/stty.exe:     $(OBJ)/Applications/util/stty.$O
+$(OBJ)/Applications/util/sum.exe:      $(OBJ)/Applications/util/sum.$O
+$(OBJ)/Applications/util/su.exe:       $(OBJ)/Applications/util/su.$O
+$(OBJ)/Applications/util/sync.exe:     $(OBJ)/Applications/util/sync.$O
+$(OBJ)/Applications/util/tee.exe:      $(OBJ)/Applications/util/tee.$O
+$(OBJ)/Applications/util/tail.exe:     $(OBJ)/Applications/util/tail.$O
+$(OBJ)/Applications/util/touch.exe:    $(OBJ)/Applications/util/touch.$O
+$(OBJ)/Applications/util/tr.exe:       $(OBJ)/Applications/util/tr.$O
+$(OBJ)/Applications/util/true.exe:     $(OBJ)/Applications/util/true.$O
+$(OBJ)/Applications/util/umount.exe:   $(OBJ)/Applications/util/umount.$O
+$(OBJ)/Applications/util/uniq.exe:     $(OBJ)/Applications/util/uniq.$O
+$(OBJ)/Applications/util/uud.exe:      $(OBJ)/Applications/util/uud.$O
+$(OBJ)/Applications/util/uue.exe:      $(OBJ)/Applications/util/uue.$O
+$(OBJ)/Applications/util/wc.exe:       $(OBJ)/Applications/util/wc.$O
+$(OBJ)/Applications/util/which.exe:    $(OBJ)/Applications/util/which.$O
+$(OBJ)/Applications/util/who.exe:      $(OBJ)/Applications/util/who.$O
+$(OBJ)/Applications/util/whoami.exe:   $(OBJ)/Applications/util/whoami.$O
+$(OBJ)/Applications/util/write.exe:    $(OBJ)/Applications/util/write.$O
+$(OBJ)/Applications/util/xargs.exe:    $(OBJ)/Applications/util/xargs.$O
+$(OBJ)/Applications/util/yes.exe:      $(OBJ)/Applications/util/yes.$O
+$(OBJ)/Applications/V7/cmd/ac.exe:     $(OBJ)/Applications/V7/cmd/ac.$O
+$(OBJ)/Applications/V7/cmd/accton.exe: $(OBJ)/Applications/V7/cmd/accton.$O
+$(OBJ)/Applications/V7/cmd/at.exe:     $(OBJ)/Applications/V7/cmd/at.$O
+$(OBJ)/Applications/V7/cmd/atrun.exe:  $(OBJ)/Applications/V7/cmd/atrun.$O
+$(OBJ)/Applications/V7/cmd/col.exe:    $(OBJ)/Applications/V7/cmd/col.$O
+$(OBJ)/Applications/V7/cmd/comm.exe:   $(OBJ)/Applications/V7/cmd/comm.$O
+$(OBJ)/Applications/V7/cmd/cron.exe:   $(OBJ)/Applications/V7/cmd/cron.$O
+$(OBJ)/Applications/V7/cmd/crypt.exe:  $(OBJ)/Applications/V7/cmd/crypt.$O
+$(OBJ)/Applications/V7/cmd/dc.exe:     $(OBJ)/Applications/V7/cmd/dc.$O
+$(OBJ)/Applications/V7/cmd/dd.exe:     $(OBJ)/Applications/V7/cmd/dd.$O
+$(OBJ)/Applications/V7/cmd/deroff.exe: $(OBJ)/Applications/V7/cmd/deroff.$O
+$(OBJ)/Applications/V7/cmd/diff3.exe:  $(OBJ)/Applications/V7/cmd/diff3.$O
+$(OBJ)/Applications/V7/cmd/diff.exe:   $(OBJ)/Applications/V7/cmd/diff.$O
+$(OBJ)/Applications/V7/cmd/diffh.exe:  $(OBJ)/Applications/V7/cmd/diffh.$O
+$(OBJ)/Applications/V7/cmd/join.exe:   $(OBJ)/Applications/V7/cmd/join.$O
+$(OBJ)/Applications/V7/cmd/look.exe:   $(OBJ)/Applications/V7/cmd/look.$O
+$(OBJ)/Applications/V7/cmd/makekey.exe: $(OBJ)/Applications/V7/cmd/makekey.$O
+$(OBJ)/Applications/V7/cmd/mesg.exe:   $(OBJ)/Applications/V7/cmd/mesg.$O
+$(OBJ)/Applications/V7/cmd/newgrp.exe: $(OBJ)/Applications/V7/cmd/newgrp.$O
+$(OBJ)/Applications/V7/cmd/pr.exe:     $(OBJ)/Applications/V7/cmd/pr.$O
+$(OBJ)/Applications/V7/cmd/ptx.exe:    $(OBJ)/Applications/V7/cmd/ptx.$O
+$(OBJ)/Applications/V7/cmd/rev.exe:    $(OBJ)/Applications/V7/cmd/rev.$O
+$(OBJ)/Applications/V7/cmd/split.exe:  $(OBJ)/Applications/V7/cmd/split.$O
+$(OBJ)/Applications/V7/cmd/su.exe:     $(OBJ)/Applications/V7/cmd/su.$O
+$(OBJ)/Applications/V7/cmd/sum.exe:    $(OBJ)/Applications/V7/cmd/sum.$O
+$(OBJ)/Applications/V7/cmd/test.exe:   $(OBJ)/Applications/V7/cmd/test.$O
+$(OBJ)/Applications/V7/cmd/time.exe:   $(OBJ)/Applications/V7/cmd/time.$O
+$(OBJ)/Applications/V7/cmd/tsort.exe:  $(OBJ)/Applications/V7/cmd/tsort.$O
+$(OBJ)/Applications/V7/cmd/wall.exe:   $(OBJ)/Applications/V7/cmd/wall.$O
+$(OBJ)/Applications/V7/games/arithmetic.exe: $(OBJ)/Applications/V7/games/arithmetic.$O
+$(OBJ)/Applications/V7/games/backgammon.exe: $(OBJ)/Applications/V7/games/backgammon.$O
+$(OBJ)/Applications/V7/games/fish.exe: $(OBJ)/Applications/V7/games/fish.$O
+$(OBJ)/Applications/V7/games/wump.exe: $(OBJ)/Applications/V7/games/wump.$O
+
+# Build levee, the text editor.
+$(OBJ)/Applications/levee/levee.exe: \
+	$(OBJ)/Applications/levee/beep.$O \
+	$(OBJ)/Applications/levee/blockio.$O \
+	$(OBJ)/Applications/levee/display.$O \
+	$(OBJ)/Applications/levee/doscall.$O \
+	$(OBJ)/Applications/levee/editcor.$O \
+	$(OBJ)/Applications/levee/exec.$O \
+	$(OBJ)/Applications/levee/find.$O \
+	$(OBJ)/Applications/levee/flexcall.$O \
+	$(OBJ)/Applications/levee/gemcall.$O \
+	$(OBJ)/Applications/levee/globals.$O \
+	$(OBJ)/Applications/levee/insert.$O \
+	$(OBJ)/Applications/levee/main.$O \
+	$(OBJ)/Applications/levee/misc.$O \
+	$(OBJ)/Applications/levee/modify.$O \
+	$(OBJ)/Applications/levee/move.$O \
+	$(OBJ)/Applications/levee/rmxcall.$O \
+	$(OBJ)/Applications/levee/ucsd.$O \
+	$(OBJ)/Applications/levee/undo.$O \
+	$(OBJ)/Applications/levee/unixcall.$O \
+	$(OBJ)/Applications/levee/wildargs.$O

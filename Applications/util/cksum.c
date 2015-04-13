@@ -103,7 +103,7 @@ static void crc(int fd, char *name)
   off_t f_size;
   unsigned long crc;
   int nb;
-  unsigned char buffer[1024];
+  static unsigned char buffer[1024];
 
   if (fd < 0) {
 	perror(name);

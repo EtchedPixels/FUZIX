@@ -7,7 +7,7 @@ unsigned short newmode;
 int make_dir(const char *name, int f)
 {
     char *line;
-    char iname[256];
+    static char iname[256];
 
     int l = strlen(name) - 1;
 

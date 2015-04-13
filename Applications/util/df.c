@@ -113,7 +113,7 @@ void df_dev(dev_t dev)
 
     printf("%-16s %6u %6u %6u %5u%% %s\n",
             dn, Total, Used, Free, Percent,
-            fsys.s_mntpt ? mntpoint(dn) : "/");
+            fsys.s_mntpt ? mntpoint(dn) : (const char*)"/");
 }
 
 void df_all(void)

@@ -91,7 +91,6 @@ char *prog_name;
 struct termios termios;
 int column= 0, max_column=80;		/* Assume 80 character terminals. */
 
-void main(int argc, char **argv);
 void report(int flags);
 int option(char *opt, char *next);
 int match(const char *s1, const char *s2);
@@ -1000,28 +999,28 @@ struct s2s {
 	speed_t ts;
 	long ns;
 } s2s[] = {
-	{ B0,		     0 },
-	{ B50,		    50 },
-	{ B75,		    75 },
-	{ B110,		   110 },
-	{ B134,		   134 },
-	{ B150,		   150 },
+	{ B0,		     0L },
+	{ B50,		    50L },
+	{ B75,		    75L },
+	{ B110,		   110L },
+	{ B134,		   134L },
+	{ B150,		   150L },
 #ifdef B200	
-	{ B200,		   200 },
+	{ B200,		   200L },
 #endif	
-	{ B300,		   300 },
-	{ B600,		   600 },
-	{ B1200,	  1200 },
+	{ B300,		   300L },
+	{ B600,		   600L },
+	{ B1200,	  1200L },
 #ifdef B1800	
-	{ B1800,	  1800 },
+	{ B1800,	  1800L },
 #endif	
-	{ B2400,	  2400 },
-	{ B4800,	  4800 },
-	{ B9600,	  9600 },
-	{ B19200,	 19200 },
-	{ B38400,	 38400 },
-	{ B57600,	 57600 },
-	{ B115200,	115200 },
+	{ B2400,	  2400L },
+	{ B4800,	  4800L },
+	{ B9600,	  9600L },
+	{ B19200,	 19200L },
+	{ B38400,	 38400L },
+	{ B57600,	 57600L },
+	{ B115200,	115200L },
 };
 
 speed_t long2speed(long num)

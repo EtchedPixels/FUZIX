@@ -11,6 +11,7 @@
 #include <blkdev.h>
 #include <devsd.h>
 #include "msx2.h"
+#include "devsd.h"
 
 /*
  * MegaFlashRom SCC+ SD contains an slot expander with several devices.
