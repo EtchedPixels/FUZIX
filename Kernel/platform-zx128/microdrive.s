@@ -373,38 +373,41 @@ mdv_motor_a:
 ;
 ;	Now we will do 8 cycles of bit banging clock and data
 ;
-mdv_motor_lp:	ld a, #0xEF			; clock it
-		out (0xef), a			; select the microdrive sel
-						; line
-		dec e				; are we there yet
+mdv_motor_lp:
+		dec e				; are we there yet ?
 		jr nz, mdv_motor_0		; send zero
 ;
 ;	Clock out an "on" bit
 ;
 		ld a,#1
-		out (0xF7), a
+		out (0xF7), a			; data high
 		ld a, #0xee
-		out (c), a			
-		call nap_1ms
-		ld a, #0xec
-		jr mdv_motor_1
+		out (c), a			; clock, !data
+		call nap_1ms			; wait 1mS
+		ld a, #0xec			; !clock !data
+		jr mdv_motor_1			; into common path
 ;
 ;	Clock out an "off" bit
 ;
 mdv_motor_0:
-		xor a
-		out (0xEF), a
+		ld a, c				; 0xEF
+		out (0xEF), a			; clock 1
+		xor a				; 0 to data
+		out (0xF7), a
 		call nap_1ms			; 1ms pulse 0
-		ld a, #0xED
+		ld a, #0xED			; clock 0
 
 mdv_motor_1:	out (c), a
-		call nap_1ms
-		djnz mdv_motor_lp
+		call nap_1ms			; 1ms wait
+		djnz mdv_motor_lp		; round we go
+		ld a, #0x01
+		out (0xF7), a			; 1 to data
+		ld a, #0xEE			; clock high, !data
+		out (0xEF), a			; done
 
 ;
 ;	"Spin" up the drive - in our case get the tape to drive speed
 ;
-mdv_spin_up:
 		ld bc, #13000
 		jp nap
 
@@ -426,10 +429,11 @@ ret0:
 ;
 _mdv_motor_on:	pop de
 		pop hl
-		pop af
-		push af
+		pop bc
+		push bc
 		push hl
 		push de
+		ld a, c
 		call mdv_motor
 		jr ret0
 ;
@@ -463,6 +467,7 @@ _mdv_bwrite:
 		ld a, (_mdv_page)
 		or a
 		ld a, e
+		push af
 		call nz, switch_bank
 		call mdv_store
 		jr mdv_bout
