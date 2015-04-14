@@ -18,9 +18,9 @@ start:		jmp start2
 ;
 		.db 0x01		; page to load at
 		.dw 0			; chmem ("0 - 'all'")
-		.dw __sectionlen_.text	; gives us code size info
-		.dw __sectionlen_.data	; gives us data size info
-		.dw __sectionlen_.bss	; bss size info
+		.dw __sectionlen_.text__	; gives us code size info
+		.dw __sectionlen_.data__	; gives us data size info
+		.dw __sectionlen_.bss__		; bss size info
 		.dw 0			; spare
 
 start2:
