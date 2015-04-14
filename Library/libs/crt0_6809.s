@@ -5,7 +5,7 @@
 		.globl _environ
 		.globl ___argv
 
-		.area .text
+		.area .header
 
 start:		jmp start2
 		.db 'F'
@@ -22,6 +22,8 @@ start:		jmp start2
 		.dw __sectionlen_.data__	; gives us data size info
 		.dw __sectionlen_.bss__		; bss size info
 		.dw 0			; spare
+
+		.area .text
 
 start2:
 		; FIXME clear BSS
