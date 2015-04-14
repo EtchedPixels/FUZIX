@@ -289,7 +289,7 @@ mdv_put_blk:	ld a, #0xE6
 		nop
 		nop
 		ld c, #0xE7			; Data port
-		ld b, #0x0F			; Header
+		ld b, #0x1B			; Header
 		otir				; Header bytes out
 		ld hl, (_mdv_buf)
 		otir				; First 256 data

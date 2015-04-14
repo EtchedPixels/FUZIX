@@ -8,6 +8,8 @@
 
 static int mdv_sec;
 
+static int bad = 0;
+
 static void SectorError(const char *p, ...)
 {
   va_list v;
@@ -16,6 +18,7 @@ static void SectorError(const char *p, ...)
   va_start(v, p);
   vfprintf(stderr, p, v);
   va_end(v);
+  bad++;
 }
 
   
@@ -43,6 +46,9 @@ static void mdv_check_header(uint8_t *buf, uint8_t sec)
 
 static void mdv_check_bufhdr(uint8_t *buf, uint8_t rec)
 {
+  int i;
+  int lb = bad;
+
   if (buf[0] != 0)
     SectorError("Bad block type %d\n", buf[0]);
   if (buf[1] != rec)
@@ -59,6 +65,19 @@ static void mdv_check_bufhdr(uint8_t *buf, uint8_t rec)
   if (buf[527] != mdv_csum(buf+15, 512))
     SectorError("Bad block data checksum %02x %02x\n", buf[527],
       mdv_csum(buf+15, 512));
+  for (i = 0; i < 32; i++) {
+    if (i != 4 && memcmp(buf + i, "FUZIX     ", 10) == 0)
+      SectorError("FUZIX tag at %d not 4\n", i);
+  }
+  if (bad > lb) {
+    for (i = 0; i < 544; i++) {
+      if (!(i & 15))
+        printf("%03x: ", i);
+      printf("%02x ", buf[i]);
+      if ((i & 15) == 15)
+        printf("\n");
+    }
+  }
 }
 
 static void mdv_check_sectormap(uint8_t *buf)
