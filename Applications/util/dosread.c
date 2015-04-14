@@ -154,7 +154,7 @@ void usage(const char *prog_name);
 unsigned c2u2(const unsigned char *ucarray);
 unsigned long c4u4(const unsigned char *ucarray);
 void determine(void);
-int main(int argc, char *argv []);
+int main(int argc, const char *argv []);
 DIRECTORY *directory(DIRECTORY *dir, int entries, BOOL function, char *pathname);
 void extract(DIRECTORY *entry);
 void delete(DIRECTORY *entry);
