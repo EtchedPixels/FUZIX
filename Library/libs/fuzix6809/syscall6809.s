@@ -4,7 +4,7 @@
 	.area .text
 
 __syscall:
-	swi2
+	swi
 	bne	error
 	rts
 error:
