@@ -26,12 +26,16 @@ start:		jmp start2
 		.area .text
 
 start2:
-		; FIXME clear BSS
+		; we don't clear BSS since the kernel already did
 
-		; FIXME get environ, argc and argv
-
-		ldx #_exit		; return vector
-		pshs x
+		; pass environ, argc and argv to main
+		ldx 4,s
+		stx _environ
+		ldx 2,s
+		stx ___argv
+		puls x			; argc
+		ldy #_exit		; return vector
+		pshs y
 		jmp _main		; go
 
 _environ:	.dw 0
