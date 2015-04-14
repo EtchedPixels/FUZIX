@@ -1,5 +1,10 @@
 #!/bin/sh
 
+endian=
+if [ "$1" = "-X" ]; then
+	shift
+	endian=-X
+fi
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
         echo "Syntax: $0 filename isize bsize"
         echo ""
@@ -8,6 +13,6 @@ if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
         exit 1
 fi
 
-../mkfs $1 $2 $3
+../mkfs $endian $1 $2 $3
 ../ucp $1 < ucp-script.txt
 ../fsck $1
