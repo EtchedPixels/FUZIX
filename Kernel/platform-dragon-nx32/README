@@ -54,3 +54,24 @@ On the Dragon type: DLOAD"DWFUZ"
 Note that if using the DW4 DriveWire server, all files must be padded to
 a multiple of 256 bytes! Use for instance Kernel/tools/pad256
 
+
+QUICK BUILDING INSTRUCTIONS
+
+1. Build the kernel:
+cd Kernel
+make TARGET=dragon-nx32
+
+2. Build the libraries
+cd Library
+make tools/syscall_6809
+cd libs
+make -f Makefile.6809
+
+3. Build the utils
+cd Applications/util
+make -f Makefile.6809 TARGET=dragon-nx32
+
+4. Build boot disk image 
+cd Standalone/filesystem-src
+./build-filesystem -X fuzix.dsk 256 65535
+
