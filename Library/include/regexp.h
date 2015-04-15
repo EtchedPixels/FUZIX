@@ -22,6 +22,6 @@ typedef struct regexp {
 extern regexp *regcomp(char *);
 extern int regexec(regexp *__prog, char *__string);
 extern void regsub(regexp *__prog, char *__source, char *__dest);
-extern void regerror(char *);
+extern void regerror(const char *);
 
 #endif
