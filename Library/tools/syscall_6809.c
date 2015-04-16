@@ -21,7 +21,7 @@ static void write_call(int n)
   fprintf(fp, "\t.area .text\n\n");
   fprintf(fp, "\t.globl __syscall\n");
   fprintf(fp, "\t.globl _%s\n\n", syscall_name[n]);
-  fprintf(fp, "_%s:\n\tldx #%d\n", syscall_name[n], n);
+  fprintf(fp, "_%s:\n\tldd #%d\n", syscall_name[n], n);
   fprintf(fp, "\tjmp __syscall\n");
   fclose(fp);
 }

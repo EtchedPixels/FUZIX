@@ -75,26 +75,26 @@ unix_syscall_entry:
 	lda #1
 	sta _kernel_flag
 
-	leax 12,s	; stacked by the swi
+	leax 14,s	; 12 stacked by the swi + return address of caller
 	ldy #U_DATA__U_ARGN
 	SAM_USER
-	ldd ,x++	; copy arguments
+	ldd 4,s		; first argument in swi stacked X
 	SAM_KERNEL
 	std ,y++
 	SAM_USER
-	ldd ,x++
+	ldd ,x++	; second argument from caller's stack
 	SAM_KERNEL
 	std ,y++
 	SAM_USER
-	ldd ,x++
+	ldd ,x++ 	; third
 	SAM_KERNEL
 	std ,y++
 	SAM_USER
-	ldd ,x++
+	ldd ,x++ 	; fourth
 	SAM_KERNEL
 	std ,y++
 	SAM_USER
-	ldd 4,s		; X register -> syscall number
+	ldd 1,s		; stacked D register -> syscall number
 	SAM_KERNEL
 	stb U_DATA__U_CALLNO
         ; save process stack pointer (in user page)
@@ -140,10 +140,14 @@ unix_syscall_entry:
 not_error:
         ; no error to signal! return syscall return value instead of error code
         ldx U_DATA__U_RETVAL
-	ldd #0
+	ldd #0		; just for setting Z flag
 unix_return:
 	; we never make a syscall from in kernel space
 	SAM_USER
+	stx 4,s		; replace stacked values before rti
+	std 1,s
+	tfr cc,a	; Z determined by D
+	sta ,s		; replace stacked CC to signal error
 	rti
 
 ;

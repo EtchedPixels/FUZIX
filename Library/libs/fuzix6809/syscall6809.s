@@ -8,8 +8,5 @@ __syscall:
 	bne	error
 	rts
 error:
-	sta	_errno
-	ldx	#0
-	stx	_errno+1
-	leax	-1,x		; Return $FFFF (-1)
+	std	_errno		; X is -1
 	rts
