@@ -98,7 +98,7 @@ int syscall_args[NR_SYSCALL] = {
 	1, //setgid
 	2, //_time
 	2, //stime
-	3, //ioctl
+	VARARGS, //ioctl
 	1, //brk
 	1, //sbrk
 	0, //fork
@@ -116,7 +116,7 @@ int syscall_args[NR_SYSCALL] = {
 	0, //geteuid
 	0, //getegid
 	1, //chroot
-	3, //fcntl
+	VARARGS, //fcntl
 	1, //fchdir
 	2, //fchmod
 	3, //fchown
