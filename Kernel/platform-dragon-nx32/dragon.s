@@ -124,7 +124,7 @@ lc          anda #0x3F
 	    stx traceptr
 	    puls x,pc
 
-	    .area .data
+	    .area .common
 
 _kernel_flag: .db 1
 traceptr:
