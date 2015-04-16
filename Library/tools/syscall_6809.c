@@ -18,11 +18,23 @@ static void write_call(int n)
     perror(namebuf);
     exit(1);
   }
-  fprintf(fp, "\t.area .text\n\n");
-  fprintf(fp, "\t.globl __syscall\n");
-  fprintf(fp, "\t.globl _%s\n\n", syscall_name[n]);
-  fprintf(fp, "_%s:\n\tldd #%d\n", syscall_name[n], n);
-  fprintf(fp, "\tjmp __syscall\n");
+  fprintf(fp, "\t.area .text\n\n"
+	      "\t.globl __syscall\n"
+	      "\t.globl __syscall_mangled\n"
+	      "\t.globl _%1$s\n\n"
+	      "_%1$s:\n", syscall_name[n]);
+  if (syscall_args[n] == VARARGS) {
+	/* Mangle into fastcall like the others: */
+	/* get return address and X (first argument) */
+	/* then put return address back */
+	fprintf(fp, "\tpuls d,x\n"
+		    "\tpshs d\n"
+		    "\tldd #%d\n"
+		    "\tjmp __syscall_mangled\n", n);
+  } else {
+	fprintf(fp, "\tldd #%d\n"
+		    "\tjmp __syscall\n", n);
+  }
   fclose(fp);
 }
 
