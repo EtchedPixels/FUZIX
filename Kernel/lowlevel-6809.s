@@ -96,7 +96,7 @@ unix_syscall_entry:
 	SAM_USER
 	ldd 4,s		; X register -> syscall number
 	SAM_KERNEL
-	std U_DATA__U_CALLNO
+	stb U_DATA__U_CALLNO
         ; save process stack pointer (in user page)
         sts U_DATA__U_SYSCALL_SP
         ; switch to kernel stack (makes our stack valid again)
