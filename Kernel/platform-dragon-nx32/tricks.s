@@ -116,8 +116,8 @@ stashb	ldd ,x++
 	lda #P_RUNNING
 	sta P_TAB__P_STATUS_OFFSET,x
 
-	lda #0
-	sta _runticks
+	ldx #0
+	stx _runticks
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
