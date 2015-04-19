@@ -21,6 +21,7 @@
         .globl interrupt_handler
 	.globl current_map
 	.globl _ptab
+	.globl _swapper
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -114,17 +115,31 @@ _switchin:
         push bc ; restore stack
 	push hl ; far padding
 
-
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
 
 	; We are in DI so we can poke these directly but must not invoke
 	; any code outside of common
 
+	ld sp, #_swapstack
+
         ld a, (hl)
+	or a
+	jr nz, not_swapped
+
+	; Swap the process in (this may swap something else out first)
+
+	push hl
+	push de
+	push af
+	call _swapper
+	pop af
+	pop de
+	pop hl
+	ld a, (hl)
+not_swapped:
 	or #0x18
 
-	; Need to deal with swap here
 
 	; Pages please !
 	ld bc, #0x7ffd
