@@ -4,7 +4,6 @@
         .module tricks
 
 	#imported
-        .globl _swapout
         .globl _newproc
         .globl _chksigs
         .globl _getproc
@@ -164,17 +163,15 @@ _dofork:
 
         ; save kernel stack pointer -- when it comes back in the parent we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
-	; returning) and with HL (ie return code) containing the child PID.
+	; returning) and with X (ie return code) containing the child PID.
         ; Hurray.
         sts U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ldx U_DATA__U_PTAB		; parent
-; FIXME
-	; jsr _swapout			; swap the parent out, leaving
-					; it in memory as the child
+	jsr fork_copy			; copy process memory to new bank
+					; and save parents uarea
 
 	; We are now in the kernel child context
 
@@ -187,12 +184,44 @@ _dofork:
 
 	; any calls to map process will now map the childs memory
 
-        ; runticks = 0;
-        clr _runticks
         ; in the child process, fork() returns zero.
+	ldx #0
+        ; runticks = 0;
+	stx _runticks
 	;
 	; And we exit, with the kernel mapped, the child now being deemed
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         rts
+
+fork_copy:
+; copy the process memory to the new bank and stash parent uarea to old bank
+	ldx fork_proc_ptr
+	ldb P_TAB__P_PAGE_OFFSET+1,x	; new bank
+	lda U_DATA__U_PAGE+1		; old bank
+	ldx #0x8000			; PROGBASE
+	pshs u				; U used by C caller
+copyf:
+	jsr map_process_a
+	ldu ,x
+	exg a,b
+	jsr map_process_a	; preserves A and B
+	stu ,x++
+	exg a,b
+	cmpx U_DATA__U_TOP
+	blo copyf
+
+; stash parent urea (including kernel stack)
+	jsr map_process_a
+	pshs b
+	ldx #U_DATA
+	ldu #U_DATA_STASH
+stashf	ldd ,x++
+	std ,u++
+	cmpx #U_DATA+U_DATA__TOTALSIZE
+	bne stashf
+	jsr map_kernel
+	puls a,u
+	; --- we are now on the stack copy, parent stack is locked away ---
+	rts                     ; this stack is copied so safe to return on
 
