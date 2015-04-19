@@ -91,6 +91,11 @@ _switchin:
 	; get process table - must be in already from switchout
 	; jsr map_kernel
 	lda P_TAB__P_PAGE_OFFSET+1,x		; LSB of 16-bit page no
+
+	; if we are switching to the same process
+	cmpa U_DATA__U_PAGE+1
+	beq nostash
+
 	jsr map_process_a
 	
 	; fetch uarea from process memory
@@ -106,6 +111,7 @@ stashb	ldd ,x++
 	; get back kernel page so that we see process table
 	jsr map_kernel
 
+nostash:
 	;puls x
 	ldx _swapstack
         ; check u_data->u_ptab matches what we wanted
