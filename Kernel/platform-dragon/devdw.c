@@ -25,6 +25,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t err;
     uint8_t *driveptr = dw_tab + minor;
     uint8_t cmd[5];
+    irqflags_t irq;
 
     if(rawflag)
         goto bad2;
@@ -44,7 +45,9 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     while (ct < 2) {
         for (tries = 0; tries < 4 ; tries++) {
             // kprintf("dw_operation on block %d ct %d\n", block, ct);
+            irq = di(); /* for now block interrupts for whole operation */
             err = dw_operation(cmd, driveptr);
+            irqrestore(irq);
             if (err == 0)
                 break;
             if (tries > 1)
