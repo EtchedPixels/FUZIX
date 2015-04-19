@@ -108,6 +108,9 @@ stashb	ldd ,x++
 	bne stashb
 	ldy _swapstack+2
 
+	; we have now new stacks so get new stack pointer before any jsr
+	lds U_DATA__U_SP
+
 	; get back kernel page so that we see process table
 	jsr map_kernel
 
