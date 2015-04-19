@@ -148,6 +148,7 @@ _dofork:
         ; runticks = 0;
         clr _runticks
         ; in the child process, fork() returns zero.
+	ldx #0
 	;
 	; And we exit, with the kernel mapped, the child now being deemed
 	; to be the live uarea. The parent is frozen in time and space as
