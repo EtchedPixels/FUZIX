@@ -29,9 +29,10 @@ start2:
 		; we don't clear BSS since the kernel already did
 
 		; pass environ, argc and argv to main
-		ldx 4,s
+		; pointers and data stuffed above stack by execve()
+		leax 4,s
 		stx _environ
-		ldx 2,s
+		leax 2,s
 		stx ___argv
 		puls x			; argc
 		ldy #_exit		; return vector
