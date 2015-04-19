@@ -90,8 +90,12 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	while(nblock--) {
 		mdv_sector = mdvmap[minor][block++];
-		kprintf("Load sector %d to %d:%x\n", mdv_sector, mdv_page, mdv_buf);
+		kprintf("%d %d:%x\n", mdv_sector, mdv_page, mdv_buf);
 		irq = di();
+		/* Shouldn't happen but in case */
+		if (mdv_tick == 0)
+			mdv_motor_on(minor + 1);
+		mdv_tick = 250;
 		if (is_read)
 			err = mdv_bread();
 		else
