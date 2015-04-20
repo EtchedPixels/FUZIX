@@ -14,7 +14,8 @@
         .globl _inint
         .globl _switchout
         .globl _switchin
-        .globl _doexec
+	.globl _low_bank
+	.globl _dup_low_page
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
@@ -115,6 +116,12 @@ _switchin:
         push bc ; restore stack
 	push hl ; far padding
 
+	ld h, d
+	ld l, e
+	call outhl
+	ld a, #10
+	call outhl
+
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
 
@@ -128,13 +135,19 @@ _switchin:
 	jr nz, not_swapped
 
 	; Swap the process in (this may swap something else out first)
+	; The second pushes are C function arguments. SDCC will trample
+	; these
 
-	push hl
+	push hl		; Save
+	push de
+	push hl		; Arguments
 	push de
 	push af
 	call _swapper
 	pop af
-	pop de
+	pop af
+	pop af
+	pop de		; Restore
 	pop hl
 	ld a, (hl)
 not_swapped:
@@ -171,10 +184,10 @@ not_swapped:
 	out (c), a
         
 	;	Is our low data in 0x8000 already or do we need to flip
-	;	it with bank 6. low_bank holds the page pointer of the
+	;	it with bank 6. _low_bank holds the page pointer of the
 	;	task owning the space
 
-	ld hl, (low_bank)	; who owns low memory
+	ld hl, (_low_bank)	; who owns low memory
 	or a
 	sbc hl, de
 	jr z, nofliplow	; not us - need to fix that up. Preserves DE
@@ -209,11 +222,15 @@ flip1:
 	ld bc, #0x7ffd
 	out (c), a
 	exx
-	ld (low_bank), de	; we own it now
+	ld (_low_bank), de	; we own it now
 
 nofliplow:
 
         ; check u_data->u_ptab matches what we wanted
+        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
+	ld h, d
+	ld l, e
+	call outhl
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE == HL
@@ -257,6 +274,23 @@ switchinfail:
         call outstring
 	; something went wrong and we didn't switch in what we asked for
         jp _trap_monitor
+
+; Interrupts should be off when this is called
+_dup_low_page:
+	ld a, #0x06 + 0x18		;	low page alternate
+	ld bc, #0x7ffd
+	out (c), a
+
+	ld hl, #0x8000			; 	Fixed
+	ld de, #0xC000			;	Page we just mapped in
+	ld bc, #16384
+	ldir
+
+	ld a, (current_map)		; 	restore mapping
+	or #0x18			; ROM bits
+	ld bc, #0x7ffd
+	out (c), a
+	ret
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
@@ -307,7 +341,7 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-	ld (low_bank), hl		;	low bank will become the child
+	ld (_low_bank), hl		;	low bank will become the child
         ld de, #P_TAB__P_PAGE_OFFSET	;	bank number
         add hl, de
         ; load p_page
@@ -434,6 +468,6 @@ bouncebuffer:
 ;	a true common so it's even easier. We never use both at once
 ;	so share with bouncebuffer
 _swapstack:
-low_bank:
+_low_bank:
 	.dw _ptab			; Init starts owning this
 
