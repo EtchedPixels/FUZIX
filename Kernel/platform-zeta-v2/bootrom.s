@@ -55,4 +55,4 @@ ramdisk_copy:
 		out (MPGSEL_3),a
 		jp 0x100		; jump to crt0.s
 ; pad
-		.ds	(0x100-(.-start))
+		.ds	(0x88-(.-start))
