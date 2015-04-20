@@ -13,6 +13,7 @@ _di:		xor a		; NMOS Z80 bug work around as per CPU manual
 		scf		; disabled
 was_ei:		push af
 		pop hl
+		di
 		ret
 
 _irqrestore:	pop hl
