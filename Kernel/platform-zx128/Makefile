@@ -1,4 +1,4 @@
-CSRCS = devtty.c devices.c main.c devmdv.c devfd.c
+CSRCS = devtty.c devices.c main.c devmdv.c devfd.c bank128.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c
 ASRCS = crt0.s zx128.s zxvideo.s microdrive.s disciple.s

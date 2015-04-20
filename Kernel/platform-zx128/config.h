@@ -33,8 +33,7 @@
 #undef CONFIG_FONT8X8
 #undef CONFIG_FONT8X8SMALL
 
-/* Two fixed banks in use */
-#define CONFIG_BANK_FIXED
+/* Custom banking */
 
 /* We have two mappings from our 128K of memory */
 #define MAX_MAPS	2
@@ -74,3 +73,5 @@
 #define SWAPTOP  0x10000UL
 #define SWAP_SIZE 0x40
 #define MAX_SWAPS 3		/* For now */
+
+#define swap_map(x)		((uint8_t *)(x))
