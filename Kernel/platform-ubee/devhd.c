@@ -115,7 +115,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	} else if (rawflag == 2) {
 		nblock = swapcnt >> 9;	/* in 512 byte chunks */
 		dptr = (uint16_t)swapbase;
-		hd_page = swapproc->p_page;
+		hd_page = swappage;
 		block = swapblk;
 	} else
 		goto bad2;
