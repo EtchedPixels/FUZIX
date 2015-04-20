@@ -95,8 +95,6 @@ _switchout:
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
-swapped: .ascii "_switchin: SWAPPED"
-            .db 13, 10, 0
 
 ;
 ;	FIXME: update this to use both pages and do the needed exchange
@@ -116,26 +114,20 @@ _switchin:
         push bc ; restore stack
 	push hl ; far padding
 
-	ld h, d
-	ld l, e
-	call outhl
-	ld a, #10
-	call outhl
-
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
-
-	; We are in DI so we can poke these directly but must not invoke
-	; any code outside of common
-
+	;
+	;	Get ourselves a valid private stack ASAP. We are going to
+	;	copy udata around and our main stacks are in udata
+	;
 	ld sp, #_swapstack
 
-        ld a, (hl)
+        ld a, (hl)	; 0 swapped, not zero is the bank for C000
 	or a
 	jr nz, not_swapped
 
 	; Swap the process in (this may swap something else out first)
-	; The second pushes are C function arguments. SDCC will trample
+	; The second pushes are C function arguments. SDCC can trample
 	; these
 
 	push hl		; Save
@@ -149,23 +141,20 @@ _switchin:
 	pop af
 	pop de		; Restore
 	pop hl
-	ld a, (hl)
+	ld a, (hl)	; We should now have a page assigned
 not_swapped:
-	or #0x18
-
-
+	; We are in DI so we can poke these directly but must not invoke
+	; any code outside of common
+	or #0x18	; ROM
 	; Pages please !
 	ld bc, #0x7ffd
 	out (c), a
 
 	;	Copy the stash from the user page back down into common
-	;	At this point we've just overwritten the live stack, and need
-	;	to avoid using our stack until we've restored SP or we
-	;	may crap on existing stack contents with unfortunate
-	;	results
-	;
 	;	The alternate registers are free - we use them for the
 	;	block copy and for the flipper
+	;
+	;	FIXME: Add Tormod's optimisation from the 6809 tree
 	;
 	exx
 	ld hl, #U_DATA_STASH
@@ -189,11 +178,11 @@ not_swapped:
 
 	ld hl, (_low_bank)	; who owns low memory
 	or a
-	sbc hl, de
-	jr z, nofliplow	; not us - need to fix that up. Preserves DE
+	sbc hl, de		; preserve DE
+	jr z, nofliplow		; skip the flip if we own low bank
 ;
 ;	Flip low banks over. Interrupts must be off as the low banks don't
-;	have the IM2 vectors
+;	have the IM2 vectors. Preserve DE
 ;
 fliplow:
 	exx
@@ -203,7 +192,7 @@ fliplow:
 	ld bc, #0x7ffd
 	out (c), a
 flip2:
-	ld b, #0		; 16K in 256 bytes
+	ld b, #0		; 256 bytes per outer loop (16K total)
 flip1:
 	ld c, (hl)
 	ld a, (de)
@@ -228,10 +217,6 @@ nofliplow:
 
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
-	ld h, d
-	ld l, e
-	call outhl
-        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE == HL
         jr nz, switchinfail
@@ -241,7 +226,7 @@ nofliplow:
         ; next_process->p_status = P_RUNNING
         ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 
-	; Fix the moved page pointers
+	; Fix any moved page pointers
 	; Just do one byte as that is all we use on this platform
 	ld a, P_TAB__P_PAGE_OFFSET(ix)
 	ld (U_DATA__U_PAGE), a
