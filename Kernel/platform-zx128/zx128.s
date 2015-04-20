@@ -32,12 +32,15 @@
         .globl _ramsize
         .globl _procmem
 
+	.globl _vtoutput
+
         .globl outcharhex
         .globl outhl, outde, outbc
         .globl outnewline
         .globl outstring
         .globl outstringhex
 
+	; banking support
 	.globl __bank_0_1
 	.globl __bank_0_2
 	.globl __bank_0_3
@@ -259,7 +262,27 @@ map_restore:
 ;	address when debugging.
 ;
 outchar:
+	ld (_tmpout), a
+	push bc
+	push de
+	push hl
+	push ix
+	ld hl, #1
+	push hl
+	ld hl, #_tmpout
+	push hl
+	push af
+	call _vtoutput
+	pop af
+	pop af
+	pop af
+	pop ix
+	pop hl
+	pop de
+	pop bc
         ret
+_tmpout:
+	.db 1
 _kernel_flag:
         .db 1
 
