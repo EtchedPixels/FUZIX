@@ -43,6 +43,8 @@
 
 #define MAX_SWAPS	64	/* Should be plenty (2MB!) */
 
+#define swap_map(x)	((uint8_t *)(x))
+
 #define BOOT_TTY (512 + 1)      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
