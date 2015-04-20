@@ -41,11 +41,11 @@ _switchout:
 	orcc #0x10		; irq off
         jsr _chksigs
 
-        ; save machine state
+        ; save machine state, including Y and U used by our C code
         ldd #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
-	pshs d
+	pshs d,y,u
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
         ; set inint to false
@@ -130,7 +130,7 @@ nostash:
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
         lds U_DATA__U_SP
-        puls x ; return code
+        puls x,y,u ; return code and saved U and Y
 
         ; enable interrupts, if the ISR isn't already running
 	lda _inint
@@ -154,8 +154,6 @@ fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_
 ;	Called from _fork. We are in a syscall, the uarea is live as the
 ;	parent uarea. The kernel is the mapped object.
 ;
-;	FIXME: preserve y
-;
 _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         orcc #0x10	 ; should already be the case ... belt and braces.
@@ -165,10 +163,10 @@ _dofork:
 	stx fork_proc_ptr
 	ldx P_TAB__P_PID_OFFSET,x
 
-        ; Save the stack pointer and critical registers.
+        ; Save the stack pointer and critical registers (Y and U used by C).
         ; When this process (the parent) is switched back in, it will be as if
         ; it returns with the value of the child's pid.
-        pshs x ; x  has p->p_pid from above, the return value in the parent
+        pshs x,y,u ;  x has p->p_pid from above, the return value in the parent
 
         ; save kernel stack pointer -- when it comes back in the parent we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
@@ -201,7 +199,7 @@ _dofork:
 	; And we exit, with the kernel mapped, the child now being deemed
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
-        rts
+	puls y,u,pc
 
 fork_copy:
 ; copy the process memory to the new bank and stash parent uarea to old bank
@@ -209,7 +207,6 @@ fork_copy:
 	ldb P_TAB__P_PAGE_OFFSET+1,x	; new bank
 	lda U_DATA__U_PAGE+1		; old bank
 	ldx #0x8000			; PROGBASE
-	pshs u				; U used by C caller
 copyf:
 	jsr map_process_a
 	ldu ,x
@@ -222,7 +219,6 @@ copyf:
 
 ; stash parent urea (including kernel stack)
 	jsr map_process_a
-	pshs b
 	ldx #U_DATA
 	ldu #U_DATA_STASH
 stashf	ldd ,x++
@@ -230,7 +226,6 @@ stashf	ldd ,x++
 	cmpx #U_DATA+U_DATA__TOTALSIZE
 	bne stashf
 	jsr map_kernel
-	puls a,u
 	; --- we are now on the stack copy, parent stack is locked away ---
 	rts                     ; this stack is copied so safe to return on
 
