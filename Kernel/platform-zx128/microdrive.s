@@ -447,7 +447,7 @@ _mdv_bread:
 		ld de, (current_map)		; Current map into e
 		ld a, (_mdv_page)
 		or a
-		ld a, e				; Save old map
+		push de
 		push af
 		call nz, switch_bank		; Switch if mdv_page set
 		call mdv_fetch			; Do the I/O
@@ -459,6 +459,8 @@ poprete:
 		xor a
 		ld h, a
 		pop af
+		pop de
+		ld a, e
 		call nz, switch_bank		; Switch bank if needed
 		ret
 
@@ -466,7 +468,7 @@ _mdv_bwrite:
 		ld de, (current_map)
 		ld a, (_mdv_page)
 		or a
-		ld a, e
+		push de
 		push af
 		call nz, switch_bank
 		call mdv_store
