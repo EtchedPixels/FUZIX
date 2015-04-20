@@ -90,7 +90,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     } else if (rawflag == 2) {		/* Swap device special */
         dlen = swapcnt;
         dptr = (uint16_t)swapbase;
-        page = &swapproc->p_page;	/* Acting on this task */
+        page = &swappage;		/* Acting on this page */
         block = swapblk;
         block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;

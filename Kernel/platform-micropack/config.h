@@ -32,6 +32,7 @@
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS	64	/* The full drive would actually be 170! */
+#define swap_map(x)	((uint8_t *)(x)) /* Simple zero based mapping */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
