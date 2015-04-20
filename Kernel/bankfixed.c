@@ -103,7 +103,7 @@ int swapout(ptptr p)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
-	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->page);
+	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 	pagemap_free(p);
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -127,7 +127,7 @@ void swapin(ptptr p, uint16_t map)
 		kprintf("%x: nopage!\n", p);
 		return;
 	}
-	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->page);
+	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif
