@@ -15,7 +15,7 @@
 uint8_t *swapbase;
 unsigned int swapcnt;
 blkno_t swapblk;
-ptptr swapproc;			/* Target process space */
+uint16_t swappage;			/* Target page */
 
 /* Table of available maps */
 static uint8_t swapmap[MAX_SWAPS];
@@ -36,22 +36,27 @@ int swapmap_alloc(void)
                 return 0;
 }
 
+/* FIXME: clean this up by having a common i/o structure to avoid
+   all the mode 1 and mode 2 confusion and conversions */
+
 int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-                    uint8_t *buf)
+                    uint16_t buf, uint16_t page)
 {
-	swapbase = buf;
+	swapbase = swap_map(buf);
 	swapcnt = nbytes;
 	swapblk = blkno;
+	swappage = page;
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 2, 0));
 }
 
 
 int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-		     uint8_t *buf)
+		     uint16_t buf, uint16_t page)
 {
-	swapbase = buf;
+	swapbase = swap_map(buf);
 	swapcnt = nbytes;
 	swapblk = blkno;
+	swappage = page;
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 2, 0));
 }
 
@@ -132,12 +137,15 @@ ptptr swapneeded(ptptr p, int notself)
  */
 void swapper(ptptr p)
 {
-	pagemap_alloc(p);	/* May cause a swapout */
+        uint16_t map = p->p_page2;
+	pagemap_alloc(p);	/* May cause a swapout. May also destroy
+                                   the old value of p->page2 */
 #ifdef DEBUG
 	kprintf("Swapping in %x (page %d), utab.ptab %x\n", p, p->p_page,
 		udata.u_ptab);
 #endif
-	swapin(p);
+	swapin(p, map);
+	swapmap_add(map);
 #ifdef DEBUG
 	kprintf("Swapped in %x (page %d), udata.ptab %x\n",
 		p, p->p_page, udata.u_ptab);

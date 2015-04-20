@@ -745,22 +745,23 @@ extern int _select(void);
 #endif
 
 /* swap.c */
-extern ptptr swapproc;
+extern uint16_t swappage;
 extern uint8_t *swapbase;
 extern unsigned int swapcnt;
 extern blkno_t swapblk;
 
 extern int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-                    uint8_t *buf);
+                    uint16_t buf, uint16_t page);
 extern int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-		     uint8_t *buf);
+		     uint16_t buf, uint16_t page);
 
 extern void swapmap_add(uint8_t swap);
 extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
+/* These two are provided by the bank code selected for the port */
 extern int swapout(ptptr p);
-extern void swapin(ptptr p);
+extern void swapin(ptptr p, uint16_t map);
 
 /* syscalls_fs.c, syscalls_proc.c, syscall_other.c etc */
 extern void updoff(void);

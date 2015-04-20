@@ -60,8 +60,6 @@ int swapout(ptptr p)
 	uint16_t blk;
 	uint16_t map;
 
-	swapproc = p;
-
 	if (!page)
 		panic("process already swapped!\n");
 #ifdef DEBUG
@@ -74,7 +72,7 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		  SWAPBASE);
+		  SWAPBASE, 1);
 	p->p_page = 0;
 	p->p_page2 = map;
 #ifdef DEBUG
@@ -86,9 +84,9 @@ int swapout(ptptr p)
 /*
  * Swap ourself in: must be on the swap stack when we do this
  */
-void swapin(ptptr p)
+void swapin(ptptr p, uint16_t map)
 {
-	uint16_t blk = p->p_page2 * SWAP_SIZE;
+	uint16_t blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
 	kprintf("Swapin %x, %d\n", p, p->p_page);
@@ -98,12 +96,8 @@ void swapin(ptptr p)
 		return;
 	}
 
-	/* Return our swap */
-	swapmap_add(p->p_page2);
-
-	swapproc = p;		/* always ourself */
 	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		 SWAPBASE);
+		 SWAPBASE, 1);
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif

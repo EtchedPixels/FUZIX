@@ -171,8 +171,7 @@ int swapout(ptptr p)
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint16_t i;
-
-	swapproc = p;
+	uint8_t *pt = (uint8_t *)&p->page;
 
 	if (page)
 		panic("process already swapped!\n");
@@ -187,7 +186,7 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	for (i = 0; i < 4; i ++) {
-		swapwrite(SWAPDEV, blk, size, (uint8_t *)base);
+		swapwrite(SWAPDEV, blk, size, base, *pt++);
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
@@ -209,12 +208,13 @@ int swapout(ptptr p)
 /*
  * Swap ourself in: must be on the swap stack when we do this
  */
-void swapin(ptptr p)
+void swapin(ptptr p, uint16_t map)
 {
-	uint16_t blk = p->p_page2 * SWAP_SIZE;
+	uint16_t blk = map * SWAP_SIZE;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint16_t i;
+	uint8_t *pt = (uint8_t *)&p->page;
 
 #ifdef DEBUG
 	kprintf("Swapin %x, %d\n", p, p->p_page);
@@ -224,12 +224,8 @@ void swapin(ptptr p)
 		return;
 	}
 
-	/* Return our swap */
-	swapmap_add(p->p_page2);
-
-	swapproc = p;		/* always ourself */
 	for (i = 0; i < 4; i ++) {
-		swapread(SWAPDEV, blk, size, (uint8_t *)base);
+		swapread(SWAPDEV, blk, size, base, *pt++);
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
