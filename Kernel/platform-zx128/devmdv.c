@@ -43,7 +43,6 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	irqflags_t irq;
 	uint16_t block, nblock;
 	uint8_t on = 0;
-	uint8_t altbank = 0;	/* Using alternate banks ? */
 
 	if (rawflag == 0) {
 		mdv_buf = udata.u_buf->bf_data;
@@ -60,20 +59,10 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		mdv_page = udata.u_page;
 	} else {
 		/* Microdrive swap awesomeness */
+		mdv_buf = swapbase;
 		nblock = swapcnt >> 9;
 		block = swapblk;
-		mdv_page = swapproc->p_page;
-		mdv_buf = swapbase;
-
-		/* Platform specific magic time. We know the swapper
-		   will do I/O to/from "us" (easy) or from the
-		   other process, in which case we need to juggle
-		   banks half way */
-		if (swapproc != udata.u_ptab) {
-			altbank = 1;
-			mdv_buf = (uint8_t *)0xC000;
-			mdv_page = 6;	/* Switched bank */
-		}
+		mdv_page = swappage;
 	}
 
 	irq = di();
@@ -90,7 +79,7 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	while(nblock--) {
 		mdv_sector = mdvmap[minor][block++];
-		kprintf("%d %d:%x\n", mdv_sector, mdv_page, mdv_buf);
+//		kprintf("%d %d:%x\n", mdv_sector, mdv_page, mdv_buf);
 		irq = di();
 		/* Shouldn't happen but in case */
 		if (mdv_tick == 0)
@@ -107,11 +96,6 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			goto bad;
 		}
 		mdv_buf += 512;
-		/* Switch bank */
-		if (altbank && mdv_buf == 0x0000) {	/* Wrapped */
-			mdv_page = swapproc->p_page;
-			mdv_buf = (uint8_t *)0xC000;
-		}
 	}
 	return 0;
 bad:
