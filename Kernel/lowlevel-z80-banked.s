@@ -576,9 +576,9 @@ _in:
 ;
 
 .ifeq CPU_NMOS_Z80
-	.include "lowlevel-z80-nmos.s"
+	.include "lowlevel-z80-nmos-banked.s"
 .else
-	.include "lowlevel-z80-cmos.s"
+	.include "lowlevel-z80-cmos-banked.s"
 .endif
 
 ;
