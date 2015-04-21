@@ -71,7 +71,11 @@ make -f Makefile.6809
 cd Applications/util
 make -f Makefile.6809 TARGET=dragon-nx32
 
-4. Build boot disk image 
+4. Build disk tools
+cd Standalone
+make
+
+5. Build boot disk image 
 cd Standalone/filesystem-src
 ./build-filesystem -X fuzix.dsk 256 65535
 
