@@ -64,6 +64,7 @@ extern FILE stdin[1];
 extern FILE stdout[1];
 extern FILE stderr[1];
 
+/* FIXME: are these really worth the cost ?? */
 #define putc(c, stream) \
 	(((stream)->bufpos >= (stream)->bufwrite) ? \
 		fputc((c), (stream)) : \
