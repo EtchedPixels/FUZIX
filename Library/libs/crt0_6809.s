@@ -1,5 +1,6 @@
 		.module crt0
 
+		.globl ___stdio_init_vars
 		.globl _main
 		.globl _exit
 		.globl _environ
@@ -27,6 +28,7 @@ start:		jmp start2
 
 start2:
 		; we don't clear BSS since the kernel already did
+		jsr ___stdio_init_vars
 
 		; pass environ, argc and argv to main
 		; pointers and data stuffed above stack by execve()
@@ -38,5 +40,7 @@ start2:
 		ldy #_exit		; return vector
 		pshs y
 		jmp _main		; go
+
+		.area .data
 
 _environ:	.dw 0
