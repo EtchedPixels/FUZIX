@@ -15,8 +15,8 @@ this recipe should work on Mac.
 	at this point to get --all-fastcall)
 
   6809:
-	gcc-4.6.4 for m6809	[Hint: build it on 32bit]
-	lwtools
+	gcc-4.6.4 for m6809
+	lwtools 4.11
 
 
 - Set TARGET in the top level Makefile

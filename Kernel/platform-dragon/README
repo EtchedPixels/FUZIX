@@ -12,7 +12,7 @@ RAM available for the user process.
 Set Up
 
 Get a copy of xroar, you *do not need* any ROM images
-Instal lwtools and your preferred 6809 gcc
+Instal lwtools (4.11) and your preferred 6809 gcc
 Set the Makefile to build for Dragon
 make
 
