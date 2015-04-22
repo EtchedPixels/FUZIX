@@ -159,7 +159,7 @@ dispatch_process_signal:
 	SAM_KERNEL
         ldb U_DATA__U_CURSIG
         beq dosigrts
-        ; put number on the stack as the argument for the signal handler
+        ; put number in X as the argument for the signal handler
 	; so extend it to 16bit
 	clra
 	tfr d,x
@@ -167,7 +167,7 @@ dispatch_process_signal:
 	lslb		;	2 bytes per entry
         ; load the address of signal handler function
 	ldy #U_DATA__U_SIGVEC
-	ldu b,y		; now y = udata.u_sigvec[cursig]
+	ldu b,y		; now u = udata.u_sigvec[cursig]
 
         ; udata.u_cursig = 0;
 	clr U_DATA__U_CURSIG
@@ -179,15 +179,14 @@ dispatch_process_signal:
 	clr ,y+
 	clr ,y
 
-        ldu #signal_return
+        ldy #signal_return
 	SAM_USER
-        pshs u      ; push return address
+        pshs y      ; push return address
 
         andcc #0xef
-	jmp ,x
+	jmp ,u
 
 signal_return:
-	puls x
         orcc #0x10
 ;
 ;	FIXME: port over the Z80 loop and check for next signal
