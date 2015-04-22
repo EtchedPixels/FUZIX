@@ -10,6 +10,7 @@
 		.globl unix_syscall_entry
 		.globl fd_nmi_handler
 		.globl size_ram
+		.globl null_handler
 
 		; exported debugging tools
 		.globl _trap_monitor
@@ -33,10 +34,15 @@
 		    jmp interrupt_handler		; 0x10C
 		    jmp firq_handler			; 0x10F
 
-
 	.area .text
+
 init_early:
+	ldx #null_handler
+	stx 1
+	lda #0x7E
+	sta 0
 	rts
+
 init_hardware:
 	jsr size_ram
 	; Turn on PIA  CB1 (50Hz interrupt)
