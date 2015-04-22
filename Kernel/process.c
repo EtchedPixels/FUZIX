@@ -481,7 +481,7 @@ void chksigs(void)
  */
 void ssig(ptptr proc, uint16_t sig)
 {
-	uint16_t sigm;
+	uint32_t sigm;
 	irqflags_t irq;
 
 	sigm = sigmask(sig);
