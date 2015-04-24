@@ -552,6 +552,15 @@ _ashlhi3_2:
 
 ___ashlsi3:
 	pshs	u
+
+	; FIXME temporary hack until we fix gcc-6809 or our use of it
+	; the argument passing doesn't match so we'll mangle it
+	ldu 4,s
+	stu ,x
+	ldu 6,s
+	stu 2,x
+	ldb 9,s
+
 	cmpb	#16
 	blt	try8
 	subb	#16
