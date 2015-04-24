@@ -46,3 +46,9 @@ void tty_hw_init(void)
     TTY_COM1_IER = 0x01; /* enable only receive interrupts */
 }
 
+void device_init(void)
+{
+    devide_init();
+    ds1302_init();
+    tty_hw_init();
+}

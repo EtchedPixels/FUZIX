@@ -8,19 +8,35 @@
    Define DEVICE_IDE if IDE hardware is present on your platform.
 
    Define IDE_8BIT_ONLY if the system implements only half of the 16-bit data
-   bus (eg N8VEM Mark IV).
+   bus (eg n8vem-mark4).
 
-   If the IDE registers appear in one contiguous block then define IDE_REG_BASE
-   and either IDE_REG_CS0_FIRST or IDE_REG_CS1_FIRST.
+   Define IDE_REG_INDIRECT if the IDE registers are not directly addressable on
+   your platform. If you do not define IDE_REG_INDIRECT then IDE registers
+   should be directly addressable by CPU I/O operations.
+   
+   If IDE_REG_INDIRECT is defined you will need to provide devide_readb() and
+   devide_writeb() to access the IDE registers. You will need to define
+   suitable values for each register (ide_reg_data, ide_reg_error etc) to be
+   passed to these functions. You will also need to provide devide_read_data()
+   and devide_write_data() to transfer sectors. See zeta-v2's PPIDE device code
+   for an example of how to do this.
 
-   If the IDE registers appear in two non-contiguous blocks then define both
-   IDE_REG_CS0_BASE and IDE_REG_CS1_BASE.
-
-   If neither of these is suitable just define the address of each register
-   ie IDE_REG_DATA, IDE_REG_ERROR, etc.
+   If IDE_REG_INDIRECT is not defined: If the IDE registers appear in one
+   contiguous block then define IDE_REG_BASE and either IDE_REG_CS0_FIRST or
+   IDE_REG_CS1_FIRST. If the IDE registers appear in two non-contiguous blocks
+   then define both IDE_REG_CS0_BASE and IDE_REG_CS1_BASE. If neither of these
+   is suitable just define the address of each register ie IDE_REG_DATA,
+   IDE_REG_ERROR, etc.
 */
 
 void devide_init(void);
+
+#ifdef IDE_REG_INDIRECT
+uint8_t devide_readb(uint8_t regaddr);
+void devide_writeb(uint8_t regaddr, uint8_t value);
+#else /* not IDE_REG_INDIRECT */
+#define devide_readb(r)        (r)
+#define devide_writeb(r,v)     do { r = v; } while(0)
 
 #ifdef IDE_REG_BASE
 #ifdef IDE_REG_CS0_FIRST
@@ -31,12 +47,13 @@ void devide_init(void);
 #define IDE_REG_CS0_BASE   (IDE_REG_BASE+0x08)
 #define IDE_REG_CS1_BASE   (IDE_REG_BASE+0x00)
 #endif
-#endif
+#endif /* IDE_REG_BASE */
 
 #ifdef IDE_REG_CS0_BASE
 #define IDE_REG_ALTSTATUS (IDE_REG_CS0_BASE + 0x06) 
 #define IDE_REG_CONTROL   (IDE_REG_CS0_BASE + 0x06) 
 #endif
+
 #ifdef IDE_REG_CS1_BASE
 #define IDE_REG_DATA      (IDE_REG_CS1_BASE + 0x00) 
 #define IDE_REG_ERROR     (IDE_REG_CS1_BASE + 0x01) 
@@ -50,6 +67,8 @@ void devide_init(void);
 #define IDE_REG_STATUS    (IDE_REG_CS1_BASE + 0x07) 
 #define IDE_REG_COMMAND   (IDE_REG_CS1_BASE + 0x07) 
 #endif
+
+#endif /* IDE_REG_INDIRECT */
 
 /* IDE status register bits */
 #define IDE_STATUS_BUSY         0x80
@@ -77,12 +96,12 @@ void devide_init(void);
 #define FLAG_CACHE_DIRTY 0x40
 #define FLAG_WRITE_CACHE 0x80
 
-
 extern bool devide_wait(uint8_t bits);
 extern void devide_read_data(void);
 extern uint8_t devide_transfer_sector(void);
 extern int devide_flush_cache(void);
 
+#ifndef IDE_REG_INDIRECT
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
 #endif
@@ -101,5 +120,6 @@ __sfr __at IDE_REG_LBA_3     ide_reg_lba_3;
 __sfr __at IDE_REG_SEC_COUNT ide_reg_sec_count;
 __sfr __at IDE_REG_STATUS    ide_reg_status;
 #endif
+#endif /* IDE_REG_INDIRECT */
 
 #endif

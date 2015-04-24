@@ -12,10 +12,14 @@
  *	make the entire of this disappear after the initial _execve
  */
 
+#ifndef TTY_INIT_BAUD
+#define TTY_INIT_BAUD B9600
+#endif
+
 static const struct termios ttydflt = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
-	CS8 | B9600 | CREAD | HUPCL,
+	CS8 | TTY_INIT_BAUD | CREAD | HUPCL,
 	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
 	{CTRL('D'), 0, 127, CTRL('C'),
 	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),

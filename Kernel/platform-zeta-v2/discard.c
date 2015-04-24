@@ -5,6 +5,12 @@
 #include <ds1302.h>
 #include "config.h"
 
+#ifdef CONFIG_PPIDE
+#include <devide.h>
+
+void ppide_init(void);
+#endif
+
 void pagemap_init(void)
 {
 	int i;
@@ -26,8 +32,13 @@ void map_init(void)
 {
 }
 
+
 void device_init(void)
 {
 	ds1302_init();
 	uart0_init();
+#ifdef CONFIG_PPIDE
+	ppide_init();
+	devide_init();
+#endif
 }

@@ -40,11 +40,11 @@ void devide_reset(void)
     kputs("IDE reset\n");
 
     /* reset both drives */
-    ide_reg_devhead = 0xE0; /* select master */
-    ide_reg_control = 0x06; /* assert reset, no interrupts */
+    devide_writeb(ide_reg_devhead, 0xE0); /* select master */
+    devide_writeb(ide_reg_control, 0x06); /* assert reset, no interrupts */
     devide_delay();
 
-    ide_reg_control = 0x02; /* release reset, no interrupts */
+    devide_writeb(ide_reg_control, 0x02); /* release reset, no interrupts */
     devide_delay();
 }
 #endif
@@ -64,12 +64,12 @@ void devide_init_drive(uint8_t drive)
 
 #ifdef IDE_8BIT_ONLY
     /* set 8-bit mode -- mostly only supported by CF cards */
-    ide_reg_devhead = select;
+    devide_writeb(ide_reg_devhead, select);
     if(!devide_wait(IDE_STATUS_READY))
         return;
 
-    ide_reg_features = 0x01; /* Enable 8-bit PIO transfer mode (CFA feature set only) */
-    ide_reg_command = IDE_CMD_SET_FEATURES;
+    devide_writeb(ide_reg_features, 0x01); /* Enable 8-bit PIO transfer mode (CFA feature set only) */
+    devide_writeb(ide_reg_command, IDE_CMD_SET_FEATURES);
 #endif
 
     /* confirm drive has LBA support */
@@ -77,8 +77,8 @@ void devide_init_drive(uint8_t drive)
         return;
 
     /* send identify command */
-    ide_reg_devhead = select;
-    ide_reg_command = IDE_CMD_IDENTIFY;
+    devide_writeb(ide_reg_devhead, select);
+    devide_writeb(ide_reg_command, IDE_CMD_IDENTIFY);
 
     /* allocate temporary sector buffer memory */
     buffer = (uint8_t *)tmpbuf();
