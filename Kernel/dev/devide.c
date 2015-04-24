@@ -27,7 +27,7 @@ bool devide_wait(uint8_t bits)
     timeout = set_timer_ms(500);
 
     while(true){
-        status = ide_reg_status;
+        status = devide_readb(ide_reg_status);
 
         if((status & (IDE_STATUS_BUSY | IDE_STATUS_ERROR | bits)) == bits)
             return true;
@@ -56,22 +56,22 @@ uint8_t devide_transfer_sector(void)
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     /* sdcc sadly unable to figure this out for itself yet */
     p = ((uint8_t *)&blk_op.lba)+3;
-    ide_reg_lba_3 = (*(p--) & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
-    ide_reg_lba_2 = *(p--);
-    ide_reg_lba_1 = *(p--);
-    ide_reg_lba_0 = *p;
+    devide_writeb(ide_reg_lba_3, (*(p--) & 0x0F) | ((drive == 0) ? 0xE0 : 0xF0)); // select drive, start loading LBA
+    devide_writeb(ide_reg_lba_2, *(p--));
+    devide_writeb(ide_reg_lba_1, *(p--));
+    devide_writeb(ide_reg_lba_0, *p);
 #else
-    ide_reg_lba_3 = ((blk_op.lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0); // select drive, start loading LBA
-    ide_reg_lba_2 = (blk_op.lba >> 16);
-    ide_reg_lba_1 = (blk_op.lba >> 8);
-    ide_reg_lba_0 = blk_op.lba;
+    devide_writeb(ide_reg_lba_3, ((blk_op.lba >> 24) & 0xF) | ((drive == 0) ? 0xE0 : 0xF0)); // select drive, start loading LBA
+    devide_writeb(ide_reg_lba_2, (blk_op.lba >> 16));
+    devide_writeb(ide_reg_lba_1, (blk_op.lba >> 8));
+    devide_writeb(ide_reg_lba_0, blk_op.lba);
 #endif
 
     if(!devide_wait(IDE_STATUS_READY))
 	return 0;
 
-    ide_reg_sec_count = 1;
-    ide_reg_command = blk_op.is_read ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR;
+    devide_writeb(ide_reg_sec_count, 1);
+    devide_writeb(ide_reg_command, blk_op.is_read ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR);
 
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
         return 0;
@@ -97,14 +97,14 @@ int devide_flush_cache(void)
     /* check drive has a cache and was written to since the last flush */
     if(blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)
 		                 == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
-	ide_reg_lba_3 = ((drive == 0) ? 0xE0 : 0xF0); // select drive
+	devide_writeb(ide_reg_lba_3, ((drive == 0) ? 0xE0 : 0xF0)); // select drive
 
 	if(!devide_wait(IDE_STATUS_READY)){
 	    udata.u_error = EIO;
 	    return -1;
 	}
 
-	ide_reg_command = IDE_CMD_FLUSH_CACHE;
+	devide_writeb(ide_reg_command, IDE_CMD_FLUSH_CACHE);
 
 	if(!devide_wait(IDE_STATUS_READY)){
 	    udata.u_error = EIO;
@@ -122,6 +122,7 @@ int devide_flush_cache(void)
 /* The innermost part of the transfer routines has to live in common memory */
 /* since it must be able to bank switch to the user memory bank.            */
 /****************************************************************************/
+#ifndef IDE_REG_INDIRECT
 COMMON_MEMORY
 
 void devide_read_data(void) __naked
@@ -159,4 +160,4 @@ gowrite:    otir                                    ; transfer first 256 bytes
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
-
+#endif
