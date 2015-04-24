@@ -133,9 +133,8 @@ void devide_read_data(void) __naked
             ld b, #0                                ; setup count
             ld c, #IDE_REG_DATA                     ; setup port number
             or a                                    ; test is_user
-            jr z, goread                            ; just start the transfer if kernel memory
-            call map_process_always                 ; else map user memory first
-goread:     inir                                    ; transfer first 256 bytes
+            call nz, map_process_always             ; map user memory first if required
+            inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
             or a                                    ; test is_user
             ret z                                   ; done if kernel memory transfer
@@ -151,9 +150,8 @@ static void devide_write_data(void) __naked
             ld b, #0                                ; setup count
             ld c, #IDE_REG_DATA                     ; setup port number
             or a                                    ; test is_user
-            jr z, gowrite                           ; just start the transfer if kernel memory
-            call map_process_always                 ; else map user memory first
-gowrite:    otir                                    ; transfer first 256 bytes
+            call nz, map_process_always             ; else map user memory first if required
+            otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
             or a                                    ; test is_user
             ret z                                   ; done if kernel memory transfer
