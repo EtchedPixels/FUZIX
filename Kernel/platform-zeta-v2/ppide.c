@@ -62,8 +62,7 @@ void devide_read_data(void) __naked
             or a                                    ; test is_user
             push af                                 ; save flags
             ld a, #PPIDE_BASE+0                     ; I will be needing this later
-            jr z, goread                            ; just start the transfer if kernel memory
-            call map_process_always                 ; else map user memory first
+            call nz, map_process_always             ; map user memory first if required
 goread:     ; now we do the transfer
             out (c), e                              ; assert /RD
             ld c, a                                 ; PPIDE_BASE
@@ -99,8 +98,7 @@ void devide_write_data(void) __naked
             or a                                    ; test is_user
             push af                                 ; save flags
             ld a, #PPIDE_BASE+0                     ; I will be needing this later
-            jr z, gowrite                           ; just start the transfer if kernel memory
-            call map_process_always                 ; else map user memory first
+            call nz, map_process_always             ; map user memory first if required
 gowrite:    ; now we do the transfer
             out (c), d                              ; de-assert /WR
             ld c, a                                 ; PPIDE_BASE
