@@ -151,7 +151,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 			case 'i':
 				ptmp = __ltostr((long) ((lval) ?
 						    va_arg(ap, long) :
-						    va_arg(ap, short)), 10);
+						    va_arg(ap, int)), 10);
 				goto printit;
 
 			case 'b':	/* Unsigned binary */
@@ -180,7 +180,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 			case 'u':	/* Unsigned decimal */
 			usproc:
 				val = lval ? va_arg(ap, unsigned long) :
-				    va_arg(ap, unsigned short);
+				    va_arg(ap, unsigned int);
 				ptmp = __ultostr(val, radix < 0 ? -radix : radix);
 				add = "";
 				if (hash) {
