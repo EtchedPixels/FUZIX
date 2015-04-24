@@ -35,7 +35,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
-#define BOOTDEVICENAMES "fd,rd"
+#define BOOTDEVICENAMES "hd#,fd,,rd"
 
 //#define SWAPDEV  (256 + 1)  /* Device for swapping */
 #define NBUFS    10       /* Number of block buffers */
@@ -48,12 +48,51 @@
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
 
 /* Floppy support */
-#define CONFIG_FLOPPY		/* # define CONFIG_FLOPPY to enable floppy */
+#define CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
+
+/* PPIDE support */
+#define CONFIG_PPIDE 		/* #define CONFIG_PPIDE to enable IDE on 8255A */
+#ifdef CONFIG_PPIDE
+#define PPIDE_BASE 0x60         /* Base address of 8255A */
+#define IDE_REG_INDIRECT        /* IDE registers are not directly connected to the CPU bus */
+
+/* IDE control signal to 8255 port C mapping */
+#define PPIDE_A0_LINE           0x01 // Direct from 8255 to IDE interface
+#define PPIDE_A1_LINE           0x02 // Direct from 8255 to IDE interface
+#define PPIDE_A2_LINE           0x04 // Direct from 8255 to IDE interface
+#define PPIDE_CS0_LINE          0x08 // Inverter between 8255 and IDE interface
+#define PPIDE_CS1_LINE          0x10 // Inverter between 8255 and IDE interface
+#define PPIDE_WR_LINE           0x20 // Inverter between 8255 and IDE interface
+#define PPIDE_WR_BIT            5    // (1 << PPIDE_WR_BIT) = PPIDE_WR_LINE
+#define PPIDE_RD_LINE           0x40 // Inverter between 8255 and IDE interface
+#define PPIDE_RD_BIT            6    // (1 << PPIDE_RD_BIT) = PPIDE_RD_LINE
+#define PPIDE_RST_LINE          0x80 // Inverter between 8255 and IDE interface
+
+/* 8255 configuration */
+#define PPIDE_PPI_BUS_READ      0x92
+#define PPIDE_PPI_BUS_WRITE     0x80
+
+/* IDE register addresses */
+#define ide_reg_data      (PPIDE_CS0_LINE)
+#define ide_reg_error     (PPIDE_CS0_LINE | PPIDE_A0_LINE)
+#define ide_reg_features  (PPIDE_CS0_LINE | PPIDE_A0_LINE)
+#define ide_reg_sec_count (PPIDE_CS0_LINE | PPIDE_A1_LINE)
+#define ide_reg_lba_0     (PPIDE_CS0_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
+#define ide_reg_lba_1     (PPIDE_CS0_LINE | PPIDE_A2_LINE)
+#define ide_reg_lba_2     (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A0_LINE)
+#define ide_reg_lba_3     (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE)
+#define ide_reg_devhead   (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE)
+#define ide_reg_command   (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
+#define ide_reg_status    (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
+#define ide_reg_altstatus (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE)
+#define ide_reg_control   (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
+#endif /* CONFIG_PPIDE */
 
 /* Optional ParPortProp board connected to PPI */
 //#define CONFIG_PPP		/* #define CONFIG_PPP to enable as tty3 */
 
 /* Device parameters */
+#define CONFIG_RAMDISK          /* enable memory-backed disk driver */
 #define NUM_DEV_RD 1
 #define DEV_RD_PAGES 16		/* size of the RAM disk in pages */
 #define DEV_RD_START 48		/* first page used by the RAM disk */

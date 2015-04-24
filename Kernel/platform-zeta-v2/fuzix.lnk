@@ -38,6 +38,9 @@ usermem_std-z80.rel
 platform-zeta-v2/discard.rel
 platform-zeta-v2/devtty.rel
 platform-zeta-v2/devtty_discard.rel
+platform-zeta-v2/ppide.rel
+platform-zeta-v2/devide.rel
+platform-zeta-v2/devide_discard.rel
 platform-zeta-v2/mbr.rel
 platform-zeta-v2/blkdev.rel
 platform-zeta-v2/ds1302.rel
