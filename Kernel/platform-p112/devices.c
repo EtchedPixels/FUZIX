@@ -34,10 +34,3 @@ bool validdev(uint16_t dev)
     else
         return true;
 }
-
-void device_init(void)
-{
-    devide_init();
-    ds1302_init();
-    tty_hw_init();
-}
