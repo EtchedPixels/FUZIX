@@ -15,7 +15,7 @@ The following are not yet supported
   interrupts fed into CTC#0 as /dev/tty2. This is partly implemented but
   scrolling has yet to be debugged!
 - FDX SASI DMA controller
-- SN76489A sound (no sound layer in Fuzix yet)
+- SN76489A sound
 
 The Rememorizer and Rememotech are not supported. Adding support for them
 should not be difficult.
@@ -41,15 +41,24 @@ Loading
 
 On the MEMU emulator you can do a fast load for testing as follows
 
-./fullcpm.sh -iobyte 0x80 -addr 0x0100 -mem /tmp/fuzix.com -addr 0x0100
+./fullcpm.sh -iobyte 0x80 -addr 0x0100 -mem platform/fuzix.com -addr 0x0100
 -serial2-out /dev/tty -diag-console -sdx-mfloppy mfloppy/ref.fs -sdx-tracks
--40
+-80
 
 (and add -diag-whatever as needed)
 
 This flips the box into pure RAM mode, loads the image at 0x100 and runs it
 fro there with the root floppy as mfloppy/ref.fs which needs to be a
-suitable image. I'm currently using a 40 track image, but 80 should work
-fine too (40 in 80 won't yet). It's quicker than booting CP/M and loading
+suitable image. I'm currently using an 80 track image, but 40 will work
+fine (40 in 80 won't yet). It's quicker than booting CP/M and loading
 the image.
+
+To build an 80 track image once everthing else is built go into
+Standalone/filesystem-src and do
+
+./build-filesystem /tmp/root.fs 128 2560
+
+
+A 40 track image will need to be hand built with a few of the less useful
+utilities removed.
 
