@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _DISCARD=0xD800
+-b _DISCARD=0xDC00
 -l z80
 platform-mtx/crt0.rel
 platform-mtx/commonmem.rel
