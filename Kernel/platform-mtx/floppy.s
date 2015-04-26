@@ -14,6 +14,11 @@
 	.globl _fd_operation
 	.globl _fd_motor_on
 	.globl _fd_motor_off
+	.globl _fd_cmd
+	.globl _fd_data
+
+	.globl map_process_always
+	.globl map_kernel
 
 FDCREG	.equ	0x10
 FDCTRK	.equ	0x11
@@ -275,19 +280,23 @@ _fd_reset:
 ;
 _fd_operation:
 	pop	bc		; return address
-	pop	hl		; command
 	pop	de		; drive track ptr
 	push	de
-	push	hl
 	push	bc
-	push	ix
-	push	hl
-	pop	ix
-	ld	l, DATA(ix)
-	ld	h, DATA+1(ix)
+
+	push	ix		; save IX (caller save in SDCC)
+
+	ld	hl, (_fd_data)	 ; data ptr
+	ld 	a, (_fd_cmd)	 ; command type
+	ld	ix, #_fd_cmd + 1 ; command
+	or	a
+	push	af
+	call	nz, map_process_always
 	call	fdsetup		; Set up for a command
 	ld	l, a
 	ld	h, #0
+	pop	af
+	call	nz, map_kernel
 	pop	ix
 	ret
 ;
@@ -379,4 +388,7 @@ motor_running:
 	.db	0
 fdcctrl:
 	.db	0
-  
+_fd_cmd:
+	.ds	5
+_fd_data:
+	.dw	0

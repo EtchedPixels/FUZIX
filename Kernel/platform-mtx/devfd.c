@@ -41,14 +41,24 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     blkno_t block;
     uint16_t dptr;
-    int ct = 0;
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = &fd_tab[minor & 1];
-    uint8_t cmd[6];
     irqflags_t irq;
+    uint8_t nblock;
 
-    if(rawflag)
+    if(rawflag == 0) {
+        dptr = (uint16_t)udata.u_buf->bf_data;
+        block = udata.u_buf->bf_blk;
+        nblock = 2;
+    } else if (rawflag == 1) {
+        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
+            goto bad2;
+        dptr = (uint16_t)udata.u_base;
+        block = udata.u_offset >> 9;
+        nblock = udata.u_count >> 8;
+    }
+    else
         goto bad2;
 
     irq = di();
@@ -60,21 +70,20 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     }
     irqrestore(irq);
 
-    dptr = (uint16_t)udata.u_buf->bf_data;
-    block = udata.u_buf->bf_blk;
 
 //    kprintf("Issue command: drive %d block %d\n", minor, block);
-    cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 16;		/* 2 sectors per block */
-    cmd[2] = ((block & 15) << 1); /* 0 - 1 base is corrected in asm */
-    cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[4] = dptr & 0xFF;
-    cmd[5] = dptr >> 8;
+    fd_cmd[0] = rawflag;
+    fd_cmd[1] = is_read ? FD_READ : FD_WRITE;
+    fd_cmd[2] = block / 16;		/* 2 sectors per block */
+    fd_cmd[3] = ((block & 15) << 1); /* 0 - 1 base is corrected in asm */
+    fd_cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
 
-    while (ct < 2) {
+    fd_data = dptr;
+
+    while (nblock--) {
         for (tries = 0; tries < 4 ; tries++) {
 //            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
-            err = fd_operation(cmd, driveptr);
+            err = fd_operation(driveptr);
             if (err == 0)
                 break;
             if (tries > 1)
@@ -83,9 +92,12 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* FIXME: should we try the other half and then bale out ? */
         if (tries == 3)
             goto bad;
-        cmd[5]++;
-        cmd[2]++;	/* Next sector for next block */
-        ct++;
+        fd_data += 256;
+        fd_cmd[3]++;	/* Next sector for next block */
+        if (fd_cmd[3] == 16) {	/* Next track */
+            fd_cmd[3] = 0;
+            fd_cmd[2]++;
+        }
     }
     return 1;
 bad:
