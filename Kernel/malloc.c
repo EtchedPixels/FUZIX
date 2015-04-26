@@ -48,9 +48,9 @@ static unsigned long memtotal;
  *	Split block at *<addr> into a used block containing <size> bytes
  *	and a free block containing the remainder.
  */
-static long *splitblk(register long **addr, long size)
+static long *splitblk(long **addr, long size)
 {
-	register long n, *p, *q;
+	long n, *p, *q;
 	n = *(p = *addr);	/* get actual block size */
 	if (n > (size + 8L)) {	/* is it worth splitting? */
 		n -= size;
@@ -73,10 +73,10 @@ static long *splitblk(register long **addr, long size)
 /*
  *	Find the smallest unused block containing at least <size> bytes.
  */
-static long *findblk(register long size)
+static long *findblk(long size)
 {
-	register int i;
-	register long n, tsiz = 0x7FFFFFFFL, **p, *q, *tptr = NULL;
+	int i;
+	long n, tsiz = 0x7FFFFFFFL, **p, *q, *tptr = NULL;
 	for (i = 0; i < MAX_POOLS; ++i) {
 		if ((p = ((long **) _mblk[i])) == NULL)
 			continue;	/* skip unavailable heaps */
@@ -99,7 +99,7 @@ static long *findblk(register long size)
  */
 static void mergeblk(int i)
 {
-	register long n, *p, *q;
+	long n, *p, *q;
 	p = (long *) _mblk[i];
 	if ((p = ((long *) *p)) == NULL)	/* empty chain */
 		return;
@@ -117,7 +117,7 @@ static void mergeblk(int i)
 /*--------------------- Documented Functions ---------------------------*/
 void *kmalloc(size_t size)
 {
-	register long *p;
+	long *p;
 	if (size <= 4L)
 		size = 8L;	/* minimum allocation */
 	else
@@ -139,9 +139,9 @@ void *kzalloc(size_t size)
 
 void kfree(void *ptr)
 {
-	register long *addr = ptr;
-	register int i;
-	register long *p, *q;
+	long *addr = ptr;
+	int i;
+	long *p, *q;
 	if (addr == NULL)
 		return;
 	--addr;			/* point to block header */
@@ -170,9 +170,9 @@ void kfree(void *ptr)
 /* FIXME: We ought to keep this as a running total */
 unsigned long kmemavail(void)
 {
-	register int i;
-	register unsigned long n = 0L;
-	register long **p, *q;
+	int i;
+	unsigned long n = 0L;
+	long **p, *q;
 	for (i = 0; i < MAX_POOLS; ++i) {
 		if ((p = ((long **) _mblk[i])) == NULL)
 			continue;	/* skip unavailable heaps */
@@ -193,9 +193,9 @@ unsigned long kmemused(void)
  */
 void kmemaddblk(void *base, size_t size)
 {
-	register int i;
-	register char *p;
-	register long *q;
+	int i;
+	char *p;
+	long *q;
 	for (i = 0; i < MAX_POOLS; ++i) {
 		if (_mblk[i] != NULL)
 			continue;	/* skip used heaps */
