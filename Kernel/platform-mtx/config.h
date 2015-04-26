@@ -56,3 +56,5 @@
 #define VT_HEIGHT	24
 #define VT_RIGHT	vt_tright[curtty]
 #define VT_BOTTOM	23
+
+#define swap_map(x)	((uint8_t *)(x))
