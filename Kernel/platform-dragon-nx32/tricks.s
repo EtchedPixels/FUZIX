@@ -13,6 +13,7 @@
         .globl map_process
         .globl map_process_a
         .globl map_process_always
+        .globl copybank
 
 	# exported
         .globl _switchout
@@ -207,15 +208,8 @@ fork_copy:
 	ldb P_TAB__P_PAGE_OFFSET+1,x	; new bank
 	lda U_DATA__U_PAGE+1		; old bank
 	ldx #0x8000			; PROGBASE
-copyf:
-	jsr map_process_a
-	ldu ,x
-	exg a,b
-	jsr map_process_a	; preserves A and B
-	stu ,x++
-	exg a,b
-	cmpx U_DATA__U_TOP
-	blo copyf
+	ldu U_DATA__U_TOP
+	jsr copybank		; preserves A,B, clobbers X,U
 
 ; stash parent urea (including kernel stack)
 	jsr map_process_a

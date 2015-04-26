@@ -14,6 +14,7 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
+	.globl copybank
 
 	; imported
 	.globl _ramsize
@@ -95,6 +96,19 @@ map_restore
 	pshs a
 	lda map_store
 	bra map_set_a
+
+; optimized bank copy for fork
+; src bank in A, dst bank in B, start in X, end in U
+copybank
+	stu cmpend+1	; self-modiying code FTW
+copyf	sta banksel
+	ldu ,x
+	stb banksel
+	stu ,x++
+cmpend	cmpx #0
+	blo copyf
+	stb map_copy
+	rts
 
 map_store	.db 0
 map_copy	.db 0
