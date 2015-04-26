@@ -88,7 +88,7 @@ What Key Features Are Missing Still
 Tool Issues
 ===========
 * No useful 8086 compiler option (started work on pcc 8086 but help
-	needed)
+	needed, coherent may provide a suitable cc but that also needs work)
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
 * SDCC can generate ROMmable binaries but not banked ones
 * SDCC has no register passing function call support, and for some
@@ -101,7 +101,10 @@ Platforms
 =========
 * Amstrad NC100/NC200 - real hardware sanity check
 * Amstrad PCW8256 - boots to loading init, floppy driver bugs to chase
+* Atari 520ST - 68000 core code build test only at this point
 * Dragon64 - abused as an emulator 6809 test environment (replaces all the system ROMs)
+* Dragon Nx32 - Dragon with Tormod's memory expansion card
+* Epson PX4/4Plus - WIP port to a very early Z80 laptop
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
 * MSX - basic functionality
 * N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the 
@@ -113,7 +116,7 @@ ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
 * Zeta v2 - initial port running to user space
-* ZX Spectrum 128K - can boot to shell but needs swap adding to get further
+* ZX Spectrum 128K - can boot to shell but needs swap debugging to get further
 
 Various other platforms are partly filled out to sanity check assumptions
 and start making progress on them. The main need there is now to tackle all
