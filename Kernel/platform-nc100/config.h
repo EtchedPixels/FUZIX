@@ -62,3 +62,8 @@
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
 #define BOOTDEVICE 0x0100	/* Only one possible option */
 #endif
+
+
+/* We need to fix rd_memcpy to handle user pages - or perhaps make the C code
+   figure out the page number and just pass it ?? */
+#define CONFIG_LEGACY_EXEC
