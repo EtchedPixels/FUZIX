@@ -70,6 +70,8 @@ int swapout(ptptr p)
 
 	/* We mever swap the live process so the second page is always
 	   page 6 */
+        if (low_bank == p)
+		panic("swapout");
 
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
