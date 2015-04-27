@@ -241,7 +241,7 @@ static void keydecode(void)
 	else
 		c = keyboard[keybyte][7-keybit];
 	if (keymap[10] & 0x80) {	/* alt */
-		if (c > 31 && c < 96)
+		if (c > 31 && c < 127)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')

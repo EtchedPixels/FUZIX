@@ -124,7 +124,7 @@ static void keydecode(void)
 		c = keyboard[keybyte][keybit];
 
 	if (keymap[6] & 2) {	/* control */
-		if (c > 31 && c < 96)
+		if (c > 31 && c < 127)
 			c &= 31;
 	}
 

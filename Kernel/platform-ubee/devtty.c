@@ -144,7 +144,7 @@ static void keydecode(void)
 	/* The keyboard lacks some rather important symbols so remap them
 	   with control */
 	if (keymap[7] & 4) {	/* control */
-		if (c > 31 && c < 96)
+		if (c > 31 && c < 127)
 			c &= 31;
 		if (keymap[7] & 3) {
 			if (c == '(')

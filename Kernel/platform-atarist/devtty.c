@@ -172,7 +172,7 @@ static void keydecode(void)
 	else
 		c = keyboard[keybyte][keybit];
 	if (keymap[1] & 64) {	/* control */
-		if (c > 31 && c < 96)
+		if (c > 31 && c < 127)
 			c &= 31;
 	}
 	tty_inproc(1, c);

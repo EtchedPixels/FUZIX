@@ -266,7 +266,7 @@ static void keydecode(void)
 
 
 	if (keymap[2] & 1) {	/* control */
-		if (c > 31 && c < 96)
+		if (c > 31 && c < 127)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
