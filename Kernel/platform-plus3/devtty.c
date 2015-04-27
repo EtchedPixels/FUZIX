@@ -128,11 +128,12 @@ void tty_pollirq(void)
 						keysdown--;
 
 				if ((key & m) && !(keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
 						keysdown++;
-					keybyte = i;
-					keybit = n;
-					newkey = 1;
+						newkey = 1;
+						keybyte = i;
+						keybit = n;
+					}
 				}
 				m >>= 1;
 			}
