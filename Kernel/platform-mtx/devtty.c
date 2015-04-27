@@ -220,25 +220,25 @@ static void keyproc(void)
 }
 
 uint8_t keyboard[8][10] = {
-	{'1', '3', '5', '7', '9' , '-', '\\', 0/*page */, 3/*brk*/, 0/*f1*/},
-	{ 27, '2', '4', '6', '8', '0', '^', 0/*eol*/, 8, 0/*f5*/},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', 0/*up*/, 9, 0/*f2*/ },
-	{'q', 'e', 't' , 'u', 'o', '@', 10, 8/*left*/, 127, 0 /* f6 */ },
-	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', 0/*right*/, 0, 0/*f7*/ },
-	{ 'a', 'd', 'g', 'j', 'l', ':', 13, 12/*home*/, 0, 0 /*f3 */ },
-	{ 0/*shift*/, 'x', 'v', 'n', ',', '/', 0/*shift*/, 0/*down*/,0 , 0 /*f8 */},
-	{'z', 'c', 'b', 'm', '.', '_', 0/*ins*/, 0/*cls*/, ' ', 0 /* f4 */ }
+	{'1', '3', '5', '7', '9' , '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{ 27, '2', '4', '6', '8', '0', '^', 0/*eol*/, CTRL('H'), KEY_F5},
+	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, '\t', KEY_F2 },
+	{'q', 'e', 't' , 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
+	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7 },
+	{ 'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3 },
+	{ 0/*shift*/, 'x', 'v', 'n', ',', '/', 0/*shift*/, KEY_DOWN, 0, KEY_F8},
+	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
 };
 
 uint8_t shiftkeyboard[8][10] = {
-	{'!', '#', '%', '\'', ')' , '=', '|', 0/*page */, 3/*brk*/, 0xF1/*f1*/},
-	{ 27, '"', '$', '&', '(', 0, '~', 0/*eol*/, 8, 0/*f5*/},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '{', 0/*up*/, 9, 0xF2/*f2*/ },
-	{'q', 'e', 't' , 'u', 'o', '`', 10, 8/*left*/, 127, 0 /* f6 */ },
-	{ 0/*capsl*/, 's', 'f', 'h', 'k', '+', '}', 0/*right*/, 0, 0/*f7*/ },
-	{ 'a', 'd', 'g', 'j', 'l', '*', 13, 12/*home*/, 0, 0 /*f3 */ },
-	{ 0/*shift*/, 'x', 'v', 'n', '<', '/', 0/*shift*/, 0/*down*/,0 , 0 /*f8 */},
-	{'z', 'c', 'b', 'm', '>', '_', 0/*ins*/, 0/*cls*/, ' ', 0 /* f4 */ }
+	{'!', '#', '%', '\'', ')' , '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{ 27, '"', '$', '&', '(', 0, '~', 0/*eol*/, KEY_BS, KEY_F5},
+	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '{', KEY_UP, '\t', KEY_F2 },
+	{'q', 'e', 't' , 'u', 'o', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
+	{ 0/*capsl*/, 's', 'f', 'h', 'k', '+', '}', KEY_RIGHT, 0, KEY_F7 },
+	{ 'a', 'd', 'g', 'j', 'l', '*', CTRL('M'), KEY_HOME, 0, KEY_F3 },
+	{ 0/*shift*/, 'x', 'v', 'n', '<', '/', 0/*shift*/, KEY_DOWN ,0 , KEY_F8},
+	{'z', 'c', 'b', 'm', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
 };
 
 static uint8_t capslock = 0;
