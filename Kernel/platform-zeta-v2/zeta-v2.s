@@ -68,7 +68,7 @@ init_early:
         call copy32k        ; copy first 32K
         pop de              ; recover memory mapping
         ld d, e             ; now for the next 32K
-        ld a, #34           ; target = first page of RAM
+        ld a, #34           ; target = third page of RAM
         call copy32k        ; copy second 32K
 
         ; Finally remap all four 16K banks to the bottom of physical memory.
