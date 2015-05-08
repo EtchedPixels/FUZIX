@@ -48,6 +48,84 @@ CONSOLE_DIVISOR_LOW	.equ	(CONSOLE_DIVISOR & 0xFF)
         .area _DISCARD
 
 init_early:
+        ; We want to be at the bottom of the RAM in the physical address space.
+        ; This may or may not alredy be the case. We can't read out the current
+        ; values of the memory banking registers.
+
+        ; We are going to assume that we are loaded in either one 64K chunk
+        ; or two 32K chunks, and that this code, plus the stack, live in the
+        ; top 16K bank. First we find ourselves in physical memory.
+        ld hl, #0x0000      ; go looking for bank 0
+        call searchpage     ; find it
+        ld d, a             ; store mapping for low 32K
+        ld hl, #0x8000      ; now go looking for bank 3
+        call searchpage     ; find it
+        ld e, a             ; store mapping for top 64K
+        push de
+
+        ; Now we copy ourselves to the right place in physical memory.
+        ld a, #32           ; target = first page of RAM
+        call copy32k        ; copy first 32K
+        pop de              ; recover memory mapping
+        ld d, e             ; now for the next 32K
+        ld a, #34           ; target = first page of RAM
+        call copy32k        ; copy second 32K
+
+        ; Finally remap all four 16K banks to the bottom of physical memory.
+        ld a, #32           ; first page of RAM
+        ld c, #MPGSEL_0     ; first bank register
+mappage:
+        out (c), a          ; map
+        inc c               ; next bank
+        inc a               ; next page
+        cp #36              ; done last page?
+        ret z
+        jr mappage
+
+copy32k:
+        out (MPGSEL_1), a
+        inc a
+        push af             ; store next RAM page
+        ld a, d             ; setup source
+        out (MPGSEL_0), a
+        call copy16k
+        inc a
+        out (MPGSEL_0), a   ; source is now second half
+        pop af              ; recover next RAM page
+        out (MPGSEL_1), a
+        ; fall through to copy16k
+copy16k:                    ; copy bank 0 to bank 1
+        ld hl, #0x0000
+        ld de, #0x4000
+        ld bc, #0x4000
+        ldir
+        ret
+
+searchpage:                 ; search for a page of virtual memory in physical memory
+        ld a, (hl)          ; read a byte
+        ld c, a             ; save it
+        ld a, #0x55         ; known value
+        ld (hl), a          ; write it at a fixed address
+        ld b, #32           ; first 512K is ROM on Zeta2
+checkpage:
+        ld a, b             ; map the page
+        out (MPGSEL_1), a   ; at 0x4000
+        ld a, (0x4000)      ; read test byte from remapped memory
+        cp #0x55            ; found it?
+        jr nz, nextpage     ; no
+        ld a, #0x42         ; test with another value (possibly it was 0x55 by chance)
+        ld (hl), a          ; write it
+        ld a, (0x4000)      ; read it
+        cp #0x42            ; found it?
+        jr z, foundpage     ; we got one!
+nextpage:
+        inc b               ; next page
+        jr nz, checkpage    ; check next page -- note we test pages above 1MB too
+        halt                ; wrapped to page 0, not found it: shouldn't happen
+foundpage:
+        ld a, c             ; get back the byte
+        ld (hl), a          ; put it back before anyone notices
+        ld a, b             ; return with page number in A
 	ret
 
 init_hardware:
