@@ -48,3 +48,4 @@ image:
 	sdldz80 -m -i bootrom.rel
 	makebin -s 256 bootrom.ihx > bootrom.bin
 	cat bootrom.bin ../fuzix.bin > fuzix.rom
+	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
