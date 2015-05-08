@@ -118,6 +118,8 @@ checkpage:
         ld a, (0x4000)      ; read it
         cp #0x42            ; found it?
         jr z, foundpage     ; we got one!
+        ld a, #0x55         ; put back the first test value
+        ld (hl), a
 nextpage:
         inc b               ; next page
         jr nz, checkpage    ; check next page -- note we test pages above 1MB too
