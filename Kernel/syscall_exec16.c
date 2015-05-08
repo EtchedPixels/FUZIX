@@ -218,8 +218,8 @@ arg_t _execve(void)
 
 	// Shove argc and the address of argv just below envp
 #ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
-	uputw((uint16_t) nargv, nenvp - 1);
-	uputw((uint16_t) argc, nenvp - 2);
+	uputw((uint16_t) nargv, nenvp - 2);
+	uputw((uint16_t) argc, nenvp - 1);
 #else
 	uputw((uint16_t) nargv, nenvp - 1);
 	uputw((uint16_t) argc, nenvp - 2);
