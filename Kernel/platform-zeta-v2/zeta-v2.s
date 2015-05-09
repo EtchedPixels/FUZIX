@@ -104,10 +104,10 @@ copy16k:                    ; copy bank 0 to bank 1
 searchpage:                 ; search for a page of virtual memory in physical memory
         ld a, (hl)          ; read a byte
         ld c, a             ; save it
-        ld a, #0x55         ; known value
-        ld (hl), a          ; write it at a fixed address
         ld b, #32           ; first 512K is ROM on Zeta2
 checkpage:
+        ld a, #0x55         ; known value
+        ld (hl), a          ; write it at a fixed address
         ld a, b             ; map the page
         out (MPGSEL_1), a   ; at 0x4000
         ld a, (0x4000)      ; read test byte from remapped memory
@@ -118,8 +118,6 @@ checkpage:
         ld a, (0x4000)      ; read it
         cp #0x42            ; found it?
         jr z, foundpage     ; we got one!
-        ld a, #0x55         ; put back the first test value
-        ld (hl), a
 nextpage:
         inc b               ; next page
         jr nz, checkpage    ; check next page -- note we test pages above 1MB too
