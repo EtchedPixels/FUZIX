@@ -1,0 +1,46 @@
+PLATFORM = 6809
+CC = m6809-unknown-gcc
+# These are wrappers for lwasm and lwar
+ASM = m6809-unknown-as
+AR = m6809-unknown-ar
+LINKER = lwlink
+CFLAGS =  -I../../../../Library/include -I../../../../Library/include/6502
+COPT = -Os
+LINKER_OPT = --format=raw -L../../../../Library/libs -lc6809
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc
+LINKER_OPT += --script=../../../util/$(TARGET).link
+ASM_OPT = -o
+CRT0 = ../../../../Library/libs/crt0_6809.o
+
+.SUFFIXES: .c .o
+
+
+SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
+        macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
+        string.c xec.c glob.c
+
+# Workaround for gcc 6809
+SRCS_HARD = word.c
+
+
+OBJS = $(SRCS:.c=.o)
+OBJS_HARD = $(SRCS_HARD:.c=.o) 
+
+all: sh
+
+$(OBJS): $(SRCS) $(CRT0)
+
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+$(OBJS_HARD): $(SRCS_HARD)
+
+sh: $(OBJS) $(OBJS_HARD) 
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS) $(OBJS_HARD)
+
+clean:
+	rm -f $(OBJS) sh $(SRCS:.c=) core *~
+
+rmbak:
+	rm -f *~ core
