@@ -141,7 +141,7 @@ static void keyproc(void)
 	}
 }
 
-#ifdef COCO_KBD
+#ifdef CONFIG_COCO_KBD
 uint8_t keyboard[8][7] = {
 	{ '@', 'h', 'p', 'x', '0', '8', KEY_ENTER },
 	{ 'a', 'i', 'q', 'y', '1', '9', 0 /* clear - used as ctrl*/ },
