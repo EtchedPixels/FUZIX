@@ -6,7 +6,49 @@ Heavily based on prior work by Will Sowerbutts <will@sowerbutts.com> and others
 Supported hardware:
  - RAM disk
  - RS232 serial port (16550 UART, tty1)
+ - PPIDE hard disk
  - Real time clock (should be, not tested)
+
+To build the kernel, edit the TARGET line in Kernel/Makefile to read:
+    export TARGET = zeta-v2
+Then run "make clean; make all" in the "Kernel" directory.
+
+-- BOOTING FROM CP/M --
+
+Copy "fuzix.com" to your CP/M filesystem. Run it from CP/M, it will boot the
+kernel. Requires a reasonably large TPA.
+
+-- BOOTING OFF DISK FROM UNA BIOS --
+
+The file "Kernel/platform-zeta-v2/diskboot.bin" is an UNA BIOS compatible
+boot sector which will allow the system to be booted directly from a PPIDE 
+drive. The boot sector will load the kernel image starting from the third
+sector of the drive (ie counting from 0, sector number 2).
+
+The kernel image (fuzix.bin) should be written to the disk drive from the third
+sector onwards, in the space before the first partition starts. Be careful to
+ensure there is sufficient space before the first partition to hold the kernel
+or you risk overwriting the filesystem in the first partition! Modern disk
+partitioning programs generally start the first partition at 1MB (sector 2048)
+and thus allow plenty of space.
+
+To check the space before the first partition, use "fdisk -l /dev/sdX" and
+check the value in the "Start" column for the first partition. If this number
+is 128 or larger, there is sufficient space.
+
+To write the boot sector to a disk drive, without overwriting the partition
+table, you can use dd as follows;
+    dd if=diskboot.bin bs=446 count=1 of=/dev/sdX
+
+To write the kernel image to the disk drive, use dd as follows;
+    dd if=fuzix.bin bs=512 seek=2 of=/dev/sdX
+
+Load the disk into the machine and boot. At the "Boot UNA unit number or ROM?"
+prompt, type the number of the disk unit to boot from.
+
+-- BOOTING FROM ROM --
+
+Currently the system can be booted from the Flash ROM. 
 
 Memory allocation (16 KiB pages):
 - ROM pages:	0 - 31
@@ -18,12 +60,8 @@ Memory allocation (16 KiB pages):
   - User space pages:	36 - 47
   - RAM disk:		48 - 63
 
-To build the kernel, edit the TARGET line in Kernel/Makefile to read:
-    export TARGET = zeta-v2
-Then run "make clean; make all" in the "Kernel" directory.
 
-Currently the system can be booted from the Flash ROM. Use the following steps
-to build the Flash ROM image:
+Use the following steps to build the Flash ROM image:
 
 1. Build the kernel (see above)
 2. Build the userspace utils (needs to be documented)
