@@ -20,7 +20,7 @@ CROSS_CCOPTS += -I../dev/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
-all:	$(OBJS)
+all:	$(OBJS) diskboot.bin
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
@@ -41,10 +41,16 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin
+	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin diskboot.bin
+
+diskboot.bin:	diskboot.s
+	$(CROSS_AS) $(ASOPTS) diskboot.s
+	sdldz80 -nmi diskboot.rel
+	makebin -s 65536 diskboot.ihx | dd bs=512 skip=125 count=1 of=diskboot.bin
 
 image:
 	sdasz80 -o bootrom.s
 	sdldz80 -m -i bootrom.rel
 	makebin -s 256 bootrom.ihx > bootrom.bin
 	cat bootrom.bin ../fuzix.bin > fuzix.rom
+	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
