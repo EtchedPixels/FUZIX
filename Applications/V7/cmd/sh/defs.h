@@ -89,30 +89,30 @@ extern STRING *sh_setenv(void);
 
 
 #define alloc malloc
-ADDRESS		alloc();
-void		addblok();
-STRING		make();
-STRING		movstr();
-TREPTR		cmd();
-TREPTR		makefork();
-NAMPTR		lookup();
-void		setname();
-void		setargs();
-DOLPTR		useargs();
-DOLPTR		freeargs();
-REAL		expr();
-STRING		catpath();
-STRING		getpath();
-STRING		*scan();
-STRING		mactrim();
-STRING		macro();
-void		await();
-void		post();
-void		exname();
-void		printnam();
-void		printflg();
-void		prs();
-void		prc();
+ADDRESS alloc();
+void addblok();
+STRING make();
+STRING movstr();
+TREPTR cmd();
+TREPTR makefork();
+NAMPTR lookup();
+void setname();
+void setargs();
+DOLPTR useargs();
+DOLPTR freeargs();
+REAL expr();
+STRING catpath();
+STRING getpath();
+STRING *scan();
+STRING mactrim();
+STRING macro();
+void await();
+void post();
+void exname();
+void printnam();
+void printflg();
+void prs();
+void prc();
 
 #define attrib(n,f)	(n->namflg |= f)
 #define round(a,b)	(((int)((ADR(a)+b)-1))&~((b)-1))
@@ -122,16 +122,16 @@ void		prc();
 #define assert(x)	;
 
 /* temp files and io */
-extern UFD		output;
-extern INT		ioset;
-extern IOPTR		iotemp;		/* files to be deleted sometime */
-extern IOPTR		iopend;		/* documents waiting to be read at NL */
+extern UFD output;
+extern INT ioset;
+extern IOPTR iotemp;		/* files to be deleted sometime */
+extern IOPTR iopend;		/* documents waiting to be read at NL */
 
 /* substitution */
-extern INT		dolc;
-extern STRING		*dolv;
-extern DOLPTR		argfor;
-extern ARGPTR		gchain;
+extern INT dolc;
+extern STRING *dolv;
+extern DOLPTR argfor;
+extern ARGPTR gchain;
 
 /* stack */
 #define		BLK(x)	((BLKPTR)(x))
@@ -154,12 +154,12 @@ extern const char endoffile[];
 extern const char synmsg[];
 
 /* name tree and words */
-extern SYSTAB		reserved;
-extern INT		wdval;
-extern INT		wdnum;
-extern ARGPTR		wdarg;
-extern INT		wdset;
-extern BOOL		reserv;
+extern SYSTAB reserved;
+extern INT wdval;
+extern INT wdnum;
+extern ARGPTR wdarg;
+extern INT wdset;
+extern BOOL reserv;
 
 /* prompting */
 extern const char stdprompt[];
@@ -167,21 +167,21 @@ extern const char supprompt[];
 extern const char profile[];
 
 /* built in names */
-extern NAMNOD		fngnod;
-extern NAMNOD		ifsnod;
-extern NAMNOD		homenod;
-extern NAMNOD		mailnod;
-extern NAMNOD		pathnod;
-extern NAMNOD		ps1nod;
-extern NAMNOD		ps2nod;
+extern NAMNOD fngnod;
+extern NAMNOD ifsnod;
+extern NAMNOD homenod;
+extern NAMNOD mailnod;
+extern NAMNOD pathnod;
+extern NAMNOD ps1nod;
+extern NAMNOD ps2nod;
 
 /* special names */
 extern char flagadr[10];
-extern STRING		cmdadr;
-extern STRING		exitadr;
-extern STRING		dolladr;
-extern STRING		pcsadr;
-extern STRING		pidadr;
+extern STRING cmdadr;
+extern STRING exitadr;
+extern STRING dolladr;
+extern STRING pcsadr;
+extern STRING pidadr;
 
 extern const char defpath[];
 
@@ -195,15 +195,15 @@ extern const char ps1name[];
 extern const char ps2name[];
 
 /* transput */
-extern CHAR	tmpout[];
-extern STRING		tmpnam;
-extern INT		serial;
+extern CHAR tmpout[];
+extern STRING tmpnam;
+extern INT serial;
 #define		TMPNAM 7
-extern FILE		standin;
+extern FILE standin;
 #define input	(standin->fdes)
 #define eof	(standin->feof)
-extern INT		peekc;
-extern STRING		comdiv;
+extern INT peekc;
+extern STRING comdiv;
 extern const char devnull[];
 
 /* flags */
@@ -221,16 +221,16 @@ extern const char devnull[];
 #define		execpr	04000
 #define		readpr	010000
 #define		keyflg	020000
-extern INT		flags;
+extern INT flags;
 
 /* error exits from various parts of shell */
 #include	<setjmp.h>
-extern jmp_buf		subshell;
-extern jmp_buf		errshell;
+extern jmp_buf subshell;
+extern jmp_buf errshell;
 
 /* fault handling */
 #include	"brkincr.h"
-extern POS		brkincr;
+extern POS brkincr;
 
 #define MINTRAP	0
 #define MAXTRAP	17
@@ -244,22 +244,22 @@ extern POS		brkincr;
 #define SIGSET	4
 #define SIGMOD	8
 
-void		fault();
-extern BOOL		trapnote;
-extern STRING	trapcom[];
-extern BOOL	trapflg[];
+void fault();
+extern BOOL trapnote;
+extern STRING trapcom[];
+extern BOOL trapflg[];
 
 /* name tree and words */
-extern STRING		*environ;
-extern CHAR		numbuf[];
+extern STRING *environ;
+extern CHAR numbuf[];
 extern const char export[];
 extern const char readonly[];
 
 /* execflgs */
-extern INT		exitval;
-extern BOOL		execbrk;
-extern INT		loopcnt;
-extern INT		breakcnt;
+extern INT exitval;
+extern BOOL execbrk;
+extern INT loopcnt;
+extern INT breakcnt;
 
 /* messages */
 extern const char mailmsg[];
@@ -288,7 +288,6 @@ extern const char badexec[];
 extern const char notfound[];
 extern const char badfile[];
 
-extern address	end[];
+extern address end[];
 
 #include	"ctype.h"
-

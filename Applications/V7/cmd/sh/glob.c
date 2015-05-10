@@ -36,5 +36,10 @@ jmp_buf errshell;
 
 /* FIXME */
 
-int setjmp(jmp_buf bar) {}
-void longjmp(jmp_buf bar, int foo) {}
+int setjmp(jmp_buf bar)
+{
+}
+
+void longjmp(jmp_buf bar, int foo)
+{
+}

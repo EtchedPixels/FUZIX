@@ -18,10 +18,10 @@
 #define N_DEFAULT 0
 
 struct namnod {
-	NAMPTR	namlft;
-	NAMPTR	namrgt;
-	STRING	namid;
-	STRING	namval;
-	STRING	namenv;
-	INT	namflg;
+	NAMPTR namlft;
+	NAMPTR namrgt;
+	STRING namid;
+	STRING namval;
+	STRING namenv;
+	INT namflg;
 };

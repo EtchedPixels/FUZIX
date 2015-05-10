@@ -12,73 +12,78 @@
 
 #include	"defs.h"
 
-STKPTR		stakbot=nullstr;
+STKPTR stakbot = nullstr;
 
 
 
 /* ========	storage allocation	======== */
 
-STKPTR	getstak(asize)
-	INT		asize;
-{	/* allocate requested stack */
-	register STKPTR	oldstak;
-	register INT		size;
+STKPTR getstak(asize)
+INT asize;
+{				/* allocate requested stack */
+	register STKPTR oldstak;
+	register INT size;
 
-	size=round(asize,BYTESPERWORD);
-	oldstak=stakbot;
+	size = round(asize, BYTESPERWORD);
+	oldstak = stakbot;
 	staktop = stakbot += size;
-	return(oldstak);
+	return (oldstak);
 }
 
-STKPTR	locstak()
-{	/* set up stack for local use
-	 * should be followed by `endstak'
-	 */
-	if(brkend-stakbot<BRKINCR
-	) {	setbrk(brkincr);
-		if(brkincr < BRKMAX
-		) {	brkincr += 256;
-		;}
-	;}
-	return(stakbot);
+STKPTR locstak()
+{				/* set up stack for local use
+				 * should be followed by `endstak'
+				 */
+	if (brkend - stakbot < BRKINCR) {
+		setbrk(brkincr);
+		if (brkincr < BRKMAX) {
+			brkincr += 256;
+			;
+		};
+	}
+	return (stakbot);
 }
 
-STKPTR	savstak()
+STKPTR savstak()
 {
-	assert(staktop==stakbot);
-	return(stakbot);
+	assert(staktop == stakbot);
+	return (stakbot);
 }
 
-STKPTR	endstak(argp)
-	register STRING	argp;
-{	/* tidy up after `locstak' */
-	register STKPTR	oldstak;
-	*argp++=0;
-	oldstak=stakbot; stakbot=staktop=(STKPTR)round(argp,BYTESPERWORD);
-	return(oldstak);
+STKPTR endstak(argp)
+register STRING argp;
+{				/* tidy up after `locstak' */
+	register STKPTR oldstak;
+	*argp++ = 0;
+	oldstak = stakbot;
+	stakbot = staktop = (STKPTR) round(argp, BYTESPERWORD);
+	return (oldstak);
 }
 
-void	tdystak(x)
-	register STKPTR 	x;
+void tdystak(x)
+register STKPTR x;
 {
 	/* try to bring stack back to x */
-	while(ADR(stakbsy)>ADR(x)
-	){free(stakbsy);
-	   stakbsy = stakbsy->word;
-	;}
-	staktop=stakbot=max(ADR(x),ADR(stakbas));
+	while (ADR(stakbsy) > ADR(x)
+	    ) {
+		free(stakbsy);
+		stakbsy = stakbsy->word;
+		;
+	}
+	staktop = stakbot = max(ADR(x), ADR(stakbas));
 	rmtemp(x);
 }
 
 stakchk()
 {
-	if((brkend-stakbas)>BRKINCR+BRKINCR
-	) {	setbrk(-BRKINCR);
-	;}
+	if ((brkend - stakbas) > BRKINCR + BRKINCR) {
+		setbrk(-BRKINCR);
+		;
+	}
 }
 
-STKPTR	cpystak(x)
-	STKPTR		x;
+STKPTR cpystak(x)
+STKPTR x;
 {
-	return(endstak(movstr(x,locstak())));
+	return (endstak(movstr(x, locstak())));
 }
