@@ -124,8 +124,8 @@ static TREPTR	list(flg)
 	REG INT		b;
 
 	r = term(flg);
-	WHILE r && ((b=(wdval==ANDFSYM)) || wdval==||SYM)
-	DO	r = makelist((b ? TAND : T||), r, term(NLFLG));
+	WHILE r && ((b=(wdval==ANDFSYM)) || wdval==ORFSYM)
+	DO	r = makelist((b ? TAND : TORF), r, term(NLFLG));
 	OD
 	return(r);
 }
@@ -160,7 +160,8 @@ static REGPTR	syncase(esym)
 	THEN	return(0);
 	ELSE	REG REGPTR	r=(REGPTR)getstak(REGTYPE);
 		r->regptr=0;
-		LOOP wdarg->argnxt=r->regptr;
+		for(;;) {
+		 wdarg->argnxt=r->regptr;
 		     r->regptr=wdarg;
 		     IF wdval || ( word()!=')' && wdval!='|' )
 		     THEN synbad();
@@ -169,7 +170,7 @@ static REGPTR	syncase(esym)
 		     THEN word();
 		     ELSE break;
 		     FI
-		POOL
+		}
 		r->regcom=cmd(0,NLFLG|MTFLG);
 		IF wdval==ECSYM
 		THEN	r->regnxt=syncase(esym);

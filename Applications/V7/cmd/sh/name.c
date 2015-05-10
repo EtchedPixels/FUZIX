@@ -129,7 +129,8 @@ INT	readvar(names)
 	THEN	f->fsiz=1;
 	FI
 
-	LOOP	c=nextc(0);
+	for(;;) {
+		c=nextc(0);
 		IF (*names && any(c, ifsnod.namval)) || eolchar(c)
 		THEN	zerostak();
 			assign(n,absstak(rel)); setstak(rel);
@@ -142,7 +143,7 @@ INT	readvar(names)
 			FI
 		ELSE	pushstak(c);
 		FI
-	POOL
+	}
 	WHILE n
 	DO assign(n, nullstr);
 	   IF *names THEN n=lookup(*names++); ELSE n=0; FI

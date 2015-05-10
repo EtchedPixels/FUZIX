@@ -349,7 +349,8 @@ static INT	split(s)
 	REG INT		c;
 	INT		count=0;
 
-	LOOP	sigchk(); argp=locstak()+BYTESPERWORD;
+	for(;;) {
+		sigchk(); argp=locstak()+BYTESPERWORD;
 		WHILE (c = *s++, !any(c,ifsnod.namval) && c)
 		DO *argp++ = c OD
 		IF argp==staktop+BYTESPERWORD
@@ -366,5 +367,5 @@ static INT	split(s)
 			makearg(argp); count++;
 		FI
 		Lcheat(gchain) |= ARGMK;
-	POOL
+	}
 }

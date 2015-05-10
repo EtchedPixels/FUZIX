@@ -32,7 +32,7 @@ ADDRESS	alloc(nbytes)
 {
 	REG POS		rbytes = round(nbytes+BYTESPERWORD,BYTESPERWORD);
 
-	LOOP	INT		c=0;
+	for (;;) {	INT		c=0;
 		REG BLKPTR	p = blokp;
 		REG BLKPTR	q;
 		REP	IF !busy(p)
@@ -49,7 +49,7 @@ ADDRESS	alloc(nbytes)
 			q = p; p = BLK(Rcheat(p->word)&~BUSY);
 		PER	p>q || (c++)==0 DONE
 		addblok(rbytes);
-	POOL
+	}
 }
 
 void	addblok(reqd)
@@ -95,7 +95,7 @@ chkbptr(ptr)
 	REG BLKPTR	q;
 	INT		us=0, un=0;
 
-	LOOP
+	for (;;) {
 	   q = Rcheat(p->word)&~BUSY;
 	   IF p==ptr THEN exf++ FI
 	   IF q<end || q>bloktop THEN abort(3) FI
@@ -106,7 +106,7 @@ chkbptr(ptr)
 	   FI
 	   IF p>=q THEN abort(4) FI
 	   p=q;
-	POOL
+	}
 	IF exf==0 THEN abort(1) FI
 	prn(un); prc(SP); prn(us); prc(NL);
 }

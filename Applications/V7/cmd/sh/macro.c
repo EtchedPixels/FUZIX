@@ -118,13 +118,14 @@ retry:
 			FI
 			IF v
 			THEN	IF c!='+'
-				THEN	LOOP WHILE c = *v++
+				THEN	for (;;) {
+				            WHILE c = *v++
 					     DO pushstak(c|quote); OD
 					     IF dolg==0 || (++dolg>dolc)
 					     THEN break;
 					     ELSE v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
 					     FI
-					POOL
+					}
 				FI
 			ELIF argp
 			THEN	IF c=='?'

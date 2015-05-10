@@ -123,13 +123,14 @@ copy(ioparg)
 		iop->iolst=iotemp; iotemp=iop;
 		cline=locstak();
 
-		LOOP	clinep=cline; chkpr(NL);
+		for (;;) {
+			clinep=cline; chkpr(NL);
 			WHILE (c = (nosubst ? readc() :  nextc(*ends)),  !eolchar(c)) DO *clinep++ = c OD
 			*clinep=0;
 			IF eof || eq(cline,ends) THEN break FI
 			*clinep++=NL;
 			write(fd,cline,clinep-cline);
-		POOL
+		}
 		close(fd);
 	FI
 }

@@ -131,7 +131,8 @@ BOOL		prof;
 	IF input>=0 THEN initf(input) FI
 
 	/* command loop */
-	LOOP	tdystak(0);
+	for(;;) {
+		tdystak(0);
 		stakchk(); /* may reduce sbrk */
 		exitset();
 		IF (flags&prompt) && standin->fstak==0 && !eof
@@ -152,7 +153,7 @@ BOOL		prof;
 		alarm(0); flags &= ~waiting;
 		execute(cmd(NL,MTFLG),0);
 		eof |= (flags&oneflg);
-	POOL
+	}
 }
 
 chkpr(eor)

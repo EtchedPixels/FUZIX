@@ -57,7 +57,7 @@ INT	expand(as,rflg)
 	   OD
 	END
 
-	LOOP	IF cs==s
+	for(;;) {	IF cs==s
 		THEN	s=nullstr;
 			break;
 		ELIF *--cs == '/'
@@ -65,7 +65,7 @@ INT	expand(as,rflg)
 			IF s==cs THEN s="/" FI
 			break;
 		FI
-	POOL
+	}
 	IF stat(s,&statb)>=0
 	    && (statb.st_mode&S_IFMT)==S_IFDIR
 	    && (dirf=open(s,0))>0

@@ -9,7 +9,6 @@
  *
  */
 
-#define PROC	extern
 #define TYPE	typedef
 #define STRUCT	TYPE struct
 #define UNION	TYPE union
@@ -33,8 +32,6 @@
 #define REP	do{
 #define PER	}while(
 #define DONE	);
-#define LOOP	for(;;){
-#define POOL	}
 
 #define TRUE	(-1)
 #define FALSE	0

@@ -326,7 +326,7 @@ execute(argt, execflg, pf1, pf2)
 			FI
 			break;
 
-		case T||:
+		case TORF:
 			IF execute(((LSTPTR)t)->lstlef,0)!=0
 			THEN	execute(((LSTPTR)t)->lstrit,execflg);
 			FI
