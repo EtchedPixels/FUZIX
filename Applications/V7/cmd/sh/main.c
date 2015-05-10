@@ -46,7 +46,7 @@ main(c, v)
 	sh_getenv();
 
 	/* look for restricted */
-/*	IF c>0 ANDF any('r', *v) THEN rflag=0 FI */
+/*	IF c>0 && any('r', *v) THEN rflag=0 FI */
 
 	/* look for options */
 	dolc=options(c,v);
@@ -75,7 +75,7 @@ main(c, v)
 	IF (beenhere++)==FALSE
 	THEN	/* ? profile */
 		IF *cmdadr=='-'
-		    ANDF (input=pathopen(nullstr, profile))>=0
+		    && (input=pathopen(nullstr, profile))>=0
 		THEN	exfile(rflag); flags &= ~ttyflg;
 		FI
 		IF rflag==0 THEN flags |= rshflg FI
@@ -115,14 +115,14 @@ BOOL		prof;
 	userid=getuid();
 
 	/* decide whether interactive */
-	IF (flags&intflg) ORF ((flags&oneflg)==0 ANDF isatty(output) ANDF isatty(input))
+	IF (flags&intflg) || ((flags&oneflg)==0 && isatty(output) && isatty(input))
 	THEN	dfault(&ps1nod, (userid?stdprompt:supprompt));
 		dfault(&ps2nod, readmsg);
 		flags |= ttyflg|prompt; ignsig(KILL);
 	ELSE	flags |= prof; flags &= ~prompt;
 	FI
 
-	IF setjmp(errshell) ANDF prof
+	IF setjmp(errshell) && prof
 	THEN	close(input); return;
 	FI
 
@@ -134,11 +134,11 @@ BOOL		prof;
 	LOOP	tdystak(0);
 		stakchk(); /* may reduce sbrk */
 		exitset();
-		IF (flags&prompt) ANDF standin->fstak==0 ANDF !eof
+		IF (flags&prompt) && standin->fstak==0 && !eof
 		THEN	IF mailnod.namval
-			    ANDF stat(mailnod.namval,&statb)>=0 ANDF statb.st_size
-			    ANDF (statb.st_mtime != mailtime)
-			    ANDF mailtime
+			    && stat(mailnod.namval,&statb)>=0 && statb.st_size
+			    && (statb.st_mtime != mailtime)
+			    && mailtime
 			THEN	prs(mailmsg)
 			FI
 			mailtime=statb.st_mtime;
@@ -158,7 +158,7 @@ BOOL		prof;
 chkpr(eor)
 char eor;
 {
-	IF (flags&prompt) ANDF standin->fstak==0 ANDF eor==NL
+	IF (flags&prompt) && standin->fstak==0 && eor==NL
 	THEN	prs(ps2nod.namval);
 	FI
 }

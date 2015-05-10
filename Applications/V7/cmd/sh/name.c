@@ -41,7 +41,7 @@ syslook(w,syswds)
 
 	WHILE s=syscan->sysnam
 	DO  IF first == *s
-		ANDF eq(w,s)
+		&& eq(w,s)
 	    THEN return(syscan->sysval);
 	    FI
 	    syscan++;
@@ -130,7 +130,7 @@ INT	readvar(names)
 	FI
 
 	LOOP	c=nextc(0);
-		IF (*names ANDF any(c, ifsnod.namval)) ORF eolchar(c)
+		IF (*names && any(c, ifsnod.namval)) || eolchar(c)
 		THEN	zerostak();
 			assign(n,absstak(rel)); setstak(rel);
 			IF *names

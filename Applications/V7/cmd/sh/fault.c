@@ -63,7 +63,7 @@ getsig(n)
 {
 	REG INT		i;
 
-	IF trapflg[i=n]&SIGMOD ORF ignsig(i)==0
+	IF trapflg[i=n]&SIGMOD || ignsig(i)==0
 	THEN	signal(i,fault);
 	FI
 }
@@ -76,7 +76,7 @@ oldsigs()
 	i=MAXTRAP;
 	WHILE i--
 	DO  t=trapcom[i];
-	    IF t==0 ORF *t
+	    IF t==0 || *t
 	    THEN clrsig(i);
 	    FI
 	    trapflg[i]=0;

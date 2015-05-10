@@ -42,7 +42,7 @@ void	initio(iop)
 	IF iop
 	THEN	iof=iop->iofile;
 		ion=mactrim(iop->ioname);
-		IF *ion ANDF (flags&noexec)==0
+		IF *ion && (flags&noexec)==0
 		THEN	IF iof&IODOC
 			THEN	subst(chkopen(ion),(fd=tmpfil()));
 				close(fd); fd=chkopen(tmpout); unlink(tmpout);
@@ -58,7 +58,7 @@ void	initio(iop)
 			THEN	fd=chkopen(ion);
 			ELIF flags&rshflg
 			THEN	failed(ion,restricted);
-			ELIF iof&IOAPP ANDF (fd=open(ion,1))>=0
+			ELIF iof&IOAPP && (fd=open(ion,1))>=0
 			THEN	lseek(fd, 0L, 2);
 			ELSE	fd=create(ion);
 			FI
@@ -91,7 +91,7 @@ INT	pathopen(path, name)
 	REG UFD		f;
 
 	REP path=catpath(path,name);
-	PER (f=open(curstak(),0))<0 ANDF path DONE
+	PER (f=open(curstak(),0))<0 && path DONE
 	return(f);
 }
 
@@ -103,7 +103,7 @@ STRING	catpath(path,name)
 	REG STRING	scanp = path,
 			argp = locstak();
 
-	WHILE *scanp ANDF *scanp!=COLON DO *argp++ = *scanp++ OD
+	WHILE *scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
 	IF scanp!=path THEN *argp++='/' FI
 	IF *scanp==COLON THEN scanp++ FI
 	path=(*scanp ? scanp : 0); scanp=name;
@@ -233,7 +233,7 @@ void	await(i)
 				sig = w_hi;
 			FI
 			IF sysmsg[sig]
-			THEN	IF i!=p ORF (flags&prompt)==0 THEN prp(); prn(p); blank() FI
+			THEN	IF i!=p || (flags&prompt)==0 THEN prp(); prn(p); blank() FI
 				prs(sysmsg[sig]);
 				IF w&0200 THEN prs(coredump) FI
 			FI
@@ -246,7 +246,7 @@ void	await(i)
 		wx |= w;
 	OD
 
-	IF wx ANDF flags&errflg
+	IF wx && flags&errflg
 	THEN	exitsh(rc);
 	FI
 	exitval=rc; exitset();
@@ -289,7 +289,7 @@ STRING	*scan(argn)
 		IF argp = argp->argnxt
 		THEN trim(*comargn);
 		FI
-		IF argp==0 ORF Rcheat(argp)&ARGMK
+		IF argp==0 || Rcheat(argp)&ARGMK
 		THEN	gsort(comargn,comargm);
 			comargm = comargn;
 		FI

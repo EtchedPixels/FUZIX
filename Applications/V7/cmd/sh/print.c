@@ -26,7 +26,7 @@ blank()
 
 prp()
 {
-	IF (flags&prompt)==0 ANDF cmdadr
+	IF (flags&prompt)==0 && cmdadr
 	THEN	prs(cmdadr); prs(colon);
 	FI
 }
@@ -89,9 +89,9 @@ STRING	icp;
 	REG INT		r = 0;
 	REG CHAR	c;
 
-	WHILE (c = *cp, digit(c)) ANDF c ANDF r>=0
+	WHILE (c = *cp, digit(c)) && c && r>=0
 	DO r = r*10 + c - '0'; cp++ OD
-	IF r<0 ORF cp==icp
+	IF r<0 || cp==icp
 	THEN	failed(icp,badnum);
 	ELSE	return(r);
 	FI

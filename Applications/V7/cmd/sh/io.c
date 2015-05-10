@@ -61,7 +61,7 @@ pop()
 chkpipe(pv)
 	INT		*pv;
 {
-	IF pipe(pv)<0 ORF pv[INPIPE]<0 ORF pv[OTPIPE]<0
+	IF pipe(pv)<0 || pv[INPIPE]<0 || pv[OTPIPE]<0
 	THEN	error(piperr);
 	FI
 }
@@ -126,7 +126,7 @@ copy(ioparg)
 		LOOP	clinep=cline; chkpr(NL);
 			WHILE (c = (nosubst ? readc() :  nextc(*ends)),  !eolchar(c)) DO *clinep++ = c OD
 			*clinep=0;
-			IF eof ORF eq(cline,ends) THEN break FI
+			IF eof || eq(cline,ends) THEN break FI
 			*clinep++=NL;
 			write(fd,cline,clinep-cline);
 		POOL

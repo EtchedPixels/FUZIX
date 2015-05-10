@@ -50,7 +50,7 @@ static TREPTR	makelist(type,i,r)
 {
 	REG LSTPTR	t;
 
-	IF i==0 ORF r==0
+	IF i==0 || r==0
 	THEN	synbad();
 	ELSE	t = (LSTPTR)getstak(LSTTYPE);
 		t->lsttyp = type;
@@ -79,7 +79,7 @@ TREPTR	cmd(sym,flg)
 	THEN	IF flg&NLFLG
 		THEN	wdval=';'; chkpr(NL);
 		FI
-	ELIF i==0 ANDF (flg&MTFLG)==0
+	ELIF i==0 && (flg&MTFLG)==0
 	THEN	synbad();
 	FI
 
@@ -124,8 +124,8 @@ static TREPTR	list(flg)
 	REG INT		b;
 
 	r = term(flg);
-	WHILE r ANDF ((b=(wdval==ANDFSYM)) ORF wdval==ORFSYM)
-	DO	r = makelist((b ? TAND : TORF), r, term(NLFLG));
+	WHILE r && ((b=(wdval==ANDFSYM)) || wdval==||SYM)
+	DO	r = makelist((b ? TAND : T||), r, term(NLFLG));
 	OD
 	return(r);
 }
@@ -146,7 +146,7 @@ static TREPTR	term(flg)
 	ELSE	word();
 	FI
 
-	IF (t=item(TRUE)) ANDF (wdval=='^' ORF wdval=='|')
+	IF (t=item(TRUE)) && (wdval=='^' || wdval=='|')
 	THEN	return(makelist(TFIL, makefork(FPOU,t), makefork(FPIN|FPCL,term(NLFLG))));
 	ELSE	return(t);
 	FI
@@ -162,7 +162,7 @@ static REGPTR	syncase(esym)
 		r->regptr=0;
 		LOOP wdarg->argnxt=r->regptr;
 		     r->regptr=wdarg;
-		     IF wdval ORF ( word()!=')' ANDF wdval!='|' )
+		     IF wdval || ( word()!=')' && wdval!='|' )
 		     THEN synbad();
 		     FI
 		     IF wdval=='|'
@@ -237,7 +237,7 @@ static TREPTR	item(flag)
 		   IF skipnl()==INSYM
 		   THEN	chkword();
 			((FORPTR)t)->forlst=(COMPTR)item(0);
-			IF wdval!=NL ANDF wdval!=';'
+			IF wdval!=NL && wdval!=';'
 			THEN	synbad();
 			FI
 			chkpr(wdval); skipnl();
@@ -287,7 +287,7 @@ static TREPTR	item(flag)
 		   argtail = &(((COMPTR)t)->comarg);
 		   WHILE wdval==0
 		   DO	argp = wdarg;
-			IF wdset ANDF keywd
+			IF wdset && keywd
 			THEN	argp->argnxt=(ARGPTR)argset;
 				argset=(ARGPTR *)argp;
 			ELSE	*argtail=argp; argtail = &(argp->argnxt); keywd=flags&keyflg;
@@ -385,7 +385,7 @@ static void	prsym(sym)
 	IF sym&SYMFLG
 	THEN	REG SYSPTR	sp=reserved;
 		WHILE sp->sysval
-			ANDF sp->sysval!=sym
+			&& sp->sysval!=sym
 		DO sp++ OD
 		prs(sp->sysnam);
 	ELIF sym==EOFSYM

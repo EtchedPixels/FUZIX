@@ -47,7 +47,7 @@ ADDRESS	alloc(nbytes)
 				FI
 			FI
 			q = p; p = BLK(Rcheat(p->word)&~BUSY);
-		PER	p>q ORF (c++)==0 DONE
+		PER	p>q || (c++)==0 DONE
 		addblok(rbytes);
 	POOL
 }
@@ -81,7 +81,7 @@ void free(void *ap)
 {
 	BLKPTR p;
 
-	IF (p=ap) ANDF p<bloktop
+	IF (p=ap) && p<bloktop
 	THEN	Lcheat((--p)->word) &= ~BUSY;
 	FI
 }
@@ -98,7 +98,7 @@ chkbptr(ptr)
 	LOOP
 	   q = Rcheat(p->word)&~BUSY;
 	   IF p==ptr THEN exf++ FI
-	   IF q<end ORF q>bloktop THEN abort(3) FI
+	   IF q<end || q>bloktop THEN abort(3) FI
 	   IF p==bloktop THEN break FI
 	   IF busy(p)
 	   THEN us += q-p;

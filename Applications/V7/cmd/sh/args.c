@@ -37,16 +37,16 @@ INT	options(argc,argv)
 	REG STRING	flagc;
 	STRING		flagp;
 
-	IF argc>1 ANDF *argp[1]=='-'
+	IF argc>1 && *argp[1]=='-'
 	THEN	cp=argp[1];
 		flags &= ~(execpr|readpr);
 		WHILE *++cp
 		DO	flagc=flagchar;
 
-			WHILE *flagc ANDF *flagc != *cp DO flagc++ OD
+			WHILE *flagc && *flagc != *cp DO flagc++ OD
 			IF *cp == *flagc
 			THEN	flags |= flagval[flagc-flagchar];
-			ELIF *cp=='c' ANDF argc>2 ANDF comdiv==0
+			ELIF *cp=='c' && argc>2 && comdiv==0
 			THEN	comdiv=argp[2];
 				argp[1]=argp[0]; argp++; argc--;
 			ELSE	failed(argv[1],badopt);

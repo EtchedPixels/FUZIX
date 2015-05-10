@@ -50,7 +50,7 @@ INT	expand(as,rflg)
 	   REG BOOL slash; slash=0;
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
-		THEN	IF rflg ANDF slash THEN break; ELSE return(0) FI
+		THEN	IF rflg && slash THEN break; ELSE return(0) FI
 		ELIF *cs=='/'
 		THEN	slash++;
 		FI
@@ -67,8 +67,8 @@ INT	expand(as,rflg)
 		FI
 	POOL
 	IF stat(s,&statb)>=0
-	    ANDF (statb.st_mode&S_IFMT)==S_IFDIR
-	    ANDF (dirf=open(s,0))>0
+	    && (statb.st_mode&S_IFMT)==S_IFDIR
+	    && (dirf=open(s,0))>0
 	THEN	dir++;
 	FI
 	count=0;
@@ -81,9 +81,9 @@ INT	expand(as,rflg)
 		PER	*rs++ DONE
 
 		// FIXME: readdir
-		WHILE read(dirf, (void *)&entry, 32) == 32 ANDF (trapnote&SIGSET) == 0
-		DO	IF entry.d_ino==0 ORF
-			    (*entry.d_name=='.' ANDF *cs!='.')
+		WHILE read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0
+		DO	IF entry.d_ino==0 ||
+			    (*entry.d_name=='.' && *cs!='.')
 			THEN	continue;
 			FI
 			IF gmatch(entry.d_name, cs)
@@ -135,7 +135,7 @@ gmatch(s, p)
 		DO	IF c==']'
 			THEN	return(ok?gmatch(s,p):0);
 			ELIF c==MINUS
-			THEN	IF lc<=scc ANDF scc<=(*p++) THEN ok++ FI
+			THEN	IF lc<=scc && scc<=(*p++) THEN ok++ FI
 			ELSE	IF scc==(lc=(c&STRIP)) THEN ok++ FI
 			FI
 		OD

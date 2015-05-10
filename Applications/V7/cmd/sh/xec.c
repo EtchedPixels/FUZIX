@@ -15,7 +15,7 @@
 
 static INT	parent;
 
-SYSTAB		commands;
+extern SYSTAB		commands;
 
 
 
@@ -32,7 +32,7 @@ execute(argt, execflg, pf1, pf2)
 
 	sigchk();
 
-	IF (t=argt) ANDF execbrk==0
+	IF (t=argt) && execbrk==0
 	THEN	REG INT		treeflgs;
 		INT		oldexit, type;
 		REG STRING	*com;
@@ -53,11 +53,11 @@ execute(argt, execflg, pf1, pf2)
 			com=scan(argn);
 			a1=com[1]; gchain=schain;
 
-			IF (internal=syslook(com[0],commands)) ORF argn==0
+			IF (internal=syslook(com[0],commands)) || argn==0
 			THEN	setlist(((COMPTR)t)->comset, 0);
 			FI
 
-			IF argn ANDF (flags&noexec)==0
+			IF argn && (flags&noexec)==0
 			THEN	/* print command if execpr */
 				IF flags&execpr
 				THEN	argn=0;	prs(execpmsg);
@@ -97,7 +97,7 @@ execute(argt, execflg, pf1, pf2)
 					execbrk = -loopcnt; break;
 	
 				case SYSBREAK:
-					IF (execbrk=loopcnt) ANDF a1
+					IF (execbrk=loopcnt) && a1
 					THEN breakcnt=stoi(a1);
 					FI
 					break;
@@ -110,7 +110,7 @@ execute(argt, execflg, pf1, pf2)
 						FI
 						WHILE *++com
 						DO INT	i;
-						   IF (i=stoi(*com))>=MAXTRAP ORF i<MINTRAP
+						   IF (i=stoi(*com))>=MAXTRAP || i<MINTRAP
 						   THEN	failed(*com,badtrap);
 						   ELIF clear
 						   THEN	clrsig(i);
@@ -144,7 +144,7 @@ execute(argt, execflg, pf1, pf2)
 				case SYSCD:
 					IF flags&rshflg
 					THEN	failed(com[0],restricted);
-					ELIF (a1==0 ANDF (a1=homenod.namval)==0) ORF chdir(a1)<0
+					ELIF (a1==0 && (a1=homenod.namval)==0) || chdir(a1)<0
 					THEN	failed(a1,baddir);
 					FI
 					break;
@@ -237,7 +237,7 @@ execute(argt, execflg, pf1, pf2)
 			END
 	
 		case TFORK:
-			IF execflg ANDF (treeflgs&(FAMP|FPOU))==0
+			IF execflg && (treeflgs&(FAMP|FPOU))==0
 			THEN	parent=0;
 			ELSE	WHILE (parent=fork()) == -1
 				DO sigchk(); alarm(10); pause() OD
@@ -246,7 +246,7 @@ execute(argt, execflg, pf1, pf2)
 			IF parent
 			THEN	/* This is the parent branch of fork;    */
 				/* it may or may not wait for the child. */
-				IF treeflgs&FPRS ANDF flags&ttyflg
+				IF treeflgs&FPRS && flags&ttyflg
 				THEN	prn(parent); newline();
 				FI
 				IF treeflgs&FPCL THEN closepipe(pf1) FI
@@ -285,7 +285,7 @@ execute(argt, execflg, pf1, pf2)
 				FI
 
 				/* default std input for & */
-				IF treeflgs&FINT ANDF ioset==0
+				IF treeflgs&FINT && ioset==0
 				THEN	sh_rename(chkopen(devnull),0);
 				FI
 
@@ -326,7 +326,7 @@ execute(argt, execflg, pf1, pf2)
 			FI
 			break;
 
-		case TORF:
+		case T||:
 			IF execute(((LSTPTR)t)->lstlef,0)!=0
 			THEN	execute(((LSTPTR)t)->lstrit,execflg);
 			FI
@@ -347,7 +347,7 @@ execute(argt, execflg, pf1, pf2)
 				   gchain=schain;
 			   FI
 			   loopcnt++;
-			   WHILE *args!=ENDARGS ANDF execbrk==0
+			   WHILE *args!=ENDARGS && execbrk==0
 			   DO	assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
 				IF execbrk<0 THEN execbrk=0 FI
@@ -364,7 +364,7 @@ execute(argt, execflg, pf1, pf2)
 			   INT		i=0;
 
 			   loopcnt++;
-			   WHILE execbrk==0 ANDF (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
+			   WHILE execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
 			   DO i=execute(((WHPTR)t)->dotre,0);
 			      IF execbrk<0 THEN execbrk=0 FI
 			   OD
@@ -388,7 +388,7 @@ execute(argt, execflg, pf1, pf2)
 			   DO	ARGPTR		rex=((REGPTR)t)->regptr;
 				WHILE rex
 				DO	REG STRING	s;
-					IF gmatch(r,s=macro(rex->argval)) ORF (trim(s), eq(r,s))
+					IF gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
 					THEN	execute(((REGPTR)t)->regcom,0);
 						t=0; break;
 					ELSE	rex=((ARGPTR)rex)->argnxt;

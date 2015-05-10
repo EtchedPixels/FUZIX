@@ -36,11 +36,6 @@
 #define LOOP	for(;;){
 #define POOL	}
 
-
-#define NEQ	^
-#define ANDF	&&
-#define ORF	||
-
 #define TRUE	(-1)
 #define FALSE	0
 #define LOBYTE	0377

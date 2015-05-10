@@ -31,7 +31,7 @@ word()
 	IF !eofmeta(c)
 	THEN	REP	IF c==LITERAL
 			THEN	*argp++=(DQUOTE);
-				WHILE (c=readc()) ANDF c!=LITERAL
+				WHILE (c=readc()) && c!=LITERAL
 				DO *argp++=(c|QUOTE); chkpr(c) OD
 				*argp++=(DQUOTE);
 			ELSE	*argp++=(c);
@@ -39,7 +39,7 @@ word()
 				IF !alphanum(c) THEN alpha=0 FI
 				IF qotchar(c)
 				THEN	d=c;
-					WHILE (*argp++=(c=nextc(d))) ANDF c!=d
+					WHILE (*argp++=(c=nextc(d))) && c!=d
 					DO chkpr(c) OD
 				FI
 			FI
@@ -48,10 +48,10 @@ word()
 		IF !letter(((ARGPTR)argp)->argval[0]) THEN wdset=0 FI
 
 		peekc=c|MARK;
-		IF ((ARGPTR)argp)->argval[1]==0 ANDF (d=((ARGPTR)argp)->argval[0], digit(d)) ANDF (c=='>' ORF c=='<')
+		IF ((ARGPTR)argp)->argval[1]==0 && (d=((ARGPTR)argp)->argval[0], digit(d)) && (c=='>' || c=='<')
 		THEN	word(); wdnum=d-'0';
 		ELSE	/*check for reserved words*/
-			IF reserv==FALSE ORF (wdval=syslook(((ARGPTR)argp)->argval,reserved))==0
+			IF reserv==FALSE || (wdval=syslook(((ARGPTR)argp)->argval,reserved))==0
 			THEN	wdarg=(ARGPTR)argp; wdval=0;
 			FI
 		FI
@@ -64,7 +64,7 @@ word()
 	ELSE	IF (wdval=c)==EOF
 		THEN	wdval=EOFSYM;
 		FI
-		IF iopend ANDF eolchar(c)
+		IF iopend && eolchar(c)
 		THEN	copy(iopend); iopend=0;
 		FI
 	FI
@@ -79,7 +79,7 @@ nextc(quote)
 	IF (d=readc())==ESCAPE
 	THEN	IF (c=readc())==NL
 		THEN	chkpr(NL); d=nextc(quote);
-		ELIF quote ANDF c!=quote ANDF !escchar(c)
+		ELIF quote && c!=quote && !escchar(c)
 		THEN	peekc=c|MARK;
 		ELSE	d = c|QUOTE;
 		FI
@@ -106,9 +106,9 @@ retry:
 			ELSE	goto retry; /* = c=readc(); */
 			FI
 		FI
-		IF flags&readpr ANDF standin->fstak==0 THEN prc(c) FI
+		IF flags&readpr && standin->fstak==0 THEN prc(c) FI
 		IF c==NL THEN f->flin++ FI
-	ELIF f->feof ORF f->fdes<0
+	ELIF f->feof || f->fdes<0
 	THEN	c=EOF; f->feof++;
 	ELIF (len=readb())<=0
 	THEN	close(f->fdes); f->fdes = -1; c=EOF; f->feof++;
@@ -124,6 +124,6 @@ static readb()
 	REG INT		len;
 
 	REP	IF trapnote&SIGSET THEN newline(); sigchk() FI
-	PER (len=read(f->fdes,f->fbuf,f->fsiz))<0 ANDF trapnote DONE
+	PER (len=read(f->fdes,f->fbuf,f->fsiz))<0 && trapnote DONE
 	return(len);
 }

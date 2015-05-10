@@ -26,7 +26,7 @@ static STRING	copyto(endch)
 {
 	REG CHAR	c;
 
-	WHILE (c=getch(endch))!=endch ANDF c
+	WHILE (c=getch(endch))!=endch && c
 	DO pushstak(c|quote) OD
 	zerostak();
 	IF c!=endch THEN error(badsub) FI
@@ -37,7 +37,7 @@ static skipto(endch)
 {
 	/* skip chars up to } */
 	REG CHAR	c;
-	WHILE (c=readc()) ANDF c!=endch
+	WHILE (c=readc()) && c!=endch
 	DO	SWITCH c IN
 
 		case SQUOTE:	skipto(SQUOTE); break;
@@ -101,7 +101,7 @@ retry:
 			ELSE	goto retry;
 			FI
 			c = readc();
-			IF !defchar(c) ANDF bra
+			IF !defchar(c) && bra
 			THEN	error(badsub);
 			FI
 			argp=0;
@@ -120,7 +120,7 @@ retry:
 			THEN	IF c!='+'
 				THEN	LOOP WHILE c = *v++
 					     DO pushstak(c|quote); OD
-					     IF dolg==0 ORF (++dolg>dolc)
+					     IF dolg==0 || (++dolg>dolc)
 					     THEN break;
 					     ELSE v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
 					     FI
@@ -166,7 +166,7 @@ STRING	macro(as)
 	quote=0; quoted=0;
 	copyto(0);
 	pop();
-	IF quoted ANDF (stakbot==staktop) THEN pushstak(QUOTE) FI
+	IF quoted && (stakbot==staktop) THEN pushstak(QUOTE) FI
 	quote=savq; quoted=savqu;
 	return(fixstak());
 }
@@ -179,7 +179,7 @@ static comsubst()
 	REG STKPTR	savptr = fixstak();
 
 	usestak();
-	WHILE (d=readc())!=SQUOTE ANDF d
+	WHILE (d=readc())!=SQUOTE && d
 	DO pushstak(d) OD
 
 	BEGIN
