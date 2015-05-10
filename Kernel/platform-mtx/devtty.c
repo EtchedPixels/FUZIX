@@ -221,7 +221,7 @@ static void keyproc(void)
 
 uint8_t keyboard[8][10] = {
 	{'1', '3', '5', '7', '9' , '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ 27, '2', '4', '6', '8', '0', '^', 0/*eol*/, KEY_BS, KEY_F5},
+	{ KEY_ESC, '2', '4', '6', '8', '0', '^', 0/*eol*/, KEY_BS, KEY_F5},
 	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2 },
 	{'q', 'e', 't' , 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
 	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7 },
@@ -232,7 +232,7 @@ uint8_t keyboard[8][10] = {
 
 uint8_t shiftkeyboard[8][10] = {
 	{'!', '#', '%', '\'', ')' , '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ 27, '"', '$', '&', '(', 0, '~', 0/*eol*/, KEY_BS, KEY_F5},
+	{ KEY_ESC, '"', '$', '&', '(', 0, '~', 0/*eol*/, KEY_BS, KEY_F5},
 	{ 0/*ctrl*/, 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2 },
 	{'Q', 'E', 'T' , 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
 	{ 0/*capsl*/, 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7 },
