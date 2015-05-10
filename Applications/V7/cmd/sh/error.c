@@ -27,7 +27,7 @@ sigchk()
 	 */
 	IF trapnote&SIGSET
 	) {	exitsh(SIGFAIL);
-	FI
+	;}
 }
 
 failed(s1,s2)
@@ -36,7 +36,7 @@ failed(s1,s2)
 	prp(); prs(s1); 
 	IF s2
 	) {	prs(colon); prs(s2);
-	FI
+	;}
 	newline(); exitsh(ERROR);
 }
 
@@ -62,7 +62,7 @@ exitsh(xno)
 	} else {
 		clearup();
 		longjmp(errshell,1);
-	FI
+	;}
 }
 
 done()
@@ -71,7 +71,7 @@ done()
 	IF t=trapcom[0]
 	) {	trapcom[0]=0; /*should free but not long */
 		execexp(t,0);
-	FI
+	;}
 	rmtemp(0);
 	exit(exitval);
 }

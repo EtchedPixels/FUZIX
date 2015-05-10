@@ -50,10 +50,10 @@ INT	options(argc,argv)
 			) {	comdiv=argp[2];
 				argp[1]=argp[0]; argp++; argc--;
 			} else {	failed(argv[1],badopt);
-			FI
+			;}
 		OD
 		argp[1]=argp[0]; argc--;
-	FI
+	;}
 
 	/* set up $- */
 	flagc=flagchar;
@@ -61,7 +61,7 @@ INT	options(argc,argv)
 	WHILE *flagc
 	DO IF flags&flagval[flagc-flagchar]
 	   ) { *flagp++ = *flagc;
-	   FI
+	   ;}
 	   flagc++;
 	OD
 	*flagp++=0;
@@ -98,8 +98,8 @@ freeargs(blk)
 		) {	FOR argp=(STRING *)argblk->dolarg; Rcheat(*argp)!=ENDARGS; argp++
 			DO free(*argp) OD
 			free(argblk);
-		FI
-	FI
+		;}
+	;}
 	return(argr);
 }
 
@@ -136,5 +136,5 @@ DOLPTR	useargs()
 		dolh->dolnxt=argfor;
 		return(argfor=dolh);
 	} else {	return(0);
-	FI
+	;}
 }

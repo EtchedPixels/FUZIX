@@ -46,14 +46,14 @@ main(c, v)
 	sh_getenv();
 
 	/* look for restricted */
-/*	IF c>0 && any('r', *v) ) { rflag=0 FI */
+/*	IF c>0 && any('r', *v) ) { rflag=0 ;} */
 
 	/* look for options */
 	dolc=options(c,v);
-	IF dolc<2 ) { flags |= stdflg FI
+	IF dolc<2 ) { flags |= stdflg ;}
 	IF (flags&stdflg)==0
 	) {	dolc--;
-	FI
+	;}
 	dolv=v+c-dolc; dolc--;
 
 	/* return here for shell file execution */
@@ -77,17 +77,17 @@ main(c, v)
 		IF *cmdadr=='-'
 		    && (input=pathopen(nullstr, profile))>=0
 		) {	exfile(rflag); flags &= ~ttyflg;
-		FI
-		IF rflag==0 ) { flags |= rshflg FI
+		;}
+		IF rflag==0 ) { flags |= rshflg ;}
 
 		/* open input file if specified */
 		IF comdiv
 		) {	estabf(comdiv); input = -1;
 		} else {	input=((flags&stdflg) ? 0 : chkopen(cmdadr));
 			comdiv--;
-		FI
+		;}
 //	} else {	*execargs=(char *)dolv;	/* for `ps' cmd */
-	FI
+	;}
 
 	exfile(0);
 	done();
@@ -104,13 +104,13 @@ BOOL		prof;
 	IF input>0
 	) {	Ldup(input,INIO);
 		input=INIO;
-	FI
+	;}
 
 	/* move output to safe place */
 	IF output==2
 	) {	Ldup(dup(2),OTIO);
 		output=OTIO;
-	FI
+	;}
 
 	userid=getuid();
 
@@ -121,15 +121,15 @@ BOOL		prof;
 		flags |= ttyflg|prompt; ignsig(KILL);
 	} else {
 		flags |= prof; flags &= ~prompt;
-	FI
+	;}
 
 	IF setjmp(errshell) && prof
 	) {	close(input); return;
-	FI
+	;}
 
 	/* error return here */
 	loopcnt=breakcnt=peekc=0; iopend=0;
-	IF input>=0 ) { initf(input) FI
+	IF input>=0 ) { initf(input) ;}
 
 	/* command loop */
 	for(;;) {
@@ -142,15 +142,15 @@ BOOL		prof;
 			    && (statb.st_mtime != mailtime)
 			    && mailtime
 			) {	prs(mailmsg)
-			FI
+			;}
 			mailtime=statb.st_mtime;
 			prs(ps1nod.namval); alarm(TIMEOUT); flags |= waiting;
-		FI
+		;}
 
 		trapnote=0; peekc=readc();
 		IF eof
 		) {	return;
-		FI
+		;}
 		alarm(0); flags &= ~waiting;
 		execute(cmd(NL,MTFLG),0);
 		eof |= (flags&oneflg);
@@ -162,7 +162,7 @@ char eor;
 {
 	IF (flags&prompt) && standin->fstak==0 && eor==NL
 	) {	prs(ps2nod.namval);
-	FI
+	;}
 }
 
 settmp()

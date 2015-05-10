@@ -41,11 +41,11 @@ ADDRESS	alloc(nbytes)
 				) {	blokp = BLK(ADR(p)+rbytes);
 					IF q > blokp
 					) {	blokp->word = p->word;
-					FI
+					;}
 					p->word=BLK(Rcheat(blokp)|BUSY);
 					return(ADR(p+1));
-				FI
-			FI
+				;}
+			;}
 			q = p; p = BLK(Rcheat(p->word)&~BUSY);
 		PER	p>q || (c++)==0 DONE
 		addblok(rbytes);
@@ -65,7 +65,7 @@ void	addblok(reqd)
 		blokstak->word=stakbsy; stakbsy=blokstak;
 		bloktop->word=BLK(Rcheat(rndstak)|BUSY);
 		bloktop=BLK(rndstak);
-	FI
+	;}
 	reqd += brkincr; reqd &= ~(brkincr-1);
 	blokp=bloktop;
 	bloktop=bloktop->word=BLK(Rcheat(bloktop)+reqd);
@@ -83,7 +83,7 @@ void free(void *ap)
 
 	IF (p=ap) && p<bloktop
 	) {	Lcheat((--p)->word) &= ~BUSY;
-	FI
+	;}
 }
 
 #ifdef DEBUG
@@ -97,17 +97,17 @@ chkbptr(ptr)
 
 	for (;;) {
 	   q = Rcheat(p->word)&~BUSY;
-	   IF p==ptr ) { exf++ FI
-	   IF q<end || q>bloktop ) { abort(3) FI
-	   IF p==bloktop ) { break FI
+	   IF p==ptr ) { exf++ ;}
+	   IF q<end || q>bloktop ) { abort(3) ;}
+	   IF p==bloktop ) { break ;}
 	   IF busy(p)
 	   ) { us += q-p;
 	   } else { un += q-p;
-	   FI
-	   IF p>=q ) { abort(4) FI
+	   ;}
+	   IF p>=q ) { abort(4) ;}
 	   p=q;
 	}
-	IF exf==0 ) { abort(1) FI
+	IF exf==0 ) { abort(1) ;}
 	prn(un); prc(SP); prn(us); prc(NL);
 }
 #endif

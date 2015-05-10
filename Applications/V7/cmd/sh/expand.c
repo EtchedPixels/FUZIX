@@ -41,7 +41,7 @@ INT	expand(as,rflg)
 	struct dirent	entry;
 	STATBUF		statb;
 
-	IF trapnote&SIGSET ) { return(0); FI
+	IF trapnote&SIGSET ) { return(0); ;}
 
 	s=cs=as; entry.d_name[DIRSIZ-1]=0; /* to end the string */
 
@@ -50,10 +50,10 @@ INT	expand(as,rflg)
 	   REG BOOL slash; slash=0;
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
-		) {	IF rflg && slash ) { break; } else { return(0) FI
+		) {	IF rflg && slash ) { break; } else { return(0) ;}
 		} else if ( *cs=='/'
 		) {	slash++;
-		FI
+		;}
 	   OD
 	}
 
@@ -62,22 +62,22 @@ INT	expand(as,rflg)
 			break;
 		} else if ( *--cs == '/'
 		) {	*cs=0;
-			IF s==cs ) { s="/" FI
+			IF s==cs ) { s="/" ;}
 			break;
-		FI
+		;}
 	}
 	IF stat(s,&statb)>=0
 	    && (statb.st_mode&S_IFMT)==S_IFDIR
 	    && (dirf=open(s,0))>0
 	) {	dir++;
-	FI
+	;}
 	count=0;
-	IF *cs==0 ) { *cs++=0200 FI
+	IF *cs==0 ) { *cs++=0200 ;}
 	IF dir
 	) {	/* check for rescan */
 		REG STRING rs; rs=cs;
 
-		REP	IF *rs=='/' ) { rescan=rs; *rs=0; gchain=0 FI
+		REP	IF *rs=='/' ) { rescan=rs; *rs=0; gchain=0 ;}
 		PER	*rs++ DONE
 
 		// FIXME: readdir
@@ -85,10 +85,10 @@ INT	expand(as,rflg)
 		DO	IF entry.d_ino==0 ||
 			    (*entry.d_name=='.' && *cs!='.')
 			) {	continue;
-			FI
+			;}
 			IF gmatch(entry.d_name, cs)
 			) {	addg(s,entry.d_name,rescan); count++;
-			FI
+			;}
 		OD
 		close(dirf);
 
@@ -101,10 +101,10 @@ INT	expand(as,rflg)
 				DO	count += expand(rchain->argval,1);
 					rchain=rchain->argnxt;
 				OD
-			FI
+			;}
 			*rescan='/';
-		FI
-	FI
+		;}
+	;}
 
 	{
 	   REG CHAR	c;
@@ -124,8 +124,8 @@ gmatch(s, p)
 	IF scc = *s++
 	) {	IF (scc &= STRIP)==0
 		) {	scc=0200;
-		FI
-	FI
+		;}
+	;}
 	switch(c = *p++) {
 	    case '[':
 		{BOOL ok; INT lc;
@@ -134,24 +134,24 @@ gmatch(s, p)
 		DO	IF c==']'
 			) {	return(ok?gmatch(s,p):0);
 			} else if ( c==MINUS
-			) {	IF lc<=scc && scc<=(*p++) ) { ok++ FI
-			} else {	IF scc==(lc=(c&STRIP)) ) { ok++ FI
-			FI
+			) {	IF lc<=scc && scc<=(*p++) ) { ok++ ;}
+			} else {	IF scc==(lc=(c&STRIP)) ) { ok++ ;}
+			;}
 		OD
 		return(0);
 		}
 
 	    default:
-		IF (c&STRIP)!=scc ) { return(0) FI
+		IF (c&STRIP)!=scc ) { return(0) ;}
 
 	    case '?':
 		return(scc?gmatch(s,p):0);
 
 	    case '*':
-		IF *p==0 ) { return(1) FI
+		IF *p==0 ) { return(1) ;}
 		--s;
 		WHILE *s
-		DO  IF gmatch(s++,p) ) { return(1) FI OD
+		DO  IF gmatch(s++,p) ) { return(1) ;} OD
 		return(0);
 
 	    case 0:
@@ -172,7 +172,7 @@ static void	addg(as1,as2,as3)
 	DO	IF (c &= STRIP)==0
 		) {	*s2++='/';
 			break;
-		FI
+		;}
 		*s2++=c;
 	OD
 	s1=as2;
@@ -180,7 +180,7 @@ static void	addg(as1,as2,as3)
 	IF s1=as3
 	) {	*s2++='/';
 		WHILE *s2++ = *++s1 DONE
-	FI
+	;}
 	makearg(endstak(s2));
 }
 

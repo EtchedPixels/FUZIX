@@ -43,7 +43,7 @@ syslook(w,syswds)
 	DO  IF first == *s
 		&& eq(w,s)
 	    ) { return(syscan->sysval);
-	    FI
+	    ;}
 	    syscan++;
 	OD
 	return(0);
@@ -59,8 +59,8 @@ setlist(arg,xp)
 	   arg=arg->argnxt;
 	   IF flags&execpr
 	   ) { prs(s);
-		IF arg ) { blank(); } else { newline(); FI
-	   FI
+		IF arg ) { blank(); } else { newline(); ;}
+	   ;}
 	OD
 }
 
@@ -81,10 +81,10 @@ void	setname(argi, xp)
 			IF xp&N_ENVNAM
 			) {	n->namenv = n->namval = argscan;
 			} else {	assign(n, argscan);
-			FI
+			;}
 			return;
-		FI
-	FI
+		;}
+	;}
 	failed(argi,notid);
 }
 
@@ -101,7 +101,7 @@ dfault(n,v)
 {
 	IF n->namval==0
 	) {	assign(n,v)
-	FI
+	;}
 }
 
 assign(n,v)
@@ -111,7 +111,7 @@ assign(n,v)
 	IF n->namflg&N_RDONLY
 	) {	failed(n->namid,wtfailed);
 	} else {	replace(&n->namval,v);
-	FI
+	;}
 }
 
 INT	readvar(names)
@@ -127,7 +127,7 @@ INT	readvar(names)
 	push(f); initf(dup(0));
 	IF lseek(0,0L,1)==-1
 	) {	f->fsiz=1;
-	FI
+	;}
 
 	for(;;) {
 		c=nextc(0);
@@ -137,19 +137,19 @@ INT	readvar(names)
 			IF *names
 			) {	n=lookup(*names++);
 			} else {	n=0;
-			FI
+			;}
 			IF eolchar(c)
 			) {	break;
-			FI
+			;}
 		} else {	pushstak(c);
-		FI
+		;}
 	}
 	WHILE n
 	DO assign(n, nullstr);
-	   IF *names ) { n=lookup(*names++); } else { n=0; FI
+	   IF *names ) { n=lookup(*names++); } else { n=0; ;}
 	OD
 
-	IF eof ) { rc=1 FI
+	IF eof ) { rc=1 ;}
 	lseek(0, (long)(f->fnxt-f->fend), 1);
 	pop();
 	return(rc);
@@ -171,7 +171,7 @@ STRING	make(v)
 	) {	movstr(v,p=alloc(length(v)));
 		return(p);
 	} else {	return(0);
-	FI
+	;}
 }
 
 
@@ -184,14 +184,14 @@ NAMPTR		lookup(nam)
 
 	IF !chkid(nam)
 	) {	failed(nam,notid);
-	FI
+	;}
 	WHILE nscan
 	DO	IF (LR=cf(nam,nscan->namid))==0
 		) {	return(nscan);
 		} else if ( LR<0
 		) {	prev = &(nscan->namlft);
 		} else {	prev = &(nscan->namrgt);
-		FI
+		;}
 		nscan = *prev;
 	OD
 
@@ -213,9 +213,9 @@ static BOOL	chkid(nam)
 	} else {	WHILE *++cp
 		DO IF !alphanum(*cp)
 		   ) {	return(FALSE);
-		   FI
+		   ;}
 		OD
-	FI
+	;}
 	return(TRUE);
 }
 
@@ -234,7 +234,7 @@ static void	namwalk(np)
 	) {	namwalk(np->namlft);
 		(*namfn)(np);
 		namwalk(np->namrgt);
-	FI
+	;}
 }
 
 void	printnam(n)
@@ -247,7 +247,7 @@ void	printnam(n)
 	) {	prs(n->namid);
 		prc('='); prs(s);
 		newline();
-	FI
+	;}
 }
 
 static STRING	staknam(n)
@@ -269,7 +269,7 @@ void	exname(n)
 		n->namenv = make(n->namval);
 	} else {	free(n->namval);
 		n->namval = make(n->namenv);
-	FI
+	;}
 }
 
 void	printflg(n)
@@ -277,13 +277,13 @@ void	printflg(n)
 {
 	IF n->namflg&N_EXPORT
 	) {	prs(export); blank();
-	FI
+	;}
 	IF n->namflg&N_RDONLY
 	) {	prs(readonly); blank();
-	FI
+	;}
 	IF n->namflg&(N_EXPORT|N_RDONLY)
 	) {	prs(n->namid); newline();
-	FI
+	;}
 }
 
 void	sh_getenv(void)
@@ -309,7 +309,7 @@ void	pushnam(n)
 {
 	IF n->namval
 	) {	*argnam++ = staknam(n);
-	FI
+	;}
 }
 
 STRING	*sh_setenv(void)

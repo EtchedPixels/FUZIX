@@ -28,7 +28,7 @@ prp()
 {
 	IF (flags&prompt)==0 && cmdadr
 	) {	prs(cmdadr); prs(colon);
-	FI
+	;}
 }
 
 void	prs(as)
@@ -38,7 +38,7 @@ void	prs(as)
 
 	IF s=as
 	) {	write(output,s,length(s)-1);
-	FI
+	;}
 }
 
 void	prc(c)
@@ -46,7 +46,7 @@ void	prc(c)
 {
 	IF c
 	) {	write(output,&c,1);
-	FI
+	;}
 }
 
 prt(t)
@@ -59,7 +59,7 @@ prt(t)
 	min=t%60;
 	IF hr=t/60
 	) {	prn(hr); prc('h');
-	FI
+	;}
 	prn(min); prc('m');
 	prn(sec); prc('s');
 }
@@ -75,7 +75,7 @@ itos(n)
 	REG char *abuf; REG POS a, i; INT pr, d;
 	abuf=numbuf; pr=FALSE; a=n;
 	FOR i=10000; i!=1; i/=10
-	DO	IF (pr |= (d=a/i)) ) { *abuf++=d+'0' FI
+	DO	IF (pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
 		a %= i;
 	OD
 	*abuf++=a+'0';
@@ -94,6 +94,6 @@ STRING	icp;
 	IF r<0 || cp==icp
 	) {	failed(icp,badnum);
 	} else {	return(r);
-	FI
+	;}
 }
 

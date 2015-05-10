@@ -55,7 +55,7 @@ static TREPTR	makelist(type,i,r)
 	} else {	t = (LSTPTR)getstak(LSTTYPE);
 		t->lsttyp = type;
 		t->lstlef = i; t->lstrit = r;
-	FI
+	;}
 	return(TREPTR)(t);
 }
 
@@ -78,10 +78,10 @@ TREPTR	cmd(sym,flg)
 	IF wdval==NL
 	) {	IF flg&NLFLG
 		) {	wdval=';'; chkpr(NL);
-		FI
+		;}
 	} else if ( i==0 && (flg&MTFLG)==0
 	) {	synbad();
-	FI
+	;}
 
 	switch(wdval) {
 
@@ -89,23 +89,23 @@ TREPTR	cmd(sym,flg)
 		IF i
 		) {	i = makefork(FINT|FPRS|FAMP, i);
 		} else {	synbad();
-		FI
+		;}
 
 	    case ';':
 		IF e=cmd(sym,flg|MTFLG)
 		) {	i=makelist(TLST, i, e);
-		FI
+		;}
 		break;
 
 	    case EOFSYM:
 		IF sym==NL
 		) {	break;
-		FI
+		;}
 
 	    default:
 		IF sym
 		) {	chksym(sym);
-		FI
+		;}
 
 	}
 	return(i);
@@ -144,12 +144,12 @@ static TREPTR	term(flg)
 	IF flg&NLFLG
 	) {	skipnl();
 	} else {	word();
-	FI
+	;}
 
 	IF (t=item(TRUE)) && (wdval=='^' || wdval=='|')
 	) {	return(makelist(TFIL, makefork(FPOU,t), makefork(FPIN|FPCL,term(NLFLG))));
 	} else {	return(t);
-	FI
+	;}
 }
 
 static REGPTR	syncase(esym)
@@ -165,20 +165,20 @@ static REGPTR	syncase(esym)
 		     r->regptr=wdarg;
 		     IF wdval || ( word()!=')' && wdval!='|' )
 		     ) { synbad();
-		     FI
+		     ;}
 		     IF wdval=='|'
 		     ) { word();
 		     } else { break;
-		     FI
+		     ;}
 		}
 		r->regcom=cmd(0,NLFLG|MTFLG);
 		IF wdval==ECSYM
 		) {	r->regnxt=syncase(esym);
 		} else {	chksym(esym);
 			r->regnxt=0;
-		FI
+		;}
 		return(r);
-	FI
+	;}
 }
 
 /*
@@ -201,7 +201,7 @@ static TREPTR	item(flag)
 	IF flag
 	) {	io=inout((IOPTR)0);
 	} else {	io=0;
-	FI
+	;}
 
 	switch(wdval) {
 
@@ -224,7 +224,7 @@ static TREPTR	item(flag)
 		   ((IFPTR)t)->iftre=cmd(THSYM,NLFLG);
 		   ((IFPTR)t)->thtre=cmd(ELSYM|FISYM|EFSYM,NLFLG);
 		   ((IFPTR)t)->eltre=((w=wdval)==ELSYM ? cmd(FISYM,NLFLG) : (w==EFSYM ? (wdval=IFSYM, item(0)) : 0));
-		   IF w==EFSYM ) { return(t) FI
+		   IF w==EFSYM ) { return(t) ;}
 		   break;
 		}
 
@@ -240,9 +240,9 @@ static TREPTR	item(flag)
 			((FORPTR)t)->forlst=(COMPTR)item(0);
 			IF wdval!=NL && wdval!=';'
 			) {	synbad();
-			FI
+			;}
 			chkpr(wdval); skipnl();
-		   FI
+		   ;}
 		   chksym(DOSYM|BRSYM);
 		   ((FORPTR)t)->fortre=cmd(wdval==DOSYM?ODSYM:KTSYM,NLFLG);
 		   break;
@@ -275,7 +275,7 @@ static TREPTR	item(flag)
 	    default:
 		IF io==0
 		) {	return(0);
-		FI
+		;}
 
 	    case 0:
 		{
@@ -292,11 +292,11 @@ static TREPTR	item(flag)
 			) {	argp->argnxt=(ARGPTR)argset;
 				argset=(ARGPTR *)argp;
 			} else {	*argtail=argp; argtail = &(argp->argnxt); keywd=flags&keyflg;
-			FI
+			;}
 			word();
 			IF flag
 			) { ((COMPTR)t)->comio=inout(((COMPTR)t)->comio);
-			FI
+			;}
 		   OD
 
 		   ((COMPTR)t)->comtyp=TCOM;
@@ -309,7 +309,7 @@ static TREPTR	item(flag)
 	reserv++; word();
 	IF io=inout(io)
 	) {	t=makefork(0,t); t->treio=io;
-	FI
+	;}
 	return(t);
 }
 
@@ -336,11 +336,11 @@ static IOPTR	inout(lastio)
 
 	    case APPSYM:
 	    case '>':
-		IF wdnum==0 ) { iof |= 1 FI
+		IF wdnum==0 ) { iof |= 1 ;}
 		iof |= IOPUT;
 		IF wdval==APPSYM
 		) {	iof |= IOAPP; break;
-		FI
+		;}
 
 	    case '<':
 		IF (c=nextc(0))=='&'
@@ -348,7 +348,7 @@ static IOPTR	inout(lastio)
 		} else if ( c=='>'
 		) {	iof |= IORDW;
 		} else {	peekc=c|MARK;
-		FI
+		;}
 		break;
 
 	    default:
@@ -361,7 +361,7 @@ static IOPTR	inout(lastio)
 	iop->iofile=iof;
 	IF iof&IODOC
 	) { iop->iolst=iopend; iopend=iop;
-	FI
+	;}
 	word(); iop->ionxt=inout(lastio);
 	return(iop);
 }
@@ -370,7 +370,7 @@ static void	chkword()
 {
 	IF word()
 	) {	synbad();
-	FI
+	;}
 }
 
 static void	chksym(sym)
@@ -378,7 +378,7 @@ static void	chksym(sym)
 	REG INT		x = sym&wdval;
 	IF ((x&SYMFLG) ? x : sym) != wdval
 	) {	synbad();
-	FI
+	;}
 }
 
 static void	prsym(sym)
@@ -391,12 +391,12 @@ static void	prsym(sym)
 		prs(sp->sysnam);
 	} else if ( sym==EOFSYM
 	) {	prs(endoffile);
-	} else {	IF sym&SYMREP ) { prc(sym) FI
+	} else {	IF sym&SYMREP ) { prc(sym) ;}
 		IF sym==NL
 		) {	prs("newline");
 		} else {	prc(sym);
-		FI
-	FI
+		;}
+	;}
 }
 
 static void	synbad()
@@ -404,13 +404,13 @@ static void	synbad()
 	prp(); prs(synmsg);
 	IF (flags&ttyflg)==0
 	) {	prs(atline); prn(standin->flin);
-	FI
+	;}
 	prs(colon);
 	prc(LQ);
 	IF wdval
 	) {	prsym(wdval);
 	} else {	prs(wdarg->argval);
-	FI
+	;}
 	prc(RQ); prs(unexpected);
 	newline();
 	exitsh(SYNBAD);

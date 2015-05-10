@@ -55,7 +55,7 @@ execute(argt, execflg, pf1, pf2)
 
 			IF (internal=syslook(com[0],commands)) || argn==0
 			) {	setlist(((COMPTR)t)->comset, 0);
-			FI
+			;}
 
 			IF argn && (flags&noexec)==0
 			) {	/* print command if execpr */
@@ -64,7 +64,7 @@ execute(argt, execflg, pf1, pf2)
 					WHILE com[argn]!=ENDARGS
 					DO prs(com[argn++]); blank() OD
 					newline();
-				FI
+				;}
 
 				switch(internal) {
 
@@ -75,8 +75,8 @@ execute(argt, execflg, pf1, pf2)
 						IF (f=pathopen(getpath(a1), a1)) < 0
 						) { failed(a1,notfound);
 						} else { execexp(0,f);
-						FI
-					FI
+						;}
+					;}
 					break;
 	
 				case SYSTIMES:
@@ -99,7 +99,7 @@ execute(argt, execflg, pf1, pf2)
 				case SYSBREAK:
 					IF (execbrk=loopcnt) && a1
 					) { breakcnt=stoi(a1);
-					FI
+					;}
 					break;
 	
 				case SYSTRAP:
@@ -107,7 +107,7 @@ execute(argt, execflg, pf1, pf2)
 					) {	BOOL	clear;
 						IF (clear=digit(*a1))==0
 						) {	++com;
-						FI
+						;}
 						WHILE *++com
 						DO INT	i;
 						   IF (i=stoi(*com))>=MAXTRAP || i<MINTRAP
@@ -118,8 +118,8 @@ execute(argt, execflg, pf1, pf2)
 							IF *a1
 							) {	getsig(i);
 							} else {	ignsig(i);
-							FI
-						   FI
+							;}
+						   ;}
 						OD
 					} else {	/* print out current traps */
 						INT		i;
@@ -127,15 +127,15 @@ execute(argt, execflg, pf1, pf2)
 						FOR i=0; i<MAXTRAP; i++
 						DO IF trapcom[i]
 						   ) {	prn(i); prs(colon); prs(trapcom[i]); newline();
-						   FI
+						   ;}
 						OD
-					FI
+					;}
 					break;
 	
 				case SYSEXEC:
 					com++;
 					initio(io); ioset=0; io=0;
-					IF a1==0 ) { break FI
+					IF a1==0 ) { break ;}
 	
 				case SYSLOGIN:
 					flags |= forked;
@@ -146,14 +146,14 @@ execute(argt, execflg, pf1, pf2)
 					) {	failed(com[0],restricted);
 					} else if ( (a1==0 && (a1=homenod.namval)==0) || chdir(a1)<0
 					) {	failed(a1,baddir);
-					FI
+					;}
 					break;
 	
 				case SYSSHFT:
 					IF dolc<1
 					) {	error(badshift);
 					} else {	dolv++; dolc--;
-					FI
+					;}
 					assnum(&dolladr, dolc);
 					break;
 	
@@ -177,30 +177,30 @@ execute(argt, execflg, pf1, pf2)
 						argc = options(argn,com);
 						IF argc>1
 						) {	setargs(com+argn-argc);
-						FI
+						;}
 					} else if ( ((COMPTR)t)->comset==0
 					) {	/*scan name chain and print*/
 						namscan(printnam);
-					FI
+					;}
 					break;
 	
 				case SYSRDONLY:
 					exitval=N_RDONLY;
 				case SYSXPORT:
-					IF exitval==0 ) { exitval=N_EXPORT; FI
+					IF exitval==0 ) { exitval=N_EXPORT; ;}
 	
 					IF a1
 					) {	WHILE *++com
 						DO attrib(lookup(*com), exitval) OD
 					} else {	namscan(printflg);
-					FI
+					;}
 					exitval=0;
 					break;
 	
 				case SYSEVAL:
 					IF a1
 					) {	execexp(a1,&com[2]);
-					FI
+					;}
 					break;
 
                                 case SYSUMASK:
@@ -227,13 +227,13 @@ execute(argt, execflg, pf1, pf2)
 				}
 
 				IF internal
-				) {	IF io ) { error(illegal) FI
+				) {	IF io ) { error(illegal) ;}
 					chktrap();
 					break;
-				FI
+				;}
 			} else if ( t->treio==0
 			) {	break;
-			FI
+			;}
 			}
 	
 		case TFORK:
@@ -241,21 +241,21 @@ execute(argt, execflg, pf1, pf2)
 			) {	parent=0;
 			} else {	WHILE (parent=fork()) == -1
 				DO sigchk(); alarm(10); pause() OD
-			FI
+			;}
 
 			IF parent
 			) {	/* This is the parent branch of fork;    */
 				/* it may or may not wait for the child. */
 				IF treeflgs&FPRS && flags&ttyflg
 				) {	prn(parent); newline();
-				FI
-				IF treeflgs&FPCL ) { closepipe(pf1) FI
+				;}
+				IF treeflgs&FPCL ) { closepipe(pf1) ;}
 				IF (treeflgs&(FAMP|FPOU))==0
 				) {	await(parent);
 				} else if ( (treeflgs&FAMP)==0
 				) {	post(parent);
 				} else {	assnum(&pcsadr, parent);
-				FI
+				;}
 
 				chktrap();
 				break;
@@ -272,22 +272,22 @@ execute(argt, execflg, pf1, pf2)
 				oldsigs();
 				IF treeflgs&FINT
 				) {	signal(INTR,1); signal(QUIT,1);
-				FI
+				;}
 
 				/* pipe in or out */
 				IF treeflgs&FPIN
 				) {	sh_rename(pf1[INPIPE],0);
 					close(pf1[OTPIPE]);
-				FI
+				;}
 				IF treeflgs&FPOU
 				) {	sh_rename(pf2[OTPIPE],1);
 					close(pf2[INPIPE]);
-				FI
+				;}
 
 				/* default std input for & */
 				IF treeflgs&FINT && ioset==0
 				) {	sh_rename(chkopen(devnull),0);
-				FI
+				;}
 
 				/* io redirection */
 				initio(t->treio);
@@ -296,9 +296,9 @@ execute(argt, execflg, pf1, pf2)
 				} else if ( com[0]!=ENDARGS
 				) {	setlist(((COMPTR)t)->comset,N_EXPORT);
 					execa(com);
-				FI
+				;}
 				done();
-			FI
+			;}
 
 		case TPAR:
 			sh_rename(dup(2),output);
@@ -311,7 +311,7 @@ execute(argt, execflg, pf1, pf2)
 			   IF execute(((LSTPTR)t)->lstlef, 0, pf1, pv)==0
 			   ) {	execute(((LSTPTR)t)->lstrit, execflg, pv, pf2);
 			   } else {	closepipe(pv);
-			   FI
+			   ;}
 			}
 			break;
 
@@ -323,13 +323,13 @@ execute(argt, execflg, pf1, pf2)
 		case TAND:
 			IF execute(((LSTPTR)t)->lstlef,0)==0
 			) {	execute(((LSTPTR)t)->lstrit,execflg);
-			FI
+			;}
 			break;
 
 		case TORF:
 			IF execute(((LSTPTR)t)->lstlef,0)!=0
 			) {	execute(((LSTPTR)t)->lstrit,execflg);
-			FI
+			;}
 			break;
 
 		case TFOR:
@@ -345,14 +345,14 @@ execute(argt, execflg, pf1, pf2)
 				   gchain=0;
 				   trim((args=scan(getarg(((FORPTR)t)->forlst)))[0]);
 				   gchain=schain;
-			   FI
+			   ;}
 			   loopcnt++;
 			   WHILE *args!=ENDARGS && execbrk==0
 			   DO	assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
-				IF execbrk<0 ) { execbrk=0 FI
+				IF execbrk<0 ) { execbrk=0 ;}
 			   OD
-			   IF breakcnt ) { breakcnt-- FI
+			   IF breakcnt ) { breakcnt-- ;}
 			   execbrk=breakcnt; loopcnt--;
 			   argfor=freeargs(argsav);
 			}
@@ -366,9 +366,9 @@ execute(argt, execflg, pf1, pf2)
 			   loopcnt++;
 			   WHILE execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
 			   DO i=execute(((WHPTR)t)->dotre,0);
-			      IF execbrk<0 ) { execbrk=0 FI
+			      IF execbrk<0 ) { execbrk=0 ;}
 			   OD
-			   IF breakcnt ) { breakcnt-- FI
+			   IF breakcnt ) { breakcnt-- ;}
 			   execbrk=breakcnt; loopcnt--; exitval=i;
 			}
 			break;
@@ -377,7 +377,7 @@ execute(argt, execflg, pf1, pf2)
 			IF execute(((IFPTR)t)->iftre,0)==0
 			) {	execute(((IFPTR)t)->thtre,execflg);
 			} else {	execute(((IFPTR)t)->eltre,execflg);
-			FI
+			;}
 			break;
 
 		case TSW:
@@ -392,15 +392,15 @@ execute(argt, execflg, pf1, pf2)
 					) {	execute(((REGPTR)t)->regcom,0);
 						t=0; break;
 					} else {	rex=((ARGPTR)rex)->argnxt;
-					FI
+					;}
 				OD
-				IF t ) { t=(TREPTR)((REGPTR)t)->regnxt FI
+				IF t ) { t=(TREPTR)((REGPTR)t)->regnxt ;}
 			   OD
 			}
 			break;
 		}
 		exitset();
-	FI
+	;}
 
 	sigchk();
 	tdystak(sav);
@@ -418,7 +418,7 @@ execexp(s,f)
 	) {	estabf(s); fb.feval=(STRING *)f;
 	} else if ( f>=0
 	) {	initf(f);
-	FI
+	;}
 	execute(cmd(NL, NLFLG|MTFLG),0);
 	pop();
 }

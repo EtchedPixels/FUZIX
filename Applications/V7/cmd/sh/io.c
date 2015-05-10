@@ -51,11 +51,11 @@ pop()
 	REG FILE	f;
 
 	IF (f=standin)->fstak
-	) {	IF f->fdes>=0 ) { close(f->fdes) FI
+	) {	IF f->fdes>=0 ) { close(f->fdes) ;}
 		standin=f->fstak;
 		return(TRUE);
 	} else {	return(FALSE);
-	FI
+	;}
 }
 
 chkpipe(pv)
@@ -63,7 +63,7 @@ chkpipe(pv)
 {
 	IF pipe(pv)<0 || pv[INPIPE]<0 || pv[OTPIPE]<0
 	) {	error(piperr);
-	FI
+	;}
 }
 
 chkopen(idf)
@@ -74,7 +74,7 @@ chkopen(idf)
 	IF (rc=open(idf,0))<0
 	) {	failed(idf,badopen);
 	} else {	return(rc);
-	FI
+	;}
 }
 
 sh_rename(f1,f2)
@@ -83,8 +83,8 @@ sh_rename(f1,f2)
 	IF f1!=f2
 	) {	dup2(f1, f2);
 		close(f1);
-		IF f2==0 ) { ioset|=1 FI
-	FI
+		IF f2==0 ) { ioset|=1 ;}
+	;}
 }
 
 create(s)
@@ -95,7 +95,7 @@ create(s)
 	IF (rc=creat(s,0666))<0
 	) {	failed(s,badcreate);
 	} else {	return(rc);
-	FI
+	;}
 }
 
 tmpfil()
@@ -117,7 +117,7 @@ copy(ioparg)
 
 	IF iop=ioparg
 	) {	copy(iop->iolst);
-		ends=mactrim(iop->ioname); IF nosubst ) { iop->iofile &= ~IODOC FI
+		ends=mactrim(iop->ioname); IF nosubst ) { iop->iofile &= ~IODOC ;}
 		fd=tmpfil();
 		iop->ioname=cpystak(tmpout);
 		iop->iolst=iotemp; iotemp=iop;
@@ -127,10 +127,10 @@ copy(ioparg)
 			clinep=cline; chkpr(NL);
 			WHILE (c = (nosubst ? readc() :  nextc(*ends)),  !eolchar(c)) DO *clinep++ = c OD
 			*clinep=0;
-			IF eof || eq(cline,ends) ) { break FI
+			IF eof || eq(cline,ends) ) { break ;}
 			*clinep++=NL;
 			write(fd,cline,clinep-cline);
 		}
 		close(fd);
-	FI
+	;}
 }

@@ -38,8 +38,8 @@ STKPTR	locstak()
 	) {	setbrk(brkincr);
 		IF brkincr < BRKMAX
 		) {	brkincr += 256;
-		FI
-	FI
+		;}
+	;}
 	return(stakbot);
 }
 
@@ -74,7 +74,7 @@ stakchk()
 {
 	IF (brkend-stakbas)>BRKINCR+BRKINCR
 	) {	setbrk(-BRKINCR);
-	FI
+	;}
 }
 
 STKPTR	cpystak(x)

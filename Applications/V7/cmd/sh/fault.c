@@ -28,15 +28,15 @@ void	fault(sig)
 	IF sig==MEMF
 	) {	IF setbrk(brkincr) == -1
 		) {	error(nospace);
-		FI
+		;}
 	} else if (sig==ALARM
 	) {	IF flags&waiting
 		) {	done();
-		FI
+		;}
 	} else {	flag = (trapcom[sig] ? TRAPSET : SIGSET);
 		trapnote |= flag;
 		trapflg[sig] |= flag;
-	FI
+	;}
 }
 
 stdsigs()
@@ -54,7 +54,7 @@ ignsig(n)
     // FIXME: need to do proper SIG_IGN checks/handling
 	IF (s=signal(i=n,1)&01)==0
 	) {	trapflg[i] |= SIGMOD;
-	FI
+	;}
 #endif	
 	return(s);
 }
@@ -65,7 +65,7 @@ getsig(n)
 
 	IF trapflg[i=n]&SIGMOD || ignsig(i)==0
 	) {	signal(i,fault);
-	FI
+	;}
 }
 
 oldsigs()
@@ -78,7 +78,7 @@ oldsigs()
 	DO  t=trapcom[i];
 	    IF t==0 || *t
 	    ) { clrsig(i);
-	    FI
+	    ;}
 	    trapflg[i]=0;
 	OD
 	trapnote=0;
@@ -91,7 +91,7 @@ clrsig(i)
 	IF trapflg[i]&SIGMOD
 	) {	signal(i,fault);
 		trapflg[i] &= ~SIGMOD;
-	FI
+	;}
 }
 
 chktrap()
@@ -108,7 +108,7 @@ chktrap()
 		) {	INT	savxit=exitval;
 			execexp(t,0);
 			exitval=savxit; exitset();
-		FI
-	   FI
+		;}
+	   ;}
 	OD
 }
