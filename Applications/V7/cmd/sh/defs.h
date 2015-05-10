@@ -303,3 +303,5 @@ ADDRESS alloc(POS nbytes);
 extern void addblok(POS reqd);
 extern void free(void *ap);	/* FIXME: rename sh_free */
 extern chkbptr(BLKPTR ptr);
+/* builtin.c */
+extern int builtin(int argn, STRING *cmd);
