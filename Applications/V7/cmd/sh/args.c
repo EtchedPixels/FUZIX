@@ -22,7 +22,7 @@ CHAR flagchar[] = {
 	'x', 'n', 'v', 't', 's', 'i', 'e', 'r', 'k', 'u', 0
 };
 
-INT flagval[] = {
+int flagval[] = {
 	execpr, noexec, readpr, oneflg, stdflg, intflg, errflg, rshflg,
 	    keyflg, setflg, 0
 };
@@ -30,9 +30,9 @@ INT flagval[] = {
 /* ========	option handling	======== */
 
 
-INT options(argc, argv)
+int options(argc, argv)
 STRING *argv;
-INT argc;
+int argc;
 {
 	register STRING cp;
 	register STRING *argp = argv;
@@ -88,7 +88,7 @@ STRING argi[];
 {
 	/* count args */
 	register STRING *argp = argi;
-	register INT argn = 0;
+	register int argn = 0;
 
 	while (Rcheat(*argp++) != ENDARGS) {
 		argn++;

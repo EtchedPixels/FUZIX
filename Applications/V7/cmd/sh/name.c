@@ -54,7 +54,7 @@ SYSTAB syswds;
 
 setlist(arg, xp)
 register ARGPTR arg;
-INT xp;
+int xp;
 {
 	while (arg) {
 		register STRING s = mactrim(arg->argval);
@@ -74,7 +74,7 @@ INT xp;
 
 void setname(argi, xp)
 STRING argi;
-INT xp;
+int xp;
 {
 	register STRING argscan = argi;
 	register NAMPTR n;
@@ -131,13 +131,13 @@ STRING v;
 	}
 }
 
-INT readvar(names)
+int readvar(names)
 STRING *names;
 {
 	FILEBLK fb;
 	register FILE f = &fb;
 	register CHAR c;
-	register INT rc = 0;
+	register int rc = 0;
 	NAMPTR n = lookup(*names++);	/* done now to avoid storage mess */
 	STKPTR rel = (STKPTR) relstak();
 
@@ -191,7 +191,7 @@ STRING *names;
 
 assnum(p, i)
 STRING *p;
-INT i;
+int i;
 {
 	itos(i);
 	replace(p, numbuf);
@@ -217,7 +217,7 @@ register STRING nam;
 {
 	register NAMPTR nscan = namep;
 	register NAMPTR *prev;
-	INT LR;
+	int LR;
 
 	if (!chkid(nam)
 	    ) {
@@ -356,7 +356,7 @@ void sh_getenv(void)
 	}
 }
 
-static INT namec;
+static int namec;
 
 void countnam(n)
 NAMPTR n;

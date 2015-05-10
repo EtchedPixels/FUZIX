@@ -58,7 +58,7 @@ CHAR c;
 prt(t)
 L_INT t;
 {
-	register INT hr, min, sec;
+	register int hr, min, sec;
 
 	t += 30;
 	t /= 60;
@@ -77,7 +77,7 @@ L_INT t;
 }
 
 prn(n)
-INT n;
+int n;
 {
 	itos(n);
 	prs(numbuf);
@@ -87,7 +87,7 @@ itos(n)
 {
 	register char *abuf;
 	register POS a, i;
-	INT pr, d;
+	int pr, d;
 	abuf = numbuf;
 	pr = FALSE;
 	a = n;
@@ -106,7 +106,7 @@ stoi(icp)
 STRING icp;
 {
 	register CHAR *cp = icp;
-	register INT r = 0;
+	register int r = 0;
 	register CHAR c;
 
 	while ((c = *cp, digit(c)) && c && r >= 0) {

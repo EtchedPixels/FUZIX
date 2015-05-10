@@ -33,7 +33,7 @@ POS nbytes;
 	register POS rbytes = round(nbytes + BYTESPERWORD, BYTESPERWORD);
 
 	for (;;) {
-		INT c = 0;
+		int c = 0;
 		register BLKPTR p = blokp;
 		register BLKPTR q;
 		do {
@@ -103,10 +103,10 @@ void free(void *ap)
 chkbptr(ptr)
 BLKPTR ptr;
 {
-	INT exf = 0;
+	int exf = 0;
 	register BLKPTR p = end;
 	register BLKPTR q;
-	INT us = 0, un = 0;
+	int us = 0, un = 0;
 
 	for (;;) {
 		q = Rcheat(p->word) & ~BUSY;

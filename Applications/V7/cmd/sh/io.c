@@ -67,7 +67,7 @@ pop()
 }
 
 chkpipe(pv)
-INT *pv;
+int *pv;
 {
 	if (pipe(pv) < 0 || pv[INPIPE] < 0 || pv[OTPIPE] < 0) {
 		error(piperr);
@@ -78,7 +78,7 @@ INT *pv;
 chkopen(idf)
 STRING idf;
 {
-	register INT rc;
+	register int rc;
 
 	if ((rc = open(idf, 0)) < 0) {
 		failed(idf, badopen);
@@ -89,7 +89,7 @@ STRING idf;
 }
 
 sh_rename(f1, f2)
-register INT f1, f2;
+register int f1, f2;
 {
 	if (f1 != f2) {
 		dup2(f1, f2);
@@ -103,7 +103,7 @@ register INT f1, f2;
 create(s)
 STRING s;
 {
-	register INT rc;
+	register int rc;
 
 	if ((rc = creat(s, 0666)) < 0) {
 		failed(s, badcreate);
@@ -128,7 +128,7 @@ IOPTR ioparg;
 {
 	CHAR c, *ends;
 	register CHAR *cline, *clinep;
-	INT fd;
+	int fd;
 	register IOPTR iop;
 
 	if (iop = ioparg) {

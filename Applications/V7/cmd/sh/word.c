@@ -23,7 +23,7 @@ word()
 {
 	register CHAR c, d;
 	register CHAR *argp = locstak() + BYTESPERWORD;
-	INT alpha = 1;
+	int alpha = 1;
 
 	wdnum = 0;
 	wdset = 0;
@@ -129,7 +129,7 @@ CHAR quote;
 readc()
 {
 	register CHAR c;
-	register INT len;
+	register int len;
 	register FILE f;
 
       retry:
@@ -178,7 +178,7 @@ readc()
 static readb()
 {
 	register FILE f = standin;
-	register INT len;
+	register int len;
 
 	do {
 		if (trapnote & SIGSET) {

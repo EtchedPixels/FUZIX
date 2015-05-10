@@ -30,10 +30,10 @@
 static void addg();
 
 
-INT expand(as, rflg)
+int expand(as, rflg)
 STRING as;
 {
-	INT count, dirf;
+	int count, dirf;
 	BOOL dir = 0;
 	STRING rescan = 0;
 	register STRING s, cs;
@@ -151,7 +151,7 @@ STRING as;
 gmatch(s, p)
 register STRING s, p;
 {
-	register INT scc;
+	register int scc;
 	CHAR c;
 
 	if (scc = *s++) {
@@ -164,7 +164,7 @@ register STRING s, p;
 	case '[':
 		{
 			BOOL ok;
-			INT lc;
+			int lc;
 			ok = 0;
 			lc = 077777;
 			while (c = *p++) {
@@ -213,7 +213,7 @@ static void addg(as1, as2, as3)
 STRING as1, as2, as3;
 {
 	register STRING s1, s2;
-	register INT c;
+	register int c;
 
 	s2 = locstak() + BYTESPERWORD;
 

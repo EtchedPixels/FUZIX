@@ -77,11 +77,11 @@ CHAR endch;
 		;
 	}
 	if (d == DOLLAR) {
-		register INT c;
+		register int c;
 		if ((c = readc(), dolchar(c))
 		    ) {
 			NAMPTR n = (NAMPTR) NIL;
-			INT dolg = 0;
+			int dolg = 0;
 			BOOL bra;
 			register STRING argp, v;
 			CHAR idb[2];
@@ -262,7 +262,7 @@ static comsubst()
 	{
 		register TREPTR t =
 		    makefork(FPOU, cmd(EOFSYM, MTFLG | NLFLG));
-		INT pv[2];
+		int pv[2];
 
 		/* this is done like this so that the pipe
 		 * is open only when needed
@@ -291,11 +291,11 @@ static comsubst()
 #define CPYSIZ	512
 
 subst(in, ot)
-INT in, ot;
+int in, ot;
 {
 	register CHAR c;
 	FILEBLK fb;
-	register INT count = CPYSIZ;
+	register int count = CPYSIZ;
 
 	push(&fb);
 	initf(in);

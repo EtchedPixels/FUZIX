@@ -12,7 +12,6 @@
 typedef char CHAR;
 typedef char BOOL;
 typedef int UFD;
-typedef int INT;
 typedef float REAL;
 typedef void *ADDRESS;
 typedef long int L_INT;
@@ -102,7 +101,7 @@ struct filehdr {
 
 struct sysnod {
 	STRING sysnam;
-	INT sysval;
+	int sysval;
 };
 
 typedef struct sysnod SYSNOD;
@@ -111,7 +110,7 @@ typedef struct sysnod SYSTAB[];
 
 /* this node is a proforma for those that follow */
 struct trenod {
-	INT tretyp;
+	int tretyp;
 	IOPTR treio;
 };
 
@@ -123,45 +122,45 @@ struct argnod {
 
 struct dolnod {
 	DOLPTR dolnxt;
-	INT doluse;
+	int doluse;
 	CHAR dolarg[1];
 };
 
 struct forknod {
-	INT forktyp;
+	int forktyp;
 	IOPTR forkio;
 	TREPTR forktre;
 };
 
 struct comnod {
-	INT comtyp;
+	int comtyp;
 	IOPTR comio;
 	ARGPTR comarg;
 	ARGPTR comset;
 };
 
 struct ifnod {
-	INT iftyp;
+	int iftyp;
 	TREPTR iftre;
 	TREPTR thtre;
 	TREPTR eltre;
 };
 
 struct whnod {
-	INT whtyp;
+	int whtyp;
 	TREPTR whtre;
 	TREPTR dotre;
 };
 
 struct fornod {
-	INT fortyp;
+	int fortyp;
 	TREPTR fortre;
 	STRING fornam;
 	COMPTR forlst;
 };
 
 struct swnod {
-	INT swtyp;
+	int swtyp;
 	STRING swarg;
 	REGPTR swlst;
 };
@@ -173,18 +172,18 @@ struct regnod {
 };
 
 struct parnod {
-	INT partyp;
+	int partyp;
 	TREPTR partre;
 };
 
 struct lstnod {
-	INT lsttyp;
+	int lsttyp;
 	TREPTR lstlef;
 	TREPTR lstrit;
 };
 
 struct ionod {
-	INT iofile;
+	int iofile;
 	STRING ioname;
 	IOPTR ionxt;
 	IOPTR iolst;

@@ -15,11 +15,11 @@
 
 static STRING execs();
 static void gsort();
-static INT split();
+static int split();
 
 #define ARGMK	01
 
-INT errno;
+int errno;
 STRING sysmsg[];
 
 /* fault handling */
@@ -37,7 +37,7 @@ void initio(iop)
 IOPTR iop;
 {
 	register STRING ion;
-	register INT iof, fd;
+	register int iof, fd;
 
 	if (iop) {
 		iof = iop->iofile;
@@ -99,7 +99,7 @@ STRING s;
 	}
 }
 
-INT pathopen(path, name)
+int pathopen(path, name)
 register STRING path, name;
 {
 	register UFD f;
@@ -198,12 +198,12 @@ register STRING t[];
 
 /* for processes to be waited for */
 #define MAXP 20
-static INT pwlist[MAXP];
-static INT pwc;
+static int pwlist[MAXP];
+static int pwc;
 
 postclr()
 {
-	register INT *pw = pwlist;
+	register int *pw = pwlist;
 
 	while (pw <= &pwlist[pwc]
 	    ) {
@@ -213,9 +213,9 @@ postclr()
 }
 
 void post(pcsid)
-INT pcsid;
+int pcsid;
 {
-	register INT *pw = pwlist;
+	register int *pw = pwlist;
 
 	if (pcsid) {
 		while (*pw) {
@@ -233,20 +233,20 @@ INT pcsid;
 }
 
 void await(i)
-INT i;
+int i;
 {
-	INT rc = 0, wx = 0;
-	INT w;
-	INT ipwc = pwc;
+	int rc = 0, wx = 0;
+	int w;
+	int ipwc = pwc;
 
 	post(i);
 	while (pwc) {
-		register INT p;
-		register INT sig;
-		INT w_hi;
+		register int p;
+		register int sig;
+		int w_hi;
 
 		{
-			register INT *pw = pwlist;
+			register int *pw = pwlist;
 			p = wait(&w);
 			while (pw <= &pwlist[ipwc]
 			    ) {
@@ -334,7 +334,7 @@ STRING s;
 }
 
 STRING *scan(argn)
-INT argn;
+int argn;
 {
 	register ARGPTR argp = (ARGPTR) (Rcheat(gchain) & ~ARGMK);
 	register STRING *comargn, *comargm;
@@ -364,8 +364,8 @@ INT argn;
 static void gsort(from, to)
 STRING from[], to[];
 {
-	INT k, m, n;
-	register INT i, j;
+	int k, m, n;
+	register int i, j;
 
 	if ((n = to - from) <= 1) {
 		return;
@@ -398,11 +398,11 @@ STRING from[], to[];
 
 /* Argument list generation */
 
-INT getarg(ac)
+int getarg(ac)
 COMPTR ac;
 {
 	register ARGPTR argp;
-	register INT count = 0;
+	register int count = 0;
 	register COMPTR c;
 
 	if (c = ac) {
@@ -417,12 +417,12 @@ COMPTR ac;
 	return (count);
 }
 
-static INT split(s)
+static int split(s)
 register STRING s;
 {
 	register STRING argp;
-	register INT c;
-	INT count = 0;
+	register int c;
+	int count = 0;
 
 	for (;;) {
 		sigchk();

@@ -19,10 +19,10 @@ STKPTR stakbot = nullstr;
 /* ========	storage allocation	======== */
 
 STKPTR getstak(asize)
-INT asize;
+int asize;
 {				/* allocate requested stack */
 	register STKPTR oldstak;
-	register INT size;
+	register int size;
 
 	size = round(asize, BYTESPERWORD);
 	oldstak = stakbot;

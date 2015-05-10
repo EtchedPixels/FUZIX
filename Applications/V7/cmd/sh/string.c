@@ -22,7 +22,7 @@ register STRING a, b;
 	return (--b);
 }
 
-INT any(c, s)
+int any(c, s)
 register CHAR c;
 STRING s;
 {
@@ -37,7 +37,7 @@ STRING s;
 	return (FALSE);
 }
 
-INT cf(s1, s2)
+int cf(s1, s2)
 register STRING s1, s2;
 {
 	while (*s1++ == *s2) {
@@ -49,7 +49,7 @@ register STRING s1, s2;
 	return (*--s1 - *s2);
 }
 
-INT length(as)
+int length(as)
 STRING as;
 {
 	register STRING s;

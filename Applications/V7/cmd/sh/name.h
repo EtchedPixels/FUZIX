@@ -23,5 +23,5 @@ struct namnod {
 	STRING namid;
 	STRING namval;
 	STRING namenv;
-	INT namflg;
+	int namflg;
 };

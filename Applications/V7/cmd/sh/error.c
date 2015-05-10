@@ -52,7 +52,7 @@ STRING s;
 }
 
 exitsh(xno)
-INT xno;
+int xno;
 {
 	/* Arrive here from `FATAL' errors
 	 *  a) exit command,

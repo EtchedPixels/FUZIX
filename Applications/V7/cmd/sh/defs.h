@@ -123,12 +123,12 @@ void prc();
 
 /* temp files and io */
 extern UFD output;
-extern INT ioset;
+extern int ioset;
 extern IOPTR iotemp;		/* files to be deleted sometime */
 extern IOPTR iopend;		/* documents waiting to be read at NL */
 
 /* substitution */
-extern INT dolc;
+extern int dolc;
 extern STRING *dolv;
 extern DOLPTR argfor;
 extern ARGPTR gchain;
@@ -155,10 +155,10 @@ extern const char synmsg[];
 
 /* name tree and words */
 extern SYSTAB reserved;
-extern INT wdval;
-extern INT wdnum;
+extern int wdval;
+extern int wdnum;
 extern ARGPTR wdarg;
-extern INT wdset;
+extern int wdset;
 extern BOOL reserv;
 
 /* prompting */
@@ -197,12 +197,12 @@ extern const char ps2name[];
 /* transput */
 extern CHAR tmpout[];
 extern STRING tmpnam;
-extern INT serial;
+extern int serial;
 #define		TMPNAM 7
 extern FILE standin;
 #define input	(standin->fdes)
 #define eof	(standin->feof)
-extern INT peekc;
+extern int peekc;
 extern STRING comdiv;
 extern const char devnull[];
 
@@ -221,7 +221,7 @@ extern const char devnull[];
 #define		execpr	04000
 #define		readpr	010000
 #define		keyflg	020000
-extern INT flags;
+extern int flags;
 
 /* error exits from various parts of shell */
 #include	<setjmp.h>
@@ -256,10 +256,10 @@ extern const char export[];
 extern const char readonly[];
 
 /* execflgs */
-extern INT exitval;
+extern int exitval;
 extern BOOL execbrk;
-extern INT loopcnt;
-extern INT breakcnt;
+extern int loopcnt;
+extern int breakcnt;
 
 /* messages */
 extern const char mailmsg[];

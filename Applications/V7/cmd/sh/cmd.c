@@ -32,7 +32,7 @@ static void synbad();
 
 
 TREPTR makefork(flgs, i)
-INT flgs;
+int flgs;
 TREPTR i;
 {
 	register FORKPTR t;
@@ -45,7 +45,7 @@ TREPTR i;
 }
 
 static TREPTR makelist(type, i, r)
-INT type;
+int type;
 TREPTR i, r;
 {
 	register LSTPTR t;
@@ -71,8 +71,8 @@ TREPTR i, r;
  */
 
 TREPTR cmd(sym, flg)
-register INT sym;
-INT flg;
+register int sym;
+int flg;
 {
 	register TREPTR i, e;
 
@@ -133,7 +133,7 @@ INT flg;
 static TREPTR list(flg)
 {
 	register TREPTR r;
-	register INT b;
+	register int b;
 
 	r = term(flg);
 	while (r && ((b = (wdval == ANDFSYM)) || wdval == ORFSYM)
@@ -174,7 +174,7 @@ static TREPTR term(flg)
 }
 
 static REGPTR syncase(esym)
-register INT esym;
+register int esym;
 {
 	skipnl();
 	if (wdval == esym) {
@@ -251,7 +251,7 @@ BOOL flag;
 
 	case IFSYM:
 		{
-			register INT w;
+			register int w;
 			t = (TREPTR) getstak(IFTYPE);
 			((IFPTR) t)->iftyp = TIF;
 			((IFPTR) t)->iftre = cmd(THSYM, NLFLG);
@@ -331,7 +331,7 @@ BOOL flag;
 			register ARGPTR argp;
 			register ARGPTR *argtail;
 			register ARGPTR *argset = 0;
-			INT keywd = 1;
+			int keywd = 1;
 			t = (TREPTR) getstak(COMTYPE);
 			((COMPTR) t)->comio = io;	/*initial io chain */
 			argtail = &(((COMPTR) t)->comarg);
@@ -384,7 +384,7 @@ static int skipnl()
 static IOPTR inout(lastio)
 IOPTR lastio;
 {
-	register INT iof;
+	register int iof;
 	register IOPTR iop;
 	register CHAR c;
 
@@ -448,7 +448,7 @@ static void chkword()
 
 static void chksym(sym)
 {
-	register INT x = sym & wdval;
+	register int x = sym & wdval;
 	if (((x & SYMFLG) ? x : sym) != wdval) {
 		synbad();
 		;

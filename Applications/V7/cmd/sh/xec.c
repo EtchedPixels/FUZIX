@@ -13,7 +13,7 @@
 #include	"defs.h"
 #include	"sym.h"
 
-static INT parent;
+static int parent;
 
 extern SYSTAB commands;
 
@@ -24,7 +24,7 @@ extern SYSTAB commands;
 
 execute(argt, execflg, pf1, pf2)
 TREPTR argt;
-INT *pf1, *pf2;
+int *pf1, *pf2;
 {
 	/* `stakbot' is preserved by this routine */
 	register TREPTR t;
@@ -33,8 +33,8 @@ INT *pf1, *pf2;
 	sigchk();
 
 	if ((t = argt) && execbrk == 0) {
-		register INT treeflgs;
-		INT oldexit, type;
+		register int treeflgs;
+		int oldexit, type;
 		register STRING *com;
 
 		treeflgs = t->tretyp;
@@ -47,7 +47,7 @@ INT *pf1, *pf2;
 		case TCOM:
 			{
 				STRING a1;
-				INT argn, internal;
+				int argn, internal;
 				ARGPTR schain = gchain;
 				IOPTR io = t->treio;
 				gchain = 0;
@@ -79,7 +79,7 @@ INT *pf1, *pf2;
 
 					case SYSDOT:
 						if (a1) {
-							register INT f;
+							register int f;
 
 							if ((f =
 							     pathopen
@@ -138,7 +138,7 @@ INT *pf1, *pf2;
 								;
 							}
 							while (*++com) {
-								INT i;
+								int i;
 								if ((i =
 								     stoi
 								     (*com))
@@ -174,7 +174,7 @@ INT *pf1, *pf2;
 								;
 							}
 						} else {	/* print out current traps */
-							INT i;
+							int i;
 
 							for (i = 0;
 							     i < MAXTRAP;
@@ -251,7 +251,7 @@ INT *pf1, *pf2;
 
 					case SYSSET:
 						if (a1) {
-							INT argc;
+							int argc;
 							argc =
 							    options(argn,
 								    com);
@@ -437,7 +437,7 @@ INT *pf1, *pf2;
 
 		case TFIL:
 			{
-				INT pv[2];
+				int pv[2];
 				chkpipe(pv);
 				if (execute
 				    (((LSTPTR) t)->lstlef, 0, pf1,
@@ -509,7 +509,7 @@ INT *pf1, *pf2;
 		case TWH:
 		case TUN:
 			{
-				INT i = 0;
+				int i = 0;
 
 				loopcnt++;
 				while (execbrk == 0
