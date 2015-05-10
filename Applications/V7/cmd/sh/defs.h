@@ -305,3 +305,6 @@ extern void free(void *ap);	/* FIXME: rename sh_free */
 extern chkbptr(BLKPTR ptr);
 /* builtin.c */
 extern int builtin(int argn, STRING *cmd);
+/* cmd.c */
+extern TREPTR makefork(int flgs, TREPTR i);
+extern TREPTR cmd(int sym, int flg);

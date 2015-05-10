@@ -13,17 +13,17 @@
 #include	"defs.h"
 #include	"sym.h"
 
-static IOPTR inout();
-static void chkword();
-static void chksym();
-static TREPTR term();
-static TREPTR makelist();
-static TREPTR list();
-static REGPTR syncase();
-static TREPTR item();
-static int skipnl();
-static void prsym();
-static void synbad();
+static IOPTR inout(IOPTR);
+static void chkword(void);
+static void chksym(int);
+static TREPTR term(int);
+static TREPTR makelist(int, TREPTR, TREPTR);
+static TREPTR list(int);
+static REGPTR syncase(int);
+static TREPTR item(BOOL);
+static int skipnl(void);
+static void prsym(int);
+static void synbad(void);
 
 
 /* ========	command line decoding	========*/
@@ -31,9 +31,7 @@ static void synbad();
 
 
 
-TREPTR makefork(flgs, i)
-int flgs;
-TREPTR i;
+TREPTR makefork(int flgs, TREPTR i)
 {
 	register FORKPTR t;
 
@@ -44,20 +42,17 @@ TREPTR i;
 	return (TREPTR) (t);
 }
 
-static TREPTR makelist(type, i, r)
-int type;
-TREPTR i, r;
+static TREPTR makelist(int type, TREPTR i, TREPTR r)
 {
 	register LSTPTR t;
 
-	if (i == 0 || r == 0) {
+	if (i == 0 || r == 0)
 		synbad();
-	} else {
+	else {
 		t = (LSTPTR) getstak(LSTTYPE);
 		t->lsttyp = type;
 		t->lstlef = i;
 		t->lstrit = r;
-		;
 	}
 	return (TREPTR) (t);
 }
@@ -70,9 +65,7 @@ TREPTR i, r;
  *	list [ ; cmd ]
  */
 
-TREPTR cmd(sym, flg)
-register int sym;
-int flg;
+TREPTR cmd(register int sym, int flg)
 {
 	register TREPTR i, e;
 
@@ -82,45 +75,33 @@ int flg;
 		if (flg & NLFLG) {
 			wdval = ';';
 			chkpr(NL);
-			;
 		}
 	} else if (i == 0 && (flg & MTFLG) == 0) {
 		synbad();
-		;
 	}
 
 	switch (wdval) {
 
 	case '&':
-		if (i) {
+		if (i)
 			i = makefork(FINT | FPRS | FAMP, i);
-		} else {
+		else
 			synbad();
-			;
-		}
 
 	case ';':
-		if (e = cmd(sym, flg | MTFLG)
-		    ) {
+		if (e = cmd(sym, flg | MTFLG))
 			i = makelist(TLST, i, e);
-			;
-		}
 		break;
 
 	case EOFSYM:
-		if (sym == NL) {
+		if (sym == NL)
 			break;
-			;
-		}
 
 	default:
-		if (sym) {
+		if (sym)
 			chksym(sym);
-			;
-		}
-
 	}
-	return (i);
+	return i;
 }
 
 /*
@@ -130,18 +111,16 @@ int flg;
  *	list || term
  */
 
-static TREPTR list(flg)
+static TREPTR list(int flg)
 {
 	register TREPTR r;
 	register int b;
 
 	r = term(flg);
-	while (r && ((b = (wdval == ANDFSYM)) || wdval == ORFSYM)
-	    ) {
+	while (r && ((b = (wdval == ANDFSYM)) || wdval == ORFSYM)) {
 		r = makelist((b ? TAND : TORF), r, term(NLFLG));
-		;
 	}
-	return (r);
+	return r;
 }
 
 /*
@@ -150,31 +129,24 @@ static TREPTR list(flg)
  *	item |^ term
  */
 
-static TREPTR term(flg)
+static TREPTR term(int flg)
 {
 	register TREPTR t;
 
 	reserv++;
-	if (flg & NLFLG) {
+	if (flg & NLFLG)
 		skipnl();
-	} else {
+	else
 		word();
-		;
-	}
 
-	if ((t = item(TRUE)) && (wdval == '^' || wdval == '|')
-	    ) {
-		return (makelist
-			(TFIL, makefork(FPOU, t),
+	if ((t = item(TRUE)) && (wdval == '^' || wdval == '|')) {
+		return (makelist(TFIL, makefork(FPOU, t),
 			 makefork(FPIN | FPCL, term(NLFLG))));
-	} else {
+	} else
 		return (t);
-		;
-	}
 }
 
-static REGPTR syncase(esym)
-register int esym;
+static REGPTR syncase(register int esym)
 {
 	skipnl();
 	if (wdval == esym) {
@@ -185,16 +157,13 @@ register int esym;
 		for (;;) {
 			wdarg->argnxt = r->regptr;
 			r->regptr = wdarg;
-			if (wdval || (word() != ')' && wdval != '|')
-			    ) {
+			if (wdval || (word() != ')' && wdval != '|')) {
 				synbad();
-				;
 			}
 			if (wdval == '|') {
 				word();
 			} else {
 				break;
-				;
 			}
 		}
 		r->regcom = cmd(0, NLFLG | MTFLG);
@@ -203,10 +172,8 @@ register int esym;
 		} else {
 			chksym(esym);
 			r->regnxt = 0;
-			;
 		}
 		return (r);
-		;
 	}
 }
 
@@ -221,168 +188,141 @@ register int esym;
  *	begin ... end
  */
 
-static TREPTR item(flag)
-BOOL flag;
+static TREPTR item(BOOL flag)
 {
 	register TREPTR t;
 	register IOPTR io;
 
-	if (flag) {
+	if (flag)
 		io = inout((IOPTR) 0);
-	} else {
+	else
 		io = 0;
-		;
-	}
 
 	switch (wdval) {
-
 	case CASYM:
-		{
-			t = (TREPTR) getstak(SWTYPE);
-			chkword();
-			((SWPTR) t)->swarg = wdarg->argval;
-			skipnl();
-			chksym(INSYM | BRSYM);
-			((SWPTR) t)->swlst =
-			    syncase(wdval == INSYM ? ESSYM : KTSYM);
-			((SWPTR) t)->swtyp = TSW;
-			break;
-		}
-
+	{
+		t = (TREPTR) getstak(SWTYPE);
+		chkword();
+		((SWPTR) t)->swarg = wdarg->argval;
+		skipnl();
+		chksym(INSYM | BRSYM);
+		((SWPTR) t)->swlst = syncase(wdval == INSYM ? ESSYM : KTSYM);
+		((SWPTR) t)->swtyp = TSW;
+		break;
+	}
 	case IFSYM:
-		{
-			register int w;
-			t = (TREPTR) getstak(IFTYPE);
-			((IFPTR) t)->iftyp = TIF;
-			((IFPTR) t)->iftre = cmd(THSYM, NLFLG);
-			((IFPTR) t)->thtre =
-			    cmd(ELSYM | FISYM | EFSYM, NLFLG);
-			((IFPTR) t)->eltre =
-			    ((w =
-			      wdval) == ELSYM ? cmd(FISYM,
-						    NLFLG) : (w ==
-							      EFSYM
-							      ? (wdval =
-								 IFSYM,
-								 item(0)) :
-							      0));
-			if (w == EFSYM) {
-				return (t);
-			}
-			break;
-		}
+	{
+		register int w;
+		t = (TREPTR) getstak(IFTYPE);
+		((IFPTR) t)->iftyp = TIF;
+		((IFPTR) t)->iftre = cmd(THSYM, NLFLG);
+		((IFPTR) t)->thtre = cmd(ELSYM | FISYM | EFSYM, NLFLG);
+		((IFPTR) t)->eltre = ((w = wdval) == ELSYM ?
+				cmd(FISYM, NLFLG) :
+				(w == EFSYM ? (wdval = IFSYM, item(0)) : 0));
+		if (w == EFSYM)
+			return (t);
+		break;
+	}
 
 	case FORSYM:
-		{
-			t = (TREPTR) getstak(FORTYPE);
-			((FORPTR) t)->fortyp = TFOR;
-			((FORPTR) t)->forlst = 0;
+	{
+		t = (TREPTR) getstak(FORTYPE);
+		((FORPTR) t)->fortyp = TFOR;
+		((FORPTR) t)->forlst = 0;
+		chkword();
+		((FORPTR) t)->fornam = wdarg->argval;
+		if (skipnl() == INSYM) {
 			chkword();
-			((FORPTR) t)->fornam = wdarg->argval;
-			if (skipnl() == INSYM) {
-				chkword();
-				((FORPTR) t)->forlst = (COMPTR) item(0);
-				if (wdval != NL && wdval != ';') {
-					synbad();
-					;
-				}
-				chkpr(wdval);
-				skipnl();
-				;
-			}
-			chksym(DOSYM | BRSYM);
-			((FORPTR) t)->fortre =
-			    cmd(wdval == DOSYM ? ODSYM : KTSYM, NLFLG);
-			break;
+			((FORPTR) t)->forlst = (COMPTR) item(0);
+			if (wdval != NL && wdval != ';')
+				synbad();
+			chkpr(wdval);
+			skipnl();
 		}
+		chksym(DOSYM | BRSYM);
+		((FORPTR) t)->fortre =
+			    cmd(wdval == DOSYM ? ODSYM : KTSYM, NLFLG);
+		break;
+	}
 
 	case WHSYM:
 	case UNSYM:
-		{
-			t = (TREPTR) getstak(WHTYPE);
-			((WHPTR) t)->whtyp = (wdval == WHSYM ? TWH : TUN);
-			((WHPTR) t)->whtre = cmd(DOSYM, NLFLG);
-			((WHPTR) t)->dotre = cmd(ODSYM, NLFLG);
-			break;
-		}
+	{
+		t = (TREPTR) getstak(WHTYPE);
+		((WHPTR) t)->whtyp = (wdval == WHSYM ? TWH : TUN);
+		((WHPTR) t)->whtre = cmd(DOSYM, NLFLG);
+		((WHPTR) t)->dotre = cmd(ODSYM, NLFLG);
+		break;
+	}
 
 	case BRSYM:
 		t = cmd(KTSYM, NLFLG);
 		break;
 
 	case '(':
-		{
-			register PARPTR p;
-			p = (PARPTR) getstak(PARTYPE);
-			p->partre = cmd(')', NLFLG);
-			p->partyp = TPAR;
-			t = makefork(0, p);
-			break;
-		}
+	{
+		register PARPTR p;
+		p = (PARPTR) getstak(PARTYPE);
+		p->partre = cmd(')', NLFLG);
+		p->partyp = TPAR;
+		t = makefork(0, p);
+		break;
+	}
 
 	default:
-		if (io == 0) {
+		if (io == 0)
 			return (0);
-			;
-		}
 
 	case 0:
-		{
-			register ARGPTR argp;
-			register ARGPTR *argtail;
-			register ARGPTR *argset = 0;
-			int keywd = 1;
-			t = (TREPTR) getstak(COMTYPE);
-			((COMPTR) t)->comio = io;	/*initial io chain */
-			argtail = &(((COMPTR) t)->comarg);
-			while (wdval == 0) {
-				argp = wdarg;
-				if (wdset && keywd) {
-					argp->argnxt = (ARGPTR) argset;
-					argset = (ARGPTR *) argp;
-				} else {
-					*argtail = argp;
-					argtail = &(argp->argnxt);
-					keywd = flags & keyflg;
-					;
-				}
-				word();
-				if (flag) {
-					((COMPTR) t)->comio =
-					    inout(((COMPTR) t)->comio);
-					;
-				};
+	{
+		register ARGPTR argp;
+		register ARGPTR *argtail;
+		register ARGPTR *argset = 0;
+		int keywd = 1;
+		t = (TREPTR) getstak(COMTYPE);
+		((COMPTR) t)->comio = io;	/*initial io chain */
+		argtail = &(((COMPTR) t)->comarg);
+		while (wdval == 0) {
+			argp = wdarg;
+			if (wdset && keywd) {
+				argp->argnxt = (ARGPTR) argset;
+				argset = (ARGPTR *) argp;
+			} else {
+				*argtail = argp;
+				argtail = &(argp->argnxt);
+				keywd = flags & keyflg;
 			}
-
-			((COMPTR) t)->comtyp = TCOM;
-			((COMPTR) t)->comset = (ARGPTR) argset;
-			*argtail = 0;
-			return (t);
+			word();
+			if (flag)
+				((COMPTR) t)->comio = inout(((COMPTR) t)->comio);
 		}
+
+		((COMPTR) t)->comtyp = TCOM;
+		((COMPTR) t)->comset = (ARGPTR) argset;
+		*argtail = 0;
+		return (t);
+	}
 
 	}
 	reserv++;
 	word();
-	if (io = inout(io)
-	    ) {
+	if (io = inout(io)) {
 		t = makefork(0, t);
 		t->treio = io;
-		;
 	}
-	return (t);
+	return t;
 }
 
 
-static int skipnl()
+static int skipnl(void)
 {
-	while ((reserv++, word() == NL)) {
+	while (reserv++, word() == NL)
 		chkpr(NL);
-	}
-	return (wdval);
+	return wdval;
 }
 
-static IOPTR inout(lastio)
-IOPTR lastio;
+static IOPTR inout(IOPTR lastio)
 {
 	register int iof;
 	register IOPTR iop;
@@ -398,25 +338,21 @@ IOPTR lastio;
 
 	case APPSYM:
 	case '>':
-		if (wdnum == 0) {
+		if (wdnum == 0)
 			iof |= 1;
-		}
 		iof |= IOPUT;
 		if (wdval == APPSYM) {
 			iof |= IOAPP;
 			break;
-			;
 		}
 
 	case '<':
-		if ((c = nextc(0)) == '&') {
+		if ((c = nextc(0)) == '&')
 			iof |= IOMOV;
-		} else if (c == '>') {
+		else if (c == '>')
 			iof |= IORDW;
-		} else {
+		else
 			peekc = c | MARK;
-			;
-		}
 		break;
 
 	default:
@@ -430,72 +366,58 @@ IOPTR lastio;
 	if (iof & IODOC) {
 		iop->iolst = iopend;
 		iopend = iop;
-		;
 	}
 	word();
 	iop->ionxt = inout(lastio);
 	return (iop);
 }
 
-static void chkword()
+static void chkword(void)
 {
-	if (word()
-	    ) {
+	if (word())
 		synbad();
-		;
-	}
 }
 
-static void chksym(sym)
+static void chksym(int sym)
 {
 	register int x = sym & wdval;
-	if (((x & SYMFLG) ? x : sym) != wdval) {
+	if (((x & SYMFLG) ? x : sym) != wdval)
 		synbad();
-		;
-	}
 }
 
-static void prsym(sym)
+static void prsym(int sym)
 {
 	if (sym & SYMFLG) {
 		register SYSPTR sp = reserved;
-		while (sp->sysval && sp->sysval != sym) {
+		while (sp->sysval && sp->sysval != sym)
 			sp++;
-		}
 		prs(sp->sysnam);
 	} else if (sym == EOFSYM) {
 		prs(endoffile);
 	} else {
-		if (sym & SYMREP) {
+		if (sym & SYMREP)
 			prc(sym);
-		}
-		if (sym == NL) {
+		if (sym == NL)
 			prs("newline");
-		} else {
+		else
 			prc(sym);
-			;
-		}
-		;
 	}
 }
 
-static void synbad()
+static void synbad(void)
 {
 	prp();
 	prs(synmsg);
 	if ((flags & ttyflg) == 0) {
 		prs(atline);
 		prn(standin->flin);
-		;
 	}
 	prs(colon);
 	prc(LQ);
-	if (wdval) {
+	if (wdval)
 		prsym(wdval);
-	} else {
+	else
 		prs(wdarg->argval);
-		;
-	}
 	prc(RQ);
 	prs(unexpected);
 	newline();
