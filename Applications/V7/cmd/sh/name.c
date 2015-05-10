@@ -375,9 +375,9 @@ NAMPTR n;
 	}
 }
 
-STRING *sh_setenv(void)
+char **sh_setenv(void)
 {
-	register STRING *er;
+	register char **er;
 
 	namec = 0;
 	namscan(countnam);

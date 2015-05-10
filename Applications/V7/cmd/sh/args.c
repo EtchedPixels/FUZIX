@@ -81,15 +81,14 @@ int options(int argc, STRING *argv)
 	return (argc);
 }
 
-void setargs(STRING argi[])
+void setargs(const char *argi[])
 {
 	/* count args */
-	register STRING *argp = argi;
+	register const char **argp = argi;
 	register int argn = 0;
 
-	while (Rcheat(*argp++) != ENDARGS) {
+	while (Rcheat(*argp++) != ENDARGS)
 		argn++;
-	}
 
 	/* free old ones unless on for loop chain */
 	freeargs(dolh);

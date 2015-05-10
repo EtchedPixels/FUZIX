@@ -85,7 +85,7 @@
 /* result type declarations */
 extern void *setbrk(intptr_t);
 extern void sh_getenv(void);
-extern STRING *sh_setenv(void);
+extern char **sh_setenv(void);
 
 
 #define alloc malloc
@@ -97,17 +97,10 @@ TREPTR cmd();
 TREPTR makefork();
 NAMPTR lookup();
 void setname();
-void setargs();
 DOLPTR useargs();
 DOLPTR freeargs();
 REAL expr();
-STRING catpath();
-STRING getpath();
-STRING *scan();
-STRING mactrim();
 STRING macro();
-void await();
-void post();
 void exname();
 void printnam();
 void printflg();
@@ -292,7 +285,7 @@ extern address end[];
 
 /* args.c */
 extern int options(int argc, STRING *argv);
-extern void setargs(STRING argi[]);
+extern void setargs(const char *argi[]);
 extern DOLPTR freeargs(DOLPTR blk);
 extern void clearup(void);
 extern DOLPTR useargs(void);
@@ -324,6 +317,19 @@ extern void prt(L_INT t);
 extern void prn(int n);
 extern void itos(int n);
 extern int stoi(const char *icp);
+/* service.c */
+extern void initio(IOPTR iop);
+extern const char *getpath(const char *s);
+extern int pathopen(const char *path, const char *name);
+extern const char *catpath(register const char *path, const char *name);
+extern void execa(const char *at[]);
+extern void postclr(void);
+extern void post(int pcsid);
+extern void await(int i);
+extern void trim(char *at);
+extern char *mactrim(char *s);
+extern char **scan(int argn);
+extern int getarg(COMPTR ac);
 /* stak.c */
 extern STKPTR getstak(int asize);
 extern STKPTR locstak(void);

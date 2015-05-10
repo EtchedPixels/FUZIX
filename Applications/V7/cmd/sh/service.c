@@ -13,14 +13,15 @@
 #include	"defs.h"
 
 
-static STRING execs();
-static void gsort();
-static int split();
+static const char *execs(const char *ap, const char *t[]);
+static void gsort(char *from[], char *to[]);
+static int split(const char *s);
 
 #define ARGMK	01
 
-int errno;
-STRING sysmsg[];
+/* FIXME: errno from header */
+extern int errno;
+extern STRING sysmsg[];
 
 /* fault handling */
 #define ENOMEM	12
@@ -33,10 +34,9 @@ STRING sysmsg[];
 
 /* service routines for `execute' */
 
-void initio(iop)
-IOPTR iop;
+void initio(IOPTR iop)
 {
-	register STRING ion;
+	register char *ion;
 	register int iof, fd;
 
 	if (iop) {
@@ -49,15 +49,13 @@ IOPTR iop;
 				fd = chkopen(tmpout);
 				unlink(tmpout);
 			} else if (iof & IOMOV) {
-				if (eq(minus, ion)
-				    ) {
+				if (eq(minus, ion)) {
 					fd = -1;
 					close(iof & IOUFD);
 				} else if ((fd = stoi(ion)) >= USERIO) {
 					failed(ion, badfile);
 				} else {
 					fd = dup(fd);
-					;
 				}
 			} else if ((iof & IOPUT) == 0) {
 				fd = chkopen(ion);
@@ -67,40 +65,32 @@ IOPTR iop;
 				lseek(fd, 0L, 2);
 			} else {
 				fd = create(ion);
-				;
 			}
 			if (fd >= 0) {
 				sh_rename(fd, iof & IOUFD);
-				;
 			};
 		}
 		initio(iop->ionxt);
-		;
 	}
 }
 
-STRING getpath(s)
-STRING s;
+const char *getpath(const char *s)
 {
-	register STRING path;
-	if (any('/', s)
-	    ) {
+	register char *path;
+	if (any('/', s)) {
 		if (flags & rshflg) {
 			failed(s, restricted);
 		} else {
 			return (nullstr);
-			;
 		}
 	} else if ((path = pathnod.namval) == 0) {
 		return (defpath);
 	} else {
 		return (cpystak(path));
-		;
 	}
 }
 
-int pathopen(path, name)
-register STRING path, name;
+int pathopen(const char *path, const char *name)
 {
 	register UFD f;
 
@@ -110,12 +100,11 @@ register STRING path, name;
 	return (f);
 }
 
-STRING catpath(path, name)
-register STRING path;
-STRING name;
+const char *catpath(register const char *path, const char *name)
 {
 	/* leaves result on top of stack */
-	register STRING scanp = path, argp = locstak();
+	register const char *scanp = path;
+	register char *argp = locstak();
 
 	while (*scanp && *scanp != COLON) {
 		*argp++ = *scanp++;
@@ -132,14 +121,13 @@ STRING name;
 	return (path);
 }
 
-static STRING xecmsg;
-static STRING *xecenv;
+static const char *xecmsg;
+static char **xecenv;
 
-void execa(at)
-STRING at[];
+void execa(const char *at[])
 {
-	register STRING path;
-	register STRING *t = at;
+	register const char *path;
+	register const char **t = at;
 
 	if ((flags & noexec) == 0) {
 		xecmsg = notfound;
@@ -148,21 +136,19 @@ STRING at[];
 		xecenv = sh_setenv();
 		while (path = execs(path, t));
 		failed(*t, xecmsg);
-		;
 	}
 }
 
-static STRING execs(ap, t)
-STRING ap;
-register STRING t[];
+static const char *execs(const char *ap, const char *t[])
 {
-	register STRING p, prefix;
+	register char *p;
+	register const char *prefix;
 
 	prefix = catpath(ap, t[0]);
 	trim(p = curstak());
 
 	sigchk();
-	execve(p, &t[0], xecenv);
+	execve(p, &t[0], (const char **)xecenv);
 	switch (errno) {
 	case ENOEXEC:
 		flags = 0;
@@ -201,39 +187,30 @@ register STRING t[];
 static int pwlist[MAXP];
 static int pwc;
 
-postclr()
+void postclr(void)
 {
 	register int *pw = pwlist;
-
-	while (pw <= &pwlist[pwc]
-	    ) {
+	while (pw <= &pwlist[pwc])
 		*pw++ = 0;
-	}
 	pwc = 0;
 }
 
-void post(pcsid)
-int pcsid;
+void post(int pcsid)
 {
 	register int *pw = pwlist;
 
 	if (pcsid) {
-		while (*pw) {
+		while (*pw)
 			pw++;
-		}
-		if (pwc >= MAXP - 1) {
+		if (pwc >= MAXP - 1)
 			pw--;
-		} else {
+		else
 			pwc++;
-			;
-		}
 		*pw = pcsid;
-		;
 	}
 }
 
-void await(i)
-int i;
+void await(int i)
 {
 	int rc = 0, wx = 0;
 	int w;
@@ -255,121 +232,98 @@ int i;
 					pwc--;
 				} else {
 					pw++;
-					;
 				}
-				;
 			}
 		}
 
-		if (p == -1) {
+		if (p == -1)
 			continue;
-		}
 
 		w_hi = (w >> 8) & LOBYTE;
 
 		if (sig = w & 0177) {
-			if (sig == 0177	/* ptrace! return */
-			    ) {
+			if (sig == 0177) {	/* ptrace! return */
 				prs("ptrace: ");
 				sig = w_hi;
-				;
 			}
-			if (sysmsg[sig]
-			    ) {
+			if (sysmsg[sig]) {
 				if (i != p || (flags & prompt) == 0) {
 					prp();
 					prn(p);
 					blank();
 				}
 				prs(sysmsg[sig]);
-				if (w & 0200) {
+				if (w & 0200)
 					prs(coredump);
-				};
 			}
 			newline();
-			;
 		}
 
-		if (rc == 0) {
+		if (rc == 0)
 			rc = (sig ? sig | SIGFLG : w_hi);
-			;
-		}
 		wx |= w;
-		;
 	}
 
-	if (wx && flags & errflg) {
+	if (wx && flags & errflg)
 		exitsh(rc);
-		;
-	}
 	exitval = rc;
 	exitset();
 }
 
 BOOL nosubst;
 
-trim(at)
-STRING at;
+void trim(char *at)
 {
-	register STRING p;
-	register CHAR c;
-	register CHAR q = 0;
+	register char *p;
+	register char c;
+	register char q = 0;
 
 	if (p = at) {
 		while (c = *p) {
 			*p++ = c & STRIP;
 			q |= c;
 		}
-		;
 	}
 	nosubst = q & QUOTE;
 }
 
-STRING mactrim(s)
-STRING s;
+char *mactrim(char *s)
 {
-	register STRING t = macro(s);
+	register char *t = macro(s);
 	trim(t);
 	return (t);
 }
 
-STRING *scan(argn)
-int argn;
+char **scan(int argn)
 {
 	register ARGPTR argp = (ARGPTR) (Rcheat(gchain) & ~ARGMK);
-	register STRING *comargn, *comargm;
+	register char **comargn, **comargm;
 
-	comargn = (STRING *) getstak(BYTESPERWORD * argn + BYTESPERWORD);
+	comargn = (char **) getstak(BYTESPERWORD * argn + BYTESPERWORD);
 	comargm = comargn += argn;
 	*comargn = ENDARGS;
 
 	while (argp) {
 		*--comargn = argp->argval;
-		if (argp = argp->argnxt) {
+		if (argp = argp->argnxt)
 			trim(*comargn);
-			;
-		}
 		if (argp == 0 || Rcheat(argp) & ARGMK) {
 			gsort(comargn, comargm);
 			comargm = comargn;
-			;
 		}
 		/* Lcheat(argp) &= ~ARGMK; */
 		argp = (ARGPTR) (Rcheat(argp) & ~ARGMK);
-		;
 	}
-	return (comargn);
+	return comargn;
 }
 
-static void gsort(from, to)
-STRING from[], to[];
+static void gsort(char *from[], char *to[])
 {
 	int k, m, n;
 	register int i, j;
 
-	if ((n = to - from) <= 1) {
+	if ((n = to - from) <= 1)
 		return;
-	}
 
 	for (j = 1; j <= n; j *= 2);
 
@@ -377,29 +331,24 @@ STRING from[], to[];
 		k = n - m;
 		for (j = 0; j < k; j++) {
 			for (i = j; i >= 0; i -= m) {
-				register STRING *fromi;
+				register char **fromi;
 				fromi = &from[i];
 				if (cf(fromi[m], fromi[0]) > 0) {
 					break;
 				} else {
-					STRING s;
+					char * s;
 					s = fromi[m];
 					fromi[m] = fromi[0];
 					fromi[0] = s;
-					;
 				}
-				;
 			}
-			;
 		}
-		;
 	}
 }
 
 /* Argument list generation */
 
-int getarg(ac)
-COMPTR ac;
+int getarg(COMPTR ac)
 {
 	register ARGPTR argp;
 	register int count = 0;
@@ -417,18 +366,16 @@ COMPTR ac;
 	return (count);
 }
 
-static int split(s)
-register STRING s;
+static int split(register const char *s)
 {
-	register STRING argp;
+	register char *argp;
 	register int c;
 	int count = 0;
 
 	for (;;) {
 		sigchk();
 		argp = locstak() + BYTESPERWORD;
-		while ((c = *s++, !any(c, ifsnod.namval) && c)
-		    ) {
+		while ((c = *s++, !any(c, ifsnod.namval) && c)) {
 			*argp++ = c;
 		}
 		if (argp == staktop + BYTESPERWORD) {
@@ -440,16 +387,12 @@ register STRING s;
 			}
 		} else if (c == 0) {
 			s--;
-			;
 		}
-		if (c =
-		    expand(((ARGPTR) (argp = endstak(argp)))->argval, 0)
-		    ) {
+		if (c = expand(((ARGPTR) (argp = endstak(argp)))->argval, 0)) {
 			count += c;
 		} else {	/* assign(&fngnod, argp->argval); */
 			makearg(argp);
 			count++;
-			;
 		}
 		Lcheat(gchain) |= ARGMK;
 	}
