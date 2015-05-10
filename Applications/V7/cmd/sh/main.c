@@ -26,14 +26,9 @@ CHAR tmpout[20] = "/tmp/sh-";
 FILEBLK stdfile;
 FILE standin = &stdfile;
 
-static void exfile();
+static void exfile(BOOL);
 
-
-
-
-main(c, v)
-int c;
-STRING v[];
+int main(int c, const char *v[])
 {
 	register int rflag = ttyflg;
 
@@ -104,8 +99,7 @@ STRING v[];
 	done();
 }
 
-static void exfile(prof)
-BOOL prof;
+static void exfile(BOOL prof)
 {
 	register L_INT mailtime = 0;
 	register int userid;
@@ -115,22 +109,19 @@ BOOL prof;
 	if (input > 0) {
 		Ldup(input, INIO);
 		input = INIO;
-		;
 	}
 
 	/* move output to safe place */
 	if (output == 2) {
 		Ldup(dup(2), OTIO);
 		output = OTIO;
-		;
 	}
 
 	userid = getuid();
 
 	/* decide whether interactive */
 	if ((flags & intflg)
-	    || ((flags & oneflg) == 0 && isatty(output) && isatty(input))
-	    ) {
+	    || ((flags & oneflg) == 0 && isatty(output) && isatty(input))) {
 		dfault(&ps1nod, (userid ? stdprompt : supprompt));
 		dfault(&ps2nod, readmsg);
 		flags |= ttyflg | prompt;
@@ -138,21 +129,18 @@ BOOL prof;
 	} else {
 		flags |= prof;
 		flags &= ~prompt;
-		;
 	}
 
 	if (setjmp(errshell) && prof) {
 		close(input);
 		return;
-		;
 	}
 
 	/* error return here */
 	loopcnt = breakcnt = peekc = 0;
 	iopend = 0;
-	if (input >= 0) {
+	if (input >= 0)
 		initf(input);
-	}
 
 	/* command loop */
 	for (;;) {
@@ -171,15 +159,12 @@ BOOL prof;
 			prs(ps1nod.namval);
 			alarm(TIMEOUT);
 			flags |= waiting;
-			;
 		}
 
 		trapnote = 0;
 		peekc = readc();
-		if (eof) {
+		if (eof)
 			return;
-			;
-		}
 		alarm(0);
 		flags &= ~waiting;
 		execute(cmd(NL, MTFLG), 0);
@@ -187,24 +172,20 @@ BOOL prof;
 	}
 }
 
-chkpr(eor)
-char eor;
+void chkpr(char eor)
 {
-	if ((flags & prompt) && standin->fstak == 0 && eor == NL) {
+	if ((flags & prompt) && standin->fstak == 0 && eor == NL)
 		prs(ps2nod.namval);
-		;
-	}
 }
 
-settmp()
+void settmp(void)
 {
 	itos(getpid());
 	serial = 0;
 	tmpnam = movstr(numbuf, &tmpout[TMPNAM]);
 }
 
-Ldup(fa, fb)
-register int fa, fb;
+void Ldup(register int fa, register int fb)
 {
 	dup2(fa, fb);
 	close(fa);

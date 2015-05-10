@@ -194,7 +194,7 @@ extern FILE standin;
 #define input	(standin->fdes)
 #define eof	(standin->feof)
 extern int peekc;
-extern STRING comdiv;
+extern const char *comdiv;
 extern const char devnull[];
 
 /* flags */
@@ -284,7 +284,7 @@ extern address end[];
 #include	"ctype.h"
 
 /* args.c */
-extern int options(int argc, STRING *argv);
+extern int options(int argc, const char *argv[]);
 extern void setargs(const char *argi[]);
 extern DOLPTR freeargs(DOLPTR blk);
 extern void clearup(void);
@@ -307,6 +307,11 @@ extern void error(const char *s);
 extern void exitsh(int xno);
 extern void done(void);
 extern void rmtemp(IOPTR base);
+/* main.c */
+extern int main(int c, const char *v[]);
+extern void chkpr(char eor);
+extern void settmp(void);
+extern void Ldup(register int fa, register int fb);
 /* print.c */
 extern void newline(void);
 extern void blank(void);

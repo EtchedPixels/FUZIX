@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include	"defs.h"
 
-static STRING *copyargs(STRING from[], int n);
+static STRING *copyargs(const char *from[], int n);
 static DOLPTR dolh;
 
 CHAR flagadr[10];
@@ -30,12 +30,12 @@ int flagval[] = {
 /* ========	option handling	======== */
 
 
-int options(int argc, STRING *argv)
+int options(int argc, const char **argv)
 {
-	register STRING cp;
-	register STRING *argp = argv;
-	register STRING flagc;
-	STRING flagp;
+	register const char *cp;
+	register const char **argp = argv;
+	register char *flagc;
+	char *flagp;
 
 	if (argc > 1 && *argp[1] == '-') {
 		cp = argp[1];
@@ -55,30 +55,23 @@ int options(int argc, STRING *argv)
 				argc--;
 			} else {
 				failed(argv[1], badopt);
-				;
 			}
-			;
 		}
 		argp[1] = argp[0];
 		argc--;
-		;
 	}
 
 	/* set up $- */
 	flagc = flagchar;
 	flagp = flagadr;
 	while (*flagc) {
-		if (flags & flagval[flagc - flagchar]
-		    ) {
+		if (flags & flagval[flagc - flagchar]) {
 			*flagp++ = *flagc;
-			;
 		}
 		flagc++;
-		;
 	}
 	*flagp++ = 0;
-
-	return (argc);
+	return argc;
 }
 
 void setargs(const char *argi[])
@@ -116,12 +109,12 @@ DOLPTR freeargs(DOLPTR blk)
 	return (argr);
 }
 
-static STRING *copyargs(STRING from[], int n)
+static STRING *copyargs(const char *from[], int n)
 {
-	register STRING *np =
+	register char **np =
 	    (STRING *) alloc(sizeof(STRING *) * n + 3 * BYTESPERWORD);
-	register STRING *fp = from;
-	register STRING *pp = np;
+	register const char **fp = from;
+	register char **pp = np;
 
 	((DOLPTR) np)->doluse = 1;	/* use count */
 	np = (STRING *) ((DOLPTR) np)->dolarg;
