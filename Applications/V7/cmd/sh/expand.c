@@ -51,7 +51,7 @@ INT	expand(as,rflg)
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
 		THEN	IF rflg && slash THEN break; ELSE return(0) FI
-		ELIF *cs=='/'
+		} else if ( *cs=='/'
 		THEN	slash++;
 		FI
 	   OD
@@ -60,7 +60,7 @@ INT	expand(as,rflg)
 	for(;;) {	IF cs==s
 		THEN	s=nullstr;
 			break;
-		ELIF *--cs == '/'
+		} else if ( *--cs == '/'
 		THEN	*cs=0;
 			IF s==cs THEN s="/" FI
 			break;
@@ -133,7 +133,7 @@ gmatch(s, p)
 		WHILE c = *p++
 		DO	IF c==']'
 			THEN	return(ok?gmatch(s,p):0);
-			ELIF c==MINUS
+			} else if ( c==MINUS
 			THEN	IF lc<=scc && scc<=(*p++) THEN ok++ FI
 			ELSE	IF scc==(lc=(c&STRIP)) THEN ok++ FI
 			FI

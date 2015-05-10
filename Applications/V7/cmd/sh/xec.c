@@ -112,7 +112,7 @@ execute(argt, execflg, pf1, pf2)
 						DO INT	i;
 						   IF (i=stoi(*com))>=MAXTRAP || i<MINTRAP
 						   THEN	failed(*com,badtrap);
-						   ELIF clear
+						   } else if ( clear
 						   THEN	clrsig(i);
 						   ELSE	replace(&trapcom[i],a1);
 							IF *a1
@@ -144,7 +144,7 @@ execute(argt, execflg, pf1, pf2)
 				case SYSCD:
 					IF flags&rshflg
 					THEN	failed(com[0],restricted);
-					ELIF (a1==0 && (a1=homenod.namval)==0) || chdir(a1)<0
+					} else if ( (a1==0 && (a1=homenod.namval)==0) || chdir(a1)<0
 					THEN	failed(a1,baddir);
 					FI
 					break;
@@ -178,7 +178,7 @@ execute(argt, execflg, pf1, pf2)
 						IF argc>1
 						THEN	setargs(com+argn-argc);
 						FI
-					ELIF ((COMPTR)t)->comset==0
+					} else if ( ((COMPTR)t)->comset==0
 					THEN	/*scan name chain and print*/
 						namscan(printnam);
 					FI
@@ -231,7 +231,7 @@ execute(argt, execflg, pf1, pf2)
 					chktrap();
 					break;
 				FI
-			ELIF t->treio==0
+			} else if ( t->treio==0
 			THEN	break;
 			FI
 			}
@@ -252,7 +252,7 @@ execute(argt, execflg, pf1, pf2)
 				IF treeflgs&FPCL THEN closepipe(pf1) FI
 				IF (treeflgs&(FAMP|FPOU))==0
 				THEN	await(parent);
-				ELIF (treeflgs&FAMP)==0
+				} else if ( (treeflgs&FAMP)==0
 				THEN	post(parent);
 				ELSE	assnum(&pcsadr, parent);
 				FI
@@ -293,7 +293,7 @@ execute(argt, execflg, pf1, pf2)
 				initio(t->treio);
 				IF type!=TCOM
 				THEN	execute(((FORKPTR)t)->forktre,1);
-				ELIF com[0]!=ENDARGS
+				} else if ( com[0]!=ENDARGS
 				THEN	setlist(((COMPTR)t)->comset,N_EXPORT);
 					execa(com);
 				FI
@@ -416,7 +416,7 @@ execexp(s,f)
 	push(&fb);
 	IF s
 	THEN	estabf(s); fb.feval=(STRING *)f;
-	ELIF f>=0
+	} else if ( f>=0
 	THEN	initf(f);
 	FI
 	execute(cmd(NL, NLFLG|MTFLG),0);

@@ -188,7 +188,7 @@ NAMPTR		lookup(nam)
 	WHILE nscan
 	DO	IF (LR=cf(nam,nscan->namid))==0
 		THEN	return(nscan);
-		ELIF LR<0
+		} else if ( LR<0
 		THEN	prev = &(nscan->namlft);
 		ELSE	prev = &(nscan->namrgt);
 		FI

@@ -79,7 +79,7 @@ TREPTR	cmd(sym,flg)
 	THEN	IF flg&NLFLG
 		THEN	wdval=';'; chkpr(NL);
 		FI
-	ELIF i==0 && (flg&MTFLG)==0
+	} else if ( i==0 && (flg&MTFLG)==0
 	THEN	synbad();
 	FI
 
@@ -345,7 +345,7 @@ static IOPTR	inout(lastio)
 	    case '<':
 		IF (c=nextc(0))=='&'
 		THEN	iof |= IOMOV;
-		ELIF c=='>'
+		} else if ( c=='>'
 		THEN	iof |= IORDW;
 		ELSE	peekc=c|MARK;
 		FI
@@ -389,7 +389,7 @@ static void	prsym(sym)
 			&& sp->sysval!=sym
 		DO sp++ OD
 		prs(sp->sysnam);
-	ELIF sym==EOFSYM
+	} else if ( sym==EOFSYM
 	THEN	prs(endoffile);
 	ELSE	IF sym&SYMREP THEN prc(sym) FI
 		IF sym==NL

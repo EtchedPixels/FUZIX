@@ -1,5 +1,5 @@
 /* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
-/* Changes: Copyright (c) 1999 Robert Nordier. All rights reserved. */
+/* Changes: Copyright (c) 1999 Robert Nordier.  All rights reserved.  */
 
 #
 /*
@@ -80,24 +80,24 @@ retry:
 				n=lookup(absstak(argp)); setstak(argp);
 				v = n->namval; id = n->namid;
 				peekc = c|MARK;;
-			ELIF digchar(c)
+			} else if ( digchar(c)
 			THEN	*id=c; idb[1]=0;
 				IF astchar(c)
 				THEN	dolg=1; c='1';
 				FI
 				c -= '0';
 				v=((c==0) ? cmdadr : (c<=dolc) ? dolv[c] : (STRING)(dolg=0));
-			ELIF c=='$'
+			} else if ( c=='$'
 			THEN	v=pidadr;
-			ELIF c=='!'
+			} else if ( c=='!'
 			THEN	v=pcsadr;
-			ELIF c=='#'
+			} else if ( c=='#'
 			THEN	v=dolladr;
-			ELIF c=='?'
+			} else if ( c=='?'
 			THEN	v=exitadr;
-			ELIF c=='-'
+			} else if ( c=='-'
 			THEN	v=flagadr;
-			ELIF bra THEN error(badsub);
+			} else if ( bra THEN error(badsub);
 			ELSE	goto retry;
 			FI
 			c = readc();
@@ -127,26 +127,26 @@ retry:
 					     FI
 					}
 				FI
-			ELIF argp
+			} else if ( argp
 			THEN	IF c=='?'
 				THEN	failed(id,*argp?argp:badparam);
-				ELIF c=='='
+				} else if ( c=='='
 				THEN	IF n
 					THEN	assign(n,argp);
 					ELSE	error(badsub);
 					FI
 				FI
-			ELIF flags&setflg
+			} else if ( flags&setflg
 			THEN	failed(id,badparam);
 			FI
 			goto retry;
 		ELSE	peekc=c|MARK;
 		FI
-	ELIF d==endch
+	} else if ( d==endch
 	THEN	return(d);
-	ELIF d==SQUOTE
+	} else if ( d==SQUOTE
 	THEN	comsubst(); goto retry;
-	ELIF d==DQUOTE
+	} else if ( d==DQUOTE
 	THEN	quoted++; quote^=QUOTE; goto retry;
 	FI
 	return(d);

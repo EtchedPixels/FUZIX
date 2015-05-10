@@ -46,7 +46,7 @@ INT	options(argc,argv)
 			WHILE *flagc && *flagc != *cp DO flagc++ OD
 			IF *cp == *flagc
 			THEN	flags |= flagval[flagc-flagchar];
-			ELIF *cp=='c' && argc>2 && comdiv==0
+			} else if (*cp=='c' && argc>2 && comdiv==0
 			THEN	comdiv=argp[2];
 				argp[1]=argp[0]; argp++; argc--;
 			ELSE	failed(argv[1],badopt);

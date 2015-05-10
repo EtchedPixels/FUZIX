@@ -46,19 +46,19 @@ void	initio(iop)
 		THEN	IF iof&IODOC
 			THEN	subst(chkopen(ion),(fd=tmpfil()));
 				close(fd); fd=chkopen(tmpout); unlink(tmpout);
-			ELIF iof&IOMOV
+			} else if ( iof&IOMOV
 			THEN	IF eq(minus,ion)
 				THEN	fd = -1;
 					close(iof&IOUFD);
-				ELIF (fd=stoi(ion))>=USERIO
+				} else if ( (fd=stoi(ion))>=USERIO
 				THEN	failed(ion,badfile);
 				ELSE	fd=dup(fd);
 				FI
-			ELIF (iof&IOPUT)==0
+			} else if ( (iof&IOPUT)==0
 			THEN	fd=chkopen(ion);
-			ELIF flags&rshflg
+			} else if ( flags&rshflg
 			THEN	failed(ion,restricted);
-			ELIF iof&IOAPP && (fd=open(ion,1))>=0
+			} else if ( iof&IOAPP && (fd=open(ion,1))>=0
 			THEN	lseek(fd, 0L, 2);
 			ELSE	fd=create(ion);
 			FI
@@ -79,7 +79,7 @@ STRING	getpath(s)
 		THEN	failed(s, restricted);
 		ELSE	return(nullstr);
 		FI
-	ELIF (path = pathnod.namval)==0
+	} else if ( (path = pathnod.namval)==0
 	THEN	return(defpath);
 	ELSE	return(cpystak(path));
 	FI
@@ -357,7 +357,7 @@ static INT	split(s)
 			THEN	continue;
 			ELSE	return(count);
 			FI
-		ELIF c==0
+		} else if (c==0
 		THEN	s--;
 		FI
 		IF c=expand(((ARGPTR)(argp=endstak(argp)))->argval,0)

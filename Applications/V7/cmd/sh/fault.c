@@ -29,7 +29,7 @@ void	fault(sig)
 	THEN	IF setbrk(brkincr) == -1
 		THEN	error(nospace);
 		FI
-	ELIF sig==ALARM
+	} else if (sig==ALARM
 	THEN	IF flags&waiting
 		THEN	done();
 		FI

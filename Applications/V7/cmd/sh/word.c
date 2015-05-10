@@ -56,7 +56,7 @@ word()
 			FI
 		FI
 
-	ELIF dipchar(c)
+	} else if ( dipchar(c)
 	THEN	IF (d=nextc(0))==c
 		THEN	wdval = c|SYMREP;
 		ELSE	peekc = d|MARK; wdval = c;
@@ -79,7 +79,7 @@ nextc(quote)
 	IF (d=readc())==ESCAPE
 	THEN	IF (c=readc())==NL
 		THEN	chkpr(NL); d=nextc(quote);
-		ELIF quote && c!=quote && !escchar(c)
+		} else if ( quote && c!=quote && !escchar(c)
 		THEN	peekc=c|MARK;
 		ELSE	d = c|QUOTE;
 		FI
@@ -96,7 +96,7 @@ readc()
 retry:
 	IF peekc
 	THEN	c=peekc; peekc=0;
-	ELIF (f=standin, f->fnxt!=f->fend)
+	} else if ( (f=standin, f->fnxt!=f->fend)
 	THEN	IF (c = *f->fnxt++)==0
 		THEN	IF f->feval
 			THEN	IF estabf(*f->feval++)
@@ -108,9 +108,9 @@ retry:
 		FI
 		IF flags&readpr && standin->fstak==0 THEN prc(c) FI
 		IF c==NL THEN f->flin++ FI
-	ELIF f->feof || f->fdes<0
+	} else if ( f->feof || f->fdes<0
 	THEN	c=EOF; f->feof++;
-	ELIF (len=readb())<=0
+	} else if ( (len=readb())<=0
 	THEN	close(f->fdes); f->fdes = -1; c=EOF; f->feof++;
 	ELSE	f->fend = (f->fnxt = f->fbuf)+len;
 		goto retry;
