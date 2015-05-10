@@ -212,7 +212,7 @@ void	await(i)
 		REG INT		sig;
 		INT		w_hi;
 
-		BEGIN
+		{
 		   REG INT	*pw=pwlist;
 		   p=wait(&w);
 		   WHILE pw <= &pwlist[ipwc]
@@ -221,7 +221,7 @@ void	await(i)
 		      ELSE pw++;
 		      FI
 		   OD
-		END
+		}
 
 		IF p == -1 THEN continue FI
 

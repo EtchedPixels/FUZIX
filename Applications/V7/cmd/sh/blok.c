@@ -70,11 +70,11 @@ void	addblok(reqd)
 	blokp=bloktop;
 	bloktop=bloktop->word=BLK(Rcheat(bloktop)+reqd);
 	bloktop->word=BLK(ADR(end)+1);
-	BEGIN
+	{
 	   REG STKPTR stakadr=STK(bloktop+2);
 	   staktop=movstr(stakbot,stakadr);
 	   stakbas=stakbot=stakadr;
-	END
+	}
 }
 
 void free(void *ap)

@@ -43,7 +43,7 @@ execute(argt, execflg, pf1, pf2)
 		SWITCH type IN
 
 		case TCOM:
-			BEGIN
+			{
 			STRING		a1;
 			INT		argn, internal;
 			ARGPTR		schain=gchain;
@@ -234,7 +234,7 @@ execute(argt, execflg, pf1, pf2)
 			ELIF t->treio==0
 			THEN	break;
 			FI
-			END
+			}
 	
 		case TFORK:
 			IF execflg && (treeflgs&(FAMP|FPOU))==0
@@ -306,13 +306,13 @@ execute(argt, execflg, pf1, pf2)
 			done();
 
 		case TFIL:
-			BEGIN
+			{
 			   INT pv[2]; chkpipe(pv);
 			   IF execute(((LSTPTR)t)->lstlef, 0, pf1, pv)==0
 			   THEN	execute(((LSTPTR)t)->lstrit, execflg, pv, pf2);
 			   ELSE	closepipe(pv);
 			   FI
-			END
+			}
 			break;
 
 		case TLST:
@@ -333,7 +333,7 @@ execute(argt, execflg, pf1, pf2)
 			break;
 
 		case TFOR:
-			BEGIN
+			{
 			   NAMPTR	n = lookup(((FORPTR)t)->fornam);
 			   STRING	*args;
 			   DOLPTR	argsav=0;
@@ -355,12 +355,12 @@ execute(argt, execflg, pf1, pf2)
 			   IF breakcnt THEN breakcnt-- FI
 			   execbrk=breakcnt; loopcnt--;
 			   argfor=freeargs(argsav);
-			END
+			}
 			break;
 
 		case TWH:
 		case TUN:
-			BEGIN
+			{
 			   INT		i=0;
 
 			   loopcnt++;
@@ -370,7 +370,7 @@ execute(argt, execflg, pf1, pf2)
 			   OD
 			   IF breakcnt THEN breakcnt-- FI
 			   execbrk=breakcnt; loopcnt--; exitval=i;
-			END
+			}
 			break;
 
 		case TIF:
@@ -381,7 +381,7 @@ execute(argt, execflg, pf1, pf2)
 			break;
 
 		case TSW:
-			BEGIN
+			{
 			   REG STRING	r = mactrim(((SWPTR)t)->swarg);
 			   t=(TREPTR)((SWPTR)t)->swlst;
 			   WHILE t
@@ -396,7 +396,7 @@ execute(argt, execflg, pf1, pf2)
 				OD
 				IF t THEN t=(TREPTR)((REGPTR)t)->regnxt FI
 			   OD
-			END
+			}
 			break;
 		ENDSW
 		exitset();

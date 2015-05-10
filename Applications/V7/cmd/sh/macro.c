@@ -183,12 +183,12 @@ static comsubst()
 	WHILE (d=readc())!=SQUOTE && d
 	DO pushstak(d) OD
 
-	BEGIN
+	{
 	   REG STRING	argc;
 	   trim(argc=fixstak());
 	   push(&cb); estabf(argc);
-	END
-	BEGIN
+	}
+	{
 	   REG TREPTR	t = makefork(FPOU,cmd(EOFSYM,MTFLG|NLFLG));
 	   INT		pv[2];
 
@@ -199,7 +199,7 @@ static comsubst()
 	   initf(pv[INPIPE]);
 	   execute(t, 0, 0, pv);
 	   close(pv[OTPIPE]);
-	END
+	}
 	tdystak(savptr); staktop=movstr(savptr,stakbot);
 	WHILE d=readc() DO pushstak(d|quote) OD
 	await(0);

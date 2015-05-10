@@ -206,7 +206,7 @@ static TREPTR	item(flag)
 	SWITCH wdval IN
 
 	    case CASYM:
-		BEGIN
+		{
 		   t=(TREPTR)getstak(SWTYPE);
 		   chkword();
 		   ((SWPTR)t)->swarg=wdarg->argval;
@@ -214,10 +214,10 @@ static TREPTR	item(flag)
 		   ((SWPTR)t)->swlst=syncase(wdval==INSYM?ESSYM:KTSYM);
 		   ((SWPTR)t)->swtyp=TSW;
 		   break;
-		END
+		}
 
 	    case IFSYM:
-		BEGIN
+		{
 		   REG INT	w;
 		   t=(TREPTR)getstak(IFTYPE);
 		   ((IFPTR)t)->iftyp=TIF;
@@ -226,10 +226,10 @@ static TREPTR	item(flag)
 		   ((IFPTR)t)->eltre=((w=wdval)==ELSYM ? cmd(FISYM,NLFLG) : (w==EFSYM ? (wdval=IFSYM, item(0)) : 0));
 		   IF w==EFSYM THEN return(t) FI
 		   break;
-		END
+		}
 
 	    case FORSYM:
-		BEGIN
+		{
 		   t=(TREPTR)getstak(FORTYPE);
 		   ((FORPTR)t)->fortyp=TFOR;
 		   ((FORPTR)t)->forlst=0;
@@ -246,31 +246,31 @@ static TREPTR	item(flag)
 		   chksym(DOSYM|BRSYM);
 		   ((FORPTR)t)->fortre=cmd(wdval==DOSYM?ODSYM:KTSYM,NLFLG);
 		   break;
-		END
+		}
 
 	    case WHSYM:
 	    case UNSYM:
-		BEGIN
+		{
 		   t=(TREPTR)getstak(WHTYPE);
 		   ((WHPTR)t)->whtyp=(wdval==WHSYM ? TWH : TUN);
 		   ((WHPTR)t)->whtre = cmd(DOSYM,NLFLG);
 		   ((WHPTR)t)->dotre = cmd(ODSYM,NLFLG);
 		   break;
-		END
+		}
 
 	    case BRSYM:
 		t=cmd(KTSYM,NLFLG);
 		break;
 
 	    case '(':
-		BEGIN
+		{
 		   REG PARPTR	 p;
 		   p=(PARPTR)getstak(PARTYPE);
 		   p->partre=cmd(')',NLFLG);
 		   p->partyp=TPAR;
 		   t=makefork(0,p);
 		   break;
-		END
+		}
 
 	    default:
 		IF io==0
@@ -278,7 +278,7 @@ static TREPTR	item(flag)
 		FI
 
 	    case 0:
-		BEGIN
+		{
 		   REG ARGPTR	argp;
 		   REG ARGPTR	*argtail;
 		   REG ARGPTR	*argset=0;
@@ -303,7 +303,7 @@ static TREPTR	item(flag)
 		   ((COMPTR)t)->comset=(ARGPTR)argset;
 		   *argtail=0;
 		   return(t);
-		END
+		}
 
 	ENDSW
 	reserv++; word();

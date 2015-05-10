@@ -20,8 +20,6 @@
 #define ELIF	} else if (
 #define FI	;}
 
-#define BEGIN	{
-#define END	}
 #define SWITCH	switch(
 #define IN	){
 #define ENDSW	}

@@ -46,7 +46,7 @@ INT	expand(as,rflg)
 	s=cs=as; entry.d_name[DIRSIZ-1]=0; /* to end the string */
 
 	/* check for meta chars */
-	BEGIN
+	{
 	   REG BOOL slash; slash=0;
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
@@ -55,7 +55,7 @@ INT	expand(as,rflg)
 		THEN	slash++;
 		FI
 	   OD
-	END
+	}
 
 	for(;;) {	IF cs==s
 		THEN	s=nullstr;
@@ -106,12 +106,12 @@ INT	expand(as,rflg)
 		FI
 	FI
 
-	BEGIN
+	{
 	   REG CHAR	c;
 	   s=as;
 	   WHILE c = *s
 	   DO	*s++=(c&STRIP?c:'/') OD
-	END
+	}
 	return(count);
 }
 
