@@ -21,7 +21,7 @@ static const struct termios ttydflt = {
 	OPOST | ONLCR,
 	CS8 | TTY_INIT_BAUD | CREAD | HUPCL,
 	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
-	{CTRL('D'), 0, 127, CTRL('C'),
+	{CTRL('D'), 0, CTRL('H'), CTRL('C'),
 	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
 	 CTRL('Z'), CTRL('Y'), CTRL('V'), CTRL('O')
 	 }
