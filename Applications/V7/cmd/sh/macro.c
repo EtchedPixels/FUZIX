@@ -27,7 +27,7 @@ static STRING	copyto(endch)
 	REG CHAR	c;
 
 	while((c=getch(endch))!=endch && c
-	DO pushstak(c|quote) OD
+	){pushstak(c|quote) OD
 	zerostak();
 	if(c!=endch ) { error(badsub) ;}
 }
@@ -38,7 +38,7 @@ static skipto(endch)
 	/* skip chars up to } */
 	REG CHAR	c;
 	while((c=readc()) && c!=endch
-	DO	switch(c) {
+	){	switch(c) {
 
 		case SQUOTE:	skipto(SQUOTE); break;
 
@@ -75,7 +75,7 @@ retry:
 			if(bra=(c==BRACE) ) { c=readc() ;}
 			if(letter(c)
 			) {	argp=(STRING)relstak();
-				while(alphanum(c) DO pushstak(c); c=readc() OD
+				while(alphanum(c) ){pushstak(c); c=readc() OD
 				zerostak();
 				n=lookup(absstak(argp)); setstak(argp);
 				v = n->namval; id = n->namid;
@@ -120,7 +120,7 @@ retry:
 			) {	if(c!='+'
 				) {	for (;;) {
 				            while(c = *v++
-					     DO pushstak(c|quote); OD
+					     ){pushstak(c|quote); OD
 					     if(dolg==0 || (++dolg>dolc)
 					     ) { break;
 					     } else { v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
@@ -181,7 +181,7 @@ static comsubst()
 
 	usestak();
 	while((d=readc())!=SQUOTE && d
-	DO pushstak(d) OD
+	){pushstak(d) OD
 
 	{
 	   REG STRING	argc;
@@ -201,10 +201,10 @@ static comsubst()
 	   close(pv[OTPIPE]);
 	}
 	tdystak(savptr); staktop=movstr(savptr,stakbot);
-	while(d=readc() DO pushstak(d|quote) OD
+	while(d=readc() ){pushstak(d|quote) OD
 	await(0);
 	while(stakbot!=staktop
-	DO	if((*--staktop&STRIP)!=NL
+	){	if((*--staktop&STRIP)!=NL
 		) {	++staktop; break;
 		;}
 	OD
@@ -223,7 +223,7 @@ subst(in,ot)
 	push(&fb); initf(in);
 	/* DQUOTE used to stop it from quoting */
 	while(c=(getch(DQUOTE)&STRIP)
-	DO pushstak(c);
+	){pushstak(c);
 	   if(--count == 0
 	   ) {	flush(ot); count=CPYSIZ;
 	   ;}

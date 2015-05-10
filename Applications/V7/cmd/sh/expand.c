@@ -49,7 +49,7 @@ INT	expand(as,rflg)
 	{
 	   REG BOOL slash; slash=0;
 	   while(!fngchar(*cs)
-	   DO	if (*cs++==0
+	   ){if (*cs++==0
 		) {	if (rflg && slash ) { break; } else { return(0) ;}
 		} else if ( *cs=='/'
 		) {	slash++;
@@ -82,7 +82,7 @@ INT	expand(as,rflg)
 
 		// FIXME: readdir
 		while(read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0
-		DO	if (entry.d_ino==0 ||
+		){if (entry.d_ino==0 ||
 			    (*entry.d_name=='.' && *cs!='.')
 			) {	continue;
 			;}
@@ -98,7 +98,7 @@ INT	expand(as,rflg)
 			if (count
 			) {	count=0;
 				while(rchain
-				DO	count += expand(rchain->argval,1);
+				){count += expand(rchain->argval,1);
 					rchain=rchain->argnxt;
 				OD
 			;}
@@ -110,7 +110,7 @@ INT	expand(as,rflg)
 	   REG CHAR	c;
 	   s=as;
 	   while(c = *s
-	   DO	*s++=(c&STRIP?c:'/') OD
+	   ){*s++=(c&STRIP?c:'/') OD
 	}
 	return(count);
 }
@@ -131,7 +131,7 @@ gmatch(s, p)
 		{BOOL ok; INT lc;
 		ok=0; lc=077777;
 		while(c = *p++
-		DO	if (c==']'
+		){if (c==']'
 			) {	return(ok?gmatch(s,p):0);
 			} else if ( c==MINUS
 			) {	if (lc<=scc && scc<=(*p++) ) { ok++ ;}
@@ -151,7 +151,7 @@ gmatch(s, p)
 		if (*p==0 ) { return(1) ;}
 		--s;
 		while(*s
-		DO  if (gmatch(s++,p) ) { return(1) ;} OD
+		){ if (gmatch(s++,p) ) { return(1) ;} OD
 		return(0);
 
 	    case 0:
@@ -169,14 +169,14 @@ static void	addg(as1,as2,as3)
 
 	s1=as1;
 	while(c = *s1++
-	DO	if ((c &= STRIP)==0
+	){if ((c &= STRIP)==0
 		) {	*s2++='/';
 			break;
 		;}
 		*s2++=c;
 	OD
 	s1=as2;
-	while(*s2 = *s1++ DO s2++ OD
+	while(*s2 = *s1++ ){s2++ OD
 	if (s1=as3
 	) {	*s2++='/';
 		while(*s2++ = *++s1 );

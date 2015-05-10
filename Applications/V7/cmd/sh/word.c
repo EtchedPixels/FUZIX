@@ -32,7 +32,7 @@ word()
 	) {	do {	if(c==LITERAL
 			) {	*argp++=(DQUOTE);
 				while((c=readc()) && c!=LITERAL
-				DO *argp++=(c|QUOTE); chkpr(c) OD
+				){*argp++=(c|QUOTE); chkpr(c) OD
 				*argp++=(DQUOTE);
 			} else {	*argp++=(c);
 				if(c=='=' ) { wdset |= alpha ;}
@@ -40,7 +40,7 @@ word()
 				if(qotchar(c)
 				) {	d=c;
 					while((*argp++=(c=nextc(d))) && c!=d
-					DO chkpr(c) OD
+					){chkpr(c) OD
 				;}
 			;}
 		} while ( (c=nextc(0), !eofmeta(c)) );

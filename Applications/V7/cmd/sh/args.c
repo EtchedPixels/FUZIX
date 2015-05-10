@@ -41,9 +41,9 @@ INT	options(argc,argv)
 	) {	cp=argp[1];
 		flags &= ~(execpr|readpr);
 		while(*++cp
-		DO	flagc=flagchar;
+		){flagc=flagchar;
 
-			while(*flagc && *flagc != *cp DO flagc++ OD
+			while(*flagc && *flagc != *cp ){flagc++ OD
 			if (*cp == *flagc
 			) {	flags |= flagval[flagc-flagchar];
 			} else if (*cp=='c' && argc>2 && comdiv==0
@@ -59,7 +59,7 @@ INT	options(argc,argv)
 	flagc=flagchar;
 	flagp=flagadr;
 	while(*flagc
-	DO if (flags&flagval[flagc-flagchar]
+	){if (flags&flagval[flagc-flagchar]
 	   ) { *flagp++ = *flagc;
 	   ;}
 	   flagc++;
@@ -76,7 +76,7 @@ void	setargs(argi)
 	REG STRING	*argp=argi;
 	REG INT		argn=0;
 
-	while(Rcheat(*argp++)!=ENDARGS DO argn++ OD
+	while(Rcheat(*argp++)!=ENDARGS ){argn++ OD
 
 	/* free old ones unless on for loop chain */
 	freeargs(dolh);
@@ -96,7 +96,7 @@ freeargs(blk)
 	) {	argr = argblk->dolnxt;
 		if ((--argblk->doluse)==0
 		) {	for ( argp=(STRING *)argblk->dolarg; Rcheat(*argp)!=ENDARGS; argp++
-			DO free(*argp) OD
+			){free(*argp) OD
 			free(argblk);
 		;}
 	;}
@@ -115,7 +115,7 @@ static STRING *	copyargs(from, n)
 	dolv=np;
 
 	while(n--
-	DO *np++ = make(*fp++) OD
+	){*np++ = make(*fp++) OD
 	*np++ = ENDARGS;
 	return(pp);
 }

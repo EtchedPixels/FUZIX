@@ -14,7 +14,6 @@
 #define UNION	TYPE union
 #define REG	register
 
-#define DO	){
 #define OD	;}
 
 #define TRUE	(-1)

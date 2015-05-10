@@ -75,7 +75,7 @@ oldsigs()
 
 	i=MAXTRAP;
 	while(i--
-	DO  t=trapcom[i];
+	){ t=trapcom[i];
 	    if(t==0 || *t
 	    ) { clrsig(i);
 	    ;}
@@ -102,7 +102,7 @@ chktrap()
 
 	trapnote &= ~TRAPSET;
 	while(--i
-	DO if(trapflg[i]&TRAPSET
+	){if(trapflg[i]&TRAPSET
 	   ) { trapflg[i] &= ~TRAPSET;
 		if(t=trapcom[i]
 		) {	INT	savxit=exitval;

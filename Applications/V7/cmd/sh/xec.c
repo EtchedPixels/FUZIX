@@ -62,7 +62,7 @@ execute(argt, execflg, pf1, pf2)
 				if( flags&execpr
 				) {	argn=0;	prs(execpmsg);
 					while(com[argn]!=ENDARGS
-					DO prs(com[argn++]); blank() OD
+					){prs(com[argn++]); blank() OD
 					newline();
 				;}
 
@@ -109,7 +109,7 @@ execute(argt, execflg, pf1, pf2)
 						) {	++com;
 						;}
 						while(*++com
-						DO INT	i;
+						){INT	i;
 						   if( (i=stoi(*com))>=MAXTRAP || i<MINTRAP
 						   ) {	failed(*com,badtrap);
 						   } else if ( clear
@@ -125,7 +125,7 @@ execute(argt, execflg, pf1, pf2)
 						INT		i;
 	
 						for (i=0; i<MAXTRAP; i++
-						DO if( trapcom[i]
+						){if( trapcom[i]
 						   ) {	prn(i); prs(colon); prs(trapcom[i]); newline();
 						   ;}
 						OD
@@ -191,7 +191,7 @@ execute(argt, execflg, pf1, pf2)
 	
 					if( a1
 					) {	while(*++com
-						DO attrib(lookup(*com), exitval) OD
+						){attrib(lookup(*com), exitval) OD
 					} else {	namscan(printflg);
 					;}
 					exitval=0;
@@ -240,7 +240,7 @@ execute(argt, execflg, pf1, pf2)
 			if( execflg && (treeflgs&(FAMP|FPOU))==0
 			) {	parent=0;
 			} else {	while((parent=fork()) == -1
-				DO sigchk(); alarm(10); pause() OD
+				){sigchk(); alarm(10); pause() OD
 			;}
 
 			if( parent
@@ -348,7 +348,7 @@ execute(argt, execflg, pf1, pf2)
 			   ;}
 			   loopcnt++;
 			   while(*args!=ENDARGS && execbrk==0
-			   DO	assign(n,*args++);
+			   ){assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
 				if( execbrk<0 ) { execbrk=0 ;}
 			   OD
@@ -365,7 +365,7 @@ execute(argt, execflg, pf1, pf2)
 
 			   loopcnt++;
 			   while(execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
-			   DO i=execute(((WHPTR)t)->dotre,0);
+			   ){i=execute(((WHPTR)t)->dotre,0);
 			      if( execbrk<0 ) { execbrk=0 ;}
 			   OD
 			   if( breakcnt ) { breakcnt-- ;}
@@ -385,9 +385,9 @@ execute(argt, execflg, pf1, pf2)
 			   REG STRING	r = mactrim(((SWPTR)t)->swarg);
 			   t=(TREPTR)((SWPTR)t)->swlst;
 			   while(t
-			   DO	ARGPTR		rex=((REGPTR)t)->regptr;
+			   ){ARGPTR		rex=((REGPTR)t)->regptr;
 				while(rex
-				DO	REG STRING	s;
+				){REG STRING	s;
 					if( gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
 					) {	execute(((REGPTR)t)->regcom,0);
 						t=0; break;

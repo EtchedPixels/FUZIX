@@ -125,7 +125,7 @@ copy(ioparg)
 
 		for (;;) {
 			clinep=cline; chkpr(NL);
-			while((c = (nosubst ? readc() :  nextc(*ends)),  !eolchar(c)) DO *clinep++ = c OD
+			while((c = (nosubst ? readc() :  nextc(*ends)),  !eolchar(c)) ){*clinep++ = c OD
 			*clinep=0;
 			if(eof || eq(cline,ends) ) { break ;}
 			*clinep++=NL;

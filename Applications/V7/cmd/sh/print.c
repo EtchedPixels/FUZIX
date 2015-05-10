@@ -75,7 +75,7 @@ itos(n)
 	REG char *abuf; REG POS a, i; INT pr, d;
 	abuf=numbuf; pr=FALSE; a=n;
 	for (i=10000; i!=1; i/=10
-	DO	if ((pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
+	){	if ((pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
 		a %= i;
 	OD
 	*abuf++=a+'0';
@@ -90,7 +90,7 @@ STRING	icp;
 	REG CHAR	c;
 
 	while((c = *cp, digit(c)) && c && r>=0
-	DO r = r*10 + c - '0'; cp++ OD
+	){ r = r*10 + c - '0'; cp++ OD
 	if (r<0 || cp==icp
 	) {	failed(icp,badnum);
 	} else {	return(r);

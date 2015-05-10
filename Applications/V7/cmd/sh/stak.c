@@ -63,7 +63,7 @@ void	tdystak(x)
 {
 	/* try to bring stack back to x */
 	while(ADR(stakbsy)>ADR(x)
-	DO free(stakbsy);
+	){free(stakbsy);
 	   stakbsy = stakbsy->word;
 	OD
 	staktop=stakbot=max(ADR(x),ADR(stakbas));

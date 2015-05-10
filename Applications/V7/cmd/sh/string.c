@@ -29,7 +29,7 @@ INT	any(c,s)
 	REG CHAR d;
 
 	while(d = *s++
-	DO	if(d==c
+	){if(d==c
 		) {	return(TRUE);
 		;}
 	OD
@@ -40,7 +40,7 @@ INT	cf(s1, s2)
 	REG STRING s1, s2;
 {
 	while(*s1++ == *s2
-	DO	if(*s2++==0
+	){if(*s2++==0
 		) {	return(0);
 		;}
 	OD

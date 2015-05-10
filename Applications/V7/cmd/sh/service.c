@@ -103,7 +103,7 @@ STRING	catpath(path,name)
 	REG STRING	scanp = path,
 			argp = locstak();
 
-	while(*scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
+	while(*scanp && *scanp!=COLON ){*argp++ = *scanp++ OD
 	if(scanp!=path ) { *argp++='/' ;}
 	if(*scanp==COLON ) { scanp++ ;}
 	path=(*scanp ? scanp : 0); scanp=name;
@@ -179,7 +179,7 @@ postclr()
 	REG INT		*pw = pwlist;
 
 	while(pw <= &pwlist[pwc]
-	DO *pw++ = 0 OD
+	){*pw++ = 0 OD
 	pwc=0;
 }
 
@@ -189,7 +189,7 @@ void	post(pcsid)
 	REG INT		*pw = pwlist;
 
 	if(pcsid
-	) {	while(*pw DO pw++ OD
+	) {	while(*pw ){pw++ OD
 		if(pwc >= MAXP-1
 		) {	pw--;
 		} else {	pwc++;
@@ -207,7 +207,7 @@ void	await(i)
 
 	post(i);
 	while(pwc
-	DO	REG INT		p;
+	){	REG INT		p;
 		REG INT		sig;
 		INT		w_hi;
 
@@ -215,7 +215,7 @@ void	await(i)
 		   REG INT	*pw=pwlist;
 		   p=wait(&w);
 		   while(pw <= &pwlist[ipwc]
-		   DO if(*pw==p
+		   ){if(*pw==p
 		      ) { *pw=0; pwc--;
 		      } else { pw++;
 		      ;}
@@ -262,7 +262,7 @@ trim(at)
 
 	if(p=at
 	) {	while(c = *p
-		DO *p++=c&STRIP; q |= c OD
+		){*p++=c&STRIP; q |= c OD
 	;}
 	nosubst=q&QUOTE;
 }
@@ -284,7 +284,7 @@ STRING	*scan(argn)
 	comargn=(STRING *)getstak(BYTESPERWORD*argn+BYTESPERWORD); comargm = comargn += argn; *comargn = ENDARGS;
 
 	while(argp
-	DO	*--comargn = argp->argval;
+	){	*--comargn = argp->argval;
 		if(argp = argp->argnxt
 		) { trim(*comargn);
 		;}
@@ -309,10 +309,10 @@ static void	gsort(from,to)
 	for (j=1; j<=n; j*=2 );
 
 	for (m=2*j-1; m/=2;
-	DO  k=n-m;
+	){ k=n-m;
 	    for (j=0; j<k; j++
-	    DO	for (i=j; i>=0; i-=m
-		DO  REG STRING *fromi; fromi = &from[i];
+	    ){	for (i=j; i>=0; i-=m
+		){ REG STRING *fromi; fromi = &from[i];
 		    if(cf(fromi[m],fromi[0])>0
 		    ) { break;
 		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
@@ -334,7 +334,7 @@ INT	getarg(ac)
 	if(c=ac
 	) {	argp=c->comarg;
 		while(argp
-		DO	count += split(macro(argp->argval));
+		){	count += split(macro(argp->argval));
 			argp=argp->argnxt;
 		OD
 	;}
@@ -351,7 +351,7 @@ static INT	split(s)
 	for(;;) {
 		sigchk(); argp=locstak()+BYTESPERWORD;
 		while((c = *s++, !any(c,ifsnod.namval) && c)
-		DO *argp++ = c OD
+		){*argp++ = c OD
 		if(argp==staktop+BYTESPERWORD
 		) {	if(c
 			) {	continue;
