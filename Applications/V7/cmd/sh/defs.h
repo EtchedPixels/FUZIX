@@ -316,3 +316,8 @@ extern void error(const STRING s);
 extern void exitsh(int xno);
 extern void done(void);
 extern void rmtemp(IOPTR base);
+/* string.c */
+extern char *movstr(register const char *a, register char *b);
+extern int any(char c, const char *s);
+extern int cf(register const char *s1, register const char *s2);
+extern int length(const char *as);

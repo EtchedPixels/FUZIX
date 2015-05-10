@@ -15,18 +15,15 @@
 /* ========	general purpose string handling ======== */
 
 
-STRING movstr(a, b)
-register STRING a, b;
+char *movstr(register const char *a, register char *b)
 {
 	while (*b++ = *a++);
 	return (--b);
 }
 
-int any(c, s)
-register CHAR c;
-STRING s;
+int any(char c, const char *s)
 {
-	register CHAR d;
+	register char d;
 
 	while (d = *s++) {
 		if (d == c) {
@@ -37,8 +34,7 @@ STRING s;
 	return (FALSE);
 }
 
-int cf(s1, s2)
-register STRING s1, s2;
+int cf(register const char *s1, register const char *s2)
 {
 	while (*s1++ == *s2) {
 		if (*s2++ == 0) {
@@ -49,10 +45,9 @@ register STRING s1, s2;
 	return (*--s1 - *s2);
 }
 
-int length(as)
-STRING as;
+int length(const char *as)
 {
-	register STRING s;
+	register const char *s;
 
 	if (s = as) {
 		while (*s++);;
