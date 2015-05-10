@@ -27,11 +27,11 @@ word()
 
 	wdnum=0; wdset=0;
 
-	WHILE (c=nextc(0), space(c)) DONE
+	while((c=nextc(0), space(c)) DONE
 	if(!eofmeta(c)
 	) {	REP	if(c==LITERAL
 			) {	*argp++=(DQUOTE);
-				WHILE (c=readc()) && c!=LITERAL
+				while((c=readc()) && c!=LITERAL
 				DO *argp++=(c|QUOTE); chkpr(c) OD
 				*argp++=(DQUOTE);
 			} else {	*argp++=(c);
@@ -39,7 +39,7 @@ word()
 				if(!alphanum(c) ) { alpha=0 ;}
 				if(qotchar(c)
 				) {	d=c;
-					WHILE (*argp++=(c=nextc(d))) && c!=d
+					while((*argp++=(c=nextc(d))) && c!=d
 					DO chkpr(c) OD
 				;}
 			;}

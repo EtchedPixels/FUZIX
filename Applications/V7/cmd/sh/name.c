@@ -39,7 +39,7 @@ syslook(w,syswds)
 
 	syscan=syswds; first = *w;
 
-	WHILE s=syscan->sysnam
+	while(s=syscan->sysnam
 	DO  if (first == *s
 		&& eq(w,s)
 	    ) { return(syscan->sysval);
@@ -53,7 +53,7 @@ setlist(arg,xp)
 	REG ARGPTR	arg;
 	INT		xp;
 {
-	WHILE arg
+	while(arg
 	DO REG STRING	s=mactrim(arg->argval);
 	   setname(s, xp);
 	   arg=arg->argnxt;
@@ -72,7 +72,7 @@ void	setname(argi, xp)
 	REG NAMPTR	n;
 
 	if (letter(*argscan)
-	) {	WHILE alphanum(*argscan) DO argscan++ OD
+	) {	while(alphanum(*argscan) DO argscan++ OD
 		if (*argscan=='='
 		) {	*argscan = 0;
 			n=lookup(argi);
@@ -144,7 +144,7 @@ INT	readvar(names)
 		} else {	pushstak(c);
 		;}
 	}
-	WHILE n
+	while(n
 	DO assign(n, nullstr);
 	   if (*names ) { n=lookup(*names++); } else { n=0; ;}
 	OD
@@ -185,7 +185,7 @@ NAMPTR		lookup(nam)
 	if (!chkid(nam)
 	) {	failed(nam,notid);
 	;}
-	WHILE nscan
+	while(nscan
 	DO	if ((LR=cf(nam,nscan->namid))==0
 		) {	return(nscan);
 		} else if ( LR<0
@@ -210,7 +210,7 @@ static BOOL	chkid(nam)
 
 	if (!letter(*cp)
 	) {	return(FALSE);
-	} else {	WHILE *++cp
+	} else {	while(*++cp
 		DO if (!alphanum(*cp)
 		   ) {	return(FALSE);
 		   ;}
@@ -290,7 +290,7 @@ void	sh_getenv(void)
 {
 	REG STRING	*e=environ;
 
-	WHILE *e
+	while(*e
 	DO setname(*e++, N_ENVNAM) OD
 }
 

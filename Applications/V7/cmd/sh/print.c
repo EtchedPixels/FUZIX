@@ -89,7 +89,7 @@ STRING	icp;
 	REG INT		r = 0;
 	REG CHAR	c;
 
-	WHILE (c = *cp, digit(c)) && c && r>=0
+	while((c = *cp, digit(c)) && c && r>=0
 	DO r = r*10 + c - '0'; cp++ OD
 	if (r<0 || cp==icp
 	) {	failed(icp,badnum);

@@ -79,7 +79,7 @@ done()
 rmtemp(base)
 	IOPTR		base;
 {
-	WHILE iotemp>base
+	while(iotemp>base
 	DO  unlink(iotemp->ioname);
 	    iotemp=iotemp->iolst;
 	OD

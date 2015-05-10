@@ -14,7 +14,6 @@
 #define UNION	TYPE union
 #define REG	register
 
-#define WHILE	while(
 #define DO	){
 #define OD	;}
 #define REP	do{

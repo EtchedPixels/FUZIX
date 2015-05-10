@@ -40,10 +40,10 @@ INT	options(argc,argv)
 	if (argc>1 && *argp[1]=='-'
 	) {	cp=argp[1];
 		flags &= ~(execpr|readpr);
-		WHILE *++cp
+		while(*++cp
 		DO	flagc=flagchar;
 
-			WHILE *flagc && *flagc != *cp DO flagc++ OD
+			while(*flagc && *flagc != *cp DO flagc++ OD
 			if (*cp == *flagc
 			) {	flags |= flagval[flagc-flagchar];
 			} else if (*cp=='c' && argc>2 && comdiv==0
@@ -58,7 +58,7 @@ INT	options(argc,argv)
 	/* set up $- */
 	flagc=flagchar;
 	flagp=flagadr;
-	WHILE *flagc
+	while(*flagc
 	DO if (flags&flagval[flagc-flagchar]
 	   ) { *flagp++ = *flagc;
 	   ;}
@@ -76,7 +76,7 @@ void	setargs(argi)
 	REG STRING	*argp=argi;
 	REG INT		argn=0;
 
-	WHILE Rcheat(*argp++)!=ENDARGS DO argn++ OD
+	while(Rcheat(*argp++)!=ENDARGS DO argn++ OD
 
 	/* free old ones unless on for loop chain */
 	freeargs(dolh);
@@ -114,7 +114,7 @@ static STRING *	copyargs(from, n)
 	np=(STRING *)((DOLPTR)np)->dolarg;
 	dolv=np;
 
-	WHILE n--
+	while(n--
 	DO *np++ = make(*fp++) OD
 	*np++ = ENDARGS;
 	return(pp);
@@ -123,10 +123,10 @@ static STRING *	copyargs(from, n)
 clearup()
 {
 	/* force `for' $* lists to go away */
-	WHILE argfor=freeargs(argfor) DONE
+	while(argfor=freeargs(argfor) DONE
 
 	/* clean up io files */
-	WHILE pop() DONE
+	while(pop() DONE
 }
 
 DOLPTR	useargs()

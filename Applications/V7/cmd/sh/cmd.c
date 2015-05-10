@@ -124,7 +124,7 @@ static TREPTR	list(flg)
 	REG INT		b;
 
 	r = term(flg);
-	WHILE r && ((b=(wdval==ANDFSYM)) || wdval==ORFSYM)
+	while(r && ((b=(wdval==ANDFSYM)) || wdval==ORFSYM)
 	DO	r = makelist((b ? TAND : TORF), r, term(NLFLG));
 	OD
 	return(r);
@@ -286,7 +286,7 @@ static TREPTR	item(flag)
 		   t=(TREPTR)getstak(COMTYPE);
 		   ((COMPTR)t)->comio=io; /*initial io chain*/
 		   argtail = &(((COMPTR)t)->comarg);
-		   WHILE wdval==0
+		   while(wdval==0
 		   DO	argp = wdarg;
 			if (wdset && keywd
 			) {	argp->argnxt=(ARGPTR)argset;
@@ -316,7 +316,7 @@ static TREPTR	item(flag)
 
 static int	skipnl()
 {
-	WHILE (reserv++, word()==NL) DO chkpr(NL) OD
+	while((reserv++, word()==NL) DO chkpr(NL) OD
 	return(wdval);
 }
 
@@ -385,7 +385,7 @@ static void	prsym(sym)
 {
 	if (sym&SYMFLG
 	) {	REG SYSPTR	sp=reserved;
-		WHILE sp->sysval
+		while(sp->sysval
 			&& sp->sysval!=sym
 		DO sp++ OD
 		prs(sp->sysnam);

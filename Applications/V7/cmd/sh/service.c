@@ -103,11 +103,11 @@ STRING	catpath(path,name)
 	REG STRING	scanp = path,
 			argp = locstak();
 
-	WHILE *scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
+	while(*scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
 	if(scanp!=path ) { *argp++='/' ;}
 	if(*scanp==COLON ) { scanp++ ;}
 	path=(*scanp ? scanp : 0); scanp=name;
-	WHILE (*argp++ = *scanp++) DONE
+	while((*argp++ = *scanp++) DONE
 	return(path);
 }
 
@@ -124,7 +124,7 @@ void	execa(at)
 	) {	xecmsg=notfound; path=getpath(*t);
 		namscan(exname);
 		xecenv=sh_setenv();
-		WHILE path=execs(path,t) DONE
+		while(path=execs(path,t) DONE
 		failed(*t,xecmsg);
 	;}
 }
@@ -178,7 +178,7 @@ postclr()
 {
 	REG INT		*pw = pwlist;
 
-	WHILE pw <= &pwlist[pwc]
+	while(pw <= &pwlist[pwc]
 	DO *pw++ = 0 OD
 	pwc=0;
 }
@@ -189,7 +189,7 @@ void	post(pcsid)
 	REG INT		*pw = pwlist;
 
 	if(pcsid
-	) {	WHILE *pw DO pw++ OD
+	) {	while(*pw DO pw++ OD
 		if(pwc >= MAXP-1
 		) {	pw--;
 		} else {	pwc++;
@@ -206,7 +206,7 @@ void	await(i)
 	INT		ipwc = pwc;
 
 	post(i);
-	WHILE pwc
+	while(pwc
 	DO	REG INT		p;
 		REG INT		sig;
 		INT		w_hi;
@@ -214,7 +214,7 @@ void	await(i)
 		{
 		   REG INT	*pw=pwlist;
 		   p=wait(&w);
-		   WHILE pw <= &pwlist[ipwc]
+		   while(pw <= &pwlist[ipwc]
 		   DO if(*pw==p
 		      ) { *pw=0; pwc--;
 		      } else { pw++;
@@ -261,7 +261,7 @@ trim(at)
 	REG CHAR	q=0;
 
 	if(p=at
-	) {	WHILE c = *p
+	) {	while(c = *p
 		DO *p++=c&STRIP; q |= c OD
 	;}
 	nosubst=q&QUOTE;
@@ -283,7 +283,7 @@ STRING	*scan(argn)
 
 	comargn=(STRING *)getstak(BYTESPERWORD*argn+BYTESPERWORD); comargm = comargn += argn; *comargn = ENDARGS;
 
-	WHILE argp
+	while(argp
 	DO	*--comargn = argp->argval;
 		if(argp = argp->argnxt
 		) { trim(*comargn);
@@ -333,7 +333,7 @@ INT	getarg(ac)
 
 	if(c=ac
 	) {	argp=c->comarg;
-		WHILE argp
+		while(argp
 		DO	count += split(macro(argp->argval));
 			argp=argp->argnxt;
 		OD
@@ -350,7 +350,7 @@ static INT	split(s)
 
 	for(;;) {
 		sigchk(); argp=locstak()+BYTESPERWORD;
-		WHILE (c = *s++, !any(c,ifsnod.namval) && c)
+		while((c = *s++, !any(c,ifsnod.namval) && c)
 		DO *argp++ = c OD
 		if(argp==staktop+BYTESPERWORD
 		) {	if(c

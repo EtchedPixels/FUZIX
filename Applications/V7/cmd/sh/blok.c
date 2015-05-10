@@ -36,7 +36,7 @@ ADDRESS	alloc(nbytes)
 		REG BLKPTR	p = blokp;
 		REG BLKPTR	q;
 		REP	if(!busy(p)
-			) {	WHILE !busy(q = p->word) DO p->word = q->word OD
+			) {	while(!busy(q = p->word) DO p->word = q->word OD
 				if(ADR(q)-ADR(p) >= rbytes
 				) {	blokp = BLK(ADR(p)+rbytes);
 					if(q > blokp

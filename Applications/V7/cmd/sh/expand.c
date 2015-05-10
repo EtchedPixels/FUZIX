@@ -48,7 +48,7 @@ INT	expand(as,rflg)
 	/* check for meta chars */
 	{
 	   REG BOOL slash; slash=0;
-	   WHILE !fngchar(*cs)
+	   while(!fngchar(*cs)
 	   DO	if (*cs++==0
 		) {	if (rflg && slash ) { break; } else { return(0) ;}
 		} else if ( *cs=='/'
@@ -81,7 +81,7 @@ INT	expand(as,rflg)
 		PER	*rs++ DONE
 
 		// FIXME: readdir
-		WHILE read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0
+		while(read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0
 		DO	if (entry.d_ino==0 ||
 			    (*entry.d_name=='.' && *cs!='.')
 			) {	continue;
@@ -97,7 +97,7 @@ INT	expand(as,rflg)
 			rchain=gchain; gchain=schain;
 			if (count
 			) {	count=0;
-				WHILE rchain
+				while(rchain
 				DO	count += expand(rchain->argval,1);
 					rchain=rchain->argnxt;
 				OD
@@ -109,7 +109,7 @@ INT	expand(as,rflg)
 	{
 	   REG CHAR	c;
 	   s=as;
-	   WHILE c = *s
+	   while(c = *s
 	   DO	*s++=(c&STRIP?c:'/') OD
 	}
 	return(count);
@@ -130,7 +130,7 @@ gmatch(s, p)
 	    case '[':
 		{BOOL ok; INT lc;
 		ok=0; lc=077777;
-		WHILE c = *p++
+		while(c = *p++
 		DO	if (c==']'
 			) {	return(ok?gmatch(s,p):0);
 			} else if ( c==MINUS
@@ -150,7 +150,7 @@ gmatch(s, p)
 	    case '*':
 		if (*p==0 ) { return(1) ;}
 		--s;
-		WHILE *s
+		while(*s
 		DO  if (gmatch(s++,p) ) { return(1) ;} OD
 		return(0);
 
@@ -168,7 +168,7 @@ static void	addg(as1,as2,as3)
 	s2 = locstak()+BYTESPERWORD;
 
 	s1=as1;
-	WHILE c = *s1++
+	while(c = *s1++
 	DO	if ((c &= STRIP)==0
 		) {	*s2++='/';
 			break;
@@ -176,10 +176,10 @@ static void	addg(as1,as2,as3)
 		*s2++=c;
 	OD
 	s1=as2;
-	WHILE *s2 = *s1++ DO s2++ OD
+	while(*s2 = *s1++ DO s2++ OD
 	if (s1=as3
 	) {	*s2++='/';
-		WHILE *s2++ = *++s1 DONE
+		while(*s2++ = *++s1 DONE
 	;}
 	makearg(endstak(s2));
 }

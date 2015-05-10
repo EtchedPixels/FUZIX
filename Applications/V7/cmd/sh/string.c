@@ -18,7 +18,7 @@
 STRING	movstr(a,b)
 	REG STRING	a, b;
 {
-	WHILE *b++ = *a++ DONE
+	while(*b++ = *a++ DONE
 	return(--b);
 }
 
@@ -28,7 +28,7 @@ INT	any(c,s)
 {
 	REG CHAR d;
 
-	WHILE d = *s++
+	while(d = *s++
 	DO	if(d==c
 		) {	return(TRUE);
 		;}
@@ -39,7 +39,7 @@ INT	any(c,s)
 INT	cf(s1, s2)
 	REG STRING s1, s2;
 {
-	WHILE *s1++ == *s2
+	while(*s1++ == *s2
 	DO	if(*s2++==0
 		) {	return(0);
 		;}
@@ -52,6 +52,6 @@ INT	length(as)
 {
 	REG STRING s;
 
-	if(s=as ) { WHILE *s++ DONE ;}
+	if(s=as ) { while(*s++ DONE ;}
 	return(s-as);
 }

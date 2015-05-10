@@ -62,7 +62,7 @@ void	tdystak(x)
 	REG STKPTR 	x;
 {
 	/* try to bring stack back to x */
-	WHILE ADR(stakbsy)>ADR(x)
+	while(ADR(stakbsy)>ADR(x)
 	DO free(stakbsy);
 	   stakbsy = stakbsy->word;
 	OD

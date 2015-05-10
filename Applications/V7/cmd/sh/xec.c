@@ -61,7 +61,7 @@ execute(argt, execflg, pf1, pf2)
 			) {	/* print command if execpr */
 				if( flags&execpr
 				) {	argn=0;	prs(execpmsg);
-					WHILE com[argn]!=ENDARGS
+					while(com[argn]!=ENDARGS
 					DO prs(com[argn++]); blank() OD
 					newline();
 				;}
@@ -108,7 +108,7 @@ execute(argt, execflg, pf1, pf2)
 						if( (clear=digit(*a1))==0
 						) {	++com;
 						;}
-						WHILE *++com
+						while(*++com
 						DO INT	i;
 						   if( (i=stoi(*com))>=MAXTRAP || i<MINTRAP
 						   ) {	failed(*com,badtrap);
@@ -190,7 +190,7 @@ execute(argt, execflg, pf1, pf2)
 					if( exitval==0 ) { exitval=N_EXPORT; ;}
 	
 					if( a1
-					) {	WHILE *++com
+					) {	while(*++com
 						DO attrib(lookup(*com), exitval) OD
 					} else {	namscan(printflg);
 					;}
@@ -239,7 +239,7 @@ execute(argt, execflg, pf1, pf2)
 		case TFORK:
 			if( execflg && (treeflgs&(FAMP|FPOU))==0
 			) {	parent=0;
-			} else {	WHILE (parent=fork()) == -1
+			} else {	while((parent=fork()) == -1
 				DO sigchk(); alarm(10); pause() OD
 			;}
 
@@ -347,7 +347,7 @@ execute(argt, execflg, pf1, pf2)
 				   gchain=schain;
 			   ;}
 			   loopcnt++;
-			   WHILE *args!=ENDARGS && execbrk==0
+			   while(*args!=ENDARGS && execbrk==0
 			   DO	assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
 				if( execbrk<0 ) { execbrk=0 ;}
@@ -364,7 +364,7 @@ execute(argt, execflg, pf1, pf2)
 			   INT		i=0;
 
 			   loopcnt++;
-			   WHILE execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
+			   while(execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
 			   DO i=execute(((WHPTR)t)->dotre,0);
 			      if( execbrk<0 ) { execbrk=0 ;}
 			   OD
@@ -384,9 +384,9 @@ execute(argt, execflg, pf1, pf2)
 			{
 			   REG STRING	r = mactrim(((SWPTR)t)->swarg);
 			   t=(TREPTR)((SWPTR)t)->swlst;
-			   WHILE t
+			   while(t
 			   DO	ARGPTR		rex=((REGPTR)t)->regptr;
-				WHILE rex
+				while(rex
 				DO	REG STRING	s;
 					if( gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
 					) {	execute(((REGPTR)t)->regcom,0);

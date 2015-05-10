@@ -74,7 +74,7 @@ oldsigs()
 	REG STRING	t;
 
 	i=MAXTRAP;
-	WHILE i--
+	while(i--
 	DO  t=trapcom[i];
 	    if(t==0 || *t
 	    ) { clrsig(i);
@@ -101,7 +101,7 @@ chktrap()
 	REG STRING	t;
 
 	trapnote &= ~TRAPSET;
-	WHILE --i
+	while(--i
 	DO if(trapflg[i]&TRAPSET
 	   ) { trapflg[i] &= ~TRAPSET;
 		if(t=trapcom[i]
