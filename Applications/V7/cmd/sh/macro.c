@@ -108,7 +108,7 @@ retry:
 			IF bra
 			THEN	IF c!='}'
 				THEN	argp=(STRING)relstak();
-					IF (v==0)NEQ(setchar(c))
+					IF (v==0)^(setchar(c))
 					THEN	copyto('}');
 					ELSE	skipto('}');
 					FI

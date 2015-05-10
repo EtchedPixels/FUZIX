@@ -37,9 +37,6 @@
 #define POOL	}
 
 
-#define SKIP	;
-#define DIV	/
-#define REM	%
 #define NEQ	^
 #define ANDF	&&
 #define ORF	||
