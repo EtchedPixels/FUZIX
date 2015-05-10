@@ -46,10 +46,10 @@ __uget:
 	ldy 9,s		; count
 	orcc #0x10
 ugetl:
-	lda ,x+
 	SAM_USER
-	sta ,u+
+	lda ,x+
 	SAM_KERNEL
+	sta ,u+
 	leay -1,y
 	bne ugetl
 	puls u,y,cc,pc

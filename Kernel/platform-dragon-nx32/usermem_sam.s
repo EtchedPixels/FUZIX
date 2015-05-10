@@ -50,10 +50,10 @@ __uget:
 	ldy 9,s		; count
 	orcc #0x10
 ugetl:
-	lda ,x+
 	jsr map_process_always
-	sta ,u+
+	lda ,x+
 	jsr map_kernel
+	sta ,u+
 	leay -1,y
 	bne ugetl
 	puls u,y,cc,pc
