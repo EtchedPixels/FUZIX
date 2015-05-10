@@ -9,11 +9,6 @@
  *
  */
 
-#define TYPE	typedef
-#define STRUCT	TYPE struct
-#define UNION	TYPE union
-
-
 #define TRUE	(-1)
 #define FALSE	0
 #define LOBYTE	0377
