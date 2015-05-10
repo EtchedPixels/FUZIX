@@ -21,12 +21,12 @@
 #include	<sys/stat.h>
 
 UFD		output = 2;
-LOCAL BOOL	beenhere = FALSE;
+static BOOL	beenhere = FALSE;
 CHAR		tmpout[20] = "/tmp/sh-";
 FILEBLK		stdfile;
 FILE		standin = &stdfile;
 
-LOCAL void	exfile();
+static void	exfile();
 
 
 
@@ -93,7 +93,7 @@ main(c, v)
 	done();
 }
 
-LOCAL void	exfile(prof)
+static void	exfile(prof)
 BOOL		prof;
 {
 	REG L_INT	mailtime = 0;

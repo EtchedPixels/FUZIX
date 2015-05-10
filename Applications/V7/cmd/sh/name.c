@@ -12,8 +12,8 @@
 
 #include	"defs.h"
 
-LOCAL BOOL	chkid();
-LOCAL void	namwalk();
+static BOOL	chkid();
+static void	namwalk();
 
 
 NAMNOD	ps2nod	= {(NAMPTR)NIL,	(NAMPTR)NIL,	ps2name},
@@ -202,7 +202,7 @@ NAMPTR		lookup(nam)
 	return(*prev = nscan);
 }
 
-LOCAL BOOL	chkid(nam)
+static BOOL	chkid(nam)
 	STRING		nam;
 {
 	REG CHAR *	cp=nam;
@@ -218,7 +218,7 @@ LOCAL BOOL	chkid(nam)
 	return(TRUE);
 }
 
-LOCAL void (*namfn)();
+static void (*namfn)();
 namscan(fn)
 	void		(*fn)();
 {
@@ -226,7 +226,7 @@ namscan(fn)
 	namwalk(namep);
 }
 
-LOCAL void	namwalk(np)
+static void	namwalk(np)
 	REG NAMPTR	np;
 {
 	IF np
@@ -249,7 +249,7 @@ void	printnam(n)
 	FI
 }
 
-LOCAL STRING	staknam(n)
+static STRING	staknam(n)
 	REG NAMPTR	n;
 {
 	REG STRING	p;
@@ -293,7 +293,7 @@ void	sh_getenv(void)
 	DO setname(*e++, N_ENVNAM) OD
 }
 
-LOCAL INT	namec;
+static INT	namec;
 
 void	countnam(n)
 	NAMPTR		n;
@@ -301,7 +301,7 @@ void	countnam(n)
 	namec++;
 }
 
-LOCAL STRING 	*argnam;
+static STRING 	*argnam;
 
 void	pushnam(n)
 	NAMPTR		n;

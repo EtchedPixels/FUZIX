@@ -13,7 +13,7 @@
 #include	"defs.h"
 #include	"sym.h"
 
-LOCAL INT	parent;
+static INT	parent;
 
 SYSTAB		commands;
 

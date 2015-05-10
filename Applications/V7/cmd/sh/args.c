@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include	"defs.h"
 
-LOCAL STRING *copyargs();
-LOCAL DOLPTR	dolh;
+static STRING *copyargs();
+static DOLPTR	dolh;
 
 CHAR	flagadr[10];
 
@@ -103,7 +103,7 @@ freeargs(blk)
 	return(argr);
 }
 
-LOCAL STRING *	copyargs(from, n)
+static STRING *	copyargs(from, n)
 	STRING		from[];
 {
 	REG STRING *	np=(STRING *)alloc(sizeof(STRING*)*n+3*BYTESPERWORD);

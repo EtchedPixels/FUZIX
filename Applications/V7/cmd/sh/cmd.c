@@ -13,17 +13,17 @@
 #include	"defs.h"
 #include	"sym.h"
 
-LOCAL IOPTR	inout();
-LOCAL void	chkword();
-LOCAL void	chksym();
-LOCAL TREPTR	term();
-LOCAL TREPTR	makelist();
-LOCAL TREPTR	list();
-LOCAL REGPTR	syncase();
-LOCAL TREPTR	item();
-LOCAL int	skipnl();
-LOCAL void	prsym();
-LOCAL void	synbad();
+static IOPTR	inout();
+static void	chkword();
+static void	chksym();
+static TREPTR	term();
+static TREPTR	makelist();
+static TREPTR	list();
+static REGPTR	syncase();
+static TREPTR	item();
+static int	skipnl();
+static void	prsym();
+static void	synbad();
 
 
 /* ========	command line decoding	========*/
@@ -44,7 +44,7 @@ TREPTR	makefork(flgs, i)
 	return(TREPTR)(t);
 }
 
-LOCAL TREPTR	makelist(type,i,r)
+static TREPTR	makelist(type,i,r)
 	INT		type;
 	TREPTR		i, r;
 {
@@ -118,7 +118,7 @@ TREPTR	cmd(sym,flg)
  *	list || term
  */
 
-LOCAL TREPTR	list(flg)
+static TREPTR	list(flg)
 {
 	REG TREPTR	r;
 	REG INT		b;
@@ -136,7 +136,7 @@ LOCAL TREPTR	list(flg)
  *	item |^ term
  */
 
-LOCAL TREPTR	term(flg)
+static TREPTR	term(flg)
 {
 	REG TREPTR	t;
 
@@ -152,7 +152,7 @@ LOCAL TREPTR	term(flg)
 	FI
 }
 
-LOCAL REGPTR	syncase(esym)
+static REGPTR	syncase(esym)
 	REG INT	esym;
 {
 	skipnl();
@@ -191,7 +191,7 @@ LOCAL REGPTR	syncase(esym)
  *	begin ... end
  */
 
-LOCAL TREPTR	item(flag)
+static TREPTR	item(flag)
 	BOOL		flag;
 {
 	REG TREPTR	t;
@@ -313,13 +313,13 @@ LOCAL TREPTR	item(flag)
 }
 
 
-LOCAL int	skipnl()
+static int	skipnl()
 {
 	WHILE (reserv++, word()==NL) DO chkpr(NL) OD
 	return(wdval);
 }
 
-LOCAL IOPTR	inout(lastio)
+static IOPTR	inout(lastio)
 	IOPTR		lastio;
 {
 	REG INT		iof;
@@ -365,14 +365,14 @@ LOCAL IOPTR	inout(lastio)
 	return(iop);
 }
 
-LOCAL void	chkword()
+static void	chkword()
 {
 	IF word()
 	THEN	synbad();
 	FI
 }
 
-LOCAL void	chksym(sym)
+static void	chksym(sym)
 {
 	REG INT		x = sym&wdval;
 	IF ((x&SYMFLG) ? x : sym) != wdval
@@ -380,7 +380,7 @@ LOCAL void	chksym(sym)
 	FI
 }
 
-LOCAL void	prsym(sym)
+static void	prsym(sym)
 {
 	IF sym&SYMFLG
 	THEN	REG SYSPTR	sp=reserved;
@@ -398,7 +398,7 @@ LOCAL void	prsym(sym)
 	FI
 }
 
-LOCAL void	synbad()
+static void	synbad()
 {
 	prp(); prs(synmsg);
 	IF (flags&ttyflg)==0

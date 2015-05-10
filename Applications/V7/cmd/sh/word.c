@@ -13,7 +13,7 @@
 #include	"defs.h"
 #include	"sym.h"
 
-LOCAL	readb();
+static readb();
 
 
 /* ========	character handling for command lines	========*/
@@ -118,7 +118,7 @@ retry:
 	return(c);
 }
 
-LOCAL	readb()
+static readb()
 {
 	REG FILE	f=standin;
 	REG INT		len;

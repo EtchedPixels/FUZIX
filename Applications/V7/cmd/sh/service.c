@@ -13,9 +13,9 @@
 #include	"defs.h"
 
 
-LOCAL STRING	execs();
-LOCAL void	gsort();
-LOCAL INT	split();
+static STRING	execs();
+static void	gsort();
+static INT	split();
 
 #define ARGMK	01
 
@@ -111,8 +111,8 @@ STRING	catpath(path,name)
 	return(path);
 }
 
-LOCAL STRING	xecmsg;
-LOCAL STRING	*xecenv;
+static STRING	xecmsg;
+static STRING	*xecenv;
 
 void	execa(at)
 	STRING		at[];
@@ -129,7 +129,7 @@ void	execa(at)
 	FI
 }
 
-LOCAL STRING	execs(ap,t)
+static STRING	execs(ap,t)
 	STRING		ap;
 	REG STRING	t[];
 {
@@ -172,8 +172,8 @@ LOCAL STRING	execs(ap,t)
 
 /* for processes to be waited for */
 #define MAXP 20
-LOCAL INT	pwlist[MAXP];
-LOCAL INT	pwc;
+static INT	pwlist[MAXP];
+static INT	pwc;
 
 postclr()
 {
@@ -299,7 +299,7 @@ STRING	*scan(argn)
 	return(comargn);
 }
 
-LOCAL void	gsort(from,to)
+static void	gsort(from,to)
 	STRING		from[], to[];
 {
 	INT		k, m, n;
@@ -342,7 +342,7 @@ INT	getarg(ac)
 	return(count);
 }
 
-LOCAL INT	split(s)
+static INT	split(s)
 	REG STRING	s;
 {
 	REG STRING	argp;

@@ -27,7 +27,7 @@
  *
  */
 
-LOCAL void	addg();
+static void	addg();
 
 
 INT	expand(as,rflg)
@@ -160,7 +160,7 @@ gmatch(s, p)
 	ENDSW
 }
 
-LOCAL void	addg(as1,as2,as3)
+static void	addg(as1,as2,as3)
 	STRING		as1, as2, as3;
 {
 	REG STRING	s1, s2;
