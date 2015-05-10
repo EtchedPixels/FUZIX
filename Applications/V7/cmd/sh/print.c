@@ -16,47 +16,40 @@ CHAR numbuf[6];
 
 /* printing and io conversion */
 
-newline()
+void newline(void)
 {
 	prc(NL);
 }
 
-blank()
+void blank(void)
 {
 	prc(SP);
 }
 
-prp()
+void prp(void)
 {
 	if ((flags & prompt) == 0 && cmdadr) {
 		prs(cmdadr);
 		prs(colon);
-		;
 	}
 }
 
-void prs(as)
-STRING as;
+void prs(const char *as)
 {
-	register STRING s;
+	register const char *s;
 
-	if (s = as) {
+	if (s = as)
 		write(output, s, length(s) - 1);
-		;
-	}
 }
 
-void prc(c)
-CHAR c;
+void prc(char c)
 {
-	if (c) {
+	if (c)
 		write(output, &c, 1);
-		;
-	}
 }
 
-prt(t)
-L_INT t;
+/* FIXME: time_t is not safely L_INT ! */
+void prt(L_INT t)
 {
 	register int hr, min, sec;
 
@@ -68,7 +61,6 @@ L_INT t;
 	if (hr = t / 60) {
 		prn(hr);
 		prc('h');
-		;
 	}
 	prn(min);
 	prc('m');
@@ -76,14 +68,14 @@ L_INT t;
 	prc('s');
 }
 
-prn(n)
-int n;
+void prn(int n)
 {
 	itos(n);
 	prs(numbuf);
 }
 
-itos(n)
+/* FIXME: use libc */
+void itos(int n)
 {
 	register char *abuf;
 	register POS a, i;
@@ -102,12 +94,12 @@ itos(n)
 	*abuf++ = 0;
 }
 
-stoi(icp)
-STRING icp;
+/* FIXME: use libc */
+int stoi(const char *icp)
 {
-	register CHAR *cp = icp;
+	register const char *cp = icp;
 	register int r = 0;
-	register CHAR c;
+	register char c;
 
 	while ((c = *cp, digit(c)) && c && r >= 0) {
 		r = r * 10 + c - '0';

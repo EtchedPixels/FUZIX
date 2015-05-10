@@ -29,7 +29,7 @@ void sigchk(void)
 		exitsh(SIGFAIL);
 }
 
-void failed(const STRING s1, const STRING s2)
+void failed(const char *s1, const char *s2)
 {
 	prp();
 	prs(s1);
@@ -42,7 +42,7 @@ void failed(const STRING s1, const STRING s2)
 	exitsh(ERROR);
 }
 
-void error(const STRING s)
+void error(const char *s)
 {
 	failed(s, NIL);
 }

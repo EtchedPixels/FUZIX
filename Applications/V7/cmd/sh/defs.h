@@ -111,8 +111,6 @@ void post();
 void exname();
 void printnam();
 void printflg();
-void prs();
-void prc();
 
 #define attrib(n,f)	(n->namflg |= f)
 #define round(a,b)	(((int)((ADR(a)+b)-1))&~((b)-1))
@@ -311,11 +309,21 @@ extern TREPTR cmd(int sym, int flg);
 /* error.c */
 extern void exitset(void);
 extern void sigchk(void);
-extern void failed(const STRING s1, const STRING s2);
-extern void error(const STRING s);
+extern void failed(const char *s1, const char *s2);
+extern void error(const char *s);
 extern void exitsh(int xno);
 extern void done(void);
 extern void rmtemp(IOPTR base);
+/* print.c */
+extern void newline(void);
+extern void blank(void);
+extern void prp(void);
+extern void prs(const char *as);
+extern void prc(char c);
+extern void prt(L_INT t);
+extern void prn(int n);
+extern void itos(int n);
+extern int stoi(const char *icp);
 /* stak.c */
 extern STKPTR getstak(int asize);
 extern STKPTR locstak(void);
@@ -324,10 +332,6 @@ extern STKPTR endstak(register STRING argp);
 extern void tdystak(register STKPTR x);
 extern void stakchk(void);
 extern STKPTR cpystak(STKPTR x);
-
-
-
-
 /* string.c */
 extern char *movstr(register const char *a, register char *b);
 extern int any(char c, const char *s);
