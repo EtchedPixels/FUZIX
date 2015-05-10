@@ -316,6 +316,18 @@ extern void error(const STRING s);
 extern void exitsh(int xno);
 extern void done(void);
 extern void rmtemp(IOPTR base);
+/* stak.c */
+extern STKPTR getstak(int asize);
+extern STKPTR locstak(void);
+extern STKPTR savstak(void);
+extern STKPTR endstak(register STRING argp);
+extern void tdystak(register STKPTR x);
+extern void stakchk(void);
+extern STKPTR cpystak(STKPTR x);
+
+
+
+
 /* string.c */
 extern char *movstr(register const char *a, register char *b);
 extern int any(char c, const char *s);

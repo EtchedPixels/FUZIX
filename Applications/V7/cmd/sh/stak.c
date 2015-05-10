@@ -12,14 +12,13 @@
 
 #include	"defs.h"
 
-STKPTR stakbot = nullstr;
+STKPTR stakbot = (void *)nullstr;
 
 
 
 /* ========	storage allocation	======== */
 
-STKPTR getstak(asize)
-int asize;
+STKPTR getstak(int asize)
 {				/* allocate requested stack */
 	register STKPTR oldstak;
 	register int size;
@@ -30,7 +29,7 @@ int asize;
 	return (oldstak);
 }
 
-STKPTR locstak()
+STKPTR locstak(void)
 {				/* set up stack for local use
 				 * should be followed by `endstak'
 				 */
@@ -44,14 +43,14 @@ STKPTR locstak()
 	return (stakbot);
 }
 
-STKPTR savstak()
+STKPTR savstak(void)
 {
+        /* FIXME: check assert doesn't suck in stdio */
 	assert(staktop == stakbot);
 	return (stakbot);
 }
 
-STKPTR endstak(argp)
-register STRING argp;
+STKPTR endstak(register STRING argp)
 {				/* tidy up after `locstak' */
 	register STKPTR oldstak;
 	*argp++ = 0;
@@ -60,8 +59,7 @@ register STRING argp;
 	return (oldstak);
 }
 
-void tdystak(x)
-register STKPTR x;
+void tdystak(register STKPTR x)
 {
 	/* try to bring stack back to x */
 	while (ADR(stakbsy) > ADR(x)
@@ -71,19 +69,17 @@ register STKPTR x;
 		;
 	}
 	staktop = stakbot = max(ADR(x), ADR(stakbas));
-	rmtemp(x);
+	rmtemp((const char *)x);
 }
 
-stakchk()
+void stakchk(void)
 {
 	if ((brkend - stakbas) > BRKINCR + BRKINCR) {
 		setbrk(-BRKINCR);
-		;
 	}
 }
 
-STKPTR cpystak(x)
-STKPTR x;
+STKPTR cpystak(STKPTR x)
 {
 	return (endstak(movstr(x, locstak())));
 }
