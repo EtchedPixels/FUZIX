@@ -15,7 +15,6 @@
 #define REG	register
 
 #define IF	if(
-#define THEN	){
 #define FI	;}
 
 #define FOR	for(

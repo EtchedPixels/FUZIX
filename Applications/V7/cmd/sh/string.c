@@ -30,7 +30,7 @@ INT	any(c,s)
 
 	WHILE d = *s++
 	DO	IF d==c
-		THEN	return(TRUE);
+		) {	return(TRUE);
 		FI
 	OD
 	return(FALSE);
@@ -41,7 +41,7 @@ INT	cf(s1, s2)
 {
 	WHILE *s1++ == *s2
 	DO	IF *s2++==0
-		THEN	return(0);
+		) {	return(0);
 		FI
 	OD
 	return(*--s1 - *s2);
@@ -52,6 +52,6 @@ INT	length(as)
 {
 	REG STRING s;
 
-	IF s=as THEN WHILE *s++ DONE FI
+	IF s=as ) { WHILE *s++ DONE FI
 	return(s-as);
 }

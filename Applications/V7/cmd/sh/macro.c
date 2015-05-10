@@ -29,7 +29,7 @@ static STRING	copyto(endch)
 	WHILE (c=getch(endch))!=endch && c
 	DO pushstak(c|quote) OD
 	zerostak();
-	IF c!=endch THEN error(badsub) FI
+	IF c!=endch ) { error(badsub) FI
 }
 
 static skipto(endch)
@@ -45,11 +45,11 @@ static skipto(endch)
 		case DQUOTE:	skipto(DQUOTE); break;
 
 		case DOLLAR:	IF readc()==BRACE
-				THEN	skipto('}');
+				) {	skipto('}');
 				FI
 		}
 	OD
-	IF c!=endch THEN error(badsub) FI
+	IF c!=endch ) { error(badsub) FI
 }
 
 static getch(endch)
@@ -60,56 +60,56 @@ static getch(endch)
 retry:
 	d=readc();
 	IF !subchar(d)
-	THEN	return(d);
+	) {	return(d);
 	FI
 	IF d==DOLLAR
-	THEN	REG INT	c;
+	) {	REG INT	c;
 		IF (c=readc(), dolchar(c))
-		THEN	NAMPTR		n=(NAMPTR)NIL;
+		) {	NAMPTR		n=(NAMPTR)NIL;
 			INT		dolg=0;
 			BOOL		bra;
 			REG STRING	argp, v;
 			CHAR		idb[2];
 			STRING		id=idb;
 
-			IF bra=(c==BRACE) THEN c=readc() FI
+			IF bra=(c==BRACE) ) { c=readc() FI
 			IF letter(c)
-			THEN	argp=(STRING)relstak();
+			) {	argp=(STRING)relstak();
 				WHILE alphanum(c) DO pushstak(c); c=readc() OD
 				zerostak();
 				n=lookup(absstak(argp)); setstak(argp);
 				v = n->namval; id = n->namid;
 				peekc = c|MARK;;
 			} else if ( digchar(c)
-			THEN	*id=c; idb[1]=0;
+			) {	*id=c; idb[1]=0;
 				IF astchar(c)
-				THEN	dolg=1; c='1';
+				) {	dolg=1; c='1';
 				FI
 				c -= '0';
 				v=((c==0) ? cmdadr : (c<=dolc) ? dolv[c] : (STRING)(dolg=0));
 			} else if ( c=='$'
-			THEN	v=pidadr;
+			) {	v=pidadr;
 			} else if ( c=='!'
-			THEN	v=pcsadr;
+			) {	v=pcsadr;
 			} else if ( c=='#'
-			THEN	v=dolladr;
+			) {	v=dolladr;
 			} else if ( c=='?'
-			THEN	v=exitadr;
+			) {	v=exitadr;
 			} else if ( c=='-'
-			THEN	v=flagadr;
-			} else if ( bra THEN error(badsub);
+			) {	v=flagadr;
+			} else if ( bra ) { error(badsub);
 			} else {	goto retry;
 			FI
 			c = readc();
 			IF !defchar(c) && bra
-			THEN	error(badsub);
+			) {	error(badsub);
 			FI
 			argp=0;
 			IF bra
-			THEN	IF c!='}'
-				THEN	argp=(STRING)relstak();
+			) {	IF c!='}'
+				) {	argp=(STRING)relstak();
 					IF (v==0)^(setchar(c))
-					THEN	copyto('}');
+					) {	copyto('}');
 					} else {	skipto('}');
 					FI
 					argp=absstak(argp);
@@ -117,37 +117,37 @@ retry:
 			} else {	peekc = c|MARK; c = 0;
 			FI
 			IF v
-			THEN	IF c!='+'
-				THEN	for (;;) {
+			) {	IF c!='+'
+				) {	for (;;) {
 				            WHILE c = *v++
 					     DO pushstak(c|quote); OD
 					     IF dolg==0 || (++dolg>dolc)
-					     THEN break;
+					     ) { break;
 					     } else { v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
 					     FI
 					}
 				FI
 			} else if ( argp
-			THEN	IF c=='?'
-				THEN	failed(id,*argp?argp:badparam);
+			) {	IF c=='?'
+				) {	failed(id,*argp?argp:badparam);
 				} else if ( c=='='
-				THEN	IF n
-					THEN	assign(n,argp);
+				) {	IF n
+					) {	assign(n,argp);
 					} else {	error(badsub);
 					FI
 				FI
 			} else if ( flags&setflg
-			THEN	failed(id,badparam);
+			) {	failed(id,badparam);
 			FI
 			goto retry;
 		} else {	peekc=c|MARK;
 		FI
 	} else if ( d==endch
-	THEN	return(d);
+	) {	return(d);
 	} else if ( d==SQUOTE
-	THEN	comsubst(); goto retry;
+	) {	comsubst(); goto retry;
 	} else if ( d==DQUOTE
-	THEN	quoted++; quote^=QUOTE; goto retry;
+	) {	quoted++; quote^=QUOTE; goto retry;
 	FI
 	return(d);
 }
@@ -167,7 +167,7 @@ STRING	macro(as)
 	quote=0; quoted=0;
 	copyto(0);
 	pop();
-	IF quoted && (stakbot==staktop) THEN pushstak(QUOTE) FI
+	IF quoted && (stakbot==staktop) ) { pushstak(QUOTE) FI
 	quote=savq; quoted=savqu;
 	return(fixstak());
 }
@@ -205,7 +205,7 @@ static comsubst()
 	await(0);
 	WHILE stakbot!=staktop
 	DO	IF (*--staktop&STRIP)!=NL
-		THEN	++staktop; break;
+		) {	++staktop; break;
 		FI
 	OD
 	pop();
@@ -225,7 +225,7 @@ subst(in,ot)
 	WHILE c=(getch(DQUOTE)&STRIP)
 	DO pushstak(c);
 	   IF --count == 0
-	   THEN	flush(ot); count=CPYSIZ;
+	   ) {	flush(ot); count=CPYSIZ;
 	   FI
 	OD
 	flush(ot);
@@ -235,6 +235,6 @@ subst(in,ot)
 static flush(ot)
 {
 	write(ot,stakbot,staktop-stakbot);
-	IF flags&execpr THEN write(output,stakbot,staktop-stakbot) FI
+	IF flags&execpr ) { write(output,stakbot,staktop-stakbot) FI
 	staktop=stakbot;
 }

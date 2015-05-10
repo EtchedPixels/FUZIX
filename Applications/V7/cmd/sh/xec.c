@@ -33,7 +33,7 @@ execute(argt, execflg, pf1, pf2)
 	sigchk();
 
 	IF (t=argt) && execbrk==0
-	THEN	REG INT		treeflgs;
+	) {	REG INT		treeflgs;
 		INT		oldexit, type;
 		REG STRING	*com;
 
@@ -54,13 +54,13 @@ execute(argt, execflg, pf1, pf2)
 			a1=com[1]; gchain=schain;
 
 			IF (internal=syslook(com[0],commands)) || argn==0
-			THEN	setlist(((COMPTR)t)->comset, 0);
+			) {	setlist(((COMPTR)t)->comset, 0);
 			FI
 
 			IF argn && (flags&noexec)==0
-			THEN	/* print command if execpr */
+			) {	/* print command if execpr */
 				IF flags&execpr
-				THEN	argn=0;	prs(execpmsg);
+				) {	argn=0;	prs(execpmsg);
 					WHILE com[argn]!=ENDARGS
 					DO prs(com[argn++]); blank() OD
 					newline();
@@ -70,10 +70,10 @@ execute(argt, execflg, pf1, pf2)
 
 				case SYSDOT:
 					IF a1
-					THEN	REG INT		f;
+					) {	REG INT		f;
 	
 						IF (f=pathopen(getpath(a1), a1)) < 0
-						THEN failed(a1,notfound);
+						) { failed(a1,notfound);
 						} else { execexp(0,f);
 						FI
 					FI
@@ -98,25 +98,25 @@ execute(argt, execflg, pf1, pf2)
 	
 				case SYSBREAK:
 					IF (execbrk=loopcnt) && a1
-					THEN breakcnt=stoi(a1);
+					) { breakcnt=stoi(a1);
 					FI
 					break;
 	
 				case SYSTRAP:
 					IF a1
-					THEN	BOOL	clear;
+					) {	BOOL	clear;
 						IF (clear=digit(*a1))==0
-						THEN	++com;
+						) {	++com;
 						FI
 						WHILE *++com
 						DO INT	i;
 						   IF (i=stoi(*com))>=MAXTRAP || i<MINTRAP
-						   THEN	failed(*com,badtrap);
+						   ) {	failed(*com,badtrap);
 						   } else if ( clear
-						   THEN	clrsig(i);
+						   ) {	clrsig(i);
 						   } else {	replace(&trapcom[i],a1);
 							IF *a1
-							THEN	getsig(i);
+							) {	getsig(i);
 							} else {	ignsig(i);
 							FI
 						   FI
@@ -126,7 +126,7 @@ execute(argt, execflg, pf1, pf2)
 	
 						FOR i=0; i<MAXTRAP; i++
 						DO IF trapcom[i]
-						   THEN	prn(i); prs(colon); prs(trapcom[i]); newline();
+						   ) {	prn(i); prs(colon); prs(trapcom[i]); newline();
 						   FI
 						OD
 					FI
@@ -135,7 +135,7 @@ execute(argt, execflg, pf1, pf2)
 				case SYSEXEC:
 					com++;
 					initio(io); ioset=0; io=0;
-					IF a1==0 THEN break FI
+					IF a1==0 ) { break FI
 	
 				case SYSLOGIN:
 					flags |= forked;
@@ -143,15 +143,15 @@ execute(argt, execflg, pf1, pf2)
 	
 				case SYSCD:
 					IF flags&rshflg
-					THEN	failed(com[0],restricted);
+					) {	failed(com[0],restricted);
 					} else if ( (a1==0 && (a1=homenod.namval)==0) || chdir(a1)<0
-					THEN	failed(a1,baddir);
+					) {	failed(a1,baddir);
 					FI
 					break;
 	
 				case SYSSHFT:
 					IF dolc<1
-					THEN	error(badshift);
+					) {	error(badshift);
 					} else {	dolv++; dolc--;
 					FI
 					assnum(&dolladr, dolc);
@@ -173,13 +173,13 @@ execute(argt, execflg, pf1, pf2)
 
 				case SYSSET:
 					IF a1
-					THEN	INT	argc;
+					) {	INT	argc;
 						argc = options(argn,com);
 						IF argc>1
-						THEN	setargs(com+argn-argc);
+						) {	setargs(com+argn-argc);
 						FI
 					} else if ( ((COMPTR)t)->comset==0
-					THEN	/*scan name chain and print*/
+					) {	/*scan name chain and print*/
 						namscan(printnam);
 					FI
 					break;
@@ -187,10 +187,10 @@ execute(argt, execflg, pf1, pf2)
 				case SYSRDONLY:
 					exitval=N_RDONLY;
 				case SYSXPORT:
-					IF exitval==0 THEN exitval=N_EXPORT; FI
+					IF exitval==0 ) { exitval=N_EXPORT; FI
 	
 					IF a1
-					THEN	WHILE *++com
+					) {	WHILE *++com
 						DO attrib(lookup(*com), exitval) OD
 					} else {	namscan(printflg);
 					FI
@@ -199,7 +199,7 @@ execute(argt, execflg, pf1, pf2)
 	
 				case SYSEVAL:
 					IF a1
-					THEN	execexp(a1,&com[2]);
+					) {	execexp(a1,&com[2]);
 					FI
 					break;
 
@@ -227,33 +227,33 @@ execute(argt, execflg, pf1, pf2)
 				}
 
 				IF internal
-				THEN	IF io THEN error(illegal) FI
+				) {	IF io ) { error(illegal) FI
 					chktrap();
 					break;
 				FI
 			} else if ( t->treio==0
-			THEN	break;
+			) {	break;
 			FI
 			}
 	
 		case TFORK:
 			IF execflg && (treeflgs&(FAMP|FPOU))==0
-			THEN	parent=0;
+			) {	parent=0;
 			} else {	WHILE (parent=fork()) == -1
 				DO sigchk(); alarm(10); pause() OD
 			FI
 
 			IF parent
-			THEN	/* This is the parent branch of fork;    */
+			) {	/* This is the parent branch of fork;    */
 				/* it may or may not wait for the child. */
 				IF treeflgs&FPRS && flags&ttyflg
-				THEN	prn(parent); newline();
+				) {	prn(parent); newline();
 				FI
-				IF treeflgs&FPCL THEN closepipe(pf1) FI
+				IF treeflgs&FPCL ) { closepipe(pf1) FI
 				IF (treeflgs&(FAMP|FPOU))==0
-				THEN	await(parent);
+				) {	await(parent);
 				} else if ( (treeflgs&FAMP)==0
-				THEN	post(parent);
+				) {	post(parent);
 				} else {	assnum(&pcsadr, parent);
 				FI
 
@@ -271,30 +271,30 @@ execute(argt, execflg, pf1, pf2)
 				/* except for those `lost' by trap   */
 				oldsigs();
 				IF treeflgs&FINT
-				THEN	signal(INTR,1); signal(QUIT,1);
+				) {	signal(INTR,1); signal(QUIT,1);
 				FI
 
 				/* pipe in or out */
 				IF treeflgs&FPIN
-				THEN	sh_rename(pf1[INPIPE],0);
+				) {	sh_rename(pf1[INPIPE],0);
 					close(pf1[OTPIPE]);
 				FI
 				IF treeflgs&FPOU
-				THEN	sh_rename(pf2[OTPIPE],1);
+				) {	sh_rename(pf2[OTPIPE],1);
 					close(pf2[INPIPE]);
 				FI
 
 				/* default std input for & */
 				IF treeflgs&FINT && ioset==0
-				THEN	sh_rename(chkopen(devnull),0);
+				) {	sh_rename(chkopen(devnull),0);
 				FI
 
 				/* io redirection */
 				initio(t->treio);
 				IF type!=TCOM
-				THEN	execute(((FORKPTR)t)->forktre,1);
+				) {	execute(((FORKPTR)t)->forktre,1);
 				} else if ( com[0]!=ENDARGS
-				THEN	setlist(((COMPTR)t)->comset,N_EXPORT);
+				) {	setlist(((COMPTR)t)->comset,N_EXPORT);
 					execa(com);
 				FI
 				done();
@@ -309,7 +309,7 @@ execute(argt, execflg, pf1, pf2)
 			{
 			   INT pv[2]; chkpipe(pv);
 			   IF execute(((LSTPTR)t)->lstlef, 0, pf1, pv)==0
-			   THEN	execute(((LSTPTR)t)->lstrit, execflg, pv, pf2);
+			   ) {	execute(((LSTPTR)t)->lstrit, execflg, pv, pf2);
 			   } else {	closepipe(pv);
 			   FI
 			}
@@ -322,13 +322,13 @@ execute(argt, execflg, pf1, pf2)
 
 		case TAND:
 			IF execute(((LSTPTR)t)->lstlef,0)==0
-			THEN	execute(((LSTPTR)t)->lstrit,execflg);
+			) {	execute(((LSTPTR)t)->lstrit,execflg);
 			FI
 			break;
 
 		case TORF:
 			IF execute(((LSTPTR)t)->lstlef,0)!=0
-			THEN	execute(((LSTPTR)t)->lstrit,execflg);
+			) {	execute(((LSTPTR)t)->lstrit,execflg);
 			FI
 			break;
 
@@ -339,7 +339,7 @@ execute(argt, execflg, pf1, pf2)
 			   DOLPTR	argsav=0;
 
 			   IF ((FORPTR)t)->forlst==0
-			   THEN    args=dolv+1;
+			   ) {    args=dolv+1;
 				   argsav=useargs();
 			   } else {	   ARGPTR	schain=gchain;
 				   gchain=0;
@@ -350,9 +350,9 @@ execute(argt, execflg, pf1, pf2)
 			   WHILE *args!=ENDARGS && execbrk==0
 			   DO	assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
-				IF execbrk<0 THEN execbrk=0 FI
+				IF execbrk<0 ) { execbrk=0 FI
 			   OD
-			   IF breakcnt THEN breakcnt-- FI
+			   IF breakcnt ) { breakcnt-- FI
 			   execbrk=breakcnt; loopcnt--;
 			   argfor=freeargs(argsav);
 			}
@@ -366,16 +366,16 @@ execute(argt, execflg, pf1, pf2)
 			   loopcnt++;
 			   WHILE execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
 			   DO i=execute(((WHPTR)t)->dotre,0);
-			      IF execbrk<0 THEN execbrk=0 FI
+			      IF execbrk<0 ) { execbrk=0 FI
 			   OD
-			   IF breakcnt THEN breakcnt-- FI
+			   IF breakcnt ) { breakcnt-- FI
 			   execbrk=breakcnt; loopcnt--; exitval=i;
 			}
 			break;
 
 		case TIF:
 			IF execute(((IFPTR)t)->iftre,0)==0
-			THEN	execute(((IFPTR)t)->thtre,execflg);
+			) {	execute(((IFPTR)t)->thtre,execflg);
 			} else {	execute(((IFPTR)t)->eltre,execflg);
 			FI
 			break;
@@ -389,12 +389,12 @@ execute(argt, execflg, pf1, pf2)
 				WHILE rex
 				DO	REG STRING	s;
 					IF gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
-					THEN	execute(((REGPTR)t)->regcom,0);
+					) {	execute(((REGPTR)t)->regcom,0);
 						t=0; break;
 					} else {	rex=((ARGPTR)rex)->argnxt;
 					FI
 				OD
-				IF t THEN t=(TREPTR)((REGPTR)t)->regnxt FI
+				IF t ) { t=(TREPTR)((REGPTR)t)->regnxt FI
 			   OD
 			}
 			break;
@@ -415,9 +415,9 @@ execexp(s,f)
 	FILEBLK		fb;
 	push(&fb);
 	IF s
-	THEN	estabf(s); fb.feval=(STRING *)f;
+	) {	estabf(s); fb.feval=(STRING *)f;
 	} else if ( f>=0
-	THEN	initf(f);
+	) {	initf(f);
 	FI
 	execute(cmd(NL, NLFLG|MTFLG),0);
 	pop();

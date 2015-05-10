@@ -40,30 +40,30 @@ void	initio(iop)
 	REG INT		iof, fd;
 
 	IF iop
-	THEN	iof=iop->iofile;
+	) {	iof=iop->iofile;
 		ion=mactrim(iop->ioname);
 		IF *ion && (flags&noexec)==0
-		THEN	IF iof&IODOC
-			THEN	subst(chkopen(ion),(fd=tmpfil()));
+		) {	IF iof&IODOC
+			) {	subst(chkopen(ion),(fd=tmpfil()));
 				close(fd); fd=chkopen(tmpout); unlink(tmpout);
 			} else if ( iof&IOMOV
-			THEN	IF eq(minus,ion)
-				THEN	fd = -1;
+			) {	IF eq(minus,ion)
+				) {	fd = -1;
 					close(iof&IOUFD);
 				} else if ( (fd=stoi(ion))>=USERIO
-				THEN	failed(ion,badfile);
+				) {	failed(ion,badfile);
 				} else {	fd=dup(fd);
 				FI
 			} else if ( (iof&IOPUT)==0
-			THEN	fd=chkopen(ion);
+			) {	fd=chkopen(ion);
 			} else if ( flags&rshflg
-			THEN	failed(ion,restricted);
+			) {	failed(ion,restricted);
 			} else if ( iof&IOAPP && (fd=open(ion,1))>=0
-			THEN	lseek(fd, 0L, 2);
+			) {	lseek(fd, 0L, 2);
 			} else {	fd=create(ion);
 			FI
 			IF fd>=0
-			THEN	sh_rename(fd,iof&IOUFD);
+			) {	sh_rename(fd,iof&IOUFD);
 			FI
 		FI
 		initio(iop->ionxt);
@@ -75,12 +75,12 @@ STRING	getpath(s)
 {
 	REG STRING	path;
 	IF any('/',s)
-	THEN	IF flags&rshflg
-		THEN	failed(s, restricted);
+	) {	IF flags&rshflg
+		) {	failed(s, restricted);
 		} else {	return(nullstr);
 		FI
 	} else if ( (path = pathnod.namval)==0
-	THEN	return(defpath);
+	) {	return(defpath);
 	} else {	return(cpystak(path));
 	FI
 }
@@ -104,8 +104,8 @@ STRING	catpath(path,name)
 			argp = locstak();
 
 	WHILE *scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
-	IF scanp!=path THEN *argp++='/' FI
-	IF *scanp==COLON THEN scanp++ FI
+	IF scanp!=path ) { *argp++='/' FI
+	IF *scanp==COLON ) { scanp++ FI
 	path=(*scanp ? scanp : 0); scanp=name;
 	WHILE (*argp++ = *scanp++) DONE
 	return(path);
@@ -121,7 +121,7 @@ void	execa(at)
 	REG STRING	*t = at;
 
 	IF (flags&noexec)==0
-	THEN	xecmsg=notfound; path=getpath(*t);
+	) {	xecmsg=notfound; path=getpath(*t);
 		namscan(exname);
 		xecenv=sh_setenv();
 		WHILE path=execs(path,t) DONE
@@ -145,7 +145,7 @@ static STRING	execs(ap,t)
 		flags=0;
 		comdiv=0; ioset=0;
 		clearup(); /* remove open files and for loop junk */
-		IF input THEN close(input) FI
+		IF input ) { close(input) FI
 		close(output); output=2;
 		input=chkopen(p);
 
@@ -189,9 +189,9 @@ void	post(pcsid)
 	REG INT		*pw = pwlist;
 
 	IF pcsid
-	THEN	WHILE *pw DO pw++ OD
+	) {	WHILE *pw DO pw++ OD
 		IF pwc >= MAXP-1
-		THEN	pw--;
+		) {	pw--;
 		} else {	pwc++;
 		FI
 		*pw = pcsid;
@@ -216,37 +216,37 @@ void	await(i)
 		   p=wait(&w);
 		   WHILE pw <= &pwlist[ipwc]
 		   DO IF *pw==p
-		      THEN *pw=0; pwc--;
+		      ) { *pw=0; pwc--;
 		      } else { pw++;
 		      FI
 		   OD
 		}
 
-		IF p == -1 THEN continue FI
+		IF p == -1 ) { continue FI
 
 		w_hi = (w>>8)&LOBYTE;
 
 		IF sig = w&0177
-		THEN	IF sig == 0177	/* ptrace! return */
-			THEN	prs("ptrace: ");
+		) {	IF sig == 0177	/* ptrace! return */
+			) {	prs("ptrace: ");
 				sig = w_hi;
 			FI
 			IF sysmsg[sig]
-			THEN	IF i!=p || (flags&prompt)==0 THEN prp(); prn(p); blank() FI
+			) {	IF i!=p || (flags&prompt)==0 ) { prp(); prn(p); blank() FI
 				prs(sysmsg[sig]);
-				IF w&0200 THEN prs(coredump) FI
+				IF w&0200 ) { prs(coredump) FI
 			FI
 			newline();
 		FI
 
 		IF rc==0
-		THEN	rc = (sig ? sig|SIGFLG : w_hi);
+		) {	rc = (sig ? sig|SIGFLG : w_hi);
 		FI
 		wx |= w;
 	OD
 
 	IF wx && flags&errflg
-	THEN	exitsh(rc);
+	) {	exitsh(rc);
 	FI
 	exitval=rc; exitset();
 }
@@ -261,7 +261,7 @@ trim(at)
 	REG CHAR	q=0;
 
 	IF p=at
-	THEN	WHILE c = *p
+	) {	WHILE c = *p
 		DO *p++=c&STRIP; q |= c OD
 	FI
 	nosubst=q&QUOTE;
@@ -286,10 +286,10 @@ STRING	*scan(argn)
 	WHILE argp
 	DO	*--comargn = argp->argval;
 		IF argp = argp->argnxt
-		THEN trim(*comargn);
+		) { trim(*comargn);
 		FI
 		IF argp==0 || Rcheat(argp)&ARGMK
-		THEN	gsort(comargn,comargm);
+		) {	gsort(comargn,comargm);
 			comargm = comargn;
 		FI
 		/* Lcheat(argp) &= ~ARGMK; */
@@ -304,7 +304,7 @@ static void	gsort(from,to)
 	INT		k, m, n;
 	REG INT		i, j;
 
-	IF (n=to-from)<=1 THEN return FI
+	IF (n=to-from)<=1 ) { return FI
 
 	FOR j=1; j<=n; j*=2 DONE
 
@@ -314,7 +314,7 @@ static void	gsort(from,to)
 	    DO	FOR i=j; i>=0; i-=m
 		DO  REG STRING *fromi; fromi = &from[i];
 		    IF cf(fromi[m],fromi[0])>0
-		    THEN break;
+		    ) { break;
 		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
 		    FI
 		OD
@@ -332,7 +332,7 @@ INT	getarg(ac)
 	REG COMPTR	c;
 
 	IF c=ac
-	THEN	argp=c->comarg;
+	) {	argp=c->comarg;
 		WHILE argp
 		DO	count += split(macro(argp->argval));
 			argp=argp->argnxt;
@@ -353,15 +353,15 @@ static INT	split(s)
 		WHILE (c = *s++, !any(c,ifsnod.namval) && c)
 		DO *argp++ = c OD
 		IF argp==staktop+BYTESPERWORD
-		THEN	IF c
-			THEN	continue;
+		) {	IF c
+			) {	continue;
 			} else {	return(count);
 			FI
 		} else if (c==0
-		THEN	s--;
+		) {	s--;
 		FI
 		IF c=expand(((ARGPTR)(argp=endstak(argp)))->argval,0)
-		THEN	count += c;
+		) {	count += c;
 		} else {	/* assign(&fngnod, argp->argval); */
 			makearg(argp); count++;
 		FI

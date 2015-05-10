@@ -26,7 +26,7 @@ sigchk()
 	 * no trap has been set.
 	 */
 	IF trapnote&SIGSET
-	THEN	exitsh(SIGFAIL);
+	) {	exitsh(SIGFAIL);
 	FI
 }
 
@@ -35,7 +35,7 @@ failed(s1,s2)
 {
 	prp(); prs(s1); 
 	IF s2
-	THEN	prs(colon); prs(s2);
+	) {	prs(colon); prs(s2);
 	FI
 	newline(); exitsh(ERROR);
 }
@@ -58,7 +58,7 @@ exitsh(xno)
 	 */
 	exitval=xno;
 	IF (flags & (forked|errflg|ttyflg)) != ttyflg
-	THEN	done();
+	) {	done();
 	} else {
 		clearup();
 		longjmp(errshell,1);
@@ -69,7 +69,7 @@ done()
 {
 	REG STRING	t;
 	IF t=trapcom[0]
-	THEN	trapcom[0]=0; /*should free but not long */
+	) {	trapcom[0]=0; /*should free but not long */
 		execexp(t,0);
 	FI
 	rmtemp(0);

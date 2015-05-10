@@ -46,13 +46,13 @@ main(c, v)
 	sh_getenv();
 
 	/* look for restricted */
-/*	IF c>0 && any('r', *v) THEN rflag=0 FI */
+/*	IF c>0 && any('r', *v) ) { rflag=0 FI */
 
 	/* look for options */
 	dolc=options(c,v);
-	IF dolc<2 THEN flags |= stdflg FI
+	IF dolc<2 ) { flags |= stdflg FI
 	IF (flags&stdflg)==0
-	THEN	dolc--;
+	) {	dolc--;
 	FI
 	dolv=v+c-dolc; dolc--;
 
@@ -73,16 +73,16 @@ main(c, v)
 	dfault(&ifsnod, sptbnl);
 
 	IF (beenhere++)==FALSE
-	THEN	/* ? profile */
+	) {	/* ? profile */
 		IF *cmdadr=='-'
 		    && (input=pathopen(nullstr, profile))>=0
-		THEN	exfile(rflag); flags &= ~ttyflg;
+		) {	exfile(rflag); flags &= ~ttyflg;
 		FI
-		IF rflag==0 THEN flags |= rshflg FI
+		IF rflag==0 ) { flags |= rshflg FI
 
 		/* open input file if specified */
 		IF comdiv
-		THEN	estabf(comdiv); input = -1;
+		) {	estabf(comdiv); input = -1;
 		} else {	input=((flags&stdflg) ? 0 : chkopen(cmdadr));
 			comdiv--;
 		FI
@@ -102,13 +102,13 @@ BOOL		prof;
 
 	/* move input */
 	IF input>0
-	THEN	Ldup(input,INIO);
+	) {	Ldup(input,INIO);
 		input=INIO;
 	FI
 
 	/* move output to safe place */
 	IF output==2
-	THEN	Ldup(dup(2),OTIO);
+	) {	Ldup(dup(2),OTIO);
 		output=OTIO;
 	FI
 
@@ -116,7 +116,7 @@ BOOL		prof;
 
 	/* decide whether interactive */
 	IF (flags&intflg) || ((flags&oneflg)==0 && isatty(output) && isatty(input))
-	THEN	dfault(&ps1nod, (userid?stdprompt:supprompt));
+	) {	dfault(&ps1nod, (userid?stdprompt:supprompt));
 		dfault(&ps2nod, readmsg);
 		flags |= ttyflg|prompt; ignsig(KILL);
 	} else {
@@ -124,12 +124,12 @@ BOOL		prof;
 	FI
 
 	IF setjmp(errshell) && prof
-	THEN	close(input); return;
+	) {	close(input); return;
 	FI
 
 	/* error return here */
 	loopcnt=breakcnt=peekc=0; iopend=0;
-	IF input>=0 THEN initf(input) FI
+	IF input>=0 ) { initf(input) FI
 
 	/* command loop */
 	for(;;) {
@@ -137,11 +137,11 @@ BOOL		prof;
 		stakchk(); /* may reduce sbrk */
 		exitset();
 		IF (flags&prompt) && standin->fstak==0 && !eof
-		THEN	IF mailnod.namval
+		) {	IF mailnod.namval
 			    && stat(mailnod.namval,&statb)>=0 && statb.st_size
 			    && (statb.st_mtime != mailtime)
 			    && mailtime
-			THEN	prs(mailmsg)
+			) {	prs(mailmsg)
 			FI
 			mailtime=statb.st_mtime;
 			prs(ps1nod.namval); alarm(TIMEOUT); flags |= waiting;
@@ -149,7 +149,7 @@ BOOL		prof;
 
 		trapnote=0; peekc=readc();
 		IF eof
-		THEN	return;
+		) {	return;
 		FI
 		alarm(0); flags &= ~waiting;
 		execute(cmd(NL,MTFLG),0);
@@ -161,7 +161,7 @@ chkpr(eor)
 char eor;
 {
 	IF (flags&prompt) && standin->fstak==0 && eor==NL
-	THEN	prs(ps2nod.namval);
+	) {	prs(ps2nod.namval);
 	FI
 }
 

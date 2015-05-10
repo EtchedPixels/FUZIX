@@ -35,9 +35,9 @@ STKPTR	locstak()
 	 * should be followed by `endstak'
 	 */
 	IF brkend-stakbot<BRKINCR
-	THEN	setbrk(brkincr);
+	) {	setbrk(brkincr);
 		IF brkincr < BRKMAX
-		THEN	brkincr += 256;
+		) {	brkincr += 256;
 		FI
 	FI
 	return(stakbot);
@@ -73,7 +73,7 @@ void	tdystak(x)
 stakchk()
 {
 	IF (brkend-stakbas)>BRKINCR+BRKINCR
-	THEN	setbrk(-BRKINCR);
+	) {	setbrk(-BRKINCR);
 	FI
 }
 
