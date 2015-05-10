@@ -30,11 +30,11 @@ BLKPTR		bloktop=BLK(end);	/*top of arena (last blok)*/
 ADDRESS	alloc(nbytes)
 	POS		nbytes;
 {
-	REG POS		rbytes = round(nbytes+BYTESPERWORD,BYTESPERWORD);
+	register POS		rbytes = round(nbytes+BYTESPERWORD,BYTESPERWORD);
 
 	for (;;) {	INT		c=0;
-		REG BLKPTR	p = blokp;
-		REG BLKPTR	q;
+		register BLKPTR	p = blokp;
+		register BLKPTR	q;
 		do {	if(!busy(p)
 			) {	while(!busy(q = p->word) ){p->word = q->word ;}
 				if(ADR(q)-ADR(p) >= rbytes
@@ -56,8 +56,8 @@ void	addblok(reqd)
 	POS		reqd;
 {
 	if(stakbas!=staktop
-	) {	REG STKPTR	rndstak;
-		REG BLKPTR	blokstak;
+	) {	register STKPTR	rndstak;
+		register BLKPTR	blokstak;
 
 		pushstak(0);
 		rndstak=(STKPTR)round(staktop,BYTESPERWORD);
@@ -71,7 +71,7 @@ void	addblok(reqd)
 	bloktop=bloktop->word=BLK(Rcheat(bloktop)+reqd);
 	bloktop->word=BLK(ADR(end)+1);
 	{
-	   REG STKPTR stakadr=STK(bloktop+2);
+	   register STKPTR stakadr=STK(bloktop+2);
 	   staktop=movstr(stakbot,stakadr);
 	   stakbas=stakbot=stakadr;
 	}
@@ -91,8 +91,8 @@ chkbptr(ptr)
 	BLKPTR	ptr;
 {
 	INT		exf=0;
-	REG BLKPTR	p = end;
-	REG BLKPTR	q;
+	register BLKPTR	p = end;
+	register BLKPTR	q;
 	INT		us=0, un=0;
 
 	for (;;) {

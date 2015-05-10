@@ -21,8 +21,8 @@ static readb();
 
 word()
 {
-	REG CHAR	c, d;
-	REG CHAR	*argp=locstak()+BYTESPERWORD;
+	register CHAR	c, d;
+	register CHAR	*argp=locstak()+BYTESPERWORD;
 	INT		alpha=1;
 
 	wdnum=0; wdset=0;
@@ -75,7 +75,7 @@ word()
 nextc(quote)
 	CHAR		quote;
 {
-	REG CHAR	c, d;
+	register CHAR	c, d;
 	if((d=readc())==ESCAPE
 	) {	if((c=readc())==NL
 		) {	chkpr(NL); d=nextc(quote);
@@ -89,9 +89,9 @@ nextc(quote)
 
 readc()
 {
-	REG CHAR	c;
-	REG INT		len;
-	REG FILE	f;
+	register CHAR	c;
+	register INT		len;
+	register FILE	f;
 
 retry:
 	if(peekc
@@ -120,8 +120,8 @@ retry:
 
 static readb()
 {
-	REG FILE	f=standin;
-	REG INT		len;
+	register FILE	f=standin;
+	register INT		len;
 
 	do {	if(trapnote&SIGSET ) { newline(); sigchk() ;}
 	} while ( (len=read(f->fdes,f->fbuf,f->fsiz))<0 && trapnote );

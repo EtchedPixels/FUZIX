@@ -32,9 +32,9 @@ INT	options(argc,argv)
 	STRING		*argv;
 	INT		argc;
 {
-	REG STRING	cp;
-	REG STRING	*argp=argv;
-	REG STRING	flagc;
+	register STRING	cp;
+	register STRING	*argp=argv;
+	register STRING	flagc;
 	STRING		flagp;
 
 	if (argc>1 && *argp[1]=='-'
@@ -73,8 +73,8 @@ void	setargs(argi)
 	STRING		argi[];
 {
 	/* count args */
-	REG STRING	*argp=argi;
-	REG INT		argn=0;
+	register STRING	*argp=argi;
+	register INT		argn=0;
 
 	while(Rcheat(*argp++)!=ENDARGS ){argn++ ;}
 
@@ -88,9 +88,9 @@ DOLPTR
 freeargs(blk)
 	DOLPTR		blk;
 {
-	REG STRING	*argp;
-	REG DOLPTR	argr=0;
-	REG DOLPTR	argblk;
+	register STRING	*argp;
+	register DOLPTR	argr=0;
+	register DOLPTR	argblk;
 
 	if (argblk=blk
 	) {	argr = argblk->dolnxt;
@@ -106,9 +106,9 @@ freeargs(blk)
 static STRING *	copyargs(from, n)
 	STRING		from[];
 {
-	REG STRING *	np=(STRING *)alloc(sizeof(STRING*)*n+3*BYTESPERWORD);
-	REG STRING *	fp=from;
-	REG STRING *	pp=np;
+	register STRING *	np=(STRING *)alloc(sizeof(STRING*)*n+3*BYTESPERWORD);
+	register STRING *	fp=from;
+	register STRING *	pp=np;
 
 	((DOLPTR)np)->doluse=1;	/* use count */
 	np=(STRING *)((DOLPTR)np)->dolarg;

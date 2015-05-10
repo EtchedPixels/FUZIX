@@ -67,7 +67,7 @@ exitsh(xno)
 
 done()
 {
-	REG STRING	t;
+	register STRING	t;
 	if (t=trapcom[0]
 	) {	trapcom[0]=0; /*should free but not long */
 		execexp(t,0);

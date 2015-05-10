@@ -18,7 +18,7 @@
 initf(fd)
 	UFD		fd;
 {
-	REG FILE	f=standin;
+	register FILE	f=standin;
 
 	f->fdes=fd; f->fsiz=((flags&(oneflg|ttyflg))==0 ? BUFSIZ : 1);
 	f->fnxt=f->fend=f->fbuf; f->feval=0; f->flin=1;
@@ -26,9 +26,9 @@ initf(fd)
 }
 
 estabf(s)
-	REG STRING	s;
+	register STRING	s;
 {
-	REG FILE	f;
+	register FILE	f;
 
 	(f=standin)->fdes = -1;
 	f->fend=length(s)+(f->fnxt=s);
@@ -39,7 +39,7 @@ estabf(s)
 push(af)
 	FILE		af;
 {
-	REG FILE	f;
+	register FILE	f;
 
 	(f=af)->fstak=standin;
 	f->feof=0; f->feval=0;
@@ -48,7 +48,7 @@ push(af)
 
 pop()
 {
-	REG FILE	f;
+	register FILE	f;
 
 	if((f=standin)->fstak
 	) {	if(f->fdes>=0 ) { close(f->fdes) ;}
@@ -69,7 +69,7 @@ chkpipe(pv)
 chkopen(idf)
 	STRING		idf;
 {
-	REG INT		rc;
+	register INT		rc;
 
 	if((rc=open(idf,0))<0
 	) {	failed(idf,badopen);
@@ -78,7 +78,7 @@ chkopen(idf)
 }
 
 sh_rename(f1,f2)
-	REG INT		f1, f2;
+	register INT		f1, f2;
 {
 	if(f1!=f2
 	) {	dup2(f1, f2);
@@ -90,7 +90,7 @@ sh_rename(f1,f2)
 create(s)
 	STRING		s;
 {
-	REG INT		rc;
+	register INT		rc;
 
 	if((rc=creat(s,0666))<0
 	) {	failed(s,badcreate);
@@ -111,9 +111,9 @@ copy(ioparg)
 	IOPTR		ioparg;
 {
 	CHAR		c, *ends;
-	REG CHAR	*cline, *clinep;
+	register CHAR	*cline, *clinep;
 	INT		fd;
-	REG IOPTR	iop;
+	register IOPTR	iop;
 
 	if(iop=ioparg
 	) {	copy(iop->iolst);

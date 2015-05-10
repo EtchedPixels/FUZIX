@@ -21,8 +21,8 @@ STKPTR		stakbot=nullstr;
 STKPTR	getstak(asize)
 	INT		asize;
 {	/* allocate requested stack */
-	REG STKPTR	oldstak;
-	REG INT		size;
+	register STKPTR	oldstak;
+	register INT		size;
 
 	size=round(asize,BYTESPERWORD);
 	oldstak=stakbot;
@@ -50,16 +50,16 @@ STKPTR	savstak()
 }
 
 STKPTR	endstak(argp)
-	REG STRING	argp;
+	register STRING	argp;
 {	/* tidy up after `locstak' */
-	REG STKPTR	oldstak;
+	register STKPTR	oldstak;
 	*argp++=0;
 	oldstak=stakbot; stakbot=staktop=(STKPTR)round(argp,BYTESPERWORD);
 	return(oldstak);
 }
 
 void	tdystak(x)
-	REG STKPTR 	x;
+	register STKPTR 	x;
 {
 	/* try to bring stack back to x */
 	while(ADR(stakbsy)>ADR(x)

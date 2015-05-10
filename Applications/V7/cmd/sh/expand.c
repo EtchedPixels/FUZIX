@@ -36,7 +36,7 @@ INT	expand(as,rflg)
 	INT		count, dirf;
 	BOOL		dir=0;
 	STRING		rescan = 0;
-	REG STRING	s, cs;
+	register STRING	s, cs;
 	ARGPTR		schain = gchain;
 	struct dirent	entry;
 	STATBUF		statb;
@@ -47,7 +47,7 @@ INT	expand(as,rflg)
 
 	/* check for meta chars */
 	{
-	   REG BOOL slash; slash=0;
+	   register BOOL slash; slash=0;
 	   while(!fngchar(*cs)
 	   ){if (*cs++==0
 		) {	if (rflg && slash ) { break; } else { return(0) ;}
@@ -75,7 +75,7 @@ INT	expand(as,rflg)
 	if (*cs==0 ) { *cs++=0200 ;}
 	if (dir
 	) {	/* check for rescan */
-		REG STRING rs; rs=cs;
+		register STRING rs; rs=cs;
 
 		do {	if (*rs=='/' ) { rescan=rs; *rs=0; gchain=0 ;}
 		} while(*rs++ );
@@ -93,7 +93,7 @@ INT	expand(as,rflg)
 		close(dirf);
 
 		if (rescan
-		) {	REG ARGPTR	rchain;
+		) {	register ARGPTR	rchain;
 			rchain=gchain; gchain=schain;
 			if (count
 			) {	count=0;
@@ -107,7 +107,7 @@ INT	expand(as,rflg)
 	;}
 
 	{
-	   REG CHAR	c;
+	   register CHAR	c;
 	   s=as;
 	   while(c = *s
 	   ){*s++=(c&STRIP?c:'/') ;}
@@ -116,9 +116,9 @@ INT	expand(as,rflg)
 }
 
 gmatch(s, p)
-	REG STRING	s, p;
+	register STRING	s, p;
 {
-	REG INT		scc;
+	register INT		scc;
 	CHAR		c;
 
 	if (scc = *s++
@@ -162,8 +162,8 @@ gmatch(s, p)
 static void	addg(as1,as2,as3)
 	STRING		as1, as2, as3;
 {
-	REG STRING	s1, s2;
-	REG INT		c;
+	register STRING	s1, s2;
+	register INT		c;
 
 	s2 = locstak()+BYTESPERWORD;
 
@@ -185,7 +185,7 @@ static void	addg(as1,as2,as3)
 }
 
 makearg(args)
-	REG STRING	args;
+	register STRING	args;
 {
 	((ARGPTR)args)->argnxt=gchain;
 	gchain=(ARGPTR)args;

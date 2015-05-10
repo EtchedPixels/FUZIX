@@ -16,17 +16,17 @@
 
 
 STRING	movstr(a,b)
-	REG STRING	a, b;
+	register STRING	a, b;
 {
 	while(*b++ = *a++ );
 	return(--b);
 }
 
 INT	any(c,s)
-	REG CHAR	c;
+	register CHAR	c;
 	STRING		s;
 {
-	REG CHAR d;
+	register CHAR d;
 
 	while(d = *s++
 	){if(d==c
@@ -37,7 +37,7 @@ INT	any(c,s)
 }
 
 INT	cf(s1, s2)
-	REG STRING s1, s2;
+	register STRING s1, s2;
 {
 	while(*s1++ == *s2
 	){if(*s2++==0
@@ -50,7 +50,7 @@ INT	cf(s1, s2)
 INT	length(as)
 	STRING as;
 {
-	REG STRING s;
+	register STRING s;
 
 	if(s=as ) { while(*s++ ); ;}
 	return(s-as);

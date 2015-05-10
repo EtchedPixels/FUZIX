@@ -27,15 +27,15 @@ execute(argt, execflg, pf1, pf2)
 	INT		*pf1, *pf2;
 {
 	/* `stakbot' is preserved by this routine */
-	REG TREPTR	t;
+	register TREPTR	t;
 	STKPTR		sav=savstak();
 
 	sigchk();
 
 	if( (t=argt) && execbrk==0
-	) {	REG INT		treeflgs;
+	) {	register INT		treeflgs;
 		INT		oldexit, type;
-		REG STRING	*com;
+		register STRING	*com;
 
 		treeflgs = t->tretyp; type = treeflgs&COMMSK;
 		oldexit=exitval; exitval=0;
@@ -70,7 +70,7 @@ execute(argt, execflg, pf1, pf2)
 
 				case SYSDOT:
 					if( a1
-					) {	REG INT		f;
+					) {	register INT		f;
 	
 						if( (f=pathopen(getpath(a1), a1)) < 0
 						) { failed(a1,notfound);
@@ -382,12 +382,12 @@ execute(argt, execflg, pf1, pf2)
 
 		case TSW:
 			{
-			   REG STRING	r = mactrim(((SWPTR)t)->swarg);
+			   register STRING	r = mactrim(((SWPTR)t)->swarg);
 			   t=(TREPTR)((SWPTR)t)->swlst;
 			   while(t
 			   ){ARGPTR		rex=((REGPTR)t)->regptr;
 				while(rex
-				){REG STRING	s;
+				){register STRING	s;
 					if( gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
 					) {	execute(((REGPTR)t)->regcom,0);
 						t=0; break;

@@ -33,9 +33,9 @@ syslook(w,syswds)
 	STRING		w;
 	SYSTAB		syswds;
 {
-	REG CHAR	first;
-	REG STRING	s;
-	REG SYSPTR	syscan;
+	register CHAR	first;
+	register STRING	s;
+	register SYSPTR	syscan;
 
 	syscan=syswds; first = *w;
 
@@ -50,11 +50,11 @@ syslook(w,syswds)
 }
 
 setlist(arg,xp)
-	REG ARGPTR	arg;
+	register ARGPTR	arg;
 	INT		xp;
 {
 	while(arg
-	){REG STRING	s=mactrim(arg->argval);
+	){register STRING	s=mactrim(arg->argval);
 	   setname(s, xp);
 	   arg=arg->argnxt;
 	   if (flags&execpr
@@ -68,8 +68,8 @@ void	setname(argi, xp)
 	STRING		argi;
 	INT		xp;
 {
-	REG STRING	argscan=argi;
-	REG NAMPTR	n;
+	register STRING	argscan=argi;
+	register NAMPTR	n;
 
 	if (letter(*argscan)
 	) {	while(alphanum(*argscan) ){argscan++ ;}
@@ -89,7 +89,7 @@ void	setname(argi, xp)
 }
 
 replace(a, v)
-	REG STRING	*a;
+	register STRING	*a;
 	STRING		v;
 {
 	free(*a); *a=make(v);
@@ -118,9 +118,9 @@ INT	readvar(names)
 	STRING		*names;
 {
 	FILEBLK		fb;
-	REG FILE	f = &fb;
-	REG CHAR	c;
-	REG INT		rc=0;
+	register FILE	f = &fb;
+	register CHAR	c;
+	register INT		rc=0;
 	NAMPTR		n=lookup(*names++); /* done now to avoid storage mess */
 	STKPTR		rel=(STKPTR)relstak();
 
@@ -165,7 +165,7 @@ assnum(p, i)
 STRING	make(v)
 	STRING		v;
 {
-	REG STRING	p;
+	register STRING	p;
 
 	if (v
 	) {	movstr(v,p=alloc(length(v)));
@@ -176,10 +176,10 @@ STRING	make(v)
 
 
 NAMPTR		lookup(nam)
-	REG STRING	nam;
+	register STRING	nam;
 {
-	REG NAMPTR	nscan=namep;
-	REG NAMPTR	*prev;
+	register NAMPTR	nscan=namep;
+	register NAMPTR	*prev;
 	INT		LR;
 
 	if (!chkid(nam)
@@ -206,7 +206,7 @@ NAMPTR		lookup(nam)
 static BOOL	chkid(nam)
 	STRING		nam;
 {
-	REG CHAR *	cp=nam;
+	register CHAR *	cp=nam;
 
 	if (!letter(*cp)
 	) {	return(FALSE);
@@ -228,7 +228,7 @@ namscan(fn)
 }
 
 static void	namwalk(np)
-	REG NAMPTR	np;
+	register NAMPTR	np;
 {
 	if (np
 	) {	namwalk(np->namlft);
@@ -240,7 +240,7 @@ static void	namwalk(np)
 void	printnam(n)
 	NAMPTR		n;
 {
-	REG STRING	s;
+	register STRING	s;
 
 	sigchk();
 	if (s=n->namval
@@ -251,9 +251,9 @@ void	printnam(n)
 }
 
 static STRING	staknam(n)
-	REG NAMPTR	n;
+	register NAMPTR	n;
 {
-	REG STRING	p;
+	register STRING	p;
 
 	p=movstr(n->namid,staktop);
 	p=movstr("=",p);
@@ -262,7 +262,7 @@ static STRING	staknam(n)
 }
 
 void	exname(n)
-	REG NAMPTR	n;
+	register NAMPTR	n;
 {
 	if (n->namflg&N_EXPORT
 	) {	free(n->namenv);
@@ -273,7 +273,7 @@ void	exname(n)
 }
 
 void	printflg(n)
-	REG NAMPTR		n;
+	register NAMPTR		n;
 {
 	if (n->namflg&N_EXPORT
 	) {	prs(export); blank();
@@ -288,7 +288,7 @@ void	printflg(n)
 
 void	sh_getenv(void)
 {
-	REG STRING	*e=environ;
+	register STRING	*e=environ;
 
 	while(*e
 	){setname(*e++, N_ENVNAM) ;}
@@ -314,7 +314,7 @@ void	pushnam(n)
 
 STRING	*sh_setenv(void)
 {
-	REG STRING	*er;
+	register STRING	*er;
 
 	namec=0;
 	namscan(countnam);

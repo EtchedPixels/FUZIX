@@ -22,9 +22,9 @@ static flush();
 
 
 static STRING	copyto(endch)
-	REG CHAR	endch;
+	register CHAR	endch;
 {
-	REG CHAR	c;
+	register CHAR	c;
 
 	while((c=getch(endch))!=endch && c
 	){pushstak(c|quote) ;}
@@ -33,10 +33,10 @@ static STRING	copyto(endch)
 }
 
 static skipto(endch)
-	REG CHAR	endch;
+	register CHAR	endch;
 {
 	/* skip chars up to } */
-	REG CHAR	c;
+	register CHAR	c;
 	while((c=readc()) && c!=endch
 	){	switch(c) {
 
@@ -55,7 +55,7 @@ static skipto(endch)
 static getch(endch)
 	CHAR		endch;
 {
-	REG CHAR	d;
+	register CHAR	d;
 
 retry:
 	d=readc();
@@ -63,12 +63,12 @@ retry:
 	) {	return(d);
 	;}
 	if(d==DOLLAR
-	) {	REG INT	c;
+	) {	register INT	c;
 		if((c=readc(), dolchar(c))
 		) {	NAMPTR		n=(NAMPTR)NIL;
 			INT		dolg=0;
 			BOOL		bra;
-			REG STRING	argp, v;
+			register STRING	argp, v;
 			CHAR		idb[2];
 			STRING		id=idb;
 
@@ -158,8 +158,8 @@ STRING	macro(as)
 	/* Strip "" and do $ substitution
 	 * Leaves result on top of stack
 	 */
-	REG BOOL	savqu =quoted;
-	REG CHAR	savq = quote;
+	register BOOL	savqu =quoted;
+	register CHAR	savq = quote;
 	FILEHDR		fb;
 
 	push(&fb); estabf(as);
@@ -176,20 +176,20 @@ static comsubst()
 {
 	/* command substn */
 	FILEBLK		cb;
-	REG CHAR	d;
-	REG STKPTR	savptr = fixstak();
+	register CHAR	d;
+	register STKPTR	savptr = fixstak();
 
 	usestak();
 	while((d=readc())!=SQUOTE && d
 	){pushstak(d) ;}
 
 	{
-	   REG STRING	argc;
+	   register STRING	argc;
 	   trim(argc=fixstak());
 	   push(&cb); estabf(argc);
 	}
 	{
-	   REG TREPTR	t = makefork(FPOU,cmd(EOFSYM,MTFLG|NLFLG));
+	   register TREPTR	t = makefork(FPOU,cmd(EOFSYM,MTFLG|NLFLG));
 	   INT		pv[2];
 
 	   /* this is done like this so that the pipe
@@ -216,9 +216,9 @@ static comsubst()
 subst(in,ot)
 	INT		in, ot;
 {
-	REG CHAR	c;
+	register CHAR	c;
 	FILEBLK		fb;
-	REG INT		count=CPYSIZ;
+	register INT		count=CPYSIZ;
 
 	push(&fb); initf(in);
 	/* DQUOTE used to stop it from quoting */

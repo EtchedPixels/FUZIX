@@ -20,9 +20,9 @@ BOOL		trapflg[MAXTRAP];
 
 
 void	fault(sig)
-	REG INT		sig;
+	register INT		sig;
 {
-	REG INT		flag;
+	register INT		flag;
 
 	signal(sig,fault);
 	if(sig==MEMF
@@ -49,7 +49,7 @@ stdsigs()
 
 ignsig(n)
 {
-	REG INT		s, i;
+	register INT		s, i;
 #if 0
     // FIXME: need to do proper SIG_IGN checks/handling
 	if((s=signal(i=n,1)&01)==0
@@ -61,7 +61,7 @@ ignsig(n)
 
 getsig(n)
 {
-	REG INT		i;
+	register INT		i;
 
 	if(trapflg[i=n]&SIGMOD || ignsig(i)==0
 	) {	signal(i,fault);
@@ -70,8 +70,8 @@ getsig(n)
 
 oldsigs()
 {
-	REG INT		i;
-	REG STRING	t;
+	register INT		i;
+	register STRING	t;
 
 	i=MAXTRAP;
 	while(i--
@@ -97,8 +97,8 @@ clrsig(i)
 chktrap()
 {
 	/* check for traps */
-	REG INT		i=MAXTRAP;
-	REG STRING	t;
+	register INT		i=MAXTRAP;
+	register STRING	t;
 
 	trapnote &= ~TRAPSET;
 	while(--i

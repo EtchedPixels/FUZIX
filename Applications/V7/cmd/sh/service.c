@@ -36,8 +36,8 @@ STRING		sysmsg[];
 void	initio(iop)
 	IOPTR		iop;
 {
-	REG STRING	ion;
-	REG INT		iof, fd;
+	register STRING	ion;
+	register INT		iof, fd;
 
 	if(iop
 	) {	iof=iop->iofile;
@@ -73,7 +73,7 @@ void	initio(iop)
 STRING	getpath(s)
 	STRING		s;
 {
-	REG STRING	path;
+	register STRING	path;
 	if(any('/',s)
 	) {	if(flags&rshflg
 		) {	failed(s, restricted);
@@ -86,9 +86,9 @@ STRING	getpath(s)
 }
 
 INT	pathopen(path, name)
-	REG STRING	path, name;
+	register STRING	path, name;
 {
-	REG UFD		f;
+	register UFD		f;
 
 	do { path=catpath(path,name);
 	} while ( (f=open(curstak(),0))<0 && path );
@@ -96,11 +96,11 @@ INT	pathopen(path, name)
 }
 
 STRING	catpath(path,name)
-	REG STRING	path;
+	register STRING	path;
 	STRING		name;
 {
 	/* leaves result on top of stack */
-	REG STRING	scanp = path,
+	register STRING	scanp = path,
 			argp = locstak();
 
 	while(*scanp && *scanp!=COLON ){*argp++ = *scanp++ ;}
@@ -117,8 +117,8 @@ static STRING	*xecenv;
 void	execa(at)
 	STRING		at[];
 {
-	REG STRING	path;
-	REG STRING	*t = at;
+	register STRING	path;
+	register STRING	*t = at;
 
 	if((flags&noexec)==0
 	) {	xecmsg=notfound; path=getpath(*t);
@@ -131,9 +131,9 @@ void	execa(at)
 
 static STRING	execs(ap,t)
 	STRING		ap;
-	REG STRING	t[];
+	register STRING	t[];
 {
-	REG STRING	p, prefix;
+	register STRING	p, prefix;
 
 	prefix=catpath(ap,t[0]);
 	trim(p=curstak());
@@ -176,7 +176,7 @@ static INT	pwc;
 
 postclr()
 {
-	REG INT		*pw = pwlist;
+	register INT		*pw = pwlist;
 
 	while(pw <= &pwlist[pwc]
 	){*pw++ = 0 ;}
@@ -186,7 +186,7 @@ postclr()
 void	post(pcsid)
 	INT		pcsid;
 {
-	REG INT		*pw = pwlist;
+	register INT		*pw = pwlist;
 
 	if(pcsid
 	) {	while(*pw ){pw++ ;}
@@ -207,12 +207,12 @@ void	await(i)
 
 	post(i);
 	while(pwc
-	){	REG INT		p;
-		REG INT		sig;
+	){	register INT		p;
+		register INT		sig;
 		INT		w_hi;
 
 		{
-		   REG INT	*pw=pwlist;
+		   register INT	*pw=pwlist;
 		   p=wait(&w);
 		   while(pw <= &pwlist[ipwc]
 		   ){if(*pw==p
@@ -256,9 +256,9 @@ BOOL		nosubst;
 trim(at)
 	STRING		at;
 {
-	REG STRING	p;
-	REG CHAR	c;
-	REG CHAR	q=0;
+	register STRING	p;
+	register CHAR	c;
+	register CHAR	q=0;
 
 	if(p=at
 	) {	while(c = *p
@@ -270,7 +270,7 @@ trim(at)
 STRING	mactrim(s)
 	STRING		s;
 {
-	REG STRING	t=macro(s);
+	register STRING	t=macro(s);
 	trim(t);
 	return(t);
 }
@@ -278,8 +278,8 @@ STRING	mactrim(s)
 STRING	*scan(argn)
 	INT		argn;
 {
-	REG ARGPTR	argp = (ARGPTR)(Rcheat(gchain)&~ARGMK);
-	REG STRING	*comargn, *comargm;
+	register ARGPTR	argp = (ARGPTR)(Rcheat(gchain)&~ARGMK);
+	register STRING	*comargn, *comargm;
 
 	comargn=(STRING *)getstak(BYTESPERWORD*argn+BYTESPERWORD); comargm = comargn += argn; *comargn = ENDARGS;
 
@@ -302,7 +302,7 @@ static void	gsort(from,to)
 	STRING		from[], to[];
 {
 	INT		k, m, n;
-	REG INT		i, j;
+	register INT		i, j;
 
 	if((n=to-from)<=1 ) { return ;}
 
@@ -312,7 +312,7 @@ static void	gsort(from,to)
 	){ k=n-m;
 	    for (j=0; j<k; j++
 	    ){	for (i=j; i>=0; i-=m
-		){ REG STRING *fromi; fromi = &from[i];
+		){ register STRING *fromi; fromi = &from[i];
 		    if(cf(fromi[m],fromi[0])>0
 		    ) { break;
 		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
@@ -327,9 +327,9 @@ static void	gsort(from,to)
 INT	getarg(ac)
 	COMPTR		ac;
 {
-	REG ARGPTR	argp;
-	REG INT		count=0;
-	REG COMPTR	c;
+	register ARGPTR	argp;
+	register INT		count=0;
+	register COMPTR	c;
 
 	if(c=ac
 	) {	argp=c->comarg;
@@ -342,10 +342,10 @@ INT	getarg(ac)
 }
 
 static INT	split(s)
-	REG STRING	s;
+	register STRING	s;
 {
-	REG STRING	argp;
-	REG INT		c;
+	register STRING	argp;
+	register INT		c;
 	INT		count=0;
 
 	for(;;) {

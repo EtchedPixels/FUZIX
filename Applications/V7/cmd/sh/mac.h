@@ -12,7 +12,6 @@
 #define TYPE	typedef
 #define STRUCT	TYPE struct
 #define UNION	TYPE union
-#define REG	register
 
 
 #define TRUE	(-1)

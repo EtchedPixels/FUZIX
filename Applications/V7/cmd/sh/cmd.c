@@ -35,7 +35,7 @@ TREPTR	makefork(flgs, i)
 	INT		flgs;
 	TREPTR		i;
 {
-	REG FORKPTR	t;
+	register FORKPTR	t;
 
 	t=(FORKPTR)getstak(FORKTYPE);
 	t->forktyp=flgs|TFORK;
@@ -48,7 +48,7 @@ static TREPTR	makelist(type,i,r)
 	INT		type;
 	TREPTR		i, r;
 {
-	REG LSTPTR	t;
+	register LSTPTR	t;
 
 	if (i==0 || r==0
 	) {	synbad();
@@ -68,10 +68,10 @@ static TREPTR	makelist(type,i,r)
  */
 
 TREPTR	cmd(sym,flg)
-	REG INT		sym;
+	register INT		sym;
 	INT		flg;
 {
-	REG TREPTR	i, e;
+	register TREPTR	i, e;
 
 	i = list(flg);
 
@@ -120,8 +120,8 @@ TREPTR	cmd(sym,flg)
 
 static TREPTR	list(flg)
 {
-	REG TREPTR	r;
-	REG INT		b;
+	register TREPTR	r;
+	register INT		b;
 
 	r = term(flg);
 	while(r && ((b=(wdval==ANDFSYM)) || wdval==ORFSYM)
@@ -138,7 +138,7 @@ static TREPTR	list(flg)
 
 static TREPTR	term(flg)
 {
-	REG TREPTR	t;
+	register TREPTR	t;
 
 	reserv++;
 	if (flg&NLFLG
@@ -153,12 +153,12 @@ static TREPTR	term(flg)
 }
 
 static REGPTR	syncase(esym)
-	REG INT	esym;
+	register INT	esym;
 {
 	skipnl();
 	if (wdval==esym
 	) {	return(0);
-	} else {	REG REGPTR	r=(REGPTR)getstak(REGTYPE);
+	} else {	register REGPTR	r=(REGPTR)getstak(REGTYPE);
 		r->regptr=0;
 		for(;;) {
 		 wdarg->argnxt=r->regptr;
@@ -195,8 +195,8 @@ static REGPTR	syncase(esym)
 static TREPTR	item(flag)
 	BOOL		flag;
 {
-	REG TREPTR	t;
-	REG IOPTR	io;
+	register TREPTR	t;
+	register IOPTR	io;
 
 	if (flag
 	) {	io=inout((IOPTR)0);
@@ -218,7 +218,7 @@ static TREPTR	item(flag)
 
 	    case IFSYM:
 		{
-		   REG INT	w;
+		   register INT	w;
 		   t=(TREPTR)getstak(IFTYPE);
 		   ((IFPTR)t)->iftyp=TIF;
 		   ((IFPTR)t)->iftre=cmd(THSYM,NLFLG);
@@ -264,7 +264,7 @@ static TREPTR	item(flag)
 
 	    case '(':
 		{
-		   REG PARPTR	 p;
+		   register PARPTR	 p;
 		   p=(PARPTR)getstak(PARTYPE);
 		   p->partre=cmd(')',NLFLG);
 		   p->partyp=TPAR;
@@ -279,9 +279,9 @@ static TREPTR	item(flag)
 
 	    case 0:
 		{
-		   REG ARGPTR	argp;
-		   REG ARGPTR	*argtail;
-		   REG ARGPTR	*argset=0;
+		   register ARGPTR	argp;
+		   register ARGPTR	*argtail;
+		   register ARGPTR	*argset=0;
 		   INT		keywd=1;
 		   t=(TREPTR)getstak(COMTYPE);
 		   ((COMPTR)t)->comio=io; /*initial io chain*/
@@ -323,9 +323,9 @@ static int	skipnl()
 static IOPTR	inout(lastio)
 	IOPTR		lastio;
 {
-	REG INT		iof;
-	REG IOPTR	iop;
-	REG CHAR	c;
+	register INT		iof;
+	register IOPTR	iop;
+	register CHAR	c;
 
 	iof=wdnum;
 
@@ -375,7 +375,7 @@ static void	chkword()
 
 static void	chksym(sym)
 {
-	REG INT		x = sym&wdval;
+	register INT		x = sym&wdval;
 	if (((x&SYMFLG) ? x : sym) != wdval
 	) {	synbad();
 	;}
@@ -384,7 +384,7 @@ static void	chksym(sym)
 static void	prsym(sym)
 {
 	if (sym&SYMFLG
-	) {	REG SYSPTR	sp=reserved;
+	) {	register SYSPTR	sp=reserved;
 		while(sp->sysval
 			&& sp->sysval!=sym
 		){sp++ ;}

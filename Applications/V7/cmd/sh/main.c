@@ -35,7 +35,7 @@ main(c, v)
 	INT		c;
 	STRING		v[];
 {
-	REG INT		rflag=ttyflg;
+	register INT		rflag=ttyflg;
 
 	/* initialise storage allocation */
 	stdsigs();
@@ -96,8 +96,8 @@ main(c, v)
 static void	exfile(prof)
 BOOL		prof;
 {
-	REG L_INT	mailtime = 0;
-	REG INT		userid;
+	register L_INT	mailtime = 0;
+	register INT		userid;
 	struct stat	statb;
 
 	/* move input */
@@ -172,7 +172,7 @@ settmp()
 }
 
 Ldup(fa, fb)
-	REG INT		fa, fb;
+	register INT		fa, fb;
 {
 	dup2(fa, fb);
 	close(fa);
