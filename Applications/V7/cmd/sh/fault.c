@@ -80,7 +80,7 @@ oldsigs()
 	    ) { clrsig(i);
 	    ;}
 	    trapflg[i]=0;
-	OD
+	;}
 	trapnote=0;
 }
 
@@ -110,5 +110,5 @@ chktrap()
 			exitval=savxit; exitset();
 		;}
 	   ;}
-	OD
+	;}
 }

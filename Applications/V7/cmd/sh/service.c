@@ -103,7 +103,7 @@ STRING	catpath(path,name)
 	REG STRING	scanp = path,
 			argp = locstak();
 
-	while(*scanp && *scanp!=COLON ){*argp++ = *scanp++ OD
+	while(*scanp && *scanp!=COLON ){*argp++ = *scanp++ ;}
 	if(scanp!=path ) { *argp++='/' ;}
 	if(*scanp==COLON ) { scanp++ ;}
 	path=(*scanp ? scanp : 0); scanp=name;
@@ -179,7 +179,7 @@ postclr()
 	REG INT		*pw = pwlist;
 
 	while(pw <= &pwlist[pwc]
-	){*pw++ = 0 OD
+	){*pw++ = 0 ;}
 	pwc=0;
 }
 
@@ -189,7 +189,7 @@ void	post(pcsid)
 	REG INT		*pw = pwlist;
 
 	if(pcsid
-	) {	while(*pw ){pw++ OD
+	) {	while(*pw ){pw++ ;}
 		if(pwc >= MAXP-1
 		) {	pw--;
 		} else {	pwc++;
@@ -219,7 +219,7 @@ void	await(i)
 		      ) { *pw=0; pwc--;
 		      } else { pw++;
 		      ;}
-		   OD
+		   ;}
 		}
 
 		if(p == -1 ) { continue ;}
@@ -243,7 +243,7 @@ void	await(i)
 		) {	rc = (sig ? sig|SIGFLG : w_hi);
 		;}
 		wx |= w;
-	OD
+	;}
 
 	if(wx && flags&errflg
 	) {	exitsh(rc);
@@ -262,7 +262,7 @@ trim(at)
 
 	if(p=at
 	) {	while(c = *p
-		){*p++=c&STRIP; q |= c OD
+		){*p++=c&STRIP; q |= c ;}
 	;}
 	nosubst=q&QUOTE;
 }
@@ -294,7 +294,7 @@ STRING	*scan(argn)
 		;}
 		/* Lcheat(argp) &= ~ARGMK; */
 		argp = (ARGPTR)(Rcheat(argp)&~ARGMK);
-	OD
+	;}
 	return(comargn);
 }
 
@@ -317,9 +317,9 @@ static void	gsort(from,to)
 		    ) { break;
 		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
 		    ;}
-		OD
-	    OD
-	OD
+		;}
+	    ;}
+	;}
 }
 
 /* Argument list generation */
@@ -336,7 +336,7 @@ INT	getarg(ac)
 		while(argp
 		){	count += split(macro(argp->argval));
 			argp=argp->argnxt;
-		OD
+		;}
 	;}
 	return(count);
 }
@@ -351,7 +351,7 @@ static INT	split(s)
 	for(;;) {
 		sigchk(); argp=locstak()+BYTESPERWORD;
 		while((c = *s++, !any(c,ifsnod.namval) && c)
-		){*argp++ = c OD
+		){*argp++ = c ;}
 		if(argp==staktop+BYTESPERWORD
 		) {	if(c
 			) {	continue;

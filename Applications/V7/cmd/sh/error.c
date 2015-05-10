@@ -82,5 +82,5 @@ rmtemp(base)
 	while(iotemp>base
 	){ unlink(iotemp->ioname);
 	    iotemp=iotemp->iolst;
-	OD
+	;}
 }

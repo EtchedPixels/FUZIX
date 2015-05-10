@@ -32,7 +32,7 @@ INT	any(c,s)
 	){if(d==c
 		) {	return(TRUE);
 		;}
-	OD
+	;}
 	return(FALSE);
 }
 
@@ -43,7 +43,7 @@ INT	cf(s1, s2)
 	){if(*s2++==0
 		) {	return(0);
 		;}
-	OD
+	;}
 	return(*--s1 - *s2);
 }
 

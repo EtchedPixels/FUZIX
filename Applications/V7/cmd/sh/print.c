@@ -77,7 +77,7 @@ itos(n)
 	for (i=10000; i!=1; i/=10
 	){	if ((pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
 		a %= i;
-	OD
+	;}
 	*abuf++=a+'0';
 	*abuf++=0;
 }
@@ -90,7 +90,7 @@ STRING	icp;
 	REG CHAR	c;
 
 	while((c = *cp, digit(c)) && c && r>=0
-	){ r = r*10 + c - '0'; cp++ OD
+	){ r = r*10 + c - '0'; cp++ ;}
 	if (r<0 || cp==icp
 	) {	failed(icp,badnum);
 	} else {	return(r);

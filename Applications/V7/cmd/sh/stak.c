@@ -65,7 +65,7 @@ void	tdystak(x)
 	while(ADR(stakbsy)>ADR(x)
 	){free(stakbsy);
 	   stakbsy = stakbsy->word;
-	OD
+	;}
 	staktop=stakbot=max(ADR(x),ADR(stakbas));
 	rmtemp(x);
 }

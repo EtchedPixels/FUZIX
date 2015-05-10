@@ -45,7 +45,7 @@ syslook(w,syswds)
 	    ) { return(syscan->sysval);
 	    ;}
 	    syscan++;
-	OD
+	;}
 	return(0);
 }
 
@@ -61,7 +61,7 @@ setlist(arg,xp)
 	   ) { prs(s);
 		if (arg ) { blank(); } else { newline(); ;}
 	   ;}
-	OD
+	;}
 }
 
 void	setname(argi, xp)
@@ -72,7 +72,7 @@ void	setname(argi, xp)
 	REG NAMPTR	n;
 
 	if (letter(*argscan)
-	) {	while(alphanum(*argscan) ){argscan++ OD
+	) {	while(alphanum(*argscan) ){argscan++ ;}
 		if (*argscan=='='
 		) {	*argscan = 0;
 			n=lookup(argi);
@@ -147,7 +147,7 @@ INT	readvar(names)
 	while(n
 	){assign(n, nullstr);
 	   if (*names ) { n=lookup(*names++); } else { n=0; ;}
-	OD
+	;}
 
 	if (eof ) { rc=1 ;}
 	lseek(0, (long)(f->fnxt-f->fend), 1);
@@ -193,7 +193,7 @@ NAMPTR		lookup(nam)
 		} else {	prev = &(nscan->namrgt);
 		;}
 		nscan = *prev;
-	OD
+	;}
 
 	/* add name node */
 	nscan=(NAMPTR)alloc(sizeof *nscan);
@@ -214,7 +214,7 @@ static BOOL	chkid(nam)
 		){if (!alphanum(*cp)
 		   ) {	return(FALSE);
 		   ;}
-		OD
+		;}
 	;}
 	return(TRUE);
 }
@@ -291,7 +291,7 @@ void	sh_getenv(void)
 	REG STRING	*e=environ;
 
 	while(*e
-	){setname(*e++, N_ENVNAM) OD
+	){setname(*e++, N_ENVNAM) ;}
 }
 
 static INT	namec;

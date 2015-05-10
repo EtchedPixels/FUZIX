@@ -62,7 +62,7 @@ execute(argt, execflg, pf1, pf2)
 				if( flags&execpr
 				) {	argn=0;	prs(execpmsg);
 					while(com[argn]!=ENDARGS
-					){prs(com[argn++]); blank() OD
+					){prs(com[argn++]); blank() ;}
 					newline();
 				;}
 
@@ -120,7 +120,7 @@ execute(argt, execflg, pf1, pf2)
 							} else {	ignsig(i);
 							;}
 						   ;}
-						OD
+						;}
 					} else {	/* print out current traps */
 						INT		i;
 	
@@ -128,7 +128,7 @@ execute(argt, execflg, pf1, pf2)
 						){if( trapcom[i]
 						   ) {	prn(i); prs(colon); prs(trapcom[i]); newline();
 						   ;}
-						OD
+						;}
 					;}
 					break;
 	
@@ -191,7 +191,7 @@ execute(argt, execflg, pf1, pf2)
 	
 					if( a1
 					) {	while(*++com
-						){attrib(lookup(*com), exitval) OD
+						){attrib(lookup(*com), exitval) ;}
 					} else {	namscan(printflg);
 					;}
 					exitval=0;
@@ -240,7 +240,7 @@ execute(argt, execflg, pf1, pf2)
 			if( execflg && (treeflgs&(FAMP|FPOU))==0
 			) {	parent=0;
 			} else {	while((parent=fork()) == -1
-				){sigchk(); alarm(10); pause() OD
+				){sigchk(); alarm(10); pause() ;}
 			;}
 
 			if( parent
@@ -351,7 +351,7 @@ execute(argt, execflg, pf1, pf2)
 			   ){assign(n,*args++);
 				execute(((FORPTR)t)->fortre,0);
 				if( execbrk<0 ) { execbrk=0 ;}
-			   OD
+			   ;}
 			   if( breakcnt ) { breakcnt-- ;}
 			   execbrk=breakcnt; loopcnt--;
 			   argfor=freeargs(argsav);
@@ -367,7 +367,7 @@ execute(argt, execflg, pf1, pf2)
 			   while(execbrk==0 && (execute(((WHPTR)t)->whtre,0)==0)==(type==TWH)
 			   ){i=execute(((WHPTR)t)->dotre,0);
 			      if( execbrk<0 ) { execbrk=0 ;}
-			   OD
+			   ;}
 			   if( breakcnt ) { breakcnt-- ;}
 			   execbrk=breakcnt; loopcnt--; exitval=i;
 			}
@@ -393,9 +393,9 @@ execute(argt, execflg, pf1, pf2)
 						t=0; break;
 					} else {	rex=((ARGPTR)rex)->argnxt;
 					;}
-				OD
+				;}
 				if( t ) { t=(TREPTR)((REGPTR)t)->regnxt ;}
-			   OD
+			   ;}
 			}
 			break;
 		}

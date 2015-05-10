@@ -54,7 +54,7 @@ INT	expand(as,rflg)
 		} else if ( *cs=='/'
 		) {	slash++;
 		;}
-	   OD
+	   ;}
 	}
 
 	for(;;) {	if (cs==s
@@ -89,7 +89,7 @@ INT	expand(as,rflg)
 			if (gmatch(entry.d_name, cs)
 			) {	addg(s,entry.d_name,rescan); count++;
 			;}
-		OD
+		;}
 		close(dirf);
 
 		if (rescan
@@ -100,7 +100,7 @@ INT	expand(as,rflg)
 				while(rchain
 				){count += expand(rchain->argval,1);
 					rchain=rchain->argnxt;
-				OD
+				;}
 			;}
 			*rescan='/';
 		;}
@@ -110,7 +110,7 @@ INT	expand(as,rflg)
 	   REG CHAR	c;
 	   s=as;
 	   while(c = *s
-	   ){*s++=(c&STRIP?c:'/') OD
+	   ){*s++=(c&STRIP?c:'/') ;}
 	}
 	return(count);
 }
@@ -137,7 +137,7 @@ gmatch(s, p)
 			) {	if (lc<=scc && scc<=(*p++) ) { ok++ ;}
 			} else {	if (scc==(lc=(c&STRIP)) ) { ok++ ;}
 			;}
-		OD
+		;}
 		return(0);
 		}
 
@@ -151,7 +151,7 @@ gmatch(s, p)
 		if (*p==0 ) { return(1) ;}
 		--s;
 		while(*s
-		){ if (gmatch(s++,p) ) { return(1) ;} OD
+		){ if (gmatch(s++,p) ) { return(1) ;} ;}
 		return(0);
 
 	    case 0:
@@ -174,9 +174,9 @@ static void	addg(as1,as2,as3)
 			break;
 		;}
 		*s2++=c;
-	OD
+	;}
 	s1=as2;
-	while(*s2 = *s1++ ){s2++ OD
+	while(*s2 = *s1++ ){s2++ ;}
 	if (s1=as3
 	) {	*s2++='/';
 		while(*s2++ = *++s1 );
