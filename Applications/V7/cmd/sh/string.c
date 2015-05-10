@@ -18,7 +18,7 @@
 STRING	movstr(a,b)
 	REG STRING	a, b;
 {
-	while(*b++ = *a++ DONE
+	while(*b++ = *a++ );
 	return(--b);
 }
 
@@ -52,6 +52,6 @@ INT	length(as)
 {
 	REG STRING s;
 
-	if(s=as ) { while(*s++ DONE ;}
+	if(s=as ) { while(*s++ ); ;}
 	return(s-as);
 }

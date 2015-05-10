@@ -123,10 +123,10 @@ static STRING *	copyargs(from, n)
 clearup()
 {
 	/* force `for' $* lists to go away */
-	while(argfor=freeargs(argfor) DONE
+	while(argfor=freeargs(argfor) );
 
 	/* clean up io files */
-	while(pop() DONE
+	while(pop() );
 }
 
 DOLPTR	useargs()

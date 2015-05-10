@@ -18,7 +18,6 @@
 #define OD	;}
 #define REP	do{
 #define PER	}while(
-#define DONE	);
 
 #define TRUE	(-1)
 #define FALSE	0

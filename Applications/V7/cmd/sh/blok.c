@@ -47,7 +47,7 @@ ADDRESS	alloc(nbytes)
 				;}
 			;}
 			q = p; p = BLK(Rcheat(p->word)&~BUSY);
-		PER	p>q || (c++)==0 DONE
+		PER	p>q || (c++)==0 );
 		addblok(rbytes);
 	}
 }

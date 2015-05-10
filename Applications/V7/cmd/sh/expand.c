@@ -78,7 +78,7 @@ INT	expand(as,rflg)
 		REG STRING rs; rs=cs;
 
 		REP	if (*rs=='/' ) { rescan=rs; *rs=0; gchain=0 ;}
-		PER	*rs++ DONE
+		PER	*rs++ );
 
 		// FIXME: readdir
 		while(read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0
@@ -179,7 +179,7 @@ static void	addg(as1,as2,as3)
 	while(*s2 = *s1++ DO s2++ OD
 	if (s1=as3
 	) {	*s2++='/';
-		while(*s2++ = *++s1 DONE
+		while(*s2++ = *++s1 );
 	;}
 	makearg(endstak(s2));
 }

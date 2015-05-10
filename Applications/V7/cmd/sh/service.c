@@ -91,7 +91,7 @@ INT	pathopen(path, name)
 	REG UFD		f;
 
 	REP path=catpath(path,name);
-	PER (f=open(curstak(),0))<0 && path DONE
+	PER (f=open(curstak(),0))<0 && path );
 	return(f);
 }
 
@@ -107,7 +107,7 @@ STRING	catpath(path,name)
 	if(scanp!=path ) { *argp++='/' ;}
 	if(*scanp==COLON ) { scanp++ ;}
 	path=(*scanp ? scanp : 0); scanp=name;
-	while((*argp++ = *scanp++) DONE
+	while((*argp++ = *scanp++) );
 	return(path);
 }
 
@@ -124,7 +124,7 @@ void	execa(at)
 	) {	xecmsg=notfound; path=getpath(*t);
 		namscan(exname);
 		xecenv=sh_setenv();
-		while(path=execs(path,t) DONE
+		while(path=execs(path,t) );
 		failed(*t,xecmsg);
 	;}
 }
@@ -306,7 +306,7 @@ static void	gsort(from,to)
 
 	if((n=to-from)<=1 ) { return ;}
 
-	for (j=1; j<=n; j*=2 DONE
+	for (j=1; j<=n; j*=2 );
 
 	for (m=2*j-1; m/=2;
 	DO  k=n-m;
