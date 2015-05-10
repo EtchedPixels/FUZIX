@@ -35,7 +35,7 @@ ADDRESS	alloc(nbytes)
 	for (;;) {	INT		c=0;
 		REG BLKPTR	p = blokp;
 		REG BLKPTR	q;
-		REP	if(!busy(p)
+		do {	if(!busy(p)
 			) {	while(!busy(q = p->word) DO p->word = q->word OD
 				if(ADR(q)-ADR(p) >= rbytes
 				) {	blokp = BLK(ADR(p)+rbytes);
@@ -47,7 +47,7 @@ ADDRESS	alloc(nbytes)
 				;}
 			;}
 			q = p; p = BLK(Rcheat(p->word)&~BUSY);
-		PER	p>q || (c++)==0 );
+		} while (	p>q || (c++)==0 );
 		addblok(rbytes);
 	}
 }

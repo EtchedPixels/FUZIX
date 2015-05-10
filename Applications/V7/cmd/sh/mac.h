@@ -16,8 +16,6 @@
 
 #define DO	){
 #define OD	;}
-#define REP	do{
-#define PER	}while(
 
 #define TRUE	(-1)
 #define FALSE	0

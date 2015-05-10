@@ -90,8 +90,8 @@ INT	pathopen(path, name)
 {
 	REG UFD		f;
 
-	REP path=catpath(path,name);
-	PER (f=open(curstak(),0))<0 && path );
+	do { path=catpath(path,name);
+	} while ( (f=open(curstak(),0))<0 && path );
 	return(f);
 }
 

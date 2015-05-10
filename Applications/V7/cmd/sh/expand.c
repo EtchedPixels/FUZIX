@@ -77,8 +77,8 @@ INT	expand(as,rflg)
 	) {	/* check for rescan */
 		REG STRING rs; rs=cs;
 
-		REP	if (*rs=='/' ) { rescan=rs; *rs=0; gchain=0 ;}
-		PER	*rs++ );
+		do {	if (*rs=='/' ) { rescan=rs; *rs=0; gchain=0 ;}
+		} while(*rs++ );
 
 		// FIXME: readdir
 		while(read(dirf, (void *)&entry, 32) == 32 && (trapnote&SIGSET) == 0

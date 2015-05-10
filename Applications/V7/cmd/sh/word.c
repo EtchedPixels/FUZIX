@@ -29,7 +29,7 @@ word()
 
 	while((c=nextc(0), space(c)) );
 	if(!eofmeta(c)
-	) {	REP	if(c==LITERAL
+	) {	do {	if(c==LITERAL
 			) {	*argp++=(DQUOTE);
 				while((c=readc()) && c!=LITERAL
 				DO *argp++=(c|QUOTE); chkpr(c) OD
@@ -43,7 +43,7 @@ word()
 					DO chkpr(c) OD
 				;}
 			;}
-		PER (c=nextc(0), !eofmeta(c)) );
+		} while ( (c=nextc(0), !eofmeta(c)) );
 		argp=endstak(argp);
 		if(!letter(((ARGPTR)argp)->argval[0]) ) { wdset=0 ;}
 
@@ -123,7 +123,7 @@ static readb()
 	REG FILE	f=standin;
 	REG INT		len;
 
-	REP	if(trapnote&SIGSET ) { newline(); sigchk() ;}
-	PER (len=read(f->fdes,f->fbuf,f->fsiz))<0 && trapnote );
+	do {	if(trapnote&SIGSET ) { newline(); sigchk() ;}
+	} while ( (len=read(f->fdes,f->fbuf,f->fsiz))<0 && trapnote );
 	return(len);
 }
