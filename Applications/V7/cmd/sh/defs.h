@@ -308,3 +308,11 @@ extern int builtin(int argn, STRING *cmd);
 /* cmd.c */
 extern TREPTR makefork(int flgs, TREPTR i);
 extern TREPTR cmd(int sym, int flg);
+/* error.c */
+extern void exitset(void);
+extern void sigchk(void);
+extern void failed(const STRING s1, const STRING s2);
+extern void error(const STRING s);
+extern void exitsh(int xno);
+extern void done(void);
+extern void rmtemp(IOPTR base);

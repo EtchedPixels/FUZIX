@@ -14,25 +14,22 @@
 
 /* ========	error handling	======== */
 
-exitset()
+void exitset(void)
 {
 	assnum(&exitadr, exitval);
 }
 
-sigchk()
+void sigchk(void)
 {
 	/* Find out if it is time to go away.
 	 * `trapnote' is set to SIGSET when fault is seen and
 	 * no trap has been set.
 	 */
-	if (trapnote & SIGSET) {
+	if (trapnote & SIGSET)
 		exitsh(SIGFAIL);
-		;
-	}
 }
 
-failed(s1, s2)
-STRING s1, s2;
+void failed(const STRING s1, const STRING s2)
 {
 	prp();
 	prs(s1);
@@ -45,14 +42,12 @@ STRING s1, s2;
 	exitsh(ERROR);
 }
 
-error(s)
-STRING s;
+void error(const STRING s)
 {
 	failed(s, NIL);
 }
 
-exitsh(xno)
-int xno;
+void exitsh(int xno)
 {
 	/* Arrive here from `FATAL' errors
 	 *  a) exit command,
@@ -71,7 +66,7 @@ int xno;
 	}
 }
 
-done()
+void done(void)
 {
 	register STRING t;
 	if (t = trapcom[0]
@@ -84,12 +79,10 @@ done()
 	exit(exitval);
 }
 
-rmtemp(base)
-IOPTR base;
+void rmtemp(IOPTR base)
 {
 	while (iotemp > base) {
 		unlink(iotemp->ioname);
 		iotemp = iotemp->iolst;
-		;
 	}
 }
