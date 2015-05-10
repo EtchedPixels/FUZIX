@@ -46,12 +46,12 @@ main(c, v)
 	sh_getenv();
 
 	/* look for restricted */
-/*	IF c>0 && any('r', *v) ) { rflag=0 ;} */
+/*	if(c>0 && any('r', *v) ) { rflag=0 ;} */
 
 	/* look for options */
 	dolc=options(c,v);
-	IF dolc<2 ) { flags |= stdflg ;}
-	IF (flags&stdflg)==0
+	if(dolc<2 ) { flags |= stdflg ;}
+	if((flags&stdflg)==0
 	) {	dolc--;
 	;}
 	dolv=v+c-dolc; dolc--;
@@ -72,16 +72,16 @@ main(c, v)
 	/* default ifs */
 	dfault(&ifsnod, sptbnl);
 
-	IF (beenhere++)==FALSE
+	if((beenhere++)==FALSE
 	) {	/* ? profile */
-		IF *cmdadr=='-'
+		if(*cmdadr=='-'
 		    && (input=pathopen(nullstr, profile))>=0
 		) {	exfile(rflag); flags &= ~ttyflg;
 		;}
-		IF rflag==0 ) { flags |= rshflg ;}
+		if(rflag==0 ) { flags |= rshflg ;}
 
 		/* open input file if specified */
-		IF comdiv
+		if(comdiv
 		) {	estabf(comdiv); input = -1;
 		} else {	input=((flags&stdflg) ? 0 : chkopen(cmdadr));
 			comdiv--;
@@ -101,13 +101,13 @@ BOOL		prof;
 	struct stat	statb;
 
 	/* move input */
-	IF input>0
+	if(input>0
 	) {	Ldup(input,INIO);
 		input=INIO;
 	;}
 
 	/* move output to safe place */
-	IF output==2
+	if(output==2
 	) {	Ldup(dup(2),OTIO);
 		output=OTIO;
 	;}
@@ -115,7 +115,7 @@ BOOL		prof;
 	userid=getuid();
 
 	/* decide whether interactive */
-	IF (flags&intflg) || ((flags&oneflg)==0 && isatty(output) && isatty(input))
+	if((flags&intflg) || ((flags&oneflg)==0 && isatty(output) && isatty(input))
 	) {	dfault(&ps1nod, (userid?stdprompt:supprompt));
 		dfault(&ps2nod, readmsg);
 		flags |= ttyflg|prompt; ignsig(KILL);
@@ -123,21 +123,21 @@ BOOL		prof;
 		flags |= prof; flags &= ~prompt;
 	;}
 
-	IF setjmp(errshell) && prof
+	if(setjmp(errshell) && prof
 	) {	close(input); return;
 	;}
 
 	/* error return here */
 	loopcnt=breakcnt=peekc=0; iopend=0;
-	IF input>=0 ) { initf(input) ;}
+	if(input>=0 ) { initf(input) ;}
 
 	/* command loop */
 	for(;;) {
 		tdystak(0);
 		stakchk(); /* may reduce sbrk */
 		exitset();
-		IF (flags&prompt) && standin->fstak==0 && !eof
-		) {	IF mailnod.namval
+		if((flags&prompt) && standin->fstak==0 && !eof
+		) {	if(mailnod.namval
 			    && stat(mailnod.namval,&statb)>=0 && statb.st_size
 			    && (statb.st_mtime != mailtime)
 			    && mailtime
@@ -148,7 +148,7 @@ BOOL		prof;
 		;}
 
 		trapnote=0; peekc=readc();
-		IF eof
+		if(eof
 		) {	return;
 		;}
 		alarm(0); flags &= ~waiting;
@@ -160,7 +160,7 @@ BOOL		prof;
 chkpr(eor)
 char eor;
 {
-	IF (flags&prompt) && standin->fstak==0 && eor==NL
+	if((flags&prompt) && standin->fstak==0 && eor==NL
 	) {	prs(ps2nod.namval);
 	;}
 }

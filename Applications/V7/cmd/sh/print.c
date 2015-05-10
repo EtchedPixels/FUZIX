@@ -26,7 +26,7 @@ blank()
 
 prp()
 {
-	IF (flags&prompt)==0 && cmdadr
+	if ((flags&prompt)==0 && cmdadr
 	) {	prs(cmdadr); prs(colon);
 	;}
 }
@@ -36,7 +36,7 @@ void	prs(as)
 {
 	REG STRING	s;
 
-	IF s=as
+	if (s=as
 	) {	write(output,s,length(s)-1);
 	;}
 }
@@ -44,7 +44,7 @@ void	prs(as)
 void	prc(c)
 	CHAR		c;
 {
-	IF c
+	if (c
 	) {	write(output,&c,1);
 	;}
 }
@@ -57,7 +57,7 @@ prt(t)
 	t += 30; t /= 60;
 	sec=t%60; t /= 60;
 	min=t%60;
-	IF hr=t/60
+	if (hr=t/60
 	) {	prn(hr); prc('h');
 	;}
 	prn(min); prc('m');
@@ -75,7 +75,7 @@ itos(n)
 	REG char *abuf; REG POS a, i; INT pr, d;
 	abuf=numbuf; pr=FALSE; a=n;
 	FOR i=10000; i!=1; i/=10
-	DO	IF (pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
+	DO	if ((pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
 		a %= i;
 	OD
 	*abuf++=a+'0';
@@ -91,7 +91,7 @@ STRING	icp;
 
 	WHILE (c = *cp, digit(c)) && c && r>=0
 	DO r = r*10 + c - '0'; cp++ OD
-	IF r<0 || cp==icp
+	if (r<0 || cp==icp
 	) {	failed(icp,badnum);
 	} else {	return(r);
 	;}

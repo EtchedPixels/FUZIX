@@ -39,15 +39,15 @@ void	initio(iop)
 	REG STRING	ion;
 	REG INT		iof, fd;
 
-	IF iop
+	if(iop
 	) {	iof=iop->iofile;
 		ion=mactrim(iop->ioname);
-		IF *ion && (flags&noexec)==0
-		) {	IF iof&IODOC
+		if(*ion && (flags&noexec)==0
+		) {	if(iof&IODOC
 			) {	subst(chkopen(ion),(fd=tmpfil()));
 				close(fd); fd=chkopen(tmpout); unlink(tmpout);
 			} else if ( iof&IOMOV
-			) {	IF eq(minus,ion)
+			) {	if(eq(minus,ion)
 				) {	fd = -1;
 					close(iof&IOUFD);
 				} else if ( (fd=stoi(ion))>=USERIO
@@ -62,7 +62,7 @@ void	initio(iop)
 			) {	lseek(fd, 0L, 2);
 			} else {	fd=create(ion);
 			;}
-			IF fd>=0
+			if(fd>=0
 			) {	sh_rename(fd,iof&IOUFD);
 			;}
 		;}
@@ -74,8 +74,8 @@ STRING	getpath(s)
 	STRING		s;
 {
 	REG STRING	path;
-	IF any('/',s)
-	) {	IF flags&rshflg
+	if(any('/',s)
+	) {	if(flags&rshflg
 		) {	failed(s, restricted);
 		} else {	return(nullstr);
 		;}
@@ -104,8 +104,8 @@ STRING	catpath(path,name)
 			argp = locstak();
 
 	WHILE *scanp && *scanp!=COLON DO *argp++ = *scanp++ OD
-	IF scanp!=path ) { *argp++='/' ;}
-	IF *scanp==COLON ) { scanp++ ;}
+	if(scanp!=path ) { *argp++='/' ;}
+	if(*scanp==COLON ) { scanp++ ;}
 	path=(*scanp ? scanp : 0); scanp=name;
 	WHILE (*argp++ = *scanp++) DONE
 	return(path);
@@ -120,7 +120,7 @@ void	execa(at)
 	REG STRING	path;
 	REG STRING	*t = at;
 
-	IF (flags&noexec)==0
+	if((flags&noexec)==0
 	) {	xecmsg=notfound; path=getpath(*t);
 		namscan(exname);
 		xecenv=sh_setenv();
@@ -145,7 +145,7 @@ static STRING	execs(ap,t)
 		flags=0;
 		comdiv=0; ioset=0;
 		clearup(); /* remove open files and for loop junk */
-		IF input ) { close(input) ;}
+		if(input ) { close(input) ;}
 		close(output); output=2;
 		input=chkopen(p);
 
@@ -188,9 +188,9 @@ void	post(pcsid)
 {
 	REG INT		*pw = pwlist;
 
-	IF pcsid
+	if(pcsid
 	) {	WHILE *pw DO pw++ OD
-		IF pwc >= MAXP-1
+		if(pwc >= MAXP-1
 		) {	pw--;
 		} else {	pwc++;
 		;}
@@ -215,37 +215,37 @@ void	await(i)
 		   REG INT	*pw=pwlist;
 		   p=wait(&w);
 		   WHILE pw <= &pwlist[ipwc]
-		   DO IF *pw==p
+		   DO if(*pw==p
 		      ) { *pw=0; pwc--;
 		      } else { pw++;
 		      ;}
 		   OD
 		}
 
-		IF p == -1 ) { continue ;}
+		if(p == -1 ) { continue ;}
 
 		w_hi = (w>>8)&LOBYTE;
 
-		IF sig = w&0177
-		) {	IF sig == 0177	/* ptrace! return */
+		if(sig = w&0177
+		) {	if(sig == 0177	/* ptrace! return */
 			) {	prs("ptrace: ");
 				sig = w_hi;
 			;}
-			IF sysmsg[sig]
-			) {	IF i!=p || (flags&prompt)==0 ) { prp(); prn(p); blank() ;}
+			if(sysmsg[sig]
+			) {	if(i!=p || (flags&prompt)==0 ) { prp(); prn(p); blank() ;}
 				prs(sysmsg[sig]);
-				IF w&0200 ) { prs(coredump) ;}
+				if(w&0200 ) { prs(coredump) ;}
 			;}
 			newline();
 		;}
 
-		IF rc==0
+		if(rc==0
 		) {	rc = (sig ? sig|SIGFLG : w_hi);
 		;}
 		wx |= w;
 	OD
 
-	IF wx && flags&errflg
+	if(wx && flags&errflg
 	) {	exitsh(rc);
 	;}
 	exitval=rc; exitset();
@@ -260,7 +260,7 @@ trim(at)
 	REG CHAR	c;
 	REG CHAR	q=0;
 
-	IF p=at
+	if(p=at
 	) {	WHILE c = *p
 		DO *p++=c&STRIP; q |= c OD
 	;}
@@ -285,10 +285,10 @@ STRING	*scan(argn)
 
 	WHILE argp
 	DO	*--comargn = argp->argval;
-		IF argp = argp->argnxt
+		if(argp = argp->argnxt
 		) { trim(*comargn);
 		;}
-		IF argp==0 || Rcheat(argp)&ARGMK
+		if(argp==0 || Rcheat(argp)&ARGMK
 		) {	gsort(comargn,comargm);
 			comargm = comargn;
 		;}
@@ -304,7 +304,7 @@ static void	gsort(from,to)
 	INT		k, m, n;
 	REG INT		i, j;
 
-	IF (n=to-from)<=1 ) { return ;}
+	if((n=to-from)<=1 ) { return ;}
 
 	FOR j=1; j<=n; j*=2 DONE
 
@@ -313,7 +313,7 @@ static void	gsort(from,to)
 	    FOR j=0; j<k; j++
 	    DO	FOR i=j; i>=0; i-=m
 		DO  REG STRING *fromi; fromi = &from[i];
-		    IF cf(fromi[m],fromi[0])>0
+		    if(cf(fromi[m],fromi[0])>0
 		    ) { break;
 		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
 		    ;}
@@ -331,7 +331,7 @@ INT	getarg(ac)
 	REG INT		count=0;
 	REG COMPTR	c;
 
-	IF c=ac
+	if(c=ac
 	) {	argp=c->comarg;
 		WHILE argp
 		DO	count += split(macro(argp->argval));
@@ -352,15 +352,15 @@ static INT	split(s)
 		sigchk(); argp=locstak()+BYTESPERWORD;
 		WHILE (c = *s++, !any(c,ifsnod.namval) && c)
 		DO *argp++ = c OD
-		IF argp==staktop+BYTESPERWORD
-		) {	IF c
+		if(argp==staktop+BYTESPERWORD
+		) {	if(c
 			) {	continue;
 			} else {	return(count);
 			;}
 		} else if (c==0
 		) {	s--;
 		;}
-		IF c=expand(((ARGPTR)(argp=endstak(argp)))->argval,0)
+		if(c=expand(((ARGPTR)(argp=endstak(argp)))->argval,0)
 		) {	count += c;
 		} else {	/* assign(&fngnod, argp->argval); */
 			makearg(argp); count++;

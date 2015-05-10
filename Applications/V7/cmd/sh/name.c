@@ -40,7 +40,7 @@ syslook(w,syswds)
 	syscan=syswds; first = *w;
 
 	WHILE s=syscan->sysnam
-	DO  IF first == *s
+	DO  if (first == *s
 		&& eq(w,s)
 	    ) { return(syscan->sysval);
 	    ;}
@@ -57,9 +57,9 @@ setlist(arg,xp)
 	DO REG STRING	s=mactrim(arg->argval);
 	   setname(s, xp);
 	   arg=arg->argnxt;
-	   IF flags&execpr
+	   if (flags&execpr
 	   ) { prs(s);
-		IF arg ) { blank(); } else { newline(); ;}
+		if (arg ) { blank(); } else { newline(); ;}
 	   ;}
 	OD
 }
@@ -71,14 +71,14 @@ void	setname(argi, xp)
 	REG STRING	argscan=argi;
 	REG NAMPTR	n;
 
-	IF letter(*argscan)
+	if (letter(*argscan)
 	) {	WHILE alphanum(*argscan) DO argscan++ OD
-		IF *argscan=='='
+		if (*argscan=='='
 		) {	*argscan = 0;
 			n=lookup(argi);
 			*argscan++ = '=';
 			attrib(n, xp);
-			IF xp&N_ENVNAM
+			if (xp&N_ENVNAM
 			) {	n->namenv = n->namval = argscan;
 			} else {	assign(n, argscan);
 			;}
@@ -99,7 +99,7 @@ dfault(n,v)
 	NAMPTR		n;
 	STRING		v;
 {
-	IF n->namval==0
+	if (n->namval==0
 	) {	assign(n,v)
 	;}
 }
@@ -108,7 +108,7 @@ assign(n,v)
 	NAMPTR		n;
 	STRING		v;
 {
-	IF n->namflg&N_RDONLY
+	if (n->namflg&N_RDONLY
 	) {	failed(n->namid,wtfailed);
 	} else {	replace(&n->namval,v);
 	;}
@@ -125,20 +125,20 @@ INT	readvar(names)
 	STKPTR		rel=(STKPTR)relstak();
 
 	push(f); initf(dup(0));
-	IF lseek(0,0L,1)==-1
+	if (lseek(0,0L,1)==-1
 	) {	f->fsiz=1;
 	;}
 
 	for(;;) {
 		c=nextc(0);
-		IF (*names && any(c, ifsnod.namval)) || eolchar(c)
+		if ((*names && any(c, ifsnod.namval)) || eolchar(c)
 		) {	zerostak();
 			assign(n,absstak(rel)); setstak(rel);
-			IF *names
+			if (*names
 			) {	n=lookup(*names++);
 			} else {	n=0;
 			;}
-			IF eolchar(c)
+			if (eolchar(c)
 			) {	break;
 			;}
 		} else {	pushstak(c);
@@ -146,10 +146,10 @@ INT	readvar(names)
 	}
 	WHILE n
 	DO assign(n, nullstr);
-	   IF *names ) { n=lookup(*names++); } else { n=0; ;}
+	   if (*names ) { n=lookup(*names++); } else { n=0; ;}
 	OD
 
-	IF eof ) { rc=1 ;}
+	if (eof ) { rc=1 ;}
 	lseek(0, (long)(f->fnxt-f->fend), 1);
 	pop();
 	return(rc);
@@ -167,7 +167,7 @@ STRING	make(v)
 {
 	REG STRING	p;
 
-	IF v
+	if (v
 	) {	movstr(v,p=alloc(length(v)));
 		return(p);
 	} else {	return(0);
@@ -182,11 +182,11 @@ NAMPTR		lookup(nam)
 	REG NAMPTR	*prev;
 	INT		LR;
 
-	IF !chkid(nam)
+	if (!chkid(nam)
 	) {	failed(nam,notid);
 	;}
 	WHILE nscan
-	DO	IF (LR=cf(nam,nscan->namid))==0
+	DO	if ((LR=cf(nam,nscan->namid))==0
 		) {	return(nscan);
 		} else if ( LR<0
 		) {	prev = &(nscan->namlft);
@@ -208,10 +208,10 @@ static BOOL	chkid(nam)
 {
 	REG CHAR *	cp=nam;
 
-	IF !letter(*cp)
+	if (!letter(*cp)
 	) {	return(FALSE);
 	} else {	WHILE *++cp
-		DO IF !alphanum(*cp)
+		DO if (!alphanum(*cp)
 		   ) {	return(FALSE);
 		   ;}
 		OD
@@ -230,7 +230,7 @@ namscan(fn)
 static void	namwalk(np)
 	REG NAMPTR	np;
 {
-	IF np
+	if (np
 	) {	namwalk(np->namlft);
 		(*namfn)(np);
 		namwalk(np->namrgt);
@@ -243,7 +243,7 @@ void	printnam(n)
 	REG STRING	s;
 
 	sigchk();
-	IF s=n->namval
+	if (s=n->namval
 	) {	prs(n->namid);
 		prc('='); prs(s);
 		newline();
@@ -264,7 +264,7 @@ static STRING	staknam(n)
 void	exname(n)
 	REG NAMPTR	n;
 {
-	IF n->namflg&N_EXPORT
+	if (n->namflg&N_EXPORT
 	) {	free(n->namenv);
 		n->namenv = make(n->namval);
 	} else {	free(n->namval);
@@ -275,13 +275,13 @@ void	exname(n)
 void	printflg(n)
 	REG NAMPTR		n;
 {
-	IF n->namflg&N_EXPORT
+	if (n->namflg&N_EXPORT
 	) {	prs(export); blank();
 	;}
-	IF n->namflg&N_RDONLY
+	if (n->namflg&N_RDONLY
 	) {	prs(readonly); blank();
 	;}
-	IF n->namflg&(N_EXPORT|N_RDONLY)
+	if (n->namflg&(N_EXPORT|N_RDONLY)
 	) {	prs(n->namid); newline();
 	;}
 }
@@ -307,7 +307,7 @@ static STRING 	*argnam;
 void	pushnam(n)
 	NAMPTR		n;
 {
-	IF n->namval
+	if (n->namval
 	) {	*argnam++ = staknam(n);
 	;}
 }

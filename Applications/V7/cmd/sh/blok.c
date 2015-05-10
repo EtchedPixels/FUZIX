@@ -35,11 +35,11 @@ ADDRESS	alloc(nbytes)
 	for (;;) {	INT		c=0;
 		REG BLKPTR	p = blokp;
 		REG BLKPTR	q;
-		REP	IF !busy(p)
+		REP	if(!busy(p)
 			) {	WHILE !busy(q = p->word) DO p->word = q->word OD
-				IF ADR(q)-ADR(p) >= rbytes
+				if(ADR(q)-ADR(p) >= rbytes
 				) {	blokp = BLK(ADR(p)+rbytes);
-					IF q > blokp
+					if(q > blokp
 					) {	blokp->word = p->word;
 					;}
 					p->word=BLK(Rcheat(blokp)|BUSY);
@@ -55,7 +55,7 @@ ADDRESS	alloc(nbytes)
 void	addblok(reqd)
 	POS		reqd;
 {
-	IF stakbas!=staktop
+	if(stakbas!=staktop
 	) {	REG STKPTR	rndstak;
 		REG BLKPTR	blokstak;
 
@@ -81,7 +81,7 @@ void free(void *ap)
 {
 	BLKPTR p;
 
-	IF (p=ap) && p<bloktop
+	if((p=ap) && p<bloktop
 	) {	Lcheat((--p)->word) &= ~BUSY;
 	;}
 }
@@ -97,17 +97,17 @@ chkbptr(ptr)
 
 	for (;;) {
 	   q = Rcheat(p->word)&~BUSY;
-	   IF p==ptr ) { exf++ ;}
-	   IF q<end || q>bloktop ) { abort(3) ;}
-	   IF p==bloktop ) { break ;}
-	   IF busy(p)
+	   if(p==ptr ) { exf++ ;}
+	   if(q<end || q>bloktop ) { abort(3) ;}
+	   if(p==bloktop ) { break ;}
+	   if(busy(p)
 	   ) { us += q-p;
 	   } else { un += q-p;
 	   ;}
-	   IF p>=q ) { abort(4) ;}
+	   if(p>=q ) { abort(4) ;}
 	   p=q;
 	}
-	IF exf==0 ) { abort(1) ;}
+	if(exf==0 ) { abort(1) ;}
 	prn(un); prc(SP); prn(us); prc(NL);
 }
 #endif

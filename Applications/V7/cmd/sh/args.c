@@ -37,14 +37,14 @@ INT	options(argc,argv)
 	REG STRING	flagc;
 	STRING		flagp;
 
-	IF argc>1 && *argp[1]=='-'
+	if (argc>1 && *argp[1]=='-'
 	) {	cp=argp[1];
 		flags &= ~(execpr|readpr);
 		WHILE *++cp
 		DO	flagc=flagchar;
 
 			WHILE *flagc && *flagc != *cp DO flagc++ OD
-			IF *cp == *flagc
+			if (*cp == *flagc
 			) {	flags |= flagval[flagc-flagchar];
 			} else if (*cp=='c' && argc>2 && comdiv==0
 			) {	comdiv=argp[2];
@@ -59,7 +59,7 @@ INT	options(argc,argv)
 	flagc=flagchar;
 	flagp=flagadr;
 	WHILE *flagc
-	DO IF flags&flagval[flagc-flagchar]
+	DO if (flags&flagval[flagc-flagchar]
 	   ) { *flagp++ = *flagc;
 	   ;}
 	   flagc++;
@@ -92,9 +92,9 @@ freeargs(blk)
 	REG DOLPTR	argr=0;
 	REG DOLPTR	argblk;
 
-	IF argblk=blk
+	if (argblk=blk
 	) {	argr = argblk->dolnxt;
-		IF (--argblk->doluse)==0
+		if ((--argblk->doluse)==0
 		) {	FOR argp=(STRING *)argblk->dolarg; Rcheat(*argp)!=ENDARGS; argp++
 			DO free(*argp) OD
 			free(argblk);
@@ -131,7 +131,7 @@ clearup()
 
 DOLPTR	useargs()
 {
-	IF dolh
+	if (dolh
 	) {	dolh->doluse++;
 		dolh->dolnxt=argfor;
 		return(argfor=dolh);

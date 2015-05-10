@@ -29,7 +29,7 @@ static STRING	copyto(endch)
 	WHILE (c=getch(endch))!=endch && c
 	DO pushstak(c|quote) OD
 	zerostak();
-	IF c!=endch ) { error(badsub) ;}
+	if(c!=endch ) { error(badsub) ;}
 }
 
 static skipto(endch)
@@ -44,12 +44,12 @@ static skipto(endch)
 
 		case DQUOTE:	skipto(DQUOTE); break;
 
-		case DOLLAR:	IF readc()==BRACE
+		case DOLLAR:	if(readc()==BRACE
 				) {	skipto('}');
 				;}
 		}
 	OD
-	IF c!=endch ) { error(badsub) ;}
+	if(c!=endch ) { error(badsub) ;}
 }
 
 static getch(endch)
@@ -59,12 +59,12 @@ static getch(endch)
 
 retry:
 	d=readc();
-	IF !subchar(d)
+	if(!subchar(d)
 	) {	return(d);
 	;}
-	IF d==DOLLAR
+	if(d==DOLLAR
 	) {	REG INT	c;
-		IF (c=readc(), dolchar(c))
+		if((c=readc(), dolchar(c))
 		) {	NAMPTR		n=(NAMPTR)NIL;
 			INT		dolg=0;
 			BOOL		bra;
@@ -72,8 +72,8 @@ retry:
 			CHAR		idb[2];
 			STRING		id=idb;
 
-			IF bra=(c==BRACE) ) { c=readc() ;}
-			IF letter(c)
+			if(bra=(c==BRACE) ) { c=readc() ;}
+			if(letter(c)
 			) {	argp=(STRING)relstak();
 				WHILE alphanum(c) DO pushstak(c); c=readc() OD
 				zerostak();
@@ -82,7 +82,7 @@ retry:
 				peekc = c|MARK;;
 			} else if ( digchar(c)
 			) {	*id=c; idb[1]=0;
-				IF astchar(c)
+				if(astchar(c)
 				) {	dolg=1; c='1';
 				;}
 				c -= '0';
@@ -101,14 +101,14 @@ retry:
 			} else {	goto retry;
 			;}
 			c = readc();
-			IF !defchar(c) && bra
+			if(!defchar(c) && bra
 			) {	error(badsub);
 			;}
 			argp=0;
-			IF bra
-			) {	IF c!='}'
+			if(bra
+			) {	if(c!='}'
 				) {	argp=(STRING)relstak();
-					IF (v==0)^(setchar(c))
+					if((v==0)^(setchar(c))
 					) {	copyto('}');
 					} else {	skipto('}');
 					;}
@@ -116,22 +116,22 @@ retry:
 				;}
 			} else {	peekc = c|MARK; c = 0;
 			;}
-			IF v
-			) {	IF c!='+'
+			if(v
+			) {	if(c!='+'
 				) {	for (;;) {
 				            WHILE c = *v++
 					     DO pushstak(c|quote); OD
-					     IF dolg==0 || (++dolg>dolc)
+					     if(dolg==0 || (++dolg>dolc)
 					     ) { break;
 					     } else { v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
 					     ;}
 					}
 				;}
 			} else if ( argp
-			) {	IF c=='?'
+			) {	if(c=='?'
 				) {	failed(id,*argp?argp:badparam);
 				} else if ( c=='='
-				) {	IF n
+				) {	if(n
 					) {	assign(n,argp);
 					} else {	error(badsub);
 					;}
@@ -167,7 +167,7 @@ STRING	macro(as)
 	quote=0; quoted=0;
 	copyto(0);
 	pop();
-	IF quoted && (stakbot==staktop) ) { pushstak(QUOTE) ;}
+	if(quoted && (stakbot==staktop) ) { pushstak(QUOTE) ;}
 	quote=savq; quoted=savqu;
 	return(fixstak());
 }
@@ -204,7 +204,7 @@ static comsubst()
 	WHILE d=readc() DO pushstak(d|quote) OD
 	await(0);
 	WHILE stakbot!=staktop
-	DO	IF (*--staktop&STRIP)!=NL
+	DO	if((*--staktop&STRIP)!=NL
 		) {	++staktop; break;
 		;}
 	OD
@@ -224,7 +224,7 @@ subst(in,ot)
 	/* DQUOTE used to stop it from quoting */
 	WHILE c=(getch(DQUOTE)&STRIP)
 	DO pushstak(c);
-	   IF --count == 0
+	   if(--count == 0
 	   ) {	flush(ot); count=CPYSIZ;
 	   ;}
 	OD
@@ -235,6 +235,6 @@ subst(in,ot)
 static flush(ot)
 {
 	write(ot,stakbot,staktop-stakbot);
-	IF flags&execpr ) { write(output,stakbot,staktop-stakbot) ;}
+	if(flags&execpr ) { write(output,stakbot,staktop-stakbot) ;}
 	staktop=stakbot;
 }

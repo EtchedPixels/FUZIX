@@ -50,7 +50,7 @@ static TREPTR	makelist(type,i,r)
 {
 	REG LSTPTR	t;
 
-	IF i==0 || r==0
+	if (i==0 || r==0
 	) {	synbad();
 	} else {	t = (LSTPTR)getstak(LSTTYPE);
 		t->lsttyp = type;
@@ -75,8 +75,8 @@ TREPTR	cmd(sym,flg)
 
 	i = list(flg);
 
-	IF wdval==NL
-	) {	IF flg&NLFLG
+	if (wdval==NL
+	) {	if (flg&NLFLG
 		) {	wdval=';'; chkpr(NL);
 		;}
 	} else if ( i==0 && (flg&MTFLG)==0
@@ -86,24 +86,24 @@ TREPTR	cmd(sym,flg)
 	switch(wdval) {
 
 	    case '&':
-		IF i
+		if (i
 		) {	i = makefork(FINT|FPRS|FAMP, i);
 		} else {	synbad();
 		;}
 
 	    case ';':
-		IF e=cmd(sym,flg|MTFLG)
+		if (e=cmd(sym,flg|MTFLG)
 		) {	i=makelist(TLST, i, e);
 		;}
 		break;
 
 	    case EOFSYM:
-		IF sym==NL
+		if (sym==NL
 		) {	break;
 		;}
 
 	    default:
-		IF sym
+		if (sym
 		) {	chksym(sym);
 		;}
 
@@ -141,12 +141,12 @@ static TREPTR	term(flg)
 	REG TREPTR	t;
 
 	reserv++;
-	IF flg&NLFLG
+	if (flg&NLFLG
 	) {	skipnl();
 	} else {	word();
 	;}
 
-	IF (t=item(TRUE)) && (wdval=='^' || wdval=='|')
+	if ((t=item(TRUE)) && (wdval=='^' || wdval=='|')
 	) {	return(makelist(TFIL, makefork(FPOU,t), makefork(FPIN|FPCL,term(NLFLG))));
 	} else {	return(t);
 	;}
@@ -156,23 +156,23 @@ static REGPTR	syncase(esym)
 	REG INT	esym;
 {
 	skipnl();
-	IF wdval==esym
+	if (wdval==esym
 	) {	return(0);
 	} else {	REG REGPTR	r=(REGPTR)getstak(REGTYPE);
 		r->regptr=0;
 		for(;;) {
 		 wdarg->argnxt=r->regptr;
 		     r->regptr=wdarg;
-		     IF wdval || ( word()!=')' && wdval!='|' )
+		     if (wdval || ( word()!=')' && wdval!='|' )
 		     ) { synbad();
 		     ;}
-		     IF wdval=='|'
+		     if (wdval=='|'
 		     ) { word();
 		     } else { break;
 		     ;}
 		}
 		r->regcom=cmd(0,NLFLG|MTFLG);
-		IF wdval==ECSYM
+		if (wdval==ECSYM
 		) {	r->regnxt=syncase(esym);
 		} else {	chksym(esym);
 			r->regnxt=0;
@@ -198,7 +198,7 @@ static TREPTR	item(flag)
 	REG TREPTR	t;
 	REG IOPTR	io;
 
-	IF flag
+	if (flag
 	) {	io=inout((IOPTR)0);
 	} else {	io=0;
 	;}
@@ -224,7 +224,7 @@ static TREPTR	item(flag)
 		   ((IFPTR)t)->iftre=cmd(THSYM,NLFLG);
 		   ((IFPTR)t)->thtre=cmd(ELSYM|FISYM|EFSYM,NLFLG);
 		   ((IFPTR)t)->eltre=((w=wdval)==ELSYM ? cmd(FISYM,NLFLG) : (w==EFSYM ? (wdval=IFSYM, item(0)) : 0));
-		   IF w==EFSYM ) { return(t) ;}
+		   if (w==EFSYM ) { return(t) ;}
 		   break;
 		}
 
@@ -235,10 +235,10 @@ static TREPTR	item(flag)
 		   ((FORPTR)t)->forlst=0;
 		   chkword();
 		   ((FORPTR)t)->fornam=wdarg->argval;
-		   IF skipnl()==INSYM
+		   if (skipnl()==INSYM
 		   ) {	chkword();
 			((FORPTR)t)->forlst=(COMPTR)item(0);
-			IF wdval!=NL && wdval!=';'
+			if (wdval!=NL && wdval!=';'
 			) {	synbad();
 			;}
 			chkpr(wdval); skipnl();
@@ -273,7 +273,7 @@ static TREPTR	item(flag)
 		}
 
 	    default:
-		IF io==0
+		if (io==0
 		) {	return(0);
 		;}
 
@@ -288,13 +288,13 @@ static TREPTR	item(flag)
 		   argtail = &(((COMPTR)t)->comarg);
 		   WHILE wdval==0
 		   DO	argp = wdarg;
-			IF wdset && keywd
+			if (wdset && keywd
 			) {	argp->argnxt=(ARGPTR)argset;
 				argset=(ARGPTR *)argp;
 			} else {	*argtail=argp; argtail = &(argp->argnxt); keywd=flags&keyflg;
 			;}
 			word();
-			IF flag
+			if (flag
 			) { ((COMPTR)t)->comio=inout(((COMPTR)t)->comio);
 			;}
 		   OD
@@ -307,7 +307,7 @@ static TREPTR	item(flag)
 
 	}
 	reserv++; word();
-	IF io=inout(io)
+	if (io=inout(io)
 	) {	t=makefork(0,t); t->treio=io;
 	;}
 	return(t);
@@ -336,14 +336,14 @@ static IOPTR	inout(lastio)
 
 	    case APPSYM:
 	    case '>':
-		IF wdnum==0 ) { iof |= 1 ;}
+		if (wdnum==0 ) { iof |= 1 ;}
 		iof |= IOPUT;
-		IF wdval==APPSYM
+		if (wdval==APPSYM
 		) {	iof |= IOAPP; break;
 		;}
 
 	    case '<':
-		IF (c=nextc(0))=='&'
+		if ((c=nextc(0))=='&'
 		) {	iof |= IOMOV;
 		} else if ( c=='>'
 		) {	iof |= IORDW;
@@ -359,7 +359,7 @@ static IOPTR	inout(lastio)
 	iop=(IOPTR)getstak(IOTYPE);
 	iop->ioname=wdarg->argval;
 	iop->iofile=iof;
-	IF iof&IODOC
+	if (iof&IODOC
 	) { iop->iolst=iopend; iopend=iop;
 	;}
 	word(); iop->ionxt=inout(lastio);
@@ -368,7 +368,7 @@ static IOPTR	inout(lastio)
 
 static void	chkword()
 {
-	IF word()
+	if (word()
 	) {	synbad();
 	;}
 }
@@ -376,14 +376,14 @@ static void	chkword()
 static void	chksym(sym)
 {
 	REG INT		x = sym&wdval;
-	IF ((x&SYMFLG) ? x : sym) != wdval
+	if (((x&SYMFLG) ? x : sym) != wdval
 	) {	synbad();
 	;}
 }
 
 static void	prsym(sym)
 {
-	IF sym&SYMFLG
+	if (sym&SYMFLG
 	) {	REG SYSPTR	sp=reserved;
 		WHILE sp->sysval
 			&& sp->sysval!=sym
@@ -391,8 +391,8 @@ static void	prsym(sym)
 		prs(sp->sysnam);
 	} else if ( sym==EOFSYM
 	) {	prs(endoffile);
-	} else {	IF sym&SYMREP ) { prc(sym) ;}
-		IF sym==NL
+	} else {	if (sym&SYMREP ) { prc(sym) ;}
+		if (sym==NL
 		) {	prs("newline");
 		} else {	prc(sym);
 		;}
@@ -402,12 +402,12 @@ static void	prsym(sym)
 static void	synbad()
 {
 	prp(); prs(synmsg);
-	IF (flags&ttyflg)==0
+	if ((flags&ttyflg)==0
 	) {	prs(atline); prn(standin->flin);
 	;}
 	prs(colon);
 	prc(LQ);
-	IF wdval
+	if (wdval
 	) {	prsym(wdval);
 	} else {	prs(wdarg->argval);
 	;}

@@ -14,8 +14,6 @@
 #define UNION	TYPE union
 #define REG	register
 
-#define IF	if(
-
 #define FOR	for(
 #define WHILE	while(
 #define DO	){

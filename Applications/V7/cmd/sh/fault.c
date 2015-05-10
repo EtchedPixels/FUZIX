@@ -25,12 +25,12 @@ void	fault(sig)
 	REG INT		flag;
 
 	signal(sig,fault);
-	IF sig==MEMF
-	) {	IF setbrk(brkincr) == -1
+	if(sig==MEMF
+	) {	if(setbrk(brkincr) == -1
 		) {	error(nospace);
 		;}
 	} else if (sig==ALARM
-	) {	IF flags&waiting
+	) {	if(flags&waiting
 		) {	done();
 		;}
 	} else {	flag = (trapcom[sig] ? TRAPSET : SIGSET);
@@ -52,7 +52,7 @@ ignsig(n)
 	REG INT		s, i;
 #if 0
     // FIXME: need to do proper SIG_IGN checks/handling
-	IF (s=signal(i=n,1)&01)==0
+	if((s=signal(i=n,1)&01)==0
 	) {	trapflg[i] |= SIGMOD;
 	;}
 #endif	
@@ -63,7 +63,7 @@ getsig(n)
 {
 	REG INT		i;
 
-	IF trapflg[i=n]&SIGMOD || ignsig(i)==0
+	if(trapflg[i=n]&SIGMOD || ignsig(i)==0
 	) {	signal(i,fault);
 	;}
 }
@@ -76,7 +76,7 @@ oldsigs()
 	i=MAXTRAP;
 	WHILE i--
 	DO  t=trapcom[i];
-	    IF t==0 || *t
+	    if(t==0 || *t
 	    ) { clrsig(i);
 	    ;}
 	    trapflg[i]=0;
@@ -88,7 +88,7 @@ clrsig(i)
 	INT		i;
 {
 	free(trapcom[i]); trapcom[i]=0;
-	IF trapflg[i]&SIGMOD
+	if(trapflg[i]&SIGMOD
 	) {	signal(i,fault);
 		trapflg[i] &= ~SIGMOD;
 	;}
@@ -102,9 +102,9 @@ chktrap()
 
 	trapnote &= ~TRAPSET;
 	WHILE --i
-	DO IF trapflg[i]&TRAPSET
+	DO if(trapflg[i]&TRAPSET
 	   ) { trapflg[i] &= ~TRAPSET;
-		IF t=trapcom[i]
+		if(t=trapcom[i]
 		) {	INT	savxit=exitval;
 			execexp(t,0);
 			exitval=savxit; exitset();

@@ -34,9 +34,9 @@ STKPTR	locstak()
 {	/* set up stack for local use
 	 * should be followed by `endstak'
 	 */
-	IF brkend-stakbot<BRKINCR
+	if(brkend-stakbot<BRKINCR
 	) {	setbrk(brkincr);
-		IF brkincr < BRKMAX
+		if(brkincr < BRKMAX
 		) {	brkincr += 256;
 		;}
 	;}
@@ -72,7 +72,7 @@ void	tdystak(x)
 
 stakchk()
 {
-	IF (brkend-stakbas)>BRKINCR+BRKINCR
+	if((brkend-stakbas)>BRKINCR+BRKINCR
 	) {	setbrk(-BRKINCR);
 	;}
 }

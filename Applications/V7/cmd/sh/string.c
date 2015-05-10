@@ -29,7 +29,7 @@ INT	any(c,s)
 	REG CHAR d;
 
 	WHILE d = *s++
-	DO	IF d==c
+	DO	if(d==c
 		) {	return(TRUE);
 		;}
 	OD
@@ -40,7 +40,7 @@ INT	cf(s1, s2)
 	REG STRING s1, s2;
 {
 	WHILE *s1++ == *s2
-	DO	IF *s2++==0
+	DO	if(*s2++==0
 		) {	return(0);
 		;}
 	OD
@@ -52,6 +52,6 @@ INT	length(as)
 {
 	REG STRING s;
 
-	IF s=as ) { WHILE *s++ DONE ;}
+	if(s=as ) { WHILE *s++ DONE ;}
 	return(s-as);
 }

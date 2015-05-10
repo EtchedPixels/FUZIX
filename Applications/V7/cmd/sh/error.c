@@ -25,7 +25,7 @@ sigchk()
 	 * `trapnote' is set to SIGSET when fault is seen and
 	 * no trap has been set.
 	 */
-	IF trapnote&SIGSET
+	if (trapnote&SIGSET
 	) {	exitsh(SIGFAIL);
 	;}
 }
@@ -34,7 +34,7 @@ failed(s1,s2)
 	STRING	s1, s2;
 {
 	prp(); prs(s1); 
-	IF s2
+	if (s2
 	) {	prs(colon); prs(s2);
 	;}
 	newline(); exitsh(ERROR);
@@ -57,7 +57,7 @@ exitsh(xno)
 	 * Action is to return to command level or exit.
 	 */
 	exitval=xno;
-	IF (flags & (forked|errflg|ttyflg)) != ttyflg
+	if ((flags & (forked|errflg|ttyflg)) != ttyflg
 	) {	done();
 	} else {
 		clearup();
@@ -68,7 +68,7 @@ exitsh(xno)
 done()
 {
 	REG STRING	t;
-	IF t=trapcom[0]
+	if (t=trapcom[0]
 	) {	trapcom[0]=0; /*should free but not long */
 		execexp(t,0);
 	;}
