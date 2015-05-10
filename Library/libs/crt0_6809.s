@@ -13,11 +13,7 @@ start:		jmp start2
 		.db 'Z'
 		.db 'X'
 		.db '1'
-
-;
-;	FIXME: we need to automate the load page setting
-;
-		.db 0x80			; page to load at
+		.db __sectionbase_.header__/256	; page to load at
 		.dw 0				; chmem ("0 - 'all'")
 		.dw __sectionlen_.text__	; gives us code size info
 		.dw __sectionlen_.data__	; gives us data size info
