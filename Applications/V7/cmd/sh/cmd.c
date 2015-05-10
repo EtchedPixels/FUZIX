@@ -52,7 +52,7 @@ static TREPTR	makelist(type,i,r)
 
 	IF i==0 || r==0
 	THEN	synbad();
-	ELSE	t = (LSTPTR)getstak(LSTTYPE);
+	} else {	t = (LSTPTR)getstak(LSTTYPE);
 		t->lsttyp = type;
 		t->lstlef = i; t->lstrit = r;
 	FI
@@ -88,7 +88,7 @@ TREPTR	cmd(sym,flg)
 	    case '&':
 		IF i
 		THEN	i = makefork(FINT|FPRS|FAMP, i);
-		ELSE	synbad();
+		} else {	synbad();
 		FI
 
 	    case ';':
@@ -143,12 +143,12 @@ static TREPTR	term(flg)
 	reserv++;
 	IF flg&NLFLG
 	THEN	skipnl();
-	ELSE	word();
+	} else {	word();
 	FI
 
 	IF (t=item(TRUE)) && (wdval=='^' || wdval=='|')
 	THEN	return(makelist(TFIL, makefork(FPOU,t), makefork(FPIN|FPCL,term(NLFLG))));
-	ELSE	return(t);
+	} else {	return(t);
 	FI
 }
 
@@ -158,7 +158,7 @@ static REGPTR	syncase(esym)
 	skipnl();
 	IF wdval==esym
 	THEN	return(0);
-	ELSE	REG REGPTR	r=(REGPTR)getstak(REGTYPE);
+	} else {	REG REGPTR	r=(REGPTR)getstak(REGTYPE);
 		r->regptr=0;
 		for(;;) {
 		 wdarg->argnxt=r->regptr;
@@ -168,13 +168,13 @@ static REGPTR	syncase(esym)
 		     FI
 		     IF wdval=='|'
 		     THEN word();
-		     ELSE break;
+		     } else { break;
 		     FI
 		}
 		r->regcom=cmd(0,NLFLG|MTFLG);
 		IF wdval==ECSYM
 		THEN	r->regnxt=syncase(esym);
-		ELSE	chksym(esym);
+		} else {	chksym(esym);
 			r->regnxt=0;
 		FI
 		return(r);
@@ -200,7 +200,7 @@ static TREPTR	item(flag)
 
 	IF flag
 	THEN	io=inout((IOPTR)0);
-	ELSE	io=0;
+	} else {	io=0;
 	FI
 
 	switch(wdval) {
@@ -291,7 +291,7 @@ static TREPTR	item(flag)
 			IF wdset && keywd
 			THEN	argp->argnxt=(ARGPTR)argset;
 				argset=(ARGPTR *)argp;
-			ELSE	*argtail=argp; argtail = &(argp->argnxt); keywd=flags&keyflg;
+			} else {	*argtail=argp; argtail = &(argp->argnxt); keywd=flags&keyflg;
 			FI
 			word();
 			IF flag
@@ -347,7 +347,7 @@ static IOPTR	inout(lastio)
 		THEN	iof |= IOMOV;
 		} else if ( c=='>'
 		THEN	iof |= IORDW;
-		ELSE	peekc=c|MARK;
+		} else {	peekc=c|MARK;
 		FI
 		break;
 
@@ -391,10 +391,10 @@ static void	prsym(sym)
 		prs(sp->sysnam);
 	} else if ( sym==EOFSYM
 	THEN	prs(endoffile);
-	ELSE	IF sym&SYMREP THEN prc(sym) FI
+	} else {	IF sym&SYMREP THEN prc(sym) FI
 		IF sym==NL
 		THEN	prs("newline");
-		ELSE	prc(sym);
+		} else {	prc(sym);
 		FI
 	FI
 }
@@ -409,7 +409,7 @@ static void	synbad()
 	prc(LQ);
 	IF wdval
 	THEN	prsym(wdval);
-	ELSE	prs(wdarg->argval);
+	} else {	prs(wdarg->argval);
 	FI
 	prc(RQ); prs(unexpected);
 	newline();

@@ -33,7 +33,7 @@ void	fault(sig)
 	THEN	IF flags&waiting
 		THEN	done();
 		FI
-	ELSE	flag = (trapcom[sig] ? TRAPSET : SIGSET);
+	} else {	flag = (trapcom[sig] ? TRAPSET : SIGSET);
 		trapnote |= flag;
 		trapflg[sig] |= flag;
 	FI

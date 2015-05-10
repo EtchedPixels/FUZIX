@@ -59,7 +59,8 @@ exitsh(xno)
 	exitval=xno;
 	IF (flags & (forked|errflg|ttyflg)) != ttyflg
 	THEN	done();
-	ELSE	clearup();
+	} else {
+		clearup();
 		longjmp(errshell,1);
 	FI
 }

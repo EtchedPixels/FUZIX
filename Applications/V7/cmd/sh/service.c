@@ -52,7 +52,7 @@ void	initio(iop)
 					close(iof&IOUFD);
 				} else if ( (fd=stoi(ion))>=USERIO
 				THEN	failed(ion,badfile);
-				ELSE	fd=dup(fd);
+				} else {	fd=dup(fd);
 				FI
 			} else if ( (iof&IOPUT)==0
 			THEN	fd=chkopen(ion);
@@ -60,7 +60,7 @@ void	initio(iop)
 			THEN	failed(ion,restricted);
 			} else if ( iof&IOAPP && (fd=open(ion,1))>=0
 			THEN	lseek(fd, 0L, 2);
-			ELSE	fd=create(ion);
+			} else {	fd=create(ion);
 			FI
 			IF fd>=0
 			THEN	sh_rename(fd,iof&IOUFD);
@@ -77,11 +77,11 @@ STRING	getpath(s)
 	IF any('/',s)
 	THEN	IF flags&rshflg
 		THEN	failed(s, restricted);
-		ELSE	return(nullstr);
+		} else {	return(nullstr);
 		FI
 	} else if ( (path = pathnod.namval)==0
 	THEN	return(defpath);
-	ELSE	return(cpystak(path));
+	} else {	return(cpystak(path));
 	FI
 }
 
@@ -192,7 +192,7 @@ void	post(pcsid)
 	THEN	WHILE *pw DO pw++ OD
 		IF pwc >= MAXP-1
 		THEN	pw--;
-		ELSE	pwc++;
+		} else {	pwc++;
 		FI
 		*pw = pcsid;
 	FI
@@ -217,7 +217,7 @@ void	await(i)
 		   WHILE pw <= &pwlist[ipwc]
 		   DO IF *pw==p
 		      THEN *pw=0; pwc--;
-		      ELSE pw++;
+		      } else { pw++;
 		      FI
 		   OD
 		}
@@ -315,7 +315,7 @@ static void	gsort(from,to)
 		DO  REG STRING *fromi; fromi = &from[i];
 		    IF cf(fromi[m],fromi[0])>0
 		    THEN break;
-		    ELSE STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
+		    } else { STRING s; s=fromi[m]; fromi[m]=fromi[0]; fromi[0]=s;
 		    FI
 		OD
 	    OD
@@ -355,14 +355,14 @@ static INT	split(s)
 		IF argp==staktop+BYTESPERWORD
 		THEN	IF c
 			THEN	continue;
-			ELSE	return(count);
+			} else {	return(count);
 			FI
 		} else if (c==0
 		THEN	s--;
 		FI
 		IF c=expand(((ARGPTR)(argp=endstak(argp)))->argval,0)
 		THEN	count += c;
-		ELSE	/* assign(&fngnod, argp->argval); */
+		} else {	/* assign(&fngnod, argp->argval); */
 			makearg(argp); count++;
 		FI
 		Lcheat(gchain) |= ARGMK;

@@ -93,7 +93,7 @@ STRING	icp;
 	DO r = r*10 + c - '0'; cp++ OD
 	IF r<0 || cp==icp
 	THEN	failed(icp,badnum);
-	ELSE	return(r);
+	} else {	return(r);
 	FI
 }
 

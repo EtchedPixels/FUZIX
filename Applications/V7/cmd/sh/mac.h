@@ -16,7 +16,6 @@
 
 #define IF	if(
 #define THEN	){
-#define ELSE	} else {
 #define FI	;}
 
 #define FOR	for(

@@ -54,7 +54,7 @@ pop()
 	THEN	IF f->fdes>=0 THEN close(f->fdes) FI
 		standin=f->fstak;
 		return(TRUE);
-	ELSE	return(FALSE);
+	} else {	return(FALSE);
 	FI
 }
 
@@ -73,7 +73,7 @@ chkopen(idf)
 
 	IF (rc=open(idf,0))<0
 	THEN	failed(idf,badopen);
-	ELSE	return(rc);
+	} else {	return(rc);
 	FI
 }
 
@@ -94,7 +94,7 @@ create(s)
 
 	IF (rc=creat(s,0666))<0
 	THEN	failed(s,badcreate);
-	ELSE	return(rc);
+	} else {	return(rc);
 	FI
 }
 

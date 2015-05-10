@@ -98,7 +98,7 @@ retry:
 			} else if ( c=='-'
 			THEN	v=flagadr;
 			} else if ( bra THEN error(badsub);
-			ELSE	goto retry;
+			} else {	goto retry;
 			FI
 			c = readc();
 			IF !defchar(c) && bra
@@ -110,11 +110,11 @@ retry:
 				THEN	argp=(STRING)relstak();
 					IF (v==0)^(setchar(c))
 					THEN	copyto('}');
-					ELSE	skipto('}');
+					} else {	skipto('}');
 					FI
 					argp=absstak(argp);
 				FI
-			ELSE	peekc = c|MARK; c = 0;
+			} else {	peekc = c|MARK; c = 0;
 			FI
 			IF v
 			THEN	IF c!='+'
@@ -123,7 +123,7 @@ retry:
 					     DO pushstak(c|quote); OD
 					     IF dolg==0 || (++dolg>dolc)
 					     THEN break;
-					     ELSE v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
+					     } else { v=dolv[dolg]; pushstak(SP|(*id=='*' ? quote : 0));
 					     FI
 					}
 				FI
@@ -133,14 +133,14 @@ retry:
 				} else if ( c=='='
 				THEN	IF n
 					THEN	assign(n,argp);
-					ELSE	error(badsub);
+					} else {	error(badsub);
 					FI
 				FI
 			} else if ( flags&setflg
 			THEN	failed(id,badparam);
 			FI
 			goto retry;
-		ELSE	peekc=c|MARK;
+		} else {	peekc=c|MARK;
 		FI
 	} else if ( d==endch
 	THEN	return(d);

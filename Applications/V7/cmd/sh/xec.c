@@ -74,7 +74,7 @@ execute(argt, execflg, pf1, pf2)
 	
 						IF (f=pathopen(getpath(a1), a1)) < 0
 						THEN failed(a1,notfound);
-						ELSE execexp(0,f);
+						} else { execexp(0,f);
 						FI
 					FI
 					break;
@@ -114,14 +114,14 @@ execute(argt, execflg, pf1, pf2)
 						   THEN	failed(*com,badtrap);
 						   } else if ( clear
 						   THEN	clrsig(i);
-						   ELSE	replace(&trapcom[i],a1);
+						   } else {	replace(&trapcom[i],a1);
 							IF *a1
 							THEN	getsig(i);
-							ELSE	ignsig(i);
+							} else {	ignsig(i);
 							FI
 						   FI
 						OD
-					ELSE	/* print out current traps */
+					} else {	/* print out current traps */
 						INT		i;
 	
 						FOR i=0; i<MAXTRAP; i++
@@ -152,7 +152,7 @@ execute(argt, execflg, pf1, pf2)
 				case SYSSHFT:
 					IF dolc<1
 					THEN	error(badshift);
-					ELSE	dolv++; dolc--;
+					} else {	dolv++; dolc--;
 					FI
 					assnum(&dolladr, dolc);
 					break;
@@ -192,7 +192,7 @@ execute(argt, execflg, pf1, pf2)
 					IF a1
 					THEN	WHILE *++com
 						DO attrib(lookup(*com), exitval) OD
-					ELSE	namscan(printflg);
+					} else {	namscan(printflg);
 					FI
 					exitval=0;
 					break;
@@ -239,7 +239,7 @@ execute(argt, execflg, pf1, pf2)
 		case TFORK:
 			IF execflg && (treeflgs&(FAMP|FPOU))==0
 			THEN	parent=0;
-			ELSE	WHILE (parent=fork()) == -1
+			} else {	WHILE (parent=fork()) == -1
 				DO sigchk(); alarm(10); pause() OD
 			FI
 
@@ -254,14 +254,14 @@ execute(argt, execflg, pf1, pf2)
 				THEN	await(parent);
 				} else if ( (treeflgs&FAMP)==0
 				THEN	post(parent);
-				ELSE	assnum(&pcsadr, parent);
+				} else {	assnum(&pcsadr, parent);
 				FI
 
 				chktrap();
 				break;
 
 
-			ELSE	/* this is the forked branch (child) of execute */
+			} else {	/* this is the forked branch (child) of execute */
 				flags |= forked; iotemp=0;
 				postclr();
 				settmp();
@@ -310,7 +310,7 @@ execute(argt, execflg, pf1, pf2)
 			   INT pv[2]; chkpipe(pv);
 			   IF execute(((LSTPTR)t)->lstlef, 0, pf1, pv)==0
 			   THEN	execute(((LSTPTR)t)->lstrit, execflg, pv, pf2);
-			   ELSE	closepipe(pv);
+			   } else {	closepipe(pv);
 			   FI
 			}
 			break;
@@ -341,7 +341,7 @@ execute(argt, execflg, pf1, pf2)
 			   IF ((FORPTR)t)->forlst==0
 			   THEN    args=dolv+1;
 				   argsav=useargs();
-			   ELSE	   ARGPTR	schain=gchain;
+			   } else {	   ARGPTR	schain=gchain;
 				   gchain=0;
 				   trim((args=scan(getarg(((FORPTR)t)->forlst)))[0]);
 				   gchain=schain;
@@ -376,7 +376,7 @@ execute(argt, execflg, pf1, pf2)
 		case TIF:
 			IF execute(((IFPTR)t)->iftre,0)==0
 			THEN	execute(((IFPTR)t)->thtre,execflg);
-			ELSE	execute(((IFPTR)t)->eltre,execflg);
+			} else {	execute(((IFPTR)t)->eltre,execflg);
 			FI
 			break;
 
@@ -391,7 +391,7 @@ execute(argt, execflg, pf1, pf2)
 					IF gmatch(r,s=macro(rex->argval)) || (trim(s), eq(r,s))
 					THEN	execute(((REGPTR)t)->regcom,0);
 						t=0; break;
-					ELSE	rex=((ARGPTR)rex)->argnxt;
+					} else {	rex=((ARGPTR)rex)->argnxt;
 					FI
 				OD
 				IF t THEN t=(TREPTR)((REGPTR)t)->regnxt FI

@@ -34,7 +34,7 @@ word()
 				WHILE (c=readc()) && c!=LITERAL
 				DO *argp++=(c|QUOTE); chkpr(c) OD
 				*argp++=(DQUOTE);
-			ELSE	*argp++=(c);
+			} else {	*argp++=(c);
 				IF c=='=' THEN wdset |= alpha FI
 				IF !alphanum(c) THEN alpha=0 FI
 				IF qotchar(c)
@@ -50,7 +50,7 @@ word()
 		peekc=c|MARK;
 		IF ((ARGPTR)argp)->argval[1]==0 && (d=((ARGPTR)argp)->argval[0], digit(d)) && (c=='>' || c=='<')
 		THEN	word(); wdnum=d-'0';
-		ELSE	/*check for reserved words*/
+		} else {	/*check for reserved words*/
 			IF reserv==FALSE || (wdval=syslook(((ARGPTR)argp)->argval,reserved))==0
 			THEN	wdarg=(ARGPTR)argp; wdval=0;
 			FI
@@ -59,9 +59,9 @@ word()
 	} else if ( dipchar(c)
 	THEN	IF (d=nextc(0))==c
 		THEN	wdval = c|SYMREP;
-		ELSE	peekc = d|MARK; wdval = c;
+		} else {	peekc = d|MARK; wdval = c;
 		FI
-	ELSE	IF (wdval=c)==EOF
+	} else {	IF (wdval=c)==EOF
 		THEN	wdval=EOFSYM;
 		FI
 		IF iopend && eolchar(c)
@@ -81,7 +81,7 @@ nextc(quote)
 		THEN	chkpr(NL); d=nextc(quote);
 		} else if ( quote && c!=quote && !escchar(c)
 		THEN	peekc=c|MARK;
-		ELSE	d = c|QUOTE;
+		} else {	d = c|QUOTE;
 		FI
 	FI
 	return(d);
@@ -101,9 +101,9 @@ retry:
 		THEN	IF f->feval
 			THEN	IF estabf(*f->feval++)
 				THEN	c=EOF;
-				ELSE	c=SP;
+				} else {	c=SP;
 				FI
-			ELSE	goto retry; /* = c=readc(); */
+			} else {	goto retry; /* = c=readc(); */
 			FI
 		FI
 		IF flags&readpr && standin->fstak==0 THEN prc(c) FI
@@ -112,7 +112,7 @@ retry:
 	THEN	c=EOF; f->feof++;
 	} else if ( (len=readb())<=0
 	THEN	close(f->fdes); f->fdes = -1; c=EOF; f->feof++;
-	ELSE	f->fend = (f->fnxt = f->fbuf)+len;
+	} else {	f->fend = (f->fnxt = f->fbuf)+len;
 		goto retry;
 	FI
 	return(c);

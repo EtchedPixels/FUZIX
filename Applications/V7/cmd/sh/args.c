@@ -49,7 +49,7 @@ INT	options(argc,argv)
 			} else if (*cp=='c' && argc>2 && comdiv==0
 			THEN	comdiv=argp[2];
 				argp[1]=argp[0]; argp++; argc--;
-			ELSE	failed(argv[1],badopt);
+			} else {	failed(argv[1],badopt);
 			FI
 		OD
 		argp[1]=argp[0]; argc--;
@@ -135,6 +135,6 @@ DOLPTR	useargs()
 	THEN	dolh->doluse++;
 		dolh->dolnxt=argfor;
 		return(argfor=dolh);
-	ELSE	return(0);
+	} else {	return(0);
 	FI
 }

@@ -50,7 +50,7 @@ INT	expand(as,rflg)
 	   REG BOOL slash; slash=0;
 	   WHILE !fngchar(*cs)
 	   DO	IF *cs++==0
-		THEN	IF rflg && slash THEN break; ELSE return(0) FI
+		THEN	IF rflg && slash THEN break; } else { return(0) FI
 		} else if ( *cs=='/'
 		THEN	slash++;
 		FI
@@ -135,7 +135,7 @@ gmatch(s, p)
 			THEN	return(ok?gmatch(s,p):0);
 			} else if ( c==MINUS
 			THEN	IF lc<=scc && scc<=(*p++) THEN ok++ FI
-			ELSE	IF scc==(lc=(c&STRIP)) THEN ok++ FI
+			} else {	IF scc==(lc=(c&STRIP)) THEN ok++ FI
 			FI
 		OD
 		return(0);

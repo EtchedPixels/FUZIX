@@ -59,7 +59,7 @@ setlist(arg,xp)
 	   arg=arg->argnxt;
 	   IF flags&execpr
 	   THEN prs(s);
-		IF arg THEN blank(); ELSE newline(); FI
+		IF arg THEN blank(); } else { newline(); FI
 	   FI
 	OD
 }
@@ -80,7 +80,7 @@ void	setname(argi, xp)
 			attrib(n, xp);
 			IF xp&N_ENVNAM
 			THEN	n->namenv = n->namval = argscan;
-			ELSE	assign(n, argscan);
+			} else {	assign(n, argscan);
 			FI
 			return;
 		FI
@@ -110,7 +110,7 @@ assign(n,v)
 {
 	IF n->namflg&N_RDONLY
 	THEN	failed(n->namid,wtfailed);
-	ELSE	replace(&n->namval,v);
+	} else {	replace(&n->namval,v);
 	FI
 }
 
@@ -136,17 +136,17 @@ INT	readvar(names)
 			assign(n,absstak(rel)); setstak(rel);
 			IF *names
 			THEN	n=lookup(*names++);
-			ELSE	n=0;
+			} else {	n=0;
 			FI
 			IF eolchar(c)
 			THEN	break;
 			FI
-		ELSE	pushstak(c);
+		} else {	pushstak(c);
 		FI
 	}
 	WHILE n
 	DO assign(n, nullstr);
-	   IF *names THEN n=lookup(*names++); ELSE n=0; FI
+	   IF *names THEN n=lookup(*names++); } else { n=0; FI
 	OD
 
 	IF eof THEN rc=1 FI
@@ -170,7 +170,7 @@ STRING	make(v)
 	IF v
 	THEN	movstr(v,p=alloc(length(v)));
 		return(p);
-	ELSE	return(0);
+	} else {	return(0);
 	FI
 }
 
@@ -190,7 +190,7 @@ NAMPTR		lookup(nam)
 		THEN	return(nscan);
 		} else if ( LR<0
 		THEN	prev = &(nscan->namlft);
-		ELSE	prev = &(nscan->namrgt);
+		} else {	prev = &(nscan->namrgt);
 		FI
 		nscan = *prev;
 	OD
@@ -210,7 +210,7 @@ static BOOL	chkid(nam)
 
 	IF !letter(*cp)
 	THEN	return(FALSE);
-	ELSE	WHILE *++cp
+	} else {	WHILE *++cp
 		DO IF !alphanum(*cp)
 		   THEN	return(FALSE);
 		   FI
@@ -267,7 +267,7 @@ void	exname(n)
 	IF n->namflg&N_EXPORT
 	THEN	free(n->namenv);
 		n->namenv = make(n->namval);
-	ELSE	free(n->namval);
+	} else {	free(n->namval);
 		n->namval = make(n->namenv);
 	FI
 }

@@ -102,7 +102,7 @@ chkbptr(ptr)
 	   IF p==bloktop THEN break FI
 	   IF busy(p)
 	   THEN us += q-p;
-	   ELSE un += q-p;
+	   } else { un += q-p;
 	   FI
 	   IF p>=q THEN abort(4) FI
 	   p=q;

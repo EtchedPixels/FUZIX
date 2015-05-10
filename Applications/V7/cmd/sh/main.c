@@ -83,10 +83,10 @@ main(c, v)
 		/* open input file if specified */
 		IF comdiv
 		THEN	estabf(comdiv); input = -1;
-		ELSE	input=((flags&stdflg) ? 0 : chkopen(cmdadr));
+		} else {	input=((flags&stdflg) ? 0 : chkopen(cmdadr));
 			comdiv--;
 		FI
-//	ELSE	*execargs=(char *)dolv;	/* for `ps' cmd */
+//	} else {	*execargs=(char *)dolv;	/* for `ps' cmd */
 	FI
 
 	exfile(0);
@@ -119,7 +119,8 @@ BOOL		prof;
 	THEN	dfault(&ps1nod, (userid?stdprompt:supprompt));
 		dfault(&ps2nod, readmsg);
 		flags |= ttyflg|prompt; ignsig(KILL);
-	ELSE	flags |= prof; flags &= ~prompt;
+	} else {
+		flags |= prof; flags &= ~prompt;
 	FI
 
 	IF setjmp(errshell) && prof
