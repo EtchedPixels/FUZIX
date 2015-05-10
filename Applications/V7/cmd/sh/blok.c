@@ -27,8 +27,7 @@ BLKPTR bloktop = BLK(end);	/*top of arena (last blok) */
 
 
 
-ADDRESS alloc(nbytes)
-POS nbytes;
+ADDRESS alloc(POS nbytes)
 {
 	register POS rbytes = round(nbytes + BYTESPERWORD, BYTESPERWORD);
 
@@ -61,8 +60,7 @@ POS nbytes;
 	}
 }
 
-void addblok(reqd)
-POS reqd;
+void addblok(POS reqd)
 {
 	if (stakbas != staktop) {
 		register STKPTR rndstak;
@@ -100,8 +98,7 @@ void free(void *ap)
 }
 
 #ifdef DEBUG
-chkbptr(ptr)
-BLKPTR ptr;
+chkbptr(BLKPTR ptr)
 {
 	int exf = 0;
 	register BLKPTR p = end;

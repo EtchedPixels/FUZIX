@@ -292,8 +292,14 @@ extern address end[];
 
 #include	"ctype.h"
 
+/* args.c */
 extern int options(int argc, STRING *argv);
 extern void setargs(STRING argi[]);
 extern DOLPTR freeargs(DOLPTR blk);
 extern void clearup(void);
 extern DOLPTR useargs(void);
+/* blok.c */
+ADDRESS alloc(POS nbytes);
+extern void addblok(POS reqd);
+extern void free(void *ap);	/* FIXME: rename sh_free */
+extern chkbptr(BLKPTR ptr);
