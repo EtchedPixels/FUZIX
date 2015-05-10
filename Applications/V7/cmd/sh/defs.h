@@ -291,3 +291,9 @@ extern const char badfile[];
 extern address end[];
 
 #include	"ctype.h"
+
+extern int options(int argc, STRING *argv);
+extern void setargs(STRING argi[]);
+extern DOLPTR freeargs(DOLPTR blk);
+extern void clearup(void);
+extern DOLPTR useargs(void);

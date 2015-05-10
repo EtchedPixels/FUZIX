@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include	"defs.h"
 
-static STRING *copyargs();
+static STRING *copyargs(STRING from[], int n);
 static DOLPTR dolh;
 
 CHAR flagadr[10];
@@ -30,9 +30,7 @@ int flagval[] = {
 /* ========	option handling	======== */
 
 
-int options(argc, argv)
-STRING *argv;
-int argc;
+int options(int argc, STRING *argv)
 {
 	register STRING cp;
 	register STRING *argp = argv;
@@ -83,8 +81,7 @@ int argc;
 	return (argc);
 }
 
-void setargs(argi)
-STRING argi[];
+void setargs(STRING argi[])
 {
 	/* count args */
 	register STRING *argp = argi;
@@ -100,8 +97,7 @@ STRING argi[];
 	assnum(&dolladr, dolc = argn - 1);
 }
 
-DOLPTR freeargs(blk)
-DOLPTR blk;
+DOLPTR freeargs(DOLPTR blk)
 {
 	register STRING *argp;
 	register DOLPTR argr = 0;
@@ -121,8 +117,7 @@ DOLPTR blk;
 	return (argr);
 }
 
-static STRING *copyargs(from, n)
-STRING from[];
+static STRING *copyargs(STRING from[], int n)
 {
 	register STRING *np =
 	    (STRING *) alloc(sizeof(STRING *) * n + 3 * BYTESPERWORD);
@@ -140,7 +135,7 @@ STRING from[];
 	return (pp);
 }
 
-clearup()
+void clearup(void)
 {
 	/* force `for' $* lists to go away */
 	while (argfor = freeargs(argfor));
@@ -149,7 +144,7 @@ clearup()
 	while (pop());
 }
 
-DOLPTR useargs()
+DOLPTR useargs(void)
 {
 	if (dolh) {
 		dolh->doluse++;
