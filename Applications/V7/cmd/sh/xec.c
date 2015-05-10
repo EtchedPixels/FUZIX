@@ -124,7 +124,7 @@ execute(argt, execflg, pf1, pf2)
 					} else {	/* print out current traps */
 						INT		i;
 	
-						FOR i=0; i<MAXTRAP; i++
+						for (i=0; i<MAXTRAP; i++
 						DO if( trapcom[i]
 						   ) {	prn(i); prs(colon); prs(trapcom[i]); newline();
 						   ;}

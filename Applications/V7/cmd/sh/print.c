@@ -74,7 +74,7 @@ itos(n)
 {
 	REG char *abuf; REG POS a, i; INT pr, d;
 	abuf=numbuf; pr=FALSE; a=n;
-	FOR i=10000; i!=1; i/=10
+	for (i=10000; i!=1; i/=10
 	DO	if ((pr |= (d=a/i)) ) { *abuf++=d+'0' ;}
 		a %= i;
 	OD

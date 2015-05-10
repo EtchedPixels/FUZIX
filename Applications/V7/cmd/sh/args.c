@@ -95,7 +95,7 @@ freeargs(blk)
 	if (argblk=blk
 	) {	argr = argblk->dolnxt;
 		if ((--argblk->doluse)==0
-		) {	FOR argp=(STRING *)argblk->dolarg; Rcheat(*argp)!=ENDARGS; argp++
+		) {	for ( argp=(STRING *)argblk->dolarg; Rcheat(*argp)!=ENDARGS; argp++
 			DO free(*argp) OD
 			free(argblk);
 		;}

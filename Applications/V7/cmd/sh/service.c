@@ -306,12 +306,12 @@ static void	gsort(from,to)
 
 	if((n=to-from)<=1 ) { return ;}
 
-	FOR j=1; j<=n; j*=2 DONE
+	for (j=1; j<=n; j*=2 DONE
 
-	FOR m=2*j-1; m/=2;
+	for (m=2*j-1; m/=2;
 	DO  k=n-m;
-	    FOR j=0; j<k; j++
-	    DO	FOR i=j; i>=0; i-=m
+	    for (j=0; j<k; j++
+	    DO	for (i=j; i>=0; i-=m
 		DO  REG STRING *fromi; fromi = &from[i];
 		    if(cf(fromi[m],fromi[0])>0
 		    ) { break;
