@@ -159,7 +159,7 @@ uint8_t keyboard[8][8] = {
 	{'x', 'y', 'z', '[', '\\', ']', '^', '_' },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{13, 12, 3, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
 	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
 };
 
@@ -170,7 +170,7 @@ uint8_t shiftkeyboard[8][8] = {
 	{'X', 'Y', 'Z', '{', '|', '}', '^', '_' },
 	{'0', '!', '"', '#', '$', '%', '&', '\'' },
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
-	{13, 12, 3, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
 	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
 };
 
@@ -193,9 +193,7 @@ static void keydecode(void)
         /* The keyboard lacks some rather important symbols so remap them
            with control */
 	if (keymap[7] & 4) {	/* control */
-		if (c > 31 && c < 127)
-			c &= 31;
-                if (keymap[7] & 3) {
+                if (keymap[7] & 3) {	/* shift */
                     if (c == '(')
                         c = '{';
                     if (c == ')')
@@ -209,10 +207,12 @@ static void keydecode(void)
                 } else {
                     if (c == '(')
                         c = '[';
-                    if (c == ')')
+                    else if (c == ')')
                         c = ']';
-                    if (c == '-')
+                    else if (c == '-')
                         c = '|';
+                    else if (c > 31 && c < 127)
+			c &= 31;
                 }
 	}
 	if (capslock && c >= 'a' && c <= 'z')
