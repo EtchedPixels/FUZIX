@@ -20,9 +20,6 @@
 #define ELIF	} else if (
 #define FI	;}
 
-#define SWITCH	switch(
-#define IN	){
-#define ENDSW	}
 #define FOR	for(
 #define WHILE	while(
 #define DO	){

@@ -83,7 +83,7 @@ TREPTR	cmd(sym,flg)
 	THEN	synbad();
 	FI
 
-	SWITCH wdval IN
+	switch(wdval) {
 
 	    case '&':
 		IF i
@@ -107,7 +107,7 @@ TREPTR	cmd(sym,flg)
 		THEN	chksym(sym);
 		FI
 
-	ENDSW
+	}
 	return(i);
 }
 
@@ -203,7 +203,7 @@ static TREPTR	item(flag)
 	ELSE	io=0;
 	FI
 
-	SWITCH wdval IN
+	switch(wdval) {
 
 	    case CASYM:
 		{
@@ -305,7 +305,7 @@ static TREPTR	item(flag)
 		   return(t);
 		}
 
-	ENDSW
+	}
 	reserv++; word();
 	IF io=inout(io)
 	THEN	t=makefork(0,t); t->treio=io;
@@ -329,7 +329,7 @@ static IOPTR	inout(lastio)
 
 	iof=wdnum;
 
-	SWITCH wdval IN
+	switch(wdval) {
 
 	    case DOCSYM:
 		iof |= IODOC; break;
@@ -353,7 +353,7 @@ static IOPTR	inout(lastio)
 
 	    default:
 		return(lastio);
-	ENDSW
+	}
 
 	chkword();
 	iop=(IOPTR)getstak(IOTYPE);

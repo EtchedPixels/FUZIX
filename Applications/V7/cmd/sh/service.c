@@ -140,8 +140,7 @@ static STRING	execs(ap,t)
 
 	sigchk();
 	execve(p, &t[0] ,xecenv);
-	SWITCH errno IN
-
+	switch(errno) {
 	    case ENOEXEC:
 		flags=0;
 		comdiv=0; ioset=0;
@@ -167,7 +166,7 @@ static STRING	execs(ap,t)
 		xecmsg=badexec;
 	    case ENOENT:
 		return(prefix);
-	ENDSW
+	}
 }
 
 /* for processes to be waited for */

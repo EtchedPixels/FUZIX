@@ -40,7 +40,7 @@ execute(argt, execflg, pf1, pf2)
 		treeflgs = t->tretyp; type = treeflgs&COMMSK;
 		oldexit=exitval; exitval=0;
 
-		SWITCH type IN
+		switch(type) {
 
 		case TCOM:
 			{
@@ -66,7 +66,7 @@ execute(argt, execflg, pf1, pf2)
 					newline();
 				FI
 
-				SWITCH internal IN
+				switch(internal) {
 
 				case SYSDOT:
 					IF a1
@@ -223,8 +223,8 @@ execute(argt, execflg, pf1, pf2)
 	
 				default:
 					internal=builtin(argn,com);
-	
-				ENDSW
+
+				}
 
 				IF internal
 				THEN	IF io THEN error(illegal) FI
@@ -398,7 +398,7 @@ execute(argt, execflg, pf1, pf2)
 			   OD
 			}
 			break;
-		ENDSW
+		}
 		exitset();
 	FI
 

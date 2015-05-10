@@ -126,8 +126,7 @@ gmatch(s, p)
 		THEN	scc=0200;
 		FI
 	FI
-	SWITCH c = *p++ IN
-
+	switch(c = *p++) {
 	    case '[':
 		{BOOL ok; INT lc;
 		ok=0; lc=077777;
@@ -157,7 +156,7 @@ gmatch(s, p)
 
 	    case 0:
 		return(scc==0);
-	ENDSW
+	}
 }
 
 static void	addg(as1,as2,as3)

@@ -38,7 +38,7 @@ static skipto(endch)
 	/* skip chars up to } */
 	REG CHAR	c;
 	WHILE (c=readc()) && c!=endch
-	DO	SWITCH c IN
+	DO	switch(c) {
 
 		case SQUOTE:	skipto(SQUOTE); break;
 
@@ -47,7 +47,7 @@ static skipto(endch)
 		case DOLLAR:	IF readc()==BRACE
 				THEN	skipto('}');
 				FI
-		ENDSW
+		}
 	OD
 	IF c!=endch THEN error(badsub) FI
 }
