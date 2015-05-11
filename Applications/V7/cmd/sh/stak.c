@@ -43,7 +43,6 @@ STKPTR locstak(void)
 
 STKPTR savstak(void)
 {
-        /* FIXME: check assert doesn't suck in stdio */
 	assert(staktop == stakbot);
 	return stakbot;
 }
@@ -65,7 +64,7 @@ void tdystak(register char *x)
 		stakbsy = stakbsy->word;
 	}
 	staktop = stakbot = max(ADR(x), ADR(stakbas));
-	rmtemp((void *)x);	/* FIXME */
+	rmtemp((IOPTR)x);
 }
 
 void stakchk(void)
