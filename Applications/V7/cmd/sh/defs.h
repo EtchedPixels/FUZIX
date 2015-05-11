@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+#include <sys/times.h>
 /*
  *	UNIX shell
  */
@@ -345,7 +345,7 @@ extern void blank(void);
 extern void prp(void);
 extern void prs(const char *as);
 extern void prc(char c);
-extern void prt(L_INT t);
+extern void prt(clock_t t);
 extern void prn(int n);
 extern void itos(int n);
 extern int stoi(const char *icp);
