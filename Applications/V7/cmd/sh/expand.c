@@ -37,8 +37,9 @@ int expand(char *as, int rflg)
 	STRING rescan = 0;
 	register char *s, *cs;
 	ARGPTR schain = gchain;
-	struct dirent entry;
 	STATBUF statb;
+	/* Use the internal API to avoid sucking in readdir and thus malloc */
+	struct __dirent entry;
 
 	if (trapnote & SIGSET)
 		return (0);
@@ -96,8 +97,9 @@ int expand(char *as, int rflg)
 			}
 		} while (*rs++);
 
-		// FIXME: readdir
-		while (read(dirf, (void *) &entry, 32) == 32 && (trapnote & SIGSET) == 0) {
+		/* We don't want to use opendir as it uses calloc and sucks in malloc so we get
+		   down and dirty */
+		while (_getdirent(dirf, (void *) &entry, 32) == 32 && (trapnote & SIGSET) == 0) {
 			if (entry.d_ino == 0 || (*entry.d_name == '.' && *cs != '.'))
 				continue;
 			if (gmatch(entry.d_name, cs)) {
