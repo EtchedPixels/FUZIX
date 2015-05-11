@@ -10,7 +10,6 @@
  */
 
 #include	"defs.h"
-#include	"dup.h"
 
 
 /* ========	input output and file copying ======== */
