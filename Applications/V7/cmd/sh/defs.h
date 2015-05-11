@@ -1,9 +1,10 @@
 /* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
 /* Changes: Copyright (c) 1999 Robert Nordier. All rights reserved. */
 
-//#include <stdint.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 /*
  *	UNIX shell
@@ -84,26 +85,8 @@
 
 /* result type declarations */
 extern void *setbrk(intptr_t);
-extern void sh_getenv(void);
 extern char **sh_setenv(void);
 
-
-#define alloc malloc
-ADDRESS alloc();
-void addblok();
-STRING make();
-STRING movstr();
-TREPTR cmd();
-TREPTR makefork();
-NAMPTR lookup();
-void setname();
-DOLPTR useargs();
-DOLPTR freeargs();
-REAL expr();
-STRING macro();
-void exname();
-void printnam();
-void printflg();
 
 #define attrib(n,f)	(n->namflg |= f)
 #define round(a,b)	(((int)((ADR(a)+b)-1))&~((b)-1))
@@ -120,7 +103,7 @@ extern IOPTR iopend;		/* documents waiting to be read at NL */
 
 /* substitution */
 extern int dolc;
-extern STRING *dolv;
+extern const char **dolv;
 extern DOLPTR argfor;
 extern ARGPTR gchain;
 
@@ -168,11 +151,11 @@ extern NAMNOD ps2nod;
 
 /* special names */
 extern char flagadr[10];
-extern STRING cmdadr;
-extern STRING exitadr;
-extern STRING dolladr;
-extern STRING pcsadr;
-extern STRING pidadr;
+extern char * cmdadr;
+extern char * exitadr;
+extern char * dolladr;
+extern char * pcsadr;
+extern char * pidadr;
 
 extern const char defpath[];
 
@@ -187,7 +170,7 @@ extern const char ps2name[];
 
 /* transput */
 extern CHAR tmpout[];
-extern STRING tmpnam;
+extern char * tmpnam;
 extern int serial;
 #define		TMPNAM 7
 extern FILE standin;
@@ -235,13 +218,12 @@ extern POS brkincr;
 #define SIGSET	4
 #define SIGMOD	8
 
-void fault();
 extern BOOL trapnote;
-extern STRING trapcom[];
+extern char * trapcom[];
 extern BOOL trapflg[];
 
 /* name tree and words */
-extern STRING *environ;
+extern char * *environ;
 extern CHAR numbuf[];
 extern const char export[];
 extern const char readonly[];
@@ -292,10 +274,10 @@ extern DOLPTR useargs(void);
 /* blok.c */
 ADDRESS alloc(POS nbytes);
 extern void addblok(POS reqd);
-extern void free(void *ap);	/* FIXME: rename sh_free */
-extern chkbptr(BLKPTR ptr);
+extern void sh_free(void *ap);
+extern int chkbptr(BLKPTR ptr);
 /* builtin.c */
-extern int builtin(int argn, STRING *cmd);
+extern int builtin(int argn, char * *cmd);
 /* cmd.c */
 extern TREPTR makefork(int flgs, TREPTR i);
 extern TREPTR cmd(int sym, int flg);
@@ -307,11 +289,56 @@ extern void error(const char *s);
 extern void exitsh(int xno);
 extern void done(void);
 extern void rmtemp(IOPTR base);
+/* expand.c */
+extern int expand(char *as, int rflg);
+extern int gmatch(register char *s, register char *p);
+extern void makearg(register char *args);
+/* fault.c */
+extern void fault(register int sig);
+extern void stdsigs(void);
+extern int ignsig(int n);
+extern void getsig(int n);
+extern void oldsigs(void);
+extern void clrsig(int i);
+extern void chktrap(void);
+/* io.c */
+extern void initf(UFD fd);
+extern int estabf(register const char *s);
+extern void push(FILE af);
+extern int pop(void);
+extern void chkpipe(int *pv);
+extern int chkopen(const char *idf);
+extern void sh_rename(register int f1, register int f2);
+extern int create(const char *s);
+extern int tmpfil(void);
+extern void copy(IOPTR ioparg);
+/* macro.c */
+extern char *macro(char *as);
+extern void subst(int in, int ot);
 /* main.c */
 extern int main(int c, const char *v[]);
 extern void chkpr(char eor);
 extern void settmp(void);
 extern void Ldup(register int fa, register int fb);
+/* name.c */
+extern int syslook(char *w, SYSTAB syswds);
+extern void setlist(register ARGPTR arg, int xp);
+extern void setname(char *argi, int xp);
+extern void replace(char **a, const char *v);
+extern void dfault(NAMPTR n, const char *v);
+extern void assign(NAMPTR n, const char *v);
+extern int readvar(char **names);
+extern void assnum(char **p, int i);
+extern char *make(const char *v);
+extern NAMPTR lookup(register char *nam);
+extern void namscan(void (*fn)(NAMPTR));
+extern void printnam(NAMPTR n);
+extern void exname(register NAMPTR n);
+extern void printflg(register NAMPTR n);
+extern void sh_getenv(void);
+extern void countnam(NAMPTR n);
+extern void pushnam(NAMPTR n);
+extern char **sh_setenv(void);
 /* print.c */
 extern void newline(void);
 extern void blank(void);
@@ -327,7 +354,7 @@ extern void initio(IOPTR iop);
 extern const char *getpath(const char *s);
 extern int pathopen(const char *path, const char *name);
 extern const char *catpath(register const char *path, const char *name);
-extern void execa(const char *at[]);
+extern void execa(const char **at);
 extern void postclr(void);
 extern void post(int pcsid);
 extern void await(int i);
@@ -336,15 +363,22 @@ extern char *mactrim(char *s);
 extern char **scan(int argn);
 extern int getarg(COMPTR ac);
 /* stak.c */
-extern STKPTR getstak(int asize);
-extern STKPTR locstak(void);
-extern STKPTR savstak(void);
-extern STKPTR endstak(register STRING argp);
-extern void tdystak(register STKPTR x);
+extern char * getstak(int asize);
+extern char * locstak(void);
+extern char * savstak(void);
+extern char * endstak(register char * argp);
+extern void tdystak(register char * x);
 extern void stakchk(void);
-extern STKPTR cpystak(STKPTR x);
+extern char *cpystak(const char *x);
 /* string.c */
 extern char *movstr(register const char *a, register char *b);
 extern int any(char c, const char *s);
 extern int cf(register const char *s1, register const char *s2);
 extern int length(const char *as);
+/* word.c */
+extern int word(void);
+extern int nextc(char quote);
+extern int readc(void);
+/* xec.c */
+extern int execute(TREPTR argt, int execflg, int *pf1, int *pf2);
+extern void execexp(char *s, UFD f);

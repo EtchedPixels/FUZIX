@@ -12,229 +12,181 @@
 
 #include	"defs.h"
 
-static BOOL chkid();
-static void namwalk();
+static BOOL chkid(const char *);
+static void namwalk(NAMPTR);
 
 
-NAMNOD ps2nod = { (NAMPTR) NIL, (NAMPTR) NIL, ps2name }, fngnod = {
-(NAMPTR) NIL, (NAMPTR) NIL, fngname}, pathnod = {
-(NAMPTR) NIL, (NAMPTR) NIL, pathname}, ifsnod = {
-(NAMPTR) NIL, (NAMPTR) NIL, ifsname}, ps1nod = {
-&pathnod, &ps2nod, ps1name}, homenod = {
-&fngnod, &ifsnod, homename}, mailnod = {
-&homenod, &ps1nod, mailname};
+NAMNOD ps2nod =  { (NAMPTR) NIL, (NAMPTR) NIL, ps2name  };
+NAMNOD fngnod =  { (NAMPTR) NIL, (NAMPTR) NIL, fngname  };
+NAMNOD pathnod = { (NAMPTR) NIL, (NAMPTR) NIL, pathname };
+NAMNOD ifsnod =  { (NAMPTR) NIL, (NAMPTR) NIL, ifsname  };
+NAMNOD ps1nod =  { &pathnod, &ps2nod, ps1name  };
+NAMNOD homenod = { &fngnod,  &ifsnod, homename };
+NAMNOD mailnod = { &homenod, &ps1nod, mailname };
 
 NAMPTR namep = &mailnod;
 
 
 /* ========	variable and string handling	======== */
 
-syslook(w, syswds)
-STRING w;
-SYSTAB syswds;
+int syslook(char *w, SYSTAB syswds)
 {
-	register CHAR first;
-	register STRING s;
+	register char first;
+	register const char *s;
 	register SYSPTR syscan;
 
 	syscan = syswds;
 	first = *w;
 
 	while (s = syscan->sysnam) {
-		if (first == *s && eq(w, s)
-		    ) {
+		if (first == *s && eq(w, s))
 			return (syscan->sysval);
-			;
-		}
 		syscan++;
-		;
 	}
 	return (0);
 }
 
-setlist(arg, xp)
-register ARGPTR arg;
-int xp;
+void setlist(register ARGPTR arg, int xp)
 {
 	while (arg) {
-		register STRING s = mactrim(arg->argval);
+		register char *s = mactrim(arg->argval);
 		setname(s, xp);
 		arg = arg->argnxt;
 		if (flags & execpr) {
 			prs(s);
-			if (arg) {
+			if (arg)
 				blank();
-			} else {
+			else
 				newline();;
-			}
-			;
-		};
+		}
 	}
 }
 
-void setname(argi, xp)
-STRING argi;
-int xp;
+void setname(char *argi, int xp)
 {
-	register STRING argscan = argi;
+	register char *argscan = argi;
 	register NAMPTR n;
 
-	if (letter(*argscan)
-	    ) {
-		while (alphanum(*argscan)) {
+	if (letter(*argscan)) {
+		while (alphanum(*argscan))
 			argscan++;
-		}
 		if (*argscan == '=') {
 			*argscan = 0;
 			n = lookup(argi);
 			*argscan++ = '=';
 			attrib(n, xp);
-			if (xp & N_ENVNAM) {
+			if (xp & N_ENVNAM)
 				n->namenv = n->namval = argscan;
-			} else {
+			else
 				assign(n, argscan);
-				;
-			}
 			return;
-			;
-		};
+		}
 	}
 	failed(argi, notid);
 }
 
-replace(a, v)
-register STRING *a;
-STRING v;
+void replace(char **a, const char *v)
 {
-	free(*a);
+	sh_free(*a);
 	*a = make(v);
 }
 
-dfault(n, v)
-NAMPTR n;
-STRING v;
+void dfault(NAMPTR n, const char *v)
 {
 	if (n->namval == 0) {
 		assign(n, v);
 	}
 }
 
-assign(n, v)
-NAMPTR n;
-STRING v;
+void assign(NAMPTR n, const char *v)
 {
-	if (n->namflg & N_RDONLY) {
+	if (n->namflg & N_RDONLY)
 		failed(n->namid, wtfailed);
-	} else {
-		replace(&n->namval, v);
-		;
-	}
+	else
+		replace((char **)&n->namval, v);	/* FIXME: check safe */
 }
 
-int readvar(names)
-STRING *names;
+int readvar(char **names)
 {
 	FILEBLK fb;
 	register FILE f = &fb;
-	register CHAR c;
+	register char c;
 	register int rc = 0;
 	NAMPTR n = lookup(*names++);	/* done now to avoid storage mess */
 	STKPTR rel = (STKPTR) relstak();
 
 	push(f);
 	initf(dup(0));
-	if (lseek(0, 0L, 1) == -1) {
+
+	if (lseek(0, 0L, 1) == -1)
 		f->fsiz = 1;
-		;
-	}
 
 	for (;;) {
 		c = nextc(0);
-		if ((*names && any(c, ifsnod.namval)) || eolchar(c)
-		    ) {
+		if ((*names && any(c, ifsnod.namval)) || eolchar(c)) {
 			zerostak();
 			assign(n, absstak(rel));
 			setstak(rel);
-			if (*names) {
+			if (*names)
 				n = lookup(*names++);
-			} else {
+			else
 				n = 0;
-				;
-			}
-			if (eolchar(c)
-			    ) {
+			if (eolchar(c))
 				break;
-				;
-			}
 		} else {
 			pushstak(c);
-			;
 		}
 	}
 	while (n) {
 		assign(n, nullstr);
-		if (*names) {
+		if (*names)
 			n = lookup(*names++);
-		} else {
-			n = 0;;
-		}
-		;
+		else
+			n = 0;
 	}
-
-	if (eof) {
+	if (eof)
 		rc = 1;
-	}
 	lseek(0, (long) (f->fnxt - f->fend), 1);
 	pop();
-	return (rc);
+	return rc;
 }
 
-assnum(p, i)
-STRING *p;
-int i;
+void assnum(char **p, int i)
 {
 	itos(i);
 	replace(p, numbuf);
 }
 
-STRING make(v)
-STRING v;
+char *make(const char *v)
 {
-	register STRING p;
+	register char *p;
 
 	if (v) {
 		movstr(v, p = alloc(length(v)));
-		return (p);
-	} else {
-		return (0);
-		;
-	}
+		return p;
+	} else
+		return 0;
 }
 
 
-NAMPTR lookup(nam)
-register STRING nam;
+NAMPTR lookup(register char *nam)
 {
 	register NAMPTR nscan = namep;
 	register NAMPTR *prev;
 	int LR;
 
-	if (!chkid(nam)
-	    ) {
+	if (!chkid(nam))
 		failed(nam, notid);
-		;
-	}
+
 	while (nscan) {
-		if ((LR = cf(nam, nscan->namid)) == 0) {
+		if ((LR = cf(nam, nscan->namid)) == 0)
 			return (nscan);
-		} else if (LR < 0) {
+		else if (LR < 0)
 			prev = &(nscan->namlft);
-		} else {
+		else
 			prev = &(nscan->namrgt);
-			;
-		}
+
 		nscan = *prev;
-		;
 	}
 
 	/* add name node */
@@ -247,50 +199,41 @@ register STRING nam;
 	return (*prev = nscan);
 }
 
-static BOOL chkid(nam)
-STRING nam;
+static BOOL chkid(const char *nam)
 {
-	register CHAR *cp = nam;
+	register const char *cp = nam;
 
-	if (!letter(*cp)
-	    ) {
+	if (!letter(*cp))
 		return (FALSE);
-	} else {
+	else {
 		while (*++cp) {
-			if (!alphanum(*cp)
-			    ) {
+			if (!alphanum(*cp))
 				return (FALSE);
-				;
-			};
 		}
-		;
 	}
-	return (TRUE);
+	return TRUE;
 }
 
-static void (*namfn) ();
-namscan(fn)
-void (*fn) ();
+static void (*namfn) (NAMPTR);
+
+void namscan(void (*fn) (NAMPTR))
 {
 	namfn = fn;
 	namwalk(namep);
 }
 
-static void namwalk(np)
-register NAMPTR np;
+static void namwalk(NAMPTR np)
 {
 	if (np) {
 		namwalk(np->namlft);
 		(*namfn) (np);
 		namwalk(np->namrgt);
-		;
 	}
 }
 
-void printnam(n)
-NAMPTR n;
+void printnam(NAMPTR n)
 {
-	register STRING s;
+	register const char *s;
 
 	sigchk();
 	if (s = n->namval) {
@@ -298,14 +241,12 @@ NAMPTR n;
 		prc('=');
 		prs(s);
 		newline();
-		;
 	}
 }
 
-static STRING staknam(n)
-register NAMPTR n;
+static char *staknam(register NAMPTR n)
 {
-	register STRING p;
+	register char *p;
 
 	p = movstr(n->namid, staktop);
 	p = movstr("=", p);
@@ -313,37 +254,30 @@ register NAMPTR n;
 	return (getstak(p + 1 - ADR(stakbot)));
 }
 
-void exname(n)
-register NAMPTR n;
+void exname(register NAMPTR n)
 {
 	if (n->namflg & N_EXPORT) {
-		free(n->namenv);
+		sh_free((void *)n->namenv);
 		n->namenv = make(n->namval);
 	} else {
-		free(n->namval);
+		sh_free((void *)n->namval);
 		n->namval = make(n->namenv);
-		;
 	}
 }
 
-void printflg(n)
-register NAMPTR n;
+void printflg(register NAMPTR n)
 {
 	if (n->namflg & N_EXPORT) {
 		prs(export);
 		blank();
-		;
 	}
 	if (n->namflg & N_RDONLY) {
 		prs(readonly);
 		blank();
-		;
 	}
-	if (n->namflg & (N_EXPORT | N_RDONLY)
-	    ) {
+	if (n->namflg & (N_EXPORT | N_RDONLY)) {
 		prs(n->namid);
 		newline();
-		;
 	}
 }
 
@@ -358,21 +292,17 @@ void sh_getenv(void)
 
 static int namec;
 
-void countnam(n)
-NAMPTR n;
+void countnam(NAMPTR n)
 {
 	namec++;
 }
 
-static STRING *argnam;
+static char **argnam;
 
-void pushnam(n)
-NAMPTR n;
+void pushnam(NAMPTR n)
 {
-	if (n->namval) {
+	if (n->namval)
 		*argnam++ = staknam(n);
-		;
-	}
 }
 
 char **sh_setenv(void)
@@ -385,5 +315,5 @@ char **sh_setenv(void)
 	    (STRING *) getstak(namec * BYTESPERWORD + BYTESPERWORD);
 	namscan(pushnam);
 	*argnam++ = 0;
-	return (er);
+	return er;
 }

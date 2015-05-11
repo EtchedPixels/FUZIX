@@ -266,7 +266,7 @@ static TREPTR item(BOOL flag)
 		p = (PARPTR) getstak(PARTYPE);
 		p->partre = cmd(')', NLFLG);
 		p->partyp = TPAR;
-		t = makefork(0, p);
+		t = makefork(0, /*FIXME*/(void *)p);
 		break;
 	}
 

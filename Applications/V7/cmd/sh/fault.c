@@ -19,31 +19,25 @@ BOOL trapflg[MAXTRAP];
 /* ========	fault handling routines	   ======== */
 
 
-void fault(sig)
-register int sig;
+void fault(register int sig)
 {
 	register int flag;
 
 	signal(sig, fault);
 	if (sig == MEMF) {
-		if (setbrk(brkincr) == -1) {
+		if (setbrk(brkincr) == (void *)-1)
 			error(nospace);
-			;
-		}
 	} else if (sig == ALARM) {
-		if (flags & waiting) {
+		if (flags & waiting)
 			done();
-			;
-		}
 	} else {
 		flag = (trapcom[sig] ? TRAPSET : SIGSET);
 		trapnote |= flag;
 		trapflg[sig] |= flag;
-		;
 	}
 }
 
-stdsigs()
+void stdsigs(void)
 {
 	ignsig(QUIT);
 	getsig(INTR);
@@ -51,20 +45,19 @@ stdsigs()
 	getsig(ALARM);
 }
 
-ignsig(n)
+int ignsig(int n)
 {
 	register int s, i;
 #if 0
 	// FIXME: need to do proper SIG_IGN checks/handling
 	if ((s = signal(i = n, 1) & 01) == 0) {
 		trapflg[i] |= SIGMOD;
-		;
 	}
 #endif
 	return (s);
 }
 
-getsig(n)
+void getsig(int n)
 {
 	register int i;
 
@@ -74,37 +67,32 @@ getsig(n)
 	}
 }
 
-oldsigs()
+void oldsigs(void)
 {
 	register int i;
-	register STRING t;
+	register char *t;
 
 	i = MAXTRAP;
 	while (i--) {
 		t = trapcom[i];
-		if (t == 0 || *t) {
+		if (t == 0 || *t)
 			clrsig(i);
-			;
-		}
 		trapflg[i] = 0;
-		;
 	}
 	trapnote = 0;
 }
 
-clrsig(i)
-int i;
+void clrsig(int i)
 {
-	free(trapcom[i]);
+	sh_free(trapcom[i]);
 	trapcom[i] = 0;
 	if (trapflg[i] & SIGMOD) {
 		signal(i, fault);
 		trapflg[i] &= ~SIGMOD;
-		;
 	}
 }
 
-chktrap()
+void chktrap(void)
 {
 	/* check for traps */
 	register int i = MAXTRAP;
@@ -114,14 +102,12 @@ chktrap()
 	while (--i) {
 		if (trapflg[i] & TRAPSET) {
 			trapflg[i] &= ~TRAPSET;
-			if (t = trapcom[i]
-			    ) {
+			if (t = trapcom[i]) {
 				int savxit = exitval;
 				execexp(t, 0);
 				exitval = savxit;
 				exitset();
-				;
-			};
-		};
+			}
+		}
 	}
 }

@@ -26,7 +26,7 @@ STKPTR getstak(int asize)
 	size = round(asize, BYTESPERWORD);
 	oldstak = stakbot;
 	staktop = stakbot += size;
-	return (oldstak);
+	return oldstak;
 }
 
 STKPTR locstak(void)
@@ -35,51 +35,46 @@ STKPTR locstak(void)
 				 */
 	if (brkend - stakbot < BRKINCR) {
 		setbrk(brkincr);
-		if (brkincr < BRKMAX) {
+		if (brkincr < BRKMAX)
 			brkincr += 256;
-			;
-		};
 	}
-	return (stakbot);
+	return stakbot;
 }
 
 STKPTR savstak(void)
 {
         /* FIXME: check assert doesn't suck in stdio */
 	assert(staktop == stakbot);
-	return (stakbot);
+	return stakbot;
 }
 
-STKPTR endstak(register STRING argp)
+STKPTR endstak(register char *argp)
 {				/* tidy up after `locstak' */
-	register STKPTR oldstak;
+	register char *oldstak;
 	*argp++ = 0;
 	oldstak = stakbot;
-	stakbot = staktop = (STKPTR) round(argp, BYTESPERWORD);
-	return (oldstak);
+	stakbot = staktop = (char *) round(argp, BYTESPERWORD);
+	return oldstak;
 }
 
-void tdystak(register STKPTR x)
+void tdystak(register char *x)
 {
 	/* try to bring stack back to x */
-	while (ADR(stakbsy) > ADR(x)
-	    ) {
-		free(stakbsy);
+	while (ADR(stakbsy) > ADR(x)) {
+		sh_free(stakbsy);
 		stakbsy = stakbsy->word;
-		;
 	}
 	staktop = stakbot = max(ADR(x), ADR(stakbas));
-	rmtemp((const char *)x);
+	rmtemp((void *)x);	/* FIXME */
 }
 
 void stakchk(void)
 {
-	if ((brkend - stakbas) > BRKINCR + BRKINCR) {
+	if ((brkend - stakbas) > BRKINCR + BRKINCR)
 		setbrk(-BRKINCR);
-	}
 }
 
-STKPTR cpystak(STKPTR x)
+char *cpystak(const char *x)
 {
-	return (endstak(movstr(x, locstak())));
+	return endstak(movstr(x, locstak()));
 }

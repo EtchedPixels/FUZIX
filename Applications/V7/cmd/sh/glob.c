@@ -1,39 +1,43 @@
+#include "defs.h"
+
 int wdval;
-int iopend;
 int flags;
 int peekc;
-char *comdiv;
+const char *comdiv;
 int breakcnt;
 int loopcnt;
-int execbrk;
+BOOL execbrk;
 int exitval;
 int dolc;
-char **dolv;
+const char **dolv;
 /* FIXME */
-void *argfor;
-void *gchain;
-int iotemp;
-int iopend;
+DOLPTR argfor;
+ARGPTR gchain;
+IOPTR iotemp;
+IOPTR iopend;
 int ioset;
-int output;
 char *pidadr;
 char *dolladr;
 char *pcsadr;
-char *pidadr;
 char *exitadr;
 char *cmdadr;
 int wdset;
-void *wdarg;
-int reserv;
+ARGPTR wdarg;
+BOOL reserv;
 int wdnum;
-int trapnote;
-int end;
+BOOL trapnote;
+address end[1];		/* FIXME */
 int serial;
+BLKPTR stakbsy;
+STKPTR stakbas;
+STKPTR brkend;
+STKPTR staktop;
 
 #include <setjmp.h>
 jmp_buf subshell;
 jmp_buf errshell;
 
+#if 0
 /* FIXME */
 
 int setjmp(jmp_buf bar)
@@ -43,3 +47,4 @@ int setjmp(jmp_buf bar)
 void longjmp(jmp_buf bar, int foo)
 {
 }
+#endif

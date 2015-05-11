@@ -29,7 +29,7 @@ OBJS_HARD = $(SRCS_HARD:.c=.o)
 
 all: sh
 
-$(OBJS): $(SRCS) $(CRT0)
+$(OBJS): $(SRCS)
 
 $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<

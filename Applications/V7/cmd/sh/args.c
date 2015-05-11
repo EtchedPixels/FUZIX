@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include	"defs.h"
 
-static STRING *copyargs(const char *from[], int n);
+static const char **copyargs(const char *from[], int n);
 static DOLPTR dolh;
 
 CHAR flagadr[10];
@@ -30,7 +30,7 @@ int flagval[] = {
 /* ========	option handling	======== */
 
 
-int options(int argc, const char **argv)
+int options(int argc, const char *argv[])
 {
 	register const char *cp;
 	register const char **argp = argv;
@@ -91,40 +91,39 @@ void setargs(const char *argi[])
 
 DOLPTR freeargs(DOLPTR blk)
 {
-	register STRING *argp;
+	register char **argp;
 	register DOLPTR argr = 0;
 	register DOLPTR argblk;
 
 	if (argblk = blk) {
 		argr = argblk->dolnxt;
 		if ((--argblk->doluse) == 0) {
-			for (argp = (STRING *) argblk->dolarg;
+			for (argp = (char **) argblk->dolarg;
 			     Rcheat(*argp) != ENDARGS; argp++) {
-				free(*argp);
+				sh_free(*argp);
 			}
-			free(argblk);
-			;
-		};
+			sh_free(argblk);
+		}
 	}
 	return (argr);
 }
 
-static STRING *copyargs(const char *from[], int n)
+static const char **copyargs(const char *from[], int n)
 {
-	register char **np =
-	    (STRING *) alloc(sizeof(STRING *) * n + 3 * BYTESPERWORD);
+	register const char **np =
+	    (const char **) alloc(sizeof(char *) * n + 3 * BYTESPERWORD);
 	register const char **fp = from;
-	register char **pp = np;
+	register const char **pp = np;
 
 	((DOLPTR) np)->doluse = 1;	/* use count */
-	np = (STRING *) ((DOLPTR) np)->dolarg;
+	np = (const char **) ((DOLPTR) np)->dolarg;
 	dolv = np;
 
 	while (n--) {
 		*np++ = make(*fp++);
 	}
 	*np++ = ENDARGS;
-	return (pp);
+	return pp;
 }
 
 void clearup(void)

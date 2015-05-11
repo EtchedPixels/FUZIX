@@ -90,7 +90,8 @@ SYSTAB reserved = {
 	{0, 0},
 };
 
-STRING sysmsg[] = {
+/* FIXME: align with actual OS! */
+const char *sysmsg[] = {
 	0,
 	"Hangup",
 	0,			/* Interrupt */

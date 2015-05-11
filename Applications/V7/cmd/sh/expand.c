@@ -27,23 +27,21 @@
  *
  */
 
-static void addg();
+static void addg(const char *as1, char *as2, const char *as3);
 
 
-int expand(as, rflg)
-STRING as;
+int expand(char *as, int rflg)
 {
 	int count, dirf;
 	BOOL dir = 0;
 	STRING rescan = 0;
-	register STRING s, cs;
+	register char *s, *cs;
 	ARGPTR schain = gchain;
 	struct dirent entry;
 	STATBUF statb;
 
-	if (trapnote & SIGSET) {
-		return (0);;
-	}
+	if (trapnote & SIGSET)
+		return (0);
 
 	s = cs = as;
 	entry.d_name[DIRSIZ - 1] = 0;	/* to end the string */
@@ -52,8 +50,7 @@ STRING as;
 	{
 		register BOOL slash;
 		slash = 0;
-		while (!fngchar(*cs)
-		    ) {
+		while (!fngchar(*cs)) {
 			if (*cs++ == 0) {
 				if (rflg && slash) {
 					break;
@@ -62,14 +59,13 @@ STRING as;
 				}
 			} else if (*cs == '/') {
 				slash++;
-				;
-			};
+			}
 		}
 	}
 
 	for (;;) {
 		if (cs == s) {
-			s = nullstr;
+			s = (char *)nullstr;
 			break;
 		} else if (*--cs == '/') {
 			*cs = 0;
@@ -77,21 +73,19 @@ STRING as;
 				s = "/";
 			}
 			break;
-			;
 		}
 	}
 	if (stat(s, &statb) >= 0
 	    && (statb.st_mode & S_IFMT) == S_IFDIR
 	    && (dirf = open(s, 0)) > 0) {
 		dir++;
-		;
 	}
 	count = 0;
 	if (*cs == 0) {
 		*cs++ = 0200;
 	}
 	if (dir) {		/* check for rescan */
-		register STRING rs;
+		register char *rs;
 		rs = cs;
 
 		do {
@@ -103,20 +97,13 @@ STRING as;
 		} while (*rs++);
 
 		// FIXME: readdir
-		while (read(dirf, (void *) &entry, 32) == 32
-		       && (trapnote & SIGSET) == 0) {
-			if (entry.d_ino == 0
-			    || (*entry.d_name == '.' && *cs != '.')
-			    ) {
+		while (read(dirf, (void *) &entry, 32) == 32 && (trapnote & SIGSET) == 0) {
+			if (entry.d_ino == 0 || (*entry.d_name == '.' && *cs != '.'))
 				continue;
-				;
-			}
-			if (gmatch(entry.d_name, cs)
-			    ) {
+			if (gmatch(entry.d_name, cs)) {
 				addg(s, entry.d_name, rescan);
 				count++;
-				;
-			};
+			}
 		}
 		close(dirf);
 
@@ -129,36 +116,30 @@ STRING as;
 				while (rchain) {
 					count += expand(rchain->argval, 1);
 					rchain = rchain->argnxt;
-					;
 				}
-				;
 			}
 			*rescan = '/';
-			;
-		};
+		}
 	}
 
 	{
-		register CHAR c;
+		register char c;
 		s = as;
-		while (c = *s) {
+		while (c = *s)
 			*s++ = (c & STRIP ? c : '/');
-		}
 	}
-	return (count);
+	return count;
 }
 
-gmatch(s, p)
-register STRING s, p;
+int gmatch(register char *s, register char *p)
 {
 	register int scc;
-	CHAR c;
+	char c;
 
 	if (scc = *s++) {
 		if ((scc &= STRIP) == 0) {
 			scc = 0200;
-			;
-		};
+		}
 	}
 	switch (c = *p++) {
 	case '[':
@@ -177,42 +158,38 @@ register STRING s, p;
 				} else {
 					if (scc == (lc = (c & STRIP))) {
 						ok++;
-					};
+					}
 				}
-				;
 			}
 			return (0);
 		}
 
 	default:
-		if ((c & STRIP) != scc) {
+		if ((c & STRIP) != scc)
 			return (0);
-		}
 
 	case '?':
 		return (scc ? gmatch(s, p) : 0);
 
 	case '*':
-		if (*p == 0) {
-			return (1);
-		}
+		if (*p == 0)
+			return 1;
 		--s;
 		while (*s) {
-			if (gmatch(s++, p)) {
-				return (1);
-			};
+			if (gmatch(s++, p))
+				return 1;
 		}
-		return (0);
+		return 0;
 
 	case 0:
 		return (scc == 0);
 	}
 }
 
-static void addg(as1, as2, as3)
-STRING as1, as2, as3;
+static void addg(const char *as1, char *as2, const char *as3)
 {
-	register STRING s1, s2;
+	register const char *s1;
+	register char *s2;
 	register int c;
 
 	s2 = locstak() + BYTESPERWORD;
@@ -225,7 +202,6 @@ STRING as1, as2, as3;
 			;
 		}
 		*s2++ = c;
-		;
 	}
 	s1 = as2;
 	while (*s2 = *s1++) {
@@ -234,13 +210,11 @@ STRING as1, as2, as3;
 	if (s1 = as3) {
 		*s2++ = '/';
 		while (*s2++ = *++s1);
-		;
 	}
 	makearg(endstak(s2));
 }
 
-makearg(args)
-register STRING args;
+void makearg(register char *args)
 {
 	((ARGPTR) args)->argnxt = gchain;
 	gchain = (ARGPTR) args;

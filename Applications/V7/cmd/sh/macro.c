@@ -16,30 +16,26 @@
 static CHAR quote;		/* used locally */
 static CHAR quoted;		/* used locally */
 
-static getch();
-static comsubst();
-static flush();
+static int getch(char);
+static void comsubst(void);
+static void flush(int);
 
-
-static STRING copyto(endch)
-register CHAR endch;
+static char *copyto(char endch)
 {
 	register CHAR c;
 
-	while ((c = getch(endch)) != endch && c) {
+	while ((c = getch(endch)) != endch && c)
 		pushstak(c | quote);
-	}
 	zerostak();
-	if (c != endch) {
+
+	if (c != endch)
 		error(badsub);
-	}
 }
 
-static skipto(endch)
-register CHAR endch;
+static int skipto(char endch)
 {
 	/* skip chars up to } */
-	register CHAR c;
+	register char c;
 	while ((c = readc()) && c != endch) {
 		switch (c) {
 
@@ -52,46 +48,39 @@ register CHAR endch;
 			break;
 
 		case DOLLAR:
-			if (readc() == BRACE) {
+			if (readc() == BRACE)
 				skipto('}');
-				;
-			}
 		}
-		;
 	}
 	if (c != endch) {
 		error(badsub);
 	}
 }
 
-static getch(endch)
-CHAR endch;
+static int getch(char endch)
 {
-	register CHAR d;
+	register char d;
 
-      retry:
+retry:
 	d = readc();
-	if (!subchar(d)
-	    ) {
+	if (!subchar(d))
 		return (d);
-		;
-	}
+
 	if (d == DOLLAR) {
 		register int c;
-		if ((c = readc(), dolchar(c))
-		    ) {
+		if ((c = readc(), dolchar(c))) {
 			NAMPTR n = (NAMPTR) NIL;
 			int dolg = 0;
 			BOOL bra;
-			register STRING argp, v;
+			register const char *argp;
+			register const char *v;
 			CHAR idb[2];
-			STRING id = idb;
+			char *id = idb;
 
-			if (bra = (c == BRACE)) {
+			if (bra = (c == BRACE))
 				c = readc();
-			}
-			if (letter(c)
-			    ) {
+
+			if (letter(c)) {
 				argp = (STRING) relstak();
 				while (alphanum(c)) {
 					pushstak(c);
@@ -101,22 +90,19 @@ CHAR endch;
 				n = lookup(absstak(argp));
 				setstak(argp);
 				v = n->namval;
-				id = n->namid;
+				id = (char *)n->namid;
 				peekc = c | MARK;;
-			} else if (digchar(c)
-			    ) {
+			} else if (digchar(c)) {
 				*id = c;
 				idb[1] = 0;
-				if (astchar(c)
-				    ) {
+				if (astchar(c)) {
 					dolg = 1;
 					c = '1';
-					;
 				}
 				c -= '0';
-				v = ((c == 0) ? cmdadr : (c <=
-							  dolc) ? dolv[c]
-				     : (STRING) (dolg = 0));
+				v = ((c == 0) ? (const char *)cmdadr :
+				         (c <= dolc) ? dolv[c]
+					 : (dolg = 0, NULL));
 			} else if (c == '$') {
 				v = pidadr;
 			} else if (c == '!') {
@@ -131,76 +117,57 @@ CHAR endch;
 				error(badsub);
 			} else {
 				goto retry;
-				;
 			}
 			c = readc();
-			if (!defchar(c) && bra) {
+
+			if (!defchar(c) && bra)
 				error(badsub);
-				;
-			}
+
 			argp = 0;
 			if (bra) {
 				if (c != '}') {
 					argp = (STRING) relstak();
-					if ((v == 0) ^ (setchar(c))
-					    ) {
+					if ((v == 0) ^ (setchar(c)))
 						copyto('}');
-					} else {
+					else
 						skipto('}');
-						;
-					}
+
 					argp = absstak(argp);
-					;
 				}
 			} else {
 				peekc = c | MARK;
 				c = 0;
-				;
 			}
 			if (v) {
 				if (c != '+') {
 					for (;;) {
-						while (c = *v++) {
-							pushstak(c |
-								 quote);;
-						}
-						if (dolg == 0
-						    || (++dolg > dolc)
-						    ) {
+						while (c = *v++)
+							pushstak(c | quote);
+
+						if (dolg == 0 || (++dolg > dolc))
 							break;
-						} else {
+						else {
 							v = dolv[dolg];
-							pushstak(SP |
-								 (*id ==
-								  '*' ?
-								  quote :
-								  0));
-							;
+							pushstak(SP | (*id == '*' ? quote : 0));
 						}
 					}
-					;
 				}
 			} else if (argp) {
 				if (c == '?') {
 					failed(id,
 					       *argp ? argp : badparam);
 				} else if (c == '=') {
-					if (n) {
+					if (n)
 						assign(n, argp);
-					} else {
+					else
 						error(badsub);
-						;
-					}
-					;
 				}
-			} else if (flags & setflg) {
+                        } else if (flags & setflg) {
 				failed(id, badparam);
-				;
 			}
 			goto retry;
 		} else {
 			peekc = c | MARK;
-			;
 		}
 	} else if (d == endch) {
 		return (d);
@@ -211,13 +178,11 @@ CHAR endch;
 		quoted++;
 		quote ^= QUOTE;
 		goto retry;
-		;
 	}
-	return (d);
+	return d;
 }
 
-STRING macro(as)
-STRING as;
+char *macro(char *as)
 {
 	/* Strip "" and do $ substitution
 	 * Leaves result on top of stack
@@ -226,7 +191,7 @@ STRING as;
 	register CHAR savq = quote;
 	FILEHDR fb;
 
-	push(&fb);
+	push((void *)&fb);/*FIXME*/
 	estabf(as);
 	usestak();
 	quote = 0;
@@ -241,20 +206,19 @@ STRING as;
 	return (fixstak());
 }
 
-static comsubst()
+static void comsubst(void)
 {
 	/* command substn */
 	FILEBLK cb;
-	register CHAR d;
+	register char d;
 	register STKPTR savptr = fixstak();
 
 	usestak();
-	while ((d = readc()) != SQUOTE && d) {
+	while ((d = readc()) != SQUOTE && d)
 		pushstak(d);
-	}
 
 	{
-		register STRING argc;
+		register char *argc;
 		trim(argc = fixstak());
 		push(&cb);
 		estabf(argc);
@@ -274,50 +238,47 @@ static comsubst()
 	}
 	tdystak(savptr);
 	staktop = movstr(savptr, stakbot);
-	while (d = readc()) {
+
+	while (d = readc())
 		pushstak(d | quote);
-	}
+
 	await(0);
+
 	while (stakbot != staktop) {
 		if ((*--staktop & STRIP) != NL) {
 			++staktop;
 			break;
-			;
-		};
+		}
 	}
 	pop();
 }
 
 #define CPYSIZ	512
 
-subst(in, ot)
-int in, ot;
+void subst(int in, int ot)
 {
-	register CHAR c;
+	register char c;
 	FILEBLK fb;
 	register int count = CPYSIZ;
 
 	push(&fb);
 	initf(in);
 	/* DQUOTE used to stop it from quoting */
-	while (c = (getch(DQUOTE) & STRIP)
-	    ) {
+	while (c = (getch(DQUOTE) & STRIP)) {
 		pushstak(c);
 		if (--count == 0) {
 			flush(ot);
 			count = CPYSIZ;
-			;
-		};
+		}
 	}
 	flush(ot);
 	pop();
 }
 
-static flush(ot)
+static void flush(int ot)
 {
 	write(ot, stakbot, staktop - stakbot);
-	if (flags & execpr) {
+	if (flags & execpr)
 		write(output, stakbot, staktop - stakbot);
-	}
 	staktop = stakbot;
 }

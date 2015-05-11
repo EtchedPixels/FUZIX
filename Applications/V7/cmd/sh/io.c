@@ -15,8 +15,7 @@
 
 /* ========	input output and file copying ======== */
 
-initf(fd)
-UFD fd;
+void initf(UFD fd)
 {
 	register FILE f = standin;
 
@@ -28,19 +27,17 @@ UFD fd;
 	f->feof = FALSE;
 }
 
-estabf(s)
-register STRING s;
+int estabf(register const char *s)
 {
 	register FILE f;
 
 	(f = standin)->fdes = -1;
-	f->fend = length(s) + (f->fnxt = s);
+	f->fend = length(s) + (f->fnxt = (char *)s);/*FIXME review */
 	f->flin = 1;
 	return (f->feof = (s == 0));
 }
 
-push(af)
-FILE af;
+void push(FILE af)
 {
 	register FILE f;
 
@@ -50,81 +47,66 @@ FILE af;
 	standin = f;
 }
 
-pop()
+int pop(void)
 {
 	register FILE f;
 
 	if ((f = standin)->fstak) {
-		if (f->fdes >= 0) {
+		if (f->fdes >= 0)
 			close(f->fdes);
-		}
 		standin = f->fstak;
 		return (TRUE);
-	} else {
+	} else
 		return (FALSE);
-		;
-	}
 }
 
-chkpipe(pv)
-int *pv;
+void chkpipe(int *pv)
 {
-	if (pipe(pv) < 0 || pv[INPIPE] < 0 || pv[OTPIPE] < 0) {
+	if (pipe(pv) < 0 || pv[INPIPE] < 0 || pv[OTPIPE] < 0)
 		error(piperr);
-		;
-	}
 }
 
-chkopen(idf)
-STRING idf;
+int chkopen(const char *idf)
 {
 	register int rc;
 
-	if ((rc = open(idf, 0)) < 0) {
+	if ((rc = open(idf, 0)) < 0)
 		failed(idf, badopen);
-	} else {
-		return (rc);
-		;
-	}
+	else
+		return rc;
 }
 
-sh_rename(f1, f2)
-register int f1, f2;
+void sh_rename(register int f1, register int f2)
 {
 	if (f1 != f2) {
 		dup2(f1, f2);
 		close(f1);
-		if (f2 == 0) {
+		if (f2 == 0)
 			ioset |= 1;
-		};
 	}
 }
 
-create(s)
-STRING s;
+int create(const char *s)
 {
 	register int rc;
 
-	if ((rc = creat(s, 0666)) < 0) {
+	if ((rc = creat(s, 0666)) < 0)
 		failed(s, badcreate);
-	} else {
-		return (rc);
-		;
-	}
+	else
+		return rc;
 }
 
-tmpfil()
+int tmpfil(void)
 {
 	itos(serial++);
 	movstr(numbuf, tmpnam);
-	return (create(tmpout));
+	return create(tmpout);
 }
 
 /* set by trim */
 BOOL nosubst;
 
-copy(ioparg)
-IOPTR ioparg;
+void copy(IOPTR ioparg)
 {
 	CHAR c, *ends;
 	register CHAR *cline, *clinep;
@@ -134,9 +116,10 @@ IOPTR ioparg;
 	if (iop = ioparg) {
 		copy(iop->iolst);
 		ends = mactrim(iop->ioname);
-		if (nosubst) {
+
+		if (nosubst)
 			iop->iofile &= ~IODOC;
-		}
+
 		fd = tmpfil();
 		iop->ioname = cpystak(tmpout);
 		iop->iolst = iotemp;
@@ -146,19 +129,17 @@ IOPTR ioparg;
 		for (;;) {
 			clinep = cline;
 			chkpr(NL);
-			while ((c =
-				(nosubst ? readc() : nextc(*ends)),
-				!eolchar(c))) {
+			while ((c = (nosubst ? readc() : nextc(*ends)),!eolchar(c))) {
 				*clinep++ = c;
 			}
 			*clinep = 0;
-			if (eof || eq(cline, ends)) {
+
+			if (eof || eq(cline, ends))
 				break;
-			}
+
 			*clinep++ = NL;
 			write(fd, cline, clinep - cline);
 		}
 		close(fd);
-		;
 	}
 }

@@ -21,7 +21,8 @@ static int split(const char *s);
 
 /* FIXME: errno from header */
 extern int errno;
-extern STRING sysmsg[];
+/* FIXME: put into a header */
+extern const char *sysmsg[];
 
 /* fault handling */
 #define ENOMEM	12
@@ -76,7 +77,7 @@ void initio(IOPTR iop)
 
 const char *getpath(const char *s)
 {
-	register char *path;
+	register const char *path;
 	if (any('/', s)) {
 		if (flags & rshflg) {
 			failed(s, restricted);
@@ -124,7 +125,7 @@ const char *catpath(register const char *path, const char *name)
 static const char *xecmsg;
 static char **xecenv;
 
-void execa(const char *at[])
+void execa(const char **at)
 {
 	register const char *path;
 	register const char **t = at;
@@ -270,7 +271,7 @@ void await(int i)
 	exitset();
 }
 
-BOOL nosubst;
+extern BOOL nosubst;	/* FIXME */
 
 void trim(char *at)
 {

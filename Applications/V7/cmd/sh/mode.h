@@ -10,9 +10,8 @@
 #define BYTESPERWORD	(sizeof(char *))
 
 typedef char CHAR;
-typedef char BOOL;
+typedef signed char BOOL;
 typedef int UFD;
-typedef float REAL;
 typedef void *ADDRESS;
 typedef long int L_INT;
 typedef unsigned POS;
@@ -79,9 +78,9 @@ struct fileblk {
 	POS flin;
 	BOOL feof;
 	CHAR fsiz;
-	STRING fnxt;
-	STRING fend;
-	STRING *feval;
+	char * fnxt;
+	char * fend;
+	char * *feval;
 	FILE fstak;
 	CHAR fbuf[BUFSIZ];
 };
@@ -92,15 +91,15 @@ struct filehdr {
 	POS flin;
 	BOOL feof;
 	CHAR fsiz;
-	STRING fnxt;
-	STRING fend;
-	STRING *feval;
+	char * fnxt;
+	char * fend;
+	char * *feval;
 	FILE fstak;
 	CHAR _fbuf[1];
 };
 
 struct sysnod {
-	STRING sysnam;
+	const char * sysnam;
 	int sysval;
 };
 
@@ -155,13 +154,13 @@ struct whnod {
 struct fornod {
 	int fortyp;
 	TREPTR fortre;
-	STRING fornam;
+	char * fornam;
 	COMPTR forlst;
 };
 
 struct swnod {
 	int swtyp;
-	STRING swarg;
+	char * swarg;
 	REGPTR swlst;
 };
 
@@ -184,7 +183,7 @@ struct lstnod {
 
 struct ionod {
 	int iofile;
-	STRING ioname;
+	char * ioname;
 	IOPTR ionxt;
 	IOPTR iolst;
 };

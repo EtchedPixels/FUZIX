@@ -60,7 +60,7 @@ int main(int c, const char *v[])
 
 	/* number of positional parameters */
 	assnum(&dolladr, dolc);
-	cmdadr = dolv[0];
+	cmdadr = (char *)dolv[0];
 
 	/* set pidname */
 	assnum(&pidadr, getpid());
@@ -167,7 +167,7 @@ static void exfile(BOOL prof)
 			return;
 		alarm(0);
 		flags &= ~waiting;
-		execute(cmd(NL, MTFLG), 0);
+		execute(cmd(NL, MTFLG), 0, NULL, NULL);
 		eof |= (flags & oneflg);
 	}
 }

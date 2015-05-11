@@ -87,14 +87,12 @@ void addblok(POS reqd)
 	}
 }
 
-void free(void *ap)
+void sh_free(void *ap)
 {
 	BLKPTR p;
 
-	if ((p = ap) && p < bloktop) {
+	if ((p = ap) && p < bloktop)
 		Lcheat((--p)->word) &= ~BUSY;
-		;
-	}
 }
 
 #ifdef DEBUG
