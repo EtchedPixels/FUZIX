@@ -296,7 +296,7 @@ extern void makearg(register char *args);
 /* fault.c */
 extern void fault(register int sig);
 extern void stdsigs(void);
-extern int ignsig(int n);
+extern sighandler_t ignsig(int n);
 extern void getsig(int n);
 extern void oldsigs(void);
 extern void clrsig(int i);

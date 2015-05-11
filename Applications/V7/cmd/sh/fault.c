@@ -45,26 +45,24 @@ void stdsigs(void)
 	getsig(ALARM);
 }
 
-int ignsig(int n)
+sighandler_t ignsig(int n)
 {
-	register int s, i;
-#if 0
-	// FIXME: need to do proper SIG_IGN checks/handling
-	if ((s = signal(i = n, 1) & 01) == 0) {
+	register int i;
+	sighandler_t s;
+	/* FIXME */
+	/* Was a test of the low bit.. not clear this is the correct translation of V7 internals */
+	if ((s = signal(i = n, SIG_IGN)) != SIG_IGN)
 		trapflg[i] |= SIGMOD;
-	}
-#endif
-	return (s);
+	return s;
 }
 
 void getsig(int n)
 {
 	register int i;
 
-	if (trapflg[i = n] & SIGMOD || ignsig(i) == 0) {
+	/* Again was a zero test for ignsig, unclear if correct translation FIXME */
+	if (trapflg[i = n] & SIGMOD || ignsig(i) == SIG_DFL)
 		signal(i, fault);
-		;
-	}
 }
 
 void oldsigs(void)
