@@ -48,8 +48,7 @@ void prc(char c)
 		write(output, &c, 1);
 }
 
-/* FIXME: time_t is not safely L_INT ! */
-void prt(L_INT t)
+void prt(clock_t t)
 {
 	register int hr, min, sec;
 
