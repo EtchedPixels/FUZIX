@@ -10,7 +10,11 @@
 	.globl _dw_operation
 	.globl _dw_reset
 
-	.area .text
+	; imported
+	.globl map_process_always
+	.globl map_kernel
+
+	.area .common
 
 _dw_reset:
 	; maybe reinitalise PIA here?
@@ -20,9 +24,13 @@ _dw_reset:
 _dw_operation:
 	pshs y
 	; get parameters from C, X points to cmd packet
-	ldy 4,s		; driveptr
+	ldy 4,s		; driveptr (dw_tab in .bss so kernel bank)
 	lda ,y		; for now, contains minor = drive number directly
-	ldb ,x		; write flag
+	ldb 5,x		; rawflag
+	pshs b
+	beq @nomap
+	jsr map_process_always
+@nomap	ldb ,x		; write flag
 	; buffer location into Y
 	ldy 3,x
 	; sector number into X
@@ -35,9 +43,12 @@ _dw_operation:
 @done	bcs @err
 	bne @err
 	ldx #0
+@fin	tst ,s+
+	beq @ret
+	jsr map_kernel
 @ret	puls y,pc
 @err	ldx #0xFFFF
-	bra @ret
+	bra @fin
 
 ; Write a sector to the DriveWire server
 ; Drive number in A, sector number in X, buffer location in Y
