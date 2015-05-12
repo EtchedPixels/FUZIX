@@ -24,6 +24,7 @@
 	; imported
 	.globl map_process_always
 	.globl map_kernel
+
 	.area .common
 
 __ugetc:
@@ -56,6 +57,7 @@ ugetl:
 	sta ,u+
 	leay -1,y
 	bne ugetl
+	ldx #0
 	puls u,y,cc,pc
 
 __ugets:
@@ -90,6 +92,7 @@ __uputc:
 	exg d,x
 	stb ,x
 	jsr map_kernel
+	ldx #0
 	puls cc,pc
 
 __uputw:
@@ -100,6 +103,7 @@ __uputw:
 	exg d,x
 	std ,x
 	jsr map_kernel
+	ldx #0
 	puls cc,pc
 
 ;	X = source, user, size on stack
@@ -115,6 +119,7 @@ uputl:
 	jsr map_kernel
 	leay -1,y
 	bne uputl
+	ldx #0
 	puls u,y,cc,pc
 
 __uzero:
@@ -128,4 +133,5 @@ uzloop:
 	leay -1,y
 	bne uzloop
 	jsr map_kernel
+	ldx #0
 	puls y,cc,pc

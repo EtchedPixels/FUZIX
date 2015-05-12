@@ -10,11 +10,11 @@
 	include "kernel.def"
         include "../kernel09.def"
 
+	; exported
 	.globl __ugetc
 	.globl __ugetw
 	.globl __uget
 	.globl __ugets
-
 	.globl __uputc
 	.globl __uputw
 	.globl __uput
@@ -52,6 +52,7 @@ ugetl:
 	sta ,u+
 	leay -1,y
 	bne ugetl
+	ldx #0
 	puls u,y,cc,pc
 
 __ugets:
@@ -86,6 +87,7 @@ __uputc:
 	exg d,x
 	stb ,x
 	SAM_KERNEL
+	ldx #0
 	puls cc,pc
 
 __uputw:
@@ -96,6 +98,7 @@ __uputw:
 	exg d,x
 	std ,x
 	SAM_KERNEL
+	ldx #0
 	puls cc,pc
 
 ;	X = source, user, size on stack
@@ -111,6 +114,7 @@ uputl:
 	SAM_KERNEL
 	leay -1,y
 	bne uputl
+	ldx #0
 	puls u,y,cc,pc
 
 __uzero:
@@ -124,4 +128,5 @@ uzloop:
 	leay -1,y
 	bne uzloop
 	SAM_KERNEL
+	ldx #0
 	puls y,cc,pc
