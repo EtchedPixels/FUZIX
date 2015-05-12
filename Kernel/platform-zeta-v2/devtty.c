@@ -37,7 +37,7 @@ void tty_setup(uint8_t minor)
 	uint8_t lcr = 0;
 	if (minor == 1) {
 		b = ttydata[minor].termios.c_cflag & CBAUD;
-		if (b > 0 && b < 16) {
+		if (boot_from_rom && b > 0 && b < 16) {
 			UART0_LCR = 0x80;	/* LCR = DLAB ON */
 			UART0_DLL = divisor_table[b] & 0xFF;
 			UART0_DLH = divisor_table[b] >> 8;

@@ -24,6 +24,11 @@
         .area _DISCARD
         .area _COMMONMEM
 
+        ; exported symbols
+        .globl init
+        .globl init_from_rom
+        .globl _boot_from_rom
+
         ; imported symbols
         .globl _fuzix_main
         .globl init_early
@@ -41,7 +46,13 @@
 
         ; startup code
         .area _CODE
-init:
+init:                       ; must be at 0x88 -- warm boot methods enter here
+        xor a
+        jr init_common
+init_from_rom:              ; must be at 0x8B -- bootrom.s enters here
+        ld a, #1
+        ; fall through
+init_common:
         di
         ld sp, #kstack_top
         ; move the common memory where it belongs    
@@ -59,6 +70,9 @@ init:
         ld bc, #l__DATA - 1
         ld (hl), #0
         ldir
+        
+        ; save ROM boot flag
+        ld (_boot_from_rom), a
 
 	; setup the rest of the memory paging
 	call init_early
@@ -73,3 +87,6 @@ init:
         di
 stop:   halt
         jr stop
+
+        .area _DATA
+_boot_from_rom: .ds 1
