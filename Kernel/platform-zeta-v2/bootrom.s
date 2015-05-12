@@ -53,6 +53,7 @@ ramdisk_copy:
 		out (MPGSEL_2),a
 		inc a			; map page 35 (RAM+48K) to bank 3
 		out (MPGSEL_3),a
-		jp 0x100		; jump to crt0.s
+
+		jp 0x8B                 ; jump to init_from_rom in crt0
 ; pad
 		.ds	(0x88-(.-start))

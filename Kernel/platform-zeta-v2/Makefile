@@ -51,6 +51,6 @@ diskboot.bin:	diskboot.s
 image:
 	sdasz80 -o bootrom.s
 	sdldz80 -m -i bootrom.rel
-	makebin -s 256 bootrom.ihx > bootrom.bin
-	cat bootrom.bin ../fuzix.bin > fuzix.rom
+	makebin -s 136 bootrom.ihx > bootrom.bin
+	cat bootrom.bin ../fuzix.bin | dd conv=sync bs=65536 count=1 of=fuzix.rom
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com

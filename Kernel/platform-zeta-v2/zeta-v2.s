@@ -27,6 +27,7 @@
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
+        .globl _boot_from_rom
 
 	; exported debugging tools
 	.globl inchar
@@ -135,14 +136,19 @@ init_hardware:
         ld (_procmem), hl
 
 	; initialize UART0
+        ld a, (_boot_from_rom)          ; do not set the baud rate and other
+        or a                            ; serial line parameters if the BIOS
+        jr z, init_partial_uart         ; already set them for us.
 	ld a,#0x80			; LCR = DLAB ON
 	out (UART0_LCR),a		; set LCR
 	ld a,#CONSOLE_DIVISOR_LOW	; baud rate divisor - low byte
 	out (UART0_DLL),a		; set low byte of divisor
 	ld a,#CONSOLE_DIVISOR_HIGH	; baud rate divisor - high byte
 	out (UART0_DLH),a		; set high byte of divisor
-	ld a,#0x03				; value for LCR and MCR
+	ld a,#0x03			; value for LCR
 	out (UART0_LCR),a		; 8 bit data, 1 stop, no parity
+init_partial_uart:
+	ld a,#0x03			; value for MCR
 	out (UART0_MCR),a		; DTR ON, RTS ON
 	ld a,#0x06			; disable and clear FIFOs
 	out (UART0_FCR),a

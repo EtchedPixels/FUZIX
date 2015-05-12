@@ -17,4 +17,6 @@ __sfr __at (UART0_BASE + 7) UART0_SCR;	/* Scratch register */
 __sfr __at (UART0_BASE + 0) UART0_DLL;	/* Divisor latch - low byte */
 __sfr __at (UART0_BASE + 1) UART0_DLH;	/* Divisor latch - high byte */
 
+extern bool boot_from_rom;
+
 #endif
