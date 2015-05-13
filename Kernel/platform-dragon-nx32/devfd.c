@@ -14,7 +14,7 @@
 
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
-static uint8_t fd_tab[MAX_FD];
+extern uint8_t *fd_tab;
 
 static void fd_motor_busy(void)
 {
@@ -49,11 +49,11 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     blkno_t block;
     uint16_t dptr;
-    int ct = 0;
+    uint8_t nblock;
     int tries;
     uint8_t err;
     uint8_t *driveptr = fd_tab + minor;
-    uint8_t cmd[6];
+    uint8_t cmd[7];
 
     if(rawflag)
         goto bad2;
@@ -66,18 +66,28 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             goto bad;
     }
 
-    dptr = (uint16_t)udata.u_buf->bf_data;
-    block = udata.u_buf->bf_blk;
+    if (rawflag == 0) {
+        dptr = (uint16_t)udata.u_buf->bf_data;
+        block = udata.u_buf->bf_blk;
+        nblock = 2;
+    } else if (rawflag == 1) {
+        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
+            goto bad2;
+        dptr = (uint16_t)udata.u_base;
+        block = udata.u_offset >> 9;
+        nblock = udata.u_count >> 8;
+    }
 
 //    kprintf("Issue command: drive %d\n", minor);
-    cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 9;		/* 2 sectors per block */
-    cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
-    cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[4] = dptr >> 8;
-    cmd[5] = dptr & 0xFF;
+    cmd[0] = rawflag;
+    cmd[1] = is_read ? FD_READ : FD_WRITE;
+    cmd[2] = block / 9;		/* 2 sectors per block */
+    cmd[3] = ((block % 9) << 1) + 1;	/*eww.. */
+    cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
+    cmd[5] = dptr >> 8;
+    cmd[6] = dptr & 0xFF;
         
-    while (ct < 2) {
+    while (nblock) {
         for (tries = 0; tries < 4 ; tries++) {
             err = fd_operation(cmd, driveptr);
             if (err == 0)
@@ -88,9 +98,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* FIXME: should we try the other half and then bale out ? */
         if (tries == 3)
             goto bad;
-        cmd[4]++;	/* Move on 256 bytes in the buffer */
-        cmd[2]++;	/* Next sector for 2nd block */
-        ct++;
+        cmd[5]++;	/* Move on 256 bytes in the buffer */
+        cmd[3]++;	/* Next sector for next block */
+        if (cmd[3] == 10) {
+            cmd[3] = 1;	/* Track on */
+            cmd[2]++;
+        }
+        nblock--;
     }
     fd_motor_idle();
     return 1;

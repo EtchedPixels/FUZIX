@@ -1,6 +1,9 @@
 ;
 ;	Core floppy routines for the Dragon
 ;
+;	Must live in common space as they are called from interrupt
+;	contexts and also map user space about
+;
 
 	.globl	fd_nmi_handler
 	.globl	nmi_handler
@@ -9,6 +12,8 @@
 	.globl _fd_operation
 	.globl _fd_motor_on
 	.globl _fd_motor_off
+
+	.globl _fd_tab
 ;
 ;	MMIO for the floppy controller
 ;
@@ -44,7 +49,7 @@ SECTOR	EQU	2
 DIRECT	EQU	3		; 0 = read 2 = write 1 = status
 DATA	EQU	4
 
-	.area	.text
+	.area	.common
 ;
 ;	NMI handling for the floppy drive
 ;
@@ -315,8 +320,13 @@ _fd_operation:
 	orcc	#0x40		; Make sure FIR is off
 	jsr	piasave
 	ldy	6,s		; Drive struct
+	tst	,y+		; User or kernel ?
+	beq	fd_op_k
+	jsr	map_process_always
+fd_op_k:
 	jsr	fdsetup		; Set up for a command
 	tfr	a,b		; Status code or 0xFF for total failure
+	jsr	map_kernel
 	bsr	piaload
 	puls	y,cc,dp,pc	; Restore IRQ state etc
 ;
@@ -380,14 +390,18 @@ _fd_motor_off:
 no_work_motor:
 	puls y,dp,pc
 
-	.area .data
-
+;
+;	We need these mapped during interrupts so must live in common
+;
+	.area .common
 nmivector:
 	.word	nmi_handler
 curdrive:
 	.byte	0xff
-
-	.area .bss
+;
+;	BSS but used with user mapping so keep common
+;
+	.area .common
 motor_running:
 	.byte	0
 fdcctrl:
@@ -397,3 +411,5 @@ pia_stash:
 	.byte	0
 	.byte	0
 	.byte	0
+_fd_tab:
+	.byte	0,0,0,0
