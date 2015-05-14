@@ -50,7 +50,7 @@ SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sleep.c sprintf.c
 SRC_C += stat.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
-SRC_C += strnicmp.c strnlen.c strsep.c
+SRC_C += strnicmp.c strnlen.c strsep.c strsignal.c
 SRC_C += system.c time.c tmpfile.c tmpnam.c ttyname.c
 SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
@@ -87,7 +87,7 @@ fuzix6502/Makefile: ../tools/syscall_6502.c ../../Kernel/include/syscall_name.h
 syslib.lib: fuzix6502/Makefile $(OBJ_C)
 	(cd fuzix6502; make)
 	$(AR) a syslib.lib $(OBJ_C)
-	ln -sf syslib.lib c.lib
+	ln -sf syslib.lib c6502.lib
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)

@@ -59,6 +59,8 @@ extern size_t strnlen __P((const char *, size_t));
 extern size_t strxfrm __P((char *, const char *, size_t));
 extern int strcoll __P((const char *s1, const char *s2));
 
+extern const char *strsignal __P((int s));
+
 #ifdef	z80
 #pagma inline(memcpy)
 #pagma inline(memset)
