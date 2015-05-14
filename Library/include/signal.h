@@ -58,7 +58,7 @@ typedef void (*sighandler_t) __P((int));
 #define SIG_IGN ((sighandler_t)1)	/* ignore signal */
 #define SIG_ERR ((sighandler_t)-1)	/* error return from signal */
 
-extern char *sys_siglist[];
+extern const char *sys_siglist[];
 
 extern void sighold(int sig);
 extern void sigrelse(int sig);
