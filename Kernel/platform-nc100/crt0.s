@@ -7,14 +7,14 @@
 		.area _FONT
 		.area _VIDEO
 	        .area _CONST
-	        .area _DATA
 	        .area _INITIALIZED
+	        .area _INITIALIZER
+	        .area _DATA
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
-	        .area _INITIALIZER
 	        .area _GSINIT
 	        .area _GSFINAL
 	        .area _COMMONMEM
