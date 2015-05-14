@@ -63,7 +63,5 @@
 #define BOOTDEVICE 0x0100	/* Only one possible option */
 #endif
 
-
-/* We need to fix rd_memcpy to handle user pages - or perhaps make the C code
-   figure out the page number and just pass it ?? */
-#define CONFIG_LEGACY_EXEC
+#define CONFIG_LARGE_IO_DIRECT	/* Definite win as our I/O is as fast as a
+				   memcpy! */
