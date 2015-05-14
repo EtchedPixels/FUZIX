@@ -40,7 +40,7 @@ sh: $(OBJS) $(OBJS_HARD)
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS) $(OBJS_HARD)
 
 clean:
-	rm -f $(OBJS) sh $(SRCS:.c=) core *~
+	rm -f $(OBJS) $(OBJS_HARD) sh $(SRCS:.c=) core *~
 
 rmbak:
 	rm -f *~ core
