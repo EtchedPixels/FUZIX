@@ -8,11 +8,11 @@
 		.area _VIDEO
 	        .area _CONST
 	        .area _INITIALIZED
-	        .area _INITIALIZER
 	        .area _DATA
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
+	        .area _INITIALIZER
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
 	        .area _GSINIT
@@ -50,7 +50,7 @@
 start:		di
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
-		ld hl, #s__INITIALIZER
+		ld hl, #s__DATA
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir

@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 		/* Pack any common memory on the end of the main code/memory if its
 		   relocated */
 		if (!s__DISCARD || pack_discard) {
-		        base = s__INITIALIZER;
+		        base = s__DATA;
 			tail = l__COMMONMEM;
 			memcpy(out + base, buf + s__COMMONMEM,
 			       l__COMMONMEM);
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
 		if (reloc == 0 && end < s__COMMONMEM +  l__COMMONMEM)
 		        end = s__COMMONMEM + l__COMMONMEM;
 
-                /* Packed image with common over initializer */
+                /* Packed image with common over data */
 		if (!s__DISCARD || pack_discard) {
 			end = base;
 			printf("\nPacked image %d bytes, for RAM target\n",

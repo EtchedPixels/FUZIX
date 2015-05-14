@@ -6,14 +6,14 @@
 	        .area _CODE2
 		.area _VIDEO
 	        .area _CONST
-	        .area _DATA
 	        .area _INITIALIZED
+	        .area _DATA
+	        .area _INITIALIZER
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
-	        .area _INITIALIZER
 	        .area _GSINIT
 	        .area _GSFINAL
 	        .area _COMMONMEM
@@ -41,7 +41,8 @@
 start:
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
-		ld hl, #s__INITIALIZER
+		ld hl, #s__DATA
+		push hl
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
@@ -50,7 +51,7 @@ start:
 		ld bc, #l__DISCARD
 		ldir
 		; then zero the data area
-		ld hl, #s__DATA
+		pop hl	; s__DATA
 		ld de, #s__DATA + 1
 		ld bc, #l__DATA - 1
 		ld (hl), #0
