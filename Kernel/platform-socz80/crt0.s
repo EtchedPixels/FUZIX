@@ -10,8 +10,8 @@
 	.area _HOME
         .area _CODE2
         .area _CONST
-        .area _DATA
         .area _INITIALIZED
+        .area _DATA
         .area _BSEG
         .area _BSS
         .area _HEAP
@@ -43,7 +43,7 @@ init:
         di
         ld sp, #kstack_top
 
-        ld hl, #s__INITIALIZER
+        ld hl, #s__DATA
         ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
         ldir
