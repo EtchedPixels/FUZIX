@@ -18,8 +18,8 @@
 /* And swapping */
 #undef SWAPDEV
 
-/* Until the Becker and floppy driver support raw I/O */
-#define CONFIG_LEGACY_EXEC
+/* Permit large I/O requests to bypass cache and go direct to userspace */
+#define CONFIG_LARGE_IO_DIRECT
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
