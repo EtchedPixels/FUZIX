@@ -8,8 +8,8 @@
         .area _CODE2
         .area _CONST
 	.area _VIDEO
-        .area _DATA
         .area _INITIALIZED
+        .area _DATA
         .area _BSEG
         .area _BSS
         .area _HEAP
@@ -48,7 +48,7 @@ init:
         call init_early
 
 	; move the common memory where it belongs    
-	ld hl, #s__INITIALIZER
+	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
 	ldir
