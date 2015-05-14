@@ -59,7 +59,7 @@ start:		di
 		out (0x2f), a
 		ld sp, #kstack_top
 		; move the common memory where it belongs
-		ld hl, #s__INITIALIZER
+		ld hl, #s__DATA
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
