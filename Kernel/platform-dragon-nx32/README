@@ -57,25 +57,20 @@ a multiple of 256 bytes! Use for instance Kernel/tools/pad256
 
 QUICK BUILDING INSTRUCTIONS
 
-1. Build the kernel:
-cd Kernel
-make TARGET=dragon-nx32
+# 1. Build the kernel:
+make -C Kernel TARGET=dragon-nx32
 
-2. Build the libraries
-cd Library
-make tools/syscall_6809
-cd libs
-make -f Makefile.6809
+# 2. Build the libraries
+make -C Library tools/syscall_6809
+make -C Library/libs -f Makefile.6809
 
-3. Build the utils
-cd Applications/util
-make -f Makefile.6809 TARGET=dragon-nx32
+# 3. Build the utils
+make -C Applications/util -f Makefile.6809 TARGET=dragon-nx32
 
-4. Build disk tools
-cd Standalone
-make
+# 4. Build disk tools
+make -C Standalone
 
-5. Build boot disk image 
+# 5. Build boot disk image 
 cd Standalone/filesystem-src
 ./build-filesystem -X fuzix.dsk 256 65535
 
