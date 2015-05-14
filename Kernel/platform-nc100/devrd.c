@@ -8,6 +8,9 @@
 #include <printf.h>
 #include <devrd.h>
 
+/* Kernel page mapping */
+static const uint8_t kmap[] = { 0x83, 0x84, 0x85 };
+
 static int rd_transfer(bool is_read, uint8_t rawflag)
 {
     blkno_t block;
@@ -16,8 +19,10 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     int dlen;
     int ct = 0;
     int map;
+    const uint8_t *p;
 
     if(rawflag) {
+        p = (const uint8_t *)&udata.u_page;
         dlen = udata.u_count;
         dptr = (uint16_t)udata.u_base;
         if ((dlen|udata.u_offset) & BLKMASK) {
@@ -26,8 +31,8 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
         }
         block = udata.u_offset >> 9;
         block_xfer = dlen >> 9;
-        map = 1;
     } else { /* rawflag == 0 */
+        p = kmap;
         dlen = 512;
         dptr = (uint16_t)udata.u_buf->bf_data;
         block = udata.u_buf->bf_blk;
@@ -37,9 +42,12 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     block += 2*320;	/* ramdisc starts at 320K in */
         
     while (ct < block_xfer) {
+        /* Pass the page to map for the data */
+        map = p[(dptr >> 14)];
         rd_memcpy(is_read, map, dptr, block);
         block++;
         ct++;
+        dptr += 512;
     }
     return ct;
 }

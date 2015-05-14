@@ -263,30 +263,15 @@ outcharw:
 ;
 ; Disk helper
 ;
-; FIXME: raw mode only works for aligned cases. Should probably just drop it
-;
 _rd_memcpy:  push ix
 	    ld ix, #0
 	    add ix, sp
-	    ; 4(ix) = is_read, 5(ix) = map, 6-7(ix) = dptr, 8-9(ix) = block
+	    ; 4(ix) = is_read, 5(ix) = dptr page 6-7(ix) = dptr, 8-9(ix) = block
             ld l, 6(ix)
 	    ld h, 7(ix)
 	    ld c, 5(ix)
             ld e, 8(ix)
             ld d, 9(ix)
-	    ld a, c		; We want 0 or 3 for the bank effect
-            add a
-            add c
-            ld c, a
-	    ld a, h
-	    and #0xC0		; bank bits
-	    rlca		; into 0-1
-	    rlca
-	    add #0x83		; kernel base
-	    cp #0x86		; common ??
-	    jr z, rd_nomod
-	    add c
-rd_nomod:   ld c, a		; C is now the bank code for dptr
             ld a, h
             and #0x3F		; Remove bank bits from H
             or #0x80            ; Will be at 0x8000
