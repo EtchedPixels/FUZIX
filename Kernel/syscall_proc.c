@@ -245,8 +245,6 @@ arg_t _sbrk(void)
 	uaddr_t oldbrk;
 
 	udata.u_argn += (oldbrk = udata.u_break);
-	if ((unsigned) udata.u_argn < oldbrk)
-		return (-1);
 	if (_brk())		/* brk (udata.u_argn) */
 		return (-1);
 
