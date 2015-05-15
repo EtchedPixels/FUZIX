@@ -1,28 +1,32 @@
+dragon-nx32
+===========
+
 Dragon (32 or 64) + external memory cartridge
 
 This port is for running FUZIX on real Dragons using an external
 memory cartridge which is being prototyped.
 
-The cartridge can have from 2 to 256 banks of 32KB each. It will
-map the active bank at 0x8000-0xFEFF and use the EXMEM (SLENB) signal to
+The cartridge can have from 2 to 256 banks of 32KB each (hence "nx32"). It
+will map the active bank at 0x8000-0xFEFF, using the EXMEM (SLENB) signal to
 hide the internal ROMs. Writing the bank number to FFBF selects the
 bank and activates the cartridge. Writing to FFBE deactivates the
 cartridge. It is only active if the SAM is in map type 0.
 
 The port reserves the internal RAM at 0-0x7FFF plus bank 0 for the kernel.
 
-The port can use DriveWire to mount a root filesystem, and is
-able to execute init. syscalls and fork have not been tested.
-Swapping out to disk does not work yet.
+The port can use DriveWire to mount the root filesystem, and most userland
+tools are working.
 
-There is not much 6809 userspace work done.
+Swapping to disk has not been implemented yet.
 
 Emulating in XRoar
+==================
 
 XRoar can be patched with the included 0001-XRoar-emulate-nx32.patch
 to emulate this memory cartridge.
 
 Using DriveWire
+===============
 
 For bootstrapping, the fuzix.bin DECB binary must be loaded into
 internal RAM and cartridge bank 0. This is currently done over
@@ -54,8 +58,8 @@ On the Dragon type: DLOAD"DWFUZ"
 Note that if using the DW4 DriveWire server, all files must be padded to
 a multiple of 256 bytes! Use for instance Kernel/tools/pad256
 
-
-QUICK BUILDING INSTRUCTIONS
+Quick build instructions
+========================
 
 # 1. Build the kernel:
 make -C Kernel TARGET=dragon-nx32
