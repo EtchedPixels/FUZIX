@@ -61,8 +61,14 @@
 #define	SYSUMASK	19
 
 /* used for input and output of shell */
+#if 0 /* V7 */
 #define INIO 10
 #define OTIO 11
+#else
+/* FUZIX default is currently 10 fds per proc.. probably should move to 16 */
+#define INIO 8
+#define OTIO 9
+#endif
 
 /*io nodes*/
 #define USERIO	10
