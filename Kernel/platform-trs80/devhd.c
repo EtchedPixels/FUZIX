@@ -79,7 +79,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
 			goto bad2;
 		dptr = (uint16_t)udata.u_base;
-		nblock = udata.u_count >> 9;
+		nblock = udata.u_count >> 8;
 		block = udata.u_offset >> 9;
 		hd_page = udata.u_page;
 	} else if (rawflag == 2) {
@@ -99,7 +99,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	hd_seccnt = 1;
 
 	sector = block;
-	sector = ((sector << 1) & 0x1E) | 0x01;
+	sector = (sector << 1) & 0x1E;
 
 	cyl = block >> 4;
 

@@ -33,7 +33,7 @@ int main(int argc, const char *argv[]) {
   p.g.cyl = buf[28] | (buf[29] << 8);
   p.g.head = buf[30];
   printf("Disk is %d cylinders, %d heads\n", p.g.cyl, p.g.head);
-  p.g.sec = 16;
+  p.g.sec = 32;
   p.g.precomp = 0;
   p.g.land = p.g.cyl + 1;
   p.g.seek = 0;
@@ -46,7 +46,7 @@ int main(int argc, const char *argv[]) {
 
   /* FIXME: should fill in matching LBA bits */
 
-  if (fseek(vol, 512 + 384L, SEEK_SET) < 0) {
+  if (fseek(vol, 256 + 384L, SEEK_SET) < 0) {
     perror(argv[1]);
     exit(1);
   }

@@ -22,7 +22,7 @@ static void hd_swapon(struct minipart *p, unsigned int d, unsigned int i)
 	   We need 32K per process: hardwire it here - FIX if you change
 	   the mapping model */
 
-	swap_dev = (d << 4) + i + 1 + 0x100;
+	swap_dev = (d << 4) + i + 1;
 
 	if (cyls >= MAX_SWAPS)
 		cyls = MAX_SWAPS - 1;
@@ -48,7 +48,7 @@ void hd_probe(void)
 		}
 		hd_seccnt = 1;
 		hd_sdh = 0x80 | (dev << 3);
-		hd_secnum = 2;
+		hd_secnum = 1;
 		hd_cyllo = 0;
 		hd_cylhi = 0;
 		hd_cmd = HDCMD_READ;
