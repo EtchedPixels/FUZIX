@@ -12,10 +12,10 @@
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
-  /* 0: /dev/fd		Floppy disc block devices */
-  {  fd_open,     no_close,     fd_read,   fd_write,   no_ioctl  },
-  /* 1: /dev/hd		Hard disc block devices */
+  /* 0: /dev/hd		Hard disc block devices */
   {  hd_open,     no_close,     hd_read,   hd_write,   no_ioctl  },
+  /* 1: /dev/fd		Floppy disc block devices */
+  {  fd_open,     no_close,     fd_read,   fd_write,   no_ioctl  },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,    trstty_close, tty_read,  tty_write,  gfx_ioctl },
   /* 3: /dev/lpr	Printer devices */
