@@ -632,6 +632,7 @@ extern void *tmpbuf(void);
 extern void *zerobuf(void);
 extern void bufsync(void);
 extern bufptr bfind(uint16_t dev, blkno_t blk);
+extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
 extern void bufinit(void);
 extern void bufdiscard(bufptr bp);
