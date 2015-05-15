@@ -33,6 +33,7 @@ int main(int c, const char *v[])
 
 	/* initialise storage allocation */
 	stdsigs();
+
 	setbrk(BRKINCR);
 	addblok((POS) 0);
 
@@ -44,13 +45,12 @@ int main(int c, const char *v[])
 
 	/* look for options */
 	dolc = options(c, v);
-	if (dolc < 2) {
+	if (dolc < 2)
 		flags |= stdflg;
-	}
-	if ((flags & stdflg) == 0) {
+
+	if ((flags & stdflg) == 0)
 		dolc--;
-		;
-	}
+
 	dolv = v + c - dolc;
 	dolc--;
 
@@ -93,7 +93,6 @@ int main(int c, const char *v[])
 //      } else {        *execargs=(char *)dolv; /* for `ps' cmd */
 		;
 	}
-
 	exfile(0);
 	done();
 }
