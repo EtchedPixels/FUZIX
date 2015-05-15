@@ -42,7 +42,6 @@ start:
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
 		ld hl, #s__DATA
-		push hl
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
 		ldir
@@ -51,7 +50,7 @@ start:
 		ld bc, #l__DISCARD
 		ldir
 		; then zero the data area
-		pop hl	; s__DATA
+		ld hl, #s__DATA
 		ld de, #s__DATA + 1
 		ld bc, #l__DATA - 1
 		ld (hl), #0
