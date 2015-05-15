@@ -280,9 +280,14 @@ int d_ioctl(uint16_t dev, uint16_t request, char *data)
 
 int d_flush(uint16_t dev)
 {
-	if (!validdev(dev))
-		panic("d_flush: bad device");
-	return (*dev_tab[major(dev)].dev_ioctl) (minor(dev), BLKFLSBUF, 0);
+	/* Not as clean as would be ideal : FIXME */
+	int r = d_ioctl(dev, BLKFLSBUF, 0);
+	/* Not knowing the ioctl is not an offence */
+	if (r && udata.u_error == ENOTTY) {
+		udata.u_error = 0;
+		r = 0;
+	}
+	return r;
 }
 
 /*
