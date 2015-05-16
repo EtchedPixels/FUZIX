@@ -1,14 +1,12 @@
 /* Set if you want RTC support and have an RTC on ports 0xB0-0xBC */
 #define CONFIG_RTC
 
-
-
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
 #undef CONFIG_MONITOR
 /* Profil syscall support (not yet complete) */
-#define CONFIG_PROFIL
+#undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
 /* Single tasking */
