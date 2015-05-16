@@ -267,8 +267,6 @@ extern const char badexec[];
 extern const char notfound[];
 extern const char badfile[];
 
-extern address end[];
-
 #include	"ctype.h"
 
 /* args.c */
@@ -278,6 +276,7 @@ extern DOLPTR freeargs(DOLPTR blk);
 extern void clearup(void);
 extern DOLPTR useargs(void);
 /* blok.c */
+void blokinit(void);
 ADDRESS alloc(POS nbytes);
 extern void addblok(POS reqd);
 extern void sh_free(void *ap);

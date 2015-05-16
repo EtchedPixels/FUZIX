@@ -22,10 +22,15 @@
 #define busy(x)	(Rcheat((x)->word)&BUSY)
 
 POS brkincr = BRKINCR;
-BLKPTR blokp;			/*current search pointer */
-BLKPTR bloktop = BLK(end);	/*top of arena (last blok) */
+BLKPTR blokp;			/* current search pointer */
+BLKPTR bloktop;			/* top of arena (last blok) */
+static void *end;		/* end of memory */
 
-
+void blokinit(void)
+{
+        end = sbrk(0);		/* Find where space starts */
+        bloktop = BLK(end);
+}
 
 ADDRESS alloc(POS nbytes)
 {

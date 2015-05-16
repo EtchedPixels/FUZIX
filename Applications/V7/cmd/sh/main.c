@@ -32,6 +32,8 @@ int main(int c, const char *v[])
 	register int rflag = ttyflg;
 
 	/* initialise storage allocation */
+	blokinit();
+
 	stdsigs();
 
 	setbrk(BRKINCR);

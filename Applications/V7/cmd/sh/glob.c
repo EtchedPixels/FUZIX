@@ -26,7 +26,6 @@ ARGPTR wdarg;
 BOOL reserv;
 int wdnum;
 BOOL trapnote;
-address end[1];		/* FIXME */
 int serial;
 BLKPTR stakbsy;
 STKPTR stakbas;
