@@ -410,8 +410,7 @@ arg_t _getfsys(void)
 		udata.u_error = ENXIO;
 		return (-1);
 	}
-	uput((char *) m->m_fs, (char *) buf, sizeof(struct filesys));
-	return (0);
+	return uput((char *) m->m_fs, (char *) buf, sizeof(struct filesys));
 }
 
 #undef dev
