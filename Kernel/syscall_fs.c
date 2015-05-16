@@ -111,11 +111,12 @@ arg_t _sync(void)
 arg_t _stat(void)
 {
 	inoptr ino;
+	int err;
 	if (!(ino = n_open(path, NULLINOPTR)))
 		return (-1);
-	stcpy(ino, buf);
+	err = stcpy(ino, buf);
 	i_deref(ino);
-	return (0);
+	return err;
 }
 
 #undef path
