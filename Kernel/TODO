@@ -10,8 +10,6 @@ IP	SYS5 signal holding
 o	ptrace
 o	Core dumps
 o	time_t bits hidden in inode
-o	n_openw() - as n_open but errors on R/O mount or media, getinodew ??
-	and update setftime ?
 NA	RTC setting
 DONE	Lock clock to RTC seconds
 o	Can we make the mount point buffers writable to disk too so we can
