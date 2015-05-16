@@ -10,10 +10,13 @@
  */
 
 #include	"defs.h"
+#include	<string.h>
 
 void *setbrk(intptr_t incr)
 {
 	uint8_t *a = sbrk(incr);
 	brkend = a + incr;
+	if (a != (uint8_t *)-1)
+		memset(a, 0, incr);
 	return a;
 }
