@@ -426,6 +426,9 @@ arg_t _read(void)
 	inoptr ino;
 	uint8_t flag;
 
+	if (!nbytes)
+	        return 0;
+
 	if (!valaddr(buf, nbytes))
 	        return -1;
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
@@ -485,6 +488,9 @@ arg_t _write(void)
 {
 	inoptr ino;
 	uint8_t flag;
+
+	if (!nbytes)
+	        return 0;
 
 	if (!valaddr(buf, nbytes))
 	        return -1;
