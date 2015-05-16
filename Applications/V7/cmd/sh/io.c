@@ -30,7 +30,8 @@ int estabf(register const char *s)
 {
 	register FILE f;
 
-	(f = standin)->fdes = -1;
+	f = standin;
+	f->fdes = -1;
 	f->fend = length(s) + (f->fnxt = (char *)s);/*FIXME review */
 	f->flin = 1;
 	return (f->feof = (s == 0));
@@ -40,7 +41,8 @@ void push(FILE af)
 {
 	register FILE f;
 
-	(f = af)->fstak = standin;
+	f = af;
+	f->fstak = standin;
 	f->feof = 0;
 	f->feval = 0;
 	standin = f;
@@ -50,7 +52,8 @@ int pop(void)
 {
 	register FILE f;
 
-	if ((f = standin)->fstak) {
+	f = standin;
+	if (f->fstak) {
 		if (f->fdes >= 0)
 			close(f->fdes);
 		standin = f->fstak;
