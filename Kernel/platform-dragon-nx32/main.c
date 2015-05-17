@@ -25,6 +25,11 @@ void pagemap_init(void)
 	/* map bank 1 last for init, leave 0 for kernel */
 	for (i = membanks - 1; i > 0; i--)
 		pagemap_add(i);
+
+#ifdef SWAPDEV
+	for (i = 0; i < MAX_SWAPS; i++)
+		swapmap_add(i);
+#endif
 }
 
 void map_init(void)

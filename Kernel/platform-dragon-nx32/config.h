@@ -16,7 +16,11 @@
 #define MAP_SIZE 0x7C00U
 #define CONFIG_BANKS	1
 /* And swapping */
-#undef SWAPDEV
+#define SWAPDEV 2049		/* DriveWire drive 1 */
+#define SWAP_SIZE   0x80	/* 64K blocks */
+#define SWAPBASE    0x8000	/* We swap the lot in one, include the */
+#define SWAPTOP     0xFF00	/* uarea so its a round number of sectors */
+#define MAX_SWAPS   32
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
@@ -60,3 +64,4 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
+#define swap_map(x)	((uint8_t *)(x))

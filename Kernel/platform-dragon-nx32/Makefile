@@ -30,7 +30,7 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	drivewire.o devdw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	devlpr.o devtty.o libc.o ../vt.o
 	../tools/pad256 ../fuzix.bin

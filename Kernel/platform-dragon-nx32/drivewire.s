@@ -11,7 +11,7 @@
 	.globl _dw_reset
 
 	; imported
-	.globl map_process_always
+	.globl map_process_a
 	.globl map_kernel
 
 	.area .common
@@ -25,12 +25,11 @@ _dw_operation:
 	pshs y
 	; get parameters from C, X points to cmd packet
 	ldy 4,s		; driveptr (dw_tab in .bss so kernel bank)
-	lda ,y		; for now, contains minor = drive number directly
-	ldb 5,x		; rawflag
-	pshs b
-	beq @nomap
-	jsr map_process_always
-@nomap	ldb ,x		; write flag
+	ldb ,y		; for now, contains minor = drive number directly
+	lda 5,x		; page map
+	jsr map_process_a	; same as map_process on nx32
+	tfr b,a
+	ldb ,x		; write flag
 	; buffer location into Y
 	ldy 3,x
 	; sector number into X
@@ -43,9 +42,7 @@ _dw_operation:
 @done	bcs @err
 	bne @err
 	ldx #0
-@fin	tst ,s+
-	beq @ret
-	jsr map_kernel
+@fin	jsr map_kernel
 @ret	puls y,pc
 @err	ldx #0xFFFF
 	bra @fin
