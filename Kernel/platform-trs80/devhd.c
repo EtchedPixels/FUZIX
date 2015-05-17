@@ -143,7 +143,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		ct++;
 		dptr += 256;
 		sector++;
-		/* Cheaper than divison! */
+		/* Cheaper than division! */
 		if (sector == 32) {
 			sector = 0;
 			head++;
