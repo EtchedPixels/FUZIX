@@ -69,6 +69,9 @@ init_hardware:
 	    std _ramsize
 	    ldd #56
 	    std _procmem
+	    ; set up SAM vector for kernel
+	    ldx #0
+	    jsr _program_vectors
 	    ; Turn on PIA  CB1 (50Hz interrupt)
 	    lda 0xFF03
 	    ora #1
