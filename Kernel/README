@@ -6,9 +6,14 @@ this recipe should work on Mac.
 - Ensure you have the correct compiler and tools installed
 
   Z80:
-	SDCC 3.4 for the kernel (3.4.2 recommended)
+	SDCC 3.4 for the kernel (3.4.3 >= 9165 recommended)
 	zmac for some of the boot blocks (making these build with sdasz80
 	would be a welcome contribution)
+
+	For building banked systems use 9165 with the patches in the Fuzix
+	github. For standard kernels patched 9165 or a current SDCC should
+	both work. The newest SDCC has the essential parts of the entry size
+	patches merged.
 
   6502:
 	CC65 (You will need to build from the fork in EtchedPixels github
@@ -37,7 +42,7 @@ this recipe should work on Mac.
 
 For testing:
 
-6809 - uses xroar, but replaces the ROMs with the built image
+6809 - uses xroar with patches to simulated the Dragon-NX32 platform.
 
 MSX2 - OpenMSX (currently you need a snapshot to get the SD card working)
 
@@ -65,9 +70,9 @@ Kernel Image Notes
 
 The Z80 image is usually built as an SDCC ihx file. SDCC output is intended for
 ROM use so the binman tool copies the INITIIALIZER segment to INITIALIZED, then
-discards the INITIALIZER. It packs the COMMON segment where INITIALIZER was and
+discards the INITIALIZER. It packs the COMMON segment over the DATA segment and
 the FONT segment if present after it. crt0.s for the platform boot then copies
-those up to their correct high memory addresses.
+those up to their correct high memory addresses and clears the DATA area.
 
 It doesn't have to work this way. The test px4plus code orders things
 differently and binman knows how to handle a few combinations of needs.
