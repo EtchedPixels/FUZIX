@@ -74,6 +74,9 @@ static int maps_needed(uint16_t top)
  *	Allocate the maps for this task post fork
  *	We have a hackish fix for init that would be nice
  *	resolve.
+ *
+ *	FIXME: we need to move udata.u_top into p-> in order to
+ *	support banked swapping.
  */
 int pagemap_alloc(ptptr p)
 {
@@ -171,7 +174,7 @@ int swapout(ptptr p)
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint16_t i;
-	uint8_t *pt = (uint8_t *)&p->page;
+	uint8_t *pt = (uint8_t *)&p->p_page;
 
 	if (page)
 		panic("process already swapped!\n");
@@ -214,7 +217,7 @@ void swapin(ptptr p, uint16_t map)
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint16_t i;
-	uint8_t *pt = (uint8_t *)&p->page;
+	uint8_t *pt = (uint8_t *)&p->p_page;
 
 #ifdef DEBUG
 	kprintf("Swapin %x, %d\n", p, p->p_page);
