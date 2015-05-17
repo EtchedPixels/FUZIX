@@ -12,7 +12,6 @@
 
 #include	"defs.h"
 
-
 /*
  *	storage allocator
  *	(circular first fit strategy)
@@ -24,11 +23,13 @@
 POS brkincr = BRKINCR;
 BLKPTR blokp;			/* current search pointer */
 BLKPTR bloktop;			/* top of arena (last blok) */
-static void *end;		/* end of memory */
+static uint8_t *end;		/* end of memory */
 
 void blokinit(void)
 {
-        end = sbrk(0);		/* Find where space starts */
+        end = setbrk(0);	/* Find where space starts */
+        if (((uint8_t)end) & 1)
+                end = setbrk(1);	/* Align */
         bloktop = BLK(end);
 }
 
@@ -41,21 +42,16 @@ ADDRESS alloc(POS nbytes)
 		register BLKPTR p = blokp;
 		register BLKPTR q;
 		do {
-			if (!busy(p)
-			    ) {
-				while (!busy(q = p->word)) {
+			if (!busy(p)) {
+				while (!busy(q = p->word))
 					p->word = q->word;
-				}
+
 				if (ADR(q) - ADR(p) >= rbytes) {
 					blokp = BLK(ADR(p) + rbytes);
-					if (q > blokp) {
+					if (q > blokp)
 						blokp->word = p->word;
-						;
-					}
-					p->word =
-					    BLK(Rcheat(blokp) | BUSY);
+					p->word = BLK(Rcheat(blokp) | BUSY);
 					return (ADR(p + 1));
-					;
 				};
 			}
 			q = p;
@@ -78,7 +74,6 @@ void addblok(POS reqd)
 		stakbsy = blokstak;
 		bloktop->word = BLK(Rcheat(rndstak) | BUSY);
 		bloktop = BLK(rndstak);
-		;
 	}
 	reqd += brkincr;
 	reqd &= ~(brkincr - 1);
