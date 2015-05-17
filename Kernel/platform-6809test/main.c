@@ -4,22 +4,6 @@
 #include <printf.h>
 #include <devtty.h>
 
-/* The uarea is already synched to the stash which is written with the
-   process */
-uint8_t *swapout_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
-}
-
-/* The switchin code will move the uarea into the process itself, we just
-   need to fix up the u_page pointer */
-uint8_t *swapin_prepare_uarea(ptptr p)
-{
-  p;
-  return NULL;
-}
-
 void platform_idle(void)
 {
 }

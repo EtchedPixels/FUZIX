@@ -29,5 +29,5 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec.o \
+	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../usermem_std-6809.o devlpr.o devtty.o libc.o

@@ -17,7 +17,7 @@
         include "kernel.def"
         include "../kernel09.def"
 
-        .area _COMMONMEM
+        .area .common
 
 ; ramtop must be in common for single process swapping cases
 ; and its a constant for the others from before init forks so it'll be fine

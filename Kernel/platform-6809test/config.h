@@ -28,8 +28,6 @@
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* We want the 8x8 font */
-#define CONFIG_FONT_8X8
 /* Vt definitions */
 #define VT_WIDTH	64
 #define VT_HEIGHT	24
@@ -37,8 +35,9 @@
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 100   /* Ticks per second */
-#define PROGBASE    ((char *)(0x0100))  /* also data base */
-#define PROGTOP     ((char *)(0xF000))  /* Top of program, base of U_DATA */
+#define PROGBASE    0x0100  /* also data base */
+#define PROGLOAD    0x0800  /* also data base */
+#define PROGTOP     0x7000  /* Top of program, base of U_DATA */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -48,9 +47,11 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 2
 #define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
-#define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
+#define NBUFS    7        /* Number of block buffers */
+#define NMOUNTS	 2	  /* Number of mounts at a time - nothing mountable! */
+
+#define swap_map(x)	((uint8_t *)(x))

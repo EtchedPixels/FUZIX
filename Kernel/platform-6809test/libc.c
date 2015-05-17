@@ -1,6 +1,6 @@
 #include "cpu.h"
 
-void *memcpy(void *d, void *s, size_t sz)
+void *memcpy(void *d, const void *s, size_t sz)
 {
   unsigned char *dp, *sp;
   while(sz--)
@@ -23,12 +23,3 @@ size_t strlen(const char *p)
   return e-p-1;
 }
 
-/* Until we pull out the bits of libgcc that are useful instead */
-void abort(void)
-{
-}
-
-void *malloc(size_t size)
-{
-  return 0;
-}

@@ -14,6 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl _kernel_flag
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -34,7 +35,7 @@
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
-            .area _COMMONMEM
+            .area .common
 
 trapmsg:    .ascii "Trapdoor: SP="
             .db 0
@@ -89,7 +90,7 @@ init_hardware:
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-            .area _COMMONMEM
+            .area .common
 
 _program_vectors:
 	    ;
@@ -221,3 +222,6 @@ outcharw:
 	    beq outcharw
 	    sta 0xffa1
 	    puls b,pc
+
+	    .area .data
+_kernel_flag: .db 1

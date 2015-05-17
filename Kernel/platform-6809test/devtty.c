@@ -56,6 +56,11 @@ void tty_putc(uint8_t minor, unsigned char c)
 	*uarta = c;
 }
 
+void tty_sleeping(uint8_t minor)
+{
+    used(minor);
+}
+
 void tty_setup(uint8_t minor)
 {
     minor;
