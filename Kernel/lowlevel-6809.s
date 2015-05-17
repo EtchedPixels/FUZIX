@@ -140,14 +140,11 @@ unix_syscall_entry:
 not_error:
         ; no error to signal! return syscall return value instead of error code
         ldx U_DATA__U_RETVAL
-	ldd #0		; just for setting Z flag
 unix_return:
 	; we never make a syscall from in kernel space
 	SAM_USER
 	stx 4,s		; replace stacked values before rti
 	std 1,s
-	tfr cc,a	; Z determined by D
-	sta ,s		; replace stacked CC to signal error
 	rti
 
 ;
