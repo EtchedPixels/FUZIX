@@ -7,7 +7,9 @@
 /* FIXME: need to add alt registers */
 typedef int jmp_buf[7];
 
-int setjmp __P((jmp_buf env));
+int __setjmp __P((jmp_buf env));
 void longjmp __P((jmp_buf env, int rv));
+
+#define setjmp(x)	__setjmp(x)
 
 #endif
