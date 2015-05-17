@@ -17,9 +17,9 @@
 #define CONFIG_BANKS	1
 /* And swapping */
 #define SWAPDEV 2049		/* DriveWire drive 1 */
-#define SWAP_SIZE   0x80	/* 64K blocks */
-#define SWAPBASE    0x8000	/* We swap the lot in one, include the */
-#define SWAPTOP     0xFF00	/* uarea so its a round number of sectors */
+#define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
+#define SWAPBASE    0x8000	/* We swap the lot, including stashed uarea */
+#define SWAPTOP     0xFF00	/* so it's a round number of 256 byte sectors */
 #define MAX_SWAPS   32
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */

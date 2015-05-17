@@ -97,6 +97,14 @@ _switchin:
 	cmpa U_DATA__U_PAGE+1
 	beq nostash
 
+	; process was swapped out?
+	cmpa #0
+	bne not_swapped
+	jsr _swapper		; void swapper(ptptr p)
+	ldx _swapstack
+	lda P_TAB__P_PAGE_OFFSET+1,x
+
+not_swapped:
 	jsr map_process_a
 	
 	; fetch uarea from process memory
@@ -124,6 +132,10 @@ nostash:
 
 	lda #P_RUNNING
 	sta P_TAB__P_STATUS_OFFSET,x
+
+	; fix any moved page pointers
+	lda P_TAB__P_PAGE_OFFSET+1,x
+	sta U_DATA__U_PAGE+1
 
 	ldx #0
 	stx _runticks
