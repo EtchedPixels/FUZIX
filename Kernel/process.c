@@ -77,7 +77,7 @@ void wakeup(void *event)
 
 void pwake(ptptr p)
 {
-	if (p->p_status > P_RUNNING) {
+	if (p->p_status > P_RUNNING && p->p_status < P_FORKING) {
 		p->p_status = P_READY;
 		p->p_wait = NULL;
 		nready++;
