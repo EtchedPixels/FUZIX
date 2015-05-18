@@ -489,7 +489,7 @@ arg_t _kill(void)
 	ptptr p;
 	int f = 0, s = 0;
 
-	if (sig < 0 || sig > 15) {
+	if (sig < 0 || sig >= NSIGS) {
 		udata.u_error = EINVAL;
 		return (-1);
 	}
