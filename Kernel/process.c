@@ -425,7 +425,7 @@ void sgrpsig(uint16_t pgrp, uint16_t sig)
 {
 	ptptr p;
 	for (p = ptab; p < ptab_end; ++p) {
-		if (-p->p_pgrp == pgrp)
+		if (p->p_pgrp == pgrp)
 			ssig(p, sig);
 	}
 }
