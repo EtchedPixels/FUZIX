@@ -68,6 +68,7 @@ SRCS  = banner.c \
 	prtroot.c \
 	ps.c \
 	pwd.c \
+	reboot.c \
 	rm.c \
 	rmdir.c \
 	sleep.c \
