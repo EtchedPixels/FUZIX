@@ -17,5 +17,5 @@ build = \
 
 absify = \
 	$(filter /%, $2) \
-	$(addprefix $($T.dir)/, $(filter-out /%, $2))
+	$(addprefix $1, $(filter-out /%, $2))
 

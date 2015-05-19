@@ -15,5 +15,6 @@ $(call build, fsck, host-exe)
 ucp.srcs = ucp.c util.c devio.c xfs1.c xfs1a.c xfs1b.c xfs2.o
 $(call build, ucp, host-exe)
 
-standalones = $(chmem) $(size) $(mkfs) $(fsck) $(ucp)
+standalones: chmem size mkfs fsck ucp
+.PHONY: standalones
 
