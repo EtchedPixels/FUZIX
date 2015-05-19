@@ -73,6 +73,19 @@ struct hd_geometry {
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
+/* uadmin */
+
+#define A_SHUTDOWN		1
+#define A_REBOOT		2
+#define A_DUMP			3
+#define A_FREEZE		4	/* Unimplemented, want for NC100 */
+#define A_SWAPCTL		16	/* Unimplemented */
+#define A_CONFIG		17	/* Unimplemented */
+#define A_FTRACE		18	/* Unimplemented:
+                                          Hook to the syscall trace debug */
+
+#define AD_NOSYNC		1	/* Unimplemented */
+
 struct times;
 struct tms;
 struct utimbuf;
