@@ -374,10 +374,10 @@ typedef struct u_data {
     void *      u_sp;           /* Stores SP when process is switchped */
     bool        u_ininterrupt;  /* True when the interrupt handler is runnign (prevents recursive interrupts) */
     int8_t      u_cursig;       /* Next signal to be dispatched */
-    arg_t       u_argn;         /* Last system call arg */
-    arg_t       u_argn1;        /* This way because args on stack backwards */
-    arg_t       u_argn2;
-    arg_t       u_argn3;        /* args n-3, n-2, n-1, and n */
+    arg_t       u_argn;         /* First C argument to the system call */
+    arg_t       u_argn1;        /* Second C argument */
+    arg_t       u_argn2;	/* Third C argument */
+    arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
@@ -409,7 +409,6 @@ typedef struct u_data {
     uint16_t	u_cloexec;	/* Close on exec flags */
     inoptr      u_cwd;          /* Index into inode table of cwd. */
     inoptr	u_root;		/* Index into inode table of / */
-    //inoptr      u_ino;          /* Used during execve() */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
 } u_data;
 
