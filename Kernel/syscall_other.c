@@ -429,7 +429,7 @@ char *ptr;
 
 arg_t _uadmin(void)
 {
-	if (!esuper())
+	if (esuper())
 		return -1;
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_REBOOT || cmd == A_DUMP) {
