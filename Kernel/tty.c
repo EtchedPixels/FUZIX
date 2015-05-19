@@ -177,6 +177,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 	        return 0;
 
+        /* FIXME: racy - need to handle IRQ driven carrier events safely */
         if (!tty_carrier(minor)) {
                 if (psleep_flags(&t->termios.c_cflag, flag))
                         return -1;
