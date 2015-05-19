@@ -252,17 +252,17 @@ static void keydecode(void)
 		return;
 	}
 
-	if (keymap[6] & 65)	/* shift */
+	if (keymap[6] & 65) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
-	else
+		if (c == KEY_F1 || c == KEY_F2) {
+			if (inputtty != c - KEY_F1) {
+				inputtty = c - KEY_F1;
+			}
+			return;
+		}
+	} else
 		c = keyboard[keybyte][keybit];
 
-	if (c == 0xF1 || c == 0xF2) {
-		if (inputtty != c - 0xF1) {
-			inputtty = c - 0xF1;
-		}
-		return;
-	}
 
 
 	if (keymap[2] & 1) {	/* control */
