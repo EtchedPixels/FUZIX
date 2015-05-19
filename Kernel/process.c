@@ -40,8 +40,11 @@ void psleep(void *event)
 	udata.u_ptab->p_waitno = ++waitno;
 	nready--;
 
-	/* FIXME: we don't want to restore interrupts here, but what
-	   is the consequence */
+	/* It is safe to restore interrupts here. We have already updated the
+	   process state. The worst case is that a wakeup as we switchout
+	   leads us to switch out and back in, or that we wake and run
+	   after other candidates - no different to it occuring after the
+	   switch */
 	irqrestore(irq);
 	switchout();		/* Switch us out, and start another process */
 	/* Switchout doesn't return in this context until we have been switched back in, of course. */
