@@ -53,6 +53,9 @@ typedef union {            /* this structure is endian dependent */
 #define VIDEO
 #define DISCARD
 
+/* Pointers are 32bit */
+#define POINTER32
+
 /* Sane behaviour for unused parameters */
 #define used(x)
 
