@@ -146,7 +146,6 @@ extern int vfscanf __P((FILE*, const char*, va_list));
 extern int vsscanf __P((char*, const char*, va_list));
 
 extern void perror __P((const char *__s));
-extern char *strerror __P((int __errno));
 
 extern char *tmpnam __P((char *buf));
 
