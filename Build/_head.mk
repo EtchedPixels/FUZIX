@@ -6,8 +6,8 @@ find-makefile = \
 	$(eval DIR := $(dir $(word $(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST))))
 
 build = \
-	$(eval TARGET := $1) \
-	$(eval CLASS := $2) \
+	$(eval TARGET := $(strip $1)) \
+	$(eval CLASS := $(strip $2)) \
 	$(eval include $(BUILD)/object.mk) \
 	$(eval TARGET :=) \
 	$(eval CLASS :=)

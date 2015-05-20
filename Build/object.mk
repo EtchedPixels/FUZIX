@@ -15,6 +15,10 @@ TARGETS += $(TARGET)
 $(TARGET).class := $(CLASS)
 $(TARGET).dir := $(DIR)
 
+# No spaces here
+T:=$(strip $(TARGET))
+include $(BUILD)/$(CLASS).mk
+
 TARGET :=
 CLASS :=
 

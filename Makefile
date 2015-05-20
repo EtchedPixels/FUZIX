@@ -7,6 +7,9 @@ hide = @
 CFLAGS = -g -O
 LDFLAGS = -g
 
+host.cflags = $(CFLAGS)
+host.ldflags = $(LDFLAGS)
+
 all:
 
 ifeq ($(PLATFORM),)
@@ -17,7 +20,8 @@ include $(BUILD)/_head.mk
 include $(BUILD)/platforms/$(PLATFORM).mk
 include $(TOP)/Standalone/build.mk
 include $(TOP)/Library/build.mk
+include $(TOP)/Applications/build.mk
 include $(BUILD)/_tail.mk
 
-all: standalones libc
+all: standalones apps
 

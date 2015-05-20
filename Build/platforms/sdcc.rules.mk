@@ -1,45 +1,56 @@
-# $1 is the current target name.
+# $T is the current target name.
 
-$1.abssrcs ?= $(call absify, $($1.dir), $($1.srcs))
-$1.depsrcs ?= $(filter %.c, $($1.abssrcs))
-$1.deps ?= $(patsubst %.c, $($1.objdir)/%.d, $($1.depsrcs))
-$1.objs ?= $(patsubst %, $($1.objdir)/%.rel, $(basename $($1.abssrcs)))
-.SECONDARY: $($1.objs)
+ifeq ($($T.abssrcs),)
+$T.abssrcs := $(call absify, $($T.dir), $($T.srcs))
+endif
 
--include $($1.deps)
+ifeq ($($T.depsrcs),)
+$T.depsrcs := $(filter %.c, $($T.abssrcs))
+endif
+
+ifeq ($($T.deps),)
+$T.deps := $(patsubst %.c, $($T.objdir)/%.d, $($T.depsrcs))
+endif
+
+ifeq ($($T.objs),)
+$T.objs := $(patsubst %, $($T.objdir)/%.rel, $(basename $($T.abssrcs)))
+endif
+
+.SECONDARY: $($T.objs)
+
+-include $($T.deps)
 
 # Variables referenced with $ are evaluated immediately.
 # Variables references with $$ are evaluated at recipe execution time.
 define patterns
 
-$($1.objdir)/%.rel: $(TOP)/%.c
+$($T.objdir)/%.rel: $(TOP)/%.c
 	@echo CC $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(SDCC) \
-		$(SDCCCFLAGS) \
-		$(PLATFORM_CFLAGS) \
-		$($1.cflags) \
-		$(INCLUDES) \
-		$($1.includes) \
-		$(DEFINES) \
-		$($1.defines) \
+		$(sdcc.cflags) $($($T.class).cflags) $($T.cflags) \
+		$(sdcc.includes) $($($T.class).includes) $($T.includes) \
+		$(sdcc.defines) $($($T.class).defines) $($T.defines) \
 		-M $$< | sed -e '1s!^[^:]*!$$@!' \
 		> $$(basename $$@).d
 	$(hide) $(SDCC) \
-		$(SDCCCFLAGS) \
-		$(PLATFORM_CFLAGS) \
-		$($1.cflags) \
-		$(INCLUDES) \
-		$($1.includes) \
-		$(DEFINES) \
-		$($1.defines) \
+		$(sdcc.cflags) $($($T.class).cflags) $($T.cflags) \
+		$(sdcc.includes) $($($T.class).includes) $($T.includes) \
+		$(sdcc.defines) $($($T.class).defines) $($T.defines) \
 		-c -o $$@ $$<
 
-$($1.objdir)/%.lib: $($1.objs)
+$($T.objdir)/%.lib: $($T.objs)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) rm -f $$@
 	$(hide) $(SDAR) -rc $$@ $$^
+
+$($T.objdir)/%.exe: $($T.objs) $($($T.class).extradeps) $($T.extradeps)
+	@echo LINK $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(SDCC) \
+		$(sdcc.ldflags) $($($T.class).ldflags) $($T.ldflags) \
+		-o $$(@:.exe=.ihx) $($T.objs)
 
 endef
 $(eval $(patterns))
