@@ -34,7 +34,6 @@
 	.globl platform_interrupt_all
 
         ; exported symbols
-        .globl unix_syscall_entry
 	.globl _chksigs
 	.globl null_handler
 	.globl unix_syscall_entry
