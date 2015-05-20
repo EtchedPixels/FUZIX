@@ -104,7 +104,7 @@ LIBS = ../../Library/libs/syslib.lib
 
 APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=)
 
-all: $(APPS)
+all: $(APPS) sizes
 
 $(OBJS): $(SRCS)
 
@@ -117,8 +117,11 @@ $(OBJSBAD): $(SRCSBAD)
 %: %.rel
 	$(FCC) $(PLATFORM) $< -o $@
 
+sizes: $(APPS)
+	ls -l $(APPS) >size.report
+
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core
