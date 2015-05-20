@@ -1,8 +1,12 @@
 # $1 is the current target name.
 
 $1.abssrcs ?= $(call absify, $($1.dir), $($1.srcs))
+$1.depsrcs ?= $(filter %.c, $($1.abssrcs))
+$1.deps ?= $(patsubst %.c, $($1.objdir)/%.d, $($1.depsrcs))
 $1.objs ?= $(patsubst %, $($1.objdir)/%.rel, $(basename $($1.abssrcs)))
 .SECONDARY: $($1.objs)
+
+-include $($1.deps)
 
 # Variables referenced with $ are evaluated immediately.
 # Variables references with $$ are evaluated at recipe execution time.

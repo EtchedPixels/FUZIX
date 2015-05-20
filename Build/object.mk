@@ -12,8 +12,8 @@ endif
 
 TARGETS += $(TARGET)
 
-$(eval $(TARGET).class := $(CLASS))
-$(eval $(TARGET).dir := $(DIR))
+$(TARGET).class := $(CLASS)
+$(TARGET).dir := $(DIR)
 
 TARGET :=
 CLASS :=
