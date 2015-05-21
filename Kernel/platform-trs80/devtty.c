@@ -215,7 +215,7 @@ static void keydecode(void)
 			c &= 31;
                 }
 	}
-	if (capslock && c >= 'a' && c <= 'z')
+	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c)
 		vt_inproc(1, c);
