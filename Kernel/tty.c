@@ -167,9 +167,8 @@ int tty_open(uint8_t minor, uint16_t flag)
 	        return -1;
         }
 
-
 	/* If there is no controlling tty for the process, establish it */
-	if (!udata.u_ptab->p_tty && !(flag & O_NOCTTY)) {
+	if (!udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
 		udata.u_ptab->p_tty = minor;
 		t->pgrp = udata.u_ptab->p_pgrp;
 	}
@@ -194,11 +193,22 @@ int tty_open(uint8_t minor, uint16_t flag)
 int tty_close(uint8_t minor)
 {
 	/* If we are closing the controlling tty, make note */
-	if (minor == udata.u_ptab->p_tty)
+	if (minor == udata.u_ptab->p_tty) {
 		udata.u_ptab->p_tty = 0;
+		ttydata[minor].pgrp = 0;
+        }
         /* If we were hung up then the last opener has gone away */
         ttydata[minor].flag &= ~TTYF_DEAD;
 	return (0);
+}
+
+/* If the group owner for the tty dies, the tty loses its group */
+void tty_exit(void)
+{
+        uint8_t t = udata.u_ptab->p_tty;
+        uint16_t *pgrp = &ttydata[t].pgrp;
+        if (t && *pgrp == udata.u_ptab->p_pgrp && *pgrp == udata.u_ptab->p_pid)
+                *pgrp = 0;
 }
 
 int tty_ioctl(uint8_t minor, uarg_t request, char *data)
@@ -412,6 +422,7 @@ void tty_hangup(uint8_t minor)
         struct tty *t = &ttydata[minor];
         /* Kill users */
         sgrpsig(t->pgrp, SIGHUP);
+        t->pgrp = 0;
         /* Stop any new I/O with errors */
         t->flag |= TTYF_DEAD;
         /* Wake up read/write */

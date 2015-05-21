@@ -242,7 +242,7 @@ void fuzix_main(void)
 
 	tty_init();
 
-	if (d_open(TTYDEV, 0) != 0)
+	if (d_open(TTYDEV, O_NOCTTY) != 0)
 		panic("no tty");
 
 	/* Sign on messages */

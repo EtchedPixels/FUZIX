@@ -549,6 +549,7 @@ setpgrp (void)                    Function 53
 arg_t _setpgrp(void)
 {
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
+	udata.u_ptab->p_tty = 0;
 	return (0);
 }
 
