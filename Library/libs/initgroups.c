@@ -22,7 +22,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <grp.h>
-#include "config-grp.h"
+#include "config-getent.h"
 
 int
 initgroups(__const char * user, gid_t gid)
