@@ -2,6 +2,8 @@
  * Copyright (c) 1993 by David I. Bell
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
+ *
+ * Stripped of stdio usage Alan Cox 2015
  */
 
 #include <unistd.h>
