@@ -90,7 +90,7 @@ void tty_setup(uint8_t minor)
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 2)
+    if (minor == 2 &&ttydata[2].users == 0)
         tr1865_ctrl = 0;	/* Drop carrier */
     return tty_close(minor);
 }

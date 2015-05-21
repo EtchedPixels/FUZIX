@@ -160,6 +160,9 @@ int mtxtty_close(uint8_t minor)
 	irqflags_t flags;
 	int err = tty_close(minor);
 
+	if (tty[minor].users)
+		return 0;
+
 	flags = di();
 	if (minor == 3) {
 		serialAc = 0x05;
