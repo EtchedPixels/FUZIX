@@ -14,7 +14,7 @@
 
 /* Should probably have a max and a max open to keep the maps managable */
 static unsigned char mdvmap[MAX_MDV][256];
-static uint8_t mdv_valid;
+static uint8_t mdv_count[MAX_MDV];
 
 /* Used by the asm helpers */
 uint8_t *mdv_buf;
@@ -126,33 +126,35 @@ int mdv_open(uint8_t minor, uint16_t flag)
 		udata.u_error = ENODEV;
 		return -1;
 	}
-	mdv_motor_on(minor + 1);
-	t = tmpbuf();
-	mdv_buf = t;
-	mdv_sector = 1;
-	mdv_page = 0;
-	err = mdv_bread();
-	if (err) {
-		mdv_sector = 128;
+	if (!mdv_count[minor]) {
+		mdv_motor_on(minor + 1);
+		t = tmpbuf();
+		mdv_buf = t;
+		mdv_sector = 1;
+		mdv_page = 0;
 		err = mdv_bread();
 		if (err) {
-			kprintf("mdv_open: maps bad: %d\n", err);
-			mdv_motor_off();
-			udata.u_error = ENXIO;
-			return -1;
+			mdv_sector = 128;
+			err = mdv_bread();
+			if (err) {
+				kprintf("mdv_open: maps bad: %d\n", err);
+				mdv_motor_off();
+				udata.u_error = ENXIO;
+				return -1;
+			}
+			kprintf("mdv_open: had to use secondary map\n");
 		}
-		kprintf("mdv_open: had to use secondary map\n");
+		memcpy(mdvmap[minor], t, 256);
+		brelse(t);
+		mdv_motor_off();
 	}
-	memcpy(mdvmap[minor], t, 256);
-	brelse(t);	
-	mdv_valid |= 1 << minor;
-	mdv_motor_off();
+	mdv_count[minor]++;
 	return 0;
 }
 
 int mdv_close(uint8_t minor)
 {
 	/* Simple approach for now */
-	mdv_valid &= ~(1 << minor);	
+	mdv_count[minor]--;
 	return 0;
 }
