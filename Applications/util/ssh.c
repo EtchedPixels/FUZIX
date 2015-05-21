@@ -75,9 +75,9 @@ int main(int argc, char *argval[])
         for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
         do {
             write(1, cprompt, 4);
-            if (read(0, buf, 127) <= 0)
+            if ((i = read(0, buf, 127)) <= 0)
                 return 0;
-            buf[strlen(buf) - 1] = '\0';   /* Strip newline from fgets */
+            buf[i - 1] = '\0';   /* Strip newline from fgets */
         }
         while (buf[0] == (char) 0);
 		cmd = strtok(buf, " \t");
@@ -183,7 +183,7 @@ int main(int argc, char *argval[])
                     }
                     write(2, "ssh: ", 5);
                     write(2, cmd, strlen(cmd));
-                    write(2, "\n", 1);      /* Say we can't exec */
+                    write(2, "?\n", 2);      /* Say we can't exec */
                     exit(1);
                 }                                   /* Parent is in context */
                 wait(0);                    /* Parent waits for completion */
