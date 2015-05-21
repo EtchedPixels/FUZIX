@@ -89,31 +89,31 @@ int login(char *ttyname)
     struct passwd *pwd;
     char *p, buf[50], salt[3];
 
-    fdtty = open(ttyname, O_RDWR);
-    if (fdtty < 0) return -1;
-
     for (;;) {
         pid = fork();
         if (pid == -1) {
             putstr("init: can't fork\n");
         } else {
-            if (pid != 0) {
-                close(fdtty);
+            if (pid != 0)
                 /* parent's context: return pid of the child process */
                 return pid;
-            }
-            
+
+            close(0);
+            close(1);
+            close(2);
+            setpgrp();
+
+            fdtty = open(ttyname, O_RDWR);
+            if (fdtty < 0)
+                return -1;
+
             /* here we are inside child's context of execution */
             envset("PATH", "/bin:/usr/bin");     
             envset("CTTY", ttyname);
 
             /* make stdin, stdout and stderr point to fdtty */
 
-            close(0);
             dup(fdtty);
-            close(1);
-            dup(fdtty);
-            close(2);
             dup(fdtty);
 
             /* display the /etc/issue file, if exists */
