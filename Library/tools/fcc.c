@@ -212,6 +212,7 @@ static int debug;
 static int pedantic;
 static int werror;
 static int unschar;
+static int nostdio = 0;
 
 
 static char *rebuildname(const char *r, const char *i, char *ext)
@@ -400,7 +401,10 @@ static void build_command(void)
       exit(1);
     }
     add_option("-o", target);
-    snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s.rel", platform);
+    if (nostdio)
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0nostdio%s.rel", platform);
+    else
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s.rel", platform);
     add_argument(mstrdup(buf));
   }
   if (srchead) {
@@ -502,8 +506,10 @@ int main(int argc, const char *argv[]) {
             werror = 1;
           else if (strcmp(p, "-funsigned-char") == 0)
             unschar = 1;
-          else if (strcmp(p, "-pedantic") == 0)
+          else if (strcmp(p, "--pedantic") == 0)
             pedantic = 1;
+          else if (strcmp(p, "--nostdio") == 0)
+            nostdio = 1;
           else {
             fprintf(stderr, "fcc: Unknown option '%s'.\n", p);
             exit(1);
