@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     int  quit, found;
     char *envpath;
     char *path, *cp;
-    char buf[200];
+    char buf[512];
     char patbuf[512];
 
     if (argc < 2) {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	    } else {
 		*cp = '\0';
 	    }
-	    sprintf(buf, "%s/%s", (*path ? path : "."), *argv);
+	    snprintf(buf, 512, "%s/%s", (*path ? path : "."), *argv);
 	    path = ++cp;
 
 	    if (access(buf, 1) == 0) {
