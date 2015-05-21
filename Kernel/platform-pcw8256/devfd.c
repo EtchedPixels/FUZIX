@@ -83,7 +83,7 @@ static void fd_geom(int minor, blkno_t block)
     fd765_cmd3();
 
     if (fd765_intwait() & 0x20)
-        track[minor] = ntrack;//FIXMEfd765_statbuf[1] & 0x7F;
+        track[minor] = ntrack;//FIXME??fd765_statbuf[1] & 0x7F;
     else {
         track[minor] = 0xFF;
         kputs("seekbad?\n");
@@ -92,7 +92,7 @@ static void fd_geom(int minor, blkno_t block)
 }
 
 /*
- *	Select a driver, ensure the motor is on and we are ready
+ *	Select a drive, ensure the motor is on and we are ready
  *	then set up the command buffers to reflect this device
  */
 static void fd_select(int minor)
