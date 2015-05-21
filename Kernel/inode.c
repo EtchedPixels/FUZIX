@@ -223,7 +223,7 @@ int16_t doclose(uint8_t uindex)
 
 	oftindex = udata.u_files[uindex];
 
-	if (ino->c_refs == 1 && of_tab[oftindex].o_refs == 1) {
+	if (of_tab[oftindex].o_refs == 1) {
 		if (isdevice(ino))
 			d_close((int) (ino->c_node.i_addr[0]));
 		if (getmode(ino) == F_REG && O_ACCMODE(of_tab[oftindex].o_access))
