@@ -151,10 +151,10 @@ struct termios {
    the data indexed off a single register */
 struct tty {
     /* Put flag first: makes it cheaper when short of registers */
-    uint8_t flag;		/* Use uint8 pad - makes the whole struct
+    uint8_t flag;		/* make the whole struct
                                    24 byte - a nice number for CPUs with no 
                                    multiplier */
-    uint8_t pad0;
+    uint8_t users;
 #define TTYF_STOP	1
 #define TTYF_DISCARD	2
 #define TTYF_DEAD	4

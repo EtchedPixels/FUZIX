@@ -172,6 +172,10 @@ int tty_open(uint8_t minor, uint16_t flag)
 		udata.u_ptab->p_tty = minor;
 		t->pgrp = udata.u_ptab->p_pgrp;
 	}
+	if (t->users) {
+	        t->users++;
+	        return 0;
+        }
 	tty_setup(minor);
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 	        return 0;
@@ -187,18 +191,21 @@ int tty_open(uint8_t minor, uint16_t flag)
                 t->flag &= ~TTYF_DEAD;
                 return -1;
         }
+        t->users++;
         return 0;
 }
 
 int tty_close(uint8_t minor)
 {
+        struct tty *t = &ttydata[minor];
+        if (--t->users)
+                return 0;
 	/* If we are closing the controlling tty, make note */
-	if (minor == udata.u_ptab->p_tty) {
+	if (minor == udata.u_ptab->p_tty)
 		udata.u_ptab->p_tty = 0;
-		ttydata[minor].pgrp = 0;
-        }
+	t->pgrp = 0;
         /* If we were hung up then the last opener has gone away */
-        ttydata[minor].flag &= ~TTYF_DEAD;
+        t->flag &= ~TTYF_DEAD;
 	return (0);
 }
 
