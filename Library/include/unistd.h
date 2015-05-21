@@ -32,10 +32,10 @@ extern int execl __P((const char *pathname, const char *arg0, ...));
 extern int execle __P((const char *pathname, const char *arg0, ...));
 extern int execlp __P((const char *pathname, const char *arg0, ...));
 extern int execlpe __P((const char *pathname, const char *arg0, ...));
-extern int execv __P((const char *pathname, const char *argv[]));
-extern int execve __P((const char *pathname, const char *argv[], const char *envp[]));
-extern int execvp __P((const char *pathname, const char *argv[]));
-extern int execvpe __P((const char *pathname, const char *argv[], const char *envp[]));
+extern int execv __P((const char *pathname, char *const argv[]));
+extern int execve __P((const char *pathname, char * const argv[], char * const envp[]));
+extern int execvp __P((const char *pathname, char *const argv[]));
+extern int execvpe __P((const char *pathname, char *const argv[], char * const envp[]));
 
 extern char *ttyname __P((int));
 extern int system __P((const char *));

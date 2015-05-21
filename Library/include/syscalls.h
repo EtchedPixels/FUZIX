@@ -110,7 +110,7 @@ extern pid_t getpid(void);
 extern pid_t getppid(void);
 extern uid_t getuid(void);
 extern mode_t umask(mode_t);
-extern int execve(const char *path, const char *argv[], const char *envp[]);
+extern int execve(const char *path, char * const argv[], char *const envp[]);
 extern pid_t wait(int *status);
 extern int setuid(uid_t uid);
 extern int setgid(gid_t gid);
