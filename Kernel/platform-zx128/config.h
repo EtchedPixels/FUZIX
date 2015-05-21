@@ -74,4 +74,5 @@
 #define SWAP_SIZE 0x40
 #define MAX_SWAPS 3		/* For now */
 
-#define swap_map(x)		((uint8_t *)(x))
+/* All our pages get mapped into the top 16K bank for swapping use */
+#define swap_map(x)		((uint8_t *)(x|0xC000))

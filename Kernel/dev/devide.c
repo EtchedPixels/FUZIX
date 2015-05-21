@@ -132,8 +132,17 @@ void devide_read_data(void) __naked
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld b, #0                                ; setup count
             ld c, #IDE_REG_DATA                     ; setup port number
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapin
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr swapin
+not_swapin:
+#endif
             or a                                    ; test is_user
             call nz, map_process_always             ; map user memory first if required
+swapin:
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
             or a                                    ; test is_user
@@ -149,8 +158,17 @@ static void devide_write_data(void) __naked
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld b, #0                                ; setup count
             ld c, #IDE_REG_DATA                     ; setup port number
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapout
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr swapout
+not_swapout:
+#endif
             or a                                    ; test is_user
             call nz, map_process_always             ; else map user memory first if required
+swapout:
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
             or a                                    ; test is_user

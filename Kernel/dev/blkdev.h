@@ -23,7 +23,8 @@ typedef struct {
 struct blkparam {
     /* do not change the order without adjusting BLKPARAM_*_OFFSET macros below */
     void *addr;                             /* address for transfer buffer */
-    bool is_user;                           /* true: addr is in user memory, false: addr is in kernel memory */
+    uint8_t is_user;	                    /* 0: kernel 1: user 2: swap */
+    uint8_t swap_page;                      /* page to pass to map_swap */
     blkdev_t *blkdev;                       /* active block device */
     uint32_t lba;                           /* LBA for first sectors to transfer */
     uint8_t nblock;                         /* number of sectors to transfer */
@@ -31,7 +32,12 @@ struct blkparam {
 };
 /* macros that inline assembler code can use to access blkparam fields */
 #define BLKPARAM_ADDR_OFFSET    0
+#ifdef POINTER32
+#define BLKPARAM_IS_USER_OFFSET 4
+#else
 #define BLKPARAM_IS_USER_OFFSET 2
+#endif
+#define BLKPARAM_SWAP_PAGE	BLKPARAM_IS_USER_OFFSET + 1
 
 extern struct blkparam blk_op;
 
