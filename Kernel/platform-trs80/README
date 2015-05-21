@@ -73,6 +73,21 @@ Setting It Up
 	# Once we get that far you can also put a filesystem in the lower
 	# blocks
 	#
-	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3 -model 4p
+	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3
 	#
 	# and remember to mark the fd volume as writeable
+
+To set up for hard disk, create a hard disk with the xtrs tools and
+
+	mkdisk -h hard4-0
+	# This assumes the default disk size
+	cd Standalone/filesystem-src
+	./build-filesystem trs80.hd 256 21760
+	dd if=trs80.hd of=hard4-0 bs=256 seek=1 conv=notrunc
+	tools/trslabel hard4-0
+	#
+	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3 -hard0 hard4-0
+
+
+You will still need a boot floppy at this point but just boot with device
+0 (or hit return). Swap is configured to be on the end of the hard disk
