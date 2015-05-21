@@ -3,7 +3,7 @@
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
  *
- * Most simple built-in commands are here.
+ * stdio stripped out Alan Cox 2015
  */
 
 #include <stdio.h>
