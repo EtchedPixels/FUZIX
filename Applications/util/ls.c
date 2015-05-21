@@ -295,9 +295,9 @@ void main(int argc, char *argv[])
 	    if ((*name != '.') || (name[1] != '\0')) {
 		strcpy(fullname, name);
 		if (!endslash)
-		    strcat(fullname, "/");
+		    strlcat(fullname, "/", sizeof(fullname));
 	    }
-	    strcat(fullname, dp->d_name);
+	    strlcat(fullname, dp->d_name, sizeof(fullname));
 	    if (listused >= listsize) {
 		newlist = realloc(list,
 			    ((sizeof(char **)) * (listsize + LISTSIZE)));
