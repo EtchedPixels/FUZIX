@@ -26,7 +26,7 @@ DIR *opendir(char *path)
 		errno = ENOMEM;
 		goto Err;
 	}
-	if ((dir->dd_fd = open(path, O_RDONLY)) < 0) {
+	if ((dir->dd_fd = open(path, O_RDONLY | O_CLOEXEC)) < 0) {
 		free(dir->dd_buf);
 		free(dir);
 	      Err:return NULL;
