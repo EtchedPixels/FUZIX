@@ -3,7 +3,8 @@
  * under the GNU Library General Public License.
  *
  * Rewritten by Alan Cox to use a binary file format and save a lot of space
- */  
+ */
+
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@ static char retbuf[80];
 static void _load_errlist(void)
 {
 	struct stat st;
-	int fd = open(_PATH_LIBERR, O_RDONLY);
+	int fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
 	if (fd < 0)
 		return;
 	if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
@@ -29,7 +30,7 @@ static void _load_errlist(void)
 		goto bad;
 	if (read(fd,__sys_errlist, st.st_size) == st.st_size) {
 		__sys_nerr = *__sys_errlist;
-		__sys_errptr = (uint16_t *)__sys_errlist + 2;
+		__sys_errptr = (uint16_t *)__sys_errlist + 1;
 		close(fd);
 		return;
 	}
@@ -38,14 +39,13 @@ bad:
 	__sys_errlist = NULL;
 	return;
 }
-	
-char *strerror(int err) 
-{
 
+char *strerror(int err)
+{
 	if (!__sys_errlist)
 		_load_errlist();
 	if (__sys_errlist && err >= 0 && err < __sys_nerr)
-		return __sys_errlist[__sys_errptr[err]];
+		return __sys_errlist + __sys_errptr[err];
 	strcpy(retbuf, "Unknown error ");
 	strcpy(retbuf + 14, _itoa(err));
 	return retbuf;
