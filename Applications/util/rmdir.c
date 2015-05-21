@@ -4,6 +4,11 @@
 
 unsigned short newmode;
 
+void writes(const char *p)
+{
+    write(2, p, strlen(p));
+}
+
 int remove_dir(char *name, int f)
 {
     int er, era = 2;
@@ -34,11 +39,13 @@ int main(int argc, char **argv)
     for (i = parent + 1; i < argc; i++) {
 	if (argv[i][0] != '-') {
 	    if (remove_dir(argv[i], parent)) {
-	        fprintf(stderr, "rmdir: cannot remove directory %s\n", argv[i]);
+	        writes("rmdir: cannot remove directory '");
+	        writes(argv[i]);
+	        perror("'");
 		er = 1;
 	    }
 	} else {
-	    fprintf(stderr, "rmdir: usage error\n");
+	    writes("rmdir: usage error\n");
 	    exit(1);
 	}
     }
