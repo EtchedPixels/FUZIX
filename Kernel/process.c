@@ -279,6 +279,7 @@ ptptr ptab_alloc(void)
 			newp = NULL;
                 }
                 newp->p_pgrp = udata.u_ptab->p_pgrp;
+                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
 	}
 	irqrestore(irq);
 	if (newp)
