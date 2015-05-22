@@ -260,8 +260,10 @@ int cdwrite(uint16_t dev, uint8_t flag)
 
 int d_open(uint16_t dev, uint8_t flag)
 {
-	if (!validdev(dev))
+	if (!validdev(dev)) {
+	        udata.u_error = ENXIO;
 		return -1;
+        }
 	return ((*dev_tab[major(dev)].dev_open) (minor(dev), flag));
 }
 
