@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <tty.h>
 
 #if defined(CONFIG_LARGE_IO_DIRECT)
 #define read_direct(flag)		(!udata.u_sysio)
@@ -274,4 +275,40 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 	/* FIXME: for 32bit we will need to check for overflow of the
            file size here in the r/w inode code */
 	return (ino);
+}
+
+/*
+ *	FIXME: could we rewrite this so we just passed the oft slot and
+ *	did the work in that then picked it up in open. That would feel
+ *	less like ugly layering violations and is probably shorter and
+ *	much cleaner, and gets rid of the itmp ugly.
+ *
+ *	FIXME. Need so IS_TTY(dev) defines too and minor(x) etc
+ */
+int dev_openi(inoptr *ino, uint8_t flag)
+{
+        int ret;
+        uint16_t da = (*ino)->c_node.i_addr[0];
+        /* Handle the special casing where we need to know about inodes */
+
+        /* /dev/tty processing */
+        if (da == 0x0200) {
+                if (!udata.u_ctty) {
+                        udata.u_error = ENODEV;
+                        return -1;
+                }
+                i_deref(*ino);
+                *ino = udata.u_ctty;
+                da = (*ino)->c_node.i_addr[0];
+                i_ref(*ino);
+                /* fall through opening the real device */
+        }
+        /* normal device opening */
+        ret = d_open((int)da, flag);
+        /* errors and non tty opens */
+        if (ret != 0 || (da & 0xFF00) != 0x0200)
+                return ret;
+        /* tty post processing */
+        tty_post(*ino, da & 0xFF, flag);
+        return 0;
 }
