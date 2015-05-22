@@ -29,6 +29,8 @@ SDCC_INCLUDES = $(patsubst %, -I%, \
 SDCC_LIBS = $(firstword $(call find_section, $(search_dirs), libdir:))
 SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES))
 
+WANT_FUZIX_STRINGLIB = n
+
 # This is the macro which is appended to target build classes; it contains all
 # the sdcc-specific bits of the build rules.
 
@@ -48,6 +50,8 @@ $1.objs ?= $$(patsubst %, $$($1.objdir)/%.rel, $$(basename $$($1.abssrcs)))
 
 -include $$($1.deps)
 
+# Builds an ordinary C file.
+
 $$($1.objdir)/%.rel: $(TOP)/%.c
 	@echo CC $$@
 	@mkdir -p $$(dir $$@)
@@ -63,11 +67,33 @@ $$($1.objdir)/%.rel: $(TOP)/%.c
 		$$(sdcc.defines) $$($$($1.class).defines) $$($1.defines) \
 		-c -o $$@ $$<
 
+# Builds an ordinary .s file.
+
+$$($1.objdir)/%.rel: $(TOP)/%.s
+	@echo AS $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(SDAS) \
+		$$(sdcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
+		-c -o $$@ $$<
+
+# Builds a dynamically generated .s file.
+
+$$($1.objdir)/%.rel: $$($1.objdir)/%.s
+	@echo AS $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(SDAS) \
+		$$(sdcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
+		-c -o $$@ $$<
+
+# Builds a library from object files.
+
 $$($1.objdir)/%.lib: $$($1.objs)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) rm -f $$@
 	$$(hide) $(SDAR) -rc $$@ $$^
+
+# Builds a target executable.
 
 $$($1.objdir)/%.exe: $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@

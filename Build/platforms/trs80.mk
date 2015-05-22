@@ -9,9 +9,14 @@ SDCC = sdcc
 SDCPP = cpp -nostdinc -undef -P
 SDAS = sdasz80
 SDAR = sdar
-ARCH = z80
 PLATFORM_RULES = sdcc.rules
 include $(BUILD)/platforms/sdcc.rules.mk
+
+# CPU architecture and which syscall generator to use.
+
+ARCH = z80
+SYSCALL_GENERATOR = syscall
+SYSCALL_STUB = fuzix/syscall.s
 
 # Find what load address the kernel wants.
 
@@ -50,8 +55,8 @@ target-exe.extradeps += $(libc.exe)
 
 libruntime.ext := $A
 $(call build, libruntime, nop)
-target-exe.ldflags += $(libruntime.exe)
-target-exe.extradeps += $(libruntime.exe)
+target-exe.ldflags += $(libruntime.exe) $(libsyscalls.exe)
+target-exe.extradeps += $(libruntime.exe) $(libsyscalls.exe)
 
 libruntime.objs := \
 	divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel \
@@ -78,6 +83,6 @@ $(libruntime.exe): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
 	@mkdir -p $(libruntime.objdir)
 	$(hide) rm -f $(libruntime.objdir)/*.rel
 	$(hide) (cd $(libruntime.objdir) \
-		&& $(AR) x $< $(libruntime_objects) \
-		&& $(AR) q $(abspath $@) $(libruntime.objs))
+		&& $(SDAR) x $< $(libruntime_objects) \
+		&& $(SDAR) cq $(abspath $@) $(libruntime.objs))
 

@@ -221,6 +221,26 @@ libsrcnames += \
 
 endif
 
+libsrcnames += $(SYSCALL_STUB)
+
 libc.srcs = $(addprefix libs/, $(libsrcnames))
 $(call build, libc, target-lib)
+
+$(SYSCALL_GENERATOR).srcs = tools/$(SYSCALL_GENERATOR).c
+$(SYSCALL_GENERATOR).includes = -I$(TOP)/Kernel/include
+$(call build, $(SYSCALL_GENERATOR), host-exe)
+
+libsyscalls.objdir = $(OBJ)/$(PLATFORM)/syscalls
+libsyscalls.srcs = $(patsubst %, $(libsyscalls.objdir)/fuzix/syscall_%.s, $(syscalls))
+libsyscalls.objs = $(patsubst %, $(libsyscalls.objdir)/fuzix/syscall_%.$O, $(syscalls))
+$(call build, libsyscalls, target-lib)
+
+# We have to use a pattern in this rule, because accurséd make only supports
+# rules with multiple outputs in pattern rules. If we just used
+# $(libsyscalls.srcs) as the source it would run the rule once for every
+# syscall.
+$(libsyscalls.objdir)/fuzix/%.s: $($(SYSCALL_GENERATOR).exe)
+	@echo SYSCALLS $@
+	@mkdir -p $(libsyscalls.objdir)/fuzix
+	$(hide) (cd $(libsyscalls.objdir) && $(abspath $^))
 
