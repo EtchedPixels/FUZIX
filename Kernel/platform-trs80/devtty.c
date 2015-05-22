@@ -98,9 +98,15 @@ void tty_putc(uint8_t minor, unsigned char c)
     else {
         irq = di();
         if (curtty != minor -1) {
+            /* Kill the cursor as we are changing the memory buffers. If
+               we don't do this the next cursor_off will hit the wrong
+               buffer */
+            cursor_off();
             vt_save(&ttysave[curtty]);
             curtty = minor - 1;
             vt_load(&ttysave[curtty]);
+            /* Fix up the cursor */
+            cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
        }
        vtoutput(&c, 1);
        irqrestore(irq);
