@@ -18,6 +18,7 @@ bget usr-files/lib/liberror.txt
 chmod 0644 liberror.txt
 
 cd /dev
+mknod tty   20666 512
 mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
