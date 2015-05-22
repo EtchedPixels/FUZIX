@@ -314,3 +314,5 @@ void tty_interrupt(void)
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
 
+/* FIXME: need to wrap vt_ioctl so we switch to the right tty before asking
+   the size! */
