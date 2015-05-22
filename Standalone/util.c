@@ -18,18 +18,18 @@ extern int swizzling;
 int fd_open(char *name)
 {
 	char *namecopy, *sd;
-	int subdev = 0;
+	int bias = 0;
 
 	namecopy = strdup(name);
 	sd = index(namecopy, ':');
 	if (sd) {
 		*sd = 0;
 		sd++;
-		subdev = atoi(sd);
+		bias = atoi(sd);
 	}
 
-	printf("Opening %s sd%d\n", namecopy, subdev);
-	dev_offset = subdev << 25;	// * 32MB
+	printf("Opening %s (offset %d)\n", namecopy, bias);
+	dev_offset = bias;
 	dev_fd = open(namecopy, O_RDWR | O_CREAT, 0666);
 	free(namecopy);
 
