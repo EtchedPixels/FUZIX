@@ -4,7 +4,7 @@
 
 /* Divide *tp by 10 and also return the remainder */
 /* On processors with real idiv we should probably just use that */
-unsigned long div10quickm(unsigned long *tp)
+static unsigned long div10quickm(unsigned long *tp)
 {
 	unsigned long q, r, t;
 	t = *tp;
