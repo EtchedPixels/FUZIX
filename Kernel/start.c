@@ -302,8 +302,8 @@ void fuzix_main(void)
 
 	kputs("OK\n");
 
-	i_ref(udata.u_cwd = root);
-	i_ref(udata.u_root = root);
+	udata.u_cwd = i_ref(root);
+	udata.u_root = i_ref(root);
 	rdtime32(&udata.u_time);
 	exec_or_die();
 }

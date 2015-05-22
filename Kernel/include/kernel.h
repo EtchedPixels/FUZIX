@@ -681,7 +681,8 @@ extern void oft_deref(int8_t of);
 extern int8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
 extern int8_t uf_alloc_n(int n);
-extern void i_ref(inoptr ino);
+#define i_ref(ino) ((ino)->c_refs++, (ino))
+//extern void i_ref(inoptr ino);
 extern void i_deref(inoptr ino);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
