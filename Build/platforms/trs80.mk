@@ -10,41 +10,8 @@ SDCPP = cpp -nostdinc -undef -P
 SDAS = sdasz80
 SDAR = sdar
 ARCH = z80
-
-# Utility functions to extract a named section from the data returned by
-# sdcc --print-search-dirs; this is chunked into sections, each starting
-# with a keyword followed by a colon, everything separated by whitespace.
-
-# Truncates a list immediately after a named section header.
-trim_before_named_section = \
-	$(if $(filter $2, $(firstword $1)), \
-		$(wordlist 2, 999, $1), \
-			$(call trim_before_named_section, $(wordlist 2, 999, $1), $2))
-
-# Truncates a list immediately *before* any section header.
-trim_after_section = \
-	$(if $(filter %:, $(firstword $1)), \
-		$2, \
-		$(if $(strip $1), \
-			$(call trim_after_section, $(wordlist 2, 999, $1), $(firstword $1) $2), \
-			$2))
-
-# Return the contents of a named section.
-find_section = \
-        $(call trim_after_section, $(call trim_before_named_section, $1, $2))
-
-# Fetch information about the SDCC installation: we'll need to know
-# where SDCC's libraries and headers are later.
-
-search_dirs = $(shell $(SDCC) --print-search-dirs -m$(ARCH))
-SDCC_INCLUDES = $(patsubst %, -I%, \
-                $(call find_section, $(search_dirs), includedir:))
-SDCC_LIBS = $(firstword $(call find_section, $(search_dirs), libdir:))
-SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES))
-
-# Which file contains the target rules for this platform.
-
-PLATFORM_RULES = $(BUILD)/platforms/sdcc.rules.mk
+PLATFORM_RULES = sdcc.rules
+include $(BUILD)/platforms/sdcc.rules.mk
 
 # Find what load address the kernel wants.
 

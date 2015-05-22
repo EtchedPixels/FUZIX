@@ -1,3 +1,7 @@
+# Load all the build class macros.
+
+include $(wildcard $(BUILD)/classes/*)
+
 TARGETS :=
 TARGET :=
 CLASS :=

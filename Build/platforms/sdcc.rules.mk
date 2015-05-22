@@ -1,57 +1,80 @@
-# $T is the current target name.
+# Utility functions to extract a named section from the data returned by
+# sdcc --print-search-dirs; this is chunked into sections, each starting
+# with a keyword followed by a colon, everything separated by whitespace.
 
-ifeq ($($T.abssrcs),)
-$T.abssrcs := $(call absify, $($T.dir), $($T.srcs))
-endif
+# Truncates a list immediately after a named section header.
+trim_before_named_section = \
+	$(if $(filter $2, $(firstword $1)), \
+		$(wordlist 2, 999, $1), \
+			$(call trim_before_named_section, $(wordlist 2, 999, $1), $2))
 
-ifeq ($($T.depsrcs),)
-$T.depsrcs := $(filter %.c, $($T.abssrcs))
-endif
+# Truncates a list immediately *before* any section header.
+trim_after_section = \
+	$(if $(filter %:, $(firstword $1)), \
+		$2, \
+		$(if $(strip $1), \
+			$(call trim_after_section, $(wordlist 2, 999, $1), $(firstword $1) $2), \
+			$2))
 
-ifeq ($($T.deps),)
-$T.deps := $(patsubst %.c, $($T.objdir)/%.d, $($T.depsrcs))
-endif
+# Return the contents of a named section.
+find_section = \
+        $(call trim_after_section, $(call trim_before_named_section, $1, $2))
 
-ifeq ($($T.objs),)
-$T.objs := $(patsubst %, $($T.objdir)/%.rel, $(basename $($T.abssrcs)))
-endif
+# Fetch information about the SDCC installation: we'll need to know
+# where SDCC's libraries and headers are later.
 
-.SECONDARY: $($T.objs)
+search_dirs = $(shell $(SDCC) --print-search-dirs -m$(ARCH))
+SDCC_INCLUDES = $(patsubst %, -I%, \
+                $(call find_section, $(search_dirs), includedir:))
+SDCC_LIBS = $(firstword $(call find_section, $(search_dirs), libdir:))
+SDCC_INCLUDE_PATH = $(patsubst %, -I%, $(SDCC_INCLUDES))
 
--include $($T.deps)
+# This is the macro which is appended to target build classes; it contains all
+# the sdcc-specific bits of the build rules.
 
+define sdcc.rules
+
+# $1 is the current target name (the same as in build classes).
 # Variables referenced with $ are evaluated immediately.
-# Variables references with $$ are evaluated at recipe execution time.
-define patterns
+# Variables references with $$ are evaluated at when the rules are
+# instantiated.
 
-$($T.objdir)/%.rel: $(TOP)/%.c
+$1.abssrcs ?= $$(call absify, $$($1.dir), $$($1.srcs))
+$1.depsrcs ?= $$(filter %.c, $$($1.abssrcs))
+$1.deps ?= $$(patsubst %.c, $$($1.objdir)/%.d, $$($1.depsrcs))
+$1.objs ?= $$(patsubst %, $$($1.objdir)/%.rel, $$(basename $$($1.abssrcs)))
+
+.SECONDARY: $$($1.objs)
+
+-include $$($1.deps)
+
+$$($1.objdir)/%.rel: $(TOP)/%.c
 	@echo CC $$@
 	@mkdir -p $$(dir $$@)
-	$(hide) $(SDCC) \
-		$(sdcc.cflags) $($($T.class).cflags) $($T.cflags) \
-		$(sdcc.includes) $($($T.class).includes) $($T.includes) \
-		$(sdcc.defines) $($($T.class).defines) $($T.defines) \
+	$$(hide) $(SDCC) \
+		$$(sdcc.cflags) $$($$($1.class).cflags) $$($1.cflags) \
+		$$(sdcc.includes) $$($$($1.class).includes) $$($1.includes) \
+		$$(sdcc.defines) $$($$($1.class).defines) $$($1.defines) \
 		-M $$< | sed -e '1s!^[^:]*!$$@!' \
 		> $$(basename $$@).d
-	$(hide) $(SDCC) \
-		$(sdcc.cflags) $($($T.class).cflags) $($T.cflags) \
-		$(sdcc.includes) $($($T.class).includes) $($T.includes) \
-		$(sdcc.defines) $($($T.class).defines) $($T.defines) \
+	$$(hide) $(SDCC) \
+		$$(sdcc.cflags) $$($$($1.class).cflags) $$($1.cflags) \
+		$$(sdcc.includes) $$($$($1.class).includes) $$($1.includes) \
+		$$(sdcc.defines) $$($$($1.class).defines) $$($1.defines) \
 		-c -o $$@ $$<
 
-$($T.objdir)/%.lib: $($T.objs)
+$$($1.objdir)/%.lib: $$($1.objs)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
-	$(hide) rm -f $$@
-	$(hide) $(SDAR) -rc $$@ $$^
+	$$(hide) rm -f $$@
+	$$(hide) $(SDAR) -rc $$@ $$^
 
-$($T.objdir)/%.exe: $($T.objs) $($($T.class).extradeps) $($T.extradeps)
+$$($1.objdir)/%.exe: $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
-	$(hide) $(SDCC) \
-		$(sdcc.ldflags) $($($T.class).ldflags) $($T.ldflags) \
-		-o $$(@:.exe=.ihx) $($T.objs)
+	$$(hide) $(SDCC) \
+		$$(sdcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
+		-o $$(@:.exe=.ihx) $$($1.objs)
 
 endef
-$(eval $(patterns))
 

@@ -16,8 +16,11 @@ $(TARGET).class := $(CLASS)
 $(TARGET).dir := $(DIR)
 
 # No spaces here
-T:=$(strip $(TARGET))
-include $(BUILD)/$(CLASS).mk
+ifeq ($(debug),y)
+$(info $(call $(CLASS).rules,$(strip $(TARGET))))
+endif
+
+$(eval $(call $(CLASS).rules,$(strip $(TARGET))))
 
 TARGET :=
 CLASS :=
