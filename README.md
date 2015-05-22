@@ -76,7 +76,6 @@ What Key Features Are Missing Still
 * banked executables
 * TCP/IP
 * select/poll()
-* /dev/tty alias
 * Support for > 32MB filesystems (but first figure out how to fsck
 	a giant fs on a slow 8bit micro!)
 * Uptime
