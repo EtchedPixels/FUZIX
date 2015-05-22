@@ -169,10 +169,7 @@ static void keydecode(void)
 				c = cursor[c - '5'];
 		}
 	}
-
-
-	if (c != 0)
-		tty_inproc(1, c);
+	tty_inproc(1, c);
 }
 
 
