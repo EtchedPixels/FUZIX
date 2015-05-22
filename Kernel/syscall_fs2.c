@@ -431,7 +431,6 @@ arg_t _open(void)
 	int8_t uindex;
 	int8_t oftindex;
 	staticfast inoptr ino;
-	inoptr itmp;
 	int16_t perm;
 	staticfast inoptr parent;
 	char fname[FILENAME_LEN + 1];
@@ -503,18 +502,18 @@ arg_t _open(void)
 	}
 
 	if (isdevice(ino)) {
-		itmp = ino;
+		inoptr *iptr = &of_tab[oftindex].o_inode;
 		/* d_open may block and thus ino may become invalid as may
 		   parent (but we don't need it again). It may also be changed
 		   by the call to dev_openi */
 
-		if (dev_openi(&itmp, flag) != 0)
+		if (dev_openi(iptr, flag) != 0)
 			goto cantopen;
 
-		/* get the static pointer back */
-		ino = itmp;
 		/* May have changed */
-		of_tab[oftindex].o_inode = ino;
+		/* get the static pointer back in case it changed via dev 
+		   usage or just because we blocked */
+		ino = *iptr;
 	}
 
 	if (trunc && getmode(ino) == F_REG) {
