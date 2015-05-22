@@ -172,8 +172,10 @@ extern int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int tty_open(uint8_t minor, uint16_t flag);
 extern int tty_close(uint8_t minor);
-extern void tty_exit(void);
 extern int tty_ioctl(uint8_t minor, uarg_t request, char *data);
+
+extern void tty_exit(void);
+extern void tty_post(inoptr ino, uint8_t minor, uint8_t flag);
 
 extern void tty_hangup(uint8_t minor);
 extern void tty_carrier_drop(uint8_t minor);

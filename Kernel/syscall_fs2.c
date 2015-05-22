@@ -483,33 +483,40 @@ arg_t _open(void)
 			goto cantopen;
 		}
 	}
+	/* Book our slot in case we block opening a device */
 	of_tab[oftindex].o_inode = ino;
 
 	perm = getperm(ino);
 	if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
 		udata.u_error = EPERM;
-		goto idrop;
+		goto cantopen;
 	}
 	if (w) {
 		if (getmode(ino) == F_DIR ) {
 			udata.u_error = EISDIR;
-			goto idrop;
+			goto cantopen;
 		}
 		if (ino->c_flags & CRDONLY) {
 			udata.u_error = EROFS;
-			goto idrop;
+			goto cantopen;
 		}
 	}
-	itmp = ino;
-	/* d_open may block and thus ino may become invalid as may
-	   parent (but we don't need it again) */
-	if (isdevice(ino)
-	    && d_open((int) ino->c_node.i_addr[0], flag) != 0) {
-		udata.u_error = ENXIO;
-		goto cantopen;
+
+	if (isdevice(ino)) {
+		itmp = ino;
+		/* d_open may block and thus ino may become invalid as may
+		   parent (but we don't need it again). It may also be changed
+		   by the call to dev_openi */
+
+		if (dev_openi(&itmp, flag) != 0)
+			goto cantopen;
+
+		/* get the static pointer back */
+		ino = itmp;
+		/* May have changed */
+		of_tab[oftindex].o_inode = ino;
 	}
-	/* get the static pointer back */
-	ino = itmp;
+
 	if (trunc && getmode(ino) == F_REG) {
 		if (f_trunc(ino))
 			goto idrop;

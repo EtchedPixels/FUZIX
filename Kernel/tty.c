@@ -35,12 +35,6 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	used(rawflag);
 	used(flag);			/* shut up compiler */
 
-	/* Minor == 0 means that it is the controlling tty of the process */
-	if (!minor)
-		minor = udata.u_ptab->p_tty;
-	if (!udata.u_ptab->p_tty)
-		udata.u_ptab->p_tty = minor;
-
 	q = &ttyinq[minor];
 	t = &ttydata[minor];
 	nread = 0;
@@ -102,12 +96,6 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	used(rawflag);
 	used(flag);
 
-	/* Minor == 0 means that it is the controlling tty of the process */
-	if (!minor)
-		minor = udata.u_ptab->p_tty;
-	if (!udata.u_ptab->p_tty)
-		udata.u_ptab->p_tty = minor;
-
 	t = &ttydata[minor];
 
 	towrite = udata.u_count;
@@ -147,16 +135,9 @@ int tty_open(uint8_t minor, uint16_t flag)
 {
 	struct tty *t;
 
-	/* FIXME : open/carrier logic is needed here, definitely before we
-	   enable ptys */
-	/* Minor == 0 means that it is the controlling tty of the process */
-	/* FIXME: need to propogate this minor change back into the file handle
-	   and inode somehow ??? */
-	if (!minor)
-		minor = udata.u_ptab->p_tty;
-	if (minor < 1 || minor > NUM_DEV_TTY) {
+	if (minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
-		return (-1);
+		return -1;
 	}
 
 	t = &ttydata[minor];
@@ -167,11 +148,6 @@ int tty_open(uint8_t minor, uint16_t flag)
 	        return -1;
         }
 
-	/* If there is no controlling tty for the process, establish it */
-	if (!udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
-		udata.u_ptab->p_tty = minor;
-		t->pgrp = udata.u_ptab->p_pgrp;
-	}
 	if (t->users) {
 	        t->users++;
 	        return 0;
@@ -195,14 +171,28 @@ int tty_open(uint8_t minor, uint16_t flag)
         return 0;
 }
 
+/* Post processing for a successful tty open */
+void tty_post(inoptr ino, uint8_t minor, uint8_t flag)
+{
+        struct tty *t = &ttydata[minor];
+	/* If there is no controlling tty for the process, establish it */
+	if (!udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
+		udata.u_ptab->p_tty = minor;
+		udata.u_ctty = ino;
+		t->pgrp = udata.u_ptab->p_pgrp;
+	}
+}
+
 int tty_close(uint8_t minor)
 {
         struct tty *t = &ttydata[minor];
         if (--t->users)
                 return 0;
 	/* If we are closing the controlling tty, make note */
-	if (minor == udata.u_ptab->p_tty)
+	if (minor == udata.u_ptab->p_tty) {
 		udata.u_ptab->p_tty = 0;
+		udata.u_ctty = NULL;
+        }
 	t->pgrp = 0;
         /* If we were hung up then the last opener has gone away */
         t->flag &= ~TTYF_DEAD;
@@ -221,9 +211,7 @@ void tty_exit(void)
 int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
-	if (!minor)
-		minor = udata.u_ptab->p_tty;
-	if (minor < 1 || minor > NUM_DEV_TTY + 1) {
+	if (minor > NUM_DEV_TTY + 1) {
 		udata.u_error = ENODEV;
 		return -1;
 	}

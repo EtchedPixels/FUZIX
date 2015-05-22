@@ -410,6 +410,7 @@ typedef struct u_data {
     inoptr      u_cwd;          /* Index into inode table of cwd. */
     inoptr	u_root;		/* Index into inode table of / */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
+    inoptr	u_ctty;		/* Controlling tty */
 } u_data;
 
 
@@ -704,6 +705,7 @@ extern void readi(inoptr ino, uint8_t flag);
 extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);
+extern int dev_openi(inoptr *ino, uint8_t flag);
 
 /* mm.c */
 extern unsigned int uputsys(unsigned char *from, usize_t size);
