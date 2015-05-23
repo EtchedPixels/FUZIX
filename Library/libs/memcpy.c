@@ -3,7 +3,7 @@
 void *memcpy(void *dest, const void *src, size_t len)
 {
 	uint8_t *dp = dest;
-	uint8_t *sp = src;
+	const uint8_t *sp = src;
 	while(len-- > 0)
 		*dp++=*sp++;
 	return dest;
