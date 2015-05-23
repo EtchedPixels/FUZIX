@@ -141,16 +141,16 @@ arg_t _time(void)
 	switch (type) {
 		case 0:
 			rdtime(&t);
-			uput(&t, tvec, sizeof(t));
-			return (0);
+			break;
 		case 1:
-			uput(&t.low, &ticks.full, sizeof(ticks));
-			uzero(&t.high, sizeof(t.high));
-			return 0;
+			t.low = ticks.full;
+			t.high = 0;
+			break;
 		default:
 			udata.u_error = EINVAL;
 			return -1;
 	}
+	return uput(&t, tvec, sizeof(t));
 }
 
 #undef tvec
