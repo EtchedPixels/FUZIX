@@ -53,12 +53,11 @@ target-exe.extradeps += $(libc.exe)
 # shame because there's bits we want in it. So we steal those bits into our
 # own addon library.
 
-libruntime.ext := $A
-$(call build, libruntime, nop)
-target-exe.ldflags += $(libruntime.exe) $(libsyscalls.exe)
-target-exe.extradeps += $(libruntime.exe) $(libsyscalls.exe)
+libc-runtime.ext = $A
+$(call build, libc-runtime, nop)
+PLATFORM_EXTRA_LIBC = $(libc-runtime.exe)
 
-libruntime.objs := \
+libc-runtime.objs := \
 	divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel \
 	modmixed.rel mul.rel mulchar.rel heap.rel memmove.rel strcpy.rel strlen.rel \
 	abs.rel crtcall.rel crtenter.rel setjmp.rel _atof.rel _schar2fs.rel \
@@ -78,11 +77,11 @@ libruntime.objs := \
 	_memcpy.rel _memset.rel _itoa.rel _ltoa.rel \
 
 
-$(libruntime.exe): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
+$(libc-runtime.exe): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
 	@echo LIBRUNTIME $@
-	@mkdir -p $(libruntime.objdir)
-	$(hide) rm -f $(libruntime.objdir)/*.rel
-	$(hide) (cd $(libruntime.objdir) \
-		&& $(SDAR) x $< $(libruntime_objects) \
-		&& $(SDAR) cq $(abspath $@) $(libruntime.objs))
+	@mkdir -p $(libc-runtime.objdir)
+	$(hide) rm -f $(libc-runtime.objdir)/*.rel
+	$(hide) (cd $(libc-runtime.objdir) \
+		&& $(SDAR) x $< $(libc-runtime) \
+		&& $(SDAR) cq $(abspath $@) $(libc-runtime.objs))
 

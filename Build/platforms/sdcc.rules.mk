@@ -44,7 +44,10 @@ define sdcc.rules
 $1.abssrcs ?= $$(call absify, $$($1.dir), $$($1.srcs))
 $1.depsrcs ?= $$(filter %.c, $$($1.abssrcs))
 $1.deps ?= $$(patsubst %.c, $$($1.objdir)/%.d, $$($1.depsrcs))
-$1.objs ?= $$(patsubst %, $$($1.objdir)/%.rel, $$(basename $$($1.abssrcs)))
+$1.objs ?= \
+	$$(patsubst %.c, $$($1.objdir)/%.rel, \
+	$$(patsubst %.s, $$($1.objdir)/%.rel, \
+		$$($1.abssrcs)))
 
 .SECONDARY: $$($1.objs)
 
@@ -85,22 +88,34 @@ $$($1.objdir)/%.rel: $$($1.objdir)/%.s
 		$$(sdcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
 		-c -o $$@ $$<
 
-# Builds a library from object files.
+# Builds a library from object files and other library files. Additional
+# libraries are merged in after the object files, from first-to-last order.
 
-$$($1.objdir)/%.lib: $$($1.objs)
+ifneq ($$(filter %.lib, $$($1.exe)),)
+
+$$($1.exe): $$($1.objs)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) rm -f $$@
-	$$(hide) $(SDAR) -rc $$@ $$^
+	$(hide) $$(foreach lib, $$(filter %.lib, $$($1.objs)), \
+		(cd $$(dir $$@) && $(SDAR) -x $$(abspath $$(lib))) && ) true
+	$$(hide) $(SDAR) -rc $$@ $$(filter %.rel, $$($1.objs))
+	$$(if $$(filter %.lib, $$($1.objs)), $$(hide) $(SDAR) -r $$@ $$(dir $$@)/*.rel)
+
+endif
 
 # Builds a target executable.
 
-$$($1.objdir)/%.exe: $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
+ifneq ($$(filter %.exe, $$($1.exe)),)
+
+$$($1.exe): $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) $(SDCC) \
 		$$(sdcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$(@:.exe=.ihx) $$($1.objs)
+
+endif
 
 endef
 

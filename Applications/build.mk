@@ -25,9 +25,9 @@ v7_games_apps := \
 # Given an app name in $1 and a path in $2, creates a target-exe module.
 
 make_single_app = \
-	$(eval $1-app.srcs := $2/$1.c) \
-	$(call build, $1-app, target-exe) \
-	$(eval apps += $($1-app.exe))
+	$(eval $1-$2-app.srcs := $2/$1.c) \
+	$(call build, $1-$2-app, target-exe) \
+	$(eval apps += $($1-$2-app.exe))
 
 apps :=
 $(foreach app, $(util_apps), $(call make_single_app,$(app),util))
@@ -36,3 +36,4 @@ $(foreach app, $(v7_games_apps), $(call make_single_app,$(app),v7/games))
 
 apps: $(apps)
 .PHONY: apps
+

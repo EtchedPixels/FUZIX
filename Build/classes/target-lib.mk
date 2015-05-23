@@ -12,4 +12,3 @@ $1.cflags += -I$(TOP)/Library/include
 
 $(call $(PLATFORM_RULES),$1)
 endef
-

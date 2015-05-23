@@ -1,9 +1,6 @@
 $(call find-makefile)
 
-# Pull the list of syscalls out of the kernel header.
-syscalls = $(shell awk -F '"' '/".*"/ { print $$2 }' < $(TOP)/Kernel/include/syscall_name.h)
-
-libsrcnames = \
+libc-functions = \
 	__argv.c \
 	__getgrent.c \
 	__getpwent.c \
@@ -11,6 +8,7 @@ libsrcnames = \
 	asctime.c \
 	assert.c \
 	atexit.c \
+	atoi.c \
 	bcmp.c \
 	bcopy.c \
 	bsearch.c \
@@ -69,7 +67,20 @@ libsrcnames = \
 	gmtime_r.c \
 	grent.c \
 	index.c \
+	isalnum.c \
+	isalpha.c \
+	isascii.c \
 	isatty.c \
+	isblank.c \
+	iscntrl.c \
+	isdigit.c \
+	isgraph.c \
+	islower.c \
+	isprint.c \
+	ispunct.c \
+	isspace.c \
+	isupper.c \
+	isxdigit.c \
 	killpg.c \
 	libintl.c \
 	localtim.c \
@@ -77,8 +88,10 @@ libsrcnames = \
 	lsearch.c \
 	lseek.c \
 	lstat.c \
+	ltoa.c \
 	ltostr.c \
 	malloc.c \
+	memmove.c \
 	mkfifo.c \
 	nanosleep.c \
 	opendir.c \
@@ -118,6 +131,10 @@ libsrcnames = \
 	stat.c \
 	stdio0.c \
 	stime.c \
+	strncmp.c \
+	strtod.c \
+	strtol.c \
+	strtol.c \
 	strxfrm.c \
 	sysconf.c \
 	system.c \
@@ -128,6 +145,9 @@ libsrcnames = \
 	tcsetattr.c \
 	time.c \
 	tmpnam.c \
+	toascii.c \
+	tolower.c \
+	toupper.c \
 	ttyname.c \
 	tzset.c \
 	ungetc.c \
@@ -141,106 +161,65 @@ libsrcnames = \
 	vsscanf.c \
 	wait.c \
 	xitoa.c \
-	toupper.c \
-	tolower.c \
-	toascii.c \
-	isascii.c \
-	isalnum.c \
-	isalpha.c \
-	iscntrl.c \
-	isdigit.c \
-	isgraph.c \
-	islower.c \
-	ispunct.c \
-	isprint.c \
-	isspace.c \
-	isupper.c \
-	isxdigit.c \
-	isblank.c \
-	
-ifneq ($(WANT_FUZIX_FLOAT),n)
+    memccpy.c \
+    memchr.c \
+    memcmp.c \
+    memcpy.c \
+    memset.c \
+    strcasecmp.c \
+    strcasestr.c \
+    strcat.c \
+    strchr.c \
+    strcmp.c \
+    strcoll.c \
+    strcpy.c \
+    strcspn.c \
+    strdup.c \
+    stricmp.c \
+    strlcpy.c \
+    strlen.c \
+    strncasecmp.c \
+    strncat.c \
+    strncpy.c \
+    strnicmp.c \
+    strnlen.c \
+    strpbrk.c \
+    strrchr.c \
+    strsep.c \
+    strspn.c \
+    strstr.c \
+    strtok.c \
+    strxfrm.c \
+	$(SYSCALL_STUB)
 
-libsrcnames += \
-	strtod.c \
+libc-functions.srcs = $(addprefix libs/, $(libc-functions))
+$(call build, libc-functions, target-lib)
 
-endif
-
-ifneq ($(WANT_FUZIX_NUMBERSLIB),n)
-
-libsrcnames += \
-	atoi.c \
-	ltoa.c \
-	strtol.c \
-
-endif
-
-ifneq ($(SDCC_LIBS),)
-
-# Nasty hack --- SDCC's runtime library has optimised versions of a lot of the
-# number stuff, *except* strtol, so we need to include it here.
-
-libsrcnames += \
-	strtol.c
-
-endif
-
-ifneq ($(WANT_FUZIX_STRINGLIB),n)
-
-libsrcnames += \
-	  memmove.c \
-      memccpy.c \
-      memchr.c \
-      memcmp.c \
-      memcpy.c \
-      memset.c \
-      strcasecmp.c \
-      strcasestr.c \
-      strcat.c \
-      strchr.c \
-      strcmp.c \
-      strcoll.c \
-      strcpy.c \
-      strcspn.c \
-      strdup.c \
-      stricmp.c \
-      strlcpy.c \
-      strlen.c \
-      strncasecmp.c \
-      strncat.c \
-	  strncmp.c \
-      strncpy.c \
-      strnicmp.c \
-      strnlen.c \
-      strpbrk.c \
-      strrchr.c \
-      strsep.c \
-      strspn.c \
-      strstr.c \
-      strtok.c \
-      strxfrm.c \
-
-endif
-
-libsrcnames += $(SYSCALL_STUB)
-
-libc.srcs = $(addprefix libs/, $(libsrcnames))
-$(call build, libc, target-lib)
 
 $(SYSCALL_GENERATOR).srcs = tools/$(SYSCALL_GENERATOR).c
 $(SYSCALL_GENERATOR).includes = -I$(TOP)/Kernel/include
 $(call build, $(SYSCALL_GENERATOR), host-exe)
 
-libsyscalls.objdir = $(OBJ)/$(PLATFORM)/syscalls
-libsyscalls.srcs = $(patsubst %, $(libsyscalls.objdir)/fuzix/syscall_%.s, $(syscalls))
-libsyscalls.objs = $(patsubst %, $(libsyscalls.objdir)/fuzix/syscall_%.$O, $(syscalls))
-$(call build, libsyscalls, target-lib)
 
-# We have to use a pattern in this rule, because accurséd make only supports
-# rules with multiple outputs in pattern rules. If we just used
-# $(libsyscalls.srcs) as the source it would run the rule once for every
-# syscall.
-$(libsyscalls.objdir)/fuzix/%.s: $($(SYSCALL_GENERATOR).exe)
+# Pull the list of syscalls out of the kernel header.
+syscalls = $(shell awk -F '"' '/".*"/ { print $$2 }' < $(TOP)/Kernel/include/syscall_name.h)
+
+libc-syscalls.objdir = $(OBJ)/$(PLATFORM)/libc-syscalls
+libc-syscalls.srcs = $(patsubst %, $(libc-syscalls.objdir)/fuzix/syscall_%.s, $(syscalls))
+libc-syscalls.objs = $(patsubst %, $(libc-syscalls.objdir)/fuzix/syscall_%.$O, $(syscalls))
+$(call build, libc-syscalls, target-lib)
+
+$(libc-syscalls.srcs): $(libc-syscalls.objdir)/syscalls-made
+$(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).exe)
 	@echo SYSCALLS $@
-	@mkdir -p $(libsyscalls.objdir)/fuzix
-	$(hide) (cd $(libsyscalls.objdir) && $(abspath $^))
+	@mkdir -p $(libc-syscalls.objdir)/fuzix
+	$(hide) (cd $(libc-syscalls.objdir) && $(abspath $^))
+	$(hide) touch $@
+
+
+# The actual libc is the functions library with the syscalls library merged in
+# on top.
+
+libc.srcs = $(libc-functions.exe) $(libc-syscalls.exe) $(PLATFORM_EXTRA_LIBC)
+$(call build, libc, target-lib)
 

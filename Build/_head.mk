@@ -16,10 +16,13 @@ build = \
 	$(eval TARGET :=) \
 	$(eval CLASS :=)
 
-# Given a path $1 and a list of filenames $2, prepends the path to any
-# relative filename in $2 (but leaves absolute paths alone).
+# Given a path $1 and a list of filenames $2, prepends the path to any relative
+# filename in $2 (but leaves absolute paths or $(OBJ)-relative paths alone).
 
 absify = \
 	$(filter /%, $2) \
-	$(addprefix $1, $(filter-out /%, $2))
+	$(filter $(OBJ)/%, $2) \
+	$(addprefix $1, \
+		$(filter-out /%, \
+		$(filter-out $(OBJ)/%, $2)))
 
