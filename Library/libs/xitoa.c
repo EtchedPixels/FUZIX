@@ -10,7 +10,7 @@
 
 static char buf[7];
 
-char *_uitoa(int i)
+char *_uitoa(unsigned int i)
 {
 	char *p = buf + sizeof(buf);
 	int c;
