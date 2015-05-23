@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	clock_gettime(CLOCK_MONOTONIC, &res);
         time(&t);
 	tm = localtime(&t);
-	printf(" %2d:%02d:%02d up ",
+	printf(" %02d:%02d:%02d up ",
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
 	mins = res.tv_sec / 60;
 	hours = mins / 60;
@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 	if (days == 1)
 		printf("1 day, ");
 	else if (days > 1)
-		printf("%d days, ", days);
-	printf("%02d:%02d, ", hours, mins); 
+		printf("%d days, ", (unsigned int)days);
+	printf("%02d:%02d, ", (unsigned int)hours, (unsigned int)mins); 
 
 	u = count_users();
 	printf("%d user%s, ", u, u != 1 ? "s" : "");
