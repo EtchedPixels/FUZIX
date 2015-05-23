@@ -589,10 +589,10 @@ void doexit(int16_t val, int16_t val2)
 	       2 * sizeof(clock_t));
 
 	for (p = ptab; p < ptab_end; ++p) {
-		if (p == udata.u_ptab)
+		if (p->p_status == P_EMPTY || p == udata.u_ptab)
 			continue;
 		/* Set any child's parents to our parent */
-		if (p->p_status && p->p_pptr == udata.u_ptab)
+		if (p->p_pptr == udata.u_ptab)
 			p->p_pptr = udata.u_ptab->p_pptr;
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
