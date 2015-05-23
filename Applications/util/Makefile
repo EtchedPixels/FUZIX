@@ -92,6 +92,7 @@ SRCS  = banner.c \
 	uniq.c \
 	uud.c \
 	uue.c \
+	uptime.c \
 	wc.c \
 	which.c \
 	who.c \
