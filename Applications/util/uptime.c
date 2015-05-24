@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <syscalls.h>
 #include <time.h>
@@ -16,14 +17,16 @@ static int count_users(void)
 	return ct;
 }
 
+static void printload(int i)
+{
+	unsigned int n = i;
+	printf(" %d.%02d", n/100, n%100);
+}
+
 int main(int argc, char *argv[])
 {
-	static struct {
-		struct _uzisysinfoblk i;
-		char buf[128];
-	} uts;
 	static struct timespec res;
-	int bytes = _uname(&uts.i, sizeof(uts));
+	static int loadavg[3];
 	time_t t;
 	uint32_t days, hours, mins;
 	struct tm *tm;
@@ -49,11 +52,13 @@ int main(int argc, char *argv[])
 	printf("%02d:%02d, ", (unsigned int)hours, (unsigned int)mins); 
 
 	u = count_users();
-	printf("%d user%s, ", u, u != 1 ? "s" : "");
+	printf("%d user%s", u, u != 1 ? "s" : "");
 
-	printf("load average: %d %d %d\n",
-	  uts.i.loadavg[0],
-	  uts.i.loadavg[1],
-	  uts.i.loadavg[2]);
+	if (getloadavg(loadavg, 3) == 3) {
+		printf(", load average:");
+		printload(loadavg[0]);
+		printload(loadavg[1]);
+		printload(loadavg[2]);
+	}
+	printf("\n");
 }
-
