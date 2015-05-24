@@ -22,6 +22,7 @@ include $(TOP)/Standalone/build.mk
 include $(TOP)/Library/build.mk
 include $(TOP)/Applications/build.mk
 include $(TOP)/Applications/V7/cmd/sh/build.mk
+include $(TOP)/Applications/levee/build.mk
 include $(BUILD)/_tail.mk
 
 all: standalones apps
