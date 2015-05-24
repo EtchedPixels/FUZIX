@@ -232,3 +232,9 @@ crt0.srcs = libs/$(CRT)
 crt0.exe = $(crt0.objdir)/Library/libs/$(CRT:.s=.$O)
 $(call build, crt0, target-lib)
 
+
+# Helper tool used to construct Fuzix executables.
+
+binman.srcs = tools/binman.c
+$(call build, binman, host-exe)
+

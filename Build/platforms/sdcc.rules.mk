@@ -108,12 +108,15 @@ endif
 
 ifneq ($$(filter %.exe, $$($1.exe)),)
 
-$$($1.exe): $$($1.objs) $(crt0.exe) $$($$($1.class).extradeps) $$($1.extradeps)
+$$($1.exe): $$($1.objs) $(crt0.exe) $(binman.exe) \
+		$$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) $(SDCC) \
 		$$(sdcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$(@:.exe=.ihx) $(crt0.exe) $$($1.objs)
+	$$(hide) makebin -p -s 65535 $$(@:.exe=.ihx) $$(@:.exe=.bin)
+	$$(hide) $(binman.exe) $(PROGLOAD) $$(@:.exe=.bin) $$(@:.exe=.map) $$@ > /dev/null
 
 endif
 
