@@ -295,7 +295,7 @@ void load_average(void)
 	struct runload *r;
 	static uint8_t utick;
 	uint8_t i;
-	uint8_t nr;
+	uint16_t nr;
 
 	utick++;
 	if (utick < 50)
@@ -310,7 +310,7 @@ void load_average(void)
 
 	while (i++ < 3) {
 		r->average = ((((r->average - (nr << 8)) * r->exponent) +
-				(((unsigned long)nr) << 16)) >> 8);
+				(((uint32_t)nr) << 16)) >> 8);
 		r++;
 	}
 }
@@ -357,6 +357,7 @@ void timer_interrupt(void)
 			}
 		}
 		updatetod();
+                load_average();
 #ifdef CONFIG_AUDIO
 		audio_tick();
 #endif
