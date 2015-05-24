@@ -93,14 +93,14 @@ $$($1.objdir)/%.rel: $$($1.objdir)/%.s
 
 ifneq ($$(filter %.lib, $$($1.exe)),)
 
-$$($1.exe): $$($1.objs)
+$$($1.exe): $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
-	$$(hide) rm -f $$@
+	$(hide) rm -f $$(dir $$@)/*.rel $$@
 	$(hide) $$(foreach lib, $$(filter %.lib, $$($1.objs)), \
 		(cd $$(dir $$@) && $(SDAR) -x $$(abspath $$(lib))) && ) true
-	$$(hide) $(SDAR) -rc $$@ $$(filter %.rel, $$($1.objs))
-	$$(if $$(filter %.lib, $$($1.objs)), $$(hide) $(SDAR) -r $$@ $$(dir $$@)/*.rel)
+	$(hide) $(SDAR) -rc $$@ $$(filter %.rel, $$($1.objs))
+	$$(if $$(filter %.lib, $$($1.objs)), $(hide) $(SDAR) -r $$@ $$(dir $$@)/*.rel)
 
 endif
 
@@ -108,12 +108,12 @@ endif
 
 ifneq ($$(filter %.exe, $$($1.exe)),)
 
-$$($1.exe): $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
+$$($1.exe): $$($1.objs) $(crt0.exe) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) $(SDCC) \
 		$$(sdcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
-		-o $$(@:.exe=.ihx) $$($1.objs)
+		-o $$(@:.exe=.ihx) $(crt0.exe) $$($1.objs)
 
 endif
 

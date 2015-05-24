@@ -1,6 +1,6 @@
 $(call find-makefile)
 
-libc-functions = \
+libc-functions.localsrcs = \
 	__argv.c \
 	__getgrent.c \
 	__getpwent.c \
@@ -192,7 +192,9 @@ libc-functions = \
     strxfrm.c \
 	$(SYSCALL_STUB)
 
-libc-functions.srcs = $(addprefix libs/, $(libc-functions))
+libc-functions.srcs = $(addprefix libs/, \
+	$(filter-out $(libc-functions.omit), $(libc-functions.localsrcs)))
+libc-functions.extradeps = $(MAKEFILE)
 $(call build, libc-functions, target-lib)
 
 
@@ -222,4 +224,11 @@ $(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).exe)
 
 libc.srcs = $(libc-functions.exe) $(libc-syscalls.exe) $(PLATFORM_EXTRA_LIBC)
 $(call build, libc, target-lib)
+
+
+# The crt object file (built and linked in seperately).
+
+crt0.srcs = libs/$(CRT)
+crt0.exe = $(crt0.objdir)/Library/libs/$(CRT:.s=.$O)
+$(call build, crt0, target-lib)
 

@@ -17,6 +17,7 @@ include $(BUILD)/platforms/sdcc.rules.mk
 ARCH = z80
 SYSCALL_GENERATOR = syscall
 SYSCALL_STUB = fuzix/syscall.s
+CRT = crt0.s
 
 # Find what load address the kernel wants.
 
@@ -57,7 +58,8 @@ libc-runtime.ext = $A
 $(call build, libc-runtime, nop)
 PLATFORM_EXTRA_LIBC = $(libc-runtime.exe)
 
-libc-runtime.objs := \
+# Names of object files to pull out of the SDCC libc.
+libc-runtime.objs = \
 	divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel \
 	modmixed.rel mul.rel mulchar.rel heap.rel memmove.rel strcpy.rel strlen.rel \
 	abs.rel crtcall.rel crtenter.rel setjmp.rel _atof.rel _schar2fs.rel \
@@ -76,6 +78,10 @@ libc-runtime.objs := \
 	_strrchr.rel _strspn.rel _strstr.rel _strtok.rel _memchr.rel _memcmp.rel \
 	_memcpy.rel _memset.rel _itoa.rel _ltoa.rel \
 
+# Names of source files from Fuzix's libc that we don't want to compile.
+libc-functions.omit = \
+	memcmp.c atoi.c memcpy.c strcat.c memset.c strncat.c strchr.c xitoa.c \
+	strrchr.c ltoa.c strcmp.c strncpy.c strtok.c strncmp.c memchr.c strcspn.c
 
 $(libc-runtime.exe): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
 	@echo LIBRUNTIME $@

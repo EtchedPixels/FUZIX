@@ -13,10 +13,12 @@ util_apps := \
 # ...and in V7/cmd.
 
 v7_cmd_apps := \
-	ac accton at atrun col comm cron crypt dc dd deroff diff3 diff diffh \
-	join look makekey mesg newgrp pr ptx rev split su sum test time tsort \
+	ac at atrun col comm cron crypt dc dd deroff diff3 diff diffh \
+	join makekey mesg newgrp pr ptx rev split su sum test time tsort \
 	wall
 
+# These don't build on sdcc:
+# accton look
 # ...and in V7/games.
 
 v7_games_apps := \
@@ -31,8 +33,8 @@ make_single_app = \
 
 apps :=
 $(foreach app, $(util_apps), $(call make_single_app,$(app),util))
-$(foreach app, $(v7_cmd_apps), $(call make_single_app,$(app),v7/cmd))
-$(foreach app, $(v7_games_apps), $(call make_single_app,$(app),v7/games))
+$(foreach app, $(v7_cmd_apps), $(call make_single_app,$(app),V7/cmd))
+$(foreach app, $(v7_games_apps), $(call make_single_app,$(app),V7/games))
 
 apps: $(apps)
 .PHONY: apps
