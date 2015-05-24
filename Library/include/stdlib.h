@@ -92,4 +92,6 @@ extern char *getpass(char *prompt);
 extern int _argc;
 extern char **_argv;
 
+extern int getloadavg __P((unsigned int loadavg[], int nelem));
+
 #endif /* __STDLIB_H */
