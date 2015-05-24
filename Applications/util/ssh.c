@@ -66,7 +66,7 @@ int main(int argc, char *argval[])
     if (login_sh) {
 	home = getenv("HOME");
 	if (!home) putenv("HOME=/");
-	chdir("/");
+	chdir(getenv("HOME"));
     }
 
     cprompt = (getuid() == 0) ? "ssh#" : "ssh$";
@@ -90,7 +90,7 @@ int main(int argc, char *argval[])
 
         /* Check for User request to change Current Working Directory */
         else if (strcmp(cmd, "cd") == 0) {
-            stat = chdir(*arg[0] ? arg[0] : getenv("HOME"));
+            stat = chdir(arg[0] ? arg[0] : getenv("HOME"));
             if (stat)
                 perror("cd");
         }
