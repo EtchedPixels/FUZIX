@@ -43,7 +43,8 @@ o	Different magic for "big" fs - 32bit block numbers only on raw
 	devices. Split blkno_t into blkno_t blknodev_t or similar
 DONE	Carrier handling for tty devices
 o	Revoke 8)
-DONE	Uptime/loadaverage/swapfree etc data
+DONE	Uptime/loadaverage/free
+o	swapfree
 o	Virtual device hooks for networking
 o	Pty/tty devices
 o	Finish select/poll
