@@ -4,6 +4,11 @@
 
 unsigned short newmode;
 
+void writes(const char *p)
+{
+    write(2, p, strlen(p));
+}
+
 int make_dir(const char *name, int f)
 {
     char *line;
@@ -41,11 +46,13 @@ int main(int argc, char *argv[])
 	if (argv[i][0] != '-') {
 
 	    if (make_dir(argv[i], parent)) {
-		fprintf(stderr, "mkdir: cannot create directory %s\n", argv[i]);
+	        writes("mkdir: cannot create directory '");
+	        writes(argv[i]);
+	        perror("'");
 		er = 1;
 	    }
 	} else {
-	    fprintf(stderr, "mkdir: usage error\n");
+	    writes("mkdir: usage error\n");
 	    exit(1);
 	}
     }

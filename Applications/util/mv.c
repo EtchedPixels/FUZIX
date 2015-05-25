@@ -3,7 +3,7 @@
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
  *
- * Most simple built-in commands are here.
+ * stdio stripped out Alan Cox 2015
  */
 
 #include <stdio.h>
@@ -24,7 +24,14 @@ typedef unsigned char BOOL;
         
 BOOL intflag;
 
-#define BUF_SIZE 4096
+/* Don't bother with malloc. We don't want to blow up with no space errors */
+#define BUF_SIZE 512
+static char buffer[BUF_SIZE];
+
+static void writes(int fd, const char *p)
+{
+    write(fd, p, strlen(p));
+}
 
 /*
  * Return TRUE if a filename is a directory.
@@ -53,7 +60,6 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
     int rcc;
     int wcc;
     char *bp;
-    char *buf;
     struct stat statbuf1;
     struct stat statbuf2;
     struct utimbuf times;
@@ -70,7 +76,9 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
 
     if ((statbuf1.st_dev == statbuf2.st_dev) &&
 	(statbuf1.st_ino == statbuf2.st_ino)) {
-	fprintf(stderr, "Copying file \"%s\" to itself\n", srcname);
+	writes(2, "Copying file \"");
+	writes(2, srcname);
+	writes(2, "\" to itself\n");
 	return FALSE;
     }
 
@@ -87,13 +95,8 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
 	return FALSE;
     }
 
-    buf = malloc(BUF_SIZE);
-    if (buf == NULL) {
-        fprintf(stderr, "Out of memory.\n");
-        goto error_exit;
-    }
-    while ((rcc = read(rfd, buf, BUF_SIZE)) > 0) {
-	bp = buf;
+    while ((rcc = read(rfd, buffer, BUF_SIZE)) > 0) {
+	bp = buffer;
 	while (rcc > 0) {
 	    wcc = write(wfd, bp, rcc);
 	    if (wcc < 0) {
@@ -145,19 +148,19 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
 char *buildname(char *dirname, char *filename)
 {
     char *cp;
-    /* FIXME: length check */
-    static char buf[PATHLEN];
+    static char buf[BUFSIZ];
 
-    if ((dirname == NULL) || (*dirname == '\0'))
+    if (dirname == NULL || *dirname == '\0')
 	return filename;
 
     cp = strrchr(filename, '/');
     if (cp)
 	filename = cp + 1;
 
-    strcpy(buf, dirname);
-    strcat(buf, "/");
-    strcat(buf, filename);
+    /* We cannot share the buffer used by copying alas*/
+    strlcpy(buf, dirname, BUFSIZ);
+    strlcat(buf, "/", BUFSIZ);
+    strlcat(buf, filename, BUFSIZ);
 
     return buf;
 }
@@ -175,7 +178,8 @@ int main(int argc, char *argv[])
     dirflag = isadir(lastarg);
 
     if ((argc > 3) && !dirflag) {
-	fprintf(stderr, "%s: not a directory\n", lastarg);
+        writes(2, lastarg);
+        writes(2, ": not a directory\n");
 	return 1;
     }
 

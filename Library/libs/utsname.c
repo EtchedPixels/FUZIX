@@ -22,15 +22,15 @@ int uname(struct utsname *utsbuf)
 	x[0] = utsbuf->release;
 	x[1] = utsbuf->sysname;
 	x[2] = utsbuf->version;
-	x[2] = utsbuf->machine;
+	x[3] = utsbuf->machine;
+	x[4] = NULL;
 	bytes -= sizeof(struct _uzisysinfoblk);
 
 	while(xp = x[ct++]) {
 		do {
-			*xp++=*p++;
+			*xp++=*p;
 			bytes--;
-		}
-		while(*p && bytes);
+		} while(*p++ && bytes > 0);
 	}
 	return 0;
 }

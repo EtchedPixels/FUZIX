@@ -65,8 +65,9 @@ static void motor_off(void)
  */
 static void fd_geom(int minor, blkno_t block)
 {
-    int ntrack = block / 9;
-    int nsector = (block % 9) + 1;
+    int ntrack = block >> 3;
+    int nsector = (block & 7) + 1;
+    fd765_cmdbuf[1] = 0;
     fd765_cmdbuf[2] = ntrack;
     fd765_rw_data[2] = ntrack;
     fd765_rw_data[3] = 0;		/* single sided for now */
@@ -78,15 +79,20 @@ static void fd_geom(int minor, blkno_t block)
     if (ntrack == track[minor])
         return;
     fd765_cmdbuf[0] = 0x0F;
+    fd765_intwait();
     fd765_cmd3();
 
     if (fd765_intwait() & 0x20)
-        track[minor] = fd765_statbuf[1] & 0x7F;
+        track[minor] = ntrack;//FIXME??fd765_statbuf[1] & 0x7F;
+    else {
+        track[minor] = 0xFF;
+        kputs("seekbad?\n");
+    }
 
 }
 
 /*
- *	Select a driver, ensure the motor is on and we are ready
+ *	Select a drive, ensure the motor is on and we are ready
  *	then set up the command buffers to reflect this device
  */
 static void fd_select(int minor)

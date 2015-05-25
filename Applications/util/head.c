@@ -1,106 +1,88 @@
 /*
-  Copyright (c) 1987,1997, Prentice Hall
-  All rights reserved.
-  
-  Redistribution and use of the MINIX operating system in source and
-  binary forms, with or without modification, are permitted provided
-  that the following conditions are met:
-  
-     * Redistributions of source code must retain the above copyright
-       notice, this list of conditions and the following disclaimer.
-  
-     * Redistributions in binary form must reproduce the above
-       copyright notice, this list of conditions and the following
-       disclaimer in the documentation and/or other materials provided
-       with the distribution.
-  
-     * Neither the name of Prentice Hall nor the names of the software
-       authors or contributors may be used to endorse or promote
-       products derived from this software without specific prior
-       written permission.
-  
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS, AUTHORS, AND
-  CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-  IN NO EVENT SHALL PRENTICE HALL OR ANY AUTHORS OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-/* head - print the first few lines of a file	Author: Andy Tanenbaum */
+ *	Head-light: A stdio free implementation of the head command for Fuzix
+ *	Alan Cox (c) 2015. GPLv2
+ */
 
+#include <stdint.h>
+#include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-#define DEFAULT 10
+static uint8_t outbuf[512];
+static uint8_t *outp;
 
-void do_file(int n, FILE *f);
-void usage(void);
+static uint8_t buffer[512];
 
-int main(int argc, char *argv[])
+static const char *n;
+static int lines = 10;	/* Default */
+
+void head(int fd, const char *p)
 {
-  FILE *f;
-  int n, k, nfiles;
-  char *ptr;
+  static struct stat st;
+  int copy = sizeof(buffer);
+  int l;
+  int ct = 0;
 
-  /* Check for flag.  Only flag is -n, to say how many lines to print. */
-  k = 1;
-  ptr = argv[1];
-  n = DEFAULT;
-  if (argc > 1 && *ptr++ == '-') {
-	k++;
-	n = atoi(ptr);
-	if (n <= 0) usage();
-  }
-  nfiles = argc - k;
 
-  if (nfiles == 0) {
-	/* Print standard input only. */
-	do_file(n, stdin);
-	exit(0);
+  if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
+    copy = 1;
+  while((l = read(fd, buffer, copy)) > 0) {
+    outp = outbuf;
+    for (p = buffer; l > 0; l--) {
+      *outp++ = *p;
+      if (outp == outbuf + 512) {
+        write(1, outbuf, 512);
+        outp = outbuf;
+      }
+      if (*p++ == '\n') {
+        ct++;
+        if (ct == lines) {
+          write(1, outbuf, outp - outbuf);
+          return;
+        }
+      }
+    }
+    write(1, outbuf, outp - outbuf);
   }
-
-  /* One or more files have been listed explicitly. */
-  while (k < argc) {
-	if (nfiles > 1) printf("==> %s <==\n", argv[k]);
-	if ((f = fopen(argv[k], "r")) == NULL)
-		fprintf(stderr, "%s: cannot open %s: %s\n",
-			argv[0], argv[k], strerror(errno));
-	else {
-		do_file(n, f);
-		fclose(f);
-	}
-	k++;
-	if (k < argc) printf("\n");
-  }
-  return(0);
 }
 
-
-void do_file(int n, FILE *f)
-{
-  int c;
-
-  /* Print the first 'n' lines of a file. */
-  while (n) switch (c = getc(f)) {
-	    case EOF:
-		return;
-	    case '\n':
-		--n;
-	    default:	putc((char) c, stdout);
-	}
-}
-
-
-void usage(void)
-{
-  fprintf(stderr, "Usage: head [-n] [file ...]\n");
+void fail(const char *p) {
+  const char *e = strerror(errno);
+  write(2, n, strlen(n));
+  write(2, " cannot open '", 14);
+  write(2, p, strlen(n));
+  write(2, "' for reading: ", 15);
+  write(2, e, strlen(e));
+  write(2, "\n", 1);
   exit(1);
+}
+
+int main(int argc, char *argv[]) {
+  const char *p;
+  int fd;
+  int err = 0;
+
+  n = *argv++;
+  p = *argv;
+
+  if (p && *p == '-') {
+    lines = atoi(p + 1);
+    argv++;
+  }
+  if (!*argv)
+    head(0, "stdin");
+  else while(p = *argv++) {
+    fd = open(p, O_RDONLY);
+    if (fd == -1) {
+      fail(p);
+      err = 1;
+    } else {
+      head(fd, p);
+      close(fd);
+    }
+  }
+  exit(err);
 }

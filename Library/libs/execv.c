@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <paths.h>
 
-int execv(const char *pathP, const char *argv[]) 
+int execv(const char *pathP, char * const argv[]) 
 {
 	return execve(pathP, argv, (void *)environ);
 }

@@ -1,32 +1,20 @@
-/*
- * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
- * This file is licensed under the terms of the 3-clause BSD open source
- * license.
- */
+/* From dLibs 1.20 but ANSIfied */
 
-#include	<string.h>
+#include <types.h>
 
-void *
-memmove(void *s1, const void *s2, register size_t n)
+void *memmove(void *dest, const void *src, size_t len)
 {
-	register char *p1 = s1;
-	register const char *p2 = s2;
-
-	if (n>0) {
-		if (p2 <= p1 && p2 + n > p1) {
-			/* overlap, copy backwards */
-			p1 += n;
-			p2 += n;
-			n++;
-			while (--n > 0) {
-				*--p1 = *--p2;
-			}
-		} else {
-			n++;
-			while (--n > 0) {
-				*p1++ = *p2++;
-			}
-		}
+	uint8_t *dp = dest;
+	const uint8_t *sp = src;
+	
+	if (sp < dp) {
+		dp += len;
+		sp += len;
+		while(len--)
+			*--dp = *--sp;
+	} else {
+		while(len--)
+			*dp++ = *sp++;
 	}
-	return s1;
+	return dest;
 }

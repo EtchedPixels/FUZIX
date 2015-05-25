@@ -18,6 +18,7 @@ bget usr-files/lib/liberror.txt
 chmod 0644 liberror.txt
 
 cd /dev
+mknod tty   20666 512
 mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
@@ -114,36 +115,24 @@ chmod 0755 init
 cd /bin
 bget ../../Applications/util/basename
 bget ../../Applications/util/cat
-bget ../../Applications/util/chgrp
 bget ../../Applications/util/chmod
-bget ../../Applications/util/chown
 bget ../../Applications/util/cmp
 bget ../../Applications/util/cp
-bget ../../Applications/util/cut
 bget ../../Applications/util/date
 bget ../../Applications/util/dd
 bget ../../Applications/util/df
-bget ../../Applications/util/dirname
-bget ../../Applications/util/du
 bget ../../Applications/util/echo
 bget ../../Applications/util/ed
-bget ../../Applications/util/false
 bget ../../Applications/util/fgrep
-bget ../../Applications/util/fsck
-bget ../../Applications/util/head
-bget ../../Applications/util/id
 bget ../../Applications/util/kill
 bget ../../Applications/util/ln
 bget ../../Applications/util/ls
 bget ../../Applications/util/mkdir
 bget ../../Applications/util/mkfs
-bget ../../Applications/util/mkfifo
 bget ../../Applications/util/mknod
 bget ../../Applications/util/mount
 bget ../../Applications/util/mv
-bget ../../Applications/util/passwd
 bget ../../Applications/util/printenv
-bget ../../Applications/util/prtroot
 bget ../../Applications/util/ps
 bget ../../Applications/util/pwd
 bget ../../Applications/util/rm
@@ -151,44 +140,29 @@ bget ../../Applications/util/rmdir
 bget ../../Applications/util/ssh
 bget ../../Applications/util/stty
 bget ../../Applications/util/sync
-bget ../../Applications/util/tee
-bget ../../Applications/util/tail
 bget ../../Applications/util/touch
 bget ../../Applications/util/tr
-bget ../../Applications/util/true
 bget ../../Applications/util/umount
 chmod 0755 basename
 chmod 0755 cat
-chmod 0755 chgrp
 chmod 0755 chmod
-chmod 0755 chown
 chmod 0755 cmp
 chmod 0755 cp
-chmod 0755 cut
 chmod 0755 date
 chmod 0755 dd
 chmod 0755 df
-chmod 0755 dirname
-chmod 0755 du
 chmod 0755 echo
 chmod 0755 ed
-chmod 0755 false
 chmod 0755 fgrep
-chmod 0755 fsck
-chmod 0755 head
-chmod 0755 id
 chmod 0755 kill
 chmod 0755 ln
 chmod 0755 ls
 chmod 0755 mkdir
 chmod 0755 mkfs
-chmod 0755 mkfifo
 chmod 0755 mknod
 chmod 0755 mount
 chmod 0755 mv
-chmod 0755 passwd
 chmod 0755 printenv
-chmod 0755 prtroot
 chmod 0755 ps
 chmod 0755 pwd
 chmod 0755 rm
@@ -196,9 +170,6 @@ chmod 0755 rmdir
 chmod 0755 ssh
 chmod 0755 stty
 chmod 0755 sync
-chmod 0755 tee
-chmod 0755 tail
 chmod 0755 touch
 chmod 0755 tr
-chmod 0755 true
 chmod 0755 umount

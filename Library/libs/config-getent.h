@@ -30,7 +30,7 @@
  * On larger systems, you will want to define this, because grp will _not_
  * deal with long lines gracefully (they will be skipped).
  */
-#define GR_SCALE_DYNAMIC
+#undef GR_SCALE_DYNAMIC
 
 #ifndef GR_SCALE_DYNAMIC
 /*
@@ -39,9 +39,9 @@
  * characters per line in the group file.  GR_MAX_MEMBERS is the maximum
  * number of members of any given group.
  */
-#define GR_MAX_LINE_LEN 128
+#define GR_MAX_LINE_LEN 186
 /* GR_MAX_MEMBERS = (GR_MAX_LINE_LEN-(24+3+6))/9 */
-#define GR_MAX_MEMBERS 11
+#define GR_MAX_MEMBERS 16
 
 #endif /* !GR_SCALE_DYNAMIC */
 

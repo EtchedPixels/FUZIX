@@ -2,7 +2,7 @@
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
  *
- * Most simple built-in commands are here.
+ * Stripped of stdio usage Alan Cox, 2015
  */
 
 #include <stdio.h>
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     int pid, sig = SIGTERM;
 
     if (argc < 2) {
-	fprintf(stderr, "usage: kill [-sig] pid ...\n");
+	write(2, "usage: kill [-sig] pid ...\n", 27);
 	return 0;
     }
     if (argv[1][0] == '-') {
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	    while (isdigit(*cp))
 		sig = sig * 10 + *cp++ - '0';
 	    if (*cp) {
-		fprintf(stderr, "kill: unknown signal\n");
+		write(2, "kill: unknown signal\n", 21);
 		return 1;
 	    }
 	}
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	while (isdigit(*cp))
 	    pid = pid * 10 + *cp++ - '0';
 	if (*cp) {
-	    fprintf(stderr, "kill: non-numeric pid\n");
+	    write(1, "kill: non-numeric pid\n", 22);
 	    continue;
 	}
 	if (kill(pid, sig) < 0) {

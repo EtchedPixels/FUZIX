@@ -9,6 +9,14 @@
 
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
+char tbuf3[TTYSIZ];
+
+uint8_t curtty;		/* output side */
+uint8_t inputtty;	/* input side */
+static struct vt_switch ttysave[2];
+static uint8_t vtbackbuf[VT_WIDTH * VT_HEIGHT];
+
+uint8_t *vtbase[2] = { 0xF800, vtbackbuf };
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
@@ -18,7 +26,8 @@ __sfr __at 0xEB tr1865_rxtx;
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 }
+    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
+    {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
 /* Write to system console */
@@ -32,18 +41,76 @@ void kputchar(char c)
 ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t reg;
-    if (minor == 1)
+    if (minor != 3)
         return TTY_READY_NOW;
     reg = tr1865_status;
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
+void vtbuf_init(void)
+{
+    memset(vtbackbuf, ' ', VT_WIDTH * VT_HEIGHT);
+}
+void vtexchange(void)
+{
+        /* Swap the pointers over: TRS80 video we switch by copying not
+           flipping hardware pointers */
+        uint8_t *v = vtbase[0];
+        vtbase[0] = vtbase[1];
+        vtbase[1] = v;
+        /* The cursor x/y for current tty are stale in the save area
+           so save them */
+        vt_save(&ttysave[curtty]);
+
+        /* Before we flip the memory */
+        cursor_off();
+
+        /* Swap the buffers over */
+        __asm
+                ld hl, #0xf800
+                ld de, #_vtbackbuf
+                ld bc, #VT_WIDTH*VT_HEIGHT
+        exchit:
+                push bc
+                ld a, (de)	; Could be optimised but its only 2K
+                ld c, (hl)	; Probably worth doing eventuallly
+                ex de, hl
+                ld (hl), c
+                ld (de), a
+                inc hl
+                inc de
+                pop bc
+                dec bc
+                ld a, b
+                or c
+                jr nz, exchit
+                ret
+        __endasm;
+        /* Cursor back */
+        cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
+}
+
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    if (minor == 1)
-        vtoutput(&c, 1);
-    if (minor == 2)
+    irqflags_t irq;
+    if (minor == 3)
         tr1865_rxtx = c;
+    else {
+        irq = di();
+        if (curtty != minor -1) {
+            /* Kill the cursor as we are changing the memory buffers. If
+               we don't do this the next cursor_off will hit the wrong
+               buffer */
+            cursor_off();
+            vt_save(&ttysave[curtty]);
+            curtty = minor - 1;
+            vt_load(&ttysave[curtty]);
+            /* Fix up the cursor */
+            cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
+       }
+       vtoutput(&c, 1);
+       irqrestore(irq);
+   }
 }
 
 void tty_interrupt(void)
@@ -51,7 +118,7 @@ void tty_interrupt(void)
     uint8_t reg = tr1865_status;
     if (reg & 0x80) {
         reg = tr1865_rxtx;
-        tty_inproc(2, reg);
+        tty_inproc(3, reg);
     }
 }
 
@@ -68,7 +135,7 @@ void tty_setup(uint8_t minor)
 {
     uint8_t baud;
     uint8_t ctrl;
-    if (minor == 1)
+    if (minor != 3)
         return;
     baud = ttydata[2].termios.c_cflag & CBAUD;
     if (baud > B19200) {
@@ -90,14 +157,14 @@ void tty_setup(uint8_t minor)
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 2)
+    if (minor == 3 &&ttydata[2].users == 0)
         tr1865_ctrl = 0;	/* Drop carrier */
     return tty_close(minor);
 }
 
 int tty_carrier(uint8_t minor)
 {
-    if (minor == 1)
+    if (minor != 3)
         return 1;
     if (tr1865_ctrl & 0x80)
         return 1;
@@ -185,9 +252,17 @@ static void keydecode(void)
 		return;
 	}
 
-	if (keymap[7] & 3)	/* shift */
+	if (keymap[7] & 3) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
-	else
+		/* VT switcher */
+		if (c == KEY_F1 || c == KEY_F2) {
+                        if (inputtty != c - KEY_F1) {
+                                inputtty = c - KEY_F1;
+                                vtexchange();	/* Exchange the video and backing buffer */
+                        }
+                        return;
+                }
+        } else
 		c = keyboard[keybyte][keybit];
 
         /* The keyboard lacks some rather important symbols so remap them
@@ -215,10 +290,10 @@ static void keydecode(void)
 			c &= 31;
                 }
 	}
-	if (capslock && c >= 'a' && c <= 'z')
+	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c)
-		vt_inproc(1, c);
+		vt_inproc(inputtty+1, c);
 }
 
 void kbd_interrupt(void)

@@ -2,6 +2,8 @@
  * Copyright (c) 1993 by David I. Bell
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
+ *
+ * Stdio usage removed Alan Cox 2015.
  */
 
 #include <pwd.h>
@@ -19,7 +21,7 @@ int main(int argc, char *argv[])
 
     cp = argv[1];
     if (!cp) {
-	fprintf(stderr, "chown: too few arguments\n");
+	write(2, "chown: too few arguments\n", 25);
 	return 1;
     }
     if (isdigit(*cp)) {
@@ -28,13 +30,13 @@ int main(int argc, char *argv[])
 	    uid = uid * 10 + (*cp++ - '0');
 
 	if (*cp) {
-	    fprintf(stderr, "chown: bad uid value\n");
+	    write(2, "chown: bad uid value\n", 21);
 	    return 1;
 	}
     } else {
 	pwd = getpwnam(cp);
 	if (pwd == NULL) {
-	    fprintf(stderr, "chown: unknown user name\n");
+	    write(2, "chown: unknown user name\n", 25);
 	    return 1;
 	}
 	uid = pwd->pw_uid;

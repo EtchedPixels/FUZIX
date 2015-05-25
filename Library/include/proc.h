@@ -37,7 +37,6 @@ typedef struct p_tab {
     uint32_t    p_pending;      /* Bitmask of pending signals */
     uint32_t    p_ignored;      /* Bitmask of ignored signals */
     uint32_t    p_held;         /* Bitmask of held signals */
-    struct u_block *p_ublk;     /* Pointer to udata block when not running */
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
     uint16_t    p_timeout;      /* timeout in centiseconds - 1 */
                                 /* 0 indicates no timeout, 1 = expired */

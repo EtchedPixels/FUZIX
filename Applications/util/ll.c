@@ -39,7 +39,7 @@ int ls(char *path)
     int    d, st;
     struct _uzidirent buf;
     struct stat statbuf;
-    char   dname[128];
+    char   dname[512];
 
     if (stat(path, &statbuf) != 0 || !S_ISDIR(statbuf.st_mode)) {
         printf("ls: can't stat %s\n", path);
@@ -58,14 +58,13 @@ int ls(char *path)
             continue;
 
         if (path[0] != '.' || path[1]) {
-            strcpy(dname, path);
-            strcat(dname, "/");
+            strlcpy(dname, path, sizeof(dname));
+            strlcat(dname, "/", sizeof(dname));
         } else {
             dname[0] = '\0';
         }
 
-        /* FIXME: 128 byte overflow */
-        strcat(dname, buf.d_name);
+        strlcat(dname, buf.d_name, sizeof(dname));
 
         if (stat(dname, &statbuf) != 0) {
             printf("ls: can't stat %s\n", dname);
@@ -93,9 +92,9 @@ int ls(char *path)
 
         printf("%4d %5d", statbuf.st_nlink, statbuf.st_ino);
         if (S_ISDIR(statbuf.st_mode))
-            strcat(dname, "/");
+            strlcat(dname, "/", sizeof(dname));
         else if (statbuf.st_mode & 0111)
-            strcat(dname, "*");
+            strlcat(dname, "*", sizeof(dname));
 
         printf("%12lu ",
                 (S_ISBLK(statbuf.st_mode) || S_ISCHR(statbuf.st_mode)) ?

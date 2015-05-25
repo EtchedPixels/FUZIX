@@ -2,13 +2,20 @@
  * Copyright (c) 1993 by David I. Bell
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
+ *
+ * stdio use removed, Alan Cox 2015
  */
 
 #include <pwd.h>
 #include <grp.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 #include <ctype.h>
+
+int writes(const char *p)
+{
+    write(2, p, strlen(p));
+}
 
 int main(int argc, char *argv[])
 {
@@ -19,7 +26,7 @@ int main(int argc, char *argv[])
 
     cp = argv[1];
     if (!cp) {
-	fprintf(stderr, "chgrp: too few arguments\n");
+	writes("chgrp: too few arguments\n");
 	return 1;
     }
     if (isdigit(*cp)) {
@@ -28,13 +35,13 @@ int main(int argc, char *argv[])
 	    gid = gid * 10 + (*cp++ - '0');
 
 	if (*cp) {
-	    fprintf(stderr, "chgrp: bad gid value\n");
+	    writes("chgrp: bad gid value\n");
 	    return 1;
 	}
     } else {
 	grp = getgrnam(cp);
 	if (grp == NULL) {
-	    fprintf(stderr, "chgrp: unknown group name\n");
+	    writes("chgrp: unknown group name\n");
 	    return 1;
 	}
 	gid = grp->gr_gid;

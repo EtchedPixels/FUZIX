@@ -14,6 +14,8 @@ ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
 SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
+SRC_CRT0NS = crt0nostdio$(PLATFORM).s
+OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
 SRC_ASM = enter.s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
@@ -24,7 +26,7 @@ SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fprintf.c fputc.c fputs.c fread.c free.c
 SRC_C += fsetpos.c ftell.c fwrite.c getcwd.c
-SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getopt.c
+SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += gmtime.c gmtime_r.c grent.c index.c isatty.c killpg.c
 SRC_C += libintl.c
@@ -64,7 +66,7 @@ OBJ_C = $(SRC_C:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -92,6 +94,9 @@ $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
 $(OBJ_CRT0):%.rel: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
+
+$(OBJ_CRT0NS):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
 $(OBJ_C):%.rel: %.c

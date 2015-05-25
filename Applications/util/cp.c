@@ -3,7 +3,7 @@
  * Permission is granted to use, distribute, or modify this source,
  * provided that this copyright notice remains intact.
  *
- * Most simple built-in commands are here.
+ * Stripped of stdio use Alan Cox 2015
  */
 
 #include <stdio.h>
@@ -26,6 +26,11 @@ BOOL copyfile(char *, char *, BOOL);
 
 char *buildname(char *, char *);
 
+static void writes(int fd, const char *p)
+{
+  write(fd, p, strlen(p));
+}
+
 int main(int argc, char *argv[])
 {
     BOOL dirflag;
@@ -37,9 +42,9 @@ int main(int argc, char *argv[])
 
     dirflag = isadir(lastarg);
 
-    if ((argc > 3) && !dirflag) {
-        fputs(lastarg, stderr);
-        fputs(": not a directory\n", stderr);
+    if (argc > 3 && !dirflag) {
+        writes(2, lastarg);
+        writes(2, ": not a directory\n");
 	return 1;
     }
     while (argc-- > 2) {
@@ -52,9 +57,6 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-
-#define BUF_SIZE 4096
-
 /*
  * Return TRUE if a filename is a directory.
  * Nonexistant files return FALSE.
@@ -76,10 +78,15 @@ isadir(char *name)
  * error message output.  (Failure is not indicted if the attributes cannot
  * be set.)
  */
+
+#define BUF_SIZE 512
+
+static char buf[BUF_SIZE];
+
 BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
 {
     int  rfd, wfd, rcc, wcc;
-    char *bp, *buf;
+    char *bp;
     struct stat statbuf1;
     struct stat statbuf2;
     struct utimbuf times;
@@ -94,9 +101,9 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
     }
     if ((statbuf1.st_dev == statbuf2.st_dev) &&
 	(statbuf1.st_ino == statbuf2.st_ino)) {
-	fputs("Copying file \"", stderr);
-	fputs(srcname, stderr);
-	fputs("\" to itself\n", stderr);
+	writes(2, "Copying file \"");
+	writes(2, srcname);
+	writes(2, "\" to itself\n");
 	return FALSE;
     }
     rfd = open(srcname, 0);
@@ -110,7 +117,6 @@ BOOL copyfile(char *srcname, char *destname, BOOL setmodes)
 	close(rfd);
 	return FALSE;
     }
-    buf = malloc(BUF_SIZE);
     while ((rcc = read(rfd, buf, BUF_SIZE)) > 0) {
 	if (intflag) {
 	    close(rfd);
@@ -175,9 +181,9 @@ char *buildname(char *dirname, char *filename)
     if (cp)
 	filename = cp + 1;
 
-    strcpy(buf, dirname);
-    strcat(buf, "/");
-    strcat(buf, filename);
+    strlcpy(buf, dirname, PATHLEN);
+    strlcat(buf, "/", PATHLEN);
+    strlcat(buf, filename, PATHLEN);
 
     return buf;
 }

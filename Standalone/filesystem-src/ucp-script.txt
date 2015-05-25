@@ -18,6 +18,7 @@ bget usr-files/lib/liberror.txt
 chmod 0644 liberror.txt
 
 cd /dev
+mknod tty   20666 512
 mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
@@ -161,6 +162,7 @@ bget ../../Applications/util/printenv
 bget ../../Applications/util/prtroot
 bget ../../Applications/util/ps
 bget ../../Applications/util/pwd
+bget ../../Applications/util/reboot
 bget ../../Applications/util/rm
 bget ../../Applications/util/rmdir
 bget ../../Applications/util/sleep
@@ -235,6 +237,7 @@ chmod 0755 printenv
 chmod 0755 prtroot
 chmod 0755 ps
 chmod 0755 pwd
+chmod 0755 reboot
 chmod 0755 rm
 chmod 0755 rmdir
 chmod 0755 sleep

@@ -16,108 +16,125 @@ BINMAN = ../../Library/tools/binman
 
 .SUFFIXES: .c .rel
 
-
-SRCS  = banner.c \
+SRCSNS = \
 	basename.c \
-	bd.c \
-	cal.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \
 	chown.c \
-	cksum.c \
 	cmp.c \
 	cp.c \
-	cut.c \
 	date.c \
+	dirname.c \
+	false.c \
+	head.c \
+	init.c \
+	kill.c \
+	ln.c \
+	logname.c \
+	mkdir.c \
+	mkfifo.c \
+	mknod.c \
+	mv.c \
+	pagesize.c \
+	printenv.c \
+	prtroot.c \
+	pwd.c \
+	reboot.c \
+	rm.c \
+	rmdir.c \
+	sum.c \
+	sync.c \
+	tee.c \
+	touch.c \
+	tr.c \
+	true.c \
+	uname.c \
+	whoami.c \
+	yes.c
+
+SRCS  = banner.c \
+	bd.c \
+	cal.c \
+	cksum.c \
+	cut.c \
 	dd.c \
 	decomp16.c \
 	df.c \
-	dirname.c \
 	dosread.c \
 	du.c \
 	echo.c \
 	ed.c \
+	env.c \
 	factor.c \
-	false.c \
 	fdisk.c \
 	fgrep.c \
 	fsck.c \
 	grep.c \
-	head.c \
 	id.c \
-	init.c \
-	kill.c \
 	ll.c \
-	ln.c \
-	logname.c \
 	ls.c \
 	man.c \
-	mkdir.c \
 	mkfs.c \
-	mkfifo.c \
-	mknod.c \
 	more.c \
 	mount.c \
-	mv.c \
 	od.c \
-	pagesize.c \
 	passwd.c \
 	patchcpm.c \
-	printenv.c \
-	prtroot.c \
 	ps.c \
-	pwd.c \
-	rm.c \
-	rmdir.c \
 	sleep.c \
 	ssh.c \
 	sort.c \
 	stty.c \
-	sum.c \
 	su.c \
-	sync.c \
-	tee.c \
 	tail.c \
-	touch.c \
-	tr.c \
-	true.c \
 	umount.c \
 	uniq.c \
 	uud.c \
 	uue.c \
+	uptime.c \
 	wc.c \
 	which.c \
 	who.c \
-	whoami.c \
 	write.c \
-	xargs.c \
-	yes.c
+	xargs.c
 
 SRCSBAD = sed.c
 
 OBJS = $(SRCS:.c=.rel)
+OBJSNS = $(SRCSNS:.c=.rel)
 OBJSBAD = $(SRCSBAD:.c=.rel)
 
 LIBS = ../../Library/libs/syslib.lib
 
-APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=)
+APPSNS = $(OBJSNS:.rel=)
 
-all: $(APPS)
+APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=) $(OBJSNS:.rel=)
 
-$(OBJS): $(SRCS)
+all: $(APPS) sizes
 
 $(OBJSBAD): $(SRCSBAD)
 	$(CC) $(CC_CRAP) $(@:.rel=.c)
+
+$(APPSNS): OPTS = --nostdio
+
+$(OBJS): %.rel: %.c
+
+$(OBJSNS): %.rel: %.c
+
+$(OBJSBAD): %.rel: %.c
 
 .c.rel:
 	$(FCC) $(PLATFORM) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $< -o $@
+	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
+
+sizes: $(APPS)
+	ls -l $(APPS) >size.report
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core

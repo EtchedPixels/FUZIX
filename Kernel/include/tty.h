@@ -151,10 +151,10 @@ struct termios {
    the data indexed off a single register */
 struct tty {
     /* Put flag first: makes it cheaper when short of registers */
-    uint8_t flag;		/* Use uint8 pad - makes the whole struct
+    uint8_t flag;		/* make the whole struct
                                    24 byte - a nice number for CPUs with no 
                                    multiplier */
-    uint8_t pad0;
+    uint8_t users;
 #define TTYF_STOP	1
 #define TTYF_DISCARD	2
 #define TTYF_DEAD	4
@@ -173,6 +173,9 @@ extern int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int tty_open(uint8_t minor, uint16_t flag);
 extern int tty_close(uint8_t minor);
 extern int tty_ioctl(uint8_t minor, uarg_t request, char *data);
+
+extern void tty_exit(void);
+extern void tty_post(inoptr ino, uint8_t minor, uint8_t flag);
 
 extern void tty_hangup(uint8_t minor);
 extern void tty_carrier_drop(uint8_t minor);

@@ -50,7 +50,7 @@ inoptr kn_open(char *namep, inoptr *parent)
     else
         wd = udata.u_cwd;
 
-    i_ref(ninode = wd);
+    ninode = i_ref(wd);
     i_ref(ninode);
 
     for(;;)
@@ -725,16 +725,6 @@ int8_t uf_alloc_n(int base)
 int8_t uf_alloc(void)
 {
     return uf_alloc_n(0);
-}
-
-
-
-/* I_ref increases the reference count of the given inode table entry.
-*/
-
-void i_ref(inoptr ino)
-{
-    ino->c_refs++;
 }
 
 

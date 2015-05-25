@@ -168,8 +168,7 @@ static void keydecode(void)
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
-		tty_inproc(1, c);
+	tty_inproc(1, c);
 }
 
 void kbd_interrupt(void)

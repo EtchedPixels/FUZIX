@@ -242,7 +242,7 @@ void fuzix_main(void)
 
 	tty_init();
 
-	if (d_open(TTYDEV, 0) != 0)
+	if (d_open(TTYDEV, O_NOCTTY) != 0)
 		panic("no tty");
 
 	/* Sign on messages */
@@ -302,8 +302,8 @@ void fuzix_main(void)
 
 	kputs("OK\n");
 
-	i_ref(udata.u_cwd = root);
-	i_ref(udata.u_root = root);
+	udata.u_cwd = i_ref(root);
+	udata.u_root = i_ref(root);
 	rdtime32(&udata.u_time);
 	exec_or_die();
 }

@@ -34,17 +34,25 @@
 */  
 /* tee - pipe fitting			Author: Paul Polderman */
 
+/* stdio use removed Alan Cox 2015 */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define	MAXFD	18
 #define CHUNK_SIZE	4096
 
 int fd[MAXFD];
+
+void writes(const char *p)
+{
+  write(2, p, strlen(p));
+}
 
 int main(int argc, char *argv[])
 {
@@ -64,7 +72,7 @@ int main(int argc, char *argv[])
 		aflag++;
 		break;
 	    default:
-		fprintf(stderr,"Usage: tee [-i] [-a] [files].\n");
+		writes("Usage: tee [-i] [-a] [files].\n");
 		exit(1);
 	}
 	argv++;
@@ -78,9 +86,9 @@ int main(int argc, char *argv[])
 	} else {
 		if ((fd[s] = creat(*argv, 0666)) >= 0) continue;
 	}
-	fprintf(stderr,"Cannot open output file: ");
-	fprintf(stderr,*argv);
-	fprintf(stderr,"\n");
+	writes("Cannot open output file: ");
+	writes(*argv);
+	writes("\n");
 	exit(2);
   }
 

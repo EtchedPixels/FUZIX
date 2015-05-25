@@ -10,13 +10,13 @@
  *	and is released into the public domain, on the condition
  *	that this comment is always included without alteration.
  */
+/* Stdio removed Alan Cox 2015 */
 
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #define BUFFER_SIZE (512)
 
@@ -89,8 +89,11 @@ void sum(int fd, const char *fname)
   putd(crc, 5, 1);
   blks = (size + (long) BUFFER_SIZE - 1L) / (long) BUFFER_SIZE;
   putd(blks, 6, 0);
-  if (fname) printf(" %s", fname);
-  printf("\n");
+  if (fname) {
+    write(1, " ", 1);
+    write(1, fname, strlen(fname));
+  }
+  write(1, "\n", 1);
 }
 
 void putd(int number, int fw, int zeros)
@@ -109,6 +112,5 @@ void putd(int number, int fw, int zeros)
 	} else
 		buf[fw - n - 1] = zeros ? '0' : ' ';
   }
-  buf[fw] = 0;
-  printf("%s", buf);
+  write(1, buf, fw);
 }

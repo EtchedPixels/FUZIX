@@ -1,8 +1,11 @@
-#include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
-  printf("%d\n", sysconf(_SC_PAGESIZE));
+  const char *p = _uitoa((int)sysconf(_SC_PAGESIZE));
+  write(1, p, strlen(p));
+  write(1, "\n", 1);
   return 0;
 }

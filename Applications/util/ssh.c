@@ -7,6 +7,7 @@
  29 Sep 1999 - Added pwd and sync commands       HP
  04 Oct 1999 - Added umask command               HP
  27 MAy 2001 - Added simple support for env vars HP
+ 20 May 2015 - Stripped out stdio usage		 AC
 ****************************************************/
 
 #include <stdio.h>
@@ -17,21 +18,44 @@
 
 extern char **environ;      /* Location of Envp from executable Header */
 
-#define MAX_ARGS  10
+#define MAX_ARGS  16
 
 char buf[128];
 char eline[45];		    /* Line for Search command */
 
-char* cmd;
-char* arg[MAX_ARGS];
+char *cmd;
+char *arg[MAX_ARGS];
+
+static void writeo(int i)
+{
+    static char buf[3];
+    buf[0] = ((i >> 6) & 7) + '0';
+    buf[1] = ((i >> 3) & 7) + '0';
+    buf[2] = (i & 7) + '0';
+    write(1, buf, 3);
+}
+
+static void writenum(int fd, unsigned int n)
+{
+    char buf[6];
+    char *bp = buf+6;
+    int c = 0;
+
+    do {
+        *--bp = n % 10;
+        n /= 10;
+        c++;
+    } while(n);
+    write(fd, bp, c);
+}
 
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
     int   login_sh, pid, sig, stat, asis, i;
-    char  cprompt;
+    const char *cprompt;
     char  *home;
-    const char  *argv[MAX_ARGS+1];
+    const char  *argv[MAX_ARGS+2];
 
     login_sh = 0;
     if (argval[0][0] == '-') login_sh = 1;
@@ -42,19 +66,18 @@ int main(int argc, char *argval[])
     if (login_sh) {
 	home = getenv("HOME");
 	if (!home) putenv("HOME=/");
-	chdir("/");
+	chdir(getenv("HOME"));
     }
 
-    cprompt = (getuid() == 0) ? '#' : '$';
+    cprompt = (getuid() == 0) ? "ssh#" : "ssh$";
 
     for (;;) {
         for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
         do {
-            printf("ssh%c ", cprompt);
-            fflush(stdout);
-            fgets(buf, 127, stdin);
-            if (feof(stdin)) return 0;     /* user typed ^D ? */
-            buf[strlen(buf) - 1] = '\0';   /* Strip newline from fgets */
+            write(1, cprompt, 4);
+            if ((i = read(0, buf, 127)) <= 0)
+                return 0;
+            buf[i - 1] = '\0';   /* Strip newline from fgets */
         }
         while (buf[0] == (char) 0);
 		cmd = strtok(buf, " \t");
@@ -67,16 +90,16 @@ int main(int argc, char *argval[])
 
         /* Check for User request to change Current Working Directory */
         else if (strcmp(cmd, "cd") == 0) {
-            stat = chdir(*arg[0] ? arg[0] : getenv("HOME"));
+            stat = chdir(arg[0] ? arg[0] : getenv("HOME"));
             if (stat)
                 perror("cd");
         }
 
         else if (strcmp(cmd, "pwd") == 0) {
             if (getcwd(buf, 128))
-                printf("%s\n", buf);
+                write(1, buf, strlen(buf));
             else
-                printf("pwd: cannot get current directory\n");
+                write(1, "pwd: cannot get current directory\n",34);
         }
         
         else if (strcmp(cmd, "sync") == 0) {
@@ -87,14 +110,14 @@ int main(int argc, char *argval[])
             if (arg[0][0] == (char) 0) {
                 i = umask(0);
                 umask(i);
-                printf("%03o\n", i);
+                writeo(i);
             } else {
                 i = 0;
                 tp = arg[0];
                 while (*tp >= '0' && *tp <= '7')
                     i = (i << 3) + *tp++ - '0';
                 if (*tp || (i & ~0777))
-                    printf("umask: bad mask value\n");
+                    write(2, "umask: bad mask value\n", 22);
                 else
                     umask(i);
             }
@@ -110,7 +133,9 @@ int main(int argc, char *argval[])
                 pid = atoi(arg[0]);
             }
             if (pid == 0 || pid == 1) {
-                printf("kill: can't kill process %d\n", pid);
+                write(2, "kill: can't kill process ", 25);
+                writenum(2, pid);
+                write(2, "\n", 1);
             } else {
                 stat = kill(pid, sig);
                 if (stat)
@@ -129,9 +154,10 @@ int main(int argc, char *argval[])
             argv[0] = cmd;                  /* Build Argv Pointer Array */
             for (i = 0; i < MAX_ARGS; ++i)
                argv[i+1] = arg[i];
+            argv[i+1] = NULL;
 
             if ((pid = fork()) == -1) {     /* Try to spawn new Process */
-                printf("ssh: can't fork\n");
+                write(2, "ssh: can't fork\n", 16);
             } else {
                 if (pid == 0) {             /* Child is in context */
                     signal(SIGINT, SIG_DFL);
@@ -155,7 +181,9 @@ int main(int argc, char *argval[])
                             ;
                         execve(eline, argv, (const char**) environ);
                     }
-                    printf("ssh: %s?\n", cmd);      /* Say we can't exec */
+                    write(2, "ssh: ", 5);
+                    write(2, cmd, strlen(cmd));
+                    write(2, "?\n", 2);      /* Say we can't exec */
                     exit(1);
                 }                                   /* Parent is in context */
                 wait(0);                    /* Parent waits for completion */

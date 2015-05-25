@@ -334,16 +334,15 @@ typedef struct p_tab {
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t	p_page2;	/* It's really four bytes for the platform */
+    /* Update kernel.def if you change fields above this comment */
 #ifdef udata
     struct u_data *p_udata;	/* Udata pointer for platforms using dynamic udata */
 #endif
-    /* Update kernel.def if you change fields above this comment */
     /* Everything below here is overlaid by time info at exit */
     uint16_t    p_priority;     /* Process priority */
     uint32_t    p_pending;      /* Bitmask of pending signals */
     uint32_t    p_ignored;      /* Bitmask of ignored signals */
     uint32_t    p_held;         /* Bitmask of held signals */
-    struct u_block *p_ublk;     /* Pointer to udata block when not running */
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
     uint16_t    p_timeout;      /* timeout in centiseconds - 1 */
                                 /* 0 indicates no timeout, 1 = expired */
@@ -375,10 +374,10 @@ typedef struct u_data {
     void *      u_sp;           /* Stores SP when process is switchped */
     bool        u_ininterrupt;  /* True when the interrupt handler is runnign (prevents recursive interrupts) */
     int8_t      u_cursig;       /* Next signal to be dispatched */
-    arg_t       u_argn;         /* Last system call arg */
-    arg_t       u_argn1;        /* This way because args on stack backwards */
-    arg_t       u_argn2;
-    arg_t       u_argn3;        /* args n-3, n-2, n-1, and n */
+    arg_t       u_argn;         /* First C argument to the system call */
+    arg_t       u_argn1;        /* Second C argument */
+    arg_t       u_argn2;	/* Third C argument */
+    arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
@@ -410,8 +409,8 @@ typedef struct u_data {
     uint16_t	u_cloexec;	/* Close on exec flags */
     inoptr      u_cwd;          /* Index into inode table of cwd. */
     inoptr	u_root;		/* Index into inode table of / */
-    //inoptr      u_ino;          /* Used during execve() */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
+    inoptr	u_ctty;		/* Controlling tty */
 } u_data;
 
 
@@ -682,7 +681,8 @@ extern void oft_deref(int8_t of);
 extern int8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
 extern int8_t uf_alloc_n(int n);
-extern void i_ref(inoptr ino);
+#define i_ref(ino) ((ino)->c_refs++, (ino))
+//extern void i_ref(inoptr ino);
 extern void i_deref(inoptr ino);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
@@ -706,6 +706,7 @@ extern void readi(inoptr ino, uint8_t flag);
 extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);
+extern int dev_openi(inoptr *ino, uint8_t flag);
 
 /* mm.c */
 extern unsigned int uputsys(unsigned char *from, usize_t size);

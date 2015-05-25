@@ -19,6 +19,7 @@
         .globl map_restore
 	.globl map_process_save
 	.globl map_kernel_restore
+	.globl map_for_swap
 	.globl current_map
 	.globl switch_bank
 
@@ -181,8 +182,18 @@ setallvectors:
 	ld a, #7
 	jp setvectors
 
+
+	; Swap helper. Map the page in A into the address space such
+	; that swap_map() gave the correct pointer to use. Undone by
+	; a map_kernel_{restore}
+map_for_swap:
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
+	push af
+	ld a, (current_map)
+	ld (ksave_map), a
+	pop af
+	; Then fall through to set the bank up
 
 switch_bank:
 	; Write the store first, that way any interrupt will restore
@@ -196,11 +207,6 @@ switch_bank:
         ret
 
 
-;
-;	These are incomplete - or at least someone somewhere has to do the
-;	exchange hackery as we've only got a 16K window so can't flip 0x8000
-;	directly.
-;
 map_process:
         ld a, h
         or l
@@ -211,12 +217,11 @@ map_process:
 	pop af
 	ret
 
+;
+;	We always save here so that existing code works until we have a
+;	clear usage of save/restore forms across the kernel
+;
 map_process_save:
-	push af
-	ld a, (current_map)
-	ld (ksave_map), a
-	pop af
-
 map_process_always:
 	push af
 	ld a, (current_map)

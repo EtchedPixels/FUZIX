@@ -97,7 +97,7 @@ OBJS = $(SRCS:.c=.o)
 
 APPS = $(OBJS:.o=)
 
-all: $(APPS)
+all: $(APPS) sizes
 
 $(OBJS): $(SRCS)
 
@@ -106,8 +106,11 @@ $(APPS): $(CRT0)
 %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $<
 
+sizes: $(APPS)
+	ls -l $(APPS) > size.report
+
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core

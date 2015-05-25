@@ -395,21 +395,12 @@ is called to read blocks. It has three modes
 
 For a simple system you only need to implement rawflag = 0 and error = 1.
 rawflag = 2 will only occur if this is your SWAP_DEV. rawflag = 1 support
-may become mandatory as it'll be a good way to optimise execve().
-
-In the swap case beware of the following. You may get issued a request to
-write/read processes other than the current process. The map_process
-function is defined on 16K banked platforms to remap banks 0-2, as 3 is
-switched on task switching and holds the common copy, uarea and top of
-process. That means that while uput/uget do the right thing for the current
-process, it will *not* do so for addresses above 0xC000 of another process
-and this may require special handling.
+is mandatory as it is used by execve().
 
 _write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 Same arguments, other direction. This means a lot of drivers turn both into
 a call to a common transfer method.
-
 
 
 A Note On Geometry Mapping
@@ -463,7 +454,8 @@ system and a cached copy (much as is needed on 32K banking). Take a look at
 the z80pack virtual platform and port to see how to do this. You can
 probably simply import z80pack and adjust the drivers. Note that z80pack
 supports multiple bank/fixed divides and numbers of banks, so you can bring
-z80pack up with your platform configuration
+z80pack up with your platform configuration. See the dragon-nx32 for an
+additional optimisation.
 
 You may have to decide between limited process size or being prepared to do
 copying tricks to copy big chunks of memory around. 
@@ -484,13 +476,6 @@ The pagemap_alloc/realloc and friends will also need updating - perhaps with
 The other examples are things like the Microbee (one 32K bank is flexible
 the other is very rigid), and things like the Sinclair Spectrum/Amstrad CPC
 boxes.
-
-Research Problems
------------------
-In theory the kernel could be built as 2 or 3 16K banks of pure code, plus data
-and some overspill in RAM. This might be very useful for Amstrad CPC type
-boxes or the Sinclair Spectrum 128+/+2/+3 type boxes with awkward mapping
-limits. Sadly sdcc isn't yet good enough to do this for you.
 
 Swapping Hints
 --------------
@@ -514,10 +499,6 @@ with a real disk swap device.
 Known Performance Problems
 --------------------------
 
-execve pulls all pages into kernel maps and then copies them to the task.
-Fixing this is non trivial but may happen. If so then raw = 1 support for
-all disks will become mandatory.
-
 fork is generally used as fork/execve. This causes a copy which is somewhat
 surplus but is very bad on singletasking as it is both slow (the compressor
 wants rewriting in Z80 someone) and also may prevent the child task fitting.
@@ -527,22 +508,16 @@ should probably support vfork().
 Other Processors
 ----------------
 
-Currently only Z80 is properly supported. Clones should also work as should
-FPGA cores like T80. The current build uses no undocumented instructions in
-any core code.
-
-The 6809 port builds a kernel that has been tested to the point of mounting
-the root file system but no userspace work has been done at this point.
-
-Z180 is not yet supported. This requires a rather unique memory banking
-module to be debugged plus some driver pieces. It should however then enable
-systems like N8VEM Mark IV and maybe even the 'Super TRS80' hacked hardware.
+Currently only Z80 and 6809 are properly supported. Clones should also work as
+should FPGA cores like T80. The current build uses no undocumented instructions
+in any core code.
 
 It ought to be possible to port UZI to any other small processor with
 banking. That would include banked 6809/6309 systems and perhaps 65C816
 (Apple IIGS anyone ?) with a suitable compiler. The current core code has
-been test built purely to verify it seems ok on 6809 (gcc) and 6502 (cc65).
-Various endianisms in the core code have been fixed but there may be more.
+been tested to some extent on 6502, and has been build tested on 8086 and
+68000. Various endianisms in the core code have been fixed but there may be
+more.
 
 The constraints roughly speaking for any port are
 
@@ -562,20 +537,17 @@ and relocatable binaries. Doable as AmigaOS showed but forget swapping.
 
 As far as I can tell we have suitable open toolchains for
 
-6809 (gcc fork) - although 6809 is well served by NitrOS/9. The core code
-has been built with gcc 6809 as a minimal sanity test.
+6809 (gcc fork) - although 6809 is well served by NitrOS/9.
 
 68HC11/2 (for the variants with banked RAM)
 
 TI990 (gcc development) - http://www.cozx.com/~dpitts/tigccinst.html
-(TI 99/4A anyone ;-))
+(TI 99/4A Geneve anyone ;-))
 
 8086 is a gap but I'm working on pcc 8086 targets and could do with help
 there (http://pcc.ludd.ltu.se/). Once the compiler is done the port should
-be easy and cover both XT and 286.
-
-6502 is probably a cause too far (but prove me wrong...). The core code will
-build with cc65.
+be easy and cover both XT and 286. Another option may now be to port the
+Coherent compiler. bcc also works.
 
 658C16 seems to lack a serious open compiler although there is a tcc port !
 (snes-sdk)
@@ -598,11 +570,9 @@ Other Things That Would Help
 ----------------------------
 
 Teaching SDCC to generate better code. It's not bad but sometimes it makes a
-right mess, especially of long types. Someone also needs to write the
-longlongs signed mod function and fix the fact that discarding the output
-of a longlong call currently blows up sdcc.
+right mess, especially of long types.
 
-SDCC call by register
+SDCC call by register (SDCC is currently adding support for some of this)
 
 A tool to take all the compiler asm output of FUZIX on Z80, identify common
 code blocks containing only internal references (jump/call) and (considering

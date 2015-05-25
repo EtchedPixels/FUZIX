@@ -229,21 +229,21 @@ int main(int argc, char *argv[])
 		break;
 
 	    case 'f':
-		sprintf(line, "%s", argv[i++]);
+	        strlcpy(line, argv[i++], BUFSIZ);
 		if (mode == OPTIONC || mode == OPTIONB)
 		    warn(OVERRIDING_PREVIOUS_MODE, "f");
 		mode = OPTIONF;
 		break;
 
 	    case 'b':
-		sprintf(line, "%s", argv[i++]);
+	        strlcpy(line, argv[i++], BUFSIZ);
 		if (mode == OPTIONF || mode == OPTIONC)
 		    warn(OVERRIDING_PREVIOUS_MODE, "b");
 		mode = OPTIONB;
 		break;
 
 	    case 'c':
-		sprintf(line, "%s", argv[i++]);
+	        strlcpy(line, argv[i++], BUFSIZ);
 		if (mode == OPTIONF || mode == OPTIONB)
 		    warn(OVERRIDING_PREVIOUS_MODE, "c");
 		mode = OPTIONC;

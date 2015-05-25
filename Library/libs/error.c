@@ -1,54 +1,52 @@
 /* Copyright (C) 1996 Robert de Bath <robert@debath.thenet.co.uk>
  * This file is part of the Linux-8086 C library and is distributed
  * under the GNU Library General Public License.
- */  
+ *
+ * Rewritten by Alan Cox to use a binary file format and save a lot of space
+ */
+
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <paths.h>
 #include <errno.h>
+#include <fcntl.h>
 
-char **__sys_errlist = 0;
-int __sys_nerr = 0;
+static uint8_t *__sys_errlist;
+static uint16_t *__sys_errptr;
+static int __sys_nerr;
+static char retbuf[80];
 
-char *strerror(int err) 
+static void _load_errlist(void)
 {
-	static char retbuf[80];
-	char *p, inbuf[128];
-	int cc, fd;
-	uint i, bufoff = 0;
-	if (__sys_nerr) {	/* sys_errlist preloaded */
-		if (err < 0 || err >= __sys_nerr)
-			goto UErr;
-		return __sys_errlist[err];
+	struct stat st;
+	int fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
+	if (fd < 0)
+		return;
+	if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
+		goto bad;
+	__sys_errlist = sbrk((st.st_size + 3)&~3);
+	if (__sys_errlist == (void *) -1)
+		goto bad;
+	if (read(fd,__sys_errlist, st.st_size) == st.st_size) {
+		__sys_nerr = *__sys_errlist;
+		__sys_errptr = (uint16_t *)__sys_errlist + 1;
+		close(fd);
+		return;
 	}
-	if (err <= 0)
-		goto UErr;	/* NB the <= allows comments in the file */
-	if ((fd = open(_PATH_LIBERR, 0)) < 0)
-		goto UErr;
-	while ((cc = read(fd, inbuf, sizeof(inbuf))) > 0) {
-		i = 0;
-		while (i < cc) {
-			if (inbuf[i] == '\n') {
-				retbuf[bufoff] = '\0';
-				if (err == atoi(retbuf)) {
-					if ((p = strchr(retbuf,' ')) == NULL) {
-						close(fd);
-						goto UErr;
-					}
-					while (*p == ' ')
-						p++;
-					close(fd);
-					return p;
-				}
-				bufoff = 0;
-			}
-			else if (bufoff < sizeof(retbuf) - 1)
-				retbuf[bufoff++] = inbuf[i];
-			++i;
-		}
-	}
-UErr:	strcpy(retbuf, "Unknown error ");
-	strncat(retbuf, _itoa(err), 10);
+bad:
+	close(fd);
+	__sys_errlist = NULL;
+	return;
+}
+
+char *strerror(int err)
+{
+	if (!__sys_errlist)
+		_load_errlist();
+	if (__sys_errlist && err >= 0 && err < __sys_nerr)
+		return __sys_errlist + __sys_errptr[err];
+	strcpy(retbuf, "Unknown error ");
+	strcpy(retbuf + 14, _itoa(err));
 	return retbuf;
 }

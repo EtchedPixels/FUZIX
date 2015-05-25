@@ -15,7 +15,8 @@
  *  5 Oct 1992	- Use readdir (kjb)
  * 26 Nov 1994	- Flag -r: print just the root device (kjb)
  * 19 May 2001  - Ported to UZI180
- *  3 Feb 015   - Flag -i: initialise the /etc/mtab file (WRS)
+ *  3 Feb 2015  - Flag -i: initialise the /etc/mtab file (WRS)
+ * 21 May 2015  - Report the rootfs as fuzix not uzi (AC)
  */
 
 #include <stdio.h>
@@ -26,7 +27,7 @@
 #include <dirent.h>
 
 #define DEV_PATH	"/dev/"
-#define MESSAGE		" / uzi rw\n"
+#define MESSAGE		" / fuzix rw\n"
 #define UNKNOWN_DEV	"/dev/unknown"
 #define ROOT		"/"
 
@@ -37,13 +38,13 @@ void done(const char *name, int status)
 {
     int fd;
 
-    if(iflag){
+    if(iflag) {
         fd = open("/etc/mtab", O_CREAT | O_TRUNC | O_WRONLY, 0644);
         if(fd < 0){
             perror("prtroot: cannot open /etc/mtab: ");
             exit(1);
         }
-    }else{ /* !iflag */
+    } else { /* !iflag */
         fd = 1;
     }
 
@@ -75,7 +76,7 @@ int main(int argc, const char *argv[])
 	&& (dp = opendir(DEV_PATH)) != (DIR *) NULL) {
 	while ((entry = readdir(dp)) != (struct dirent *) NULL) {
 	    strcpy(namebuf, DEV_PATH);
-	    strcat(namebuf, entry->d_name);
+	    strlcat(namebuf, entry->d_name, sizeof(namebuf));
 	    if (stat(namebuf, &filestat) != 0)
 		continue;
 	    if (!S_ISBLK(filestat.st_mode))

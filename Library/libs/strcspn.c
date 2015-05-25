@@ -13,7 +13,7 @@ size_t strcspn(const char *string, const char *set)
  */
 {
     register const char *setptr;
-    char *start;
+    const char *start;
 
     start = string;
     while (*string)

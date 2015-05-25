@@ -1,22 +1,18 @@
-/*
- * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
- * This file is licensed under the terms of the 3-clause BSD open source
- * license.
- */
-
 #include	<string.h>
 
-int
-memcmp(const void *s1, const void *s2, size_t n)
-{
-	register const unsigned char *p1 = s1, *p2 = s2;
+/* ANSIfied from dLibs 1.2 and handling of 0 length compare done as per
+   convention (equality) */
 
-	if (n) {
-		n++;
-		while (--n > 0) {
-			if (*p1++ == *p2++) continue;
-			return *--p1 - *--p2;
-		}
+int memcmp(const void *mem1, const void *mem2, size_t len)
+{
+	const signed char *p1 = mem1, *p2 = mem2;
+
+	if (!len)
+		return 0;
+
+	while (--len && *p1 == *p2) {
+		p1++;
+		p2++;
 	}
-	return 0;
+	return *p1 - *p2;
 }

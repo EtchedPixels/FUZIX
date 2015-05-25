@@ -141,16 +141,16 @@ arg_t _time(void)
 	switch (type) {
 		case 0:
 			rdtime(&t);
-			uput(&t, tvec, sizeof(t));
-			return (0);
+			break;
 		case 1:
-			uput(&t.low, &ticks.full, sizeof(ticks));
-			uzero(&t.high, sizeof(t.high));
-			return 0;
+			t.low = ticks.full;
+			t.high = 0;
+			break;
 		default:
 			udata.u_error = EINVAL;
 			return -1;
 	}
+	return uput(&t, tvec, sizeof(t));
 }
 
 #undef tvec
@@ -489,7 +489,7 @@ arg_t _kill(void)
 	ptptr p;
 	int f = 0, s = 0;
 
-	if (sig < 0 || sig > 15) {
+	if (sig < 0 || sig >= NSIGS) {
 		udata.u_error = EINVAL;
 		return (-1);
 	}
@@ -549,6 +549,7 @@ setpgrp (void)                    Function 53
 arg_t _setpgrp(void)
 {
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
+	udata.u_ptab->p_tty = 0;
 	return (0);
 }
 

@@ -9,7 +9,7 @@ CC_NOOPT = $(CC_OPT)
 ASM_OPT = -o
 SRC_CRT0 = crt0_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM =
+SRC_ASM = setjmp_6809.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -19,7 +19,7 @@ SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fprintf.c fputc.c fputs.c fread.c free.c
 SRC_C += fsetpos.c ftell.c fwrite.c getcwd.c
-SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getopt.c
+SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += gmtime.c gmtime_r.c grent.c index.c isatty.c killpg.c
 SRC_C += libintl.c
@@ -27,7 +27,7 @@ SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putchar_wrapper.c putpwent.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
-SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
+SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sleep.c sprintf.c
 SRC_C += stat.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c

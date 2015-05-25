@@ -110,10 +110,10 @@ int main(int argc, char *argv[])
 	strcpy(ifname, "<stdin>");
     } else {
 	if (source != NULL) {
-	    strcpy(ifname, source);
-	    strcat(ifname, curarg);
+	    strlcpy(ifname, source, sizeof(ifname));
+	    strlcat(ifname, curarg, sizeof(ifname));
 	} else {
-	    strcpy(ifname, curarg);
+	    strlcpy(ifname, curarg, sizeof(ifname));
 	}
 	if ((inpf = fopen(ifname, "r")) == NULL) {
 	    printf("uud: Can't open %s\n", ifname);
@@ -176,10 +176,10 @@ int main(int argc, char *argv[])
 		malformed_begin();
 
 	if (target != NULL) {
-	    strcpy(ofname, target);
-	    strcat(ofname, dest);
+	    strlcpy(ofname, target, sizeof(ofname));
+	    strlcat(ofname, dest, sizeof(ofname));
 	} else {
-	    strcpy(ofname, dest);
+	    strlcpy(ofname, dest, sizeof(ofname));
 	}
 
 	if ((outf = fopen(ofname, "w")) == NULL) {	/* binary! */
@@ -406,10 +406,10 @@ void getfile(char *buf)
 	printf("uud: Missing include file name.\n");
 	exit(17);
     } else if (source != NULL) {
-	strcpy(ifname, source);
-	strcat(ifname, pos);
+	strlcpy(ifname, source, sizeof(ifname));
+	strlcat(ifname, pos, sizeof(ifname));
     } else {
-	strcpy(ifname, pos);
+	strlcpy(ifname, pos, sizeof(ifname));
     }
 
     if (access(ifname, 04)) {

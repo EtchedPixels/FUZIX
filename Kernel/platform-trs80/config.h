@@ -15,6 +15,7 @@
 #define CONFIG_VT
 /* Simple character addressed device */
 #define CONFIG_VT_SIMPLE
+#define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS	2
@@ -23,7 +24,7 @@
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
 /* Vt definitions */
-#define VT_BASE		((uint8_t *)0xF800)
+#define VT_BASE		vtbase[curtty]
 #define VT_WIDTH	80
 #define VT_HEIGHT	24
 #define VT_RIGHT	79

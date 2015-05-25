@@ -42,6 +42,7 @@ extern int atoi __P((const char *str));
 extern long atol __P((const char *strP));
 
 extern char *_itoa __P((int value));
+extern char *_uitoa __P((unsigned int value));
 extern char *_ltoa __P((long value));
 extern char *_ultoa __P((unsigned long value));
 
@@ -90,5 +91,7 @@ extern char *getpass(char *prompt);
 
 extern int _argc;
 extern char **_argv;
+
+extern int getloadavg __P((unsigned int loadavg[], int nelem));
 
 #endif /* __STDLIB_H */
