@@ -8,9 +8,9 @@ ifeq ($$($1.ext),)
 $$(error You must define $1.ext to use nop)
 endif
 
-$1.exe += $$($1.objdir)/$1.$$($1.ext)
+$1.result += $$($1.objdir)/$1.$$($1.ext)
 
-$1: $$($1.exe)
+$1: $$($1.result)
 .PHONY: $1
 
 endef

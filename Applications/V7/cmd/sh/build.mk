@@ -6,5 +6,5 @@ v7-sh.srcs = \
 	word.c xec.c glob.c
 $(call build, v7-sh, target-exe)
 
-apps: $(v7-sh.exe)
+apps: $(v7-sh.result)
 

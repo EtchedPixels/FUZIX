@@ -6,5 +6,5 @@ levee.srcs = \
 	move.c rmxcall.c ucsd.c undo.c unixcall.c wildargs.c
 $(call build, levee, target-exe)
 
-apps: $(levee.exe)
+apps: $(levee.result)
 

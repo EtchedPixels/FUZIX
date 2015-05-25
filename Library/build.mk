@@ -212,7 +212,7 @@ libc-syscalls.objs = $(patsubst %, $(libc-syscalls.objdir)/fuzix/syscall_%.$O, $
 $(call build, libc-syscalls, target-lib)
 
 $(libc-syscalls.srcs): $(libc-syscalls.objdir)/syscalls-made
-$(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).exe)
+$(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).result)
 	@echo SYSCALLS $@
 	@mkdir -p $(libc-syscalls.objdir)/fuzix
 	$(hide) (cd $(libc-syscalls.objdir) && $(abspath $^))
@@ -222,14 +222,14 @@ $(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).exe)
 # The actual libc is the functions library with the syscalls library merged in
 # on top.
 
-libc.srcs = $(libc-functions.exe) $(libc-syscalls.exe) $(PLATFORM_EXTRA_LIBC)
+libc.srcs = $(libc-functions.result) $(libc-syscalls.result) $(PLATFORM_EXTRA_LIBC)
 $(call build, libc, target-lib)
 
 
 # The crt object file (built and linked in seperately).
 
 crt0.srcs = libs/$(CRT)
-crt0.exe = $(crt0.objdir)/Library/libs/$(CRT:.s=.$O)
+crt0.result = $(crt0.objdir)/Library/libs/$(CRT:.s=.$O)
 $(call build, crt0, target-lib)
 
 

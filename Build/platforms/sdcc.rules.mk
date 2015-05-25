@@ -91,9 +91,9 @@ $$($1.objdir)/%.rel: $$($1.objdir)/%.s
 # Builds a library from object files and other library files. Additional
 # libraries are merged in after the object files, from first-to-last order.
 
-ifneq ($$(filter %.lib, $$($1.exe)),)
+ifneq ($$(filter %.lib, $$($1.result)),)
 
-$$($1.exe): $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
+$$($1.result): $$($1.objs) $$($$($1.class).extradeps) $$($1.extradeps)
 	@echo AR $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) rm -f $$(dir $$@)/*.rel $$@
@@ -106,17 +106,17 @@ endif
 
 # Builds a target executable.
 
-ifneq ($$(filter %.exe, $$($1.exe)),)
+ifneq ($$(filter %.exe, $$($1.result)),)
 
-$$($1.exe): $$($1.objs) $(crt0.exe) $(binman.exe) \
+$$($1.result): $$($1.objs) $(crt0.result) $(binman.result) \
 		$$($$($1.class).extradeps) $$($1.extradeps)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) $(SDCC) \
 		$$(sdcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
-		-o $$(@:.exe=.ihx) $(crt0.exe) $$($1.objs)
+		-o $$(@:.exe=.ihx) $(crt0.result) $$($1.objs)
 	$$(hide) makebin -p -s 65535 $$(@:.exe=.ihx) $$(@:.exe=.bin)
-	$$(hide) $(binman.exe) $(PROGLOAD) $$(@:.exe=.bin) $$(@:.exe=.map) $$@ > /dev/null
+	$$(hide) $(binman.result) $(PROGLOAD) $$(@:.exe=.bin) $$(@:.exe=.map) $$@ > /dev/null
 
 endif
 

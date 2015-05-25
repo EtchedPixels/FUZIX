@@ -46,9 +46,9 @@ target-exe.ldflags += \
 	--no-std-crt0 \
 	--code-loc $(PROGLOAD) \
 	--data-loc 0 \
-	$(libc.exe)
+	$(libc.result)
 
-target-exe.extradeps += $(libc.exe)
+target-exe.extradeps += $(libc.result)
 
 # Fuzix' libc conflicts with the standard sdcc compiler library, which is a
 # shame because there's bits we want in it. So we steal those bits into our
@@ -56,7 +56,7 @@ target-exe.extradeps += $(libc.exe)
 
 libc-runtime.ext = $A
 $(call build, libc-runtime, nop)
-PLATFORM_EXTRA_LIBC = $(libc-runtime.exe)
+PLATFORM_EXTRA_LIBC = $(libc-runtime.result)
 
 # Names of object files to pull out of the SDCC libc.
 libc-runtime.objs = \
@@ -83,7 +83,7 @@ libc-functions.omit = \
 	memcmp.c atoi.c memcpy.c strcat.c memset.c strncat.c strchr.c xitoa.c \
 	strrchr.c ltoa.c strcmp.c strncpy.c strtok.c strncmp.c memchr.c strcspn.c
 
-$(libc-runtime.exe): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
+$(libc-runtime.result): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
 	@echo LIBRUNTIME $@
 	@mkdir -p $(libc-runtime.objdir)
 	$(hide) rm -f $(libc-runtime.objdir)/*.rel

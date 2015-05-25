@@ -3,9 +3,9 @@
 define target-exe.rules
 
 $1.objdir ?= $(OBJ)/$(PLATFORM)/$1
-$1.exe ?= $$($1.objdir)/$1.exe
+$1.result ?= $$($1.objdir)/$1.exe
 
-$1: $$($1.exe)
+$1: $$($1.result)
 .PHONY: $1
 
 $1.cflags += -I$(TOP)/Library/include

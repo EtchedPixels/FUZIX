@@ -29,7 +29,7 @@ v7_games_apps := \
 make_single_app = \
 	$(eval $1-$2-app.srcs := $2/$1.c) \
 	$(call build, $1-$2-app, target-exe) \
-	$(eval apps += $($1-$2-app.exe))
+	$(eval apps += $($1-$2-app.result))
 
 apps :=
 $(foreach app, $(util_apps), $(call make_single_app,$(app),util))

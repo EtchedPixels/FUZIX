@@ -6,9 +6,9 @@
 define host-exe.rules
 
 $1.objdir ?= $(OBJ)/host/$1
-$1.exe ?= $$($1.objdir)/$1
+$1.result ?= $$($1.objdir)/$1
 
-$1: $$($1.exe)
+$1: $$($1.result)
 .PHONY: $1
 
 $1.abssrcs := $$(call absify, $$($1.dir), $$($1.srcs))
@@ -19,7 +19,7 @@ $1.objs := $$(patsubst %, $$($1.objdir)/%.o, $$(basename $$($1.abssrcs)))
 
 -include $$($1.deps)
 
-$$($1.exe): $$($1.objs)
+$$($1.result): $$($1.objs)
 	@echo HOSTLINK $$@
 	@mkdir -p $$(dir $$@)
 	$$(hide) gcc \
