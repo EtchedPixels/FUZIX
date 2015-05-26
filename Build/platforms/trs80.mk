@@ -10,7 +10,6 @@ SDCPP = cpp -nostdinc -undef -P
 SDAS = sdasz80
 SDAR = sdar
 PLATFORM_RULES = sdcc.rules
-include $(BUILD)/platforms/sdcc.rules.mk
 
 # CPU architecture and which syscall generator to use.
 
@@ -19,75 +18,122 @@ SYSCALL_GENERATOR = syscall
 SYSCALL_STUB = fuzix/syscall.s
 CRT = crt0.s
 
-# Find what load address the kernel wants.
+# Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
+# go on the file system, not including the standard files; the three columns
+# are destination filename, mode, and source filename.
+FILESYSTEM_ISIZE = 64
+FILESYSTEM_FSIZE = 2880
+FILESYSTEM = \
+	/bin/arithmetic         0755 $(Applications/V7/games/arithmetic.result) \
+	/bin/banner             0755 $(Applications/util/banner.result) \
+	/bin/basename           0755 $(Applications/util/basename.result) \
+	/bin/bd                 0755 $(Applications/util/bd.result) \
+	/bin/cal                0755 $(Applications/util/cal.result) \
+	/bin/cat                0755 $(Applications/util/cat.result) \
+	/bin/chgrp              0755 $(Applications/util/chgrp.result) \
+	/bin/chmod              0755 $(Applications/util/chmod.result) \
+	/bin/chown              0755 $(Applications/util/chown.result) \
+	/bin/cksum              0755 $(Applications/util/cksum.result) \
+	/bin/cmp                0755 $(Applications/util/cmp.result) \
+	/bin/cp                 0755 $(Applications/util/cp.result) \
+	/bin/cut                0755 $(Applications/util/cut.result) \
+	/bin/date               0755 $(Applications/util/date.result) \
+	/bin/dd                 0755 $(Applications/util/dd.result) \
+	/bin/df                 0755 $(Applications/util/df.result) \
+	/bin/dirname            0755 $(Applications/util/dirname.result) \
+	/bin/dosread            0755 $(Applications/util/dosread.result) \
+	/bin/du                 0755 $(Applications/util/du.result) \
+	/bin/echo               0755 $(Applications/util/echo.result) \
+	/bin/ed                 0755 $(Applications/util/ed.result) \
+	/bin/factor             0755 $(Applications/util/factor.result) \
+	/bin/false              0755 $(Applications/util/false.result) \
+	/bin/fdisk              0755 $(Applications/util/fdisk.result) \
+	/bin/fgrep              0755 $(Applications/util/fgrep.result) \
+	/bin/fsck               0755 $(Applications/util/fsck.result) \
+	/bin/grep               0755 $(Applications/util/grep.result) \
+	/bin/head               0755 $(Applications/util/head.result) \
+	/bin/id                 0755 $(Applications/util/id.result) \
+	/bin/init               0755 $(Applications/util/init.result) \
+	/bin/kill               0755 $(Applications/util/kill.result) \
+	/bin/ll                 0755 $(Applications/util/ll.result) \
+	/bin/ln                 0755 $(Applications/util/ln.result) \
+	/bin/logname            0755 $(Applications/util/logname.result) \
+	/bin/ls                 0755 $(Applications/util/ls.result) \
+	/bin/man                0755 $(Applications/util/man.result) \
+	/bin/mkdir              0755 $(Applications/util/mkdir.result) \
+	/bin/mkfifo             0755 $(Applications/util/mkfifo.result) \
+	/bin/mkfs               0755 $(Applications/util/mkfs.result) \
+	/bin/mknod              0755 $(Applications/util/mknod.result) \
+	/bin/more               0755 $(Applications/util/more.result) \
+	/bin/mount              0755 $(Applications/util/mount.result) \
+	/bin/mv                 0755 $(Applications/util/mv.result) \
+	/bin/od                 0755 $(Applications/util/od.result) \
+	/bin/pagesize           0755 $(Applications/util/pagesize.result) \
+	/bin/passwd             0755 $(Applications/util/passwd.result) \
+	/bin/patchcpm           0755 $(Applications/util/patchcpm.result) \
+	/bin/printenv           0755 $(Applications/util/printenv.result) \
+	/bin/prtroot            0755 $(Applications/util/prtroot.result) \
+	/bin/ps                 0755 $(Applications/util/ps.result) \
+	/bin/pwd                0755 $(Applications/util/pwd.result) \
+	/bin/rm                 0755 $(Applications/util/rm.result) \
+	/bin/rmdir              0755 $(Applications/util/rmdir.result) \
+	/bin/sleep              0755 $(Applications/util/sleep.result) \
+	/bin/sort               0755 $(Applications/util/sort.result) \
+	/bin/ssh                0755 $(Applications/util/ssh.result) \
+	/bin/stty               0755 $(Applications/util/stty.result) \
+	/bin/su                 0755 $(Applications/util/su.result) \
+	/bin/sum                0755 $(Applications/util/sum.result) \
+	/bin/sync               0755 $(Applications/util/sync.result) \
+	/bin/tail               0755 $(Applications/util/tail.result) \
+	/bin/tee                0755 $(Applications/util/tee.result) \
+	/bin/touch              0755 $(Applications/util/touch.result) \
+	/bin/tr                 0755 $(Applications/util/tr.result) \
+	/bin/true               0755 $(Applications/util/true.result) \
+	/bin/umount             0755 $(Applications/util/umount.result) \
+	/bin/uniq               0755 $(Applications/util/uniq.result) \
+	/bin/uud                0755 $(Applications/util/uud.result) \
+	/bin/uue                0755 $(Applications/util/uue.result) \
+	/bin/wc                 0755 $(Applications/util/wc.result) \
+	/bin/which              0755 $(Applications/util/which.result) \
+	/bin/who                0755 $(Applications/util/who.result) \
+	/bin/whoami             0755 $(Applications/util/whoami.result) \
+	/bin/write              0755 $(Applications/util/write.result) \
+	/bin/xargs              0755 $(Applications/util/xargs.result) \
+	/bin/yes                0755 $(Applications/util/yes.result) \
+    /bin/ac                 0755 $(Applications/V7/cmd/ac.result) \
+    /bin/at                 0755 $(Applications/V7/cmd/at.result) \
+    /bin/atrun              0755 $(Applications/V7/cmd/atrun.result) \
+    /bin/col                0755 $(Applications/V7/cmd/col.result) \
+    /bin/comm               0755 $(Applications/V7/cmd/comm.result) \
+    /bin/cron               0755 $(Applications/V7/cmd/cron.result) \
+    /bin/crypt              0755 $(Applications/V7/cmd/crypt.result) \
+    /bin/dc                 0755 $(Applications/V7/cmd/dc.result) \
+    /bin/dd                 0755 $(Applications/V7/cmd/dd.result) \
+    /bin/deroff             0755 $(Applications/V7/cmd/deroff.result) \
+    /bin/diff               0755 $(Applications/V7/cmd/diff.result) \
+    /bin/diff3              0755 $(Applications/V7/cmd/diff3.result) \
+    /bin/diffh              0755 $(Applications/V7/cmd/diffh.result) \
+    /bin/join               0755 $(Applications/V7/cmd/join.result) \
+    /bin/makekey            0755 $(Applications/V7/cmd/makekey.result) \
+    /bin/mesg               0755 $(Applications/V7/cmd/mesg.result) \
+    /bin/newgrp             0755 $(Applications/V7/cmd/newgrp.result) \
+    /bin/pr                 0755 $(Applications/V7/cmd/pr.result) \
+    /bin/ptx                0755 $(Applications/V7/cmd/ptx.result) \
+    /bin/rev                0755 $(Applications/V7/cmd/rev.result) \
+    /bin/split              0755 $(Applications/V7/cmd/split.result) \
+    /bin/su                 0755 $(Applications/V7/cmd/su.result) \
+    /bin/sum                0755 $(Applications/V7/cmd/sum.result) \
+    /bin/test               0755 $(Applications/V7/cmd/test.result) \
+    /bin/time               0755 $(Applications/V7/cmd/time.result) \
+    /bin/tsort              0755 $(Applications/V7/cmd/tsort.result) \
+    /bin/wall               0755 $(Applications/V7/cmd/wall.result) \
+    /usr/games/backgammon   0755 $(Applications/V7/games/backgammon.result) \
+    /usr/games/fish         0755 $(Applications/V7/games/fish.result) \
+    /usr/games/wump         0755 $(Applications/V7/games/wump.result) \
 
-PROGLOAD = $(shell \
-        (cat $(TOP)/Kernel/platform-$(PLATFORM)/config.h && echo PROGLOAD) | \
-        cpp -E | tail -n1)
+# These don't work yet. \
+    /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
+    /bin/look               0755 $(Applications/V7/cmd/look.result) \
 
-# CFLAGS used everywhere.
-
-sdcc.cflags = \
-	-m$(ARCH) \
-	--std-c99 \
-	--opt-code-size \
-	-Ddouble=float
-
-# User-mode code can see the standard library.
-
-target-lib.includes += -ILibrary/include
-target-exe.includes += -ILibrary/include
-
-# Used when linking user mode executables.
-
-target-exe.ldflags += \
-	-mz80 \
-	--nostdlib \
-	--no-std-crt0 \
-	--code-loc $(PROGLOAD) \
-	--data-loc 0 \
-	$(libc.result)
-
-target-exe.extradeps += $(libc.result)
-
-# Fuzix' libc conflicts with the standard sdcc compiler library, which is a
-# shame because there's bits we want in it. So we steal those bits into our
-# own addon library.
-
-libc-runtime.ext = $A
-$(call build, libc-runtime, nop)
-PLATFORM_EXTRA_LIBC = $(libc-runtime.result)
-
-# Names of object files to pull out of the SDCC libc.
-libc-runtime.objs = \
-	divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel \
-	modmixed.rel mul.rel mulchar.rel heap.rel memmove.rel strcpy.rel strlen.rel \
-	abs.rel crtcall.rel crtenter.rel setjmp.rel _atof.rel _schar2fs.rel \
-	_sint2fs.rel _slong2fs.rel _uchar2fs.rel _uint2fs.rel _ulong2fs.rel \
-	_fs2schar.rel _fs2sint.rel _fs2slong.rel _fs2uchar.rel _fs2uint.rel \
-	_fs2ulong.rel _fsadd.rel _fsdiv.rel _fsmul.rel _fssub.rel _fseq.rel \
-	_fsgt.rel _fslt.rel _fsneq.rel fabsf.rel frexpf.rel ldexpf.rel expf.rel \
-	powf.rel sincosf.rel sinf.rel cosf.rel logf.rel log10f.rel sqrtf.rel \
-	tancotf.rel tanf.rel cotf.rel asincosf.rel asinf.rel acosf.rel atanf.rel \
-	atan2f.rel sincoshf.rel sinhf.rel coshf.rel tanhf.rel floorf.rel \
-	ceilf.rel modff.rel _divslong.rel _modslong.rel _modulong.rel \
-	_divulong.rel _mullong.rel _mullonglong.rel _divslonglong.rel \
-	_divulonglong.rel _modslonglong.rel _modulonglong.rel _ltoa.rel _atoi.rel \
-	abs.rel labs.rel _strcat.rel _strchr.rel _strcmp.rel _strcspn.rel \
-	_strncat.rel _strncmp.rel strxfrm.rel _strncpy.rel _strpbrk.rel \
-	_strrchr.rel _strspn.rel _strstr.rel _strtok.rel _memchr.rel _memcmp.rel \
-	_memcpy.rel _memset.rel _itoa.rel _ltoa.rel \
-
-# Names of source files from Fuzix's libc that we don't want to compile.
-libc-functions.omit = \
-	memcmp.c atoi.c memcpy.c strcat.c memset.c strncat.c strchr.c xitoa.c \
-	strrchr.c ltoa.c strcmp.c strncpy.c strtok.c strncmp.c memchr.c strcspn.c
-
-$(libc-runtime.result): $(SDCC_LIBS)/$(ARCH).lib $(MAKEFILE)
-	@echo LIBRUNTIME $@
-	@mkdir -p $(libc-runtime.objdir)
-	$(hide) rm -f $(libc-runtime.objdir)/*.rel
-	$(hide) (cd $(libc-runtime.objdir) \
-		&& $(SDAR) x $< $(libc-runtime) \
-		&& $(SDAR) cq $(abspath $@) $(libc-runtime.objs))
+include $(BUILD)/platforms/sdcc.rules.mk
 

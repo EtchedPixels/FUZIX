@@ -1,3 +1,7 @@
+# Global setup.
+
+debug ?= n
+
 # Load all the build class macros.
 
 include $(wildcard $(BUILD)/classes/*)
