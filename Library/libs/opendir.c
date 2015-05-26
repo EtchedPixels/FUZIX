@@ -9,27 +9,22 @@
 DIR *opendir(char *path)
 {
 	struct stat statbuf;
-	register DIR *dir;
+	struct _dir *dir;
 
 	if (stat(path, &statbuf) != 0)
-		goto Err;
+		return NULL;
+
 	if ((statbuf.st_mode & S_IFDIR) == 0) {
 		errno = ENOTDIR;
-		goto Err;
+		return NULL;
 	}
-	if ((dir = (DIR *) calloc(1, sizeof(DIR))) == NULL) {
+	if ((dir = calloc(1, sizeof(struct _dir))) == NULL) {
 		errno = ENOMEM;
-		goto Err;
+		return NULL;
 	}
-	if ((dir->dd_buf = calloc(1, sizeof(struct dirent))) == NULL) {
+	if ((dir->d.dd_fd = open(path, O_RDONLY | O_CLOEXEC)) < 0) {
 		free(dir);
-		errno = ENOMEM;
-		goto Err;
+		return NULL;
 	}
-	if ((dir->dd_fd = open(path, O_RDONLY | O_CLOEXEC)) < 0) {
-		free(dir->dd_buf);
-		free(dir);
-	      Err:return NULL;
-	}
-	return dir;
+	return (DIR *)dir;
 }
