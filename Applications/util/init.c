@@ -206,7 +206,7 @@ static uint8_t to_runlevel(uint8_t c)
 {
 	if (c == 's' || c == 'S')
 		return 7;		/* 1 << 7 is used for boot/single */
-	if (c >=  '0 ' && c <= '6')
+	if (c >=  '0' && c <= '6')
 		return c - '0';
 	return -1;
 }
@@ -518,7 +518,7 @@ static void envset(char *a, char *b)
 /*
  *	Internal implementation of "getty" and "login"
  */
-static pid_t getty(char *ttyname, char *id)
+static pid_t getty(const char *ttyname, const char *id)
 {
 	int fdtty, pid;
 	struct passwd *pwd;
