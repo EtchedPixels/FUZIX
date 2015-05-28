@@ -91,7 +91,7 @@ char *prog_name;
 struct termios termios;
 int column= 0, max_column=80;		/* Assume 80 character terminals. */
 
-void main(int argc, char **argv);
+void main(int argc, char *argv[]);
 void report(int flags);
 int option(char *opt, char *next);
 int match(const char *s1, const char *s2);

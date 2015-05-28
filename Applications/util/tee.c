@@ -57,7 +57,7 @@ void writes(const char *p)
 int main(int argc, char *argv[])
 {
   char iflag = 0, aflag = 0;
-  char buf[CHUNK_SIZE];
+  static char buf[CHUNK_SIZE];
   int i, s, n;
 
   argv++;
