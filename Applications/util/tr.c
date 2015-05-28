@@ -26,7 +26,7 @@ BOOL invec[ASCII + 1], outvec[ASCII + 1];
 
 short in_index, out_index;
 
-int  main(int argc, char **argv);
+int  main(int argc, char *argv[]);
 void convert(void);
 void map(unsigned char *string1, unsigned char *string2);
 void expand(char *arg, unsigned char *buffer);
@@ -159,7 +159,7 @@ void complement(unsigned char *buffer)
 {
     register unsigned char *ptr;
     register short i, index;
-    unsigned char conv[ASCII + 2];
+    static unsigned char conv[ASCII + 2];
 
     index = 0;
     for (i = 1; i <= ASCII; i++) {

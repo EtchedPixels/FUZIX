@@ -33,8 +33,8 @@ int do_ps(void)
     int i, j, uid, pfd, ptsize;
     struct passwd *pwd;
     struct p_tab *pp;
-    struct p_tab ptab[PTABSIZE];
-    char name[10], uname[20];
+    static struct p_tab ptab[PTABSIZE];
+    static char name[10], uname[20];
 
     uid = getuid();
 

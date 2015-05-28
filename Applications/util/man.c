@@ -64,7 +64,7 @@ int searchwhatis(FILE *wf, char *title, char **ppage, char **psection)
  */
 {
 	static char page[256], section[32];
-	char alias[256];
+	static char alias[256];
 	int found= 0;
 	int c;
 
@@ -478,7 +478,8 @@ int trymandir(char *mandir, char *title, char *section)
  */
 {
 	FILE *wf;
-	char whatis[1024], pagename[1024], *wpage, *wsection;
+	static char whatis[1024], pagename[1024];
+	char *wpage, *wsection;
 	int rsw, rsp;
 	int ntries;
 	int (*searchidx)(FILE *, char *, char **, char **);
@@ -559,7 +560,7 @@ int trysubmandir(char *mandir, char *title, char *section)
  * may have manual pages that override the ones in the major directory.
  */
 {
-	char submandir[1024];
+	static char submandir[1024];
 	DIR *md;
 	struct dirent *entry;
 
@@ -590,7 +591,7 @@ int trysubmandir(char *mandir, char *title, char *section)
 void searchmanpath(char *title, char *section)
 /* Search the manual path for a manual page describing "title." */
 {
-	char mandir[1024];
+	static char mandir[1024];
 	char *pp= manpath, *pd;
 
 	for (;;) {

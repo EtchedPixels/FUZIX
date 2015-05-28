@@ -179,7 +179,7 @@ int main(int argc, char *argval[])
                             *tp++ = '/';
                         for (i = 0; (*tp++ = cmd[i++]) != '\0'; )
                             ;
-                        execve(eline, argv, (const char**) environ);
+                        execve(eline, (char**) argv, (char**) environ);
                     }
                     write(2, "ssh: ", 5);
                     write(2, cmd, strlen(cmd));

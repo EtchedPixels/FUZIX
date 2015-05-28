@@ -33,10 +33,10 @@ void usage(char ** argv)
 
 int main(int argc, char ** argv)
 {
-	char ttyname[12];
+	static char ttyname[12];
 	struct passwd * pwdent;
 	int ofd = -1;
-	char buf[255];
+	static char buf[255];
 	int n;
 
 	if ((argc > 3) || (argc < 2)) {

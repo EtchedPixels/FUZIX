@@ -29,6 +29,7 @@
 
 #define BUFFER_SIZE    512
 
+static char buff[BUFFER_SIZE];
 
 /* The name of the file currently being displayed, "-" indicates stdin. */
 
@@ -61,7 +62,6 @@ int open_file(char *new_filename)
 int output_file(int fd)
 {
     int bytes_read;
-    char buff[BUFFER_SIZE];
 
     while ((bytes_read = read(fd, buff, BUFFER_SIZE)) > 0)
 	write(STDOUT_FILENO, buff, bytes_read);

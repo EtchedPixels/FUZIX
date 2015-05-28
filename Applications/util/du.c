@@ -52,7 +52,7 @@ typedef struct already {
     nlink_t al_nlink;
 } ALREADY;
 
-int  main(int argc, char **argv);
+int  main(int argc, char *argv[]);
 int  makedname(char *d, char *f, char *out, int outlen);
 int  done(dev_t dev, ino_t inum, nlink_t nlink);
 long dodir(char *d, int thislev, dev_t dev);
@@ -131,7 +131,7 @@ long dodir(char *d, int thislev, dev_t dev)
     long total;
     DIR  *dp;
     struct dirent *entry;
-    char dent[LINELEN];
+    static char dent[LINELEN];
 
     if (lstat(d, &s) < 0) {
 	fprintf(stderr, "%s: %s: %s\n", prog, d, strerror(errno));

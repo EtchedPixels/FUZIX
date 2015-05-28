@@ -596,7 +596,7 @@ int main(int argc,  char *argv[])
 				bflag = 1;
 				break;
 			case 'h':
-				execv("/usr/lib/diffh", (const char**)args);
+				execv("/usr/lib/diffh", (char**)args);
 				mesg("cannot find diffh", empty);
 				done();
 			}
