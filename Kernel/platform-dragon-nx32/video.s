@@ -31,7 +31,7 @@ _vid256x192:
 	sta $ffc5
 	lda $ff22
 	anda #$07
-	ora #$f8
+	ora #$f0
 	sta $ff22
 	rts
 
@@ -61,20 +61,28 @@ _plot_char:
 	tfr d,x
 	leax _fontdata_8x8,x		; relative to font
 	lda ,x+			; simple 8x8 renderer for now
+	coma
 	sta 0,y
 	lda ,x+
+	coma
 	sta 32,y
 	lda ,x+
+	coma
 	sta 64,y
 	lda ,x+
+	coma
 	sta 96,y
 	lda ,x+
+	coma
 	sta 128,y
 	lda ,x+
+	coma
 	sta 160,y
 	lda ,x+
+	coma
 	sta 192,y
 	lda ,x+
+	coma
 	sta 224,y
 	puls y,pc
 
@@ -182,15 +190,16 @@ _clear_across:
 	jsr vidaddr	; Y now holds the address
 	tfr x,d		; Shuffle so we are writng to X and the counter
 	tfr y,x		; l is in d
+	lda #$ff
 clearnext:
-	clr ,x
-	clr 32,x
-	clr 64,x
-	clr 96,x
-	clr 128,x
-	clr 160,x
-	clr 192,x
-	clr 224,x
+	sta ,x
+	sta 32,x
+	sta 64,x
+	sta 96,x
+	sta 128,x
+	sta 160,x
+	sta 192,x
+	sta 224,x
 	leax 1,x
 	decb
 	bne clearnext
@@ -203,8 +212,7 @@ _clear_lines:
 	clra			; b holds Y pos already
 	jsr vidaddr		; y now holds ptr to line start
 	tfr y,x
-	clra
-	clrb
+	ldd #$ffff
 	lsl 4,s
 	lsl 4,s
 	lsl 4,s
