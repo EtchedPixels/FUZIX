@@ -206,15 +206,16 @@ $(call build, $(SYSCALL_GENERATOR), host-exe)
 # Pull the list of syscalls out of the kernel header.
 syscalls = $(shell awk -F '"' '/".*"/ { print $$2 }' < $(TOP)/Kernel/include/syscall_name.h)
 
+syscalldir = $(dir $(SYSCALL_STUB))
 libc-syscalls.objdir = $(OBJ)/$(PLATFORM)/libc-syscalls
-libc-syscalls.srcs = $(patsubst %, $(libc-syscalls.objdir)/fuzix/syscall_%.s, $(syscalls))
-libc-syscalls.objs = $(patsubst %, $(libc-syscalls.objdir)/fuzix/syscall_%.$O, $(syscalls))
+libc-syscalls.srcs = $(patsubst %, $(libc-syscalls.objdir)/$(syscalldir)/syscall_%.s, $(syscalls))
+libc-syscalls.objs = $(patsubst %, $(libc-syscalls.objdir)/$(syscalldir)/syscall_%.$O, $(syscalls))
 $(call build, libc-syscalls, target-lib)
 
 $(libc-syscalls.srcs): $(libc-syscalls.objdir)/syscalls-made
 $(libc-syscalls.objdir)/syscalls-made: $($(SYSCALL_GENERATOR).result)
 	@echo SYSCALLS $@
-	@mkdir -p $(libc-syscalls.objdir)/fuzix
+	@mkdir -p $(libc-syscalls.objdir)/$(syscalldir)
 	$(hide) (cd $(libc-syscalls.objdir) && $(abspath $^))
 	$(hide) touch $@
 
