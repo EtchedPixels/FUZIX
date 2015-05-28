@@ -35,8 +35,7 @@
 #define VT_BOTTOM	23
 #define VT_INITIAL_LINE	0
 
-extern unsigned char vt_mangle_6847(unsigned char c);
-#define VT_MAP_CHAR(x)	vt_mangle_6847(x)
+#define VIDEO_BASE	0x0400
 
 /* RS/Tandy Color Computer keyboard */
 #undef CONFIG_COCO_KBD
