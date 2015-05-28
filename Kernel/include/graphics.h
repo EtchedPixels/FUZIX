@@ -40,7 +40,7 @@ struct display {
 #define GFX_BLT_GC	256
 #define GFX_RECT	512	/* Rectangles */
 #define GFX_RAW		1024	/* Raw command streams */
-#define GFX_RAWCOPY	1024	/* Raw command stream is copier format */
+#define GFX_RAWCOPY	2048	/* Raw command stream is copier format */
   uint16_t drawmodes;
 #define MODE_XOR	1	/* XOR as well as set/clr */
 #define MODE_PATTERN	2	/* 8x8 pattern */
