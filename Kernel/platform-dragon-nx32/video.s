@@ -22,6 +22,9 @@
 ;
 ;	Dragon video drivers
 ;
+;	SAM V2=1 V1=1 V0=-
+;	6847 A/G=1 GM2=1 GM1=1 GM0=1
+;
 _vid256x192:
 	sta $ffc0
 	sta $ffc3
@@ -37,16 +40,9 @@ _vid256x192:
 ;	A = X, B = Y
 ;
 vidaddr:
-	ldy #VIDEO_BASE	; X is now the right column top line
-	leay a,y
-	clra
-	rorb	; 3 right is as good as 5 left	
-	rora
-	rorb
-	rora
-	rorb
-	rora	; D is now 32 * b
-	leay d,y
+	ldy #VIDEO_BASE
+	exg a,b
+	leay d,y		; 256 x Y + X
 	rts
 ;
 ;	plot_char(int8_t y, int8_t x, uint16_t c)
@@ -85,9 +81,9 @@ _plot_char:
 ;
 ;	void scroll_up(void)
 ;
-_scroll_up
+_scroll_up:
 	pshs y
-	ldy VIDEO_BASE
+	ldy #VIDEO_BASE
 	leax 256,y
 vscrolln:
 	; Unrolled line by line copy
@@ -123,7 +119,7 @@ vscrolln:
 	std ,y++
 	ldd ,x++
 	std ,y++
-	cmpy video_endptr
+	cmpx video_endptr
 	bne vscrolln
 	puls y,pc
 
@@ -132,7 +128,7 @@ vscrolln:
 ;
 _scroll_down:
 	pshs y
-	ldy VIDEO_END
+	ldy #VIDEO_END
 	leax -256,y
 vscrolld:
 	; Unrolled line by line loop
@@ -196,7 +192,7 @@ clearnext:
 	clr 192,x
 	clr 224,x
 	leax 1,x
-	deca
+	decb
 	bne clearnext
 	puls y,pc
 ;
@@ -209,6 +205,9 @@ _clear_lines:
 	tfr y,x
 	clra
 	clrb
+	lsl 4,s
+	lsl 4,s
+	lsl 4,s
 wipel:
 	std ,x++
 	std ,x++
@@ -230,7 +229,7 @@ wipel:
 	bne wipel
 	puls y,pc
 
-_cursor_on
+_cursor_on:
 	pshs y
 	lda  4,s
 	jsr vidaddr
@@ -238,7 +237,7 @@ _cursor_on
 	puls y
 	stx cursor_save
 	; Fall through
-_cursor_off
+_cursor_off:
 	ldx cursor_save
 	com ,x
 	com 32,x

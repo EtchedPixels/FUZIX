@@ -10,7 +10,7 @@
 #undef CONFIG_SINGLETASK
 /* Pure swap */
 #undef CONFIG_SWAP_ONLY
-/* Banked Kernel: need to fix GCC first */
+
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 4
 #define MAP_SIZE 0x7C00U
@@ -27,15 +27,13 @@
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* Simple text mode */
-#define CONFIG_VT_SIMPLE
+#define CONFIG_FONT8X8
 /* Vt definitions */
-#define VT_BASE		(uint8_t *)0x0400	/* Default video text mode base */
 #define VT_WIDTH	32
-#define VT_HEIGHT	16
+#define VT_HEIGHT	24
 #define VT_RIGHT	31
-#define VT_BOTTOM	15
-#define VT_INITIAL_LINE	4
+#define VT_BOTTOM	23
+#define VT_INITIAL_LINE	0
 
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)

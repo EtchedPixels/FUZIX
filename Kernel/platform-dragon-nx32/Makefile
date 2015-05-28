@@ -2,7 +2,7 @@
 CSRCS = devlpr.c devtty.c devfd.c devdw.c
 CSRCS += devices.c main.c libc.c
 
-ASRCS = crt0.s dragon.s mem-nx32.s
+ASRCS = crt0.s dragon.s mem-nx32.s video.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -32,5 +32,5 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devlpr.o devtty.o libc.o ../vt.o
+	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o
 	../tools/pad256 ../fuzix.bin
