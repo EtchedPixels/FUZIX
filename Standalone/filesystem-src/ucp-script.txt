@@ -179,6 +179,7 @@ bget ../../Applications/util/tr
 bget ../../Applications/util/true
 bget ../../Applications/util/umount
 bget ../../Applications/util/uniq
+bget ../../Applications/util/uptime
 bget ../../Applications/util/uud
 bget ../../Applications/util/uue
 bget ../../Applications/util/wc
@@ -254,6 +255,7 @@ chmod 0755 tr
 chmod 0755 true
 chmod 0755 umount
 chmod 0755 uniq
+chmod 0755 uptime
 chmod 0755 uud
 chmod 0755 uue
 chmod 0755 wc

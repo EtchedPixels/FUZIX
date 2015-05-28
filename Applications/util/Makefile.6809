@@ -83,6 +83,7 @@ SRCS  = banner.c \
 	true.c \
 	umount.c \
 	uniq.c \
+	uptime.c \
 	uud.c \
 	uue.c \
 	wc.c \
