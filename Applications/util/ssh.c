@@ -69,12 +69,12 @@ int main(int argc, char *argval[])
 	chdir(getenv("HOME"));
     }
 
-    cprompt = (getuid() == 0) ? "ssh#" : "ssh$";
+    cprompt = (getuid() == 0) ? "ssh# " : "ssh$ ";
 
     for (;;) {
         for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
         do {
-            write(1, cprompt, 4);
+            write(1, cprompt, 5);
             if ((i = read(0, buf, 127)) <= 0)
                 return 0;
             buf[i - 1] = '\0';   /* Strip newline from fgets */
@@ -96,8 +96,12 @@ int main(int argc, char *argval[])
         }
 
         else if (strcmp(cmd, "pwd") == 0) {
-            if (getcwd(buf, 128))
-                write(1, buf, strlen(buf));
+	    if (getcwd(buf, 128)){
+	        char *ptr=&buf[strlen(buf)];
+	        *ptr++='\n';
+		*ptr=0;
+	        write(1, buf, strlen(buf));
+	    }
             else
                 write(1, "pwd: cannot get current directory\n",34);
         }
@@ -145,8 +149,9 @@ int main(int argc, char *argval[])
 
         /* Check for environmen variable assignment */
         else if ((tp = strchr(cmd, '=')) != NULL) {
-            if (*(tp+1) == '\0') *tp = '\0';
-            putenv(cmd);
+	  *tp='\0';
+	  if( *(tp+1) == '\0' ) unsetenv( cmd );
+	  else setenv(cmd,tp+1,1);
         }
 
         /* No built-in Command, Try to find Executable Command File */
