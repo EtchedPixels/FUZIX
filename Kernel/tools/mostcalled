@@ -1,0 +1,13 @@
+#!/bin/sh
+
+(
+grep -h "call	_" *.asm platform/*.asm > tmp_calls
+
+X=$(sed -e  "s/^.*call.//" < tmp_calls| sort -n|uniq)
+
+for i in $X
+do
+	n=$(grep $i tmp_calls | wc -l)
+	echo $n": "$i
+done
+) | sort -n
