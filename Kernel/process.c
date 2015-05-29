@@ -1,6 +1,7 @@
 #undef DEBUG			/* turn this on to enable syscall tracing */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
+#define DEBUG_PREEMPT		/* debug pre-emption */
 
 #include <kernel.h>
 #include <tty.h>
@@ -366,13 +367,16 @@ void timer_interrupt(void)
 	/* Check run time of current process */
 	if ((++runticks >= udata.u_ptab->p_priority)
 	    && !udata.u_insys && inint && nready > 1) {	/* Time to switch out? */
-#ifdef DEBUG
-		kputs("[preempt]");
-		kprintf("Prio = %d\n", udata.u_ptab->p_priority);
+#ifdef DEBUG_PREEMPT
+		kprintf("[preempt %x %d]", udata.u_ptab,
+		        udata.u_ptab->p_priority);
 #endif
 		udata.u_insys = true;
 		udata.u_ptab->p_status = P_READY;
 		switchout();
+#ifdef DEBUG_PREEMPT
+		kprintf("[preempt return %x]", udata.u_ptab);
+#endif
 		udata.u_insys = false;	/* We have switched back in */
 	}
 #endif
@@ -612,6 +616,8 @@ void doexit(int16_t val, int16_t val2)
 #ifdef CONFIG_ACCT
 	acctexit(p);
 #endif
+        udata.u_page = 0xFFFFU;
+        udata.u_page2 = 0xFFFFU;
 	/* FIXME: send SIGCLD here */
 	/* FIXME: POSIX.1 says that SIG_IGN for SIGCLD means don't go
 	   zombie, just clean up as we go */
