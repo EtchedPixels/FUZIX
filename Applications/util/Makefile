@@ -50,6 +50,7 @@ SRCSNS = \
 	tr.c \
 	true.c \
 	uname.c \
+	while1.c \
 	whoami.c \
 	yes.c
 
