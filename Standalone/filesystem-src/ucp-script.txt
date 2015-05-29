@@ -2,21 +2,40 @@ cd /
 mkdir bin
 mkdir dev
 mkdir etc
+mkdir mnt
+mkdir root
 mkdir tmp
 mkdir usr
-chmod 0775 bin
-chmod 0775 dev
-chmod 0775 etc
+mkdir var
+chmod 0755 /
+chmod 0755 bin
+chmod 0755 dev
+chmod 0755 etc
 chmod 01777 tmp
-chmod 0775 usr
+chmod 0755 usr
+chmod 0755 var
+chmod 0700 root
 
 cd /usr
 mkdir lib
-chmod 0775 lib
+chmod 0755 lib
+mkdir bin
+chmod 0755 bin
+mkdir include
+chmod 0755 include
+mkdir share
+chmod 0755 share
 cd lib
 bget usr-files/lib/liberror.txt
 chmod 0644 liberror.txt
 
+cd /var
+mkdir spool
+chmod 0755 spool
+mkdir mail
+chmod 0755 spool
+
+cd /
 cd /dev
 mknod tty   20666 512
 mknod tty1  20660 513
@@ -98,15 +117,17 @@ mknod fd3   60660 259
 mknod null  20666 1024
 mknod mem   20660 1025
 mknod zero  20444 1026
-mknod proc  20660 1027
+mknod proc  20666 1027
 
 cd /etc
 bget etc-files/issue
 bget etc-files/motd
 bget etc-files/passwd
+bget etc-files/inittab
 chmod 0644 issue
 chmod 0644 motd
 chmod 0644 passwd
+chmod 0644 init
 
 cd /
 bget ../../Applications/util/init
@@ -232,7 +253,7 @@ chmod 0755 mount
 chmod 0755 mv
 chmod 0755 od
 chmod 0755 pagesize
-chmod 0755 passwd
+chmod 4755 passwd
 chmod 0755 patchcpm
 chmod 0755 printenv
 chmod 0755 prtroot
@@ -246,7 +267,7 @@ chmod 0755 ssh
 chmod 0755 sort
 chmod 0755 stty
 chmod 0755 sum
-chmod 0755 su
+chmod 4755 su
 chmod 0755 sync
 chmod 0755 tee
 chmod 0755 tail
