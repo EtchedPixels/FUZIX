@@ -514,7 +514,7 @@ void ckdir(uint16_t inum, uint16_t pnum, char *name)
     uint16_t j;
     int c;
     int nentries;
-    char ename[150];
+    static char ename[150];
 
     iread(inum, &ino);
     if ((ino.i_mode & S_IFMT) != S_IFDIR)

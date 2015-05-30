@@ -10,7 +10,7 @@
 char *strstr(const char *s1, const char *s2)
 {
    int l = strlen(s2);
-   char * p = s1;
+   char * p = (char *) s1;
 
    if( l==0 ) return p;
 

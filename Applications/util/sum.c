@@ -62,7 +62,7 @@ void error(const char *s, const char *f)
 
 void sum(int fd, const char *fname)
 {
-  char buf[BUFFER_SIZE];
+  static char buf[BUFFER_SIZE];
   register int i, n;
   long size = 0;
   unsigned crc = 0;
