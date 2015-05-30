@@ -160,7 +160,7 @@ int mtxtty_close(uint8_t minor)
 	irqflags_t flags;
 	int err = tty_close(minor);
 
-	if (tty[minor].users)
+	if (ttydata[minor].users)
 		return 0;
 
 	flags = di();
