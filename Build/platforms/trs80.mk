@@ -12,7 +12,7 @@ CRT = crt0.s
 
 # This platform uses sdcc.
 
-include $(BUILD)/platforms/sdcc.rules.mk
+include $(BUILD)/sdcc.rules.mk
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns

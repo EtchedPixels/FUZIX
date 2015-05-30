@@ -23,7 +23,7 @@ CRT = crt0_msp430x.s
 
 # This is a generic gcc platform.
 
-include $(BUILD)/platforms/targetgcc.rules.mk
+include $(BUILD)/targetgcc.rules.mk
 
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to

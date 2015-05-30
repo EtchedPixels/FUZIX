@@ -18,7 +18,7 @@ endif
 
 include $(BUILD)/_head.mk
 include $(BUILD)/platforms/$(PLATFORM).mk
-include $(BUILD)/platforms/standard.rules.mk
+include $(BUILD)/standard.rules.mk
 include $(TOP)/Standalone/build.mk
 include $(TOP)/Library/build.mk
 include $(TOP)/Applications/build.mk
