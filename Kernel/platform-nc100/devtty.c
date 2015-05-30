@@ -67,7 +67,7 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 int nc100_tty_close(uint8_t minor)
 {
 	tty_close(minor);
-	if (tty[minor].users)
+	if (ttydata[minor].users)
 		return 0;
 	if (minor == 2) {
 #ifdef CONFIG_NC200
