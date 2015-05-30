@@ -8,7 +8,6 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _inint
         .globl _switchout
         .globl _switchin
         .globl _doexec
@@ -18,6 +17,7 @@
         .globl interrupt_handler
 	.globl map_kernel
 	.globl _ramtop
+	.globl _need_resched
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -32,6 +32,8 @@
 ; here
 _ramtop:
 	.dw 0
+_need_resched:
+	.db 0
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -53,10 +55,6 @@ _switchout:
         push ix
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
-
-        ; set inint to false
-        xor a
-        ld (_inint), a
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -112,9 +110,9 @@ _switchin:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ld a, (U_DATA__U_ININTERRUPT)
         or a
-        ret z ; in ISR, leave interrupts off
+        ret nz ; in ISR, leave interrupts off
         ei
         ret ; return with interrupts on
 
