@@ -16,7 +16,7 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl _kernel_flag
+	    .globl _need_resched
 
 	    .globl map_kernel
 	    .globl map_process
@@ -148,6 +148,5 @@ outchar:
 	    out (0x01), a
             ret
 
-; needs to be common
-_kernel_flag:
-	   .db 1
+_need_resched:
+	    .db 0
