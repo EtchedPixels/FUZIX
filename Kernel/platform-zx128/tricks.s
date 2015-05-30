@@ -11,7 +11,6 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _inint
         .globl _switchout
         .globl _switchin
 	.globl _low_bank
@@ -58,10 +57,6 @@ _switchout:
 	; will simply go back to the saved SP above and discard anything
 	; here
 	;
-
-        ; set inint to false
-        xor a
-        ld (_inint), a
 
 	; Stash the uarea back into process memory
 	ld hl, (U_DATA__U_PAGE)
@@ -247,9 +242,9 @@ nofliplow:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ld a, (U_DATA__U_ININTERRUPT)
         or a
-        ret z ; in ISR, leave interrupts off
+        ret nz ; in ISR, leave interrupts off
         ei
         ret ; return with interrupts on
 

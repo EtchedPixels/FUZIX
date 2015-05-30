@@ -25,7 +25,7 @@
 	    .globl platform_interrupt_all
 	    .globl map_save
 	    .globl map_restore
-	    .globl _kernel_flag
+	    .globl _need_resched
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -217,8 +217,8 @@ map_restore:
 
 saved_map:  .db 0
 
-_kernel_flag:
-	    .db 1
+_need_resched:
+	    .db 0
 
 
 ; outchar: Wait for UART TX idle, then print the char in A

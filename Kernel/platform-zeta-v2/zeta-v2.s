@@ -12,7 +12,6 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
-	.globl _kernel_flag
 	.globl _irqvector
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
@@ -385,10 +384,6 @@ _kernel_pages:
 ; memory page mapping save area for map_save/map_restore
 map_savearea:
 	.db	0,0,0,0
-
-; has to live in common
-_kernel_flag:
-	.db	1
 
 ;=========================================================================
 ; Basic console I/O

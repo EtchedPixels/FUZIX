@@ -20,7 +20,6 @@
 
 	    .globl _sil_memcpy
 
-	    .globl _kernel_flag
 	    .globl _irqvector
 
             ; exported debugging tools
@@ -313,8 +312,6 @@ map_store:
 	    .db 0
 map_copy:
 	    .db 0
-_kernel_flag:
-	    .db 1
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF

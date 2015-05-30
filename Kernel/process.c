@@ -387,7 +387,6 @@ void timer_interrupt(void)
 void unix_syscall(void)
 {
 	// NO LOCAL VARIABLES PLEASE
-	udata.u_insys = true;
 	udata.u_error = 0;
 
 	/* Fuzix saves the Stack Pointer and arguments in the
@@ -422,7 +421,6 @@ void unix_syscall(void)
 		switchout();
 	}
 	ei();
-	udata.u_insys = false;
 }
 
 void sgrpsig(uint16_t pgrp, uint16_t sig)

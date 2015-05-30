@@ -116,6 +116,11 @@ deliver_signals_2:
 signal_return:
 	pop hl		; argument
 	di
+	;
+	;	We must keep IRQ disabled in the kernel mapped
+	;	element of this processing, as we don't want to
+	;	set INSYS flags here.
+	;
 	ld (U_DATA__U_SYSCALL_SP), sp
 	ld sp, #kstack_top
 	call map_kernel
@@ -159,6 +164,9 @@ unix_syscall_entry:
         ld de, #U_DATA__U_ARGN
         ldir           ; copy
 
+	ld a, #1
+	ld (U_DATA__U_INSYS), a
+
         ; save process stack pointer
         ld (U_DATA__U_SYSCALL_SP), sp
         ; switch to kernel stack
@@ -178,10 +186,16 @@ unix_syscall_entry:
 	; 1. fork() will return twice from _unix_syscall
 	; 2. execve() will not return here but will hit _doexec()
 	;
+	; The fork case returns with a different U_DATA mapped so the
+	; U_DATA referencing code is fine, but globals are usually not
 
         di
 
+
 	call map_process_always
+
+	xor a
+	ld (U_DATA__U_INSYS), a
 
 	; Back to the user stack
 	ld sp, (U_DATA__U_SYSCALL_SP)
@@ -275,20 +289,6 @@ _doexec:
         jp (hl)
 
 ;
-;	Trap handlers
-;
-;	Enter with HL being the signal to send ourself
-;
-trap_signal:
-        push hl
-	ld hl, (U_DATA__U_PTAB);
-        push hl
-        call _ssig
-        pop hl
-        pop hl
-	ret
-
-;
 ;  Called from process context (hopefully)
 ;
 ;  FIXME: hardcoded RST38 won't work on all boxes
@@ -354,7 +354,6 @@ interrupt_handler:
         push hl
         push ix
         push iy
-	di
 
 	; Some platforms (MSX for example) have devices we *must*
 	; service irrespective of kernel state in order to shut them
@@ -380,6 +379,8 @@ interrupt_handler:
 	ld (istack_switched_sp), sp
 	ld sp, #istack_top
 
+	ld a, (0)
+
 	call map_save
 	;
 	;	FIXME: re-implement sanity checks and add a stack one
@@ -387,6 +388,9 @@ interrupt_handler:
 
 	; We need the kernel mapped for the IRQ handling
 	call map_kernel
+
+	cp #0xC3
+	call nz, null_pointer_trap
 
 	; So the kernel can check rapidly for interrupt status
 	; FIXME: move to the C code
@@ -451,6 +455,23 @@ interrupt_pop:
         ex af, af'
         ei			; Must be instruction before ret
 	ret			; runs in the ei interrupt shadow
+
+;
+;	Called with the kernel mapped, mid interrupt and on the IRQ stack
+;
+null_pointer_trap:
+	ld a, #0xC3
+	ld (0), a
+
+trap_signal:
+	push hl
+	ld hl, (U_DATA__U_PTAB);
+        push hl
+        call _ssig
+        pop hl
+        pop hl
+	ret
+
 
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task

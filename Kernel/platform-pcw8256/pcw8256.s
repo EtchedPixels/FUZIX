@@ -11,7 +11,7 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
-	    .globl _kernel_flag
+	    .globl _need_resched
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
@@ -62,16 +62,6 @@ font8x8	    .equ	0x9C00		; font loaded after framebuffer
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
-
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
-
-tm_stack:
-            .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-tm_stack_top:
 
 ;
 ;	Ask the controller to reboot
@@ -479,5 +469,5 @@ map_save_area:
 	    .db 0
 	    .db 0
 
-_kernel_flag:
-	    .db 1
+_need_resched:
+	    .db 0

@@ -23,7 +23,7 @@
 	.globl current_map
 	.globl switch_bank
 
-        .globl _kernel_flag
+        .globl _need_resched
 
         ; exported debugging tools
         .globl _trap_monitor
@@ -288,8 +288,6 @@ outchar:
         ret
 _tmpout:
 	.db 1
-_kernel_flag:
-        .db 1
 
 	.area _COMMONDATA
 current_map:                ; place to store current page number. Is needed
@@ -299,6 +297,9 @@ map_store:
         .db 0
 
 ksave_map:
+        .db 0
+
+_need_resched:
         .db 0
 
 	.area _COMMONMEM
