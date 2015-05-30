@@ -16,11 +16,6 @@ cc65.cflags += \
 
 cc65.includes += -I$(TOP)/Library/include/6502
 
-# User-mode code can see the standard library.
-
-target-lib.includes += -ILibrary/include
-target-exe.includes += -ILibrary/include
-
 # Used when linking user mode executables.
 
 target-exe.ldflags += --config $(TOP)/Build/platforms/$(PLATFORM).cfg

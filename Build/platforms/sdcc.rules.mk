@@ -44,13 +44,6 @@ sdcc.cflags = \
 	--opt-code-size \
 	-Ddouble=float
 
-# User-mode code can see the standard library.
-
-target-lib.includes ?=
-target-lib.includes += -ILibrary/include
-target-exe.includes ?=
-target-exe.includes += -ILibrary/include
-
 # Used when linking user mode executables.
 
 target-exe.ldflags ?=
