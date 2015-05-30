@@ -31,7 +31,7 @@ char seqc = SEQMAX;
 int split = 0;
 int fileln = 32000;
 
-int  main(int argc, char **argv);
+int  main(int argc, char *argv[]);
 void maketable(void);
 void makename(void);
 void encode(void);

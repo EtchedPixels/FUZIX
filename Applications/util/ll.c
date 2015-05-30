@@ -39,7 +39,7 @@ int ls(char *path)
     int    d, st;
     struct _uzidirent buf;
     struct stat statbuf;
-    char   dname[512];
+    static char dname[512];
 
     if (stat(path, &statbuf) != 0 || !S_ISDIR(statbuf.st_mode)) {
         printf("ls: can't stat %s\n", path);

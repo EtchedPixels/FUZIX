@@ -50,7 +50,7 @@ static char sccsid[] = "@(#)cal.c	8.4 (Berkeley) 4/2/94";
 int time_zone = 0;
 long timezone = 0;
 
-int errx(int exv, char *str)
+void errx(int exv, char *str)
 {
     fprintf(stderr, "cal: %s\n", str);
     exit(exv);
@@ -104,6 +104,9 @@ char *full_month[12] = {
     "May",       "June",     "July",     "August",
     "September", "October",  "November", "December"
 };
+
+static int days[12][MAXDAYS];
+static char lineout[80];
 
 /* leap year -- account for gregorian reformation in 1752 */
 #define	leap_year(yr) \
@@ -192,7 +195,7 @@ int main(int argc, char *argv[])
 	j_yearly(year);
     else
 	yearly(year);
-    exit(0);
+    return(0);
 }
 
 #define	DAY_LEN		3	/* 3 spaces per day */
@@ -226,8 +229,6 @@ void j_yearly(int year)
 {
     char *p;
     int col, *dp, i, month, row, which_cal;
-    int days[12][MAXDAYS];
-    char lineout[80];
 
     sprintf(lineout, "%d", year);
     center(lineout, J_WEEK_LEN * 2 + J_HEAD_SEP, 0);
@@ -263,8 +264,6 @@ void yearly(int year)
 {
     char *p;
     int col, *dp, i, month, row, which_cal;
-    int days[12][MAXDAYS];
-    char lineout[80];
 
     sprintf(lineout, "%d", year);
     center(lineout, WEEK_LEN * 3 + HEAD_SEP * 2, 0);

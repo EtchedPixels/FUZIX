@@ -72,7 +72,7 @@ static const unsigned long crctab[] = {
 };
 
 
-
+static unsigned char buffer[1024];
 static int aux;
 
 /* Routine straight out of 4.9.10 */
@@ -103,7 +103,6 @@ static void crc(int fd, char *name)
   off_t f_size;
   unsigned long crc;
   int nb;
-  unsigned char buffer[1024];
 
   if (fd < 0) {
 	perror(name);

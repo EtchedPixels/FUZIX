@@ -58,7 +58,7 @@ int main(int argc, const char *argv[])
 		exit(1);
 	}
 	if (p == 0) {
-		execvp(argv[1], &argv[1]);
+		execvp(argv[1], (char**) &argv[1]);
 		perror(argv[1]);
 		_exit(1);
 	}
