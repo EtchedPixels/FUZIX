@@ -19,7 +19,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
-	    .globl _kernel_flag
+	    .globl _need_resched
 	    .globl _irqwork
 
             ; exported debugging tools
@@ -53,9 +53,8 @@
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
-_kernel_flag:
-	    .db 1	; We start in kernel mode
-
+_need_resched:
+	    .db 0
 trapmsg:    .ascii "Trapdoor: SP="
             .db 0
 trapmsg2:   .ascii ", PC="
