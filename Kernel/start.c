@@ -70,6 +70,8 @@ void create_init(void)
 	map_init();
 	newproc(init_process);
 
+	udata.u_insys = 1;
+
 	init_process->p_status = P_RUNNING;
 
 	/* wipe file table */
