@@ -8,7 +8,6 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _inint
         .globl _switchout
         .globl _switchin
         .globl _doexec
@@ -56,10 +55,6 @@ _switchout:
         push ix
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
-
-        ; set inint to false
-        xor a
-        ld (_inint), a
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -146,7 +141,7 @@ not_swapped:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ld a, (U_DATA__U_ININTERRUPT)
         or a
         ret z ; in ISR, leave interrupts off
         ei
