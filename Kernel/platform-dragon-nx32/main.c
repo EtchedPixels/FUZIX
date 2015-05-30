@@ -35,11 +35,3 @@ void pagemap_init(void)
 void map_init(void)
 {
 }
-
-unsigned char vt_mangle_6847(unsigned char c)
-{
-	if (c >= 96)
-		c -= 32;
-	c &= 0x3F;
-	return c;
-}

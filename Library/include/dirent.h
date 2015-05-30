@@ -4,8 +4,6 @@
 #include <types.h>
 #endif
 
-/* It's 14 for the kernel as it stands but may move to 30 so build
-   that into userspace */
 
 #define MAXNAMLEN	30
 
@@ -16,6 +14,7 @@ typedef struct {
 	int dd_size;		/* # of valid entries in buffer */
 	struct dirent *dd_buf;	/* -> directory buffer */
 } DIR;				/* stream data from opendir() */
+
 
 typedef int (*__dir_select_fn_t) __P ((struct dirent *));
 
@@ -28,10 +27,19 @@ struct dirent {
 	char		d_name[31];
 };
 
-/* Internal version */
+/* Kernel directory format off disk */
 struct __dirent {
-	int 		d_ino;
+	ino_t		d_ino;
 	char		d_name[30];
+};
+
+/* Internal directory structure */
+struct _dir {
+	DIR d;
+	struct dirent de;
+	uint8_t buf[512];
+	uint8_t next;
+	uint8_t last;
 };
 
 extern DIR *opendir __P ((char *__name));

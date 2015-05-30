@@ -14,6 +14,7 @@
 int dev = 0;
 struct filesys superblock;
 int swizzling = 0;		/* Wrongendian ? */
+long offset;
 
 char *bitmap;
 int16_t *linkmap;
@@ -43,12 +44,19 @@ int yes(void)
 int main(int argc, char **argv)
 {
     char *buf;
+    char *op;
 
     if(argc != 2){
-        fprintf(stderr, "syntax: fsck [devfile]\n");
+        fprintf(stderr, "syntax: fsck [devfile][:offset]\n");
         return 1;
     }
     
+    op = strchr(argv[1], ':');
+    if (op) {
+        *op++ = 0;
+        offset = atol(op);
+    }
+
     if(fd_open(argv[1])){
         printf("Cannot open file\n");
         return -1;
@@ -699,7 +707,7 @@ blkno_t blk_alloc0(struct filesys *filesys)
 char *daread(uint16_t blk)
 {
     static char da_buf[512];
-    if (lseek(dev_fd, blk * 512L, 0) == -1) {
+    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
     }
@@ -713,7 +721,7 @@ char *daread(uint16_t blk)
 
 void dwrite(uint16_t blk, char *addr)
 {
-    if (lseek(dev_fd, blk * 512L, 0) == -1) {
+    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
     }

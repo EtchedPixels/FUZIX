@@ -6,6 +6,7 @@
 #include <device.h>
 #include <vt.h>
 #include <tty.h>
+#include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -217,3 +218,43 @@ void platform_interrupt(void)
 
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
+
+static struct display display = {
+  256, 192,
+  256, 192,
+  0xFF, 0xFF,		/* For now */
+  FMT_MONO_BW,
+  HW_UNACCEL,
+  0,
+  0,
+  GFX_SETPIXEL|GFX_MAPPABLE,
+  0
+};
+
+static struct videomap displaymap = {
+	0,
+	0,
+	VIDEO_BASE,
+	6 * 1024,
+	0,
+	0,
+	0,
+	MAP_FBMEM|MAP_FBMEM_SIMPLE
+};
+
+/*
+ *	Start by just reporting the 256x192 mode which is memory mapped
+ *	(it's effectively always in our address space). Should really
+ *	support setting graphics into the other modes.
+ */
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	if (arg >> 8 != 0x03)
+		return vt_ioctl(minor, arg, ptr);
+	if (arg == GFXIOC_GETINFO)
+		return uput(&display, ptr, sizeof(display));
+	if (arg == GFXIOC_MAP)
+		return uput(&displaymap, ptr, sizeof(displaymap));
+	udata.u_error = ENOTTY;
+	return -1;
+}

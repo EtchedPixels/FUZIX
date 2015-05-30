@@ -51,7 +51,7 @@ static signed char ncursory;
 static void cursor_fix(void)
 {
 	if (cursorx < 0) {
-		cursorx = 0;
+		cursorx = VT_RIGHT;
 		cursory--;
 	}
 	if (cursory < 0)

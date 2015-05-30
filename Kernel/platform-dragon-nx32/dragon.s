@@ -11,6 +11,7 @@
 		.globl fd_nmi_handler
 		.globl size_ram
 		.globl null_handler
+		.globl _vid256x192
 
 		; exported debugging tools
 		.globl _trap_monitor
@@ -49,6 +50,8 @@ init_hardware:
 	lda 0xFF03
 	ora #1
 	sta 0xFF03
+	jsr _vid256x192
+	jsr _vtinit
 	rts
 
 

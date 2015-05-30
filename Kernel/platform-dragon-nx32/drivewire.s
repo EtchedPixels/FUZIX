@@ -10,6 +10,11 @@
 	.globl _dw_operation
 	.globl _dw_reset
 
+	.globl _dw_lpr
+	.globl _dw_lpr_close
+	.globl _dw_rtc_read
+
+
 	; imported
 	.globl map_process_a
 	.globl map_kernel
@@ -128,6 +133,68 @@ ReRead   pshs  a
 	 bra   ReRead  
 ReadErr  comb			; set carry bit
 ReadEx	 puls  d,x,y,pc
+
+	.area .text
+;
+;	Virtual devices on DriveWire
+;
+;	Line printer
+;	RTC
+;	Virtual serial ???
+;
+;
+;	dw_lpr(uint8_t c)
+;
+;	Print a byte to drive wire printers
+;
+;	B holds the byte. Call with interrupts off
+;
+_dw_lpr:
+	pshs y
+	stb lprb2
+	ldx #lprb
+	ldy #2
+dwop:
+	jsr DWWrite
+	puls y,pc
+
+;
+;	dw_lpr_close(void)
+;
+;	Close the printer device
+;
+_dw_lpr_close:
+	pshs y
+	ldx #lprb3
+	ldy #1
+	bra dwop
+
+;
+;	uint8_t dw_rtc_read(uint8_t *p)
+;
+_dw_rtc_read:
+	pshs y
+	ldy #2
+	pshs x
+	ldx #lprrtw
+	jsr DWWrite
+	puls x
+	ldy #6
+	clra
+	jsr DWRead
+	clrb
+	sbcb #0
+	bra dwop
+
+	.area .data
+
+lprb:	.db 0x50	; print char
+lprb2:	.db 0x00	; filled in with byte to send
+lprb3:	.db 0x46	; printer flush
+lprrtw:	.db 0x23	; request for time
+
+	.area .common
+
 
 ; Used by DWRead and DWWrite
 IntMasks equ   $50

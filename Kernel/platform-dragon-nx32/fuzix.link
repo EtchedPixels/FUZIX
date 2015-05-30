@@ -1,7 +1,7 @@
 define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
 section .vectors load 0x0100
-section .start load 0x0800
+section .start load 0x1c00
 section .common
 section .text2
 section .discard

@@ -4,51 +4,67 @@
 #include <device.h>
 #include <devlpr.h>
 
-/* random test places */
-uint8_t *lpstat = (uint8_t *)0xFF00;
-uint8_t *lpdata = (uint8_t *)0xFF01;
+volatile uint8_t * const pia0b = (uint8_t *)0xFF02;
+volatile uint8_t * const pia1a = (uint8_t *)0xFF20;
+volatile uint8_t * const pia1b = (uint8_t *)0xFF22;
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
-	minor;
-	flag;			// shut up compiler
-	return 0;
+	if (minor < 2)
+		return 0;
+	udata.u_error = ENODEV;
+	return -1;
 }
 
 int lpr_close(uint8_t minor)
 {
-	minor;			// shut up compiler
+	if (minor == 1)
+		dw_lpr_close();
+	return 0;
+}
+
+static int iopoll(int sofar)
+{
+	/* Ought to be a core helper for this lot ? */
+	if (need_resched())
+		_sched_yield();
+	if (udata.u_cursig || udata.u_ptab->p_pending) {
+		if (sofar)
+			return sofar;
+		udata.u_error = EINTR;
+		return -1;
+	}
 	return 0;
 }
 
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	int c = udata.u_count;
-	char *p = udata.u_base;
-	uint16_t ct;
+	uint8_t *p = udata.u_base;
+	uint8_t *pe = p + udata.u_count;
+	int n;
+	irqflags_t irq;
 
-	minor;
-	rawflag;
-	flag;			// shut up compiler
-
-	while (c-- > 0) {
-		ct = 0;
-
-		/* Try and balance polling and sleeping */
-		while (*lpstat & 2) {
-			ct++;
-			if (ct == 10000) {
-				udata.u_ptab->p_timeout = 3;
-				if (psleep_flags(NULL, flag)) {
-					if (udata.u_count)
-						udata.u_error = 0;
-					return udata.u_count;
-				}
-				ct = 0;
-			}
+	if (minor == 1) {
+		while (p < pe) {
+			if ((n = iopoll(pe - p)) != 0)
+				return n;
+			dw_lpr(ugetc(p++));
 		}
-		/* Data */
-		*lpdata = ugetc(p++);
+	} else {
+		while (p < pe) {
+			/* Printer busy ? */
+			while (*pia1b & 1) {
+				if ((n = iopoll(pe - p)) != 0)
+					return n;
+			}
+			/* The Dragon shares the printer and keyboard scan
+			   lines. Make sure we don't collide */
+			irq = di();
+			*pia0b = ugetc(p++);
+			*pia1a |= 0x02;	/* Strobe */
+			*pia1a &= ~0x02;
+			irqrestore(irq);
+		}
 	}
-	return udata.u_count;
+	return pe - p;
 }

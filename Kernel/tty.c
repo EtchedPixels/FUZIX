@@ -175,12 +175,16 @@ int tty_open(uint8_t minor, uint16_t flag)
 void tty_post(inoptr ino, uint8_t minor, uint8_t flag)
 {
         struct tty *t = &ttydata[minor];
+        irqflags_t irq = di();
 	/* If there is no controlling tty for the process, establish it */
-	if (!udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
+	/* Disable interrupts so we don't endup setting up our control after
+	   the carrier drops and tries to undo it.. */
+	if (!(t->flag & TTYF_DEAD) && !udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
 		udata.u_ptab->p_tty = minor;
 		udata.u_ctty = ino;
 		t->pgrp = udata.u_ptab->p_pgrp;
 	}
+	irqrestore(irq);
 }
 
 int tty_close(uint8_t minor)
