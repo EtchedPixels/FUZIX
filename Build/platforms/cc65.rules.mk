@@ -64,7 +64,7 @@ libc-runtime.objs = \
 
 # Names of source files from Fuzix's libc that we don't want to compile.
 libc-functions.omit = \
-	memmove.c memcpy.c memset.c strtod.c strchr.c strrchr.c strstr.c
+	memmove.c memcpy.c memset.c strtod.c strchr.c strrchr.c strstr.c bzero.c
 
 $(libc-runtime.result): $(CC65_LIBDIR)/sim$(ARCH).lib $(MAKEFILE_LIST)
 	@echo LIBRUNTIME $@
