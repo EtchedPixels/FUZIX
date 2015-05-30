@@ -11,7 +11,6 @@ TARGETAS = msp430-elf-as
 TARGETAR = msp430-elf-ar
 TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
-PLATFORM_RULES = targetgcc.rules
 
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
 
@@ -21,6 +20,11 @@ ARCH = msp430x
 SYSCALL_GENERATOR = syscall_msp430x
 SYSCALL_STUB = fuzixmsp430x/syscall.s
 CRT = crt0_msp430x.s
+
+# This is a generic gcc platform.
+
+include $(BUILD)/platforms/targetgcc.rules.mk
+
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
@@ -138,6 +142,4 @@ FILESYSTEM = \
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
     /bin/look               0755 $(Applications/V7/cmd/look.result) \
-
-include $(BUILD)/platforms/$(PLATFORM_RULES).mk
 

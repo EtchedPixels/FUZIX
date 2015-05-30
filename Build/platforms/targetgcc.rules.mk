@@ -1,4 +1,7 @@
 # Build rules for gcc-based targets.
+# This requires you to have set TARGETCC, TARGETLD etc.
+
+PLATFORM_RULES = targetgcc.rules
 
 # Locate the libgcc used by this target.
 
@@ -8,6 +11,7 @@ libgcc = $(shell $(TARGETCC) --print-libgcc)
 
 targetgcc.cflags += \
 	-g \
+	-Wall \
 	-ffunction-sections \
 	-fdata-sections \
 	-fno-inline \
@@ -39,18 +43,9 @@ define targetgcc.rules
 # Variables references with $$ are evaluated at when the rules are
 # instantiated.
 
-$1.abssrcs ?= $$(call absify, $$($1.dir), $$($1.srcs))
-$1.depsrcs ?= $$(filter %.c, $$($1.abssrcs))
-$1.deps ?= $$(patsubst %.c, $$($1.objdir)/%.d, $$($1.depsrcs))
-$1.extradeps ?=
-$1.objs ?= \
-	$$(patsubst %.c, $$($1.objdir)/%.o, \
-	$$(patsubst %.s, $$($1.objdir)/%.o, \
-		$$($1.abssrcs)))
+# Invoke standard rules.
 
-.SECONDARY: $$($1.objs)
-
--include $$($1.deps)
+$(call standard.rules,$1)
 
 # Builds an ordinary C file.
 

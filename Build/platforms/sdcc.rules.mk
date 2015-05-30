@@ -1,3 +1,12 @@
+# SDCC setup.
+
+SDCC = sdcc
+SDCPP = cpp -nostdinc -undef -P
+SDAS = sdasz80
+SDAR = sdar
+PLATFORM_RULES = sdcc.rules
+
+
 # Utility functions to extract a named section from the data returned by
 # sdcc --print-search-dirs; this is chunked into sections, each starting
 # with a keyword followed by a colon, everything separated by whitespace.
@@ -111,18 +120,9 @@ define sdcc.rules
 # Variables references with $$ are evaluated at when the rules are
 # instantiated.
 
-$1.abssrcs ?= $$(call absify, $$($1.dir), $$($1.srcs))
-$1.depsrcs ?= $$(filter %.c, $$($1.abssrcs))
-$1.deps ?= $$(patsubst %.c, $$($1.objdir)/%.d, $$($1.depsrcs))
-$1.extradeps ?=
-$1.objs ?= \
-	$$(patsubst %.c, $$($1.objdir)/%.rel, \
-	$$(patsubst %.s, $$($1.objdir)/%.rel, \
-		$$($1.abssrcs)))
+# Invoke standard rules.
 
-.SECONDARY: $$($1.objs)
-
--include $$($1.deps)
+$(call standard.rules,$1)
 
 # Builds an ordinary C file.
 

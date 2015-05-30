@@ -1,8 +1,16 @@
 # Build rules for cc65.
 
+CC65 = cl65
+CC65CPP = cpp -nostdinc -undef -P
+CC65AS = ca65
+CC65AR = ar65
+CC65LD = ld65
+PLATFORM_RULES = cc65.rules
+
 # Find the cc65 installation directory, fairly crudely from the location of
 # the binary (it doesn't seem possible to get this from the cc65 binary
 # itself).
+
 CC65_DIR = $(dir $(shell which $(CC65)))/../share/cc65
 CC65_LIBDIR = $(CC65_DIR)/lib/
 
@@ -85,18 +93,9 @@ define cc65.rules
 # Variables references with $$ are evaluated at when the rules are
 # instantiated.
 
-$1.abssrcs ?= $$(call absify, $$($1.dir), $$($1.srcs))
-$1.depsrcs ?= $$(filter %.c, $$($1.abssrcs))
-$1.deps ?= $$(patsubst %.c, $$($1.objdir)/%.d, $$($1.depsrcs))
-$1.extradeps ?=
-$1.objs ?= \
-	$$(patsubst %.c, $$($1.objdir)/%.o, \
-	$$(patsubst %.s, $$($1.objdir)/%.o, \
-		$$($1.abssrcs)))
+# Invoke standard rules.
 
-.SECONDARY: $$($1.objs)
-
--include $$($1.deps)
+$(call standard.rules,$1)
 
 # Builds an ordinary C file.
 

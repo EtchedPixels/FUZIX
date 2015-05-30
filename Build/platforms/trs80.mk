@@ -3,20 +3,16 @@ $(call find-makefile)
 O = rel
 A = lib
 
-# SDCC setup.
-
-SDCC = sdcc
-SDCPP = cpp -nostdinc -undef -P
-SDAS = sdasz80
-SDAR = sdar
-PLATFORM_RULES = sdcc.rules
-
 # CPU architecture and which syscall generator to use.
 
 ARCH = z80
 SYSCALL_GENERATOR = syscall
 SYSCALL_STUB = fuzix/syscall.s
 CRT = crt0.s
+
+# This platform uses sdcc.
+
+include $(BUILD)/platforms/sdcc.rules.mk
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
@@ -134,6 +130,4 @@ FILESYSTEM = \
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
     /bin/look               0755 $(Applications/V7/cmd/look.result) \
-
-include $(BUILD)/platforms/sdcc.rules.mk
 

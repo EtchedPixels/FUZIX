@@ -3,21 +3,16 @@ $(call find-makefile)
 O = o
 A = lib
 
-# cc65 setup.
-
-CC65 = cl65
-CC65CPP = cpp -nostdinc -undef -P
-CC65AS = ca65
-CC65AR = ar65
-CC65LD = ld65
-PLATFORM_RULES = cc65.rules
-
 # CPU architecture and which syscall generator to use.
 
 ARCH = 6502
 SYSCALL_GENERATOR = syscall_6502
 SYSCALL_STUB = fuzix6502/syscall.s
 CRT = crt0_6502.s
+
+# This platform uses cc65.
+
+include $(BUILD)/platforms/cc65.rules.mk
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
@@ -135,6 +130,3 @@ FILESYSTEM = \
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
     /bin/look               0755 $(Applications/V7/cmd/look.result) \
-
-include $(BUILD)/platforms/cc65.rules.mk
-
