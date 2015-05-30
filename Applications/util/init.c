@@ -132,10 +132,10 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 			/* Don't leak utmp into the child */
 			endutent();
 			/* Run the child */
-			execv(args[2], args + 2);
+			execv(args[2], (char**) (args + 2));
 			/* If it didn't look binary run it via the shell */
 			if (errno == ENOEXEC)
-				execv("/bin/sh", args);
+				execv("/bin/sh", (char**) args);
 			/* Oh bugger */
 			perror(args[2]);
 			exit(1);
@@ -547,7 +547,7 @@ static pid_t getty(const char *ttyname, const char *id)
 
 			/* here we are inside child's context of execution */
 			envset("PATH", "/bin:/usr/bin");
-			envset("CTTY", ttyname);
+			envset("CTTY", (char*) ttyname);
 
 			/* make stdin, stdout and stderr point to fdtty */
 
