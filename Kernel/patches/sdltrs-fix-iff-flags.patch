@@ -1,0 +1,19 @@
+diff -u --recursive sdltrs_1_1_0/src/z80.c sdltrs_1_1_0.ac/src/z80.c
+--- sdltrs_1_1_0/src/z80.c	2010-02-14 00:38:36.000000000 +0000
++++ sdltrs_1_1_0.ac/src/z80.c	2015-05-30 02:44:06.958734734 +0100
+@@ -1348,6 +1348,7 @@
+     REG_SP -= 2;
+     mem_write_word(REG_SP, REG_PC);
+     z80_state.iff1 = 0;
++    z80_state.iff2 = 0;
+     switch (z80_state.interrupt_mode) {
+     case 0:
+       /* REG_PC = get_irq_vector() & 0x38; */
+@@ -2880,6 +2882,7 @@
+ 
+       case 0x4D:	/* reti */
+ 	/* no support for alerting peripherals, just like ret */
++	z80_state.iff1 = z80_state.iff2;
+ 	REG_PC = mem_read_word(REG_SP);
+ 	REG_SP += 2;
+ 	T_COUNT(14);
