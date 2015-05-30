@@ -1,7 +1,7 @@
 #undef DEBUG			/* turn this on to enable syscall tracing */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
-#define DEBUG_PREEMPT		/* debug pre-emption */
+#undef DEBUG_PREEMPT		/* debug pre-emption */
 
 #include <kernel.h>
 #include <tty.h>
@@ -365,29 +365,22 @@ void timer_interrupt(void)
 	}
 #ifndef CONFIG_SINGLETASK
 	/* Check run time of current process */
+        /* Time to switch out? */
 	if ((++runticks >= udata.u_ptab->p_priority)
-	    && !udata.u_insys && inint && nready > 1) {	/* Time to switch out? */
+	    && !udata.u_insys && inint && nready > 1) {
+                 need_resched = 1;
 #ifdef DEBUG_PREEMPT
-		kprintf("[preempt %x %d]", udata.u_ptab,
-		        udata.u_ptab->p_priority);
+		kprintf("[preempt %x %d %x]", udata.u_ptab,
+		        udata.u_ptab->p_priority,
+		        *((uint16_t *)0xEAFE));
 #endif
-		udata.u_insys = true;
-		udata.u_ptab->p_status = P_READY;
-		switchout();
-#ifdef DEBUG_PREEMPT
-		kprintf("[preempt return %x]", udata.u_ptab);
-#endif
-		udata.u_insys = false;	/* We have switched back in */
-	}
+        }
 #endif
 }
 
 #ifdef DEBUG
 #include "syscall_name.h"
 #endif
-
-extern int16_t kernel_flag;	/* true when in a syscall etc, maintained by the
-				   asm interfaces but visible in C */
 
 // Fuzix system call handler
 // we arrive here from syscall.s with the kernel paged in, using the kernel stack, interrupts enabled.

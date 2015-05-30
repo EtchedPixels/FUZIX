@@ -23,6 +23,7 @@
         .globl unix_syscall_entry
         .globl interrupt_handler
 	.globl _swapper
+	.globl _need_resched
 
 	.globl map_kernel
 	.globl map_process
@@ -54,10 +55,6 @@ _switchout:
         push ix
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
-
-        ; set inint to false
-        xor a
-        ld (_inint), a
 
 	; Stash the uarea back into process memory
 	call map_process_always
@@ -120,6 +117,12 @@ _switchin:
 	pop hl
 	ld a, (hl)
 not_swapped:
+;	ld hl, (U_DATA__U_PTAB)
+;	or a
+;	sbc hl, de
+;	jr z, skip_copyback	; Tormod's optimisation: don't copy the
+				; the stash back if we are the task who
+				; last owned the real udata
 	; Pages please !
 	call map_process_a
 
@@ -138,9 +141,10 @@ not_swapped:
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
-        sbc hl, de              ; subtract, result will be zero if DE==IX
+        sbc hl, de              ; subtract, result will be zero if DE==HL
         jr nz, switchinfail
 
+skip_copyback:
 	; wants optimising up a bit
 	ld ix, (U_DATA__U_PTAB)
         ; next_process->p_status = P_RUNNING
@@ -162,10 +166,10 @@ not_swapped:
         pop ix
         pop hl ; return code
 
-        ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ; enable interrupts, if we didn't pre-empt in an ISR
+        ld a, (U_DATA__U_ININTERRUPT)
         or a
-        ret z ; in ISR, leave interrupts off
+        ret nz ; Not an ISR, leave interrupts off
         ei
         ret ; return with interrupts on
 
@@ -317,3 +321,4 @@ bouncebuffer:
 ;	banked fork() call.
 ;
 _swapstack:
+_need_resched:	.db 0

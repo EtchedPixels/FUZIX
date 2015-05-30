@@ -621,6 +621,7 @@ extern void switchout(void);
 extern void doexec(uaddr_t start_addr);
 extern void switchin(ptptr process);
 extern int16_t dofork(ptptr child);
+extern uint8_t need_resched;
 
 /* devio.c */
 extern uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
