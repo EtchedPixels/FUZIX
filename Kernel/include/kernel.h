@@ -353,6 +353,7 @@ typedef struct p_tab {
 /**HP**/
     uint16_t	p_pgrp;		/* Process group */
     uint8_t	p_nice;
+    usize_t	p_top;		/* Copy of u_top */
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
     void *	p_profbuf;

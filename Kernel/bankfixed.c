@@ -85,6 +85,9 @@ uint16_t pagemap_mem_used(void)
 /*
  *	Swap out the memory of a process to make room
  *	for something else
+ *
+ *	FIXME: we can write out base - p_top, then the udata providing
+ *	we also modify our read logic here as well
  */
 int swapout(ptptr p)
 {

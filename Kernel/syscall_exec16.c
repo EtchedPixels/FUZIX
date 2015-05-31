@@ -154,6 +154,7 @@ arg_t _execve(void)
 
 	/* From this point on we are commmited to the exec() completing */
 	udata.u_top = top;
+	udata.u_ptab->p_top = top;
 
 	/* setuid, setgid if executable requires it */
 	if (ino->c_node.i_mode & SET_UID)

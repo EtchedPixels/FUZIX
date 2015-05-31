@@ -87,7 +87,7 @@ static int maps_needed(uint16_t top)
 int pagemap_alloc(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
-	int needed = maps_needed(udata.u_top);
+	int needed = maps_needed(p->p_top);
 
 #ifdef SWAPDEV
 	/* Throw our toys out of our pram until we have enough room */
