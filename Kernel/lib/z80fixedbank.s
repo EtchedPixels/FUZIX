@@ -117,10 +117,10 @@ _switchin:
 	pop hl
 	ld a, (hl)
 not_swapped:
-;	ld hl, (U_DATA__U_PTAB)
-;	or a
-;	sbc hl, de
-;	jr z, skip_copyback	; Tormod's optimisation: don't copy the
+	ld hl, (U_DATA__U_PTAB)
+	or a
+	sbc hl, de
+	jr z, skip_copyback	; Tormod's optimisation: don't copy the
 				; the stash back if we are the task who
 				; last owned the real udata
 	; Pages please !
