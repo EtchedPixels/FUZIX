@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <ctype.h>
 
 extern char **environ;      /* Location of Envp from executable Header */
 
@@ -25,6 +27,7 @@ char eline[45];		    /* Line for Search command */
 
 char *cmd;
 char *arg[MAX_ARGS];
+int infd;
 
 static void writeo(int i)
 {
@@ -49,6 +52,48 @@ static void writenum(int fd, unsigned int n)
     write(fd, bp, c);
 }
 
+static char *argptr;
+static char *argout;
+static char argstate;
+
+static char *nextarg(void)
+{
+    char *p = argout;
+
+    while(isspace(*argptr))
+        argptr++;
+    if (*argptr == '\0')
+        return NULL;
+    while (*argptr != '\0') {
+        if (!argstate) {
+            if (isspace(*argptr))
+                break;
+            if (*argptr == '\'' || *argptr == '"')
+                argstate = *argptr;
+            else
+                *argout++ = *argptr;
+        } else {
+            if (*argptr == argstate)
+                argstate = 0;
+            else
+                *argout++ = *argptr;
+        }
+        argptr++;
+    }
+    if (*argptr)
+        argptr++;
+    *argout++ = 0;
+    return p;
+}
+
+static char *getarg(char *in)
+{
+    argstate = 0;
+    argptr = in;
+    argout = in;
+    return nextarg();
+}
+
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
@@ -67,6 +112,9 @@ int main(int argc, char *argval[])
 	home = getenv("HOME");
 	if (!home) putenv("HOME=/");
 	chdir(getenv("HOME"));
+	infd = open(".sshrc", O_RDONLY);
+	if (infd < 0)
+	    infd = 0;
     }
 
     cprompt = (getuid() == 0) ? "ssh# " : "ssh$ ";
@@ -74,15 +122,20 @@ int main(int argc, char *argval[])
     for (;;) {
         for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
         do {
-            write(1, cprompt, 5);
-            if ((i = read(0, buf, 127)) <= 0)
-                return 0;
+            if (infd == 0)
+                write(1, cprompt, 5);
+            if ((i = read(infd, buf, 127)) <= 0) {
+                if (infd == 0)
+                    return 0;
+                else
+                    infd = 0;
+            }
             buf[i - 1] = '\0';   /* Strip newline from fgets */
-        }
-        while (buf[0] == (char) 0);
-		cmd = strtok(buf, " \t");
-		for (i = 0; i < MAX_ARGS; i++)
-			arg[i] = strtok(NULL, " \t");
+	    cmd = getarg(buf);
+	} while (cmd == NULL);
+
+	for (i = 0; i < MAX_ARGS; i++)
+		arg[i] = nextarg();
 
         /* Check for User-Requested Exit back to Login Prompt */
         if (strcmp(cmd, "exit") == 0)
