@@ -61,7 +61,7 @@ init_hardware:
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl _kernel_flag
+	    .globl _need_resched
 
 
             ; imported symbols
@@ -71,12 +71,6 @@ init_hardware:
 	    .globl fd_nmi_handler
 
             .area .common
-
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
 
 _trap_reboot:
 _trap_monitor:
@@ -121,7 +115,7 @@ badswi_handler:
 	    rti
 
 ; outchar: Simple writing to video memory
-
+; FIXME: we are now in grapics mode !
 outchar:
 	    pshs x
 	    ldx traceptr
@@ -135,6 +129,6 @@ lc          anda #0x3F
 
 	    .area .common
 
-_kernel_flag: .db 1
+_need_resched: .db 1
 traceptr:
 	   .dw 0x0400

@@ -49,10 +49,6 @@ _switchout:
 	pshs d,y,u
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
-        ; set inint to false
-	lda #0
-	sta _inint
-
 	; Stash the uarea into process memory bank
 	jsr map_process_always
 
@@ -137,8 +133,8 @@ nostash:
         puls x,y,u ; return code and saved U and Y
 
         ; enable interrupts, if the ISR isn't already running
-	lda _inint
-        beq swtchdone ; in ISR, leave interrupts off
+	lda U_DATA__U_ININTERRUPT
+        bne swtchdone ; in ISR, leave interrupts off
 	andcc #0xef
 swtchdone:
         rts

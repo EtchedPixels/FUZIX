@@ -32,7 +32,7 @@
         .globl map_save
         .globl map_restore
 	.globl outchar
-	.globl _kernel_flag
+	.globl _need_resched
 	.globl _inint
 	.globl _platform_interrupt
 
@@ -71,9 +71,6 @@
 ;
 unix_syscall_entry:
 	SAM_KERNEL	; stack now invalid
-	; make sure the interrupt logic knows we are in kernel mode
-	lda #1
-	sta _kernel_flag
 
 	leax 14,s	; 12 stacked by the swi + return address of caller
 	ldy #U_DATA__U_ARGN
@@ -102,6 +99,10 @@ unix_syscall_entry:
         ; switch to kernel stack (makes our stack valid again)
         lds #kstack_top
 
+	; we are in syscall state
+	lda #1
+	sta U_DATA__U_INSYS
+
         ; map in kernel keeping common
 	jsr map_kernel
 
@@ -114,7 +115,7 @@ unix_syscall_entry:
         orcc #0x10
 	; let the interrupt logic know we are not in kernel mode any more
 	; kernel_flag is not in common so write it before we map it away
-	clr _kernel_flag
+	clr U_DATA__U_INSYS
 
         ; map process memory back in based on common (common may have
         ; changed on a task switch)
@@ -198,7 +199,6 @@ _doexec:
         orcc #0x10
 	; this is a funny extra path out of syscall so we must also cover
 	; the exit from kernel here
-	clr _kernel_flag
 
         ; map task into address space (kernel_flag is no longer mapped, don't
 	; re-order this)
@@ -235,16 +235,13 @@ interrupt_handler:
 	    ; FIXME: add profil support here (need to keep profil ptrs
 	    ; unbanked if so ?)
 
-            ; don't allow us to run re-entrant, we've only got one interrupt stack
-	    lda U_DATA__U_ININTERRUPT
-            bne interrupt_return
-            inca
+	    lda #1
             sta U_DATA__U_ININTERRUPT
 
             ; switch stacks
             sts istack_switched_sp
-	    ; Unlike Z80 even the istack is banked, it's only valid on SAM
-	    ; based boxes when SAM_KERNEL is true
+	    ; Unlike Z80 even the istack is banked, it's only valid on some
+	    ; SAM based boxes when SAM_KERNEL is true
             lds #istack_top-2
 	    ; FIXME: check store/dec order might not need to be -2 here!!!!
 
@@ -260,8 +257,7 @@ interrupt_handler:
 	    ; kernel_flag is in the kernel map so we need to map early, we
 	    ; need to map anyway for trap_signal
 	    ;
-	    ldb _kernel_flag
-	    pshs b,cc
+	    ldb U_DATA__U_INSYS	; In a system call ?
 	    bne in_kernel
 
             ; we're not in kernel mode, check for signals and fault
@@ -280,35 +276,56 @@ in_kernel:
             lda #1
             sta _inint
 
-	    ; this may task switch if not within a system call
-	    ; if we switch then istack_switched_sp is out of date.
-	    ; When this occurs we will exit via the resume path 
+	    ;
+	    ; If the kernel decides to task switch it will set
+	    ; _need_resched, and will only do so if the caller was in
+	    ; user space so has a free kernel stack
+
 	    ;
 	    ; Y is caller saves so we'll get the right Y back
 	    ; for our SAM_RESTORE
             jsr _platform_interrupt
 
             clr _inint
-
-	    puls b,cc			; Z = in kernel
-	    bne in_kernel_2
-
-	    ; On a return to user space always do a new map, we may have
-	    ; changed process
-	    jsr map_process_always
-            bra int_switch
-	    ; On a return from an interrupt in kernel mode restore the old
-	    ; mapping as it will vary during kernel activity and the kernel
-	    ; wants it put back as it was before
-in_kernel_2:
-	    jsr map_restore
-int_switch:
             lds istack_switched_sp	; stack back
+	    sts U_DATA__U_SYSCALL_SP	; save again somewhere safe for
+					; preemption
             clr U_DATA__U_ININTERRUPT
             lda U_DATA__U_INSYS
             bne interrupt_return
+	    lda _need_resched
+	    clr _need_resched
+	    beq no_switch
 
+	    ; Pre emption occurs on the task stack. Conceptually its a
+	    ; not quite a syscall
+	    lds #kstack_top
+	    ldx U_DATA__U_PTAB
+	    ; Move to ready state
+	    lda #P_READY
+	    sta P_TAB__P_STATUS_OFFSET,x
+	    ; Sleep on the kernel stack, IRQs will get re-enabled if need
+	    ; be
+	    jsr _switchout
+	    ;
+	    ; We will resume here after the pre-emption. Get back onto
+	    ; the user stack and map ourself in
+	    lds U_DATA__U_SYSCALL_SP
+	    ; do the map on the user stack (for SAM switching)
 	    SAM_USER
+	    jsr map_process_always
+	    bra intdone
+
+	    ; Not task switching - the easy and usual path
+no_switch:   
+	    ; On a return from an interrupt restore the old mapping as it
+	    ; will vary during kernel activity and we need to put it put
+	    ; it back as it was before the interrupt
+	    ; pre-emption is handled differently...
+	    SAM_USER
+	    jsr map_restore
+
+intdone: 
             ; we're not in kernel mode, check for signals
 	    ; runs off the user stack so need user ram mapped on a SAM
 	    ; based platform
@@ -376,7 +393,7 @@ nmi_handler:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; outstring: Print the string at X until 0 byte is found
-; destroys: AF HL
+; destroys: A, X
 outstring:
 	lda ,x+
 	beq outstrdone
@@ -385,7 +402,7 @@ outstring:
 outstrdone:
 	rts
 
-; print the string at (HL) in hex (continues until 0 byte seen)
+; print the string at (X) in hex (continues until 0 byte seen)
 outstringhex:
 	lda ,x+
 	beq outstrdone
