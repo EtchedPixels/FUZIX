@@ -4,12 +4,17 @@ CSRCS += devices.c main.c
 DISCARD_CSRCS = discard.c devhd_discard.c
 
 ASRCS = trs80.s crt0.s
-ASRCS += tricks.s commonmem.s floppy.s
+ASRCS += tricks.s commonmem.s floppy.s drivewire.s
+
+DSRCS = ../dev/devdw.c
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS)
+DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
+OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
+
+CROSS_CCOPTS += -I../dev/
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
 
@@ -20,6 +25,9 @@ $(COBJS): %.rel: %.c
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
+
+$(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<

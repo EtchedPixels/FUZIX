@@ -40,4 +40,6 @@ devsys.rel
 platform-trs80/devlpr.rel
 platform-trs80/devtty.rel
 platform-trs80/discard.rel
+platform-trs80/devdw.rel
+platform-trs80/drivewire.rel
 -e
