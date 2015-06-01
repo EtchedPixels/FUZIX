@@ -18,6 +18,7 @@ inoptr n_open(char *uname, inoptr *parent)
     tb = (char*)tmpbuf(); /* temporary memory to hold kernel's copy of the filename */
 
     if (ugets(uname, tb, 512) == -1) {
+        udata.u_error = EFAULT;
         *parent = NULLINODE;
         return NULLINODE;
     }
@@ -81,7 +82,7 @@ inoptr kn_open(char *namep, inoptr *parent)
             goto nodir;
         }
         if(!(getperm(wd) & OTH_EX)){
-            udata.u_error = EPERM;
+            udata.u_error = EACCES;
             goto nodir;
         }
 
@@ -274,7 +275,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     }
     if(!(getperm(wd) & OTH_WR))
     {
-        udata.u_error = EPERM;
+        udata.u_error = EACCES;
         return false;
     }
     /* Inserting a new blank entry ? */

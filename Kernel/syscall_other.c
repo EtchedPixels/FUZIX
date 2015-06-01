@@ -61,7 +61,7 @@ arg_t _rename(void)
 	/* Check we can write the src dir, we don't want to fail on
 	   ch_link */
 	if (!(getperm(srcp) & OTH_WR) && esuper()) {
-		udata.u_error = EPERM;
+		udata.u_error = EACCES;
 		goto nogood;
 	}
 	/* Destination exists ? If so we must remove it if possible */

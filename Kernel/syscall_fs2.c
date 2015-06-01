@@ -165,7 +165,7 @@ arg_t _access(void)
 
 	retval = 0;
 	if (~getperm(ino) & (mode & 07)) {
-		udata.u_error = EPERM;
+		udata.u_error = EACCES;
 		retval = -1;
 	}
 
@@ -464,6 +464,9 @@ arg_t _open(void)
 			goto idrop;
 		}
 	} else {
+		/* The n_open failed */
+		if (udata.u_error == EFAULT)
+			goto cantopen;
 		/* New file */
 		if (!(flag & O_CREAT)) {
 			udata.u_error = ENOENT;
@@ -487,7 +490,7 @@ arg_t _open(void)
 
 	perm = getperm(ino);
 	if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
-		udata.u_error = EPERM;
+		udata.u_error = EACCES;
 		goto cantopen;
 	}
 	if (w) {
