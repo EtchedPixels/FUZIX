@@ -516,6 +516,10 @@ struct s_argblk {
 #define ENOLCK		35		/* Lock table full */
 #define ENOTEMPTY	36		/* Directory is not empty */
 #define ENAMETOOLONG    37              /* File name too long */
+#define EAFNOSUPPORT	38		/* Address family not supported */
+#define EALREADY	39		/* Operation already in progress */
+#define EADDRINUSE	40		/* Address already in use */
+#define EADDRNOTAVAIL	41		/* Address not available */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
