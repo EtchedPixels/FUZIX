@@ -24,6 +24,8 @@ struct socket
 #define SS_LISTENING		3
 #define SS_CONNECTING		4
 #define SS_CONNECTED		5
+#define SS_ACCEPTWAIT		6
+	uint8_t s_data;
 	struct sockaddrs s_addr;
 };
 
@@ -65,10 +67,16 @@ static struct socket *sock_get(int fd, uint8_t *flag)
 	return sockets + ino->c_node.i_nlink;
 }
 
-static int sock_pending(struct socket *s)
+static int sock_pending(struct socket *l)
 {
-	/* TODO */
-	return 0;
+	uint8_t d = l - sockets;
+	struct socket *s = sockets;
+	while (s < sockets + NSOCKET) {
+		if (s->s_state == SS_ACCEPTWAIT && s->s_data == d)
+			return s - sockets;
+		s++;
+	}
+	return -1;
 }
 
 static int sock_autobind(struct socket *s)
