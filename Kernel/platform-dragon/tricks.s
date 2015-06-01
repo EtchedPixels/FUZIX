@@ -48,10 +48,6 @@ _switchout:
 	pshs d
 	sts U_DATA__U_SP
 
-        ; set inint to false
-	lda #0
-	sta _inint
-
         ; find another process to run (may select this one again) returns it
         ; in X
         jsr _getproc
@@ -84,8 +80,8 @@ _switchin:
         puls x ; return code
 
         ; enable interrupts, if the ISR isn't already running
-	lda _inint
-        beq swtchdone ; in ISR, leave interrupts off
+	lda U_DATA__U_ININTERRUPT
+        bne swtchdone ; in ISR, leave interrupts off
 	andcc #0xef
 swtchdone:
         rts
