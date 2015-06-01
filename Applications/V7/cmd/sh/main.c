@@ -18,6 +18,7 @@
 #include	"timeout.h"
 #include	<sys/types.h>
 #include	<sys/stat.h>
+#include    <setjmp.h>
 
 UFD output = 2;
 static BOOL beenhere = FALSE;
