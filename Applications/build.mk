@@ -12,29 +12,30 @@ util_apps := \
 
 # ...and in V7/cmd.
 
-v7_cmd_apps := \
+cmd_apps := \
 	ac at atrun col comm cron crypt dc dd deroff diff3 diff diffh \
 	join makekey mesg newgrp pr ptx rev split su sum test time tsort \
 	wall
 
-# These don't build on sdcc:
+# These don't build:
 # accton look
+
 # ...and in V7/games.
 
-v7_games_apps := \
+games_apps := \
 	arithmetic backgammon fish wump 
 
 # Given an app name in $1 and a path in $2, creates a target-exe module.
 
 make_single_app = \
-	$(eval Applications/$2/$1.srcs = $2/$1.c) \
-	$(call build, Applications/$2/$1, target-exe) \
-	$(eval apps += $(Applications/$2/$1.result))
+	$(eval $3-$1.srcs = $2/$1.c) \
+	$(call build, $3-$1, target-exe) \
+	$(eval apps += $($3-$1.result))
 
 apps :=
-$(foreach app, $(util_apps), $(call make_single_app,$(app),util))
-$(foreach app, $(v7_cmd_apps), $(call make_single_app,$(app),V7/cmd))
-$(foreach app, $(v7_games_apps), $(call make_single_app,$(app),V7/games))
+$(foreach app, $(util_apps), $(call make_single_app,$(app),util,util))
+$(foreach app, $(cmd_apps), $(call make_single_app,$(app),V7/cmd,v7-cmd))
+$(foreach app, $(games_apps), $(call make_single_app,$(app),V7/games,v7-games))
 
 apps: $(apps)
 .PHONY: apps
