@@ -1,9 +1,11 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2
 
+#export TARGET = 6809test
 #export TARGET = 8086test
 #export TARGET = atarist
 #export TARGET = bbcmicro
 #export TARGET = dragon
+export TARGET = dragon-nx32
 #export TARGET = micropack
 #export TARGET = msx1
 #export TARGET = msx2
@@ -21,7 +23,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
 #export TARGET = zeta-v2
-export TARGET = zx128
+#export TARGET = zx128
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
@@ -70,7 +72,7 @@ C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c flat.c
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
 #
-C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c
+C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c syscall_net.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
