@@ -57,7 +57,7 @@ sdcc.cflags = \
 
 target-exe.ldflags ?=
 target-exe.ldflags += \
-	-mz80 \
+	-m$(ARCH) \
 	--nostdlib \
 	--no-std-crt0 \
 	--code-loc $(PROGLOAD) \

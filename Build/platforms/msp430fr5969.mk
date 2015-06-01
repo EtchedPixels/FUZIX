@@ -25,6 +25,11 @@ CRT = crt0_msp430x.s
 
 include $(BUILD)/targetgcc.rules.mk
 
+# Extra, platform-specific libc source files (relative to Library/libs).
+
+libc-functions.localsrcs += \
+	setjmp_msp430.s \
+	longjmp_msp430.s \
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
@@ -138,6 +143,7 @@ FILESYSTEM = \
     /usr/games/backgammon   0755 $(Applications/V7/games/backgammon.result) \
     /usr/games/fish         0755 $(Applications/V7/games/fish.result) \
     /usr/games/wump         0755 $(Applications/V7/games/wump.result) \
+	/bin/sh                 0755 $(v7-sh.result) \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \

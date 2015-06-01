@@ -68,7 +68,7 @@ libc-runtime.objs = \
         sub.o subysp.o swap.o tosint.o toslong.o udiv32by16r16.o udiv.o uge.o ugt.o \
         ule.o ult.o umod.o umul16x16r32.o umul8x16r24.o umul8x8r16.o xor.o \
         zeropage.o \
-		strchr.o strrchr.o memmove.o memcpy.o memset.o
+		strchr.o strrchr.o memmove.o memcpy.o memset.o setjmp.o longjmp.o
 
 # Names of source files from Fuzix's libc that we don't want to compile.
 libc-functions.omit = \

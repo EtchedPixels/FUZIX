@@ -1,6 +1,6 @@
 $(call find-makefile)
 
-libc-functions.localsrcs = \
+libc-functions.localsrcs += \
 	__argv.c \
 	__getgrent.c \
 	__getpwent.c \
@@ -121,7 +121,6 @@ libc-functions.localsrcs = \
 	scanf.c \
 	setbuffer.c \
 	setenv.c \
-	setjmp.c \
 	setlocale.c \
 	settimeofday.c \
 	setvbuf.c \

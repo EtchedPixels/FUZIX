@@ -126,6 +126,8 @@ FILESYSTEM = \
     /usr/games/backgammon   0755 $(Applications/V7/games/backgammon.result) \
     /usr/games/fish         0755 $(Applications/V7/games/fish.result) \
     /usr/games/wump         0755 $(Applications/V7/games/wump.result) \
+	/bin/levee              0755 $(levee.result) \
+	/bin/sh                 0755 $(v7-sh.result) \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
