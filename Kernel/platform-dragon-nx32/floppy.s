@@ -105,9 +105,9 @@ fdsetup:
 ;
 ;	FIXME: what have we screwed up here so this always branches ???
 ;
-;	beq	fdiosetup
+	beq	fdiosetup
 
-	sta	<FDCTRK		; target
+	sta	<FDCDATA	; target
 	;
 	;	So we can verify
 	;
