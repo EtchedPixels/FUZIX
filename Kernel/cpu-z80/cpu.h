@@ -73,3 +73,5 @@ typedef union {            /* this structure is endian dependent */
 /* Do not use COMMON_MEMORY except for __asm code blocks. The SDCC helpers are not
    loaded into common */
 #define COMMON_MEMORY   static void COMMONSEG(void)  __naked { __asm .area _COMMONMEM __endasm; }
+
+#define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))

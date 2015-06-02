@@ -88,6 +88,8 @@ static int sock_autobind(struct socket *s)
 
 static struct socket *sock_find_local(uint32_t addr, uint16_t port)
 {
+	used(addr);
+	used(port);
 	/* TODO */
 	return NULL;
 }
