@@ -289,8 +289,10 @@ in_kernel:
             clr _inint
             ldx istack_switched_sp	; stack back
             lda U_DATA__U_INSYS
+            beq inusr
             clr U_DATA__U_ININTERRUPT
-            bne interrupt_return
+            bra interrupt_return
+inusr:
 	    lda _need_resched
 	    beq no_switch
 
