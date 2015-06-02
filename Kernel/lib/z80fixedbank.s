@@ -24,6 +24,8 @@
         .globl interrupt_handler
 	.globl _swapper
 	.globl _need_resched
+	.globl _nready
+	.globl _platform_idle
 
 	.globl map_kernel
 	.globl map_process
@@ -56,6 +58,33 @@ _switchout:
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
+	ld a, (_nready)
+	or a
+	jr nz, slow_path
+
+idling:
+	ei
+	call _platform_idle
+	di
+	ld a, (_nready)
+	or a
+	jr z, idling
+	cp #1
+	jr nz, slow_path
+	ld hl, (U_DATA__U_PTAB)
+	ld a, (hl)		; Process table status is first byte
+	; Are we the one process ?
+	cp #P_READY
+	jr nz, slow_path
+	; We are - fast path return from switchout
+	ld (hl), #P_RUNNING
+	pop iy
+	pop ix
+	pop hl
+	ei
+	ret
+
+slow_path:
 	; Stash the uarea back into process memory
 	call map_process_always
 	ld hl, #U_DATA

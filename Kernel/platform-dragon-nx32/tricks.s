@@ -14,6 +14,8 @@
         .globl map_process_a
         .globl map_process_always
         .globl copybank
+	.globl _nready
+	.globl _platform_idle
 
 	# exported
         .globl _switchout
@@ -49,6 +51,54 @@ _switchout:
 	pshs d,y,u
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
+	; See if we are about to go idle
+	lda _nready
+	; Someone else will run - go the slow path into the scheduler
+;	bne slow_path
+	bra slow_path
+
+	;
+	; Wait for something to become ready
+	;
+idling:
+	andcc #0xef
+	jsr _platform_idle
+	orcc #0x10
+
+	lda _nready
+	beq idling
+
+	; Did multiple things wake up, if so we must follow the slow
+	; path
+	cmpa #1
+	bne slow_path
+
+	; Was the waker us ?
+	ldx U_DATA + U_DATA__U_PTAB
+	lda P_TAB__P_STATUS_OFFSET,x
+	cmpa #P_READY
+	; No: follow the slow path
+	bne slow_path
+
+	; We can use the fast path for returning.
+	;
+	; Mark ourself running with a new time slice allocation
+	;
+	lda #P_RUNNING
+	sta P_TAB__P_STATUS_OFFSET,x
+	ldx #0
+	stx _runticks
+	;
+	; We idled and got the CPU back - fast path, and we know
+	; we are not a pre-emption. In effect the switchout() becomes
+	; a normal function call and we don't have to stash anything or
+	; bank switch.
+	;
+	andcc #0xef
+	puls x,y,u,pc
+
+
+slow_path:
 	; Stash the uarea into process memory bank
 	jsr map_process_always
 
