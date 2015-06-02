@@ -12,6 +12,7 @@
 		.globl size_ram
 		.globl null_handler
 		.globl _vid256x192
+		.globl _vtoutput
 
 		; exported debugging tools
 		.globl _trap_monitor
@@ -115,20 +116,17 @@ badswi_handler:
 	    rti
 
 ; outchar: Simple writing to video memory
-; FIXME: we are now in grapics mode !
+; FIXME: bank switching ???
 outchar:
-	    pshs x
-	    ldx traceptr
-	    cmpa #0x60
-            blo lc
-	    suba #0x20
-lc          anda #0x3F
-	    sta ,x+
-	    stx traceptr
-	    puls x,pc
+	    pshs x,d,pc
+	    sta outbuf
+	    ldx #outbuf
+	    lda #1
+	    pshs a
+	    jsr _vtoutput
+	    puls x,d,pc
 
 	    .area .common
 
-_need_resched: .db 1
-traceptr:
-	   .dw 0x0400
+outbuf:	    .db 0
+_need_resched: .db 0
