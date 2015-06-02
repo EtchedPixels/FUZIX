@@ -288,9 +288,9 @@ in_kernel:
 
             clr _inint
             ldx istack_switched_sp	; stack back
-            lda U_DATA__U_INSYS
             clr U_DATA__U_ININTERRUPT
-            bne interrupt_return
+            lda U_DATA__U_INSYS
+            bne interrupt_return_x
 	    lda _need_resched
 	    beq no_switch
 
@@ -337,6 +337,9 @@ intdone:
 interrupt_return:
 	    SAM_RESTORE			; uses the saved Y
             rti
+interrupt_return_x:
+	    tfr x,s
+	    bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
 trap_signal:
