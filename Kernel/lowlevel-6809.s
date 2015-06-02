@@ -287,16 +287,16 @@ in_kernel:
             jsr _platform_interrupt
 
             clr _inint
-            lds istack_switched_sp	; stack back
-	    sts U_DATA__U_SYSCALL_SP	; save again somewhere safe for
-					; preemption
-            clr U_DATA__U_ININTERRUPT
+            ldx istack_switched_sp	; stack back
             lda U_DATA__U_INSYS
+            clr U_DATA__U_ININTERRUPT
             bne interrupt_return
 	    lda _need_resched
 	    clr _need_resched
 	    beq no_switch
 
+	    stx U_DATA__U_SYSCALL_SP	; save again somewhere safe for
+					; preemption
 	    ; Pre emption occurs on the task stack. Conceptually its a
 	    ; not quite a syscall
 	    lds #kstack_top
@@ -310,10 +310,10 @@ in_kernel:
 	    ;
 	    ; We will resume here after the pre-emption. Get back onto
 	    ; the user stack and map ourself in
+	    jsr map_process_always
 	    lds U_DATA__U_SYSCALL_SP
 	    ; do the map on the user stack (for SAM switching)
 	    SAM_USER
-	    jsr map_process_always
 	    bra intdone
 
 	    ; Not task switching - the easy and usual path
@@ -322,8 +322,9 @@ no_switch:
 	    ; will vary during kernel activity and we need to put it put
 	    ; it back as it was before the interrupt
 	    ; pre-emption is handled differently...
-	    SAM_USER
 	    jsr map_restore
+	    lds istack_switched_sp
+	    SAM_USER
 
 intdone: 
             ; we're not in kernel mode, check for signals
