@@ -54,8 +54,7 @@ _switchout:
 	; See if we are about to go idle
 	lda _nready
 	; Someone else will run - go the slow path into the scheduler
-;	bne slow_path
-	bra slow_path
+	bne slow_path
 
 	;
 	; Wait for something to become ready
