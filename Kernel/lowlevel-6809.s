@@ -292,9 +292,9 @@ in_kernel:
             clr U_DATA__U_ININTERRUPT
             bne interrupt_return
 	    lda _need_resched
-	    clr _need_resched
 	    beq no_switch
 
+	    clr _need_resched
 	    stx U_DATA__U_SYSCALL_SP	; save again somewhere safe for
 					; preemption
 	    ; Pre emption occurs on the task stack. Conceptually its a
