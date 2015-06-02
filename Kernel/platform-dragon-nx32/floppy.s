@@ -320,7 +320,7 @@ _fd_operation:
 	orcc	#0x40		; Make sure FIR is off
 	jsr	piasave
 	ldy	6,s		; Drive struct
-	tst	,y+		; User or kernel ?
+	tst	,x+		; User or kernel ?
 	beq	fd_op_k
 	jsr	map_process_always
 fd_op_k:

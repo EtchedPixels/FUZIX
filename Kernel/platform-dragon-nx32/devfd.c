@@ -14,7 +14,7 @@
 
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
-extern uint8_t *fd_tab;
+extern uint8_t fd_tab[];
 
 static void fd_motor_busy(void)
 {
@@ -89,14 +89,18 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         
     while (nblock) {
         for (tries = 0; tries < 4 ; tries++) {
+            kprintf("fd sector %d track %d\n", cmd[3], cmd[2]);
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
-            if (tries > 1)
+            kprintf("fd error %d\n", err);
+            if (tries > 1) {
+                kputs("fd reset\n");
                 fd_reset(driveptr);
+            }
         }
         /* FIXME: should we try the other half and then bale out ? */
-        if (tries == 3)
+        if (tries == 4)
             goto bad;
         cmd[5]++;	/* Move on 256 bytes in the buffer */
         cmd[3]++;	/* Next sector for next block */
