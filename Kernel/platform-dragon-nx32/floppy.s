@@ -107,6 +107,7 @@ fdsetup:
 ;
 	beq	fdiosetup
 
+	lda	TRACK,x
 	sta	<FDCDATA	; target
 	;
 	;	So we can verify
@@ -155,15 +156,15 @@ noprecomp:
 	sty	nmivector	; so our NMI handler will clean up
 	ldy	#0		; timeout handling
 	orcc	#0x50		; irqs off or we'll miss bytes
+	ldb	DIRECT,x
+	cmpb	#0x01		; read ?
+	beq	fdio_in_1
+	cmpb	#0x02
+	beq	wait_drq_1	; write
 	sta	<FDCREG		; issue the command
 	nop			; give the FDC a moment to think
 	exg	a,a
 	exg	a,a
-	ldb	DIRECT,x
-	cmpb	#0x01		; read ?
-	beq	fdio_in
-	cmpb	#0x02
-	beq	wait_drq	; write
 ;
 ;	Status registers
 ;
@@ -176,6 +177,11 @@ fdxferdone:
 ;
 ;	Relies on B being 2...
 ;
+wait_drq_1:
+	sta	<FDCREG		; issue the command
+	nop			; give the FDC a moment to think
+	exg	a,a
+	exg	a,a
 wait_drq:
 	bitb	<FDCREG
 	bne	drq_on
@@ -207,6 +213,11 @@ drq_go:
 ;
 ;	Read from the disk
 ;
+fdio_in_1:
+	sta	<FDCREG		; issue the command
+	nop			; give the FDC a moment to think
+	exg	a,a
+	exg	a,a
 fdio_in:
 	ldx	DATA,x
 fdio_dwait:
@@ -412,4 +423,4 @@ pia_stash:
 	.byte	0
 	.byte	0
 _fd_tab:
-	.byte	0,0,0,0
+	.byte	0xFF,0xFF,0xFF,0xFF

@@ -55,9 +55,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[7];
 
-    if(rawflag)
-        goto bad2;
-
     fd_motor_busy();		/* Touch the motor timer first so we don't
                                    go and turn it off as we are doing this */
     if (fd_selected != minor) {
@@ -76,7 +73,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         dptr = (uint16_t)udata.u_base;
         block = udata.u_offset >> 9;
         nblock = udata.u_count >> 8;
-    }
+    } else
+        goto bad2;
 
 //    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = rawflag;
@@ -89,15 +87,11 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         
     while (nblock) {
         for (tries = 0; tries < 4 ; tries++) {
-            kprintf("fd sector %d track %d\n", cmd[3], cmd[2]);
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
-            kprintf("fd error %d\n", err);
-            if (tries > 1) {
-                kputs("fd reset\n");
+            if (tries > 1)
                 fd_reset(driveptr);
-            }
         }
         /* FIXME: should we try the other half and then bale out ? */
         if (tries == 4)
@@ -111,7 +105,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         nblock--;
     }
     fd_motor_idle();
-    return 1;
+    return 0;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:
