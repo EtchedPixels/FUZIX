@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <devtty.h>
 #include <device.h>
+#include <devfd.h>
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
@@ -212,6 +213,7 @@ void platform_interrupt(void)
 		keyproc();
 		if (keysdown < 3 && newkey)
 			keydecode();
+                fd_timer_tick();
 		timer_interrupt();
 	}
 }

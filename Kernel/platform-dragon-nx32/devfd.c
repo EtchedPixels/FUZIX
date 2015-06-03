@@ -16,21 +16,27 @@ static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
 extern uint8_t fd_tab[];
 
-static void fd_motor_busy(void)
+static uint8_t motor_timeout = 0;
+
+static inline void fd_motor_busy(void)
 {
     motorct++;
+    motor_timeout = 240;
 }
 
-static void fd_motor_idle(void)
+static inline void fd_motor_idle(void)
 {
     motorct--;
-    // if (motorct == 0) ... start timer */
 }
 
-static void fd_motor_timeout(void)
+void fd_timer_tick(void)
 {
-    fd_selected = 0xff;
-    fd_motor_off();
+    if (!motorct && motor_timeout) {
+        if (motor_timeout-- == 1) {
+            fd_selected = 0xff;
+            fd_motor_off();
+        }
+    }
 }
 
 /*
