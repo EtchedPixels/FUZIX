@@ -5,6 +5,7 @@
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_open(uint8_t minor, uint16_t flag);
+void fd_timer_tick(void);
 
 /* low level interface */
 uint8_t fd_reset(uint8_t *drive);
