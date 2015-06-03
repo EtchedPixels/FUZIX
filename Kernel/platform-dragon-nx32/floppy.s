@@ -102,9 +102,6 @@ fdsetup:
 	sta	<FDCTRK		; reset track register
 	pshs	x,y
 	cmpa	TRACK,x		; target track
-;
-;	FIXME: what have we screwed up here so this always branches ???
-;
 	beq	fdiosetup
 
 	lda	TRACK,x
@@ -158,9 +155,9 @@ noprecomp:
 	orcc	#0x50		; irqs off or we'll miss bytes
 	ldb	DIRECT,x
 	cmpb	#0x01		; read ?
-	beq	fdio_in_1
+	beq	fdio_in
 	cmpb	#0x02
-	beq	wait_drq_1	; write
+	beq	fdio_out	; write
 	sta	<FDCREG		; issue the command
 	nop			; give the FDC a moment to think
 	exg	a,a
@@ -177,14 +174,14 @@ fdxferdone:
 ;
 ;	Relies on B being 2...
 ;
-wait_drq_1:
+fdio_out:
 	sta	<FDCREG		; issue the command
-	nop			; give the FDC a moment to think
-	exg	a,a
-	exg	a,a
+	ldx	DATA,x		; get the data pointer
+	lda	,x+		; otherwise we don't have time
+				; to fetch it
 wait_drq:
-	bitb	<FDCREG
-	bne	drq_on
+	ldb	<0xFF23		; check for DRQ the fastest way we can
+	bmi	drq_go		; go go go...
 	leay	-1,y
 	bne	wait_drq
 	;
@@ -199,47 +196,48 @@ wait_drq:
 ;
 ;	Begin the actual copy to disk
 ;
-drq_on:
-	ldx	DATA,x
-	lda	,x+
-	bra	drq_go
 drq_loop:
 	sync
 drq_go:
 	sta	<FDCDATA
+	ldb	<0xFF22		; clear the FIR (PIA1DB)
 	lda	,x+
-	bra	drq_loop
+	bra	drq_loop	; exit is via NMI
 
 ;
 ;	Read from the disk
 ;
-fdio_in_1:
-	sta	<FDCREG		; issue the command
-	nop			; give the FDC a moment to think
-	exg	a,a
-	exg	a,a
 fdio_in:
+	sta	<FDCREG		; issue the command
 	ldx	DATA,x
 fdio_dwait:
-	ldb	<FDCREG
-	bitb	#0x02
-	bne	fdio_go
+	ldb	<0xFF23		; wait on the PIA not fd regs.. quicker
+	bmi	fdio_go
+;
+;	Not ready, go round again
+;
+fdio_nogo:
 	leay	-1,y
 	bne	fdio_dwait
+;
+;	FIXME: do error recovery at some point (reset/poll)
+;
 	ldb	fdcctrl
 	stb	<FDCCTRL
 	lda	#0xff
 	rts
-;
-;	Now do the data
-;
-fdio_loop:
-	sync
+
 fdio_go:
+	lda	<FDCDATA	; get the data first
+	ldb	<0xFF22		; clear FIR
+	sta	,x+		; store the received byte
+fdio_loop:
+	sync			; stall for FIR
 	ldb	<0xFF22		; clear the FIR (PIA1DB)
 	lda	<FDCDATA
 	sta	,x+
-	bra	fdio_loop
+	bra	fdio_loop	; NMI terminates this
+
 
 ;
 ;	PIA management
