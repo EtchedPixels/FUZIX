@@ -5,6 +5,7 @@
 #include <devtty.h>
 
 uint8_t membanks;
+uint8_t system_id;
 
 void platform_idle(void)
 {

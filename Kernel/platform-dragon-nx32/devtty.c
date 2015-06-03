@@ -88,6 +88,7 @@ static uint8_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
+/* FIXME: shouldn't COCO shiftmask also differ ??? 0x02 not 0x40 ?? */
 static uint8_t shiftmask[8] = {
 	0, 0x40, 0, 0, 0, 0, 0, 0x40
 };
@@ -141,6 +142,11 @@ static void keyproc(void)
 		}
 		keymap[i] = keyin[i];
 	}
+	if (system_id) { 	/* COCO series */
+	  keybit += 2;
+	  if (keybit > 5)
+	    keybit -= 6;
+        }
 }
 
 #ifdef CONFIG_COCO_KBD
