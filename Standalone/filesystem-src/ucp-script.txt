@@ -155,6 +155,7 @@ bget ../../Applications/util/dosread
 bget ../../Applications/util/du
 bget ../../Applications/util/echo
 bget ../../Applications/util/ed
+bget ../../Applications/util/env
 bget ../../Applications/util/false
 bget ../../Applications/util/fdisk
 bget ../../Applications/util/fgrep
@@ -231,6 +232,7 @@ chmod 0755 dosread
 chmod 0755 du
 chmod 0755 echo
 chmod 0755 ed
+chmod 0755 env
 chmod 0755 false
 chmod 0755 fdisk
 chmod 0755 fgrep
