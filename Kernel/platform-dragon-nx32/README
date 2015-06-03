@@ -25,6 +25,9 @@ Emulating in XRoar
 XRoar can be patched with the included 0001-XRoar-emulate-nx32.patch
 to emulate this memory cartridge.
 
+*NOTE*: This patch works with 0.32, but not the latest 0.33 release of
+XRoar.
+
 Using DriveWire
 ===============
 
