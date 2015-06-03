@@ -216,7 +216,6 @@ fdio_dwait:
 ;
 ;	Not ready, go round again
 ;
-fdio_nogo:
 	leay	-1,y
 	bne	fdio_dwait
 ;

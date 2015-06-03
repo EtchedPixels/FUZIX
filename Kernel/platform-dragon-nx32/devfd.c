@@ -98,7 +98,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             goto bad;
         cmd[5]++;	/* Move on 256 bytes in the buffer */
         cmd[3]++;	/* Next sector for next block */
-        if (cmd[3] == 10) {
+        if (cmd[3] == 19) {
             cmd[3] = 1;	/* Track on */
             cmd[2]++;
         }
