@@ -210,7 +210,7 @@ arg_t _execve(void)
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with Program invocation name
-	uget((void *) ugetw(nargv), udata.u_name, 8);
+	ugets((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	brelse(abuf);
