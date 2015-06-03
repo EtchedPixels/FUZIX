@@ -33,9 +33,12 @@ bss_wipe:	sta ,x+
 		cmpb #0x49		; Dragon32
 		beq identified
 		inca
-		cmpb #0x50		; COCO3
+		cmpb #0x31		; COCO1/2
 		beq identified
-		inca			; Guess it's a COCO ?
+		inca
+		cmpb #0x32		; COCO3
+		beq identified
+		inca			; Beats me
 identified:
 		sta _system_id		; what sort of a box are we ?
 		jsr init_early
