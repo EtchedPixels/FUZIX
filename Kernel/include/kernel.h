@@ -381,6 +381,7 @@ typedef struct u_data {
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
+    uaddr_t	u_break;	/* Top of data space */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
@@ -397,7 +398,6 @@ typedef struct u_data {
     uint16_t    u_gid;
     uint16_t    u_euid;
     uint16_t    u_egid;
-    uaddr_t     u_break;        /* Top of data space */
     char        u_name[8];      /* Name invoked with */
     clock_t     u_utime;        /* Elapsed ticks in user mode */
     clock_t     u_stime;        /* Ticks in system mode */
