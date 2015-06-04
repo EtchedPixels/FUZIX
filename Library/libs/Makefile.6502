@@ -78,7 +78,7 @@ SRC_HARD += regexp.c
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
 
-all: syslib.lib crt0_6502.o
+all: syslib.lib liberror.txt crt0_6502.o
 
 fuzix6502/Makefile: ../tools/syscall_6502.c ../../Kernel/include/syscall_name.h
 	(cd ..; make tools/syscall_6502)
@@ -88,6 +88,9 @@ syslib.lib: fuzix6502/Makefile $(OBJ_C)
 	(cd fuzix6502; make)
 	$(AR) a syslib.lib $(OBJ_C)
 	ln -sf syslib.lib c6502.lib
+
+liberror.txt:
+	../tools/liberror > liberror.txt
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
@@ -102,5 +105,5 @@ $(OBJ_HARD):%.o: %.c
 	$(CC) $(CC_NOOPT) $(@:.o=.c)
 
 clean:
-	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l
+	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l liberror.txt
 	(cd fuzix6502; make clean)

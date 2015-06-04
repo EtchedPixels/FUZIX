@@ -66,7 +66,7 @@ OBJ_C = $(SRC_C:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -90,6 +90,9 @@ fuzix/syslib.l:
 	../tools/syscall
 	make -C fuzix
 
+liberror.txt:
+	../tools/liberror > liberror.txt
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -106,5 +109,5 @@ $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
 clean:
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt
 	(cd fuzix; make clean)
