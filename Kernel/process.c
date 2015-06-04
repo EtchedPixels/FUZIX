@@ -1,7 +1,7 @@
 #undef DEBUG			/* turn this on to enable syscall tracing */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
-#define DEBUG_PREEMPT		/* debug pre-emption */
+#undef DEBUG_PREEMPT		/* debug pre-emption */
 
 #include <kernel.h>
 #include <tty.h>
