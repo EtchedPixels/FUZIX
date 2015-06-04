@@ -26,9 +26,12 @@ void readi(inoptr ino, uint8_t flag)
 	case F_REG:
 
 		/* See if end of file will limit read */
-
-		udata.u_count = min(udata.u_count,
+		if (ino->c_node.i_size <= udata.u_offset)
+			udata.u_count = 0;
+                else {
+			udata.u_count = min(udata.u_count,
 				ino->c_node.i_size - udata.u_offset);
+                }
 		toread = udata.u_count;
 		goto loop;
 
