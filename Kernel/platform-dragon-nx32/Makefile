@@ -2,9 +2,10 @@
 CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c libc.c
 
-DSRCS = ../dev/devdw.c
+DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c \
+        ../dev/devide_discard.c ../dev/mbr.c
 
-ASRCS = crt0.s dragon.s mem-nx32.s video.s
+ASRCS = crt0.s dragon.s mem-nx32.s video.s ide.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -40,5 +41,6 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o
+	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o \
+	devide.o blkdev.o ide.o devide_discard.o mbr.o
 	../tools/pad256 ../fuzix.bin
