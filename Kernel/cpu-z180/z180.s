@@ -12,7 +12,7 @@
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment
         .globl hw_irqvector
         .globl _irqvector
-        .globl _kernel_flag
+        .globl _need_resched
 
         ; imported symbols
         .globl _ramsize
@@ -192,9 +192,6 @@ z180_init_hardware:
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
         .area _CODE
-
-_kernel_flag:
-        .db 1
 
 _copy_and_map_process:
         di          ; just to be sure
@@ -569,6 +566,7 @@ interrupt_table:
 
 hw_irqvector:	.db 0
 _irqvector:	.db 0
+_need_resched:	.db 0
 
 z80_irq:
         push af
@@ -689,10 +687,6 @@ _switchout:
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
-        ; set inint to false
-        xor a
-        ld (_inint), a
-
         ; no need to stash udata on this platform since common memory is dedicated
         ; to each process.
 
@@ -763,9 +757,9 @@ _switchin:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ld a, (U_DATA__U_ININTERRUPT)
         or a
-        ret z ; in ISR, leave interrupts off
+        ret nz ; in ISR, leave interrupts off
         ei
         ret ; return with interrupts on
 

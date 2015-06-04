@@ -2,7 +2,7 @@ Big TODO Items Before 0.1 Release
 ---------------------------------
 
 o 	BSD groups can be done but do we care ?
-IP	Termios and speed hooks to tty drivers
+DONE	Termios and speed hooks to tty drivers
 DONE	hangup ioctl (vhangup) plus hangups for group leader exits
 DONE	rename should delete old files it renames over
 o	SYS5 signal functionality and other signals (SIGCLD, STOP etc)

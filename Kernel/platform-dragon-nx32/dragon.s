@@ -12,6 +12,7 @@
 		.globl size_ram
 		.globl null_handler
 		.globl _vid256x192
+		.globl _vtoutput
 
 		; exported debugging tools
 		.globl _trap_monitor
@@ -61,7 +62,7 @@ init_hardware:
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl _kernel_flag
+	    .globl _need_resched
 
 
             ; imported symbols
@@ -71,12 +72,6 @@ init_hardware:
 	    .globl fd_nmi_handler
 
             .area .common
-
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
 
 _trap_reboot:
 _trap_monitor:
@@ -121,20 +116,17 @@ badswi_handler:
 	    rti
 
 ; outchar: Simple writing to video memory
-
+; FIXME: bank switching ???
 outchar:
-	    pshs x
-	    ldx traceptr
-	    cmpa #0x60
-            blo lc
-	    suba #0x20
-lc          anda #0x3F
-	    sta ,x+
-	    stx traceptr
-	    puls x,pc
+	    pshs x,d,pc
+	    sta outbuf
+	    ldx #outbuf
+	    lda #1
+	    pshs a
+	    jsr _vtoutput
+	    puls x,d,pc
 
 	    .area .common
 
-_kernel_flag: .db 1
-traceptr:
-	   .dw 0x0400
+outbuf:	    .db 0
+_need_resched: .db 0

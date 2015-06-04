@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <devtty.h>
 #include <device.h>
+#include <devfd.h>
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
@@ -47,8 +48,13 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	irqflags_t irq;
 	if (minor == 1) {
+		/* We need a better way generally to handle keyboard v
+		   VT */
+		irq = di();
 		vtoutput(&c, 1);
+		irqrestore(irq);
 	} else
 		*uart_data = c;	/* Data */
 }
@@ -87,6 +93,7 @@ static uint8_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
+/* FIXME: shouldn't COCO shiftmask also differ ??? 0x02 not 0x40 ?? */
 static uint8_t shiftmask[8] = {
 	0, 0x40, 0, 0, 0, 0, 0, 0x40
 };
@@ -140,6 +147,11 @@ static void keyproc(void)
 		}
 		keymap[i] = keyin[i];
 	}
+	if (system_id) { 	/* COCO series */
+	  keybit += 2;
+	  if (keybit > 5)
+	    keybit -= 6;
+        }
 }
 
 #ifdef CONFIG_COCO_KBD
@@ -212,6 +224,7 @@ void platform_interrupt(void)
 		keyproc();
 		if (keysdown < 3 && newkey)
 			keydecode();
+                fd_timer_tick();
 		timer_interrupt();
 	}
 }

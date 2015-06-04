@@ -45,6 +45,9 @@ Or for an emulator with Becker port:
 For XRoar, just add -load dwfuzb.bin to its invocation, and on the Dragon:
  EXEC&H600
 
+For an emulator with Becker port while using the DragonDOS cartridge
+ lwasm --pragma=condundefzero -r -b -odwfuzb.bin dwload.asm -DFUZIX -DRAMORG=0x600 -DBECKER -DBCKSTAT=0xFF49 -DBCKPORT=0xFF4A
+
 To make an audio file for loading DWLOAD via the cassette port:
  makewav -r -c -odwfuz.wav dwfuz.bin
 The makewav utility can be found at toolshed.sf.net

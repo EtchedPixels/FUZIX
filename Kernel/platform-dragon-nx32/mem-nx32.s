@@ -100,15 +100,19 @@ map_restore
 ; optimized bank copy for fork
 ; src bank in A, dst bank in B, start in X, end in U
 copybank
+	pshs dp,a
+	lda #0xff
+	tfr a,dp
+	puls a
 	stu cmpend+1	; self-modiying code FTW
-copyf	sta banksel
+copyf	sta <banksel
 	ldu ,x
-	stb banksel
+	stb <banksel
 	stu ,x++
 cmpend	cmpx #0
 	blo copyf
 	stb map_copy
-	rts
+	puls dp,pc
 
 map_store	.db 0
 map_copy	.db 0

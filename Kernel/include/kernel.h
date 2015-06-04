@@ -353,6 +353,7 @@ typedef struct p_tab {
 /**HP**/
     uint16_t	p_pgrp;		/* Process group */
     uint8_t	p_nice;
+    usize_t	p_top;		/* Copy of u_top */
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
     void *	p_profbuf;
@@ -380,6 +381,7 @@ typedef struct u_data {
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
+    uaddr_t	u_break;	/* Top of data space */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
@@ -396,7 +398,6 @@ typedef struct u_data {
     uint16_t    u_gid;
     uint16_t    u_euid;
     uint16_t    u_egid;
-    uaddr_t     u_break;        /* Top of data space */
     char        u_name[8];      /* Name invoked with */
     clock_t     u_utime;        /* Elapsed ticks in user mode */
     clock_t     u_stime;        /* Ticks in system mode */
@@ -515,6 +516,10 @@ struct s_argblk {
 #define ENOLCK		35		/* Lock table full */
 #define ENOTEMPTY	36		/* Directory is not empty */
 #define ENAMETOOLONG    37              /* File name too long */
+#define EAFNOSUPPORT	38		/* Address family not supported */
+#define EALREADY	39		/* Operation already in progress */
+#define EADDRINUSE	40		/* Address already in use */
+#define EADDRNOTAVAIL	41		/* Address not available */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued

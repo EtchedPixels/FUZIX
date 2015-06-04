@@ -14,7 +14,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
-	    .globl _kernel_flag
+	    .globl _need_resched
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -34,17 +34,10 @@
 
             .area .common
 
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
-
 _trap_reboot:
 _trap_monitor:
 	    cwai #0
 	    bra _trap_monitor
-
 
 _di:
 	    tfr cc,b		; return the old irq state
@@ -183,6 +176,6 @@ lc	    anda #0x3F
 
 	    .area .data
 
-_kernel_flag: .db 1
+_need_resched: .db 0
 traceptr:
 	   .dw 0x6000

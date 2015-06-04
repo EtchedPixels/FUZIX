@@ -15,7 +15,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl _slot_table
-	    .globl _kernel_flag
+	    .globl _need_resched
 
 	    ; video driver
 	    .globl _vtinit
@@ -79,8 +79,8 @@ _trap_reboot:
 	    di
 	    halt
 
-_kernel_flag:
-	   .db 1
+_need_resched:
+	   .db 0
 
 
 ; -----------------------------------------------------------------------------

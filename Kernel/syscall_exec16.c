@@ -154,6 +154,7 @@ arg_t _execve(void)
 
 	/* From this point on we are commmited to the exec() completing */
 	udata.u_top = top;
+	udata.u_ptab->p_top = top;
 
 	/* setuid, setgid if executable requires it */
 	if (ino->c_node.i_mode & SET_UID)
@@ -209,7 +210,7 @@ arg_t _execve(void)
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with Program invocation name
-	uget((void *) ugetw(nargv), udata.u_name, 8);
+	ugets((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	brelse(abuf);

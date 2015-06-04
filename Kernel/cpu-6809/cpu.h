@@ -28,6 +28,10 @@ extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
 extern uint16_t swab(uint16_t);
 
+/* 6809 wins on this one! */
+#define	ntohs(x)	(x)
+#define ntohl(x)	(x)
+
 /* 6809 doesn't benefit from making a few key variables in
    non-reentrant functions static */
 #define staticfast	auto

@@ -19,7 +19,7 @@
 	    .globl enaslt
 	    .globl _mapslot_bank1
 	    .globl _mapslot_bank2
-	    .globl _kernel_flag
+	    .globl _need_resched
 
 	    ; video driver
 	    .globl _vtinit
@@ -61,16 +61,6 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-trapmsg:    .ascii "Trapdoor: SP="
-            .db 0
-trapmsg2:   .ascii ", PC="
-            .db 0
-tm_user_sp: .dw 0
-
-tm_stack:
-            .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-tm_stack_top:
-
 ; Ideally return to any debugger/monitor
 _trap_monitor:
 	    di
@@ -82,8 +72,8 @@ _trap_reboot:
 	    di
 	    halt
 
-_kernel_flag:
-	    .db 1
+_need_resched:
+	    .db 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)

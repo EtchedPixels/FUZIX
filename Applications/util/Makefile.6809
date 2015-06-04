@@ -36,6 +36,7 @@ SRCS  = banner.c \
 	du.c \
 	echo.c \
 	ed.c \
+	env.c \
 	factor.c \
 	false.c \
 	fdisk.c \
@@ -66,6 +67,7 @@ SRCS  = banner.c \
 	prtroot.c \
 	ps.c \
 	pwd.c \
+	reboot.c \
 	rm.c \
 	rmdir.c \
 	sed.c \

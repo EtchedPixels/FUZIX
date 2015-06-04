@@ -1,12 +1,14 @@
 ; UZI mnemonics for memory addresses etc
 
 U_DATA                      equ 0x7D00       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           equ 0x300        ; 256+256+256 bytes.
+U_DATA__TOTALSIZE           equ 0x200        ; 256+256 (we don't save istack)
 
 U_DATA_STASH                equ 0xFC00       ; FC00-FEFF
 
 VIDEO_BASE		    equ 0x0400	     ; 6K for the display
 VIDEO_END		    equ 0x1C00
+
+PROGBASE                    equ 0x8000       ; programs and data start here
 
 ; Have these defined so that lowlevel-6809.s can be used as-is
 SAM_USER macro

@@ -1,19 +1,27 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devdw.c
+CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c libc.c
+
+DSRCS = ../dev/devdw.c
 
 ASRCS = crt0.s dragon.s mem-nx32.s video.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-OBJS  = $(COBJS) $(AOBJS)
+DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
+
+CROSS_CCOPTS += -I../dev/
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
 
 all: $(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+
+$(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(AOBJS): %$(BINEXT): %.s

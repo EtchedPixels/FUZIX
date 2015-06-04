@@ -1,6 +1,8 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devdw.c
+CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c libc.c
+
+DSRCS = ../dev/devdw.c
 
 ASRCS = p6809.s crt0.s drivewire.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s
@@ -9,12 +11,17 @@ COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
 OBJS  = $(COBJS) $(AOBJS)
 
+CROSS_CCOPTS += -I../dev/
+
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o) \
        d64_1.decb d64_1.rom d64_2.rom cart1.rom cart2.rom
 
 all:	$(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+
+$(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(AOBJS): %$(BINEXT): %.s

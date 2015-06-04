@@ -14,23 +14,29 @@
 
 static uint8_t motorct;
 static uint8_t fd_selected = 0xFF;
-extern uint8_t *fd_tab;
+extern uint8_t fd_tab[];
 
-static void fd_motor_busy(void)
+static uint8_t motor_timeout = 0;
+
+static inline void fd_motor_busy(void)
 {
     motorct++;
+    motor_timeout = 240;
 }
 
-static void fd_motor_idle(void)
+static inline void fd_motor_idle(void)
 {
     motorct--;
-    // if (motorct == 0) ... start timer */
 }
 
-static void fd_motor_timeout(void)
+void fd_timer_tick(void)
 {
-    fd_selected = 0xff;
-    fd_motor_off();
+    if (!motorct && motor_timeout) {
+        if (motor_timeout-- == 1) {
+            fd_selected = 0xff;
+            fd_motor_off();
+        }
+    }
 }
 
 /*
@@ -55,9 +61,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[7];
 
-    if(rawflag)
-        goto bad2;
-
     fd_motor_busy();		/* Touch the motor timer first so we don't
                                    go and turn it off as we are doing this */
     if (fd_selected != minor) {
@@ -76,7 +79,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         dptr = (uint16_t)udata.u_base;
         block = udata.u_offset >> 9;
         nblock = udata.u_count >> 8;
-    }
+    } else
+        goto bad2;
 
 //    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = rawflag;
@@ -96,18 +100,18 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
                 fd_reset(driveptr);
         }
         /* FIXME: should we try the other half and then bale out ? */
-        if (tries == 3)
+        if (tries == 4)
             goto bad;
         cmd[5]++;	/* Move on 256 bytes in the buffer */
         cmd[3]++;	/* Next sector for next block */
-        if (cmd[3] == 10) {
+        if (cmd[3] == 19) {
             cmd[3] = 1;	/* Track on */
             cmd[2]++;
         }
         nblock--;
     }
     fd_motor_idle();
-    return 1;
+    return 0;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:

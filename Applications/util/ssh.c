@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <errno.h>
 
 extern char **environ;      /* Location of Envp from executable Header */
 
@@ -25,6 +28,12 @@ char eline[45];		    /* Line for Search command */
 
 char *cmd;
 char *arg[MAX_ARGS];
+char *inrd;
+char *outrd;
+char *exrd;
+int bg;
+
+int infd;
 
 static void writeo(int i)
 {
@@ -49,6 +58,86 @@ static void writenum(int fd, unsigned int n)
     write(fd, bp, c);
 }
 
+static char *argptr;
+static char *argout;
+static char argstate;
+
+static char *nextarg(void)
+{
+    char *p;
+    char **t;
+redo:
+    p = argout;
+    t = NULL;
+    while(isspace(*argptr))
+        argptr++;
+    if (*argptr == '\0')
+        return NULL;
+    if (memcmp(argptr, "2>", 2) == 0) {
+        t = &exrd;
+        argptr += 2;
+    } else if (*argptr == '<') {
+        t = &inrd;
+        argptr++;
+    } else if (*argptr == '>') {
+        t = &outrd;
+        argptr++;
+    }
+    while (*argptr != '\0') {
+        if (!argstate) {
+            if (isspace(*argptr))
+                break;
+            if (*argptr == '\'' || *argptr == '"')
+                argstate = *argptr;
+            else
+                *argout++ = *argptr;
+        } else {
+            if (*argptr == argstate)
+                argstate = 0;
+            else
+                *argout++ = *argptr;
+        }
+        argptr++;
+    }
+    if (*argptr)
+        argptr++;
+    *argout++ = 0;
+    /* Redirections etc are pulled out of line */
+    if (t) {
+        *t = p;
+        goto redo;
+    }
+    return p;
+}
+
+static char *getarg(char *in)
+{
+    argstate = 0;
+    argptr = in;
+    argout = in;
+    inrd = NULL;
+    outrd = NULL;
+    exrd = NULL;
+    bg = 0;
+    return nextarg();
+}
+
+static void openf(const char *p, int tfd, int mode)
+{
+    int fd;
+
+    if (p == NULL)
+        return;
+
+    fd = open(p, mode, 0666);
+    if (fd == -1) {
+        perror(p);
+        exit(1);
+    }
+    dup2(fd, tfd);
+    close(fd);
+}
+
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
@@ -67,22 +156,45 @@ int main(int argc, char *argval[])
 	home = getenv("HOME");
 	if (!home) putenv("HOME=/");
 	chdir(getenv("HOME"));
+	infd = open(".sshrc", O_RDONLY);
+	if (infd < 0)
+	    infd = 0;
     }
 
     cprompt = (getuid() == 0) ? "ssh# " : "ssh$ ";
 
     for (;;) {
-        for (i = 0; i < MAX_ARGS; i++) arg[i] = NULL;
+        const char **argp = arg;
+        for (i = 0; i < MAX_ARGS; i++)
+            *argp++ = NULL;
+        argp = arg;
         do {
-            write(1, cprompt, 5);
-            if ((i = read(0, buf, 127)) <= 0)
-                return 0;
-            buf[i - 1] = '\0';   /* Strip newline from fgets */
+            if (infd == 0)
+                write(1, cprompt, 5);
+            if ((i = read(infd, buf, 127)) <= 0) {
+                if (infd == 0)
+                    return 0;
+                else {
+                    close(infd);
+                    infd = 0;
+                }
+            }
+            if (buf[i - 1] == '\n')
+                buf[i - 1] = '\0';   /* Strip newline from read() */
+	    cmd = getarg(buf);
+	} while (cmd == NULL);
+
+	for (i = 0; i < MAX_ARGS; i++) {
+	    *argp = nextarg();
+	    if (*argp == NULL)
+	        break;
+            argp++;
         }
-        while (buf[0] == (char) 0);
-		cmd = strtok(buf, " \t");
-		for (i = 0; i < MAX_ARGS; i++)
-			arg[i] = strtok(NULL, " \t");
+        argp--;
+        if (i && strcmp(*argp, "&") == 0) {
+            bg = 1;
+            *argp = NULL;
+        }
 
         /* Check for User-Requested Exit back to Login Prompt */
         if (strcmp(cmd, "exit") == 0)
@@ -94,18 +206,6 @@ int main(int argc, char *argval[])
             if (stat)
                 perror("cd");
         }
-
-        else if (strcmp(cmd, "pwd") == 0) {
-	    if (getcwd(buf, 128)){
-	        char *ptr=&buf[strlen(buf)];
-	        *ptr++='\n';
-		*ptr=0;
-	        write(1, buf, strlen(buf));
-	    }
-            else
-                write(1, "pwd: cannot get current directory\n",34);
-        }
-        
         else if (strcmp(cmd, "sync") == 0) {
             sync();
         }
@@ -127,6 +227,7 @@ int main(int argc, char *argval[])
             }
         }
 
+#ifdef SSH_EXPENSIVE
         /* Check for User request to kill a process */
         else if (strcmp(cmd, "kill") == 0) {
             if (arg[0][0] == '-') {
@@ -146,8 +247,19 @@ int main(int argc, char *argval[])
                     perror("kill");
             }
         }
+        else if (strcmp(cmd, "pwd") == 0) {
+	    if (getcwd(buf, 128)){
+	        char *ptr=&buf[strlen(buf)];
+	        *ptr++='\n';
+		*ptr=0;
+	        write(1, buf, strlen(buf));
+	    }
+            else
+                write(1, "pwd: cannot get current directory\n",34);
+        }
+#endif
 
-        /* Check for environmen variable assignment */
+        /* Check for environment variable assignment */
         else if ((tp = strchr(cmd, '=')) != NULL) {
 	  *tp='\0';
 	  if( *(tp+1) == '\0' ) unsetenv( cmd );
@@ -167,6 +279,12 @@ int main(int argc, char *argval[])
                 if (pid == 0) {             /* Child is in context */
                     signal(SIGINT, SIG_DFL);
                     signal(SIGQUIT, SIG_DFL);
+
+                    openf(inrd, 0, O_RDONLY);
+                    openf(outrd, 1, O_WRONLY|O_CREAT);
+                    /* Must be done last */
+                    openf(exrd, 2, O_WRONLY|O_CREAT);
+
                     /* Path search adapted from Univ of Washington's Minix */
                     path = getenv("PATH");  /* Get base of path string, or NULL */
                     eline[0] = '\0';
@@ -190,9 +308,10 @@ int main(int argc, char *argval[])
                     write(2, cmd, strlen(cmd));
                     write(2, "?\n", 2);      /* Say we can't exec */
                     exit(1);
-                }                                   /* Parent is in context */
-                wait(0);                    /* Parent waits for completion */
-                kill(pid, SIGKILL);         /* then kills child process */
+                }
+                /* Wait for the child */
+                if (!bg)
+                    while(waitpid(pid, NULL, 0) != pid && errno == EINTR);
             }
         }
     }

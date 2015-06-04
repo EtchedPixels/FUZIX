@@ -102,12 +102,10 @@ fdsetup:
 	sta	<FDCTRK		; reset track register
 	pshs	x,y
 	cmpa	TRACK,x		; target track
-;
-;	FIXME: what have we screwed up here so this always branches ???
-;
-;	beq	fdiosetup
+	beq	fdiosetup
 
-	sta	<FDCTRK		; target
+	lda	TRACK,x
+	sta	<FDCDATA	; target
 	;
 	;	So we can verify
 	;
@@ -155,15 +153,15 @@ noprecomp:
 	sty	nmivector	; so our NMI handler will clean up
 	ldy	#0		; timeout handling
 	orcc	#0x50		; irqs off or we'll miss bytes
-	sta	<FDCREG		; issue the command
-	nop			; give the FDC a moment to think
-	exg	a,a
-	exg	a,a
 	ldb	DIRECT,x
 	cmpb	#0x01		; read ?
 	beq	fdio_in
 	cmpb	#0x02
-	beq	wait_drq	; write
+	beq	fdio_out	; write
+	sta	<FDCREG		; issue the command
+	nop			; give the FDC a moment to think
+	exg	a,a
+	exg	a,a
 ;
 ;	Status registers
 ;
@@ -176,9 +174,14 @@ fdxferdone:
 ;
 ;	Relies on B being 2...
 ;
+fdio_out:
+	sta	<FDCREG		; issue the command
+	ldx	DATA,x		; get the data pointer
+	lda	,x+		; otherwise we don't have time
+				; to fetch it
 wait_drq:
-	bitb	<FDCREG
-	bne	drq_on
+	ldb	<0xFF23		; check for DRQ the fastest way we can
+	bmi	drq_go		; go go go...
 	leay	-1,y
 	bne	wait_drq
 	;
@@ -193,42 +196,47 @@ wait_drq:
 ;
 ;	Begin the actual copy to disk
 ;
-drq_on:
-	ldx	DATA,x
-	lda	,x+
-	bra	drq_go
 drq_loop:
 	sync
 drq_go:
 	sta	<FDCDATA
+	ldb	<0xFF22		; clear the FIR (PIA1DB)
 	lda	,x+
-	bra	drq_loop
+	bra	drq_loop	; exit is via NMI
 
 ;
 ;	Read from the disk
 ;
 fdio_in:
+	sta	<FDCREG		; issue the command
 	ldx	DATA,x
 fdio_dwait:
-	ldb	<FDCREG
-	bitb	#0x02
-	bne	fdio_go
+	ldb	<0xFF23		; wait on the PIA not fd regs.. quicker
+	bmi	fdio_go
+;
+;	Not ready, go round again
+;
 	leay	-1,y
 	bne	fdio_dwait
+;
+;	FIXME: do error recovery at some point (reset/poll)
+;
 	ldb	fdcctrl
 	stb	<FDCCTRL
 	lda	#0xff
 	rts
-;
-;	Now do the data
-;
-fdio_loop:
-	sync
+
 fdio_go:
+	lda	<FDCDATA	; get the data first
+	ldb	<0xFF22		; clear FIR
+	sta	,x+		; store the received byte
+fdio_loop:
+	sync			; stall for FIR
 	ldb	<0xFF22		; clear the FIR (PIA1DB)
 	lda	<FDCDATA
 	sta	,x+
-	bra	fdio_loop
+	bra	fdio_loop	; NMI terminates this
+
 
 ;
 ;	PIA management
@@ -320,7 +328,7 @@ _fd_operation:
 	orcc	#0x40		; Make sure FIR is off
 	jsr	piasave
 	ldy	6,s		; Drive struct
-	tst	,y+		; User or kernel ?
+	tst	,x+		; User or kernel ?
 	beq	fd_op_k
 	jsr	map_process_always
 fd_op_k:
@@ -412,4 +420,4 @@ pia_stash:
 	.byte	0
 	.byte	0
 _fd_tab:
-	.byte	0,0,0,0
+	.byte	0xFF,0xFF,0xFF,0xFF
