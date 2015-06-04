@@ -66,7 +66,7 @@ int  PROC findfwd(char  *pattern,int  start,int  endp);
 int  PROC fixcore(int  *topp);
 void PROC fixmarkers(int  base,int  offset);
 int  PROC fixupline(int  dft);
-int  PROC format(char  *out,unsigned short  c);
+int  PROC format(char  *out,unsigned c);
 int  PROC fseekeol(int  origin);
 int  PROC gcount(void);
 int  PROC getKey(void);
@@ -158,7 +158,7 @@ int  PROC writefile(void);
 int  PROC writeline(int  y,int  x,int  start);
 int  PROC zdraw(char  code);
 int  PROC zerostack(struct  undostack *u);
-void main(int  argc,char  * *argv);
+void main(int  argc,char *argv[]);
 void PROC initcon(void);
 void PROC fixcon(void);
 #endif  /*_PROTO_D*/                   
