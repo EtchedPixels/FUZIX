@@ -48,8 +48,13 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	irqflags_t irq;
 	if (minor == 1) {
+		/* We need a better way generally to handle keyboard v
+		   VT */
+		irq = di();
 		vtoutput(&c, 1);
+		irqrestore(irq);
 	} else
 		*uart_data = c;	/* Data */
 }
