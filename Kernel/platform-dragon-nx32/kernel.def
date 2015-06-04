@@ -8,6 +8,8 @@ U_DATA_STASH                equ 0xFC00       ; FC00-FEFF
 VIDEO_BASE		    equ 0x0400	     ; 6K for the display
 VIDEO_END		    equ 0x1C00
 
+PROGBASE                    equ 0x8000       ; programs and data start here
+
 ; Have these defined so that lowlevel-6809.s can be used as-is
 SAM_USER macro
 	endm
