@@ -129,12 +129,12 @@ void create_init(void)
 #define BOOTDEVICENAMES "" /* numeric parsing only */
 #endif
 
-uint16_t bootdevice(const char *devname)
+uint16_t bootdevice(const uint8_t *devname)
 {
 	bool match = true;
 	unsigned int b = 0, n = 0;
-	const char *p, *bdn = BOOTDEVICENAMES;
-	char c, pc;
+	const uint8_t *p, *bdn = (const uint8_t *)BOOTDEVICENAMES;
+	uint8_t c, pc;
 
 	/* skip spaces at start of string */
 	while(*devname == ' '){
@@ -194,6 +194,7 @@ uint16_t bootdevice(const char *devname)
 		case 0:
 		case '\n':
 		case '\r':
+		 /* FIXME: space trailing copy the rest into init args */
 		case ' ':
 			break;
 		default:
@@ -209,14 +210,14 @@ uint16_t bootdevice(const char *devname)
 uint16_t get_root_dev(void)
 {
 	uint16_t rd = BAD_ROOT_DEV;
-	char bootline[10];
+	uint8_t bootline[10];
 
 	if (cmdline && *cmdline)
 		rd = bootdevice(cmdline);
 
 	while(rd == BAD_ROOT_DEV){
 		kputs("bootdev: ");
-		udata.u_base = (uint8_t*)&bootline;
+		udata.u_base = bootline;
 		udata.u_sysio = 1;
 		udata.u_count = sizeof(bootline)-1;
 		udata.u_euid = 0;		/* Always begin as superuser */
@@ -245,7 +246,7 @@ void fuzix_main(void)
 
 	tty_init();
 
-	if (d_open(TTYDEV, O_NOCTTY) != 0)
+	if (d_open(TTYDEV, 0) != 0)
 		panic("no tty");
 
 	/* Sign on messages */
