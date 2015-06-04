@@ -101,7 +101,26 @@ extern void devide_read_data(void);
 extern uint8_t devide_transfer_sector(void);
 extern int devide_flush_cache(void);
 
+extern void devide_write_data(void);
+extern void devde_read_data(void);
+
 #ifndef IDE_REG_INDIRECT
+#ifdef IDE_IS_MMIO
+#define ide_reg_control *((volatile uint8_t *)IDE_REG_CONTROL)
+#define ide_reg_command *((volatile uint8_t *)IDE_REG_COMMAND)
+#define ide_reg_data 	*((volatile uint8_t *)IDE_REG_DATA)
+#define ide_reg_devhead *((volatile uint8_t *)IDE_REG_DEVHEAD)
+#define ide_reg_error	*((volatile uint8_t *)IDE_REG_ERROR)
+#define ide_reg_features *((volatile uint8_t *)IDE_FEATURES)
+#define ide_reg_lba_0	*((volatile uint8_t *)IDE_REG_LBA_0)
+#define ide_reg_lba_1	*((volatile uint8_t *)IDE_REG_LBA_1)
+#define ide_reg_lba_2	*((volatile uint8_t *)IDE_REG_LBA_2)
+#define ide_reg_lba_3	*((volatile uint8_t *)IDE_REG_LBA_3)
+#define ide_reg_sec_count *((volatile uint8_t *)IDE_REG_SEC_COUNT)
+#define ide_reg_status	*((volatile uint8_t *)IDE_REG_STATUS)
+
+#else /* !MMIO */
+
 #ifdef IDE_REG_ALTSTATUS
 __sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
 #endif
@@ -119,7 +138,7 @@ __sfr __at IDE_REG_LBA_2     ide_reg_lba_2;
 __sfr __at IDE_REG_LBA_3     ide_reg_lba_3;
 __sfr __at IDE_REG_SEC_COUNT ide_reg_sec_count;
 __sfr __at IDE_REG_STATUS    ide_reg_status;
-#endif
+#endif /* MMIO */
 #endif /* IDE_REG_INDIRECT */
-
+#endif /* IDE_PRIVAYTE */
 #endif

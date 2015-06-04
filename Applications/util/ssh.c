@@ -153,6 +153,8 @@ int main(int argc, char *argval[])
     signal(SIGQUIT, SIG_IGN);
 
     if (login_sh) {
+	if (!getenv("PATH"))
+	    putenv("PATH=/bin");
 	home = getenv("HOME");
 	if (!home) putenv("HOME=/");
 	chdir(getenv("HOME"));

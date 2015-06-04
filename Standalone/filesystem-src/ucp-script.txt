@@ -26,7 +26,7 @@ chmod 0755 include
 mkdir share
 chmod 0755 share
 cd lib
-bget usr-files/lib/liberror.txt
+bget ../../Library/libs/liberror.txt
 chmod 0644 liberror.txt
 
 cd /var

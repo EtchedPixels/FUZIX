@@ -13,7 +13,7 @@ static struct __dirent *dnext(struct _dir *dir)
 {
         if (dir->next == dir->last) {
                 int l = read(dir->d.dd_fd, dir->buf, sizeof(dir->buf));
-                if (l == 0)
+                if (l <= 0)
                         return NULL;
                 l /= 32;
                 dir->last = l;

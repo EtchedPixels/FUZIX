@@ -5,6 +5,9 @@
 		.module dragon
 
 		; exported
+		.globl _mpi_present
+		.globl _mpi_set_slot
+		.globl _cart_hash
 
 		; imported
 		.globl unix_syscall_entry
@@ -109,24 +112,73 @@ _program_vectors:
 	    rts
 
 ;
+;	Helpers for the MPI and Cartridge Detect
+;
+
+;
+;	oldslot = mpi_set_slot(uint8_t newslot)
+;
+_mpi_set_slot:
+	tfr b,a
+	ldb 0xff7f
+	sta 0xff7f
+	rts
+;
+;	int8_t mpi_present(void)
+;
+_mpi_present:
+	lda 0xff7f	; Save bits
+	ldb #0xff	; Will get back 33 from an MPI cartridge
+	stb 0xff7f	; if the emulator is right on this
+	ldb 0xff7f
+	cmpb #0x33
+	bne nompi
+	clr 0xff7f	; Switch to slot 0
+	ldb 0xff7f
+	bne nompi
+	incb
+	sta 0xff7f	; Our becker port for debug will be on the default
+			; slot so put it back for now
+	rts		; B = 0
+nompi:	ldb #0
+	sta 0xff7f	; Restore bits just in case
+	rts
+
+;
+;	uint16_t cart_hash(void)
+;
+_cart_hash:
+	pshs cc
+	orcc #0x10
+	ldx #0xC000
+	ldd #0
+	clr $FFBE	; Map cartridge
+hashl:
+	addd ,x++
+	cmpx #0xC200
+	bne hashl
+	tfr d,x
+	clr $FFBF	; Return to normality
+	puls cc,pc
+;
 ;	FIXME:
 ;
 firq_handler:
 badswi_handler:
 	    rti
 
-; outchar: Simple writing to video memory
-; FIXME: bank switching ???
+;
+;	debug via printer port
+;
 outchar:
-	    pshs x,d,pc
-	    sta outbuf
-	    ldx #outbuf
-	    lda #1
-	    pshs a
-	    jsr _vtoutput
-	    puls x,d,pc
+	    sta 0xFF02
+	    lda 0xFF20
+	    ora #0x02
+	    sta 0xFF20
+	    anda #0xFD
+	    sta 0xFF20
+	    rts
 
 	    .area .common
 
-outbuf:	    .db 0
 _need_resched: .db 0

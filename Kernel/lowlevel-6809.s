@@ -585,11 +585,18 @@ ___ashlsi3:
 	; Shift by 16
 	ldu	2,x
 	stu	,x
+	ldu	#0
+	stu	2,x
 try8:
 	cmpb	#8
 	blt	try_rest
 	subb	#8
 	; Shift by 8
+	ldu	1,x
+	stu	,x
+	lda	3,x
+	sta	2,x
+	clr	3,x
 
 try_rest:
 	tstb

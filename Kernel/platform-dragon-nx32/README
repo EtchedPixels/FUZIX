@@ -68,7 +68,6 @@ Quick build instructions
 make -C Kernel TARGET=dragon-nx32
 
 # 2. Build the libraries
-make -C Library tools/syscall_6809
 make -C Library/libs -f Makefile.6809
 
 # 3. Build the utils

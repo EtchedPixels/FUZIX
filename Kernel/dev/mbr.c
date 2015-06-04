@@ -73,7 +73,7 @@ void mbr_parse(char letter)
 			break;
 		    /* we include all primary partitions but we deliberately knobble the size in 
 		       order to prevent catastrophic accidents */
-		    br->partition[i].lba_count = cpu_to_le32(2);
+		    br->partition[i].lba_count = cpu_to_le32(2L);
 		    /* fall through */
 		default:
 		    /* Regular partition: In EBRs these are relative to the EBR (not the disk, nor

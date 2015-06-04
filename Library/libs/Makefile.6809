@@ -59,7 +59,7 @@ OBJ_C = $(SRC_C:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib $(OBJ_CRT0)
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0)
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -74,9 +74,18 @@ syslib$(PLATFORM).lib: syscall.l libc.l
 	$(AR) -c syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
-fuzix$(PLATFORM)/syslib.l:
-	../tools/syscall_$(PLATFORM)
+fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
+	$<
 	make -C fuzix$(PLATFORM)
+
+../tools/syscall_$(PLATFORM): ../tools/syscall_$(PLATFORM).c
+	make -C .. tools/syscall_$(PLATFORM)
+
+liberror.txt: ../tools/liberror
+	$< -X > $@
+
+../tools/liberror: ../tools/liberror.c
+	make -C .. tools/liberror
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
@@ -92,6 +101,6 @@ $(OBJ_HARD):%.o: %.c
 
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
-	libc$(PLATFORM).a
+	libc$(PLATFORM).a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
