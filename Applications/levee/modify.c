@@ -138,7 +138,7 @@ chop(int start, int *endd, bool visual, bool *query)
 /*>>>>
     bool ok;
   <<<<*/
-    char dest[DSIZE];
+    static char dest[DSIZE];
     register int len, dlen;
     
     retval = -1;

@@ -149,7 +149,7 @@ static const char *execs(const char *ap, const char *t[])
 	trim(p = curstak());
 
 	sigchk();
-	execve(p, &t[0], (const char **)xecenv);
+	execve(p, (char**) &t[0], (char **)xecenv);
 	switch (errno) {
 	case ENOEXEC:
 		flags = 0;

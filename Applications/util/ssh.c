@@ -166,7 +166,7 @@ int main(int argc, char *argval[])
     cprompt = (getuid() == 0) ? "ssh# " : "ssh$ ";
 
     for (;;) {
-        const char **argp = arg;
+        char **argp = arg;
         for (i = 0; i < MAX_ARGS; i++)
             *argp++ = NULL;
         argp = arg;
