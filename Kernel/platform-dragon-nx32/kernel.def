@@ -11,6 +11,14 @@ VIDEO_END		    equ 0x1C00
 IDEDATA			    equ 0xFF50
 IDEDATA_L		    equ 0xFF58
 
+SPIDATA			    equ 0xFF6C
+SPISTATUS		    equ SPIDATA + 1
+SPICTRL			    equ SPISTATUS
+SPICLK			    equ SPICTRL + 1
+SPISIE			    equ SPICLK + 1
+
+SPICS			    equ 0x01	     ; hardcode SEL0 for now
+
 PROGBASE                    equ 0x8000       ; programs and data start here
 
 ; Have these defined so that lowlevel-6809.s can be used as-is
