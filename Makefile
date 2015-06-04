@@ -26,15 +26,15 @@ ucp.result = bin/ucp
 
 filesystem.result = filesystem-$(PLATFORM).img
 
-include $(BUILD)/_head.mk
+include $(BUILD)/bake.mk
 include $(BUILD)/platforms/$(PLATFORM).mk
-include $(BUILD)/standard.rules.mk
+include $(BUILD)/rules/standard.rules.mk
 include $(TOP)/Standalone/build.mk
 include $(TOP)/Library/build.mk
+include $(TOP)/Library/tests/build.mk
 include $(TOP)/Applications/build.mk
 include $(TOP)/Applications/V7/cmd/sh/build.mk
 include $(TOP)/Applications/levee/build.mk
 include $(TOP)/Standalone/filesystem-src/build.mk
-include $(BUILD)/_tail.mk
 
-all: standalones filesystem
+all: tests standalones filesystem

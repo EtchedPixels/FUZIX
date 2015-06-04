@@ -23,7 +23,7 @@ CRT = crt0_msp430x.s
 
 # This is a generic gcc platform.
 
-include $(BUILD)/targetgcc.rules.mk
+include $(BUILD)/rules/targetgcc.rules.mk
 
 # Extra, platform-specific libc source files (relative to Library/libs).
 

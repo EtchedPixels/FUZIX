@@ -12,7 +12,7 @@ CRT = crt0_6502.s
 
 # This platform uses cc65.
 
-include $(BUILD)/cc65.rules.mk
+include $(BUILD)/rules/cc65.rules.mk
 
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns

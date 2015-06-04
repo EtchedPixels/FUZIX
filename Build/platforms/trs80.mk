@@ -12,7 +12,7 @@ CRT = crt0.s
 
 # This platform uses sdcc.
 
-include $(BUILD)/sdcc.rules.mk
+include $(BUILD)/rules/sdcc.rules.mk
 
 # Extra, platform-specific libc source files (relative to Library/libs).
 
