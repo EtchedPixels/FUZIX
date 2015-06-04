@@ -213,21 +213,29 @@ arg_t _times(void)
 brk (addr)                       Function 30
 char *addr;
 ********************************************/
-#define addr (char *)udata.u_argn
+#define addr (uaddr_t)udata.u_argn
 
 arg_t _brk(void)
 {
-	/* FIXME: when we start building binaries with the stack embedded in them
-	   they will need a different test.. */
-	/* Don't allow break to be set past user's stack pointer */
-    /*** St. Nitschke allow min. of 512 bytes for Stack ***/
-	if (addr >= (char *) brk_limit()) {
+	/* Don't allow break to be set outside of the range the platform
+	   permits. For most platforms this is within 512 bytes of the
+	   stack pointer
+
+	   FIXME: if we get more complex mapping rule types then we may
+	   need to make this something like  if (brk_valid(addr)) so we
+	   can keep it portable */
+
+	if (addr >= brk_limit()) {
 		kprintf("%d: out of memory\n", udata.u_ptab->p_pid);
 		udata.u_error = ENOMEM;
-		return (-1);
+		return -1;
 	}
-	udata.u_break = (uaddr_t) addr;
-	return (0);
+	/* If we have done a break that gives us more room we must zero
+	   the extra as we no longer guarantee it is clear already */
+	if (addr > udata.u_break)
+		uzero(udata.u_break, addr - udata.u_break);
+	udata.u_break = addr;
+	return 0;
 }
 
 #undef addr

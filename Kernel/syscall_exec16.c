@@ -194,9 +194,9 @@ arg_t _execve(void)
 		progptr += bin_size;
 	}
 
-	/* Should be smarter on the uzero: bank align the clearance */
-	// zero all remaining process memory above the last block loaded.
-	uzero((uint8_t *)progptr, top - progptr);
+	/* Wipe the memory in the BSS. We don't wipe the memory above
+	   that on 8bit boxes, but defer it to brk/sbrk() */
+	uzero((uint8_t *)progptr, progptr + bss);
 
 	udata.u_break = (int) progptr + bss;	//  Set initial break for program
 

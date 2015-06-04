@@ -369,7 +369,7 @@ typedef struct u_data {
     uint16_t    u_page2;        /* Process page data (equal to u_ptab->p_page2) */
     bool        u_insys;        /* True if in kernel */
     uint8_t     u_callno;       /* sys call being executed. */
-    void *      u_syscall_sp;   /* Stores SP when process makes system call */
+    uaddr_t     u_syscall_sp;   /* Stores SP when process makes system call */
     susize_t    u_retval;       /* Return value from sys call */
     int16_t     u_error;        /* Last error number */
     void *      u_sp;           /* Stores SP when process is switchped */
