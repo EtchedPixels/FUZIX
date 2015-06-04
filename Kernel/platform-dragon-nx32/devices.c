@@ -11,6 +11,8 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <devsd.h>
+#include <device.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -46,5 +48,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+    if (spi_setup())
+        devsd_init();
     devide_init();
 }
