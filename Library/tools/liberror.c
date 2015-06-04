@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   int swizzle = 0;
   int i;
   
-  if (argc > 1 && strcmp(argv[1], "-x") == 0)
+  if (argc > 1 && strcmp(argv[1], "-X") == 0)
     swizzle = 1;
 
   buf[0] = ERRORS;
