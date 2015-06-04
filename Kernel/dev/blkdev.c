@@ -57,7 +57,7 @@ int blkdev_open(uint8_t minor, uint16_t flags)
 {
     uint8_t drive, partition;
 
-    flags; /* unused */
+    used(flags);
 
     drive = minor >> 4;
     partition = minor & 0x0F;
@@ -136,21 +136,21 @@ xferfail:
 
 int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    flag; /* not used */
+    used(flag); /* not used */
     blk_op.is_read = true;
     return blkdev_transfer(minor, rawflag);
 }
 
 int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    flag; /* not used */
+    used(flag); /* not used */
     blk_op.is_read = false;
     return blkdev_transfer(minor, rawflag);
 }
 
 int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
 {
-    data; /* unused */
+    used(data); /* unused */
 
     if (request != BLKFLSBUF)
 	return -1;
@@ -186,7 +186,7 @@ void blkdev_scan(blkdev_t *blk, uint8_t flags)
 {
     uint8_t letter = 'a' + (blk - blkdev_table);
 
-    flags; /* not used */
+    used(flags); /* not used */
 
     blk_op.blkdev = blk;
     mbr_parse(letter);
