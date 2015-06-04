@@ -1,0 +1,12 @@
+# Inittab
+id:3:initdefault:
+# Start a shell first
+si::sysinit:/bin/sh
+# Run level s - a shell
+is:s:respawn:/bin/sh
+# Start up
+rc::bootwait:/etc/rc
+# Terminals
+01:3:respawn:getty /dev/tty1
+02:3:off:getty /dev/tty2
+03:3:off:getty /dev/tty3
