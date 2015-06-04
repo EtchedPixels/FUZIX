@@ -6,10 +6,8 @@
 
 
 struct sockaddrs {
-	uint32_t laddr;
-	uint16_t lport;
-	uint32_t daddr;
-	uint16_t dport;
+	uint32_t addr;
+	uint16_t port;
 };
 
 struct socket
@@ -26,11 +24,17 @@ struct socket
 #define SS_CONNECTED		5
 #define SS_ACCEPTWAIT		6
 	uint8_t s_data;
-	struct sockaddrs s_addr;
+	struct sockaddrs s_addr[3];
+#define SADDR_SRC	0
+#define SADDR_DST	1
+#define SADDR_TMP	2
+	uint8_t s_flag;
+#define SFLAG_ATMP	1		/* Use SADDR_TMP */
 };
 
 struct socket sockets[NSOCKET];
 uint32_t our_address;
+static uint16_t nextauto = 5000;
 
 static int is_socket(inoptr ino)
 {
@@ -81,7 +85,12 @@ static int sock_pending(struct socket *l)
 
 static int sock_autobind(struct socket *s)
 {
-	/* TODO */
+	static struct sockaddrs sa;
+	sa.addr = INADDR_ANY;
+//	do {
+//		sa.port = nextauto++;
+//	} while(sock_find(SADDR_SRC, &sa));
+	memcpy(&s->s_addr[SADDR_SRC], &sa, sizeof(sa));
 	s->s_state = SS_BOUND;
 	return 0;
 }
@@ -130,6 +139,19 @@ static int sa_getremote(struct sockaddr_in *u, struct sockaddr_in *k)
 		udata.u_error = EACCES;
 		return -1;
 	}
+	return 0;
+}
+
+static int sa_put(struct socket *s, int type, struct sockaddr_in *u)
+{
+	struct sockaddrs *sa = &s->s_addr[type];
+	static struct sockaddr_in sin;
+	memset(&sin, 0, sizeof(sin));
+	sin.sin_addr.s_addr = sa->addr;
+	sin.sin_port = sa->port;
+	sin.sin_family = AF_INET;
+	if (u && uput(u, &sin, sizeof(sin)) == -1)
+		return -1;
 	return 0;
 }
 
@@ -266,13 +288,16 @@ arg_t _listen(void)
 	return 0;
 }
 
+#undef fd
+#undef qlen
+
 /*******************************************
 bind(fd, addr)           Function ??
 int fd;
 struct sockaddr_*in addr;
 ********************************************/
 #define fd   (int16_t)udata.u_argn
-#define addr (struct sockaddr_in *)udata.u_argn1
+#define uaddr (struct sockaddr_in *)udata.u_argn1
 
 arg_t _bind(void)
 {
@@ -282,15 +307,21 @@ arg_t _bind(void)
 		return -1;
 	if (s->s_state != SS_UNCONNECTED)
 		return -1;
-	if (sa_getlocal(addr, &sin) == -1)
+	if (sa_getlocal(uaddr, &sin) == -1)
 		return -1;
 	if (sock_find_local(sin.sin_addr.s_addr, sin.sin_port)) {
 		udata.u_error = EADDRINUSE;
 		return -1;
 	}
+	s->s_addr[SADDR_SRC].addr = sin.sin_addr.s_addr;
+	s->s_addr[SADDR_SRC].port = sin.sin_port;
+
 	s->s_state = SS_BOUND;
 	return 0;
 }
+
+#undef fd
+#undef uaddr
 
 /*******************************************
 connect(fd, addr)           Function ??
@@ -298,7 +329,7 @@ int fd;
 struct sockaddr_*in addr;
 ********************************************/
 #define fd   (int16_t)udata.u_argn
-#define addr (struct sockaddr_in *)udata.u_argn1
+#define uaddr (struct sockaddr_in *)udata.u_argn1
 
 arg_t _connect(void)
 {
@@ -315,8 +346,10 @@ arg_t _connect(void)
 		return -1;
 	
 	if (s->s_state == SS_BOUND) {
-		if (sa_getremote(addr, &sin) == -1)
+		if (sa_getremote(uaddr, &sin) == -1)
 			return -1;
+		s->s_addr[SADDR_DST].addr = sin.sin_addr.s_addr;
+		s->s_addr[SADDR_DST].port = sin.sin_port;
 		s->s_state = SS_CONNECTING;
 		/* Protocol op to kick off */
 	}
@@ -329,6 +362,9 @@ arg_t _connect(void)
 	} while (s->s_state == SS_CONNECTING);
 	return sock_error(s);
 }
+
+#undef fd
+#undef uaddr
 
 /*******************************************
 accept(fd, addr)           Function ??
@@ -364,13 +400,16 @@ arg_t _accept(void)
 	return nfd;
 }
 
+#undef fd
+
 /*******************************************
 getsockaddrs(fd, addr)           Function ??
 int fd;
 struct sockaddr_*in addr;
 ********************************************/
 #define fd   (int16_t)udata.u_argn
-#define addrs (uint8_t *)udata.u_argn1
+#define type (uint16_t)udata.u_argn1
+#define uaddr (struct sockaddr_in *)udata.u_argn1
 
 arg_t _getsockaddrs(void)
 {
@@ -378,6 +417,89 @@ arg_t _getsockaddrs(void)
 
 	if (s == NULL)
 		return -1;
-	return uput(&s->s_addr, addrs, sizeof(struct sockaddrs));
+	if (type > 1) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	return sa_put(s, type, uaddr);
 }
 
+#undef fd
+#undef type
+#undef uaddr
+
+/* FIXME: do we need the extra arg/flags or can we fake it in user */
+
+/*******************************************
+sendto(fd, buf, len, addr, flags)           Function ??
+int fd;
+char *buf;
+susize_t len;
+struct sockaddr_*in addr;
+int flags;
+********************************************/
+#define d (int16_t)udata.u_argn
+#define buf (char *)udata.u_argn1
+#define nbytes (susize_t)udata.u_argn2
+#define uaddr (struct sockaddr_in *)udata.u_argn3
+#define flags (uint16_t)udata.u_argn4
+
+arg_t _sendto(void)
+{
+	struct socket *s = sock_get(d, NULL);
+	struct sockaddr_in sin;
+
+	if (s == NULL)
+		return -1;
+	/* Save the address and then just do a 'write' */
+	if (s->s_type != SOCKTYPE_TCP) {
+		/* Use the address in atmp */
+		s->s_flag |= SFLAG_ATMP;
+		if (sa_getremote(uaddr, &sin) == -1)
+			return -1;
+		s->s_addr[SADDR_TMP].addr = sin.sin_addr.s_addr;
+		s->s_addr[SADDR_TMP].port = sin.sin_port;
+	}
+	return _write();
+}
+
+#undef d
+#undef buf
+#undef nbytes
+#undef uaddr
+#undef flags
+
+/*******************************************
+recvfrom(fd, buf, len, addr, flags)           Function ??
+int fd;
+char *buf;
+susize_t len;
+struct sockaddr_*in addr;
+int flags
+********************************************/
+#define d (int16_t)udata.u_argn
+#define buf (char *)udata.u_argn1
+#define nbytes (susize_t)udata.u_argn2
+#define uaddr (struct sockaddr_in *)udata.u_argn3
+#define flags (uint16_t)udata.u_argn4
+
+arg_t _recvfrom(void)
+{
+	struct socket *s = sock_get(d, NULL);
+	int ret;
+
+	if (s == NULL)
+		return -1;
+	ret = _read();
+	if (ret < 0)
+		return ret;
+	if (sa_put(s, SADDR_TMP, uaddr))
+		return -1;
+	return ret;
+}
+
+#undef d
+#undef buf
+#undef nbytes
+#undef uaddr
+#undef flags
