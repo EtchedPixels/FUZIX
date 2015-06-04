@@ -17,8 +17,6 @@
 #include <devide.h>
 #include <blkdev.h>
 
-static void devide_write_data(void);
-
 bool devide_wait(uint8_t bits)
 {
     uint8_t status;
@@ -95,7 +93,7 @@ int devide_flush_cache(void)
     drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
 
     /* check drive has a cache and was written to since the last flush */
-    if(blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)
+    if((blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY))
 		                 == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
 	devide_writeb(ide_reg_lba_3, ((drive == 0) ? 0xE0 : 0xF0)); // select drive
 
@@ -123,6 +121,11 @@ int devide_flush_cache(void)
 /* since it must be able to bank switch to the user memory bank.            */
 /****************************************************************************/
 #ifndef IDE_REG_INDIRECT
+
+#ifndef IDE_IS_MMIO
+
+/* Port I/O: Currently Z80 only */
+
 COMMON_MEMORY
 
 void devide_read_data(void) __naked
@@ -151,7 +154,7 @@ swapin:
     __endasm;
 }
 
-static void devide_write_data(void) __naked
+void devide_write_data(void) __naked
 {
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
@@ -176,4 +179,5 @@ swapout:
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
+#endif
 #endif
