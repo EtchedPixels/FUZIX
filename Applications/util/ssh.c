@@ -293,7 +293,18 @@ int main(int argc, char *argval[])
                     umask(i);
             }
         }
-
+        else if (strcmp(cmd, "fg") == 0) {
+            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
+                write(2, "fg: can't continue\n", 19);
+            else
+                while(pidwait(pid, 0) != pid);
+        }
+        else if (strcmp(cmd, "bg") == 0) {
+            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
+                write(2, "bg: can't continue\n", 19);
+            else
+                lastfg = -1;
+        }
 #ifdef SSH_EXPENSIVE
         /* Check for User request to kill a process */
         else if (strcmp(cmd, "kill") == 0) {
@@ -314,18 +325,6 @@ int main(int argc, char *argval[])
                     perror("kill");
             }
         }
-        else if (strcmp(cmd, "fg") == 0) {
-            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
-                write(2, "fg: can't continue\n", 19);
-            else
-                while(pidwait(pid, 0) != pid);
-        }
-        else if (strcmp(cmd, "bg") == 0) {
-            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
-                write(2, "bg: can't continue\n", 19);
-            else
-                lastfg = -1;
-        }                
         else if (strcmp(cmd, "pwd") == 0) {
 	    if (getcwd(buf, 128)){
 	        char *ptr=&buf[strlen(buf)];
