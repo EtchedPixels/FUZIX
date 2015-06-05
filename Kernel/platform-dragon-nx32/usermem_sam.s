@@ -124,14 +124,23 @@ uputl:
 
 __uzero:
 	pshs y,cc
-	lda #0
 	ldy 5,s
 	orcc #0x10
 	jsr map_process_always
-uzloop:
+	tfr y,d
+	clra
+	lsrb		; odd count?
+	bcc evenc
 	sta ,x+
 	leay -1,y
+	beq zdone
+evenc:
+	clrb
+uzloop:
+	std ,x++
+	leay -2,y
 	bne uzloop
+zdone:
 	jsr map_kernel
 	ldx #0
 	puls y,cc,pc
