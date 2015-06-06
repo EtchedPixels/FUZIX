@@ -141,6 +141,10 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 			exit(1);
 		}
 	}
+	/* We need to force utmp closed otherwise we may end up fd sharing
+	   with our child and having our lseek() calls messed up. Or maybe
+	   it's time to support pread/pwrite ? */
+	endutent();
 	/* Let it complete if that is the instruction */
 	if (wait) {
 		while (waitpid(pid, NULL, 0) != pid);
@@ -619,8 +623,9 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	/* Don't leak utmp into the child */
 	endutent();
 
-	setgid(pwd->pw_gid);
-	setuid(pwd->pw_uid);
+	if (setgid(pwd->pw_gid) == -1 ||
+		setuid(pwd->pw_uid) == -1)
+			_exit(255);
 	signal(SIGINT, SIG_DFL);
 
 	/* setup user environment variables */

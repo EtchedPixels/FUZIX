@@ -117,7 +117,8 @@ redo:
         argptr++;
     *argout++ = 0;
     if (subst) {
-        char *n = getenv(p);
+        /* Ought to wrap this and handle $? $$ $* and $1 $2 ... */
+        char *n = getenv(p + 1);
         if (n)
             return n;
         else
@@ -229,13 +230,14 @@ int main(int argc, char *argval[])
     for (;;) {
         char **argp = arg;
         
-        pidwait(0, WNOHANG);
         
         
         for (i = 0; i < MAX_ARGS; i++)
             *argp++ = NULL;
         argp = arg;
         do {
+            pidwait(0, WNOHANG);
+            /* Also check for mail ?? */
             if (infd == 0)
                 write(1, cprompt, 5);
             if ((i = read(infd, buf, 127)) <= 0) {

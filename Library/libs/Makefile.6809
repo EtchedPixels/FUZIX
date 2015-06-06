@@ -4,12 +4,12 @@ AR = m6809-unknown-ar
 PLATFORM = 6809
 export PLATFORM
 CC_OPT = -c -Os -I../include -I../include/6502
-# for stuff that gives sdcc nightmares
+# for stuff that gives gcc nightmares
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -o
 SRC_CRT0 = crt0_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM = setjmp_6809.s
+SRC_ASM = setjmp_6809.s ashlsi3_6809.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
