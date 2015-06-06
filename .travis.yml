@@ -3,6 +3,7 @@ before_install:
     - wget --output-document=dependencies/cc65.zip https://github.com/cc65/cc65/archive/master.zip
     - (cd dependencies && unzip -q cc65.zip)
     - (cd dependencies/cc65-master && make > /dev/null && sudo make prefix=/usr/local)
+    - export PATH=$PATH:/usr/local/bin
 language: c
 script:
     - make PLATFORM=6502test -j4
