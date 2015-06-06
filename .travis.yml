@@ -5,5 +5,7 @@ before_install:
     - wget https://github.com/cc65/cc65/archive/master.zip
     - unzip -q master.zip
     - cd cc65-master && make > /dev/null && sudo make prefix=/usr/local
-script: "make PLATFORM=6502test -j4"
+language: c
+script:
+    - make PLATFORM=6502test -j4
 
