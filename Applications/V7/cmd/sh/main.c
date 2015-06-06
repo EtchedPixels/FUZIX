@@ -192,3 +192,7 @@ void Ldup(register int fa, register int fb)
 	close(fa);
 	fcntl(fb, F_SETFD, FD_CLOEXEC);
 }
+
+void gratuitous_call(void)
+{
+}
