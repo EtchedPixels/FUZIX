@@ -117,7 +117,7 @@ extern ARGPTR gchain;
 #define		BLK(x)	((BLKPTR)(x))
 #define		BYT(x)	((BYTPTR)(x))
 #define		STK(x)	((STKPTR)(x))
-#define		ADR(x)	((char*)(x))
+#define		ADR(x)	((char *)(x))
 
 /* stak stuff */
 #include	"stak.h"
