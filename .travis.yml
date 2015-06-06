@@ -1,10 +1,21 @@
+cache:
+    directory:
+        - dependencies
 before_install:
     - mkdir -p dependencies
-    - wget --output-document=dependencies/cc65.zip https://github.com/cc65/cc65/archive/master.zip
-    - (cd dependencies && unzip -q cc65.zip)
-    - (cd dependencies/cc65-master && make > /dev/null && sudo make prefix=/usr/local install)
+    - cd dependencies
+    - wget --output-document=cc65.zip https://github.com/cc65/cc65/archive/master.zip
+    - unzip -q cc65.zip
+    - (cd cc65-master && make > /dev/null && sudo make prefix=/usr/local install)
+    - wget --output-document=sdcc.tar.bz2 'http://downloads.sourceforge.net/project/sdcc/sdcc/3.4.0/sdcc-src-3.4.0.tar.bz2?r='
+    - tar xaf sdcc.tar.bz2
+    - (cd sdcc-3.4.0 && patch -p1 ../../Kernel/patches/SDCC)
+    - (cd sdcc-3.4.0 && ./configure --prefix=/usr/local --disable-pic14-port --disable-pic16-port)
+    - (cd sdcc-3.4.0 && make -j4 > /dev/null && sudo make install > /dev/null)
     - export PATH=$PATH:/usr/local/bin
+    - cd ..
 language: c
 script:
     - make PLATFORM=6502test -j4
+    - make PLATFORM=trs80 -j4
 
