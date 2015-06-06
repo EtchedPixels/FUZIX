@@ -17,7 +17,7 @@
  * d) `absstak' gives real address if needed
  */
 #define		relstak()	(staktop-stakbot)
-#define		absstak(x)	(stakbot+Rcheat(x))
+#define		absstak(x)	(stakbot+((intptr_t)(x)))
 #define		setstak(x)	(staktop=absstak(x))
 #define		pushstak(c)	(*staktop++=(c))
 #define		zerostak()	(*staktop=0)
@@ -36,7 +36,7 @@
 /* for local use only since it hands
  * out a real address for the stack top
  */
-//STKPTR locstak();
+/*STKPTR locstak();*/
 
 /* Will allocate the item being used and return its
  * address (safe now).
@@ -46,15 +46,15 @@
 /* For use after `locstak' to hand back
  * new stack top and then allocate item
  */
-//STKPTR endstak();
+/*STKPTR endstak();*/
 
 /* Copy a string onto the stack and
  * allocate the space.
  */
-//STKPTR cpystak();
+/*STKPTR cpystak();*/
 
 /* Allocate given ammount of stack space */
-//STKPTR getstak();
+/*STKPTR getstak();*/
 
 /* A chain of ptrs of stack blocks that
  * have become covered by heap allocation.
@@ -75,4 +75,4 @@ extern STKPTR stakbot;
 extern STKPTR staktop;
 
 /* Used with tdystak */
-//STKPTR savstak();
+/*STKPTR savstak();*/
