@@ -7,6 +7,7 @@ before_install:
     - wget --output-document=cc65.zip https://github.com/cc65/cc65/archive/master.zip
     - unzip -q cc65.zip
     - (cd cc65-master && make > /dev/null && sudo make prefix=/usr/local install)
+    - sudo apt-get --no-install-recommends build-dep sdcc -y
     - wget --output-document=sdcc.tar.bz2 'http://downloads.sourceforge.net/project/sdcc/sdcc/3.4.0/sdcc-src-3.4.0.tar.bz2?r='
     - tar xaf sdcc.tar.bz2
     - (cd sdcc-3.4.0 && patch -p1 < ../../Kernel/patches/SDCC)
