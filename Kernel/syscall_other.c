@@ -431,11 +431,13 @@ arg_t _uadmin(void)
 {
 	if (esuper())
 		return -1;
+	_sync();
 	/* Wants moving into machine specific files */
-	if (cmd == A_SHUTDOWN || cmd == A_REBOOT || cmd == A_DUMP) {
-		_sync();
+	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
 		trap_monitor();
-	}
+	if (cmd == A_REBOOT)
+		trap_reboot();
+
 	/* We don't do SWAPCTL yet */
 	udata.u_error = EINVAL;
 	return -1;
