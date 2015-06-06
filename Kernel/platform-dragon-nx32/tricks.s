@@ -259,7 +259,7 @@ fork_copy:
 	ldx #PROGBASE
 	ldu U_DATA__U_BREAK		; top of data
 	jsr copybank			; preserves A,B, clobbers X,U
-	ldx U_DATA__U_SP
+	ldx U_DATA__U_SYSCALL_SP
 	ldu U_DATA__U_TOP		; top of process memory
 	jsr copybank
 

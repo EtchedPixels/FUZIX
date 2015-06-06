@@ -196,7 +196,7 @@ arg_t _execve(void)
 
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
-	uzero((uint8_t *)progptr, progptr + bss);
+	uzero((uint8_t *)progptr, bss);
 
 	udata.u_break = (int) progptr + bss;	//  Set initial break for program
 

@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 extern char **environ;      /* Location of Envp from executable Header */
 
@@ -35,6 +36,16 @@ int bg;
 
 int infd;
 
+static void writes(int fd, const char *p)
+{
+    write(fd, p, strlen(p));
+}
+
+static void nl(int fd)
+{
+    write(fd, "\n", 1);
+}
+
 static void writeo(int i)
 {
     static char buf[3];
@@ -51,7 +62,7 @@ static void writenum(int fd, unsigned int n)
     int c = 0;
 
     do {
-        *--bp = n % 10;
+        *--bp = (n % 10) + '0';
         n /= 10;
         c++;
     } while(n);
@@ -66,6 +77,7 @@ static char *nextarg(void)
 {
     char *p;
     char **t;
+    uint8_t subst = 0;
 redo:
     p = argout;
     t = NULL;
@@ -83,6 +95,8 @@ redo:
         t = &outrd;
         argptr++;
     }
+    if (*argptr == '$')
+        subst = 1;
     while (*argptr != '\0') {
         if (!argstate) {
             if (isspace(*argptr))
@@ -102,6 +116,13 @@ redo:
     if (*argptr)
         argptr++;
     *argout++ = 0;
+    if (subst) {
+        char *n = getenv(p);
+        if (n)
+            return n;
+        else
+            return "";
+    }
     /* Redirections etc are pulled out of line */
     if (t) {
         *t = p;
@@ -138,6 +159,46 @@ static void openf(const char *p, int tfd, int mode)
     close(fd);
 }
 
+static pid_t lastfg = -1;
+
+static pid_t pidwait(pid_t want, int f)
+{
+    int status;
+    pid_t p = waitpid(0, &status, f);
+    if (p == -1)
+        return -1;
+
+    if (p != want) {
+        write(1, "[", 1);
+        writenum(1, p);
+        write(1, "] ", 2);
+        if (WIFEXITED(status)) {
+            write(1, "Exit ", 5);
+            writenum(1, WEXITSTATUS(status));
+            nl(1);
+            return p;
+        }
+    }
+    /* Silently for fg process */
+    if (WIFEXITED(status)) {
+        /* Set $? some day ? */
+        return p;
+    }
+    if (WIFSIGNALED(status)) {
+        writes(1, strsignal(WTERMSIG(status)));
+        if (WCOREDUMP(status))
+            write(1, "(core dumped)", 13);
+        nl(1);
+        return p;
+    }
+    if (WIFSTOPPED(status)) {
+        write(1, "Stopped\n", 7);
+        if (want == 0)
+            lastfg = want;
+    }
+    return p;
+}        
+    
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
@@ -167,6 +228,10 @@ int main(int argc, char *argval[])
 
     for (;;) {
         char **argp = arg;
+        
+        pidwait(0, WNOHANG);
+        
+        
         for (i = 0; i < MAX_ARGS; i++)
             *argp++ = NULL;
         argp = arg;
@@ -228,7 +293,18 @@ int main(int argc, char *argval[])
                     umask(i);
             }
         }
-
+        else if (strcmp(cmd, "fg") == 0) {
+            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
+                write(2, "fg: can't continue\n", 19);
+            else
+                while(pidwait(pid, 0) != pid);
+        }
+        else if (strcmp(cmd, "bg") == 0) {
+            if (lastfg == -1 || kill(lastfg, SIGCONT) == -1)
+                write(2, "bg: can't continue\n", 19);
+            else
+                lastfg = -1;
+        }
 #ifdef SSH_EXPENSIVE
         /* Check for User request to kill a process */
         else if (strcmp(cmd, "kill") == 0) {
@@ -242,7 +318,7 @@ int main(int argc, char *argval[])
             if (pid == 0 || pid == 1) {
                 write(2, "kill: can't kill process ", 25);
                 writenum(2, pid);
-                write(2, "\n", 1);
+                nl(2);
             } else {
                 stat = kill(pid, sig);
                 if (stat)
@@ -254,7 +330,7 @@ int main(int argc, char *argval[])
 	        char *ptr=&buf[strlen(buf)];
 	        *ptr++='\n';
 		*ptr=0;
-	        write(1, buf, strlen(buf));
+	        writes(1, buf);
 	    }
             else
                 write(1, "pwd: cannot get current directory\n",34);
@@ -307,13 +383,15 @@ int main(int argc, char *argval[])
                         execve(eline, (char**) argv, (char**) environ);
                     }
                     write(2, "ssh: ", 5);
-                    write(2, cmd, strlen(cmd));
+                    writes(2, cmd);
                     write(2, "?\n", 2);      /* Say we can't exec */
                     exit(1);
                 }
                 /* Wait for the child */
-                if (!bg)
-                    while(waitpid(pid, NULL, 0) != pid && errno == EINTR);
+                lastfg = pid;
+                if (!bg) {
+                    while(pidwait(pid, 0) != pid);
+                }
             }
         }
     }
