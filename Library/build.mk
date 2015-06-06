@@ -131,6 +131,7 @@ libc-functions.localsrcs += \
 	stdio0.c \
 	stime.c \
 	strncmp.c \
+	strsignal.c \
 	strtod.c \
 	strtol.c \
 	strtol.c \
@@ -237,4 +238,18 @@ $(call build, crt0, target-lib)
 
 binman.srcs = tools/binman.c
 $(call build, binman, host-exe)
+
+
+# Helper tool to generate the platform liberror.
+
+liberror-gen.srcs = tools/liberror.c
+$(call build, liberror-gen, host-exe)
+
+liberror.ext = txt
+liberror.srcs = $(liberror-gen.result)
+$(call build, liberror, nop)
+$(liberror.result): $(liberror-gen.result)
+	@echo LIBERROR $@
+	@mkdir -p $(dir $@)
+	$(hide) $(liberror-gen.result) $(liberror.flags) > $(liberror.result)
 

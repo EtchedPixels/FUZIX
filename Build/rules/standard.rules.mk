@@ -17,8 +17,6 @@ $1.objs ?= \
 	$$(patsubst %.s, $$($1.objdir)/%.$O, \
 		$$($1.abssrcs)))
 
-.SECONDARY: $$($1.objs)
-
 -include $$($1.deps)
 
 endef

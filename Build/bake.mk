@@ -30,4 +30,4 @@ absify = \
 tests:
 clean:
 .PHONY: tests clean
-
+.DELETE_ON_ERROR:

@@ -83,11 +83,11 @@ standard_device_nodes = \
 	/dev/zero  20444 1026 \
 	/dev/proc  20660 1027 \
 
-standard_files = \
-	/etc/issue              0644 $(TOP)/Standalone/filesystem-src/etc-files/issue \
-	/etc/motd               0644 $(TOP)/Standalone/filesystem-src/etc-files/motd \
-	/etc/passwd             0644 $(TOP)/Standalone/filesystem-src/etc-files/passwd \
-	/usr/lib/liberror.txt   0644 $(TOP)/Standalone/filesystem-src/usr-files/lib/liberror.txt \
+FILESYSTEM += \
+	/etc/issue              0644 Standalone/filesystem-src/etc-files/issue \
+	/etc/motd               0644 Standalone/filesystem-src/etc-files/motd \
+	/etc/passwd             0644 Standalone/filesystem-src/etc-files/passwd \
+	/usr/lib/liberror.txt   0644 $(liberror.result) \
 
 # Helper function which returns the source file part of the list above.
 get_source_files_from_list = \
@@ -96,10 +96,7 @@ get_source_files_from_list = \
 		)
 
 filesystem.ext = img
-filesystem.srcs = \
-	$(call get_source_files_from_list, $(FILESYSTEM)) \
-	$(abspath $(call get_source_files_from_list, $(standard_files)))
-
+filesystem.abssrcs = $(call get_source_files_from_list, $(FILESYSTEM))
 $(call build, filesystem, nop)
 
 $(filesystem.result): $(TOP)/Standalone/filesystem-src/populatefs.awk \
@@ -114,4 +111,5 @@ $(filesystem.result): $(TOP)/Standalone/filesystem-src/populatefs.awk \
 		| tee /tmp/out \
 		| $(ucp.result) $(filesystem.result) > /dev/null
 	$(hide) $(fsck.result) $(filesystem.result)
+
 
