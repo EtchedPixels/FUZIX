@@ -281,6 +281,8 @@ arg_t _waitpid(void)
 		return (-1);
 	}
 
+	/* FIXME: move this scan into the main loop and also error
+	   on a complete loop finding no matchi for pid */
 	/* See if we have any children. */
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status && p->p_pptr == udata.u_ptab
@@ -297,7 +299,7 @@ arg_t _waitpid(void)
 		chksigs();
 		if (udata.u_cursig) {
 			udata.u_error = EINTR;
-			return (-1);
+			return -1;
 		}
 		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_status == P_ZOMBIE
@@ -324,7 +326,8 @@ arg_t _waitpid(void)
 			break;
 		psleep(udata.u_ptab);
 	}
-	return 0;
+	udata.u_error = EINTR;
+	return -1;
 }
 
 #undef pid
