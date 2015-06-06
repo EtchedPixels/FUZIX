@@ -26,7 +26,7 @@ unsigned char partitiontable[512];
 typedef struct {
   int cmd;
   char *help;
-  void (*func)();
+  void (*func)(void);
 } Funcs;
 
 struct hd_geometry geometry;
