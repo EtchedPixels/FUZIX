@@ -325,6 +325,7 @@ extern int main(int c, const char *v[]);
 extern void chkpr(char eor);
 extern void settmp(void);
 extern void Ldup(register int fa, register int fb);
+extern void gratuitous_call(void);
 /* name.c */
 extern int syslook(char *w, SYSTAB syswds);
 extern void setlist(register ARGPTR arg, int xp);
