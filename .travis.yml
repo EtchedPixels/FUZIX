@@ -8,11 +8,9 @@ before_install:
     - unzip -q cc65.zip
     - (cd cc65-master && make > /dev/null && sudo make prefix=/usr/local install)
     - sudo apt-get --no-install-recommends install libboost-all-dev
-    - wget --output-document=sdcc.tar.bz2 'http://downloads.sourceforge.net/project/sdcc/sdcc/3.4.0/sdcc-src-3.4.0.tar.bz2?r='
-    - tar xaf sdcc.tar.bz2
-    - (cd sdcc-3.4.0 && patch -p1 < ../../Kernel/patches/SDCC)
-    - (cd sdcc-3.4.0 && ./configure --prefix=/usr/local --disable-pic14-port --disable-pic16-port)
-    - (cd sdcc-3.4.0 && make -j4 > /dev/null && sudo make install > /dev/null)
+    - git clone --depth 1 --branch patched https://github.com/davidgiven/sdcc.git
+    - (cd sdcc/sdcc && ./configure --prefix=/usr/local --disable-pic14-port --disable-pic16-port)
+    - (cd sdcc/sdcc && make -j4 > /dev/null && sudo make install > /dev/null)
     - export PATH=$PATH:/usr/local/bin
     - cd ..
 language: c
