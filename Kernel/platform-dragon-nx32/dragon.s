@@ -47,6 +47,7 @@ init_early:
 	stx 1
 	lda #0x7E
 	sta 0
+	sta 0x0071		; BASIC cold boot flag
 	rts
 
 init_hardware:
