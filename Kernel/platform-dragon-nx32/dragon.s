@@ -19,6 +19,7 @@
 
 		; exported debugging tools
 		.globl _trap_monitor
+		.globl _trap_reboot
 		.globl outchar
 		.globl _di
 		.globl _ei
@@ -77,10 +78,13 @@ init_hardware:
             .area .common
 
 _trap_reboot:
-_trap_monitor:
-	    cwai #0
-	    bra _trap_monitor
+	    orcc #0x10
+	    clr 0xFFBE
+	    jmp [0xFFFE]
 
+_trap_monitor:
+	    orcc #0x10
+	    bra _trap_monitor
 
 _di:
 	    tfr cc,b		; return the old irq state
