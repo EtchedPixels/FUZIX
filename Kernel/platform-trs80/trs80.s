@@ -31,6 +31,7 @@
 
             ; exported debugging tools
             .globl _trap_monitor
+            .globl _trap_reboot
             .globl outchar
 
             ; imported symbols

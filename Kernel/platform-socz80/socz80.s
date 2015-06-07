@@ -24,6 +24,7 @@
 
             ; exported debugging tools
             .globl _trap_monitor
+            .globl _trap_reboot
             .globl outchar
 
             ; imported symbols
@@ -65,6 +66,8 @@ tm_stack:
             .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 tm_stack_top:
 
+; For now both hit monitor
+_trap_reboot:
 _trap_monitor:
             ; stash SP
             ld (tm_user_sp), sp

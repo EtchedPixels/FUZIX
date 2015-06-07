@@ -30,7 +30,7 @@
 
             .globl _tty_inproc
             .globl unix_syscall_entry
-            .globl trap_illegal
+            .globl _trap_reboot
 	    .globl nmi_handler
 	    .globl null_handler
 
