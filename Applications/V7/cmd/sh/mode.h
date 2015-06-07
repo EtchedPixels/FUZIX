@@ -49,7 +49,6 @@ typedef struct namnod *NAMPTR;
  * are necessary, one for each context.
  */
 #define Lcheat(a)	(*(int *)&(a))
-#define Rcheat(a)	((int)(a))
 
 
 /* address puns for storage allocation */

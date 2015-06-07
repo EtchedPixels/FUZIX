@@ -80,7 +80,7 @@ void setargs(const char *argi[])
 	register const char **argp = argi;
 	register int argn = 0;
 
-	while (Rcheat(*argp++) != ENDARGS)
+	while (((intptr_t)(*argp++)) != ENDARGS)
 		argn++;
 
 	/* free old ones unless on for loop chain */
@@ -99,7 +99,7 @@ DOLPTR freeargs(DOLPTR blk)
 		argr = argblk->dolnxt;
 		if ((--argblk->doluse) == 0) {
 			for (argp = (char **) argblk->dolarg;
-			     Rcheat(*argp) != ENDARGS; argp++) {
+			     ((intptr_t)(*argp)) != ENDARGS; argp++) {
 				sh_free(*argp);
 			}
 			sh_free(argblk);

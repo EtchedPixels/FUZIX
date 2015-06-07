@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
+#include <carts.h>
 
 uint8_t membanks;
 uint8_t system_id;
@@ -51,12 +52,24 @@ struct cart_rom_id {
 static const char empty[] = "(empty)";
 
 struct cart_rom_id carts[] = {
-	{ 0x72B0, 1, "DragonDOS" },
-	{ 0x9063, 3, "DeltaDOS" },
+	{ 0x72B0, CART_DRAGONDOS, "DragonDOS" },
+	{ 0x9063, CART_DELTADOS, "DeltaDOS" },
 	{ 0xB400, 0, empty },
-	{ 0xC248, 2, "RS-DOS" },
+	{ 0xC248, CART_RSDOS, "RS-DOS" },
+	{ 0xE1BA, CART_ORCH90, "Orchestra-90 CC" },
 	{ 0x0000, 0, "No ROM" }
 };
+
+/* Find a cartridge or it's slot */
+int cart_find(int id)
+{
+	int i;
+	for (i = 0; i < id; i++) {
+		if (carttype[i] == id)
+			return i;
+	}
+	return -1;
+}
 
 static struct cart_rom_id *cart_lookup(uint16_t hash)
 {
