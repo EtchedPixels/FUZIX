@@ -28,10 +28,11 @@
         .globl map_save
         .globl map_restore
 	.globl outchar
-	.globl _kernel_flag
+	.globl _need_resched
 	.globl _inint
 	.globl _platform_interrupt
 	.globl platform_interrupt_all
+	.globl _switchout
 
         ; exported symbols
 	.globl _chksigs
@@ -66,7 +67,75 @@ CPU_Z180	    .equ    Z80_TYPE-2
 
         .area _COMMONMEM
 
-; entry point for UZI system calls
+;
+;	Called on the user stack in order to process signals that
+;	are pending. A user process can longjmp out of this loop so
+;	care is needed. Call with interrupts disabled and user mapped.
+;
+;	Returns with interrupts disabled and user mapped, but may
+;	enable interrupts and change mappings.
+;
+deliver_signals:
+	; Pending signal
+	ld a, (U_DATA__U_CURSIG)
+	or a
+	ret z
+
+deliver_signals_2:
+	ld l, a
+	ld h, #0
+	push hl		; signal number as C argument to the handler
+
+	; Handler to use
+	add hl, hl
+	ld de, #U_DATA__U_SIGVEC
+	add hl, de
+	ld e, (hl)
+	inc hl
+	ld d,(hl)
+
+	; Indicate processed
+	xor a
+	ld (U_DATA__U_CURSIG), a
+
+	; Semantics for now: signal delivery clears handler
+	ld (hl), a
+	dec hl
+	ld (hl), a
+
+	ld bc, #signal_return
+	push bc		; bc is passed in as the return vector
+
+	ex de, hl
+	ei
+	jp (hl)		; return to user space. This will then return via
+			; the return path handler passed in BC
+
+;
+;	Syscall signal return path
+;
+signal_return:
+	pop hl		; argument
+	di
+	;
+	;	We must keep IRQ disabled in the kernel mapped
+	;	element of this processing, as we don't want to
+	;	set INSYS flags here.
+	;
+	ld (U_DATA__U_SYSCALL_SP), sp
+	ld sp, #kstack_top
+	call map_kernel
+	push af
+	call _chksigs
+	pop af
+	call map_process_always
+	ld sp, (U_DATA__U_SYSCALL_SP)
+	jr deliver_signals
+
+
+;
+;	Syscall processing path
+;
 unix_syscall_entry:
         di
         ; store processor state
@@ -78,12 +147,11 @@ unix_syscall_entry:
         push de
         push hl
         exx
-        ; push af ;; WRS: also skip this
         push bc
         push de
-        ; push hl ;; WRS: we could skip this since we always set HL on return
         push ix
         push iy
+	; We don't save AF or HL
 
         ; locate function call arguments on the userspace stack
         ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
@@ -99,6 +167,9 @@ unix_syscall_entry:
         ld de, #U_DATA__U_ARGN
         ldir           ; copy
 
+	ld a, #1
+	ld (U_DATA__U_INSYS), a
+
         ; save process stack pointer
         ld (U_DATA__U_SYSCALL_SP), sp
         ; switch to kernel stack
@@ -106,10 +177,6 @@ unix_syscall_entry:
 
         ; map in kernel keeping common
 	call map_kernel
-
-	; make sure the interrupt logic knows we are in kernel mode (flag lives in kernel bank)
-	ld a, #1
-	ld (_kernel_flag), a
 
         ; re-enable interrupts
         ei
@@ -119,41 +186,51 @@ unix_syscall_entry:
         call _unix_syscall
 	pop af
 
+	;
+	; WARNING: There are two special cases to beware of here
+	; 1. fork() will return twice from _unix_syscall
+	; 2. execve() will not return here but will hit _doexec()
+	;
+	; The fork case returns with a different U_DATA mapped so the
+	; U_DATA referencing code is fine, but globals are usually not
+
         di
-	; let the interrupt logic know we are not in kernel mode any more
-	; kernel_flag is not in common so write it before we map it away
+
+
+	call map_process_always
+
 	xor a
-	ld (_kernel_flag), a
+	ld (U_DATA__U_INSYS), a
+
+	; Back to the user stack
+	ld sp, (U_DATA__U_SYSCALL_SP)
+
+	ld hl, (U_DATA__U_ERROR)
+	ld de, (U_DATA__U_RETVAL)
+
+	ld a, (U_DATA__U_CURSIG)
+	or a
+
+	; Fast path the normal case
+	jr nz, via_signal
+
+	; Restore stacks and go
 	;
-	; We restart from here on a unix syscall signal return path
+	; Should we change the ABI and just return in DE/HL ?
 	;
-unix_sig_exit:
-        ; map process memory back in based on common (common may have
-        ; changed on a task switch)
-        call map_process_always
-
-        ; switch back to user stack
-        ld sp, (U_DATA__U_SYSCALL_SP)
-
-        ; check for signals, call the handlers
-        call dispatch_process_signal
-
-        ; check if error condition to be signalled on return
-        ld hl, (U_DATA__U_ERROR)
-        ld a, h
-        or l    ; set NZ flag if we are to return error
-        jr z, not_error
-
-        scf    ; set carry flag
-        ; note error code remains in HL
-        jr unix_return
+unix_return:
+	ld a, h
+	or l
+	jr z, not_error
+	scf		; carry flag on return state for errors
+	jr unix_pop
 
 not_error:
-        ; no error to signal! return syscall return value instead of error code
-        ld hl, (U_DATA__U_RETVAL)
-        ; fall through to return code
-
-unix_return:
+	ex de, hl	; return the retval instead
+	;
+	; Undo the stacking and go back to user space
+	;
+unix_pop:
         ; restore machine state
         pop iy
         pop ix
@@ -172,79 +249,35 @@ unix_return:
         ei
         ret ; must immediately follow EI
 
-dispatch_process_signal:
-        ; check if any signal outstanding
-        ld a, (U_DATA__U_CURSIG)
-        or a
-        ret z
 
-        ; put system call number on the stack as the argument for the signal handler
-        ld l, a
-        ld h, #0
-        push hl
+via_signal:
+	; Get off the kernel syscall stack before we start signal
+	; handling. Our signal handlers may themselves elect to make system
+	; calls. This means we must also save the error/return code
+	ld hl, (U_DATA__U_ERROR)
+	push hl
+	ld hl, (U_DATA__U_RETVAL)
+	push hl
 
-        ; load the address of signal handler function
-        add hl, hl
-        ld de, #U_DATA__U_SIGVEC
-        add hl, de
-        ld e, (hl)
-        inc hl
-        ld d, (hl)      ; now DE = udata.u_sigvec[cursig]
+	; Signal processing. This may longjmp back into userland
+	call deliver_signals_2
 
-        ; udata.u_cursig = 0;
-        xor a
-        ld (U_DATA__U_CURSIG), a
+	; If not then we recover the syscall return values and
+	; exit via the syscall return path
+	pop de			; retval
+	pop hl			; errno
+	jr unix_return
 
-        ; restore signal handler to the default.
-        ; udata.u_sigvec[cursig] = SIG_DFL;
-        ; SIG_DFL = 0, A is still 0 from above, HL points at second byte of the signal vector.
-        ld (hl), a
-        dec hl
-        ld (hl), a
-
-        ld hl, #signal_return
-        push hl      ; push return address
-
-        ex de,hl
-        ei
-        jp (hl)        ; call signal handler in userspace, with interrupts enabled
-
-signal_return:
-        pop hl  ; remove arg from stack
-	pop hl  ; we won't be using the return address either
-        di	; So we don't screw up in mapping and stack games
-        ; save process stack pointer
-        ld (U_DATA__U_SYSCALL_SP), sp
-        ; switch to kernel stack
-        ld sp, #kstack_top
-	call map_kernel
-	push af
-	call _chksigs
-	pop af
-	; Loop back around, switch stacks, check if there is a signal
-	; and if so process it.
-	;
-	; If we do restartable signals we can just check the restartable
-	; info and jmp back further up the syscall path *providing* that
-	; on signal exit paths we write back any needed parameters with
-	; their new info
-	jr unix_sig_exit
-
+;
+;	Final component of execve()
+;
 _doexec:
         di
-	; this is a funny extra path out of syscall so we must also cover
-	; the exit from kernel here
-	xor a
-	ld (_kernel_flag), a
-        ; map task into address space (kernel_flag is no longer mapped, don't
-	; re-order this)
         call map_process_always
 
-	pop af ; pop far data
         pop bc ; return address
+	pop af ; bank number
         pop de ; start address
-        ;; push de ; restore stack ... but we're about to discard SP anyway!
-        ;; push bc 
 
         ld hl, (U_DATA__U_ISP)
         ld sp, hl      ; Initialize user stack, below main() parameters and the environment
@@ -261,189 +294,31 @@ _doexec:
         jp (hl)
 
 ;
-;	Very simple IRQ handler, we get interrupts at 50Hz and we have to
-;	poll ttys from it. The more logic we could move to common here the
-;	better.
-;
-interrupt_handler:
-            ; store machine state
-            ; we arrive here via the trampoline at 0038h with interrupts disabled
-            ; save CPU registers (restored in _IRET)
-            ex af,af'
-            push af
-            ex af,af'
-            exx
-            push bc
-            push de
-            push hl
-            exx
-            push af
-            push bc
-            push de
-            push hl
-            push ix
-            push iy
-
-	    ; Some platforms (MSX for example) have devices we *must*
-	    ; service irrespective of kernel state in order to shut them
-	    ; up. This code must be in common and use small amounts of stack
-	    call platform_interrupt_all
-	    ; FIXME: add profil support here (need to keep profil ptrs
-	    ; unbanked if so ?)
-
-            ; don't allow us to run re-entrant, we've only got one interrupt stack
-            ld a, (U_DATA__U_ININTERRUPT)
-            or a
-            jp nz, interrupt_return
-            inc a
-            ld (U_DATA__U_ININTERRUPT), a
-
-.ifeq CPU_Z180
-            ; On Z180 we have more than one IRQ, so we need to track of which one
-            ; we arrived through. The IRQ handler sets irqvector_hw when each
-            ; interrupt arrives. If we are not already handling an interrupt then
-            ; we copy this into _irqvector which is the value the kernel code
-            ; examines (and will not change even if reentrant interrupts arrive). 
-            ; Generally the only place that irqvector_hw should be used is in 
-            ; the platform_interrupt_all routine.
-            .globl hw_irqvector
-            .globl _irqvector
-            ld a, (hw_irqvector)
-            ld (_irqvector), a
-.endif
-
-            ; switch stacks
-            ld (istack_switched_sp), sp
-	    ; the istack is not banked (very important!)
-            ld sp, #istack_top
-
-	    call map_save
-
-	    ld a, (0)		; save address 0 contents for checking
-	    ld b, a
-
-	    call map_kernel
-	    ;
-	    ; kernel_flag is in the kernel map so we need to map early, we
-	    ; need to map anyway for trap_signal
-	    ;
-	    ld a, (_kernel_flag)
-	    or a
-	    push af
-.ifeq PROGBASE
-	    jr nz, in_kernel
-            ; we're not in kernel mode, check for signals and fault
-	    ld a, #0xC3
-	    cp b		; should be a jump
-	    jr z, nofault
-	    call map_process_always; map the process
-	    ld a, #0xC3		; put it back
-	    ld (0), a		; write
-	    call map_kernel	; restore the map
-	    ld hl, #11		; SIGSEGV
-	    call trap_signal	; signal the user with a fault
-
-nofault:
-in_kernel:
-.endif
-            ; set inint to true
-            ld a, #1
-            ld (_inint), a
-
-	    ; this may task switch if not within a system call
-	    ; if we switch then istack_switched_sp is out of date.
-	    ; When this occurs we will exit via the resume path 
-	    push af
-            call _platform_interrupt
-	    pop af
-
-            xor a
-            ld (_inint), a
-
-	    pop af			; Z = in kernel
-	    jr nz, in_kernel_2
-
-	    ; On a return to user space always do a new map, we may have
-	    ; changed process
-	    call map_process_always
-            jr int_switch
-	    ; On a return from an interrupt in kernel mode restore the old
-	    ; mapping as it will vary during kernel activity and the kernel
-	    ; wants it put back as it was before
-in_kernel_2:
-	    call map_restore
-int_switch:
-            ld sp, (istack_switched_sp)	; stack back
-
-            xor a
-            ld (U_DATA__U_ININTERRUPT), a
-
-            ld a, (U_DATA__U_INSYS)
-            or a
-            jr nz, interrupt_return
-
-	    ; FIXME: check kernel mode flag ?
-            ; we're not in kernel mode, check for signals
-            call dispatch_process_signal
-	    ; FIXME: we should loop for multiple signals probably
-
-interrupt_return:
-            pop iy
-            pop ix
-            pop hl
-            pop de
-            pop bc
-            pop af
-            exx
-            pop hl
-            pop de
-            pop bc
-            exx
-            ex af, af'
-            pop af
-            ex af, af'
-            ei
-.ifeq CPU_Z180
-            ; WRS - we could examine hw_irqvector and return with ret/reti as appropriate?
-            ret
-.else
-            reti
-.endif
-
-;  Enter with HL being the signal to send ourself
-trap_signal:
-            push hl
-	    ld hl, (U_DATA__U_PTAB);
-            push hl
-	    push af
-            call _ssig
-	    pop af
-            pop hl
-            pop hl
-	    ret
-
 ;  Called from process context (hopefully)
+;
+;  FIXME: hardcoded RST38 won't work on all boxes
+;
 null_handler:
-	    ; kernel jump to NULL is bad
-	    ld a, (U_DATA__U_INSYS)
-	    or a
-	    jp z, trap_illegal
-	    ; user is merely not good
-            ld hl, #7
-            push hl
-	    ld hl, (U_DATA__U_PTAB)
-            push hl
-	    ld hl, #10		; signal (getpid(), SIGBUS)
-            rst #0x30		; syscall
-            pop hl
-            pop hl
-            ld hl, #0
-            rst #0x30		; exit
+	; kernel jump to NULL is bad
+	ld a, (U_DATA__U_INSYS)
+	or a
+	jp z, trap_illegal
+	; user is merely not good
+	ld hl, #7
+	push hl
+	ld hl, (U_DATA__U_PTAB)
+	push hl
+	ld hl, #10		; signal (getpid(), SIGBUS)
+	rst #0x30		; syscall
+	pop hl
+	pop hl
+	ld hl, #0
+	rst #0x30		; exit
 
 
 
 illegalmsg: .ascii "[trap_illegal]"
-            .db 13, 10, 0
+        .db 13, 10, 0
 
 trap_illegal:
         ld hl, #illegalmsg
@@ -456,11 +331,218 @@ dpsmsg: .ascii "[dispsig]"
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0
+
 nmi_handler:
 	call map_kernel
         ld hl, #nmimsg
         call outstring
         jp _trap_monitor
+
+;
+;	Interrupt handler. Not quite the same as syscalls, we need to
+;	stack everything and we must get off the IRQ stack and then
+;	process need_resched and signals
+;
+interrupt_handler:
+        ; store machine state
+        ex af,af'
+        push af
+        ex af,af'
+        exx
+        push bc
+        push de
+        push hl
+        exx
+        push af
+        push bc
+        push de
+        push hl
+        push ix
+        push iy
+
+	; Some platforms (MSX for example) have devices we *must*
+	; service irrespective of kernel state in order to shut them
+	; up. This code must be in common and use small amounts of stack
+	call platform_interrupt_all
+	; FIXME: add profil support here (need to keep profil ptrs
+	; unbanked if so ?)
+.ifeq CPU_Z180
+        ; On Z180 we have more than one IRQ, so we need to track of which one
+        ; we arrived through. The IRQ handler sets irqvector_hw when each
+        ; interrupt arrives. If we are not already handling an interrupt then
+        ; we copy this into _irqvector which is the value the kernel code
+        ; examines (and will not change even if reentrant interrupts arrive).
+        ; Generally the only place that irqvector_hw should be used is in
+        ; the platform_interrupt_all routine.
+        .globl hw_irqvector
+        .globl _irqvector
+        ld a, (hw_irqvector)
+        ld (_irqvector), a
+.endif
+
+	; Get onto the IRQ stack
+	ld (istack_switched_sp), sp
+	ld sp, #istack_top
+
+	ld a, (0)
+
+	call map_save
+	;
+	;	FIXME: re-implement sanity checks and add a stack one
+	;
+
+	; We need the kernel mapped for the IRQ handling
+	call map_kernel
+
+	cp #0xC3
+	call nz, null_pointer_trap
+
+	; So the kernel can check rapidly for interrupt status
+	; FIXME: move to the C code
+	ld a, #1
+	ld (_inint), a
+	; So we know that this task should resume with IRQs off
+	ld (U_DATA__U_ININTERRUPT), a
+
+	push af
+	call _platform_interrupt
+	pop af
+
+	xor a
+	ld (_inint), a
+
+	ld a, (_need_resched)
+	or a
+	jr nz, preemption
+
+	; Back to the old memory map
+	call map_restore
+
+	;
+	; Back on user stack
+	;
+	ld sp, (istack_switched_sp)
+
+intout:
+	xor a
+	ld (U_DATA__U_ININTERRUPT), a
+
+	ld hl, #intret
+	push hl
+	reti			; We have now 'left' the interrupt
+				; and the controllers have seen the
+				; reti M1 cycle. However we still
+				; have DI set
+intret:
+	di
+	ld a, (U_DATA__U_INSYS)
+	or a
+	jr nz, interrupt_pop
+
+	; Loop through any pending signals. These could longjmp out
+	; of the handler so ensure everything is fixed before this !
+
+	call deliver_signals
+
+	; Then unstack and go.
+interrupt_pop:
+        pop iy
+        pop ix
+        pop hl
+        pop de
+        pop bc
+        pop af
+        exx
+        pop hl
+        pop de
+        pop bc
+        exx
+        ex af, af'
+        pop af
+        ex af, af'
+        ei			; Must be instruction before ret
+	ret			; runs in the ei interrupt shadow
+
+;
+;	Called with the kernel mapped, mid interrupt and on the IRQ stack
+;
+null_pointer_trap:
+	ld a, #0xC3
+	ld (0), a
+
+trap_signal:
+	push hl
+	ld hl, (U_DATA__U_PTAB);
+        push hl
+	push af
+        call _ssig
+	pop af
+        pop hl
+        pop hl
+	ret
+
+;
+;	Pre-emption. We need to get off the interrupt stack, switch task
+;	and clean up the IRQ state carefully
+;
+
+	.globl preemption
+
+preemption:
+	xor a
+	ld (_need_resched), a	; Task done
+
+	; Back to the old memory map
+	call map_restore
+
+	ld hl, (istack_switched_sp)
+	ld (U_DATA__U_SYSCALL_SP), hl
+
+	ld sp, #kstack_top	; We don't pre-empt in a syscall
+				; so this is fine
+	ld hl, #intret2
+	push hl
+	reti			; We have now 'left' the interrupt
+				; and the controllers have seen the
+				; reti M1 cycle. However we still
+				; have DI set
+
+	;
+	; We are now on the syscall stack (which is fine, we don't
+	; pre-empt mid syscall so therefore it is free.  We will now
+	; task switch. The process being pre-empted will disappear into
+	; switchout() and whoever is next will come out of the same -
+	; hence the need to reti
+
+	;
+intret2:call map_kernel
+	;
+	; Process status is offset 0
+	;
+	ld hl, (U_DATA__U_PTAB)
+	ld (hl), #P_READY
+	call _switchout
+	;
+	; We have been rescheduled, remap ourself and go back to user
+	; space via signal handling
+	;
+	call map_process_always	; Get our user mapping back
+
+	; We are no longer in an interrupt
+	xor a
+	ld (U_DATA__U_ININTERRUPT), a
+
+	; We were pre-empted but have now been rescheduled
+	; User stack
+	ld sp, (U_DATA__U_SYSCALL_SP)
+	ld a, (U_DATA__U_CURSIG)
+	or a
+	call nz, deliver_signals_2
+	;
+	; pop the stack and go
+	;
+	jr interrupt_pop
+
 
 
 	.area _COMMONMEM
