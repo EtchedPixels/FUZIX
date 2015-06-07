@@ -22,7 +22,15 @@ cc65.cflags += \
 	-O -Or \
 	-D__STDC__
 
-cc65.includes += -I$(TOP)/Library/include/6502
+cc65.includes += \
+	-I$(TOP)/Library/include/6502 \
+	-I$(CC65_DIR)/include \
+	--asm-include-dir $(CC65_DIR)/asminc \
+	--asm-include-dir $(TOP)/Kernel/platform-$(PLATFORM)
+
+cc65.asflags += \
+	-I$(TOP)/Kernel/platform-$(PLATFORM) \
+	-I$(CC65_DIR)/asminc
 
 # Used when linking user mode executables.
 
@@ -34,7 +42,7 @@ target-exe.extradeps += $(libc.result) $(TOP)/Build/platforms/$(PLATFORM).cfg
 libc-functions.omit = \
 
 
-# Fuzix' libc conflicts with the standard sdcc compiler library, which is a
+# Fuzix' libc conflicts with the standard cc65 compiler library, which is a
 # shame because there's bits we want in it. So we steal those bits into our
 # own addon library.
 
@@ -115,7 +123,7 @@ $$($1.objdir)/%.o: $(TOP)/%.s
 	@echo AS $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(CC65AS) \
-		$$(sdcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
+		$$(cc65.asflags) $$($$($1.class).asflags) $$($1.asflags) \
 		-o $$@ $$<
 
 # Builds a dynamically generated .s file.
