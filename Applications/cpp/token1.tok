@@ -1,0 +1,25 @@
+struct token_trans { char * name; int token; };
+%%
+...,	TK_ELLIPSIS
+>>=,	TK_RIGHT_ASSIGN
+<<=,	TK_LEFT_ASSIGN
++=,	TK_ADD_ASSIGN
+-=,	TK_SUB_ASSIGN
+*=,	TK_MUL_ASSIGN
+/=,	TK_DIV_ASSIGN
+%=,	TK_MOD_ASSIGN
+&=,	TK_AND_ASSIGN
+^=,	TK_XOR_ASSIGN
+|=,	TK_OR_ASSIGN
+>>,	TK_RIGHT_OP
+<<,	TK_LEFT_OP
+++,	TK_INC_OP
+--,	TK_DEC_OP
+->,	TK_PTR_OP
+&&,	TK_AND_OP
+||,	TK_OR_OP
+<=,	TK_LE_OP
+>=,	TK_GE_OP
+==,	TK_EQ_OP
+!=,	TK_NE_OP
+..,	TK_WORD

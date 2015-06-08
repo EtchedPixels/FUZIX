@@ -1,0 +1,36 @@
+struct token_trans { char * name; int token; };
+%%
+auto,		TK_AUTO
+break,		TK_BREAK
+case,		TK_CASE
+char,		TK_CHAR
+const,		TK_CONST
+continue,	TK_CONTINUE
+default,	TK_DEFAULT
+do,		TK_DO
+double,		TK_DOUBLE
+else,		TK_ELSE
+enum,		TK_ENUM
+extern,		TK_EXTERN
+float,		TK_FLOAT
+for,		TK_FOR
+goto,		TK_GOTO
+if,		TK_IF
+int,		TK_INT
+long,		TK_LONG
+register,	TK_REGISTER
+return,		TK_RETURN
+short,		TK_SHORT
+signed,		TK_SIGNED
+sizeof,		TK_SIZEOF
+static,		TK_STATIC
+struct,		TK_STRUCT
+switch,		TK_SWITCH
+typedef,	TK_TYPEDEF
+union,		TK_UNION
+unsigned,	TK_UNSIGNED
+void,		TK_VOID
+volatile,	TK_VOLATILE
+while,		TK_WHILE
+__FILE__,	TK_FILE
+__LINE__,	TK_LINE
