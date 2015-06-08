@@ -1,0 +1,36 @@
+--- m6809-unknown-ld	2013-02-10 11:55:20.000000000 +0100
++++ m6809-unknown-ld	2015-06-08 23:08:50.469856766 +0200
+@@ -92,6 +92,9 @@ while [ "$*" != "" ]; do
+ 			options="$options --map=$map_file"
+ 			;;
+ 			
++		-T)
++			options="$options --script=$1"; shift
++			;;
+ 		-Tbss)
+ 			options="$options --section-base=.bss=$1"; shift
+ 			;;
+@@ -115,10 +118,6 @@ while [ "$*" != "" ]; do
+ 			echo "ld (m6809)"
+ 			exit 0
+ 			;;
+-		-T)
+-			echo "-T scripts not supported";
+-			exit 1;
+-			;;
+ 		--format-lwex)
+ 			options="$options --format=lwex"
+ 			;;
+@@ -140,6 +139,12 @@ while [ "$*" != "" ]; do
+ 			options="$options $arg"
+ 			;;
+ 
++		--relax)
++			;;
++		--start-group)
++			;;
++		--end-group)
++			;;
+ 		-*)
+ 			echo "ld (m6809): unknown option $arg"
+ 			exit 1
