@@ -1,0 +1,19 @@
+
+compile()
+{
+   # /lib/elksemu ./as86 -3 -k "$@"
+   ./as86 -3 -k "$@"
+}
+
+for i in `ls asm/*.asm`
+do
+	j=`basename $i .asm`
+	compile asm/$j.asm -b $j.bin -o $j.obj > /dev/null
+	cmp $j.obj obj1/$j.obj
+
+	# compile asm/$j.asm -b $j.bin > /dev/null
+	# cmp $j.bin bin/$j.bin
+
+	rm -f $j.bin $j.obj $j.asm
+done
+

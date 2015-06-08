@@ -1,0 +1,6 @@
+	SEG	CS
+	SEG	DS
+	SEG	ES
+	SEG	FS
+	SEG	GS
+	SEG	SS
