@@ -20,6 +20,9 @@ all: cpp
 cpp: main.o cpp.o hash.o token1.o token2.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS)
 
+.c.o:
+	$(CC) $(CFLAGS) $(COPT) -c $<
+
 clean realclean:
 	rm -f cpp main.o cpp.o hash.o token1.o token2.o tmp.h *~
 
