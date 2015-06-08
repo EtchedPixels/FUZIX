@@ -7,6 +7,7 @@
 /* This is an implementation of the C standard IO package. */ 
     
 #include "stdio-l.h"
+#include <string.h>
 
 char *gets(char *str) /* BAD function; DON'T use it! */ 
 {
@@ -24,12 +25,14 @@ char *gets(char *str) /* BAD function; DON'T use it! */
 char *gets_s(char *str,size_t maxlen)
 {
 	register int c;
-	register char *p=str;
-
-	while ( (((c = getc(stdin)) != EOF) && (c != '\n')) && ( p - str < maxlen) )
+	register char *p[maxlen+1];
+	register char *t=p;
+	while ( (((c = getc(stdin)) != EOF) && (c != '\n')) && ( p - str <= maxlen) )
 		*p++=c;
 	*p='\0';
-	return (((c == EOF) && (p == str)) ? NULL : str);/* NULL == EOF */
+	if ((p==t)||(p-t>maxlen)) return NULL;
+	else memcpy(str,t,p-t);
+	return str;
 }
 
 int puts(const void *str) 
