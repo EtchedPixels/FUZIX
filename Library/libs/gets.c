@@ -30,7 +30,7 @@ char *gets_s(char *str,size_t maxlen)
 	while ( (((c = getc(stdin)) != EOF) && (c != '\n')) && ( p - str ) )
 		*p++=c;
 	*p='\0';
-	if (c[maxlen-1]) str = NULL;
+	if (c[maxlen-1]) return NULL;
 	else memcpy(str,t,p-t);
 	return str;
 }
