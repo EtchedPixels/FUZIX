@@ -46,6 +46,7 @@ SRCSNS = \
 	sum.c \
 	sync.c \
 	tee.c \
+	telinit.c \
 	touch.c \
 	tr.c \
 	true.c \

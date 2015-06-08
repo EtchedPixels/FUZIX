@@ -56,9 +56,17 @@ static int initcount;
 int default_rl;
 int runlevel;
 
+volatile static int dingdong;
+
 void sigalarm(int sig)
 {
 	return;
+}
+
+void sigusr1(int sig)
+{
+	signal(SIGUSR1, sigusr1);
+	dingdong = 1;
 }
 
 int showfile(char *fname)
@@ -67,7 +75,7 @@ int showfile(char *fname)
 	char buf[80];
 
 	fd = open(fname, O_RDONLY);
-	if (fd > 0) {
+	if (fd >= 0) {
 		do {
 			len = read(fd, buf, 80);
 			write(1, buf, len);
@@ -212,7 +220,7 @@ static uint8_t to_runlevel(uint8_t c)
 		return 7;		/* 1 << 7 is used for boot/single */
 	if (c >=  '0' && c <= '6')
 		return c - '0';
-	return -1;
+	return 0xFF;
 }
 
 /*
@@ -253,7 +261,7 @@ static void parse_initline(void)
 			return;
 		}
 		bit = to_runlevel(*sdata++);
-		if (bit == -1) {
+		if (bit == 0xFF) {
 			bad_line();
 			return;
 		}
@@ -461,7 +469,7 @@ int main(int argc, char *argv[])
 	int fdtty1;
 
 	signal(SIGINT, SIG_IGN);
-//	signal(SIGHUP, telinit);
+	signal(SIGUSR1, sigusr1);
 
 	/* remove any stale /etc/mtab file */
 
@@ -494,7 +502,17 @@ int main(int argc, char *argv[])
 
 	for (;;) {
 		clear_zombies(0);
-		/* FIXME: telinit handling, HUP handling */
+		if (dingdong) {
+			uint8_t newrl;
+			int fd = open("/var/run/intctl", O_RDONLY);
+			if (fd != -1 && read(fd, &newrl, 1) == 1) {
+				exit_runlevel(1 << runlevel, 1 << newrl);
+				runlevel = newrl;
+				enter_runlevel(1 << runlevel);
+			}
+			close(fd);
+			dingdong = 0;
+		}
 	}
 }
 

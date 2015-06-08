@@ -80,6 +80,7 @@ SRCS  = banner.c \
 	sync.c \
 	tee.c \
 	tail.c \
+	telinit.c \
 	touch.c \
 	tr.c \
 	true.c \
