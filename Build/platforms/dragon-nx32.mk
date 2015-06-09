@@ -8,8 +8,8 @@ A = a
 TARGETCC = m6809-unknown-gcc
 TARGETCPP = m6809-unknown-cpp -nostdinc -undef -P
 TARGETAS = m6809-unknown-as
-TARGETAR = m6809-unknown-ar
-TARGETLD = m6809-unknown-ld
+TARGETAR = $(abspath $(BUILD)/tools/lwtools-ar.sh) m6809-unknown-ar
+TARGETLD = $(BUILD)/tools/lwtools-ld.sh m6809-unknown-ld
 TARGETOBJCOPY = /bin/false
 
 targetgcc.includes += -I$(TOP)/Library/include/6502

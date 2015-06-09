@@ -2,11 +2,11 @@ cache:
     directory:
         - dependencies
 before_install:
+    - sudo add-apt-repository ppa:david.given/ppa -y
+    - sudo apt-get update -q
+    - sudo apt-get install cc65
     - mkdir -p dependencies
     - cd dependencies
-    - wget --output-document=cc65.zip https://github.com/cc65/cc65/archive/master.zip
-    - unzip -q cc65.zip
-    - (cd cc65-master && make > /dev/null && sudo make prefix=/usr/local install)
     - sudo apt-get --no-install-recommends install libboost-all-dev
     - git clone --depth 1 --branch patched https://github.com/davidgiven/sdcc.git
     - (cd sdcc/sdcc && ./configure --prefix=/usr/local --disable-pic14-port --disable-pic16-port)
