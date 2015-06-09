@@ -1,24 +1,32 @@
 
 //
 // readline.c
-//
-// Copyright (c) 2014 Yorkie Neil <yorkiefixer@gmail.com>
-//
+// 
+// Original library copyright (c) 2014 Yorkie Neil <yorkiefixer@gmail.com>
+// FUZIX fixes      copyright (c) 2015 Erkin Alp Güney <erkinalp9035@gmail.com>
+
+// #define _ZERO_IDIOM
+// define if the target is pipelined and supports r
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "readline.h"
 
 readline_t *
 readline_new(char * buffer) {
-  readline_t * rl = (readline_t*) malloc(sizeof(readline_t));
+  readline_t * rl=NULL;
+  do (readline_t*) rl=malloc(sizeof(readline_t)); while ((errno!=ENOMEM)&&(!rl));
+  if (rl==NULL) return & (readline_t){0} ;
   size_t len = strlen(buffer);
 
   rl->cursor = 0;
   rl->line = 0;
   rl->buffer = (char*) malloc(len);
+#ifdef _ZERO_IDIOM
   memset(rl->buffer, 0, len);
+#endif
   memcpy(rl->buffer, buffer, len);
   return rl;
 }
@@ -36,13 +44,16 @@ readline_next(readline_t * rl) {
 
   len = cur - rl->cursor - 1;
   ret = (char*) malloc(len);
-
-  if (ret == NULL || (len == 0 && cur > buffer_len)) {
+  
+  if (ret==NULL) return NULL;
+  if ((len == 0 && cur > buffer_len)) {
     free(ret);
     return NULL;
   }
 
+#ifdef _ZERO_IDIOM
   memset(ret, 0, len);
+#endif
   memcpy(ret, rl->buffer+rl->cursor, len);
   rl->cursor = cur;
   rl->line += 1;
@@ -71,7 +82,9 @@ readline_last_from_rl(readline_t * rl) {
     return NULL;
   }
 
+#ifdef _ZERO_IDIOM
   memset(ret, 0, len);
+#endif
   memcpy(ret, rl->buffer+cur, len);
   return ret;
 }
