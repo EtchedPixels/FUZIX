@@ -137,27 +137,27 @@ void tty_setup(uint8_t minor)
     uint8_t ctrl;
     if (minor != 3)
         return;
-    baud = ttydata[2].termios.c_cflag & CBAUD;
+    baud = ttydata[3].termios.c_cflag & CBAUD;
     if (baud > B19200) {
-        ttydata[2].termios.c_cflag &= ~CBAUD;
-        ttydata[2].termios.c_cflag |= B19200;
+        ttydata[3].termios.c_cflag &= ~CBAUD;
+        ttydata[3].termios.c_cflag |= B19200;
         baud = B19200;
     }
     tr1865_baud = baud | (baud << 4);
 
     ctrl = 3;
-    if (ttydata[2].termios.c_cflag & PARENB) {
-        if (ttydata[2].termios.c_cflag & PARODD)
+    if (ttydata[3].termios.c_cflag & PARENB) {
+        if (ttydata[3].termios.c_cflag & PARODD)
             ctrl |= 0x80;
     } else
         ctrl |= 0x8;		/* No parity */
-    ctrl |= trssize[(ttydata[2].termios.c_cflag & CSIZE) >> 4];
+    ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
     tr1865_ctrl = ctrl;
 }
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 3 &&ttydata[2].users == 0)
+    if (minor == 3 && ttydata[3].users == 0)
         tr1865_ctrl = 0;	/* Drop carrier */
     return tty_close(minor);
 }
