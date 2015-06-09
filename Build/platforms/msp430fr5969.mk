@@ -13,6 +13,7 @@ TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
 
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
+target-exe.ldflags += -T $(TOP)/Build/platforms/$(PLATFORM).ld
 
 # CPU architecture and which syscall generator to use.
 
