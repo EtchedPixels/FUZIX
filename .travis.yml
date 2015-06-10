@@ -6,7 +6,6 @@ before_install:
     - sudo apt-get update -q
     - sudo apt-get install cc65 sdcc
     - export PATH=$PATH:/usr/local/bin
-    - cd ..
 language: c
 script:
     - make PLATFORM=6502test -j4
