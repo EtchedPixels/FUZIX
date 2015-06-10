@@ -13,6 +13,7 @@
 	; Imports
 	;
 	.globl _fontdata_8x8
+	.globl _vidattr
 
 	include "kernel.def"
 	include "../kernel09.def"
@@ -60,6 +61,74 @@ _plot_char:
 	rola
 	tfr d,x
 	leax _fontdata_8x8,x		; relative to font
+	ldb _vtattr
+	andb #0x3F		; drop the bits that don't affect our video
+	beq plot_fast
+
+	;
+	;	General purpose plot with attributes, we only fastpath
+	;	the simple case
+	;
+	clra
+plot_loop:
+	sta _vtrow
+	ldb _vtattr
+	cmpa #7		; Underline only applies on the bottom row
+	beq ul_this
+	andb #0xFD
+ul_this:
+	cmpa #3		; italic shift right for < 3
+	blt ital_1
+	andb #0xFB
+	bra maskdone
+ital_1:
+	cmpa #5		; italic shift right for >= 5
+	blt maskdone
+	bitb #0x04
+	bne maskdone
+	orb #0x40		; spare bit borrow for bottom of italic
+	andb #0xFB
+maskdone:
+	lda ,x+			; now throw the row away for a bit
+	bitb #0x10
+	bne notbold
+	lsra
+	ora -1,x		; shift and or to make it bold
+notbold:
+	bitb #0x04		; italic by shifting top and bottom
+	beq notital1
+	lsra
+notital1:
+	bitb #0x40
+	beq notital2
+	lsla
+notital2:
+	bitb #0x02
+	beq notuline
+	lda #0xff		; underline by setting bottom row
+notuline:
+	bitb #0x01		; inverse or not: we are really in inverse
+	bne plot_inv		; by default so we complement except if
+	coma			; inverted
+plot_inv:
+	bitb #0x20		; overstrike or plot ?
+	bne overstrike
+	sta ,y
+	bra plotnext
+overstrike:
+	anda ,y
+	sta ,y
+plotnext:
+	leay 32,y
+	lda _vtrow
+	inca
+	cmpa #8
+	bne plot_loop
+	puls y,pc
+;
+;	Fast path for normal attributes
+;
+plot_fast:
 	lda ,x+			; simple 8x8 renderer for now
 	coma
 	sta 0,y
@@ -246,6 +315,9 @@ _cursor_on:
 	stx cursor_save
 	; Fall through
 _cursor_off:
+	ldb _vtattr
+	bitb #0x80
+	bne nocursor
 	ldx cursor_save
 	com ,x
 	com 32,x
@@ -255,8 +327,11 @@ _cursor_off:
 	com 160,x
 	com 192,x
 	com 224,x
+nocursor:
 	rts
 
 	.area .data
 cursor_save:
 	.dw	0
+_vtrow:
+	.db	0
