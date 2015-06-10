@@ -39,11 +39,24 @@
  *	This code can be banked on its own. If you touch it on Z80 make
  *	very sure you inspect the asm output for calls to compiler helpers
  *	and don't add any.
- *	
+ *
+ *	Possible VT extensions to look at
+ *	- Esc-L		Insert blank line, move lines below down
+ *	- ESC-M		Delete cursor line, move up blank bottom
+ *	-		Colour setting (Atari ST uses esc b/c) but we need
+ *			more flexibility and border
+ *	- ESC-d		erase start to cursor inclusive
+ *	- ESC-j		save cursor y/x
+ *	- ESC-k		restore cursor
+ *	- ESC-l		erase line, cursor to left
+ *	- ESC-o		erase from start of line to cursor (inclusive)
+ *
+ *	Would tty be a better graphics interface than direct ? Probably not ?
  */
 
 
 static uint8_t vtmode;
+uint8_t vtattr;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
 static signed char ncursory;
@@ -153,7 +166,8 @@ static int escout(unsigned char c)
 	}
 	if (c == 'Y')
 		return 2;
-
+	if (c == 'a')
+		return 4;
 	return 0;
 }
 
@@ -176,13 +190,17 @@ void vtoutput(unsigned char *p, unsigned int len)
 			ncursory = c - ' ';
 			vtmode++;
 			continue;
-		} else {
+		} else if (vtmode == 3) {
 			int ncursorx = c - ' ';
 			if (ncursory >= 0 && ncursorx <= VT_BOTTOM)
 				cursory = ncursory;
 			if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 				cursorx = ncursorx;
 			vtmode = 0;
+		} else {
+			vtattr = c;
+			vtmode = 0;
+			continue;
 		}
 	}
 	cursor_on(cursory, cursorx);
@@ -210,6 +228,8 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 #endif					
 			case VTSIZE:
 				return VT_HEIGHT << 8 | VT_WIDTH;
+			case VTATTRS:
+				return vtattr_cap;
 		}
 	}
 	return tty_ioctl(minor, request, data);
@@ -259,6 +279,7 @@ void vtinit(void)
 void vt_save(struct vt_switch *vt)
 {
 	vt->vtmode = vtmode;
+	vt->vtattr = vtattr;
 	vt->cursorx = cursorx;
 	vt->cursory = cursory;
 	vt->ncursory = ncursory;
@@ -267,6 +288,7 @@ void vt_save(struct vt_switch *vt)
 void vt_load(struct vt_switch *vt)
 {
 	vtmode = vt->vtmode;
+	vtattr = vt->vtattr;
 	cursorx = vt->cursorx;
 	cursory = vt->cursory;
 	ncursory = vt->ncursory;

@@ -19,6 +19,15 @@
 
 struct vt_switch {
   uint8_t vtmode;
+  uint8_t vtattr;
+#define VTA_INVERSE	1
+#define VTA_UNDERLINE	2
+#define VTA_ITALIC	4
+#define VTA_FLASH	8
+#define VTA_BOLD	16
+#define VTA_OVERSTRIKE	32
+  /* 64 is set to ensure a valid normal character */
+#define VTA_NOCURSOR	128
   signed char cursorx;
   signed char cursory;
   signed char ncursory;
@@ -41,5 +50,6 @@ void plot_char(int8_t y, int8_t x, uint16_t c);
 void do_beep(void);
 int vt_ioctl(uint8_t minor, uarg_t op, char *ptr);
 int vt_inproc(uint8_t minor, unsigned char c);
+extern uint8_t vtattr_cap;
 
 #endif

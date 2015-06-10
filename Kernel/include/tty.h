@@ -143,6 +143,7 @@ struct termios {
 #define KBMAPGET	0x21
 #define VTSIZE		0x22
 #define KBSETTRANS	0x23
+#define VTATTRS		0x24
 
 /* Character Input Queue size */
 #define TTYSIZ 132
