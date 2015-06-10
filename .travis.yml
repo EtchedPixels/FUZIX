@@ -4,13 +4,7 @@ cache:
 before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo apt-get update -q
-    - sudo apt-get install cc65
-    - mkdir -p dependencies
-    - cd dependencies
-    - sudo apt-get --no-install-recommends install libboost-all-dev
-    - git clone --depth 1 --branch patched https://github.com/davidgiven/sdcc.git
-    - (cd sdcc/sdcc && ./configure --prefix=/usr/local --disable-pic14-port --disable-pic16-port)
-    - (cd sdcc/sdcc && make -j4 > /dev/null && sudo make install > /dev/null)
+    - sudo apt-get install cc65 sdcc
     - export PATH=$PATH:/usr/local/bin
     - cd ..
 language: c
