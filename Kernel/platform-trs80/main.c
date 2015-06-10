@@ -8,6 +8,8 @@ uint16_t ramtop = PROGTOP;
 __sfr __at 0xE0 irqstat;
 __sfr __at 0xEF irqack;
 
+uint8_t vtattr_cap;
+
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
 void platform_idle(void)
