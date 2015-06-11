@@ -14,6 +14,8 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
+uint8_t vtattr_cap = 0;			/* we could do inverse ? */
+
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
 

@@ -18,6 +18,7 @@
 
             ; exported debugging tools
             .globl _trap_monitor
+            .globl _trap_reboot
             .globl outchar
 	    .globl _di
 	    .globl _ei
