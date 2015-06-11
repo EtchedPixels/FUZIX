@@ -8,6 +8,8 @@
 
 #undef  DEBUG            /* UNdefine to delete debug code sequences */
 
+uint8_t vtattr_cap;
+
 __sfr __at 0xE0	dart0d;
 __sfr __at 0xE1 dart0c;
 __sfr __at 0xE2	dart1d;

@@ -26,6 +26,8 @@ __sfr __at 0xB7 kmap7;
 __sfr __at 0xB8 kmap8;
 __sfr __at 0xB9 kmap9;
 
+uint8_t vtattr_cap;
+
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
