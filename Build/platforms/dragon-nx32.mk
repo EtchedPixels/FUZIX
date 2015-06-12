@@ -34,6 +34,7 @@ libc-functions.localsrcs += \
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
+FILESYSTEM_CROSSENDIAN = -X
 FILESYSTEM_ISIZE = 64
 FILESYSTEM_FSIZE = 2880
 FILESYSTEM = \

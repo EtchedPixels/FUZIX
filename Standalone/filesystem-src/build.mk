@@ -104,7 +104,7 @@ $(filesystem.result): $(TOP)/Standalone/filesystem-src/populatefs.awk \
 	@echo FILESYSTEM $@
 	@mkdir -p $(dir $@)
 	$(hide) rm -f $@
-	$(hide) $(mkfs.result) $@ $(FILESYSTEM_ISIZE) $(FILESYSTEM_FSIZE)
+	$(hide) $(mkfs.result) $(FILESYSTEM_CROSSENDIAN) $@ $(FILESYSTEM_ISIZE) $(FILESYSTEM_FSIZE)
 	$(hide) echo $(standard_device_nodes) $(standard_files) $(FILESYSTEM) \
 		| gawk 'BEGIN { RS = " "; } { printf("%s ", $$0); if (n%3 == 2) { printf "\n"; } n++; }' \
 		| gawk -f $(TOP)/Standalone/filesystem-src/populatefs.awk \
