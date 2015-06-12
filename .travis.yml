@@ -7,7 +7,7 @@ before_install:
     - sudo apt-get install cc65 sdcc
     - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run
     - chmod a+rx msp430-gcc-linux-installer-3.x.x.run
-    - sudo ./msp430-gcc-linux-installer-3.x.x.run --mode unattended --prefix /usr/local/bin
+    - sudo ./msp430-gcc-linux-installer-3.x.x.run --mode unattended --prefix /usr/local
     - export PATH=$PATH:/usr/local/bin
 language: c
 script:
