@@ -30,6 +30,7 @@ targetgcc.asflags += \
 
 target-exe.extradeps += $(libc.result) $(libgcc) $(TOP)/Build/platforms/$(PLATFORM).ld
 target-exe.ldflags += \
+	-T $(TOP)/Build/platforms/$(PLATFORM).ld \
 	--relax
 
 # This is the macro which is appended to target build classes; it contains all

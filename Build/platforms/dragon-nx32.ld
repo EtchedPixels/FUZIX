@@ -5,5 +5,6 @@ section .text
 section .text.hot
 section .text.unlikely
 section .text.startup
+section *,!bss
 section .data
 section .bss

@@ -9,8 +9,8 @@ TARGETCC = m6809-unknown-gcc
 TARGETCPP = m6809-unknown-cpp -nostdinc -undef -P
 TARGETAS = m6809-unknown-as
 TARGETAR = $(abspath $(BUILD)/tools/lwtools-ar.sh) m6809-unknown-ar
-TARGETLD = $(BUILD)/tools/lwtools-ld.sh m6809-unknown-ld
-TARGETOBJCOPY = /bin/false
+TARGETLD = $(BUILD)/tools/m6809-unknown-ld
+TARGETOBJCOPY = $(BUILD)/tools/m6809-unknown-objcopy
 
 targetgcc.includes += -I$(TOP)/Library/include/6502
 
