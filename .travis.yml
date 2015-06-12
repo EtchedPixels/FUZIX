@@ -5,9 +5,13 @@ before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo apt-get update -q
     - sudo apt-get install cc65 sdcc
+    - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run
+    - chmod a+rx msp430-gcc-linux-installer-3.x.x.run
+    - sudo ./msp430-gcc-linux-installer-3.x.x.run --mode unattended --prefix /usr/local/bin
     - export PATH=$PATH:/usr/local/bin
 language: c
 script:
     - make PLATFORM=6502test -j4
+    - make PLATFORM=msp430fr5969 -j4
     - make PLATFORM=trs80 -j4
 
