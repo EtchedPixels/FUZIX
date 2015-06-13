@@ -38,6 +38,7 @@ FILESYSTEM_CROSSENDIAN = -X
 FILESYSTEM_ISIZE = 256
 FILESYSTEM_FSIZE = 65535
 FILESYSTEM = \
+	//init                  0755 $(util-init.result) \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
 	/bin/bd                 0755 $(util-bd.result) \
@@ -66,7 +67,6 @@ FILESYSTEM = \
 	/bin/grep               0755 $(util-grep.result) \
 	/bin/head               0755 $(util-head.result) \
 	/bin/id                 0755 $(util-id.result) \
-	/bin/init               0755 $(util-init.result) \
 	/bin/kill               0755 $(util-kill.result) \
 	/bin/ll                 0755 $(util-ll.result) \
 	/bin/ln                 0755 $(util-ln.result) \
