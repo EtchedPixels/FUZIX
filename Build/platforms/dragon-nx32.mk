@@ -88,6 +88,7 @@ FILESYSTEM = \
 	/bin/prtroot            0755 $(util-prtroot.result) \
 	/bin/ps                 0755 $(util-ps.result) \
 	/bin/pwd                0755 $(util-pwd.result) \
+	/bin/reboot             0755 $(util-reboot.result) \
 	/bin/rm                 0755 $(util-rm.result) \
 	/bin/rmdir              0755 $(util-rmdir.result) \
 	/bin/sleep              0755 $(util-sleep.result) \
