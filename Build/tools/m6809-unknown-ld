@@ -1,0 +1,171 @@
+#!/bin/sh
+#
+#
+# Copyright 2009 by William Astle <lost@l-w.ca>
+#
+#This file is part of LWTOOLS.
+#
+#LWTOOLS is free software: you can redistribute it and/or modify it under the
+#terms of the GNU General Public License as published by the Free Software
+#Foundation, either version 3 of the License, or (at your option) any later
+#version.
+#
+#This program is distributed in the hope that it will be useful, but WITHOUT
+#ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+#more details.
+#
+#You should have received a copy of the GNU General Public License along with
+#this program. If not, see <http://www.gnu.org/licenses/>.
+
+# this was based somewhat on the "as" script from gcc6809
+
+#echo "LWTOOLS-ld $0 $*"
+path_to_lwlink=lwlink
+
+# Set defaults.  Some are based on the target type, which is 
+# determined by the name by which the program was invoked.
+output_file=a.out
+libpaths=
+libs=
+stdlibpaths="-L=/usr/local/lib -L=/usr/lib -L=/lib"
+verbose=
+
+if [ "$verbose" = 1 ]; then
+	echo "$0 $@"
+fi
+
+case $0 in
+	*m6809-coco-*)
+		options="--format=decb"
+#		options="-b .text=0x2000 -b .data=0x7000 -b .bss=0x7C00 -b .ctors=0x7F00 -b .dtors=0x7F80 -b vector=0x7FF0"
+#		aslink_options="-nwxst"
+#		exe_suffix=.bin
+		;;
+	*)
+		options="--format=raw"
+#		options="-b .text=0x8000 -b .data=0x1000 -b .bss=0x0100 -b .ctors=0xFD00 -b .dtors=0xFE00 -b vector=0xFFF0"
+#		aslink_options="-nwxso"
+#		exe_suffix=.s19
+		;;
+esac
+
+
+while [ "$*" != "" ]; do
+	arg=$1; shift
+	case $arg in
+		-d|-dc|-dp)
+			# force allocation of space to common symbols
+			# even if relocatable output file is specified
+			# not supported by targets
+			;;
+		-X)
+			# strip unneeded stuff
+			# ignored - really just a no-op
+			;;
+		-gn)
+			# Generate NoICE debug file
+			# ignored because debugging not supported by targets
+			;;
+		-gs)
+			# Generate SDCC debug file
+			# ignored because debugging not supported by targets
+			;;
+		-o)
+			output_file=$1; shift
+			;;
+		-L*)
+			arg=${arg#-L}
+			libpaths="$libpaths --library-path=$arg"
+			;;
+		-l*)
+			arg=${arg#-l}
+			libs="$libs --library=$arg"
+			;;
+		--section-start)
+			section_value=$1; shift
+			options="$options --section-base=$section_value"
+			;;
+		
+		-Map=*)
+			arg=${arg#-Map=}; shift
+			options="$options --map=$arg"
+			;;
+			
+		-T)
+			options="$options --script=$1"; shift
+			;;
+		-Tbss)
+			options="$options --section-base=.bss=$1"; shift
+			;;
+		-Tdata)
+			options="$options --section-base=.data=$1"; shift
+			;;
+		-Ttext|-Tcode)
+			options="$options --section-base=.text=$1"; shift
+			;;
+		-v|--verbose)
+			verbose=1
+			;;
+		*crt0.o)
+			startup_files=$arg
+			;;
+		-g)
+			# Ignored by GNU ld; we should do the same
+			;;
+		-h|--help)
+			echo "ld (m6809)"
+			exit 0
+			;;
+		--format-lwex)
+			options="$options --format=lwex"
+			;;
+		
+		--sysroot=*)
+			options="$options $arg"
+			;;
+			
+		-nostdlib)
+			stdlibpaths=
+			;;
+		
+		-e)
+			options="$options --entry=$1"
+			shift
+			;;
+			
+		--entry)
+			options="$options $arg"
+			;;
+
+		--relax)
+			;;
+		--start-group)
+			;;
+		--end-group)
+			;;
+		--gc-sections)
+			;;
+		-*)
+			echo "ld (m6809): unknown option $arg"
+			exit 1
+			;;
+		*)
+			input_files="$input_files $arg"
+			;;
+	esac
+done
+
+options="$options -o $output_file"
+
+if [ "$verbose" = "1" ]; then
+	echo "$path_to_lwlink $options $input_files $startup_files $libpaths $stdlibpaths $libs"
+fi
+
+$path_to_lwlink $options $input_files $startup_files $libpaths $libs
+rc=$?
+
+if [ "$rc" != "0" ]; then
+	rm -f $output_file
+	exit $rc
+fi

@@ -9,6 +9,8 @@
 
 char tbuf1[TTYSIZ];
 
+uint8_t vtattr_cap;
+
 /* buffer for port scan procedure */
 uint8_t keybuf[8];
 /* Previous state */

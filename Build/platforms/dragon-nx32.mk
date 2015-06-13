@@ -9,8 +9,8 @@ TARGETCC = m6809-unknown-gcc
 TARGETCPP = m6809-unknown-cpp -nostdinc -undef -P
 TARGETAS = m6809-unknown-as
 TARGETAR = $(abspath $(BUILD)/tools/lwtools-ar.sh) m6809-unknown-ar
-TARGETLD = $(BUILD)/tools/lwtools-ld.sh m6809-unknown-ld
-TARGETOBJCOPY = /bin/false
+TARGETLD = $(BUILD)/tools/m6809-unknown-ld
+TARGETOBJCOPY = $(BUILD)/tools/m6809-unknown-objcopy
 
 targetgcc.includes += -I$(TOP)/Library/include/6502
 
@@ -34,9 +34,11 @@ libc-functions.localsrcs += \
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
-FILESYSTEM_ISIZE = 64
-FILESYSTEM_FSIZE = 2880
+FILESYSTEM_CROSSENDIAN = -X
+FILESYSTEM_ISIZE = 256
+FILESYSTEM_FSIZE = 65535
 FILESYSTEM = \
+	//init                  0755 $(util-init.result) \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
 	/bin/bd                 0755 $(util-bd.result) \
@@ -65,7 +67,6 @@ FILESYSTEM = \
 	/bin/grep               0755 $(util-grep.result) \
 	/bin/head               0755 $(util-head.result) \
 	/bin/id                 0755 $(util-id.result) \
-	/bin/init               0755 $(util-init.result) \
 	/bin/kill               0755 $(util-kill.result) \
 	/bin/ll                 0755 $(util-ll.result) \
 	/bin/ln                 0755 $(util-ln.result) \
@@ -87,6 +88,7 @@ FILESYSTEM = \
 	/bin/prtroot            0755 $(util-prtroot.result) \
 	/bin/ps                 0755 $(util-ps.result) \
 	/bin/pwd                0755 $(util-pwd.result) \
+	/bin/reboot             0755 $(util-reboot.result) \
 	/bin/rm                 0755 $(util-rm.result) \
 	/bin/rmdir              0755 $(util-rmdir.result) \
 	/bin/sleep              0755 $(util-sleep.result) \

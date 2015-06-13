@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $1 in
+	--output-target)
+		shift; shift;
+		;;
+esac
+exec cp "$1" "$2"

@@ -13,6 +13,8 @@
 
 char tbuf1[TTYSIZ];
 
+uint8_t vtattr_cap;
+
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },

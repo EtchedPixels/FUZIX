@@ -6,14 +6,15 @@ PLATFORM_RULES = targetgcc.rules
 # Locate the libgcc used by this target.
 
 libgcc = $(shell $(TARGETCC) --print-libgcc)
+libgcc.ld = -L$(dir $(libgcc)) -lgcc
+
+libc.ld = -L$(dir $(libc.result)) -lc
 
 # Flags used everywhere.
 
 targetgcc.cflags += \
 	-g \
 	-Wall \
-	-ffunction-sections \
-	-fdata-sections \
 	-fno-inline \
 	--short-enums \
 	-Os
@@ -30,6 +31,7 @@ targetgcc.asflags += \
 
 target-exe.extradeps += $(libc.result) $(libgcc) $(TOP)/Build/platforms/$(PLATFORM).ld
 target-exe.ldflags += \
+	-T $(TOP)/Build/platforms/$(PLATFORM).ld \
 	--relax
 
 # This is the macro which is appended to target build classes; it contains all
@@ -108,7 +110,7 @@ $$($1.result): $$($1.objs) $(crt0.result) $(binman.result) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$@.elf \
 		--start-group \
-		$$($1.objs) $(crt0.result) $(libc.result) $(libgcc) \
+		$$($1.objs) $(crt0.result) $(libc.ld) $(libgcc.ld) \
 		--end-group
 	$(hide) $(TARGETOBJCOPY) \
 		--output-target binary $$@.elf $$@

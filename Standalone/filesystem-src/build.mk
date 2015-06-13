@@ -84,6 +84,7 @@ standard_device_nodes = \
 	/dev/proc  20660 1027 \
 
 FILESYSTEM += \
+	/etc/inittab            0644 Standalone/filesystem-src/etc-files/inittab \
 	/etc/issue              0644 Standalone/filesystem-src/etc-files/issue \
 	/etc/motd               0644 Standalone/filesystem-src/etc-files/motd \
 	/etc/passwd             0644 Standalone/filesystem-src/etc-files/passwd \
@@ -104,7 +105,7 @@ $(filesystem.result): $(TOP)/Standalone/filesystem-src/populatefs.awk \
 	@echo FILESYSTEM $@
 	@mkdir -p $(dir $@)
 	$(hide) rm -f $@
-	$(hide) $(mkfs.result) $@ $(FILESYSTEM_ISIZE) $(FILESYSTEM_FSIZE)
+	$(hide) $(mkfs.result) $(FILESYSTEM_CROSSENDIAN) $@ $(FILESYSTEM_ISIZE) $(FILESYSTEM_FSIZE)
 	$(hide) echo $(standard_device_nodes) $(standard_files) $(FILESYSTEM) \
 		| gawk 'BEGIN { RS = " "; } { printf("%s ", $$0); if (n%3 == 2) { printf "\n"; } n++; }' \
 		| gawk -f $(TOP)/Standalone/filesystem-src/populatefs.awk \

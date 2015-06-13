@@ -22,6 +22,10 @@ uint8_t curtty;		/* output side */
 uint8_t inputtty;	/* input side */
 static struct vt_switch ttysave[2];
 
+/* FIXME: this will eventually vary by tty so we'll need to either load
+   it then call the vt ioctl or just intercept the vt ioctl */
+uint8_t vtattr_cap;
+
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 char tbuf3[TTYSIZ];

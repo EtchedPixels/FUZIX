@@ -6,7 +6,7 @@ util_apps := \
 	banner basename bd cal cat chgrp chmod chown cksum cmp cp cut date dd \
 	decomp16 df dirname dosread du echo ed factor false fdisk fgrep fsck \
 	grep head id init kill ll ln logname ls man mkdir mkfs mkfifo mknod \
-	mount more mv od pagesize passwd patchcpm printenv prtroot ps pwd rm rmdir \
+	mount more mv od pagesize passwd patchcpm printenv prtroot ps pwd reboot rm rmdir \
 	sleep ssh sort stty sum su sync tee tail telinit touch tr true umount \
 	uniq uud uue wc which who whoami write xargs yes
 
