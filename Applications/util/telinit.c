@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
 
 /*
  *	Turn the character codes 0123456sS into run level numbers
