@@ -4,7 +4,7 @@ cache:
 before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo apt-get update -q
-    - sudo apt-get install cc65 sdcc
+    - sudo apt-get install cc65 sdcc libc6-i386 lib32stdc++6
     - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run -O /tmp/msp430
     - chmod a+rx /tmp/msp430
     - sudo /tmp/msp430 --mode unattended --prefix /usr/local
