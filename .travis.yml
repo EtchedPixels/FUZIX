@@ -3,11 +3,15 @@ cache:
         - dependencies
 before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
+    - sudo add-apt-repository ppa:tormodvolden/m6809 -y
     - sudo apt-get update -q
-    - sudo apt-get install cc65 sdcc
+    - sudo apt-get install cc65 sdcc lwtools libmpc2
+    - wget http://toolshed.sourceforge.net/gcc/gcc-6809_4.6.4lw-1~precise_i386.deb
+    - sudo dpkg -i gcc-6809_4.6.4lw-1~precise_i386.deb
     - export PATH=$PATH:/usr/local/bin
 language: c
 script:
     - make PLATFORM=6502test -j4
     - make PLATFORM=trs80 -j4
+    - make PLATFORM=dragon-nx32 -j4
 
