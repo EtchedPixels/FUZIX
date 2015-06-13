@@ -15,8 +15,6 @@ libc.ld = -L$(dir $(libc.result)) -lc
 targetgcc.cflags += \
 	-g \
 	-Wall \
-	-ffunction-sections \
-	-fdata-sections \
 	-fno-inline \
 	--short-enums \
 	-Os
