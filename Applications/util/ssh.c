@@ -307,7 +307,6 @@ int main(int argc, char *argval[])
             else
                 lastfg = -1;
         }
-#ifdef SSH_EXPENSIVE
         /* Check for User request to kill a process */
         else if (strcmp(cmd, "kill") == 0) {
             if (arg[0][0] == '-') {
@@ -327,6 +326,7 @@ int main(int argc, char *argval[])
                     perror("kill");
             }
         }
+#ifdef SSH_EXPENSIVE
         else if (strcmp(cmd, "pwd") == 0) {
 	    if (getcwd(buf, 128)){
 	        char *ptr=&buf[strlen(buf)];
