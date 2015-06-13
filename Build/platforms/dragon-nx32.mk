@@ -35,8 +35,8 @@ libc-functions.localsrcs += \
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
 FILESYSTEM_CROSSENDIAN = -X
-FILESYSTEM_ISIZE = 64
-FILESYSTEM_FSIZE = 2880
+FILESYSTEM_ISIZE = 256
+FILESYSTEM_FSIZE = 65535
 FILESYSTEM = \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
