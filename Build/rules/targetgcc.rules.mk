@@ -6,6 +6,9 @@ PLATFORM_RULES = targetgcc.rules
 # Locate the libgcc used by this target.
 
 libgcc = $(shell $(TARGETCC) --print-libgcc)
+libgcc.ld = -L$(dir $(libgcc)) -lgcc
+
+libc.ld = -L$(dir $(libc.result)) -lc
 
 # Flags used everywhere.
 
@@ -109,7 +112,7 @@ $$($1.result): $$($1.objs) $(crt0.result) $(binman.result) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$@.elf \
 		--start-group \
-		$$($1.objs) $(crt0.result) $(libc.result) $(libgcc) \
+		$$($1.objs) $(crt0.result) $(libc.ld) $(libgcc.ld) \
 		--end-group
 	$(hide) $(TARGETOBJCOPY) \
 		--output-target binary $$@.elf $$@
