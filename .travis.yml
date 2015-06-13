@@ -5,11 +5,11 @@ before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo apt-get update -q
     - sudo apt-get install cc65 sdcc libc6-i386 lib32stdc++6
-    - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run -O /tmp/msp430
-    - chmod a+rx /tmp/msp430
-    - sudo /tmp/msp430 --mode unattended --prefix /usr/local
-    - rm /tmp/msp430
-    - export PATH=$PATH:/usr/local/bin
+    - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run -O msp430.installer
+    - chmod a+rx msp430.installer
+    - sudo ./msp430.installer --mode unattended --prefix $HOME/msp430
+    - rm msp430.installer
+    - export PATH=$PATH:/usr/local/bin:$HOME/msp430/bin
 language: c
 script:
     - make PLATFORM=6502test -j4
