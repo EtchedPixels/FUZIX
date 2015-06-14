@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
       sscanf(p1, "%x", &discard_base);
       
     if (hogs && match == 0) {
-      if (strstr(p2, "_start")) {
+      if (*p2=='_') {
         sscanf(p1, "%x", &naddr);
         strcpy(nname, p2);
         if (addr && (all || !is_discard(addr)) ) {
-          name[strlen(name)-6]=0;
+          strtok(name, " \t\n");
           printf("%d: %s\n", naddr-addr, name);
         }
         addr = naddr;
