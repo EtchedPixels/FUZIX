@@ -62,12 +62,12 @@ extern int strcoll __P((const char *s1, const char *s2));
 extern const char *strsignal __P((int s));
 extern char *strerror __P((int __errno));
 
-#ifdef	z80
-#pagma inline(memcpy)
-#pagma inline(memset)
-#pagma inline(strcpy)
-#pagma inline(strlen)
-#pagma inline(strcmp)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
+#define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
+#define strcpy(dst, src) __builtin_strcpy(dst, src)
+#define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)
+#define strchr(s, c) __builtin_strchr(s, c)
+#define memset(dst, c, n) __builtin_memset(dst, c, n)
 #endif
 
 #endif		/* END OF DEFINITION	STRING.H */
