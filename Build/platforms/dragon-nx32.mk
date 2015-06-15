@@ -31,6 +31,9 @@ libc-functions.localsrcs += \
 	setjmp_6809.s \
 	ashlsi3_6809.s \
 
+# If host has wrong endianess
+liberror.flags = -X
+
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
