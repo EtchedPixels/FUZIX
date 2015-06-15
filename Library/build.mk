@@ -5,10 +5,13 @@ libc-functions.localsrcs += \
 	__getgrent.c \
 	__getpwent.c \
 	abort.c \
+	abs.c \
 	asctime.c \
 	assert.c \
 	atexit.c \
 	atoi.c \
+	atof.c \
+	atol.c \
 	bcmp.c \
 	bcopy.c \
 	bsearch.c \
@@ -56,6 +59,7 @@ libc-functions.localsrcs += \
 	getgrgid.c \
 	getgrnam.c \
 	gethostname.c \
+	getloadavg.c \
 	getopt.c \
 	getpass.c \
 	getpw.c \
@@ -82,6 +86,7 @@ libc-functions.localsrcs += \
 	isupper.c \
 	isxdigit.c \
 	killpg.c \
+	labs.c \
 	libintl.c \
 	localtim.c \
 	localtim_r.c \
@@ -93,6 +98,7 @@ libc-functions.localsrcs += \
 	malloc.c \
 	memmove.c \
 	mkfifo.c \
+	mkstemps.c \
 	nanosleep.c \
 	opendir.c \
 	pathconf.c \
@@ -144,6 +150,7 @@ libc-functions.localsrcs += \
 	tcgetattr.c \
 	tcsetattr.c \
 	time.c \
+	tmpfile.c \
 	tmpnam.c \
 	toascii.c \
 	tolower.c \
