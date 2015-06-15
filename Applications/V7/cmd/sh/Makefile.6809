@@ -18,16 +18,11 @@ CRT0 = ../../../../Library/libs/crt0_6809.o
 
 SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
         macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
-        string.c xec.c glob.c
+        string.c word.c xec.c glob.c
 
 INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 
-# Workaround for gcc 6809
-SRCS_HARD = word.c
-
-
 OBJS = $(SRCS:.c=.o)
-OBJS_HARD = $(SRCS_HARD:.c=.o) 
 
 all: sh
 
@@ -36,13 +31,11 @@ $(OBJS): $(INCS)
 $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
-$(OBJS_HARD): $(SRCS_HARD)
-
-sh: $(OBJS) $(OBJS_HARD) 
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS) $(OBJS_HARD)
+sh: $(OBJS)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS)
 
 clean:
-	rm -f $(OBJS) $(OBJS_HARD) sh $(SRCS:.c=) core *~
+	rm -f $(OBJS) sh $(SRCS:.c=) core *~
 
 rmbak:
 	rm -f *~ core
