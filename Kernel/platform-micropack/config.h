@@ -41,9 +41,9 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
-#define NBUFS    6        /* Number of block buffers */
+#define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */

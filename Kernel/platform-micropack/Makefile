@@ -1,6 +1,6 @@
 
-DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c
-CSRCS = devices.c main.c
+DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devfd.c
+CSRCS = devices.c main.c devtty.c
 
 ASRCS = crt0.s z80pack.s
 ASRCS += tricks.s commonmem.s
