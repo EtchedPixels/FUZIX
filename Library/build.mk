@@ -152,7 +152,6 @@ libc-functions.localsrcs += \
 	time.c \
 	tmpfile.c \
 	tmpnam.c \
-	toascii.c \
 	tolower.c \
 	toupper.c \
 	ttyname.c \
