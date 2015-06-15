@@ -346,8 +346,8 @@ sigout:
 	wr = insq(q, c);
 	if (wr)
 		tty_echo(minor, c);
-	else if (minor < PTY_OFFSET)
-		tty_putc_wait(minor, '\007');	/* Beep if no more room */
+	else
+		tty_putc(minor, '\007');	/* Beep if no more room */
 
 	if (!canon || c == t->termios.c_cc[VEOL] || c == '\n'
 	    || c == t->termios.c_cc[VEOF])
