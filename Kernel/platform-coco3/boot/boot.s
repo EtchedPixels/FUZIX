@@ -1,4 +1,4 @@
-;;; 
+;;;
 ;;;  A Fuzix booter for the CoCo3
 ;;;
 
@@ -11,19 +11,19 @@ frame	.dw	0		; on entry frame pointer
 npage	.db	0		; next page no.
 pos	.dw	0		; buffer pos in memory
 nampre	fcn	/"FUZIX.BIN/	; " image to load
-		
+
 	;; And the Kick-off
 start
 	sts	frame
 	lda	#'F		; print F
-	jsr	0xa282		; 
+	jsr	0xa282		;
 	;; open kernel image file
 	ldb	#'I		; input mode
 	jsr	open
 	lbcs	abort
 	lda	#'U		; print "U"
 	jsr	$a282
-	;; Move to task one 
+	;; Move to task one
 	ldx	#$ffa0
 	ldu	#$ffa8
 	ldd	,x++		; copy mmu regs
@@ -108,7 +108,7 @@ a@	sta	,x+
 	.db	$7e		; jump
 bounce_end
 
-	
+
 ;;; Gets next word from file
 ;;;    takes: nothing
 ;;;    returns: D = next word
@@ -118,7 +118,7 @@ getw
 	jsr	$a176		; A = low byte
 	exg	a,b		; flip D = next word
 	rts
-	
+
 
 ;;; Sets load address
 ;;;   takes: D = Address
@@ -132,7 +132,7 @@ setload
 	lsra
 	lsra
 	lsra			; A= blk no
-	sta	$ffaa		; put in mmu 
+	sta	$ffaa		; put in mmu
 	puls	d
 	anda	#$1f		; D = offset
 	addd	#$4000		; mmu offset
@@ -160,7 +160,7 @@ abort
 	lds	frame
 	rts
 
-	
+
 ;;; Open a file
 ;;;   takes: B=ascii mode (I,O,D)
 ;;;   returns: C set on error
@@ -197,7 +197,7 @@ out@	clra			; clear C
 err@	coma			; set C
 	puls	b,pc		; return
 
-	
+
 
 ;;; Close file buffer
 close
