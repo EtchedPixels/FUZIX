@@ -1,0 +1,133 @@
+Fuzix for CoCo3 (512k)
+
+Copyright 2015, Brett M. Gordon, under GPL2.
+
+
+This port is for running FUZIX on an emulated 512K Ram Color
+Computer 3.  This port is based heavily on the platform-6809test and
+the two dragon ports by Tormod Volden.  It will not, as yet, work on a
+stock 128k CoCo3; No disk swapping is supported, and until then, a
+128K version will be unexciting, anyway.
+
+
+*************************
+REQUIREMENTS
+*************************
+
+A working DriveWire implementation.
+A 512k CoCo3 (emulator only for now)
+
+and for building:
+
+decb from the toolshed project: http://sourceforge.net/projects/toolshed/
+lwtools from William Astle: http://lwtools.projects.l-w.ca/
+gcc6809: http://toolshed.sourceforge.net/gcc/
+
+
+
+*************************
+BOOTING
+*************************
+
+Booting this Fuzix is accomplished via some flavor of Disk Extended
+Color Basic (DECB).  When building Fuzix two disk images are
+produced. The first, "Kernel/platform-coco3/fuzix.dsk", is a standard
+35 track DECB image.  This RSDOS filesystem contains a small
+bootloader, "BOOT.BIN", that does the serious work of loading the
+actual kernel, "FUZIX.BIN", into memory.  There is a HDBDOS/YA-DOS
+style "AUTOEXEC.BAS" file included to assist in auto-booting FUZIX.
+
+The second disk image produced is
+"Standalone/filesystem-src/fuzixfs.dsk".  This is the actual Fuzix
+"root" filesystem, containing the usual suspects.
+
+The stock build can be booted by placing "fuzix.dsk" in Drivewire as
+disk 0, and "fuzixfs.dsk" as disk 1.  PLEASE TURN OFF "HDBDOS
+Translation" on the Drivewire Server. If not using HDBDOS/YA-DOS type
+the following at the BASIC prompt:
+
+LOADM"BOOT.BIN":EXEC 'DW1
+
+The boot loader will automatically consider anything after the BASIC
+REM comment as a commandline to be sent to the kernel.  In the above
+example, "DW1", indicates that DriveWire Drive No. 1 should be mounted
+as the root filesystem.
+
+
+*************************
+KEYBOARD 
+*************************
+
+Some work needs done on the support on the ALT key shifting.  The ALT
+key is hard to use with a emulators that work in Windows or X, anyway.
+
+The tilde, "~", character can be produced with <F1>
+The pipe, "|", character can be produced with <SHIFT><F1>
+
+Pressing <CTRL><1> will switch to virtual console No. 1.
+Pressing <CTRL><2> will switch to virtual console No. 2.
+
+
+*************************
+DEVICES (so far)
+*************************
+
+node       major   minor     description
+/dev/tty1  2       1   	     console / virtual terminal No. 1.
+/dev/tty2  2       2         virtual terminal No. 2.
+/dev/tty3  2       3         Drivewire Virtual Window #0 
+/dev/dw?   8       0-256     Drivewire Block Drives
+
+
+**************************
+BUILDING
+**************************
+
+# 1. Build the kernel:
+make -C Kernel TARGET=coco3
+
+# 2. Build the boot disk:
+make -C Kernel/platform-coco3 fuzix.dsk
+
+# 2. Build the libraries
+make -C Library tools/syscall_6809
+make -C Library/libs -f Makefile.6809 TARGET=coco3
+
+# 3. Build the utils
+make -C Applications/util -f Makefile.6809 TARGET=coco3
+
+# 4. Build disk tools
+make -C Standalone
+
+# 5. Build boot disk image 
+cd Standalone/filesystem-src
+./build-filesystem -X fuzix.dsk 256 65535
+
+
+
+*************************
+TO DO
+*************************
+
+* Swapping to disk has not been implemented yet, so a standard 512k
+upgrade is required.
+
+* IDE Drivers.
+
+* Better and more DriveWire Virtual Serial Ports.
+
+* Fix the underlying Banking layout to better handle UDATA
+
+* Better support of the GIME chip's video modes
+
+* A whole gaggle of things, to numerous to count.
+
+
+*************************
+BUGS
+*************************
+
+* Things work better if you compile the userspace utilities (esp. "init")
+with standard gcc optimizations.
+
+

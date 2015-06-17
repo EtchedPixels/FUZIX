@@ -1,0 +1,273 @@
+;;;
+;;; CoCo3 ghoulish tricks (boo!)
+;;;
+        .module tricks
+
+	;; imported
+        .globl _newproc
+        .globl _chksigs
+        .globl _getproc
+        .globl _trap_monitor
+
+	;; exported
+        .globl _switchout
+        .globl _switchin
+        .globl _dofork
+	.globl _ramtop
+
+        include "kernel.def"
+        include "../kernel09.def"
+
+
+	.area .data
+;;; _ramrop cannot be in common, as this memory becomes per-process
+;;; when we add better udata handling.
+_ramtop:
+	.dw 0
+	
+
+
+	.area .common
+
+;;; Switchout switches out the current process, finds another that is READY,
+;;; possibly the same process, and switches it in.  When a process is
+;;; restarted after calling switchout, it thinks it has just returned
+;;; from switchout().
+;;;
+;;; FIXME: make sure we optimise the switch to self case higher up the stack!
+;;; 
+;;; This function can have no arguments or auto variables.
+_switchout:
+	orcc 	#0x10		; irq off
+        jsr 	_chksigs	; check for signals
+
+        ;; save machine state
+        ldd 	#0		; return zero
+	;; return code set here is ignored, but _switchin can 
+        ;; return from either _switchout OR _dofork, so they must both write 
+        ;; U_DATA__U_SP with the following on the stack:
+	pshs 	d,y,u
+	sts 	U_DATA__U_SP	; save SP
+
+
+	;; Stash the uarea into process memory bank
+	jsr 	map_process_always
+	ldx 	#U_DATA
+	ldy 	#U_DATA_STASH
+stash	ldd 	,x++
+	std 	,y++
+	cmpx 	#U_DATA+U_DATA__TOTALSIZE
+	bne 	stash
+	jsr 	map_kernel
+
+        
+        jsr 	_getproc	; X = next process ptr
+        jsr 	_switchin	; and switch it in
+        ; we should never get here
+        jsr 	_trap_monitor
+
+_swapstack
+	.dw 	0
+	.dw 	0
+
+
+badswitchmsg:
+	.ascii 	"_switchin: FAIL"
+        .db 	13
+	.db 	10
+	.db 	0
+
+;;; Switch in a process 
+;;;   takes: X = process
+;;;   returns: shouldn't
+_switchin:
+        orcc 	#0x10		; irq off
+
+	;pshs x
+	stx 	_swapstack
+
+	leax 	P_TAB__P_PAGE_OFFSET,x		; get address of page table
+
+
+	cmpx 	U_DATA__U_PAGE	; switching in ourselfs?
+	beq 	nostash		; yes then don't save UDATA
+
+	jsr 	map_process	; map new process into memory
+	
+	; fetch uarea from process memory
+	sty 	_swapstack+2
+	ldx 	#U_DATA_STASH
+	ldy 	#U_DATA
+stashb	ldd 	,x++
+	std 	,y++
+	cmpx 	#U_DATA_STASH+U_DATA__TOTALSIZE
+	bne 	stashb
+
+	; we have now new stacks so get new stack pointer before any jsr
+	lds 	U_DATA__U_SP
+
+	; get back kernel page so that we see process table
+	jsr 	map_kernel
+
+nostash:
+	;puls x
+	ldx 	_swapstack
+        ; check u_data->u_ptab matches what we wanted
+	cmpx 	U_DATA__U_PTAB
+        bne 	switchinfail
+
+	lda 	#P_RUNNING
+	sta 	P_TAB__P_STATUS_OFFSET,x
+
+	;; fix-up page mappings (voodoo code?)
+	lda 	P_TAB__P_PAGE_OFFSET,x
+	sta 	U_DATA__U_PAGE
+	lda 	P_TAB__P_PAGE_OFFSET+1,x
+	sta 	U_DATA__U_PAGE+1
+	lda 	P_TAB__P_PAGE_OFFSET+2,x
+	sta 	U_DATA__U_PAGE+2
+	lda 	P_TAB__P_PAGE_OFFSET+3,x
+	sta 	U_DATA__U_PAGE+3
+
+	;; clear the 16 bit tick counter 
+	ldx 	#0
+	stx 	_runticks
+
+        ;; restore machine state -- note we may be returning from either
+        ;; _switchout or _dofork
+        lds 	U_DATA__U_SP
+        puls 	x,y,u ; return code and saved U and Y
+
+        ;; enable interrupts, if the ISR isn't already running
+	lda	U_DATA__U_ININTERRUPT
+	bne 	swtchdone
+	andcc 	#0xef
+swtchdone:
+        rts
+
+switchinfail:
+	jsr 	outx
+        ldx 	#badswitchmsg
+        jsr 	outstring
+	;; something went wrong and we didn't switch in what we asked for
+        jmp 	_trap_monitor
+
+fork_proc_ptr:
+	.dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
+
+;;;
+;;;	Called from _fork. We are in a syscall, the uarea is live as the
+;;;	parent uarea. The kernel is the mapped object.
+;;;
+_dofork:
+        ;; always disconnect the vehicle battery before performing maintenance
+        orcc 	#0x10	 ; should already be the case ... belt and braces.
+
+	;; new process in X, get parent pid into y
+	stx 	fork_proc_ptr
+	ldx 	P_TAB__P_PID_OFFSET,x
+
+        ;; Save the stack pointer and critical registers.
+        ;; When this process (the parent) is switched back in, it will be as if
+        ;; it returns with the value of the child's pid.
+	;; Y has p->p_pid from above, the return value in the parent
+        pshs 	x,y,u 
+
+        ;; save kernel stack pointer -- when it comes back in the
+	;; parent we'll be in
+	;; _switchin which will immediately return (appearing to be _dofork()
+	;; returning) and with HL (ie return code) containing the child PID.
+        ;; Hurray.
+        sts 	U_DATA__U_SP
+
+        ;; now we're in a safe state for _switchin to return in the parent
+	;; process.
+
+	;; --------- we switch stack copies in this call -----------
+	jsr 	fork_copy	; copy 0x000 to udata.u_top and the
+				; uarea and return on the childs
+				; common
+	;; We are now in the kernel child context
+
+        ;; now the copy operation is complete we can get rid of the stuff
+        ;; _switchin will be expecting from our copy of the stack.
+	puls 	x
+
+        ldx 	fork_proc_ptr	; get forked process
+        jsr 	_newproc	; and set it up
+
+	;; any calls to map process will now map the childs memory
+
+	ldx 	#0		; zero out process's tick counter
+	stx 	_runticks
+        ;; in the child process, fork() returns zero.
+	;;
+	;; And we exit, with the kernel mapped, the child now being deemed
+	;; to be the live uarea. The parent is frozen in time and space as
+	;; if it had done a switchout().
+        puls y,u,pc
+
+
+;;; copy the process memory to the new process
+;;; and stash parent uarea to old bank
+fork_copy:
+	ldx 	fork_proc_ptr
+	ldb 	P_TAB__P_PAGE_OFFSET,x ;  new bank
+	lda 	U_DATA__U_PAGE         ;  old bank
+	jsr 	copybank
+	ldb 	P_TAB__P_PAGE_OFFSET+1,x ;  new bank
+	lda 	U_DATA__U_PAGE+1         ;  old bank
+	jsr 	copybank
+	ldb 	P_TAB__P_PAGE_OFFSET+2,x ;  new bank
+	lda 	U_DATA__U_PAGE+2         ;  old bank
+	jsr 	copybank
+	;; stash parent urea (including kernel stack)
+	jsr 	map_process_always
+	ldx 	#U_DATA
+	ldu 	#U_DATA_STASH
+stashf	ldd 	,x++
+	std 	,u++
+	cmpx 	#U_DATA+U_DATA__TOTALSIZE
+	bne 	stashf
+	jsr 	map_kernel
+	; --- we are now on the stack copy, parent stack is locked away ---
+	rts	; this stack is copied so safe to return on
+
+;;; Copy data from one bank to another
+;;;   takes: B = dest bank, A = src bank
+;;;   modifies: U
+copybank
+	pshs	d,x
+	;; copy first block in bank
+	ldd	0xffa8		; save mmu state
+	pshs	d
+	ldd	0xffaa
+	pshs	d
+	;; map in src and dest
+	ldd	4,s		; D = banks
+	stb	0xffa8
+	incb
+	stb	0xffa9
+	sta	0xffaa
+	inca
+	sta	0xffab
+	;; copy
+	ldx	#0
+	ldu	#0x4000
+a@	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	cmpx	#0x4000
+	bne	a@
+	;; restore mmu
+	puls	d
+	std	0xffaa
+	puls	d
+	std	0xffa8
+	;; return
+	puls	d,x,pc		; return
