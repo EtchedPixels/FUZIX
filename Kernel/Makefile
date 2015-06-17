@@ -1,4 +1,4 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2
+TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2 platform-coco3
 
 #export TARGET = 6809simple
 #export TARGET = 6809test
@@ -6,6 +6,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = atarist
 #export TARGET = bbcmicro
 #export TARGET = dragon
+#export TARGET = coco3
 #export TARGET = dragon-nx32
 #export TARGET = micropack
 #export TARGET = msx1
@@ -19,7 +20,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = px4plus
 #export TARGET = socz80
 #export TARGET = tgl6502
-export TARGET = trs80
+#export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite

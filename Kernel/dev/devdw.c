@@ -41,10 +41,14 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         block = udata.u_offset >> 9;
         nblock = udata.u_count >> 8;
     } else if (rawflag == 2) {
+#ifdef SWAPDEV
         page = (uint8_t)swappage;
         dptr = (uint16_t)swapbase;
         nblock = swapcnt >> 8;
         block = swapblk;
+#else
+	goto bad2;
+#endif
     } else
         goto bad2;
 
