@@ -55,7 +55,7 @@ as the root filesystem.
 
 
 *************************
-KEYBOARD 
+KEYBOARD
 *************************
 
 Some work needs done on the support on the ALT key shifting.  The ALT
@@ -75,7 +75,7 @@ DEVICES (so far)
 node       major   minor     description
 /dev/tty1  2       1   	     console / virtual terminal No. 1.
 /dev/tty2  2       2         virtual terminal No. 2.
-/dev/tty3  2       3         Drivewire Virtual Window #0 
+/dev/tty3  2       3         Drivewire Virtual Window #0
 /dev/dw?   8       0-256     Drivewire Block Drives
 
 
@@ -99,7 +99,7 @@ make -C Applications/util -f Makefile.6809 TARGET=coco3
 # 4. Build disk tools
 make -C Standalone
 
-# 5. Build boot disk image 
+# 5. Build boot disk image
 cd Standalone/filesystem-src
 ./build-filesystem -X fuzix.dsk 256 65535
 

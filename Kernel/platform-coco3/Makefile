@@ -1,8 +1,8 @@
 
 CSRCS = devtty.c ttydw.c
-CSRCS += devices.c main.c libc.c 
+CSRCS += devices.c main.c libc.c
 
-DSRCS = ../dev/devdw.c 
+DSRCS = ../dev/devdw.c
 
 ASRCS = coco3.s crt0.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s
@@ -16,7 +16,7 @@ CROSS_CCOPTS += -I../dev/
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
 
-all:	$(OBJS) 
+all:	$(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -29,10 +29,10 @@ $(AOBJS): %$(BINEXT): %.s
 
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f $(OBJS) $(JUNK)  core *~
 
 image:
-	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c 
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \

@@ -6,7 +6,7 @@ U_DATA__TOTALSIZE           equ 0x200        ; 256+256 bytes.
 U_DATA_STASH		    equ 0xBd00       ; FC00-FEFF
 
 
-;;; We don't need these macros for we have no 
+;;; We don't need these macros for we have no
 ;;; SAM shenanigans on a CoCo3
 
 SAM_USER macro

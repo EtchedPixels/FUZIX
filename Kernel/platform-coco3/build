@@ -1,7 +1,7 @@
 
 # remake kernel
 cd ..
-make TARGET=coco3 clean 
+make TARGET=coco3 clean
 
 # specially make bank16.c (bug fix for compile fart?)
 #m6809-unknown-gcc -c -Wall -msoft-reg-count=0 -mfar-stack-param -I cpu-6809 -I platform-coco3 -I include -o bank16k.o bank16k.c

@@ -38,7 +38,7 @@
             include "../kernel09.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK 
+; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
             .area .common
 
@@ -70,7 +70,7 @@ bounce@
 	jmp	[0xfffe]	; jmp to reset vector
 bounce_end@
 
-	
+
 
 ;;; Turn off interrupts
 ;;;    takes: nothing
@@ -95,7 +95,7 @@ _irqrestore:			; B holds the data
 	    rts
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK 
+; KERNEL MEMORY BANK
 ; -----------------------------------------------------------------------------
             .area .text
 
@@ -174,7 +174,7 @@ _program_vectors:
 	ldb	#0x7E
 	stb	0
 	jsr	map_kernel
-	rts			
+	rts
 
 ;;; This clear the interrupt source before calling the 
 ;;  normal handler
@@ -183,7 +183,7 @@ _program_vectors:
 my_interrupt_handler
 	lda	$ff02		; clear pia irq latch by reading data port
 	jmp	interrupt_handler ; jump to regular handler
-	
+
 ;;;  FIXME:  these interrupt handlers should prolly do something
 ;;;  in the future.
 firq_handler:
@@ -239,7 +239,7 @@ map_process_2:
 	    sta ,y+		; put it in mmu
 
 	;; map the rest of the block in order
-*	    ldy #0xffa0		; 
+*	    ldy #0xffa0		;
 	    lda ,x+
 	    sta ,y+
 	    inca
@@ -249,11 +249,11 @@ map_process_2:
 	    sta ,y+
 	    inca
 	    sta ,y+
-	
+
 *	    lda ,x+
 	    lda	#6
 	    sta ,y+
-	    inca	
+	    inca
 	    sta ,y
 
 	    lda  #0
@@ -261,7 +261,6 @@ map_process_2:
 	    sta init1_mirror		; and save INIT1 setting in mirror
 	    puls x,y,a,pc		; so had better include common!
 
-	
 ;;;
 ;;;	Restore a saved mapping. We are guaranteed that we won't switch
 ;;;	common copy between save and restore. Preserve all registers
@@ -276,7 +275,7 @@ map_restore:
 	    sta init1_mirror
 	    sta 0xff91
 	    puls a,pc
-	    
+
 ;;; Save current mapping
 ;;;   takes: nothing
 ;;;   returns: nothing
@@ -290,7 +289,7 @@ saved_map:  .db 0		; which mapping state where we in?
 init1_mirror:
 	    .db 0		; a *mirror* of gimme $ff91, which is WriteOnly
 _need_resched	.db 0		; scheduler flag
-	    
+
 
 ;;;  Print a character to debugging
 ;;;   takes: A = character
@@ -304,4 +303,3 @@ outchar:
 
 	.area	.data
 scrPos	.dw	0xb400		; debugging screen buffer position
-
