@@ -21,7 +21,7 @@
 	; imported
 	.globl 	map_process_always
 	.globl 	map_kernel
-	
+
 	.area 	.common
 
 __ugetc:

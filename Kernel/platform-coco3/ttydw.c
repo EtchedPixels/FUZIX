@@ -23,7 +23,7 @@ int wait=MAX_WAIT;
 
 /* Number of ports open. IF zero then polling routine
    will not poll */
-int open_ports=0;    
+int open_ports=0;
 
 void dw_putc( uint8_t minor, unsigned char c ){
   unsigned char buf[2];

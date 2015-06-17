@@ -24,7 +24,7 @@
 ;;; when we add better udata handling.
 _ramtop:
 	.dw 0
-	
+
 
 
 	.area .common
@@ -35,7 +35,7 @@ _ramtop:
 ;;; from switchout().
 ;;;
 ;;; FIXME: make sure we optimise the switch to self case higher up the stack!
-;;; 
+;;;
 ;;; This function can have no arguments or auto variables.
 _switchout:
 	orcc 	#0x10		; irq off
@@ -43,8 +43,8 @@ _switchout:
 
         ;; save machine state
         ldd 	#0		; return zero
-	;; return code set here is ignored, but _switchin can 
-        ;; return from either _switchout OR _dofork, so they must both write 
+	;; return code set here is ignored, but _switchin can
+        ;; return from either _switchout OR _dofork, so they must both write
         ;; U_DATA__U_SP with the following on the stack:
 	pshs 	d,y,u
 	sts 	U_DATA__U_SP	; save SP
@@ -60,7 +60,7 @@ stash	ldd 	,x++
 	bne 	stash
 	jsr 	map_kernel
 
-        
+
         jsr 	_getproc	; X = next process ptr
         jsr 	_switchin	; and switch it in
         ; we should never get here
@@ -77,7 +77,7 @@ badswitchmsg:
 	.db 	10
 	.db 	0
 
-;;; Switch in a process 
+;;; Switch in a process
 ;;;   takes: X = process
 ;;;   returns: shouldn't
 _switchin:
@@ -93,7 +93,7 @@ _switchin:
 	beq 	nostash		; yes then don't save UDATA
 
 	jsr 	map_process	; map new process into memory
-	
+
 	; fetch uarea from process memory
 	sty 	_swapstack+2
 	ldx 	#U_DATA_STASH
@@ -129,7 +129,7 @@ nostash:
 	lda 	P_TAB__P_PAGE_OFFSET+3,x
 	sta 	U_DATA__U_PAGE+3
 
-	;; clear the 16 bit tick counter 
+	;; clear the 16 bit tick counter
 	ldx 	#0
 	stx 	_runticks
 
@@ -171,7 +171,7 @@ _dofork:
         ;; When this process (the parent) is switched back in, it will be as if
         ;; it returns with the value of the child's pid.
 	;; Y has p->p_pid from above, the return value in the parent
-        pshs 	x,y,u 
+        pshs 	x,y,u
 
         ;; save kernel stack pointer -- when it comes back in the
 	;; parent we'll be in

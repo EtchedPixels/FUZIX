@@ -14,7 +14,7 @@ void do_beep(void)
 }
 
 /*
- Map handling: We have flexible paging. Each map table consists 
+ Map handling: We have flexible paging. Each map table consists
  of a set of pages with the last page repeated to fill any holes.
  */
 
