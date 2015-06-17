@@ -42,7 +42,7 @@ int main(int argc, char **argv)
       char **name;
       FILE *f;
       struct lstring *line = NULL;
-      llist_t *list = NULL;
+      struct llist_t *list = NULL;
       int retval = EXIT_SUCCESS;
 
 /* tac from coreutils 6.9 supports:
