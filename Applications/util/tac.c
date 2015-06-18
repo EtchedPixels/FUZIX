@@ -42,7 +42,7 @@ int main(int argc, char **argv)
       char **name;
       FILE *f;
       struct lstring *line = NULL;
-      struct llist_t *list = NULL;
+      struct llist_t *list = & ((struct llist_t){0});
       int retval = EXIT_SUCCESS;
 
 /* tac from coreutils 6.9 supports:
@@ -102,12 +102,12 @@ We support none, but at least we will complain or handle "--":
                   retval = EXIT_FAILURE;
             }
       } while (name != argv);
-
+      char i=0;
       while (list) {
             line = (struct lstring *)list->data;
             write(STDOUT_FILENO, line->buf, line->size);
             *(list)=(llist){0};
-            free(list);
+            if (i) free(list); else i++;
             list = list->link;
       }
 
