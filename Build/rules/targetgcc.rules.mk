@@ -3,10 +3,6 @@
 
 PLATFORM_RULES = targetgcc.rules
 
-# Locate the libgcc used by this target.
-
-libgcc = $(shell $(TARGETCC) --print-libgcc)
-libgcc.ld = -L$(dir $(libgcc)) -lgcc
 
 libc.ld = -L$(dir $(libc.result)) -lc
 
@@ -30,7 +26,6 @@ targetgcc.asflags += \
 
 target-exe.extradeps += \
 	$(libc.result) \
-	$(libgcc) \
 	$(TOP)/Build/platforms/$(PLATFORM).ld
 
 target-exe.ldflags += \
@@ -40,7 +35,6 @@ target-exe.ldflags += \
 # Used when linking kernel images.
 
 kernel-elf.extradeps += \
-	$(libgcc) \
 	$(TOP)/Kernel/platform-$(PLATFORM)/$(PLATFORM).ld
 
 kernel-elf.ldflags += \
@@ -124,15 +118,20 @@ endif
 
 ifneq ($$(filter %.exe, $$($1.result)),)
 
+# Locate the libgcc used by this target.
+
+$1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
+
 $$($1.result): $$($1.objs) $(crt0.result) \
-		$$($$($1.class).extradeps) $$($1.extradeps)
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(TARGETLD) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$@.elf \
 		--start-group \
-		$$($1.objs) $(crt0.result) $(libc.ld) $(libgcc.ld) \
+		$$($1.objs) $(crt0.result) $(libc.ld) \
+		-L$$(dir $$($1.libgcc)) -lgcc \
 		--end-group
 	$(hide) $(TARGETOBJCOPY) \
 		--output-target binary $$@.elf $$@
@@ -143,8 +142,10 @@ endif
 
 ifneq ($$(filter %.elf, $$($1.result)),)
 
+$1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
+
 $$($1.result): $$($1.objs) \
-		$$($$($1.class).extradeps) $$($1.extradeps)
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
 	@echo KERNEL $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(TARGETLD) \
@@ -152,7 +153,8 @@ $$($1.result): $$($1.objs) \
 		-o $$@ \
 		-Map $$(@:elf=map) \
 		--start-group \
-		$$($1.objs) $(libgcc.ld) \
+		$$($1.objs) \
+		-L$$(dir $$($1.libgcc)) -lgcc \
 		--end-group
 
 endif
