@@ -12,6 +12,7 @@ TARGETAR = msp430-elf-ar
 TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
 
+targetgcc.cflags += -ffunction-sections -fdata-sections
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
 
 # CPU architecture and which syscall generator to use.

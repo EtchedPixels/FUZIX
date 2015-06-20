@@ -37,4 +37,11 @@ include $(TOP)/Applications/V7/cmd/sh/build.mk
 include $(TOP)/Applications/levee/build.mk
 include $(TOP)/Standalone/filesystem-src/build.mk
 
+ifeq ($(wildcard $(TOP)/Kernel/platform-$(PLATFORM)/build.mk),)
+$(warning (building the kernel for $(PLATFORM) isn't set up from here yet))
+else
+include $(TOP)/Kernel/platform-$(PLATFORM)/build.mk
+all: kernel
+endif
+
 all: tests standalones filesystem
