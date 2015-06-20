@@ -47,8 +47,6 @@ void tty_rawinit(void)
 	
 	/* Disable RX/TX interrupts. */
 	UCA0IE &= ~(UCTXIE | UCRXIE);
-
-	kprintf("Hello, world!\n");
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -57,6 +55,10 @@ void tty_putc(uint8_t minor, unsigned char c)
 		;
 
 	UCA0TXBUF = c;
+}
+
+void tty_sleeping(uint8_t minor)
+{
 }
 
 ttyready_t tty_writeready(uint8_t minor)

@@ -7,6 +7,9 @@ hide = @
 CFLAGS = -g -Os
 LDFLAGS = -g
 
+VERSION = "0.1"
+SUBVERSION = "ac1"
+
 host.cflags = $(CFLAGS)
 host.ldflags = $(LDFLAGS)
 

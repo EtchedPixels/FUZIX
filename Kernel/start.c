@@ -281,6 +281,7 @@ void fuzix_main(void)
 	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	fstabinit();
+#if 0
 	pagemap_init();
 	create_init();
 
@@ -310,5 +311,6 @@ void fuzix_main(void)
 	udata.u_root = i_ref(root);
 	rdtime32(&udata.u_time);
 	exec_or_die();
+#endif
 }
 
