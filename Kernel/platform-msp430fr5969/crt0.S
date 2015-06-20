@@ -29,6 +29,7 @@ istack_top:
 .comm udata, U_DATA__U_TOP - U_DATA__U_PTAB
 
 .text
+.globl __main
 __main:
 	; Disable watchdog timer.
 
@@ -48,21 +49,21 @@ __main:
 	mov #__bssstart, r12
 	mov #0, r13
 	mov #__bsssize, r14
-	call #memset
+	calla #memset
 
 	; Wipe the extra, big bit of BSS.
 	mov #__bigbssstart, r12
 	mov #0, r13
 	mov #__bigbsssize, r14
-	call #memset
+	calla #memset
 
 	; Set some kernel variables.
 	mov.w #64, &ramsize
 	mov.w #32, &procmem
 
 	; Call C routines.
-	call #tty_rawinit
-	;call #fuzix_main
+	calla #tty_rawinit
+	calla #fuzix_main
 stop:
 	jmp stop
 
@@ -77,7 +78,7 @@ trap_monitor:
 .globl ei
 ei:
 	bis.w #GIE, SR
-	ret
+	reta
 
 .globl di
 di:
@@ -85,13 +86,13 @@ di:
 	mov SR, r12
 	and #~GIE, r12
 	bic.w #GIE, SR
-	ret
+	reta
 
 .globl irqrestore
 irqrestore:
 	bic.w #GIE, SR           ; Ensure off
 	bis.w r12, SR            ; Mask in saved value
-	ret
+	reta
 
 .section "__interrupt_vector_reset", "ax", @progbits
 	.word __main
@@ -101,7 +102,7 @@ irqrestore:
 	.text { \
 	1: mov #3f, r12 { \
 	   mov #kstack_top, sp { \
-	   call #kprintf { \
+	   calla #kprintf { \
 	2: jmp 2b { \
 	.data { \
 	3: .asciz name { \
