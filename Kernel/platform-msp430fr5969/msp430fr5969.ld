@@ -221,8 +221,7 @@ SECTIONS
     KEEP (*(.dtors))
   } > HIROM
 
-  .text           :
-  {
+  .text : {
     . = ALIGN(2);
     PROVIDE (_start = .);
     KEEP (*(SORT(.crt_*)))

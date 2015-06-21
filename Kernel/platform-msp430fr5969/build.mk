@@ -17,6 +17,7 @@ kernel.srcs = \
 	../dev/mbr.c \
 	../devio.c \
 	../filesys.c \
+	../lowlevel-msp430x.S \
 	../kdata.c \
 	../process.c \
 	../simple.c \

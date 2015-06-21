@@ -1,3 +1,5 @@
+U_DATA = udata
+
 ; Keep these in sync with struct u_data!!
 #define U_DATA__U_PTAB         (U_DATA+0)   ; struct p_tab*
 #define U_DATA__U_PAGE         (U_DATA+2)   ; uint16_t
