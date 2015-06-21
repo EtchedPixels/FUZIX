@@ -11,14 +11,23 @@ $(kernelversion.result):
 
 
 kernel.srcs = \
+	../dev/blkdev.c \
+	../dev/devsd.c \
+	../dev/devsd_discard.c \
+	../dev/mbr.c \
 	../devio.c \
+	../filesys.c \
 	../kdata.c \
 	../process.c \
+	../simple.c \
 	../start.c \
+	../swap.c \
+	../timer.c \
 	../tty.c \
 	../usermem.c \
 	crt0.S \
 	devices.c \
+	devsdspi.c \
 	devtty.c \
 	libc.c \
 	main.c \

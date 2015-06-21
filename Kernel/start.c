@@ -281,7 +281,6 @@ void fuzix_main(void)
 	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	fstabinit();
-#if 0
 	pagemap_init();
 	create_init();
 
@@ -301,6 +300,7 @@ void fuzix_main(void)
 
 	if (fmount(root_dev, NULLINODE, 0))
 		panic("no filesys");
+#if 0
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)
 		panic("no root");

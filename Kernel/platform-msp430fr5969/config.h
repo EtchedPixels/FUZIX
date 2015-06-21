@@ -16,17 +16,13 @@
 #define BANK_PROCESS
 
 /* Pure swap */
-#undef CONFIG_SWAP_ONLY
+#define CONFIG_SWAP_ONLY
+
 #define CONFIG_BANKS 1
 /* Banked Kernel: need to fix GCC first */
 #undef CONFIG_BANKED
 /* And swapping */
 #define SWAPDEV 6	/* FIXME */
-#define SWAP_SIZE   0x80 	/* 64K blocks */
-/* FIXME */
-#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0x8000	/* uarea so its a round number of sectors */
-#define MAX_SWAPS	32
 
 /* Video terminal, not a serial tty */
 #undef CONFIG_VT
@@ -48,7 +44,13 @@ extern int __user_base;
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    ((uint16_t)(size_t)&__user_base)  /* also data base */
 #define PROGLOAD    PROGBASE /* also data base */
-#define PROGTOP     0xff80  /* Top of program */
+#define PROGTOP     0xfe00  /* Top of program */
+
+#define SWAPBASE    PROGBASE
+#define SWAPTOP	    PROGTOP
+#define SWAP_SIZE   ((PROGTOP - PROGBASE)/512)
+#define MAX_SWAPS	32
+#define swap_map(x) ((uint8_t*)(x))
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -64,6 +66,9 @@ extern int __user_base;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
+
+#define SD_DRIVE_COUNT 1
+#define MAX_BLKDEV 1
 
 #define BIGDATA __attribute__ ((section (".bigbss")))
 

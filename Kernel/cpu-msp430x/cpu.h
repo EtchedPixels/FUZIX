@@ -43,6 +43,8 @@ typedef union {            /* this structure is endian dependent */
 
 #define cpu_to_le16(x)	(x)
 #define le16_to_cpu(x)	(x)
+#define cpu_to_le32(x)  (x)
+#define le32_to_cpu(x)  (x)
 
 /* Bank attributes --- unused */
 #define CODE1

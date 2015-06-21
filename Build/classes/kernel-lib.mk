@@ -10,12 +10,14 @@ $1: $$($1.result)
 
 $1.cflags += \
 	-I$(TOP)/Kernel \
+	-I$(TOP)/Kernel/dev \
 	-I$(TOP)/Kernel/include \
 	-I$(TOP)/Kernel/platform-$(PLATFORM) \
 	-I$(TOP)/Kernel/cpu-$(ARCH)
 
 $1.asflags += \
 	-I$(TOP)/Kernel \
+	-I$(TOP)/Kernel/dev \
 	-I$(TOP)/Kernel/include \
 	-I$(TOP)/Kernel/platform-$(PLATFORM) \
 	-I$(TOP)/Kernel/cpu-$(ARCH)

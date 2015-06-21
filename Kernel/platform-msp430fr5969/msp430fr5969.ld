@@ -106,7 +106,8 @@ MEMORY {
 
   SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800 /* END=0x23FF, size 2048 */
   LOROM            : ORIGIN = 0x4400, LENGTH = 0x8000-0x4400
-  USER             : ORIGIN = 0x8000, LENGTH = 0xff00-0x8000
+  USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000
+  LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00
   HIROM            : ORIGIN = 0x10000, LENGTH = 0x3FFF
 }
 
@@ -218,7 +219,7 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
-  } > LOROM
+  } > HIROM
 
   .text           :
   {

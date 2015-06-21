@@ -1,4 +1,5 @@
 #include "msp430fr5969.h"
+#include "kernel.def"
 #include "kernel430x.def"
 
 ; imported symbols
@@ -10,10 +11,6 @@
 
 
 .section ".noinit"
-; The kernel stack.
-kstack_base:
-	.fill 256
-kstack_top:
 
 ; The interrupt stack.
 istack_base:
@@ -24,9 +21,11 @@ istack_top:
 .globl istack_switch_sp
 .comm istack_switch_sp, 2
 
-; The userdata structure.
+; The userdata/system stack structure. See Kernel/include/kernel.h.
 .globl udata
-.comm udata, U_DATA__U_TOP - U_DATA__U_PTAB
+udata:
+	.fill 512
+kstack_top:
 
 .text
 .globl __main
@@ -75,6 +74,17 @@ trap_monitor:
 	bic.w #GIE, SR
 	jmp trap_monitor
 	
+.globl abort
+abort:
+	bic.w #GIE, SR
+	mov #1f, r12
+	mov #kstack_top, sp
+	calla #kprintf
+	jmp .
+.data
+1: .asciz "[abort]\n"
+.text
+
 .globl ei
 ei:
 	bis.w #GIE, SR
