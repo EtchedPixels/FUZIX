@@ -272,6 +272,7 @@ ptptr ptab_alloc(void)
 				    && p->p_pid == nextpid)
 					newp->p_pid = 0;	/* try again */
 		}
+		newp->p_top = udata.u_top;
 		if (pagemap_alloc(newp) == 0) {
 			newp->p_status = P_FORKING;
 			nproc++;
