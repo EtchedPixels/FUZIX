@@ -70,5 +70,5 @@ extern int __user_base;
 #define SD_DRIVE_COUNT 1
 #define MAX_BLKDEV 1
 
-#define BIGDATA __attribute__ ((section (".bigbss")))
+#define BOOTDEVICE 0x0001 // hda1
 

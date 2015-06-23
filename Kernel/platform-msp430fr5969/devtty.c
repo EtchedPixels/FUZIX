@@ -24,6 +24,8 @@ void kputchar(char c)
 
 void tty_rawinit(void)
 {
+	/* The tty uses UCA0. */
+
 	/* Connect pins 2.0 and 2.1 to the UART. */
 	P2SEL1 |= BIT0 | BIT1;
 	P2SEL0 &= ~(BIT0 | BIT1);

@@ -7,7 +7,7 @@
 #include <printf.h>
 #include <timer.h>
 #include "msp430fr5969.h"
-#include "globals.h"
+#include "externs.h"
 
 extern uint8_t last_interrupt;
 
@@ -48,6 +48,7 @@ void device_init(void)
 	WDTCTL = WDTPW | WDTSSEL__ACLK | WDTTMSEL | WDTCNTCL | WDTIS__512;
 	SFRIE1 |= WDTIE;
 
+	sd_rawinit();
 	devsd_init();
 }
 

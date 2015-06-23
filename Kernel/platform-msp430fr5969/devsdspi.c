@@ -8,122 +8,111 @@
 #include <printf.h>
 #include <timer.h>
 #include <stdbool.h>
-#include "config.h"
 #include <blkdev.h>
+#include "config.h"
+#include "externs.h"
+#include "msp430fr5969.h"
 
-/* We should revisit this if we are willing to rely on the later VHDL
-   being used. At that point we've got mode setting but more importantly
-   the tx port is r/w as rx/tx so the port can sit in (c) */
+#define SPI_MODE_0 (UCCKPH)
+#define SPI_MODE_1 (0)
+#define SPI_MODE_2 (UCCKPH|UCCKPL)
+#define SPI_MODE_3 (UCCKPL)
 
-#if 0
-__sfr __at 0x30 sd_spi_chipselect;
-__sfr __at 0x31 sd_spi_status;
-__sfr __at 0x32 sd_spi_tx;
-__sfr __at 0x33 sd_spi_rx;
-__sfr __at 0x34 sd_spi_divisor;
-__sfr __at 0x35 sd_spi_gpio;		/* only on later VHDL */
-__sfr __at 0x36 sd_spi_mode;		/* only on later VHDL */
-#endif
-
-#define SD_SPI_TX 0x32
-#define SD_SPI_RX 0x33
-
-void sd_spi_mode0(void)
+void sd_rawinit(void)
 {
-#if 0
-  sd_spi_mode = 0;
-#endif
+	/* The SD card is an SPI device with CS on P1.3. All our SPI devices
+	 * are going to be on UCB0. */
+
+	P1DIR |= BIT3;         // set pin as output
+	P1OUT &= ~BIT3;        // lower CS
+
+	/* Disable UCB0 while we set it up. */
+
+	UCB0CTLW0 = UCSWRST;
+
+	/* Connect up SIMO, MISO. */
+
+	P1SEL1 |= BIT6|BIT7;
+	P1SEL0 &= ~(BIT6|BIT7);
+
+	/* Connect up SCLK. */
+
+	P2SEL1 |= BIT2;
+	P2SEL0 &= ~BIT2;
+
+	/* Set 400kHz output clock (SMCLK is 8MHz, divided by 20). */
+
+	UCB0BRW = 30;
+
+	/* Interrupts off. */
+
+	UCB0IE &= ~(UCTXIE | UCRXIE);
+
+	/* Initialise UCB0. */
+
+	UCB0CTLW0 = UCSWRST
+		| UCSSEL__SMCLK    // use SMCLK
+		| UCMODE_0         // 3-wire SPI mode
+		| UCMST            // master
+		| UCMSB            // send MSB first
+		| UCSYNC           // synchronous (SPI rather than I2C)
+		| SPI_MODE_0
+		;
+
+	/* Enable. */
+
+	UCB0CTLW0 &= ~UCSWRST;
 }
 
 void sd_spi_clock(bool go_fast)
 {
-//  sd_spi_mode0();
-#if 0
-  /* Currently the sd driver just uses 'slow' and 'fast'. That's ok for
-     sd but mmc really needs to be 16MHz */
-  if (go_fast)
-    sd_spi_divisor = 3;	//2
-  else
-    sd_spi_divisor = 255;
-#endif
 }
 
 void sd_spi_raise_cs(void)
 {
-#if 0
-  sd_spi_chipselect = 0xFF;
-#endif
+	P1OUT |= BIT3;
 }
 
 void sd_spi_lower_cs(void)
 {
-#if 0
-  sd_spi_chipselect = 0xFE;
-#endif
+	P1OUT &= ~BIT3;
 }
 
-void sd_spi_transmit_byte(unsigned char byte)
+void sd_spi_transmit_byte(uint8_t byte)
 {
-#if 0
-  sd_spi_tx = byte;
-#endif
+	UCB0TXBUF = byte;
+	while (!(UCB0IFG & UCTXIFG))
+		;
 }
 
 uint8_t sd_spi_receive_byte(void)
 {
-#if 0
-  uint8_t r;
-  sd_spi_tx = 0xFF;
-  r = sd_spi_rx;
-  return r;
-#endif
-	return 0;
+	UCB0TXBUF = 0xff; // force MOSI high while waiting
+
+	while (!(UCB0IFG & UCTXIFG))
+		;
+	while (!(UCB0IFG & UCRXIFG))
+		;
+
+	uint8_t b = UCB0RXBUF;
+	return b;
 }
 
 
 bool sd_spi_receive_sector(void)
 {
-#if 0
-  __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET);
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET);
-    or a	; Set the Z flag up and save it, dont do it twice
-    push af
-    call nz,map_process_always
-    call rx256
-    call rx256
-xferout:
-    pop af
-    call nz,map_kernel
-    ret
-rx256:
-    ld a,#0xFF
-    ld bc, #SD_SPI_RX	 ; b = 0, c = port
-rx256_1:
-    out (SD_SPI_TX),a   ; we could use (c),a on newer VHDL
-    ini
-    jr nz, rx256_1
-    ret
-  __endasm;
-#endif
+	uint8_t* addr = blk_op.addr;
+	int i;
+	for (i=0; i<512; i++)
+		addr[i] = sd_spi_receive_byte();
 	return 0;
 }
 
 bool sd_spi_transmit_sector(void)
 {
-#if 0
-  __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
-    or a	; Set the Z flag up and save it, dont do it twice
-    push af
-    call nz,map_process_always
-    ld a,#0xFF
-    ld bc, #SD_SPI_TX
-    otir
-    otir
-    jr xferout
-  __endasm;
-#endif
+	uint8_t* addr = blk_op.addr;
+	int i;
+	for (i=0; i<512; i++)
+		sd_spi_transmit_byte(addr[i]);
 	return 0;
 }

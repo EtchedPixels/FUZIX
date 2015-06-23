@@ -35,8 +35,8 @@ libc-functions.localsrcs += \
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
-FILESYSTEM_ISIZE = 64
-FILESYSTEM_FSIZE = 2880
+FILESYSTEM_ISIZE = 640
+FILESYSTEM_FSIZE = 20480 # 10MB
 FILESYSTEM = \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
