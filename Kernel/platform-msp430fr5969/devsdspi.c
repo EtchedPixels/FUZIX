@@ -66,6 +66,9 @@ void sd_rawinit(void)
 
 void sd_spi_clock(bool go_fast)
 {
+	UCB0CTLW0 |= UCSWRST;
+	UCB0BRW = go_fast ? 0 : 20;
+	UCB0CTLW0 &= ~UCSWRST;
 }
 
 void sd_spi_raise_cs(void)
