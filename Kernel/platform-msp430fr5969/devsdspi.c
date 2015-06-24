@@ -42,7 +42,7 @@ void sd_rawinit(void)
 
 	/* Set 400kHz output clock (SMCLK is 8MHz, divided by 20). */
 
-	UCB0BRW = 30;
+	UCB0BRW = 20;
 
 	/* Interrupts off. */
 
@@ -78,9 +78,9 @@ void sd_spi_lower_cs(void)
 	P1OUT &= ~BIT3;
 }
 
-void sd_spi_transmit_byte(uint8_t byte)
+void sd_spi_transmit_byte(uint8_t b)
 {
-	UCB0TXBUF = byte;
+	UCB0TXBUF = b;
 	while (!(UCB0IFG & UCTXIFG))
 		;
 }
@@ -94,8 +94,7 @@ uint8_t sd_spi_receive_byte(void)
 	while (!(UCB0IFG & UCRXIFG))
 		;
 
-	uint8_t b = UCB0RXBUF;
-	return b;
+	return UCB0RXBUF;
 }
 
 
