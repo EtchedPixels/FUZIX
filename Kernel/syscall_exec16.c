@@ -74,8 +74,10 @@ char *envp[];
 static int header_ok(uint8_t *pp)
 {
 	register uint8_t *p = pp;
-	if (*p != EMAGIC && *p != EMAGIC_2)
-		return 0;
+	#if defined(EMAGIC) || defined(EMAGIC_2)
+		if (*p != EMAGIC && *p != EMAGIC_2)
+			return 0;
+	#endif
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
@@ -99,6 +101,7 @@ arg_t _execve(void)
 
 	top = ramtop;
 
+	kprintf("name=%lx\n", name);
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
 

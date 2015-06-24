@@ -8,9 +8,6 @@
 .globl init_early
 .globl init_hardware
 
-; Set up the stacks.
-
-
 .section ".noinit"
 
 ; The interrupt stack.
@@ -23,13 +20,7 @@ istack_top:
 .globl istack_switched_sp
 .comm istack_switched_sp, 2
 
-; The userdata/system stack structure. See Kernel/include/kernel.h.
-.globl udata
-udata:
-	.fill 512
-kstack_top:
-
-.text
+.section ".lowtext", "ax", @progbits
 .globl __main
 __main:
 	; Disable watchdog timer.
@@ -59,23 +50,17 @@ __main:
 	mov.b #0, &CSCTL0_H                             ; Relock clock registers
 
 	; Init stack.
-	mov #kstack_top, SP
+	movx.a #kstack_top, SP
 
 	; Wipe BSS.
-	mov #__bssstart, r12
+	movx.a #__bssstart, r12
 	mov #0, r13
-	mov #__bsssize, r14
-	calla #memset
-
-	; Wipe the extra, big bit of BSS.
-	mov #__bigbssstart, r12
-	mov #0, r13
-	mov #__bigbsssize, r14
+	movx.a #__bsssize, r14
 	calla #memset
 
 	; Set some kernel variables.
-	mov.w #64, &ramsize
-	mov.w #32, &procmem
+	movx.w #64, &ramsize
+	movx.w #32, &procmem
 
 	; Call C routines.
 	calla #tty_rawinit
@@ -86,37 +71,32 @@ stop:
 __reti:
 	reti
 
-.globl trap_monitor
-trap_monitor:
+proc trap_monitor
 	bic.w #GIE, SR
 	jmp trap_monitor
 	
-.globl abort
-abort:
+proc abort
 	bic.w #GIE, SR
-	mov #1f, r12
-	mov #kstack_top, sp
+	movx.a #1f, r12
+	movx.a #kstack_top, sp
 	calla #kprintf
 	jmp .
-.data
+.data 1
 1: .asciz "[abort]\n"
 .text
 
-.globl ei
-ei:
+proc ei
 	bis.w #GIE, SR
 	reta
 
-.globl di
-di:
+proc di
 	; Return the old interrupt status in r12.
 	mov SR, r12
 	and #~GIE, r12
 	bic.w #GIE, SR
 	reta
 
-.globl irqrestore
-irqrestore:
+proc irqrestore
 	bic.w #GIE, SR           ; Ensure off
 	bis.w r12, SR            ; Mask in saved value
 	reta
@@ -130,17 +110,17 @@ irqrestore:
 
 #define standard_interrupt(name, irq) \
 	.globl name ## _trampoline { \
-	.section ".lowtext", "ax", @progbits { \
+	.section ".lowtext" { \
 	name ## _trampoline: \
-	mov.b #(irq), &last_interrupt { \
+	movx.b #(irq), &last_interrupt { \
 	bra #interrupt_handler { \
 	.section #name, "ax", @progbits { \
 		.word name ## _trampoline
 
 #define fallback_interrupt(name) \
-	.text { \
-	1: mov #3f, r12 { \
-	   mov #kstack_top, sp { \
+	.section ".lowtext" { \
+	1: movx.a #3f, r12 { \
+	   movx.a #kstack_top, sp { \
 	   calla #kprintf { \
 	2: jmp 2b { \
 	.data { \

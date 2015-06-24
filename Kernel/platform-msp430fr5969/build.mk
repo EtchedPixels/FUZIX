@@ -17,12 +17,15 @@ kernel.srcs = \
 	../dev/mbr.c \
 	../devio.c \
 	../filesys.c \
+	../inode.c \
 	../lowlevel-msp430x.S \
 	../kdata.c \
 	../process.c \
 	../simple.c \
 	../start.c \
 	../swap.c \
+	../syscall_exec16.c \
+	../syscall_fs.c \
 	../timer.c \
 	../tty.c \
 	../usermem.c \
@@ -44,7 +47,7 @@ kernel.asflags += \
 	-mlarge
 
 kernel.ldflags += \
-	-g 
+	-s 
 
 kernel.libgcc = $(shell $(TARGETCC) -mlarge --print-libgcc)
 kernel.result = $(TOP)/kernel-$(PLATFORM).elf

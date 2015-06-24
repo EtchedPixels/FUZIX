@@ -105,7 +105,9 @@ MEMORY {
   BSL              : ORIGIN = 0x1000, LENGTH = 0x0800
 
   SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800 /* END=0x23FF, size 2048 */
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x8000-0x4400
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7e00-0x4400
+  UDATA            : ORIGIN = 0x7e00, LENGTH = 0x015c
+  SYSCALL          : ORIGIN = 0x7ffc, LENGTH = 0x0004
   USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000
   LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00
   HIROM            : ORIGIN = 0x10000, LENGTH = 0x3FFF
@@ -113,6 +115,8 @@ MEMORY {
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));
+PROVIDE(udata = ORIGIN(UDATA));
+PROVIDE(kstack_top = ORIGIN(UDATA) + LENGTH(UDATA));
 
 SECTIONS
 {
@@ -178,6 +182,7 @@ SECTIONS
     KEEP (*(.resetvec))
   } > RESETVEC
 
+
   .rodata : {
     . = ALIGN(2);
     *(.plt)
@@ -219,13 +224,18 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
-  } > HIROM
+  } > LOROM
+
+  .lowtext : {
+  	. = ALIGN(2);
+    PROVIDE (_start = .);
+	*(.lowtext)
+  } > LOROM
 
   .text : {
     . = ALIGN(2);
-    PROVIDE (_start = .);
     KEEP (*(SORT(.crt_*)))
-    *(.lowtext .text .stub .text.* .gnu.linkonce.t.* .text:*)
+    *(.text .stub .text.* .gnu.linkonce.t.* .text:*)
     KEEP (*(.text.*personality*))
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
@@ -237,7 +247,7 @@ SECTIONS
     KEEP (*(.init))
     KEEP (*(.fini))
     KEEP (*(.tm_clone_table))
-  } > LOROM
+  } > HIROM
 
   .data : {
     . = ALIGN(2);
@@ -281,15 +291,6 @@ SECTIONS
     PROVIDE (__bssend = .);
   } > LOROM
   PROVIDE (__bsssize = SIZEOF(.bss));
-
-  .bigbss (NOLOAD) : {
-    . = ALIGN(2);
-    PROVIDE (__bigbssstart = .);
-    *(.bigbss .bigbss.*)
-    . = ALIGN(2);
-    PROVIDE (__bigbssend = .);
-  } > LOROM
-  PROVIDE (__bigbsssize = SIZEOF(.bigbss));
 
   .noinit (NOLOAD) : {
     . = ALIGN(2);

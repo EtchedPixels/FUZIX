@@ -14,19 +14,19 @@ switchout:
 	bic.w #GIE, SR                     ; interrupts off
 	mov #0, r12                        ; set return code
 	pushm.a #12, r15                   ; save all registers (r15 to r4)
-	pushx.a SR                         ; ...and the status register
-	mova SP, &U_DATA__U_SP             ; save stack pointer
+	push SR                            ; ...and the status register
+	movx SP, &U_DATA__U_SP             ; save stack pointer
 	clra &inint
 
 	;calla #getproc
-	calla #switchin                    ; switch in new process
+	jmp switchin                    ; switch in new process
 	calla #trap_monitor                ; should never reach here
 
 .globl switchin
 switchin:
 	bic.w #GIE, SR                     ; interrupts off
-	mova &U_DATA__U_SP, SP             ; restore stack pointer
-	popx.a SR                          ; restore status register
+	movx &U_DATA__U_SP, SP             ; restore stack pointer
+	pop SR                             ; restore status register
 	popm.a #12, r15                    ; restore all registers (r15 to r4)
 	bis.w #GIE, SR                     ; interrupts on
 	reta

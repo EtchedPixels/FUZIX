@@ -1,2 +1,8 @@
 U_DATA                      = udata
 
+.macro proc NAME
+	.section .text.\NAME
+	.globl \NAME
+	\NAME:
+.endm
+

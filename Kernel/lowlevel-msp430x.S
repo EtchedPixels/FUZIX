@@ -1,3 +1,4 @@
+#include "platform-msp430fr5969/kernel.def"
 #include "kernel430x.def"
 
 .section ".lowtext"
@@ -7,7 +8,7 @@ interrupt_handler:
 	 * may be the user process or the kernel's. We haven't saved any
 	 * registers yet. */
 
-	mov SP, &istack_switched_sp        ; save old stack (16 bit!)
+	movx.w SP, &istack_switched_sp        ; save old stack (16 bit!)
 	mov #istack_top, SP                ; load new one
 
 	pushm.a #13, r15                   ; save all registers (r15 to r3)
@@ -16,6 +17,30 @@ interrupt_handler:
 
 	popm.a #13, r15                    ; restore all registers (r15 to r3)
 	
-	mov &istack_switched_sp, SP        ; restore stack
+	movx.w &istack_switched_sp, SP        ; restore stack
 	reti
 
+proc doexec
+	dint
+	#if 0
+        di
+        call map_process_always
+
+        pop bc ; return address
+        pop de ; start address
+
+        ld hl, (U_DATA__U_ISP)
+        ld sp, hl      ; Initialize user stack, below main() parameters and the environment
+
+        ; u_data.u_insys = false
+        xor a
+        ld (U_DATA__U_INSYS), a
+
+        ex de, hl
+
+	; for the relocation engine - tell it where it is
+	ld iy, #PROGLOAD
+        ei
+        jp (hl)
+#endif
+	jmp .

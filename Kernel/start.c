@@ -80,6 +80,7 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
+	kprintf("PROGLOAD=%lx\n", (void*)PROGLOAD);
 	uput(arg, (void *)PROGLOAD, sizeof(arg));
 	/* Poke in argv[0] - FIXME: Endianisms...  */
 	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
@@ -300,7 +301,6 @@ void fuzix_main(void)
 
 	if (fmount(root_dev, NULLINODE, 0))
 		panic("no filesys");
-#if 0
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)
 		panic("no root");
@@ -311,6 +311,5 @@ void fuzix_main(void)
 	udata.u_root = i_ref(root);
 	rdtime32(&udata.u_time);
 	exec_or_die();
-#endif
 }
 

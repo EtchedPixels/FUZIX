@@ -42,7 +42,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 extern int __user_base;
 
 #define TICKSPERSEC 64   /* Ticks per second */
-#define PROGBASE    ((uint16_t)(size_t)&__user_base)  /* also data base */
+#define PROGBASE    ((uint32_t)(size_t)&__user_base)  /* also data base */
 #define PROGLOAD    PROGBASE /* also data base */
 #define PROGTOP     0xfe00  /* Top of program */
 

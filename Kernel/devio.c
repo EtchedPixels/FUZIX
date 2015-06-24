@@ -506,6 +506,7 @@ void kprintf(const char *fmt, ...)
 {
 	char *str;
 	unsigned int v;
+	unsigned long l;
 	char c;
 	va_list ap;
 
@@ -524,6 +525,13 @@ void kprintf(const char *fmt, ...)
 				kputchar(c);
 				fmt++;
 				continue;
+			}
+			if ((*fmt == 'l') && (*(fmt+1) == 'x')) {
+				l = va_arg(ap, unsigned long);
+				/* TODO: not 32-bit safe */
+				kputhex((uint16_t)(l >> 16));
+				kputhex((uint16_t)l);
+				fmt += 2;
 			}
 			if (*fmt == 'x' || *fmt == 'd' || *fmt == 'u') {
 				v = va_arg(ap, int);
