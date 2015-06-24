@@ -5,19 +5,19 @@
 	.type setjmp, @function
 	.func setjmp
 setjmp:
-	pop	r14
-	mov	r14, 10*2(r15) ; return address
-	mov r1, 0*2(r15)
-	mov r2, 1*2(r15)
-	mov r4, 2*2(r15)
-	mov r5, 3*2(r15)
-	mov r6, 4*2(r15)
-	mov r7, 5*2(r15)
-	mov r8, 6*2(r15)
-	mov r9, 7*2(r15)
-	mov r10, 8*2(r15)
-	mov r11, 9*2(r15)
-	clr r15
-	br r14
+	popx r14
+	movx r14, 10*4(r15) ; return address
+	movx.a r1, 0*4(r15)
+	movx.a r2, 1*4(r15)
+	movx.a r4, 2*4(r15)
+	movx.a r5, 3*4(r15)
+	movx.a r6, 4*4(r15)
+	movx.a r7, 5*4(r15)
+	movx.a r8, 6*4(r15)
+	movx.a r9, 7*4(r15)
+	movx.a r10, 8*4(r15)
+	movx.a r11, 9*4(r15)
+	clrx r15
+	br.a r14
 .endfunc
 
