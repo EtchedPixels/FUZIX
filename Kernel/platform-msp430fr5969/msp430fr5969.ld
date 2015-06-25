@@ -106,7 +106,7 @@ MEMORY {
 
   SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800 /* END=0x23FF, size 2048 */
   LOROM            : ORIGIN = 0x4400, LENGTH = 0x7e00-0x4400
-  UDATA            : ORIGIN = 0x7e00, LENGTH = 0x015c
+  UDATA            : ORIGIN = 0x7e00, LENGTH = 0x01fc
   SYSCALL          : ORIGIN = 0x7ffc, LENGTH = 0x0004
   USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000
   LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00

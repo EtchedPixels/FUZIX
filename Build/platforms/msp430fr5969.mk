@@ -38,6 +38,7 @@ libc-functions.localsrcs += \
 FILESYSTEM_ISIZE = 640
 FILESYSTEM_FSIZE = 20480 # 10MB
 FILESYSTEM = \
+	/bin/arithmetic         0755 $(v7-games-arithmetic.result) \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
 	/bin/bd                 0755 $(util-bd.result) \
@@ -66,7 +67,6 @@ FILESYSTEM = \
 	/bin/grep               0755 $(util-grep.result) \
 	/bin/head               0755 $(util-head.result) \
 	/bin/id                 0755 $(util-id.result) \
-	/bin/init               0755 $(util-init.result) \
 	/bin/kill               0755 $(util-kill.result) \
 	/bin/ll                 0755 $(util-ll.result) \
 	/bin/ln                 0755 $(util-ln.result) \
@@ -90,6 +90,7 @@ FILESYSTEM = \
 	/bin/pwd                0755 $(util-pwd.result) \
 	/bin/rm                 0755 $(util-rm.result) \
 	/bin/rmdir              0755 $(util-rmdir.result) \
+	/bin/sh                 0755 $(v7-sh.result) \
 	/bin/sleep              0755 $(util-sleep.result) \
 	/bin/sort               0755 $(util-sort.result) \
 	/bin/ssh                0755 $(util-ssh.result) \
@@ -140,11 +141,10 @@ FILESYSTEM = \
     /bin/time               0755 $(v7-cmd-time.result) \
     /bin/tsort              0755 $(v7-cmd-tsort.result) \
     /bin/wall               0755 $(v7-cmd-wall.result) \
-	/bin/arithmetic         0755 $(v7-games-arithmetic.result) \
+	/init                   0755 $(util-init.result) \
     /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
     /usr/games/fish         0755 $(v7-games-fish.result) \
     /usr/games/wump         0755 $(v7-games-wump.result) \
-	/bin/sh                 0755 $(v7-sh.result) \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \

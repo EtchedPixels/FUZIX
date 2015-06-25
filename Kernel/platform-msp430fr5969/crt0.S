@@ -10,16 +10,6 @@
 
 .section ".noinit"
 
-; The interrupt stack.
-.globl istack_top
-istack_base:
-	.fill 254
-istack_top:
-
-; The saved interrupt pointer. Stacks must be in low memory.
-.globl istack_switched_sp
-.comm istack_switched_sp, 2
-
 .section ".lowtext", "ax", @progbits
 .globl __main
 __main:
@@ -119,11 +109,12 @@ proc irqrestore
 
 #define fallback_interrupt(name) \
 	.section ".lowtext" { \
+	name ## _fallback: \
 	1: movx.a #3f, r12 { \
 	   movx.a #kstack_top, sp { \
 	   calla #kprintf { \
 	2: jmp 2b { \
-	.data { \
+	.data 1 { \
 	3: .asciz #name { \
 	.section #name, "ax", @progbits { \
 	   .word 1b

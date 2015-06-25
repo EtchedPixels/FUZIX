@@ -11,7 +11,7 @@
 #define PTABSIZE 1
 
 /* Simple user copies for now (change when ROM the kernel) */
-#define CONFIG_USERMEM_C
+#define CONFIG_USERMEM_DIRECT
 #define BANK_KERNEL
 #define BANK_PROCESS
 
@@ -71,4 +71,5 @@ extern int __user_base;
 #define MAX_BLKDEV 1
 
 #define BOOTDEVICE 0x0001 // hda1
+
 

@@ -101,7 +101,6 @@ arg_t _execve(void)
 
 	top = ramtop;
 
-	kprintf("name=%lx\n", name);
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
 
@@ -263,7 +262,7 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
 
-	while ((ptr = (char *) ugetw(userspace_argv++)) != NULL) {
+	while ((ptr = (char *) ugeta(userspace_argv++)) != NULL) {
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
 		do {
 			*bufp++ = c = ugetc(ptr++);
@@ -305,14 +304,14 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
-		uputw((uint16_t) ptr, argv++);
+		uputa((arg_t) ptr, argv++);
 		if (argc) {
 			do
 				++ptr;
 			while (*sptr++);
 		}
 	}
-	uputw(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
+	uputa(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
 	return ((char **) argbase);
 }
 

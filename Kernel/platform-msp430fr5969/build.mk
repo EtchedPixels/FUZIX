@@ -18,7 +18,7 @@ kernel.srcs = \
 	../devio.c \
 	../filesys.c \
 	../inode.c \
-	../lowlevel-msp430x.S \
+	../lowlevel-msp430x.c \
 	../kdata.c \
 	../process.c \
 	../simple.c \
@@ -40,16 +40,13 @@ kernel.srcs = \
 
 kernel.cflags += \
 	-g \
-	-mlarge
 
 kernel.asflags += \
 	-g \
-	-mlarge
 
 kernel.ldflags += \
 	-s 
 
-kernel.libgcc = $(shell $(TARGETCC) -mlarge --print-libgcc)
 kernel.result = $(TOP)/kernel-$(PLATFORM).elf
 $(call build, kernel, kernel-elf)
 

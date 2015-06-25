@@ -34,14 +34,14 @@ int pagemap_alloc(ptptr p)
   return 0;
 }
 
-int pagemap_realloc(uint16_t size)
+int pagemap_realloc(usize_t size)
 {
   if (size >= ramtop)
     return ENOMEM;
   return 0;
 }
 
-uint16_t pagemap_mem_used(void)
+uaddr_t pagemap_mem_used(void)
 {
   return (PROGTOP - PROGBASE) >> 10;
 }

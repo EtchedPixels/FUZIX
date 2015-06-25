@@ -1,14 +1,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* The MSP430X has 20-bit registers. Yes, really. It defines size_t
+ * to be one of those. Use that rather than uint32_t because it's
+ * way more efficient. */
+typedef uintptr_t uint20_t;
+typedef intptr_t int20_t;
+
 typedef uint8_t irqflags_t;
 
-typedef int16_t arg_t;
-typedef uint16_t uarg_t;
-typedef uint16_t uaddr_t;
-typedef uint16_t usize_t;		/* Largest value passed by userspace */
-typedef int16_t susize_t;
+typedef uint32_t arg_t;
+typedef uint32_t uarg_t;
+typedef uint20_t uaddr_t;
+typedef uint20_t usize_t;		/* Largest value passed by userspace */
+typedef int20_t susize_t;
 typedef uint32_t clock_t;
+
+#define ARGT_IS_BIGGER_THAN_INT 1
 
 extern void ei(void);
 extern irqflags_t di(void);

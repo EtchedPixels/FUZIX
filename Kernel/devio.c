@@ -514,35 +514,44 @@ void kprintf(const char *fmt, ...)
 	while (*fmt) {
 		if (*fmt == '%') {
 			fmt++;
-			if (*fmt == 's') {
-				str = va_arg(ap, char *);
-				kputs(str);
-				fmt++;
-				continue;
-			}
-			if (*fmt == 'c') {
-				c = va_arg(ap, int);
-				kputchar(c);
-				fmt++;
-				continue;
-			}
-			if ((*fmt == 'l') && (*(fmt+1) == 'x')) {
-				l = va_arg(ap, unsigned long);
-				/* TODO: not 32-bit safe */
-				kputhex((uint16_t)(l >> 16));
-				kputhex((uint16_t)l);
-				fmt += 2;
-			}
-			if (*fmt == 'x' || *fmt == 'd' || *fmt == 'u') {
-				v = va_arg(ap, int);
-				if (*fmt == 'x')
+			switch (*fmt) {
+				case 's':
+					str = va_arg(ap, char *);
+					kputs(str);
+					fmt++;
+					continue;
+
+				case 'c':
+					c = va_arg(ap, int);
+					kputchar(c);
+					fmt++;
+					continue;
+
+				case 'l': /* assume an x is following */
+					l = va_arg(ap, unsigned long);
+					/* TODO: not 32-bit safe */
+					kputhex((uint16_t)(l >> 16));
+					kputhex((uint16_t)l);
+					fmt += 2;
+					continue;
+
+				case 'x':
+					v = va_arg(ap, int);
 					kputhex(v);
-				else if (*fmt == 'd')
+					fmt++;
+					continue;
+
+				case 'd':
+					v = va_arg(ap, int);
 					kputnum(v);
-				else if (*fmt == 'u')
+					fmt++;
+					continue;
+
+				case 'u':
+					v = va_arg(ap, int);
 					kputunum(v);
-				fmt++;
-				continue;
+					fmt++;
+					continue;
 			}
 		}
 		kputchar(*fmt);

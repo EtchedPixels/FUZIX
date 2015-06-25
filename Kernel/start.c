@@ -59,11 +59,6 @@ void fstabinit(void)
 void create_init(void)
 {
 	uint8_t *j;
-	/* userspace: PROGLOAD +
-               0    1    2    3    4   5  6  7  8  9  A  B  C */
-	static const char arg[] =
-	    { '/', 'i', 'n', 'i', 't', 0, 0, 1, 1, 0, 0, 0, 0 };
-
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
 	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
@@ -79,16 +74,22 @@ void create_init(void)
 	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j) {
 		*j = NO_FILE;
 	}
-	/* Poke the execve arguments into user data space so _execve() can read them back */
-	kprintf("PROGLOAD=%lx\n", (void*)PROGLOAD);
-	uput(arg, (void *)PROGLOAD, sizeof(arg));
-	/* Poke in argv[0] - FIXME: Endianisms...  */
-	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
 
-	/* Set up things to look like the process is calling _execve() */
-	udata.u_argn =  (arg_t)PROGLOAD;
-	udata.u_argn1 = (arg_t)(PROGLOAD + 0x7); /* Arguments (just "/init") */
-	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
+	uput("/init", PROGLOAD, 6);
+	udata.u_argn = (arg_t)PROGLOAD;
+
+	j = PROGLOAD+8;
+
+	/* Arguments; just "/init" */
+	udata.u_argn1 = (arg_t)j;
+	uputa(udata.u_argn, j);
+	j += sizeof(arg_t);
+	uputa(0, j);
+	j += sizeof(arg_t);
+
+	/* Environment (none) */
+	udata.u_argn2 = j;
+	uputa(0, j);
 }
 
 #ifndef BOOTDEVICE
