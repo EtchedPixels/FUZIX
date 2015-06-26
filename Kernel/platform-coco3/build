@@ -14,6 +14,10 @@ make TARGET=coco3
 cd platform-coco3
 rm fuzix.dsk ; make fuzix.dsk
 
+if [ $1 = "kernel" ];  then 
+   exit
+fi
+
 
 # make Libs
 cd ../../Library

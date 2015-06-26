@@ -42,8 +42,14 @@
 ; -----------------------------------------------------------------------------
             .area .common
 
+	
+saved_map
+	.db 0		; which mapping state where we in?
+init1_mirror
+	.db 0		; a *mirror* of gimme $ff91, which is WriteOnly
+_need_resched
+	.db 0		; scheduler flag
 
-tm_user_sp: .dw 0
 
 _trap_monitor:
 	    orcc #0x10
@@ -65,8 +71,10 @@ loop@	lda	,u+
 	;; low memory on reboot to bounce to the reset
 	;; vector.
 bounce@
-	lda	#0x84		; reset GIME (map in roms)
+	lda	#0x06		; reset GIME (map in internal 32k rom)
 	sta  	0xff90
+	clr	0xff91
+	clr	0x72
 	jmp	[0xfffe]	; jmp to reset vector
 bounce_end@
 
@@ -118,6 +126,13 @@ init_hardware:
 	std 	_ramsize
 	ldd 	#512-64
 	std 	_procmem
+	;; set initial user mmu
+	ldd	#8
+	ldx	#$ffa0
+b@	sta	,x+
+	inca
+	decb
+	bne	b@
         ;; set temporary screen up
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
@@ -165,19 +180,27 @@ a@	sta	,x+
 
             .area .common
 
-;;; Setup interrupt vectors in the cpu map state
-;;;   CoCo3's vectors are in common, so this doesn't need to do anything
-;;;   takes: nothing
+;;; Platform specific userspace setup
+;;;   We're going to borrow this to copy the common bank
+;;;   into the userspace too.
+;;;   takes: X = page table pointer
 ;;;   returns: nothing
 _program_vectors:
-	jsr	map_process
-	ldb	#0x7E
-	stb	0
-	jsr	map_kernel
-	rts
+	;; copy the common section into user-space
+	lda	0xffa8	     ; save mmu reg on stack
+	pshs	a,x,u
 
-;;; This clear the interrupt source before calling the 
-;;  normal handler
+	;; setup the null pointer / sentinal bytes in low process memory
+	lda	[1,s]	     ; get process's blk address for address 0
+	sta	0xffa8	     ; put in our mmu ( at address 0 )
+	lda	#0x7E
+	sta	0
+	puls	a,x,u	     ; restore mmu reg
+	sta	0xffa8	     ; 
+	rts		     ; return
+
+;;; This clear the interrupt source before calling the
+;;; normal handler
 ;;;    takes: nothing ( it is an interrupt handler)
 ;;;    returns: nothing ( it is an interrupt handler )
 my_interrupt_handler
@@ -232,14 +255,11 @@ map_process_2:
 	    pshs x,y,a
 	    ldy #0xffa0		; MMU user map. We can fiddle with
 
-	;; map in the common block
 	    lda ,x+		; get byte from page table
 	    sta ,y+		; put it in mmu
 	    inca		; increment to get next 8k block
 	    sta ,y+		; put it in mmu
 
-	;; map the rest of the block in order
-*	    ldy #0xffa0		;
 	    lda ,x+
 	    sta ,y+
 	    inca
@@ -250,11 +270,9 @@ map_process_2:
 	    inca
 	    sta ,y+
 
-*	    lda ,x+
-	    lda	#6
-	    sta ,y+
-	    inca
+	    lda ,x+		; bank all but common memory
 	    sta ,y
+
 
 	    lda  #0
 	    sta 0xff91			; new mapping goes live here
@@ -285,11 +303,6 @@ map_save:
 	    sta saved_map
 	    puls a,pc
 
-saved_map:  .db 0		; which mapping state where we in?
-init1_mirror:
-	    .db 0		; a *mirror* of gimme $ff91, which is WriteOnly
-_need_resched	.db 0		; scheduler flag
-
 
 ;;;  Print a character to debugging
 ;;;   takes: A = character
@@ -303,3 +316,6 @@ outchar:
 
 	.area	.data
 scrPos	.dw	0xb400		; debugging screen buffer position
+
+
+

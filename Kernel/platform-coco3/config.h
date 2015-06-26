@@ -51,7 +51,7 @@ extern unsigned char vt_map( unsigned char c );
 
 #define TICKSPERSEC 60      /* Ticks per second */
 #define PROGBASE    0x0100  /* also data base */
-#define PROGTOP     0xbd00  /* Top of program, base of U_DATA */
+#define PROGTOP     0xe000  /* Top of program, base of U_DATA */
 #define PROGLOAD    0x0100  /* ??? */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */

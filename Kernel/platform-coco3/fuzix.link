@@ -5,10 +5,11 @@ section .text2
 section .text
 section .text.hot
 section .test.unlikely
-section .discard
 section .data
 section	.bss
+section .discard
 section .video load 0xa880
-section .udata load 0xc000
+section .udata load 0xe000
 section .common
+section .cpage load 0xfe00
 entry start

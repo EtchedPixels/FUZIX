@@ -11,7 +11,8 @@
         .globl kstack_top
         .globl istack_top
         .globl istack_switched_sp
-
+	.globl kcommon_start
+	
         .area .udata
 
 ;;; first 512 bytes: starts with struct u_block,
@@ -27,3 +28,7 @@ istack_base:
 	zmb 254
 istack_top:
 istack_switched_sp: .dw 0
+
+;;; This helps _program_vectors know where the kernel common code starts
+;;; for copying into userspace.
+kcommon_start

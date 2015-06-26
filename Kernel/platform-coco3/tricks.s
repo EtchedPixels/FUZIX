@@ -25,7 +25,12 @@
 _ramtop:
 	.dw 0
 
+_swapstack
+	.dw 	0
+	.dw 	0
 
+fork_proc_ptr:
+	.dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 	.area .common
 
@@ -49,26 +54,10 @@ _switchout:
 	pshs 	d,y,u
 	sts 	U_DATA__U_SP	; save SP
 
-
-	;; Stash the uarea into process memory bank
-	jsr 	map_process_always
-	ldx 	#U_DATA
-	ldy 	#U_DATA_STASH
-stash	ldd 	,x++
-	std 	,y++
-	cmpx 	#U_DATA+U_DATA__TOTALSIZE
-	bne 	stash
-	jsr 	map_kernel
-
-
         jsr 	_getproc	; X = next process ptr
         jsr 	_switchin	; and switch it in
         ; we should never get here
         jsr 	_trap_monitor
-
-_swapstack
-	.dw 	0
-	.dw 	0
 
 
 badswitchmsg:
@@ -83,51 +72,23 @@ badswitchmsg:
 _switchin:
         orcc 	#0x10		; irq off
 
-	;pshs x
-	stx 	_swapstack
+	stx 	_swapstack	; save passed page table *
 
-	leax 	P_TAB__P_PAGE_OFFSET,x		; get address of page table
+	;; flip in the newly choosen task's common page
+	lda	P_TAB__P_PAGE_OFFSET+3,x
+	inca
+	sta	0xffa7
+	sta	0xffaf
+	
+	;; --------- No Stack ! --------------
 
-
-	cmpx 	U_DATA__U_PAGE	; switching in ourselfs?
-	beq 	nostash		; yes then don't save UDATA
-
-	jsr 	map_process	; map new process into memory
-
-	; fetch uarea from process memory
-	sty 	_swapstack+2
-	ldx 	#U_DATA_STASH
-	ldy 	#U_DATA
-stashb	ldd 	,x++
-	std 	,y++
-	cmpx 	#U_DATA_STASH+U_DATA__TOTALSIZE
-	bne 	stashb
-
-	; we have now new stacks so get new stack pointer before any jsr
-	lds 	U_DATA__U_SP
-
-	; get back kernel page so that we see process table
-	jsr 	map_kernel
-
-nostash:
-	;puls x
-	ldx 	_swapstack
         ; check u_data->u_ptab matches what we wanted
+	ldx 	_swapstack
 	cmpx 	U_DATA__U_PTAB
         bne 	switchinfail
 
 	lda 	#P_RUNNING
 	sta 	P_TAB__P_STATUS_OFFSET,x
-
-	;; fix-up page mappings (voodoo code?)
-	lda 	P_TAB__P_PAGE_OFFSET,x
-	sta 	U_DATA__U_PAGE
-	lda 	P_TAB__P_PAGE_OFFSET+1,x
-	sta 	U_DATA__U_PAGE+1
-	lda 	P_TAB__P_PAGE_OFFSET+2,x
-	sta 	U_DATA__U_PAGE+2
-	lda 	P_TAB__P_PAGE_OFFSET+3,x
-	sta 	U_DATA__U_PAGE+3
 
 	;; clear the 16 bit tick counter
 	ldx 	#0
@@ -152,8 +113,6 @@ switchinfail:
 	;; something went wrong and we didn't switch in what we asked for
         jmp 	_trap_monitor
 
-fork_proc_ptr:
-	.dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;;;
 ;;;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -211,35 +170,50 @@ _dofork:
 ;;; copy the process memory to the new process
 ;;; and stash parent uarea to old bank
 fork_copy:
-	ldx 	fork_proc_ptr
-	ldb 	P_TAB__P_PAGE_OFFSET,x ;  new bank
-	lda 	U_DATA__U_PAGE         ;  old bank
-	jsr 	copybank
-	ldb 	P_TAB__P_PAGE_OFFSET+1,x ;  new bank
-	lda 	U_DATA__U_PAGE+1         ;  old bank
-	jsr 	copybank
-	ldb 	P_TAB__P_PAGE_OFFSET+2,x ;  new bank
-	lda 	U_DATA__U_PAGE+2         ;  old bank
-	jsr 	copybank
-	;; stash parent urea (including kernel stack)
-	jsr 	map_process_always
-	ldx 	#U_DATA
-	ldu 	#U_DATA_STASH
-stashf	ldd 	,x++
-	std 	,u++
-	cmpx 	#U_DATA+U_DATA__TOTALSIZE
-	bne 	stashf
-	jsr 	map_kernel
+	;; calculate how many regular pages we need to copy
+	ldd	U_DATA__U_TOP	       ; get size of process
+	tfr	d,y		       ; make copy of progtop
+	anda	#$3f		       ; mask off remainder
+	pshs	cc		       ; push onto stack ( remcc )
+	tfr	y,d		       ; get copy of progtop
+	rola			       ; make low bits = whole pages
+	rola			       ;
+	rola			       ;
+	anda	#$3		       ; bottom two bits are now whole pages
+	puls	cc		       ; get remainder's cc (  )
+	beq	skip@		       ; skip round-up if zero
+	inca			       ; round up
+	cmpa	#4		       ; is 4th bank copied?
+	pshs	cc,a		       ; and put on stack ( 4th?  no )
+	;; copy parent's whole pages to child's
+skip@	ldx	fork_proc_ptr
+	leax	P_TAB__P_PAGE_OFFSET,x ; X = * new process page tables (dest)
+	ldu	#U_DATA__U_PAGE	       ; parent process page tables (src)
+loop@	ldb	,x+		       ; B = child's next page
+	lda	,u+		       ; A = parent's next page
+	jsr	copybank	       ; copy bank
+	dec	1,s		       ; bump counter
+	bne	loop@
+	;; copy UDATA + common (if needed)
+	ldx	fork_proc_ptr	       ; X = new process ptr
+	ldb	P_TAB__P_PAGE_OFFSET+3,x ;  B = child's UDATA/common page
+	puls	cc,a		       ; pull 4th? condition codes
+	beq	skip2@		       ; 4th bank already copied?
+	lda	U_DATA__U_PAGE+3	 ;  A = parent's UDATA/common page
+	jsr	copybank		 ; copy it
+	;; remap common page in MMU to new process
+skip2@	incb
+	stb	0xffaf
+	stb	0xffa7
 	; --- we are now on the stack copy, parent stack is locked away ---
 	rts	; this stack is copied so safe to return on
 
 ;;; Copy data from one bank to another
 ;;;   takes: B = dest bank, A = src bank
-;;;   modifies: U
 copybank
-	pshs	d,x
-	;; copy first block in bank
-	ldd	0xffa8		; save mmu state
+	pshs	d,x,u
+	;; save mmu state
+	ldd	0xffa8	
 	pshs	d
 	ldd	0xffaa
 	pshs	d
@@ -251,9 +225,10 @@ copybank
 	sta	0xffaa
 	inca
 	sta	0xffab
-	;; copy
-	ldx	#0
-	ldu	#0x4000
+	;; loop setup
+	ldx	#0		; dest address
+	ldu	#0x4000		; src address
+	;; unrolled: 16 bytes at a time
 a@	ldd	,u++
 	std	,x++
 	ldd	,u++
@@ -262,12 +237,20 @@ a@	ldd	,u++
 	std	,x++
 	ldd	,u++
 	std	,x++
-	cmpx	#0x4000
-	bne	a@
+	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	ldd	,u++
+	std	,x++
+	cmpx	#0x4000		; end of copy?
+	bne	a@		; no repeat
 	;; restore mmu
 	puls	d
 	std	0xffaa
 	puls	d
 	std	0xffa8
 	;; return
-	puls	d,x,pc		; return
+	puls	d,x,u,pc		; return
