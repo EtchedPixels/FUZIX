@@ -12,7 +12,7 @@
         .globl outstring
         .globl outcharhex
         .globl platform_interrupt_all
-        .globl _trap_monitor
+        .globl _trap_reboot
 
         ; imported symbols
         .globl z180_init_hardware
@@ -110,6 +110,14 @@ inchar:
         jr nc, inchar
         in0 a, (ESCC_DATA_A)
         ret
+
+_trap_reboot:
+        in0 a, (Z182_SYSCONFIG)
+        res 3, a                    ; re-enable the ROM select line
+        out0 (Z182_SYSCONFIG), a
+        xor a
+        out0 (MMU_BBR), a           ; map ROM into the lower 60K
+        jp 0                        ; jump to the boot ROM entry vector
 
 platform_interrupt_all:
         ret
