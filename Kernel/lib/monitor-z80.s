@@ -8,6 +8,7 @@
 ;   D arg1 [arg2]  - display memory at address arg1 (to arg2)
 ;   I arg1         - input from port address arg1
 ;   O arg1 arg2    - output arg2 to port address arg1
+;   J arg1         - jump to arg1 and execute code
 
                 .z80
 
@@ -63,6 +64,8 @@ monitor_loop:   call outnewline
                 jp z, inport
                 cp #'O'
                 jp z, outport
+                cp #'J'
+                jp z, jump
 badinput:       ld a, #'?'
                 jp outchar  ; ret back to monitor_loop
 
@@ -126,6 +129,11 @@ hl_eq_de:       ld      a,h
                 ld      a,l
                 cp      e
                 ret
+
+; J addr
+; Jump to addr and execute code
+jump:           jp (hl)
+                ; return address is already on the stack
 
 ; I port
 ; Input from port
