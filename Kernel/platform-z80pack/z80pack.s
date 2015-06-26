@@ -27,6 +27,8 @@
 
 	    .globl _fd_bankcmd
 
+	    .globl _trap_reboot
+
             ; exported debugging tools
             .globl _trap_monitor
             .globl outchar
