@@ -17,7 +17,7 @@
 	    .globl _modout
 
             ; imported symbols
-	    .globl _program_vectors	
+	    .globl _program_vectors
             .globl _ramsize
             .globl _procmem
 	    .globl _nbanks
