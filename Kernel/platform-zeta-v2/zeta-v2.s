@@ -16,6 +16,7 @@
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
 	.globl _kernel_pages
+	.globl _trap_reboot
 
         ; imported symbols
         .globl _ramsize
@@ -278,6 +279,12 @@ _program_vectors:
 	ld (0x0067),hl
 
 	jr map_kernel
+
+_trap_reboot:
+        di
+        xor a                           ; ROM starts at page 0
+        out (MPGSEL_0), a               ; map ROM to low 16K
+        jp 0                            ; jump into ROM
 
 ;=========================================================================
 ; Memory management
