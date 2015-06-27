@@ -58,6 +58,8 @@ void fstabinit(void)
 /* FIXME: pass remainder of boot argument to init, also word align */
 void create_init(void)
 {
+	const char init[] = "/bin/ls";
+
 	uint8_t *j;
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
@@ -75,10 +77,10 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 
-	uput("/init", (void*)PROGLOAD, 6);
+	uput(init, (void*)PROGLOAD, sizeof(init));
 	udata.u_argn = (arg_t)PROGLOAD;
 
-	j = PROGLOAD+8;
+	j = PROGLOAD+((sizeof(init)+3) & ~3);
 
 	/* Arguments; just "/init" */
 	udata.u_argn1 = (arg_t)j;
