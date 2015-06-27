@@ -20,11 +20,13 @@
 
 void sd_rawinit(void)
 {
-	/* The SD card is an SPI device with CS on P1.3. All our SPI devices
+	/* The SD card is an SPI device with CS on P3.4. All our SPI devices
 	 * are going to be on UCB0. */
 
-	P1DIR |= BIT3;         // set pin as output
-	P1OUT &= ~BIT3;        // lower CS
+	P3SEL1 &= ~BIT4;
+	P3SEL0 &= ~BIT4;
+	P3DIR |= BIT4;         // set pin as output
+	P3OUT &= ~BIT4;        // lower CS
 
 	/* Disable UCB0 while we set it up. */
 
@@ -73,12 +75,12 @@ void sd_spi_clock(bool go_fast)
 
 void sd_spi_raise_cs(void)
 {
-	P1OUT |= BIT3;
+	P3OUT |= BIT4;
 }
 
 void sd_spi_lower_cs(void)
 {
-	P1OUT &= ~BIT3;
+	P3OUT &= ~BIT4;
 }
 
 void sd_spi_transmit_byte(uint8_t b)
