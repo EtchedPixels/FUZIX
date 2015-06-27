@@ -39,14 +39,17 @@ kernel.srcs = \
 	$(kernelversion.result)
 
 kernel.cflags += \
+	-mlarge \
 	-g \
 
 kernel.asflags += \
+	-mlarge \
 	-g \
 
 kernel.ldflags += \
 	-s 
 
+kernel.libgcc = $(shell $(TARGETCC) -mlarge --print-libgcc)
 kernel.result = $(TOP)/kernel-$(PLATFORM).elf
 $(call build, kernel, kernel-elf)
 

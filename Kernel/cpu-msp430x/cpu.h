@@ -3,20 +3,25 @@
 
 /* The MSP430X has 20-bit registers. Yes, really. It defines size_t
  * to be one of those. Use that rather than uint32_t because it's
- * way more efficient. */
+ * way more efficient, but 20-bit pointers are still stored in memory
+ * as 32-bit values.
+ *
+ * However, we only build the kernel in 20-bit mode; userland is in
+ * 16-bit mode. Because all userspace addresses are below 64kB, it's
+ * safe to cast a 16-bit value to a 20-bit address and vice verse.
+ */
+
 typedef uintptr_t uint20_t;
 typedef intptr_t int20_t;
 
 typedef uint8_t irqflags_t;
 
-typedef uint32_t arg_t;
-typedef uint32_t uarg_t;
-typedef uint20_t uaddr_t;
-typedef uint20_t usize_t;		/* Largest value passed by userspace */
-typedef int20_t susize_t;
+typedef uint16_t arg_t;
+typedef uint16_t uarg_t;
+typedef uint16_t uaddr_t;
+typedef uint16_t usize_t;		/* Largest value passed by userspace */
+typedef int16_t susize_t;
 typedef uint32_t clock_t;
-
-#define ARGT_IS_BIGGER_THAN_INT 1
 
 extern void ei(void);
 extern irqflags_t di(void);

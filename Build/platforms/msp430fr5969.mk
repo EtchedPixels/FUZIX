@@ -5,7 +5,7 @@ A = a
 
 # Target gcc setup.
 
-TARGETCC = msp430-elf-gcc -mlarge
+TARGETCC = msp430-elf-gcc
 TARGETCPP = msp430-elf-cpp -nostdinc -undef -P
 TARGETAS = msp430-elf-as
 TARGETAR = msp430-elf-ar

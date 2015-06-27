@@ -14,17 +14,20 @@ _start:
 	.align 2
 1:
 	; Wipe BSS.
-	movx.a #__bss_start, r12
-	mov #0, 13
-	movx.a #__bss_end, r14
-	calla #memset
+	mov #__bss_start, r12
+	mov #__bss_end, r13
+2:
+	clr.b @r12
+	inc r12
+	cmp r12, r13
+	jnz 2b
 
 	; Pull environ off the stack.
-	movx.a 0(sp), &environ
+	mov 0(sp), &environ
 
 	; When main returns, jump to _exit.
-	pushx.a #exit
-	br.a #main
+	push #exit
+	br #main
 	
 .globl environ
 .comm environ, 2
