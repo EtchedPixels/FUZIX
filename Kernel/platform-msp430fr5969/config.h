@@ -22,22 +22,10 @@
 /* Banked Kernel: need to fix GCC first */
 #undef CONFIG_BANKED
 /* And swapping */
-#define SWAPDEV 6	/* FIXME */
+#define SWAPDEV 0x0002 /* hda2 */
 
 /* Video terminal, not a serial tty */
 #undef CONFIG_VT
-/* Simple text mode */
-#define CONFIG_VT_SIMPLE
-/* Vt definitions */
-#define VT_BASE		(uint8_t *)0x6000	/* Default video text mode base */
-#define VT_WIDTH	32
-#define VT_HEIGHT	16
-#define VT_RIGHT	31
-#define VT_BOTTOM	15
-#define VT_INITIAL_LINE	4
-
-extern unsigned char vt_mangle_6847(unsigned char c);
-#define VT_MAP_CHAR(x)	vt_mangle_6847(x)
 
 extern int __user_base;
 
@@ -46,9 +34,9 @@ extern int __user_base;
 #define PROGLOAD    PROGBASE /* also data base */
 #define PROGTOP     0xfe00  /* Top of program */
 
-#define SWAPBASE    PROGBASE
+#define SWAPBASE    ((uint16_t)&udata)
 #define SWAPTOP	    PROGTOP
-#define SWAP_SIZE   ((PROGTOP - PROGBASE)/512)
+#define SWAP_SIZE   ((SWAPTOP - SWAPBASE)/512)
 #define MAX_SWAPS	32
 #define swap_map(x) ((uint8_t*)(x))
 
@@ -70,6 +58,6 @@ extern int __user_base;
 #define SD_DRIVE_COUNT 1
 #define MAX_BLKDEV 1
 
-#define BOOTDEVICE 0x0001 // hda1
+#define BOOTDEVICE 0x0001 /* hda1 */
 
 

@@ -11,6 +11,7 @@ libc.ld = -L$(dir $(libc.result)) -lc
 targetgcc.cflags += \
 	-g \
 	-Wall \
+	-Werror=implicit-function-declaration \
 	--short-enums \
 	-Os
 

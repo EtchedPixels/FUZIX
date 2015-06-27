@@ -48,15 +48,6 @@ uint16_t ugetw(const void *user)
 	return _ugetw(user);
 }
 
-#if ARGT_IS_BIGGER_THAN_INT
-arg_t ugeta(const void *user)
-{
-	if (!valaddr(user, sizeof(arg_t)))
-		return -1;
-	return _ugeta(user);
-}
-#endif
-
 /* ugets is a bit odd - we don't know the length of the passed string
    so we trim to the end of the allowed memory and if we don't find a
    \0 in time we error */
@@ -93,15 +84,6 @@ int uputw(uint16_t value, void *user)
 		return -1;
 	return _uputw(value,user);
 }
-
-#if ARGT_IS_BIGGER_THAN_INT
-int uputa(arg_t value, void *user)
-{
-	if (!valaddr(user, sizeof(arg_t)))
-		return -1;
-	return _uputa(value,user);
-}
-#endif
 
 int uzero(void *user, usize_t count)
 {
@@ -145,17 +127,6 @@ uint16_t _ugetw(const uint16_t *user)
 	BANK_KERNEL;
 	return tmp;
 }
-
-#if ARGT_IS_BIGGER_THAN_INT
-arg_t _ugeta(const arg_t *user)
-{
-	arg_t tmp;
-	BANK_PROCESS;
-	tmp = *user;
-	BANK_KERNEL;
-	return tmp;
-}
-#endif
 
 int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
 {
@@ -202,16 +173,6 @@ int _uputw(uint16_t value,  uint16_t *user)
 	return 0;
 }
 
-#if ARGT_IS_BIGGER_THAN_INT
-int _uputa(arg_t value,  arg_t *user)
-{
-	BANK_PROCESS;
-	*user = value;
-	BANK_KERNEL;
-	return 0;
-}
-#endif
-
 int _uzero(uint8_t *user, usize_t count)
 {
 	BANK_KERNEL;
@@ -241,13 +202,6 @@ uint16_t _ugetw(const uint16_t *user)
 {
 	return *user;
 }
-
-#if ARGT_IS_BIGGER_THAN_INT
-arg_t _ugeta(const arg_t *user)
-{
-	return *user;
-}
-#endif
 
 int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
 {
@@ -279,14 +233,6 @@ int _uputw(uint16_t value,  uint16_t *user)
 	*user = value;
 	return 0;
 }
-
-#if ARGT_IS_BIGGER_THAN_INT
-int _uputa(arg_t value, arg_t *user)
-{
-	*user = value;
-	return 0;
-}
-#endif
 
 int _uzero(uint8_t *user, usize_t count)
 {

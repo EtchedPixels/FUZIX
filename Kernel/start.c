@@ -75,21 +75,21 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 
-	uput("/init", PROGLOAD, 6);
+	uput("/init", (void*)PROGLOAD, 6);
 	udata.u_argn = (arg_t)PROGLOAD;
 
 	j = PROGLOAD+8;
 
 	/* Arguments; just "/init" */
 	udata.u_argn1 = (arg_t)j;
-	uputa(udata.u_argn, j);
+	uputw(udata.u_argn, j);
 	j += sizeof(arg_t);
-	uputa(0, j);
+	uputw(0, j);
 	j += sizeof(arg_t);
 
 	/* Environment (none) */
 	udata.u_argn2 = j;
-	uputa(0, j);
+	uputw(0, j);
 }
 
 #ifndef BOOTDEVICE
@@ -280,6 +280,7 @@ void fuzix_main(void)
 	ptab_end = &ptab[maxproc];
 
 	/* Parameters message */
+	kprintf("kernel stack from %lx to %lx\n", (&udata+1), 0x7ffcL);
 	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	fstabinit();
@@ -293,13 +294,13 @@ void fuzix_main(void)
 	ei();
 	kputs("ok.\n");
 
-	/* initialise hardware devices */
 	device_init();
 
 	/* Mount the root device */
 	root_dev = get_root_dev();
 	kprintf("Mounting root fs (root_dev=%d): ", root_dev);
 
+	/* initialise hardware devices */
 	if (fmount(root_dev, NULLINODE, 0))
 		panic("no filesys");
 	root = i_open(root_dev, ROOTINODE);

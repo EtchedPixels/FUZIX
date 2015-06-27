@@ -40,6 +40,8 @@ kernel.srcs = \
 
 kernel.cflags += \
 	-mlarge \
+	-Wno-int-to-pointer-cast \
+	-Wno-pointer-to-int-cast \
 	-g \
 
 kernel.asflags += \

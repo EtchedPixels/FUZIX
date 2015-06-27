@@ -621,18 +621,6 @@ extern int _uputc(uint16_t value,  uint8_t *user);
 extern int _uputw(uint16_t value,  uint16_t *user);
 extern int _uzero(uint8_t *user, usize_t count);
 
-#if ARGT_IS_BIGGER_THAN_INT
-	extern arg_t ugeta(const void *userspace_source);
-	extern int uputa(arg_t value, void *userspace_source);
-	extern arg_t _ugeta(const arg_t *user);
-	extern int _uputa(arg_t value, arg_t* user);
-#else
-	#define ugeta ugetw
-	#define uputa uputw
-	#define _ugeta _ugetw
-	#define _uputa _uputw
-#endif
-
 /* platform/tricks.s */
 extern void switchout(void);
 extern void doexec(uaddr_t start_addr);
