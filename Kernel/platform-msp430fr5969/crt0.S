@@ -91,6 +91,9 @@ proc irqrestore
 	bis.w r12, SR            ; Mask in saved value
 	reta
 
+.section ".syscall", "ax", @progbits
+	.long unix_syscall_entry
+
 .section "__interrupt_vector_reset", "ax", @progbits
 	.word __main
 .text

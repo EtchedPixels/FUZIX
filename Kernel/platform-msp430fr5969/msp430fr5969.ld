@@ -226,6 +226,10 @@ SECTIONS
     KEEP (*(.dtors))
   } > LOROM
 
+  .syscall : {
+    KEEP (*(.syscall))
+  } > SYSCALL
+
   .lowtext : {
   	. = ALIGN(2);
     PROVIDE (_start = .);
