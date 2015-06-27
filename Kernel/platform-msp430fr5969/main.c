@@ -3,7 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 
-uaddr_t ramtop = PROGTOP;
+uaddr_t ramtop;
 
 void platform_idle(void)
 {

@@ -9,7 +9,6 @@ $(kernelversion.result):
 	$(hide) (cd $(dir $@) && $(kernelversion.abssrcs) $(VERSION) $(SUBVERSION))
 	$(hide) mv $(dir $@)/version.c $@
 
-
 kernel.srcs = \
 	../dev/blkdev.c \
 	../dev/devsd.c \
@@ -20,12 +19,16 @@ kernel.srcs = \
 	../inode.c \
 	../lowlevel-msp430x.c \
 	../kdata.c \
+	../mm.c \
 	../process.c \
 	../simple.c \
 	../start.c \
 	../swap.c \
 	../syscall_exec16.c \
 	../syscall_fs.c \
+	../syscall_fs2.c \
+	../syscall_other.c \
+	../syscall_proc.c \
 	../timer.c \
 	../tty.c \
 	../usermem.c \
@@ -42,6 +45,8 @@ kernel.cflags += \
 	-mlarge \
 	-Wno-int-to-pointer-cast \
 	-Wno-pointer-to-int-cast \
+	-fno-inline \
+	-fno-common \
 	-g \
 
 kernel.asflags += \

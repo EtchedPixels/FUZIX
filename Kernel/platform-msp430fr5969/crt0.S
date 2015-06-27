@@ -8,11 +8,7 @@
 .globl init_early
 .globl init_hardware
 
-.section ".noinit"
-
-.section ".lowtext", "ax", @progbits
-.globl __main
-__main:
+lowproc trap_reboot
 	; Disable watchdog timer.
 
 	mov.w #(WDTPW | WDTHOLD), &WDTCTL
@@ -40,17 +36,22 @@ __main:
 	mov.b #0, &CSCTL0_H                             ; Relock clock registers
 
 	; Init stack.
-	movx.a #kstack_top, SP
+	mov.a #kstack_top, SP
 
 	; Wipe BSS.
-	movx.a #__bssstart, r12
+	mov.w #__bssstart, r12
 	mov #0, r13
-	movx.a #__bsssize, r14
+	mov.w #__bsssize, r14
+	calla #memset
+
+	mov.w #__bss2start, r12
+	mov #0, r13
+	mov.w #__bss2size, r14
 	calla #memset
 
 	; Set some kernel variables.
-	movx.w #64, &ramsize
-	movx.w #32, &procmem
+	mov.w #64, &ramsize
+	mov.w #32, &procmem
 
 	; Call C routines.
 	calla #tty_rawinit
@@ -75,10 +76,6 @@ proc abort
 1: .asciz "[abort]\n"
 .text
 
-proc ei
-	bis.w #GIE, SR
-	reta
-
 proc di
 	; Return the old interrupt status in r12.
 	mov SR, r12
@@ -95,7 +92,7 @@ proc irqrestore
 	.long unix_syscall_entry
 
 .section "__interrupt_vector_reset", "ax", @progbits
-	.word __main
+	.word trap_reboot
 .text
 
 .globl last_interrupt

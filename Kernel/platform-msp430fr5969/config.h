@@ -10,10 +10,12 @@
 #define CONFIG_SINGLETASK
 #define PTABSIZE 1
 
+#define CONFIG_NO_STARTUP_MESSAGE
+
 /* Simple user copies for now (change when ROM the kernel) */
 #define CONFIG_USERMEM_DIRECT
-#define BANK_KERNEL
-#define BANK_PROCESS
+#define BANK_KERNEL /* */
+#define BANK_PROCESS /* */
 
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
@@ -28,16 +30,17 @@
 #undef CONFIG_VT
 
 extern int __user_base;
+extern int __user_top;
 
 #define TICKSPERSEC 64   /* Ticks per second */
-#define PROGBASE    ((uint32_t)(size_t)&__user_base)  /* also data base */
+#define PROGBASE    ((uaddr_t)&__user_base)  /* also data base */
 #define PROGLOAD    PROGBASE /* also data base */
-#define PROGTOP     0xfe00  /* Top of program */
+#define PROGTOP     ((uaddr_t)&__user_top)  /* Top of program */
 
-#define SWAPBASE    ((uint16_t)&udata)
+#define SWAPBASE    PROGBASE
 #define SWAPTOP	    PROGTOP
 #define SWAP_SIZE   ((SWAPTOP - SWAPBASE)/512)
-#define MAX_SWAPS	32
+#define MAX_SWAPS	8
 #define swap_map(x) ((uint8_t*)(x))
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
@@ -52,8 +55,10 @@ extern int __user_base;
 #define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    6       /* Number of block buffers */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
+#define NBUFS    4       /* Number of block buffers */
+#define NMOUNTS	 1	  /* Number of mounts at a time */
+#define UFTSIZE  4       /* Number of user files */
+#define OFTSIZE  7       /* Number of open files */
 
 #define SD_DRIVE_COUNT 1
 #define MAX_BLKDEV 1

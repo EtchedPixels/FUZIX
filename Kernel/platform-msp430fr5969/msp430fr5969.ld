@@ -104,9 +104,9 @@ MEMORY {
   RESETVEC         : ORIGIN = 0xFFFE, LENGTH = 0x0002
   BSL              : ORIGIN = 0x1000, LENGTH = 0x0800
 
-  SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800 /* END=0x23FF, size 2048 */
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7c00-0x4400
-  UDATA            : ORIGIN = 0x7c00, LENGTH = 0x7ffc-0x7c00
+  SRAMLO           : ORIGIN = 0x1C00, LENGTH = 0x0400
+  SRAMHI           : ORIGIN = 0x2000, LENGTH = 0x0400
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7ffc-0x4400
   SYSCALL          : ORIGIN = 0x7ffc, LENGTH = 0x0004
   USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000
   LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00
@@ -115,8 +115,9 @@ MEMORY {
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));
-PROVIDE(udata = ORIGIN(UDATA));
-PROVIDE(kstack_top = ORIGIN(UDATA) + LENGTH(UDATA));
+PROVIDE(__user_top = ORIGIN(USER) + LENGTH(USER));
+PROVIDE(udata = ORIGIN(SRAMLO));
+PROVIDE(kstack_top = ORIGIN(SRAMLO) + LENGTH(SRAMLO));
 
 SECTIONS
 {
@@ -185,45 +186,7 @@ SECTIONS
 
   .rodata : {
     . = ALIGN(2);
-    *(.plt)
-    *(.rodata .rodata.* .gnu.linkonce.r.* .const .const:*)
-    *(.rodata1)
-    *(.eh_frame_hdr)
-    KEEP (*(.eh_frame))
-    KEEP (*(.gcc_except_table)) *(.gcc_except_table.*)
-    PROVIDE (__preinit_array_start = .);
-    KEEP (*(.preinit_array))
-    PROVIDE (__preinit_array_end = .);
-    PROVIDE (__init_array_start = .);
-    KEEP (*(SORT(.init_array.*)))
-    KEEP (*(.init_array))
-    PROVIDE (__init_array_end = .);
-    PROVIDE (__fini_array_start = .);
-    KEEP (*(.fini_array))
-    KEEP (*(SORT(.fini_array.*)))
-    PROVIDE (__fini_array_end = .);
-    LONG(0); /* Sentinel.  */
-
-    /* gcc uses crtbegin.o to find the start of the constructors, so
-       we make sure it is first.  Because this is a wildcard, it
-       doesn't matter if the user does not actually link against
-       crtbegin.o; the linker won't look for a file to match a
-       wildcard.  The wildcard also means that it doesn't matter which
-       directory crtbegin.o is in.  */
-    KEEP (*crtbegin*.o(.ctors))
-
-    /* We don't want to include the .ctor section from from the
-       crtend.o file until after the sorted ctors.  The .ctor section
-       from the crtend file contains the end of ctors marker and it
-       must be last */
-    KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
-    KEEP (*(SORT(.ctors.*)))
-    KEEP (*(.ctors))
-
-    KEEP (*crtbegin*.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
-    KEEP (*(SORT(.dtors.*)))
-    KEEP (*(.dtors))
+    *(.rodata .rodata.* .const .const:*)
   } > LOROM
 
   .syscall : {
@@ -233,51 +196,55 @@ SECTIONS
   .lowtext : {
   	. = ALIGN(2);
     PROVIDE (_start = .);
-	*(.lowtext)
+	*(.lowtext .lowtext.*)
+	*(.text._*)
+	*(.text.kprintf)
+	*(.text.readi)
+	*(.text.writei)
+	*(.text.fuzix_main)
+	*(.text.sgrpsig)
   } > LOROM
-
+    
   .text : {
     . = ALIGN(2);
     KEEP (*(SORT(.crt_*)))
-    *(.text .stub .text.* .gnu.linkonce.t.* .text:*)
-    KEEP (*(.text.*personality*))
-    /* .gnu.warning sections are handled specially by elf32.em.  */
-    *(.gnu.warning)
-    *(.interp .hash .dynsym .dynstr .gnu.version*)
+    *(.text .text.* .text:*)
     PROVIDE (__etext = .);
     PROVIDE (_etext = .);
     PROVIDE (etext = .);
-    . = ALIGN(2);
-    KEEP (*(.init))
-    KEEP (*(.fini))
-    KEEP (*(.tm_clone_table))
   } > HIROM
+
+  .sram : {
+  	. = ALIGN(2);
+	PROVIDE (__bss2start = .);
+	*(.bss.ptab);
+	*(.bss.blk_op);
+	*(.bss.of_tab);
+	*(.bss.tbuf1);
+	. = ALIGN(2);
+	PROVIDE (__bss2end = .);
+  } > SRAMHI
+  PROVIDE (__bss2size = SIZEOF(.sram));
 
   .data : {
     . = ALIGN(2);
     PROVIDE (__datastart = .);
 
-    KEEP (*(.jcr))
-    *(.data.rel.ro.local) *(.data.rel.ro*)
-    *(.dynamic)
-
-    *(.data .data.* .gnu.linkonce.d.*)
-    KEEP (*(.gnu.linkonce.d.*personality*))
-    SORT(CONSTRUCTORS)
-    *(.data1)
-    *(.got.plt) *(.got)
+    *(.data .data.*)
 
     /* We want the small data sections together, so single-instruction offsets
        can access them all, and initialized data all before uninitialized, so
        we can shorten the on-disk segment size.  */
     . = ALIGN(2);
-    *(.sdata .sdata.* .gnu.linkonce.s.* D_2 D_1)
+    *(.sdata .sdata.*)
 
     . = ALIGN(2);
     _edata = .;
     PROVIDE (edata = .);
     PROVIDE (__dataend = .);
-  } > LOROM AT>LOROM
+
+	*(COMMON)
+  } > LOROMX
 
   /* Note that crt0 assumes this is a multiple of two; all the
      start/stop symbols are also assumed word-aligned.  */
@@ -287,23 +254,11 @@ SECTIONS
   .bss : {
     . = ALIGN(2);
     PROVIDE (__bssstart = .);
-    *(.dynbss)
-    *(.sbss .sbss.*)
     *(.bss .bss.* .gnu.linkonce.b.*)
     . = ALIGN(2);
-    *(COMMON)
     PROVIDE (__bssend = .);
   } > LOROM
   PROVIDE (__bsssize = SIZEOF(.bss));
-
-  .noinit (NOLOAD) : {
-    . = ALIGN(2);
-    PROVIDE (__noinit_start = .);
-    *(.noinit)
-    . = ALIGN(2);
-    PROVIDE (__noinit_end = .);
-    end = .;
-  } > SRAM
 
   .MP430.attributes 0 :
   {

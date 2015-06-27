@@ -23,11 +23,38 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
 
-extern void ei(void);
+static inline void ei(void)
+{
+	asm volatile ("eint");
+}
+
+#if 0
+static inline irqflags_t di(void)
+{
+	irqflags_t flags;
+	asm volatile (
+		"mov SR, %0\n"
+		"dint\n"
+		: "=g" (flags));
+	return flags;
+}
+
+static inline void irqrestore(irqflags_t flags)
+{
+	asm volatile (
+		"dint\n"
+		"and #0x0008, %0\n"
+		"bis.w %0, SR\n"
+		: "+g" (flags));
+}
+#endif
+
 extern irqflags_t di(void);
 extern void irqrestore(irqflags_t f);
-
 #undef EMAGIC             /* No executable header for MSP430X */
+
+/* Allow a minimum of 512 bytes gap between stack and top of allocations */
+#define brk_limit() (udata.u_syscall_sp - 512)
 
 extern void* memcpy(void*, const void*, size_t);
 extern void* memset(void*, int, size_t);

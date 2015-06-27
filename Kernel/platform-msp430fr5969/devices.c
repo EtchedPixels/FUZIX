@@ -21,10 +21,6 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,    no_ioctl },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,      tty_close,   tty_read,  tty_write,  tty_ioctl },
-  /* 3: /dev/lpr	Printer devices */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,    no_ioctl  },
-  /* 4: /dev/mem etc	System devices (one offs) */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,    no_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 

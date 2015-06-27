@@ -1,8 +1,14 @@
 U_DATA                      = udata
 
-.macro proc NAME
-	.section .text.\NAME
-	.globl \NAME
-	\NAME:
+.macro proc n
+	.section ".text.\n", "ax", @progbits
+	.globl \n
+	\n:
+.endm
+
+.macro lowproc n
+	.section ".lowtext.\n", "ax", @progbits
+	.globl \n
+	\n:
 .endm
 
