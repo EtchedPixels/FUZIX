@@ -183,6 +183,15 @@ init_partial_uart:
 
 	ret
 
+        ; the reboot code must reside between 0x4000 and 0xBFFF
+        .area _CODE2
+_trap_reboot:
+        di
+        xor a                           ; ROM starts at page 0
+        out (MPGSEL_0), a               ; map ROM to low 16K
+        out (MPGSEL_3), a               ; UNA BIOS also checks for ROM signature in top 16K
+        jp 0                            ; jump into ROM
+
 ;=========================================================================
 ; Common Memory (0xF000 upwards)
 ;=========================================================================
@@ -279,12 +288,6 @@ _program_vectors:
 	ld (0x0067),hl
 
 	jr map_kernel
-
-_trap_reboot:
-        di
-        xor a                           ; ROM starts at page 0
-        out (MPGSEL_0), a               ; map ROM to low 16K
-        jp 0                            ; jump into ROM
 
 ;=========================================================================
 ; Memory management
