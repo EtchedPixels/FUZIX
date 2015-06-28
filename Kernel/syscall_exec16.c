@@ -28,6 +28,9 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			udata.u_offset = (off_t)blk << 9;
 			udata.u_count = 512;
 			udata.u_base = (uint8_t *)base;
+			
+			/* Why is this necessary on the MSP430???? */
+			*(volatile uint8_t*)base;
 
 			if (cdread(i->c_dev, 0) < 0) {
 				kputs("bload failed.\n");

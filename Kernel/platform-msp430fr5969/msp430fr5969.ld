@@ -186,7 +186,7 @@ SECTIONS
 
   .rodata : {
     . = ALIGN(2);
-    *(.rodata .rodata.* .const .const:*)
+    *(.rodata.* .rodata .const .const:*)
   } > LOROM
 
   .syscall : {
@@ -203,6 +203,7 @@ SECTIONS
 	*(.text.writei)
 	*(.text.fuzix_main)
 	*(.text.sgrpsig)
+	*(.text.srch_dir)
   } > LOROM
     
   .text : {
@@ -217,10 +218,15 @@ SECTIONS
   .sram : {
   	. = ALIGN(2);
 	PROVIDE (__bss2start = .);
-	*(.bss.ptab);
-	*(.bss.blk_op);
-	*(.bss.of_tab);
-	*(.bss.tbuf1);
+	*(.bss.ptab)
+	*(.bss.blk_op)
+	*(.bss.of_tab)
+	*(.bss.tbuf1)
+	*(.bss.blkdev_table)
+	*(.bss.fs_tab)
+	*(.bss.ttydata)
+	*(.bss.ticks)
+	*(.bss.tod)
 	. = ALIGN(2);
 	PROVIDE (__bss2end = .);
   } > SRAMHI

@@ -7,7 +7,6 @@
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
 /* Single tasking - for now while we get it booting */
-#define CONFIG_SINGLETASK
 #define PTABSIZE 1
 
 #define CONFIG_NO_STARTUP_MESSAGE

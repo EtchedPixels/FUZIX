@@ -54,13 +54,7 @@ lowproc trap_reboot
 	mov.w #32, &procmem
 
 	; Call C routines.
-	calla #tty_rawinit
-	calla #fuzix_main
-stop:
-	jmp stop
-
-__reti:
-	reti
+	bra #platform_init
 
 proc trap_monitor
 	bic.w #GIE, SR
@@ -73,7 +67,7 @@ proc abort
 	calla #kprintf
 	jmp .
 .data 1
-1: .asciz "[abort]\n"
+1: .asciz "ABRT\n"
 .text
 
 proc di

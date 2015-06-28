@@ -4,6 +4,8 @@
 #include "globals.h"
 
 extern void sd_rawinit(void);
+extern void tty_rawinit(void);
+extern void fuzix_main(void);
 
 #endif
 

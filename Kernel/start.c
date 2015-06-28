@@ -58,7 +58,7 @@ void fstabinit(void)
 /* FIXME: pass remainder of boot argument to init, also word align */
 void create_init(void)
 {
-	const char init[] = "/bin/ls";
+	const char init[] = "/init";
 
 	uint8_t *j;
 	init_process = ptab_alloc();
