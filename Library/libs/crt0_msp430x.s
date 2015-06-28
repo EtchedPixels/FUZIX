@@ -2,16 +2,16 @@
 .globl _start
 _start:
 	jmp 1f                             ; two bytes
-	.byte 0                            ; one byte of padding
+	.byte 0                            ; two bytes of padding
 	.byte 'F', 'Z', 'X', '1'           ; magic starts at 0x8003
 
-	.word 0 ; chmem
+	.byte 0x80                         ; page to start at
+	.word 0                            ; chmem (0 means 'all')
 	.word __data_start
-	.word __data_end
-	.word __bss_end
+	.word __data_len
+	.word __bss_len
 	.word 0 ; spare
 
-	.align 2
 1:
 	; Wipe BSS.
 	mov #__bss_start, r12
