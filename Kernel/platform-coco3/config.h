@@ -67,11 +67,17 @@ extern unsigned char vt_map( unsigned char c );
 #define CMDLINE	0x88	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 10
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time - nothing mountable! */
 
 #define CONFIG_COCO_KBD   /* Use CoCo key maps rather than Dragon */
 
+
+/* Drivewire Defines */
+
+#define DW_VSER_NUM 4     /* No of Virtual Serial Ports */
+#define DW_VWIN_NUM 4     /* No of Virtual Window Ports */
+#define DW_MIN_OFF  3     /* Minor number offset */
 

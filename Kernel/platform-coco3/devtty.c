@@ -15,15 +15,34 @@
 uint8_t vtattr_cap;
 
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
+char tbuf1[TTYSIZ];   /* console 0 */
+char tbuf2[TTYSIZ];   /* console 1 */
+char tbuf3[TTYSIZ];   /* drivewire VSER 0 */
+char tbuf4[TTYSIZ];   /* drivewire VSER 1 */
+char tbuf5[TTYSIZ];   /* drivewire VSER 2 */
+char tbuf6[TTYSIZ];   /* drivewire VSER 3 */
+char tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
+char tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
+char tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
+char tbufa[TTYSIZ];   /* drivewire VWIN 3 */
 
-struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
+
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	
+	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
+	/* GIME Consoles */
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2}
+	/* Drivewire Virtual Serial Ports */
+	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf6, tbuf6, tbuf6, TTYSIZ, 0, TTYSIZ / 2},
+	/* Drivewire Virtual Window Ports */
+	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf8, tbuf8, tbuf8, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf9, tbuf9, tbuf9, TTYSIZ, 0, TTYSIZ / 2},
+	{tbufa, tbufa, tbufa, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 
@@ -52,7 +71,7 @@ int curminor = 1;
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
-	if (minor == 3 && ttydata[3].users == 0)
+	if (minor > 2 && ttydata[minor].users == 0)
 		dw_vclose(minor);
 	return (tty_close(minor));
 }
@@ -73,7 +92,7 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if (minor == 3) {
+	if (minor > 2 ) {
 		dw_putc(minor, c);
 		return;
 	}
@@ -95,15 +114,16 @@ void tty_sleeping(uint8_t minor)
 
 void tty_setup(uint8_t minor)
 {
-	if (minor == 3) {
+	if (minor > 2) {
 		dw_vopen(minor);
 		return;
 	}
 }
 
-/* For the moment */
+
 int tty_carrier(uint8_t minor)
 {
+	if( minor > 2 ) return dw_carrier( minor );
 	return 1;
 }
 
