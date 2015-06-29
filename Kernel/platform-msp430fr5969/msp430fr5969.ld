@@ -104,20 +104,32 @@ MEMORY {
   RESETVEC         : ORIGIN = 0xFFFE, LENGTH = 0x0002
   BSL              : ORIGIN = 0x1000, LENGTH = 0x0800
 
-  SRAMLO           : ORIGIN = 0x1C00, LENGTH = 0x0400
-  SRAMHI           : ORIGIN = 0x2000, LENGTH = 0x0400
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7ffc-0x4400
+  SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800
+
+  /* The kstack is at 0x7e00, and extends up to 0x8000, with four bytes
+   * reserved under 0x8000 for the syscall vector; UDATA goes at the top
+   * of userspace, just below 0xfe00. */
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7e00-0x4400
+  KSTACK           : ORIGIN = 0x7e00, LENGTH = 0x1fc
   SYSCALL          : ORIGIN = 0x7ffc, LENGTH = 0x0004
-  USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000
+  USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000-240
+  UDATA            : ORIGIN = 0xfe00-240, LENGTH = 240
+
+  /* Desperately pack more variables into the 384-byte space between
+   * 0xfe00 and 0xff80 (where the system vectors start). */
   LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00
+
   HIROM            : ORIGIN = 0x10000, LENGTH = 0x3FFF
 }
+
+PROVIDE(__swap_base = 0x7e00);
+PROVIDE(__swap_top = 0xfe00);
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));
 PROVIDE(__user_top = ORIGIN(USER) + LENGTH(USER));
-PROVIDE(udata = ORIGIN(SRAMLO));
-PROVIDE(kstack_top = ORIGIN(SRAMLO) + LENGTH(SRAMLO));
+PROVIDE(udata = ORIGIN(UDATA));
+PROVIDE(kstack_top = ORIGIN(KSTACK) + LENGTH(KSTACK));
 
 SECTIONS
 {
@@ -204,6 +216,10 @@ SECTIONS
 	*(.text.fuzix_main)
 	*(.text.sgrpsig)
 	*(.text.srch_dir)
+	*(.text.switchout)
+	*(.text.dofork)
+	*(.text.getproc)
+	*(.text.rargs)
   } > LOROM
     
   .text : {
@@ -215,21 +231,25 @@ SECTIONS
     PROVIDE (etext = .);
   } > HIROM
 
+  .bss : {
+    . = ALIGN(2);
+    PROVIDE (__bssstart = .);
+    *(.bss.bufpool);
+	*(.bss.blkdev_table);
+	*(.bss.tod);
+	*(.bss.ttydata);
+    . = ALIGN(2);
+    PROVIDE (__bssend = .);
+  } > LOROM
+  PROVIDE (__bsssize = SIZEOF(.bss));
+
   .sram : {
   	. = ALIGN(2);
 	PROVIDE (__bss2start = .);
-	*(.bss.ptab)
-	*(.bss.blk_op)
-	*(.bss.of_tab)
-	*(.bss.tbuf1)
-	*(.bss.blkdev_table)
-	*(.bss.fs_tab)
-	*(.bss.ttydata)
-	*(.bss.ticks)
-	*(.bss.tod)
+	*(.bss.*)
 	. = ALIGN(2);
 	PROVIDE (__bss2end = .);
-  } > SRAMHI
+  } > SRAM
   PROVIDE (__bss2size = SIZEOF(.sram));
 
   .data : {
@@ -256,15 +276,6 @@ SECTIONS
      start/stop symbols are also assumed word-aligned.  */
   PROVIDE(__romdatastart = LOADADDR(.data));
   PROVIDE (__romdatacopysize = SIZEOF(.data));
-
-  .bss : {
-    . = ALIGN(2);
-    PROVIDE (__bssstart = .);
-    *(.bss .bss.* .gnu.linkonce.b.*)
-    . = ALIGN(2);
-    PROVIDE (__bssend = .);
-  } > LOROM
-  PROVIDE (__bsssize = SIZEOF(.bss));
 
   .MP430.attributes 0 :
   {

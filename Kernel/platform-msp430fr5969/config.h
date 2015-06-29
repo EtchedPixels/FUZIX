@@ -7,7 +7,7 @@
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
 /* Single tasking - for now while we get it booting */
-#define PTABSIZE 1
+#define PTABSIZE 4
 
 #define CONFIG_NO_STARTUP_MESSAGE
 
@@ -31,13 +31,16 @@
 extern int __user_base;
 extern int __user_top;
 
+extern int __swap_base;
+extern int __swap_top;
+
 #define TICKSPERSEC 64   /* Ticks per second */
 #define PROGBASE    ((uaddr_t)&__user_base)  /* also data base */
 #define PROGLOAD    PROGBASE /* also data base */
 #define PROGTOP     ((uaddr_t)&__user_top)  /* Top of program */
 
-#define SWAPBASE    PROGBASE
-#define SWAPTOP	    PROGTOP
+#define SWAPBASE    ((uaddr_t)&__swap_base)
+#define SWAPTOP	    ((uaddr_t)&__swap_top)
 #define SWAP_SIZE   ((SWAPTOP - SWAPBASE)/512)
 #define MAX_SWAPS	8
 #define swap_map(x) ((uint8_t*)(x))

@@ -60,10 +60,3 @@ __attribute__ ((naked)) void unix_syscall_entry(void)
 		  "g" (udata.u_error)
 	);
 }
-
-int16_t dofork(ptptr child)
-{
-	kprintf("dofork\n");
-	for (;;);
-}
-

@@ -40,14 +40,18 @@ lowproc trap_reboot
 
 	; Wipe BSS.
 	mov.w #__bssstart, r12
-	mov #0, r13
-	mov.w #__bsssize, r14
-	calla #memset
+1:
+	clr.b @r12
+	inc r12
+	cmp.w #__bssend, r12
+	jnz 1b
 
 	mov.w #__bss2start, r12
-	mov #0, r13
-	mov.w #__bss2size, r14
-	calla #memset
+1:
+	clr.b @r12
+	inc r12
+	cmp.w #__bss2end, r12
+	jnz 1b
 
 	; Set some kernel variables.
 	mov.w #64, &ramsize

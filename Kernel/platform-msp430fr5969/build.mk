@@ -54,6 +54,7 @@ kernel.asflags += \
 	-g \
 
 kernel.ldflags += \
+	--relax \
 	-s 
 
 kernel.libgcc = $(shell $(TARGETCC) -mlarge --print-libgcc)

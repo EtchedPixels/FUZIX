@@ -65,7 +65,7 @@ void tty_sleeping(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	return (UCA0IFG & UCTXIFG) ? TTY_READY_NOW : TTY_READY_LATER;
+	return (UCA0IFG & UCTXIFG) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_setup(uint8_t minor)
