@@ -184,6 +184,21 @@ init_partial_uart:
 	ret
 
 ;=========================================================================
+; Kernel code
+;=========================================================================
+        .area _CODE
+
+_trap_reboot:
+        ; We need to map the ROM back in -- ideally into every page.
+        ; This little trick based on a clever suggestion from John Coffman.
+        di
+        ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
+        ld (0xFFFE), hl                 ; put it at the very top of RAM
+        xor a                           ; A=0
+        jp 0xFFFE                       ; execute it; PC then wraps to 0
+
+
+;=========================================================================
 ; Common Memory (0xF000 upwards)
 ;=========================================================================
         .area _COMMONMEM
@@ -279,12 +294,6 @@ _program_vectors:
 	ld (0x0067),hl
 
 	jr map_kernel
-
-_trap_reboot:
-        di
-        xor a                           ; ROM starts at page 0
-        out (MPGSEL_0), a               ; map ROM to low 16K
-        jp 0                            ; jump into ROM
 
 ;=========================================================================
 ; Memory management
