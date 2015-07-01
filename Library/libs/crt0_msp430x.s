@@ -5,7 +5,7 @@ _start:
 	.byte 0                            ; two bytes of padding
 	.byte 'F', 'Z', 'X', '1'           ; magic starts at 0x8003
 
-	.byte 0x80                         ; page to start at
+	.byte __user_page                  ; page to start at
 	.word 0                            ; chmem (0 means 'all')
 	.word __data_start
 	.word __data_len

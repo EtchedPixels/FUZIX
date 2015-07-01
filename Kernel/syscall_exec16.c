@@ -134,7 +134,6 @@ arg_t _execve(void)
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += PROGLOAD;
-
 	bss = *(uint16_t *)(buf + 14);
 
 	/* Binary doesn't fit */

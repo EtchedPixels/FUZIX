@@ -46,13 +46,13 @@ __attribute__ ((naked)) void unix_syscall_entry(void)
 		"dint\n"
 		"mov.b r11, %0\n"
 		"mov.w sp, %1\n"
-		"movx.a #kstack_top, sp\n"
-		"calla %2\n"
+		"mov.w #kstack_top, sp\n"
+		"call %2\n"
 		"mov.w %1, sp\n"
 		"mov.w %3, r12\n"
 		"mov.w %4, r13\n"
 		"eint\n"
-		"reta\n"
+		"ret\n"
 		: "=m" (udata.u_callno),
 		  "=m" (udata.u_syscall_sp)
 		: "g" (unix_syscall_main),

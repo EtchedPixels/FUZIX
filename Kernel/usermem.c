@@ -193,16 +193,6 @@ usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 	return 0;
 }
 
-int16_t _ugetc(const uint8_t *user)
-{
-	return *user;
-}
-
-uint16_t _ugetw(const uint16_t *user)
-{
-	return *user;
-}
-
 int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	while(count--) {
@@ -219,18 +209,6 @@ int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
 int _uput(const uint8_t *source, uint8_t *user, usize_t count)
 {
 	memcpy(user, source, count);
-	return 0;
-}
-
-int _uputc(uint16_t value,  uint8_t *user)
-{
-	*user = value;
-	return 0;
-}
-
-int _uputw(uint16_t value,  uint16_t *user)
-{
-	*user = value;
 	return 0;
 }
 

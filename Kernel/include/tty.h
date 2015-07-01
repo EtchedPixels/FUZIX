@@ -146,7 +146,9 @@ struct termios {
 #define VTATTRS		0x24
 
 /* Character Input Queue size */
+#if !defined TTYSIZ
 #define TTYSIZ 132
+#endif
 
 /* Group the tty into a single object. That lets 8bit processors keep all
    the data indexed off a single register */

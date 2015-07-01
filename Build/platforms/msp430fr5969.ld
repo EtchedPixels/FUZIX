@@ -3,12 +3,13 @@ ENTRY(_start)
 
 MEMORY
 {
-        USER : ORIGIN = 0x8000, LENGTH = 0x7e00
+        USER : ORIGIN = 0x9e80, LENGTH = (0xff80 - 0x9e80)
 }
 
 SECTIONS
 {
         .image : {
+				__image_start = .;
                 *(.header*)
                 *(.text*)
 				. = ALIGN(2);
@@ -19,6 +20,7 @@ SECTIONS
                 __data_end = .;
         } > USER
 		__data_len = (__data_end - __data_start);
+		__user_page = (__image_start / 0x100);
 
         .bss : {
 				. = ALIGN(2);

@@ -12,7 +12,11 @@ TARGETAR = msp430-elf-ar
 TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
 
-targetgcc.cflags += -ffunction-sections -fdata-sections
+targetgcc.cflags += \
+	-ffunction-sections \
+	-fdata-sections \
+	-funit-at-a-time
+
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
 
 # CPU architecture and which syscall generator to use.
@@ -142,9 +146,11 @@ FILESYSTEM = \
     /bin/tsort              0755 $(v7-cmd-tsort.result) \
     /bin/wall               0755 $(v7-cmd-wall.result) \
 	/init                   0755 $(util-init.result) \
-    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
     /usr/games/fish         0755 $(v7-games-fish.result) \
     /usr/games/wump         0755 $(v7-games-wump.result) \
+
+# These are too big. \
+    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \

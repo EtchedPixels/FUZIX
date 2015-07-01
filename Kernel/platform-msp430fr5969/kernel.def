@@ -6,9 +6,3 @@ U_DATA                      = udata
 	\n:
 .endm
 
-.macro lowproc n
-	.section ".lowtext.\n", "ax", @progbits
-	.globl \n
-	\n:
-.endm
-

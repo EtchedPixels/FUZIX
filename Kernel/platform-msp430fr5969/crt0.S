@@ -8,11 +8,25 @@
 .globl init_early
 .globl init_hardware
 
-lowproc trap_reboot
-	; Disable watchdog timer.
+.globl trap_reboot
+proc poweron
+	mov.w #(WDTPW | WDTHOLD), &WDTCTL               ; Disable watchdog
 
-	mov.w #(WDTPW | WDTHOLD), &WDTCTL
+trap_reboot:
+	dint
 
+	; Copy the startup code out of high rom and into its execution address.
+	mov.w #0, r15
+1:
+	movx.b __hirom_base(r15), __user_base(r15)
+	inc r15
+	cmp.w #__hirom_length, r15
+	jnz 1b
+
+	; Go to the real startup code.
+	br #trap_reboot_high
+
+proc trap_reboot_high
 	mov.b #CSKEY>>8, &CSCTL0_H                      ; Unlock clock registers
 	mov.w #DCOFSEL_3 | DCORSEL, &CSCTL1             ; DCO to 8MHz
 	; ACLK = VLO; SMCLK = MCLK = DCO
@@ -36,9 +50,9 @@ lowproc trap_reboot
 	mov.b #0, &CSCTL0_H                             ; Relock clock registers
 
 	; Init stack.
-	mov.a #kstack_top, SP
+	mov.w #kstack_top, SP
 
-	; Wipe BSS.
+	; Wipe the first BSS.
 	mov.w #__bssstart, r12
 1:
 	clr.b @r12
@@ -46,6 +60,7 @@ lowproc trap_reboot
 	cmp.w #__bssend, r12
 	jnz 1b
 
+	; ...and the second BSS.
 	mov.w #__bss2start, r12
 1:
 	clr.b @r12
@@ -53,12 +68,21 @@ lowproc trap_reboot
 	cmp.w #__bss2end, r12
 	jnz 1b
 
+	; Now copy the initial values of the data segment out of high rom.
+	mov.w #0, r12
+1:
+	movx.b __romdata_start(r12), __romdata_dest(r12)
+	inc r12
+	cmp #__romdata_length, r12
+	jnz 1b
+	
 	; Set some kernel variables.
 	mov.w #64, &ramsize
-	mov.w #32, &procmem
+	mov.w #__user_length_kb, &procmem
+	
 
 	; Call C routines.
-	bra #platform_init
+	br #platform_init
 
 proc trap_monitor
 	bic.w #GIE, SR
@@ -66,9 +90,9 @@ proc trap_monitor
 	
 proc abort
 	bic.w #GIE, SR
-	movx.a #1f, r12
-	movx.a #kstack_top, sp
-	calla #kprintf
+	mov.w #1f, r12
+	mov.w #kstack_top, sp
+	call #kprintf
 	jmp .
 .data 1
 1: .asciz "ABRT\n"
@@ -79,38 +103,31 @@ proc di
 	mov SR, r12
 	and #~GIE, r12
 	bic.w #GIE, SR
-	reta
+	ret
 
 proc irqrestore
 	bic.w #GIE, SR           ; Ensure off
 	bis.w r12, SR            ; Mask in saved value
-	reta
+	ret
 
 .section ".syscall", "ax", @progbits
-	.long unix_syscall_entry
+	.word unix_syscall_entry
 
 .section "__interrupt_vector_reset", "ax", @progbits
-	.word trap_reboot
-.text
-
-.globl last_interrupt
-.comm last_interrupt, 1
+	.word poweron
 
 #define standard_interrupt(name, irq) \
-	.globl name ## _trampoline { \
-	.section ".lowtext" { \
-	name ## _trampoline: \
-	movx.b #(irq), &last_interrupt { \
-	bra #interrupt_handler { \
+	proc name ## _trampoline { \
+	   mov.b #(irq), &last_interrupt { \
+	   br #interrupt_handler { \
 	.section #name, "ax", @progbits { \
 		.word name ## _trampoline
 
 #define fallback_interrupt(name) \
-	.section ".lowtext" { \
-	name ## _fallback: \
-	1: movx.a #3f, r12 { \
-	   movx.a #kstack_top, sp { \
-	   calla #kprintf { \
+	proc name ## _fallback { \
+	1: mov.w #3f, r12 { \
+	   mov.w #kstack_top, sp { \
+	   br #kprintf { \
 	2: jmp 2b { \
 	.data 1 { \
 	3: .asciz #name { \

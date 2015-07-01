@@ -34,20 +34,6 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-void device_init(void)
-{
-	/* Configure the watchdog timer to use ACLK as the system interrupt.
-	 * ACLK was set up in the boot sequence to use the LFXT clock, which runs
-	 * (relatively accurately) at 32kHz. 512 ticks at 32kHz is 64Hz.
-	 */
-
-	WDTCTL = WDTPW | WDTSSEL__ACLK | WDTTMSEL | WDTCNTCL | WDTIS__512;
-	SFRIE1 |= WDTIE;
-
-	sd_rawinit();
-	devsd_init();
-}
-
 /* This is called with interrupts off. */
 void platform_interrupt(void)
 {

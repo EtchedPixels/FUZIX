@@ -9,10 +9,9 @@
 /* Single tasking - for now while we get it booting */
 #define PTABSIZE 4
 
-#define CONFIG_NO_STARTUP_MESSAGE
+#define CONFIG_USERMEM_DIRECT
 
 /* Simple user copies for now (change when ROM the kernel) */
-#define CONFIG_USERMEM_DIRECT
 #define BANK_KERNEL /* */
 #define BANK_PROCESS /* */
 
@@ -57,6 +56,7 @@ extern int __swap_top;
 #define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+#define TTYSIZ   8        /* Size of serial buffer */
 #define NBUFS    4       /* Number of block buffers */
 #define NMOUNTS	 1	  /* Number of mounts at a time */
 #define UFTSIZE  4       /* Number of user files */

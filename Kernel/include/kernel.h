@@ -613,13 +613,21 @@ extern int uzero(void *userspace_dest, usize_t count);
 
 /* usermem.c or usermem_std.s */
 extern usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
+extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
+extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
+extern int _uzero(uint8_t *user, usize_t count);
+
+#if defined CONFIG_USERMEM_DIRECT
+#define _ugetc(p) (*(uint8_t*)(p))
+#define _ugetw(p) (*(uint16_t*)(p))
+#define _uputc(v, p) ((*(uint8_t*)(p) = (v)), 0)
+#define _uputw(v, p) ((*(uint16_t*)(p) = (v)), 0)
+#else
 extern int16_t _ugetc(const uint8_t *user);
 extern uint16_t _ugetw(const uint16_t *user);
-extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
-extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
 extern int _uputc(uint16_t value,  uint8_t *user);
 extern int _uputw(uint16_t value,  uint16_t *user);
-extern int _uzero(uint8_t *user, usize_t count);
+#endif
 
 /* platform/tricks.s */
 extern void switchout(void);

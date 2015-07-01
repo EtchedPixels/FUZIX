@@ -34,15 +34,18 @@ kernel.srcs = \
 	../usermem.c \
 	crt0.S \
 	devices.c \
+	devices_discard.c \
 	devsdspi.c \
+	devsdspi_discard.c \
 	devtty.c \
+	devtty_discard.c \
 	libc.c \
 	main.c \
+	main_discard.c \
 	tricks.S \
 	$(kernelversion.result)
 
 kernel.cflags += \
-	-mlarge \
 	-Wno-int-to-pointer-cast \
 	-Wno-pointer-to-int-cast \
 	-fno-inline \
@@ -50,14 +53,12 @@ kernel.cflags += \
 	-g \
 
 kernel.asflags += \
-	-mlarge \
 	-g \
 
 kernel.ldflags += \
 	--relax \
 	-s 
 
-kernel.libgcc = $(shell $(TARGETCC) -mlarge --print-libgcc)
 kernel.result = $(TOP)/kernel-$(PLATFORM).elf
 $(call build, kernel, kernel-elf)
 

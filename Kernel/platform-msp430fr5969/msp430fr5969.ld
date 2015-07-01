@@ -106,30 +106,28 @@ MEMORY {
 
   SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800
 
-  /* The kstack is at 0x7e00, and extends up to 0x8000, with four bytes
-   * reserved under 0x8000 for the syscall vector; UDATA goes at the top
-   * of userspace, just below 0xfe00. */
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x7e00-0x4400
-  KSTACK           : ORIGIN = 0x7e00, LENGTH = 0x1fc
-  SYSCALL          : ORIGIN = 0x7ffc, LENGTH = 0x0004
-  USER             : ORIGIN = 0x8000, LENGTH = 0xfe00-0x8000-240
-  UDATA            : ORIGIN = 0xfe00-240, LENGTH = 240
+  /* We have a combined udata/kstack block just under the userdata start,
+   * at 0x8080. The syscall vector is at 0x817e. */
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0x9d80-0x4400
+  UDATA            : ORIGIN = 0x9d80, LENGTH = 0x00fe
+  SYSCALL          : ORIGIN = 0x9e7e, LENGTH = 0x0002
+  USER             : ORIGIN = 0x9e80, LENGTH = (0xff80-0x9e80)
 
-  /* Desperately pack more variables into the 384-byte space between
-   * 0xfe00 and 0xff80 (where the system vectors start). */
-  LOROMX           : ORIGIN = 0xfe00, LENGTH = 0xff80-0xfe00
-
+  /* Our init code goes here. It'll get copied into userspace at startup,
+   * so we can discard it; that way we don't have it using up space at
+   * runtime. */
   HIROM            : ORIGIN = 0x10000, LENGTH = 0x3FFF
 }
 
-PROVIDE(__swap_base = 0x7e00);
-PROVIDE(__swap_top = 0xfe00);
+PROVIDE(__swap_base = 0x8080);
+PROVIDE(__swap_top = 0xff80);
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));
+PROVIDE(__user_length_kb = LENGTH(USER) / 1024);
 PROVIDE(__user_top = ORIGIN(USER) + LENGTH(USER));
 PROVIDE(udata = ORIGIN(UDATA));
-PROVIDE(kstack_top = ORIGIN(KSTACK) + LENGTH(KSTACK));
+PROVIDE(kstack_top = ORIGIN(UDATA) + LENGTH(UDATA));
 
 SECTIONS
 {
@@ -196,47 +194,40 @@ SECTIONS
   } > RESETVEC
 
 
+  .syscall : {
+    KEEP (*(.syscall))
+  } > SYSCALL
+
+  .boottext : {
+    . = ALIGN(2);
+	*(.text.trap_reboot_high);
+	*/*_discard.o(.text.* .rodata .rodata.*);
+	*/mbr.o(.text.* .rodata .rodata.*);
+	*/start.o(.text.* .rodata .rodata.*);
+	*/start.o(.text.* .rodata .rodata.*);
+  } > USER AT> HIROM
+  PROVIDE (__hirom_base = LOADADDR(.boottext));
+  PROVIDE (__hirom_length = SIZEOF(.boottext));
+
   .rodata : {
     . = ALIGN(2);
     *(.rodata.* .rodata .const .const:*)
   } > LOROM
 
-  .syscall : {
-    KEEP (*(.syscall))
-  } > SYSCALL
-
-  .lowtext : {
+  .text : {
   	. = ALIGN(2);
     PROVIDE (_start = .);
-	*(.lowtext .lowtext.*)
-	*(.text._*)
-	*(.text.kprintf)
-	*(.text.readi)
-	*(.text.writei)
-	*(.text.fuzix_main)
-	*(.text.sgrpsig)
-	*(.text.srch_dir)
-	*(.text.switchout)
-	*(.text.dofork)
-	*(.text.getproc)
-	*(.text.rargs)
-  } > LOROM
-    
-  .text : {
-    . = ALIGN(2);
-    KEEP (*(SORT(.crt_*)))
     *(.text .text.* .text:*)
     PROVIDE (__etext = .);
     PROVIDE (_etext = .);
     PROVIDE (etext = .);
-  } > HIROM
+  } > LOROM
 
   .bss : {
     . = ALIGN(2);
     PROVIDE (__bssstart = .);
     *(.bss.bufpool);
 	*(.bss.blkdev_table);
-	*(.bss.tod);
 	*(.bss.ttydata);
     . = ALIGN(2);
     PROVIDE (__bssend = .);
@@ -258,24 +249,19 @@ SECTIONS
 
     *(.data .data.*)
 
-    /* We want the small data sections together, so single-instruction offsets
-       can access them all, and initialized data all before uninitialized, so
-       we can shorten the on-disk segment size.  */
-    . = ALIGN(2);
-    *(.sdata .sdata.*)
-
     . = ALIGN(2);
     _edata = .;
     PROVIDE (edata = .);
     PROVIDE (__dataend = .);
 
 	*(COMMON)
-  } > LOROMX
+  } > SRAM AT> HIROM
 
   /* Note that crt0 assumes this is a multiple of two; all the
      start/stop symbols are also assumed word-aligned.  */
-  PROVIDE(__romdatastart = LOADADDR(.data));
-  PROVIDE (__romdatacopysize = SIZEOF(.data));
+  PROVIDE(__romdata_start = LOADADDR(.data));
+  PROVIDE(__romdata_dest = ADDR(.data));
+  PROVIDE(__romdata_length = SIZEOF(.data));
 
   .MP430.attributes 0 :
   {
