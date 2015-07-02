@@ -27,7 +27,7 @@ switchin:
 	pop SR                             ; restore status register
 	popm #12, r15                    ; restore all registers (r15 to r4)
 	eint                               ; interrupts on
-	reta
+	ret
 
 ; Forks to swap. On entry, r12 is the process pointer.
 
@@ -54,7 +54,7 @@ proc dofork
 	; child process. First we get rid of all the junk we put on the stack for
 	; switchin.
 
-	add #12*4 + 2, sp
+	add #12*2 + 2, sp
 
 	; Now create the child process. (r12 is still the process pointer.)
 

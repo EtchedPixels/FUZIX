@@ -135,7 +135,6 @@ int tty_open(uint8_t minor, uint16_t flag)
 {
 	struct tty *t;
 
-	kputchar('x');
 	if (minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
 		return -1;

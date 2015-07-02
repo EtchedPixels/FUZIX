@@ -94,7 +94,7 @@ proc abort
 	mov.w #kstack_top, sp
 	call #kprintf
 	jmp .
-.data 1
+.section ".rodata"
 1: .asciz "ABRT\n"
 .text
 
@@ -129,7 +129,7 @@ proc irqrestore
 	   mov.w #kstack_top, sp { \
 	   br #kprintf { \
 	2: jmp 2b { \
-	.data 1 { \
+	.section ".rodata" { \
 	3: .asciz #name { \
 	.section #name, "ax", @progbits { \
 	   .word 1b

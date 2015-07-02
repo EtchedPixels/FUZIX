@@ -22,8 +22,13 @@ _start:
 	cmp r12, r13
 	jnz 2b
 
-	; Pull environ off the stack.
-	mov 0(sp), &environ
+	; Pull argc and argv off the stack.
+	pop r12
+	pop r13
+
+	; What's left on the stack is the environment.
+	mov sp, r14
+	mov.w r14, &environ
 
 	; When main returns, jump to _exit.
 	push #exit

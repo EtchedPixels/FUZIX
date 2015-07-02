@@ -107,11 +107,11 @@ MEMORY {
   SRAM             : ORIGIN = 0x1C00, LENGTH = 0x0800
 
   /* We have a combined udata/kstack block just under the userdata start,
-   * at 0x8080. The syscall vector is at 0x817e. */
+   * The syscall vector is in the two bytes immediately before userspace. */
   LOROM            : ORIGIN = 0x4400, LENGTH = 0x9d80-0x4400
-  UDATA            : ORIGIN = 0x9d80, LENGTH = 0x00fe
-  SYSCALL          : ORIGIN = 0x9e7e, LENGTH = 0x0002
-  USER             : ORIGIN = 0x9e80, LENGTH = (0xff80-0x9e80)
+  UDATA            : ORIGIN = 0x9d80, LENGTH = 0x017e
+  SYSCALL          : ORIGIN = 0x9efe, LENGTH = 0x0002
+  USER             : ORIGIN = 0x9f00, LENGTH = (0xff80-0x9f00)
 
   /* Our init code goes here. It'll get copied into userspace at startup,
    * so we can discard it; that way we don't have it using up space at
