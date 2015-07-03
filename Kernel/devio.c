@@ -486,11 +486,11 @@ void kputhex(unsigned int v)
 void kputunum(unsigned int v)
 {
 	unsigned char n = 0;
-	putdigit((v / 10000) % 10, &n);
-	putdigit((v / 1000) % 10, &n);
-	putdigit((v / 100) % 10, &n);
-	putdigit((v / 10) % 10, &n);
-	putdigit0(v % 10);
+	unsigned int f = 10000;
+	do {
+		putdigit((v / f) % 10, &n);
+		f /= 10;
+	} while (f > 0);
 }
 
 void kputnum(int v)
