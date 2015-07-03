@@ -42,6 +42,10 @@ void platform_interrupt(void)
 		case INTERRUPT_WDT:
 			timer_interrupt();
 			break;
+
+		case INTERRUPT_USCI_A0:
+			tty_interrupt();
+			break;
 	}
 }
 

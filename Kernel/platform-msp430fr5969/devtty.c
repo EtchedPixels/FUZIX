@@ -50,4 +50,8 @@ int tty_carrier(uint8_t minor)
     return 1;
 }
 
+void tty_interrupt(void)
+{
+	tty_inproc(BOOT_TTY & 0xff, UCA0RXBUF);
+}
 

@@ -198,9 +198,21 @@ SECTIONS
     KEEP (*(.syscall))
   } > SYSCALL
 
+  /* Emergency memory reserve! */
+  .lowtext : {
+    . = ALIGN(2);
+    *(.text.tty_inproc);
+    *(.text.pwake);
+    *(.text.di);
+    *(.text.irqrestore);
+	*(.text.*_trampoline);
+  } > INFOMEM
+
   .boottext : {
     . = ALIGN(2);
 	*(.text.trap_reboot_high);
+	*(.text.blkdev_alloc);
+	*(.text.blkdev_scan);
 	*/*_discard.o(.text.* .rodata .rodata.*);
 	*/mbr.o(.text.* .rodata .rodata.*);
 	*/start.o(.text.* .rodata .rodata.*);

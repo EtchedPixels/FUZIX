@@ -22,6 +22,7 @@ static void write_call(int n)
 	      "\t.globl _syscall\n"
 	      "\t.globl %1$s\n\n"
 	      "%1$s:\n", syscall_name[n]);
+
   if (syscall_args[n] == VARARGS)
   {
 	/* Varargs syscalls have the first argument in r12 and the others on
@@ -30,8 +31,13 @@ static void write_call(int n)
 	            "\tmov 4(sp), r14\n"
 				"\tmov 6(sp), r15\n");
   }
-  fprintf(fp, "\tmov #%d, r11\n"
-              "\tbr #_syscall\n",
+
+  /* On entry, the four parameters are in r12-r15. The syscall number is on
+   * the stack. */
+
+  fprintf(fp, "\tpush #%d\n"
+              "\tpush #_syscall_return\n"
+			  "\tbr &(_start-2)\n",
 			  n);
   fclose(fp);
 }

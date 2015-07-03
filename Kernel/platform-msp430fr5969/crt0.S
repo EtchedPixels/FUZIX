@@ -80,16 +80,15 @@ proc trap_reboot_high
 	mov.w #64, &ramsize
 	mov.w #__user_length_kb, &procmem
 	
-
 	; Call C routines.
 	br #platform_init
 
 proc trap_monitor
-	bic.w #GIE, SR
+	dint
 	jmp trap_monitor
 	
 proc abort
-	bic.w #GIE, SR
+	dint
 	mov.w #1f, r12
 	mov.w #kstack_top, sp
 	call #kprintf
@@ -139,4 +138,5 @@ fallback_interrupt(__interrupt_vector_unmi)
 fallback_interrupt(__interrupt_vector_sysnmi)
 
 standard_interrupt(__interrupt_vector_wdt, INTERRUPT_WDT)
+standard_interrupt(__interrupt_vector_usci_a0, INTERRUPT_USCI_A0)
 

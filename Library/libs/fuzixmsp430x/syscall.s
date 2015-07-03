@@ -1,11 +1,11 @@
 
 .text
-.globl _syscall
-_syscall:
-        ; On entry, the syscall number is in r11 and the four parameters in
-        ; r12-r15 (luckily, these are all caller saved).
-        call &(_start-2)
+.globl _syscall_return
+_syscall_return:
         ; On exit from the kernel, the result is in r12 and r13 is an errno.
+		; The system call number is still on the stack.
+		incd sp
+
         tst r13
         jz 1f
 		; Error path.

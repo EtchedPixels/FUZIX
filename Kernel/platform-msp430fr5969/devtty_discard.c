@@ -32,7 +32,9 @@ void tty_rawinit(void)
 	/* Unreset UART. */
 	UCA0CTLW0 &= ~(UCSWRST);
 	
-	/* Disable RX/TX interrupts. */
-	UCA0IE &= ~(UCTXIE | UCRXIE);
+	/* Disable TX interrupts, enable RX interrupts. */
+	UCA0IE = UCA0IE
+		& ~UCTXIE
+		| UCRXIE;
 }
 

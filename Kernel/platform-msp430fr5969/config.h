@@ -17,6 +17,7 @@
 
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
+#define CONFIG_SINGLETASK
 
 #define CONFIG_BANKS 1
 /* Banked Kernel: need to fix GCC first */
@@ -59,8 +60,8 @@ extern int __swap_top;
 #define TTYSIZ   8        /* Size of serial buffer */
 #define NBUFS    4       /* Number of block buffers */
 #define NMOUNTS	 1	  /* Number of mounts at a time */
-#define UFTSIZE  4       /* Number of user files */
-#define OFTSIZE  7       /* Number of open files */
+#define UFTSIZE  15       /* Number of user files */
+#define OFTSIZE  15       /* Number of open files */
 
 #define SD_DRIVE_COUNT 1
 #define MAX_BLKDEV 1

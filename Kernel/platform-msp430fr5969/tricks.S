@@ -18,8 +18,18 @@ proc switchout
 
 	call #getproc                     ; find a new process to run
 switchin:
+	// On entry, r12 is the ptptr of the process to run.
 	dint                               ; interrupts off
-	mov.w #U_DATA__U_PTAB, r12
+
+	cmp.b #0, P_TAB__P_PAGE_OFFSET(r12)  // get the swap page the process is in
+	jnz not_swapped
+
+	// The process we want to run is swapped out, so we have to reload it from
+	// disk.
+
+	br .
+
+not_swapped:
 	mov.b #P_RUNNING, P_TAB__P_STATUS_OFFSET(r12) ; mark process as running
 
 	mov &U_DATA__U_SP, SP             ; restore stack pointer
@@ -65,4 +75,24 @@ proc dofork
 	clr &runticks                      ; reset process run count
 	clr r12                            ; child fork returns zero!
 	eint                               ; interrupts on
+	ret
+
+/* System call entry. The system call number has been pushed onto the stack,
+ * above the return address. The four parameters are in r12-r15. */
+
+proc unix_syscall_entry
+	dint
+	mov.b 2(sp), &U_DATA__U_CALLNO
+	mov.w sp, &U_DATA__U_SYSCALL_SP
+	mov.w #kstack_top, sp
+	mov.w r12, &U_DATA__U_ARGN
+	mov.w r13, &U_DATA__U_ARGN1
+	mov.w r14, &U_DATA__U_ARGN2
+	mov.w r15, &U_DATA__U_ARGN3
+	eint
+	call #unix_syscall
+	dint
+	mov.w &U_DATA__U_SYSCALL_SP, sp
+	mov.w &U_DATA__U_RETVAL, r12
+	mov.w &U_DATA__U_ERROR, r13
 	ret

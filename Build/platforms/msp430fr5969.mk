@@ -13,9 +13,13 @@ TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
 
 targetgcc.cflags += \
+	-g \
 	-ffunction-sections \
 	-fdata-sections \
 	-funit-at-a-time
+
+target-exe.ldflags += \
+	-g
 
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
 
