@@ -16,7 +16,9 @@ targetgcc.cflags += \
 	-g \
 	-ffunction-sections \
 	-fdata-sections \
-	-funit-at-a-time
+	-funit-at-a-time \
+	-mhwmult=auto \
+	-mmcu=msp430fr5969
 
 target-exe.ldflags += \
 	-g

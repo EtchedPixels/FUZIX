@@ -2,6 +2,12 @@
 #include "kernel.def"
 #include "kernel430x.def"
 
+SWAPSTACK_SIZE = 128
+.section .bss.swapstack
+.globl swapstack
+swapstack:
+	.fill SWAPSTACK_SIZE
+
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
@@ -21,22 +27,27 @@ switchin:
 	// On entry, r12 is the ptptr of the process to run.
 	dint                               ; interrupts off
 
+	// Compare the swap page 
 	cmp.b #0, P_TAB__P_PAGE_OFFSET(r12)  // get the swap page the process is in
 	jnz not_swapped
 
 	// The process we want to run is swapped out, so we have to reload it from
-	// disk.
+	// disk. Because we're about to overwrite the udata and kstack with the
+	// restored process, we need to switch to a special stack.
 
-	br .
+	mov #swapstack+SWAPSTACK_SIZE, sp
+	push r12
+	call #swapper                     // r12 contains ptptr
+	pop r12
 
 not_swapped:
 	mov.b #P_RUNNING, P_TAB__P_STATUS_OFFSET(r12) ; mark process as running
 
-	mov &U_DATA__U_SP, SP             ; restore stack pointer
-    clr &runticks                      ; reset process run count
-	pop SR                             ; restore status register
-	popm #12, r15                    ; restore all registers (r15 to r4)
-	eint                               ; interrupts on
+	mov &U_DATA__U_SP, SP             // restore stack pointer
+    clr &runticks                     // reset process run count
+	pop SR                            // restore status register
+	popm #12, r15                     // restore all registers (r15 to r4)
+	eint                              // interrupts on
 	ret
 
 ; Forks to swap. On entry, r12 is the process pointer.
@@ -44,13 +55,15 @@ not_swapped:
 proc dofork
 	dint
 
-	; dofork suspends the parent; the scheduler will resume it again with
-	; switchin. So we need to save the parent's state is if it had been
-	; saved with switchout.
+	// dofork suspends the parent; the scheduler will resume it again with
+	// switchin. So we need to save the parent's state is if it had been
+	// saved with switchout.
 
-	pushm #12, r15                   ; save all registers (r15 to r4)
-	push SR                            ; ...and the status register
-	mov SP, &U_DATA__U_SP              ; save stack pointer
+	pushm #3, r15                     // save r15, r14, r13
+	push P_TAB__P_PID_OFFSET(r12)     // save child pid as r12
+	pushm #8, r11                     // save r11, r10, r9, r8, r7, r6, r5, r4
+	push SR                           // ...and the status register
+	mov SP, &U_DATA__U_SP             // save stack pointer
 	clr &inint
 
 	; Save the parent process to disk.
@@ -95,4 +108,5 @@ proc unix_syscall_entry
 	mov.w &U_DATA__U_SYSCALL_SP, sp
 	mov.w &U_DATA__U_RETVAL, r12
 	mov.w &U_DATA__U_ERROR, r13
+	eint
 	ret

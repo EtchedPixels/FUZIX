@@ -108,10 +108,10 @@ MEMORY {
 
   /* We have a combined udata/kstack block just under the userdata start,
    * The syscall vector is in the two bytes immediately before userspace. */
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x9d80-0x4400
-  UDATA            : ORIGIN = 0x9d80, LENGTH = 0x017e
-  SYSCALL          : ORIGIN = 0x9efe, LENGTH = 0x0002
-  USER             : ORIGIN = 0x9f00, LENGTH = (0xff80-0x9f00)
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0x9f80-0x4400
+  UDATA            : ORIGIN = 0x9f80, LENGTH = 0x017e
+  SYSCALL          : ORIGIN = 0xa0fe, LENGTH = 0x0002
+  USER             : ORIGIN = 0xa100, LENGTH = (0xff80-0xa100)
 
   /* Our init code goes here. It'll get copied into userspace at startup,
    * so we can discard it; that way we don't have it using up space at
@@ -119,8 +119,9 @@ MEMORY {
   HIROM            : ORIGIN = 0x10000, LENGTH = 0x3FFF
 }
 
-PROVIDE(__swap_base = 0x8080);
-PROVIDE(__swap_top = 0xff80);
+PROVIDE(__swap_base = ORIGIN(UDATA));
+PROVIDE(__swap_top = ORIGIN(USER) + LENGTH(USER));
+PROVIDE(__swap_size_blocks = (LENGTH(USER) + LENGTH(UDATA)) / 512);
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));
@@ -241,6 +242,8 @@ SECTIONS
     *(.bss.bufpool);
 	*(.bss.blkdev_table);
 	*(.bss.ttydata);
+	*(.bss.swapstack);
+	*(.bss.tbuf1);
     . = ALIGN(2);
     PROVIDE (__bssend = .);
   } > LOROM

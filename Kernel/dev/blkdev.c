@@ -125,6 +125,8 @@ static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
         if(n == 0)
             goto xferfail;
         blk_op.nblock -= n;
+		blk_op.lba += n<<BLKSHIFT;
+		blk_op.addr += n<<BLKSHIFT;
         count += n;
     }
 

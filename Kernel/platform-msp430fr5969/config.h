@@ -33,6 +33,7 @@ extern int __user_top;
 
 extern int __swap_base;
 extern int __swap_top;
+extern int __swap_size_blocks;
 
 #define TICKSPERSEC 64   /* Ticks per second */
 #define PROGBASE    ((uaddr_t)&__user_base)  /* also data base */
@@ -41,7 +42,7 @@ extern int __swap_top;
 
 #define SWAPBASE    ((uaddr_t)&__swap_base)
 #define SWAPTOP	    ((uaddr_t)&__swap_top)
-#define SWAP_SIZE   ((SWAPTOP - SWAPBASE)/512)
+#define SWAP_SIZE   ((uint16_t)&__swap_size_blocks)
 #define MAX_SWAPS	8
 #define swap_map(x) ((uint8_t*)(x))
 
@@ -57,9 +58,9 @@ extern int __swap_top;
 #define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define TTYSIZ   8        /* Size of serial buffer */
-#define NBUFS    4       /* Number of block buffers */
-#define NMOUNTS	 1	  /* Number of mounts at a time */
+#define TTYSIZ   80       /* Size of serial buffer */
+#define NBUFS    4        /* Number of block buffers */
+#define NMOUNTS	 1	      /* Number of mounts at a time */
 #define UFTSIZE  15       /* Number of user files */
 #define OFTSIZE  15       /* Number of open files */
 
