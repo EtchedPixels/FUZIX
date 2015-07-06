@@ -70,7 +70,7 @@ extern unsigned char vt_map( unsigned char c );
 #define NUM_DEV_TTY 10
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */
-#define NMOUNTS	 2	  /* Number of mounts at a time - nothing mountable! */
+#define NMOUNTS	 4	  /* Number of mounts at a time - nothing mountable! */
 
 #define CONFIG_COCO_KBD   /* Use CoCo key maps rather than Dragon */
 
@@ -81,3 +81,8 @@ extern unsigned char vt_map( unsigned char c );
 #define DW_VWIN_NUM 4     /* No of Virtual Window Ports */
 #define DW_MIN_OFF  3     /* Minor number offset */
 
+/* Block device define */
+#define MAX_BLKDEV  2     /* IDE */
+#define DEVICE_IDE        /* enable if IDE interface present */
+#define IDE_REG_CS1_BASE 0xFF50
+#define IDE_IS_MMIO  1		/* MMIO IDE */

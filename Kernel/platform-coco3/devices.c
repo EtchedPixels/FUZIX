@@ -6,14 +6,15 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
+#include <blkdev.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
-  /* 0: /dev/fd		Floppy disc block devices  */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
-  /* 1: /dev/hd		Hard disc block devices (absent) */
+  /* 0: /dev/hd		Hard disc block devices (absent) */
+  {  blkdev_open,  no_close,    blkdev_read,	blkdev_write,	blkdev_ioctl },
+  /* 1: /dev/fd		Floppy disc block devices  */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,     my_tty_close,   tty_read,  tty_write,  tty_ioctl },
@@ -40,5 +41,6 @@ bool validdev(uint16_t dev)
 }
 void device_init(void)
 {
+	devide_init( );
 }
 

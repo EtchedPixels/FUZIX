@@ -18,3 +18,8 @@ SAM_SAVE macro
 
 SAM_RESTORE macro
 	endm
+
+
+;; asm/c shared IDE stuff
+IDEDATA			    equ 0xFF50
+IDEDATA_L		    equ 0xFF58
