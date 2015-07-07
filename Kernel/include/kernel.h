@@ -11,6 +11,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define __FUZIX__KERNEL_DOT_H__
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "config.h"
 #include "cpu.h"
@@ -62,13 +63,24 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NO_FILE   (0xFF)
 
 typedef struct s_queue {
-    unsigned char *q_base;    /* Pointer to data */
-    unsigned char *q_head;    /* Pointer to addr of next char to read. */
-    unsigned char *q_tail;    /* Pointer to where next char to insert goes. */
+	#if defined CONFIG_INDIRECT_QUEUES
+		queueptr_t q_base;    /* Pointer to data */
+		queueptr_t q_head;    /* Pointer to addr of next char to read. */
+		queueptr_t q_tail;    /* Pointer to where next char to insert goes. */
+	#else
+		unsigned char *q_base;    /* Pointer to data */
+		unsigned char *q_head;    /* Pointer to addr of next char to read. */
+		unsigned char *q_tail;    /* Pointer to where next char to insert goes. */
+	#endif
     int   q_size;    /* Max size of queue */
     int   q_count;   /* How many characters presently in queue */
     int   q_wakeup;  /* Threshold for waking up processes waiting on queue */
 } queue_t;
+
+#if !defined CONFIG_INDIRECT_QUEUES
+	#define GETQ(p) (*(p))
+	#define PUTQ(p, v) (*(p) = (v))
+#endif
 
 struct tms {
 	clock_t  tms_utime;

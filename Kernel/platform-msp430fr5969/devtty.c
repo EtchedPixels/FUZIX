@@ -7,11 +7,12 @@
 #include <tty.h>
 #include "msp430fr5969.h"
 
-uint8_t tbuf1[TTYSIZ];
+__attribute__ ((section (".hidata"))) uint8_t ttybuf[TTYSIZ];
+#define ttybuf_hi (queueptr_t)ttybuf
 
 struct s_queue ttyinq[NUM_DEV_TTY+1] = { /* ttyinq[0] is never used */
-	{ NULL,    NULL,    NULL,    0,        0,       0    },
-	{ tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
+	{ 0,         0,         0,         0,      0, 0        },
+	{ ttybuf_hi, ttybuf_hi, ttybuf_hi, TTYSIZ, 0, TTYSIZ/2 },
 };
 
 /* Output for the system console (kprintf etc) */

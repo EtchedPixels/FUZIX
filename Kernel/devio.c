@@ -363,7 +363,7 @@ bool insq(struct s_queue * q, unsigned char c)
 	if (q->q_count == q->q_size)
 		r = false;	// no space left :(
 	else {
-		*(q->q_tail) = c;
+		PUTQ(q->q_tail, c);
 		++q->q_count;
 		if (++q->q_tail >= q->q_base + q->q_size)
 			q->q_tail = q->q_base;
@@ -384,7 +384,7 @@ bool remq(struct s_queue * q, unsigned char *cp)
 	if (!q->q_count)
 		r = false;
 	else {
-		*cp = *(q->q_head);
+		*cp = GETQ(q->q_head);
 		--q->q_count;
 		if (++q->q_head >= q->q_base + q->q_size)
 			q->q_head = q->q_base;
@@ -420,7 +420,7 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
 		--q->q_count;
 		if (--q->q_tail < q->q_base)
 			q->q_tail = q->q_base + q->q_size - 1;
-		*cp = *(q->q_tail);
+		*cp = GETQ(q->q_tail);
 		r = true;
 	}
 	irqrestore(irq);

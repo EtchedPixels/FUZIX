@@ -79,6 +79,22 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
+#define __read_hidata(p) \
+	({ \
+		uint8_t r; \
+		asm ("movx.b 0x10000(%1), %0" \
+			: "=g" (r) \
+			: "r" (p)); \
+		r; \
+	})
+
+#define __write_hidata(p, v) \
+	({ \
+		asm volatile ("movx.b %0, 0x10000(%1)" \
+			: \
+			: "g" (v), "r" (p)); \
+	})
+
 #define used(x)
 
 #define cpu_to_le16(x)	(x)

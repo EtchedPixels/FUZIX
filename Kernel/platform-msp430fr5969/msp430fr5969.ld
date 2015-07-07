@@ -272,6 +272,11 @@ SECTIONS
 	*(COMMON)
   } > SRAM AT> HIROM
 
+  .hidata : {
+  	. = ALIGN(2);
+	*(.hidata .hidata.*)
+  } > HIROM
+
   /* Note that crt0 assumes this is a multiple of two; all the
      start/stop symbols are also assumed word-aligned.  */
   PROVIDE(__romdata_start = LOADADDR(.data));

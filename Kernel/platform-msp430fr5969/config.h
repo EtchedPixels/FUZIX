@@ -28,6 +28,12 @@
 /* Video terminal, not a serial tty */
 #undef CONFIG_VT
 
+/* To save space, queues go in high memory. */
+#define CONFIG_INDIRECT_QUEUES
+typedef uint16_t queueptr_t;
+#define GETQ(p) __read_hidata(p)
+#define PUTQ(p, v) __write_hidata((p), (v))
+
 extern int __user_base;
 extern int __user_top;
 
@@ -58,7 +64,6 @@ extern int __swap_size_blocks;
 #define NDEVS    1        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define TTYSIZ   80       /* Size of serial buffer */
 #define NBUFS    4        /* Number of block buffers */
 #define NMOUNTS	 1	      /* Number of mounts at a time */
 #define UFTSIZE  15       /* Number of user files */
