@@ -22,6 +22,9 @@ _start:
 	cmp r12, r13
 	jnz 2b
 
+	; Initialise stdio.
+	call #__stdio_init_vars
+
 	; Pull argc and argv off the stack.
 	pop r12
 	pop r13
