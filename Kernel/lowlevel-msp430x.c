@@ -6,11 +6,11 @@
 #include "intrinsics.h"
 #include "msp430fr5969.h"
 
-__interrupt void interrupt_handler(void)
+/* Call with interrupts off and on the user stack, and then return straight
+ * into the user program. A signal may longjmp out so don't rely on this
+ * returning! */
+void deliver_signals(void)
 {
-	inint = true;
-	platform_interrupt();
-	inint = false;
 	if (!udata.u_insys)
 	{
 		uint8_t cursig = udata.u_cursig;
@@ -31,6 +31,13 @@ __interrupt void interrupt_handler(void)
 			fn(cursig);
 		}
 	}
+	ei();
+}
+
+__interrupt void interrupt_handler(void)
+{
+	platform_interrupt();
+	deliver_signals();
 }
 
 void doexec(uaddr_t start_addr)

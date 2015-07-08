@@ -20,7 +20,6 @@ proc switchout
 	pushm #12, r15                   ; save all registers (r15 to r4)
 	push SR                            ; ...and the status register
 	mov SP, &U_DATA__U_SP              ; save stack pointer
-	clr &inint
 
 	call #getproc                     ; find a new process to run
 switchin:
@@ -64,7 +63,6 @@ proc dofork
 	pushm #8, r11                     // save r11, r10, r9, r8, r7, r6, r5, r4
 	push SR                           // ...and the status register
 	mov SP, &U_DATA__U_SP             // save stack pointer
-	clr &inint
 
 	; Save the parent process to disk.
 
@@ -108,7 +106,11 @@ proc unix_syscall_entry
 	dint
 	mov.b #0, &U_DATA__U_INSYS
 	mov.w &U_DATA__U_SYSCALL_SP, sp
+
+	; Deliver any pending signals. This may not return, and interrupts will be
+	; on afterwards.
+
+	call #deliver_signals
 	mov.w &U_DATA__U_RETVAL, r12
 	mov.w &U_DATA__U_ERROR, r13
-	eint
 	ret
