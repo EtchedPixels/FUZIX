@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <tty.h>
 #include <devsd.h>
+#include <devsys.h>
 #include <blkdev.h>
 #include <printf.h>
 #include <timer.h>
@@ -18,9 +19,13 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 0: /dev/sd		SD disk  */
   {  blkdev_open,   no_close,    blkdev_read, blkdev_write, blkdev_ioctl },
   /* 1: /dev/hd		Hard disc block devices (sd card) */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,    no_ioctl },
+  {  nxio_open,     no_close,    no_rdwr,     no_rdwr,      no_ioctl },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,      tty_close,   tty_read,  tty_write,  tty_ioctl },
+  {  tty_open,      tty_close,   tty_read,    tty_write,    tty_ioctl },
+  /* 3: /dev/lpr	Printer devices */
+  {  no_open,      no_close,     no_rdwr,     no_rdwr,      no_ioctl  },
+  /* 4: /dev/mem etc	System devices (one offs) */
+  {  no_open,      no_close,     sys_read,    sys_write,    sys_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 

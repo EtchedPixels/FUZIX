@@ -79,6 +79,12 @@ int sd_spi_init(void)
     unsigned char n, cmd, card_type, ocr[4];
     timer_t timer;
 
+	/* Initialising SD cards is pretty horrible; they aren't sane SPI devices.
+	 * There's a good flowchart of the state machine here:
+	 *
+	 * http://elm-chan.org/docs/mmc/gx1/sdinit.png
+	 */
+
     sd_spi_raise_cs();
 
     sd_spi_clock(false);

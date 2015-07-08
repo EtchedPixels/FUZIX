@@ -30,40 +30,41 @@ void sd_spi_lower_cs(void)
 	P3OUT &= ~BIT4;
 }
 
-void sd_spi_transmit_byte(uint8_t b)
+static uint8_t xmit_recv(uint8_t b)
 {
 	UCB0TXBUF = b;
-	while (!(UCB0IFG & UCTXIFG))
+	while (!(UCB0IFG & (UCTXIFG|UCRXIFG)))
 		;
+	return UCB0RXBUF;
+}
+
+void sd_spi_transmit_byte(uint8_t b)
+{
+	xmit_recv(b);
 }
 
 uint8_t sd_spi_receive_byte(void)
 {
-	UCB0TXBUF = 0xff; // force MOSI high while waiting
-
-	while (!(UCB0IFG & UCTXIFG))
-		;
-	while (!(UCB0IFG & UCRXIFG))
-		;
-
-	return UCB0RXBUF;
+	return xmit_recv(0xff);
 }
 
 
 bool sd_spi_receive_sector(void)
 {
 	uint8_t* addr = blk_op.addr;
-	int i;
-	for (i=0; i<512; i++)
-		addr[i] = sd_spi_receive_byte();
+	uint8_t* endaddr = addr + 512;
+
+	while (addr != endaddr)
+		*addr++ = xmit_recv(0xff);
 	return 0;
 }
 
 bool sd_spi_transmit_sector(void)
 {
 	uint8_t* addr = blk_op.addr;
-	int i;
-	for (i=0; i<512; i++)
-		sd_spi_transmit_byte(addr[i]);
+	uint8_t* endaddr = addr + 512;
+
+	while (addr != endaddr)
+		xmit_recv(*addr++);
 	return 0;
 }

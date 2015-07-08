@@ -124,14 +124,18 @@ proc irqrestore
 
 #define fallback_interrupt(name) \
 	proc name ## _fallback { \
-	1: mov.w #3f, r12 { \
-	   mov.w #kstack_top, sp { \
-	   br #kprintf { \
-	2: jmp 2b { \
-	.section ".rodata" { \
-	3: .asciz #name { \
+	1: push #2f { \
+	   br #fallback_interrupt_error { \
 	.section #name, "ax", @progbits { \
-	   .word 1b
+	2: .word 1b
+
+proc fallback_interrupt_error
+	mov.w #kstack_top, sp
+	mov.w #1f, r12
+	call #kprintf
+	jmp .
+.section ".rodata"
+1: .asciz "[I%d!]"
 
 ;fallback_interrupt("__interrupt_vector_comp_e")
 fallback_interrupt(__interrupt_vector_unmi)

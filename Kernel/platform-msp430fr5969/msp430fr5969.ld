@@ -243,7 +243,7 @@ SECTIONS
 	*(.bss.blkdev_table);
 	*(.bss.ttydata);
 	*(.bss.swapstack);
-	*(.bss.tbuf1);
+	*(.bss.fs_tab);
     . = ALIGN(2);
     PROVIDE (__bssend = .);
   } > LOROM

@@ -15,6 +15,7 @@ kernel.srcs = \
 	../dev/devsd_discard.c \
 	../dev/mbr.c \
 	../devio.c \
+	../devsys.c \
 	../filesys.c \
 	../inode.c \
 	../lowlevel-msp430x.c \
