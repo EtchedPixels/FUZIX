@@ -102,9 +102,11 @@ proc unix_syscall_entry
 	mov.w r13, &U_DATA__U_ARGN1
 	mov.w r14, &U_DATA__U_ARGN2
 	mov.w r15, &U_DATA__U_ARGN3
+	mov.b #1, &U_DATA__U_INSYS
 	eint
 	call #unix_syscall
 	dint
+	mov.b #0, &U_DATA__U_INSYS
 	mov.w &U_DATA__U_SYSCALL_SP, sp
 	mov.w &U_DATA__U_RETVAL, r12
 	mov.w &U_DATA__U_ERROR, r13

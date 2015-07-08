@@ -9,10 +9,12 @@
 .globl init_hardware
 
 .globl trap_reboot
+.globl trap_monitor
 proc poweron
 	mov.w #(WDTPW | WDTHOLD), &WDTCTL               ; Disable watchdog
 
 trap_reboot:
+trap_monitor:
 	dint
 
 	; Copy the startup code out of high rom and into its execution address.
@@ -83,20 +85,6 @@ proc trap_reboot_high
 	; Call C routines.
 	br #platform_init
 
-proc trap_monitor
-	dint
-	jmp trap_monitor
-	
-proc abort
-	dint
-	mov.w #1f, r12
-	mov.w #kstack_top, sp
-	call #kprintf
-	jmp .
-.section ".rodata"
-1: .asciz "ABRT\n"
-.text
-
 proc di
 	; Return the old interrupt status in r12.
 	mov SR, r12
@@ -129,7 +117,10 @@ proc irqrestore
 	.section #name, "ax", @progbits { \
 	2: .word 1b
 
-proc fallback_interrupt_error
+.global fallback_interrupt_error
+proc abort
+	push.w #0
+fallback_interrupt_error:
 	mov.w #kstack_top, sp
 	mov.w #1f, r12
 	call #kprintf

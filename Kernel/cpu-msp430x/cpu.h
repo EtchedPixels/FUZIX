@@ -38,12 +38,13 @@ static inline irqflags_t di(void)
 		: "=g" (flags));
 	return flags;
 }
+#endif
 
+#if 0
 static inline void irqrestore(irqflags_t flags)
 {
 	asm volatile (
 		"dint\n"
-		"and #0x0008, %0\n"
 		"bis.w %0, SR\n"
 		: "+g" (flags));
 }
