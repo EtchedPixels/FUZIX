@@ -23,10 +23,8 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
 
-static inline void ei(void)
-{
-	asm volatile ("eint");
-}
+#define ei() \
+	asm volatile ("eint")
 
 #if 0
 static inline irqflags_t di(void)
