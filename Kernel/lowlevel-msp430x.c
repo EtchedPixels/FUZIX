@@ -8,7 +8,9 @@
 
 __interrupt void interrupt_handler(void)
 {
+	inint = true;
 	platform_interrupt();
+	inint = false;
 	if (!udata.u_insys)
 	{
 		uint8_t cursig = udata.u_cursig;
