@@ -76,7 +76,7 @@ void main(int argc, char *argv[])
     long outtotal;
     long inmax=0;
     char *buf;
-    size_t mixupblk=1;
+    size_t mixupblk=0;
 
     while (--argc > 0) {
 	str = *++argv;
@@ -220,7 +220,7 @@ void main(int argc, char *argv[])
 	    fprintf(stderr, "Interrupted\n");
 	    goto cleanup;
 	}
-	if (strfry) {
+	if (mixupblk) {
 	    off_t of=0;
 	    for (;of<blocksize;of+=blocksize) dstrfry(buf,size);
 	} 
