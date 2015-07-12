@@ -109,9 +109,9 @@ MEMORY {
   /* We have a combined udata/kstack block just under the userdata start,
    * The syscall vector is in the two bytes immediately before userspace. */
   LOROM            : ORIGIN = 0x4400, LENGTH = 0x9f80-0x4400
-  UDATA            : ORIGIN = 0x9f80, LENGTH = 0x017e
-  SYSCALL          : ORIGIN = 0xa0fe, LENGTH = 0x0002
-  USER             : ORIGIN = 0xa100, LENGTH = (0xff80-0xa100)
+  UDATA            : ORIGIN = 0x9f80, LENGTH = 0xa17e-0x9f80
+  SYSCALL          : ORIGIN = 0xa17e, LENGTH = 0x0002
+  USER             : ORIGIN = 0xa180, LENGTH = 0xff80-0xa180
 
   /* Our init code goes here. It'll get copied into userspace at startup,
    * so we can discard it; that way we don't have it using up space at

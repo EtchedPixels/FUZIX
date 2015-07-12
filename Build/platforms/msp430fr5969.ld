@@ -3,7 +3,7 @@ ENTRY(_start)
 
 MEMORY
 {
-        USER : ORIGIN = 0xa100, LENGTH = (0xff80 - 0xa100)
+        USER : ORIGIN = 0xa180, LENGTH = (0xff80 - 0xa180)
 }
 
 SECTIONS
