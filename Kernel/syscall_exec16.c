@@ -299,7 +299,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set argv to point below the argument strings */
 	argc = argbuf->a_argc;
-	argbase = argv = (char **)align(ptr, sizeof(uaddr_t)) - (argc + 1) ;
+	argbase = argv = (char **)aligndown(ptr, sizeof(uaddr_t)) - (argc + 1) ;
 
 	if (cnt) {
 		*cnt = argc;
