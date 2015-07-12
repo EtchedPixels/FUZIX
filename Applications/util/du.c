@@ -131,7 +131,7 @@ long dodir(char *d, int thislev, dev_t dev)
     long total;
     DIR  *dp;
     struct dirent *entry;
-    static char dent[LINELEN];
+    char dent[LINELEN];
 
     if (lstat(d, &s) < 0) {
 	fprintf(stderr, "%s: %s: %s\n", prog, d, strerror(errno));
