@@ -42,5 +42,6 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
 	devide_init( );
+	devsdc_init( );
 }
 

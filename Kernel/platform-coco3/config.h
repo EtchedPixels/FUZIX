@@ -82,7 +82,7 @@ extern unsigned char vt_map( unsigned char c );
 #define DW_MIN_OFF  3     /* Minor number offset */
 
 /* Block device define */
-#define MAX_BLKDEV  2     /* IDE */
+#define MAX_BLKDEV  4     /* 2 IDE + 2 SDC */
 #define DEVICE_IDE        /* enable if IDE interface present */
 #define IDE_REG_CS1_BASE 0xFF50
 #define IDE_IS_MMIO  1		/* MMIO IDE */
