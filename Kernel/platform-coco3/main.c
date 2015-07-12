@@ -27,7 +27,7 @@ void pagemap_init(void)
     for (i = 8; i < 64; i+=2)
         pagemap_add(i);
     /* add common page last so init gets it */
-    /* pagemap_add(6); */
+    pagemap_add(6);
 }
 
 void map_init(void)

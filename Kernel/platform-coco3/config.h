@@ -51,7 +51,7 @@ extern unsigned char vt_map( unsigned char c );
 
 #define TICKSPERSEC 60      /* Ticks per second */
 #define PROGBASE    0x0100  /* also data base */
-#define PROGTOP     0xbd00  /* Top of program, base of U_DATA */
+#define PROGTOP     0xe000  /* Top of program, base of U_DATA */
 #define PROGLOAD    0x0100  /* ??? */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
@@ -67,11 +67,22 @@ extern unsigned char vt_map( unsigned char c );
 #define CMDLINE	0x88	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 10
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */
-#define NMOUNTS	 2	  /* Number of mounts at a time - nothing mountable! */
+#define NMOUNTS	 4	  /* Number of mounts at a time - nothing mountable! */
 
 #define CONFIG_COCO_KBD   /* Use CoCo key maps rather than Dragon */
 
 
+/* Drivewire Defines */
+
+#define DW_VSER_NUM 4     /* No of Virtual Serial Ports */
+#define DW_VWIN_NUM 4     /* No of Virtual Window Ports */
+#define DW_MIN_OFF  3     /* Minor number offset */
+
+/* Block device define */
+#define MAX_BLKDEV  2     /* IDE */
+#define DEVICE_IDE        /* enable if IDE interface present */
+#define IDE_REG_CS1_BASE 0xFF50
+#define IDE_IS_MMIO  1		/* MMIO IDE */

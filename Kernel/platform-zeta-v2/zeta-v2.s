@@ -16,6 +16,7 @@
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
 	.globl _kernel_pages
+	.globl _trap_reboot
 
         ; imported symbols
         .globl _ramsize
@@ -181,6 +182,21 @@ init_partial_uart:
 	im 2				; set Z80 CPU interrupt mode 2
 
 	ret
+
+;=========================================================================
+; Kernel code
+;=========================================================================
+        .area _CODE
+
+_trap_reboot:
+        ; We need to map the ROM back in -- ideally into every page.
+        ; This little trick based on a clever suggestion from John Coffman.
+        di
+        ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
+        ld (0xFFFE), hl                 ; put it at the very top of RAM
+        xor a                           ; A=0
+        jp 0xFFFE                       ; execute it; PC then wraps to 0
+
 
 ;=========================================================================
 ; Common Memory (0xF000 upwards)

@@ -106,6 +106,13 @@ cd Standalone/filesystem-src
 
 
 *************************
+DONE
+*************************
+
+* Fix the underlying Banking layout to better handle UDATA
+
+
+*************************
 TO DO
 *************************
 
@@ -114,9 +121,11 @@ upgrade is required.
 
 * IDE Drivers.
 
-* Better and more DriveWire Virtual Serial Ports.
+* SDC Drivers.
 
-* Fix the underlying Banking layout to better handle UDATA
+* SCSI Drivers.
+
+* Better and more DriveWire Virtual Serial Ports.
 
 * Better support of the GIME chip's video modes
 

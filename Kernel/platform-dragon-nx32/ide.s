@@ -24,12 +24,12 @@ _devide_read_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	lda _blk_op + 2
-	beq rdk
-	jsr map_process_always
-rdk:	ldx _blk_op
+	ldx _blk_op
 	leay 512,x
 	sty endp
+	tst _blk_op+2
+	beq readword
+	jsr map_process_always
 readword:
 	lda <IDEDATA
 	ldb <IDEDATA_L		; latched
@@ -43,12 +43,12 @@ _devide_write_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	lda _blk_op + 2
-	beq wdk
-	jsr map_process_always
-wdk:	ldx _blk_op
+	ldx _blk_op
 	leay 512,x
 	sty endp
+	tst _blk_op+2
+	beq writeword
+	jsr map_process_always
 writeword:
 	ldd ,x++
 	stb <IDEDATA_L
