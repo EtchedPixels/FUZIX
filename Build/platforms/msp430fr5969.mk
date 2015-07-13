@@ -112,6 +112,7 @@ FILESYSTEM = \
 	/bin/write              0755 $(util-write.result) \
 	/bin/xargs              0755 $(util-xargs.result) \
 	/bin/yes                0755 $(util-yes.result) \
+	/bin/forth              0755 $(util-fforth.result) \
     /bin/ac                 0755 $(v7-cmd-ac.result) \
     /bin/at                 0755 $(v7-cmd-at.result) \
     /bin/atrun              0755 $(v7-cmd-atrun.result) \
