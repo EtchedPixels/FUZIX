@@ -7,9 +7,12 @@
 # most Unixy platforms. It's intended as a scripting language for the Fuzix
 # operating system.
 #
-# It's probably a bit archaic --- I've been using the Forth 83 doc as a
-# reference: http://forth.sourceforge.net/standard/fst83/fst83-16.htm
+# It's probably a bit weird --- I'm using the ANS Forth reference here:
+# http://lars.nocrew.org/dpans/dpans6.htm
+# ...but I've been playing fast and loose with the standard.
 #
+# Peculiarities include:
+# 
 # Note! This program looks weird. That's because it's a shell script *and* a C
 # file. (And an Awk script.) However, it's necessary in order to dynamically
 # generate the word list, which is just too fragile to do by hand. If you edit
@@ -24,12 +27,14 @@ trap 'rm /tmp/$$.words' EXIT
 # Get the list of words (for forward declaration).
 awk -f- $0 >/tmp/$$.words <<EOF
 	/\/\/@W$/ {
-		print("static cdefn_t " \$3 ";")
+		n = \$2
+		sub(/,/, " ", n)
+		print("static cdefn_t " n ";")
 	}
 EOF
 
 # Now actually edit the source file.
-awk -f- $0 >$0.new <<EOF
+awk -f- $0 > $0.new <<EOF
 	BEGIN {
 		lastword = "NULL"
 	}
@@ -45,16 +50,26 @@ awk -f- $0 >$0.new <<EOF
 
 
 	/\/\/@W\$/ {
-		\$8 = lastword ","
-		lastword = "&" \$3
-		printf("%-32s { %-14s %-10s %-14s %s }; //@W\n",
-			"static cdefn_t " \$3 " =",
-			\$6, \$7, \$8, \$9)
+		\$5 = lastword ","
+
+		printf("%s %-19s %-15s %-13s %-17s",
+			\$1, \$2, \$3, \$4, \$5)
+
+		payload = ""
+		for (i=6; i<=NF; i++)
+			printf(" %s", \$i)
+		printf("\n")
+
+		lastword = "&" \$2
+		sub(/,/, "", lastword)
+
 		next
 	}
 
 	/\/\/@E$/ {
-		printf("static cdefn_t* latest = " lastword "; //@E\n")
+		n = \$2
+		sub(/,/, " ", n)
+		printf("static " \$2 " " \$3 " = (defn_t*) " lastword "; //@E\n")
 		next
 	}
 
@@ -88,8 +103,7 @@ typedef const struct definition cdefn_t;
 static jmp_buf onerror;
 
 #define MAX_LINE_LENGTH 160
-#define ALLOCATION_CHUNK_SIZE 1024
-#define ALLOCATION_MARGIN 16
+#define ALLOCATION_CHUNK_SIZE 128
 #define CELL sizeof(cell_t)
 
 #define DSTACKSIZE 64
@@ -100,24 +114,31 @@ static cell_t* dsp;
 static cell_t rstack[RSTACKSIZE];
 static cell_t* rsp;
 
-static char tib[MAX_LINE_LENGTH];
-static cell_t tib_h = MAX_LINE_LENGTH;
-static cell_t tibo = 0;
+static char input_buffer[MAX_LINE_LENGTH];
+static cell_t in_arrow;
 static cell_t base = 10;
+static cell_t state = false;
 
-static const defn_t** pc;
-static const defn_t* latest;
+static defn_t** pc;
+static defn_t* latest; /* Most recent word on dictionary */
+static cdefn_t* last;   /* Last of the built-in words */
 
-typedef void code_fn(const defn_t* w);
+typedef void code_fn(cdefn_t* w);
 
-#define NAMELEN 8
+#define FL_IMM 0x80
+
+struct fstring
+{
+	uint8_t len;
+	char data[];
+};
+
 struct definition
 {
 	code_fn* code;
-	const char* name;
+	struct fstring* name;
 	cdefn_t* next;
-	void* payload;
-	bool immediate : 1;
+	void* payload[];
 };
 
 static uint8_t* here;
@@ -150,6 +171,14 @@ static cell_t dpop(void)
 	return *--dsp;
 }
 
+static cell_t dpeek(int count)
+{
+	cell_t* ptr = dsp - count;
+	if (ptr < dstack)
+		panic("data stack underflow");
+	return *ptr;
+}
+
 static void rpush(cell_t val)
 {
 	if (rsp == &rstack[RSTACKSIZE])
@@ -164,123 +193,164 @@ static cell_t rpop(void)
 	return *--rsp;
 }
 
-static void* claim_workspace(size_t length)
+static void* ensure_workspace(size_t length)
 {
-	uint8_t* p = here;
-	here += length;
+	uint8_t* p = here + length;
 
-	if (here > (here_top-ALLOCATION_MARGIN))
+	if (p > (here_top))
 	{
 		uint8_t* newtop = sbrk(ALLOCATION_CHUNK_SIZE);
 		if (newtop != here_top)
 			panic("non-contiguous sbrk memory");
 		here_top = newtop + ALLOCATION_CHUNK_SIZE;
 	}
+
+	return here;
+}
+
+static void* claim_workspace(size_t length)
+{
+	uint8_t* p = ensure_workspace(length);
+	here += length;
 	return p;
 }
 
-static cdefn_t* lookup_word(const char* name)
+/* Note --- this only works properly on word names, not general counted
+ * strings, because it ignores the top bit of the length (used in the
+ * dictionary as a flag). */
+static int fstreq(const struct fstring* f1, const struct fstring* f2)
 {
-	cdefn_t* current = latest;
-	while (current)
-	{
-		if (current->name
-				&& (strcmp(current->name, name) == 0))
-			return current;
-		current = current->next;
-	}
-	return NULL;
+	int len1 = f1->len & 0x7f;
+	int len2 = f2->len & 0x7f;
+	if (len1 != len2)
+		return 0;
+	return (memcmp(f1->data, f2->data, len1) == 0);
 }
 
-static void codeword(cdefn_t* w)
+static void fstrout(const struct fstring* f)
 {
-	rpush((cell_t) pc);
-	pc = (void*) w->payload;
+	fwrite(f->data, 1, f->len & 0x7f, stdout);
 }
-
-static void rvarword(cdefn_t* w) { dpush((cell_t) w->payload); }
-static void wvarword(defn_t* w) { w->payload = (void*) dpop(); }
-static void rivarword(cdefn_t* w) { dpush(*(cell_t*) w->payload); }
-static void wivarword(cdefn_t* w) { *(cell_t*)w->payload = dpop(); }
 
 /* Forward declarations of words go here --- do not edit.*/
 //@EXPORT{
-static cdefn_t _exit_word;
-static cdefn_t _fputc_word;
-static cdefn_t _fwrite_word;
-static cdefn_t _stderr_word;
-static cdefn_t _stdin_word;
-static cdefn_t _stdout_word;
-static cdefn_t accept_word;
-static cdefn_t add_word;
-static cdefn_t allot_word;
-static cdefn_t at_word;
-static cdefn_t base_word;
-static cdefn_t branch_word;
-static cdefn_t branchif_word;
-static cdefn_t bye_word;
-static cdefn_t c_at_word;
-static cdefn_t c_comma_word;
-static cdefn_t c_pling_word;
-static cdefn_t cell_word;
-static cdefn_t cells_word;
-static cdefn_t comma_word;
-static cdefn_t div_word;
-static cdefn_t dot_quote_rword;
-static cdefn_t emit_word;
-static cdefn_t execute_word;
-static cdefn_t exit_word;
-static cdefn_t here_word;
-static cdefn_t in_a_word;
-static cdefn_t latest_word;
-static cdefn_t lit_word;
-static cdefn_t m_one_word;
-static cdefn_t mul_word;
-static cdefn_t one_word;
-static cdefn_t pad_word;
-static cdefn_t pling_word;
-static cdefn_t pop_word;
-static cdefn_t quit_word;
-static cdefn_t rsp0_word;
-static cdefn_t rsp_at_word;
-static cdefn_t rsp_pling_word;
-static cdefn_t sp0_word;
-static cdefn_t sp_at_word;
-static cdefn_t sp_pling_word;
-static cdefn_t sub_word;
-static cdefn_t tib_h_word;
-static cdefn_t tib_word;
-static cdefn_t type_word;
-static cdefn_t zero_word;
+static cdefn_t E_undef_word ;
+static cdefn_t _exit_word ;
+static cdefn_t _fputc_word ;
+static cdefn_t _fread_word ;
+static cdefn_t _fwrite_word ;
+static cdefn_t _stderr_word ;
+static cdefn_t _stdin_word ;
+static cdefn_t _stdout_word ;
+static cdefn_t a_number_word ;
+static cdefn_t accept_word ;
+static cdefn_t add_one_word ;
+static cdefn_t add_word ;
+static cdefn_t allot_word ;
+static cdefn_t at_word ;
+static cdefn_t base_word ;
+static cdefn_t branch0_word ;
+static cdefn_t branch_word ;
+static cdefn_t bye_word ;
+static cdefn_t c_at_word ;
+static cdefn_t c_comma_word ;
+static cdefn_t c_pling_word ;
+static cdefn_t cell_word ;
+static cdefn_t cells_word ;
+static cdefn_t close_sq_word ;
+static cdefn_t comma_word ;
+static cdefn_t compile_num_word ;
+static cdefn_t create_word ;
+static cdefn_t div_word ;
+static cdefn_t dot_quote_rword ;
+static cdefn_t dot_word ;
+static cdefn_t dup_word ;
+static cdefn_t emit_word ;
+static cdefn_t execute_word ;
+static cdefn_t exit_word ;
+static cdefn_t fill_word ;
+static cdefn_t find_word ;
+static cdefn_t here_word ;
+static cdefn_t in_arrow_word ;
+static cdefn_t interpret_num_word ;
+static cdefn_t interpret_word ;
+static cdefn_t latest_word ;
+static cdefn_t lit_word ;
+static cdefn_t m_one_word ;
+static cdefn_t mul_word ;
+static cdefn_t one_word ;
+static cdefn_t over_word ;
+static cdefn_t pad_word ;
+static cdefn_t pling_word ;
+static cdefn_t pop_word ;
+static cdefn_t quit_word ;
+static cdefn_t refill_word ;
+static cdefn_t rot_word ;
+static cdefn_t rsp0_word ;
+static cdefn_t rsp_at_word ;
+static cdefn_t rsp_pling_word ;
+static cdefn_t skip0_word ;
+static cdefn_t skipifi_word ;
+static cdefn_t skipnot0_word ;
+static cdefn_t skipnotifi_word ;
+static cdefn_t source_word ;
+static cdefn_t sp0_word ;
+static cdefn_t sp_at_word ;
+static cdefn_t sp_pling_word ;
+static cdefn_t state_word ;
+static cdefn_t sub_one_word ;
+static cdefn_t sub_word ;
+static cdefn_t swap_word ;
+static cdefn_t two_word ;
+static cdefn_t type_word ;
+static cdefn_t u_dot_word ;
+static cdefn_t word_word ;
+static cdefn_t zero_word ;
+static cdefn_t immediate_word ;
+static cdefn_t open_sq_word ;
 //@EXPORT}
 
-static void _fwrite_cb(cdefn_t* w)
+/* ======================================================================= */
+/*                                  WORDS                                  */
+/* ======================================================================= */
+
+static void icodeword(cdefn_t* w) { rpush((cell_t) pc); pc = *w->payload; }
+static void rvarword(cdefn_t* w) { dpush((cell_t) *w->payload); }
+static void r2varword(cdefn_t* w) { dpush((cell_t) w->payload[0]); dpush((cell_t) w->payload[1]); }
+static void wvarword(defn_t* w) { *w->payload = (void*) dpop(); }
+static void rivarword(cdefn_t* w) { dpush(*(cell_t*) *w->payload); }
+static void wivarword(cdefn_t* w) { *(cell_t*)*w->payload = dpop(); }
+
+static void _freadwrite_cb(cdefn_t* w)
 {
 	FILE* fp = (FILE*)dpop();
 	size_t len = dpop();
 	void* ptr = (void*)dpop();
-	dpush(fwrite(ptr, 1, len, fp));
+	int (*func)(void* ptr, size_t size, size_t nmemb, FILE* stream) = (void*) *w->payload;
+
+	dpush(func(ptr, 1, len, fp));
 }
 
 static void accept_cb(cdefn_t* w)
 {
 	cell_t max = dpop();
-	uint8_t* addr = (uint8_t*)dpop();
+	char* addr = (char*)dpop();
 
-	cell_t i = 0;
-	while (i < max)
-	{
-		int c = fgetc(stdin);
-		if ((c == -1) || (c == '\n'))
-		{
-			*addr = '\n';
-			i++;
-			break;
-		}
-		*addr = c;
-		i++;
-	}
-	dpush(i);
+	fgets(addr, max, stdin);
+
+	int len = strlen(addr);
+	if ((len > 0) && (addr[len-1] == '\n'))
+		len--;
+	dpush(len);
+}
+
+static void fill_cb(cdefn_t* w)
+{
+	cell_t c = dpop();
+	cell_t len = dpop();
+	void* ptr = (void*) dpop();
+
+	memset(ptr, c, len);
 }
 
 static void dot_quote_rcb(cdefn_t* w)
@@ -291,30 +361,272 @@ static void dot_quote_rcb(cdefn_t* w)
 	pc = alignup(ptr+len+1);
 }
 
-static void _exit_cb(cdefn_t* w)    { exit(dpop()); }
-static void _fputc_cb(cdefn_t* w)   { FILE* fp = (FILE*)dpop(); fputc(dpop(), fp); }
-static void add_cb(cdefn_t* w)      { dpush(dpop() + dpop()); }
-static void allot_cb(cdefn_t* w)    { claim_workspace(dpop()); }
-static void at_cb(cdefn_t* w)       { dpush(*(cell_t*)dpop()); }
-static void branch_cb(cdefn_t* w)   { pc = (void*) *pc; }
-static void branchif_cb(cdefn_t* w) { if (dpop() == (cell_t)w->payload) pc = (void*)*pc; else pc++; }
-static void c_at_cb(cdefn_t* w)     { dpush(*(uint8_t*)dpop()); }
-static void c_pling_cb(cdefn_t* w)  { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
-static void div_cb(cdefn_t* w)      { cell_t a = dpop(); cell_t b = dpop(); dpush(b / a); }
-static void execute_cb(cdefn_t* w)  { cdefn_t* p = (void*) dpop(); codeword(p); }
-static void exit_cb(cdefn_t* w)     { pc = (void*)rpop(); }
-static void lit_cb(cdefn_t* w)      { dpush((cell_t) *pc++); }
-static void mul_cb(cdefn_t* w)      { dpush(dpop() * dpop()); }
-static void pling_cb(cdefn_t* w)    { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
-static void pop_cb(cdefn_t* w)      { dpop(); }
-static void sub_cb(cdefn_t* w)      { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
+static void create_cb(cdefn_t* w)
+{
+	defn_t* newword = claim_workspace(sizeof(defn_t));
+}
 
-static cdefn_t* bye_ops[] =     { &zero_word, &exit_word };
+static void immediate_cb(cdefn_t* w)
+{
+	latest->name->len |= FL_IMM;
+}
+
+static void word_cb(cdefn_t* w)
+{
+	int delimiter = dpop();
+	struct fstring* fs = ensure_workspace(MAX_LINE_LENGTH);
+	int count = 0;
+
+	/* Skip whitespace. */
+	while (in_arrow < MAX_LINE_LENGTH)
+	{
+		int c = input_buffer[in_arrow];
+		if (c != delimiter)
+			break;
+		in_arrow++;
+	}
+	if (in_arrow != MAX_LINE_LENGTH)
+	{
+		while (in_arrow < MAX_LINE_LENGTH)
+		{
+			int c = input_buffer[in_arrow];
+			if (c == delimiter)
+				break;
+			fs->data[count] = c;
+			count++;
+			in_arrow++;
+		}
+	}
+
+	fs->len = count;
+	dpush((cell_t) fs);
+}
+
+static void find_cb(cdefn_t* w)
+{
+	struct fstring* name = (void*) dpop();
+	cdefn_t* current = latest;
+	while (current)
+	{
+		if (current->name && fstreq(name, current->name))
+		{
+			dpush((cell_t) current);
+			dpush((current->name->len & FL_IMM) ? 1 : -1);
+			return;
+		}
+		current = current->next;
+	}
+
+	dpush((cell_t) name);
+	dpush(0);
+}
+
+static unsigned get_digit(char p)
+{
+	if (p >= 'a')
+		return 10 + p - 'a';
+	if (p >= 'A')
+		return 10 + p - 'A';
+	return p - '0';
+}
+
+/* This is Forth's rather complicated number parse utility.
+ * ( ud c-addr len -- ud' c-addr' len' )
+ * Digits are parsed according to base and added to the accumulator ud.
+ * Signs are not supported.
+ */
+static void a_number_cb(cdefn_t* w)
+{
+	int len = dpop();
+	char* addr = (void*) dpop();
+	cell_t ud = dpop();
+
+	while (len > 0)
+	{
+		int d = get_digit(*addr);
+		if (d >= base)
+			break;
+		ud = (ud * base) + d;
+
+		len--;
+		addr++;
+	}
+
+	dpush(ud);
+	dpush((cell_t) addr);
+	dpush(len);
+}
+
+static void rot_cb(cdefn_t* w)
+{
+	cell_t x3 = dpop();
+	cell_t x2 = dpop();
+	cell_t x1 = dpop();
+	dpush(x3);
+	dpush(x1);
+	dpush(x2);
+}
+
+static void swap_cb(cdefn_t* w)
+{
+	cell_t x2 = dpop();
+	cell_t x1 = dpop();
+	dpush(x2);
+	dpush(x1);
+}
+
+static char to_digit(int p)
+{
+	if (p < 10)
+		return '0' + p;
+	return 'a' + (p - 10);
+}
+
+
+static void u_dot_cb(cdefn_t* w)
+{
+	uintptr_t value = dpop();
+	char* start = ensure_workspace(16);
+	char* ptr = start;
+
+	do {
+		cell_t r = value % base;
+		value /= base;
+		*ptr++ = to_digit(r);
+	} while (value > 0);
+
+	while (ptr > start)
+		putchar(*--ptr);
+}
+
+static void dot_cb(cdefn_t* w)
+{
+	cell_t value = dpeek(1);
+	if (value < 0)
+	{
+		putchar('-');
+		value = -value;
+	}
+	u_dot_cb(w);
+}
+
+static void E_undef_cb(cdefn_t* w)    { panic("unrecognised word"); }
+static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
+static void _fputc_cb(cdefn_t* w)     { FILE* fp = (FILE*)dpop(); fputc(dpop(), fp); }
+static void add_cb(cdefn_t* w)        { dpush(dpop() + dpop()); }
+static void allot_cb(cdefn_t* w)      { claim_workspace(dpop()); }
+static void at_cb(cdefn_t* w)         { dpush(*(cell_t*)dpop()); }
+static void branch_cb(cdefn_t* w)     { pc = (void*) *pc; }
+static void branchif_cb(cdefn_t* w)   { if (dpop() == (cell_t)*w->payload) pc = (void*)*pc; else pc++; }
+static void branchnotif_cb(cdefn_t* w) { if (dpop() != (cell_t)*w->payload) pc = (void*)*pc; else pc++; }
+static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
+static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
+static void close_sq_cb(cdefn_t* w)   { state = 1; }
+static void div_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b / a); }
+static void execute_cb(cdefn_t* w)    { cdefn_t* p = (void*) dpop(); p->code(p); }
+static void exit_cb(cdefn_t* w)       { pc = (void*)rpop(); }
+static void increment_cb(cdefn_t* w)  { dpush(dpop() + (cell_t)*w->payload); }
+static void lit_cb(cdefn_t* w)        { dpush((cell_t) *pc++); }
+static void mul_cb(cdefn_t* w)        { dpush(dpop() * dpop()); }
+static void open_sq_cb(cdefn_t* w)    { state = 0; }
+static void peekcon_cb(cdefn_t* w)    { dpush(dpeek((cell_t) *w->payload)); }
+static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
+static void pop_cb(cdefn_t* w)        { dpop(); }
+static void skipif_cb(cdefn_t* w)     { if (dpop() == (cell_t)*w->payload) pc++; }
+static void skipifi_cb(cdefn_t* w)    { if (dpop() == (cell_t)*pc++) pc++; }
+static void skipnotif_cb(cdefn_t* w)  { if (dpop() != (cell_t)*w->payload) pc++; }
+static void skipnotifi_cb(cdefn_t* w) { if (dpop() != (cell_t)*pc++) pc++; }
+static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
+
+static cdefn_t* accept_ops[] =  { &_stdin_word, &_fread_word, &exit_word };
+static cdefn_t* bye_ops[] =     { &zero_word, &_exit_word };
 static cdefn_t* c_comma_ops[] = { &here_word, &c_pling_word, &one_word, &allot_word, &exit_word };
 static cdefn_t* cells_ops[] =   { &cell_word, &mul_word, &exit_word };
 static cdefn_t* comma_ops[] =   { &here_word, &pling_word, &cell_word, &allot_word, &exit_word };
 static cdefn_t* emit_ops[] =    { &_stdout_word, &_fputc_word, &exit_word };
 static cdefn_t* type_ops[] =    { &_stdout_word, &_fwrite_word, &pop_word, &exit_word };
+
+/* refill: ( -- flag )
+ * Refills the input buffer. */
+static cdefn_t* refill_ops[] =
+{
+	/* Read a line from the terminal. */
+	&source_word, &accept_word, /* ( -- len ) */
+	/* Clear the remainder of the buffer. */
+	&dup_word, &lit_word, (void*)input_buffer, &add_word, /* ( -- len addr ) */
+	&swap_word, /* ( -- addr len ) */
+	&lit_word, (void*)MAX_LINE_LENGTH, &swap_word, &sub_word, /* ( -- addr remaining ) */
+	&lit_word, (void*)32, /* ( -- addr remaining char ) */
+	&fill_word,
+
+	/* Reset the input pointer. */
+	&zero_word, &in_arrow_word, &pling_word,
+
+	/* We will succeed! */
+	&one_word, &exit_word
+};
+
+static cdefn_t* interpreter_table[] =
+{
+	// compiling   not found            immediate
+	&execute_word, &interpret_num_word, &execute_word, // interpreting
+	&comma_word,   &compile_num_word,   &execute_word  // compiling
+};
+
+/* interpret: ( -- )
+ * Parses the input buffer and executes the words therein. */
+static cdefn_t* interpret_ops[] =
+{
+	/* Parse a word. */
+	&lit_word, (void*)32, &word_word, /* ( -- c-addr ) */
+	/* End of the buffer? If so, return. */
+	&c_at_word, &skipnot0_word, &exit_word, /* ( -- ) */
+
+	/* Look up the word. */
+	&here_word, &find_word, /* ( -- addr n ) */
+
+	/* What is it? Calculate an offset into the lookup table. */
+	&add_one_word, &cells_word,
+	&state_word, &at_word, &lit_word, (void*)3, &mul_word,
+	&add_word, /* ( -- addr offset ) */
+
+	/* Now look up the result. */
+	&lit_word, (void*)interpreter_table, &add_word, &at_word, &execute_word,
+
+	/* And go round again. */
+	&branch_word, (void*)interpret_ops
+};
+
+/* interpret_num: ( c-addr -- )
+ * We didn't recognise this word, so parse it as a number. */
+static cdefn_t* interpret_num_ops[] =
+{
+	/* Get the length of the input string. */
+	&dup_word, &c_at_word, /* ( -- addr len ) */
+	/* The address we've got is a counted string; we want the address of the
+	 * data. */
+	&swap_word, &add_one_word, &swap_word, /* ( -- addr+1 len ) */
+	/* Initialise the accumulator. */
+	&zero_word, &rot_word, /* ( -- 0 addr+1 len ) */
+	/* Parse! */
+	&a_number_word, /* ( -- val addr+1 len ) */
+	/* We must consume all bytes. */
+	&skip0_word, &E_undef_word,
+	/* Huzzah! */
+	&pop_word, &exit_word
+};
+
+/* compile_num: ( c-addr -- )
+ * We didn't recognise this word, so parse it as a number and compile it. */
+static cdefn_t* compile_num_ops[] =
+{
+	/* The interpreter does the heavy lifting for us! */
+	&interpret_num_word,
+	/* ...and compile. */
+	&lit_word, &lit_word, &comma_word,
+	&comma_word,
+	&exit_word
+};
 
 static const char prompt_msg[4] = " ok\n";
 static cdefn_t* quit_ops[] =
@@ -322,66 +634,108 @@ static cdefn_t* quit_ops[] =
 	/* Reset stacks. */
 	&sp0_word, &sp_pling_word,
 	&rsp0_word, &rsp_pling_word,
+
 	/* Display the prompt. */
 	&lit_word, (void*)prompt_msg, &lit_word, (void*)4, &type_word,
-	/* Read a line from the terminal. */
-	&tib_word, &tib_h_word, &accept_word,
+
+	/* Refill the input buffer. */
+	&refill_word, &pop_word,
+	/* Interpret it. */
+	&interpret_word,
+
 	/* And go round again */
 	&branch_word, (void*)(quit_ops+4)
 };
 
-/* List of words go here. To add a word, add a new entry and run this file as
- * a shell script. The link field will be set correctly. 
- * BEWARE: these lines are parsed using whitespace. LEAVE EXACTLY AS IS.*/
-static cdefn_t _exit_word =      { _exit_cb,      "_exit",   NULL,          NULL }; //@W
-static cdefn_t _fputc_word =     { _fputc_cb,     "_fputc",  &_exit_word,   NULL }; //@W
-static cdefn_t _fwrite_word =    { _fwrite_cb,    "_fwrite", &_fputc_word,  NULL }; //@W
-static cdefn_t _stderr_word =    { rivarword,     "_stderr", &_fwrite_word, &stderr, }; //@W
-static cdefn_t _stdin_word =     { rivarword,     "_stdin",  &_stderr_word, &stdin, }; //@W
-static cdefn_t _stdout_word =    { rivarword,     "_stdout", &_stdin_word,  &stdout, }; //@W
-static cdefn_t accept_word =     { accept_cb,     "accept",  &_stdout_word, NULL }; //@W
-static cdefn_t add_word =        { add_cb,        "+",       &accept_word,  NULL }; //@W
-static cdefn_t allot_word =      { allot_cb,      "allot",   &add_word,     NULL, }; //@W
-static cdefn_t at_word =         { at_cb,         "@",       &allot_word,   NULL }; //@W
-static cdefn_t base_word =       { rvarword,      "base",    &at_word,      &base }; //@W
-static cdefn_t branch_word =     { branch_cb,     NULL,      &base_word,    (void*)0 }; //@W
-static cdefn_t branchif_word =   { branchif_cb,   NULL,      &branch_word,  (void*)0 }; //@W
-static cdefn_t bye_word =        { codeword,      "bye",     &branchif_word, bye_ops, }; //@W
-static cdefn_t c_at_word =       { c_at_cb,       "c@",      &bye_word,     NULL }; //@W
-static cdefn_t c_comma_word =    { codeword,      "c,",      &c_at_word,    c_comma_ops, }; //@W
-static cdefn_t c_pling_word =    { c_pling_cb,    "c!",      &c_comma_word, NULL }; //@W
-static cdefn_t cell_word =       { rvarword,      "cell",    &c_pling_word, (void*)CELL, }; //@W
-static cdefn_t cells_word =      { codeword,      "cells",   &cell_word,    cells_ops, }; //@W
-static cdefn_t comma_word =      { codeword,      ",",       &cells_word,   comma_ops, }; //@W
-static cdefn_t div_word =        { div_cb,        "/",       &comma_word,   NULL }; //@W
-static cdefn_t dot_quote_rword = { dot_quote_rcb, NULL,      &div_word,     NULL }; //@W
-static cdefn_t emit_word =       { codeword,      "emit",    &dot_quote_rword, emit_ops }; //@W
-static cdefn_t execute_word =    { execute_cb,    "execute", &emit_word,    NULL }; //@W
-static cdefn_t exit_word =       { exit_cb,       "exit",    &execute_word, NULL }; //@W
-static cdefn_t here_word =       { rivarword,     "here",    &exit_word,    &here }; //@W
-static cdefn_t in_a_word =       { rvarword,      ">in",     &here_word,    &tibo }; //@W
-static cdefn_t latest_word =     { rivarword,     "latest",  &in_a_word,    &latest, }; //@W
-static cdefn_t lit_word =        { lit_cb,        NULL,      &latest_word,  NULL, }; //@W
-static cdefn_t m_one_word =      { rvarword,      "-1",      &lit_word,     (void*)-1, }; //@W
-static cdefn_t mul_word =        { mul_cb,        "*",       &m_one_word,   NULL }; //@W
-static cdefn_t one_word =        { rvarword,      "1",       &mul_word,     (void*)1, }; //@W
-static cdefn_t pad_word =        { rvarword,      "pad",     &one_word,     &here }; //@W
-static cdefn_t pling_word =      { pling_cb,      "!",       &pad_word,     NULL }; //@W
-static cdefn_t pop_word =        { pop_cb,        "pop",     &pling_word,   NULL }; //@W
-static cdefn_t quit_word =       { codeword,      NULL,      &pop_word,     quit_ops }; //@W
-static cdefn_t rsp0_word =       { rvarword,      "rsp0",    &quit_word,    rstack }; //@W
-static cdefn_t rsp_at_word =     { rivarword,     "rsp@",    &rsp0_word,    &rsp }; //@W
-static cdefn_t rsp_pling_word =  { wivarword,     "rsp!",    &rsp_at_word,  &rsp }; //@W
-static cdefn_t sp0_word =        { rvarword,      "sp0",     &rsp_pling_word, dstack }; //@W
-static cdefn_t sp_at_word =      { rivarword,     "sp@",     &sp0_word,     &dsp }; //@W
-static cdefn_t sp_pling_word =   { wivarword,     "sp!",     &sp_at_word,   &dsp }; //@W
-static cdefn_t sub_word =        { sub_cb,        "-",       &sp_pling_word, NULL }; //@W
-static cdefn_t tib_h_word =      { rvarword,      "tib#",    &sub_word,     &tib_h }; //@W
-static cdefn_t tib_word =        { rvarword,      "tib",     &tib_h_word,   tib }; //@W
-static cdefn_t type_word =       { codeword,      "type",    &tib_word,     type_ops }; //@W
-static cdefn_t zero_word =       { rvarword,      "0",       &type_word,    (void*)0, }; //@W
+#define WORD(w, c, n, l, f, p...) \
+	struct fstring_##w { uint8_t len; char data[sizeof(n)-1]; }; \
+	static struct fstring_##w w##_name = {(sizeof(n)-1) | f, n}; \
+	static cdefn_t w = { c, (struct fstring*) &w##_name, l, { p } };
 
-static cdefn_t* latest = &zero_word; //@E
+#define COM(w, c, n, l, p...) WORD(w, c, n, l, 0, p)
+#define IMM(w, c, n, l, p...) WORD(w, c, n, l, FL_IMM, p)
+
+/* A list of words go here. To add a word, add a new entry and run this file as
+ * a shell script. The link field will be set correctly.
+ * BEWARE: these lines are parsed using whitespace. LEAVE EXACTLY AS IS.*/
+//@WORDLIST
+COM( E_undef_word,       E_undef_cb,     "",           NULL,             (void*)0 ) //@W
+COM( _exit_word,         _exit_cb,       "_exit",      &E_undef_word,    ) //@W
+COM( _fputc_word,        _fputc_cb,      "_fputc",     &_exit_word,      ) //@W
+COM( _fread_word,        _freadwrite_cb, "_fread",     &_fputc_word,     &fread ) //@W
+COM( _fwrite_word,       _freadwrite_cb, "_fwrite",    &_fread_word,     &fwrite ) //@W
+COM( _stderr_word,       rivarword,      "_stderr",    &_fwrite_word,    &stderr ) //@W
+COM( _stdin_word,        rivarword,      "_stdin",     &_stderr_word,    &stdin ) //@W
+COM( _stdout_word,       rivarword,      "_stdout",    &_stdin_word,     &stdout ) //@W
+COM( a_number_word,      a_number_cb,    ">number",    &_stdout_word,    ) //@W
+COM( accept_word,        accept_cb,      "accept",     &a_number_word,   ) //@W
+COM( add_one_word,       increment_cb,   "1+",         &accept_word,     (void*)1 ) //@W
+COM( add_word,           add_cb,         "+",          &add_one_word,    ) //@W
+COM( allot_word,         allot_cb,       "allot",      &add_word,        ) //@W
+COM( at_word,            at_cb,          "@",          &allot_word,      ) //@W
+COM( base_word,          rvarword,       "base",       &at_word,         &base ) //@W
+COM( branch0_word,       branchif_cb,    "",           &base_word,       (void*)0 ) //@W
+COM( branch_word,        branch_cb,      "",           &branch0_word,    ) //@W
+COM( bye_word,           icodeword,      "bye",        &branch_word,     bye_ops ) //@W
+COM( c_at_word,          c_at_cb,        "c@",         &bye_word,        ) //@W
+COM( c_comma_word,       icodeword,      "c,",         &c_at_word,       c_comma_ops ) //@W
+COM( c_pling_word,       c_pling_cb,     "c!",         &c_comma_word,    ) //@W
+COM( cell_word,          rvarword,       "cell",       &c_pling_word,    (void*)CELL ) //@W
+COM( cells_word,         icodeword,      "cells",      &cell_word,       cells_ops ) //@W
+COM( close_sq_word,      close_sq_cb,    "]",          &cells_word,      ) //@W
+COM( comma_word,         icodeword,      ",",          &close_sq_word,   comma_ops ) //@W
+COM( compile_num_word,   icodeword,      "",           &comma_word,      compile_num_ops ) //@W
+COM( create_word,        create_cb,      "create",     &compile_num_word, ) //@W
+COM( div_word,           div_cb,         "/",          &create_word,     ) //@W
+COM( dot_quote_rword,    dot_quote_rcb,  "",           &div_word,        ) //@W
+COM( dot_word,           dot_cb,         ".",          &dot_quote_rword, ) //@W
+COM( dup_word,           peekcon_cb,     "dup",        &dot_word,        (void*)1 ) //@W
+COM( emit_word,          icodeword,      "emit",       &dup_word,        emit_ops ) //@W
+COM( execute_word,       execute_cb,     "execute",    &emit_word,       ) //@W
+COM( exit_word,          exit_cb,        "exit",       &execute_word,    ) //@W
+COM( fill_word,          fill_cb,        "fill",       &exit_word,       ) //@W
+COM( find_word,          find_cb,        "find",       &fill_word,       ) //@W
+COM( here_word,          rivarword,      "here",       &find_word,       &here ) //@W
+COM( in_arrow_word,      rvarword,       ">in",        &here_word,       &in_arrow ) //@W
+COM( interpret_num_word, icodeword,      "",           &in_arrow_word,   interpret_num_ops ) //@W
+COM( interpret_word,     icodeword,      "interpret",  &interpret_num_word, interpret_ops ) //@W
+COM( latest_word,        rivarword,      "latest",     &interpret_word,  &latest ) //@W
+COM( lit_word,           lit_cb,         "",           &latest_word,     ) //@W
+COM( m_one_word,         rvarword,       "-1",         &lit_word,        (void*)-1 ) //@W
+COM( mul_word,           mul_cb,         "*",          &m_one_word,      ) //@W
+COM( one_word,           rvarword,       "1",          &mul_word,        (void*)1 ) //@W
+COM( over_word,          peekcon_cb,     "over",       &one_word,        (void*)2 ) //@W
+COM( pad_word,           rvarword,       "pad",        &over_word,       &here ) //@W
+COM( pling_word,         pling_cb,       "!",          &pad_word,        ) //@W
+COM( pop_word,           pop_cb,         "pop",        &pling_word,      ) //@W
+COM( quit_word,          icodeword,      "",           &pop_word,        quit_ops ) //@W
+COM( refill_word,        icodeword,      "refill",     &quit_word,       refill_ops ) //@W
+COM( rot_word,           rot_cb,         "rot",        &refill_word,     ) //@W
+COM( rsp0_word,          rvarword,       "rsp0",       &rot_word,        rstack ) //@W
+COM( rsp_at_word,        rivarword,      "rsp@",       &rsp0_word,       &rsp ) //@W
+COM( rsp_pling_word,     wivarword,      "rsp!",       &rsp_at_word,     &rsp ) //@W
+COM( skip0_word,         skipif_cb,      "",           &rsp_pling_word,  (void*)0 ) //@W
+COM( skipifi_word,       skipifi_cb,     "",           &skip0_word,      ) //@W
+COM( skipnot0_word,      skipnotif_cb,   "",           &skipifi_word,    (void*)0 ) //@W
+COM( skipnotifi_word,    skipnotifi_cb,  "",           &skipnot0_word,   ) //@W
+COM( source_word,        r2varword,      "source",     &skipnotifi_word, input_buffer, (void*)MAX_LINE_LENGTH ) //@W
+COM( sp0_word,           rvarword,       "sp0",        &source_word,     dstack ) //@W
+COM( sp_at_word,         rivarword,      "sp@",        &sp0_word,        &dsp ) //@W
+COM( sp_pling_word,      wivarword,      "sp!",        &sp_at_word,      &dsp ) //@W
+COM( state_word,         rvarword,       "state",      &sp_pling_word,   &state ) //@W
+COM( sub_one_word,       increment_cb,   "-1",         &state_word,      (void*)-1 ) //@W
+COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
+COM( swap_word,          swap_cb,        "swap",       &sub_word,        ) //@W
+COM( two_word,           rvarword,       "2",          &swap_word,       (void*)2 ) //@W
+COM( type_word,          icodeword,      "type",       &two_word,        type_ops ) //@W
+COM( u_dot_word,         u_dot_cb,       "u.",         &type_word,       ) //@W
+COM( word_word,          word_cb,        "word",       &u_dot_word,      ) //@W
+COM( zero_word,          rvarword,       "0",          &word_word,       (void*)0 ) //@W
+IMM( immediate_word,     immediate_cb,   "immediate",  &zero_word,       ) //@W
+IMM( open_sq_word,       open_sq_cb,     "[",          &immediate_word,  ) //@W
+
+static defn_t* latest = (defn_t*) &open_sq_word; //@E
+static cdefn_t* last = (defn_t*) &open_sq_word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -392,11 +746,20 @@ int main(int argc, const char* argv[])
 	dsp = dstack;
 	rsp = rstack;
 
-	pc = (void*) quit_word.payload;
+	pc = (defn_t**) quit_ops;
 	for (;;)
 	{
 		const struct definition* w = (void*) *pc++;
-		//printf("[%s]\n", w->name);
+		#if 0
+			printf("stack: ");
+			cell_t* p;
+			for (p = dstack; p < dsp; p++)
+				printf("%lx ", *p);
+			putchar('[');
+			fstrout(w->name);
+			putchar(']');
+			putchar('\n');
+		#endif
 		w->code(w);
 	}
 }
