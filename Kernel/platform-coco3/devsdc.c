@@ -67,9 +67,7 @@ uint8_t devsdc_transfer(void)
 	uint8_t cmd;              /* holds SDC command value */
 	sdc_transfer_function_t fptr;  /* holds which xfer routine we want */
 
-	/* test for raw mode */
-	blk_op.
-	   
+	  
 
 	/* turn on uber-secret SDC LBA mode*/
 	sdc_reg_ctl = 0x43; 
@@ -141,6 +139,7 @@ void devsdc_init()
 {
 	blkdev_t *blk;
 
+	kputs("SDC: ");
 	if( devsdc_exist() ){
 		/* register first drive */
 		blk=blkdev_alloc();
@@ -154,8 +153,8 @@ void devsdc_init()
 		blk->transfer = devsdc_transfer;
 		blk->flush = devsdc_flush;
 		blk->drive_lba_count=-1;
-		kprintf("SDC: ok.\n");
+		kputs("Ok.\n");
 	}
-
+	else kprintf("Not Found.\n");
 }
 
