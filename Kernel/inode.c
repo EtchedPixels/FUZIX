@@ -68,6 +68,10 @@ void readi(inoptr ino, uint8_t flag)
 #if defined(read_direct)
 			if (!ispipe && pblk != NULLBLK && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
 				/* we can transfer direct from disk to the userspace buffer */
+				/* FIXME: allow for async queued I/O here. We want
+				   an API something like breadasync() that either
+				   does the cdread() or queues for a smart platform
+				   or box with floppy tape devices */
 				off_t uostash;
 				usize_t ucstash;
 				uostash = udata.u_offset;	            /* stash file offset */
