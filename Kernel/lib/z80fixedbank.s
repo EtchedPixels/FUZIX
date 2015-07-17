@@ -14,7 +14,6 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _inint
         .globl _switchout
         .globl _switchin
         .globl _doexec
@@ -139,11 +138,23 @@ _switchin:
 	or a
 	jr nz, not_swapped
 
+	;
+	;	Re-enable interrupts while we swap. This is ok because
+	;	we are not on the IRQ stack when switchin is invoked.
+	;
+	;	There are two basic cases
+	;	#1: pre-emption. Not in a system call, must avoid
+	;	re-entering pre-emption logic, Z80 lowlevel code sets U_INSYS
+	;	#2: kernel syscall. Also protected by U_DATA__U_INSYS
+	;
+	ei
 	push hl
 	push de
 	call _swapper
 	pop de
 	pop hl
+	di
+
 	ld a, (hl)
 not_swapped:
 	ld hl, (U_DATA__U_PTAB)
@@ -219,6 +230,10 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         di ; should already be the case ... belt and braces.
 
+	;
+	; FIXME: we should no longer need interrupts off for most of a
+	; fork() call.
+	;
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
