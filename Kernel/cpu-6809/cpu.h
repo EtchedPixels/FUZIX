@@ -13,6 +13,10 @@ typedef uint16_t uarg_t;		/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* A user address must fit this */
+typedef uint16_t uptr_t;		/* User pointer equivalent */
+
+#define uputp  uputw			/* Copy user pointer type */
+#define ugetp  ugetw			/* between user and kernel */
 
 extern void ei(void);
 extern irqflags_t di(void);
