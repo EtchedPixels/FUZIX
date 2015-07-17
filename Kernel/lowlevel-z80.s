@@ -508,6 +508,14 @@ preemption:
 
 	;
 intret2:call map_kernel
+
+	;
+	; Semantically we are doing a null syscall for pre-empt. We need
+	; to record ourselves as in a syscall so we can't be recursively
+	; pre-empted when switchout re-enables interrupts.
+	;
+	ld a, #1
+	ld (U_DATA__U_INSYS), a
 	;
 	; Process status is offset 0
 	;
@@ -515,14 +523,17 @@ intret2:call map_kernel
 	ld (hl), #P_READY
 	call _switchout
 	;
+	; We are no longer in an interrupt or a syscall
+	;
+	xor a
+	ld (U_DATA__U_ININTERRUPT), a
+	ld (U_DATA__U_INSYS), a
+	;
 	; We have been rescheduled, remap ourself and go back to user
 	; space via signal handling
 	;
 	call map_process_always	; Get our user mapping back
 
-	; We are no longer in an interrupt
-	xor a
-	ld (U_DATA__U_ININTERRUPT), a
 
 	; We were pre-empted but have now been rescheduled
 	; User stack
