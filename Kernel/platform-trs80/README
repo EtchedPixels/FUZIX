@@ -12,12 +12,15 @@ Emulator Bugs:
 	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
 	be affected.
 
+	The interrupt flags are misemulated. A patch for this is in the
+	Fuzix tree and is needed to run Fuzix on xtrs/sdltrs
+
 Requirements: 
 	128K RAM fitted
 	Hard disk drive (will be used for swap), or a suitable memory
 	expander board could be used with a bit of tweaking (or both!)
-	*** NOTE: the current code will simply swap blindly all over the first
-	hard disk ***
+	(The hard disk code should work with the Lo-tech IDE adapter but
+	this has yet to be confirmed)
 
 Memory Map:
 	Base memory 0-FFFF (with a fair bit of slack) is used for the kernel
@@ -42,7 +45,7 @@ Drivers:
 	Floppy and Hard disk are done and minimally tested
 	Floppy drivers do not yet deal with double sided disks or sd/dd
 	media detection
-	Hard disk needs to read block 0, and handle partitions of some form
+	Hard disk reads block 0, and handle partitions of some form
 	including finding where 'swap' lives
 
 Adding Support For Other Banked RAM:
@@ -91,3 +94,32 @@ To set up for hard disk, create a hard disk with the xtrs tools and
 
 You will still need a boot floppy at this point but just boot with device
 0 (or hit return). Swap is configured to be on the end of the hard disk
+
+
+
+Banking Models
+
+Currently Supported:
+	TRS80 model 4 with inbuilt memory bank switching
+
+In Progress:
+	Port 0x94 modification to add extra internal RAM to a 4 and 4P
+
+Not Yet Started:
+	"Selector" for Model 1. Port 31 allows memory reshuffling away from
+the model 1 default. Either the upper or lower 32K is switchable but not
+both at once. bits 4/5 control the selection between a further 4 32K banks.
+Also needs model 1 support adding of course.
+
+
+Documentation Needed:
+	Various other RAM banking boards (AlphaTech and the like)
+
+	HD64180 mods with more RAM (these are I suspect almost a different port)
+	(XLR8R etc)
+
+Not Usable:
+	Various model 1 interfaces that provide 64K RAM or near 64K RAM. Not
+enough for Fuzix on Z80. Possibly enough for UZI with a hard disc.
+
+	LNW80 model II (same problem - 64K only)
