@@ -59,7 +59,7 @@ extern unsigned char vt_map( unsigned char c );
                             /* Temp FIXME set to serial port for debug ease */
 
 /* Boot devices */
-#define BOOTDEVICENAMES ",,,,,,,,dw"
+#define BOOTDEVICENAMES "hd#,,,,,,,,dw"
 
 
 
