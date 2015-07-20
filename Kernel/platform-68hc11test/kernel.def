@@ -1,0 +1,51 @@
+;
+;	Hide the udata above the I/O in the gap before the EEPROM
+;
+.equ U_DATA                      , 0xF200       ; (this is struct u_data from kernel.h)
+.equ U_DATA__TOTALSIZE           , 0x200        ;
+.equ IRQ_STACK		    , 0xF400
+.equ EESTACK			    , 0xF600	     ; used for eeprom stuff
+
+;
+;	EEPROM entry points
+;
+;	A = srcbank, B = dstbank
+;	IX = src, returns value in D
+.equ fargetb			, 0xF840
+.equ fargetw			, 0xF842
+;
+;	A = srcbank, B = dstbank
+;	IX = dst, IY = dstval
+;
+.equ farputb			, 0xF844
+.equ farputw			, 0xF846
+;
+;	A = srcbank, B = dstbank
+;	IX = dst, IY = src
+;	kernel:_tmp1 = length (in kernel bank)
+;
+.equ farcopy			, 0xF848
+;
+;	A = bank, IX = function, IY = far stack
+;
+.equ farcall			, 0xF84A
+;
+;	A = bank, IX = function, IY = far stack
+;
+.equ farjump			, 0xF84C
+;
+;	A = bank
+;
+.equ setbank			, 0xF84E
+;
+;	D = 0
+;
+.equ reboot			, 0xF850
+;
+;
+;	Low memory usage (not banked)
+;
+.equ tmp1			, 0xFE		; 16bits
+.equ curbank			, 0xFD
+.equ usrbank			, 0xFC		; we track this to emulate
+						; usermode copy stuff
