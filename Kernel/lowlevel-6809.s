@@ -163,6 +163,9 @@ dispatch_process_signal:
 	tfr d,x
 
 	lslb		;	2 bytes per entry
+;
+;	FIXME: must save Y for same ??
+;
         ; load the address of signal handler function
 	ldy #U_DATA__U_SIGVEC
 	ldu b,y		; now u = udata.u_sigvec[cursig]
