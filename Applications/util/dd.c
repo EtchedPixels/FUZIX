@@ -28,7 +28,7 @@ typedef unsigned char BOOL;
 #define	PAR_COUNT	4
 #define	PAR_SEEK	5
 #define	PAR_SKIP	6
-#define PAR_STRFRY	7
+#define	PAR_STRFRY	7
 
 
 typedef struct {
@@ -57,7 +57,7 @@ BOOL intflag;
 
 static char localbuf[8192];
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     static char *str;
     static char *cp;
