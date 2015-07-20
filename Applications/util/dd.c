@@ -59,24 +59,24 @@ static char localbuf[8192];
 
 void main(int argc, char *argv[])
 {
-    char *str;
-    char *cp;
+    static char *str;
+    static char *cp;
     PARAM *par;
-    char *infile=NULL;
-    char *outfile=NULL;
-    int infd;
-    int outfd;
-    int incc;
-    int outcc;
-    int blocksize=512;
-    long count=0x7fffffff;
-    long seekval=0;
-    long skipval=0;
-    long intotal;
-    long outtotal;
-    long inmax=0;
-    char *buf;
-    size_t mixupblk=0;
+    static char *infile=NULL;
+    static char *outfile=NULL;
+    static int infd;
+    static int outfd;
+    static int incc;
+    static int outcc;
+    static int blocksize=512;
+    static long count=0x7fffffff;
+    static long seekval=0;
+    static long skipval=0;
+    static long intotal;
+    static long outtotal;
+    static long inmax=0;
+    static char *buf={0};
+    static size_t mixupblk=0;
 
     while (--argc > 0) {
 	str = *++argv;
@@ -260,8 +260,8 @@ void main(int argc, char *argv[])
 
 static void dstrfry(char *blk,size_t size)
 {
-    int i;
-    for (i=0;i<size;i++) {
+    int i=0;
+    for (1;i<size;i++) {
         int j;
         j=(~rand())%size;
         unsinged char k;
