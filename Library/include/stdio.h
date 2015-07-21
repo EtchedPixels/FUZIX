@@ -64,18 +64,11 @@ extern FILE stdin[1];
 extern FILE stdout[1];
 extern FILE stderr[1];
 
-/* FIXME: are these really worth the cost ?? */
-#define putc(c, stream) \
-	(((stream)->bufpos >= (stream)->bufwrite) ? \
-		fputc((c), (stream)) : \
-		(uchar) (*(stream)->bufpos++ = (c)))
-#define getc(stream)	\
-	(((stream)->bufpos >= (stream)->bufread) ? \
-		fgetc(stream) : \
-		(*(stream)->bufpos++))
+#define putc(c, stream)	fputc((c), stream)
+#define getc(stream)	fgetc(stream)
 
-#define putchar(c)	putc((c), stdout)
-#define getchar()	getc(stdin)
+#define putchar(c)	fputc((c), stdout)
+#define getchar()	fgetc(stdin)
 
 extern char *gets __P((char *));
 extern char *gets_s __P((char *, size_t));
