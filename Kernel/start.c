@@ -55,14 +55,18 @@ void fstabinit(void)
 	}
 }
 
-/* FIXME: pass remainder of boot argument to init, also word align */
+/* FIXME: pass remainder of boot argument to init */
+/* Remember two things when modifying this code
+   1. Some processors need 2 byte alignment or better of arguments. We
+      lay it out for 4
+   2. We are going to end up with cases where user and kernel pointer
+      size differ due to memory models etc. We use uputp and we allow
+      room for the pointers to be bigger than kernel */
+
 void create_init(void)
 {
 	uint8_t *j;
-	/* userspace: PROGLOAD +
-               0    1    2    3    4   5  6  7  8  9  A  B  C */
-	static const char arg[] =
-	    { '/', 'i', 'n', 'i', 't', 0, 0, 1, 1, 0, 0, 0, 0 };
+	static const char arg[] = { '/', 'i', 'n', 'i', 't' };
 
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
@@ -80,14 +84,15 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
+	uzero((void *)PROGLOAD, 32);
 	uput(arg, (void *)PROGLOAD, sizeof(arg));
-	/* Poke in argv[0] - FIXME: Endianisms...  */
-	uputw(PROGLOAD+1 , (void *)(PROGLOAD + 7));
+	/* Poke in argv[0] */
+	uputp(PROGLOAD+1 , (void *)(PROGLOAD + 8));
 
 	/* Set up things to look like the process is calling _execve() */
 	udata.u_argn =  (arg_t)PROGLOAD;
-	udata.u_argn1 = (arg_t)(PROGLOAD + 0x7); /* Arguments (just "/init") */
-	udata.u_argn2 = (arg_t)(PROGLOAD + 0xb); /* Environment (none) */
+	udata.u_argn1 = (arg_t)(PROGLOAD + 0x8); /* Arguments (just "/init") */
+	udata.u_argn2 = (arg_t)(PROGLOAD + 0x10); /* Environment (none) */
 }
 
 #ifndef BOOTDEVICE

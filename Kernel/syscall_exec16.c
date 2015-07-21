@@ -23,8 +23,10 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			bufdiscard((bufptr)buf);
 			brelse((bufptr)buf);
 #else
-			/* Might be worth spotting sequential blocks and
-			   merging ? */
+			/* FIXME: allow for async queued I/O here. We want
+			   an API something like breadasync() that either
+			   does the cdread() or queues for a smart platform
+			   or box with floppy tape devices */
 			udata.u_offset = (off_t)blk << 9;
 			udata.u_count = 512;
 			udata.u_base = (uint8_t *)base;
@@ -254,13 +256,15 @@ nogood3:
 bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 {
 	char *ptr;		/* Address of base of arg strings in user space */
+	char *up = (char *)userspace_argv;
 	uint8_t c;
 	uint8_t *bufp;
 
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
 
-	while ((ptr = (char *) ugetw(userspace_argv++)) != NULL) {
+	while ((ptr = (char *) ugetp(up)) != NULL) {
+		up += sizeof(uptr_t);
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
 		do {
 			*bufp++ = c = ugetc(ptr++);
@@ -278,9 +282,9 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 
 char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
 {
-	char **argv;		/* Address of users argv[], just below ptr */
+	char *argv;		/* Address of users argv[], just below ptr */
 	int argc, arglen;
-	char **argbase;
+	char *argbase;
 	uint8_t *sptr;
 
 	sptr = argbuf->a_buf;
@@ -294,7 +298,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set argv to point below the argument strings */
 	argc = argbuf->a_argc;
-	argbase = argv = (char **) ptr - (argc + 1);
+	argbase = argv = ptr - sizeof(uptr_t) * (argc + 1);
 
 	if (cnt) {
 		*cnt = argc;
@@ -302,15 +306,16 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
-		uputw((uint16_t) ptr, argv++);
+		uputp((uptr_t) ptr, argv);
+		argv += sizeof(uptr_t);
 		if (argc) {
 			do
 				++ptr;
 			while (*sptr++);
 		}
 	}
-	uputw(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
-	return ((char **) argbase);
+	uputp(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
+	return (char **)argbase;
 }
 
 /*
