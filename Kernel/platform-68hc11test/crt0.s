@@ -7,15 +7,22 @@
 	        .globl init_early
 	        .globl init_hardware
 	        .globl kstack_top
+		.globl _start
 
 	        ; startup code @0
 	        .sect .start
+_start:
 		jmp start
 
 		.sect .text
 start:		
 		sei
 		lds #kstack_top
+		ldx #edata
+wipe:		clr ,x
+		inx
+		cmpx #_end
+		bne wipe
 ;
 ;	FIXME: any set up needed ?
 ;
@@ -29,6 +36,8 @@ stop:		bra stop
 ;
 ;	Zeropage compiler goo
 ;
+
+	.sect .page0
 
 		.globl _.frame
 		.globl _.tmp

@@ -24,6 +24,7 @@ clean:
 
 image:
 	$(CROSS_LD) -o ../fuzix.bin -M >../fuzix.map \
+	--script=memory.x \
 	crt0.o commonmem.o \
 	p68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o ../timer.o ../kdata.o devrd.o devices.o \
