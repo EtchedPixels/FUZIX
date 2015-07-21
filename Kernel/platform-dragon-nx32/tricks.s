@@ -94,7 +94,7 @@ idling:
 	; bank switch.
 	;
 	andcc #0xef
-	puls x,y,u,pc
+	puls d,y,u,pc
 
 
 slow_path:
