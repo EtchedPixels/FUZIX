@@ -1,6 +1,9 @@
 ;
 ;	68HC11 fully banked (so no real 'common')
 ;
+;	Based upon Tormod's Dragon NX32 code for 6809. We try and minimise
+;	the use of Y so we can port to 680x eventually.
+;
         .file "tricks"
 	.mode mshort
 
@@ -26,6 +29,13 @@
 ramtop:
 	.word 0
 
+; tiny stack for eeprom copier call
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+switchstack:
+
 	.sect .code
 
 ; Switchout switches out the current process, finds another that is READY,
@@ -33,9 +43,10 @@ ramtop:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
 ; This function can have no arguments or auto variables.
+; We have no registers to preserve as the compiler assumes a function call
+; clobbers the works.
+;
 switchout:
 	sei
         jsr chksigs
@@ -45,11 +56,52 @@ switchout:
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
 	pshx
+
 	sts U_DATA__U_SP
 
-        ; set inint to false
-	clr inint
+	ldaa nready
+	bne slow_path
+idling:
+	cli
+	jsr platform_idle
+	sei
+	ldaa nready
+	beq idling
+	deca
+	bne slow_path
 
+	; Was the waker us ?
+	ldx U_DATA__U_PTAB
+	ldaa P_TAB__P_STATUS_OFFSET,x
+	bne slow_path
+
+	; We can use the fast path for returning.
+	;
+	; Mark ourself running with a new time slice allocation
+	;
+	ldaa #P_RUNNING
+	staa P_TAB__P_STATUS_OFFSET,x
+	ldx #0
+	stx runticks
+	;
+	; We idled and got the CPU back - fast path, and we know
+	; we are not a pre-emption. In effect the switchout() becomes
+	; a normal function call and we don't have to stash anything or
+	; bank switch.
+	;
+	cli
+	rts
+
+slow_path:
+	ldd #512
+	std tmp1
+	ldab U_DATA__U_PAGE + 1		; our process
+	clra				; kernel
+	ldx #U_DATA
+	ldy #U_DATA
+	jsr farcopy			; eeprom copier
+	
+	
         ; find another process to run (may select this one again) returns it
         ; in X
         jsr getproc
@@ -57,10 +109,11 @@ switchout:
         ; we should never get here
         jsr trap_monitor
 
-badswitchmsg: .ascii "switchin: FAIL"
-            .byte 13
-	    .byte 10
-	    .byte 0
+badswitchmsg:
+	.ascii "switchin: FAIL"
+        .byte 13
+	.byte 10
+	.byte 0
 
 ; new process pointer is in D
 switchin:
@@ -68,10 +121,29 @@ switchin:
 	
 	xgdx
 
-	;
-	; FIXME: implement dragon-nx uarea copy logic for HC11 via
-	; eeprom copy helpers
-	;
+	ldaa P_TAB__P_PAGE_OFFSET+1,x
+	cmpa U_DATA__U_PAGE+1
+	beq nostash
+
+	cmpa #0
+	bne not_swapped
+	pshx
+	jsr swapper
+	pulx
+
+not_swapped:
+	ldd #512
+	std tmp1
+	ldaa P_TAB__P_PAGE_OFFSET+1,x
+	stx _.d1		; save process ptr
+	lds #switchstack	; move away from overwritten area
+	ldx #U_DATA		; local copy
+	ldy #U_DATA		; far copy is at same address
+	clrb			; copy from bank A to bank 0
+	jsr farcopy		; copy via the eeprom helper
+	ldx _.d1
+
+nostash:
 
 	; ------- No stack -------
         ; check u_data->u_ptab matches what we wanted
@@ -82,7 +154,8 @@ switchin:
 	ldaa #P_RUNNING
 	staa P_TAB__P_STATUS_OFFSET,x
 
-	clr runticks
+	ldx #0
+	stx runticks
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
