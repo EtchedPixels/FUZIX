@@ -9,38 +9,57 @@
 ;
 ;	EEPROM entry points
 ;
-;	A = srcbank, B = dstbank
-;	IX = src, returns value in D
+;	A = bank
+;	X = src, returns value in B or D
 .equ fargetb			, 0xF840
-.equ fargetw			, 0xF842
+.equ fargetw			, 0xF843
+;
+;	A = bank B = value
+;	X = dst
+;
+.equ farputb			, 0xF846
+;
+;	A = bank
+;	X = dst, Y = value
+;
+.equ farputw			, 0xF849
 ;
 ;	A = srcbank, B = dstbank
-;	IX = dst, IY = dstval
-;
-.equ farputb			, 0xF844
-.equ farputw			, 0xF846
-;
-;	A = srcbank, B = dstbank
-;	IX = dst, IY = src
+;	X = dst, Y = src
 ;	kernel:_tmp1 = length (in kernel bank)
 ;
-.equ farcopy			, 0xF848
+.equ farcopy			, 0xF84C
 ;
-;	A = bank, IX = function, IY = far stack
+;	A = bank, X = function, Y = far stack
 ;
-.equ farcall			, 0xF84A
+.equ farcall			, 0xF84F
 ;
-;	A = bank, IX = function, IY = far stack
+;	A = bank, X = function, Y = far stack
 ;
-.equ farjump			, 0xF84C
+.equ farjump			, 0xF852
 ;
 ;	A = bank
 ;
-.equ setbank			, 0xF84E
+.equ setbank			, 0xF855
 ;
 ;	D = 0
 ;
-.equ reboot			, 0xF850
+.equ reboot			, 0xF858
+;
+;	A = srcbank, B = dstbank
+;	X = dst, Y = src
+;	kernel:_tmp1 = length (in kernel bank)
+;
+.equ farzcopy			, 0xF85B
+;
+;	A = bank
+;	X = dst
+;	Y = len
+;
+;	Return in D
+;
+.equ farzero			, 0xF85E
+;
 ;
 ;
 ;	Low memory usage (not banked)

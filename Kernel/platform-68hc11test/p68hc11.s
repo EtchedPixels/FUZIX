@@ -135,15 +135,105 @@ map_process:
 	.globl _uzero
 
 
+;
+;	D = user address
+;
 doexec:
+	xgdx		; function into X
+	ldaa usrbank	; bank
+	ldy U_DATA__U_ISP
+	jsr farcall
+;
+;	If this returns we should probably do an exit call or something
+;	FIXME
+;
+	jmp trap_monitor
+
+
+;
+;	D = user address
+;
 sigdispatch:
+	xgdx
+	ldy U_DATA__U_SYSCALL_SP
+	ldaa usrbank
+	; This may not return which is fine
+	jmp farcall
+	; Signal handler completed and returned back to the eeprom and thus
+	; banked back to kernel so returns to our caller
+
+;
+;	We have no common but instead route far accesses via the eeprom
+;	helpers in the firmware.
+;
 _ugetc:
+	xgdx
+	ldaa usrbank
+	jsr fargetb
+	clra
+	rts
 _ugetw:
+	xgdx
+	ldaa usrbank
+	jmp fargetw
+
+;
+;	D = src, 2(s) = dest, 4(s) = size
+;
 _ugets:
+	tsx
+	xgdy		; D was src, we want it in Y
+	ldd 4,x		; size
+	std tmp1	; in tmp1
+	ldx 2,x		; destination in X
+	clrb		; 0 = kernel
+	ldaa usrbank	; user space
+	jmp farzcopy	; returns error/size in D
+;
+;	D = src, 2(s) = dest, 4(s) = size
+;
 _uget:
+	tsx
+	xgdy		; D was src, we want it in Y
+	ldd 4,x		; size
+	std tmp1	; in tmp1
+	ldx 2,x		; destination in X
+	clrb		; 0 = kernel
+	ldaa usrbank	; user space
+	jmp farcopy
+;
+;	D = value, 2(s) = dst
+;
 _uputc:
+	tsx
+	ldx 2,x		; x is dst
+	xgdy		; value into y
+	ldaa usrbank
+	jmp farputb
+
 _uputw:
+	tsx
+	ldx 2,x		; x is dst
+	xgdy		; value into y
+	ldaa usrbank
+	jmp farputw
+;
+;	D = src, 2(s) = dst, 4(s) = size
+;
 _uput:
+	tsx
+	xgdy		; D was src, we want it in Y
+	ldd 4,x		; size
+	std tmp1	; in tmp1
+	ldx 2,x		; destination in X
+	clra		; 0 = kernel
+	ldab usrbank	; user space
+	jmp farcopy
 _uzero:
-	/* FIXME */
+	tsx
+	ldy 2,x		; length
+	xgdx		; pointer
+	ldaa usrbank
+	jmp farzero
+
 	rts
