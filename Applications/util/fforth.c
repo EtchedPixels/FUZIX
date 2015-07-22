@@ -14,10 +14,20 @@
 # Peculiarities include:
 # 
 # Note! This program looks weird. That's because it's a shell script *and* a C
-# file. (And an Awk script.) However, it's necessary in order to dynamically
-# generate the word list, which is just too fragile to do by hand. If you edit
-# a line marked with a //@W, then just run this file, as a shell script, and
-# it'll rebuild all the fiddly links in the list.
+# file. (And an Awk script.) The awk file will autogenerate the Forth dictionary
+# and precompiled words in the C source, which is just too fragile to do by
+# hand.
+# 
+# //@W: marks a dictionary entry. This will get updated in place to form a linked
+# list.
+#
+# //@C: cheesy™ precompiled Forth. Put semi-Forth code on the following comment
+# lines; the line immediately afterwards will be updated to contain the byte-
+# compiled version. Don't put a trailing semicolon.
+#
+# C compilation options:
+#
+#   -DFAST             don't bounds check the stack (smaller, faster code)
 #
 # No evil was harmed in the making of this file. Probably.
 
@@ -37,6 +47,14 @@ EOF
 awk -f- $0 > $0.new <<EOF
 	BEGIN {
 		lastword = "NULL"
+
+		ord_table = ""
+		for (i = 0; i < 256; i++)
+			ord_table = ord_table sprintf("%c", i)
+	}
+
+	function ord(s) {
+		return index(ord_table, s) - 1
 	}
 
 	/\/\/@EXPORT}\$/ {
@@ -60,6 +78,12 @@ awk -f- $0 > $0.new <<EOF
 			printf(" %s", \$i)
 		printf("\n")
 
+		wordname = \$4
+		sub(/^"/, "", wordname)
+		sub(/",$/, "", wordname)
+		sub(/\\\\./, "&", wordname)
+		words[wordname] = \$2
+
 		lastword = "&" \$2
 		sub(/,/, "", lastword)
 
@@ -70,6 +94,125 @@ awk -f- $0 > $0.new <<EOF
 		n = \$2
 		sub(/,/, " ", n)
 		printf("static " \$2 " " \$3 " = (defn_t*) " lastword "; //@E\n")
+		next
+	}
+
+	function push(n) {
+		stack[sp++] = n
+	}
+
+	function pop() {
+		return stack[--sp]
+	}
+
+	function comma(s) {
+		if (s !~ /,$/)
+			s = s ","
+		bytecode[pc++] = s
+	}
+
+	function compile(n) {
+		if (n == "if")
+		{
+			comma("&branch0_word")
+			push(pc)
+			comma(0)
+			return
+		}
+		if (n == "then")
+		{
+			bytecode[pop()] = "(&" word ".payload[0] + " pc "),"
+			return
+		}
+			
+		if (n == "begin")
+		{
+			push(pc)
+			return
+		}
+		if (n == "until")
+		{
+			comma("&branch_word")
+			comma("(&" word ".payload[0] + " pop() "),")
+			return
+		}
+
+		if (n ~ /^\[.*]$/)
+		{
+			sub(/^\\[/, "", n)
+			sub(/]$/, "", n)
+			comma("(" n ")")
+			return
+		}
+
+		wordsym = words[n]
+		if (wordsym == "")
+		{
+			if (n ~ /-?[0-9]/)
+			{
+				comma("&lit_word,")
+				comma(n ",")
+				return
+			}
+
+			printf("Unrecognised word '%s' while defining '%s'\n", n, wordstring) > "/dev/stderr"
+			exit(1)
+		}
+		comma("&" wordsym)
+	}
+
+	/^\/\/@C/ {
+		print
+
+		wordstring = \$2
+
+		word = ""
+		for (i=1; i<=length(wordstring); i++)
+		{
+			c = substr(wordstring, i, 1)
+			if (c ~ /[A-Za-z_$]/)
+				word = word c
+			else
+				word = word sprintf("_%02x_", ord(c))
+		}
+		word = word "_word"
+
+		sub(/\\\\/, "\\\\\\\\", wordstring)
+
+		immediate = (\$3 == "immediate")
+		hidden = (\$3 == "hidden")
+		sp = 0
+		pc = 0
+
+		# (Yes, this is supposed to consume and not print one extra line.)
+		while (getline)
+		{
+			if (\$1 != "//")
+			{
+				# Consume and do not print.
+				break
+			}
+			print 
+			
+			for (i=2; i<=NF; i++)
+			{
+				if (\$i == "\\\\")
+					break;
+				compile(\$i)
+			}
+		}
+
+		if (immediate)
+			printf("IMM( ")
+		else
+			printf("COM( ")
+		printf("%s, codeword, \"%s\", %s, ", word, hidden ? "" : wordstring, lastword)
+		for (i = 0; i < pc; i++)
+			printf("(void*)%s ", bytecode[i])
+		printf("(void*)&exit_word )\n")
+		lastword = "&" word
+		words[wordstring] = word ","
+
 		next
 	}
 
@@ -253,10 +396,10 @@ static cdefn_t E_undef_word ;
 static cdefn_t _O_RDONLY_word ;
 static cdefn_t _O_RDWR_word ;
 static cdefn_t _O_WRONLY_word ;
+static cdefn_t _close_word ;
 static cdefn_t _create_word ;
 static cdefn_t _exit_word ;
 static cdefn_t _input_fd_word ;
-static cdefn_t _close_word ;
 static cdefn_t _open_word ;
 static cdefn_t _read_word ;
 static cdefn_t _stderr_word ;
@@ -274,57 +417,38 @@ static cdefn_t at_word ;
 static cdefn_t base_word ;
 static cdefn_t branch0_word ;
 static cdefn_t branch_word ;
-static cdefn_t branchnot0_word ;
-static cdefn_t bye_word ;
 static cdefn_t c_at_word ;
-static cdefn_t c_comma_word ;
 static cdefn_t c_pling_word ;
 static cdefn_t cell_word ;
-static cdefn_t cells_word ;
 static cdefn_t close_sq_word ;
-static cdefn_t colon_word ;
-static cdefn_t comma_word ;
-static cdefn_t compile_num_word ;
-static cdefn_t constant_word ;
-static cdefn_t create_word ;
-static cdefn_t decimal_word ;
 static cdefn_t div_word ;
+static cdefn_t drop_word ;
 static cdefn_t dup_word ;
+static cdefn_t equals0_word ;
 static cdefn_t equals_word ;
 static cdefn_t execute_word ;
 static cdefn_t exit_word ;
 static cdefn_t fill_word ;
 static cdefn_t find_word ;
 static cdefn_t here_word ;
-static cdefn_t hex_word ;
 static cdefn_t in_arrow_word ;
-static cdefn_t interpret_num_word ;
-static cdefn_t interpret_word ;
 static cdefn_t latest_word ;
+static cdefn_t less0_word ;
 static cdefn_t lit_word ;
 static cdefn_t m_one_word ;
 static cdefn_t more0_word ;
-static cdefn_t less0_word ;
-static cdefn_t equals0_word ;
 static cdefn_t mul_word ;
 static cdefn_t not_equals_word ;
+static cdefn_t notequals0_word ;
 static cdefn_t one_word ;
 static cdefn_t or_word ;
 static cdefn_t over_word ;
 static cdefn_t pad_word ;
 static cdefn_t pling_word ;
-static cdefn_t drop_word ;
-static cdefn_t quit_word ;
-static cdefn_t read_file_word ;
-static cdefn_t refill_word ;
 static cdefn_t rot_word ;
 static cdefn_t rsp0_word ;
 static cdefn_t rsp_at_word ;
 static cdefn_t rsp_pling_word ;
-static cdefn_t skip0_word ;
-static cdefn_t skipifi_word ;
-static cdefn_t skipnot0_word ;
-static cdefn_t skipnotifi_word ;
 static cdefn_t source_word ;
 static cdefn_t sp0_word ;
 static cdefn_t sp_at_word ;
@@ -334,20 +458,16 @@ static cdefn_t sub_one_word ;
 static cdefn_t sub_word ;
 static cdefn_t swap_word ;
 static cdefn_t two_word ;
-static cdefn_t type_word ;
-static cdefn_t variable_word ;
 static cdefn_t word_word ;
 static cdefn_t zero_word ;
 static cdefn_t immediate_word ;
 static cdefn_t open_sq_word ;
-static cdefn_t semicolon_word ;
 //@EXPORT}
 
 /* ======================================================================= */
 /*                                  WORDS                                  */
 /* ======================================================================= */
 
-static void icodeword(cdefn_t* w) { rpush((cell_t) pc); pc = w->payload[0]; }
 static void codeword(cdefn_t* w) { rpush((cell_t) pc); pc = (void*) &w->payload[0]; }
 static void dataword(cdefn_t* w) { dpush((cell_t) &w->payload[0]); }
 static void rvarword(cdefn_t* w) { dpush((cell_t) w->payload[0]); }
@@ -453,9 +573,11 @@ static void _create_cb(cdefn_t* w)
 	defn->code = dataword;
 	defn->name = name;
 	defn->next = latest;
-	printf("[defined ");
-	fwrite(&defn->name->data[0], 1, defn->name->len & 0x7f, stdout);
-	printf("]\n");
+	#if 0
+		printf("[defined ");
+		fwrite(&defn->name->data[0], 1, defn->name->len & 0x7f, stdout);
+		printf("]\n");
+	#endif
 	latest = defn;
 }
 
@@ -543,7 +665,6 @@ static void and_cb(cdefn_t* w)        { dpush(dpop() & dpop()); }
 static void at_cb(cdefn_t* w)         { dpush(*(cell_t*)dpop()); }
 static void branch_cb(cdefn_t* w)     { pc = (void*) *pc; }
 static void branchif_cb(cdefn_t* w)   { if (dpop() == (cell_t)*w->payload) pc = (void*)*pc; else pc++; }
-static void branchnotif_cb(cdefn_t* w) { if (dpop() != (cell_t)*w->payload) pc = (void*)*pc; else pc++; }
 static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
@@ -564,192 +685,7 @@ static void open_sq_cb(cdefn_t* w)    { state = 0; }
 static void or_cb(cdefn_t* w)         { dpush(dpop() | dpop()); }
 static void peekcon_cb(cdefn_t* w)    { dpush(dpeek((cell_t) *w->payload)); }
 static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
-static void skipif_cb(cdefn_t* w)     { if (dpop() == (cell_t)*w->payload) pc++; }
-static void skipifi_cb(cdefn_t* w)    { if (dpop() == (cell_t)*pc++) pc++; }
-static void skipnotif_cb(cdefn_t* w)  { if (dpop() != (cell_t)*w->payload) pc++; }
-static void skipnotifi_cb(cdefn_t* w) { if (dpop() != (cell_t)*pc++) pc++; }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
-
-static cdefn_t* bye_ops[] =     { &zero_word, &_exit_word };
-static cdefn_t* c_comma_ops[] = { &here_word, &c_pling_word, &one_word, &allot_word, &exit_word };
-static cdefn_t* cells_ops[] =   { &cell_word, &mul_word, &exit_word };
-static cdefn_t* comma_ops[] =   { &here_word, &pling_word, &cell_word, &allot_word, &exit_word };
-static cdefn_t* decimal_ops[] = { &lit_word, (void*)10, &base_word, &pling_word, &exit_word };
-static cdefn_t* hex_ops[] =     { &lit_word, (void*)16, &base_word, &pling_word, &exit_word };
-static cdefn_t* type_ops[] =    { &_stdout_word, &rot_word, &rot_word, &_write_word, &drop_word, &exit_word };
-static cdefn_t* variable_ops[] = { &create_word, &cell_word, &allot_word, &exit_word };
-
-static cdefn_t* create_ops[] =
-{
-	/* Get the word name; this is written to here */
-	&lit_word, (void*)' ', &word_word, /* ( addr -- ) */
-
-	/* Advance over it */
-	&dup_word, &c_at_word, &add_one_word, &allot_word, /* ( addr -- ) */
-
-	/* Ensure the data pointer is aligned, and then create the word header */
-	&align_word, &_create_word, /* ( -- ) */
-
-	&exit_word
-};
-
-static cdefn_t* colon_ops[] =
-{
-	/* Create the word itself. */
-	&create_word,
-
-	/* Turn it into a runnable word. */
-	&lit_word, (void*)codeword, &latest_word, &pling_word,
-
-	/* Switch to compilation mode. */
-	&close_sq_word, &exit_word
-};
-
-static cdefn_t* constant_ops[] =
-{
-	&create_word,
-	&lit_word, (void*)rvarword, &latest_word, &pling_word,
-	&comma_word, &exit_word
-};
-
-static cdefn_t* semicolon_ops[] =
-{
-	&lit_word, &exit_word, &comma_word,
-	&open_sq_word,
-	&exit_word
-};
-
-/* refill: ( -- flag )
- * Refills the input buffer. */
-static cdefn_t* refill_ops[] =
-{
-	/* Read a line from the terminal. */
-	&source_word, &accept_word, /* ( -- len ) */
-
-	/* Is this the end? */
-	&dup_word, &less0_word, &branch0_word, (void*)(refill_ops+9),
-		&drop_word, &zero_word, &exit_word, /* ( -- len ) */
-
-	/* Clear the remainder of the buffer. */
-	&dup_word, &lit_word, (void*)input_buffer, &add_word, /* ( -- len addr ) */
-	&swap_word, /* ( -- addr len ) */
-	&lit_word, (void*)MAX_LINE_LENGTH, &swap_word, &sub_word, /* ( -- addr remaining ) */
-	&lit_word, (void*)32, /* ( -- addr remaining char ) */
-	&fill_word,
-
-	/* Reset the input pointer. */
-	&zero_word, &in_arrow_word, &pling_word,
-
-	/* We will succeed! */
-	&one_word, &exit_word
-};
-
-static cdefn_t* interpreter_table[] =
-{
-	// compiling   not found            immediate
-	&execute_word, &interpret_num_word, &execute_word, // interpreting
-	&comma_word,   &compile_num_word,   &execute_word  // compiling
-};
-
-/* interpret: ( -- )
- * Parses the input buffer and executes the words therein. */
-static cdefn_t* interpret_ops[] =
-{
-	/* Parse a word. */
-	&lit_word, (void*)32, &word_word, /* ( -- c-addr ) */
-	/* End of the buffer? If so, return. */
-	&c_at_word, &skipnot0_word, &exit_word, /* ( -- ) */
-
-	/* Look up the word. */
-	&here_word, &find_word, /* ( -- addr n ) */
-
-	/* What is it? Calculate an offset into the lookup table. */
-	&add_one_word, &cells_word,
-	&state_word, &at_word, &lit_word, (void*)(3*8), &mul_word,
-	&add_word, /* ( -- addr offset ) */
-
-	/* Now look up the result. */
-	&lit_word, (void*)interpreter_table, &add_word, &at_word, &execute_word,
-
-	/* And go round again. */
-	&branch_word, (void*)interpret_ops
-};
-
-/* interpret_num: ( c-addr -- )
- * We didn't recognise this word, so parse it as a number. */
-static cdefn_t* interpret_num_ops[] =
-{
-	/* Get the length of the input string. */
-	&dup_word, &c_at_word, /* ( -- addr len ) */
-	/* The address we've got is a counted string; we want the address of the
-	 * data. */
-	&swap_word, &add_one_word, &swap_word, /* ( -- addr+1 len ) */
-	/* Initialise the accumulator. */
-	&zero_word, &rot_word, &rot_word, /* ( -- 0 addr+1 len ) */
-	/* Parse! */
-	&a_number_word, /* ( -- val addr+1 len ) */
-	/* We must consume all bytes. */
-	&skip0_word, &E_undef_word,
-	/* Huzzah! */
-	&drop_word, &exit_word
-};
-
-/* compile_num: ( c-addr -- )
- * We didn't recognise this word, so parse it as a number and compile it. */
-static cdefn_t* compile_num_ops[] =
-{
-	/* The interpreter does the heavy lifting for us! */
-	&interpret_num_word,
-	/* ...and compile. */
-	&lit_word, &lit_word, &comma_word,
-	&comma_word,
-	&exit_word
-};
-
-static const char prompt_msg[4] = " ok\n";
-static cdefn_t* quit_ops[] =
-{
-	/* If we're reading from stdin, show the prompt. */
-	&_input_fd_word, &at_word, &_stdin_word, &equals_word, &branch0_word, (void*)(quit_ops+11),
-	&lit_word, (void*)prompt_msg, &lit_word, (void*)4, &type_word,
-
-	/* Refill the input buffer. If there is not input buffer, exit. */
-	&refill_word, &skipnot0_word, &exit_word,
-
-	/* Interpret it. */
-	&interpret_word,
-
-	/* And go round again */
-	&branch_word, (void*)quit_ops
-};
-
-static cdefn_t* read_file_ops[] =
-{
-	/* Read the filename. */
-	&lit_word, (void*)' ', &word_word, /* ( -- len ) */
-
-	/* Turn it into a C string. */
-	&dup_word, &c_at_word, &add_word, &add_one_word,
-	&zero_word, &swap_word, &c_pling_word, /* ( -- ) */
- 
-	/* Open the new one. */
-	&here_word, &add_one_word, &_O_RDONLY_word, &_open_word,
-	&dup_word, &skipnot0_word, &E_fnf_word,
-
-	/* Swap in the new stream, saving the old one to the stack. */
-	&_input_fd_word, &at_word, /* ( -- new old ) */
-	&swap_word, &_input_fd_word, &pling_word, /* ( -- old ) */
-
-	/* Run the interpreter/compiler until EOF. */
-	&quit_word,
-
-	/* Close the new stream. */
-	&_input_fd_word, &at_word, &_close_word, &drop_word,
-
-	/* Restore the old stream. */
-	&_input_fd_word, &pling_word,
-	&exit_word
-};
 
 #define WORD(w, c, n, l, f, p...) \
 	struct fstring_##w { uint8_t len; char data[sizeof(n)-1]; }; \
@@ -763,16 +699,16 @@ static cdefn_t* read_file_ops[] =
  * a shell script. The link field will be set correctly.
  * BEWARE: these lines are parsed using whitespace. LEAVE EXACTLY AS IS.*/
 //@WORDLIST
-COM( E_fnf_word,         E_fnf_cb,       "",           NULL,             (void*)0 ) //@W
-COM( E_undef_word,       E_undef_cb,     "",           &E_fnf_word,      (void*)0 ) //@W
+COM( E_fnf_word,         E_fnf_cb,       "E_fnf",      NULL,             (void*)0 ) //@W
+COM( E_undef_word,       E_undef_cb,     "E_undef",    &E_fnf_word,      (void*)0 ) //@W
 COM( _O_RDONLY_word,     rvarword,       "O_RDONLY",   &E_undef_word,    (void*)O_RDONLY ) //@W
 COM( _O_RDWR_word,       rvarword,       "O_RDWR",     &_O_RDONLY_word,  (void*)O_RDWR ) //@W
 COM( _O_WRONLY_word,     rvarword,       "O_WRONLY",   &_O_RDWR_word,    (void*)O_WRONLY ) //@W
-COM( _close_word,        _close_cb,      "_close",     &_input_fd_word,  ) //@W
-COM( _create_word,       _create_cb,     "",           &_O_WRONLY_word,  ) //@W
+COM( _close_word,        _close_cb,      "_close",     &_O_WRONLY_word,  ) //@W
+COM( _create_word,       _create_cb,     "",           &_close_word,     ) //@W
 COM( _exit_word,         _exit_cb,       "_exit",      &_create_word,    ) //@W
 COM( _input_fd_word,     rvarword,       "_input_fd",  &_exit_word,      &input_fd ) //@W
-COM( _open_word,         _open_cb,       "_open",      &_close_word,     ) //@W
+COM( _open_word,         _open_cb,       "_open",      &_input_fd_word,  ) //@W
 COM( _read_word,         _readwrite_cb,  "_read",      &_open_word,      &read ) //@W
 COM( _stderr_word,       rvarword,       "_stderr",    &_read_word,      (void*)2 ) //@W
 COM( _stdin_word,        rvarword,       "_stdin",     &_stderr_word,    (void*)0 ) //@W
@@ -787,61 +723,41 @@ COM( allot_word,         allot_cb,       "allot",      &align_word,      ) //@W
 COM( and_word,           and_cb,         "and",        &allot_word,      ) //@W
 COM( at_word,            at_cb,          "@",          &and_word,        ) //@W
 COM( base_word,          rvarword,       "base",       &at_word,         &base ) //@W
-COM( branch0_word,       branchif_cb,    "",           &base_word,       (void*)0 ) //@W
-COM( branch_word,        branch_cb,      "",           &branch0_word,    ) //@W
-COM( branchnot0_word,    branchnotif_cb, "",           &branch_word,     (void*)0 ) //@W
-COM( bye_word,           icodeword,      "bye",        &branchnot0_word, bye_ops ) //@W
-COM( c_at_word,          c_at_cb,        "c@",         &bye_word,        ) //@W
-COM( c_comma_word,       icodeword,      "c,",         &c_at_word,       c_comma_ops ) //@W
-COM( c_pling_word,       c_pling_cb,     "c!",         &c_comma_word,    ) //@W
+COM( branch0_word,       branchif_cb,    "0branch",    &base_word,       (void*)0 ) //@W
+COM( branch_word,        branch_cb,      "branch",     &branch0_word,    ) //@W
+COM( c_at_word,          c_at_cb,        "c@",         &branch_word,     ) //@W
+COM( c_pling_word,       c_pling_cb,     "c!",         &c_at_word,       ) //@W
 COM( cell_word,          rvarword,       "cell",       &c_pling_word,    (void*)CELL ) //@W
-COM( cells_word,         icodeword,      "cells",      &cell_word,       cells_ops ) //@W
-COM( close_sq_word,      close_sq_cb,    "]",          &cells_word,      ) //@W
-COM( colon_word,         icodeword,      ":",          &close_sq_word,   colon_ops ) //@W
-COM( comma_word,         icodeword,      ",",          &colon_word,      comma_ops ) //@W
-COM( compile_num_word,   icodeword,      "",           &comma_word,      compile_num_ops ) //@W
-COM( constant_word,      icodeword,      "constant",   &compile_num_word, constant_ops ) //@W
-COM( create_word,        icodeword,      "create",     &constant_word,   create_ops ) //@W
-COM( decimal_word,       icodeword,      "decimal",    &create_word,     decimal_ops ) //@W
-COM( div_word,           div_cb,         "/",          &decimal_word,    ) //@W
-COM( drop_word,          drop_cb,        "drop",       &pling_word,      ) //@W
-COM( dup_word,           peekcon_cb,     "dup",        &div_word,        (void*)1 ) //@W
-COM( equals0_word,       equals0_cb,     "0=",         &less0_word,      ) //@W
-COM( equals_word,        equals_cb,      "=",          &dup_word,        ) //@W
+COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
+COM( div_word,           div_cb,         "/",          &close_sq_word,   ) //@W
+COM( drop_word,          drop_cb,        "drop",       &div_word,        ) //@W
+COM( dup_word,           peekcon_cb,     "dup",        &drop_word,       (void*)1 ) //@W
+COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
+COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
 COM( execute_word,       execute_cb,     "execute",    &equals_word,     ) //@W
 COM( exit_word,          exit_cb,        "exit",       &execute_word,    ) //@W
 COM( fill_word,          fill_cb,        "fill",       &exit_word,       ) //@W
 COM( find_word,          find_cb,        "find",       &fill_word,       ) //@W
 COM( here_word,          rivarword,      "here",       &find_word,       &here ) //@W
-COM( hex_word,           icodeword,      "hex",        &here_word,       hex_ops ) //@W
-COM( in_arrow_word,      rvarword,       ">in",        &hex_word,        &in_arrow ) //@W
-COM( interpret_num_word, icodeword,      "",           &in_arrow_word,   interpret_num_ops ) //@W
-COM( interpret_word,     icodeword,      "interpret",  &interpret_num_word, interpret_ops ) //@W
-COM( latest_word,        rivarword,      "latest",     &interpret_word,  &latest ) //@W
-COM( less0_word,         less0_cb,       "0<",         &more0_word,      ) //@W
-COM( lit_word,           lit_cb,         "",           &latest_word,     ) //@W
+COM( in_arrow_word,      rvarword,       ">in",        &here_word,       &in_arrow ) //@W
+COM( latest_word,        rivarword,      "latest",     &in_arrow_word,   &latest ) //@W
+COM( less0_word,         less0_cb,       "0<",         &latest_word,     ) //@W
+COM( lit_word,           lit_cb,         "lit",        &less0_word,      ) //@W
 COM( m_one_word,         rvarword,       "-1",         &lit_word,        (void*)-1 ) //@W
 COM( more0_word,         more0_cb,       "0>",         &m_one_word,      ) //@W
-COM( mul_word,           mul_cb,         "*",          &equals0_word,    ) //@W
+COM( mul_word,           mul_cb,         "*",          &more0_word,      ) //@W
 COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
-COM( notequals0_word,    notequals0_cb,  "0<>",         &mul_word,        ) //@W
-COM( one_word,           rvarword,       "1",          &not_equals_word, (void*)1 ) //@W
+COM( notequals0_word,    notequals0_cb,  "0<>",        &not_equals_word, ) //@W
+COM( one_word,           rvarword,       "1",          &notequals0_word, (void*)1 ) //@W
 COM( or_word,            or_cb,          "or",         &one_word,        ) //@W
 COM( over_word,          peekcon_cb,     "over",       &or_word,         (void*)2 ) //@W
 COM( pad_word,           rvarword,       "pad",        &over_word,       &here ) //@W
 COM( pling_word,         pling_cb,       "!",          &pad_word,        ) //@W
-COM( quit_word,          icodeword,      "",           &drop_word,       quit_ops ) //@W
-COM( read_file_word,     icodeword,      "read-file",  &quit_word,       read_file_ops ) //@W
-COM( refill_word,        icodeword,      "refill",     &read_file_word,  refill_ops ) //@W
-COM( rot_word,           rot_cb,         "rot",        &refill_word,     ) //@W
+COM( rot_word,           rot_cb,         "rot",        &pling_word,      ) //@W
 COM( rsp0_word,          rvarword,       "rsp0",       &rot_word,        rstack ) //@W
 COM( rsp_at_word,        rivarword,      "rsp@",       &rsp0_word,       &rsp ) //@W
 COM( rsp_pling_word,     wivarword,      "rsp!",       &rsp_at_word,     &rsp ) //@W
-COM( skip0_word,         skipif_cb,      "",           &rsp_pling_word,  (void*)0 ) //@W
-COM( skipifi_word,       skipifi_cb,     "",           &skip0_word,      ) //@W
-COM( skipnot0_word,      skipnotif_cb,   "",           &skipifi_word,    (void*)0 ) //@W
-COM( skipnotifi_word,    skipnotifi_cb,  "",           &skipnot0_word,   ) //@W
-COM( source_word,        r2varword,      "source",     &skipnotifi_word, input_buffer, (void*)MAX_LINE_LENGTH ) //@W
+COM( source_word,        r2varword,      "source",     &rsp_pling_word,  input_buffer, (void*)MAX_LINE_LENGTH ) //@W
 COM( sp0_word,           rvarword,       "sp0",        &source_word,     dstack ) //@W
 COM( sp_at_word,         rivarword,      "sp@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "sp!",        &sp_at_word,      &dsp ) //@W
@@ -850,16 +766,241 @@ COM( sub_one_word,       increment_cb,   "-1",         &state_word,      (void*)
 COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
 COM( swap_word,          swap_cb,        "swap",       &sub_word,        ) //@W
 COM( two_word,           rvarword,       "2",          &swap_word,       (void*)2 ) //@W
-COM( type_word,          icodeword,      "type",       &two_word,        type_ops ) //@W
-COM( variable_word,      icodeword,      "variable",   &type_word,       variable_ops ) //@W
-COM( word_word,          word_cb,        "word",       &variable_word,   ) //@W
+COM( word_word,          word_cb,        "word",       &two_word,        ) //@W
 COM( zero_word,          rvarword,       "0",          &word_word,       (void*)0 ) //@W
 IMM( immediate_word,     immediate_cb,   "immediate",  &zero_word,       ) //@W
 IMM( open_sq_word,       open_sq_cb,     "[",          &immediate_word,  ) //@W
-IMM( semicolon_word,     icodeword,      ";",          &open_sq_word,    semicolon_ops ) //@W
 
-static defn_t* latest = (defn_t*) &semicolon_word; //@E
-static cdefn_t* last = (defn_t*) &semicolon_word; //@E
+//@C ( immediate
+//   10 word drop
+IMM( _28__word, codeword, "(", &open_sq_word, (void*)&lit_word, (void*)10, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C \ immediate
+//   40 word drop
+IMM( _5c__word, codeword, "\\", &_28__word, (void*)&lit_word, (void*)40, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C cells
+//  cell *
+COM( cells_word, codeword, "cells", &_5c__word, (void*)&cell_word, (void*)&mul_word, (void*)&exit_word )
+
+//@C ,
+//  here !
+//  cell allot
+COM( _2c__word, codeword, ",", &cells_word, (void*)&here_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
+
+//@C c,
+//  here c!
+//  1 allot
+COM( c_2c__word, codeword, "c,", &_2c__word, (void*)&here_word, (void*)&c_pling_word, (void*)&one_word, (void*)&allot_word, (void*)&exit_word )
+
+//@C create
+//  \ Get the word name; this is written as a counted string to here.
+//  32 word                            \ addr --
+//
+//  \ Advance over it.
+//  dup c@ 1+ allot                    \ addr --
+//
+//  \ Ensure alignment, then create the low level header.
+//  align [&_create_word]
+COM( create_word, codeword, "create", &c_2c__word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_one_word, (void*)&allot_word, (void*)&align_word, (void*)(&_create_word), (void*)&exit_word )
+
+//@C emit
+//   here c!
+//   _stdout here 1 _write drop
+COM( emit_word, codeword, "emit", &create_word, (void*)&here_word, (void*)&c_pling_word, (void*)&_stdout_word, (void*)&here_word, (void*)&one_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C type
+// \ ( addr n -- )
+//   _stdout rot rot _write drop
+COM( type_word, codeword, "type", &emit_word, (void*)&_stdout_word, (void*)&rot_word, (void*)&rot_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C cr
+//   10 emit
+COM( cr_word, codeword, "cr", &type_word, (void*)&lit_word, (void*)10, (void*)&emit_word, (void*)&exit_word )
+
+//@C space
+//   32 emit
+COM( space_word, codeword, "space", &cr_word, (void*)&lit_word, (void*)32, (void*)&emit_word, (void*)&exit_word )
+
+//@C negate
+//   0 swap -
+COM( negate_word, codeword, "negate", &space_word, (void*)&zero_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
+
+//@C true
+//   1
+COM( true_word, codeword, "true", &negate_word, (void*)&one_word, (void*)&exit_word )
+
+//@C false
+//   0
+COM( false_word, codeword, "false", &true_word, (void*)&zero_word, (void*)&exit_word )
+
+//@C bye
+//   0 _exit
+COM( bye_word, codeword, "bye", &false_word, (void*)&zero_word, (void*)&_exit_word, (void*)&exit_word )
+
+//@C refill
+//  \ Read a line from the terminal.
+//  source accept              \ -- len
+//
+//  \ Is this the end?
+//  dup 0< if
+//    drop 0 exit
+//  then
+//
+//  \ Clear the remainder of the buffer.
+//  dup [&lit_word] [input_buffer] +       \ -- len addr
+//  swap                       \ -- addr len
+//  [&lit_word] [MAX_LINE_LENGTH] swap -   \ -- addr remaining
+//  32                         \ -- addr remaining char
+//  fill
+//
+//  \ Reset the input pointer.
+//  0 >in !
+//
+//  \ We must succeed!
+//  1
+COM( refill_word, codeword, "refill", &bye_word, (void*)&source_word, (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 9), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&dup_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&add_word, (void*)&swap_word, (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&swap_word, (void*)&sub_word, (void*)&lit_word, (void*)32, (void*)&fill_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
+
+//@C interpret_num hidden
+// \ Evaluates a number, or perish in the attempt.
+// \ ( c-addr -- value )
+//   \ Get the length of the input string.
+//   dup c@                            \ -- addr len
+//
+//   \ The address we've got is a counted string; we want the address of the data.
+//   swap 1+                           \ -- len addr+1
+//
+//   \ Initialise the accumulator.
+//   0 swap rot                        \ -- 0 addr+1 len
+//
+//   \ Parse!
+//   >number                           \ -- val addr+1 len
+//
+//   \ We must consume all bytes to succeed.
+//   if E_undef then
+//
+//   \ Huzzah!
+//   drop
+COM( interpret_num_word, codeword, "", &refill_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&a_number_word, (void*)&branch0_word, (void*)(&interpret_num_word.payload[0] + 11), (void*)&E_undef_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C compile_num hidden
+// \ Compiles a number (or at least, a word we don't recognise).
+// \ ( c-addr -- )
+//   \ The interpreter does the heavy lifting for us!
+//   interpret_num                     \ -- value
+//
+//   \ ...and compile.
+//   [&lit_word] [&lit_word] , ,
+COM( compile_num_word, codeword, "", &interpret_num_word, (void*)&interpret_num_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&exit_word )
+
+static cdefn_t* interpreter_table[] =
+{
+	// compiling   not found            immediate
+	&execute_word, &interpret_num_word, &execute_word, // interpreting
+	&_2c__word,    &compile_num_word,   &execute_word  // compiling
+};
+
+//@C interpret
+// \ Parses the input buffer and executes the words therein.
+//   begin
+//     \ Parse a word.
+//     \ (This relies of word writing the result to here.)
+//     32 word                         \ -- c-addr
+//
+//     \ End of the buffer? If so, return.
+//     c@ 0= if exit then              \ --
+//
+//     \ Look up the word.
+//     here find                       \ -- addr kind
+//
+//     \ What is it? Calculate an offset into the lookup table.
+//     1+ cells
+//     state @ 24 *
+//     +                               \ -- addr offset
+//
+//     \ Look up the right word and run it.
+//     [&lit_word] [interpreter_table] + @ execute \ -- addr
+//   until
+COM( interpret_word, codeword, "interpret", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)24, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
+
+static const char prompt_msg[4] = " ok\n";
+//@C quit
+//  begin
+//    \ If we're reading from stdin, show the prompt.
+//    _input_fd @ _stdin = if
+//      [&lit_word] [prompt_msg] 4 type
+//    then
+//
+//    \ Refill the input buffer; if we run out, exit.
+//    refill 0= if exit then
+//
+//    \ Interpret the contents of the buffer.
+//    interpret
+//  until
+COM( quit_word, codeword, "quit", &interpret_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_stdin_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&quit_word.payload[0] + 11), (void*)(&lit_word), (void*)(prompt_msg), (void*)&lit_word, (void*)4, (void*)&type_word, (void*)&refill_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&quit_word.payload[0] + 16), (void*)&exit_word, (void*)&interpret_word, (void*)&branch_word, (void*)(&quit_word.payload[0] + 0), (void*)&exit_word )
+
+//@C read-file
+//   \ Read the filename.
+//   32 word
+//
+//   \ Turn it into a C string.
+//   dup c@ + 1+ 0 swap c!
+//
+//   \ Open the new file.
+//   here 1+ O_RDONLY _open
+//   dup 0= if E_fnf then
+//
+//   \ Swap in the new stream, saving the old one to the stack.
+//   _input_fd @
+//   swap _input_fd !
+//
+//   \ Run the interpreter/compiler until EOF.
+//   quit
+//
+//   \ Close the new stream.
+//   _input_fd @ _close drop
+//
+//   \ Restore the old stream.
+//   _input_fd !
+COM( read_2d_file_word, codeword, "read-file", &quit_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&c_pling_word, (void*)&here_word, (void*)&add_one_word, (void*)&_O_RDONLY_word, (void*)&_open_word, (void*)&dup_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&read_2d_file_word.payload[0] + 19), (void*)&E_fnf_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&swap_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&quit_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_close_word, (void*)&drop_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&exit_word )
+
+//@C :
+//  \ Create the word itself.
+//  create
+//
+//  \ Turn it into a runnable word.
+//  [&lit_word] [codeword] latest !
+//
+//  \ Switch to compilation mode.
+//  ]
+COM( _3a__word, codeword, ":", &read_2d_file_word, (void*)&create_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&pling_word, (void*)&close_sq_word, (void*)&exit_word )
+
+//@C ; immediate
+//  [&lit_word] [&exit_word] ,
+//  [
+IMM( _3b__word, codeword, ";", &_3a__word, (void*)(&lit_word), (void*)(&exit_word), (void*)&_2c__word, (void*)&open_sq_word, (void*)&exit_word )
+
+//@C constant
+// \ ( value -- )
+//  create
+//  [&lit_word] [rvarword] latest !
+//  ,
+COM( constant_word, codeword, "constant", &_3b__word, (void*)&create_word, (void*)(&lit_word), (void*)(rvarword), (void*)&latest_word, (void*)&pling_word, (void*)&_2c__word, (void*)&exit_word )
+
+//@C variable
+//  create 0 ,
+COM( variable_word, codeword, "variable", &constant_word, (void*)&create_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
+
+//@C hex
+//  16 state !
+COM( hex_word, codeword, "hex", &variable_word, (void*)&lit_word, (void*)16, (void*)&state_word, (void*)&pling_word, (void*)&exit_word )
+
+//@C decimal
+//  10 state !
+COM( decimal_word, codeword, "decimal", &hex_word, (void*)&lit_word, (void*)10, (void*)&state_word, (void*)&pling_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &decimal_word; //@E
+static defn_t* latest = (defn_t*) &decimal_word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -871,8 +1012,8 @@ int main(int argc, const char* argv[])
 	dsp = dstack;
 	rsp = rstack;
 
-	rpush((cell_t) &bye_ops);
-	pc = (defn_t**) quit_ops;
+	rpush((cell_t) &bye_word.payload[0]);
+	pc = (defn_t**) &quit_word.payload[0];
 	for (;;)
 	{
 		const struct definition* w = (void*) *pc++;
