@@ -314,7 +314,7 @@ static void panic(const char* message)
 	strerr("panic: ");
 	strerr(message);
 	strerr("\n");
-	longjmp(onerror, 0);
+	longjmp(onerror, 1);
 }
 
 #if !defined FAST
@@ -398,7 +398,6 @@ static int fstreq(const struct fstring* f1, const struct fstring* f2)
 /* Forward declarations of words go here --- do not edit.*/
 //@EXPORT{
 static cdefn_t E_fnf_word ;
-static cdefn_t E_undef_word ;
 static cdefn_t _O_RDONLY_word ;
 static cdefn_t _O_RDWR_word ;
 static cdefn_t _O_WRONLY_word ;
@@ -413,6 +412,7 @@ static cdefn_t _stdin_word ;
 static cdefn_t _stdout_word ;
 static cdefn_t _write_word ;
 static cdefn_t a_number_word ;
+static cdefn_t abort_word ;
 static cdefn_t accept_word ;
 static cdefn_t add_one_word ;
 static cdefn_t add_word ;
@@ -431,6 +431,7 @@ static cdefn_t close_sq_word ;
 static cdefn_t div_word ;
 static cdefn_t drop_word ;
 static cdefn_t dup_word ;
+static cdefn_t q_dup_word ;
 static cdefn_t equals0_word ;
 static cdefn_t equals_word ;
 static cdefn_t execute_word ;
@@ -465,6 +466,8 @@ static cdefn_t state_word ;
 static cdefn_t sub_one_word ;
 static cdefn_t sub_word ;
 static cdefn_t swap_word ;
+static cdefn_t t_drop_word ;
+static cdefn_t t_dup_word ;
 static cdefn_t two_word ;
 static cdefn_t word_word ;
 static cdefn_t zero_word ;
@@ -593,6 +596,13 @@ static void find_cb(cdefn_t* w)
 {
 	struct fstring* name = (void*) dpop();
 	cdefn_t* current = latest;
+
+	#if 0
+		printf("[find ");
+		fwrite(&name->data[0], 1, name->len & 0x7f, stdout);
+		printf("]\n");
+	#endif
+
 	while (current)
 	{
 		if (current->name && fstreq(name, current->name))
@@ -662,10 +672,31 @@ static void swap_cb(cdefn_t* w)
 	dpush(x1);
 }
 
+static void t_dup_cb(cdefn_t* w)
+{
+	cell_t x2 = dpop();
+	cell_t x1 = dpop();
+	dpush(x1);
+	dpush(x2);
+	dpush(x1);
+	dpush(x2);
+}
+
+static void execute_cb(cdefn_t* w)
+{
+	cdefn_t* p = (void*) dpop();
+	#if 0
+		printf("[execute ");
+		fwrite(&p->name->data[0], 1, p->name->len & 0x7f, stdout);
+		printf("]\n");
+	#endif
+	p->code(p);
+}
+
 static void E_fnf_cb(cdefn_t* w)      { panic("file not found"); }
-static void E_undef_cb(cdefn_t* w)    { panic("unrecognised word"); }
 static void _close_cb(cdefn_t* w)     { dpush(close(dpop())); }
 static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
+static void abort_cb(cdefn_t* w)      { longjmp(onerror, 1); }
 static void add_cb(cdefn_t* w)        { dpush(dpop() + dpop()); }
 static void align_cb(cdefn_t* w)      { claim_workspace((CELL - (cell_t)here) & (CELL-1)); }
 static void allot_cb(cdefn_t* w)      { claim_workspace(dpop()); }
@@ -678,10 +709,10 @@ static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
 static void div_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b / a); }
+static void q_dup_cb(cdefn_t* w)      { cell_t a = dpeek(1); if (a) dpush(a); }
 static void drop_cb(cdefn_t* w)       { dpop(); }
 static void equals0_cb(cdefn_t* w)    { dpush(dpop() == 0); }
 static void equals_cb(cdefn_t* w)     { dpush(dpop() == dpop()); }
-static void execute_cb(cdefn_t* w)    { cdefn_t* p = (void*) dpop(); p->code(p); }
 static void exit_cb(cdefn_t* w)       { pc = (void*)rpop(); }
 static void increment_cb(cdefn_t* w)  { dpush(dpop() + (cell_t)*w->payload); }
 static void less0_cb(cdefn_t* w)      { dpush(dpop() < 0); }
@@ -696,6 +727,7 @@ static void peekcon_cb(cdefn_t* w)    { dpush(dpeek((cell_t) *w->payload)); }
 static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
 static void r_arrow_cb(cdefn_t* w)    { dpush(rpop()); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
+static void t_drop_cb(cdefn_t* w)     { dpop(); dpop(); }
 
 #define WORD(w, c, n, l, f, p...) \
 	struct fstring_##w { uint8_t len; char data[sizeof(n)-1]; }; \
@@ -710,8 +742,7 @@ static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dp
  * BEWARE: these lines are parsed using whitespace. LEAVE EXACTLY AS IS.*/
 //@WORDLIST
 COM( E_fnf_word,         E_fnf_cb,       "E_fnf",      NULL,             (void*)0 ) //@W
-COM( E_undef_word,       E_undef_cb,     "E_undef",    &E_fnf_word,      (void*)0 ) //@W
-COM( _O_RDONLY_word,     rvarword,       "O_RDONLY",   &E_undef_word,    (void*)O_RDONLY ) //@W
+COM( _O_RDONLY_word,     rvarword,       "O_RDONLY",   &E_fnf_word,      (void*)O_RDONLY ) //@W
 COM( _O_RDWR_word,       rvarword,       "O_RDWR",     &_O_RDONLY_word,  (void*)O_RDWR ) //@W
 COM( _O_WRONLY_word,     rvarword,       "O_WRONLY",   &_O_RDWR_word,    (void*)O_WRONLY ) //@W
 COM( _close_word,        _close_cb,      "_close",     &_O_WRONLY_word,  ) //@W
@@ -725,7 +756,8 @@ COM( _stdin_word,        rvarword,       "_stdin",     &_stderr_word,    (void*)
 COM( _stdout_word,       rvarword,       "_stdout",    &_stdin_word,     (void*)1 ) //@W
 COM( _write_word,        _readwrite_cb,  "_write",     &_stdout_word,    &write ) //@W
 COM( a_number_word,      a_number_cb,    ">NUMBER",    &_write_word,     ) //@W
-COM( accept_word,        accept_cb,      "ACCEPT",     &a_number_word,   ) //@W
+COM( abort_word,         abort_cb,       "ABORT",      &a_number_word,   ) //@W
+COM( accept_word,        accept_cb,      "ACCEPT",     &abort_word,      ) //@W
 COM( add_one_word,       increment_cb,   "1+",         &accept_word,     (void*)1 ) //@W
 COM( add_word,           add_cb,         "+",          &add_one_word,    ) //@W
 COM( align_word,         align_cb,       "ALIGN",      &add_word,        ) //@W
@@ -743,7 +775,8 @@ COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
 COM( div_word,           div_cb,         "/",          &close_sq_word,   ) //@W
 COM( drop_word,          drop_cb,        "DROP",       &div_word,        ) //@W
 COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)1 ) //@W
-COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
+COM( q_dup_word,         q_dup_cb,       "?DUP",       &dup_word,        ) //@W
+COM( equals0_word,       equals0_cb,     "0=",         &q_dup_word,      ) //@W
 COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
 COM( execute_word,       execute_cb,     "EXECUTE",    &equals_word,     ) //@W
 COM( exit_word,          exit_cb,        "EXIT",       &execute_word,    ) //@W
@@ -777,19 +810,21 @@ COM( state_word,         rvarword,       "STATE",      &sp_pling_word,   &state 
 COM( sub_one_word,       increment_cb,   "-1",         &state_word,      (void*)-1 ) //@W
 COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
 COM( swap_word,          swap_cb,        "SWAP",       &sub_word,        ) //@W
-COM( two_word,           rvarword,       "2",          &swap_word,       (void*)2 ) //@W
+COM( t_drop_word,        t_drop_cb,      "2DROP",      &swap_word,       ) //@W
+COM( t_dup_word,         t_dup_cb,       "2DUP",       &t_drop_word,     ) //@W
+COM( two_word,           rvarword,       "2",          &t_dup_word,      (void*)2 ) //@W
 COM( word_word,          word_cb,        "WORD",       &two_word,        ) //@W
 COM( zero_word,          rvarword,       "0",          &word_word,       (void*)0 ) //@W
 IMM( immediate_word,     immediate_cb,   "IMMEDIATE",  &zero_word,       ) //@W
 IMM( open_sq_word,       open_sq_cb,     "[",          &immediate_word,  ) //@W
 
 //@C ( IMMEDIATE
-//   10 WORD DROP
-IMM( _28__word, codeword, "(", &open_sq_word, (void*)&lit_word, (void*)10, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
+//   40 WORD DROP
+IMM( _28__word, codeword, "(", &open_sq_word, (void*)&lit_word, (void*)40, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C \ IMMEDIATE
-//   40 WORD DROP
-IMM( _5c__word, codeword, "\\", &_28__word, (void*)&lit_word, (void*)40, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
+//   10 WORD DROP
+IMM( _5c__word, codeword, "\\", &_28__word, (void*)&lit_word, (void*)10, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C CELLS
 //  CELL *
@@ -873,27 +908,46 @@ COM( bye_word, codeword, "BYE", &false_word, (void*)&zero_word, (void*)&_exit_wo
 //  1
 COM( refill_word, codeword, "REFILL", &bye_word, (void*)&source_word, (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 9), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&dup_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&add_word, (void*)&swap_word, (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&swap_word, (void*)&sub_word, (void*)&lit_word, (void*)32, (void*)&fill_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
 
+//@C COUNT
+// \ ( c-addr -- addr len )
+//   DUP C@ SWAP 1+ SWAP
+COM( count_word, codeword, "COUNT", &refill_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&swap_word, (void*)&exit_word )
+
+static const char unrecognised_word_msg[] = "panic: unrecognised word: ";
 //@C INTERPRET_NUM HIDDEN
 // \ Evaluates a number, or perish in the attempt.
 // \ ( c-addr -- value )
+//   DUP
+//
 //   \ Get the length of the input string.
-//   DUP C@                            \ -- addr len
+//   DUP C@                            \ -- addr addr len
 //
 //   \ The address we've got is a counted string; we want the address of the data.
-//   SWAP 1+                           \ -- len addr+1
+//   SWAP 1+                           \ -- addr len addr+1
 //
 //   \ Initialise the accumulator.
-//   0 SWAP ROT                        \ -- 0 addr+1 len
+//   0 SWAP ROT                        \ -- addr 0 addr+1 len
 //
 //   \ Parse!
-//   >NUMBER                           \ -- val addr+1 len
+//   >NUMBER                           \ -- addr val addr+1 len
 //
 //   \ We must consume all bytes to succeed.
-//   IF E_undef THEN
+//   IF
+//     [&lit_word] [unrecognised_word_msg]
+//     [&lit_word] [sizeof(unrecognised_word_msg)]
+//     TYPE
 //
-//   \ Huzzah!
-//   DROP
-COM( interpret_num_word, codeword, "", &refill_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&a_number_word, (void*)&branch0_word, (void*)(&interpret_num_word.payload[0] + 11), (void*)&E_undef_word, (void*)&drop_word, (void*)&exit_word )
+//     DROP DROP                       \ -- addr
+//     COUNT                           \ -- c-addr len
+//     TYPE                            \ --
+//
+//     CR
+//     ABORT
+//   THEN
+//
+//   \ Huzzah!                         \ -- addr val addr+1
+//   DROP SWAP DROP                    \ -- val
+COM( interpret_num_word, codeword, "", &count_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&a_number_word, (void*)&branch0_word, (void*)(&interpret_num_word.payload[0] + 22), (void*)(&lit_word), (void*)(unrecognised_word_msg), (void*)(&lit_word), (void*)(sizeof(unrecognised_word_msg)), (void*)&type_word, (void*)&drop_word, (void*)&drop_word, (void*)&count_word, (void*)&type_word, (void*)&cr_word, (void*)&abort_word, (void*)&drop_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C COMPILE_NUM HIDDEN
 // \ Compiles a number (or at least, a word we don't recognise).
@@ -1066,16 +1120,52 @@ IMM( while_word, codeword, "WHILE", &until_word, (void*)(&lit_word), (void*)(&br
 //   HERE @ SWAP !
 IMM( repeat_word, codeword, "REPEAT", &while_word, (void*)&swap_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
+//@C DO IMMEDIATE
+// \ C: -- start-addr
+// \    index max --
+//   HERE @
+//   \ Push the index and max values onto the return stack.
+//   [&lit_word] [&lit_word] ,
+//   [&lit_word] [&arrow_r_word] ,
+//   [&lit_word] [&lit_word] ,
+//   [&lit_word] [&arrow_r_word] ,
+IMM( do_word, codeword, "DO", &repeat_word, (void*)&here_word, (void*)&at_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&exit_word )
+
+//@C loophelper HIDDEN
+// \ Contains the actual logic for loop.
+// \ R: max index --
+// \    -- index max flag
+//   \ Fetch data from return stack.
+//   R> R> 1+ R>                       \ r-addr index+1 max
+//
+//   \ Put the return address back!
+//   ROT >R                            \ index+1 max
+//
+//   \ Do the comparison.
+//   2DUP =                            \ index+1 max flag
+COM( loophelper_word, codeword, "", &do_word, (void*)&r_arrow_word, (void*)&r_arrow_word, (void*)&add_one_word, (void*)&r_arrow_word, (void*)&rot_word, (void*)&arrow_r_word, (void*)&t_dup_word, (void*)&equals_word, (void*)&exit_word )
+
+//@C LOOP IMMEDIATE
+// \ C: start-addr --
+//   [&lit_word] [&loophelper_word] ,
+//   [&lit_word] [&branch0_word] , ,
+//   [&lit_word] [&t_drop_word] ,
+IMM( loop_word, codeword, "LOOP", &loophelper_word, (void*)(&lit_word), (void*)(&loophelper_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&t_drop_word), (void*)&_2c__word, (void*)&exit_word )
+
 //@C HEX
-//  16 STATE !
-COM( hex_word, codeword, "HEX", &repeat_word, (void*)&lit_word, (void*)16, (void*)&state_word, (void*)&pling_word, (void*)&exit_word )
+//  16 BASE !
+COM( hex_word, codeword, "HEX", &loop_word, (void*)&lit_word, (void*)16, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C DECIMAL
-//  10 STATE !
-COM( decimal_word, codeword, "DECIMAL", &hex_word, (void*)&lit_word, (void*)10, (void*)&state_word, (void*)&pling_word, (void*)&exit_word )
+//  10 BASE !
+COM( decimal_word, codeword, "DECIMAL", &hex_word, (void*)&lit_word, (void*)10, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &decimal_word; //@E
-static defn_t* latest = (defn_t*) &decimal_word; //@E
+//@C DEPTH
+//  SP@ SP0 - CELL /
+COM( depth_word, codeword, "DEPTH", &decimal_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&sub_word, (void*)&cell_word, (void*)&div_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &depth_word; //@E
+static defn_t* latest = (defn_t*) &depth_word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -1084,6 +1174,25 @@ int main(int argc, const char* argv[])
 
 	setjmp(onerror);
 	input_fd = 0;
+
+	if (argc > 1)
+	{
+		input_fd = open(argv[1], O_RDONLY);
+
+		/* Panics when running a script exit, rather than returning to the
+		 * REPL. */
+		if (setjmp(onerror))
+			exit(1);
+
+		if (input_fd == -1)
+		{
+			strerr("panic: unable to open file: ");
+			strerr(argv[1]);
+			strerr("\n");
+			exit(1);
+		}
+	}
+			
 	dsp = dstack;
 	rsp = rstack;
 
