@@ -119,6 +119,15 @@ awk -f- $0 > $0.new <<EOF
 			comma(0)
 			return
 		}
+		if (n == "ELSE")
+		{
+			elsejump = pop()
+			comma("&branch_word")
+			push(pc)
+			comma(0)
+
+			bytecode[elsejump] = "(&" word ".payload[0] + " pc "),"
+		}
 		if (n == "THEN")
 		{
 			bytecode[pop()] = "(&" word ".payload[0] + " pc "),"
@@ -140,6 +149,21 @@ awk -f- $0 > $0.new <<EOF
 		{
 			comma("&branch0_word")
 			comma("(&" word ".payload[0] + " pop() "),")
+			return
+		}
+		if (n == "WHILE")
+		{
+			comma("&branch0_word")
+			push(pc)
+			comma(0)
+			return
+		}
+		if (n == "REPEAT")
+		{
+			whilefalse = pop()
+			comma("&branch_word")
+			comma("(&" word ".payload[0] + " pop() "),")
+			bytecode[whilefalse] = "(&" word ".payload[0] + " pc "),"
 			return
 		}
 
@@ -184,6 +208,7 @@ awk -f- $0 > $0.new <<EOF
 		word = tolower(word) "_word"
 
 		sub(/\\\\/, "\\\\\\\\", wordstring)
+		sub(/"/, "\\\\\\"", wordstring)
 
 		immediate = (\$3 == "IMMEDIATE")
 		hidden = (\$3 == "HIDDEN")
@@ -299,11 +324,6 @@ struct definition
 	void* payload[];
 };
 
-static inline void* alignup(void* ptr)
-{
-	return (void*)(((cell_t)ptr + sizeof(cell_t)-1) & ~sizeof(cell_t));
-}
-
 static void strerr(const char* s)
 {
 	write(2, s, strlen(s));
@@ -353,13 +373,28 @@ static cell_t rpop(void)
 		panic("return stack underflow");
 	return *--rsp;
 }
+
+static cell_t rpeek(int count)
+{
+	cell_t* ptr = rsp - count;
+	if (ptr < rstack)
+		panic("return stack underflow");
+	return *ptr;
+}
+
 #else
 static inline void dpush(cell_t val) { *dsp++ = val; }
 static inline cell_t dpop(void) { return *--dsp; }
 static inline cell_t dpeek(int count) { return dsp[-count]; }
 static inline void rpush(cell_t val) { *rsp++ = val; }
 static inline cell_t rpop(void) { return *--rsp; }
+static inline cell_t rpeek(int count) { return rsp[-count]; }
 #endif
+
+static void dpushbool(bool b)
+{
+	dpush(b ? -1 : 0);
+}
 
 static void* ensure_workspace(size_t length)
 {
@@ -431,18 +466,23 @@ static cdefn_t close_sq_word ;
 static cdefn_t div_word ;
 static cdefn_t drop_word ;
 static cdefn_t dup_word ;
-static cdefn_t q_dup_word ;
 static cdefn_t equals0_word ;
 static cdefn_t equals_word ;
 static cdefn_t execute_word ;
 static cdefn_t exit_word ;
 static cdefn_t fill_word ;
 static cdefn_t find_word ;
+static cdefn_t ge_word ;
+static cdefn_t gt_word ;
 static cdefn_t here_word ;
 static cdefn_t in_arrow_word ;
+static cdefn_t invert_word ;
 static cdefn_t latest_word ;
+static cdefn_t le_word ;
 static cdefn_t less0_word ;
 static cdefn_t lit_word ;
+static cdefn_t lshift_word ;
+static cdefn_t lt_word ;
 static cdefn_t m_one_word ;
 static cdefn_t more0_word ;
 static cdefn_t mul_word ;
@@ -452,9 +492,14 @@ static cdefn_t one_word ;
 static cdefn_t or_word ;
 static cdefn_t over_word ;
 static cdefn_t pad_word ;
+static cdefn_t pick_word ;
 static cdefn_t pling_word ;
+static cdefn_t q_dup_word ;
 static cdefn_t r_arrow_word ;
 static cdefn_t rot_word ;
+static cdefn_t rpick_word ;
+static cdefn_t rshift_word ;
+static cdefn_t rsshift_word ;
 static cdefn_t rsp0_word ;
 static cdefn_t rsp_at_word ;
 static cdefn_t rsp_pling_word ;
@@ -468,8 +513,12 @@ static cdefn_t sub_word ;
 static cdefn_t swap_word ;
 static cdefn_t t_drop_word ;
 static cdefn_t t_dup_word ;
+static cdefn_t t_over_word ;
+static cdefn_t t_swap_word ;
 static cdefn_t two_word ;
+static cdefn_t u_lt_word ;
 static cdefn_t word_word ;
+static cdefn_t xor_word ;
 static cdefn_t zero_word ;
 static cdefn_t immediate_word ;
 static cdefn_t open_sq_word ;
@@ -541,32 +590,52 @@ static void immediate_cb(cdefn_t* w)
 	latest->name->len |= FL_IMM;
 }
 
+static bool is_delimiter(int c, int delimiter)
+{
+	if (c == delimiter)
+		return true;
+	if ((delimiter == ' ') && (c < 32))
+		return true;
+	return false;
+}
+
+static void skip_ws(int delimiter)
+{
+	while (in_arrow < MAX_LINE_LENGTH)
+	{
+		int c = input_buffer[in_arrow];
+		if (!is_delimiter(c, delimiter))
+			break;
+		in_arrow++;
+	}
+}
+
 static void word_cb(cdefn_t* w)
 {
 	int delimiter = dpop();
 	struct fstring* fs = ensure_workspace(MAX_LINE_LENGTH);
 	int count = 0;
 
-	/* Skip whitespace. */
-	while (in_arrow < MAX_LINE_LENGTH)
-	{
-		int c = input_buffer[in_arrow];
-		if (c != delimiter)
-			break;
-		in_arrow++;
-	}
+	skip_ws(delimiter);
 	if (in_arrow != MAX_LINE_LENGTH)
 	{
 		while (in_arrow < MAX_LINE_LENGTH)
 		{
 			int c = input_buffer[in_arrow];
-			if (c == delimiter)
+			if (is_delimiter(c, delimiter))
 				break;
 			fs->data[count] = c;
 			count++;
 			in_arrow++;
 		}
 	}
+	skip_ws(delimiter);
+
+	#if 0
+		strerr("<");
+		write(2, &fs->data[0], count);
+		strerr(">");
+	#endif
 
 	fs->len = count;
 	dpush((cell_t) fs);
@@ -672,12 +741,14 @@ static void swap_cb(cdefn_t* w)
 	dpush(x1);
 }
 
-static void t_dup_cb(cdefn_t* w)
+static void t_swap_cb(cdefn_t* w)
 {
+	cell_t x4 = dpop();
+	cell_t x3 = dpop();
 	cell_t x2 = dpop();
 	cell_t x1 = dpop();
-	dpush(x1);
-	dpush(x2);
+	dpush(x3);
+	dpush(x4);
 	dpush(x1);
 	dpush(x2);
 }
@@ -709,25 +780,38 @@ static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
 static void div_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b / a); }
-static void q_dup_cb(cdefn_t* w)      { cell_t a = dpeek(1); if (a) dpush(a); }
 static void drop_cb(cdefn_t* w)       { dpop(); }
-static void equals0_cb(cdefn_t* w)    { dpush(dpop() == 0); }
-static void equals_cb(cdefn_t* w)     { dpush(dpop() == dpop()); }
+static void equals0_cb(cdefn_t* w)    { dpushbool(dpop() == 0); }
+static void equals_cb(cdefn_t* w)     { dpushbool(dpop() == dpop()); }
 static void exit_cb(cdefn_t* w)       { pc = (void*)rpop(); }
+static void ge_cb(cdefn_t* w)         { cell_t a = dpop(); cell_t b = dpop(); dpushbool(b >= a); }
+static void gt_cb(cdefn_t* w)         { cell_t a = dpop(); cell_t b = dpop(); dpushbool(b > a); }
 static void increment_cb(cdefn_t* w)  { dpush(dpop() + (cell_t)*w->payload); }
-static void less0_cb(cdefn_t* w)      { dpush(dpop() < 0); }
+static void invert_cb(cdefn_t* w)     { dpush(~dpop()); }
+static void le_cb(cdefn_t* w)         { cell_t a = dpop(); cell_t b = dpop(); dpushbool(b <= a); }
+static void less0_cb(cdefn_t* w)      { dpushbool(dpop() < 0); }
 static void lit_cb(cdefn_t* w)        { dpush((cell_t) *pc++); }
-static void more0_cb(cdefn_t* w)      { dpush(dpop() > 0); }
+static void lshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a << u); }
+static void lt_cb(cdefn_t* w)         { cell_t a = dpop(); cell_t b = dpop(); dpushbool(b < a); }
+static void more0_cb(cdefn_t* w)      { dpushbool(dpop() > 0); }
 static void mul_cb(cdefn_t* w)        { dpush(dpop() * dpop()); }
-static void not_equals_cb(cdefn_t* w) { dpush(dpop() != dpop()); }
-static void notequals0_cb(cdefn_t* w) { dpush(dpop() != 0); }
+static void not_equals_cb(cdefn_t* w) { dpushbool(dpop() != dpop()); }
+static void notequals0_cb(cdefn_t* w) { dpushbool(dpop() != 0); }
 static void open_sq_cb(cdefn_t* w)    { state = 0; }
 static void or_cb(cdefn_t* w)         { dpush(dpop() | dpop()); }
 static void peekcon_cb(cdefn_t* w)    { dpush(dpeek((cell_t) *w->payload)); }
+static void peekcon2_cb(cdefn_t* w)   { peekcon_cb(w); peekcon_cb(w); }
+static void pick_cb(cdefn_t* w)       { dpush(dpeek(dpop())); }
 static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
+static void q_dup_cb(cdefn_t* w)      { cell_t a = dpeek(1); if (a) dpush(a); }
 static void r_arrow_cb(cdefn_t* w)    { dpush(rpop()); }
+static void rpick_cb(cdefn_t* w)      { dpush(rpeek(dpop())); }
+static void rshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a >> u); }
+static void rsshift_cb(cdefn_t* w)    { dpush(dpop() >> 1); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
 static void t_drop_cb(cdefn_t* w)     { dpop(); dpop(); }
+static void u_lt_cb(cdefn_t* w)       { ucell_t a = dpop(); ucell_t b = dpop(); dpushbool(b < a); }
+static void xor_cb(cdefn_t* w)        { dpush(dpop() ^ dpop()); }
 
 #define WORD(w, c, n, l, f, p...) \
 	struct fstring_##w { uint8_t len; char data[sizeof(n)-1]; }; \
@@ -775,19 +859,24 @@ COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
 COM( div_word,           div_cb,         "/",          &close_sq_word,   ) //@W
 COM( drop_word,          drop_cb,        "DROP",       &div_word,        ) //@W
 COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)1 ) //@W
-COM( q_dup_word,         q_dup_cb,       "?DUP",       &dup_word,        ) //@W
-COM( equals0_word,       equals0_cb,     "0=",         &q_dup_word,      ) //@W
+COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
 COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
 COM( execute_word,       execute_cb,     "EXECUTE",    &equals_word,     ) //@W
 COM( exit_word,          exit_cb,        "EXIT",       &execute_word,    ) //@W
 COM( fill_word,          fill_cb,        "FILL",       &exit_word,       ) //@W
 COM( find_word,          find_cb,        "FIND",       &fill_word,       ) //@W
-COM( here_word,          rvarword,       "HERE",       &find_word,       &here ) //@W
+COM( ge_word,            ge_cb,          ">=",         &find_word,       ) //@W
+COM( gt_word,            gt_cb,          ">",          &ge_word,         ) //@W
+COM( here_word,          rvarword,       "HERE",       &gt_word,         &here ) //@W
 COM( in_arrow_word,      rvarword,       ">IN",        &here_word,       &in_arrow ) //@W
-COM( latest_word,        rvarword,       "LATEST",     &in_arrow_word,   &latest ) //@W
-COM( less0_word,         less0_cb,       "0<",         &latest_word,     ) //@W
+COM( invert_word,        invert_cb,      "INVERT",     &in_arrow_word,   ) //@W
+COM( latest_word,        rvarword,       "LATEST",     &invert_word,     &latest ) //@W
+COM( le_word,            le_cb,          "<=",         &latest_word,     ) //@W
+COM( less0_word,         less0_cb,       "0<",         &le_word,         ) //@W
 COM( lit_word,           lit_cb,         "LIT",        &less0_word,      ) //@W
-COM( m_one_word,         rvarword,       "-1",         &lit_word,        (void*)-1 ) //@W
+COM( lshift_word,        lshift_cb,      "LSHIFT",     &lit_word,        ) //@W
+COM( lt_word,            lt_cb,          "<",          &lshift_word,     ) //@W
+COM( m_one_word,         rvarword,       "-1",         &lt_word,         (void*)-1 ) //@W
 COM( more0_word,         more0_cb,       "0>",         &m_one_word,      ) //@W
 COM( mul_word,           mul_cb,         "*",          &more0_word,      ) //@W
 COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
@@ -796,10 +885,15 @@ COM( one_word,           rvarword,       "1",          &notequals0_word, (void*)
 COM( or_word,            or_cb,          "OR",         &one_word,        ) //@W
 COM( over_word,          peekcon_cb,     "OVER",       &or_word,         (void*)2 ) //@W
 COM( pad_word,           rvarword,       "PAD",        &over_word,       &here ) //@W
-COM( pling_word,         pling_cb,       "!",          &pad_word,        ) //@W
-COM( r_arrow_word,       r_arrow_cb,     "R>",         &pling_word,      ) //@W
+COM( pick_word,          pick_cb,        "PICK",       &pad_word,        ) //@W
+COM( pling_word,         pling_cb,       "!",          &pick_word,       ) //@W
+COM( q_dup_word,         q_dup_cb,       "?DUP",       &pling_word,      ) //@W
+COM( r_arrow_word,       r_arrow_cb,     "R>",         &q_dup_word,      ) //@W
 COM( rot_word,           rot_cb,         "ROT",        &r_arrow_word,    ) //@W
-COM( rsp0_word,          rvarword,       "RSP0",       &rot_word,        rstack ) //@W
+COM( rpick_word,         rpick_cb,       "RPICK",      &rot_word,        ) //@W
+COM( rshift_word,        rshift_cb,      "RSHIFT",     &rpick_word,      ) //@W
+COM( rsshift_word,       rsshift_cb,     "2/",         &rshift_word,     ) //@W
+COM( rsp0_word,          rvarword,       "RSP0",       &rsshift_word,    rstack ) //@W
 COM( rsp_at_word,        rivarword,      "RSP@",       &rsp0_word,       &rsp ) //@W
 COM( rsp_pling_word,     wivarword,      "RSP!",       &rsp_at_word,     &rsp ) //@W
 COM( source_word,        r2varword,      "SOURCE",     &rsp_pling_word,  input_buffer, (void*)MAX_LINE_LENGTH ) //@W
@@ -807,14 +901,18 @@ COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack 
 COM( sp_at_word,         rivarword,      "SP@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "SP!",        &sp_at_word,      &dsp ) //@W
 COM( state_word,         rvarword,       "STATE",      &sp_pling_word,   &state ) //@W
-COM( sub_one_word,       increment_cb,   "-1",         &state_word,      (void*)-1 ) //@W
+COM( sub_one_word,       increment_cb,   "1-",         &state_word,      (void*)-1 ) //@W
 COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
 COM( swap_word,          swap_cb,        "SWAP",       &sub_word,        ) //@W
 COM( t_drop_word,        t_drop_cb,      "2DROP",      &swap_word,       ) //@W
-COM( t_dup_word,         t_dup_cb,       "2DUP",       &t_drop_word,     ) //@W
-COM( two_word,           rvarword,       "2",          &t_dup_word,      (void*)2 ) //@W
-COM( word_word,          word_cb,        "WORD",       &two_word,        ) //@W
-COM( zero_word,          rvarword,       "0",          &word_word,       (void*)0 ) //@W
+COM( t_dup_word,         peekcon2_cb,    "2DUP",       &t_drop_word,     (void*)2 ) //@W
+COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)4 ) //@W
+COM( t_swap_word,        t_swap_cb,      "2SWAP",      &t_over_word,     ) //@W
+COM( two_word,           rvarword,       "2",          &t_swap_word,     (void*)2 ) //@W
+COM( u_lt_word,          u_lt_cb,        "U<",         &two_word,        ) //@W
+COM( word_word,          word_cb,        "WORD",       &u_lt_word,       ) //@W
+COM( xor_word,           xor_cb,         "XOR",        &word_word,       ) //@W
+COM( zero_word,          rvarword,       "0",          &xor_word,        (void*)0 ) //@W
 IMM( immediate_word,     immediate_cb,   "IMMEDIATE",  &zero_word,       ) //@W
 IMM( open_sq_word,       open_sq_cb,     "[",          &immediate_word,  ) //@W
 
@@ -1008,9 +1106,8 @@ COM( interact_word, codeword, "INTERACT", &interpret_word, (void*)&_input_fd_wor
 //@C QUIT
 //  SP0 SP!
 //  RSP0 RSP!
-//  [&lit_word] [&bye_word] >R
-//  INTERACT
-COM( quit_word, codeword, "QUIT", &interact_word, (void*)&sp0_word, (void*)&sp_pling_word, (void*)&rsp0_word, (void*)&rsp_pling_word, (void*)(&lit_word), (void*)(&bye_word), (void*)&arrow_r_word, (void*)&interact_word, (void*)&exit_word )
+//  INTERACT BYE
+COM( quit_word, codeword, "QUIT", &interact_word, (void*)&sp0_word, (void*)&sp_pling_word, (void*)&rsp0_word, (void*)&rsp_pling_word, (void*)&interact_word, (void*)&bye_word, (void*)&exit_word )
 
 //@C READ-FILE
 //   \ Read the filename.
@@ -1121,40 +1218,68 @@ IMM( while_word, codeword, "WHILE", &until_word, (void*)(&lit_word), (void*)(&br
 IMM( repeat_word, codeword, "REPEAT", &while_word, (void*)&swap_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C DO IMMEDIATE
-// \ C: -- start-addr
-// \    index max --
+// \ C: -- &leave-addr start-addr
+// \ R: -- leave-addr index max
+// \    max index --
+//   \ Save the loop exit address; this will be patched by LOOP.
+//   [&lit_word] [&lit_word] ,
+//   HERE @ 0 ,
+//   [&lit_word] [&arrow_r_word] ,
+//
+//   \ Save loop start address onto the compiler's stack.
 //   HERE @
+//
 //   \ Push the index and max values onto the return stack.
-//   [&lit_word] [&lit_word] ,
 //   [&lit_word] [&arrow_r_word] ,
-//   [&lit_word] [&lit_word] ,
 //   [&lit_word] [&arrow_r_word] ,
-IMM( do_word, codeword, "DO", &repeat_word, (void*)&here_word, (void*)&at_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&exit_word )
+IMM( do_word, codeword, "DO", &repeat_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&exit_word )
 
 //@C loophelper HIDDEN
 // \ Contains the actual logic for loop.
-// \ R: max index --
-// \    -- index max flag
+// \ R: index max --
+// \    -- max index flag
 //   \ Fetch data from return stack.
-//   R> R> 1+ R>                       \ r-addr index+1 max
+//   R> R> R> 1+                       \ r-addr max index+1
 //
 //   \ Put the return address back!
-//   ROT >R                            \ index+1 max
+//   ROT >R                            \ max index+1
 //
 //   \ Do the comparison.
-//   2DUP =                            \ index+1 max flag
-COM( loophelper_word, codeword, "", &do_word, (void*)&r_arrow_word, (void*)&r_arrow_word, (void*)&add_one_word, (void*)&r_arrow_word, (void*)&rot_word, (void*)&arrow_r_word, (void*)&t_dup_word, (void*)&equals_word, (void*)&exit_word )
+//   2DUP =                            \ max index+1 flag
+COM( loophelper_word, codeword, "", &do_word, (void*)&r_arrow_word, (void*)&r_arrow_word, (void*)&r_arrow_word, (void*)&add_one_word, (void*)&rot_word, (void*)&arrow_r_word, (void*)&t_dup_word, (void*)&equals_word, (void*)&exit_word )
 
 //@C LOOP IMMEDIATE
-// \ C: start-addr --
+// \ R: leave-addr index max --
+// \ C: &leave-addr start-addr --
 //   [&lit_word] [&loophelper_word] ,
 //   [&lit_word] [&branch0_word] , ,
 //   [&lit_word] [&t_drop_word] ,
-IMM( loop_word, codeword, "LOOP", &loophelper_word, (void*)(&lit_word), (void*)(&loophelper_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&t_drop_word), (void*)&_2c__word, (void*)&exit_word )
+//
+//   \ Patch the leave address to contain the loop exit address.
+//   HERE @ SWAP !
+IMM( loop_word, codeword, "LOOP", &loophelper_word, (void*)(&lit_word), (void*)(&loophelper_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&t_drop_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+
+//@C LEAVE
+// \ R: leave-addr index max
+//   \ Remove LEAVE's return address.
+//   R> DROP
+//
+//   \ ...and the two control words.
+//   R> R> 2DROP
+//
+//   \ All that's left is the loop exit address, and EXIT
+//   \ will consume that.
+COM( leave_word, codeword, "LEAVE", &loop_word, (void*)&r_arrow_word, (void*)&drop_word, (void*)&r_arrow_word, (void*)&r_arrow_word, (void*)&t_drop_word, (void*)&exit_word )
+
+//@C I
+// \ R: leave-addr index max -- leave-addr index max
+// \    -- index
+//  3 RPICK
+COM( i_word, codeword, "I", &leave_word, (void*)&lit_word, (void*)3, (void*)&rpick_word, (void*)&exit_word )
 
 //@C HEX
 //  16 BASE !
-COM( hex_word, codeword, "HEX", &loop_word, (void*)&lit_word, (void*)16, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
+COM( hex_word, codeword, "HEX", &i_word, (void*)&lit_word, (void*)16, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C DECIMAL
 //  10 BASE !
@@ -1164,8 +1289,62 @@ COM( decimal_word, codeword, "DECIMAL", &hex_word, (void*)&lit_word, (void*)10, 
 //  SP@ SP0 - CELL /
 COM( depth_word, codeword, "DEPTH", &decimal_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&sub_word, (void*)&cell_word, (void*)&div_word, (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &depth_word; //@E
-static defn_t* latest = (defn_t*) &depth_word; //@E
+//@C s"helper HIDDEN
+// \ -- addr count
+//  \ The return address points at a counted string.
+//  R> DUP                             \ -- r-addr r-addr
+//
+//  \ Move it to point after the string.
+//  DUP C@ + 1+                        \ -- r-addr end-r-addr
+//
+//  \ Align it!
+//  DUP                                \ -- r-addr end-r-addr end-r-addr
+//  CELL SWAP -
+//  CELL 1- AND                        \ -- r-addr end-r-addr offset
+//  +                                  \ -- r-addr aligned-end-r-addr
+//
+//  \ Store it back as the return address.
+//  >R
+//
+//  \ ...and decode the counted string.
+//  COUNT
+COM( s_22_helper_word, codeword, "", &depth_word, (void*)&r_arrow_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&dup_word, (void*)&cell_word, (void*)&swap_word, (void*)&sub_word, (void*)&cell_word, (void*)&sub_one_word, (void*)&and_word, (void*)&add_word, (void*)&arrow_r_word, (void*)&count_word, (void*)&exit_word )
+
+//@C S" IMMEDIATE
+// \ -- addr count
+//  \ Emit the helper.
+//  [&lit_word] [&s_22_helper_word] ,
+//
+//  \ Emit the text itself as a counted string.
+//  34 WORD
+//
+//  \ Advance over the text.
+//  C@ 1+ ALLOT
+//
+//  \ Make sure the workspace pointer is aligned!
+//  ALIGN
+IMM( s_22__word, codeword, "S\"", &s_22_helper_word, (void*)(&lit_word), (void*)(&s_22_helper_word), (void*)&_2c__word, (void*)&lit_word, (void*)34, (void*)&word_word, (void*)&c_at_word, (void*)&add_one_word, (void*)&allot_word, (void*)&align_word, (void*)&exit_word )
+
+//@C 2*
+//  1 LSHIFT
+COM( _32__2a__word, codeword, "2*", &s_22__word, (void*)&one_word, (void*)&lshift_word, (void*)&exit_word )
+
+//@C MIN
+// \ x1 x2 -- x3
+//   2DUP > IF SWAP THEN DROP
+COM( min_word, codeword, "MIN", &_32__2a__word, (void*)&t_dup_word, (void*)&gt_word, (void*)&branch0_word, (void*)(&min_word.payload[0] + 5), (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C MAX
+// \ x1 x2 -- x3
+//   2DUP < IF SWAP THEN DROP
+COM( max_word, codeword, "MAX", &min_word, (void*)&t_dup_word, (void*)&lt_word, (void*)&branch0_word, (void*)(&max_word.payload[0] + 5), (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C R@
+//   2 RPICK
+COM( r_40__word, codeword, "R@", &max_word, (void*)&two_word, (void*)&rpick_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &r_40__word; //@E
+static defn_t* latest = (defn_t*) &r_40__word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -1201,11 +1380,19 @@ int main(int argc, const char* argv[])
 	{
 		const struct definition* w = (void*) *pc++;
 		#if 0
-			printf("stack: ");
 			cell_t* p;
+			printf("%p ", pc-1);
+			printf("S(");
 			for (p = dstack; p < dsp; p++)
 				printf("%lx ", *p);
-			putchar('[');
+			printf(") ");
+			#if 0
+				printf("R(");
+				for (p = rstack; p < rsp; p++)
+					printf("%lx ", *p);
+				printf(") ");
+			#endif
+			printf("[");
 			fwrite(&w->name->data[0], 1, w->name->len & 0x7f, stdout);
 			putchar(']');
 			putchar('\n');
