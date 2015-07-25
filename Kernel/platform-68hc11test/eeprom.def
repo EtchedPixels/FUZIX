@@ -1,0 +1,61 @@
+;
+;	Shared definitions for EEPROM functions and mappings
+;
+.equ	iobase,		0xF000
+.equ	rambase,	0xF040
+
+	include "cpu.def"
+
+;
+;	Unbanked memory
+;
+.equ spibuf,		rambase + 0x00	;	Used during boot, overlays
+					;	tmp and post boot bits
+.equ tmp1,		rambase + 0x00	;	First four words
+.equ tmp2,		rambase + 0x02	;	also used for scratch spi
+.equ tmp3,		rambase + 0x04	;	buffers etc
+.equ ret_d,		rambase + 0x06	;	For far calls. Do not assume
+.equ ret_x,		rambase + 0x08	;	values in rambase preserved
+.equ ret_y, 		rambase + 0x0A	;
+.equ ramsize,		rambase + 0x10	;	RAM size in KB
+.equ eclock		rambase + 0x12	;	E clock in KHz
+.equ unbanked_user,	rambase + 0x40	;	128 bytes of unbanked
+					;	RAM owned by the OS
+
+
+;
+;	Trap indirections. These can live in unbanked memory space.
+;
+.equ vector_sci, 0xF7B0
+.equ vector_spi, 0xF7B4
+.equ vector_pai, 0xF7B8
+.equ vector_pao, 0xF7BC
+.equ vector_to,  0xF7C0
+.equ vector_toc5,0xF7C4
+.equ vector_toc4,0xF7C8
+.equ vector_toc3,0xF7CC
+.equ vector_toc2,0xF7D0
+.equ vector_toc1,0xF7D4
+.equ vector_tic3,0xF7D8
+.equ vector_tic2,0xF7DC
+.equ vector_tic1,0xF7E0
+.equ vector_rti, 0xF7E4
+.equ vector_irq, 0xF7E8
+.equ vector_xirq,0xF7EC
+.equ vector_swi, 0xF7F0
+.equ vector_ill, 0xF7F4
+.equ vector_cop, 0xF7F8
+.equ vector_cmf, 0xF7FC
+
+
+.equ blocktype, 0xF7A0		; block device types (16 bytes for)
+
+.equ	BDEV_NONE,		0x00
+.equ	BDEV_MMC,		0x01
+.equ	BDEV_SD1,		0x02
+.equ	BDEV_SD2,		0x04
+.equ	BDEV_SDC,		0x06
+.equ	BDEV_ATA,		0x10
+.equ	BDEVF_LBA,		0x80
+
+
