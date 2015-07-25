@@ -116,6 +116,11 @@ badswitchmsg:
 	.byte 0
 
 ; new process pointer is in D
+;
+; FIXME: switchin needs to switch the interrupt stack descriptors or similar
+; on per task basis to handle the interrupt pre-emption case in a way that
+; keeps the firmware from getting grumpy.
+;
 switchin:
 	sei
 	

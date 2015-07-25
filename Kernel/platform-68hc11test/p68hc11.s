@@ -140,7 +140,7 @@ map_process:
 ;
 doexec:
 	xgdx		; function into X
-	ldaa usrbank	; bank
+	ldab usrbank	; bank
 	ldy U_DATA__U_ISP
 	jsr farcall
 ;
@@ -156,7 +156,7 @@ doexec:
 sigdispatch:
 	xgdx
 	ldy U_DATA__U_SYSCALL_SP
-	ldaa usrbank
+	ldab usrbank
 	; This may not return which is fine
 	jmp farcall
 	; Signal handler completed and returned back to the eeprom and thus
@@ -164,7 +164,8 @@ sigdispatch:
 
 ;
 ;	We have no common but instead route far accesses via the eeprom
-;	helpers in the firmware.
+;	helpers in the firmware. X points at the stackframe and B holds
+;	the previous bank.
 ;
 _ugetc:
 	xgdx
@@ -237,3 +238,102 @@ _uzero:
 	jmp farzero
 
 	rts
+
+;
+;	System call and interrupt vectors (via the eeprom firmware. It does
+;	the bank switches to 0 and return and the rti).
+;
+;	We only use SCI rx, timer and external irqs
+;	plus illegal opcodes and swi for syscall stuff
+;
+;	Y points to the far stack frame, B holds the bank we trapped from
+;
+;	FIXME: if we resched in the interrupt handler we break the eeprom
+;	irq vector handling assumptions. Need to rework this lot so we don't
+;	return via the eeprom irq path ?
+;
+
+
+serial_int:
+	ldaa #1
+do_int:
+	staa irqsrc
+	jsr interrupt_handler
+	clr irqsrc
+	tst U_DATA__U_CURSIG
+	bne int_signal
+	rts
+timer_int:
+	ldaa #2
+	bra do_int
+irq_int:
+	ldaa #3
+	bra do_int
+
+int_signal:
+	jsr dispatch_process_signal
+	rts
+;
+;	Synchronous events. This is ok to use tmp1 as we are not an
+;	irq affecting the kernel
+;
+;	On entry the Y register points to the far stack frame and A holds
+;	the bank we trapped from (and thus it's stack)
+;
+;	We are on a small trap handling stack with interrupts off. We must
+;	get off that stack stub
+;
+;	We need to copy the trap frame (9 bytes), above that is a return
+;	address (user space) and then arguments 2-4 (arg1 is in the trap
+;	frame X). Total 17 bytes
+;
+swi_int:
+	sty U_DATA__U_SYSCALL_SP ; userspace return stack
+	lds #kstack_top		; switch to kernel stack
+	clrb			; copy to kernel
+	ldx #17			; bytes to copy
+	stx tmp1
+	ldx #paramcopy
+	jsr farcopy
+	ldx #paramcopy
+	ldd 4,x			; stack frame X reg (arg1)
+	std U_DATA__U_ARGN
+	ldd 11,x		; arg 2
+	std U_DATA__U_ARGN1
+	ldd 13,x
+	std U_DATA__U_ARGN2
+	ldd 15,x
+	std U_DATA__U_ARGN3
+	ldd 4,x
+	std U_DATA__U_CALLNO
+	cli
+	jsr unix_syscall_entry
+	sei
+	ldx U_DATA__U_ERROR
+	ldd U_DATA__U_RETVAL
+	tst U_DATA__U_CURSIG
+	beq nosig
+	psha
+	pshb
+	pshx
+	;
+	;	FIXME: sort out the actual signal delivery logic
+	;
+	jsr dispatch_process_signal
+	pulx
+	pulb
+	pula
+nosig:
+	stx ret_x		; registers for farjmp return
+	std ret_d
+
+	ldy U_DATA__U_SYSCALL_SP
+	iny			; eat return address
+	iny
+	cli
+	rts
+
+	.sect .data
+irqsrc:	.byte 0
+
+.comm	paramcopy,17,1

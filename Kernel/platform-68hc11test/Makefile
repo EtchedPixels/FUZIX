@@ -3,7 +3,7 @@ CSRCS = devtty.c devrd.c
 CSRCS += devices.c main.c libc.c
 
 ASRCS = crt0.s p68hc11.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s eeprom.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -11,7 +11,7 @@ OBJS  = $(COBJS) $(AOBJS)
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
 
-all:	$(OBJS)
+all:	$(OBJS) kernel.def eeprom.def
 
 $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -23,7 +23,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin -M >../fuzix.map \
+	$(CROSS_LD) -o fuzix.out -M >../fuzix.map \
 	--script=memory.x \
 	crt0.o commonmem.o \
 	p68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
@@ -32,3 +32,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../usermem_std-68hc11.o devtty.o libc.o
+	$(CROSS_LD) -o eeprom.out -M >../eeprom.map \
+	--script=eeprom.x eeprom.o
+	m6811-elf-objcopy --output-target=binary fuzix.out ../fuzix.bin
+	m6811-elf-objcopy --output-target=binary eeprom.out ../eeprom.bin
