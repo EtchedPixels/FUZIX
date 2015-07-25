@@ -26,21 +26,23 @@
 ;
 ;	A = srcbank, B = dstbank
 ;	X = dst, Y = src
-;	kernel:_tmp1 = length (in kernel bank)
+;	kernel:_tmp1 = length (in eeprom memory - FIXME)
 ;
 .equ farcopy			, 0xF84C
 ;
-;	A = bank, X = function, Y = far stack
+;	B = bank, X = function, Y = far stack
+;	ret_x, ret_d, ret_y register values on far side
 ;
 .equ farcall			, 0xF84F
 ;
-;	A = bank, X = function, Y = far stack
+;	B = bank, X = function, Y = far stack
+;	ret_x, ret_d, ret_y register values on far side
 ;
 .equ farjump			, 0xF852
 ;
 ;	A = bank
 ;
-.equ setbank			, 0xF855
+; FIXME - useless ! .equ setbank			, 0xF855
 ;
 ;	D = 0
 ;
@@ -62,9 +64,14 @@
 ;
 ;
 ;
-;	Low memory usage (not banked)
+;	Low memory usage (not banked): FIXME - tmp1 should be in eeprom RAM
+;	as should ret_*
+;	All TBD
 ;
 .equ tmp1			, 0xFE		; 16bits
 .equ curbank			, 0xFD
 .equ usrbank			, 0xFC		; we track this to emulate
 						; usermode copy stuff
+.equ ret_x			, 0xFA
+.equ ret_y			, 0xF8
+.equ ret_d			, 0xF6
