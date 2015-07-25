@@ -127,6 +127,7 @@ awk -f- $0 > $0.new <<EOF
 			comma(0)
 
 			bytecode[elsejump] = "(&" word ".payload[0] + " pc "),"
+			return
 		}
 		if (n == "THEN")
 		{
@@ -164,6 +165,12 @@ awk -f- $0 > $0.new <<EOF
 			comma("&branch_word")
 			comma("(&" word ".payload[0] + " pop() "),")
 			bytecode[whilefalse] = "(&" word ".payload[0] + " pc "),"
+			return
+		}
+
+		if (n == "RECURSE")
+		{
+			comma("&" word)
 			return
 		}
 
@@ -273,8 +280,27 @@ exit 0
 #include <sys/stat.h>
 #include <fcntl.h>
 
-typedef intptr_t cell_t;
-typedef uintptr_t ucell_t;
+#if INTPTR_MAX == INT16_MAX
+	typedef int16_t cell_t;
+	typedef uint16_t ucell_t;
+	typedef int32_t pair_t;
+	typedef uint32_t upair_t;
+#elif INTPTR_MAX == INT32_MAX
+	typedef int32_t cell_t;
+	typedef uint32_t ucell_t;
+	typedef int64_t pair_t;
+	typedef uint64_t upair_t;
+#elif INTPTR_MAX == INT64_MAX
+	typedef int64_t cell_t;
+	typedef uint64_t ucell_t;
+	/* This works on gcc and is useful for debugging; I'm not really expecting
+	 * people will be using fforth for real on 64-bit platforms. */
+	typedef __int128_t pair_t;
+	typedef __uint128_t upair_t;
+#else
+	#error "Don't understand the size of your platform!"
+#endif
+
 typedef struct definition defn_t;
 typedef const struct definition cdefn_t;
 
@@ -288,7 +314,7 @@ static jmp_buf onerror;
 static cell_t dstack[DSTACKSIZE];
 static cell_t* dsp;
 
-#define RSTACKSIZE 16
+#define RSTACKSIZE 64
 static cell_t rstack[RSTACKSIZE];
 static cell_t* rsp;
 
@@ -309,6 +335,9 @@ typedef void code_fn(cdefn_t* w);
 static void align_cb(cdefn_t* w);
 
 #define FL_IMM 0x80
+
+#define CONST_STRING(n, v) \
+	static const char n[sizeof(v)-1] = v
 
 struct fstring
 {
@@ -391,6 +420,20 @@ static inline cell_t rpop(void) { return *--rsp; }
 static inline cell_t rpeek(int count) { return rsp[-count]; }
 #endif
 
+static pair_t dpopd(void)
+{
+	upair_t p = (ucell_t)dpop();
+	p <<= sizeof(cell_t)*8;
+	p |= (ucell_t)dpop();
+	return p;
+}
+
+static void dpushd(upair_t p)
+{
+	dpush(p);
+	dpush(p >> sizeof(cell_t)*8);
+}
+
 static void dpushbool(bool b)
 {
 	dpush(b ? -1 : 0);
@@ -448,6 +491,7 @@ static cdefn_t _stdout_word ;
 static cdefn_t _write_word ;
 static cdefn_t a_number_word ;
 static cdefn_t abort_word ;
+static cdefn_t abs_word ;
 static cdefn_t accept_word ;
 static cdefn_t add_one_word ;
 static cdefn_t add_word ;
@@ -463,7 +507,7 @@ static cdefn_t c_at_word ;
 static cdefn_t c_pling_word ;
 static cdefn_t cell_word ;
 static cdefn_t close_sq_word ;
-static cdefn_t div_word ;
+static cdefn_t dabs_word ;
 static cdefn_t drop_word ;
 static cdefn_t dup_word ;
 static cdefn_t equals0_word ;
@@ -472,6 +516,7 @@ static cdefn_t execute_word ;
 static cdefn_t exit_word ;
 static cdefn_t fill_word ;
 static cdefn_t find_word ;
+static cdefn_t fm_mod_word ;
 static cdefn_t ge_word ;
 static cdefn_t gt_word ;
 static cdefn_t here_word ;
@@ -483,6 +528,7 @@ static cdefn_t less0_word ;
 static cdefn_t lit_word ;
 static cdefn_t lshift_word ;
 static cdefn_t lt_word ;
+static cdefn_t m_star_word ;
 static cdefn_t m_one_word ;
 static cdefn_t more0_word ;
 static cdefn_t mul_word ;
@@ -517,6 +563,8 @@ static cdefn_t t_over_word ;
 static cdefn_t t_swap_word ;
 static cdefn_t two_word ;
 static cdefn_t u_lt_word ;
+static cdefn_t u_m_star_word ;
+static cdefn_t um_mod ;
 static cdefn_t word_word ;
 static cdefn_t xor_word ;
 static cdefn_t zero_word ;
@@ -764,6 +812,52 @@ static void execute_cb(cdefn_t* w)
 	p->code(p);
 }
 
+static void abs_cb(cdefn_t* w)
+{
+	cell_t d = dpop();
+	if (d < 0)
+		d = -d;
+	dpush(d);
+}
+
+static void dabs_cb(cdefn_t* w)
+{
+	pair_t d = dpopd();
+	if (d < 0)
+		d = -d;
+	dpushd(d);
+}
+
+static void fm_mod_cb(cdefn_t* w)
+{
+	cell_t den = dpop();
+	pair_t num = dpopd();
+	cell_t q = num / den;
+	cell_t r = num % den;
+
+	if ((num^den) <= 0)
+	{
+		if (r)
+		{
+			q -= 1;
+			r += den;
+		}
+    }
+
+	dpush(r);
+	dpush(q);
+}
+
+static void um_mod_cb(cdefn_t* w)
+{
+	ucell_t den = dpop();
+	upair_t num = dpopd();
+	ucell_t q = num / den;
+	ucell_t r = num % den;
+	dpush(r);
+	dpush(q);
+}
+
 static void E_fnf_cb(cdefn_t* w)      { panic("file not found"); }
 static void _close_cb(cdefn_t* w)     { dpush(close(dpop())); }
 static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
@@ -779,7 +873,6 @@ static void branchif_cb(cdefn_t* w)   { if (dpop() == (cell_t)*w->payload) pc = 
 static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
-static void div_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b / a); }
 static void drop_cb(cdefn_t* w)       { dpop(); }
 static void equals0_cb(cdefn_t* w)    { dpushbool(dpop() == 0); }
 static void equals_cb(cdefn_t* w)     { dpushbool(dpop() == dpop()); }
@@ -793,6 +886,7 @@ static void less0_cb(cdefn_t* w)      { dpushbool(dpop() < 0); }
 static void lit_cb(cdefn_t* w)        { dpush((cell_t) *pc++); }
 static void lshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a << u); }
 static void lt_cb(cdefn_t* w)         { cell_t a = dpop(); cell_t b = dpop(); dpushbool(b < a); }
+static void m_star_cb(cdefn_t* w)     { dpushd((pair_t)dpop() * (pair_t)dpop()); }
 static void more0_cb(cdefn_t* w)      { dpushbool(dpop() > 0); }
 static void mul_cb(cdefn_t* w)        { dpush(dpop() * dpop()); }
 static void not_equals_cb(cdefn_t* w) { dpushbool(dpop() != dpop()); }
@@ -811,6 +905,7 @@ static void rsshift_cb(cdefn_t* w)    { dpush(dpop() >> 1); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
 static void t_drop_cb(cdefn_t* w)     { dpop(); dpop(); }
 static void u_lt_cb(cdefn_t* w)       { ucell_t a = dpop(); ucell_t b = dpop(); dpushbool(b < a); }
+static void u_m_star_cb(cdefn_t* w)   { dpushd((upair_t)(ucell_t)dpop() * (upair_t)(ucell_t)dpop()); }
 static void xor_cb(cdefn_t* w)        { dpush(dpop() ^ dpop()); }
 
 #define WORD(w, c, n, l, f, p...) \
@@ -841,7 +936,8 @@ COM( _stdout_word,       rvarword,       "_stdout",    &_stdin_word,     (void*)
 COM( _write_word,        _readwrite_cb,  "_write",     &_stdout_word,    &write ) //@W
 COM( a_number_word,      a_number_cb,    ">NUMBER",    &_write_word,     ) //@W
 COM( abort_word,         abort_cb,       "ABORT",      &a_number_word,   ) //@W
-COM( accept_word,        accept_cb,      "ACCEPT",     &abort_word,      ) //@W
+COM( abs_word,           abs_cb,         "ABS",        &abort_word,      ) //@W
+COM( accept_word,        accept_cb,      "ACCEPT",     &abs_word,        ) //@W
 COM( add_one_word,       increment_cb,   "1+",         &accept_word,     (void*)1 ) //@W
 COM( add_word,           add_cb,         "+",          &add_one_word,    ) //@W
 COM( align_word,         align_cb,       "ALIGN",      &add_word,        ) //@W
@@ -856,8 +952,8 @@ COM( c_at_word,          c_at_cb,        "C@",         &branch_word,     ) //@W
 COM( c_pling_word,       c_pling_cb,     "C!",         &c_at_word,       ) //@W
 COM( cell_word,          rvarword,       "CELL",       &c_pling_word,    (void*)CELL ) //@W
 COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
-COM( div_word,           div_cb,         "/",          &close_sq_word,   ) //@W
-COM( drop_word,          drop_cb,        "DROP",       &div_word,        ) //@W
+COM( dabs_word,          dabs_cb,        "DABS",       &close_sq_word,   ) //@W
+COM( drop_word,          drop_cb,        "DROP",       &dabs_word,       ) //@W
 COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)1 ) //@W
 COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
 COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
@@ -865,7 +961,8 @@ COM( execute_word,       execute_cb,     "EXECUTE",    &equals_word,     ) //@W
 COM( exit_word,          exit_cb,        "EXIT",       &execute_word,    ) //@W
 COM( fill_word,          fill_cb,        "FILL",       &exit_word,       ) //@W
 COM( find_word,          find_cb,        "FIND",       &fill_word,       ) //@W
-COM( ge_word,            ge_cb,          ">=",         &find_word,       ) //@W
+COM( fm_mod_word,        fm_mod_cb,      "FM/MOD",     &find_word,       ) //@W
+COM( ge_word,            ge_cb,          ">=",         &fm_mod_word,     ) //@W
 COM( gt_word,            gt_cb,          ">",          &ge_word,         ) //@W
 COM( here_word,          rvarword,       "HERE",       &gt_word,         &here ) //@W
 COM( in_arrow_word,      rvarword,       ">IN",        &here_word,       &in_arrow ) //@W
@@ -876,7 +973,8 @@ COM( less0_word,         less0_cb,       "0<",         &le_word,         ) //@W
 COM( lit_word,           lit_cb,         "LIT",        &less0_word,      ) //@W
 COM( lshift_word,        lshift_cb,      "LSHIFT",     &lit_word,        ) //@W
 COM( lt_word,            lt_cb,          "<",          &lshift_word,     ) //@W
-COM( m_one_word,         rvarword,       "-1",         &lt_word,         (void*)-1 ) //@W
+COM( m_star_word,        m_star_cb,      "M*",         &lt_word,         ) //@W
+COM( m_one_word,         rvarword,       "-1",         &m_star_word,     (void*)-1 ) //@W
 COM( more0_word,         more0_cb,       "0>",         &m_one_word,      ) //@W
 COM( mul_word,           mul_cb,         "*",          &more0_word,      ) //@W
 COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
@@ -910,7 +1008,9 @@ COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)
 COM( t_swap_word,        t_swap_cb,      "2SWAP",      &t_over_word,     ) //@W
 COM( two_word,           rvarword,       "2",          &t_swap_word,     (void*)2 ) //@W
 COM( u_lt_word,          u_lt_cb,        "U<",         &two_word,        ) //@W
-COM( word_word,          word_cb,        "WORD",       &u_lt_word,       ) //@W
+COM( u_m_star_word,      u_m_star_cb,    "UM*",        &u_lt_word,       ) //@W
+COM( um_mod,             um_mod_cb,      "UM/MOD",     &u_m_star_word,   ) //@W
+COM( word_word,          word_cb,        "WORD",       &um_mod,          ) //@W
 COM( xor_word,           xor_cb,         "XOR",        &word_word,       ) //@W
 COM( zero_word,          rvarword,       "0",          &xor_word,        (void*)0 ) //@W
 IMM( immediate_word,     immediate_cb,   "IMMEDIATE",  &zero_word,       ) //@W
@@ -928,10 +1028,14 @@ IMM( _5c__word, codeword, "\\", &_28__word, (void*)&lit_word, (void*)10, (void*)
 //  CELL *
 COM( cells_word, codeword, "CELLS", &_5c__word, (void*)&cell_word, (void*)&mul_word, (void*)&exit_word )
 
+//@C CELL+
+//  CELL +
+COM( cell_2b__word, codeword, "CELL+", &cells_word, (void*)&cell_word, (void*)&add_word, (void*)&exit_word )
+
 //@C ,
 //  HERE @ !
 //  CELL ALLOT
-COM( _2c__word, codeword, ",", &cells_word, (void*)&here_word, (void*)&at_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
+COM( _2c__word, codeword, ",", &cell_2b__word, (void*)&here_word, (void*)&at_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
 
 //@C C,
 //  HERE @ C!
@@ -967,9 +1071,19 @@ COM( cr_word, codeword, "CR", &type_word, (void*)&lit_word, (void*)10, (void*)&e
 //   32 EMIT
 COM( space_word, codeword, "SPACE", &cr_word, (void*)&lit_word, (void*)32, (void*)&emit_word, (void*)&exit_word )
 
+//@C SPACES
+// \ n --
+//   BEGIN
+//     DUP 0>
+//   WHILE
+//     SPACE 1-
+//   REPEAT
+//   DROP
+COM( spaces_word, codeword, "SPACES", &space_word, (void*)&dup_word, (void*)&more0_word, (void*)&branch0_word, (void*)(&spaces_word.payload[0] + 8), (void*)&space_word, (void*)&sub_one_word, (void*)&branch_word, (void*)(&spaces_word.payload[0] + 0), (void*)&drop_word, (void*)&exit_word )
+
 //@C NEGATE
 //   0 SWAP -
-COM( negate_word, codeword, "NEGATE", &space_word, (void*)&zero_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
+COM( negate_word, codeword, "NEGATE", &spaces_word, (void*)&zero_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
 
 //@C TRUE
 //   1
@@ -1011,7 +1125,52 @@ COM( refill_word, codeword, "REFILL", &bye_word, (void*)&source_word, (void*)&ac
 //   DUP C@ SWAP 1+ SWAP
 COM( count_word, codeword, "COUNT", &refill_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&swap_word, (void*)&exit_word )
 
-static const char unrecognised_word_msg[] = "panic: unrecognised word: ";
+//@C numberthenneg HIDDEN
+// \ val addr len -- val addr len
+// \ As >NUMBER, but negates the result.
+//   >NUMBER
+//   ROT NEGATE ROT ROT
+COM( numberthenneg_word, codeword, "", &count_word, (void*)&a_number_word, (void*)&rot_word, (void*)&negate_word, (void*)&rot_word, (void*)&rot_word, (void*)&exit_word )
+
+//@C snumber HIDDEN
+// \ val addr len -- val addr len
+// \ As >NUMBER, but copes with a leading -.
+//
+//   SWAP DUP C@                       \ -- val len addr byte
+//   ROT SWAP                          \ -- val addr len byte
+//   45 = IF
+//     1- SWAP 1+ SWAP
+//     numberthenneg
+//   ELSE
+//     >NUMBER
+//   THEN
+COM( snumber_word, codeword, "", &numberthenneg_word, (void*)&swap_word, (void*)&dup_word, (void*)&c_at_word, (void*)&rot_word, (void*)&swap_word, (void*)&lit_word, (void*)45, (void*)&equals_word, (void*)&branch0_word, (void*)(&snumber_word.payload[0] + 17), (void*)&sub_one_word, (void*)&swap_word, (void*)&add_one_word, (void*)&swap_word, (void*)&numberthenneg_word, (void*)&branch_word, (void*)(&snumber_word.payload[0] + 18), (void*)&a_number_word, (void*)&exit_word )
+
+CONST_STRING(unrecognised_word_msg, "panic: unrecognised word: ");
+//@C E_enoent HIDDEN
+// \ c-addr --
+//   [&lit_word] [unrecognised_word_msg]
+//   [&lit_word] [sizeof(unrecognised_word_msg)]
+//   TYPE
+//
+//   DROP DROP                         \ -- addr
+//   COUNT                             \ -- c-addr len
+//   TYPE                              \ --
+//
+//   CR
+//   ABORT
+COM( e_enoent_word, codeword, "", &snumber_word, (void*)(&lit_word), (void*)(unrecognised_word_msg), (void*)(&lit_word), (void*)(sizeof(unrecognised_word_msg)), (void*)&type_word, (void*)&drop_word, (void*)&drop_word, (void*)&count_word, (void*)&type_word, (void*)&cr_word, (void*)&abort_word, (void*)&exit_word )
+
+CONST_STRING(end_of_line_msg, "panic: unexpected end of line");
+//@C E_eol HIDDEN
+// \ --
+//   [&lit_word] [unrecognised_word_msg]
+//   [&lit_word] [sizeof(unrecognised_word_msg)]
+//   TYPE
+//   CR
+//   ABORT
+COM( e_eol_word, codeword, "", &e_enoent_word, (void*)(&lit_word), (void*)(unrecognised_word_msg), (void*)(&lit_word), (void*)(sizeof(unrecognised_word_msg)), (void*)&type_word, (void*)&cr_word, (void*)&abort_word, (void*)&exit_word )
+
 //@C INTERPRET_NUM HIDDEN
 // \ Evaluates a number, or perish in the attempt.
 // \ ( c-addr -- value )
@@ -1027,25 +1186,14 @@ static const char unrecognised_word_msg[] = "panic: unrecognised word: ";
 //   0 SWAP ROT                        \ -- addr 0 addr+1 len
 //
 //   \ Parse!
-//   >NUMBER                           \ -- addr val addr+1 len
+//   snumber                           \ -- addr val addr+1 len
 //
 //   \ We must consume all bytes to succeed.
-//   IF
-//     [&lit_word] [unrecognised_word_msg]
-//     [&lit_word] [sizeof(unrecognised_word_msg)]
-//     TYPE
-//
-//     DROP DROP                       \ -- addr
-//     COUNT                           \ -- c-addr len
-//     TYPE                            \ --
-//
-//     CR
-//     ABORT
-//   THEN
+//   IF E_enoent THEN
 //
 //   \ Huzzah!                         \ -- addr val addr+1
 //   DROP SWAP DROP                    \ -- val
-COM( interpret_num_word, codeword, "", &count_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&a_number_word, (void*)&branch0_word, (void*)(&interpret_num_word.payload[0] + 22), (void*)(&lit_word), (void*)(unrecognised_word_msg), (void*)(&lit_word), (void*)(sizeof(unrecognised_word_msg)), (void*)&type_word, (void*)&drop_word, (void*)&drop_word, (void*)&count_word, (void*)&type_word, (void*)&cr_word, (void*)&abort_word, (void*)&drop_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+COM( interpret_num_word, codeword, "", &e_eol_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&swap_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&snumber_word, (void*)&branch0_word, (void*)(&interpret_num_word.payload[0] + 12), (void*)&e_enoent_word, (void*)&drop_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C COMPILE_NUM HIDDEN
 // \ Compiles a number (or at least, a word we don't recognise).
@@ -1161,12 +1309,30 @@ COM( constant_word, codeword, "CONSTANT", &_3b__word, (void*)&create_word, (void
 //  CREATE 0 ,
 COM( variable_word, codeword, "VARIABLE", &constant_word, (void*)&create_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
 
+//@C POSTPONE IMMEDIATE
+// \ Picks up a word from the input stream and compiles a call to it,
+// \ regardless of whether it's an immediate word or not.
+//   32 WORD                           \ -- c-addr
+//
+//   \ End of the buffer? If so, panic..
+//   C@ 0= IF E_eol THEN               \ --
+//
+//   \ Look up the word.
+//   HERE @ FIND                       \ -- addr kind
+//
+//   \ Not found?
+//   0= IF E_enoent THEN               \ -- addr
+//
+//   \ Compile it.
+//   ,
+IMM( postpone_word, codeword, "POSTPONE", &variable_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 8), (void*)&e_eol_word, (void*)&here_word, (void*)&at_word, (void*)&find_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 15), (void*)&e_enoent_word, (void*)&_2c__word, (void*)&exit_word )
+
 //@C IF IMMEDIATE
 // \ -- addr
 //  [&lit_word] [&branch0_word] ,
 //  HERE @
 //  0 ,
-IMM( if_word, codeword, "IF", &variable_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
+IMM( if_word, codeword, "IF", &postpone_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C THEN IMMEDIATE
 // \ addr --
@@ -1285,9 +1451,53 @@ COM( hex_word, codeword, "HEX", &i_word, (void*)&lit_word, (void*)16, (void*)&ba
 //  10 BASE !
 COM( decimal_word, codeword, "DECIMAL", &hex_word, (void*)&lit_word, (void*)10, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
 
+//@C S>D
+//   DUP 0< IF -1 ELSE 0 THEN
+COM( s_3e_d_word, codeword, "S>D", &decimal_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&s_3e_d_word.payload[0] + 7), (void*)&m_one_word, (void*)&branch_word, (void*)(&s_3e_d_word.payload[0] + 8), (void*)&zero_word, (void*)&exit_word )
+
+//@C R@
+//   2 RPICK
+COM( r_40__word, codeword, "R@", &s_3e_d_word, (void*)&two_word, (void*)&rpick_word, (void*)&exit_word )
+
+//@C +- HIDDEN
+//   0< IF NEGATE THEN
+COM( _2b__2d__word, codeword, "", &r_40__word, (void*)&less0_word, (void*)&branch0_word, (void*)(&_2b__2d__word.payload[0] + 4), (void*)&negate_word, (void*)&exit_word )
+
+//@C SM/REM
+//   OVER                              \ low high quot high
+//   >R >R
+//   DABS R@ ABS
+//   UM/MOD
+//   R> R@ XOR
+//   +-
+//   SWAP R>
+//   +-
+//   SWAP
+COM( sm_2f_rem_word, codeword, "SM/REM", &_2b__2d__word, (void*)&over_word, (void*)&arrow_r_word, (void*)&arrow_r_word, (void*)&dabs_word, (void*)&r_40__word, (void*)&abs_word, (void*)&um_mod, (void*)&r_arrow_word, (void*)&r_40__word, (void*)&xor_word, (void*)&_2b__2d__word, (void*)&swap_word, (void*)&r_arrow_word, (void*)&_2b__2d__word, (void*)&swap_word, (void*)&exit_word )
+
+//@C /
+//  >R S>D R> FM/MOD SWAP DROP
+COM( _2f__word, codeword, "/", &sm_2f_rem_word, (void*)&arrow_r_word, (void*)&s_3e_d_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C /MOD
+//  >R S>D R> FM/MOD
+COM( _2f_mod_word, codeword, "/MOD", &_2f__word, (void*)&arrow_r_word, (void*)&s_3e_d_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&exit_word )
+
+//@C MOD
+//  >R S>D R> FM/MOD DROP
+COM( mod_word, codeword, "MOD", &_2f_mod_word, (void*)&arrow_r_word, (void*)&s_3e_d_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C */
+//  >R M* R> FM/MOD SWAP DROP
+COM( _2a__2f__word, codeword, "*/", &mod_word, (void*)&arrow_r_word, (void*)&m_star_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C */MOD
+//  >R M* R> FM/MOD
+COM( _2a__2f_mod_word, codeword, "*/MOD", &_2a__2f__word, (void*)&arrow_r_word, (void*)&m_star_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&exit_word )
+
 //@C DEPTH
 //  SP@ SP0 - CELL /
-COM( depth_word, codeword, "DEPTH", &decimal_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&sub_word, (void*)&cell_word, (void*)&div_word, (void*)&exit_word )
+COM( depth_word, codeword, "DEPTH", &_2a__2f_mod_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&sub_word, (void*)&cell_word, (void*)&_2f__word, (void*)&exit_word )
 
 //@C s"helper HIDDEN
 // \ -- addr count
@@ -1339,12 +1549,102 @@ COM( min_word, codeword, "MIN", &_32__2a__word, (void*)&t_dup_word, (void*)&gt_w
 //   2DUP < IF SWAP THEN DROP
 COM( max_word, codeword, "MAX", &min_word, (void*)&t_dup_word, (void*)&lt_word, (void*)&branch0_word, (void*)(&max_word.payload[0] + 5), (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
 
-//@C R@
-//   2 RPICK
-COM( r_40__word, codeword, "R@", &max_word, (void*)&two_word, (void*)&rpick_word, (void*)&exit_word )
+//@C RECURSE IMMEDIATE
+//   LATEST ,
+IMM( recurse_word, codeword, "RECURSE", &max_word, (void*)&latest_word, (void*)&_2c__word, (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &r_40__word; //@E
-static defn_t* latest = (defn_t*) &r_40__word; //@E
+//@C u.nospace HIDDEN
+// \ u --
+//   BASE @ /MOD
+//   ?DUP IF
+//     RECURSE
+//   THEN
+//
+//   DUP 10 < IF
+//     48
+//   ELSE
+//     10 -
+//     65
+//   THEN
+//   + EMIT
+COM( u_2e_nospace_word, codeword, "", &recurse_word, (void*)&base_word, (void*)&at_word, (void*)&_2f_mod_word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 7), (void*)&u_2e_nospace_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&lt_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 17), (void*)&lit_word, (void*)48, (void*)&branch_word, (void*)(&u_2e_nospace_word.payload[0] + 22), (void*)&lit_word, (void*)10, (void*)&sub_word, (void*)&lit_word, (void*)65, (void*)&add_word, (void*)&emit_word, (void*)&exit_word )
+
+//@C uwidth HIDEEN
+// \ This word returns the width (in characters) of an unsigned number in the current base.
+// \ u -- width
+//   BASE @ /
+//   ?DUP IF
+//     RECURSE 1+
+//   ELSE
+//     1
+//   THEN
+COM( uwidth_word, codeword, "uwidth", &u_2e_nospace_word, (void*)&base_word, (void*)&at_word, (void*)&_2f__word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&uwidth_word.payload[0] + 10), (void*)&uwidth_word, (void*)&add_one_word, (void*)&branch_word, (void*)(&uwidth_word.payload[0] + 11), (void*)&one_word, (void*)&exit_word )
+
+//@C U.R
+// \ Prints an unsigned number in a field.
+// \ u width --
+//   SWAP DUP                          \ width u u
+//   uwidth                            \ width u uwidth
+//   ROT                               \ u uwidth width
+//   SWAP -                            \ u width-uwidth
+//
+//   SPACES u.nospace
+COM( u_2e_r_word, codeword, "U.R", &uwidth_word, (void*)&swap_word, (void*)&dup_word, (void*)&uwidth_word, (void*)&rot_word, (void*)&swap_word, (void*)&sub_word, (void*)&spaces_word, (void*)&u_2e_nospace_word, (void*)&exit_word )
+
+//@C .R
+// \ Prints a signed number in a field. We can't just print the sign and call
+// \ U.R, because we want the sign to be next to the number...
+// \ n width --
+//
+//   SWAP                              \ width n
+//   DUP 0< IF
+//     NEGATE                          \ width u
+//     1
+//     SWAP ROT 1-                     \ 1 u width-1
+//   ELSE
+//     0
+//     SWAP ROT                        \ 0 u width
+//   THEN
+//
+//   SWAP DUP                          \ flag width u u
+//   uwidth                            \ flag width u uwidth
+//   ROT                               \ flag u uwidth width
+//   SWAP -                            \ flag u width-uwidth
+//
+//   SPACES                            \ flag u
+//   SWAP                              \ u flag
+//
+//   IF 45 EMIT THEN
+//
+//   u.nospace
+COM( _2e_r_word, codeword, ".R", &u_2e_r_word, (void*)&swap_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&_2e_r_word.payload[0] + 12), (void*)&negate_word, (void*)&one_word, (void*)&swap_word, (void*)&rot_word, (void*)&sub_one_word, (void*)&branch_word, (void*)(&_2e_r_word.payload[0] + 15), (void*)&zero_word, (void*)&swap_word, (void*)&rot_word, (void*)&swap_word, (void*)&dup_word, (void*)&uwidth_word, (void*)&rot_word, (void*)&swap_word, (void*)&sub_word, (void*)&spaces_word, (void*)&swap_word, (void*)&branch0_word, (void*)(&_2e_r_word.payload[0] + 28), (void*)&lit_word, (void*)45, (void*)&emit_word, (void*)&u_2e_nospace_word, (void*)&exit_word )
+
+//@C .
+//   0 .R SPACE
+COM( _2e__word, codeword, ".", &_2e_r_word, (void*)&zero_word, (void*)&_2e_r_word, (void*)&space_word, (void*)&exit_word )
+
+//@C U.
+//   0 U.R SPACE
+COM( u_2e__word, codeword, "U.", &_2e__word, (void*)&zero_word, (void*)&u_2e_r_word, (void*)&space_word, (void*)&exit_word )
+
+//@C .S
+//   SP@ SP0
+//   BEGIN
+//     2DUP >
+//   WHILE
+//     DUP @ .
+//     CELL +
+//   REPEAT
+//   2DROP
+//   CR
+COM( _2e_s_word, codeword, ".S", &u_2e__word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&t_dup_word, (void*)&gt_word, (void*)&branch0_word, (void*)(&_2e_s_word.payload[0] + 13), (void*)&dup_word, (void*)&at_word, (void*)&_2e__word, (void*)&cell_word, (void*)&add_word, (void*)&branch_word, (void*)(&_2e_s_word.payload[0] + 2), (void*)&t_drop_word, (void*)&cr_word, (void*)&exit_word )
+
+//@C LITERAL IMMEDIATE
+//   [&lit_word] [&lit_word] , ,
+IMM( literal_word, codeword, "LITERAL", &_2e_s_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &literal_word; //@E
+static defn_t* latest = (defn_t*) &literal_word; //@E
 
 int main(int argc, const char* argv[])
 {
