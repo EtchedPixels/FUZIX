@@ -141,7 +141,7 @@ SECTIONS
   .stext   :
   {
     *(.stext)
-  }  > ram
+  }  > eeprom
   .init	  :
   {
     *(.init)
@@ -171,42 +171,42 @@ SECTIONS
     KEEP (*(.fini4))	/* Runtime exit.  */
     _etext = .;
     PROVIDE (etext = .);
-  }  > ram
+  }  > eeprom
   .eh_frame   :
   {
     KEEP (*(.eh_frame))
-  }  > ram
+  }  > eeprom
   .gcc_except_table   :
   {
     *(.gcc_except_table)
-  }  > ram
+  }  > eeprom
   .rodata    :
   {
     *(.rodata)
     *(.rodata.*)
     *(.gnu.linkonce.r*)
-  }  > ram
+  }  > eeprom
   .rodata1   :
   {
     *(.rodata1)
-  }  > ram
+  }  > eeprom
   /* Constructor and destructor tables are in text.  */
   .ctors   :
   {
      PROVIDE (__CTOR_LIST__ = .);
     KEEP (*(.ctors))
      PROVIDE(__CTOR_END__ = .);
-  }  > ram
+  }  > eeprom
     .dtors	  :
   {
      PROVIDE(__DTOR_LIST__ = .);
     KEEP (*(.dtors))
      PROVIDE(__DTOR_END__ = .);
-  }  > ram
+  }  > eeprom
   .jcr   :
   {
     KEEP (*(.jcr))
-  }  > ram
+  }  > eeprom
   /* Start of the data section image in ROM.  */
   .data	:
   {
@@ -218,7 +218,7 @@ SECTIONS
     CONSTRUCTORS
     _edata  =  .;
     PROVIDE (edata = .);
-  }  > ram
+  }  > eeram
   /* Relocation for some bss and data sections.  */
   .bss   :
   {
@@ -231,7 +231,7 @@ SECTIONS
     *(.gnu.linkonce.b.*)
     *(COMMON)
     PROVIDE (_end = .);
-  }  > ram
+  }  > eeram
   __bss_size = SIZEOF(.bss);
   PROVIDE (__bss_size = SIZEOF(.bss));
   .eeprom   :
@@ -239,6 +239,11 @@ SECTIONS
     *(.eeprom)
     *(.eeprom.*)
   }  > eeprom
+  .iram   :
+  {
+    *(.iram)
+    *(.iram.*)
+  }  > iram
   /* If the 'vectors_addr' symbol is defined, it indicates the start address
      of interrupt vectors.  This depends on the 68HC11 operating mode:
 			Addr
