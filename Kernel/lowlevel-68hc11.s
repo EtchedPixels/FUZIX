@@ -7,6 +7,10 @@
 	.globl ei
 	.globl irqrestore
 
+	.globl unix_syscall_entry
+	.globl dispatch_process_signal
+	.globl interrupt_handler
+
 	.globl outnewline
 	.globl outcharhex
 	.globl outchar
