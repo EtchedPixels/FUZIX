@@ -528,8 +528,8 @@ static cdefn_t less0_word ;
 static cdefn_t lit_word ;
 static cdefn_t lshift_word ;
 static cdefn_t lt_word ;
-static cdefn_t m_star_word ;
 static cdefn_t m_one_word ;
+static cdefn_t m_star_word ;
 static cdefn_t more0_word ;
 static cdefn_t mul_word ;
 static cdefn_t not_equals_word ;
@@ -545,10 +545,10 @@ static cdefn_t r_arrow_word ;
 static cdefn_t rot_word ;
 static cdefn_t rpick_word ;
 static cdefn_t rshift_word ;
-static cdefn_t rsshift_word ;
 static cdefn_t rsp0_word ;
 static cdefn_t rsp_at_word ;
 static cdefn_t rsp_pling_word ;
+static cdefn_t rsshift_word ;
 static cdefn_t source_word ;
 static cdefn_t sp0_word ;
 static cdefn_t sp_at_word ;
@@ -561,6 +561,7 @@ static cdefn_t t_drop_word ;
 static cdefn_t t_dup_word ;
 static cdefn_t t_over_word ;
 static cdefn_t t_swap_word ;
+static cdefn_t tuck_word ;
 static cdefn_t two_word ;
 static cdefn_t u_lt_word ;
 static cdefn_t u_m_star_word ;
@@ -828,6 +829,15 @@ static void dabs_cb(cdefn_t* w)
 	dpushd(d);
 }
 
+static void tuck_cb(cdefn_t* w)
+{
+	cell_t x2 = dpop();
+	cell_t x1 = dpop();
+	dpush(x2);
+	dpush(x1);
+	dpush(x2);
+}
+
 static void fm_mod_cb(cdefn_t* w)
 {
 	cell_t den = dpop();
@@ -973,9 +983,9 @@ COM( less0_word,         less0_cb,       "0<",         &le_word,         ) //@W
 COM( lit_word,           lit_cb,         "LIT",        &less0_word,      ) //@W
 COM( lshift_word,        lshift_cb,      "LSHIFT",     &lit_word,        ) //@W
 COM( lt_word,            lt_cb,          "<",          &lshift_word,     ) //@W
-COM( m_star_word,        m_star_cb,      "M*",         &lt_word,         ) //@W
-COM( m_one_word,         rvarword,       "-1",         &m_star_word,     (void*)-1 ) //@W
-COM( more0_word,         more0_cb,       "0>",         &m_one_word,      ) //@W
+COM( m_one_word,         rvarword,       "-1",         &lt_word,         (void*)-1 ) //@W
+COM( m_star_word,        m_star_cb,      "M*",         &m_one_word,      ) //@W
+COM( more0_word,         more0_cb,       "0>",         &m_star_word,     ) //@W
 COM( mul_word,           mul_cb,         "*",          &more0_word,      ) //@W
 COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
 COM( notequals0_word,    notequals0_cb,  "0<>",        &not_equals_word, ) //@W
@@ -990,11 +1000,11 @@ COM( r_arrow_word,       r_arrow_cb,     "R>",         &q_dup_word,      ) //@W
 COM( rot_word,           rot_cb,         "ROT",        &r_arrow_word,    ) //@W
 COM( rpick_word,         rpick_cb,       "RPICK",      &rot_word,        ) //@W
 COM( rshift_word,        rshift_cb,      "RSHIFT",     &rpick_word,      ) //@W
-COM( rsshift_word,       rsshift_cb,     "2/",         &rshift_word,     ) //@W
-COM( rsp0_word,          rvarword,       "RSP0",       &rsshift_word,    rstack ) //@W
+COM( rsp0_word,          rvarword,       "RSP0",       &rshift_word,     rstack ) //@W
 COM( rsp_at_word,        rivarword,      "RSP@",       &rsp0_word,       &rsp ) //@W
 COM( rsp_pling_word,     wivarword,      "RSP!",       &rsp_at_word,     &rsp ) //@W
-COM( source_word,        r2varword,      "SOURCE",     &rsp_pling_word,  input_buffer, (void*)MAX_LINE_LENGTH ) //@W
+COM( rsshift_word,       rsshift_cb,     "2/",         &rsp_pling_word,  ) //@W
+COM( source_word,        r2varword,      "SOURCE",     &rsshift_word,    input_buffer, (void*)MAX_LINE_LENGTH ) //@W
 COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack ) //@W
 COM( sp_at_word,         rivarword,      "SP@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "SP!",        &sp_at_word,      &dsp ) //@W
@@ -1006,7 +1016,8 @@ COM( t_drop_word,        t_drop_cb,      "2DROP",      &swap_word,       ) //@W
 COM( t_dup_word,         peekcon2_cb,    "2DUP",       &t_drop_word,     (void*)2 ) //@W
 COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)4 ) //@W
 COM( t_swap_word,        t_swap_cb,      "2SWAP",      &t_over_word,     ) //@W
-COM( two_word,           rvarword,       "2",          &t_swap_word,     (void*)2 ) //@W
+COM( tuck_word,          tuck_cb,        "TUCK",       &t_swap_word,     ) //@W
+COM( two_word,           rvarword,       "2",          &tuck_word,       (void*)2 ) //@W
 COM( u_lt_word,          u_lt_cb,        "U<",         &two_word,        ) //@W
 COM( u_m_star_word,      u_m_star_cb,    "UM*",        &u_lt_word,       ) //@W
 COM( um_mod,             um_mod_cb,      "UM/MOD",     &u_m_star_word,   ) //@W
@@ -1032,10 +1043,34 @@ COM( cells_word, codeword, "CELLS", &_5c__word, (void*)&cell_word, (void*)&mul_w
 //  CELL +
 COM( cell_2b__word, codeword, "CELL+", &cells_word, (void*)&cell_word, (void*)&add_word, (void*)&exit_word )
 
+//@C CHAR+
+//  1+
+COM( char_2b__word, codeword, "CHAR+", &cell_2b__word, (void*)&add_one_word, (void*)&exit_word )
+
+//@C CHARS
+// \ nop!
+COM( chars_word, codeword, "CHARS", &char_2b__word, (void*)&exit_word )
+
+//@C ALIGNED
+// \ addr -- aligned-addr
+//   DUP                               \ -- end-r-addr end-r-addr
+//   CELL SWAP -
+//   CELL 1- AND                       \ -- end-r-addr offset
+//   +                                 \ -- aligned-end-r-addr
+COM( aligned_word, codeword, "ALIGNED", &chars_word, (void*)&dup_word, (void*)&cell_word, (void*)&swap_word, (void*)&sub_word, (void*)&cell_word, (void*)&sub_one_word, (void*)&and_word, (void*)&add_word, (void*)&exit_word )
+
+//@C +!
+// \ n addr --
+//   DUP @                             \ -- n addr val
+//   ROT                               \ -- addr val n
+//   +                                 \ -- addr new-val
+//   SWAP !
+COM( _2b__21__word, codeword, "+!", &aligned_word, (void*)&dup_word, (void*)&at_word, (void*)&rot_word, (void*)&add_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+
 //@C ,
 //  HERE !
 //  CELL ALLOT
-COM( _2c__word, codeword, ",", &cell_2b__word, (void*)&here_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
+COM( _2c__word, codeword, ",", &_2b__21__word, (void*)&here_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
 
 //@C C,
 //  HERE C!
@@ -1508,17 +1543,14 @@ COM( depth_word, codeword, "DEPTH", &_2a__2f_mod_word, (void*)&sp_at_word, (void
 //  DUP C@ + 1+                        \ -- r-addr end-r-addr
 //
 //  \ Align it!
-//  DUP                                \ -- r-addr end-r-addr end-r-addr
-//  CELL SWAP -
-//  CELL 1- AND                        \ -- r-addr end-r-addr offset
-//  +                                  \ -- r-addr aligned-end-r-addr
+//  ALIGNED
 //
 //  \ Store it back as the return address.
 //  >R
 //
 //  \ ...and decode the counted string.
 //  COUNT
-COM( s_22_helper_word, codeword, "", &depth_word, (void*)&r_arrow_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&dup_word, (void*)&cell_word, (void*)&swap_word, (void*)&sub_word, (void*)&cell_word, (void*)&sub_one_word, (void*)&and_word, (void*)&add_word, (void*)&arrow_r_word, (void*)&count_word, (void*)&exit_word )
+COM( s_22_helper_word, codeword, "", &depth_word, (void*)&r_arrow_word, (void*)&dup_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&aligned_word, (void*)&arrow_r_word, (void*)&count_word, (void*)&exit_word )
 
 //@C S" IMMEDIATE
 // \ -- addr count
@@ -1643,8 +1675,22 @@ COM( _2e_s_word, codeword, ".S", &u_2e__word, (void*)&sp_at_word, (void*)&sp0_wo
 //   [&lit_word] [&lit_word] , ,
 IMM( literal_word, codeword, "LITERAL", &_2e_s_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &literal_word; //@E
-static defn_t* latest = (defn_t*) &literal_word; //@E
+//@C 2@
+// \ addr -- lo hi
+//  DUP @                              \ addr lo
+//  SWAP                               \ lo addr
+//  CELL+ @                            \ lo hi
+COM( _32__40__word, codeword, "2@", &literal_word, (void*)&dup_word, (void*)&at_word, (void*)&swap_word, (void*)&cell_2b__word, (void*)&at_word, (void*)&exit_word )
+
+//@C 2!
+// \ lo hi addr --
+//   TUCK                              \ lo addr hi addr
+//   CELL+                             \ lo addr hi addr+C
+//   ! !
+COM( _32__21__word, codeword, "2!", &_32__40__word, (void*)&tuck_word, (void*)&cell_2b__word, (void*)&pling_word, (void*)&pling_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &_32__21__word; //@E
+static defn_t* latest = (defn_t*) &_32__21__word; //@E
 
 int main(int argc, const char* argv[])
 {
