@@ -964,7 +964,7 @@ COM( find_word,          find_cb,        "FIND",       &fill_word,       ) //@W
 COM( fm_mod_word,        fm_mod_cb,      "FM/MOD",     &find_word,       ) //@W
 COM( ge_word,            ge_cb,          ">=",         &fm_mod_word,     ) //@W
 COM( gt_word,            gt_cb,          ">",          &ge_word,         ) //@W
-COM( here_word,          rvarword,       "HERE",       &gt_word,         &here ) //@W
+COM( here_word,          rivarword,      "HERE",       &gt_word,         &here ) //@W
 COM( in_arrow_word,      rvarword,       ">IN",        &here_word,       &in_arrow ) //@W
 COM( invert_word,        invert_cb,      "INVERT",     &in_arrow_word,   ) //@W
 COM( latest_word,        rvarword,       "LATEST",     &invert_word,     &latest ) //@W
@@ -1033,14 +1033,14 @@ COM( cells_word, codeword, "CELLS", &_5c__word, (void*)&cell_word, (void*)&mul_w
 COM( cell_2b__word, codeword, "CELL+", &cells_word, (void*)&cell_word, (void*)&add_word, (void*)&exit_word )
 
 //@C ,
-//  HERE @ !
+//  HERE !
 //  CELL ALLOT
-COM( _2c__word, codeword, ",", &cell_2b__word, (void*)&here_word, (void*)&at_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
+COM( _2c__word, codeword, ",", &cell_2b__word, (void*)&here_word, (void*)&pling_word, (void*)&cell_word, (void*)&allot_word, (void*)&exit_word )
 
 //@C C,
-//  HERE @ C!
+//  HERE C!
 //  1 ALLOT
-COM( c_2c__word, codeword, "C,", &_2c__word, (void*)&here_word, (void*)&at_word, (void*)&c_pling_word, (void*)&one_word, (void*)&allot_word, (void*)&exit_word )
+COM( c_2c__word, codeword, "C,", &_2c__word, (void*)&here_word, (void*)&c_pling_word, (void*)&one_word, (void*)&allot_word, (void*)&exit_word )
 
 //@C CREATE
 //  \ Get the word name; this is written as a counted string to here.
@@ -1054,9 +1054,9 @@ COM( c_2c__word, codeword, "C,", &_2c__word, (void*)&here_word, (void*)&at_word,
 COM( create_word, codeword, "CREATE", &c_2c__word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_one_word, (void*)&allot_word, (void*)&align_word, (void*)(&_create_word), (void*)&exit_word )
 
 //@C EMIT
-//   HERE @ C!
-//   _stdout HERE @ 1 _write DROP
-COM( emit_word, codeword, "EMIT", &create_word, (void*)&here_word, (void*)&at_word, (void*)&c_pling_word, (void*)&_stdout_word, (void*)&here_word, (void*)&at_word, (void*)&one_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
+//   HERE C!
+//   _stdout HERE 1 _write DROP
+COM( emit_word, codeword, "EMIT", &create_word, (void*)&here_word, (void*)&c_pling_word, (void*)&_stdout_word, (void*)&here_word, (void*)&one_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C TYPE
 // \ ( addr n -- )
@@ -1223,7 +1223,7 @@ static cdefn_t* interpreter_table[] =
 //     C@ 0= IF EXIT THEN              \ --
 //
 //     \ Look up the word.
-//     HERE @ FIND                     \ -- addr kind
+//     HERE FIND                     \ -- addr kind
 //
 //     \ What is it? Calculate an offset into the lookup table.
 //     1+ CELLS
@@ -1233,7 +1233,7 @@ static cdefn_t* interpreter_table[] =
 //     \ Look up the right word and run it.
 //     [&lit_word] [interpreter_table] + @ EXECUTE \ -- addr
 //   AGAIN
-COM( interpret_word, codeword, "INTERPRET", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&at_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)24, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
+COM( interpret_word, codeword, "INTERPRET", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)24, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
 
 static const char prompt_msg[4] = " ok\n";
 //@C INTERACT
@@ -1265,7 +1265,7 @@ COM( quit_word, codeword, "QUIT", &interact_word, (void*)&sp0_word, (void*)&sp_p
 //   DUP C@ + 1+ 0 SWAP C!
 //
 //   \ Open the new file.
-//   HERE @ 1+ O_RDONLY _open
+//   HERE 1+ O_RDONLY _open
 //   DUP 0= IF E_fnf THEN
 //
 //   \ Swap in the new stream, saving the old one to the stack.
@@ -1280,7 +1280,7 @@ COM( quit_word, codeword, "QUIT", &interact_word, (void*)&sp0_word, (void*)&sp_p
 //
 //   \ Restore the old stream.
 //   _input_fd !
-COM( read_2d_file_word, codeword, "READ-FILE", &quit_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&c_pling_word, (void*)&here_word, (void*)&at_word, (void*)&add_one_word, (void*)&_O_RDONLY_word, (void*)&_open_word, (void*)&dup_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&read_2d_file_word.payload[0] + 20), (void*)&E_fnf_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&swap_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&interact_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_close_word, (void*)&drop_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&exit_word )
+COM( read_2d_file_word, codeword, "READ-FILE", &quit_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&add_word, (void*)&add_one_word, (void*)&zero_word, (void*)&swap_word, (void*)&c_pling_word, (void*)&here_word, (void*)&add_one_word, (void*)&_O_RDONLY_word, (void*)&_open_word, (void*)&dup_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&read_2d_file_word.payload[0] + 19), (void*)&E_fnf_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&swap_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&interact_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_close_word, (void*)&drop_word, (void*)&_input_fd_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C :
 //  \ Create the word itself.
@@ -1318,26 +1318,26 @@ COM( variable_word, codeword, "VARIABLE", &constant_word, (void*)&create_word, (
 //   C@ 0= IF E_eol THEN               \ --
 //
 //   \ Look up the word.
-//   HERE @ FIND                       \ -- addr kind
+//   HERE FIND                       \ -- addr kind
 //
 //   \ Not found?
 //   0= IF E_enoent THEN               \ -- addr
 //
 //   \ Compile it.
 //   ,
-IMM( postpone_word, codeword, "POSTPONE", &variable_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 8), (void*)&e_eol_word, (void*)&here_word, (void*)&at_word, (void*)&find_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 15), (void*)&e_enoent_word, (void*)&_2c__word, (void*)&exit_word )
+IMM( postpone_word, codeword, "POSTPONE", &variable_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 8), (void*)&e_eol_word, (void*)&here_word, (void*)&find_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&postpone_word.payload[0] + 14), (void*)&e_enoent_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C IF IMMEDIATE
 // \ -- addr
 //  [&lit_word] [&branch0_word] ,
-//  HERE @
+//  HERE
 //  0 ,
-IMM( if_word, codeword, "IF", &postpone_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
+IMM( if_word, codeword, "IF", &postpone_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C THEN IMMEDIATE
 // \ addr --
-//  HERE @ SWAP !
-IMM( then_word, codeword, "THEN", &if_word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+//  HERE SWAP !
+IMM( then_word, codeword, "THEN", &if_word, (void*)&here_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C ELSE IMMEDIATE
 // \ if-addr -- else-addr
@@ -1345,17 +1345,17 @@ IMM( then_word, codeword, "THEN", &if_word, (void*)&here_word, (void*)&at_word, 
 //  [&lit_word] [&branch_word] ,      \ -- if-addr
 //
 //  \ Remember where the branch label is for patching later.
-//  HERE @ 0 ,                         \ -- if-addr else-addr
+//  HERE 0 ,                         \ -- if-addr else-addr
 //
 //  \ Patch the *old* branch label (from the condition) to the current address.
 //  SWAP                               \ -- else-addr if-addr
 //  [&then_word]
-IMM( else_word, codeword, "ELSE", &then_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)&swap_word, (void*)(&then_word), (void*)&exit_word )
+IMM( else_word, codeword, "ELSE", &then_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&here_word, (void*)&zero_word, (void*)&_2c__word, (void*)&swap_word, (void*)(&then_word), (void*)&exit_word )
 
 //@C BEGIN IMMEDIATE
 // \ -- start-addr
-//  HERE @
-IMM( begin_word, codeword, "BEGIN", &else_word, (void*)&here_word, (void*)&at_word, (void*)&exit_word )
+//  HERE
+IMM( begin_word, codeword, "BEGIN", &else_word, (void*)&here_word, (void*)&exit_word )
 
 //@C AGAIN IMMEDIATE
 // \ start-addr --
@@ -1371,17 +1371,17 @@ IMM( until_word, codeword, "UNTIL", &again_word, (void*)(&lit_word), (void*)(&br
 // \ Used as 'begin <cond> while <loop-body> repeat'.
 // \ start-addr -- start-addr while-target-addr
 //   [&lit_word] [&branch0_word] ,
-//   HERE @
+//   HERE
 //   0 ,
-IMM( while_word, codeword, "WHILE", &until_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
+IMM( while_word, codeword, "WHILE", &until_word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&here_word, (void*)&zero_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C REPEAT IMMEDIATE
 // \ start-addr while-target-addr --
 //   SWAP
 //   [&lit_word] [&branch_word] , ,
 //
-//   HERE @ SWAP !
-IMM( repeat_word, codeword, "REPEAT", &while_word, (void*)&swap_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+//   HERE SWAP !
+IMM( repeat_word, codeword, "REPEAT", &while_word, (void*)&swap_word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&_2c__word, (void*)&here_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C DO IMMEDIATE
 // \ C: -- &leave-addr start-addr
@@ -1389,16 +1389,16 @@ IMM( repeat_word, codeword, "REPEAT", &while_word, (void*)&swap_word, (void*)(&l
 // \    max index --
 //   \ Save the loop exit address; this will be patched by LOOP.
 //   [&lit_word] [&lit_word] ,
-//   HERE @ 0 ,
+//   HERE 0 ,
 //   [&lit_word] [&arrow_r_word] ,
 //
 //   \ Save loop start address onto the compiler's stack.
-//   HERE @
+//   HERE
 //
 //   \ Push the index and max values onto the return stack.
 //   [&lit_word] [&arrow_r_word] ,
 //   [&lit_word] [&arrow_r_word] ,
-IMM( do_word, codeword, "DO", &repeat_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&zero_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&exit_word )
+IMM( do_word, codeword, "DO", &repeat_word, (void*)(&lit_word), (void*)(&lit_word), (void*)&_2c__word, (void*)&here_word, (void*)&zero_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&here_word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&arrow_r_word), (void*)&_2c__word, (void*)&exit_word )
 
 //@C loophelper HIDDEN
 // \ Contains the actual logic for loop.
@@ -1422,8 +1422,8 @@ COM( loophelper_word, codeword, "", &do_word, (void*)&r_arrow_word, (void*)&r_ar
 //   [&lit_word] [&t_drop_word] ,
 //
 //   \ Patch the leave address to contain the loop exit address.
-//   HERE @ SWAP !
-IMM( loop_word, codeword, "LOOP", &loophelper_word, (void*)(&lit_word), (void*)(&loophelper_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&t_drop_word), (void*)&_2c__word, (void*)&here_word, (void*)&at_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+//   HERE SWAP !
+IMM( loop_word, codeword, "LOOP", &loophelper_word, (void*)(&lit_word), (void*)(&loophelper_word), (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch0_word), (void*)&_2c__word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&t_drop_word), (void*)&_2c__word, (void*)&here_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C LEAVE
 // \ R: leave-addr index max
