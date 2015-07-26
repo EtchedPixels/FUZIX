@@ -7,6 +7,10 @@
 	include "cpu.def"
 
 ;
+;	Basic layout
+;
+.equ	EEBASE		0xF600		;	Here upwards owned by EEPROM
+;
 ;	Unbanked memory
 ;
 .equ spibuf,		rambase + 0x00	;	Used during boot, overlays
@@ -58,4 +62,95 @@
 .equ	BDEV_ATA,		0x10
 .equ	BDEVF_LBA,		0x80
 
+
+;
+;	EEPROM entry points
+;
+;	A = bank
+;	X = src, returns value in B or D
+;
+.equ fargetb			, 0xFF40
+.equ fargetw			, 0xFF43
+;
+;	A = bank B = value
+;	X = dst
+;
+.equ farputb			, 0xFF46
+;
+;	A = bank
+;	X = dst, Y = value
+;
+.equ farputw			, 0xFF49
+;
+;	A = srcbank, B = dstbank
+;	X = dst, Y = src
+;	kernel:_tmp1 = length (in eeprom memory - FIXME)
+;
+.equ farcopy			, 0xFF4C
+;
+;	B = bank, X = function, Y = far stack
+;	ret_x, ret_d, ret_y register values on far side
+;
+.equ farcall			, 0xFF4F
+;
+;	B = bank, X = function, Y = far stack
+;	ret_x, ret_d, ret_y register values on far side
+;
+.equ farjump			, 0xFF52
+;
+;	A = bank
+;
+; FIXME - useless ! .equ setbank			, 0xFF55
+;
+;	D = 0
+;
+.equ reboot			, 0xFF58
+;
+;	A = srcbank, B = dstbank
+;	X = dst, Y = src
+;	kernel:_tmp1 = length (in kernel bank)
+;
+.equ farzcopy			, 0xFF5B
+;
+;	A = bank
+;	X = dst
+;	Y = len
+;
+;	Return in D
+;
+.equ farzero			, 0xFF5E
+;
+;	A = device id
+;	B = bank
+;	Y/D = block
+;	X = buffer
+;
+;	Returns B = error code, 0 = ok
+;
+.equ block_read			, 0xFF61
+.equ block_write		, 0xFF64
+;
+;	X = string (in bank 0)
+;
+.equ conputs			, 0xFF67
+;
+;	B = character
+;
+.equ conputc			, 0xFF6A
+;
+;	B = value
+;
+.equ conputhex			, 0xFF6D
+;
+;	B = flags (0 = wait, echo, 1 = wait no echo, 2 = nowait noecho)
+;	returned in B
+;
+.equ conin			, 0xFF70
+;
+;	A = bank
+;	X = buffer
+;	Y = length
+;
+.equ spi_read			, 0xFF73
+.equ spi_write			, 0xFF76
 
