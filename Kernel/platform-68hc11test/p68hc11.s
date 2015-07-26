@@ -15,28 +15,16 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
+	.globl outchar
 
         ; exported debugging tools
         .globl trap_monitor
         .globl trap_reboot
 
+	include "cpu.def"
+	include "eeprom.def"
         include "kernel.def"
         include "../kernel-hc11.def"
-
-;
-;	TODO: hardware registers
-;
-
-	.globl baud
-.equ baud,0xf000
-	.globl sccr1
-.equ sccr1,0xf000
-	.globl sccr2
-.equ sccr2,0xf000
-	.globl scdr
-.equ scdr,0xf000
-	.globl scsr
-.equ scsr,0xf000
 
         .sect .data
 
@@ -60,15 +48,25 @@ trap_monitor:
 trap_reboot:
 	jmp reboot
 
+outchar:
+	psha
+outchar1:
+	ldaa scsr
+	anda #0x80
+	beq outchar
+	stab scdr
+	pula
 init_early:
 	rts
 
 init_hardware:
 	; set system RAM size
-	ldd #512
+	ldd ram		; Size from firmware
 	std ramsize
-	ldd #512-64
-	std procmem
+	clc
+	sbcb #64
+	sbca #0
+	std procmem	; 64K is lost to kernel
 
 	; Our vectors are in high memory unlike Z80 but we still
 	; need vectors

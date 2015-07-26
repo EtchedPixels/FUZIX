@@ -13,7 +13,6 @@
 
 	.globl outnewline
 	.globl outcharhex
-	.globl outchar
 	.globl outstring
 	.globl outx
 	.globl outy
@@ -41,9 +40,9 @@ irqrestore:		; D holds the return from di where A is the cc
 
 outnewline:
 	ldab #0x0d
-	bsr outchar
+	bsr outchar_call
 	ldab #0x0a
-	bra outchar
+	bra outchar_call
 
 
 outcharhex:
@@ -65,20 +64,13 @@ outnibble:
 	ble outh2
 	addb #0x07
 outh2:	addb #0x30
-outchar:
-	psha
-outchar1:
-	ldaa scsr
-	anda #0x80
-	beq outchar1
-	stab scdr
-	pula
-	rts
+outchar_call:
+	jmp outchar
 
 outstring:
 	ldab ,x
 	beq outsdone
-	bsr outchar
+	bsr outchar_call
 	inx
 	bra outstring
 
