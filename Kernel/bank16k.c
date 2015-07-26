@@ -177,7 +177,7 @@ int swapout(ptptr p)
 	uint16_t i;
 	uint8_t *pt = (uint8_t *)&p->p_page;
 
-	if (page)
+	if (!page)
 		panic("process already swapped!\n");
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
