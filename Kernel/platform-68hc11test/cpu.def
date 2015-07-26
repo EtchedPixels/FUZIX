@@ -2,6 +2,16 @@
 ;	Probably belongs somewhere more general eventually
 ;
 
+		.globl porta, pioc, portc, portb, portcl, ddrc, portd
+		.globl ddrd,porte, cforc, oc1m, oc1d, tcnth, tcntl
+		.globl tic1h, tic1l, tic2h, tic2l, tic3h, tic3l
+		.globl toc1h, toc1l, toc2h, toc2l, toc3h, toc3l
+		.globl toc4h, toc4l, tio4o5h, tio4o5l, tctl1, tctl2
+		.globl tmsk1, tflg1, tmsk2, tflg2, pactl, pacnt
+		.globl spcr, spsr, spdr, baud, sccr1, sccr2
+		.globl scsr, scdr, adctl, adr1, adr2, adr3, adr4
+		.globl bprot, eprog, option, coprst, pprog, hprio, init
+
 .equ porta,  iobase + 0x00
 ; reserved 0x01
 .equ pioc,   iobase + 0x02
