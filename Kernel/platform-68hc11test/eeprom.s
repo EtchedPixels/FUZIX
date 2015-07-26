@@ -5,6 +5,7 @@
 ;	- any debug/testing 8)
 ;
 ;	Vector table for functions
+;	Vector table for exceptions/interrupts
 ;	Add functions for spi block copy to/from banks
 ;	Add description of SPI attached devices for OS
 ;	Make serial mode ask if you want serial or retry SD
@@ -88,7 +89,7 @@ wipelow:
 
 	; Save RAM size (fixed for now)
 	ldd #512
-	std ramsize
+	std ram
 	; Set for board (FIXME - .equ for this)
 	ldd #2048
 	std eclock
@@ -608,6 +609,67 @@ interrupt:
 	tys			; back to old stack
 	rti
 
+int_sci:
+	ldx #vector_sci
+	bra interrupt
+int_spi:
+	ldx #vector_spi
+	bra interrupt
+int_pai:
+	ldx #vector_pai
+	bra interrupt
+int_pao:
+	ldx #vector_pao
+	bra interrupt
+int_to:
+	ldx #vector_to
+	bra interrupt
+int_tic4oc5:
+	ldx #vector_toc5
+	bra interrupt
+int_toc4:
+	ldx #vector_toc4
+	bra interrupt
+int_toc3:
+	ldx #vector_toc3
+	bra interrupt
+int_toc2:
+	ldx #vector_toc2
+	bra interrupt
+int_toc1:
+	ldx #vector_toc1
+	bra interrupt
+int_tic3:
+	ldx #vector_tic3
+	bra interrupt
+int_tic2:
+	ldx #vector_tic2
+	bra interrupt
+int_tic1:
+	ldx #vector_tic1
+	bra interrupt
+int_rti:
+	ldx #vector_rti
+	bra interrupt
+int_irq:
+	ldx #vector_irq
+	bra interrupt
+int_xirq:
+	ldx #vector_xirq
+	bra interrupt
+int_swi:
+	ldx #vector_swi
+	bra interrupt
+int_ill:
+	ldx #vector_ill
+	bra interrupt
+int_cop:
+	ldx #vector_cop
+	bra interrupt
+int_cmf:
+	ldx #vector_cmf
+	bra interrupt
+
 boot1:	.ascii "68HC811 Bootware"
 	.byte 13,10,0
 boot2:	.byte 13,10
@@ -647,9 +709,70 @@ hitnewline:
 newline:
 	.byte 13,10,0
 sergo:
-	.ascii "Serial boot: being download"
+	.ascii "Serial boot: begin download"
 	.byte 13,10
 	.ascii ">"
 	.byte 0
 
+	.sect .syscall		; starts at 0xFF40 for now
 
+jfargetb:
+	jmp fargetb
+jfargetw:
+	jmp fargetw
+jfarputb:
+	jmp farputb
+jfarputw:
+	jmp farputw
+jfarcopy:
+	jmp farcopy
+jfarcall:
+	jmp farcall
+jfarjump:
+	jmp farjump
+jreboot:
+	jmp reboot
+jfarzcopy:
+	jmp farzcopy
+jfarzero:
+	jmp farzero
+jblockread:
+	jmp block_read
+jblockwrite:
+	jmp block_write
+jconputs:
+	jmp conputs
+jconputc:
+	jmp conputc
+jconputhex:
+	jmp conputhex
+jconin:
+	jmp conin
+jspiread:
+	jmp spi_read
+jspiwrite:
+	jmp spi_write
+
+	.sect .vector		; FIXME: set to 0xFFD6 in the link file
+
+	.word	int_sci
+	.word	int_spi
+	.word	int_pai
+	.word	int_pao
+	.word	int_to
+	.word	int_tic4oc5
+	.word	int_toc4
+	.word	int_toc3
+	.word	int_toc2
+	.word	int_toc1
+	.word	int_tic3
+	.word	int_tic2
+	.word	int_tic1
+	.word	int_rti
+	.word	int_irq
+	.word	int_xirq
+	.word	int_swi
+	.word	int_ill
+	.word	int_cop
+	.word	int_cmf
+	.word	_start		; Reset vector

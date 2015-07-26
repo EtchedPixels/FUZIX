@@ -9,7 +9,7 @@
 ;
 ;	Basic layout
 ;
-.equ	EEBASE		0xF600		;	Here upwards owned by EEPROM
+.equ	EEBASE,		0xF600		;	Here upwards owned by EEPROM
 ;
 ;	Unbanked memory
 ;
@@ -21,8 +21,8 @@
 .equ ret_d,		rambase + 0x06	;	For far calls. Do not assume
 .equ ret_x,		rambase + 0x08	;	values in rambase preserved
 .equ ret_y, 		rambase + 0x0A	;
-.equ ramsize,		rambase + 0x10	;	RAM size in KB
-.equ eclock		rambase + 0x12	;	E clock in KHz
+.equ ram,		rambase + 0x10	;	RAM size in KB
+.equ eclock,		rambase + 0x12	;	E clock in KHz
 .equ unbanked_user,	rambase + 0x40	;	128 bytes of unbanked
 					;	RAM owned by the OS
 
