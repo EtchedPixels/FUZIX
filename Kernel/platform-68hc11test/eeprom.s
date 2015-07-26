@@ -4,8 +4,6 @@
 ;	TODO
 ;	- any debug/testing 8)
 ;
-;	Vector table for functions
-;	Vector table for exceptions/interrupts
 ;	Add functions for spi block copy to/from banks
 ;	Add description of SPI attached devices for OS
 ;	Make serial mode ask if you want serial or retry SD
@@ -19,6 +17,8 @@
 ;	the boot block can be tighter ?
 ;
 ;
+	.mode mshort
+
 	.globl _start
 
 	include "eeprom.def"
@@ -714,7 +714,44 @@ sergo:
 	.ascii ">"
 	.byte 0
 
-	.sect .syscall		; starts at 0xFF40 for now
+spi_read:
+	rts
+spi_write:
+	rts
+conin:
+	cmpb #2			; no wait
+	beq conin_nb
+	cmpb #1
+	beq conin_ne
+	jsr waitkey
+	jsr outchar
+	rts
+conin_ne:
+	jmp waitkey
+conin_nb:
+	ldab scsr
+	andb #0x20
+	beq retff
+	ldab scdr
+	rts
+retff:	ldab #0xff
+	rts
+
+conputs:
+	jmp outstr
+conputc:
+	jmp outchar
+conputhex:
+	jmp outcharhex
+
+block_read:
+	ldab #0xff
+	rts
+block_write:
+	ldab #0xff
+	rts
+
+	.sect .syscalls,"ax"		; starts at 0xFF40 for now
 
 jfargetb:
 	jmp fargetb
@@ -753,7 +790,7 @@ jspiread:
 jspiwrite:
 	jmp spi_write
 
-	.sect .vector		; FIXME: set to 0xFFD6 in the link file
+	.sect .vectors		; FIXME: set to 0xFFD6 in the link file
 
 	.word	int_sci
 	.word	int_spi
