@@ -367,71 +367,102 @@ static void panic(const char* message)
 }
 
 #if !defined FAST
+static void dadjust(int delta)
+{
+	dsp -= delta;
+	if (dsp <= dstack)
+		panic("data stack overflow");
+	if (dsp > dstack+DSTACKSIZE)
+		panic("data stack underflow");
+}
+
+static void radjust(int delta)
+{
+	rsp -= delta;
+	if (rsp <= rstack)
+		panic("return stack overflow");
+	if (rsp > rstack+RSTACKSIZE)
+		panic("return stack underflow");
+}
+
 static void dpush(cell_t val)
 {
-	if (dsp == &dstack[DSTACKSIZE])
-		panic("data stack overflow");
-	*dsp++ = val;
+	dadjust(1);
+	*dsp = val;
 }
 
 static cell_t dpop(void)
 {
-	if (dsp == &dstack[0])
-		panic("data stack underflow");
-	return *--dsp;
+	cell_t v = *dsp;
+	dadjust(-1);
+	return v;
 }
 
 static cell_t dpeek(int count)
 {
-	cell_t* ptr = dsp - count;
-	if (ptr < dstack)
+	cell_t* ptr = dsp + count;
+	if (ptr > dstack+DSTACKSIZE)
 		panic("data stack underflow");
 	return *ptr;
 }
 
 static void rpush(cell_t val)
 {
-	if (rsp == &rstack[RSTACKSIZE])
-		panic("return stack overflow");
-	*rsp++ = val;
+	radjust(1);
+	*rsp = val;
 }
 
 static cell_t rpop(void)
 {
-	if (rsp == &rstack[0])
-		panic("return stack underflow");
-	return *--rsp;
+	cell_t v = *rsp;
+	radjust(-1);
+	return v;
 }
 
 static cell_t rpeek(int count)
 {
-	cell_t* ptr = rsp - count;
-	if (ptr < rstack)
+	cell_t* ptr = rsp + count;
+	if (ptr >= rstack+RSTACKSIZE)
 		panic("return stack underflow");
 	return *ptr;
 }
 
 #else
-static inline void dpush(cell_t val) { *dsp++ = val; }
-static inline cell_t dpop(void) { return *--dsp; }
-static inline cell_t dpeek(int count) { return dsp[-count]; }
-static inline void rpush(cell_t val) { *rsp++ = val; }
-static inline cell_t rpop(void) { return *--rsp; }
-static inline cell_t rpeek(int count) { return rsp[-count]; }
+static inline void dadjust(cell_t val, int delta) { dsp -= delta; }
+static inline void radjust(cell_t val, int delta) { rsp -= delta; }
+static inline void dpush(cell_t val) { *--dsp = val; }
+static inline cell_t dpop(void) { return *dsp++; }
+static inline cell_t dpeek(int count) { return dsp[count]; }
+static inline void rpush(cell_t val) { *--rsp = val; }
+static inline cell_t rpop(void) { return *rsp++; }
+static inline cell_t rpeek(int count) { return rsp[count]; }
 #endif
+
+static pair_t readpair(ucell_t* ptr)
+{
+	upair_t p = ptr[0];
+	p <<= sizeof(cell_t)*8;
+	p |= ptr[1];
+	return p;
+}
+
+static void writepair(ucell_t* ptr, upair_t p)
+{
+	ptr[1] = p;
+	ptr[0] = p >> (sizeof(cell_t)*8);
+}
 
 static pair_t dpopd(void)
 {
-	upair_t p = (ucell_t)dpop();
-	p <<= sizeof(cell_t)*8;
-	p |= (ucell_t)dpop();
-	return p;
+	pair_t v = readpair((ucell_t*) dsp);
+	dadjust(-2);
+	return v;
 }
 
 static void dpushd(upair_t p)
 {
-	dpush(p);
-	dpush(p >> sizeof(cell_t)*8);
+	dadjust(2);
+	writepair((ucell_t*) dsp, p);
 }
 
 static void dpushbool(bool b)
@@ -883,7 +914,7 @@ static void branchif_cb(cdefn_t* w)   { if (dpop() == (cell_t)*w->payload) pc = 
 static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
-static void drop_cb(cdefn_t* w)       { dpop(); }
+static void drop_cb(cdefn_t* w)       { dadjust(-1); }
 static void equals0_cb(cdefn_t* w)    { dpushbool(dpop() == 0); }
 static void equals_cb(cdefn_t* w)     { dpushbool(dpop() == dpop()); }
 static void exit_cb(cdefn_t* w)       { pc = (void*)rpop(); }
@@ -907,13 +938,13 @@ static void peekcon_cb(cdefn_t* w)    { dpush(dpeek((cell_t) *w->payload)); }
 static void peekcon2_cb(cdefn_t* w)   { peekcon_cb(w); peekcon_cb(w); }
 static void pick_cb(cdefn_t* w)       { dpush(dpeek(dpop())); }
 static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
-static void q_dup_cb(cdefn_t* w)      { cell_t a = dpeek(1); if (a) dpush(a); }
+static void q_dup_cb(cdefn_t* w)      { cell_t a = dpeek(0); if (a) dpush(a); }
 static void r_arrow_cb(cdefn_t* w)    { dpush(rpop()); }
 static void rpick_cb(cdefn_t* w)      { dpush(rpeek(dpop())); }
 static void rshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a >> u); }
 static void rsshift_cb(cdefn_t* w)    { dpush(dpop() >> 1); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
-static void t_drop_cb(cdefn_t* w)     { dpop(); dpop(); }
+static void t_drop_cb(cdefn_t* w)     { dadjust(-2); }
 static void u_lt_cb(cdefn_t* w)       { ucell_t a = dpop(); ucell_t b = dpop(); dpushbool(b < a); }
 static void u_m_star_cb(cdefn_t* w)   { dpushd((upair_t)(ucell_t)dpop() * (upair_t)(ucell_t)dpop()); }
 static void xor_cb(cdefn_t* w)        { dpush(dpop() ^ dpop()); }
@@ -964,7 +995,7 @@ COM( cell_word,          rvarword,       "CELL",       &c_pling_word,    (void*)
 COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
 COM( dabs_word,          dabs_cb,        "DABS",       &close_sq_word,   ) //@W
 COM( drop_word,          drop_cb,        "DROP",       &dabs_word,       ) //@W
-COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)1 ) //@W
+COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)0 ) //@W
 COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
 COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
 COM( execute_word,       execute_cb,     "EXECUTE",    &equals_word,     ) //@W
@@ -991,7 +1022,7 @@ COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
 COM( notequals0_word,    notequals0_cb,  "0<>",        &not_equals_word, ) //@W
 COM( one_word,           rvarword,       "1",          &notequals0_word, (void*)1 ) //@W
 COM( or_word,            or_cb,          "OR",         &one_word,        ) //@W
-COM( over_word,          peekcon_cb,     "OVER",       &or_word,         (void*)2 ) //@W
+COM( over_word,          peekcon_cb,     "OVER",       &or_word,         (void*)1 ) //@W
 COM( pad_word,           rvarword,       "PAD",        &over_word,       &here ) //@W
 COM( pick_word,          pick_cb,        "PICK",       &pad_word,        ) //@W
 COM( pling_word,         pling_cb,       "!",          &pick_word,       ) //@W
@@ -1000,12 +1031,12 @@ COM( r_arrow_word,       r_arrow_cb,     "R>",         &q_dup_word,      ) //@W
 COM( rot_word,           rot_cb,         "ROT",        &r_arrow_word,    ) //@W
 COM( rpick_word,         rpick_cb,       "RPICK",      &rot_word,        ) //@W
 COM( rshift_word,        rshift_cb,      "RSHIFT",     &rpick_word,      ) //@W
-COM( rsp0_word,          rvarword,       "RSP0",       &rshift_word,     rstack ) //@W
+COM( rsp0_word,          rvarword,       "RSP0",       &rshift_word,     rstack+RSTACKSIZE ) //@W
 COM( rsp_at_word,        rivarword,      "RSP@",       &rsp0_word,       &rsp ) //@W
 COM( rsp_pling_word,     wivarword,      "RSP!",       &rsp_at_word,     &rsp ) //@W
 COM( rsshift_word,       rsshift_cb,     "2/",         &rsp_pling_word,  ) //@W
 COM( source_word,        r2varword,      "SOURCE",     &rsshift_word,    input_buffer, (void*)MAX_LINE_LENGTH ) //@W
-COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack ) //@W
+COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack+DSTACKSIZE ) //@W
 COM( sp_at_word,         rivarword,      "SP@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "SP!",        &sp_at_word,      &dsp ) //@W
 COM( state_word,         rvarword,       "STATE",      &sp_pling_word,   &state ) //@W
@@ -1013,8 +1044,8 @@ COM( sub_one_word,       increment_cb,   "1-",         &state_word,      (void*)
 COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
 COM( swap_word,          swap_cb,        "SWAP",       &sub_word,        ) //@W
 COM( t_drop_word,        t_drop_cb,      "2DROP",      &swap_word,       ) //@W
-COM( t_dup_word,         peekcon2_cb,    "2DUP",       &t_drop_word,     (void*)2 ) //@W
-COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)4 ) //@W
+COM( t_dup_word,         peekcon2_cb,    "2DUP",       &t_drop_word,     (void*)1 ) //@W
+COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)3 ) //@W
 COM( t_swap_word,        t_swap_cb,      "2SWAP",      &t_over_word,     ) //@W
 COM( tuck_word,          tuck_cb,        "TUCK",       &t_swap_word,     ) //@W
 COM( two_word,           rvarword,       "2",          &tuck_word,       (void*)2 ) //@W
@@ -1039,9 +1070,13 @@ COM( cells_word, codeword, "CELLS", &_5c__word, (void*)&cell_word, (void*)&mul_w
 //  CELL +
 COM( cell_2b__word, codeword, "CELL+", &cells_word, (void*)&cell_word, (void*)&add_word, (void*)&exit_word )
 
+//@C CELL-
+//  CELL -
+COM( cell_2d__word, codeword, "CELL-", &cell_2b__word, (void*)&cell_word, (void*)&sub_word, (void*)&exit_word )
+
 //@C CHAR+
 //  1+
-COM( char_2b__word, codeword, "CHAR+", &cell_2b__word, (void*)&add_one_word, (void*)&exit_word )
+COM( char_2b__word, codeword, "CHAR+", &cell_2d__word, (void*)&add_one_word, (void*)&exit_word )
 
 //@C CHARS
 // \ nop!
@@ -1505,8 +1540,8 @@ COM( leave_word, codeword, "LEAVE", &loop_word, (void*)&r_arrow_word, (void*)&dr
 //@C I
 // \ R: leave-addr index max -- leave-addr index max
 // \    -- index
-//  3 RPICK
-COM( i_word, codeword, "I", &leave_word, (void*)&lit_word, (void*)3, (void*)&rpick_word, (void*)&exit_word )
+//  2 RPICK
+COM( i_word, codeword, "I", &leave_word, (void*)&two_word, (void*)&rpick_word, (void*)&exit_word )
 
 //@C HEX
 //  16 BASE !
@@ -1517,12 +1552,12 @@ COM( hex_word, codeword, "HEX", &i_word, (void*)&lit_word, (void*)16, (void*)&ba
 COM( decimal_word, codeword, "DECIMAL", &hex_word, (void*)&lit_word, (void*)10, (void*)&base_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C S>D
-//   DUP 0< IF -1 ELSE 0 THEN
+//   DUP 0< IF -1 ELSE 0 THEN 
 COM( s_3e_d_word, codeword, "S>D", &decimal_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&s_3e_d_word.payload[0] + 7), (void*)&m_one_word, (void*)&branch_word, (void*)(&s_3e_d_word.payload[0] + 8), (void*)&zero_word, (void*)&exit_word )
 
 //@C R@
-//   2 RPICK
-COM( r_40__word, codeword, "R@", &s_3e_d_word, (void*)&two_word, (void*)&rpick_word, (void*)&exit_word )
+//   1 RPICK
+COM( r_40__word, codeword, "R@", &s_3e_d_word, (void*)&one_word, (void*)&rpick_word, (void*)&exit_word )
 
 //@C +- HIDDEN
 //   0< IF NEGATE THEN
@@ -1561,8 +1596,8 @@ COM( _2a__2f__word, codeword, "*/", &mod_word, (void*)&arrow_r_word, (void*)&m_s
 COM( _2a__2f_mod_word, codeword, "*/MOD", &_2a__2f__word, (void*)&arrow_r_word, (void*)&m_star_word, (void*)&r_arrow_word, (void*)&fm_mod_word, (void*)&exit_word )
 
 //@C DEPTH
-//  SP@ SP0 - CELL /
-COM( depth_word, codeword, "DEPTH", &_2a__2f_mod_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&sub_word, (void*)&cell_word, (void*)&_2f__word, (void*)&exit_word )
+//  SP0 SP@ - CELL / 1-
+COM( depth_word, codeword, "DEPTH", &_2a__2f_mod_word, (void*)&sp0_word, (void*)&sp_at_word, (void*)&sub_word, (void*)&cell_word, (void*)&_2f__word, (void*)&sub_one_word, (void*)&exit_word )
 
 //@C s"helper HIDDEN
 // \ -- addr count
@@ -1689,39 +1724,32 @@ COM( _2e__word, codeword, ".", &_2e_r_word, (void*)&zero_word, (void*)&_2e_r_wor
 //   0 U.R SPACE
 COM( u_2e__word, codeword, "U.", &_2e__word, (void*)&zero_word, (void*)&u_2e_r_word, (void*)&space_word, (void*)&exit_word )
 
-//@C .S
-//   SP@ SP0
+//@C showstack HIDDEN
+// \ Dumps the contents of a stack.
+// \ ( SP@ SP0 -- )
 //   BEGIN
-//     2DUP >
+//     2DUP <>
 //   WHILE
+//     CELL-
 //     DUP @ .
-//     CELL +
 //   REPEAT
 //   2DROP
 //   CR
-COM( _2e_s_word, codeword, ".S", &u_2e__word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&t_dup_word, (void*)&gt_word, (void*)&branch0_word, (void*)(&_2e_s_word.payload[0] + 13), (void*)&dup_word, (void*)&at_word, (void*)&_2e__word, (void*)&cell_word, (void*)&add_word, (void*)&branch_word, (void*)(&_2e_s_word.payload[0] + 2), (void*)&t_drop_word, (void*)&cr_word, (void*)&exit_word )
+COM( showstack_word, codeword, "", &u_2e__word, (void*)&t_dup_word, (void*)&not_equals_word, (void*)&branch0_word, (void*)(&showstack_word.payload[0] + 10), (void*)&cell_2d__word, (void*)&dup_word, (void*)&at_word, (void*)&_2e__word, (void*)&branch_word, (void*)(&showstack_word.payload[0] + 0), (void*)&t_drop_word, (void*)&cr_word, (void*)&exit_word )
 
-//@C 2@
-// \ addr -- hi lo
-//  DUP @                              \ addr lo
-//  SWAP                               \ lo addr
-//  CELL+ @                            \ lo hi
-//  SWAP                               \ hi lo
-COM( _32__40__word, codeword, "2@", &_2e_s_word, (void*)&dup_word, (void*)&at_word, (void*)&swap_word, (void*)&cell_2b__word, (void*)&at_word, (void*)&swap_word, (void*)&exit_word )
+//@C .S
+//   SP@ SP0 showstack
+COM( _2e_s_word, codeword, ".S", &showstack_word, (void*)&sp_at_word, (void*)&sp0_word, (void*)&showstack_word, (void*)&exit_word )
 
-//@C 2!
-// \ hi lo addr --
-//   TUCK                              \ hi addr lo addr
-//   !                                 \ hi addr
-//   CELL+                             \ hi addr+C
-//   !
-COM( _32__21__word, codeword, "2!", &_32__40__word, (void*)&tuck_word, (void*)&pling_word, (void*)&cell_2b__word, (void*)&pling_word, (void*)&exit_word )
+//@C .RS
+//   RSP@ CELL+ RSP0 showstack
+COM( _2e_rs_word, codeword, ".RS", &_2e_s_word, (void*)&rsp_at_word, (void*)&cell_2b__word, (void*)&rsp0_word, (void*)&showstack_word, (void*)&exit_word )
 
 //@C CHAR
 //   BL WORD
 //   DUP C@ 0= IF E_eol THEN
 //   1+ C@
-COM( char_word, codeword, "CHAR", &_32__21__word, (void*)&bl_word, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&char_word.payload[0] + 8), (void*)&e_eol_word, (void*)&add_one_word, (void*)&c_at_word, (void*)&exit_word )
+COM( char_word, codeword, "CHAR", &_2e_rs_word, (void*)&bl_word, (void*)&word_word, (void*)&dup_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&char_word.payload[0] + 8), (void*)&e_eol_word, (void*)&add_one_word, (void*)&c_at_word, (void*)&exit_word )
 
 //@C [CHAR] IMMEDIATE
 //   CHAR LITERAL
@@ -1735,8 +1763,16 @@ IMM( _5b_char_5d__word, codeword, "[CHAR]", &char_word, (void*)&char_word, (void
 //   [&lit_word] [&type_word] ,
 IMM( _2e__22__word, codeword, ".\"", &_5b_char_5d__word, (void*)&s_22__word, (void*)(&lit_word), (void*)(&type_word), (void*)&_2c__word, (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &_2e__22__word; //@E
-static defn_t* latest = (defn_t*) &_2e__22__word; //@E
+//@C 2@
+//   DUP CELL+ @ SWAP @
+COM( _32__40__word, codeword, "2@", &_2e__22__word, (void*)&dup_word, (void*)&cell_2b__word, (void*)&at_word, (void*)&swap_word, (void*)&at_word, (void*)&exit_word )
+
+//@C 2!
+//   SWAP OVER ! CELL+ !
+COM( _32__21__word, codeword, "2!", &_32__40__word, (void*)&swap_word, (void*)&over_word, (void*)&pling_word, (void*)&cell_2b__word, (void*)&pling_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &_32__21__word; //@E
+static defn_t* latest = (defn_t*) &_32__21__word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -1764,23 +1800,26 @@ int main(int argc, const char* argv[])
 		}
 	}
 			
-	dsp = dstack;
-	rsp = rstack;
+	dsp = dstack + DSTACKSIZE;
+	rsp = rstack + RSTACKSIZE;
 
 	pc = (defn_t**) &quit_word.payload[0];
 	for (;;)
 	{
 		const struct definition* w = (void*) *pc++;
+		/* Uncomment this to trace the current program counter, stack and
+		 * word for every bytecode. */
 		#if 0
 			cell_t* p;
 			printf("%p ", pc-1);
 			printf("S(");
-			for (p = dstack; p < dsp; p++)
+			for (p = dstack+DSTACKSIZE-1; p >= dsp; p--)
 				printf("%lx ", *p);
 			printf(") ");
+			/* Uncomment this to also trace the return stack. */
 			#if 0
 				printf("R(");
-				for (p = rstack; p < rsp; p++)
+				for (p = rstack+RSTACKSIZE-1; p >= rsp; p--)
 					printf("%lx ", *p);
 				printf(") ");
 			#endif
