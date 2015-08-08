@@ -612,7 +612,15 @@ static cdefn_t open_sq_word ;
 /*                                  WORDS                                  */
 /* ======================================================================= */
 
-static void codeword(cdefn_t* w) { rpush((cell_t) pc); pc = (void*) &w->payload[0]; }
+static void codeword(cdefn_t* w)
+{
+	rpush((cell_t) pc);
+	pc = (void*) &w->payload[0];
+	#if 0
+		printf("[bytecode %p]\n", pc);
+	#endif
+}
+
 static void dataword(cdefn_t* w) { dpush((cell_t) &w->payload[0]); }
 static void rvarword(cdefn_t* w) { dpush((cell_t) w->payload[0]); }
 static void r2varword(cdefn_t* w) { dpush((cell_t) w->payload[0]); dpush((cell_t) w->payload[1]); }
@@ -744,8 +752,8 @@ static void _create_cb(cdefn_t* w)
 	defn->next = latest;
 	#if 0
 		printf("[defined ");
-		fwrite(&defn->name->data[0], 1, defn->name->len & 0x7f, stdout);
-		printf("]\n");
+		fwrite(&defn->name->data[0], 1, defn->name->len & FL__MASK, stdout);
+		printf(" (name @ %p) -> %p]\n", defn->name, defn);
 	#endif
 	latest = defn;
 }
@@ -847,8 +855,8 @@ static void execute_cb(cdefn_t* w)
 	cdefn_t* p = (void*) dpop();
 	#if 0
 		printf("[execute ");
-		fwrite(&p->name->data[0], 1, p->name->len & 0x7f, stdout);
-		printf("]\n");
+		fwrite(&p->name->data[0], 1, p->name->len & FL__MASK, stdout);
+		printf(" (name @ %p) -> %p]\n", p->name, p);
 	#endif
 	p->code(p);
 }
@@ -1388,18 +1396,58 @@ COM( read_2d_file_word, codeword, "READ-FILE", &quit_word, (void*)&lit_word, (vo
 //  ]
 COM( _3a__word, codeword, ":", &read_2d_file_word, (void*)&create_word, (void*)&smudge_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&close_sq_word, (void*)&exit_word )
 
+//@C DOES>
+// \ Turns a simple CREATE word into a code word.
+//   \ Get the address of name field of the CREATEd word.
+//   LATEST @ CELL+                        \ addr --
+//
+//   \ Fetch it.
+//   DUP @                                 \ addr name --
+//
+//   \ Set the field to null (we don't want the old word being looked up).
+//   0                                     \ addr name 0 --
+//   ROT                                   \ name 0 addr --
+//   !                                     \ name --
+//
+//   \ Remember what the last word was.
+//   LATEST @ SWAP                         \ oldword name --
+//
+//   \ Ensure alignment, and create the new low level header.
+//   ALIGN [&_create_word]                 \ oldword --
+//
+//   \ Turn it into a runnable word.
+//   [&lit_word] [codeword] LATEST @ !     \ oldword
+//
+//   \ The first thing it does is call the old word (to push the data area
+//   \ defined with CREATE).
+//   ,
+//   
+//   \ Then it's going to jump to the bytecode in the word containing the
+//   \ DOES>. (That's the one we're being called from.)
+//   [&lit_word] [&branch_word] ,
+//   R> ,
+//
+//   \ Meanwhile, the word we're being called from is going to simply exit.
+//   \ (So, not running the remainder of our bytecode.) As we've popped
+//   \ DOES>'s return address, exiting from here will do that automatically.
+COM( does_3e__word, codeword, "DOES>", &_3a__word, (void*)&latest_word, (void*)&at_word, (void*)&cell_2b__word, (void*)&dup_word, (void*)&at_word, (void*)&zero_word, (void*)&rot_word, (void*)&pling_word, (void*)&latest_word, (void*)&at_word, (void*)&swap_word, (void*)&align_word, (void*)(&_create_word), (void*)&smudge_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&r_arrow_word, (void*)&_2c__word, (void*)&exit_word )
+
 //@C ; IMMEDIATE
 //  [&lit_word] [&exit_word] ,
 //  SMUDGE
 //  [
-IMM( _3b__word, codeword, ";", &_3a__word, (void*)(&lit_word), (void*)(&exit_word), (void*)&_2c__word, (void*)&smudge_word, (void*)&open_sq_word, (void*)&exit_word )
+IMM( _3b__word, codeword, ";", &does_3e__word, (void*)(&lit_word), (void*)(&exit_word), (void*)&_2c__word, (void*)&smudge_word, (void*)&open_sq_word, (void*)&exit_word )
+
+//@C >BODY
+//  3 CELLS +
+COM( _3e_body_word, codeword, ">BODY", &_3b__word, (void*)&lit_word, (void*)3, (void*)&cells_word, (void*)&add_word, (void*)&exit_word )
 
 //@C CONSTANT
 // \ ( value -- )
 //  CREATE
 //  [&lit_word] [rvarword] LATEST @ !
 //  ,
-COM( constant_word, codeword, "CONSTANT", &_3b__word, (void*)&create_word, (void*)(&lit_word), (void*)(rvarword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&_2c__word, (void*)&exit_word )
+COM( constant_word, codeword, "CONSTANT", &_3e_body_word, (void*)&create_word, (void*)(&lit_word), (void*)(rvarword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C VARIABLE
 //  CREATE 0 ,
@@ -1858,7 +1906,7 @@ int main(int argc, const char* argv[])
 				printf("%lx ", *p);
 			printf(") ");
 			/* Uncomment this to also trace the return stack. */
-			#if 1
+			#if 0
 				printf("R(");
 				for (p = rstack+RSTACKSIZE-1; p >= rsp; p--)
 					printf("%lx ", *p);
