@@ -334,7 +334,9 @@ static uint8_t* here_top;
 typedef void code_fn(cdefn_t* w);
 static void align_cb(cdefn_t* w);
 
-#define FL_IMM 0x80
+#define FL_IMMEDIATE 0x80
+#define FL_SMUDGE    0x40
+#define FL__MASK     0x3f
 
 #define CONST_STRING(n, v) \
 	static const char n[sizeof(v)-1] = v
@@ -348,7 +350,7 @@ struct fstring
 struct definition
 {
 	code_fn* code;
-	struct fstring* name;
+	struct fstring* name; // top bits of len are flags!
 	cdefn_t* next;
 	void* payload[];
 };
@@ -497,8 +499,8 @@ static void* claim_workspace(size_t length)
  * dictionary as a flag). */
 static int fstreq(const struct fstring* f1, const struct fstring* f2)
 {
-	int len1 = f1->len & 0x7f;
-	int len2 = f2->len & 0x7f;
+	int len1 = f1->len & FL__MASK;
+	int len2 = f2->len & FL__MASK;
 	if (len1 != len2)
 		return 0;
 	return (memcmp(f1->data, f2->data, len1) == 0);
@@ -581,6 +583,7 @@ static cdefn_t rsp0_word ;
 static cdefn_t rsp_at_word ;
 static cdefn_t rsp_pling_word ;
 static cdefn_t rsshift_word ;
+static cdefn_t smudge_word ;
 static cdefn_t source_word ;
 static cdefn_t sp0_word ;
 static cdefn_t sp_at_word ;
@@ -668,7 +671,12 @@ static void fill_cb(cdefn_t* w)
 
 static void immediate_cb(cdefn_t* w)
 {
-	latest->name->len |= FL_IMM;
+	latest->name->len |= FL_IMMEDIATE;
+}
+
+static void smudge_cb(cdefn_t* w)
+{
+	latest->name->len ^= FL_SMUDGE;
 }
 
 static bool is_delimiter(int c, int delimiter)
@@ -758,7 +766,7 @@ static void find_cb(cdefn_t* w)
 		if (current->name && fstreq(name, current->name))
 		{
 			dpush((cell_t) current);
-			dpush((current->name->len & FL_IMM) ? 1 : -1);
+			dpush((current->name->len & FL_IMMEDIATE) ? 1 : -1);
 			return;
 		}
 		current = current->next;
@@ -960,11 +968,12 @@ static void xor_cb(cdefn_t* w)        { dpush(dpop() ^ dpop()); }
 	static cdefn_t w = { c, (struct fstring*) &w##_name, l, { p } };
 
 #define COM(w, c, n, l, p...) WORD(w, c, n, l, 0, p)
-#define IMM(w, c, n, l, p...) WORD(w, c, n, l, FL_IMM, p)
+#define IMM(w, c, n, l, p...) WORD(w, c, n, l, FL_IMMEDIATE, p)
 
 /* A list of words go here. To add a word, add a new entry and run this file as
- * a shell script. The link field will be set correctly.
- * BEWARE: these lines are parsed using whitespace. LEAVE EXACTLY AS IS.*/
+ * a shell script. The link field will be set correctly. (They'll also be lined
+ * up for you.)
+ */
 //@WORDLIST
 COM( E_fnf_word,         E_fnf_cb,       "E_fnf",      NULL,             (void*)0 ) //@W
 COM( _O_RDONLY_word,     rvarword,       "O_RDONLY",   &E_fnf_word,      (void*)O_RDONLY ) //@W
@@ -1041,7 +1050,8 @@ COM( rsp0_word,          rvarword,       "RSP0",       &rshift_word,     rstack+
 COM( rsp_at_word,        rivarword,      "RSP@",       &rsp0_word,       &rsp ) //@W
 COM( rsp_pling_word,     wivarword,      "RSP!",       &rsp_at_word,     &rsp ) //@W
 COM( rsshift_word,       rsshift_cb,     "2/",         &rsp_pling_word,  ) //@W
-COM( source_word,        r2varword,      "SOURCE",     &rsshift_word,    input_buffer, (void*)MAX_LINE_LENGTH ) //@W
+COM( smudge_word,        smudge_cb,      "SMUDGE",     &rsshift_word,    ) //@W
+COM( source_word,        r2varword,      "SOURCE",     &smudge_word,     input_buffer, (void*)MAX_LINE_LENGTH ) //@W
 COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack+DSTACKSIZE ) //@W
 COM( sp_at_word,         rivarword,      "SP@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "SP!",        &sp_at_word,      &dsp ) //@W
@@ -1368,17 +1378,21 @@ COM( read_2d_file_word, codeword, "READ-FILE", &quit_word, (void*)&lit_word, (vo
 //  \ Create the word itself.
 //  CREATE
 //
+//  \ It musn't be findable until compilation end.
+//  SMUDGE
+//
 //  \ Turn it into a runnable word.
 //  [&lit_word] [codeword] LATEST @ !
 //
 //  \ Switch to compilation mode.
 //  ]
-COM( _3a__word, codeword, ":", &read_2d_file_word, (void*)&create_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&close_sq_word, (void*)&exit_word )
+COM( _3a__word, codeword, ":", &read_2d_file_word, (void*)&create_word, (void*)&smudge_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&close_sq_word, (void*)&exit_word )
 
 //@C ; IMMEDIATE
 //  [&lit_word] [&exit_word] ,
+//  SMUDGE
 //  [
-IMM( _3b__word, codeword, ";", &_3a__word, (void*)(&lit_word), (void*)(&exit_word), (void*)&_2c__word, (void*)&open_sq_word, (void*)&exit_word )
+IMM( _3b__word, codeword, ";", &_3a__word, (void*)(&lit_word), (void*)(&exit_word), (void*)&_2c__word, (void*)&smudge_word, (void*)&open_sq_word, (void*)&exit_word )
 
 //@C CONSTANT
 // \ ( value -- )
