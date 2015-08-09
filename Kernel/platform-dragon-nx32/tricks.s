@@ -73,7 +73,7 @@ idling:
 	bne slow_path
 
 	; Was the waker us ?
-	ldx U_DATA + U_DATA__U_PTAB
+	ldx U_DATA__U_PTAB
 	lda P_TAB__P_STATUS_OFFSET,x
 	cmpa #P_READY
 	; No: follow the slow path
@@ -94,7 +94,7 @@ idling:
 	; bank switch.
 	;
 	andcc #0xef
-	puls x,y,u,pc
+	puls d,y,u,pc
 
 
 slow_path:
@@ -103,7 +103,7 @@ slow_path:
 
 	ldx #U_DATA
 	ldy #U_DATA_STASH
-stash	ldd ,x++
+stash:	ldd ,x++
 	std ,y++
 	cmpx #U_DATA+U_DATA__TOTALSIZE
 	bne stash

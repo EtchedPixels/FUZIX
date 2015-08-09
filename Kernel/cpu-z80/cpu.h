@@ -10,6 +10,10 @@ typedef uint16_t uarg_t;		/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* User address */
+typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
+
+#define uputp  uputw			/* Copy user pointer type */
+#define ugetp  ugetw			/* between user and kernel */
 
 #define ei()   do {__asm ei __endasm; } while(0);
 

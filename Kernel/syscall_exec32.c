@@ -276,11 +276,13 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 	uint8_t c;
 	uint8_t *bufp;
 	int err;
+	void *up = (void *)userspace_argv;
 
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
 
-	while ((ptr = (char *) ugetl(userspace_argv++, &err)) != NULL) {
+	while ((ptr = (char *) ugetp(up, &err)) != NULL) {
+		up += sizeof(uptr_t);
 		if (err)
 			return true;
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
@@ -302,9 +304,9 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 
 char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
 {
-	char **argv;		/* Address of users argv[], just below ptr */
+	void *argv;		/* Address of users argv[], just below ptr */
 	int argc, arglen;
-	char **argbase;
+	uptr_t *argbase;
 	uint8_t *sptr;
 
 	sptr = argbuf->a_buf;
@@ -318,7 +320,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set argv to point below the argument strings */
 	argc = argbuf->a_argc;
-	argbase = argv = (char **) ptr - (argc + 1);
+	argbase = argv = ptr - sizeof(uptr_t) * (argc + 1);
 
 	if (cnt) {
 		*cnt = argc;
@@ -326,14 +328,15 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
-		uputl((uint32_t) ptr, argv++);
+		uputp((uint32_t) ptr, argv);
+		argv += sizeof(uptr_t);
 		if (argc) {
 			do
 				++ptr;
 			while (*sptr++);
 		}
 	}
-	uputl(0, argv);
+	uputp(0, argv);
 	return ((char **) argbase);
 }
 

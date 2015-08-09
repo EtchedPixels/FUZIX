@@ -1,12 +1,12 @@
 
 CSRCS = devtty.c ttydw.c mbr.c
-CSRCS += devices.c main.c libc.c
+CSRCS += devices.c main.c libc.c devsdc.c
 
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
 DSRCS += ../dev/devide_discard.c
 
 ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
-ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s
+ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -39,7 +39,7 @@ image:
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devide.o devide_discard.o \
-	../platform-dragon-nx32/ide.o \
+	../platform-dragon-nx32/ide.o devsdc.o sdc.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

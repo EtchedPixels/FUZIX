@@ -32,20 +32,21 @@ extern void *memset(void *, int, size_t);
 extern size_t strlen(const char *);
 extern uint16_t swab(uint16_t);
 
-/* 6809 wins on this one! */
+/* 680x wins on this one! */
 #define	ntohs(x)	(x)
 #define ntohl(x)	(x)
 
-/* 6809 doesn't benefit from making a few key variables in
-   non-reentrant functions static */
+/* 68HC11 doesn't benefit from making a few key variables in
+   non-reentrant functions static - FIXME, evaluate this carefully esp
+   wrt zero page  */
 #define staticfast	auto
 
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
 
 typedef struct {
+   uint32_t high;	   /* FIXME: check this matches long long */
    uint32_t low;
-   uint32_t high;
 } time_t;
 
 typedef union {            /* this structure is endian dependent */

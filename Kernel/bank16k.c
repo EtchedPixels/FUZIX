@@ -18,6 +18,8 @@
  *	PROGTOP		first byte above process space
  *
  *	Page numbers must not include 0 (0 is taken as swapped)
+ *
+ *	SWAPBASE must be in the low 16K bank
  */
 #include <kernel.h>
 #include <kdata.h>
@@ -177,7 +179,7 @@ int swapout(ptptr p)
 	uint16_t i;
 	uint8_t *pt = (uint8_t *)&p->p_page;
 
-	if (page)
+	if (!page)
 		panic("process already swapped!\n");
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
@@ -189,13 +191,15 @@ int swapout(ptptr p)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
-	for (i = 0; i < 4; i ++) {
+	for (i = 0; i < 4; i++) {
 		swapwrite(SWAPDEV, blk, size, base, *pt++);
 		base += 0x4000;
+		base &= 0xC000;	/* Snap to bank alignment */
+                blk += size;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
-		if (i == 3)
-			size = SWAP_SIZE - 0x60;
+		if (i == 2)
+			size = SWAP_SIZE + (SWAPBASE >> 9) - 0x60;
 		else
 			size = 0x20;
 	}
@@ -233,10 +237,12 @@ void swapin(ptptr p, uint16_t map)
 	for (i = 0; i < 4; i ++) {
 		swapread(SWAPDEV, blk, size, base, *pt++);
 		base += 0x4000;
+		base &= 0xC000;
+		blk += size;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
-		if (i == 3)
-			size = SWAP_SIZE - 0x60;
+		if (i == 2)
+			size = SWAP_SIZE + (SWAPBASE >> 9) - 0x60;
 		else
 			size = 0x20;	/* 16 K */
 	}

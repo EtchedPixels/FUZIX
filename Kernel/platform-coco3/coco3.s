@@ -121,6 +121,8 @@ init_early:
 ;;;    takes: nothing
 ;;;    returns: nothing
 init_hardware:
+	;; High speed poke
+	sta	0xffd9		; high speed poke
 	;; set system RAM size
 	ldd 	#512
 	std 	_ramsize

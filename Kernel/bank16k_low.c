@@ -21,6 +21,9 @@
  *	SWAPDEV		if using swap
  *
  *	Page numbers must not include 0 (0 is taken as swapped)
+ *
+ *	Swap needs debugging and fixes before it will be usable (review
+ *	bank16k.c)
  */
 
 
@@ -176,7 +179,7 @@ int swapout(ptptr p)
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint8_t *pt = (uint8_t *)&p->page;
 
-	if (page)
+	if (!page)
 		panic("process already swapped!\n");
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
@@ -199,7 +202,7 @@ int swapout(ptptr p)
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
-		if (i == 3)
+		if (i == 2)
 			size = SWAP_SIZE_EXCL_ZP - 0x60;
 		else
 			size = 0x20;
@@ -246,7 +249,7 @@ void swapin(ptptr p, uint16_t map)
 		base += 0x4000;
 		/* Last bank is determined by SWAP SIZE. We do the maths
 		   in 512's (0x60 = 0xC000) */
-		if (i == 3)
+		if (i == 2)
 			size = SWAP_SIZE_EXCL_ZP - 0x60;
 		else
 			size = 0x20;	/* 16 K */

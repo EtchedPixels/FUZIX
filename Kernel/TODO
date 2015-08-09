@@ -49,3 +49,12 @@ o	Virtual device hooks for networking
 o	Pty/tty devices
 o	Finish select/poll
 o	Support for o65 binary format
+
+Other
+-----
+o	Check safety of changes to allow interrupts during swapper
+o	Check we don't have any races of the form
+	kill()
+		checks signal has handler
+	signal(x, SIG_DFL)
+		signal serviced

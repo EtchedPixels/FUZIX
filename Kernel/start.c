@@ -58,9 +58,9 @@ void fstabinit(void)
 /* FIXME: pass remainder of boot argument to init, also word align */
 void create_init(void)
 {
-	const char init[] = "/init";
-
 	uint8_t *j;
+	static const char arg[] = { '/', 'i', 'n', 'i', 't' };
+
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
 	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
@@ -76,22 +76,16 @@ void create_init(void)
 	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j) {
 		*j = NO_FILE;
 	}
+	/* Poke the execve arguments into user data space so _execve() can read them back */
+	uzero((void *)PROGLOAD, 32);
+	uput(arg, (void *)PROGLOAD, sizeof(arg));
+	/* Poke in argv[0] */
+	uputp(PROGLOAD+1 , (void *)(PROGLOAD + 8));
 
-	uput(init, (void*)PROGLOAD, sizeof(init));
-	udata.u_argn = (arg_t)PROGLOAD;
-
-	j = PROGLOAD+((sizeof(init)+3) & ~3);
-
-	/* Arguments; just "/init" */
-	udata.u_argn1 = (arg_t)j;
-	uputw(udata.u_argn, j);
-	j += sizeof(arg_t);
-	uputw(0, j);
-	j += sizeof(arg_t);
-
-	/* Environment (none) */
-	udata.u_argn2 = j;
-	uputw(0, j);
+	/* Set up things to look like the process is calling _execve() */
+	udata.u_argn =  (arg_t)PROGLOAD;
+	udata.u_argn1 = (arg_t)(PROGLOAD + 0x8); /* Arguments (just "/init") */
+	udata.u_argn2 = (arg_t)(PROGLOAD + 0x10); /* Environment (none) */
 }
 
 #ifndef BOOTDEVICE
@@ -295,13 +289,13 @@ void fuzix_main(void)
 	ei();
 	kputs("ok.\n");
 
+	/* initialise hardware devices */
 	device_init();
 
 	/* Mount the root device */
 	root_dev = get_root_dev();
 	kprintf("Mounting root fs (root_dev=%d): ", root_dev);
 
-	/* initialise hardware devices */
 	if (fmount(root_dev, NULLINODE, 0))
 		panic("no filesys");
 	root = i_open(root_dev, ROOTINODE);

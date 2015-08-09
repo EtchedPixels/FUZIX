@@ -23,15 +23,13 @@ static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
 			bufdiscard((bufptr)buf);
 			brelse((bufptr)buf);
 #else
-			/* Might be worth spotting sequential blocks and
-			   merging ? */
+			/* FIXME: allow for async queued I/O here. We want
+			   an API something like breadasync() that either
+			   does the cdread() or queues for a smart platform
+			   or box with floppy tape devices */
 			udata.u_offset = (off_t)blk << 9;
 			udata.u_count = 512;
 			udata.u_base = (uint8_t *)base;
-			
-			/* Why is this necessary on the MSP430???? */
-			*(volatile uint8_t*)base;
-
 			if (cdread(i->c_dev, 0) < 0) {
 				kputs("bload failed.\n");
 				return -1;
@@ -78,10 +76,8 @@ char *envp[];
 static int header_ok(uint8_t *pp)
 {
 	register uint8_t *p = pp;
-	#if defined(EMAGIC) || defined(EMAGIC_2)
-		if (*p != EMAGIC && *p != EMAGIC_2)
-			return 0;
-	#endif
+	if (*p != EMAGIC && *p != EMAGIC_2)
+		return 0;
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
@@ -134,6 +130,7 @@ arg_t _execve(void)
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += PROGLOAD;
+
 	bss = *(uint16_t *)(buf + 14);
 
 	/* Binary doesn't fit */
@@ -299,7 +296,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set argv to point below the argument strings */
 	argc = argbuf->a_argc;
-	argbase = argv = (char **)aligndown(ptr, sizeof(uaddr_t)) - (argc + 1) ;
+	argbase = argv = (char **) ptr - (argc + 1);
 
 	if (cnt) {
 		*cnt = argc;
@@ -307,7 +304,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
-		uputw((arg_t) ptr, argv++);
+		uputw((uint16_t) ptr, argv++);
 		if (argc) {
 			do
 				++ptr;

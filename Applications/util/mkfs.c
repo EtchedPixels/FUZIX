@@ -23,6 +23,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <unistd.h>
 #include <fcntl.h>
 
+
 typedef uint16_t blkno_t;
 
 struct dinode {
@@ -62,6 +63,9 @@ typedef struct direct {
     uint16_t   d_ino;
     char     d_name[FILENAME_LEN];
 } direct;
+
+
+uint8_t fast=0;     /* flag for fast formatting option */
 
 int dev;
 
@@ -113,13 +117,14 @@ void mkfs(uint16_t fsize, uint16_t isize)
     printf("Zeroizing i-blocks...\n");
     zeros = zerobuf();		/* Get a zero filled buffer */
 
-#if 1
-    for (j = 0; j < fsize; ++j)
-	dwrite(j, zeros);
-#else
-    for (j = 0; j < isize; ++j)
-	dwrite(j, zeros);
-#endif
+    if( !fast ){
+	    for (j = 0; j < fsize; ++j)
+		    dwrite(j, zeros);
+    }
+    else{
+	    for (j = 0; j < isize; ++j)
+		    dwrite(j, zeros);
+    }
 
     /* Initialize the super-block */
     fs_tab.s_mounted = SMOUNTED;	/* Magic number */
@@ -169,28 +174,45 @@ void mkfs(uint16_t fsize, uint16_t isize)
     printf("Done.\n");
 }
 
+void printopts( )
+{
+	fprintf( stderr, "usage: mkfs [options] device isize fsize\n");
+	exit(-1);
+}
+
+
 int main(int argc, char *argv[])
 {
     uint16_t fsize, isize;
     struct stat statbuf;
+    int option;
 
-    if (argc != 4) {
-	fprintf(stderr, "usage: mkfs device isize fsize\n");
-	exit(-1);
+    while( (option=getopt( argc, argv, "f" ))>0 ){
+	    switch( option ){
+	    case 'f':
+		    fast=1;
+		    break;
+	    case '?':
+	    default:
+		    printopts();
+	    }
     }
 
-    if (stat(argv[1], &statbuf) != 0) {
-        fprintf(stderr, "mkfs: can't stat %s\n", argv[1]);
-        exit(-1);
-    }
+    if (argc-optind < 3) printopts();
     
-    if (!S_ISBLK(statbuf.st_mode)) {
-        fprintf(stderr, "mkfs: %s is not a block device\n", argv[1]);
+    
+    if (stat(argv[optind], &statbuf) != 0) {
+        fprintf(stderr, "mkfs: can't stat %s\n", argv[optind]);
         exit(-1);
     }
 
-    isize = (uint16_t) atoi(argv[2]);
-    fsize = (uint16_t) atoi(argv[3]);
+    if (!S_ISBLK(statbuf.st_mode)) {
+        fprintf(stderr, "mkfs: %s is not a block device\n", argv[optind]);
+        exit(-1);
+    }
+
+    isize = (uint16_t) atoi(argv[optind+1]);
+    fsize = (uint16_t) atoi(argv[optind+2]);
 
     if (fsize < 3 || isize < 2 || isize >= fsize) {
 	fprintf(stderr, "mkfs: bad parameter values\n");
@@ -198,13 +220,13 @@ int main(int argc, char *argv[])
     }
 
     printf("Making filesystem on device %s with isize %u fsize %u. Confirm? ",
-	   argv[1], isize, fsize);
+	   argv[optind], isize, fsize);
     if (!yes())
 	exit(-1);
 
-    dev = open(argv[1], O_RDWR);
+    dev = open(argv[optind], O_RDWR);
     if (dev < 0) {
-        fprintf(stderr, "mkfs: can't open device %s\n", argv[1]);
+        fprintf(stderr, "mkfs: can't open device %s\n", argv[optind]);
         exit(-1);
     }
 
