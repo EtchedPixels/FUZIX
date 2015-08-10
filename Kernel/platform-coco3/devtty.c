@@ -135,10 +135,12 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	int irq;
 	if (minor > 2 ) {
 		dw_putc(minor, c);
 		return;
 	}
+	irq=di();
 	struct pty *t = curpty;
 	vt_save(&curpty->vt);
 	curpty = &ptytab[minor - 1];
@@ -147,6 +149,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 	vt_save(&curpty->vt);
 	curpty = t;
 	vt_load(&curpty->vt);
+	irqrestore(irq);
 }
 
 void tty_sleeping(uint8_t minor)
@@ -437,12 +440,12 @@ unsigned char vt_map(unsigned char c)
 void devtty_init()
 {
 	int i;
-	int vtmode=0;
+	int defmode=0;
 	/* scan cmdline for params for vt */
 
        	/* apply default/cmdline mode to terminal structs */
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].gime), &(mode[vtmode]), 5 );
+		memcpy( &(ptytab[i].gime), &(mode[defmode]), 5 );
 	}
 	/* apply terminal to registers */
 	*(unsigned int *) 0xff9d = ptytab[0].scrloc;
