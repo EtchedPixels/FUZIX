@@ -10,6 +10,11 @@
 frame	.dw	0		; on entry frame pointer
 npage	.db	0		; next page no.
 pos	.dw	0		; buffer pos in memory
+tickp	.dw	$400+(32*15)	; ticker next position
+tickb	.db	0		;
+size	.dw	0		; no of grans
+secs	.dw	0		; init value of of sectors for each screen block
+scount	.dw	0		; sector counter 
 nampre	fcn	/"FUZIX.BIN/	; " image to load
 
 	;; And the Kick-off
@@ -23,6 +28,20 @@ start
 	lbcs	abort
 	lda	#'U		; print "U"
 	jsr	$a282
+	;; calculate sectors for each screen block
+	ldd	size
+	lsra
+	rorb
+	lsra
+	rorb
+	lsra
+	rorb
+	lsra
+	rorb
+	lsra
+	rorb
+	std	secs
+	std	scount
 	;; Move to task one
 	ldx	#$ffa0
 	ldu	#$ffa8
@@ -51,6 +70,7 @@ c@	jsr	$a176		; get a byte in A
 	jsr	getw		; D = load address
 	jsr	setload		; set load address
 d@	jsr	$a176		; A = byte
+	jsr	tick
 	jsr	putb		; put into kernel memory
 	leay	-1,y		; decrement U
 	bne	d@		; loop
@@ -117,6 +137,8 @@ getw
 	tfr	a,b		; B = high byte
 	jsr	$a176		; A = low byte
 	exg	a,b		; flip D = next word
+	jsr	tick
+	jsr	tick
 	rts
 
 
@@ -183,8 +205,21 @@ f@	jsr	$c68c		; search directory, U=ram directory image
 	beq	err@		; yes then error!
 	ldd	#$00ff		; basic/ascii
 	bra	h@
+	;; get size of file in granuals
+g@	pshs	d,x,u
+	ldb	2,u		; B = first granuals of file
+	jsr	$cd1e		; get no of granuals
+	andb	#0xf		; B = sectors used in last granual
+	pshs	b		; save on stack ( last )
+	clr	,-s		; as 16 bit value
+	deca			; A = whole granuals
+	ldb	#9
+	mul			; D = sectors
+	addd	,s++		; D = sectors in file
+	std	size		; save
+	puls	d,x,u
 	;; copy directory stuff
-g@	ldd	,u		; D = type/ascii
+	ldd	,u		; D = type/ascii
 	ldb	#$ff		; force ascii
 h@	std	$957
 	ldd	#$100		; record length
@@ -208,5 +243,23 @@ close
 	rts
 
 
+;;; Tick the ticker
+tick
+	pshs	d,x
+	inc	tickb		; inc byte counter
+	bne	out@		; return if not 256 bytes
+	;; decrement block counter
+	ldd	scount
+	subd	#1
+	std	scount
+	bne	out@		; leave if sector/block counter is not done
+	;; else put new screen block
+	ldd	secs
+	std	scount
+	ldb	#$af		; a blue block
+	ldx	tickp		; get position
+	stb	,x+		; print it to screen buffer
+	stx	tickp		; and save position
+out@	puls	d,x,pc
 
 	end	start
