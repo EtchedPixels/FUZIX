@@ -5,7 +5,7 @@
 ;;; This bootloader works from a DECB-like evironment, It loads
 ;;; FUZIX.BIN from a DECB disk and plops it in memory, starting
 ;;; at physical address 0x0000.
-	org	$2600		; where am I loaded.
+	org	$7a00		; where am I loaded.
 
 frame	.dw	0		; on entry frame pointer
 npage	.db	0		; next page no.
@@ -101,9 +101,9 @@ e@	lda	,x+
 	lda	#'O
 	jsr	$a282		; report load
 	;; find command line in input buffer
-	ldx	#$2dc		; X = start of line
+	ldx	$a6		; X = position in program
 f@	lda	,x+		; get a byte
-	cmpa	#$83		; is a colon token?
+	cmpa	#$83		; is a remark token?
 	bne	f@
 	ldd	#$88		; set destination of command line
 	jsr	setload		;
