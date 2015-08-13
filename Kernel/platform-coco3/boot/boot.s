@@ -14,14 +14,34 @@ tickp	.dw	$400+(32*15)	; ticker next position
 tickb	.db	0		;
 size	.dw	0		; no of grans
 secs	.dw	0		; init value of of sectors for each screen block
-scount	.dw	0		; sector counter 
+scount	.dw	0		; sector counter
 nampre	fcn	/"FUZIX.BIN/	; " image to load
-
+	rmb	3		; pad for max filename
+wbuf	rmb	32		; word buffer for cmdline parsing
+wptr	.dw	$88		; static data for word routine
+bootstr	fcn	"BOOT="
+	
 	;; And the Kick-off
 start
 	sts	frame
 	lda	#'F		; print F
 	jsr	0xa282		;
+	;; Move to task one
+	ldx	#$ffa0
+	ldu	#$ffa8
+	ldd	,x++		; copy mmu regs
+	std	,u++
+	ldd	,x++
+	std	,u++
+	ldd	,x++
+	std	,u++
+	ldd	,x++
+	std	,u++
+	ldb	#1
+	stb	$ff91		; set mmu to task 1
+	;; move and process command line
+	jsr	cpcmd
+	jsr	bootfile
 	;; open kernel image file
 	ldb	#'I		; input mode
 	jsr	open
@@ -42,19 +62,6 @@ start
 	rorb
 	std	secs
 	std	scount
-	;; Move to task one
-	ldx	#$ffa0
-	ldu	#$ffa8
-	ldd	,x++		; copy mmu regs
-	std	,u++
-	ldd	,x++
-	std	,u++
-	ldd	,x++
-	std	,u++
-	ldd	,x++
-	std	,u++
-	ldb	#1
-	stb	$ff91		; set mmu to task 1
 	;; Load BIN file
 	;;
 	ldb	$6f		; get current file no.
@@ -100,22 +107,82 @@ e@	lda	,x+
 	jsr	putb		; put at end of bounce routine
 	lda	#'O
 	jsr	$a282		; report load
-	;; find command line in input buffer
-	ldx	$a6		; X = position in program
-f@	lda	,x+		; get a byte
-	cmpa	#$83		; is a remark token?
-	bne	f@
-	ldd	#$88		; set destination of command line
-	jsr	setload		;
-g@	lda	,x+		; get one byte
-	jsr	putb		; put it in memory
-	tsta
-	bne	g@		; repeat if not done
 	;; map in kernel block 0
 	orcc	#$50		; turn off interrupts
-	clr	$ffa8
+	clr	$ffa8		; put bounce routine in memory
 	jmp	$0		; and jump to bounce routine
 
+
+;;; copy cmdline down to kernel 0
+cpcmd	;; find command line in input buffer
+	ldd	#$88		; set destination of cpy in kernel memory
+	jsr	setload		;
+	ldx	$a6		; X = position in program
+a@	lda	,x+		; get a byte
+	beq	c@		; end of line w/o remark token?
+	cmpa	#$83		; is a remark token?
+	bne	a@
+b@	lda	,x+		; get one byte
+c@	jsr	putb		; put it in kernel memory
+	tsta
+	bne	b@		; repeat if not done
+	rts			; return
+
+;;; parse cmdline for a word
+word	pshs	d,x,u
+	clra
+	pshs	cc		; return C=clr by default,x,u
+	lda	$ffa8
+	pshs	a
+	clr	$ffa8	      ; x ptr is kernel memory
+	ldx	wptr		; X is src
+	ldu	#wbuf		; u is dest
+	;; remove leading spaces
+a@	lda	,x+		; get a byte
+	beq	d@		; if zero then no more to parse
+	cmpa	#0x20		; is a space?
+	beq	a@		; yes then repeat
+	;; append non white space to word buffer
+b@	sta	,u+		; append to word buffer
+	lda	,x+		; get next word
+	beq	c@		; if zero then end
+	cmpa	#0x20		; is space?
+	bne	b@		; no then repat
+	;; end of line
+c@	leax	-1,x
+	stx	wptr		; save src ptr
+	sta	,u+
+	puls	a
+	sta	$ffa8
+	puls	cc,d,x,u,pc
+	;; no more input
+d@	coma
+	tfr	cc,a
+	sta	1,s
+	bra	c@
+	
+;;; look for boot file name in cmd line
+bootfile
+	pshs	d,x,u
+a@	jsr	word
+	bcs	out@		; quit if no more words
+	ldb	#5		; compare 5 chars
+	ldx	#bootstr	;
+	ldu	#wbuf		; 
+b@	lda	,x+		; get string 1
+	cmpa	,u+		; compare to string 2
+	bne	a@		; get another word if not equal
+	decb
+	bne	b@
+	;; ok we've found a "BOOT=": copy arg to filename buffer
+	ldx	#nampre+1
+c@	lda	,u+		; get a byte
+	sta	,x+		; store a byte in buffer
+	bne	c@		; repeat if not zero
+	;; out of cmd to parse
+out@	puls	d,x,u,pc
+
+	
 ;;; This routine is copied down to kernel map 0
 bounce
 	;; map in rest of kernel
