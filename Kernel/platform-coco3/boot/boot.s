@@ -16,14 +16,22 @@ size	.dw	0		; no of grans
 secs	.dw	0		; init value of of sectors for each screen block
 scount	.dw	0		; sector counter
 nampre	fcn	/"FUZIX.BIN/	; " image to load
-	rmb	3		; pad for max filename
+	rmb	6		; pad for max filename
 wbuf	rmb	32		; word buffer for cmdline parsing
 wptr	.dw	$88		; static data for word routine
 bootstr	fcn	"BOOT="
-	
+fnf	.db	13
+	fcc	"KERNEL FILE NOT FOUND"
+	.db	13
+	.db	0
+
 	;; And the Kick-off
 start
 	sts	frame
+	lda	#13
+	jsr	0xa282
+	ldd	#$400+(32*14)
+	std	$88
 	lda	#'F		; print F
 	jsr	0xa282		;
 	;; Move to task one
@@ -246,6 +254,8 @@ inc@	ldx	#$4000		; inc pos
 
 ;;; Abort!
 abort
+	ldx	#fnf-1
+	jsr	$b99c
 	lds	frame
 	rts
 
