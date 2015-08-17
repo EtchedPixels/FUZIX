@@ -14,9 +14,8 @@ extern int tgetflag __P((char *));
 extern int tgetnum __P((char *));
 extern char *tgetstr __P((char *, char **));
 
-extern void tputs __P((char *, int, int (*)(int)));
+extern int tputs __P((char *, int, void (*outc)(int)));
 extern char *tgoto __P((char *, int, int));
-extern char *tparam();	/* VARARGS */
+extern char * tparam(char *, char *, int, int, int, int, int);	/* VARARGS */
 
 #endif /* _TERMCAP_H */
-

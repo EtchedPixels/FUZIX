@@ -62,9 +62,14 @@ SRC_HARD += regexp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
+SRC_C += termcap.c
+
+SRC_CURS = $(shell find curses -name '*.c')
+
 OBJ_C = $(SRC_C:.c=.rel)
+OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_CURS) $(OBJ_HARD)
 
 all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt
 
@@ -105,9 +110,13 @@ $(OBJ_CRT0NS):%.rel: %.s
 $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
+$(OBJ_CURS):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c) -o ./curses/
+
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
 clean:
 	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt
+	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~)
 	(cd fuzix; make clean)

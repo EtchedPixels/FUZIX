@@ -138,7 +138,7 @@ extern unsigned int ACS_LANTERN;
 extern unsigned int ACS_BLOCK;
 
 #ifdef _BIG_MACHINE_
-_PROTOTYPE( char *unctrl, (int _c) );
+_PROTOTYPE( char *unctrl, (char _c) );
 _PROTOTYPE( int baudrate, (void));
 _PROTOTYPE( void beep, (void));
 _PROTOTYPE( void cbreak, (void));
@@ -153,7 +153,7 @@ _PROTOTYPE( int erasechar, (void));
 _PROTOTYPE( void fatal, (char *_s) );
 _PROTOTYPE( int fixterm, (void));
 _PROTOTYPE( void flash, (void));
-_PROTOTYPE( int gettmode, (void));
+_PROTOTYPE( void gettmode, (void));
 _PROTOTYPE( void idlok, (WINDOW *_win, bool _flag) );
 _PROTOTYPE( WINDOW *initscr, (void));
 _PROTOTYPE( void keypad, (WINDOW *_win, bool _flag) );
@@ -164,13 +164,12 @@ _PROTOTYPE( void meta, (WINDOW *_win, bool _flag) );
 _PROTOTYPE( int mvcur, (int _oldy, int _oldx, int _newy, int _newx) );
 _PROTOTYPE( int mvinch, (int _y, int _x) );
 _PROTOTYPE( int mvprintw, (int _y, int _x, char *_fmt, ...) );
-_PROTOTYPE( int mvscanw, (int _y, int _x, char *_fmt, char *_A1, int _A2,
-						int _A3, int _A4, int _A5) );
+_PROTOTYPE( int mvscanw, (int _y, int _x, const char *_fmt, ...) );
 _PROTOTYPE( int mvwin, (WINDOW *_win, int _begy, int _begx) );
 _PROTOTYPE( int mvwinch, (WINDOW *_win, int _y, int _x) );
 _PROTOTYPE( int mvwprintw, (WINDOW *_win, int _y, int _x, char *_fmt, ...) );
-_PROTOTYPE( int mvwscanw, (WINDOW *_win, int _y, int _x, char *_fmt, char *_A1,
-					int _A2, int _A3, int _A4, int _A5) );
+_PROTOTYPE( int mvwscanw, (WINDOW *_win, int _y, int _x, const char *_fmt,
+                                                                        ...) );
 _PROTOTYPE( WINDOW *newwin, (int _num_lines, int _num_cols, int _y, int _x));
 _PROTOTYPE( void nl, (void));
 _PROTOTYPE( void nocbreak, (void));
@@ -188,8 +187,7 @@ _PROTOTYPE( int resetterm, (void));
 _PROTOTYPE( int saveoldterm, (void));
 _PROTOTYPE( int saveterm, (void));
 _PROTOTYPE( int savetty, (void));
-_PROTOTYPE( int scanw, (char *_fmt, char *_A1, int _A2, int _A3, int _A4,
-					int _A5) );
+_PROTOTYPE( int scanw, (const char *_fmt, ...) );
 _PROTOTYPE( void scroll, (WINDOW *_win) );
 _PROTOTYPE( void scrollok, (WINDOW *_win, bool _flag) );
 _PROTOTYPE( int setscrreg, (int _top, int _bottom) );
@@ -218,8 +216,7 @@ _PROTOTYPE( int wmove, (WINDOW *_win, int _y, int _x) );
 _PROTOTYPE( void wnoutrefresh, (WINDOW *_win) );
 _PROTOTYPE( int wprintw, (WINDOW *win, char *fmt, ...));
 _PROTOTYPE( void wrefresh, (WINDOW *_win) );
-_PROTOTYPE( int wscanw, (WINDOW *_win, char *_fmt, char *_A1, int _A2, int _A3,
-							int _A4, int _A5) );
+_PROTOTYPE( int wscanw, (WINDOW *_win, const char *_fmt, ...));
 _PROTOTYPE( int wsetscrreg, (WINDOW *_win, int _top, int _bottom) );
 _PROTOTYPE( int wtabsize, (WINDOW *_win, int _ts) );
 
