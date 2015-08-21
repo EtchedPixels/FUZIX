@@ -110,6 +110,7 @@ Platforms
 ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * P112 - Supports the floppy disk controller, ESCC serial ports, and optional G-IDE interface.
 * SocZ80 - 128MHz extreme Z80 FPGA machine. Boots to shell, drivers need work
+* Tandy COCO3 - boots to userspace and supports drivewire
 * TGL6502 - Test 6502ish environment
 * TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
 * Z80Pack - used as a dev and test environment for both large swapping
