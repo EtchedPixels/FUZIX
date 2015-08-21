@@ -1,5 +1,5 @@
 
-CSRCS = devtty.c ttydw.c mbr.c
+CSRCS = ttydw.c mbr.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
@@ -33,7 +33,8 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 
 image:
-	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c 
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
