@@ -1,4 +1,39 @@
-/* termcap - print termcap settings	Author: Terrence Holm */
+/*
+ *	termcap.c	V1.1	20/7/87		agc	Joypace Ltd
+ *
+ *	Copyright Joypace Ltd, London, UK, 1987. All rights reserved.
+ *	This file may be freely distributed provided that this notice
+ *	remains attached.
+ *
+ *	A public domain implementation of the termcap(3) routines.
+ *
+ *
+ *
+ *	 Klamer Schutte	      V1.2    Nov. 1988
+ *
+ *   - Can match multiple terminal names		 [tgetent]
+ *   - Removal of **area assignments			 [tgetstr]
+ *
+ *	 Terrence W. Holm     V1.3    May, Sep, Oct.  1988
+ *
+ *  - Correct when TERM != name and TERMCAP is defined	 [tgetent]
+ *  - Correct the comparison for the terminal name 	 [tgetent]
+ *  - Correct the value of ^x escapes              	 [tgetstr]
+ *  - Added %r to reverse row/column			 [tgoto]
+ *  - Fixed end of definition test			 [tgetnum/flag/str]
+ *
+ *	 Terrence W. Holm     V1.4    Jan. 1989
+ *
+ *   - Incorporated Klamer's V1.2 fixes into V1.3
+ *   - Added %d, (old %d is now %2)			 [tgoto]
+ *   - Allow '#' comments in definition file		 [tgetent]
+ *
+ * FIXME:
+ *	- support the use of some kind of < 1024 byte buffer
+ *	  interface
+ *	- avoid the use of stdio (state machine search for either
+ *	  [start of file]name: or \nname:)
+ */
 
 #include <termcap.h>
 #include <stdio.h>
@@ -26,7 +61,7 @@ extern char *UP;		/* up cursor movement */
 int tgetent(char *bp, char *name)
 {
     FILE *fp;
-    char *file;
+    const char *file;
     char *term;
     short len = strlen(name);
 
@@ -42,8 +77,7 @@ int tgetent(char *bp, char *name)
     else if (*file != '/')
 	if ((term = getenv("TERM")) != (char *) NULL
 	    && strcmp(term, name) == 0) {
-	    *bp = '\0';
-	    strncat(bp, file, 1023);
+	    strlcpy(bp, file, 1023);
 	    return (1);
 	} else
 	    file = "/etc/termcap";
