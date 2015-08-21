@@ -267,7 +267,7 @@ char *tgetstr(char *id, char **area)
  */
 
 
-int tputs(register char *cp, int affcnt, void (*outc)(int ch))
+int tputs(const char *cp, int affcnt, int (*outc)(int ch))
 {
     if (cp == (char *) NULL)
 	return (1);
