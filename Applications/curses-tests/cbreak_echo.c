@@ -6,7 +6,7 @@
 #define PW_LEN 256
 #define NAME_LEN 256
 
-int main() {
+int main(int argc, char *argv[]) {
 
 	char name[NAME_LEN];
 	char password[PW_LEN];

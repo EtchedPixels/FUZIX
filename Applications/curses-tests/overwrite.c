@@ -1,9 +1,9 @@
-#include<stdio.h>
-#include<curses.h>
-#include<stdlib.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <curses.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-void main()
+void main(int argc, char *argv[])
 {
         WINDOW *w = newwin(5, 20, 5, 5);
 	int i = 0;

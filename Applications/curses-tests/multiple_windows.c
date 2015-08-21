@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <curses.h>
 
-int main()
+int main(int argc, char *argv[])
 {
 	WINDOW *new_window_ptr;
 	WINDOW *popup_window_ptr;

@@ -1,9 +1,9 @@
-#include<stdio.h>
-#include<curses.h>
-#include<stdlib.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <curses.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	int i = 0;
 

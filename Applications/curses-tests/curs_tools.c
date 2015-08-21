@@ -6,7 +6,7 @@
 #define Y 18
 #define gotosleep() sleep(5)
 
-void main()
+void main(int argc, char *argv[])
 {
 	WINDOW *main_window_ptr;
 	WINDOW *status_window_ptr;

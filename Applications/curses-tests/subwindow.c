@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <curses.h>
 
-int main()
+int main(int argc, char *argv[])
 {
 	WINDOW *sub_window_ptr;
 	int x_loop;
