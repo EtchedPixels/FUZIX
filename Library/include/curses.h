@@ -177,7 +177,7 @@ _PROTOTYPE( void nodelay, (WINDOW *_win, bool _flag) );
 _PROTOTYPE( void noecho, (void));
 _PROTOTYPE( void nonl, (void));
 _PROTOTYPE( void noraw, (void));
-_PROTOTYPE( void outc, (int _c) );
+_PROTOTYPE( int outc, (int _c) );
 _PROTOTYPE( void overlay, (WINDOW *_win1, WINDOW *_win2) );
 _PROTOTYPE( void overwrite, (WINDOW *_win1, WINDOW *_win2) );
 _PROTOTYPE( void poscur, (int _r, int _c) );
