@@ -7,8 +7,6 @@
 /* Actual lines themselves.					*/
 /****************************************************************/
 
-_PROTOTYPE(static WINDOW *makenew, (int nlines, int ncols, int begy,int begx));
-
 static WINDOW *makenew(int num_lines, int num_columns, int begy, int begx)
 {
   int i;

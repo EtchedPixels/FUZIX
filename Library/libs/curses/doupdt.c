@@ -10,11 +10,11 @@ static WINDOW *twin;		/* used by many routines */
 /* Time to optimize than to do things directly.                 */
 /****************************************************************/
 
-_PROTOTYPE(static void gotoxy, (int row, int col ));
-_PROTOTYPE(static void newattr, (int ch ));
-_PROTOTYPE(static void Putchar, (int ch ));
-_PROTOTYPE(static void clrupdate, (WINDOW *scr ));
-_PROTOTYPE(static void transformline, (int lineno ));
+static void gotoxy(int row, int col );
+static void newattr(int ch );
+static void Putchar(int ch );
+static void clrupdate(WINDOW *scr );
+static void transformline(int lineno);
 
 static void gotoxy(int row, int col)
 {
@@ -48,6 +48,9 @@ static void newattr(int ch)
 /* Putchar() writes a character, with attributes, to the physical
    screen, but avoids writing to the lower right screen position.
    Should it care about am?
+
+   FIXME: try and move away from sucking in stdio in curses and in
+   termcap
 */
 
 /* Output char with attribute */
@@ -145,7 +148,7 @@ static void transformline(register int lineno)
 /* Updates the screen to look like curscr.                      */
 /****************************************************************/
 
-void doupdate()
+void doupdate(void)
 {
   int i;
 

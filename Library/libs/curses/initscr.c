@@ -4,7 +4,7 @@
 #include <curses.h>
 #include "curspriv.h"
 
-WINDOW *initscr()
+WINDOW *initscr(void)
 {
 	char *term;
 

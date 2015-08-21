@@ -2,7 +2,7 @@
 #include "curspriv.h"
 #include <termcap.h>
 
-int endwin()
+int endwin(void)
 {
 	extern char *me;
 	

@@ -6,8 +6,6 @@
 /* If error, return -1.						*/
 /****************************************************************/
 
-_PROTOTYPE( static short newline, (WINDOW *win, int lin));
-
 static short newline(WINDOW *win, int lin)
 {
   if (++lin > win->_regbottom) {

@@ -2,6 +2,7 @@
 #include <termcap.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <string.h>
 #include <curses.h>
 #include "curspriv.h"
 
@@ -39,14 +40,16 @@ char *vb;			/* visual bell */
 /* fatal - report error and die. Never returns */
 void fatal(char *s)
 {
-  (void) fprintf(stderr, "curses: %s\n", s);
+  write(2, "curses: ", 8);
+  write(2, s, strlen(s));
+  write(2, "\n", 1);
   exit(1);
 }
 
 /* Outc - call putchar, necessary because putchar is a macro. */
-void outc(int c)
+int outc(int c)
 {
-  putchar(c);
+  return putchar(c);
 }
 
 /* Move cursor to r,c */
@@ -126,7 +129,7 @@ unsigned int _cursgraftable[27] =
  '>', '<', 'v', '^', '#', ':', ' ', '#', '+', '\'', '#', '+', '+',
  '+', '+', '+', '-', ' ', '-', ' ', '_', '+', '+', '+', '+', '|'
 };
-char _cursident[28] = "+,.-0ahI`fgjklmnopqrstuvwx~";
+unsigned char _cursident[28] = "+,.-0ahI`fgjklmnopqrstuvwx~";
 
 int setterm(char *type)
 {

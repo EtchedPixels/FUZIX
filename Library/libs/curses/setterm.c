@@ -1,9 +1,7 @@
 #include <curses.h>
 #include "curspriv.h"
 
-_PROTOTYPE( static void ttysetflags, (void) );
-
-static void ttysetflags()
+static void ttysetflags(void)
 {
   _tty.c_iflag |= ICRNL | IXON;
   _tty.c_oflag |= OPOST | ONLCR;
@@ -27,49 +25,49 @@ static void ttysetflags()
   tcsetattr(0, TCSANOW, &_tty);
 }				/* ttysetflags */
 
-void raw()
+void raw(void)
 {
   _cursvar.rawmode = TRUE;
   ttysetflags();
 }				/* raw */
 
-void noraw()
+void noraw(void)
 {
   _cursvar.rawmode = FALSE;
   ttysetflags();
 }				/* noraw */
 
-void echo()
+void echo(void)
 {
   _cursvar.echoit = TRUE;
   ttysetflags();
 }
 
-void noecho()
+void noecho(void)
 {
   _cursvar.echoit = FALSE;
   ttysetflags();
 }
 
-void nl()
+void nl(void)
 {
   NONL = FALSE;
   ttysetflags();
 }				/* nl */
 
-void nonl()
+void nonl(void)
 {
   NONL = TRUE;
   ttysetflags();
 }				/* nonl */
 
-void cbreak()
+void cbreak(void)
 {
   _cursvar.cbrkmode = TRUE;
   ttysetflags();
 }				/* cbreak */
 
-void nocbreak()
+void nocbreak(void)
 {
   _cursvar.cbrkmode = FALSE;
   ttysetflags();
