@@ -115,8 +115,6 @@ static void transformline(register int lineno)
 {
   register int *dstp;
   register int *srcp;
-  register int dstc;
-  register int srcc;
   int x;
   int endx;
 
