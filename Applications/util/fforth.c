@@ -13,6 +13,12 @@
 #
 # Peculiarities include:
 # 
+# DOES>  ANS Forth decrees that you can call DOES> multiple times on a word,
+#        where each time it changes the code part of the word. fforth doesn't
+#        support that. If you call DOES> twice here, you end up *appending*
+#        the behaviour after the DOES> --- so the old code will be called,
+#        then the new code will be called.
+#
 # Note! This program looks weird. That's because it's a shell script *and* a C
 # file. (And an Awk script.) The awk file will autogenerate the Forth dictionary
 # and precompiled words in the C source, which is just too fragile to do by
@@ -525,7 +531,6 @@ static cdefn_t _write_word ;
 static cdefn_t a_number_word ;
 static cdefn_t abort_word ;
 static cdefn_t abs_word ;
-static cdefn_t accept_word ;
 static cdefn_t add_one_word ;
 static cdefn_t add_word ;
 static cdefn_t align_word ;
@@ -643,29 +648,6 @@ static void _open_cb(cdefn_t* w)
 	int flags = dpop();
 	const char* filename = (void*)dpop();
 	dpush(open(filename, flags));
-}
-
-static void accept_cb(cdefn_t* w)
-{
-	cell_t max = dpop();
-	char* addr = (char*)dpop();
-	int len = 0;
-
-	while (len < max)
-	{
-		char c;
-		if (read(input_fd, &c, 1) <= 0)
-		{
-			if (len == 0)
-				len = -1;
-			break;
-		}
-		if (c == '\n')
-			break;
-
-		addr[len++] = c;
-	}
-	dpush(len);
 }
 
 static void fill_cb(cdefn_t* w)
@@ -1000,8 +982,7 @@ COM( _write_word,        _readwrite_cb,  "_write",     &_stdout_word,    &write 
 COM( a_number_word,      a_number_cb,    ">NUMBER",    &_write_word,     ) //@W
 COM( abort_word,         abort_cb,       "ABORT",      &a_number_word,   ) //@W
 COM( abs_word,           abs_cb,         "ABS",        &abort_word,      ) //@W
-COM( accept_word,        accept_cb,      "ACCEPT",     &abs_word,        ) //@W
-COM( add_one_word,       increment_cb,   "1+",         &accept_word,     (void*)1 ) //@W
+COM( add_one_word,       increment_cb,   "1+",         &abs_word,        (void*)1 ) //@W
 COM( add_word,           add_cb,         "+",          &add_one_word,    ) //@W
 COM( align_word,         align_cb,       "ALIGN",      &add_word,        ) //@W
 COM( allot_word,         allot_cb,       "ALLOT",      &align_word,      ) //@W
@@ -1191,6 +1172,54 @@ COM( false_word, codeword, "FALSE", &true_word, (void*)&zero_word, (void*)&exit_
 //   0 _exit
 COM( bye_word, codeword, "BYE", &false_word, (void*)&zero_word, (void*)&_exit_word, (void*)&exit_word )
 
+//@C NIP
+// \ x y -- y
+//  SWAP DROP
+COM( nip_word, codeword, "NIP", &bye_word, (void*)&swap_word, (void*)&drop_word, (void*)&exit_word )
+
+//@C KEY
+// \ Read one character from the terminal. -1 is returned on error.
+// \ -- key
+//  0 SP@                    \ -- X addr
+//  _input_fd @ OVER 1 _read \ -- X addr result
+//  1 <> IF
+//    2DROP -1
+//  ELSE
+//    C@ NIP
+//  THEN
+COM( key_word, codeword, "KEY", &nip_word, (void*)&zero_word, (void*)&sp_at_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&over_word, (void*)&one_word, (void*)&_read_word, (void*)&one_word, (void*)&not_equals_word, (void*)&branch0_word, (void*)(&key_word.payload[0] + 15), (void*)&t_drop_word, (void*)&m_one_word, (void*)&branch_word, (void*)(&key_word.payload[0] + 17), (void*)&c_at_word, (void*)&nip_word, (void*)&exit_word )
+
+//@C ACCEPT
+// \ Read characters from the terminal.
+// \ addr max -- count
+//  OVER + OVER              \ -- addr max-addr addr
+//
+//  \ Read first key.
+//  KEY                      \ -- addr max-addr ptr
+//
+//  \ If this fails, report failure.
+//  DUP -1 = IF              \ -- addr max-addr ptr key
+//    DROP 2DROP -1 EXIT
+//  THEN
+//
+//  BEGIN                    \ -- addr max-addr ptr key
+//    DUP 10 = IF
+//      \ Early exit.        \ -- addr max-addr ptr key
+//      0
+//    ELSE
+//    	>R 2DUP <> R> SWAP   \ -- addr max-addr ptr key flag
+//    THEN
+//  WHILE                    \ -- addr max-addr ptr key
+//    OVER C! 1+             \ -- addr max-addr ptr+1
+//    KEY                    \ -- addr max-addr ptr+1 key
+//    DUP -1 = IF
+//      \ EOF. Pretend it's a newline.
+//      DROP 10
+//    THEN
+//  REPEAT
+//  DROP NIP SWAP -               \ -- count
+COM( accept_word, codeword, "ACCEPT", &key_word, (void*)&over_word, (void*)&add_word, (void*)&over_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&t_drop_word, (void*)&m_one_word, (void*)&exit_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 22), (void*)&zero_word, (void*)&branch_word, (void*)(&accept_word.payload[0] + 27), (void*)&arrow_r_word, (void*)&t_dup_word, (void*)&not_equals_word, (void*)&r_arrow_word, (void*)&swap_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 43), (void*)&over_word, (void*)&c_pling_word, (void*)&add_one_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 41), (void*)&drop_word, (void*)&lit_word, (void*)10, (void*)&branch_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&nip_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
+
 //@C REFILL
 //  \ Read a line from the terminal.
 //  SOURCE ACCEPT              \ -- len
@@ -1212,7 +1241,7 @@ COM( bye_word, codeword, "BYE", &false_word, (void*)&zero_word, (void*)&_exit_wo
 //
 //  \ We must succeed!
 //  1
-COM( refill_word, codeword, "REFILL", &bye_word, (void*)&source_word, (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 9), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&dup_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&add_word, (void*)&swap_word, (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&swap_word, (void*)&sub_word, (void*)&lit_word, (void*)32, (void*)&fill_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
+COM( refill_word, codeword, "REFILL", &accept_word, (void*)&source_word, (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 9), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&dup_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&add_word, (void*)&swap_word, (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&swap_word, (void*)&sub_word, (void*)&lit_word, (void*)32, (void*)&fill_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
 
 //@C COUNT
 // \ ( c-addr -- addr len )
@@ -1430,7 +1459,7 @@ COM( _3a__word, codeword, ":", &read_2d_file_word, (void*)&create_word, (void*)&
 //   \ Meanwhile, the word we're being called from is going to simply exit.
 //   \ (So, not running the remainder of our bytecode.) As we've popped
 //   \ DOES>'s return address, exiting from here will do that automatically.
-COM( does_3e__word, codeword, "DOES>", &_3a__word, (void*)&latest_word, (void*)&at_word, (void*)&cell_2b__word, (void*)&dup_word, (void*)&at_word, (void*)&zero_word, (void*)&rot_word, (void*)&pling_word, (void*)&latest_word, (void*)&at_word, (void*)&swap_word, (void*)&align_word, (void*)(&_create_word), (void*)&smudge_word, (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&r_arrow_word, (void*)&_2c__word, (void*)&exit_word )
+COM( does_3e__word, codeword, "DOES>", &_3a__word, (void*)&latest_word, (void*)&at_word, (void*)&cell_2b__word, (void*)&dup_word, (void*)&at_word, (void*)&zero_word, (void*)&rot_word, (void*)&pling_word, (void*)&latest_word, (void*)&at_word, (void*)&swap_word, (void*)&align_word, (void*)(&_create_word), (void*)(&lit_word), (void*)(codeword), (void*)&latest_word, (void*)&at_word, (void*)&pling_word, (void*)&_2c__word, (void*)(&lit_word), (void*)(&branch_word), (void*)&_2c__word, (void*)&r_arrow_word, (void*)&_2c__word, (void*)&exit_word )
 
 //@C ; IMMEDIATE
 //  [&lit_word] [&exit_word] ,
