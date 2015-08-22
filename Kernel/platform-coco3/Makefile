@@ -1,5 +1,5 @@
 
-CSRCS = ttydw.c mbr.c
+CSRCS = ttydw.c mbr.c cmdline.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
@@ -44,7 +44,8 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o
+	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o \
+	cmdline.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s
