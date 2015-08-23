@@ -314,6 +314,7 @@ static jmp_buf onerror;
 
 #define MAX_LINE_LENGTH 160
 #define ALLOCATION_CHUNK_SIZE 128
+#define PAD_SIZE 84
 #define CELL sizeof(cell_t)
 
 #define DSTACKSIZE 64
@@ -484,7 +485,7 @@ static void* ensure_workspace(size_t length)
 {
 	uint8_t* p = here + length;
 
-	if (p > here_top)
+	while ((p+PAD_SIZE) > here_top)
 	{
 		uint8_t* newtop = sbrk(ALLOCATION_CHUNK_SIZE);
 		if (newtop != here_top)
@@ -1035,7 +1036,7 @@ COM( notequals0_word,    notequals0_cb,  "0<>",        &not_equals_word, ) //@W
 COM( one_word,           rvarword,       "1",          &notequals0_word, (void*)1 ) //@W
 COM( or_word,            or_cb,          "OR",         &one_word,        ) //@W
 COM( over_word,          peekcon_cb,     "OVER",       &or_word,         (void*)1 ) //@W
-COM( pad_word,           rvarword,       "PAD",        &over_word,       &here ) //@W
+COM( pad_word,           rivarword,      "PAD",        &over_word,       &here ) //@W
 COM( pick_word,          pick_cb,        "PICK",       &pad_word,        ) //@W
 COM( pling_word,         pling_cb,       "!",          &pick_word,       ) //@W
 COM( q_dup_word,         q_dup_cb,       "?DUP",       &pling_word,      ) //@W
