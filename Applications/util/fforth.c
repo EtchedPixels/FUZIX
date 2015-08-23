@@ -326,6 +326,8 @@ static cell_t* rsp;
 
 static int input_fd;
 static char input_buffer[MAX_LINE_LENGTH];
+static char* in_base;
+static cell_t in_len;
 static cell_t in_arrow;
 static cell_t base = 10;
 static cell_t state = false;
@@ -559,6 +561,8 @@ static cdefn_t ge_word ;
 static cdefn_t gt_word ;
 static cdefn_t here_word ;
 static cdefn_t in_arrow_word ;
+static cdefn_t inlen_arrow_word ;
+static cdefn_t inbase_arrow_word ;
 static cdefn_t invert_word ;
 static cdefn_t latest_word ;
 static cdefn_t le_word ;
@@ -680,9 +684,9 @@ static bool is_delimiter(int c, int delimiter)
 
 static void skip_ws(int delimiter)
 {
-	while (in_arrow < MAX_LINE_LENGTH)
+	while (in_arrow < in_len)
 	{
-		int c = input_buffer[in_arrow];
+		int c = in_base[in_arrow];
 		if (!is_delimiter(c, delimiter))
 			break;
 		in_arrow++;
@@ -692,15 +696,15 @@ static void skip_ws(int delimiter)
 static void word_cb(cdefn_t* w)
 {
 	int delimiter = dpop();
-	struct fstring* fs = ensure_workspace(MAX_LINE_LENGTH);
+	struct fstring* fs = ensure_workspace(in_len + 1);
 	int count = 0;
 
 	skip_ws(delimiter);
-	if (in_arrow != MAX_LINE_LENGTH)
+	if (in_arrow != in_len)
 	{
-		while (in_arrow < MAX_LINE_LENGTH)
+		while (in_arrow < in_len)
 		{
-			int c = input_buffer[in_arrow];
+			int c = in_base[in_arrow];
 			if (is_delimiter(c, delimiter))
 				break;
 			fs->data[count] = c;
@@ -837,7 +841,10 @@ static void execute_cb(cdefn_t* w)
 	cdefn_t* p = (void*) dpop();
 	#if 0
 		printf("[execute ");
-		fwrite(&p->name->data[0], 1, p->name->len & FL__MASK, stdout);
+		if (p->name)
+			fwrite(&p->name->data[0], 1, p->name->len & FL__MASK, stdout);
+		else
+			printf("(null)");
 		printf(" (name @ %p) -> %p]\n", p->name, p);
 	#endif
 	p->code(p);
@@ -946,6 +953,7 @@ static void rpick_cb(cdefn_t* w)      { dpush(*raddr(dpop())); }
 static void rpokecon_cb(cdefn_t* w)   { cell_t v = dpop(); *raddr((cell_t) *w->payload) = v; }
 static void rshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a >> u); }
 static void rsshift_cb(cdefn_t* w)    { dpush(dpop() >> 1); }
+static void source_cb(cdefn_t* w)     { dpush((cell_t) in_base); dpush(in_len); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
 static void u_lt_cb(cdefn_t* w)       { ucell_t a = dpop(); ucell_t b = dpop(); dpushbool(b < a); }
 static void u_m_star_cb(cdefn_t* w)   { dpushd((upair_t)(ucell_t)dpop() * (upair_t)(ucell_t)dpop()); }
@@ -1009,7 +1017,9 @@ COM( ge_word,            ge_cb,          ">=",         &fm_mod_word,     ) //@W
 COM( gt_word,            gt_cb,          ">",          &ge_word,         ) //@W
 COM( here_word,          rivarword,      "HERE",       &gt_word,         &here ) //@W
 COM( in_arrow_word,      rvarword,       ">IN",        &here_word,       &in_arrow ) //@W
-COM( invert_word,        invert_cb,      "INVERT",     &in_arrow_word,   ) //@W
+COM( inlen_arrow_word,   rvarword,       ">INLEN",     &in_arrow_word,   &in_len ) //@W
+COM( inbase_arrow_word,  rvarword,       ">INBASE",    &inlen_arrow_word, &in_base ) //@W
+COM( invert_word,        invert_cb,      "INVERT",     &inbase_arrow_word, ) //@W
 COM( latest_word,        rvarword,       "LATEST",     &invert_word,     &latest ) //@W
 COM( le_word,            le_cb,          "<=",         &latest_word,     ) //@W
 COM( less0_word,         less0_cb,       "0<",         &le_word,         ) //@W
@@ -1039,7 +1049,7 @@ COM( rsp_at_word,        rivarword,      "RSP@",       &rsp0_word,       &rsp ) 
 COM( rsp_pling_word,     wivarword,      "RSP!",       &rsp_at_word,     &rsp ) //@W
 COM( rsshift_word,       rsshift_cb,     "2/",         &rsp_pling_word,  ) //@W
 COM( smudge_word,        smudge_cb,      "SMUDGE",     &rsshift_word,    ) //@W
-COM( source_word,        r2varword,      "SOURCE",     &smudge_word,     input_buffer, (void*)MAX_LINE_LENGTH ) //@W
+COM( source_word,        source_cb,      "SOURCE",     &smudge_word,     ) //@W
 COM( sp0_word,           rvarword,       "SP0",        &source_word,     dstack+DSTACKSIZE ) //@W
 COM( sp_at_word,         rivarword,      "SP@",        &sp0_word,        &dsp ) //@W
 COM( sp_pling_word,      wivarword,      "SP!",        &sp_at_word,      &dsp ) //@W
@@ -1094,13 +1104,17 @@ COM( chars_word, codeword, "CHARS", &char_2b__word, (void*)&exit_word )
 //   +                                 \ -- aligned-end-r-addr
 COM( aligned_word, codeword, "ALIGNED", &chars_word, (void*)&dup_word, (void*)&cell_word, (void*)&swap_word, (void*)&sub_word, (void*)&cell_word, (void*)&sub_one_word, (void*)&and_word, (void*)&add_word, (void*)&exit_word )
 
+//@C -ROT
+//   ROT ROT
+COM( _2d_rot_word, codeword, "-ROT", &aligned_word, (void*)&rot_word, (void*)&rot_word, (void*)&exit_word )
+
 //@C +!
 // \ n addr --
 //   DUP @                             \ -- n addr val
 //   ROT                               \ -- addr val n
 //   +                                 \ -- addr new-val
 //   SWAP !
-COM( _2b__21__word, codeword, "+!", &aligned_word, (void*)&dup_word, (void*)&at_word, (void*)&rot_word, (void*)&add_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
+COM( _2b__21__word, codeword, "+!", &_2d_rot_word, (void*)&dup_word, (void*)&at_word, (void*)&rot_word, (void*)&add_word, (void*)&swap_word, (void*)&pling_word, (void*)&exit_word )
 
 //@C ,
 //  HERE !
@@ -1130,8 +1144,8 @@ COM( emit_word, codeword, "EMIT", &create_word, (void*)&here_word, (void*)&c_pli
 
 //@C TYPE
 // \ ( addr n -- )
-//   _stdout ROT ROT _write DROP
-COM( type_word, codeword, "TYPE", &emit_word, (void*)&_stdout_word, (void*)&rot_word, (void*)&rot_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
+//   _stdout -ROT _write DROP
+COM( type_word, codeword, "TYPE", &emit_word, (void*)&_stdout_word, (void*)&_2d_rot_word, (void*)&_write_word, (void*)&drop_word, (void*)&exit_word )
 
 //@C CR
 //   10 EMIT
@@ -1219,26 +1233,23 @@ COM( accept_word, codeword, "ACCEPT", &key_word, (void*)&over_word, (void*)&add_
 
 //@C REFILL
 //  \ Read a line from the terminal.
-//  SOURCE ACCEPT              \ -- len
+//  [&lit_word] [input_buffer]
+//  [&lit_word] [MAX_LINE_LENGTH] 
+//  ACCEPT                   \ -- len
 //
 //  \ Is this the end?
 //  DUP 0< IF
 //    DROP 0 EXIT
 //  THEN
 //
-//  \ Clear the remainder of the buffer.
-//  DUP [&lit_word] [input_buffer] +       \ -- len addr
-//  SWAP                                   \ -- addr len
-//  [&lit_word] [MAX_LINE_LENGTH] SWAP -   \ -- addr remaining
-//  32                                     \ -- addr remaining char
-//  FILL
-//
-//  \ Reset the input pointer.
+//  \ Set up in the input buffer variables.
+//  >INLEN !
+//  [&lit_word] [input_buffer] >INBASE !
 //  0 >IN !
 //
 //  \ We must succeed!
 //  1
-COM( refill_word, codeword, "REFILL", &accept_word, (void*)&source_word, (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 9), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&dup_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&add_word, (void*)&swap_word, (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&swap_word, (void*)&sub_word, (void*)&lit_word, (void*)32, (void*)&fill_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
+COM( refill_word, codeword, "REFILL", &accept_word, (void*)(&lit_word), (void*)(input_buffer), (void*)(&lit_word), (void*)(MAX_LINE_LENGTH), (void*)&accept_word, (void*)&dup_word, (void*)&less0_word, (void*)&branch0_word, (void*)(&refill_word.payload[0] + 12), (void*)&drop_word, (void*)&zero_word, (void*)&exit_word, (void*)&inlen_arrow_word, (void*)&pling_word, (void*)(&lit_word), (void*)(input_buffer), (void*)&inbase_arrow_word, (void*)&pling_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&one_word, (void*)&exit_word )
 
 //@C COUNT
 // \ ( c-addr -- addr len )
@@ -1253,8 +1264,8 @@ IMM( _28__word, codeword, "(", &count_word, (void*)&lit_word, (void*)41, (void*)
 // \ val addr len -- val addr len
 // \ As >NUMBER, but negates the result.
 //   >NUMBER
-//   ROT NEGATE ROT ROT
-COM( numberthenneg_word, codeword, "", &_28__word, (void*)&a_number_word, (void*)&rot_word, (void*)&negate_word, (void*)&rot_word, (void*)&rot_word, (void*)&exit_word )
+//   ROT NEGATE -ROT
+COM( numberthenneg_word, codeword, "", &_28__word, (void*)&a_number_word, (void*)&rot_word, (void*)&negate_word, (void*)&_2d_rot_word, (void*)&exit_word )
 
 //@C snumber HIDDEN
 // \ val addr len -- val addr len
@@ -1344,8 +1355,8 @@ static cdefn_t* interpreter_table[] =
 //     \ (This relies of word writing the result to here.)
 //     32 WORD                         \ -- c-addr
 //
-//     \ End of the buffer? If so, return.
-//     C@ 0= IF EXIT THEN              \ --
+//     \ End of the buffer? (WORD returns a zero-length result.) If so, return.
+//     C@ 0= IF EXIT THEN
 //
 //     \ Look up the word.
 //     HERE FIND                     \ -- addr kind
@@ -1359,6 +1370,30 @@ static cdefn_t* interpreter_table[] =
 //     [&lit_word] [interpreter_table] + @ EXECUTE \ -- addr
 //   AGAIN
 COM( interpret_word, codeword, "INTERPRET", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)24, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
+
+//@C EVALUATE
+// \ Parses a user-specified string and executes the words therein.
+// \ c-addr len --
+//
+//  \ Save the old variables (on the return stack so they don't interfere
+//  \ with the EVALUATEd return code).
+//  >INLEN @ >R              \ c-addr len -- 
+//  >INBASE @ >R             \ c-addr len --
+//  >IN @ >R                 \ c-addr len --
+//
+//  \ Set up the new ones.
+//  >INLEN !                 \ c-addr --
+//  >INBASE !                \ --
+//  0 >IN !
+//
+//  \ Run the code.
+//  INTERPRET
+//
+//  \ Now put the variables back again.
+//  R> >IN !                 \ --
+//  R> >INBASE !             \ --
+//  R> >INLEN !              \ --
+COM( evaluate_word, codeword, "EVALUATE", &interpret_word, (void*)&inlen_arrow_word, (void*)&at_word, (void*)&arrow_r_word, (void*)&inbase_arrow_word, (void*)&at_word, (void*)&arrow_r_word, (void*)&in_arrow_word, (void*)&at_word, (void*)&arrow_r_word, (void*)&inlen_arrow_word, (void*)&pling_word, (void*)&inbase_arrow_word, (void*)&pling_word, (void*)&zero_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&interpret_word, (void*)&r_arrow_word, (void*)&in_arrow_word, (void*)&pling_word, (void*)&r_arrow_word, (void*)&inbase_arrow_word, (void*)&pling_word, (void*)&r_arrow_word, (void*)&inlen_arrow_word, (void*)&pling_word, (void*)&exit_word )
 
 static const char prompt_msg[4] = " ok\n";
 //@C INTERACT
@@ -1374,7 +1409,7 @@ static const char prompt_msg[4] = " ok\n";
 //    \ Interpret the contents of the buffer.
 //    INTERPRET
 //  AGAIN
-COM( interact_word, codeword, "INTERACT", &interpret_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_stdin_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&interact_word.payload[0] + 11), (void*)(&lit_word), (void*)(prompt_msg), (void*)&lit_word, (void*)4, (void*)&type_word, (void*)&refill_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interact_word.payload[0] + 16), (void*)&exit_word, (void*)&interpret_word, (void*)&branch_word, (void*)(&interact_word.payload[0] + 0), (void*)&exit_word )
+COM( interact_word, codeword, "INTERACT", &evaluate_word, (void*)&_input_fd_word, (void*)&at_word, (void*)&_stdin_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&interact_word.payload[0] + 11), (void*)(&lit_word), (void*)(prompt_msg), (void*)&lit_word, (void*)4, (void*)&type_word, (void*)&refill_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interact_word.payload[0] + 16), (void*)&exit_word, (void*)&interpret_word, (void*)&branch_word, (void*)(&interact_word.payload[0] + 0), (void*)&exit_word )
 
 //@C QUIT
 //  SP0 SP!
@@ -1939,7 +1974,10 @@ int main(int argc, const char* argv[])
 				printf(") ");
 			#endif
 			printf("[");
-			fwrite(&w->name->data[0], 1, w->name->len & 0x7f, stdout);
+			if (w->name)
+				fwrite(&w->name->data[0], 1, w->name->len & FL__MASK, stdout);
+			else
+				printf("(null)");
 			putchar(']');
 			putchar('\n');
 		#endif
