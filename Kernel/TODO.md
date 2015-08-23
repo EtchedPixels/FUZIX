@@ -1,29 +1,29 @@
 Big TODO Items Before 0.1 Release
 ---------------------------------
 
-o 	BSD groups can be done but do we care ?
-DONE	Termios and speed hooks to tty drivers
-DONE	hangup ioctl (vhangup) plus hangups for group leader exits
-DONE	rename should delete old files it renames over
-o	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
+[ ] 	BSD groups can be done but do we care ?
+[X]	Termios and speed hooks to tty drivers
+[X]	hangup ioctl (vhangup) plus hangups for group leader exits
+[X]	rename should delete old files it renames over
+[ ]	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
 IP	SYS5 signal holding
-o	ptrace
-o	Core dumps
-o	time_t bits hidden in inode
+[X]	ptrace
+[ ]	Core dumps
+[ ]	time_t bits hidden in inode
 NA	RTC setting
-DONE	Lock clock to RTC seconds
-o	Can we make the mount point buffers writable to disk too so we can
+[X]	Lock clock to RTC seconds
+[ ]	Can we make the mount point buffers writable to disk too so we can
 	drop the quiet ones when busy ?
 IP	Simplify exec logic and split into multiple functions
-o	Add "shared lib" (or more accurately copied lib) support for libc
+[ ]	Add "shared lib" (or more accurately copied lib) support for libc
 	to keep binary size small
-o	Can we make inodes partially pageable given our on disk guarantees ?
+[ ]	Can we make inodes partially pageable given our on disk guarantees ?
 	Disk inode in cinode would then become a pointer. Might allow more open
 	objects and less memory usage. Might be nicer alternative to the BSD
 	inode shrinking hack (although that would fix the time_t question!)
-o	Finish the cpm emulator port
+[ ]	Finish the cpm emulator port
 IP	Make object alignments 16bit friendly
-DONE	Add fields to binaries giving load page (so can load Z80 0x8000
+[X]	Add fields to binaries giving load page (so can load Z80 0x8000
 	binaries safely etc)
 
 Big Speed Up Points
