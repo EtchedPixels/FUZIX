@@ -505,36 +505,38 @@ THINGS TO DO. (Beta Notes, 18 August 1998 - HFB)
   libraries, etc.
 
 
-                ------------------------------------
+---------------------------------------
 
+    UZIX - UNIX Implementation for MSX
+    (c) 1997-2001 Arcady Schekochikhin
+	       Adriano C. R. da Cunha
+	        http://uzix.msx.org
 
-UZIX - UNIX Implementation for MSX
-(c) 1997-2001 Arcady Schekochikhin
-	      Adriano C. R. da Cunha
-						      http://uzix.msx.org
+#What is the UZIX?
 
-What is the UZIX?
-
-	UZIX: UNIX IMPLEMENTATION FOR MSX based on UZI written by Douglas
+UZIX: UNIX IMPLEMENTATION FOR MSX based on UZI written by Douglas
 Braun and ported to MS-DOS / MSX by Arcady Schekochikhin and Adriano
 Rodrigues da Cunha.
-	UZIX is an implementation of the UNIX kernel written for a MSX/PC
+
+UZIX is an implementation of the UNIX kernel written for a MSX/PC
 computer. It implements almost all 7th Edition AT&T UNIX kernel
 functionality. UZIX was written to run on PC (under MS DOS) or MSX2/2+/TR.
 The source code is written mostly in C, and was compiled with Turbo-C (PC)
 or Hitech-C (MSX). UZIX's code was based on public domain Doug Braun's
 UZI, which was written from scratch, and contains no AT&T code, so it is
 not subject to any of AT&T's copyright or licensing restrictions.
-	UZIX implements almost all of the 7th Edition functionality. All
+
+UZIX implements almost all of the 7th Edition functionality. All
 file I/O, directories, mountable file systems, user and group IDs, pipes,
 and applicable device I/O are supported. The number of processes is
 limited only by the swap space available, with a maximum of 31 processes
 (total of 1024k memory). UZIX implements UNIX well enough to run the
 Bourne Shell in its full functionality.
-	UZIX is very small. The code size of the kernel is less than 30Kb
+
+UZIX is very small. The code size of the kernel is less than 30Kb
 (in fact, it's 25.8Kb). I think it is the smallest UNIX 7th Edition-like
 implementation you can get.
-	Due to the limitation of a 64Kb linear addressing space of 
+Due to the limitation of a 64Kb linear addressing space of
 Z80, UZIX supports only applications with a maximum size of 32Kb.
 
 Features:
@@ -545,17 +547,19 @@ Features:
 * Stable filesystem, almost bugless;
 * Very stable kernel, shell and environment;
 * System shell and utilities running with no errors;
-* Module support (only used by TCP/IP Stack now); 
-* Harddisk support (ESE MegaSCSI and Sunrise IDE); 
+* Module support (only used by TCP/IP Stack now);
+* Harddisk support (ESE MegaSCSI and Sunrise IDE);
 
 How it works:
 
-	UZIX uses MSX2 memory mapper to achieve multiprocessing. On PC
+UZIX uses MSX2 memory mapper to achieve multiprocessing. On PC
 UZIX use additional PC memory for swapping. In both cases UZIX use 64K of
 virtual address space (full Z80 space or one full segment on PC).
-	UZIX itself occupies the upper 32K of address space, and the
+
+UZIX itself occupies the upper 32K of address space, and the
 currently running process occupies the lower 32K.
-	UZIX does need some additional hardware support. First, UZIX uses
+
+UZIX does need some additional hardware support. First, UZIX uses
 system clock that provide a periodic interrupt. Also, the current
 implementation uses an additional real-time clock to get the time for file
 timestamps, etc. The current TTY driver assumes an polling-driven buffered
@@ -563,7 +567,7 @@ keyboard, which should exist on most systems.
 
 How UZIX is different than real UNIX:
 
-	UZIX implements almost all of the 7th Edition AT&T UNIX
+UZIX implements almost all of the 7th Edition AT&T UNIX
 functionality. All file I/O, directories, mountable file systems, user and
 group IDs, pipes, and applicable device I/O are supported. Process control
 (fork(), execve(), signal(), kill(), pause(), alarm(), and wait()) are
@@ -572,12 +576,13 @@ available, with a maximum of 31 processes (total of 1024k memory). As
 mentioned, UZIX implements UNIX well enough to run the Bourne Shell in its
 full functionality. The only changes made to the shell's source code were
 to satisfy the limitations of the C compiler.
-	Here is a (possibly incomplete) list of missing features and
+
+Here is a (possibly incomplete) list of missing features and
 limitations:
 
 * The debugger- and profiler-related system calls do not exist.
 * The supplied TTY driver is bare-bones. It supports only one port.
-* Inode numbers are only 16-bit, so filesystems are 32MB or less. 
+* Inode numbers are only 16-bit, so filesystems are 32MB or less.
 * File dates are not in the standard format. Instead they look like those
   used by MS-DOS.
 * The 4.2BSD execve() was implemented. Additional flavors of exec() are
@@ -588,7 +593,7 @@ limitations:
 
 Developer notes:
 
-	MSX UZIX can be compiled with any ANSI-compatible C compilers. The
+MSX UZIX can be compiled with any ANSI-compatible C compilers. The
 only true one for MSX is Hitech-C (CP/M version) and MS-DOS Hitech-C
 (cross-compiler). MSX UZIX was written using Hitech-C. You'll find many
 constructions and functions not supported (and also limitations) by other
@@ -597,11 +602,12 @@ compiled using other compiler, but it will requires a lot of changes in
 the source code.  Initially, MSX UZIX couldn't be compiled for running on
 a MSX1, since it uses Memory Mapper for multitasking, system real-time
 clock for file timestamps, and 80-column screen.
-	Of course, is possible doing a "light" MSX UZIX for MSX1, with a
+Of course, is possible doing a "light" MSX UZIX for MSX1, with a
 fake real-time clock (software emulated by the kernel), using a 40-column
 display and other memory device (such as MegaRAM) for multitasking, but
 it's not the target of this release.
-	But, just for fun (and as a curiousity), there is a version of MSX
+But, just for fun (and as a curiousity), there is a version of MSX
+
 UZIX for MSX1. It emulates the system real-time clock and uses the
 brazilian MegaRAM for multitasking. The system overall performance is
 lower than using Memory Mapper, since due to switching restrictions of
@@ -611,7 +617,8 @@ the user must input the actual date and time when system boots. The
 40-column display doesn't represent a serious restriction, but some
 applications (like top, ps or banner) will display bad formatted texts on
 screen.
-	This release of MSX UZIX can handle a maximum of 31 processes
+
+This release of MSX UZIX can handle a maximum of 31 processes
 (limited to the size of available RAM). It could handle up to 127
 processes (4Mb RAM), but it's nonsense a single user running so many
 processes at a time. That's why this limit of 31 concurrent processes.
@@ -725,7 +732,7 @@ Copy license:
 	All the UZIX source (kernel, utilities and related sources) is
 released under the GNU GPL license. Read the COPYING file for details.
 
-		-----------------------------------------------------
+---------------------------------------
 
 		UZI: UNIX Z-80 IMPLEMENTATION
 
@@ -802,7 +809,7 @@ Here is a (possibly incomplete) list of missing features and limitations:
     The format of the device driver switch table is unlike that of
     the 7th Edition.
 
-    The necessary semaphores and locking mechanisms to implement 
+    The necessary semaphores and locking mechanisms to implement
     reentrant disk I/O are not there.  This would make it harder to
     implement interrupt-driven disk I/O without busy-waiting.
 
@@ -867,7 +874,7 @@ are only a couple of these in the code, and they could easily be removed.
 
 Because UZI occupies the upper 32K of memory, the standard L80 linker
 could not be used to link it.  Instead, a homebrew L80 replacement linker
-was used.  This generated a 64K-byte CP/M .COM file, which has the lower 
+was used.  This generated a 64K-byte CP/M .COM file, which has the lower
 32K pruned by the CP/M PIP utility.  This is the reason for appearance
 of the string "MOMBASSA" in filler.mac and loadunix.sub.
 
@@ -884,7 +891,7 @@ Running programs under UZI:
 A number of 7th Edition, System V, and 4.2BSD programs were ported to
 UZI.  Most notably, the Bourne shell and ed run fine under UZI.
 In addition the 4.2BSD stdio library was also ported.  This, along
-with the Code Works Q/C library and miscellaneous System V library 
+with the Code Works Q/C library and miscellaneous System V library
 functions, was used when porting programs.
 
 Due to obvious legal reasons, the source or executables for most of these
@@ -901,4 +908,3 @@ contains many programs that should compile and run under UZI.  Since
 Minix is much less encumbered by licensing provisions than real Unix,
 it would make sense to port Minix programs to UZI.  In fact, UZI itself
 could be ported to the PC, and used as a replacement for the Minix kernel.
-
