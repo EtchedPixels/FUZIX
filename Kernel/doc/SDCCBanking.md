@@ -1,3 +1,5 @@
+# SDD banking
+
 SDCC itself does not support code banking, only data banking. Even the data
 banking isn't truely "far" pointers so is mostly useless.
 
@@ -9,17 +11,18 @@ it's not smart enough to lay out the banks itself.
 The compiler is also modified to add an option --external-banker which
 causes it to do two things
 
-1.	Calls to functions are generated with push af/pop af either side
+1.  Calls to functions are generated with push af/pop af either side
 	of the invocation (except calls to literals)
 
-2.	Functions assume there are four bytes of pushed address
+2. Functions assume there are four bytes of pushed address
 
 
-How it works
+## How it works
 
 sdldz80 takes a -r flag. In the presence of the -r flag it assumes for now
 
 Code Segments:
+
 	_CODE		is "bank 1"
 	_CODE2		is "bank 2"
 	_CODE3		is "bank 3"
@@ -28,6 +31,7 @@ Code Segments:
 	_COMMONMEM	is common (bank 0)
 
 Data Segments:
+
 	_CONST		is common (bank 0)
 	_INITIALIZED	is common (bank 0)
 	_DATA		is common (bank 0)
@@ -53,18 +57,19 @@ images.
 binmunge reads the relocs and banks and converts as follows
 
 Code
+
 	PUSH AF
 	CALL xx
 	POP AF
 
-	is turned into
+is turned into
 
 	CALL __bank_n_from_m	; for inter-bank calls
 	DEFW xx
 
 	0xC3 (JUMP) is turned into a jump into a stub
 
-	Anything else is considered an error
+Anything else is considered an error
 
 Data
 	Each code entry is turned into a stub. Identical entries are turned
@@ -95,17 +100,15 @@ syscall tables correctly generate inter bank calls.
 
 Banking Handlers
 
-See platform-zx128/zx128.s
-
+See [platform-zx128/zx128.s](https://github.com/EtchedPixels/FUZIX/blob/master/Kernel/platform-zx128/zx128.s)
 
 Assumptions
 
-__sdcc_callhl
-__enter
-__enter_s
+	__sdcc_callhl
+	__enter
+	__enter_s
 
 must live in common memory
 
 You must use a sdcc support library modified to expect 'far' style offsets
 on helpers, but they may be banked.
-
