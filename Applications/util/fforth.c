@@ -501,8 +501,8 @@ static void* claim_workspace(size_t length)
 }
 
 /* Note --- this only works properly on word names, not general counted
- * strings, because it ignores the top bit of the length (used in the
- * dictionary as a flag). */
+ * strings, because it ignores the top bits of the length (used in the
+ * dictionary as flags). */
 static int fstreq(const struct fstring* f1, const struct fstring* f2)
 {
 	int len1 = f1->len & FL__MASK;
@@ -903,6 +903,7 @@ static void _close_cb(cdefn_t* w)     { dpush(close(dpop())); }
 static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
 static void abort_cb(cdefn_t* w)      { longjmp(onerror, 1); }
 static void add_cb(cdefn_t* w)        { dpush(dpop() + dpop()); }
+static void dadjust_cb(cdefn_t* w)    { dadjust((cell_t) *w->payload); }
 static void align_cb(cdefn_t* w)      { claim_workspace((CELL - (cell_t)here) & (CELL-1)); }
 static void allot_cb(cdefn_t* w)      { claim_workspace(dpop()); }
 static void and_cb(cdefn_t* w)        { dpush(dpop() & dpop()); }
@@ -913,8 +914,6 @@ static void branchif_cb(cdefn_t* w)   { if (dpop() == (cell_t)*w->payload) pc = 
 static void c_at_cb(cdefn_t* w)       { dpush(*(uint8_t*)dpop()); }
 static void c_pling_cb(cdefn_t* w)    { uint8_t* p = (uint8_t*)dpop(); *p = dpop(); }
 static void close_sq_cb(cdefn_t* w)   { state = 1; }
-static void drop_cb(cdefn_t* w)       { dadjust(-1); }
-static void rdrop_cb(cdefn_t* w)      { radjust(-1); }
 static void equals0_cb(cdefn_t* w)    { dpushbool(dpop() == 0); }
 static void equals_cb(cdefn_t* w)     { dpushbool(dpop() == dpop()); }
 static void exit_cb(cdefn_t* w)       { pc = (void*)rpop(); }
@@ -935,19 +934,19 @@ static void notequals0_cb(cdefn_t* w) { dpushbool(dpop() != 0); }
 static void open_sq_cb(cdefn_t* w)    { state = 0; }
 static void or_cb(cdefn_t* w)         { dpush(dpop() | dpop()); }
 static void peekcon_cb(cdefn_t* w)    { dpush(*daddr((cell_t) *w->payload)); }
-static void pokecon_cb(cdefn_t* w)    { cell_t v = dpop(); *daddr((cell_t) *w->payload) = v; }
 static void peekcon2_cb(cdefn_t* w)   { peekcon_cb(w); peekcon_cb(w); }
 static void pick_cb(cdefn_t* w)       { dpush(*daddr(dpop())); }
 static void pling_cb(cdefn_t* w)      { cell_t* p = (cell_t*)dpop(); *p = dpop(); }
+static void pokecon_cb(cdefn_t* w)    { cell_t v = dpop(); *daddr((cell_t) *w->payload) = v; }
 static void q_dup_cb(cdefn_t* w)      { cell_t a = *daddr(0); if (a) dpush(a); }
 static void r_arrow_cb(cdefn_t* w)    { dpush(rpop()); }
+static void radjust_cb(cdefn_t* w)    { radjust((cell_t) *w->payload); }
 static void rpeekcon_cb(cdefn_t* w)   { dpush(*raddr((cell_t) *w->payload)); }
-static void rpokecon_cb(cdefn_t* w)   { cell_t v = dpop(); *raddr((cell_t) *w->payload) = v; }
 static void rpick_cb(cdefn_t* w)      { dpush(*raddr(dpop())); }
+static void rpokecon_cb(cdefn_t* w)   { cell_t v = dpop(); *raddr((cell_t) *w->payload) = v; }
 static void rshift_cb(cdefn_t* w)     { cell_t u = dpop(); ucell_t a = dpop(); dpush(a >> u); }
 static void rsshift_cb(cdefn_t* w)    { dpush(dpop() >> 1); }
 static void sub_cb(cdefn_t* w)        { cell_t a = dpop(); cell_t b = dpop(); dpush(b - a); }
-static void t_drop_cb(cdefn_t* w)     { dadjust(-2); }
 static void u_lt_cb(cdefn_t* w)       { ucell_t a = dpop(); ucell_t b = dpop(); dpushbool(b < a); }
 static void u_m_star_cb(cdefn_t* w)   { dpushd((upair_t)(ucell_t)dpop() * (upair_t)(ucell_t)dpop()); }
 static void xor_cb(cdefn_t* w)        { dpush(dpop() ^ dpop()); }
@@ -997,7 +996,7 @@ COM( c_pling_word,       c_pling_cb,     "C!",         &c_at_word,       ) //@W
 COM( cell_word,          rvarword,       "CELL",       &c_pling_word,    (void*)CELL ) //@W
 COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
 COM( dabs_word,          dabs_cb,        "DABS",       &close_sq_word,   ) //@W
-COM( drop_word,          drop_cb,        "DROP",       &dabs_word,       ) //@W
+COM( drop_word,          dadjust_cb,     "DROP",       &dabs_word,       (void*)-1 ) //@W
 COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)0 ) //@W
 COM( equals0_word,       equals0_cb,     "0=",         &dup_word,        ) //@W
 COM( equals_word,        equals_cb,      "=",          &equals0_word,    ) //@W
@@ -1031,7 +1030,7 @@ COM( pick_word,          pick_cb,        "PICK",       &pad_word,        ) //@W
 COM( pling_word,         pling_cb,       "!",          &pick_word,       ) //@W
 COM( q_dup_word,         q_dup_cb,       "?DUP",       &pling_word,      ) //@W
 COM( r_arrow_word,       r_arrow_cb,     "R>",         &q_dup_word,      ) //@W
-COM( rdrop_word,         rdrop_cb,       "RDROP",      &r_arrow_word,    ) //@W
+COM( rdrop_word,         radjust_cb,     "RDROP",      &r_arrow_word,    (void*)-1 ) //@W
 COM( rot_word,           rot_cb,         "ROT",        &rdrop_word,      ) //@W
 COM( rpick_word,         rpick_cb,       "RPICK",      &rot_word,        ) //@W
 COM( rshift_word,        rshift_cb,      "RSHIFT",     &rpick_word,      ) //@W
@@ -1048,7 +1047,7 @@ COM( state_word,         rvarword,       "STATE",      &sp_pling_word,   &state 
 COM( sub_one_word,       increment_cb,   "1-",         &state_word,      (void*)-1 ) //@W
 COM( sub_word,           sub_cb,         "-",          &sub_one_word,    ) //@W
 COM( swap_word,          swap_cb,        "SWAP",       &sub_word,        ) //@W
-COM( t_drop_word,        t_drop_cb,      "2DROP",      &swap_word,       ) //@W
+COM( t_drop_word,        dadjust_cb,     "2DROP",      &swap_word,       (void*)-2 ) //@W
 COM( t_dup_word,         peekcon2_cb,    "2DUP",       &t_drop_word,     (void*)1 ) //@W
 COM( t_over_word,        peekcon2_cb,    "2OVER",      &t_dup_word,      (void*)3 ) //@W
 COM( t_swap_word,        t_swap_cb,      "2SWAP",      &t_over_word,     ) //@W
@@ -1203,12 +1202,9 @@ COM( key_word, codeword, "KEY", &nip_word, (void*)&zero_word, (void*)&sp_at_word
 //  THEN
 //
 //  BEGIN                    \ -- addr max-addr ptr key
-//    DUP 10 = IF
-//      \ Early exit.        \ -- addr max-addr ptr key
-//      0
-//    ELSE
-//    	>R 2DUP <> R> SWAP   \ -- addr max-addr ptr key flag
-//    THEN
+//    DUP 10 <>              \ -- addr max-addr-ptr key not-cr
+//    2SWAP 2DUP <> >R 2SWAP R>
+//    AND
 //  WHILE                    \ -- addr max-addr ptr key
 //    OVER C! 1+             \ -- addr max-addr ptr+1
 //    KEY                    \ -- addr max-addr ptr+1 key
@@ -1217,8 +1213,9 @@ COM( key_word, codeword, "KEY", &nip_word, (void*)&zero_word, (void*)&sp_at_word
 //      DROP 10
 //    THEN
 //  REPEAT
-//  DROP NIP SWAP -               \ -- count
-COM( accept_word, codeword, "ACCEPT", &key_word, (void*)&over_word, (void*)&add_word, (void*)&over_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&t_drop_word, (void*)&m_one_word, (void*)&exit_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 22), (void*)&zero_word, (void*)&branch_word, (void*)(&accept_word.payload[0] + 27), (void*)&arrow_r_word, (void*)&t_dup_word, (void*)&not_equals_word, (void*)&r_arrow_word, (void*)&swap_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 43), (void*)&over_word, (void*)&c_pling_word, (void*)&add_one_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 41), (void*)&drop_word, (void*)&lit_word, (void*)10, (void*)&branch_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&nip_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
+//  DROP NIP SWAP            \ -- ptr+1 addr
+//  -                        \ -- count
+COM( accept_word, codeword, "ACCEPT", &key_word, (void*)&over_word, (void*)&add_word, (void*)&over_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&t_drop_word, (void*)&m_one_word, (void*)&exit_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&not_equals_word, (void*)&t_swap_word, (void*)&t_dup_word, (void*)&not_equals_word, (void*)&arrow_r_word, (void*)&t_swap_word, (void*)&r_arrow_word, (void*)&and_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 40), (void*)&over_word, (void*)&c_pling_word, (void*)&add_one_word, (void*)&key_word, (void*)&dup_word, (void*)&m_one_word, (void*)&equals_word, (void*)&branch0_word, (void*)(&accept_word.payload[0] + 38), (void*)&drop_word, (void*)&lit_word, (void*)10, (void*)&branch_word, (void*)(&accept_word.payload[0] + 13), (void*)&drop_word, (void*)&nip_word, (void*)&swap_word, (void*)&sub_word, (void*)&exit_word )
 
 //@C REFILL
 //  \ Read a line from the terminal.
