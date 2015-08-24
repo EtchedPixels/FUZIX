@@ -284,6 +284,14 @@ exit 0
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+#include <sys/signal.h>
+#include <sys/times.h>
+#include <sys/utsname.h>
+#include <sys/wait.h>
+#include <sys/file.h>
+#include <utime.h>
 #include <fcntl.h>
 
 #if INTPTR_MAX == INT16_MAX
@@ -522,16 +530,63 @@ static cdefn_t E_fnf_word ;
 static cdefn_t _O_RDONLY_word ;
 static cdefn_t _O_RDWR_word ;
 static cdefn_t _O_WRONLY_word ;
+static cdefn_t _chdir_word ;
 static cdefn_t _close_word ;
 static cdefn_t _create_word ;
 static cdefn_t _exit_word ;
 static cdefn_t _input_fd_word ;
+static cdefn_t _mknod_word ;
 static cdefn_t _open_word ;
 static cdefn_t _read_word ;
+static cdefn_t _link_word ;
+static cdefn_t _lseek_word ;
+static cdefn_t _rename_word ;
+static cdefn_t _sync_word ;
+static cdefn_t _access_word ;
+static cdefn_t _chmod_word ;
+static cdefn_t _chown_word ;
+static cdefn_t _stat_word ;
+static cdefn_t _fstat_word ;
+static cdefn_t _dup_word ;
+static cdefn_t _getpid_word ;
+static cdefn_t _getppid_word ;
+static cdefn_t _getuid_word ;
+static cdefn_t _umask_word ;
+static cdefn_t _write_word ;
+static cdefn_t _execve_word ;
+static cdefn_t _setuid_word ;
+static cdefn_t _setgid_word ;
+static cdefn_t _ioctl_word ;
+static cdefn_t _fork_word ;
+static cdefn_t _mount_word ;
+static cdefn_t _umount_word ;
+static cdefn_t _signal_word ;
+static cdefn_t _dup2_word ;
+static cdefn_t _pause_word ;
+static cdefn_t _alarm_word ;
+static cdefn_t _kill_word ;
+static cdefn_t _pipe_word ;
+static cdefn_t _getgid_word ;
+static cdefn_t _times_word ;
+static cdefn_t _utime_word ;
+static cdefn_t _getegid_word ;
+static cdefn_t _geteuid_word ;
+static cdefn_t _chroot_word ;
+static cdefn_t _fcntl_word ;
+static cdefn_t _fchdir_word ;
+static cdefn_t _fchmod_word ;
+static cdefn_t _fchown_word ;
+static cdefn_t _mkdir_word ;
+static cdefn_t _rmdir_word ;
+static cdefn_t _setpgrp_word ;
+static cdefn_t _getpgrp_word ;
+static cdefn_t _uname_word ;
+static cdefn_t _wait_word ;
+static cdefn_t _nice_word ;
+static cdefn_t _flock_word ;
 static cdefn_t _stderr_word ;
 static cdefn_t _stdin_word ;
 static cdefn_t _stdout_word ;
-static cdefn_t _write_word ;
 static cdefn_t a_number_word ;
 static cdefn_t abort_word ;
 static cdefn_t abs_word ;
@@ -622,6 +677,114 @@ static cdefn_t open_sq_word ;
 //@EXPORT}
 
 /* ======================================================================= */
+/*                                SYSCALLS                                 */
+/* ======================================================================= */
+
+static void _readwrite_cb(cdefn_t* w)
+{
+	size_t len = dpop();
+	void* ptr = (void*)dpop();
+	int fd = dpop();
+	int (*func)(int fd, void* ptr, size_t size) = (void*) *w->payload;
+
+	dpush(func(fd, ptr, len));
+}
+
+static void _sys_cb(cdefn_t* w)
+{
+	int (*func)(void) = (void*) *w->payload;
+	dpush(func());
+}
+
+static void _sys_s_cb(cdefn_t* w)
+{
+	int (*func)(void* s) = (void*) *w->payload;
+	dpush(func((void*)dpop()));
+}
+
+static void _sys_is_cb(cdefn_t* w)
+{
+	void* s = (void*)dpop();
+	int i = dpop();
+	int (*func)(int i, void* s) = (void*) *w->payload;
+	dpush(func(i, s));
+}
+
+static void _sys_si_cb(cdefn_t* w)
+{
+	int i = dpop();
+	void* s = (void*)dpop();
+	int (*func)(void* s, int i) = (void*) *w->payload;
+	dpush(func(s, i));
+}
+
+static void _sys_sii_cb(cdefn_t* w)
+{
+	int i2 = dpop();
+	int i1 = dpop();
+	void* s = (void*)dpop();
+	int (*func)(void* s, int i1, int i2) = (void*) *w->payload;
+	dpush(func(s, i1, i2));
+}
+
+static void _sys_ss_cb(cdefn_t* w)
+{
+	void* s2 = (void*)dpop();
+	void* s1 = (void*)dpop();
+	int (*func)(void* s1, void* s2) = (void*) *w->payload;
+	dpush(func(s1, s2));
+}
+
+static void _sys_ssi_cb(cdefn_t* w)
+{
+	cell_t i = dpop();
+	void* s2 = (void*)dpop();
+	void* s1 = (void*)dpop();
+	int (*func)(void* s1, void* s2, int i) = (void*) *w->payload;
+	dpush(func(s1, s2, i));
+}
+
+static void _sys_sss_cb(cdefn_t* w)
+{
+	void* s3 = (void*)dpop();
+	void* s2 = (void*)dpop();
+	void* s1 = (void*)dpop();
+	int (*func)(void* s1, void* s2, void* s3) = (void*) *w->payload;
+	dpush(func(s1, s2, s3));
+}
+
+static void _sys_i_cb(cdefn_t* w)
+{
+	int (*func)(cell_t i) = (void*) *w->payload;
+	dpush(func(dpop()));
+}
+
+static void _sys_ii_cb(cdefn_t* w)
+{
+	cell_t i2 = dpop();
+	cell_t i1 = dpop();
+	int (*func)(int i1, int i2) = (void*) *w->payload;
+	dpush(func(i1, i2));
+}
+
+static void _sys_iii_cb(cdefn_t* w)
+{
+	cell_t i3 = dpop();
+	cell_t i2 = dpop();
+	cell_t i1 = dpop();
+	int (*func)(int i1, int i2, int i3) = (void*) *w->payload;
+	dpush(func(i1, i2, i3));
+}
+
+static void _sys_iiv_cb(cdefn_t* w)
+{
+	void* s = (void*)dpop();
+	cell_t i2 = dpop();
+	cell_t i1 = dpop();
+	dpush(ioctl(i1, i2, s));
+}
+
+/* ======================================================================= */
 /*                                  WORDS                                  */
 /* ======================================================================= */
 
@@ -640,23 +803,6 @@ static void r2varword(cdefn_t* w) { dpush((cell_t) w->payload[0]); dpush((cell_t
 static void wvarword(defn_t* w) { w->payload[0] = (void*) dpop(); }
 static void rivarword(cdefn_t* w) { dpush(*(cell_t*) w->payload[0]); }
 static void wivarword(cdefn_t* w) { *(cell_t*)(w->payload[0]) = dpop(); }
-
-static void _readwrite_cb(cdefn_t* w)
-{
-	size_t len = dpop();
-	void* ptr = (void*)dpop();
-	int fd = dpop();
-	int (*func)(int fd, void* ptr, size_t size) = (void*) *w->payload;
-
-	dpush(func(fd, ptr, len));
-}
-
-static void _open_cb(cdefn_t* w)
-{
-	int flags = dpop();
-	const char* filename = (void*)dpop();
-	dpush(open(filename, flags));
-}
 
 static void fill_cb(cdefn_t* w)
 {
@@ -909,16 +1055,6 @@ static void fm_mod_cb(cdefn_t* w)
 	dpush(q);
 }
 
-static void um_mod_cb(cdefn_t* w)
-{
-	ucell_t den = dpop();
-	upair_t num = dpopd();
-	ucell_t q = num / den;
-	ucell_t r = num % den;
-	dpush(r);
-	dpush(q);
-}
-
 static void ud_mod_cb(cdefn_t* w)
 {
 	upair_t den = dpopd();
@@ -930,7 +1066,6 @@ static void ud_mod_cb(cdefn_t* w)
 }
 
 static void E_fnf_cb(cdefn_t* w)      { panic("file not found"); }
-static void _close_cb(cdefn_t* w)     { dpush(close(dpop())); }
 static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
 static void abort_cb(cdefn_t* w)      { longjmp(onerror, 1); }
 static void add_cb(cdefn_t* w)        { dpush(dpop() + dpop()); }
@@ -1000,17 +1135,64 @@ COM( E_fnf_word,         E_fnf_cb,       "E_fnf",      NULL,             (void*)
 COM( _O_RDONLY_word,     rvarword,       "O_RDONLY",   &E_fnf_word,      (void*)O_RDONLY ) //@W
 COM( _O_RDWR_word,       rvarword,       "O_RDWR",     &_O_RDONLY_word,  (void*)O_RDWR ) //@W
 COM( _O_WRONLY_word,     rvarword,       "O_WRONLY",   &_O_RDWR_word,    (void*)O_WRONLY ) //@W
-COM( _close_word,        _close_cb,      "_close",     &_O_WRONLY_word,  ) //@W
-COM( _create_word,       _create_cb,     "",           &_close_word,     ) //@W
+COM( _chdir_word,        _sys_s_cb,      "_chdir",     &_O_WRONLY_word,  &chdir ) //@W
+COM( _close_word,        _sys_i_cb,      "_close",     &_chdir_word,     &close ) //@W
+COM( _create_word,       _create_cb,     "_create",    &_close_word,     ) //@W
 COM( _exit_word,         _exit_cb,       "_exit",      &_create_word,    ) //@W
 COM( _input_fd_word,     rvarword,       "_input_fd",  &_exit_word,      &input_fd ) //@W
-COM( _open_word,         _open_cb,       "_open",      &_input_fd_word,  ) //@W
+COM( _mknod_word,        _sys_sii_cb,    "_mknod",     &_input_fd_word,  ) //@W
+COM( _open_word,         _sys_si_cb,     "_open",      &_mknod_word,     &open ) //@W
 COM( _read_word,         _readwrite_cb,  "_read",      &_open_word,      &read ) //@W
-COM( _stderr_word,       rvarword,       "_stderr",    &_read_word,      (void*)2 ) //@W
+COM( _link_word,         _sys_ss_cb,     "_link",      &_read_word,      &link ) //@W
+COM( _lseek_word,        _sys_iii_cb,    "_lseek",     &_link_word,      &lseek ) //@W
+COM( _rename_word,       _sys_ss_cb,     "_rename",    &_lseek_word,     &rename ) //@W
+COM( _sync_word,         _sys_i_cb,      "_sync",      &_rename_word,    &sync ) //@W
+COM( _access_word,       _sys_si_cb,     "_access",    &_sync_word,      &access ) //@W
+COM( _chmod_word,        _sys_si_cb,     "_chmod",     &_access_word,    &chmod ) //@W
+COM( _chown_word,        _sys_sii_cb,    "_chown",     &_chmod_word,     &chown ) //@W
+COM( _stat_word,         _sys_ss_cb,     "_stat",      &_chown_word,     &stat ) //@W
+COM( _fstat_word,        _sys_is_cb,     "_fstat",     &_stat_word,      &fstat ) //@W
+COM( _dup_word,          _sys_i_cb,      "_dup",       &_fstat_word,     &dup ) //@W
+COM( _getpid_word,       _sys_cb,        "_getpid",    &_dup_word,       &getpid ) //@W
+COM( _getppid_word,      _sys_cb,        "_getppid",   &_getpid_word,    &getppid ) //@W
+COM( _getuid_word,       _sys_cb,        "_getuid",    &_getppid_word,   &getuid ) //@W
+COM( _umask_word,        _sys_i_cb,      "_umask",     &_getuid_word,    &umask ) //@W
+COM( _write_word,        _readwrite_cb,  "_write",     &_umask_word,     &write ) //@W
+COM( _execve_word,       _sys_sss_cb,    "_execve",    &_write_word,     &execve ) //@W
+COM( _setuid_word,       _sys_i_cb,      "_setuid",    &_execve_word,    &setuid ) //@W
+COM( _setgid_word,       _sys_i_cb,      "_setgid",    &_setuid_word,    &setgid ) //@W
+COM( _ioctl_word,        _sys_iiv_cb,    "_ioctl",     &_setgid_word,    &ioctl ) //@W
+COM( _fork_word,         _sys_cb,        "_fork",      &_ioctl_word,     &fork ) //@W
+COM( _mount_word,        _sys_ssi_cb,    "_mount",     &_fork_word,      &mount ) //@W
+COM( _umount_word,       _sys_s_cb,      "_umount",    &_mount_word,     &umount ) //@W
+COM( _signal_word,       _sys_ss_cb,     "_signal",    &_umount_word,    &signal ) //@W
+COM( _dup2_word,         _sys_ii_cb,     "_dup2",      &_signal_word,    &dup2 ) //@W
+COM( _pause_word,        _sys_cb,        "_pause",     &_dup2_word,      &pause ) //@W
+COM( _alarm_word,        _sys_i_cb,      "_alarm",     &_pause_word,     &alarm ) //@W
+COM( _kill_word,         _sys_ii_cb,     "_kill",      &_alarm_word,     &kill ) //@W
+COM( _pipe_word,         _sys_si_cb,     "_pipe",      &_kill_word,      &pipe ) //@W
+COM( _getgid_word,       _sys_cb,        "_getgid",    &_pipe_word,      &getgid ) //@W
+COM( _times_word,        _sys_s_cb,      "_times",     &_getgid_word,    &times ) //@W
+COM( _utime_word,        _sys_ss_cb,     "_utime",     &_times_word,     &utime ) //@W
+COM( _getegid_word,      _sys_cb,        "_getegid",   &_utime_word,     &getegid ) //@W
+COM( _geteuid_word,      _sys_cb,        "_geteuid",   &_getegid_word,   &geteuid ) //@W
+COM( _chroot_word,       _sys_s_cb,      "_chroot",    &_geteuid_word,   &chroot ) //@W
+COM( _fcntl_word,        _sys_iiv_cb,    "_fnctl",     &_chroot_word,    &fcntl ) //@W
+COM( _fchdir_word,       _sys_i_cb,      "_fchdir",    &_fcntl_word,     &fchdir ) //@W
+COM( _fchmod_word,       _sys_ii_cb,     "_fchmod",    &_fchdir_word,    &fchmod ) //@W
+COM( _fchown_word,       _sys_ii_cb,     "_fchown",    &_fchmod_word,    &fchown ) //@W
+COM( _mkdir_word,        _sys_si_cb,     "_mkdir",     &_fchown_word,    &mkdir ) //@W
+COM( _rmdir_word,        _sys_s_cb,      "_rmdir",     &_mkdir_word,     &rmdir ) //@W
+COM( _setpgrp_word,      _sys_ii_cb,     "_setpgrp",   &_rmdir_word,     &setpgrp ) //@W
+COM( _getpgrp_word,      _sys_i_cb,      "_getpgrp",   &_setpgrp_word,   &getpgrp ) //@W
+COM( _uname_word,        _sys_s_cb,      "_uname",     &_getpgrp_word,   &uname ) //@W
+COM( _wait_word,         _sys_s_cb,      "_wait",      &_uname_word,     &wait ) //@W
+COM( _nice_word,         _sys_i_cb,      "_nice",      &_wait_word,      &nice ) //@W
+COM( _flock_word,        _sys_ii_cb,     "_flock",     &_nice_word,      &flock ) //@W
+COM( _stderr_word,       rvarword,       "_stderr",    &_flock_word,     (void*)2 ) //@W
 COM( _stdin_word,        rvarword,       "_stdin",     &_stderr_word,    (void*)0 ) //@W
 COM( _stdout_word,       rvarword,       "_stdout",    &_stdin_word,     (void*)1 ) //@W
-COM( _write_word,        _readwrite_cb,  "_write",     &_stdout_word,    &write ) //@W
-COM( a_number_word,      a_number_cb,    ">NUMBER",    &_write_word,     ) //@W
+COM( a_number_word,      a_number_cb,    ">NUMBER",    &_stdout_word,    ) //@W
 COM( abort_word,         abort_cb,       "ABORT",      &a_number_word,   ) //@W
 COM( abs_word,           abs_cb,         "ABS",        &abort_word,      ) //@W
 COM( add_one_word,       increment_cb,   "1+",         &abs_word,        (void*)1 ) //@W
