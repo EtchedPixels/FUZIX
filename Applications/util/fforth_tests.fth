@@ -1035,14 +1035,15 @@ TESTING INPUT: ACCEPT
 
 CREATE ABUF 80 CHARS ALLOT
 
-: ACCEPT-TEST
-   CR ." PLEASE TYPE UP TO 80 CHARACTERS:" CR
-   ABUF 80 ACCEPT
-   CR ." RECEIVED: " [CHAR] " EMIT
-   ABUF SWAP TYPE [CHAR] " EMIT CR
-;
-
-{ ACCEPT-TEST -> }
+\ dtrg: interactive, so disabled.
+\ : ACCEPT-TEST
+\    CR ." PLEASE TYPE UP TO 80 CHARACTERS:" CR
+\    ABUF 80 ACCEPT
+\    CR ." RECEIVED: " [CHAR] " EMIT
+\    ABUF SWAP TYPE [CHAR] " EMIT CR
+\ ;
+\ 
+\ { ACCEPT-TEST -> }
 
 \ ------------------------------------------------------------------------
 TESTING DICTIONARY SEARCH RULES

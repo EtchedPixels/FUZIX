@@ -1845,7 +1845,7 @@ IMM( recurse_word, codeword, "RECURSE", &max_word, (void*)&latest_word, (void*)&
 
 //@C u.nospace HIDDEN
 // \ u --
-//   BASE @ /MOD
+//   0 BASE @ UM/MOD         \ rem quot
 //   ?DUP IF
 //     RECURSE
 //   THEN
@@ -1857,18 +1857,26 @@ IMM( recurse_word, codeword, "RECURSE", &max_word, (void*)&latest_word, (void*)&
 //     65
 //   THEN
 //   + EMIT
-COM( u_2e_nospace_word, codeword, "", &recurse_word, (void*)&base_word, (void*)&at_word, (void*)&_2f_mod_word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 7), (void*)&u_2e_nospace_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&lt_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 17), (void*)&lit_word, (void*)48, (void*)&branch_word, (void*)(&u_2e_nospace_word.payload[0] + 22), (void*)&lit_word, (void*)10, (void*)&sub_word, (void*)&lit_word, (void*)65, (void*)&add_word, (void*)&emit_word, (void*)&exit_word )
+COM( u_2e_nospace_word, codeword, "", &recurse_word, (void*)&zero_word, (void*)&base_word, (void*)&at_word, (void*)&um_2f_mod_word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 8), (void*)&u_2e_nospace_word, (void*)&dup_word, (void*)&lit_word, (void*)10, (void*)&lt_word, (void*)&branch0_word, (void*)(&u_2e_nospace_word.payload[0] + 18), (void*)&lit_word, (void*)48, (void*)&branch_word, (void*)(&u_2e_nospace_word.payload[0] + 23), (void*)&lit_word, (void*)10, (void*)&sub_word, (void*)&lit_word, (void*)65, (void*)&add_word, (void*)&emit_word, (void*)&exit_word )
 
-//@C uwidth HIDEEN
+//@C U/ 
+// \ Unsigned ordinary division.
+// \ x y -- quot
+//   0 SWAP
+//   UM/MOD
+//   NIP
+COM( u_2f__word, codeword, "U/", &u_2e_nospace_word, (void*)&zero_word, (void*)&swap_word, (void*)&um_2f_mod_word, (void*)&nip_word, (void*)&exit_word )
+
+//@C uwidth HIDDEN
 // \ This word returns the width (in characters) of an unsigned number in the current base.
 // \ u -- width
-//   BASE @ /
+//   BASE @ U/
 //   ?DUP IF
 //     RECURSE 1+
 //   ELSE
 //     1
 //   THEN
-COM( uwidth_word, codeword, "uwidth", &u_2e_nospace_word, (void*)&base_word, (void*)&at_word, (void*)&_2f__word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&uwidth_word.payload[0] + 10), (void*)&uwidth_word, (void*)&add_one_word, (void*)&branch_word, (void*)(&uwidth_word.payload[0] + 11), (void*)&one_word, (void*)&exit_word )
+COM( uwidth_word, codeword, "", &u_2f__word, (void*)&base_word, (void*)&at_word, (void*)&u_2f__word, (void*)&q_dup_word, (void*)&branch0_word, (void*)(&uwidth_word.payload[0] + 10), (void*)&uwidth_word, (void*)&add_one_word, (void*)&branch_word, (void*)(&uwidth_word.payload[0] + 11), (void*)&one_word, (void*)&exit_word )
 
 //@C U.R
 // \ Prints an unsigned number in a field.
