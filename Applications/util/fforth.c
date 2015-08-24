@@ -1,23 +1,58 @@
 #define dummy /*
 # fforth © 2015 David Given
-# This program is available under the terms of the 2-clause BSD license.
-# The full text is available here: http://opensource.org/licenses/BSD-2-Clause
+# All rights reserved.
 #
-# fforth is a small Forth written in portable C. It should Just Compile on
-# most Unixy platforms. It's intended as a scripting language for the Fuzix
-# operating system.
+# --- BSD 2 CLAUSE LICENSE FOLLOWS ---
 #
-# It's probably a bit weird --- I'm using the ANS Forth reference here:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE. is available here:
+#
+# --- END OF LICENSE ---
+# 
+# fforth is a small indirect-threaded Forth written in portable C. It should
+# Just Compile on most Unixy platforms. It's intended as a scripting language
+# for the Fuzix operating system but should work fine on any small system.
+#
+# It supports most of the core ANS Forth words, and passes (most of) John
+# Hayes' ANS conformance test. Or at least that of the version I found.
+#
+# For reference, the version of the standard I've been referring to is:
 # http://lars.nocrew.org/dpans/dpans6.htm
-# ...but I've been playing fast and loose with the standard.
 #
+# 
 # Peculiarities include:
 # 
-# DOES>  ANS Forth decrees that you can call DOES> multiple times on a word,
-#        where each time it changes the code part of the word. fforth doesn't
-#        support that. If you call DOES> twice here, you end up *appending*
-#        the behaviour after the DOES> --- so the old code will be called,
-#        then the new code will be called.
+# DOES>
+#     ANS Forth decrees that you can call DOES> multiple times on a word, where
+#     each time it changes the code part of the word. fforth doesn't support
+#     that. If you call DOES> twice here, you end up *appending* the behaviour
+#     after the DOES> --- so the old code will be called, then the new code
+#     will be called.
+#
+# READ-FILE filename
+#     Opens and then executes Forth code supplied in the named file.
+#
+# In addition, it's probably full of bugs.
+#
 #
 # Note! This program looks weird. That's because it's a shell script *and* a C
 # file. (And an Awk script.) The awk file will autogenerate the Forth dictionary
@@ -30,6 +65,8 @@
 # //@C: cheesy™ precompiled Forth. Put semi-Forth code on the following comment
 # lines; the line immediately afterwards will be updated to contain the byte-
 # compiled version. Don't put a trailing semicolon.
+#
+# //@E: patches up the attached statement to refer to the last word defined.
 #
 # C compilation options:
 #
