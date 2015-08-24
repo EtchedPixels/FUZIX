@@ -791,7 +791,7 @@ static void a_number_cb(cdefn_t* w)
 {
 	int len = dpop();
 	char* addr = (void*) dpop();
-	ucell_t ud = dpop();
+	upair_t ud = dpopd();
 
 	while (len > 0)
 	{
@@ -804,7 +804,7 @@ static void a_number_cb(cdefn_t* w)
 		addr++;
 	}
 
-	dpush(ud);
+	dpushd(ud);
 	dpush((cell_t) addr);
 	dpush(len);
 }
@@ -1280,12 +1280,19 @@ COM( count_word, codeword, "COUNT", &refill_word, (void*)&dup_word, (void*)&c_at
 //   41 WORD DROP
 IMM( _28__word, codeword, "(", &count_word, (void*)&lit_word, (void*)41, (void*)&word_word, (void*)&drop_word, (void*)&exit_word )
 
+//@C number HIDDEN
+// \ val addr len -- val addr len
+//   0 -ROT                            \ -- val 0 addr len
+//   >NUMBER                           \ -- val 0 addr len
+//   ROT DROP                          \ -- val 0 addr
+COM( number_word, codeword, "", &_28__word, (void*)&zero_word, (void*)&_2d_rot_word, (void*)&a_number_word, (void*)&rot_word, (void*)&drop_word, (void*)&exit_word )
+
 //@C numberthenneg HIDDEN
 // \ val addr len -- val addr len
-// \ As >NUMBER, but negates the result.
-//   >NUMBER
+// \ As number, but negates the result.
+//   number
 //   ROT NEGATE -ROT
-COM( numberthenneg_word, codeword, "", &_28__word, (void*)&a_number_word, (void*)&rot_word, (void*)&negate_word, (void*)&_2d_rot_word, (void*)&exit_word )
+COM( numberthenneg_word, codeword, "", &number_word, (void*)&number_word, (void*)&rot_word, (void*)&negate_word, (void*)&_2d_rot_word, (void*)&exit_word )
 
 //@C snumber HIDDEN
 // \ val addr len -- val addr len
@@ -1297,9 +1304,9 @@ COM( numberthenneg_word, codeword, "", &_28__word, (void*)&a_number_word, (void*
 //     1- SWAP 1+ SWAP
 //     numberthenneg
 //   ELSE
-//     >NUMBER
+//     number
 //   THEN
-COM( snumber_word, codeword, "", &numberthenneg_word, (void*)&swap_word, (void*)&dup_word, (void*)&c_at_word, (void*)&rot_word, (void*)&swap_word, (void*)&lit_word, (void*)45, (void*)&equals_word, (void*)&branch0_word, (void*)(&snumber_word.payload[0] + 17), (void*)&sub_one_word, (void*)&swap_word, (void*)&add_one_word, (void*)&swap_word, (void*)&numberthenneg_word, (void*)&branch_word, (void*)(&snumber_word.payload[0] + 18), (void*)&a_number_word, (void*)&exit_word )
+COM( snumber_word, codeword, "", &numberthenneg_word, (void*)&swap_word, (void*)&dup_word, (void*)&c_at_word, (void*)&rot_word, (void*)&swap_word, (void*)&lit_word, (void*)45, (void*)&equals_word, (void*)&branch0_word, (void*)(&snumber_word.payload[0] + 17), (void*)&sub_one_word, (void*)&swap_word, (void*)&add_one_word, (void*)&swap_word, (void*)&numberthenneg_word, (void*)&branch_word, (void*)(&snumber_word.payload[0] + 18), (void*)&number_word, (void*)&exit_word )
 
 //@C LITERAL IMMEDIATE
 //   [&lit_word] [&lit_word] , ,
