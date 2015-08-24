@@ -576,6 +576,7 @@ static cdefn_t lt_word ;
 static cdefn_t m_one_word ;
 static cdefn_t m_star_word ;
 static cdefn_t more0_word ;
+static cdefn_t move_word ;
 static cdefn_t mul_word ;
 static cdefn_t not_equals_word ;
 static cdefn_t notequals0_word ;
@@ -664,6 +665,14 @@ static void fill_cb(cdefn_t* w)
 	void* ptr = (void*) dpop();
 
 	memset(ptr, c, len);
+}
+
+static void move_cb(cdefn_t* w)
+{
+	cell_t len = dpop();
+	cell_t dest = dpop();
+	cell_t src = dpop();
+	memcpy((void*)dest, (void*)src, len);
 }
 
 static void immediate_cb(cdefn_t* w)
@@ -1043,7 +1052,8 @@ COM( lt_word,            lt_cb,          "<",          &lshift_word,     ) //@W
 COM( m_one_word,         rvarword,       "-1",         &lt_word,         (void*)-1 ) //@W
 COM( m_star_word,        m_star_cb,      "M*",         &m_one_word,      ) //@W
 COM( more0_word,         more0_cb,       "0>",         &m_star_word,     ) //@W
-COM( mul_word,           mul_cb,         "*",          &more0_word,      ) //@W
+COM( move_word,          move_cb,        "MOVE",       &more0_word,      ) //@W
+COM( mul_word,           mul_cb,         "*",          &move_word,       ) //@W
 COM( not_equals_word,    not_equals_cb,  "<>",         &mul_word,        ) //@W
 COM( notequals0_word,    notequals0_cb,  "0<>",        &not_equals_word, ) //@W
 COM( one_word,           rvarword,       "1",          &notequals0_word, (void*)1 ) //@W
