@@ -769,7 +769,9 @@ static void find_cb(cdefn_t* w)
 
 	while (current)
 	{
-		if (current->name && fstreq(name, current->name))
+		if (current->name
+			&& !(current->name->len & FL_SMUDGE)
+			&& fstreq(name, current->name))
 		{
 			dpush((cell_t) current);
 			dpush((current->name->len & FL_IMMEDIATE) ? 1 : -1);
