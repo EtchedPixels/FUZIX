@@ -16,15 +16,4 @@ export ASMEXT = .s
 export BINEXT = .rel
 export BITS=16
 #
-#	Adjust this as needed for your platform (or contribute a script
-#	to look in the usual places !)
-#
-ifeq ($(SDCC_LIB),)
-  ifeq ($(UNAME_S),Darwin)
-    export LIBZ80=/usr/local/share/sdcc/lib/$(CPU)
-  else
-    export LIBZ80=/usr/share/sdcc/lib/$(CPU)
-  endif
-else
-  export LIBZ80=$(SDCC_LIB)/$(CPU)
-endif
+export LIBZ80=$(shell tools/findsdcc $(CPU))

@@ -9,14 +9,12 @@ extern char *UP;
 extern char *BC;
 extern int ospeed;
 
-extern int tgetent __P((char *, char *));
-extern int tgetflag __P((char *));
-extern int tgetnum __P((char *));
-extern char *tgetstr __P((char *, char **));
+extern int tgetent(char *, const char *);
+extern int tgetflag(char *);
+extern int tgetnum(char *);
+extern char *tgetstr(char *, char **);
 
-extern void tputs __P((char *, int, int (*)(int)));
-extern char *tgoto __P((char *, int, int));
-extern char *tparam();	/* VARARGS */
+extern int tputs __P((const char *, int, int (*outc)(int)));
+extern char *tgoto __P((const char *, int, int));
 
 #endif /* _TERMCAP_H */
-

@@ -51,7 +51,10 @@ LOADM"BOOT.BIN":EXEC 'DW1
 The boot loader will automatically consider anything after the BASIC
 REM comment as a commandline to be sent to the kernel.  In the above
 example, "DW1", indicates that DriveWire Drive No. 1 should be mounted
-as the root filesystem.
+as the root filesystem. The boot leader will scan the command line for
+"BOOT=filename" to set which kernel image to load.  If no boot image
+is specified it will use "FUZIX.BIN".  Regular DECB filename rules
+apply, so "BOOT=FUZIX.BIN:1" works as expected.
 
 
 *************************

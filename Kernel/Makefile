@@ -21,7 +21,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = px4plus
 #export TARGET = socz80
 #export TARGET = tgl6502
-#export TARGET = trs80
+export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
@@ -30,6 +30,10 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
+
+ifeq ($(MAKE),)
+  export MAKE = "make"
+endif
 
 UNAME_S := $(shell uname -s)
 
@@ -108,7 +112,7 @@ lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
 target:
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
-	+make -C platform-$(TARGET)
+	+$(MAKE) -C platform-$(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
@@ -143,13 +147,13 @@ font4x6.c: tools/make4x6
 
 clean:
 	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
-	+make -C platform-$(TARGET) clean
-	+make -C cpm-loader clean
-	+make -C tools/bankld clean
+	+$(MAKE) -C platform-$(TARGET) clean
+	+$(MAKE) -C cpm-loader clean
+	+$(MAKE) -C tools/bankld clean
 
 clean-all: clean
-	(cd tools/bankld; make clean)
-	$(foreach target,$(TARGET_LIST), make -C $(target) clean;)
+	(cd tools/bankld; $(MAKE) clean)
+	$(foreach target,$(TARGET_LIST), $(MAKE) -C $(target) clean;)
 
 include cpu-$(CPU)/image.mk
 -include platform-$(TARGET)/image.mk

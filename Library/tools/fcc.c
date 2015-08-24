@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 /*
  *	Wrap the sdcc compiler tools into something more Unixlike and without
@@ -377,6 +378,9 @@ static void build_command(void)
   if (opt == NULL || optcode < 3)
     add_argument("--opt-code-size");
   /* Macros */
+  /* Suppress the warnings when sharing code across architectures */
+  add_argument("-Ddouble=float");
+  /* User provided macros */
   add_argument_list(machead);
   /* Paths */
   add_option_list("-I", includehead);

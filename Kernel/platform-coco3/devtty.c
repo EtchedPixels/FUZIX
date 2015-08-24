@@ -47,17 +47,44 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 
 
 
-static struct pty {
-	unsigned char *base;	/* base of buffer in cpu space */
-	unsigned char *cpos;	/* current location of cursor */
-	unsigned char csave;	/* charactor that is under the cursor */
-	struct vt_switch vt;	/* the vt.o module's state */
-	unsigned int scrloc;	/* location to put into gimme */
-};
+//static struct pty {
+//	unsigned char *base;	/* base of buffer in cpu space */
+//	unsigned char *cpos;	/* current location of cursor */
+//	unsigned char csave;	/* charactor that is under the cursor */
+//	struct vt_switch vt;	/* the vt.o module's state */
+//	unsigned int scrloc;	/* location to put into gimme */
+//	unsigned char gime;     /* video register settings of this tty */   
+//	unsigned char width;    /* text width of screen */
+//	unsigned char height;   /* text height */
+//	unsigned char right;    /* right most coord */
+//	unsigned char bottom;   /* bottom most coord */
+//};
 
 static struct pty ptytab[] = {
-	{(unsigned char *) 0xb400, NULL, 0, {0, 0, 0, 0}, 0xb400 / 8},
-	{(unsigned char *) 0xac80, NULL, 0, {0, 0, 0, 0}, 0xac80 / 8}
+	{
+		(unsigned char *) 0xb400, 
+		NULL, 
+		0, 
+		{0, 0, 0, 0}, 
+		0xb400 / 8,
+		0x14,              /* 80 column */
+		80,
+		21,
+		79,
+		20
+	},
+	{
+		(unsigned char *) 0xac80, 
+		NULL, 
+		0, 
+		{0, 0, 0, 0}, 
+		0xac80 / 8,
+		0x0c,              /* 40 column */
+		40,
+		21,
+		39,
+		20
+	}
 };
 
 
@@ -288,6 +315,7 @@ static void keydecode(void)
 			vt_save(&curpty->vt);
 			curpty = &ptytab[0];
 			*(unsigned int *) 0xff9d = curpty->scrloc;
+			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 1;
 			return;
@@ -297,6 +325,7 @@ static void keydecode(void)
 			vt_save(&curpty->vt);
 			curpty = &ptytab[1];
 			*(unsigned int *) 0xff9d = curpty->scrloc;
+			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 2;
 			return;

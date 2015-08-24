@@ -19,7 +19,10 @@ MEMORY
   iram  (rwx) : ORIGIN = 0x0F040, LENGTH = 0x00C0
   ram2  (rwx) : ORIGIN = 0x0F100, LENGTH = 0x0500
   eeram (rwx) : ORIGIN = 0x0F600, LENGTH = 0x0200
-  eeprom      : ORIGIN = 0x0F800, LENGTH = 0x0800
+  eeprom (rx) : ORIGIN = 0x0F800, LENGTH = 0x0740
+  eesysc (rx) : ORIGIN = 0x0FF40, LENGTH = 0x0096
+  eevec (rx)  : ORIGIN = 0x0FFD6, LENGTH = 0x002A
+
 }
 
 SECTIONS
@@ -207,7 +210,7 @@ SECTIONS
   {
     KEEP (*(.jcr))
   }  > eeprom
-  /* Start of the data section image in ROM.  */
+  /* Start of the data section image in RAM.  */
   .data	:
   {
     *(.sdata)
@@ -244,23 +247,17 @@ SECTIONS
     *(.iram)
     *(.iram.*)
   }  > iram
-  /* If the 'vectors_addr' symbol is defined, it indicates the start address
-     of interrupt vectors.  This depends on the 68HC11 operating mode:
-			Addr
-     Single chip	0xffc0
-     Extended mode	0xffc0
-     Bootstrap		0x00c0
-     Test		0xbfc0
-     In general, the vectors address is 0xffc0.  This can be overriden
-     with the '-defsym vectors_addr=0xbfc0' ld option.
-     Note: for the bootstrap mode, the interrupt vectors are at 0xbfc0 but
-     they are redirected to 0x00c0 by the internal PROM.  Application's vectors
-     must also consist of jump instructions (see Motorola's manual).  */
-  PROVIDE (_vectors_addr = DEFINED (vectors_addr) ? vectors_addr : 0xffc0);
-  .vectors DEFINED (vectors_addr) ? vectors_addr : 0xffc0 :
+  .syscalls  :
   {
-    KEEP (*(.vectors))
-  }
+    *(.syscalls)
+    *(.syscalls.*)
+  } > eesysc
+  .vectors  :
+  {
+    *(.vectors)
+    *(.vectors.*)
+  } > eevec
+
   /* Stabs debugging sections.  */
   .stab		 0 : { *(.stab) }
   .stabstr	 0 : { *(.stabstr) }

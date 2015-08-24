@@ -126,10 +126,12 @@ bget etc-files/issue
 bget etc-files/motd
 bget etc-files/passwd
 bget etc-files/inittab
+bget etc-files/termcap
 chmod 0644 issue
 chmod 0644 motd
 chmod 0644 passwd
 chmod 0644 inittab
+chmod 0644 termcap
 
 cd /
 bget ../../Applications/util/init

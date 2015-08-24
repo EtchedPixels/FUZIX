@@ -2,6 +2,7 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
+export MAKE = make
 # This gets set for 'awkward' devices like ZX128
 #PLATFORM = -zx128
 PLATFORM =
@@ -62,9 +63,14 @@ SRC_HARD += regexp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
+SRC_C += termcap.c
+
+SRC_CURS = $(shell find curses -name '*.c')
+
 OBJ_C = $(SRC_C:.c=.rel)
+OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_CURS) $(OBJ_HARD)
 
 all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt
 
@@ -73,7 +79,7 @@ libc.l:%.l:$(OBJ_ALL)
 
 syscall.l: fuzix/syslib.l
 	../tools/syscall
-	(cd fuzix; make)
+	(cd fuzix; $(MAKE))
 	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
 
 sdccz80.lib:
@@ -88,7 +94,7 @@ syslib$(PLATFORM).lib: syscall.l libc.l sdccz80.lib
 
 fuzix/syslib.l:
 	../tools/syscall
-	make -C fuzix
+	$(MAKE) -C fuzix
 
 liberror.txt:
 	../tools/liberror > liberror.txt
@@ -105,9 +111,13 @@ $(OBJ_CRT0NS):%.rel: %.s
 $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
+$(OBJ_CURS):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c) -o ./curses/
+
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
 clean:
 	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt
-	(cd fuzix; make clean)
+	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~)
+	(cd fuzix; $(MAKE) clean)

@@ -40,10 +40,10 @@
 // #define CONFIG_VT_SIMPLE
 /* Vt definitions */
 #define VT_BASE      (uint8_t *)0xb400
-#define VT_WIDTH	80
-#define VT_HEIGHT	21
-#define VT_RIGHT	79
-#define VT_BOTTOM	20
+#define VT_WIDTH	curpty->width
+#define VT_HEIGHT	curpty->height
+#define VT_RIGHT	curpty->right
+#define VT_BOTTOM	curpty->bottom
 #define VT_INITIAL_LINE 0
 
 extern unsigned char vt_map( unsigned char c );

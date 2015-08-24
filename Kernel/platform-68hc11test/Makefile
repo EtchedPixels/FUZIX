@@ -35,4 +35,4 @@ image:
 	$(CROSS_LD) -o eeprom.out -M >../eeprom.map \
 	--script=eeprom.x eeprom.o
 	m6811-elf-objcopy --output-target=binary fuzix.out ../fuzix.bin
-	m6811-elf-objcopy --output-target=binary eeprom.out ../eeprom.bin
+	m6811-elf-objcopy --only-section=.text --only-section=.syscalls --only-section=.vectors --output-target=binary eeprom.out ../eeprom.bin
