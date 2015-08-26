@@ -115,6 +115,7 @@ init_early:
 	stx	1
 	lda	#0x7E
 	sta	0
+	jsr	_cmdline_init
         rts
 
 ;;; Initialize Hardware !
