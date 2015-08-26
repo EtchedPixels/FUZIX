@@ -6,6 +6,7 @@ Commandline handling attempt.
 
 
 #include <kernel.h>
+#include <printf.h>
 
 /* This stuff is directly from the standard C lib */
 
@@ -133,9 +134,10 @@ int kargc=0;
 void cmdline_init()
 {
 	char *p=strtok( CMDLINE, " ");
-	if( p ){
+	while( p ){
 		kargv[kargc++]=p;
 		p=strtok( NULL, " ");
 	}
 	kargv[kargc]=NULL;
 }
+
