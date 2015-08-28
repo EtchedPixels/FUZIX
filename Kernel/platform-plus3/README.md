@@ -9,7 +9,7 @@ conf0	[0] [1] [2] [3]
 conf1	[4] [5] [6] [7]
 conf2	[4] [5] [6] [3]
 conf3	[4] [7] [6] [3]
-````
+```
 
 That gives us a conventional low 0/1 and 4/5 for user space with the kernel
 using 2/3/6/7.
