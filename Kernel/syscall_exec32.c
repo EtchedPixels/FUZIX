@@ -266,7 +266,7 @@ nogood:
 #undef argv
 #undef envp
 
-/* TODO        max (1024) 512 bytes for argv
+/* TODO:        max (1024) 512 bytes for argv
  *             and max 512 bytes for environ
  */
 

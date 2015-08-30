@@ -82,7 +82,7 @@ static void mdv_check_bufhdr(uint8_t *buf, uint8_t rec)
 
 static void mdv_check_sectormap(uint8_t *buf)
 {
-  ; /* TODO */
+  ; /* TODO: Insert description */
 }
 
 static void mdv_read(FILE *fp, char *buf, int len)

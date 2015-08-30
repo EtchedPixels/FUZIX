@@ -65,7 +65,7 @@ extern long _pathconf __P((int name));
 #define _SC_AVPHYS_PAGES	15
 #define _SC_NPROCESSORS_CONF	16
 #define _SC_NPROCESSORS_ONLN	17
-/* SYS5 isms: TODO */
+/* TODO: SYS5 isms */
 #define _SC_NGROUPS_MAX		18
 #define _SC_JOB_CONTROL		19
 #define _SC_SAVED_IDS		20
