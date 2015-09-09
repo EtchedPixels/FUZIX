@@ -196,7 +196,7 @@ void pagemap_switch(ptptr p)
 	/* Take over the correctly mapped copy */
 	store[proc] = mem[proc];
 	/* Exchange the actual data */
-//FIXME	mem_switch(proc);
+	/* FIXME: mem_switch(proc); */
 	/* Admit to owning it */
 	mem[proc]->last = p;
 }

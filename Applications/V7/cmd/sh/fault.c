@@ -49,8 +49,7 @@ sighandler_t ignsig(int n)
 {
 	register int i;
 	sighandler_t s;
-	/* FIXME */
-	/* Was a test of the low bit.. not clear this is the correct translation of V7 internals */
+	/* FIXME: Was a test of the low bit.. not clear this is the correct translation of V7 internals */
 	if ((s = signal(i = n, SIG_IGN)) != SIG_IGN)
 		trapflg[i] |= SIGMOD;
 	return s;
