@@ -1,4 +1,5 @@
 First wild guess at an MSX1 target
+---
 
 And it is exactly that a guess 8)
 
@@ -13,20 +14,23 @@ may be able to bank the OS kernel in a cartridge.
 
 Q: should we work to the following map
 
-
+```
 	0x0000-0x7FFF	User space / switchable with kernel
 			(in theory if kernel code is cartridge
 			 could we even use RAM + megaram?)
 	0x8000-0xBFFF	Kernel (end of code, data, highcode, common)
 	0xC000-0xFFFF
+```
 
 or do we bite the bullet about relocatable binaries (which we need to do
 for the sinclair at least) and do
 
+```
 	0x0000-0x00FF	Vectors
 	0x0100-????
 	0x4000-0xBFFF	User space/switchable with kernel rest
 	0xC000-0xFFFF
+``` 
 
 which would allow the use of more typs of megaram without LDIR tricks.
 
