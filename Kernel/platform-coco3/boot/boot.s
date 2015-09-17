@@ -128,8 +128,11 @@ cpcmd	;; find command line in input buffer
 	ldx	$a6		; X = position in program
 a@	lda	,x+		; get a byte
 	beq	c@		; end of line w/o remark token?
-	cmpa	#$83		; is a remark token?
-	bne	a@
+	cmpa	#$83		; is a ' token?
+	beq	b@
+	cmpa	#$82		; is a REM token?
+	beq	b@
+	bra	a@
 b@	lda	,x+		; get one byte
 c@	jsr	putb		; put it in kernel memory
 	tsta
