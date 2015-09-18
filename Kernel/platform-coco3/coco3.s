@@ -174,6 +174,7 @@ a@	sta	,x+
 	ldx 	#nmi_handler
 	sta	,u+
 	stx	,u
+	jsr	_devtty_init
         rts
 
 
