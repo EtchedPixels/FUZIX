@@ -123,11 +123,6 @@ init_early:
 init_hardware:
 	;; High speed poke
 	sta	0xffd9		; high speed poke
-	;; set system RAM size
-	ldd 	#512
-	std 	_ramsize
-	ldd 	#512-64
-	std 	_procmem
 	;; set initial user mmu
 	ldd	#8
 	ldx	#$ffa0
@@ -153,6 +148,32 @@ b@	sta	,x+
 a@	sta	,x+
 	cmpx	#$bb80
 	bne	a@
+	;; check for 512k RAM
+	ldx	#0xffad
+	ldy	#0xa000
+	ldb	,x		; save mmu setting
+	pshs	b
+	ldd	#$3808
+	sta	,x		; mmu to 38
+	clr	,y		; clear it
+	stb	,x		; mmu to 08
+	clr	,y		; clear it
+	inc	,y		; inc it
+	sta	,x		; mmu to 38
+	tst	,y		; test datum in 38
+	tfr	cc,a		; A == test
+	puls	b		; pull and reset mmu
+	stb	,x		;
+	tfr	a,cc		; get results in CC again
+	beq	c@		; it didn't change so 512k
+	;; only 128k!!!
+d@	ldx	#nomem@
+	jsr	_panic
+	;; set system RAM size
+c@	ldd 	#512
+	std 	_ramsize
+	ldd 	#512-64
+	std 	_procmem
         ;; Our vectors are in high memory unlike Z80 but we still
         ;; need vectors
 	ldu	#0xfeee		; vector area
@@ -176,7 +197,7 @@ a@	sta	,x+
 	stx	,u
 	jsr	_devtty_init
         rts
-
+nomem@	fcn	"only have 128k\n"
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
