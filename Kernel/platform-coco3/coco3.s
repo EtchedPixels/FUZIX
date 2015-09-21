@@ -322,3 +322,12 @@ scrPos	.dw	0xb400		; debugging screen buffer position
 
 
 
+;;; Maps the memory for swap transfers
+;;;   takes: A = swap token ( a page no. )
+;;;   returns: nothing
+map_for_swap
+	sta	0xffa8
+	inca
+	sta	0xffa9
+	rts
+
