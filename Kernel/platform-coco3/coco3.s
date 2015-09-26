@@ -138,7 +138,7 @@ b@	sta	,x+
         ;; set temporary screen up
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
-	ldb	#%00001100	; text / 8 lines per char row
+	ldb	#%00000100	; text / 8 lines per char row
 	stb	$ff98
 	ldb	#%00010100	; 80 column mode
 	stb	$ff99
