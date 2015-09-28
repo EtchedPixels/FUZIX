@@ -56,8 +56,13 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			        if (n)
 			                udata.u_ptab->p_timeout = n + 1;
                         }
-			if (psleep_flags(q, flag))
-			        return -1;
+			if (psleep_flags(q, flag)){
+				if( nread ){
+					udata.u_error = 0;
+					return nread;
+				}
+				return -1;
+			}
                         /* timer expired */
                         if (udata.u_ptab->p_timeout == 1)
                                 goto out;
@@ -108,8 +113,14 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
                         }
 			if (!(t->flag & TTYF_STOP))
 				break;
-			if (psleep_flags(&t->flag, flag))
+			if (psleep_flags(&t->flag, flag)){
+				int ret= towrite-udata.u_count;
+				if( ret ){
+					udata.u_error = 0;			
+					return ret;
+				}
 				return -1;
+			}
 		}
 
 		if (!(t->flag & TTYF_DISCARD)) {
