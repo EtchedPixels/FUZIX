@@ -164,10 +164,6 @@ void dw_putc( uint8_t minor, unsigned char c ){
 	buf[0]=DW_FASTWRITE | dw_port( minor ) ;
 	buf[1]=c;
 	dw_transaction( buf, 2, NULL, 0 );
-	if( c == '\n' ){
-		c='\r';
-		dw_transaction( buf,2, NULL, 0 );
-	}
 }
 
 
@@ -229,7 +225,6 @@ void dw_vpoll( ){
 		/* VSER Channel single datum */
 		if( buf[0]<16 ){
 			int minor=dw_minor( buf[0] );
-			if( buf[1]!= '\r' ) 
 				tty_inproc( minor, buf[1] );
 			continue;
 		}
@@ -245,16 +240,16 @@ void dw_vpoll( ){
 		/* VSER channel multiple data */
 		if( buf[0] < 32 ){
 			int i;
-			char b[3];
+			unsigned char b[3];
 			char c;
 			int minor=dw_minor( buf[0]-17 );
 			b[0]=DW_SERREADM;
 			b[1]=buf[0]-17;
-			b[2]=mini( buf[1], qfree( minor )-1 );
+			b[2]=mini( buf[1], 16 );
 			dw_transaction( b,3,tbuf, b[2] );
 			for( i=0; i<b[2]; i++){
-				if( tbuf[i]!='\r') 
-					tty_inproc( minor, tbuf[i] );
+				tty_inproc( minor, tbuf[i] );
+				//kprintf("%c",tbuf[i] );
 			}
 			wait=1;
 			break;
