@@ -20,6 +20,53 @@
  *	Networking Functionality
  */
 
+struct ethhdr {
+  uint8_t src[6];
+  uint8_t dst[6];
+  uint16_t proto;
+};
+
+struct arphdr
+{
+  uint16_t hrd;		/* format of hardware address	*/
+  uint16_t pro;		/* format of protocol address	*/
+  uint8_t hln;		/* length of hardware address	*/
+  uint8_t pln;		/* length of protocol address	*/
+  uint16_t op;		/* ARP opcode (command)		*/
+
+  uint8_t src_hw[6];	/* sender hardware address	*/
+  uint32_t sip;		/* sender IP address		*/
+  uint8_tt tha[6];	/* target hardware address	*/
+  uint32_t tip;		/* target IP address		*/
+
+};
+
+/* ARP protocol HARDWARE identifiers. */
+#define ARPHRD_NETROM	0		/* from KA9Q: NET/ROM pseudo	*/
+#define ARPHRD_ETHER 	1		/* Ethernet 10Mbps		*/
+#define	ARPHRD_EETHER	2		/* Experimental Ethernet	*/
+#define	ARPHRD_AX25	3		/* AX.25 Level 2		*/
+#define	ARPHRD_PRONET	4		/* PROnet token ring		*/
+#define	ARPHRD_CHAOS	5		/* Chaosnet			*/
+#define	ARPHRD_IEEE802	6		/* IEEE 802.2 Ethernet- huh?	*/
+#define	ARPHRD_ARCNET	7		/* ARCnet			*/
+#define	ARPHRD_APPLETLK	8		/* APPLEtalk			*/
+/* Dummy types for non ARP hardware */
+#define ARPHRD_SLIP	256
+#define ARPHRD_CSLIP	257
+#define ARPHRD_SLIP6	258
+#define ARPHRD_CSLIP6	259
+#define ARPHRD_RSRVD	260		/* Notional KISS type 		*/
+#define ARPHRD_ADAPT	264
+#define ARPHRD_PPP	512
+#define ARPHRD_TUNNEL	768		/* IPIP tunnel			*/
+
+/* ARP protocol opcodes. */
+#define	ARPOP_REQUEST	1		/* ARP request			*/
+#define	ARPOP_REPLY	2		/* ARP reply			*/
+#define	ARPOP_RREQUEST	3		/* RARP request			*/
+#define	ARPOP_RREPLY	4		/* RARP reply			*/
+
 struct iphdr {
 #if defined(LITTLE_ENDIAN_BITFIELD)
 	uint8_t	ihl:4,
@@ -175,6 +222,7 @@ struct sockaddr_in {
 };
 
 extern int mac_queue(void);
+extern int mac_queue_raw(void);
 extern int loopback_queue(void);
 
 extern struct socket *sock_find(uint16_t src, uint16_t dst);
@@ -186,6 +234,21 @@ extern int pkt_pull(void *ptr, uint16_t len);
 extern uint8_t *pkt_next;
 extern uint16_t pkt_len;
 
+extern void arp_rcv(void);
+extern void arp_put(struct arp *a);
+extern struct arp *arp_get(struct arp *a);
+
+struct arp {
+  uint32_t addr;
+  uint8_t users;
+  uint8_t flags;
+#define ARP_VALID	1
+  uint8_t hw[6];
+};
+
+#define ARPSIZE 16
+
+extern struct arp arptab[ARPSIZE];
 
 extern void ip_mirror(void);
 extern void ip_prepare(struct socket *s, uint16_t len);
