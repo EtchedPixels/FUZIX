@@ -1,2 +1,8 @@
 - SIGSTOP/TSTP behaviour wrong
 - SIGCHLD not sent
+
+- Debug signal delivery with catches on Z80 and 6809 (not clear either is
+  correct right now)
+
+- RAW (char mode) disk I/O gives iffy results on most platforms. As we have
+  O_DIRECT we should probably just throw the entire thing out.
