@@ -15,16 +15,16 @@
 uint8_t vtattr_cap;
 
 
-char tbuf1[TTYSIZ];   /* console 0 */
-char tbuf2[TTYSIZ];   /* console 1 */
-char tbuf3[TTYSIZ];   /* drivewire VSER 0 */
-char tbuf4[TTYSIZ];   /* drivewire VSER 1 */
-char tbuf5[TTYSIZ];   /* drivewire VSER 2 */
-char tbuf6[TTYSIZ];   /* drivewire VSER 3 */
-char tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
-char tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
-char tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
-char tbufa[TTYSIZ];   /* drivewire VWIN 3 */
+uint8_t tbuf1[TTYSIZ];   /* console 0 */
+uint8_t tbuf2[TTYSIZ];   /* console 1 */
+uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
+uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
+uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
+uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
+uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
+uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
+uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
+uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
 
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	
