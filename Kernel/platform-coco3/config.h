@@ -86,3 +86,5 @@ extern unsigned char vt_map( unsigned char c );
 #define DEVICE_IDE        /* enable if IDE interface present */
 #define IDE_REG_CS1_BASE 0xFF50
 #define IDE_IS_MMIO  1		/* MMIO IDE */
+
+#define platform_discard()
