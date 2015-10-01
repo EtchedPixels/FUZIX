@@ -1,5 +1,7 @@
 Dragon Experimental Build
 
+RETIRED: KEPT FOR REFERENCE AND CODE REUSE ONLY
+
 Currently we build for a Dragon64 but are not doing anything but initial
 boot testing work. As we replace the ROMs it is kind of cheating. It won't
 run on a Dragon 32 right now because it assumes the two page switching and

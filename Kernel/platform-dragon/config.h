@@ -65,3 +65,5 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define swap_map(x)	((uint8_t *)(x))
+
+#define platform_discard()
