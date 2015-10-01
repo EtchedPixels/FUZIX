@@ -114,3 +114,5 @@
 #endif
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+
+#define platform_discard()

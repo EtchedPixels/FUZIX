@@ -57,3 +57,4 @@
 #define VT_RIGHT	29
 #define VT_BOTTOM	7
 
+#define platform_discard()

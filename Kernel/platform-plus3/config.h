@@ -67,3 +67,7 @@
 #define NBUFS    9        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 #define MAX_BLKDEV 2      /* 2 IDE drives, 1 SD drive */
+
+#define swap_map(x)	((uint8_t *)(x))	/* For now */
+
+#define platform_discard()

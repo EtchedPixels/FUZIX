@@ -47,3 +47,5 @@
 #define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+
+#define platform_discard()
