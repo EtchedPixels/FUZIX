@@ -37,7 +37,7 @@
 #define PROGTOP     0xF000  	/* Top of program, base of U_DATA */
 
 #define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need all of it FIXME) */
-#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
+#define SWAPBASE    ((uint16_t)0x0000)	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xF400	/* vectors. We have to swap 256 bytes of
                                    common as well */
 
@@ -56,3 +56,5 @@
 
 
 #define swap_map(x)	((uint8_t *)(x))	/* For now */
+
+#define platform_discard()
