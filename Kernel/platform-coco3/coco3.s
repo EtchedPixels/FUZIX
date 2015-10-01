@@ -105,6 +105,10 @@ _irqrestore:			; B holds the data
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK
 ; -----------------------------------------------------------------------------
+	.area .data
+hz:	.db	0  		; Is machine in 50hz?
+
+	
             .area .text
 
 ;;;  Stuff to initialize *before* hardware
@@ -138,8 +142,17 @@ b@	sta	,x+
         ;; set temporary screen up
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
-	ldb	#%00001100	; text / 8 lines per char row
-	stb	$ff98
+	;; detect PAL or NTSC ROM
+	ldb	#$3f		; put Super BASIC in mmu
+	stb	$ffae		; 
+	lda	$c033		; get BASIC's "mirror" of Video Reg
+	ldb	#$06		; put Fuzix Kernel back in mmu
+	stb	$ffae		;
+	anda	#$8		; mask off 50 hz bit
+	sta	hz		; save for future use
+	;; continue setup of regs
+	ora	#%00000100	; text / 8 lines per char row
+	sta	$ff98
 	ldb	#%00010100	; 80 column mode
 	stb	$ff99
 	ldd	#$b400/8	; video at physical 0xb000
