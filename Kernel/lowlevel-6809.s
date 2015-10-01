@@ -14,6 +14,7 @@
 	.globl	_umodhi3
 	.globl  _mulhi3
 	.globl	_ashlhi3
+	.globl	_ashrhi3
 	.globl	_lshrhi3
 	.globl	___ashlsi3
 	.globl	_swab
@@ -625,4 +626,16 @@ _lshrhi3_1:
 	rorb
 	bra	_lshrhi3_1
 _lshrhi3_2:
+	puls	x,pc
+
+_ashrhi3:
+	pshs	x
+1$:
+	leax	-1,x
+	cmpx	#-1
+	beq	2$
+	asra
+	rorb
+	bra	1$
+2$:
 	puls	x,pc
