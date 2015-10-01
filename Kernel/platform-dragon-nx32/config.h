@@ -68,3 +68,6 @@
 #define NBUFS    6       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
+
+#define platform_discard()
+
