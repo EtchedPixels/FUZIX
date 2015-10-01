@@ -1,0 +1,65 @@
+COCO2
+=====
+
+COCO or Dragon 64 with an IDE port and 64K of RAM
+
+Supported hardware:
+	IDE (Glenside or compatible)
+
+Memory Map
+==========
+0000-00FF	Interrupt stack
+0100-01FF	Vectors (then wasted - could hide libc.o in there ?)
+0200-03FF	Display
+0400-7FFF	Code/Data for kernel (take care to keep this below 8000 and
+		shuffle stuff if needed to make it fit)
+8000-EFFF	User space
+F000-FBFF	More kernel bits
+FC00-FEFF	udata
+FF00-FFFF	I/O etc
+
+
+Emulating in XRoar
+==================
+
+Needs the IDE patches
+
+TODO
+====
+
+Loader code
+Set the display up correctly
+Support for a real time clock and clock locking
+Review irq disabling. We shouldn't need much of this at all as we don't have
+floppy hell to contend with, but the switchin/switchout logic needs to be
+reviewed for interrupt safety and the IRQs re-enabled during swap in and
+out. We should also be totally clean now on FIR blocking, so audio might
+actually be doable!
+
+MPI switching
+
+Could we do a cartridge version
+- Re-order so common is in low memory
+- Support map_kernel/map_process flipping
+- Add asm helpers for user mode copying (trivial - and since we never copy
+  into kernel ROM we can optimise them a lot - one map switch only)
+- Fix IDE to support the map flip on transfers (needs little asm code
+  adding)
+- How to do discard, can we just take the hit or do we need to copy the
+  entire cartridge into high RAM, run in high RAM with discard at say
+  0xA000 and then in platform_discard switch on map_kernel cartridge
+  selection so we can let userspace blow away the upper 32K of the RAM
+  mapping.
+
+16K Cartridge version would give us space for
+- Proper video (costs us about 8K)
+- Nice loader (just 'EXEC $C000' and go) < 1K
+- Probably all of sound/joysticks/printer/floppy and a few more buffers
+- Full size user memory bank (so can run full v7 shell) 4K
+
+
+Write a loader into the cartridge start so it bootstraps off disk and runs
+nicely
+
+6847T1 lower case ?
+
