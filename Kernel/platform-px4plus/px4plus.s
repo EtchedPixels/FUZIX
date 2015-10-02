@@ -16,9 +16,9 @@
 	    .globl map_restore
 	    .globl map_process_save
 	    .globl map_kernel_restore
-	    .globl _kernel_flag
 	    .globl _sidecar
 	    .globl _carttype
+	    .globl _need_resched
 
 	    .globl platform_interrupt_all
 
