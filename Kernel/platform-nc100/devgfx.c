@@ -17,8 +17,7 @@ static struct display ncdisplay = {
   HW_UNACCEL,
   0,
   0,
-  GFX_SETPIXEL|GFX_RAW|GFX_RAWCOPY,
-  0
+  GFX_DRAW
 };
 #else
 static struct display ncdisplay = {
@@ -29,34 +28,40 @@ static struct display ncdisplay = {
   HW_UNACCEL,
   0,
   0,
-  GFX_SETPIXEL|GFX_RAW|GFX_RAWCOPY,
-  0
+  GFX_DRAW
 };
 #endif
 
-extern uint16_t video_op[GFX_BUFLEN];
-
-extern struct attribute video_attr;	/* Shared with asm code */
- 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+  uint8_t *tmp;
+  uint16_t l;
   if (arg >> 8 != 0x03)
     return vt_ioctl(minor, arg, ptr);
   if (arg == GFXIOC_GETINFO)
     return uput(&ncdisplay, ptr, sizeof(ncdisplay));
-  if (arg == GFXIOC_SETATTR)
-    return uget(&video_attr, ptr, sizeof(video_attr));
-  if (uget(&video_op, ptr, sizeof(video_op)))
-      return -1;
   switch(arg) {
-  case GFXIOC_SETPIXEL:
-    video_setpixel();
+  case GFXIOC_DRAW:
+    /* Note: we assume we will not map the screen over the buffers */
+    tmp = (uint8_t *)tmpbuf();
+    l = ugetw(ptr);
+    if (l < 2 || l > 512)
+      goto bad;
+    if (uget(tmp, ptr + 2, l))
+      goto bad2;
+    /* TODO
+    if (draw_validate(ptr, l, 480, 64))
+      goto bad; */
+    video_cmd(tmp);
+    brelse((bufptr) tmp);
     return 0;
-  case GFXIOC_CMD:
-    video_cmd();
-    return 0;  
   default:
     udata.u_error = EINVAL;
     return -1;
   }
+bad:
+    udata.u_error = EINVAL;
+bad2:
+    brelse((bufptr) tmp);
+    return -1;
 }
