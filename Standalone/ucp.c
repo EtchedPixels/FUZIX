@@ -46,16 +46,16 @@ static struct oft of_tab[OFTSIZE];
 static int match(char *cmd);
 static void usage(void);
 static void prmode(int mode);
-static int ls(char *path);
-static int chmod(char *modes, char *path);
-static int mknod( char *path, char *modes, char *devs);
-static int mkdir(char *path);
-static int get( char *src, char *dest, int binflag);
-static int put( char *arg, int binflag);
-static int type( char *arg);
-static int fdump(char *arg);
-static int fuzix_rm( char *path);
-static int fuzix_rmdir(char *path);
+static int cmd_ls(char *path);
+static int cmd_chmod(char *modes, char *path);
+static int cmd_mknod( char *path, char *modes, char *devs);
+static int cmd_mkdir(char *path);
+static int cmd_get( char *src, char *dest, int binflag);
+static int cmd_put( char *arg, int binflag);
+static int cmd_type( char *arg);
+static int cmd_fdump(char *arg);
+static int cmd_rm( char *path);
+static int cmd_rmdir(char *path);
 
 int main(int argc, char *argval[])
 {
@@ -135,9 +135,9 @@ int main(int argc, char *argval[])
 
             case 1:         /* ls */
                 if (*arg1)
-                    retc = ls(arg1);
+                    retc = cmd_ls(arg1);
                 else
-                    retc = ls(".");
+                    retc = cmd_ls(".");
                 break;
 
             case 2:         /* cd */
@@ -151,52 +151,52 @@ int main(int argc, char *argval[])
 
             case 3:         /* mkdir */
                 if (*arg1)
-                    retc = mkdir(arg1);
+                    retc = cmd_mkdir(arg1);
                 break;
 
             case 4:         /* mknod */
                 if (*arg1 && *arg2 && *arg3)
-                    retc = mknod(arg1, arg2, arg3);
+                    retc = cmd_mknod(arg1, arg2, arg3);
                 break;
 
             case 5:         /* chmod */
                 if (*arg1 && *arg2)
-                    retc = chmod(arg1, arg2);
+                    retc = cmd_chmod(arg1, arg2);
                 break;
 
             case 6:         /* get */
                 if (*arg1)
-                    retc = get(arg1, *arg2 ? arg2 : arg1, 0);
+                    retc = cmd_get(arg1, *arg2 ? arg2 : arg1, 0);
                 break;
 
             case 7:         /* bget */
                 if (*arg1)
-                    retc = get(arg1, *arg2 ? arg2 : arg1, 1);
+                    retc = cmd_get(arg1, *arg2 ? arg2 : arg1, 1);
                 break;
 
             case 8:         /* put */
                 if (*arg1)
-                    retc = put(arg1, 0);
+                    retc = cmd_put(arg1, 0);
                 break;
 
             case 9:         /* bput */
                 if (*arg1)
-                    retc = put(arg1, 1);
+                    retc = cmd_put(arg1, 1);
                 break;
 
             case 10:        /* type */
                 if (*arg1)
-                    retc = type(arg1);
+                    retc = cmd_type(arg1);
                 break;
 
             case 11:        /* dump */
                 if (*arg1)
-                    retc = fdump(arg1);
+                    retc = cmd_fdump(arg1);
                 break;
 
             case 12:        /* rm */
                 if (*arg1)
-                    retc = fuzix_rm(arg1);
+                    retc = cmd_rm(arg1);
                 break;
 
             case 13:        /* df */
@@ -215,7 +215,7 @@ int main(int argc, char *argval[])
 
             case 14:        /* rmdir */
                 if (*arg1)
-                    retc = fuzix_rmdir(arg1);
+                    retc = cmd_rmdir(arg1);
                 break;
 
             case 15:        /* mount */
@@ -340,7 +340,7 @@ static void prmode(int mode)
         printf("-");
 }
 
-static int ls(char *path)
+static int cmd_ls(char *path)
 {
     struct direct buf;
     struct uzi_stat statbuf;
@@ -427,7 +427,7 @@ static int ls(char *path)
     return 0;
 }
 
-static int chmod(char *modes, char *path)
+static int cmd_chmod(char *modes, char *path)
 {
     unsigned int mode;
 
@@ -453,7 +453,7 @@ static int chmod(char *modes, char *path)
 }
 
 
-static int mknod( char *path, char *modes, char *devs)
+static int cmd_mknod( char *path, char *modes, char *devs)
 {
     unsigned int mode;
     int dev;
@@ -481,7 +481,7 @@ static int mknod( char *path, char *modes, char *devs)
 
 
 
-static int mkdir(char *path)
+static int cmd_mkdir(char *path)
 {
     char dot[100];
 
@@ -506,7 +506,7 @@ static int mkdir(char *path)
 
 
 
-static int get( char *src, char *dest, int binflag)
+static int cmd_get( char *src, char *dest, int binflag)
 {
     FILE *fp;
     int d;
@@ -541,7 +541,7 @@ static int get( char *src, char *dest, int binflag)
 }
 
 
-static int put( char *arg, int binflag)
+static int cmd_put( char *arg, int binflag)
 {
     FILE *fp;
     int d;
@@ -574,7 +574,7 @@ static int put( char *arg, int binflag)
 }
 
 
-static int type( char *arg)
+static int cmd_type( char *arg)
 {
     int d, i;
     char cbuf[512];
@@ -601,7 +601,7 @@ static int type( char *arg)
 }
 
 
-static int fdump(char *arg)
+static int cmd_fdump(char *arg)
 {
     int d;
     char cbuf[512];
@@ -623,7 +623,7 @@ static int fdump(char *arg)
 }
 
 
-static int fuzix_rm( char *path)
+static int cmd_rm( char *path)
 {
     struct uzi_stat statbuf;
 
@@ -643,7 +643,7 @@ static int fuzix_rm( char *path)
 }
 
 
-static int fuzix_rmdir(char *path)
+static int cmd_rmdir(char *path)
 {
     struct uzi_stat statbuf;
     char newpath[100];
