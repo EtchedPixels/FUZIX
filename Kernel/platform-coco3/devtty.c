@@ -250,9 +250,9 @@ uint8_t keyboard[8][7] = {
 	,
 	{'d', 'l', 't', '|' /* down */ , '4', ',', 0 /* NC */ }
 	,
-	{'e', 'm', 'u', KEY_BS /* left */ , '5', '-', '~' /* NC */ }
+	{'e', 'm', 'u', KEY_BS /* left */ , '5', '-', '~' /* F1 */ }
 	,
-	{'f', 'n', 'v', KEY_TAB /* right */ , '6', '.', 0 /* NC */ }
+	{'f', 'n', 'v', KEY_TAB /* right */ , '6', '.', '`' /* F2 */ }
 	,
 	{'g', 'o', 'w', ' ', '7', '/', 0 /* shift */ }
 	,
@@ -269,9 +269,9 @@ uint8_t shiftkeyboard[8][7] = {
 	,
 	{'D', 'L', 'T', ']' /* down */ , '$', '<', 0 /* NC */ }
 	,
-	{'E', 'M', 'U', '{' /* left */ , '%', '=', '|' /* NC */ }
+	{'E', 'M', 'U', '{' /* left */ , '%', '=', '|' /* F1 */ }
 	,
-	{'F', 'N', 'V', '}' /* right */ , '&', '>', 0 /* NC */ }
+	{'F', 'N', 'V', '}' /* right */ , '&', '>', 0 /* F2 */ }
 	,
 	{'G', 'O', 'W', ' ', '\'', '?', 0 /* shift */ }
 	,
@@ -430,6 +430,8 @@ unsigned char vt_map(unsigned char c)
 	/* The CoCo3's gime has a strange code for underscore */
 	if (c == '_')
 		return 0x7F;
+	if (c == '`')
+		return 0x5E; /* up arrow */
 	return c;
 }
 
