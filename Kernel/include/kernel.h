@@ -373,7 +373,7 @@ typedef struct u_data {
     susize_t    u_retval;       /* Return value from sys call */
     int16_t     u_error;        /* Last error number */
     void *      u_sp;           /* Stores SP when process is switchped */
-    bool        u_ininterrupt;  /* True when the interrupt handler is runnign (prevents recursive interrupts) */
+    bool        u_ininterrupt;  /* True when the interrupt handler is running (prevents recursive interrupts) */
     int8_t      u_cursig;       /* Next signal to be dispatched */
     arg_t       u_argn;         /* First C argument to the system call */
     arg_t       u_argn1;        /* Second C argument */
