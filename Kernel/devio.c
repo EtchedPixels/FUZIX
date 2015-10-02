@@ -445,7 +445,7 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
 int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 {
 	if (flags & O_NDELAY) {
-	        if (*n) {
+	        if (!*n) {
 	                *n = (usize_t)-1;
 			udata.u_error = EAGAIN;
                 }
@@ -453,7 +453,7 @@ int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 	}
 	psleep(p);
 	if (udata.u_cursig || udata.u_ptab->p_pending) {	/* messy */
-	        if (*n) {
+	        if (!*n) {
 	                *n = (usize_t)-1;
                         udata.u_error = EINTR;
                 }
