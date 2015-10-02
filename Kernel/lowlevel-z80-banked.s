@@ -383,8 +383,9 @@ interrupt_handler:
 	; Get onto the IRQ stack
 	ld (istack_switched_sp), sp
 	ld sp, #istack_top
-
+.ifeq PROGBASE
 	ld a, (0)
+.endif
 
 	call map_save
 	;
@@ -394,9 +395,10 @@ interrupt_handler:
 	; We need the kernel mapped for the IRQ handling
 	call map_kernel
 
+.ifeq PROGBASE
 	cp #0xC3
 	call nz, null_pointer_trap
-
+.endif
 	; So the kernel can check rapidly for interrupt status
 	; FIXME: move to the C code
 	ld a, #1
@@ -672,21 +674,22 @@ _in:
 	.include "lowlevel-z80-cmos-banked.s"
 .endif
 
-;
-;	These are needed by the experimental SDCC size optimisations
-;
 	.area _COMMONMEM
 
-	.globl __enter, __enter_s
+	.globl ___sdcc_enter_ix
+	.globl ___sdcc_enter_ix_n
 
-__enter:
+___sdcc_enter_ix:
 	pop hl		; return address
 	push ix		; save frame pointer
 	ld ix, #0
 	add ix, sp	; set ix to the stack frame
 	jp (hl)		; and return
 
-__enter_s:
+;
+; Not used unless experimentally patched sdcc
+;
+___sdcc_enter_ix_n:
 	pop hl		; return address
 	push ix		; save frame pointer
 	ld ix, #0
@@ -703,9 +706,12 @@ __enter_s:
 ;
 ;	This must be in common in banked builds
 ;
-	.globl __sdcc_call_hl
+	.globl ___sdcc_call_hl
+	.globl ___sdcc_call_iy
 
-__sdcc_call_hl:
+___sdcc_call_iy:
+	.byte 0xFD	; IY override and fall through
+___sdcc_call_hl:
 	jp (hl)
 
 ;
@@ -736,6 +742,7 @@ _memset:
 	dec a
 	ret z		; > 1 ?
 	ld d, h
+
 	ld e, l
 	inc de
 	dec bc
