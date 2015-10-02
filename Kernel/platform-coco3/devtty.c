@@ -8,6 +8,7 @@
 #include <tty.h>
 #include <devdw.h>
 #include <ttydw.h>
+#include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -250,9 +251,9 @@ uint8_t keyboard[8][7] = {
 	,
 	{'d', 'l', 't', '|' /* down */ , '4', ',', 0 /* NC */ }
 	,
-	{'e', 'm', 'u', KEY_BS /* left */ , '5', '-', '~' /* NC */ }
+	{'e', 'm', 'u', KEY_BS /* left */ , '5', '-', '~' /* F1 */ }
 	,
-	{'f', 'n', 'v', KEY_TAB /* right */ , '6', '.', 0 /* NC */ }
+	{'f', 'n', 'v', KEY_TAB /* right */ , '6', '.', '`' /* F2 */ }
 	,
 	{'g', 'o', 'w', ' ', '7', '/', 0 /* shift */ }
 	,
@@ -269,9 +270,9 @@ uint8_t shiftkeyboard[8][7] = {
 	,
 	{'D', 'L', 'T', ']' /* down */ , '$', '<', 0 /* NC */ }
 	,
-	{'E', 'M', 'U', '{' /* left */ , '%', '=', '|' /* NC */ }
+	{'E', 'M', 'U', '{' /* left */ , '%', '=', '|' /* F1 */ }
 	,
-	{'F', 'N', 'V', '}' /* right */ , '&', '>', 0 /* NC */ }
+	{'F', 'N', 'V', '}' /* right */ , '&', '>', 0 /* F2 */ }
 	,
 	{'G', 'O', 'W', ' ', '\'', '?', 0 /* shift */ }
 	,
@@ -430,7 +431,32 @@ unsigned char vt_map(unsigned char c)
 	/* The CoCo3's gime has a strange code for underscore */
 	if (c == '_')
 		return 0x7F;
+	if (c == '`')
+		return 0x5E; /* up arrow */
 	return c;
+}
+
+static struct display display = {
+  256, 192,
+  256, 192,
+  0xFF, 0xFF,		/* For now */
+  FMT_MONO_BW,
+  HW_UNACCEL,
+  GFX_ENABLE,
+  0,
+  GFX_SETPIXEL,
+  0
+};
+
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	if (arg >> 8 != 0x03)
+		return vt_ioctl(minor, arg, ptr);
+	if (arg == GFXIOC_GETINFO)
+		return uput(&display, ptr, sizeof(display));
+	udata.u_error = ENOTTY;
+	return -1;
 }
 
 

@@ -19,5 +19,6 @@ static struct pty {
 extern struct pty *curpty;
 
 int my_tty_close( uint8_t minor ); /* wrapper call to close DW ports */
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 
 #endif
