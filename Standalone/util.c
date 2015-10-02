@@ -11,7 +11,6 @@
 
 int dev_fd;
 int dev_offset;
-struct u_data udata;
 
 extern int swizzling;
 

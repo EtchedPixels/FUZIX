@@ -31,12 +31,7 @@
 extern int dev_fd;
 extern int dev_offset;
 int fd_open(char *name);
-int d_close(void);
-void xfs_init();
 void panic(char *s);
-void bufsync (void);
-char *zerobuf (void);
-int super(void);
 
 extern uint16_t swizzle16(uint32_t v);
 extern uint32_t swizzle32(uint32_t v);
@@ -147,6 +142,41 @@ typedef struct filesys {
     inoptr      s_mntpt;
 } filesys, *fsptr;
 
+#define EPERM           1               /* Not owner */
+#define ENOENT          2               /* No such file or directory */
+#define ESRCH           3               /* No such process */
+#define EINTR           4               /* Interrupted System Call */
+#define EIO             5               /* I/O Error */
+#define ENXIO           6               /* No such device or address */
+#define E2BIG           7               /* Arg list too long */
+#define ENOEXEC         8               /* Exec format error */
+#define EBADF           9               /* Bad file number */
+#define ECHILD          10              /* No children */
+#define EAGAIN          11              /* No more processes */
+#define ENOMEM          12              /* Not enough core */
+#define EACCES          13              /* Permission denied */
+#define EFAULT          14              /* Bad address */
+#define ENOTBLK         15              /* Block device required */
+#define EBUSY           16              /* Mount device busy */
+#define EEXIST          17              /* File exists */
+#define EXDEV           18              /* Cross-device link */
+#define ENODEV          19              /* No such device */
+#define ENOTDIR         20              /* Not a directory */
+#define EISDIR          21              /* Is a directory */
+#define EINVAL          22              /* Invalid argument */
+#define ENFILE          23              /* File table overflow */
+#define EMFILE          24              /* Too many open files */
+#define ENOTTY          25              /* Not a typewriter */
+#define ETXTBSY         26              /* Text file busy */
+#define EFBIG           27              /* File too large */
+#define ENOSPC          28              /* No space left on device */
+#define ESPIPE          29              /* Illegal seek */
+#define EROFS           30              /* Read-only file system */
+#define EMLINK          31              /* Too many links */
+#define EPIPE           32              /* Broken pipe */
+
+
+#ifdef UCP
 typedef struct u_data {
     struct p_tab *u_ptab;       /* Process table pointer */
     char        u_insys;        /* True if in kernel */
@@ -188,140 +218,86 @@ typedef struct u_data {
     uint32_t      u_cstime;
 } u_data;
 
-
-extern inoptr root;
-extern struct cinode i_tab[ITABSIZE];
-extern struct filesys fs_tab[1];
-extern struct blkbuf bufpool[NBUFS];
-extern struct u_data udata; /* MUST BE FIRST */
-#define PTABSIZE 20
-// extern struct p_tab ptab[PTABSIZE];
-
-#define EPERM           1               /* Not owner */
-#define ENOENT          2               /* No such file or directory */
-#define ESRCH           3               /* No such process */
-#define EINTR           4               /* Interrupted System Call */
-#define EIO             5               /* I/O Error */
-#define ENXIO           6               /* No such device or address */
-#define E2BIG           7               /* Arg list too long */
-#define ENOEXEC         8               /* Exec format error */
-#define EBADF           9               /* Bad file number */
-#define ECHILD          10              /* No children */
-#define EAGAIN          11              /* No more processes */
-#define ENOMEM          12              /* Not enough core */
-#define EACCES          13              /* Permission denied */
-#define EFAULT          14              /* Bad address */
-#define ENOTBLK         15              /* Block device required */
-#define EBUSY           16              /* Mount device busy */
-#define EEXIST          17              /* File exists */
-#define EXDEV           18              /* Cross-device link */
-#define ENODEV          19              /* No such device */
-#define ENOTDIR         20              /* Not a directory */
-#define EISDIR          21              /* Is a directory */
-#define EINVAL          22              /* Invalid argument */
-#define ENFILE          23              /* File table overflow */
-#define EMFILE          24              /* Too many open files */
-#define ENOTTY          25              /* Not a typewriter */
-#define ETXTBSY         26              /* Text file busy */
-#define EFBIG           27              /* File too large */
-#define ENOSPC          28              /* No space left on device */
-#define ESPIPE          29              /* Illegal seek */
-#define EROFS           30              /* Read-only file system */
-#define EMLINK          31              /* Too many links */
-#define EPIPE           32              /* Broken pipe */
-
 typedef struct oft {
     uint32_t     o_ptr;      /* File position point16_ter */
     inoptr    o_inode;    /* Pointer into in-core inode table */
     char      o_access;   /* O_RDONLY, O_WRONLY, or O_RDWR */
     char      o_refs;     /* Reference count: depends on # of active children*/
 } oft;
+// static struct cinode i_tab[ITABSIZE];    /* In-core inode table */
+static struct oft of_tab[OFTSIZE]; /* Open File Table */
 
-// extern struct cinode i_tab[ITABSIZE];    /* In-core inode table */
-extern struct oft of_tab[OFTSIZE]; /* Open File Table */
+static void xfs_init(int);
 
-void brelse(bufptr bp);
-void bawrite(bufptr bp);
-int bfree(bufptr bp, int dirty);
-int bdwrite(bufptr bp);
-int bdread(bufptr bp);
-void bufinit(void);
-void bufdump(void);
-bufptr bfind(int dev, blkno_t blk);
-bufptr freebuf(void);
-int insq (struct s_queue *q, char c);
-int remq (struct s_queue *q, char *cp);
-int uninsq (struct s_queue *q, char *cp);
-int fullq (struct s_queue *q);
-void clrq (struct s_queue *q);
-char *bread(int dev, blkno_t blk, int rewrite);
-int fmount(int dev, inoptr ino);
-void i_ref(inoptr ino);
-void xfs_end(void);
-int doclose(int16_t uindex);
-int _open(char *name, int16_t flag);
-int _creat(char *name, int16_t mode);
-int _close(int16_t uindex);
-int _link( char *name1, char *name2);
-int _unlink(char *path);
-int _read( int16_t d, char *buf, uint16_t nbytes);
-int _write( int16_t d, char *buf, uint16_t nbytes);
-int _mknod( char *name, int16_t mode, int16_t dev);
-blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
-inoptr rwsetup( int rwflag, int d, char *buf, int nbytes);
-int psize(inoptr ino);
-void oft_deref(int of);
-void i_deref(inoptr ino);
-void f_trunc(inoptr ino);
-void setftime(inoptr ino, int flag);
-void wr_inode(inoptr ino);
-int _seek( int16_t file, uint16_t offset, int16_t flag);
-void readi( inoptr ino );
-void writei( inoptr ino);
-void addoff( uint32_t *ofptr, int amount);
-void updoff(int d);
-inoptr getinode(int uindex);
-inoptr n_open( register char *name, register inoptr *parent );
-inoptr srch_dir(inoptr wd, register char *compname);
-inoptr srch_mt( inoptr ino);
-inoptr i_open( register int dev, register unsigned ino);
-int ch_link( inoptr wd, char *oldname, char *newname, inoptr nindex);
-char * filename( char *path);
-int namecomp( char *n1, char *n2);
-inoptr newfile( inoptr pino, char *name);
-fsptr getdev( int devno);
-unsigned i_alloc(int devno);
-void i_free( int devno, unsigned ino);
-blkno_t blk_alloc( int devno );
-void blk_free( int devno, blkno_t blk);
-int oft_alloc(void);
-void _sync(void);
-int _chdir(char *dir);
-int min(int a, int b);
-int _access( char *path, int16_t mode);
-int _chmod( char *path, int16_t mode);
-int _chown( char *path, int owner, int group);
-int _stat( char *path, struct uzi_stat *buf);
-int _fstat( int16_t fd, struct uzi_stat *buf);
-void stcpy( inoptr ino, struct uzi_stat *buf);
-int _dup( int16_t oldd);
-int _dup2( int16_t oldd, int16_t newd);
-int _umask( int mask);
-int _getfsys(int dev,char * buf);
-int _ioctl( int fd, int request, char *data);
-int getperm(inoptr ino);
-int _mount( char *spec, char *dir, int rwflag);
-int _time( int tvec[]);
-int fuzix_getmode(inoptr ino);
-void bawrite(bufptr bp);
-int isdevice(inoptr ino);
-int bfree(bufptr bp, int dirty);
-void magic(inoptr ino);
-int baddev(fsptr dev);
-void validblk(int dev, blkno_t num);
-int uf_alloc(void);
-void i_ref( inoptr ino);
-void freeblk(int dev, blkno_t blk, int level);
-int valadr(char *base, uint16_t size);
-int _umount(char *spec);
+static inoptr root;
+static struct cinode i_tab[ITABSIZE];
+static struct filesys fs_tab[1];
+static struct blkbuf bufpool[NBUFS];
+static struct u_data udata;
+static void bufsync (void);
+static char *zerobuf (void);
+static void brelse(bufptr bp);
+static void bawrite(bufptr bp);
+static int bfree(bufptr bp, int dirty);
+static int bdwrite(bufptr bp);
+static int bdread(bufptr bp);
+static void bufinit(void);
+static bufptr bfind(int dev, blkno_t blk);
+static bufptr freebuf(void);
+static void magic(inoptr ino);
+static char *bread(int dev, blkno_t blk, int rewrite);
+static int fmount(int dev, inoptr ino);
+static void i_ref(inoptr ino);
+static void xfs_end(void);
+static int doclose(int16_t uindex);
+static int fuzix_open(char *name, int16_t flag);
+static int fuzix_creat(char *name, int16_t mode);
+static int fuzix_close(int16_t uindex);
+static int fuzix_link( char *name1, char *name2);
+static int fuzix_unlink(char *path);
+static int fuzix_read( int16_t d, char *buf, uint16_t nbytes);
+static int fuzix_write( int16_t d, char *buf, uint16_t nbytes);
+static int fuzix_mknod( char *name, int16_t mode, int16_t dev);
+static blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
+static inoptr rwsetup( int rwflag, int d, char *buf, int nbytes);
+static void oft_deref(int of);
+static int uf_alloc(void);
+static void i_deref(inoptr ino);
+static void f_trunc(inoptr ino);
+static void freeblk(int dev, blkno_t blk, int level);
+static void setftime(inoptr ino, int flag);
+static void wr_inode(inoptr ino);
+static int isdevice(inoptr ino);
+static void readi( inoptr ino );
+static void writei( inoptr ino);
+static void updoff(int d);
+static void validblk(int dev, blkno_t num);
+static inoptr getinode(int uindex);
+static inoptr n_open( register char *name, register inoptr *parent );
+static inoptr srch_dir(inoptr wd, register char *compname);
+static inoptr srch_mt( inoptr ino);
+static inoptr i_open( register int dev, register unsigned ino);
+static int ch_link( inoptr wd, char *oldname, char *newname, inoptr nindex);
+static char * filename( char *path);
+static int namecomp( char *n1, char *n2);
+static inoptr newfile( inoptr pino, char *name);
+static fsptr getdev( int devno);
+static unsigned i_alloc(int devno);
+static void i_free( int devno, unsigned ino);
+static blkno_t blk_alloc( int devno );
+static void blk_free( int devno, blkno_t blk);
+static int oft_alloc(void);
+static void fuzix_sync(void);
+static int fuzix_chdir(char *dir);
+static int min(int a, int b);
+static int fuzix_chmod( char *path, int16_t mode);
+static int fuzix_stat( char *path, struct uzi_stat *buf);
+static void stcpy( inoptr ino, struct uzi_stat *buf);
+static int fuzix_getfsys(int dev,char * buf);
+static int fuzix_mount( char *spec, char *dir, int rwflag);
+static int fuzix_getmode(inoptr ino);
+static void bawrite(bufptr bp);
+static int bfree(bufptr bp, int dirty);
+static int fuzix_umount( char *spec);
 
+#endif
