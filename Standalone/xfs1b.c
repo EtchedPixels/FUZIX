@@ -92,13 +92,13 @@ int _chdir(char *dir)
 {
 	register inoptr newcwd;
 	inoptr n_open();
-	int getmode();
+	int fuzix_getmode();
 
 	udata.u_error = 0;
 	ifnot(newcwd = n_open(dir, NULLINOPTR))
 	    return (-1);
 
-	if (getmode(newcwd) != F_DIR) {
+	if (fuzix_getmode(newcwd) != F_DIR) {
 		udata.u_error = ENOTDIR;
 		i_deref(newcwd);
 		return (-1);
@@ -362,11 +362,11 @@ int _mount(char *spec, char *dir, int rwflag)
 		i_deref(sino);
 		return (-1);
 	}
-	if (getmode(sino) != F_BDEV) {
+	if (fuzix_getmode(sino) != F_BDEV) {
 		udata.u_error = ENOTBLK;
 		goto nogood;
 	}
-	if (getmode(dino) != F_DIR) {
+	if (fuzix_getmode(dino) != F_DIR) {
 		udata.u_error = ENOTDIR;
 		goto nogood;
 	}
@@ -412,7 +412,7 @@ int _umount(char *spec)
 	ifnot(sino = n_open(spec, NULLINOPTR))
 	    return (-1);
 
-	if (getmode(sino) != F_BDEV) {
+	if (fuzix_getmode(sino) != F_BDEV) {
 		udata.u_error = ENOTBLK;
 		goto nogood;
 	}

@@ -55,7 +55,7 @@ int _open(char *name, int16_t flag)
 	register inoptr ino;
 	register int16_t perm;
 	inoptr n_open();
-	int getperm(), getmode(), isdevice(), d_open();
+	int getperm(), fuzix_getmode(), isdevice(), d_open();
 	int uf_alloc(), oft_alloc();
 
 	udata.u_error = 0;
@@ -82,7 +82,7 @@ int _open(char *name, int16_t flag)
 		goto cantopen;
 	}
 
-	if (getmode(ino) == F_DIR &&
+	if (fuzix_getmode(ino) == F_DIR &&
 	    (flag == FO_WRONLY || flag == FO_RDWR)) {
 		udata.u_error = EISDIR;
 		goto cantopen;
@@ -145,7 +145,7 @@ int _creat(char *name, int16_t mode)
 	register int16_t j;
 	inoptr n_open();
 	inoptr newfile();
-	int getperm(), getmode(), uf_alloc(), oft_alloc();
+	int getperm(), fuzix_getmode(), uf_alloc(), oft_alloc();
 
 	udata.u_error = 0;
 	parent = NULLINODE;
@@ -158,7 +158,7 @@ int _creat(char *name, int16_t mode)
 	ino = n_open(name, &parent);
 	if (ino) {
 		i_deref(parent);
-		if (getmode(ino) == F_DIR) {
+		if (fuzix_getmode(ino) == F_DIR) {
 			i_deref(ino);
 			udata.u_error = EISDIR;
 			goto nogood;
@@ -168,7 +168,7 @@ int _creat(char *name, int16_t mode)
 			udata.u_error = EACCES;
 			goto nogood;
 		}
-		if (getmode(ino) == F_REG) {
+		if (fuzix_getmode(ino) == F_REG) {
 			/* Truncate the file to zero length */
 			f_trunc(ino);
 			/* Reset any oft pointers */
@@ -213,13 +213,13 @@ int _link(char *name1, char *name2)
 	inoptr parent2;
 	char *filename();
 	inoptr n_open();
-	int ch_link(), getmode(), super();
+	int ch_link(), fuzix_getmode(), super();
 
 	udata.u_error = 0;
 	ifnot(ino = n_open(name1, NULLINOPTR))
 	    return (-1);
 
-	if (getmode(ino) == F_DIR && !super()) {
+	if (fuzix_getmode(ino) == F_DIR && !super()) {
 		udata.u_error = EPERM;
 		goto nogood;
 	}
@@ -266,7 +266,7 @@ int _unlink(char *path)
 	char *filename();
     /*--    inoptr i_open();--*/
 	inoptr n_open();
-	int getmode(), ch_link(), super();
+	int fuzix_getmode(), ch_link(), super();
 
 	udata.u_error = 0;
 	ino = n_open(path, &pino);
@@ -276,7 +276,7 @@ int _unlink(char *path)
 		return (-1);
 	}
 
-	if (getmode(ino) == F_DIR && !super()) {
+	if (fuzix_getmode(ino) == F_DIR && !super()) {
 		udata.u_error = EPERM;
 		goto nogood;
 	}

@@ -56,7 +56,7 @@ inoptr n_open(register char *name, register inoptr * parent)
 		}
 		i_deref(wd);
 		wd = ninode;
-		if (getmode(wd) != F_DIR) {
+		if (fuzix_getmode(wd) != F_DIR) {
 			udata.u_error = ENOTDIR;
 			goto nodir;
 		}
@@ -814,7 +814,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
 	int sh;
 	int dev;
 
-	if (getmode(ip) == F_BDEV)
+	if (fuzix_getmode(ip) == F_BDEV)
 		return (bn);
 
 	dev = ip->c_dev;
@@ -976,7 +976,7 @@ void setftime(inoptr ino, int flag)
 }
 
 
-int getmode(inoptr ino)
+int fuzix_getmode(inoptr ino)
 {
 	return (swizzle16(ino->c_node.i_mode) & F_MASK);
 }

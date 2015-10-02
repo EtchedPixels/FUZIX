@@ -312,7 +312,7 @@ int _ioctl( int fd, int request, char *data);
 int getperm(inoptr ino);
 int _mount( char *spec, char *dir, int rwflag);
 int _time( int tvec[]);
-int getmode(inoptr ino);
+int fuzix_getmode(inoptr ino);
 void bawrite(bufptr bp);
 int isdevice(inoptr ino);
 int bfree(bufptr bp, int dirty);

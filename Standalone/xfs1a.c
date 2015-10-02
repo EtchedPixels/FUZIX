@@ -55,7 +55,7 @@ void readi(inoptr ino)
 	int dev;
 
 	dev = ino->c_dev;
-	switch (getmode(ino)) {
+	switch (fuzix_getmode(ino)) {
 
 	case F_DIR:
 	case F_REG:
@@ -108,7 +108,7 @@ void writei(inoptr ino)
 
 	dev = ino->c_dev;
 
-	switch (getmode(ino)) {
+	switch (fuzix_getmode(ino)) {
 
 	case F_BDEV:
 		dev = swizzle16(*(ino->c_node.i_addr));
