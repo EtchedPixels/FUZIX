@@ -8,6 +8,7 @@
 #include <tty.h>
 #include <devdw.h>
 #include <ttydw.h>
+#include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -431,6 +432,29 @@ unsigned char vt_map(unsigned char c)
 	if (c == '_')
 		return 0x7F;
 	return c;
+}
+
+static struct display display = {
+  256, 192,
+  256, 192,
+  0xFF, 0xFF,		/* For now */
+  FMT_MONO_BW,
+  HW_UNACCEL,
+  GFX_ENABLE,
+  0,
+  GFX_SETPIXEL,
+  0
+};
+
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	if (arg >> 8 != 0x03)
+		return vt_ioctl(minor, arg, ptr);
+	if (arg == GFXIOC_GETINFO)
+		return uput(&display, ptr, sizeof(display));
+	udata.u_error = ENOTTY;
+	return -1;
 }
 
 
