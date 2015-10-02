@@ -17,10 +17,9 @@ static const struct display trsdisplay = {
   1, 1,		/* Need adding to ioctls */
   FMT_MONO_BW,
   HW_TRS80GFX,
-  GFX_ENABLE|GFX_MAPPABLE|GFX_OFFSCREEN,
+  GFX_ENABLE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
   32,
-  GFX_SETPIXEL,
-  0
+  GFX_DRAW	/* FIXME: do GFX_READ */
 };
 
 /* Assumes a Tandy board */
@@ -33,16 +32,16 @@ static const struct videomap trsmap = {
   MAP_PIO
 };
 
-uint16_t video_op[GFX_BUFLEN];
-
 __sfr __at 0x83 gfx_ctrl;
 
-struct attribute video_attr;	/* Shared with asm code */
- 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+  uint8_t *tmp;
+  uint16_t l;
+
   if (arg >> 8 != 0x03)
     return vt_ioctl(minor, arg, ptr);
+
   switch(arg) {
   case GFXIOC_GETINFO:
     return uput(&trsdisplay, ptr, sizeof(trsdisplay));
@@ -57,15 +56,26 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
      card directly */
   case GFXIOC_MAP:
     return uput(&trsmap, ptr, sizeof(trsmap));
-  case GFXIOC_SETATTR:
-    return uget(&video_attr, ptr, sizeof(video_attr));
-  case GFXIOC_SETPIXEL:
-    if (uget(&video_op, ptr, sizeof(video_op)))
-      return -1;
-    video_setpixel();
+  case GFXIOC_DRAW:
+    tmp = (uint8_t *)tmpbuf();
+    l = ugetw(ptr);
+    if (l < 2 || l > 512)
+      goto bad;
+    if (uget(tmp, ptr + 2, l))
+      goto bad2;
+    /* TODO
+    if (draw_validate(ptr, l, 1024, 256))
+      goto bad; */
+    video_cmd(tmp);
+    brelse((bufptr) tmp);
     return 0;
   default:
     udata.u_error = EINVAL;
     return -1;
   }
+bad:
+  udata.u_error = EINVAL;
+bad2:
+  brelse((bufptr) tmp);
+  return -1;
 }

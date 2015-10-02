@@ -18,9 +18,7 @@
 	    .globl _hd_page
 
 	    ; video
-	    .globl _video_setpixel
-	    .globl _video_op
-	    .globl _video_attr
+	    .globl _video_cmd
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -183,72 +181,42 @@ _hd_xfer_out:
 ;
 ;	Graphics card
 ;
-setpixel_optab:
-	    nop				;
-	    or b			; COPY
-	    nop
-	    or b			; SET
-	    cpl				; complement pixel mask
-	    and b			; CLEAR by anding with mask
-	    nop
-	    xor b			; INVERT
-setpixel_bittab:
-	    .db 128,64,32,16,8,4,2,1
-
-_video_setpixel:
-	    ld a, (_video_attr + 2)	; mode
-	    or a			; copy ?
-	    jr nz, setpixel_notdraw
-	    ld a, (_video_attr)		; ink
-	    or a			; white ?
-	    jr nz, setpixel_notdraw	; a = 1 = set so good
-	    ld a, #2			; clear
-setpixel_notdraw:
-	    ld e, a
-	    ld d, #0
-	    ld hl, #setpixel_optab
-	    add hl, de
-	    ld a, (hl)
-	    ld (setpixel_opcode), a	; Self modifying
-	    inc hl
-	    ld a, (hl)
-	    ld (setpixel_opcode), a	; Self modifying
-	    ld bc, (_video_op)	; B is the count
-	    ld a, b
-	    and #0x1f		; max 31 pixels per op
-	    ret z
-	    push bc
-setpixel_loop:
-	    ld hl, #_video_op + 2	; co-ordinate pairs
-	    ld a, (hl)		; low bits of X
-	    and #7
-	    ld c, a
-	    ld a, (hl)
-	    inc hl
-	    ld b, (hl)		; high bits of X
-	    srl b
-	    rra
-	    srl b
-	    rra
-	    srl b
-	    rra
-	    and #0x7F
-	    out (0x80), a
-	    ld a, (hl)		; y low (no y high needed)
-	    inc hl
-	    inc hl		; next point pair
-	    push hl
-	    out (0x81), a
-	    ld hl, #setpixel_bittab
-	    ld b, #0
-	    add hl, bc
-	    ld b, (hl)		; our pixel mask
-	    in a, (0x82)	; pixel from screen
-setpixel_opcode:
-	    nop			; nop or cpl
-	    or b
-	    out (0x82), a
+_video_cmd:
+	    pop de
 	    pop hl
-	    pop bc
-	    djnz setpixel_loop
+	    push hl
+	    push de
+	    ld e,(hl)			; X byte, Y line
+	    inc hl			; The hardware does the conversion
+	    ld d,(hl)			; for us
+	    ld a, #0x43			; auto incremeent X on write only
+	    out (0x83), a		; set the register up
+nextline:
+	    push de
+	    ld c, #0x80
+	    out (c), e			; X
+	    inc c
+	    out (c), d			; Y
+nextop:
+	    xor a
+	    ld b, (hl)
+	    cp b
+	    jr z, endline
+	    inc hl
+	    ld c,(hl)
+	    inc hl
+oploop:
+	    in a, (0x82)		; read data
+	    and c
+	    xor (hl)
+	    out (0x82), a		; autoincrements X
+	    djnz oploop
+	    inc hl
+	    jr nextop
+endline:    pop de
+	    inc d		; down a scan line (easy peasy)
+	    inc hl
+	    xor a
+	    cp (hl)		; 0 0 = end (for blank lines just do 01 ff 00)
+	    jr nz, nextline
 	    ret
