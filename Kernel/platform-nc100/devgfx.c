@@ -38,9 +38,10 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   uint16_t l;
   if (arg >> 8 != 0x03)
     return vt_ioctl(minor, arg, ptr);
-  if (arg == GFXIOC_GETINFO)
-    return uput(&ncdisplay, ptr, sizeof(ncdisplay));
+
   switch(arg) {
+  case GFXIOC_GETINFO:
+    return uput(&ncdisplay, ptr, sizeof(ncdisplay));
   case GFXIOC_DRAW:
     /* Note: we assume we will not map the screen over the buffers */
     tmp = (uint8_t *)tmpbuf();
@@ -60,8 +61,8 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     return -1;
   }
 bad:
-    udata.u_error = EINVAL;
+  udata.u_error = EINVAL;
 bad2:
-    brelse((bufptr) tmp);
-    return -1;
+  brelse((bufptr) tmp);
+  return -1;
 }
