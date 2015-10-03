@@ -12,6 +12,7 @@ struct display {
 #define FMT_MONO_WB	1
 #define FMT_COLOUR4	2
 #define FMT_COLOUR16	3
+#define FMT_TEXT	4	/* Text only mode */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
