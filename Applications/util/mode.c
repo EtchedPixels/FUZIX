@@ -30,6 +30,9 @@ static void format(int n) {
     case FMT_COLOUR4:
       printf("four colour");
       break;
+    case FMT_TEXT:
+      printf("text");
+      break;
     case FMT_COLOUR16:
       printf("sixteen colour");
       break;
