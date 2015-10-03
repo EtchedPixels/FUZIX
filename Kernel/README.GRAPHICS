@@ -11,7 +11,10 @@ If it reports GFX_PALETTE then you can get the palette entries and try
 and set them.
 
 If it reports GFX_MULTIMODE then you can call GFXIOC_GETMODE with a uint8_t
-set and get back a full buffer of the display for that mode.
+set and get back a full buffer of the display for that mode. Mode 0 is always
+the default mode and will support text (in other words any kind of 'recovery'
+can just force mode 0). If there are multiple text modes and some work on all
+displays then mode 0 should be one of the "all displays" modes.
 
 The formats defined so far are
 
@@ -126,7 +129,7 @@ l1:
 	jr l0
 
 
-GFX_GET		y x (byte aligned) h w buffer
+GFX_READ	y x (byte aligned) h w buffer
 	copy up to 512 bytes from video to userspace
 
 The only icky case then is the matter of the machines with head-up-backside
@@ -140,14 +143,26 @@ If we go this way then
 
 2. Do we allow a repeat to cross a scan line (probably not - its a PITA)
 
-3. Do we allow mask of repeats for planar video
+3. Do we allow mask of repeats for planar video (yes)
 
 4. If we are clipping against the display do we just allow configurable clip
-   rectangles given it's near enough the same logic ?
+   rectangles given it's near enough the same logic ? - NO, the buffer can
+   expand if we clip to pixel alignments. Thats fine for userspace as it can
+   itself do clipping and always generate buffers whose left/right is a
+   single instance of something (so don't expand).
 
 5. What is the best way to arrange the operations so we don't end up using
-   bounce buffers if avoidable ?
+   bounce buffers if avoidable ? (direct mapping user space on some systems
+   perhaps, but that implies the verifier is asm). For those we can direct
+   map it, just put a copy of the rendering loop *in* userspace and avoid
+   syscalls !
 
 6. Do we still allow for screen/screen blits as well (eg scrolling)
 
+7. Should there be a way to access the system font from userspace for graphics
+   work ?
 
+8. Do we want an op for a fast byte aligned pure copy. It's tiny amounts of
+   code and some stuff is a lot faster that way (eg TRS80 can use otir)
+   YES - GFX_READ and GFX_WRITE core are almost identical on most boxes and
+   can nicely self modify.
