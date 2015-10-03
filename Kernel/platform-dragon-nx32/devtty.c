@@ -235,16 +235,29 @@ void platform_interrupt(void)
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
 
-static struct display display = {
-  256, 192,
-  256, 192,
-  0xFF, 0xFF,		/* For now */
-  FMT_MONO_BW,
-  HW_UNACCEL,
-  0,
-  0,
-  GFX_SETPIXEL|GFX_MAPPABLE,
-  0
+static struct display display[2] = {
+	{
+		0,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_WB,
+		HW_UNACCEL,
+		0,
+		0,
+		GFX_MAPPABLE,
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_BW,
+		HW_UNACCEL,
+		0,
+		0,
+		GFX_MAPPABLE,
+	},
 };
 
 static struct videomap displaymap = {
@@ -258,6 +271,9 @@ static struct videomap displaymap = {
 	MAP_FBMEM|MAP_FBMEM_SIMPLE
 };
 
+static uint8_t vmode;
+
+#define pia1b	((volatile uint8_t *)0xFF22)
 /*
  *	Start by just reporting the 256x192 mode which is memory mapped
  *	(it's effectively always in our address space). Should really
@@ -268,9 +284,22 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
 	if (arg == GFXIOC_GETINFO)
-		return uput(&display, ptr, sizeof(display));
+		return uput(&display[vmode], ptr, sizeof(struct display));
 	if (arg == GFXIOC_MAP)
 		return uput(&displaymap, ptr, sizeof(displaymap));
+	if (arg == GFXIOC_GETMODE || arg == GFXIOC_SETMODE) {
+		uint8_t m = ugetc(ptr);
+		if (m > 1) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&display[m], ptr, sizeof(display));
+		vmode = m;
+		/* As we get more modes this will need to be done nicely */
+		*pia1b = (*pia1b & 0xF7) | (m << 3);
+		return 0;
+	}
 	udata.u_error = ENOTTY;
 	return -1;
 }
