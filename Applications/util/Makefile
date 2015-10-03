@@ -78,6 +78,7 @@ SRCS  = banner.c \
 	ls.c \
 	man.c \
 	mkfs.c \
+	mode.c \
 	more.c \
 	mount.c \
 	od.c \

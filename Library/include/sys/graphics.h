@@ -55,10 +55,10 @@ struct palette {
 
 /* Returned from a successful GFXIOC_MAP */
 struct videomap {
-  uaddr_t mmio;			/* Memory mapped register base */
-  uaddr_t pio;			/* I/O space register base */
-  uaddr_t fbmem;		/* Frame buffer memory */
-  usize_t fbsize;
+  void * mmio;			/* Memory mapped register base */
+  void * pio;			/* I/O space register base */
+  void * fbmem;			/* Frame buffer memory */
+  size_t fbsize;
   uint8_t mmio_seg;		/* For the 8086 */
   uint8_t fbmem_seg;
   uint8_t spacing;		/* Multiplier for non standard register spacing */
