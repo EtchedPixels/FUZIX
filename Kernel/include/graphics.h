@@ -3,6 +3,7 @@
 
 /* We use the same structure for modes */
 struct display {
+  uint8_t mode;			/* Mode number */
   uint16_t width, height;	/* Logical display size */
   uint16_t stride, lines;	/* Physical layout */
   uint8_t vstep, hstep;		/* Scrolling step if supported or 0xFF */
@@ -27,6 +28,7 @@ struct display {
 #define GFX_ENABLE	16	/* Separate mode we enable/disable */
 #define GFX_MULTIMODE	32	/* Has multiple modes */
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
+#define GFX_TEXT	128	/* Console text works in this mode */
   uint16_t memory;		/* Memory size in KB (may be 0 if not relevant) */
   uint16_t commands;
 #define GFX_DRAW	1	/* Supports the draw command */
@@ -39,6 +41,8 @@ struct display {
 #define GFX_PDRAW	128	/* Supports planar draw (draw buffer with a
 				   leading plane mask) indicating which planes
 				   to run the command on */
+#define GFX_WRITE	256	/* Supports writing a buffer */
+#define GFX_AWRITE	512	/* Supports writing an attribute buffer */
  /* We may want to add some hardware ones as we hit machines that have them */
 };
 
@@ -87,4 +91,6 @@ struct videomap {
 #define GFXIOC_WAITVB		0x0310	/* Wait for vblank */
 #define GFXIOC_GETMODE		0x0311	/* Get info on a mode */
 #define GFXIOC_SETMODE		0x0312	/* Set video mode */
+#define GFXIOC_WRITE		0x0313	/* Write to screen direct */
+#define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #endif
