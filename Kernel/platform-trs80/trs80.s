@@ -19,6 +19,8 @@
 
 	    ; video
 	    .globl _video_cmd
+	    .globl _video_read
+	    .globl _video_write
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -188,7 +190,10 @@ _video_cmd:
 	    push de
 	    ld e,(hl)			; X byte, Y line
 	    inc hl			; The hardware does the conversion
+	    inc hl
 	    ld d,(hl)			; for us
+	    inc hl			; skip high bytes
+	    inc hl
 	    ld a, #0x43			; auto incremeent X on write only
 	    out (0x83), a		; set the register up
 nextline:
@@ -214,9 +219,45 @@ oploop:
 	    inc hl
 	    jr nextop
 endline:    pop de
-	    inc d		; down a scan line (easy peasy)
+	    inc d			; down a scan line (easy peasy)
 	    inc hl
 	    xor a
 	    cp (hl)		; 0 0 = end (for blank lines just do 01 ff 00)
 	    jr nz, nextline
 	    ret
+
+_video_write:
+	    ld a, #0xB3
+	    ld (patch_io + 1), a	; OTIR
+	    ld a, #0x43
+video_do:
+	    out (0x83), a		; autoincrement on write
+	    pop de
+	    pop iy
+	    push iy
+	    push de
+	    push iy
+	    pop hl
+	    ld de, #8
+	    add hl, de			; Data start into HL
+	    ld e, (iy)			; x
+	    ld d, 2(iy)			; y
+next_rw:
+	    ld c, #0x80
+	    out (c), e			; x
+	    inc c
+	    out (c), d			; y
+	    inc c			; to data
+	    ld b, 4(iy)			; count of bytes per line
+patch_io:
+	    otir			; wheee...
+	    inc d			; next line
+	    dec 6(iy)			; height
+	    jr nz, next_rw
+	    ret
+
+_video_read:
+	    ld a, #0xB2			; inir
+	    ld (patch_io + 1), a
+	    ld a, #0x13			; autoincrement on read
+	    jr video_do
