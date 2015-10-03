@@ -11,7 +11,7 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart_data = (uint8_t *)0xFF04;	/* ACIA data */
+uint8_t *uart_data = (uint8_t *)0xFF04;		/* ACIA data */
 uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
@@ -235,6 +235,8 @@ void platform_interrupt(void)
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
 
+/* These look the same but have a different palette - its fine for now for
+   test purposes */
 static struct display display[2] = {
 	{
 		0,
@@ -243,20 +245,20 @@ static struct display display[2] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_MONO_WB,
 		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE,
 		0,
 		0,
-		GFX_MAPPABLE,
 	},
 	{
 		1,
 		256, 192,
 		256, 192,
 		0xFF, 0xFF,		/* For now */
-		FMT_MONO_BW,
+		FMT_MONO_WB,
 		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE,
 		0,
 		0,
-		GFX_MAPPABLE,
 	},
 };
 
@@ -294,7 +296,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		}
 		if (arg == GFXIOC_GETMODE)
-			return uput(&display[m], ptr, sizeof(display));
+			return uput(&display[m], ptr, sizeof(struct display));
 		vmode = m;
 		/* As we get more modes this will need to be done nicely */
 		*pia1b = (*pia1b & 0xF7) | (m << 3);
