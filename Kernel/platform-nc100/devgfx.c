@@ -10,6 +10,7 @@
 
 #ifdef CONFIG_NC100
 static struct display ncdisplay = {
+  0,
   480, 64,
   512, 64,
   0xFF, 0xFF,		/* For now */
@@ -21,14 +22,15 @@ static struct display ncdisplay = {
 };
 #else
 static struct display ncdisplay = {
+  0,
   480, 128,
   512, 128,
   0xFF, 0xFF,		/* For now */
   FMT_MONO_WB,
   HW_UNACCEL,
+  GFX_TEXT,
   0,
-  0,
-  GFX_DRAW
+  GFX_DRAW,
 };
 #endif
 
@@ -46,7 +48,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     /* Note: we assume we will not map the screen over the buffers */
     tmp = (uint8_t *)tmpbuf();
     l = ugetw(ptr);
-    if (l < 2 || l > 512)
+    if (l < 6 || l > 512)
       goto bad;
     if (uget(tmp, ptr + 2, l))
       goto bad2;

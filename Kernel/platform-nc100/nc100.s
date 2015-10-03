@@ -574,7 +574,10 @@ _video_cmd:
 	    push af
 	    ld e,(hl)
 	    inc hl
+	    inc hl
 	    ld d,(hl)
+	    inc hl
+	    inc hl
 	    call addr_de	; turn DE into screen address (HL is kept)
 nextline:
 	    push de
