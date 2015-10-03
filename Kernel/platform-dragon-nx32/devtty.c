@@ -28,6 +28,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
 
+static uint8_t vmode;
+
 /* tty1 is the screen tty2 is the serial port */
 
 /* Output for the system console (kprintf etc) */
@@ -56,7 +58,9 @@ void tty_putc(uint8_t minor, unsigned char c)
 		/* We need a better way generally to handle keyboard v
 		   VT */
 		irq = di();
-		vtoutput(&c, 1);
+		/* We don't do text except in 256x129 resolution modes */
+		if (vmode < 2)
+			vtoutput(&c, 1);
 		irqrestore(irq);
 	} else
 		*uart_data = c;	/* Data */
@@ -235,9 +239,9 @@ void platform_interrupt(void)
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
 
-/* These look the same but have a different palette - its fine for now for
-   test purposes */
-static struct display display[2] = {
+static struct display display[4] = {
+	/* Two variants of 256x192 with different palette */
+	/* 256 x 192 */
 	{
 		0,
 		256, 192,
@@ -260,6 +264,30 @@ static struct display display[2] = {
 		0,
 		0,
 	},
+	/* 128 x 192 four colour modes */
+	{
+		2,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE,
+		0,
+		0,
+	},
+	{
+		3,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE,
+		0,
+		0,
+	},
+	/* Possibly we should also allow for SG6 and SG4 ?? */
 };
 
 static struct videomap displaymap = {
@@ -273,9 +301,16 @@ static struct videomap displaymap = {
 	MAP_FBMEM|MAP_FBMEM_SIMPLE
 };
 
-static uint8_t vmode;
+/* bit 7 - A/G 6 GM2 5 GM1 4 GM0 & INT/EXT 3 CSS */
+static uint8_t piabits[] = { 0xF0, 0xF8, 0xE0, 0xE8};
+///* V0 V1 V2 */
+//static uint8_t sambits[] = { 0x6, 0x6, 0x6, 0x6 };
+
+
 
 #define pia1b	((volatile uint8_t *)0xFF22)
+#define sam_v	((volatile uint8_t *)0xFFC0)
+
 /*
  *	Start by just reporting the 256x192 mode which is memory mapped
  *	(it's effectively always in our address space). Should really
@@ -291,15 +326,19 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return uput(&displaymap, ptr, sizeof(displaymap));
 	if (arg == GFXIOC_GETMODE || arg == GFXIOC_SETMODE) {
 		uint8_t m = ugetc(ptr);
-		if (m > 1) {
+//		uint8_t b;
+		if (m > 3) {
 			udata.u_error = EINVAL;
 			return -1;
 		}
 		if (arg == GFXIOC_GETMODE)
 			return uput(&display[m], ptr, sizeof(struct display));
 		vmode = m;
-		/* As we get more modes this will need to be done nicely */
-		*pia1b = (*pia1b & 0xF7) | (m << 3);
+		*pia1b = (*pia1b & 0x07) | piabits[m];
+//		b = sambits[m];
+//		sam_v[b & 1] = 0;
+//		sam_v[(b & 2)?3:2] = 0;
+//		sam_v[(b & 4)?5:4] = 0;
 		return 0;
 	}
 	udata.u_error = ENOTTY;
