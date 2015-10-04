@@ -311,6 +311,45 @@ static uint8_t piabits[] = { 0xF0, 0xF8, 0xE0, 0xE8};
 #define pia1b	((volatile uint8_t *)0xFF22)
 #define sam_v	((volatile uint8_t *)0xFFC0)
 
+static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
+{
+  int l;
+  int c = 8;	/* 4 x uint16_t */
+  uint16_t *p = (uint16_t *)buf;
+  l = ugetw(ptr);
+  if (l < 6 || l > 512)
+    return EINVAL;
+  if (arg != GFXIOC_READ)
+    c = l;
+  if (uget(buf, ptr + 2, c))
+    return EFAULT;
+  switch(arg) {
+  case GFXIOC_DRAW:
+    /* TODO
+    if (draw_validate(ptr, l, 256, 192))  - or 128!
+      return EINVAL */
+    video_cmd(buf);
+    break;
+  case GFXIOC_WRITE:
+  case GFXIOC_READ:
+    if (l < 8)
+      return EINVAL;
+    l -= 8;
+    if (p[0] > 31 || p[1] > 191 || p[2] > 31 || p[3] > 191 ||
+      p[0] + p[2] > 32 || p[1] + p[3] > 192 ||
+      (p[2] * p[3]) > l)
+      return -EFAULT;
+    if (arg == GFXIOC_READ) {
+      video_read(buf);
+      if (uput(buf + 8, ptr, l))
+        return EFAULT;
+      return 0;
+    }
+    video_write(buf);
+  }
+  return 0;
+}
+
 /*
  *	Start by just reporting the 256x192 mode which is memory mapped
  *	(it's effectively always in our address space). Should really
@@ -320,11 +359,16 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
-	if (arg == GFXIOC_GETINFO)
+	switch(arg) {
+	case GFXIOC_GETINFO:
 		return uput(&display[vmode], ptr, sizeof(struct display));
-	if (arg == GFXIOC_MAP)
+	case GFXIOC_MAP:
 		return uput(&displaymap, ptr, sizeof(displaymap));
-	if (arg == GFXIOC_GETMODE || arg == GFXIOC_SETMODE) {
+	case GFXIOC_UNMAP:
+		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:
+	{
 		uint8_t m = ugetc(ptr);
 //		uint8_t b;
 		if (m > 3) {
@@ -341,6 +385,22 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 //		sam_v[(b & 4)?5:4] = 0;
 		return 0;
 	}
-	udata.u_error = ENOTTY;
+	case GFXIOC_DRAW:
+	case GFXIOC_READ:
+	case GFXIOC_WRITE:
+	{
+		uint8_t *tmp;
+		int err;
+
+		tmp = (uint8_t *)tmpbuf();
+		err = gfx_draw_op(arg, ptr, tmp);
+		brelse((bufptr) tmp);
+		if (err) {
+			udata.u_error = err;
+			err = -1;
+		}
+		return err;
+	}
+	}
 	return -1;
 }
