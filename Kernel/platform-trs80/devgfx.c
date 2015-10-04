@@ -11,16 +11,31 @@
 #include <graphics.h>
 #include <devgfx.h>
 
-static const struct display trsdisplay = {
-  0,
-  640, 240,
-  1024, 256,
-  1, 1,		/* Need adding to ioctls */
-  FMT_MONO_BW,
-  HW_TRS80GFX,
-  GFX_ENABLE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
-  32,
-  GFX_DRAW|GFX_READ|GFX_WRITE
+static const struct display trsdisplay[2] = {
+  {
+    /* Once we get around to it this is probably best described as
+       160 x 72 sixel */
+    0,
+    80, 24,
+    80, 24,
+    255, 255,
+    FMT_TEXT,
+    HW_UNACCEL,
+    0,
+    2,
+    0
+  },
+  {
+    1,
+    640, 240,
+    1024, 256,
+    1, 1,		/* Need adding to ioctls */
+    FMT_MONO_BW,
+    HW_TRS80GFX,
+    GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
+    32,
+    GFX_DRAW|GFX_READ|GFX_WRITE
+  }
 };
 
 /* Assumes a Tandy board */
@@ -34,6 +49,8 @@ static const struct videomap trsmap = {
 };
 
 __sfr __at 0x83 gfx_ctrl;
+
+static uint8_t vmode;
 
 static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 {
@@ -77,6 +94,7 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t *tmp;
+  uint8_t m;
   int err;
 
   if (arg >> 8 != 0x03)
@@ -84,31 +102,40 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 
   switch(arg) {
   case GFXIOC_GETINFO:
-    return uput(&trsdisplay, ptr, sizeof(trsdisplay));
-  case GFXIOC_ENABLE:
-    gfx_ctrl = 3;	/* we might want 1 for special cases */
+    return uput(&trsdisplay[vmode], ptr, sizeof(struct display));
+  case GFXIOC_GETMODE:
+  case GFXIOC_SETMODE:
+    m = ugetc(ptr);
+    if (m > 1)
+      break;
+    if (arg == GFXIOC_GETMODE)
+      return uput(&trsdisplay[m], ptr, sizeof(struct display));
+    vmode = m;
+    gfx_ctrl = m ? 3 : 0;	/* we might want 1 for special cases */
     return 0;
-  case GFXIOC_DISABLE:
-    gfx_ctrl = 0;
   case GFXIOC_UNMAP:
     return 0;
   /* Users can "map" 8) the I/O ports into their process and use the
      card directly */
   case GFXIOC_MAP:
+    if (vmode == 0)
+      break;
     return uput(&trsmap, ptr, sizeof(trsmap));
   case GFXIOC_DRAW:
   case GFXIOC_READ:
   case GFXIOC_WRITE:
-    tmp = (uint8_t *)tmpbuf();
-    err = gfx_draw_op(arg, ptr, tmp);
-    brelse((bufptr) tmp);
-    if (err) {
-      udata.u_error = err;
-      err = -1;
+    if (vmode == 1) {
+      tmp = (uint8_t *)tmpbuf();
+      err = gfx_draw_op(arg, ptr, tmp);
+      brelse((bufptr) tmp);
+      if (err) {
+        udata.u_error = err;
+        err = -1;
+       }
+       return err;
     }
-    return err;
-  default:
-    udata.u_error = EINVAL;
-    return -1;
+    /* Fall through */
   }
+  udata.u_error = EINVAL;
+  return -1;
 }

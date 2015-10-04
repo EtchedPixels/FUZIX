@@ -85,8 +85,6 @@ static void decode_mode_c(int c)
     printf("offscreen ");
   if (disp.features & GFX_VBLANK)
     printf("vblank ");
-  if (disp.features & GFX_ENABLE)
-    printf("enable ");
   if (disp.features & GFX_MULTIMODE)
     printf("multimode ");
   if (disp.features & GFX_PALETTE_SET)

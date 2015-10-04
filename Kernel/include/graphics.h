@@ -26,7 +26,6 @@ struct display {
 #define GFX_PALETTE	2	/* Has colour palette */
 #define GFX_OFFSCREEN	4	/* Offscreen memory */
 #define GFX_VBLANK	8
-#define GFX_ENABLE	16	/* Separate mode we enable/disable */
 #define GFX_MULTIMODE	32	/* Has multiple modes */
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
 #define GFX_TEXT	128	/* Console text works in this mode */
@@ -74,8 +73,6 @@ struct videomap {
 };
 
 #define GFXIOC_GETINFO		0x0300	/* Query display info for this tty */
-#define GFXIOC_ENABLE		0x0301	/* Enter graphics mode */
-#define GFXIOC_DISABLE		0x0302	/* Exit graphics mode */
 #define GFXIOC_GETPALETTE	0x0303	/* Get a palette entry */
 #define GFXIOC_SETPALETTE	0x0304	/* Set a palette entry */
 #define GFXIOC_MAP		0x0305	/* Map into process if supported */
