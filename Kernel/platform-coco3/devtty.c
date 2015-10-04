@@ -437,15 +437,18 @@ unsigned char vt_map(unsigned char c)
 }
 
 static struct display display = {
-  256, 192,
-  256, 192,
-  0xFF, 0xFF,		/* For now */
-  FMT_MONO_BW,
-  HW_UNACCEL,
-  GFX_ENABLE,
-  0,
-  GFX_SETPIXEL,
-  0
+  0,               /* Mode  number */
+  256, 192,        /* screen size */
+  256, 192,        /* buffer size */
+  0xFF, 0xFF,	   /* no pan, scroll */
+  FMT_TEXT,        /* all our supported modes */
+  HW_UNACCEL,      /* no acceleration */
+  GFX_PALETTE | 
+  GFX_MULTIMODE |
+  GFX_PALETTE_SET |
+  GFX_TEXT,        /* all the crap we support in this mode */
+  0,               /* Memory size irrelevant */
+  0,               /* supports no commands */
 };
 
 
