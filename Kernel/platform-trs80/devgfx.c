@@ -93,7 +93,6 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-  uint8_t *tmp;
   uint8_t m;
   int err;
 
@@ -125,7 +124,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   case GFXIOC_READ:
   case GFXIOC_WRITE:
     if (vmode == 1) {
-      tmp = (uint8_t *)tmpbuf();
+      uint8_t *tmp = (uint8_t *)tmpbuf();
       err = gfx_draw_op(arg, ptr, tmp);
       brelse((bufptr) tmp);
       if (err) {
@@ -136,6 +135,5 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     }
     /* Fall through */
   }
-  udata.u_error = EINVAL;
   return -1;
 }
