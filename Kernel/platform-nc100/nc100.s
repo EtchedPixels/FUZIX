@@ -561,6 +561,27 @@ _cursor_off:
 
 
 ;
+;	Turn a co-ordinate pair in DE into an address in DE
+;	and map the video. Unlike the font version we work in bytes across
+;	(for NC100, NC200 needs doing)
+;
+addr_de_pix:
+	    ld a, #0x43
+	    out (0x11), a
+
+	    ld b, d	; save X
+	    ld a, e	; turn Y into a pixel row
+	    sla d	; X is in 0-63, rotate it left twice
+	    sla d
+	    srl a	; multiple by 64 A into DE
+	    rr  d	; roll two bits into D pushing the X bits
+	    srl a	; back where they came from
+	    rr  d
+	    add #VIDEO_BASEH	; screen start (0x7000 or 0x6000 for NC200)
+	    ld  e, d
+	    ld  d, a
+	    ret
+;
 ;	For NC100 (NC200 needs doing)
 ;
 ;	video_cmd(uint8_t *buf)
@@ -578,7 +599,7 @@ _video_cmd:
 	    ld d,(hl)
 	    inc hl
 	    inc hl
-	    call addr_de	; turn DE into screen address (HL is kept)
+	    call addr_de_pix	; turn DE into screen address (HL is kept)
 nextline:
 	    push de
 nextop:
