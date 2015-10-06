@@ -151,7 +151,7 @@ b@	sta	,x+
 	anda	#$8		; mask off 50 hz bit
 	sta	hz		; save for future use
 	;; continue setup of regs
-	ora	#%00000100	; text / 8 lines per char row
+	ora	#%00000100	; text @ 9 lines per char row
 	sta	$ff98
 	ldb	#%00010100	; 80 column mode
 	stb	$ff99
