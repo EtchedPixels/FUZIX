@@ -45,7 +45,7 @@ $(AOBJS): %$(BINEXT): %.s
 clean:
 	rm -f *.o *~
 
-image:
+image: bootfuz.bin
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco2.o discard.o ../simple.o \
@@ -56,4 +56,8 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	devtty.o libc.o ../vt.o
+# FIXME: need to then convert the decb into an image for the IDE disk booter
+
+bootfuz.bin: bootloader.s
+	lwasm -r -b -obootfuz.bin bootloader.s
 
