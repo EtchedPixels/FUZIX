@@ -57,6 +57,67 @@ struct mode_s{
 	uint8_t bottom;
 };
 
+
+/* List (array) of all supported modes, as relayed to ioctl */
+static struct display fmodes[] = {
+	{
+		0,               /* Mode  number */
+		80, 25,          /* screen size */
+		80, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		1,               /* Mode  number */
+		40, 25,          /* screen size */
+		40, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		2,               /* Mode  number */
+		64, 25,          /* screen size */
+		64, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		3,               /* Mode  number */
+		32, 25,          /* screen size */
+		32, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	}
+};
+
 static struct mode_s mode[4] = {
 	{   0x14, 80, 21, 79, 20  },
 	{   0x0c, 40, 21, 39, 20  },
@@ -423,21 +484,6 @@ unsigned char vt_map(unsigned char c)
 		return 0x5E; /* up arrow */
 	return c;
 }
-
-static struct display display = {
-  0,               /* Mode  number */
-  256, 192,        /* screen size */
-  256, 192,        /* buffer size */
-  0xFF, 0xFF,	   /* no pan, scroll */
-  FMT_TEXT,        /* all our supported modes */
-  HW_UNACCEL,      /* no acceleration */
-  GFX_PALETTE | 
-  GFX_MULTIMODE |
-  GFX_PALETTE_SET |
-  GFX_TEXT,        /* all the crap we support in this mode */
-  0,               /* Memory size irrelevant */
-  0,               /* supports no commands */
-};
 
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
