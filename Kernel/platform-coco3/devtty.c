@@ -134,11 +134,11 @@ static struct pty ptytab[] = {
 		0, 
 		{0, 0, 0, 0}, 
 		0xb400 / 8,
-		0x14,              /* 80 column */
+		0x74,              /* 80 column */
 		80,
-		21,
+		25,
 		79,
-		20,
+		24,
 		&fmodes[0]
 	},
 	{
@@ -147,11 +147,11 @@ static struct pty ptytab[] = {
 		0, 
 		{0, 0, 0, 0}, 
 		0xac80 / 8,
-		0x0c,              /* 40 column */
+		0x6c,              /* 40 column */
 		40,
-		21,
+		25,
 		39,
-		20,
+		24,
 		&fmodes[1]
 	}
 };
