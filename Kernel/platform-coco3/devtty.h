@@ -2,6 +2,7 @@
 #define __DEVTTY_DOT_H__
 
 #include <../include/vt.h>
+#include <../include/graphics.h>
 
 static struct pty {
 	unsigned char *base;	/* base of buffer in cpu space */
@@ -14,6 +15,7 @@ static struct pty {
 	unsigned char height;   /* text height */
 	unsigned char right;    /* right most coord */
 	unsigned char bottom;   /* bottom most coord */
+	struct display *fdisp;  /* ptr to struct for ioctl */
 };
 
 extern struct pty *curpty;
