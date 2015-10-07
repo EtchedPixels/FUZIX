@@ -55,6 +55,7 @@ struct mode_s{
 	uint8_t height;
 	uint8_t right;
 	uint8_t bottom;
+	struct display *fmod;
 };
 
 
@@ -119,10 +120,10 @@ static struct display fmodes[] = {
 };
 
 static struct mode_s mode[4] = {
-	{   0x14, 80, 21, 79, 20  },
-	{   0x0c, 40, 21, 39, 20  },
-	{   0x10, 64, 21, 63, 20  },
-	{   0x08, 32, 21, 31, 20  },
+	{   0x74, 80, 25, 79, 24, &(fmode[0])  },
+	{   0x6c, 40, 25, 39, 24, &(fmode[1])  },
+	{   0x70, 64, 25, 63, 24, &(fmode[2])  },
+	{   0x68, 32, 25, 31, 24, $(fmode[3])  },
 };
 
 
@@ -137,7 +138,8 @@ static struct pty ptytab[] = {
 		80,
 		21,
 		79,
-		20
+		20,
+		&fmodes[0]
 	},
 	{
 		(unsigned char *) 0xac80, 
@@ -149,7 +151,8 @@ static struct pty ptytab[] = {
 		40,
 		21,
 		39,
-		20
+		20,
+		&fmodes[1]
 	}
 };
 
