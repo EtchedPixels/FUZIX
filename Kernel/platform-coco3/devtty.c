@@ -497,24 +497,27 @@ unsigned char vt_map(unsigned char c)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-	if ( minor > 2 ) goto error; /* remove once DW get its own ioctl() */
+	if ( minor > 2 ) /* remove once DW get its own ioctl() */
+		goto notty;
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
 	if (arg == GFXIOC_GETINFO)
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
 	if (arg == GFXIOC_GETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto error;
+		if( m > 3 ) goto inval;
 		return uput( &fmodes[m], ptr, sizeof( struct display));
 	}
 	if (arg == GFXIOC_SETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto error;
+		if( m > 3 ) goto inval;
 		memcpy( &(ptytab[minor-1].gime), &(mode[m]), sizeof( struct mode_s ) );
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
 	}
- error:	udata.u_error = EINVAL;
+ notty: udata.u_error = ENOTTY;
+	return -1;
+ inval:	udata.u_error = EINVAL;
 	return -1;
 }
 
