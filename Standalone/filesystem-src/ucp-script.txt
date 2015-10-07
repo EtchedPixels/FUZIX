@@ -177,6 +177,7 @@ bget ../../Applications/util/mkdir
 bget ../../Applications/util/mkfs
 bget ../../Applications/util/mkfifo
 bget ../../Applications/util/mknod
+bget ../../Applications/util/mode
 bget ../../Applications/util/more
 bget ../../Applications/util/mount
 bget ../../Applications/util/mv
@@ -256,6 +257,7 @@ chmod 0755 mkdir
 chmod 0755 mkfs
 chmod 0755 mkfifo
 chmod 0755 mknod
+chmod 0755 mode
 chmod 0755 more
 chmod 0755 mount
 chmod 0755 mv

@@ -48,18 +48,6 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 
 
 
-//static struct pty {
-//	unsigned char *base;	/* base of buffer in cpu space */
-//	unsigned char *cpos;	/* current location of cursor */
-//	unsigned char csave;	/* charactor that is under the cursor */
-//	struct vt_switch vt;	/* the vt.o module's state */
-//	unsigned int scrloc;	/* location to put into gimme */
-//	unsigned char gime;     /* video register settings of this tty */   
-//	unsigned char width;    /* text width of screen */
-//	unsigned char height;   /* text height */
-//	unsigned char right;    /* right most coord */
-//	unsigned char bottom;   /* bottom most coord */
-//};
 
 struct mode_s{
 	uint8_t gime;
@@ -67,13 +55,75 @@ struct mode_s{
 	uint8_t height;
 	uint8_t right;
 	uint8_t bottom;
+	struct display *fmod;
+};
+
+
+/* List (array) of all supported modes, as relayed to ioctl */
+static struct display fmodes[] = {
+	{
+		0,               /* Mode  number */
+		80, 25,          /* screen size */
+		80, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		1,               /* Mode  number */
+		40, 25,          /* screen size */
+		40, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		2,               /* Mode  number */
+		64, 25,          /* screen size */
+		64, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	},
+	{
+		3,               /* Mode  number */
+		32, 25,          /* screen size */
+		32, 25,          /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_TEXT,        /* this is a text mode */
+		HW_UNACCEL,      /* no acceleration */
+		GFX_PALETTE | 
+		GFX_MULTIMODE |
+		GFX_PALETTE_SET |
+		GFX_TEXT,        /* all the crap we support in this mode */
+		0,               /* Memory size irrelevant */
+		0,               /* supports no graphics commands */
+	}
 };
 
 static struct mode_s mode[4] = {
-	{   0x14, 80, 21, 79, 20  },
-	{   0x0c, 40, 21, 39, 20  },
-	{   0x10, 64, 21, 63, 20  },
-	{   0x08, 32, 21, 31, 20  },
+	{   0x74, 80, 25, 79, 24, &(fmodes[0])  },
+	{   0x6c, 40, 25, 39, 24, &(fmodes[1])  },
+	{   0x70, 64, 25, 63, 24, &(fmodes[2])  },
+	{   0x68, 32, 25, 31, 24, &(fmodes[3])  },
 };
 
 
@@ -84,23 +134,25 @@ static struct pty ptytab[] = {
 		0, 
 		{0, 0, 0, 0}, 
 		0xb400 / 8,
-		0x14,              /* 80 column */
+		0x74,              /* 80 column */
 		80,
-		21,
+		25,
 		79,
-		20
+		24,
+		&fmodes[0]
 	},
 	{
-		(unsigned char *) 0xac80, 
+		(unsigned char *) 0xac00, 
 		NULL, 
 		0, 
 		{0, 0, 0, 0}, 
-		0xac80 / 8,
-		0x0c,              /* 40 column */
+		0xac00 / 8,
+		0x6c,              /* 40 column */
 		40,
-		21,
+		25,
 		39,
-		20
+		24,
+		&fmodes[1]
 	}
 };
 
@@ -110,6 +162,14 @@ struct pty *curpty = &ptytab[0];
 
 /* current minor for input */
 int curminor = 1;
+
+
+/* Apply settings to GIME chip */
+void apply_gime( int minor ){
+	*(unsigned int *) 0xff9d = ptytab[minor-1].scrloc;
+	*(unsigned char *) 0xff99 = ptytab[minor-1].gime;
+}
+
 
 
 /* A wrapper for tty_close that closes the DW port properly */
@@ -334,20 +394,18 @@ static void keydecode(void)
 		if (c == '1') {
 			vt_save(&curpty->vt);
 			curpty = &ptytab[0];
-			*(unsigned int *) 0xff9d = curpty->scrloc;
-			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 1;
+			apply_gime( 1 );
 			return;
 		}
 		/* control + 2 */
 		if (c == '2') {
 			vt_save(&curpty->vt);
 			curpty = &ptytab[1];
-			*(unsigned int *) 0xff9d = curpty->scrloc;
-			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 2;
+			apply_gime( 2 );
 			return;
 		}
 		/* control + something else */
@@ -436,26 +494,27 @@ unsigned char vt_map(unsigned char c)
 	return c;
 }
 
-static struct display display = {
-  256, 192,
-  256, 192,
-  0xFF, 0xFF,		/* For now */
-  FMT_MONO_BW,
-  HW_UNACCEL,
-  GFX_ENABLE,
-  0,
-  GFX_SETPIXEL,
-  0
-};
-
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+	if ( minor > 2 ) goto error; /* remove once DW get its own ioctl() */
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
 	if (arg == GFXIOC_GETINFO)
-		return uput(&display, ptr, sizeof(display));
-	udata.u_error = ENOTTY;
+		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
+	if (arg == GFXIOC_GETMODE){
+		uint8_t m=ugetc(ptr);
+		if( m > 3 ) goto error;
+		return uput( &fmodes[m], ptr, sizeof( struct display));
+	}
+	if (arg == GFXIOC_SETMODE){
+		uint8_t m=ugetc(ptr);
+		if( m > 3 ) goto error;
+		memcpy( &(ptytab[minor-1].gime), &(mode[m]), sizeof( struct mode_s ) );
+		if( minor == curminor ) apply_gime( minor );
+		return 0;
+	}
+ error:	udata.u_error = ENOTTY;
 	return -1;
 }
 
@@ -471,10 +530,8 @@ void devtty_init()
 
        	/* apply default/cmdline mode to terminal structs */
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].gime), &(mode[defmode]), 5 );
+		memcpy( &(ptytab[i].gime), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
-	/* apply terminal to registers */
-	*(unsigned int *) 0xff9d = ptytab[0].scrloc;
-	*(unsigned char *) 0xff99 = ptytab[0].gime;
+	apply_gime( 1 );    /* apply initial tty1 to regs */
 }
 
