@@ -146,7 +146,7 @@ font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon tools/decb-image hogs.txt hogs.txt.old tools/*~
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C cpm-loader clean
 	+$(MAKE) -C tools/bankld clean

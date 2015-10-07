@@ -15,3 +15,5 @@ export BINEXT = .o
 export BITS=16
 
 tools/decbdragon: tools/decbdragon.c
+tools/decb-image: tools/decb-image.c
+

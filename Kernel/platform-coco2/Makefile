@@ -56,7 +56,10 @@ image: bootfuz.bin
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	devtty.o libc.o ../vt.o
-# FIXME: need to then convert the decb into an image for the IDE disk booter
+	../tools/decb-image <../fuzix.bin fuzix.img
+	# Repack the high 4K where the loader wants it
+	dd if=fuzix.img of=fuzix.tmp bs=1024 skip=60
+	dd if=fuzix.tmp of=fuzix.img bs=1024 seek=32 conv=notrunc
 
 bootfuz.bin: bootloader.s
 	lwasm -r -b -obootfuz.bin bootloader.s
