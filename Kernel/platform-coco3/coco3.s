@@ -164,7 +164,7 @@ b@	sta	,x+
 	ldx	#$ac00
 	lda	#$20
 a@	sta	,x+
-	cmpx	#$bb80
+	cmpx	#$bbd0
 	bne	a@
         ;; Our vectors are in high memory unlike Z80 but we still
         ;; need vectors
