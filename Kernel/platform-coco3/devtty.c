@@ -164,6 +164,14 @@ struct pty *curpty = &ptytab[0];
 int curminor = 1;
 
 
+/* Apply settings to GIME chip */
+void apply_gime( int minor ){
+	*(unsigned int *) 0xff9d = ptytab[minor-1].scrloc;
+	*(unsigned char *) 0xff99 = ptytab[minor-1].gime;
+}
+
+
+
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
@@ -386,20 +394,18 @@ static void keydecode(void)
 		if (c == '1') {
 			vt_save(&curpty->vt);
 			curpty = &ptytab[0];
-			*(unsigned int *) 0xff9d = curpty->scrloc;
-			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 1;
+			apply_gime( 1 );
 			return;
 		}
 		/* control + 2 */
 		if (c == '2') {
 			vt_save(&curpty->vt);
 			curpty = &ptytab[1];
-			*(unsigned int *) 0xff9d = curpty->scrloc;
-			*(unsigned char *) 0xff99 = curpty->gime;
 			vt_load(&curpty->vt);
 			curminor = 2;
+			apply_gime( 2 );
 			return;
 		}
 		/* control + something else */
@@ -513,8 +519,6 @@ void devtty_init()
 	for( i=0; i<2; i++){
 		memcpy( &(ptytab[i].gime), &(mode[defmode]), 5 );
 	}
-	/* apply terminal to registers */
-	*(unsigned int *) 0xff9d = ptytab[0].scrloc;
-	*(unsigned char *) 0xff99 = ptytab[0].gime;
+	apply_gime( 1 );    /* apply initial tty1 to regs */
 }
 
