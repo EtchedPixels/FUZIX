@@ -514,7 +514,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
 	}
- error:	udata.u_error = ENOTTY;
+ error:	udata.u_error = EINVAL;
 	return -1;
 }
 
