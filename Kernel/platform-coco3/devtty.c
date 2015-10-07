@@ -166,8 +166,8 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	*(unsigned int *) 0xff9d = ptytab[minor-1].scrloc;
-	*(unsigned char *) 0xff99 = ptytab[minor-1].gime;
+	*(volatile uint16_t *) 0xff9d = ptytab[minor-1].scrloc;
+	*(volatile uint8_t *) 0xff99 = ptytab[minor-1].gime;
 }
 
 
@@ -505,17 +505,20 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
 	if (arg == GFXIOC_GETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto error;
+		if( m > 3 ) goto inval;
 		return uput( &fmodes[m], ptr, sizeof( struct display));
 	}
 	if (arg == GFXIOC_SETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto error;
+		if( m > 3 ) goto inval;
 		memcpy( &(ptytab[minor-1].gime), &(mode[m]), sizeof( struct mode_s ) );
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
 	}
- error:	udata.u_error = ENOTTY;
+	udata.u_error = ENOTTY;
+	return -1;
+
+inval:	udata.u_error = EINVAL;
 	return -1;
 }
 
