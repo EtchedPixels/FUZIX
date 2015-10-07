@@ -166,8 +166,8 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	*(unsigned int *) 0xff9d = ptytab[minor-1].scrloc;
-	*(unsigned char *) 0xff99 = ptytab[minor-1].gime;
+	*(volatile uint16_t *) 0xff9d = ptytab[minor-1].scrloc;
+	*(volatile uint8_t *) 0xff99 = ptytab[minor-1].gime;
 }
 
 
