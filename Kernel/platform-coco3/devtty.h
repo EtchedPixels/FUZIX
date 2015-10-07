@@ -4,7 +4,7 @@
 #include <../include/vt.h>
 #include <../include/graphics.h>
 
-static struct pty {
+struct pty {
 	unsigned char *base;	/* base of buffer in cpu space */
 	unsigned char *cpos;	/* current location of cursor */
 	unsigned char csave;	/* charactor that is under the cursor */
