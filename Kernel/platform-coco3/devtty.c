@@ -142,11 +142,11 @@ static struct pty ptytab[] = {
 		&fmodes[0]
 	},
 	{
-		(unsigned char *) 0xac80, 
+		(unsigned char *) 0xac00, 
 		NULL, 
 		0, 
 		{0, 0, 0, 0}, 
-		0xac80 / 8,
+		0xac00 / 8,
 		0x6c,              /* 40 column */
 		40,
 		25,
@@ -530,7 +530,7 @@ void devtty_init()
 
        	/* apply default/cmdline mode to terminal structs */
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].gime), &(mode[defmode]), 5 );
+		memcpy( &(ptytab[i].gime), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
 	apply_gime( 1 );    /* apply initial tty1 to regs */
 }
