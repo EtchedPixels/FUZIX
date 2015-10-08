@@ -25,8 +25,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2}
 };
 
-uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
-		     VTA_OVERSTRIKE|VTA_NOCURSOR;
+uint8_t vtattr_cap = 0;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -52,13 +51,9 @@ ttyready_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	irqflags_t irq;
-	if (minor == 1) {
-		/* We need a better way generally to handle keyboard v
-		   VT */
-		irq = di();
+	if (minor == 1)
 		vtoutput(&c, 1);
-		irqrestore(irq);
-	} else
+	else
 		*uart_data = c;	/* Data */
 }
 
