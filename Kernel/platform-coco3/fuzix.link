@@ -1,6 +1,7 @@
 define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
 section .start load 0x0200
+section .video
 section .text2
 section .text
 section .text.hot
@@ -8,7 +9,6 @@ section .test.unlikely
 section .data
 section	.bss
 section .discard
-section .video load 0xa880
 section .udata load 0xe000
 section .common
 section .cpage load 0xfe00
