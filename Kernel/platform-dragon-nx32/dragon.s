@@ -133,13 +133,23 @@ _mpi_set_slot:
 ;
 _mpi_present:
 	lda 0xff7f	; Save bits
+	tfr a,b
+	lsrb
+	lsrb
+	lsrb
+	lsrb
+	eorb 0xff7f
+	andb #0x03	; We expect to see the bits 5-4 and 1-0 matching
+	bne nompi	; not guaranteed but a good rule of thumb for us
 	ldb #0xff	; Will get back 33 from an MPI cartridge
 	stb 0xff7f	; if the emulator is right on this
 	ldb 0xff7f
+	andb #0x33
 	cmpb #0x33
 	bne nompi
 	clr 0xff7f	; Switch to slot 0
 	ldb 0xff7f
+	andb #0x33	; We can't trust the high bits
 	bne nompi
 	incb
 	sta 0xff7f	; Our becker port for debug will be on the default
