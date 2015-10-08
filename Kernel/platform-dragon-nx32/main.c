@@ -56,8 +56,31 @@ struct cart_rom_id carts[] = {
 	{ 0x9063, CART_DELTADOS, "DeltaDOS" },
 	{ 0xB400, 0, empty },
 	{ 0xC248, CART_RSDOS, "RS-DOS" },
+	/* This one is an oddity - we need to do more to know what it drives
+	   The great thing is we can extract the MMIO addresses from it */
+	{ 0xB61B, CART_HDBDOS, "HDBDOS" },
 	{ 0xE1BA, CART_ORCH90, "Orchestra-90 CC" },
 	{ 0x0000, 0, "No ROM" }
+};
+
+struct hdb_rom_id {
+	char key[2];
+	uint8_t id;
+	const char *name;
+};
+        
+static struct hdb_rom_id hdb[] = {
+        { "ID", CART_IDE, "IDE (CHS)" },
+        { "LB", CART_IDE, "IDE (LBA)" },
+        { "TC", CART_TC3, "TC^3" },
+        { "KE", CART_KENTON, "KENTON" },
+        { "LR", CART_LRTECH, "LRTECH" },
+        { "HD", CART_HDII, "HD-II" },
+        { "4-", CART_4N1, "4-N-1" },
+        { "DW", CART_DRIVEWIRE, "Drivewire" },
+        { "BE", CART_BECKER, "Becker" },
+        { "J&", CART_JMCP, "J&M CP" },
+        {}
 };
 
 /* Find a cartridge or it's slot */
@@ -78,6 +101,21 @@ static struct cart_rom_id *cart_lookup(uint16_t hash)
 		if (cart->hash == hash)
 			return cart;
 	} while(cart++->hash);
+	return NULL;
+}
+
+static inline int keycmp(uint16_t *k1, uint16_t *k2)
+{
+	return (*k1 == *k2);
+}
+
+static struct hdb_rom_id *hdb_lookup(uint16_t key)
+{
+	struct hdb_rom_id *id = hdb;
+	do {
+		if (keycmp(&key, (uint16_t *)id->key))
+			return id;
+	} while(id++->id);
 	return NULL;
 }
 
@@ -109,6 +147,20 @@ void map_init(void)
 			kprintf("%d: Unknown(%x) %c\n",
 				i, hash,
 				i == bslot ? '*':' ');
+				
+		/* The analysis needs to be in asm as we need to page in
+		   the ROM to peer at it */
+		if (rom->id == CART_HDBDOS) {
+                        uint16_t t = cart_analyze_hdb();
+                        struct hdb_rom_id *hdb = hdb_lookup(t);
+                        if (hdb) {
+        			kprintf("   %s MMIO %x ID %d\n",
+        			        hdb->name,
+		        	        hdb_port, hdb_id);
+                                carttype[i] = hdb->id;
+                        } else
+                                kprintf("??%x\n", t);
+                }
 	}
 	mpi_set_slot(bootslot);
 }
