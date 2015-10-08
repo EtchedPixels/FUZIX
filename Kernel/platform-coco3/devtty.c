@@ -12,6 +12,8 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
+#define VSECT __attribute__((section(".video")))
+#define VSECTD __attribute__((section(".videodata")))
 
 uint8_t vtattr_cap;
 

@@ -2,6 +2,7 @@ define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
 section .start load 0x0200
 section .video
+section .videodata
 section .text2
 section .text
 section .text.hot
