@@ -53,7 +53,6 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	irqflags_t irq;
 	if (minor == 1) {
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
@@ -96,7 +95,7 @@ void tty_setup(uint8_t minor)
 	uint8_t r;
 	if (minor != 2)
 		return;
-	r = ttydata[2].termios.c_flag & CBAUD;
+	r = ttydata[2].termios.c_cflag & CBAUD;
 	if (r > B19200) {
 		r = 0x1F;	/* 19.2 */
 		ttydata[2].termios.c_cflag &=~CBAUD;
@@ -111,7 +110,7 @@ void tty_setup(uint8_t minor)
 			r |= 0x20;	/* Odd parity */
 		else
 			r |= 0x60;	/* Even parity */
-		if (ttydata[2].termios.c_cflag & PARMARK)
+		if (ttydata[2].termios.c_cflag & PARMRK)
 			r |= 0x80;	/* Mark/space */
 	}
 }
