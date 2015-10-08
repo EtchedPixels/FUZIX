@@ -55,13 +55,9 @@ void tty_putc(uint8_t minor, unsigned char c)
 {
 	irqflags_t irq;
 	if (minor == 1) {
-		/* We need a better way generally to handle keyboard v
-		   VT */
-		irq = di();
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
 			vtoutput(&c, 1);
-		irqrestore(irq);
 	} else
 		*uart_data = c;	/* Data */
 }
@@ -71,12 +67,52 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
+/* 6551 mode handling */
+
+static uint8_t baudbits[] = {
+	0x11,		/* 50 */
+	0x12,		/* 75 */
+	0x13,		/* 110 */
+	0x14,		/* 134 */
+	0x15,		/* 150 */
+	0x16,		/* 300 */
+	0x17,		/* 600 */
+	0x18,		/* 1200 */
+	0x1A,		/* 2400 */
+	0x1C,		/* 4800 */
+	0x1E,		/* 9600 */
+	0x1F,		/* 19200 */
+};
+
+static uint8_t bitbits[] = {
+	0x30,
+	0x20,
+	0x10,
+	0x00
+};
+
 void tty_setup(uint8_t minor)
 {
-	if (minor == 2) {
-		/* FIXME: do proper mode setting */
-		*uart_command = 0x01;	/* DTR high, IRQ enabled, TX irq disabled 8N1 */
-		*uart_control = 0x1E;	/* 9600 baud */
+	uint8_t r;
+	if (minor != 2)
+		return;
+	r = ttydata[2].termios.c_flag & CBAUD;
+	if (r > B19200) {
+		r = 0x1F;	/* 19.2 */
+		ttydata[2].termios.c_cflag &=~CBAUD;
+		ttydata[2].termios.c_cflag |= B19200;
+	} else
+		r = baudbits[r];
+	r |= bitbits[(ttydata[2].termios.c_cflag & CSIZE) >> 4];
+	*uart_control = r;
+	r = 0x0A;	/* rx and tx on, !rts low, dtr int off, no echo */
+	if (ttydata[2].termios.c_cflag & PARENB) {
+		if (ttydata[2].termios.c_cflag & PARODD)
+			r |= 0x20;	/* Odd parity */
+		else
+			r |= 0x60;	/* Even parity */
+		if (ttydata[2].termios.c_cflag & PARMARK)
+			r |= 0x80;	/* Mark/space */
 	}
 }
 
@@ -251,7 +287,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_TEXT|GFX_MAPPABLE,
 		0,
-		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
 	{
 		1,
@@ -262,7 +298,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_TEXT|GFX_MAPPABLE,
 		0,
-		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
 	/* 128 x 192 four colour modes */
 	{
@@ -274,7 +310,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_MAPPABLE,
 		0,
-		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
 	{
 		3,
@@ -285,7 +321,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_MAPPABLE,
 		0,
-		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
 	/* Possibly we should also allow for SG6 and SG4 ?? */
 };
