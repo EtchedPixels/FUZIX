@@ -497,10 +497,10 @@ unsigned char vt_map(unsigned char c)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-	if ( minor > 2 ) /* remove once DW get its own ioctl() */
-		goto notty;
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
+	if ( minor > 2 ) /* remove once DW get its own ioctl() */
+		goto notty;
 	if (arg == GFXIOC_GETINFO)
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
 	if (arg == GFXIOC_GETMODE){
