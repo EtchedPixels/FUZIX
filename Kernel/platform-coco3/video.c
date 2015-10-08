@@ -97,3 +97,11 @@ unsigned char vt_map(unsigned char c)
 		return 0x5E; /* up arrow */
 	return c;
 }
+
+
+void video_init( )
+{
+	map_for_video();
+	memset( (char *)0x2000, ' ', 0x4000 );
+	map_for_kernel();
+}
