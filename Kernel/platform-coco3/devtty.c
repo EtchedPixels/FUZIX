@@ -12,6 +12,8 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
+#define VSECT __attribute__((section(".video")))
+#define VSECTD __attribute__((section(".videodata")))
 
 uint8_t vtattr_cap;
 
@@ -127,13 +129,13 @@ static struct mode_s mode[4] = {
 };
 
 
-static struct pty ptytab[] = {
+static struct pty ptytab[] VSECTD = {
 	{
-		(unsigned char *) 0xb400, 
+		(unsigned char *) 0x2000, 
 		NULL, 
 		0, 
 		{0, 0, 0, 0}, 
-		0xb400 / 8,
+		0x10000 / 8,
 		0x74,              /* 80 column */
 		80,
 		25,
@@ -142,11 +144,11 @@ static struct pty ptytab[] = {
 		&fmodes[0]
 	},
 	{
-		(unsigned char *) 0xac00, 
+		(unsigned char *) 0x3000, 
 		NULL, 
 		0, 
 		{0, 0, 0, 0}, 
-		0xac00 / 8,
+		0x11000 / 8,
 		0x6c,              /* 40 column */
 		40,
 		25,
@@ -158,7 +160,7 @@ static struct pty ptytab[] = {
 
 
 /* ptr to current active pty table */
-struct pty *curpty = &ptytab[0];
+struct pty *curpty VSECTD = &ptytab[0];
 
 /* current minor for input */
 int curminor = 1;
@@ -427,72 +429,6 @@ void platform_interrupt(void)
 }
 
 
-
-
-/* These are routines stolen from the stock vt.c's VT_SIMPLE code, and modified
-   to suite multiple vts
-*/
-
-
-static uint8_t *char_addr(unsigned int y1, unsigned char x1)
-{
-	return curpty->base + VT_WIDTH * y1 + (uint16_t) x1;
-}
-
-void cursor_off(void)
-{
-	if (curpty->cpos)
-		*curpty->cpos = curpty->csave;
-}
-
-void cursor_on(int8_t y, int8_t x)
-{
-	curpty->csave = *char_addr(y, x);
-	curpty->cpos = char_addr(y, x);
-	*curpty->cpos = VT_MAP_CHAR('_');
-}
-
-void plot_char(int8_t y, int8_t x, uint16_t c)
-{
-	*char_addr(y, x) = VT_MAP_CHAR(c);
-}
-
-void clear_lines(int8_t y, int8_t ct)
-{
-	unsigned char *s = char_addr(y, 0);
-	memset(s, ' ', ct * VT_WIDTH);
-}
-
-void clear_across(int8_t y, int8_t x, int16_t l)
-{
-	unsigned char *s = char_addr(y, x);
-	memset(s, ' ', l);
-}
-
-/* FIXME: these should use memmove */
-
-void scroll_up(void)
-{
-	memcpy(curpty->base, curpty->base + VT_WIDTH,
-	       VT_WIDTH * VT_BOTTOM);
-}
-
-void scroll_down(void)
-{
-	memcpy(curpty->base + VT_WIDTH, curpty->base,
-	       VT_WIDTH * VT_BOTTOM);
-}
-
-
-unsigned char vt_map(unsigned char c)
-{
-	/* The CoCo3's gime has a strange code for underscore */
-	if (c == '_')
-		return 0x7F;
-	if (c == '`')
-		return 0x5E; /* up arrow */
-	return c;
-}
 
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)

@@ -6,7 +6,7 @@ DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
 DSRCS += ../dev/devide_discard.c
 
 ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
-ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s
+ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -35,6 +35,7 @@ clean:
 image:
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c 
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
+	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
@@ -44,7 +45,8 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o
+	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
+	videoll.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s

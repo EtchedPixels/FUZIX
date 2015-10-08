@@ -33,6 +33,7 @@
             .globl unix_syscall_entry
 	    .globl nmi_handler
 	    .globl null_handler
+	    .globl video_init
 
             include "kernel.def"
             include "../kernel09.def"
@@ -161,11 +162,7 @@ b@	sta	,x+
 	sta	$ffb0
 	stb	$ffb8
 	;; clear video memory
-	ldx	#$ac00
-	lda	#$20
-a@	sta	,x+
-	cmpx	#$bbd0
-	bne	a@
+	jsr	_video_init
         ;; Our vectors are in high memory unlike Z80 but we still
         ;; need vectors
 	ldu	#0xfeee		; vector area
