@@ -284,7 +284,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_MONO_WB,
 		HW_UNACCEL,
-		GFX_TEXT|GFX_MAPPABLE,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -295,7 +295,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_MONO_WB,
 		HW_UNACCEL,
-		GFX_TEXT|GFX_MAPPABLE,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -307,7 +307,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_COLOUR4,
 		HW_UNACCEL,
-		GFX_MAPPABLE,
+		GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -318,7 +318,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_COLOUR4,
 		HW_UNACCEL,
-		GFX_MAPPABLE,
+		GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -420,6 +420,12 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 //		sam_v[(b & 4)?5:4] = 0;
 		return 0;
 	}
+	case GFXIOC_WAITVB:
+		/* Our system clock is our vblank, use the standard timeout
+		   to pause for one clock */
+		udata.u_ptab->p_timeout = 2;
+		psleep(NULL);
+		return 0;
 	case GFXIOC_DRAW:
 	case GFXIOC_READ:
 	case GFXIOC_WRITE:
