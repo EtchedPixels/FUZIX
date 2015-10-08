@@ -58,7 +58,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		/* We need a better way generally to handle keyboard v
 		   VT */
 		irq = di();
-		/* We don't do text except in 256x129 resolution modes */
+		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
 			vtoutput(&c, 1);
 		irqrestore(irq);
