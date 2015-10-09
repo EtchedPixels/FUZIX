@@ -10,6 +10,7 @@ uint8_t membanks;
 uint8_t system_id;
 uint8_t cartslots = 1;
 uint8_t carttype[4];
+uint16_t cartaddr[4];
 uint8_t bootslot = 0;
 
 void platform_idle(void)
@@ -158,6 +159,7 @@ void map_init(void)
         			        hdb->name,
 		        	        hdb_port, hdb_id);
                                 carttype[i] = hdb->id;
+                                cartaddr[i] = hdb_port;
                         } else
                                 kprintf("??%x\n", t);
                 }
