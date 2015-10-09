@@ -186,9 +186,14 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	*(volatile uint16_t *) 0xff9d = ptytab[minor-1].scrloc;
-	*(volatile uint8_t *) 0xff98 = ( hz & 0x78 )| ptytab[minor-1].vmod;
-	*(volatile uint8_t *) 0xff99 = ptytab[minor-1].vres;
+	struct pty *p=&(ptytab[minor-1]);
+	uint16_t s;
+	if( p->vmod & 0x80 )
+		s=0x12000 / 8 ;
+	else s=p->scrloc;		
+	*(volatile uint16_t *) 0xff9d = s;
+	*(volatile uint8_t *) 0xff98 = ( hz & 0x78 )| p->vmod;
+	*(volatile uint8_t *) 0xff99 = p->vres;
 }
 
 
