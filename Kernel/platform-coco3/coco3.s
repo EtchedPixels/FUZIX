@@ -18,6 +18,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl _need_resched
+	    .globl _hz
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -107,7 +108,7 @@ _irqrestore:			; B holds the data
 ; KERNEL MEMORY BANK
 ; -----------------------------------------------------------------------------
 	.area .data
-hz:	.db	0  		; Is machine in 50hz?
+_hz:	.db	0  		; Is machine in 50hz?
 
 	
             .area .text
@@ -150,7 +151,7 @@ b@	sta	,x+
 	ldb	#$06		; put Fuzix Kernel back in mmu
 	stb	$ffae		;
 	anda	#$8		; mask off 50 hz bit
-	sta	hz		; save for future use
+	sta	_hz		; save for future use
 	;; continue setup of regs
 	ora	#%00000100	; text @ 9 lines per char row
 	sta	$ff98
