@@ -44,10 +44,6 @@
 #define MAX_BLKDEV  2		    /* 2 IDE drives */
 
 #define DEVICE_IDE                  /* enable if IDE interface present */
-#define IDE_REG_BASE       0x50
-#define IDE_REG_CS0_FIRST
-#define IDE_REG_CS0_BASE   (IDE_REG_BASE+0x00)
-#define IDE_REG_CS1_BASE   (IDE_REG_BASE+0x08)
 
 /* We have a DS1302, we can read the time of day from it */
 #define CONFIG_RTC
