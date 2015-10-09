@@ -28,8 +28,6 @@
 #define MAX_BLKDEV  	3	/* 2 IDE drives + 1 SPI */
 #define SD_DRIVE_COUNT	1	/* Could be higher with multiple CS used */
 #define DEVICE_IDE              /* enable if IDE interface present */
-#define IDE_REG_CS1_BASE 0xFF50
-#define IDE_IS_MMIO  1		/* MMIO IDE */
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT

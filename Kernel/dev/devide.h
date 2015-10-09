@@ -2,6 +2,7 @@
 #define __DEVIDE_DOT_H__
 
 #include "config.h"
+#include "platform_ide.h"
 
 /* IDE Drive Configuration (in config.h)
  
@@ -89,20 +90,26 @@ void devide_writeb(uint8_t regaddr, uint8_t value);
 
 #ifdef _IDE_PRIVATE
 
-#define DRIVE_COUNT 2           /* at most 2 drives without adjusting DRIVE_NR_MASK */
+#ifndef DRIVE_COUNT
+#define DRIVE_COUNT 2           /* at most 16 drives without adjusting DRIVE_NR_MASK */
+#endif
 
 /* we use the bits in the driver_data field of blkdev_t as follows: */
-#define DRIVE_NR_MASK    0x01   /* low bit used to select the drive number -- extend if more required */
+#define DRIVE_NR_MASK    0x0F   /* low bit used to select master/slave */
 #define FLAG_CACHE_DIRTY 0x40
 #define FLAG_WRITE_CACHE 0x80
 
 extern bool devide_wait(uint8_t bits);
-extern void devide_read_data(void);
 extern uint8_t devide_transfer_sector(void);
 extern int devide_flush_cache(void);
 
+/* Platform provided, or may be defaults */
 extern void devide_write_data(void);
-extern void devde_read_data(void);
+extern void devide_read_data(void);
+
+/* Platform provided */
+extern void ide_select(uint8_t drive);
+extern void ide_deselect(void);
 
 #ifndef IDE_REG_INDIRECT
 #ifdef IDE_IS_MMIO

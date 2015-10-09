@@ -11,6 +11,9 @@ extern uint16_t hdb_port;
 extern uint8_t hdb_timeout;
 extern uint8_t hdb_id;
 
+extern uint16_t cartaddr[];
+extern uint8_t cartslots;
+
 extern uint8_t spi_setup(void);
 
 #endif /* __DEVICE_DOT_H__ */
