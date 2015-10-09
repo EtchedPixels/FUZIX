@@ -107,10 +107,6 @@ extern int devide_flush_cache(void);
 extern void devide_write_data(void);
 extern void devide_read_data(void);
 
-/* Platform provided */
-extern void ide_select(uint8_t drive);
-extern void ide_deselect(void);
-
 #ifndef IDE_REG_INDIRECT
 #ifdef IDE_IS_MMIO
 #define ide_reg_control *((volatile uint8_t *)IDE_REG_CONTROL)
