@@ -10,7 +10,8 @@ struct pty {
 	unsigned char csave;	/* charactor that is under the cursor */
 	struct vt_switch vt;	/* the vt.o module's state */
 	unsigned int scrloc;	/* location to put into gimme */
-	unsigned char gime;      /* video register settings of this tty */   
+	unsigned char vmod;     /* video mode */
+	unsigned char vres;     /* video register settings of this tty */   
 	unsigned char width;    /* text width of screen */
 	unsigned char height;   /* text height */
 	unsigned char right;    /* right most coord */
