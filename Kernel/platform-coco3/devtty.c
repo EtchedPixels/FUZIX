@@ -119,13 +119,25 @@ static struct display fmodes[] = {
 		0,               /* Memory size irrelevant */
 		0,               /* supports no graphics commands */
 	}
+	{
+		4,               /* Mode  number */
+		256, 192,        /* screen size */
+		256, 192,        /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_MONO_BW,     /* for now just B&W */
+		HW_UNACCEL,      /* no acceleration */
+		0,               /* no features
+		0,               /* Memory size irrelevant */
+		GRX_DRAW,        /* only the basics */
+	}
 };
 
-static struct mode_s mode[4] = {
+static struct mode_s mode[5] = {
 	{   0x74, 80, 25, 79, 24, &(fmodes[0])  },
 	{   0x6c, 40, 25, 39, 24, &(fmodes[1])  },
 	{   0x70, 64, 25, 63, 24, &(fmodes[2])  },
 	{   0x68, 32, 25, 31, 24, &(fmodes[3])  },
+	{   0x08, 40, 21, 39, 20, &(fmodes[4])  },
 };
 
 
@@ -441,12 +453,12 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
 	if (arg == GFXIOC_GETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto inval;
+		if( m > 4 ) goto inval;
 		return uput( &fmodes[m], ptr, sizeof( struct display));
 	}
 	if (arg == GFXIOC_SETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto inval;
+		if( m > 4 ) goto inval;
 		memcpy( &(ptytab[minor-1].gime), &(mode[m]), sizeof( struct mode_s ) );
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
