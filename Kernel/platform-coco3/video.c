@@ -103,7 +103,7 @@ unsigned char vt_map(unsigned char c)
 static void video_get( char *usrptr ){
 	map_for_video();
 	uget( usrptr, (char *)0x2000, 512);
-	map_for_kerne();
+	map_for_kernel();
 }
 
 
