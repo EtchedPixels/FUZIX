@@ -547,7 +547,8 @@ struct s_argblk {
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 #define BLKFLSBUF		0x4103	/* Use the Linux name */
-
+#define HDIO_RAWCMD		0x4104	/* Issue a raw command, ioctl data
+					   is device dependant ! */
 /*
  *	Sound ioctls 02xx (see audio.h)
  */
