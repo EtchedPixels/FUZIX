@@ -7,6 +7,18 @@
 
 	.globl	_memset
 	.globl	_memcpy
+*	.globl _vid256x192
+*	.globl _plot_char
+*	.globl _scroll_up
+*	.globl _scroll_down
+*	.globl _clear_across
+*	.globl _clear_lines
+*	.globl _cursor_on
+*	.globl _cursor_off
+
+	.globl _video_read
+	.globl _video_write
+	.globl _video_cmd
 
 	include "kernel.def"
 	include "../kernel09.def"
