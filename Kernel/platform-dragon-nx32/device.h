@@ -12,7 +12,10 @@ extern uint8_t hdb_timeout;
 extern uint8_t hdb_id;
 
 extern uint16_t cartaddr[];
+extern uint8_t carttype[];
 extern uint8_t cartslots;
+extern uint8_t bootslot;
+extern uint8_t membanks;
 
 extern uint8_t spi_setup(void);
 
