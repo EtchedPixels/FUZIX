@@ -143,7 +143,7 @@ extern int si_flush(void);
 extern int si_docmd(uint8_t *data);
 
 /* Discardables (we don't do hot plug) */
-extern void scsi_init(void);
+extern void devscsi_init(void);
 
 /* Driver provided */
 

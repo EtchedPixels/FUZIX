@@ -33,8 +33,10 @@ void scsi_dev_init(uint8_t drive)
   si_dcb.device = drive;
   si_dcb.lun = 0;
   si_dcb.bus = 0;
+  kputchar('S');
   if (si_select())		/* Can't select it - probably not present */
     return;
+  kputchar('I');
   /* FIXME: check if this would be better as a memcpy of fixed struct */
   si_dcb.cb.cb0.opcode = SIINQUIRY;
   si_dcb.cb.cb0.hiblock = 0;
@@ -47,6 +49,7 @@ void scsi_dev_init(uint8_t drive)
   si_user = 0;
   if (si_docmd(identify))
     return;
+  kputchar(':');
 
   p = identify + 8;
   while (p < identify + 27)
@@ -100,7 +103,7 @@ void scsi_dev_init(uint8_t drive)
   blkdev_scan(blk, SWAPSCAN);
 }
 
-void scsi_init(void)
+void devscsi_init(void)
 {
   uint8_t i;
   /* This is a bit crude - we need to do proper scans of each controller
