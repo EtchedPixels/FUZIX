@@ -9,6 +9,7 @@
 	.globl _si_select
 	.globl _si_clear
 	.globl _si_reset
+	.globl _si_deselect
 
 	.area .common
 
@@ -70,6 +71,13 @@ waitreql:
 	rts
 
 	.area .text
+
+mpi_scsi:
+	ldb #_cartslots
+	cmpb #1
+	beq si_rts
+	ldb #_scsi_slot
+	jmp _mpi_set_slot
 	
 _si_writecmd:			; DCB, B is len (check B or X)
 	pshs y,u
@@ -88,7 +96,8 @@ si_busfail:
 	ldb #-1			; Error (should sort some codes for type!)
 	puls y,u,pc
 
-_si_select:			; Select device B
+_si_select:			; Select device
+	bsr mpi_scsi		; Set the MPI
 	ldb #_si_dcb+20		; Device number
 	beq si_seltimeo		; FIXME: different errorcodes ? 
 	ldx #0
@@ -120,9 +129,21 @@ si_bsyc:
 	rts
 si_seltimeo:
 	ldb #-1
+_si_reset:
+si_rts:
 	rts
 
 _si_clear:
+	bsr mpi_scsi
 	clr $FF70
-_si_reset:
-	rts
+	; Fall through
+_si_deselect:
+	ldb si_savedslot
+	cmpb #255
+	beq si_rts
+	jmp _mpi_set_slot
+
+	.area .data
+
+si_savedslot
+	.db 255			; No restore (eg no MPI)
