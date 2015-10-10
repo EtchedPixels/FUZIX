@@ -78,4 +78,5 @@ void device_init(void)
       ide_slot = i;
     }
     devide_init();
+    devscsi_init();
 }

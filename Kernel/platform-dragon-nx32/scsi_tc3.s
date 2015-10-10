@@ -32,7 +32,7 @@ _si_read:			; X is pointer
 	sta ,x+
 	leay -1,y
 	bne _si_read
-	ldx #0			; Return 0
+	clrb			; Return 0
 	puls y,u,pc
 
 _si_write:			; X is pointer, dcb block gives length
@@ -47,12 +47,12 @@ _si_write:			; X is pointer, dcb block gives length
 	sta $FF70
 	leay -1,y
 	bne _si_write
-	ldx #0			; Return 0
+	clrb			; Return 0
 	puls y,u,pc
 timeout:
 	tfr u,s			; Throw an exception
 si_busfailw:
-	ldx #-1
+	ldb #-1
 	puls y,u,pc
 
 ;
@@ -72,7 +72,7 @@ waitreql:
 	.area .text
 	
 _si_writecmd:			; DCB, B is len (check B or X)
-	pshs y,u,pc
+	pshs y,u
 	tfr s,u			; Required exception frame for waitreq
 	jsr waitreq
 	ldx #_si_dcb
@@ -82,14 +82,14 @@ _si_writecmd:			; DCB, B is len (check B or X)
 	sta $FF70
 	decb
 	bne _si_writecmd
-	ldx #0			; Return 0
+	clrb			; Return 0
 	puls y,u,pc
 si_busfail:
-	ldx #-1			; Error (should sort some codes for type!)
+	ldb #-1			; Error (should sort some codes for type!)
 	puls y,u,pc
 
 _si_select:			; Select device B
-	cmpb #7
+	ldb #_si_dcb+20		; Device number
 	beq si_seltimeo		; FIXME: different errorcodes ? 
 	ldx #0
 	lda #1
@@ -116,10 +116,10 @@ si_bsyc:
 	lda $FF71
 	bita #0x02
 	beq si_bsyc		; The device asserts BSY for us
-	ldx #0			; All good
+	clrb			; All good
 	rts
 si_seltimeo:
-	ldx #-1
+	ldb #-1
 	rts
 
 _si_clear:
