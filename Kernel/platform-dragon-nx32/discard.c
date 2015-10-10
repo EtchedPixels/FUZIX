@@ -42,6 +42,7 @@ struct cart_rom_id carts[] = {
 	/* This one is an oddity - we need to do more to know what it drives
 	   The great thing is we can extract the MMIO addresses from it */
 	{ 0xB61B, CART_HDBDOS, "HDBDOS" },
+	{ 0xCF55, CART_HDBDOS, "HDBDOS" },
 	{ 0xE1BA, CART_ORCH90, "Orchestra-90 CC" },
 	{ 0x0000, 0, "No ROM" }
 };
@@ -53,8 +54,8 @@ struct hdb_rom_id {
 };
         
 static struct hdb_rom_id hdb[] = {
-        { "ID", CART_IDE, "IDE (CHS)" },
-        { "LB", CART_IDE, "IDE (LBA)" },
+        { "ID", CART_IDE, "IDE-CHS" },
+        { "LB", CART_IDE, "IDE-LBA" },
         { "TC", CART_TC3, "TC^3" },
         { "KE", CART_KENTON, "KENTON" },
         { "LR", CART_LRTECH, "LRTECH" },
@@ -121,15 +122,14 @@ void map_init(void)
 		hash = cart_hash();
 		rom = cart_lookup(hash);
 		if (rom) {
-			kprintf("%d: %s %c\n",
-				i, rom->name,
-				i == bootslot ? '*':' ');
+			kprintf("%d:%c%s",
+			        i, i == bslot ? '*':' ',
+				rom->name);
 			carttype[i] = rom->id;
 		}
 		else
-			kprintf("%d: Unknown(%x) %c\n",
-				i, hash,
-				i == bslot ? '*':' ');
+			kprintf("%d:%cUnknown(%x)",
+				i, i == bslot ? '*':' ', hash);
 				
 		/* The analysis needs to be in asm as we need to page in
 		   the ROM to peer at it */
@@ -137,14 +137,16 @@ void map_init(void)
                         uint16_t t = cart_analyze_hdb();
                         struct hdb_rom_id *hdb = hdb_lookup(t);
                         if (hdb) {
-        			kprintf("   %s MMIO %x ID %d\n",
-        			        hdb->name,
-		        	        hdb_port, hdb_id);
+				kprintf(" %s ID %d",
+					hdb->name, hdb_id);
+                                if (hdb->id == CART_IDE)
+                                        kprintf(" MMIO %x", hdb_port);
                                 carttype[i] = hdb->id;
                                 cartaddr[i] = hdb_port;
                         } else
                                 kprintf("??%x\n", t);
                 }
+                kputchar('\n');
 	}
 	mpi_set_slot(bootslot);
 }
