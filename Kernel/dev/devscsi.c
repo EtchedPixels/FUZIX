@@ -93,10 +93,11 @@ int si_docmd(uint8_t *data)
 			err = si_read(data);
 		else
 			err = si_write(data);
-		if (err)
-			return err;
 	}
-	return si_cmdend();
+	if (err == 0)
+		err = si_cmdend();
+	si_clear();		/* Clears any data on scsi bus */
+	si_deselect();
 }
 
 /*
@@ -135,8 +136,6 @@ uint8_t si_cmd(void)
 
 		if(!(err = si_docmd(blk_op.addr)))
 		  break;
-		si_clear();		/* Clears any data on scsi bus */
-		/*	si_restore(); Needed ?? - eg for SASI ? */
 	}
 
 	/* If any errors print error message */
@@ -145,6 +144,8 @@ uint8_t si_cmd(void)
 		/* If fatal error */
 		if(count == 10){
 			si_err("Fatal error\007 10 retries", err);
+                        /* Ugly - si_reset is odd and has to do its own
+                           select/deselect of the controller if needed */
 			si_reset();
 			return 0;
 		}

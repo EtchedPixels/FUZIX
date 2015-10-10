@@ -157,5 +157,8 @@ extern uint8_t si_writecmd(uint8_t len);
 extern uint8_t si_select(void);
 /* Clear anything stuck on the bus, or wrong directions */
 extern void si_clear(void);
-/* Reset the bus if possible */
+/* Reset the bus if possible: Oddity - this one fn has to select the controller
+   itself then deselect (don't select a drive!) */
 extern void si_reset(void);
+/* Deselect the scsi controller */
+extern void si_deselect(void);
