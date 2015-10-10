@@ -49,6 +49,7 @@ bool validdev(uint16_t dev)
 
 uint16_t ide_base = 0xFF50;
 uint8_t ide_slot = 3;		/* Disk in slot 3 by convention */
+uint8_t scsi_slot = 3;		/* Again by convention */
 
 static uint8_t old_slot;
 
@@ -78,5 +79,9 @@ void device_init(void)
       ide_slot = i;
     }
     devide_init();
-    devscsi_init();
+    i = cart_find(CART_TC3);
+    if (i >= 0) {
+      scsi_slot = i;
+      devscsi_init();
+    }
 }
