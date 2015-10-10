@@ -52,7 +52,7 @@ uint8_t ide_slot = 3;		/* Disk in slot 3 by convention */
 
 static uint8_t old_slot;
 
-void ide_select(void)
+void ide_select(uint8_t device)
 {
   if (cartslots > 1)
     old_slot = mpi_set_slot(ide_slot);
