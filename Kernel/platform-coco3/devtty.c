@@ -475,6 +475,15 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
 	}
+	if (arg == GFXIOC_DRAW ){
+		int err;
+		err = gfx_draw_op(arg, ptr);
+		if (err) {
+			udata.u_error = err;
+			err = -1;
+		}
+		return err;
+	}
 	udata.u_error = ENOTTY;
 	return -1;
 
