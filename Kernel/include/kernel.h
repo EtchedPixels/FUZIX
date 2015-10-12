@@ -99,7 +99,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 /* we need a busier-than-busy state for superblocks, so that if those blocks
  * are read by userspace through bread() they are not subsequently freed by 
  * bfree() until the filesystem is unmounted */
-typedef enum { BF_FREE=0, BF_BUSY, BF_SUPERBLOCK } bf_busy_t;
+#define BF_FREE		0
+#define BF_BUSY		1
+#define BF_SUPERBLOCK	2
 
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
@@ -108,9 +110,9 @@ typedef struct blkbuf {
     uint8_t     bf_data[BLKSIZE];    /* This MUST be first ! */
     uint16_t    bf_dev;
     blkno_t     bf_blk;
-    bool        bf_dirty;
-    bf_busy_t   bf_busy;
-    uint16_t    bf_time;         /* LRU time stamp */
+    uint8_t     bf_dirty;	/* bit 0 used */
+    uint8_t     bf_busy;	/* bits 0-1 used */
+    uint16_t    bf_time;        /* LRU time stamp */
 } blkbuf, *bufptr;
 
 /* TODO: consider smaller inodes or clever caching. 2BSD uses small

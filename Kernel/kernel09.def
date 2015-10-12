@@ -34,4 +34,4 @@ EAGAIN                      equ 11           ; value from include/kernel.h
 
 
 ; Keep in sync with struct blkbuf
-BUFSIZE 		    equ 521
+BUFSIZE 		    equ 520
