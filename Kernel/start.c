@@ -40,7 +40,7 @@ void bufinit(void)
 {
 	bufptr bp;
 
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
 	}

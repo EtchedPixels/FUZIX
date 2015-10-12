@@ -23,6 +23,12 @@ extern uint16_t root_dev;  /* Device number of root filesystem. */
 extern uint16_t swap_dev;  /* Device number used for swap */
 
 extern struct blkbuf bufpool[NBUFS];
+#ifndef CONFIG_DYNAMIC_BUFPOOL
+#define bufpool_end (bufpool + NBUFS)	/* Define so its a compile time const */
+#else
+extern struct blkbuf *bufpool_end;
+#endif
+
 extern struct p_tab ptab[PTABSIZE];
 extern struct p_tab *ptab_end;
 extern struct oft of_tab[OFTSIZE];       /* Open File Table */
