@@ -1,4 +1,8 @@
 /* The "ls" standard command.
+ *
+ * FIXME: we should chdir into the directory we are listing if doing stats
+ * and then stat the shortname (this saves lots of filename walks and the
+ * resulting touches of atime).
  */
 #include <stdio.h>
 #include <string.h>
@@ -324,7 +328,8 @@ void main(int argc, char *argv[])
 		/* Now finally list the filenames. */
 	for (i = 0; i < listused; i++, free(name)) {
 	    name = list[i];
-	    if (LSTAT(name, &statbuf) < 0) {
+	    /* Only do expensive stat calls if we actually need the data ! */
+	    if ((flags & (LSF_DIR|LSF_FILE|LSF_INODE|LSF_LONG)) && LSTAT(name, &statbuf) < 0) {
 		perror(name);
 		continue;
 	    }
