@@ -2,48 +2,64 @@
 	; common Dragon platform
 	;
 
-		.module dragon
+	.module dragon
 
-		; exported
-		.globl _mpi_present
-		.globl _mpi_set_slot
-		.globl _cart_hash
-		.globl _cart_analyze_hdb
-		.globl _hdb_offset
-		.globl _hdb_id
-		.globl _hdb_port
-		.globl _hdb_timeout
+	; exported
+	.globl _mpi_present
+	.globl _mpi_set_slot
+	.globl _cart_hash
+	.globl _cart_analyze_hdb
+	.globl _hdb_offset
+	.globl _hdb_id
+	.globl _hdb_port
+	.globl _hdb_timeout
+	.globl _bufpool
+	.globl _discard_size
 
-		; imported
-		.globl unix_syscall_entry
-		.globl fd_nmi_handler
-		.globl size_ram
-		.globl null_handler
-		.globl _vid256x192
-		.globl _vtoutput
+	; imported
+	.globl unix_syscall_entry
+	.globl fd_nmi_handler
+	.globl size_ram
+	.globl null_handler
+	.globl _vid256x192
+	.globl _vtoutput
 
-		; exported debugging tools
-		.globl _trap_monitor
-		.globl _trap_reboot
-		.globl outchar
-		.globl _di
-		.globl _ei
-		.globl _irqrestore
+	; exported debugging tools
+	.globl _trap_monitor
+	.globl _trap_reboot
+	.globl outchar
+	.globl _di
+	.globl _ei
+	.globl _irqrestore
 
-            include "kernel.def"
-            include "../kernel09.def"
+        include "kernel.def"
+        include "../kernel09.def"
 
 
-		.area .vectors
+	.area .vectors
 	;
 	;	At 0x100 as required by the Dragon ROM
 	;
-		    jmp badswi_handler			; 0x100
-		    jmp badswi_handler			; 0x103
-		    jmp unix_syscall_entry 		; 0x106
-		    jmp fd_nmi_handler			; 0x109
-		    jmp interrupt_handler		; 0x10C
-		    jmp firq_handler			; 0x10F
+	jmp badswi_handler			; 0x100
+	jmp badswi_handler			; 0x103
+	jmp unix_syscall_entry 		; 0x106
+	jmp fd_nmi_handler			; 0x109
+	jmp interrupt_handler		; 0x10C
+	jmp firq_handler			; 0x10F
+
+	.area	.buffers
+	;
+	;	We use the linker to place these just below
+	;	the discard area
+	;
+_bufpool:
+	.ds	BUFSIZE*NBUFS
+
+	;	And expose the discard buffer count to C - but in discard
+	;	so we can blow it away and precomputed at link time
+	.area	.discard
+_discard_size:
+	.db	__sectionlen_.discard__/BUFSIZE
 
 	.area .text
 
@@ -86,6 +102,7 @@ init_hardware:
 _trap_reboot:
 	    orcc #0x10
 	    clr 0xFFBE
+	    clr 0x0071
 	    jmp [0xFFFE]
 
 _trap_monitor:
