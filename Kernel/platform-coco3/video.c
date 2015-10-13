@@ -129,7 +129,7 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 	}
 	if (arg != GFXIOC_READ)
 		c = l;
-	if (uget((char *)0x5e00, ptr + 2, c)){
+	if (uget(ptr + 2, (char *)0x5e00, c)){
 		err = EFAULT;
 		goto ret;
 	}
