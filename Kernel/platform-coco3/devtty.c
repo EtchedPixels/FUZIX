@@ -15,6 +15,9 @@
 #define VSECT __attribute__((section(".video")))
 #define VSECTD __attribute__((section(".videodata")))
 
+extern uint8_t hz;
+
+
 uint8_t vtattr_cap;
 
 
@@ -52,7 +55,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 
 
 struct mode_s{
-	uint8_t gime;
+	uint8_t vmod;
+	uint8_t vres;
 	uint8_t width;
 	uint8_t height;
 	uint8_t right;
@@ -118,14 +122,26 @@ static struct display fmodes[] = {
 		GFX_TEXT,        /* all the crap we support in this mode */
 		0,               /* Memory size irrelevant */
 		0,               /* supports no graphics commands */
+	},
+	{
+		4,               /* Mode  number */
+		256, 192,        /* screen size */
+		256, 192,        /* buffer size */
+		0xFF, 0xFF,	 /* no pan, scroll */
+		FMT_MONO_BW,     /* for now just B&W */
+		HW_UNACCEL,      /* no acceleration */
+		0,               /* no features */
+		0,               /* Memory size irrelevant */
+		GFX_DRAW,        /* only the basics */
 	}
 };
 
-static struct mode_s mode[4] = {
-	{   0x74, 80, 25, 79, 24, &(fmodes[0])  },
-	{   0x6c, 40, 25, 39, 24, &(fmodes[1])  },
-	{   0x70, 64, 25, 63, 24, &(fmodes[2])  },
-	{   0x68, 32, 25, 31, 24, &(fmodes[3])  },
+static struct mode_s mode[5] = {
+	{   0x04, 0x74, 80, 25, 79, 24, &(fmodes[0])  },
+	{   0x04, 0x6c, 40, 25, 39, 24, &(fmodes[1])  },
+	{   0x04, 0x70, 64, 25, 63, 24, &(fmodes[2])  },
+	{   0x04, 0x68, 32, 25, 31, 24, &(fmodes[3])  },
+	{   0x80, 0x08, 40, 21, 39, 20, &(fmodes[4])  },
 };
 
 
@@ -136,6 +152,7 @@ static struct pty ptytab[] VSECTD = {
 		0, 
 		{0, 0, 0, 0}, 
 		0x10000 / 8,
+		0x04,
 		0x74,              /* 80 column */
 		80,
 		25,
@@ -149,6 +166,7 @@ static struct pty ptytab[] VSECTD = {
 		0, 
 		{0, 0, 0, 0}, 
 		0x11000 / 8,
+		0x04,
 		0x6c,              /* 40 column */
 		40,
 		25,
@@ -168,8 +186,14 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	*(volatile uint16_t *) 0xff9d = ptytab[minor-1].scrloc;
-	*(volatile uint8_t *) 0xff99 = ptytab[minor-1].gime;
+	struct pty *p=&(ptytab[minor-1]);
+	uint16_t s;
+	if( p->vmod & 0x80 )
+		s=0x12000 / 8 ;
+	else s=p->scrloc;		
+	*(volatile uint16_t *) 0xff9d = s;
+	*(volatile uint8_t *) 0xff98 = ( hz & 0x78 )| p->vmod;
+	*(volatile uint8_t *) 0xff99 = p->vres;
 }
 
 
@@ -441,15 +465,24 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
 	if (arg == GFXIOC_GETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto inval;
+		if( m > 4 ) goto inval;
 		return uput( &fmodes[m], ptr, sizeof( struct display));
 	}
 	if (arg == GFXIOC_SETMODE){
 		uint8_t m=ugetc(ptr);
-		if( m > 3 ) goto inval;
-		memcpy( &(ptytab[minor-1].gime), &(mode[m]), sizeof( struct mode_s ) );
+		if( m > 4 ) goto inval;
+		memcpy( &(ptytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
 		if( minor == curminor ) apply_gime( minor );
 		return 0;
+	}
+	if (arg == GFXIOC_DRAW ){
+		int err;
+		err = gfx_draw_op(arg, ptr);
+		if (err) {
+			udata.u_error = err;
+			err = -1;
+		}
+		return err;
 	}
 	udata.u_error = ENOTTY;
 	return -1;
@@ -470,7 +503,7 @@ void devtty_init()
 
        	/* apply default/cmdline mode to terminal structs */
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].gime), &(mode[defmode]), sizeof( struct mode_s ) );
+		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
 	apply_gime( 1 );    /* apply initial tty1 to regs */
 }
