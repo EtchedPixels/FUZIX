@@ -35,7 +35,7 @@ char *syscall_name[NR_SYSCALL] = {
 	"ioctl",
 	"brk",
 	"sbrk",
-	"fork",
+	"_fork",
 	"mount",
 	"umount",
 	"signal",
@@ -101,7 +101,7 @@ int syscall_args[NR_SYSCALL] = {
 	VARARGS, //ioctl
 	1, //brk
 	1, //sbrk
-	0, //fork
+	2, //_fork
 	3, //mount
 	1, //umount
 	2, //signal

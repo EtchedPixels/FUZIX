@@ -59,3 +59,5 @@ typedef union {            /* this structure is endian dependent */
 
 /* No support for inline */
 #define inline
+
+#define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))

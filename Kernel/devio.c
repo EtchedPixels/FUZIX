@@ -80,7 +80,7 @@ int bfree(bufptr bp, uint8_t dirty)
 	if(bp->bf_busy == BF_BUSY) /* do not free BF_SUPERBLOCK */
 		bp->bf_busy = BF_FREE;
 
-	if (dirty > 1) {	// immediate writeback
+	if (dirty > 1) {	/* immediate writeback */
 		if (bdwrite(bp) == -1)
 			udata.u_error = EIO;
 		bp->bf_dirty = false;
@@ -130,7 +130,7 @@ void bufsync(void)
 
 	/* FIXME: this can generate a lot of d_flush calls when you have
 	   plenty of buffers */
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if ((bp->bf_dev != NO_DEVICE) && bp->bf_dirty)
 		        bdput(bp);
 	}
@@ -140,7 +140,7 @@ bufptr bfind(uint16_t dev, blkno_t blk)
 {
 	bufptr bp;
 
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bp->bf_dev == dev && bp->bf_blk == blk)
 			return bp;
 	}
@@ -151,7 +151,7 @@ void bdrop(uint16_t dev)
 {
 	bufptr bp;
 
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bp->bf_dev == dev) {
 		        bdput(bp);
 		        bp->bf_dev = NO_DEVICE;
@@ -168,7 +168,7 @@ bufptr freebuf(void)
 	/* Try to find a non-busy buffer and write out the data if it is dirty */
 	oldest = NULL;
 	oldtime = 0;
-	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bufclock - bp->bf_time >= oldtime && bp->bf_busy == BF_FREE) {
 			oldest = bp;
 			oldtime = bufclock - bp->bf_time;
@@ -442,18 +442,30 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
              Miscellaneous helpers
 **********************************************************************/
 
-int psleep_flags(void *p, unsigned char flags)
+int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 {
 	if (flags & O_NDELAY) {
-		udata.u_error = EAGAIN;
-		return (-1);
+	        if (!*n) {
+	                *n = (usize_t)-1;
+			udata.u_error = EAGAIN;
+                }
+		return -1;
 	}
 	psleep(p);
 	if (udata.u_cursig || udata.u_ptab->p_pending) {	/* messy */
-		udata.u_error = EINTR;
-		return (-1);
+	        if (!*n) {
+	                *n = (usize_t)-1;
+                        udata.u_error = EINTR;
+                }
+		return -1;
 	}
 	return 0;
+}
+
+int psleep_flags(void *p, unsigned char flags)
+{
+        usize_t dummy = 0;
+        return psleep_flags_io(p, flags, &dummy);
 }
 
 void kputs(const char *p)
@@ -566,7 +578,7 @@ void bufdump(void)
 	bufptr j;
 
 	kprintf("\ndev\tblock\tdirty\tbusy\ttime clock %d\n", bufclock);
-	for (j = bufpool; j < bufpool + NBUFS; ++j)
+	for (j = bufpool; j < bufpool_end; ++j)
 		kprintf("%d\t%u\t%d\t%d\t%u\n", j->bf_dev, j->bf_blk,
 			j->bf_dirty, j->bf_busy, j->bf_time);
 }

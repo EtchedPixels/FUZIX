@@ -13,7 +13,7 @@ uint8_t ticks_this_dsecond;
 uint8_t ticks_per_dsecond;
 inoptr root;
 uint16_t waitno;
-time_t tod;			// time of day
+time_t tod;			/* Time of day */
 ticks_t ticks;
 int16_t acct_fh = -1;		/* Accounting file handle */
 
@@ -23,7 +23,9 @@ struct runload loadavg[3] = {
 	{ 254, 0 }	/* 180 sets of 5 seconds per 15 minutes */
 };
 
+#ifndef CONFIG_DYNAMIC_BUFPOOL
 struct blkbuf bufpool[NBUFS];
+#endif
 
 struct p_tab ptab[PTABSIZE];
 struct p_tab *ptab_end;		/* Points to first byte off end */

@@ -13,6 +13,7 @@
 #include <devide.h>
 #include <devsd.h>
 #include <device.h>
+#include <carts.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -46,9 +47,41 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+uint16_t ide_base = 0xFF50;
+uint8_t ide_slot = 3;		/* Disk in slot 3 by convention */
+uint8_t scsi_slot = 3;		/* Again by convention */
+
+static uint8_t old_slot;
+
+void ide_select(uint8_t device)
+{
+  if (cartslots > 1)
+    old_slot = mpi_set_slot(ide_slot);
+}
+
+void ide_deselect(void)
+{
+  if (cartslots > 1)
+    mpi_set_slot(old_slot);
+}
+
+/* This can move to discard... */
+
 void device_init(void)
 {
+    int i;
+
     if (spi_setup())
         devsd_init();
+    i = cart_find(CART_IDE);
+    if (i >= 0) {
+      ide_base = cartaddr[i] ? cartaddr[i]: ide_base;
+      ide_slot = i;
+    }
     devide_init();
+    i = cart_find(CART_TC3);
+    if (i >= 0) {
+      scsi_slot = i;
+      devscsi_init();
+    }
 }

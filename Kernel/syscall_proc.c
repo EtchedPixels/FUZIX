@@ -350,8 +350,10 @@ arg_t __exit(void)
 #undef val
 
 /*******************************************
-fork ()                          Function 32
+_fork (flags, addr)              Function 32
 ********************************************/
+#define flags (int16_t)udata.u_argn
+#define addr (uaddr_t)udata.u_argn1
 
 arg_t _fork(void)
 {
@@ -359,6 +361,13 @@ arg_t _fork(void)
 	struct p_tab *new_process;
 	arg_t r;
 	irqflags_t irq;
+
+	if (flags) {
+		/* Brief period of grace... */
+//		udata.u_error = EINVAL;
+//		return -1;
+		kputs("warning: rebuild libc\n");
+	}
 
 	new_process = ptab_alloc();
 	if (!new_process)
@@ -391,6 +400,7 @@ arg_t _fork(void)
 	return r;
 }
 
+#undef flags
 
 
 /*******************************************

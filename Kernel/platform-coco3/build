@@ -42,8 +42,13 @@ cd ../../Applications/V7/cmd/sh
 make -f Makefile.6809 TARGET=coco3 clean
 make -f Makefile.6809 TARGET=coco3
 
+# build levee
+cd ../../../levee
+make -f Makefile.6809 TARGET=coco3 clean
+make -f Makefile.6809 TARGET=coco3
+
 # build utils
-cd ../../../../Standalone
+cd ../../Standalone
 make
 
 # build boot disk image

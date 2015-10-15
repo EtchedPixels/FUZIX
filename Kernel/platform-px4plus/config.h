@@ -34,8 +34,8 @@
 /* FIXME: treat the banks of the ramdisc as memory not swap, also trim
    to 30K as only have 120K of RAMdisc */
 #define SWAP_SIZE   0x40 	/* 32K in blocks (with uarea means 31.25K max app size) */
-#define SWAPBASE    (uint8_t *)0x5D00	/* We swap the lot in one, include the */
-#define SWAPTOP	    (uint8_t *)0xDD00	/* vectors so its a round number of sectors */
+#define SWAPBASE    0x5D00	/* We swap the lot in one, include the */
+#define SWAPTOP	    0xDD00	/* vectors so its a round number of sectors */
 #define MAX_SWAPS	4	/* We have a whopping 128K of RAMDISC! */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
@@ -57,3 +57,6 @@
 #define VT_RIGHT	29
 #define VT_BOTTOM	7
 
+#define swap_map(x)	((uint8_t *)(x))
+
+#define platform_discard()

@@ -113,7 +113,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 /* we need a busier-than-busy state for superblocks, so that if those blocks
  * are read by userspace through bread() they are not subsequently freed by 
  * bfree() until the filesystem is unmounted */
-typedef enum { BF_FREE=0, BF_BUSY, BF_SUPERBLOCK } bf_busy_t;
+#define BF_FREE		0
+#define BF_BUSY		1
+#define BF_SUPERBLOCK	2
 
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
@@ -122,9 +124,9 @@ typedef struct blkbuf {
     uint8_t     bf_data[BLKSIZE];    /* This MUST be first ! */
     uint16_t    bf_dev;
     blkno_t     bf_blk;
-    bool        bf_dirty;
-    bf_busy_t   bf_busy;
-    uint16_t    bf_time;         /* LRU time stamp */
+    uint8_t     bf_dirty;	/* bit 0 used */
+    uint8_t     bf_busy;	/* bits 0-1 used */
+    uint16_t    bf_time;        /* LRU time stamp */
 } blkbuf, *bufptr;
 
 /* TODO: consider smaller inodes or clever caching. 2BSD uses small
@@ -387,7 +389,7 @@ typedef struct u_data {
     susize_t    u_retval;       /* Return value from sys call */
     int16_t     u_error;        /* Last error number */
     void *      u_sp;           /* Stores SP when process is switchped */
-    bool        u_ininterrupt;  /* True when the interrupt handler is runnign (prevents recursive interrupts) */
+    bool        u_ininterrupt;  /* True when the interrupt handler is running (prevents recursive interrupts) */
     int8_t      u_cursig;       /* Next signal to be dispatched */
     arg_t       u_argn;         /* First C argument to the system call */
     arg_t       u_argn1;        /* Second C argument */
@@ -561,7 +563,8 @@ struct s_argblk {
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 #define BLKFLSBUF		0x4103	/* Use the Linux name */
-
+#define HDIO_RAWCMD		0x4104	/* Issue a raw command, ioctl data
+					   is device dependant ! */
 /*
  *	Sound ioctls 02xx (see audio.h)
  */
@@ -676,6 +679,7 @@ extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
 extern void clrq(struct s_queue *q);
 extern bool uninsq(struct s_queue *q, unsigned char *cp);
+extern int psleep_flags_io(void *event, unsigned char flags, usize_t *n);
 extern int psleep_flags(void *event, unsigned char flags);
 extern int nxio_open(uint8_t minor, uint16_t flag);
 extern int no_open(uint8_t minor, uint16_t flag);

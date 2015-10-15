@@ -636,6 +636,7 @@ void panic(char *deathcry)
 void exec_or_die(void)
 {
 	kputs("Starting /init\n");
+	platform_discard();
 	_execve();
 	panic("no /init");	/* BIG Trouble if we Get Here!! */
 }

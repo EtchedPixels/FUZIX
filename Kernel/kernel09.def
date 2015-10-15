@@ -31,3 +31,7 @@ P_READY                     equ 2            ; value from include/kernel.h
 OS_BANK                     equ 0            ; value from include/kernel.h
 
 EAGAIN                      equ 11           ; value from include/kernel.h
+
+
+; Keep in sync with struct blkbuf
+BUFSIZE 		    equ 520

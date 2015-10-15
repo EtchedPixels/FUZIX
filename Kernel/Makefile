@@ -1,12 +1,12 @@
 TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2 platform-coco3
 
 #export TARGET = 6809simple
-#export TARGET = 6809test
 #export TARGET = 68hc11test
 #export TARGET = 8086test
 #export TARGET = atarist
 #export TARGET = bbcmicro
 #export TARGET = dragon
+#export TARGET = coco2
 #export TARGET = coco3
 #export TARGET = dragon-nx32
 #export TARGET = micropack
@@ -146,7 +146,7 @@ font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/bintomdv tools/chkmdv tools/decbdragon tools/decb-image hogs.txt hogs.txt.old tools/*~
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C cpm-loader clean
 	+$(MAKE) -C tools/bankld clean

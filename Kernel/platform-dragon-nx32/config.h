@@ -25,11 +25,12 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
 
+/* Reclaim the discard space for buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
+
 #define MAX_BLKDEV  	3	/* 2 IDE drives + 1 SPI */
 #define SD_DRIVE_COUNT	1	/* Could be higher with multiple CS used */
 #define DEVICE_IDE              /* enable if IDE interface present */
-#define IDE_REG_CS1_BASE 0xFF50
-#define IDE_IS_MMIO  1		/* MMIO IDE */
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
@@ -65,6 +66,9 @@
 #define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    6       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers at boot time */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
+
+/* Remember to update platform-dragon-nx32/kernel.defs to match */
+

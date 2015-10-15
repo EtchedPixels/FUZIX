@@ -58,3 +58,5 @@
 #define VT_BOTTOM	23
 
 #define swap_map(x)	((uint8_t *)(x))
+
+#define platform_discard()

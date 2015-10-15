@@ -3,6 +3,7 @@
                 .module monitor
                 .include "kernel.def"
                 .globl _trap_monitor
+		.globl _trap_reboot
                 .globl map_kernel
 
 ; -----------------------------------------------------------------------------
@@ -35,3 +36,6 @@ stacknext:      pop hl
                 djnz stacknext
                 halt
 .endif
+
+_trap_reboot:	; TODO
+		jr _trap_monitor

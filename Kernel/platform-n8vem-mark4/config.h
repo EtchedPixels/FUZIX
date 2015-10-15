@@ -40,7 +40,6 @@
 
 #define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
-/* On-board IDE on Mark IV */
 #define DEVICE_IDE
 #define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
@@ -70,3 +69,5 @@
 	/* ASCI0 as the console */
 	#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #endif
+
+#define platform_discard()

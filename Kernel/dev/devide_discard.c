@@ -54,7 +54,7 @@ void devide_init_drive(uint8_t drive)
     blkdev_t *blk;
     uint8_t *buffer, select;
 
-    switch(drive){
+    switch(drive & 1){
 	case 0: select = 0xE0; break;
 	case 1: select = 0xF0; break;
         default: return;
@@ -62,19 +62,21 @@ void devide_init_drive(uint8_t drive)
 
     kprintf("IDE drive %d: ", drive);
 
+    ide_select(drive);
+
 #ifdef IDE_8BIT_ONLY
     /* set 8-bit mode -- mostly only supported by CF cards */
     devide_writeb(ide_reg_devhead, select);
-    if(!devide_wait(IDE_STATUS_READY))
-        return;
+    if (!devide_wait(IDE_STATUS_READY))
+        goto out;
 
     devide_writeb(ide_reg_features, 0x01); /* Enable 8-bit PIO transfer mode (CFA feature set only) */
     devide_writeb(ide_reg_command, IDE_CMD_SET_FEATURES);
 #endif
 
     /* confirm drive has LBA support */
-    if(!devide_wait(IDE_STATUS_READY))
-        return;
+    if (!devide_wait(IDE_STATUS_READY))
+        goto out;
 
     /* send identify command */
     devide_writeb(ide_reg_devhead, select);
@@ -83,7 +85,7 @@ void devide_init_drive(uint8_t drive)
     /* allocate temporary sector buffer memory */
     buffer = (uint8_t *)tmpbuf();
 
-    if(!devide_wait(IDE_STATUS_DATAREQUEST))
+    if (!devide_wait(IDE_STATUS_DATAREQUEST))
 	goto failout;
 
     blk_op.is_user = false;
@@ -91,7 +93,7 @@ void devide_init_drive(uint8_t drive)
     blk_op.nblock = 1;
     devide_read_data();
 
-    if(!(buffer[99] & 0x02)){
+    if(!(buffer[99] & 0x02)) {
         kputs("LBA unsupported.\n");
         goto failout;
     }
@@ -119,12 +121,18 @@ void devide_init_drive(uint8_t drive)
     /* done with our temporary memory */
     brelse((bufptr)buffer);
 
+    /* Deselect the IDE, as we will re-select it in the partition scan and
+       it may not recursively stack de-selections */
+    ide_deselect();
+
     /* scan partitions */
     blkdev_scan(blk, SWAPSCAN);
 
     return;
 failout:
     brelse((bufptr)buffer);
+out:
+    ide_deselect();
     return;
 }
 
@@ -136,6 +144,6 @@ void devide_init(void)
     devide_reset();
 #endif
 
-    for(d=0; d<DRIVE_COUNT; d++)
+    for(d=0; d < DRIVE_COUNT; d++)
         devide_init_drive(d);
 }

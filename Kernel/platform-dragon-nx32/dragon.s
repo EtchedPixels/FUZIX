@@ -2,43 +2,64 @@
 	; common Dragon platform
 	;
 
-		.module dragon
+	.module dragon
 
-		; exported
-		.globl _mpi_present
-		.globl _mpi_set_slot
-		.globl _cart_hash
+	; exported
+	.globl _mpi_present
+	.globl _mpi_set_slot
+	.globl _cart_hash
+	.globl _cart_analyze_hdb
+	.globl _hdb_offset
+	.globl _hdb_id
+	.globl _hdb_port
+	.globl _hdb_timeout
+	.globl _bufpool
+	.globl _discard_size
 
-		; imported
-		.globl unix_syscall_entry
-		.globl fd_nmi_handler
-		.globl size_ram
-		.globl null_handler
-		.globl _vid256x192
-		.globl _vtoutput
+	; imported
+	.globl unix_syscall_entry
+	.globl fd_nmi_handler
+	.globl size_ram
+	.globl null_handler
+	.globl _vid256x192
+	.globl _vtoutput
 
-		; exported debugging tools
-		.globl _trap_monitor
-		.globl _trap_reboot
-		.globl outchar
-		.globl _di
-		.globl _ei
-		.globl _irqrestore
+	; exported debugging tools
+	.globl _trap_monitor
+	.globl _trap_reboot
+	.globl outchar
+	.globl _di
+	.globl _ei
+	.globl _irqrestore
 
-            include "kernel.def"
-            include "../kernel09.def"
+        include "kernel.def"
+        include "../kernel09.def"
 
 
-		.area .vectors
+	.area .vectors
 	;
 	;	At 0x100 as required by the Dragon ROM
 	;
-		    jmp badswi_handler			; 0x100
-		    jmp badswi_handler			; 0x103
-		    jmp unix_syscall_entry 		; 0x106
-		    jmp fd_nmi_handler			; 0x109
-		    jmp interrupt_handler		; 0x10C
-		    jmp firq_handler			; 0x10F
+	jmp badswi_handler			; 0x100
+	jmp badswi_handler			; 0x103
+	jmp unix_syscall_entry 		; 0x106
+	jmp fd_nmi_handler			; 0x109
+	jmp interrupt_handler		; 0x10C
+	jmp firq_handler			; 0x10F
+
+	.area	.buffers
+	;
+	;	We use the linker to place these just below
+	;	the discard area
+	;
+_bufpool:
+	.ds	BUFSIZE*NBUFS
+
+	;	And expose the discard buffer count to C - but in discard
+	;	so we can blow it away and precomputed at link time
+	.area	.discard
+_discard_size:
+	.db	__sectionlen_.discard__/BUFSIZE
 
 	.area .text
 
@@ -81,6 +102,7 @@ init_hardware:
 _trap_reboot:
 	    orcc #0x10
 	    clr 0xFFBE
+	    clr 0x0071
 	    jmp [0xFFFE]
 
 _trap_monitor:
@@ -114,7 +136,7 @@ _irqrestore:			; B holds the data
 ; 	and is not banked out.
 ;
 _program_vectors:
-	    rts
+	rts
 
 ;
 ;	Helpers for the MPI and Cartridge Detect
@@ -133,13 +155,23 @@ _mpi_set_slot:
 ;
 _mpi_present:
 	lda 0xff7f	; Save bits
+	tfr a,b
+	lsrb
+	lsrb
+	lsrb
+	lsrb
+	eorb 0xff7f
+	andb #0x03	; We expect to see the bits 5-4 and 1-0 matching
+	bne nompi	; not guaranteed but a good rule of thumb for us
 	ldb #0xff	; Will get back 33 from an MPI cartridge
 	stb 0xff7f	; if the emulator is right on this
 	ldb 0xff7f
+	andb #0x33
 	cmpb #0x33
 	bne nompi
 	clr 0xff7f	; Switch to slot 0
 	ldb 0xff7f
+	andb #0x33	; We can't trust the high bits
 	bne nompi
 	incb
 	sta 0xff7f	; Our becker port for debug will be on the default
@@ -165,6 +197,77 @@ hashl:
 	tfr d,x
 	clr $FFBF	; Return to normality
 	puls cc,pc
+
+_cart_analyze_hdb:
+	pshs cc
+	orcc #0x10
+	clr $FFBE
+	ldd 0xD93B	; I/O port
+	std _hdb_port
+	ldd 0xD93D	; Timeout and ID if SCSI
+	std _hdb_timeout
+	; Shortly after that fixed block we will find the sign on and
+	; copyright, which tell us what interface we are for.
+	ldx #0xD940
+hdb_s_next:
+	cmpx #0xE000
+	beq no_sign	; No sign of the sign on !
+	lda ,x+
+	cmpa #'H'
+	bne hdb_s_next
+	lda ,x+
+	cmpa #'D'	; This is safe as we know the bytes before
+	bne hdb_s_next	; our match are AUTOEXEC.BAS so won't partially
+	lda ,x+		; match !
+	cmpa #'B'
+	bne hdb_s_next
+	lda ,x+
+	cmpa #'-'
+	bne hdb_s_next
+	;
+	; We have found the HDB-. X now points at the D of DOS
+	;
+	leax 6,x	; Skip version
+	;
+	; We now have to find a space
+	;
+hdb_s_spc:
+	cmpx #0xE000
+	beq no_sign
+	lda ,x+
+	cmpa #0x20
+	bne hdb_s_spc
+	;
+	; This is followed by a string. For those we care about the first
+	; letters are sufficient to tell them apart
+	;
+	; LB : IDE LBA
+	; ID : IDE CHS
+	; TC : TC^3 SCSI
+	; KE : Kenton
+	; LR : LR Tech 
+	; HD : HD-II
+	; 4- : 4-N-1
+	; DW : Drivewire stuff	} Need more identification but are not 
+	; BE : Becker ports 	} interesting to us anyway
+	; J& : J&M CP
+	ldx ,x
+ret1:
+	clr $FFBF
+	puls cc,pc
+no_sign:
+	ldx #-1
+	bra ret1
+
+; Need to be here so they can be written with cart paged in
+_hdb_port:
+	.dw 0
+_hdb_timeout:
+	.db 0
+_hdb_id:
+	.db 0
+_hdb_type:
+	.db 0	
 ;
 ;	FIXME:
 ;
@@ -176,13 +279,13 @@ badswi_handler:
 ;	debug via printer port
 ;
 outchar:
-	    sta 0xFF02
-	    lda 0xFF20
-	    ora #0x02
-	    sta 0xFF20
-	    anda #0xFD
-	    sta 0xFF20
-	    rts
+	sta 0xFF02
+	lda 0xFF20
+	ora #0x02
+	sta 0xFF20
+	anda #0xFD
+	sta 0xFF20
+	rts
 
 	    .area .common
 

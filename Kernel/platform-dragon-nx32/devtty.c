@@ -11,7 +11,7 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart_data = (uint8_t *)0xFF04;	/* ACIA data */
+uint8_t *uart_data = (uint8_t *)0xFF04;		/* ACIA data */
 uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
@@ -27,6 +27,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
+
+static uint8_t vmode;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -51,13 +53,10 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	irqflags_t irq;
 	if (minor == 1) {
-		/* We need a better way generally to handle keyboard v
-		   VT */
-		irq = di();
-		vtoutput(&c, 1);
-		irqrestore(irq);
+		/* We don't do text except in 256x192 resolution modes */
+		if (vmode < 2)
+			vtoutput(&c, 1);
 	} else
 		*uart_data = c;	/* Data */
 }
@@ -67,12 +66,52 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
+/* 6551 mode handling */
+
+static uint8_t baudbits[] = {
+	0x11,		/* 50 */
+	0x12,		/* 75 */
+	0x13,		/* 110 */
+	0x14,		/* 134 */
+	0x15,		/* 150 */
+	0x16,		/* 300 */
+	0x17,		/* 600 */
+	0x18,		/* 1200 */
+	0x1A,		/* 2400 */
+	0x1C,		/* 4800 */
+	0x1E,		/* 9600 */
+	0x1F,		/* 19200 */
+};
+
+static uint8_t bitbits[] = {
+	0x30,
+	0x20,
+	0x10,
+	0x00
+};
+
 void tty_setup(uint8_t minor)
 {
-	if (minor == 2) {
-		/* FIXME: do proper mode setting */
-		*uart_command = 0x01;	/* DTR high, IRQ enabled, TX irq disabled 8N1 */
-		*uart_control = 0x1E;	/* 9600 baud */
+	uint8_t r;
+	if (minor != 2)
+		return;
+	r = ttydata[2].termios.c_cflag & CBAUD;
+	if (r > B19200) {
+		r = 0x1F;	/* 19.2 */
+		ttydata[2].termios.c_cflag &=~CBAUD;
+		ttydata[2].termios.c_cflag |= B19200;
+	} else
+		r = baudbits[r];
+	r |= bitbits[(ttydata[2].termios.c_cflag & CSIZE) >> 4];
+	*uart_control = r;
+	r = 0x0A;	/* rx and tx on, !rts low, dtr int off, no echo */
+	if (ttydata[2].termios.c_cflag & PARENB) {
+		if (ttydata[2].termios.c_cflag & PARODD)
+			r |= 0x20;	/* Odd parity */
+		else
+			r |= 0x60;	/* Even parity */
+		if (ttydata[2].termios.c_cflag & PARMRK)
+			r |= 0x80;	/* Mark/space */
 	}
 }
 
@@ -235,16 +274,55 @@ void platform_interrupt(void)
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
 
-static struct display display = {
-  256, 192,
-  256, 192,
-  0xFF, 0xFF,		/* For now */
-  FMT_MONO_BW,
-  HW_UNACCEL,
-  0,
-  0,
-  GFX_SETPIXEL|GFX_MAPPABLE,
-  0
+static struct display display[4] = {
+	/* Two variants of 256x192 with different palette */
+	/* 256 x 192 */
+	{
+		0,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_WB,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_WB,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	/* 128 x 192 four colour modes */
+	{
+		2,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	{
+		3,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	/* Possibly we should also allow for SG6 and SG4 ?? */
 };
 
 static struct videomap displaymap = {
@@ -258,6 +336,55 @@ static struct videomap displaymap = {
 	MAP_FBMEM|MAP_FBMEM_SIMPLE
 };
 
+/* bit 7 - A/G 6 GM2 5 GM1 4 GM0 & INT/EXT 3 CSS */
+static uint8_t piabits[] = { 0xF0, 0xF8, 0xE0, 0xE8};
+///* V0 V1 V2 */
+//static uint8_t sambits[] = { 0x6, 0x6, 0x6, 0x6 };
+
+
+
+#define pia1b	((volatile uint8_t *)0xFF22)
+#define sam_v	((volatile uint8_t *)0xFFC0)
+
+static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
+{
+  int l;
+  int c = 8;	/* 4 x uint16_t */
+  uint16_t *p = (uint16_t *)buf;
+  l = ugetw(ptr);
+  if (l < 6 || l > 512)
+    return EINVAL;
+  if (arg != GFXIOC_READ)
+    c = l;
+  if (uget(buf, ptr + 2, c))
+    return EFAULT;
+  switch(arg) {
+  case GFXIOC_DRAW:
+    /* TODO
+    if (draw_validate(ptr, l, 256, 192))  - or 128!
+      return EINVAL */
+    video_cmd(buf);
+    break;
+  case GFXIOC_WRITE:
+  case GFXIOC_READ:
+    if (l < 8)
+      return EINVAL;
+    l -= 8;
+    if (p[0] > 31 || p[1] > 191 || p[2] > 31 || p[3] > 191 ||
+      p[0] + p[2] > 32 || p[1] + p[3] > 192 ||
+      (p[2] * p[3]) > l)
+      return -EFAULT;
+    if (arg == GFXIOC_READ) {
+      video_read(buf);
+      if (uput(buf + 8, ptr, l))
+        return EFAULT;
+      return 0;
+    }
+    video_write(buf);
+  }
+  return 0;
+}
+
 /*
  *	Start by just reporting the 256x192 mode which is memory mapped
  *	(it's effectively always in our address space). Should really
@@ -267,10 +394,54 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
-	if (arg == GFXIOC_GETINFO)
-		return uput(&display, ptr, sizeof(display));
-	if (arg == GFXIOC_MAP)
+	switch(arg) {
+	case GFXIOC_GETINFO:
+		return uput(&display[vmode], ptr, sizeof(struct display));
+	case GFXIOC_MAP:
 		return uput(&displaymap, ptr, sizeof(displaymap));
-	udata.u_error = ENOTTY;
+	case GFXIOC_UNMAP:
+		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:
+	{
+		uint8_t m = ugetc(ptr);
+//		uint8_t b;
+		if (m > 3) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&display[m], ptr, sizeof(struct display));
+		vmode = m;
+		*pia1b = (*pia1b & 0x07) | piabits[m];
+//		b = sambits[m];
+//		sam_v[b & 1] = 0;
+//		sam_v[(b & 2)?3:2] = 0;
+//		sam_v[(b & 4)?5:4] = 0;
+		return 0;
+	}
+	case GFXIOC_WAITVB:
+		/* Our system clock is our vblank, use the standard timeout
+		   to pause for one clock */
+		udata.u_ptab->p_timeout = 2;
+		psleep(NULL);
+		return 0;
+	case GFXIOC_DRAW:
+	case GFXIOC_READ:
+	case GFXIOC_WRITE:
+	{
+		uint8_t *tmp;
+		int err;
+
+		tmp = (uint8_t *)tmpbuf();
+		err = gfx_draw_op(arg, ptr, tmp);
+		brelse((bufptr) tmp);
+		if (err) {
+			udata.u_error = err;
+			err = -1;
+		}
+		return err;
+	}
+	}
 	return -1;
 }

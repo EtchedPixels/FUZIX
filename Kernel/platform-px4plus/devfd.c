@@ -68,7 +68,7 @@ int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     } else if (rawflag == 2) {
 	nblock = swapcnt >> 7;	/* in 128 byte chunks */
 	dptr = (uint16_t)swapbase;
-	page = swapproc->p_page;
+	page = swappage;
 	block = swapblk << 2;
     } else
 	goto bad;

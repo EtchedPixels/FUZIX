@@ -1,7 +1,6 @@
 CC=gcc
-CCOPTS=-O2 -g -Wall -Wno-char-subscripts -Wno-deprecated-declarations
+CCOPTS=-O2 -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
 TARGETS=mkfs fsck ucp chmem size
-UTILS=util.o devio.o xfs1.o xfs1a.o xfs1b.o xfs2.o
 
 all:	$(TARGETS)
 
@@ -15,7 +14,7 @@ fsck:	fsck.o util.o
 	$(CC) $(CCOPTS) -o $@ $< util.o
 
 ucp:	ucp.o $(UTILS)
-	$(CC) $(CCOPTS) -o $@ $< $(UTILS)
+	$(CC) $(CCOPTS) -o $@ $< util.o
 
 chmem:	chmem.o
 	$(CC) $(CCOPTS) -o $@ $<

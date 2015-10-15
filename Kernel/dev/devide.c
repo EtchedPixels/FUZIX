@@ -49,7 +49,10 @@ uint8_t devide_transfer_sector(void)
     uint8_t *p;
 #endif
 
+
     drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+
+    ide_select(drive);
 
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     /* sdcc sadly unable to figure this out for itself yet */
@@ -65,25 +68,30 @@ uint8_t devide_transfer_sector(void)
     devide_writeb(ide_reg_lba_0, blk_op.lba);
 #endif
 
-    if(!devide_wait(IDE_STATUS_READY))
-	return 0;
+    if (!devide_wait(IDE_STATUS_READY))
+	goto fail;
 
     devide_writeb(ide_reg_sec_count, 1);
     devide_writeb(ide_reg_command, blk_op.is_read ? IDE_CMD_READ_SECTOR : IDE_CMD_WRITE_SECTOR);
 
     if(!devide_wait(IDE_STATUS_DATAREQUEST))
-        return 0;
+        goto fail;
 
-    if(blk_op.is_read)
+    if (blk_op.is_read)
 	devide_read_data();
-    else{
+    else {
 	devide_write_data();
 	if(!devide_wait(IDE_STATUS_READY))
-	    return 0;
+	    goto fail;
 	blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
     }
 
+    ide_deselect();
+
     return 1;
+fail:
+    ide_deselect();
+    return 0;
 }
 
 int devide_flush_cache(void)
@@ -92,28 +100,31 @@ int devide_flush_cache(void)
 
     drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
 
+    ide_select(drive);
+
     /* check drive has a cache and was written to since the last flush */
     if((blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY))
 		                 == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
-	devide_writeb(ide_reg_lba_3, ((drive == 0) ? 0xE0 : 0xF0)); // select drive
+	devide_writeb(ide_reg_lba_3, (((drive & 1) == 0) ? 0xE0 : 0xF0)); // select drive
 
-	if(!devide_wait(IDE_STATUS_READY)){
-	    udata.u_error = EIO;
-	    return -1;
-	}
+	if (!devide_wait(IDE_STATUS_READY))
+	    goto fail;
 
 	devide_writeb(ide_reg_command, IDE_CMD_FLUSH_CACHE);
 
-	if(!devide_wait(IDE_STATUS_READY)){
-	    udata.u_error = EIO;
-	    return -1;
-	}
+	if (!devide_wait(IDE_STATUS_READY))
+	    goto fail;
 
         /* drive cache is now clean */
 	blk_op.blkdev->driver_data &= ~FLAG_CACHE_DIRTY;
     }
-
+    ide_deselect();
     return 0;
+
+fail:
+    udata.u_error = EIO;
+    ide_deselect();
+    return -1;
 }
 
 /****************************************************************************/

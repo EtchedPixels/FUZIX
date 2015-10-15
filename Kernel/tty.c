@@ -27,7 +27,7 @@ struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	uint16_t nread;
+	usize_t nread;
 	unsigned char c;
 	struct s_queue *q;
 	struct tty *t;
@@ -56,8 +56,8 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			        if (n)
 			                udata.u_ptab->p_timeout = n + 1;
                         }
-			if (psleep_flags(q, flag))
-			        return -1;
+			if (psleep_flags_io(q, flag, &nread))
+			        return nread;
                         /* timer expired */
                         if (udata.u_ptab->p_timeout == 1)
                                 goto out;
@@ -90,15 +90,13 @@ out:
 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	struct tty *t;
-	int towrite;
+	usize_t written = 0;
 	uint8_t c;
 
 	used(rawflag);
 	used(flag);
 
 	t = &ttydata[minor];
-
-	towrite = udata.u_count;
 
 	while (udata.u_count-- != 0) {
 		for (;;) {	/* Wait on the ^S/^Q flag */
@@ -108,8 +106,8 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
                         }
 			if (!(t->flag & TTYF_STOP))
 				break;
-			if (psleep_flags(&t->flag, flag))
-				return -1;
+			if (psleep_flags_io(&t->flag, flag, &written))
+				return written;
 		}
 
 		if (!(t->flag & TTYF_DISCARD)) {
@@ -127,8 +125,9 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			tty_putc_wait(minor, c);
 		}
 		++udata.u_base;
+		++written;
 	}
-	return towrite;
+	return written;
 }
 
 int tty_open(uint8_t minor, uint16_t flag)

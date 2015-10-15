@@ -13,39 +13,51 @@ HP
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <unistd.h>
 #include <libgen.h>
+#define UCP
 #include "fuzix_fs.h"
 
-#define UCP_VERSION  "1.1ac"
+#define UCP_VERSION  "1.2ac"
 
-int16_t *syserror = (int16_t*)&udata.u_error;
+static int16_t *syserror = (int16_t*)&udata.u_error;
 static char cwd[100];
 static char line[128];
-char *nextline = NULL;
-char *month[] =
+static char *nextline = NULL;
+static char *month[] =
 { "Jan", "Feb", "Mar", "Apr",
     "May", "Jun", "Jul", "Aug",
     "Sep", "Oct", "Nov", "Dec" };
 
+#define DEVIO
+
+static uint16_t bufclock = 0;		/* Time-stamp counter for LRU */
+static struct blkbuf bufpool[NBUFS];
+
+static struct cinode i_tab[ITABSIZE];
+static struct filesys fs_tab[1];
+
 int swizzling = 0;
 
-int match(char *cmd);
-void usage(void);
-void prmode(int mode);
-int ls(char *path);
-int chmod(char *modes, char *path);
-int mknod( char *path, char *modes, char *devs);
-int mkdir(char *path);
-int get( char *src, char *dest, int binflag);
-int put( char *arg, int binflag);
-int type( char *arg);
-int fdump(char *arg);
-int unlink( char *path);
-int rmdir(char *path);
+static inoptr root;
+static struct oft of_tab[OFTSIZE];
 
-int main(argc, argval)
-    int argc;
-    char *argval[];
+
+static int match(char *cmd);
+static void usage(void);
+static void prmode(int mode);
+static int cmd_ls(char *path);
+static int cmd_chmod(char *modes, char *path);
+static int cmd_mknod( char *path, char *modes, char *devs);
+static int cmd_mkdir(char *path);
+static int cmd_get( char *src, char *dest, int binflag);
+static int cmd_put( char *arg, int binflag);
+static int cmd_type( char *arg);
+static int cmd_fdump(char *arg);
+static int cmd_rm( char *path);
+static int cmd_rmdir(char *path);
+
+int main(int argc, char *argval[])
 {
     int  rdev;
     char cmd[30], arg1[1024], arg2[30], arg3[30];
@@ -54,14 +66,7 @@ int main(argc, argval)
     int  pending_line = 0;
     struct filesys fsys;
     int  j, retc = 0;
-    /*--    char *argv[5];--*/
 
-    /*
-       if (argc < 2)
-       rdev = 0;
-       else
-       rdev = atoi(argval[1]);
-       */
     if (argc == 2) {
         fd_open(argval[1]);
         interactive = 1;
@@ -119,7 +124,7 @@ int main(argc, argval)
                 continue;
         }
 
-        _sync();
+        fuzix_sync();
 
         if (strcmp(cmd, "\n") == 0)
             continue;
@@ -130,15 +135,15 @@ int main(argc, argval)
 
             case 1:         /* ls */
                 if (*arg1)
-                    retc = ls(arg1);
+                    retc = cmd_ls(arg1);
                 else
-                    retc = ls(".");
+                    retc = cmd_ls(".");
                 break;
 
             case 2:         /* cd */
                 if (*arg1) {
                     strcpy(cwd, arg1);
-                    if ((retc = _chdir(arg1)) != 0) {
+                    if ((retc = fuzix_chdir(arg1)) != 0) {
                         printf("cd: error number %d\n", *syserror);
                     }
                 }
@@ -146,57 +151,57 @@ int main(argc, argval)
 
             case 3:         /* mkdir */
                 if (*arg1)
-                    retc = mkdir(arg1);
+                    retc = cmd_mkdir(arg1);
                 break;
 
             case 4:         /* mknod */
                 if (*arg1 && *arg2 && *arg3)
-                    retc = mknod(arg1, arg2, arg3);
+                    retc = cmd_mknod(arg1, arg2, arg3);
                 break;
 
             case 5:         /* chmod */
                 if (*arg1 && *arg2)
-                    retc = chmod(arg1, arg2);
+                    retc = cmd_chmod(arg1, arg2);
                 break;
 
             case 6:         /* get */
                 if (*arg1)
-                    retc = get(arg1, *arg2 ? arg2 : arg1, 0);
+                    retc = cmd_get(arg1, *arg2 ? arg2 : arg1, 0);
                 break;
 
             case 7:         /* bget */
                 if (*arg1)
-                    retc = get(arg1, *arg2 ? arg2 : arg1, 1);
+                    retc = cmd_get(arg1, *arg2 ? arg2 : arg1, 1);
                 break;
 
             case 8:         /* put */
                 if (*arg1)
-                    retc = put(arg1, 0);
+                    retc = cmd_put(arg1, 0);
                 break;
 
             case 9:         /* bput */
                 if (*arg1)
-                    retc = put(arg1, 1);
+                    retc = cmd_put(arg1, 1);
                 break;
 
             case 10:        /* type */
                 if (*arg1)
-                    retc = type(arg1);
+                    retc = cmd_type(arg1);
                 break;
 
             case 11:        /* dump */
                 if (*arg1)
-                    retc = fdump(arg1);
+                    retc = cmd_fdump(arg1);
                 break;
 
             case 12:        /* rm */
                 if (*arg1)
-                    retc = unlink(arg1);
+                    retc = cmd_rm(arg1);
                 break;
 
             case 13:        /* df */
                 for (j = 0; j < 4; ++j) {
-                    retc = _getfsys(j, (char*)&fsys);
+                    retc = fuzix_getfsys(j, (char*)&fsys);
                     if (retc == 0 && fsys.s_mounted) {
                         printf("%d:  %u blks used, %u free;  ", j,
                                 (fsys.s_fsize - fsys.s_isize) - fsys.s_tfree,
@@ -210,19 +215,19 @@ int main(argc, argval)
 
             case 14:        /* rmdir */
                 if (*arg1)
-                    retc = rmdir(arg1);
+                    retc = cmd_rmdir(arg1);
                 break;
 
             case 15:        /* mount */
                 if (*arg1 && *arg2)
-                    if ((retc = _mount(arg1, arg2, 0)) != 0) {
+                    if ((retc = fuzix_mount(arg1, arg2, 0)) != 0) {
                         printf("Mount error: %d\n", *syserror);
                     }
                 break;
 
             case 16:        /* umount */
                 if (*arg1)
-                    if ((retc = _umount(arg1)) != 0) {
+                    if ((retc = fuzix_umount(arg1)) != 0) {
                         printf("Umount error: %d\n", *syserror);
                     }
                 break;
@@ -239,13 +244,13 @@ int main(argc, argval)
         }           /* End Switch */
     } while (interactive || pending_line);
 
-    _sync();
+    fuzix_sync();
 
     return retc;
 }
 
 
-int match(char *cmd)
+static int match(char *cmd)
 {
     if (strcmp(cmd, "exit") == 0)
         return (0);
@@ -296,7 +301,7 @@ int match(char *cmd)
 }
 
 
-void usage(void)
+static void usage(void)
 {
     printf("UCP commands:\n");
     printf("?|help\n");
@@ -317,7 +322,7 @@ void usage(void)
     printf("umount path\n");
 }
 
-void prmode(int mode)
+static void prmode(int mode)
 {
     if (mode & 4)
         printf("r");
@@ -335,7 +340,7 @@ void prmode(int mode)
         printf("-");
 }
 
-int ls(char *path)
+static int cmd_ls(char *path)
 {
     struct direct buf;
     struct uzi_stat statbuf;
@@ -343,18 +348,18 @@ int ls(char *path)
     int d, st;
 
     /*
-       if (_stat(path, &statbuf) != 0 || (statbuf.st_mode & F_MASK) != F_DIR) {
+       if (fuzix_stat(path, &statbuf) != 0 || (statbuf.st_mode & F_MASK) != F_DIR) {
        printf("ls: can't stat %s\n", path);
        return -1;
        }
        */
 
-    d = _open(path, 0);
+    d = fuzix_open(path, 0);
     if (d < 0) {
         fprintf(stderr, "ls: can't open %s\n", path);
         return -1;
     }
-    while (_read(d, (char *) &buf, 16) == 16) {
+    while (fuzix_read(d, (char *) &buf, 16) == 16) {
         if (buf.d_name[0] == '\0')
             continue;
 
@@ -367,7 +372,7 @@ int ls(char *path)
 
         strcat(dname, buf.d_name);
 
-        if (_stat(dname, &statbuf) != 0) {
+        if (fuzix_stat(dname, &statbuf) != 0) {
             fprintf(stderr, "ls: can't stat %s\n", dname);
             break;
         }
@@ -418,31 +423,29 @@ int ls(char *path)
 
         printf("  %-15s\n", dname);
     }
-    _close(d);
+    fuzix_close(d);
     return 0;
 }
 
-int chmod(char *modes, char *path)
+static int cmd_chmod(char *modes, char *path)
 {
-    int mode;
+    unsigned int mode;
 
     printf("chmod %s to %s\n", path, modes);
-    mode = -1;
-    sscanf(modes, "%o", &mode);
-    if (mode == -1) {
+    if (sscanf(modes, "%o", &mode) != 1) {
         fprintf(stderr, "chmod: bad mode\n");
         return (-1);
     }
     /* Preserve the type if not specified */
     if (mode < 10000) {
         struct uzi_stat st;
-        if (_stat(path, &st) != 0) {
+        if (fuzix_stat(path, &st) != 0) {
             fprintf(stderr, "chmod: can't stat file '%s': %d\n", path, *syserror);
             return -1;
         }
         mode = (st.st_mode & ~0x7777) | mode;
     }
-    if (_chmod(path, mode)) {
+    if (fuzix_chmod(path, mode)) {
         fprintf(stderr, "chmod: error %d\n", *syserror);
         return (-1);
     }
@@ -450,14 +453,12 @@ int chmod(char *modes, char *path)
 }
 
 
-int mknod( char *path, char *modes, char *devs)
+static int cmd_mknod( char *path, char *modes, char *devs)
 {
-    int mode;
+    unsigned int mode;
     int dev;
 
-    mode = -1;
-    sscanf(modes, "%o", &mode);
-    if (mode == -1) {
+    if (sscanf(modes, "%o", &mode) != 1) {
         fprintf(stderr, "mknod: bad mode\n");
         return (-1);
     }
@@ -471,8 +472,8 @@ int mknod( char *path, char *modes, char *devs)
         fprintf(stderr, "mknod: bad device\n");
         return (-1);
     }
-    if (_mknod(path, mode, dev) != 0) {
-        fprintf(stderr, "_mknod: error %d\n", *syserror);
+    if (fuzix_mknod(path, mode, dev) != 0) {
+        fprintf(stderr, "fuzix_mknod: error %d\n", *syserror);
         return (-1);
     }
     return (0);
@@ -480,23 +481,23 @@ int mknod( char *path, char *modes, char *devs)
 
 
 
-int mkdir(char *path)
+static int cmd_mkdir(char *path)
 {
     char dot[100];
 
-    if (_mknod(path, 040000 | 0777, 0) != 0) {
+    if (fuzix_mknod(path, 040000 | 0777, 0) != 0) {
         fprintf(stderr, "mkdir: mknod error %d\n", *syserror);
         return (-1);
     }
     strcpy(dot, path);
     strcat(dot, "/.");
-    if (_link(path, dot) != 0) {
+    if (fuzix_link(path, dot) != 0) {
         fprintf(stderr, "mkdir: link \".\" error %d\n", *syserror);
         return (-1);
     }
     strcpy(dot, path);
     strcat(dot, "/..");
-    if (_link(".", dot) != 0) {
+    if (fuzix_link(".", dot) != 0) {
         fprintf(stderr, "mkdir: link \"..\" error %d\n", *syserror);
         return (-1);
     }
@@ -505,7 +506,7 @@ int mkdir(char *path)
 
 
 
-int get( char *src, char *dest, int binflag)
+static int cmd_get( char *src, char *dest, int binflag)
 {
     FILE *fp;
     int d;
@@ -517,7 +518,7 @@ int get( char *src, char *dest, int binflag)
         fprintf(stderr, "Source file '%s' not found\n", src);
         return (-1);
     }
-    d = _creat(basename(dest), 0666);
+    d = fuzix_creat(basename(dest), 0666);
     if (d < 0) {
         fprintf(stderr, "Can't open destination file '%s'; error %d\n", dest, *syserror);
         return (-1);
@@ -526,21 +527,21 @@ int get( char *src, char *dest, int binflag)
         nread = fread(cbuf, 1, 512, fp);
         if (nread == 0)
             break;
-        if (_write(d, cbuf, nread) != nread) {
-            fprintf(stderr, "_write error %d\n", *syserror);
+        if (fuzix_write(d, cbuf, nread) != nread) {
+            fprintf(stderr, "fuzix_write error %d\n", *syserror);
             fclose(fp);
-            _close(d);
+            fuzix_close(d);
             return (-1);
         }
     }
     fclose(fp);
-    _close(d);
-    _sync();
+    fuzix_close(d);
+    fuzix_sync();
     return (0);
 }
 
 
-int put( char *arg, int binflag)
+static int cmd_put( char *arg, int binflag)
 {
     FILE *fp;
     int d;
@@ -552,40 +553,40 @@ int put( char *arg, int binflag)
         fprintf(stderr, "Can't open destination file.\n");
         return (-1);
     }
-    d = _open(arg, 0);
+    d = fuzix_open(arg, 0);
     if (d < 0) {
         fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
-        if ((nread = _read(d, cbuf, 512)) == 0)
+        if ((nread = fuzix_read(d, cbuf, 512)) == 0)
             break;
         if (fwrite(cbuf, 1, nread, fp) != nread) {
             fprintf(stderr, "fwrite error");
             fclose(fp);
-            _close(d);
+            fuzix_close(d);
             return (-1);
         }
     }
     fclose(fp);
-    _close(d);
+    fuzix_close(d);
     return (0);
 }
 
 
-int type( char *arg)
+static int cmd_type( char *arg)
 {
     int d, i;
     char cbuf[512];
     int nread;
 
-    d = _open(arg, 0);
+    d = fuzix_open(arg, 0);
     if (d < 0) {
         fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
-        if ((nread = _read(d, cbuf, 512)) == 0)
+        if ((nread = fuzix_read(d, cbuf, 512)) == 0)
             break;
 
         for (i = 0; i < nread; i++) {
@@ -595,38 +596,38 @@ int type( char *arg)
         }
     }
     fputc('\n', stdout);
-    _close(d);
+    fuzix_close(d);
     return (0);
 }
 
 
-int fdump(char *arg)
+static int cmd_fdump(char *arg)
 {
     int d;
     char cbuf[512];
     int nread;
 
     printf("Dump starting.\n");
-    d = _open(arg, 0);
+    d = fuzix_open(arg, 0);
     if (d < 0) {
         fprintf(stderr, "Can't open unix file error %d\n", *syserror);
         return (-1);
     }
     for (;;) {
-        if ((nread = _read(d, cbuf, 512)) == 0)
+        if ((nread = fuzix_read(d, cbuf, 512)) == 0)
             break;
     }
-    _close(d);
+    fuzix_close(d);
     printf("Dump done.\n");
     return (0);
 }
 
 
-int unlink( char *path)
+static int cmd_rm( char *path)
 {
     struct uzi_stat statbuf;
 
-    if (_stat(path, &statbuf) != 0) {
+    if (fuzix_stat(path, &statbuf) != 0) {
         fprintf(stderr, "unlink: can't stat %s\n", path);
         return (-1);
     }
@@ -634,22 +635,22 @@ int unlink( char *path)
         fprintf(stderr, "unlink: %s is a directory\n", path);
         return (-1);
     }
-    if (_unlink(path) != 0) {
-        fprintf(stderr, "unlink: _unlink errn=or %d\n", *syserror);
+    if (fuzix_unlink(path) != 0) {
+        fprintf(stderr, "unlink: fuzix_unlink errn=or %d\n", *syserror);
         return (-1);
     }
     return (0);
 }
 
 
-int rmdir(char *path)
+static int cmd_rmdir(char *path)
 {
     struct uzi_stat statbuf;
     char newpath[100];
     struct direct dir;
     int fd;
 
-    if (_stat(path, &statbuf) != 0) {
+    if (fuzix_stat(path, &statbuf) != 0) {
         fprintf(stderr, "rmdir: can't stat %s\n", path);
         return (-1);
     }
@@ -658,35 +659,1837 @@ int rmdir(char *path)
         fprintf(stderr, "rmdir: %s is not a directory\n", path);
         return (-1);
     }
-    if ((fd = _open(path, 0)) < 0) {
+    if ((fd = fuzix_open(path, 0)) < 0) {
         fprintf(stderr, "rmdir: %s is unreadable\n", path);
         return (-1);
     }
-    while (_read(fd, (char *) &dir, sizeof(dir)) == sizeof(dir)) {
+    while (fuzix_read(fd, (char *) &dir, sizeof(dir)) == sizeof(dir)) {
         if (dir.d_ino == 0)
             continue;
         if (!strcmp(dir.d_name, ".") || !strcmp(dir.d_name, ".."))
             continue;
         fprintf(stderr, "rmdir: %s is not empty\n", path);
-        _close(fd);
+        fuzix_close(fd);
         return (-1);
     }
-    _close(fd);
+    fuzix_close(fd);
 
     strcpy(newpath, path);
     strcat(newpath, "/.");
-    if (_unlink(newpath) != 0) {
+    if (fuzix_unlink(newpath) != 0) {
         fprintf(stderr, "rmdir: can't unlink \".\"  error %d\n", *syserror);
         /*return (-1); */
     }
     strcat(newpath, ".");
-    if (_unlink(newpath) != 0) {
+    if (fuzix_unlink(newpath) != 0) {
         fprintf(stderr, "rmdir: can't unlink \"..\"  error %d\n", *syserror);
         /*return (-1); */
     }
-    if (_unlink(path) != 0) {
-        fprintf(stderr, "rmdir: _unlink error %d\n", *syserror);
+    if (fuzix_unlink(path) != 0) {
+        fprintf(stderr, "rmdir: fuzix_unlink error %d\n", *syserror);
         return (-1);
     }
     return (0);
+}
+
+static void fs_init(void)
+{
+	udata.u_euid = 0;
+	udata.u_insys = 1;
+}
+
+static void xfs_init(int bootdev)
+{
+	register char *j;
+
+	fs_init();
+	bufinit();
+
+	/* User's file table */
+	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j)
+		*j = -1;
+
+	/* Mount the root device */
+	if (fmount(ROOTDEV, NULLINODE))
+		panic("no filesys");
+
+	ifnot(root = i_open(ROOTDEV, ROOTINODE))
+	    panic("no root");
+
+	i_ref(udata.u_cwd = root);
+}
+
+
+static void xfs_end(void)
+{
+	register int16_t j;
+
+	for (j = 0; j < UFTSIZE; ++j) {
+		ifnot(udata.u_files[j] & 0x80)	/* Portable equivalent of == -1 */
+		    doclose(j);
+	}
+}
+
+
+static int fuzix_open(char *name, int16_t flag)
+{
+	int16_t uindex;
+	register int16_t oftindex;
+	register inoptr ino;
+
+	udata.u_error = 0;
+
+	if (flag < 0 || flag > 2) {
+		udata.u_error = EINVAL;
+		return (-1);
+	}
+	if ((uindex = uf_alloc()) == -1)
+		return (-1);
+
+	if ((oftindex = oft_alloc()) == -1)
+		goto nooft;
+
+	ifnot(ino = n_open(name, NULLINOPTR))
+	    goto cantopen;
+
+	of_tab[oftindex].o_inode = ino;
+
+	if (fuzix_getmode(ino) == F_DIR &&
+	    (flag == FO_WRONLY || flag == FO_RDWR)) {
+		udata.u_error = EISDIR;
+		goto cantopen;
+	}
+
+	if (isdevice(ino))	// && d_open((int)ino->c_node.i_addr[0]) != 0)
+	{
+		udata.u_error = ENXIO;
+		goto cantopen;
+	}
+
+	udata.u_files[uindex] = oftindex;
+
+	of_tab[oftindex].o_ptr = 0;
+	of_tab[oftindex].o_access = flag;
+
+	return (uindex);
+
+      cantopen:
+	oft_deref(oftindex);	/* This will call i_deref() */
+      nooft:
+	udata.u_files[uindex] = -1;
+	return (-1);
+}
+
+static int doclose(int16_t uindex)
+{
+	register int16_t oftindex;
+	inoptr ino;
+
+	udata.u_error = 0;
+	ifnot(ino = getinode(uindex))
+	    return (-1);
+	oftindex = udata.u_files[uindex];
+
+	//if (isdevice(ino)
+	//        /* && ino->c_refs == 1 && of_tab[oftindex].o_refs == 1 */ )
+	//    d_close((int)(ino->c_node.i_addr[0]));
+
+	udata.u_files[uindex] = -1;
+	oft_deref(oftindex);
+
+	return (0);
+}
+
+static int fuzix_close(int16_t uindex)
+{
+	udata.u_error = 0;
+	return (doclose(uindex));
+}
+
+static int fuzix_creat(char *name, int16_t mode)
+{
+	register inoptr ino;
+	register int16_t uindex;
+	register int16_t oftindex;
+	inoptr parent;
+	register int16_t j;
+
+	udata.u_error = 0;
+	parent = NULLINODE;
+
+	if ((uindex = uf_alloc()) == -1)
+		return (-1);
+	if ((oftindex = oft_alloc()) == -1)
+		return (-1);
+
+	ino = n_open(name, &parent);
+	if (ino) {
+		i_deref(parent);
+		if (fuzix_getmode(ino) == F_DIR) {
+			i_deref(ino);
+			udata.u_error = EISDIR;
+			goto nogood;
+		}
+		if (fuzix_getmode(ino) == F_REG) {
+			/* Truncate the file to zero length */
+			f_trunc(ino);
+			/* Reset any oft pointers */
+			for (j = 0; j < OFTSIZE; ++j)
+				if (of_tab[j].o_inode == ino)
+					of_tab[j].o_ptr = 0;
+		}
+	} else {
+		if (parent && (ino = newfile(parent, name)))
+			/* Parent was derefed in newfile */
+		{
+			ino->c_node.i_mode =
+			    swizzle16(F_REG |
+				      (mode & MODE_MASK & ~udata.u_mask));
+			setftime(ino, A_TIME | M_TIME | C_TIME);
+			/* The rest of the inode is initialized in newfile() */
+			wr_inode(ino);
+		} else {
+			/* Doesn't exist and can't make it */
+			if (parent)
+				i_deref(parent);
+			goto nogood;
+		}
+	}
+	udata.u_files[uindex] = oftindex;
+
+	of_tab[oftindex].o_ptr = 0;
+	of_tab[oftindex].o_inode = ino;
+	of_tab[oftindex].o_access = FO_WRONLY;
+
+	return (uindex);
+
+      nogood:
+	oft_deref(oftindex);
+	return (-1);
+}
+
+static int fuzix_link(char *name1, char *name2)
+{
+	register inoptr ino;
+	register inoptr ino2;
+	inoptr parent2;
+
+	udata.u_error = 0;
+	ifnot(ino = n_open(name1, NULLINOPTR))
+	    return (-1);
+
+	/* Make sure file2 doesn't exist, and get its parent */
+	if ((ino2 = n_open(name2, &parent2))) {
+		i_deref(ino2);
+		i_deref(parent2);
+		udata.u_error = EEXIST;
+		goto nogood;
+	}
+
+	ifnot(parent2)
+	    goto nogood;
+
+	if (ino->c_dev != parent2->c_dev) {
+		i_deref(parent2);
+		udata.u_error = EXDEV;
+		goto nogood;
+	}
+
+	if (ch_link(parent2, "", filename(name2), ino) == 0)
+		goto nogood;
+
+	/* Update the link count. */
+	ino->c_node.i_nlink =
+	    swizzle16(swizzle16(ino->c_node.i_nlink) + 1);
+	wr_inode(ino);
+	setftime(ino, C_TIME);
+
+	i_deref(parent2);
+	i_deref(ino);
+	return (0);
+
+      nogood:
+	i_deref(ino);
+	return (-1);
+}
+
+static int fuzix_unlink(char *path)
+{
+	register inoptr ino;
+	inoptr pino;
+
+	udata.u_error = 0;
+	ino = n_open(path, &pino);
+
+	ifnot(pino && ino) {
+		udata.u_error = ENOENT;
+		return (-1);
+	}
+
+	/* Remove the directory entry */
+
+	if (ch_link(pino, filename(path), "", NULLINODE) == 0)
+		goto nogood;
+
+	/* Decrease the link count of the inode */
+
+	if (ino->c_node.i_nlink == 0) {
+		ino->c_node.i_nlink =
+		    swizzle16(swizzle16(ino->c_node.i_nlink) + 2);
+		printf("fuzix_unlink: bad nlink\n");
+	} else
+		ino->c_node.i_nlink =
+		    swizzle16(swizzle16(ino->c_node.i_nlink) - 1);
+	setftime(ino, C_TIME);
+	i_deref(pino);
+	i_deref(ino);
+	return (0);
+      nogood:
+	i_deref(pino);
+	i_deref(ino);
+	return (-1);
+}
+
+static int fuzix_read(int16_t d, char *buf, uint16_t nbytes)
+{
+	register inoptr ino;
+
+	udata.u_error = 0;
+	/* Set up u_base, u_offset, ino; check permissions, file num. */
+	if ((ino = rwsetup(1, d, buf, nbytes)) == NULLINODE)
+		return (-1);	/* bomb out if error */
+
+	readi(ino);
+	updoff(d);
+
+	return (udata.u_count);
+}
+
+static int fuzix_write(int16_t d, char *buf, uint16_t nbytes)
+{
+	register inoptr ino;
+
+	udata.u_error = 0;
+	/* Set up u_base, u_offset, ino; check permissions, file num. */
+	if ((ino = rwsetup(0, d, buf, nbytes)) == NULLINODE)
+		return (-1);	/* bomb out if error */
+
+	writei(ino);
+	updoff(d);
+
+	return (udata.u_count);
+}
+
+static inoptr rwsetup(int rwflag, int d, char *buf, int nbytes)
+{
+	register inoptr ino;
+	register struct oft *oftp;
+
+	udata.u_base = buf;
+	udata.u_count = nbytes;
+
+	if ((ino = getinode(d)) == NULLINODE)
+		return (NULLINODE);
+
+	oftp = of_tab + udata.u_files[d];
+	if (oftp->o_access == (rwflag ? FO_WRONLY : FO_RDONLY)) {
+		udata.u_error = EBADF;
+		return (NULLINODE);
+	}
+
+	setftime(ino, rwflag ? A_TIME : (A_TIME | M_TIME | C_TIME));
+
+	/* Initialize u_offset from file pointer */
+	udata.u_offset = oftp->o_ptr;
+
+	return (ino);
+}
+
+static void readi(inoptr ino)
+{
+	register uint16_t amount;
+	register uint16_t toread;
+	register blkno_t pblk;
+	register char *bp;
+	int dev;
+
+	dev = ino->c_dev;
+	switch (fuzix_getmode(ino)) {
+
+	case F_DIR:
+	case F_REG:
+
+		/* See of end of file will limit read */
+		toread = udata.u_count =
+		    min(udata.u_count,
+			swizzle32(ino->c_node.i_size) - udata.u_offset);
+		goto loop;
+
+	case F_BDEV:
+		toread = udata.u_count;
+		dev = swizzle16(*(ino->c_node.i_addr));
+
+	      loop:
+		while (toread) {
+			if ((pblk =
+			     bmap(ino, udata.u_offset >> 9, 1)) != NULLBLK)
+				bp = bread(dev, pblk, 0);
+			else
+				bp = zerobuf();
+
+			bcopy(bp + (udata.u_offset & 511), udata.u_base,
+			      (amount =
+			       min(toread, 512 - (udata.u_offset & 511))));
+			brelse((bufptr) bp);
+
+			udata.u_base += amount;
+			udata.u_offset += amount;
+			toread -= amount;
+		}
+		break;
+
+	default:
+		udata.u_error = ENODEV;
+	}
+}
+
+
+
+/* Writei (and readi) need more i/o error handling */
+
+static void writei(inoptr ino)
+{
+	register uint16_t amount;
+	register uint16_t towrite;
+	register char *bp;
+	blkno_t pblk;
+	int dev;
+
+	dev = ino->c_dev;
+
+	switch (fuzix_getmode(ino)) {
+
+	case F_BDEV:
+		dev = swizzle16(*(ino->c_node.i_addr));
+	case F_DIR:
+	case F_REG:
+		towrite = udata.u_count;
+		goto loop;
+
+	      loop:
+		while (towrite) {
+			amount =
+			    min(towrite, 512 - (udata.u_offset & 511));
+
+			if ((pblk =
+			     bmap(ino, udata.u_offset >> 9, 0)) == NULLBLK)
+				break;	/* No space to make more blocks */
+
+			/* If we are writing an entire block, we don't care
+			   about its previous contents */
+			bp = bread(dev, pblk, (amount == 512));
+
+			bcopy(udata.u_base, bp + (udata.u_offset & 511),
+			      amount);
+			bawrite((bufptr) bp);
+
+			udata.u_base += amount;
+			udata.u_offset += amount;
+			towrite -= amount;
+		}
+
+		/* Update size if file grew */
+		if (udata.u_offset > swizzle32(ino->c_node.i_size)) {
+			ino->c_node.i_size = swizzle32(udata.u_offset);
+			ino->c_dirty = 1;
+		}
+		break;
+
+	default:
+		udata.u_error = ENODEV;
+	}
+}
+
+
+
+static void updoff(int d)
+{
+	/* Update current file pointer */
+	of_tab[udata.u_files[d]].o_ptr = udata.u_offset;
+}
+
+static int valadr(char *base, uint16_t size)
+{
+	return (1);
+}
+
+
+static int fuzix_mknod(char *name, int16_t mode, int16_t dev)
+{
+	register inoptr ino;
+	inoptr parent;
+
+	udata.u_error = 0;
+
+	if ((ino = n_open(name, &parent))) {
+		udata.u_error = EEXIST;
+		goto nogood;
+	}
+
+	ifnot(parent) {
+		udata.u_error = ENOENT;
+		return (-1);
+	}
+
+	ifnot(ino = newfile(parent, name))
+	    goto nogood2;
+
+	/* Initialize mode and dev */
+	ino->c_node.i_mode = swizzle16(mode & ~udata.u_mask);
+	ino->c_node.i_addr[0] = swizzle16(isdevice(ino) ? dev : 0);
+	setftime(ino, A_TIME | M_TIME | C_TIME);
+	wr_inode(ino);
+
+	i_deref(ino);
+	return (0);
+
+      nogood:
+	i_deref(ino);
+      nogood2:
+	i_deref(parent);
+	return (-1);
+}
+
+static void fuzix_sync(void)
+{
+	int j;
+	inoptr ino;
+	char *buf;
+
+	/* Write out modified inodes */
+
+	udata.u_error = 0;
+	for (ino = i_tab; ino < i_tab + ITABSIZE; ++ino)
+		if ((ino->c_refs) > 0 && ino->c_dirty != 0) {
+			wr_inode(ino);
+			ino->c_dirty = 0;
+		}
+
+	/* Write out modified super blocks */
+	/* This fills the rest of the super block with garbage. */
+
+	for (j = 0; j < NDEVS; ++j) {
+		if (swizzle16(fs_tab[j].s_mounted) == SMOUNTED
+		    && fs_tab[j].s_fmod) {
+			fs_tab[j].s_fmod = 0;
+			buf = bread(j, 1, 1);
+			bcopy((char *) &fs_tab[j], buf, 512);
+			bfree((bufptr) buf, 2);
+		}
+	}
+	bufsync();		/* Clear buffer pool */
+}
+
+static int fuzix_chdir(char *dir)
+{
+	register inoptr newcwd;
+
+	udata.u_error = 0;
+	ifnot(newcwd = n_open(dir, NULLINOPTR))
+	    return (-1);
+
+	if (fuzix_getmode(newcwd) != F_DIR) {
+		udata.u_error = ENOTDIR;
+		i_deref(newcwd);
+		return (-1);
+	}
+	i_deref(udata.u_cwd);
+	udata.u_cwd = newcwd;
+	return (0);
+}
+
+static int min(int a, int b)
+{
+	return (a < b ? a : b);
+}
+
+static int fuzix_chmod(char *path, int16_t mode)
+{
+	inoptr ino;
+
+	udata.u_error = 0;
+	ifnot(ino = n_open(path, NULLINOPTR))
+	    return (-1);
+
+	ino->c_node.i_mode =
+	    swizzle16((mode & MODE_MASK) |
+		      (swizzle16(ino->c_node.i_mode) & F_MASK));
+	setftime(ino, C_TIME);
+	i_deref(ino);
+	return (0);
+}
+
+static int fuzix_stat(char *path, struct uzi_stat *buf)
+{
+	register inoptr ino;
+
+	udata.u_error = 0;
+	ifnot(valadr((char *) buf, sizeof(struct uzi_stat))
+	      && (ino = n_open(path, NULLINOPTR))) {
+		return (-1);
+	}
+	stcpy(ino, buf);
+	i_deref(ino);
+	return (0);
+}
+
+/* Utility for stat and fstat */
+static void stcpy(inoptr ino, struct uzi_stat *buf)
+{
+	struct uzi_stat *b = (struct uzi_stat *) buf;
+
+	b->st_dev = swizzle16(ino->c_dev);
+	b->st_ino = swizzle16(ino->c_num);
+	b->st_mode = swizzle16(ino->c_node.i_mode);
+	b->st_nlink = swizzle16(ino->c_node.i_nlink);
+	b->st_uid = swizzle16(ino->c_node.i_uid);
+	b->st_gid = swizzle16(ino->c_node.i_gid);
+
+	b->st_rdev = swizzle16(ino->c_node.i_addr[0]);
+
+	b->st_size = swizzle32(ino->c_node.i_size);
+	b->fst_atime = swizzle32(ino->c_node.i_atime);
+	b->fst_mtime = swizzle32(ino->c_node.i_mtime);
+	b->fst_ctime = swizzle32(ino->c_node.i_ctime);
+}
+
+/* Special system call returns super-block of given filesystem for
+ * users to determine free space, etc.  Should be replaced with a
+ * sync() followed by a read of block 1 of the device.
+ */
+
+static int fuzix_getfsys(int dev, char *buf)
+{
+	udata.u_error = 0;
+	if (dev < 0 || dev >= NDEVS
+	    || swizzle16(fs_tab[dev].s_mounted) != SMOUNTED) {
+		udata.u_error = ENXIO;
+		return (-1);
+	}
+
+	/* FIXME: endiam swapping here */
+	bcopy((char *) &fs_tab[dev], (char *) buf, sizeof(struct filesys));
+	return (0);
+}
+
+static int fuzix_mount(char *spec, char *dir, int rwflag)
+{
+	register inoptr sino, dino;
+	register int dev;
+
+	udata.u_error = 0;
+	ifnot(sino = n_open(spec, NULLINOPTR))
+	    return (-1);
+
+	ifnot(dino = n_open(dir, NULLINOPTR)) {
+		i_deref(sino);
+		return (-1);
+	}
+	if (fuzix_getmode(sino) != F_BDEV) {
+		udata.u_error = ENOTBLK;
+		goto nogood;
+	}
+	if (fuzix_getmode(dino) != F_DIR) {
+		udata.u_error = ENOTDIR;
+		goto nogood;
+	}
+	dev = (int) swizzle16(sino->c_node.i_addr[0]);
+
+	if (dev >= NDEVS)	// || d_open(dev))
+	{
+		udata.u_error = ENXIO;
+		goto nogood;
+	}
+	if (fs_tab[dev].s_mounted || dino->c_refs != 1
+	    || dino->c_num == ROOTINODE) {
+		udata.u_error = EBUSY;
+		goto nogood;
+	}
+	fuzix_sync();
+
+	if (fmount(dev, dino)) {
+		udata.u_error = EBUSY;
+		goto nogood;
+	}
+	i_deref(dino);
+	i_deref(sino);
+	return (0);
+      nogood:
+	i_deref(dino);
+	i_deref(sino);
+	return (-1);
+}
+
+static int fuzix_umount(char *spec)
+{
+	register inoptr sino;
+	register int dev;
+	register inoptr ptr;
+
+	udata.u_error = 0;
+
+	ifnot(sino = n_open(spec, NULLINOPTR))
+	    return (-1);
+
+	if (fuzix_getmode(sino) != F_BDEV) {
+		udata.u_error = ENOTBLK;
+		goto nogood;
+	}
+
+	dev = (int) swizzle16(sino->c_node.i_addr[0]);
+
+	if (!fs_tab[dev].s_mounted) {
+		udata.u_error = EINVAL;
+		goto nogood;
+	}
+
+	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr)
+		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
+			udata.u_error = EBUSY;
+			goto nogood;
+		}
+	fuzix_sync();
+	fs_tab[dev].s_mounted = 0;
+	i_deref(fs_tab[dev].s_mntpt);
+
+	i_deref(sino);
+	return (0);
+
+      nogood:
+	i_deref(sino);
+	return (-1);
+}
+
+static inoptr n_open(register char *name, register inoptr * parent)
+{
+	register inoptr wd;	/* the directory we are currently searching. */
+	register inoptr ninode;
+	register inoptr temp;
+
+	if (*name == '/')
+		wd = root;
+	else
+		wd = udata.u_cwd;
+
+	i_ref(ninode = wd);
+	i_ref(ninode);
+
+	for (;;) {
+		if (ninode)
+			magic(ninode);
+
+		/* See if we are at a mount point */
+		if (ninode)
+			ninode = srch_mt(ninode);
+
+		while (*name == '/')	/* Skip (possibly repeated) slashes */
+			++name;
+		ifnot(*name)	/* No more components of path? */
+		    break;
+		ifnot(ninode) {
+			udata.u_error = ENOENT;
+			goto nodir;
+		}
+		i_deref(wd);
+		wd = ninode;
+		if (fuzix_getmode(wd) != F_DIR) {
+			udata.u_error = ENOTDIR;
+			goto nodir;
+		}
+
+		/* See if we are going up through a mount point */
+		if (wd->c_num == ROOTINODE && wd->c_dev != ROOTDEV
+		    && name[1] == '.') {
+			temp = fs_tab[wd->c_dev].s_mntpt;
+			++temp->c_refs;
+			i_deref(wd);
+			wd = temp;
+		}
+
+		ninode = srch_dir(wd, name);
+
+		while (*name != '/' && *name)
+			++name;
+	}
+
+	if (parent)
+		*parent = wd;
+	else
+		i_deref(wd);
+	ifnot(parent || ninode)
+	    udata.u_error = ENOENT;
+	return (ninode);
+
+nodir:
+	if (parent)
+		*parent = NULLINODE;
+	i_deref(wd);
+	return (NULLINODE);
+
+}
+
+
+
+/* Srch_dir is given a inode pointer of an open directory and a string
+ * containing a filename, and searches the directory for the file.  If
+ * it exists, it opens it and returns the inode pointer, otherwise NULL.
+ * This depends on the fact that ba_read will return unallocated blocks
+ * as zero-filled, and a partially allocated block will be padded with
+ * zeroes.
+ */
+
+static inoptr srch_dir(inoptr wd, register char *compname)
+{
+	register int curentry;
+	register blkno_t curblock;
+	register struct direct *buf;
+	register int nblocks;
+	unsigned inum;
+
+	nblocks = (swizzle32(wd->c_node.i_size) + 511) >> 9;
+
+	for (curblock = 0; curblock < nblocks; ++curblock) {
+		buf =
+		    (struct direct *) bread(wd->c_dev,
+					    bmap(wd, curblock, 1), 0);
+		for (curentry = 0; curentry < 16; ++curentry) {
+			if (namecomp(compname, buf[curentry].d_name)) {
+				inum =
+				    swizzle16(buf[curentry & 0x0f].d_ino);
+				brelse((bufptr) buf);
+				return (i_open(wd->c_dev, inum));
+			}
+		}
+		brelse((bufptr) buf);
+	}
+	return (NULLINODE);
+}
+
+
+/* Srch_mt sees if the given inode is a mount point. If so it
+ * dereferences it, and references and returns a pointer to the
+ * root of the mounted filesystem.
+ */
+
+static inoptr srch_mt(inoptr ino)
+{
+	register int j;
+
+	for (j = 0; j < NDEVS; ++j)
+		if (swizzle16(fs_tab[j].s_mounted) == SMOUNTED
+		    && fs_tab[j].s_mntpt == ino) {
+			i_deref(ino);
+			return (i_open(j, ROOTINODE));
+		}
+
+	return (ino);
+}
+
+
+/* I_open is given an inode number and a device number,
+ * and makes an entry in the inode table for them, or
+ * increases it reference count if it is already there.
+ * An inode # of zero means a newly allocated inode.
+ */
+
+static inoptr i_open(register int dev, register unsigned ino)
+{
+
+	struct dinode *buf;
+	register inoptr nindex;
+	int i;
+	register inoptr j;
+	int new;
+	static inoptr nexti = i_tab;	/* added inoptr. 26.12.97  HFB */
+
+	if (dev < 0 || dev >= NDEVS)
+		panic("i_open: Bad dev");
+
+	new = 0;
+	ifnot(ino) {		/* Want a new one */
+		new = 1;
+		ifnot(ino = i_alloc(dev)) {
+			udata.u_error = ENOSPC;
+			return (NULLINODE);
+		}
+	}
+
+	if (ino < ROOTINODE || ino >= (swizzle16(fs_tab[dev].s_isize) - 2) * 8) {
+		printf("i_open: bad inode number\n");
+		return (NULLINODE);
+	}
+
+
+	nindex = NULLINODE;
+	j = (inoptr) nexti;
+	for (i = 0; i < ITABSIZE; ++i) {
+		nexti = (inoptr) j;
+		if (++j >= i_tab + ITABSIZE)
+			j = i_tab;
+
+		ifnot(j->c_refs)
+		    nindex = j;
+
+		if (j->c_dev == dev && j->c_num == ino) {
+			nindex = j;
+			goto found;
+		}
+	}
+
+	/* Not already in table. */
+
+	ifnot(nindex) {		/* No unrefed slots in inode table */
+		udata.u_error = ENFILE;
+		return (NULLINODE);
+	}
+
+	buf = (struct dinode *) bread(dev, (ino >> 3) + 2, 0);
+	bcopy((char *) &(buf[ino & 0x07]), (char *) &(nindex->c_node), 64);
+	brelse((bufptr) buf);
+
+	nindex->c_dev = dev;
+	nindex->c_num = ino;
+	nindex->c_magic = CMAGIC;
+
+found:
+	if (new) {
+		if (nindex->c_node.i_nlink
+		    || swizzle16(nindex->c_node.i_mode) & F_MASK)
+			goto badino;
+	} else {
+		ifnot(nindex->c_node.i_nlink
+		      && swizzle16(nindex->c_node.i_mode) & F_MASK)
+		    goto badino;
+	}
+
+	++nindex->c_refs;
+	return (nindex);
+
+badino:
+	printf("i_open: bad disk inode\n");
+	return (NULLINODE);
+}
+
+
+
+/* Ch_link modifies or makes a new entry in the directory for the name
+ * and inode pointer given. The directory is searched for oldname.  When
+ * found, it is changed to newname, and it inode # is that of *nindex.
+ * A oldname of "" matches a unused slot, and a nindex of NULLINODE
+ * means an inode # of 0.  A return status of 0 means there was no
+ * space left in the filesystem, or a non-empty oldname was not found,
+ * or the user did not have write permission.
+ */
+
+static int ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
+{
+	struct direct curentry;
+
+	/* Search the directory for the desired slot. */
+
+	udata.u_offset = 0;
+
+	for (;;) {
+		udata.u_count = 32;
+		udata.u_base = (char *) &curentry;
+//        udata.u_sysio = 1;                                    /*280*/
+		readi(wd);
+
+		/* Read until EOF or name is found */
+		/* readi() advances udata.u_offset */
+		if (udata.u_count == 0
+		    || namecomp(oldname, curentry.d_name))
+			break;
+	}
+
+	if (udata.u_count == 0 && *oldname)
+		return (0);	/* Entry not found */
+
+	bcopy(newname, curentry.d_name, 30);
+
+	{
+		int i;
+
+		for (i = 0; i < 30; ++i)
+			if (curentry.d_name[i] == '\0')
+				break;
+		for (; i < 30; ++i)
+			curentry.d_name[i] = '\0';
+	}
+
+	if (nindex)
+		curentry.d_ino = swizzle16(nindex->c_num);
+	else
+		curentry.d_ino = 0;
+
+	/* If an existing slot is being used, we must back up the file offset */
+	if (udata.u_count)
+		udata.u_offset -= 32;
+
+	udata.u_count = 32;
+	udata.u_base = (char *) &curentry;
+	udata.u_sysio = 1;	/*280 */
+	writei(wd);
+
+	if (udata.u_error)
+		return (0);
+
+	setftime(wd, A_TIME | M_TIME | C_TIME);	/* Sets c_dirty */
+
+	/* Update file length to next block */
+	if (swizzle32(wd->c_node.i_size) & 511)
+		wd->c_node.i_size = swizzle32(
+		    swizzle32(wd->c_node.i_size) + 512 -
+		    (swizzle32(wd->c_node.i_size) & 511));
+
+	return (1);
+}
+
+
+
+/* Filename is given a path name, and returns a pointer to the
+ * final component of it.
+ */
+
+static char *filename(char *path)
+{
+	register char *ptr;
+
+	ptr = path;
+	while (*ptr)
+		++ptr;
+	while (*ptr != '/' && ptr-- > path);
+	return (ptr + 1);
+}
+
+
+/* Namecomp compares two strings to see if they are the same file name.
+ * It stops at 30 chars or a null or a slash. It returns 0 for difference.
+ */
+
+static int namecomp(char *n1, char *n2)
+{
+	register int n;
+
+	n = 30;
+	while (*n1 && *n1 != '/') {
+		if (*n1++ != *n2++)
+			return (0);
+		ifnot(--n)
+		    return (-1);
+	}
+	return (*n2 == '\0' || *n2 == '/');
+}
+
+
+/* Newfile is given a pointer to a directory and a name, and creates
+ * an entry in the directory for the name, dereferences the parent,
+ * and returns a pointer to the new inode.  It allocates an inode
+ * number, and creates a new entry in the inode table for the new
+ * file, and initializes the inode table entry for the new file.
+ * The new file will have one reference, and 0 links to it.  Better
+ * Better make sure there isn't already an entry with the same name.
+ */
+
+static inoptr newfile(inoptr pino, char *name)
+{
+	register inoptr nindex;
+	register int j;
+
+	ifnot(nindex = i_open(pino->c_dev, 0))
+	    goto nogood;
+
+	/* BIG FIX:  user/group setting was missing  SN *//*280 */
+	nindex->c_node.i_uid = swizzle16(udata.u_euid);	/*280 */
+	nindex->c_node.i_gid = swizzle16(udata.u_egid);	/*280 */
+
+	nindex->c_node.i_mode = swizzle16(F_REG);	/* For the time being */
+	nindex->c_node.i_nlink = swizzle16(1);
+	nindex->c_node.i_size = 0;
+	for (j = 0; j < 20; j++)
+		nindex->c_node.i_addr[j] = 0;
+	wr_inode(nindex);
+
+	ifnot(ch_link(pino, "", filename(name), nindex)) {
+		i_deref(nindex);
+		goto nogood;
+	}
+
+	i_deref(pino);
+	return (nindex);
+
+nogood:
+	i_deref(pino);
+	return (NULLINODE);
+}
+
+
+/* Check the given device number, and return its address in the mount
+ * table.  Also time-stamp the superblock of dev, and mark it modified.
+ * Used when freeing and allocating blocks and inodes.
+ */
+
+static fsptr getdev(int devno)
+{
+	register fsptr dev;
+
+	dev = fs_tab + devno;
+	if (devno < 0 || devno >= NDEVS || !dev->s_mounted)
+		panic("getdev: bad dev");
+	dev->s_fmod = 1;
+	return (dev);
+}
+
+
+/* Returns true if the magic number of a superblock is corrupt.
+ */
+
+static int baddev(fsptr dev)
+{
+	return (swizzle16(dev->s_mounted) != SMOUNTED);
+}
+
+
+/* I_alloc finds an unused inode number, and returns it, or 0
+ * if there are no more inodes available.
+ */
+
+static unsigned i_alloc(int devno)
+{
+	fsptr dev;
+	blkno_t blk;
+	struct dinode *buf;
+	register int j;
+	register int k;
+	unsigned ino;
+
+	if (baddev(dev = getdev(devno)))
+		goto corrupt;
+
+      tryagain:
+	if (dev->s_ninode) {
+		int i;
+
+		ifnot(dev->s_tinode)
+		    goto corrupt;
+		i = swizzle16(dev->s_ninode);
+		ino = swizzle16(dev->s_inode[--i]);
+		dev->s_ninode = swizzle16(i);
+		if (ino < 2 || ino >= (swizzle16(dev->s_isize) - 2) * 8)
+			goto corrupt;
+		dev->s_tinode = swizzle16(swizzle16(dev->s_tinode) - 1);
+		return (ino);
+	}
+
+	/* We must scan the inodes, and fill up the table */
+
+	fuzix_sync();		/* Make on-disk inodes consistent */
+	k = 0;
+	for (blk = 2; blk < swizzle16(dev->s_isize); blk++) {
+		buf = (struct dinode *) bread(devno, blk, 0);
+		for (j = 0; j < 8; j++) {
+			ifnot(buf[j].i_mode || buf[j].i_nlink)
+			    dev->s_inode[k++] =
+			    swizzle16(8 * (blk - 2) + j);
+			if (k == 50) {
+				brelse((bufptr) buf);
+				goto done;
+			}
+		}
+		brelse((bufptr) buf);
+	}
+
+      done:
+	ifnot(k) {
+		if (dev->s_tinode)
+			goto corrupt;
+		udata.u_error = ENOSPC;
+		return (0);
+	}
+
+	dev->s_ninode = swizzle16(k);
+	goto tryagain;
+
+      corrupt:
+	printf("i_alloc: corrupt superblock\n");
+	dev->s_mounted = swizzle16(1);
+	udata.u_error = ENOSPC;
+	return (0);
+}
+
+
+/* I_free is given a device and inode number, and frees the inode.
+ * It is assumed that there are no references to the inode in the
+ * inode table or in the filesystem.
+ */
+
+static void i_free(int devno, unsigned ino)
+{
+	register fsptr dev;
+
+	if (baddev(dev = getdev(devno)))
+		return;
+
+	if (ino < 2 || ino >= (swizzle16(dev->s_isize) - 2) * 8)
+		panic("i_free: bad ino");
+
+	dev->s_tinode = swizzle16(swizzle16(dev->s_tinode) + 1);
+	if (swizzle16(dev->s_ninode) < 50) {
+		int i = swizzle16(dev->s_ninode);
+		dev->s_inode[i++] = swizzle16(ino);
+		dev->s_ninode = swizzle16(i);
+	}
+}
+
+
+/* Blk_alloc is given a device number, and allocates an unused block
+ * from it. A returned block number of zero means no more blocks.
+ */
+
+static blkno_t blk_alloc(int devno)
+{
+	register fsptr dev;
+	register blkno_t newno;
+	blkno_t *buf;		/*, *bread(); -- HP */
+	register int j;
+	int i;
+
+	if (baddev(dev = getdev(devno)))
+		goto corrupt2;
+
+	if (swizzle16(dev->s_nfree) <= 0 || swizzle16(dev->s_nfree) > 50)
+		goto corrupt;
+
+	i = swizzle16(dev->s_nfree);
+	newno = swizzle16(dev->s_free[--i]);
+	dev->s_nfree = swizzle16(i);
+	ifnot(newno) {
+		if (dev->s_tfree != 0)
+			goto corrupt;
+		udata.u_error = ENOSPC;
+		dev->s_nfree = swizzle16(swizzle16(dev->s_nfree) + 1);
+		return (0);
+	}
+
+	/* See if we must refill the s_free array */
+
+	ifnot(dev->s_nfree) {
+		buf = (blkno_t *) bread(devno, newno, 0);
+		dev->s_nfree = buf[0];
+		for (j = 0; j < 50; j++) {
+			dev->s_free[j] = buf[j + 1];
+		}
+		brelse((bufptr) buf);
+	}
+
+	validblk(devno, newno);
+
+	ifnot(dev->s_tfree)
+	    goto corrupt;
+	dev->s_tfree = swizzle16(swizzle16(dev->s_tfree) - 1);
+
+	/* Zero out the new block */
+	buf = (blkno_t *) bread(devno, newno, 2);
+	bzero(buf, 512);
+	bawrite((bufptr) buf);
+	return (newno);
+
+      corrupt:
+	printf("blk_alloc: corrupt\n");
+	dev->s_mounted = swizzle16(1);
+      corrupt2:
+	udata.u_error = ENOSPC;
+	return (0);
+}
+
+
+/* Blk_free is given a device number and a block number,
+and frees the block. */
+
+static void blk_free(int devno, blkno_t blk)
+{
+	register fsptr dev;
+	register char *buf;
+	int b;
+
+	ifnot(blk)
+	    return;
+
+	if (baddev(dev = getdev(devno)))
+		return;
+
+	validblk(devno, blk);
+
+	if (dev->s_nfree == 50) {
+		buf = bread(devno, blk, 1);
+		bcopy((char *) &(dev->s_nfree), buf, 512);
+		bawrite((bufptr) buf);
+		dev->s_nfree = 0;
+	}
+
+	dev->s_tfree = swizzle16(swizzle16(dev->s_tfree) + 1);
+	b = swizzle16(dev->s_nfree);
+	dev->s_free[b++] = swizzle16(blk);
+	dev->s_nfree = swizzle16(b);
+}
+
+
+/* Oft_alloc and oft_deref allocate and dereference (and possibly free)
+ * entries in the open file table.
+ */
+
+static int oft_alloc(void)
+{
+	register int j;
+
+	for (j = 0; j < OFTSIZE; ++j) {
+		ifnot(of_tab[j].o_refs) {
+			of_tab[j].o_refs = 1;
+			of_tab[j].o_inode = NULLINODE;
+			return (j);
+		}
+	}
+	udata.u_error = ENFILE;
+	return (-1);
+}
+
+
+static void oft_deref(int of)
+{
+	register struct oft *ofptr;
+
+	ofptr = of_tab + of;
+	if (!(--ofptr->o_refs) && ofptr->o_inode) {
+		i_deref(ofptr->o_inode);
+		ofptr->o_inode = NULLINODE;
+	}
+}
+
+
+/* Uf_alloc finds an unused slot in the user file table.
+ */
+
+static int uf_alloc(void)
+{
+	register int j;
+
+	for (j = 0; j < UFTSIZE; ++j) {
+		if (udata.u_files[j] & 0x80) {	/* Portable, unlike  == -1 */
+			return (j);
+		}
+	}
+	udata.u_error = ENFILE;
+	return (-1);
+}
+
+
+/* I_ref increases the reference count of the given inode table entry.
+ */
+
+static void i_ref(inoptr ino)
+{
+	if (++(ino->c_refs) == 2 * ITABSIZE) {	/* Arbitrary limit. *//*280 */
+		printf("inode %u,", ino->c_num);	/*280 */
+		panic("too many i-refs");
+	}			/*280 */
+}
+
+
+/* I_deref decreases the reference count of an inode, and frees it from
+ * the table if there are no more references to it.  If it also has no
+ * links, the inode itself and its blocks (if not a device) is freed.
+ */
+
+static void i_deref(inoptr ino)
+{
+	unsigned int m;
+
+	magic(ino);
+
+	ifnot(ino->c_refs)
+	    panic("inode freed.");
+
+	/* If the inode has no links and no refs, it must have
+	   its blocks freed. */
+
+	ifnot(--ino->c_refs || ino->c_node.i_nlink) {
+/*
+ SN  (mcy)
+*/
+
+		m = swizzle16(ino->c_node.i_mode);
+		if (((m & F_MASK) == F_REG) ||
+		    ((m & F_MASK) == F_DIR) || ((m & F_MASK) == F_PIPE))
+			f_trunc(ino);
+	}
+	/* If the inode was modified, we must write it to disk. */
+	if (!(ino->c_refs) && ino->c_dirty) {
+		ifnot(ino->c_node.i_nlink) {
+			ino->c_node.i_mode = 0;
+			i_free(ino->c_dev, ino->c_num);
+		}
+		wr_inode(ino);
+	}
+}
+
+
+/* Wr_inode writes out the given inode in the inode table out to disk,
+ * and resets its dirty bit.
+ */
+
+static void wr_inode(inoptr ino)
+{
+	struct dinode *buf;
+	register blkno_t blkno;
+
+	magic(ino);
+
+	blkno = (ino->c_num >> 3) + 2;
+	buf = (struct dinode *) bread(ino->c_dev, blkno, 0);
+	bcopy((char *) (&ino->c_node),
+	      (char *) ((char **) &buf[ino->c_num & 0x07]), 64);
+	bfree((bufptr) buf, 2);
+	ino->c_dirty = 0;
+}
+
+
+/* isdevice(ino) returns true if ino points to a device */
+static int isdevice(inoptr ino)
+{
+	return (swizzle16(ino->c_node.i_mode) & 020000);
+}
+
+
+/* F_trunc frees all the blocks associated with the file, if it
+ * is a disk file.
+ */
+
+static void f_trunc(inoptr ino)
+{
+	int dev;
+	int j;
+
+	dev = ino->c_dev;
+
+	/* First deallocate the double indirect blocks */
+	freeblk(dev, swizzle16(ino->c_node.i_addr[19]), 2);
+
+	/* Also deallocate the indirect blocks */
+	freeblk(dev, swizzle16(ino->c_node.i_addr[18]), 1);
+
+	/* Finally, free the direct blocks */
+	for (j = 17; j >= 0; --j)
+		freeblk(dev, swizzle16(ino->c_node.i_addr[j]), 0);
+
+	bzero((char *) ino->c_node.i_addr, sizeof(ino->c_node.i_addr));
+
+	ino->c_dirty = 1;
+	ino->c_node.i_size = 0;
+}
+
+
+/* Companion function to f_trunc(). */
+static void freeblk(int dev, blkno_t blk, int level)
+{
+	blkno_t *buf;
+	int j;
+
+	ifnot(blk)
+	    return;
+
+	if (level) {
+		buf = (blkno_t *) bread(dev, blk, 0);
+		for (j = 255; j >= 0; --j)
+			freeblk(dev, swizzle16(buf[j]), level - 1);
+		brelse((bufptr) buf);
+	}
+
+	blk_free(dev, blk);
+}
+
+
+
+/* Changes: blk_alloc zeroes block it allocates */
+/*
+ * Bmap defines the structure of file system storage by returning
+ * the physical block number on a device given the inode and the
+ * logical block number in a file.  The block is zeroed if created.
+ */
+static blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
+{
+	register int i;
+	register bufptr bp;
+	register int j;
+	register blkno_t nb;
+	int sh;
+	int dev;
+
+	if (fuzix_getmode(ip) == F_BDEV)
+		return (bn);
+
+	dev = ip->c_dev;
+
+	/*
+	 * blocks 0..17 are direct blocks
+	 */
+	if (bn < 18) {
+		nb = swizzle16(ip->c_node.i_addr[bn]);
+		if (nb == 0) {
+			if (rwflg || (nb = blk_alloc(dev)) == 0)
+				return (NULLBLK);
+			ip->c_node.i_addr[bn] = swizzle16(nb);
+			ip->c_dirty = 1;
+		}
+		return (nb);
+	}
+
+	/*
+	 * addresses 18 and 19 have single and double indirect blocks.
+	 * the first step is to determine how many levels of indirection.
+	 */
+	bn -= 18;
+	sh = 0;
+	j = 2;
+	if (bn & 0xff00) {	/* bn > 255  so double indirect */
+		sh = 8;
+		bn -= 256;
+		j = 1;
+	}
+
+	/*
+	 * fetch the address from the inode
+	 * Create the first indirect block if needed.
+	 */
+	ifnot(nb = swizzle16(ip->c_node.i_addr[20 - j])) {
+		if (rwflg || !(nb = blk_alloc(dev)))
+			return (NULLBLK);
+		ip->c_node.i_addr[20 - j] = swizzle16(nb);
+		ip->c_dirty = 1;
+	}
+
+	/*
+	 * fetch through the indirect blocks
+	 */
+	for (; j <= 2; j++) {
+		bp = (bufptr) bread(dev, nb, 0);
+		/******
+                if(bp->bf_error) {
+                        brelse(bp);
+                        return((blkno_t)0);
+                }
+                ******/
+		i = (bn >> sh) & 0xff;
+		if ((swizzle16(nb) == ((blkno_t *) bp)[i]))
+			brelse(bp);
+		else {
+			if (rwflg || !(nb = blk_alloc(dev))) {
+				brelse(bp);
+				return (NULLBLK);
+			}
+			((blkno_t *) bp)[i] = swizzle16(nb);
+			bawrite(bp);
+		}
+		sh -= 8;
+	}
+	return (nb);
+}
+
+
+
+/* Validblk panics if the given block number is not a valid
+ *  data block for the given device.
+ */
+static void validblk(int dev, blkno_t num)
+{
+	register fsptr devptr;
+
+	devptr = fs_tab + dev;
+
+	if (devptr->s_mounted == 0)
+		panic("validblk: not mounted");
+
+	if (num < swizzle16(devptr->s_isize)
+	    || num >= swizzle16(devptr->s_fsize))
+		panic("validblk: invalid blk");
+}
+
+
+/* This returns the inode pointer associated with a user's file
+ * descriptor, checking for valid data structures.
+ */
+static inoptr getinode(int uindex)
+{
+	register int oftindex;
+	register inoptr inoindex;
+
+	if (uindex < 0 || uindex >= UFTSIZE
+	    || udata.u_files[uindex] & 0x80) {
+		udata.u_error = EBADF;
+		return (NULLINODE);
+	}
+
+	if ((oftindex = udata.u_files[uindex]) < 0 || oftindex >= OFTSIZE)
+		panic("Getinode: bad desc table");
+
+	if ((inoindex = of_tab[oftindex].o_inode) < i_tab ||
+	    inoindex >= i_tab + ITABSIZE)
+		panic("Getinode: bad OFT");
+
+	magic(inoindex);
+
+	return (inoindex);
+}
+
+/* This sets the times of the given inode, according to the flags.
+ */
+static void setftime(inoptr ino, int flag)
+{
+	time_t now;
+	ino->c_dirty = 1;
+
+	now = time(NULL);
+
+	if (flag & A_TIME)
+		ino->c_node.i_atime = swizzle32(now);
+	if (flag & M_TIME)
+		ino->c_node.i_mtime = swizzle32(now);
+	if (flag & C_TIME)
+		ino->c_node.i_ctime = swizzle32(now);
+}
+
+
+static int fuzix_getmode(inoptr ino)
+{
+	return (swizzle16(ino->c_node.i_mode) & F_MASK);
+}
+
+
+/* Fmount places the given device in the mount table with mount point ino.
+ */
+static int fmount(int dev, inoptr ino)
+{
+	char *buf;
+	register struct filesys *fp;
+
+	/* Dev 0 blk 1 */
+	fp = fs_tab + dev;
+	buf = bread(dev, 1, 0);
+	bcopy(buf, (char *) fp, sizeof(struct filesys));
+	brelse((bufptr) buf);
+
+	/* See if there really is a filesystem on the device */
+	if (fp->s_mounted == SMOUNTED_WRONGENDIAN)
+		swizzling = 1;
+	if (swizzle16(fp->s_mounted) != SMOUNTED ||
+	    swizzle16(fp->s_isize) >= swizzle16(fp->s_fsize))
+		return (-1);
+
+	fp->s_mntpt = ino;
+	if (ino)
+		++ino->c_refs;
+
+	return (0);
+}
+
+static void magic(inoptr ino)
+{
+	if (ino->c_magic != CMAGIC)
+		panic("Corrupt inode");
+}
+
+static char *bread(int dev, blkno_t blk, int rewrite)
+{
+	register bufptr bp;
+
+/*printf("Reading block %d\n", blk);*/
+
+	bp = bfind(dev, blk);
+	if (bp) {
+		if (bp->bf_busy)
+			panic("want busy block");
+		goto done;
+	}
+	bp = freebuf();
+	bp->bf_dev = dev;
+	bp->bf_blk = blk;
+
+	/* If rewrite is set, we are about to write over the entire block,
+	   so we don't need the previous contents */
+
+	ifnot(rewrite)
+	    if (bdread(bp) == -1) {
+		udata.u_error = EIO;
+		return 0;
+	}
+
+done:
+	bp->bf_busy = 1;
+	bp->bf_time = ++bufclock;	/* Time stamp it */
+	return (bp->bf_data);
+}
+
+
+static void brelse(bufptr bp)
+{
+/*printf("Releasing block %d (0)\n", bp->bf_blk);*/
+	bfree(bp, 0);
+}
+
+static void bawrite(bufptr bp)
+{
+/*printf("Releasing block %d (1)\n", bp->bf_blk);*/
+	bfree(bp, 1);
+}
+
+static int bfree(bufptr bp, int dirty)
+{
+/*printf("Releasing block %d (%d)\n", bp->bf_blk, dirty);*/
+	bp->bf_dirty |= dirty;
+	bp->bf_busy = 0;
+
+	if (dirty == 2) {	/* Extra dirty */
+		if (bdwrite(bp) == -1)
+			udata.u_error = EIO;
+		bp->bf_dirty = 0;
+		return (-1);
+	}
+	return (0);
+}
+
+
+/* This returns a busy block not belonging to any device, with
+ * garbage contents.  It is essentially a malloc for the kernel.
+ * Free it with brelse()!
+ */
+static char *tmpbuf(void)
+{
+	bufptr bp;
+	bufptr freebuf();
+
+/*printf("Allocating temp block\n");*/
+	bp = freebuf();
+	bp->bf_dev = -1;
+	bp->bf_busy = 1;
+	bp->bf_time = ++bufclock;	/* Time stamp it */
+	return (bp->bf_data);
+}
+
+
+static char *zerobuf(void)
+{
+	char *b;
+	char *tmpbuf();
+
+	b = tmpbuf();
+	bzero(b, 512);
+	return (b);
+}
+
+
+static void bufsync(void)
+{
+	register bufptr bp;
+
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bp->bf_dev != -1 && bp->bf_dirty) {
+			bdwrite(bp);
+			if (!bp->bf_busy)
+				bp->bf_dirty = 0;
+		}
+	}
+}
+
+static bufptr bfind(int dev, blkno_t blk)
+{
+	register bufptr bp;
+
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bp->bf_dev == dev && bp->bf_blk == blk)
+			return (bp);
+	}
+	return (NULL);
+}
+
+
+static bufptr freebuf(void)
+{
+	register bufptr bp;
+	register bufptr oldest;
+	register int oldtime;
+
+	/* Try to find a non-busy buffer and write out the data if it is dirty */
+	oldest = NULL;
+	oldtime = 0;
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		if (bufclock - bp->bf_time >= oldtime && !bp->bf_busy) {
+			oldest = bp;
+			oldtime = bufclock - bp->bf_time;
+		}
+	}
+	ifnot(oldest)
+	    panic("no free buffers");
+
+	if (oldest->bf_dirty) {
+		if (bdwrite(oldest) == -1)
+			udata.u_error = EIO;
+		oldest->bf_dirty = 0;
+	}
+	return (oldest);
+}
+
+static void bufinit(void)
+{
+	register bufptr bp;
+
+	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
+		bp->bf_dev = -1;
+	}
+}
+
+
+/*********************************************************************
+Bdread() and bdwrite() are the block device interface routines.  they
+are given a buffer pointer, which contains the device, block number,
+and data location.  They basically validate the device and vector the
+call.
+
+Cdread() and cdwrite are the same for character (or "raw") devices,
+and are handed a device number.  Udata.u_base, count, and offset have
+the rest of the data.
+**********************************************************************/
+
+static int bdread(bufptr bp)
+{
+//    printf("bdread(fd=%d, block %d)\n", dev_fd, bp->bf_blk);
+
+	udata.u_buf = bp;
+	if (lseek
+	    (dev_fd, dev_offset + (((int) bp->bf_blk) * 512),
+	     SEEK_SET) == -1)
+		perror("lseek");
+	if (read(dev_fd, bp->bf_data, 512) != 512)
+		panic("read() failed");
+
+	return 0;
+}
+
+
+static int bdwrite(bufptr bp)
+{
+	udata.u_buf = bp;
+
+	lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512), SEEK_SET);
+	if (write(dev_fd, bp->bf_data, 512) != 512)
+		panic("write() failed");
+	return 0;
 }

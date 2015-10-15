@@ -49,7 +49,7 @@ _sd_spi_clock:
 	beq slow
 	ldd #0x0401		; external 45MHz clock on, divide by 3
 	bra clkset
-slow:	ldd #0x0003		; internal clock, phi/5 -> 2MHz/5 = 400Khz
+slow:	ldd #0x0000		; internal clock, phi/2 -> 0.89MHz/2 = 445kHz
 clkset:	std SPICTRL
 	rts
 
@@ -75,7 +75,7 @@ _sd_spi_transmit_byte:
 	stb SPIDATA
 txwait:
 	lda SPISTATUS
-	anda #0x40
+	anda #0x20		; BSY
 	bne txwait
 	rts
 
@@ -109,7 +109,8 @@ _sd_spi_receive_sector:
 rdspi:	ldx _blk_op
 	leay 512,x
 	sty endspi
-	lda #0x44		; FRX on, external clock on
+	lda #0x14		; FRX on, external clock on
+	sta SPICTRL
 read8:
 	lda <SPIDATA
 	ldb <SPIDATA

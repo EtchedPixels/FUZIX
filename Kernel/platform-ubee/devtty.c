@@ -10,6 +10,8 @@
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
+uint8_t vtattr_cap;
+
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
 __sfr __at 0xEA tr1865_status;

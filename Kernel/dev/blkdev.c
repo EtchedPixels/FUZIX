@@ -128,6 +128,8 @@ static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
 		blk_op.lba += n<<BLKSHIFT;
 		blk_op.addr += n<<BLKSHIFT;
         count += n;
+	blk_op.addr += n * BLKSIZE;
+	blk_op.lba += n;
     }
 
     return count; /* 10/10, would transfer sectors again */

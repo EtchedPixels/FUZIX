@@ -37,12 +37,14 @@ void mbr_parse(char letter)
 {
 	boot_record_t *br;
 	uint8_t i,k = 0;
-	
+	uint32_t tstart;
+	uint32_t tlen;
+
 	kprintf("hd%c: ", letter);
-	
+
 	/* allocate temporary memory */
 	br = (boot_record_t *)tmpbuf();
-	
+
 	blk_op.is_read = true;
 	blk_op.is_user = false;
 	blk_op.addr = br;
@@ -61,9 +63,20 @@ void mbr_parse(char letter)
 		if( ! br->partition[i].flags ){
 			continue;
 		}
+		/* if valid entry, then adjust offset/len to blocks*/
 		else{
-			blk_op.blkdev->lba_first[k] = br->partition[i].start;
-			blk_op.blkdev->lba_count[k] = br->partition[i].len;
+			tstart = br->partition[i].start;
+			tlen = br->partition[i].len;
+			if( !br->secz ){
+				tstart >>= 1;
+				tlen >>= 1;
+			}
+			else{
+				tstart <<= (br->secz-1);
+				tlen <<= (br->secz-1);
+			}			
+			blk_op.blkdev->lba_first[k] = tstart;
+			blk_op.blkdev->lba_count[k] = tlen;
 			kprintf("hd%c%d ", letter, k+1);
 			k++;
 		}

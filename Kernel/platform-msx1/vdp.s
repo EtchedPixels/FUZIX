@@ -25,6 +25,8 @@ VDP_DIRECT	.equ	1
 ;	FIXME: should use vdpport, but right now vdpport is in data not
 ;	common space.
 ;
+	    .area _COMMONMEM
+
 platform_interrupt_all:
 	    ld c, #0x99
 	    in a, (c)

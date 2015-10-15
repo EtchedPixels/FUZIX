@@ -60,6 +60,8 @@ uint8_t vtattr;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
 static signed char ncursory;
+static uint8_t vtpend;
+static uint8_t vtbusy;
 
 static void cursor_fix(void)
 {
@@ -175,35 +177,65 @@ static int escout(unsigned char c)
 /* VT52 alike functionality */
 void vtoutput(unsigned char *p, unsigned int len)
 {
-	cursor_off();
-	while (len--) {
-		unsigned char c = *p++;
-		if (vtmode == 0) {
-			charout(c);
-			continue;
-		}
-		if (vtmode == 1) {
-			vtmode = escout(c);
-			continue;
-		}
-		if (vtmode == 2) {
-			ncursory = c - ' ';
-			vtmode++;
-			continue;
-		} else if (vtmode == 3) {
-			int ncursorx = c - ' ';
-			if (ncursory >= 0 && ncursorx <= VT_BOTTOM)
-				cursory = ncursory;
-			if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
-				cursorx = ncursorx;
-			vtmode = 0;
-		} else {
-			vtattr = c;
-			vtmode = 0;
-			continue;
-		}
+	irqflags_t irq;
+	uint8_t cq;
+
+	/* We can get re-entry into the vt code from tty echo. This is one of
+	   the few places in Fuzix interrupts bite us this way.
+
+	   If we have a clash then we queue the echoed symbol and print it
+	   in the thread of execution it interrupted. We only queue one so
+	   in theory might lose the odd echo - but the same occurs with real
+	   uarts. If anyone actually has printing code slow enough this is a
+	   problem then vtpend can turn into a small queue */
+	irq = di();
+	if (vtbusy) {
+		vtpend = *p;
+		irqrestore(irq);
+		return;
 	}
+	vtbusy = 1;
+	irqrestore(irq);
+	cursor_off();
+	do {
+		while (len--) {
+			unsigned char c = *p++;
+			if (vtmode == 0) {
+				charout(c);
+				continue;
+			}
+			if (vtmode == 1) {
+				vtmode = escout(c);
+				continue;
+			}
+			if (vtmode == 2) {
+				ncursory = c - ' ';
+				vtmode++;
+				continue;
+			} else if (vtmode == 3) {
+				int ncursorx = c - ' ';
+				if (ncursory >= 0 && ncursorx <= VT_BOTTOM)
+					cursory = ncursory;
+				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
+					cursorx = ncursorx;
+					vtmode = 0;
+			} else {
+				vtattr = c;
+				vtmode = 0;
+				continue;
+			}
+		}
+		/* Copy the pending symbol and clear the buffer */
+		cq = vtpend;
+		vtpend = 0;
+		/* Any loops print the single byte in cq */
+		p = &cq;
+		len = 1;
+		/* Until we don't get interrupted */
+	} while(cq);
+
 	cursor_on(cursory, cursorx);
+	vtbusy = 0;
 }
 
 int vt_ioctl(uint8_t minor, uarg_t request, char *data)

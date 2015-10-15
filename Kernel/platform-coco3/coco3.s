@@ -18,6 +18,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl _need_resched
+	    .globl _hz
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -33,6 +34,7 @@
             .globl unix_syscall_entry
 	    .globl nmi_handler
 	    .globl null_handler
+	    .globl video_init
 
             include "kernel.def"
             include "../kernel09.def"
@@ -105,6 +107,10 @@ _irqrestore:			; B holds the data
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK
 ; -----------------------------------------------------------------------------
+	.area .data
+_hz:	.db	0  		; Is machine in 50hz?
+
+	
             .area .text
 
 ;;;  Stuff to initialize *before* hardware
@@ -138,8 +144,17 @@ b@	sta	,x+
         ;; set temporary screen up
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
-	ldb	#%00001100	; text / 8 lines per char row
-	stb	$ff98
+	;; detect PAL or NTSC ROM
+	ldb	#$3f		; put Super BASIC in mmu
+	stb	$ffae		; 
+	lda	$c033		; get BASIC's "mirror" of Video Reg
+	ldb	#$06		; put Fuzix Kernel back in mmu
+	stb	$ffae		;
+	anda	#$8		; mask off 50 hz bit
+	sta	_hz		; save for future use
+	;; continue setup of regs
+	ora	#%00000100	; text @ 9 lines per char row
+	sta	$ff98
 	ldb	#%00010100	; 80 column mode
 	stb	$ff99
 	ldd	#$b400/8	; video at physical 0xb000
@@ -148,11 +163,7 @@ b@	sta	,x+
 	sta	$ffb0
 	stb	$ffb8
 	;; clear video memory
-	ldx	#$ac00
-	lda	#$20
-a@	sta	,x+
-	cmpx	#$bb80
-	bne	a@
+	jsr	_video_init
         ;; Our vectors are in high memory unlike Z80 but we still
         ;; need vectors
 	ldu	#0xfeee		; vector area
@@ -174,6 +185,7 @@ a@	sta	,x+
 	ldx 	#nmi_handler
 	sta	,u+
 	stx	,u
+	jsr	_devtty_init
         rts
 
 
@@ -320,4 +332,13 @@ outchar:
 scrPos	.dw	0xb400		; debugging screen buffer position
 
 
+
+;;; Maps the memory for swap transfers
+;;;   takes: A = swap token ( a page no. )
+;;;   returns: nothing
+map_for_swap
+	sta	0xffa8
+	inca
+	sta	0xffa9
+	rts
 

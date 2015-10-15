@@ -261,11 +261,69 @@ char *tgetstr(char *id, char **area)
 }
 
 /*
+ *	tgoto - given the cursor motion string cm, make up the string
+ *	for the cursor to go to (destcol, destline), and return the string.
+ *	Returns "OOPS" if something's gone wrong, or the string otherwise.
+ */
+
+char *tgoto(const char *cm, int destcol, int destline)
+{
+ 	static char ret[24];
+	char *rp = ret;
+	int incr = 0;
+	int argno = 0;
+	int numval;
+
+	for (; *cm; cm++) {
+		if (*cm == '%') {
+			switch (*++cm) {
+				case 'i':
+					incr = 1;
+		  			break;
+				case 'r':
+					argno = 1;
+		  			break;
+				case '+':
+					numval = (argno == 0 ? destline : destcol);
+					*rp++ = numval + incr + *++cm;
+					argno = 1 - argno;
+					break;
+				case '2':
+					numval = (argno == 0 ? destline : destcol);
+					numval = (numval + incr) % 100;
+					*rp++ = '0' + (numval / 10);
+					*rp++ = '0' + (numval % 10);
+					argno = 1 - argno;
+					break;
+				case 'd':
+					numval = (argno == 0 ? destline : destcol);
+					numval = (numval + incr) % 1000;
+					if (numval > 99)
+						*rp++ = '0' + (numval / 100);
+					if (numval > 9)
+						*rp++ = '0' + (numval / 10) % 10;
+					*rp++ = '0' + (numval % 10);
+					argno = 1 - argno;
+					break;
+				case '%':
+					*rp++ = '%';
+					break;
+				default:
+					return("OOPS");
+ 			}
+		}
+		else
+			*rp++ = *cm;
+	}
+	*rp = '\0';
+	return ret;
+}
+
+/*
  *	tputs - put the string cp out onto the terminal, using the function
  *	outc. This should do padding for the terminal, but I can't find a
  *	terminal that needs padding at the moment...
  */
-
 
 int tputs(const char *cp, int affcnt, int (*outc)(int ch))
 {
