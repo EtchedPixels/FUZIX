@@ -45,6 +45,7 @@ libc-functions.localsrcs += \
 	fgetpwent.c \
 	fgets.c \
 	fopen.c \
+	fork.c \
 	fprintf.c \
 	fputc.c \
 	fputs.c \

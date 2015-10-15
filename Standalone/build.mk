@@ -12,7 +12,7 @@ $(call build, mkfs, host-exe)
 fsck.srcs = fsck.c util.c
 $(call build, fsck, host-exe)
 
-ucp.srcs = ucp.c util.c devio.c xfs1.c xfs1a.c xfs1b.c xfs2.o
+ucp.srcs = ucp.c util.c
 $(call build, ucp, host-exe)
 
 standalones: chmem size mkfs fsck ucp

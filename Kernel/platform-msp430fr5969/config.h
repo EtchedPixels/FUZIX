@@ -74,4 +74,5 @@ extern int __swap_size_blocks;
 
 #define BOOTDEVICE 0x0001 /* hda1 */
 
+#define platform_discard() do {} while(0)
 

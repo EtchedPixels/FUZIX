@@ -108,10 +108,10 @@ MEMORY {
 
   /* We have a combined udata/kstack block just under the userdata start,
    * The syscall vector is in the two bytes immediately before userspace. */
-  LOROM            : ORIGIN = 0x4400, LENGTH = 0x9f80-0x4400
-  UDATA            : ORIGIN = 0x9f80, LENGTH = 0xa17e-0x9f80
-  SYSCALL          : ORIGIN = 0xa17e, LENGTH = 0x0002
-  USER             : ORIGIN = 0xa180, LENGTH = 0xff80-0xa180
+  LOROM            : ORIGIN = 0x4400, LENGTH = 0xa180-0x4400
+  UDATA            : ORIGIN = 0xa180, LENGTH = 0xa37e-0xa180
+  SYSCALL          : ORIGIN = 0xa37e, LENGTH = 0x0002
+  USER             : ORIGIN = 0xa380, LENGTH = 0xff80-0xa380
 
   /* Our init code goes here. It'll get copied into userspace at startup,
    * so we can discard it; that way we don't have it using up space at
@@ -121,7 +121,7 @@ MEMORY {
 
 PROVIDE(__swap_base = ORIGIN(UDATA));
 PROVIDE(__swap_top = ORIGIN(USER) + LENGTH(USER));
-PROVIDE(__swap_size_blocks = (LENGTH(USER) + LENGTH(UDATA)) / 512);
+PROVIDE(__swap_size_blocks = (LENGTH(USER) + LENGTH(UDATA) + LENGTH(SYSCALL)) / 512);
 
 PROVIDE(__user_base = ORIGIN(USER));
 PROVIDE(__user_length = LENGTH(USER));

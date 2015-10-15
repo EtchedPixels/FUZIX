@@ -23,6 +23,9 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
 
+#define uputp  uputw			/* Copy user pointer type */
+#define ugetp  ugetw			/* between user and kernel */
+
 #define ei() \
 	asm volatile ("eint")
 
