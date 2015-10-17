@@ -206,7 +206,8 @@ arg_t _execve(void)
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
 
-	udata.u_break = (int) progptr + bss;	//  Set initial break for program
+	// Set initial break for program
+	udata.u_break = (int)alignup(progptr + bss, sizeof(void*));
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
