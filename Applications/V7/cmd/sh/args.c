@@ -10,8 +10,7 @@
  *
  */
 
-#include <stdlib.h>
-#include	"defs.h"
+#include "defs.h"
 
 static const char **copyargs(const char *from[], int n);
 static DOLPTR dolh;

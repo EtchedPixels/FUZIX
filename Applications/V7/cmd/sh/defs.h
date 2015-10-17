@@ -1,11 +1,15 @@
 /* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
 /* Changes: Copyright (c) 1999 Robert Nordier. All rights reserved. */
 
+#define _GNU_SOURCE
 #include <stdint.h>
 #include <stddef.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/times.h>
+#include <errno.h>
+
 /*
  *	UNIX shell
  */
@@ -176,7 +180,7 @@ extern const char ps2name[];
 
 /* transput */
 extern CHAR tmpout[];
-extern char * tmpnam;
+extern char *tempfile;
 extern int serial;
 #define		TMPNAM 7
 extern FILE standin;
