@@ -98,6 +98,7 @@ char rline(void)
 {
 	register char c, r;
 
+	fflush(stdout);
 	while ((c = getchar()) == ' ');
 	r = c;
 	while (c != '\n' && c != ' ') {
@@ -111,16 +112,19 @@ char rline(void)
 
 int rnum(int n)
 {
-	time_t t;
-	static int16_t first[2];
+	static char seeded = 0;
 
-	if (first[1] == 0) {
+	if (!seeded) {
+		static int16_t first[2];
+		time_t t;
+
+		seeded = 1;
 		time(&t);
 		first[0] = (int) t;
 		first[1] = ((uint32_t) t) >> 16;
 		srand((first[1] * first[0]) ^ first[1]);
 	}
-	return (((long)rand() / 32768L) * n);
+	return rand() % n;
 }
 
 int rin(void)
@@ -128,6 +132,7 @@ int rin(void)
 	register int n, c;
 
 	n = 0;
+	fflush(stdout);
 	c = getchar();
 	while (c != '\n' && c != ' ') {
 		if (c < '0' || c > '9') {
