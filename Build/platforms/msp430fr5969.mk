@@ -48,7 +48,6 @@ libc-functions.localsrcs += \
 FILESYSTEM_ISIZE = 640
 FILESYSTEM_FSIZE = 20480 # 10MB
 FILESYSTEM = \
-	/bin/arithmetic         0755 $(v7-games-arithmetic.result) \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
 	/bin/bd                 0755 $(util-bd.result) \
@@ -153,11 +152,12 @@ FILESYSTEM = \
     /bin/tsort              0755 $(v7-cmd-tsort.result) \
     /bin/wall               0755 $(v7-cmd-wall.result) \
 	/init                   0755 $(util-init.result) \
+	/usr/games/arithmetic   0755 $(v7-games-arithmetic.result) \
     /usr/games/fish         0755 $(v7-games-fish.result) \
     /usr/games/wump         0755 $(v7-games-wump.result) \
+    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
 
 # These are too big. \
-    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \
