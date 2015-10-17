@@ -25,6 +25,7 @@ void getline(char *s)
 
 	rs = s;
 
+	fflush(stdout);
 	while ((*rs = getchar()) == ' ');
 	while (*rs != '\n')
 		if (*rs == 0)
