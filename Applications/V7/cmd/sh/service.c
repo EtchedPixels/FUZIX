@@ -19,8 +19,6 @@ static int split(const char *s);
 
 #define ARGMK	01
 
-/* FIXME: errno from header */
-extern int errno;
 /* FIXME: put into a header */
 extern const char *sysmsg[];
 
