@@ -516,10 +516,6 @@ void kputnum(int v)
 
 void kprintf(const char *fmt, ...)
 {
-	char *str;
-	unsigned int v;
-	unsigned long l;
-	char c;
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -528,42 +524,47 @@ void kprintf(const char *fmt, ...)
 			fmt++;
 			switch (*fmt) {
 				case 's':
-					str = va_arg(ap, char *);
+				{
+					char* str = va_arg(ap, char *);
 					kputs(str);
 					fmt++;
 					continue;
+				}
 
 				case 'c':
-					c = va_arg(ap, int);
+				{
+					char c = va_arg(ap, int);
 					kputchar(c);
 					fmt++;
 					continue;
+				}
 
 				case 'l': /* assume an x is following */
-					l = va_arg(ap, unsigned long);
+				{
+					long l = va_arg(ap, unsigned long);
 					/* TODO: not 32-bit safe */
 					kputhex((uint16_t)(l >> 16));
 					kputhex((uint16_t)l);
 					fmt += 2;
 					continue;
+				}
 
 				case 'x':
-					v = va_arg(ap, int);
-					kputhex(v);
-					fmt++;
-					continue;
-
 				case 'd':
-					v = va_arg(ap, int);
-					kputnum(v);
-					fmt++;
-					continue;
-
 				case 'u':
-					v = va_arg(ap, int);
-					kputunum(v);
+				{
+					unsigned int v = va_arg(ap, int);
+
+					if (*fmt == 'x')
+						kputhex(v);
+					else if (*fmt == 'd')
+						kputnum(v);
+					else if (*fmt == 'u')
+						kputunum(v);
+
 					fmt++;
 					continue;
+				}
 			}
 		}
 		kputchar(*fmt);
