@@ -9,7 +9,6 @@
  *
  */
 
-#include	<stdlib.h>
 #include	"defs.h"
 
 

@@ -101,7 +101,7 @@ int create(const char *s)
 int tmpfil(void)
 {
 	itos(serial++);
-	movstr(numbuf, tmpnam);
+	movstr(numbuf, tempfile);
 	return create(tmpout);
 }
 

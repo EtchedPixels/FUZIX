@@ -10,10 +10,10 @@
  *
  */
 
+#include	"defs.h"
 #include	<stdlib.h>
 #include	<unistd.h>
 #include	<fcntl.h>
-#include	"defs.h"
 #include	"sym.h"
 #include	"timeout.h"
 #include	<sys/types.h>
@@ -25,6 +25,7 @@ static BOOL beenhere = FALSE;
 CHAR tmpout[20] = "/tmp/sh-";
 FILEBLK stdfile;
 FILE standin = &stdfile;
+char* tempfile;
 
 static void exfile(BOOL);
 
@@ -183,7 +184,7 @@ void settmp(void)
 {
 	itos(getpid());
 	serial = 0;
-	tmpnam = movstr(numbuf, &tmpout[TMPNAM]);
+	tempfile = movstr(numbuf, &tmpout[TMPNAM]);
 }
 
 void Ldup(register int fa, register int fb)
