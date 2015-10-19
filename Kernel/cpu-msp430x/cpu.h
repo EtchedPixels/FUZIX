@@ -122,3 +122,10 @@ typedef union {            /* this structure is endian dependent */
 #define EMAGIC   (*p)
 #define EMAGIC_2 (*p)
 
+/* To save space, queues go in high memory. */
+#define CONFIG_INDIRECT_QUEUES
+typedef uint16_t queueptr_t;
+#define GETQ(p) __read_hidata(p)
+#define PUTQ(p, v) __write_hidata((p), (v))
+
+
