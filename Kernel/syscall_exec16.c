@@ -76,14 +76,8 @@ char *envp[];
 static int header_ok(uint8_t *pp)
 {
 	register uint8_t *p = pp;
-	#if defined(EMAGIC)
-		if ((*p != EMAGIC)
-		#if defined(EMAGIC_2)
-			&& (*p != EMAGIC_2)
-		#endif
-		)
-			return 0;
-	#endif
+	if (*p != EMAGIC && *p != EMAGIC_2)
+		return 0;
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
