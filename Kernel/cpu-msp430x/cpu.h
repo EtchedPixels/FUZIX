@@ -23,6 +23,12 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
 
+/* The MSP430 requires aligned accesses. (Annoying, it doesn't trap if you
+ * get this wrong. It just reads to or writes from the wrong place.) */
+
+#define ALIGNUP(v)   alignup(v, 2)
+#define ALIGNDOWN(v) aligndown(v, 2)
+
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
 

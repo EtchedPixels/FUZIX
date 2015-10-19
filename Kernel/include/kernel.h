@@ -25,6 +25,16 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define aligndown(v,a) (uint8_t*)((intptr_t)(v) & ~((a)-1))
 #define alignup(v,a) (uint8_t*)((intptr_t)((v) + (a)-1) & ~((a)-1))
 
+/* By default, assume machines that don't need alignment. */
+
+#ifndef ALIGNUP
+#define ALIGNUP(v) (v)
+#endif
+
+#ifndef ALIGNDOWN
+#define ALIGNDOWN(v) (v)
+#endif
+
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */

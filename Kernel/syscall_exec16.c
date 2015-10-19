@@ -207,7 +207,7 @@ arg_t _execve(void)
 	uzero((uint8_t *)progptr, bss);
 
 	// Set initial break for program
-	udata.u_break = (int)alignup(progptr + bss, sizeof(void*));
+	udata.u_break = (int)ALIGNUP(progptr + bss);
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -295,7 +295,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	sptr = argbuf->a_buf;
 
 	/* Move them into the users address space, at the very top */
-	ptr -= (arglen = (int)alignup(argbuf->a_arglen, 2));
+	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
 
 	if (arglen) {
 		uput(sptr, ptr, arglen);

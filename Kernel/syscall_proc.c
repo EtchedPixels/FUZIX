@@ -225,7 +225,7 @@ arg_t _brk(void)
 	   need to make this something like  if (brk_valid(addr)) so we
 	   can keep it portable */
 
-	uaddr_t aligned = (uaddr_t) alignup(addr, sizeof(uaddr_t));
+	uaddr_t aligned = (uaddr_t) ALIGNUP(addr);
 	if (aligned >= brk_limit()) {
 		kprintf("%d: out of memory\n", udata.u_ptab->p_pid);
 		udata.u_error = ENOMEM;
