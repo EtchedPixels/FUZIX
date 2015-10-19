@@ -11,7 +11,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define __FUZIX__KERNEL_DOT_H__
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "config.h"
 #include "cpu.h"
