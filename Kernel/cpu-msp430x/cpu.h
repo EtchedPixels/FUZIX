@@ -119,6 +119,6 @@ typedef union {            /* this structure is endian dependent */
 
 /* Really we should check for the jmp I imagine but gcc will figure the below
    out for us and keep this oddness out of the core code ! */
-#define EMAGIC	(*p)
-#define EMAGIC2 (*p)
+#define EMAGIC   (*p)
+#define EMAGIC_2 (*p)
 
