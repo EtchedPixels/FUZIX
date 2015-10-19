@@ -76,8 +76,14 @@ char *envp[];
 static int header_ok(uint8_t *pp)
 {
 	register uint8_t *p = pp;
-	if (*p != EMAGIC && *p != EMAGIC_2)
-		return 0;
+	#if defined(EMAGIC)
+		if ((*p != EMAGIC)
+		#if defined(EMAGIC_2)
+			&& (*p != EMAGIC_2)
+		#endif
+		)
+			return 0;
+	#endif
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
@@ -200,7 +206,8 @@ arg_t _execve(void)
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
 
-	udata.u_break = (int) progptr + bss;	//  Set initial break for program
+	/* Set initial break for program */
+	udata.u_break = (int)ALIGNUP(progptr + bss);
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -290,7 +297,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	sptr = argbuf->a_buf;
 
 	/* Move them into the users address space, at the very top */
-	ptr -= (arglen = argbuf->a_arglen);
+	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
 
 	if (arglen) {
 		uput(sptr, ptr, arglen);

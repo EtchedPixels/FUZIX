@@ -1,0 +1,8 @@
+U_DATA                      = udata
+
+.macro proc n
+	.section ".text.\n", "ax", @progbits
+	.globl \n
+	\n:
+.endm
+

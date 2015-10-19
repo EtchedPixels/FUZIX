@@ -23,6 +23,12 @@ void *malloc(size_t size)
 	register mem *ptr = 0;
 	if (size == 0)
 		return 0;	/* ANSI STD */
+
+	/* Ensure size is aligned, otherwise our memory nodes become unaligned
+	 * and we get hard-to-debug errors on platforms which require
+	 * aligned accesses. */
+	size = (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
+
 	sz = size + sizeof(struct mem_cell);
 
 #ifdef MINALLOC

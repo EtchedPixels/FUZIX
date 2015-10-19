@@ -15,7 +15,8 @@ $1.extradeps ?=
 $1.objs ?= \
 	$$(patsubst %.c, $$($1.objdir)/%.$O, \
 	$$(patsubst %.s, $$($1.objdir)/%.$O, \
-		$$($1.abssrcs)))
+	$$(patsubst %.S, $$($1.objdir)/%.$O, \
+		$$($1.abssrcs))))
 
 -include $$($1.deps)
 

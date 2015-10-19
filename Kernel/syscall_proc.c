@@ -225,16 +225,17 @@ arg_t _brk(void)
 	   need to make this something like  if (brk_valid(addr)) so we
 	   can keep it portable */
 
-	if (addr >= brk_limit()) {
+	uaddr_t aligned = (uaddr_t) ALIGNUP(addr);
+	if (aligned >= brk_limit()) {
 		kprintf("%d: out of memory\n", udata.u_ptab->p_pid);
 		udata.u_error = ENOMEM;
 		return -1;
 	}
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
-	if (addr > udata.u_break)
-		uzero((void *)udata.u_break, addr - udata.u_break);
-	udata.u_break = addr;
+	if (aligned > udata.u_break)
+		uzero((void *)udata.u_break, aligned - udata.u_break);
+	udata.u_break = aligned;
 	return 0;
 }
 

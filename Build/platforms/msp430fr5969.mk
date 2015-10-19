@@ -12,6 +12,17 @@ TARGETAR = msp430-elf-ar
 TARGETLD = msp430-elf-ld
 TARGETOBJCOPY = msp430-elf-objcopy
 
+targetgcc.cflags += \
+	-g \
+	-ffunction-sections \
+	-fdata-sections \
+	-funit-at-a-time \
+	-mhwmult=auto \
+	-mmcu=msp430fr5969
+
+target-exe.ldflags += \
+	-g
+
 targetgcc.includes += -I$(TOP)/Library/include/msp430x
 
 # CPU architecture and which syscall generator to use.
@@ -34,8 +45,8 @@ libc-functions.localsrcs += \
 # Configure the filesystem; size and contents. $(FILESYSTEM) lists the files to
 # go on the file system, not including the standard files; the three columns
 # are destination filename, mode, and source filename.
-FILESYSTEM_ISIZE = 64
-FILESYSTEM_FSIZE = 2880
+FILESYSTEM_ISIZE = 640
+FILESYSTEM_FSIZE = 20480 # 10MB
 FILESYSTEM = \
 	/bin/banner             0755 $(util-banner.result) \
 	/bin/basename           0755 $(util-basename.result) \
@@ -65,7 +76,6 @@ FILESYSTEM = \
 	/bin/grep               0755 $(util-grep.result) \
 	/bin/head               0755 $(util-head.result) \
 	/bin/id                 0755 $(util-id.result) \
-	/bin/init               0755 $(util-init.result) \
 	/bin/kill               0755 $(util-kill.result) \
 	/bin/ll                 0755 $(util-ll.result) \
 	/bin/ln                 0755 $(util-ln.result) \
@@ -89,6 +99,7 @@ FILESYSTEM = \
 	/bin/pwd                0755 $(util-pwd.result) \
 	/bin/rm                 0755 $(util-rm.result) \
 	/bin/rmdir              0755 $(util-rmdir.result) \
+	/bin/sh                 0755 $(v7-sh.result) \
 	/bin/sleep              0755 $(util-sleep.result) \
 	/bin/sort               0755 $(util-sort.result) \
 	/bin/ssh                0755 $(util-ssh.result) \
@@ -112,7 +123,7 @@ FILESYSTEM = \
 	/bin/write              0755 $(util-write.result) \
 	/bin/xargs              0755 $(util-xargs.result) \
 	/bin/yes                0755 $(util-yes.result) \
-	/bin/forth              0755 $(util-fforth.result) \
+	/bin/fforth             0755 $(util-fforth.result) \
     /bin/ac                 0755 $(v7-cmd-ac.result) \
     /bin/at                 0755 $(v7-cmd-at.result) \
     /bin/atrun              0755 $(v7-cmd-atrun.result) \
@@ -140,11 +151,13 @@ FILESYSTEM = \
     /bin/time               0755 $(v7-cmd-time.result) \
     /bin/tsort              0755 $(v7-cmd-tsort.result) \
     /bin/wall               0755 $(v7-cmd-wall.result) \
-	/bin/arithmetic         0755 $(v7-games-arithmetic.result) \
-    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
+	/init                   0755 $(util-init.result) \
+	/usr/games/arithmetic   0755 $(v7-games-arithmetic.result) \
     /usr/games/fish         0755 $(v7-games-fish.result) \
     /usr/games/wump         0755 $(v7-games-wump.result) \
-	/bin/sh                 0755 $(v7-sh.result) \
+    /usr/games/backgammon   0755 $(v7-games-backgammon.result) \
+
+# These are too big. \
 
 # These don't work yet. \
     /bin/accton             0755 $(Applications/V7/cmd/accton.result) \

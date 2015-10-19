@@ -3,10 +3,6 @@
 
 PLATFORM_RULES = targetgcc.rules
 
-# Locate the libgcc used by this target.
-
-libgcc = $(shell $(TARGETCC) --print-libgcc)
-libgcc.ld = -L$(dir $(libgcc)) -lgcc
 
 libc.ld = -L$(dir $(libc.result)) -lc
 
@@ -15,7 +11,7 @@ libc.ld = -L$(dir $(libc.result)) -lc
 targetgcc.cflags += \
 	-g \
 	-Wall \
-	-fno-inline \
+	-Werror=implicit-function-declaration \
 	--short-enums \
 	-Os
 
@@ -29,9 +25,21 @@ targetgcc.asflags += \
 
 # Used when linking user mode executables.
 
-target-exe.extradeps += $(libc.result) $(libgcc) $(TOP)/Build/platforms/$(PLATFORM).ld
+target-exe.extradeps += \
+	$(libc.result) \
+	$(TOP)/Build/platforms/$(PLATFORM).ld
+
 target-exe.ldflags += \
 	-T $(TOP)/Build/platforms/$(PLATFORM).ld \
+	--relax
+
+# Used when linking kernel images.
+
+kernel-elf.extradeps += \
+	$(TOP)/Kernel/platform-$(PLATFORM)/$(PLATFORM).ld
+
+kernel-elf.ldflags += \
+	-T $(TOP)/Kernel/platform-$(PLATFORM)/$(PLATFORM).ld \
 	--relax
 
 # This is the macro which is appended to target build classes; it contains all
@@ -73,6 +81,15 @@ $$($1.objdir)/%.o: $(TOP)/%.s
 		$$(targetgcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
                 -c -o $$@ $$<
 
+# Builds an ordinary .S file.
+
+$$($1.objdir)/%.o: $(TOP)/%.S
+	@echo AS $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(TARGETCC) \
+		$$(targetgcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
+                -c -o $$@ $$<
+
 # Builds a dynamically generated .s file.
 
 $$($1.objdir)/%.o: $$($1.objdir)/%.s
@@ -102,18 +119,44 @@ endif
 
 ifneq ($$(filter %.exe, $$($1.result)),)
 
-$$($1.result): $$($1.objs) $(crt0.result) $(binman.result) \
-		$$($$($1.class).extradeps) $$($1.extradeps)
+# Locate the libgcc used by this target.
+
+$1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
+
+$$($1.result): $$($1.objs) $(crt0.result) \
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(TARGETLD) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-o $$@.elf \
 		--start-group \
-		$$($1.objs) $(crt0.result) $(libc.ld) $(libgcc.ld) \
+		$$($1.objs) $(crt0.result) $(libc.ld) \
+		-L$$(dir $$($1.libgcc)) -lgcc \
 		--end-group
 	$(hide) $(TARGETOBJCOPY) \
 		--output-target binary $$@.elf $$@
+
+endif
+
+# Builds a kernel image.
+
+ifneq ($$(filter %.elf, $$($1.result)),)
+
+$1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
+
+$$($1.result): $$($1.objs) \
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
+	@echo KERNEL $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(TARGETLD) \
+		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
+		-o $$@ \
+		-Map $$(@:elf=map) \
+		--start-group \
+		$$($1.objs) \
+		-L$$(dir $$($1.libgcc)) -lgcc \
+		--end-group
 
 endif
 
