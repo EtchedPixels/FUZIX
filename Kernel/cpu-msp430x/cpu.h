@@ -19,6 +19,7 @@ typedef uint8_t irqflags_t;
 typedef uint16_t arg_t;
 typedef uint16_t uarg_t;
 typedef uint16_t uaddr_t;
+typedef uint16_t uptr_t;
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
