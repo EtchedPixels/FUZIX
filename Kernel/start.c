@@ -55,7 +55,14 @@ void fstabinit(void)
 	}
 }
 
-/* FIXME: pass remainder of boot argument to init, also word align */
+/* FIXME: pass remainder of boot argument to init */
+/* Remember two things when modifying this code
+   1. Some processors need 2 byte alignment or better of arguments. We
+      lay it out for 4
+   2. We are going to end up with cases where user and kernel pointer
+      size differ due to memory models etc. We use uputp and we allow
+      room for the pointers to be bigger than kernel */
+
 void create_init(void)
 {
 	uint8_t *j;
