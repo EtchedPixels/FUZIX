@@ -19,7 +19,7 @@ static void write_call(int n)
     exit(1);
   }
   fprintf(fp, "\t.export _%s\n\n", syscall_name[n]);
-  fprintf(fp, "\t.import __syscall\n\n", syscall_name[n]);
+  fprintf(fp, "\t.import __syscall\n\n");
   fprintf(fp, "\t.import pushax\n\n");
   fprintf(fp, ".proc _%s\n", syscall_name[n]);
   if (syscall_args[n] == VARARGS) {
