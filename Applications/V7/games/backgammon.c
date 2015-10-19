@@ -8,7 +8,7 @@
 
 #define NIL (-1)
 #define MAXGMOV 10
-#define MAXIMOVES 1000
+#define MAXIMOVES 500
 
 char level;			/*'b'=beginner, 'i'=intermediate, 'e'=expert */
 int die1;
@@ -42,6 +42,7 @@ struct {
 
 void getstr(char *s)
 {
+	fflush(stdout);
 	while ((*s = getchar()) != '\n')
 		s++;
 	*s = 0;
@@ -545,9 +546,9 @@ void prtbrd(void)
 	printf("    ");
 	for (k = 7; k <= 12; k++)
 		printf("%4d", k);
-	putchar('\r');
+	putchar('\n');
 	for (k = 1; k <= 54; k++)
-		putchar('_');
+		putchar('-');
 	putchar('\n');
 	numline(red, white, 1, 6);
 	printf("    ");
@@ -572,9 +573,9 @@ void prtbrd(void)
 	numline(white, red, 1, 6);
 	printf("    ");
 	numline(white, red, 7, 12);
-	putchar('\r');
+	putchar('\n');
 	for (k = 1; k <= 54; k++)
-		putchar('_');
+		putchar('-');
 	putchar('\n');
 	for (k = 24; k >= 19; k--)
 		printf("%4d", k);
