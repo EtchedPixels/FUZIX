@@ -60,7 +60,6 @@ static inline void irqrestore(irqflags_t flags)
 
 extern irqflags_t di(void);
 extern void irqrestore(irqflags_t f);
-#undef EMAGIC             /* No executable header for MSP430X */
 
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
@@ -117,4 +116,9 @@ typedef union {            /* this structure is endian dependent */
 #define COMMON
 #define VIDEO
 #define DISCARD
+
+/* Really we should check for the jmp I imagine but gcc will figure the below
+   out for us and keep this oddness out of the core code ! */
+#define EMAGIC	(*p)
+#define EMAGIC2 (*p)
 
