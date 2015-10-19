@@ -73,16 +73,14 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NO_DEVICE (0xFFFFU)
 #define NO_FILE   (0xFF)
 
+#if !defined(CONFIG_INDIRECT_QUEUES)
+typedef unsigned char * queueptr_t;
+#endif
+
 typedef struct s_queue {
-	#if defined CONFIG_INDIRECT_QUEUES
-		queueptr_t q_base;    /* Pointer to data */
-		queueptr_t q_head;    /* Pointer to addr of next char to read. */
-		queueptr_t q_tail;    /* Pointer to where next char to insert goes. */
-	#else
-		unsigned char *q_base;    /* Pointer to data */
-		unsigned char *q_head;    /* Pointer to addr of next char to read. */
-		unsigned char *q_tail;    /* Pointer to where next char to insert goes. */
-	#endif
+    queueptr_t q_base;    /* Pointer to data */
+    queueptr_t q_head;    /* Pointer to addr of next char to read. */
+    queueptr_t q_tail;    /* Pointer to where next char to insert goes. */
     int   q_size;    /* Max size of queue */
     int   q_count;   /* How many characters presently in queue */
     int   q_wakeup;  /* Threshold for waking up processes waiting on queue */
