@@ -322,7 +322,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 		}
 	}
 	uputp(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
-	return (char **) argbase;
+	return (char **)argbase;
 }
 
 /*
