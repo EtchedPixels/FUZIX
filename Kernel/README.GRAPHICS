@@ -157,7 +157,7 @@ If we go this way then
    map it, just put a copy of the rendering loop *in* userspace and avoid
    syscalls !
 
-6. Do we still allow for screen/screen blits as well (eg scrolling)
+6. Do we still allow for screen/screen blits as well (eg scrolling)  YES
 
 7. Should there be a way to access the system font from userspace for graphics
    work ?
