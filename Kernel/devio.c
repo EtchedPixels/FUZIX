@@ -363,7 +363,7 @@ bool insq(struct s_queue * q, unsigned char c)
 	if (q->q_count == q->q_size)
 		r = false;	// no space left :(
 	else {
-		*(q->q_tail) = c;
+		PUTQ(q->q_tail, c);
 		++q->q_count;
 		if (++q->q_tail >= q->q_base + q->q_size)
 			q->q_tail = q->q_base;
@@ -384,7 +384,7 @@ bool remq(struct s_queue * q, unsigned char *cp)
 	if (!q->q_count)
 		r = false;
 	else {
-		*cp = *(q->q_head);
+		*cp = GETQ(q->q_head);
 		--q->q_count;
 		if (++q->q_head >= q->q_base + q->q_size)
 			q->q_head = q->q_base;
@@ -420,7 +420,7 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
 		--q->q_count;
 		if (--q->q_tail < q->q_base)
 			q->q_tail = q->q_base + q->q_size - 1;
-		*cp = *(q->q_tail);
+		*cp = GETQ(q->q_tail);
 		r = true;
 	}
 	irqrestore(irq);
@@ -516,37 +516,55 @@ void kputnum(int v)
 
 void kprintf(const char *fmt, ...)
 {
-	char *str;
-	unsigned int v;
-	char c;
 	va_list ap;
 
 	va_start(ap, fmt);
 	while (*fmt) {
 		if (*fmt == '%') {
 			fmt++;
-			if (*fmt == 's') {
-				str = va_arg(ap, char *);
-				kputs(str);
-				fmt++;
-				continue;
-			}
-			if (*fmt == 'c') {
-				c = va_arg(ap, int);
-				kputchar(c);
-				fmt++;
-				continue;
-			}
-			if (*fmt == 'x' || *fmt == 'd' || *fmt == 'u') {
-				v = va_arg(ap, int);
-				if (*fmt == 'x')
-					kputhex(v);
-				else if (*fmt == 'd')
-					kputnum(v);
-				else if (*fmt == 'u')
-					kputunum(v);
-				fmt++;
-				continue;
+			switch (*fmt) {
+				case 's':
+				{
+					char* str = va_arg(ap, char *);
+					kputs(str);
+					fmt++;
+					continue;
+				}
+
+				case 'c':
+				{
+					char c = va_arg(ap, int);
+					kputchar(c);
+					fmt++;
+					continue;
+				}
+
+				case 'l': /* assume an x is following */
+				{
+					long l = va_arg(ap, unsigned long);
+					/* TODO: not 32-bit safe */
+					kputhex((uint16_t)(l >> 16));
+					kputhex((uint16_t)l);
+					fmt += 2;
+					continue;
+				}
+
+				case 'x':
+				case 'd':
+				case 'u':
+				{
+					unsigned int v = va_arg(ap, int);
+
+					if (*fmt == 'x')
+						kputhex(v);
+					else if (*fmt == 'd')
+						kputnum(v);
+					else if (*fmt == 'u')
+						kputunum(v);
+
+					fmt++;
+					continue;
+				}
 			}
 		}
 		kputchar(*fmt);

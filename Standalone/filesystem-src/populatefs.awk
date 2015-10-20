@@ -3,12 +3,14 @@ BEGIN {
 	printf "chmod 01777 /tmp\n";
 }
 
-function dirname(f)
+function dirname(f,  d)
 {
+	d = "";
 	if (f ~ /\//)
-		return gensub(/\/[^/]*$/, "", "g", f);
-	else
-		return "";
+		d = gensub(/\/[^/]*$/, "", "g", f);
+	if (d == "")
+		return "/";
+	return d;
 }
 
 function basename(f)
@@ -21,7 +23,7 @@ function mkdirp(dir,  base)
 	if (!made[dir])
 	{
 		base = dirname(dir);
-		if (base != "")
+		if (base != "/")
 			mkdirp(base);
 		printf "mkdir " dir "\n";
 		printf "chmod 0755 " dir "\n";
@@ -40,7 +42,7 @@ function mkdirp(dir,  base)
 		mkdirp(dir);
 		printf "cd " dir "\n";
 		if (arg ~ /^[0-9]+$/)
-			printf "mknod " mode " " arg "\n";
+			printf "mknod " dest " " mode " " arg "\n";
 		else
 		{
 			printf "bget " arg " " basename(dest) "\n";

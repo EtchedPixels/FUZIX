@@ -36,8 +36,8 @@ OMU also got blended in
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
 * Kernel boots on both 6502, 6809 and Z80
-* Core code can be built for 6502, 6809, 68000, 8086 and Z80 so should be far more
-	portable
+* Core code can be built for 6502, 6809, 68000, 8086, Z80 and MSP430 so should
+  be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
 * Helpers to make many bits of implementation wrappers to core code
@@ -102,6 +102,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 * Dragon Nx32 - Dragon with Tormod's memory expansion card
 * Epson PX4/4Plus - WIP port to a very early Z80 laptop
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
+* MSP430FR5969 - decent functionality, but no concurrent processes; see Documentation/MSP430FR5969.md
 * MSX - basic functionality
 * N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the
 ECB expansion bus only the PropIO V2 serial port is supported at this time.

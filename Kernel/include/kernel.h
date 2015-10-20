@@ -21,6 +21,18 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #define min(a,b) ( (a) < (b) ? (a) : (b) )
 #define max(a,b) ( (a) > (b) ? (a) : (b) )
+#define aligndown(v,a) (uint8_t*)((intptr_t)(v) & ~((a)-1))
+#define alignup(v,a) (uint8_t*)((intptr_t)((v) + (a)-1) & ~((a)-1))
+
+/* By default, assume machines that don't need alignment. */
+
+#ifndef ALIGNUP
+#define ALIGNUP(v) (v)
+#endif
+
+#ifndef ALIGNDOWN
+#define ALIGNDOWN(v) (v)
+#endif
 
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
 
@@ -61,14 +73,23 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NO_DEVICE (0xFFFFU)
 #define NO_FILE   (0xFF)
 
+#if !defined(CONFIG_INDIRECT_QUEUES)
+typedef unsigned char * queueptr_t;
+#endif
+
 typedef struct s_queue {
-    unsigned char *q_base;    /* Pointer to data */
-    unsigned char *q_head;    /* Pointer to addr of next char to read. */
-    unsigned char *q_tail;    /* Pointer to where next char to insert goes. */
+    queueptr_t q_base;    /* Pointer to data */
+    queueptr_t q_head;    /* Pointer to addr of next char to read. */
+    queueptr_t q_tail;    /* Pointer to where next char to insert goes. */
     int   q_size;    /* Max size of queue */
     int   q_count;   /* How many characters presently in queue */
     int   q_wakeup;  /* Threshold for waking up processes waiting on queue */
 } queue_t;
+
+#if !defined CONFIG_INDIRECT_QUEUES
+	#define GETQ(p) (*(p))
+	#define PUTQ(p, v) (*(p) = (v))
+#endif
 
 struct tms {
 	clock_t  tms_utime;
@@ -616,13 +637,21 @@ extern int uzero(void *userspace_dest, usize_t count);
 
 /* usermem.c or usermem_std.s */
 extern usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
+extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
+extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
+extern int _uzero(uint8_t *user, usize_t count);
+
+#if defined CONFIG_USERMEM_DIRECT
+#define _ugetc(p) (*(uint8_t*)(p))
+#define _ugetw(p) (*(uint16_t*)(p))
+#define _uputc(v, p) ((*(uint8_t*)(p) = (v)), 0)
+#define _uputw(v, p) ((*(uint16_t*)(p) = (v)), 0)
+#else
 extern int16_t _ugetc(const uint8_t *user);
 extern uint16_t _ugetw(const uint16_t *user);
-extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
-extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
 extern int _uputc(uint16_t value,  uint8_t *user);
 extern int _uputw(uint16_t value,  uint16_t *user);
-extern int _uzero(uint8_t *user, usize_t count);
+#endif
 
 /* platform/tricks.s */
 extern void switchout(void);

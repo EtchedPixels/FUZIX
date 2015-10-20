@@ -200,7 +200,8 @@ arg_t _execve(void)
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
 
-	udata.u_break = (int) progptr + bss;	//  Set initial break for program
+	/* Set initial break for program */
+	udata.u_break = (int)ALIGNUP(progptr + bss);
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -290,7 +291,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	sptr = argbuf->a_buf;
 
 	/* Move them into the users address space, at the very top */
-	ptr -= (arglen = argbuf->a_arglen);
+	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
 
 	if (arglen) {
 		uput(sptr, ptr, arglen);
