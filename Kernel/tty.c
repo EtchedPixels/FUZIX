@@ -225,21 +225,21 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
         }
 	switch (request) {
 	case TCGETS:
-		uput(&ttydata[minor].termios, data, sizeof(struct termios));
+		return uput(&ttydata[minor].termios, data, sizeof(struct termios));
 		break;
+	case TCSETSF:
+		clrq(&ttyinq[minor]);
+		/* Fall through for now */
 	case TCSETSW:
 		/* We don't have an output queue really so for now drop
 		   through */
 	case TCSETS:
-	case TCSETSF:
-		uget(data, &ttydata[minor].termios, sizeof(struct termios));
-		if (request == TCSETSF)
-			clrq(&ttyinq[minor]);
+		if (uget(data, &ttydata[minor].termios, sizeof(struct termios)) == -1)
+		        return -1;
                 tty_setup(minor);
 		break;
 	case TIOCINQ:
-		uput(&ttyinq[minor].q_count, data, 2);
-		break;
+		return uput(&ttyinq[minor].q_count, data, 2);
 	case TIOCFLUSH:
 		clrq(&ttyinq[minor]);
 		break;
