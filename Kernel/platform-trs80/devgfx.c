@@ -21,7 +21,7 @@ static const struct display trsdisplay[2] = {
     255, 255,
     FMT_TEXT,
     HW_UNACCEL,
-    0,
+    GFX_MULTIMODE|GFX_TEXT,
     2,
     0
   },
@@ -32,7 +32,7 @@ static const struct display trsdisplay[2] = {
     1, 1,		/* Need adding to ioctls */
     FMT_MONO_BW,
     HW_TRS80GFX,
-    GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
+    GFX_MULTIMODE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
     32,
     GFX_DRAW|GFX_READ|GFX_WRITE
   }
