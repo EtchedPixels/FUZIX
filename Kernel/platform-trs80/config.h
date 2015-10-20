@@ -33,7 +33,7 @@
 #define TICKSPERSEC 60   /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
+#define PROGTOP     0x7E00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks */
@@ -54,7 +54,9 @@
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    10       /* Number of block buffers */
+#define NBUFS    10       /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+/* Reclaim the discard space for buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
 
-#define platform_discard()
+extern void platform_discard(void);

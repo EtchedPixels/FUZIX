@@ -49,9 +49,15 @@
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
+	    .globl _bufpool
+
             .include "kernel.def"
             .include "../kernel.def"
 
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xE800 upwards)
 ; -----------------------------------------------------------------------------
