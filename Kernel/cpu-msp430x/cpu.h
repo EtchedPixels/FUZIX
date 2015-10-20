@@ -117,8 +117,7 @@ typedef union {            /* this structure is endian dependent */
 #define VIDEO
 #define DISCARD
 
-/* Really we should check for the jmp I imagine but gcc will figure the below
-   out for us and keep this oddness out of the core code ! */
-#define EMAGIC	(*p)
-#define EMAGIC2 (*p)
+/* jmp over the Fuzix header. Will need updating if the header size changes */
+#define EMAGIC   0x08
+#define EMAGIC_2 0x3c
 
