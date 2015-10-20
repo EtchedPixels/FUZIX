@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -27,6 +29,12 @@
 
 /* Video terminal, not a serial tty */
 #undef CONFIG_VT
+
+/* To save space, queues go in high memory. */
+#define CONFIG_INDIRECT_QUEUES
+typedef uint16_t queueptr_t;
+#define GETQ(p) __read_hidata(p)
+#define PUTQ(p, v) __write_hidata((p), (v))
 
 extern int __user_base;
 extern int __user_top;
