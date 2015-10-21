@@ -43,6 +43,7 @@ extern int system __P((const char *));
 extern int pause __P((void));
 extern pid_t fork __P((void));
 extern char *getcwd __P((char *, int));
+extern void swab __P((const void * __from, void * __to, ssize_t __count));
 
 extern long sysconf __P((int name));
 extern long fpathconf __P((int fd, int name));
