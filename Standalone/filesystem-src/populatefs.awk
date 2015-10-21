@@ -42,7 +42,7 @@ function mkdirp(dir,  base)
 		mkdirp(dir);
 		printf "cd " dir "\n";
 		if (arg ~ /^[0-9]+$/)
-			printf "mknod " dest " " mode " " arg "\n";
+			printf "mknod " basename(dest) " " mode " " arg "\n";
 		else
 		{
 			printf "bget " arg " " basename(dest) "\n";
