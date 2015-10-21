@@ -10,6 +10,8 @@ __sfr __at 0xEF irqack;
 
 uint8_t vtattr_cap;
 
+struct blkbuf *bufpool_end = bufpool + NBUFS;
+
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
 void platform_idle(void)
@@ -32,6 +34,30 @@ void platform_interrupt(void)
     return;
   kbd_interrupt();
   timer_interrupt();
+}
+
+/*
+ *	Once we are about to load init we can throw the boot code away
+ *	and convert it into disk cache. This gets us 7 or so buffer
+ *	back which more than doubles our cache size !
+ */
+void platform_discard(void)
+{
+  extern uint16_t discard_size;
+  bufptr bp = bufpool_end;
+
+  discard_size /= sizeof(struct blkbuf);
+
+  kprintf("%d buffers reclaimed from discard\n", discard_size);
+
+  bufpool_end += discard_size;	/* Reclaim the discard space */
+
+  memset(bp, 0, discard_size * sizeof(struct blkbuf));
+  /* discard_size is in discard so it dies here */
+  for (bp = bufpool + NBUFS; bp < bufpool_end; ++bp) {
+    bp->bf_dev = NO_DEVICE;
+    bp->bf_busy = BF_FREE;
+  }
 }
 
 #ifdef CONFIG_RTC

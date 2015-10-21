@@ -284,7 +284,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_MONO_WB,
 		HW_UNACCEL,
-		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -295,7 +295,7 @@ static struct display display[4] = {
 		0xFF, 0xFF,		/* For now */
 		FMT_MONO_WB,
 		HW_UNACCEL,
-		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
 	},
@@ -309,7 +309,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_MAPPABLE|GFX_VBLANK,
 		0,
-		GFX_DRAW|GFX_READ|GFX_WRITE,
+		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
 	},
 	{
 		3,
@@ -320,7 +320,7 @@ static struct display display[4] = {
 		HW_UNACCEL,
 		GFX_MAPPABLE|GFX_VBLANK,
 		0,
-		GFX_DRAW|GFX_READ|GFX_WRITE,
+		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
 	},
 	/* Possibly we should also allow for SG6 and SG4 ?? */
 };
@@ -385,11 +385,6 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
   return 0;
 }
 
-/*
- *	Start by just reporting the 256x192 mode which is memory mapped
- *	(it's effectively always in our address space). Should really
- *	support setting graphics into the other modes.
- */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
 	if (arg >> 8 != 0x03)

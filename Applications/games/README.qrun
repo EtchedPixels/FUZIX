@@ -1,0 +1,33 @@
+qrun
+----
+Qrun is a portable tool for running quill games on small machines. It is based
+heavily upon the player parts of John Elliott's "unquill" but with all the
+dumping features removed and some other space savings done.
+
+The simple zmem() handler used by unquill has been replaced with a sort of
+least regularly-used paging scheme. 
+
+Usage:
+	qrum snapshot.sna
+
+
+BUGS
+----
+Subsunk aborts on start up
+Pause 0 is misinterpreted as no time not 256/50ths.
+
+WARNINGS
+--------
+If you turn any of the debug or stats recording on remember to link stdio!
+
+TODO
+----
+Automatically size the buffer pool
+More size improvements
+Support graphics - either by pre-rendering and compressing the graphics or
+by forking off a graphics renderer. The latter is hard because many games
+rely on the spectrum graphics attributes model.
+Support UDGs when in graphics mode
+Scaling vertically/horizontally in graphics (eg so we don't look stupid on a
+PCW8512!)
+
