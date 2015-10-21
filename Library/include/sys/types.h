@@ -76,4 +76,5 @@ typedef struct {
 } __ktime_t;
 #endif
 typedef int32_t clock_t;
+typedef uint32_t useconds_t;
 #endif
