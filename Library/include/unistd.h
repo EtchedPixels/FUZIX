@@ -24,6 +24,7 @@ extern int lstat __P((const char *, struct stat *));
 extern int readlink __P((const char *, char *, int));
 
 extern unsigned int sleep __P((unsigned int seconds));
+extern int usleep __P((useconds_t usecs));
 
 extern char **environ;
 

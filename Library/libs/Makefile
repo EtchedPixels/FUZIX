@@ -41,7 +41,7 @@ SRC_C += stat.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnlen.c strnicmp.c strsep.c strxfrm.c strcoll.c strsignal.c
 SRC_C += strtod.c strtol.c system.c time.c tmpfile.c tmpnam.c ttyname.c
-SRC_C += tzset.c ungetc.c utent.c utimes.c utsname.c
+SRC_C += tzset.c ungetc.c usleep.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
