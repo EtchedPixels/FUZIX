@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 /*
- *	Emualte Berkley hostname calls
+ *	Emulate Berkley hostname calls
  */
 
 static int openhostname(int flags, mode_t mode)
