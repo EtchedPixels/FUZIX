@@ -5,9 +5,9 @@
 #
 #
 CPU=z80
-LIBZ80=$(shell tools/findsdcc $(CPU))
+LIBZ80=$(../../Kernel/tools/findsdcc $CPU)
 
-cp $(LIBZ80)/$(CPU)/$(CPU).lib tmp.lib
+cp $LIBZ80/$CPU.lib tmp.lib
 #
 #	Scrub the functions we don't want to inherit
 #	Need to review setjmp and maybe a couple of others
