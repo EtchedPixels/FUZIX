@@ -22,24 +22,28 @@ targetgcc.ldflags += \
 targetgcc.asflags += \
 	-g
 
+targetgcc.ldfileflags = \
+	-I $(TOP)/Build/platforms
 
 # Used when linking user mode executables.
 
 target-exe.extradeps += \
-	$(libc.result) \
+	$(libc.result)
+
+target-exe.ldfile = \
 	$(TOP)/Build/platforms/$(PLATFORM).ld
 
 target-exe.ldflags += \
-	-T $(TOP)/Build/platforms/$(PLATFORM).ld \
 	--relax
 
 # Used when linking kernel images.
 
-kernel-elf.extradeps += \
+kernel-elf.extradeps +=
+
+kernel-elf.ldfile = \
 	$(TOP)/Kernel/platform-$(PLATFORM)/$(PLATFORM).ld
 
 kernel-elf.ldflags += \
-	-T $(TOP)/Kernel/platform-$(PLATFORM)/$(PLATFORM).ld \
 	--relax
 
 # This is the macro which is appended to target build classes; it contains all
@@ -55,6 +59,10 @@ define targetgcc.rules
 # Invoke standard rules.
 
 $(call standard.rules,$1)
+
+# Default the ldfile to the one defined for this class.
+
+$1.ldfile ?= $($($1.class).ldfile)
 
 # Builds an ordinary C file.
 
@@ -99,6 +107,19 @@ $$($1.objdir)/%.o: $$($1.objdir)/%.s
 		$$(targetgcc.asflags) $$($$($1.class).asflags) $$($1.asflags) \
                 -c -o $$@ $$<
 
+# Preprocesses an LD script.
+
+$$($1.objdir)/%.ld: $(TOP)/%.ld
+	@echo CPP $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(TARGETCPP) \
+		$$(targetgcc.ldfileflags) $$($$($1.class).ldfileflags) $$($1.ldfileflags) \
+		-MM -MF $$@.d -MT $$@ $$<
+	$(hide) $(TARGETCPP) -CC \
+		$$(targetgcc.ldfileflags) $$($$($1.class).ldfileflags) $$($1.ldfileflags) \
+		$$< $$@
+-include $$($1.objdir)/$$($$($1.class).ldfile).d
+
 # Builds a library from object files and other library files. Additional
 # libraries are merged in after the object files, from first-to-last order.
 
@@ -124,11 +145,13 @@ ifneq ($$(filter %.exe, $$($1.result)),)
 $1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
 
 $$($1.result): $$($1.objs) $(crt0.result) \
-		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc) \
+		$$($1.objdir)/$$($$($1.class).ldfile)
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(TARGETLD) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
+		-T $$($1.objdir)/$$($$($1.class).ldfile) \
 		-o $$@.elf \
 		--start-group \
 		$$($1.objs) $(crt0.result) $(libc.ld) \
@@ -146,11 +169,13 @@ ifneq ($$(filter %.elf, $$($1.result)),)
 $1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
 
 $$($1.result): $$($1.objs) \
-		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc)
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc) \
+		$$($1.objdir)/$$($$($1.class).ldfile)
 	@echo KERNEL $$@
 	@mkdir -p $$(dir $$@)
 	$(hide) $(TARGETLD) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
+		-T $$($1.objdir)/$$($$($1.class).ldfile) \
 		-o $$@ \
 		-Map $$(@:elf=map) \
 		--start-group \
