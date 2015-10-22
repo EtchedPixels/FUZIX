@@ -25,4 +25,4 @@ IDEDATA			    equ 0xFF50
 IDEDATA_L		    equ 0xFF58
 
 
-NBUFS			    equ	5
+NBUFS			    equ	6
