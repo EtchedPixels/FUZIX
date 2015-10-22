@@ -142,6 +142,7 @@ b@	sta	,x+
 	decb
 	bne	b@
         ;; set temporary screen up
+	clr	$ff9c		; reset scroll register
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
 	;; detect PAL or NTSC ROM
