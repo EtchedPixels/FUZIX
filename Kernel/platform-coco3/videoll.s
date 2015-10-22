@@ -53,6 +53,28 @@ a@	ldb	,u+
 	puls	x,y,u,pc
 
 
+;
+;	These routines wortk in both 256x192x2 and 128x192x4 modes
+;	because everything in the X plane is bytewide.
+;
+_video_write:
+	pshs u
+	bsr vidptr
+	tfr x,y			; So we can use y to get at the w/h
+	leax 4,x		; Move on to data space
+vwnext:
+	lda 2,y
+	pshs u
+vwline:
+	ldb ,x+
+	stb ,u+
+	deca
+	bne vwline
+	puls u
+	leau 32,u
+	dec ,y
+	bne vwnext
+	puls u,pc
 
 
 vidptr:
@@ -64,7 +86,28 @@ vidptr:
 	ldd 	,x++		; X
 	leau 	d,u
 	rts
-
+	
+;
+;	FIXME - fold read/write into one self modifier
+;
+_video_read:
+	pshs u
+	bsr vidptr
+	tfr x,y			; So we can use y to get at the w/h
+	leax 4,x		; Move on to data space
+vrnext:
+	lda 2,y			; a counts our copy along the scan line
+	pshs u
+vrline:
+	ldb ,u+			; b does our data
+	stb ,x+
+	deca
+	bne vrline
+	puls u			; step down a line
+	leau 32,u
+	dec ,y			; use the buffer directly for line count
+	bne vrnext
+	puls u,pc		; and done
 
 ;;; void video_cmd( char *rle_data );
 _video_cmd:
