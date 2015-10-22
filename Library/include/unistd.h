@@ -38,7 +38,10 @@ extern int execve __P((const char *pathname, char * const argv[], char * const e
 extern int execvp __P((const char *pathname, char *const argv[]));
 extern int execvpe __P((const char *pathname, char *const argv[], char * const envp[]));
 
-extern char *ttyname __P((int));
+extern char *ttyname __P((int __fd));
+extern int ttyname_r __P((int __fd, char *__buf, size_t __size));
+extern char *getlogin __P((void));
+extern int getlogin_r __P((char * __buf, size_t __size));
 extern int system __P((const char *));
 extern int pause __P((void));
 extern pid_t fork __P((void));

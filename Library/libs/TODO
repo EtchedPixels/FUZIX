@@ -48,7 +48,7 @@ sys/shm.h
 signal.h	sigaction bits need defining plus SA_NOCLDSTOP
 sys/statfs	need to add fakery for it
 
-stdio		_NFILE, L_ctermid, L_cuserid, P_tmpdir, L_tmpnam
+stdio		_NFILE, L_ctermid, P_tmpdir, L_tmpnam
 
 stropts.h 	(streams)
 

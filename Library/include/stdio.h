@@ -147,4 +147,7 @@ extern void rewind __P((FILE *fp));
 extern FILE *popen __P((const char *, const char *));
 extern int pclose __P((FILE *));
 
+extern char *cuserid __P((char *__buf));
+#define L_cuserid	9
+
 #endif /* __STDIO_H */

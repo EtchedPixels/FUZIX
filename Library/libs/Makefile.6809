@@ -14,12 +14,13 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
-SRC_C += creat.c crypt.c ctime.c difftime.c err.c errno.c error.c
+SRC_C += creat.c crypt.c ctime.c cuserid.c difftime.c err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
 SRC_C += free.c fsetpos.c ftell.c fwrite.c getcwd.c
-SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getopt.c
+SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
+SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += gmtime.c gmtime_r.c grent.c index.c isatty.c killpg.c
 SRC_C += libintl.c
