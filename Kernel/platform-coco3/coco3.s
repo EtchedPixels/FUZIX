@@ -19,6 +19,8 @@
 	    .globl map_restore
 	    .globl _need_resched
 	    .globl _hz
+	    .globl _bufpool
+	    .globl _discard_size
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -39,6 +41,16 @@
             include "kernel.def"
             include "../kernel09.def"
 
+
+	.area	.buffers
+
+_bufpool:
+	.ds	BUFSIZE*NBUFS
+
+	.area	.discard
+_discard_size:
+	.db	__sectionlen_.discard__/BUFSIZE
+	
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
