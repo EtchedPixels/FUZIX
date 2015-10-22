@@ -195,7 +195,7 @@ min:
 	rts
 a@	std	,u
 	rts
-	
+
 ;;;  A faster user-kernel space copy
 ;;;    takes: usr = usr space ptr
 ;;;    takes: krn = kernel space ptr
@@ -264,7 +264,13 @@ a@	lda	,u+		; get a byte
 	sta	,x+		; store it
 	leay	-1,y		; bump counter
 	bne	a@		; loop if not done
-	;; inc outter loop
+	;; end inner loop
+	;; clean up kernel mmu's for next mapping or returning
+	ldd	#$0001		; restore kernel mapping (manually)
+	std	$ffa8
+	ldd	#$0203
+	std	$ffaa	
+	;; increment out loop variables
 	puls	u		; restore data stack
 	ldd	krn		; add this iteration's byte count
 	addd	icount		; from source address
@@ -277,10 +283,6 @@ a@	lda	,u+		; get a byte
 	std	count
 	lbne	b@		; if bytes left to copy then repeat
 	;; return
-	ldd	#$0001		; restore kernel mapping (manually)
-	std	$ffa8
-	ldd	#$0203
-	std	$ffaa
 	ldx 	#0		; return #0 - success
 	puls 	u,y,cc,pc	; return
 
