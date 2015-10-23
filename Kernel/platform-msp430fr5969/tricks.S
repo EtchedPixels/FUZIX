@@ -15,33 +15,46 @@ swapstack:
 
 .globl switchin
 proc switchout
-	dint                               ; interrupts off
-	clr r12                            ; set return code
-	pushm #12, r15                   ; save all registers (r15 to r4)
-	push SR                            ; ...and the status register
-	mov SP, &U_DATA__U_SP              ; save stack pointer
+	dint                              // interrupts off
+	clr r12                           // set return code
+	pushm #12, r15                    // save all registers (r15 to r4)
+	push SR                           // ...and the status register
+	mov SP, &U_DATA__U_SP             // save stack pointer
 
-	call #getproc                     ; find a new process to run
+	call #getproc                     // find a new process to run
 switchin:
 	// On entry, r12 is the ptptr of the process to run.
-	dint                               ; interrupts off
+	dint                              // interrupts off
 
 	// Compare the swap page 
-	cmp.b #0, P_TAB__P_PAGE_OFFSET(r12)  // get the swap page the process is in
+	cmp #0, P_TAB__P_PAGE_OFFSET(r12)  // get the swap page the process is in
 	jnz not_swapped
 
-	// The process we want to run is swapped out, so we have to reload it from
-	// disk. Because we're about to overwrite the udata and kstack with the
-	// restored process, we need to switch to a special stack.
+	// Because we don't support banking, we're using simple.c as our process
+	// storage backend, which is a bit simple-minded --- it doesn't handle
+	// swapping out processes for us. So, while the swapper will *swap in* a
+	// process, we need to deal with the case where it's swapped out manually.
+	//
+	// Because we're about to overwrite the udata and kstack with the restored
+	// process, we need to switch to a special stack. This lets us do the slow
+	// bit with interrupts on, which is nice.
 
 	mov #swapstack+SWAPSTACK_SIZE, sp
+	eint
 	push r12
-	call #swapper                     // r12 contains ptptr
+	mov &U_DATA__U_PTAB, r12          // load old ptptr
+	cmp #0, P_TAB__P_PAGE_OFFSET(r12) // has it been swapped out?
+	jz 1f                             // if yes, skip
+	call #swapout                     // ...if no, swap it out
+1:
+	mov 0(sp), r12                    // load new ptptr
+	call #swapper                     // ...swap it in
 	pop r12
 
 not_swapped:
 	mov.b #P_RUNNING, P_TAB__P_STATUS_OFFSET(r12) ; mark process as running
 
+	dint
 	mov &U_DATA__U_SP, SP             // restore stack pointer
     clr &runticks                     // reset process run count
 	pop SR                            // restore status register
@@ -68,7 +81,9 @@ proc dofork
 
 	push r12
 	mov.w &U_DATA__U_PTAB, r12
+	eint
 	call #swapout
+	dint
 	pop r12
 
 	; Okay, done. Anything we change now won't affect the parent. Create the

@@ -8,8 +8,8 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#define PTABSIZE 4
+#define PTABSIZE 5
+#define MAX_SWAPS PTABSIZE
 
 #define CONFIG_USERMEM_DIRECT
 
@@ -19,7 +19,6 @@
 
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
-#define CONFIG_SINGLETASK
 
 #define CONFIG_BANKS 1
 /* Banked Kernel: need to fix GCC first */
@@ -51,7 +50,6 @@ extern int __swap_size_blocks;
 #define SWAPBASE    ((uaddr_t)&__swap_base)
 #define SWAPTOP	    ((uaddr_t)&__swap_top)
 #define SWAP_SIZE   ((uint16_t)&__swap_size_blocks)
-#define MAX_SWAPS	8
 #define swap_map(x) ((uint8_t*)(x))
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
