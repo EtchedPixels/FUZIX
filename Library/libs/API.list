@@ -17,7 +17,7 @@ atoi			CODE
 atol			CODE
 bsearch
 calloc			CODE
-ceil
+ceil			Z80
 chdir			CODE
 chmod			CODE
 chown			CODE
@@ -29,7 +29,7 @@ cos			Z80
 cosh			Z80
 creat			CODE
 crypt			CODE (but tea not DES)
-ctermid
+ctermid			CODE
 cuserid			CODE
 drand48
 dup			CODE
@@ -49,7 +49,7 @@ execvp			CODE
 exit			CODE
 _exit			CODE
 exp
-fabs
+fabs			Z80
 fclose			CODE
 fcntl			CODE
 fdopen			CODE
@@ -61,7 +61,7 @@ fgetgrent		CODE
 fgetpwent		CODE
 fgets			CODE
 fileno			CODE
-floor
+floor			Z80
 fmod
 fopen			CODE
 fork			CODE
@@ -100,7 +100,7 @@ getpwuid		CODE
 gets			CODE
 getuid			CODE
 getutline		CODE
-getw			*MISSING*
+getw			CODE
 gmtime			CODE
 gsignal			OBSOLETE
 hcreate
@@ -169,7 +169,7 @@ putenv			CODE
 putpwent		CODE
 puts			CODE
 pututline		CODE
-putw
+putw			CODE
 qsort			CODE
 rand			CODE
 read			CODE
@@ -226,7 +226,7 @@ time			CODE
 times			CODE
 tmpfile			CODE
 tmpnam			CODE
-toascii
+toascii			CODE
 tolower			CODE
 _tolower		CODE
 toupper			CODE

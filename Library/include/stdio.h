@@ -149,5 +149,10 @@ extern int pclose __P((FILE *));
 
 extern char *cuserid __P((char *__buf));
 #define L_cuserid	9
+extern char *ctermid __P((char *__buf));
+#define L_ctermid	9
+
+extern int getw __P((FILE *__f));
+extern int putw __P((int __n, FILE *__f));
 
 #endif /* __STDIO_H */
