@@ -30,7 +30,7 @@ cosh			Z80
 creat			CODE
 crypt			CODE (but tea not DES)
 ctermid
-cuserid(?)
+cuserid			CODE
 drand48
 dup			CODE
 encrypt
@@ -88,7 +88,7 @@ geteuid			CODE
 getgid			CODE
 getgrgid		CODE
 getgrnam		CODE
-getlogin		*MISSING*
+getlogin		CODE
 getopt			CODE
 getpass			CODE
 getpgrp			CODE
