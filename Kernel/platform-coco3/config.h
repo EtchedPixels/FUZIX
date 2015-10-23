@@ -11,6 +11,9 @@
 /* Use C helpers for usermem */
 #undef CONFIG_USERMEM_C
 
+/* Reclaim discard space for buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
+
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define CONFIG_BANKS	4
@@ -85,4 +88,3 @@ extern unsigned char vt_map( unsigned char c );
 #define MAX_BLKDEV  4     /* 2 IDE + 2 SDC */
 #define DEVICE_IDE        /* enable if IDE interface present */
 
-#define platform_discard()
