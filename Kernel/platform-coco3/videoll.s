@@ -63,7 +63,7 @@ _video_write:
 	tfr x,y			; So we can use y to get at the w/h
 	leax 4,x		; Move on to data space
 vwnext:
-	lda 2,y
+	lda 3,y
 	pshs u
 vwline:
 	ldb ,x+
@@ -72,7 +72,7 @@ vwline:
 	bne vwline
 	puls u
 	leau 32,u
-	dec ,y
+	dec 1,y
 	bne vwnext
 	puls u,pc
 
