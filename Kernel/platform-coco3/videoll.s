@@ -96,7 +96,7 @@ _video_read:
 	tfr x,y			; So we can use y to get at the w/h
 	leax 4,x		; Move on to data space
 vrnext:
-	lda 2,y			; a counts our copy along the scan line
+	lda 3,y			; a counts our copy along the scan line
 	pshs u
 vrline:
 	ldb ,u+			; b does our data
@@ -105,7 +105,7 @@ vrline:
 	bne vrline
 	puls u			; step down a line
 	leau 32,u
-	dec ,y			; use the buffer directly for line count
+	dec 1,y			; use the buffer directly for line count
 	bne vrnext
 	puls u,pc		; and done
 
