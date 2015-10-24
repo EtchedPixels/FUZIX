@@ -87,15 +87,14 @@ endline:
 ;;;   returns: U = screen ptr
 ;;;   modifies: D
 vidptr:
-	ldu 	#VIDEO_BASE
-	ldd 	,x++		; Y into B
-	lda 	#32
+	ldd	,x++
+	lda	#32
 	mul
-	leau 	d,u
-	ldd 	,x++		; X
-	leau 	d,u
+	addd	,x++
+	addd	#VIDEO_BASE
+	tfr	d,u
 	rts
-	
+
 
 ;;; This does the job of READ & WRITE
 ;;;   takes: C = direction 0=write, 1=read
