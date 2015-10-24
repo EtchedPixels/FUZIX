@@ -1,9 +1,10 @@
+#include "msp430fr5969.ld.h"
 
 ENTRY(_start)
 
 MEMORY
 {
-        USER : ORIGIN = 0xa380, LENGTH = (0xff80 - 0xa380)
+        USER : ORIGIN = USER_BASE, LENGTH = (0xff80 - USER_BASE)
 }
 
 SECTIONS

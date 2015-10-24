@@ -16,7 +16,7 @@ static struct display ncdisplay = {
   0xFF, 0xFF,		/* For now */
   FMT_MONO_WB,
   HW_UNACCEL,
-  0,
+  GFX_TEXT,
   0,
   GFX_DRAW
 };
