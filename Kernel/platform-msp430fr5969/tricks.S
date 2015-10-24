@@ -8,6 +8,22 @@ SWAPSTACK_SIZE = 128
 swapstack:
 	.fill SWAPSTACK_SIZE
 
+; Loads an overlay from high memory to its destination in low memory.
+; The address provided in parameters are the *low 16 bits* of the high
+; memory addresses (for C compatibility).
+proc load_overlay
+	; r12 = overlay start
+	; r13 = overlay stop
+	mov.w #0, r14
+	sub.w r12, r13
+1:
+	movx.w 0x10000(r12), __overlay_start_address(r14)
+	incd r12
+	incd r14
+	cmp.w r14, r13
+	jnz 1b
+	ret
+
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
@@ -117,6 +133,7 @@ proc unix_syscall_entry
 	mov.w r15, &U_DATA__U_ARGN3
 	mov.b #1, &U_DATA__U_INSYS
 	eint
+	call #load_overlay_for_syscall
 	call #unix_syscall
 	dint
 	mov.b #0, &U_DATA__U_INSYS

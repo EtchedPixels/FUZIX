@@ -212,22 +212,32 @@ SECTIONS
 	*(.text.*_trampoline);
   } > INFOMEM
 
-  .boottext : {
-    . = ALIGN(2);
-	*(.text.trap_reboot_high);
-	*(.text.blkdev_alloc);
-	*(.text.blkdev_scan);
-	"*/*_discard.o"(.text.* .rodata .rodata.*);
-	"*/mbr.o"(.text.* .rodata .rodata.*);
-	"*/start.o"(.text.* .rodata .rodata.*);
-  } > USER AT> HIROM
-  PROVIDE (__hirom_base = LOADADDR(.boottext));
-  PROVIDE (__hirom_length = SIZEOF(.boottext));
+  OVERLAY : NOCROSSREFS {
+    .boot_overlay {
+		*(.text.trap_reboot_high);
+		*(.text.blkdev_alloc);
+		*(.text.blkdev_scan);
+		"*/*_discard.o"(.text.* .rodata .rodata.*);
+		"*/mbr.o"(.text.* .rodata .rodata.*);
+		"*/start.o"(.text.* .rodata .rodata.*);
+    }
+	.syscall_exec16_overlay {
+		"*/syscall_exec16.o"(.text.* .rodata .rodata.*);
+	}
+	.syscall_fs2_overlay {
+		"*/syscall_fs2.o"(.text.* .rodata .rodata.*);
+	}
+	.syscall_other_overlay {
+		"*/syscall_other.o"(.text.* .rodata .rodata.*);
+	}
+  } > LOROM AT> HIROM
+  PROVIDE (__overlay_start_address = ADDR(.boot_overlay));
+  PROVIDE (__load_length_boot_overlay = SIZEOF(.boot_overlay));
 
   .rodata : {
     . = ALIGN(2);
     *(.rodata.* .rodata .const .const:*)
-  } > LOROM
+  } > LOROM AT> LOROM
 
   .text : {
   	. = ALIGN(2);
