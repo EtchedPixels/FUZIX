@@ -386,6 +386,9 @@ static cdefn_t* last;   /* Last of the built-in words */
 static uint8_t* here;
 static uint8_t* here_top;
 
+static const char** global_argv;
+static int global_argc;
+
 typedef void code_fn(cdefn_t* w);
 static void align_cb(cdefn_t* w);
 
@@ -632,6 +635,8 @@ static cdefn_t add_word ;
 static cdefn_t align_word ;
 static cdefn_t allot_word ;
 static cdefn_t and_word ;
+static cdefn_t argc_word ;
+static cdefn_t argv_word ;
 static cdefn_t arrow_r_word ;
 static cdefn_t at_word ;
 static cdefn_t base_word ;
@@ -640,6 +645,7 @@ static cdefn_t branch_word ;
 static cdefn_t c_at_word ;
 static cdefn_t c_pling_word ;
 static cdefn_t cell_word ;
+static cdefn_t ccount_word ;
 static cdefn_t close_sq_word ;
 static cdefn_t dabs_word ;
 static cdefn_t drop_word ;
@@ -1102,6 +1108,15 @@ static void ud_mod_cb(cdefn_t* w)
 	dpushd(q);
 }
 
+static void ccount_cb(cdefn_t* w)
+{
+	const char* cptr = (const char*) *daddr(0);
+	if (cptr)
+		dpush(strlen(cptr));
+	else
+		dpush(0);
+}
+
 static void E_fnf_cb(cdefn_t* w)      { panic("file not found"); }
 static void _exit_cb(cdefn_t* w)      { exit(dpop()); }
 static void abort_cb(cdefn_t* w)      { longjmp(onerror, 1); }
@@ -1237,7 +1252,9 @@ COM( add_word,           add_cb,         "+",          &add_one_word,    ) //@W
 COM( align_word,         align_cb,       "ALIGN",      &add_word,        ) //@W
 COM( allot_word,         allot_cb,       "ALLOT",      &align_word,      ) //@W
 COM( and_word,           and_cb,         "AND",        &allot_word,      ) //@W
-COM( arrow_r_word,       arrow_r_cb,     ">R",         &and_word,        ) //@W
+COM( argc_word,          rvarword,       "ARGC",       &and_word,        &global_argc ) //@W
+COM( argv_word,          rvarword,       "ARGV",       &argc_word,       &global_argv ) //@W
+COM( arrow_r_word,       arrow_r_cb,     ">R",         &argv_word,       ) //@W
 COM( at_word,            at_cb,          "@",          &arrow_r_word,    ) //@W
 COM( base_word,          rvarword,       "BASE",       &at_word,         &base ) //@W
 COM( branch0_word,       branchif_cb,    "0BRANCH",    &base_word,       (void*)0 ) //@W
@@ -1245,7 +1262,8 @@ COM( branch_word,        branch_cb,      "BRANCH",     &branch0_word,    ) //@W
 COM( c_at_word,          c_at_cb,        "C@",         &branch_word,     ) //@W
 COM( c_pling_word,       c_pling_cb,     "C!",         &c_at_word,       ) //@W
 COM( cell_word,          rvarword,       "CELL",       &c_pling_word,    (void*)CELL ) //@W
-COM( close_sq_word,      close_sq_cb,    "]",          &cell_word,       ) //@W
+COM( ccount_word,        ccount_cb,      "CCOUNT",     &cell_word,       ) //@W
+COM( close_sq_word,      close_sq_cb,    "]",          &ccount_word,     ) //@W
 COM( dabs_word,          dabs_cb,        "DABS",       &close_sq_word,   ) //@W
 COM( drop_word,          dadjust_cb,     "DROP",       &dabs_word,       (void*)-1 ) //@W
 COM( dup_word,           peekcon_cb,     "DUP",        &drop_word,       (void*)0 ) //@W
@@ -2243,8 +2261,35 @@ COM( sign_word, codeword, "SIGN", &_23__word, (void*)&less0_word, (void*)&branch
 //   UNTIL
 COM( _23_s_word, codeword, "#S", &sign_word, (void*)&_23__word, (void*)&t_dup_word, (void*)&or_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&_23_s_word.payload[0] + 0), (void*)&exit_word )
 
-static cdefn_t* last = (defn_t*) &_23_s_word; //@E
-static defn_t* latest = (defn_t*) &_23_s_word; //@E
+//@C SHIFT-ARGS
+// \ Discards the first argument in the argv array.
+// \ ( -- )
+//   ARGC @ IF
+//     -1 ARGC +!
+//     CELL ARGV +!
+//   THEN
+COM( shift_2d_args_word, codeword, "SHIFT-ARGS", &_23_s_word, (void*)&argc_word, (void*)&at_word, (void*)&branch0_word, (void*)(&shift_2d_args_word.payload[0] + 10), (void*)&m_one_word, (void*)&argc_word, (void*)&_2b__21__word, (void*)&cell_word, (void*)&argv_word, (void*)&_2b__21__word, (void*)&exit_word )
+
+//@C ARG
+// \ Fetches an argument from the argv array.
+// \ ( n -- addr count )
+//   ARGV @ + @              \ c-ptr
+//   CCOUNT                  \ addr count
+COM( arg_word, codeword, "ARG", &shift_2d_args_word, (void*)&argv_word, (void*)&at_word, (void*)&add_word, (void*)&at_word, (void*)&ccount_word, (void*)&exit_word )
+
+//@C NEXT-ARG
+// \ Fetches the next argument (or 0 0 if none).
+// \ ( -- addr count )
+//   ARGC @ IF
+//     0 ARG
+//     SHIFT-ARGS
+//   ELSE
+//     0 0
+//   THEN
+COM( next_2d_arg_word, codeword, "NEXT-ARG", &arg_word, (void*)&argc_word, (void*)&at_word, (void*)&branch0_word, (void*)(&next_2d_arg_word.payload[0] + 9), (void*)&zero_word, (void*)&arg_word, (void*)&shift_2d_args_word, (void*)&branch_word, (void*)(&next_2d_arg_word.payload[0] + 11), (void*)&zero_word, (void*)&zero_word, (void*)&exit_word )
+
+static cdefn_t* last = (defn_t*) &next_2d_arg_word; //@E
+static defn_t* latest = (defn_t*) &next_2d_arg_word; //@E
 
 int main(int argc, const char* argv[])
 {
@@ -2270,8 +2315,14 @@ int main(int argc, const char* argv[])
 			strerr("\n");
 			exit(1);
 		}
+
+		argv++;
+		argc++;
 	}
 			
+	global_argv = argv;
+	global_argc = argc;
+
 	dsp = dstack + DSTACKSIZE;
 	rsp = rstack + RSTACKSIZE;
 
