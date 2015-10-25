@@ -12,8 +12,11 @@ extern video_cmd( char *rlt_data);
 
 */
 
+static int irq;
+
 static void map_for_video()
 {
+	irq=di();
 	*( uint8_t *)0xffa9 = 8;
 	*( uint8_t *)0xffaa = 9;
 }
@@ -22,6 +25,7 @@ static void map_for_kernel()
 {
 	*( uint8_t *)0xffa9 = 1;
 	*( uint8_t *)0xffaa = 2;
+	irqrestore(irq);
 }
 
 static uint8_t *char_addr(unsigned int y1, unsigned char x1)
@@ -142,24 +146,24 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 		break;
 	case GFXIOC_WRITE:
 	case GFXIOC_READ:
-		err = EFAULT;
-		goto ret;
-		/* Not implemented yet....
-		   if (l < 8)
-		   return EINVAL;
-		   l -= 8;
-		   if (p[0] > 31 || p[1] > 191 || p[2] > 31 || p[3] > 191 ||
-		   p[0] + p[2] > 32 || p[1] + p[3] > 192 ||
-		   (p[2] * p[3]) > l)
-		   return -EFAULT;
-		   if (arg == GFXIOC_READ) {
-		   video_read(buf);
-		   if (uput(buf + 8, ptr, l))
-		   return EFAULT;
-		   return 0;
-		   }
-		   video_write(buf);
-		*/
+		if (l < 8){
+			err= EINVAL;
+			break;
+		}
+		l -= 8;
+		if (p[0] > 191 || p[1] > 31 || p[2] > 191 || p[3] > 31 ||
+		    p[0] + p[2] > 192 || p[1] + p[3] > 32 ||
+		    (p[2] * p[3]) > l) {
+			err = -EFAULT;
+			break;
+		}
+		if (arg == GFXIOC_READ) {
+			video_read( (char *)0x5e00 );
+			if (uput( (char *)0x5e00 + 8, ptr+10, l-2))
+				err = EFAULT;
+			break;
+		}
+		video_write( (char *)0x5e00 );
 	}
  ret:
 	map_for_kernel();

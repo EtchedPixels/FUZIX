@@ -128,11 +128,11 @@ static struct display fmodes[] = {
 		256, 192,        /* screen size */
 		256, 192,        /* buffer size */
 		0xFF, 0xFF,	 /* no pan, scroll */
-		FMT_MONO_BW,     /* for now just B&W */
+		FMT_MONO_WB,     /* for now just B&W */
 		HW_UNACCEL,      /* no acceleration */
 		0,               /* no features */
 		0,               /* Memory size irrelevant */
-		GFX_DRAW,        /* only the basics */
+		GFX_DRAW|GFX_READ|GFX_WRITE  /* only the basics */
 	}
 };
 
@@ -461,29 +461,39 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return tty_ioctl(minor, arg, ptr);
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
-	if (arg == GFXIOC_GETINFO)
+	switch( arg ){
+	case GFXIOC_GETINFO:
 		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
-	if (arg == GFXIOC_GETMODE){
-		uint8_t m=ugetc(ptr);
-		if( m > 4 ) goto inval;
-		return uput( &fmodes[m], ptr, sizeof( struct display));
-	}
-	if (arg == GFXIOC_SETMODE){
-		uint8_t m=ugetc(ptr);
-		if( m > 4 ) goto inval;
-		memcpy( &(ptytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
-		if( minor == curminor ) apply_gime( minor );
-		return 0;
-	}
-	if (arg == GFXIOC_DRAW ){
-		int err;
-		err = gfx_draw_op(arg, ptr);
-		if (err) {
-			udata.u_error = err;
-			err = -1;
+	case GFXIOC_GETMODE:
+		{
+			uint8_t m=ugetc(ptr);
+			if( m > 4 ) goto inval;
+			return uput( &fmodes[m], ptr, sizeof( struct display));
 		}
-		return err;
+	case GFXIOC_SETMODE:
+		{
+			uint8_t m=ugetc(ptr);
+			if( m > 4 ) goto inval;
+			memcpy( &(ptytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
+			if( minor == curminor ) apply_gime( minor );
+			return 0;
+		}
+	case GFXIOC_DRAW:
+	case GFXIOC_WRITE:
+	case GFXIOC_READ:
+		{
+			int err;
+			err = gfx_draw_op(arg, ptr);
+			if (err) {
+				udata.u_error = err;
+				err = -1;
+			}
+			return err;
+		}
+	default:
+		break;
 	}
+
 	udata.u_error = ENOTTY;
 	return -1;
 

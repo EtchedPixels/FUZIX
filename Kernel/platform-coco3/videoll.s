@@ -5,17 +5,9 @@
 	.module	videoll
 
 
+	;; exported
 	.globl	_memset
 	.globl	_memcpy
-*	.globl _vid256x192
-*	.globl _plot_char
-*	.globl _scroll_up
-*	.globl _scroll_down
-*	.globl _clear_across
-*	.globl _clear_lines
-*	.globl _cursor_on
-*	.globl _cursor_off
-
 	.globl _video_read
 	.globl _video_write
 	.globl _video_cmd
@@ -26,7 +18,6 @@
 	.area .video
 
 VIDEO_BASE  equ	 $4000
-
 
 	
 ;;;   void *memset(void *d, int c, size_t sz)
@@ -53,18 +44,16 @@ a@	ldb	,u+
 	puls	x,y,u,pc
 
 
-
-
-vidptr:
-	ldu 	#VIDEO_BASE
-	ldd 	,x++		; Y into B
-	lda 	#32
-	mul
-	leau 	d,u
-	ldd 	,x++		; X
-	leau 	d,u
-	rts
-
+;
+;	These routines wortk in both 256x192x2 and 128x192x4 modes
+;	because everything in the X plane is bytewide.
+;
+_video_write:
+	clra			; clr C
+	bra	tfr_cmd
+_video_read:
+	coma			; set C
+	bra	tfr_cmd		; go
 
 ;;; void video_cmd( char *rle_data );
 _video_cmd:
@@ -90,3 +79,49 @@ endline:
 	ldb 	,x+		; get next op - 0,0 means end and done
 	bne 	oploop
 	puls 	u,pc
+
+
+;;; Calculate Screen pointer from y,x,h,w
+;;;   takes: X = ptr to box
+;;;   returns: X = X + 4
+;;;   returns: U = screen ptr
+;;;   modifies: D
+vidptr:
+	ldd	,x++
+	lda	#32
+	mul
+	addd	,x++
+	addd	#VIDEO_BASE
+	tfr	d,u
+	rts
+
+
+;;; This does the job of READ & WRITE
+;;;   takes: C = direction 0=write, 1=read
+;;;   takes: X = transfer buffer ptr + 2
+tfr_cmd:
+	pshs	u,y		; save regs
+	orcc	#$10		; turn off interrupt - int might remap kernel
+	ldd	#$80c0		; this is writing
+	bcc	c@		; if carry clear then keep D write
+	exg	a,b		; else flip D: now is reading
+c@	sta	b@+1		; !!! self modify inner loop
+	stb	b@+3		; !!!  
+	bsr	vidptr		; U = screen addr
+	tfr	x,y		; Y = ptr to Height, width
+	leax	4,x		; X = pixel data
+	;; outter loop: iterate over pixel rows
+a@	lda	3,y		; count = width
+	pshs	u		; save screen ptr
+	;; inner loop: iterate over columns
+	;; modify mod+1 and mod+3 to switch directions
+b@	ldb	,x+		; get a byte from src
+	stb	,u+		; save byte to dest
+	deca			; bump counter
+	bne	b@		; loop
+	;; increment outer loop
+	puls	u		; restore original screen ptr
+	leau	32,u		; add byte span of screen (goto next line)
+	dec	1,y		; bump row counter
+	bne	a@		; loop
+	puls	u,y,pc		; restore regs, return
