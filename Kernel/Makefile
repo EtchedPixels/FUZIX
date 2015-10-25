@@ -9,7 +9,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = coco2
 #export TARGET = coco3
 #export TARGET = dragon-nx32
-#export TARGET = micropack
+export TARGET = micropack
 #export TARGET = msx1
 #export TARGET = msx2
 #export TARGET = mtx
@@ -21,7 +21,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = px4plus
 #export TARGET = socz80
 #export TARGET = tgl6502
-export TARGET = trs80
+#export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
@@ -30,6 +30,7 @@ export TARGET = trs80
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
+export ROOT_DIR
 
 ifeq ($(MAKE),)
   export MAKE = "make"

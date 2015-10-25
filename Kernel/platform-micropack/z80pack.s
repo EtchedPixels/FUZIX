@@ -31,6 +31,8 @@
             .globl outchar
 
             ; imported symbols
+
+	    .globl ___sdcc_enter_ix
             .globl _ramsize
             .globl _procmem
 
@@ -113,6 +115,13 @@ _program_vectors:
             ld (0x0038), a
             ld hl, #interrupt_handler
             ld (0x0039), hl
+
+            ; RST8 helper
+            ld a, #0xC3 ; JP instruction
+            ld (0x008), a
+            ld hl, #___sdcc_enter_ix
+
+            ld (0x009), hl
 
             ; set restart vector for UZI system calls
             ld (0x0030), a   ;  (rst 30h is unix function call vector)

@@ -1,0 +1,10 @@
+;
+;	Convert the function preambles calls into RST8
+;
+replace restart	{
+	call	___sdcc_enter_ix
+} by {
+	rst 8
+}
+
+
