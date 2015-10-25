@@ -5,7 +5,7 @@
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#define CONFIG_MULTI
+#undef CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
 /* CP/M emulation */
@@ -15,9 +15,7 @@
 /* Swap only */
 #define CONFIG_SWAP_ONLY
 /* Simple user copies */
-#define CONFIG_USERMEM_C
-#define BANK_KERNEL
-#define BANK_PROCESS
+#define CONFIG_USERMEM_DIRECT
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
