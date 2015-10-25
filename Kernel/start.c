@@ -252,7 +252,7 @@ void fuzix_main(void)
 	tty_init();
 
 	if (d_open(TTYDEV, 0) != 0)
-		panic("no tty");
+		panic(PANIC_NOTTY);
 
 	/* Sign on messages */
 	kprintf(
@@ -304,10 +304,10 @@ void fuzix_main(void)
 	kprintf("Mounting root fs (root_dev=%d): ", root_dev);
 
 	if (fmount(root_dev, NULLINODE, 0))
-		panic("no filesys");
+		panic(PANIC_NOFILESYS);
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)
-		panic("no root");
+		panic(PANIC_NOROOT);
 
 	kputs("OK\n");
 

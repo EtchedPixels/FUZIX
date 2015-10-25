@@ -76,7 +76,7 @@ static struct mem *mem_alloc(void)
 			return p;
 		}
 	}
-	panic("mem_alloc: leak");
+	panic(PANIC_MLEAK);
 }
 
 static void *kdup(void *p, void *e)

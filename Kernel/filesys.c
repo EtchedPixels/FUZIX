@@ -192,7 +192,7 @@ inoptr i_open(uint16_t dev, uint16_t ino)
     bool isnew = false;
 
     if(!validdev(dev))
-        panic("i_open: bad dev");
+        panic(PANIC_IOPEN_BAD);
 
     if(!ino){        /* ino==0 means we want a new one */
         isnew = true;
@@ -451,7 +451,7 @@ fsptr getdev(uint16_t dev)
     mnt = fs_tab_get(dev);
 
     if (!mnt || !(devfs = mnt->m_fs) || devfs->s_mounted == 0) {
-        panic("getdev: bad dev");
+        panic(PANIC_GD_BAD);
         /* Return needed to persuade SDCC all is ok */
         return NULL;
     }
@@ -549,7 +549,7 @@ void i_free(uint16_t devno, uint16_t ino)
         return;
 
     if(ino < 2 || ino >=(dev->s_isize-2)*8)
-        panic("i_free: bad ino");
+        panic(PANIC_IFREE_BADI);
 
     ++dev->s_tinode;
     if(dev->s_ninode < FILESYS_TABSIZE)
@@ -739,7 +739,7 @@ void i_deref(inoptr ino)
     magic(ino);
 
     if(!ino->c_refs)
-        panic("inode freed.");
+        panic(PANIC_INODE_FREED);
 
     if((ino->c_node.i_mode & F_MASK) == F_PIPE)
         wakeup((char *)ino);
@@ -950,12 +950,12 @@ void validblk(uint16_t dev, blkno_t num)
     mnt = fs_tab_get(dev);
 
     if(mnt == NULL || !(devptr = mnt->m_fs) || devptr->s_mounted == 0) {
-        panic("validblk: not mounted");
+        panic(PANIC_VALIDBLK_NM);
         return;
     }
 
     if(num < devptr->s_isize || num >= devptr->s_fsize)
-        panic("validblk: invalid blk");
+        panic(PANIC_VALIDBLK_INV);
 }
 
 
@@ -975,10 +975,10 @@ inoptr getinode(uint8_t uindex)
     oftindex = udata.u_files[uindex];
 
     if(oftindex >= OFTSIZE || oftindex == NO_FILE)
-        panic("getinode: bad desc table");
+        panic(PANIC_GETINO_BADT);
 
     if((inoindex = of_tab[oftindex].o_inode) < i_tab || inoindex >= i_tab+ITABSIZE)
-        panic("getinode: bad OFT");
+        panic(PANIC_GETINO_OFT);
 
     magic(inoindex);
     return(inoindex);
@@ -1077,7 +1077,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     struct filesys *fp;
 
     if(d_open(dev, 0) != 0)
-        panic("fmount: can't open filesystem");
+        panic(PANIC_FMOUNT_NOPEN);
 
     m = newfstab();
     if (m == NULL) {
@@ -1116,5 +1116,5 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
 void magic(inoptr ino)
 {
     if(ino->c_magic != CMAGIC)
-        panic("corrupt inode");
+        panic(PANIC_CORRUPTI);
 }

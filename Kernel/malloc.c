@@ -163,7 +163,7 @@ void kfree(void *ptr)
 		mergeblk(i);
 		return;
 	}
-	panic("bad free");
+	panic(PANIC_BADFREE);
 }
 
 

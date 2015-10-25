@@ -24,7 +24,7 @@ static uint8_t swapptr = 0;
 void swapmap_add(uint8_t swap)
 {
 	if (swapptr == MAX_SWAPS)
-		panic("maxswap");
+		panic(PANIC_MAXSWAP);
 	swapmap[swapptr++] = swap;
 }
 
@@ -116,7 +116,7 @@ static ptptr swapvictim(ptptr p, int notself)
 #else
 	used(p);
 	if (notself)
-		panic("bad notself\n");
+		panic(PANIC_NOTSELF);
 	return udata.u_ptab;
 #endif
 }

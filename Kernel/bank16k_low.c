@@ -47,7 +47,7 @@ static unsigned char pfptr = 0;
 void pagemap_add(uint8_t page)
 {
 	if (pfptr == MAX_MAPS)
-		panic("map over");
+		panic(PANIC_MAPOVER);
 	pfree[pfptr++] = page;
 }
 
@@ -180,7 +180,7 @@ int swapout(ptptr p)
 	uint8_t *pt = (uint8_t *)&p->page;
 
 	if (!page)
-		panic("process already swapped!\n");
+		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif

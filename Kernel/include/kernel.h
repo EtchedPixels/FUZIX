@@ -15,6 +15,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "config.h"
 #include "cpu.h"
 
+#include "panic.h"
+
 #ifndef NULL
 #define NULL (void *)0
 #endif

@@ -51,7 +51,7 @@ static unsigned char pfptr = 0;
 void pagemap_add(uint8_t page)
 {
 	if (pfptr == MAX_MAPS)
-		panic("map over");
+		panic(PANIC_MAPOVER);
 	pfree[pfptr++] = page;
 }
 

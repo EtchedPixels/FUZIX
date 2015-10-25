@@ -51,7 +51,7 @@ void pagemap_add(uint8_t page)
 void pagemap_free(ptptr p)
 {
 	if (p->p_page == 0)
-		panic("free0");
+		panic(PANIC_FREE0);
 	pfree[pfptr++] = p->p_page;
 }
 
@@ -96,7 +96,7 @@ int swapout(ptptr p)
 	uint16_t map;
 
 	if (!page)
-		panic("process already swapped!\n");
+		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif

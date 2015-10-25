@@ -35,7 +35,7 @@ uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
 
 	if ((bp = bfind(dev, blk)) != NULL) {
 		if (bp->bf_busy == BF_BUSY)
-			panic("want busy block");
+			panic(PANIC_WANTBSYB);
 		else if (bp->bf_busy == BF_FREE)
 			bp->bf_busy = BF_BUSY;
 		/* BF_SUPERBLOCK is fine */
@@ -175,7 +175,7 @@ bufptr freebuf(void)
 		}
 	}
 	if (!oldest)
-		panic("no free buffers");
+		panic(PANIC_NOFREEB);
 
 	if (oldest->bf_dirty) {
 		if (bdwrite(oldest) == -1)
@@ -227,7 +227,7 @@ int bdread(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
 	if (!validdev(dev))
-		panic("bdread: invalid dev");
+		panic(PANIC_BDR_INVD);
 
 	udata.u_buf = bp;
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 0, 0));
@@ -238,7 +238,7 @@ int bdwrite(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
 	if (!validdev(dev))
-		panic("bdwrite: invalid dev");
+		panic(PANIC_BDW_INVD);
 
 	udata.u_buf = bp;
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 0, 0));
@@ -247,14 +247,14 @@ int bdwrite(bufptr bp)
 int cdread(uint16_t dev, uint8_t flag)
 {
 	if (!validdev(dev))
-		panic("cdread: invalid dev");
+		panic(PANIC_CDR_INVD);
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 1, flag));
 }
 
 int cdwrite(uint16_t dev, uint8_t flag)
 {
 	if (!validdev(dev))
-		panic("cdwrite: invalid dev");
+		panic(PANIC_CDW_INVD);
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 1, flag));
 }
 
@@ -270,7 +270,7 @@ int d_open(uint16_t dev, uint8_t flag)
 int d_close(uint16_t dev)
 {
 	if (!validdev(dev))
-		panic("d_close: bad device");
+		panic(PANIC_DCL_INVD);
         bdrop(dev);
 	return (*dev_tab[major(dev)].dev_close) (minor(dev));
 }

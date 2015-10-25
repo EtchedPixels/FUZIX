@@ -29,7 +29,7 @@ void psleep(void *event)
 	case P_RUNNING:	// normal process
 		break;
 	default:
-		panic("psleep: voodoo");
+		panic(PANIC_VOODOO);
 	}
 
 	if (!event)
@@ -124,7 +124,7 @@ ptptr getproc(void)
 
 		switch (getproc_nextp->p_status) {
 		case P_RUNNING:
-			panic("getproc: extra running");
+			panic(PANIC_GETPROC);
 		case P_READY:
 #ifdef DEBUG
 			kprintf("[getproc returning %x pid=%d]\n",
@@ -137,7 +137,7 @@ ptptr getproc(void)
 		if (getproc_nextp == haltafter) {
 			/* we have only one interrupt stack so we can't take interrupts */
 			if(udata.u_ininterrupt)
-				panic("getproc: cannot ei");
+				panic(PANIC_EI);
 			/* yes please, interrupts on (WRS: they probably are already on?) */
 			ei();
 			platform_idle();
@@ -555,7 +555,7 @@ void doexit(int16_t val, int16_t val2)
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 	if (udata.u_ptab->p_pid == 1)
-		panic("killed init");
+		panic(PANIC_KILLED_INIT);
 
 	_sync();		/* Not necessary, but a good idea. */
 
@@ -621,7 +621,7 @@ void doexit(int16_t val, int16_t val2)
 	nproc--;
 
 	switchin(getproc());
-	panic("doexit: won't exit");
+	panic(PANIC_DOEXIT);
 }
 
 void panic(char *deathcry)
@@ -638,5 +638,5 @@ void exec_or_die(void)
 	kputs("Starting /init\n");
 	platform_discard();
 	_execve();
-	panic("no /init");	/* BIG Trouble if we Get Here!! */
+	panic(PANIC_NOINIT);	/* BIG Trouble if we Get Here!! */
 }

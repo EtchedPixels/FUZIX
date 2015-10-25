@@ -61,7 +61,7 @@ int swapout(ptptr p)
 	uint16_t map;
 
 	if (!page)
-		panic("process already swapped!\n");
+		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif

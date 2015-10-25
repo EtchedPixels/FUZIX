@@ -281,7 +281,7 @@ void pagemap_free(ptptr p)
 {
 	struct hole *m = (struct hole *) p->page;
 	if (m->flags != HOLE_USED)
-		panic("double free");
+		panic(PANIC_DOUBLE_FREE);
 	m->flags = HOLE_FREE;
 	sweep_holes(mh);
 }
