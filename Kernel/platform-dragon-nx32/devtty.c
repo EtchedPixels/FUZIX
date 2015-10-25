@@ -376,7 +376,7 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
       return -EFAULT;
     if (arg == GFXIOC_READ) {
       video_read(buf);
-      if (uput(buf, ptr, l + 8))
+      if (uput( buf+8, ptr+10, l-2 ))
         return EFAULT;
       return 0;
     }

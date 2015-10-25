@@ -339,23 +339,43 @@ nocursor:
 ;	because everything in the X plane is bytewide.
 ;
 _video_write:
-	pshs u
-	bsr vidptr
-	tfr x,y			; So we can use y to get at the w/h
-	leax 4,x		; Move on to data space
-vwnext:
-	lda 3,y
-	pshs u
-vwline:
-	ldb ,x+
-	stb ,u+
-	deca
-	bne vwline
-	puls u
-	leau 32,u
-	dec 1,y
-	bne vwnext
-	puls u,pc
+	clra			; clr C
+	bra	tfr_cmd
+_video_read:
+	coma			; set C
+	bra	tfr_cmd		; go
+
+;;; This does the job of READ & WRITE
+;;;   takes: C = direction 0=write, 1=read
+;;;   takes: X = transfer buffer ptr + 2
+tfr_cmd:
+	pshs	u,y		; save regs
+	orcc	#$10		; turn off interrupt - int might remap kernel
+	ldd	#$80c0		; this is writing
+	bcc	c@		; if carry clear then keep D write
+	exg	a,b		; else flip D: now is reading
+c@	sta	b@+1		; !!! self modify inner loop
+	stb	b@+3		; !!!  
+	bsr	vidptr		; U = screen addr
+	tfr	x,y		; Y = ptr to Height, width
+	leax	4,x		; X = pixel data
+	;; outter loop: iterate over pixel rows
+a@	lda	3,y		; count = width
+	pshs	u		; save screen ptr
+	;; inner loop: iterate over columns
+	;; modify mod+1 and mod+3 to switch directions
+b@	ldb	,x+		; get a byte from src
+	stb	,u+		; save byte to dest
+	deca			; bump counter
+	bne	b@		; loop
+	;; increment outer loop
+	puls	u		; restore original screen ptr
+	leau	32,u		; add byte span of screen (goto next line)
+	dec	1,y		; bump row counter
+	bne	a@		; loop
+	puls	u,y,pc		; restore regs, return
+	
+
 ;
 ;	Find the address we need on a pixel row basis
 ;
@@ -368,27 +388,6 @@ vidptr:
 	ldd ,x++		; X
 	leau d,u
 	rts
-;
-;	FIXME - fold read/write into one self modifier
-;
-_video_read:
-	pshs u
-	bsr vidptr
-	tfr x,y			; So we can use y to get at the w/h
-	leax 4,x		; Move on to data space
-vrnext:
-	lda 3,y			; a counts our copy along the scan line
-	pshs u
-vrline:
-	ldb ,u+			; b does our data
-	stb ,x+
-	deca
-	bne vrline
-	puls u			; step down a line
-	leau 32,u
-	dec 1,y			; use the buffer directly for line count
-	bne vrnext
-	puls u,pc		; and done
 
 _video_cmd:
 	pshs u
