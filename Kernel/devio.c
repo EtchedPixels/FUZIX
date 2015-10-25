@@ -3,6 +3,17 @@
 #include <kdata.h>
 #include <stdarg.h>
 
+/* Error checking */
+
+void validchk(uint16_t dev, const char *p)
+{
+        if (!validdev(dev)) {
+                kputs(p);
+                kputchar(':');
+                panic(PANIC_INVD);
+        }
+}
+
 /* Buffer pool management */
 /*********************************************************************
 The high-level interface is through bread() and bfree().
@@ -226,8 +237,8 @@ Any device other than a disk will have only raw access.
 int bdread(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
-	if (!validdev(dev))
-		panic(PANIC_BDR_INVD);
+
+	validchk(dev, PANIC_BDR);
 
 	udata.u_buf = bp;
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 0, 0));
@@ -237,8 +248,8 @@ int bdread(bufptr bp)
 int bdwrite(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
-	if (!validdev(dev))
-		panic(PANIC_BDW_INVD);
+
+	validchk(dev, PANIC_BDW);
 
 	udata.u_buf = bp;
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 0, 0));
@@ -246,15 +257,13 @@ int bdwrite(bufptr bp)
 
 int cdread(uint16_t dev, uint8_t flag)
 {
-	if (!validdev(dev))
-		panic(PANIC_CDR_INVD);
+	validchk(dev, PANIC_CDR);
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 1, flag));
 }
 
 int cdwrite(uint16_t dev, uint8_t flag)
 {
-	if (!validdev(dev))
-		panic(PANIC_CDW_INVD);
+	validchk(dev, PANIC_CDW);
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 1, flag));
 }
 
@@ -269,8 +278,7 @@ int d_open(uint16_t dev, uint8_t flag)
 
 int d_close(uint16_t dev)
 {
-	if (!validdev(dev))
-		panic(PANIC_DCL_INVD);
+	validchk(dev, PANIC_DCL);
         bdrop(dev);
 	return (*dev_tab[major(dev)].dev_close) (minor(dev));
 }

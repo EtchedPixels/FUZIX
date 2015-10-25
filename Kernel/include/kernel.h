@@ -663,6 +663,7 @@ extern int16_t dofork(ptptr child);
 extern uint8_t need_resched;
 
 /* devio.c */
+extern void validchk(uint16_t dev, const char *p);
 extern uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
 extern void brelse(void *bp);
 extern void bawrite(void *bp);

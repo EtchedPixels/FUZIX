@@ -191,8 +191,7 @@ inoptr i_open(uint16_t dev, uint16_t ino)
     struct mount *m;
     bool isnew = false;
 
-    if(!validdev(dev))
-        panic(PANIC_IOPEN_BAD);
+    validchk(dev, PANIC_IOPEN);
 
     if(!ino){        /* ino==0 means we want a new one */
         isnew = true;
