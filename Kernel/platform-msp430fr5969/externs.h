@@ -7,6 +7,7 @@ extern void sd_rawinit(void);
 extern void tty_rawinit(void);
 extern void tty_interrupt(void);
 extern void fuzix_main(void);
+extern void load_overlay(uint16_t start, uint16_t stop);
 
 #endif
 

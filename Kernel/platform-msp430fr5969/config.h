@@ -8,7 +8,7 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
-#define PTABSIZE 5
+#define PTABSIZE 6
 #define MAX_SWAPS PTABSIZE
 
 #define CONFIG_USERMEM_DIRECT
@@ -74,5 +74,5 @@ extern int __swap_size_blocks;
 
 #define BOOTDEVICE 0x0001 /* hda1 */
 
-#define platform_discard() do {} while(0)
+extern void platform_discard(void);
 

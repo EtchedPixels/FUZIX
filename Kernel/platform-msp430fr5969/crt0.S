@@ -18,11 +18,11 @@ trap_monitor:
 	dint
 
 	; Copy the startup code out of high rom and into its execution address.
-	mov.w #0, r15
+	mov #0, r15
 1:
-	movx.b __hirom_base(r15), __user_base(r15)
+	movx.b __load_start_boot_overlay(r15), __overlay_start_address(r15)
 	inc r15
-	cmp.w #__hirom_length, r15
+	cmp.w #__load_length_boot_overlay, r15
 	jnz 1b
 
 	; Go to the real startup code.
