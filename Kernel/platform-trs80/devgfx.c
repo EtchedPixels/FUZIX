@@ -73,6 +73,7 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
     break;
   case GFXIOC_WRITE:
   case GFXIOC_READ:
+  case GFXIOC_EXG:
     if (l < 8)
       return EINVAL;
     l -= 8;
@@ -80,13 +81,17 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
       p[0] + p[2] > 128 || p[1] + p[3] > 255 ||
       (p[2] * p[3]) > l)
       return -EFAULT;
-    if (arg == GFXIOC_READ) {
-      video_read(buf);
-      if (uput(buf + 8, ptr, l))
+    if (arg == GFXIOC_WRITE)
+      video_write(buf);
+    else {
+      if (arg == GFXIOC_READ)
+        video_read(buf);
+      else
+        video_exg(buf);
+      if (uput(buf + 10, ptr, l - 2))
         return EFAULT;
       return 0;
     }
-    video_write(buf);
   }
   return 0;
 }
@@ -123,6 +128,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   case GFXIOC_DRAW:
   case GFXIOC_READ:
   case GFXIOC_WRITE:
+  case GFXIOC_EXG:
     if (vmode == 1) {
       uint8_t *tmp = (uint8_t *)tmpbuf();
       err = gfx_draw_op(arg, ptr, tmp);

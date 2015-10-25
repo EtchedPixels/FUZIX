@@ -21,6 +21,7 @@
 	    .globl _video_cmd
 	    .globl _video_read
 	    .globl _video_write
+	    .globl _video_exg
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -267,3 +268,38 @@ _video_read:
 	    ld (patch_io + 1), a
 	    ld a, #0x13			; autoincrement on read
 	    jr video_do
+
+_video_exg:				; not quite worth self modifying
+	    ld a, #0xB3			; this one too
+	    ld (patch_io + 1), a	; OTIR
+	    ld a, #0x43
+	    out (0x83), a		; autoincrement on write
+	    pop de
+	    pop iy
+	    push iy
+	    push de
+	    push iy
+	    pop hl
+	    ld de, #8
+	    add hl, de			; Data start into HL
+	    ld e, (iy)			; x
+	    ld d, 2(iy)			; y
+next_ex:
+	    ld c, #0x80
+	    out (c), e			; x
+	    inc c
+	    out (c), d			; y
+	    ld b, 4(iy)			; count of bytes per line
+ex_line:
+	    in a, (0x82)		; faster than in a,(c)
+	    ex af,af'			; icky but no free registers
+	    ld a, (hl)
+	    out (0x82), a		; write and inc
+	    ex af, af
+	    ld (hl), a
+	    inc hl
+	    djnz ex_line
+	    inc d			; next line
+	    dec 6(iy)			; height
+	    jr nz, next_ex
+	    ret
