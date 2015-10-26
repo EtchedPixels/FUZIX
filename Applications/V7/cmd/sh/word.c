@@ -117,7 +117,7 @@ retry:
 	if (peekc) {
 		c = peekc;
 		peekc = 0;
-	} else if ((f = standin, f->fnxt != f->fend)) {
+	} else if ((f = standin, f->fnxt != f->fend)) { //what is it?
 		if ((c = *f->fnxt++) == 0) {
 			if (f->feval) {
 				if (estabf(*f->feval++))
