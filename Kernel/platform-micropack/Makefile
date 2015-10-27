@@ -1,6 +1,6 @@
 
 DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devfd.c
-CSRCS = devices.c main.c devtty.c
+CSRCS = devices.c main.c devtty.c syscall_bank.c
 
 ASRCS = crt0.s z80pack.s
 ASRCS += tricks.s commonmem.s
@@ -16,6 +16,11 @@ CROSS_CCOPTS += -I../dev/z80pack/
 JUNK = *.rel *.lst *.asm *.sym *.rst
 
 all:	$(OBJS)
+
+syscall_bank.h: ../include/syscall_name.h ../syscall_fs.c ../syscall_fs2.c ../syscall_fs3.c ../syscall_other.c ../syscall_exec16.c
+	../tools/map_syscall ../syscall_fs.c ../syscall_fs2.c ../syscall_fs3.c ../syscall_other.c ../syscall_exec16.c >syscall_bank.h
+
+syscall_bank.c: syscall_bank.h
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
