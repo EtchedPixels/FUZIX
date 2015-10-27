@@ -1,8 +1,13 @@
 -mwxuy
 -i fuzix.ihx
+-b _CODE=0xC000
 -b _DISCARD=0x5000
--b _UDATA=0x6000
--b _CODE=0x6300
+-b _UDATA=0x7E00
+-b _CODE6=0x8000
+-b _CODE3=0x8000
+-b _CODE4=0x8000
+-b _CODE5=0x8000
+-b _CODE7=0x8000
 -l z80
 platform-micropack/crt0.rel
 platform-micropack/commonmem.rel
@@ -24,6 +29,7 @@ inode.rel
 syscall_exec16.rel
 syscall_fs.rel
 syscall_fs2.rel
+syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
 tty.rel

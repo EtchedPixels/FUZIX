@@ -20,16 +20,17 @@
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
 
+#define PTABSIZE    8
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    0x0000	/* also data base */
 #define PROGLOAD    0x0100
-#define PROGTOP     0x6000	/* Top of program, base of U_DATA */
+#define PROGTOP     0x7E00	/* Top of program, base of U_DATA */
 #define PROC_SIZE   32		/* Memory needed per process */
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
-#define MAX_SWAPS	64	/* The full drive would actually be 170! */
+#define MAX_SWAPS   PTABSIZE	/* The full drive would actually be 170! */
 #define swap_map(x)	((uint8_t *)(x)) /* Simple zero based mapping */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */

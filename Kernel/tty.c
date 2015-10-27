@@ -7,6 +7,12 @@
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
 /*
+ *	On some 8bit systems it makes a huge difference if we avoid all the
+ *	t-> pointer dereferences at link time, so for a single tty we abuse
+ *	the preprocessor slightly
+ */
+
+/*
  *	Minimal Terminal Interface
  *
  *	TODO:
@@ -271,12 +277,11 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 int tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
-	struct tty *t;
-	struct s_queue *q = &ttyinq[minor];
 	int canon;
 	uint8_t wr;
+	struct tty *t = &ttydata[minor];
+	struct s_queue *q = &ttyinq[minor];
 
-	t = &ttydata[minor];
 	canon = t->termios.c_lflag & ICANON;
 
 	if (t->termios.c_iflag & ISTRIP)

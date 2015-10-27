@@ -1,11 +1,8 @@
-; 2013-12-18 William R Sowerbutts
-
-        .module crt0
-
         ; Ordering of segments for the linker.
         ; WRS: Note we list all our segments here, even though
         ; we don't use them all, because their ordering is set
         ; when they are first seen.
+	.area _CODE6		; overlaid by 3 4 5 (which are smaller)
         .area _CODE
         .area _CODE2
         .area _CONST
@@ -23,6 +20,9 @@
 
 	.area _DISCARD
 	.area _UDATA
+
+        .module crt0
+
 
         ; imported symbols
         .globl _fuzix_main

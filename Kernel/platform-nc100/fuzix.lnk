@@ -24,6 +24,7 @@ syscall_exec16.rel
 syscall_fs.rel
 syscall_proc.rel
 syscall_fs2.rel
+syscall_fs3.rel
 syscall_other.rel
 mm.rel
 swap.rel

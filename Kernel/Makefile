@@ -70,12 +70,17 @@ include cpu-$(CPU)/rules.mk
 CDSRCS = start.c
 C1SRCS =  version.c filesys.c devio.c kdata.c
 C1SRCS += inode.c tty.c
-#
-#	Keep all of the syscalls in C2SRCS
-#
-C2SRCS =  syscall_proc.c syscall_fs.c
-C2SRCS += syscall_fs2.c syscall_other.c syscall_exec$(BITS).c process.c malloc.c
+C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c flat.c
+#
+#	Usually we map sysalls into CODE2 but they can be overlaid
+#
+CS1SRCS = syscall_fs.c
+CS2SRCS = syscall_fs2.c
+CS3SRCS = syscall_fs3.c
+CS4SRCS = syscall_other.c
+CS5SRCS = syscall_exec$(BITS).c
+#
 #
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
@@ -92,12 +97,22 @@ CDOBJS = $(CDSRCS:.c=$(BINEXT))
 C1OBJS = $(C1SRCS:.c=$(BINEXT))
 C2OBJS = $(C2SRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
+
+CS1OBJS = $(CS1SRCS:.c=$(BINEXT))
+CS2OBJS = $(CS2SRCS:.c=$(BINEXT))
+CS3OBJS = $(CS3SRCS:.c=$(BINEXT))
+CS4OBJS = $(CS4SRCS:.c=$(BINEXT))
+CS5OBJS = $(CS5SRCS:.c=$(BINEXT))
+
 CFONTOBJS = $(CFONTSRCS:.c=$(BINEXT))
 CVIDEOOBJS = $(CVIDEOSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:$(ASMEXT)=$(BINEXT))
 
-CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(CFONTSRCS) $(CVIDEOSRCS)
-COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS)
+CSSRCS = $(CS1SRCS) $(CS2SRCS) $(CS3SRCS) $(CS4SRCS) $(CS5SRCS)
+CSOBJS = $(CS1OBJS) $(CS2OBJS) $(CS3OBJS) $(CS4OBJS) $(CS5OBJS)
+
+CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(CFONTSRCS) $(CVIDEOSRCS) $(CSSRCS)
+COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSOBJS)
 
 OBJS  = $(COBJS) $(AOBJS)
 
@@ -132,6 +147,21 @@ $(CFONTOBJS): %$(BINEXT): %.c
 
 $(CVIDEOOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_VIDEO) $<
+
+$(CS1OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS1) $<
+
+$(CS2OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS2) $<
+
+$(CS3OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS3) $<
+
+$(CS4OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS4) $<
+
+$(CS5OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS5) $<
 
 $(AOBJS): %$(BINEXT): %$(ASMEXT)
 	$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<

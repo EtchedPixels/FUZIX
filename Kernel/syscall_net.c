@@ -488,6 +488,7 @@ arg_t _recvfrom(void)
 	struct socket *s = sock_get(d, NULL);
 	int ret;
 
+	/* FIXME: will need _read redone for banked syscalls */
 	if (s == NULL)
 		return -1;
 	ret = _read();
