@@ -5,44 +5,24 @@ Test environment for a very squashed build to see what we can achieve in
 
 Not a useful target, but memory testing stuff
 
+File system code is paged with the banks being 4K spaced 0xE00 length copies
+of the bank and any fixed data that dribbles over the end.
 
-Sizes of target blocks:
-
-syscall_exec16:
-	~= 1300 bytes
-
-syscall_other:
-	~= 2031 bytes
-
-syscall_fs2
-	3386
-	but includes open (821) and flock(381) which can sleep
-	leaves 2184
+TODO: 
+Turn memory images into a loadable binary and a block for the disk
+Preload the exec syscall bank into the main binary so startup works
 
 
-So overlaying syscalL_fs2/syscall_other/syscall_exec16 would save about 2K
-and take us to 6800, still 5K short
-
-Overlaying them all onto syscall_fs would save about 5400 bytes total but
-does mean we need to be smart about overlay restores on wakeup. That also
-fixes open which would give us a total save of about 6.5K or close to the
-6912 or so needed. The single tty hack would probably push us to the needed
-size.
-
-However syscall_fs is only 1.9K so would need to split syscall_fs2 two ways
-
-Would give us
-
-	syscall_fs
-	syscall_exec16
-	syscall_other
-	syscall_fs2_a
-	syscall_fs2_b
+Savings:
 
 Other candidates for the bot which are big are waitpid at 380 bytes and
 signal + sigdisp at 621 bytes the pair. signal/sigdisp normally occur only
 at startup and signal handling so would be acceptable-ish, waitpid always
 involves a task switch anyway. Neither are ideal but they might work.
+
+Some inline tricks with tty might also save a tiny bit of RAM
+Put the swap stack at 0x80-0xFF as we can't realistically run CP/M
+emulation.
 
 Other thoughts. When working with small app have a version of some of the
 overlays that can be loaded in the top of app space - how to do relocations
@@ -50,7 +30,4 @@ and patches ?
 
 Do we want to keep the overlays in the swap space gapped between each
 swapped app. Disk swap is usually cheap spacewise and it would speed up
-their fetching (especially as most IDE drives cache at least a track!).
-Would in a sense become a sneaky way to use the IDE cache as a secondary
-memory 8)
-
+their fetching.
