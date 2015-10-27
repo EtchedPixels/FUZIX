@@ -18,6 +18,9 @@ U_DATA__U_ISP               .equ (U_DATA+26)  ; void * (initial stack pointer wh
 U_DATA__U_TOP               .equ (U_DATA+28)  ; uint16_t
 U_DATA__U_BREAK             .equ (U_DATA+30)  ; uint16_t
 U_DATA__U_SIGVEC            .equ (U_DATA+32)  ; table of function pointers (void *)
+U_DATA__U_BASE		    .equ (U_DATA+64)  ; uint8_t *
+U_DATA__U_COUNT		    .equ (U_DATA+66)  ; uint16_t
+U_DATA__U_OFFSET	    .equ (U_DATA+68)  ; uint32_t
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      .equ 0
