@@ -17,6 +17,8 @@
         .globl interrupt_handler
 	.globl _swapper
 	.globl _swapout
+	.globl _curbank
+	.globl bank_switch_a
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -83,6 +85,8 @@ _switchin:
 	;	We are still on the departing processes stack, which is
 	;	fine for now.
 	;
+	ld a, (_curbank)
+	ld (U_DATA__U_PAGE2), a
 	ld sp, #_swapstack
 	push hl
 	; We will always swap out the current process
@@ -104,6 +108,19 @@ not_swapped:
         sbc hl, de              ; subtract, result will be zero if DE==IX
         jr nz, switchinfail
 
+	ld a, (U_DATA__U_INSYS)
+	or a
+	jr z, not_sys
+	ld l, a
+	; Bank rigt ?
+	ld a, (U_DATA__U_PAGE2)
+	; Any bank
+	or a
+	jr z, not_sys
+	; Need to switch bank
+	ld l, a
+	call bank_switch_a
+not_sys:
 	; wants optimising up a bit
 	ld ix, (U_DATA__U_PTAB)
         ; next_process->p_status = P_RUNNING

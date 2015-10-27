@@ -1,6 +1,8 @@
 -mwxuy
+-r
 -i fuzix.ihx
--b _CODE=0xC000
+-b _DATAAL=0xC000
+-b _CODE=0xC040
 -b _DISCARD=0x5000
 -b _UDATA=0x7E00
 -b _CODE6=0x8000
@@ -39,4 +41,5 @@ swap.rel
 devsys.rel
 platform-micropack/devlpr.rel
 platform-micropack/devtty.rel
+platform-micropack/syscall_bank.rel
 -e

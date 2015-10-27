@@ -24,6 +24,8 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
+	    .globl bank_switch_a
+	    .globl _curbank
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -40,6 +42,8 @@
             .globl null_handler
 	    .globl nmi_handler
             .globl interrupt_handler
+	    .globl _syscall_bank
+	    .globl _hd_read
 
             .globl outcharhex
             .globl outhl, outde, outbc
@@ -65,9 +69,6 @@ _trap_reboot:
 	    ld a, #1
 	    out (29), a
 
-; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
-; -----------------------------------------------------------------------------
             .area _CODE
 
 init_early:
@@ -125,7 +126,7 @@ _program_vectors:
 
             ; set restart vector for UZI system calls
             ld (0x0030), a   ;  (rst 30h is unix function call vector)
-            ld hl, #unix_syscall_entry
+            ld hl, #overlay_syscall_entry
             ld (0x0031), hl
 
             ; Set vector for jump to NULL
@@ -158,5 +159,51 @@ outchar:
 	    out (0x01), a
             ret
 
+overlay_syscall_entry:
+	ld hl, #18
+	add hl, sp
+	ld hl, #_syscall_bank	; FIXME load both as sdasz80 sulks
+	ld l, (hl)
+	ld a, (hl)
+	or a
+	jp z, unix_syscall_entry
+	ld a, (_curbank)
+	cp (hl)
+	call nz, bank_switch_hl
+	jp unix_syscall_entry
+	;
+	;	Flip bank
+	;
+bank_switch_hl:
+	ld a, (hl)
+bank_switch_a:
+	push bc
+	push de
+	push iy
+	ld (_curbank), a
+	add a, a	; 8 * 512 blocks per instance
+	add a, a
+	add a, a
+	ld h, #0
+	ld l, a
+	ld (U_DATA__U_OFFSET), hl
+	ld hl, #0x8000
+	ld (U_DATA__U_BASE), hl
+	ld hl, #0xE00
+	ld (U_DATA__U_COUNT), hl
+	ld hl, #0x0101
+	push hl
+	xor a
+	push af
+	inc sp
+	call _hd_read
+	inc sp
+	pop af
+	pop iy
+	pop de
+	pop bc
+
 _need_resched:
-	    .db 0
+	.db 0
+_curbank:
+	.db 0
