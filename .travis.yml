@@ -1,6 +1,9 @@
-cache:
-    directory:
-        - dependencies
+matrix:
+    include:
+        - env: PLATFORM=6502test
+        - env: PLATFORM=msp430fr5969
+        - env: PLATFORM=dragon-nx32
+        - env: PLATFORM=trs80
 before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo add-apt-repository ppa:tormodvolden/m6809 -y
@@ -15,8 +18,5 @@ before_install:
     - sudo dpkg -i gcc-6809_4.6.4lw-1~precise_i386.deb
 language: c
 script:
-    - make PLATFORM=6502test -j4
-    - make PLATFORM=msp430fr5969 -j4
-    - make PLATFORM=dragon-nx32 -j4
-    - make PLATFORM=trs80 -j4
+    - make PLATFORM=$PLATFORM -j4
 
