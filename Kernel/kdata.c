@@ -97,4 +97,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_flock,			/* FUZIX system call 60 */
 	_getpgrp,		/* FUZIX system call 61 */
 	_sched_yield,		/* FUZIX system call 62 */
+	_acct,			/* FUZIX system call 63 */
+	_memalloc,		/* FUZIX system call 64 */
+	_memfree,		/* FUZIX system call 65 */
 };

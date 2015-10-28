@@ -891,18 +891,21 @@ extern arg_t _fcntl(void);        /* FUZIX system call 47 */
 extern arg_t _fchdir(void);       /* FUZIX system call 48 */
 extern arg_t _fchmod(void);       /* FUZIX system call 49 */
 extern arg_t _fchown(void);       /* FUZIX system call 50 */
-extern arg_t _mkdir(void);	 /* FUZIX system call 51 */
+extern arg_t _mkdir(void);	  /* FUZIX system call 51 */
 extern arg_t _rmdir(void);        /* FUZIX system call 52 */
-extern arg_t _setpgrp(void);	 /* FUZIX system call 53 */
-extern arg_t _uname(void);	 /* FUZIX system call 54 */
-extern arg_t _waitpid(void);	 /* FUZIX system call 55 */
-extern arg_t _profil(void);	 /* FUZIX system call 56 */
-extern arg_t _uadmin(void);	 /* FUZIX system call 57 */
+extern arg_t _setpgrp(void);	  /* FUZIX system call 53 */
+extern arg_t _uname(void);	  /* FUZIX system call 54 */
+extern arg_t _waitpid(void);	  /* FUZIX system call 55 */
+extern arg_t _profil(void);	  /* FUZIX system call 56 */
+extern arg_t _uadmin(void);	  /* FUZIX system call 57 */
 extern arg_t _nice(void);         /* FUZIX system call 58 */
-extern arg_t _sigdisp(void);	 /* FUZIX system call 59 */
-extern arg_t _flock(void);	 /* FUZIX system call 60 */
-extern arg_t _getpgrp(void);	 /* FUZIX system call 61 */
+extern arg_t _sigdisp(void);	  /* FUZIX system call 59 */
+extern arg_t _flock(void);	  /* FUZIX system call 60 */
+extern arg_t _getpgrp(void);	  /* FUZIX system call 61 */
 extern arg_t _sched_yield(void);  /* FUZIX system call 62 */
+extern arg_t _acct(void);	  /* FUZIX system call 63 */
+extern arg_t _memalloc(void);	  /* FUZIX system call 64 */
+extern arg_t _memfree(void);	  /* FUZIX system call 65 */
 
 #if defined(CONFIG_32BIT)
 #include "kernel32.h"

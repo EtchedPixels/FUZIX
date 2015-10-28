@@ -17,8 +17,6 @@ extern unsigned long kmemused(void);
 extern void pagemap_switch(ptptr p);
 extern void *pagemap_base(void);
 #define PROGLOAD (uint32_t)pagemap_base()
-extern arg_t _memalloc(void);
-extern arg_t _memfree(void);
 extern uint32_t ugetl(void *uaddr, int *err);
 extern int uputl(uint32_t val, void *uaddr);
 

@@ -1,4 +1,4 @@
-#define NR_SYSCALL 63
+#define NR_SYSCALL 66
 
 #define VARARGS 	-1
 
@@ -66,6 +66,9 @@ char *syscall_name[NR_SYSCALL] = {
 	"flock",
 	"getpgrp",
 	"yield",
+	"acct",
+	"memalloc",
+	"memfree",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -132,4 +135,7 @@ int syscall_args[NR_SYSCALL] = {
 	2, //flock
 	0, //getpgrp
 	0, //yield
+	1, //act
+	1, //memalloc
+	1, //memfree
 };
