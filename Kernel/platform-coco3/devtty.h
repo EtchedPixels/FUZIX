@@ -17,6 +17,7 @@ struct pty {
 	unsigned char right;    /* right most coord */
 	unsigned char bottom;   /* bottom most coord */
 	struct display *fdisp;  /* ptr to struct for ioctl */
+	uint8_t attr;           /* attribute byte to apply */
 };
 
 extern struct pty *curpty;

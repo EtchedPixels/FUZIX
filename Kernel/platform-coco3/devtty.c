@@ -137,10 +137,10 @@ static struct display fmodes[] = {
 };
 
 static struct mode_s mode[5] = {
-	{   0x04, 0x74, 80, 25, 79, 24, &(fmodes[0])  },
-	{   0x04, 0x6c, 40, 25, 39, 24, &(fmodes[1])  },
-	{   0x04, 0x70, 64, 25, 63, 24, &(fmodes[2])  },
-	{   0x04, 0x68, 32, 25, 31, 24, &(fmodes[3])  },
+	{   0x04, 0x75, 80, 25, 79, 24, &(fmodes[0])  },
+	{   0x04, 0x6d, 40, 25, 39, 24, &(fmodes[1])  },
+	{   0x04, 0x71, 64, 25, 63, 24, &(fmodes[2])  },
+	{   0x04, 0x69, 32, 25, 31, 24, &(fmodes[3])  },
 	{   0x80, 0x08, 40, 21, 39, 20, &(fmodes[4])  },
 };
 
@@ -158,7 +158,8 @@ static struct pty ptytab[] VSECTD = {
 		25,
 		79,
 		24,
-		&fmodes[0]
+		&fmodes[0],
+		050
 	},
 	{
 		(unsigned char *) 0x3000, 
@@ -172,7 +173,8 @@ static struct pty ptytab[] VSECTD = {
 		25,
 		39,
 		24,
-		&fmodes[1]
+		&fmodes[1],
+		0x01
 	}
 };
 
