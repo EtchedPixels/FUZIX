@@ -44,9 +44,9 @@ void cursor_off(void)
 void cursor_on(int8_t y, int8_t x)
 {
 	map_for_video();
-	curpty->csave = *char_addr(y, x);
-	curpty->cpos = char_addr(y, x);
-	*curpty->cpos = VT_MAP_CHAR('_');
+	curpty->csave = *(char_addr(y, x)+1);
+	curpty->cpos = char_addr(y, x)+1;
+		*curpty->cpos = *curpty->cpos ^ 0x3f;
 	map_for_kernel();
 }
 
