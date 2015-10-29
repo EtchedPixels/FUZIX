@@ -174,7 +174,7 @@ static struct pty ptytab[] VSECTD = {
 		39,
 		24,
 		&fmodes[1],
-		0x01
+		050
 	}
 };
 
