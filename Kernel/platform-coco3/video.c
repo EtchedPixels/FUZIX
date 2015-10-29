@@ -30,7 +30,7 @@ static void map_for_kernel()
 
 static uint8_t *char_addr(unsigned int y1, unsigned char x1)
 {
-	return curpty->base + VT_WIDTH * y1 + (uint16_t) x1;
+	return curpty->base + VT_WIDTH * y1 * 2 + (uint16_t)(x1*2);
 }
 
 void cursor_off(void)
@@ -52,24 +52,31 @@ void cursor_on(int8_t y, int8_t x)
 
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
+	char *p=char_addr(y,x);
 	map_for_video();
-	*char_addr(y, x) = VT_MAP_CHAR(c);
+	*p++ = VT_MAP_CHAR(c);
+	*p = curpty->attr;
 	map_for_kernel();
 }
 
 void clear_lines(int8_t y, int8_t ct)
 {
 	map_for_video();
-	unsigned char *s = char_addr(y, 0);
-	memset(s, ' ', ct * VT_WIDTH);
+	uint16_t *s = (uint16_t *)char_addr(y, 0);
+	ct *= VT_WIDTH;
+	uint16_t w = ' ' * 0x100 + curpty->attr;
+	for( ; ct ; ct-- )
+		*s++=w;
 	map_for_kernel();
 }
 
 void clear_across(int8_t y, int8_t x, int16_t l)
 {
 	map_for_video();
-	unsigned char *s = char_addr(y, x);
-	memset(s, ' ', l);
+	uint16_t *s = (uint16_t *)char_addr(y, x);
+	uint16_t w=' ' * 0x100 + curpty->attr;
+	for( ; l ; l-- )
+		*s++=w;
 	map_for_kernel();
 }
 
@@ -78,16 +85,16 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 void scroll_up(void)
 {
 	map_for_video();
-	memcpy(curpty->base, curpty->base + VT_WIDTH,
-	       VT_WIDTH * VT_BOTTOM);
+	memcpy(curpty->base, curpty->base + VT_WIDTH*2,
+	       VT_WIDTH*2 * VT_BOTTOM);
 	map_for_kernel();
 }
 
 void scroll_down(void)
 {
 	map_for_video();
-	memcpy(curpty->base + VT_WIDTH, curpty->base,
-	       VT_WIDTH * VT_BOTTOM);
+	memcpy(curpty->base + VT_WIDTH*2, curpty->base,
+	       VT_WIDTH*2 * VT_BOTTOM);
 	map_for_kernel();
 }
 
