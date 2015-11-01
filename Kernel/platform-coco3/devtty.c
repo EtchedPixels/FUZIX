@@ -456,8 +456,7 @@ void platform_interrupt(void)
 
 void vtattr_notify(void)
 {
-	curpty->attr += 1;
-
+	curpty->attr = ((vtink&7)<<3) + (vtpaper&7);
 }
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
