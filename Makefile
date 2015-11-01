@@ -32,6 +32,7 @@ filesystem.result = filesystem-$(PLATFORM).img
 include $(BUILD)/bake.mk
 include $(BUILD)/platforms/$(PLATFORM).mk
 include $(BUILD)/rules/standard.rules.mk
+include $(TOP)/Kernel/tools/build.mk
 include $(TOP)/Standalone/build.mk
 include $(TOP)/Library/build.mk
 include $(TOP)/Library/tests/build.mk

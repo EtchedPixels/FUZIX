@@ -742,6 +742,7 @@ extern struct mount *fs_tab_get(uint16_t dev);
 /* returns true on failure, false on success */
 extern bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
 extern void magic(inoptr ino);
+extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* inode.c */
 extern void readi(inoptr ino, uint8_t flag);
@@ -749,6 +750,7 @@ extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);
 extern int dev_openi(inoptr *ino, uint8_t flag);
+extern void sync(void);
 
 /* mm.c */
 extern unsigned int uputsys(unsigned char *from, usize_t size);

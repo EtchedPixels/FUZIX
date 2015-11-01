@@ -224,11 +224,20 @@ SECTIONS
 	.syscall_exec16_overlay {
 		"*/syscall_exec16.o"(.text.* .rodata .rodata.*);
 	}
+	.syscall_fs_overlay {
+		"*/syscall_fs.o"(.text.* .rodata .rodata.*);
+	}
 	.syscall_fs2_overlay {
 		"*/syscall_fs2.o"(.text.* .rodata .rodata.*);
 	}
+	.syscall_fs3_overlay {
+		"*/syscall_fs3.o"(.text.* .rodata .rodata.*);
+	}
 	.syscall_other_overlay {
 		"*/syscall_other.o"(.text.* .rodata .rodata.*);
+	}
+	.syscall_proc_overlay {
+		"*/syscall_proc.o"(.text.* .rodata .rodata.*);
 	}
   } > LOROM AT> HIROM
   PROVIDE (__overlay_start_address = ADDR(.boot_overlay));
