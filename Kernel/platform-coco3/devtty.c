@@ -508,6 +508,10 @@ inval:	udata.u_error = EINVAL;
 
 /* Initial Setup stuff down here. */
 
+uint8_t rgb_def_pal[16]={
+	0, 8, 32, 40, 16, 24, 48, 63,
+	0, 8, 32, 40, 16, 24, 48, 63	
+};
 
 void devtty_init()
 {
@@ -520,5 +524,7 @@ void devtty_init()
 		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
 	apply_gime( 1 );    /* apply initial tty1 to regs */
+	/* make video palettes match vt.h's definitions. */
+	memcpy( (uint8_t *)0xffb0, rgb_def_pal, 16 );
 }
 
