@@ -65,7 +65,7 @@ void clear_lines(int8_t y, int8_t ct)
 	map_for_video();
 	uint16_t *s = (uint16_t *)char_addr(y, 0);
 	uint16_t w = ' ' * 0x100 + curpty->attr;
-	for( ; wc ; wc-- )
+	while(  wc-- )
 		*s++=w;
 	map_for_kernel();
 }
@@ -75,7 +75,7 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	map_for_video();
 	uint16_t *s = (uint16_t *)char_addr(y, x);
 	uint16_t w=' ' * 0x100 + curpty->attr;
-	for( ; l ; l-- )
+	while( l-- )
 		*s++=w;
 	map_for_kernel();
 }
