@@ -13,6 +13,7 @@ struct display {
 #define FMT_COLOUR4	2
 #define FMT_COLOUR16	3
 #define FMT_TEXT	4	/* Text only mode */
+#define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
@@ -43,6 +44,7 @@ struct display {
 				   to run the command on */
 #define GFX_WRITE	256	/* Supports writing a buffer */
 #define GFX_AWRITE	512	/* Supports writing an attribute buffer */
+#define GFX_EXG		1024	/* Simultaenous GFX_READ/GFX_WRITE to swap */
  /* We may want to add some hardware ones as we hit machines that have them */
 };
 
@@ -91,4 +93,5 @@ struct videomap {
 #define GFXIOC_SETMODE		0x0312	/* Set video mode */
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
+#define GFXIOC_EXG		0x0315	/* Exchange a block */
 #endif
