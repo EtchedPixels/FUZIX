@@ -454,8 +454,11 @@ void platform_interrupt(void)
 	dw_vpoll();
 }
 
+void vtattr_notify(void)
+{
+	curpty->attr += 1;
 
-
+}
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
