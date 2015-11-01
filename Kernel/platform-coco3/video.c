@@ -61,11 +61,11 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
 
 void clear_lines(int8_t y, int8_t ct)
 {
+	uint16_t wc= ct * VT_WIDTH;
 	map_for_video();
 	uint16_t *s = (uint16_t *)char_addr(y, 0);
-	ct *= VT_WIDTH;
 	uint16_t w = ' ' * 0x100 + curpty->attr;
-	for( ; ct ; ct-- )
+	for( ; wc ; wc-- )
 		*s++=w;
 	map_for_kernel();
 }
