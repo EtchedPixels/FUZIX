@@ -1,3 +1,6 @@
+#define GRAPHICS
+
+
 /* 
 
     QRun: Quill game runner for Fuzix.
@@ -140,6 +143,10 @@ Commodore 64 differences:
 #include <unistd.h>
 #include <stdint.h>
 
+#ifdef GRAPHICS
+#include "sys/graphics.h"
+#endif
+
 #define VERSION "0.1ac2"
 
 typedef uint8_t uchr;	/* for brevity */
@@ -169,7 +176,7 @@ static void expdict(uchr, ushrt *);
 static char present(uchr);
 static uchr doproc(ushrt, uchr, uchr);
 static void listat(uchr);
-static void initgame(ushrt);
+static void initgame(void);
 static void playgame(ushrt);
 static void sysmess(uchr);
 static uchr ffeq(uchr, uchr);
@@ -178,11 +185,14 @@ static uchr autobj(uchr);
 static uchr runact(ushrt, uchr);
 static uchr cplscmp(ushrt, char *);
 static uchr matchword(char **);
-static void usage(char *);
+static void usage(void);
 static void dec32(ushrt);
 static char yesno(void);
 static void savegame(void);
 static void loadgame(void);
+
+static void initdisplay(void);
+static void drawlocation(void);
 
 /* Supported architectures */
 #define ARCH_SPECTRUM 0
@@ -260,7 +270,7 @@ void errstr(const char *t1, const char *t2)
 	write(2, "\n", 1);
 }
 
-#define debugstr errstr
+#define debugstr(x, ...)
 
 void readbuf(char *p, int len)
 {
@@ -285,34 +295,27 @@ int main(int argc, char *argv[])
 
 /* If command looks like a help command, print helpscreen */
 
-	if ((argc == 1) || (isoptch(AV10) && strchr("hH/?", AV11)))
-		usage(AV0);
-
-/* Parse for options. */
-
-	for (n = 2; n < argc; n++) {
-		if (isoptch(argv[n][0])) {	/* Start of an option */
-			switch (argv[n][1]) {
-			case 'L':
-			case 'l':
+	while(*++argv && **argv == '-') {
+		switch(**argv) {
+			default:
+			case 'h':
+				usage();
+			case 'l':			
 				dbver = 10;
 				break;
-			case 'Q':
 			case 'q':
 				nobeep = 1;
 				break;
-
-			default:
-				errstr("Invalid option", argv[n]);
-				exit(1);
-			}	/* End switch */
 		}		/* End For */
 	}			/* End If */
 
 	/* Load the snapshot. To save space, we ignore the printer
 	   buffer and the screen, which can contain nothing of value. */
 
-	inname = argv[1];
+	if (*argv == NULL || argv[1])
+		usage();
+
+	inname = *argv;
 
 	if ((infile = open(inname, O_RDONLY)) < 0) {
 		perror(inname);
@@ -459,7 +462,8 @@ int main(int argc, char *argv[])
 	while (running) {
 		estop = 0;
 		srand(1);
-		initgame(zxptr);	/* Initialise the game */
+		initdisplay();
+		initgame();		/* Initialise the game */
 		playgame(zxptr);	/* Play it */
 		if (estop) {
 			estop = 0;	/* Emergency stop operation, game restarts */
@@ -477,8 +481,10 @@ int main(int argc, char *argv[])
 	return 0;
 }				/* End main() */
 
-static void usage(char *title)
+static void usage(void)
 {
+	errstr("-I  : Use disk graphics.",
+	       NULL);
 	errstr("-L  : Attempt to interpret as a 'later' type Quill file.",
 	       NULL);
 	errstr("-Q : Quiet (no beeping)", NULL);
@@ -496,7 +502,7 @@ uchr zbuf_pri[ZBUF_NUM];	/* 0 = unused , 1+ is use count */
 static uchr zbuf_alloc(void)
 {
 	uchr low = 255;
-	uchr i, lnum;
+	uchr i, lnum = 0;
 	for (i = 0; i < ZBUF_NUM; i++) {
 		if (zbuf_pri[i] == 0)
 			return i;
@@ -604,22 +610,6 @@ static void dec32(ushrt v)
 	opch32(v + '0');
 }
 
-static void opch32(char ch)
-{
-	/* Output a character, assuming 32-column screen */
-	/* FIXME: need to be smart about widths in target */
-	write(1, &ch, 1);
-	if (ch == '\n')
-		xpos = 0;
-	else if (ch == 8 && xpos)
-		xpos--;
-	else if (arch == ARCH_SPECTRUM && xpos == 31)
-		nl();
-	else if (arch != ARCH_SPECTRUM && xpos == 39)
-		nl();
-	else
-		xpos++;
-}
 
 static void nl(void)
 {
@@ -1043,7 +1033,7 @@ static uchr runact(ushrt ccond, uchr noun)
 			n = zmem(++ccond);
 			ccond++;
 /*			usleep(10000L * n); FIXME */
-			printf("sleep %d\n", n);
+/*			printf("sleep %d\n", n);*/
 			if (n > 100)
 				sleep(n/100);
 			break;
@@ -1126,7 +1116,7 @@ static uchr condtrue(ushrt ccond)
 	return (ctrue);
 }
 
-static void initgame(ushrt zxptr)
+static void initgame(void)
 {
 	uchr n;
 	ushrt obase;
@@ -1268,6 +1258,7 @@ static void playgame(ushrt zxptr)
 				sysmess(0);
 				nl();
 			} else {
+				drawlocation();
 				oneitem(loctab, CURLOC);
 				nl();
 				listat(CURLOC);	/* List objects present */
@@ -1464,7 +1455,7 @@ static void listat(uchr locno)
 
 uchr ffeq(uchr x, uchr y)
 {				/* Match x with y, 0FFh matches any */
-	return (uchr) ((x == 0xFF) || (y == 0xFF) || (x == y));
+	return (uchr) (x == 0xFF || y == 0xFF || x == y);
 }
 
 uchr doproc(ushrt table, uchr verb, uchr noun)
@@ -1565,7 +1556,6 @@ static void oneitem(ushrt table, uchr item)
 	cch = ~term;
 
 	n = zword(table + 2 * item);
-//    xpos=0;
 
 	while (1) {
 		cch = (0xFF - (zmem(n++)));
@@ -1573,14 +1563,6 @@ static void oneitem(ushrt table, uchr item)
 			break;
 		expch(cch, &n);
 	}
-}
-
-static void clrscr(void)
-{
-	char n;
-
-	for (n = 0; n < 24; n++)
-		nl();
 }
 
 static void expdict(uchr cch, ushrt * n)
@@ -1652,7 +1634,7 @@ static void expch(uchr cch, ushrt * n)
 	else if (cch > 164)
 		expdict(cch, n);
 	else if (cch > 126)
-		opch32('?');
+		opch32(cch);
 	else if (cch == 6)
 		for (spc(); (xpos % 16); spc()) ;
 	else if (cch == 8)
@@ -1669,3 +1651,233 @@ static void expch(uchr cch, ushrt * n)
 	} else if ((cch > 0x0F) && (cch < 0x16))
 		(*n)++;
 }
+
+
+#ifdef GRAPHICS
+
+/*
+ *	TODO: 
+ *		Use spectrum font ?
+ *		UDG font
+ *		Colour parsing and display
+ *		Graphically render text
+ *		Cente & Scale text on wide displays
+ *		Patch/Press split screen support
+ *		Char mode I/O without echo throughout
+ *		Emulate input insert behaviour in prompts ?
+ *		Use scrolling/blit if supported by platform
+ */
+
+/* FIXME: reset on new game and on load */
+static uint8_t seen[256/8];
+
+/* For the moment */
+static char gpath[] = "picXX.gfx";
+static const char hex[] = "0123456789ABCDEF";
+static uint16_t pict[261];
+
+static uint16_t pixw, pixh;	/* Pixel screen size */
+static uint8_t has_gfx;		/* True if graphics mode in use */
+static uint8_t has_txt;		/* True if text I/O available */
+static uint8_t invert;		/* Mono invert ? */
+
+/* For the moment just assume we also have text support */
+
+struct gfx_draw {
+	uint16_t len;
+	uint16_t y;
+	uint16_t x;
+	uint8_t data[0];
+};
+
+static void clrscr(void)
+{
+	struct gfx_draw *clr = (struct gfx_draw *)pict;
+	uint8_t *p;
+	uint16_t w;
+
+	if (!has_gfx || has_txt) {
+		write(1, "\033H\033J", 4);
+		return;
+	}
+	p = clr->data;
+	/* FIXME: assumes mono */
+	w = pixw >> 3;		/* In bytes */
+	while(w > 255) {
+		*p++ = 255;
+		*p++ = 0x00;
+		*p++ = 0x00;
+		w -= 255;
+	}
+	*p++ = w;
+	*p++ = 0x00;
+	*p++ = 0x00;
+	*p++ = 0x00;		/* End of line */
+	*p++ = 0x00;		/* End of op */
+	clr->x = 0;
+	clr->len = p - clr->data + 4;
+	for (w = 0; w < pixh; w++) {
+		clr->y = w;
+		if (ioctl(0, GFXIOC_DRAW, pict) == -1)
+			perror("GFXIOC_DRAW");
+	}	
+}	
+
+static void initdisplay(void)
+{
+	static struct display m;
+	uint16_t wneed;
+	
+	memset(seen, 0, 256/8);
+	/* TODO - sanity test and request mode */
+	if (ioctl(0, GFXIOC_GETINFO, &m) < 0) {
+		perror("graphics");
+		has_txt = 1;
+		has_gfx = 0;
+		return;
+	}
+	if (m.commands & (GFX_WRITE | GFX_DRAW) == (GFX_WRITE | GFX_DRAW))
+		has_gfx = 1;
+	pixw = m.width;
+	pixh = m.height;
+
+	has_txt = m.features & GFX_TEXT;
+
+	wneed = 256;
+	if (arch != ARCH_SPECTRUM)
+		wneed = 320;
+	
+	switch(m.format) {
+		case FMT_MONO_BW:
+			invert = 1;
+			break;
+		case FMT_MONO_WB:
+			invert = 0;
+			break;
+		case FMT_TEXT:
+			has_gfx = 0;
+			break;
+		default:
+			if (!has_txt)
+				errstr("unsupported video format", NULL);
+			has_gfx = 0;
+	}
+	
+	if (m.height < 192 || m.width < wneed)
+		has_gfx = 0;
+	/* Decide if need to double width stuff 
+	
+	if (pixw >= 2 * wneed && has_gfx)
+		textdbx = 1;
+	if (pixh >= 384 && has_gfx)
+		textdby = 1;
+	*/
+}
+
+/* Deal with black on white versus white on black and using the same
+   b/w bitmaps */
+static void memflip(uint16_t *p, uint16_t len)
+{
+	while(len--)
+		*p++ ^= 0xFFFF;
+}
+
+static void drawlocation(void)
+{
+	int fd;
+	uint8_t b = 1 << (CURLOC & 7);
+	uint8_t n = CURLOC >> 3;
+	if ((seen[n] & b) && state.flags[29] != 255)
+		return;
+	seen[n] |= b;
+	state.flags[29] = 0;
+	
+	gpath[3] = hex[CURLOC >> 4];
+	gpath[4] = hex[CURLOC & 0x0F];
+
+	fd = open(gpath, O_RDONLY);
+	if (fd < 0)
+		return;
+	/* Ok we have an actual picture */
+	n = 0;
+	/* FIXME: hard coded for the moment */
+	pict[0] = 522;
+	pict[2] = (pixw - 256) / 2;	/* Centre */
+	pict[3] = 32;
+	pict[4] = 16;
+	/* Possible want to consider scaling issues, especially on different
+	   aspect ratio display - eg 640 x 200 ? */
+	while(n < 192) {
+		if (read(fd, pict + 5, 512) != 512) {
+			perror(gpath);
+			exit(1);
+		}
+		pict[1] = n;
+		if (invert)
+			memflip(pict + 5, 256);
+		if (ioctl(0, GFXIOC_WRITE, pict) < 0) {
+			perror("GFXIOC_WRITE");
+			exit(1);
+		}
+		n += 16;
+	}
+	close(fd);
+	getch();
+	clrscr();
+}
+
+static void opch32(char ch)
+{
+	/* Output a character, assuming 32 or 40 column screen */
+	/* FIXME if (has_gfx ... ) else */
+	write(1, &ch, 1);
+	if (ch == '\n')
+		xpos = 0;
+	else if (ch == 8 && xpos)
+		xpos--;
+	else if (arch == ARCH_SPECTRUM && xpos == 31)
+		nl();
+	else if (arch != ARCH_SPECTRUM && xpos == 39)
+		nl();
+	else
+		xpos++;
+}
+	
+#else
+
+static void drawlocation(void)
+{
+}
+
+static void initdisplay(void)
+{
+}
+
+static void clrscr(void)
+{
+	char n;
+
+	for (n = 0; n < 24; n++)
+		nl();
+}
+
+static void opch32(char ch)
+{
+	/* Output a character, assuming 32 or 40 column screen */
+	/* FIXME: need to be smart about widths in target */
+	if (ch > 126)
+		ch = '?';	/* No UDGs */
+	write(1, &ch, 1);
+	if (ch == '\n')
+		xpos = 0;
+	else if (ch == 8 && xpos)
+		xpos--;
+	else if (arch == ARCH_SPECTRUM && xpos == 31)
+		nl();
+	else if (arch != ARCH_SPECTRUM && xpos == 39)
+		nl();
+	else
+		xpos++;
+}
+
+#endif
