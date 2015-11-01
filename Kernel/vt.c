@@ -40,23 +40,43 @@
  *	very sure you inspect the asm output for calls to compiler helpers
  *	and don't add any.
  *
+ *	Extensions in use
+ *	- Esc a c	Set vtattr bits (inverse, etc)
+ *
+ *	- Esc b c	Set ink colour
+ *	- Esc c c	Set paper colour
+ *	Where c uses the low 4bits to provide IBRG colours
+ *		0 black
+ *		1 blue
+ *		2 red
+ *		3 magenta or similar
+ *		4 green
+ *		5 cyan
+ *		6 yellow
+ *		7 white
+ *		8-15 brighter versions - if available
+ *	Bit 4 is reserved (must be 0 if bit 5 is 0)
+ *	Bit 5 indicates bit 4-0 are platform specific colour
+ *	Bit 6 should be set to keep it in the ascii range
+ *	Bit 7 should be clear
+ *
  *	Possible VT extensions to look at
  *	- Esc-L		Insert blank line, move lines below down
  *	- ESC-M		Delete cursor line, move up blank bottom
- *	-		Colour setting (Atari ST uses esc b/c) but we need
- *			more flexibility and border
  *	- ESC-d		erase start to cursor inclusive
  *	- ESC-j		save cursor y/x
  *	- ESC-k		restore cursor
  *	- ESC-l		erase line, cursor to left
  *	- ESC-o		erase from start of line to cursor (inclusive)
  *
- *	Would tty be a better graphics interface than direct ? Probably not ?
+ *	- Some way to set border colour on consoles.
  */
 
 
 static uint8_t vtmode;
 uint8_t vtattr;
+uint8_t vtink;
+uint8_t vtpaper;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
 static signed char ncursory;
@@ -170,6 +190,10 @@ static int escout(unsigned char c)
 		return 2;
 	if (c == 'a')
 		return 4;
+	if (c == 'b')
+		return 5;
+	if (c == 'c')
+		return 6;
 	return 0;
 }
 
@@ -219,8 +243,16 @@ void vtoutput(unsigned char *p, unsigned int len)
 				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 					cursorx = ncursorx;
 					vtmode = 0;
-			} else {
+			} else if (vtmode == 4 {
 				vtattr = c;
+				vtmode = 0;
+				continue;
+			} else if (vtmode == 5) {
+				vtink = c;
+				vtmode = 0;
+				continue;
+			} else if (vtmode == 6) {
+				vtpaper = c;
 				vtmode = 0;
 				continue;
 			}
