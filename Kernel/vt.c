@@ -243,17 +243,20 @@ void vtoutput(unsigned char *p, unsigned int len)
 				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 					cursorx = ncursorx;
 					vtmode = 0;
-			} else if (vtmode == 4) {
+			} else if (vtmode == 4 ){
 				vtattr = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			} else if (vtmode == 5) {
 				vtink = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			} else if (vtmode == 6) {
 				vtpaper = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			}
 		}
