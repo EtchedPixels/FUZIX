@@ -1,22 +1,37 @@
-cache:
-    directory:
-        - dependencies
+matrix:
+    include:
+        - env: PLATFORM=6502test
+        - env: PLATFORM=msp430fr5969
+        - env: PLATFORM=dragon-nx32
+        - env: PLATFORM=trs80
 before_install:
     - sudo add-apt-repository ppa:david.given/ppa -y
     - sudo add-apt-repository ppa:tormodvolden/m6809 -y
     - sudo apt-get update -q
-    - sudo apt-get install cc65 sdcc lwtools:i386 libmpc2 libc6-i386 lib32stdc++6 lib32z1 libmpc2:i386
-    - wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.x.x.run -O msp430.installer
-    - chmod a+rx msp430.installer
-    - sudo ./msp430.installer --mode unattended --prefix $HOME/msp430
-    - rm msp430.installer
+    - sudo apt-get install libmpc2 libc6-i386 lib32stdc++6 lib32z1 libmpc2:i386
     - export PATH=$PATH:/usr/local/bin:$HOME/msp430/bin
-    - wget http://toolshed.sourceforge.net/gcc/gcc-6809_4.6.4lw-1~precise_i386.deb
-    - sudo dpkg -i gcc-6809_4.6.4lw-1~precise_i386.deb
+    - |
+        if [ $PLATFORM = "6502test" ]; then
+            sudo apt-get install cc65
+        fi
+    - |
+        if [ $PLATFORM = "trs80" ]; then
+            sudo apt-get install sdcc
+        fi
+    - |
+        if [ $PLATFORM = "msp430fr5969" ]; then
+            wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.5.0.0.run -O /tmp/msp430.installer
+            chmod a+rx /tmp/msp430.installer
+            /tmp/msp430.installer --mode unattended --prefix $HOME/msp430
+            rm /tmp/msp430.installer
+        fi
+    - |
+        if [ $PLATFORM = "dragon-nx32" ]; then
+            sudo apt-get install lwtools:i386 
+            wget http://toolshed.sourceforge.net/gcc/gcc-6809_4.6.4lw-1~precise_i386.deb
+            sudo dpkg -i gcc-6809_4.6.4lw-1~precise_i386.deb
+        fi
 language: c
 script:
-    - make PLATFORM=6502test -j4
-    - make PLATFORM=msp430fr5969 -j4
-    - make PLATFORM=dragon-nx32 -j4
-    - make PLATFORM=trs80 -j4
+    - make PLATFORM=$PLATFORM -j4
 
