@@ -319,3 +319,21 @@ int dev_openi(inoptr *ino, uint8_t flag)
         tty_post(*ino, da & 0xFF, flag);
         return 0;
 }
+
+void sync(void)
+{
+	inoptr ino;
+
+	/* Write out modified inodes */
+
+	for (ino = i_tab; ino < i_tab + ITABSIZE; ++ino)
+		if (ino->c_refs > 0 && (ino->c_flags & CDIRTY)) {
+			wr_inode(ino);
+			ino->c_flags &= ~CDIRTY;
+			/* WRS: also call d_flush(ino->c_dev) here? */
+		}
+
+        /* This now also indirectly does the superblocks as they
+           are buffers that are pinned */
+	bufsync();		/* Clear buffer pool */
+}

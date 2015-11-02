@@ -68,7 +68,7 @@ for those cases they are needed (eg games)
 
 Need to decide on the best approach for text and fonts
 
-Rather than using graphcis operations like lines and rectangles we replace
+Rather than using graphics operations like lines and rectangles we replace
 all the graphics operations proposed with game style sprite rectangles
 
 We then need exactly two graphics rendering commands (three if we do blits).

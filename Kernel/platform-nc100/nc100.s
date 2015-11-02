@@ -32,6 +32,7 @@
 	    .globl _vtinit
 	    .globl platform_interrupt_all
 	    .globl _video_cmd
+	    .globl _vtattr_notify
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -337,6 +338,7 @@ vtdone:	    pop af
 	    pop af
 	    ret po
 	    ei
+_vtattr_notify:
 	    ret
 
 ;

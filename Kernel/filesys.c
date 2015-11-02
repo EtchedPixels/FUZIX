@@ -1117,3 +1117,27 @@ void magic(inoptr ino)
     if(ino->c_magic != CMAGIC)
         panic(PANIC_CORRUPTI);
 }
+
+/* This is a helper function used by _unlink and _rename; it doesn't really
+ * belong here, but needs to be in common code as it's used from two different
+ * syscall banks. */
+arg_t unlinki(inoptr ino, inoptr pino, char *fname)
+{
+	if (getmode(ino) == F_DIR) {
+		udata.u_error = EISDIR;
+		return -1;
+	}
+
+	/* Remove the directory entry (ch_link checks perms) */
+	if (!ch_link(pino, fname, "", NULLINODE))
+		return -1;
+
+	/* Decrease the link count of the inode */
+	if (!(ino->c_node.i_nlink--)) {
+		ino->c_node.i_nlink += 2;
+		kprintf("_unlink: bad nlink\n");
+	}
+	setftime(ino, C_TIME);
+	return (0);
+}
+

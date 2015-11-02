@@ -31,6 +31,7 @@
 	    .globl _do_beep
 	    .globl _clear_lines
 	    .globl _clear_across
+	    .globl _vtattr_notify
 
             ; imported symbols
             .globl _ramsize
@@ -280,6 +281,7 @@ _scroll_up:
 	    add a, #8
 	    ld (roller), a
             out (0xf6), a
+_vtattr_notify:
 	    ret
 _scroll_down:
 	    ld a, (roller)

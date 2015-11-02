@@ -13,6 +13,7 @@ struct display {
 #define FMT_COLOUR4	2
 #define FMT_COLOUR16	3
 #define FMT_TEXT	4	/* Text only mode */
+#define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */

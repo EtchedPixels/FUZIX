@@ -13,6 +13,7 @@
         .globl _clear_lines
         .globl _clear_across
         .globl _do_beep
+	.globl _vtattr_notify
 
         .area _VIDEO
 
@@ -259,6 +260,7 @@ _cursor_off:
         ld d, a
         xor a
         ld (de), a
+_vtattr_notify:
         ret
 
         ; FIXME: now this is_do_silent_click actually
