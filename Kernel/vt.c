@@ -404,10 +404,9 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	memset(s, ' ', l);
 }
 
-void vtattr_notify( void )
+void vtattr_notify(void)
 {
 }
-
 
 /* FIXME: these should use memmove */
 
