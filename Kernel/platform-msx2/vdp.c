@@ -87,3 +87,7 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
     addr = VT_BASE + y * VT_WIDTH + x;
     v99xx_write_vram(addr, c);
 }
+
+void vtattr_notify(void)
+{
+}

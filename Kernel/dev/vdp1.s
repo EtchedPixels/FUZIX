@@ -15,6 +15,8 @@
 	    .globl vdpinit
 	    .globl platform_interrupt_all
 
+	    .globl _vtattr_notify
+
 	    .area _CODE
 
 ;
@@ -251,7 +253,9 @@ cursor_off:
 	    ld a, (cursorpeek)
 	    ld c, a
 	    call plotit
+_vtattr_notify:
 	    ret
+
 ;
 ;	This must be in data or common not code
 ;
