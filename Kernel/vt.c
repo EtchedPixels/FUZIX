@@ -243,17 +243,20 @@ void vtoutput(unsigned char *p, unsigned int len)
 				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 					cursorx = ncursorx;
 					vtmode = 0;
-			} else if (vtmode == 4) {
+			} else if (vtmode == 4 ){
 				vtattr = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			} else if (vtmode == 5) {
 				vtink = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			} else if (vtmode == 6) {
 				vtpaper = c;
 				vtmode = 0;
+				vtattr_notify();
 				continue;
 			}
 		}
@@ -400,6 +403,11 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	unsigned char *s = char_addr(y, x);
 	memset(s, ' ', l);
 }
+
+void vtattr_notify( void )
+{
+}
+
 
 /* FIXME: these should use memmove */
 
