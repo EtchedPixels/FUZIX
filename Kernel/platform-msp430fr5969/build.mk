@@ -9,6 +9,23 @@ $(kernelversion.result):
 	$(hide) (cd $(dir $@) && $(kernelversion.abssrcs) $(VERSION) $(SUBVERSION))
 	$(hide) mv $(dir $@)/version.c $@
 
+syscallmap.ext = h
+# Do not change the order below without updating main.c.
+syscallmap.srcs = \
+	../syscall_exec16.c \
+	../syscall_fs.c \
+	../syscall_fs2.c \
+	../syscall_fs3.c \
+	../syscall_other.c \
+	../syscall_proc.c
+$(call build, syscallmap, nop)
+$(syscallmap.result): $(map_syscall.result)
+	@echo SYSCALLMAP $@
+	$(hide) mkdir -p $(dir $@)
+	$(hide) $(map_syscall.result) $(syscallmap.abssrcs) > $@
+	
+$(TOP)/Kernel/platform-msp430fr5969/main.c: $(syscallmap.result)
+
 kernel.srcs = \
 	../dev/blkdev.c \
 	../dev/devsd.c \
@@ -28,6 +45,7 @@ kernel.srcs = \
 	../syscall_exec16.c \
 	../syscall_fs.c \
 	../syscall_fs2.c \
+	../syscall_fs3.c \
 	../syscall_other.c \
 	../syscall_proc.c \
 	../timer.c \
@@ -45,6 +63,9 @@ kernel.srcs = \
 	main_discard.c \
 	tricks.S \
 	$(kernelversion.result)
+
+kernel.includes += \
+	-I$(dir $(syscallmap.result)) \
 
 kernel.cflags += \
 	-Wno-int-to-pointer-cast \

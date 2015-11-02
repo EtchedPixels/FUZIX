@@ -83,7 +83,7 @@ arg_t _rename(void)
 	/* get it onto disk - probably overkill */
 	wr_inode(dstp);
 	wr_inode(srcp);
-	_sync();
+	sync();
 	ret = 0;
       nogood2:
 	i_deref(dstp);
@@ -289,7 +289,7 @@ arg_t _mount(void)
 		goto nogood;
 	}
 
-	_sync();
+	sync();
 
 	if (fmount(dev, dino, flags)) {
 		udata.u_error = EBUSY;
@@ -353,7 +353,7 @@ arg_t _umount(void)
 			goto nogood;
 		}
 
-	_sync();
+	sync();
 
 	i_deref(mnt->m_fs->s_mntpt);
 	/* Give back the buffer we pinned at mount time */
@@ -431,7 +431,7 @@ arg_t _uadmin(void)
 {
 	if (esuper())
 		return -1;
-	_sync();
+	sync();
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
 		trap_monitor();

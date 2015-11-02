@@ -557,7 +557,7 @@ void doexit(int16_t val, int16_t val2)
 	if (udata.u_ptab->p_pid == 1)
 		panic(PANIC_KILLED_INIT);
 
-	_sync();		/* Not necessary, but a good idea. */
+	sync();		/* Not necessary, but a good idea. */
 
 	irq = di();
 

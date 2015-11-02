@@ -71,6 +71,7 @@ not_swapped:
 	mov.b #P_RUNNING, P_TAB__P_STATUS_OFFSET(r12) ; mark process as running
 
 	dint
+	call #load_overlay_for_syscall    // ensure right overlay is loaded
 	mov &U_DATA__U_SP, SP             // restore stack pointer
     clr &runticks                     // reset process run count
 	pop SR                            // restore status register

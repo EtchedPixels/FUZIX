@@ -79,21 +79,7 @@ bad:
 
 arg_t _sync(void)
 {
-	inoptr ino;
-
-	/* Write out modified inodes */
-
-	for (ino = i_tab; ino < i_tab + ITABSIZE; ++ino)
-		if (ino->c_refs > 0 && (ino->c_flags & CDIRTY)) {
-			wr_inode(ino);
-			ino->c_flags &= ~CDIRTY;
-			/* WRS: also call d_flush(ino->c_dev) here? */
-		}
-
-        /* This now also indirectly does the superblocks as they
-           are buffers that are pinned */
-	bufsync();		/* Clear buffer pool */
-
+	sync();
 	return 0;
 }
 
@@ -364,28 +350,6 @@ char *path;
 ********************************************/
 #define path (char *)udata.u_argn
 
-/* Helper for the bits shared with rename */
-arg_t unlinki(inoptr ino, inoptr pino, char *fname)
-{
-	if (getmode(ino) == F_DIR) {
-		udata.u_error = EISDIR;
-		return -1;
-	}
-
-	/* Remove the directory entry (ch_link checks perms) */
-	if (!ch_link(pino, fname, "", NULLINODE))
-		return -1;
-
-	/* Decrease the link count of the inode */
-	if (!(ino->c_node.i_nlink--)) {
-		ino->c_node.i_nlink += 2;
-		kprintf("_unlink: bad nlink\n");
-	}
-	setftime(ino, C_TIME);
-	return (0);
-}
-
-/* kind of pinned here by unlinki() */
 arg_t _unlink(void)
 {
 	inoptr ino;
