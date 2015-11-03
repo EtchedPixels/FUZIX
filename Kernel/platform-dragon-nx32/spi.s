@@ -27,13 +27,13 @@ _spi_setup:
 	lda #0x0F
 	sta SPISIE		; selects off, IRQs off
 	cmpa SPISIE
-	beq nospi
+	bne nospi
 	lda SPIDATA		; clear TC
 	lda SPISTATUS
-	bpl nospi 		; TC not clear -> no spi present
+	bmi nospi 		; TC not clear -> no spi present
 	sta SPIDATA		; start a transmit, TC should now be clear
 	lda SPISTATUS
-	bmi spigood
+	bpl spigood
 nospi:	clrb
 	rts
 spigood:
@@ -56,13 +56,13 @@ clkset:	std SPICTRL
 ;
 ;	For multiple cards these need to look at the card #
 ;
-_sd_spi_lower_cs:
+_sd_spi_raise_cs:
 	lda SPISIE
 	ora #SPICS
 	sta SPISIE
 	rts
 
-_sd_spi_raise_cs:
+_sd_spi_lower_cs:
 	lda SPISIE
 	anda #0xFF-SPICS
 	sta SPISIE

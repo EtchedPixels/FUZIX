@@ -12,10 +12,10 @@ IDEDATA			    equ 0xFF50
 IDEDATA_L		    equ 0xFF58
 
 SPIDATA			    equ 0xFF6C
-SPISTATUS		    equ SPIDATA + 1
+SPISTATUS		    equ SPIDATA+1
 SPICTRL			    equ SPISTATUS
-SPICLK			    equ SPICTRL + 1
-SPISIE			    equ SPICLK + 1
+SPICLK			    equ SPICTRL+1
+SPISIE			    equ SPICLK+1
 
 SPICS			    equ 0x01	     ; hardcode SEL0 for now
 
