@@ -115,7 +115,7 @@ int sd_send_command(unsigned char cmd, uint32_t arg)
 
     /* Send command packet */
     sd_spi_transmit_byte(cmd);                        /* Start + Command index */
-#if 0
+#if !defined(__SDCC) && !defined(SDCC)
     sd_spi_transmit_byte((unsigned char)(arg >> 24)); /* Argument[31..24] */
     sd_spi_transmit_byte((unsigned char)(arg >> 16)); /* Argument[23..16] */
     sd_spi_transmit_byte((unsigned char)(arg >> 8));  /* Argument[15..8] */
