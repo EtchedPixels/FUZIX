@@ -37,11 +37,11 @@ copy:					; Move the loader somewhere safe
 ; and just leave alone.
 ;
 start:
-		ldd #'B'*256 + 'O'
+		ldd #'B'*256+'O'
 		std 0x0200
-		ldd #'O' * 256 + 'T'
+		ldd #'O'*256+'T'
 		std 0x0202
-		ldd #':' * 256 + ' '
+		ldd #':'*256+' '
 		std 0x0204
 		tfr s,u			; Save old stack
 		lds #$FE00		; Point the stack somewhere clear of

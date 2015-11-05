@@ -391,7 +391,7 @@ nmimsg:     .ascii "[NMI]"
 
 nmi_handler:
 	SAM_KERNEL
-	lds #istack_top - 2		; We aren't coming back so this is ok
+	lds #istack_top-2		; We aren't coming back so this is ok
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring

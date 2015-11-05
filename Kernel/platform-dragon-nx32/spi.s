@@ -103,7 +103,7 @@ _sd_spi_receive_sector:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	lda _blk_op + 2
+	lda _blk_op+2
 	beq rdspi
 	jsr map_process_always
 rdspi:	ldx _blk_op
@@ -135,7 +135,7 @@ _sd_spi_transmit_sector:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	lda _blk_op + 2
+	lda _blk_op+2
 	beq wrspi
 	jsr map_process_always
 wrspi:	ldx _blk_op

@@ -26,7 +26,7 @@ _si_read:			; X is pointer
 	tfr s,u			; u holds our frame pointer to throw
 	bsr waitreq		; an exception
 	ldx #_si_dcb
-	ldy #_si_dcb + 16	; length word
+	ldy #_si_dcb+16		; length word
 	bita #0x08		; check CMD asserted
 	bne si_busfailw
 	lda $FF70
@@ -41,7 +41,7 @@ _si_write:			; X is pointer, dcb block gives length
 	tfr s,u			; u holds our frame pointer to throw
 	bsr waitreq		; an exception
 	ldx #_si_dcb
-	ldy _si_dcb + 16		; length word
+	ldy _si_dcb+16		; length word
 	bita #0x08		; check CMD asserted
 	bne si_busfailw
 	lda ,x+
