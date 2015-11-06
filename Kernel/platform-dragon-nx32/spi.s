@@ -103,13 +103,13 @@ _sd_spi_receive_sector:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
+	ldx _blk_op
+	leay 512,x
+	sty endspi
 	lda _blk_op+2
 	beq rdspi
 	jsr map_process_always
-rdspi:	ldx _blk_op
-	leay 512,x
-	sty endspi
-	lda #0x14		; FRX on, external clock on
+rdspi:	lda #0x14		; FRX on, external clock on
 	sta SPICTRL
 read8:
 	lda <SPIDATA
@@ -135,12 +135,14 @@ _sd_spi_transmit_sector:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
+	ldx _blk_op
+	leay 512,x
+	sty endspi
 	lda _blk_op+2
 	beq wrspi
 	jsr map_process_always
-wrspi:	ldx _blk_op
-	leay 512,x
-	sty endspi
+wrspi:	lda #0x14		; FRX on, external clock on
+	sta SPICTRL
 write8:
 	ldd ,x++
 	sta <SPIDATA
