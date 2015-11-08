@@ -27,7 +27,6 @@ struct dirent *readdir(DIR * dirp)
         struct _dir *dir = (struct _dir *)dirp;
 	struct __dirent *direntry;
 	register struct dirent *buf;
-	int len;
 
 	if (dir == NULL || dir->d.dd_fd == -1) {
 		errno = EFAULT;
@@ -43,7 +42,8 @@ struct dirent *readdir(DIR * dirp)
 	buf = &dir->de;
 	buf->d_ino = direntry->d_ino;
 	buf->d_off = -1;	/* FIXME */
-	buf->d_reclen = 33;
+	buf->d_reclen = 31;
+	dir->d.dd_loc += (buf->d_reclen + 1);
 	strncpy(buf->d_name, (char *) direntry->d_name, 31);
 	buf->d_name[30] = 0;
 	return buf;

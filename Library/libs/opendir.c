@@ -26,5 +26,7 @@ DIR *opendir(char *path)
 		free(dir);
 		return NULL;
 	}
+
+	dir->d.dd_loc = 0;
 	return (DIR *)dir;
 }
