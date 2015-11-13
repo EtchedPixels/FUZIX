@@ -68,6 +68,8 @@ typedef int bool;
 #define wattroff(win, attrs) (win)->_attrs &= ~(attrs)
 #define resetty() stty(1, &_orig_tty)
 #define getyx(win,y,x) (y = (win)->_cury, x = (win)->_curx)
+#define getmaxyx(win,y,x) (y = (win)->_maxy, x = (win)->_maxx)
+#define getbegyx(win,y,x) (y = (win)->_begy, x = (win)->_begx)
 
 /* Video attribute definitions. */
 #define A_BLINK        0x0100
