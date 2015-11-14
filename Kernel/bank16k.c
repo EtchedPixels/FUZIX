@@ -192,7 +192,7 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	for (i = 0; i < 4; i++) {
-		swapwrite(SWAPDEV, blk, size, base, *pt++);
+		swapwrite(SWAPDEV, blk, size<<9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;	/* Snap to bank alignment */
                 blk += size;
@@ -235,7 +235,7 @@ void swapin(ptptr p, uint16_t map)
 	}
 
 	for (i = 0; i < 4; i ++) {
-		swapread(SWAPDEV, blk, size, base, *pt++);
+		swapread(SWAPDEV, blk, size<<9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;
 		blk += size;
