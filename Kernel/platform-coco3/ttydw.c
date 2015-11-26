@@ -235,7 +235,7 @@ void dw_vpoll( ){
 			int minor=dw_minor( buf[1]-1 );
 			struct dw_in *p=dw_gettab( buf[1]-1 );
 			dw_vclose( minor );
-			tty_carrier_drop( minor );
+			tty_carrier_drop( minor+1 );
 			continue;
 		}
 		/* VSER channel multiple data */
