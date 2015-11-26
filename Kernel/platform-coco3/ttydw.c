@@ -189,8 +189,10 @@ void dw_vclose( uint8_t minor){
 	buf[0]=DW_SETSTAT;
 	buf[1]=dw_port( minor );
 	buf[2]=DW_VCLOSE;
-	dw_transaction( buf, 3, NULL, 0 );
-	open_ports--;
+	if( p->flags & DW_FLG_OPEN ){
+		dw_transaction( buf, 3, NULL, 0 );
+		open_ports--;
+	}
 	p->flags &= ~DW_FLG_OPEN ;
 }
 
@@ -224,15 +226,14 @@ void dw_vpoll( ){
 		}
 		/* VSER Channel single datum */
 		if( buf[0]<16 ){
-			int minor=dw_minor( buf[0] );
+			int minor=dw_minor( buf[0]-1 );
 				tty_inproc( minor, buf[1] );
 			continue;
 		}
 		/* VSER Channel closed? */
 		if( buf[0] == 16 ){
-			int minor=dw_minor( buf[1] );
+			int minor=dw_minor( buf[1]-1 );
 			struct dw_in *p=dw_gettab( buf[1]-1 );
-			p->flags &= ~DW_FLG_OPEN ;
 			dw_vclose( minor );
 			tty_carrier_drop( minor );
 			continue;
@@ -242,14 +243,19 @@ void dw_vpoll( ){
 			int i;
 			unsigned char b[3];
 			char c;
+			int min;
 			int minor=dw_minor( buf[0]-17 );
 			b[0]=DW_SERREADM;
 			b[1]=buf[0]-17;
-			b[2]=mini( buf[1], 16 );
-			dw_transaction( b,3,tbuf, b[2] );
-			for( i=0; i<b[2]; i++){
+			min=mini( buf[1], qfree( minor ) );
+			b[2]=min;
+			if( !min ){
+				wait=1;
+				break;
+			}
+			dw_transaction( b,3,tbuf, min );
+			for( i=0; i<min; i++){
 				tty_inproc( minor, tbuf[i] );
-				//kprintf("%c",tbuf[i] );
 			}
 			wait=1;
 			break;
