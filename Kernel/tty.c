@@ -46,7 +46,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	nread = 0;
 	while (nread < udata.u_count) {
 		for (;;) {
-		        if (t->flag & TTYF_DEAD) {
+		        if ((t->flag & TTYF_DEAD)&&(!q->q_count)) {
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
