@@ -203,7 +203,7 @@ void apply_gime( int minor ){
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
-	if (minor > 2 && ttydata[minor].users == 0)
+	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
 	return (tty_close(minor));
 }
