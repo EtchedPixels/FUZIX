@@ -232,10 +232,10 @@ void dw_vpoll( ){
 		}
 		/* VSER Channel closed? */
 		if( buf[0] == 16 ){
-			int minor=dw_minor( buf[1]-1 );
-			struct dw_in *p=dw_gettab( buf[1]-1 );
+			int minor=dw_minor( buf[1] );
+			struct dw_in *p=dw_gettab( buf[1] );
 			dw_vclose( minor );
-			tty_carrier_drop( minor+1 );
+			tty_carrier_drop( minor);
 			continue;
 		}
 		/* VSER channel multiple data */
