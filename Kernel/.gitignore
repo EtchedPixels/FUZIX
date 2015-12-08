@@ -1,0 +1,11 @@
+*.asm
+common.bin
+common.ihx
+fuzix.bin
+fuzix.cdb
+fuzix.ihx
+fuzix.tmp
+hogs.txt
+platform
+relocs.dat
+version.c
