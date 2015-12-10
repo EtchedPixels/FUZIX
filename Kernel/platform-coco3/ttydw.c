@@ -124,36 +124,20 @@ int mini( int a, int b ){
 }
 
 
-/* Test a passed minor for validity and/or get index
-   returns: -1 on invalid, else ok. */
-int dw_val( uint8_t minor ){
-	minor-=DW_MIN_OFF;
-	if( minor < 0 ) return -1;
-	if( minor > (DW_VSER_NUM + DW_VWIN_NUM) ) return -1;
-	return minor;
-}
-
-
 /* Gets dw_tab entry for given minor */
 struct dw_in *dw_gettab( uint8_t minor ){
-	return &dwtab[ dw_val( minor ) ] ;
+	return &dwtab[ minor - DW_MIN_OFF ] ;
 }
 
 /* Translates a DW port no. to a proper minor no */
 int dw_minor( uint8_t port ){
-	if( port < 16 ) port -= 1 ;
-	else port = port - 64 + DW_VSER_NUM ;
-	return( port + DW_MIN_OFF );
+	return port + DW_MIN_OFF - 1 ;
 }
 
 
 /* Translates a Minor to a port no */
 int dw_port( uint8_t minor ){
-	minor -= DW_MIN_OFF;
-	/* fix next line? */
-	if( minor >= DW_VSER_NUM ) minor += 16 - DW_VSER_NUM ;
-	else minor++;
-	return minor;
+	return minor - DW_MIN_OFF + 1 ;
 }
 
 
@@ -191,9 +175,7 @@ void dw_vclose( uint8_t minor){
 	buf[2]=DW_VCLOSE;
 	if( p->flags & DW_FLG_OPEN ){
 		dw_transaction( buf, 3, NULL, 0 );
-		open_ports--;
 	}
-	p->flags &= ~DW_FLG_OPEN ;
 }
 
 
@@ -226,16 +208,20 @@ void dw_vpoll( ){
 		}
 		/* VSER Channel single datum */
 		if( buf[0]<16 ){
-			int minor=dw_minor( buf[0]-1 );
-				tty_inproc( minor, buf[1] );
+			int minor=dw_minor( buf[0] );
+			tty_inproc( minor, buf[1] );
 			continue;
 		}
 		/* VSER Channel closed? */
 		if( buf[0] == 16 ){
 			int minor=dw_minor( buf[1] );
-			struct dw_in *p=dw_gettab( buf[1] );
-			dw_vclose( minor );
-			tty_carrier_drop( minor);
+			struct dw_in *p=dw_gettab( minor );
+		       	if( p->flags & DW_FLG_OPEN ){
+				p->flags &= ~DW_FLG_OPEN;
+				open_ports--;
+				if( ttydata[minor].users )
+					tty_carrier_drop( minor);
+			}
 			continue;
 		}
 		/* VSER channel multiple data */
