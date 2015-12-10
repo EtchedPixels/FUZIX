@@ -89,6 +89,8 @@
 #define DW_VOPEN     0x29
 #define DW_VCLOSE    0x2A
 
+#define DW_NS_OFF    ( DW_MIN_OFF + DW_VSER_NUM )
+
 
 /* Internal Structure to represent state of DW ports */
 struct dw_in{
@@ -131,13 +133,19 @@ struct dw_in *dw_gettab( uint8_t minor ){
 
 /* Translates a DW port no. to a proper minor no */
 int dw_minor( uint8_t port ){
-	return port + DW_MIN_OFF - 1 ;
+	if( port >= 16 ) return port - 16 + DW_NS_OFF  ;
+	int ret = port + DW_MIN_OFF - 1 ;
+	return ret;
+					
 }
 
 
 /* Translates a Minor to a port no */
 int dw_port( uint8_t minor ){
-	return minor - DW_MIN_OFF + 1 ;
+	int ret = minor - DW_MIN_OFF + 1;
+	if( minor >= DW_NS_OFF ) 
+		return 	minor + 16 - DW_NS_OFF ;
+	return ret;
 }
 
 
@@ -248,9 +256,9 @@ void dw_vpoll( ){
 		}
 		/* VWIN channel single datum */
 		if( buf[0] < 144 ){
-			int minor=dw_minor( buf[0] );
+			int minor=dw_minor( buf[0]-48 );
 			tty_inproc( minor, buf[1] );
-			continue;	
+			continue;
 		}
 		/* something we don't handle? */
 		kprintf("out of band data\n");
