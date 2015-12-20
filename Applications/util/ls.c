@@ -83,6 +83,8 @@ static char *modestring(int mode)
 	buf[0] = 'c';
     if (S_ISBLK(mode))
 	buf[0] = 'b';
+    if (S_ISFIFO(mode))
+        buf[0] = 'p';
 #ifdef	S_ISLNK
     if (S_ISLNK(mode))
 	buf[0] = 'l';
