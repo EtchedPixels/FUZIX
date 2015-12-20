@@ -79,6 +79,7 @@ SRCS  = banner.c \
 	sum.c \
 	su.c \
 	sync.c \
+	tar.c \
 	tee.c \
 	tail.c \
 	telinit.c \
