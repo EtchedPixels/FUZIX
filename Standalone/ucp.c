@@ -1930,7 +1930,7 @@ static void blk_free(int devno, blkno_t blk)
 
 	validblk(devno, blk);
 
-	if (dev->s_nfree == 50) {
+	if (dev->s_nfree == swizzle16(50) ) {
 		buf = bread(devno, blk, 1);
 		bcopy((char *) &(dev->s_nfree), buf, 512);
 		bawrite((bufptr) buf);
