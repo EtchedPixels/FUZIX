@@ -46,7 +46,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	nread = 0;
 	while (nread < udata.u_count) {
 		for (;;) {
-		        if (t->flag & TTYF_DEAD) {
+		        if ((t->flag & TTYF_DEAD)&&(!q->q_count)) {
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
@@ -159,7 +159,7 @@ int tty_open(uint8_t minor, uint16_t flag)
         }
 	tty_setup(minor);
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
-	        return 0;
+		goto out;
 
         /* FIXME: racy - need to handle IRQ driven carrier events safely */
         if (!tty_carrier(minor)) {
@@ -172,7 +172,7 @@ int tty_open(uint8_t minor, uint16_t flag)
                 t->flag &= ~TTYF_DEAD;
                 return -1;
         }
-        t->users++;
+ out:   t->users++;
         return 0;
 }
 
