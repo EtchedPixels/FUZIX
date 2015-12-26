@@ -364,7 +364,7 @@ void filename(char *userspace_upath, char *name)
         *ptr-- = 0;
     /* Walk back until we drop off the start of the buffer or find the
        slash */
-    while(*ptr != '/' && ptr-- >= buf);
+    while(*ptr != '/' && ptr-- > buf);
     /* And move past the slash, or not the string start */
     ptr++;
     memcpy(name, ptr, FILENAME_LEN);
