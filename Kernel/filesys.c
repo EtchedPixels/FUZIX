@@ -272,6 +272,8 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
         udata.u_error = EROFS;
         return false;
     }
+    /* FIXME: for modern style permissions we should also check whether
+       wd has the sticky bit set and if so require ownership or root */
     if(!(getperm(wd) & OTH_WR))
     {
         udata.u_error = EACCES;
@@ -421,7 +423,7 @@ inoptr newfile(inoptr pino, char *name)
     if(!(nindex = i_open(pino->c_dev, 0)))
         goto nogood;
 
-    /* BUG FIX:  user/group setting was missing  SN */
+    /* This does not implement BSD style "sticky" groups */
     nindex->c_node.i_uid = udata.u_euid;
     nindex->c_node.i_gid = udata.u_egid;
 
@@ -1022,6 +1024,11 @@ uint8_t getperm(inoptr ino)
         mode >>= 6;
     else if(ino->c_node.i_gid == udata.u_egid)
         mode >>= 3;
+#ifdef CONFIG_LEVEL_2
+    /* BSD process groups */
+    else if (in_group(ino->c_node.i_gid))
+        mode >> = 3;
+#endif
 
     return(mode & 07);
 }
