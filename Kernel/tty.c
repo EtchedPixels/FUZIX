@@ -231,7 +231,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
         }
 	switch (request) {
 	case TCGETS:
-		return uput(&ttydata[minor].termios, data, sizeof(struct termios));
+		return uput(&t->termios, data, sizeof(struct termios));
 		break;
 	case TCSETSF:
 		clrq(&ttyinq[minor]);
@@ -240,7 +240,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 		/* We don't have an output queue really so for now drop
 		   through */
 	case TCSETS:
-		if (uget(data, &ttydata[minor].termios, sizeof(struct termios)) == -1)
+		if (uget(data, &t->termios, sizeof(struct termios)) == -1)
 		        return -1;
                 tty_setup(minor);
 		break;
@@ -258,6 +258,15 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	case TIOCOSTART:
 		t->flag &= ~TTYF_STOP;
 		break;
+#ifdef CONFIG_LEVEL_2
+        case TIOCGWINSZ:
+                return uput(&t->winsize, data, sizeof(struct winsize));
+        case TIOCSWINSZ:
+                if (uget(&t->winsize, data, sizeof(struct winsize)))
+                        return -1;
+                sgrpsig(t->pgrp, SIGWINCH);
+                return 0;
+#endif
 	default:
 		udata.u_error = ENOTTY;
 		return (-1);

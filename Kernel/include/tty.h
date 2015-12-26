@@ -145,10 +145,23 @@ struct termios {
 #define KBSETTRANS	0x23
 #define VTATTRS		0x24
 
+/* Fuzix systems to level 2 have 256 byte tty buffers as per standards, level 1
+   boxes may not */
+#if defined(CONFIG_LEVEL_2)
+#define TTYSIZ 256
+#endif
+
 /* Character Input Queue size */
 #if !defined TTYSIZ
 #define TTYSIZ 132
 #endif
+
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;
+    unsigned short ws_ypixel;
+};
 
 /* Group the tty into a single object. That lets 8bit processors keep all
    the data indexed off a single register */
@@ -163,6 +176,10 @@ struct tty {
 #define TTYF_DEAD	4
     uint16_t pgrp;
     struct termios termios;
+    /* TODO: For now lets work on the basis winsz is level 2 */
+#ifdef CONFIG_LEVEL_2
+    struct winsize winsize;
+#endif
 };
 
 #define CTRL(x)		((x)&0x1F)
