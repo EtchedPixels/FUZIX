@@ -355,10 +355,17 @@ void filename(char *userspace_upath, char *name)
         return;          /* An access violation reading the name */
     }
     ptr = buf;
+    /* Find the end of the buffer */
     while(*ptr)
         ++ptr;
-    /* Special case for "...name.../" */
-    while(*ptr != '/' && ptr-- > buf);
+    /* Special case for "...name.../". SuS requires that mkdir foo/ works
+       (see the clarifications to the standard) */
+    if (*--ptr == '/')
+        *ptr-- = 0;
+    /* Walk back until we drop off the start of the buffer or find the
+       slash */
+    while(*ptr != '/' && ptr-- >= buf);
+    /* And move past the slash, or not the string start */
     ptr++;
     memcpy(name, ptr, FILENAME_LEN);
     brelse(buf);
@@ -480,7 +487,6 @@ uint16_t i_alloc(uint16_t devno)
 {
     staticfast fsptr dev;
     staticfast blkno_t blk;
-    staticfast struct mount *m;
     struct dinode *buf;
     staticfast uint16_t j;
     uint16_t k;
@@ -488,7 +494,6 @@ uint16_t i_alloc(uint16_t devno)
 
     if(baddev(dev = getdev(devno)))
         goto corrupt;
-    m = fs_tab_get(devno);
 
 tryagain:
     if(dev->s_ninode) {
