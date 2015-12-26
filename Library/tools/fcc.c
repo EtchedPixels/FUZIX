@@ -378,6 +378,7 @@ static void build_command(void)
   if (opt == NULL || optcode < 3)
     add_argument("--opt-code-size");
   /* Macros */
+  add_argument("-D__FUZIX__");
   /* Suppress the warnings when sharing code across architectures */
   add_argument("-Ddouble=float");
   /* User provided macros */
