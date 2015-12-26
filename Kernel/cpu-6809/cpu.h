@@ -66,3 +66,4 @@ typedef union {            /* this structure is endian dependent */
 /* Sane behaviour for unused parameters */
 #define used(x)
 
+#define gcc_miscompile_workaround()	__asm("":::"memory")
