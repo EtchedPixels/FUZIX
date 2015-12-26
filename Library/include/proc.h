@@ -10,7 +10,7 @@
 /* The sleeping range must be together see swap.c */
 #define P_READY         2    /* Runnable   */
 #define P_SLEEP         3    /* Sleeping; can be awakened by signal */
-#define P_XSLEEP        4    /* Sleeping, don't wake up for signal */
+#define P_STOPPED       4    /* Stopped waiting for SIGCONT */
 #define P_PAUSE         5    /* Sleeping for pause(); can wakeup for signal */
 #define P_WAIT          6    /* Executed a wait() */
 #define P_FORKING       7    /* In process of forking; do not mess with */
