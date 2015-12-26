@@ -98,6 +98,7 @@ int si_docmd(uint8_t *data)
 		err = si_cmdend();
 	si_clear();		/* Clears any data on scsi bus */
 	si_deselect();
+	return 0;
 }
 
 /*
