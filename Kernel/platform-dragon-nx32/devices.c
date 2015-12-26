@@ -11,6 +11,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <devscsi.h>
 #include <devsd.h>
 #include <device.h>
 #include <carts.h>
