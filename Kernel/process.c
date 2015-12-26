@@ -490,12 +490,23 @@ void ssig(ptptr proc, uint16_t sig)
 	sigm = sigmask(sig);
 
 	irq = di();
-	/* FIXME:
-	   SIGCONT needs to wake even if ignored.
-	   SIGSTOP needs to actually stop the task once it hits
-	   the syscall exit path */
+
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
-		if (sig == SIGCONT || !(proc->p_ignored & sigm)) {
+	        /* SIGSTOP can't be ignored and puts the process into P_STOPPED */
+	        /* FIXME: Level 2 will need a lot more handling here, both SIGTSTP
+	           handling and the wait() handling for stopping */
+	        if (sig == SIGSTOP) {
+	                if (proc->p_status == P_RUNNING ||
+                            proc->p_status == P_READY)
+                                    nready--;
+                        proc->p_status = P_STOPPED;
+                /* SIGCONT likewise has an unblockable effect */
+		} else if (sig == SIGCONT && proc->p_status == P_STOPPED) {
+		        proc->p_status = P_READY;
+		        nready++;
+		}
+		/* Routine signal behaviour */
+		else if (!(proc->p_ignored & sigm)) {
 			/* Don't wake for held signals */
 			if (!(proc->p_held & sigm)) {
 				switch (proc->p_status) {
