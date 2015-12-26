@@ -299,8 +299,10 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
             break;
     }
 
-    if(udata.u_count == 0 && *oldname)
+    if(udata.u_count == 0 && *oldname) {
+        udata.u_error = ENOENT;
         return false;                  /* Entry not found */
+    }
 
     memcpy(curentry.d_name, newname, FILENAME_LEN);
     // pad name with NULLs
