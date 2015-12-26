@@ -232,7 +232,7 @@ void pass1(void)
                 swizzle16(superblock.s_tinode), 8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount);
 
         if (yes()) {
-            superblock.s_tinode = 8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount;
+            superblock.s_tinode = swizzle16(8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount);
             dwrite((blkno_t) 1, (char *) &superblock);
         }
     }
