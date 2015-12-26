@@ -94,7 +94,10 @@ void readi(inoptr ino, uint8_t flag)
 
 				brelse(bp);
 			}
-
+			/* Bletch */
+#if defined(__M6809__)
+                        gcc_miscompile_workaround();
+#endif                        
 			udata.u_base += amount;
 			udata.u_offset += amount;
 			if (ispipe && udata.u_offset >= 18 * BLKSIZE)
@@ -172,6 +175,12 @@ void writei(inoptr ino, uint8_t flag)
 
 		while (towrite) {
 			amount = min(towrite, BLKSIZE - BLKOFF(udata.u_offset));
+
+                        if (udata.u_offset >> BLKOVERSIZE) {
+                                udata.u_error = EFBIG;
+                                ssig(udata.u_ptab, SIGXFSZ);
+                                break;
+                        }
 
 			if ((pblk =
 			     bmap(ino, udata.u_offset >> BLKSHIFT,
@@ -279,8 +288,6 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 		oftp->o_ptr = ino->c_node.i_size;
 	/* Initialize u_offset from file pointer */
 	udata.u_offset = oftp->o_ptr;
-	/* FIXME: for 32bit we will need to check for overflow of the
-           file size here in the r/w inode code */
 	return (ino);
 }
 
