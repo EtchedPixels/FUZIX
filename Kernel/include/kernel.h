@@ -36,6 +36,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define ALIGNDOWN(v) (v)
 #endif
 
+#ifdef CONFIG_LEVEL_2
+#include "level2.h"
+#endif
+
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
@@ -52,10 +56,14 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #ifndef PTABSIZE
 #define PTABSIZE 15      /* Process table size. */
 #endif
-
 #ifndef MAPBASE		/* Usually the start of program and map match */
 #define MAPBASE PROGBASE
 #endif
+
+#ifndef NGROUP
+#define NGROUP		16
+#endif
+
 
 #define MAXTICKS     10   /* Max ticks before switching out (time slice)
                             default process time slice */
@@ -438,6 +446,11 @@ typedef struct u_data {
     inoptr	u_root;		/* Index into inode table of / */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
     inoptr	u_ctty;		/* Controlling tty */
+#ifdef CONFIG_LEVEL_2
+    uint16_t    u_groups[NGROUP]; /* Group list */
+    uint8_t	u_ngroup;
+    struct rlimit u_rlimit[NRLIMIT];	/* Resource limits */
+#endif
 } u_data;
 
 
