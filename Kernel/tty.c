@@ -267,6 +267,17 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
                         return -1;
                 sgrpsig(t->pgrp, SIGWINCH);
                 return 0;
+        case TIOCGPGRP:
+                return uputw(t->pgrp, data);
+#ifdef CONFIG_LEVEL_2
+        case TIOCSPGRP:
+                /* Only applicable via controlling terminal */
+                if (minor != udata.u_ptab->p_tty) {
+                        udata.u_error = ENOTTY;
+                        return -1;
+                }
+                return tcsetpgrp(minor, t, data);
+#endif
 	default:
 		udata.u_error = ENOTTY;
 		return -1;

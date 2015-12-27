@@ -142,6 +142,9 @@ struct termios {
 #define TIOCGWINSZ	10
 #define TIOCSWINSZ	11
 
+#define TIOCGPGRP	12
+#define TIOCSPGRP	13
+
 #define KBMAPSIZE	0x20
 #define KBMAPGET	0x21
 #define VTSIZE		0x22
