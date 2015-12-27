@@ -38,6 +38,11 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #ifdef CONFIG_LEVEL_2
 #include "level2.h"
+#else
+
+#define jobcontrol_in(x)
+#define jobcontrol_out(x)
+
 #endif
 
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"

@@ -50,6 +50,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
+                        jobcontrol_in(t);
 			if (remq(q, &c)) {
 				if (udata.u_sysio)
 					*udata.u_base = c;
@@ -114,8 +115,8 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				break;
 			if (psleep_flags_io(&t->flag, flag, &written))
 				return written;
+                        jobcontrol_out(t);
 		}
-
 		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
 				c = *udata.u_base;
@@ -229,6 +230,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	        udata.u_error = ENXIO;
 	        return -1;
         }
+        jobcontrol_in(t);
 	switch (request) {
 	case TCGETS:
 		return uput(&t->termios, data, sizeof(struct termios));
