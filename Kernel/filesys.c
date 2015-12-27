@@ -1027,7 +1027,7 @@ uint8_t getperm(inoptr ino)
 #ifdef CONFIG_LEVEL_2
     /* BSD process groups */
     else if (in_group(ino->c_node.i_gid))
-        mode >> = 3;
+        mode >>= 3;
 #endif
 
     return(mode & 07);
