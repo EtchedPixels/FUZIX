@@ -139,6 +139,9 @@ struct termios {
 #define TIOCOSTOP	8
 #define TIOCOSTART	9
 
+#define TIOCGWINSZ	10
+#define TIOCSWINSZ	11
+
 #define KBMAPSIZE	0x20
 #define KBMAPGET	0x21
 #define VTSIZE		0x22
@@ -156,7 +159,7 @@ struct termios {
 #define TTYSIZ 132
 #endif
 
-struct winsize {
+struct winsize {		/* Keep me 8bytes on small boxes */
     unsigned short ws_row;
     unsigned short ws_col;
     unsigned short ws_xpixel;
@@ -168,7 +171,7 @@ struct winsize {
 struct tty {
     /* Put flag first: makes it cheaper when short of registers */
     uint8_t flag;		/* make the whole struct
-                                   24 byte - a nice number for CPUs with no 
+                                   32 byte - a nice number for CPUs with no 
                                    multiplier */
     uint8_t users;
 #define TTYF_STOP	1
@@ -176,10 +179,7 @@ struct tty {
 #define TTYF_DEAD	4
     uint16_t pgrp;
     struct termios termios;
-    /* TODO: For now lets work on the basis winsz is level 2 */
-#ifdef CONFIG_LEVEL_2
-    struct winsize winsize;
-#endif
+    struct winsize winsize;	/* 8 byte so takes us up to 32 */
 };
 
 #define CTRL(x)		((x)&0x1F)
