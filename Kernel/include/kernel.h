@@ -399,6 +399,9 @@ typedef struct p_tab {
     uaddr_t	p_profsize;
     uaddr_t	p_profoff;
 #endif    
+#ifdef CONFIG_LEVEL_2
+    uint16_t	p_session;
+#endif
 } p_tab, *ptptr;
 
 typedef struct u_data {
