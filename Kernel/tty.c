@@ -258,7 +258,6 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	case TIOCOSTART:
 		t->flag &= ~TTYF_STOP;
 		break;
-#ifdef CONFIG_LEVEL_2
         case TIOCGWINSZ:
                 return uput(&t->winsize, data, sizeof(struct winsize));
         case TIOCSWINSZ:
@@ -266,12 +265,11 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
                         return -1;
                 sgrpsig(t->pgrp, SIGWINCH);
                 return 0;
-#endif
 	default:
 		udata.u_error = ENOTTY;
-		return (-1);
+		return -1;
 	}
-	return (0);
+	return 0;
 }
 
 
