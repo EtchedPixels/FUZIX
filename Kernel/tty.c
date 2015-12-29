@@ -7,24 +7,13 @@
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
 /*
- *	On some 8bit systems it makes a huge difference if we avoid all the
- *	t-> pointer dereferences at link time, so for a single tty we abuse
- *	the preprocessor slightly
- */
-
-/*
  *	Minimal Terminal Interface
  *
  *	TODO:
- *	- VTIME timeout support
- *	- Blocking open
- *	- Hangup
- *	- Invoke device side helpers
  *	- Parity
  *	- Various misc minor flags
- *	- Better /dev/tty handling
- *	- BSD ^Z handling and tty sessions eventually
- *	- Flow control
+ *	- BSD ^Z handling and tty sessions
+ *	- Software Flow control
  *
  *	Add a small echo buffer to each tty
  */
