@@ -23,8 +23,20 @@ struct rlimit {
 
 
 extern int in_group(uint16_t gid);
+extern void jobcontrol_in(struct tty *tty);
+extern void jobcontrol_out(struct tty *tty);
+extern int tcsetpgrp(struct tty *tty, char *data);
+
+/* The first half of this always gets used with a constant so using a macro
+   turns the whole thing into a constant 32bit comparison with a fixed
+   or global register memory address */
+#define limit_exceeded(l, v) \
+    (udata.u_rlimit[(l)] < (v))
 
 extern arg_t _setgroups(void);
 extern arg_t _getgroups(void);
 extern arg_t _getrlimit(void);
 extern arg_t _setrlimit(void);
+extern arg_t _setpgid(void);
+extern arg_t _setsid(void);
+extern arg_t _getsid(void);
