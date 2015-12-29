@@ -42,6 +42,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #define jobcontrol_in(x)
 #define jobcontrol_out(x)
+#define limit_exceeded(x,y) (0)
 
 #endif
 
