@@ -522,7 +522,7 @@ arg_t _kill(void)
 		/* No overlap here */
 		if (-p->p_pgrp == pid || p->p_pid == pid) {
 			f = 1;	/* Found */
-			if (udata.u_ptab->p_uid == p->p_uid || super()) {
+			if (can_signal(p, sig)) {
 				if (sig)
 					ssig(p, sig);
 				s = 1;	/* Signalled */

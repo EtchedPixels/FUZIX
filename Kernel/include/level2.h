@@ -31,7 +31,15 @@ extern int tcsetpgrp(struct tty *tty, char *data);
    turns the whole thing into a constant 32bit comparison with a fixed
    or global register memory address */
 #define limit_exceeded(l, v) \
-    (udata.u_rlimit[(l)] < (v))
+	(udata.u_rlimit[(l)] < (v))
+
+/* Job control requires SIGCONT is sendable to anyone in our process group.
+   Untidy but we are stuck with it
+
+   FIXME: check for any setuid funnies */
+#define can_signal(p, sig) \
+	((sig == SIGCONT && udata.u_ptab->p_session == (p)->session) \
+	|| udata.u_ptab->p_uid == (p)->p_uid || super())
 
 extern arg_t _setgroups(void);
 extern arg_t _getgroups(void);

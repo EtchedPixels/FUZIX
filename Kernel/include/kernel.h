@@ -43,6 +43,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define jobcontrol_in(x)
 #define jobcontrol_out(x)
 #define limit_exceeded(x,y) (0)
+#define can_signal(p, sig) \
+	(udata.u_ptab->p_uid == (p)->p_uid || super())
 
 #endif
 
