@@ -15,7 +15,7 @@ inoptr n_open(char *uname, inoptr *parent)
     inoptr r;
     char *tb;
 
-    tb = (char*)tmpbuf(); /* temporary memory to hold kernel's copy of the filename */
+    tb = (char*)pathbuf(); /* temporary memory to hold kernel's copy of the filename */
 
     if (ugets(uname, tb, 512) == -1) {
         udata.u_error = EFAULT;
@@ -29,7 +29,7 @@ inoptr n_open(char *uname, inoptr *parent)
 
     r = kn_open(tb, parent);
 
-    brelse(tb);
+    pathfree(tb);
 
     return r;
 }

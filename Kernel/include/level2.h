@@ -27,6 +27,12 @@ extern void jobcontrol_in(struct tty *tty);
 extern void jobcontrol_out(struct tty *tty);
 extern int tcsetpgrp(struct tty *tty, char *data);
 
+/* Platform must implement according to its PATH_MAX and allocators. If
+   you are using a 512 byte path limit then calling tmpbuf() and brelse()
+   is sufficient */
+extern char *pathhbuf(void);
+extern void pathfree(char *p);
+
 /* The first half of this always gets used with a constant so using a macro
    turns the whole thing into a constant 32bit comparison with a fixed
    or global register memory address */
