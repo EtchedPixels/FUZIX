@@ -569,9 +569,16 @@ setpgrp (void)                    Function 53
 
 arg_t _setpgrp(void)
 {
+#ifdef CONFIG_LEVEL_2
+	/* For full session management it's a shade
+	   more complicated and we have the routine
+	   to do the full job */
+	return setsid(0,0);
+#else
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	udata.u_ptab->p_tty = 0;
-	return (0);
+	return 0;
+#endif	
 }
 
 /********************************************
