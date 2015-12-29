@@ -445,6 +445,7 @@ void tty_hangup(uint8_t minor)
         struct tty *t = &ttydata[minor];
         /* Kill users */
         sgrpsig(t->pgrp, SIGHUP);
+        sgrpsig(t->pgrp, SIGCONT);
         t->pgrp = 0;
         /* Stop any new I/O with errors */
         t->flag |= TTYF_DEAD;

@@ -427,9 +427,10 @@ void unix_syscall(void)
 void sgrpsig(uint16_t pgrp, uint16_t sig)
 {
 	ptptr p;
-	for (p = ptab; p < ptab_end; ++p) {
-		if (p->p_pgrp == pgrp)
-			ssig(p, sig);
+	if (pgrp) {
+		for (p = ptab; p < ptab_end; ++p)
+			if (p->p_pgrp == pgrp)
+				ssig(p, sig);
 	}
 }
 
@@ -607,6 +608,7 @@ void doexit(int16_t val, int16_t val2)
                 if (p->p_pgrp == udata.u_ptab->p_pid) {
 			p->p_pgrp = 0;
 			ssig(p, SIGHUP);
+			ssig(p, SIGCONT);
 		}
 	}
 	tty_exit();
