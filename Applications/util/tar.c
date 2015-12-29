@@ -245,7 +245,7 @@ static void storedir( char *name){
 	struct stat s;
 	int fd;
 	int ret;
-	DIR *dirstream;
+	DIR dirstream;
 	struct dirent *dir;
 	char cname[100];
 	uint32_t count;
@@ -342,12 +342,11 @@ static void storedir( char *name){
 		break;
 	case S_IFDIR:
 		/* open the directory */
-		dirstream = opendir( name );
-		if( ret < 0 ){
+		if (opendir_r(&dirstream,  name) == NULL) {
 			pname();
 			break;
 		}
-		while( dir = readdir( dirstream ) ){
+		while( dir = readdir(&dirstream ) ){
 			/* dont arch .. or . */
 			if( !strcmp( dir->d_name, "." ) ||
 			    !strcmp( dir->d_name, ".." )
@@ -357,23 +356,26 @@ static void storedir( char *name){
 			strncat( cname, dir->d_name, 100 );
 			{
 				/* save state of files */
-				uint32_t tell=telldir( dirstream );
-				closedir( dirstream );
+				uint32_t tell=telldir( &dirstream );
+				closedir_r( &dirstream );
 				/* recursive call to this dir */
 				storedir( cname );
 				/* restore state of files */
-				dirstream=opendir( name );
-				seekdir( dirstream, tell );
+				if (opendir_r(&dirstream, name) == NULL) {
+					pname();
+					break;
+				}
+				seekdir(&dirstream, tell );
 			}
 		}
-		closedir( dirstream );
+		closedir_r( &dirstream );
 		break;
 	}
 }
 
 
 /* list all the files in an archive */
-static void list( ){
+static void list(void){
 	int x;
 	int zcount=2;
 

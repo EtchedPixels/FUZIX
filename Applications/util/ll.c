@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <time.h>
 
@@ -28,16 +29,11 @@ void prmode(int mode)
         printf("-");
 }
 
-/* FIXME: use readdir */
-struct _uzidirent {
- uint16_t ino;
- char d_name[30];
-};
-
 int ls(char *path)
 {
-    int    d, st;
-    struct _uzidirent buf;
+    int st;
+    struct dirent *d;
+    DIR dp;
     struct stat statbuf;
     static char dname[512];
 
@@ -46,15 +42,14 @@ int ls(char *path)
         return -1;
     }
 
-    d = open(path, O_RDONLY);
-    if (d < 0) {
+    if (opendir_r(&dp, path) < 0) {
         printf ("ls: can't open %s\n", path);
         return -1;
     }
 
     /* FIXME: use readdir etc */
-    while (read(d, (char *)&buf, 32) == 16) {
-        if (buf.d_name[0] == '\0')
+    while (d = readdir(&dp)) {
+        if (d->d_name[0] == '\0')
             continue;
 
         if (path[0] != '.' || path[1]) {
@@ -64,7 +59,7 @@ int ls(char *path)
             dname[0] = '\0';
         }
 
-        strlcat(dname, buf.d_name, sizeof(dname));
+        strlcat(dname, d->d_name, sizeof(dname));
 
         if (stat(dname, &statbuf) != 0) {
             printf("ls: can't stat %s\n", dname);
@@ -117,7 +112,7 @@ int ls(char *path)
 
         printf("  %-30s\n", dname);
     }
-    close (d);
+    closedir_r(&dp);
     return 0;
 }
 

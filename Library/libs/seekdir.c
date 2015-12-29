@@ -1,9 +1,8 @@
 #include <dirent.h>
 #include <unistd.h>
 
-void seekdir (DIR * dirp, off_t pos)
+void seekdir(DIR *dir, off_t pos)
 {
-	struct _dir *dir = (struct _dir *)dirp;
-	lseek(dir->d.dd_fd, dir->d.dd_loc = pos, SEEK_SET);
-	dir->next = dir->last = 0;
+	lseek(dir->dd_fd, dir->dd_loc = pos, SEEK_SET);
+	dir->_priv.next = dir->_priv.last = 0;
 }

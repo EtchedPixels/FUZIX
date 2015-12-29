@@ -59,7 +59,7 @@ void done(const char *name, int status)
 
 int main(int argc, const char *argv[])
 {
-    DIR *dp;
+    DIR dp;
     int i;
     struct dirent *entry;
     struct stat filestat, rootstat;
@@ -73,8 +73,8 @@ int main(int argc, const char *argv[])
     }
 
     if (stat(ROOT, &rootstat) == 0
-	&& (dp = opendir(DEV_PATH)) != (DIR *) NULL) {
-	while ((entry = readdir(dp)) != (struct dirent *) NULL) {
+	&& opendir_r(&dp,DEV_PATH) != (DIR *) NULL) {
+	while ((entry = readdir(&dp)) != (struct dirent *) NULL) {
 	    strcpy(namebuf, DEV_PATH);
 	    strlcat(namebuf, entry->d_name, sizeof(namebuf));
 	    if (stat(namebuf, &filestat) != 0)

@@ -143,13 +143,13 @@ void df_all(void)
 
 const char *devname(dev_t devno)
 {
-    DIR *dp;
+    DIR dp;
     struct dirent *entry;
     struct stat fstat;
     static char namebuf[sizeof(DEV_PATH) + MAXNAMLEN + 2];
 
-    if ((dp = opendir(DEV_PATH)) != (DIR *) NULL) {
-        while ((entry = readdir(dp)) != (struct dirent *) NULL) {
+    if (opendir_r(&dp, DEV_PATH) != (DIR *) NULL) {
+        while ((entry = readdir(&dp)) != (struct dirent *) NULL) {
             sprintf(namebuf, "%s/%s", DEV_PATH, entry->d_name);
             if (stat(namebuf, &fstat) != 0)
                 continue;
@@ -157,11 +157,11 @@ const char *devname(dev_t devno)
                 continue;
             if (fstat.st_rdev != devno)
                 continue;
-            closedir(dp);
+            closedir_r(&dp);
             return namebuf;
         }
     }
-    closedir(dp);
+    closedir_r(&dp);
 
     sprintf(namebuf, "%d", devno);
     return namebuf;

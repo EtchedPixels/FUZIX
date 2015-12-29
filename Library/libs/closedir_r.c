@@ -1,4 +1,4 @@
-/* closedir.c      closedir implementation
+/* closedir_r.c      closedir_r implementation
  *
  */
 #include <unistd.h>
@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-int closedir(DIR * dir)
+int closedir_r(DIR * dir)
 {
 	if (dir == NULL || dir->dd_fd == -1) {
 		errno = EBADF;
@@ -17,6 +17,5 @@ int closedir(DIR * dir)
 	}
 	close(dir->dd_fd);
 	dir->dd_fd = -1;
-	free(dir);
 	return 0;
 }

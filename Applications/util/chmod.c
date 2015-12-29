@@ -210,17 +210,17 @@ int main(int argc, char *argv[])
 int do_change(char *name)
 {
     mode_t m;
-    DIR *dirp;
+    DIR dir;
     struct dirent *entp;
     char *namp;
 
     if (lstat(name, &st)) {
 	perror(name);
-	return (1);
+	return 1;
     }
 
     if (S_ISLNK(st.st_mode) && rflag)
-	return (0);		/* Note: violates POSIX. */
+	return 0;		/* Note: violates POSIX. */
 
     if (!symbolic)
 	m = new_mode;
@@ -235,7 +235,7 @@ int do_change(char *name)
     }
 
     if (S_ISDIR(st.st_mode) && rflag) {
-	if (!(dirp = opendir(name))) {
+	if (!opendir_r(&dir, name)) {
 	    perror(name);
 	    return (1);
 	}
@@ -243,14 +243,14 @@ int do_change(char *name)
 	    strcpy(path, name);
 	namp = path + strlen(path);
 	*namp++ = '/';
-	while (entp = readdir(dirp))
+	while (entp = readdir(&dir))
 	    if (entp->d_name[0] != '.' ||
 		(entp->d_name[1] &&
 		 (entp->d_name[1] != '.' || entp->d_name[2]))) {
 		strcpy(namp, entp->d_name);
 		errors |= do_change(path);
 	    }
-	closedir(dirp);
+	closedir_r(&dir);
 	*--namp = '\0';
     }
     return (errors);

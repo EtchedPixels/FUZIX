@@ -1,7 +1,6 @@
 #include <dirent.h>
 
-off_t telldir(DIR * dirp)
+off_t telldir(DIR * dir)
 {
-	struct _dir *dir = (struct _dir *)dirp;
-	return dir->d.dd_loc;
+	return dir->dd_loc;
 }
