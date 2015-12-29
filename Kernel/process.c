@@ -553,6 +553,22 @@ void acctexit(ptptr p)
 }
 #endif
 
+/* Perform the terminal process signalling */
+static int signal_parent(ptptr p)
+{
+        if (p->p_ignored & (1UL << SIGCHLD)) {
+		/* POSIX.1 says that SIG_IGN for SIGCHLD means don't go
+		   zombie, just clean up as we go */
+		p->p_status = P_EMPTY;
+                return 0;
+	}
+	ssig(p, SIGCHLD);
+	/* Wake up a waiting parent, if any. */
+	wakeup((char *)p);
+	p->p_status = P_ZOMBIE;
+	return 1;
+}
+
 void doexit(int16_t val, int16_t val2)
 {
 	int16_t j;
@@ -601,6 +617,7 @@ void doexit(int16_t val, int16_t val2)
 		if (p->p_status == P_EMPTY || p == udata.u_ptab)
 			continue;
 		/* Set any child's parents to our parent */
+		/* FIXME: do we need to wakeup the parent if we do this ? */
 		if (p->p_pptr == udata.u_ptab)
 			p->p_pptr = udata.u_ptab->p_pptr;
 		/* Send SIGHUP to any pgrp members and remove
@@ -623,13 +640,7 @@ void doexit(int16_t val, int16_t val2)
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;
-	/* FIXME: send SIGCLD here */
-	/* FIXME: POSIX.1 says that SIG_IGN for SIGCLD means don't go
-	   zombie, just clean up as we go */
-	/* Wake up a waiting parent, if any. */
-	wakeup((char *) udata.u_ptab->p_pptr);
-
-	udata.u_ptab->p_status = P_ZOMBIE;
+        signal_parent(udata.u_ptab->p_pptr);
 	nready--;
 	nproc--;
 
