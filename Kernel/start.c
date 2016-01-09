@@ -93,6 +93,11 @@ void create_init(void)
 	udata.u_argn =  (arg_t)PROGLOAD;
 	udata.u_argn1 = (arg_t)(PROGLOAD + 0x8); /* Arguments (just "/init") */
 	udata.u_argn2 = (arg_t)(PROGLOAD + 0x10); /* Environment (none) */
+
+#ifdef CONFIG_LEVEL_2
+	init_process->p_session = 1;
+#endif
+	init_process->p_pgrp = 1;
 }
 
 #ifndef BOOTDEVICE
@@ -251,7 +256,7 @@ void fuzix_main(void)
 
 	tty_init();
 
-	if (d_open(TTYDEV, 0) != 0)
+	if (d_open(TTYDEV, O_NOCTTY) != 0)
 		panic(PANIC_NOTTY);
 
 	/* Sign on messages */
