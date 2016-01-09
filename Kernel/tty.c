@@ -165,7 +165,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 }
 
 /* Post processing for a successful tty open */
-void tty_post(inoptr ino, uint8_t minor, uint8_t flag)
+void tty_post(inoptr ino, uint8_t minor, uint16_t flag)
 {
         struct tty *t = &ttydata[minor];
         irqflags_t irq = di();
@@ -177,6 +177,10 @@ void tty_post(inoptr ino, uint8_t minor, uint8_t flag)
 		udata.u_ptab->p_tty = minor;
 		udata.u_ctty = ino;
 		t->pgrp = udata.u_ptab->p_pgrp;
+#ifdef DEBUG
+		kprintf("setting tty %d pgrp to %d for pid %d\n",
+		        minor, t->pgrp, udata.u_ptab->p_pid);
+#endif
 	}
 	irqrestore(irq);
 }
@@ -190,10 +194,16 @@ int tty_close(uint8_t minor)
 	if (minor == udata.u_ptab->p_tty) {
 		udata.u_ptab->p_tty = 0;
 		udata.u_ctty = NULL;
+#ifdef DEBUG
+		kprintf("pid %d loses controller\n", udata.u_ptab->p_pid);
+#endif
         }
 	t->pgrp = 0;
         /* If we were hung up then the last opener has gone away */
         t->flag &= ~TTYF_DEAD;
+#ifdef DEBUG
+        kprintf("tty %d last close\n", minor);
+#endif
 	return (0);
 }
 

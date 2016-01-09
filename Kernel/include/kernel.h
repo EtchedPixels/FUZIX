@@ -776,7 +776,7 @@ extern void readi(inoptr ino, uint8_t flag);
 extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);
-extern int dev_openi(inoptr *ino, uint8_t flag);
+extern int dev_openi(inoptr *ino, uint16_t flag);
 extern void sync(void);
 
 /* mm.c */

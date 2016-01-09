@@ -299,7 +299,7 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
  *
  *	FIXME. Need so IS_TTY(dev) defines too and minor(x) etc
  */
-int dev_openi(inoptr *ino, uint8_t flag)
+int dev_openi(inoptr *ino, uint16_t flag)
 {
         int ret;
         uint16_t da = (*ino)->c_node.i_addr[0];
