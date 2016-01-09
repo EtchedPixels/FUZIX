@@ -483,7 +483,7 @@ int main(int argc, char *argv[])
 	/* loop until we can open the first terminal */
 
 	do {
-		fdtty1 = open("/dev/tty1", O_RDWR);
+		fdtty1 = open("/dev/tty1", O_RDWR|O_NOCTTY);
 	} while (fdtty1 < 0);
 
 	/* make stdin, stdout and stderr point to /dev/tty1 */
