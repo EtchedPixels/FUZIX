@@ -9,7 +9,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = coco2
 #export TARGET = coco3
 #export TARGET = dragon-nx32
-export TARGET = micropack
+#export TARGET = micropack
 #export TARGET = msx1
 #export TARGET = msx2
 #export TARGET = mtx
@@ -23,7 +23,7 @@ export TARGET = micropack
 #export TARGET = tgl6502
 #export TARGET = trs80
 #export TARGET = ubee
-#export TARGET = z80pack
+export TARGET = z80pack
 #export TARGET = z80pack-lite
 #export TARGET = zeta-v2
 #export TARGET = zx128
@@ -74,10 +74,11 @@ C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank16k.c bank16k_low.c bank32k.c bankfixed.c flat.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
+#	Assume we'll never be doing overlays with level2 or networking
 #
-CS1SRCS = syscall_fs.c
+CS1SRCS = syscall_fs.c syscall_level2.c select.c
 CS2SRCS = syscall_fs2.c
-CS3SRCS = syscall_fs3.c
+CS3SRCS = syscall_fs3.c	syscall_net.c
 CS4SRCS = syscall_other.c
 CS5SRCS = syscall_exec$(BITS).c
 #
@@ -85,7 +86,7 @@ CS5SRCS = syscall_exec$(BITS).c
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
 #
-C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c syscall_net.c
+C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
