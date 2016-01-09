@@ -274,10 +274,6 @@ _dofork:
         ; load p_page
         ld c, (hl)
 	; load existing page ptr
-	push af
-	ld a, c
-	call outcharhex
-	pop af
 	ld a, (U_DATA__U_PAGE)
 
 	call bankfork			;	do the bank to bank copy
