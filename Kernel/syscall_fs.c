@@ -473,3 +473,12 @@ arg_t _write(void)
 #undef buf
 #undef nbytes
 
+/*******************************************
+nosys ()                   Function: various
+********************************************/
+
+arg_t _nosys(void)
+{
+        udata.u_error = ENOSYS;
+        return -1;
+}

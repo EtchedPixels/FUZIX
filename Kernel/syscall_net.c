@@ -2,6 +2,8 @@
 #include <kdata.h>
 #include <netdev.h>
 
+#ifndef CONFIG_NET
+
 #define NSOCKET 8
 
 
@@ -504,3 +506,5 @@ arg_t _recvfrom(void)
 #undef nbytes
 #undef uaddr
 #undef flags
+
+#endif

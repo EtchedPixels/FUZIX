@@ -265,7 +265,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
                         udata.u_error = ENOTTY;
                         return -1;
                 }
-                return tcsetpgrp(minor, t, data);
+                return tcsetpgrp(t, data);
 #endif
 	default:
 		udata.u_error = ENOTTY;

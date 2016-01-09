@@ -394,7 +394,7 @@ void unix_syscall(void)
 	 * Assembly Language Function handler in lowlevel.s
 	 */
 	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
-		udata.u_error = EINVAL;
+		udata.u_error = ENOSYS;
 	} else {
 #ifdef DEBUG
 		kprintf("\t\tpid %d: syscall %d\t%s(%x, %x, %x)\n",

@@ -69,6 +69,20 @@ char *syscall_name[NR_SYSCALL] = {
 	"acct",
 	"memalloc",
 	"memfree",
+	"_nosys66",
+	"_nosys67",
+	"_nosys68",
+	"_nosys69",
+	"_nosys70",
+	"_nosys71",
+	"_select",
+	"setgroups",
+	"getgroups",
+	"getrlimit",
+	"setrlimit",
+	"setpgid",
+	"setsid",
+	"getsid",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -138,4 +152,18 @@ int syscall_args[NR_SYSCALL] = {
 	1, //act
 	1, //memalloc
 	1, //memfree
+	0, //nosys 66
+	0, //nosys 67
+	0, //nosys 68
+	0, //nosys 69
+	0, //nosys 70
+	0, //nosys 71
+	2, //_select
+	2, //setgroups
+	2, //getgroups
+	2, //getrlimit
+	2, //setrlimit
+	2, //setpgid
+	1, //setsid
+	1, //getsid
 };

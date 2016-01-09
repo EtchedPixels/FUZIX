@@ -573,7 +573,7 @@ arg_t _setpgrp(void)
 	/* For full session management it's a shade
 	   more complicated and we have the routine
 	   to do the full job */
-	return setsid(0,0);
+	return _setsid();
 #else
 	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
 	udata.u_ptab->p_tty = 0;

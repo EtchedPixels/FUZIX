@@ -3,8 +3,10 @@
 #include <kdata.h>
 #include <printf.h>
 
+#ifdef CONFIG_LEVEL_2
+
 /*******************************************
-  setgroups (ngroup, groups)     Function ??
+  setgroups (ngroup, groups)     Function 73
   int ngroup;
   const uint16_t *groups;
  *******************************************/
@@ -17,7 +19,7 @@ arg_t _setgroups(void)
 		return -1;
 	if (ngroup < 0 || ngroup > NGROUP) {
 		udata.u_error = EINVAL;
-		return -1
+		return -1;
 	}
 	if (ngroup && uget(groups, udata.u_groups, ngroup * sizeof(uint16_t)))
 		return -1;
@@ -29,7 +31,7 @@ arg_t _setgroups(void)
 #undef groups
 
 /*******************************************
-  getgroups (ngroup, groups)     Function ??
+  getgroups (ngroup, groups)     Function 74
   int ngroup;
   uint16_t *groups;
  *******************************************/
@@ -42,7 +44,7 @@ arg_t _getgroups(void)
 		return udata.u_ngroup;
 	if (ngroup < udata.u_ngroup) {
 		udata.u_error = EINVAL;
-		return;
+		return -1;
 	}
 	if (uput(groups, udata.u_groups, ngroup * sizeof(uint16_t)) < 0)
 		return -1;
@@ -53,7 +55,7 @@ arg_t _getgroups(void)
 #undef groups
 
 /*******************************************
-  getrlimit (res, rlimit)        Function ??
+  getrlimit (res, rlimit)        Function 75
   int res;
   struct rlimit *rlim;
  *******************************************/
@@ -74,7 +76,7 @@ arg_t _getrlimit(void)
 #undef rlim
 
 /*******************************************
-  setrlimit (res, rlimit)        Function ??
+  setrlimit (res, rlimit)        Function 76
   int res;
   const struct rlimit *rlim;
  *******************************************/
@@ -93,7 +95,7 @@ arg_t _setrlimit(void)
 	if (uget(rlim, &r, sizeof(struct rlimit)))
 		return -1;
 
-	o = uata.u_rlimit + res;
+	o = udata.u_rlimit + res;
 	if (r.rlim_cur > r.rlim_max)
 		goto bad;
 
@@ -112,7 +114,7 @@ bad:
 #undef rlim
 
 /*******************************************
-  setpgid (pid, pgid)        Function ??
+  setpgid (pid, pgid)        Function 77
   uint16_t npid;
   uint16_t npgid;
  *******************************************/
@@ -122,8 +124,9 @@ bad:
 
 arg_t _setpgid(void)
 {
-	ptptr p, t;
+	ptptr p, t = NULL;
 	uint16_t ses = udata.u_ptab->p_session;
+	uint16_t n = npgid;
 
 	/* pid 0 means "self" */
 	if (npid == 0)
@@ -142,15 +145,15 @@ arg_t _setpgid(void)
 	if (t->p_session != udata.u_ptab->p_session)
 		goto invalid;
 
-	if (npgid == 0)
-		npgid = t->p_pid;
+	if (n == 0)
+		n = t->p_pid;
 
 	/* Check if the group is in use with a different session */
 	for (p = ptab; p < ptab_end; ++p)
-		if (p->p_pgrp == npgid && p->p_session != ses)
+		if (p->p_pgrp == n && p->p_session != ses)
 			goto invalid;
 
-	t->p_pgrp = npgid;
+	t->p_pgrp = n;
 	return 0;
 
 invalid:
@@ -162,7 +165,7 @@ invalid:
 #undef npgid
 
 /*******************************************
-  setsid (void)                  Function ??
+  setsid (void)                  Function 78
  *******************************************/
 
 arg_t _setsid(void)
@@ -171,7 +174,7 @@ arg_t _setsid(void)
 	uint16_t pid = udata.u_ptab->p_pid;
 
 	for (p = ptab; p < ptab_end; ++p) {
-		if (p->p_pgid == pid || p->p_session == pid) {
+		if (p->p_pgrp == pid || p->p_session == pid) {
 			udata.u_error = EPERM;
 			return -1;
 		}
@@ -184,9 +187,11 @@ arg_t _setsid(void)
 }
 
 /*******************************************
-  getsid (pid)                   Function ??
+  getsid (pid)                   Function 79
   uint16_t pid;
  *******************************************/
+
+#define pid (uint16_t)udata.u_argn
 
 arg_t _getsid(void)
 {
@@ -198,4 +203,6 @@ arg_t _getsid(void)
 	udata.u_error = ESRCH;
 	return -1;
 }
+#undef pid
 
+#endif

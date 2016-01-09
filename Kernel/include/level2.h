@@ -1,3 +1,6 @@
+#ifndef _LEVEL_2_H
+#define _LEVEL_2_H
+
 /* Resource limits only exist on LEVEL_2 systems */
 
 #define NRLIMIT		9
@@ -12,7 +15,7 @@
 #define RLIMIT_RSS	7
 #define RLIMIT_STACK	8
 
-typedef uint32_t rlimit_t
+typedef uint32_t rlim_t;
 
 #define RLIM_INFINITY 0xFFFFFFFFUL
 
@@ -21,6 +24,7 @@ struct rlimit {
     rlim_t rlim_max;
 };
 
+struct tty;
 
 extern int in_group(uint16_t gid);
 extern void jobcontrol_in(struct tty *tty);
@@ -30,7 +34,7 @@ extern int tcsetpgrp(struct tty *tty, char *data);
 /* Platform must implement according to its PATH_MAX and allocators. If
    you are using a 512 byte path limit then calling tmpbuf() and brelse()
    is sufficient */
-extern char *pathhbuf(void);
+extern char *pathbuf(void);
 extern void pathfree(char *p);
 
 /* The first half of this always gets used with a constant so using a macro
@@ -44,9 +48,10 @@ extern void pathfree(char *p);
 
    FIXME: check for any setuid funnies */
 #define can_signal(p, sig) \
-	((sig == SIGCONT && udata.u_ptab->p_session == (p)->session) \
+	((sig == SIGCONT && udata.u_ptab->p_session == (p)->p_session) \
 	|| udata.u_ptab->p_uid == (p)->p_uid || super())
 
+extern arg_t _select(void);
 extern arg_t _setgroups(void);
 extern arg_t _getgroups(void);
 extern arg_t _getrlimit(void);
@@ -54,3 +59,5 @@ extern arg_t _setrlimit(void);
 extern arg_t _setpgid(void);
 extern arg_t _setsid(void);
 extern arg_t _getsid(void);
+
+#endif

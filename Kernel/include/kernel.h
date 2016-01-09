@@ -571,6 +571,7 @@ struct s_argblk {
 #define EALREADY	39		/* Operation already in progress */
 #define EADDRINUSE	40		/* Address already in use */
 #define EADDRNOTAVAIL	41		/* Address not available */
+#define ENOSYS		42		/* No such system call */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
@@ -805,15 +806,15 @@ extern void exec_or_die(void);
 extern void seladdwait(struct selmap *s);
 extern void selrmwait(struct selmap *s);
 extern void selwake(struct selmap *s);
-#ifdef CONFIG_SELECT
-extern int selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
+#ifdef CONFIG_LEVEL_2
+extern void selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
 extern void selwake_inode(inoptr i, uint16_t mask);
 extern void selwake_pipe(inoptr i, uint16_t mask);
 extern int _select(void);
 #else
 #define selwait_inode(i,smask,setit) do {} while(0)
-#define selwake_inode(i,smask,setit) do {} while(0)
-#define selwake_pipe(i,smask,setit) do {} while(0)
+#define selwake_inode(i,smask) do {} while(0)
+#define selwake_pipe(i,smask) do {} while(0)
 #endif
 
 /* swap.c */
