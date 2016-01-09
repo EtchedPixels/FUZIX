@@ -26,9 +26,13 @@ void psleep(void *event)
 	switch (udata.u_ptab->p_status) {
 	case P_SLEEP:		// echo output from devtty happens while processes are still sleeping but in-context
 		nready++;	/* We will fix this back up below */
-	case P_RUNNING:	// normal process
+	case P_STOPPED:		// coming to a halt
+	case P_RUNNING:		// normal process
 		break;
 	default:
+#ifdef DEBUG
+	        kprintf("psleep(0x%x) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
+#endif
 		panic(PANIC_VOODOO);
 	}
 
@@ -458,14 +462,17 @@ void chksigs(void)
 		if (*svec == SIG_DFL) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
-			if (j == SIGCHLD || j == SIGURG ||
+			if (j == SIGCHLD || j == SIGURG || j == SIGSTOP ||
+#ifdef CONFIG_LEVEL_2
+                            j == SIGTTIN || j == SIGTTOU ||
+#endif
 			    j == SIGIO || j == SIGCONT || udata.u_ptab->p_pid == 1) {
 				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
 			}
 			/* FIXME: core dump on some signals */
 #ifdef DEBUG
-			kputs("process terminated by signal: ");
+			kprintf("process terminated by signal %d\n", j);
 #endif
 			doexit(0, j);
 		} else if (*svec != SIG_IGN) {
@@ -496,7 +503,7 @@ void ssig(ptptr proc, uint16_t sig)
 	        /* SIGSTOP can't be ignored and puts the process into P_STOPPED */
 	        /* FIXME: Level 2 will need a lot more handling here, both SIGTSTP
 	           handling and the wait() handling for stopping */
-	        if (sig == SIGSTOP) {
+	        if (sig == SIGSTOP || sig == SIGTTIN || sig == SIGTTOU) {
 	                if (proc->p_status == P_RUNNING ||
                             proc->p_status == P_READY)
                                     nready--;
