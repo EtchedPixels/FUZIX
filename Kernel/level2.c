@@ -15,23 +15,31 @@ int in_group(uint16_t gid)
 	return 0;
 }
 
-void jobcontrol_in(struct tty *t)
+void jobcontrol_in(uint8_t minor, struct tty *t)
 {
-	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp)
+	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp
+	        || udata.u_ptab->p_tty != minor)
 		return;
-	/* We probably want to special case a helper here because we need
-	   to handle the funnier side effects ? */
+#ifdef DEBUG
+        kprintf("[stop %d %d %d]\n",
+                t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
+#endif
 	ssig(udata.u_ptab, SIGTTIN);
 	/* So we halt */
 	psleep(0);
 }
 
-void jobcontrol_out(struct tty *t)
+void jobcontrol_out(uint8_t minor, struct tty *t)
 {
-	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp)
+	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp
+	        || udata.u_ptab->p_tty != minor)
 		return;
 	if (!(t->termios.c_lflag & TOSTOP))
 		return;
+#ifdef DEBUG
+        kprintf("[stop %d %d %d]\n",
+                t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
+#endif
 	ssig(udata.u_ptab, SIGTTOU);
 	/* So we halt */
 	psleep(0);
@@ -54,10 +62,8 @@ int tcsetpgrp(struct tty *t, char *data)	/* data is user pointer */
 		/* The group exists */
 		if (p->p_pgrp == grp) {
 			/* but not within our session */
-			if (p->p_session != ses) {
-				udata.u_error = EPERM;
+			if (p->p_session != ses && !super())
 				return -1;
-			}
 			/* So it's a valid group and in our session */
 			t->pgrp = grp;
 			return 0;
