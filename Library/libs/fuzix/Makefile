@@ -68,6 +68,23 @@ ASRCS += syscall__sigdisp.s
 ASRCS += syscall_flock.s
 ASRCS += syscall_getpgrp.s
 ASRCS += syscall_yield.s
+ASRCS += syscall_acct.s
+ASRCS += syscall_memalloc.s
+ASRCS += syscall_memfree.s
+ASRCS += syscall__nosys66.s
+ASRCS += syscall__nosys67.s
+ASRCS += syscall__nosys68.s
+ASRCS += syscall__nosys69.s
+ASRCS += syscall__nosys70.s
+ASRCS += syscall__nosys71.s
+ASRCS += syscall__select.s
+ASRCS += syscall_setgroups.s
+ASRCS += syscall_getgroups.s
+ASRCS += syscall_getrlimit.s
+ASRCS += syscall_setrlimit.s
+ASRCS += syscall_setpgid.s
+ASRCS += syscall_setsid.s
+ASRCS += syscall_getsid.s
 
 
 ASRCALL = $(ASRCS) $(ASYS)

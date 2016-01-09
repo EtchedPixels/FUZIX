@@ -143,6 +143,14 @@ extern int rename(const char *path, const char *newpath);
 extern int flock(int fd, int op);
 extern pid_t getpgrp(void);
 extern int sched_yield(void);
+extern int acct(const char *filename);
+extern int setgroups(size_t size, const gid_t *groups);
+extern int getgroups(int size, gid_t *groups);
+extern int getrlimit(int resource, struct rlimit *rlim);
+extern int setrlimit(int resource, const struct rlimit *rlim);
+extern int setpgid(pid_t pid, pid_t pgrp);
+extern pid_t setsid(void);
+extern pid_t getsid(pid_t pid);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);
@@ -156,6 +164,7 @@ extern int _utime(const char *file, __ktime_t *buf);
 extern int _uname(struct _uzisysinfoblk *uzib, int len);
 extern int _profil(void *samples, uint16_t offset, uint16_t size, int16_t scale);
 extern int _lseek(int fd, off_t *offset, int mode);
+extern int _select(int nfd, uint16_t *base);
 
 /* C library provided syscall emulation */
 extern int stat(const char *path, struct stat *s);
