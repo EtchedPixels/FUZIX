@@ -1,4 +1,4 @@
-#define NR_SYSCALL 66
+#define NR_SYSCALL 80
 
 #define VARARGS 	-1
 
