@@ -17,7 +17,7 @@ int in_group(uint16_t gid)
 
 void jobcontrol_in(struct tty *t)
 {
-	if (udata.u_ptab->p_pgrp == t->pgrp)
+	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp)
 		return;
 	/* We probably want to special case a helper here because we need
 	   to handle the funnier side effects ? */
@@ -28,7 +28,7 @@ void jobcontrol_in(struct tty *t)
 
 void jobcontrol_out(struct tty *t)
 {
-	if (udata.u_ptab->p_pgrp == t->pgrp)
+	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp)
 		return;
 	if (!(t->termios.c_lflag & TOSTOP))
 		return;

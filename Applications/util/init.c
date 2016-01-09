@@ -475,6 +475,11 @@ int main(int argc, char *argv[])
 
 	unlink("/etc/mtab");
 
+	/* clean up anything handed to us by the kernel */
+	close(0);
+	close(1);
+	close(2);
+
 	/* loop until we can open the first terminal */
 
 	do {
@@ -562,6 +567,7 @@ static pid_t getty(const char *ttyname, const char *id)
 			close(1);
 			close(2);
 			setpgrp();
+			setpgid(0,0);
 
 			fdtty = open(ttyname, O_RDWR);
 			if (fdtty < 0)
