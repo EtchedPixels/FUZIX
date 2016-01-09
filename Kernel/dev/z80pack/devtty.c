@@ -23,6 +23,8 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
+static uint8_t ttypoll;
+
 /* Write to system console */
 void kputchar(char c)
 {
@@ -37,12 +39,12 @@ char tty_writeready(uint8_t minor)
     uint8_t s;
 
     if (minor == 1)
-        return 1;
+        return TTY_READY_NOW;
     if (minor == 2)
         s = tty2stat;
     else
         s = tty3stat;
-    return s & 2;
+    return s & 2 ? TTY_READY_NOW: TTY_READY_LATER;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -57,7 +59,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 
 void tty_sleeping(uint8_t minor)
 {
-    used(minor);
+    ttypoll |= 1 << minor;
 }
 
 /* Called every timer tick */
@@ -76,10 +78,14 @@ void tty_pollirq(void)
         c = tty3data;
         tty_inproc(3, c);
     }
-    if (tty2stat & 2)
+    if ((ttypoll & 2) && (tty2stat & 2)) {
+        ttypoll &= ~2;
         wakeup(&ttydata[2]);
-    if (tty3stat & 2)
+    }
+    if ((ttypoll & 4) && (tty3stat & 2)) {
+        ttypoll &= ~4;
         wakeup(&ttydata[3]);
+    }
 }    
 
 void tty_setup(uint8_t minor)
