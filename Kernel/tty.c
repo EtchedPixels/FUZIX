@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <tty.h>
 
-#undef  DEBUG			/* UNdefine to delete debug code sequences */
-
 /*
  *	Minimal Terminal Interface
  *
@@ -39,7 +37,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		                udata.u_error = ENXIO;
 		                return -1;
                         }
-                        jobcontrol_in(t);
+                        jobcontrol_in(minor, t);
 			if (remq(q, &c)) {
 				if (udata.u_sysio)
 					*udata.u_base = c;
@@ -104,7 +102,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				break;
 			if (psleep_flags_io(&t->flag, flag, &written))
 				return written;
-                        jobcontrol_out(t);
+                        jobcontrol_out(minor, t);
 		}
 		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
@@ -171,6 +169,7 @@ void tty_post(inoptr ino, uint8_t minor, uint8_t flag)
 {
         struct tty *t = &ttydata[minor];
         irqflags_t irq = di();
+
 	/* If there is no controlling tty for the process, establish it */
 	/* Disable interrupts so we don't endup setting up our control after
 	   the carrier drops and tries to undo it.. */
@@ -219,7 +218,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	        udata.u_error = ENXIO;
 	        return -1;
         }
-        jobcontrol_in(t);
+        jobcontrol_in(minor, t);
 	switch (request) {
 	case TCGETS:
 		return uput(&t->termios, data, sizeof(struct termios));
