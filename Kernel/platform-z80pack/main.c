@@ -34,3 +34,19 @@ void platform_interrupt(void)
 void map_init(void)
 {
 }
+
+#ifdef CONFIG_LEVEL_2
+
+/* We always use 512 byte paths so no special pathbuf needed */
+
+char *pathbuf(void)
+{
+ return tmpbuf();
+}
+
+void pathfree(char *tb)
+{
+ brelse(tb);
+}
+
+#endif
