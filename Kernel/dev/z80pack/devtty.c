@@ -78,12 +78,12 @@ void tty_pollirq(void)
         c = tty3data;
         tty_inproc(3, c);
     }
-    if ((ttypoll & 2) && (tty2stat & 2)) {
-        ttypoll &= ~2;
+    if ((ttypoll & 4) && (tty2stat & 2)) {
+        ttypoll &= ~4;
         wakeup(&ttydata[2]);
     }
-    if ((ttypoll & 4) && (tty3stat & 2)) {
-        ttypoll &= ~4;
+    if ((ttypoll & 8) && (tty3stat & 2)) {
+        ttypoll &= ~8;
         wakeup(&ttydata[3]);
     }
 }    
