@@ -182,6 +182,7 @@ arg_t _setsid(void)
 	p = udata.u_ptab;
 	p->p_pgrp = pid;
 	p->p_session = pid;
+	p->p_tty = 0;
 	udata.u_ctty = NULL;
 	return 0;
 }
