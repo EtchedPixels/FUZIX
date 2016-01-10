@@ -16,6 +16,9 @@ struct sysinfoblk sysinfo = {
 #ifdef CONFIG_PROFIL
 	CONF_PROFIL |
 #endif
+#ifdef CONFIG_LEVEL_2
+	CONF_LEVEL_2 |
+#endif
 	0
 };
 /* Must follow immediately afterwards */
