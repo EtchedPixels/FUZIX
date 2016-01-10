@@ -19,7 +19,7 @@
 
 /* Process table entry */
 
-typedef struct p_tab {
+struct p_tab {
     /* WRS: UPDATE kernel.def IF YOU CHANGE THIS STRUCTURE */
     uint8_t     p_status;       /* Process status: MUST BE FIRST MEMBER OF STRUCT */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
@@ -48,16 +48,27 @@ typedef struct p_tab {
     uint16_t    p_pgrp;         /* Process group */
     uint8_t     p_nice;
     uint16_t	p_top;		/* Copy of u_top : FIXME: usize_t */
-#ifdef CONFIG_PROFIL
+};
+
+/* Followed by this structure if profiling supported */
+struct p_prof {
     uint8_t     p_profscale;
     void *      p_profbuf;
     uint16_t    p_profsize;
     uint16_t    p_profoff;
-#endif
 };
 
-#ifndef PTABSIZE
-#define PTABSIZE 15      /* Process table size. */
-#endif
+/* Then this one if level 2 */
+struct p_level_2 {
+    uint16_t	p_session;
+};
+
+/* The offsets of the prof and l2 are not guaranteed to be as per this
+   structure. Use this only for sizing */
+struct p_tab_buffer {
+    struct p_tab	p_tab;
+    struct p_prof	_prof;
+    struct p_level_2	_l2;
+};
 
 #endif /* __PROC_H */

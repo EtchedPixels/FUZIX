@@ -624,6 +624,7 @@ struct sysinfoblk {
   uint16_t config;		/* Config flag mask */
 #define CONF_PROFIL		1
 #define CONF_NET		2	/* Hah.. 8) */
+#define CONF_LEVEL_2		4
   uint16_t loadavg[3];
   uint32_t spare2;
     			        /* Followed by uname strings */

@@ -10,6 +10,8 @@
 #define	F_r	0x04		/* running only flag */
 #define	F_n	0x08		/* numeric output flag */
 
+#define PTABSIZE	128
+
 int flags;
 
 char *mapstat(char s)
@@ -30,10 +32,11 @@ char *mapstat(char s)
 
 int do_ps(void)
 {
-    int i, j, uid, pfd, ptsize;
+    int i, j, uid, pfd, ptsize, nodesize;
     struct passwd *pwd;
+    struct p_tab_buffer *ppbuf;
     struct p_tab *pp;
-    static struct p_tab ptab[PTABSIZE];
+    static struct p_tab_buffer ptab[PTABSIZE];
     static char name[10], uname[20];
 
     uid = getuid();
@@ -43,6 +46,16 @@ int do_ps(void)
         return 1;
     }
         
+    if (ioctl(pfd, 2, (char *) &nodesize) != 0) {
+        perror("ioctl");
+        close(pfd);
+        return 1;
+    }
+
+    if (nodesize > sizeof(struct p_tab_buffer)) {
+        fprintf(stderr, "kernel/user include mismatch.\n");
+        exit(1);
+    }
     if (ioctl(pfd, 1, (char *) &ptsize) != 0) {
         perror("ioctl");
         close(pfd);
@@ -51,9 +64,10 @@ int do_ps(void)
     
     if (ptsize > PTABSIZE) ptsize = PTABSIZE;
     
+    /* FIXME: we don't need to buffer these first - it's silly */
     for (i = 0; i < ptsize; ++i) {
-        if (read(pfd, (char * ) &ptab[i], sizeof(struct p_tab)) !=
-                                          sizeof(struct p_tab)) {
+        if (read(pfd, (char * ) &ptab[i], nodesize) !=
+                                          nodesize) {
             fprintf(stderr, "ps: error reading from /dev/proc\n");
             close(pfd);
             return 1;
@@ -68,7 +82,8 @@ int do_ps(void)
 	    printf("USER\t  PID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
     }
 
-    for (pp = ptab, i = 0; i < ptsize; ++i, ++pp) {
+    for (ppbuf = ptab, i = 0; i < ptsize; ++i, ++ppbuf) {
+        pp = &ppbuf->p_tab;
 	if (pp->p_status == 0)
 	    continue;
 
