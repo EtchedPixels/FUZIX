@@ -2,8 +2,9 @@
 #include <printf.h>
 
 /*
- *	From Dale Schumacher's public domain dlibs. It's a very simple, very
- *	compact and surprisingly efficient malloc/free/memavail
+ *	This is inspired by Dale Schumacher's public domain dlibs, but rewritten
+ *	from scratch. It's a very simple, very compact and surprisingly efficient
+ *	malloc/free/memavail
  *
  *	These functions should *not* be used by core kernel code. They are
  *	used to support flat address space machines. They can be used by 32bit
@@ -17,201 +18,160 @@
 
 #if defined(CONFIG_32BIT)
 
-#ifndef MAX_POOLS
-#define	MAX_POOLS		1
-#endif
+#undef DEBUG_MEMORY
 
-#define	FREE		0x00
-#define	USED		0x80
-#define	NULL_BLOCK		0x80000000L
-static char *_mblk[MAX_POOLS];	/* system memory heaps */
-static long _msiz[MAX_POOLS];	/* allocated heap sizes */
-static unsigned long memtotal;
+struct block
+{
+	struct block* next;
+	size_t length; /* high bit set if used */
+};
+
+#define UNUSED(b) (!((b)->length & (1<<31)))
+
+static struct block start = { NULL, sizeof(struct block) };
 
 /*
- *	Up to MAX_POOLS heaps are allocated as the operating system boots.
- *	These heaps are them divided into blocks for parcelling out by the
- *	user-callable memory allocation routines. Each heap beings with a
- *	pointer to the first free block, or NULL if there are no free blocks
- *	in this heap.  Each block begins with a 4-byte header which defines
- *	the number of bytes in the block, including the header.  Since blocks
- *	in a heap are known to be contiguous, this value also defines the
- *	beginning of the next block in the heap.  The high bit of the header
- *	is set if the block is used and clear if it is free.  The heaps ends
- *	with a block header which indicates a used block containing 0 bytes.
- *	The is the constant value NULL_BLOCK.  Free blocks contain an additional
- *	pointer field, immediatly following the header, which is a pointer to
- *	the header of the next free block, or NULL.
- */
-
-/*
- *	Split block at *<addr> into a used block containing <size> bytes
- *	and a free block containing the remainder.
- */
-static long *splitblk(long **addr, long size)
-{
-	long n, *p, *q;
-	n = *(p = *addr);	/* get actual block size */
-	if (n > (size + 8L)) {	/* is it worth splitting? */
-		n -= size;
-
-		/* calculate "break" point */
-		q = ((long *) (((char *) p) + size));
-		p[0] = size;
-		q[0] = n;
-		q[1] = p[1];
-		*addr = q;
-	}
-
-	else			/* not worth splitting */
-		*addr = ((long *) p[1]);	/* remove from free list */
-	*((char *) p) = USED;	/* mark block "used" */
-	return (p);
-}
-
-
-/*
- *	Find the smallest unused block containing at least <size> bytes.
- */
-static long *findblk(long size)
-{
-	int i;
-	long n, tsiz = 0x7FFFFFFFL, **p, *q, *tptr = NULL;
-	for (i = 0; i < MAX_POOLS; ++i) {
-		if ((p = ((long **) _mblk[i])) == NULL)
-			continue;	/* skip unavailable heaps */
-		while ((q = *p) != NULL) {
-			n = *q;
-			if ((n >= size) && (n < tsiz)) {	/* it fits */
-				tsiz = n;
-				tptr = ((long *) p);
-			}
-			p = ((long **) (q + 1));
-		}
-	}
-	return (tptr);
-}
-
-
-/*
- *	Merge adjacent "free" blocks in heap <i>.  Links in the free chain
- *	are guarenteed to be in forward order.
- */
-static void mergeblk(int i)
-{
-	long n, *p, *q;
-	p = (long *) _mblk[i];
-	if ((p = ((long *) *p)) == NULL)	/* empty chain */
-		return;
-	while ((q = ((long *) p[1])) != NULL) {
-		n = *p;
-		if (((char *) p) + n == ((char *) q)) {	/* adjacent free block */
-			p[1] = q[1];	/* re-link free chain */
-			*p += *q;	/* adjust block size */
-		} else
-			p = q;
-	}
-}
-
-
-/*--------------------- Documented Functions ---------------------------*/
-void *kmalloc(size_t size)
-{
-	long *p;
-	if (size <= 4L)
-		size = 8L;	/* minimum allocation */
-	else
-		size = (size + 5L) & ~1L;	/* header & alignment */
-	if ((p = findblk(size)) == NULL)
-		return (NULL);
-	/* FIXME: check cast */
-	p = splitblk((long **) p, size);
-	return (p + 4);		/* skip over header */
-}
-
-void *kzalloc(size_t size)
-{
-	void *p = kmalloc(size);
-	if (p)
-		memset(p, 0, size);
-	return p;
-}
-
-void kfree(void *ptr)
-{
-	long *addr = ptr;
-	int i;
-	long *p, *q;
-	if (addr == NULL)
-		return;
-	--addr;			/* point to block header */
-	for (i = 0; i < MAX_POOLS; ++i) {
-		if ((p = ((long *) _mblk[i])) == NULL)
-			continue;	/* skip unavailable blocks */
-		if ((addr < p)
-		    || (addr > ((long *) (((char *) p) + _msiz[i]))))
-			continue;	/* block range check */
-		while ((q = ((long *) *p)) != NULL) {
-			++q;
-			if ((addr < q) && (addr > p))
-				break;
-			p = q;
-		}
-		*((char *) addr) = FREE;	/* link into free chain */
-		addr[1] = *p;
-		*p = ((long) addr);
-		mergeblk(i);
-		return;
-	}
-	panic(PANIC_BADFREE);
-}
-
-
-/* FIXME: We ought to keep this as a running total */
-unsigned long kmemavail(void)
-{
-	int i;
-	unsigned long n = 0L;
-	long **p, *q;
-	for (i = 0; i < MAX_POOLS; ++i) {
-		if ((p = ((long **) _mblk[i])) == NULL)
-			continue;	/* skip unavailable heaps */
-		while ((q = *p) != NULL) {
-			n += *q;
-			p = ((long **) (q + 1));
-		}
-	} return (n);
-}
-
-unsigned long kmemused(void)
-{
-	return memtotal - kmemavail();
-}
-
-/*
- *	Add a memory block to the pool
+ * Add a memory block to the pool
  */
 void kmemaddblk(void *base, size_t size)
 {
-	int i;
-	char *p;
-	long *q;
-	for (i = 0; i < MAX_POOLS; ++i) {
-		if (_mblk[i] != NULL)
-			continue;	/* skip used heaps */
-		_mblk[i] = base;
-		_msiz[i] = size;
-		q = ((long *) (p + size));	/* thread starting blocks */
-		q[-1] = NULL_BLOCK;
-		q = ((long *) (p + 4L));
-		q[-1] = (long) q;
-		q[0] = (size - 8L);
-		q[1] = 0;
-		p[4] = FREE;
-		memtotal += size;
-		return;
+	struct block* b = &start;
+	struct block* n = (struct block*) base;
+
+	/* Run down the list until we find the last block. */
+
+	while (b->next)
+		b = b->next;
+
+	/* Add the block. */
+
+	b->next = n;
+	n->next = NULL;
+	n->length = size;
+	#if defined(DEBUG_MEMORY)
+		kprintf("mem: add %x+%x\n", n, n->length);
+	#endif
+}
+
+/*
+ * Find the smallest unused block containing at least length bytes.
+ */
+static struct block* find_smallest(size_t length)
+{
+	static struct block dummy = { NULL, 0x7fffffff };
+	struct block* smallest = &dummy;
+	struct block* b = &start;
+
+	while (b->next)
+	{
+		if (UNUSED(b)
+			&& (b->length >= length)
+			&& (b->length < smallest->length))
+		{
+			smallest = b;
+		}
+
+		b = b->next;
 	}
-	kputs("Too many memory pools\n");
+
+	return (b == &dummy) ? NULL : b;
+}
+
+/*
+ * Split the supplied block into a used section and an unused section
+ * immediately following it (if big enough).
+ */
+static void split_block(struct block* b, size_t size)
+{
+	int32_t newsize = b->length - size; /* might be negative */
+	if (newsize > sizeof(struct block)*4)
+	{
+		struct block* n = (struct block*)((uint8_t*)b + size);
+		#if defined(DEBUG_MEMORY)
+			kprintf("mem: split %x+%x -> ", b, b->length);
+		#endif
+		n->next = b->next;
+		b->next = n;
+		b->length = size;
+		n->length = newsize;
+		#if defined(DEBUG_MEMORY)
+			kprintf("%x+%x and %x+%x\n", b, b->length, n, n->length);
+		#endif
+	}
+
+	b->length |= 0x80000000;
+}
+
+/*
+ * Allocate a block.
+ */
+void* kmalloc(size_t size)
+{
+	struct block* b;
+
+	size = ALIGNUP(size) + sizeof(struct block);
+	b = find_smallest(size);
+	if (!b)
+		return NULL;
+
+	split_block(b, size);
+	#if defined(DEBUG_MEMORY)
+		kprintf("mem: alloc %x+%x\n", b, b->length);
+	#endif
+	return b+1;
+}
+
+/*
+ * Merge all adjacent free blocks in the chain.
+ */
+static void merge_all_blocks(void)
+{
+	struct block* b = &start;
+
+	while (b->next)
+	{
+		struct block* n = b->next;
+
+		if (UNUSED(b)
+			&& UNUSED(n)
+			&& (((uint8_t*)b + b->length) == (uint8_t*)n))
+		{
+			/* Two mergeable blocks are adjacent. */
+			#if defined(DEBUG_MEMORY)
+				kprintf("mem: merge %x+%x and %x+%x -> ",
+					b, b->length, n, n->length);
+			#endif
+			b->next = n->next;
+			b->length += n->length;
+			#if defined(DEBUG_MEMORY)
+				kprintf("%x+%x\n", b, b->length);
+			#endif
+		}
+		else
+		{
+			/* Only move on to the next block if we're unable to merge
+			 * this one. */
+			b = n;
+		}
+	}
+}
+
+/*
+ * Free a block. If there's a block immediately after this one, merge it.
+ * (This maintains ordering within split blocks.)
+ */
+void kfree(void* p)
+{
+	struct block* b = (struct block*)p - 1;
+	#if defined(DEBUG_MEMORY)
+		kprintf("mem: free %x+%x\n", b, b->length);
+	#endif
+
+	if (UNUSED(b))
+		panic(PANIC_BADFREE);
+	
+	b->length &= 0x7fffffff;
+	merge_all_blocks();
 }
 
 #endif
