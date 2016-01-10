@@ -2,9 +2,11 @@
 #include <kdata.h>
 #include <netdev.h>
 
-#ifndef CONFIG_NET
+#ifdef CONFIG_NET
 
+#ifndef NSOCKET
 #define NSOCKET 8
+#endif
 
 
 struct sockaddrs {
@@ -17,14 +19,17 @@ struct socket
 	inoptr s_inode;
 	uint8_t s_type;
 	uint8_t s_error;
+
 	uint8_t s_state;
-#define SS_UNUSED		0
-#define SS_UNCONNECTED		1
-#define SS_BOUND		2
-#define SS_LISTENING		3
-#define SS_CONNECTING		4
-#define SS_CONNECTED		5
-#define SS_ACCEPTWAIT		6
+#define SS_UNUSED		0	/* Free slot */
+#define SS_UNCONNECTED		1	/* Created */
+#define SS_BOUND		2	/* Bind or autobind */
+#define SS_LISTENING		3	/* Listen called */
+#define SS_CONNECTING		4	/* Connect initiated */
+#define SS_CONNECTED		5	/* Connect has completed */
+#define SS_ACCEPTWAIT		6	/* Waiting for accept to harvest */
+#define SS_CLOSED		7	/* Protocol layers done, not close()d */
+	/* FIXME: need state for shutdown handling */
 	uint8_t s_data;
 	struct sockaddrs s_addr[3];
 #define SADDR_SRC	0
@@ -38,10 +43,67 @@ struct socket sockets[NSOCKET];
 uint32_t our_address;
 static uint16_t nextauto = 5000;
 
-static int is_socket(inoptr ino)
+bool issocket(inoptr ino)
 {
 	if ((ino->c_node.i_mode & F_MASK) == F_SOCK)
 		return 1;
+	return 0;
+}
+
+int is_netd(void)
+{
+	return 0;
+}
+
+int sock_write(inoptr ino, uint8_t flag)
+{
+	struct socket *s = &sockets[ino->c_node.i_nlink];
+	used(flag);
+
+	if (s->s_state != SS_CONNECTED) {
+		/* FIXME: handle shutdown states properly */
+		if (s->s_state == SS_CLOSED) {
+			ssig(udata.u_ptab, SIGPIPE);
+			udata.u_error = EPIPE;
+		} else
+			udata.u_error = EINVAL;
+		return -1;
+	}
+	/* For now */
+	udata.u_error = EINVAL;
+	return -1;
+}
+
+int netd_sock_read(inoptr ino, uint8_t flag)
+{
+	used(ino);
+	used(flag);
+
+	udata.u_error = EINVAL;
+	return -1;
+}
+
+/* Wait to leave a state. This will eventually need interrupt locking etc */
+static int sock_wait_leave(struct socket *s, uint8_t flag, uint8_t state)
+{
+	do {
+		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
+		if (psleep_flags(s, flag))
+			return -1;
+		/* Protocol state check */
+	} while (s->s_state == state);
+	return 0;
+}
+
+/* Wait to enter a state. This will eventually need interrupt locking etc */
+static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
+{
+	do {
+		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
+		if (psleep_flags(s, flag))
+			return -1;
+		/* Protocol state check */
+	} while (s->s_state == state);
 	return 0;
 }
 
@@ -56,13 +118,22 @@ static int8_t alloc_socket(void)
 	return -1;
 }
 
+void sock_close(inoptr ino)
+{
+	/* For the moment */
+	struct socket *s = &sockets[ino->c_node.i_nlink];
+	sock_wait_enter(s, 0, SS_CLOSED);
+	sockets[ino->c_node.i_nlink].s_state = SS_UNUSED;
+}
+
+
 static struct socket *sock_get(int fd, uint8_t *flag)
 {
 	struct oft *oftp;
 	inoptr ino = getinode(fd);
 	if (ino == NULLINODE)
 		return NULL;
-	if (!is_socket(ino)) {
+	if (!issocket(ino)) {
 		udata.u_error = EINVAL;
 		return NULL;
 	}
@@ -237,7 +308,7 @@ nooft:
 }
 
 /*******************************************
-socket (af, type, pf)           Function ??
+socket (af, type, pf)            Function 90
 uint16_t af;
 uint16_t type;
 uint16_t pf;
@@ -267,7 +338,7 @@ arg_t _socket(void)
 #undef pf
 
 /*******************************************
-listen(fd, qlen)           Function ??
+listen(fd, qlen)                 Function 91
 int fd;
 int qlen;
 ********************************************/
@@ -294,9 +365,10 @@ arg_t _listen(void)
 #undef qlen
 
 /*******************************************
-bind(fd, addr)           Function ??
+bind(fd, addr, len)              Function 92
 int fd;
 struct sockaddr_*in addr;
+int length;		Unused for now
 ********************************************/
 #define fd   (int16_t)udata.u_argn
 #define uaddr (struct sockaddr_in *)udata.u_argn1
@@ -326,9 +398,10 @@ arg_t _bind(void)
 #undef uaddr
 
 /*******************************************
-connect(fd, addr)           Function ??
+connect(fd, addr, len)           Function 93
 int fd;
 struct sockaddr_*in addr;
+int length;		Unused for now
 ********************************************/
 #define fd   (int16_t)udata.u_argn
 #define uaddr (struct sockaddr_in *)udata.u_argn1
@@ -356,12 +429,9 @@ arg_t _connect(void)
 		/* Protocol op to kick off */
 	}
 
-	do {
-		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
-		if (psleep_flags(s, flag))
-			return -1;
-		/* Protocol state check */
-	} while (s->s_state == SS_CONNECTING);
+	if (sock_wait_leave(s, 0, SS_CONNECTING))
+		return -1;
+	/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
 	return sock_error(s);
 }
 
@@ -369,7 +439,7 @@ arg_t _connect(void)
 #undef uaddr
 
 /*******************************************
-accept(fd, addr)           Function ??
+accept(fd, addr)                 Function 94
 int fd;
 struct sockaddr_*in addr;
 ********************************************/
@@ -390,6 +460,7 @@ arg_t _accept(void)
 		return -1;
 	}
 	
+	/* Needs locking versus interrupts */
 	while ((n = sock_pending(s)) != -1) {
 		if (psleep_flags(s, flag))
 			return -1;
@@ -405,7 +476,7 @@ arg_t _accept(void)
 #undef fd
 
 /*******************************************
-getsockaddrs(fd, addr)           Function ??
+getsockaddrs(fd, addr)           Function 95
 int fd;
 struct sockaddr_*in addr;
 ********************************************/
@@ -433,31 +504,36 @@ arg_t _getsockaddrs(void)
 /* FIXME: do we need the extra arg/flags or can we fake it in user */
 
 /*******************************************
-sendto(fd, buf, len, addr, flags)           Function ??
+sendto(fd, buf, len, addr)       Function 96
 int fd;
 char *buf;
 susize_t len;
-struct sockaddr_*in addr;
-int flags;
+struct sockio *addr;	control buffer
 ********************************************/
 #define d (int16_t)udata.u_argn
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
-#define uaddr (struct sockaddr_in *)udata.u_argn3
-#define flags (uint16_t)udata.u_argn4
+#define uaddr ((struct sockio *)udata.u_argn3)
 
 arg_t _sendto(void)
 {
 	struct socket *s = sock_get(d, NULL);
 	struct sockaddr_in sin;
+	uint16_t flags;
 
 	if (s == NULL)
 		return -1;
+
+	flags = ugetw(&uaddr->sio_flags);
+	if (flags) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
 	/* Save the address and then just do a 'write' */
 	if (s->s_type != SOCKTYPE_TCP) {
 		/* Use the address in atmp */
 		s->s_flag |= SFLAG_ATMP;
-		if (sa_getremote(uaddr, &sin) == -1)
+		if (sa_getremote(&uaddr->sio_addr, &sin) == -1)
 			return -1;
 		s->s_addr[SADDR_TMP].addr = sin.sin_addr.s_addr;
 		s->s_addr[SADDR_TMP].port = sin.sin_port;
@@ -469,34 +545,39 @@ arg_t _sendto(void)
 #undef buf
 #undef nbytes
 #undef uaddr
-#undef flags
 
 /*******************************************
-recvfrom(fd, buf, len, addr, flags)           Function ??
+recvfrom(fd, buf, len, addr)     Function 97
 int fd;
 char *buf;
 susize_t len;
-struct sockaddr_*in addr;
-int flags
+struct sockio *addr;	 control buffer
 ********************************************/
 #define d (int16_t)udata.u_argn
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
-#define uaddr (struct sockaddr_in *)udata.u_argn3
-#define flags (uint16_t)udata.u_argn4
+#define uaddr ((struct sockio *)udata.u_argn3)
 
 arg_t _recvfrom(void)
 {
 	struct socket *s = sock_get(d, NULL);
 	int ret;
+	uint16_t flags;
 
 	/* FIXME: will need _read redone for banked syscalls */
 	if (s == NULL)
 		return -1;
+
+	flags = ugetw(&uaddr->sio_flags);
+	if (flags) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+
 	ret = _read();
 	if (ret < 0)
 		return ret;
-	if (sa_put(s, SADDR_TMP, uaddr))
+	if (sa_put(s, SADDR_TMP, &uaddr->sio_addr))
 		return -1;
 	return ret;
 }
@@ -505,6 +586,5 @@ arg_t _recvfrom(void)
 #undef buf
 #undef nbytes
 #undef uaddr
-#undef flags
 
 #endif

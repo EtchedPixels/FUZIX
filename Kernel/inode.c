@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <tty.h>
+#include <netdev.h>
 
 #if defined(CONFIG_LARGE_IO_DIRECT)
 #define read_direct(flag)		(!udata.u_sysio)
@@ -37,8 +38,10 @@ void readi(inoptr ino, uint8_t flag)
 
         case F_SOCK:
 #ifdef CONFIG_NET
-                if (is_netd())
-                        return netd_sock_read(ino, flag);
+                if (is_netd()) {
+                        udata.u_count = netd_sock_read(ino, flag);
+                        return;
+                }
 #endif
 	case F_PIPE:
 		ispipe = true;

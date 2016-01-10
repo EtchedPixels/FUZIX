@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <version.h>
 #include <kdata.h>
+#include <netdev.h>
 
 p_tab *init_process;
 unsigned char *cmdline = (unsigned char *) CMDLINE;
@@ -116,5 +117,25 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_setpgid,		/* FUZIX system call 77 */
 	_setsid,		/* FUZIX system call 78 */
 	_getsid,		/* FUZIX system call 79 */
+	_nosys,			/* 80-89 reserved */
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+	_nosys,
+#if defined(CONFIG_NET)		/* For now require L2 */
+	_socket,		/* FUZIX system call 90 */
+	_listen,		/* FUZIX system call 91 */
+	_bind,			/* FUZIX system call 92 */
+	_connect,		/* FUZIX system call 93 */
+	_accept,		/* FUZIX system call 94 */
+	_getsockaddrs,		/* FUZIX system call 95 */
+	_sendto,		/* FUZIX system call 96 */
+	_recvfrom,		/* FUZIX system call 97 */
+#endif
 #endif
 };

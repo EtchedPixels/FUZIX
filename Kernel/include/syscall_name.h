@@ -1,4 +1,4 @@
-#define NR_SYSCALL 80
+#define NR_SYSCALL 98
 
 #define VARARGS 	-1
 
@@ -83,6 +83,24 @@ char *syscall_name[NR_SYSCALL] = {
 	"setpgid",
 	"setsid",
 	"getsid",
+	"_nosys80",
+	"_nosys81",
+	"_nosys82",
+	"_nosys83",
+	"_nosys84",
+	"_nosys85",
+	"_nosys86",
+	"_nosys87",
+	"_nosys88",
+	"_nosys89",
+	"socket",
+	"listen",
+	"_bind",
+	"_connect",
+	"_accept",
+	"_getsockaddrs",
+	"_sendto",
+	"_recvfrom"
 };
 
 int syscall_args[NR_SYSCALL] = {

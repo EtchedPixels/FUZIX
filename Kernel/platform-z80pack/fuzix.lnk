@@ -38,5 +38,6 @@ platform-z80pack/devtty.rel
 platform-z80pack/devrtc.rel
 level2.rel
 syscall_level2.rel
+syscall_net.rel
 select.rel
 -e
