@@ -4,41 +4,6 @@
 
 #ifdef CONFIG_NET
 
-#ifndef NSOCKET
-#define NSOCKET 8
-#endif
-
-
-struct sockaddrs {
-	uint32_t addr;
-	uint16_t port;
-};
-
-struct socket
-{
-	inoptr s_inode;
-	uint8_t s_type;
-	uint8_t s_error;
-
-	uint8_t s_state;
-#define SS_UNUSED		0	/* Free slot */
-#define SS_UNCONNECTED		1	/* Created */
-#define SS_BOUND		2	/* Bind or autobind */
-#define SS_LISTENING		3	/* Listen called */
-#define SS_CONNECTING		4	/* Connect initiated */
-#define SS_CONNECTED		5	/* Connect has completed */
-#define SS_ACCEPTWAIT		6	/* Waiting for accept to harvest */
-#define SS_CLOSED		7	/* Protocol layers done, not close()d */
-	/* FIXME: need state for shutdown handling */
-	uint8_t s_data;
-	struct sockaddrs s_addr[3];
-#define SADDR_SRC	0
-#define SADDR_DST	1
-#define SADDR_TMP	2
-	uint8_t s_flag;
-#define SFLAG_ATMP	1		/* Use SADDR_TMP */
-};
-
 struct socket sockets[NSOCKET];
 uint32_t our_address;
 static uint16_t nextauto = 5000;
@@ -60,18 +25,23 @@ int sock_write(inoptr ino, uint8_t flag)
 	struct socket *s = &sockets[ino->c_node.i_nlink];
 	used(flag);
 
-	if (s->s_state != SS_CONNECTED) {
-		/* FIXME: handle shutdown states properly */
-		if (s->s_state == SS_CLOSED) {
-			ssig(udata.u_ptab, SIGPIPE);
-			udata.u_error = EPIPE;
-		} else
-			udata.u_error = EINVAL;
-		return -1;
+	/* FIXME: IRQ protection */
+	while(1) {
+		if (s->s_state != SS_CONNECTED && s->s_state != SS_CLOSING) {
+			/* FIXME: handle shutdown states properly */
+			if (s->s_state >= SS_CLOSEWAIT) {
+				ssig(udata.u_ptab, SIGPIPE);
+				udata.u_error = EPIPE;
+			} else
+				udata.u_error = EINVAL;
+			return -1;
+		}
+		if (s->s_iflag == SI_THROTTLE || net_write(s, flag) == -2) {
+			s->s_iflag |= SI_THROTTLE;
+			if (psleep_flags(&s->s_iflag, flag) == -1)
+				return -1;
+		}
 	}
-	/* For now */
-	udata.u_error = EINVAL;
-	return -1;
 }
 
 int netd_sock_read(inoptr ino, uint8_t flag)
@@ -118,12 +88,32 @@ static int8_t alloc_socket(void)
 	return -1;
 }
 
+struct socket *sock_alloc_accept(struct socket *s)
+{
+	struct socket *n;
+	int8_t i = alloc_socket();
+	if (i == -1)
+		return NULL;
+	n = &sockets[i];
+
+	memcpy(n, s, sizeof(*n));
+	n->s_state = SS_ACCEPTING;
+	n->s_data = s - sockets;
+	return n;
+}
+
+void sock_wake_listener(struct socket *s)
+{
+	wakeup(&sockets[s->s_data]);
+}
+
 void sock_close(inoptr ino)
 {
 	/* For the moment */
 	struct socket *s = &sockets[ino->c_node.i_nlink];
+	net_close(s);
 	sock_wait_enter(s, 0, SS_CLOSED);
-	sockets[ino->c_node.i_nlink].s_state = SS_UNUSED;
+	s->s_state = SS_UNUSED;
 }
 
 
@@ -164,8 +154,7 @@ static int sock_autobind(struct socket *s)
 //		sa.port = nextauto++;
 //	} while(sock_find(SADDR_SRC, &sa));
 	memcpy(&s->s_addr[SADDR_SRC], &sa, sizeof(sa));
-	s->s_state = SS_BOUND;
-	return 0;
+	return net_bind(s);
 }
 
 static struct socket *sock_find_local(uint32_t addr, uint16_t port)
@@ -245,14 +234,10 @@ struct sockinfo {
 	uint8_t priv;
 };
 
-#define NSOCKTYPE 3
 struct sockinfo socktypes[NSOCKTYPE] = {
 	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, 0 },
-#define SOCKTYPE_TCP	1
 	{ AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0 },
-#define SOCKTYPE_UDP	2
 	{ AF_INET, SOCK_RAW, 0, 0 }
-#define SOCKTYPE_RAW	3
 };
 
 arg_t make_socket(struct sockinfo *s, int8_t *np)
@@ -266,19 +251,25 @@ arg_t make_socket(struct sockinfo *s, int8_t *np)
 	if (s->priv && esuper())
 		return -1;
 
-	/* Start by getting the file and inode table entries */
-	if ((uindex = uf_alloc()) == -1)
-		return -1;
-	if ((oftindex = oft_alloc()) == -1)
-		goto nooft;
-
 	if (np)
 		n = *np;
 	else {
 		n = alloc_socket();
 		if (n == -1)
-			goto noalloc;
+			return -1;
 	}
+	sockets[n].s_type = s - socktypes;	/* Pointer or uint8_t best ? */
+	sockets[n].s_state = SS_INIT;
+
+	if (net_init(&sockets[n]) == -1)
+		goto nosock;
+
+	/* Start by getting the file and inode table entries */
+	if ((uindex = uf_alloc()) == -1)
+		goto nosock;
+	if ((oftindex = oft_alloc()) == -1)
+		goto nooft;
+
 	/* We need an inode : FIXME - do we want a pipedev aka Unix ? */
 	if (!(ino = i_open(root_dev, 0)))
 		goto noalloc;
@@ -286,16 +277,14 @@ arg_t make_socket(struct sockinfo *s, int8_t *np)
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
 	ino->c_node.i_nlink = n;	/* Cheat !! */
+	sockets[n].s_inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;
 
 	udata.u_files[uindex] = oftindex;
 
-	sockets[n].s_inode = ino;
-	sockets[n].s_type = s - socktypes;	/* Pointer or uint8_t best ? */
-	sockets[n].s_state = SS_UNCONNECTED;
-
+	sock_wait_leave(&sockets[n], 0, SS_INIT);
 	if (np)
 		*np = n;
 	return uindex;
@@ -304,6 +293,8 @@ noalloc:
 	oft_deref(oftindex);	/* Will call i_deref! */
 nooft:
 	udata.u_files[uindex] = NO_FILE;
+nosock:
+	sockets[n].s_state = SS_UNUSED;
 	return -1;
 }
 
@@ -357,8 +348,7 @@ arg_t _listen(void)
 		return -1;	
 	}
 	/* Call the protocol services */
-	s->s_state = SS_LISTENING;
-	return 0;
+	return net_listen(s);
 }
 
 #undef fd
@@ -390,8 +380,7 @@ arg_t _bind(void)
 	s->s_addr[SADDR_SRC].addr = sin.sin_addr.s_addr;
 	s->s_addr[SADDR_SRC].port = sin.sin_port;
 
-	s->s_state = SS_BOUND;
-	return 0;
+	return net_bind(s);
 }
 
 #undef fd
@@ -425,8 +414,8 @@ arg_t _connect(void)
 			return -1;
 		s->s_addr[SADDR_DST].addr = sin.sin_addr.s_addr;
 		s->s_addr[SADDR_DST].port = sin.sin_port;
-		s->s_state = SS_CONNECTING;
-		/* Protocol op to kick off */
+		if (net_connect(s))
+			return -1;
 	}
 
 	if (sock_wait_leave(s, 0, SS_CONNECTING))

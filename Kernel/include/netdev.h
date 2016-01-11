@@ -1,4 +1,3 @@
-
 #define AF_INET		1
 
 #define SOCK_RAW	1
@@ -34,6 +33,68 @@ struct sockio {
 #define INADDR_LOOPBACK		0x7F000001UL
 #define IN_LOOPBACK(a)		(((a) >> 24) == 0x7F)
 
+
+#ifndef NSOCKET
+#define NSOCKET 8
+#endif
+
+
+struct sockaddrs {
+	uint32_t addr;
+	uint16_t port;
+};
+
+struct socket
+{
+	inoptr s_inode;
+	uint8_t s_type;
+	uint8_t s_error;
+
+	uint8_t s_state;
+#define SS_UNUSED		0	/* Free slot */
+#define SS_INIT			1	/* Initializing state (for IP offloaders) */
+#define SS_UNCONNECTED		2	/* Created */
+#define SS_BOUND		3	/* Bind or autobind */
+#define SS_LISTENING		4	/* Listen called */
+#define SS_CONNECTING		5	/* Connect initiated */
+#define SS_CONNECTED		6	/* Connect has completed */
+#define SS_ACCEPTING		7	/* Accepting in progress */
+#define SS_ACCEPTWAIT		8	/* Waiting for accept to harvest */
+#define SS_CLOSEWAIT		9	/* Remote has closed */
+#define SS_CLOSING		10	/* Protocol close in progress */
+#define SS_CLOSED		11	/* Protocol layers done, not close()d */
+	/* FIXME: need state for shutdown handling */
+	uint8_t s_data;
+	struct sockaddrs s_addr[3];
+#define SADDR_SRC	0
+#define SADDR_DST	1
+#define SADDR_TMP	2
+	uint8_t s_flag;
+#define SFLAG_ATMP	1		/* Use SADDR_TMP */
+	uint8_t s_iflag;		/* Flags touched in IRQ handlers */
+#define SI_DATA		1		/* Data is ready */
+#define SI_EOF		2		/* At EOF */
+#define SI_THROTTLE	4		/* Transmit is throttled */
+	uint8_t s_lcn;			/* Logical channel (for link layer) */
+	uint8_t s_lcnflag;		/* LCN private flags */
+};
+
+#define NSOCKTYPE 3
+#define SOCKTYPE_TCP	1
+#define SOCKTYPE_UDP	2
+#define SOCKTYPE_RAW	3
+
+struct netdevice
+{
+	uint8_t mac_len;
+	const char *name;
+	uint16_t flags;
+#define IFF_POINTOPOINT		1
+};
+
+extern struct socket sockets[NSOCKET];
+extern uint32_t our_address;
+
 /* Network layer syscalls */
 extern arg_t _socket(void);
 extern arg_t _listen(void);
@@ -50,3 +111,16 @@ extern int netd_sock_read(inoptr ino, uint8_t flag);
 extern int is_netd(void);
 extern int sock_write(inoptr ino, uint8_t flag);
 extern bool issocket(inoptr ino);
+
+/* Hooks between the network implementation and the socket layer */
+extern int net_init(struct socket *s);
+extern int net_bind(struct socket *s);
+extern int net_connect(struct socket *s);
+extern void net_close(struct socket *s);
+extern int net_listen(struct socket *s);
+extern arg_t net_read(struct socket *s, uint8_t flag);
+extern arg_t net_write(struct socket *s, uint8_t flag);
+extern arg_t net_ioctl(uint8_t op, void *p);
+extern void netdev_init(void);
+
+extern struct netdevice net_dev;
