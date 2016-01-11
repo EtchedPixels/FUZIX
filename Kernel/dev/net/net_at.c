@@ -45,6 +45,12 @@ void netat_hangup(void)
   }
 }
 
+static void netat_do_hangup(void)
+{
+  /* Need to delay and space this but this will do now for human
+     pretending to be modem testing */
+  netat_write("+++ATH\n", 7);
+}
 /* We read off the ready event until we get data */
 
 void netat_event(void)
@@ -127,7 +133,7 @@ int net_connect(struct socket *s)
 void net_close(struct socket *s)
 {
   if (at_state == 4) {
-    netat_hangup();		/* Either +++ ATH with spacing, or carrier drop */
+    netat_do_hangup();		/* Either +++ ATH with spacing, or carrier drop */
     at_state = 0;
   }
   s->s_state = SS_UNUSED;
