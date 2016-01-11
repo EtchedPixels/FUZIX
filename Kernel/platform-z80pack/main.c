@@ -3,9 +3,9 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devatsim.h>
 
 uint16_t ramtop = PROGTOP;
-
 
 void pagemap_init(void)
 {
@@ -28,6 +28,7 @@ void platform_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
+ netat_poll();
 }
 
 /* Nothing to do for the map of init */

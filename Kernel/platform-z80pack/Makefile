@@ -1,5 +1,6 @@
 
-DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c
+DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c ../dev/z80pack/devatsim.c
+NSRCS = ../dev/net/net_at.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s z80pack.s
@@ -8,8 +9,9 @@ ASRCS += tricks.s commonmem.s
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DOBJS = $(patsubst ../dev/z80pack/%.c,%.rel, $(DSRCS))
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/z80pack/
 
@@ -24,6 +26,9 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DOBJS): %.rel: ../dev/z80pack/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 

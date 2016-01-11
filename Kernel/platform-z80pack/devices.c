@@ -7,6 +7,7 @@
 #include <devlpr.h>
 #include <devtty.h>
 #include <devrtc.h>
+#include <netdev.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -42,4 +43,5 @@ void device_init(void)
   /* Add 64 swaps (4MB) to use the entire J drive */
   for (i = 0; i < MAX_SWAPS; i++)
     swapmap_add(i);
+  netdev_init();
 }

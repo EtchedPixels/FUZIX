@@ -40,4 +40,6 @@ level2.rel
 syscall_level2.rel
 syscall_net.rel
 select.rel
+platform-z80pack/devatsim.rel
+platform-z80pack/net_at.rel
 -e
