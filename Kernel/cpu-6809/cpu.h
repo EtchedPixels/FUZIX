@@ -67,3 +67,5 @@ typedef union {            /* this structure is endian dependent */
 #define used(x)
 
 #define gcc_miscompile_workaround()	__asm("":::"memory")
+
+#define BIG_ENDIAN
