@@ -43,13 +43,20 @@
 /* math software */
 #define EDOM            33              /* Argument too large */
 #define ERANGE          34              /* Result too large */
+
 #define EWOULDBLOCK	EAGAIN		/* Operation would block */
 #define ENOLOCK		35		/* Lock table full */
 #define ENOTEMPTY	36		/* Directory is not empty */
 #define ENAMETOOLONG    37              /* File name too long */
+#define EAFNOSUPPORT	38		/* Address family not supported */
+#define EALREADY	39		/* Operation already in progress */
+#define EADDRINUSE	40		/* Address already in use */
+#define EADDRNOTAVAIL	41		/* Address not available */
+#define ENOSYS		42		/* No such system call */
+#define EPFNOSUPPORT	43		/* Protocol not supported */
+#define EOPNOTSUPP	43		/* Operation not supported on transport endpoint */
 
-
-#define __ERRORS	38
+#define __ERRORS	44
 
 extern int sys_nerr;
 extern char *sys_errlist[];
