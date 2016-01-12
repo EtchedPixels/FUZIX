@@ -85,6 +85,24 @@ ASRCS += syscall_setrlimit.s
 ASRCS += syscall_setpgid.s
 ASRCS += syscall_setsid.s
 ASRCS += syscall_getsid.s
+ASRCS += syscall__nosys80.s
+ASRCS += syscall__nosys81.s
+ASRCS += syscall__nosys82.s
+ASRCS += syscall__nosys83.s
+ASRCS += syscall__nosys84.s
+ASRCS += syscall__nosys85.s
+ASRCS += syscall__nosys86.s
+ASRCS += syscall__nosys87.s
+ASRCS += syscall__nosys88.s
+ASRCS += syscall__nosys89.s
+ASRCS += syscall_socket.s
+ASRCS += syscall_listen.s
+ASRCS += syscall_bind.s
+ASRCS += syscall_connect.s
+ASRCS += syscall__accept.s
+ASRCS += syscall__getsockaddrs.s
+ASRCS += syscall__sendto.s
+ASRCS += syscall__recvfrom.s
 
 
 ASRCALL = $(ASRCS) $(ASYS)
