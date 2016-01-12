@@ -80,9 +80,9 @@ struct socket
 };
 
 #define NSOCKTYPE 3
-#define SOCKTYPE_TCP	1
-#define SOCKTYPE_UDP	2
-#define SOCKTYPE_RAW	3
+#define SOCKTYPE_TCP	0
+#define SOCKTYPE_UDP	1
+#define SOCKTYPE_RAW	2
 
 struct netdevice
 {
