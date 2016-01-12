@@ -199,7 +199,7 @@ int syscall_args[NR_SYSCALL] = {
 	3, //bind
 	3, //connect
 	1, //accept
-	1, //getsockaddrs
+	3, //getsockaddrs
 	4, //sendto
 	4, //recvfrom
 };
