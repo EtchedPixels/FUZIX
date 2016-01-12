@@ -64,6 +64,12 @@ struct _uzifilesys {
     uint16_t	  s_mntpt;
 };
 
+struct _sockio {
+        uint16_t sio_flags;
+        uint16_t sio_addr_len;
+        uint8_t sio_addr[0];
+};
+
 struct hd_geometry {
 	uint8_t heads;
 	uint8_t sectors;
@@ -151,6 +157,10 @@ extern int setrlimit(int resource, const struct rlimit *rlim);
 extern int setpgid(pid_t pid, pid_t pgrp);
 extern pid_t setsid(void);
 extern pid_t getsid(pid_t pid);
+extern int socket(int af, int type, int pf);
+extern int listen(int fd, int len);
+extern int bind(int fd, const struct sockaddr *s, int len);
+extern int connect(int fd, const struct sockaddr *s, int len);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);
@@ -165,6 +175,10 @@ extern int _uname(struct _uzisysinfoblk *uzib, int len);
 extern int _profil(void *samples, uint16_t offset, uint16_t size, int16_t scale);
 extern int _lseek(int fd, off_t *offset, int mode);
 extern int _select(int nfd, uint16_t *base);
+extern int _accept(int fd);
+extern int _getsockaddrs(int fd, int type, struct sockaddr_in *addr);
+extern int _sendto(int fd, const char *buf, size_t len, struct _sockio *uaddr);
+extern int _recvfrom(int fd, char *buf, size_t len, struct _sockio *uaddr);
 
 /* C library provided syscall emulation */
 extern int stat(const char *path, struct stat *s);
