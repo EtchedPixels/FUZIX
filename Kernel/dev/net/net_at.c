@@ -67,7 +67,7 @@ void netat_event(void)
     case 0:	/* Discard */
       return;
     case 1:
-      if (ch == 'O')
+      if (ch == 'C')
         at_state = 2;
       else {
         netat_hangup();
@@ -75,7 +75,7 @@ void netat_event(void)
       }
       break;
     case 2:
-      if (ch == 'K')
+      if (ch == 'O')
         at_state = 3;
       else {
         netat_hangup();
@@ -86,6 +86,8 @@ void netat_event(void)
       if (ch != '\n')
         break;
       at_state = 4;	/* Don't process */
+      sockets[0].s_state = SS_CONNECTED;
+      wakeup(&sockets[0]);
       break;
   }
 }
@@ -118,6 +120,7 @@ int net_connect(struct socket *s)
   uint32_t n = s->s_addr[SADDR_DST].addr;
   uint16_t p = s->s_addr[SADDR_DST].port;
 
+  netat_wake();
   /* Pity drivewire won't talk addresses and ports as a hex block ! */
   netat_write("ATD ", 4);
   netat_write_u8ch(n >> 24, '.');
