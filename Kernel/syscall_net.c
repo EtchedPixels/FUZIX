@@ -56,24 +56,20 @@ int netd_sock_read(inoptr ino, uint8_t flag)
 /* Wait to leave a state. This will eventually need interrupt locking etc */
 static int sock_wait_leave(struct socket *s, uint8_t flag, uint8_t state)
 {
-	do {
+	while (s->s_state == state)
 		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
 		if (psleep_flags(s, flag))
 			return -1;
-		/* Protocol state check */
-	} while (s->s_state == state);
 	return 0;
 }
 
 /* Wait to enter a state. This will eventually need interrupt locking etc */
 static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 {
-	do {
+	while (s->s_state != state)
 		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
 		if (psleep_flags(s, flag))
 			return -1;
-		/* Protocol state check */
-	} while (s->s_state == state);
 	return 0;
 }
 
@@ -229,8 +225,8 @@ int sock_error(struct socket *s)
 
 struct sockinfo {
 	uint8_t af;
-	uint8_t pf;
 	uint8_t type;
+	uint8_t pf;
 	uint8_t priv;
 };
 
@@ -321,7 +317,8 @@ arg_t _socket(void)
 		}
 		s++;
 	}
-	return -EAFNOSUPPORT;
+	udata.u_error = EAFNOSUPPORT;
+	return -1;
 }
 
 #undef af
@@ -465,8 +462,9 @@ arg_t _accept(void)
 #undef fd
 
 /*******************************************
-getsockaddrs(fd, addr)           Function 95
+getsockaddrs(fd, type, addr)     Function 95
 int fd;
+int type;
 struct sockaddr_*in addr;
 ********************************************/
 #define fd   (int16_t)udata.u_argn
