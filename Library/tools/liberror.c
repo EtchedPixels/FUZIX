@@ -44,6 +44,7 @@ const char *err[44] = {
   "Directory is not empty",
   "File name too long",
   "Address family not supported",
+  "Operation already in progress",
   "Address not available",
   "Invalid system call number",
   "Protocol family not supported",
