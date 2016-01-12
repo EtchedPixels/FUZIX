@@ -96,6 +96,7 @@ int net_init(struct socket *s)
     udata.u_error = EPFNOSUPPORT;
     return -1;
   }
+  s->s_state = SS_UNCONNECTED;
   return 0;
 }
 
