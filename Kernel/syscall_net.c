@@ -312,7 +312,7 @@ arg_t _socket(void)
 	/* Find the socket */
 	while (s && s < socktypes + NSOCKTYPE) {
 		if (s->af == afv && s->type == typev) {
-			if (s->pf == 0 || s->pf == pfv)
+			if (pfv == 0 || s->pf == 0 || s->pf == pfv)
 				return make_socket(s, NULL);
 		}
 		s++;

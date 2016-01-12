@@ -137,7 +137,7 @@ void net_close(struct socket *s)
     netat_do_hangup();		/* Either +++ ATH with spacing, or carrier drop */
     at_state = 0;
   }
-  s->s_state = SS_UNUSED;
+  s->s_state = SS_CLOSED;
 }
 
 arg_t net_read(struct socket *s, uint8_t flag)
