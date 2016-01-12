@@ -95,8 +95,8 @@ char *syscall_name[NR_SYSCALL] = {
 	"_nosys89",
 	"socket",
 	"listen",
-	"_bind",
-	"_connect",
+	"bind",
+	"connect",
 	"_accept",
 	"_getsockaddrs",
 	"_sendto",
@@ -184,4 +184,22 @@ int syscall_args[NR_SYSCALL] = {
 	2, //setpgid
 	1, //setsid
 	1, //getsid
+	0, //nosys80
+	0, //nosys81
+	0, //nosys82
+	0, //nosys83
+	0, //nosys84
+	0, //nosys85
+	0, //nosys86
+	0, //nosys87
+	0, //nosys88
+	0, //nosys89
+	3, //socket
+	2, //listen
+	3, //bind
+	3, //connect
+	1, //accept
+	1, //getsockaddrs
+	4, //sendto
+	4, //recvfrom
 };

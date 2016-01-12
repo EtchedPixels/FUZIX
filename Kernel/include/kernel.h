@@ -573,7 +573,7 @@ struct s_argblk {
 #define EADDRNOTAVAIL	41		/* Address not available */
 #define ENOSYS		42		/* No such system call */
 #define EPFNOSUPPORT	43		/* Protocol not supported */
-#define EOPNOTSUPP	43		/* Operation not supported on transport
+#define EOPNOTSUPP	44		/* Operation not supported on transport
                                            endpoint */
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
