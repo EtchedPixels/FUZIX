@@ -55,8 +55,8 @@
 #define ENOSYS		42		/* No such system call */
 #define EPFNOSUPPORT	43		/* Protocol not supported */
 #define EOPNOTSUPP	43		/* Operation not supported on transport endpoint */
-
-#define __ERRORS	44
+#define ECONNRESET	44		/* Connection reset by peer */
+#define __ERRORS	45
 
 extern int sys_nerr;
 extern char *sys_errlist[];

@@ -575,6 +575,8 @@ struct s_argblk {
 #define EPFNOSUPPORT	43		/* Protocol not supported */
 #define EOPNOTSUPP	44		/* Operation not supported on transport
                                            endpoint */
+#define ECONNRESET	45		/* Connection reset by peer */
+
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
  * by userspace.

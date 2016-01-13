@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define ERRORS	44
-const char *err[44] = {
+#define ERRORS	45
+const char *err[45] = {
   "Success",
   "Operation not permitted",
   "No such file or directory",
@@ -48,7 +48,8 @@ const char *err[44] = {
   "Address not available",
   "Invalid system call number",
   "Protocol family not supported",
-  "Operation not supported on transport endpoint"
+  "Operation not supported on transport endpoint",
+  "Connection reset by peer"
 };
 
 static uint8_t buf[16384];
