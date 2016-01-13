@@ -5,7 +5,12 @@
 #ifdef CONFIG_NET
 
 struct socket sockets[NSOCKET];
-uint32_t our_address;
+#ifdef BIG_ENDIAN
+uint32_t our_address = 0xC0000001;
+#else
+uint32_t our_address = 0x010000C0;
+#endif
+
 static uint16_t nextauto = 5000;
 
 bool issocket(inoptr ino)
@@ -36,11 +41,18 @@ int sock_write(inoptr ino, uint8_t flag)
 				udata.u_error = EINVAL;
 			return -1;
 		}
-		if (s->s_iflag == SI_THROTTLE || net_write(s, flag) == -2) {
-			s->s_iflag |= SI_THROTTLE;
-			if (psleep_flags(&s->s_iflag, flag) == -1)
+		switch(net_write(s, flag)) {
+			case -2:
+				s->s_iflag |= SI_THROTTLE;
+				break;
+			case -1:
 				return -1;
+			default:
+				return udata.u_count;
 		}
+		if (s->s_iflag == SI_THROTTLE &&
+			psleep_flags(&s->s_iflag, flag) == -1)
+				return -1;
 	}
 }
 
@@ -147,7 +159,7 @@ static int sock_autobind(struct socket *s)
 	static struct sockaddrs sa;
 	sa.addr = INADDR_ANY;
 //	do {
-//		sa.port = nextauto++;
+//		sa.port = ntohs(nextauto++);
 //	} while(sock_find(SADDR_SRC, &sa));
 	memcpy(&s->s_addr[SADDR_SRC], &sa, sizeof(sa));
 	return net_bind(s);
