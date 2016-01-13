@@ -94,6 +94,10 @@ void netat_event(void)
 
 int net_init(struct socket *s)
 {
+  if (s != &sockets[0]) {
+    udata.u_error = ENOMEM;
+    return -1;
+  }
   if (s->s_type != SOCKTYPE_TCP) {
     udata.u_error = EPFNOSUPPORT;
     return -1;
@@ -120,7 +124,16 @@ int net_connect(struct socket *s)
   uint32_t n = s->s_addr[SADDR_DST].addr;
   uint16_t p = s->s_addr[SADDR_DST].port;
 
+  if (IN_LOOPBACK(n) || IN_LOOPBACK(s->s_addr[SADDR_SRC].addr)) {
+    udata.u_error = ECONNRESET;
+    s->s_state = SS_CLOSED;
+    return -1;
+  }
+
   netat_wake();
+
+  n = ntohl(n);
+
   /* Pity drivewire won't talk addresses and ports as a hex block ! */
   netat_write("ATD ", 4);
   netat_write_u8ch(n >> 24, '.');
