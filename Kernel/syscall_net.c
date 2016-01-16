@@ -20,15 +20,18 @@ bool issocket(inoptr ino)
 	return 0;
 }
 
+/* This and netd_sock_read need a lot more thought and probably a
+   restructure. Problem is that for small boxes some kind of pipe like
+   disk cache queue for sockets is the right answer, but not for offload */
+
 int is_netd(void)
 {
-	return 0;
+	return 1;
 }
 
 int sock_write(inoptr ino, uint8_t flag)
 {
 	struct socket *s = &sockets[ino->c_node.i_nlink];
-	used(flag);
 
 	/* FIXME: IRQ protection */
 	while(1) {
@@ -58,11 +61,8 @@ int sock_write(inoptr ino, uint8_t flag)
 
 int netd_sock_read(inoptr ino, uint8_t flag)
 {
-	used(ino);
-	used(flag);
-
-	udata.u_error = EINVAL;
-	return -1;
+	struct socket *s = &sockets[ino->c_node.i_nlink];
+	return net_read(s, flag);
 }
 
 /* Wait to leave a state. This will eventually need interrupt locking etc */
