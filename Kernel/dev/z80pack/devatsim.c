@@ -46,6 +46,11 @@ static void netat_drop(void)
     }
 }
 
+void netat_flush(void)
+{
+  while((status & 5) == 5)
+    data;
+}
 
 void netat_poll(void)
 {
@@ -55,7 +60,7 @@ void netat_poll(void)
     return;
   }
   up = 1;
-  while (poll && (st & 1))
+  while (poll && (status & 1))
       netat_event();
 }
 

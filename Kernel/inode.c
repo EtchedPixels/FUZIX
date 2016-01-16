@@ -38,8 +38,8 @@ void readi(inoptr ino, uint8_t flag)
 
         case F_SOCK:
 #ifdef CONFIG_NET
-                if (is_netd()) {
-                        udata.u_count = netd_sock_read(ino, flag);
+                if (use_net_r()) {
+                        udata.u_count = sock_read(ino, flag);
                         return;
                 }
 #endif
@@ -150,7 +150,7 @@ void writei(inoptr ino, uint8_t flag)
 
 #ifdef CONFIG_NET
 	case F_SOCK:
-		if (!is_netd()) {
+		if (use_net_w()) {
 			udata.u_count = sock_write(ino, flag);
 			break;
 		}

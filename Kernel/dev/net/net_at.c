@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <netdev.h>
 #include <net_at.h>
+#include <printf.h>
 
 /*
  *	Implement a one socket TCP model for interfaces that provide only AT
@@ -16,17 +17,33 @@ static void netat_write(const char *p, uint16_t len)
     netat_outbyte(*p++);
 }
 
-static void netat_write_u8ch(uint8_t v, char c)
+/* Borrowed from libc */
+static const char *_uitoa(uint16_t i)
 {
-  used(v);
-  /* FIXME: number out */
-  netat_outbyte(c);
+  static char buf[8];
+  char *p = buf + sizeof(buf);
+  int c;
+
+  *--p = '\0';
+  do {
+    c = i % 10;
+    i /= 10;
+    *--p = '0' + c;
+  } while(i);
+  return p;
 }
 
 static void netat_write_u16ch(uint16_t v, char c)
 {
-  used(v);
+  const char *p = _uitoa(v);
+  while(*p)
+    netat_outbyte(*p++);
   netat_outbyte(c);
+}
+
+static void netat_write_u8ch(uint8_t v, char c)
+{
+  netat_write_u16ch(v, c);
 }
 
 static void wakeup_all(void)
@@ -58,7 +75,7 @@ void netat_event(void)
   uint8_t ch;
   if (at_state == 4) {
     sockets[0].s_iflag |= SI_DATA;
-    wakeup(&sockets[0].s_data);
+    wakeup(&sockets[0].s_iflag);
     netat_nowake();
     return;
   }
@@ -134,7 +151,8 @@ int net_connect(struct socket *s)
 
   n = ntohl(n);
 
-  /* Pity drivewire won't talk addresses and ports as a hex block ! */
+  /* Pity AT command sets won't talk addresses and ports as a hex block ! */
+  netat_flush();
   netat_write("ATD ", 4);
   netat_write_u8ch(n >> 24, '.');
   netat_write_u8ch(n >> 16, '.');
@@ -218,3 +236,12 @@ void netdev_init(void)
 {
 }
 
+uint8_t use_net_r(void)
+{
+  return 1;
+}
+
+uint8_t use_net_w(void)
+{
+  return 1;
+}
