@@ -134,9 +134,10 @@ arg_t _fstat(void)
 /* Utility for stat and fstat */
 int stcpy(inoptr ino, char *buf)
 {
-	int err = uput((char *) &(ino->c_dev), buf, 12);
-	err |= uput((char *) &(ino->c_node.i_addr[0]), buf + 12, 2);
-	err |= uput((char *) &(ino->c_node.i_size), buf + 14, 16);
+	int err = uput((char *) &(ino->c_node.i_size),    buf + 0,         5*4);
+	err |=    uput((char *) &(ino->c_dev),            buf + 5*4,       2*2);
+	err |=    uput((char *) &(ino->c_node.i_mode),    buf + 5*4 + 2*2, 4*2);
+	err |=    uput((char *) &(ino->c_node.i_addr[0]), buf + 5*4 + 6*2, 1*2);
 	return err;
 }
 
