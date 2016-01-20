@@ -28,12 +28,12 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 #endif
 
-#ifndef __SIZE_T_DEFINED
+#if !defined(__SIZE_T_DEFINED) && !defined(_SIZE_T_DEFINED)
 #define __SIZE_T_DEFINED
 typedef uint16_t size_t;
 #endif
 
-#ifndef __SSIZE_T_DEFINED
+#if !defined(__SSIZE_T_DEFINED) && !defined(_SSIZE_T_DEFINED)
 #define __SSIZE_T_DEFINED
 typedef int16_t ssize_t;
 #endif
