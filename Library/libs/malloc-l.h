@@ -14,6 +14,26 @@
 
 #define __MINI_MALLOC__
 
+union maximally_aligned {
+	uint8_t b;
+	uint16_t s;
+	uint32_t i;
+	#if !defined(NO_64BIT)
+		uint64_t l;
+	#endif
+	float f;
+	double d;
+};
+
+struct malloc_alignment_tester
+{
+	char b;
+	union maximally_aligned u;
+};
+
+#define ALIGNMENT ((int)&(((struct malloc_alignment_tester*)NULL)->u))
+#define ALIGNUP(s) (((s) + ALIGNMENT - 1) & ~(ALIGNMENT - 1))
+
 #define MCHUNK		512	/* Allocation unit in 'mem' elements */
 #undef LAZY_FREE		/* If set frees can be infinitly defered */
 #undef MINALLOC	/* 32 */	/* Smallest chunk to alloc in 'mem's */
@@ -29,9 +49,10 @@
 #endif
 
 typedef struct mem_cell {
-	struct mem_cell *next;	/* A pointer to the next mem */
-	unsigned int size;	/* An int >= sizeof pointer */
-	char *depth;		/* For the alloca hack */
+	struct mem_cell *next;              /* A pointer to the next mem */
+	unsigned int size;                  /* An int >= sizeof pointer */
+	char *depth;                        /* For the alloca hack */
+	union maximally_aligned padding[0]; /* Ensures alignment of payload */
 } mem;
 
 #define m_size(p)  ((p)[0].size)		/* For malloc */
