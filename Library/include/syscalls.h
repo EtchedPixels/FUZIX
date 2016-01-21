@@ -10,24 +10,11 @@
 #endif
 #include <sys/stat.h>
 
+/* TODO: make this less nasty. */
+#include "../../Kernel/include/userstructs.h"
+
 extern int errno;
 extern int syscall(int callno, ...);
-
-struct  _uzistat
-{
-	int16_t    st_dev;
-	uint16_t   st_ino;
-	uint16_t   st_mode;
-	uint16_t   st_nlink;
-	uint16_t   st_uid;
-	uint16_t   st_gid;
-	uint16_t   st_rdev;
-	uint32_t   st_size;
-	uint32_t   st_atime;
-	uint32_t   st_mtime;
-	uint32_t   st_ctime;
-	uint32_t   st_timeh;	/* Time high bytes */
-};
 
 struct _uzisysinfoblk {
   uint8_t infosize;		/* For expandability */

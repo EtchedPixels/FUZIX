@@ -2,6 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
+#include <userstructs.h>
 
 void updoff(void)
 {
@@ -134,9 +135,17 @@ arg_t _fstat(void)
 /* Utility for stat and fstat */
 int stcpy(inoptr ino, char *buf)
 {
-	int err = uput((char *) &(ino->c_dev), buf, 12);
-	err |= uput((char *) &(ino->c_node.i_addr[0]), buf + 12, 2);
-	err |= uput((char *) &(ino->c_node.i_size), buf + 14, 16);
+	/* Copying the structure a member at a time is too expensive.  Instead we
+	 * copy sequential runs of identical types (the only members which the
+	 * compiler guarantees are next to each other). */
+
+	uint32_t zero = 0;
+	struct _uzistat* st = (struct _uzistat*) buf;
+	int err = uput(&ino->c_dev,            &st->st_dev,   2 * sizeof(uint16_t));
+	err |=    uput(&ino->c_node.i_mode,    &st->st_mode,  4 * sizeof(uint16_t));
+	err |=    uput(&ino->c_node.i_addr[0], &st->st_rdev,  1 * sizeof(uint16_t));
+	err |=    uput(&ino->c_node.i_size,    &st->st_size,  4 * sizeof(uint32_t));
+	err |=    uput(&zero,                  &st->st_timeh, 1 * sizeof(uint32_t));
 	return err;
 }
 
