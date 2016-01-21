@@ -15,13 +15,6 @@ extern int syscall(int callno, ...);
 
 struct  _uzistat
 {
-	/* For alignment reasons, arrange this structure with largest objects
-	 * first. */
-	uint32_t   st_size;
-	uint32_t   st_atime;
-	uint32_t   st_mtime;
-	uint32_t   st_ctime;
-	uint32_t   st_timeh;	/* Time high bytes */
 	int16_t    st_dev;
 	uint16_t   st_ino;
 	uint16_t   st_mode;
@@ -29,6 +22,11 @@ struct  _uzistat
 	uint16_t   st_uid;
 	uint16_t   st_gid;
 	uint16_t   st_rdev;
+	uint32_t   st_size;
+	uint32_t   st_atime;
+	uint32_t   st_mtime;
+	uint32_t   st_ctime;
+	uint32_t   st_timeh;	/* Time high bytes */
 };
 
 struct _uzisysinfoblk {
