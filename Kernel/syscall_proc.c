@@ -373,10 +373,18 @@ arg_t _fork(void)
 		return -1;
 
 	irq = di();
-	// we're going to run our child process next, so mark this process as being ready to run
+	/*
+	 * We're going to run our child process next, so mark this process as
+	 * being ready to run
+	 */
 	udata.u_ptab->p_status = P_READY;
-	// kick off the new process (the bifurcation happens inside here, we returns in both 
-	// the child and parent contexts)
+	/*
+	 * Kick off the new process (the bifurcation happens inside here, we
+	 * *MAY* returns in both the child and parent contexts, however in a
+	 * non error case the child may also directly return to userspace
+	 * with the return code of 0 and not return from here. Do not assume
+	 * you can execute any child code reliably beyond this call
+	 */
 	r = dofork(new_process);
 #ifdef DEBUG
 	kprintf("Dofork %x (n %x)returns %d\n", udata.u_ptab,
