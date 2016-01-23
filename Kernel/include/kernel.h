@@ -381,7 +381,8 @@ typedef struct p_tab {
 #ifdef udata
     struct u_data *p_udata;	/* Udata pointer for platforms using dynamic udata */
 #endif
-    /* Everything below here is overlaid by time info at exit */
+    /* Everything below here is overlaid by time info at exit.
+	 * Make sure it's 32-bit aligned. */
     uint16_t    p_priority;     /* Process priority */
     uint32_t    p_pending;      /* Bitmask of pending signals */
     uint32_t    p_ignored;      /* Bitmask of ignored signals */
