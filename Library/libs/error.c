@@ -11,6 +11,7 @@
 #include <paths.h>
 #include <errno.h>
 #include <fcntl.h>
+#include "malloc-l.h"
 
 static uint8_t *__sys_errlist;
 static uint16_t *__sys_errptr;
@@ -25,7 +26,7 @@ static void _load_errlist(void)
 		return;
 	if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
 		goto bad;
-	__sys_errlist = sbrk((st.st_size + 3)&~3);
+	__sys_errlist = sbrk(ALIGNUP(st.st_size));
 	if (__sys_errlist == (void *) -1)
 		goto bad;
 	if (read(fd,__sys_errlist, st.st_size) == st.st_size) {

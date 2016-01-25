@@ -6,6 +6,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -328,10 +329,10 @@ static void parse_inittab(void)
 	while (sdata < sdata_end)
 		parse_initline();
 	/* Allocate space for the control arrays */
-	initpid = (uint16_t *) idata;
-	idata += 2 * initcount;
 	initptr = (uint8_t **) idata;
 	idata += sizeof(void *) * initcount;
+	initpid = (uint16_t *) idata;
+	idata += 2 * initcount;
 	if (brk(idata) == -1)
 		putstr("unable to return space\n");
 	memset(initpid, 0, 2 * initcount);

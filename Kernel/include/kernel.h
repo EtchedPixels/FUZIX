@@ -174,21 +174,6 @@ typedef struct dinode {
     blkno_t  i_addr[20];
 } dinode;               /* Exactly 64 bytes long! */
 
-struct  stat    /* Really only used by libc */
-{
-	int16_t   st_dev;
-	uint16_t  st_ino;
-	uint16_t  st_mode;
-	uint16_t  st_nlink;
-	uint16_t  st_uid;
-	uint16_t  st_gid;
-	uint16_t  st_rdev;
-	off_t   st_size;
-	uint32_t  st_atime;	/* Break in 2038 */
-	uint32_t  st_mtime;
-	uint32_t  st_ctime;
-};
-
 /* We use the Linux one for compatibility. There's no real Unix 'standard'
    for such things */
 
