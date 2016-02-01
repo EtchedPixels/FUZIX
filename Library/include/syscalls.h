@@ -10,8 +10,7 @@
 #endif
 #include <sys/stat.h>
 
-/* TODO: make this less nasty. */
-#include "../../Kernel/include/userstructs.h"
+#include <sys/userstructs.h>
 
 extern int errno;
 extern int syscall(int callno, ...);
