@@ -1,6 +1,17 @@
-/* init.c - simplified init program for UZI180 (mix of init/getty/login)
- *          only handles logins in /dev/tty1
- *          handles user names from /etc/passwd
+/*
+ *	Min System 5 style init daemon. Based upon the simple init/login from
+ *	UZI180. It's much like a normal sysvinit except the code is a lot
+ *	tighter and we integrate the getty/login sequence to reduce size
+ *	and disk activity.
+ *
+ *	Note: once we have select() for tty devices we could conceivably
+ *	even avoid forking on a level 2 system until the tty is used (maybe
+ *	even to the point of login completion ?)
+ *
+ *	TODO: (once we have SIGCLD)
+ *	- Give serious consideration to hiding cron/at in the daemon
+ *	  to keep our background daemon count as low as we can
+ *	- Ditto for syslogd
  */
 
 #include <string.h>
@@ -28,13 +39,21 @@
 #define MAX_ARGS	16
 
 
-#define crlf   write(1, "\n", 1)
+#define crlf()   write(1, "\n", 1)
 
 static void spawn_login(struct passwd *, const char *, const char *);
 static pid_t getty(const char *, const char *);
 
 static struct utmp ut;
 
+/* State that has to persist across an inittab reload */
+struct initpid {
+	pid_t pid;
+	uint8_t id[2];
+};
+
+/* Base of our working space */
+static uint8_t *membase;
 /* Next line to parse */
 static uint8_t *snext;
 /* Current parse position */
@@ -46,16 +65,18 @@ static uint8_t *idata;
 /* Pointer to record start */
 static uint8_t *ibackup;
 /* PID table */
-static uint16_t *initpid;
-/* Pointers into idata */
-static uint8_t **initptr;
+static struct initpid *initpid;
+/* Previous PID table (if reloaded inittab) */
+static struct initpid *oldpid;
 /* Base of processed data */
 static uint8_t *inittab;
 /* Number of entries */
-static int initcount;
-
-int default_rl;
-int runlevel;
+static unsigned int initcount;
+static unsigned int oldcount;
+/* Default runlevel to move to */
+static int default_rl;
+/* Current run level */
+static int runlevel;
 
 volatile static int dingdong;
 
@@ -90,17 +111,6 @@ int showfile(char *fname)
 void putstr(char *str)
 {
 	write(1, str, strlen(str));
-}
-
-static uint8_t *stackmem(uint8_t * a, unsigned int size)
-{
-	uint8_t *tp = sbrk(size);
-	if (tp == (uint8_t *) - 1) {
-		write(2, "init: out of memory.\n", 21);
-		_exit(1);
-	}
-	memcpy(tp, a, size);
-	return tp;
 }
 
 static pid_t spawn_process(uint8_t * p, uint8_t wait)
@@ -166,19 +176,13 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 /*
  *	Clear any dead processes
  */
-static void clear_zombies(int flags)
+
+static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 {
-	int i;
-	pid_t pid = waitpid(-1, NULL, flags);
-	/* Interrupted ? */
-	if (pid < 0)
-		return;
-	/* See if we care what died. If we do then also check that
-	 * do not need to respawn it
-	 */
-	for (i = 0; i < initcount; i++) {
-		if (initpid[i] == pid) {
-			uint8_t *p = initptr[i];
+	uint16_t i;
+	for (i = 0; i < count; i++) {
+		if (ip->pid == pid) {
+			uint8_t *p = initpid[i].id;
 			/* Clear the utmp entry */
 			ut.ut_pid = 1;
 			ut.ut_type = INIT_PROCESS;
@@ -188,13 +192,30 @@ static void clear_zombies(int flags)
 			*ut.ut_user = 0;
 			pututline(&ut);
 			/* Mark as done */
-			initpid[i] = 0;
+			initpid[i].pid = 0;
 			/* Respawn the task if appropriate */
 			if ((p[3] & (1 << runlevel)) && p[4] == INIT_RESPAWN)
-				initpid[i] = spawn_process(p, 0);
-			break;
+				initpid[i].pid = spawn_process(p, 0);
+			return 0;
 		}
+		ip++;
 	}
+	return -1;
+}
+
+static void clear_zombies(int flags)
+{
+	pid_t pid = waitpid(-1, NULL, flags);
+	/* Interrupted ? */
+	if (pid < 0)
+		return;
+	/* See if we care what died. If we do then also check that
+	 * do not need to respawn it
+	 */
+	 if (clear_utmp(initpid, initcount, pid) == 0)
+	 	return;
+	if (oldpid)
+		clear_utmp(oldpid, oldcount, pid);
 }
 
 /*
@@ -248,7 +269,7 @@ static void parse_initline(void)
 		return;
 	}
 	/* We start with a line length then the id: bits. Don't write
-	 * the length yet - we may still be using that byte for iput */
+	 * the length yet - we may still be using that byte for input */
 	linelen = idata++;
 	*idata++ = *sdata++;
 	*idata++ = *sdata++;	/* Copy the init string */
@@ -319,6 +340,12 @@ static void parse_initline(void)
 	initcount++;
 }
 
+static void brk_warn(void *p)
+{
+	if (brk(p) == -1)
+		putstr("unable to return space\n");
+}
+
 /*
  *	Parse the init table, then set up the pointers after the processed
  *	data, and adjust the brk() value to allow for the tables
@@ -329,14 +356,10 @@ static void parse_inittab(void)
 	while (sdata < sdata_end)
 		parse_initline();
 	/* Allocate space for the control arrays */
-	initptr = (uint8_t **) idata;
-	idata += sizeof(void *) * initcount;
-	initpid = (uint16_t *) idata;
-	idata += 2 * initcount;
-	if (brk(idata) == -1)
-		putstr("unable to return space\n");
-	memset(initpid, 0, 2 * initcount);
-	memset(initptr, 0, sizeof(uint8_t *) * initcount);
+	initpid = (struct initpid *) idata;
+	idata += sizeof(struct initpid) * initcount;
+	brk_warn(idata);
+	memset(initpid, 0, sizeof(struct initpid) * initcount);
 }
 
 /*
@@ -352,6 +375,7 @@ static void load_inittab(void)
 		write(2, "init: no inittab\n", 17);
 		goto fail;
 	}
+	/* FIXME: this may unalign our memory pool */
 	sdata = sbrk(st.st_size + 1);
 	if (sdata == (uint8_t *) - 1) {
 		write(2, "init: out of memory\n", 20);
@@ -372,6 +396,58 @@ static void load_inittab(void)
 	_exit(1);
 }
 
+static struct initpid *find_id(uint8_t *id)
+{
+	struct initpid *e = initpid + initcount;
+	struct initpid *t = initpid;
+	while (t < e) {
+		if (id[0] == t->id[0] && id[1] == t->id[1])
+			return t;
+		t++;
+	}
+	return NULL;
+}
+
+static void reload_inittab(void)
+{
+	/* Save the old pid table */
+	unsigned int size = sizeof(struct initpid) * initcount;
+	struct initpid *p = (struct initpid *)membase;
+	uint16_t i;
+
+	memmove(membase, initpid, size);
+	/* Throw everything else out */
+	brk_warn(membase + size);
+	/* Save the old pointer and size */
+	oldpid = p;
+	oldcount = initcount;
+	/* Load the new table */
+	load_inittab();
+	parse_inittab();
+	/* We now have the new initspaces all set up and the pointers
+	   are valid. We have the old initpid table at membase and we
+	   saved the old length in count. We can now transcribe the
+	   pid entries and kill off anyone who doesn't belong */
+	/* FIXME: we don't kill and restart an entry that has changed but
+	   will respawn the new form. There isn't an easy way to fix that
+	   without further major reworking */
+	for (i = 0; i < oldcount; i++) {
+		struct initpid *n = find_id(p->id);
+		if (n == NULL && p->pid) {
+			/* Deleted line - kill the process group */
+			kill(-p->pid, SIGHUP);
+			sleep(5);
+			kill(-p->pid, SIGKILL);
+		} else {
+			n->pid = p->pid;
+		}
+	}
+	/* We could shuffle all the pointers back down and free the old
+	   pid table, but there is no point. If we do a further reload
+	   we will move the current pid table right down and all will
+	   be just as good */
+}
+
 /*
  *	We are exiting a runlevel. Prune anybody who is running and should
  *	no longer be present. We don't do the cleanup here. We do that
@@ -387,9 +463,9 @@ static int cleanup_runlevel(uint8_t oldmask, uint8_t newmask, int sig)
 		/* Dying ? */
 		if ((p[3] & oldmask) && !(p[3] && newmask)) {
 			/* Count number still to die */
-			if (p[4] == INIT_RESPAWN && initpid[n]) {
+			if (p[4] == INIT_RESPAWN && initpid[n].pid) {
 				/* Group kill */
-				if (kill(-initpid[n], sig) == 0)
+				if (kill(-initpid[n].pid, sig) == 0)
 					nrun++;
 			}
 		}
@@ -426,19 +502,22 @@ static void exit_runlevel(uint8_t oldmask, uint8_t newmask)
 static void do_for_runlevel(uint8_t newmask, int op)
 {
 	uint8_t *p = inittab;
+	struct initpid *t = initpid;
 	int n = 0;
 	while (n < initcount) {
-		initptr[n] = p;
+		t->id[0] = p[1];
+		t->id[1] = p[2];
 		if (!(p[3] & newmask))
 			goto next;
 		if ((p[4] & INIT_OPMASK) == op) {
 			/* Already running ? */
-			if (op == INIT_RESPAWN && initpid[n])
+			if (op == INIT_RESPAWN && t->pid)
 				goto next;
 			/* Spawn and maybe wait for a process */
-			initpid[n] = spawn_process(p, (p[3] & INIT_WAIT));
+			t->pid = spawn_process(p, (p[3] & INIT_WAIT));
 		}
 next:		p += *p;
+		t++;
 		n++;
 	}
 }
@@ -501,6 +580,8 @@ int main(int argc, char *argv[])
 
 	close(open("/var/run/utmp", O_WRONLY | O_CREAT | O_TRUNC));
 
+	membase = sbrk(0);
+
 	load_inittab();
 	parse_inittab();
 
@@ -512,9 +593,20 @@ int main(int argc, char *argv[])
 			uint8_t newrl;
 			int fd = open("/var/run/intctl", O_RDONLY);
 			if (fd != -1 && read(fd, &newrl, 1) == 1) {
-				exit_runlevel(1 << runlevel, 1 << newrl);
-				runlevel = newrl;
-				enter_runlevel(1 << runlevel);
+				if (newrl != 'q') {
+					exit_runlevel(1 << runlevel, 1 << newrl);
+					runlevel = newrl;
+					enter_runlevel(1 << runlevel);
+				} else {
+					/* Reload */
+					reload_inittab();
+					/* Prune anything running that should
+					   not in fact be there */
+					exit_runlevel(255, 1 << runlevel);
+					/* Start anything added to the current
+					   run level */
+					enter_runlevel(1 << runlevel);
+				}
 			}
 			close(fd);
 			dingdong = 0;
@@ -528,10 +620,11 @@ int main(int argc, char *argv[])
 static char *env[10];
 static int envn;
 
-static void envset(char *a, char *b)
+static void envset(const char *a, const char *b)
 {
 	int al = strlen(a);
 	static char hptr[5];
+	/* May unalign the memory pool but we don't care by this point */
 	char *tp = sbrk(al + strlen(b) + 2);
 	if (tp == (char *) -1) {
 		putstr("out of memory.\n");
@@ -570,13 +663,16 @@ static pid_t getty(const char *ttyname, const char *id)
 			setpgrp();
 			setpgid(0,0);
 
+			/* Throw all the init working spacd we inherited */
+			brk_warn(membase);
+
 			fdtty = open(ttyname, O_RDWR);
 			if (fdtty < 0)
 				return -1;
 
 			/* here we are inside child's context of execution */
 			envset("PATH", "/bin:/usr/bin");
-			envset("CTTY", (char*) ttyname);
+			envset("CTTY", ttyname);
 
 			/* make stdin, stdout and stderr point to fdtty */
 
@@ -667,7 +763,7 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	/* show the motd file */
 
 	if (!showfile("/etc/motd"))
-		crlf;
+		crlf();
 
 	/* and spawn the shell */
 

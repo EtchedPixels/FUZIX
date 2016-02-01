@@ -12,6 +12,8 @@ static uint8_t to_runlevel(uint8_t c)
 		return 7;		/* 1 << 7 is used for boot/single */
 	if (c >=  '0' && c <= '6')
 		return c - '0';
+        if (c == 'q')
+                return 'q';
 	return 0xFF;
 }
 
