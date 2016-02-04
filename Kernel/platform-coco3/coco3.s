@@ -343,7 +343,7 @@ outchar:
 
 	.area	.data
 scrPos	.dw	0xb400		; debugging screen buffer position
-
+	.area	.text
 
 
 ;;; Maps the memory for swap transfers
