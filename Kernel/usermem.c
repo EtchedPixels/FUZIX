@@ -45,6 +45,12 @@ uint16_t ugetw(const void *user)
 {
 	if (!valaddr(user, 2))
 		return -1;
+#ifdef MISALIGNED
+	if (MISALIGNED(user, 2)) }
+		ssig(udata.u_proc, SIGBUS);
+		return -1;
+	}
+#endif
 	return _ugetw(user);
 }
 
@@ -82,6 +88,12 @@ int uputw(uint16_t value, void *user)
 {
 	if (!valaddr(user, 2))
 		return -1;
+#ifdef MISALIGNED
+	if (MISALIGNED(user, 2)) }
+		ssig(udata.u_proc, SIGBUS);
+		return -1;
+	}
+#endif
 	return _uputw(value,user);
 }
 
