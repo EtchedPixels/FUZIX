@@ -49,6 +49,11 @@ int ip_output(void *pbuf, uint16_t plen, void *dbuf, uint16_t dlen)
      careful to buffer the receive side while queueing output */
 }
 
+static int ip_outions(void)
+{
+  return 0;
+}
+
 void ip_rcv(void)
 {
   uint16_t len = pkt_left;
@@ -70,7 +75,7 @@ void ip_rcv(void)
     if (ip_options())
       return;
   /* No frags for now (memory limits on 8bit) */
-  if (iph.frag_off)
+  if (iph.frag_off)	/* FIXME: check MF and FO */
     return;
   if (iph.daddr == 0xFFFFFFFF)
     pkt_type = PKT_BROADCAST;
