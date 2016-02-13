@@ -382,6 +382,7 @@ typedef struct p_tab {
 /**HP**/
     uint16_t	p_pgrp;		/* Process group */
     uint8_t	p_nice;
+    uint8_t	p_event;	/* Events */
     usize_t	p_top;		/* Copy of u_top */
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
@@ -471,8 +472,9 @@ struct s_argblk {
 
 
 /* waitpid options */
-#define WNOHANG		1	/* don't support others yet */
-
+#define WNOHANG		1
+#define WUNTRACED	2
+#define _WSTOPPED	0xFF
 
 /* Open() parameters. */
 

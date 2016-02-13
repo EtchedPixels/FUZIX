@@ -302,14 +302,12 @@ arg_t _waitpid(void)
 			return -1;
 		}
 		for (p = ptab; p < ptab_end; ++p) {
-			if (p->p_status == P_ZOMBIE
-			    && p->p_pptr == udata.u_ptab) {
-				if (pid == -1 || p->p_pid == pid
-				    || p->p_pgrp == -pid) {
+			if (p->p_pptr == udata.u_ptab &&
+				(pid == -1 || p->p_pid == pid ||
+					p->p_pgrp == -pid)) {
+				if (p->p_status == P_ZOMBIE) {
 					if (statloc)
-						uputw(p->p_exitval,
-						      statloc);
-
+						uputw(p->p_exitval, statloc);
 					retval = p->p_pid;
 					p->p_status = P_EMPTY;
 
@@ -317,6 +315,11 @@ arg_t _waitpid(void)
 					/* of p_priority in the childs process table entry. */
 					udata.u_cutime += ((clock_t *)&p->p_priority)[0];
 					udata.u_cstime += ((clock_t *)&p->p_priority)[1];
+					return retval;
+				}
+				if (p->p_event && (options & WUNTRACED)) {
+					retval = (uint16_t)p->p_event << 8 | _WSTOPPED;
+					p->p_event = 0;
 					return retval;
 				}
 			}

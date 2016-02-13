@@ -500,21 +500,23 @@ void ssig(ptptr proc, uint16_t sig)
 	irq = di();
 
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
-	        /* SIGSTOP can't be ignored and puts the process into P_STOPPED */
-	        /* FIXME: Level 2 will need a lot more handling here, both SIGTSTP
-	           handling and the wait() handling for stopping */
+	        /* SIGSTOP can't be ignored and puts the process into P_STOPPED.
+	           We need to sort out handling of SIGSTOP when waiting - we should
+	           really interrupt the syscall and stop */
 	        if (sig == SIGSTOP || sig == SIGTTIN || sig == SIGTTOU) {
 	                if (proc->p_status == P_RUNNING ||
                             proc->p_status == P_READY)
                                     nready--;
                         proc->p_status = P_STOPPED;
+                        proc->p_event = sig;
                 /* SIGCONT likewise has an unblockable effect */
 		} else if (sig == SIGCONT && proc->p_status == P_STOPPED) {
 		        proc->p_status = P_READY;
+		        proc->p_event = 0;
 		        nready++;
 		}
 		/* Routine signal behaviour */
-		else if (!(proc->p_ignored & sigm)) {
+		if (!(proc->p_ignored & sigm)) {
 			/* Don't wake for held signals */
 			if (!(proc->p_held & sigm)) {
 				switch (proc->p_status) {
