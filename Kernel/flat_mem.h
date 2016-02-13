@@ -31,6 +31,8 @@ extern void vmmu_setcontext(struct memblk *list);
 extern void vmmu_free(struct memblk *list);
 extern int vmmu_dup(struct memblk *list, struct memblk *dest);
 
+extern int pagemap_fork(ptptr p);
+
 /* Platform provided. Must be suitably aligned */
 extern uint8_t *membase;
 extern uint8_t *memtop;

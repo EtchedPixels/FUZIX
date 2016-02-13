@@ -415,8 +415,14 @@ int vmmu_dup(struct memblk *list, struct memblk *dest)
 }
 
 
+struct mmu_context {
+	struct memblk mmu;
+	uint8_t *base;
+};
+
 static uint16_t last_context;
 static struct mmu_context *last_mmu;
+static struct mmu_context mmu_context[PTABSIZE]
 
 /* For the moment. If we add separate va info then we can use that if not
    we use the map table */
@@ -451,11 +457,13 @@ uint32_t ugetl(void *uaddr, int *err)
 	}
 	if (err)
 		*err = 0;
+#ifdef MISALIGNED
 	if (MISALIGNED(uaddr, 4)) {
 		*err = -1;
 		ssig(udata.u_proc, SIGBUS);
 		return -1;
 	}
+#endif
 	return *(uint32_t *)uaddr;
 
 }
@@ -464,10 +472,12 @@ int uputl(uint32_t val, void *uaddr)
 {
 	if (!valaddr(uaddr, 4))
 		return -1;
+#ifdef MISALIGNED
 	if (MISALIGNED(uaddr, 4)) {
 		ssig(udata.u_proc, SIGBUS);
 		return -1;
 	}
+#endif
 	return *(uint32_t *)uaddr;
 }
 
@@ -522,6 +532,13 @@ void *pagemap_base(void)
 usize_t pagemap_mem_used(void)
 {
 	return freemem >> 10;
+}
+
+int pagemap_fork(ptptr p)
+{
+	struct mmu_context *parent = mmu_context + p->page;
+	struct mmu_context *child = mmu_context + udata.u_page;
+	return vmmu_dup(parent->mmu.next, &child.mmu);
 }
 
 #define size (uint32_t)udata.u_argn
