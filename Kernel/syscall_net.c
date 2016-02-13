@@ -61,7 +61,6 @@ int sock_read(inoptr ino, uint8_t flag)
 static int sock_wait_leave(struct socket *s, uint8_t flag, uint8_t state)
 {
 	while (s->s_state == state)
-		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
 		if (psleep_flags(s, flag))
 			return -1;
 	return 0;
@@ -71,7 +70,6 @@ static int sock_wait_leave(struct socket *s, uint8_t flag, uint8_t state)
 static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 {
 	while (s->s_state != state)
-		/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
 		if (psleep_flags(s, flag))
 			return -1;
 	return 0;
@@ -116,6 +114,23 @@ void sock_close(inoptr ino)
 	s->s_state = SS_UNUSED;
 }
 
+struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa)
+{
+	struct socket *sp;
+	struct sockaddrs *a;
+
+	for (sp = sockets; sp < sockets + NSOCKET; sp++) {
+		a = &sp->s_addr[sv];
+		if (sp->s_state == SS_UNUSED || sp->s_type != type)
+			continue;
+		if (a->port != sa->port)
+			continue;
+		if (a->addr != sa->addr && a->addr != INADDR_ANY)
+			continue;
+		return sp;
+	}
+	return NULL;
+}
 
 static struct socket *sock_get(int fd, uint8_t *flag)
 {
@@ -150,9 +165,9 @@ static int sock_autobind(struct socket *s)
 {
 	static struct sockaddrs sa;
 	sa.addr = INADDR_ANY;
-//	do {
-//		sa.port = ntohs(nextauto++);
-//	} while(sock_find(SADDR_SRC, &sa));
+	do {
+		sa.port = ntohs(nextauto++);
+	} while(sock_find(s->s_type, SADDR_SRC, &sa));
 	memcpy(&s->s_addr[SADDR_SRC], &sa, sizeof(sa));
 	return net_bind(s);
 }
