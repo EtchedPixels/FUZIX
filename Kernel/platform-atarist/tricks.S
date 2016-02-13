@@ -55,11 +55,9 @@ _switchin:
         ; runticks = 0
 	clr.w _runticks
 
-        ; restore machine state -- note we may be returning from either
-        ; _switchout or _dofork
+        ; restore machine state
         move.l U_DATA__U_SP(a5),sp
 	movem.l (sp)+,a0-a4/a6/d0-d7	; FIXME: trim to callee saves here too
-	add #2,sp			; drop return code dummy
 
         tst.b _inint
         beq keepoff ; in ISR, leave interrupts off
@@ -73,68 +71,3 @@ switchinfail:
         bsr outstring
 	; something went wrong and we didn't switch in what we asked for
         bra _trap_monitor
-
-
-;
-;	Called from _fork. We are in a syscall, the uarea is live as the
-;	parent uarea. The kernel is the mapped object.
-;
-;	We don't support fork() proper only vfork()
-;
-_dofork:
-        ; always disconnect the vehicle battery before performing maintenance
-        or #$0700,sr ; should already be the case ... belt and braces.
-
-	move.l 4(sp),a0
-	move.l a0,fork_proc_ptr
-
-        ; prepare return value in parent process -- HL = p->p_pid;
-	move.w P_TAB__P_PID_OFFSET(a0),d0
-	move.w d0,-(sp)
-	movem.l a0-a6/d0-d7,-(sp)		; FIXME - callees !
-
-        ; save kernel stack pointer -- when it comes back in the parent we'll be in
-        ; _switchin which will immediately return (appearing to be _dofork()
-	; returning) and with HL (ie return code) containing the child PID.
-        ; Hurray.
-
-        move.l sp,U_DATA__U_SP(a5)
-	move.l a5,P_TAB__P_UDATA_OFFSET(a0)
-
-        ; now we're in a safe state for _switchin to return in the parent
-	; process.
-
-	; FIXME: allocation heap walk/copy for chains
-
-	bsr bankfork			;	do the bank to bank copy
-
-	; Returns with a5 set for the new process
-
-        ; now the copy operation is complete we can get rid of the stuff
-        ; _switchin will be expecting from our copy of the stack.
-
-	add.l #58,sp			; FIXME: adjut when adjust movem's
-
-        ; Make a new process table entry, etc.
-        move.l fork_proc_ptr,-(sp)
-        bsr _newproc
-        add.l #4,sp
-
-        clr.w _runticks
-        ; in the child process, fork() returns zero.
-	clr.w d0
-	;
-	; And we exit, with the kernel mapped, the child now being deemed
-	; to be the live uarea. The parent is frozen in time and space as
-	; if it had done a switchout().
-        rts
-
-;
-;	This is related so we will keep it here. Copy the process memory
-;	for a fork. Walk the heap allocations for this process and duplicate
-;	them. We need to allow this to fail and ripple the error back nicely
-;
-bankfork:
-	rts
-
-fork_proc_ptr: long 0 ; (C type is struct p_tab *) -- address of child process p_tab entry

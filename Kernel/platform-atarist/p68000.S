@@ -27,6 +27,7 @@ init_early:
 init_hardware:
             ; set system RAM size
 	    move.l $42E,d0		; TOS phystop
+	    move.l d0, _memtop;
 	    lsr.l #8,d0			; into KBytes
 	    lsr.l #2,d0
 	    move.w d0,_ramsize
