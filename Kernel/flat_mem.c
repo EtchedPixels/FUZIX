@@ -519,9 +519,9 @@ void *pagemap_base(void)
 	return mmu_context[udata.u_page].base;
 }
 
-unsigned long pagemap_mem_used(void)
+usize_t pagemap_mem_used(void)
 {
-	return freemem;
+	return freemem >> 10;
 }
 
 #define size (uint32_t)udata.u_argn
