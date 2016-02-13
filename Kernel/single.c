@@ -48,18 +48,18 @@ int pagemap_alloc(ptptr p)
 	return 0;
 }
 
-int pagemap_realloc(uint16_t size)
+int pagemap_realloc(usize_t size)
 {
-	if (size >= (uint16_t) ramtop)
+	if (size >= (usize_t) ramtop)
 		return ENOMEM;
 	udata.u_ptab->p_page = 1;
 	udata.u_page = 1;
 	return 0;
 }
 
-uint16_t pagemap_mem_used(void)
+usize_t pagemap_mem_used(void)
 {
-	uint16_t mem = PROGTOP - ramtop + (uint16_t)udata.u_top;
+	usize_t mem = PROGTOP - ramtop + (usize_t)udata.u_top;
 	return mem >> 10;
 }
 
