@@ -848,7 +848,7 @@ extern void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big bo
 extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
 extern int pagemap_realloc(usize_t p);
-extern uaddr_t pagemap_mem_used(void);
+extern usize_t pagemap_mem_used(void);
 extern void map_init(void);
 extern void platform_idle(void);
 extern uint8_t rtc_secs(void);

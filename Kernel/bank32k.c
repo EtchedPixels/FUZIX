@@ -116,7 +116,7 @@ int pagemap_alloc(ptptr p)
  *	at one size, and switchout at the other and the udata will just get
  *	saved/restored to the right places.
  */
-int pagemap_realloc(uint16_t size) {
+int pagemap_realloc(usize_t size) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
@@ -149,7 +149,7 @@ int pagemap_realloc(uint16_t size) {
 	return 0;
 }
 
-uint16_t pagemap_mem_used(void) {
+usize_t pagemap_mem_used(void) {
 	return pfptr << 5;
 }
 
