@@ -75,7 +75,6 @@ friends, while UMZIX has a neat unified "make anything" function.
 * select/poll()
 * Support for > 32MB filesystems (but first figure out how to fsck
 	a giant fs on a slow 8bit micro!)
-* Uptime
 * Smarter scheduler
 * Optimisations for disk block/inode allocator (2.11BSD)
 * CP/M emulator has not yet been debugged on the FUZIX syscall API
@@ -96,13 +95,13 @@ friends, while UMZIX has a neat unified "make anything" function.
 ## Platforms
 
 * Amstrad NC100/NC200 - real hardware sanity check
-* Amstrad PCW8256 - boots to loading init, floppy driver bugs to chase
+* Amstrad PCW8256 - fork and memory management needs some fixing up
 * Atari 520ST - 68000 core code build test only at this point
-* Dragon64 - abused as an emulator 6809 test environment (replaces all the system ROMs)
-* Dragon Nx32 - Dragon with Tormod's memory expansion card
+* Dragon64 - in progress to see how small we can go
+* Dragon Nx32 - Dragon with Tormod's memory expansion card (SPInx)
 * Epson PX4/4Plus - WIP port to a very early Z80 laptop
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
-* MSP430FR5969 - decent functionality, but no concurrent processes; see Documentation/MSP430FR5969.md
+* MSP430FR5969 - decent functionality; see Documentation/MSP430FR5969.md
 * MSX - basic functionality
 * N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the
 ECB expansion bus only the PropIO V2 serial port is supported at this time.
