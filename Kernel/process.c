@@ -477,7 +477,7 @@ void chksigs(void)
 #ifdef DEBUG
 			kprintf("process terminated by signal %d\n", j);
 #endif
-			doexit(0, j);
+			doexit((uint16_t)j << 8);
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
 			udata.u_ptab->p_pending &= ~m;	// unset the bit
@@ -582,7 +582,7 @@ static int signal_parent(ptptr p)
 	return 1;
 }
 
-void doexit(int16_t val, int16_t val2)
+void doexit(uint16_t val)
 {
 	int16_t j;
 	ptptr p;
@@ -611,7 +611,7 @@ void doexit(int16_t val, int16_t val2)
 	}
 
 
-	udata.u_ptab->p_exitval = (val << 8) | (val2 & 0xff);
+	udata.u_ptab->p_exitval = val;
 
 	i_deref(udata.u_cwd);
 	i_deref(udata.u_root);

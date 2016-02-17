@@ -786,7 +786,7 @@ extern void program_vectors(uint16_t *pageptr);
 extern void sgrpsig(uint16_t pgrp, uint8_t sig);
 extern void unix_syscall(void);
 extern void timer_interrupt(void);
-extern void doexit (int16_t val, int16_t val2);
+extern void doexit (uint16_t val);
 extern void panic(char *deathcry);
 extern void exec_or_die(void);
 #define need_resched() (nready != 1 && runticks >= udata.u_ptab->p_priority)
