@@ -6,12 +6,10 @@ this recipe should work on Mac.
 - Ensure you have the correct compiler and tools installed
 
   Z80:
-	SDCC 3.4 for the kernel (3.4.3 >= 9165 recommended)
-	zmac for some of the boot blocks (making these build with sdasz80
-	would be a welcome contribution)
+	SDCC 3.5.4 for the kernel (>= #9332 recommended)
 
-	For building banked systems use 9165 with the patches in the Fuzix
-	github. For standard kernels patched 9165 or a current SDCC should
+	For building banked systems use 9332 with the patches in the Fuzix
+	github. For standard kernels patched 9332 or a current SDCC should
 	both work. The newest SDCC has the essential parts of the entry size
 	patches merged.
 
@@ -60,7 +58,7 @@ SocZ80 - real hardware only
 
 TGL6502 - uses the emulator code that goes with the tgl6502 distro
 
-TRS80 - tested on sdltrs
+TRS80 - tested on sdltrs with fixes (sdltrs fixes are in my github)
 
 Z80Pack - Use Z80Pack 1.24 or higher
 
