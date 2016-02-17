@@ -111,6 +111,15 @@ arg_t _execve(void)
 		goto nogood;
 	}
 
+	/* Core dump and ptrace permission logic */
+#ifdef CONFIG_LEVEL_2
+	if ((!getperm(ino) & OTH_RD) ||
+		(ino->c_node.i_mode & (SET_UID | SET_GID)))
+		udata.u_flags |= U_FLAG_NOCORE;
+	else
+		udata.u_flags &= ~U_FLAG_NOCORE;
+#endif
+
 	setftime(ino, A_TIME);
 
 	if (ino->c_node.i_size == 0) {
@@ -334,3 +343,56 @@ arg_t _memfree(void)
 	udata.u_error = ENOMEM;
 	return -1;
 }
+
+#ifdef CONFIG_LEVEL_2
+
+/*
+ *	Core dump
+ */
+
+static struct coredump corehdr = {
+	0xDEAD,
+	0xC0DE,
+	16,
+};
+
+void write_core_image(void)
+{
+	inoptr parent = NULLINODE;
+	inoptr ino;
+
+	ino = kn_open("core", &parent);
+	if (ino) {
+		i_deref(parent);
+		return;
+	}
+	if (parent && (ino = newfile(parent, "core"))) {
+		ino->c_node.i_mode = F_REG | 0400;
+		setftime(ino, A_TIME | M_TIME | C_TIME);
+		wr_inode(ino);
+		f_trunc(ino);
+
+		/* FIXME: need to add some arch specific header bits, and
+		   also pull stuff like the true sp and registers out of
+		   the return stack properly */
+
+		corehdr.ch_base = MAPBASE;
+		corehdr.ch_break = udata.u_break;
+		corehdr.ch_sp = udata.u_syscall_sp;
+		corehdr.ch_top = PROGTOP;
+		udata.u_offset = 0;
+		udata.u_base = (uint8_t *)&corehdr;
+		udata.u_sysio = true;
+		udata.u_count = sizeof(corehdr);
+		writei(ino, 0);
+		udata.u_sysio = false;
+		udata.u_base = MAPBASE;
+		udata.u_count = udata.u_break - MAPBASE;
+		writei(ino, 0);
+		udata.u_base = udata.u_sp;
+		udata.u_count = PROGTOP - udata.u_sp;
+		writei(ino, 0);
+		i_deref(ino);
+	}
+}
+#endif

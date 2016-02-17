@@ -47,6 +47,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 	(udata.u_ptab->p_uid == (p)->p_uid || super())
 #define pathbuf()	tmpbuf()
 #define pathfree(tb)	brelse(tb)
+#define dump_core(sig)
+
 #endif
 
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
@@ -445,6 +447,8 @@ typedef struct u_data {
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
     uint8_t	u_ngroup;
+    uint8_t	u_flags;
+#define U_FLAG_NOCORE		1	/* Set if no core dump */
     struct rlimit u_rlimit[NRLIMIT];	/* Resource limits */
 #endif
 } u_data;
