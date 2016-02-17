@@ -11,11 +11,8 @@
 #define P_READY         2    /* Runnable   */
 #define P_SLEEP         3    /* Sleeping; can be awakened by signal */
 #define P_STOPPED       4    /* Stopped waiting for SIGCONT */
-#define P_PAUSE         5    /* Sleeping for pause(); can wakeup for signal */
-#define P_WAIT          6    /* Executed a wait() */
-#define P_FORKING       7    /* In process of forking; do not mess with */
-#define P_ZOMBIE2       8    /* Exited but code pages still valid. */
-#define P_ZOMBIE        9    /* Exited. */
+#define P_FORKING       5    /* In process of forking; do not mess with */
+#define P_ZOMBIE        6    /* Exited. */
 
 /* Process table entry */
 

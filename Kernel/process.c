@@ -36,12 +36,7 @@ void psleep(void *event)
 		panic(PANIC_VOODOO);
 	}
 
-	if (!event)
-		udata.u_ptab->p_status = P_PAUSE;
-	else if (event == (char *) udata.u_ptab)
-		udata.u_ptab->p_status = P_WAIT;
-	else
-		udata.u_ptab->p_status = P_SLEEP;
+	udata.u_ptab->p_status = P_SLEEP;
 	udata.u_ptab->p_wait = event;
 	udata.u_ptab->p_waitno = ++waitno;
 	nready--;
@@ -428,7 +423,7 @@ void unix_syscall(void)
 	ei();
 }
 
-void sgrpsig(uint16_t pgrp, uint16_t sig)
+void sgrpsig(uint16_t pgrp, uint8_t sig)
 {
 	ptptr p;
 	if (pgrp) {
@@ -457,15 +452,23 @@ void chksigs(void)
 		m = sigmask(j);
 		if (!(m & pending))
 			continue;
+	        /* SIGSTOP can't be ignored and puts the process into
+	           P_STOPPED state when it is ready to handle the signal.
+	           Annoyingly right now we have to context switch to the task
+	           in order to stop it in the right place. That would be nice
+	           to fix */
+	        if (j == SIGSTOP || j == SIGTTIN || j == SIGTTOU) {
+			udata.u_ptab->p_status = P_STOPPED;
+			udata.u_ptab->p_event = j;
+			psleep(NULL);
+                }
 		/* This is more complex than in V7 - we have multiple
 		   behaviours (plus the unimplemented as yet core dump) */
 		if (*svec == SIG_DFL) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
 			if (j == SIGCHLD || j == SIGURG || j == SIGSTOP ||
-#ifdef CONFIG_LEVEL_2
                             j == SIGTTIN || j == SIGTTOU ||
-#endif
 			    j == SIGIO || j == SIGCONT || udata.u_ptab->p_pid == 1) {
 				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
@@ -490,7 +493,10 @@ void chksigs(void)
 /*
  *	Send signal, avoid touching uarea
  */
-void ssig(ptptr proc, uint16_t sig)
+/* SDCC bug #2472: SDCC generates hideous code for this function due to bad
+   code generation when masking longs. Not clear we can do much about it but
+   file a bug */
+void ssig(ptptr proc, uint8_t sig)
 {
 	uint32_t sigm;
 	irqflags_t irq;
@@ -500,28 +506,26 @@ void ssig(ptptr proc, uint16_t sig)
 	irq = di();
 
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
-	        /* SIGSTOP can't be ignored and puts the process into P_STOPPED.
-	           We need to sort out handling of SIGSTOP when waiting - we should
-	           really interrupt the syscall and stop */
-	        if (sig == SIGSTOP || sig == SIGTTIN || sig == SIGTTOU) {
-	                if (proc->p_status == P_RUNNING ||
-                            proc->p_status == P_READY)
-                                    nready--;
-                        proc->p_status = P_STOPPED;
-                        proc->p_event = sig;
-                /* SIGCONT likewise has an unblockable effect */
-		} else if (sig == SIGCONT && proc->p_status == P_STOPPED) {
-		        proc->p_status = P_READY;
-		        proc->p_event = 0;
-		        nready++;
+                /* SIGCONT has an unblockable effect */
+		if (sig == SIGCONT) {
+			if (proc->p_status == P_STOPPED) {
+			        proc->p_status = P_READY;
+			        proc->p_event = 0;
+			        nready++;
+			}
+			/* CONT discards pending stops */
+			proc->p_pending &= ~((1L << SIGSTOP) | (1L << SIGTTIN) |
+					     (1L << SIGTTOU) | (1L << SIGTSTP));
 		}
+		/* STOP discards pending conts */
+		if (sig >= SIGSTOP && sig <= SIGTTOU)
+			proc->p_pending &= ~(1L << SIGCONT);
+
 		/* Routine signal behaviour */
 		if (!(proc->p_ignored & sigm)) {
 			/* Don't wake for held signals */
 			if (!(proc->p_held & sigm)) {
 				switch (proc->p_status) {
-				case P_PAUSE:
-				case P_WAIT:
 				case P_SLEEP:
 					proc->p_status = P_READY;
 					nready++;
