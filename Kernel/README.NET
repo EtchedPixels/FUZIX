@@ -1,0 +1,156 @@
+Network Interface
+
+There are two layers to the network interface. syscall_net implements something
+armavingly representative of the BSD sockets API, which libc wraps to look
+much more like it should.
+
+The basic state is managed by the syscall_net socket layer and state
+transitions and events cause calls into the network layer implementation and
+from the implementation back up to the syscall_net.c code.
+
+The goal of this separation is to support
+
+- A native TCP/IP stack running in userspace
+
+- The WizNET modules with an onboard TCP and 32K of buffers. These are ideal
+  for things like ethernet on small microcontrollers.
+
+- Drivewire 4, which supports multiple incoming and outgoing TCP connections
+  over the DriveWire link and the Drivewire 4 server.
+
+- Emulator TCP/IP host stack interfaces such as those in uQLX, QPC2 etc
+
+- A single socket fake AT interface as provided by some emulators modem
+  emulation. This limits us to a single TCP connection, and requires we
+  remember to do DNS lookups before opening the data socket.
+
+It cannot support devices that provide multiple TCP/IP data links but are
+unable to flow control or error recover the link properly (eg the ESP8266
+standard firmware). It ought to be possible to write replacement ESP8266
+firmware to provide a sane serial interface.
+
+Native Stack
+
+The native stack consists of a kernel driver bound to syscall_net, a user mode
+daemon and a backing file (as implemented today, although for bigger machines
+that could become a memory buffer).
+
+Thus socket(), connect() and friends execute in the context of the originating
+process. They cause the syscall_net layer to make socket transitions and these
+transitions along with some other needed messages are passed back and forth
+between the daemon and the application.
+
+The backing file is used to avoid the problem of the kernel needing large
+amounts of buffer memory for half usable networking. Instead the kernel and
+daemon communicate by copying data to and from a single large file that backs
+the networking state. In the fast sequence of events the data is effectively
+moved between the daemon and application using the disk cache as the buffers.
+However if there is more buffering needed it will spill to hard disc and all
+will be good.
+
+Currently the interface and syscall_net layer has hardwired assumptions about
+TCP/IP that need pushing into the low level implementations so that other
+protocols could also be supported.
+
+Note: accepting incoming connections is not yet handled. This will add some
+new messages.
+
+Native Stack Messages
+
+The read() call receives the next message from the kernel. The kernel passes
+events by providing a copy of the relevant socket data structures to the
+daemon including the event masks.
+
+The events the kernel sends are
+
+NEVW_STATE:	A state change is pending, eg a bind or connect() call
+		sd->newstate holds the requested new socket state
+
+		For moves to SS_UNCONNECTED the daemon responds with
+		an NE_INIT message giving the lcn (logical channel number)
+		it wishes to associate with the socket in ne.data and any
+		error code in ne.ret
+
+		For other state changes it acknowledges them by responding
+		with NE_NEWSTATE and the desired new state. ne.ret again
+		holds the error code if failing or 0 if good
+
+NEVW_READ:	This is sent when the user application has read data from
+		the socket and there is more room in the buffer. No reply
+		is required
+
+NEVW_WRITE:	This is sent when the user application has written data to
+		the socket and there is more data in the buffer. No reply
+		is needed
+
+
+The daemon sends the following events asynchronously by using the write()
+system call
+
+NE_EVENT:	An asynchronous state change has occurred, for example a socket
+		being reset or connecting. This does not clear any wait for
+		synchronous event change. If an event wait is pending then
+		a further read will report the fact and the socket can if
+		need be, be sent a NEVW_STATE giving the states. That
+		is needed as NE_EVENT can cross NEVW_STATE messages.
+
+NE_SETADDR:	Set the kernel view of one of the address structures. This
+		is used when a connection is made for example.
+
+		FIXME: we don't yet handle attaching addresses to datagrams
+		in UDP unconnected mode.
+
+NE_ROOM:	Inform the kernel that more space now exists. ne.data is the
+		new tbuf pointer indicating what was consumed.
+
+NE_DATA:	More data has arrived, ne.data is the new rnext pointer
+
+The actual data is held in the buffer file. For UDP we keep it simple and
+put one packet in each buffer (1K max packet size currently supported). For
+TCP we treat the buffer space as a 4K RX and a 4K TX buffer. The daemon knows
+as the user eats data so it can ACK correctly, but also it knows the range
+that is free so can use the buffer as an out of order cache for the socket.
+
+Implementing For Your Platform
+
+Firstly pick the needed stack. 
+
+The drivers/net/net_at implementation is a pretty minimal fake socket
+connection for an AT modem style interface. It's really only intended for
+debugging but can be used if there are no better choices. Note the FIXME's
+around +++ however.
+
+The native stack is currently very much a work in progress
+
+I have sketched out DriveWire4 and WizNet stacks but they are far from
+complete or tested. If you are interested in finishing the job let me know.
+
+
+TODO
+
+- Push socket type checking into the implementation so we can handle non TCP/IP
+stacks. That impacts how we store addresses so we may need a size ifdef or
+union to avoid burdening small boxes with full address objects.
+
+- Attach datagrams to an address. Might reduce our UDP datagram size a bit
+below 1K - do we care ? Needed on send and receive.
+
+- Allow platform to set sizes.
+
+- Implement binding ioctls, exit clean up, test of compatible struct and consts
+
+- Need to sort out the send/recv interface and address setting.
+
+- Push "local" address check out of syscall_net
+
+- net_ hook for configuration ioctls or somesuch ?
+
+- Libc needs a resolver and all the networking helper stuff BSD expects
+
+- Could we consume and undirty buffers with a slightly naughy readi hook ?
+
+- shutdown()
+
+- socket options
+
+- recvmsg/sendmsg (maybe - silly functions!)
