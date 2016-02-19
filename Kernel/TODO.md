@@ -9,17 +9,17 @@ Big TODO Items Before 0.1 Release
 
 - [x]	rename should delete old files it renames over
 
-- [ ]	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
+- [x]	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
 
-- IP	SYS5 signal holding
+- [x]	SYS5 signal holding
 
 - [x]	ptrace
 
-- [ ]	Core dumps
+- [IP]	Core dumps
 
 - [ ]	time_t bits hidden in inode
 
-- NA	RTC setting
+- NA	RTC setting (do in user space)
 
 - [x]	Lock clock to RTC seconds
 
@@ -30,6 +30,9 @@ Big TODO Items Before 0.1 Release
 
 - [ ]	Add "shared lib" (or more accurately copied lib) support for libc
 	to keep binary size small
+
+- [ ]	Add an exomizer 2.0 linking mode to save disc space. Probably
+	can be done all user space.
 
 - [ ]	Can we make inodes partially pageable given our on disk guarantees ?
 	Disk inode in cinode would then become a pointer. Might allow more open
@@ -48,7 +51,7 @@ Big Speed Up Points
 
 - [ ]	Rewrite the compressor in assembler
 
-- IP	Support 'raw' I/O on files	(done for O_DIRECT read and as an
+- [x]	Support 'raw' I/O on files	(done for O_DIRECT read and as an
 	optimisation). Needs cleaning up.
 
 - [x]	Make execve use this to avoid all the copies
