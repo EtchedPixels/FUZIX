@@ -3,6 +3,8 @@
 #include <kdata.h>
 #include <devsys.h>
 #include <audio.h>
+#include <netdev.h>
+#include <net_native.h>
 
 /*
  *	System devices:
@@ -12,6 +14,7 @@
  *	Minor	2	zero
  *	Minor	3	proc
  *	Minor	64	audio
+ *	Minor	65	net_native
  *
  *	Use Minor 128+ for platform specific devices
  */
@@ -38,6 +41,10 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	if (udata.u_offset >= PTABSIZE * sizeof(struct p_tab))
 		return 0;
 	return uputsys(addr + udata.u_offset, udata.u_count);
+#ifdef CONFIG_NET_NATIVE
+  case 65:
+    return netdev_read(flag);
+#endif
   default:
     udata.u_error = ENXIO;
     return -1;
@@ -58,6 +65,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
   case 3:
     udata.u_error = EINVAL;
     return -1;
+#ifdef CONFIG_NET_NATIVE
+  case 65:
+    return netdev_write(flag);
+#endif
   default:
     udata.u_error = ENXIO;
     return -1;
@@ -72,6 +83,10 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 #ifdef CONFIG_AUDIO
 	if (minor == 64)
 		return audio_ioctl(request, data);
+#endif
+#ifdef CONFIG_NET_NATIVE
+	if (minor == 65)
+		return netdev_ioctl(request, data);
 #endif
 	if (minor != 3) {
           udata.u_error = ENOTTY;
@@ -91,5 +106,15 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 		udata.u_error = EINVAL;
 		return (-1);
 	}
+	return 0;
+}
+
+int sys_close(uint8_t minor)
+{
+	used(minor);
+#ifdef CONFIG_NET_NATIVE
+	if (minor == 65)
+		return netdev_close(minor);
+#endif
 	return 0;
 }

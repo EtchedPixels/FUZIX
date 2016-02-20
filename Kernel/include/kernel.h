@@ -565,6 +565,8 @@ struct s_argblk {
 #define EOPNOTSUPP	44		/* Operation not supported on transport
                                            endpoint */
 #define ECONNRESET	45		/* Connection reset by peer */
+#define ENETDOWN	46		/* Network is down */
+#define EMSGSIZE	47		/* Message too long */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
@@ -601,6 +603,10 @@ struct s_argblk {
 
 /*
  *	Graphics ioctls 03xx (see graphics.h)
+ */
+
+/*
+ *	Networking ioctls 04xx (see net_native.h)
  */
 
 /*
