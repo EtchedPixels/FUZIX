@@ -21,58 +21,60 @@
 
 int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-  unsigned char *addr = (unsigned char *) ptab;
+	unsigned char *addr = (unsigned char *) ptab;
 
-  used(rawflag);
-  used(flag);
+	used(rawflag);
+	used(flag);
 
-  switch(minor){
-  case 0:
-    return 0;
-  case 1:
-        return uputsys((unsigned char *)udata.u_offset, udata.u_count);
-  case 2:
-	if (udata.u_sysio)
-		memset(udata.u_base, 0, udata.u_count);
-	else
-		uzero(udata.u_base, udata.u_count);
-	return udata.u_count;
-  case 3:
-	if (udata.u_offset >= PTABSIZE * sizeof(struct p_tab))
+	switch (minor) {
+	case 0:
 		return 0;
-	return uputsys(addr + udata.u_offset, udata.u_count);
+	case 1:
+		return uputsys((unsigned char *) udata.u_offset,
+			       udata.u_count);
+	case 2:
+		if (udata.u_sysio)
+			memset(udata.u_base, 0, udata.u_count);
+		else
+			uzero(udata.u_base, udata.u_count);
+		return udata.u_count;
+	case 3:
+		if (udata.u_offset >= PTABSIZE * sizeof(struct p_tab))
+			return 0;
+		return uputsys(addr + udata.u_offset, udata.u_count);
 #ifdef CONFIG_NET_NATIVE
-  case 65:
-    return netdev_read(flag);
+	case 65:
+		return netdev_read(flag);
 #endif
-  default:
-    udata.u_error = ENXIO;
-    return -1;
-  }
+	default:
+		udata.u_error = ENXIO;
+		return -1;
+	}
 }
 
 int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-  used(rawflag);
-  used(flag);
+	used(rawflag);
+	used(flag);
 
-  switch(minor){
-  case 0:
-  case 2:
-    return udata.u_count;
-  case 1:
-    return ugetsys((unsigned char *)udata.u_offset, udata.u_count);
-  case 3:
-    udata.u_error = EINVAL;
-    return -1;
+	switch (minor) {
+	case 0:
+	case 2:
+		return udata.u_count;
+	case 1:
+		return ugetsys((unsigned char *) udata.u_offset,
+			       udata.u_count);
+	case 3:
+		udata.u_error = EINVAL;
+		return -1;
 #ifdef CONFIG_NET_NATIVE
-  case 65:
-    return netdev_write(flag);
+	case 65:
+		return netdev_write(flag);
 #endif
-  default:
-    udata.u_error = ENXIO;
-    return -1;
-  }
+	default:
+		udata.u_error = ENXIO;
+		return -1;
+	}
 }
 
 #define PIO_TABSIZE	1
@@ -89,9 +91,9 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 		return netdev_ioctl(request, data);
 #endif
 	if (minor != 3) {
-          udata.u_error = ENOTTY;
-	  return -1;
-        }
+		udata.u_error = ENOTTY;
+		return -1;
+	}
 
 	switch (request) {
 	case PIO_TABSIZE:
