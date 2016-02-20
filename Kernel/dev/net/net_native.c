@@ -232,6 +232,8 @@ static uint16_t netn_queuebytes(struct socket *s)
 		return 0;
 
 	udata.u_sysio = false;
+	/* FIXME: if we go over 64K these will need some long casts to force
+	   the types on the right side */
 	udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tnext;
 
 	/* Wrapped part of the ring buffer */
