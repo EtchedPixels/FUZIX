@@ -235,13 +235,3 @@ arg_t net_ioctl(uint8_t op, void *p)
 void netdev_init(void)
 {
 }
-
-uint8_t use_net_r(void)
-{
-  return 1;
-}
-
-uint8_t use_net_w(void)
-{
-  return 1;
-}

@@ -5,8 +5,11 @@
 #include <printf.h>
 
 /* This holds the additional kernel context for the sockets */
-struct sockdata sockdata[NSOCKET];
+static struct sockdata sockdata[NSOCKET];
+/* This is the inode of the backing file object */
+static inoptr net_ino;
 
+/* Wake all blockers on a socket - used for error cases */
 static void wakeup_all(struct socket *s)
 {
 	wakeup(s);
@@ -21,11 +24,12 @@ static void wakeup_all(struct socket *s)
  *
  * Is it worth having a single call take a batch of events ? 
  */
+static struct netevent ne;
+
 int netdev_write(void)
 {
 	struct socket *s;
 	struct sockdata *sd;
-	static struct netevent ne;
 
 	/* Grab a message from the service daemon */
 	if (net_ino == NULL || udata.u_count != sizeof(ne) || 
@@ -44,20 +48,20 @@ int netdev_write(void)
 		s->s_state = ne.data;
 		sd->ret = ne.ret;
 		/* A synchronous state change has completed */
-		sd->event &= ~ NETW_STATEW;
+		sd->event &= ~NEVW_STATE;
 		/* Review select impact for this v wakeup_all */
 		wakeup(s);
 		break;
 		/* Asynchronous state changing event */
 	case NE_EVENT:
 		s->s_state = ne.data;
-		s->s_err = ne.ret;
+		sd->err = ne.ret;
 		wakeup_all(s);
 		break;
 		/* Change an address */
 	case NE_SETADDR:
 		if (ne.data < 3)
-			memcpy(s->s_addr[ne.data], ne.info,
+			memcpy(&s->s_addr[ne.data], &ne.info,
 			       sizeof(struct sockaddrs));
 		break;
 		/* Response to creating a socket. Initialize lcn */
@@ -79,7 +83,7 @@ int netdev_write(void)
 		/* Indicator of data from the network agent */
 	case NE_DATA:
 		sd->rnext = ne.data;	/* More data available */
-		memcpy(sd->rlen, ne.info,
+		memcpy(sd->rlen, &ne.info,
 			       sizeof(uint16_t) * NSOCKBUF);
 		s->s_iflag |= SI_DATA;
 		break;
@@ -101,7 +105,7 @@ static int netdev_report(struct sockdata *sd)
 	if (uput(sd, udata.u_base, sizeof(*sd)) == -1 ||
 		uput(s, udata.u_base + sizeof(*sd), sizeof(*s)) == -1)
 		return -1;
-	sd->event &= ~NEVW_MASK;
+	sd->event &= ~NEV_MASK;
 	return udata.u_count;
 }
 
@@ -113,7 +117,7 @@ static int netdev_report(struct sockdata *sd)
 int netdev_read(uint8_t flag)
 {
 	if (net_ino == NULL || udata.u_count != sizeof(struct sockmsg)) {
-		udata.error = EINVAL;
+		udata.u_error = EINVAL;
 		return -1;
 	}
 	while(1) {
@@ -135,7 +139,6 @@ int netdev_read(uint8_t flag)
 static int netdev_ioctl(uarg_t request, char *data)
 {
 	int16_t fd;
-	inoptr ino;
 
 	switch(request) {
 		/* Daemon starting up, passing file handle of cache */
@@ -152,6 +155,8 @@ static int netdev_ioctl(uarg_t request, char *data)
 			i_ref(net_ino);
 			return 0;				
 	}
+	udata.u_error = ENOTTY;
+	return -1;
 }
 
 /*
@@ -171,6 +176,7 @@ static int netdev_close(void)
 			s++;
 		}
 	}
+	return 0;
 }
 
 /*
@@ -184,13 +190,13 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
 	uint8_t sn = s - sockets;
 	struct sockdata *sd = &sockdata[sn];
 
-	sd->event |= NETW_STATE | NETW_STATEW;
+	sd->event |= NEV_STATE | NEVW_STATE;
 	sd->newstate = state;
 	wakeup(&ne);
 
 	do {
 		psleep(s);
-	} while (sd->event & NETW_STATEW);
+	} while (sd->event & NEVW_STATE);
 
 	udata.u_error = sd->ret;
 	return -1;
@@ -219,6 +225,8 @@ static uint16_t netn_queuebytes(struct socket *s)
 	arg_t r = 0;
 	uint8_t sn = s - sockets;
 	struct sockdata *sd = &sockdata[sn];
+	uint16_t spc;
+
 	/* Do we have room ? */
 	if (sd->tnext == sd->tbuf)
 		return 0;
@@ -229,7 +237,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 	/* Wrapped part of the ring buffer */
 	if (n && sd->tnext > sd->tbuf) {
 		/* Write into the end space */
-		uint16_t spc = TXBUFSIZ - sd->tnext;
+		spc = TXBUFSIZ - sd->tnext;
 		if (spc < n)
 			spc = n;
 		udata.u_count = spc;
@@ -241,7 +249,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 		n -= spc;
 		r = spc;
 		/* And wrap */
-		if (sd->tnext == TXBUFSIZE)
+		if (sd->tnext == TXBUFSIZ)
 			sd->tnext = 0;
 	}
 	/* If we are not wrapped or just did the overflow write lower */
@@ -260,7 +268,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 		r += spc;
 	}
 	/* Tell the networkd daemon there is more data in the ring */
-	netn_asynchronous_event(s, NE_WRITE);
+	netn_asynchronous_event(s, NEV_WRITE);
 	return r;
 }
 
@@ -279,7 +287,7 @@ static uint16_t netn_putbuf(struct socket *s)
 	uint8_t sn = s - sockets;
 	struct sockdata *sd = &sockdata[sn];
 
-	if (udata.u_count > TXPKTSIZE) {
+	if (udata.u_count > TXPKTSIZ) {
 		udata.u_error = EMSGSIZE;
 		return 0xFFFF;
 	}
@@ -287,7 +295,7 @@ static uint16_t netn_putbuf(struct socket *s)
 		return 0;
 
 	udata.u_sysio = false;
-	udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZE;
+	udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
 	/* FIXME: check writei returns and readi returns properly */
 	writei(net_ino, 0);
 	sd->tlen[sd->tnext++] = udata.u_count;
@@ -315,10 +323,10 @@ static uint16_t netn_getbuf(struct socket *s)
 	if (sd->rbuf == sd->rnext)
 		return 0;
 	udata.u_sysio = false;
-	udata.u_offset = sn * SOCKBUFOFF + sd->rbuf * RXPKTSIZE;
+	udata.u_offset = sn * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
 	udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf++]);
 	/* FIXME: check writei returns and readi returns properly */
-	readi(net, ino, 0);
+	readi(net_ino, 0);
 	/* FIXME: be smarter when we send this */
 	if (sd->rbuf == NSOCKBUF)
 		sd->rbuf = 0;
@@ -340,6 +348,7 @@ static uint16_t netn_copyout(struct socket *s)
 	arg_t r = 0;
 	uint8_t sn = s - sockets;
 	struct sockdata *sd = &sockdata[sn];
+	uint16_t spc;
 
 	if (sd->rnext == sd->rbuf)
 		return 0;
@@ -350,7 +359,7 @@ static uint16_t netn_copyout(struct socket *s)
 	/* Wrapped part of the ring buffer */
 	if (n && sd->rnext < sd->rbuf) {
 		/* Write into the end space */
-		uint16_t spc = RXBUFSIZ - sd->rbuf;
+		spc = RXBUFSIZ - sd->rbuf;
 		if (spc < n)
 			spc = n;
 		udata.u_count = spc;
@@ -362,7 +371,7 @@ static uint16_t netn_copyout(struct socket *s)
 		n -= spc;
 		r = spc;
 		/* And wrap */
-		if (sd->rbuf == RXBUFSIZE)
+		if (sd->rbuf == RXBUFSIZ)
 			sd->rbuf = 0;
 	}
 	/* If we are not wrapped or just did the overflow write lower */
@@ -380,7 +389,7 @@ static uint16_t netn_copyout(struct socket *s)
 	}
 	/* Tell the networkd daemon there is more room in the ring */
 	/* FIXME: be smarter when we send this */
-	netn_asynchronous_event(s, NE_READ);
+	netn_asynchronous_event(s, NEV_READ);
 	return r;
 	
 }
@@ -458,6 +467,8 @@ void net_close(struct socket *s)
 arg_t net_read(struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0;
+	uint8_t sn = s - sockets;
+	struct sockdata *sd = &sockdata[sn];
 
 	if (sd->err) {
 		udata.u_error = sd->err;
@@ -493,6 +504,8 @@ arg_t net_read(struct socket *s, uint8_t flag)
 arg_t net_write(struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
+	uint8_t sn = s - sockets;
+	struct sockdata *sd = &sockdata[sn];
 
 	if (sd->err) {
 		udata.u_error = sd->err;
@@ -511,13 +524,13 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		else
 			n = netn_queuebytes(s);
 		/* FIXME: buffer the error in this case */
-		if (n == 0xFFFF)
-			return udata.u_count ? udata.u_count : -1;
+		if (n == 0xFFFFU)
+			return udata.u_count ? (arg_t)udata.u_count : -1;
 
 		t += n;
 
 		if (n == 0) {	/* Blocked */
-			netn_asynchronous_event(s, NE_ROOM, udata.u_count);
+			netn_asynchronous_event(s, NE_ROOM);
 			if (psleep_flags(&s->s_iflag, flag))
 				return -1;
 		}
@@ -541,14 +554,4 @@ arg_t net_ioctl(uint8_t op, void *p)
 
 void netdev_init(void)
 {
-}
-
-uint8_t use_net_r(void)
-{
-	return 1;
-}
-
-uint8_t use_net_w(void)
-{
-	return 1;
 }

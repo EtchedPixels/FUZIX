@@ -108,8 +108,6 @@ extern arg_t _recvfrom(void);
 /* Hooks for inode.c into the networking */
 extern void sock_close(inoptr ino);
 extern int sock_read(inoptr ino, uint8_t flag);
-extern uint8_t use_net_r(void);
-extern uint8_t use_net_w(void);
 extern int sock_write(inoptr ino, uint8_t flag);
 extern bool issocket(inoptr ino);
 
