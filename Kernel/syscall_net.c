@@ -114,6 +114,17 @@ void sock_close(inoptr ino)
 	s->s_state = SS_UNUSED;
 }
 
+/*
+ *	This chunk of logic wants pushing out into the stack implementation.
+ *	We shouldn't have knowledge of the addressing in the core code.
+ *
+ *	Likewise this means that we need to push autobinding, bind address
+ *	checks and socket type checks into the lower stack and only care
+ *	about datagram versus stream.
+ *
+ *	(A good thought experiment would be verifying that you could support
+ *	something like AX.25 and a host mode TNC via net_native)
+ */
 struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa)
 {
 	struct socket *sp;
