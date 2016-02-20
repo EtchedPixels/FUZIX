@@ -1,6 +1,7 @@
 
 DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c ../dev/z80pack/devatsim.c
-NSRCS = ../dev/net/net_at.c
+#NSRCS = ../dev/net/net_at.c
+NSRCS = ../dev/net/net_native.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s z80pack.s

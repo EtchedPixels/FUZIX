@@ -28,7 +28,7 @@ void platform_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
- netat_poll();
+// netat_poll();
 }
 
 /* Nothing to do for the map of init */
