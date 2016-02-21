@@ -61,7 +61,7 @@ extern arg_t _setsid(void);
 extern arg_t _getsid(void);
 
 /* Provided by the execve support */
-extern void write_core_image(void);
+extern uint8_t write_core_image(void);
 
 /* This will change a lot in future ! */
 struct coredump {

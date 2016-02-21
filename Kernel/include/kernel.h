@@ -47,7 +47,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 	(udata.u_ptab->p_uid == (p)->p_uid || super())
 #define pathbuf()	tmpbuf()
 #define pathfree(tb)	brelse(tb)
-#define dump_core(sig)
+#define dump_core(sig)	sig
 
 #endif
 
@@ -476,6 +476,7 @@ struct s_argblk {
 #define WNOHANG		1
 #define WUNTRACED	2
 #define _WSTOPPED	0xFF
+#define W_COREDUMP	0x80
 
 /* Open() parameters. */
 

@@ -434,14 +434,15 @@ void sgrpsig(uint16_t pgrp, uint8_t sig)
 }
 
 #ifdef CONFIG_LEVEL_2
-static void dump_core(uint8_t sig)
+static uint8_t dump_core(uint8_t sig)
 {
         if (!(udata.u_flags & U_FLAG_NOCORE) && ((sig == SIGQUIT || sig == SIGILL || sig == SIGTRAP ||
             sig == SIGABRT || sig == SIGBUS || sig == SIGFPE ||
             sig == SIGSEGV || sig == SIGXCPU || sig == SIGXFSZ ||
             sig == SIGSYS))) {
-        	write_core_image();
+		return sig | write_core_image();
 	}
+	return sig;
 }
 #endif                                    
 
@@ -489,8 +490,7 @@ void chksigs(void)
 #ifdef DEBUG
 			kprintf("process terminated by signal %d\n", j);
 #endif
-                        dump_core(j);
-			doexit((uint16_t)j << 8);
+                        doexit(dump_core(j));
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
 			udata.u_ptab->p_pending &= ~m;	// unset the bit

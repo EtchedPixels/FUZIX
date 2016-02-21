@@ -346,7 +346,7 @@ int16_t val;
 arg_t __exit(void)
 {
 	/* Deliberately chop to 8bits */
-	doexit(val & 0xFF);
+	doexit(val << 8);
 	return 0;		// ... yeah. that might not happen.
 }
 
