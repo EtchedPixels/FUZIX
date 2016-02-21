@@ -113,7 +113,7 @@ arg_t _execve(void)
 
 	/* Core dump and ptrace permission logic */
 #ifdef CONFIG_LEVEL_2
-	if ((!getperm(ino) & OTH_RD) ||
+	if ((!(getperm(ino) & OTH_RD)) ||
 		(ino->c_node.i_mode & (SET_UID | SET_GID)))
 		udata.u_flags |= U_FLAG_NOCORE;
 	else
@@ -356,7 +356,7 @@ static struct coredump corehdr = {
 	16,
 };
 
-void write_core_image(void)
+uint8_t write_core_image(void)
 {
 	inoptr parent = NULLINODE;
 	inoptr ino;
@@ -364,7 +364,7 @@ void write_core_image(void)
 	ino = kn_open("core", &parent);
 	if (ino) {
 		i_deref(parent);
-		return;
+		return 0;
 	}
 	if (parent && (ino = newfile(parent, "core"))) {
 		ino->c_node.i_mode = F_REG | 0400;
@@ -393,6 +393,8 @@ void write_core_image(void)
 		udata.u_count = PROGTOP - udata.u_sp;
 		writei(ino, 0);
 		i_deref(ino);
+		return W_COREDUMP;
 	}
+	return 0;
 }
 #endif
