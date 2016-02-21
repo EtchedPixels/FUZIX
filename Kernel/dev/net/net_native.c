@@ -40,7 +40,7 @@ int netdev_write(void)
 	}
 
 	s = sockets + ne.socket;
-	sd = sockdata + ne.socket;
+	sd = s->s_priv;
 
 	switch (ne.event) {
 		/* State change. Wakes up the socket having moved state */
@@ -67,7 +67,7 @@ int netdev_write(void)
 		/* Response to creating a socket. Initialize lcn */
 	case NE_INIT:
 		s->s_state = SS_UNCONNECTED;
-		s->s_lcn = ne.data;
+		sd->lcn = ne.data;
 		sd->event = 0;
 		sd->ret = ne.ret;
 		sd->err = 0;
@@ -99,8 +99,7 @@ int netdev_write(void)
    as copies. It can then make any decisions it needs to make */
 static int netdev_report(struct sockdata *sd)
 {
-	uint8_t sn = sd - sockdata;
-	struct socket *s = sockets + sn;
+	struct socket *s = sd->socket;
 
 	if (uput(sd, udata.u_base, sizeof(*sd)) == -1 ||
 		uput(s, udata.u_base + sizeof(*sd), sizeof(*s)) == -1)
@@ -187,8 +186,7 @@ static int netdev_close(void)
  */
 static int netn_synchronous_event(struct socket *s, uint8_t state)
 {
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 
 	sd->event |= NEV_STATE | NEVW_STATE;
 	sd->newstate = state;
@@ -208,8 +206,7 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
  */
 static void netn_asynchronous_event(struct socket *s, uint8_t event)
 {
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 	sd->event |= event;
 	wakeup(&ne);
 }
@@ -223,8 +220,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 {
 	arg_t n = udata.u_count;
 	arg_t r = 0;
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 	uint16_t spc;
 
 	/* Do we have room ? */
@@ -234,7 +230,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 	udata.u_sysio = false;
 	/* FIXME: if we go over 64K these will need some long casts to force
 	   the types on the right side */
-	udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tnext;
+	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tnext;
 
 	/* Wrapped part of the ring buffer */
 	if (n && sd->tnext > sd->tbuf) {
@@ -260,7 +256,7 @@ static uint16_t netn_queuebytes(struct socket *s)
 		if (spc < n)
 			spc = n;
 		udata.u_count = spc;
-		udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tnext;
+		udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tnext;
 
 		/* FIXME: check writei returns and readi returns properly */
 		writei(net_ino, 0);
@@ -286,8 +282,7 @@ static uint16_t netn_queuebytes(struct socket *s)
  */
 static uint16_t netn_putbuf(struct socket *s)
 {
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 
 	if (udata.u_count > TXPKTSIZ) {
 		udata.u_error = EMSGSIZE;
@@ -297,7 +292,7 @@ static uint16_t netn_putbuf(struct socket *s)
 		return 0;
 
 	udata.u_sysio = false;
-	udata.u_offset = sn * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
+	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
 	/* FIXME: check writei returns and readi returns properly */
 	writei(net_ino, 0);
 	sd->tlen[sd->tnext++] = udata.u_count;
@@ -317,15 +312,14 @@ static uint16_t netn_putbuf(struct socket *s)
  */
 static uint16_t netn_getbuf(struct socket *s)
 {
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 	arg_t n = udata.u_count;
 	arg_t r = 0;
 	
 	if (sd->rbuf == sd->rnext)
 		return 0;
 	udata.u_sysio = false;
-	udata.u_offset = sn * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
+	udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
 	udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf++]);
 	/* FIXME: check writei returns and readi returns properly */
 	readi(net_ino, 0);
@@ -348,18 +342,17 @@ static uint16_t netn_copyout(struct socket *s)
 {
 	arg_t n = udata.u_count;
 	arg_t r = 0;
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 	uint16_t spc;
 
 	if (sd->rnext == sd->rbuf)
 		return 0;
 
 	udata.u_sysio = false;
-	udata.u_offset = sn * SOCKBUFOFF + sd->rbuf;
 
 	/* Wrapped part of the ring buffer */
 	if (n && sd->rnext < sd->rbuf) {
+		udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf;
 		/* Write into the end space */
 		spc = RXBUFSIZ - sd->rbuf;
 		if (spc < n)
@@ -378,6 +371,7 @@ static uint16_t netn_copyout(struct socket *s)
 	}
 	/* If we are not wrapped or just did the overflow write lower */
 	if (n) {
+		udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf;
 		spc = sd->rnext - sd->rbuf;
 		if (spc < n)
 			spc = n;
@@ -410,10 +404,13 @@ static uint16_t netn_copyout(struct socket *s)
  */
 int net_init(struct socket *s)
 {
+	struct sockdata *sd = sockdata + s->s_num;
 	if (!net_ino) {
 		udata.u_error = ENETDOWN;
 		return -1;
 	}
+	s->s_priv = sd;
+	sd->socket = s;
 	return netn_synchronous_event(s, SS_UNCONNECTED);
 }
 
@@ -469,8 +466,7 @@ void net_close(struct socket *s)
 arg_t net_read(struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0;
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 
 	if (sd->err) {
 		udata.u_error = sd->err;
@@ -506,8 +502,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 arg_t net_write(struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
-	uint8_t sn = s - sockets;
-	struct sockdata *sd = &sockdata[sn];
+	struct sockdata *sd = s->s_priv;
 
 	if (sd->err) {
 		udata.u_error = sd->err;

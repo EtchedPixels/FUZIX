@@ -46,10 +46,7 @@ struct sockaddrs {
 
 struct socket
 {
-	inoptr s_inode;
 	uint8_t s_type;
-	uint8_t s_error;
-
 	uint8_t s_state;
 #define SS_UNUSED		0	/* Free slot */
 #define SS_INIT			1	/* Initializing state (for IP offloaders) */
@@ -64,7 +61,9 @@ struct socket
 #define SS_CLOSING		10	/* Protocol close in progress */
 #define SS_CLOSED		11	/* Protocol layers done, not close()d */
 	/* FIXME: need state for shutdown handling */
-	uint8_t s_data;
+	uint8_t s_data;			/* Socket we are an accept() for */
+	uint8_t s_error;
+	uint8_t s_num;			/* To save expensive maths */
 	struct sockaddrs s_addr[3];
 #define SADDR_SRC	0
 #define SADDR_DST	1
@@ -75,8 +74,8 @@ struct socket
 #define SI_DATA		1		/* Data is ready */
 #define SI_EOF		2		/* At EOF */
 #define SI_THROTTLE	4		/* Transmit is throttled */
-	uint8_t s_lcn;			/* Logical channel (for link layer) */
-	uint8_t s_lcnflag;		/* LCN private flags */
+	void *s_priv;			/* Private pointer for lower layers */
+	inoptr s_inode;			/* Can remove once debugged */
 };
 
 #define NSOCKTYPE 3

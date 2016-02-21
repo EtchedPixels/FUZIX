@@ -21,6 +21,7 @@
 
 
 struct sockdata {
+	void *socket;
 	uint8_t err;
 	uint8_t ret;
 	uint8_t event;		/* Waiting events to go to user space */
@@ -30,6 +31,7 @@ struct sockdata {
 #define NEV_MASK	7
 #define NEVW_STATE	128
 	uint8_t newstate;	/* Requested new state */
+	uint8_t lcn;		/* Logical channel */
 	uint16_t rlen[NSOCKBUF];	/* TCP uses 0 as total space */
 	uint16_t rbuf;
 	uint16_t rnext;

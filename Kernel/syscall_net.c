@@ -75,28 +75,26 @@ static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 	return 0;
 }
 
-static int8_t alloc_socket(void)
+static struct socket *alloc_socket(void)
 {
 	struct socket *s = sockets;
 	while (s < sockets + NSOCKET) {
 		if (s->s_state == SS_UNUSED)
-			return s - sockets;
+			return s;
 		s++;
 	}
-	return -1;
+	return NULL;
 }
 
 struct socket *sock_alloc_accept(struct socket *s)
 {
-	struct socket *n;
-	int8_t i = alloc_socket();
-	if (i == -1)
+	struct socket *n = alloc_socket();
+	if (n == NULL)
 		return NULL;
-	n = &sockets[i];
 
 	memcpy(n, s, sizeof(*n));
 	n->s_state = SS_ACCEPTING;
-	n->s_data = s - sockets;
+	n->s_data = s->s_num;
 	return n;
 }
 
@@ -143,6 +141,7 @@ struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa)
 	return NULL;
 }
 
+
 static struct socket *sock_get(int fd, uint8_t *flag)
 {
 	struct oft *oftp;
@@ -160,16 +159,16 @@ static struct socket *sock_get(int fd, uint8_t *flag)
 	return sockets + ino->c_node.i_nlink;
 }
 
-static int sock_pending(struct socket *l)
+static struct socket *sock_pending(struct socket *l)
 {
-	uint8_t d = l - sockets;
+	uint8_t d = l->s_num;
 	struct socket *s = sockets;
 	while (s < sockets + NSOCKET) {
 		if (s->s_state == SS_ACCEPTWAIT && s->s_data == d)
-			return s - sockets;
+			return s;
 		s++;
 	}
-	return -1;
+	return NULL;
 }
 
 static int sock_autobind(struct socket *s)
@@ -182,7 +181,6 @@ static int sock_autobind(struct socket *s)
 	memcpy(&s->s_addr[SADDR_SRC], &sa, sizeof(sa));
 	return net_bind(s);
 }
-
 static struct socket *sock_find_local(uint32_t addr, uint16_t port)
 {
 	used(addr);
@@ -253,6 +251,7 @@ int sock_error(struct socket *s)
 		return 0;
 }
 
+
 struct sockinfo {
 	uint8_t af;
 	uint8_t type;
@@ -266,9 +265,9 @@ struct sockinfo socktypes[NSOCKTYPE] = {
 	{ AF_INET, SOCK_RAW, 0, 0 }
 };
 
-arg_t make_socket(struct sockinfo *s, int8_t *np)
+arg_t make_socket(struct sockinfo *s, struct socket **np)
 {
-	int8_t n;
+	struct socket *n;
 	int8_t uindex;
 	int8_t oftindex;
 	inoptr ino;
@@ -281,13 +280,13 @@ arg_t make_socket(struct sockinfo *s, int8_t *np)
 		n = *np;
 	else {
 		n = alloc_socket();
-		if (n == -1)
+		if (n == NULL)
 			return -1;
 	}
-	sockets[n].s_type = s - socktypes;	/* Pointer or uint8_t best ? */
-	sockets[n].s_state = SS_INIT;
+	n->s_type = s - socktypes;	/* Pointer or uint8_t best ? */
+	n->s_state = SS_INIT;
 
-	if (net_init(&sockets[n]) == -1)
+	if (net_init(n) == -1)
 		goto nosock;
 
 	/* Start by getting the file and inode table entries */
@@ -302,15 +301,15 @@ arg_t make_socket(struct sockinfo *s, int8_t *np)
 	/* All good - now set it up */
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
-	ino->c_node.i_nlink = n;	/* Cheat !! */
-	sockets[n].s_inode = ino;
+	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
+	n->s_inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;
 
 	udata.u_files[uindex] = oftindex;
 
-	sock_wait_leave(&sockets[n], 0, SS_INIT);
+	sock_wait_leave(n, 0, SS_INIT);
 	if (np)
 		*np = n;
 	return uindex;
@@ -320,7 +319,7 @@ noalloc:
 nooft:
 	udata.u_files[uindex] = NO_FILE;
 nosock:
-	sockets[n].s_state = SS_UNUSED;
+	n->s_state = SS_UNUSED;
 	return -1;
 }
 
@@ -466,7 +465,7 @@ arg_t _accept(void)
 {
 	uint8_t flag;
 	struct socket *s = sock_get(fd, &flag);
-	int8_t n;
+	struct socket *n;
 	int8_t nfd;
 
 	if (s == NULL)
@@ -477,7 +476,7 @@ arg_t _accept(void)
 	}
 	
 	/* Needs locking versus interrupts */
-	while ((n = sock_pending(s)) != -1) {
+	while ((n = sock_pending(s)) != NULL) {
 		if (psleep_flags(s, flag))
 			return -1;
 		if (s->s_error)
@@ -485,7 +484,7 @@ arg_t _accept(void)
 	}
 	if ((nfd = make_socket(&socktypes[SOCKTYPE_TCP], &n)) == -1)
 		return -1;
-	sockets[n].s_state = SS_CONNECTED;
+	n->s_state = SS_CONNECTED;
 	return nfd;
 }
 
@@ -605,3 +604,13 @@ arg_t _recvfrom(void)
 #undef uaddr
 
 #endif
+
+/* FIXME: Move to _discard */
+
+void sock_init(void)
+{
+	struct socket *s = sockets;
+	uint8_t n = 0;
+	while (s < sockets + NSOCKET)
+		s++->s_num = n;
+}
