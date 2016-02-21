@@ -28,7 +28,7 @@
 #define WIFSTOPPED(status)	(((status) & 0xff) == 0x7f)
 
 /* Nonzero if STATUS indicates the child dumped core.  */
-#define WCOREDUMP(status)	((status) & 0200)
+#define WCOREDUMP(status)	((status) & 0x80)
 
 /* Macros for constructing status values.  */
 #define W_EXITCODE(ret, sig)	((ret) << 8 | (sig))
