@@ -613,4 +613,5 @@ void sock_init(void)
 	uint8_t n = 0;
 	while (s < sockets + NSOCKET)
 		s++->s_num = n;
+	netdev_init();
 }

@@ -121,6 +121,6 @@ extern arg_t net_write(struct socket *s, uint8_t flag);
 extern arg_t net_ioctl(uint8_t op, void *p);
 extern void netdev_init(void);
 extern struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa);
-
+extern void sock_init(void);
 
 extern struct netdevice net_dev;
