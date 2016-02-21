@@ -43,6 +43,11 @@ int netdev_write(void)
 	sd = s->s_priv;
 
 	switch (ne.event) {
+		/* Initialize a new socket */
+	case NE_INIT:
+		sd->lcn = ne.data;
+		ne.data = SS_UNCONNECTED;
+		/* And fall through */
 		/* State change. Wakes up the socket having moved state */
 	case NE_NEWSTATE:
 		s->s_state = ne.data;
@@ -63,17 +68,6 @@ int netdev_write(void)
 		if (ne.data < 3)
 			memcpy(&s->s_addr[ne.data], &ne.info,
 			       sizeof(struct sockaddrs));
-		break;
-		/* Response to creating a socket. Initialize lcn */
-	case NE_INIT:
-		s->s_state = SS_UNCONNECTED;
-		sd->lcn = ne.data;
-		sd->event = 0;
-		sd->ret = ne.ret;
-		sd->err = 0;
-		sd->rbuf = sd->rnext = 0;
-		sd->tbuf = sd->tnext = 0;
-		wakeup(s);
 		break;
 		/* Indicator of write room from the network agent */
 	case NE_ROOM:
@@ -211,62 +205,55 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 	wakeup(&ne);
 }
 
-/*
- *	Queue data to a stream socket. We use the entire buffer space
- *	available as a ring buffer and write bytes to it. We then update
- *	our pointer and poke the daemon to send stuff.
- */
-static uint16_t netn_queuebytes(struct socket *s)
+/* General purpose ring buffer operator. Non re-entrant so use every
+   trick of the trade to generate non-shite Z80 code, especially given the
+   fact we have a 32bit offset and SDCC. This game saves us 768 bytes over
+   a naïve implementation */
+
+static uint16_t sptr, eptr, len;
+static uint32_t base;
+static void (*op)(inoptr, uint8_t);
+
+static uint16_t ringbop(void)
 {
-	arg_t n = udata.u_count;
-	arg_t r = 0;
-	struct sockdata *sd = s->s_priv;
-	uint16_t spc;
+	uarg_t spc;
+	uarg_t r = 0;
 
-	/* Do we have room ? */
-	if (sd->tnext == sd->tbuf)
+	if (sptr == eptr)
 		return 0;
-
 	udata.u_sysio = false;
-	/* FIXME: if we go over 64K these will need some long casts to force
-	   the types on the right side */
-	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tnext;
-
+	udata.u_error = 0;
 	/* Wrapped part of the ring buffer */
-	if (n && sd->tnext > sd->tbuf) {
+	if (len && sptr > eptr) {
 		/* Write into the end space */
-		spc = TXBUFSIZ - sd->tnext;
-		if (spc < n)
-			spc = n;
+		spc = RINGSIZ - sptr;
+		if (spc < len)
+			spc = len;
 		udata.u_count = spc;
-		/* FIXME: check writei returns and readi returns properly */
-		writei(net_ino, 0);
+		udata.u_offset = base + sptr;
+		op(net_ino, 0);
 		if (udata.u_error)
 			return 0xFFFF;
-		sd->tnext += spc;
-		n -= spc;
+		sptr += spc;
+		len -= spc;
 		r = spc;
 		/* And wrap */
-		if (sd->tnext == TXBUFSIZ)
-			sd->tnext = 0;
+		if (sptr == RINGSIZ)
+			sptr = 0;
 	}
 	/* If we are not wrapped or just did the overflow write lower */
-	if (n) {
-		spc = sd->tbuf - sd->tnext;
-		if (spc < n)
-			spc = n;
+	if (len) {
+		spc = eptr - sptr;
+		if (spc < len)
+			spc = len;
 		udata.u_count = spc;
-		udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tnext;
-
-		/* FIXME: check writei returns and readi returns properly */
-		writei(net_ino, 0);
+		udata.u_offset = base + sptr;
+		op(net_ino, 0);
 		if (udata.u_error)
 			return 0xFFFF;
-		sd->tnext += spc;
+		sptr += spc;
 		r += spc;
 	}
-	/* Tell the networkd daemon there is more data in the ring */
-	netn_asynchronous_event(s, NEV_WRITE);
 	return r;
 }
 
@@ -331,6 +318,33 @@ static uint16_t netn_getbuf(struct socket *s)
 }
 
 /*
+ *	Queue data to a stream socket. We use the entire buffer space
+ *	available as a ring buffer and write bytes to it. We then update
+ *	our pointer and poke the daemon to send stuff.
+ */
+static uint16_t netn_queuebytes(struct socket *s)
+{
+	struct sockdata *sd = s->s_priv;
+	arg_t r;
+
+	len = udata.u_count;
+
+	sptr = sd->tnext;
+	eptr = sd->tbuf;
+	base = s->s_num * SOCKBUFOFF + RXBUFOFF;
+	op = writei;
+
+	r = ringbop();
+	sd->tnext = sptr;
+
+	/* Tell the network daemon there is more data in the ring */
+	if (r != 0xFFFF)
+		netn_asynchronous_event(s, NEV_WRITE);
+	return r;
+}
+
+
+/*
  *	Pull bytes from the receive ring buffer. We copy as many bytes as
  *	we can to fulfill the user request. Short reads are acceptable if
  *	the buffer contains some data but not enough.
@@ -340,56 +354,24 @@ static uint16_t netn_getbuf(struct socket *s)
  */
 static uint16_t netn_copyout(struct socket *s)
 {
-	arg_t n = udata.u_count;
-	arg_t r = 0;
 	struct sockdata *sd = s->s_priv;
-	uint16_t spc;
+	arg_t r;
 
-	if (sd->rnext == sd->rbuf)
-		return 0;
+	len = udata.u_count;
 
-	udata.u_sysio = false;
+	sptr = sd->rbuf;
+	eptr = sd->rnext;
+	base = s->s_num * SOCKBUFOFF;
+	op = readi;
 
-	/* Wrapped part of the ring buffer */
-	if (n && sd->rnext < sd->rbuf) {
-		udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf;
-		/* Write into the end space */
-		spc = RXBUFSIZ - sd->rbuf;
-		if (spc < n)
-			spc = n;
-		udata.u_count = spc;
-		/* FIXME: check writei returns and readi returns properly */
-		readi(net_ino, 0);
-		if (udata.u_error)
-			return 0xFFFF;
-		sd->rbuf += spc;
-		n -= spc;
-		r = spc;
-		/* And wrap */
-		if (sd->rbuf == RXBUFSIZ)
-			sd->rbuf = 0;
-	}
-	/* If we are not wrapped or just did the overflow write lower */
-	if (n) {
-		udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf;
-		spc = sd->rnext - sd->rbuf;
-		if (spc < n)
-			spc = n;
-		udata.u_count = spc;
-		/* FIXME: check writei returns and readi returns properly */
-		readi(net_ino, 0);
-		if (udata.u_error)
-			return 0xFFFF;
-		sd->rbuf += spc;
-		r += spc;
-	}
-	/* Tell the networkd daemon there is more room in the ring */
-	/* FIXME: be smarter when we send this */
-	netn_asynchronous_event(s, NEV_READ);
+	r = ringbop();
+	sd->rnext = sptr;
+
+	if (r != 0xFFFF)
+		netn_asynchronous_event(s, NEV_READ);
 	return r;
 	
 }
-
 
 /*
  *	Called from the core network layer when a socket is being
@@ -411,6 +393,10 @@ int net_init(struct socket *s)
 	}
 	s->s_priv = sd;
 	sd->socket = s;
+	sd->err = 0;
+	sd->event = 0;
+	sd->rbuf = sd->rnext = 0;
+	sd->tbuf = sd->tnext = 0;
 	return netn_synchronous_event(s, SS_UNCONNECTED);
 }
 

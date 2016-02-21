@@ -7,15 +7,14 @@
 */
 
 #define NSOCKBUF	4	/* 4 buffers per socket */
-#define TXBUFSIZ	(1024 * NSOCKBUF)
-#define RXBUFSIZ	(1024 * NSOCKBUF)
+#define RINGSIZ		(1024 * NSOCKBUF)
 
 /* The usable space will be lower once the headers are added for addressing */
 #define TXPKTSIZ	1024
 #define RXPKTSIZ	1024
 
-#define SOCKBUFOFF	(RXBUFOFF + RXBUFSIZ)
-#define RXBUFOFF	TXBUFSIZ
+#define SOCKBUFOFF	(2 * RINGSIZ)
+#define RXBUFOFF	RINGSIZ
 
 /* Total size is thus 8K * sockets - typically 64K for the file */
 
