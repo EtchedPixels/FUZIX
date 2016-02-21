@@ -53,6 +53,7 @@ int namesort(const void *p1, const void *p2);
 long time_zone = 0;
 long timezone = 0;
 
+uint8_t bad = 0;	/* Set if any errors occur on the way */
 
 /*
  * Sort routine for list of filenames.
@@ -214,7 +215,7 @@ static void lsfile(char *name, struct stat *statbuf, int flags)
     fputc('\n', stdout);
 }
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     static char *def[1] =
     {"."};
@@ -229,7 +230,7 @@ void main(int argc, char *argv[])
 
     if ((list = (char **) malloc(LISTSIZE * sizeof(char *))) == NULL) {
 	fprintf(stderr, "No memory for ls buffer\n");
-	return;
+	return 2;
     }
     listsize = LISTSIZE;
     listused = 0;
@@ -239,7 +240,7 @@ void main(int argc, char *argv[])
 	    switch (*cp) {
 	    case 'h':
 		printf("Usage: ls [-dilfaouR] [pattern]\n");
-		return;
+		return 0;
 	    case 'd':
 		flags |= LSF_DIR;
 		break;
@@ -266,7 +267,7 @@ void main(int argc, char *argv[])
 		break;
 	    default:
 		fprintf(stderr, "Unknown option -%c\n", *cp);
-		return;
+		return 2 ;
 	    }
 	}
     }
@@ -280,6 +281,7 @@ void main(int argc, char *argv[])
 	name = *argv++;
 	endslash = (*name && (name[strlen(name) - 1] == '/'));
 	if (LSTAT(name, &statbuf) < 0) {
+	    bad |= 2;
 	    perror(name);
 	    continue;
 	}
@@ -290,10 +292,12 @@ void main(int argc, char *argv[])
 	/* Do all the files in a directory. */
 	if ((dirp = opendir(name)) == NULL) {
 	    perror(name);
+	    bad |= 2;
 	    continue;
 	}
 	if (flags & LSF_MULT)
 	    printf("\n%s:\n", name);
+        /* FIXME: process as we go unless sorting! */
 	while ((dp = readdir(dirp)) != NULL) {
 	    if (dp->d_name[0] == '\0')
 		continue;
@@ -311,6 +315,7 @@ void main(int argc, char *argv[])
 			    ((sizeof(char **)) * (listsize + LISTSIZE)));
 		if (newlist == NULL) {
 		    fprintf(stderr, "No memory for ls buffer\n");
+		    bad |= 2;
 		    break;
 		}
 		list = newlist;
@@ -318,6 +323,7 @@ void main(int argc, char *argv[])
 	    }
 	    if ((list[listused] = strdup(fullname)) == NULL) {
 		fprintf(stderr, "No memory for filenames\n");
+		bad |= 2;
 		break;
 	    }
 	    listused++;
@@ -333,6 +339,7 @@ void main(int argc, char *argv[])
 	    /* Only do expensive stat calls if we actually need the data ! */
 	    if ((flags & (LSF_DIR|LSF_FILE|LSF_INODE|LSF_LONG)) && LSTAT(name, &statbuf) < 0) {
 		perror(name);
+		bad |= 1;
 		continue;
 	    }
 	    if (((flags & LSF_DIR) && !S_ISDIR(statbuf.st_mode)) ||
@@ -347,5 +354,8 @@ void main(int argc, char *argv[])
 	listused = 0;
     }
     fflush(stdout);
+    /* 2 for a bad error, 1 for a minor error, 0 otherwise but not 3 for
+       both! */
+    return (bad & 2) ? 2 : bad;
 }
 
