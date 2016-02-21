@@ -15,7 +15,7 @@ int in_group(uint16_t gid)
 	return 0;
 }
 
-void jobcontrol_in(uint8_t minor, struct tty *t)
+static void jobop(uint8_t minor, uint8_t sig, struct tty *t)
 {
 	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp
 	        || udata.u_ptab->p_tty != minor)
@@ -24,25 +24,22 @@ void jobcontrol_in(uint8_t minor, struct tty *t)
         kprintf("[stop %d %d %d]\n",
                 t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
 #endif
-	ssig(udata.u_ptab, SIGTTIN);
+	ssig(udata.u_ptab, sig);
 	/* So we halt */
 	psleep(0);
 }
 
+void jobcontrol_in(uint8_t minor, struct tty *t)
+{
+        jobop(minor, SIGTTIN, t);
+}
+
+
 void jobcontrol_out(uint8_t minor, struct tty *t)
 {
-	if (!t->pgrp || udata.u_ptab->p_pgrp == t->pgrp
-	        || udata.u_ptab->p_tty != minor)
-		return;
 	if (!(t->termios.c_lflag & TOSTOP))
 		return;
-#ifdef DEBUG
-        kprintf("[stop %d %d %d]\n",
-                t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
-#endif
-	ssig(udata.u_ptab, SIGTTOU);
-	/* So we halt */
-	psleep(0);
+        jobop(minor, SIGTTOU, t);
 }
 
 int tcsetpgrp(struct tty *t, char *data)	/* data is user pointer */
