@@ -77,7 +77,7 @@ inoptr kn_open(char *namep, inoptr *parent)
         }
         i_deref(wd);
         wd = ninode;
-        if(getmode(wd) != F_DIR){
+        if(getmode(wd) != MODE_R(F_DIR)){
             udata.u_error = ENOTDIR;
             goto nodir;
         }
@@ -877,7 +877,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
     int sh;
     uint16_t dev;
 
-    if(getmode(ip) == F_BDEV)
+    if(getmode(ip) == MODE_R(F_BDEV))
         return(bn);
 
     dev = ip->c_dev;
@@ -1052,9 +1052,11 @@ void setftime(inoptr ino, uint8_t flag)
 }
 
 
-uint16_t getmode(inoptr ino)
+uint8_t getmode(inoptr ino)
 {
-    return(ino->c_node.i_mode & F_MASK);
+    /* Shifting by 9 (past permissions might be more logical but
+       8 happens to be cheap */
+    return (ino->c_node.i_mode & F_MASK) >> 8;
 }
 
 
@@ -1137,7 +1139,7 @@ void magic(inoptr ino)
  * syscall banks. */
 arg_t unlinki(inoptr ino, inoptr pino, char *fname)
 {
-	if (getmode(ino) == F_DIR) {
+	if (getmode(ino) == MODE_R(F_DIR)) {
 		udata.u_error = EISDIR;
 		return -1;
 	}

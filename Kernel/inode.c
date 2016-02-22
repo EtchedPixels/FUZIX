@@ -23,8 +23,8 @@ void readi(inoptr ino, uint8_t flag)
 	dev = ino->c_dev;
 	ispipe = false;
 	switch (getmode(ino)) {
-	case F_DIR:
-	case F_REG:
+	case MODE_R(F_DIR):
+	case MODE_R(F_REG):
 
 		/* See if end of file will limit read */
 		if (ino->c_node.i_size <= udata.u_offset)
@@ -36,12 +36,12 @@ void readi(inoptr ino, uint8_t flag)
 		toread = udata.u_count;
 		goto loop;
 
-        case F_SOCK:
+        case MODE_R(F_SOCK):
 #ifdef CONFIG_NET
                 udata.u_count = sock_read(ino, flag);
                 break;
 #endif
-	case F_PIPE:
+	case MODE_R(F_PIPE):
 		ispipe = true;
 		while (ino->c_node.i_size == 0 && !(flag & O_NDELAY)) {
 			if (ino->c_refs == 1)	/* No writers */
@@ -57,7 +57,7 @@ void readi(inoptr ino, uint8_t flag)
 		}
 		goto loop;
 
-	case F_BDEV:
+	case MODE_R(F_BDEV):
 		toread = udata.u_count;
 		dev = *(ino->c_node.i_addr);
 
@@ -111,7 +111,7 @@ void readi(inoptr ino, uint8_t flag)
 		}
 		break;
 
-	case F_CDEV:
+	case MODE_R(F_CDEV):
 		udata.u_count = cdread(ino->c_node.i_addr[0], flag);
 
 		if (udata.u_count != (usize_t)-1)
@@ -138,20 +138,20 @@ void writei(inoptr ino, uint8_t flag)
 
 	switch (getmode(ino)) {
 
-	case F_BDEV:
+	case MODE_R(F_BDEV):
 		dev = *(ino->c_node.i_addr);
-	case F_DIR:
-	case F_REG:
+	case MODE_R(F_DIR):
+	case MODE_R(F_REG):
 		ispipe = false;
 		towrite = udata.u_count;
 		goto loop;
 
 #ifdef CONFIG_NET
-	case F_SOCK:
+	case MODE_R(F_SOCK):
         	udata.u_count = sock_write(ino, flag);
 		break;
 #endif
-	case F_PIPE:
+	case MODE_R(F_PIPE):
 		ispipe = true;
 		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
 		   in one go - needs merging into the loop */
@@ -217,7 +217,7 @@ void writei(inoptr ino, uint8_t flag)
 		}
 		break;
 
-	case F_CDEV:
+	case MODE_R(F_CDEV):
 		udata.u_count = cdwrite(ino->c_node.i_addr[0], flag);
 
 		if (udata.u_count != -1)
@@ -242,7 +242,7 @@ int16_t doclose(uint8_t uindex)
 	if (of_tab[oftindex].o_refs == 1) {
 		if (isdevice(ino))
 			d_close((int) (ino->c_node.i_addr[0]));
-		if (getmode(ino) == F_REG && O_ACCMODE(of_tab[oftindex].o_access))
+		if (getmode(ino) == MODE_R(F_REG) && O_ACCMODE(of_tab[oftindex].o_access))
 			flush_dev = ino->c_dev;
 #ifdef CONFIG_NET
 		if (issocket(ino))
@@ -282,7 +282,7 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 	}
 	setftime(ino, is_read ? A_TIME : (A_TIME | M_TIME | C_TIME));
 
-	if (getmode(ino) == F_REG && is_read == 0
+	if (getmode(ino) == MODE_R(F_REG) && is_read == 0
 	    && (oftp->o_access & O_APPEND))
 		oftp->o_ptr = ino->c_node.i_size;
 	/* Initialize u_offset from file pointer */

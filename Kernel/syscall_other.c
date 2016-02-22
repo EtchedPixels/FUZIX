@@ -196,7 +196,7 @@ arg_t _rmdir(void)
 	/* Fixme: check for rmdir of /. - ditto for unlink ? */
 
 	/* Not a directory */
-	if (getmode(ino) != F_DIR) {
+	if (getmode(ino) != MODE_R(F_DIR)) {
 		udata.u_error = ENOTDIR;
 		goto nogood;
 	}
@@ -267,12 +267,12 @@ arg_t _mount(void)
 		return (-1);
 	}
 
-	if (getmode(sino) != F_BDEV) {
+	if (getmode(sino) != MODE_R(F_BDEV)) {
 		udata.u_error = ENOTBLK;
 		goto nogood;
 	}
 
-	if (getmode(dino) != F_DIR) {
+	if (getmode(dino) != MODE_R(F_DIR)) {
 		udata.u_error = ENOTDIR;
 		goto nogood;
 	}
@@ -330,7 +330,7 @@ arg_t _umount(void)
 	if (!(sino = n_open(spec, NULLINOPTR)))
 		return (-1);
 
-	if (getmode(sino) != F_BDEV) {
+	if (getmode(sino) != MODE_R(F_BDEV)) {
 		udata.u_error = ENOTBLK;
 		goto nogood;
 	}

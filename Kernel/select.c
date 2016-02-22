@@ -159,16 +159,16 @@ int _select(void)
 					return -1;
 				switch (getmode(ino)) {
 					/* Device types that automatically report some ready states */
-				case F_BDEV:
-				case F_REG:
+				case MODE_R(F_BDEV):
+				case MODE_R(F_REG):
 					outr |= m;
-				case F_DIR:
+				case MODE_R(F_DIR):
 					inr |= m;
 					break;
-				case F_PIPE:
+				case MODE_R(F_PIPE):
 					n = pipesel_begin(ino, n);
 					goto setbits;
-				case F_CDEV:
+				case MODE_R(F_CDEV):
 					/* If unsupported we report the device as read/write ready */
 					if (d_ioctl
 					    (ino->c_node.i_addr[0],
@@ -213,11 +213,11 @@ int _select(void)
 		if (sum & m) {
 			ino = getinode(i);
 			switch (getmode(ino)) {
-			case F_CDEV:
+			case MODE_R(F_CDEV):
 				d_ioctl(ino->c_node.i_addr[0], SELECT_END,
 					NULL);
 				break;
-			case F_PIPE:
+			case MODE_R(F_PIPE):
 				pipesel_end(ino);
 			}
 		}

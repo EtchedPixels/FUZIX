@@ -213,6 +213,9 @@ struct hd_geometry {
 
 #define F_MASK  0170000
 
+/* So we can do all our getmode comparisons in 8bit to help the compilers out */
+#define MODE_R(x)	((uint8_t)((x) >> 8))
+
 #define major(x) ((x) >> 8)
 #define minor(x) ((x) & 0xFF)
 
@@ -765,7 +768,7 @@ extern bool super(void);
 extern bool esuper(void);
 extern uint8_t getperm(inoptr ino);
 extern void setftime(inoptr ino, uint8_t flag);
-extern uint16_t getmode(inoptr ino);
+extern uint8_t getmode(inoptr ino);
 extern struct mount *fs_tab_get(uint16_t dev);
 /* returns true on failure, false on success */
 extern bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
