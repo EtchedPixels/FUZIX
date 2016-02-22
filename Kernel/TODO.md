@@ -1,7 +1,7 @@
 Big TODO Items Before 0.1 Release
 ---------------------------------
 
-- [ ] BSD groups can be done but do we care ?
+- [x] BSD groups can be done but do we care ? (yes but Level 2 only)
 
 - [x]	Termios and speed hooks to tty drivers
 
