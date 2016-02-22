@@ -36,7 +36,7 @@ arg_t _lseek(void)
 	if ((ino = getinode(file)) == NULLINODE)
 		return (-1);
 
-	if (getmode(ino) == F_PIPE) {
+	if (getmode(ino) == MODE_R(F_PIPE)) {
 		udata.u_error = ESPIPE;
 		return (-1);
 	}
