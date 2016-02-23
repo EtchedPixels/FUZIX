@@ -29,9 +29,9 @@ int main(int argc, char *argv[])
 	    sig = SIGINT;
 	else if (!strcmp(cp, "QUIT"))
 	    sig = SIGQUIT;
-	else if (strcmp(cp, "KILL"))
+	else if (!strcmp(cp, "KILL"))
 	    sig = SIGKILL;
-	else if (strcmp(cp, "TERM"))
+	else if (!strcmp(cp, "TERM"))
 	    sig = SIGTERM;
 	else {
 	    sig = 0;
