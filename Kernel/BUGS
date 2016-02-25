@@ -1,8 +1,23 @@
-- SIGSTOP/TSTP behaviour wrong
-- SIGCHLD not sent
+- SIGSTOP/TSTP behaviour: should we stop *after* handlers run ?
 
-- Debug signal delivery with catches on Z80 and 6809 (not clear either is
+- Debug signal delivery with catches on 6809 (not clear this is
   correct right now)
 
 - RAW (char mode) disk I/O gives iffy results on most platforms. As we have
   O_DIRECT we should probably just throw the entire thing out.
+
+- Weird Z80 crash with irq driven wakeup
+
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)wakeup: found proc 0xC46A pid 7
+	psleep(0xD266)psleep(0xD266) -> 0:0
+	panic: psleep: voodoo
+	System halted, bye.
+
+suggests sleep/wakeup/irq race somewhere still
+
+- socket code leaks inode refs ??
