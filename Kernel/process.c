@@ -455,11 +455,14 @@ void chksigs(void)
 	int (**svec)(int) = &udata.u_sigvec[0];
 	uint32_t m;
 
-	// any signals pending?
-	if (!pending)
+	/* Fast path - no signals pending means no work
+	   Also don't do signal processing if we are in P_STOPPED. This
+	   isn't quite right but will paper over the holes for the moment
+	   FIXME */
+	if (!pending || udata.u_ptab->p_status == P_STOPPED)
 		return;
 
-	// dispatch the lowest numbered signal
+	/* Dispatch the lowest numbered signal */
 	for (j = 1; j < NSIGS; ++j) {
 		svec++;
 		m = sigmask(j);
