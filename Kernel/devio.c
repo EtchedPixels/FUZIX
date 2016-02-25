@@ -604,7 +604,7 @@ void idump(void)
 	for (ip = i_tab; ip < i_tab + ITABSIZE; ++ip) {
 		if(ip->c_magic != CMAGIC)
 			continue;
-		kprintf("%d\t%d\t%d\t%u\t%d\t",
+		kprintf("%d\t%d\t%d\t%u\t%u\t",
 			ip - i_tab, ip->c_magic, ip->c_dev, ip->c_num,
 			ip->c_node.i_mode);
 		kprintf("%d\t%d\t%d\t%d\n",	/* line split for compiler */
