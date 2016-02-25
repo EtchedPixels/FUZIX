@@ -2,17 +2,12 @@ CC = sdcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdcc
-FCC = ../../Library/tools/fcc -O2
+FCC = ../../Library/tools/fcc
+FCCOPTS = -O2
 PLATFORM =
 #PLATFORM = -tzx128
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
-
-# Used for programs that make sdcc go boom or take hours
-CC_CRAP = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../../Library/include
-ASM_OPT = -l -o -s
-LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
-BINMAN = ../../Library/tools/binman
 
 .SUFFIXES: .c .rel
 
@@ -102,7 +97,7 @@ SRCS  = banner.c \
 	write.c \
 	xargs.c
 
-SRCSBAD = sed.c
+SRCSBAD = sed.c socktest.c
 
 OBJS = $(SRCS:.c=.rel)
 OBJSNS = $(SRCSNS:.c=.rel)
@@ -116,8 +111,6 @@ APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=) $(OBJSNS:.rel=)
 
 all: $(APPS) sizes
 
-$(OBJSBAD): $(SRCSBAD)
-	$(CC) $(CC_CRAP) $(@:.rel=.c)
 
 $(APPSNS): OPTS = --nostdio
 
@@ -126,9 +119,10 @@ $(OBJS): %.rel: %.c
 $(OBJSNS): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
+	$(FCC) $(PLATFORM) -c $<
 
 .c.rel:
-	$(FCC) $(PLATFORM) -c $<
+	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
 
 %: %.rel
 	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
