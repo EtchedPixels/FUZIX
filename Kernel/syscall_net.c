@@ -123,7 +123,10 @@ void sock_close(inoptr ino)
 	net_close(s);
 	sock_wait_enter(s, 0, SS_CLOSED);
 	s->s_state = SS_UNUSED;
-	i_deref(ino);
+	/* You re-use something you pays the price. Probably should switch
+	   to using data 0 as devices do ? FIXME */
+	ino->c_node.i_nlink = 0;
+	ino->c_flags |= CDIRTY;
 }
 
 /*
@@ -316,7 +319,6 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
 	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
-	i_ref(ino);
 	n->s_inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
