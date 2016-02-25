@@ -572,6 +572,15 @@ struct s_argblk {
 #define ENETDOWN	46		/* Network is down */
 #define EMSGSIZE	47		/* Message too long */
 
+#define ETIMEDOUT	48		/* Connection timed out */
+#define ECONNREFUSED	49		/* Connection refused */
+#define EHOSTUNREACH	50		/* No route to host */
+#define EHOSTDOWN	51		/* Host is down */
+#define	ENETUNREACH	52		/* Network is unreachable */
+#define ENOTCONN	53		/* Transport endpoint is not connected */
+#define EINPROGRESS	54		/* Operation now in progress */
+#define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
+
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
  * by userspace.
