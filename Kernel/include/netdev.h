@@ -53,10 +53,10 @@ struct socket
 #define SS_UNCONNECTED		2	/* Created */
 #define SS_BOUND		3	/* Bind or autobind */
 #define SS_LISTENING		4	/* Listen called */
-#define SS_CONNECTING		5	/* Connect initiated */
-#define SS_CONNECTED		6	/* Connect has completed */
-#define SS_ACCEPTING		7	/* Accepting in progress */
-#define SS_ACCEPTWAIT		8	/* Waiting for accept to harvest */
+#define SS_ACCEPTING		5	/* Accepting in progress */
+#define SS_ACCEPTWAIT		6	/* Waiting for accept to harvest */
+#define SS_CONNECTING		7	/* Connect initiated */
+#define SS_CONNECTED		8	/* Connect has completed */
 #define SS_CLOSEWAIT		9	/* Remote has closed */
 #define SS_CLOSING		10	/* Protocol close in progress */
 #define SS_CLOSED		11	/* Protocol layers done, not close()d */
