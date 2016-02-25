@@ -60,18 +60,31 @@ int sock_read(inoptr ino, uint8_t flag)
 /* Wait to leave a state. This will eventually need interrupt locking etc */
 static int sock_wait_leave(struct socket *s, uint8_t flag, uint8_t state)
 {
-	while (s->s_state == state)
-		if (psleep_flags(s, flag))
+	irqflags_t irq;
+	irq = di();
+	while (s->s_state == state) {
+		if (psleep_flags(s, flag)) {
+			irqrestore(irq);
 			return -1;
+		}
+		di();
+	}
+	irqrestore(irq);
 	return 0;
 }
 
 /* Wait to enter a state. This will eventually need interrupt locking etc */
 static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 {
-	while (s->s_state != state)
-		if (psleep_flags(s, flag))
+	irqflags_t irq;
+	irq = di();
+	while (s->s_state != state) {
+		if (psleep_flags(s, flag)) {
+			irqrestore(irq);
 			return -1;
+		}
+	}
+	irqrestore(irq);
 	return 0;
 }
 
@@ -110,6 +123,7 @@ void sock_close(inoptr ino)
 	net_close(s);
 	sock_wait_enter(s, 0, SS_CLOSED);
 	s->s_state = SS_UNUSED;
+	i_deref(ino);
 }
 
 /*
@@ -302,6 +316,7 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
 	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
+	i_ref(ino);
 	n->s_inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
@@ -442,12 +457,16 @@ arg_t _connect(void)
 		s->s_addr[SADDR_DST].port = sin.sin_port;
 		if (net_connect(s))
 			return -1;
+		if (sock_wait_leave(s, 0, SS_CONNECTING)) {
+			/* API oddity, thanks Berkley */
+			if (udata.u_error == EAGAIN)
+				udata.u_error = EINPROGRESS;
+			return -1;
+		}
+		return sock_error(s);
 	}
-
-	if (sock_wait_leave(s, 0, SS_CONNECTING))
-		return -1;
-	/* FIXME: return EINPROGRESS not EINTR for SS_CONNECTING */
-	return sock_error(s);
+	udata.u_error = EINVAL;
+	return -1;
 }
 
 #undef fd
