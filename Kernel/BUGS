@@ -20,4 +20,3 @@
 
 suggests sleep/wakeup/irq race somewhere still
 
-- socket code leaks inode refs ??
