@@ -40,5 +40,5 @@ level2.rel
 syscall_level2.rel
 syscall_net.rel
 select.rel
-platform-z80pack/net_native.rel
+platform-z80pack/net_z80pack.rel
 -e

@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <devatsim.h>
+#include <net_z80pack.h>
 
 uint16_t ramtop = PROGTOP;
 
@@ -29,6 +30,7 @@ void platform_interrupt(void)
  tty_pollirq();
  timer_interrupt();
 // netat_poll();
+ netz_poll();
 }
 
 /* Nothing to do for the map of init */
