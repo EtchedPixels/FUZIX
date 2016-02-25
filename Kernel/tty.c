@@ -10,8 +10,8 @@
  *	TODO:
  *	- Parity
  *	- Various misc minor flags
- *	- BSD ^Z handling and tty sessions
  *	- Software Flow control
+ *	- Don't echo EOF char ?
  *
  *	Add a small echo buffer to each tty
  */
