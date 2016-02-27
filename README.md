@@ -35,7 +35,7 @@ OMU also got blended in
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots on both 6502, 6809 and Z80
+* Kernel boots to userspace on both 6502 (bitrotted), 6809, MSP430 and Z80
 * Core code can be built for 6502, 6809, 68000, 8086, Z80 and MSP430 so should
   be far more portable
 * Core architecture designed to support building and maintaining
@@ -68,24 +68,23 @@ friends, while UMZIX has a neat unified "make anything" function.
 
 ## What Key Features Are Missing Still
 
-* ptrace, core dumps, ulimit
+* ptrace, ulimit
 * root reserved disk blocks
 * banked executables
-* TCP/IP
-* select/poll()
+* TCP/IP (in progress)
+* select/poll() (in progress)
 * Support for > 32MB filesystems (but first figure out how to fsck
 	a giant fs on a slow 8bit micro!)
 * Smarter scheduler
 * Optimisations for disk block/inode allocator (2.11BSD)
 * CP/M emulator has not yet been debugged on the FUZIX syscall API
 
-
 ## Tool Issues
 
 * No useful 8086 compiler option (started work on pcc 8086 but help
 	needed, coherent may provide a suitable cc but that also needs work)
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
-* SDCC can generate ROMmable binaries but not banked ones
+* SDCC can generate ROMmable binaries but not banked ones (hack fixes done)
 * SDCC has no register passing function call support, and for some
 	stuff it really shows
 * SDCC generates quite bloaty small applications. Needs research
