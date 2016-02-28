@@ -1,6 +1,22 @@
 /*
  *	Manipulate BBC micro disc images include Watford DDFS and
- *	to an extent HDFS image types
+ *	to an extent HDFS image types. We don't handle Z80 images because
+ *	the Z80 images are totally different. The Z80 disks have
+ *	BIOS on sectors 0-7, CCP & BDOS on sectors 8-29 (CCP first)
+ *	The disk itself is in CP/M format. The disk must be in FM mode 80 track
+ *	and tracks 0-2 are used by the system image.
+ *
+ *	The Z80 images load the BIOS to E9F0, CCP and BDOS to D400
+ *	The BIOS EB00 to EBF0 are copied to EAF0-EBE0 and EBF0-F1F0 to
+ *	EBE0 to F1E0
+ *
+ *	To boot the byte at D400 must contain C3 and if so then a jump is
+ *	made to EA00
+ *
+ *	The CP/M image has tracks 0-79 mapped to side 0, but 80-159 are mapped
+ *	to side 1 in *reverse* order. 4K directory, 128 entries per disc, 512
+ *	byte blocks, 256 byte physical sector size. Physical skew is
+ *	00 11 44 55 88 99 22 33 66 77 (for the pairs)
  */
 
 #include <stdio.h>
@@ -54,7 +70,7 @@
  *	Sector 1 starts with an 8 byte block holding
  *	100-103 Last four bytes of title (space padded)
  *	104 disk cycle number (key number for HDFS)
- *	105 number of catalogu entries * 8
+ *	105 number of catalogue entries * 8
  *	106 bit 0/1 total sectors bit8-9
  *	    bit 2 0 (WDFS total sectors bit 10) (HDFS sides - 1)
  *	    bit 3 0 (HDFS 1 - HDFS detect)

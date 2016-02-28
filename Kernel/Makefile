@@ -176,6 +176,8 @@ tools/map_syscall: tools/map_syscall.c
 
 tools/make4x6: tools/make4x6.c
 
+tools/bbc: tools/bbc.c
+
 font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
