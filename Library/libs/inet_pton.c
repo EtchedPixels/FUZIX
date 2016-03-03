@@ -46,10 +46,10 @@ int inet_pton(int af, const char *src, void *dst)
 
 	/* Unlike the legacy interfaces this one requires decimal and four
 	   dotted quads */
-	src = quad(src, *p++);
-	src = quad(src, *p++);
-	src = quad(src, *p++);
-	src = quad(src, *p);
+	src = quad(src, p++);
+	src = quad(src, p++);
+	src = quad(src, p++);
+	src = quad(src, p);
 	if (src == NULL || *src)
 		return 0;
 	return 1;

@@ -23,8 +23,9 @@ extern uint16_t htons(uint16_t __hostshort);
 extern int inet_aton(const char *__cp, struct in_addr *__inp);
 extern in_addr_t inet_addr(const char *__cp);
 extern in_addr_t inet_network(const char *__cp);
-/* Awkward - struct argument .. may need hacks for 6502 ?? */
-extern char *inet_ntoa(struct in_addr __in);
+/* Awkward - struct argument .. hacks needed */
+extern char *_inet_ntoa(uint32_t a);
+#define inet_ntoa(x)	(_inet_ntoa((x).s_addr))
 
 /* Modern APIs */
 extern const char *inet_ntop(int __af, const void *__src, char *__dst,

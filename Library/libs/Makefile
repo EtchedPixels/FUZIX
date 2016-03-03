@@ -1,4 +1,4 @@
-CC = sdcc
+CC = fcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
@@ -8,9 +8,11 @@ export MAKE = make
 PLATFORM =
 export PLATFORM
 #CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
-CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include
+#CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include -I../../Kernel/include
 # for stuff that gives sdcc nightmares
-CC_NOOPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../include
+#CC_NOOPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../include
+CC_OPT = -O2 -c
+CC_NOOPT = -c
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
 SRC_CRT0 = crt0$(PLATFORM).s
@@ -31,7 +33,9 @@ SRC_C += free.c fsetpos.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
 SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
-SRC_C += getw.c gmtime.c gmtime_r.c grent.c index.c isatty.c killpg.c
+SRC_C += getw.c gmtime.c gmtime_r.c grent.c
+SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
+SRC_C += index.c isatty.c killpg.c
 SRC_C += libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
