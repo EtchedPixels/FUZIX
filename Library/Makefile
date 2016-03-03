@@ -26,3 +26,17 @@ tools/binman: tools/binman.c
 
 tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
+
+install:
+	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
+	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
+	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
+	mkdir -p /opt/fcc/include/sys
+	install -m 0755 tools/binman tools/fcc /opt/fcc/bin
+	install -m 0644 include/*.h /opt/fcc/include
+	install -m 0644 include/6502/*.h /opt/fcc/include/6502
+	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa
+	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
+	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
+	install -m 0644 include/sys/*.h /opt/fcc/include/sys
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
