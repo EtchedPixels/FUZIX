@@ -361,6 +361,8 @@ uint8_t write_core_image(void)
 	inoptr parent = NULLINODE;
 	inoptr ino;
 
+	udata.u_error = 0;
+
 	ino = kn_open("core", &parent);
 	if (ino) {
 		i_deref(parent);
