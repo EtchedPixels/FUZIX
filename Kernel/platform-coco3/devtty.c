@@ -275,6 +275,9 @@ static int keysdown = 0;
 static uint8_t shiftmask[8] = {
 	0, 0, 0, 0x40, 0x40, 0, 0, 0x40
 };
+static uint8_t timer = 0 ;
+#define REPEAT_DELAY0 30 ; /* delay ticks before first repeat  */
+#define REPEAT_DELAY1 10 ; /* delay ticks on sucessive repeats */
 
 /* a lookup table to rotate a 0 bit around */
 static uint8_t rbit[8] = {
@@ -448,8 +451,18 @@ void platform_interrupt(void)
 	*pia_col;
 	newkey = 0;
 	keyproc();
-	if (keysdown < 3 && newkey)
-		keydecode();
+	if (keysdown && (keysdown < 3) ){
+		if(newkey){
+			keydecode();
+			timer = REPEAT_DELAY0 ;
+		}
+		else{
+			if( ! --timer ){
+				keydecode();
+				timer = REPEAT_DELAY1 ;
+			}
+		}
+	}
 	timer_interrupt();
 	dw_vpoll();
 }
