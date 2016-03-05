@@ -20,5 +20,7 @@ DIR *opendir_r(DIR *dir, char *path)
 	if ((dir->dd_fd = open(path, O_RDONLY | O_CLOEXEC)) < 0)
 		return NULL;
 	dir->dd_loc = 0;
+	dir->_priv.next = 0;
+	dir->_priv.last = 0;
 	return dir;
 }
