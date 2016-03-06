@@ -33,6 +33,11 @@ struct vt_switch {
   signed char ncursory;
 };
 
+struct vt_repeat {
+  uint8_t first;
+  uint8_t continual;
+};
+
 /* Core functions */
 void vtoutput(unsigned char *p, unsigned int len);
 void vtinit(void);
@@ -50,9 +55,10 @@ void plot_char(int8_t y, int8_t x, uint16_t c);
 void do_beep(void);
 int vt_ioctl(uint8_t minor, uarg_t op, char *ptr);
 int vt_inproc(uint8_t minor, unsigned char c);
-void vtattr_notify( void );
+void vtattr_notify(void);
 extern uint8_t vtattr_cap;
 extern uint8_t vtink;
 extern uint8_t vtpaper;
+extern struct vt_repeat keyrepeat;
 
 #endif

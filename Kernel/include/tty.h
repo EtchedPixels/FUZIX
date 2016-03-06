@@ -148,8 +148,9 @@ struct termios {
 #define KBMAPSIZE	0x20
 #define KBMAPGET	0x21
 #define VTSIZE		0x22
-#define KBSETTRANS	0x23
+#define KBSETTRANS	(0x23|IOCTL_SUPER)
 #define VTATTRS		0x24
+#define KBRATE		0x25
 
 /* Fuzix systems to level 2 have 256 byte tty buffers as per standards, level 1
    boxes may not */
