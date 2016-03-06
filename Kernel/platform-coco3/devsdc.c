@@ -121,7 +121,7 @@ uint8_t devsdc_transfer(void)
 	return ret;
 }
 
-
+__attribute__((section(".discard")))
 /* Returns true if SDC hardware seems to exist */
 bool devsdc_exist()
 {
@@ -133,7 +133,7 @@ bool devsdc_exist()
 	else return 0;
 }
 
-
+__attribute__((section(".discard")))
 /* Call this to initialize SDC/blkdev interface */
 void devsdc_init()
 {
