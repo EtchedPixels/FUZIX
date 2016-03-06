@@ -117,7 +117,7 @@ static void video_get( char *usrptr ){
 	map_for_kernel();
 }
 
-
+__attribute__((section(".discard")))
 void video_init( )
 {
 	map_for_video();

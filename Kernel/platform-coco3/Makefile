@@ -2,16 +2,18 @@
 CSRCS = ttydw.c mbr.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
+CDSRCS = ../dev/devide_discard.c
+
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
-DSRCS += ../dev/devide_discard.c
 
 ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = devdw.o blkdev.o devide.o devide_discard.o
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
+DOBJS = devdw.o blkdev.o devide.o 
+CDOBJS = $(CDSRCS:.c=$(BINEXT))
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -21,6 +23,9 @@ all:	$(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(CDOBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
