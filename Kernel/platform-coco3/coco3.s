@@ -122,8 +122,8 @@ _irqrestore:			; B holds the data
 	.area .data
 _hz:	.db	0  		; Is machine in 50hz?
 
-	
-            .area .text
+
+            .area .discard
 
 ;;;  Stuff to initialize *before* hardware
 ;;;    takes: nothing
