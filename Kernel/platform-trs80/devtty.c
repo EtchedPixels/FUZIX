@@ -15,6 +15,7 @@ uint8_t curtty;		/* output side */
 uint8_t inputtty;	/* input side */
 static struct vt_switch ttysave[2];
 static uint8_t vtbackbuf[VT_WIDTH * VT_HEIGHT];
+struct vt_repeat keyrepeat;
 
 uint8_t *vtbase[2] = { 0xF800, vtbackbuf };
 
@@ -242,6 +243,7 @@ uint8_t shiftkeyboard[8][8] = {
 };
 
 static uint8_t capslock = 0;
+static uint8_t kbd_timer;
 
 static void keydecode(void)
 {
@@ -300,7 +302,13 @@ void kbd_interrupt(void)
 {
 	newkey = 0;
 	keyproc();
-	if (keysdown < 3 && newkey)
-		keydecode();
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
 }
-
