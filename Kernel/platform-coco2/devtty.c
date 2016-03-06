@@ -26,6 +26,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 };
 
 uint8_t vtattr_cap = 0;
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -50,7 +52,6 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	irqflags_t irq;
 	if (minor == 1)
 		vtoutput(&c, 1);
 	else
@@ -220,8 +221,15 @@ void platform_interrupt(void)
 		*pia_col;
 		newkey = 0;
 		keyproc();
-		if (keysdown < 3 && newkey)
-			keydecode();
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
+		}
 //                fd_timer_tick();
 		timer_interrupt();
 	}

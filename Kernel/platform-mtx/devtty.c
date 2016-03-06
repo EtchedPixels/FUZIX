@@ -26,6 +26,9 @@ static struct vt_switch ttysave[2];
    it then call the vt ioctl or just intercept the vt ioctl */
 uint8_t vtattr_cap;
 
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
+
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 char tbuf3[TTYSIZ];
@@ -286,8 +289,15 @@ void kbd_interrupt(void)
 {
 	newkey = 0;
 	keyproc();
-	if (keysdown < 3 && newkey)
-		keydecode();
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
 }
 
 void tty_interrupt(void)

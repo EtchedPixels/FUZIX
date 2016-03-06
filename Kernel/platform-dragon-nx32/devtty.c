@@ -29,6 +29,8 @@ uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
 
 static uint8_t vmode;
+static uint8_t kbd_timer;
+struct vt_repeat keyrepeat;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -264,8 +266,15 @@ void platform_interrupt(void)
 		*pia_col;
 		newkey = 0;
 		keyproc();
-		if (keysdown < 3 && newkey)
-			keydecode();
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
+		}
                 fd_timer_tick();
 		timer_interrupt();
 	}

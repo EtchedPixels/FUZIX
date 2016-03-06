@@ -16,7 +16,9 @@ __sfr __at 0xA9 kbd_row_read;
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
+struct vt_repeat keyrepeat;
 uint8_t vtattr_cap;
+static uint8_t kbd_timer;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -158,8 +160,15 @@ void kbd_interrupt(void)
 	update_keyboard();
 	keyproc();
 
-	if (keysdown < 3 && newkey)
-		keydecode();
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
 }
 
 void tty_sleeping(uint8_t minor)

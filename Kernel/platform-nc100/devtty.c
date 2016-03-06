@@ -27,6 +27,8 @@ __sfr __at 0xB8 kmap8;
 __sfr __at 0xB9 kmap9;
 
 uint8_t vtattr_cap;
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
 
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
@@ -313,8 +315,15 @@ void platform_interrupt(void)
 
 		newkey = 0;
 		keyproc();
-		if (keysdown < 3 && newkey)
-			keydecode();
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
+		}
 		timer_interrupt();
 	}
 	if (!(a & 16)) {
@@ -357,8 +366,15 @@ void platform_interrupt(void)
 
 		newkey = 0;
 		keyproc();
-		if (keysdown < 3 && newkey)
-			keydecode();
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
+		}
 		timer_interrupt();
 	}
 	/* clear the mask */

@@ -9,6 +9,8 @@
 #undef  DEBUG            /* UNdefine to delete debug code sequences */
 
 uint8_t vtattr_cap;
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
 
 __sfr __at 0xE0	dart0d;
 __sfr __at 0xE1 dart0c;
@@ -256,10 +258,16 @@ static void keydecode(void)
           floppy motor etc */
 void platform_interrupt(void) 
 {
-    newkey = 0;
-    keyproc();
-    if (keysdown < 3 && newkey)
-        keydecode();
-    timer_interrupt();
+	newkey = 0;
+	keyproc();
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
+	timer_interrupt();
 }
-

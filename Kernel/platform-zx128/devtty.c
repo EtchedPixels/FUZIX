@@ -10,6 +10,8 @@
 char tbuf1[TTYSIZ];
 
 uint8_t vtattr_cap;
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
 
 /* buffer for port scan procedure */
 uint8_t keybuf[8];
@@ -142,9 +144,16 @@ void tty_pollirq(void)
 		}
 		keymap[i] = keybuf[i];
 	}
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
 
-	if (keysdown < 3 && newkey)
-		keydecode();
 }
 
 static uint8_t cursor[4] = { KEY_LEFT, KEY_DOWN, KEY_UP, KEY_RIGHT };
