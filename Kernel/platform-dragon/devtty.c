@@ -103,6 +103,9 @@ static uint8_t rbit[8] = {
 	0x7F,
 };
 
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
+
 /* Row inputs: multiplexed with the joystick */
 static volatile uint8_t *pia_row = (uint8_t *)0xFF00;
 /* Columns for scanning: multiplexed with the printer port */
@@ -211,8 +214,15 @@ void platform_interrupt(void)
 		*pia_col;
 		newkey = 0;
 		keyproc();
-		if (keysdown < 3 && newkey)
-			keydecode();
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
+		}
 		timer_interrupt();
 	}
 }
