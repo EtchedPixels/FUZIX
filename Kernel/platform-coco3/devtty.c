@@ -510,9 +510,10 @@ inval:	udata.u_error = EINVAL;
 
 uint8_t rgb_def_pal[16]={
 	0, 8, 32, 40, 16, 24, 48, 63,
-	0, 8, 32, 40, 16, 24, 48, 63	
+	0, 8, 32, 40, 16, 24, 48, 63
 };
 
+__attribute__((section(".discard")))
 void devtty_init()
 {
 	int i;
