@@ -24,7 +24,6 @@
       stdin/stdout.
 
     TODO:
-    * don't archive the archive file
 */
 
 #include <stdio.h>
@@ -67,6 +66,7 @@ char *ofile=NULL;       /* pointer to archive name from cmd line */
 char key=0;             /* key mode of command (t,x,c) */
 int noreplace=0;        /* replace old files? */
 int cksum=1;            /* don't worry about cksums */
+struct stat astat;      /* stat of archive file */
 
 
 /* Return a number from an octal string */
@@ -258,7 +258,12 @@ static void storedir( char *name){
 		perror("");
 		return;
 	}
-	
+
+	/* check to make sure we're not trying to archive
+	   the archive */
+	if (  ( s.st_ino == astat.st_ino ) && ( s.st_dev == astat.st_dev ) )
+		return;
+
 	if( S_ISREG (s.st_mode ) ){
 		count = s.st_size / 512 ;
 		rem = s.st_size % 512 ;
@@ -574,10 +579,17 @@ static void extract( char *argv[] ){
 /* Create a archive */
 static void create( char *argv[] ){
 	int x;
+
 	/* open outfile */
 	if( ofile ) outfile=open( ofile, O_CREAT|O_WRONLY, 0666 );
 	else outfile=1;
 	if( outfile < 0 ){
+		pname();
+		exit(1);
+	}
+	/* get dev / inode numbers of created tar file for comparing to
+	   added files, in order to skip adding a tar file to itself */
+	if( fstat( outfile, &astat ) ){
 		pname();
 		exit(1);
 	}
