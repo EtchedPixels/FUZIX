@@ -15,6 +15,12 @@
 #define VSECT __attribute__((section(".video")))
 #define VSECTD __attribute__((section(".videodata")))
 
+
+/* Default key repeat values, in tenths of seconds */
+#define REPEAT_FIRST 5 /* delay before first repeat */
+#define REPEAT_CONTINUAL 1 /* delay on sucessive repeats */
+
+
 extern uint8_t hz;
 
 
@@ -275,9 +281,9 @@ static int keysdown = 0;
 static uint8_t shiftmask[8] = {
 	0, 0, 0, 0x40, 0x40, 0, 0, 0x40
 };
-static uint8_t timer = 0 ;
-#define REPEAT_DELAY0 30 ; /* delay ticks before first repeat  */
-#define REPEAT_DELAY1 10 ; /* delay ticks on sucessive repeats */
+struct vt_repeat keyrepeat;
+static uint8_t kbd_timer;
+
 
 /* a lookup table to rotate a 0 bit around */
 static uint8_t rbit[8] = {
@@ -454,12 +460,12 @@ void platform_interrupt(void)
 	if (keysdown && (keysdown < 3) ){
 		if(newkey){
 			keydecode();
-			timer = REPEAT_DELAY0 ;
+			kbd_timer = keyrepeat.first;
 		}
 		else{
-			if( ! --timer ){
+			if( ! --kbd_timer ){
 				keydecode();
-				timer = REPEAT_DELAY1 ;
+				kbd_timer = keyrepeat.continual;
 			}
 		}
 	}
@@ -531,6 +537,9 @@ void devtty_init()
 {
 	int i;
 	int defmode=0;
+	/* set default keyboard delay/repeat rates */
+	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC/10);
+	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC/10);
 	/* scan cmdline for params for vt */
 
        	/* apply default/cmdline mode to terminal structs */
