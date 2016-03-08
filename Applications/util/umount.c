@@ -34,6 +34,7 @@ int rm_mtab(char *devname)
     FILE *inpf, *outf;
     char *tmp_fname;
 	char tmp[MTAB_LINE];
+	char tmp2[MTAB_LINE];
 	char* dev;
 	char* mntpt;
 
@@ -52,11 +53,12 @@ int rm_mtab(char *devname)
         exit(1);
     }
     while (fgets(tmp, sizeof(tmp), inpf)) {
+	    strncpy( tmp2, tmp, MTAB_LINE );
 		dev = strtok(tmp, " ");
         if (strcmp(dev, devname) == 0) {
             continue;
         } else {
-            fprintf(outf, "%s", tmp);
+            fprintf(outf, "%s", tmp2);
         }
     }
     fclose(inpf);
