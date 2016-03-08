@@ -53,7 +53,6 @@ int rm_mtab(char *devname)
     }
     while (fgets(tmp, sizeof(tmp), inpf)) {
 		dev = strtok(tmp, " ");
-		mntpt = strtok(NULL, " ");
         if (strcmp(dev, devname) == 0) {
             continue;
         } else {
