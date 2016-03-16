@@ -180,9 +180,9 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 {
 	uint16_t i;
+	uint8_t *p = inittab;
 	for (i = 0; i < count; i++) {
 		if (ip->pid == pid) {
-			uint8_t *p = initpid[i].id;
 			/* Clear the utmp entry */
 			ut.ut_pid = 1;
 			ut.ut_type = INIT_PROCESS;
@@ -199,6 +199,7 @@ static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 			return 0;
 		}
 		ip++;
+		p += *p;
 	}
 	return -1;
 }
