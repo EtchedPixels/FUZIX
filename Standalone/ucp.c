@@ -50,6 +50,7 @@ static int cmd_ls(char *path);
 static int cmd_chmod(char *modes, char *path);
 static int cmd_mknod( char *path, char *modes, char *devs);
 static int cmd_mkdir(char *path);
+static int cmd_link( char *src, char *dst );
 static int cmd_get( char *src, char *dest, int binflag);
 static int cmd_put( char *arg, int binflag);
 static int cmd_type( char *arg);
@@ -231,6 +232,11 @@ int main(int argc, char *argval[])
                         printf("Umount error: %d\n", *syserror);
                     }
                 break;
+	
+	    case 17:        /* ln */
+		if (*arg1 && *arg2)
+		    retc = cmd_link(arg1, arg2);
+		break;
 
             case 50:        /* help */
                 usage();
@@ -292,6 +298,8 @@ static int match(char *cmd)
         return (15);
     else if (strcmp(cmd, "umount") == 0)
         return (16);
+    else if (strcmp(cmd, "ln" ) == 0 )
+	return (17);
     else if (strcmp(cmd, "help") == 0)
         return (50);
     else if (strcmp(cmd, "?") == 0)
@@ -320,6 +328,7 @@ static void usage(void)
     printf("df\n");
     printf("mount dev# path\n");
     printf("umount path\n");
+    printf("ln sourcefile destfile\n");
 }
 
 static void prmode(int mode)
@@ -504,7 +513,14 @@ static int cmd_mkdir(char *path)
     return (0);
 }
 
-
+static int cmd_link( char *src, char *dst )
+{
+    if( fuzix_link( src, dst ) != 0 ){
+	fprintf(stderr, "link: error %d\n", *syserror );
+	return -1;
+    }
+    return 0;
+}
 
 static int cmd_get( char *src, char *dest, int binflag)
 {
