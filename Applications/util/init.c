@@ -173,6 +173,19 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 		return pid;
 }
 
+/* Get condensed inittab entry pointer from index */
+
+static uint8_t *get_inittab( uint8_t index)
+{
+	uint8_t *p = inittab;
+	uint8_t i;
+	for( i = 0; i < index; i++ )
+		p += *p; /* add length to p for next entry pointer */
+	return p;
+}
+
+
+
 /*
  *	Clear any dead processes
  */
@@ -194,6 +207,7 @@ static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 			/* Mark as done */
 			initpid[i].pid = 0;
 			/* Respawn the task if appropriate */
+			p = get_inittab(i);
 			if ((p[3] & (1 << runlevel)) && p[4] == INIT_RESPAWN)
 				initpid[i].pid = spawn_process(p, 0);
 			return 0;
