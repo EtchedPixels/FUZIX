@@ -1,0 +1,85 @@
+
+HISTORY FILE FOR ADVENTURE IN C
+
+09 Jan 1982		Greg Huntzinger
+-----------		5775 Leetsdale Dr.
+			Suite 699
+			P.O. Box 22557
+			Denver, CO 80222
+			<303> 753-0488/452-4919 ext 307
+(1)	added this history file
+(2)	fixed spelling and typeo errors in--
+		ADVENT1.DAT
+		ADVENT2.DAT
+		ADVENT6.DAT
+
+
+15 Sept 1985		Bob Withers
+------------		4001 Via Plata
+			Mesquite, Texas 75150
+			(214) 270-0368
+
+(1)	Ported code to compile under the Eco-C88 compiler for the IBM/PC.
+(2)	Added conditional code to allow the adventure to be compiled under
+	the Lattice and DeSmet compilers (refer to the conditional switches
+	in ADVENT.H for compiler selection).
+(3)	Re-formatted all of the text databases to take better advantage of
+	an 80 column screen.
+(4)	Added type casts at various places to keep the Lattice compiler from
+	complaining.
+(5)	Performed fairly extensive modification to the file I/O portion of
+	the program to allow it to use MS-DOS stream I/O.
+(6)	Added functions for initb() and initw() which do not exist under any
+	of the target compilers.
+(7)	Doubled the number of file offset indexes kept for databases ADVENT1,
+	ADVENT2, ADVENT3, and ADVENT6.	This did not significantly increase
+	the size of the executable module but does speed access to the text
+	stored in these files.
+(8)	Modified sub-modules EADVENT.C and SAVEADV.C so that the entire
+	program could be linked together to produce a single executable file
+	rather than performing dynamic loads of these two modules (via exec).
+
+     These modifications were compiled and tested under the following IBM/PC
+     compilers:
+
+	     Eco-C88 Version 2.72	     Ecosoft, Inc.
+	     Lattice C Version 2.14	     Lattice, Inc.
+	     DeSmet C Version 2.41	     C-Ware, Inc.
+
+     The resultant executable modules were play tested on both an IBM/PC and
+     a Texas Instruments TIPC.	All versions of the game appeared to operate
+     properly, however, the game was not played to it's conclusion.
+
+** Note that when running this program under MS-DOS a CONFIG.SYS file is
+   required to set the FILES= parameter to at least 10 files.  Failure to do
+   this will result in an error message that the program was not able to open
+   file ADVENT6.DAT.
+
+
+ 2 Jun 90		Bob Withers
+ --------		649 Meadowbrook
+			Allen, Texas 75002
+
+ (1)  Ported code to Microsoft C V 5.10 and 6.00
+ (2)  Placed all global variables in header ADVENT.H
+ (3)  Removed most runtime variable initialization and replaced
+      by compile time initializers.
+ (4)  Added file ADVENTDB.C to completely replace all the adventure
+      data base files.	This keeps all data in memory and eliminates
+      all disk accesses during game play.  All functions in DATABASE.C
+      were modified to access in memory data.
+ (5)  Added code to support the BRIEF and VERBOSE verbs.
+ (6)  Added code to ignore CTRL-C signal.
+ (7)  Modified vocab search to use a binary search.
+
+
+ 16 March 2016		Alan Cox <alan@etchedpixels.co.uk>
+--------------
+
+ (1)  Turned the database back into a file
+ (2)  Removed some of the weird DOSism
+ (3)  Removed the use of stdio
+
+ This allows us to run it on Fuzix although it is a bit tight at the moment
+ and more optimisation is needed as is removing the rigid 80 column formatting
+

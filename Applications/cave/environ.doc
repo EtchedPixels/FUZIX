@@ -1,0 +1,106 @@
+Notes on Adventure Environment
+written April 26, 1981
+
+        This disk was written and and compiled under version 1.3x and
+will NOT compile under version 1.4 and later without changes to the
+source.  Specifically dbuff in advent.h on or about line 134 must be
+declared so that it is compatible with the 1.4 file i/o.  The com files
+on the disk will require at least a 46k system to execute, but
+recompiling under 1.4 will add about 1k to the memory requirements
+(except that 1.4 produces tighter code).
+        The com files provided were debugged on a system including
+a 48k Altair equipped with 2 Micropolis drives, and a Processor
+Technology VDM.
+        To begin play, type advent. To resume a saved game type
+"advent -r".
+
+Added notes on making this ADVENTURE work in BDS-C Version 1.43
+Environment  written 17 May 1981 by L. C. Calhoun.
+
+        At Robert Ward's request, I brought this program up on
+the 1.43 compiler.  Only one change was required..to add the
+small section on buffering from BDSCIO.H to ADVENT.H, and to
+change dbuff[134] in ADVENT.H to dbuff[BUFSIZ].  I did review
+the other program files for potential changes, and added a
+title and note to the head of each for the record.  The compile
+and link control syntaxes differ between V 1.4 and older versions.
+I made the appropriate changes, and created two submit files;
+ADVCOMP.SUB and ADVLINK.SUB.  These must (of course) run on
+disk a:, but they are set up for all the c utilities to be on
+disk a: and the actual c programs with their .CRL files to be
+on b:.  Just PIP these two sub files over to the a: disk where
+CC1, CC2, C.CCC, CLINK, DEFF*  etc. hang out.  Only one file
+needs to be read two times during linkage - TURN.CRL while
+EADVENT.COM is being linked.  Otherwise, it went smoothly
+in conversion.
+
+        Mr. Jaeger (me too, I must admit) was worried that
+the greater buffer size used in the standard V 1.43 library
+would have a bad effect on the program length.  I compiled
+without the -o option for optimization.  Lo and behold,
+the program appears to be considerably shorter.  I was able
+to external set the data (-e6A00) much lower than in the
+submit files supplied.  I could have even gone lower.
+I compiled a second time with the e option in CC1 to -e6A00,
+see ADVCOMP.SUB.  Dog gone if the code didn't end at 5EC8.
+However, the variables end at 7CA1 even with the -e6A00,
+so I didn't bother.
+
+        The re-compiles were done on an ALTAIR 8800B, with
+a 60K CPM 2.2 system, ADM-3A display, and TARBEL single side
+single density controlling four Shugart 801R's.  I checked
+the elboeroom callouts during compile, and the least amount
+of elboeroom was 20K whilst compiling TURN.C.  So, it appears
+that the re-compiled version will compile and run on
+a 40K system with about 4K of stack space.  You can pick
+up another 2K of stack space by editing the ADVCOMP.SUB file
+for the option -e6000 if it's worthwhile.  Thank you Mr. Zolman.
+
+***********************************************************************
+
+Written on Sept 18, 1985
+
+Port of source code to the MS-DOS environment with the following
+target compilers:
+
+                  Eco-C88          Version 2.72
+                  Lattice C        Version 2.14
+                  DeSmet C         Version 2.41
+
+Most of the changes required involved the use of file I/O and the
+database offset index arrays used in the program.  Conditional code
+was added at various points in order to allow the same source to
+compile under the three target compilers.  The modules EADVENT.C and
+SAVEADV.C were modified from main drivers to called functions in order
+that the entire program could be linked into a single executable
+module.
+
+Under MS-DOS version 2 or higher the default number of files is one
+too few to enable the program to run.  A FILES=10 should be added
+in your CONFIG.SYS file (I've been using 12).
+
+I was unable to get the Lattice version to operate properly using
+buffered file I/O.  It appeared that the file offsets returned by
+lseek() and ftell() were incorrect while using buffered I/O.  I'm
+still scratching my head over this one.  I disabled file buffering
+on the Lattice version and it worked perfectly.  Well .... not
+exactly perfectly.  Lets put it this way, it operates properly.  A
+dead snail could beat it in a race but it does operate as advertised.
+If anyone has a clue for a fix to this it would be most appreciated.
+
+All versions of the program were compiled on an IBM/PC with 640K and
+running under PC-DOS V2.10.  The executable modules were also tried
+under PC-DOS V3.00 and on a TIPC with 512K running under MS-DOS V2.13.
+The program operated as expected under all configurations.
+
+Bob Withers
+
+*****************************************************************************
+
+Written on June 2nd, 1990
+
+The code was once again ported to compile under Microsoft C V5.10 and V6.00
+under both MSDOS and OS/2.  Numerous changes and code restructuring were
+performed.  See comments in file ADVENT.C for details.
+
+Bob Withers
