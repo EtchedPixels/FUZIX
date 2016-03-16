@@ -9,6 +9,7 @@ static uint8_t db_ntrav;
 static int db_lastloc;
 static int db_fd;
 static struct gameheader game;
+
 static void dbstring(uint16_t * off)
 {
 	uint16_t s = off[1] - *off;
@@ -36,13 +37,22 @@ void db_init(void)
 	}
 }
 
+void travcache(short loc)
+{
+	char *p;
+	if (loc != db_lastloc) {
+		dbstring(game.lshort + loc - 1);
+		db_lastloc = loc;
+		p = db_buf + strlen(db_buf) + 1;
+		db_ntrav = *p++;
+		memcpy(db_trav, p, sizeof(db_trav));
+	}
+}
 
 /*  Routine to fill travel array for a given location.	*/
 void gettrav(short loc)
 {
-	if (loc != db_lastloc)
-		bug(40);
-	--loc;
+	travcache(loc);
 	pTravel = db_trav;
 	sTravCnt = db_ntrav;
 	return;
@@ -87,6 +97,7 @@ void rspeak(short msg)
 void pspeak(short item, short state)
 {
 	register char *p;
+	char *s;
 
 #ifdef DEBUG
 	if (dbgflg)
@@ -104,13 +115,13 @@ void pspeak(short item, short state)
 		--state;
 	}
 
-	/* FIXME: optimise */
+	s = p;
 	while (TRUE) {
 		if (NUL == *p || '/' == *p)
 			break;
-		write(1, p, 1);
 		++p;
 	}
+	write(1, s, p - s);
 	nl();
 	return;
 }
@@ -119,7 +130,6 @@ void pspeak(short item, short state)
 /*  Print the long description of a location				    */
 void desclg(short loc)
 {
-	uint8_t *p;
 	dbstring(game.loclong + loc - 1);
 
 #ifdef DEBUG
@@ -129,26 +139,13 @@ void desclg(short loc)
 #endif				/*  */
 	DisplayText(game.loclong);
 	nl();
-
-	/* Cache the exits */
-	dbstring(game.lshort + loc - 1);
-	p = db_buf + strlen(db_buf) + 1;
-	db_ntrav = *p++;
-	memcpy(db_trav, p, sizeof(db_trav));
-	db_lastloc = loc;
 }
 
 
 /*  Print the short description of a location				    */
 void descsh(short loc)
 {
-	uint8_t *p;
-	db_lastloc = loc;
-	dbstring(game.lshort + loc - 1);
-	p = db_buf + strlen(db_buf) + 1;
-	db_ntrav = *p++;
-	memcpy(db_trav, p, sizeof(db_trav));
-
+	travcache(loc);
 #ifdef DEBUG
 	if (dbgflg)
 		fprintf(stderr, "** descsh(%d) ** ", loc);
