@@ -1,8 +1,3 @@
-#
-#	For Z80 at least this should work. We will need to hack advgen to
-#	do endian swapping if building on PC for 6809
-#
-
 PLATFORM = 6809
 CC = m6809-unknown-gcc
 # pointer to pointer gcc compilation problems: use -O0.
