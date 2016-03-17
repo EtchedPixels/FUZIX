@@ -3,7 +3,7 @@
 
 #include "advent.h"
 static void DisplayText(uint16_t * tab);
-static char db_buf[257];
+static char db_buf[513];
 static struct trav db_trav[16];	/* Trav for last location fetched */
 static uint8_t db_ntrav;
 static int db_lastloc;
