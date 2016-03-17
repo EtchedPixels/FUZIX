@@ -5,7 +5,8 @@
 
 PLATFORM = 6809
 CC = m6809-unknown-gcc
-CCOPTS = -O2
+# pointer to pointer gcc compilation problems: use -O0.
+CCOPTS = -O0
 # These are wrappers for lwasm and lwar
 ASM = m6809-unknown-as
 AR = m6809-unknown-ar
