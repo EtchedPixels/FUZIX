@@ -664,9 +664,6 @@ static pid_t getty(const char *ttyname, const char *id)
 			setpgrp();
 			setpgid(0,0);
 
-			/* Throw all the init working spacd we inherited */
-			brk_warn(membase);
-
 			fdtty = open(ttyname, O_RDWR);
 			if (fdtty < 0)
 				return -1;
