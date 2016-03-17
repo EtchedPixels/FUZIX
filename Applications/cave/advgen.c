@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 #define MAXDIM(a)		    (sizeof(a) / sizeof(a[0]))
 struct trav {
@@ -1646,6 +1647,16 @@ struct gameheader {
 };
 
 #define out 1
+
+static int crossendian;
+
+static uint16_t endianize(uint16_t v)
+{
+	if (crossendian)
+		v = ((v & 0xFF) << 8) | (v >> 8);
+	return v;
+}
+
 int main(int argc, char *argv[])
 {
 	int i = 0;
@@ -1654,12 +1665,21 @@ int main(int argc, char *argv[])
 	int len;
 	struct trav t;
 	struct gameheader game;
+
+	if (argc == 2 && strcmp(argv[1], "-x") == 0) {
+		crossendian = 1;
+		argc--;
+	}
+	if (argc != 1) {
+		fprintf(stderr, "%s [-x] >advent.db", argv[0]);
+		exit(1);
+	}
 	base = sizeof(game);
 	write(out, &game, sizeof(game));
 	dp = sizeof(game);
 	while (i < 210) {
 		len = strlen(pTextMsg[i]) + 1;
-		game.msg[i] = dp;
+		game.msg[i] = endianize(dp);
 		dp += len;
 		write(out, pTextMsg[i], len);
 		i++;
@@ -1669,7 +1689,7 @@ int main(int argc, char *argv[])
 
 		/* 0 terminate as entries don't give the true length */
 		len = strlen(pShortRmDesc[i]) + 1;
-		game.lshort[i] = dp;
+		game.lshort[i] = endianize(dp);
 		write(out, pShortRmDesc[i], len);
 		dp += len;
 		if (TravTab[i].sTrav > 16) {
@@ -1682,18 +1702,18 @@ int main(int argc, char *argv[])
 	} game.lshort[i] = dp;
 	for (i = 0; i < 64; i++) {
 		len = strlen(pObjDesc[i]);
-		game.odesc[i] = dp;
+		game.odesc[i] = endianize(dp);
 		write(out, pObjDesc[i], len);
 		dp += len;
 	}
 	game.odesc[i] = dp;
 	for (i = 0; i < 64; i++) {
 		len = strlen(pLongRmDesc[i]);
-		game.loclong[i] = dp;
+		game.loclong[i] = endianize(dp);
 		write(out, pLongRmDesc[i], len);
 		dp += len;
 	}
-	game.loclong[i] = dp;
+	game.loclong[i] = endianize(dp);
 	if (lseek(out, 0L, SEEK_SET) == -1) {
 		perror("seek");
 		exit(1);
