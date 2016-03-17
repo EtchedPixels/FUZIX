@@ -1601,42 +1601,61 @@ char *pTextMsg[] = {
 /*  Msg 202  */
 	"Somewhere nearby is Colossal Cave, where others have found fortunes in\n"
 	    "treasure and gold, though it is rumored that some who enter are never seen\n"
-	    "again.  Magic is said to work in the cave.  I will be your eyes and hands.\n" "Direct me with commands of 1 or 2 words.  I should warn you that I look at\n" "only the first five letters of each word, so you'll have to enter\n",
+	    "again.  Magic is said to work in the cave.  I will be your eyes and hands.\n"
+	    "Direct me with commands of 1 or 2 words.  I should warn you that I look at\n"
+	    "only the first five letters of each word, so you'll have to enter\n",
 /*  Msg 203  */
-	"\"Northeast\" as \"ne\" to distinguish it from \"North\".  (Should you get stuck,\n" "type \"help\" for some general hints.\n",
+	"\"Northeast\" as \"ne\" to distinguish it from \"North\".  (Should you get stuck,\n"
+	"type \"help\" for some general hints).\n",
 /*  Msg 204  */
 	"This program was originally developed by Willie Crowther. Most of the\n"
-	    "features of the current program were added by Don Woods.  This version,\n" "written in BDS 8080 C was adapted by Jay R. Jaeger and was later ported to\n" "MSC V5.1 on the IBM/PC by Bob Withers.\n",
+	"features of the current program were added by Don Woods.  This version,\n"
+	"written in BDS 8080 C was adapted by Jay R. Jaeger and was later ported to\n"
+	"MSC V5.1 on the IBM/PC by Bob Withers and then to Fuzix by Alan Cox.\n",
 /*  Msg 205  */
 	"I know of places, actions, and things.  Most of my vocabulary describes\n"
 	    "places and is used to move you there.  To move, try words like forest,\n"
 	    "building, downstream, enter, east, west, north, south, up or down.  I know\n"
-	    "about a few special objects, like a black rod hidden in the cave.  These\n" "objects can be manipulated using some of the action words I know. Usually\n" "you will need to give both the object and action words (In either order),",
+	    "about a few special objects, like a black rod hidden in the cave.  These\n"
+	    "objects can be manipulated using some of the action words I know. Usually\n"
+	    "you will need to give both the object and action words (In either order),",
 /*  Msg 206  */
 	"but sometimes I can infer the object from the verb alone.  Some objects also\n"
 	    "imply verbs; in particular, \"inventory\" implies \"take inventory\", which\n"
 	    "causes me to give you a list of what you're carrying.  The objects have side\n"
-	    "effects; for instance, the rod scares the bird.  Usually people having\n" "trouble moving just need to try a few more words.  Usually people trying\n" "unsuccessfully to manipulate an object are attempting something beyond their",
+	    "effects; for instance, the rod scares the bird.  Usually people having\n"
+	    "trouble moving just need to try a few more words.  Usually people trying\n"
+	    "unsuccessfully to manipulate an object are attempting something beyond their",
 /*  Msg 207  */
 	"(or my!) capabilities and should try a completely different tack.  To speed\n"
 	    "the game you can sometimes move long distances with a single word.  For\n"
 	    "example, \"building\" usually gets you to the building from anywhere above\n"
-	    "ground except when lost in the forest.  Also, note that cave passages turn a\n" "lot, and that leaving a room to the north does not guarantee entering the\n" "next from the south.\n" "\n" "Good luck!",
+	    "ground except when lost in the forest.  Also, note that cave passages turn a\n"
+	    "lot, and that leaving a room to the north does not guarantee entering the\n"
+	    "next from the south.\n"
+	    "\n"
+	    "Good luck!",
 /*  Msg 208  */
 	"If you want to end your adventure early, say \"quit\".  To suspend you\n"
 	    "adventure such that you can continue later say \"suspend\" (or \"pause\" or\n"
 	    "\"save\").  To see how well you're doing, say \"score\".  To get full credit for\n"
-	    "a treasure, you must have left it safely in the building, though you get\n" "partial credit just for locating it. You lose points for getting killed, or\n" "for quitting, though the former costs you more.  There are also points based",
+	    "a treasure, you must have left it safely in the building, though you get\n"
+	    "partial credit just for locating it. You lose points for getting killed, or\n"
+	    "for quitting, though the former costs you more.  There are also points based",
 /*  Msg 209  */
 	"on how much (If any) of the cave you've managed to explore;  in particular,\n"
 	    "there is a large bonus just for getting in (to distinguish the beginners\n"
 	    "from the rest of the pack), and there are other ways to determine whether\n"
-	    "you've been through some of the more harrowing sections. If you think you've\n" "found all the treasures, just keep exploring for a while.  If nothing\n" "interesting happens, you haven't found them all yet.  If something",
+	    "you've been through some of the more harrowing sections. If you think you've\n"
+	    "found all the treasures, just keep exploring for a while.  If nothing\n"
+	    "interesting happens, you haven't found them all yet.  If something",
 /*  Msg 210  */
 	"interesting DOES happen, it means you're getting a bonus and have an\n"
 	    "opportunity to garner many more points in the master's section.  I may\n"
 	    "occasionally offer hints in you seem to be having trouble.  If I do, I'll\n"
-	    "warn you in advance how much it will affect your score to accept the hints.\n" "Finally, to save paper, you may specify \"brief\", which tells me never to\n" "repeat the full description of a place unless you explicitly ask me to.",
+	    "warn you in advance how much it will affect your score to accept the hints.\n"
+	    "Finally, to save paper, you may specify \"brief\", which tells me never to\n"
+	    "repeat the full description of a place unless you explicitly ask me to.",
 };
 
 struct gameheader {
