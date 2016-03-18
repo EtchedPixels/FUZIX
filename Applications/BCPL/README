@@ -1,0 +1,87 @@
+This is a port of Robert Nordier's cint implementation to 16bit. Mostly it's
+a clean-up of all the signed/unsigned handling errors that are invisible in
+the 32bit version.
+
+Because this is a 16bit version you will also need to concatenate the supplied
+.i files for the compiler with the included blib16.i not the supplied blib.b
+which is blib modified for 16 rather than 32bits and is derived from the
+original BCPL distribution.
+
+For the BCPL kit see:
+http://www.nordier.com/software/bcpl.html
+
+Performance on the whole is pretty bad. Much of that is because SDCC doesn't
+generate particularly good code for this. It is however possible to
+recompile BCPL with it if you have a free weekend.
+
+Various things would improve the performance I suspect such as using local
+variables for some of the key pointers so SDCC makes them register pairs
+would help no end.
+
+
+How To Use
+----------
+
+The BCPL compiler produces OCODE in a file called OCODE. The cg code
+generator turns this into INTCODE which is a sort of assemblerish thing.
+
+There is no linker. Just cat the INTCODE files together in any order, the
+BCPL globals do all the magic!
+
+The BCPL kit comes with the BCPL (.b) files and the compiled intcode .i
+files for the compiler itself. So you can can
+
+cat cg.i blib16.i iclib.i > codegen.i
+cat syn.i trn.i blib16.i iclib.i > b.i
+
+Now you can do
+
+icint b.i <file.b
+icint codegen 
+
+and INTCODE contains your output file to run.
+
+Thus once you've written a minimal INTCODE interpreter for your system you
+have effectively fully bootstrapped the compiler and you can now write an
+OCODE or INTCODE to native code generator, then bootstrap the compiler with
+that to get a native compiler.
+
+In the FUZIX 8bit case it's a bit more complicated. While native code
+support will be a nice addition it's also going to be less compact so things
+like BCPL won't actually fit. The later compilers use a thing called
+CINTCODE which is much uglier but was designed to be compact on 8bit
+machines and run at a bearable speed. This was used for things like the BBC
+Micro BCPL environment. INTCODE is more reflective of older eras and word
+addressed machines.
+
+Probably what we actually need (if anyone really cares) is an INTCODE to
+something-saner and more compact bytecode convertor with a separate runtime
+engine.
+
+BCPLKIT COPYRIGHT
+-----------------
+
+Most of the files here are taken from a BCPL compiler kit distribution
+dating from the early 1980s.  None of the files bears a copyright
+notice in the original, but -- on the basis of other files in the
+distribution -- it seems reasonable to assume these are:
+
+   (c) Copyright 1978-1980 Tripos Research Group
+       University of Cambridge
+       Computer Laboratory
+
+Changes and additions are
+
+    (c) Copyright 2004, 2012 Robert Nordier
+
+and are freely redistributable.
+
+Robert Nordier
+www.nordier.com
+
+For more on BCPL see
+
+http://www.cl.cam.ac.uk/users/mr/BCPL.html
+
+Note that BCPL is not free software although it is available as a source
+release free for private or academic use.
