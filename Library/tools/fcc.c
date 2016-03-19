@@ -244,9 +244,12 @@ static char *chopname(const char *i)
     fprintf(stderr, "Out of memory.\n");
     exit(1);
   }
-  t = strrchr(p, '.');
-  if (t)
-    *t = 0;
+  t = strrchr(p, '/');
+  if (t) {
+    t = strrchr(t + 1, '.');
+    if (t)
+      *t = 0;
+  }
   return p;
 }
 
@@ -558,7 +561,7 @@ int main(int argc, const char *argv[]) {
   add_argument(buf);
   add_argument(t);
   add_argument(rebuildname("", target, "map"));
-  add_argument(chopname(target));
+  add_argument(target);
   ret = do_command();
   exit(ret);
 }
