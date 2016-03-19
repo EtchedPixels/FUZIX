@@ -119,7 +119,7 @@ $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 $(OBJ_CURS):%.rel: %.c
-	$(CC) $(CC_OPT) $(@:.rel=.c) -o ./curses/
+	$(CC) $(CC_OPT) $(@:.rel=.c) -o $@
 
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
