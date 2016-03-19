@@ -3,7 +3,7 @@ a clean-up of all the signed/unsigned handling errors that are invisible in
 the 32bit version.
 
 Because this is a 16bit version you will also need to concatenate the supplied
-.i files for the compiler with the included blib16.i not the supplied blib.b
+.i files for the compiler with the included blib16.i not the supplied blib.i
 which is blib modified for 16 rather than 32bits and is derived from the
 original BCPL distribution.
 
