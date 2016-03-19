@@ -174,16 +174,39 @@ stc(uint16_t c)
     M[P - 1] += c << Cp;
 }
 
+static char buf[128];
+static char *rcp = buf;
+static char *rce = buf;
+
+static int16_t rchget(void)
+{
+ rcp = buf;
+ rce = buf + read(fp, buf, 128);
+ if (rce <= rcp)
+  return -1;
+ return 0;
+}
+
 static void
 rch(void)
 {
     /* FIXME: blows up on EOF */
     for (;;) {
-        if (read(fp, &Ch, 1) == 0)
-         Ch = -1;
-//        putchar(Ch);
+        if (rcp == rce)
+          if (rchget()) {
+           Ch = -1;
+           return;
+          }
+        Ch = *rcp++;
         if (Ch != '/') return;
-        do read(fp, &Ch, 1); while (Ch != '\n');
+        do {
+         if (rcp == rce)
+          if (rchget()) {
+            Ch = -1;
+            return;
+          }
+          Ch = *rcp++;
+       } while (Ch != '\n');
     }
 }
 
@@ -205,7 +228,9 @@ setlab(int n)
     while (k > 0) {
 	uint16_t kp = k;
         uint16_t nv = M[kp];
-//        if (n == 499)fprintf(stderr, "setlab %d to %d\n", (unsigned int)kp, (unsigned int)P);
+        /* Removing this debug check breaks under SDCC - FIXME check if
+           compiler bug ! */
+        if (n == 9499)fprintf(stderr, "setlab %d to %d\n", (unsigned int)kp, (unsigned int)P);
         M[kp] = P;
         k = nv;
     }
