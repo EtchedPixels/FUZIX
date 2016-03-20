@@ -54,50 +54,38 @@ struct sigentry sigtab[]={
 	{ NULL, 0 }
 };
 
-int getsig( char *n )
+int getsig(char *n)
 {
 	struct sigentry *s=sigtab;
-	while( s->suffix ){
-		if( !strcmp(n,s->suffix) )
+	while (s->suffix) {
+		if (!strcmp(n,s->suffix))
 			return s->no;
-		s=s+1;
+		s = s + 1;
 	}
 	return -1;
 }	
 
-void diesig( void )
+void diesig(void)
 {
 	write(2, "kill: unknown signal\n", 21);
 	exit(1);
 }
 
-char *inttoa( int n )
-{
-	static c[10];
-	char *p=&c[9];
-	*--p=0;
-	while( n ){
-		*--p = (n % 10) + '0';
-		n /= 10;
-	}
-	return p;
-}
-
-void printsigs( void )
+void printsigs(void)
 {
 	struct sigentry *s=sigtab;
 	int col=0;
-	while( s->suffix ){
-		int l=strlen(s->suffix);
-		char *np=inttoa( s->no );
+	while (s->suffix) {
+		int l = strlen(s->suffix);
+		char *np = _itoa(s->no);
 		write(2, "SIG", 3 );
-		write(2, s->suffix, l );
-		write(2, "       ", 7-l );
-		write(2, np, strlen(np) );
-		if( col++ & 1 )
-			write(2, "\n", 1 );
+		write(2, s->suffix, l);
+		write(2, "       ", 7 - l);
+		write(2, np, strlen(np));
+		if (col++ & 1)
+			write(2, "\n", 1);
 		else
-			write(2, "   ", 3 );
+			write(2, "   ", 3);
 		s=s+1;
 	}
 	exit(0);
