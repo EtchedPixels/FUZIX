@@ -1,5 +1,5 @@
 
-CSRCS = ttydw.c mbr.c
+CSRCS = ttydw.c mbr.c dwtime.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
 CDSRCS = ../dev/devide_discard.c
@@ -53,7 +53,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o
+	videoll.o dwtime.o 
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s
