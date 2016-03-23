@@ -1,4 +1,4 @@
-#define NUM_OBJ 55
+#define NUM_OBJ 56
 #define WORDSIZE 4
 #include <stdint.h>
 
@@ -10,7 +10,7 @@ struct location {
 const uint8_t toomuch[] = { "I am carrying too much. " };
 const uint8_t dead[] = { "I am dead.\n" };
 const uint8_t stored_msg[] = { "I have stored " };
-const uint8_t stored_msg2[] = { "treasures. On a scale of 0 to 100, that rates " };
+const uint8_t stored_msg2[] = { " treasures. On a scale of 0 to 100, that rates " };
 const uint8_t dotnewline[] = { ".\n" };
 const uint8_t newline[] = { "\n" };
 const uint8_t carrying[] = { "I am carrying:\n" };
@@ -1332,8 +1332,9 @@ const uint8_t actions[] = {
 	10, 1, 48, 
 	2, 42, 0, 23, 
 	2, 54, 76, 
-	255, 75, 12, 
+	4, 75, 12, 
 	4, 0, 
+	51, 
 	255,
 };
 
