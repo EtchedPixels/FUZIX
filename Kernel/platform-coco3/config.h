@@ -89,3 +89,4 @@ extern unsigned char vt_map( unsigned char c );
 #undef  CONFIG_COCOSDC    /* Darren Atkinson's "CoCoSDC" cartridge */
 #define CONFIG_IDE        /* enable if IDE interface present */
 
+#define CONFIG_RTC        /* enable RTC code */

@@ -48,5 +48,6 @@ void device_init(void)
 	devsdc_init( );
 #endif
 	dwtime_init( );
+	inittod();
 }
 
