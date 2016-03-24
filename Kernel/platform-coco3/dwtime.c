@@ -7,35 +7,34 @@
 
 #define DISC __attribute__((section(".discard")))
 
-
+static uint8_t secs;
 
 static const uint16_t mktime_moffset[12]= { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
-static int get_time( char *tbuf )
+static int get_time( uint8_t *tbuf )
 {
 	int ret;
 
 	tbuf[0]=0x23;
 	ret=dw_transaction( tbuf, 1, tbuf, 6 );
 	if( ret ) return -1;
-
+	secs = tbuf[5];
 	return 0;
 }
 
 
-/* A Clasic, as stolen from Gnu */
-uint32_t __mulsi3( uint32_t a, uint32_t b)
+/* A Classic, as stolen from Gnu */
+DISC uint32_t __mulsi3( uint32_t a, uint32_t b)
 {
 	uint32_t r=0;
-	while (a)
-		{
-			if (a & 1)
-				r += b;
-			a >>= 1;
-			b <<= 1;
-		}
+	while (a){
+		if (a & 1)
+			r += b;
+		a >>= 1;
+		b <<= 1;
+	}
 	b=r;
-	return b;	
+	return b;
 }
 
 
@@ -102,7 +101,30 @@ DISC int dwtime_init( void )
 }
 
 
+#define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */
 
+/* Called every every decisec from timer.c */
+uint8_t rtc_secs(void)
+{
+	static uint8_t ticks=10;
+	static uint8_t longt=CONFIG_DWTIME_INTERVAL;
+	uint8_t t[6];
 
+	/* count to 10 deci's before doing anything */
+	if( --ticks )
+		return secs;
+	ticks=10;
+	/* count to INTERVAL before polling */
+	if( --longt ) 
+		goto nopoll;
+	longt=CONFIG_DWTIME_INTERVAL;
+	/* poll dw time and return it */
+	if( get_time( t ) ) goto nopoll;
+	return secs;
+	
+ nopoll:
+	if( (++secs) > 59 ) secs = 0;
+	return secs;
+}
 
 
