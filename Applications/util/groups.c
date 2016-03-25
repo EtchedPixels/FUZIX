@@ -15,7 +15,6 @@ static void writesn(const char *p)
 static void writeg(gid_t g)
 {
   struct group *gp;
-
   gp = getgrgid(g);
   if (gp)
     writesn(gp->gr_name);
@@ -52,8 +51,7 @@ int main(int argc, char *argv[])
       writeg(*g++);
     }
   }
-  if (egp) {
+  if (egp)
     writeg(eg);
-  }
   exit(0);
 }  
