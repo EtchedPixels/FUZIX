@@ -81,6 +81,11 @@ struct sockaddr;
 
 #define AD_NOSYNC		1	/* Unimplemented */
 
+/* shutdown */
+#define SHUT_RD			0
+#define SHUT_WR			1
+#define SHUT_RDWR		2
+
 struct times;
 struct tms;
 struct utimbuf;
@@ -150,6 +155,7 @@ extern int socket(int af, int type, int pf);
 extern int listen(int fd, int len);
 extern int bind(int fd, const struct sockaddr *s, int len);
 extern int connect(int fd, const struct sockaddr *s, int len);
+extern int shutdown(int fd, int how);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);
