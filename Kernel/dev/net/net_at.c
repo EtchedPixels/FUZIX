@@ -185,10 +185,12 @@ arg_t net_read(struct socket *s, uint8_t flag)
     }
     
     while(netat_ready() && n < udata.u_count) {
+      if (s->s_iflag & SI_SHUTR)
+        break;
       uputc(netat_byte(), udata.u_base++);
       n++;
     }
-    if (n)
+    if (n || (s->s_iflag & SI_SHUTR))
       return n;
     s->s_iflag &= ~SI_DATA;
     netat_wake();
@@ -207,7 +209,7 @@ arg_t net_write(struct socket *s, uint8_t flag)
   used(flag);
 
   while(n < udata.u_count) {
-    if (sockets[0].s_state == SS_CLOSED) {
+    if (sockets[0].s_state == SS_CLOSED || (sockets[0].s_iflag & SI_SHUTW)) {
       udata.u_error = EPIPE;
       ssig(udata.u_ptab, SIGPIPE);
       return -1;
@@ -217,6 +219,13 @@ arg_t net_write(struct socket *s, uint8_t flag)
     n++;
   }
   return udata.u_count;
+}
+
+arg_t net_shutdown(struct socket *s, uint8_t flag)
+{
+  s->s_iflag |= flag;
+  netat_wake();
+  return 0;
 }
 
 struct netdevice net_dev = {

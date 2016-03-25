@@ -288,8 +288,10 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		netstat = s->s_num;
 		st = status(s);
 
-		if (s->s_state == SS_CLOSED)
+		if (s->s_state == SS_CLOSED || (s->s_iflag & SI_SHUTW)) {
+		        udata.u_error = EPIPE;
 			break;
+                }
 
 		/* Error or EOF */
 		if (st & 0xC0)
@@ -321,12 +323,22 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	}
 	/* It broke mummy ! */
         irqrestore(irq);
-	if (n)
+	if (n) {
+	        s->s_error = udata.u_error;
+	        udata.u_error = 0;
 		return n;
+        }
 	err_xlate(s);
 	if (udata.u_error == EPIPE)
 		ssig(udata.u_ptab, SIGPIPE);
 	return -1;
+}
+
+arg_t net_shutdown(struct socket *s, uint8_t flag)
+{
+        s->s_iflag |= flag;
+        wakeup_all(s);
+        return 0;
 }
 
 /* Gunk we are still making up */

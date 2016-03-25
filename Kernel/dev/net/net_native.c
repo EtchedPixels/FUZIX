@@ -471,7 +471,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 			n = netn_copyout(s);
 		if (n == 0xFFFF)
 			return -1;
-		if (n)
+		if (n || (s->s_iflag & SI_SHUTR))
 			return n;
 		s->s_iflag &= ~SI_DATA;
 		/* Could do with using timeouts here to be clever for non O_NDELAY so
@@ -497,7 +497,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	}
 
 	while (t < udata.u_count) {
-		if (s->s_state == SS_CLOSED) {
+		if (s->s_state == SS_CLOSED || (s->s_iflag & SI_SHUTW)) {
 			udata.u_error = EPIPE;
 			ssig(udata.u_ptab, SIGPIPE);
 			return -1;
@@ -519,6 +519,13 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		}
 	}
 	return udata.u_count;
+}
+
+arg_t net_shutdown(struct socket *s, uint8-t flag)
+{
+	s->s_iflag |= flag;
+	wakeup_all(s);
+	return 0;
 }
 
 /* Gunk we are still making up */
