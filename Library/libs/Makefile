@@ -35,7 +35,7 @@ SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
-SRC_C += index.c isatty.c killpg.c
+SRC_C += index.c initgroups.c isatty.c killpg.c
 SRC_C += libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
@@ -62,8 +62,6 @@ SRC_C += cfmakeraw.c cfspeed.c revoke.c
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
 # Seems to give the compiler a hard time
 SRC_HARD += regexp.c
-# Not supported yet
-#SRC_C += initgroups.c
 # Pieces we inherit in this case from the compiler library instead
 #SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
 #SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c

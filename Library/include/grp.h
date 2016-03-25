@@ -29,6 +29,8 @@ extern int initgroups __P((const char * user, gid_t gid));
 
 extern struct group * __getgrent __P((int grp_fd));
 
+extern int initgroups(const char *__user, gid_t __group);
+
 extern char *_path_group;
 
 #endif /* _GRP_H */
