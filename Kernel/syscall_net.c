@@ -90,12 +90,17 @@ static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 
 static struct socket *alloc_socket(void)
 {
+	irqflags_t irq = di();
 	struct socket *s = sockets;
 	while (s < sockets + NSOCKET) {
-		if (s->s_state == SS_UNUSED)
+		if (s->s_state == SS_UNUSED) {
+			s->s_state = SS_INIT;
+			irqrestore(irq);
 			return s;
+		}
 		s++;
 	}
+	irqrestore(irq);
 	return NULL;
 }
 
