@@ -11,5 +11,9 @@
 typedef int socklen_t;
 typedef uint16_t sa_family_t;
 
+struct sockaddr {
+  sa_family_t sa_family;
+  uint8_t sa_data[14];
+};
 
 #endif

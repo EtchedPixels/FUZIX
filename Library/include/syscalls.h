@@ -62,6 +62,9 @@ struct hd_geometry {
 	uint16_t cylinders;
 	uint32_t start;
 };
+
+struct sockaddr;
+
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 
