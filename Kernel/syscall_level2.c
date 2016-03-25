@@ -46,7 +46,7 @@ arg_t _getgroups(void)
 		udata.u_error = EINVAL;
 		return -1;
 	}
-	if (uput(groups, udata.u_groups, ngroup * sizeof(uint16_t)) < 0)
+	if (uput(udata.u_groups, groups, udata.u_ngroup * sizeof(uint16_t)) < 0)
 		return -1;
 	return udata.u_ngroup;
 }
