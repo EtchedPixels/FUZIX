@@ -875,6 +875,7 @@ extern void map_init(void);
 extern void platform_idle(void);
 extern uint8_t rtc_secs(void);
 extern void trap_reboot(void);
+extern uint8_t platform_param(unsigned char *p);
 
 /* Will need a uptr_t eventually */
 extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */

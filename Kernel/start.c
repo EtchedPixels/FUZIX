@@ -7,6 +7,8 @@
 
 #define BAD_ROOT_DEV 0xFFFF
 
+static uint8_t ro;
+
 /*
  *	Put nothing here that cannot be discarded. We will eventually
  *	make the entire of this disappear after the initial _execve
@@ -63,10 +65,21 @@ void fstabinit(void)
       size differ due to memory models etc. We use uputp and we allow
       room for the pointers to be bigger than kernel */
 
+static uaddr_t progptr;
+static uaddr_t argptr;
+
+void add_argument(const char *s)
+{
+	int l = strlen(s) + 1;
+	uput(s, (void *)progptr, l);
+	uputp(progptr, (void *)argptr);
+	progptr += ((l + 3) & ~3);
+	argptr += sizeof(uptr_t);
+}
+
 void create_init(void)
 {
 	uint8_t *j;
-	static const char arg[] = { '/', 'i', 'n', 'i', 't' };
 
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
@@ -84,15 +97,21 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
-	uzero((void *)PROGLOAD, 32);
-	uput(arg, (void *)PROGLOAD, sizeof(arg));
-	/* Poke in argv[0] */
-	uputp(PROGLOAD+1 , (void *)(PROGLOAD + 8));
+	argptr = PROGLOAD;
+	progptr = PROGLOAD + 2048;
 
+	uzero((void *)progptr, 32);
+	add_argument("/init");
+}
+
+void complete_init(void)
+{
+	/* Terminate argv, also use this as the env ptr */
+	uputp(0, (void *)argptr);
 	/* Set up things to look like the process is calling _execve() */
-	udata.u_argn =  (arg_t)PROGLOAD;
-	udata.u_argn1 = (arg_t)(PROGLOAD + 0x8); /* Arguments (just "/init") */
-	udata.u_argn2 = (arg_t)(PROGLOAD + 0x10); /* Environment (none) */
+	udata.u_argn =  (arg_t)PROGLOAD + 2048; /* "/init" */
+	udata.u_argn1 = (arg_t)PROGLOAD; /* Arguments */
+	udata.u_argn2 = (arg_t)argptr; /* Environment (none) */
 
 #ifdef CONFIG_LEVEL_2
 	init_process->p_session = 1;
@@ -139,11 +158,45 @@ void create_init(void)
 #define BOOTDEVICENAMES "" /* numeric parsing only */
 #endif
 
-uint16_t bootdevice(const uint8_t *devname)
+static uint8_t system_param(unsigned char *p)
+{
+	if (*p == 'r' && p[2] == 0) {
+		if (p[1] == 'o') {
+			ro = 1;
+			return 1;
+		} else if (p[1] == 'w') {
+			ro = 0;
+			return 1;
+		}
+	}
+	/* FIXME: Parse init=path ?? */
+	return platform_param(p);
+}
+
+/* Parse other arguments */
+void parse_args(unsigned char *p)
+{
+	unsigned char *s; 
+	while(*p) {
+		while(*p == ' ' || *p == '\n')
+			p++;
+		s = p;
+		while(*p && *p != ' ' && *p != '\n')
+			p++;
+		if(*p)
+			*p++=0;
+		if (!system_param(s))
+			add_argument(s);
+
+	}
+}
+
+uint16_t bootdevice(uint8_t *devname)
 {
 	bool match = true;
 	unsigned int b = 0, n = 0;
-	const uint8_t *p, *bdn = (const uint8_t *)BOOTDEVICENAMES;
+	uint8_t *p;
+	const uint8_t *bdn = (const uint8_t *)BOOTDEVICENAMES;
 	uint8_t c, pc;
 
 	/* skip spaces at start of string */
@@ -204,8 +257,9 @@ uint16_t bootdevice(const uint8_t *devname)
 		case 0:
 		case '\n':
 		case '\r':
-		 /* FIXME: space trailing copy the rest into init args */
+			break;
 		case ' ':
+			parse_args(p);
 			break;
 		default:
 			return BAD_ROOT_DEV;
@@ -217,10 +271,12 @@ uint16_t bootdevice(const uint8_t *devname)
 		return BAD_ROOT_DEV;
 }
 
+/* So its in discard and thrown not on stack */
+static uint8_t bootline[64];
+
 uint16_t get_root_dev(void)
 {
 	uint16_t rd = BAD_ROOT_DEV;
-	uint8_t bootline[10];
 
 	if (cmdline && *cmdline)
 		rd = bootdevice(cmdline);
@@ -301,14 +357,20 @@ void fuzix_main(void)
 	ei();
 	kputs("ok.\n");
 
+	/* get the root device */
+	root_dev = get_root_dev();
+
+	/* finish building argv */
+	complete_init();
+
 	/* initialise hardware devices */
 	device_init();
 
 	/* Mount the root device */
-	root_dev = get_root_dev();
-	kprintf("Mounting root fs (root_dev=%d): ", root_dev);
+	kprintf("Mounting root fs (root_dev=%d, r%c): ", root_dev,
+		ro ? 'o' : 'w');
 
-	if (fmount(root_dev, NULLINODE, 0))
+	if (fmount(root_dev, NULLINODE, ro))
 		panic(PANIC_NOFILESYS);
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)

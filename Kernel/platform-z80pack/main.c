@@ -38,6 +38,12 @@ void map_init(void)
 {
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+ used(p);
+ return 0;
+}
+
 #ifdef CONFIG_LEVEL_2
 
 /* We always use 512 byte paths so no special pathbuf needed */
