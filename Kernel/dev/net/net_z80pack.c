@@ -57,7 +57,6 @@ static uint8_t status(struct socket *s)
 	}
 	if (st & 0x80) {
 		s->s_error = netctrl;
-		kprintf("ERR %d\n", s->s_error);
                 if (s->s_error <= sizeof(errormap))
         		s->s_error = errormap[s->s_error];
                 else
@@ -66,6 +65,7 @@ static uint8_t status(struct socket *s)
 		        switch(s->s_error) {
 		        case EINPROGRESS:
 		        case ENOTCONN:
+		                s->s_error = 0;
 		                break;
                         default:
                 		s->s_state = SS_CLOSED;
@@ -111,7 +111,6 @@ int net_init(struct socket *s)
 		udata.u_error = EAFNOSUPPORT;
 		return -1;
 	}
-	kprintf("Socket %d\n", s->s_num);
 	/* For now keep the LCN matching the socket # */
 	if (s->s_num < 16) {
 		/* Select our new socket and turn off NDELAY bit flag */
@@ -218,7 +217,8 @@ arg_t net_read(struct socket *s, uint8_t flag)
 	usize_t n = 0;
 	struct sockdata *sd = s->s_priv;
 	irqflags_t irq;
-	uint8_t st, data;
+	uint8_t st;
+	volatile uint8_t data;
 
 
 	while (1)  {
@@ -260,7 +260,6 @@ arg_t net_read(struct socket *s, uint8_t flag)
 			return -1;
                 }
 	}
-	kprintf("ST %x N %d\n", st, n);
 	if (n)
 		return n;
 	if (st & 0x80) {
