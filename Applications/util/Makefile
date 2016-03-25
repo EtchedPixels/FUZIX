@@ -22,6 +22,7 @@ SRCSNS = \
 	date.c \
 	dirname.c \
 	false.c \
+	groups.c \
 	head.c \
 	init.c \
 	kill.c \
