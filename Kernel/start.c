@@ -10,8 +10,8 @@
 static uint8_t ro;
 
 /*
- *	Put nothing here that cannot be discarded. We will eventually
- *	make the entire of this disappear after the initial _execve
+ *	Put nothing here that cannot be discarded. We make the entirity
+ *	of this disappear after the initial _execve.
  */
 
 #ifndef TTY_INIT_BAUD
