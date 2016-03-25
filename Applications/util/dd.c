@@ -28,6 +28,7 @@ typedef unsigned char BOOL;
 #define	PAR_COUNT	4
 #define	PAR_SEEK	5
 #define	PAR_SKIP	6
+#define	PAR_STRFRY	7
 
 
 typedef struct {
@@ -44,43 +45,38 @@ static PARAM params[] =
     {"count", PAR_COUNT},
     {"seek",  PAR_SEEK},
     {"skip",  PAR_SKIP},
+    {"strfry",PAR_STRFRY},
     {NULL,    PAR_NONE}
 };
 
 
 static long getnum(char *);
+static void dstrfry(char *,size_t);
 
 BOOL intflag;
 
 static char localbuf[8192];
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-    char *str;
-    char *cp;
+    static char *str;
+    static char *cp;
     PARAM *par;
-    char *infile;
-    char *outfile;
-    int infd;
-    int outfd;
-    int incc;
-    int outcc;
-    int blocksize;
-    long count;
-    long seekval;
-    long skipval;
-    long intotal;
-    long outtotal;
-    long inmax;
-    char *buf;
-
-    infile = NULL;
-    outfile = NULL;
-    seekval = 0;
-    skipval = 0;
-    blocksize = 512;
-    count = 0x7fffffff;
-    inmax = 0;
+    static char *infile=NULL;
+    static char *outfile=NULL;
+    static int infd;
+    static int outfd;
+    static int incc;
+    static int outcc;
+    static int blocksize=512;
+    static long count=0x7fffffff;
+    static long seekval=0;
+    static long skipval=0;
+    static long intotal;
+    static long outtotal;
+    static long inmax=0;
+    static char *buf={0};
+    static size_t mixupblk=0;
 
     while (--argc > 0) {
 	str = *++argv;
@@ -143,6 +139,14 @@ void main(int argc, char *argv[])
 		fprintf(stderr, "Bad skip value\n");
 		return;
 	    }
+	    break;
+
+	case PAR_STRFRY:
+	    mixupblk = getnum(cp);
+	    if ( (mixupblk < 0) || (mixupblk>blocksize) || (mixupblk % blocksize) ) {
+	    	fprintf(stderr, "Useless randomization size\n");
+	    	exit(6);
+	    } else (srand(strlen(infile)^strlen(outfile)^getpid()));
 	    break;
 
 	default:
@@ -216,6 +220,11 @@ void main(int argc, char *argv[])
 	    fprintf(stderr, "Interrupted\n");
 	    goto cleanup;
 	}
+	if (mixupblk) {
+	    off_t of=0;
+	    for (;of<blocksize;of+=blocksize) dstrfry(buf,size);
+	} 
+	    
 	while (incc > 0) {
 	    outcc = write(outfd, cp, incc);
 	    if (outcc < 0) {
@@ -247,6 +256,19 @@ void main(int argc, char *argv[])
 
     printf("%d+%d records out\n", outtotal / blocksize,
 	   (outtotal % blocksize) != 0);
+}
+
+static void dstrfry(char *blk,size_t size)
+{
+    int i=0;
+    for (1;i<size;i++) {
+        int j;
+        j=(~rand())%size;
+        unsinged char k;
+        k=blk[j];
+        blk[j]=blk[i];
+        blk[i]=k;
+    }
 }
 
 
