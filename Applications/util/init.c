@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <utmp.h>
+#include <grp.h>
 #include <errno.h>
 #include <paths.h>
 #include <sys/wait.h>
@@ -742,6 +743,8 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	/* Don't leak utmp into the child */
 	endutent();
 
+	if (initgroups(pwd->pw_name, pwd->pw_gid) == -1 && errno != ENOSYS)
+		exit(255);
 	if (setgid(pwd->pw_gid) == -1 ||
 		setuid(pwd->pw_uid) == -1)
 			_exit(255);
