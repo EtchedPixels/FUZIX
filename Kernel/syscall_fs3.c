@@ -86,7 +86,9 @@ arg_t _open(void)
 			udata.u_error = EISDIR;
 			goto cantopen;
 		}
-		if (ino->c_flags & CRDONLY) {
+		/* Special case - devices on a read only file system may
+		   be opened read/write */
+		if (!isdevice(ino) && (ino->c_flags & CRDONLY)) {
 			udata.u_error = EROFS;
 			goto cantopen;
 		}
