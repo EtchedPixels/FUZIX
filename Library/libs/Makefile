@@ -19,7 +19,7 @@ SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
 SRC_CRT0NS = crt0nostdio$(PLATFORM).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
-SRC_ASM = enter.s
+SRC_ASM = enter.s htonl-z80.s htons-z80.s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c atoi_small.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -128,3 +128,6 @@ clean:
 	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt
 	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~)
 	(cd fuzix; $(MAKE) clean)
+
+install:
+	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
