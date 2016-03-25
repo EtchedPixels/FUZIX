@@ -32,7 +32,6 @@ int initgroups(const char *user, gid_t gid)
 	int num_groups;
 	int grp_fd;
 
-
 	if ((grp_fd = open("/etc/group", O_RDONLY)) < 0)
 		return -1;
 
@@ -53,5 +52,5 @@ int initgroups(const char *user, gid_t gid)
 		}
 	}
 	close(grp_fd);
-	return setgroups(num_groups, group_list);
+	return setgroups(num_groups + 1, group_list);
 }
