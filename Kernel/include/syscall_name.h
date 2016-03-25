@@ -100,7 +100,8 @@ char *syscall_name[NR_SYSCALL] = {
 	"_accept",
 	"_getsockaddrs",
 	"_sendto",
-	"_recvfrom"
+	"_recvfrom",
+	"_shutdown",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -202,4 +203,5 @@ int syscall_args[NR_SYSCALL] = {
 	3, //getsockaddrs
 	4, //sendto
 	4, //recvfrom
+	2, //shutdown
 };

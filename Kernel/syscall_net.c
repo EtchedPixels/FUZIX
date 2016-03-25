@@ -319,7 +319,6 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
 	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
-	n->s_inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;
@@ -547,14 +546,14 @@ char *buf;
 susize_t len;
 struct sockio *addr;	control buffer
 ********************************************/
-#define d (int16_t)udata.u_argn
+#define fd (int16_t)udata.u_argn
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 #define uaddr ((struct sockio *)udata.u_argn3)
 
 arg_t _sendto(void)
 {
-	struct socket *s = sock_get(d, NULL);
+	struct socket *s = sock_get(fd, NULL);
 	struct sockaddr_in sin;
 	uint16_t flags;
 
@@ -578,7 +577,7 @@ arg_t _sendto(void)
 	return _write();
 }
 
-#undef d
+#undef fd
 #undef buf
 #undef nbytes
 #undef uaddr
@@ -590,14 +589,14 @@ char *buf;
 susize_t len;
 struct sockio *addr;	 control buffer
 ********************************************/
-#define d (int16_t)udata.u_argn
+#define fd (int16_t)udata.u_argn
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 #define uaddr ((struct sockio *)udata.u_argn3)
 
 arg_t _recvfrom(void)
 {
-	struct socket *s = sock_get(d, NULL);
+	struct socket *s = sock_get(fd, NULL);
 	int ret;
 	uint16_t flags;
 
@@ -619,10 +618,34 @@ arg_t _recvfrom(void)
 	return ret;
 }
 
-#undef d
+#undef fd
 #undef buf
 #undef nbytes
 #undef uaddr
+
+/*******************************************
+shutdown(fd, how)                Function ??
+int fd;
+int how;
+********************************************/
+#define fd (int16_t)udata.u_argn
+#define how (uint16_t)udata.u_argn1
+
+arg_t _shutdown(void)
+{
+	struct socket *s = sock_get(fd, NULL);
+
+	if (s == NULL)
+		return -1;
+	if (how > 2) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	return net_shutdown(s, how + 1);
+}
+
+#undef fd
+#undef how
 
 #endif
 

@@ -136,6 +136,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_getsockaddrs,		/* FUZIX system call 95 */
 	_sendto,		/* FUZIX system call 96 */
 	_recvfrom,		/* FUZIX system call 97 */
+	_shutdown,		/* FUZIX system call 98 */
 #endif
 #endif
 };

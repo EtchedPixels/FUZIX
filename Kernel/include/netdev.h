@@ -71,11 +71,12 @@ struct socket
 	uint8_t s_flag;
 #define SFLAG_ATMP	1		/* Use SADDR_TMP */
 	uint8_t s_iflag;		/* Flags touched in IRQ handlers */
-#define SI_DATA		1		/* Data is ready */
-#define SI_EOF		2		/* At EOF */
-#define SI_THROTTLE	4		/* Transmit is throttled */
+#define SI_SHUTR	1
+#define SI_SHUTW	2
+#define SI_DATA		4		/* Data is ready */
+#define SI_EOF		8		/* At EOF */
+#define SI_THROTTLE	16		/* Transmit is throttled */
 	void *s_priv;			/* Private pointer for lower layers */
-	inoptr s_inode;			/* Can remove once debugged */
 };
 
 #define NSOCKTYPE 3
@@ -103,6 +104,7 @@ extern arg_t _accept(void);
 extern arg_t _getsockaddrs(void);
 extern arg_t _sendto(void);
 extern arg_t _recvfrom(void);
+extern arg_t _shutdown(void);
 
 /* Hooks for inode.c into the networking */
 extern void sock_close(inoptr ino);
@@ -119,6 +121,7 @@ extern int net_listen(struct socket *s);
 extern arg_t net_read(struct socket *s, uint8_t flag);
 extern arg_t net_write(struct socket *s, uint8_t flag);
 extern arg_t net_ioctl(uint8_t op, void *p);
+extern int net_shutdown(struct socket *s, uint8_t how); /* bit 0 rd, bit 1 wr */
 extern void netdev_init(void);
 extern struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa);
 extern void sock_init(void);
