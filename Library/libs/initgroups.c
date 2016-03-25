@@ -40,8 +40,7 @@ int initgroups(const char *user, gid_t gid)
 	group_list[num_groups] = gid;
 	while (num_groups < GR_MAX_GROUPS &&
 	       (group = __getgrent(grp_fd)) != NULL) {
-		if (group->gr_gid != gid);
-		{
+		if (group->gr_gid != gid) {
 			tmp_mem = group->gr_mem;
 			while (*tmp_mem != NULL) {
 				if (!strcmp(*tmp_mem, user)) {
