@@ -8,7 +8,6 @@
 
 DIR *opendir(char *path)
 {
-	struct stat statbuf;
 	DIR *dir = calloc(1, sizeof(DIR));
 	if (dir == NULL) {
 		errno = ENOMEM;
