@@ -48,7 +48,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define pathbuf()	tmpbuf()
 #define pathfree(tb)	brelse(tb)
 #define dump_core(sig)	sig
-
+#define in_group(x)	0
 #endif
 
 #define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
