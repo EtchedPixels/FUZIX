@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 	static char line[81];
 	char *lp;
 	char *p;
+	char *fn;
 	int state = 0;
 
 	if (argc != 2) {
@@ -49,6 +50,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	*p++ = 0;
+	fn = p;
+
 	lp = strchr(argv[1] + 7, ':');
 	if (lp == NULL)
 		addr.sin_port = htons(80);
@@ -84,11 +87,18 @@ int main(int argc, char *argv[])
 		perror("connect");
 		exit(1);
 	}
-	if (writes(fd, "GET /test HTTP/1.1\r\nHost: test.test\r\n\r\n") ==
-	    -1) {
+	if (writes(fd, "GET /") == -1 ||
+	    writes(fd, fn) == -1 ||
+	    writes(fd, " HTTP/1.1\r\nHost: ") == -1 ||
+	    writes(fd, argv[1] + 7) == -1 ||
+	    writes(fd, "\r\n\r\n") == -1) {
 		perror("write");
 		exit(1);
 	}
+
+	p = strrchr(fn, '/');
+	if (p)
+	        fn = p + 1;
 
 	lp = line;
 
@@ -128,7 +138,7 @@ int main(int argc, char *argv[])
 					p++;
 					/* nl/nl end of headers - begin xfer */
 					fd2 =
-					    open("output",
+					    open(fn,
 						 O_WRONLY | O_TRUNC |
 						 O_CREAT, 0700);
 					if (fd2 == -1) {
