@@ -55,3 +55,7 @@ void map_init(void)
 }
 
 
+uint8_t platform_param(unsigned char *p)
+{
+	return 0;
+}
