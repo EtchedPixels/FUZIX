@@ -68,10 +68,15 @@ Quick build instructions
 make -C Kernel TARGET=dragon-nx32
 
 # 2. Build the libraries
+make -C Library tools/syscall_6809
 make -C Library/libs -f Makefile.6809
 
-# 3. Build the utils
+# 3. Build the utils and applications
 make -C Applications/util -f Makefile.6809 TARGET=dragon-nx32
+make -C Applications/V7/cmd/sh -f Makefile.6809 TARGET=dragon-nx32
+make -C Applications/levee -f Makefile.6809 TARGET=dragon-nx32
+make -C Applications/cave -f Makefile.6809 TARGET=dragon-nx32
+make -C Applications/dw -f Makefile.6809 TARGET=dragon-nx32
 
 # 4. Build disk tools
 make -C Standalone
