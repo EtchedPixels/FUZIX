@@ -8,7 +8,7 @@ CFLAGS = -I../../Library/include -I../../Library/include/6502
 LINKER_OPT = --format=raw -L../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc
-LINKER_OPT += --script=$(TARGET).link
+LINKER_OPT += --script=../util/$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
 
