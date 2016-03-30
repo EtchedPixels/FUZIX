@@ -24,6 +24,11 @@ void pagemap_init(void)
 #endif
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+	return 0;
+}
+
 static const char *sysname[] = {"Dragon", "COCO", "COCO3", "Unknown"};
 
 struct cart_rom_id {
