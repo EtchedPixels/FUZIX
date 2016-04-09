@@ -743,8 +743,10 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	/* Don't leak utmp into the child */
 	endutent();
 
-	if (initgroups(pwd->pw_name, pwd->pw_gid) == -1 && errno != ENOSYS)
-		exit(255);
+	/* We don't care if initgroups fails - it only grants extra rights */
+	initgroups(pwd->pw_name, pwd->pw_gid);
+
+	/* But we do care if these fail! */
 	if (setgid(pwd->pw_gid) == -1 ||
 		setuid(pwd->pw_uid) == -1)
 			_exit(255);
