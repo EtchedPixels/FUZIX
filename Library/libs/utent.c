@@ -89,7 +89,7 @@ getutline(const struct utmp * utmp_entry)
 #if 0 /* This is driving me nuts.  It's not an implementation problem -
 	 it's a matter of how things _SHOULD_ behave.  Groan. */
   if (ut_fd!=-1)
-     lseek(ut_fd, (off_t) -sizeof(struct utmp), SEEK_CUR);
+     lseek(ut_fd, -(off_t)sizeof(struct utmp), SEEK_CUR);
 #endif
 
   while ((utmp=getutent())!=NULL)
@@ -113,11 +113,11 @@ pututline(const struct utmp * utmp_entry)
   /* Ignore the return value.  That way, if they've already positioned
      the file pointer where they want it, everything will work out. */
   if (ut_fd!=-1)
-  (void) lseek(ut_fd, (off_t) -sizeof(struct utmp), SEEK_CUR);
+  (void) lseek(ut_fd, -(off_t)sizeof(struct utmp), SEEK_CUR);
 #endif
 
   if ((ut=getutid(utmp_entry))!=NULL)
-      lseek(ut_fd, (off_t) -sizeof(struct utmp), SEEK_CUR);
+      lseek(ut_fd, -(off_t)sizeof(struct utmp), SEEK_CUR);
   else if( ut_fd==-1 )
       return NULL;
   else
@@ -133,7 +133,7 @@ pututline(const struct utmp * utmp_entry)
     return NULL;
 
   /* I think this final lseek gets the result Nat was after ... RdB */
-  lseek(ut_fd, (off_t) -sizeof(struct utmp), SEEK_CUR);
+  lseek(ut_fd, -(off_t) sizeof(struct utmp), SEEK_CUR);
 
   /* Ignoring untrapped errors */
   errno=xerrno;
