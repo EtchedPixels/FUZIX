@@ -30,7 +30,7 @@ uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 
 static uint8_t vmode;
 static uint8_t kbd_timer;
-struct vt_repeat keyrepeat;
+struct vt_repeat keyrepeat = { 40, 4 };
 
 /* tty1 is the screen tty2 is the serial port */
 
