@@ -316,8 +316,12 @@ int tty_inproc(uint8_t minor, unsigned char c)
 		trap_monitor();
 #endif
 
-	if (c == '\r' && (t->termios.c_iflag & ICRNL))
-		c = '\n';
+	if (c == '\r' ){
+		if(t->termios.c_iflag & IGNCR )
+			return 1;
+		if(t->termios.c_iflag & ICRNL)
+			c = '\n';
+	}
 	if (c == '\n' && (t->termios.c_iflag & INLCR))
 		c = '\r';
 
