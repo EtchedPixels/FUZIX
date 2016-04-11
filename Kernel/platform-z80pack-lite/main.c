@@ -11,6 +11,12 @@ void platform_idle(void)
   tty_pollirq(); 
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
+
 /* The simple support does all the rest of the work for us */
 
 void platform_interrupt(void)

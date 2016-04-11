@@ -14,6 +14,12 @@ void platform_idle(void)
     __endasm;
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
+
 __sfr __at 0x00 uart0_status;
 __sfr __at 0x01 uart0_data;
 __sfr __at 0x28 uart1_status;

@@ -27,6 +27,12 @@ void platform_interrupt(void)
   timer_interrupt();
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
+
 extern uint8_t map_translate[MAX_MAPS];
 extern uint8_t *map_live;
 

@@ -25,6 +25,12 @@ void platform_idle(void)
   irqrestore(irq);
 }
 
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
+
 void platform_interrupt(void)
 {
  tty_pollirq();
