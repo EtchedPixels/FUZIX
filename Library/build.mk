@@ -25,6 +25,7 @@ libc-functions.localsrcs += \
 	clock_gettime.c \
 	clock_settime.c \
 	closedir.c \
+	closedir_r.c \
 	confstr.c \
 	creat.c \
 	crypt.c \
@@ -102,6 +103,7 @@ libc-functions.localsrcs += \
 	mkstemps.c \
 	nanosleep.c \
 	opendir.c \
+	opendir_r.c \
 	pathconf.c \
 	pause.c \
 	perror.c \
