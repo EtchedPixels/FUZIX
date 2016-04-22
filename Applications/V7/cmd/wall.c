@@ -45,8 +45,8 @@ int main(int argc, const char *argv[])
 	register struct utmp *p;
 	FILE *f;
 
-	if ((f = fopen("/etc/utmp", "r")) == NULL) {
-		fprintf(stderr, "Cannot open /etc/utmp\n");
+	if ((f = fopen("/var/run/utmp", "r")) == NULL) {
+		fprintf(stderr, "Cannot open /var/run/utmp\n");
 		exit(1);
 	}
 	fread((char *) utmp, sizeof(struct utmp), USERS, f);
