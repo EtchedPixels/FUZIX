@@ -735,7 +735,7 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	/* utmp */
 	ut.ut_type = USER_PROCESS;
 	ut.ut_pid = getpid();
-	strncpy(ut.ut_line, tty, UT_LINESIZE);
+	strncpy(ut.ut_line, tty+5, UT_LINESIZE);
 	strncpy(ut.ut_id, id, 2);
 	time(&ut.ut_time);
 	strncpy(ut.ut_user, pwd->pw_name, UT_NAMESIZE);
