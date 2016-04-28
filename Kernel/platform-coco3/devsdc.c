@@ -46,7 +46,7 @@
 /* a "simple" internal function pointer to which transfer
    routine to use.
 */
-typedef void (*sdc_transfer_function_t)( void *addr);
+typedef void (*sdc_transfer_function_t)( unsigned char *addr);
 
 
 
