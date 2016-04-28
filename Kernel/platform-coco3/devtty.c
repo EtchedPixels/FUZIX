@@ -9,6 +9,7 @@
 #include <devdw.h>
 #include <ttydw.h>
 #include <graphics.h>
+#include <video.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 

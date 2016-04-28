@@ -1,7 +1,8 @@
 #include <kernel.h>
 #include <devtty.h>
+#include <video.h>
 
-extern video_cmd( char *rlt_data);
+extern void video_cmd( char *rlt_data);
 
 /* These are routines stolen from the stock vt.c's VT_SIMPLE code, and modified
    to suite multiple vts
@@ -52,7 +53,7 @@ void cursor_on(int8_t y, int8_t x)
 
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
-	char *p=char_addr(y,x);
+	unsigned char *p=char_addr(y,x);
 	map_for_video();
 	*p++ = VT_MAP_CHAR(c);
 	*p = curpty->attr;
@@ -165,12 +166,12 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 			break;
 		}
 		if (arg == GFXIOC_READ) {
-			video_read( (char *)0x5e00 );
+			video_read( (unsigned char *)0x5e00 );
 			if (uput( (char *)0x5e00 + 8, ptr+10, l-2))
 				err = EFAULT;
 			break;
 		}
-		video_write( (char *)0x5e00 );
+		video_write( (unsigned char *)0x5e00 );
 	}
  ret:
 	map_for_kernel();
