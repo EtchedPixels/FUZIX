@@ -47,10 +47,10 @@ void mbr_parse(char letter)
 
 	blk_op.is_read = true;
 	blk_op.is_user = false;
-	blk_op.addr = br;
+	blk_op.addr = (uint8_t *)br;
 	blk_op.lba = 0;
 	blk_op.nblock = 1;
-	
+
 	/* FIX: should also check table's CRC */
 	if(!blk_op.blkdev->transfer() || br->magic != MBR_SIGNATURE){
 		kputs("No CCPT");
