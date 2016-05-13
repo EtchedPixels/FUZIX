@@ -238,7 +238,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 				continue;
 			} else if (vtmode == 3) {
 				int ncursorx = c - ' ';
-				if (ncursory >= 0 && ncursorx <= VT_BOTTOM)
+				if (ncursory >= 0 && ncursory <= VT_BOTTOM)
 					cursory = ncursory;
 				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 					cursorx = ncursorx;
