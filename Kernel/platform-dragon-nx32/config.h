@@ -12,7 +12,7 @@
 #undef CONFIG_SWAP_ONLY
 
 #define CONFIG_BANK_FIXED
-#define MAX_MAPS 4
+#define MAX_MAPS 16
 #define MAP_SIZE 0x7C00U
 #define CONFIG_BANKS	1
 /* And swapping */
