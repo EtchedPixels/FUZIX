@@ -14,16 +14,14 @@
 _dw_reset:
 	ret
 
-	; dw_operation(cmdblock, driveptr)
+	; dw_operation(cmdblock)
 _dw_operation:
 	pop bc		; return
 	pop iy		; cmdblock
-	pop de		; driveptr
-	push de
 	push iy
 	push bc
 
-	ld b, 5(iy)	; page map
+	ld b, 7(iy)	; page map LSB
 	call map_process_a
 	ld h, 3(iy)	; pointer
 	ld l, 4(iy)
@@ -31,7 +29,7 @@ _dw_operation:
 	ld c, 2(iy)
 	xor a
 	cp (iy)
-	ld a, (de)
+	ld a, 5(iy)
 	jr nz, is_write
 	call dw_read_sector
 dw_op_ret:

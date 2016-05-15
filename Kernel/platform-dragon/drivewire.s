@@ -20,8 +20,7 @@ _dw_reset:
 _dw_operation:
 	pshs y
 	; get parameters from C, X points to cmd packet
-	ldy 4,s		; driveptr
-	lda ,y		; for now, contains minor = drive number directly
+	lda 5,x		; minor = drive number
 	ldb ,x		; write flag
 	; buffer location into Y
 	ldy 3,x

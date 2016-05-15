@@ -3,12 +3,8 @@
 #include <printf.h>
 #include <devdw.h>
 
-#define MAX_DW	4	/* can be 255 */
-
 #define DW_READ		0
 #define DW_WRITE	1
-
-static uint8_t dw_tab[MAX_DW];
 
 /*
  *	Block device glue for DriveWire
@@ -23,9 +19,8 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int nblock;
     int tries;
     uint8_t err;
-    uint8_t *driveptr = dw_tab + minor;
-    uint8_t cmd[6];
-    uint8_t page;
+    uint8_t cmd[8];
+    uint16_t page;
     irqflags_t irq;
 
     if (rawflag == 0) {
@@ -36,13 +31,13 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     } else if (rawflag == 1) {
         if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
             goto bad2;
-        page = (uint8_t)udata.u_page;
+        page = udata.u_page;
         dptr = (uint16_t)udata.u_base;
         block = udata.u_offset >> 9;
         nblock = udata.u_count >> 8;
     } else if (rawflag == 2) {
 #ifdef SWAPDEV
-        page = (uint8_t)swappage;
+        page = (uint16_t)swappage;
         dptr = (uint16_t)swapbase;
         nblock = swapcnt >> 8;
         block = swapblk;
@@ -59,19 +54,20 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     cmd[2] = (block << 1) & 0xFF;
     cmd[3] = dptr >> 8;
     cmd[4] = dptr & 0xFF;
-    cmd[5] = page;
-    *driveptr = minor; /* pass minor (drive number) through here for now */
+    cmd[5] = minor;
+    cmd[6] = page >> 8;
+    cmd[7] = page & 0xFF;
         
     while (nblock--) {
         for (tries = 0; tries < 4 ; tries++) {
             // kprintf("dw_operation block %d left %d\n", block, nblock);
             irq = di(); /* for now block interrupts for whole operation */
-            err = dw_operation(cmd, driveptr);
+            err = dw_operation(cmd);
             irqrestore(irq);
             if (err == 0)
                 break;
             if (tries > 1)
-                dw_reset(driveptr);
+                dw_reset();
         }
         /* FIXME: should we try the other half and then bail out ? */
         if (tries == 3)
@@ -95,10 +91,6 @@ bad2:
 int dw_open(uint8_t minor, uint16_t flag)
 {
     used(flag);
-    if(minor >= MAX_DW) {
-        udata.u_error = ENODEV;
-        return -1;
-    }
     return 0;
 }
 
