@@ -4,6 +4,11 @@
 #include <printf.h>
 #include <devtty.h>
 
+uint8_t platform_param(unsigned char *p)
+{
+	return 0;
+}
+
 void platform_idle(void)
 {
 }

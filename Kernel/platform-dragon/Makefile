@@ -1,8 +1,7 @@
 
 CSRCS = devlpr.c devtty.c devfd.c
 CSRCS += devices.c main.c libc.c
-
-DSRCS = ../dev/devdw.c
+CSRCS += ../dev/devdw.c
 
 ASRCS = p6809.s crt0.s drivewire.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s
