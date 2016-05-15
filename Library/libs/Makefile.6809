@@ -7,6 +7,10 @@ CC_OPT = -c -Os -I../include -I../include/6502
 # for stuff that gives gcc nightmares
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -o
+# copied in from kernel tree
+KRN_HEADERS = userstructs.h
+KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
+KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM = setjmp_6809.s ashlsi3_6809.s
@@ -62,6 +66,11 @@ OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
 all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0)
 
+$(OBJ_ALL): $(KRN_HEADERS_COPY)
+
+$(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
+	cp ../../Kernel/include/$(notdir $@) $@
+
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
@@ -105,3 +114,4 @@ clean:
 	libc$(PLATFORM).a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
+	rm -f $(KRN_HEADERS_COPY)
