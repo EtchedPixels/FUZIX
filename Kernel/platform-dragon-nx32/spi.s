@@ -47,7 +47,7 @@ spigood:
 _sd_spi_clock:
 	cmpb #0			
 	beq slow
-	ldd #0x0401		; external 45MHz clock on, divide by 3
+	ldd #0x0401		; external 45MHz clock on, divide by 4
 	bra clkset
 slow:	ldd #0x0000		; internal clock, phi/2 -> 0.89MHz/2 = 445kHz
 clkset:	std SPICTRL
@@ -110,7 +110,7 @@ _sd_spi_receive_sector:
 	beq rdspi
 	jsr map_process_always
 rdspi:	lda #0x14		; FRX on, external clock on
-	sta SPICTRL
+	sta <SPICTRL
 read8:
 	lda <SPIDATA
 	ldb <SPIDATA
@@ -128,7 +128,7 @@ read8:
 	bne read8
 	jsr map_kernel
 	lda #0x04
-	sta SPICTRL		; FRX off, external clock on
+	sta <SPICTRL		; FRX off, external clock on
 	puls y,dp,pc
 
 _sd_spi_transmit_sector:
@@ -141,7 +141,7 @@ _sd_spi_transmit_sector:
 	lda _blk_op+2
 	beq wrspi
 	jsr map_process_always
-wrspi:	lda #0x14		; FRX on, external clock on
+wrspi:	lda #0x04		; ext clock, no FRX
 	sta SPICTRL
 write8:
 	ldd ,x++
