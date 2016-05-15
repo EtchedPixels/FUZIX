@@ -27,9 +27,7 @@ before_install:
         fi
     - |
         if [ $PLATFORM = "dragon-nx32" ]; then
-            sudo apt-get install lwtools:i386 
-            wget http://toolshed.sourceforge.net/gcc/gcc-6809_4.6.4lw-1~precise_i386.deb
-            sudo dpkg -i gcc-6809_4.6.4lw-1~precise_i386.deb
+            sudo apt-get install lwtools gcc6809
         fi
 language: c
 script:
