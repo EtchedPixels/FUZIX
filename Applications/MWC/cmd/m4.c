@@ -122,23 +122,25 @@ char bqt = BQUOTE;
 char eqt = EQUOTE;
 
 /* VARARGS */
-void errorp(int f, ...)
+void errorp(int f, const char *s, ...)
 {
+	va_list ap;
+	va_start(ap, s);
+	
 	fprintf(stderr, "m4: ");
-#if 0
-	FIXME if (fstkptr != NULL) {
+	if (fstkptr != NULL) {
 		if (fstkptr->f_name != NULL)
 			fprintf(stderr, "%s: ", fstkptr->f_name->s_body);
 		fprintf(stderr, "%d: ", fstkptr->f_line);
 	}
-	fprintf(stderr, "%r", &x);
+	vfprintf(stderr, s, ap);
 	putc('\n', stderr);
 	if (f) {
 		while (lstdchr != EOF && lstdchr != '\n')
 			lstdchr = getchar();
 		exit(1);
 	}
-#endif
+	va_end(ap);
 }
 
 char *alloc(int n)
@@ -838,6 +840,9 @@ void mlen(STRING ** pps)
 		((pps[1] != NULL) ? pps[1]->s_next - pps[1]->s_body : 0));
 }
 
+/*
+
+Removed as any implementaton of this is implicitly insecure
 void mmaketemp(STRING ** pps)
 {
 	register char *pc;
@@ -846,6 +851,7 @@ void mmaketemp(STRING ** pps)
 	mktemp(pc);
 	pushstr(pps[1]);
 }
+*/
 
 void msubstr(STRING ** pps)
 {
@@ -995,7 +1001,7 @@ int main(int argc, char *argv[])
 	buildin("incr", mincr);
 	buildin("index", mindex);
 	buildin("len", mlen);
-	buildin("maketemp", mmaketemp);
+/*	buildin("maketemp", mmaketemp); */
 	buildin("sinclude", msinclude);
 	buildin("substr", msubstr);
 	buildin("syscmd", msyscmd);
