@@ -11,7 +11,7 @@ PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n
 
 .SUFFIXES: .c .rel
 
-SRCSNS = test.c
+SRCSNS = expr.c test.c
 
 SRCS  = ac.c almanac.c at.c col.c deroff.c find.c moo.c pr.c tar.c ttt.c
 
@@ -38,6 +38,9 @@ $(OBJSNS): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
 	$(FCC) $(PLATFORM) -c $<
+
+expr.c: expr.y
+	byacc -o expr.c expr.y
 
 find.c: find.y
 	byacc -o find.c find.y
