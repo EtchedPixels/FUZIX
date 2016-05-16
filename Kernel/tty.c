@@ -261,7 +261,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
         case TIOCGWINSZ:
                 return uput(&t->winsize, data, sizeof(struct winsize));
         case TIOCSWINSZ:
-                if (uget(&t->winsize, data, sizeof(struct winsize)))
+                if (uget(data, &t->winsize, sizeof(struct winsize)))
                         return -1;
                 sgrpsig(t->pgrp, SIGWINCH);
                 return 0;
