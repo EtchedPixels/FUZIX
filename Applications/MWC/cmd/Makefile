@@ -13,7 +13,7 @@ PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n
 
 SRCSNS = test.c
 
-SRCS  = ac.c almanac.c at.c col.c deroff.c moo.c pr.c tar.c ttt.c
+SRCS  = ac.c almanac.c at.c col.c deroff.c find.c moo.c pr.c tar.c ttt.c
 
 SRCSBAD = calendar.c m4.c
 
@@ -38,6 +38,9 @@ $(OBJSNS): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
 	$(FCC) $(PLATFORM) -c $<
+
+find.c: find.y
+	byacc -o find.c find.y
 
 .c.rel:
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
