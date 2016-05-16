@@ -326,7 +326,7 @@ void gettime(char *str)
  */
 int mut(const char *str, const char *tbl[])
 {
-	register char	**tp;
+	register const char **tp;
 	register int	len;
 	int		res;
 

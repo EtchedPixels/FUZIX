@@ -278,7 +278,7 @@ enum {
 	IN_PAREN
 };
 
-int test_boolor(int argc, char *argv[], int *matchedp, int paren);
+int test_boolor(int argc, const char *argv[], int *matchedp, int paren);
 
 
 /*

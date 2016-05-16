@@ -74,7 +74,7 @@ void table(dirhd_t * args);
 void extract(dirhd_t * args);
 dirhd_t *update(char *name, dirhd_t * args, tarhd_t * header);
 void append(char *name, dirhd_t * args);
-dirhd_t *research(char *name, dirhd_t * args);
+dirhd_t *research(const char *name, dirhd_t * args);
 int argcont(dirhd_t * args, char *name, int ret);
 int makepath(char *pathname);
 int mkparent(char *pathname);
