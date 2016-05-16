@@ -39,7 +39,8 @@ extern char *ultoa __P((unsigned long value, char *strP, int radix));
 extern char *ltoa __P((long value, char *strP, int radix));
 
 extern int atoi __P((const char *str));
-extern long atol __P((const char *strP));
+extern long atol __P((const char *str));
+extern double atof __P((const char *str));
 
 extern char *_itoa __P((int value));
 extern char *_uitoa __P((unsigned int value));
