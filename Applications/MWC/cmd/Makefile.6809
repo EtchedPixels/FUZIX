@@ -15,7 +15,7 @@ CRT0 = ../../../Library/libs/crt0_6809.o
 .SUFFIXES: .c .o
 
 
-SRCS  = ac.c almanac.c at.c calendar.c col.c deroff.c m4.c moo.c pr.c tar.c test.c ttt.c
+SRCS  = ac.c almanac.c at.c calendar.c col.c deroff.c expr.c find.c m4.c moo.c pr.c tar.c test.c ttt.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -29,6 +29,12 @@ $(APPS): $(CRT0)
 
 %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $<
+
+expr.c: expr.y
+	byacc -o expr.c expr.y
+
+find.c: find.y
+	byacc -o find.c find.y
 
 sizes: $(APPS)
 	ls -l $(APPS) > size.report
