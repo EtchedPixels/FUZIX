@@ -49,8 +49,11 @@ _dw_reset:
 
 _dw_operation:
 	pshs y
+	ldd 6,x	        ; test for kernel/usr mapping
+	beq kern@       ; is zero, so must be a kernel xfer.
+	jsr map_process_always
 	; get parameters from C, X points to cmd packet
-	lda 5,x		; minor = drive number
+kern@	lda 5,x		; minor = drive number
 	ldb ,x		; write flag
 	; buffer location into Y
 	ldy 3,x
@@ -64,7 +67,8 @@ _dw_operation:
 @done	bcs @err
 	bne @err
 	ldx #0
-@ret	puls y,pc
+@ret	jsr map_kernel
+	puls y,pc
 @err	ldx #0xFFFF
 	bra @ret
 
