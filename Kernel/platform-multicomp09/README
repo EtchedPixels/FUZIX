@@ -203,7 +203,8 @@ TO DO
 * BUG should have CONFIG_SDC in coco config.def otherwise devsdc_init doesn't get called in devices.c
 * BUG other platforms have mixture of CONFIG_IDE and DEVICE_IDE and CONFIG_SDC and DEVICE_SD
 * BUG coco3 devices.c should #include devide.h devsd.h
-* BUG fix problem of missing include file that I ended up copying
+* BUG fix problem of missing include file that I ended up copying to allow library to build:
+  cp Kernel/include/userstructs.h Library/include/sys
 * BUG devsd.h has devsd_init but devsdc.c had devsdc_init, so did devices.c The other routine names
 * are not uniform either..
 * BUG loader does not spot overlapped section or section that overflows address space
