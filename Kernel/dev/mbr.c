@@ -4,6 +4,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <blkdev.h>
+#include <config.h>
 
 typedef struct {
     uint8_t  status;
@@ -37,8 +38,11 @@ void mbr_parse(char letter)
     blk_op.is_read = true;
     blk_op.is_user = false;
     blk_op.addr = (uint8_t *)br;
+#ifdef CONFIG_MBR_OFFSET
+    blk_op.lba = CONFIG_MBR_OFFSET;
+#else
     blk_op.lba = 0;
-
+#endif
     do{
         blk_op.nblock = 1;
         if(!blk_op.blkdev->transfer() || le16_to_cpu(br->signature) != MBR_SIGNATURE)
@@ -48,7 +52,7 @@ void mbr_parse(char letter)
 	if(seen >= 50)
 	    break;
 
-	if(seen == 1){ 
+	if(seen == 1){
 	    /* we just loaded the first extended boot record */
 	    ep_offset = blk_op.lba;
 	    next = 4;
@@ -56,7 +60,7 @@ void mbr_parse(char letter)
 	}
 
 	br_offset = blk_op.lba;
-	blk_op.lba = 0;
+        blk_op.lba = 0;
 
 	for(i=0; i<MBR_ENTRY_COUNT && next < MAX_PARTITIONS; i++){
 	    switch(br->partition[i].type){
@@ -71,7 +75,7 @@ void mbr_parse(char letter)
 		    blk_op.lba = ep_offset + le32_to_cpu(br->partition[i].lba_first);
 		    if(next >= 4)
 			break;
-		    /* we include all primary partitions but we deliberately knobble the size in 
+		    /* we include all primary partitions but we deliberately knobble the size in
 		       order to prevent catastrophic accidents */
 		    br->partition[i].lba_count = cpu_to_le32(2L);
 		    /* fall through */
