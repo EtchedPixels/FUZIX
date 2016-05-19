@@ -1,13 +1,13 @@
 ;;;
-;;;  Multicomp SDC Driver
+;;;  multicomp09 SD Driver
 ;;;
 
 ;;; imported
 	.globl blk_op		; blk operation arguments
 
 ;;; exported
-	.globl _devsdc_write
-	.globl _devsdc_read
+	.globl _devsd_write
+	.globl _devsd_read
 
 
 ;;; multicomp09 hw registers
@@ -26,7 +26,7 @@ SDLBA2         equ $FFDC	; not used here
 ;;; entry: x=data source
 ;;; can corrupt: a, b, cc, x
 ;;; must preserve: y, u
-_devsdc_write
+_devsd_write
 	pshs	y
 	ldy	#512		; 512 bytes
 WrBiz	lda	SDCTL
@@ -46,7 +46,7 @@ WrBiz	lda	SDCTL
 ;;; entry: x=data destination
 ;;; can corrupt: a, b, cc, x
 ;;; must preserve: y, u
-_devsdc_read
+_devsd_read
 	pshs	y
 	ldy	#512		; 512 bytes
 RdBiz	lda	SDCTL
