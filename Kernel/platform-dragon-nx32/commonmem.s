@@ -8,7 +8,7 @@
         .globl istack_top
         .globl istack_switched_sp
 
-        .area .udata
+        .area .udata,bss
 
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:

@@ -22,9 +22,13 @@ start:
 main:		orcc #0x10		; interrupts definitely off
 		lds #kstack_top
 
+		clra
+		ldx #__sectionbase_.udata__
+udata_wipe:	sta ,x+
+		cmpx #__sectionbase_.udata__+__sectionlen_.udata__
+		blo udata_wipe
 		ldx #__sectionbase_.bss__
 		ldy #__sectionlen_.bss__
-		clra
 bss_wipe:	sta ,x+
 		leay -1,y
 		bne bss_wipe
