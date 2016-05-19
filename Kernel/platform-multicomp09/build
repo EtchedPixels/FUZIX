@@ -1,0 +1,57 @@
+
+# remake kernel
+cd ..
+make TARGET=multicomp09 clean
+
+# specially make bank16.c (bug fix for compile fart?)
+#m6809-unknown-gcc -c -Wall -msoft-reg-count=0 -mfar-stack-param -I cpu-6809 -I platform-multicomp09 -I include -o bank16k.o bank16k.c
+
+# make rest of kernel
+make TARGET=multicomp09
+
+
+# make bootstrap loader
+cd platform-multicomp09
+make boot.bin
+
+if [ $1 = "kernel" ];  then
+   exit
+fi
+
+
+# make Libs
+cd ../../Library
+rm tools/syscall_6809
+make tools/syscall_6809
+cd libs
+make -f Makefile.6809 TARGET=multicomp09 clean
+make -f Makefile.6809 TARGET=multicomp09
+
+# build utils
+cd ../../Applications/util
+make -f Makefile.6809 TARGET=multicomp09 clean
+make -f Makefile.6809 TARGET=multicomp09
+
+# build dw command
+cd ../dw
+make -f Makefile.6809 TARGET=multicomp09 clean
+make -f Makefile.6809 TARGET=multicomp09
+
+# build sh
+cd ../../Applications/V7/cmd/sh
+make -f Makefile.6809 TARGET=multicomp09 clean
+make -f Makefile.6809 TARGET=multicomp09
+
+# build levee
+cd ../../../levee
+make -f Makefile.6809 TARGET=multicomp09 clean
+make -f Makefile.6809 TARGET=multicomp09
+
+# build utils
+cd ../../Standalone
+make
+
+# build boot disk image
+cd filesystem-src
+./build-filesystem -X fuzixfs.dsk 256 65535
+

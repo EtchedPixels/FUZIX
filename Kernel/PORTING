@@ -3,7 +3,7 @@ Minimal Requirements
 
 - 6809 or Z80 processor
 - 128K memory for Z80 (the kernel itself wants between 32 and 40K R/O and about
-  8-16K R/W depending upon the configuration. For 6809 the kernel compiles
+  8-16K R/W depending upon the configuration). For 6809 the kernel compiles
   to about 24K so a single bank 64K machine just about works.
 - Some kind of memory banking giving a common area and multiple banks
 - A storage device, preferably hard disk or SD card or similar
@@ -26,6 +26,8 @@ to do the work) it should also be possible to run with
 
 Porting Fuzix to a new Z80 based machine generally requires the following
 
+- Pick an appropriate Kernel/platform-TARGET to clone.
+
 - Pick an output device that is easy to drive (serial or video) and write a
   mininal test output driver for it standalone. Serial is usually best if
   you don't have a character mapped console
@@ -33,7 +35,10 @@ Porting Fuzix to a new Z80 based machine generally requires the following
 - Extend that into a suitable boot loader, unless loading from existing
   firmware (see tips below for CP/M booting)
 
-- Select the appropriate model
+- A lot of standard code is available to make porting easy
+
+- Select the appropriate options (in platform-TARGET/config.h and in
+  platform-TARGET/kernel.def)
 
   CONFIG_SINGLETASK
   - single tasking (no fast swap device, limited memory). Processes are
@@ -50,9 +55,7 @@ Porting Fuzix to a new Z80 based machine generally requires the following
   - swap device number if you have a suitable device for swap. This
     is usually best done after it boots ok
 
-- Pick an appropriate platform to clone.
-
-- A lot of standard code is available to make porting easy
+ CONFIG_SWAP_ONLY selects NO user banking
 
  CONFIG_BANK16 selects support for four flexible 16K bank registers. The non
  common kernel & data parts must all fit below 0xC000, common goes higher.
@@ -96,12 +99,21 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  so it  can be moved into another segment (eg to be with the video screen data).
  See pcw8256 for an example of this.
 
+ CONFIG_MBR_OFFSET tells dev/mbr.c where to find the MBR. FUZIX knows how to
+ parse a standard DOS master boot record and extract partition table entries
+ to locate and mount drives. A well-behaved disk will have its MBR at block 0.
+ If you need to put your MBR elsewhere, use this. Even with this defined,
+ block 0 is still checked first and a valid MBR there is used in preference.
+
 - Set the basic system parameters
 
  TICKSPERSEC	-	clock rate
- PROGBASE	- 	low memory address fo applications (should be 0x100
+ PROGBASE	- 	low memory address for applications (should be 0x100
 			to run standard binaries). Some bits of start.c
 			still break if this is not 0x0100
+ PROGLOAD	- 	?? what is the distinction PROGLOAD vs PROGBASE?
+                        In most cases PROGBASE is 0 and PROGLOAD is 0x100.
+                        In all cases, PROGBASE<=PROGLOAD.
  PROGTOP	- 	first byte above main memory, usually the start of
 	   		the udata area and common memory. Typically above
 			0xF000 but if your system has a fixed upper common
@@ -109,9 +121,9 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  BOOT_TTY	-	the device you will use as your 'console' at boot
 			time. 513 is the first tty, 514 the second etc
 
- CMDLINE	-	pointer to a command line passed from the
-			loader/firmware. If booting from CP/M (see below) use
-			0x88. Optional.
+ CMDLINE	-	pointer to a null-terminated command line passed
+			from the loader/firmware. If booting from CP/M (see
+			below) use 0x88. Optional: set to NULL if none.
 
  NUM_DEV_TTY	-	number of tty devices (video consoles/serial)
 
@@ -127,7 +139,7 @@ If you have non interrupt driven serial ports then poll them in your IRQ
 handler and provide a platform_idle which also polls the ports (makes it
 feel much snappier).
 
-Provide a putchar() that writes to your console correctly either via direct
+Provide a kputchar() that writes to your console correctly either via direct
 debug code or later via the tty helper. Provide a similar (register
 preserving) assembler hook in outchar. That gives you a usable kprintf in C
 and outhl/outde/outcharhex/.. series of methods in assembler for debugging.
@@ -154,7 +166,7 @@ MAX_MAPS is the max number of pages (or banks whatever you have) that you
 can have. Set it to the largest you might need and load those present if
 your system comes in different memory sizes.
 
-If you are using swap then
+If you are using swap then:
 
 SWAPBASE	-	lowest address that will be swapped
 SWAPTOP		-	highest address that will be swapped
@@ -268,7 +280,7 @@ _cursor_off	-	remove the cursor
 C interfaces
 ------------
 
-Devices.c
+devices.c
 
 dev_tab is the device table for your platform indicating what is present.
 Usually best taken from another platform and hacked up
@@ -283,16 +295,16 @@ void device_init(void)
 Called early on before init runs so devices can do initialization before
 they are opened. May well be blank
 
-Devtty.c
+devtty.c
 
 Define a TTYSIZE buffer for each device present
 Copy the struct s_queue from another filled in for your devices/buffers.
 
-Provide putchar(c) if it is not already provided by your asm code
+Provide kputchar(c) if it is not already provided by your asm code
 
 bool tty_writeready(uint8_t minor)
 
-Returns true fi you can write bytes to this port (1..n). For things like
+Returns true if you can write bytes to this port (1..n). For things like
 video consoles just return true
 
 void tty_putc(uint8_t minor, char c)
@@ -324,7 +336,7 @@ them here. Either way call tty_inproc(minor, c) with the character to queue
 it for input. This may call back to your tty_putc.
 
 
-Main.c
+main.c
 
 uint8_t *swapout_prepare_uarea(ptptr p)
 uint8_t *swapin_prepare_uarea(ptptr p)
@@ -410,7 +422,7 @@ The conventional mapping of block numbers is to start at track 0, side 0,
 sector 1 as block 0, and then follow the usual upward pattern. The OS
 reserves block 0 as a boot block, and puts the superblock at block 1.
 
-If you have a disc with a loadable kernel on it then put the kernel on the
+If you have a disc with a loadable kernel on it then put the kernel at the
 *end* of the disc. This means you get a smaller file system on the media but
 also means you don't to special case 'boot tracks' or waste any of a data
 disc.
@@ -458,7 +470,7 @@ z80pack up with your platform configuration. See the dragon-nx32 for an
 additional optimisation.
 
 You may have to decide between limited process size or being prepared to do
-copying tricks to copy big chunks of memory around. 
+copying tricks to copy big chunks of memory around.
 
 If you have only a single user bank however it's easy - see z80pack-lite 8)
 
