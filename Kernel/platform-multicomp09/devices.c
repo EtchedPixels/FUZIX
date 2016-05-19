@@ -9,7 +9,9 @@
 #ifdef CONFIG_IDE
 #include <devide.h>
 #endif
+#ifdef CONFIG_SD
 #include <devsd.h>
+#endif
 #include <blkdev.h>
 /* [NAC HACK 2016Apr24] add ds1302 */
 
@@ -49,7 +51,7 @@ void device_init(void)
 #ifdef CONFIG_IDE
 	devide_init( );
 #endif
-	/*#ifdef CONFIG_SDC [NAC HACK 2016Apr24] */
+
 #ifdef CONFIG_SD
 	devsd_init( );
 #endif
