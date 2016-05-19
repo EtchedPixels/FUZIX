@@ -61,8 +61,6 @@ _bufpool:
 _discard_size:
 	.db	__sectionlen_.discard__/BUFSIZE
 
-	.area .text
-
 init_early:
 	ldx #null_handler
 	stx 1

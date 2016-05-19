@@ -12,17 +12,16 @@
 	        .area .start
 
 start:
+		orcc #0x10		; interrupts definitely off
+		lds #kstack_top		; note we'll wipe the stack later
 		ldb $80FD		; save from ROM space
-		; text may be in memory bank 0
+		; text and discard may be in memory bank 0
 		jsr map_kernel
-		jmp main
+		jmp premain
 
-		.area .text
+		.area .discard
 
-main:		orcc #0x10		; interrupts definitely off
-		lds #kstack_top
-
-		clra
+premain:	clra
 		ldx #__sectionbase_.udata__
 udata_wipe:	sta ,x+
 		cmpx #__sectionbase_.udata__+__sectionlen_.udata__
@@ -47,6 +46,10 @@ identified:
 		sta _system_id		; what sort of a box are we ?
 		jsr init_early
 		jsr init_hardware
-		jsr _fuzix_main
-		orcc #0x10
+		jmp main
+
+		.area .text
+
+main		jsr _fuzix_main
+		orcc #0x10		; we should never get here
 stop:		bra stop
