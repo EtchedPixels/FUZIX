@@ -26,6 +26,7 @@
 #elif defined(__m6809__)
 
 	typedef uint16_t jmp_buf[4];
+	extern int setjmp(jmp_buf env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
 
 #else
