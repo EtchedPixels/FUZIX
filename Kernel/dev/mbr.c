@@ -38,15 +38,22 @@ void mbr_parse(char letter)
     blk_op.is_read = true;
     blk_op.is_user = false;
     blk_op.addr = (uint8_t *)br;
-#ifdef CONFIG_MBR_OFFSET
-    blk_op.lba = CONFIG_MBR_OFFSET;
-#else
     blk_op.lba = 0;
-#endif
+
     do{
         blk_op.nblock = 1;
-        if(!blk_op.blkdev->transfer() || le16_to_cpu(br->signature) != MBR_SIGNATURE)
+        if(!blk_op.blkdev->transfer() || le16_to_cpu(br->signature) != MBR_SIGNATURE){
+#ifdef CONFIG_MBR_OFFSET
+            if (blk_op.lba == 0) {
+                /* failed to find MBR on block 0. Go round again but this time
+                   look at the fall-back location for this badly-behaved media
+                */
+                blk_op.lba = CONFIG_MBR_OFFSET;
+                continue;
+            }
+#endif
 	    break;
+        }
 
 	/* avoid an infinite loop where extended boot records form a loop */
 	if(seen >= 50)

@@ -48,20 +48,20 @@
 /* Boot devices */
 #define BOOTDEVICENAMES "hd#,,,,,,,,dw"
 
-/* [NAC HACK 2016Apr24] nicer if I didn't hard-wire this? */
-/* This must be a 16-bit number, not a string! See start.c for examples/encoding */
-/* so this is hda1 */
-/* Without this defined, get prompted for root device at boot time */
+/* This must be a 16-bit number, not a string! See start.c for examples/encoding
+   -- so 0x0001 is hda1
+   Without this defined, get prompted for root device at boot time
+*/
 #define BOOTDEVICE 0x0001
 
 /* We need a tidier way to do this from the loader */
-/* [NAC HACK 2016Apr24] 0 because we don't have one */
 #define CMDLINE	 NULL	  /* Location of root dev name */
 
 /* Allow MBR to be other than at block 0. If so, the start LBA of partitions
    defined in the MBR are defined relative to the position of the MBR, not
    relative to the start of the disk (ie, the values they'd have if the
-   MBR was in block 0)
+   MBR was in block 0). Even with this defined, it only acts as a back-up:
+   block 0 is still checked first.
 */
 #define CONFIG_MBR_OFFSET (0x30000)
 

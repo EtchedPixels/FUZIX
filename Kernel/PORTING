@@ -102,7 +102,8 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  CONFIG_MBR_OFFSET tells dev/mbr.c where to find the MBR. FUZIX knows how to
  parse a standard DOS master boot record and extract partition table entries
  to locate and mount drives. A well-behaved disk will have its MBR at block 0.
- If you need to put your MBR elsewhere, use this.
+ If you need to put your MBR elsewhere, use this. Even with this defined,
+ block 0 is still checked first and a valid MBR there is used in preference.
 
 - Set the basic system parameters
 
