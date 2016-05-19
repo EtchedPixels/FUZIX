@@ -13,7 +13,7 @@
 
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 16
-#define MAP_SIZE 0x7C00U
+#define MAP_SIZE 0x7F00U
 #define CONFIG_BANKS	1
 /* And swapping */
 #define SWAPDEV 2049		/* DriveWire drive 1 */
@@ -52,7 +52,7 @@
    sort the banker out */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xFC00  /* Top of program */
+#define PROGTOP     0xFD00  /* Top of program */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
