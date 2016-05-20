@@ -1,0 +1,9 @@
+# Executables
+chmem
+fsck
+mkfs
+size
+ucp
+# Disk images
+filesystem-src/fuzix.dsk
+filesystem-src/fuzixfs.dsk

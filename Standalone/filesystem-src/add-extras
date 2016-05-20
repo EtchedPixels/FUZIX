@@ -1,0 +1,15 @@
+#!/bin/sh
+
+endian=
+if [ "$1" = "-X" ]; then
+	shift
+	endian=-X
+fi
+if [ -z "$1" ]; then
+        echo "Syntax: $0 [-X] filename"
+        echo ""
+        exit 1
+fi
+
+../ucp $1 < ucp-extras-script.txt
+../fsck $1

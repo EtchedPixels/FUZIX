@@ -1,0 +1,8 @@
+# Everything..
+*
+# ..except ourself
+!.gitignore
+# ..and these
+!syscall.s
+!syscall-zx128.s
+!Makefile

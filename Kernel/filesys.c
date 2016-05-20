@@ -1054,7 +1054,7 @@ void setftime(inoptr ino, uint8_t flag)
 
 uint8_t getmode(inoptr ino)
 {
-    /* Shifting by 9 (past permissions might be more logical but
+    /* Shifting by 9 (past permissions) might be more logical but
        8 happens to be cheap */
     return (ino->c_node.i_mode & F_MASK) >> 8;
 }
@@ -1084,7 +1084,7 @@ struct mount *fs_tab_get(uint16_t dev)
     return NULL;
 }
 
-/* Fmount places the given device in the mount table with mount point ino.
+/* Fmount places the given device in the mount table with mount point info.
 */
 bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
 {
