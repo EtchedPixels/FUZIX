@@ -154,6 +154,8 @@ make -C Applications/cpp  TARGET=multicomp09
 make -C Applications/as09 TARGET=multicomp09
 make -C Applications/ld09 TARGET=multicomp09
 make -C Applications/V7/games -f Makefile.6809 TARGET=multicomp09
+make -C Applications/games -f Makefile.6809 TARGET=multicomp09
+make -C Applications/MWC/cmd -f Makefile.6809 TARGET=multicomp09
 
 # 4. Build disk tools
 make -C Standalone
@@ -198,13 +200,15 @@ TO DO
 * currently assume 64, 8K pages - like coco3. Want actually to do a memory size and cope with 512K
   or 1MByte
 * unify things that need not be different from coco3
+* Add lv.doc ... to man/ ??
+* could ucp do bget AND permissions in one line??
+* could ucp support a comment character??
+* get some fortunes /usr/share/games/fortunes
+* work out where to put advent.db /usr/share/games/advent ??
 * BUG fix exec09 core dump on register print
 * BUG separate memcpy memset out of videoll.s -- for all 6809 platforms.
 * BUG should have CONFIG_SDC in coco config.def otherwise devsdc_init doesn't get called in devices.c
-* BUG other platforms have mixture of CONFIG_IDE and DEVICE_IDE and CONFIG_SDC and DEVICE_SD
 * BUG coco3 devices.c should #include devide.h devsd.h
-* BUG fix problem of missing include file that I ended up copying to allow library to build:
-  cp Kernel/include/userstructs.h Library/include/sys
 * BUG devsd.h has devsd_init but devsdc.c had devsdc_init, so did devices.c The other routine names
 * are not uniform either..
 * BUG loader does not spot overlapped section or section that overflows address space
@@ -215,11 +219,9 @@ TO DO
 * BUG the pcw8256 tree has some checked-in ~ files.
 * BUG exec09 doesn't detect when an out-of-range memory address in a region
   is accessed.. or when an out-of-range memory page is mapped.
-* BUG exec09 reported this: 01:0x299F 1026FF7B              LBNE  01:0x1291E -- address out of range!!
 * add more stuff from util - including FORTH
 * work out where advent.db ought to be.
 * Get 2nd PCB working
-* Upgrade to have FUZIX in CamelForth ROM
 
 
 *************************
