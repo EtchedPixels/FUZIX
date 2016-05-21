@@ -13,4 +13,5 @@ extern void video_cmd(uint8_t *ptr);
 extern void video_read(uint8_t *ptr);
 extern void video_write(uint8_t *ptr);
 
+int my_tty_close( uint8_t minor ); /* wrapper call to close DW ports */
 #endif

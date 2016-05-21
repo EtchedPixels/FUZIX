@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c
+CSRCS = devlpr.c devtty.c devfd.c ttydw.c
 CSRCS += devices.c main.c libc.c
 
 CDSRCS = discard.c
@@ -50,7 +50,7 @@ image:
 	dragon.o mem-nx32.o ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
-	drivewire.o devdw.o \
+	drivewire.o devdw.o ttydw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

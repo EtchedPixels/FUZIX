@@ -7,6 +7,8 @@
 #include <devfd.h>
 #include <vt.h>
 #include <tty.h>
+#include <devdw.h>
+#include <ttydw.h>
 #include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
@@ -18,11 +20,16 @@ uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
+unsigned char tbuf3[TTYSIZ];   /* drivewire VSER 0 */
+unsigned char tbuf4[TTYSIZ];   /* drivewire VWIN 0 */
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2}
+	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
+	/* Drivewire Virtual Serial Ports */
+	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
@@ -55,6 +62,10 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	if (minor > 2 ) {
+		dw_putc(minor, c);
+		return;
+	}
 	if (minor == 1) {
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
@@ -95,6 +106,10 @@ static uint8_t bitbits[] = {
 void tty_setup(uint8_t minor)
 {
 	uint8_t r;
+	if (minor > 2) {
+		dw_vopen(minor);
+		return;
+	}
 	if (minor != 2)
 		return;
 	r = ttydata[2].termios.c_cflag & CBAUD;
@@ -119,6 +134,7 @@ void tty_setup(uint8_t minor)
 
 int tty_carrier(uint8_t minor)
 {
+	if (minor > 2) return dw_carrier( minor );
 	/* The serial DCD is status bit 5 but not wired */
 	return 1;
 }
@@ -277,6 +293,7 @@ void platform_interrupt(void)
 		}
                 fd_timer_tick();
 		timer_interrupt();
+		dw_vpoll();
 	}
 }
 
@@ -396,6 +413,8 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+	if (minor > 2)	/* remove once DW get its own ioctl() */
+		return tty_ioctl(minor, arg, ptr);
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
 	switch(arg) {
@@ -448,4 +467,12 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	}
 	}
 	return -1;
+}
+
+/* A wrapper for tty_close that closes the DW port properly */
+int my_tty_close(uint8_t minor)
+{
+	if (minor > 2 && ttydata[minor].users == 1)
+		dw_vclose(minor);
+	return (tty_close(minor));
 }
