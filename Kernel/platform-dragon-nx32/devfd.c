@@ -64,7 +64,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     fd_motor_busy();		/* Touch the motor timer first so we don't
                                    go and turn it off as we are doing this */
     if (fd_selected != minor) {
-        uint8_t err = fd_motor_on(selmap[minor]);
+        err = fd_motor_on(selmap[minor]);
         if (err)
             goto bad;
     }
