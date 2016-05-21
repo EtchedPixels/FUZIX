@@ -177,7 +177,7 @@ $$($1.result): $$($1.objs) \
 		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
 		-T $$($1.objdir)/$$($$($1.class).ldfile) \
 		-o $$@ \
-		-Map $$(@:elf=map) \
+		-Map=$$(@:elf=map) \
 		--start-group \
 		$$($1.objs) \
 		-L$$(dir $$($1.libgcc)) -lgcc \
