@@ -105,6 +105,22 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  If you need to put your MBR elsewhere, use this. Even with this defined,
  block 0 is still checked first and a valid MBR there is used in preference.
 
+ CONFIG_IDE, IDE_DRIVE_COUNT
+ CONFIG_SD, SD_DRIVE_COUNT
+ CONFIG_FLOPPY
+ CONFIG_P112_FLOPPY
+ CONFIG_COCOSDC (Darren Atkinson's "CoCoSDC" floppy emulator cartridge)
+ The common kernel files don't provide any support for these different block
+ devices. Support for block devices is provided per-platform by the
+ platform-specific Makefile (ie, by pulling in IDE support code from
+ Kernel/dev or from platform-specific source files) and by entries in the
+ device driver switch table and calls in device_init(). Examine devices.c
+ for a few different platforms to get the idea. You might use (eg) CONFIG_SD
+ in your platform code in order to allow a build with and without SD support.
+
+ MAX_BLKDEV is the total number of block devices. Current examples include
+ IDE, FLOPPY, SD, COCOSDC, SCSI, ROM and RAM disks.
+
 - Set the basic system parameters
 
  TICKSPERSEC	-	clock rate

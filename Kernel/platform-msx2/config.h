@@ -43,7 +43,7 @@
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define DEVICE_SD
+#define CONFIG_SD
 #define SD_DRIVE_COUNT 1
 
 #define MAX_BLKDEV 1      /* Single SD drive */

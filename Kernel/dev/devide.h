@@ -5,8 +5,11 @@
 #include "platform_ide.h"
 
 /* IDE Drive Configuration (in config.h)
- 
-   Define DEVICE_IDE if IDE hardware is present on your platform.
+
+   Define CONFIG_IDE if IDE hardware is present on your platform.
+
+   Define IDE_DRIVE_COUNT to the number of IDE drives your hardware
+   supports (at most 16) - defaults to 2 if undefined.
 
    Define IDE_8BIT_ONLY if the system implements only half of the 16-bit data
    bus (eg n8vem-mark4).
@@ -14,7 +17,7 @@
    Define IDE_REG_INDIRECT if the IDE registers are not directly addressable on
    your platform. If you do not define IDE_REG_INDIRECT then IDE registers
    should be directly addressable by CPU I/O operations.
-   
+
    If IDE_REG_INDIRECT is defined you will need to provide devide_readb() and
    devide_writeb() to access the IDE registers. You will need to define
    suitable values for each register (ide_reg_data, ide_reg_error etc) to be
@@ -90,8 +93,8 @@ void devide_writeb(uint8_t regaddr, uint8_t value);
 
 #ifdef _IDE_PRIVATE
 
-#ifndef DRIVE_COUNT
-#define DRIVE_COUNT 2           /* at most 16 drives without adjusting DRIVE_NR_MASK */
+#ifndef IDE_DRIVE_COUNT
+#define IDE_DRIVE_COUNT 2       /* at most 16 drives without adjusting DRIVE_NR_MASK */
 #endif
 
 /* we use the bits in the driver_data field of blkdev_t as follows: */
