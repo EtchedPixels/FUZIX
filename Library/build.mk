@@ -73,6 +73,7 @@ libc-functions.localsrcs += \
 	gmtime_r.c \
 	grent.c \
 	index.c \
+	initgroups.c \
 	isalnum.c \
 	isalpha.c \
 	isascii.c \
