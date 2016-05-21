@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <devtty.h>
 #include <device.h>
-#include <devfd.h>
+#include "devfd.h"
 #include <vt.h>
 #include <tty.h>
 #include <devdw.h>
