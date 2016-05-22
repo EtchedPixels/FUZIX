@@ -40,13 +40,13 @@
 
 #define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
-#define DEVICE_IDE
+#define CONFIG_IDE
 #define IDE_REG_BASE       MARK4_IO_BASE
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_FIRST
 
 /* On-board SD on Mark IV */
-#define DEVICE_SD
+#define CONFIG_SD
 #define SD_DRIVE_COUNT 1
 
 /* On-board DS1302 on Mark IV, we can read the time of day from it */

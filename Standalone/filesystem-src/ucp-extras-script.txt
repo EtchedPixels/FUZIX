@@ -1,0 +1,128 @@
+cd /usr
+mkdir src
+chmod 755 src
+cd src
+mkdir fforth
+chmod 755 fforth
+
+cd /usr/bin
+bget ../../Applications/as09/as09
+bget ../../Applications/cave/advent
+bget ../../Applications/cave/advent.db
+bget ../../Applications/cpp/cpp
+bget ../../Applications/dw/dw
+bget ../../Applications/dw/dwgetty
+bget ../../Applications/dw/dwterm
+bget ../../Applications/games/adv01
+bget ../../Applications/games/adv02
+bget ../../Applications/games/adv03
+bget ../../Applications/games/adv04
+bget ../../Applications/games/adv05
+bget ../../Applications/games/adv06
+bget ../../Applications/games/adv07
+bget ../../Applications/games/adv08
+bget ../../Applications/games/adv09
+bget ../../Applications/games/adv10
+bget ../../Applications/games/adv11
+bget ../../Applications/games/adv12
+bget ../../Applications/games/adv13
+bget ../../Applications/games/adv14a
+bget ../../Applications/games/adv14b
+bget ../../Applications/games/fortune
+bget ../../Applications/games/fortune-gen
+bget ../../Applications/games/myst01
+bget ../../Applications/games/myst02
+bget ../../Applications/games/myst03
+bget ../../Applications/games/myst04
+bget ../../Applications/games/myst05
+bget ../../Applications/games/myst06
+bget ../../Applications/games/myst07
+bget ../../Applications/games/myst08
+bget ../../Applications/games/myst09
+bget ../../Applications/games/myst10
+bget ../../Applications/games/myst11
+bget ../../Applications/games/qrun
+bget ../../Applications/ld09/ld09
+bget ../../Applications/levee/levee
+bget ../../Applications/MWC/cmd/ac
+bget ../../Applications/MWC/cmd/almanac
+bget ../../Applications/MWC/cmd/at
+bget ../../Applications/MWC/cmd/calendar
+bget ../../Applications/MWC/cmd/col
+bget ../../Applications/MWC/cmd/deroff
+bget ../../Applications/MWC/cmd/expr
+bget ../../Applications/MWC/cmd/find
+bget ../../Applications/MWC/cmd/m4
+bget ../../Applications/MWC/cmd/moo
+bget ../../Applications/MWC/cmd/pr
+##bget ../../Applications/MWC/cmd/tar
+bget ../../Applications/MWC/cmd/test
+bget ../../Applications/MWC/cmd/ttt
+bget ../../Applications/MWC/cmd/units
+bget ../../Applications/V7/games/arithmetic
+bget ../../Applications/V7/games/wump
+bget ../../Applications/V7/games/fish
+bget ../../Applications/V7/games/backgammon
+bget ../../Applications/util/fforth
+chmod 0755 as09
+chmod 0755 advent
+chmod 0755 advent.db
+chmod 0755 cpp
+chmod 0755 dw
+chmod 0755 dwgetty
+chmod 0755 dwterm
+chmod 0755 adv01
+chmod 0755 adv02
+chmod 0755 adv03
+chmod 0755 adv04
+chmod 0755 adv05
+chmod 0755 adv06
+chmod 0755 adv07
+chmod 0755 adv08
+chmod 0755 adv09
+chmod 0755 adv10
+chmod 0755 adv11
+chmod 0755 adv12
+chmod 0755 adv13
+chmod 0755 adv14a
+chmod 0755 adv14b
+chmod 0755 fortune
+chmod 0755 fortune-gen
+chmod 0755 myst01
+chmod 0755 myst02
+chmod 0755 myst03
+chmod 0755 myst04
+chmod 0755 myst05
+chmod 0755 myst06
+chmod 0755 myst07
+chmod 0755 myst08
+chmod 0755 myst09
+chmod 0755 myst10
+chmod 0755 myst11
+chmod 0755 qrun
+chmod 0755 ld09
+chmod 0755 levee
+chmod 0755 ac
+chmod 0755 almanac
+chmod 0755 at
+chmod 0755 calendar
+chmod 0755 col
+chmod 0755 deroff
+chmod 0755 expr
+chmod 0755 find
+chmod 0755 m4
+chmod 0755 moo
+chmod 0755 pr
+##chmod 0755 tar
+chmod 0755 test
+chmod 0755 ttt
+chmod 0755 units
+chmod 0755 arithmetic
+chmod 0755 wump
+chmod 0755 fish
+chmod 0755 backgammon
+chmod 0755 fforth
+
+cd /usr/src/fforth
+bget ../../Applications/util/fforth_tests.fth
+chmod 0755 fforth_tests.fth

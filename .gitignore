@@ -8,3 +8,9 @@
 *.sym
 *.o
 cscope.*
+# Library archives
+*.a
+# Emacs backup
+*~
+# Statistics from builds
+size.report

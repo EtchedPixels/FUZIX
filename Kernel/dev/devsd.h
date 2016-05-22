@@ -3,7 +3,7 @@
 
 /* SD Configuration (in config.h)
 
-   Define DEVICE_SD if SD hardware is present on your platform.
+   Define CONFIG_SD if SD hardware is present on your platform.
 
    Define SD_DRIVE_COUNT to the number of SD cards your hardware
    supports (at most 16)

@@ -36,7 +36,7 @@
 #define readb(x)            *((volatile uint8_t *)x)
 #define writeb(val,x)       *((volatile uint8_t *)x) = val
 
-#ifdef DEVICE_SD
+#ifdef CONFIG_SD
 
 
 /* slot and subslot containing the sd interface */

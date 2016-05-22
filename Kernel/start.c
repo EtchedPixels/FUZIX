@@ -10,7 +10,7 @@
 static uint8_t ro;
 
 /*
- *	Put nothing here that cannot be discarded. We make the entirity
+ *	Put nothing here that cannot be discarded. We make the entirety
  *	of this disappear after the initial _execve.
  */
 
