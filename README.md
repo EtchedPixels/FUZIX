@@ -102,6 +102,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 * Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
 * MSP430FR5969 - decent functionality; see Documentation/MSP430FR5969.md
 * MSX - basic functionality
+* Multicomp09 - decent functionality. This is an FPGA 6809 system extended from the design by Grant Searle.
 * N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the
 ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * P112 - Supports the floppy disk controller, ESCC serial ports, and optional G-IDE interface.
