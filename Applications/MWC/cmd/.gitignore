@@ -1,0 +1,18 @@
+ac
+almanac
+at
+calendar
+col
+deroff
+expr
+find
+m4
+moo
+pr
+tar
+test
+ttt
+units
+# files that are created by byacc
+expr.c
+find.c

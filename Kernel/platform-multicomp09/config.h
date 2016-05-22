@@ -81,13 +81,7 @@
 /* Block device define. Each block device can have upto 16 partitions */
 #define MAX_BLKDEV  1     /* 1 SD drive */
 
+#undef CONFIG_IDE         /* enable if IDE interface present */
 
-#undef   DEVICE_IDE        /* enable if IDE interface present */
-#undef   CONFIG_IDE
-
-#define CONFIG_SD
-#define CONFIG_SDC
-#define DEVICE_SD
-#define DEVICE_SDC
-
+#define CONFIG_SD         /* enable if SD  interface present */
 #define SD_DRIVE_COUNT 1  /* 1 drive */

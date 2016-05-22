@@ -64,7 +64,7 @@
 
 #ifdef CONFIG_PPP
 	/* SD card in ParPortProp */
-	#define DEVICE_SD
+	#define CONFIG_SD
         #define SD_DRIVE_COUNT 1
 	#define NUM_DEV_TTY 2
 
