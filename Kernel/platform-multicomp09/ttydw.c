@@ -216,7 +216,7 @@ void dw_vpoll( ){
 		}
 		/* VSER Channel single datum */
 		if( buf[0]<16 ){
-			int minor=dw_minor( buf[0] );
+			int minor=dw_minor( buf[0] - 1 );
 			tty_inproc( minor, buf[1] );
 			continue;
 		}
