@@ -4,8 +4,9 @@
 #include <types.h>
 #endif
 
-
+/* `MAXNAMLEN' is the BSD name for what POSIX calls `NAME_MAX'.  */
 #define MAXNAMLEN	30
+#define NAME_MAX        30
 
 struct dirent {
 	long		d_ino;		/* Try to be iBCS2 like */

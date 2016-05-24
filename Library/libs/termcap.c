@@ -58,7 +58,7 @@ extern char *UP;		/* up cursor movement */
  *	termcap entry found, 0 if not found, and -1 if file not found.
  */
 
-int tgetent(char *bp, char *name)
+int tgetent(char *bp, const char *name)
 {
     FILE *fp;
     const char *file;
