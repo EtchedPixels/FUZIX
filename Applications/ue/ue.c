@@ -37,7 +37,9 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <ctype.h>
 #include <string.h>
 #include <termios.h>
-#include <stdio.h>
+#ifdef ANSIEMU
+# include <stdio.h>
+#endif
 #include <unistd.h>
 #include "tty.h"
 
@@ -146,9 +148,17 @@ GetSetTerm(int set)
 
 void
 gotoxy(int x, int y){
+#ifdef ANSIEMU
 	sprintf(str,"%c[%03d;%03dH",0x1b,y,x);
-	outxy.Y=y;outxy.X=x;
 	write(1, (void*)&str, 10);
+#else
+	str[0] = '\x1b';
+	str[1] = 'Y';
+	str[2] = y + 31;
+	str[3] = x + 31;
+	write(1, (void*)&str, 4);
+#endif
+	outxy.Y=y;outxy.X=x;
 }
 
 char
