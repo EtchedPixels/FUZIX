@@ -37,8 +37,9 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <ctype.h>
 #include <string.h>
 #include <termios.h>
+#include <stdio.h>
 
-#define BUF 65536*4
+#define BUF 2048*4
 #define MODE 0666
 #define TABSZ 4
 #define TABM TABSZ-1
@@ -344,7 +345,7 @@ undo()
 		undop--;
 		curp = (char*)undop->pos;
 		if(undop->pos < 0){	// negative means was delete
-			(int)curp = -(int)curp;		// so insert
+			curp = -(int)curp;		// so insert
 			cmove(curp, curp+1, etxt-curp);
 			*curp = undop->ch;
 			if(*curp == '\n') LINES++;
