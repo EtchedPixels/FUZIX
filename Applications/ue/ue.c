@@ -74,7 +74,7 @@ char *filename;
 /* undo record struct */
 typedef struct {
 	char ch;
-	int pos;
+	char *pos;
 } U_REC;
 
 U_REC* undop = (U_REC*)&ubuf;
@@ -332,8 +332,8 @@ delete()
 		if(*curp == '\n') 
 			LINES--;
 		if((char*)&undop[1] < ubuf+UBUF){
-			undop->ch = *curp;
-			undop->pos = -(int)curp;	// negative means delete
+			undop->ch = *curp | 0x80;	// negative means delete
+			undop->pos = curp;
 			undop++;
 		}
 		cmove(curp+1, curp, etxt-curp);
@@ -359,13 +359,12 @@ delrol()
 void
 undo()
 {
-	if((void*)undop > (void*)ubuf){
+	if((char *)undop > ubuf){
 		undop--;
-		curp = (char*)undop->pos;
-		if(undop->pos < 0){	// negative means was delete
-			curp = -(int)curp;		// so insert
-			cmove(curp, curp+1, etxt-curp);
-			*curp = undop->ch;
+		curp = undop->pos;
+		if(undop->ch & 0x80){		// negative means was delete
+			cmove(curp, curp+1, etxt-curp);		// so insert
+			*curp = undop->ch & ~0x80;
 			if(*curp == '\n') LINES++;
 		}
 		else{	// was insert so delete
@@ -520,7 +519,7 @@ int main(int argc, char **argv)
 				if(*curp++ == '\n') LINES++;
 				if((char*)&undop[1] < ubuf+UBUF){
 //					undop->ch = curp[-1];
-					undop->pos = (int)curp-1;	// positive means insert
+					undop->pos = curp-1;	// positive means insert
 					undop++;
 				}
 			}
