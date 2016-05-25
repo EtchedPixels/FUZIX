@@ -81,7 +81,13 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	map_for_kernel();
 }
 
-/* FIXME: these should use memmove */
+static void rmemcpy( unsigned char *dest, unsigned char *src, size_t n )
+{
+	unsigned char *d=dest+n;
+	unsigned char *s=src+n;
+	while( s != src )
+		*--d = *--s;
+}
 
 void scroll_up(void)
 {
@@ -94,7 +100,7 @@ void scroll_up(void)
 void scroll_down(void)
 {
 	map_for_video();
-	memcpy(curpty->base + VT_WIDTH*2, curpty->base,
+	rmemcpy(curpty->base + VT_WIDTH*2, curpty->base,
 	       VT_WIDTH*2 * VT_BOTTOM);
 	map_for_kernel();
 }
