@@ -40,7 +40,8 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <stdio.h>
 #include <unistd.h>
 
-#define BUF 2048*4
+#define BUF 4096*6
+#define UBUF 768
 #define MODE 0666
 #define TABSZ 4
 #define TABM TABSZ-1
@@ -56,7 +57,7 @@ int row, col;
 char str[MAXCOLS];		// used by gotoxy and clrtoeol
 char prompt[]="Look for: ";
 char sstring[MAXCOLS];	// search string, used by look()
-char ubuf[BUF];			// undo buffer
+char ubuf[UBUF];			// undo buffer
 char ks[6];				// keyboard input string, used by getch()
 
 char buf[BUF];
@@ -314,7 +315,7 @@ delete()
 	if(curp < etxt){
 		if(*curp == '\n') 
 			LINES--;
-		if((char*)&undop[1] < ubuf+BUF){
+		if((char*)&undop[1] < ubuf+UBUF){
 			undop->ch = *curp;
 			undop->pos = -(int)curp;	// negative means delete
 			undop++;
@@ -480,7 +481,7 @@ int main(int argc, char **argv)
 				cmove(curp, curp+1, etxt-curp);
 				*curp = ch == '\r' ? '\n' : ch;
 				if(*curp++ == '\n') LINES++;
-				if((char*)&undop[1] < ubuf+BUF){
+				if((char*)&undop[1] < ubuf+UBUF){
 //					undop->ch = curp[-1];
 					undop->pos = (int)curp-1;	// positive means insert
 					undop++;
