@@ -423,7 +423,7 @@ display()
 			page = prevline(page-1);
 	}
 	epage = page;
-	gotoxy(0,1);
+	gotoxy(1,1);
 	while (1) {
 		if (curp == epage) {
 			row = i;
