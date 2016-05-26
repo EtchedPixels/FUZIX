@@ -38,6 +38,7 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <string.h>
 #include <termios.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define BUF 2048*4
 #define MODE 0666
