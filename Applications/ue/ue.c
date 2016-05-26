@@ -39,6 +39,7 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "tty.h"
 
 #define BUF 4096*6
 #define UBUF 768
@@ -46,8 +47,9 @@ terminal is (1,1) based. display() takes care of the conversion.
 #define TABSZ 4
 #define TABM TABSZ-1
 
-#define MAXLINES 25
 #define MAXCOLS 96
+
+int MAXLINES = 25;
 
 int COLS = MAXCOLS;
 int LINES = 1;
@@ -458,6 +460,23 @@ int main(int argc, char **argv)
 	if (argc < 2)
 		return (2);
 	GetSetTerm(0);
+#ifdef VTSIZE
+	int16_t vtsize;
+	vtsize = ioctl(0, VTSIZE, 0);
+	if (vtsize != -1) {
+		MAXLINES = vtsize >> 8;
+		COLS = vtsize & 0xFF;
+	}
+#endif
+#ifdef TIOCGWINSZ
+	struct winsize w;
+	if (ioctl(0, TIOCGWINSZ, &w) != -1) {
+		if (w.ws_row != 0)
+			MAXLINES = w.ws_row;
+		if (w.ws_col != 0)
+			COLS = w.ws_col;
+	}
+#endif
 	if (0 < (i = open(filename = *++argv, 0))) {
 		etxt += read(i, buf, BUF);
 		if (etxt < buf)
