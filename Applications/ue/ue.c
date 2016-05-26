@@ -190,10 +190,14 @@ emitch(int c)
 void
 clrtoeol()
 {
+#ifdef ANSIEMU
 	int i=0;
 	while(i < COLS-outxy.X)
 		str[i++]=' ';
 	write(1, (void*)&str, COLS-outxy.X > 0 ? COLS-outxy.X : 0);
+#else
+	write(1, "\x1b" "K", 2);
+#endif
 	gotoxy(outxy.X,outxy.Y);
 }
 // end of I/O
@@ -455,11 +459,15 @@ display()
 		}
 		++epage;
 	}
+#ifdef ANSIEMU
 	i = outxy.Y;
 	while(i++ <= MAXLINES){
 		clrtoeol();
 		gotoxy(1,i);
 	}
+#else
+	write(1, "\x1b" "J", 2);	/* clear to end of screen */
+#endif
 	gotoxy(col+1, row+1);
 }
 
