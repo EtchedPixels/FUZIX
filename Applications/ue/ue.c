@@ -157,7 +157,7 @@ getch()
 }
 
 void
-put1(int c)
+put1(char c)
 {
 	write(1, (void*)&c, 1);
 	outxy.X++;
