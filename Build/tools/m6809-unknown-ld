@@ -74,6 +74,10 @@ while [ "$*" != "" ]; do
 		-o)
 			output_file=$1; shift
 			;;
+		--oformat=*)
+			arg=${arg#--oformat=};
+			options="$options --format=$arg"
+			;;
 		-L*)
 			arg=${arg#-L}
 			libpaths="$libpaths --library-path=$arg"
@@ -88,10 +92,13 @@ while [ "$*" != "" ]; do
 			;;
 		
 		-Map=*)
-			arg=${arg#-Map=}; shift
+			arg=${arg#-Map=};
 			options="$options --map=$arg"
 			;;
 			
+		--script=*)
+			options="$options $arg"
+			;;
 		-T)
 			options="$options --script=$1"; shift
 			;;
