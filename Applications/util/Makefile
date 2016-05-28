@@ -89,9 +89,9 @@ SRCS  = banner.c \
 	tail.c \
 	umount.c \
 	uniq.c \
+	uptime.c \
 	uud.c \
 	uue.c \
-	uptime.c \
 	wc.c \
 	which.c \
 	who.c \
