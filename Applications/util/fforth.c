@@ -1639,13 +1639,13 @@ static cdefn_t* interpreter_table[] =
 //
 //     \ What is it? Calculate an offset into the lookup table.
 //     1+ CELLS
-//     STATE @ 24 *
+//     STATE @ 3 CELLS *
 //     +                               \ -- addr offset
 //
 //     \ Look up the right word and run it.
 //     [&lit_word] [interpreter_table] + @ EXECUTE \ -- addr
 //   AGAIN
-COM( interpret_word, codeword, "INTERPRET", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)24, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
+COM( interpret_word, codeword, "INTERPRET", &compile_num_word, (void*)&lit_word, (void*)32, (void*)&word_word, (void*)&c_at_word, (void*)&equals0_word, (void*)&branch0_word, (void*)(&interpret_word.payload[0] + 8), (void*)&exit_word, (void*)&here_word, (void*)&find_word, (void*)&add_one_word, (void*)&cells_word, (void*)&state_word, (void*)&at_word, (void*)&lit_word, (void*)3, (void*)&cells_word, (void*)&mul_word, (void*)&add_word, (void*)(&lit_word), (void*)(interpreter_table), (void*)&add_word, (void*)&at_word, (void*)&execute_word, (void*)&branch_word, (void*)(&interpret_word.payload[0] + 0), (void*)&exit_word )
 
 //@C EVALUATE
 // \ Parses a user-specified string and executes the words therein.
