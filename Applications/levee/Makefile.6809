@@ -21,13 +21,11 @@ CSRCS += move.c rmxcall.c ucsd.c undo.c unixcall.c wildargs.c
 
 OBJS = $(CSRCS:.c=.o)
 
-levee: $(OBJS)
-	$(LINKER) -o levee $(LINKER_OPT) $(CRT0) $(OBJS)
+levee: $(OBJS) $(CRT0)
+	$(LINKER) -o levee $(LINKER_OPT) $^
 
-$(OBJS): $(CSRCS)
-
-.c.o:
-	$(CC) $(CFLAGS) $(COPT) -c $(@:.o=.c)
+$(OBJS): %.o: %.c
+	$(CC) $(CFLAGS) $(COPT) -c $<
 
 clean:
 	rm -rf $(OBJS) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.asm levee levee.bin

@@ -31,8 +31,8 @@ $(OBJS): $(INCS)
 $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
-sh: $(OBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS)
+sh: $(OBJS) $(CRT0)
+	$(LINKER) -o $@ $(LINKER_OPT) $^
 
 clean:
 	rm -f $(OBJS) sh $(SRCS:.c=) core *~
