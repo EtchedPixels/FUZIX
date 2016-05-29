@@ -201,7 +201,9 @@ bget ../../Applications/util/su
 bget ../../Applications/util/sync
 bget ../../Applications/util/tar
 bget ../../Applications/util/tee
+bget ../../Applications/util/termcap
 bget ../../Applications/util/tail
+bget ../../Applications/util/tget
 bget ../../Applications/util/touch
 bget ../../Applications/util/tr
 bget ../../Applications/util/true
@@ -282,7 +284,9 @@ chmod 4755 su
 chmod 0755 sync
 chmod 0755 tar
 chmod 0755 tee
+chmod 0755 termcap
 chmod 0755 tail
+chmod 0755 tget
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
