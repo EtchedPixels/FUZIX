@@ -83,6 +83,8 @@ SRCS  = banner.c \
 	tee.c \
 	tail.c \
 	telinit.c \
+	termcap.c \
+	tget.c \
 	touch.c \
 	tr.c \
 	true.c \
@@ -94,6 +96,7 @@ SRCS  = banner.c \
 	wc.c \
 	which.c \
 	who.c \
+	while1.c \
 	whoami.c \
 	write.c \
 	xargs.c \
