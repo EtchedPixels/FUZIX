@@ -207,7 +207,7 @@ extern char *UP;		/* up cursor movement */
 
 int tgetent(bp, name)
 char *bp;
-char *name;
+const char *name;
 {
     FILE *fp;
     char *file;
@@ -421,7 +421,7 @@ char **area;
  */
 
 char *tgoto(cm, destcol, destline)
-char *cm;
+const char *cm;
 int destcol;
 int destline;
 {
@@ -491,9 +491,9 @@ int destline;
  */
 
 int tputs(cp, affcnt, outc)
-register char *cp;
+register const char *cp;
 int affcnt;
-void (*outc)(int ch);
+int (*outc)(int ch);
 {
     if (cp == (char *) NULL)
 	return (1);
