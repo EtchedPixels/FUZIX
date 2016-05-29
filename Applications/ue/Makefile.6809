@@ -4,13 +4,14 @@ CC = m6809-unknown-gcc
 ASM = m6809-unknown-as
 AR = m6809-unknown-ar
 LINKER = lwlink
-CFLAGS = -I../../Library/include -I../../Library/include/6502
+CFLAGS = -I../../Library/include -I../../Library/include/6502 -Os
 LINKER_OPT = --format=raw -L../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc --map=$@.map
 LINKER_OPT += --script=../util/$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
+CRT0NS = ../../Library/libs/crt0nostdio_6809.o
 
 .SUFFIXES: .c .o
 
@@ -23,7 +24,7 @@ APPS = $(OBJS:.o=)
 
 all: $(APPS) size.report
 
-$(APPS): $(CRT0)
+$(APPS): $(CRT0NS)
 
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $^
