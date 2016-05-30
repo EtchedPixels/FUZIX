@@ -43,8 +43,6 @@ bget ../../Applications/games/myst10
 bget ../../Applications/games/myst11
 bget ../../Applications/games/qrun
 bget ../../Applications/ld09/ld09
-bget ../../Applications/levee/levee-ansi
-bget ../../Applications/levee/levee-termcap
 bget ../../Applications/MWC/cmd/ac
 bget ../../Applications/MWC/cmd/almanac
 bget ../../Applications/MWC/cmd/at
@@ -103,8 +101,6 @@ chmod 0755 myst10
 chmod 0755 myst11
 chmod 0755 qrun
 chmod 0755 ld09
-chmod 0755 levee-ansi
-chmod 0755 levee-termcap
 chmod 0755 ac
 chmod 0755 almanac
 chmod 0755 at
