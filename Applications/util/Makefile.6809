@@ -40,6 +40,7 @@ SRCS  = banner.c \
 	factor.c \
 	false.c \
 	fdisk.c \
+	fforth.c \
 	fgrep.c \
 	fsck.c \
 	grep.c \
