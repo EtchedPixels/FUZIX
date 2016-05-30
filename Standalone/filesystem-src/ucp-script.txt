@@ -201,7 +201,9 @@ bget ../../Applications/util/su
 bget ../../Applications/util/sync
 bget ../../Applications/util/tar
 bget ../../Applications/util/tee
+bget ../../Applications/util/termcap
 bget ../../Applications/util/tail
+bget ../../Applications/util/tget
 bget ../../Applications/util/touch
 bget ../../Applications/util/tr
 bget ../../Applications/util/true
@@ -212,6 +214,7 @@ bget ../../Applications/util/uud
 bget ../../Applications/util/uue
 bget ../../Applications/util/wc
 bget ../../Applications/util/which
+bget ../../Applications/util/while1
 bget ../../Applications/util/who
 bget ../../Applications/util/whoami
 bget ../../Applications/util/write
@@ -282,7 +285,9 @@ chmod 4755 su
 chmod 0755 sync
 chmod 0755 tar
 chmod 0755 tee
+chmod 0755 termcap
 chmod 0755 tail
+chmod 0755 tget
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
@@ -293,6 +298,7 @@ chmod 0755 uud
 chmod 0755 uue
 chmod 0755 wc
 chmod 0755 which
+chmod 0755 while1
 chmod 0755 who
 chmod 0755 whoami
 chmod 0755 write

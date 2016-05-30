@@ -43,7 +43,6 @@ bget ../../Applications/games/myst10
 bget ../../Applications/games/myst11
 bget ../../Applications/games/qrun
 bget ../../Applications/ld09/ld09
-bget ../../Applications/levee/levee
 bget ../../Applications/MWC/cmd/ac
 bget ../../Applications/MWC/cmd/almanac
 bget ../../Applications/MWC/cmd/at
@@ -64,6 +63,7 @@ bget ../../Applications/V7/games/wump
 bget ../../Applications/V7/games/fish
 bget ../../Applications/V7/games/backgammon
 bget ../../Applications/util/fforth
+bget ../../Applications/util/sed
 chmod 0755 as09
 chmod 0755 advent
 chmod 0755 advent.db
@@ -101,7 +101,6 @@ chmod 0755 myst10
 chmod 0755 myst11
 chmod 0755 qrun
 chmod 0755 ld09
-chmod 0755 levee
 chmod 0755 ac
 chmod 0755 almanac
 chmod 0755 at
@@ -122,7 +121,31 @@ chmod 0755 wump
 chmod 0755 fish
 chmod 0755 backgammon
 chmod 0755 fforth
+chmod 0755 sed
 
 cd /usr/src/fforth
 bget ../../Applications/util/fforth_tests.fth
 chmod 0755 fforth_tests.fth
+
+cd /usr
+mkdir man
+chmod 0755 man
+cd man
+mkdir man1
+mkdir man2
+mkdir man3
+mkdir man4
+mkdir man5
+mkdir man6
+mkdir man7
+chmod 0755 man1
+chmod 0755 man2
+chmod 0755 man3
+chmod 0755 man4
+chmod 0755 man5
+chmod 0755 man6
+chmod 0755 man7
+
+cd man1
+bget ../../Applications/util/man.1
+chmod 644 man.1
