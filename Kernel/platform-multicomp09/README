@@ -147,6 +147,7 @@ make -C Library/libs -f Makefile.6809 TARGET=multicomp09
 # 3. Build the utils
 make -C Applications/util -f Makefile.6809 TARGET=multicomp09
 make -C Applications/V7/cmd/sh -f Makefile.6809 TARGET=multicomp09
+make -C Applications/V7/cmd -f Makefile.6809 TARGET=multicomp09
 make -C Applications/levee -f Makefile.6809 TARGET=multicomp09
 make -C Applications/cave -f Makefile.6809 TARGET=multicomp09
 make -C Applications/dw -f Makefile.6809 TARGET=multicomp09

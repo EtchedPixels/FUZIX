@@ -58,6 +58,35 @@ bget ../../Applications/MWC/cmd/pr
 bget ../../Applications/MWC/cmd/test
 bget ../../Applications/MWC/cmd/ttt
 bget ../../Applications/MWC/cmd/units
+bget ../../Applications/V7/cmd/accton
+##bget ../../Applications/V7/cmd/ac
+##bget ../../Applications/V7/cmd/at
+bget ../../Applications/V7/cmd/atrun
+bget ../../Applications/V7/cmd/col
+bget ../../Applications/V7/cmd/comm
+bget ../../Applications/V7/cmd/cron
+bget ../../Applications/V7/cmd/crypt
+bget ../../Applications/V7/cmd/dc
+##bget ../../Applications/V7/cmd/dd
+##bget ../../Applications/V7/cmd/deroff
+bget ../../Applications/V7/cmd/diff
+bget ../../Applications/V7/cmd/diff3
+bget ../../Applications/V7/cmd/diffh
+bget ../../Applications/V7/cmd/join
+bget ../../Applications/V7/cmd/look
+bget ../../Applications/V7/cmd/makekey
+bget ../../Applications/V7/cmd/mesg
+bget ../../Applications/V7/cmd/newgrp
+##bget ../../Applications/V7/cmd/pr
+bget ../../Applications/V7/cmd/ptx
+bget ../../Applications/V7/cmd/rev
+bget ../../Applications/V7/cmd/split
+bget ../../Applications/V7/cmd/sum
+##bget ../../Applications/V7/cmd/su
+##bget ../../Applications/V7/cmd/test
+bget ../../Applications/V7/cmd/time
+bget ../../Applications/V7/cmd/tsort
+bget ../../Applications/V7/cmd/wall
 bget ../../Applications/V7/games/arithmetic
 bget ../../Applications/V7/games/wump
 bget ../../Applications/V7/games/fish
@@ -118,6 +147,35 @@ chmod 0755 pr
 chmod 0755 test
 chmod 0755 ttt
 chmod 0755 units
+chmod 0755 accton
+##chmod 0755 ac
+##chmod 0755 at
+chmod 0755 atrun
+chmod 0755 col
+chmod 0755 comm
+chmod 0755 cron
+chmod 0755 crypt
+chmod 0755 dc
+##chmod 0755 dd
+##chmod 0755 deroff
+chmod 0755 diff
+chmod 0755 diff3
+chmod 0755 diffh
+chmod 0755 join
+chmod 0755 look
+chmod 0755 makekey
+chmod 0755 mesg
+chmod 0755 newgrp
+##chmod 0755 pr
+chmod 0755 ptx
+chmod 0755 rev
+chmod 0755 split
+chmod 0755 sum
+##chmod 0755 su
+##chmod 0755 test
+chmod 0755 time
+chmod 0755 tsort
+chmod 0755 wall
 chmod 0755 arithmetic
 chmod 0755 wump
 chmod 0755 fish
