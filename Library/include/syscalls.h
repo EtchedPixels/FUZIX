@@ -64,6 +64,7 @@ struct hd_geometry {
 };
 
 struct sockaddr;
+struct sockaddr_in;
 
 #define HDIO_GETGEO		0x0101
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
