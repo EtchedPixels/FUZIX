@@ -1,0 +1,109 @@
+.TH man 1 "FUZIX System Utilities" "FUZIX" \" -*- nroff -*-
+.SH NAME
+man \- display on-line reference manuals
+.SH SYNOPSIS
+.B man
+[\-w] [\-b|\-q] [section-number] page
+.SH DESCRIPTION
+This document describes the FUZIX version of
+.BR man .
+This version is extremely minimal, intended for use when a more
+feature-rich version is impractical.
+.B man
+is the system's manual pager. The
+.I page
+argument is the name of a program, file, function system call or other
+system feature which should be documented in the system's manual.
+.B man
+will try and locate and display a manual page for the
+.I page
+argument given. If a numeric
+.I section
+argument is given, then
+.B man
+will only look in that section of the manual, rather than all the sections
+which is the default.
+.PP
+Here is a list of the manual sections:-
+.PP
+1 Program or shell commands
+.br
+2 System calls in the kernel
+.br
+3 Functions in the libraries
+.br
+4 Special device files
+.br
+5 File formats
+.br
+6 Games
+.br
+7 Macro packages
+.br
+8 System administration programs
+.br
+9 Kernel routines
+.PP
+Unlike other man programs, this one does not use an external formatter such
+as nroff, as we currently do not have one. It supports a subset of nroff
+-man features which are sufficient for displaying FUZIX manual pages.
+.SS OPTIONS
+.TP
+.I "-w"
+Do not display any manual pages, but print the location of each one found.
+.TP
+.I "-v"
+Force verbose output. (default)
+.TP
+.I "-q"
+Force quiet output.
+.SH EXAMPLES
+.IP
+man ls
+.IP
+man -w cp
+.LP
+Display the manual page for ls, and the location of the manual page for cp
+respectively.
+.SH ENVIRONMENT
+.B man
+obeys the following environment variables.
+.TP
+.SB MANSECT
+A colon separated list of single digit section numbers indicating the sections
+to be searched, and the search order. Default: 1:2:3:4:5:6:7:8:9
+.TP
+.SB MANPATH
+A colon separated list of directories to search for a manual page tree. Default: /usr/local/man:/usr/man
+.TP
+.SB PAGER
+The name of the program to be used to display the manual page. Default: more
+.TP
+.SB PATH
+A colon separated list of directories to search for commands including the
+program specified by PAGER, and gzip and compress used to uncompress compressed
+manual pages.
+.SH EXIT STATUS
+.TP
+.B 0
+Completed successfully.
+.TP
+.B 1
+No
+.I page
+specified on no manual page found.
+.SH FILES
+.PD 0
+.TP
+.B /usr/man/man?/*
+.PD
+.SH BUGS
+Plenty I am sure.
+.SH AUTHORS
+Rob de Bath 
+.br
+Al Riddoch (ajr@ecs.soton.ac.uk) (ELKS manpage)
+Neal Crook (tweaks for FUZIX manpage)
+.SH SEE ALSO
+.BR more (1),
+.BR cat (1).
