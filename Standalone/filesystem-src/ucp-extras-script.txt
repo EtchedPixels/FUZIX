@@ -62,6 +62,9 @@ bget ../../Applications/V7/games/arithmetic
 bget ../../Applications/V7/games/wump
 bget ../../Applications/V7/games/fish
 bget ../../Applications/V7/games/backgammon
+bget ../../Applications/util/sed
+bget ../../Applications/util/termcap
+bget ../../Applications/util/tget
 bget ../../Applications/util/fforth
 chmod 0755 as09
 chmod 0755 advent
@@ -119,6 +122,9 @@ chmod 0755 arithmetic
 chmod 0755 wump
 chmod 0755 fish
 chmod 0755 backgammon
+chmod 0755 sed
+chmod 0755 termcap
+chmod 0755 tget
 chmod 0755 fforth
 
 cd /usr/src/fforth

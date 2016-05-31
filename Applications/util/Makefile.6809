@@ -96,6 +96,7 @@ SRCS  = \
 	su.c \
 	tar.c \
 	tail.c \
+	termcap.c \
 	tget.c \
 	umount.c \
 	uniq.c \
@@ -109,7 +110,6 @@ SRCS  = \
 	xargs.c
 
 SKIPPED = \
-	termcap.c \
 	tiddles.c \
 
 
