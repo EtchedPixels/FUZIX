@@ -224,7 +224,7 @@ typedef struct oft {
     char      o_access;   /* O_RDONLY, O_WRONLY, or O_RDWR */
     char      o_refs;     /* Reference count: depends on # of active children*/
 } oft;
-// static struct cinode i_tab[ITABSIZE];    /* In-core inode table */
+/* static struct cinode i_tab[ITABSIZE];    * In-core inode table */
 static struct oft of_tab[OFTSIZE]; /* Open File Table */
 
 static void xfs_init(int);

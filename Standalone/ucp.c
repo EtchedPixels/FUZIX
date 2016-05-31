@@ -776,7 +776,7 @@ static int fuzix_open(char *name, int16_t flag)
 		goto cantopen;
 	}
 
-	if (isdevice(ino))	// && d_open((int)ino->c_node.i_addr[0]) != 0)
+	if (isdevice(ino))	/* && d_open((int)ino->c_node.i_addr[0]) != 0) */
 	{
 		udata.u_error = ENXIO;
 		goto cantopen;
@@ -806,9 +806,11 @@ static int doclose(int16_t uindex)
 	    return (-1);
 	oftindex = udata.u_files[uindex];
 
-	//if (isdevice(ino)
-	//        /* && ino->c_refs == 1 && of_tab[oftindex].o_refs == 1 */ )
-	//    d_close((int)(ino->c_node.i_addr[0]));
+#if 0
+	if (isdevice(ino)
+	    /* && ino->c_refs == 1 && of_tab[oftindex].o_refs == 1 */ )
+	    d_close((int)(ino->c_node.i_addr[0]));
+#endif
 
 	udata.u_files[uindex] = -1;
 	oft_deref(oftindex);
@@ -1321,7 +1323,7 @@ static int fuzix_mount(char *spec, char *dir, int rwflag)
 	}
 	dev = (int) swizzle16(sino->c_node.i_addr[0]);
 
-	if (dev >= NDEVS)	// || d_open(dev))
+	if (dev >= NDEVS)	/* || d_open(dev)) */
 	{
 		udata.u_error = ENXIO;
 		goto nogood;
@@ -1618,7 +1620,7 @@ static int ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 	for (;;) {
 		udata.u_count = 32;
 		udata.u_base = (char *) &curentry;
-//        udata.u_sysio = 1;                                    /*280*/
+/*        udata.u_sysio = 1;                                    280*/
 		readi(wd);
 
 		/* Read until EOF or name is found */
@@ -2486,7 +2488,7 @@ the rest of the data.
 
 static int bdread(bufptr bp)
 {
-//    printf("bdread(fd=%d, block %d)\n", dev_fd, bp->bf_blk);
+/*    printf("bdread(fd=%d, block %d)\n", dev_fd, bp->bf_blk); */
 
 	udata.u_buf = bp;
 	if (lseek
