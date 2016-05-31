@@ -90,6 +90,7 @@ struct times;
 struct tms;
 struct utimbuf;
 struct utsname;
+struct rlimit;
 
 extern void _exit(int code);
 extern int open(const char *path, int flags, ...);
