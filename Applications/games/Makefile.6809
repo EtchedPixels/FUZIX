@@ -11,6 +11,7 @@ LINKER_OPT += -L$(LIBGCCDIR) -lgcc
 LINKER_OPT += --script=../util/$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
+CRT0NS = ../../Library/libs/crt0nostdio_6809.o
 
 .SUFFIXES: .c .o
 
@@ -19,32 +20,25 @@ SRCSNS = qrun.c fortune.c
 SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
         myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
-        myst08.c myst09.c myst10.c myst11.c fortune.c fortune-gen.c
-
-SRCSBAD = 
+        myst08.c myst09.c myst10.c myst11.c fortune-gen.c
 
 OBJS = $(SRCS:.c=.o)
-OBJSNS = $(SRCSNS:.c=.rel)
-OBJSBAD = $(SRCSBAD:.c=.rel)
+OBJSNS = $(SRCSNS:.c=.o)
 
 APPS = $(OBJS:.o=)
+APPSNS = $(OBJSNS:.o=)
 
-all: $(APPS) sizes
-
-$(OBJS): $(SRCS)
+all: $(APPS) $(APPSNS) size.report
 
 $(APPS): $(CRT0)
+$(APPSNS): $(CRT0NS)
 
-$(APPSNS): OPTS = --nostdio
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $^
 
-%: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $<
-
-sizes: $(APPS)
-	ls -l $(APPS) > size.report
+size.report: $(APPS)
+	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) *.lst *.map size.report
 
-rmbak:
-	rm -f *~ core

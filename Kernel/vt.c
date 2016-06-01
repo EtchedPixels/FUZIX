@@ -178,12 +178,12 @@ static int escout(unsigned char c)
 		return 0;
 	}
 	if (c == 'J') {
-		clear_across(cursory, cursorx, VT_RIGHT - cursorx);
+		clear_across(cursory, cursorx, VT_RIGHT - cursorx + 1);
 		clear_lines(cursory + 1, VT_BOTTOM - cursory);
 		return 0;
 	}
 	if (c == 'K') {
-		clear_across(cursory, cursorx, VT_RIGHT - cursorx);
+		clear_across(cursory, cursorx, VT_RIGHT - cursorx + 1);
 		return 0;
 	}
 	if (c == 'Y')

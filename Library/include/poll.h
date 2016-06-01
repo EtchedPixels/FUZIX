@@ -3,7 +3,7 @@
 
 struct pollfd {
   int fd;
-  short events
+  short events;
   short revents;
 };
 

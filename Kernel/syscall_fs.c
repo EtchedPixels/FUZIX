@@ -271,9 +271,7 @@ arg_t _ioctl(void)
 	dev = ino->c_node.i_addr[0];
 
 	/* top bit of request is reserved for kernel originated magic */
-	if (d_ioctl(dev, request & 0x7FFF, data))
-		return -1;
-	return (0);
+	return d_ioctl(dev, request & 0x7FFF, data);
 }
 
 #undef fd

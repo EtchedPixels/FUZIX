@@ -33,7 +33,7 @@
 /* The Drivewire block dev rawmode=1 doesn't work just now
    with the bank16k.c memory layout (yet), so we have to
    use legacy binary loading... */
-#define CONFIG_LEGACY_EXEC
+/* #define CONFIG_LEGACY_EXEC */
 
 
 /* Video terminal, not a serial tty */

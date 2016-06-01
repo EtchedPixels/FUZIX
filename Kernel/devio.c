@@ -285,18 +285,17 @@ int d_close(uint16_t dev)
 
 int d_ioctl(uint16_t dev, uint16_t request, char *data)
 {
+	int ret;
+
 	if (!validdev(dev)) {
 		udata.u_error = ENXIO;
 		return -1;
 	}
 
-	if ((*dev_tab[major(dev)].dev_ioctl) (minor(dev), request, data)) {
-		if (!udata.u_error)	// maybe the ioctl routine might set this?
+	ret =  (*dev_tab[major(dev)].dev_ioctl) (minor(dev), request, data);
+	if (ret == -1 && !udata.u_error)	// maybe the ioctl routine might set this?
 			udata.u_error = ENOTTY;
-		return -1;
-	}
-
-	return 0;
+	return ret;
 }
 
 int d_flush(uint16_t dev)

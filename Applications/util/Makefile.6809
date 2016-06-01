@@ -11,81 +11,93 @@ LINKER_OPT += -L$(LIBGCCDIR) -lgcc
 LINKER_OPT += --script=$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
+CRT0NS = ../../Library/libs/crt0nostdio_6809.o
 
 .SUFFIXES: .c .o
 
-
-SRCS  = banner.c \
+SRCSNS = \
 	basename.c \
-	bd.c \
-	cal.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \
 	chown.c \
-	cksum.c \
 	cmp.c \
 	cp.c \
-	cut.c \
 	date.c \
+	dirname.c \
+	false.c \
+	groups.c \
+	head.c \
+	init.c \
+	kill.c \
+	ln.c \
+	logname.c \
+	mkdir.c \
+	mkfifo.c \
+	mknod.c \
+	mv.c \
+	pagesize.c \
+	printenv.c \
+	prtroot.c \
+	pwd.c \
+	reboot.c \
+	rm.c \
+	rmdir.c \
+	sum.c \
+	sync.c \
+	tee.c \
+	telinit.c \
+	touch.c \
+	tr.c \
+	true.c \
+	while1.c \
+	whoami.c \
+	yes.c
+
+
+SRCS  = \
+	banner.c \
+	bd.c \
+	cal.c \
+	cksum.c \
+	cut.c \
 	dd.c \
 	decomp16.c \
 	df.c \
-	dirname.c \
 	dosread.c \
 	du.c \
 	echo.c \
 	ed.c \
 	env.c \
 	factor.c \
-	false.c \
 	fdisk.c \
+	fforth.c \
 	fgrep.c \
 	fsck.c \
 	grep.c \
-	head.c \
 	id.c \
-	init.c \
-	kill.c \
 	ll.c \
-	ln.c \
-	logname.c \
 	ls.c \
 	man.c \
-	mkdir.c \
 	mkfs.c \
-	mkfifo.c \
-	mknod.c \
 	mode.c \
 	more.c \
 	mount.c \
-	mv.c \
 	od.c \
-	pagesize.c \
 	passwd.c \
 	patchcpm.c \
-	printenv.c \
-	prtroot.c \
 	ps.c \
-	pwd.c \
-	reboot.c \
-	rm.c \
-	rmdir.c \
 	sed.c \
 	sleep.c \
 	ssh.c \
+	socktest.c \
 	sort.c \
 	stty.c \
-	sum.c \
 	su.c \
-	sync.c \
 	tar.c \
-	tee.c \
 	tail.c \
-	telinit.c \
-	touch.c \
-	tr.c \
-	true.c \
+	termcap.c \
+	tget.c \
 	umount.c \
 	uniq.c \
 	uptime.c \
@@ -94,29 +106,32 @@ SRCS  = banner.c \
 	wc.c \
 	which.c \
 	who.c \
-	whoami.c \
 	write.c \
-	xargs.c \
-	yes.c
+	xargs.c
+
+SKIPPED = \
+	tiddles.c \
+
 
 OBJS = $(SRCS:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
 
 APPS = $(OBJS:.o=)
+APPSNS = $(OBJSNS:.o=)
 
-all: $(APPS) sizes
-
-$(OBJS): $(SRCS)
+all: $(APPS) $(APPSNS) size.report
 
 $(APPS): $(CRT0)
+$(APPSNS): $(CRT0NS)
 
-%: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $<
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $^
 
-sizes: $(APPS)
-	ls -l $(APPS) > size.report
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core

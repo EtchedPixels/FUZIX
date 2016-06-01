@@ -1,11 +1,32 @@
 # from cmd/
 ac
+accton
+at
+atrun
 col
+comm
+cron
+crypt
 dc
+dd
+deroff
 diff
+diff3
+diffh
+join
+look
 makekey
+mesg
+newgrp
+pr
 ptx
+rev
+split
+su
 sum
+test
+time
+tsort
 wall
 # from cmd/sh
 sh

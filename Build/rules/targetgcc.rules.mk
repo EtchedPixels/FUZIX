@@ -185,6 +185,28 @@ $$($1.result): $$($1.objs) \
 
 endif
 
+ifneq ($$(filter %.bin, $$($1.result)),)
+
+# The 6809 platforms using LWTOOLS/decb also use their own functions for now
+# $1.libgcc ?= $(shell $(TARGETCC) --print-libgcc)
+
+$$($1.result): $$($1.objs) \
+		$$($$($1.class).extradeps) $$($1.extradeps) $$($1.libgcc) \
+		$$($1.objdir)/$$($$($1.class).ldfile)
+	@echo KERNEL $$@
+	@mkdir -p $$(dir $$@)
+	$(hide) $(TARGETLD) \
+		$$(targetgcc.ldflags) $$($$($1.class).ldflags) $$($1.ldflags) \
+		-T $$($1.objdir)/$$($$($1.class).ldfile) \
+		-o $$@ \
+		--oformat=decb \
+		-Map=$$(@:bin=map) \
+		--start-group \
+		$$($1.objs) \
+		--end-group
+
+endif
+
 endef
 
 
