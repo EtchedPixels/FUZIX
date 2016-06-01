@@ -34,7 +34,7 @@ int fd_open(char *name)
 
 	if (dev_fd < 0)
 		return -1;
-	printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset);
+	/* printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset); */
 	return 0;
 }
 

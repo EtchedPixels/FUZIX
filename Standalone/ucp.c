@@ -58,39 +58,45 @@ static int cmd_fdump(char *arg);
 static int cmd_rm( char *path);
 static int cmd_rmdir(char *path);
 
+static int interactive = 0;
+
 int main(int argc, char *argval[])
 {
     int  rdev;
     char cmd[30], arg1[1024], arg2[30], arg3[30];
     int  count;
-    int  interactive;
+    int  multiline;
     int  pending_line = 0;
     struct filesys fsys;
     int  j, retc = 0;
 
     if (argc == 2) {
         fd_open(argval[1]);
-        interactive = 1;
+        multiline = 1;
     } else if (argc == 3) {
         fd_open(argval[1]);
         strncpy(&line[0], argval[2], 127);
         line[127] = '\0';
-        interactive = 0;
+        multiline = 0;
     } else {
         printf("Usage: ucp FILE [COMMAND]\n");
         exit(1);
     }
+
+    if (isatty(0))
+	interactive = 1;
 
     rdev = 0;
 
     xfs_init(rdev);
     strcpy(cwd, "/");
 
-    printf("Fuzix UCP version " UCP_VERSION ". Type ? for help.\n");
+    printf("Fuzix UCP version " UCP_VERSION ".%s\n", interactive?" Type ? for help.":"");
 
     do {
-        if (interactive && !pending_line) {
-            printf("unix: ");
+        if (multiline && !pending_line) {
+	    if (interactive)
+                printf("unix: ");
             if (fgets(line, 128, stdin) == NULL) {
                 xfs_end();
                 exit(retc);
@@ -128,6 +134,8 @@ int main(int argc, char *argval[])
         fuzix_sync();
 
         if (strcmp(cmd, "\n") == 0)
+            continue;
+	if (cmd[0] == '#')
             continue;
         switch (match(cmd)) {
             case 0:         /* exit */
@@ -248,7 +256,7 @@ int main(int argc, char *argval[])
                 retc = -1;
                 break;
         }           /* End Switch */
-    } while (interactive || pending_line);
+    } while (multiline || pending_line);
 
     fuzix_sync();
 
@@ -440,7 +448,8 @@ static int cmd_chmod(char *modes, char *path)
 {
     unsigned int mode;
 
-    printf("chmod %s to %s\n", path, modes);
+    if (interactive)
+        printf("chmod %s to %s\n", path, modes);
     if (sscanf(modes, "%o", &mode) != 1) {
         fprintf(stderr, "chmod: bad mode\n");
         return (-1);
