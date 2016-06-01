@@ -165,7 +165,8 @@ loop@	lda	,u+
 	;; low memory on reboot to bounce to the reset
 	;; vector.
 bounce@
-	;; [NAC HACK 2016May01] todo
+	;; [NAC HACK 2016May01] todo.. for multicomp need to re-enable the ROM.
+	;; how to test this??
 	lda	#0x06		; reset GIME (map in internal 32k rom)
 	sta  	0xff90
 	clr	0xff91
@@ -310,30 +311,29 @@ xinihw:	rts
 ;;;   into the userspace too.
 ;;;   takes: X = page table pointer
 ;;;   returns: nothing
-;;; [NAC HACK 2016May01] but.. X (page table pointer) not used??
-;;; [NAC HACK 2016May01] this can be smaller and tidier. Point to MMUADR and do indexed access.
-;;; [NAC HACK 2016May07] pushes x,u but uses neither. Could be smaller if we used X to point
-;;; to MMUADR... not so!! the indirect access grabs the value of X from the stack.
 _program_vectors:
 	;; copy the common section into user-space
-	pshs	x,u
+	pshs	y
+	ldy	#MMUADR
 
 	;; setup the null pointer / sentinal bytes in low process memory
-	lda	#(MMU_MAP1|8)
-	sta	MMUADR
-        ;; [NAC HACK 2016May07] access stacked X
-	lda	[0,s]	     ; get process's blk address for address 0
-	sta	MMUDAT	     ; put in our mmu ( at address 0 )
+	lda	#(MMU_MAP1|8)	; stay in MAP1, select block 8
+	sta	,y
+
+	lda	,x	     	; get process's blk address for address 0
+	sta	1,y		; and put it in MMUDAT
 	lda	#0x7E
 	sta	0
 
 	;; restore the MMU mapping that we trampled on
-	lda	#(MMU_MAP1|8)
-	sta	MMUADR
-	lda	_krn_mmu_map
-	sta	MMUDAT
+	;; MMUADR still has MAP1, block 8 so no need to re-write it.
 
-	puls	pc,x,u	     ; restore reg and return
+	;; retrieve value that used to be in MAP1, block 8
+	lda	_krn_mmu_map
+	;; and restore it
+	sta	1,y		; MMUDAT
+
+	puls	pc,y	     	; restore reg and return
 
 
 
@@ -345,17 +345,19 @@ badswi_handler:
 
 
 ;;; Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
-;;; All registers preserved
+;;;   takes: nothing
+;;;   returns: nothing
+;;;   modifies: nothing - all registers preserved
 map_process_always:
-	pshs	x,y,u
+	pshs	x
 	ldx	#U_DATA__U_PAGE
 	jsr	map_process_2
-	puls	x,y,u,pc
+	puls	x,pc
 
 ;;; Maps a page table into cpu space
 ;;;   takes: X - pointer page table ( ptptr )
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 map_process:
 	cmpx	#0		; is zero?
 	bne	map_process_2	; no then map process; else: map the kernel
@@ -364,7 +366,7 @@ map_process:
 ;;; Maps the Kernel into CPU space
 ;;;   takes: nothing
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 ;;;	Map in the kernel below the current common, all registers preserved
 map_kernel:
 	pshs	a
@@ -380,7 +382,7 @@ map_kernel:
 ;;; Maps a page table into the MMU
 ;;;   takes: X = pointer to page table
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 map_process_2:
 	pshs	x,y,a,b
 
@@ -388,27 +390,26 @@ map_process_2:
 	ldy	#_usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	0,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	1,y		; copy to usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	2,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	3,y		; copy to usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	4,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	5,y		; copy to usr_mmu_map
 
 	lda	,x+		; bank all but common memory
-	sta	,y		;
+	sta	6,y		;
 
 	;; now, update MMU with those values
 	lda	#(MMU_MAP1|0)	; stay in map1, select mapsel=0
 	ldx	#MMUADR
-	ldy	#_usr_mmu_map	; go back to start [NAC HACK 2016May07] or could use offsets above..
 
 	ldb	,y+   		; page from usr_mmu_map
 	std	,x		; Write A to MMUADR to set MAPSEL=8, then write B to MMUDAT
@@ -474,11 +475,6 @@ map_for_swap
 	stb	MMUADR		; select second 8K in kernel mapping mapsel=9
 	sta	MMUDAT
 	rts
-
-;;; multicomp09 HW registers
-;;; vdu/virtual UART
-UARTDAT	equ $ffd1
-UARTSTA	equ $ffd0
 
 ;;;  Print a character to debugging
 ;;;   takes: A = character
