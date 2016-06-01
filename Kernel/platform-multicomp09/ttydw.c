@@ -118,7 +118,7 @@ int open_ports=0;
 
 
 /* buffer for receiving multiple bytes from vport channels */
-char tbuf[256];
+unsigned char tbuf[256];
 
 
 int mini( int a, int b ){
@@ -277,7 +277,7 @@ int dw_carrier( uint8_t minor ){
 
 /* (re) Initializes DW */
 void dw_init( ){
-	char buf[2];
+	unsigned char buf[2];
 	buf[0]=DW_INIT;
 	buf[1]=0x42;
 	dw_transaction( buf,2,buf,1,0 );
