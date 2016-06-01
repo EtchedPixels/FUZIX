@@ -1,5 +1,6 @@
 #define NUM_OBJ 54
 #define WORDSIZE 3
+#define GAME_MAGIC 306
 #include <stdint.h>
 
 struct location {
@@ -1250,6 +1251,19 @@ const uint8_t automap[] = {
 
 static jmp_buf restart;
 
+struct savearea {
+  uint16_t magic;
+  uint8_t carried;
+  uint8_t lighttime;
+  uint8_t location;
+  uint8_t objloc[NUM_OBJ];
+  uint8_t roomsave[6];
+  uint8_t savedroom;
+  uint32_t bitflags;
+  int16_t counter;
+  int16_t counter_array[16];
+};
+
 static char linebuf[81];
 static char *nounbuf;
 static char wordbuf[WORDSIZE + 1];
@@ -1262,17 +1276,10 @@ static uint8_t actmatch;
 static uint8_t continuation;
 static uint16_t *param;
 static uint16_t param_buf[5];
-static uint8_t carried;
-static uint8_t lighttime;
-static uint8_t location;
-static uint8_t objloc[NUM_OBJ];
-static uint8_t roomsave[6];
-static uint8_t savedroom;
-static uint32_t bitflags;
-static int16_t counter;
-static int16_t counter_array[16];
 static uint8_t redraw;
 static uint8_t rows, cols;
+
+static struct savearea game;
 
 static void error(const char *p);
 
@@ -1283,6 +1290,9 @@ static void error(const char *p);
 #define LIGHTOUT	16
 #define DARKFLAG	15
 #define LIGHT_SOURCE	9
+
+/* Define this because 1 << n might be 16bit */
+#define ONEBIT		((uint32_t)1)
 
 #define REDRAW		1
 #define REDRAW_MAYBE	2
@@ -1297,7 +1307,7 @@ static char wbuf[81];
 static int wbp = 0;
 static int xpos = 0, ypos = 0;
 static int bottom;
-WINDOW *topwin, *botwin, *curwin;
+static WINDOW *topwin, *botwin, *curwin;
 
 static void flush_word(void)
 {
@@ -1550,13 +1560,6 @@ static void strout_upper(const uint8_t *p)
   strout_lower(p);
 }
 
-static char readchar(void)
-{
-  char c;
-  if (read(0, &c, 1) < 1)
-    return -1;
-  return c;
-}
 
 static void line_input(void)
 {
@@ -1566,6 +1569,12 @@ static void line_input(void)
   linebuf[l] = 0;
   if (l && linebuf[l-1] == '\n')
     linebuf[l-1] = 0;
+}
+
+static char readchar(void)
+{
+  line_input();
+  return *linebuf;
 }
 
 static void begin_upper(void)
@@ -1722,7 +1731,7 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
   for (i = 0; i < n; i++) {
     uint8_t opc = *p++;
     uint16_t par = *p++ | ((opc & 0xE0) >> 5);
-    uint8_t op = objloc[par];
+    uint8_t op = game.objloc[par];
     opc &= 0x1F;
 
     switch(opc) {
@@ -1734,19 +1743,19 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 2:
-        if (op != location)
+        if (op != game.location)
           return NULL;
         break;
       case 3:
-        if (op != 255 && op != location)
+        if (op != 255 && op != game.location)
           return NULL;
         break;
       case 4:
-        if (location != par)
+        if (game.location != par)
           return NULL;
         break;
       case 5:
-        if (op == location)
+        if (op == game.location)
           return NULL;
         break;
       case 6:
@@ -1754,27 +1763,27 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 7:
-        if (location == par)
+        if (game.location == par)
           return NULL;
         break;
       case 8:
-        if (!(bitflags & (1 << par)))
+        if (!(game.bitflags & (ONEBIT << par)))
           return NULL;
         break;
       case 9:
-        if (bitflags & (1 << par))
+        if (game.bitflags & (ONEBIT << par))
           return NULL;
         break;
       case 10:
-        if (!carried)
+        if (!game.carried)
           return NULL;
         break;
       case 11:
-        if (carried)
+        if (game.carried)
           return NULL;
         break;
       case 12:
-        if (op == 255 || op == location)
+        if (op == 255 || op == game.location)
           return NULL;
         break;
       case 13:
@@ -1786,11 +1795,11 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 15:
-        if (counter > par)
+        if (game.counter > par)
           return NULL;
         break;
       case 16:
-        if (counter < par)
+        if (game.counter < par)
           return NULL;
         break;
       case 17:
@@ -1802,7 +1811,7 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 19:
-        if (counter != par)
+        if (game.counter != par)
           return NULL;
         break;
       default:
@@ -1814,10 +1823,10 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
 
 uint8_t islight(void)
 {
-  uint8_t l = objloc[LIGHT_SOURCE];
-  if (!(bitflags & (1 << DARKFLAG)))
+  uint8_t l = game.objloc[LIGHT_SOURCE];
+  if (!(game.bitflags & (ONEBIT << DARKFLAG)))
     return 1;
-  if (l == 255 || l == location)
+  if (l == 255 || l == game.location)
     return 1;
   return 0;
 }
@@ -1839,8 +1848,8 @@ static void action_look(void)
     end_upper();
     return;
   }
-  p = locdata[location].text;
-  e = locdata[location].exit;
+  p = locdata[game.location].text;
+  e = locdata[game.location].exit;
   if (*p == '*')
     p++;
   else
@@ -1862,9 +1871,9 @@ static void action_look(void)
     strout_upper(nonestr);
   strout_upper(dotnewline);
   f = 1;
-  e = objloc;
-  while(e < objloc + NUM_OBJ) {
-    if (*e++ == location) {
+  e = game.objloc;
+  while(e < game.objloc + NUM_OBJ) {
+    if (*e++ == game.location) {
       if (f) {
         strout_upper(canalsosee);
         f = 0;
@@ -1885,8 +1894,8 @@ static void action_delay(void)
 static void action_dead(void)
 {
   strout_lower(dead);
-  bitflags &= ~(1 << DARKFLAG);
-  location = lastloc;
+  game.bitflags &= ~(ONEBIT << DARKFLAG);
+  game.location = lastloc;
   action_look();
 }
 
@@ -1900,11 +1909,11 @@ static void action_quit(void)
 
 static void action_score(void)
 {
-  uint8_t *p = objloc;
+  uint8_t *p = game.objloc;
   const uint8_t **m = objtext;
   uint8_t t = 0, s = 0;
 
-  while(p < objloc + NUM_OBJ) {
+  while(p < game.objloc + NUM_OBJ) {
     if (*m[0] == '*') {
       t++;
       if (*p == treasure)
@@ -1925,15 +1934,15 @@ static void action_score(void)
 
 static void action_inventory(void)
 {
-  uint8_t *p = objloc;
+  uint8_t *p = game.objloc;
   const uint8_t **m = objtext;
   uint8_t f = 1;
 
   strout_lower(carrying);
-  if (carried == 0)
+  if (game.carried == 0)
     strout_lower(nothing);
   else {  
-    while(p < objloc + NUM_OBJ) {
+    while(p < game.objloc + NUM_OBJ) {
       if (*p == 255) {
         if (!f)
           strout_lower(dashstr);
@@ -1948,12 +1957,52 @@ static void action_inventory(void)
   strout_lower(dotnewline);
 }
 
+static char *filename(void)
+{
+  strout_lower("File name ? ");
+  line_input();
+  return skip_spaces(linebuf);
+}
+
+static void action_save(void)
+{
+  int fd;
+  char *p = filename();
+  if (*p == 0)
+    return;
+  game.magic = GAME_MAGIC;
+  fd = open(p, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+  if (fd == -1 || write(fd, &game, sizeof(game)) != sizeof(game) || close(fd) == -1)
+    strout_lower("Save failed.\n");
+  close(fd);	/* Double closing is safe for non error path */
+}
+
+static int action_restore(void)
+{
+  while(1) {
+    char *p = filename();
+    int fd;
+
+    if (*p == 0)
+      return 0;
+
+    fd = open(p, O_RDONLY, 0600);
+
+    if (fd != -1 && read(fd, &game, sizeof(game)) == sizeof(game) && close(fd) != -1 &&
+        game.magic == GAME_MAGIC)
+      return 1;
+
+    strout_lower("Load failed.\n");
+    close(fd);
+  }
+}
+  
 static void moveitem(uint8_t i, uint8_t l)
 {
-  uint8_t *p = objloc + i;
-  if (*p == location)
+  uint8_t *p = game.objloc + i;
+  if (*p == game.location)
     redraw |= REDRAW_MAYBE;
-  if (l == location)
+  if (l == game.location)
     redraw |= REDRAW;
   *p = l;
 }
@@ -1979,16 +2028,16 @@ static void run_actions(const uint8_t *p, uint8_t n)
       case 51:	/* nop - check */
         break;
       case 52:	/* Get */
-        if (carried >= maxcar)
+        if (game.carried >= maxcar)
           strout_lower(toomuch);
         else
           moveitem(*param++, 255);
         break;
       case 53: /* Drop */
-        moveitem(*param++, location);
+        moveitem(*param++, game.location);
         break;
       case 54: /* Go */
-        location = *param++;
+        game.location = *param++;
         redraw = REDRAW;
         break;
       case 55: /* Destroy */
@@ -1996,17 +2045,17 @@ static void run_actions(const uint8_t *p, uint8_t n)
         moveitem(*param++, 0);
         break;
       case 56:	/* Set dark flag */
-        bitflags |= (1 << DARKFLAG);
+        game.bitflags |= (ONEBIT << DARKFLAG);
         break;
       case 57:	/* Clear dark flag */
-        bitflags &= ~(1 << DARKFLAG);
+        game.bitflags &= ~(ONEBIT << DARKFLAG);
         break;
       case 58:	/* Set bit */
-        bitflags |= (1 << *param++);
+        game.bitflags |= (ONEBIT << *param++);
         break;
       /* 59 see 55 */
       case 60:	/* Clear bit */
-        bitflags &= ~(1 << *param++);
+        game.bitflags &= ~(ONEBIT << *param++);
         break;
       case 61:	/* Dead */
         action_dead();
@@ -2027,24 +2076,25 @@ static void run_actions(const uint8_t *p, uint8_t n)
       case 66:	/* Inventory */
         action_inventory();
       case 67:	/* Set bit 0 */
-        bitflags |= (1 << 0);
+        game.bitflags |= (ONEBIT << 0);
         break;
       case 68:	/* Clear bit 0 */
-        bitflags &= ~(1 << 0);
+        game.bitflags &= ~(ONEBIT << 0);
         break;
       case 69:	/* Refill lamp */
-        lighttime = lightfill;
-        bitflags &= ~(1 << LIGHTOUT);
+        game.lighttime = lightfill;
+        game.bitflags &= ~(ONEBIT << LIGHTOUT);
         moveitem(LIGHT_SOURCE, 255);
         break;
       case 70:	/* Wipe lower */
         /* TODO */
         break;
       case 71:	/* Save */
-        /* TODO */
+        action_save();
+        break;
       case 72:	/* Swap two objects */
-        tmp = objloc[*param];
-        moveitem(*param, objloc[param[1]]);
+        tmp = game.objloc[*param];
+        moveitem(*param, game.objloc[param[1]]);
         moveitem(param[1], tmp);
         param += 2;
         break;
@@ -2055,37 +2105,37 @@ static void run_actions(const uint8_t *p, uint8_t n)
         moveitem(*param++, 255);
         break;
       case 75:	/* Put one item by another */
-        moveitem(*param, objloc[param[1]]);
+        moveitem(*param, game.objloc[param[1]]);
         param += 2;
         break;
       case 77:	/* Decrement counter */
-        if (counter >= 0)
-          counter--;
+        if (game.counter >= 0)
+          game.counter--;
         break;
       case 78:	/* Display counter */
-        decout_lower(counter);
+        decout_lower(game.counter);
         break;
       case 79:	/* Set counter */
-        counter = *param++;
+        game.counter = *param++;
         break;
       case 80:	/* Swap player and saved room */
-        tmp = savedroom;
-        savedroom = location;
-        location = tmp;
+        tmp = game.savedroom;
+        game.savedroom = game.location;
+        game.location = tmp;
         redraw = REDRAW;
         break;
       case 81:	/* Swap counter and counter n */
-        tmp16 = counter;
-        counter = counter_array[*param];
-        counter_array[*param++] = tmp16;
+        tmp16 = game.counter;
+        game.counter = game.counter_array[*param];
+        game.counter_array[*param++] = tmp16;
         break;
       case 82:	/* Add to counter */
-        counter += *param++;
+        game.counter += *param++;
         break;
       case 83:	/* Subtract from counter */
-        counter -= *param++;
-        if (counter < 0)
-          counter = -1;
+        game.counter -= *param++;
+        if (game.counter < 0)
+          game.counter = -1;
         break;
       case 84:	/* Print noun, newline */
         strout_lower((uint8_t *)nounbuf);
@@ -2098,10 +2148,10 @@ static void run_actions(const uint8_t *p, uint8_t n)
         break;
       case 87: /* Swap player and saveroom array entry */
         tmp16 = *param++;
-        tmp = roomsave[tmp16];
-        roomsave[tmp16] = location;
-        if (tmp != location) {
-          location = tmp;
+        tmp = game.roomsave[tmp16];
+        game.roomsave[tmp16] = game.location;
+        if (tmp != game.location) {
+          game.location = tmp;
           redraw = REDRAW;
         }
         break;
@@ -2196,7 +2246,7 @@ uint8_t autonoun(uint8_t loc)
   if (*wordbuf == ' ' || *wordbuf == 0)
     return 255;
   while(*p) {
-    if (strncasecmp((const char *)p, wordbuf, WORDSIZE) == 0 && objloc[p[WORDSIZE]] == loc)
+    if (strncasecmp((const char *)p, wordbuf, WORDSIZE) == 0 && game.objloc[p[WORDSIZE]] == loc)
       return p[WORDSIZE];
     p += WORDSIZE + 1;
   }
@@ -2212,10 +2262,10 @@ void run_command(void)
   if (verb == VERB_GET) {		/* Get */
     if (noun == 0)
       strout_lower(whatstr);
-    else if (carried >= maxcar)
+    else if (game.carried >= maxcar)
       strout_lower(toomuch);
     else {
-      tmp = autonoun(location);
+      tmp = autonoun(game.location);
       if (tmp == 255)
         strout_lower(beyondpower);
       else
@@ -2232,7 +2282,7 @@ void run_command(void)
       if (tmp == 255)
         strout_lower(beyondpower);
       else
-        moveitem(tmp, location);
+        moveitem(tmp, game.location);
     }
     actmatch = 1;
     return;
@@ -2242,23 +2292,23 @@ void run_command(void)
 void process_light(void)
 {
   uint8_t l;
-  if ((l = objloc[LIGHT_SOURCE]) == 0)
+  if ((l = game.objloc[LIGHT_SOURCE]) == 0)
     return;
-  if (lighttime == 255)
+  if (game.lighttime == 255)
     return;
-  if (!--lighttime) {
-    bitflags &= ~(1 << LIGHTOUT);	/* Check clear ! */
-    if (l == 255 || l == location) {
+  if (!--game.lighttime) {
+    game.bitflags &= ~(ONEBIT << LIGHTOUT);	/* Check clear ! */
+    if (l == 255 || l == game.location) {
       strout_lower(lightout);
       redraw = REDRAW_MAYBE;
       return;
     }
   }
-  if (lighttime > 25)
+  if (game.lighttime > 25)
     return;
   strout_lower(lightoutin);
-  decout_lower(lighttime);
-  strout_lower(lighttime == 1 ? turn : turns);
+  decout_lower(game.lighttime);
+  strout_lower(game.lighttime == 1 ? turn : turns);
 }
 
 void main_loop(void)
@@ -2311,7 +2361,7 @@ void main_loop(void)
 
         if (!light)
           strout_lower(darkdanger);
-        dir = locdata[location].exit[noun - 1];
+        dir = locdata[game.location].exit[noun - 1];
         if (!dir) {
           if (!light) {
             strout_lower(brokeneck);
@@ -2322,7 +2372,7 @@ void main_loop(void)
           strout_lower(cantgo);
           continue;
         }
-        location = dir;
+        game.location = dir;
         redraw = REDRAW;
         continue;
       }
@@ -2342,21 +2392,23 @@ void main_loop(void)
 
 void start_game(void)
 {
-  memcpy(objloc, objinit, sizeof(objloc));
-  bitflags = 0;
-  counter = 0;
-  memset(counter_array, 0, sizeof(counter_array));
-  savedroom = 0;
-  memset(roomsave, 0, sizeof(roomsave));
-  location = startloc;
-  lighttime = startlamp;
-  carried = startcarried;
+  memcpy(game.objloc, objinit, sizeof(game.objloc));
+  game.bitflags = 0;
+  game.counter = 0;
+  memset(game.counter_array, 0, sizeof(game.counter_array));
+  game.savedroom = 0;
+  memset(game.roomsave, 0, sizeof(game.roomsave));
+  game.location = startloc;
+  game.lighttime = startlamp;
+  game.carried = startcarried;
 }
 
 int main(int argc, char *argv[])
 {
   display_init();
   setjmp(restart);
-  start_game();
+  strout_lower("Restore a saved game ? ");
+  if (!yes_or_no() || !action_restore())
+    start_game();
   main_loop();
 }
