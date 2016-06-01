@@ -60,64 +60,43 @@
 ;;; registers are selecting blocks 0-7.
 ;;; map1 mapping registers are uninitialised.
 
+	.module multicomp09
 
-;;; multicomp09 HW registers
-MMUADR	equ	$ffde
-MMUDAT	equ	$ffdf
-TIMER   equ     $ffdd
+	; exported symbols
+	.globl init_early
+	.globl init_hardware
+	.globl interrupt_handler
+        .globl _program_vectors
+	.globl map_kernel
+	.globl map_process
+	.globl map_process_always
+	.globl map_save
+	.globl map_restore
+	.globl _need_resched
+	.globl _bufpool
+	.globl _discard_size
+        .globl _krn_mmu_map
+        .globl _usr_mmu_map
+	.globl curr_tr
 
-;;; bit-fields
-MMUADR_ROMDIS	equ $80		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_TR	equ $40		; 0 after reset, 0 when FUZIX boots. 0=map0, 1=map1
-MMUADR_MMUEN	equ $20		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_NMI	equ $10		; 0 after reset, 0 when FUZIX boots. Do not write 1.
-MMUADR_MAPSEL	equ $0f		; last-written value is UNDEFINED.
-;;; the only two useful values for the upper nibble
-MMU_MAP0	equ	(MMUADR_ROMDIS|MMUADR_MMUEN)
-MMU_MAP1	equ	(MMUADR_ROMDIS|MMUADR_MMUEN|MMUADR_TR)
+	; exported debugging tools
+        .globl _trap_monitor
+	.globl _trap_reboot
+        .globl outchar
+	.globl _di
+	.globl _ei
+	.globl _irqrestore
 
-TIMER_ON        equ $02
-TIMER_OFF       equ $00
-TIMER_INT       equ $80
+	; imported symbols
+        .globl _ramsize
+        .globl _procmem
+        .globl unix_syscall_entry
+	.globl nmi_handler
+	.globl null_handler
 
-
-            .module multicomp09
-
-            ; exported symbols
-            .globl init_early
-            .globl init_hardware
-            .globl interrupt_handler
-            .globl _program_vectors
-	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
-	    .globl map_save
-	    .globl map_restore
-	    .globl _need_resched
-	    .globl _bufpool
-	    .globl _discard_size
-            .globl _krn_mmu_map
-            .globl _usr_mmu_map
-	    .globl curr_tr
-
-            ; exported debugging tools
-            .globl _trap_monitor
-	    .globl _trap_reboot
-            .globl outchar
-	    .globl _di
-	    .globl _ei
-	    .globl _irqrestore
-
-            ; imported symbols
-            .globl _ramsize
-            .globl _procmem
-            .globl unix_syscall_entry
-	    .globl nmi_handler
-	    .globl null_handler
-
-            include "kernel.def"
-            include "../kernel09.def"
-
+        include "kernel.def"
+        include "../kernel09.def"
+	include "platform.def"
 
 	.area	.buffers
 

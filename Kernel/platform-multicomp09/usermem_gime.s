@@ -2,29 +2,14 @@
 
 ;;;
 ;;;	6809 copy to and from userspace via
-;;;     Color Computer 3 GIME mmu
+;;;     Multicomp09 MMU which imitates a Color Computer 3 GIME mmu
 ;;;
-
-;;; multicomp09 HW registers
-;;; [NAC HACK 2016May03] maybe I should define these all as offsets from IOBASE..
-;;; then index any of them from a single register.
-MMUADR	equ	$ffde
-MMUDAT	equ	$ffdf
-
-;;; bit-fields
-MMUADR_ROMDIS	equ $80		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_TR	equ $40		; 0 after reset, 0 when FUZIX boots. 0=map0, 1=map1
-MMUADR_MMUEN	equ $20		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_NMI	equ $10		; 0 after reset, 0 when FUZIX boots. Do not write 1.
-MMUADR_MAPSEL	equ $0f		; last-written value is UNDEFINED.
-;;; the only two useful values for the upper nibble
-MMU_MAP0	equ	(MMUADR_ROMDIS|MMUADR_MMUEN)
-MMU_MAP1	equ	(MMUADR_ROMDIS|MMUADR_MMUEN|MMUADR_TR)
 
 	include "kernel.def"
         include "../kernel09.def"
+        include "platform.def"
 
-	;; window xfer treshhold - any user/krn space xtfers
+	;; window xfer threshhold - any user/krn space xtfers
 	;; bigger than this will be routed to the banking/windowing
 	;; transfers, rather than the original slower routines
 WINTR	equ	256		; window xfer threshold
@@ -339,4 +324,3 @@ a@	lda	,u+		; get a byte
 	;; return
 	ldx 	#0		; return #0 - success
 	puls 	u,y,cc,pc	; return
-

@@ -32,7 +32,7 @@ $(CDOBJS): %$(BINEXT): %.c
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %$(BINEXT): %.s
+$(AOBJS): %$(BINEXT): %.s dw.def kernel.def platform.def ../kernel09.def
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 

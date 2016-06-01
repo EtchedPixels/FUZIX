@@ -9,13 +9,7 @@
 	.globl _devsd_write
 	.globl _devsd_read
 
-
-;;; multicomp09 hw registers
-SDDATA         equ $FFD8
-SDCTL          equ $FFD9
-SDLBA0         equ $FFDA	; not used here
-SDLBA1         equ $FFDB	; not used here
-SDLBA2         equ $FFDC	; not used here
+        include "platform.def"
 
 	section	.common
 
