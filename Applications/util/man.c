@@ -83,6 +83,14 @@ void line_break(void);
 void page_break(void);
 void print_header(void);
 void print_footer(void);
+void step(char **pcurr, char **pnext);
+int open_page(char * name);
+void close_page(void);
+int fetch_word(void);
+int do_command(void);
+int do_argvcmd(int cmd_id);
+int do_noargs(int cmd_id);
+void build_headers(void);
 
 int find_page(char *name, char *sect)
 {
@@ -143,7 +151,7 @@ static char manorcat[] = "man:cat";
    return rv;
 }
 
-int step(char **pcurr, char **pnext)
+void step(char **pcurr, char **pnext)
 {
    char *curr = *pcurr;
    char *next = *pnext;
@@ -167,7 +175,8 @@ int step(char **pcurr, char **pnext)
 
 int open_page(char * name)
 {
-   char *p, *command = 0;
+   char *p;
+   const char *command = 0;
    char buf[256];
 
    if (access(name, 0) < 0) return -1;
@@ -415,8 +424,8 @@ int fetch_word(void)
 
 int do_command(void)
 {
-   char * cmd;
-   int ch, i;
+   const char * cmd;
+   int i;
    char lbuf[10];
 
    cmd = word + 1;
@@ -538,8 +547,7 @@ int do_fontwords(int this_font, int other_font, int early_exit)
    return 0;
 }
 
-do_noargs(cmd_id)
-int cmd_id;
+int do_noargs(int cmd_id)
 {
    if (cmd_id < 10) line_break();
    switch (cmd_id) {
@@ -567,8 +575,7 @@ int cmd_id;
    return 0;
 }
 
-do_argvcmd(cmd_id)
-int cmd_id;
+int do_argvcmd(int cmd_id)
 {
    int ch;
 
@@ -628,7 +635,7 @@ int cmd_id;
    return 0;
 }
 
-build_headers()
+void build_headers(void)
 {
    char buffer[5][80];
    int  strno=0, stroff=0;
