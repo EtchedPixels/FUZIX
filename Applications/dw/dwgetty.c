@@ -303,6 +303,10 @@ void pute( char *mess )
 int main( int argc, char *argv[])
 {
 	int f;
+	int i;
+	int len;
+	char c[2];
+
 
 
 	if( argc<3){
@@ -327,9 +331,6 @@ int main( int argc, char *argv[])
 	new.c_lflag &= ~ECHO;
 	tcsetattr( f, TCSANOW, &new );
 
-	int i;
-	int len;
-
 	write(f,listenMsg,strlen(listenMsg) );
 	write(f,port_txt,strlen(port_txt) );
 	write(f,"\r",1);
@@ -346,7 +347,6 @@ int main( int argc, char *argv[])
 
        	new.c_iflag |= IGNCR;
 	tcsetattr( f, TCSANOW,  &new );
-	char c[2];
 	c[0]='0';
 	c[1]=argv[1][strlen(argv[1])-1];
 	getty( argv[1], c, f );
