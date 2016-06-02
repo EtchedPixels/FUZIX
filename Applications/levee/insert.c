@@ -26,10 +26,10 @@ insertion(int count, int openflag, int *dp, int *yp, bool visual)
     char cmd, c;
     int rp;		/* number of spaces to diddle */
     int	ts, ss;		/* tabs && spaces to insert */
-    register cp;	/* current position */
+    register int cp;	/* current position */
     int i;		/* random index */
     int	endd;		/* last open place */
-    register rsize;	/* size of upper buffer */
+    register int rsize;	/* size of upper buffer */
     int	currDLE = 0;	/* what DLE is now */
     int	len;		/* full insert size */
     bool Dflag;

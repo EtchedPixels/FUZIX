@@ -34,7 +34,7 @@ srdef *SOUND = (srdef *)SADDR;
 
 main()
 {
-    register i;
+    register int i;
     long ssp;
 
     ssp = Super(0L);

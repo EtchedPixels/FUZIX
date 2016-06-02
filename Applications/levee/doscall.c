@@ -51,7 +51,7 @@ char *s;
 PROC
 getKey()
 {
-    register c;
+    register int c;
     extern char _far crawcin();
 
     c = crawcin();
@@ -122,7 +122,7 @@ struct glob_t *dta;
     static struct glob_t *dta_bfr;	/* pointer to desired dta */
     static struct find_t dird;		/* DOS dta */
 
-    register st;			/* status from _dos_findxxx */
+    register int st;			/* status from _dos_findxxx */
 
     if (path) {
 	/* when we start searching, save the path part of the filename in

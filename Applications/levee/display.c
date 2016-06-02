@@ -183,7 +183,7 @@ prints(char *s)
 {
     int size,oxp = curpos.x;
     char buf[MAXCOLS+1];
-    register bi = 0;
+    register int bi = 0;
 
     while (*s && curpos.x < COLS) {
     	size = format(&buf[bi],*s++);
@@ -199,9 +199,9 @@ PROC
 writeline(int y,int x,int start)
 {
     int endd,oxp;
-    register size;
+    register int size;
     char buf[MAXCOLS+1];
-    register bi = 0;
+    register int bi = 0;
     
     endd = fseekeol(start);
     if (start==0 || core[start-1] == EOL)

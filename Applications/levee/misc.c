@@ -216,7 +216,7 @@ static srdef *SOUND = (srdef *)SADDR;
 static
 beeper(void)
 {
-    register i;
+    register int i;
     for (i=0; i<sizeof(sound); i++) {
 	(*SOUND)[0] = i;
 	(*SOUND)[2] = sound[i];

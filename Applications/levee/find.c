@@ -40,7 +40,7 @@ REmatch(char *pattern, int start, int end)
 int PROC
 omatch(char *pattern, char **cp, char *endp)
 {
-    register flag;
+    register int flag;
     extern int ignorecase;
 
     switch (*pattern) {
@@ -131,7 +131,7 @@ amatch(char *pattern, char *start, char *endp)
 PROC
 patsize(char **pattern)
 {
-    register count;
+    register int count;
     
     switch (**pattern) {
       case LITCHAR:

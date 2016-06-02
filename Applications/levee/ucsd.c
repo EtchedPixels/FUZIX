@@ -57,7 +57,7 @@ fillchar(char *src,int length, char ch)
 int PROC
 scan(int length, char tst, char ch, char *src)
 {
-    register inc,l;
+    register int inc,l;
     
     if (length < 0)
 	inc = -1;

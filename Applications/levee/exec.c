@@ -85,7 +85,7 @@ PROC
 args(void)
 /* args: print the argument list */
 {
-    register i;
+    register int i;
     mvcur(-1,0);
     for (i=0; i < argc; i++) {
 	if (curpos.x+strlen(argv[i]) >= COLS)
