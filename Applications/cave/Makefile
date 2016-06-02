@@ -28,4 +28,4 @@ advent: $(OBJ)
 	$(FCC) $(PLATFORM) $(FCCOPTS) -o $@ $(OBJ)
 
 clean:
-	rm advent advent.db advgen *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f advent advent.db advgen *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
