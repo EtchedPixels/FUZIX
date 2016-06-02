@@ -1,5 +1,6 @@
-#define NUM_OBJ 60
+#define NUM_OBJ 61
 #define WORDSIZE 4
+#define GAME_MAGIC 341
 #include <stdint.h>
 
 struct location {
@@ -10,7 +11,7 @@ struct location {
 const uint8_t toomuch[] = { "I am carrying too much. " };
 const uint8_t dead[] = { "I am dead.\n" };
 const uint8_t stored_msg[] = { "I have stored " };
-const uint8_t stored_msg2[] = { "treasures. On a scale of 0 to 100, that rates " };
+const uint8_t stored_msg2[] = { " treasures. On a scale of 0 to 100, that rates " };
 const uint8_t dotnewline[] = { ".\n" };
 const uint8_t newline[] = { "\n" };
 const uint8_t carrying[] = { "I am carrying:\n" };
@@ -55,7 +56,7 @@ const uint8_t *exitmsgptr[] = {
  *	Game database follows below. Although linked into the same asm
  *	file to make life easier this is just "mere aggregation" for
  *	convenience, due to limits in the tool chain and the game licence
- *	not the GPL applies below this point
+ *	not the GPL applies to the game database.
  */
 const uint8_t startlamp = 35;
 const uint8_t lightfill = 35;
@@ -722,1441 +723,930 @@ const uint8_t *msgptr[] = {
 
 
 const uint8_t status[] = {
-/* AUTO  100  	*/
 	183, 
 	7, 2, 7, 24, 8, 15, 9, 6, 7, 14, 
 	67, 0, 0, 73, 
-/* AUTO  0    	*/
 	203, 
 	8, 0, 0, 27, 
 	60, 68, 57, 64, 
-/* AUTO  100  	*/
 	178, 
 	8, 16, 9, 28, 0, 31, 0, 28, 
 	52, 58, 64, 
-/* AUTO  100  	*/
 	178, 
 	4, 24, 6, 9, 9, 27, 0, 27, 
 	56, 58, 64, 
-/* AUTO  100  	*/
 	168, 
 	1, 30, 0, 14, 
 	60, 
-/* AUTO  100  	*/
 	183, 
 	2, 43, 2, 44, 8, 30, 8, 14, 0, 1, 
 	108, 81, 78, 73, 
-/* AUTO  0    	*/
 	197, 
 	0, 1, 
 	81, 17, 
-/* AUTO  100  	*/
 	172, 
 	2, 30, 1, 44, 0, 44, 
 	53, 
-/* AUTO  100  	*/
 	172, 
 	2, 44, 1, 30, 0, 44, 
 	74, 
-/* AUTO  100  	*/
 	179, 
 	9, 2, 64, 238, 0, 4, 0, 1, 
 	79, 58, 81, 73, 
-/* AUTO  0    	*/
 	198, 
 	0, 2, 
 	58, 133, 134, 
-/* AUTO  100  	*/
 	164, 
 	0, 1, 
 	81, 
-/* AUTO  100  	*/
 	171, 
 	19, 0, 0, 35, 
 	54, 64, 19, 125, 
-/* AUTO  100  	*/
 	164, 
 	0, 1, 
 	81, 
-/* AUTO  100  	*/
 	170, 
 	0, 1, 0, 1, 
 	81, 77, 81, 
-/* AUTO  100  	*/
 	172, 
 	7, 8, 1, 26, 0, 12, 
 	60, 
-/* AUTO  100  	*/
 	164, 
 	4, 35, 
 	63, 
-/* AUTO  100  	*/
 	173, 
 	1, 51, 0, 9, 0, 10, 
 	60, 60, 
-/* AUTO  100  	*/
 	168, 
 	1, 27, 0, 10, 
 	60, 
-/* AUTO  100  	*/
 	180, 
 	8, 9, 8, 10, 8, 11, 8, 31, 0, 30, 
 	58, 
-/* AUTO  100  	*/
 	169, 
 	4, 14, 9, 9, 
 	56, 64, 
-/* AUTO  100  	*/
 	182, 
 	9, 3, 4, 12, 0, 3, 0, 2, 0, 1, 
 	58, 79, 81, 
-/* AUTO  100  	*/
 	170, 
 	4, 28, 0, 6, 
 	60, 57, 64, 
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
 };
 const uint8_t actions[] = {
-/* PUMP  ANY  	*/
 	7, 50, 0, 
 	6, 45, 
 	13, 11, 104, 130, 
-/* STAR  PUMP 	*/
-	255, 49, 18, 
+	4, 49, 18, 
 	4, 0, 
-/* FIND  ANY  	*/
-	255, 51, 0, 
+	51, 
+	4, 51, 0, 
 	4, 0, 
-/* PUSH  COCK 	*/
+	51, 
 	9, 66, 59, 
 	4, 14, 0, 28, 
 	129, 54, 
-/* UNCO  HOSE 	*/
 	23, 52, 57, 
 	1, 26, 8, 13, 0, 13, 0, 12, 0, 40, 
 	60, 60, 74, 1, 
-/* PUMP  GAS  	*/
 	23, 50, 71, 
 	8, 12, 2, 24, 1, 45, 0, 46, 0, 45, 
 	1, 72, 67, 73, 
-/* AUTO  0    	*/
 	201, 
 	8, 0, 0, 20, 
 	68, 58, 
-/* PUT   HOSE 	*/
 	18, 43, 57, 
 	2, 24, 1, 26, 8, 13, 0, 12, 
 	121, 120, 58, 
-/* PUT   HOSE 	*/
 	14, 43, 57, 
 	2, 24, 1, 40, 0, 40, 
 	1, 122, 59, 
-/* PUT   HOSE 	*/
 	13, 43, 57, 
 	2, 24, 1, 26, 9, 13, 
 	119, 120, 
-/* CONN  HOSE 	*/
 	23, 38, 57, 
 	1, 40, 1, 26, 1, 22, 0, 13, 0, 40, 
 	58, 117, 118, 59, 
-/* CONN  HOSE 	*/
 	13, 38, 57, 
 	1, 40, 1, 26, 6, 22, 
 	116, 118, 
-/* CONN  PUMP 	*/
 	4, 38, 18, 
 	1, 26, 
 	110, 
-/* LOOK  PUMP 	*/
 	11, 5, 18, 
 	3, 26, 8, 13, 
 	2, 18, 114, 115, 
-/* LOOK  PUMP 	*/
 	11, 5, 18, 
 	3, 26, 9, 13, 
 	2, 18, 113, 115, 
-/* TRAN  WARF 	*/
 	19, 41, 70, 
 	4, 13, 8, 14, 8, 29, 8, 30, 
 	67, 0, 0, 73, 
-/* AUTO  0    	*/
 	203, 
 	8, 0, 9, 1, 
 	3, 8, 20, 73, 
-/* AUTO  0    	*/
 	203, 
 	8, 0, 9, 1, 
 	68, 0, 0, 73, 
-/* AUTO  0    	*/
 	202, 
 	8, 0, 0, 17, 
 	26, 68, 58, 
-/* TRAN  YOYO 	*/
 	23, 41, 10, 
 	4, 13, 8, 14, 8, 17, 8, 29, 8, 30, 
 	1, 26, 27, 63, 
-/* GO    STAT 	*/
 	9, 1, 7, 
 	2, 2, 0, 8, 
 	54, 1, 
-/* GO    BOOT 	*/
 	9, 1, 8, 
 	2, 12, 0, 9, 
 	54, 1, 
-/* GO    YOYO 	*/
 	9, 1, 10, 
 	2, 1, 0, 1, 
 	54, 1, 
-/* LOOK  STAI 	*/
 	5, 5, 12, 
 	2, 16, 
 	2, 4, 
-/* GO    STAI 	*/
 	11, 1, 12, 
 	2, 16, 0, 2, 
 	54, 1, 56, 64, 
-/* LOOK  PIPE 	*/
 	5, 5, 13, 
 	2, 13, 
 	2, 5, 
-/* GO    HOUS 	*/
 	9, 1, 15, 
 	2, 10, 0, 16, 
 	54, 1, 
-/* GO    HOUS 	*/
 	9, 1, 15, 
 	2, 6, 0, 26, 
 	54, 1, 
-/* GO    HARD 	*/
 	9, 1, 16, 
 	2, 3, 0, 17, 
 	54, 1, 
-/* LOOK  PUMP 	*/
 	5, 5, 18, 
 	2, 11, 
 	2, 6, 
-/* LOOK  CONS 	*/
 	5, 5, 19, 
 	2, 14, 
 	2, 7, 
-/* PUSH  SWIT 	*/
 	5, 66, 21, 
 	2, 14, 
 	3, 20, 
-/* PUSH  TABL 	*/
 	13, 66, 25, 
 	2, 17, 0, 18, 0, 1, 
 	62, 1, 
-/* THRO  SWIT 	*/
 	5, 64, 21, 
 	2, 14, 
 	3, 20, 
-/* SLID  TABL 	*/
 	13, 73, 25, 
 	2, 17, 0, 18, 0, 1, 
 	62, 1, 
-/* LOOK  PILE 	*/
 	19, 5, 23, 
 	2, 15, 17, 19, 0, 19, 0, 9, 
 	62, 1, 2, 21, 
-/* OPEN  TOOL 	*/
 	23, 19, 29, 
 	3, 7, 17, 22, 0, 7, 0, 20, 0, 21, 
 	72, 74, 0, 73, 
-/* AUTO  0    	*/
 	203, 
 	0, 22, 0, 31, 
 	74, 74, 9, 21, 
-/* LOOK  DOWN 	*/
 	5, 5, 6, 
 	4, 1, 
 	2, 4, 
-/* OPEN  PIPE 	*/
 	17, 19, 13, 
 	2, 13, 1, 21, 0, 24, 0, 13, 
 	72, 1, 
-/* LOOK  SAFE 	*/
 	5, 5, 35, 
 	2, 18, 
 	2, 10, 
-/* GET   BATT 	*/
 	18, 10, 26, 
 	2, 44, 0, 44, 0, 29, 0, 19, 
 	59, 60, 74, 
-/* GET   BATT 	*/
 	8, 10, 26, 
 	2, 19, 0, 19, 
 	52, 
-/* DROP  BATT 	*/
 	18, 18, 26, 
 	1, 44, 0, 44, 0, 19, 0, 14, 
 	59, 53, 60, 
-/* DROP  BATT 	*/
 	8, 18, 26, 
 	1, 19, 0, 19, 
 	53, 
-/* GO    SHAC 	*/
 	9, 1, 42, 
 	4, 20, 0, 25, 
 	1, 54, 
-/* FUEL  BATT 	*/
 	13, 46, 26, 
 	3, 19, 4, 21, 0, 31, 
 	58, 1, 
-/* LOOK  BATT 	*/
 	10, 5, 26, 
 	3, 19, 9, 31, 
 	2, 11, 12, 
-/* LOOK  BATT 	*/
 	9, 5, 26, 
 	3, 19, 8, 31, 
 	2, 12, 
-/* LOOK  TOOL 	*/
 	4, 5, 29, 
 	3, 7, 
 	22, 
-/* CHEC  BATT 	*/
 	13, 23, 26, 
 	3, 19, 1, 25, 8, 30, 
 	14, 15, 
-/* CHEC  BATT 	*/
 	13, 23, 26, 
 	3, 19, 1, 25, 9, 30, 
 	14, 16, 
-/* CHEC  BATT 	*/
 	13, 23, 26, 
 	3, 22, 1, 25, 8, 30, 
 	14, 15, 
-/* CHEC  BATT 	*/
 	13, 23, 26, 
 	3, 44, 1, 25, 9, 30, 
 	14, 16, 
-/* LOOK  GLOV 	*/
 	15, 5, 62, 
 	4, 29, 9, 18, 0, 41, 
 	9, 21, 74, 73, 
-/* AUTO  0    	*/
 	201, 
 	0, 18, 0, 49, 
 	58, 74, 
-/* LIGH  ON   	*/
 	9, 25, 44, 
 	8, 16, 3, 31, 
 	13, 25, 
-/* LIGH  ON   	*/
 	14, 25, 44, 
 	3, 31, 0, 9, 0, 31, 
 	72, 64, 1, 
-/* LIGH  OFF  	*/
 	14, 25, 45, 
 	3, 9, 0, 9, 0, 31, 
 	72, 64, 1, 
-/* LOOK  BOMB 	*/
 	15, 5, 48, 
 	4, 24, 1, 9, 9, 1, 
 	2, 30, 28, 73, 
-/* AUTO  0    	*/
 	194, 
 	32, 2, 29, 
-/* AUTO  0    	*/
 	196, 
 	17, 33, 
 	34, 
-/* PUSH  SWIT 	*/
 	15, 66, 21, 
 	4, 24, 1, 9, 0, 1, 
 	58, 2, 21, 20, 
-/* LOOK  BOMB 	*/
 	15, 5, 48, 
 	4, 24, 1, 9, 8, 1, 
 	30, 28, 31, 73, 
-/* AUTO  0    	*/
 	196, 
 	17, 33, 
 	34, 
-/* GET   ENVE 	*/
 	17, 10, 34, 
 	4, 24, 17, 33, 1, 9, 0, 33, 
 	1, 52, 
-/* AUTO  0    	*/
-/* OPEN  ENVE 	*/
 	14, 19, 34, 
 	1, 33, 6, 28, 0, 28, 
 	9, 21, 74, 
-/* LOOK  MOUN 	*/
 	5, 5, 52, 
 	4, 22, 
 	2, 37, 
-/* DIG   ANY  	*/
 	19, 84, 0, 
 	4, 11, 1, 23, 9, 26, 0, 26, 
 	58, 1, 0, 73, 
-/* AUTO  0    	*/
 	200, 
 	0, 34, 0, 11, 
 	62, 
-/* DIG   ANY  	*/
 	21, 84, 0, 
 	8, 26, 1, 23, 4, 11, 0, 35, 0, 11, 
 	62, 1, 
-/* LOOK  HOLE 	*/
 	9, 5, 54, 
 	2, 34, 17, 36, 
 	2, 38, 
-/* CUT   LINE 	*/
 	22, 27, 55, 
 	2, 34, 1, 23, 9, 25, 0, 25, 17, 36, 
 	2, 39, 58, 
-/* CUT   LINE 	*/
 	22, 27, 55, 
 	2, 35, 8, 25, 1, 23, 0, 24, 17, 36, 
 	58, 2, 39, 
-/* PUSH  LINE 	*/
 	19, 66, 55, 
 	2, 35, 8, 24, 17, 36, 0, 36, 
 	52, 1, 9, 21, 
-/* GET   LINE 	*/
 	17, 10, 55, 
 	2, 35, 8, 24, 17, 36, 0, 36, 
 	52, 1, 
-/* THRO  LINE 	*/
 	17, 64, 55, 
 	1, 36, 4, 22, 0, 36, 0, 37, 
 	59, 53, 
-/* CLIM  LINE 	*/
 	9, 34, 55, 
 	2, 37, 10, 0, 
 	13, 41, 
-/* CLIM  LINE 	*/
 	13, 34, 55, 
 	2, 37, 11, 0, 0, 23, 
 	54, 1, 
-/* TIE   LINE 	*/
 	4, 36, 55, 
 	2, 37, 
 	43, 
-/* TO    PICK 	*/
 	18, 37, 51, 
 	2, 37, 3, 23, 0, 23, 0, 23, 
 	1, 58, 59, 
-/* AUTO  0    	*/
-/* GET   QUAR 	*/
 	13, 10, 53, 
 	4, 23, 6, 23, 2, 4, 
 	13, 44, 
-/* GET   QUAR 	*/
 	22, 10, 53, 
 	1, 23, 4, 23, 2, 4, 0, 4, 0, 38, 
 	1, 59, 52, 
-/* OPEN  SAFE 	*/
 	15, 19, 35, 
 	1, 28, 2, 18, 0, 39, 
 	52, 1, 9, 21, 
-/* LOOK  PAPE 	*/
 	5, 5, 50, 
 	1, 39, 
 	2, 45, 
-/* LOOK  CAR  	*/
 	7, 5, 39, 
 	2, 27, 
 	2, 46, 47, 73, 
-/* AUTO  0    	*/
 	194, 
 	2, 127, 49, 
-/* AUTO  0    	*/
 	196, 
 	9, 21, 
 	123, 
-/* AUTO  0    	*/
 	196, 
 	8, 11, 
 	126, 
-/* GET   HOSE 	*/
 	22, 10, 57, 
 	2, 27, 9, 21, 9, 11, 0, 40, 0, 21, 
 	52, 58, 1, 
-/* GET   HOSE 	*/
 	9, 10, 57, 
 	2, 40, 0, 40, 
 	52, 1, 
-/* REPL  HOSE 	*/
 	18, 32, 57, 
 	1, 40, 2, 27, 0, 21, 0, 40, 
 	1, 60, 59, 
-/* GO    COCK 	*/
 	9, 1, 59, 
 	2, 27, 0, 29, 
 	54, 1, 
-/* CLOS  COCK 	*/
 	13, 35, 59, 
 	4, 29, 9, 22, 0, 22, 
 	1, 58, 
-/* LOOK  DASH 	*/
 	7, 5, 64, 
 	4, 29, 
 	2, 51, 46, 73, 
-/* AUTO  0    	*/
 	197, 
 	9, 22, 
 	47, 102, 
-/* AUTO  0    	*/
 	197, 
 	8, 22, 
 	48, 102, 
-/* AUTO  0    	*/
 	196, 
 	8, 19, 
 	103, 
-/* AUTO  0    	*/
 	196, 
 	8, 8, 
 	103, 
-/* AUTO  0    	*/
 	200, 
 	9, 19, 9, 8, 
 	104, 
-/* OPEN  GLOV 	*/
 	15, 19, 62, 
 	4, 29, 9, 18, 0, 41, 
 	9, 21, 74, 73, 
-/* AUTO  0    	*/
 	201, 
 	0, 18, 0, 49, 
 	58, 74, 
-/* LOOK  FORM 	*/
 	5, 5, 65, 
 	1, 41, 
 	105, 106, 
-/* LOOK  RADI 	*/
 	7, 5, 43, 
 	3, 30, 
 	2, 107, 0, 73, 
-/* AUTO  0    	*/
 	199, 
 	9, 29, 
 	24, 0, 0, 73, 
-/* AUTO  0    	*/
 	199, 
 	9, 14, 
 	109, 0, 0, 73, 
-/* AUTO  0    	*/
 	211, 
 	8, 14, 8, 29, 8, 30, 8, 31, 
 	67, 0, 0, 73, 
-/* AUTO  0    	*/
 	199, 
 	9, 0, 
 	111, 0, 0, 73, 
-/* AUTO  0    	*/
 	192, 
 	68, 
-/* CONN  RADI 	*/
 	4, 38, 43, 
 	3, 30, 
 	110, 
-/* CONN  ANTE 	*/
 	22, 38, 66, 
 	4, 13, 9, 14, 3, 30, 0, 14, 0, 30, 
 	58, 53, 1, 
-/* CONN  CABL 	*/
 	4, 38, 75, 
 	3, 51, 
 	43, 
-/* CONN  BATT 	*/
 	19, 38, 26, 
 	3, 30, 3, 19, 9, 29, 0, 29, 
 	58, 1, 0, 73, 
-/* AUTO  0    	*/
 	200, 
 	0, 19, 0, 44, 
 	72, 
-/* PUSH  SWIT 	*/
 	16, 66, 21, 
 	4, 13, 2, 44, 8, 14, 8, 30, 
 	112, 
-/* MAKE  FUEL 	*/
 	23, 55, 74, 
 	4, 2, 3, 9, 3, 38, 3, 49, 3, 46, 
 	0, 0, 0, 73, 
-/* AUTO  0    	*/
 	215, 
 	3, 48, 3, 41, 0, 38, 0, 49, 0, 48, 
 	59, 59, 59, 67, 
-/* AUTO  0    	*/
 	196, 
 	9, 0, 
 	135, 
-/* AUTO  0    	*/
 	211, 
 	8, 0, 0, 46, 0, 34, 0, 50, 
 	62, 52, 1, 68, 
-/* FUEL  CAR  	*/
 	22, 46, 39, 
 	2, 27, 1, 50, 0, 50, 0, 45, 0, 19, 
 	72, 58, 1, 
-/* PUSH  BUTT 	*/
 	10, 66, 79, 
 	4, 29, 8, 8, 
 	124, 125, 63, 
-/* PUSH  BUTT 	*/
 	10, 66, 79, 
 	4, 29, 9, 19, 
 	3, 8, 20, 
-/* PUSH  BUTT 	*/
 	10, 66, 79, 
 	4, 29, 8, 21, 
 	124, 125, 63, 
-/* PUSH  BUTT 	*/
 	10, 66, 79, 
 	4, 29, 8, 20, 
 	124, 125, 63, 
-/* PUSH  BUTT 	*/
 	14, 66, 79, 
 	4, 29, 9, 22, 0, 11, 
 	1, 126, 58, 
-/* PUSH  BUTT 	*/
 	18, 66, 79, 
 	4, 29, 8, 4, 0, 4, 0, 5, 
 	60, 58, 128, 
-/* PUSH  BUTT 	*/
 	23, 66, 79, 
 	4, 29, 8, 5, 0, 5, 0, 6, 0, 19, 
 	60, 58, 60, 73, 
-/* AUTO  0    	*/
 	194, 
 	131, 56, 64, 
-/* GET   HOSE 	*/
 	10, 10, 57, 
 	2, 27, 8, 11, 
 	124, 125, 63, 
-/* OPEN  COCK 	*/
 	18, 19, 59, 
 	4, 29, 8, 22, 0, 22, 0, 11, 
 	60, 60, 1, 
-/* WASH  HOSE 	*/
 	13, 59, 57, 
 	1, 40, 4, 21, 0, 20, 
 	60, 1, 
-/* GET   UP   	*/
 	6, 10, 5, 
 	8, 22, 
 	13, 46, 48, 
-/* GET   UP   	*/
 	22, 10, 5, 
 	4, 29, 8, 4, 0, 19, 0, 27, 0, 19, 
 	54, 62, 1, 
-/* GET   UP   	*/
 	22, 10, 5, 
 	4, 29, 8, 5, 0, 3, 0, 27, 0, 3, 
 	54, 62, 1, 
-/* GET   UP   	*/
 	22, 10, 5, 
 	4, 29, 8, 6, 0, 24, 0, 27, 0, 24, 
 	54, 62, 1, 
-/* OPEN  COCK 	*/
 	9, 19, 59, 
 	4, 14, 0, 28, 
 	129, 54, 
-/* TO    TERM 	*/
 	18, 37, 72, 
 	2, 27, 3, 51, 0, 9, 0, 51, 
 	1, 58, 53, 
-/* TO    BATT 	*/
 	23, 37, 26, 
 	2, 27, 3, 51, 0, 10, 0, 51, 0, 19, 
 	58, 53, 53, 1, 
-/* LOOK  VAT  	*/
 	7, 5, 80, 
 	4, 2, 
 	1, 2, 3, 8, 
-/* FUEL  JUG  	*/
 	4, 46, 73, 
 	1, 45, 
 	50, 
-/* FUEL  CAR  	*/
 	22, 46, 39, 
 	2, 27, 1, 46, 0, 8, 0, 46, 0, 45, 
 	58, 72, 1, 
-/* CLIM  MOUN 	*/
 	4, 34, 52, 
 	4, 22, 
 	50, 
-/* SAY   ANY  	*/
 	1, 80, 0, 
 	1, 85, 
-/* GO    CAR  	*/
 	9, 1, 39, 
 	2, 27, 0, 29, 
 	54, 1, 
-/* OPEN  GLOV 	*/
 	6, 19, 62, 
 	4, 29, 
 	3, 8, 20, 
-/* GET   OUT  	*/
 	6, 10, 89, 
 	8, 22, 
 	13, 46, 48, 
-/* GET   OUT  	*/
 	22, 10, 89, 
 	4, 29, 8, 4, 0, 19, 0, 27, 0, 19, 
 	54, 62, 1, 
-/* GET   OUT  	*/
 	22, 10, 89, 
 	4, 29, 8, 5, 0, 3, 0, 27, 0, 3, 
 	54, 62, 1, 
-/* GET   OUT  	*/
 	22, 10, 89, 
 	4, 29, 8, 6, 0, 24, 0, 27, 0, 24, 
 	54, 62, 1, 
-/* GO    SHED 	*/
 	8, 1, 58, 
 	4, 7, 0, 13, 
 	54, 
-/* GET   LINE 	*/
 	17, 10, 55, 
 	4, 23, 9, 23, 0, 36, 0, 37, 
 	52, 59, 
-/* PUSH  LINE 	*/
 	17, 66, 55, 
 	4, 23, 9, 23, 0, 36, 0, 37, 
 	52, 59, 
-/* GET   LINE 	*/
 	19, 10, 55, 
 	4, 23, 8, 23, 0, 37, 0, 36, 
 	55, 74, 67, 73, 
-/* AUTO  0    	*/
 	206, 
 	8, 0, 0, 23, 0, 23, 
 	68, 74, 60, 
-/* PUSH  LINE 	*/
 	23, 66, 55, 
 	4, 23, 8, 23, 0, 37, 0, 36, 0, 23, 
 	55, 74, 74, 73, 
-/* AUTO  0    	*/
 	199, 
 	0, 23, 
 	60, 1, 9, 21, 
-/* CLOS  TOOL 	*/
 	12, 35, 29, 
 	3, 20, 0, 20, 0, 7, 
 	72, 
-/* OPEN  TOOL 	*/
 	12, 19, 29, 
 	3, 7, 0, 7, 0, 20, 
 	72, 
-/* LOOK  STAI 	*/
 	23, 5, 12, 
 	4, 2, 6, 45, 14, 45, 3, 9, 0, 45, 
 	74, 2, 21, 132, 
-/* GO    STAI 	*/
 	8, 1, 12, 
 	4, 2, 0, 1, 
 	54, 
-/* LIGH  FLAS 	*/
 	9, 25, 46, 
 	8, 16, 3, 31, 
 	13, 25, 
-/* LIGH  FLAS 	*/
 	14, 25, 46, 
 	3, 31, 0, 9, 0, 31, 
 	72, 64, 1, 
-/* UNLI  FLAS 	*/
 	14, 15, 46, 
 	3, 9, 0, 9, 0, 31, 
 	72, 64, 1, 
-/* GET   QUAR 	*/
 	12, 10, 53, 
 	2, 38, 7, 23, 0, 38, 
 	52, 
-/* GET   ENVE 	*/
 	8, 10, 34, 
 	2, 33, 0, 33, 
 	52, 
-/* GO    COCK 	*/
 	8, 1, 59, 
 	4, 14, 0, 28, 
 	54, 
-/* SLEE  ANY  	*/
 	7, 21, 0, 
 	0, 35, 
 	54, 64, 19, 125, 
-/* LOOK  ME   	*/
 	2, 5, 93, 
 	1, 2, 133, 
-/* LOOK  HOSE 	*/
 	9, 5, 57, 
 	1, 40, 8, 20, 
 	2, 136, 
-/* LOOK  HOSE 	*/
 	9, 5, 57, 
 	1, 40, 9, 20, 
 	2, 137, 
-/* MAKE  FUEL 	*/
 	8, 55, 74, 
 	6, 41, 4, 2, 
 	138, 
-/* MAKE  FUEL 	*/
 	9, 55, 74, 
 	4, 2, 1, 9, 
 	21, 139, 
-/* PUT   HOSE 	*/
 	18, 43, 57, 
 	1, 40, 2, 27, 0, 21, 0, 40, 
 	1, 60, 59, 
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* CHAR  BATT 	*/
 	4, 42, 26, 
 	1, 19, 
 	50, 
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* AUTO  0    	*/
-/* GET   LINE 	*/
 	8, 10, 55, 
 	2, 36, 0, 36, 
 	52, 
-/* PUSH  SWIT 	*/
 	6, 66, 21, 
 	1, 30, 
 	1, 3, 20, 
-/* TRAN  ANY  	*/
-	255, 41, 0, 
+	4, 41, 0, 
 	4, 0, 
-/* PUSH  CAR  	*/
+	51, 
 	4, 66, 39, 
 	2, 27, 
 	40, 
-/* USE   ANY  	*/
 	1, 71, 0, 
 	119, 35, 
-/* SWIM  ANY  	*/
 	4, 57, 0, 
 	4, 21, 
 	1, 
-/* TO    ANY  	*/
 	0, 37, 0, 
 	33, 
-/* PUSH  LINE 	*/
 	9, 66, 55, 
 	2, 34, 9, 24, 
 	13, 42, 
-/* GET   LINE 	*/
 	9, 10, 55, 
 	2, 34, 9, 24, 
 	13, 42, 
-/* CUT   LINE 	*/
 	8, 27, 55, 
 	6, 23, 2, 34, 
 	40, 
-/* DIG   ANY  	*/
 	4, 84, 0, 
 	6, 23, 
 	40, 
-/* OPEN  PIPE 	*/
 	9, 19, 13, 
 	1, 28, 6, 21, 
 	13, 23, 
-/* LOOK  ANY  	*/
 	10, 5, 0, 
 	8, 15, 6, 9, 
 	13, 11, 30, 
-/* OPEN  SAFE 	*/
 	9, 19, 35, 
 	1, 21, 6, 28, 
 	13, 23, 
-/* LOOK  ANY  	*/
 	3, 5, 0, 
 	1, 2, 3, 8, 
-/* GET   INVE 	*/
 	0, 10, 27, 
 	66, 
-/* INVE  ANY  	*/
 	0, 62, 0, 
 	66, 
-/* QUIT  ANY  	*/
 	0, 22, 0, 
 	63, 
-/* SAVE  GAME 	*/
 	0, 17, 28, 
 	71, 
-/* HELP  ANY  	*/
 	0, 31, 0, 
 	36, 
-/* DIG   ANY  	*/
 	7, 84, 0, 
 	4, 20, 
 	1, 3, 8, 20, 
-/* AUTO  0    	*/
 	255,
 };
 
 
 const uint8_t verbs[] = {
-	/* AUTO */
-	65, 85, 84, 79,
-	/* GO */
-	71, 79, 32, 32,
-	/* *WALK */
-	215, 65, 76, 75,
-	/* *RUN */
-	210, 85, 78, 32,
-	/* *ENTE */
-	197, 78, 84, 69,
-	/* LOOK */
-	76, 79, 79, 75,
-	/* *EXAM */
-	197, 88, 65, 77,
-	/* *L */
-	204, 32, 32, 32,
-	/* *DESC */
-	196, 69, 83, 67,
-	/* *READ */
-	210, 69, 65, 68,
-	/* GET */
-	71, 69, 84, 32,
-	/* *TAKE */
-	212, 65, 75, 69,
-	/* *GRAB */
-	199, 82, 65, 66,
-	/* *PICK */
-	208, 73, 67, 75,
-	/* *REMO */
-	210, 69, 77, 79,
-	/* UNLI */
-	85, 78, 76, 73,
-	/*  */
-	32, 32, 32, 32,
-	/* SAVE */
-	83, 65, 86, 69,
-	/* DROP */
-	68, 82, 79, 80,
-	/* OPEN */
-	79, 80, 69, 78,
-	/* *UNLO */
-	213, 78, 76, 79,
-	/* SLEE */
-	83, 76, 69, 69,
-	/* QUIT */
-	81, 85, 73, 84,
-	/* CHEC */
-	67, 72, 69, 67,
-	/* *TEST */
-	212, 69, 83, 84,
-	/* LIGH */
-	76, 73, 71, 72,
-	/* *FLAS */
-	198, 76, 65, 83,
-	/* CUT */
-	67, 85, 84, 32,
-	/* *SLIC */
-	211, 76, 73, 67,
-	/* *HIT */
-	200, 73, 84, 32,
-	/* *CHOP */
-	195, 72, 79, 80,
-	/* HELP */
-	72, 69, 76, 80,
-	/* REPL */
-	82, 69, 80, 76,
-	/* *RECO */
-	210, 69, 67, 79,
-	/* CLIM */
-	67, 76, 73, 77,
-	/* CLOS */
-	67, 76, 79, 83,
-	/* TIE */
-	84, 73, 69, 32,
-	/* TO */
-	84, 79, 32, 32,
-	/* CONN */
-	67, 79, 78, 78,
-	/* *TAPE */
-	212, 65, 80, 69,
-	/* *ATTA */
-	193, 84, 84, 65,
-	/* TRAN */
-	84, 82, 65, 78,
-	/* CHAR */
-	67, 72, 65, 82,
-	/* PUT */
-	80, 85, 84, 32,
-	/* *INSE */
-	201, 78, 83, 69,
-	/*   */
-	32, 32, 32, 32,
-	/* FUEL */
-	70, 85, 69, 76,
-	/* *REFU */
-	210, 69, 70, 85,
-	/* *FILL */
-	198, 73, 76, 76,
-	/* STAR */
-	83, 84, 65, 82,
-	/* PUMP */
-	80, 85, 77, 80,
-	/* FIND */
-	70, 73, 78, 68,
-	/* UNCO */
-	85, 78, 67, 79,
-	/* *DISC */
-	196, 73, 83, 67,
-	/*  */
-	32, 32, 32, 32,
-	/* MAKE */
-	77, 65, 75, 69,
-	/* *MIX */
-	205, 73, 88, 32,
-	/* SWIM */
-	83, 87, 73, 77,
-	/* *WADE */
-	215, 65, 68, 69,
-	/* WASH */
-	87, 65, 83, 72,
-	/* *RINS */
-	210, 73, 78, 83,
-	/* *CLEA */
-	195, 76, 69, 65,
-	/* INVE */
-	73, 78, 86, 69,
-	/* CLIM */
-	67, 76, 73, 77,
-	/* THRO */
-	84, 72, 82, 79,
-	/* *CAST */
-	195, 65, 83, 84,
-	/* PUSH */
-	80, 85, 83, 72,
-	/* *PULL */
-	208, 85, 76, 76,
-	/* *PRES */
-	208, 82, 69, 83,
-	/* *FLIP */
-	198, 76, 73, 80,
-	/* *LIFT */
-	204, 73, 70, 84,
-	/* USE */
-	85, 83, 69, 32,
-	/* *WITH */
-	215, 73, 84, 72,
-	/* SLID */
-	83, 76, 73, 68,
-	/* *MOVE */
-	205, 79, 86, 69,
-	/* LAUG */
-	76, 65, 85, 71,
-	/* SING */
-	83, 73, 78, 71,
-	/* SMEL */
-	83, 77, 69, 76,
-	/* LIST */
-	76, 73, 83, 84,
-	/* SHAK */
-	83, 72, 65, 75,
-	/* SAY */
-	83, 65, 89, 32,
-	/* *YELL */
-	217, 69, 76, 76,
-	/* *SCRE */
-	211, 67, 82, 69,
-	/* *TALK */
-	212, 65, 76, 75,
-	/* DIG */
-	68, 73, 71, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
+65, 85, 84, 79,
+71, 79, 32, 32,
+215, 65, 76, 75,
+210, 85, 78, 32,
+197, 78, 84, 69,
+76, 79, 79, 75,
+197, 88, 65, 77,
+204, 32, 32, 32,
+196, 69, 83, 67,
+210, 69, 65, 68,
+71, 69, 84, 32,
+212, 65, 75, 69,
+199, 82, 65, 66,
+208, 73, 67, 75,
+210, 69, 77, 79,
+85, 78, 76, 73,
+32, 32, 32, 32,
+83, 65, 86, 69,
+68, 82, 79, 80,
+79, 80, 69, 78,
+213, 78, 76, 79,
+83, 76, 69, 69,
+81, 85, 73, 84,
+67, 72, 69, 67,
+212, 69, 83, 84,
+76, 73, 71, 72,
+198, 76, 65, 83,
+67, 85, 84, 32,
+211, 76, 73, 67,
+200, 73, 84, 32,
+195, 72, 79, 80,
+72, 69, 76, 80,
+82, 69, 80, 76,
+210, 69, 67, 79,
+67, 76, 73, 77,
+67, 76, 79, 83,
+84, 73, 69, 32,
+84, 79, 32, 32,
+67, 79, 78, 78,
+212, 65, 80, 69,
+193, 84, 84, 65,
+84, 82, 65, 78,
+67, 72, 65, 82,
+80, 85, 84, 32,
+201, 78, 83, 69,
+32, 32, 32, 32,
+70, 85, 69, 76,
+210, 69, 70, 85,
+198, 73, 76, 76,
+83, 84, 65, 82,
+80, 85, 77, 80,
+70, 73, 78, 68,
+85, 78, 67, 79,
+196, 73, 83, 67,
+32, 32, 32, 32,
+77, 65, 75, 69,
+205, 73, 88, 32,
+83, 87, 73, 77,
+215, 65, 68, 69,
+87, 65, 83, 72,
+210, 73, 78, 83,
+195, 76, 69, 65,
+73, 78, 86, 69,
+67, 76, 73, 77,
+84, 72, 82, 79,
+195, 65, 83, 84,
+80, 85, 83, 72,
+208, 85, 76, 76,
+208, 82, 69, 83,
+198, 76, 73, 80,
+204, 73, 70, 84,
+85, 83, 69, 32,
+215, 73, 84, 72,
+83, 76, 73, 68,
+205, 79, 86, 69,
+76, 65, 85, 71,
+83, 73, 78, 71,
+83, 77, 69, 76,
+76, 73, 83, 84,
+83, 72, 65, 75,
+83, 65, 89, 32,
+217, 69, 76, 76,
+211, 67, 82, 69,
+212, 65, 76, 75,
+68, 73, 71, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
 	0,
 };
 const uint8_t nouns[] = {
-	/* ANY */
-	65, 78, 89, 32,
-	/* NORT */
-	78, 79, 82, 84,
-	/* SOUT */
-	83, 79, 85, 84,
-	/* EAST */
-	69, 65, 83, 84,
-	/* WEST */
-	87, 69, 83, 84,
-	/* UP */
-	85, 80, 32, 32,
-	/* DOWN */
-	68, 79, 87, 78,
-	/* STAT */
-	83, 84, 65, 84,
-	/* BOOT */
-	66, 79, 79, 84,
-	/* *CASH */
-	195, 65, 83, 72,
-	/* YOYO */
-	89, 79, 89, 79,
-	/* *BUIL */
-	194, 85, 73, 76,
-	/* STAI */
-	83, 84, 65, 73,
-	/* PIPE */
-	80, 73, 80, 69,
-	/* *PADL */
-	208, 65, 68, 76,
-	/* HOUS */
-	72, 79, 85, 83,
-	/* HARD */
-	72, 65, 82, 68,
-	/* *STOR */
-	211, 84, 79, 82,
-	/* PUMP */
-	80, 85, 77, 80,
-	/* CONS */
-	67, 79, 78, 83,
-	/* STRE */
-	83, 84, 82, 69,
-	/* SWIT */
-	83, 87, 73, 84,
-	/* CORN */
-	67, 79, 82, 78,
-	/* PILE */
-	80, 73, 76, 69,
-	/* *TRAS */
-	212, 82, 65, 83,
-	/* TABL */
-	84, 65, 66, 76,
-	/* BATT */
-	66, 65, 84, 84,
-	/* INVE */
-	73, 78, 86, 69,
-	/* GAME */
-	71, 65, 77, 69,
-	/* TOOL */
-	84, 79, 79, 76,
-	/* *BOX */
-	194, 79, 88, 32,
-	/* KEY */
-	75, 69, 89, 32,
-	/* DUCT */
-	68, 85, 67, 84,
-	/* *TAPE */
-	212, 65, 80, 69,
-	/* ENVE */
-	69, 78, 86, 69,
-	/* SAFE */
-	83, 65, 70, 69,
-	/* HYDR */
-	72, 89, 68, 82,
-	/* ROOM */
-	82, 79, 79, 77,
-	/* PUMP */
-	80, 85, 77, 80,
-	/* CAR */
-	67, 65, 82, 32,
-	/* *JET */
-	202, 69, 84, 32,
-	/* *TANK */
-	212, 65, 78, 75,
-	/* SHAC */
-	83, 72, 65, 67,
-	/* RADI */
-	82, 65, 68, 73,
-	/* ON */
-	79, 78, 32, 32,
-	/* OFF */
-	79, 70, 70, 32,
-	/* FLAS */
-	70, 76, 65, 83,
-	/* *LIGH */
-	204, 73, 71, 72,
-	/* BOMB */
-	66, 79, 77, 66,
-	/* *CANI */
-	195, 65, 78, 73,
-	/* PAPE */
-	80, 65, 80, 69,
-	/* PICK */
-	80, 73, 67, 75,
-	/* MOUN */
-	77, 79, 85, 78,
-	/* QUAR */
-	81, 85, 65, 82,
-	/* HOLE */
-	72, 79, 76, 69,
-	/* LINE */
-	76, 73, 78, 69,
-	/* *PHON */
-	208, 72, 79, 78,
-	/* HOSE */
-	72, 79, 83, 69,
-	/* SHED */
-	83, 72, 69, 68,
-	/* COCK */
-	67, 79, 67, 75,
-	/* *WIND */
-	215, 73, 78, 68,
-	/* *DOOR */
-	196, 79, 79, 82,
-	/* GLOV */
-	71, 76, 79, 86,
-	/* *COMP */
-	195, 79, 77, 80,
-	/* DASH */
-	68, 65, 83, 72,
-	/* FORM */
-	70, 79, 82, 77,
-	/* ANTE */
-	65, 78, 84, 69,
-	/* *LEAD */
-	204, 69, 65, 68,
-	/* TUNE */
-	84, 85, 78, 69,
-	/* *DIAL */
-	196, 73, 65, 76,
-	/* WARF */
-	87, 65, 82, 70,
-	/* GAS */
-	71, 65, 83, 32,
-	/* TERM */
-	84, 69, 82, 77,
-	/* JUG */
-	74, 85, 71, 32,
-	/* FUEL */
-	70, 85, 69, 76,
-	/* CABL */
-	67, 65, 66, 76,
-	/* SAND */
-	83, 65, 78, 68,
-	/* JAR */
-	74, 65, 82, 32,
-	/* *FLUI */
-	198, 76, 85, 73,
-	/* BUTT */
-	66, 85, 84, 84,
-	/* VAT */
-	86, 65, 84, 32,
-	/* MINE */
-	77, 73, 78, 69,
-	/* *SHAF */
-	211, 72, 65, 70,
-	/*   */
-	32, 32, 32, 32,
-	/* *STON */
-	211, 84, 79, 78,
-	/* OFFI */
-	79, 70, 70, 73,
-	/* TANK */
-	84, 65, 78, 75,
-	/* FEET */
-	70, 69, 69, 84,
-	/* HAND */
-	72, 65, 78, 68,
-	/* OUT */
-	79, 85, 84, 32,
-	/* BASE */
-	66, 65, 83, 69,
-	/* LABO */
-	76, 65, 66, 79,
-	/* ENGI */
-	69, 78, 71, 73,
-	/* ME */
-	77, 69, 32, 32,
-	/* *MYSE */
-	205, 89, 83, 69,
-	/* GRAS */
-	71, 82, 65, 83,
-	/* FIEL */
-	70, 73, 69, 76,
-	/* HIGH */
-	72, 73, 71, 72,
-	/* LOT */
-	76, 79, 84, 32,
-	/* LEDG */
-	76, 69, 68, 71,
-	/* LAKE */
-	76, 65, 75, 69,
-	/* BEAC */
-	66, 69, 65, 67,
-	/* CODE */
-	67, 79, 68, 69,
-	/* *MESS */
-	205, 69, 83, 83,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
-	/*  */
-	32, 32, 32, 32,
+65, 78, 89, 32,
+78, 79, 82, 84,
+83, 79, 85, 84,
+69, 65, 83, 84,
+87, 69, 83, 84,
+85, 80, 32, 32,
+68, 79, 87, 78,
+83, 84, 65, 84,
+66, 79, 79, 84,
+195, 65, 83, 72,
+89, 79, 89, 79,
+194, 85, 73, 76,
+83, 84, 65, 73,
+80, 73, 80, 69,
+208, 65, 68, 76,
+72, 79, 85, 83,
+72, 65, 82, 68,
+211, 84, 79, 82,
+80, 85, 77, 80,
+67, 79, 78, 83,
+83, 84, 82, 69,
+83, 87, 73, 84,
+67, 79, 82, 78,
+80, 73, 76, 69,
+212, 82, 65, 83,
+84, 65, 66, 76,
+66, 65, 84, 84,
+73, 78, 86, 69,
+71, 65, 77, 69,
+84, 79, 79, 76,
+194, 79, 88, 32,
+75, 69, 89, 32,
+68, 85, 67, 84,
+212, 65, 80, 69,
+69, 78, 86, 69,
+83, 65, 70, 69,
+72, 89, 68, 82,
+82, 79, 79, 77,
+80, 85, 77, 80,
+67, 65, 82, 32,
+202, 69, 84, 32,
+212, 65, 78, 75,
+83, 72, 65, 67,
+82, 65, 68, 73,
+79, 78, 32, 32,
+79, 70, 70, 32,
+70, 76, 65, 83,
+204, 73, 71, 72,
+66, 79, 77, 66,
+195, 65, 78, 73,
+80, 65, 80, 69,
+80, 73, 67, 75,
+77, 79, 85, 78,
+81, 85, 65, 82,
+72, 79, 76, 69,
+76, 73, 78, 69,
+208, 72, 79, 78,
+72, 79, 83, 69,
+83, 72, 69, 68,
+67, 79, 67, 75,
+215, 73, 78, 68,
+196, 79, 79, 82,
+71, 76, 79, 86,
+195, 79, 77, 80,
+68, 65, 83, 72,
+70, 79, 82, 77,
+65, 78, 84, 69,
+204, 69, 65, 68,
+84, 85, 78, 69,
+196, 73, 65, 76,
+87, 65, 82, 70,
+71, 65, 83, 32,
+84, 69, 82, 77,
+74, 85, 71, 32,
+70, 85, 69, 76,
+67, 65, 66, 76,
+83, 65, 78, 68,
+74, 65, 82, 32,
+198, 76, 85, 73,
+66, 85, 84, 84,
+86, 65, 84, 32,
+77, 73, 78, 69,
+211, 72, 65, 70,
+32, 32, 32, 32,
+211, 84, 79, 78,
+79, 70, 70, 73,
+84, 65, 78, 75,
+70, 69, 69, 84,
+72, 65, 78, 68,
+79, 85, 84, 32,
+66, 65, 83, 69,
+76, 65, 66, 79,
+69, 78, 71, 73,
+77, 69, 32, 32,
+205, 89, 83, 69,
+71, 82, 65, 83,
+70, 73, 69, 76,
+72, 73, 71, 72,
+76, 79, 84, 32,
+76, 69, 68, 71,
+76, 65, 75, 69,
+66, 69, 65, 67,
+67, 79, 68, 69,
+205, 69, 83, 83,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
+32, 32, 32, 32,
 	0,
 };
 const uint8_t automap[] = {
-	/* TOOL */
-	84, 79, 79, 76,
+84, 79, 79, 76,
 	7,
-	/* FLAS */
-	70, 76, 65, 83,
+70, 76, 65, 83,
 	9,
-	/* BATT */
-	66, 65, 84, 84,
+66, 65, 84, 84,
 	19,
-	/* TOOL */
-	84, 79, 79, 76,
+84, 79, 79, 76,
 	20,
-	/* KEY */
-	75, 69, 89, 32,
+75, 69, 89, 32,
 	21,
-	/* DUCT */
-	68, 85, 67, 84,
+68, 85, 67, 84,
 	22,
-	/* PICK */
-	80, 73, 67, 75,
+80, 73, 67, 75,
 	23,
-	/* HYDR */
-	72, 89, 68, 82,
+72, 89, 68, 82,
 	25,
-	/* PUMP */
-	80, 85, 77, 80,
+80, 85, 77, 80,
 	26,
-	/* KEY */
-	75, 69, 89, 32,
+75, 69, 89, 32,
 	28,
-	/* RADI */
-	82, 65, 68, 73,
+82, 65, 68, 73,
 	30,
-	/* FLAS */
-	70, 76, 65, 83,
+70, 76, 65, 83,
 	31,
-	/* ENVE */
-	69, 78, 86, 69,
+69, 78, 86, 69,
 	33,
-	/* LINE */
-	76, 73, 78, 69,
+76, 73, 78, 69,
 	36,
-	/* QUAR */
-	81, 85, 65, 82,
+81, 85, 65, 82,
 	38,
-	/* PAPE */
-	80, 65, 80, 69,
+80, 65, 80, 69,
 	39,
-	/* HOSE */
-	72, 79, 83, 69,
+72, 79, 83, 69,
 	40,
-	/* FORM */
-	70, 79, 82, 77,
+70, 79, 82, 77,
 	41,
-	/* BATT */
-	66, 65, 84, 84,
+66, 65, 84, 84,
 	44,
-	/* JUG */
-	74, 85, 71, 32,
+74, 85, 71, 32,
 	45,
-	/* JUG */
-	74, 85, 71, 32,
+74, 85, 71, 32,
 	46,
-	/* SAND */
-	83, 65, 78, 68,
+83, 65, 78, 68,
 	48,
-	/* JAR */
-	74, 65, 82, 32,
+74, 65, 82, 32,
 	49,
-	/* JUG */
-	74, 85, 71, 32,
+74, 85, 71, 32,
 	50,
-	/* CABL */
-	67, 65, 66, 76,
+67, 65, 66, 76,
 	51,
 	0,
 };
@@ -2173,6 +1663,19 @@ const uint8_t automap[] = {
 
 static jmp_buf restart;
 
+struct savearea {
+  uint16_t magic;
+  uint8_t carried;
+  uint8_t lighttime;
+  uint8_t location;
+  uint8_t objloc[NUM_OBJ];
+  uint8_t roomsave[6];
+  uint8_t savedroom;
+  uint32_t bitflags;
+  int16_t counter;
+  int16_t counter_array[16];
+};
+
 static char linebuf[81];
 static char *nounbuf;
 static char wordbuf[WORDSIZE + 1];
@@ -2185,17 +1688,10 @@ static uint8_t actmatch;
 static uint8_t continuation;
 static uint16_t *param;
 static uint16_t param_buf[5];
-static uint8_t carried;
-static uint8_t lighttime;
-static uint8_t location;
-static uint8_t objloc[NUM_OBJ];
-static uint8_t roomsave[6];
-static uint8_t savedroom;
-static uint32_t bitflags;
-static int16_t counter;
-static int16_t counter_array[16];
 static uint8_t redraw;
 static uint8_t rows, cols;
+
+static struct savearea game;
 
 static void error(const char *p);
 
@@ -2206,6 +1702,9 @@ static void error(const char *p);
 #define LIGHTOUT	16
 #define DARKFLAG	15
 #define LIGHT_SOURCE	9
+
+/* Define this because 1 << n might be 16bit */
+#define ONEBIT		((uint32_t)1)
 
 #define REDRAW		1
 #define REDRAW_MAYBE	2
@@ -2220,7 +1719,7 @@ static char wbuf[81];
 static int wbp = 0;
 static int xpos = 0, ypos = 0;
 static int bottom;
-WINDOW *topwin, *botwin, *curwin;
+static WINDOW *topwin, *botwin, *curwin;
 
 static void flush_word(void)
 {
@@ -2473,13 +1972,6 @@ static void strout_upper(const uint8_t *p)
   strout_lower(p);
 }
 
-static char readchar(void)
-{
-  char c;
-  if (read(0, &c, 1) < 1)
-    return -1;
-  return c;
-}
 
 static void line_input(void)
 {
@@ -2489,6 +1981,12 @@ static void line_input(void)
   linebuf[l] = 0;
   if (l && linebuf[l-1] == '\n')
     linebuf[l-1] = 0;
+}
+
+static char readchar(void)
+{
+  line_input();
+  return *linebuf;
 }
 
 static void begin_upper(void)
@@ -2645,7 +2143,7 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
   for (i = 0; i < n; i++) {
     uint8_t opc = *p++;
     uint16_t par = *p++ | ((opc & 0xE0) >> 5);
-    uint8_t op = objloc[par];
+    uint8_t op = game.objloc[par];
     opc &= 0x1F;
 
     switch(opc) {
@@ -2657,19 +2155,19 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 2:
-        if (op != location)
+        if (op != game.location)
           return NULL;
         break;
       case 3:
-        if (op != 255 && op != location)
+        if (op != 255 && op != game.location)
           return NULL;
         break;
       case 4:
-        if (location != par)
+        if (game.location != par)
           return NULL;
         break;
       case 5:
-        if (op == location)
+        if (op == game.location)
           return NULL;
         break;
       case 6:
@@ -2677,27 +2175,27 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 7:
-        if (location == par)
+        if (game.location == par)
           return NULL;
         break;
       case 8:
-        if (!(bitflags & (1 << par)))
+        if (!(game.bitflags & (ONEBIT << par)))
           return NULL;
         break;
       case 9:
-        if (bitflags & (1 << par))
+        if (game.bitflags & (ONEBIT << par))
           return NULL;
         break;
       case 10:
-        if (!carried)
+        if (!game.carried)
           return NULL;
         break;
       case 11:
-        if (carried)
+        if (game.carried)
           return NULL;
         break;
       case 12:
-        if (op == 255 || op == location)
+        if (op == 255 || op == game.location)
           return NULL;
         break;
       case 13:
@@ -2709,11 +2207,11 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 15:
-        if (counter > par)
+        if (game.counter > par)
           return NULL;
         break;
       case 16:
-        if (counter < par)
+        if (game.counter < par)
           return NULL;
         break;
       case 17:
@@ -2725,7 +2223,7 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
           return NULL;
         break;
       case 19:
-        if (counter != par)
+        if (game.counter != par)
           return NULL;
         break;
       default:
@@ -2737,10 +2235,10 @@ static const uint8_t *run_conditions(const uint8_t *p, uint8_t n)
 
 uint8_t islight(void)
 {
-  uint8_t l = objloc[LIGHT_SOURCE];
-  if (!(bitflags & (1 << DARKFLAG)))
+  uint8_t l = game.objloc[LIGHT_SOURCE];
+  if (!(game.bitflags & (ONEBIT << DARKFLAG)))
     return 1;
-  if (l == 255 || l == location)
+  if (l == 255 || l == game.location)
     return 1;
   return 0;
 }
@@ -2762,8 +2260,8 @@ static void action_look(void)
     end_upper();
     return;
   }
-  p = locdata[location].text;
-  e = locdata[location].exit;
+  p = locdata[game.location].text;
+  e = locdata[game.location].exit;
   if (*p == '*')
     p++;
   else
@@ -2785,9 +2283,9 @@ static void action_look(void)
     strout_upper(nonestr);
   strout_upper(dotnewline);
   f = 1;
-  e = objloc;
-  while(e < objloc + NUM_OBJ) {
-    if (*e++ == location) {
+  e = game.objloc;
+  while(e < game.objloc + NUM_OBJ) {
+    if (*e++ == game.location) {
       if (f) {
         strout_upper(canalsosee);
         f = 0;
@@ -2808,8 +2306,8 @@ static void action_delay(void)
 static void action_dead(void)
 {
   strout_lower(dead);
-  bitflags &= ~(1 << DARKFLAG);
-  location = lastloc;
+  game.bitflags &= ~(ONEBIT << DARKFLAG);
+  game.location = lastloc;
   action_look();
 }
 
@@ -2823,11 +2321,11 @@ static void action_quit(void)
 
 static void action_score(void)
 {
-  uint8_t *p = objloc;
+  uint8_t *p = game.objloc;
   const uint8_t **m = objtext;
   uint8_t t = 0, s = 0;
 
-  while(p < objloc + NUM_OBJ) {
+  while(p < game.objloc + NUM_OBJ) {
     if (*m[0] == '*') {
       t++;
       if (*p == treasure)
@@ -2848,15 +2346,15 @@ static void action_score(void)
 
 static void action_inventory(void)
 {
-  uint8_t *p = objloc;
+  uint8_t *p = game.objloc;
   const uint8_t **m = objtext;
   uint8_t f = 1;
 
   strout_lower(carrying);
-  if (carried == 0)
+  if (game.carried == 0)
     strout_lower(nothing);
   else {  
-    while(p < objloc + NUM_OBJ) {
+    while(p < game.objloc + NUM_OBJ) {
       if (*p == 255) {
         if (!f)
           strout_lower(dashstr);
@@ -2871,12 +2369,52 @@ static void action_inventory(void)
   strout_lower(dotnewline);
 }
 
+static char *filename(void)
+{
+  strout_lower("File name ? ");
+  line_input();
+  return skip_spaces(linebuf);
+}
+
+static void action_save(void)
+{
+  int fd;
+  char *p = filename();
+  if (*p == 0)
+    return;
+  game.magic = GAME_MAGIC;
+  fd = open(p, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+  if (fd == -1 || write(fd, &game, sizeof(game)) != sizeof(game) || close(fd) == -1)
+    strout_lower("Save failed.\n");
+  close(fd);	/* Double closing is safe for non error path */
+}
+
+static int action_restore(void)
+{
+  while(1) {
+    char *p = filename();
+    int fd;
+
+    if (*p == 0)
+      return 0;
+
+    fd = open(p, O_RDONLY, 0600);
+
+    if (fd != -1 && read(fd, &game, sizeof(game)) == sizeof(game) && close(fd) != -1 &&
+        game.magic == GAME_MAGIC)
+      return 1;
+
+    strout_lower("Load failed.\n");
+    close(fd);
+  }
+}
+  
 static void moveitem(uint8_t i, uint8_t l)
 {
-  uint8_t *p = objloc + i;
-  if (*p == location)
+  uint8_t *p = game.objloc + i;
+  if (*p == game.location)
     redraw |= REDRAW_MAYBE;
-  if (l == location)
+  if (l == game.location)
     redraw |= REDRAW;
   *p = l;
 }
@@ -2902,16 +2440,16 @@ static void run_actions(const uint8_t *p, uint8_t n)
       case 51:	/* nop - check */
         break;
       case 52:	/* Get */
-        if (carried >= maxcar)
+        if (game.carried >= maxcar)
           strout_lower(toomuch);
         else
           moveitem(*param++, 255);
         break;
       case 53: /* Drop */
-        moveitem(*param++, location);
+        moveitem(*param++, game.location);
         break;
       case 54: /* Go */
-        location = *param++;
+        game.location = *param++;
         redraw = REDRAW;
         break;
       case 55: /* Destroy */
@@ -2919,17 +2457,17 @@ static void run_actions(const uint8_t *p, uint8_t n)
         moveitem(*param++, 0);
         break;
       case 56:	/* Set dark flag */
-        bitflags |= (1 << DARKFLAG);
+        game.bitflags |= (ONEBIT << DARKFLAG);
         break;
       case 57:	/* Clear dark flag */
-        bitflags &= ~(1 << DARKFLAG);
+        game.bitflags &= ~(ONEBIT << DARKFLAG);
         break;
       case 58:	/* Set bit */
-        bitflags |= (1 << *param++);
+        game.bitflags |= (ONEBIT << *param++);
         break;
       /* 59 see 55 */
       case 60:	/* Clear bit */
-        bitflags &= ~(1 << *param++);
+        game.bitflags &= ~(ONEBIT << *param++);
         break;
       case 61:	/* Dead */
         action_dead();
@@ -2950,24 +2488,25 @@ static void run_actions(const uint8_t *p, uint8_t n)
       case 66:	/* Inventory */
         action_inventory();
       case 67:	/* Set bit 0 */
-        bitflags |= (1 << 0);
+        game.bitflags |= (ONEBIT << 0);
         break;
       case 68:	/* Clear bit 0 */
-        bitflags &= ~(1 << 0);
+        game.bitflags &= ~(ONEBIT << 0);
         break;
       case 69:	/* Refill lamp */
-        lighttime = lightfill;
-        bitflags &= ~(1 << LIGHTOUT);
+        game.lighttime = lightfill;
+        game.bitflags &= ~(ONEBIT << LIGHTOUT);
         moveitem(LIGHT_SOURCE, 255);
         break;
       case 70:	/* Wipe lower */
         /* TODO */
         break;
       case 71:	/* Save */
-        /* TODO */
+        action_save();
+        break;
       case 72:	/* Swap two objects */
-        tmp = objloc[*param];
-        moveitem(*param, objloc[param[1]]);
+        tmp = game.objloc[*param];
+        moveitem(*param, game.objloc[param[1]]);
         moveitem(param[1], tmp);
         param += 2;
         break;
@@ -2978,37 +2517,37 @@ static void run_actions(const uint8_t *p, uint8_t n)
         moveitem(*param++, 255);
         break;
       case 75:	/* Put one item by another */
-        moveitem(*param, objloc[param[1]]);
+        moveitem(*param, game.objloc[param[1]]);
         param += 2;
         break;
       case 77:	/* Decrement counter */
-        if (counter >= 0)
-          counter--;
+        if (game.counter >= 0)
+          game.counter--;
         break;
       case 78:	/* Display counter */
-        decout_lower(counter);
+        decout_lower(game.counter);
         break;
       case 79:	/* Set counter */
-        counter = *param++;
+        game.counter = *param++;
         break;
       case 80:	/* Swap player and saved room */
-        tmp = savedroom;
-        savedroom = location;
-        location = tmp;
+        tmp = game.savedroom;
+        game.savedroom = game.location;
+        game.location = tmp;
         redraw = REDRAW;
         break;
       case 81:	/* Swap counter and counter n */
-        tmp16 = counter;
-        counter = counter_array[*param];
-        counter_array[*param++] = tmp16;
+        tmp16 = game.counter;
+        game.counter = game.counter_array[*param];
+        game.counter_array[*param++] = tmp16;
         break;
       case 82:	/* Add to counter */
-        counter += *param++;
+        game.counter += *param++;
         break;
       case 83:	/* Subtract from counter */
-        counter -= *param++;
-        if (counter < 0)
-          counter = -1;
+        game.counter -= *param++;
+        if (game.counter < 0)
+          game.counter = -1;
         break;
       case 84:	/* Print noun, newline */
         strout_lower((uint8_t *)nounbuf);
@@ -3021,10 +2560,10 @@ static void run_actions(const uint8_t *p, uint8_t n)
         break;
       case 87: /* Swap player and saveroom array entry */
         tmp16 = *param++;
-        tmp = roomsave[tmp16];
-        roomsave[tmp16] = location;
-        if (tmp != location) {
-          location = tmp;
+        tmp = game.roomsave[tmp16];
+        game.roomsave[tmp16] = game.location;
+        if (tmp != game.location) {
+          game.location = tmp;
           redraw = REDRAW;
         }
         break;
@@ -3119,7 +2658,7 @@ uint8_t autonoun(uint8_t loc)
   if (*wordbuf == ' ' || *wordbuf == 0)
     return 255;
   while(*p) {
-    if (strncasecmp((const char *)p, wordbuf, WORDSIZE) == 0 && objloc[p[WORDSIZE]] == loc)
+    if (strncasecmp((const char *)p, wordbuf, WORDSIZE) == 0 && game.objloc[p[WORDSIZE]] == loc)
       return p[WORDSIZE];
     p += WORDSIZE + 1;
   }
@@ -3135,10 +2674,10 @@ void run_command(void)
   if (verb == VERB_GET) {		/* Get */
     if (noun == 0)
       strout_lower(whatstr);
-    else if (carried >= maxcar)
+    else if (game.carried >= maxcar)
       strout_lower(toomuch);
     else {
-      tmp = autonoun(location);
+      tmp = autonoun(game.location);
       if (tmp == 255)
         strout_lower(beyondpower);
       else
@@ -3155,7 +2694,7 @@ void run_command(void)
       if (tmp == 255)
         strout_lower(beyondpower);
       else
-        moveitem(tmp, location);
+        moveitem(tmp, game.location);
     }
     actmatch = 1;
     return;
@@ -3165,23 +2704,23 @@ void run_command(void)
 void process_light(void)
 {
   uint8_t l;
-  if ((l = objloc[LIGHT_SOURCE]) == 0)
+  if ((l = game.objloc[LIGHT_SOURCE]) == 0)
     return;
-  if (lighttime == 255)
+  if (game.lighttime == 255)
     return;
-  if (!--lighttime) {
-    bitflags &= ~(1 << LIGHTOUT);	/* Check clear ! */
-    if (l == 255 || l == location) {
+  if (!--game.lighttime) {
+    game.bitflags &= ~(ONEBIT << LIGHTOUT);	/* Check clear ! */
+    if (l == 255 || l == game.location) {
       strout_lower(lightout);
       redraw = REDRAW_MAYBE;
       return;
     }
   }
-  if (lighttime > 25)
+  if (game.lighttime > 25)
     return;
   strout_lower(lightoutin);
-  decout_lower(lighttime);
-  strout_lower(lighttime == 1 ? turn : turns);
+  decout_lower(game.lighttime);
+  strout_lower(game.lighttime == 1 ? turn : turns);
 }
 
 void main_loop(void)
@@ -3234,7 +2773,7 @@ void main_loop(void)
 
         if (!light)
           strout_lower(darkdanger);
-        dir = locdata[location].exit[noun - 1];
+        dir = locdata[game.location].exit[noun - 1];
         if (!dir) {
           if (!light) {
             strout_lower(brokeneck);
@@ -3245,7 +2784,7 @@ void main_loop(void)
           strout_lower(cantgo);
           continue;
         }
-        location = dir;
+        game.location = dir;
         redraw = REDRAW;
         continue;
       }
@@ -3265,21 +2804,23 @@ void main_loop(void)
 
 void start_game(void)
 {
-  memcpy(objloc, objinit, sizeof(objloc));
-  bitflags = 0;
-  counter = 0;
-  memset(counter_array, 0, sizeof(counter_array));
-  savedroom = 0;
-  memset(roomsave, 0, sizeof(roomsave));
-  location = startloc;
-  lighttime = startlamp;
-  carried = startcarried;
+  memcpy(game.objloc, objinit, sizeof(game.objloc));
+  game.bitflags = 0;
+  game.counter = 0;
+  memset(game.counter_array, 0, sizeof(game.counter_array));
+  game.savedroom = 0;
+  memset(game.roomsave, 0, sizeof(game.roomsave));
+  game.location = startloc;
+  game.lighttime = startlamp;
+  game.carried = startcarried;
 }
 
 int main(int argc, char *argv[])
 {
   display_init();
   setjmp(restart);
-  start_game();
+  strout_lower("Restore a saved game ? ");
+  if (!yes_or_no() || !action_restore())
+    start_game();
   main_loop();
 }
