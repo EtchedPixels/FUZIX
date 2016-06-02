@@ -37,6 +37,7 @@
 	    .globl nmi_handler
 	    .globl null_handler
 	    .globl video_init
+	    .globl _scanmem
 
             include "kernel.def"
             include "../kernel09.def"
@@ -142,9 +143,16 @@ init_hardware:
 	;; High speed poke
 	sta	0xffd9		; high speed poke
 	;; set system RAM size
-	ldd 	#512
+	jsr	_scanmem	; X = number of pages
+	tfr 	x,d
+	lslb
+	rola
+	lslb
+	rola
+	lslb
+	rola
 	std 	_ramsize
-	ldd 	#512-64
+	subd	#64+16
 	std 	_procmem
 	;; set initial user mmu
 	ldd	#8

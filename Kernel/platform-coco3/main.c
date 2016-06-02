@@ -33,6 +33,27 @@ void do_beep(void)
 {
 }
 
+/* Scan memory return number of 8k pages found */
+__attribute__((section(".discard")))
+int scanmem(void)
+{
+	volatile uint8_t *mmu=(uint8_t *)0xffa8;
+	volatile uint8_t *ptr=(uint8_t *)0x0100;
+	int i;
+	for( i = 0; i<256; i++ ){
+		*mmu=i;
+		*ptr=0;
+	}
+	*mmu=0;
+	*ptr=0xff;
+	*mmu=1;
+	for( i = 1; i<256 && !*ptr ; )
+		*mmu=++i;
+	*mmu=0;
+	return i;
+}
+
+
 /*
  Map handling: We have flexible paging. Each map table consists
  of a set of pages with the last page repeated to fill any holes.
@@ -41,14 +62,17 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i;
+    int max = scanmem();
+    
     /*  We have 64 8k pages for a CoCo3 so insert every other one
      *  into the kernel allocator map.
      */
-    for (i = 10; i < 64; i+=2)
+    for (i = 10; i < max ; i+=2)
         pagemap_add(i);
     /* add common page last so init gets it */
     pagemap_add(6);
 }
+
 
 void map_init(void)
 {
