@@ -1,0 +1,5 @@
+
+To compile RPilot, run `make'.
+
+To install it, run `make install'.  To install under a directory other than
+/usr/local/, run `make install INSTALL_DIR=/the/new/dir'.

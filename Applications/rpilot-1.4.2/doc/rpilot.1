@@ -1,0 +1,60 @@
+.\" RPilot man page
+.TH RPILOT 1
+
+.SH NAME
+rpilot \- Rob's PILOT interpreter
+
+
+.SH SYNOPSIS
+.B rpilot
+.RI [ -options ]
+.I file
+
+
+.SH DESCRIPTION
+
+.BR rpilot
+is an intepreter for the IEEE-standard language PILOT.
+
+.SH OPTIONS
+
+.TP
+.BI \-b \ 
+Don't print the banner when starting up
+.BR rpilot
+
+.TP
+.B \-i
+Enters an interactive mode when no file names are given on the command line.
+To do so, it first looks for a file called
+.B interact.p
+in the current directory.  If that cannot be found, the file pointed to by the
+.B RPILOT_INTERACT
+variable will be tried.  If either of these can be found, they will be loaded
+and run.  Finally, if neither of these can be loaded, an error will be 
+reported.
+
+.TP
+.B \-?
+Prints a short summary of command line options.
+
+.SH SEE ALSO
+The RPilot web site at http://rpilot.sourceforge.net/
+
+.SH BUGS
+Please report any bugs to the author at rcl211@nyu.edu 
+
+.SH COPYING
+.B RPilot
+is Copyright 1998,2002 Rob Linwood
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+
+.SH AUTHOR
+Rob Linwood <rcl211@nyu.edu>
+.br
+http://homepages.nyu.edu/~rcl211/

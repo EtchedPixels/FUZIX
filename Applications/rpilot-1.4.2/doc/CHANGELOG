@@ -1,0 +1,41 @@
+Change log for RPilot
+---------------------
+
+1.4.2 (Released June 21st, 2002)
+ - Fix usage of `isblank()', a GNU extension (Thanks to Patrick Eaton)
+ - Add some #defines to rpilot.h to replace a few hard-coded constants
+ - RPilot is over 4 years old. Wow.
+
+1.4.1 (Released August 13th, 2000)
+ - New math system!  I think that was the only remaining code from the 1.0 
+   releases, so the 1.4 versions now represent a complete rewrite.
+ - Added Unix man page.
+ - First version to use RPM and BSD packages.
+
+1.4: (Released July 4th, 2000)
+ - Rewrote everything except the math system (which needs it bad!)
+ - Merged parse.c and rstring.c
+ - Fixed a few examples.
+ - Added an interactive mode.
+ - Added the special variables $prompt, #rpilot, and #retcode
+ - Revised documentation.
+ - Changed contact info in all files.
+
+1.01: (Released July 4th, 1998)
+ - Fixed two bugs in rpilot.c, so it will now work when compiled by gcc.  The
+   lines read "strcpy( string, '\0')" when that should have been
+   "strset( string, 0)".  Thanks to Ken M who pointed this out.
+ - Fixed a few bugs in parse.c - see that file for more info.
+ - Revised documentation to point out differences in the size of numbers based
+   on what compiler the program was compiled with, and correct a few typos.
+ - Added a new example program, fact.p, for calculating factorials.
+ - Included a DJGPP-compiled version of RPilot in the DOS distribution.
+ - Released the first native OS/2 version.
+ - Added this file.
+
+1.0: (Released Apr 17th, 1998)
+ - First version for DOS and Linux.
+
+
+
+

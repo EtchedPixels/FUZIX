@@ -1,0 +1,13 @@
+The following examples are included with RPilot:
+dosmenu.p  - A program which displays a menu of commands for DOS users
+unixmenu.p - The same as above, only it's for Linux users
+french.p   - A quiz on your knowledge of French
+guess.p    - A simple number-guessing game
+hello.p    - "Hello World!", the cannonical first trial program
+jump-use.p - An example of Jumps and Using subroutines
+math.p     - A demonstration of RPilot's mathematical capabilities
+name.p     - A simple program which asks for your name and age
+recurse.p  - A recursive PILOT program which calls itself
+crazy.p    - An example of overusing the "X" command
+fact.p     - A program which recursively solves factorials
+inter.p    - Run RPilot interactively, by reading statements and running them
