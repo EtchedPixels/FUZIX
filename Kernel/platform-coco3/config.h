@@ -17,7 +17,7 @@
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define CONFIG_BANKS	4
-#define MAX_MAPS 32-3
+#define MAX_MAPS 128-3
 #define MAPBASE 0x0000
 /* And swapping */
 /* #define SWAPDEV  2051	 */
