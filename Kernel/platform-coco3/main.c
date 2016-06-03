@@ -40,15 +40,17 @@ int scanmem(void)
 	volatile uint8_t *mmu=(uint8_t *)0xffa8;
 	volatile uint8_t *ptr=(uint8_t *)0x0100;
 	int i;
-	for( i = 0; i<256; i++ ){
+	for( i = 0; i<256; i+=8 ){
 		*mmu=i;
 		*ptr=0;
 	}
 	*mmu=0;
 	*ptr=0xff;
-	*mmu=1;
-	for( i = 1; i<256 && !*ptr ; )
-		*mmu=++i;
+	*mmu=8;
+	for( i = 8; i<256 && !*ptr ; ){
+		i+=8;
+		*mmu=i;;
+	}
 	*mmu=0;
 	return i;
 }
