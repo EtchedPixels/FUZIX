@@ -8,7 +8,7 @@ CC_OPT = -c -Os -I../include -I../include/6502
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -o
 # copied in from kernel tree
-KRN_HEADERS = userstructs.h
+KRN_HEADERS = userstructs.h drivewire.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s

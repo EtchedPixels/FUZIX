@@ -5,6 +5,7 @@
 int dw_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int dw_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int dw_open(uint8_t minor, uint16_t flag);
+int dw_ioctl(uint8_t minor, uarg_t request, char *data);
 
 /* low level interface */
 uint8_t dw_reset(void);
