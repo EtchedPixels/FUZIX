@@ -10,7 +10,7 @@ int dw_open(uint8_t minor, uint16_t flag);
 uint8_t dw_reset(void);
 uint8_t dw_operation(uint8_t *cmd);
 uint16_t dw_transaction( unsigned char *send, uint16_t scnt,
-			 unsigned char *recv, uint16_t rcnt );
+			 unsigned char *recv, uint16_t rcnt, uint8_t rawf );
 
 #endif /* __DEVDW_DOT_H__ */
 
