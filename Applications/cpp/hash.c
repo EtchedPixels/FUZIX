@@ -30,10 +30,7 @@ int  hashsize  = 0xFF;	/* 2^X -1 */
 int  hashcount = 0;
 static int hashvalue P((int namespace, char * word));
 
-void *
-read_entry(namespace, word)
-int namespace;
-char * word;
+void *read_entry(int namespace, char *word)
 {
    int hash_val;
    struct hashentry * hashline;
@@ -52,11 +49,7 @@ char * word;
    return 0;
 }
 
-char *
-set_entry(namespace, word, value)
-int namespace;
-char * word;
-void * value;
+char *set_entry(int namespace, char *word, void *value)
 {
    int hash_val, i;
    struct hashentry * hashline, *prev;
@@ -103,9 +96,7 @@ void * value;
    return hashline->word;
 }
 
-static int hashvalue(namespace, word)
-int namespace;
-char * word;
+static int hashvalue(int namespace, char *word)
 {
    int val = namespace;
    char *p = word;

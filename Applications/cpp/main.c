@@ -37,10 +37,7 @@ int exit_code = 0;
 char * outfile = 0;
 FILE * ofd = 0;
 
-int
-main(argc, argv)
-int argc;
-char ** argv;
+int main(int argc, char *argv[])
 {
    int ar, i;
    char * p;
@@ -139,6 +136,7 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
    if (!curfile)
       cfatal(Usage);
 
+#if 0
    /* Define date and time macros. */
    if (dialect != DI_KNR) {
       time_t now;
@@ -154,6 +152,7 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
       sprintf(buf, "__DATE__=\"%.3s %.2s %.4s\"", timep + 4, timep + 8, timep + 20);
       define_macro(buf);
    }
+#endif
 
    if (outfile) ofd = fopen(outfile, "w");
    else         ofd = stdout;
@@ -169,9 +168,7 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
    exit(exit_code);
 }
 
-void
-undefine_macro(name)
-char * name;
+void undefine_macro(char * name)
 {
    struct define_item * ptr;
 
@@ -182,9 +179,7 @@ char * name;
    }
 }
 
-void
-define_macro(name)
-char * name;
+void define_macro(char *name)
 {
    char * p;
    char * value;
@@ -206,11 +201,7 @@ char * name;
    ptr->next = 0;
 }
 
-FILE *
-open_include(fname, mode, checkrel)
-char * fname;
-char * mode;
-int checkrel;
+FILE *open_include(char *fname, char *mode, int checkrel)
 {
    FILE * fd = 0;
    int i;
@@ -246,10 +237,7 @@ int checkrel;
 
 static int outpos = 0;
 
-void
-cmsg(mtype, str)
-char * mtype;
-char * str;
+void cmsg(char *mtype, char *str)
 {
    if (c_fname && (*c_fname || c_lineno))
       fprintf(stderr, "%s:%d: ", c_fname, c_lineno);
@@ -260,39 +248,30 @@ char * str;
       fprintf(stderr, "%s\n", str);
 }
 
-void
-cfatal(str)
-char * str;
+void cfatal(char *str)
 {
    cmsg("CPP-FATAL error", str);
    exit(255);
 }
 
-void
-cerror(str)
-char * str;
+void cerror(char * str)
 {
    exit_code = 1;
    cmsg("error", str);
 }
 
-void
-cwarn(str)
-char * str;
+void cwarn(char * str)
 {
    cmsg("warning", str);
 }
 
-void
-pr_indent(count)
-int count;
+void pr_indent(int count)
 {
    if(count>10) count=10;
    while(count>0) {fprintf(ofd, "\t"); count--; }
 }
 
-void
-hash_line()
+void hash_line(void)
 {
    if( strcmp(last_name, c_fname) != 0 ) last_line = -1;
    if( c_lineno != last_line || last_line <= 0 )
@@ -321,8 +300,7 @@ hash_line()
    }
 }
 
-void
-print_toks_cpp()
+void print_toks_cpp(void)
 {
    int i;
    int indent=0;
@@ -382,8 +360,7 @@ print_toks_cpp()
    outpos = 0;
 }
 
-void
-print_toks_raw()
+void print_toks_raw(void)
 {
    int i;
    long val;
@@ -438,9 +415,7 @@ print_toks_raw()
    }
 }
 
-char *
-token_txn(token)
-int token;
+char *token_txn(int token)
 {
    char * s = "UNKNOWN";
    static char buf[17];

@@ -12,9 +12,7 @@
 __inline
 #endif
 static unsigned int
-hash1 (str, len)
-     register const char *str;
-     register unsigned int len;
+hash1 (const char *str, unsigned int len)
 {
   static unsigned char asso_values[] =
     {
@@ -52,9 +50,7 @@ hash1 (str, len)
 __inline
 #endif
 struct token_trans *
-is_ctok (str, len)
-     register const char *str;
-     register unsigned int len;
+is_ctok (const char *str, unsigned int len)
 {
   static struct token_trans wordlist[] =
     {
