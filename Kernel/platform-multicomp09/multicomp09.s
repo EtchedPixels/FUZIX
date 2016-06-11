@@ -242,7 +242,7 @@ init_hardware:
 	;; set up the map1 registers (MAPSEL=8..f) to use pages 0-7
 	;; ..to match the pre-existing setup of map0.
 	;; _krn_mmu_map is set up with the required values.
-	;; while doing this, were careful to keep MMUADR_MAP1 *clear* because we are using
+	;; while doing this, keep TR=0 because we are using
 	;; map0 and don't want to switch the map yet.
 	lda	#(MMU_MAP0|8)	; stay in map0, select 1st mapping register for map1
 	ldx	#MMUADR
@@ -281,8 +281,8 @@ gomap1:	lda	#MMU_MAP1
 atmap1:
 
 
-	;; Multicomp09 has RAM up at the hardware vector positions
-	;; so we can write the addresses directly, 2 bytes per vector;
+	;; Multicomp09 has RAM at the hardware vector positions
+	;; so we can write the addresses directly; 2 bytes per vector:
 	;; no need for a jump op-code.
 	ldx	#0xfff2		; address of SWI3 vector
 	ldy	#badswi_handler
@@ -412,25 +412,25 @@ map_process_2:
 	ldx	#MMUADR
 
 	ldb	,y+   		; page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=8, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=0, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=9, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=1, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=a, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=2, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=b, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=3, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=c, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=4, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=d, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=5, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=e, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=6, then write B to MMUDAT
 
 	lda	#MMU_MAP0
 	sta	,x		; new mapping goes live here

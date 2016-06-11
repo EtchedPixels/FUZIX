@@ -250,7 +250,7 @@ skip2@	incb
 ;;; uses low 32Kbyte of kernel address space as the "window" for this
 ;;; use map 8,9 (0x0000-0x3fff) for dest, map 10,11 (0x4000-0x7fff) for source
 copybank
-	pshs	d,x,u,y		; changing this will affect "ldb 1,s" below
+	pshs	d,x,u,y		; changing this will affect "ldb 0,s" below
 	;; map in dest
 	ldx	#MMUADR		; for storing
 	lda	#(MMU_MAP1+8)	; mapsel=8, for dest, in B

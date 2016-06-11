@@ -188,7 +188,7 @@ void platform_interrupt(void)
 		timer_interrupt();
 	}
 
-	dw_vpoll();
+        //	dw_vpoll();
 }
 
 
