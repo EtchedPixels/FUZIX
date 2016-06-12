@@ -46,12 +46,13 @@
    "dw_transaction" routine/function:
 
    int16_t dw_transaction( char *send, uint16_t scnt,
-                            char *recv, uint16_t rcnt )
+                            char *recv, uint16_t rcnt, uint8_t rawf )
 
    where "send" is a data buffer to send
          "scnt" is the size of the send buffer
          "recv" is a data buffer for the received reply
 	 "rcnt" is the size of the recv buffer
+	 "rawf" rd/wr directly to userspace
    returns:  0 on no error
             -1 on DW reception framing error (too slow!!)
             -2 on not all bytes received
@@ -155,7 +156,7 @@ void dw_putc( uint8_t minor, unsigned char c ){
 	unsigned char buf[2];
 	buf[0]=DW_FASTWRITE | dw_port( minor ) ;
 	buf[1]=c;
-	dw_transaction( buf, 2, NULL, 0 );
+	dw_transaction( buf, 2, NULL, 0, 0 );
 }
 
 
@@ -168,7 +169,7 @@ void dw_vopen( uint8_t minor ){
 	buf[1]=dw_port( minor );
 	buf[2]=DW_VOPEN;
 	if( ! ( p->flags & DW_FLG_OPEN ) ){
-		dw_transaction( buf, 3, NULL, 0 );
+		dw_transaction( buf, 3, NULL, 0, 0 );
 		open_ports++;
 	}
 	p->flags |= DW_FLG_OPEN;
@@ -182,7 +183,7 @@ void dw_vclose( uint8_t minor){
 	buf[1]=dw_port( minor );
 	buf[2]=DW_VCLOSE;
 	if( p->flags & DW_FLG_OPEN ){
-		dw_transaction( buf, 3, NULL, 0 );
+		dw_transaction( buf, 3, NULL, 0, 0 );
 	}
 }
 
@@ -208,7 +209,7 @@ void dw_vpoll( ){
 	/* up to four transactions at a poll */
 	for( i=0; i<4; i++){
 		buf[0]=DW_SERREAD;
-		dw_transaction( buf, 1, buf, 2 );
+		dw_transaction( buf, 1, buf, 2, 0 );
 		/* nothing waiting ? */
 		if( ! (buf[0] & 0x7f) ) {
 			wait=MAX_WAIT;
@@ -246,7 +247,7 @@ void dw_vpoll( ){
 				wait=1;
 				break;
 			}
-			dw_transaction( b,3,tbuf, min );
+			dw_transaction( b,3,tbuf, min, 0 );
 			for( i=0; i<min; i++){
 				tty_inproc( minor, tbuf[i] );
 			}
@@ -279,5 +280,5 @@ void dw_init( ){
 	char buf[2];
 	buf[0]=DW_INIT;
 	buf[1]=0x42;
-	dw_transaction( buf,2,buf,1 );
+	dw_transaction( buf,2,buf,1,0 );
 }
