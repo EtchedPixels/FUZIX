@@ -1,0 +1,33 @@
+This is based on the CP/M emulation from Will's UZI for SocZ80
+
+It's been converted to sdasz80/sdld for tool commonality with sdcc and moved
+into userspace.
+
+TODO:
+
+-	Start debugging it
+-	Check all syscall translations are still correct
+-	Move what we can into the runcpm loader binary
+-	Support tacking .COM onto the name in runcpm
+-	Fix up directory mapping and shrink buffer
+-	Use CP/M scratch space for internal variables and buffer pointers
+	so we can also support a high loaded version using shared common for
+	awkward memory mapped boxes (eg the Memotech)
+-	Save the syscall vector on entry as CP/M apps can re-use the RST
+	vector
+-	Find a nice way to build a relocatable version rather than one per
+	system type.
+
+
+6809 folks might want to look at
+
+http://permalink.gmane.org/gmane.comp.hardware.tandy.coco/77846
+
+and see if it could be ported over using our built in vt52 emulation and
+syscalls instead of the OS/9 interfaces and if Luis will put a licence on
+it.
+
+A faster (but 8080 only alternative) is in the Dunfield CUBIX OS.
+
+6502 folk may have to settle for writing themselves a DOS-65 simulator 8)
+
