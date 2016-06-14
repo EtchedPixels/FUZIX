@@ -19,6 +19,7 @@ static int mode = MODE_LINK;
 static char *workdir;		/* Working directory */
 
 static int verbose = 0;
+static int valgrind = 0;
 
 static unsigned int progbase = 0x0100;	/* Program base */
 
@@ -354,7 +355,12 @@ static void build_command(void)
 {
   char buf[128];
 
+  if (valgrind == 1)
+    add_argument("valgrind");
+
   add_argument("sdcc");
+  if (verbose == 1)
+    add_argument("-V");
   /* Set up the basic parameters we will inflict on the user */
   add_argument("--std-c99");
   add_option("-m", cpu?cpu:"z80");
@@ -534,6 +540,8 @@ int main(int argc, const char *argv[]) {
             pedantic = 1;
           else if (strcmp(p, "--nostdio") == 0)
             nostdio = 1;
+          else if (strcmp(p, "--valgrind") == 0)
+            valgrind = 1;
           else {
             fprintf(stderr, "fcc: Unknown option '%s'.\n", p);
             exit(1);
