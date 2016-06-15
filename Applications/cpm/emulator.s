@@ -8,7 +8,6 @@
     ; TODO
     ; - Recheck all syscall translations
     ; - Fix up directory mapping a bit more
-    ; - Move some of the scratch bytes into the CP/M work area
     ; - Save the syscall vector on entry and go via the saved copy as the
     ;   RST could be re-used by CP/M programs
     ; - Make the code use indirect pointers to the directory buffer etc
@@ -32,6 +31,18 @@ LF	.EQU	0x0A		; ASCII Line Feed
 CR	.EQU	0x0D		; ASCII Carriage Return
 ESC	.EQU	0x1B		; ASCII ESCape Char
 
+;
+;	Reserved space items
+;
+char	.EQU	0x3F		; Byte storage for Conin/Conout
+SysSP	.EQU	0x40		; System stack pointer
+UserSP	.EQU	0x42		; User process stack
+dmaSav	.EQU	0x44		; Saved DMA pointer
+dmaadr	.EQU	0x46		; DMA address
+srchFD	.EQU	0x48		; Directory search fd
+LSeekData .EQU	0x4A		; 4 bytes
+cnt	.EQU	0x4E		; Count of waiting keys
+
 TCGETS	.EQU	1		; Fuzix - get tty data
 TCSETS	.EQU	2		; Fuzix - set tty data
 TIOCINQ	.EQU	5		; Fuzix - characters pending
@@ -39,36 +50,21 @@ TIOCINQ	.EQU	5		; Fuzix - characters pending
 STDIN	.EQU	0	; file descriptor value of keyboard
 STDOUT	.EQU	1	; file descriptor value of display
 
-;
-; FIXME: set up phase can be in the runcpm tool
-;
-; Initialize both FCB entries to blank values
-
-EStart:	LD	HL,#fcbDat	; Move initial FCB
-	PUSH	HL
-	LD	DE,#fcb		;  into
-	LD	BC,#16		;   position
-	LDIR
-	POP	HL
-	LD	C,#16		;    init 2nd entry
-	LDIR
-
-; Catenate argv[] elements into default buffer
-
-	POP	IX		;  Get Ptr to argv[]
-	INC	IX		;  Skip "runcpm"
-	INC	IX
+EStart:
 ;
 ; Load the binary of argv[1] at 0x0100 (obliterating runcpm) (passed as fd
 ; 2)
 ;
-	LD	DE,#__bdos - 0x100	; largest possible binary space
+	LD	HL, #startaddr		; just a cheap way to let runcpm
+					; check a valid load address
+	LD	(SysSP), SP		; save stack pointer for cold starts
+	LD	DE,#EStart - 0x100	; largest possible binary space
 	PUSH	DE
-	LD	DE, #0x0100
+	LD	DE, #0x0100	; address
 	PUSH	DE
 	LD	DE,#3		; file handle
 	PUSH	DE
-	LD	DE,#7		; read()
+	LD	DE,#7		; read(3, 0x100, size)
 	PUSH	DE
 	RST	0x30
 	POP	DE
@@ -82,52 +78,7 @@ EStart:	LD	HL,#fcbDat	; Move initial FCB
 	RST	0x30
 	POP	DE
 	POP	DE
-	INC	IX		;  Skip binary name
-	INC	IX
-;
-;	Turn the following arguments into the CP/M tail and default FCB
-;
-	LD	DE,#buff+1	; Pt to CP/M Dflt Buffer
-	LD	C,#0		;  Cnt to 0
-	INC	IX		;   Skip Argv[0]
-	INC	IX
-Cold0:	LD	L, 0(IX)	; Get Ptr to Arg element
-	INC	IX
-	LD	H, 0(IX)
-	INC	IX
-	LD	A,H
-	OR	L		; End?
-	JR	Z,Cold2		; ..exit if Yes
-	LD	A,#' '		; Add space separator for args
-	LD	(DE),A
-	INC	DE
-	INC	C		;   bump count
-Cold1:	LD	A,(HL)
-	OR	A		; End of string?
-	JR	Z,Cold0		; ..try next if Yes
-	CP	#'a'		; ensure
-	JR	C,NoCap		;  it
-	CP	#'z'+1		;   is
-	JR	NC,NoCap	;    UCase
-	AND	#0x5F
-NoCap:	LD	(DE),A		; Move a byte
-	INC	HL
-	INC	C		;   bump count
-	INC	E		;  bump ptr
-	JR	NZ,Cold1	; ..get next byte if no bfr ovfl
-			;..else 0FF->100H, terminate
-	DEC	E		;  (back up for Null-termination)
-Cold2:	XOR	A
-	LD	(DE),A		;   Null-terminate for safety
 
-	LD	HL,#buff	; Pt to count loc'n in buff
-	LD	(HL),C		;  save total arg count
-	INC	HL		;   advance to 1st char
-	LD	DE,#fcb+1
-	CALL	FilNm		; Get Name/Typ in 1st FCB
-	OR	A		;  (set End flag)
-	LD	DE,#fcb+17	;   (prepare)
-	CALL	NZ,FilNm	;    Get Tame/Typ in 2nd FCB if present
 
 	LD	DE,#dir
 	LD	B,#128
@@ -137,70 +88,6 @@ Cold2:	XOR	A
 	LD	(0x0003),HL	; Clear IOBYTE and Default Drive/User
 
 	JP	__bios		; Go to Cold Start setup
-
-; Fill FCB Name.Typ fields with any present data
-
-FilNm:	LD	A,(HL)		; Get char
-	INC	HL		;   bump
-	OR	A		; End of String?
-	RET	Z
-	CP	#' '		; "Whitespace"?
-	JR	Z,FilNm0	; ..jump if Yes
-	CP	#TAB
-	JR	NZ,FilNm1	; ..jump if No
-FilNm0:	DEC	C		; Count down total length
-	LD	A,C		;  (prepare)
-	JR	NZ,FilNm	; ..loop if Not End
-	RET			;  ..else Exit showing EOL
-
-FilNm1:	LD	B,#8		; Set length of Name field
-	PUSH	DE		;   save Ptr to Name[0]
-	CALL	FilFl0		;  Get Name
-	POP	DE		;   restore Ptr to Name
-	OR	A
-	RET	Z		; ..return if End-of-Line
-	CP	#' '
-	RET	Z		; ..return if separator
-	CP	#'.'
-	JR	Z,FilNm2	; ..bypass char skip
-
-FilNm3:	LD	A,(HL)
-	INC	HL
-	OR	A
-	RET	Z		; Exit if End of Line
-	CP	#' '
-	RET	Z		;  or End of Field
-	CP	#'.'
-	JR	NZ,FilNm3	; ..loop til End or period
-
-FilNm2:	LD	A,E
-	ADD	A,#8		; Adjust FCB ptr to type field
-	LD	E,A
-	LD	B,#3
-			;..fall thru to get next char..
-; Move bytes from (HL) to (DE) for Count in C, Count in B or Ch in {' ','.',0}
-
-FilFld:	LD	A,(HL)		; Get Char
-	INC	HL		;   bump ptr
-	OR	A		; End of String?
-	RET	Z		; ..return if Yes
-FilFl0:	CP	#'.'		; Period?
-	RET	Z
-	CP	#' '		; Space?
-	RET	Z
-	LD	(DE),A		; Else Store byte
-	INC	DE		;   bump dest ptr
-	DEC	C		; End of Input String?
-	LD	A,C		;  (prepare)
-	RET	Z		; .return End if Yes
-	DJNZ	FilFld		; ..loop til field counter ends
-	OR	#0x0FF		; Return flag
-	RET
-
-fcbDat:	.db	0
-	.ascii	'           '
-	.db	0,0,0,0
-
 
 ;==========================================================
 ;     Resident Portion of Basic Disk Operating System
@@ -268,8 +155,8 @@ _bdos0:	LD	(_arg),DE
 	LD	A,#0xFF		;  Prepare Error code
 	LD	L,A
 	RET	NC		; ..return if Illegal
-	LD	(_userSP),SP
-	LD	SP,#_Bstack
+	LD	(UserSP),SP
+	LD	SP,(SysSP)	; return to system stack
 	PUSH	IX
 	PUSH	IY
 	LD	B,#0		; Fcn # to Word
@@ -286,7 +173,7 @@ _bdos0:	LD	(_arg),DE
 
 _bdosX:	POP	IY
 	POP	IX
-	LD	SP,(_userSP)
+	LD	SP,(UserSP)
 	LD	DE,(_arg)	; Return Orig contents of DE
 	LD	A,(_call)
 	LD	C,A		; Return Orig contents of C
@@ -611,7 +498,7 @@ Fcn18:	LD	HL,(dmaadr)
 	LD	(dmaSav),HL	; Save "real" DMA
 Fcn18A:	LD	HL,#dir+16
 	LD	(dmaadr),HL	;  Set DMA for Dir Op'n
-	LD	A,#16		;  Getdirent
+	LD	A,#24		;  Getdirent
 	LD	DE,#32		;  Len of Dir entries
 	CALL	RdWrt0		;   Read an Entry
 	JR	C,#Fcn18E	; Error if Carry Set
@@ -1371,14 +1258,18 @@ BWrit:	JP	Write		; 14 Write Sector
 ; Cold Entry.  Set up CP/M vectors and Stack, Get
 ; Current TTY Parms, Save for Exit, and begin
 
-__cold:	LD	A,#0x0C3
-	LD	HL,#__bdos
-	LD	SP,HL		; Set CP/M Stack for execution
+__cold:
+
+	LD	A,#0xC3
+	LD	SP,(SysSP)	; Set CP/M Stack for execution
 	LD	(0x0005),A	;  Set Bdos Vector
+	LD	HL,#__bdos
 	LD	(0x0006),HL
 	LD	HL,#WBoot
 	LD	(0x0000),A	;   Set Bios Warm Boot Vector
 	LD	(0x0001),HL
+	LD	HL, #0x80
+	LD	(dmaadr), HL
 
 	LD	HL,#ttTermios0	; & buf
 	LD	DE,#TCGETS	;  ioctl fcn to Get Parms
@@ -1421,7 +1312,7 @@ Exit:	LD	C,#0x0D
 	LD	HL,#ttTermios0	; & buf
 	LD	DE,#TCSETS	;  ioctl fcn to Set Parms
 	CALL	IoCtl		;   Execute ioctl Fcn on STDIN
-
+Quit:
 	LD	HL,#0		; Exit Good Status
 	PUSH	HL
 	PUSH	HL		;  UZI Fcn 0 (_exit)
@@ -1592,23 +1483,12 @@ dpb:	.dw	64		; Dummy Disk Parameter Block
 
 ;----------------------- Data -----------------------
 
-dmaadr:	.dw	0x0080		; Read/Write Transfer Addr   (char *dmaadr;)
-dmaSav:	.dw	0		; Temp storage of current DMA Address
-srchFD:	.dw	0		; File Descriptor for Searches
-char:	.db	' '		; Byte storage for Conin/Conout
-cnt:	.dw	0		; Count of waiting keys
-LSeekData:	.dw	0	; Used for _lseek() syscalls
-		.dw	0
 ttTermios:
 	.ds	20		; Working TTY Port Settings
 ttTermios0:
 	.ds	20		; Initial TTY Port Settings
 
-dir:	.ds	128		; Directory Buffer
-
-	.ds	128
-_Bstack:
-_userSP:.dw    0       ; WRS: important that we write data all the way to the very last byte used
+dir:	.ds	128		; Directory Buffer (can cut to 48 bytes?)
 
 BIOSIZ	.EQU	.-__bios
 CPMSIZ	.EQU	.-__bdos
