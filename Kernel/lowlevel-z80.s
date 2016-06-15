@@ -291,23 +291,27 @@ _doexec:
 ;
 ;  Called from process context (hopefully)
 ;
-;  FIXME: hardcoded RST38 won't work on all boxes
+;  FIXME: hardcoded RST30 won't work on all boxes
 ;
 null_handler:
 	; kernel jump to NULL is bad
 	ld a, (U_DATA__U_INSYS)
 	or a
-	jp z, trap_illegal
+	jp nz, trap_illegal
 	; user is merely not good
 	ld hl, #7
 	push hl
-	ld hl, (U_DATA__U_PTAB)
+	ld ix, (U_DATA__U_PTAB)
+	ld l,P_TAB__P_PID_OFFSET(ix)
+	ld h,P_TAB__P_PID_OFFSET+1(ix)
 	push hl
-	ld hl, #10		; signal (getpid(), SIGBUS)
+	ld hl, #39		; signal (getpid(), SIGBUS)
+	push hl
 	rst #0x30		; syscall
-	pop hl
-	pop hl
-	ld hl, #0
+	ld hl, #0xFFFF
+	push hl
+	dec hl			; #0
+	push hl
 	rst #0x30		; exit
 
 
@@ -462,11 +466,10 @@ interrupt_pop:
 null_pointer_trap:
 	ld a, #0xC3
 	ld (0), a
-
+	ld hl, #11		; SIGSEGV
 trap_signal:
 	push hl
 	ld hl, (U_DATA__U_PTAB);
-        push hl
         call _ssig
         pop hl
         pop hl
