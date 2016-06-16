@@ -9,6 +9,6 @@ struct dw_trans{
 };
 
 /* ioctl */
-#define DRIVEWIREC_TRANS 1  /* low-level transaction interface
+#define DRIVEWIREC_TRANS 1  /* low-level transaction interface */
 
 #endif
