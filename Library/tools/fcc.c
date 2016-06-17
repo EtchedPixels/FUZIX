@@ -379,7 +379,9 @@ static void build_command(void)
   if (werror == 1)
     add_argument("--Werror");
   if (unschar == 1)
-    add_argument("-funsigned-char");
+    add_argument("--funsigned-char");
+  if (unschar == 2)
+    add_argument("--fsigned-char");
   if (debug == 1)
     add_argument("--debug");
   /* Turn -O1/2/3/4 into something meaningful */
@@ -536,6 +538,8 @@ int main(int argc, const char *argv[]) {
             werror = 1;
           else if (strcmp(p, "-funsigned-char") == 0)
             unschar = 1;
+          else if (strcmp(p, "-fsigned-char") == 0)
+            unschar = 2;
           else if (strcmp(p, "--pedantic") == 0)
             pedantic = 1;
           else if (strcmp(p, "--nostdio") == 0)
