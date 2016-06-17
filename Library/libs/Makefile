@@ -68,16 +68,20 @@ SRC_HARD += regexp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
-SRC_C += termcap.c
+SRC_CT += termcap.c
 
 SRC_CURS = $(shell find curses -name '*.c')
 
+SRC_LM = vfscanf.c vfprintf.c
+OBJ_LM = vfscanf-libm.rel vfprintf-libm.rel
+
 OBJ_C = $(SRC_C:.c=.rel)
 OBJ_CURS = $(SRC_CURS:.c=.rel)
+OBJ_CT = $(SRC_CT:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -108,6 +112,14 @@ curses$(PLATFORM).lib: $(OBJ_CURS)
 	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
 	$(AR) s curses$(PLATFORM).lib
 
+termcap$(PLATFORM).lib: $(OBJ_CT)
+	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
+	$(AR) s termcap$(PLATFORM).lib
+
+m$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	$(AR) s m$(PLATFORM).lib
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -120,8 +132,17 @@ $(OBJ_CRT0NS):%.rel: %.s
 $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
+$(OBJ_CT):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c)
+
 $(OBJ_CURS):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c) -o $@
+
+vfscanf-libm.rel: vfscanf.c
+	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
+
+vfprintf-libm.rel: vfscanf.c
+	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
 
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
@@ -133,4 +154,5 @@ clean:
 
 install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
-	cp curses$(PLATFORM).lib /opt/fcc/lib/
+	cp curses$(PLATFORM).lib termcap$(PLATFORM).lib /opt/fcc/lib/
+	cp m$(PLATFORM).lib /opt/fcc/lib/
