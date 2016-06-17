@@ -75,9 +75,9 @@ SRC_CURS = $(shell find curses -name '*.c')
 OBJ_C = $(SRC_C:.c=.rel)
 OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_CURS) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -104,6 +104,10 @@ fuzix/syslib.l:
 liberror.txt:
 	../tools/liberror > liberror.txt
 
+curses$(PLATFORM).lib: $(OBJ_CURS)
+	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
+	$(AR) s curses$(PLATFORM).lib
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -129,3 +133,4 @@ clean:
 
 install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
+	cp curses$(PLATFORM).lib /opt/fcc/lib/
