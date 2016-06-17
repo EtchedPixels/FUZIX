@@ -21,12 +21,6 @@ typedef unsigned char BOOL;
 #define STDIN           0
 #define STDOUT          1
 
-/*
-#define isblank(ch)     (((ch) == ' ')  || ((ch) == '\t'))
-#define isdecimal(ch)   (((ch) >= '0')  && ((ch) <= '9'))
-*/
-#define isblank(ch)	isspace(ch)
-
 typedef int NUM;
 typedef int LEN;
 
@@ -655,14 +649,14 @@ static BOOL getnum(char **retcp, BOOL *rethavenum, NUM *retnum)
 	    break;
 
 	default:
-	    if (!isdecimal(*cp)) {
+	    if (!isdigit(*cp)) {
 		*retcp = cp;
 		*rethavenum = havenum;
 		*retnum = value;
 		return TRUE;
 	    }
 	    num = 0;
-	    while (isdecimal(*cp))
+	    while (isdigit(*cp))
 		num = num * 10 + *cp++ - '0';
 	    havenum = TRUE;
 	    break;
