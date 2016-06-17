@@ -1,8 +1,5 @@
-CC = sdcc
-ASM = sdasz80
-AR = sdar
 LINKER = sdcc
-FCC = ../../../../Library/tools/fcc -O2
+FCC = ../../../../Library/tools/fcc -O2 -fsigned-char
 PLATFORM =
 #PLATFORM = -tzx128
 
