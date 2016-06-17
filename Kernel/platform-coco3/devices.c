@@ -29,7 +29,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
   /* /dev/dw   Drivewire */
-  {  dw_open,       no_close,    dw_read,   dw_write,  no_ioctl },
+  {  dw_open,       no_close,    dw_read,   dw_write,  dw_ioctl },
 };
 
 bool validdev(uint16_t dev)

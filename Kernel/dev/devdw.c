@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devdw.h>
+#include <drivewire.h>
 
 #define DW_READ		0
 #define DW_WRITE	1
@@ -106,3 +107,16 @@ int dw_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return dw_transfer(minor, false, rawflag);
 }
 
+int dw_ioctl(uint8_t minor, uarg_t request, char *data)
+{
+	struct dw_trans s;
+	used( minor );
+
+	if( request != DRIVEWIREC_TRANS )
+		return -1;
+	if( uget( data, &s, sizeof(struct dw_trans) ) )
+		return -1;
+
+	return dw_transaction( s.sbuf, s.sbufz, s.rbuf, s.rbufz, 1 );
+	
+}
