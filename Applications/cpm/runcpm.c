@@ -149,6 +149,6 @@ int main(int argc, char *argv[])
 
   /* If this works it blows us away and we never return */
   (*exec)();
-  writes("runcp: exec failure\n");
+  writes("runcpm: exec failure\n");
   exit(1);
 }
