@@ -25,21 +25,25 @@
 _dw_transaction:
 	pshs	cc,y		; save caller
 	orcc	#0x50		; stop interrupts
-	ldy	5,s		; Y = number of bytes to send
-	beq	out@		; no byte to write - leave
+	tstb			; rawflag?
+	beq	skip@		; nope - then skip switching to process map
+	jsr	map_process_always
+skip@	ldy	5,s		; Y = number of bytes to send
+	beq	ok@		; no bytes to write - leave
 	jsr	DWWrite		; send to DW
 	ldx	7,s		; X is receive buffer
 	ldy	9,s		; Y = number of bytes to receive
-	beq	out@		; no bytes to send - leave
+	beq	ok@		; no bytes to send - leave
 	jsr	DWRead		; read in that many bytes
 	bcs	frame@		; C set on framing error
 	bne	part@		; Z zet on all bytes received
-out@	ldx	#0		; no error
+ok@	ldx	#0		; no error
+out@	jsr	map_kernel
 	puls	cc,y,pc		; return
 frame@	ldx	#-1		; frame error
-	puls	cc,y,pc		; return
+	bra	out@
 part@	ldx	#-2		; not all bytes received!
-	puls	cc,y,pc		; return
+	bra 	out@
 
 _dw_reset:
 	; maybe reinitalise PIA here?
