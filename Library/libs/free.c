@@ -1,155 +1,41 @@
-/* Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
- * This file is part of the Linux-8086 C library and is distributed
- * under the GNU Library General Public License.
- *
- * This is a combined alloca/malloc package. It uses a classic algorithm
- * and so may be seen to be quite slow compared to more modern routines
- * with 'nasty' distributions.
+/*
+ *	This is an ANSI C version of the classic K & R memory allocator. The only
+ *	real difference here is that we handle large allocations and signs correctly
+ *	which the original didn't do portably. Specifically we
+ *	- correctly handle signed sbrk when the largest allocation allowed is
+ *	  unsigned
+ *	- catch the case of a malloc close to the full size_t overflowing in the
+ *	  nblock computation.
  */
 
-#include "malloc-l.h"
-
-/* Start the alloca with just the dumb version of malloc */
-void *(*__alloca_alloc) __P((size_t)) = __mini_malloc;
-
-/* the free list is a single list of free blocks. __freed_list points to
-   the highest block (highest address) and each block points to the lower
-   block (lower address). last block points to 0 (initial value of
-   _freed_list)
-*/
-mem *__freed_list = 0;
-
-#ifdef VERBOSE
-/* NB: Careful here, stdio may use malloc - so we can't */
-#include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
-static void pstr __P((char *));
-static void phex __P((unsigned));
-static void noise __P((char *, mem *));
-static void pstr(char *str)
-{
-	write(2, str, strlen(str));
-} static void phex(unsigned val)
-{
-	char buf[8];
-	strcpy(buf, "000");
-	ltoa((long) val, buf + 3, 16);
-	pstr(buf + strlen(buf + 4));
-} void __noise(char *y, mem * x)
-{
-	pstr("Malloc ");
-	phex((unsigned) x);
-	pstr(" sz ");
-	phex(x ? (unsigned) m_size(x) : 0);
-	pstr(" nxt ");
-	phex(x ? (unsigned) m_next(x) : 0);
-	pstr(" is ");
-	pstr(y);
-	pstr("\n");
-}
-#endif				/*  */
+#include <stdint.h>
+#include <unistd.h>
+#include "malloc.h"
+
 void free(void *ptr)
 {
-	register mem *top, *chk = (mem *) ptr;
-	if (chk == 0)
-		return;		/* free(NULL) - be nice */
-	chk--;
-      try_this:;
-	top = (mem *) sbrk(0);
-	if (m_add(chk, m_size(chk)) >= top) {
-		noise("FREE brk", chk);
-		brk((void *) ((uchar *) top - m_size(chk)));
+	struct memh *mh = MH(ptr), *p;
 
-		/* Adding this code allow free to release blocks in any order;
-		 * they can still only be allocated from the top of the heap
-		 * tho.
-		 */
-#ifdef __MINI_MALLOC__
-                /* FIXME: void * cast appears to be a cc65 bug */
-		if (__alloca_alloc == (void *)__mini_malloc && __freed_list) {
-			chk = __freed_list;
-			__freed_list = m_next(__freed_list);
-			goto try_this;
-		}
-#endif				/*  */
+	if (ptr == NULL)
+		return;
+
+	/* Find the free list block that is just before us */
+	for (p = __mfreeptr; !(p < mh && mh < p->next); p = p->next)
+		if (p >= p->next && (p < mh || mh < p->next))
+			break;
+	/* Fix up and if we can merge forward */
+	if (mh + mh->size == p->next) {
+		mh->size += p->next->size;
+		mh->next = p->next->next;
+	} else
+		mh->next = p->next;
+	/* Ditto backwards */
+	if (p + p->size == mh) {
+		p->size += mh->size;
+		p->next = mh->next;
+	} else {
+		p->next = mh;
 	}
-
-	else {			/* Nope, not sure where this goes, leave it for malloc to deal with */
-
-#ifdef __MINI_MALLOC__
-		/* check if block is already on free list.
-		   if it is, return without doing nothing */
-		top = __freed_list;
-		while (top) {
-			if (top == chk)
-				return;
-			top = m_next(top);
-		}
-
-		/* else add it to free list */
-		if (!__freed_list || chk > __freed_list) {
-
-			/* null free list or block above free list */
-			m_next(chk) = __freed_list;
-			__freed_list = chk;
-		}
-
-		else {
-
-			/* insert block in free list, ordered by address */
-			register mem *prev = __freed_list;
-			top = __freed_list;
-			while (top && top > chk) {
-				prev = top;
-				top = m_next(top);
-			}
-			m_next(chk) = top;
-			m_next(prev) = chk;
-		}
-
-#else				/*  */
-		m_next(chk) = __freed_list;
-		__freed_list = chk;
-
-#endif				/*  */
-		noise("ADD LIST", chk);
-	}
-}
-
-void *__mini_malloc(size_t size)
-{
-	register mem *ptr;
-	register unsigned int sz;
-
-	/* First time round this _might_ be odd, But we won't do that! */
-#if 0
-	sz = (unsigned int) sbrk(0);
-	if (sz & (sizeof(struct mem_cell) - 1)) {
-		if (sbrk
-		    (sizeof(struct mem_cell) -
-		     (sz & (sizeof(struct mem_cell) - 1))) < 0)
-			goto nomem;
-	}
-#endif				/*  */
-	if (size == 0)
-		return 0;
-
-	/* Ensure size is aligned, otherwise our memory nodes become unaligned
-	 * and we get hard-to-debug errors on platforms which require
-	 * aligned accesses. */
-	size = ALIGNUP(size + sizeof(struct mem_cell));
-
-	/* Minor oops here, sbrk has a signed argument */
-	if (size > (((unsigned) -1) >> 1) - sizeof(struct mem_cell) * 2) {
-	      nomem:errno = ENOMEM;
-		return 0;
-	}
-	size += sizeof(struct mem_cell);	/* Round up and leave space for size field */
-	ptr = (mem *) sbrk(size);
-	if ((int) ptr == -1)
-		return 0;
-	m_size(ptr) = size;
-	noise("CREATE", ptr);
-	return ptr + 1;
+	__mfreeptr = p;
 }

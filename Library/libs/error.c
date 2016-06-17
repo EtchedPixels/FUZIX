@@ -11,12 +11,15 @@
 #include <paths.h>
 #include <errno.h>
 #include <fcntl.h>
-#include "malloc-l.h"
 
 static uint8_t *__sys_errlist;
 static uint16_t *__sys_errptr;
 static int __sys_nerr;
 static char retbuf[80];
+
+#define ALIGNMENT	16
+
+#define ALIGNUP(s) (((s) + ALIGNMENT - 1) & ~(ALIGNMENT - 1))
 
 static void _load_errlist(void)
 {

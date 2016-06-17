@@ -1,29 +1,53 @@
-/* Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
- * This file is part of the Linux-8086 C library and is distributed
- * under the GNU Library General Public License.
- *
- * This is a combined alloca/malloc package. It uses a classic algorithm
- * and so may be seen to be quite slow compared to more modern routines
- * with 'nasty' distributions.
- */  
-    
-#include "malloc-l.h"
+/*
+ *	This is an ANSI C version of the classic K & R memory allocator. The only
+ *	real difference here is that we handle large allocations and signs correctly
+ *	which the original didn't do portably. Specifically we
+ *	- correctly handle signed sbrk when the largest allocation allowed is
+ *	  unsigned
+ *	- catch the case of a malloc close to the full size_t overflowing in the
+ *	  nblock computation.
+ */
 
-void *realloc(void *ptr, size_t size) 
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
+#include "malloc.h"
+
+/*
+ * We cannot just free/malloc because there is a pathalogical case when we free
+ * a block which is merged with the block before and then we allocate some of the
+ * combined block. In that case we will a new header into the middle of the user
+ * bytes.
+ */
+void *realloc(void *ptr, size_t size)
 {
-	void *nptr;
-	unsigned int osize;
-	if (ptr == 0)
+	struct memh *mh = MH(ptr);
+	void *np;
+	size_t nblocks;
+
+	if (size == 0) {
+		free(ptr);
+		return NULL;
+	}
+
+	if (ptr == NULL)
 		return malloc(size);
-	
-	/* ??? what if I really want to free rest of block ? */ 
-	if (size <= (osize = (m_size(((mem *) ptr) - 1) - 1) * sizeof(mem)))
+
+	nblocks =
+	    (size + sizeof(struct memh) + sizeof(struct memh) -
+	     1) / sizeof(struct memh);
+
+	/* If size in mem blocks is sufficiently similar (make this fuzzier ?) */
+	if (nblocks == mh->size)
 		return ptr;
-	if ((nptr = malloc(size)) == NULL)
-		return 0;
-	memcpy(nptr, ptr, osize);
+
+	if (nblocks < mh->size)
+		return ptr;
+	np = malloc(size);
+	if (np == NULL)
+		return ptr;
+	memcpy(np, ptr, mh->size * sizeof(struct memh));
 	free(ptr);
-	return nptr;
+	return np;
 }
-
-
