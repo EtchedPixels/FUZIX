@@ -73,7 +73,7 @@ int  exit_status;
 
 void warn(int warn_number, char *option)
 {
-    static char *warn_msg[] =
+    static const char *warn_msg[] =
     {
 	"%s: Option -d allowed only with -f\n",
 	"%s: -%s overrides earlier option\n",
@@ -88,7 +88,7 @@ void warn(int warn_number, char *option)
 
 void cuterror(int err)
 {
-    static char *err_mes[] =
+    static const char *err_mes[] =
     {
 	"%s: syntax error\n",
 	"%s: position must be >0\n",
