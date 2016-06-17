@@ -35,22 +35,22 @@ extern char *tzname[2];
 extern int daylight;
 extern long timezone;
 
-extern clock_t clock __P ((void));
-extern time_t mktime __P ((struct tm * __tp));
-extern double difftime __P ((time_t *__time2, time_t *__time1));
+extern clock_t clock(void);
+extern time_t mktime(struct tm * __tp);
+extern double difftime(time_t *__time2, time_t *__time1);
 
 
-extern void __tm_conv __P((struct tm *tmbuf, time_t *t, int offset));
-extern char *asctime __P ((struct tm * __tp));
-extern char *asctime_r __P((struct tm *, char * __buf));
-extern char *ctime __P ((time_t * __tp));
-extern char *ctime_r __P ((time_t * __tp, char * __buf));
-extern void tzset __P ((void));
+extern void __tm_conv(struct tm *tmbuf, time_t *t, int offset);
+extern char *asctime(struct tm * __tp);
+extern char *asctime_r(struct tm *, char * __buf);
+extern char *ctime(time_t * __tp);
+extern char *ctime_r(time_t * __tp, char * __buf);
+extern void tzset(void);
 
-extern struct tm *gmtime __P ((time_t *__tp));
-extern struct tm *localtime __P ((time_t * __tp));
-extern struct tm *gmtime_r(time_t *tvec, struct tm *result);
-extern struct tm *localtime_r(time_t *tvec, struct tm *result);
+extern struct tm *gmtime(time_t *__tp);
+extern struct tm *localtime(time_t * __tp);
+extern struct tm *gmtime_r(time_t *__tvec, struct tm *__result);
+extern struct tm *localtime_r(time_t *__tvec, struct tm *__result);
 
 typedef int clockid_t;
 
@@ -59,14 +59,14 @@ typedef int clockid_t;
 #define CLOCK_REALTIME	0
 #define CLOCK_MONOTONIC 1
 
-extern int clock_getres(clockid_t clk_id,  struct timespec *res);
-extern int clock_gettime(clockid_t clk_id,  struct timespec *tp);
-extern int clock_nanosleep(clockid_t clk_id, int flags,
-	const struct timespec *request, struct timespec *remain);
-extern int clock_settime(clockid_t clk_id,  const struct timespec *tp);
+extern int clock_getres(clockid_t __clk_id,  struct timespec *__res);
+extern int clock_gettime(clockid_t __clk_id,  struct timespec *__tp);
+extern int clock_nanosleep(clockid_t __clk_id, int __flags,
+	const struct timespec *__request, struct timespec *__remain);
+extern int clock_settime(clockid_t __clk_id,  const struct timespec *__tp);
 
 #define TIMER_ABSTIME	1
 
-extern int nanosleep(const struct timespec *request, struct timespec *remain);
+extern int nanosleep(const struct timespec *__request, struct timespec *__remain);
 
 #endif

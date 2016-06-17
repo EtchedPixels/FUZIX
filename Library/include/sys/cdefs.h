@@ -13,7 +13,6 @@
 #endif	/* __STDC__ */
 
 /* This is not a typedef so `const __ptr_t' does the right thing */
-/* For K&R 'void' defined as 'char' */
 #define __ptr_t void *
 
 #endif

@@ -6,61 +6,64 @@
 #include <stddef.h>
 
 /* Basic string functions */
-extern size_t strlen __P ((const char* __str));
+extern size_t strlen(const char *__s);
 
-extern char * strcat __P ((char*, const char*));
-extern char * strcpy __P ((char*, const char*));
-extern int strcmp __P ((const char*, const char*));
+extern char *strcat(char *__dest, const char *__src);
+extern char *strcpy(char *__dest, const char *__src);
+extern int strcmp(const char *__s1, const char *__s2);
 
-extern char * strncat __P ((char*, const char*, size_t));
-extern char * strncpy __P ((char*, const char*, size_t));
-extern int strncmp __P((const char*, const char*, size_t));
+extern char *strncat(char *__dest, const char *__src, size_t __n);
+extern char *strncpy(char *__dest, const char *__src, size_t __n);
+extern int strncmp(const char *__s1, const char *__s2, size_t __n);
 
-extern int stricmp __P((const char*, const char*));
-extern int strnicmp __P((const char*, const char*, size_t));
+extern int stricmp(const char *__s1, const char *__s2);
+extern int strnicmp(const char *__s1, const char *__s2, size_t __n);
 
-extern int strcasecmp __P((const char*, const char*));
-extern int strncasecmp __P((const char*, const char*, size_t));
+extern int strcasecmp(const char *__s1, const char *__s2);
+extern int strncasecmp(const char *__s1, const char *__s2, size_t __n);
 
-extern char * strchr __P ((const char*, int));
-extern char * strrchr __P ((const char*, int));
-extern char * strdup __P ((const char*));
+extern char *strchr(const char *__s, int __c);
+extern char *strrchr(const char *__s , int __c);
+extern char *strdup(const char *__s);
+/* FIXME: missing but in POSIX */
+extern char *strndup(const char *__s, int __n);
 
 /* Basic mem functions */
-extern void * memcpy __P ((void*, const void*, size_t));
-extern void * memccpy __P ((void*, const void*, int, size_t));
-extern void * memchr __P ((const void*, int, size_t));
-extern void * memset __P ((void*, int, size_t));
-extern int memcmp __P ((const void*, const void*, size_t));
+extern void *memcpy(void *__dest, const void *__src, size_t __n);
+extern void *memccpy(void *__dest, const void *__src, int __c, size_t __n);
+extern void *memchr(const void *__src, int __c, size_t __n);
+extern void *memset(void *__s, int __c, size_t __n);
+extern int memcmp(const void *__s1, const void *__s2, size_t __n);
 
-extern void * memmove __P ((void*, const void*, size_t));
+extern void *memmove(void *__dest, const void *__src, size_t __n);
 
 /* BSDisms */
-extern char *index __P ((const char *, int));
-extern char *rindex __P ((const char *, int));
-extern void bcopy __P ((const void*, void*, size_t));
-extern void bzero __P ((void*, size_t));
+extern char *index(const char *__s, int __c);
+extern char *rindex(const char *__s, int __c);
+extern void bcopy(const void *__src, void *__dst, size_t __n);
+extern void bzero(void *__dst, size_t __n);
 
 /* Other common BSD functions */
-extern char *strpbrk __P ((const char *, const char *));
-extern char *strsep __P ((char **, const char *));
-extern char *strstr __P ((const char *, const char *));
-extern char *strtok __P ((char *, const char *));
-extern size_t strcspn __P ((const char *, const char *));
-extern size_t strspn __P ((const char *, const char *));
+extern char *strpbrk(const char *__s, const char *__accept);
+extern char *strsep(char **__stringp, const char *__delim);
+extern char *strstr(const char *__haystack, const char *__needle);
+extern char *strtok(char *__str, const char *__delim);
+extern size_t strcspn(const char *__s, const char *__reject);
+extern size_t strspn(const char *__s, const char *__accept);
 
-extern size_t strlcpy __P((char *, const char *, size_t));
-extern size_t strlcat __P((char *, const char *, size_t));
+extern size_t strlcpy(char *__dest, const char *__src, size_t __maxlen);
+extern size_t strlcat(char *__dest, const char *__src, size_t __maxlen);
 
-extern char *strcasestr __P((const char *, const char *));
+/* FIXME: GNUism */
+extern char *strcasestr(const char *__needle, const char *__haystack);
 
 /* Later ISOisms */
-extern size_t strnlen __P((const char *, size_t));
-extern size_t strxfrm __P((char *, const char *, size_t));
-extern int strcoll __P((const char *s1, const char *s2));
+extern size_t strnlen(const char *__s, size_t __maxlen);
+extern size_t strxfrm(char *__dest, const char *__src, size_t __n);
+extern int strcoll(const char *__s1, const char *__s2);
 
-extern const char *strsignal __P((int s));
-extern char *strerror __P((int __errno));
+extern const char *strsignal(int __sig);
+extern char *strerror(int __errno);
 
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
 #define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)

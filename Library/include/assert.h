@@ -15,14 +15,14 @@
 
 #else /* NDEBUG */
 
-extern void __assert __P((char *, char *, int));
+extern void __assert(const char *__expr, const char *__file, const int __line);
 
 #define assert(expr)	\
   ((void) ((expr) || (__assert (__STRING(expr),  __FILE__, __LINE__), 0)))
 
 #endif /* NDEBUG */
 
-extern void __errput __P((char *));
+extern void __errput(const char *__txt);
 
 #endif /* __ASSERT_H */
 

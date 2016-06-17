@@ -27,72 +27,74 @@ typedef struct {
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-extern void exit __P((int));
-extern void abort __P((void));
+extern void exit(int __status);
+extern void abort(void);
 
 
-extern int rand __P((void));
-extern void srand __P((uint seed));
+extern int rand(void);
+extern void srand(unsigned int __seed);
 
-extern char *__longtoa __P((unsigned long, char *, int, char, char));
-extern char *ultoa __P((unsigned long value, char *strP, int radix));
-extern char *ltoa __P((long value, char *strP, int radix));
+/* FIXME: the *toa formats are not standard so belong in a fuzix namespace */
+/* FIXME: untangle all our excessive ultoa etc variants */
+extern char *ultoa(unsigned long __value, char *__strP, int __radix);
+extern char *ltoa(long __value, char *__strP, int __radix);
 
-extern int atoi __P((const char *str));
-extern long atol __P((const char *str));
-extern double atof __P((const char *str));
+extern int atoi(const char *__nptr);
+extern long atol(const char *__nptr);
+extern double atof(const char *__nptr);
 
-extern char *_itoa __P((int value));
-extern char *_uitoa __P((unsigned int value));
-extern char *_ltoa __P((long value));
-extern char *_ultoa __P((unsigned long value));
+extern char *_itoa(int __value);
+extern char *_uitoa(unsigned int __value);
+extern char *_ltoa(long __value);
+extern char *_ultoa(unsigned long __value);
 
-extern char *__ultostr __P((unsigned long value, int radix));
-extern char *__ltostr __P((long value, int radix));
+extern char *__ultostr(unsigned long value, int __radix);
+extern char *__ltostr(long __value, int __radix);
 
-extern long strtol __P ((const char * nptr, char ** endptr, int base));
-extern unsigned long strtoul __P ((const char * nptr,
-				   char ** endptr, int base));
+extern long strtol(const char *__nptr, char **__endptr, int __base);
+extern unsigned long strtoul(const char *__nptr,
+				   char **__endptr, int __base);
 
-extern int mkstemp(char *template);
-extern int mkstemps(char *template, int suffix);
+extern int mkstemp(char *__template);
+extern int mkstemps(char *__template, int __suffix);
 
 #ifndef __HAS_NO_DOUBLES__
-extern double strtod __P ((const char * nptr, char ** endptr));
+extern double strtod(const char *__nptr, char **__endptr);
 #endif
 
 extern char **environ;
-extern char *getenv __P((char *));
-extern int putenv __P((char *));
-extern int setenv __P((char *, char *, int));
-extern void unsetenv __P((char *));
+extern char *getenv(char *__name);
+extern int putenv(char *__name);
+extern int setenv(char *__name, char *__value, int __overwrite);
+extern void unsetenv(char *__name);
 
-typedef void (*atexit_t) __P((void));
-extern int atexit __P((atexit_t));
+/* FIXME: atexit_t doesn't appear to be a standard type so should __atexit_t ?? */
+typedef void (*atexit_t)(void);
+extern int atexit(atexit_t __function);
 
-extern char *crypt __P((char *__key, char *__salt));
+extern char *crypt(char *__key, char *__salt);
 
-typedef int (*cmp_func_t) __P((const void *, const void *));
+typedef int (*cmp_func_t)(const void *__a, const void *__b);
 
 extern int _bsearch;
-extern void *bsearch __P((void *key, void *base, size_t num, size_t size, cmp_func_t cmp));
-extern void *lfind __P((void *key, void *base, size_t *num, size_t size, cmp_func_t cmp));
-extern void *lsearch __P((void *key, void *base, size_t *num, size_t size, cmp_func_t cmp));
+extern void *bsearch(void *__key, void *__base, size_t __num, size_t __size, cmp_func_t __cmp);
+extern void *lfind(void *__key, void *__base, size_t *__num, size_t __size, cmp_func_t __cmp);
+extern void *lsearch(void *__key, void *__base, size_t *__num, size_t __size, cmp_func_t __cmp);
 extern void *_qbuf;
-extern void qsort __P((void *base, size_t num, size_t size, cmp_func_t cmp));
+extern void qsort(void *__base, size_t __num, size_t __size, cmp_func_t __cmp);
 
 #define mb_len(a,b)	strnlen(a,b)
 
 extern int opterr;
 extern int optind;
 extern char *optarg;
-extern int getopt __P((int argc, char *argv[], char *optstring));
+extern int getopt(int __argc, char *__argv[], char *__optstring);
 
-extern char *getpass(char *prompt);
+extern char *getpass(char *__prompt);
 
 extern int _argc;
 extern char **_argv;
 
-extern int getloadavg __P((unsigned int loadavg[], int nelem));
+extern int getloadavg(unsigned int __loadavg[], int __nelem);
 
 #endif /* __STDLIB_H */

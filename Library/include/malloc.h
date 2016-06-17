@@ -4,10 +4,9 @@
 #include <types.h>
 #endif
 
-extern void free __P((void *));
-extern void *malloc __P((size_t));
-extern void *realloc __P((void *, size_t));
-extern void *calloc __P((size_t, size_t));
-extern void *alloca __P((size_t));
+extern void free(void *__ptr);
+extern void *malloc(size_t __size);
+extern void *realloc(void *__ptr, size_t __size);
+extern void *calloc(size_t __nmemb, size_t __size);
 
 #endif

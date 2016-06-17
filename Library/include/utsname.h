@@ -13,6 +13,6 @@ struct utsname {
 	char domainname[14];
 };
 
-extern int uname __P ((struct utsname * __utsbuf));
+extern int uname(struct utsname * __utsbuf);
 
 #endif

@@ -2,15 +2,9 @@
 
 #ifndef CURSES_H
 
-#define _BIG_MACHINE_
-
 #include <termios.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-#ifndef _PROTOTYPE
-#define _PROTOTYPE(x,y) 	x y
-#endif
 
 typedef int bool;
 
@@ -139,90 +133,88 @@ extern unsigned int ACS_BOARD;
 extern unsigned int ACS_LANTERN;
 extern unsigned int ACS_BLOCK;
 
-#ifdef _BIG_MACHINE_
-_PROTOTYPE( char *unctrl, (char _c) );
-_PROTOTYPE( int baudrate, (void));
-_PROTOTYPE( void beep, (void));
-_PROTOTYPE( void cbreak, (void));
-_PROTOTYPE( void clearok, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( void clrscr, (void));
-_PROTOTYPE( void curs_set, (int _visibility) );
-_PROTOTYPE( void delwin, (WINDOW *_win) );
-_PROTOTYPE( void doupdate, (void));
-_PROTOTYPE( void echo, (void));
-_PROTOTYPE( int endwin, (void));
-_PROTOTYPE( int erasechar, (void));
-_PROTOTYPE( void fatal, (char *_s) );
-_PROTOTYPE( int fixterm, (void));
-_PROTOTYPE( void flash, (void));
-_PROTOTYPE( void gettmode, (void));
-_PROTOTYPE( void idlok, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( WINDOW *initscr, (void));
-_PROTOTYPE( void keypad, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( int killchar, (void));
-_PROTOTYPE( void leaveok, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( char *longname, (void));
-_PROTOTYPE( void meta, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( int mvcur, (int _oldy, int _oldx, int _newy, int _newx) );
-_PROTOTYPE( int mvinch, (int _y, int _x) );
-_PROTOTYPE( int mvprintw, (int _y, int _x, const char *_fmt, ...) );
-_PROTOTYPE( int mvscanw, (int _y, int _x, const char *_fmt, ...) );
-_PROTOTYPE( int mvwin, (WINDOW *_win, int _begy, int _begx) );
-_PROTOTYPE( int mvwinch, (WINDOW *_win, int _y, int _x) );
-_PROTOTYPE( int mvwprintw, (WINDOW *_win, int _y, int _x, const char *_fmt, ...) );
-_PROTOTYPE( int mvwscanw, (WINDOW *_win, int _y, int _x, const char *_fmt,
-                                                                        ...) );
-_PROTOTYPE( WINDOW *newwin, (int _num_lines, int _num_cols, int _y, int _x));
-_PROTOTYPE( void nl, (void));
-_PROTOTYPE( void nocbreak, (void));
-_PROTOTYPE( void nodelay, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( void noecho, (void));
-_PROTOTYPE( void nonl, (void));
-_PROTOTYPE( void noraw, (void));
-_PROTOTYPE( int outc, (int _c) );
-_PROTOTYPE( void overlay, (WINDOW *_win1, WINDOW *_win2) );
-_PROTOTYPE( void overwrite, (WINDOW *_win1, WINDOW *_win2) );
-_PROTOTYPE( void poscur, (int _r, int _c) );
-_PROTOTYPE( int printw, (const char *_fmt, ...) );
-_PROTOTYPE( void raw, (void));
-_PROTOTYPE( int resetterm, (void));
-_PROTOTYPE( int saveoldterm, (void));
-_PROTOTYPE( int saveterm, (void));
-_PROTOTYPE( int savetty, (void));
-_PROTOTYPE( int scanw, (const char *_fmt, ...) );
-_PROTOTYPE( void scroll, (WINDOW *_win) );
-_PROTOTYPE( void scrollok, (WINDOW *_win, bool _flag) );
-_PROTOTYPE( int setscrreg, (int _top, int _bottom) );
-_PROTOTYPE( int setterm, (char *_type) );
-_PROTOTYPE( int setupterm, (void));
-_PROTOTYPE( WINDOW *subwin, (WINDOW *_orig, int _nlines, int _ncols, int _y,
-					int _x));
-_PROTOTYPE( int tabsize, (int _ts) );
-_PROTOTYPE( void touchwin, (WINDOW *_win) );
-_PROTOTYPE( int waddch, (WINDOW *_win, int _c) );
-_PROTOTYPE( int waddstr, (WINDOW *_win, char *_str) );
-_PROTOTYPE( int wbox, (WINDOW *_win, int _ymin, int _xmin, int _ymax,
-				int _xmax, unsigned int _v, unsigned int _h) );
-_PROTOTYPE( void wclear, (WINDOW *_win) );
-_PROTOTYPE( int wclrtobot, (WINDOW *_win) );
-_PROTOTYPE( int wclrtoeol, (WINDOW *_win) );
-_PROTOTYPE( int wdelch, (WINDOW *_win) );
-_PROTOTYPE( int wdeleteln, (WINDOW *_win) );
-_PROTOTYPE( void werase, (WINDOW *_win) );
-_PROTOTYPE( int wgetch, (WINDOW *_win) );
-_PROTOTYPE( int wgetstr, (WINDOW *_win, char *_str) );
-_PROTOTYPE( int winch, (WINDOW *_win) );
-_PROTOTYPE( int winsch, (WINDOW *_win, char _c) );
-_PROTOTYPE( int winsertln, (WINDOW *_win) );
-_PROTOTYPE( int wmove, (WINDOW *_win, int _y, int _x) );
-_PROTOTYPE( void wnoutrefresh, (WINDOW *_win) );
-_PROTOTYPE( int wprintw, (WINDOW *_win, const char *_fmt, ...));
-_PROTOTYPE( void wrefresh, (WINDOW *_win) );
-_PROTOTYPE( int wscanw, (WINDOW *_win, const char *_fmt, ...));
-_PROTOTYPE( int wsetscrreg, (WINDOW *_win, int _top, int _bottom) );
-_PROTOTYPE( int wtabsize, (WINDOW *_win, int _ts) );
+extern char *unctrl(char _c);
+extern int baudrate(void);
+extern void beep(void);
+extern void cbreak(void);
+extern void clearok(WINDOW *_win, bool _flag);
+extern void clrscr(void);
+extern void curs_set(int _visibility);
+extern void delwin(WINDOW *_win);
+extern void doupdate(void);
+extern void echo(void);
+extern int endwin(void);
+extern int erasechar(void);
+extern void fatal(char *_s);
+extern int fixterm(void);
+extern void flash(void);
+extern void gettmode(void);
+extern void idlok(WINDOW *_win, bool _flag);
+extern WINDOW *initscr(void);
+extern void keypad(WINDOW *_win, bool _flag);
+extern int killchar(void);
+extern void leaveok(WINDOW *_win, bool _flag);
+extern char *longname(void);
+extern void meta(WINDOW *_win, bool _flag);
+extern int mvcur(int _oldy, int _oldx, int _newy, int _newx);
+extern int mvinch(int _y, int _x);
+extern int mvprintw(int _y, int _x, const char *_fmt, ...);
+extern int mvscanw(int _y, int _x, const char *_fmt, ...);
+extern int mvwin(WINDOW *_win, int _begy, int _begx);
+extern int mvwinch(WINDOW *_win, int _y, int _x);
+extern int mvwprintw(WINDOW *_win, int _y, int _x, const char *_fmt, ...);
+extern int mvwscanw(WINDOW *_win, int _y, int _x, const char *_fmt,
+                                                                        ...);
+extern WINDOW *newwin(int _num_lines, int _num_cols, int _y, int _x);
+extern void nl(void);
+extern void nocbreak(void);
+extern void nodelay(WINDOW *_win, bool _flag);
+extern void noecho(void);
+extern void nonl(void);
+extern void noraw(void);
+extern int outc(int _c);
+extern void overlay(WINDOW *_win1, WINDOW *_win2);
+extern void overwrite(WINDOW *_win1, WINDOW *_win2);
+extern void poscur(int _r, int _c);
+extern int printw(const char *_fmt, ...);
+extern void raw(void);
+extern int resetterm(void);
+extern int saveoldterm(void);
+extern int saveterm(void);
+extern int savetty(void);
+extern int scanw(const char *_fmt, ...);
+extern void scroll(WINDOW *_win);
+extern void scrollok(WINDOW *_win, bool _flag);
+extern int setscrreg(int _top, int _bottom);
+extern int setterm(char *_type);
+extern int setupterm(void);
+extern WINDOW *subwin(WINDOW *_orig, int _nlines, int _ncols, int _y,
+					int _x);
+extern int tabsize(int _ts);
+extern void touchwin(WINDOW *_win);
+extern int waddch(WINDOW *_win, int _c);
+extern int waddstr(WINDOW *_win, char *_str);
+extern int wbox(WINDOW *_win, int _ymin, int _xmin, int _ymax,
+				int _xmax, unsigned int _v, unsigned int _h);
+extern void wclear(WINDOW *_win);
+extern int wclrtobot(WINDOW *_win);
+extern int wclrtoeol(WINDOW *_win);
+extern int wdelch(WINDOW *_win);
+extern int wdeleteln(WINDOW *_win);
+extern void werase(WINDOW *_win);
+extern int wgetch(WINDOW *_win);
+extern int wgetstr(WINDOW *_win, char *_str);
+extern int winch(WINDOW *_win);
+extern int winsch(WINDOW *_win, char _c);
+extern int winsertln(WINDOW *_win);
+extern int wmove(WINDOW *_win, int _y, int _x);
+extern void wnoutrefresh(WINDOW *_win);
+extern int wprintw(WINDOW *_win, const char *_fmt, ...);
+extern void wrefresh(WINDOW *_win);
+extern int wscanw(WINDOW *_win, const char *_fmt, ...);
+extern int wsetscrreg(WINDOW *_win, int _top, int _bottom);
+extern int wtabsize(WINDOW *_win, int _ts);
 
-#endif
 #define CURSES_H
 
 #endif

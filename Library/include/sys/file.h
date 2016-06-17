@@ -17,6 +17,6 @@
 #define LOCK_UN		2
 #define LOCK_NB		O_NDELAY
 
-extern int flock(int fd, int operation);
+extern int flock(int __fd, int __operation);
 
 #endif

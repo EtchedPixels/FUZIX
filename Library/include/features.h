@@ -7,30 +7,6 @@
 #endif
 #endif
 
-#ifdef __STDC__
-
-#ifndef VOID
-#define VOID	void
-#endif
-#ifndef __P
-#define __P(a)	a
-#endif
-#define __const const
-
-#else	/* K&R */
-
-#ifndef VOID
-#define VOID
-#endif
-#ifndef __P
-#define __P(a)	()
-#endif
-#define __const
-#define volatile
-#define void	char
-
-#endif	/* __STDC__ */
-
 #include <sys/cdefs.h>
 
 #endif

@@ -39,9 +39,8 @@
 typedef struct flock {
    short l_type;
    short l_whence;
-   long l_start;
-   long l_len;
-   short l_sysid;
+   off_t l_start;
+   off_t l_len;
    pid_t l_pid;
 } flock_t;
 

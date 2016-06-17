@@ -16,18 +16,18 @@ struct group {
 	char	**gr_mem;	/* Member list. */
 };
 
-extern void setgrent __P((void));
-extern void endgrent __P((void));
-extern struct group *getgrent __P((void));
+extern void setgrent(void);
+extern void endgrent(void);
+extern struct group *getgrent(void);
 
-extern struct group *getgrgid __P((const gid_t gid));
-extern struct group *getgrnam __P((const char * name));
+extern struct group *getgrgid(const gid_t __gid);
+extern struct group *getgrnam(const char *__name);
 
-extern struct group * fgetgrent __P((FILE * file));
+extern struct group *fgetgrent(FILE *__file);
 
-extern int initgroups __P((const char * user, gid_t gid));
+extern int initgroups(const char *__user, gid_t __gid);
 
-extern struct group * __getgrent __P((int grp_fd));
+extern struct group * __getgrent(int __grp_fd);
 
 extern char *_path_group;
 

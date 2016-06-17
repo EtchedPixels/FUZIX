@@ -4,18 +4,18 @@
 #include <stdarg.h>
 /* BSD err functionality */
 
-extern void err(int eval, const char *fmt, ...);
-extern void errc(int eval, int code, const char *fmt, ...);
-extern void errx(int eval, const char *fmt, ...);
-extern void warn(const char *fmt, ...);
-extern void warnc(int code, const char *fmt, ...);
-extern void warnx(const char *fmt, ...);
+extern void err(int __eval, const char *__fmt, ...);
+extern void errc(int __eval, int __code, const char *__fmt, ...);
+extern void errx(int __eval, const char *__fmt, ...);
+extern void warn(const char *__fmt, ...);
+extern void warnc(int __code, const char *__fmt, ...);
+extern void warnx(const char *__fmt, ...);
 
-extern void verr(int eval, const char *fmt, va_list args);
-extern void verrc(int eval, int code, const char *fmt, va_list args);
-extern void verrx(int eval, const char *fmt, va_list args);
-extern void vwarn(const char *fmt, va_list args);
-extern void vwarnc(int code, const char *fmt, va_list args);
-extern void vwarnx(const char *fmt, va_list args);
+extern void verr(int __eval, const char *__fmt, va_list __args);
+extern void verrc(int __eval, int __code, const char *__fmt, va_list __args);
+extern void verrx(int __eval, const char *__fmt, va_list __args);
+extern void vwarn(const char *__fmt, va_list __args);
+extern void vwarnc(int __code, const char *__fmt, va_list __args);
+extern void vwarnx(const char *__fmt, va_list __args);
 
 #endif

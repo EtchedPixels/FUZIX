@@ -34,9 +34,9 @@ extern int inet_pton(int __af, const char *__src, void *__dst);
 
 #if 0
 /* These are obsolete to the point we don't bother */
-extern struct in_addr inet_makeaddr(in_addr_t net, ip_addr_t host);
-extern in_addr_t inet_lnaof(struct in_addr in);
-extern in_addr_t inet_netof(struct in_addr in);
+extern struct in_addr inet_makeaddr(in_addr_t __net, ip_addr_t __host);
+extern in_addr_t inet_lnaof(struct in_addr __in);
+extern in_addr_t inet_netof(struct in_addr __in);
 #endif
 
 #endif

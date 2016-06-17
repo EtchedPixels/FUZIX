@@ -32,14 +32,14 @@ struct utmp {
 	long	ut_addr;		/* IP addr of remote host */
 };
 
-extern void		setutent __P((void));
-extern void		utmpname __P((const char *));
-extern struct utmp *	getutent __P((void));
-extern struct utmp *	getutid __P((const struct utmp *));
-extern struct utmp *	getutline __P((const struct utmp *));
-extern struct utmp *	pututline __P((const struct utmp *));
-extern void		endutent __P((void));
+extern void		setutent(void);
+extern void		utmpname(const char *__file);
+extern struct utmp *	getutent(void);
+extern struct utmp *	getutid(const struct utmp *__ut);
+extern struct utmp *	getutline(const struct utmp *__ut);
+extern struct utmp *	pututline(const struct utmp *__ut);
+extern void		endutent(void);
 
-struct utmp *		__getutent __P((int));
+struct utmp *		__getutent(int);
 
 #endif /* __UTMP_H */

@@ -5,28 +5,24 @@
 
 #include <stdint.h>
 
-extern int toupper(int c);
-extern int tolower(int c);
+extern int toupper(int __c);
+extern int tolower(int __c);
 
-extern int isalnum(int c);
-extern int isalpha(int c);
-extern int isascii(int c);
-extern int isblank(int c);
-extern int iscntrl(int c);
-extern int isdigit(int c);
-extern int isgraph(int c);
-extern int islower(int c);
-extern int isprint(int c);
-extern int ispunct(int c);
-extern int isspace(int c);
-extern int isupper(int c);
-extern int isxdigit(int c);
+extern int isalnum(int __c);
+extern int isalpha(int __c);
+extern int isascii(int __c);
+extern int isblank(int __c);
+extern int iscntrl(int __c);
+extern int isdigit(int __c);
+extern int isgraph(int __c);
+extern int islower(int __c);
+extern int isprint(int __c);
+extern int ispunct(int __c);
+extern int isspace(int __c);
+extern int isupper(int __c);
+extern int isxdigit(int __c);
 
-#define isascii(c) (!((uint8_t)c & 0x80))
+#define isascii(c) (!((uint8_t)(c) & 0x80))
 #define toascii(c) ((c) & 0x7f)
-
-#define isdecimal isdigit
-#define _tolower tolower
-#define _toupper toupper
 
 #endif /* __CTYPE_H */

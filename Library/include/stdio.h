@@ -70,11 +70,11 @@ extern FILE stderr[1];
 #define putchar(c)	fputc((c), stdout)
 #define getchar()	fgetc(stdin)
 
-extern char *gets __P((char *));
-extern char *gets_s __P((char *, size_t));
+extern char *gets(char *__s);
+extern char *gets_s(char *__s, size_t __size);
 
-extern int _putchar __P((int));
-extern int _getchar __P((void));
+extern int _putchar(int __c);
+extern int _getchar(void);
 
 #define ferror(fp)	(((fp)->mode&__MODE_ERR) != 0)
 #define feof(fp)	(((fp)->mode&__MODE_EOF) != 0)
@@ -82,77 +82,78 @@ extern int _getchar __P((void));
 #define fileno(fp)	((fp)->fd)
 
 /* These two call malloc */
-extern int setvbuf __P((FILE*, char*, int, size_t));
+extern int setvbuf(FILE *__stream, char *__buf, int __mode, size_t __size);
 #define setlinebuf(__fp)	setvbuf((__fp), (char*)0, _IOLBF, 0)
 
 /* These don't */
-extern void setbuffer __P((FILE*, char*, size_t));
+extern void setbuffer(FILE *__stream, char *__buf, size_t __size);
 #define setbuf(__fp, __buf)	setbuffer((__fp), (__buf), BUFSIZ)
 
-extern int fgetc __P((FILE*));
-extern int fputc __P((int, FILE*));
-extern int ungetc __P((int, FILE*));
+extern int fgetc(FILE *__stream);
+extern int fputc(int, FILE *__stream);
+extern int ungetc(int, FILE *__stream);
 
-extern int fclose __P((FILE*));
-extern int fflush __P((FILE*));
+extern int fclose(FILE *__stream);
+extern int fflush(FILE *__stream);
+/* FIXME: this symbol needs to be __ */
 #define stdio_pending(fp) ((fp)->bufread > (fp)->bufpos)
-extern char *fgets __P((char*, size_t, FILE*));
-extern FILE *__fopen __P((const char*, int, FILE*, const char*));
+extern char *fgets(char *__s, size_t __size, FILE *__stream);
+extern FILE *__fopen(const char *__path, int __fd, FILE * __stream, const char *__mode);
 
 #define fopen(__file, __mode)	      __fopen((__file), -1, (FILE*)0, (__mode))
 #define freopen(__file, __mode, __fp) __fopen((__file), -1, (__fp), (__mode))
 #define fdopen(__file, __mode)	__fopen((char*)0, (__file), (FILE*)0, (__mode))
 
-extern FILE *tmpfile __P((void));
+extern FILE *tmpfile(void);
 
-extern int fputs __P((const void *, FILE*));
-extern int puts __P((const void *));
+extern int fputs(const void *__s, FILE *__stream);
+extern int puts(const void *__s);
 
-extern int fread __P((void *, size_t, size_t, FILE *));
-extern int fwrite __P((const void *, size_t, size_t, FILE *));
+extern int fread(void *__ptr, size_t __size, size_t, FILE *__stream);
+extern int fwrite(const void *__ptr, size_t __size, size_t __nmemb, FILE *__stream);
 
-extern int fseek __P((FILE *fp, long offset, int whence));
-extern long ftell __P((FILE *fp));
+extern int fseek(FILE *__stream, long __offset, int __whence);
+extern long ftell(FILE *__stream);
 #define fseeko	fseek
 #define ftello  ftell
 
-extern int fgetpos __P((FILE *fp, fpos_t *pos));
-extern int fsetpos __P((FILE *fp, fpos_t *pos));
+extern int fgetpos(FILE *__stream, fpos_t *__pos);
+extern int fsetpos(FILE *__stream, fpos_t *__pos);
 
-extern int printf __P((const char*, ...));
-extern int fprintf __P((FILE*, const char*, ...));
-extern int sprintf __P((char*, const char*, ...));
-extern int snprintf __P((char*, size_t, const char*, ...));
+extern int printf(const char *__fmt, ...);
+extern int fprintf(FILE *__stream, const char *__fmt, ...);
+extern int sprintf(char *__str, const char *__fmt, ...);
+extern int snprintf(char *__str, size_t __size, const char *__fmt, ...);
 
-extern int vprintf __P((const char*, va_list));
-extern int vfprintf __P((FILE*, const char*, va_list));
-extern int _vfnprintf __P((FILE*, size_t, const char*, va_list));
-extern int vsprintf __P((char*, const char*, va_list));
-extern int vsnprintf __P((char*, size_t, const char*, va_list));
+extern int vprintf(const char*, va_list __ap);
+extern int vfprintf(FILE *__stream, const char*, va_list __ap);
+extern int _vfnprintf(FILE *__stream, size_t __size, const char *__fmt, va_list __ap);
+extern int vsprintf(char *__str, const char *__fmt, va_list __ap);
+extern int vsnprintf(char *__str, size_t __size, const char *__fmt, va_list __ap);
 
-extern int scanf __P((const char*, ...));
-extern int fscanf __P((FILE*, const char*, ...));
-extern int sscanf __P((char*, const char*, ...));
+extern int scanf(const char *__fmt, ...);
+extern int fscanf(FILE *__stream, const char *__fmt, ...);
+extern int sscanf(char *__str, const char *__fmt, ...);
 
-extern int vscanf __P((const char*, va_list));
-extern int vfscanf __P((FILE*, const char*, va_list));
-extern int vsscanf __P((char*, const char*, va_list));
+extern int vscanf(const char *__fmt, va_list __ap);
+extern int vfscanf(FILE *__stream, const char *__fmt, va_list __ap);
+extern int vsscanf(char *__str, const char *__fmt, va_list __ap);
 
-extern void perror __P((const char *__s));
+extern void perror(const char *__s);
 
-extern char *tmpnam __P((char *buf));
+extern char *tmpnam(char *__buf);
 
-extern int rename __P((const char *oldname, const char *newname));
-extern void rewind __P((FILE *fp));
-extern FILE *popen __P((const char *, const char *));
-extern int pclose __P((FILE *));
+extern int rename(const char *__oldname, const char *__newname);
+extern void rewind(FILE *__stream);
+extern FILE *popen(const char *__command, const char *__type);
+extern int pclose(FILE *__stream);
 
-extern char *cuserid __P((char *__buf));
+extern char *cuserid(char *__buf);
 #define L_cuserid	9
-extern char *ctermid __P((char *__buf));
+extern char *ctermid(char *__buf);
 #define L_ctermid	9
 
-extern int getw __P((FILE *__f));
-extern int putw __P((int __n, FILE *__f));
+extern int getw(FILE *__f);
+extern int putw(int __n, FILE *__f);
 
 #endif /* __STDIO_H */

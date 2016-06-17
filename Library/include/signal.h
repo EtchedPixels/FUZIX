@@ -52,7 +52,7 @@ typedef enum {
 typedef uint32_t sigset_t;	/* at least 16 bits: use 32 in user space */
 				/* for expansion space */
 /* Type of a signal handler.  */
-typedef void (*sighandler_t) __P((int));
+typedef void (*sighandler_t)(int);
 
 #define SIG_DFL ((sighandler_t)0)	/* default signal handling */
 #define SIG_IGN ((sighandler_t)1)	/* ignore signal */
@@ -60,10 +60,10 @@ typedef void (*sighandler_t) __P((int));
 
 extern const char *sys_siglist[];
 
-extern void sighold(int sig);
-extern void sigrelse(int sig);
-extern void sigignore(int sig);
-extern sighandler_t sigset(int sig, sighandler_t disp);
+extern void sighold(int __sig);
+extern void sigrelse(int __sig);
+extern void sigignore(int __sig);
+extern sighandler_t sigset(int __sig, sighandler_t __disp);
 
 typedef int sig_atomic_t;
 

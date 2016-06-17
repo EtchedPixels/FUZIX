@@ -16,22 +16,20 @@ struct passwd {
 	char	*pw_shell;	/* Shell program */
 };
 
-extern void setpwent __P((void));
-extern void endpwent __P((void));
-extern struct passwd *getpwent __P((void));
+extern void setpwent(void);
+extern void endpwent(void);
+extern struct passwd *getpwent(void);
 
-extern int putpwent __P((const struct passwd * __p, FILE * __f));
-extern int getpw __P((uid_t uid, char *buf));
+extern int putpwent(const struct passwd *__p, FILE *__f);
+extern int getpw(uid_t uid, char *buf);
 
-extern struct passwd *fgetpwent __P((FILE * file));
+extern struct passwd *fgetpwent(FILE *__file);
 
-extern struct passwd *getpwuid __P((uid_t __uid));
-extern struct passwd *getpwnam __P((const char *));
+extern struct passwd *getpwuid(uid_t __uid);
+extern struct passwd *getpwnam(const char *__name);
 
-extern struct passwd * __getpwent __P((int passwd_fd));
+extern struct passwd * __getpwent(int __passwd_fd);
 
 extern char *_path_passwd;
-
-#define getlogin()	getpwnam(getuid())
 
 #endif /* pwd.h  */

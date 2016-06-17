@@ -58,6 +58,6 @@ struct stat {
 
 /* Weird location but for historical reasons */
 
-extern int mkfifo(const char *pathname, mode_t mode);
+extern int mkfifo(const char *__pathname, mode_t __mode);
 
 #endif

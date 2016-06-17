@@ -10,6 +10,6 @@ struct tms {
 	clock_t	tms_etime;	/* Elapsed real time */
 };
 
-extern int times(struct tms *tms);
+extern int times(struct tms *__tms);
 
 #endif

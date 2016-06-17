@@ -15,43 +15,42 @@
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2
 
-extern long tell __P((int));
-extern off_t lseek __P((int, off_t, int));
+extern off_t lseek(int __fd, off_t __offset, int __whence);
 
-extern int isatty __P((int));
+extern int isatty(int __fd);
 
-extern int lstat __P((const char *, struct stat *));
-extern int readlink __P((const char *, char *, int));
+extern int lstat(const char *__pathname, struct stat *__buf);
+extern int readlink(const char *__pathname, char *__buf, int __bufsiz);
 
-extern unsigned int sleep __P((unsigned int seconds));
-extern int usleep __P((useconds_t usecs));
+extern unsigned int sleep(unsigned int __seconds);
+extern int usleep(useconds_t __usecs);
 
 extern char **environ;
 
-extern const char * _findPath __P((const char *pathname));
-extern int execl __P((const char *pathname, const char *arg0, ...));
-extern int execle __P((const char *pathname, const char *arg0, ...));
-extern int execlp __P((const char *pathname, const char *arg0, ...));
-extern int execlpe __P((const char *pathname, const char *arg0, ...));
-extern int execv __P((const char *pathname, char *const argv[]));
-extern int execve __P((const char *pathname, char * const argv[], char * const envp[]));
-extern int execvp __P((const char *pathname, char *const argv[]));
-extern int execvpe __P((const char *pathname, char *const argv[], char * const envp[]));
+extern const char * _findPath(const char *__pathname);
+extern int execl(const char *__pathname, const char *__arg0, ...);
+extern int execle(const char *__pathname, const char *__arg0, ...);
+extern int execlp(const char *__pathname, const char *__arg0, ...);
+extern int execlpe(const char *__pathname, const char *__arg0, ...);
+extern int execv(const char *__pathname, char *const __argv[]);
+extern int execve(const char *__pathname, char * const __argv[], char * const __envp[]);
+extern int execvp(const char *__pathname, char *const __argv[]);
+extern int execvpe(const char *__pathname, char *const __argv[], char * const __envp[]);
 
-extern char *ttyname __P((int __fd));
-extern int ttyname_r __P((int __fd, char *__buf, size_t __size));
-extern char *getlogin __P((void));
-extern int getlogin_r __P((char * __buf, size_t __size));
-extern int system __P((const char *));
-extern int pause __P((void));
-extern pid_t fork __P((void));
-extern char *getcwd __P((char *, int));
-extern void swab __P((const void * __from, void * __to, ssize_t __count));
+extern char *ttyname(int __fd);
+extern int ttyname_r(int __fd, char *__buf, size_t __size);
+extern char *getlogin(void);
+extern int getlogin_r(char * __buf, size_t __size);
+extern int system(const char *);
+extern int pause(void);
+extern pid_t fork(void);
+extern char *getcwd(char *, int);
+extern void swab(const void * __from, void * __to, ssize_t __count);
 
-extern long sysconf __P((int name));
-extern long fpathconf __P((int fd, int name));
-extern long pathconf __P((const char *path, int name));
-extern long _pathconf __P((int name));
+extern long sysconf(int __name);
+extern long fpathconf(int __fd, int __name);
+extern long pathconf(const char *__path, int __name);
+extern long _pathconf(int __name);
 
 #define _SC_ARG_MAX		1
 #define _SC_CHILD_MAX		2
@@ -102,11 +101,11 @@ extern long _pathconf __P((int name));
 #define _POSIX_TIMERS
 #define _POSIX_MONTONIC_CLOCK
 
-extern int gethostname(char *name, size_t len);
-extern int sethostname(const char *name, size_t len);
+extern int gethostname(char *__name, size_t __len);
+extern int sethostname(const char *__name, size_t __len);
 
 #ifndef __STDLIB_H
-extern void exit __P((int));
+extern void exit(int __status);
 #endif
 
 #ifndef R_OK

@@ -62,7 +62,5 @@ extern int sys_nerr;
 extern char *sys_errlist[];
 extern int errno;
 
-extern char *strerror __P((int _errno));
-
 #endif
 
