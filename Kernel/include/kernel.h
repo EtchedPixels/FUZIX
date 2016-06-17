@@ -623,6 +623,10 @@ struct s_argblk {
  */
 
 /*
+ *	Drivewire ioctls 050x (see drivewire.h)
+ */
+
+/*
  *	System info shared with user space
  */
 struct sysinfoblk {
