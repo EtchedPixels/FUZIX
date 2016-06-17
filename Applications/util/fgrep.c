@@ -195,7 +195,7 @@ void file_open(void)
   /* Use stdin if no file arguments are given on the command line. */
   if (optarg == (char *) NULL || strcmp(optarg, "-") == 0) {
 	fd_in = 0;
-	optarg = "stdin";
+	optarg = (char *)"stdin";
   } else if ((fd_in = open(optarg, O_RDONLY)) == -1) {
 	fprintf(stderr, "%s: can't open %s\n", prog_name, optarg);
 	exit(1);
