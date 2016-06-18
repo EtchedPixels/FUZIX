@@ -77,7 +77,6 @@ friends, while UMZIX has a neat unified "make anything" function.
 	a giant fs on a slow 8bit micro!)
 * Smarter scheduler
 * Optimisations for disk block/inode allocator (2.11BSD)
-* CP/M emulator has not yet been debugged on the FUZIX syscall API
 
 ## Tool Issues
 
