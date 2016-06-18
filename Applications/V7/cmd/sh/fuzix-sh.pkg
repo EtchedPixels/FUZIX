@@ -1,0 +1,3 @@
+package: sh
+
+f:0755:/bin/sh         : sh

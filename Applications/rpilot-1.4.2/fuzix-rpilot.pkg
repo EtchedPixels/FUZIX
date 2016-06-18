@@ -1,0 +1,21 @@
+package: rpilot
+if-file: rpilot
+
+f:0755:/usr/bin/rpilot                   : rpilot
+f:0644:/usr/man/man1/rpilot.1            : doc/rpilot.1
+d:0755:/usr/doc/rpilot
+f:0644:/usr/doc/rpilot/rpilot.txt        : doc/rpilot.txt
+f:0644:/usr/doc/rpilot/examples.txt      : doc/examples.txt
+d:0755:/usr/src/rpilot
+f:0644:/usr/src/rpilot/crazy.p           : examples/crazy.p
+f:0644:/usr/src/rpilot/dosmenu.p         : examples/dosmenu.p
+f:0644:/usr/src/rpilot/fact.p            : examples/fact.p
+f:0644:/usr/src/rpilot/french.p          : examples/french.p
+f:0644:/usr/src/rpilot/guess.p           : examples/guess.p
+f:0644:/usr/src/rpilot/hello.p           : examples/hello.p
+f:0644:/usr/src/rpilot/inter.p           : examples/inter.p
+f:0644:/usr/src/rpilot/jump-use.p        : examples/jump-use.p
+f:0644:/usr/src/rpilot/math.p            : examples/math.p
+f:0644:/usr/src/rpilot/name.p            : examples/name.p
+f:0644:/usr/src/rpilot/recurse.p         : examples/recurse.p
+f:0644:/usr/src/rpilot/unixmenu.p        : examples/unixmenu.p

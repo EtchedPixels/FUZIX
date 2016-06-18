@@ -1,0 +1,315 @@
+#!/usr/bin/perl
+#
+# Build FUZIX system disk from distributed set of fuzix-*.pkg files
+# in the Standalone/filesystem-src and Application directories.
+#
+
+# TODO
+# validate disk geometry.
+# check that package names are unique
+# work out package on/off rules
+# create some uber-packages
+# resolve dependencies?
+
+use strict;
+use warnings;
+use File::Find;
+
+# package files are in @files
+# each entry is a reference to an array in which
+# [0] directory
+# [1] file
+my @file;
+
+# packages are in @pkg
+# each entry is a reference to an array in which
+# [0] ref to entry in @file from which package was read
+# [1]->% attributes - including {pkg}
+# [2]->@ entries
+my @pkg;
+
+# only these attributes are recognised
+my %legal_attr = qw( package 0  if-file 0  if-cpu 0  if-platform 0  require-package 0  require-option 0);
+
+# only these commands are recognised. Specify number of arguments.
+my %cmd = qw( d 2  n 3  f 3);
+
+# stores command-line arguments
+my %args;
+
+# always try to continue, accumulating errors.
+my $error = 0;
+
+cmdline_args();
+build_file_list();
+build_pkg_list();
+resolve_pkg();
+gen_ucp();
+build_dsk();
+exit 0;
+
+############################################################################################
+# subroutines.
+
+# create an entry for each package (may be more than one package per file)
+sub build_pkg_list {
+    foreach my $x (@file) {
+        open IN, "$x->[0]/$x->[1]" or die "ERROR could not open file $x->[0]/$x->[1]\n";
+        my $in_pkg = 0;
+        my $current = 0;
+        while (my $line = <IN>) {
+            chomp $line;
+            # strip comments..
+            $line =~ s/#.*$//;
+            # .. and trailing whitespace
+            $line =~ s/\s*$//;
+            next if $line eq '';
+            my @bits = split /\s*:\s*/, $line;
+            if ($bits[0] eq 'package') {
+                # start a new entry
+                my @entry;
+                my %attr;
+                $attr{selected} = 1;
+                $attr{pkg} = $bits[1];
+                my @cmd;
+                $in_pkg = 1;
+                @entry = ($x, \%attr, \@cmd);
+                push @pkg, \@entry;
+                $current = $#pkg;
+                print "Found package $bits[1]\n";
+            }
+            elsif (exists($legal_attr{$bits[0]}) and $in_pkg) {
+                # attribute: put it in a hash with its value
+                $pkg[$current]->[1]->{$bits[0]} = $bits[1]; # [NAC HACK 2016Jun15] only one value from attr
+            }
+            elsif (exists($cmd{$bits[0]}) and $in_pkg) {
+                # command: prepend line number (for error reporting) then file it away for later
+                unshift @bits, ($.);
+                push $pkg[$current]->[2], \@bits;
+            }
+            else {
+                $error = $error + 1;
+                print "Store attribute $bits[0] with value $bits[1]\n";
+                foreach my $x (sort keys %legal_attr) {
+                    print "$x\n";
+                }
+                print "ERROR $x->[0]/$x->[1]:$. - unknown command/attribute or no package\n";
+            }
+        }
+        close IN;
+        die "ERROR Fix errors and re-run\n" if $error;
+    }
+}
+
+
+# build a datastructure representing each package file found in the
+# Standalone/filesystem-src/ and Application/ directories.
+sub build_file_list {
+    my @places = ('.','../../Applications');
+    foreach my $dir (@places) {
+        find(\&pkg_file, $dir);
+    }
+}
+
+
+# call-back from build_file_list
+sub pkg_file {
+    if ($_ =~ /^fuzix-.*\.pkg$/) {
+        my @entry;
+        $entry[0] = $File::Find::dir;
+        $entry[1] = $_;
+        push @file,\@entry;
+    }
+}
+
+
+# select which packages to include, and put them in the right order
+sub resolve_pkg {
+    foreach my $x (@pkg) {
+        print "Resolving package $x->[1]->{pkg}\n";
+        # [NAC HACK 2016Jun17] for now, only thing we do here is honour if-file
+        if (exists($x->[1]->{'if-file'}) and (! -f "$x->[0]->[0]/$x->[1]->{'if-file'}")) {
+            $x->[1]->{selected} = 0;
+        }
+
+    }
+}
+
+
+# work through enabled packages in order, generating the UCP script
+sub gen_ucp {
+    my %paths;
+    my $cur_path = '';
+    open OUT, ">ucp-tmp.txt" or die "ERROR could not open file ucp-tmp.txt";
+    foreach my $x (@pkg) {
+        my $file = "$x->[0]->[0]/$x->[0]->[1]";
+        my $selected = $x->[1]->{selected};
+        next if not $selected;
+        print "Processing package $x->[1]->{pkg}\n";
+        foreach my $i (0..$#{$x->[2]}) {
+             my ($line, $cmd, $arg1, $arg2, $arg3, $arg4) = @{$x->[2]->[$i]};
+             # number of arguments to the command
+             my $argn = $#{$x->[2]->[$i]} - 2 + 1;
+             if ($argn != $cmd{$cmd}) {
+                 $error = $error + 1;
+                 print "ERROR $file:$line wrong number of arguments\n";
+             }
+             else {
+                if ($cmd eq 'n') { # node arg1: major arg2: minor arg3: path
+                    if (exists($paths{$arg3})) {
+                        $error = $error + 1;
+                        print "ERROR $file:$line duplicate node $arg3\n";
+                    }
+                    $arg3 =~ /(.*)\/(.*)$/;
+                    my $base = $1;
+                    my $node = $2;
+                    if (exists($paths{$base}) or ($base eq '')) {
+                        # all good
+                        $paths{"$base/$node"} = 1;
+                        if ($cur_path ne $base) {
+                            $base = $base eq '' ? '/' : $base;
+                            print OUT "cd $base\n";
+                            $cur_path = $base;
+                        }
+                        print OUT "mknod $node $arg1, $arg2\n";
+                    }
+                    else {
+                        $error = $error + 1;
+                        print "ERROR $file:$line no parent path $base for $arg3\n";
+                    }
+                }
+                elsif ($cmd eq 'd') { # directory arg1: protection arg2: path
+                    if (exists($paths{$arg2})) {
+                        $error = $error + 1;
+                        print "ERROR $file:$line duplicate path $arg2\n";
+                    }
+                    $arg2 =~ /(.*)\/(.*)$/;
+                    my $base = $1;
+                    my $dir = $2;
+                    if (exists($paths{$base}) or ($base eq '')) {
+                        # all good
+                        $paths{"$base/$dir"} = 1;
+                        if ($cur_path ne $base) {
+                            $base = $base eq '' ? '/' : $base;
+                            print OUT "cd $base\n";
+                            $cur_path = $base;
+                        }
+                        print OUT "mkdir $dir\n";
+                        print OUT "chmod  $arg1 $dir\n";
+                    }
+                    else {
+                        $error = $error + 1;
+                        print "ERROR $file:$line no parent path $base for $arg2\n";
+                    }
+                }
+                else {
+                    # must be file arg1: protection arg2: dest arg3: src
+                    if (exists($paths{$arg2})) {
+                        $error = $error + 1;
+                        print "ERROR $file:$line duplicate file $arg2\n";
+                    }
+                    $arg2 =~ /(.*)\/(.*)$/;
+                    my $base = $1;
+                    my $file = $2;
+                    if (-f "$x->[0]->[0]/$arg3") {
+                        if (exists($paths{$base}) or ($base eq '')) {
+                            # all good
+                            $paths{"$base/$file"} = 1;
+                            if ($cur_path ne $base) {
+                                $base = $base eq '' ? '/' : $base;
+                                print OUT "cd $base\n";
+                                $cur_path = $base;
+                            }
+                            print OUT "bget $x->[0]->[0]/$arg3 $file\n";
+                            print OUT "chmod $arg1 $file\n";
+                        }
+                        else {
+                            $error = $error + 1;
+                            print "ERROR $file:$line no parent path $base for $arg2\n";
+                        }
+                    }
+                    else {
+                        $error = $error + 1;
+                        print "ERROR $file:$line file not found\n";
+                    }
+                }
+             }
+        }
+    }
+    close OUT;
+    die "ERROR Fix errors and re-run\n" if $error;
+}
+
+
+
+
+# [NAC HACK 2016Jun14] abstract it from command-line parameters to make it behave like
+# existing script.
+# create disk image:
+# create empty disk
+# apply ucp script
+# run fsck
+sub build_dsk {
+    my $swizzle = $args{endian} eq 'little' ? '' : '-X';
+    if (system "../mkfs $swizzle $args{file} $args{isize} $args{bsize}") {
+        die "ERROR mkfs failed - exit status $?\n";
+    }
+    if (system "../ucp $args{file} < ucp-tmp.txt") {
+        # [NAC HACK 2016Jun14] ucp bug: exit status good even tho errors occur.
+        die "ERROR ucp failed - exit status $?\n";
+    }
+    if (system "../fsck $args{file}") {
+        die "ERROR fsck failed - exit status $?\n";
+    }
+}
+
+
+# Validate command-line arguments and populate %args
+sub cmdline_args {
+    # defaults
+    $args{file} = 'fuzix.dsk';
+    $args{endian} = 'little';
+    $args{isize} = 256;
+    $args{bsize} = 65535;
+
+    while (my $arg = shift @ARGV) {
+        $arg = lc $arg;
+        if ($arg eq '-h') {
+            help_exit();
+        }
+        elsif ($arg eq '-x') {
+            $args{endian} = "big";
+        }
+        elsif ($arg eq '-f') {
+            $args{file} = shift @ARGV;
+            open OUT, ">$args{file}" or die "ERROR cannot open $args{file} for output";
+            close OUT;
+        }
+        elsif ($arg eq '-g') {
+            $args{isize} = shift @ARGV;
+            $args{bsize} = shift @ARGV;
+        }
+        else {
+            print "ERROR unrecognised option $arg -- try -h for help\n";
+            exit 1;
+        }
+    }
+}
+
+
+# Display help message and exit.
+sub help_exit {
+    print <<EOF;
+
+build-filesystem-ng [options]
+
+Options:
+
+-h           print help and exit
+-x           swizzle disk image (for big-endian processors like 6809). Default: no swizzle.
+-f FILENAME  filename of disk image. Default: $args{file}
+-g N M       disk geometry N=inode size, M=block size. Default: $args{isize} $args{bsize}
+
+EOF
+exit 1;
+}

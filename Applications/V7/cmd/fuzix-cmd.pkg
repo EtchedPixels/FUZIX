@@ -1,0 +1,32 @@
+package: V7-cmd
+if-file: accton
+
+f:0755:/usr/bin/accton      : accton
+##f:0755:/usr/bin/ac          : ac
+##f:0755:/usr/bin/at          : at
+f:0755:/usr/bin/atrun       : atrun
+##f:0755:/usr/bin/col         : col
+f:0755:/usr/bin/comm        : comm
+f:0755:/usr/bin/cron        : cron
+f:0755:/usr/bin/crypt       : crypt
+f:0755:/usr/bin/dc          : dc
+##f:0755:/usr/bin/dd          : dd
+##f:0755:/usr/bin/deroff      : deroff
+f:0755:/usr/bin/diff        : diff
+f:0755:/usr/bin/diff3       : diff3
+f:0755:/usr/bin/diffh       : diffh
+f:0755:/usr/bin/join        : join
+f:0755:/usr/bin/look        : look
+f:0755:/usr/bin/makekey     : makekey
+f:0755:/usr/bin/mesg        : mesg
+f:0755:/usr/bin/newgrp      : newgrp
+##f:0755:/usr/bin/pr          : pr
+f:0755:/usr/bin/ptx         : ptx
+f:0755:/usr/bin/rev         : rev
+f:0755:/usr/bin/split       : split
+f:0755:/usr/bin/sum         : sum
+##f:0755:/usr/bin/su          : su
+##f:0755:/usr/bin/test        : test
+f:0755:/usr/bin/time        : time
+f:0755:/usr/bin/tsort       : tsort
+f:0755:/usr/bin/wall        : wall
