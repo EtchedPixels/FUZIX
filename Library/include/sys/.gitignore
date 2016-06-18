@@ -1,2 +1,3 @@
 # not tracked here; copied from kernel tree by build process
 userstructs.h
+drivewire.h
