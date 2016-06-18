@@ -5,8 +5,6 @@
  * Internal ascii conversion routine, avoid use of printf, it's a bit big!
  */
 
-static void hit __P((char *, int));
-
 static void hit(char *buf, int val)
 {
 	*buf = '0' + val % 10;
