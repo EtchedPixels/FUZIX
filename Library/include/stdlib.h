@@ -97,4 +97,14 @@ extern char **_argv;
 
 extern int getloadavg(unsigned int __loadavg[], int __nelem);
 
+extern double drand48(void);
+extern double erand48(unsigned short __xsubi[3]);
+extern unsigned long jrand48(unsigned short __xsubi[3]);
+extern void lcong48(unsigned short __param[7]);
+extern long lrand48(void);
+extern unsigned long mrand48(void);
+extern long nrand48(unsigned short __xsubi[3]);
+extern unsigned short *seed48(unsigned short __seed16v[3]);
+extern void srand48(long __sedval);
+
 #endif /* __STDLIB_H */

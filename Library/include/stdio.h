@@ -156,4 +156,7 @@ extern char *ctermid(char *__buf);
 extern int getw(FILE *__f);
 extern int putw(int __n, FILE *__f);
 
+extern long a64l(const char *__str64)
+extern char *l64a(long __value);
+
 #endif /* __STDIO_H */
