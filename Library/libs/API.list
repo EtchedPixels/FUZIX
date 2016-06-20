@@ -1,23 +1,37 @@
 Initial target API (SYS5.2 equivalent - ish)
 
-a64l
+Z80 = implementation for float form in the SDCC library and we should eventually
+use that not our own if possible
+
+a64l			CODE
 abort			FIXME
 abs			CODE
 access			CODE
-acos			Z80
+acos			CODE
+acosf			Z80 | CODE
+acosh			CODE
+acoshf			CODE (check Z80)
 advance
 alarm			CODE
 asctime			CODE
-asin			Z80
+asin			CODE
+asinf			Z80 | CODE
+asinh			CODE
+asinhf			CODE (check Z80)
 assert			CODE
-atan			Z80
-atan2			Z80
+atan			CODE
+atanf			Z80 | CODE
+atan2			CODE
+atan2f			Z80 | CODE
+atanh			CODE
+atanhf			CODE (check Z80)
 atof			CODE
 atoi			CODE
 atol			CODE
-bsearch
+bsearch			CODE
 calloc			CODE
-ceil			Z80
+ceil			CODE
+ceilf			Z80 | CODE
 chdir			CODE
 chmod			CODE
 chown			CODE
@@ -25,21 +39,23 @@ clearerr		CODE
 clock			CODE
 close			CODE
 compile			CODE (but no to spec)
-cos			Z80
-cosh			Z80
+cos			CODE
+cosf			Z80 | CODE
+cosh			CODE
+coshf			Z80 | CODE
 creat			CODE
 crypt			CODE (but tea not DES)
 ctermid			CODE
 cuserid			CODE
-drand48
+drand48			CODE
 dup			CODE
-encrypt
+encrypt			NO (obsolete single DES)
 endgrent		CODE
 endpwent		CODE
 endutent		CODE
-erand48
-erf
-erfc
+erand48			CODE
+erf			ULY
+erfc			ULY
 execl			CODE
 execle			*MISSING ?*
 execlp			CODE
@@ -48,8 +64,10 @@ execve			CODE
 execvp			CODE
 exit			CODE
 _exit			CODE
-exp
-fabs			Z80
+exp			CODE
+expf			CODE | Z80
+fabs			CODE
+fabsf			CODE | Z80
 fclose			CODE
 fcntl			CODE
 fdopen			CODE
@@ -61,8 +79,10 @@ fgetgrent		CODE
 fgetpwent		CODE
 fgets			CODE
 fileno			CODE
-floor			Z80
-fmod
+floor			CODE
+floorf			Z80 | CODE
+fmod			CODE
+fmodf			CODE
 fopen			CODE
 fork			CODE
 fprintf			CODE
@@ -71,12 +91,13 @@ fputs			CODE
 fread			CODE
 free			CODE
 freopen			CODE
-frexp
+frexp			CODE
+frexpf			CODE
 fscanf			CODE
 fseek			CODE
 fstat			CODE
 ftell			CODE
-ftw
+ftw			https://opensource.apple.com/source/Libc/Libc-825.26/gen/nftw.c ?
 fwrite			CODE
 gamma
 getc			CODE
@@ -105,7 +126,9 @@ gmtime			CODE
 gsignal			OBSOLETE
 hcreate
 hdestroy
-hypot
+hsearch
+hypot			CODE
+hypotf			CODE
 ioctl			CODE
 isalnum			CODE
 isalpha			CODE
@@ -119,22 +142,23 @@ ispunct			CODE
 isspace			CODE
 isupper			CODE
 isxdigit		CODE
-j0
-j1
-jn
-jrand48
+j0			ULY
+j1			ULY
+jn			ULY
+jrand48			CODE
 kill			CODE
-l64a
-lcong48
-ldexp
+l64a			CODE
+lcong48			CODE
+ldexp			ULY
 lfind			CODE
 link			CODE
 localtime		CODE
 lockf			NO (flock)
-log			Z80
-log10
+log			CODE | Z80
+logf			ULY
+log10			ULY
 longjmp			CODE
-lrand48
+lrand48			CODE
 lsearch			CODE
 lseek			CODE
 mallinfo
@@ -149,20 +173,21 @@ memcpy			CODE
 memset			CODE
 mknod			CODE
 mktemp
-modf			Z80
+modf			ULY
+modff			Z80 | ULY
 monitor
 mount			CODE
-mrand48
+mrand48			CODE
 nlist
-nrand48
+nrand48			CODE
 open			CODE
 pause			CODE
 pclose			CODE
 perror			CODE
 pipe			CODE
 popen			CODE
-pow			Z80
-printf			CODE (check all fmts included) - do libfl version
+pow			Z80 | ULY
+printf			CODE (check all fmts included)
 putc			CODE
 putchar			CODE
 putenv			CODE
@@ -176,27 +201,27 @@ read			CODE
 realloc			CODE
 rewind			CODE
 scanf			CODE
-seed48
+seed48			CODE
 setbuf			CODE
 setgid			CODE
 setgrent		CODE
 setjmp			CODE
-setkey
+setkey			NO (obsolete, single DES)
 setpgrp			CODE
 setuid			CODE
 setutent		CODE
 setvbuf			CODE
 sgetl
 signal			CODE (but kernel bits to do)
-sin
-sinh
+sin			ULY
+sinh			ULY
 sleep			CODE
 sprintf			CODE
 sputl
 sqrt			Z80
 srand			CODE
-srand48
-ssignal
+srand48			CODE
+ssignal			OBSOLETE
 stat			CODE
 step
 stime			CODE
@@ -214,11 +239,11 @@ strspn			CODE
 strtod			CODE
 strtok			CODE
 strtol			CODE
-swab			*MISSING*
+swab			CODE
 sync			CODE
 system			CODE
-tan
-tanh
+tan			ULY
+tanh			ULY
 tdelete
 tempnam		
 tfind
@@ -248,6 +273,6 @@ vfprintf		CODE
 vsprintf		CODE
 wait			CODE
 write			CODE
-y0
-y1
-yn
+y0			ULY (in j0)
+y1			ULY (in j1)
+yn			ULY (in jn)

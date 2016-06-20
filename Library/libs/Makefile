@@ -21,11 +21,11 @@ SRC_CRT0NS = crt0nostdio$(PLATFORM).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
 SRC_ASM = enter.s htonl-z80.s htons-z80.s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
-SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c atoi_small.c
+SRC_C =  __argv.c a64l.c abort.c asctime.c assert.c atexit.c atoi_small.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
-SRC_C += difftime.c err.c errno.c error.c
+SRC_C += difftime.c drand48.c err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
@@ -36,8 +36,8 @@ SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
 SRC_C += index.c initgroups.c isatty.c killpg.c
-SRC_C += libintl.c
-SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
+SRC_C += l64a.c libintl.c localtim.c localtim_r.c
+SRC_C += lrand48.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
 SRC_C += pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
@@ -67,6 +67,11 @@ SRC_HARD += regexp.c
 #SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
+
+SRC_C += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
+SRC_C += ceilf.c expf.c
+SRC_C += fabsf.c floorf.c fmodf.c frexpf.c hypotf.c
+SRC_C += scalbnf.c scalbinf.c sqrtf.c
 
 SRC_CT += termcap.c
 
