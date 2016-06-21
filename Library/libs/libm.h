@@ -134,4 +134,7 @@ float  __cosdf(double);
 float  __tandf(double,int);
 float  __expo2f(float);
 
+double __log1p(double);
+float  __log1pf(float);
+
 #endif

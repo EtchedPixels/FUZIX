@@ -99,7 +99,7 @@ fstat			CODE
 ftell			CODE
 ftw			https://opensource.apple.com/source/Libc/Libc-825.26/gen/nftw.c ?
 fwrite			CODE
-gamma
+gamma			OBSOLETE (added lgamma, tgamma)
 getc			CODE
 getchar			CODE
 getcwd			CODE
@@ -142,9 +142,12 @@ ispunct			CODE
 isspace			CODE
 isupper			CODE
 isxdigit		CODE
-j0			ULY
-j1			ULY
-jn			ULY
+j0			CODE
+j0f			CODE
+j1			CODE
+j1f			CODE
+jn			CODE
+jnf			CODE
 jrand48			CODE
 kill			CODE
 l64a			CODE
@@ -155,8 +158,9 @@ link			CODE
 localtime		CODE
 lockf			NO (flock)
 log			CODE | Z80
-logf			ULY
-log10			ULY
+logf			CODE
+log10			CODE
+log10f			CODE
 longjmp			CODE
 lrand48			CODE
 lsearch			CODE
@@ -173,8 +177,8 @@ memcpy			CODE
 memset			CODE
 mknod			CODE
 mktemp
-modf			ULY
-modff			Z80 | ULY
+modf			CODE
+modff			Z80 | CODE
 monitor
 mount			CODE
 mrand48			CODE
@@ -200,6 +204,8 @@ rand			CODE
 read			CODE
 realloc			CODE
 rewind			CODE
+round						; MUSL ones unsuitable licence
+roundf						;
 scanf			CODE
 seed48			CODE
 setbuf			CODE
@@ -213,8 +219,10 @@ setutent		CODE
 setvbuf			CODE
 sgetl
 signal			CODE (but kernel bits to do)
-sin			ULY
-sinh			ULY
+sin			CODE
+sinf			CODE | Z80
+sinh			CODE
+sinhf			CODE
 sleep			CODE
 sprintf			CODE
 sputl
@@ -242,8 +250,10 @@ strtol			CODE
 swab			CODE
 sync			CODE
 system			CODE
-tan			ULY
-tanh			ULY
+tan			CODE
+tanf			CODE | Z80
+tanh			CODE
+tanhf			CODE
 tdelete
 tempnam		
 tfind
@@ -273,6 +283,6 @@ vfprintf		CODE
 vsprintf		CODE
 wait			CODE
 write			CODE
-y0			ULY (in j0)
-y1			ULY (in j1)
-yn			ULY (in jn)
+y0			CODE
+y1			CODE
+yn			CODE

@@ -69,9 +69,17 @@ SRC_HARD += regexp.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
 SRC_C += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
-SRC_C += ceilf.c expf.c
-SRC_C += fabsf.c floorf.c fmodf.c frexpf.c hypotf.c
-SRC_C += scalbnf.c scalbinf.c sqrtf.c
+SRC_C += cbrtf.c ceilf.c copysignf.c erff.c expf.c expm1f.c
+SRC_C += fabsf.c fdimf.c floorf.c fmaxf.c fminf.c fmodf.c frexpf.c
+SRC_C += hypotf.c ilogbf.c j0f.c j1f.c jnf.c
+SRC_C += ldexpf.c lgammaf.c lgammaf_r.c logf.c log2f.c log10f.c logbf.c
+SRC_C += lrintf.c lroundf.c
+SRC_C += modff.c nearbyintf.c nextafterf.c powf.c
+SRC_C += remainderf.c remquof.c rintf.c
+SRC_C += scalbnf.c scalbinf.c
+SRC_C += sinf.c sincosf.c sinhf.c
+SRC_C += sqrtf.c tgammaf.c
+SRC_C += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
 
 SRC_CT += termcap.c
 
