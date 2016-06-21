@@ -24,6 +24,7 @@ f:0755:/bin/du         :du
 f:0755:/bin/echo       :echo
 f:0755:/bin/ed         :ed
 f:0755:/bin/env        :env
+f:0755:/bin/factor     :factor
 f:0755:/bin/false      :false
 f:0755:/bin/fdisk      :fdisk
 f:0755:/bin/fgrep      :fgrep
