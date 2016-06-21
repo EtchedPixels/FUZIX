@@ -14,7 +14,7 @@ int stricmp(const char *s, const char *d)
 		unsigned char sc = *(const uchar *) s++, dc = *(const uchar *) d++;
 
 		if (sc != dc) {
-			if (_tolower(sc) != _tolower(dc))
+			if (tolower(sc) != tolower(dc))
 				return (int) (char) (sc - dc);
 		} else if (sc == '\0')
 			break;

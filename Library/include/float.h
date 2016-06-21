@@ -1,79 +1,45 @@
-/*-------------------------------------------------------------------------
-   float.h - ANSI functions forward declarations
+/* From MUSL */
 
-   Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
+#ifndef _FLOAT_H
+#define _FLOAT_H
 
-   This library is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 2, or (at your option) any
-   later version.
+#define FLT_RADIX 2
 
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
+#define FLT_MIN 1.17549435e-38F
+#define FLT_MAX 3.40282347e+38F
+#define FLT_EPSILON 1.19209290e-07F
 
-   You should have received a copy of the GNU General Public License 
-   along with this library; see the file COPYING. If not, write to the
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.
+#define FLT_MANT_DIG 24
+#define FLT_MIN_EXP (-125)
+#define FLT_MAX_EXP 128
 
-   As a special exception, if you link this library with other files,
-   some of which are compiled with SDCC, to produce an executable,
-   this library does not by itself cause the resulting executable to
-   be covered by the GNU General Public License. This exception does
-   not however invalidate any other reasons why the executable file
-   might be covered by the GNU General Public License.
--------------------------------------------------------------------------*/
+#define FLT_DIG 6
+#define FLT_MIN_10_EXP (-37)
+#define FLT_MAX_10_EXP 38
 
-#ifndef __FLOAT_H
-#define __FLOAT_H 1
+#define DBL_MIN 2.2250738585072014e-308
+#define DBL_MAX 1.7976931348623157e+308
+#define DBL_EPSILON 2.2204460492503131e-16
 
-#include <limits.h>
+#define DBL_MANT_DIG 53
+#define DBL_MIN_EXP (-1021)
+#define DBL_MAX_EXP 1024
 
-#define FLT_RADIX       2
-#define FLT_MANT_DIG    24
-#define FLT_EPSILON     1.192092896E-07F
-#define FLT_DIG         6
-#define FLT_MIN_EXP     (-125)
-#define FLT_MIN         1.175494351E-38F
-#define FLT_MIN_10_EXP  (-37)
-#define FLT_MAX_EXP     (+128)
-#define FLT_MAX         3.402823466E+38F
-#define FLT_MAX_10_EXP  (+38)
+#define DBL_DIG 15
+#define DBL_MIN_10_EXP (-307)
+#define DBL_MAX_10_EXP 308
 
-/* the following deal with IEEE single-precision numbers */
-#define EXCESS		126
-#define SIGNBIT		((unsigned long)0x80000000)
-#define __INFINITY	((unsigned long)0x7F800000)
-#define HIDDEN		(unsigned long)(1ul << 23)
-#define SIGN(fp)	(((unsigned long)(fp) >> (8*sizeof(fp)-1)) & 1)
-#define EXP(fp)		(((unsigned long)(fp) >> 23) & (unsigned int) 0x00FF)
-#define MANT(fp)	(((fp) & (unsigned long)0x007FFFFF) | HIDDEN)
-#define NORM            0xff000000
-#define PACK(s,e,m)	((s) | ((unsigned long)(e) << 23) | (m))
+#define FLT_ROUNDS 1	/* Check this */
 
-float __uchar2fs (unsigned char);
-float __schar2fs (signed char);
-float __uint2fs (unsigned int);
-float __sint2fs (signed int);
-float __ulong2fs (unsigned long);
-float __slong2fs (signed long);
-unsigned char __fs2uchar (float);
-signed char __fs2schar (float);
-unsigned int __fs2uint (float);
-signed int __fs2sint (float);
-unsigned long __fs2ulong (float);
-signed long __fs2slong (float);
+#if defined(__SDCC_z80) || defined(__SDCC_z180)
+#define FLT_EVAL_METHOD 0
+typedef float float_t;
+typedef double double_t;
+#else
+#define FLT_EVAL_METHOD -2
+typedef float float_t;
+typedef double double_t;
+#endif
 
-float __fsadd (float, float);
-float __fssub (float, float);
-float __fsmul (float, float);
-float __fsdiv (float, float);
 
-char __fslt (float, float);
-char __fseq (float, float);
-char __fsgt (float, float);
-
-#endif	/* __SDC51_FLOAT_H */
-
+#endif

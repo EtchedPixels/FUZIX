@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-int remove(__const char *src)
+int remove(const char *src)
 {
    int er = errno;
    int rv = unlink(src);

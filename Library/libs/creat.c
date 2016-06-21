@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-int creat(__const char * file, mode_t mode)
+int creat(const char * file, mode_t mode)
 {
   return open(file, O_TRUNC|O_CREAT|O_WRONLY, mode);
 }
