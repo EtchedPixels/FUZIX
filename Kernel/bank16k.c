@@ -124,10 +124,11 @@ int pagemap_realloc(usize_t size)
 	if (have > want) {
 		for (i = want; i < have; i++) {
 			pfree[pfptr++] = ptr[i];
-			ptr[i] = ptr[3];
+			ptr[i] = ptr[ want - 1 ];
 		}
 		udata.u_ptab->p_page = udata.u_page;
 		udata.u_ptab->p_page2 = udata.u_page2;
+		program_vectors(&udata.u_page);
 		return 0;
 	}
 
