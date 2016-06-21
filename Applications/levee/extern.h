@@ -177,7 +177,6 @@ cmdtype movemap[];
 
 #if SYS5
 #define fillchar(p,l,c)	memset((p),(c),(l))
-#define index(s,c)	strchr((s),(c))
 #else /*!SYS5*/
 #if ST
 #define fillchar(p,l,c)	blkfill((p),(c),(l))
