@@ -68,33 +68,35 @@ SRC_HARD += regexp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
-SRC_C += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
-SRC_C += cbrtf.c ceilf.c copysignf.c erff.c expf.c expm1f.c
-SRC_C += fabsf.c fdimf.c floorf.c fmaxf.c fminf.c fmodf.c frexpf.c
-SRC_C += hypotf.c ilogbf.c j0f.c j1f.c jnf.c
-SRC_C += ldexpf.c lgammaf.c lgammaf_r.c logf.c log2f.c log10f.c logbf.c
-SRC_C += lrintf.c lroundf.c
-SRC_C += modff.c nearbyintf.c nextafterf.c powf.c
-SRC_C += remainderf.c remquof.c rintf.c
-SRC_C += scalbnf.c scalbinf.c
-SRC_C += sinf.c sincosf.c sinhf.c
-SRC_C += sqrtf.c tgammaf.c
-SRC_C += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
-
 SRC_CT += termcap.c
 
 SRC_CURS = $(shell find curses -name '*.c')
 
-SRC_LM = vfscanf.c vfprintf.c
-OBJ_LM = vfscanf-libm.rel vfprintf-libm.rel
+SRC_LM += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
+SRC_LM += cbrtf.c ceilf.c copysignf.c erff.c expf.c expm1f.c
+SRC_LM += fabsf.c fdimf.c floorf.c fmaxf.c fminf.c fmodf.c frexpf.c
+SRC_LM += hypotf.c ilogbf.c j0f.c j1f.c jnf.c
+SRC_LM += ldexpf.c lgammaf.c lgammaf_r.c logf.c log2f.c log10f.c logbf.c
+SRC_LM += lrintf.c lroundf.c
+SRC_LM += modff.c nearbyintf.c nextafterf.c powf.c
+SRC_LM += remainderf.c remquof.c rintf.c
+SRC_LM += scalbnf.c scalbinf.c
+SRC_LM += sinf.c sincosf.c sinhf.c
+SRC_LM += sqrtf.c tgammaf.c
+SRC_LM += vfscanf_m.c vfprintf_m.c
+SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
+
+SRC_TM = tinymalloc.c
 
 OBJ_C = $(SRC_C:.c=.rel)
 OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_CT = $(SRC_CT:.c=.rel)
+OBJ_LM = $(SRC_LM:.c=.rel)
+OBJ_TM = $(SRC_TM:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -125,13 +127,17 @@ curses$(PLATFORM).lib: $(OBJ_CURS)
 	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
 	$(AR) s curses$(PLATFORM).lib
 
+m$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	$(AR) s m$(PLATFORM).lib
+
 termcap$(PLATFORM).lib: $(OBJ_CT)
 	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
 	$(AR) s termcap$(PLATFORM).lib
 
-m$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
-	$(AR) s m$(PLATFORM).lib
+tinymalloc$(PLATFORM).lib: $(OBJ_TM)
+	$(AR) rc tinymalloc$(PLATFORM).lib $(OBJ_TM)
+	$(AR) s tinymalloc$(PLATFORM).lib
 
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
@@ -151,11 +157,11 @@ $(OBJ_CT):%.rel: %.c
 $(OBJ_CURS):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c) -o $@
 
-vfscanf-libm.rel: vfscanf.c
+$(OBJ_LM):%.rel: %.c
 	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
 
-vfprintf-libm.rel: vfscanf.c
-	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
+$(OBJ_TM):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
@@ -168,4 +174,4 @@ clean:
 install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
 	cp curses$(PLATFORM).lib termcap$(PLATFORM).lib /opt/fcc/lib/
-	cp m$(PLATFORM).lib /opt/fcc/lib/
+	cp m$(PLATFORM).lib tinymalloc$(PLATFORM).lib /opt/fcc/lib/
