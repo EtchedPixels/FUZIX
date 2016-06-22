@@ -1,0 +1,48 @@
+.SUFFIXES: .c .rel
+
+CC = fcc
+CFLAGS = -c -O2
+
+# Will need some of these if you want native executables on non-Linux/i386
+# -DDETECTAOUT			# Turn on detection.
+# -DV7_A_OUT			# a.out.h is like V7
+# -DBSD_A_OUT			# a.out.h is like BSD
+# -DSTANDARD_GNU_A_OUT		# a.out.h is like GNU normal.
+#
+# -DREL_OUTPUT -DBUGCOMPAT	# -r Produces weird *.o files.
+#
+DEFS	=-DREL_OUTPUT
+
+# An alternative file for a non-standard a.out.h (eg i386 linux on an Alpha)
+#
+# NATIVE=-DA_OUT_INCL='"a_out_local.h"' 
+
+OBJS= dumps.rel io.rel ld.rel readobj.rel table.rel typeconv.rel linksyms.rel mkar.rel \
+      writebin.rel writeemu.rel
+
+all: ld09 objchop
+
+ld09: $(OBJS)
+	$(CC) -o $@ $(OBJS)
+
+objchop: objchop.rel
+	$(CC) -o $@ $(OBJS)
+
+clean realclean clobber:
+	rm -f *.rel ld09 ld09r objchop catimage objdump09 *~
+
+$(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
+	 syshead.h type.h x86_aout.h
+
+ar.h:
+	test -f ar.h || \
+	{ rm -f ar.h ; ln -s ../libc/include/ar.h . ; } || \
+	ln ../libc/include/ar.h .
+
+writebin.rel: writebin.c
+	$(CC) $(CFLAGS) $(DEFS) $(NATIVE) -c $<
+
+writerel.rel: writebin.c
+
+.c.rel:
+	$(CC) $(CFLAGS) $(DEFS) -c $< -o $@
