@@ -1,0 +1,6 @@
+package  fforth
+if-file  fforth
+
+f 0755 /usr/bin/fforth           fforth
+d 0755 /usr/src/fforth
+f 0644 /usr/src/fforth/fforth_tests.fth   fforth_tests.fth

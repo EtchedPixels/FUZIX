@@ -1,0 +1,19 @@
+package  MWC-cmd
+if-file  ac
+
+f 0755 /usr/bin/ac         ac
+f 0755 /usr/bin/almanac    almanac
+f 0755 /usr/bin/at         at
+f 0755 /usr/bin/calendar   calendar
+f 0755 /usr/bin/col        col
+f 0755 /usr/bin/deroff     deroff
+f 0755 /usr/bin/expr       expr
+f 0755 /usr/bin/find       find
+f 0755 /usr/bin/m4         m4
+f 0755 /usr/bin/moo        moo
+f 0755 /usr/bin/pr         pr
+#which is best? This one or the one in util?
+#f 0755 /usr/bin/tar         tar
+f 0755 /usr/bin/test       test
+f 0755 /usr/bin/ttt        ttt
+f 0755 /usr/bin/units      units

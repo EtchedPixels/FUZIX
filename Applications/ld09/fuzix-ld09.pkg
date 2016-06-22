@@ -1,0 +1,4 @@
+package  ld09
+if-file  ld09
+
+f 0755 /usr/bin/ld09  ld09
