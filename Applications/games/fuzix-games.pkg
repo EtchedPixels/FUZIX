@@ -1,0 +1,32 @@
+package  games
+if-file  adv01
+
+f 0755 /usr/bin/adv01         adv01
+f 0755 /usr/bin/adv02         adv02
+f 0755 /usr/bin/adv03         adv03
+f 0755 /usr/bin/adv04         adv04
+f 0755 /usr/bin/adv05         adv05
+f 0755 /usr/bin/adv06         adv06
+f 0755 /usr/bin/adv07         adv07
+f 0755 /usr/bin/adv08         adv08
+f 0755 /usr/bin/adv09         adv09
+f 0755 /usr/bin/adv10         adv10
+f 0755 /usr/bin/adv11         adv11
+f 0755 /usr/bin/adv12         adv12
+f 0755 /usr/bin/adv13         adv13
+f 0755 /usr/bin/adv14a        adv14a
+f 0755 /usr/bin/adv14b        adv14b
+f 0755 /usr/bin/fortune       fortune
+f 0755 /usr/bin/fortune-gen   fortune-gen
+f 0755 /usr/bin/myst01        myst01
+f 0755 /usr/bin/myst02        myst02
+f 0755 /usr/bin/myst03        myst03
+f 0755 /usr/bin/myst04        myst04
+f 0755 /usr/bin/myst05        myst05
+f 0755 /usr/bin/myst06        myst06
+f 0755 /usr/bin/myst07        myst07
+f 0755 /usr/bin/myst08        myst08
+f 0755 /usr/bin/myst09        myst09
+f 0755 /usr/bin/myst10        myst10
+f 0755 /usr/bin/myst11        myst11
+f 0755 /usr/bin/qrun          qrun

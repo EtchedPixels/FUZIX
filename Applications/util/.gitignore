@@ -24,5 +24,8 @@
 # ..and miscellanea
 !fforth_tests.fth
 
+# ..and package files
+!*.pkg
+
 # ..and .gitignore itself else we don't see when it's been changed.
 !.gitignore

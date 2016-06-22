@@ -1,0 +1,4 @@
+package  ccp
+if-file  cpp
+
+f 0644 /usr/bin/cpp           cpp
