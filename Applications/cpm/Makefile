@@ -12,7 +12,7 @@ emulator: emulator.s
 	dd if=emulator.tmp of=emulator.bin bs=1 count=4096 skip=$(BASE)
 
 runcpm: runcpm.c
-	fcc -O2 -c runcpm.c
+	fcc -O2 -c --nostdio runcpm.c
 	fcc -o runcpm runcpm.rel
 	
 clean:
