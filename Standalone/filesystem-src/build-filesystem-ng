@@ -64,7 +64,7 @@ sub build_pkg_list {
             # .. and trailing whitespace
             $line =~ s/\s*$//;
             next if $line eq '';
-            my @bits = split /\s*:\s*/, $line;
+            my @bits = split " ", $line;
             if ($bits[0] eq 'package') {
                 # start a new entry
                 my @entry;
@@ -89,10 +89,6 @@ sub build_pkg_list {
             }
             else {
                 $error = $error + 1;
-                print "Store attribute $bits[0] with value $bits[1]\n";
-                foreach my $x (sort keys %legal_attr) {
-                    print "$x\n";
-                }
                 print "ERROR $x->[0]/$x->[1]:$. - unknown command/attribute or no package\n";
             }
         }
@@ -241,14 +237,7 @@ sub gen_ucp {
 }
 
 
-
-
-# [NAC HACK 2016Jun14] abstract it from command-line parameters to make it behave like
-# existing script.
-# create disk image:
-# create empty disk
-# apply ucp script
-# run fsck
+# Create disk image: create empty disk, apply ucp script, run fsck.
 sub build_dsk {
     my $swizzle = $args{endian} eq 'little' ? '' : '-X';
     if (system "../mkfs $swizzle $args{file} $args{isize} $args{bsize}") {

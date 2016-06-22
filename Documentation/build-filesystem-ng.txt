@@ -40,59 +40,59 @@ Example
 Here are 3 (cut-down) package files.
 
 ------ Standalone/filesystem-src/fuzix-basefs.pkg
-package: basefs
+package  basefs
 
-d:0755:/
-d:0755:/usr
-d:0755:/dev
-d:0755:/usr/share
+d 0755 /
+d 0755 /usr
+d 0755 /dev
+d 0755 /usr/share
 
-f:0644:/usr/share/liberror.txt     :      ../../Library/libs/liberror.txt
+f 0644 /usr/share/liberror.txt            ../../Library/libs/liberror.txt
 
-n:20666:512:/dev/tty   
+n 20666 512 /dev/tty   
 
 ======
 ------ Applications/util/fuzix-util.pkg
-package: util
+package  util
 
-f:0755:/bin/banner     :banner
-f:0755:/bin/basename   :basename
-f:0755:/bin/man        :man
-f:0644:/usr/man/man1/man.1   :man.1
+f 0755 /bin/banner      banner
+f 0755 /bin/basename    basename
+f 0755 /bin/man         man
+f 0644 /usr/man/man1/man.1    man.1
 
-package: z80-util
-if-cpu: z80
+package  z80-util
+if-cpu  z80
 
-f:0755:/bin/patchcpm   :patchcpm
+f 0755 /bin/patchcpm    patchcpm
 
 ======
 ------ Applications/rpilot-1.4.2/fuzix-rpilot.pkg
-package: rpilot
-if-file: rpilot
+package  rpilot
+if-file  rpilot
 
-f:0755:/usr/bin/rpilot                   : rpilot
-f:0644:/usr/man/man1/rpilot.1            : doc/rpilot.1
-d:0755:/usr/doc/rpilot
+f 0755 /usr/bin/rpilot                     rpilot
+f 0644 /usr/man/man1/rpilot.1              doc/rpilot.1
+d 0755 /usr/doc/rpilot
 
 ======
 
-The definition of a package extends from the "package:" keyword until the next
-"package:" keyword or until the end of the file. Thus, a file can contain
+The definition of a package extends from the "package" keyword until the next
+"package" keyword or until the end of the file. Thus, a file can contain
 multiple package definitions.
 
-The "package:" keyword is followed by zero or more attributes and then by zero
+The "package" keyword is followed by zero or more attributes and then by zero
 or more commands.
 
 There are currently 3 commands defined, each of them maps to one or more ucp
 commands. The commands are parsed and an error-free-by-construction ucp script
 is emitted and applied to the ucp executable.
 
-The "d:" command creates and sets permissions on a directory. The directory must
+The "d" command creates and sets permissions on a directory. The directory must
 be created leaf by leaf.
 
-The "n:" command creates and sets properties on a node.
+The "n" command creates and sets properties on a node.
 
-The "f:" command copies and sets permissions on a file. The destination
+The "f" command copies and sets permissions on a file. The destination
 directory must exist. The source and destination file names are specified
 independently. The source file is specified relative to the location of the
 package file (so fuzix-basefs.pkg needs to ../ its way to liberror.txt but
@@ -100,12 +100,12 @@ fuzix-util.pkg can reference banner in the cwd).
 
 Two attributes are shown:
 
-if-file: - this is used in optional packages. It checks for the existence of the
+if-file - this is used in optional packages. It checks for the existence of the
 named file. If the named file is not found, the package is disabled. This
 provides a simple method to omit groups of files from applications that have not
 been build.
 
-if-cpu: - this is used to disable a package if its content is only applicable to
+if-cpu - this is used to disable a package if its content is only applicable to
 a particular target.
 
 
@@ -154,12 +154,12 @@ Example usage is to create a "meta-package" for example:
 
 ------ Applications/fuzix-mysys.pkg
 # My custom setup
-package: mysys
-disable-pkg: mysys
+package  mysys
+disable-pkg  mysys
 
-set-cpu: 6809
-require-pkg: basefs
-disable-pkg: rpilot games
+set-cpu  6809
+require-pkg  basefs
+disable-pkg  rpilot games
 
 ======
 
@@ -180,15 +180,17 @@ and some more attributes, then a package can be found there like this:
 
 ------ Kernel/platform/fuzix.pkg
 # This is a platform-specific file found through the Kernel/platform link
-package: multicomp09
-set-cpu: 6809
-set-platform: multicomp09
-set-endian: big
-set-geometry: 256 : 65535
+package  multicomp09
+set-cpu  6809
+set-platform  multicomp09
+set-endian  big
+set-geometry  256   65535
 
 ======
 
 allowing build-filesystem to be run with no command-line arguments.
+
+4/ Add soft-link command
 
 
 Restrictions and error-handling
@@ -197,10 +199,10 @@ Restrictions and error-handling
 Within a package file, # is treated as a comment character, with no escape. Text
 from '#' to the end of the line is discarded.
 
-Whitespace is ignored and discarded.
+Whitespace acts as a separator. Excess whitespace is ignored and discarded.
 
-There is no accommodation for file-names that include quotes or slashes or
-anything weird.
+There is no accommodation for file-names that include whitespace or quotes or
+slashes or anything weird.
 
 Attempts to multiply-define a directory/node/file generate an error, referenced
 back to the source directory/file/line (ucp allows a file to be redefined but I

@@ -1,7 +1,7 @@
-package: V7-games
-if-file: arithmetic
+package  V7-games
+if-file  arithmetic
 
-f:0755:/usr/bin/arithmetic  : arithmetic
-f:0755:/usr/bin/wump        : wump
-f:0755:/usr/bin/fish        : fish
-f:0755:/usr/bin/backgammon  : backgammon
+f 0755 /usr/bin/arithmetic    arithmetic
+f 0755 /usr/bin/wump          wump
+f 0755 /usr/bin/fish          fish
+f 0755 /usr/bin/backgammon    backgammon

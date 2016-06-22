@@ -1,139 +1,139 @@
-package: basefs
+package  basefs
 
-# d:xxxx:yyy
+# d xxxx yyy
 # directory xxxx is the ownership yyyy is the path
 # cannot create a path unless its parent exists
 # a directory must be fully specified starting at /
 
-d:0755:/
-d:0755:/bin
-d:0755:/dev
-d:0755:/etc
-d:0755:/mnt
-d:01777:/tmp
-d:0755:/usr
-d:0755:/var
-d:0700:/root
+d 0755 /
+d 0755 /bin
+d 0755 /dev
+d 0755 /etc
+d 0755 /mnt
+d 01777 /tmp
+d 0755 /usr
+d 0755 /var
+d 0700 /root
 
-d:0755:/usr/lib
-d:0755:/usr/bin
-d:0755:/usr/include
-d:0755:/usr/share
+d 0755 /usr/lib
+d 0755 /usr/bin
+d 0755 /usr/include
+d 0755 /usr/share
 
-f:0644:/usr/share/liberror.txt     :      ../../Library/libs/liberror.txt
+f 0644 /usr/share/liberror.txt            ../../Library/libs/liberror.txt
 
-d:0755:/var/spool
-d:0755:/var/mail
-d:0755:/var/run
+d 0755 /var/spool
+d 0755 /var/mail
+d 0755 /var/run
 
-n:20666:512:/dev/tty   
-n:20660:513:/dev/tty1  
-n:20660:514:/dev/tty2  
-n:20660:515:/dev/tty3  
-n:20660:516:/dev/tty4  
-n:20660:517:/dev/tty5  
-n:20660:518:/dev/tty6  
-n:20660:519:/dev/tty7  
-n:20660:520:/dev/tty8  
-n:60660:0:/dev/hda   
-n:60660:1:/dev/hda1  
-n:60660:2:/dev/hda2  
-n:60660:3:/dev/hda3  
-n:60660:4:/dev/hda4  
-n:60660:5:/dev/hda5  
-n:60660:6:/dev/hda6  
-n:60660:7:/dev/hda7  
-n:60660:8:/dev/hda8  
-n:60660:9:/dev/hda9  
-n:60660:10:/dev/hda10 
-n:60660:11:/dev/hda11 
-n:60660:12:/dev/hda12 
-n:60660:13:/dev/hda13 
-n:60660:14:/dev/hda14 
-n:60660:15:/dev/hda15 
-n:60660:16:/dev/hdb   
-n:60660:17:/dev/hdb1  
-n:60660:18:/dev/hdb2  
-n:60660:19:/dev/hdb3  
-n:60660:20:/dev/hdb4  
-n:60660:21:/dev/hdb5  
-n:60660:22:/dev/hdb6  
-n:60660:23:/dev/hdb7  
-n:60660:24:/dev/hdb8  
-n:60660:25:/dev/hdb9  
-n:60660:26:/dev/hdb10 
-n:60660:27:/dev/hdb11 
-n:60660:28:/dev/hdb12 
-n:60660:29:/dev/hdb13 
-n:60660:30:/dev/hdb14 
-n:60660:31:/dev/hdb15 
-n:60660:32:/dev/hdc   
-n:60660:33:/dev/hdc1  
-n:60660:34:/dev/hdc2  
-n:60660:35:/dev/hdc3  
-n:60660:36:/dev/hdc4  
-n:60660:37:/dev/hdc5  
-n:60660:38:/dev/hdc6  
-n:60660:39:/dev/hdc7  
-n:60660:40:/dev/hdc8  
-n:60660:41:/dev/hdc9  
-n:60660:42:/dev/hdc10 
-n:60660:43:/dev/hdc11 
-n:60660:44:/dev/hdc12 
-n:60660:45:/dev/hdc13 
-n:60660:46:/dev/hdc14 
-n:60660:47:/dev/hdc15 
-n:60660:48:/dev/hdd   
-n:60660:49:/dev/hdd1  
-n:60660:50:/dev/hdd2  
-n:60660:51:/dev/hdd3  
-n:60660:52:/dev/hdd4  
-n:60660:53:/dev/hdd5  
-n:60660:54:/dev/hdd6  
-n:60660:55:/dev/hdd7  
-n:60660:56:/dev/hdd8  
-n:60660:57:/dev/hdd9  
-n:60660:58:/dev/hdd10 
-n:60660:59:/dev/hdd11 
-n:60660:60:/dev/hdd12 
-n:60660:61:/dev/hdd13 
-n:60660:62:/dev/hdd14 
-n:60660:63:/dev/hdd15 
-n:60660:256:/dev/fd0   
-n:60660:257:/dev/fd1   
-n:60660:258:/dev/fd2   
-n:60660:259:/dev/fd3   
-n:20666:1024:/dev/null  
-n:20660:1025:/dev/mem   
-n:20444:1026:/dev/zero  
-n:20666:1027:/dev/proc  
+n 20666 512 /dev/tty   
+n 20660 513 /dev/tty1  
+n 20660 514 /dev/tty2  
+n 20660 515 /dev/tty3  
+n 20660 516 /dev/tty4  
+n 20660 517 /dev/tty5  
+n 20660 518 /dev/tty6  
+n 20660 519 /dev/tty7  
+n 20660 520 /dev/tty8  
+n 60660 0 /dev/hda   
+n 60660 1 /dev/hda1  
+n 60660 2 /dev/hda2  
+n 60660 3 /dev/hda3  
+n 60660 4 /dev/hda4  
+n 60660 5 /dev/hda5  
+n 60660 6 /dev/hda6  
+n 60660 7 /dev/hda7  
+n 60660 8 /dev/hda8  
+n 60660 9 /dev/hda9  
+n 60660 10 /dev/hda10 
+n 60660 11 /dev/hda11 
+n 60660 12 /dev/hda12 
+n 60660 13 /dev/hda13 
+n 60660 14 /dev/hda14 
+n 60660 15 /dev/hda15 
+n 60660 16 /dev/hdb   
+n 60660 17 /dev/hdb1  
+n 60660 18 /dev/hdb2  
+n 60660 19 /dev/hdb3  
+n 60660 20 /dev/hdb4  
+n 60660 21 /dev/hdb5  
+n 60660 22 /dev/hdb6  
+n 60660 23 /dev/hdb7  
+n 60660 24 /dev/hdb8  
+n 60660 25 /dev/hdb9  
+n 60660 26 /dev/hdb10 
+n 60660 27 /dev/hdb11 
+n 60660 28 /dev/hdb12 
+n 60660 29 /dev/hdb13 
+n 60660 30 /dev/hdb14 
+n 60660 31 /dev/hdb15 
+n 60660 32 /dev/hdc   
+n 60660 33 /dev/hdc1  
+n 60660 34 /dev/hdc2  
+n 60660 35 /dev/hdc3  
+n 60660 36 /dev/hdc4  
+n 60660 37 /dev/hdc5  
+n 60660 38 /dev/hdc6  
+n 60660 39 /dev/hdc7  
+n 60660 40 /dev/hdc8  
+n 60660 41 /dev/hdc9  
+n 60660 42 /dev/hdc10 
+n 60660 43 /dev/hdc11 
+n 60660 44 /dev/hdc12 
+n 60660 45 /dev/hdc13 
+n 60660 46 /dev/hdc14 
+n 60660 47 /dev/hdc15 
+n 60660 48 /dev/hdd   
+n 60660 49 /dev/hdd1  
+n 60660 50 /dev/hdd2  
+n 60660 51 /dev/hdd3  
+n 60660 52 /dev/hdd4  
+n 60660 53 /dev/hdd5  
+n 60660 54 /dev/hdd6  
+n 60660 55 /dev/hdd7  
+n 60660 56 /dev/hdd8  
+n 60660 57 /dev/hdd9  
+n 60660 58 /dev/hdd10 
+n 60660 59 /dev/hdd11 
+n 60660 60 /dev/hdd12 
+n 60660 61 /dev/hdd13 
+n 60660 62 /dev/hdd14 
+n 60660 63 /dev/hdd15 
+n 60660 256 /dev/fd0   
+n 60660 257 /dev/fd1   
+n 60660 258 /dev/fd2   
+n 60660 259 /dev/fd3   
+n 20666 1024 /dev/null  
+n 20660 1025 /dev/mem   
+n 20444 1026 /dev/zero  
+n 20666 1027 /dev/proc  
 
-f:0644:/etc/issue:    etc-files/issue
-f:0644:/etc/motd:     etc-files/motd
-f:0644:/etc/passwd:   etc-files/passwd
-f:0644:/etc/inittab:  etc-files/inittab
-f:0644:/etc/termcap:  etc-files/termcap
+f 0644 /etc/issue     etc-files/issue
+f 0644 /etc/motd      etc-files/motd
+f 0644 /etc/passwd    etc-files/passwd
+f 0644 /etc/inittab   etc-files/inittab
+f 0644 /etc/termcap   etc-files/termcap
 
-f:0755:/init:         ../../Applications/util/init
+f 0755 /init          ../../Applications/util/init
 
 
-d:0755:/usr/doc
+d 0755 /usr/doc
 
-d:0755:/usr/man
-d:0755:/usr/man/man1
-d:0755:/usr/man/man2
-d:0755:/usr/man/man3
-d:0755:/usr/man/man4
-d:0755:/usr/man/man5
-d:0755:/usr/man/man6
-d:0755:/usr/man/man7
+d 0755 /usr/man
+d 0755 /usr/man/man1
+d 0755 /usr/man/man2
+d 0755 /usr/man/man3
+d 0755 /usr/man/man4
+d 0755 /usr/man/man5
+d 0755 /usr/man/man6
+d 0755 /usr/man/man7
 
-d:0755:/usr/src
+d 0755 /usr/src
 
 # duplicate node - not allowed; will create error in ucp
-##n:20666:1027:/dev/proc
+##n 20666 1027 /dev/proc
 # duplicate directory - not allowed; will create error in ucp
-##d:0755:/usr/src
+##d 0755 /usr/src
 # duplicate file - not allowed (but ucp *will* allow these)
 # files are specified relative to the location of the package file
-##f:0644:/usr/share/liberror.txt     :      ../../Library/libs/liberror.txt
+##f 0644 /usr/share/liberror.txt            ../../Library/libs/liberror.txt

@@ -1,4 +1,4 @@
-package: levee
-if-file: levee
+package  levee
+if-file  levee
 
-f:0755:/bin/levee      :../../Applications/levee/levee
+f 0755 /bin/levee       ../../Applications/levee/levee
