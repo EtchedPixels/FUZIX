@@ -1,0 +1,11 @@
+- Debug stack offsets
+- Get code generation working and suiting things like as09
+- Write some copt rules to stop the output sucking so much
+- Steal the rst tricks done by BDS C
+- Output mixed code/data so we can flush the literal pool every line of asm
+  and maybe even get rid of the literal pool (2.5K saving)
+- Can we split the preprocessor optionally
+- Work out what is needed for stack frame based Z80 and 6809 code
+
+Easy small C fixups worth doing in passing
+- \x and \001 style escapes
