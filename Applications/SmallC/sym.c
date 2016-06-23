@@ -239,6 +239,8 @@ void declare_local(int typ, int stclass, int otag) {
                     }
                 }
             }
+            /* FIXME: do one gen_modify_stack at the end and
+               some kind of align method here */
             if (stclass != LSTATIC) {
                 stkp = gen_modify_stack(stkp - k);
                 add_local(sname, j, typ, stkp, AUTO);
@@ -328,6 +330,7 @@ int add_global (char *sname, int identity, int type, int offset, int storage) {
     current_symbol_table_idx = global_table_index;
     symbol = &symbol_table[current_symbol_table_idx];
     buffer_ptr = symbol->name;
+    /* FIXME: only copy so many bytes */
     while (alphanumeric(*buffer_ptr++ = *sname++));
     symbol->identity = identity;
     symbol->type = type;
@@ -361,6 +364,7 @@ int add_local (char *sname, int identity, int type, int offset, int storage_clas
     current_symbol_table_idx = local_table_index;
     symbol = &symbol_table[current_symbol_table_idx];
     buffer_ptr = symbol->name;
+    /* FIXME: only copy so many bytes */
     while (alphanumeric(*buffer_ptr++ = *sname++));
     symbol->identity = identity;
     symbol->type = type;

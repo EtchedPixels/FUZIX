@@ -62,6 +62,8 @@ extern void gen_unsigned_less_than(void);
 extern void gen_unsigned_less_or_equal(void);
 extern void gen_usigned_greater_than(void);
 extern void gen_unsigned_greater_or_equal(void);
+extern void gen_prologue(void);
+extern void gen_epilogue(void);
 extern char *inclib(void);
 extern void gnargs(int d);
 extern int assemble(char *s);

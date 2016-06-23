@@ -75,10 +75,12 @@ void newfunc(void) {
             }
         }
     }
+    gen_prologue();
     statement(YES);
     print_label(fexitlab);
     output_label_terminator();
     newline();
+    gen_epilogue();
     gen_modify_stack(0);
     gen_ret();
     stkp = 0;

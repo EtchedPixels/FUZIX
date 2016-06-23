@@ -112,7 +112,6 @@ void fpubext(SYMBOL *scptr) {
  * @param num
  */
 void output_number(int num) {
-    output_byte('#');
     output_decimal(num);
 }
 
@@ -140,7 +139,7 @@ void gen_get_memory(SYMBOL *sym) {
         output_line("ld l,a");
         output_line("ld h,0");
     } else {
-        output_with_tab ("ld hl,");
+        output_with_tab ("*ld hl,");
         output_bracketed(sym->name);
         newline ();
     }
@@ -160,19 +159,13 @@ int gen_get_locale(SYMBOL *sym) {
         newline();
         return HL_REG;
     } else {
-        if (uflag && !(sym->identity == ARRAY)) {// ||
-                //(sym->identity == VARIABLE && sym->type == STRUCT))) {
-            output_with_tab("ldsi\t");
-            output_number(sym->offset - stkp);
-            newline ();
-            return DE_REG;
-        } else {
-            gen_immediate();
-            output_number(sym->offset - stkp);
-            newline ();
-            output_line ("add hl, sp");
-            return HL_REG;
-        }
+        gen_immediate();
+        output_number(sym->offset - stkp);
+/*        output_string(" ; ");
+        output_number(sym->offset + 2);*/
+        newline ();
+        output_line ("add hl,sp");
+        return HL_REG;
     }
 }
 
@@ -229,17 +222,10 @@ void gen_get_indirect(char typeobj, int reg) {
         output_line("ld l,(hl)");
         output_line("ld h,0");
     } else { // int
-        if (uflag) {
-            if (reg & HL_REG) {
-                gen_swap();
-            }
-            output_line("lhlx");
-        } else {
-            output_line("ld a,(hl)");
-            output_line("inc hl");
-            output_line("ld h,(hl)");
-            output_line("ld l,a");
-        }
+        output_line("ld a,(hl)");
+        output_line("inc hl");
+        output_line("ld h,(hl)");
+        output_line("ld l,a");
     }
 }
 
@@ -302,7 +288,26 @@ void gen_call(char *sname) {
 void declare_entry_point(char *symbol_name) {
     output_string(symbol_name);
     output_label_terminator();
-    //newline();
+    newline();
+}
+
+void gen_prologue(void)
+{
+#if 0
+    output_line("push ix");
+    output_line("ld ix,#0");
+    output_line("add ix,sp");
+    stkp = stkp - INTSIZE;
+#endif
+}
+
+void gen_epilogue(void)
+{
+#if 0
+    output_line("ld sp,ix");
+    output_line("pop ix");
+    stkp = 0;
+#endif
 }
 
 /**

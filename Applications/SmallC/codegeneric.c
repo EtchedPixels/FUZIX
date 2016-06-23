@@ -131,7 +131,7 @@ void gen_get_memory(SYMBOL *sym) {
         output_bracketed(sym->name);
         newline();
     } else {
-        output_with_tab ("load r1 ");
+        output_with_tab ("(ggm)load r1 ");
         output_bracketed(sym->name);
         newline ();
     }
@@ -151,18 +151,11 @@ int gen_get_locale(SYMBOL *sym) {
         newline();
         return HL_REG;
     } else {
-        if (uflag && !(sym->identity == ARRAY)) {// ||
-                //(sym->identity == VARIABLE && sym->type == STRUCT))) {
-            output_with_tab("ldsi\t");
-            output_number(sym->offset - stkp);
-            newline ();
-            return DE_REG;
-        } else {
-            gen_immediate();
-            output_number(sym->offset - stkp);
-            output_line ("+sp");
-            return HL_REG;
-        }
+        gen_immediate();
+        output_number(sym->offset - stkp);
+        output_string("+sp");
+        newline();
+        return HL_REG;
     }
 }
 
