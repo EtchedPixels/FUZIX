@@ -3,8 +3,7 @@
  * under the GNU Library General Public License.
  */
 
-#include <string.h>
-#include <sys/types.h>
+#include <stdlib.h>
 
 long labs(long arg1)
 {

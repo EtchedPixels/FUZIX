@@ -43,6 +43,8 @@ extern int atoi(const char *__nptr);
 extern long atol(const char *__nptr);
 extern double atof(const char *__nptr);
 
+extern int abs(int __i);
+extern int labs(long __i);
 extern char *_itoa(int __value);
 extern char *_uitoa(unsigned int __value);
 extern char *_ltoa(long __value);
