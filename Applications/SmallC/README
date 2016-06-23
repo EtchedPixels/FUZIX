@@ -1,3 +1,7 @@
+The below describes all the core files except for the codez80 which was
+added by Alan Cox and copt.c which is a separate tool and under the GPL (see
+copt.c)
+
 
 README for version imported from github SmallC-85
 -------------------------------------------------
