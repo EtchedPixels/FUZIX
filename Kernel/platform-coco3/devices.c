@@ -8,6 +8,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <dwtime.h>
 
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -47,5 +48,7 @@ void device_init(void)
 #ifdef CONFIG_COCOSDC
 	devsdc_init( );
 #endif
+	dwtime_init( );
+	inittod();
 }
 

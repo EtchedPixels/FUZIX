@@ -1,5 +1,5 @@
 
-CSRCS = ttydw.c mbr.c
+CSRCS = ttydw.c mbr.c dwtime.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
 CDSRCS = ../dev/devide_discard.c
@@ -38,8 +38,9 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 
 image:
-	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c 
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../timer.o ../timer.c
 	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
 	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o ../usermem.o ../usermem.c
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
@@ -53,7 +54,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o
+	videoll.o dwtime.o 
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s
