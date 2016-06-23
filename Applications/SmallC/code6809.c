@@ -1,9 +1,3 @@
-/*      File codeas09.c: 2.2 (84/08/31,10:05:13) */
-/*% cc -O -c %
- *
- *	THIS IS FROM AN OLDER VERSION OF THE COMPILER: WILL NEED PORTING
- */
-
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
@@ -18,779 +12,711 @@
  *      This compiler assumes that an integer is the SAME length as
  *      a pointer - in fact, the compiler uses INTSIZE for both.
  */
-#define INTSIZE 2
-#define BYTEOFF 1
 
-void tab(void)
-{
-        output_byte('\t');
-}
-
-void ot(char ptr[])
-{
-        tab ();
-        output_string (ptr);
-
-}
-
-void ol(char ptr[])
-{
-        ot (ptr);
-        newline();
-}
-
-
-
-/*
- *      print all assembler info before any code is generated
- *
+/**
+ * print all assembler info before any code is generated
  */
-void header(void)
-{
-        output_string("|\tSmall C MC6809\n|\tCoder (2.4,84/11/27)\n|");
-        frontend_version();
-        newline();
-        ol (".globl\tsmul,sdiv,smod,asr,asl,neg,lneg,case");
-        ol (".globl\teq,ne,lt,le,gt,ge,ult,ule,ugt,uge,bool");
-
+void header (void) {
+    output_string ("; Small C Z80\n;\tCoder (ac0)\n;");
+    frontend_version();
+    newline ();
+    output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
+    output_line ("\t.module SMALLC_GENERATED");
 }
 
+/**
+ * prints new line
+ * @return
+ */
+void newline (void) {
+    output_byte (LF);
+}
 
 void initmac(void) {
-        defmac("mc6809\t1");
-        defmac("mitas09\t1");
-        defmac("smallc\t1");
-
+    defmac("mc6809\t1");
+    defmac("smallc\t1");
 }
 
-int galign(int t)
-{
-        return (t);
-
-}
-
-/*
- *      return size of an integer
+/**
+ * Output internal generated label prefix
  */
-int intsize(void) {
-        return(INTSIZE);
-
+void output_label_prefix(void) {
+    output_byte('_');
 }
 
-/*
- *      return offset of ls byte within word
- *      (ie: 8080 & pdp11 is 0, 6809 is 1, 360 is 3)
+/**
+ * Output a label definition terminator
  */
-int byteoff(void) {
-        return(BYTEOFF);
+void output_label_terminator (void) {
+    output_byte (':');
 }
 
-/*
- *      Output internal generated label prefix
+/**
+ * begin a comment line for the assembler
  */
-void olprfix(void) {
-        output_string("LL");
-
+void gen_comment(void) {
+    output_byte (';');
 }
 
-/*
- *      Output a label definition terminator
+/**
+ * print any assembler stuff needed after all code
  */
-void col(void)
-{
-        output_string ("=.\n");
-
+void trailer(void) {
+    output_line (";\t.end");
 }
 
-/*
- *      begin a comment line for the assembler
- *
+/**
+ * text (code) segment
  */
-void comment(void)
-{
-        output_byte ('|');
-
+void code_segment_gtext(void) {
+    output_line ("\t.text");
 }
 
-/*
- *      Output a prefix in front of user labels
+/**
+ * data segment
  */
-void prefix(void) {
-        output_byte('_');
-
+void data_segment_gdata(void) {
+    output_line ("\t.data");
 }
 
-/*
- *      print any assembler stuff needed after all code
- *
+/**
+ * Output the variable symbol at scptr as an extrn or a public
+ * @param scptr
  */
-void trailer(void)
-{
-        ol (".end");
-
+void ppubext(SYMBOL *scptr)  {
+    if (symbol_table[current_symbol_table_idx].storage == STATIC) return;
+    output_with_tab (scptr->storage == EXTERN ? ".extrn\t" : ".globl\t");
+    output_string (scptr->name);
+    newline();
 }
 
-/*
- *      function prologue
- */
-void prologue(void)
-{
-
-}
-
-/*
- *      text (code) segment
- */
-
-void gtext(void)
-{
-        ol (".text");
-
-}
-
-/*
- *      data segment
- */
-void gdata(void)
-{
-        ol (".data");
-
-}
-
-/*
- *  Output the variable symbol at scptr as an extrn or a public
- */
-void ppubext(char *scptr)
-{
-        if (scptr[STORAGE] == STATIC)
-                return;
-        ot (".globl\t");
-        prefix ();
-        output_string (scptr);
-        nl();
-
-}
-
-/*
+/**
  * Output the function symbol at scptr as an extrn or a public
+ * @param scptr
  */
-void fpubext(char *scptr) {
-        ppubext(scptr);
-
+void fpubext(SYMBOL *scptr) {
+    if (scptr->storage == STATIC) return;
+    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ".extrn\t");
+    output_string (scptr->name);
+    newline ();
 }
 
-/*
- *  Output a decimal number to the assembler file
+/**
+ * Output a decimal number to the assembler file, with # prefix
+ * @param num
  */
-void onum(int num) {
-        output_decimal(num);    /* pdp11 needs a "." here */
-        output_byte('.');
+void output_number(int num) {
+    output_byte('#');
+    output_decimal(num);
 }
 
-/*
- *      fetch a static memory cell into the primary register
+/**
+ * fetch a static memory cell into the primary register
+ * @param sym
  */
-
-void getmem(char *sym)
-{
-        if ((sym[IDENT] != POINTER) & (sym[TYPE] == CCHAR)) {
-                ot ("ldb\t");
-                prefix ();
-                output_string (sym + NAME);
-                newline();
-                ot ("sex");
-                newline();
-        } else {
-                ot ("ldd\t");
-                prefix ();
-                output_string (sym + NAME);
-                newline();
-        }
-}
-
-/*
- *      fetch the address of the specified symbol into the primary register
- *
- */
-void getloc(char *sym)
-{
-        if (sym[STORAGE] == LSTATIC) {
-                immed();
-                printlabel(glint(sym));
-                nl();
-        } else {
-                ot ("leay\t");
-                onum (glint(sym) - stkp);
-                output_string ("(s)\n\ttfr\ty,d\n");
-        }
-
-}
-
-/*
- *      store the primary register into the specified static memory cell
- *
- */
-void putmem (char *sym)
-{
-        if ((sym[IDENT] != POINTER) & (sym[TYPE] == CCHAR)) {
-                ot ("stb\t");
-        } else
-                ot ("std\t");
-        prefix ();
-        output_string (sym + NAME);
+void gen_get_memory(SYMBOL *sym) {
+    if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
+        output_with_tab("ldb ");
+        output_string(sym->name);
+        newline ();
+        output_line("sex");
+    } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
+        output_with_tab("ldb ");
+        output_string(sym->name);
         newline();
-
+        output_line("clr a");
+    } else {
+        output_with_tab ("ldd ");
+        output_string(sym->name);
+        newline ();
+    }
 }
 
-/*
- *      store the specified object type in the primary register
- *      at the address on the top of the stack
- *
+/**
+ * asm - fetch the address of the specified symbol into the primary register
+ * @param sym the symbol name
+ * @return which register pair contains result
  */
-void putstk(char typeobj)
-{
-        if (typeobj == CCHAR)
-                ol ("stb\t@(s)++");
-        else
-                ol ("std\t@(s)++");
-        stkp = stkp + INTSIZE;
-
+int gen_get_locale(SYMBOL *sym) {
+    if (sym->storage == LSTATIC) {
+        gen_immediate();
+        print_label(sym->offset);
+        newline();
+        return HL_REG;
+    } else {
+        output_line("leay ");
+        output_number(sym->offset - stkp);
+        output_string("(s)");
+        newline ();
+        output_line("tfr y,d");
+        return HL_REG;
+    }
 }
 
-/*
- *      fetch the specified object type indirect through the primary
- *      register into the primary register
- *
+/**
+ * asm - store the primary register into the specified static memory cell
+ * @param sym
  */
-void indirect (char typeobj)
-{
-        ol("tfr\td,y");
-        if (typeobj == CCHAR)
-                ol ("ldb\t(y)\n\tsex");
-        else
-                ol ("ldd\t(y)");
-
+void gen_put_memory(SYMBOL *sym) {
+    if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
+        output_with_tab ("stb ");
+        output_string(sym->name);
+    } else {
+        output_with_tab("std ");
+        output_string(sym->name);
+    }
+    newline ();
 }
 
-/*
- *      swap the primary and secondary registers
- *
+/**
+ * store the specified object type in the primary register
+ * at the address in secondary register (on the top of the stack)
+ * @param typeobj
  */
-void swap(void)
-{
-        ol ("exg\td,x");
-
+void gen_put_indirect(char typeobj) {
+    /* pop ? */
+    output_line("tfr d,y");
+    if (typeobj & CCHAR) {
+        output_line("stb ,y");
+    } else {
+        output_line("std ,y");
+    }
 }
 
-/*
- *      print partial instruction to get an immediate value into
- *      the primary register
- *
+/**
+ * fetch the specified object type indirect through the primary
+ * register into the primary register
+ * @param typeobj object type
  */
-void immed(void)
-{
-        ot ("ldd\t#");
-
+void gen_get_indirect(char typeobj, int reg) {
+    if (typeobj == CCHAR) {
+        if (reg & DE_REG) {
+            gen_swap();
+        }
+        output_line("loadbs r1 (r1)");
+    } else if (typeobj == UCHAR) {
+        if (reg & DE_REG) {
+            gen_swap();
+        }
+        //gen_call("cguchar");
+        output_line("loadbu r1 (r1)");
+    } else { // int
+         output_line("load r1 (r1)");
+    }
 }
 
-/*
- *      push the primary register onto the stack
- *
+/**
+ * swap the primary and secondary registers
  */
-void gpush(void)
-{
-        ol ("pshs\td");
+void gen_swap(void) {
+    output_line("exg d,x");
+}
+
+/**
+ * print partial instruction to get an immediate value into
+ * the primary register
+ */
+void gen_immediate(void) {
+    output_with_tab ("ldd ");
+}
+
+/**
+ * push the primary register onto the stack
+ */
+void gen_push(int reg) {
+    if (reg & DE_REG) {
+        output_line ("pshs x");
         stkp = stkp - INTSIZE;
-
+    } else {
+        output_line ("pshs d");
+        stkp = stkp - INTSIZE;
+    }
 }
 
-/*
- *      pop the top of the stack into the secondary register
- *
+/**
+ * pop the top of the stack into the secondary register
  */
-void gpop(void)
-{
-        ol ("puls\td");
-        stkp = stkp + INTSIZE;
-
+void gen_pop(void) {
+    output_line ("puls x");
+    stkp = stkp + INTSIZE;
 }
 
-/*
- *      swap the primary register and the top of the stack
- *
+/**
+ * swap the primary register and the top of the stack
  */
-void swapstk(void)
-{
-        ol ("ldy\t(s)\nstd\t(s)\n\ttfr\ty,d");
-
+void gen_swap_stack(void) {
+    output_line("ldy (s)");
+    output_line("std (s)");
+    output_line("tfr y,d");
 }
 
-/*
- *      call the specified subroutine name
- *
+/**
+ * call the specified subroutine name
+ * @param sname subroutine name
  */
-void gcall(char *sname)
-{
-        ot ("jsr\t");
-        if (*sname == '^')
-                output_string (++sname);
-        else {
-                prefix ();
-                output_string (sname);
-        }
-        newline();
-
+void gen_call(char *sname) {
+    output_with_tab ("jsr ");
+    output_string (sname);
+    newline ();
 }
 
-/*
- *      return from subroutine
- *
+/**
+ * declare entry point
  */
-void gret(void)
-{
-        ol ("rts");
-
+void declare_entry_point(char *symbol_name) {
+    output_string(symbol_name);
+    output_label_terminator();
+    //newline();
 }
 
-/*
- *      perform subroutine call to value on top of stack
- *
+/**
+ * return from subroutine
  */
-void callstk(void)
-{
-        gpop();
-        ol("jsr\t(x)");
-
+void gen_ret(void) {
+    output_line ("rts");
 }
 
-/*
- *      jump to specified internal label number
- *
+/**
+ * perform subroutine call to value on top of stack
  */
-void jump(int label)
-{
-        ot ("lbra\t");
-        printlabel(label);
-        nl();
-
+void callstk(void) {
+    output_line ("jsr (x)");
 }
 
-/*
- *      test the primary register and jump if false to label
- *
+/**
+ * jump to specified internal label number
+ * @param label the label
  */
-void testjump (int label, int ft)
+void gen_jump(int label)
 {
-        ol ("cmpd\t#0");
-        if (ft)
-                ot ("lbne\t");
-        else
-                ot ("lbeq\t");
-        printlabel (label);
-        newline();
-
+    output_with_tab ("lbra ");
+    print_label (label);
+    newline ();
 }
 
-/*
- *      print pseudo-op  to define a byte
- *
+/**
+ * test the primary register and jump if false to label
+ * @param label the label
+ * @param ft if true jnz is generated, jz otherwise
  */
-void defbyte(void)
+void gen_test_jump(int label, int ft)
 {
-        ot (".byte\t");
-
+    output_line ("cmpd #0");
+    if (ft)
+        output_with_tab ("lbne ");
+    else
+        output_with_tab ("lbeq ");
+    print_label (label);
+    newline ();
 }
 
-/*
- *      print pseudo-op to define storage
- *
+/**
+ * print pseudo-op  to define a byte
  */
-void defstorage(void)
-{
-        ot (".blkb\t");
-
+void gen_def_byte(void) {
+    output_with_tab (".byte ");
 }
 
-/*
- *      print pseudo-op to define a word
- *
+/**
+ * print pseudo-op to define storage
  */
-
-void defword(void)
-{
-        ot (".word\t");
-
+void gen_def_storage(void) {
+    output_with_tab (".blkb ");
 }
 
-/*
- *      modify the stack pointer to the new value indicated
- *
+/**
+ * print pseudo-op to define a word
  */
-void modstk(int newstkp)
-{
-        int     k;
+void gen_def_word(void) {
+    output_with_tab (".word ");
+}
 
-        k = galign(newstkp - stkp);
-        if (k == 0)
-                return (newstkp);
-        ot ("leas\t");
-        onum (k);
-        output_string ("(s)\n");
+/**
+ * modify the stack pointer to the new value indicated
+ * @param newstkp new value
+ */
+int gen_modify_stack(int newstkp) {
+    int k;
+
+    k = newstkp - stkp;
+    if (k == 0)
         return (newstkp);
-
+    output_with_tab("leas ");
+    output_decimal(k);
+    output_string("(s)");
+    newline();
+    return (newstkp);
 }
 
-/*
- *      multiply the primary register by INTSIZE
+/**
+ * multiply the primary register by INTSIZE
  */
-void gaslint(void)
-{
-        ol ("aslb\n\trola");
-
+void gen_multiply_by_two(void) {
+    output_line("aslb");
+    output_line("rola");
 }
 
-/*
- *      divide the primary register by INTSIZE
+/**
+ * divide the primary register by INTSIZE, never used
  */
-void gasrint(void)
-{
-        ol ("asra\n\trorb");
-
+void gen_divide_by_two(void) {
+    output_line("asra");
+    output_line("rorb");
 }
 
-/*
- *      Case jump instruction
+/**
+ * Case jump instruction
  */
-void gjcase(void) {
-        ot ("jmp\tcase");
-        newline();
-
+void gen_jump_case(void) {
+    output_with_tab ("jump cccase");
+    newline ();
 }
 
-/*
- *      add the primary and secondary registers
- *      if lval2 is int pointer and lval is int, scale lval
+/**
+ * add the primary and secondary registers
+ * if lval2 is int pointer and lval is not, scale lval
+ * @param lval
+ * @param lval2
  */
-void gadd (LVALUE *lval, LVALUE *lval2)
-{
-        if (dbltest (lval2, lval)) {
-                ol ("asl\t1(s)\n\trol\t(s)");
-        }
-        ol ("addd\t(s)++");
-        stkp = stkp + INTSIZE;
-
+void gen_add(LVALUE *lval, LVALUE *lval2) {
+    if (dbltest (lval2, lval)) {
+        output_line("asl 1(s)");
+        output_line("rol (s)");
+    }
+    output_line ("addd (s)++");
+    stkp += INTSIZE;
 }
 
-/*
- *      subtract the primary register from the secondary
- *
+/**
+ * subtract the primary register from the secondary
  */
-void gsub(void)
-{
-        ol ("subd\t(s)++\n\tcoma\n\tcomb\n\taddd\t#1");
-        stkp = stkp + INTSIZE;
-
+void gen_sub(void) {
+    /* Double check */
+    output_line("subd (s)++");
+    output_line("coma");
+    output_line("comb");
+    output_line("addd #1");
+    stkp += INTSIZE;
 }
 
-/*
- *      multiply the primary and secondary registers
- *      (result in primary)
- *
+/**
+ * multiply the primary and secondary registers (result in primary)
  */
-void gmult(void)
-{
-        gcall ("^smul");
-        stkp = stkp + INTSIZE;
-
+void gen_mult(void) {
+    gen_pop();
+    gen_call ("__mul");
 }
 
-/*
- *      divide the secondary register by the primary
- *      (quotient in primary, remainder in secondary)
- *
+/**
+ * divide the secondary register by the primary
+ * (quotient in primary, remainder in secondary)
  */
-void gdiv(void)
-{
-        gcall ("^sdiv");
-        stkp = stkp + INTSIZE;
-
+void gen_div(void) {
+    gen_pop();
+    output_line("__div");
 }
 
-/*
- *      compute the remainder (mod) of the secondary register
- *      divided by the primary register
- *      (remainder in primary, quotient in secondary)
- *
+/**
+ * unsigned divide the secondary register by the primary
+ * (quotient in primary, remainder in secondary)
  */
-void gmod(void)
-{
-        gcall ("^smod");
-        stkp = stkp + INTSIZE;
-
+void gen_udiv(void) {
+    gen_pop();
+    output_line("__udiv");
 }
 
-/*
- *      inclusive 'or' the primary and secondary registers
- *
+/**
+ * compute the remainder (mod) of the secondary register
+ * divided by the primary register
+ * (remainder in primary, quotient in secondary)
  */
-void gor(void)
-{
-        ol ("ora\t(s)+\n\torb\t(s)+");
-        stkp = stkp + INTSIZE;
-
+void gen_mod(void) {
+    gen_pop();
+    output_line("__mod");
 }
 
-/*
- *      exclusive 'or' the primary and secondary registers
- *
+/**
+ * compute the remainder (mod) of the secondary register
+ * divided by the primary register
+ * (remainder in primary, quotient in secondary)
  */
-void gxor(void)
-{
-        ol ("eora\t(s)+\n\teorb\t(s)+");
-        stkp = stkp + INTSIZE;
-
+void gen_umod(void) {
+    gen_pop();
+    output_line("__umod");
 }
 
-/*
- *      'and' the primary and secondary registers
- *
+/**
+ * inclusive 'or' the primary and secondary registers
  */
-void gand(void)
-{
-        ol ("anda\t(s)+\n\tandb\t(s)+");
-        stkp = stkp + INTSIZE;
-
+void gen_or(void) {
+    output_line("ora (s)+");
+    output_line("orb (s)+");
+    stkp += INTSIZE;
 }
 
-/*
- *      arithmetic shift right the secondary register the number of
- *      times in the primary register
- *      (results in primary register)
- *
+/**
+ * exclusive 'or' the primary and secondary registers
  */
-void gasr(void)
-{
-        gcall ("^asr");
-        stkp = stkp + INTSIZE;
-
+void gen_xor(void) {
+    output_line("eora (s)+");
+    output_line("eorb (s)+");
+    stkp += INTSIZE;
 }
 
-/*
- *      arithmetic shift left the secondary register the number of
- *      times in the primary register
- *      (results in primary register)
- *
+/**
+ * 'and' the primary and secondary registers
  */
-void gasl(void)
-{
-        gcall ("^asl");
-        stkp = stkp + INTSIZE;
-
+void gen_and(void) {
+    output_line("anda (s)+");
+    output_line("andb (s)+");
+    stkp += INTSIZE;
 }
 
-/*
- *      two's complement of primary register
- *
+/**
+ * arithmetic shift right the secondary register the number of
+ * times in the primary register (results in primary register)
  */
-void gneg(void)
-{
-        gcall ("^neg");
-
+void gen_arithm_shift_right(void) {
+    gen_call("__asr");
+    stkp += INTSIZE;
 }
 
-/*
- *      logical complement of primary register
- *
+/**
+ * logically shift right the secondary register the number of
+ * times in the primary register (results in primary register)
  */
-void glneg(void)
-{
-        gcall ("^lneg");
-
+void gen_logical_shift_right(void) {
+    gen_call("__lsr");
+    stkp += INTSIZE;
 }
 
-/*
- *      one's complement of primary register
- *
+/**
+ * arithmetic shift left the secondary register the number of
+ * times in the primary register (results in primary register)
  */
-void gcom(void)
-{
-        ol ("coma\n\tcomb");
-
+void gen_arithm_shift_left(void) {
+    gen_call("__lsl");
+    stkp += INTSIZE;
 }
 
-/*
- *      convert primary register into logical value
- *
+/**
+ * two's complement of primary register
  */
-void gbool(void)
-{
-        gcall ("^bool");
+void gen_twos_complement(void) {
+    gen_call("__neg");
 }
 
-/*
- *      increment the primary register by 1 if char, INTSIZE if
- *      int
+/**
+ * logical complement of primary register
  */
-void ginc (int lval[])
-{
-        if (lval[2] == CINT)
-                ol ("addd\t#2");
-        else
-                ol ("addd\t#1");
-
+void gen_logical_negation(void) {
+    gen_call("__lneg");
 }
 
-/*
- *      decrement the primary register by one if char, INTSIZE if
- *      int
+/**
+ * one's complement of primary register
  */
-void gdec(int lval[])
-{
-        if (lval[2] == CINT)
-                ol ("subd\t#2");
-        else
-                ol ("subd\t#1");
-
+void gen_complement(void) {
+    output_line("coma");
+    output_line("comb");
 }
 
-/*
- *      following are the conditional operators.
- *      they compare the secondary register against the primary register
- *      and put a literl 1 in the primary if the condition is true,
- *      otherwise they clear the primary register
- *
+/**
+ * Convert primary value into logical value (0 if 0, 1 otherwise)
  */
-
-/*
- *      equal
- *
- */
-void geq(void)
-{
-        gcall ("^eq");
-        stkp = stkp + INTSIZE;
-
+void gen_convert_primary_reg_value_to_bool(void) {
+    gen_call("__bool");
 }
 
-/*
- *      not equal
- *
+/**
+ * increment the primary register by 1 if char, INTSIZE if int
  */
-void gne(void)
-{
-        gcall ("^ne");
-        stkp = stkp + INTSIZE;
-
+void gen_increment_primary_reg(LVALUE *lval) {
+    switch (lval->ptr_type) {
+        case STRUCT:
+            output_with_tab("addd ");
+            output_number(lval->tagsym->size);
+            newline();
+            break ;
+        case CINT:
+        case UINT:
+            output_line("addd #2");
+            break;
+        default:
+            output_line("addd #1");
+            break;
+    }
 }
 
-/*
- *      less than (signed)
- *
+/**
+ * decrement the primary register by one if char, INTSIZE if int
  */
-void glt(void)
-{
-        gcall ("^lt");
-        stkp = stkp + INTSIZE;
+void gen_decrement_primary_reg(LVALUE *lval) {
+    switch (lval->ptr_type) {
+        case CINT:
+        case UINT:
+            output_line("subd #2");
+            break;
+        case STRUCT:
+            output_with_tab("subd ");
+            output_number(lval->tagsym->size - 1);
+            newline();
+            break ;
+        default:
+            output_line("subd #1");
+            break;
+    }
 }
 
-/*
- *      less than or equal (signed)
- *
+/**
+ * following are the conditional operators.
+ * they compare the secondary register against the primary register
+ * and put a literal 1 in the primary if the condition is true,
+ * otherwise they clear the primary register
  */
-void gle(void)
-{
-        gcall ("^le");
-        stkp = stkp + INTSIZE;
 
+/**
+ * equal
+ */
+void gen_equal(void) {
+    gen_call("__eq");
+    stkp += INTSIZE;
 }
 
-/*
- *      greater than (signed)
- *
+/**
+ * not equal
  */
-void ggt(void)
-{
-        gcall ("^gt");
-        stkp = stkp + INTSIZE;
-
+void gen_not_equal(void) {
+    gen_call("__ne");
+    stkp += INTSIZE;
 }
 
-/*
- *      greater than or equal (signed)
- *
+/**
+ * less than (signed)
  */
-void gge(void)
-{
-        gcall ("^ge");
-        stkp = stkp + INTSIZE;
-
+void gen_less_than(void) {
+    gen_call("__lt");
+    stkp += INTSIZE;
 }
 
-/*
- *      less than (unsigned)
- *
+/**
+ * less than or equal (signed)
  */
-void gult(void)
-{
-        gcall ("^ult");
-        stkp = stkp + INTSIZE;
-
+void gen_less_or_equal(void) {
+    gen_call("__le");
+    stkp += INTSIZE;
 }
 
-/*
- *      less than or equal (unsigned)
- *
+/**
+ * greater than (signed)
  */
-void gule(void)
-{
-        gcall ("^ule");
-        stkp = stkp + INTSIZE;
-
+void gen_greater_than(void) {
+    gen_call("__gt");
+    stkp += INTSIZE;
 }
 
-/*
- *      greater than (unsigned)
- *
+/**
+ * greater than or equal (signed)
  */
-void gugt(void)
-{
-        gcall ("^ugt");
-        stkp = stkp + INTSIZE;
-
+void gen_greater_or_equal(void) {
+    gen_call("__ge");
+    stkp += INTSIZE;
 }
 
-/*
- *      greater than or equal (unsigned)
- *
+/**
+ * less than (unsigned)
  */
-void guge(void)
-{
-        gcall ("^uge");
-        stkp = stkp + INTSIZE;
+void gen_unsigned_less_than(void) {
+    gen_call("__ult");
+    stkp += INTSIZE;
+}
 
+/**
+ * less than or equal (unsigned)
+ */
+void gen_unsigned_less_or_equal(void) {
+    gen_call("__ule");
+    stkp += INTSIZE;
+}
+
+/**
+ * greater than (unsigned)
+ */
+void gen_usigned_greater_than(void) {
+    gen_call("__ugt");
+    stkp += INTSIZE;
+}
+
+/**
+ * greater than or equal (unsigned)
+ */
+void gen_unsigned_greater_or_equal(void) {
+    gen_call("__uge");
+    stkp += INTSIZE;
 }
 
 char *inclib(void) {
-#ifdef  flex
-        return("B.");
-#endif
-#ifdef  unix
-        return(INCDIR);
-#endif
 #ifdef  cpm
         return("B:");
 #endif
-
+#ifdef  unix
+#ifdef  INCDIR
+        return(INCDIR);
+#else
+        return "";
+#endif
+#endif
 }
 
-/*      Squirrel away argument count in a register that modstk/getloc/stloc
-        doesn't touch.
-*/
-
+/**
+ * Squirrel away argument count in a register that modstk doesn't touch.
+ * @param d
+ */
 void gnargs(int d)
 {
-        ot ("ldu\t#");
-        onum(d);
-        newline();
+    output_with_tab ("ldu ");
+    output_number(d);
+    newline ();
+}
 
+/**
+ * print partial instruction to get an immediate value into
+ * the secondary register
+ */
+void gen_immediate2(void) {
+    output_with_tab ("ldx ");
+}
+
+/**
+ * add offset to primary register
+ * @param val the value
+ */
+void add_offset(int val) {
+    output_with_tab("addd ");
+    output_number(val);
+    newline();
+}
+
+/**
+ * multiply the primary register by the length of some variable
+ * @param type
+ * @param size
+ */
+void gen_multiply(int type, int size) {
+	switch (type) {
+        case CINT:
+        case UINT:
+            gen_multiply_by_two();
+            output_line("mul r1 2");
+            break;
+        case STRUCT:
+            output_with_tab("ldy ");
+            output_number(size);
+            newline();
+            gen_call("__muli ");
+            newline();
+            break;
+        default:
+            break;
+    }
 }

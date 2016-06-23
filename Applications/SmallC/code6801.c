@@ -11,6 +11,8 @@
  *              360 = 3)
  *      This compiler assumes that an integer is the SAME length as
  *      a pointer - in fact, the compiler uses INTSIZE for both.
+ *
+ *	For 6801 we keep the secondary as top of stack as much as possible
  */
 
 /**
@@ -22,8 +24,6 @@ void header (void) {
     newline ();
     output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
     output_line ("\t.module SMALLC_GENERATED");
-    output_line ("\t.list   (err, loc, bin, eqt, cyc, lin, src, lst, md)");
-    output_line ("\t.nlist  (pag)");
 }
 
 /**
@@ -31,15 +31,11 @@ void header (void) {
  * @return 
  */
 void newline (void) {
-#if __CYGWIN__ == 1
-    output_byte (CR);
-#endif
     output_byte (LF);
 }
 
 void initmac(void) {
-    defmac("cpm\t1");
-    defmac("Z80\t1");
+    defmac("MC6801\t1");
     defmac("smallc\t1");
 }
 
@@ -75,14 +71,14 @@ void trailer(void) {
  * text (code) segment
  */
 void code_segment_gtext(void) {
-    output_line ("\t.area  SMALLC_GENERATED  (REL,CON,CSEG)");
+    output_line ("\t.text");
 }
 
 /**
  * data segment
  */
 void data_segment_gdata(void) {
-    output_line ("\t.area  SMALLC_GENERATED_DATA  (REL,CON,DSEG)");
+    output_line ("\t.data");
 }
 
 /**
@@ -91,7 +87,7 @@ void data_segment_gdata(void) {
  */
 void ppubext(SYMBOL *scptr)  {
     if (symbol_table[current_symbol_table_idx].storage == STATIC) return;
-    output_with_tab (scptr->storage == EXTERN ? ";extrn\t" : ".globl\t");
+    output_with_tab (scptr->storage == EXTERN ? ".extrn\t" : ".globl\t");
     output_string (scptr->name);
     newline();
 }
@@ -102,7 +98,7 @@ void ppubext(SYMBOL *scptr)  {
  */
 void fpubext(SYMBOL *scptr) {
     if (scptr->storage == STATIC) return;
-    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ";extrn\t");
+    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ".extrn\t");
     output_string (scptr->name);
     newline ();
 }
@@ -116,32 +112,24 @@ void output_number(int num) {
     output_decimal(num);
 }
 
-static void output_bracketed(char *p)
-{
-    output_byte('(');
-    output_string(p);
-    output_byte(')');
-}
-
 /**
  * fetch a static memory cell into the primary register
  * @param sym
  */
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
-        output_with_tab ("ld a,");
-        output_bracketed(sym->name);
+        output_with_tab ("ldab ");
+        output_string(sym->name);
+        output_line("sex");
         newline ();
-        gen_call ("ccsxt");
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
-        output_with_tab("ld a,");
-        output_bracketed(sym->name);
+        output_with_tab("ldab ");
+        output_string(sym->name);
         newline();
-        output_line("ld l,a");
-        output_line("ld h,0");
+        output_line("clra");
     } else {
-        output_with_tab ("ld hl,");
-        output_bracketed(sym->name);
+        output_with_tab ("ldd ");
+        output_string(sym->name);
         newline ();
     }
 }
@@ -154,25 +142,16 @@ void gen_get_memory(SYMBOL *sym) {
 int gen_get_locale(SYMBOL *sym) {
     if (sym->storage == LSTATIC) {
         gen_immediate();
-        output_byte('(');
         print_label(sym->offset);
-        output_byte(')');
         newline();
         return HL_REG;
     } else {
-        if (uflag && !(sym->identity == ARRAY)) {// ||
-                //(sym->identity == VARIABLE && sym->type == STRUCT))) {
-            output_with_tab("ldsi\t");
-            output_number(sym->offset - stkp);
-            newline ();
-            return DE_REG;
-        } else {
-            gen_immediate();
-            output_number(sym->offset - stkp);
-            newline ();
-            output_line ("add hl, sp");
-            return HL_REG;
-        }
+        output_line("sts _tmp");
+        output_line("ldd _tmp");
+        output_with_tab("add ");
+        output_number(sym->offset - stkp);
+        newline ();
+        return HL_REG;
     }
 }
 
@@ -182,14 +161,11 @@ int gen_get_locale(SYMBOL *sym) {
  */
 void gen_put_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
-        output_line ("ld a,l");
-        output_with_tab ("ld ");
-        output_bracketed(sym->name);
-        output_string(",a");
+        output_with_tab("std ");
+        output_string(sym->name);
     } else {
-        output_with_tab("ld ");
-        output_bracketed(sym->name);
-        output_string(",hl");
+        output_with_tab("stab ");
+        output_string(sym->name);
     }
     newline ();
 }
@@ -200,13 +176,11 @@ void gen_put_memory(SYMBOL *sym) {
  * @param typeobj
  */
 void gen_put_indirect(char typeobj) {
-    gen_pop ();
+    gen_pop();
     if (typeobj & CCHAR) {
-        //gen_call("ccpchar");
-        output_line("ld a,l");
-        output_line("ld (de),a");
+        output_line("stab ,x");
     } else {
-        gen_call("ccpint");
+        output_line("std ,x");
     }
 }
 
@@ -218,28 +192,21 @@ void gen_put_indirect(char typeobj) {
 void gen_get_indirect(char typeobj, int reg) {
     if (typeobj == CCHAR) {
         if (reg & DE_REG) {
-            gen_swap();
-        }
-        gen_call("ccgchar");
+            output_line("ldab ,x");
+            output_line("sex");
+        } else
+            gen_call("_ldas_d");
     } else if (typeobj == UCHAR) {
         if (reg & DE_REG) {
-            gen_swap();
-        }
-        //gen_call("cguchar");
-        output_line("ld l,(hl)");
-        output_line("ld h,0");
+            output_line("ldab ,x");
+            output_line("clra");
+        } else
+            gen_call("_ldau_d");
     } else { // int
-        if (uflag) {
-            if (reg & HL_REG) {
-                gen_swap();
-            }
-            output_line("lhlx");
-        } else {
-            output_line("ld a,(hl)");
-            output_line("inc hl");
-            output_line("ld h,(hl)");
-            output_line("ld l,a");
-        }
+        if (reg & DE_REG)
+            output_line("ldd ,x");
+        else
+            gen_call("_ldd_d");
     }
 }
 
@@ -247,7 +214,7 @@ void gen_get_indirect(char typeobj, int reg) {
  * swap the primary and secondary registers
  */
 void gen_swap(void) {
-    output_line("ex de,hl");
+    gen_call("_swap");
 }
 
 /**
@@ -255,7 +222,7 @@ void gen_swap(void) {
  * the primary register
  */
 void gen_immediate(void) {
-    output_with_tab ("ld hl,");
+    output_with_tab ("ldd ");
 }
 
 /**
@@ -263,10 +230,11 @@ void gen_immediate(void) {
  */
 void gen_push(int reg) {
     if (reg & DE_REG) {
-        output_line ("push de");
+        output_line ("pshx");
         stkp = stkp - INTSIZE;
     } else {
-        output_line ("push hl");
+        output_line ("psha");	/* Check order */
+        output_line ("pshb");
         stkp = stkp - INTSIZE;
     }
 }
@@ -275,7 +243,7 @@ void gen_push(int reg) {
  * pop the top of the stack into the secondary register
  */
 void gen_pop(void) {
-    output_line ("pop de");
+    output_line ("pulx");
     stkp = stkp + INTSIZE;
 }
 
@@ -283,7 +251,10 @@ void gen_pop(void) {
  * swap the primary register and the top of the stack
  */
 void gen_swap_stack(void) {
-    output_line ("ex (sp),hl");
+    output_line("std _tmp1");
+    output_line("ldd ,s");
+    output_line("ldx _tmp1");
+    output_line("stx ,s");
 }
 
 /**
@@ -291,7 +262,7 @@ void gen_swap_stack(void) {
  * @param sname subroutine name
  */
 void gen_call(char *sname) {
-    output_with_tab ("call ");
+    output_with_tab ("jsr ");
     output_string (sname);
     newline ();
 }
@@ -309,19 +280,15 @@ void declare_entry_point(char *symbol_name) {
  * return from subroutine
  */
 void gen_ret(void) {
-    output_line ("ret");
+    output_line ("rts");
 }
 
 /**
  * perform subroutine call to value on top of stack
  */
 void callstk(void) {
-    gen_immediate ();
-    output_string ("#.+5");
-    newline ();
-    gen_swap_stack ();
-    output_line ("jp (hl)");
-    stkp = stkp + INTSIZE;
+    gen_pop();
+    output_line("jsr ,x");
 }
 
 /**
@@ -330,7 +297,7 @@ void callstk(void) {
  */
 void gen_jump(int label)
 {
-    output_with_tab ("jp ");
+    output_with_tab ("jump ");
     print_label (label);
     newline ();
 }
@@ -342,12 +309,11 @@ void gen_jump(int label)
  */
 void gen_test_jump(int label, int ft)
 {
-    output_line ("ld a,h");
-    output_line ("or l");
+    output_line ("tstd");
     if (ft)
-        output_with_tab ("jp nz,");
+        output_with_tab ("bne ");
     else
-        output_with_tab ("jp z,");
+        output_with_tab ("beq ");
     print_label (label);
     newline ();
 }
@@ -384,63 +350,76 @@ int gen_modify_stack(int newstkp) {
     if (k == 0)
         return (newstkp);
     if (k > 0) {
-        if (k < 7) {
-            if (k & 1) {
-                output_line ("inc sp");
-                k--;
+        if (k >= 8) {
+            while(k >= 2) {
+                output_line("pulx");
+                k -= 2;
             }
-            while (k) {
-                output_line ("pop bc");
-                k = k - INTSIZE;
+            if (k == 1)
+                output_line("ins");
+            return newstkp;
+        } else {
+            output_line("tsx");
+            if (k > 255) {
+                output_line("ldab #255");
+                while(k > 255) {
+                    output_line("abx");
+                    k -= 255;
+                }
             }
-            return (newstkp);
+            if (k) {
+                output_with_tab("ldab ");
+                output_number(k);
+                newline();
+                output_line("abx");
+            }
+            output_line("txs");
+            return newstkp;
         }
     } else {
-        if (k > -7) {
-            if (k & 1) {
-                output_line ("dec sp");
-                k++;
+        if (k >= -16) {
+            while (k <= -2) {
+                output_line("pshx");
+                k += 2;
             }
-            while (k) {
-                output_line ("pop bc");
-                k = k + INTSIZE;
-            }
-            return (newstkp);
+            if (k == -1)
+                output_line("des");
+            return newstkp;
         }
+        /* TODO - must preserve AA */
+        output_line("std _tmp");
+        output_line("ldd ");
+        output_number(newstkp);
+        output_line("sts _tmp2");
+        output_line("addd _tmp2");
+        output_line("std _tmp2");
+        output_line("lds _tmp2");
+        output_line("ldd _tmp");
     }
-    gen_swap ();
-    gen_immediate ();
-    output_number (k);
-    newline ();
-    output_line ("dec sp");
-    output_line ("ld sp, hl");
-    gen_swap ();
-    return (newstkp);
+    return newstkp;
 }
 
 /**
  * multiply the primary register by INTSIZE
  */
 void gen_multiply_by_two(void) {
-    output_line ("add hl,hl");
+    output_line("aslb");
+    output_line("rola");
 }
 
 /**
  * divide the primary register by INTSIZE, never used
  */
 void gen_divide_by_two(void) {
-    gen_push(HL_REG);        /* push primary in prep for gasr */
-    gen_immediate ();
-    output_number (1);
-    newline ();
-    gen_arithm_shift_right ();  /* divide by two */
+    output_line("asra");
+    output_line("rorb");
 }
 
 /**
  * Case jump instruction
  */
 void gen_jump_case(void) {
-    output_with_tab ("jp cccase");
+    output_with_tab ("jmp _case");
     newline ();
 }
 
@@ -451,21 +430,22 @@ void gen_jump_case(void) {
  * @param lval2
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
-    gen_pop ();
+    gen_swap();
     if (dbltest (lval2, lval)) {
-        gen_swap ();
-        gen_multiply_by_two();
-        gen_swap ();
-    }
-    output_line ("add hl,de");
+        output_line("addd ,s");
+        output_line("addd ,s");
+    } else
+        output_line ("addd ,s");
+    gen_swap();
+    gen_pop();
 }
 
 /**
  * subtract the primary register from the secondary
  */
 void gen_sub(void) {
-    gen_pop ();
-    gen_call ("ccsub");
+    gen_pop();
+    gen_call("_sub");
 }
 
 /**
@@ -473,7 +453,7 @@ void gen_sub(void) {
  */
 void gen_mult(void) {
     gen_pop();
-    gen_call ("ccmul");
+    gen_call("_mul");
 }
 
 /**
@@ -482,7 +462,7 @@ void gen_mult(void) {
  */
 void gen_div(void) {
     gen_pop();
-    gen_call ("ccdiv");
+    gen_call("_div");
 }
 
 /**
@@ -491,7 +471,7 @@ void gen_div(void) {
  */
 void gen_udiv(void) {
     gen_pop();
-    gen_call ("ccudiv");
+    gen_call("_udiv");
 }
 
 /**
@@ -500,8 +480,8 @@ void gen_udiv(void) {
  * (remainder in primary, quotient in secondary)
  */
 void gen_mod(void) {
-    gen_div ();
-    gen_swap ();
+    gen_pop();
+    gen_call("_mod");
 }
 
 /**
@@ -510,32 +490,35 @@ void gen_mod(void) {
  * (remainder in primary, quotient in secondary)
  */
 void gen_umod(void) {
-    gen_udiv ();
-    gen_swap ();
+    gen_pop();
+    gen_call("_umod");
 }
 
 /**
  * inclusive 'or' the primary and secondary registers
  */
 void gen_or(void) {
+    output_line("orab ,s");
+    output_line("oraa 1,s");
     gen_pop();
-    gen_call ("ccor");
 }
 
 /**
  * exclusive 'or' the primary and secondary registers
  */
 void gen_xor(void) {
+    output_line("eorb ,s");
+    output_line("eora 1,s");
     gen_pop();
-    gen_call ("ccxor");
 }
 
 /**
  * 'and' the primary and secondary registers
  */
 void gen_and(void) {
+    output_line("andb ,s");
+    output_line("anda 1,s");
     gen_pop();
-    gen_call ("ccand");
 }
 
 /**
@@ -544,7 +527,7 @@ void gen_and(void) {
  */
 void gen_arithm_shift_right(void) {
     gen_pop();
-    gen_call ("ccasr");
+    gen_call("_asr");
 }
 
 /**
@@ -553,7 +536,7 @@ void gen_arithm_shift_right(void) {
  */
 void gen_logical_shift_right(void) {
     gen_pop();
-    gen_call ("cclsr");
+    gen_call("_asl");
 }
 
 /**
@@ -562,35 +545,36 @@ void gen_logical_shift_right(void) {
  */
 void gen_arithm_shift_left(void) {
     gen_pop ();
-    gen_call ("ccasl");
+    gen_call("_lsl");
 }
 
 /**
  * two's complement of primary register
  */
 void gen_twos_complement(void) {
-    gen_call ("ccneg");
+    gen_call("_neg");
 }
 
 /**
  * logical complement of primary register
  */
 void gen_logical_negation(void) {
-    gen_call ("cclneg");
+    gen_call("_lneg");
 }
 
 /**
  * one's complement of primary register
  */
 void gen_complement(void) {
-    gen_call ("cccom");
+    output_line("coma");
+    output_line("comb");
 }
 
 /**
  * Convert primary value into logical value (0 if 0, 1 otherwise)
  */
 void gen_convert_primary_reg_value_to_bool(void) {
-    gen_call ("ccbool");
+    gen_call("_bool");
 }
 
 /**
@@ -599,16 +583,16 @@ void gen_convert_primary_reg_value_to_bool(void) {
 void gen_increment_primary_reg(LVALUE *lval) {
     switch (lval->ptr_type) {
         case STRUCT:
-            gen_immediate2();
+            output_with_tab("addd ");
             output_number(lval->tagsym->size);
             newline();
-            output_line("add hl,de");
             break ;
         case CINT:
         case UINT:
-            output_line("inc hl");
+            output_line("addd #2");
+            break;
         default:
-            output_line("inc hl");
+            output_line("addd #1");
             break;
     }
 }
@@ -617,28 +601,18 @@ void gen_increment_primary_reg(LVALUE *lval) {
  * decrement the primary register by one if char, INTSIZE if int
  */
 void gen_decrement_primary_reg(LVALUE *lval) {
-    output_line("dec hl");
     switch (lval->ptr_type) {
         case CINT:
         case UINT:
-            output_line("dec hl");
+            output_line("subd #2");
             break;
         case STRUCT:
-            gen_immediate2();
+            output_with_tab("subd ");
             output_number(lval->tagsym->size - 1);
             newline();
-            // two's complement
-            output_line("ld a,d");
-            output_line("cpl");
-            output_line("ld d,a");
-            output_line("ld a,e");
-            output_line("cpl");
-            output_line("ld e,a");
-            output_line("inc de");
-            // substract
-            output_line("add hl,de");
             break ;
         default:
+            output_line("subd #1");
             break;
     }
 }
@@ -655,7 +629,7 @@ void gen_decrement_primary_reg(LVALUE *lval) {
  */
 void gen_equal(void) {
     gen_pop();
-    gen_call ("cceq");
+    gen_call("_eq");
 }
 
 /**
@@ -663,7 +637,7 @@ void gen_equal(void) {
  */
 void gen_not_equal(void) {
     gen_pop();
-    gen_call ("ccne");
+    gen_call("_ne");
 }
 
 /**
@@ -671,7 +645,7 @@ void gen_not_equal(void) {
  */
 void gen_less_than(void) {
     gen_pop();
-    gen_call ("cclt");
+    gen_call("_lt");
 }
 
 /**
@@ -679,7 +653,7 @@ void gen_less_than(void) {
  */
 void gen_less_or_equal(void) {
     gen_pop();
-    gen_call ("ccle");
+    gen_call("_le");
 }
 
 /**
@@ -687,7 +661,7 @@ void gen_less_or_equal(void) {
  */
 void gen_greater_than(void) {
     gen_pop();
-    gen_call ("ccgt");
+    gen_call("_gt");
 }
 
 /**
@@ -695,7 +669,7 @@ void gen_greater_than(void) {
  */
 void gen_greater_or_equal(void) {
     gen_pop();
-    gen_call ("ccge");
+    gen_call("_ge");
 }
 
 /**
@@ -703,7 +677,7 @@ void gen_greater_or_equal(void) {
  */
 void gen_unsigned_less_than(void) {
     gen_pop();
-    gen_call ("ccult");
+    gen_call("_ult");
 }
 
 /**
@@ -711,7 +685,7 @@ void gen_unsigned_less_than(void) {
  */
 void gen_unsigned_less_or_equal(void) {
     gen_pop();
-    gen_call ("ccule");
+    gen_call("_ule");
 }
 
 /**
@@ -719,7 +693,7 @@ void gen_unsigned_less_or_equal(void) {
  */
 void gen_usigned_greater_than(void) {
     gen_pop();
-    gen_call ("ccugt");
+    gen_call("_ugt");
 }
 
 /**
@@ -727,7 +701,7 @@ void gen_usigned_greater_than(void) {
  */
 void gen_unsigned_greater_or_equal(void) {
     gen_pop();
-    gen_call ("ccuge");
+    gen_call("_uge");
 }
 
 char *inclib(void) {
@@ -749,7 +723,7 @@ char *inclib(void) {
  */
 void gnargs(int d)
 {
-    output_with_tab ("ld a,");
+    output_with_tab ("ldaa ");
     output_number(d);
     newline ();
 }
@@ -759,7 +733,7 @@ void gnargs(int d)
  * the secondary register
  */
 void gen_immediate2(void) {
-    output_with_tab ("ld de,");
+    output_with_tab ("ldx ");
 }
 
 /**
@@ -767,10 +741,9 @@ void gen_immediate2(void) {
  * @param val the value
  */
 void add_offset(int val) {
-    gen_immediate2();
+    output_with_tab("addd ");
     output_number(val);
     newline();
-    output_line ("add hl,de");
 }
 
 /**
@@ -782,14 +755,15 @@ void gen_multiply(int type, int size) {
 	switch (type) {
         case CINT:
         case UINT:
-            gen_multiply_by_two();
+            output_line("std _tmp");
+            output_line("addd _tmp");
             break;
         case STRUCT:
-            gen_immediate2();
+            output_with_tab("ldx ");
             output_number(size);
             newline();
-            gen_call("ccmul");
-            break ;
+            gen_call("_muld");
+            break;
         default:
             break;
     }
