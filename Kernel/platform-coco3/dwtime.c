@@ -16,7 +16,7 @@ static int get_time( uint8_t *tbuf )
 	int ret;
 
 	tbuf[0]=0x23;
-	ret=dw_transaction( tbuf, 1, tbuf, 6 );
+	ret=dw_transaction( tbuf, 1, tbuf, 6, 0 );
 	if( ret ) return -1;
 	secs = tbuf[5];
 	return 0;
