@@ -39,10 +39,7 @@ PRIVATE int lastlib = NR_STDLIBS;
 FORWARD char *buildname P((char *pre, char *mid, char *suf));
 FORWARD char *expandlib P((char *fn));
 
-PRIVATE char *buildname(pre, mid, suf)
-char *pre;
-char *mid;
-char *suf;
+PRIVATE char *buildname(char *pre, char *mid, char *suf)
 {
     char *name;
 
@@ -53,8 +50,7 @@ char *suf;
     return name;
 }
 
-PRIVATE char *expandlib(fn)
-char *fn;
+PRIVATE char *expandlib(char *fn)
 {
     char *path, *s;
     int i;
@@ -73,9 +69,7 @@ char *fn;
     return NUL_PTR;
 }
 
-PUBLIC int main(argc, argv)
-int argc;
-char **argv;
+PUBLIC int main(int argc, char **argv)
 {
     register char *arg;
     int argn;

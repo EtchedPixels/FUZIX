@@ -121,12 +121,8 @@ FORWARD void writenulls P((bin_off_t count));
 #define FUNCNAME writebin
 #endif
 
-PUBLIC void FUNCNAME(outfilename, argsepid, argbits32, argstripflag, arguzp)
-char *outfilename;
-bool_pt argsepid;
-bool_pt argbits32;
-bool_pt argstripflag;
-bool_pt arguzp;
+PUBLIC void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+                     bool_pt argstripflag, bool_pt arguzp)
 {
     char buf4[4];
 #ifdef EDOS
@@ -585,8 +581,7 @@ bool_pt arguzp;
 
 #ifdef EDOS
 
-PRIVATE unsigned binheaderlength(commandname)
-char *commandname;
+PRIVATE unsigned binheaderlength(char *commandname)
 {
     unsigned count;
     char *name;
@@ -611,9 +606,7 @@ char *commandname;
 /* the special name  _main  is converted to the command name first */
 /* copy upper case and numerals, convert lower case to upper, ignore rest */
 
-PRIVATE char *idconvert(elptr, commandname)
-struct entrylist *elptr;
-char *commandname;
+PRIVATE char *idconvert(struct entrylist *elptr, char *commandname)
 {
     char *name;
     char *newname;
@@ -644,8 +637,7 @@ char *commandname;
 
 #endif /* EDOS */
 
-PRIVATE void linkmod(modptr)
-struct modstruct *modptr;
+PRIVATE void linkmod(struct modstruct *modptr)
 {
     char buf[ABS_TEXT_MAX];
     int command;
@@ -820,8 +812,7 @@ struct modstruct *modptr;
     }
 }
 
-PRIVATE void padmod(modptr)
-struct modstruct *modptr;
+PRIVATE void padmod(struct modstruct *modptr)
 {
     bin_off_t count;
     fastin_t seg;
@@ -849,9 +840,7 @@ struct modstruct *modptr;
     }
 }
 
-PRIVATE void setsym(name, value)
-char *name;
-bin_off_t value;
+PRIVATE void setsym(char *name, bin_off_t value)
 {
     struct symstruct *symptr;
 
@@ -862,8 +851,7 @@ bin_off_t value;
 	    symptr->value = value;
 }
 
-PRIVATE void symres(name)
-register char *name;
+PRIVATE void symres(char *name)
 {
     register struct symstruct *symptr;
 
@@ -882,8 +870,7 @@ register char *name;
 
 /* set new segment */
 
-PRIVATE void setseg(newseg)
-fastin_pt newseg;
+PRIVATE void setseg(fastin_pt newseg)
 {
     if (newseg != curseg)
     {
@@ -894,16 +881,14 @@ fastin_pt newseg;
     }
 }
 
-PRIVATE void skip(countsize)
-unsigned countsize;
+PRIVATE void skip(unsigned countsize)
 {
     writenulls((bin_off_t) readsize(countsize));
 }
 
 #ifdef EDOS
 
-PRIVATE void writeheader(commandname)
-char *commandname;
+PRIVATE void writeheader(char *commandname)
 {
     char buf[MAX_OFFSET_SIZE];
     bin_off_t offset;
@@ -952,7 +937,7 @@ char *commandname;
 
 #ifdef MINIX
 
-PRIVATE void writeheader()
+PRIVATE void writeheader(void)
 {
     struct exec header;
 
@@ -1035,8 +1020,7 @@ PRIVATE void writeheader()
 
 #endif /* MINIX */
 
-PRIVATE void writenulls(count)
-bin_off_t count;
+PRIVATE void writenulls(bin_off_t count)
 {
     long lcount = count;
     if( lcount < 0 )
@@ -1051,12 +1035,8 @@ bin_off_t count;
 #define FUNCNAME writebin
 #endif
 
-PUBLIC void FUNCNAME(outfilename, argsepid, argbits32, argstripflag, arguzp)
-char *outfilename;
-bool_pt argsepid;
-bool_pt argbits32;
-bool_pt argstripflag;
-bool_pt arguzp;
+PUBLIC void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+                     bool_pt argstripflag, bool_pt arguzp)
 {
     char * s  = "WARNING: Native a.out generation not included, sorry\n";
     write(2, s, strlen(s));

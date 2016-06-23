@@ -8,7 +8,7 @@
 
 #ifndef __OUT_OK
 
-main()
+int main(int argc, char *argv[])
 {
    fprintf(stderr, "Compile error: struct exec invalid\n");
    exit(1);
@@ -19,9 +19,36 @@ main()
 FILE * ifd;
 struct exec header;
 
-main(argc, argv)
-int argc;
-char ** argv;
+void fatal(const char * str)
+{
+   fprintf(stderr, "objchop: %s\n", str);
+   exit(2);
+}
+
+int write_file(char *fname, long bsize)
+{
+   char buffer[1024];
+   int ssize;
+   FILE * ofd;
+
+   ofd = fopen(fname, "w");
+   if( ofd == 0 ) fatal("Cannot open output file");
+
+   while(bsize>0)
+   {
+      if( bsize > sizeof(buffer) ) ssize = sizeof(buffer);
+      else ssize = bsize;
+
+      if( (ssize=fread(buffer, 1, ssize, ifd)) <= 0 )
+         fatal("Error reading segment from executable");
+      if( fwrite(buffer, 1, ssize, ofd) != ssize )
+         fatal("Error writing output file");
+      bsize -= ssize;
+   }
+   fclose(ofd);
+}
+
+int main(int argc, char **argv)
 {
    FILE * ofd;
    if( argc != 5 ) fatal("Usage: objchop a.out text.bin data.bin sizes.asm");
@@ -54,38 +81,6 @@ char ** argv;
    fclose(ofd);
 
    exit(0);
-}
-
-write_file(fname, bsize)
-char * fname;
-long bsize;
-{
-   char buffer[1024];
-   int ssize;
-   FILE * ofd;
-
-   ofd = fopen(fname, "w");
-   if( ofd == 0 ) fatal("Cannot open output file");
-
-   while(bsize>0)
-   {
-      if( bsize > sizeof(buffer) ) ssize = sizeof(buffer);
-      else ssize = bsize;
-
-      if( (ssize=fread(buffer, 1, ssize, ifd)) <= 0 )
-         fatal("Error reading segment from executable");
-      if( fwrite(buffer, 1, ssize, ofd) != ssize )
-         fatal("Error writing output file");
-      bsize -= ssize;
-   }
-   fclose(ofd);
-}
-
-fatal(str)
-char * str;
-{
-   fprintf(stderr, "objchop: %s\n", str);
-   exit(2);
 }
 
 #endif
