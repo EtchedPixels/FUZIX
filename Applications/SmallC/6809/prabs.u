@@ -1,0 +1,27 @@
+|       prabs.  converts both args to unsigned, and
+|       remembers result sign as sign a eor sign b
+|       used only by divide support
+|       result d contains right, sign is non-zero
+|       if result (from divide) should be negative.
+|
+|
+.globl prabs
+        left=8.
+        right=4.
+        sign=3.
+prabs:  clr     sign(s)
+        ldd     left(s)
+        bge     tryr
+        nega
+        negb
+        sbca    #0
+        std     left(s)
+        inc     sign(s)
+tryr:   ldd     right(s)
+        bge     done
+        nega
+        negb
+        sbca    #0
+        dec     sign(s)
+        std     right(s)
+done:   rts

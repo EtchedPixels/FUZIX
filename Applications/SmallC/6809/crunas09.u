@@ -1,0 +1,85 @@
+|       csa09 Small C v1 comparison support
+|       All are dyadic except for lneg.
+.globl  eq
+.globl  ne
+.globl  lt
+.globl  le
+.globl  gt
+.globl  ge
+.globl  ult
+.globl  ule
+.globl  ugt
+.globl  uge
+.globl  lneg
+.globl  bool
+.globl  _eend,_edata,_etext
+.globl  _Xstktop,_brkend
+
+eq:     cmpd 2(s)
+        lbeq true
+        lbra false
+
+ne:     cmpd 2(s)
+        lbne true
+        lbra false
+
+lt:     cmpd 2(s)
+        bgt true
+        bra false
+
+le:     cmpd 2(s)
+        bge true
+        bra false
+
+gt:     cmpd 2(s)
+        blt true
+        bra false
+
+ge:     cmpd 2(s)
+        ble true
+        bra false
+
+ult:    cmpd 2(s)
+        bhi true
+        bra false
+
+ule:    cmpd 2(s)
+        bhs true
+        bra false
+
+ugt:    cmpd 2(s)
+        blo true
+        bra false
+
+uge:    cmpd 2(s)
+        bls true
+        bra false
+
+lneg:   cmpd #0
+        beq ltrue
+        ldd #0
+        rts
+ltrue:  ldd #1
+        rts
+
+bool:   bsr     lneg
+        bra     lneg
+
+true:   ldd #1
+        ldx (s)
+        leas 4(s)
+        jmp (x)
+
+false:  clra
+        clrb
+        ldx (s)
+        leas 4(s)
+        jmp  (x)
+_Xstktop:       tfr     s,d
+        rts
+_etext  =       .
+        .bss
+_eend   =       .
+        .data
+_brkend:        .wval   _eend
+_edata  =       .

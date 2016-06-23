@@ -34,8 +34,12 @@ int fix_include_name (void) {
         *(--ibp) = 0;
         fp = -1;
         if (c1 == '<' || ((fp = open(buf, O_RDONLY)) != -1)) {
+#ifndef __linux__
                 strcpy(buf2, DEFLIB);
                 strlcat(buf2, buf, sizeof(buf2));
+#else
+                snprintf(buf2, sizeof(buf2), "%s%s", DEFLIB, buf);
+#endif                
                 fp = open(buf2, O_RDONLY);
         }
         return (fp);

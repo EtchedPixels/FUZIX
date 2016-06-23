@@ -10,7 +10,7 @@ int     Xargv[30];
 Xarglist(ap) char *ap; {
         char qc;
         Xargc = 0;
-        ap[(*ap)+1 <tel:+1>] = '\0';
+        ap[(*ap)+1] = '\0';
         ap++;
         while (isspace(*ap)) ap++;
         Xargv[Xargc++] = "arg0";

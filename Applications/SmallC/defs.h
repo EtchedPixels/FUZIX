@@ -2,10 +2,8 @@
  * File defs.h: 2.1 (83/03/21,02:07:20)
  */
 
-// Intel 8080 architecture defs
-#if defined(M6809) || defined(M8080)
+// Intel 8080 / Z80 architecture defs
 #define INTSIZE 2
-#endif
 
 // miscellaneous
 #define FOREVER for(;;)

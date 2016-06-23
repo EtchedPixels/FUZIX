@@ -1,0 +1,10 @@
+|       MC6809 Concurrent Euclid fault codes
+ASSERTFAIL = 0
+RANGECHECK = 1
+CASERANGE = 2
+| fault codes for runtime routines
+OUTOFSPACE = 20
+.globl ASSERTFAIL
+.globl RANGECHECK
+.globl CASERANGE
+.globl  OUTOFSPACE

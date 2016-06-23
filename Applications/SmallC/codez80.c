@@ -1,8 +1,3 @@
-/*      File code8080.c: 2.2 (84/08/31,10:05:09) */
-/*% cc -O -c %
- *
- */
-
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
@@ -22,7 +17,7 @@
  * print all assembler info before any code is generated
  */
 void header (void) {
-    output_string ("; Small C 8080\n;\tCoder (2.4,84/11/27)\n;");
+    output_string ("; Small C Z80\n;\tCoder (ac0)\n;");
     frontend_version();
     newline ();
     output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
@@ -44,8 +39,7 @@ void newline (void) {
 
 void initmac(void) {
     defmac("cpm\t1");
-    defmac("I8080\t1");
-    defmac("RMAC\t1");
+    defmac("Z80\t1");
     defmac("smallc\t1");
 }
 
@@ -122,25 +116,32 @@ void output_number(int num) {
     output_decimal(num);
 }
 
+static void output_bracketed(char *p)
+{
+    output_byte('(');
+    output_string(p);
+    output_byte(')');
+}
+
 /**
  * fetch a static memory cell into the primary register
  * @param sym
  */
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
-        output_with_tab ("lda\t");
-        output_string (sym->name);
+        output_with_tab ("ld a,");
+        output_bracketed(sym->name);
         newline ();
         gen_call ("ccsxt");
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
-        output_with_tab("lda\t");
-        output_string(sym->name);
+        output_with_tab("ld a,");
+        output_bracketed(sym->name);
         newline();
-        output_line("mov \tl,a");
-        output_line("mvi \th,#0");
+        output_line("ld l,a");
+        output_line("ld h,0");
     } else {
-        output_with_tab ("lhld\t");
-        output_string (sym->name);
+        output_with_tab ("ld hl,");
+        output_bracketed(sym->name);
         newline ();
     }
 }
@@ -153,7 +154,9 @@ void gen_get_memory(SYMBOL *sym) {
 int gen_get_locale(SYMBOL *sym) {
     if (sym->storage == LSTATIC) {
         gen_immediate();
+        output_byte('(');
         print_label(sym->offset);
+        output_byte(')');
         newline();
         return HL_REG;
     } else {
@@ -167,7 +170,7 @@ int gen_get_locale(SYMBOL *sym) {
             gen_immediate();
             output_number(sym->offset - stkp);
             newline ();
-            output_line ("dad \tsp");
+            output_line ("add hl, sp");
             return HL_REG;
         }
     }
@@ -179,12 +182,15 @@ int gen_get_locale(SYMBOL *sym) {
  */
 void gen_put_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
-        output_line ("mov \ta,l");
-        output_with_tab ("sta \t");
+        output_line ("ld a,l");
+        output_with_tab ("ld ");
+        output_bracketed(sym->name);
+        output_string(",a");
     } else {
-        output_with_tab ("shld\t");
+        output_with_tab("ld ");
+        output_bracketed(sym->name);
+        output_string(",hl");
     }
-    output_string (sym->name);
     newline ();
 }
 
@@ -197,14 +203,10 @@ void gen_put_indirect(char typeobj) {
     gen_pop ();
     if (typeobj & CCHAR) {
         //gen_call("ccpchar");
-        output_line("mov \ta,l");
-        output_line("stax\td");
+        output_line("ld l,a");
+        output_line("ld (de),a");
     } else {
-        if (uflag) {
-            output_line("shlx");
-        } else {
-            gen_call("ccpint");
-        }
+        gen_call("ccpint");
     }
 }
 
@@ -224,8 +226,8 @@ void gen_get_indirect(char typeobj, int reg) {
             gen_swap();
         }
         //gen_call("cguchar");
-        output_line("mov \tl,m");
-        output_line("mvi \th,0");
+        output_line("ld l,(hl)");
+        output_line("ld h,0");
     } else { // int
         if (uflag) {
             if (reg & HL_REG) {
@@ -233,7 +235,10 @@ void gen_get_indirect(char typeobj, int reg) {
             }
             output_line("lhlx");
         } else {
-            gen_call("ccgint");
+            output_line("ld a,(hl)");
+            output_line("inc hl");
+            output_line("ld h,(hl)");
+            output_line("ld l,a");
         }
     }
 }
@@ -242,7 +247,7 @@ void gen_get_indirect(char typeobj, int reg) {
  * swap the primary and secondary registers
  */
 void gen_swap(void) {
-    output_line("xchg");
+    output_line("ex de,hl");
 }
 
 /**
@@ -250,7 +255,7 @@ void gen_swap(void) {
  * the primary register
  */
 void gen_immediate(void) {
-    output_with_tab ("lxi \th,");
+    output_with_tab ("ld hl,");
 }
 
 /**
@@ -258,10 +263,10 @@ void gen_immediate(void) {
  */
 void gen_push(int reg) {
     if (reg & DE_REG) {
-        output_line ("push\td");
+        output_line ("push de");
         stkp = stkp - INTSIZE;
     } else {
-        output_line ("push\th");
+        output_line ("push hl");
         stkp = stkp - INTSIZE;
     }
 }
@@ -270,7 +275,7 @@ void gen_push(int reg) {
  * pop the top of the stack into the secondary register
  */
 void gen_pop(void) {
-    output_line ("pop \td");
+    output_line ("pop de");
     stkp = stkp + INTSIZE;
 }
 
@@ -278,7 +283,7 @@ void gen_pop(void) {
  * swap the primary register and the top of the stack
  */
 void gen_swap_stack(void) {
-    output_line ("xthl");
+    output_line ("ex (sp),hl");
 }
 
 /**
@@ -286,7 +291,7 @@ void gen_swap_stack(void) {
  * @param sname subroutine name
  */
 void gen_call(char *sname) {
-    output_with_tab ("call\t");
+    output_with_tab ("call ");
     output_string (sname);
     newline ();
 }
@@ -315,7 +320,7 @@ void callstk(void) {
     output_string ("#.+5");
     newline ();
     gen_swap_stack ();
-    output_line ("pchl");
+    output_line ("jp (hl)");
     stkp = stkp + INTSIZE;
 }
 
@@ -325,7 +330,7 @@ void callstk(void) {
  */
 void gen_jump(int label)
 {
-    output_with_tab ("jmp \t");
+    output_with_tab ("jp ");
     print_label (label);
     newline ();
 }
@@ -337,12 +342,12 @@ void gen_jump(int label)
  */
 void gen_test_jump(int label, int ft)
 {
-    output_line ("mov \ta,h");
-    output_line ("ora \tl");
+    output_line ("ld a,h");
+    output_line ("or l");
     if (ft)
-        output_with_tab ("jnz \t");
+        output_with_tab ("jp nz,");
     else
-        output_with_tab ("jz  \t");
+        output_with_tab ("jp z,");
     print_label (label);
     newline ();
 }
@@ -351,21 +356,21 @@ void gen_test_jump(int label, int ft)
  * print pseudo-op  to define a byte
  */
 void gen_def_byte(void) {
-    output_with_tab (".db\t");
+    output_with_tab (".db ");
 }
 
 /**
  * print pseudo-op to define storage
  */
 void gen_def_storage(void) {
-    output_with_tab (".ds\t");
+    output_with_tab (".ds ");
 }
 
 /**
  * print pseudo-op to define a word
  */
 void gen_def_word(void) {
-    output_with_tab (".dw\t");
+    output_with_tab (".dw ");
 }
 
 /**
@@ -381,11 +386,11 @@ int gen_modify_stack(int newstkp) {
     if (k > 0) {
         if (k < 7) {
             if (k & 1) {
-                output_line ("inx \tsp");
+                output_line ("inc sp");
                 k--;
             }
             while (k) {
-                output_line ("pop \tb");
+                output_line ("pop bc");
                 k = k - INTSIZE;
             }
             return (newstkp);
@@ -393,11 +398,11 @@ int gen_modify_stack(int newstkp) {
     } else {
         if (k > -7) {
             if (k & 1) {
-                output_line ("dcx \tsp");
+                output_line ("dec sp");
                 k++;
             }
             while (k) {
-                output_line ("push\tb");
+                output_line ("pop bc");
                 k = k + INTSIZE;
             }
             return (newstkp);
@@ -407,8 +412,8 @@ int gen_modify_stack(int newstkp) {
     gen_immediate ();
     output_number (k);
     newline ();
-    output_line ("dad \tsp");
-    output_line ("sphl");
+    output_line ("dec sp");
+    output_line ("ld sp, hl");
     gen_swap ();
     return (newstkp);
 }
@@ -417,7 +422,7 @@ int gen_modify_stack(int newstkp) {
  * multiply the primary register by INTSIZE
  */
 void gen_multiply_by_two(void) {
-    output_line ("dad \th");
+    output_line ("add hl,hl");
 }
 
 /**
@@ -435,7 +440,7 @@ void gen_divide_by_two(void) {
  * Case jump instruction
  */
 void gen_jump_case(void) {
-    output_with_tab ("jmp \tcccase");
+    output_with_tab ("jp cccase");
     newline ();
 }
 
@@ -449,10 +454,10 @@ void gen_add(LVALUE *lval, LVALUE *lval2) {
     gen_pop ();
     if (dbltest (lval2, lval)) {
         gen_swap ();
-        gen_multiply_by_two ();
+        gen_multiply_by_two();
         gen_swap ();
     }
-    output_line ("dad \td");
+    output_line ("add hl,de");
 }
 
 /**
@@ -597,13 +602,13 @@ void gen_increment_primary_reg(LVALUE *lval) {
             gen_immediate2();
             output_number(lval->tagsym->size);
             newline();
-            output_line("dad \td");
+            output_line("add hl,de");
             break ;
         case CINT:
         case UINT:
-            output_line("inx \th");
+            output_line("inc hl");
         default:
-            output_line("inx \th");
+            output_line("inc hl");
             break;
     }
 }
@@ -612,26 +617,26 @@ void gen_increment_primary_reg(LVALUE *lval) {
  * decrement the primary register by one if char, INTSIZE if int
  */
 void gen_decrement_primary_reg(LVALUE *lval) {
-    output_line("dcx \th");
+    output_line("dec hl");
     switch (lval->ptr_type) {
         case CINT:
         case UINT:
-            output_line("dcx \th");
+            output_line("dec hl");
             break;
         case STRUCT:
             gen_immediate2();
             output_number(lval->tagsym->size - 1);
             newline();
             // two's complement
-            output_line("mov  \ta,d");
-            output_line("cma");
-            output_line("mov  \td,a");
-            output_line("mov  \ta,e");
-            output_line("cma");
-            output_line("mov \te,a");
-            output_line("inx \td");
+            output_line("ld a,d");
+            output_line("cpl");
+            output_line("ld d,a");
+            output_line("ld a,e");
+            output_line("cpl");
+            output_line("ld e,a");
+            output_line("inc de");
             // substract
-            output_line("dad \td");
+            output_line("add hl,de");
             break ;
         default:
             break;
@@ -744,7 +749,7 @@ char *inclib(void) {
  */
 void gnargs(int d)
 {
-    output_with_tab ("mvi \ta,");
+    output_with_tab ("ld a,");
     output_number(d);
     newline ();
 }
@@ -754,7 +759,7 @@ void gnargs(int d)
  * the secondary register
  */
 void gen_immediate2(void) {
-    output_with_tab ("lxi \td,");
+    output_with_tab ("ld de,");
 }
 
 /**
@@ -765,7 +770,7 @@ void add_offset(int val) {
     gen_immediate2();
     output_number(val);
     newline();
-    output_line ("dad \td");
+    output_line ("add hl,de");
 }
 
 /**
@@ -789,4 +794,3 @@ void gen_multiply(int type, int size) {
             break;
     }
 }
-

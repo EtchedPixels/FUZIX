@@ -1,0 +1,54 @@
+|       signed mod
+|       calling: (left / right)
+|               push left
+|               ldd right
+|               jsr smod
+|       result in d, arg popped.
+|
+        left=6
+        right=2
+        sign=1
+        count=0
+        return=4
+        CARRY=1
+.globl smod,mod,ASSERTFAIL
+.globl mrabs
+smod:   leas    -4(s)
+        std     right(s)
+        bne     nozero
+        swi2
+        .byte   ASSERTFAIL
+nozero: jsr     mrabs
+mod:    clr     count(s)        | prescale divisor
+        inc     count(s)
+mscl:   inc     count(s)
+        aslb
+        rola
+        bpl     mscl
+        std     right(s)
+        ldd     left(s)
+        clr     left(s)
+        clr     left+1 <tel:+1>(s)
+mod1:   subd    right(s)        | check subtract
+        bcc     mod2
+        addd    right(s)
+        andcc   #~CARRY
+        bra     mod3
+mod2:   orcc    #CARRY
+mod3:   rol     left+1 <tel:+1>(s)       | roll in carry
+        rol     left(s)
+        lsr     right(s)
+        ror     right+1 <tel:+1>(s)
+        dec     count(s)
+        bne     mod1
+        tst     sign(s)         | sign fiddle
+        beq     nochg
+        nega
+        negb
+        sbca    #0
+nochg:  std     right(s)        | move return addr
+        ldd     return(s)
+        std     left(s)
+        ldd     right(s)
+        leas    6(s)
+        rts

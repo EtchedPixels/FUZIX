@@ -8,11 +8,6 @@
 #include "defs.h"
 #include "data.h"
 
-#ifdef M6809
-
-/*      Define ASNM and LDNM to the names of the assembler and linker
-        respectively */
-
 /*
  *      Some predefinitions:
  *
@@ -799,5 +794,3 @@ void gnargs(int d)
         newline();
 
 }
-
-#endif

@@ -1,0 +1,26 @@
+|       mrabs.  converts both args to unsigned, and
+|       remembers result sign as the sign of the left
+|       argument.  (for signed modulo)
+|       result d contains right, sign is non-zero
+|       if result (from mod) should be negative.
+|
+|
+.globl mrabs
+        left=8.
+        right=4.
+        sign=3.
+mrabs:  clr     sign(s)
+        ldd     left(s)
+        bge     tryr
+        nega
+        negb
+        sbca    #0
+        std     left(s)
+        inc     sign(s)
+tryr:   ldd     right(s)
+        bge     done
+        nega
+        negb
+        sbca    #0
+        std     right(s)
+done:   rts

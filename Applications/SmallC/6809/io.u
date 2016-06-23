@@ -1,0 +1,28 @@
+|       Small C v1 io (putchar) for physics machine
+.globl  _putchar
+_putchar=.
+        lda     /9000
+        bita    #2
+        beq     _putchar
+        lda     3(s)
+        sta     /9001
+        cmpa    #10.
+        bne     out
+        ldd     #13.
+        pshs    d
+        lbsr    _putchar
+        leas    2(s)
+out:    rts
+
+.globl  _getchar
+_getchar=.
+        lda     /9000
+        bita    #1
+        beq     _getchar
+        ldb     /9001
+        clra
+        andb    #/7F
+        cmpb    #04
+        bne     noteot
+        ldd     #-1
+noteot: rts

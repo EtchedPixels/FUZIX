@@ -1,0 +1,12 @@
+grep public $* | sed 's/:       public//
+/?/d
+s?\([^  ]*\)[    ]*\(.*\)?\2    \1?
+s/\.asm//'> /tmp/symdef$$
+grep extrn $* | sed 's/:        extrn//
+s/\.asm//
+s?\([^  ]*\)[    ]*\(.*\)?\2    \1?
+/?/d'   > /tmp/symref$$
+sort /tmp/symdef$$ -o /tmp/symdef$$
+sort /tmp/symref$$ -o /tmp/symref$$
+join /tmp/symref$$ /tmp/symdef$$ | sed 's/[^    ]* *//'
+rm /tmp/symdef$$ /tmp/symref$$

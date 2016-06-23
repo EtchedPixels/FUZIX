@@ -1,0 +1,25 @@
+|       Run-time start off for ccv1 on the Physics 6809
+.globl  _edata
+.globl  _main
+| Initialize stack
+        lds     #/1000
+        ldx     #_edata | clear all of memory
+l2:     clr     (x)+
+        cmpx    #/0fff
+        bne     l2
+| Circumvent EPROM bug
+        ldx     #/ff3b
+        ldb     #6
+l1:     pshs    x
+        decb
+        bne l1
+|       clear everything so that start conds are
+|       always same
+        clra
+        clrb
+        tfr     a,dp
+        tfr     d,x
+        tfr     d,y
+        tfr     d,u
+        jsr     _main
+        jmp     /fc00
