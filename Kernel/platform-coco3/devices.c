@@ -8,6 +8,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <dwtime.h>
 
 
 struct devsw dev_tab[] =  /* The device driver switch table */

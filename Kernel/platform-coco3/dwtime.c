@@ -4,6 +4,7 @@
 #include <drivewire.h>
 #include <printf.h>
 #include <kdata.h>
+#include "config.h"
 
 #define DISC __attribute__((section(".discard")))
 
@@ -24,7 +25,7 @@ static int get_time( uint8_t *tbuf )
 
 
 /* A Classic, as stolen from Gnu */
-DISC uint32_t __mulsi3( uint32_t a, uint32_t b)
+DISC static uint32_t mul( uint32_t a, uint32_t b)
 {
 	uint32_t r=0;
 	while (a){
@@ -41,7 +42,7 @@ DISC uint32_t __mulsi3( uint32_t a, uint32_t b)
 
 DISC int dwtime_init( void )
 {
-	char buffer[6];
+	uint8_t buffer[6];
 	uint32_t ret;
 
 	/* get time packet */
@@ -68,10 +69,11 @@ DISC int dwtime_init( void )
 
 	/* calculate days from years */
 	ret=365;
-	ret *= year - 70;
+	ret = mul( ret, year - 70 );
 
 	/* count leap days in preceding years */
 	ret += (year - 69) >> 2;
+	
 
 	/* calculate days from months */
 	ret += mktime_moffset[month];
@@ -83,15 +85,15 @@ DISC int dwtime_init( void )
 	/* add in days in this month */
 	ret += day - 1;
 	/* convert to hours */
-	ret *= 24;
+	ret = mul( ret, 24 );
 	ret += hour;
 
 	/* convert to minutes */
-	ret *= 60;
+	ret = mul( ret, 60 );
 	ret += minute;
 
 	/* convert to seconds */
-	ret *= 60;
+	ret = mul( ret, 60 );
 	ret += second;
 
 	tod.low=ret;
@@ -101,7 +103,6 @@ DISC int dwtime_init( void )
 }
 
 
-#define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */
 
 /* Called every every decisec from timer.c */
 uint8_t rtc_secs(void)
