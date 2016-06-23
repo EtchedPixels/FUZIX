@@ -157,15 +157,13 @@ make -C Applications/ld09 TARGET=multicomp09
 make -C Applications/V7/games -f Makefile.6809 TARGET=multicomp09
 make -C Applications/games -f Makefile.6809 TARGET=multicomp09
 make -C Applications/MWC/cmd -f Makefile.6809 TARGET=multicomp09
+make -C Applications/rpilot-1.4.2 -f Makefile.6809 TARGET=multicomp09
 
 # 4. Build disk tools
 make -C Standalone
 
 # 5. Build boot disk image
-cd Standalone/filesystem-src && ./build-filesystem -X fuzixfs.dsk 256 65535
-
-# 6. Add extras
-cd Standalone/filesystem-src && ./add-extras -X fuzixfs.dsk
+cd Standalone/filesystem-src && ./build-filesystem-ng -x -f fuzixfs.dsk
 
 
 **************************
