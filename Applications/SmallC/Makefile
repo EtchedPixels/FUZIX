@@ -35,7 +35,7 @@ copt:	$(OBJ_COPT)
 	$(CC) -o copt $(OBJ_COPT)
 
 clean:
-	rm -f $(OBJ) scc8080 *.rel *~
+	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *.rel *~
 
 .c.rel:
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@

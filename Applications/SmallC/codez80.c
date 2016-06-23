@@ -402,7 +402,7 @@ int gen_modify_stack(int newstkp) {
                 k++;
             }
             while (k) {
-                output_line ("pop bc");
+                output_line ("push bc");
                 k = k + INTSIZE;
             }
             return (newstkp);
