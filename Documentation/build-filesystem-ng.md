@@ -86,34 +86,35 @@ f 0644 /usr/man/man1/rpilot.1              doc/rpilot.1
 d 0755 /usr/doc/rpilot
 ````
 
+The format is line-based and uses \# as the comment-to-end-of-line character.
+
 The definition of a package extends from the "package" keyword until the next
 "package" keyword or until the end of the file. Thus, a file can contain
 multiple package definitions.
 
-The "package" keyword is followed by zero or more attributes and then by zero
-or more commands.
+The "package" keyword is followed by zero or more lines of attributes and then
+by zero or more lines of commands. Within a line, keywords/attributes/commands
+are space-separated from their arguments.
 
-There are currently 3 commands defined, each of them maps to one or more ucp
-commands. The commands are parsed and an error-free-by-construction ucp script
-is emitted and applied to the ucp executable:
+The following commands are (currently) defined:
 
-* "d" creates and sets permissions on a directory. The directory must
-be created leaf by leaf.
+* d - create and set permissions on a directory. The directory must be created
+leaf by leaf.
 
-* "n" creates and sets properties on a node.
+* n - create and set properties on a node.
 
-* "f" copies and sets permissions on a file. The destination
-directory must exist. The source and destination file names are specified
-independently. The source file is specified relative to the location of the
-package file (so fuzix-basefs.pkg needs to ../ its way to liberror.txt but
-fuzix-util.pkg can reference banner in the cwd).
+* f - copy and set permissions on a file. The destination directory must
+exist. The source and destination file names are specified independently. The
+source file is specified relative to the location of the package file (so
+fuzix-basefs.pkg needs to ../ its way to liberror.txt but fuzix-util.pkg can
+reference banner in the cwd).
 
-Two attributes are shown:
+The following attributes are shown in the examples:
 
 * if-file - this is used in optional packages. It checks for the existence of the
 named file. If the named file is not found, the package is disabled. This
 provides a simple method to omit groups of files from applications that have not
-been build.
+been built.
 
 * if-cpu - this is used to disable a package if its content is only applicable to
 a particular target.
@@ -121,8 +122,115 @@ a particular target.
 
 ## Enabling and disabling packages
 
-Every package is enabled by default. The "if-" attributes invoke rules that may
-result in a package being disabled.
+Consider the following use-cases:
+
+1. Build a disk image containing everything that's available
+2. Build a disk image containing everything that is suitable for a specific target processor
+3. Build a disk image containing a specific package or set of packages
+4. Build a disk image omitting a specific package or set of packages
+
+Item 1 in the list is trivial; it is the default behaviour of the script. A
+well-written package file will include the "if-file" attribute and so all
+packages that have been built will be included in the disk image.
+
+The remaining three items require the use of a "meta-package". A meta-package is
+disabled by default (and therefore will not form part of "everything that's
+available" in the previous example). One single meta-package can be enabled at
+the command-line.
+
+The following package file achieves item 2 in the list:
+
+````
+# My custom setup
+package  mysys
+disable-pkg  mysys
+
+set-cpu  6809
+````
+
+It is selected like this:
+
+````
+./build-filesystem-ng -x -f fuzixfs.dsk -p mysys
+````
+
+The attribute disable-pkg is used to disable the package by default, the -p
+command-line argument enables the package.
+
+The attribute set-cpu provides a value that is tested by if-cpu (fuzix-util.pkg
+above provides an example). The if-cpu test will fail (package will be disabled)
+if a set-cpu attribute is found in an enabled package and the arguments to
+if-cpu and set-cpu mis-match.
+
+There is also an ttribute pair if-platform/set-platform. They work in the same
+way as if-cpu/set-cpu.
+
+Caveats:
+
+* the order in which package files are found/processed does not affect the
+  decision-making
+
+* the implementation is intended to cope will real use-cases. You can surely
+  compose pathological cases that are mutually contradictory.
+
+The following package file achieves item 3 in the list:
+
+````
+# A specific set of packages for my system
+package  mysys
+disable-pkg  mysys ALL
+enable-pkg basefs allgames
+
+````
+
+It is selected using the -p command-line parameter as before.
+
+This example introduces three new things:
+
+* the special/reserved package name ALL is used to disable every package
+* it shows that disable-pkg actually accepts a _list_ of packages
+* it shows the use of enable-pkg to specify a list of packages to enable
+
+
+Caveats:
+
+* You can only use ALL with disable-pkg
+
+* You should only used ALL once, in the package specified at the command-line
+
+* The _order_ of the enable-pkg, disable-pkg attributes has no effect on the
+  behaviour of ALL; it has the effect of disabling every package (except the one
+  that contains it) before any enable-pkg attributes are considered.
+
+
+
+The following package file achieves the final item on the list:
+
+````
+# An educational system. No games (boo!)
+package  mysys
+disable-pkg  mysys allgames
+````
+
+It is selected using the -p command-line parameter as before.
+
+This example does not introduce any new things.
+
+Contrast the last two examples: one starts from nothing and adds what's
+desired. The second starts from everything and removes what's not desired.
+
+Each package referred to in the enable-pkg/disable-pkg list could itself be a
+meta-package. For example:
+
+````
+# All the games
+package  allgames
+disable-pkg allgames
+enable-pkg  games V7-games adventure
+````
+
+[NAC HACK 2016Jun23] not sure that works in both cases.. may need to flip the
+sense.
 
 Once the attributes have been processed, each enabled package is expected to be
 able to be processed to completions without errors.
@@ -130,7 +238,7 @@ able to be processed to completions without errors.
 
 ## Current Status
 
-The description reflects the current state of build-filesystem-ng; a complete
+This description reflects the current state of build-filesystem-ng; a complete
 set of ·pkg files is in place, and it can successfully process them to generate
 a working disk image.
 
@@ -204,6 +312,10 @@ allowing build-filesystem to be run with no command-line arguments.
 
 build-filesystem-ng is a PERL script which runs on the host system and invokes
 the FUZIX mkfs, ucp and fsk executables.
+
+Each of the (currently-defined) commands maps to one or more ucp commands. A
+correct-by-construction ucp script is generated (ucp-temp.txt) and applied to
+the ucp executable.
 
 
 ## Restrictions and error-handling
