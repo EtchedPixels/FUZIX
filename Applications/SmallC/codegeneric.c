@@ -2,6 +2,9 @@
 #include "defs.h"
 #include "data.h"
 
+static int args;
+
+
 /*
  *	A cheap and cheerful way to see what it's trying to do
  *
@@ -80,6 +83,14 @@ void data_segment_gdata(void) {
     output_line ("\t.data");
 }
 
+void gen_prologue(void)
+{
+}
+
+void gen_epilogue(void)
+{
+}
+
 /**
  * Output the variable symbol at scptr as an extrn or a public
  * @param scptr
@@ -131,7 +142,7 @@ void gen_get_memory(SYMBOL *sym) {
         output_bracketed(sym->name);
         newline();
     } else {
-        output_with_tab ("(ggm)load r1 ");
+        output_with_tab ("load r1 ");
         output_bracketed(sym->name);
         newline ();
     }
@@ -145,9 +156,7 @@ void gen_get_memory(SYMBOL *sym) {
 int gen_get_locale(SYMBOL *sym) {
     if (sym->storage == LSTATIC) {
         gen_immediate();
-        output_byte('(');
         print_label(sym->offset);
-        output_byte(')');
         newline();
         return HL_REG;
     } else {
@@ -180,13 +189,13 @@ void gen_put_memory(SYMBOL *sym) {
  * @param typeobj
  */
 void gen_put_indirect(char typeobj) {
-    gen_pop ();
     if (typeobj & CCHAR) {
         //gen_call("ccpchar");
-        output_line("storeb r1 (r2)");
+        output_line("popstoreb r1 (r2)");
     } else {
-        output_line("store r1 (r2)");
+        output_line("popstore r1 (r2)");
     }
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -199,13 +208,13 @@ void gen_get_indirect(char typeobj, int reg) {
         if (reg & DE_REG) {
             gen_swap();
         }
-        output_line("loadbs r1 (r1)");
+        output_line("loadsb r1 (r1)");
     } else if (typeobj == UCHAR) {
         if (reg & DE_REG) {
             gen_swap();
         }
         //gen_call("cguchar");
-        output_line("loadbu r1 (r1)");
+        output_line("loadub r1 (r1)");
     } else { // int
          output_line("load r1 (r1)");
     }
@@ -261,6 +270,8 @@ void gen_swap_stack(void) {
 void gen_call(char *sname) {
     output_with_tab ("call ");
     output_string (sname);
+    output_byte(',');
+    output_number(args);
     newline ();
 }
 
@@ -284,7 +295,9 @@ void gen_ret(void) {
  * perform subroutine call to value on top of stack
  */
 void callstk(void) {
-    output_line ("call r1");
+    output_line("call r1");
+    output_byte(',');
+    output_number(args);
 }
 
 /**
@@ -384,29 +397,29 @@ void gen_jump_case(void) {
  * @param lval2
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
-    gen_pop ();
     if (dbltest (lval2, lval)) {
         gen_swap ();
         gen_multiply_by_two();
         gen_swap ();
     }
-    output_line ("add r1 r2");
+    output_line ("popadd r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * subtract the primary register from the secondary
  */
 void gen_sub(void) {
-    gen_pop ();
-    output_line("sub r2 r1");
+    output_line("popsub r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * multiply the primary and secondary registers (result in primary)
  */
 void gen_mult(void) {
-    gen_pop();
-    output_line("mul r1 r2");
+    output_line("popmul r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -414,8 +427,8 @@ void gen_mult(void) {
  * (quotient in primary, remainder in secondary)
  */
 void gen_div(void) {
-    gen_pop();
-    output_line("div r1 r2");
+    output_line("popdiv r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -423,8 +436,8 @@ void gen_div(void) {
  * (quotient in primary, remainder in secondary)
  */
 void gen_udiv(void) {
-    gen_pop();
-    output_line("udiv r1 r2");
+    output_line("popudiv r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -433,8 +446,8 @@ void gen_udiv(void) {
  * (remainder in primary, quotient in secondary)
  */
 void gen_mod(void) {
-    gen_pop();
-    output_line("div r2 r1");
+    output_line("popdiv r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -443,32 +456,32 @@ void gen_mod(void) {
  * (remainder in primary, quotient in secondary)
  */
 void gen_umod(void) {
-    gen_pop();
-    output_line("udiv r2 r1");
+    output_line("popudiv r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * inclusive 'or' the primary and secondary registers
  */
 void gen_or(void) {
-    gen_pop();
-    output_line("or r1 r2");
+    output_line("popor r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * exclusive 'or' the primary and secondary registers
  */
 void gen_xor(void) {
-    gen_pop();
-    output_line("xor r1 r2");
+    output_line("popxor r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * 'and' the primary and secondary registers
  */
 void gen_and(void) {
-    gen_pop();
-    output_line("and r1 r2");
+    output_line("popand r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -476,8 +489,8 @@ void gen_and(void) {
  * times in the primary register (results in primary register)
  */
 void gen_arithm_shift_right(void) {
-    gen_pop();
-    output_line("asr r2 r1");
+    output_line("popasr r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -485,8 +498,8 @@ void gen_arithm_shift_right(void) {
  * times in the primary register (results in primary register)
  */
 void gen_logical_shift_right(void) {
-    gen_pop();
-    output_line("lsr r2 r1");
+    output_line("poplsr r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -494,8 +507,8 @@ void gen_logical_shift_right(void) {
  * times in the primary register (results in primary register)
  */
 void gen_arithm_shift_left(void) {
-    gen_pop ();
-    output_line("lsl r2 r1");
+    output_line("poplsl r2 r1");
+    stkp = stkp + INTSIZE;
 }
 
 /**
@@ -577,80 +590,80 @@ void gen_decrement_primary_reg(LVALUE *lval) {
  * equal
  */
 void gen_equal(void) {
-    gen_pop();
-    output_line ("eq r1 r2");
+    output_line ("popeq r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * not equal
  */
 void gen_not_equal(void) {
-    gen_pop();
-    output_line ("ne r1 r2");
+    output_line ("popne r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * less than (signed)
  */
 void gen_less_than(void) {
-    gen_pop();
-    output_line ("lt r1 r2");
+    output_line ("poplt r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * less than or equal (signed)
  */
 void gen_less_or_equal(void) {
-    gen_pop();
-    output_line ("le r1 r2");
+    output_line ("pople r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * greater than (signed)
  */
 void gen_greater_than(void) {
-    gen_pop();
-    output_line ("gt r1 r2");
+    output_line ("popgt r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * greater than or equal (signed)
  */
 void gen_greater_or_equal(void) {
-    gen_pop();
-    output_line ("ge r1 r2");
+    output_line ("popge r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * less than (unsigned)
  */
 void gen_unsigned_less_than(void) {
-    gen_pop();
-    output_line ("ult r1 r2");
+    output_line ("popult r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * less than or equal (unsigned)
  */
 void gen_unsigned_less_or_equal(void) {
-    gen_pop();
-    output_line ("ule r1 r2");
+    output_line ("popule r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * greater than (unsigned)
  */
 void gen_usigned_greater_than(void) {
-    gen_pop();
-    output_line ("ugt r1 r2");
+    output_line ("popugt r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 /**
  * greater than or equal (unsigned)
  */
 void gen_unsigned_greater_or_equal(void) {
-    gen_pop();
-    output_line ("uge r1 r2");
+    output_line ("popuge r1 r2");
+    stkp = stkp + INTSIZE;
 }
 
 char *inclib(void) {
@@ -670,11 +683,10 @@ char *inclib(void) {
  * Squirrel away argument count in a register that modstk doesn't touch.
  * @param d
  */
+
 void gnargs(int d)
 {
-    output_with_tab ("load r3 ");
-    output_number(d);
-    newline ();
+    args = d;
 }
 
 /**
