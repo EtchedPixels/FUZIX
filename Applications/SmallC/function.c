@@ -16,7 +16,6 @@ int argtop;
  */
 void newfunc(void) {
     char n[NAMESIZE];
-    int type;
     fexitlab = getlabel();
 
     if (!symname(n)) {
