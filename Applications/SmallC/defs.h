@@ -78,6 +78,7 @@ struct tag_symbol {
 #define UCHAR           ((1 << 2) + 1)
 #define CINT            (2 << 2)
 #define UINT            ((2 << 2) + 1)
+#define VOID		(0 << 2)
 
 // possible entries for storage
 #define PUBLIC  1
