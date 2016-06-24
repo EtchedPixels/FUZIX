@@ -35,10 +35,14 @@ int declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_str
                 multidef (sname);
             if (match ("(")) {
                 /* FIXME: We need to deal with pointer types properly here */
+                if (identity == POINTER)
+                    type = CINT;
                 newfunc_typed(storage, sname, type);
                 /* Can't int foo(x){blah),a=4; */
                 return 1;
             }
+            if (identity == VARIABLE && type == VOID)
+                error("cannot have void variables");
             if (match ("[")) {
                 dim = needsub ();
                 //if (dim || storage == EXTERN) {
