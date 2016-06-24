@@ -206,7 +206,6 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
 void dumplits(void) {
     int j, k;
 
-#ifndef TINY
     if (litptr == 0)
         return;
     print_label(litlab);
@@ -224,14 +223,12 @@ void dumplits(void) {
             output_byte(',');
         }
     }
-#endif
 }
 
 /**
  * dump all static variables
  */
 void dumpglbs(void) {
-#ifndef TINY
     int dim, i, list_size, line_count, value;
     if (!glbflag)
         return;
@@ -289,10 +286,8 @@ void dumpglbs(void) {
         }
         current_symbol_table_idx++;
     }
-#endif    
 }
 
-#ifndef TINY
 /**
  * dump struct data
  * @param symbol struct variable
@@ -321,7 +316,6 @@ void dump_struct(SYMBOL *symbol, int position) {
         newline();
     }
 }
-#endif
 
 /**
  * report errors
