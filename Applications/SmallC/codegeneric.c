@@ -161,8 +161,8 @@ int gen_get_locale(SYMBOL *sym) {
         return HL_REG;
     } else {
         gen_immediate();
-        output_number(sym->offset - stkp);
-        output_string("+sp");
+        output_number(sym->offset);
+        output_string("+fp");
         newline();
         return HL_REG;
     }
