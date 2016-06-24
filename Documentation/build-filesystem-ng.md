@@ -129,61 +129,64 @@ Consider the following use-cases:
 3. Build a disk image containing a specific package or set of packages
 4. Build a disk image omitting a specific package or set of packages
 
-Item 1 in the list is trivial; it is the default behaviour of the script. A
+The first use-case is trivial; it is the default behaviour of the script. A
 well-written package file will include the "if-file" attribute and so all
 packages that have been built will be included in the disk image.
 
-The remaining three items require the use of a "meta-package". A meta-package is
-disabled by default (and therefore will not form part of "everything that's
-available" in the previous example). One single meta-package can be enabled at
-the command-line.
+The remaining three use-cases require the use of a "meta-package". A
+meta-package is disabled by default (and therefore will not form part of
+"everything that's available" in the previous example). One single meta-package
+can be enabled at the command-line.
 
-The following package file achieves item 2 in the list:
+The second use-case can be achieved using a package file like this:
 
 ````
 # My custom setup
-package  mysys
-disable-pkg  mysys
+package  mysys09
+disable-pkg  mysys09
 
 set-cpu  6809
 ````
 
-It is selected like this:
+Which is applied like this:
 
 ````
 ./build-filesystem-ng -x -f fuzixfs.dsk -p mysys
 ````
 
-The attribute disable-pkg is used to disable the package by default, the -p
-command-line argument enables the package.
+The attribute disable-pkg is used to disable the package by default (so, for
+example, it will not be enabled during use-case 1). The -p command-line argument
+enables the package.
 
 The attribute set-cpu provides a value that is tested by if-cpu (fuzix-util.pkg
 above provides an example). The if-cpu test will fail (package will be disabled)
-if a set-cpu attribute is found in an enabled package and the arguments to
-if-cpu and set-cpu mis-match.
+if a set-cpu attribute is found in an enabled package _and_ the arguments to
+if-cpu and set-cpu mis-match (therefore, in the absence of a set-cpu attribute,
+the if-cpu test will always pass; package will remain enabled).
 
-There is also an ttribute pair if-platform/set-platform. They work in the same
+There is also an attribute pair if-platform/set-platform. They work in the same
 way as if-cpu/set-cpu.
 
-Caveats:
+Notes:
 
 * the order in which package files are found/processed does not affect the
   decision-making
-
 * the implementation is intended to cope will real use-cases. You can surely
   compose pathological cases that are mutually contradictory.
 
-The following package file achieves item 3 in the list:
+The last two use-cases take opposite approaches to the same problem. One says
+"start with nothing and add a specific set of package", the other says "start
+with everything and remove a specific set of packages". Here is a package file
+for the "start with nothing" approach:
 
 ````
 # A specific set of packages for my system
-package  mysys
-disable-pkg  mysys ALL
-enable-pkg basefs allgames
-
+package  mysys-nothing
+disable-pkg  mysys-nothing ALL
+enable-pkg basefs games V7-games adventure
 ````
 
-It is selected using the -p command-line parameter as before.
+As before, it is selected using the -p command-line parameter.
 
 This example introduces three new things:
 
@@ -192,48 +195,88 @@ This example introduces three new things:
 * it shows the use of enable-pkg to specify a list of packages to enable
 
 
-Caveats:
+Notes:
 
 * You can only use ALL with disable-pkg
-
 * You should only used ALL once, in the package specified at the command-line
-
 * The _order_ of the enable-pkg, disable-pkg attributes has no effect on the
   behaviour of ALL; it has the effect of disabling every package (except the one
   that contains it) before any enable-pkg attributes are considered.
 
-
-
-The following package file achieves the final item on the list:
+Finally, here is a package file for the "start with everything" approach:
 
 ````
 # An educational system. No games (boo!)
-package  mysys
-disable-pkg  mysys allgames
+package  mysys-all
+disable-pkg  mysys-all games V7-games adventure
 ````
+As before, it is selected using the -p command-line parameter.
 
-It is selected using the -p command-line parameter as before.
-
-This example does not introduce any new things.
+This example does not introduce anything new.
 
 Contrast the last two examples: one starts from nothing and adds what's
 desired. The second starts from everything and removes what's not desired.
 
 Each package referred to in the enable-pkg/disable-pkg list could itself be a
-meta-package. For example:
+meta-package. The design of the meta-package changes though, depending upon
+whether you are using the "start with everything" or the "start with nothing"
+approach. For example you could put both of these package definitions into
+as single file:
 
 ````
 # All the games
 package  allgames
 disable-pkg allgames
 enable-pkg  games V7-games adventure
+
+# None of the games
+package no-allgames
+disable-pkg no-allgames
+disable-pkg games V7-games adventure
 ````
 
-[NAC HACK 2016Jun23] not sure that works in both cases.. may need to flip the
-sense.
+And then the earlier examples would become:
+
+````
+# A specific set of packages for my system
+package  mysys
+disable-pkg  mysys ALL
+enable-pkg basefs allgames
+````
+and:
+
+````
+# An educational system. No games (boo!)
+package  mysys
+disable-pkg  mysys
+enable-pkg no-allgames    # enable it so it can disable packages!
+````
+
+Package files can be "nested" to arbitrary depth in this way.
+
+Notes:
+
+* the idea of including a "positive" and "negative" meta-package in a single
+  file is a convenient way of leaving your options open
+* the "no-" prefix to the package name has no significance to build-filesystem-ng
+  but might be considered a useful working-practise.
+
+### Implementation Details
+
+Package enabling/disabling is a 6-stage process:
+
+* Apply defaults: enable any package unless it is self-disabled
+* Apply -p: enable a package referenced on the command-line
+* Apply ALL if found: disable all packages except its containing package
+* For all enabled packages, process any enable-pkg statements. Iterate until stable
+* For all enabled packages, process any disable-pkg statements except self-disable (no iteration is required here)
+* For all enabled packages, process any if-file if-cpu if-platform attributes (may result in packages being disabled)
+
+
+### Error-handing
 
 Once the attributes have been processed, each enabled package is expected to be
-able to be processed to completions without errors.
+able to be processed to completion without errors. Errors are fatal.
 
 
 ## Current Status
