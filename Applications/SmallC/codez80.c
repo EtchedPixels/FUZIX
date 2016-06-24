@@ -153,9 +153,7 @@ void gen_get_memory(SYMBOL *sym) {
 int gen_get_locale(SYMBOL *sym) {
     if (sym->storage == LSTATIC) {
         gen_immediate();
-        output_byte('(');
         print_label(sym->offset);
-        output_byte(')');
         newline();
         return HL_REG;
     } else {
