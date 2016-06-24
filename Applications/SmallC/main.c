@@ -188,7 +188,7 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
             otag = define_struct(sname, stclass, sflag);
         }
         declare_global(STRUCT, stclass, mtag, otag, is_struct);
-    } else if ((type = get_type()) != 0) {
+    } else if ((type = get_type()) != 1) {
         ns = declare_global(type, stclass, mtag, 0, is_struct);
     } else if (stclass == PUBLIC) {
         return (0);

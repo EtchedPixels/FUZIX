@@ -214,6 +214,7 @@ extern int add_local (char *sname, int identity, int type, int offset, int stora
 extern int symname(char *sname);
 extern void illname(void);
 extern void multidef(char *symbol_name);
+extern void notvoid(int type);
 extern void addwhile(WHILE *ptr);
 extern void delwhile(void);
 extern WHILE *readwhile(void);

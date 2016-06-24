@@ -31,25 +31,32 @@ void newfunc(void) {
 void newfunc_typed(int storage, char *n, int type)
 {
     int idx;
-    /* TODO: external storage */
-    if (storage == EXTERN)
-        error("not yet supported");
+    SYMBOL *symbol;
     if ((idx = find_global(n)) > -1) {
-        if (symbol_table[idx].identity != FUNCTION)
+        symbol = &symbol_table[idx];
+        if (symbol->identity != FUNCTION) {
+            printf("L3 %d %d\n", idx, symbol->identity);
             multidef(n);
-        else if (symbol_table[idx].offset == FUNCTION)
-            multidef(n);
-        else
-            symbol_table[idx].offset = FUNCTION;
-    } else
-        add_global(n, FUNCTION, CINT, FUNCTION, storage);
-    output_string(n);
-    output_label_terminator();
-    newline();
+        }
+    } else {
+        /* extern implies global scope */
+        idx = add_global(n, FUNCTION, CINT, 0, storage == EXTERN ? PUBLIC : storage);
+        printf("L1 %d\n", idx);
+        symbol = &symbol_table[idx];
+        printf("L1 %d %d\n", idx, symbol->offset);
+    }
     local_table_index = NUMBER_OF_GLOBALS; //locptr = STARTLOC;
     argstk = 0;
     // ANSI style argument declaration
-    if (doAnsiArguments() == 0) {
+    if (doAnsiArguments()) {
+        if (storage == EXTERN) {
+            need_semicolon();
+            return;
+        }
+        /* No body .. just a definition */
+        if (match(";"))
+            return;
+    } else {
         // K&R style argument declaration
         while (!match(")")) {
             if (symname(n)) {
@@ -71,10 +78,18 @@ void newfunc_typed(int storage, char *n, int type)
             if (endst())
                 break;
         }
+        if (storage == EXTERN) {
+            need_semicolon();
+            return;
+        }
+        /* No body .. just a definition */
+        if (match(";"))
+            return;
         stkp = 0;
         argtop = argstk;
         while (argstk) {
-            if ((type = get_type()) != 0) {
+            if ((type = get_type()) != -1) {
+                notvoid(type);
                 getarg(type);
                 need_semicolon();
             } else {
@@ -83,6 +98,14 @@ void newfunc_typed(int storage, char *n, int type)
             }
         }
     }
+    if (symbol->offset == FUNCTION) {
+            printf("L2 %d %d\n", idx, symbol->offset);
+            multidef(n);
+    }
+    symbol->offset = FUNCTION;
+    output_string(n);
+    output_label_terminator();
+    newline();
     gen_prologue();
     statement(YES);
     print_label(fexitlab);
@@ -143,14 +166,15 @@ void getarg(int t) {
 int doAnsiArguments(void) {
     int type;
     type = get_type();
-    if (type == 0) {
+    if (type == -1) {
         return 0; // no type detected, revert back to K&R style
     }
     argtop = argstk;
     argstk = 0;
     FOREVER
     {
-        if (type) {
+        /* We don't need to pull a variable for void */
+        if (type != -1) {
             doLocalAnsiArgument(type);
         } else {
             error("wrong number args");
@@ -175,6 +199,8 @@ void doLocalAnsiArgument(int type) {
         identity = POINTER;
     } else {
         identity = VARIABLE;
+        if (type == VOID)
+            return;
     }
     if (symname(symbol_name)) {
         if (find_locale(symbol_name) > -1) {

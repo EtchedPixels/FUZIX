@@ -68,7 +68,7 @@ int do_local_declares(int stclass) {
             otag = define_struct(sname, stclass, sflag);
         }
         declare_local(STRUCT, stclass, otag);
-    } else if ((type = get_type()) != 0) {
+    } else if ((type = get_type()) != -1) {
         declare_local(type, stclass, -1);
     } else if (stclass == LSTATIC || stclass == DEFAUTO) {
         declare_local(CINT, stclass, -1);

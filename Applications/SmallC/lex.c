@@ -196,7 +196,7 @@ void blanks(void) {
 
 /**
  * returns declaration type
- * @return CCHAR, CINT, UCHAR, UINT
+ * @return VOID, CCHAR, CINT, UCHAR, UINT
  *
  * FIXME: wants rewriting to collect property bits and base type right
  */
@@ -228,6 +228,6 @@ int get_type(void) {
     } else if (amatch ("int", 3)) {
         return CINT;
     }
-    return 0;
+    return -1;
 }
 
