@@ -20,7 +20,7 @@ d 0755 /usr/bin
 d 0755 /usr/include
 d 0755 /usr/share
 
-f 0644 /usr/share/liberror.txt            ../../Library/libs/liberror.txt
+f 0644 /usr/lib/liberror.txt            ../../Library/libs/liberror.txt
 
 d 0755 /var/spool
 d 0755 /var/mail
