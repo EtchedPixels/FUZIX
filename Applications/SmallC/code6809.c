@@ -269,6 +269,14 @@ void declare_entry_point(char *symbol_name) {
     //newline();
 }
 
+void gen_prologue(void)
+{
+}
+
+void gen_epilogue(void)
+{
+}
+
 /**
  * return from subroutine
  */
