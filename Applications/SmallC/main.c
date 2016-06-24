@@ -177,6 +177,7 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
     int otag;   // tag of struct object being declared
     int sflag;		// TRUE for struct definition, zero for union
     char sname[NAMESIZE];
+    int ns = 0;
     
     blanks();
     if ((sflag=amatch("struct", 6)) || amatch("union", 5)) {
@@ -188,13 +189,14 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
         }
         declare_global(STRUCT, stclass, mtag, otag, is_struct);
     } else if ((type = get_type()) != 0) {
-        declare_global(type, stclass, mtag, 0, is_struct);
+        ns = declare_global(type, stclass, mtag, 0, is_struct);
     } else if (stclass == PUBLIC) {
         return (0);
     } else {
-        declare_global(CINT, stclass, mtag, 0, is_struct);
+        ns = declare_global(CINT, stclass, mtag, 0, is_struct);
     }
-    need_semicolon();
+    if (!ns)
+        need_semicolon();
     return (1);
 }
 

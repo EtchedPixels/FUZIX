@@ -13,16 +13,16 @@
  * @param mtag tag of struct whose members are being declared, or zero
  * @param otag tag of struct object being declared. only matters if mtag is non-zero
  * @param is_struct struct or union or no meaning
- * @return 
+ * @return 1 if a function was parsed
  */
-void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_struct) {
+int declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_struct) {
     int     dim, identity;
     char    sname[NAMESIZE];
 
     FOREVER {
         FOREVER {
             if (endst ())
-                return;
+                return 0;
             dim = 1;
             if (match ("*")) {
                 identity = POINTER;
@@ -33,6 +33,12 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
                 illname ();
             if (find_global (sname) > -1)
                 multidef (sname);
+            if (match ("(")) {
+                /* FIXME: We need to deal with pointer types properly here */
+                newfunc_typed(storage, sname, type);
+                /* Can't int foo(x){blah),a=4; */
+                return 1;
+            }
             if (match ("[")) {
                 dim = needsub ();
                 //if (dim || storage == EXTERN) {
@@ -70,7 +76,7 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
             }
         }
         if (!match (","))
-            return;
+            return 0;
     }
 }
 

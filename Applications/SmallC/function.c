@@ -16,7 +16,7 @@ int argtop;
  */
 void newfunc(void) {
     char n[NAMESIZE];
-    int idx, type;
+    int type;
     fexitlab = getlabel();
 
     if (!symname(n)) {
@@ -24,6 +24,17 @@ void newfunc(void) {
         do_kill();
         return;
     }
+    if (!match("("))
+        error("missing open paren");
+    newfunc_typed(PUBLIC, n, CINT);
+}
+
+void newfunc_typed(int storage, char *n, int type)
+{
+    int idx;
+    /* TODO: external storage */
+    if (storage == EXTERN)
+        error("not yet supported");
     if ((idx = find_global(n)) > -1) {
         if (symbol_table[idx].identity != FUNCTION)
             multidef(n);
@@ -32,9 +43,7 @@ void newfunc(void) {
         else
             symbol_table[idx].offset = FUNCTION;
     } else
-        add_global(n, FUNCTION, CINT, FUNCTION, PUBLIC);
-    if (!match("("))
-        error("missing open paren");
+        add_global(n, FUNCTION, CINT, FUNCTION, storage);
     output_string(n);
     output_label_terminator();
     newline();
