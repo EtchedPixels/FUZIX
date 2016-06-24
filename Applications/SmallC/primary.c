@@ -256,11 +256,26 @@ int quoted_string(int *position) {
     return (1);
 }
 
+#define BADHEX 127
+
+int hexdigit(char c)
+{
+    if (c >= 'a')
+        c -= 32;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A';
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    return BADHEX;
+}
+
 /**
  * decode special characters (preceeded by back slashes)
  */
 int spechar(void) {
     char c;
+    int r;
+
     c = ch();
 
     if      (c == 'n') c = LF;
@@ -268,10 +283,41 @@ int spechar(void) {
     else if (c == 'r') c = CR;
     else if (c == 'f') c = FFEED;
     else if (c == 'b') c = BKSP;
-    else if (c == '0') c = EOS;
     else if (c == EOS) return 0;
 
     gch();
+    if (c == 'x') {
+        c = hexdigit(ch());
+        if (c == BADHEX) {
+            error("bad escape");
+            return '?';
+        }
+        r = c;
+        gch();
+        c = hexdigit(ch());
+        if (c == BADHEX)
+            return r;
+        r <<= 4;
+        r |= c;
+        gch();
+        return r;
+    }
+    if (c == '0') {
+        int n;
+        n = 0;
+        r = 0;
+
+        while(n < 3) {
+            c = ch();
+            if (c < '0' || c > '7')
+                return r;
+            r <<= 3;
+            r |= c - '0';
+            n++;
+            gch();
+        }
+        return r;
+    }
     return (c);
 }
 
