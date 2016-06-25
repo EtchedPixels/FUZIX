@@ -20,14 +20,11 @@ platform-specific files/file-sets in order to create a tailored disk image.
 When build-filesystem-ng is executed, it performs these steps in sequence:
 
 * Search the Standalone and Application trees for package files. Package files
-are recognised by name. It's OK to have multiple package files with the same
-name.
-
+  are recognised by name. It's OK to have multiple package files with the same
+  name.
 * Determine whether each package is enabled or disabled.
-
 * Re-order the package list, if necessary, to resolve declared dependencies of
   enabled packages.
-
 * Generate a FUZIX disk image containing all of the elements (files,
   directories, nodes etc.) specified in the enabled packages
 
@@ -55,7 +52,7 @@ d 0755 /usr
 d 0755 /dev
 d 0755 /usr/share
 
-f 0644 /usr/share/liberror.txt            ../../Library/libs/liberror.txt
+f 0644 /usr/lib/liberror.txt            ../../Library/libs/liberror.txt
 
 n 20666 512 /dev/tty   
 ````
@@ -99,25 +96,22 @@ are space-separated from their arguments.
 The following commands are (currently) defined:
 
 * d - create and set permissions on a directory. The directory must be created
-leaf by leaf.
-
+  leaf by leaf.
 * n - create and set properties on a node.
-
 * f - copy and set permissions on a file. The destination directory must
-exist. The source and destination file names are specified independently. The
-source file is specified relative to the location of the package file (so
-fuzix-basefs.pkg needs to ../ its way to liberror.txt but fuzix-util.pkg can
-reference banner in the cwd).
+  exist. The source and destination file names are specified independently. The
+  source file is specified relative to the location of the package file (so
+  fuzix-basefs.pkg needs to ../ its way to liberror.txt but fuzix-util.pkg can
+  reference banner in the cwd).
 
 The following attributes are shown in the examples:
 
 * if-file - this is used in optional packages. It checks for the existence of the
-named file. If the named file is not found, the package is disabled. This
-provides a simple method to omit groups of files from applications that have not
-been built.
-
+  named file. If the named file is not found, the package is disabled. This
+  provides a simple method to omit groups of files from applications that have not
+  been built.
 * if-cpu - this is used to disable a package if its content is only applicable to
-a particular target.
+  a particular target.
 
 
 ## Enabling and disabling packages
@@ -151,12 +145,11 @@ set-cpu  6809
 Which is applied like this:
 
 ````
-./build-filesystem-ng -x -f fuzixfs.dsk -p mysys
+./build-filesystem-ng -x -f fuzixfs.dsk -p mysys09
 ````
 
-The attribute disable-pkg is used to disable the package by default (so, for
-example, it will not be enabled during use-case 1). The -p command-line argument
-enables the package.
+The attribute disable-pkg is used to disable the package by default. The
+package is enabled by the -p command-line argument.
 
 The attribute set-cpu provides a value that is tested by if-cpu (fuzix-util.pkg
 above provides an example). The if-cpu test will fail (package will be disabled)
@@ -188,11 +181,11 @@ enable-pkg basefs games V7-games adventure
 
 As before, it is selected using the -p command-line parameter.
 
-This example introduces three new things:
+This example introduces:
 
-* the special/reserved package name ALL is used to disable every package
-* it shows that disable-pkg actually accepts a _list_ of packages
-* it shows the use of enable-pkg to specify a list of packages to enable
+* the special/reserved package name ALL which is used to disable every package
+* the idea that disable-pkg actually accepts a _list_ of packages
+* the attribute enable-pkg which is used to specify a list of packages to enable
 
 
 Notes:
@@ -212,16 +205,11 @@ disable-pkg  mysys-all games V7-games adventure
 ````
 As before, it is selected using the -p command-line parameter.
 
-This example does not introduce anything new.
 
-Contrast the last two examples: one starts from nothing and adds what's
-desired. The second starts from everything and removes what's not desired.
-
-Each package referred to in the enable-pkg/disable-pkg list could itself be a
-meta-package. The design of the meta-package changes though, depending upon
-whether you are using the "start with everything" or the "start with nothing"
-approach. For example you could put both of these package definitions into
-as single file:
+Each package referred to on the enable-pkg/disable-pkg list could itself be a
+meta-package. The design of the meta-package depends upon whether you are using
+the "start with everything" or the "start with nothing" approach. For example,
+consider these two package definitions (conveniently stored in a single file):
 
 ````
 # All the games
@@ -231,8 +219,7 @@ enable-pkg  games V7-games adventure
 
 # None of the games
 package no-allgames
-disable-pkg no-allgames
-disable-pkg games V7-games adventure
+disable-pkg no-allgames games V7-games adventure
 ````
 
 And then the earlier examples would become:
@@ -261,8 +248,6 @@ Notes:
 * the "no-" prefix to the package name has no significance to build-filesystem-ng
   but might be considered a useful working-practise.
 
-### Implementation Details
-
 Package enabling/disabling is a 6-stage process:
 
 * Apply defaults: enable any package unless it is self-disabled
@@ -272,9 +257,6 @@ Package enabling/disabling is a 6-stage process:
 * For all enabled packages, process any disable-pkg statements except self-disable (no iteration is required here)
 * For all enabled packages, process any if-file if-cpu if-platform attributes (may result in packages being disabled)
 
-
-### Error-handing
-
 Once the attributes have been processed, each enabled package is expected to be
 able to be processed to completion without errors. Errors are fatal.
 
@@ -282,57 +264,19 @@ able to be processed to completion without errors. Errors are fatal.
 ## Current Status
 
 This description reflects the current state of build-filesystem-ng; a complete
-set of ·pkg files is in place, and it can successfully process them to generate
-a working disk image.
+set of ·pkg files is in place, and can be used to generate a working disk image.
 
-The if-cpu attribute is recognised but ignored. The if-file attribute is
-recognised and honoured. Command-line parameters can be used to get help and to
-set the output filename, endian-ness and geometry.
+The 'futures' section below is a list of anticipated but not-yet-implemented
+set of changes. Mail me with other requirements.
 
 
 ## Futures
 
-1. package name on command-line (see description of meta-package below)
+1. Dependencies, using new attribute require-pkg. -- A simple iterative solver
+will put them in the right order. Currently, all packages have an implicit
+dependency on fuzix-basefs.pkg and it is "luck" that it gets processed first.
 
-2. additional attributes
-
- * require-pkg: attribute to allow dependencies to be declared. A simple iterative
-solver will enable/disable packages and put them in the right order. Currently,
-all packages have an implicit dependency on fuzix-basefs.pkg and it is "luck"
-that it gets processed first.
-
- * set-cpu: set the attribute that is tested by if-cpu
-
- * (if-platform:, set-platform:)
-
- * disable-pkg: explicitly disable a package
- * enable-pkg: explicitly enable a package
-
-  Example usage is to create a "meta-package" for example: Applications/fuzix-mysys.pkg
-
-````
-# My custom setup
-package  mysys
-disable-pkg  mysys
-
-set-cpu  6809
-require-pkg  basefs
-disable-pkg  rpilot games
-````
-
-
-This package is disabled by default - so that it is not found and applied by a
-'default' invocation of build-filesystem-ng. The package is explicitly enabled
-at the command-line like this:
-
-./build-filesystem-ng -p mysys
-
-Package files are located in the normal way, but package "mysys" is required to
-exist and is enabled (overriding the disable within its package file). Once
-enabled, its other attributes come into play, guiding the package set that in
-turn determines the content of the final disk image.
-
-3. Add Kernel/platform to search list
+2. Add Kernel/platform to search list
 
 and some more attributes, then a package can be found there like this (Kernel/platform/fuzix.pkg):
 
@@ -345,11 +289,14 @@ set-endian  big
 set-geometry  256   65535
 ````
 
+3. Add soft-link command
 
-allowing build-filesystem to be run with no command-line arguments.
+4. allow enable-pkg disable-pkg to be repeated within a package file:
+concatenate their argument lists. Currently ignore all but the last instance in
+any packaged file.
 
-4. Add soft-link command
-
+5. allow fine-grain tweaking by replacing a file (Currently trapped as an error, even tho UCP doesn't mind)
+and deleting a file. Add section to the manual on fine-grain customisation.
 
 ## Implementation
 

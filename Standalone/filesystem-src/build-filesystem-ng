@@ -29,7 +29,11 @@ my @file;
 my @pkg;
 
 # only these attributes are recognised
-my %legal_attr = qw( package 0  if-file 0  if-cpu 0  if-platform 0  require-package 0  require-option 0);
+my %legal_attr = qw( package 0      if-file 0
+                     if-cpu 0       set-cpu 0
+                     if-platform 0  set-platform 0
+                     enable-pkg  0  disable-pkg  0
+                     require-pkg 0);
 
 # only these commands are recognised. Specify number of arguments.
 my %cmd = qw( d 2  n 3  f 3);
@@ -39,6 +43,9 @@ my %args;
 
 # always try to continue, accumulating errors.
 my $error = 0;
+
+# toggled by -v command-line option.
+my $verbose = 0;
 
 cmdline_args();
 build_file_list();
@@ -53,6 +60,7 @@ exit 0;
 
 # create an entry for each package (may be more than one package per file)
 sub build_pkg_list {
+    my %pkgs; # to check for duplicate package names
     foreach my $x (@file) {
         open IN, "$x->[0]/$x->[1]" or die "ERROR could not open file $x->[0]/$x->[1]\n";
         my $in_pkg = 0;
@@ -67,20 +75,24 @@ sub build_pkg_list {
             my @bits = split " ", $line;
             if ($bits[0] eq 'package') {
                 # start a new entry
-                my @entry;
+                print "Found package $bits[1]\n";
+                if (exists $pkgs{$bits[1]}) {
+                    $error = $error + 1;
+                    print "ERROR $x->[0]/$x->[1]:$. - duplicate package name $bits[1]\n";
+                }
+                $pkgs{$bits[1]} = 1;
+
                 my %attr;
-                $attr{selected} = 1;
-                $attr{pkg} = $bits[1];
+                $attr{pkg} = $bits[1];  # special: scalar rather than array ref
                 my @cmd;
                 $in_pkg = 1;
-                @entry = ($x, \%attr, \@cmd);
-                push @pkg, \@entry;
+                push @pkg, [$x, \%attr, \@cmd];
                 $current = $#pkg;
-                print "Found package $bits[1]\n";
             }
             elsif (exists($legal_attr{$bits[0]}) and $in_pkg) {
-                # attribute: put it in a hash with its value
-                $pkg[$current]->[1]->{$bits[0]} = $bits[1]; # [NAC HACK 2016Jun15] only one value from attr
+                # attribute: add it to the %attr hash with its arguments as an array ref
+                my $attribute = shift @bits;
+                $pkg[$current]->[1]->{$attribute} = \@bits;
             }
             elsif (exists($cmd{$bits[0]}) and $in_pkg) {
                 # command: prepend line number (for error reporting) then file it away for later
@@ -93,8 +105,8 @@ sub build_pkg_list {
             }
         }
         close IN;
-        die "ERROR Fix errors and re-run\n" if $error;
     }
+    die "ERROR Fix errors and re-run\n" if $error;
 }
 
 
@@ -118,17 +130,136 @@ sub pkg_file {
     }
 }
 
+## [NAC HACK 2016Jun24] bug!! for repeated attribute, should concatenate the arguments. Create test-case
+## to validate.
 
-# select which packages to include, and put them in the right order
+# Work out which packages to enable, and put them in the right order
 sub resolve_pkg {
+    my $all_pkg = '';
+    my %pkg;
+    # Pass 1: apply defaults: enable each package unless it is self-disabled. Enable a package
+    # specified on the command line. Look for ALL and (if found) note its containing package.
+    # Build a hash to reference package entries by name (for use in Pass 3/4)
     foreach my $x (@pkg) {
-        print "Resolving package $x->[1]->{pkg}\n";
-        # [NAC HACK 2016Jun17] for now, only thing we do here is honour if-file
-        if (exists($x->[1]->{'if-file'}) and (! -f "$x->[0]->[0]/$x->[1]->{'if-file'}")) {
-            $x->[1]->{selected} = 0;
+        my $pkg = $x->[1]->{pkg};
+        $pkg{$pkg} = $x;
+        my $enabled = 1;
+        my $all_here = 0;
+        if (exists $x->[1]->{'disable-pkg'}) {
+            my @disable = @{$x->[1]->{'disable-pkg'}};
+            foreach my $p (@disable) {
+                if ($p eq $pkg) {
+                    # self-disabled
+                    $enabled = 0;
+                }
+                if ($p eq 'ALL') {
+                    $all_here = 1;
+                }
+            }
+        }
+        if (exists($args{pkg}) and $args{pkg} eq $pkg) {
+            $enabled = 1;
+        }
+        $x->[1]->{enabled} = $enabled;
+
+        # Only honour ALL in an enabled package
+        if ($enabled and $all_here) {
+            if ($all_pkg) {
+                print "WARNING found ALL in enabled package $pkg and enabled package $all_pkg\n";
+            }
+            else {
+                $all_pkg = $pkg;
+            }
+        }
+    }
+
+    # Pass 2: apply ALL
+    foreach my $x (@pkg) {
+        if ($all_pkg and ($x->[1]->{pkg} ne $all_pkg)) {
+            $x->[1]->{enabled} = 0;
+        }
+    }
+
+    # Pass 3: for all enabled packages, process any enable-pkg statements. Iterate until stable.
+    my $loops = 0;
+    my $changes;
+    do {
+        $changes = 0;
+        foreach my $x (@pkg) {
+            next if ($x->[1]->{enabled} == 0);
+            my $pkg = $x->[1]->{pkg};
+            if (exists $x->[1]->{'enable-pkg'}) {
+                my @enable = @{$x->[1]->{'enable-pkg'}};
+                foreach my $p (@enable) {
+                    if (exists $pkg{$p}) {
+                        if ($pkg{$p}->[1]->{enabled} == 0) {
+                            $changes = $changes + 1;
+                            $pkg{$p}->[1]->{enabled} = 1;
+                            print "Enabled  package $p\n" if $verbose;
+                        }
+                    }
+                    else {
+                        print "WARNING package $pkg tried to enable non-found package $p\n"
+                    }
+                }
+            }
+        }
+        $loops = $loops + 1;
+        die "ERROR loop detected. Cannot resolve packages\n" if ($loops > 100);
+    } while ($changes != 0);
+
+    # Pass 4: for all enabled packages, process any disable-pkg statements. Don't need to iterate
+    # here. Ignore self-disable.
+    foreach my $x (@pkg) {
+        next if ($x->[1]->{enabled} == 0);
+        my $pkg = $x->[1]->{pkg};
+        if (exists $x->[1]->{'disable-pkg'}) {
+            my @disable = @{$x->[1]->{'disable-pkg'}};
+            foreach my $p (@disable) {
+                next if $p eq 'ALL'; # ignore reserved package name
+                next if $p eq $pkg;  # ignore self-disable
+                if (exists $pkg{$p}) {
+                    if ($pkg{$p}->[1]->{enabled} == 1) {
+                        $pkg{$p}->[1]->{enabled} = 0;
+                        print "Disabled package $p\n" if $verbose;
+                    }
+                }
+                else {
+                    print "WARNING package $pkg tried to disable non-found package $p\n"
+                }
+            }
+        }
+    }
+
+    # Pass 5: process if-file, if-cpu, if-platform
+    # Need to do a pass to extract set-cpu set-platform then another pass to process the 'if-'
+    my %set;
+    foreach my $x (@pkg) {
+        next if ($x->[1]->{enabled} == 0);
+        if (exists $x->[1]->{'set-cpu'}) {
+            $set{cpu} = $x->[1]->{'set-cpu'}->[0];
+        }
+        if (exists $x->[1]->{'set-platform'}) {
+            $set{platform} = $x->[1]->{'set-platform'}->[0];
+        }
+    }
+
+    foreach my $x (@pkg) {
+        if (exists($x->[1]->{'if-file'}) and (! -f "$x->[0]->[0]/$x->[1]->{'if-file'}->[0]")) {
+            $x->[1]->{enabled} = 0;
+        }
+        if (exists($x->[1]->{'if-cpu'}) and ($x->[1]->{'if-cpu'}->[0] ne $set{cpu})) {
+            $x->[1]->{enabled} = 0;
+        }
+        if (exists($x->[1]->{'if-platform'}) and ($x->[1]->{'if-platform'}->[0] ne $set{platform})) {
+            $x->[1]->{enabled} = 0;
         }
 
+        print "Resolving package $x->[1]->{pkg}: enabled=$x->[1]->{enabled}\n";
     }
+
+    # [NAC HACK 2016Jun25] futures/todo: dependency handling
+
 }
 
 
@@ -139,8 +270,8 @@ sub gen_ucp {
     open OUT, ">ucp-tmp.txt" or die "ERROR could not open file ucp-tmp.txt";
     foreach my $x (@pkg) {
         my $file = "$x->[0]->[0]/$x->[0]->[1]";
-        my $selected = $x->[1]->{selected};
-        next if not $selected;
+        my $enabled = $x->[1]->{enabled};
+        next if not $enabled;
         print "Processing package $x->[1]->{pkg}\n";
         foreach my $i (0..$#{$x->[2]}) {
              my ($line, $cmd, $arg1, $arg2, $arg3, $arg4) = @{$x->[2]->[$i]};
@@ -152,7 +283,7 @@ sub gen_ucp {
              }
              else {
                 if ($cmd eq 'n') { # node arg1: major arg2: minor arg3: path
-                    if (exists($paths{$arg3})) {
+                    if (exists $paths{$arg3}) {
                         $error = $error + 1;
                         print "ERROR $file:$line duplicate node $arg3\n";
                     }
@@ -175,7 +306,7 @@ sub gen_ucp {
                     }
                 }
                 elsif ($cmd eq 'd') { # directory arg1: protection arg2: path
-                    if (exists($paths{$arg2})) {
+                    if (exists $paths{$arg2}) {
                         $error = $error + 1;
                         print "ERROR $file:$line duplicate path $arg2\n";
                     }
@@ -200,7 +331,7 @@ sub gen_ucp {
                 }
                 else {
                     # must be file arg1: protection arg2: dest arg3: src
-                    if (exists($paths{$arg2})) {
+                    if (exists $paths{$arg2}) {
                         $error = $error + 1;
                         print "ERROR $file:$line duplicate file $arg2\n";
                     }
@@ -266,6 +397,12 @@ sub cmdline_args {
         if ($arg eq '-h') {
             help_exit();
         }
+        elsif ($arg eq '-v') {
+            $verbose = 1;
+        }
+        elsif ($arg eq '-p') {
+            $args{pkg} = shift @ARGV;
+        }
         elsif ($arg eq '-x') {
             $args{endian} = "big";
         }
@@ -295,6 +432,10 @@ build-filesystem-ng [options]
 Options:
 
 -h           print help and exit
+-v           enable more verbose output during execution
+
+-p PKG       enable package named PKG
+
 -x           swizzle disk image (for big-endian processors like 6809). Default: no swizzle.
 -f FILENAME  filename of disk image. Default: $args{file}
 -g N M       disk geometry N=inode size, M=block size. Default: $args{isize} $args{bsize}
