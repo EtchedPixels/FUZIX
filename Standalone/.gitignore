@@ -7,3 +7,5 @@ ucp
 # Disk images
 filesystem-src/fuzix.dsk
 filesystem-src/fuzixfs.dsk
+# Temporary file from running build-filesystem-ng
+filesystem-src/ucp-tmp.txt

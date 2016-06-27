@@ -1,0 +1,5 @@
+# Used to make a minimal system -- eg, for floppy.
+package  mini
+
+disable-pkg ALL mini
+enable-pkg basefs util-mini
