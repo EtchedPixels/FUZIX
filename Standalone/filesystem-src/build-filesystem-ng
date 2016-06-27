@@ -248,10 +248,12 @@ sub resolve_pkg {
         if (exists($x->[1]->{'if-file'}) and (! -f "$x->[0]->[0]/$x->[1]->{'if-file'}->[0]")) {
             $x->[1]->{enabled} = 0;
         }
-        if (exists($x->[1]->{'if-cpu'}) and ($x->[1]->{'if-cpu'}->[0] ne $set{cpu})) {
+        if (exists($set{cpu}) and exists($x->[1]->{'if-cpu'}) and
+            ($x->[1]->{'if-cpu'}->[0] ne $set{cpu})) {
             $x->[1]->{enabled} = 0;
         }
-        if (exists($x->[1]->{'if-platform'}) and ($x->[1]->{'if-platform'}->[0] ne $set{platform})) {
+        if (exists($set{platform}) and exists($x->[1]->{'if-platform'}) and
+            ($x->[1]->{'if-platform'}->[0] ne $set{platform})) {
             $x->[1]->{enabled} = 0;
         }
 
