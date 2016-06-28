@@ -25,22 +25,22 @@ The symbols referred to in a given module are linked together by a chain
 beginning in the module descriptor.
 */
 
-PRIVATE unsigned convertsize[NSEG / 4] = {0, 1, 2, 4};
-PRIVATE struct entrylist *entrylast;	/* last on list of entry symbols */
-PRIVATE struct redlist *redlast;	/* last on list of redefined symbols */
-PRIVATE struct modstruct *modlast;	/* data for last module */
+static unsigned convertsize[NSEG / 4] = {0, 1, 2, 4};
+static struct entrylist *entrylast;	/* last on list of entry symbols */
+static struct redlist *redlast;	/* last on list of redefined symbols */
+static struct modstruct *modlast;	/* data for last module */
 
-FORWARD long readarheader P((char **parchentry));
-FORWARD unsigned readfileheader P((void));
-FORWARD void readmodule P((char *filename, char *archentry));
-FORWARD void reedmodheader P((void));
-FORWARD bool_pt redsym P((struct symstruct *symptr, bin_off_t value));
-FORWARD unsigned checksum P((char *string, unsigned length));
-FORWARD unsigned segbits P((unsigned seg, char *sizedesc));
+static long readarheader(char **parchentry);
+static unsigned readfileheader(void);
+static void readmodule(char *filename, char *archentry);
+static void reedmodheader(void);
+static bool_pt redsym(struct symstruct *symptr, bin_off_t value);
+static unsigned checksum(char *string, unsigned length);
+static unsigned segbits(unsigned seg, char *sizedesc);
 
 /* initialise object file handler */
 
-PUBLIC void objinit(void)
+void objinit(void)
 {
     modfirst = modlast = NUL_PTR;
     entryfirst = entrylast = NUL_PTR;
@@ -49,7 +49,7 @@ PUBLIC void objinit(void)
 
 /* read all symbol definitions in an object file */
 
-PUBLIC void readsyms(char *filename, bool_pt trace)
+void readsyms(char *filename, bool_pt trace)
 {
     char *archentry;
     long filelength;
@@ -100,7 +100,7 @@ PUBLIC void readsyms(char *filename, bool_pt trace)
 
 /* read archive header and return length */
 
-PRIVATE long readarheader(char **parchentry)
+static long readarheader(char **parchentry)
 {
     struct ar_hdr arheader;
     char *endptr;
@@ -119,7 +119,7 @@ PRIVATE long readarheader(char **parchentry)
 
 /* read and check file header of the object file just opened */
 
-PRIVATE unsigned readfileheader(void)
+static unsigned readfileheader(void)
 {
     struct
     {
@@ -138,7 +138,7 @@ PRIVATE unsigned readfileheader(void)
 
 /* read the next module */
 
-PRIVATE void readmodule(char *filename, char *archentry)
+static void readmodule(char *filename, char *archentry)
 {
     struct symdstruct		/* to save parts of symbol before name known */
     {
@@ -219,7 +219,7 @@ PRIVATE void readmodule(char *filename, char *archentry)
 
 /* put symbol on entry symbol list if it is not already */
 
-PUBLIC void entrysym(struct symstruct *symptr)
+void entrysym(struct symstruct *symptr)
 {
     register struct entrylist *elptr;
 
@@ -238,7 +238,7 @@ PUBLIC void entrysym(struct symstruct *symptr)
 
 /* read the header of the next module */
 
-PRIVATE void reedmodheader(void)
+static void reedmodheader(void)
 {
     struct
     {
@@ -281,7 +281,7 @@ PRIVATE void reedmodheader(void)
     modlast = modptr;
 }
 
-PRIVATE bool_pt redsym(struct symstruct *symptr, bin_off_t value)
+static bool_pt redsym(struct symstruct *symptr, bin_off_t value)
 {
     register struct redlist *rlptr;
     char class;
@@ -321,7 +321,7 @@ PRIVATE bool_pt redsym(struct symstruct *symptr, bin_off_t value)
     return TRUE;
 }
 
-PRIVATE unsigned checksum(char *string, unsigned length)
+static unsigned checksum(char *string, unsigned length)
 {
     unsigned char sum;		/* this is a 1-byte checksum */
 
@@ -330,12 +330,12 @@ PRIVATE unsigned checksum(char *string, unsigned length)
     return sum;
 }
 
-PUBLIC bin_off_t readconvsize(unsigned countindex)
+bin_off_t readconvsize(unsigned countindex)
 {
     return readsize(convertsize[countindex]);
 }
 
-PUBLIC bin_off_t readsize(unsigned count)
+bin_off_t readsize(unsigned count)
 {
     char buf[MAX_OFFSET_SIZE];
 
@@ -345,13 +345,13 @@ PUBLIC bin_off_t readsize(unsigned count)
     return cntooffset(buf, count);
 }
 
-PRIVATE unsigned segbits(unsigned seg, char *sizedesc)
+static unsigned segbits(unsigned seg, char *sizedesc)
 {
     return 3 & ((unsigned) sizedesc[((NSEG - 1) - seg) / 4] >> (2 * (seg % 4)));
     /* unsigned to give logical shift */
 }
 
-PUBLIC unsigned segsizecount(unsigned seg, struct modstruct *modptr)
+unsigned segsizecount(unsigned seg, struct modstruct *modptr)
 {
     return convertsize[segbits(seg, modptr->segsizedesc)];
 }

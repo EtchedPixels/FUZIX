@@ -20,7 +20,7 @@ static int no_swap   = 1;
 static int long_off[4] = {0,1,2,3};
 static int int_off[2] = {0,1};
 
-PUBLIC bool_pt typeconv_init(bool_pt big_endian, bool_pt long_big_endian)
+bool_pt typeconv_init(bool_pt big_endian, bool_pt long_big_endian)
 {
    int i;
    no_swap = (!big_endian && !long_big_endian);
@@ -43,7 +43,7 @@ PUBLIC bool_pt typeconv_init(bool_pt big_endian, bool_pt long_big_endian)
    return 1;
 }
 
-PUBLIC void u2c2(char *buf, u2_pt offset)
+void u2c2(char *buf, u2_pt offset)
 {
 #ifdef __AS386_16__
    if( no_swap )
@@ -56,7 +56,7 @@ PUBLIC void u2c2(char *buf, u2_pt offset)
    buf[int_off[1]] = (offset>>8);
 }
 
-PUBLIC void u4c4(char *buf, u4_t offset)
+void u4c4(char *buf, u4_t offset)
 {
    int i;
 #ifdef __AS386_16__
@@ -73,7 +73,7 @@ PUBLIC void u4c4(char *buf, u4_t offset)
    }
 }
 
-PUBLIC void u4cn(char *buf, u4_t offset, unsigned count)
+void u4cn(char *buf, u4_t offset, unsigned count)
 {
     switch(count)
     {
@@ -92,7 +92,7 @@ PUBLIC void u4cn(char *buf, u4_t offset, unsigned count)
     }
 }
 
-PUBLIC void u2cn(char *buf, u2_pt offset, unsigned count)
+void u2cn(char *buf, u2_pt offset, unsigned count)
 {
     switch(count)
     {
@@ -111,7 +111,7 @@ PUBLIC void u2cn(char *buf, u2_pt offset, unsigned count)
     }
 }
 
-PUBLIC u2_pt c2u2(char *buf)
+u2_pt c2u2(char *buf)
 {
     u2_pt res;
 #ifdef __AS386_16__
@@ -123,7 +123,7 @@ PUBLIC u2_pt c2u2(char *buf)
     return res;
 }
 
-PUBLIC u4_t c4u4(char *buf)
+u4_t c4u4(char *buf)
 {
     u4_t res;
     int i;
@@ -138,7 +138,7 @@ PUBLIC u4_t c4u4(char *buf)
     return res;
 }
 
-PUBLIC u4_t cnu4(char *buf, unsigned count)
+u4_t cnu4(char *buf, unsigned count)
 {
     switch (count)
     {
@@ -156,7 +156,7 @@ PUBLIC u4_t cnu4(char *buf, unsigned count)
     }
 }
 
-PUBLIC u2_pt cnu2(char *buf, unsigned count)
+u2_pt cnu2(char *buf, unsigned count)
 {
     switch (count)
     {

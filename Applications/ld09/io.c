@@ -16,51 +16,51 @@
 #define TRELBUFSIZE	1024
 
 #ifdef REL_OUTPUT
-PRIVATE char *drelbuf;		/* extra output buffer for data relocations */
-PRIVATE char *drelbufptr;	/* data relocation output buffer ptr */
-PRIVATE char *drelbuftop;	/* data relocation output buffer top */
+static char *drelbuf;		/* extra output buffer for data relocations */
+static char *drelbufptr;	/* data relocation output buffer ptr */
+static char *drelbuftop;	/* data relocation output buffer top */
 #endif
-PRIVATE char *errbuf;		/* error buffer (actually uses STDOUT) */
-PRIVATE char *errbufptr;	/* error buffer ptr */
-PRIVATE char *errbuftop;	/* error buffer top */
-PRIVATE int  errfil = STDOUT_FILENO;
-PRIVATE char *inbuf;		/* input buffer */
-PRIVATE char *inbufend;		/* input buffer top */
-PRIVATE char *inbufptr;		/* end of input in input buffer */
-PRIVATE int infd;		/* input file descriptor */
-PRIVATE char *inputname;	/* name of current input file */
-PRIVATE char *outbuf;		/* output buffer */
-PRIVATE char *outbufptr;	/* output buffer ptr */
-PRIVATE char *outbuftop;	/* output buffer top */
-PRIVATE int outfd;		/* output file descriptor */
-PRIVATE mode_t outputperms;	/* permissions of output file */
-PRIVATE char *outputname;	/* name of output file */
-PRIVATE const char *refname;	/* name of program for error reference */
+static char *errbuf;		/* error buffer (actually uses STDOUT) */
+static char *errbufptr;	/* error buffer ptr */
+static char *errbuftop;	/* error buffer top */
+static int  errfil = STDOUT_FILENO;
+static char *inbuf;		/* input buffer */
+static char *inbufend;		/* input buffer top */
+static char *inbufptr;		/* end of input in input buffer */
+static int infd;		/* input file descriptor */
+static char *inputname;	/* name of current input file */
+static char *outbuf;		/* output buffer */
+static char *outbufptr;	/* output buffer ptr */
+static char *outbuftop;	/* output buffer top */
+static int outfd;		/* output file descriptor */
+static mode_t outputperms;	/* permissions of output file */
+static char *outputname;	/* name of output file */
+static const char *refname;	/* name of program for error reference */
 #ifdef REL_OUTPUT
-PRIVATE char *trelbuf;		/* extra output buffer for text relocations */
-PRIVATE char *trelbufptr;	/* text relocation output buffer ptr */
-PRIVATE char *trelbuftop;	/* text relocation output buffer top */
-PRIVATE int trelfd;		/* text relocation output file descriptor */
+static char *trelbuf;		/* extra output buffer for text relocations */
+static char *trelbufptr;	/* text relocation output buffer ptr */
+static char *trelbuftop;	/* text relocation output buffer top */
+static int trelfd;		/* text relocation output file descriptor */
 #endif
-PRIVATE unsigned warncount;	/* count of warnings */
+static unsigned warncount;	/* count of warnings */
 
 #ifdef MSDOS
 #define off_t	long		/* NOT a typedef */
 #endif
 
-FORWARD void errexit P((char *message));
-FORWARD void flushout P((void));
+static void errexit(char *message);
+static void flushout(void);
 #ifdef REL_OUTPUT
-FORWARD void flushtrel P((void));
+static void flushtrel(void);
 #endif
-FORWARD void outhexdigs P((bin_off_t num));
-FORWARD void outputerror P((char *message));
-FORWARD void put04x P((unsigned num));
-FORWARD void putstrn P((const char *message));
-FORWARD void refer P((void));
-FORWARD void stderr_out P((void));
+static void outhexdigs(bin_off_t num);
+static void outputerror(char *message);
+static void put04x(unsigned num);
+static void putstrn(const char *message);
+static void refer(void);
+static void stderr_out(void);
 
-PUBLIC void ioinit(char *progname)
+void ioinit(char *progname)
 {
     infd = ERR;
     if (*progname)
@@ -88,14 +88,14 @@ PUBLIC void ioinit(char *progname)
 #endif
 }
 
-PUBLIC void closein(void)
+void closein(void)
 {
     if (infd != ERR && close(infd) < 0)
 	inputerror("cannot close");
     infd = ERR;
 }
 
-PUBLIC void closeout()
+void closeout()
 {
 #ifdef REL_OUTPUT
     unsigned nbytes;
@@ -116,14 +116,14 @@ PUBLIC void closeout()
 #endif
 }
 
-PUBLIC void errtrace(char *name, int level)
+void errtrace(char *name, int level)
 {
     while (level-- > 0)
 	putbyte(' ');
     putstrn(name);
 }
 
-PUBLIC void executable(void)
+void executable(void)
 {
     if (errcount)
         unlink(outputname);
@@ -133,14 +133,14 @@ PUBLIC void executable(void)
 #endif
 }
 
-PUBLIC void flusherr(void)
+void flusherr(void)
 {
     if( errbufptr != errbuf )
        write(errfil, errbuf, (unsigned) (errbufptr - errbuf));
     errbufptr = errbuf;
 }
 
-PRIVATE void stderr_out(void)
+static void stderr_out(void)
 {
    if( errfil != STDERR_FILENO )
    {
@@ -149,7 +149,7 @@ PRIVATE void stderr_out(void)
    }
 }
 
-PRIVATE void flushout(void)
+static void flushout(void)
 {
     unsigned nbytes;
 
@@ -160,7 +160,7 @@ PRIVATE void flushout(void)
 }
 
 #ifdef REL_OUTPUT
-PRIVATE void flushtrel(void)
+static void flushtrel(void)
 {
     unsigned nbytes;
 
@@ -171,7 +171,7 @@ PRIVATE void flushtrel(void)
 }
 #endif
 
-PUBLIC void openin(char *filename)
+void openin(char *filename)
 {
 #if 0 /* XXX - this probably won't work with constructed lib names? */
     if (infd == ERR || strcmp(inputname, filename) != 0)
@@ -189,7 +189,7 @@ PUBLIC void openin(char *filename)
     }
 }
 
-PUBLIC void openout(char *filename)
+void openout(char *filename)
 {
     mode_t oldmask;
 
@@ -223,7 +223,7 @@ PUBLIC void openout(char *filename)
 #endif
 }
 
-PRIVATE void outhexdigs(bin_off_t num)
+static void outhexdigs(bin_off_t num)
 {
     if (num >= 0x10)
     {
@@ -233,7 +233,7 @@ PRIVATE void outhexdigs(bin_off_t num)
     putbyte(hexdigit[num]);
 }
 
-PRIVATE void put04x(unsigned num)
+static void put04x(unsigned num)
 {
     putbyte(hexdigit[num / 0x1000]);
     putbyte(hexdigit[(num / 0x100) & 0x0F]);
@@ -243,7 +243,7 @@ PRIVATE void put04x(unsigned num)
 
 #ifdef LONG_OFFSETS
 
-PUBLIC void put08lx(bin_off_t num)
+void put08lx(bin_off_t num)
 {
     put04x(num / 0x10000);
     put04x(num % 0x10000);
@@ -251,7 +251,7 @@ PUBLIC void put08lx(bin_off_t num)
 
 #else /* not LONG_OFFSETS */
 
-PUBLIC void put08x(bin_off_t num)
+void put08x(bin_off_t num)
 {
     putstr("0000");
     put04x(num);
@@ -259,7 +259,7 @@ PUBLIC void put08x(bin_off_t num)
 
 #endif /* not LONG_OFFSETS */
 
-PUBLIC void putbstr(unsigned width, char *str)
+void putbstr(unsigned width, char *str)
 {
     unsigned length;
     
@@ -268,7 +268,7 @@ PUBLIC void putbstr(unsigned width, char *str)
     putstr(str);
 }
 
-PUBLIC void putbyte(int ch)
+void putbyte(int ch)
 {
     register char *ebuf;
 
@@ -282,20 +282,20 @@ PUBLIC void putbyte(int ch)
     errbufptr = ebuf;
 }
 
-PUBLIC void putstr(const char *message)
+void putstr(const char *message)
 {
     while (*message != 0)
 	putbyte(*message++);
 }
 
-PRIVATE void putstrn(char *message)
+static void putstrn(char *message)
 {
     putstr(message);
     putbyte('\n');
     flusherr(); errfil = STDOUT_FILENO;
 }
 
-PUBLIC int readchar(void)
+int readchar(void)
 {
     int ch;
 	
@@ -319,7 +319,7 @@ PUBLIC int readchar(void)
     return ch;
 }
 
-PUBLIC void readin(char *buf, unsigned count)
+void readin(char *buf, unsigned count)
 {
     int ch;
     
@@ -331,7 +331,7 @@ PUBLIC void readin(char *buf, unsigned count)
     }
 }
 
-PUBLIC bool_pt readineofok(char *buf, unsigned count)
+bool_pt readineofok(char *buf, unsigned count)
 {
     int ch;
     
@@ -344,14 +344,14 @@ PUBLIC bool_pt readineofok(char *buf, unsigned count)
     return FALSE;
 }
 
-PUBLIC void seekin(unsigned long offset)
+void seekin(unsigned long offset)
 {
     inbufptr = inbufend = inbuf;
     if (lseek(infd, (off_t) offset, SEEK_SET) != offset)
 	prematureeof();
 }
 
-PUBLIC void seekout(unsigned long offset)
+void seekout(unsigned long offset)
 {
     flushout();
     if (lseek(outfd, (off_t) offset, SEEK_SET) != offset)
@@ -359,7 +359,7 @@ PUBLIC void seekout(unsigned long offset)
 }
 
 #ifdef REL_OUTPUT
-PUBLIC void seektrel(unsigned long offset)
+void seektrel(unsigned long offset)
 {
     flushtrel();
     if (lseek(trelfd, (off_t) offset, SEEK_SET) != offset)
@@ -367,7 +367,7 @@ PUBLIC void seektrel(unsigned long offset)
 }
 #endif
 
-PUBLIC void writechar(int ch)
+void writechar(int ch)
 {
     register char *obuf;
 
@@ -382,7 +382,7 @@ PUBLIC void writechar(int ch)
 }
 
 #ifdef REL_OUTPUT
-PUBLIC void writedrel(char *buf, unsigned count)
+void writedrel(char *buf, unsigned count)
 {
     register char *rbuf;
 
@@ -397,7 +397,7 @@ PUBLIC void writedrel(char *buf, unsigned count)
 }
 #endif
 
-PUBLIC void writeout(char *buf, unsigned count)
+void writeout(char *buf, unsigned count)
 {
     register char *obuf;
 
@@ -416,7 +416,7 @@ PUBLIC void writeout(char *buf, unsigned count)
 }
 
 #ifdef REL_OUTPUT
-PUBLIC void writetrel(char *buf, unsigned count)
+void writetrel(char *buf, unsigned count)
 {
     register char *rbuf;
 
@@ -437,19 +437,19 @@ PUBLIC void writetrel(char *buf, unsigned count)
 
 /* error module */
 
-PRIVATE void errexit(char *message)
+static void errexit(char *message)
 {
     putstrn(message);
     exit(2);
 }
 
-PUBLIC void fatalerror(char *message)
+void fatalerror(char *message)
 {
     refer();
     errexit(message);
 }
 
-PUBLIC void inputerror(char *message)
+void inputerror(char *message)
 {
     refer();
     putstr(message);
@@ -457,14 +457,14 @@ PUBLIC void inputerror(char *message)
     errexit(inputname);
 }
 
-PUBLIC void input1error(char *message)
+void input1error(char *message)
 {
     refer();
     putstr(inputname);
     errexit(message);
 }
 
-PRIVATE void outputerror(char *message)
+static void outputerror(char *message)
 {
     refer();
     putstr(message);
@@ -472,17 +472,17 @@ PRIVATE void outputerror(char *message)
     errexit(outputname);
 }
 
-PUBLIC void outofmemory(void)
+void outofmemory(void)
 {
     inputerror("out of memory while processing");
 }
 
-PUBLIC void prematureeof(void)
+void prematureeof(void)
 {
     inputerror("premature end of");
 }
 
-PUBLIC void redefined(char *name, char *message, char *archentry,
+void redefined(char *name, char *message, char *archentry,
 		      char *deffilename, char *defarchentry)
 {
     ++warncount;
@@ -510,7 +510,7 @@ PUBLIC void redefined(char *name, char *message, char *archentry,
     putstrn("");
 }
 
-PUBLIC void interseg(char *fname, char *aname, char *name)
+void interseg(char *fname, char *aname, char *name)
 {
     ++errcount;
     refer();
@@ -529,14 +529,14 @@ PUBLIC void interseg(char *fname, char *aname, char *name)
     putstrn("");
 }
 
-PRIVATE void refer(void)
+static void refer(void)
 {
     stderr_out();
     putstr(refname);
     putstr(": ");
 }
 
-PUBLIC void reserved(char *name)
+void reserved(char *name)
 {
     ++errcount;
     stderr_out();
@@ -544,7 +544,7 @@ PUBLIC void reserved(char *name)
     putstrn(name);
 }
 
-PUBLIC void size_error(int seg, bin_off_t count, bin_off_t size)
+void size_error(int seg, bin_off_t count, bin_off_t size)
 {
     refer();
     putstr("seg ");
@@ -556,7 +556,7 @@ PUBLIC void size_error(int seg, bin_off_t count, bin_off_t size)
     errexit("");
 }
 
-PUBLIC void undefined(char *name)
+void undefined(char *name)
 {
     ++errcount;
     stderr_out();
@@ -564,7 +564,7 @@ PUBLIC void undefined(char *name)
     putstrn(name);
 }
 
-PUBLIC void usage(void)
+void usage(void)
 {
     stderr_out();
     putstr("usage: ");
@@ -580,7 +580,7 @@ PUBLIC void usage(void)
 #endif
 }
 
-PUBLIC void version_msg(void)
+void version_msg(void)
 {
     stderr_out();
 #ifdef VERSION
@@ -591,7 +591,7 @@ PUBLIC void version_msg(void)
 #endif
 }
 
-PUBLIC void use_error(char *message)
+void use_error(char *message)
 {
     refer();
     putstrn(message);

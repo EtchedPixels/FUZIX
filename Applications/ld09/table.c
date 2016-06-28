@@ -12,19 +12,19 @@
 #define GOLDEN		157	/* GOLDEN/HASHTABSIZE approx golden ratio */
 #define HASHTABSIZE	256
 
-PRIVATE struct symstruct *hashtab[HASHTABSIZE];	/* hash table */
-PRIVATE char *tableptr;		/* next free spot in catchall table */
-PRIVATE char *tableend;		/* ptr to spot after last in table */
+static struct symstruct *hashtab[HASHTABSIZE];	/* hash table */
+static char *tableptr;		/* next free spot in catchall table */
+static char *tableend;		/* ptr to spot after last in table */
 
-PUBLIC  int maxused = 0;	/* Stats */
-PRIVATE int mainavail, usedtop;	/* Stats */
+int maxused = 0;	/* Stats */
+static int mainavail, usedtop;	/* Stats */
 
-FORWARD struct symstruct **gethashptr P((char *name));
-FORWARD void check_used P((void));
+static struct symstruct **gethashptr(char *name);
+static void check_used(void);
 
 /* initialise symbol table */
 
-PUBLIC void syminit(void)
+void syminit(void)
 {
     unsigned i;
 
@@ -45,7 +45,7 @@ PUBLIC void syminit(void)
 /* add named symbol to end of table - initialise only name and next fields */
 /* caller must not duplicate names of externals for findsym() to work */
 
-PUBLIC struct symstruct *addsym(char *name)
+struct symstruct *addsym(char *name)
 {
     struct symstruct **hashptr;
     struct symstruct *oldsymptr = 0;
@@ -75,7 +75,7 @@ PUBLIC struct symstruct *addsym(char *name)
 
 /* lookup named symbol */
 
-PUBLIC struct symstruct *findsym(char *name)
+struct symstruct *findsym(char *name)
 {
     struct symstruct *symptr;
 
@@ -88,7 +88,7 @@ PUBLIC struct symstruct *findsym(char *name)
 
 /* convert name to a hash table ptr */
 
-PRIVATE struct symstruct **gethashptr(char *name)
+static struct symstruct **gethashptr(char *name)
 {
     register unsigned hashval;
 
@@ -128,7 +128,7 @@ HASHVAL.EXIT
 
 /* move symbol descriptor entries to top of table (no error checking) */
 
-PUBLIC char *moveup(unsigned nbytes)
+char *moveup(unsigned nbytes)
 {
     register char *source;
     register char *target;
@@ -146,7 +146,7 @@ PUBLIC char *moveup(unsigned nbytes)
 
 /* our version of malloc */
 
-PUBLIC char *ourmalloc(unsigned nbytes)
+char *ourmalloc(unsigned nbytes)
 {
     char *allocptr;
 
@@ -159,7 +159,7 @@ PUBLIC char *ourmalloc(unsigned nbytes)
 
 /* our version of free (release from bottom of table) */
 
-PUBLIC void ourfree(char *cptr)
+void ourfree(char *cptr)
 {
     check_used();
     tableptr = cptr;
@@ -168,7 +168,7 @@ PUBLIC void ourfree(char *cptr)
 
 /* read string from file into table at offset suitable for next symbol */
 
-PUBLIC char *readstring(void)
+char *readstring(void)
 {
     int c;
     char *s;
@@ -191,7 +191,7 @@ PUBLIC char *readstring(void)
 
 /* release from top of table */
 
-PUBLIC void release(char *cptr)
+void release(char *cptr)
 {
     check_used();
     mainavail += cptr - tableend;
@@ -200,7 +200,7 @@ PUBLIC void release(char *cptr)
     tableend = cptr;
 }
 
-PRIVATE void check_used(void)
+static void check_used(void)
 {
    int used;
 
@@ -208,7 +208,7 @@ PRIVATE void check_used(void)
    if (used > maxused) maxused = used;
 }
 
-PUBLIC int memory_used(void)
+int memory_used(void)
 {
    check_used();
    return maxused;
@@ -216,7 +216,7 @@ PUBLIC int memory_used(void)
 
 /* allocate space for string */
 
-PUBLIC char *stralloc(char *s)
+char *stralloc(char *s)
 {
     return strcpy(ourmalloc((unsigned) strlen(s) + 1), s);
 }

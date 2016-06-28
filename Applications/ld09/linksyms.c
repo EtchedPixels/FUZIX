@@ -10,12 +10,12 @@
 #undef EXTERN
 #include "globvar.h"
 
-FORWARD void linkrefs P((struct modstruct *modptr));
-PUBLIC bool_t reloc_output = 0;
+static void linkrefs(struct modstruct *modptr);
+bool_t reloc_output = 0;
 
 /* link all symbols connected to entry symbols */
 
-PUBLIC void linksyms(bool_pt argreloc_output)
+void linksyms(bool_pt argreloc_output)
 {
     char needlink;
     struct entrylist *elptr;
@@ -69,7 +69,7 @@ PUBLIC void linksyms(bool_pt argreloc_output)
     while (needlink);
 }
 
-PRIVATE void linkrefs(struct modstruct *modptr)
+static void linkrefs(struct modstruct *modptr)
 {
     register struct symstruct **symparray;
     register struct symstruct *symptr;

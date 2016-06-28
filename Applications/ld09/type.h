@@ -71,106 +71,98 @@ struct symstruct		/* symbol table entry format */
 
 /* prototypes */
 
-#ifndef P
-#ifdef __STDC__
-#define P(x)	x
-#else
-#define P(x)	()
-#endif
-#endif
-
 /* dump.c */
-void dumpmods P((void));
-void dumpsyms P((void));
+void dumpmods(void);
+void dumpsyms(void);
 
 /* io.c */
-void ioinit P((char *progname));
-void closein P((void));
-void closeout P((void));
-void errtrace P((char *name, int level));
-void executable P((void));
-void flusherr P((void));
-void openin P((char *filename));
-void openout P((char *filename));
-void putstr P((char *message));
-void put08x P((bin_off_t num));
-void put08lx P((bin_off_t num));
-void putbstr P((unsigned width, char *str));
-void putbyte P((int ch));
-int readchar P((void));
-void readin P((char *buf, unsigned count));
-bool_pt readineofok P((char *buf, unsigned count));
-void seekin P((unsigned long offset));
-void seekout P((unsigned long offset));
-void seektrel P((unsigned long offset));
-void writechar P((int c));
-void writedrel P((char *buf, unsigned count));
-void writeout P((char *buf, unsigned count));
-void writetrel P((char *buf, unsigned count));
-void fatalerror P((char *message));
-void inputerror P((char *message));
-void input1error P((char *message));
-void outofmemory P((void));
-void prematureeof P((void));
-void redefined P((char *name, char *message, char *archentry,
-		  char *deffilename, char *defarchentry));
-void interseg P((char *fname, char *aname, char *name));
-void reserved P((char *name));
-void size_error P((int seg, bin_off_t count, bin_off_t size));
-void undefined P((char *name));
-void usage P((void));
-void version_msg P((void));
-void use_error P((char *message));
+void ioinit(char *progname);
+void closein(void);
+void closeout(void);
+void errtrace(char *name, int level);
+void executable(void);
+void flusherr(void);
+void openin(char *filename);
+void openout(char *filename);
+void putstr(char *message);
+void put08x(bin_off_t num);
+void put08lx(bin_off_t num);
+void putbstr(unsigned width, char *str);
+void putbyte(int ch);
+int readchar(void);
+void readin(char *buf, unsigned count);
+bool_pt readineofok(char *buf, unsigned count);
+void seekin(unsigned long offset);
+void seekout(unsigned long offset);
+void seektrel(unsigned long offset);
+void writechar(int c);
+void writedrel(char *buf, unsigned count);
+void writeout(char *buf, unsigned count);
+void writetrel(char *buf, unsigned count);
+void fatalerror(char *message);
+void inputerror(char *message);
+void input1error(char *message);
+void outofmemory(void);
+void prematureeof(void);
+void redefined(char *name, char *message, char *archentry,
+		  char *deffilename, char *defarchentry);
+void interseg(char *fname, char *aname, char *name);
+void reserved(char *name);
+void size_error(int seg, bin_off_t count, bin_off_t size);
+void undefined(char *name);
+void usage(void);
+void version_msg(void);
+void use_error(char *message);
 
 /* ld.c */
-int main P((int argc, char **argv));
+int main(int argc, char **argv);
 
 /* readobj.c */
-void objinit P((void));
-void readsyms P((char *filename, bool_pt trace));
+void objinit(void);
+void readsyms(char *filename, bool_pt trace);
 #ifdef OBJ_H
-void entrysym P((struct symstruct *symptr));
-unsigned segsizecount P((unsigned seg, struct modstruct *modptr));
+void entrysym(struct symstruct *symptr);
+unsigned segsizecount(unsigned seg, struct modstruct *modptr);
 #endif
-bin_off_t readconvsize P((unsigned countindex));
-bin_off_t readsize P((unsigned count));
+bin_off_t readconvsize(unsigned countindex);
+bin_off_t readsize(unsigned count);
 
 /* table.c */
-void syminit P((void));
-struct symstruct *addsym P((char *name));
-struct symstruct *findsym P((char *name));
-char *moveup P((unsigned nbytes));
-char *ourmalloc P((unsigned nbytes));
-void ourfree P((char *cptr));
-char *readstring P((void));
-void release P((char *cptr));
-int memory_used P((void));
-char *stralloc P((char *s));
+void syminit(void);
+struct symstruct *addsym(char *name);
+struct symstruct *findsym(char *name);
+char *moveup(unsigned nbytes);
+char *ourmalloc(unsigned nbytes);
+void ourfree(char *cptr);
+char *readstring(void);
+void release(char *cptr);
+int memory_used(void);
+char *stralloc(char *s);
 
 /* typeconvert.c */
-u2_pt c2u2 P((char *buf));
-u4_t c4u4 P((char *buf));
-u2_pt cnu2 P((char *buf, unsigned count));
-u4_t cnu4 P((char *buf, unsigned count));
-void u2c2 P((char *buf, u2_pt offset));
-void u4c4 P((char *buf, u4_t offset));
-void u2cn P((char *buf, u2_pt offset, unsigned count));
-void u4cn P((char *buf, u4_t offset, unsigned count));
-bool_pt typeconv_init P((bool_pt big_endian, bool_pt long_big_endian));
+u2_pt c2u2(char *buf);
+u4_t c4u4(char *buf);
+u2_pt cnu2(char *buf, unsigned count);
+u4_t cnu4(char *buf, unsigned count);
+void u2c2(char *buf, u2_pt offset);
+void u4c4(char *buf, u4_t offset);
+void u2cn(char *buf, u2_pt offset, unsigned count);
+void u4cn(char *buf, u4_t offset, unsigned count);
+bool_pt typeconv_init(bool_pt big_endian, bool_pt long_big_endian);
 
 /* writebin.c */
-void writebin P((char *outfilename, bool_pt argsepid, bool_pt argbits32,
-		 bool_pt argstripflag, bool_pt arguzp));
+void writebin(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+		 bool_pt argstripflag, bool_pt arguzp);
 
-void write_dosemu P((char *outfilename, bool_pt argsepid, bool_pt argbits32,
-		 bool_pt argstripflag, bool_pt arguzp));
+void write_dosemu(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+		 bool_pt argstripflag, bool_pt arguzp);
 
 /* write_elks.c */
-void write_elks P((char *outfilename, bool_pt argsepid, bool_pt argbits32,
-		 bool_pt argstripflag, bool_pt arguzp, bool_pt nsym));
+void write_elks(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+		 bool_pt argstripflag, bool_pt arguzp, bool_pt nsym);
 
 /* linksym.c */
-void linksyms P((bool_pt argreloc_output));
+void linksyms(bool_pt argreloc_output);
 
 /* mkar.c */
-void ld86r P((int argc, char ** argv));
+void ld86r(int argc, char ** argv);

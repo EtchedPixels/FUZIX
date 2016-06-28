@@ -7,8 +7,6 @@
 #define TRUE	1
 
 #define EXTERN	extern
-#define FORWARD	static
-#define PRIVATE	static
 #define PUBLIC
 
 #include "config.h"

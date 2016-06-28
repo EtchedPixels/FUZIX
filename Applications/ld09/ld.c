@@ -15,31 +15,31 @@
 #define NR_STDLIBS	0
 #endif
 
-PUBLIC bin_off_t text_base_value = 0;	/* XXX */
-PUBLIC bin_off_t data_base_value = 0;	/* XXX */
-PUBLIC bin_off_t heap_top_value  = 0;	/* XXX */
-PUBLIC int headerless = 0;
+bin_off_t text_base_value = 0;	/* XXX */
+bin_off_t data_base_value = 0;	/* XXX */
+bin_off_t heap_top_value  = 0;	/* XXX */
+int headerless = 0;
 #ifndef VERY_SMALL_MEMORY
-PUBLIC int v7 = 0;
+int v7 = 0;
 #endif
 #ifndef MSDOS
-PUBLIC int cpm86 = 0;
+int cpm86 = 0;
 #endif
-PUBLIC char hexdigit[] = "0123456789abcdef";
+char hexdigit[] = "0123456789abcdef";
 
-PRIVATE bool_t flag[128];
-PRIVATE char *libs[MAX_LIBS] = {
+static bool_t flag[128];
+static char *libs[MAX_LIBS] = {
 #ifdef MC6809
     "/usr/local/lib/m09/",
 #endif
     0
 };
-PRIVATE int lastlib = NR_STDLIBS;
+static int lastlib = NR_STDLIBS;
 
-FORWARD char *buildname P((char *pre, char *mid, char *suf));
-FORWARD char *expandlib P((char *fn));
+static char *buildname(char *pre, char *mid, char *suf);
+static char *expandlib(char *fn);
 
-PRIVATE char *buildname(char *pre, char *mid, char *suf)
+static char *buildname(char *pre, char *mid, char *suf)
 {
     char *name;
 
@@ -50,7 +50,7 @@ PRIVATE char *buildname(char *pre, char *mid, char *suf)
     return name;
 }
 
-PRIVATE char *expandlib(char *fn)
+static char *expandlib(char *fn)
 {
     char *path, *s;
     int i;
@@ -69,7 +69,7 @@ PRIVATE char *expandlib(char *fn)
     return NUL_PTR;
 }
 
-PUBLIC int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     register char *arg;
     int argn;

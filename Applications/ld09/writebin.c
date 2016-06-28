@@ -69,59 +69,59 @@
 #define offsetof(struc, mem) ((int) &((struc *) 0)->mem)
 #define memsizeof(struc, mem) sizeof(((struc *) 0)->mem)
 
-PRIVATE bool_t bits32;		/* nonzero for 32-bit executable */
-PRIVATE bin_off_t combase[NSEG];/* bases of common parts of segments */
-PRIVATE bin_off_t comsz[NSEG];	/* sizes of common parts of segments */
-PRIVATE fastin_t curseg;	/* current segment, 0 to $F */
-PRIVATE bin_off_t edataoffset;	/* end of data */
-PRIVATE bin_off_t endoffset;	/* end of bss */
-PRIVATE bin_off_t etextoffset;	/* end of text */
-PRIVATE bin_off_t etextpadoff;	/* end of padded text */
+static bool_t bits32;		/* nonzero for 32-bit executable */
+static bin_off_t combase[NSEG];/* bases of common parts of segments */
+static bin_off_t comsz[NSEG];	/* sizes of common parts of segments */
+static fastin_t curseg;	/* current segment, 0 to $F */
+static bin_off_t edataoffset;	/* end of data */
+static bin_off_t endoffset;	/* end of bss */
+static bin_off_t etextoffset;	/* end of text */
+static bin_off_t etextpadoff;	/* end of padded text */
 #ifdef REL_OUTPUT
-PRIVATE unsigned ndreloc;	/* number of data relocations */
+static unsigned ndreloc;	/* number of data relocations */
 #endif
-PRIVATE unsigned nsym;		/* number of symbols written */
+static unsigned nsym;		/* number of symbols written */
 #ifdef REL_OUTPUT
-PRIVATE unsigned ntreloc;	/* number of text relocations */
+static unsigned ntreloc;	/* number of text relocations */
 extern bool_t reloc_output;	/* nonzero to leave reloc info in output */
 #endif
-PRIVATE unsigned relocsize;	/* current relocation size 1, 2 or 4 */
-PRIVATE bin_off_t segadj[NSEG];	/* adjusts (file offset - seg offset) */
+static unsigned relocsize;	/* current relocation size 1, 2 or 4 */
+static bin_off_t segadj[NSEG];	/* adjusts (file offset - seg offset) */
 				/* depends on zero init */
-PRIVATE bin_off_t segbase[NSEG];/* bases of data parts of segments */
-PRIVATE char segboundary[9] = "__seg0DH";
+static bin_off_t segbase[NSEG];/* bases of data parts of segments */
+static char segboundary[9] = "__seg0DH";
 				/* name of seg boundary __seg0DL to __segfCH */
-PRIVATE bin_off_t segpos[NSEG];	/* segment positions for current module */
-PRIVATE bin_off_t segsz[NSEG];	/* sizes of data parts of segments */
+static bin_off_t segpos[NSEG];	/* segment positions for current module */
+static bin_off_t segsz[NSEG];	/* sizes of data parts of segments */
 				/* depends on zero init */
-PRIVATE bool_t sepid;		/* nonzero for separate I & D */
-PRIVATE bool_t stripflag;	/* nonzero to strip symbols */
-PRIVATE bin_off_t spos;		/* position in current seg */
-PRIVATE bool_t uzp;		/* nonzero for unmapped zero page */
+static bool_t sepid;		/* nonzero for separate I & D */
+static bool_t stripflag;	/* nonzero to strip symbols */
+static bin_off_t spos;		/* position in current seg */
+static bool_t uzp;		/* nonzero for unmapped zero page */
 
 #ifdef EDOS
-FORWARD unsigned binheaderlength P((char *commandname));
-FORWARD char *idconvert P((struct entrylist *elptr, char *commandname));
+unsigned binheaderlength(char *commandname);
+char *idconvert(struct entrylist *elptr, char *commandname);
 #endif
-FORWARD void linkmod P((struct modstruct *modptr));
-FORWARD void padmod P((struct modstruct *modptr));
-FORWARD void setsym P((char *name, bin_off_t value));
-FORWARD void symres P((char *name));
-FORWARD void setseg P((fastin_pt newseg));
-FORWARD void skip P((unsigned countsize));
+void linkmod(struct modstruct *modptr);
+void padmod(struct modstruct *modptr);
+void setsym(char *name, bin_off_t value);
+void symres(char *name);
+void setseg(fastin_pt newseg);
+void skip(unsigned countsize);
 #ifdef EDOS
-FORWARD void writeheader P((char *commandname));
+void writeheader(char *commandname);
 #else
-FORWARD void writeheader P((void));
+void writeheader(void);
 #endif
-FORWARD void writenulls P((bin_off_t count));
+void writenulls(bin_off_t count);
 
 /* write binary file */
 #ifndef FUNCNAME 
 #define FUNCNAME writebin
 #endif
 
-PUBLIC void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
                      bool_pt argstripflag, bool_pt arguzp)
 {
     char buf4[4];
@@ -581,7 +581,7 @@ PUBLIC void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
 
 #ifdef EDOS
 
-PRIVATE unsigned binheaderlength(char *commandname)
+static unsigned binheaderlength(char *commandname)
 {
     unsigned count;
     char *name;
@@ -606,7 +606,7 @@ PRIVATE unsigned binheaderlength(char *commandname)
 /* the special name  _main  is converted to the command name first */
 /* copy upper case and numerals, convert lower case to upper, ignore rest */
 
-PRIVATE char *idconvert(struct entrylist *elptr, char *commandname)
+static char *idconvert(struct entrylist *elptr, char *commandname)
 {
     char *name;
     char *newname;
@@ -637,7 +637,7 @@ PRIVATE char *idconvert(struct entrylist *elptr, char *commandname)
 
 #endif /* EDOS */
 
-PRIVATE void linkmod(struct modstruct *modptr)
+static void linkmod(struct modstruct *modptr)
 {
     char buf[ABS_TEXT_MAX];
     int command;
@@ -812,7 +812,7 @@ PRIVATE void linkmod(struct modstruct *modptr)
     }
 }
 
-PRIVATE void padmod(struct modstruct *modptr)
+static void padmod(struct modstruct *modptr)
 {
     bin_off_t count;
     fastin_t seg;
@@ -840,7 +840,7 @@ PRIVATE void padmod(struct modstruct *modptr)
     }
 }
 
-PRIVATE void setsym(char *name, bin_off_t value)
+static void setsym(char *name, bin_off_t value)
 {
     struct symstruct *symptr;
 
@@ -851,7 +851,7 @@ PRIVATE void setsym(char *name, bin_off_t value)
 	    symptr->value = value;
 }
 
-PRIVATE void symres(char *name)
+static void symres(char *name)
 {
     register struct symstruct *symptr;
 
@@ -870,7 +870,7 @@ PRIVATE void symres(char *name)
 
 /* set new segment */
 
-PRIVATE void setseg(fastin_pt newseg)
+static void setseg(fastin_pt newseg)
 {
     if (newseg != curseg)
     {
@@ -881,14 +881,14 @@ PRIVATE void setseg(fastin_pt newseg)
     }
 }
 
-PRIVATE void skip(unsigned countsize)
+static void skip(unsigned countsize)
 {
     writenulls((bin_off_t) readsize(countsize));
 }
 
 #ifdef EDOS
 
-PRIVATE void writeheader(char *commandname)
+static void writeheader(char *commandname)
 {
     char buf[MAX_OFFSET_SIZE];
     bin_off_t offset;
@@ -937,7 +937,7 @@ PRIVATE void writeheader(char *commandname)
 
 #ifdef MINIX
 
-PRIVATE void writeheader(void)
+static void writeheader(void)
 {
     struct exec header;
 
@@ -1020,7 +1020,7 @@ PRIVATE void writeheader(void)
 
 #endif /* MINIX */
 
-PRIVATE void writenulls(bin_off_t count)
+static void writenulls(bin_off_t count)
 {
     long lcount = count;
     if( lcount < 0 )
@@ -1035,7 +1035,7 @@ PRIVATE void writenulls(bin_off_t count)
 #define FUNCNAME writebin
 #endif
 
-PUBLIC void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+void FUNCNAME(char *outfilename, bool_pt argsepid, bool_pt argbits32,
                      bool_pt argstripflag, bool_pt arguzp)
 {
     char * s  = "WARNING: Native a.out generation not included, sorry\n";

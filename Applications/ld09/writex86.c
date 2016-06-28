@@ -59,56 +59,51 @@
 #define offsetof(struc, mem) ((int) &((struc *) 0)->mem)
 #define memsizeof(struc, mem) sizeof(((struc *) 0)->mem)
 
-PRIVATE bool_t bits32;		/* nonzero for 32-bit executable */
-PRIVATE bin_off_t combase[NSEG];/* bases of common parts of segments */
-PRIVATE bin_off_t comsz[NSEG];	/* sizes of common parts of segments */
-PRIVATE fastin_t curseg;	/* current segment, 0 to $F */
-PRIVATE bin_off_t edataoffset;	/* end of data */
-PRIVATE bin_off_t endoffset;	/* end of bss */
-PRIVATE bin_off_t etextoffset;	/* end of text */
-PRIVATE bin_off_t etextpadoff;	/* end of padded text */
-PRIVATE unsigned nsym;		/* number of symbols written */
-PRIVATE unsigned relocsize;	/* current relocation size 1, 2 or 4 */
-PRIVATE bin_off_t segadj[NSEG];	/* adjusts (file offset - seg offset) */
+static bool_t bits32;		/* nonzero for 32-bit executable */
+static bin_off_t combase[NSEG];/* bases of common parts of segments */
+static bin_off_t comsz[NSEG];	/* sizes of common parts of segments */
+static fastin_t curseg;	/* current segment, 0 to $F */
+static bin_off_t edataoffset;	/* end of data */
+static bin_off_t endoffset;	/* end of bss */
+static bin_off_t etextoffset;	/* end of text */
+static bin_off_t etextpadoff;	/* end of padded text */
+static unsigned nsym;		/* number of symbols written */
+static unsigned relocsize;	/* current relocation size 1, 2 or 4 */
+static bin_off_t segadj[NSEG];	/* adjusts (file offset - seg offset) */
 				/* depends on zero init */
-PRIVATE bin_off_t segbase[NSEG];/* bases of data parts of segments */
-PRIVATE char segboundary[9] = "__seg0DH";
+static bin_off_t segbase[NSEG];/* bases of data parts of segments */
+static char segboundary[9] = "__seg0DH";
 				/* name of seg boundary __seg0DL to __segfCH */
-PRIVATE bin_off_t segpos[NSEG];	/* segment positions for current module */
-PRIVATE bin_off_t segsz[NSEG];	/* sizes of data parts of segments */
+static bin_off_t segpos[NSEG];	/* segment positions for current module */
+static bin_off_t segsz[NSEG];	/* sizes of data parts of segments */
 				/* depends on zero init */
-PRIVATE bool_t sepid;		/* nonzero for separate I & D */
-PRIVATE bool_t stripflag;	/* nonzero to strip symbols */
-PRIVATE bin_off_t spos;		/* position in current seg */
-PRIVATE bool_t uzp;		/* nonzero for unmapped zero page */
-PRIVATE bool_t xsym;		/* extended symbol table */
+static bool_t sepid;		/* nonzero for separate I & D */
+static bool_t stripflag;	/* nonzero to strip symbols */
+static bin_off_t spos;		/* position in current seg */
+static bool_t uzp;		/* nonzero for unmapped zero page */
+static bool_t xsym;		/* extended symbol table */
 
-FORWARD void linkmod P((struct modstruct *modptr));
-FORWARD void padmod P((struct modstruct *modptr));
-FORWARD void setsym P((char *name, bin_off_t value));
-FORWARD void symres P((char *name));
-FORWARD void setseg P((fastin_pt newseg));
-FORWARD void skip P((unsigned countsize));
-FORWARD void writeheader P((void));
+static void linkmod(struct modstruct *modptr);
+static void padmod(struct modstruct *modptr);
+static void setsym(char *name, bin_off_t value);
+static void symres(char *name);
+static void setseg(fastin_pt newseg);
+static void skip(unsigned countsize);
+static void writeheader(void);
 #ifndef VERY_SMALL_MEMORY
-FORWARD void v7header P((void));
+static void v7header(void);
 #endif
 #ifndef MSDOS
-FORWARD void cpm86header P((void));
+static void cpm86header(void);
 #endif
-FORWARD void writenulls P((bin_off_t count));
+static void writenulls(bin_off_t count);
 
 EXTERN bool_t reloc_output;
 
 /* write binary file */
 
-PUBLIC void write_elks(outfilename, argsepid, argbits32, argstripflag, arguzp, argxsym)
-char *outfilename;
-bool_pt argsepid;
-bool_pt argbits32;
-bool_pt argstripflag;
-bool_pt arguzp;
-bool_pt argxsym;
+void write_elks(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+                bool_pt argstripflag, bool_pt arguzp, bool_pt argxsym)
 {
     char buf4[4];
     char *cptr;
@@ -454,7 +449,7 @@ bool_pt argxsym;
     executable();
 }
 
-PRIVATE void linkmod(modptr)
+static void linkmod(modptr)
 struct modstruct *modptr;
 {
     char buf[ABS_TEXT_MAX];
@@ -555,7 +550,7 @@ struct modstruct *modptr;
     }
 }
 
-PRIVATE void padmod(modptr)
+static void padmod(modptr)
 struct modstruct *modptr;
 {
     bin_off_t count;
@@ -584,7 +579,7 @@ struct modstruct *modptr;
     }
 }
 
-PRIVATE void setsym(name, value)
+static void setsym(name, value)
 char *name;
 bin_off_t value;
 {
@@ -594,7 +589,7 @@ bin_off_t value;
 	symptr->value = value;
 }
 
-PRIVATE void symres(name)
+static void symres(name)
 register char *name;
 {
     register struct symstruct *symptr;
@@ -611,7 +606,7 @@ register char *name;
 
 /* set new segment */
 
-PRIVATE void setseg(newseg)
+static void setseg(newseg)
 fastin_pt newseg;
 {
     if (newseg != curseg)
@@ -623,14 +618,14 @@ fastin_pt newseg;
     }
 }
 
-PRIVATE void skip(countsize)
+static void skip(countsize)
 unsigned countsize;
 {
     writenulls((bin_off_t) readsize(countsize));
 }
 
 #ifndef MSDOS
-PRIVATE void cpm86header()
+static void cpm86header()
 {
     struct cpm86_exec header;
     memset(&header, 0, sizeof header);
@@ -656,7 +651,7 @@ PRIVATE void cpm86header()
 }
 #endif
 
-PRIVATE void writeheader()
+static void writeheader()
 {
     struct exec header;
 
@@ -685,7 +680,7 @@ PRIVATE void writeheader()
 }
 
 #ifndef VERY_SMALL_MEMORY
-PRIVATE void v7header()
+static void v7header()
 {
     struct v7_exec header;
 
@@ -721,7 +716,7 @@ PRIVATE void v7header()
 }
 #endif
 
-PRIVATE void writenulls(count)
+static void writenulls(count)
 bin_off_t count;
 {
     long lcount = count;
