@@ -33,7 +33,7 @@ static struct memh *brkmore(size_t nb)
 	if (p == (struct memh *) -1)
 		return NULL;
 	/* Overflow catch */
-	if (p + nb < p)
+	if ((uintptr_t)p + sizeof(struct memh) * nb < (uintptr_t)p)
 		return NULL;
 	/* Move our break point. Using brk this way avoids the sign problems */
 	if (brk(p + nb))
