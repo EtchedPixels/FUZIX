@@ -34,16 +34,12 @@ void newfunc_typed(int storage, char *n, int type)
     SYMBOL *symbol;
     if ((idx = find_global(n)) > -1) {
         symbol = &symbol_table[idx];
-        if (symbol->identity != FUNCTION) {
-            printf("L3 %d %d\n", idx, symbol->identity);
+        if (symbol->identity != FUNCTION)
             multidef(n);
-        }
     } else {
         /* extern implies global scope */
         idx = add_global(n, FUNCTION, CINT, 0, storage == EXTERN ? PUBLIC : storage);
-        printf("L1 %d\n", idx);
         symbol = &symbol_table[idx];
-        printf("L1 %d %d\n", idx, symbol->offset);
     }
     local_table_index = NUMBER_OF_GLOBALS; //locptr = STARTLOC;
     argstk = 0;
@@ -98,10 +94,8 @@ void newfunc_typed(int storage, char *n, int type)
             }
         }
     }
-    if (symbol->offset == FUNCTION) {
-            printf("L2 %d %d\n", idx, symbol->offset);
+    if (symbol->offset == FUNCTION)
             multidef(n);
-    }
     symbol->offset = FUNCTION;
     output_string(n);
     output_label_terminator();
