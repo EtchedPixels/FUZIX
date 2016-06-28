@@ -20,8 +20,6 @@ void header (void) {
     output_string ("; Small C Z80\n;\tCoder (ac0)\n;");
     frontend_version();
     newline ();
-    output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
-    output_line ("\t.module SMALLC_GENERATED");
 }
 
 /**
@@ -69,14 +67,14 @@ void trailer(void) {
  * text (code) segment
  */
 void code_segment_gtext(void) {
-    output_line ("\t.text");
+    output_line (".text");
 }
 
 /**
  * data segment
  */
 void data_segment_gdata(void) {
-    output_line ("\t.data");
+    output_line (".data");
 }
 
 /**
@@ -85,7 +83,7 @@ void data_segment_gdata(void) {
  */
 void ppubext(SYMBOL *scptr)  {
     if (symbol_table[current_symbol_table_idx].storage == STATIC) return;
-    output_with_tab (scptr->storage == EXTERN ? ".extrn\t" : ".globl\t");
+    output_with_tab (scptr->storage == EXTERN ? ".extern\t" : ".globl\t");
     output_string (scptr->name);
     newline();
 }
@@ -96,17 +94,25 @@ void ppubext(SYMBOL *scptr)  {
  */
 void fpubext(SYMBOL *scptr) {
     if (scptr->storage == STATIC) return;
-    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ".extrn\t");
+    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ".extern\t");
     output_string (scptr->name);
     newline ();
+}
+
+/**
+ * Output a decimal number to the assembler file
+ * @param num
+ */
+void output_number(int num) {
+    output_decimal(num);
 }
 
 /**
  * Output a decimal number to the assembler file, with # prefix
  * @param num
  */
-void output_number(int num) {
-    output_byte('#');
+void output_immediate(int num) {
+    output_string("#");
     output_decimal(num);
 }
 
@@ -146,7 +152,7 @@ int gen_get_locale(SYMBOL *sym) {
     } else {
         output_line("leay ");
         output_number(sym->offset - stkp);
-        output_string("(s)");
+        output_string(",s");
         newline ();
         output_line("tfr y,d");
         return HL_REG;
@@ -217,7 +223,7 @@ void gen_swap(void) {
  * the primary register
  */
 void gen_immediate(void) {
-    output_with_tab ("ldd ");
+    output_with_tab ("ldd #");
 }
 
 /**
@@ -245,8 +251,8 @@ void gen_pop(void) {
  * swap the primary register and the top of the stack
  */
 void gen_swap_stack(void) {
-    output_line("ldy (s)");
-    output_line("std (s)");
+    output_line("ldy ,s");
+    output_line("std ,s");
     output_line("tfr y,d");
 }
 
@@ -322,21 +328,21 @@ void gen_test_jump(int label, int ft)
  * print pseudo-op  to define a byte
  */
 void gen_def_byte(void) {
-    output_with_tab (".byte ");
+    output_with_tab ("fcb ");
 }
 
 /**
  * print pseudo-op to define storage
  */
 void gen_def_storage(void) {
-    output_with_tab (".blkb ");
+    output_with_tab ("blkb ");
 }
 
 /**
  * print pseudo-op to define a word
  */
 void gen_def_word(void) {
-    output_with_tab (".word ");
+    output_with_tab ("fdb ");
 }
 
 /**
@@ -351,7 +357,7 @@ int gen_modify_stack(int newstkp) {
         return (newstkp);
     output_with_tab("leas ");
     output_decimal(k);
-    output_string("(s)");
+    output_string(",s");
     newline();
     return (newstkp);
 }
@@ -388,10 +394,10 @@ void gen_jump_case(void) {
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
     if (dbltest (lval2, lval)) {
-        output_line("asl 1(s)");
-        output_line("rol (s)");
+        output_line("asl 1,s");
+        output_line("rol ,s");
     }
-    output_line ("addd (s)++");
+    output_line ("addd ,s++");
     stkp += INTSIZE;
 }
 
@@ -400,7 +406,7 @@ void gen_add(LVALUE *lval, LVALUE *lval2) {
  */
 void gen_sub(void) {
     /* Double check */
-    output_line("subd (s)++");
+    output_line("subd ,s++");
     output_line("coma");
     output_line("comb");
     output_line("addd #1");
@@ -457,8 +463,8 @@ void gen_umod(void) {
  * inclusive 'or' the primary and secondary registers
  */
 void gen_or(void) {
-    output_line("ora (s)+");
-    output_line("orb (s)+");
+    output_line("ora ,s+");
+    output_line("orb ,s+");
     stkp += INTSIZE;
 }
 
@@ -466,8 +472,8 @@ void gen_or(void) {
  * exclusive 'or' the primary and secondary registers
  */
 void gen_xor(void) {
-    output_line("eora (s)+");
-    output_line("eorb (s)+");
+    output_line("eora ,s+");
+    output_line("eorb ,s+");
     stkp += INTSIZE;
 }
 
@@ -475,8 +481,8 @@ void gen_xor(void) {
  * 'and' the primary and secondary registers
  */
 void gen_and(void) {
-    output_line("anda (s)+");
-    output_line("andb (s)+");
+    output_line("anda ,s+");
+    output_line("andb ,s+");
     stkp += INTSIZE;
 }
 
@@ -543,7 +549,7 @@ void gen_increment_primary_reg(LVALUE *lval) {
     switch (lval->ptr_type) {
         case STRUCT:
             output_with_tab("addd ");
-            output_number(lval->tagsym->size);
+            output_immediate(lval->tagsym->size);
             newline();
             break ;
         case CINT:
@@ -567,7 +573,7 @@ void gen_decrement_primary_reg(LVALUE *lval) {
             break;
         case STRUCT:
             output_with_tab("subd ");
-            output_number(lval->tagsym->size - 1);
+            output_immediate(lval->tagsym->size - 1);
             newline();
             break ;
         default:
@@ -683,7 +689,7 @@ char *inclib(void) {
 void gnargs(int d)
 {
     output_with_tab ("ldu ");
-    output_number(d);
+    output_immediate(d);
     newline ();
 }
 
@@ -701,7 +707,7 @@ void gen_immediate2(void) {
  */
 void add_offset(int val) {
     output_with_tab("addd ");
-    output_number(val);
+    output_immediate(val);
     newline();
 }
 
@@ -715,11 +721,10 @@ void gen_multiply(int type, int size) {
         case CINT:
         case UINT:
             gen_multiply_by_two();
-            output_line("mul r1 2");
             break;
         case STRUCT:
             output_with_tab("ldy ");
-            output_number(size);
+            output_immediate(size);
             newline();
             gen_call("__muli ");
             newline();
