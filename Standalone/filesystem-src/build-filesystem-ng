@@ -36,7 +36,7 @@ my %legal_attr = qw( package 0      if-file 0
                      require-pkg 0);
 
 # only these commands are recognised. Specify number of arguments.
-my %cmd = qw( d 2  n 3  f 3);
+my %cmd = qw( d 2  n 3  f 3  l 2  r 1);
 
 # stores command-line arguments
 my %args;
@@ -294,7 +294,7 @@ sub gen_ucp {
                     my $node = $2;
                     if (exists($paths{$base}) or ($base eq '')) {
                         # all good
-                        $paths{"$base/$node"} = 1;
+                        $paths{"$base/$node"} = 'd';
                         if ($cur_path ne $base) {
                             $base = $base eq '' ? '/' : $base;
                             print OUT "cd $base\n";
@@ -317,7 +317,7 @@ sub gen_ucp {
                     my $dir = $2;
                     if (exists($paths{$base}) or ($base eq '')) {
                         # all good
-                        $paths{"$base/$dir"} = 1;
+                        $paths{"$base/$dir"} = 'd';
                         if ($cur_path ne $base) {
                             $base = $base eq '' ? '/' : $base;
                             print OUT "cd $base\n";
@@ -329,6 +329,38 @@ sub gen_ucp {
                     else {
                         $error = $error + 1;
                         print "ERROR $file:$line no parent path $base for $arg2\n";
+                    }
+                }
+                elsif ($cmd eq 'l') { # link arg1: original file arg2: new file
+                    if (exists $paths{$arg1}) {
+                        if (exists $paths{$arg2}) {
+                            $error = $error + 1;
+                            print "ERROR $file:$line file already exists $arg2\n";
+                        }
+                        else {
+                            $paths{$arg2} = 'l';
+                            print OUT "ln $arg1 $arg2\n";
+                        }
+                    }
+                    else {
+                        $error = $error + 1;
+                        print "ERROR $file:$line file not found $arg1\n";
+                    }
+                }
+                elsif ($cmd eq 'r') { # rm arg1: file
+                    if (exists $paths{$arg1}) {
+                        if ($paths{$arg1} eq 'f') {
+                            delete $paths{$arg1};
+                            print OUT "rm $arg1\n";
+                        }
+                        else {
+                            $error = $error + 1;
+                            print "ERROR $file:$line cannot remove $arg1 -- not a file\n";
+                        }
+                    }
+                    else {
+                        $error = $error + 1;
+                        print "ERROR $file:$line file not found $arg1\n";
                     }
                 }
                 else {
@@ -343,7 +375,7 @@ sub gen_ucp {
                     if (-f "$x->[0]->[0]/$arg3") {
                         if (exists($paths{$base}) or ($base eq '')) {
                             # all good
-                            $paths{"$base/$file"} = 1;
+                            $paths{"$base/$file"} = 'f';
                             if ($cur_path ne $base) {
                                 $base = $base eq '' ? '/' : $base;
                                 print OUT "cd $base\n";

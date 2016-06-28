@@ -2,6 +2,7 @@ package  rpilot
 if-file  rpilot
 
 f 0755 /usr/bin/rpilot                     rpilot
+l      /usr/bin/rpilot                     /usr/bin/pilot
 f 0644 /usr/man/man1/rpilot.1              doc/rpilot.1
 d 0755 /usr/doc/rpilot
 f 0644 /usr/doc/rpilot/rpilot.txt          doc/rpilot.txt

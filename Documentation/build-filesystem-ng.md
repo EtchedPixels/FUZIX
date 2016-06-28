@@ -79,8 +79,10 @@ package  rpilot
 if-file  rpilot
 
 f 0755 /usr/bin/rpilot                     rpilot
+l      /usr/bin/rpilot                     /usr/bin/pilot
 f 0644 /usr/man/man1/rpilot.1              doc/rpilot.1
 d 0755 /usr/doc/rpilot
+
 ````
 
 The format is line-based and uses \# as the comment-to-end-of-line character.
@@ -103,6 +105,9 @@ The following commands are (currently) defined:
   source file is specified relative to the location of the package file (so
   fuzix-basefs.pkg needs to ../ its way to liberror.txt but fuzix-util.pkg can
   reference banner in the cwd).
+* l - link from existing file to new file. The full path of both files must
+  be specified. The destination directory must exist.
+* r - remove an existing file. The full path of the file must be specified.
 
 The following attributes are shown in the examples:
 
@@ -261,6 +266,20 @@ Once the attributes have been processed, each enabled package is expected to be
 able to be processed to completion without errors. Errors are fatal.
 
 
+## Building Small Disk Images
+
+Here are some techniques for building small disk images.
+
+* Create a meta-package, use ALL to disable everything
+* Refactor existing packages (within a single package file) into a minimal
+  and a full-blown file set (see fuzix-util.pkg for an example of this) and
+  then pull in the minimal parts
+* Use r (remove) in the meta-package file to tactically trim away files you
+  can do without
+
+See Standalone/filesystem-src/fuzix-mini.pkg for an example.
+
+
 ## Current Status
 
 This description reflects the current state of build-filesystem-ng; a complete
@@ -289,14 +308,13 @@ set-endian  big
 set-geometry  256   65535
 ````
 
-3. Add soft-link command
-
 4. allow enable-pkg disable-pkg to be repeated within a package file:
 concatenate their argument lists. Currently ignore all but the last instance in
 any packaged file.
 
 5. allow fine-grain tweaking by replacing a file (Currently trapped as an error, even tho UCP doesn't mind)
-and deleting a file. Add section to the manual on fine-grain customisation.
+Add section to the manual on fine-grain customisation.
+
 
 ## Implementation
 
@@ -306,6 +324,9 @@ the FUZIX mkfs, ucp and fsk executables.
 Each of the (currently-defined) commands maps to one or more ucp commands. A
 correct-by-construction ucp script is generated (ucp-temp.txt) and applied to
 the ucp executable.
+
+The r(emove) command does not remove an entry from the ucp-temp.txt - it generates
+a new (rm) entry in ucp-temp.txt.
 
 
 ## Restrictions and error-handling
