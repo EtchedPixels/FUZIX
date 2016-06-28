@@ -8,33 +8,18 @@
 #include "type.h"
 #include "globvar.h"
 
-#define MAX_LIBS	(NR_STDLIBS + 5)
-#ifdef MC6809
-#define NR_STDLIBS	1
-#else
-#define NR_STDLIBS	0
-#endif
+#define MAX_LIBS	5
 
 bin_off_t text_base_value = 0;	/* XXX */
 bin_off_t data_base_value = 0;	/* XXX */
-bin_off_t heap_top_value  = 0;	/* XXX */
 int headerless = 0;
-#ifndef VERY_SMALL_MEMORY
-int v7 = 0;
-#endif
-#ifndef MSDOS
-int cpm86 = 0;
-#endif
 char hexdigit[] = "0123456789abcdef";
 
 static bool_t flag[128];
 static char *libs[MAX_LIBS] = {
-#ifdef MC6809
-    "/usr/local/lib/m09/",
-#endif
     0
 };
-static int lastlib = NR_STDLIBS;
+static int lastlib = 0;
 
 static char *buildname(char *pre, char *mid, char *suf);
 static char *expandlib(char *fn);
@@ -86,9 +71,6 @@ int main(int argc, char **argv)
     objinit();
     syminit();
     typeconv_init(INT_BIG_ENDIAN, LONG_BIG_ENDIAN);
-#ifndef MC6809
-    flag['3'] = sizeof(char *) >= 4;
-#endif
     outfilename = NUL_PTR;
     for (argn = 1; argn < argc; ++argn)
     {
@@ -109,22 +91,16 @@ int main(int argc, char **argv)
 #ifdef REL_OUTPUT
 	    case 'B':		/* Broken -r for dosemu. */
 #endif
+#ifdef HAS_32BIT
 	    case '0':		/* use 16-bit libraries */
 	    case '3':		/* use 32-bit libraries */
+#endif
 	    case 'M':		/* print symbols linked */
 	    case 'i':		/* separate I & D output */
 	    case 'm':		/* print modules linked */
 	    case 's':		/* strip symbols */
 	    case 'z':		/* unmapped zero page */
-	    case 'N':		/* Native format a.out */
 	    case 'd':		/* Make a headerless outfile */
-#ifndef MSDOS
-	    case 'c':		/* Write header in CP/M-86 format */
-#endif
-	    case 'y':		/* Use a newer symbol table */
-#ifndef VERY_SMALL_MEMORY
-	    case '7':		/* Produce a UNIX v7 a.out header */
-#endif
 		if (arg[2] == 0)
 		    flag[(int) arg[1]] = TRUE;
 		else if (arg[2] == '-' && arg[3] == 0)
@@ -176,17 +152,6 @@ int main(int argc, char **argv)
 		if (errno != 0)
 		    use_error("invalid data address");
 		break;
-	    case 'H':		/* heap top address */
-		if (arg[2] == 0 && ++argn >= argc)
-		    usage();
-		errno = 0;    
-		if (arg[2] == 0 )
-		   heap_top_value = strtoul(argv[argn], (char **)0, 16);
-		else
-		   heap_top_value = strtoul(arg+2, (char **)0, 16);
-		if (errno != 0)
-		    use_error("invalid heap top");
-		break;
 	    case 'l':		/* library name */
 		tfn = buildname(libprefix, arg + 2, libsuffix);
 		if ((infilename = expandlib(tfn)) == NUL_PTR)
@@ -206,30 +171,11 @@ int main(int argc, char **argv)
     }
     if(icount==0) usage();
 
-#ifdef BUGCOMPAT
-    if( icount==1 && ( flag['r'] && !flag['N'] ) ) {
-       flag['r'] = 0;
-       flag['B'] = 1;
-    }
-#endif
-
 #ifdef REL_OUTPUT
-#ifndef MSDOS
     if( flag['r'] && !flag['N'] )
     {
        /* Do a relocatable link -- actually fake it with 'ar.c' */
        ld86r(argc, argv);
-    }
-#endif
-#endif
-
-#ifdef MSDOS
-    /* MSDOS Native is special, we make a COM file */
-    if( flag['N'] )
-    {
-       flag['N'] = 0;
-       flag['d'] = 1;
-       text_base_value = 0x100;
     }
 #endif
 
@@ -237,34 +183,11 @@ int main(int argc, char **argv)
     headerless = flag['d'];
     if( headerless ) flag['s'] = 1;
 
-#ifndef VERY_SMALL_MEMORY
-    /* UNIX seventh edition executables */
-    v7 = flag['7'];
-#endif
-
-#ifndef MSDOS
-    /* CP/M-86 executables can't use symbols. */
-    cpm86 = flag['c'];
-    if ( cpm86 ) flag['s'] = 1;
-#endif
-
     linksyms(flag['r'] | flag['B']);
     if (outfilename == NUL_PTR)
 	outfilename = "a.out";
-#ifndef MSDOS
-    if( flag['N'] )
-       writebin(outfilename, flag['i'], flag['3'], flag['s'],
-	     flag['z'] & flag['3']);
-    else
-#endif
-    if( flag['B'] )
-       write_dosemu(outfilename, flag['i'], flag['3'], flag['s'],
-	  flag['z'] & flag['3']);
-#if 0	/* FIXME */
-    else
-       write_elks(outfilename, flag['i'], flag['3'], flag['s'],
-	     flag['z'], flag['y']);
-#endif	     
+    write_fuzix(outfilename, flag['i'], flag['3'], flag['s'],
+	     flag['z']);
     if (flag['m'])
 	dumpmods();
     if (flag['M'])

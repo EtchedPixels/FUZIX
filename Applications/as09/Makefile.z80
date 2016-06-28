@@ -13,7 +13,7 @@ OBJS =	as.rel assemble.rel errors.rel express.rel \
 all: as09
 
 as09: $(OBJS)
-	$(CC) -o $@ $(OBJS)
+	$(CC) -o $@ --nostdio $(OBJS)
 
 clean realclean clobber:
 	rm -f *.rel as09 *~

@@ -429,8 +429,7 @@ void writenl(void)
 
 /* write 1 offset_t, order to suit target */
 
-void writeoff(offset)
-offset_t offset;
+void writeoff(offset_t offset)
 {
     char buf[sizeof offset];
 

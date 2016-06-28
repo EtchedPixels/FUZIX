@@ -25,9 +25,7 @@ static struct sym_s *needlabel P((void));
 static void showredefinedlabel P((void));
 static void setloc P((unsigned seg));
 
-static void bumpsem(flagptr, defval)
-register struct flags_s *flagptr;
-int defval;
+static void bumpsem(struct flags_s *flagptr, int defval)
 {
     int newcount;
 
@@ -70,8 +68,7 @@ int defval;
 /* check symbol is either undefined */
 /* or has the same segment & relocatability as lc */
 
-bool_pt checksegrel(symptr)
-register struct sym_s *symptr;
+bool_pt checksegrel(struct sym_s *symptr)
 {
     if ((symptr->type & LABIT ||
 	(symptr->data & IMPBIT && !(symptr->data & UNDBIT))) &&
@@ -745,7 +742,7 @@ void pfdb(void)
     firstdata = lastexp.data;
     while (TRUE)
     {
-	*adrptr++ = lastexp;
+	memcpy(adrptr++, &lastexp, sizeof(lastexp));
 	mcount += 2;		/* won't overflow, line length limits it */
 	if (sym != COMMA)
 	    break;

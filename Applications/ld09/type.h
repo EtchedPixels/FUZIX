@@ -84,7 +84,7 @@ void executable(void);
 void flusherr(void);
 void openin(char *filename);
 void openout(char *filename);
-void putstr(char *message);
+void putstr(const char *message);
 void put08x(bin_off_t num);
 void put08lx(bin_off_t num);
 void putbstr(unsigned width, char *str);
@@ -160,6 +160,10 @@ void write_dosemu(char *outfilename, bool_pt argsepid, bool_pt argbits32,
 /* write_elks.c */
 void write_elks(char *outfilename, bool_pt argsepid, bool_pt argbits32,
 		 bool_pt argstripflag, bool_pt arguzp, bool_pt nsym);
+
+/* write_fuzix.c */
+void write_fuzix(char *outfilename, bool_pt argsepid, bool_pt argbits32,
+		 bool_pt argstripflag, bool_pt arguzp);
 
 /* linksym.c */
 void linksyms(bool_pt argreloc_output);

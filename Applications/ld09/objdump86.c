@@ -55,11 +55,6 @@ void fetch_aout_hdr _((void));
 void dump_aout _((void));
 void size_aout _((void));
 void nm_aout _((void));
-#ifndef VERY_SMALL_MEMORY
-void fetch_v7_hdr _((void));
-void dump_v7 _((void));
-void size_v7 _((void));
-#endif
 
 int  obj_ver;
 int  sections;
@@ -282,19 +277,6 @@ char * archive;
       case 2: nm_aout(); break;
       }
       break;
-#ifndef VERY_SMALL_MEMORY
-   case 2: /* V7 executable */
-      fseek(ifd, 0L, 0);
-      fetch_v7_hdr();
-
-      switch(display_mode)
-      {
-      case 0: dump_v7(); break;
-      case 1: size_v7(); break;
-      case 2: error("Symbol table not supported for v7"); exit(1); break;
-      }
-      break;
-#endif
    }
 
    if( strtab ) free(strtab);
@@ -333,13 +315,6 @@ read_objheader()
          sections = 1;
 	 return 1;
       }
-#ifndef VERY_SMALL_MEMORY
-      if( buf[1] == 1 ) /* 04xx octal */
-      {
-         sections = 1;
-         return 2;
-      }
-#endif
       return error("Bad magic number");
    }
 
@@ -893,80 +868,3 @@ nm_aout()
    if( pending_nl ) putchar('\n');
 }
 
-#ifndef VERY_SMALL_MEMORY
-/************************************************************************/
-/* V7 a.out versions
- */
-
-void
-fetch_v7_hdr()
-{
-   int i;
-
-   h_len  = 8;
-   for(i=0; i<h_len; i++)
-   {
-      header[i] = get_word();
-   }
-}
-
-void
-size_v7()
-{
-   if( display_mode == 0 )
-      printf("text\tdata\tbss\tdec\thex\tfilename\n");
-
-   printf("%ld\t%ld\t%ld\t%ld\t%lx\t%s\n",
-      header[1], header[2], header[3],
-      header[1]+ header[2]+ header[3],
-      header[1]+ header[2]+ header[3],
-      ifname);
-
-   tot_size_text += header[1];
-   tot_size_data += header[2];
-   tot_size_bss  += header[3];
-}
-
-void
-dump_v7()
-{
-   int i;
-   long l;
-
-   printf("TYPE:");
-   switch (header[0]) {
-   case 0405: printf(" overlay"); break;
-   case 0407: printf(" impure"); break;
-   case 0410: printf(" read-only text"); break;
-   case 0411: printf(" pure"); break;
-   case 0413: printf(" demand load"); break;
-   default: printf(" (unknown)"); break;
-   }
-   printf("\n");
-
-   if( header[5] )
-      printf("a_entry  = 0x%08lx\n", header[5]);
-   printf("\n");
-
-   size_aout();
-   printf("\n");
-
-   printf("TEXTSEG\n");
-   fseek(ifd, (long)h_len, 0);
-   for(l=0; l<header[1]; l++)
-   {
-      if( (i=getc(ifd)) == EOF ) break;
-      hex_output(i);
-   }
-   hex_output(EOF);
-
-   printf("DATASEG\n");
-   fseek(ifd, (long)h_len+header[1], 0);
-   for(l=0; l<header[2]; l++)
-   {
-      if( (i=getc(ifd)) == EOF ) break;
-      hex_output(i);
-   }
-   hex_output(EOF);
-}
-#endif

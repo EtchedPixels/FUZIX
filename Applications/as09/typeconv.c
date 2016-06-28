@@ -14,8 +14,10 @@
 #define NATIVE_ENDIAN
 #endif
 
-void xxerr P((char *));
-void xxerr(x) char * x; { write(2, x, strlen(x)); }
+void xxerr(const char *x)
+{
+   write(2, x, strlen(x));
+}
 
 #ifdef __AS386_16__
 static int no_swap   = 1;

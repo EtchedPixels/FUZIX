@@ -47,12 +47,14 @@ char buf[128];
    for(ar=1; ar<argc; ar++) if( ar != libarg && argv[ar][0] != '-' )
    {
       char * ptr;
+      /* FIXME: strlcpy etc */
       if( stat(argv[ar], &st) < 0 ) fatalerror("Cannot stat object");
       if((ptr=strchr(argv[ar], '/'))) ptr++; else ptr=argv[ar];
       memset(&arbuf, ' ', sizeof(arbuf));
       strcpy(buf, ptr); strcat(buf, "/                 ");
       strncpy(arbuf.ar_name, buf, sizeof(arbuf.ar_name));
      
+      /* FIXME: use ltoa ita for Fuzix */
       snprintf(arbuf.ar_date, 12, "%-12ld", (long)st.st_mtime);
       snprintf(arbuf.ar_uid, 6, "%-6d", (int)(st.st_uid%1000000L));
       snprintf(arbuf.ar_gid, 6, "%-6d", (int)(st.st_gid%1000000L));
@@ -63,6 +65,7 @@ char buf[128];
       if( fwrite(&arbuf, 1, sizeof(arbuf), fd) != sizeof(arbuf) )
          fatalerror("Cannot write header");
 
+      /* FIXME: can overflow and off_t may not be size_t*/
       ptr = malloc(st.st_size+2);
       if( ptr == 0 ) fatalerror("Out of memory");
       ptr[st.st_size] = ' ';
@@ -71,9 +74,11 @@ char buf[128];
          fatalerror("Cannot read input file");
       fclose(ifd);
 
+      /* FIXME: may overflow */
       if( st.st_size&1 ) st.st_size++;
       if( fwrite(ptr, 1, st.st_size, fd) != st.st_size )
          fatalerror("Cannot write output file");
+      free(ptr);
    }
    fclose(fd);
    exit(0);

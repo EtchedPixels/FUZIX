@@ -114,6 +114,7 @@ fd_t open_input(char *name)
 	   struct stat st;
 	   if( fstat(fd, &st) >= 0 )
 	      filelength = st.st_size;
+           /* FIXME: check allowing for the +4 below */
 	   if( filelength > (((unsigned)-1)>>1)-3 )
 	   {
 	      mem_end = mem_start = "\n\n";

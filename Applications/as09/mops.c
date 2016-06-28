@@ -2812,8 +2812,7 @@ void predec1(void)
 
 /* common routine for PSHS/PULS/PSHU/PULU */
 
-void sustack(stackreg)
-reg_pt stackreg;
+void sustack(reg_pt stackreg)
 {
     reg_pt reg;
 

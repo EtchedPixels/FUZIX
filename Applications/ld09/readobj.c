@@ -121,19 +121,12 @@ static long readarheader(char **parchentry)
 
 static unsigned readfileheader(void)
 {
-    struct
-    {
-	char magic[2];
-	char count[2];		/* really an int */
-    }
-     fileheader;
-    char filechecksum;		/* part of fileheader but would unalign */
+    char fileheader[5];
 
-    readin((char *) &fileheader, sizeof fileheader);
-    readin(&filechecksum, sizeof filechecksum);
-    if (filechecksum != checksum((char *) &fileheader, sizeof fileheader))
+    readin(fileheader, sizeof fileheader);
+    if ((unsigned char)fileheader[4] != checksum(fileheader, 4))
 	input1error(" is not an object file (checksum failed)");
-    return c2u2(fileheader.count);
+    return c2u2(fileheader + 2);
 }
 
 /* read the next module */
@@ -321,9 +314,10 @@ static bool_pt redsym(struct symstruct *symptr, bin_off_t value)
     return TRUE;
 }
 
-static unsigned checksum(char *string, unsigned length)
+static unsigned checksum(char *stringp, unsigned length)
 {
     unsigned char sum;		/* this is a 1-byte checksum */
+    unsigned char *string = (unsigned char *)stringp;
 
     for (sum = 0; length-- != 0;)
 	sum += *string++ & 0xFF;

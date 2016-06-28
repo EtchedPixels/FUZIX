@@ -16,23 +16,14 @@
 #define I80386			/* generate 80386 code */
 #endif
 #define MNSIZE			/* allow byte size in mnemonic, e.g. "movb" */
-#undef SOS_EDOS			/* source OS is EDOS */
 
 /* defaults */
 
 #define DIRCHAR		'/'	/* character separating filename from dir */
-#define INBUFSIZE	8192
+#define INBUFSIZE	512
 #define SOS_EOLSTR	"\012"
 
 /* defaults modified by switches */
-
-#ifdef SOS_EDOS
-# undef INBUFSIZE
-# define INBUFSIZE	512
-# undef SOS_EOLSTR
-# define SOS_EOLSTR	"\015\012"
-# define STAKSIZ	256	/* table grows up to stack less this */
-#endif
 
 #ifdef __AS386_16__
 # undef INBUFSIZE
@@ -305,11 +296,10 @@ oops - ENTBIT misplaced
 
 /* special segments */
 
-#define BSSLOC		3
-#define DATALOC		3
-#define DPLOC		2
-#define STRLOC		1
 #define TEXTLOC		0
+#define DATALOC		1
+#define BSSLOC		2
+#define DPLOC		3
 
 #include "errors.h"
 

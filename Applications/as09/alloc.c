@@ -30,14 +30,10 @@ void init_heap(void)
     if(sbrk(0) != heapend)
        as_abort(NOMEMEORY);
 #else
-#ifdef SOS_EDOS
-    heapend = stackreg() - STAKSIZ;
-#else
     heapptr = malloc(USERMEM);
     heapend = heapptr + USERMEM;
     if (heapptr == 0)
 	as_abort(NOMEMEORY);
-#endif
 #endif
 #endif
 }

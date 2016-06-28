@@ -44,10 +44,6 @@ static int trelfd;		/* text relocation output file descriptor */
 #endif
 static unsigned warncount;	/* count of warnings */
 
-#ifdef MSDOS
-#define off_t	long		/* NOT a typedef */
-#endif
-
 static void errexit(char *message);
 static void flushout(void);
 #ifdef REL_OUTPUT
@@ -71,6 +67,7 @@ void ioinit(char *progname)
        if(*progname=='/')
           refname=progname+1;
 
+    /* FIXME: we need a malloc with error check here */
 #ifdef REL_OUTPUT
     drelbuf = malloc(DRELBUFSIZE);
     drelbuftop = drelbuf + DRELBUFSIZE;
@@ -127,10 +124,8 @@ void executable(void)
 {
     if (errcount)
         unlink(outputname);
-#ifndef MSDOS
     else
 	chmod(outputname, outputperms);
-#endif
 }
 
 void flusherr(void)
@@ -201,12 +196,10 @@ void openout(char *filename)
 #endif
 	outputerror("cannot open");
 
-#ifndef MSDOS
     /* Can't do this on MSDOS; it upsets share.exe */
     oldmask = umask(0); umask(oldmask);
     outputperms = ((CREAT_PERMS | EXEC_PERMS) & ~oldmask);
     chmod(filename, outputperms & ~EXEC_PERMS);
-#endif
 
 #ifdef REL_OUTPUT
     drelbufptr = drelbuf;
@@ -288,7 +281,7 @@ void putstr(const char *message)
 	putbyte(*message++);
 }
 
-static void putstrn(char *message)
+static void putstrn(const char *message)
 {
     putstr(message);
     putbyte('\n');

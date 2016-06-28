@@ -10,8 +10,6 @@
 
 /* one of these target operating systems must be defined */
 
-#undef EDOS			/* generate EDOS executable */
-#undef  MINIX			/* generate Minix executable */
 #define FUZIX			/* FUZIX executable */
 
 /* these may need to be defined to suit the source processor */
