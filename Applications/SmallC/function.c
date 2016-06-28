@@ -16,7 +16,6 @@ int argtop;
  */
 void newfunc(void) {
     char n[NAMESIZE];
-    fexitlab = getlabel();
 
     if (!symname(n)) {
         error("illegal function or declaration");
@@ -32,6 +31,9 @@ void newfunc_typed(int storage, char *n, int type)
 {
     int idx;
     SYMBOL *symbol;
+
+    fexitlab = getlabel();
+
     if ((idx = find_global(n)) > -1) {
         symbol = &symbol_table[idx];
         if (symbol->identity != FUNCTION)
