@@ -66,7 +66,6 @@
 
 #define ABS_TEXT_MAX 64
 
-#define offsetof(struc, mem) ((int) &((struc *) 0)->mem)
 #define memsizeof(struc, mem) sizeof(((struc *) 0)->mem)
 
 static bool_t bits32;		/* nonzero for 32-bit executable */
@@ -100,21 +99,21 @@ static bin_off_t spos;		/* position in current seg */
 static bool_t uzp;		/* nonzero for unmapped zero page */
 
 #ifdef EDOS
-unsigned binheaderlength(char *commandname);
+static unsigned binheaderlength(char *commandname);
 char *idconvert(struct entrylist *elptr, char *commandname);
 #endif
-void linkmod(struct modstruct *modptr);
-void padmod(struct modstruct *modptr);
-void setsym(char *name, bin_off_t value);
-void symres(char *name);
-void setseg(fastin_pt newseg);
-void skip(unsigned countsize);
+static void linkmod(struct modstruct *modptr);
+static void padmod(struct modstruct *modptr);
+static void setsym(char *name, bin_off_t value);
+static void symres(char *name);
+static void setseg(fastin_pt newseg);
+static void skip(unsigned countsize);
 #ifdef EDOS
-void writeheader(char *commandname);
+static void writeheader(char *commandname);
 #else
-void writeheader(void);
+static void writeheader(void);
 #endif
-void writenulls(bin_off_t count);
+static void writenulls(bin_off_t count);
 
 /* write binary file */
 #ifndef FUNCNAME 
