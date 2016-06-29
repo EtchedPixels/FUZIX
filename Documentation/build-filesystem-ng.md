@@ -108,6 +108,7 @@ The following commands are (currently) defined:
 * l - link from existing file to new file. The full path of both files must
   be specified. The destination directory must exist.
 * r - remove an existing file. The full path of the file must be specified.
+* (a rename can be synthesised by a l followed by a r)
 
 The following attributes are shown in the examples:
 
@@ -167,9 +168,9 @@ way as if-cpu/set-cpu.
 
 Notes:
 
-* the order in which package files are found/processed does not affect the
+* The order in which package files are found/processed does not affect the
   decision-making
-* the implementation is intended to cope will real use-cases. You can surely
+* The implementation is intended to cope will real use-cases. You can surely
   compose pathological cases that are mutually contradictory.
 
 The last two use-cases take opposite approaches to the same problem. One says
@@ -188,9 +189,9 @@ As before, it is selected using the -p command-line parameter.
 
 This example introduces:
 
-* the special/reserved package name ALL which is used to disable every package
-* the idea that disable-pkg actually accepts a _list_ of packages
-* the attribute enable-pkg which is used to specify a list of packages to enable
+* The special/reserved package name ALL which is used to disable every package
+* The idea that disable-pkg actually accepts a _list_ of packages
+* The attribute enable-pkg which is used to specify a list of packages to enable
 
 
 Notes:
@@ -248,12 +249,12 @@ Package files can be "nested" to arbitrary depth in this way.
 
 Notes:
 
-* the idea of including a "positive" and "negative" meta-package in a single
+* The idea of including a "positive" and "negative" meta-package in a single
   file is a convenient way of leaving your options open
-* the "no-" prefix to the package name has no significance to build-filesystem-ng
+* The "no-" prefix to the package name has no significance to build-filesystem-ng
   but might be considered a useful working-practise.
 
-Package enabling/disabling is a 6-stage process:
+Implementation detail: package enabling/disabling is a 6-stage process:
 
 * Apply defaults: enable any package unless it is self-disabled
 * Apply -p: enable a package referenced on the command-line
@@ -277,19 +278,45 @@ Here are some techniques for building small disk images.
 * Use r (remove) in the meta-package file to tactically trim away files you
   can do without
 
+
 See Standalone/filesystem-src/fuzix-mini.pkg for an example.
 
+## Building Custom Disk Images
 
-## Current Status
+Here are some techniques for building custom disk images.
 
-This description reflects the current state of build-filesystem-ng; a complete
-set of ·pkg files is in place, and can be used to generate a working disk image.
+* Create a meta-package
+* Use the techniques elsewhere to customise the package list, if required
+* There is no command to _rename_ a file, but you can synthesise a rename by
+  a link followed by remove of the original file.
+* You cannot overwrite a file (for example, to replace /etc/inittab with
+  a version customised for your system) but you can synthesise an overwrite
+  by a remove followed by a copy of the new file
 
-The 'futures' section below is a list of anticipated but not-yet-implemented
-set of changes. Mail me with other requirements.
+Here is an example of these techniues:
+
+````
+# Custom package for my system
+package deluxe
+disable-pkg deluxe
+# synthesise rename of /etc/init
+l /etc/inittab /etc/inittab.orig
+r /etc/inittab
+
+# replace it with a version that starts up 2 terminals
+f 0644 /etc/inittab   my_inittab
+````
+
+One 'gotcha' with this technique is that there is (currently) no control over
+the order in which package files are processed, except that those in Standalone/
+are processed before those in Applications/. See require-pkg in the 'futures'
+section below.
 
 
 ## Futures
+
+This section is a list of anticipated but not-yet-implemented changes.
+Mail me with other requirements.
 
 1. Dependencies, using new attribute require-pkg. -- A simple iterative solver
 will put them in the right order. Currently, all packages have an implicit
@@ -308,12 +335,9 @@ set-endian  big
 set-geometry  256   65535
 ````
 
-4. allow enable-pkg disable-pkg to be repeated within a package file:
+3. allow enable-pkg disable-pkg to be repeated within a package file:
 concatenate their argument lists. Currently ignore all but the last instance in
 any packaged file.
-
-5. allow fine-grain tweaking by replacing a file (Currently trapped as an error, even tho UCP doesn't mind)
-Add section to the manual on fine-grain customisation.
 
 
 ## Implementation
