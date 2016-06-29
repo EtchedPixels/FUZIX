@@ -2790,6 +2790,7 @@ void mswap(void)
 		error(ILLREG);	/* registers not of same size */
 	}
     }
+    getsym();
 }
 
 /* PSHU and PULU */
