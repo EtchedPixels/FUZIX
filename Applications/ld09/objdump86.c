@@ -13,48 +13,40 @@
  *
  * Copyright (c) 1999 by Greg Haerr <greg@censoft.com>
  * Added archive file reading capabilties
+ *
+ * Modified for Fuzix by Alan Cox 2016.
  */
 
 #include <stdio.h>
-#ifdef __STDC__
 #include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 #include <string.h>
 #include "const.h"
 #include "ar.h"
 #include "obj.h"
 
-FILE * ifd;
-char * ifname;
+FILE *ifd;
+char *ifname;
 
-#ifdef __STDC__
-#define _(x) x
-#else 
-#define _(x) ()
-#endif 
-
-long get_long _((void));
-long get_sized _((int sz));
-unsigned int get_word _((void));
-int get_byte _((void));
-int main _((int argc, char**argv));
-void do_file _((char * fname));
-long read_arheader _((char *archentry));
-void do_module _((char * fname, char *archive));
-int error _((char * str));
-int read_objheader _((void));
-int read_sectheader _((void));
-int read_syms _((void));
-void disp_sectheader _((void));
-int disp_syms _((void));
-void read_databytes _((void));
-void hex_output _((int ch));
-void fetch_aout_hdr _((void));
-void dump_aout _((void));
-void size_aout _((void));
-void nm_aout _((void));
+long get_long(void);
+long get_sized(int sz);
+unsigned int get_word(void);
+int get_byte(void);
+int main(int argc, char**argv);
+void do_file(char * fname);
+long read_arheader(char *archentry);
+void do_module(char * fname, char *archive);
+int error(char * str);
+int read_objheader(void);
+int read_sectheader(void);
+int read_syms(void);
+void disp_sectheader(void);
+int disp_syms(void);
+void read_databytes(void);
+void hex_output(int ch);
+void fetch_aout_hdr(void);
+void dump_aout(void);
+void size_aout(void);
+void nm_aout(void);
 
 int  obj_ver;
 int  sections;
@@ -84,10 +76,7 @@ int opt_o;
 long size_text, size_data, size_bss;
 long tot_size_text=0, tot_size_data=0, tot_size_bss=0;
 
-int
-main(argc, argv)
-int argc;
-char ** argv;
+int main(int argc, char *argv[])
 {
    int ar;
    char * p;
@@ -132,9 +121,7 @@ char ** argv;
    return 0;
 }
 
-void
-do_file(fname)
-char * fname;
+void do_file(char * fname)
 {
    unsigned int magic;
    long 	filelength;
@@ -178,9 +165,7 @@ char * fname;
 }
 
 /* read archive header and return length */
-long
-read_arheader(archentry)
-char *archentry;
+long read_arheader(char *archentry)
 {
    char *	  endptr;
    struct ar_hdr  arheader;
@@ -197,10 +182,7 @@ char *archentry;
    return strtoul(arheader.ar_size, (char **)NULL, 0);
 }
 
-void
-do_module(fname, archive)
-char * fname;
-char * archive;
+void do_module(char *fname, char *archive)
 {
    int  modno, i;
 
@@ -285,9 +267,7 @@ char * archive;
    symnames = 0;
 }
 
-int
-error(str)
-char * str;
+int error(char *str)
 {
    switch( display_mode )
    {
@@ -300,14 +280,14 @@ char * str;
    return -1;
 }
 
-int
-read_objheader()
+int read_objheader(void)
 {
    unsigned char buf[5];
 
    if( fread(buf, 1, 5, ifd) != 5 )
       return error("Cannot read object header");
-
+#if 0
+   /* FIXME: Fuzix not ELKS support needed */
    if( buf[0] != 0xA3 || buf[1] != 0x86 )
    {
       if( buf[0] == 1 && buf[1] == 3 )
@@ -317,7 +297,7 @@ read_objheader()
       }
       return error("Bad magic number");
    }
-
+#endif
    if( (unsigned char)(buf[0] + buf[1] + buf[2] + buf[3]) != buf[4] )
       return error("Bad header checksum");
 
@@ -326,8 +306,7 @@ read_objheader()
    return 0;
 }
 
-int
-read_sectheader()
+int read_sectheader(void)
 {
    long ssenc;
    int i;
@@ -353,8 +332,7 @@ read_sectheader()
    return 0;
 }
 
-void
-disp_sectheader()
+void disp_sectheader(void)
 {
    int i;
    if( display_mode ) return;
@@ -373,13 +351,13 @@ disp_sectheader()
    printf("SYMS %u\n", num_syms);
 }
 
-int
-read_syms()
+int read_syms(void)
 {
    int i;
 
    if( num_syms < 0 ) return error("Bad symbol table");
 
+   /* FIXME: overflows */
    symnames = malloc(num_syms*sizeof(char*)+1);
    if( symnames == 0 ) return error("Out of memory");
 
@@ -407,8 +385,7 @@ read_syms()
    return 0;
 }
 
-int
-disp_syms()
+int disp_syms(void)
 {
    int i;
 
@@ -482,10 +459,10 @@ disp_syms()
    return 0;
 }
 
-void
-read_databytes()
-{
 static char * relstr[] = {"ERR", "DB", "DW", "DD"};
+
+void read_databytes(void)
+{
    long l, cpos;
    int ch, i;
    int curseg = 0;
@@ -568,9 +545,7 @@ break_break:;
    fseek(ifd, cpos, 0);
 }
 
-long
-get_sized(sz)
-int sz;
+long get_sized(int sz)
 {
    switch(sz)
    {
@@ -582,8 +557,7 @@ int sz;
    return -1;
 }
 
-long
-get_long()
+long get_long(void)
 {
    long retv = 0;
    int i;
@@ -598,8 +572,7 @@ get_long()
    return retv;
 }
 
-unsigned int
-get_word()
+unsigned int get_word(void)
 {
    long retv = 0;
    int i;
@@ -616,8 +589,7 @@ get_word()
    return retv;
 }
 
-int
-get_byte()
+int get_byte(void)
 {
    int v = getc(ifd);
    if (v == EOF) return -1; 
@@ -625,9 +597,7 @@ get_byte()
    return v;
 }
 
-void
-hex_output(ch)
-int ch;
+void hex_output(int ch)
 {
 static char linebuf[80];
 static char buf[20];
@@ -658,13 +628,14 @@ static int pos = 0;
 
 /************************************************************************/
 /* ELKS a.out versions
+ *
+ * TODO: Fuzix headers
  */
 
 long header[12];
 int  h_len, h_flgs, h_cpu;
 
-void
-fetch_aout_hdr()
+void fetch_aout_hdr(void)
 {
    int i;
 
@@ -685,8 +656,7 @@ fetch_aout_hdr()
    }
 }
 
-void
-dump_aout()
+void dump_aout(void)
 {
 static char * cpu[] = { "unknown", "8086", "m68k", "ns16k", "i386", "sparc" };
 static char * byteord[] = { "LITTLE_ENDIAN", "(2143)","(3412)","BIG_ENDIAN" };
@@ -756,8 +726,7 @@ static char * byteord[] = { "LITTLE_ENDIAN", "(2143)","(3412)","BIG_ENDIAN" };
    hex_output(EOF);
 }
 
-void
-size_aout()
+void size_aout(void)
 {
    if( display_mode == 0 )
       printf("text\tdata\tbss\tdec\thex\tfilename\n");
@@ -773,8 +742,7 @@ size_aout()
    tot_size_bss  += header[4];
 }
 
-void
-nm_aout()
+void nm_aout(void)
 {
    char n_name[10];
    long n_value;

@@ -8,10 +8,13 @@ DEFS	=
 OBJS= dumps.rel io.rel ld.rel readobj.rel table.rel typeconv.rel linksyms.rel \
       writefuzix.rel
 
-all: ld09
+all: ld09 mkar
 
 ld09: $(OBJS)
 	$(CC) -o $@ $(OBJS)
+
+mkar: mkar.rel
+	$(CC) -o $@ $<
 
 clean realclean clobber:
 	rm -f *.rel *.lst *.sym *.asm ld09 ld09r objchop catimage objdump09 *~ *.bin *.lk *.map *.noi
