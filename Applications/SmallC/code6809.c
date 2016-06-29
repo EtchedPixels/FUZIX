@@ -17,7 +17,7 @@
  * print all assembler info before any code is generated
  */
 void header (void) {
-    output_string ("; Small C Z80\n;\tCoder (ac0)\n;");
+    output_string ("; Small C 6809\n;\tCoder (ac0)\n;");
     frontend_version();
     newline ();
 }
@@ -294,7 +294,7 @@ void gen_ret(void) {
  * perform subroutine call to value on top of stack
  */
 void callstk(void) {
-    output_line ("jsr (x)");
+    output_line ("jsr ,x");
 }
 
 /**
