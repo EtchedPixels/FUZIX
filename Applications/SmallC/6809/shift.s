@@ -1,32 +1,32 @@
 |       Shift support for Small C v1 sa09
-.globl  asr
-asr:    tstb
+.globl __asr
+__asr:  tstb
         bge     okr
         negb
-        bra     asl
+        bra     __asl
 okr:    incb
         pshs    b
-        ldd     3(s)
-asrl:   dec     (s)
+        ldd     3,s
+asrl:   dec     ,s
         beq     return
         asra
         rorb
         bra     asrl
 
-.globl  asl
-asl:    tstb
+.globl __asl
+__asl:  tstb
         bge     okl
         negb
-        bra     asr
+        bra     __asr
 okl:    incb
         pshs    b
-        ldd     3(s)
-asll:   dec     (s)
+        ldd     3,s
+asll:   dec     ,s
         beq     return
         aslb
         rola
         bra     asll
 
-return: ldx     1(s)
-        leas    5(s)
-        jmp     (x)
+return: ldx     1,s
+        leas    5,s
+        jmp     ,x

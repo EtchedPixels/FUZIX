@@ -5,23 +5,23 @@
 |       if result (from divide) should be negative.
 |
 |
-.globl prabs
-        left=8.
-        right=4.
-        sign=3.
-prabs:  clr     sign(s)
-        ldd     left(s)
+.globl __prabs
+|       left=8.
+|       right=4.
+|       sign=3.
+__prabs:clr     3,s
+        ldd     8,s
         bge     tryr
         nega
         negb
         sbca    #0
-        std     left(s)
-        inc     sign(s)
-tryr:   ldd     right(s)
+        std     8,s
+        inc     3,s
+tryr:   ldd     4,s
         bge     done
         nega
         negb
         sbca    #0
-        dec     sign(s)
-        std     right(s)
+        dec     3,s
+        std     4,s
 done:   rts

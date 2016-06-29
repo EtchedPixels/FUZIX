@@ -5,22 +5,22 @@
 |       if result (from mod) should be negative.
 |
 |
-.globl mrabs
-        left=8.
-        right=4.
-        sign=3.
-mrabs:  clr     sign(s)
-        ldd     left(s)
+.globl __mrabs
+;       left=8.
+;       right=4.
+;       sign=3.
+__mrabs:clr     3,s
+        ldd     8,s
         bge     tryr
         nega
         negb
         sbca    #0
-        std     left(s)
-        inc     sign(s)
-tryr:   ldd     right(s)
+        std     8,s
+        inc     3,s
+tryr:   ldd     4,s
         bge     done
         nega
         negb
         sbca    #0
-        std     right(s)
+        std     4,s
 done:   rts

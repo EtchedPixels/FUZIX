@@ -1,3 +1,0 @@
-|       Small C v1 exit routine (physics computer)
-.globl  _exit
-_exit:  jmp     /fc00
