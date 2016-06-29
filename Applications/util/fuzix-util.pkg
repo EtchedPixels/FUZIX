@@ -1,79 +1,96 @@
-package  util
+# 3 packages are defined here:
+#
+# util-mini  - Intended for the minimal stuff needed to build a bootable
+#              system (eg, a floppy-based system). The initial selection
+#              was based on the content of the ucp-mini-script.txt before
+#              it was retired.
+# util       - The remainder of the util set
+# util-z80   - Additional stuff from the util set that is only useful
+#              on z80 systems
+
+
+########################################################################
+package  util-mini
 
 # specify the full path to the target - path must already
 # exist. Source file is specified relative to the location of the pkg file
-f 0755 /bin/banner      banner
 f 0755 /bin/basename    basename
-f 0755 /bin/bd          bd
-f 0755 /bin/cal         cal
 f 0755 /bin/cat         cat
-f 0755 /bin/chgrp       chgrp
 f 0755 /bin/chmod       chmod
-f 0755 /bin/chown       chown
-f 0755 /bin/cksum       cksum
 f 0755 /bin/cmp         cmp
 f 0755 /bin/cp          cp
-f 0755 /bin/cut         cut
 f 0755 /bin/date        date
 f 0755 /bin/dd          dd
-f 0755 /bin/decomp16    decomp16
 f 0755 /bin/df          df
+f 0755 /bin/echo        echo
+f 0755 /bin/ed          ed
+f 0755 /bin/fgrep       fgrep
+f 0755 /bin/kill        kill
+f 0755 /bin/ln          ln
+f 0755 /bin/ls          ls
+f 0755 /bin/mkdir       mkdir
+f 0755 /bin/mkfs        mkfs
+f 0755 /bin/mknod       mknod
+f 0755 /bin/mount       mount
+f 0755 /bin/mv          mv
+f 0755 /bin/printenv    printenv
+f 0755 /bin/ps          ps
+f 0755 /bin/pwd         pwd
+f 0755 /bin/rm          rm
+f 0755 /bin/rmdir       rmdir
+f 0755 /bin/ssh         ssh
+f 0755 /bin/stty        stty
+f 0755 /bin/sync        sync
+f 0755 /bin/touch       touch
+f 0755 /bin/tr          tr
+f 0755 /bin/umount      umount
+
+
+########################################################################
+package  util
+
+f 0755 /bin/banner      banner
+f 0755 /bin/bd          bd
+f 0755 /bin/cal         cal
+f 0755 /bin/chgrp       chgrp
+f 0755 /bin/chown       chown
+f 0755 /bin/cksum       cksum
+f 0755 /bin/cut         cut
+f 0755 /bin/decomp16    decomp16
 f 0755 /bin/dirname     dirname
 f 0755 /bin/dosread     dosread
 f 0755 /bin/du          du
-f 0755 /bin/echo        echo
-f 0755 /bin/ed          ed
 f 0755 /bin/env         env
 f 0755 /bin/factor      factor
 f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
-f 0755 /bin/fgrep       fgrep
 f 0755 /bin/fsck        fsck
 f 0755 /bin/grep        grep
 f 0755 /bin/head        head
 f 0755 /bin/id          id
-f 0755 /bin/kill        kill
 f 0755 /bin/ll          ll
-f 0755 /bin/ln          ln
 f 0755 /bin/logname     logname
-f 0755 /bin/ls          ls
 f 0755 /bin/man         man
 f 0644 /usr/man/man1/man.1    man.1
-f 0755 /bin/mkdir       mkdir
-f 0755 /bin/mkfs        mkfs
 f 0755 /bin/mkfifo      mkfifo
-f 0755 /bin/mknod       mknod
 f 0755 /bin/mode        mode
 f 0755 /bin/more        more
-f 0755 /bin/mount       mount
-f 0755 /bin/mv          mv
 f 0755 /bin/od          od
 f 0755 /bin/pagesize    pagesize
 f 0755 /bin/passwd      passwd
-f 0755 /bin/printenv    printenv
 f 0755 /bin/prtroot     prtroot
-f 0755 /bin/ps          ps
-f 0755 /bin/pwd         pwd
 f 0755 /bin/reboot      reboot
-f 0755 /bin/rm          rm
-f 0755 /bin/rmdir       rmdir
 f 0755 /bin/sed         sed
 f 0755 /bin/sleep       sleep
-f 0755 /bin/ssh         ssh
 f 0755 /bin/sort        sort
-f 0755 /bin/stty        stty
 f 0755 /bin/sum         sum
 f 0755 /bin/su          su
-f 0755 /bin/sync        sync
 f 0755 /bin/tail        tail
 f 0755 /bin/tar         tar
 f 0755 /bin/tee         tee
 f 0755 /bin/termcap     termcap
 f 0755 /bin/tget        tget
-f 0755 /bin/touch       touch
-f 0755 /bin/tr          tr
 f 0755 /bin/true        true
-f 0755 /bin/umount      umount
 f 0755 /bin/uniq        uniq
 f 0755 /bin/uptime      uptime
 f 0755 /bin/uud         uud
@@ -86,7 +103,9 @@ f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs
 f 0755 /bin/yes         yes
 
-package  z80-util
+########################################################################
+package  util-z80
+
 if-cpu  z80
 
 f 0755 /bin/patchcpm    patchcpm

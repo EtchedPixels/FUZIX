@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 
 	memset(zero512, 0, 512);
 
-	printf("Making filesystem on device %s with isize %u fsize %u.\n",
-	       argv[1], isize, fsize);
+	printf("Making filesystem with %s byte order on device %s with fsize = %u and isize = %u.\n",
+	       swizzling==0 ? "normal" : "reversed", argv[1], fsize, isize);
 
 	if (fd_open(argv[1])) {
 		printf("Can't open device");

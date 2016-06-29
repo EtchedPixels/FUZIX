@@ -13,6 +13,4 @@ if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
         exit 1
 fi
 
-../mkfs $endian $1 $2 $3
-../ucp $1 < ucp-script.txt
-../fsck $1
+./build-filesystem-ng $endian -f $1 -g $2 $3
