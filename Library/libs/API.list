@@ -54,8 +54,8 @@ endgrent		CODE
 endpwent		CODE
 endutent		CODE
 erand48			CODE
-erf			ULY
-erfc			ULY
+erf			CODE
+erfc			CODE
 execl			CODE
 execle			*MISSING ?*
 execlp			CODE
@@ -152,7 +152,7 @@ jrand48			CODE
 kill			CODE
 l64a			CODE
 lcong48			CODE
-ldexp			ULY
+ldexp			CODE
 lfind			CODE
 link			CODE
 localtime		CODE
@@ -176,7 +176,7 @@ memcmp			CODE
 memcpy			CODE
 memset			CODE
 mknod			CODE
-mktemp
+mktemp			OBSOLETE
 modf			CODE
 modff			Z80 | CODE
 monitor
