@@ -150,7 +150,7 @@ int gen_get_locale(SYMBOL *sym) {
         newline();
         return HL_REG;
     } else {
-        output_line("leay ");
+        output_with_tab("leay ");
         output_number(sym->offset - stkp);
         output_string(",s");
         newline ();
@@ -180,8 +180,7 @@ void gen_put_memory(SYMBOL *sym) {
  * @param typeobj
  */
 void gen_put_indirect(char typeobj) {
-    /* pop ? */
-    output_line("tfr d,y");
+    output_line("puls d");
     if (typeobj & CCHAR) {
         output_line("stb ,y");
     } else {
@@ -195,19 +194,23 @@ void gen_put_indirect(char typeobj) {
  * @param typeobj object type
  */
 void gen_get_indirect(char typeobj, int reg) {
-    if (typeobj == CCHAR) {
-        if (reg & DE_REG) {
-            gen_swap();
+    if (typeobj == CCHAR || typeobj == UCHAR) {
+        if (reg & DE_REG)
+            output_line("ldb ,x");
+        else {
+            /* TODO work out what we can damage here */
+            output_line("tfr d,u");
+            output_line("ldb ,u");
         }
-        output_line("loadbs r1 (r1)");
-    } else if (typeobj == UCHAR) {
-        if (reg & DE_REG) {
-            gen_swap();
-        }
-        //gen_call("cguchar");
-        output_line("loadbu r1 (r1)");
+        if (typeobj == CCHAR)
+            output_line("sex");
     } else { // int
-         output_line("load r1 (r1)");
+        if (reg & DE_REG)
+            output_line("ldd ,x");	/* Can't happen ?? */
+        else {
+            output_line("tfr d,u");
+            output_line("ldd ,u");
+        }
     }
 }
 

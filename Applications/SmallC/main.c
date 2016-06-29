@@ -144,20 +144,22 @@ void usage(void) {
  */
 void parse(void) {
     while (!input_eof) {
-        if (amatch("extern", 6))
+        if (match("#")) {
+            if (match("asm"))
+                doasm();
+            else if (match("include"))
+                doinclude();
+            else if (match("define"))
+                dodefine();
+            else if (match("undef"))
+                doundef();
+        }
+        else if (amatch("extern", 6))
             do_declarations(EXTERN, NULL_TAG, 0);
         else if (amatch("static", 6))
             do_declarations(STATIC, NULL_TAG, 0);
-        else if (do_declarations(PUBLIC, NULL_TAG, 0));
-        else if (match("#asm"))
-            doasm();
-        else if (match("#include"))
-            doinclude();
-        else if (match("#define")) {
-            dodefine();
-        }
-        else if (match("#undef"))
-            doundef();
+        else if (do_declarations(PUBLIC, NULL_TAG, 0))
+            ;
         else {
             newfunc();
         }

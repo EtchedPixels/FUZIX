@@ -31,6 +31,7 @@ void newfunc_typed(int storage, char *n, int type)
 {
     int idx;
     SYMBOL *symbol;
+    char an[NAMESIZE];
 
     fexitlab = getlabel();
 
@@ -57,11 +58,11 @@ void newfunc_typed(int storage, char *n, int type)
     } else {
         // K&R style argument declaration
         while (!match(")")) {
-            if (symname(n)) {
-                if (find_locale(n) > -1)
-                    multidef(n);
+            if (symname(an)) {
+                if (find_locale(an) > -1)
+                    multidef(an);
                 else {
-                    add_local(n, 0, 0, argstk, AUTO);
+                    add_local(an, 0, 0, argstk, AUTO);
                     argstk = argstk + INTSIZE;
                 }
             } else {
