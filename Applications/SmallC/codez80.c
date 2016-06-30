@@ -458,6 +458,12 @@ int gen_modify_stack(int newstkp) {
     return (newstkp);
 }
 
+/* FIXME */
+int gen_defer_modify_stack(int newstkp)
+{
+    return gen_modify_stack(newstkp);
+}
+
 /**
  * multiply the primary register by INTSIZE
  */

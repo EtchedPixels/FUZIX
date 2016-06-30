@@ -30,6 +30,7 @@ extern void gen_test_jump(int label, int ft);
 extern void gen_def_byte(void);
 extern void gen_def_storage(void);
 extern void gen_def_word(void);
+extern int gen_defer_modify_stack(int newstkp);
 extern int gen_modify_stack(int newstkp);
 extern void gen_multiply_by_two(void);
 extern void gen_divide_by_two(void);

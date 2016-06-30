@@ -368,6 +368,8 @@ void gen_def_word(void) {
     output_with_tab ("fdb ");
 }
 
+static int defer;
+
 /**
  * modify the stack pointer to the new value indicated
  * @param newstkp new value
@@ -375,7 +377,8 @@ void gen_def_word(void) {
 int gen_modify_stack(int newstkp) {
     int k;
 
-    k = newstkp - stkp;
+    k = newstkp - stkp + defer;
+    defer = 0;
     if (k == 0)
         return (newstkp);
     output_with_tab("leas ");
@@ -383,6 +386,17 @@ int gen_modify_stack(int newstkp) {
     output_string(",s");
     newline();
     return (newstkp);
+}
+
+/**
+ * modify the stack pointer to the new value indicated, but
+ * allow the change to be deferred
+ */
+
+int gen_defer_modify_stack(int newstkp)
+{
+    defer += newstkp - stkp;
+    return newstkp + defer;
 }
 
 /**

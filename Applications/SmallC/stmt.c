@@ -151,8 +151,11 @@ void do_compound(int func) {
                 if (input_eof)
                         return;
                 if (decls) {
-                        if (!statement_declare ())
+                        if (!statement_declare ()) {
+                                /* Any deferred movement now happens */
+                                gen_modify_stack(stkp);
                                 decls = NO;
+                        }
                 } else
                         do_statement ();
         }

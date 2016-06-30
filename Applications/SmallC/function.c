@@ -62,6 +62,7 @@ void newfunc_typed(int storage, char *n, int type)
                 if (find_locale(an) > -1)
                     multidef(an);
                 else {
+                    /* FIXME: struct */
                     add_local(an, 0, 0, argstk, AUTO);
                     argstk = argstk + INTSIZE;
                 }
@@ -210,6 +211,7 @@ void doLocalAnsiArgument(int type) {
                 ptr = ptr - 1;
                 address = symbol_table[ptr].offset;
                 symbol_table[ptr].offset = address + INTSIZE;
+                /* Struct etc FIXME */
             }
         }
     } else {

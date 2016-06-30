@@ -253,7 +253,7 @@ void declare_local(int typ, int stclass, int otag) {
             /* FIXME: do one gen_modify_stack at the end and
                some kind of align method here */
             if (stclass != LSTATIC) {
-                stkp = gen_modify_stack(stkp - k);
+                stkp = gen_defer_modify_stack(stkp - k);
                 add_local(sname, j, typ, stkp, AUTO);
             } else
                 add_local(sname, j, typ, k, LSTATIC);
