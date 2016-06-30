@@ -1,0 +1,63 @@
+lbra %1
+%1:
+=
+%1:
+
+lbeq %1
+lbra %2
+%1:
+=
+lbne %2
+%1:
+
+tfr u,d
+pshs d
+tfr d,u
+ldd %1
+=
+pshs u
+ldd %1
+
+tfr u,d
+pshs d
+ldd #%1
+puls x
+std ,x
+=
+tfr u,x
+ldd #%1
+std ,x
+
+leau %1,s
+pshs u
+ldd ,u
+addd %2
+puls x
+std ,x
+subd %2
+=
+leax %1,s
+ldd ,x
+addd %2
+std ,x
+subd %2
+
+tfr u,d
+tfr d,u
+ldd ,u
+=
+ldd ,u
+
+tfr u,d
+tfr d,u
+=
+tfr u,d
+
+leau %d,s
+tfr u,x
+ldd %1
+std ,x
+=
+leax %d,s
+ldd %1
+std ,x

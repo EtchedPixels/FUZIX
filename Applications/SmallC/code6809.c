@@ -11,6 +11,9 @@
  *              360 = 3)
  *      This compiler assumes that an integer is the SAME length as
  *      a pointer - in fact, the compiler uses INTSIZE for both.
+ *
+ *	Work this so we use d as primary and sort of use x as secondary
+ *	(in fact we usually use ,s)
  */
 
 /**
@@ -150,11 +153,11 @@ int gen_get_locale(SYMBOL *sym) {
         newline();
         return HL_REG;
     } else {
-        output_with_tab("leay ");
+        output_with_tab("leau ");
         output_number(sym->offset - stkp);
         output_string(",s");
         newline ();
-        output_line("tfr y,d");
+        output_line("tfr u,d");
         return HL_REG;
     }
 }
@@ -180,11 +183,11 @@ void gen_put_memory(SYMBOL *sym) {
  * @param typeobj
  */
 void gen_put_indirect(char typeobj) {
-    output_line("puls d");
+    output_line("puls x");
     if (typeobj & CCHAR) {
-        output_line("stb ,y");
+        output_line("stb ,x");
     } else {
-        output_line("std ,y");
+        output_line("std ,x");
     }
 }
 
@@ -254,9 +257,9 @@ void gen_pop(void) {
  * swap the primary register and the top of the stack
  */
 void gen_swap_stack(void) {
-    output_line("ldy ,s");
+    output_line("ldu ,s");
     output_line("std ,s");
-    output_line("tfr y,d");
+    output_line("tfr u,d");
 }
 
 /**
@@ -297,6 +300,7 @@ void gen_ret(void) {
  * perform subroutine call to value on top of stack
  */
 void callstk(void) {
+    gen_pop();
     output_line ("jsr ,x");
 }
 

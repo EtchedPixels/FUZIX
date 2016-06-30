@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -DTINY
+CFLAGS = -DTINY -DINCDIR=\"includes/\"
 COPT = -O2
 
 OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
