@@ -338,7 +338,9 @@ sub gen_ucp {
                             print "ERROR $file:$line file already exists $arg2\n";
                         }
                         else {
-                            $paths{$arg2} = 'l';
+                            # mark it as 'f' because it is a hard link and therefore
+                            # indistinguishable from the original file.
+                            $paths{$arg2} = 'f';
                             print OUT "ln $arg1 $arg2\n";
                         }
                     }
