@@ -583,6 +583,19 @@ static char *subst(char *pat)
 		}
 		i += sprintf(&buf[i], "%s$%lx", num < 0 ? "-" : "", labs(num));
 		pat++;
+	} else if (pat[0] == '%' && pat[1] == '{') {
+		/* Substitute with expression decimal */
+		cp = pat + 2;
+		if ((pat = strchr(cp, '}')) == NULL || pat - cp <= 0)
+			num = 0;
+		else
+			num = eval(cp, pat - cp);
+		if (i >= MAXLINE - 20) {
+			fprintf(stderr, "%s: line too long\n", progname);
+			exit(1);
+		}
+		i += sprintf(&buf[i], "%d", num);
+		pat++;
 	} else if (pat[0] == '%' && pat[1] == '=') {
 		/* Substitute with converted variable */
 		/* First seperate all parts of the pattern string */
