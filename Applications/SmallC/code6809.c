@@ -119,6 +119,18 @@ void output_immediate(int num) {
     output_decimal(num);
 }
 
+static void describe_access(SYMBOL *sym)
+{
+    if (sym->storage == LSTATIC)
+        print_label(sym->offset);
+    else if (sym->storage == AUTO || sym->storage == DEFAUTO) {
+        output_number(sym->offset - stkp);
+        output_string(",s");
+    } else
+        output_string(sym->name);
+    newline();
+}
+
 /**
  * fetch a static memory cell into the primary register
  * @param sym
@@ -126,18 +138,15 @@ void output_immediate(int num) {
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
         output_with_tab("ldb ");
-        output_string(sym->name);
-        newline ();
+        describe_access(sym);
         output_line("sex");
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
         output_with_tab("ldb ");
-        output_string(sym->name);
-        newline();
+        describe_access(sym);
         output_line("clr a");
     } else {
         output_with_tab ("ldd ");
-        output_string(sym->name);
-        newline ();
+        describe_access(sym);
     }
 }
 
@@ -167,14 +176,11 @@ int gen_get_locale(SYMBOL *sym) {
  * @param sym
  */
 void gen_put_memory(SYMBOL *sym) {
-    if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
+    if ((sym->identity != POINTER) && (sym->type & CCHAR))
         output_with_tab ("stb ");
-        output_string(sym->name);
-    } else {
+    else
         output_with_tab("std ");
-        output_string(sym->name);
-    }
-    newline ();
+    describe_access(sym);
 }
 
 /**
@@ -215,6 +221,16 @@ void gen_get_indirect(char typeobj, int reg) {
             output_line("ldd ,u");
         }
     }
+}
+
+/**
+ * platform level analysis of whether a symbol access needs to be
+ * direct or indirect (globals are always direct)
+ */
+int gen_indirected(SYMBOL *s)
+{
+    /* Never indirect, use s relative because our CPU rocks */
+    return 0;
 }
 
 /**

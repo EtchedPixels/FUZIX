@@ -128,24 +128,32 @@ static void output_bracketed(char *p)
     output_byte(')');
 }
 
+static void describe_access(SYMBOL *sym)
+{
+    output_byte('(');
+    if (sym->storage == LSTATIC) {
+        print_label(sym->offset);
+    } else if (sym->storage == AUTO || sym->storage == DEFAUTO) {
+        output_number(sym->offset);
+        output_string("+fp");
+    } else
+        output_string(sym->name);
+    output_byte(')');
+    newline();
+}
+
 /**
  * fetch a static memory cell into the primary register
  * @param sym
  */
 void gen_get_memory(SYMBOL *sym) {
-    if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
+    if ((sym->identity != POINTER) && (sym->type == CCHAR))
         output_with_tab ("loadsb r1 ");
-        output_bracketed(sym->name);
-        newline ();
-    } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
+    else if ((sym->identity != POINTER) && (sym->type == UCHAR))
         output_with_tab("loadub r1 ");
-        output_bracketed(sym->name);
-        newline();
-    } else {
+    else
         output_with_tab ("load r1 ");
-        output_bracketed(sym->name);
-        newline ();
-    }
+    describe_access(sym);
 }
 
 /**
@@ -173,14 +181,11 @@ int gen_get_locale(SYMBOL *sym) {
  * @param sym
  */
 void gen_put_memory(SYMBOL *sym) {
-    if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
+    if ((sym->identity != POINTER) && (sym->type & CCHAR))
         output_with_tab ("storeb r1 ");
-        output_bracketed(sym->name);
-    } else {
+    else
         output_with_tab("store r1 ");
-        output_bracketed(sym->name);
-    }
-    newline ();
+    describe_access(sym);
 }
 
 /**
@@ -218,6 +223,15 @@ void gen_get_indirect(char typeobj, int reg) {
     } else { // int
          output_line("load r1 (r1)");
     }
+}
+
+/**
+ * platform level analysis of whether a symbol access needs to be
+ * direct or indirect (globals are always direct)
+ */
+int gen_indirected(SYMBOL *s)
+{
+    return 0;
 }
 
 /**

@@ -13,6 +13,7 @@ extern void output_number(int num);
 extern void gen_get_memory(SYMBOL *sym);
 extern int gen_get_locale(SYMBOL *sym);
 extern void gen_put_memory(SYMBOL *sym);
+extern int gen_indirected(SYMBOL *sym);
 extern void gen_put_indirect(char typeobj);
 extern void gen_get_indirect(char typeobj, int reg);
 extern void gen_swap(void);

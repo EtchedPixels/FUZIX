@@ -211,6 +211,16 @@ void gen_get_indirect(char typeobj, int reg) {
 }
 
 /**
+ * platform level analysis of whether a symbol access needs to be
+ * direct or indirect (globals are always direct)
+ */
+int gen_indirected(SYMBOL *s)
+{
+    /* TODO */
+    return 1;
+}
+
+/**
  * swap the primary and secondary registers
  */
 void gen_swap(void) {

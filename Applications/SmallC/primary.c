@@ -50,8 +50,26 @@ int primary(LVALUE *lval) {
         return(0);
     }
     if (symname (sname)) {
-        if ((symbol_table_idx = find_locale(sname)) > -1) {
-            symbol = &symbol_table[symbol_table_idx];
+        int local = 1;
+        symbol_table_idx = find_locale(sname);
+        if (symbol_table_idx == -1) {
+            local = 0;
+            symbol_table_idx = find_global(sname);
+            /* Only valid undeclared name is a function reference */
+            if (symbol_table_idx == -1) {
+                blanks();
+                if (ch() != '(')
+                    error("undeclared variable");
+                symbol_table_idx = add_global(sname, FUNCTION, CINT, 0, PUBLIC);
+                symbol = &symbol_table[symbol_table_idx];
+                lval->symbol = symbol;
+                lval->indirect = 0;
+                return 0;
+            }
+        }
+        symbol = &symbol_table[symbol_table_idx];
+
+        if (local && gen_indirected(symbol)) {
             reg = gen_get_locale(symbol);
             lval->symbol = symbol;
             lval->indirect = symbol->type;
@@ -69,37 +87,32 @@ int primary(LVALUE *lval) {
             }
             return FETCH | reg;
         }
-        if ((symbol_table_idx = find_global(sname)) > -1) {
-            symbol = &symbol_table[symbol_table_idx];
-            if (symbol->identity != FUNCTION) {
-                lval->symbol = symbol;
-                lval->indirect = 0;
-                if (symbol->type == STRUCT) {
-                    lval->tagsym = &tag_table[symbol->tagidx];
+        /* Globals and anything we can directly access */
+        if (symbol->identity != FUNCTION) {
+            lval->symbol = symbol;
+            lval->indirect = 0;
+            if (symbol->type == STRUCT) {
+                lval->tagsym = &tag_table[symbol->tagidx];
+            }
+            if (symbol->identity != ARRAY &&
+                (symbol->identity != VARIABLE || symbol->type != STRUCT)) {
+                if (symbol->identity == POINTER) {
+                    lval->ptr_type = symbol->type;
                 }
-                if (symbol->identity != ARRAY &&
-                    (symbol->identity != VARIABLE || symbol->type != STRUCT)) {
-                    if (symbol->identity == POINTER) {
-                        lval->ptr_type = symbol->type;
-                    }
-                    return FETCH | HL_REG;
-                }
+                return FETCH | HL_REG;
+            }
+
+            if (symbol->storage == LSTATIC)
+                gen_get_locale(symbol);
+            else {
                 gen_immediate();
                 output_string(symbol->name);
                 newline();
-                lval->indirect = symbol->type;
-                lval->ptr_type = symbol->type;
-                return 0;
             }
+            lval->indirect = symbol->type;
+            lval->ptr_type = symbol->type;
+            return 0;
         }
-        blanks();
-        if (ch() != '(')
-            error("undeclared variable");
-        symbol_table_idx = add_global(sname, FUNCTION, CINT, 0, PUBLIC);
-        symbol = &symbol_table[symbol_table_idx];
-        lval->symbol = symbol;
-        lval->indirect = 0;
-        return 0;
     }
     lval->symbol = 0;
     lval->indirect = 0;

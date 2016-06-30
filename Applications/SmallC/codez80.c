@@ -115,12 +115,36 @@ void output_number(int num) {
     output_decimal(num);
 }
 
+static void output_number_signed(int num)
+{
+    if (num > 0)
+        output_byte('+');
+    else
+        output_decimal(num);
+}
+
 static void output_bracketed(char *p)
 {
     output_byte('(');
     output_string(p);
     output_byte(')');
 }
+
+static void describe_access(SYMBOL *sym)
+{
+    if (sym->storage == LSTATIC) {
+        output_byte('(');
+        print_label(sym->offset);
+        output_byte(')');
+    } else if (sym->storage == AUTO || sym->storage == DEFAUTO) {
+        output_string("(ix");
+        output_number_signed(sym->offset - stkp);
+        output_byte(')');
+    } else
+        output_string(sym->name);
+    newline();
+}
+
 
 /**
  * fetch a static memory cell into the primary register
@@ -225,6 +249,19 @@ void gen_get_indirect(char typeobj, int reg) {
         output_line("ld h,(hl)");
         output_line("ld l,a");
     }
+}
+
+/**
+ * platform level analysis of whether a symbol access needs to be
+ * direct or indirect (globals are always direct)
+ */
+int gen_indirected(SYMBOL *s)
+{
+    if (s->storage == LSTATIC)
+        return 0;
+/*    if (abs(s->offset) < 124 && (s->type == CCHAR || s->type == UCHAR))
+        return 0; */
+    return 1;
 }
 
 /**
