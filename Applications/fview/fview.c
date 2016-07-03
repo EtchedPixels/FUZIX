@@ -51,6 +51,7 @@ int16_t *error1;            /* error buffer 1 */
 int16_t *error2;            /* error buffer 2 */
 int16_t *err_cur;           /* ptr to current line's errors */
 int16_t *err_next;          /* ptr to next line's errors */
+int dither=1;               /* should we dither? */
 
 #ifndef LITTLE_ENDIAN
 uint16_t swizzle16( uint16_t d ){
@@ -131,13 +132,15 @@ void flip_err( void ){
 
 void fs_dist( int16_t e, uint16_t i ){	
 	/* distribute error */
-	err_cur[ i + 1 ] = e * 7 ;
-	err_next[ i - 1 ] += e * 3 ;
-	err_next[ i ] += e * 5 ;
-	err_next[ i + 1 ] += e ;
+	if( dither ){
+		err_cur[ i + 1 ] = e * 7 ;
+		err_next[ i - 1 ] += e * 3 ;
+		err_next[ i ] += e * 5 ;
+		err_next[ i + 1 ] += e ;
+	}
 }	 
 
-void bpp32( ){
+void bpp32( uint16_t no ){
 	int i,j,k,c,x,e;
 	int erri=1;
 	uint8_t *out = obuf+sizeof(struct box);
@@ -152,13 +155,24 @@ void bpp32( ){
 		for( j=0; j<8; j++ ){
 			/* fixme: the following color translation only
 			   works with big endian... add a ifdef for little */
-			//in++;
-			//p.blue = *in++;
-			//p.green = *in++;
-			//p.red = *in++;
-
+			switch( no ){
+			case 16:
+				p.green = (*(in+1) << 1) & 0xf8;
+				p.red   = (*(in+1) << 6) | *in >> 5;
+				p.blue  = *in << 3 ;
+				in += 2;
+				break;
+			case 32:
+				in++;
+			case 24:
+				p.blue = *in++;
+				p.green = *in++;
+				p.red = *in++;
+			}
 			c = c << 1;
-			x= intensity( (struct bmp_palette)in ) + err_cur[ erri ]/16;
+			x= intensity( &p );
+			if( dither )
+				x += err_cur[ erri ]/16;
 			if( x > 127 ){
 				c++;
 				e=x-256;
@@ -206,7 +220,9 @@ void bpp( int no ){
 			}
 			for( k=0; k<8/no; k ++ ){
 				c = c << 1;
-				x= intensity( &(pal[ pix[k] ]) ) + err_cur[ erri ]/16;
+				x= intensity( &(pal[ pix[k] ]) );
+				if( dither )
+					x += err_cur[ erri ]/16;
 				if( x > 127 ){
 					c++;
 					e=x-256;
@@ -232,12 +248,20 @@ int main( int argc, char *argv[] )
 	int rsize;
 	struct box *lbox;
 	int i,j;
-		
 
 	if( argc<2 )
 		exit_err_mess("usage: fview file");
-	
-	fd=open( argv[1], O_RDONLY );
+
+	for( i=1; i<<argc; i++){
+		if( argv[i][0] != '-' )
+			break;
+		if( argv[i][1]=='d' ){
+			dither=0;
+			continue;
+		}
+	}
+
+	fd=open( argv[i], O_RDONLY );
 	if( fd<0 )
 		exit_err_mess("error opening bitmap");
 
@@ -288,10 +312,18 @@ int main( int argc, char *argv[] )
 	printf("bpp: %d\n", d.bpp );
 	printf("pallete entries: %d\n", (uint16_t)d.colors );
 
-
+	/* verify bitmap format */
+	if( h.header[0]!='B' || h.header[1]!='M' )
+		exit_err_mess("bad file header");
+	if( d.size < 40 )
+		exit_err_mess("unsupported bmp format");
+	if( d.comp )
+		exit_err_mess("compression not supported");
+	
+	
+	/* alloc bmp line buffers */
 	rsize = (( d.bpp * d.width + 31 ) / 32 ) * 4;
 
-	/* fixme: what if bmp width < screen width ? */
 	lbuf=malloc( rsize );
 	if( lbuf == NULL )
 		exit_err_mess("cannot malloc line buffer");
@@ -332,6 +364,7 @@ int main( int argc, char *argv[] )
 		/* pixate the transels here */
 		switch( d.bpp ){
 		case 1:
+			/* fixme: fast, but doesn't do palette lookup :( */
 			memcpy( obuf+sizeof(struct box), lbuf, 32 );
 			break;
 		case 2:
@@ -339,8 +372,10 @@ int main( int argc, char *argv[] )
 		case 8:
 			bpp( d.bpp );
 			break;
+		case 16:
+		case 24:
 		case 32:
-			bpp32( );
+			bpp32( d.bpp );
 			break;
 		default:
 			printf("unsupported bpp.\n");
