@@ -28,10 +28,10 @@ struct bmp_dib {
 };
 
 struct bmp_palette {
+	uint8_t zero;
 	uint8_t blue;
 	uint8_t green;
 	uint8_t red;
-	uint8_t zero;
 };
 
 struct box {
@@ -137,20 +137,28 @@ void fs_dist( int16_t e, uint16_t i ){
 	err_next[ i + 1 ] += e ;
 }	 
 
-
-/* Tranlate a line worth of 8 bpp source data to 1 bpp */
-void bpp8( void ){
-	int i,j,c,x,e;
+void bpp32( ){
+	int i,j,k,c,x,e;
 	int erri=1;
 	uint8_t *out = obuf+sizeof(struct box);
 	uint8_t *in = lbuf;
+	uint8_t pix[8];
+	struct bmp_palette p;
+
 	flip_err();
 	memset( err_next, 0, 516 );
 	for( i=0; i<32; i++){
 		c=0;
 		for( j=0; j<8; j++ ){
+			/* fixme: the following color translation only
+			   works with big endian... add a ifdef for little */
+			//in++;
+			//p.blue = *in++;
+			//p.green = *in++;
+			//p.red = *in++;
+
 			c = c << 1;
-			x= intensity( &(pal[*in++]) ) + err_cur[ erri ]/16;
+			x= intensity( (struct bmp_palette)in ) + err_cur[ erri ]/16;
 			if( x > 127 ){
 				c++;
 				e=x-256;
@@ -165,25 +173,40 @@ void bpp8( void ){
 	}
 	
 }	
- 
 
-void bpp4( void ){
+
+/* Tranlate a line worth of source data to 1 bpp */
+void bpp( int no ){
 	int i,j,k,c,x,e;
 	int erri=1;
 	uint8_t *out = obuf+sizeof(struct box);
 	uint8_t *in = lbuf;
-	uint8_t pix[2];
+	uint8_t pix[8];
+
 	flip_err();
 	memset( err_next, 0, 516 );
 	for( i=0; i<32; i++){
 		c=0;
-		for( j=0; j<4; j++ ){
-			pix[0]= *in >> 4;
-			pix[1]= *in++ & 0xf;
-			for( k=0; k<2; k++ ){
-				/* first nibble of in */
+		for( j=0; j<no; j++ ){
+			switch( no ){
+			case 2:
+				pix[0]= *in >> 6;
+				pix[1]= *in >> 4 & 0x3;
+				pix[2]= *in >> 2 & 0x3;
+				pix[3]= *in++ & 0x3;
+				break;
+			case 4:
+				pix[0]= *in >> 4;
+				pix[1]= *in++ & 0xf;
+				break;
+			case 8:
+				pix[0]= *in++;
+				break;
+				/* default case should be caught by caller */
+			}
+			for( k=0; k<8/no; k ++ ){
 				c = c << 1;
-				x = intensity( &(pal[ pix[k] ]) ) + err_cur[ erri ]/16;
+				x= intensity( &(pal[ pix[k] ]) ) + err_cur[ erri ]/16;
 				if( x > 127 ){
 					c++;
 					e=x-256;
@@ -199,6 +222,7 @@ void bpp4( void ){
 	}
 	
 }
+
 
 int main( int argc, char *argv[] )
 {
@@ -310,11 +334,13 @@ int main( int argc, char *argv[] )
 		case 1:
 			memcpy( obuf+sizeof(struct box), lbuf, 32 );
 			break;
+		case 2:
 		case 4:
-			bpp4();
-			break;
 		case 8:
-			bpp8();
+			bpp( d.bpp );
+			break;
+		case 32:
+			bpp32( );
 			break;
 		default:
 			printf("unsupported bpp.\n");
