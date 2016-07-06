@@ -1,3 +1,9 @@
+/*
+   fview - a simple program to display windows .bmp files on fuzix.
+   This will read the most common formats of 1,2,4,16,24,or 32 bpp.
+   It only translates to a 1 bpp format, with optional FS dithering
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -47,12 +53,14 @@ struct display disp;        /* general struct for noodling */
 uint8_t *lbuf;              /* bmp line buffer */
 uint8_t *obuf;              /* output line buffer to tty dev */
 struct bmp_palette *pal;    /* table of palette entries */
-int16_t *error1;            /* error buffer 1 */
-int16_t *error2;            /* error buffer 2 */
+int16_t *error1;            /* error buffer 1 in 1/16ths of error */
+int16_t *error2;            /* error buffer 2 in 1/16ths of error */
 int16_t *err_cur;           /* ptr to current line's errors */
 int16_t *err_next;          /* ptr to next line's errors */
 int dither=1;               /* should we dither? */
+int pinfo=0;                /* just print info from bmp header and quit */
 int rsize;                  /* bmp size of row in bytes */
+int ssize;                  /* screen size of row in bytes */
 
 #ifndef LITTLE_ENDIAN
 uint16_t swizzle16( uint16_t d ){
@@ -87,7 +95,7 @@ int scan_modes(void) {
 		  break;
 	  if( ! (disp.commands & GFX_WRITE) ) continue;
 	  if( ! (disp.format & FMT_MONO_WB) ) continue;
-	  if( disp.width != 256 ) continue;
+	  //	  if( disp.width != 256 ) continue;
 	  res = disp.width * disp.height;
 	  if( res > maxres ){
 		  maxres = res;
@@ -97,12 +105,20 @@ int scan_modes(void) {
   return ret;
 }
 
+
 void exit_err_mess( char *mess ){
 	fprintf( stderr, mess );
 	fputc( '\n', stderr );
 	exit(1);
 }
 
+void exit_usage(){
+	exit_err_mess("usage: fview -dp file");
+}
+
+
+/* This is an aproximation of a RGB -> intensity
+   formula :) */
 uint8_t intensity( struct bmp_palette *p ){
 	uint16_t c;
 	c = (p->red * 2);
@@ -123,6 +139,7 @@ void flip_err( void ){
 	}
 }
 
+/* Floyd-Steinberg Dithering */
 void fs_dist( int16_t e, uint16_t i ){	
 	/* distribute error */
 	if( dither ){
@@ -133,6 +150,7 @@ void fs_dist( int16_t e, uint16_t i ){
 	}
 }	 
 
+/* Convert a row of non-paletted modes to 1 bpp screen row */
 void bpp32( int no ){
 	int i,j,k,c,x,e;
 	int erri=1;
@@ -142,8 +160,8 @@ void bpp32( int no ){
 	struct bmp_palette p;
 
 	flip_err();
-	memset( err_next, 0, 516 );
-	for( i=0; i<32; i++){
+	memset( err_next, 0, (disp.width+2)*sizeof(int) );
+	for( i=0; i<ssize; i++){
 		c=0;
 		for( j=0; j<8; j++ ){
 			if( in < lbuf + rsize ){
@@ -189,7 +207,7 @@ void bpp32( int no ){
 }	
 
 
-/* Tranlate a line worth of source data to 1 bpp */
+/* Convert 1 row of paletted mode to 1 bpp screen row */
 void bpp( int no ){
 	int i,j,k,c,x,e;
 	int erri=1;
@@ -199,9 +217,9 @@ void bpp( int no ){
 
 	flip_err();
 
-	memset( err_next, 0, 516 );
+	memset( err_next, 0, (disp.width+2)*sizeof(int) );
 
-	for( i=0; i<32; i++){
+	for( i=0; i<ssize; i++){
 		c=0;
 		for( j=0; j<no; j++ ){
 
@@ -216,22 +234,22 @@ void bpp( int no ){
 					pix[5]= *in >> 2 & 1;
 					pix[6]= *in >> 1 & 1;
 					pix[7]= *in & 1;
-					in++;
 					break;
 				case 2:
 					pix[0]= *in >> 6;
 					pix[1]= *in >> 4 & 0x3;
 					pix[2]= *in >> 2 & 0x3;
-					pix[3]= *in++ & 0x3;
+					pix[3]= *in & 0x3;
 					break;
 				case 4:
 					pix[0]= *in >> 4;
-					pix[1]= *in++ & 0xf;
+					pix[1]= *in & 0xf;
 					break;
 				case 8:
-					pix[0]= *in++;
+					pix[0]= *in;
 					break;
 				}
+				in++;
 			}
 			else{
 				for( k=j; k<8/no; k++ ) pix[k]=0;
@@ -267,26 +285,37 @@ int main( int argc, char *argv[] )
 	struct bmp_dib d;
 	struct box *lbox;
 	int i,j;
-	int llb;
+	int llb;    /* screen row last line of bmp (if < screen height ) */
 
 	if( argc<2 )
-		exit_err_mess("usage: fview file");
+		exit_usage;
 
-	for( i=1; i<<argc; i++){
+	for( i=1; i < argc; i++ ){
 		if( argv[i][0] != '-' )
 			break;
-		if( argv[i][1]=='d' ){
-			dither=0;
-			continue;
+		for( j=0; j < strlen(argv[i]); j++){
+			switch( argv[i][j] ){
+			case 'd':
+				dither=0;
+				break;
+			case 'p':
+				pinfo=1;
+				break;
+			default:
+				exit_usage;
+			}
 		}
 	}
-
+	
 	fd=open( argv[i], O_RDONLY );
 	if( fd<0 )
 		exit_err_mess("error opening bitmap");
 
 	/* get file header */
 	ret = read( fd, &h, sizeof(h) );
+	if( ret < sizeof(h) )
+		exit_err_mess("Error reading bmp file header");
+
 	/* swizzle bitmap fields */
 #ifndef LITTLE_ENDIAN
 	h.size = swizzle32( h.size );
@@ -295,6 +324,9 @@ int main( int argc, char *argv[] )
 
 	/* get dib header */
 	ret = read( fd, &d, sizeof(d) );
+	if( ret < sizeof(d) )
+		exit_err_mess("Error reading dib header");
+
 	/* swizzle its fields */
 #ifndef LITTLE_ENDIAN
 	d.size = swizzle32( d.size );
@@ -319,13 +351,6 @@ int main( int argc, char *argv[] )
 		exit_err_mess("read error loading palette");
 
 
-	/* Allocate dithering error buffers */
-	error1 = calloc( 256 + 2, sizeof( int16_t ) );
-	error2 = calloc( 256 + 2, sizeof( int16_t ) );
-	if( error1 == NULL | error2 == NULL )
-		exit_err_mess("cannot alloc dither buffers");
-	flip_err();
-
 	printf("header: %c%c\n", h.header[0], h.header[1] );
 	printf("width: %d, height: %d\n", (uint16_t)d.width, (uint16_t)d.height );
 	printf("bpp: %d\n", d.bpp );
@@ -338,6 +363,8 @@ int main( int argc, char *argv[] )
 		exit_err_mess("unsupported bmp format");
 	if( d.comp )
 		exit_err_mess("compression not supported");
+
+	if( pinfo ) exit(0);
 
 	/* alloc bmp line buffers */
 	rsize = (( d.bpp * d.width + 31 ) / 32 ) * 4;
@@ -359,30 +386,42 @@ int main( int argc, char *argv[] )
 	if( ioctl( 1, GFXIOC_SETMODE, &disp ) < 0 )
 		exit_err_mess("Cannot set graphics mode");
 
-	obuf=malloc( disp.width / 8 + sizeof(struct box) );
+	ssize=disp.width / 8;
+
+	obuf=malloc( ssize + sizeof(struct box) );
 	if( obuf == NULL )
 		exit_err_mess("cannot malloc dev buffer");
 
 	lbox=(struct box *)obuf;
-	lbox->size = disp.width / 8 + sizeof(struct box);
+	lbox->size = ssize + sizeof(struct box);
 	lbox->x = 0;
 	lbox->h = 1;
-	lbox->w = 32;
-
+	lbox->w = ssize;
 
 	/* calc starting screen Y*/
 	if( d.height < disp.height )
 		llb = d.height-1;
 	else llb = disp.height-1;
-	
-	
 
-	/* loop */
+	/* Allocate dithering error buffers
+	   we add an extra 2 samples here because dithering requires
+	   a sample behind and in front of our subject pixel
+	*/
+	error1 = calloc( disp.width + 2, sizeof( int16_t ) );
+	error2 = calloc( disp.width + 2, sizeof( int16_t ) );
+	if( error1 == NULL | error2 == NULL )
+		exit_err_mess("cannot alloc dither buffers");
+	flip_err();
+
+
+	/* loop - for each row of pixels  
+	   read a row from bmp file, tranlate to a row of screen data,
+	   and send data to fuzix
+	 */
 	for( i=disp.height-1; i>-1; i-- ){
 		if( i <= llb ){
 			/* get a line from the file */
 			ret=read( fd, lbuf, rsize );
-
 			if( ret < rsize ) {
 				printf("file read error: %d\n", ret );
 				goto leave;
@@ -407,7 +446,7 @@ int main( int argc, char *argv[] )
 			}
 		}
 		else{
-			memset( obuf+sizeof(struct box), 0, 32 );
+			memset( obuf+sizeof(struct box), 0, ssize );
 		}
 		/* output line to video device */
 		lbox->y = i;
