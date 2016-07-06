@@ -1,7 +1,24 @@
 /*
-   fview - a simple program to display windows .bmp files on fuzix.
-   This will read the most common formats of 1,2,4,16,24,or 32 bpp.
-   It only translates to a 1 bpp format, with optional FS dithering
+    fview - a program to display windows .bmp files on fuzix.
+    Copyright (C) 2016  Brett M. Gordon
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+   This will read the most common .bmp/dib formats of 1,2,4,8,16,24,or 32 bpp.
+   It only translates to a 1 bpp screen format, with optional FS dithering.
+   No scaling, offsetting, or colors.
 */
 
 #include <stdio.h>
@@ -49,8 +66,8 @@ struct box {
 };
 
 struct display entry_disp;  /* state of display on program entry */
-struct display disp;        /* general struct for noodling */
-uint8_t *lbuf;              /* bmp line buffer */
+struct display disp;        /* general struct for noodling with graphics ioctl */
+uint8_t *lbuf;              /* bmp file line buffer */
 uint8_t *obuf;              /* output line buffer to tty dev */
 struct bmp_palette *pal;    /* table of palette entries */
 int16_t *error1;            /* error buffer 1 in 1/16ths of error */
@@ -281,19 +298,19 @@ void bpp( int no ){
 int main( int argc, char *argv[] )
 {
 	int fd,ret;
-	struct bmp_header h;
-	struct bmp_dib d;
-	struct box *lbox;
+	struct bmp_header h; /* bitmap file header */
+	struct bmp_dib d;    /* bitmap dib header */
+	struct box *lbox;    /* ptr to ioctl's len/box struct */
 	int i,j;
-	int llb;    /* screen row last line of bmp (if < screen height ) */
+	int llb;    /* last screen Y of bmp (if bmp height < screen height ) */
 
 	if( argc<2 )
-		exit_usage;
+		exit_usage();
 
 	for( i=1; i < argc; i++ ){
 		if( argv[i][0] != '-' )
 			break;
-		for( j=0; j < strlen(argv[i]); j++){
+		for( j=1; j < strlen(argv[i]); j++){
 			switch( argv[i][j] ){
 			case 'd':
 				dither=0;
@@ -302,11 +319,18 @@ int main( int argc, char *argv[] )
 				pinfo=1;
 				break;
 			default:
-				exit_usage;
+				exit_usage();
 			}
 		}
 	}
-	
+
+	/* 
+	 *
+	 * Open the bmp file and get it ready
+	 *
+	 *
+	*/
+
 	fd=open( argv[i], O_RDONLY );
 	if( fd<0 )
 		exit_err_mess("error opening bitmap");
@@ -377,7 +401,11 @@ int main( int argc, char *argv[] )
 	if( lseek( fd, h.offset, SEEK_SET)<0 )
 		exit_err_mess("seek error in bitmap file");
 
-	/* set video mode */
+	/*
+	 * 
+	 *  Setup video mode / tty
+	 *
+	 */
 
 	disp.mode=scan_modes();
 	if( disp.mode < 0 )
@@ -414,9 +442,9 @@ int main( int argc, char *argv[] )
 	flip_err();
 
 
-	/* loop - for each row of pixels  
+	/* main loop - for each row of pixels  
 	   read a row from bmp file, tranlate to a row of screen data,
-	   and send data to fuzix
+	   and send row data to tty
 	 */
 	for( i=disp.height-1; i>-1; i-- ){
 		if( i <= llb ){
@@ -458,8 +486,8 @@ int main( int argc, char *argv[] )
 	}
 
 	getchar();
- leave:	
-	/* unset video mode */
+ leave:
+	/* reset video mode */
 	ioctl( 1, GFXIOC_SETMODE, &entry_disp );
 
 	exit(0);
