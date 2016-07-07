@@ -3,7 +3,7 @@
 int fputs(const void *str, FILE * fp)
 {
 	register int n = 0;
-	char *s = str;
+	const char *s = str;
 
 	while (*s) {
 		if (putc(*s++, fp) == EOF)
