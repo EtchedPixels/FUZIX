@@ -1,7 +1,6 @@
 ;;;
 ;;; CoCo3 ghoulish tricks (boo!) ported to multicomp09
 ;;;
-
         .module tricks
 
 	;; imported
@@ -79,8 +78,7 @@ _switchin:
 	stx 	_swapstack	; save passed page table *
 
 ;;; [NAC HACK 2016May03] this is only flipping in top 8K .. as is coco3.
-	lda	curr_tr		; [NAC HACK 2016May07] I assume we're running in krn but
-				; I'm not 100% sure..
+	lda	curr_tr		; Select MMU register associated with
 	ora	#7		; top 8K of usr map
 	sta	MMUADR
 
@@ -90,8 +88,7 @@ _switchin:
 	sta	MMUDAT
 	sta	_usr_mmu_map+7	; keep the mirror in sync.
 
-	lda	curr_tr		; [NAC HACK 2016May07] I assume we're running in krn but
-				; I'm not 100% sure..
+	lda	curr_tr		; Select MMU register associated with
 	ora	#$f		; top 8K of krn map
 	sta	MMUADR
 
@@ -228,15 +225,13 @@ skip2@	incb
         ;;
         ;; 	stb	0xffaf
         ;; 	stb	0xffa7
-	lda	curr_tr		; [NAC HACK 2016May07] I assume we're running in krn but
-				; I'm not 100% sure..
+	lda	curr_tr		; Select MMU register associated with
 	ora	#$f		; top 8K of krn map
         sta     MMUADR
         stb     MMUDAT
 	stb	_krn_mmu_map+7	; keep the mirror in sync.
 
-	lda	curr_tr		; [NAC HACK 2016May07] I assume we're running in krn but
-				; I'm not 100% sure..
+	lda	curr_tr		; Select MMU register associated with
 	ora	#7		; top 8K of usr map
         sta     MMUADR
         stb     MMUDAT
@@ -253,7 +248,8 @@ copybank
 	pshs	d,x,u,y		; changing this will affect "ldb 0,s" below
 	;; map in dest
 	ldx	#MMUADR		; for storing
-	lda	#(MMU_MAP1+8)	; mapsel=8, for dest, in B
+	lda     curr_tr		; Select MMU register associated with
+	ora	#8		; mapsel=8, for dest, in B
 	std	,x		; mapsel=8, page in B
 	inca			; mapsel=9
 	incb			; adjacent page
@@ -290,7 +286,8 @@ a@	ldd	,u++
 	;; restore mmu
 	ldy	#_krn_mmu_map	; kernel's mmu ptr.. for reading
 	ldx	#MMUADR		; for storing
-	lda	#(MMU_MAP1+8)
+	lda     curr_tr         ; Select MMU register associated with
+	ora     #8              ; mapsel=8, for dest, in B
 	ldb	,y+		; page from krn_mmu_map
 	std	,x		; Write A to MMUADR to set MAPSEL=8, then write B to MMUDAT
 	inca			; next mapsel

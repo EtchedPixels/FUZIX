@@ -108,7 +108,9 @@ When control passes to the boot-loader, it locates the kernel, parses the DECB
 format to load the kernel to RAM and pass control to it at its start address
 (which is encoded into the DECB file).
 
+The emulator is started like this:
 
+./m6809-run -s multicomp09 -b ../6809M.bin -I 240000 -m 100000000
 
 *************************
 KEYBOARD
@@ -123,8 +125,8 @@ DEVICES (so far)
 *************************
 
 node       major   minor     description
-/dev/tty1  2       1   	     console
-/dev/tty2  2       2         RS232 port
+/dev/tty1  2       1   	     VGA/PS2 console  <-+-- swappable by VDUFFD0
+/dev/tty2  2       2         RS232 port       <-+             jumper
 /dev/tty3  2       3         USB virtual RS232 port
 /dev/tty4  2       4         Drivewire Virtual Window #0  (coming soon..)
 /dev/dw?   8       0-256     Drivewire Block Drives       (coming soon..)

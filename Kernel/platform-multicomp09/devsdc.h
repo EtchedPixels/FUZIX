@@ -1,4 +1,4 @@
 
 
-void devsd_read( char *addr );
-void devsd_write( char *addr );
+void devsd_read( void *addr );
+void devsd_write( void *addr );

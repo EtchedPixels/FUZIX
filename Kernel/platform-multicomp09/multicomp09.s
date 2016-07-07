@@ -22,9 +22,9 @@
 ;;; $ffb0   video colour
 
 ;;; coco3 MMU
-;;; accessed through registers $ff91 and $ffa0-$ffa7
+;;; accessed through registers $ff91 and $ffa0-$ffaf
 ;;; 2 possible memory maps: map0, map1 selected by $ff91[0]
-;;; map0 is used for Kernel mode, map1 is used for User mode.
+;;; map0 is used for User mode, map1 is used for Kernel mode.
 ;;; map1 is selected at boot (ie, now).
 ;;; when 0, select map0 using pages stored in $ffa0-$ffa7
 ;;; when 1, select map1 using pages stored in $ffa8-$ffaf
@@ -35,11 +35,10 @@
 ;;; multicomp09 MMU
 ;;; accessed through two WRITE-ONLY registers MMUADR, MMUDAT
 ;;; 2 possible memory maps: map0, map1 selected by MMUADR[6]
-;;; map0 is used for Kernel mode, map1 is used for User mode.
+;;; map0 is used for User mode, map1 is used for Kernel mode.
 ;;; map0 is selected at boot (ie, now)
-;;; [NAC HACK 2016Apr23] to avoid pointless divergence from
-;;; coco3, the first hardware setup step will be to flip to
-;;; map1.
+;;; .. to avoid pointless divergence from coco3, the first
+;;; hardware setup step will be to flip to map1.
 ;;; [NAC HACK 2016Apr23] in the future, may handle this in
 ;;; forth or in the bootstrap
 ;;; when 0, select map0 using MAPSEL values 0-7
@@ -137,9 +136,9 @@ _need_resched
 ;;; The values of 0-7 set here for _usr_mmu_map reflect how the user mappings
 ;;; are set up when the kernel is started - so don't change them either!
 _krn_mmu_map
-	.db	0,1,2,3,4,5,6,7
+	.db	0,1,2,3,4,5,6,7 ; mmu registers 8-f
 _usr_mmu_map
-	.db	0,1,2,3,4,5,6,7
+	.db	0,1,2,3,4,5,6,7 ; mmu registers 0-7
 
 
 _trap_monitor:
@@ -317,7 +316,8 @@ _program_vectors:
 	ldy	#MMUADR
 
 	;; setup the null pointer / sentinal bytes in low process memory
-	lda	#(MMU_MAP1|8)	; stay in MAP1, select block 8
+	lda	curr_tr		; Select MMU register associated with
+	ora	#8		; block 8
 	sta	,y
 
 	lda	,x	     	; get process's blk address for address 0
@@ -326,9 +326,9 @@ _program_vectors:
 	sta	0
 
 	;; restore the MMU mapping that we trampled on
-	;; MMUADR still has MAP1, block 8 so no need to re-write it.
+	;; MMUADR still has block 8 selected so no need to re-write it.
 
-	;; retrieve value that used to be in MAP1, block 8
+	;; retrieve value that used to be in block 8
 	lda	_krn_mmu_map
 	;; and restore it
 	sta	1,y		; MMUDAT

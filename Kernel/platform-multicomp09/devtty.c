@@ -13,6 +13,10 @@
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 #undef  MC09_VIRTUAL_IN
 
+/* Hardware Registers */
+#define TIMER  (0xffdd)
+#define timer_reg  *((volatile uint8_t *)TIMER)
+
 
 /* Multicomp has 3 serial ports. Each is a cut-down 6850, with fixed BAUD rate and word size.
    Port 0 is, by default, a virtual UART interface to a VGA output and PS/2 keyboard
@@ -23,10 +27,10 @@
    Port 0 is used for tty1, Port 1 for tty2.
 */
 static uint8_t *uart[] = {
-    0,      0,                               /* Unused */
-    (volatile uint8_t *)0xFFD1, (volatile uint8_t *)0xFFD0,    /* Virtual UART Data, Status port0, tty1 */
-    (volatile uint8_t *)0xFFD3, (volatile uint8_t *)0xFFD2,    /*         UART Data, Status port1, tty2 */
-    (volatile uint8_t *)0xFFD5, (volatile uint8_t *)0xFFD4,    /*         UART Data, Status port2, tty3 */
+	0,      0,                               /* Unused */
+	(uint8_t *)0xFFD1, (uint8_t *)0xFFD0,    /* Virtual UART Data, Status port0, tty1 */
+	(uint8_t *)0xFFD3, (uint8_t *)0xFFD2,    /*         UART Data, Status port1, tty2 */
+	(uint8_t *)0xFFD5, (uint8_t *)0xFFD4,    /*         UART Data, Status port2, tty3 */
 };
 
 #ifdef MC09_VIRTUAL_IN
@@ -38,7 +42,8 @@ static int icount = 0;
 static int imatch = 100;
 /* X represents a pause at end-of-line*/
 /* Without pauses, the input streams ahead of the output */
-static uint8_t input[] = "ls -al\nXpwd\nXps\nX\x04root\nXtime ls\nX\nfforth /usr/src/fforth/fforth_tests.fth\nX";
+/*static uint8_t input[] = "ls -al\nXpwd\nXps\nX\x04root\nXtime ls\nX\nfforth /usr/src/fforth/fforth_tests.fth\nX"; */
+static uint8_t input[] = "ls -al\nXpwd\nX";
 static int ccount = 0;
 #endif
 
@@ -85,7 +90,6 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 
 
 
-
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
@@ -98,16 +102,28 @@ int my_tty_close(uint8_t minor)
 /* Output for the system console (kprintf etc) */
 void kputchar(char c)
 {
-	if (c == '\n')
-            tty_putc(minor(TTYDEV), '\r');
-	tty_putc(minor(TTYDEV), c);
+	uint8_t minor = minor(TTYDEV);
+
+	while ((*(uart[minor*2 + 1]) & 2) != 2) {
+		/* UART is busy */
+	}
+
+	/* convert from CR to CRLF */
+	if (c == '\n') {
+		tty_putc(minor, '\r');
+		while ((*(uart[minor*2 + 1]) & 2) != 2) {
+			/* UART is busy */
+		}
+	}
+
+	tty_putc(minor, c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
 {
 	uint8_t c;
         if ((minor < 1) || (minor > 3)) {
-            return TTY_READY_NOW;
+		return TTY_READY_NOW;
         }
 	c = *(uart[minor*2 + 1]); /* 2 entries per UART, +1 to get STATUS */
 	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
@@ -180,12 +196,10 @@ void platform_interrupt(void)
 	if (c & 0x01) { tty_inproc(3, *(uart[3*2])); } */
 #endif
 
-	/* [NAC HACK 2016May07] need defines for the timer */
-	c = *((volatile uint8_t *)0xFFDD);
+	c = timer_reg;
 	if (c & 0x80) {
-		*((volatile uint8_t *)0xFFDD) = c; /* service the hardware */
-		/* tell the OS it happened */
-		timer_interrupt();
+		timer_reg = c;       /* service the hardware */
+		timer_interrupt();   /* tell the OS it happened */
 	}
 
         //	dw_vpoll();
