@@ -79,7 +79,7 @@ int pinfo=0;                /* just print info from bmp header and quit */
 int rsize;                  /* bmp size of row in bytes */
 int ssize;                  /* screen size of row in bytes */
 
-#ifndef LITTLE_ENDIAN
+
 uint16_t swizzle16( uint16_t d ){
 	return d << 8 | d >> 8 ;
 }
@@ -91,8 +91,15 @@ uint32_t swizzle32( uint32_t d ){
 		( d << 8 ) & 0xff0000  |
 		( d << 24 );
 }
-#endif
 
+
+/* Return true if big endian */
+int big_endian(){
+	uint16_t w = 0x1234;
+	uint8_t *c = (uint8_t *) w;
+	if( *c == 0x12 ) return 1;
+	return 0;
+}
 
 /* scan the tty driver's nodes.  Pick the one that gives us the most resolution at 1bpp, and can do a direct WRITE ioctl */
 int scan_modes(void) {
@@ -112,7 +119,6 @@ int scan_modes(void) {
 		  break;
 	  if( ! (disp.commands & GFX_WRITE) ) continue;
 	  if( ! (disp.format & FMT_MONO_WB) ) continue;
-	  //	  if( disp.width != 256 ) continue;
 	  res = disp.width * disp.height;
 	  if( res > maxres ){
 		  maxres = res;
@@ -156,8 +162,8 @@ void flip_err( void ){
 	}
 }
 
-/* Floyd-Steinberg Dithering */
-void fs_dist( int16_t e, uint16_t i ){	
+/* Floyd-Steinberg Dithering - distribute luminance error amongst forward neighbors */
+void fs_dist( int16_t e, uint16_t i ){
 	/* distribute error */
 	if( dither ){
 		err_cur[ i + 1 ] = e * 7 ;
@@ -177,20 +183,25 @@ void bpp32( int no ){
 	struct bmp_palette p;
 
 	flip_err();
+
 	memset( err_next, 0, (disp.width+2)*sizeof(int) );
+
 	for( i=0; i<ssize; i++){
 		c=0;
 		for( j=0; j<8; j++ ){
 			if( in < lbuf + rsize ){
-				/* fixme: the following color translation only
-				   works with big endian... add a ifdef for little */
 				switch( no ){
 				case 16:
+					/* bit manip a 5-5-5-1 layout,
+					   while scaling the result up to 
+					   8bits from 5.
+					*/
 					p.green = (*(in+1) << 1) & 0xf8;
 					p.red   = (*(in+1) << 6) | *in >> 5;
 					p.blue  = *in << 3 ;
 					in += 2;
 					break;
+					/* 32 is just 24 with a leading 0 */
 				case 32:
 					in++;
 				case 24:
@@ -200,6 +211,7 @@ void bpp32( int no ){
 				}
 			}
 			else{
+				/* we're past src line end... make blank. */
 				p.green = 0;
 				p.red = 0 ;
 				p.blue = 0 ;
@@ -218,10 +230,9 @@ void bpp32( int no ){
 			fs_dist( e, erri );
 			erri++;
 		}
-		*out++ = c;
+		*out++ = c; /* every 8 samples write c to dest
 	}
-	
-}	
+}
 
 
 /* Convert 1 row of paletted mode to 1 bpp screen row */
@@ -341,10 +352,10 @@ int main( int argc, char *argv[] )
 		exit_err_mess("Error reading bmp file header");
 
 	/* swizzle bitmap fields */
-#ifndef LITTLE_ENDIAN
-	h.size = swizzle32( h.size );
-	h.offset = swizzle32( h.offset );
-#endif
+	if( big_endian() ){
+		h.size = swizzle32( h.size );
+		h.offset = swizzle32( h.offset );
+	}
 
 	/* get dib header */
 	ret = read( fd, &d, sizeof(d) );
@@ -352,17 +363,17 @@ int main( int argc, char *argv[] )
 		exit_err_mess("Error reading dib header");
 
 	/* swizzle its fields */
-#ifndef LITTLE_ENDIAN
-	d.size = swizzle32( d.size );
-	d.width = swizzle32( d.width );
-	d.height = swizzle32( d.height );
-	d.planes = swizzle16( d.planes );
-	d.bpp = swizzle16( d.bpp );
-	d.comp = swizzle32( d.comp );
-	d.dsize = swizzle32( d.dsize );
-	/* -- skip swizzling some unused data -- */
-	d.colors = swizzle32( d.colors );
-#endif
+	if( big_endian() ){
+		d.size = swizzle32( d.size );
+		d.width = swizzle32( d.width );
+		d.height = swizzle32( d.height );
+		d.planes = swizzle16( d.planes );
+		d.bpp = swizzle16( d.bpp );
+		d.comp = swizzle32( d.comp );
+		d.dsize = swizzle32( d.dsize );
+		/* -- skip swizzling some unused data -- */
+		d.colors = swizzle32( d.colors );
+	}
 
 	/* get pallete table */
 	if( lseek( fd, sizeof(h)+d.size, SEEK_SET ) < 0 )
