@@ -69,22 +69,18 @@ uint8_t devsd_transfer_sector(void)
 	while (sd_reg_ctl != SD_IDLE_STAT) {
 	}
 
-	/* [NAC HACK 2016May11] should not need this but real hardware seems
-	   to need something here even tho CUBIX FORTH NITROS9 FLEX all work
-	   without it and with seemingly equivalent code
-	*/
-	for (i=0; i<1000; i++) {
-		tmp = sd_reg_ctl;
-	}
-
 	/* load up block address. It's stored as a 32-bit value but we
 	   ignore the MS byte because the SD controller only has a
-	   24-bit address range
+	   24-bit address range.
+           The hardware seems a bit fussy about having the addresses sent
+           in this order (lba0..lba2). With them send lba2 first, a
+           delay loop was needed between the sr_reg_ctl poll and the lba2
+           write in order to work on real hardware.
 	*/
  	ptr=((uint8_t *)(&blk_op.lba))+1;
-	sd_reg_lba2 = ptr[0]; /* MS byte of 24-bit block address */
-	sd_reg_lba1 = ptr[1];
 	sd_reg_lba0 = ptr[2];
+	sd_reg_lba1 = ptr[1];
+	sd_reg_lba2 = ptr[0]; /* MS byte of 24-bit block address */
 
 
 	/* send the command and set up the subroutine pointer */
