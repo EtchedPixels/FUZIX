@@ -69,9 +69,9 @@ SRC_CURS = $(shell find curses -name '*.c')
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_CURS) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0)
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
@@ -103,6 +103,9 @@ liberror.txt: ../tools/liberror
 
 ../tools/liberror: ../tools/liberror.c
 	make -C .. tools/liberror
+
+curses$(PLATFORM).lib: $(OBJ_CURS)
+	$(AR) -c curses$(PLATFORM).lib $(OBJ_CURS)
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
