@@ -108,7 +108,7 @@ SRCS  = \
 	write.c \
 	xargs.c
 
-SRCSM = tget.c
+SRCTC = tget.c
 
 SKIPPED = \
 	tiddles.c \
@@ -116,13 +116,13 @@ SKIPPED = \
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
-OBJM = $(SRCSM:.c=.o)
+OBJTC = $(SRCTC:.c=.o)
 
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
-APPM = $(OBJM:.o=)
+APPTC = $(OBJTC:.o=)
 
-all: $(APPS) $(APPSNS) $(APPM) size.report
+all: $(APPS) $(APPSNS) $(APPTC) size.report
 
 $(APPS): $(CRT0)
 $(APPSNS): $(CRT0NS)
@@ -130,8 +130,8 @@ $(APPSNS): $(CRT0NS)
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $^
 
-$(APPM): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) -lm $^
+$(APPTC): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) -ltermcap6809 $^
 
 size.report: $(APPS) $(APPSNS)
 	ls -l $^ > $@
