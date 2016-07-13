@@ -23,6 +23,14 @@ decb from the toolshed project: http://sourceforge.net/projects/toolshed/
 lwtools from William Astle: http://lwtools.projects.l-w.ca/
 gcc6809: http://toolshed.sourceforge.net/gcc/
 
+The gcc6809 tools are a patch based on gcc 4.6.  The patch and emulated
+ar/as/ld commands can be found at:
+
+http://lwtools.projects.l-w.ca/hg/index.cgi/file/a3711f5ac569/extra
+
+A full set of tools, assembled and ready to go:
+
+https://launchpad.net/~tormodvolden/+archive/ubuntu/m6809
 
 
 *************************
@@ -98,6 +106,7 @@ make -C Library/libs -f Makefile.6809 TARGET=coco3
 
 # 3. Build the utils
 make -C Applications/util -f Makefile.6809 TARGET=coco3
+make -C Applications/V7/cmd/sh -f Makefile.6809 TARGET=coco3
 
 # 4. Build disk tools
 make -C Standalone
@@ -106,7 +115,51 @@ make -C Standalone
 cd Standalone/filesystem-src
 ./build-filesystem -X fuzix.dsk 256 65535
 
+(Note that Kernel/platform-coco3/build is a script which
+basically does all this, including pre-cleaning previous
+builds output.)
 
+*************************
+NOTES ON USING MAME
+*************************
+
+Drivewire emulation is the old Coco3 serial line protocol, now
+run over a TCP connection.  It lets the Coco3 access disk blocks
+by sending requests out its serial port, and having some external
+(presumable, bigger) machine access its disks and send back
+results.  FUZIX will boot with a DOS boot disk at drive 0, and
+the FUZIX filesystem as drive 1.  Both of them are actually
+served from the "outside", via Drivewire.
+
+Your goal is to run a Drivewire server on your host machine, with MAME
+accessing the two FUZIX disk images you've built.  Your Coco3 runs
+on MAME, and when your Coco3 OS (FUZIX!) makes a Drivewire access,
+MAME turns it into bytes on a TCP connection to that Drivewire
+server.
+
+You will need MAME (Multi Arcade Machine eMulator) of a fairly
+modern vintage; Drivewire emulation was added in 0.156 (Debian
+Jessie, for instance, only has 0.154).  Check under "Machine
+Configuration" to see if there is a "Becker Port" configuration
+option, and make sure it's enabled.
+
+A Drivewire enabled Coco3 model has been added to MAME;
+if you start MAME as "mame coco3dw1" it will try to start HDB-DOS
+with Drivewire support.  The boot ROM files are in coco3dw1.zip,
+an archive easily found via a search engine.
+
+Before starting your emulated Coco3,
+start up your Drivewire server with Kernel/platform-coco3/fuzix.dsk
+as drive 0, and Standalone/filesystem-src/fuzixfs.dsk as drive 1.
+With any luck, you'll see a progress bar as FUZIX loads, and then
+the FUZIX kernel will start up, running from that second (larger)
+dsk image.
+
+There are Drivewire servers out there, some quite powerful.
+If you need a quick-n-dirty Drivewire server, one of the FUZIX
+enthusiasts has a simple Python based one available:
+
+    https://github.com/vandys/pydw
 
 *************************
 DONE
