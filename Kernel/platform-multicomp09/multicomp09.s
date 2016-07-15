@@ -22,9 +22,9 @@
 ;;; $ffb0   video colour
 
 ;;; coco3 MMU
-;;; accessed through registers $ff91 and $ffa0-$ffa7
+;;; accessed through registers $ff91 and $ffa0-$ffaf
 ;;; 2 possible memory maps: map0, map1 selected by $ff91[0]
-;;; map0 is used for Kernel mode, map1 is used for User mode.
+;;; map0 is used for User mode, map1 is used for Kernel mode.
 ;;; map1 is selected at boot (ie, now).
 ;;; when 0, select map0 using pages stored in $ffa0-$ffa7
 ;;; when 1, select map1 using pages stored in $ffa8-$ffaf
@@ -35,11 +35,10 @@
 ;;; multicomp09 MMU
 ;;; accessed through two WRITE-ONLY registers MMUADR, MMUDAT
 ;;; 2 possible memory maps: map0, map1 selected by MMUADR[6]
-;;; map0 is used for Kernel mode, map1 is used for User mode.
+;;; map0 is used for User mode, map1 is used for Kernel mode.
 ;;; map0 is selected at boot (ie, now)
-;;; [NAC HACK 2016Apr23] to avoid pointless divergence from
-;;; coco3, the first hardware setup step will be to flip to
-;;; map1.
+;;; .. to avoid pointless divergence from coco3, the first
+;;; hardware setup step will be to flip to map1.
 ;;; [NAC HACK 2016Apr23] in the future, may handle this in
 ;;; forth or in the bootstrap
 ;;; when 0, select map0 using MAPSEL values 0-7
@@ -60,64 +59,43 @@
 ;;; registers are selecting blocks 0-7.
 ;;; map1 mapping registers are uninitialised.
 
+	.module multicomp09
 
-;;; multicomp09 HW registers
-MMUADR	equ	$ffde
-MMUDAT	equ	$ffdf
-TIMER   equ     $ffdd
+	; exported symbols
+	.globl init_early
+	.globl init_hardware
+	.globl interrupt_handler
+        .globl _program_vectors
+	.globl map_kernel
+	.globl map_process
+	.globl map_process_always
+	.globl map_save
+	.globl map_restore
+	.globl _need_resched
+	.globl _bufpool
+	.globl _discard_size
+        .globl _krn_mmu_map
+        .globl _usr_mmu_map
+	.globl curr_tr
 
-;;; bit-fields
-MMUADR_ROMDIS	equ $80		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_TR	equ $40		; 0 after reset, 0 when FUZIX boots. 0=map0, 1=map1
-MMUADR_MMUEN	equ $20		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_NMI	equ $10		; 0 after reset, 0 when FUZIX boots. Do not write 1.
-MMUADR_MAPSEL	equ $0f		; last-written value is UNDEFINED.
-;;; the only two useful values for the upper nibble
-MMU_MAP0	equ	(MMUADR_ROMDIS|MMUADR_MMUEN)
-MMU_MAP1	equ	(MMUADR_ROMDIS|MMUADR_MMUEN|MMUADR_TR)
+	; exported debugging tools
+        .globl _trap_monitor
+	.globl _trap_reboot
+        .globl outchar
+	.globl _di
+	.globl _ei
+	.globl _irqrestore
 
-TIMER_ON        equ $02
-TIMER_OFF       equ $00
-TIMER_INT       equ $80
+	; imported symbols
+        .globl _ramsize
+        .globl _procmem
+        .globl unix_syscall_entry
+	.globl nmi_handler
+	.globl null_handler
 
-
-            .module multicomp09
-
-            ; exported symbols
-            .globl init_early
-            .globl init_hardware
-            .globl interrupt_handler
-            .globl _program_vectors
-	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
-	    .globl map_save
-	    .globl map_restore
-	    .globl _need_resched
-	    .globl _bufpool
-	    .globl _discard_size
-            .globl _krn_mmu_map
-            .globl _usr_mmu_map
-	    .globl curr_tr
-
-            ; exported debugging tools
-            .globl _trap_monitor
-	    .globl _trap_reboot
-            .globl outchar
-	    .globl _di
-	    .globl _ei
-	    .globl _irqrestore
-
-            ; imported symbols
-            .globl _ramsize
-            .globl _procmem
-            .globl unix_syscall_entry
-	    .globl nmi_handler
-	    .globl null_handler
-
-            include "kernel.def"
-            include "../kernel09.def"
-
+        include "kernel.def"
+        include "../kernel09.def"
+	include "platform.def"
 
 	.area	.buffers
 
@@ -158,9 +136,9 @@ _need_resched
 ;;; The values of 0-7 set here for _usr_mmu_map reflect how the user mappings
 ;;; are set up when the kernel is started - so don't change them either!
 _krn_mmu_map
-	.db	0,1,2,3,4,5,6,7
+	.db	0,1,2,3,4,5,6,7 ; mmu registers 8-f
 _usr_mmu_map
-	.db	0,1,2,3,4,5,6,7
+	.db	0,1,2,3,4,5,6,7 ; mmu registers 0-7
 
 
 _trap_monitor:
@@ -186,7 +164,8 @@ loop@	lda	,u+
 	;; low memory on reboot to bounce to the reset
 	;; vector.
 bounce@
-	;; [NAC HACK 2016May01] todo
+	;; [NAC HACK 2016May01] todo.. for multicomp need to re-enable the ROM.
+	;; how to test this??
 	lda	#0x06		; reset GIME (map in internal 32k rom)
 	sta  	0xff90
 	clr	0xff91
@@ -262,7 +241,7 @@ init_hardware:
 	;; set up the map1 registers (MAPSEL=8..f) to use pages 0-7
 	;; ..to match the pre-existing setup of map0.
 	;; _krn_mmu_map is set up with the required values.
-	;; while doing this, were careful to keep MMUADR_MAP1 *clear* because we are using
+	;; while doing this, keep TR=0 because we are using
 	;; map0 and don't want to switch the map yet.
 	lda	#(MMU_MAP0|8)	; stay in map0, select 1st mapping register for map1
 	ldx	#MMUADR
@@ -301,8 +280,8 @@ gomap1:	lda	#MMU_MAP1
 atmap1:
 
 
-	;; Multicomp09 has RAM up at the hardware vector positions
-	;; so we can write the addresses directly, 2 bytes per vector;
+	;; Multicomp09 has RAM at the hardware vector positions
+	;; so we can write the addresses directly; 2 bytes per vector:
 	;; no need for a jump op-code.
 	ldx	#0xfff2		; address of SWI3 vector
 	ldy	#badswi_handler
@@ -331,30 +310,30 @@ xinihw:	rts
 ;;;   into the userspace too.
 ;;;   takes: X = page table pointer
 ;;;   returns: nothing
-;;; [NAC HACK 2016May01] but.. X (page table pointer) not used??
-;;; [NAC HACK 2016May01] this can be smaller and tidier. Point to MMUADR and do indexed access.
-;;; [NAC HACK 2016May07] pushes x,u but uses neither. Could be smaller if we used X to point
-;;; to MMUADR... not so!! the indirect access grabs the value of X from the stack.
 _program_vectors:
 	;; copy the common section into user-space
-	pshs	x,u
+	pshs	y
+	ldy	#MMUADR
 
 	;; setup the null pointer / sentinal bytes in low process memory
-	lda	#(MMU_MAP1|8)
-	sta	MMUADR
-        ;; [NAC HACK 2016May07] access stacked X
-	lda	[0,s]	     ; get process's blk address for address 0
-	sta	MMUDAT	     ; put in our mmu ( at address 0 )
+	lda	curr_tr		; Select MMU register associated with
+	ora	#8		; block 8
+	sta	,y
+
+	lda	,x	     	; get process's blk address for address 0
+	sta	1,y		; and put it in MMUDAT
 	lda	#0x7E
 	sta	0
 
 	;; restore the MMU mapping that we trampled on
-	lda	#(MMU_MAP1|8)
-	sta	MMUADR
-	lda	_krn_mmu_map
-	sta	MMUDAT
+	;; MMUADR still has block 8 selected so no need to re-write it.
 
-	puls	pc,x,u	     ; restore reg and return
+	;; retrieve value that used to be in block 8
+	lda	_krn_mmu_map
+	;; and restore it
+	sta	1,y		; MMUDAT
+
+	puls	pc,y	     	; restore reg and return
 
 
 
@@ -366,17 +345,19 @@ badswi_handler:
 
 
 ;;; Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
-;;; All registers preserved
+;;;   takes: nothing
+;;;   returns: nothing
+;;;   modifies: nothing - all registers preserved
 map_process_always:
-	pshs	x,y,u
+	pshs	x
 	ldx	#U_DATA__U_PAGE
 	jsr	map_process_2
-	puls	x,y,u,pc
+	puls	x,pc
 
 ;;; Maps a page table into cpu space
 ;;;   takes: X - pointer page table ( ptptr )
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 map_process:
 	cmpx	#0		; is zero?
 	bne	map_process_2	; no then map process; else: map the kernel
@@ -385,7 +366,7 @@ map_process:
 ;;; Maps the Kernel into CPU space
 ;;;   takes: nothing
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 ;;;	Map in the kernel below the current common, all registers preserved
 map_kernel:
 	pshs	a
@@ -401,7 +382,7 @@ map_kernel:
 ;;; Maps a page table into the MMU
 ;;;   takes: X = pointer to page table
 ;;;   returns: nothing
-;;;   modifies: nothing
+;;;   modifies: nothing - all registers preserved
 map_process_2:
 	pshs	x,y,a,b
 
@@ -409,48 +390,47 @@ map_process_2:
 	ldy	#_usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	0,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	1,y		; copy to usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	2,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	3,y		; copy to usr_mmu_map
 
 	lda	,x+		; get byte from page table
-	sta	,y+		; copy to usr_mmu_map
+	sta	4,y		; copy to usr_mmu_map
 	inca			; increment to get next 8K block
-	sta	,y+		; copy to usr_mmu_map
+	sta	5,y		; copy to usr_mmu_map
 
 	lda	,x+		; bank all but common memory
-	sta	,y		;
+	sta	6,y		;
 
 	;; now, update MMU with those values
 	lda	#(MMU_MAP1|0)	; stay in map1, select mapsel=0
 	ldx	#MMUADR
-	ldy	#_usr_mmu_map	; go back to start [NAC HACK 2016May07] or could use offsets above..
 
 	ldb	,y+   		; page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=8, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=0, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=9, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=1, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=a, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=2, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=b, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=3, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=c, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=4, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=d, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=5, then write B to MMUDAT
 	inca			; next mapsel
 	ldb     ,y+     	; next page from usr_mmu_map
-	std	,x		; Write A to MMUADR to set MAPSEL=e, then write B to MMUDAT
+	std	,x		; Write A to MMUADR to set MAPSEL=6, then write B to MMUDAT
 
 	lda	#MMU_MAP0
 	sta	,x		; new mapping goes live here
@@ -495,11 +475,6 @@ map_for_swap
 	stb	MMUADR		; select second 8K in kernel mapping mapsel=9
 	sta	MMUDAT
 	rts
-
-;;; multicomp09 HW registers
-;;; vdu/virtual UART
-UARTDAT	equ $ffd1
-UARTSTA	equ $ffd0
 
 ;;;  Print a character to debugging
 ;;;   takes: A = character

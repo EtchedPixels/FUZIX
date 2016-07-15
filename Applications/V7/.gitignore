@@ -28,8 +28,8 @@ test
 time
 tsort
 wall
-# from cmd/sh
-sh
+# from cmd/sh/
+cmd/sh/sh
 # from games/
 arithmetic
 backgammon

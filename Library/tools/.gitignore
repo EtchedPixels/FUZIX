@@ -1,4 +1,6 @@
 libclean
 liberror
 syscall
-syscall_*
+syscall_msp430x
+syscall_6502
+syscall_6809

@@ -1,0 +1,46 @@
+;;;
+;;; Hardware definitions for Multicomp 6809 FPGA-based computer
+;;;
+
+;;; [NAC HACK 2016May03] maybe I should define these all as offsets from IOBASE..
+;;; then index any of them from a single register.
+;;; [NAC HACK 2016Jun01] or use the DP register and access them all on the direct page
+
+;;; MMU registers
+MMUADR	equ	$ffde
+MMUDAT	equ	$ffdf
+
+
+
+;;; MMU bit-fields
+MMUADR_ROMDIS	equ $80		; 0 after reset, 1 when FUZIX boots. Leave at 1.
+MMUADR_TR	equ $40		; 0 after reset, 0 when FUZIX boots. 0=map0, 1=map1
+MMUADR_MMUEN	equ $20		; 0 after reset, 1 when FUZIX boots. Leave at 1.
+MMUADR_NMI	equ $10		; 0 after reset, 0 when FUZIX boots. Do not write 1.
+MMUADR_MAPSEL	equ $0f		; last-written value is UNDEFINED.
+;;; the only two useful values for the upper nibble
+MMU_MAP0	equ	(MMUADR_ROMDIS|MMUADR_MMUEN)
+MMU_MAP1	equ	(MMUADR_ROMDIS|MMUADR_MMUEN|MMUADR_TR)
+
+
+
+;;; Timer registers
+TIMER   equ     $ffdd
+
+;;; Timer bit-fields
+TIMER_ON        equ $02
+TIMER_OFF       equ $00
+TIMER_INT       equ $80
+
+
+;;; SD Controller registers
+SDDATA         equ $FFD8
+SDCTL          equ $FFD9
+SDLBA0         equ $FFDA	; not used here
+SDLBA1         equ $FFDB	; not used here
+SDLBA2	       equ $FFDC	; not used here
+
+
+;;; vdu/virtual UART registers
+UARTDAT		equ $ffd1
+UARTSTA		equ $ffd0

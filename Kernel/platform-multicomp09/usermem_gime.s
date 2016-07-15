@@ -2,29 +2,14 @@
 
 ;;;
 ;;;	6809 copy to and from userspace via
-;;;     Color Computer 3 GIME mmu
+;;;     Multicomp09 MMU which imitates a Color Computer 3 GIME mmu
 ;;;
-
-;;; multicomp09 HW registers
-;;; [NAC HACK 2016May03] maybe I should define these all as offsets from IOBASE..
-;;; then index any of them from a single register.
-MMUADR	equ	$ffde
-MMUDAT	equ	$ffdf
-
-;;; bit-fields
-MMUADR_ROMDIS	equ $80		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_TR	equ $40		; 0 after reset, 0 when FUZIX boots. 0=map0, 1=map1
-MMUADR_MMUEN	equ $20		; 0 after reset, 1 when FUZIX boots. Leave at 1.
-MMUADR_NMI	equ $10		; 0 after reset, 0 when FUZIX boots. Do not write 1.
-MMUADR_MAPSEL	equ $0f		; last-written value is UNDEFINED.
-;;; the only two useful values for the upper nibble
-MMU_MAP0	equ	(MMUADR_ROMDIS|MMUADR_MMUEN)
-MMU_MAP1	equ	(MMUADR_ROMDIS|MMUADR_MMUEN|MMUADR_TR)
 
 	include "kernel.def"
         include "../kernel09.def"
+        include "platform.def"
 
-	;; window xfer treshhold - any user/krn space xtfers
+	;; window xfer threshhold - any user/krn space xtfers
 	;; bigger than this will be routed to the banking/windowing
 	;; transfers, rather than the original slower routines
 WINTR	equ	256		; window xfer threshold
@@ -224,7 +209,6 @@ a@	std	,u
 ;;; remapping the mmu, copies those bytes, *then* re-computes the
 ;;; mmu banking and repeats until all bytes are transfered.
 ;;;
-;;; assume: map0 (kernel map) is in use.
 ;;; "borrow" the low 4 kernel MMU mappings; treating them as 2, 16K
 ;;; windows, map kernel space into the lower and user space into the
 ;;; upper, then copy from one to the other. At the end of the routine,
@@ -258,14 +242,16 @@ b@	ldd	krn		; calc max byte copyable from source
 	;;
 	;;
 	;;
-	ldb	#(MMU_MAP1|8)
+	ldb	curr_tr
+	orb	#8
 	stb	0,y		; MMUADR set mapsel=8
 	;;
 	ldb	a,x		; get mmu entry
 	stb	1,y		; MMUDAT store in mmu
         ;;
 	;;
-	ldb	#(MMU_MAP1|9)
+	ldb	curr_tr
+        orb     #9
 	stb	0,y		; MMUADR set mapsel=9
 	;;
         inca                    ; increment index [NAC HACK 2016May07] or a,x+ above and omit this??
@@ -283,14 +269,16 @@ b@	ldd	krn		; calc max byte copyable from source
 	anda	#3		; mask off junk [NAC HACK 2016May03] why not 7??
 	ldx	#U_DATA__U_PAGE	; X = ptr to user page table
 	;;
-	ldb	#(MMU_MAP1|10)
+	ldb	curr_tr
+        orb     #10
 	stb	0,y		; MMUADR set mapsel=10
 	;;
 	ldb	a,x		; B = page table entry
 	stb	1,y		; MMUDAT store in MMU
 	incb			; increment for next page no [NAC HACK 2016May03] coz we use page pairs?
 	;;
-	lda	#(MMU_MAP1|11)	; use A because B is busy this time
+	lda     curr_tr	        ; use A because B is busy this time
+	ora     #11
 	sta	0,y		; MMUADR set mapsel=11
 	;;
 	stb	1,y		; MMUDAT store in mmu
@@ -312,7 +300,8 @@ a@	lda	,u+		; get a byte
 	;; clean up kernel mmu's for next mapping or returning
 	ldx	#MMUADR
 	ldy	#_krn_mmu_map
-	lda	#(MMU_MAP1|8)
+	lda	curr_tr		; Select MMU register associated with
+        ora     #8              ; mapsel=8
         ldb     ,y+             ; page from _krn_mmu_map
         std     ,x              ; Write A to MMUADR to set MAPSEL=8, then write B to MMUDAT
         inca                    ; next mapsel
@@ -339,4 +328,3 @@ a@	lda	,u+		; get a byte
 	;; return
 	ldx 	#0		; return #0 - success
 	puls 	u,y,cc,pc	; return
-
