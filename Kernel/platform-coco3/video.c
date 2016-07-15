@@ -165,7 +165,7 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 			break;
 		}
 		l -= 8;
-		if (p[0] > 191 || p[1] > 31 || p[2] > 191 || p[3] > 31 ||
+		if (p[0] > 191 || p[1] > 31 || p[2] > 192 || p[3] > 32 ||
 		    p[0] + p[2] > 192 || p[1] + p[3] > 32 ||
 		    (p[2] * p[3]) > l) {
 			err = -EFAULT;
