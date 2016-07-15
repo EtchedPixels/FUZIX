@@ -97,7 +97,6 @@ SRCS  = \
 	tar.c \
 	tail.c \
 	termcap.c \
-	tget.c \
 	umount.c \
 	uniq.c \
 	uptime.c \
@@ -109,23 +108,30 @@ SRCS  = \
 	write.c \
 	xargs.c
 
+SRCTC = tget.c
+
 SKIPPED = \
 	tiddles.c \
 
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
+OBJTC = $(SRCTC:.c=.o)
 
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
+APPTC = $(OBJTC:.o=)
 
-all: $(APPS) $(APPSNS) size.report
+all: $(APPS) $(APPSNS) $(APPTC) size.report
 
 $(APPS): $(CRT0)
 $(APPSNS): $(CRT0NS)
 
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $^
+
+$(APPTC): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) -ltermcap6809 $^
 
 size.report: $(APPS) $(APPSNS)
 	ls -l $^ > $@
