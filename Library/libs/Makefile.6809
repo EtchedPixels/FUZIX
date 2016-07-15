@@ -3,7 +3,7 @@ ASM = m6809-unknown-as
 AR = m6809-unknown-ar
 PLATFORM = 6809
 export PLATFORM
-CC_OPT = -c -Os -I../include -I../include/6502
+CC_OPT = -c -Os -I../include -I../include/6809
 # for stuff that gives gcc nightmares
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -o
