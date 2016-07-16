@@ -23,6 +23,9 @@
 _devsd_write
 	pshs	y
 	ldy	#512		; 512 bytes
+        tst     _blk_op+2       ; test user/kernel xfer
+        beq     WrBiz           ; if zero then stay in kernel space
+        jsr     map_process_always ; else flip to user space
 WrBiz	lda	SDCTL
 	cmpa	#$a0
 	bne	WrBiz		; space not available
@@ -30,7 +33,8 @@ WrBiz	lda	SDCTL
 	sta	SDDATA		; store to SD
 	leay	-1,y
 	bne	WrBiz		; next
-	puls	y,pc
+        puls    y
+        jmp     map_kernel      ; reset to kernel space (tail optimise)
 
 
 ;;; Read 512 bytes from SDC
@@ -43,6 +47,9 @@ WrBiz	lda	SDCTL
 _devsd_read
 	pshs	y
 	ldy	#512		; 512 bytes
+        tst     _blk_op+2       ; test user/kernel xfer
+        beq     RdBiz           ; if zero then stay in kernel space
+        jsr     map_process_always ; else flip to user space
 RdBiz	lda	SDCTL
 	cmpa	#$e0
 	bne	RdBiz		; byte not available
@@ -50,4 +57,5 @@ RdBiz	lda	SDCTL
 	sta	,x+		; store byte in sector buffer
 	leay	-1,y
 	bne	RdBiz		; next
-	puls	y,pc
+        puls    y
+        jmp     map_kernel      ; reset to kernel space (tail optimise)
