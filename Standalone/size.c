@@ -3,17 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int bufpair(unsigned char *p, int n)
+static unsigned int
+bufpair(int bigend, unsigned char *p, int n)
 {
-  return p[n] + 256 *p[n+1];
+  if (bigend) {
+    /* mc6809, big endian */
+    return (p[n] << 8) | p[n+1];
+  }
+  return p[n] | (p[n+1] << 8);
 }
 
 int main(int argc, char *argv[])
 {
   FILE *fp;
   unsigned char buf[16];
-  int basepage;
-  int n;
+  unsigned int basepage;
+  int n, endian;
+  unsigned int txtsz, datsz, bsssz;
 
   if (argc < 2) {
     fprintf(stderr, "%s [executable]\n", argv[0]);
@@ -29,21 +35,39 @@ int main(int argc, char *argv[])
       fprintf(stderr, "%s: too short ?\n", argv[0]);
       exit(1);
     }
-    if (buf[0] != 0xC3 || buf[3] != 'F' || buf[4] != 'Z'|| buf[5] != 'X' ||
-      buf[6] != '1') {
-      fprintf(stderr, "%s: not a Fuzix binary format.\n", argv[1]);
-      exit(1);
+
+    basepage = 0;
+    if (buf[0] == 0xC3) {
+	/* Z-80 */
+	endian = 0;
+	basepage = buf[7] << 8;
+    } else if (buf[0] == 0x7E) {
+	/* 6809 */
+	endian = 1;
+    } else {
+	endian = -1;
+    }
+    if ((endian == -1) ||
+	    (buf[3] != 'F') ||
+	    (buf[4] != 'Z') ||
+	    (buf[5] != 'X') ||
+	    (buf[6] != '1')) {
+	fprintf(stderr, "%s: not a Fuzix binary format.\n", argv[1]);
+	exit(1);
     }
     fclose(fp);
-    basepage = buf[7] << 8;
     printf(" base text data  bss   size  hex filename\n");
+
+    /* Text, data, BSS */
+    txtsz = bufpair(endian, buf, 10) - basepage;
+    datsz = bufpair(endian, buf, 12) - basepage;
+    bsssz = bufpair(endian, buf, 14);
+
     printf("%5x%5x%5x%5x%7d%5x %s\n",
       basepage,
-      bufpair(buf, 10) - basepage,
-      bufpair(buf, 12) - bufpair(buf, 10) - basepage,
-      bufpair(buf, 14),
-      bufpair(buf, 14) + bufpair(buf, 12) - basepage,
-      bufpair(buf, 14) + bufpair(buf, 12) - basepage,
+      txtsz, datsz, bsssz,
+      txtsz+datsz+bsssz,
+      txtsz+datsz+bsssz,
       argv[n]);
   }
   exit(0);
