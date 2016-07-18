@@ -87,10 +87,13 @@ int primary(LVALUE *lval) {
             }
             return FETCH | reg;
         }
-        /* Globals and anything we can directly access */
+
+	/* Globals, function names */
+	lval->symbol = symbol;
+	lval->indirect = 0;
         if (symbol->identity != FUNCTION) {
-            lval->symbol = symbol;
-            lval->indirect = 0;
+
+	    /* Globals and anything we can directly access */
             if (symbol->type == STRUCT) {
                 lval->tagsym = &tag_table[symbol->tagidx];
             }
@@ -102,17 +105,21 @@ int primary(LVALUE *lval) {
                 return FETCH | HL_REG;
             }
 
-            if (symbol->storage == LSTATIC)
+            if (symbol->storage == LSTATIC) {
                 gen_get_locale(symbol);
-            else {
+            } else {
                 gen_immediate();
                 output_string(symbol->name);
                 newline();
             }
             lval->indirect = symbol->type;
             lval->ptr_type = symbol->type;
-            return 0;
-        }
+        } else {
+
+	    /* Function call */
+            lval->ptr_type = symbol->type;
+	}
+	return 0;
     }
     lval->symbol = 0;
     lval->indirect = 0;
