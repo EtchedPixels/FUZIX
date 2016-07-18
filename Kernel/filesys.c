@@ -411,17 +411,27 @@ inoptr newfile(inoptr pino, char *name)
     inoptr nindex;
     uint8_t j;
 
+    /* No parent? */
+    if (!pino) {
+        udata.u_error = ENXIO;
+        goto nogood;
+    }
+
     /* First see if parent is writeable */
     if (pino->c_flags & CRDONLY) {
         udata.u_error = EROFS;
         goto nogood;
     }
 
-    if(!(getperm(pino) & OTH_WR))
+    if (!(getperm(pino) & OTH_WR)) {
+        udata.u_error = EPERM;
         goto nogood;
+    }
 
-    if(!(nindex = i_open(pino->c_dev, 0)))
+    if (!(nindex = i_open(pino->c_dev, 0))) {
+        udata.u_error = ENFILE;
         goto nogood;
+    }
 
     /* This does not implement BSD style "sticky" groups */
     nindex->c_node.i_uid = udata.u_euid;
@@ -430,12 +440,14 @@ inoptr newfile(inoptr pino, char *name)
     nindex->c_node.i_mode = F_REG;   /* For the time being */
     nindex->c_node.i_nlink = 1;
     nindex->c_node.i_size = 0;
-    for(j=0; j <20; j++)
+    for (j = 0; j < 20; j++) {
         nindex->c_node.i_addr[j] = 0;
+    }
     wr_inode(nindex);
 
-    if(!ch_link(pino, "", name, nindex)) {
+    if (!ch_link(pino, "", name, nindex)) {
         i_deref(nindex);
+	/* ch_link sets udata.u_error */
         goto nogood;
     }
     i_deref(pino);
