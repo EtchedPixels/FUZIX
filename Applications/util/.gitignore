@@ -2,11 +2,12 @@
 *
 
 # ..except source files
-!*.c
+!*.[chl]
 
 # ..and documentation (including man pages)
 !COPYING
 !README.*
+!INSTALL*
 !*.1
 !*.2
 !*.3
@@ -29,3 +30,6 @@
 
 # ..and .gitignore itself else we don't see when it's been changed.
 !.gitignore
+
+# less
+!less
