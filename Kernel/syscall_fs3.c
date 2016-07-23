@@ -55,24 +55,28 @@ arg_t _open(void)
 		/* The n_open failed */
 		if (udata.u_error == EFAULT)
 			goto cantopen;
+
 		/* New file */
 		if (!(flag & O_CREAT)) {
 			udata.u_error = ENOENT;
 			goto cantopen;
 		}
 		filename(name, fname);
+
 		/* newfile drops parent for us */
-		if (parent && (ino = newfile(parent, fname))) {
-			ino->c_node.i_mode =
-			    (F_REG | (mode & MODE_MASK & ~udata.u_mask));
-			setftime(ino, A_TIME | M_TIME | C_TIME);
-			wr_inode(ino);
-		} else {
-			udata.u_error = ENFILE;	/* FIXME, should be set in newfile
-						   not bodged to a guessed code */
+		ino = newfile(parent, fname);
+		if (!ino) {
+			/* on error, newfile sets udata.u_error */
 			goto cantopen;
 		}
+
+		/* new inode, successfully created */
+		ino->c_node.i_mode =
+		    (F_REG | (mode & MODE_MASK & ~udata.u_mask));
+		setftime(ino, A_TIME | M_TIME | C_TIME);
+		wr_inode(ino);
 	}
+
 	/* Book our slot in case we block opening a device */
 	of_tab[oftindex].o_inode = ino;
 
