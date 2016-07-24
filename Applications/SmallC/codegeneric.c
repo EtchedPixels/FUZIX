@@ -710,14 +710,6 @@ void gnargs(int d)
 }
 
 /**
- * print partial instruction to get an immediate value into
- * the secondary register
- */
-void gen_immediate2(void) {
-    output_with_tab ("load r2 ");
-}
-
-/**
  * add offset to primary register
  * @param val the value
  */
