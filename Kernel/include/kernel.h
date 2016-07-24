@@ -588,7 +588,14 @@ struct s_argblk {
 #define SELECT_BEGIN		0x8000
 #define SELECT_END		0x8001
 
-#define IOCTL_SUPER		0x4000	/* superuser needed */
+#define IOCTL_NORMAL		0x0000	/* No special rules */
+#define IOCTL_SUPER		0x4000	/* Superuser needed */
+#define IOCTL_KERNEL		0x8000	/* Kernel side only */
+#define IOCTL_WRONLY		0xC000	/* Write handle needed */
+
+#define IOCTL_CLASS_SUPER	0x40
+#define IOCTL_CLASS_KERNEL	0x80
+#define IOCTL_CLASS_WRONLY	0xC0
 
 /*
  *	Ioctl ranges

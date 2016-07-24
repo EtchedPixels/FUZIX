@@ -251,27 +251,29 @@ arg_t _ioctl(void)
 {
 	inoptr ino;
 	uint16_t dev;
+	uint8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
+	struct oft *oftp;
 
 	if ((ino = getinode(fd)) == NULLINODE)
 		return -1;
 
-	if (!(isdevice(ino))) {
+	oftp = of_tab + udata.u_files[fd];
+
+	if (!(isdevice(ino)) || rclass == IOCTL_CLASS_KERNEL) {
 		udata.u_error = ENOTTY;
 		return -1;
 	}
 
-	if ((request & IOCTL_SUPER) && esuper())
+	if (rclass == IOCTL_CLASS_SUPER && esuper())
 	        return -1;
-
-	if (!(getperm(ino) & OTH_WR)) {
+	if (rclass == IOCTL_CLASS_WRONLY && O_ACCMODE(oftp->o_access) == O_RDONLY) {
 		udata.u_error = EPERM;
 		return -1;
 	}
 
 	dev = ino->c_node.i_addr[0];
 
-	/* top bit of request is reserved for kernel originated magic */
-	return d_ioctl(dev, request & 0x7FFF, data);
+	return d_ioctl(dev, request, data);
 }
 
 #undef fd
