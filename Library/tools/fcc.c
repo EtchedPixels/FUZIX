@@ -227,7 +227,11 @@ static char *rebuildname(const char *r, const char *i, char *ext)
   }
   strcpy(p, r);
   strcat(p, i);
-  t = strrchr(p, '.');
+  t = strrchr(p, '/');
+  if (t)
+    t = strrchr(t, '.');
+  else
+    t = strrchr(p, '.');
   if (t)
     strcpy(t + 1, ext);
   else {
@@ -346,6 +350,17 @@ static int do_command(void)
   }
   return (WEXITSTATUS(status));
 }
+
+/*
+ *	The SDCC tool chain screws up if fed ./foo.o as a target so undo
+ *	any ./ bit
+ */
+static char *undotslash(char *p)
+{
+  if (*p == '.' && p[1] == '/')
+    return p + 2;
+  return p;
+}
     
 /*
  *	Stitch together an sdcc command.
@@ -432,7 +447,7 @@ static void build_command(void)
       fprintf(stderr, "no target.\n");
       exit(1);
     }
-    add_option("-o", target);
+    add_option("-o", undotslash(target));
     if (nostdio)
       snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0nostdio%s.rel", platform);
     else
