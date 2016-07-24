@@ -157,11 +157,6 @@ int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
     if (request != BLKFLSBUF)
 	return -1;
 
-    if (!(getperm(ino) & OTH_WR)) {
-	udata.u_error = EPERM;
-	return -1;
-    }
-
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk_op.blkdev = &blkdev_table[minor >> 4];
 

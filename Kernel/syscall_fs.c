@@ -263,6 +263,10 @@ arg_t _ioctl(void)
 	if ((request & IOCTL_SUPER) && esuper())
 	        return -1;
 
+	if (!(getperm(ino) & OTH_WR)) {
+		udata.u_error = EPERM;
+		return -1;
+	}
 
 	dev = ino->c_node.i_addr[0];
 
