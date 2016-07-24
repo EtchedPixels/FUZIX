@@ -86,7 +86,7 @@ static char symofchar[256] =	/* table to convert chars to their symbols */
     WHITESPACE, WHITESPACE, WHITESPACE, WHITESPACE
 };
 
-static void intconst P((void));
+static void intconst(void);
 
 void context_hexconst(void)
 {

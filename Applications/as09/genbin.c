@@ -27,7 +27,7 @@ static offset_t binmin;	/* minimum value of binmbuf for pass 1 */
 #define PT offset_t
 #endif
 
-static void putbinoffset P((offset_t offset, count_t size));
+static void putbinoffset(offset_t offset, count_t size);
 
 /* write header to binary file */
 
@@ -214,18 +214,7 @@ void putbin(opcode_pt ch)
 	    else
 #endif
 	    {
-#ifdef MSDOS
-static PT zapptr = 0;
-#endif
 		outfd = binfil;
-#ifdef MSDOS
-		while (binfbuf < (PT)binmbuf && binfbuf >= zapptr+binmin)
-		{
-		    writec(0);
-		    ++binfbuf;
-		    ++zapptr;
-		}
-#endif
 		if( binfbuf != (PT)binmbuf)
 		    if( lseek(binfil, (long)((PT)binmbuf-binfbuf), 1) < 0 )
 			error(BWRAP);
@@ -256,6 +245,7 @@ static void putbinoffset(offset_t offset, count_t size)
 {
     char buf[sizeof offset];
 
+    /* FIXME: implies our binary format depends on stuff we don't want it to ? */
 #if SIZEOF_OFFSET_T > 0x2
     u4cn(buf, offset, size);
 #else

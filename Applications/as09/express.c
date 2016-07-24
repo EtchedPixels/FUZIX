@@ -8,12 +8,12 @@
 #include "scan.h"
 #include "source.h"
 
-static void experror P((char * err_str));
-static void expundefined P((void));
-static void simple2 P((void));
-static void simple P((void));
-static void term P((void));
-static void factor2 P((void));
+static void experror(char * err_str);
+static void expundefined(void);
+static void simple2(void);
+static void simple(void);
+static void term(void);
+static void factor2(void);
 
 void absexpres(void)
 {
