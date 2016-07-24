@@ -1399,7 +1399,7 @@ static int fuzix_mkdir(char *name, int mode)
 		return (-1);
 	}
 
-	if (parent->c_node.i_nlink == 0xFFFF) {
+	if (swizzle16(parent->c_node.i_nlink) == 0xFFFF) {
 		udata.u_error = EMLINK;
 		goto nogood2;
 	}
@@ -1413,16 +1413,17 @@ static int fuzix_mkdir(char *name, int mode)
 	}
 
 	/* Initialize mode and dev */
-	ino->c_node.i_mode = F_DIR | 0200;	/* so ch_link is allowed */
+	ino->c_node.i_mode = swizzle16(F_DIR | 0200);	/* so ch_link is allowed */
 	setftime(ino, A_TIME | M_TIME | C_TIME);
 	if (ch_link(ino, "", ".", ino) == 0 ||
 	    ch_link(ino, "", "..", parent) == 0)
 		goto cleanup;
 
 	/* Link counts and permissions */
-	ino->c_node.i_nlink = 2;
-	parent->c_node.i_nlink++;
-	ino->c_node.i_mode = ((mode & ~udata.u_mask) & MODE_MASK) | F_DIR;
+	ino->c_node.i_nlink = swizzle16(2);
+	parent->c_node.i_nlink =
+	    swizzle16(swizzle16(parent->c_node.i_nlink) + 1);
+	ino->c_node.i_mode = swizzle16(((mode & ~udata.u_mask) & MODE_MASK) | F_DIR);
 	i_deref(parent);
 	wr_inode(ino);
 	i_deref(ino);
