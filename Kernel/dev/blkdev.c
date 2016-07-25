@@ -84,29 +84,25 @@ static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
     switch(rawflag){
         case 0:
             /* read single 512-byte sector to buffer in kernel memory */
-            blk_op.nblock = 1;
-            blk_op.lba = udata.u_buf->bf_blk;
-            blk_op.addr = udata.u_buf->bf_data;
             break;
         case 1:
             /* read some number of 512-byte sectors directly to user memory */
-            blk_op.nblock = (udata.u_count >> BLKSHIFT);
-            if((udata.u_count | (uint16_t)udata.u_offset) & BLKMASK)
-                panic("blkdev: not integral");
-            blk_op.lba = (udata.u_offset >> BLKSHIFT);
-            blk_op.addr = udata.u_base;
+            if (d_blkoff(BLKSHIFT))
+                return -1;
             break;
 #ifdef SWAPDEV
         case 2:
-            blk_op.nblock = swapcnt >> BLKSHIFT;
-            blk_op.lba = swapblk;
-            blk_op.addr = swapbase;
             blk_op.swap_page = swappage;
             break;
 #endif
         default:
             goto xferfail;
     }
+    /* FIXME: these should go away now but we need to make u_block some
+       kind of raw blkno_t that can be 32bit optionally */
+    blk_op.nblock = udata.u_nblock;
+    blk_op.lba = udata.u_block;
+    blk_op.addr = udata.u_dptr;
 
     if(partition == 0){
 	/* partition 0 is the whole disk and requires no translation */
@@ -130,7 +126,7 @@ static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
 	blk_op.lba += n;
     }
 
-    return count; /* 10/10, would transfer sectors again */
+    return count << BLKSHIFT; /* 10/10, would transfer sectors again */
 xferfail:
     udata.u_error = EIO;
     return -1;
