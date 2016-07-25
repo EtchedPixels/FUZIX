@@ -98,7 +98,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 * Dragon64 - in progress to see how small we can go
 * Dragon Nx32 - Dragon with Tormod's memory expansion card (SPInx)
 * Epson PX4/4Plus - WIP port to a very early Z80 laptop
-* Memotech MTX512 - boots to userspace in emulation, some small details need fixing to boot on real hardware
+* Memotech MTX512 - boots to userspace in emulation, should run on real hardware
 * MSP430FR5969 - decent functionality; see Documentation/MSP430FR5969.md
 * MSX - basic functionality
 * Multicomp09 - decent functionality. This is an FPGA 6809 system extended from the design by Grant Searle.
