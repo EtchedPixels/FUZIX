@@ -447,6 +447,13 @@ typedef struct u_data {
     inoptr	u_root;		/* Index into inode table of / */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
     inoptr	u_ctty;		/* Controlling tty */
+
+    /* Temporaries used for block I/O */
+    blkno_t	u_block;	/* Block number */
+    uint16_t	u_blkoff;	/* Offset in block */
+    uint16_t	u_nblock;	/* Number of blocks */
+    uint8_t	*u_dptr;	/* Address for I/O */
+
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
     uint8_t	u_ngroup;
@@ -735,6 +742,7 @@ extern int d_open(uint16_t dev, uint8_t flag);
 extern int d_close(uint16_t dev);
 extern int d_ioctl(uint16_t dev, uint16_t request, char *data);
 extern int d_flush(uint16_t dev);
+extern int d_blkoff(uint8_t bits);
 extern int cdwrite(uint16_t dev, uint8_t flag);
 extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
@@ -843,9 +851,6 @@ extern int _select(void);
 
 /* swap.c */
 extern uint16_t swappage;
-extern uint8_t *swapbase;
-extern unsigned int swapcnt;
-extern blkno_t swapblk;
 
 extern int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
                     uint16_t buf, uint16_t page);
