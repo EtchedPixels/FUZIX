@@ -49,7 +49,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     cmd[6] = page >> 8;
     cmd[7] = page & 0xFF;
         
-    while (ct < udata.u_nblock) {
+    while (ct++ < udata.u_nblock) {
         for (tries = 0; tries < 4 ; tries++) {
             /* kprintf("dw_operation block %d left %d\n", block, nblock); */
             irq = di(); /* for now block interrupts for whole operation */
