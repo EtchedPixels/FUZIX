@@ -344,6 +344,7 @@ interrupt_return:
             rti
 interrupt_return_x:
 	    tfr x,s
+	    jsr	map_restore
 	    bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
@@ -584,10 +585,22 @@ ___ashrsi3:
 	ldu 6,s
 	stu 2,x
 	ldb 9,s
-	;; FIXME: insert 16 and 8 optimization here
-	;; remember to propigate top bit for signage
+	;; FIXME: insert 16 optimization here
+	;; remember to propagate top bit for signage
+try_8@	cmpb	#8
+	blo 	try_rest@
+	subb	#8
+	ldu	1,x		; shift what we can down by 1 byte
+	stu	2,x
+	lda	,x
+	sta	1,x
+	clr	,x		; default top byte to positive
+	tst	1,x		; test old msb for sign
+	bpl     try_8@		; go try another 8 shifts
+	dec	,x		; dec to make top byte negative
+	bra	try_8@		; go try another 8 shifts
 try_rest@
-	tstb			; redunant until optimizations are added
+	tstb		
 	beq	done@
 do_rest@
 	; Shift by 1
