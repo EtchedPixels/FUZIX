@@ -17,6 +17,7 @@
 	.globl	_ashrhi3
 	.globl	_lshrhi3
 	.globl	___ashlsi3
+	.globl  ___ashrsi3
 	.globl	_swab
 
 	; debugging aids
@@ -572,6 +573,34 @@ _ashlhi3_1:
 _ashlhi3_2:
 	puls	x,pc
 
+
+
+___ashrsi3:
+	pshs	u
+	; FIXME temporary hack until we fix gcc-6809 or our use of it
+	; the argument passing doesn't match so we'll mangle it
+	ldu 4,s
+	stu ,x
+	ldu 6,s
+	stu 2,x
+	ldb 9,s
+	;; FIXME: insert 16 and 8 optimization here
+	;; remember to propigate top bit for signage
+try_rest@
+	tstb			; redunant until optimizations are added
+	beq	done@
+do_rest@
+	; Shift by 1
+	asr	,x
+	ror	1,x
+	ror	2,x
+	ror	3,x
+	decb
+	bne	do_rest@
+done@
+	puls	u,pc
+
+	
 ___ashlsi3:
 	pshs	u
 
