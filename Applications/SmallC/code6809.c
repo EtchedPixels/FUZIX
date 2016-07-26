@@ -2,6 +2,9 @@
 #include "defs.h"
 #include "data.h"
 
+int nextreg = 0;
+int regv[8];
+
 /*
  *      Some predefinitions:
  *
@@ -121,7 +124,15 @@ void output_immediate(int num) {
 
 static void describe_access(SYMBOL *sym)
 {
-    if (sym->storage == LSTATIC)
+    if (sym->storage == REGISTER) {
+        if (sym->offset < 2)
+            output_byte("uy"[sym->offset]);
+        else {
+            output_string("_reg");
+            output_number(sym->offset);
+        }
+    }
+    else if (sym->storage == LSTATIC)
         print_label(sym->offset);
     else if (sym->storage == AUTO || sym->storage == DEFAUTO) {
         output_number(sym->offset - stkp);
@@ -145,8 +156,16 @@ void gen_get_memory(SYMBOL *sym) {
         describe_access(sym);
         output_line("clr a");
     } else {
-        output_with_tab ("ldd ");
-        describe_access(sym);
+        /* Annoying special case */
+        if (sym->storage == REGISTER && sym->offset < 2) {
+            output_with_tab("tfr ");
+            output_byte("uy"[sym->offset]);
+            output_string(",d");
+            newline();
+        } else {
+            output_with_tab ("ldd ");
+            describe_access(sym);
+        }
     }
 }
 
@@ -176,6 +195,19 @@ int gen_get_locale(SYMBOL *sym) {
  * @param sym
  */
 void gen_put_memory(SYMBOL *sym) {
+    int reg = 0;
+
+    /* FIXME: for now we only do 16bit values in reg so we avoid the
+       tfr b,x problem */
+    if (sym->storage == REGISTER && sym->offset < 2)
+        reg = 1;
+
+    if (reg) {
+        output_with_tab("tfr d,");
+        output_byte("uy"[sym->offset]);
+        newline();
+        return;
+    }
     if ((sym->identity != POINTER) && (sym->type & CCHAR))
         output_with_tab ("stb ");
     else
@@ -208,6 +240,7 @@ void gen_get_indirect(char typeobj, int reg) {
             output_line("ldb ,x");
         else {
             /* TODO work out what we can damage here */
+            /* Can we avoid using ,u ?? */
             output_line("tfr d,u");
             output_line("ldb ,u");
         }
@@ -217,8 +250,9 @@ void gen_get_indirect(char typeobj, int reg) {
         if (reg & DE_REG)
             output_line("ldd ,x");	/* Can't happen ?? */
         else {
-            output_line("tfr d,u");
-            output_line("ldd ,u");
+            output_line("exg d,x");
+            output_line("ldx ,x");
+            output_line("exg d,x");
         }
     }
 }
@@ -270,9 +304,14 @@ void gen_pop(void) {
 }
 
 /**
- * swap the primary register and the top of the stack
+ * swap the primary register and the top of the stack. Used when we
+ * call a function as a variable.
+ *
+ * FIXME: probably want a gen_call_indirect so targets can do sane things
  */
 void gen_swap_stack(void) {
+    /* FIXME: if we can get rid of u register stuff we can get two
+       register variables */
     output_line("ldu ,s");
     output_line("std ,s");
     output_line("tfr u,d");
@@ -299,10 +338,37 @@ void declare_entry_point(char *symbol_name) {
 
 void gen_prologue(void)
 {
+    nextreg = 0;
 }
 
 void gen_epilogue(void)
 {
+    int i;
+    /* FIXME: usual case we can pop these in this order need to spot the
+       sp position and optimize accordingly */
+    for (i = nextreg - 1; i >= 2; i--) {
+        if (stkp == regv[i]) {
+            stkp += 2;
+            output_line("puls x");
+        } else {
+            output_with_tab("ldx ");
+            output_number(stkp - i);
+            output_string(",s");
+            newline();
+        }
+        output_with_tab("stx _reg");
+        output_number(i);
+        newline();
+    }
+    /* FIXME: need to adjust the stack if there is cruft in the way */
+    if (nextreg > 1) {
+        output_line("puls y,u");
+        stkp + 4;
+    }
+    else if (nextreg) {
+        output_line("puls y");
+        stkp += 2;
+    }
 }
 
 /**
@@ -398,6 +464,27 @@ int gen_defer_modify_stack(int newstkp)
     defer += newstkp - stkp;
     return newstkp + defer;
 }
+
+int gen_register(int vp, int size, int typ)
+{
+    if (size != 2)
+        return -1;
+    if (nextreg > 8)
+        return -1;
+    stkp = stkp - 2;
+    regv[nextreg] = stkp;
+    if (nextreg > 1) {
+        output_with_tab("ldy _reg");
+        output_number(nextreg);
+        newline();
+    }
+    if (nextreg == 1)
+        output_line("pshs y");
+    else
+        output_line("pshs u");
+    return nextreg++;
+}
+
 
 /**
  * multiply the primary register by INTSIZE
@@ -725,6 +812,8 @@ char *inclib(void) {
  */
 void gnargs(int d)
 {
+    /* u is a register variable but it is saved before a call and we just
+       need to do something clever on entry if using register variables */
     output_with_tab ("ldu ");
     output_immediate(d);
     newline ();
@@ -769,4 +858,12 @@ void gen_multiply(int type, int size) {
         default:
             break;
     }
+}
+
+/**
+ * To help the optimizer know when r1/r2 are discardable
+ */
+void gen_statement_end(void)
+{
+    output_line(";end");
 }

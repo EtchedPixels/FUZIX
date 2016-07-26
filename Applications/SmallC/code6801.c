@@ -2,6 +2,12 @@
 #include "defs.h"
 #include "data.h"
 
+int nextreg = 0;
+int xdirty = 0;
+int xsprel = 0;
+int xtype = 0;	/* 0 = D, 1 = S */
+int regv[8];
+
 /*
  *      Some predefinitions:
  *
@@ -13,6 +19,9 @@
  *      a pointer - in fact, the compiler uses INTSIZE for both.
  *
  *	For 6801 we keep the secondary as top of stack as much as possible
+ *
+ *	D holds the accumulator values
+ *	X is used for scratch pointer work
  */
 
 /**
@@ -43,6 +52,7 @@ void initmac(void) {
  * Output internal generated label prefix
  */
 void output_label_prefix(void) {
+    xdirty = 1;
     output_byte('$');
 }
 
@@ -112,6 +122,53 @@ void output_number(int num) {
     output_decimal(num);
 }
 
+static void describe_access(SYMBOL *sym)
+{
+    if (sym->storage == REGISTER) {
+        output_string("<_reg");
+        output_number(sym->offset);
+        newline();
+        return;
+    }
+    if (sym->storage == AUTO || sym->storage == DEFAUTO) {
+        output_decimal(sym->offset - xsprel);
+        output_string(",x");
+    } else if (sym->storage == LSTATIC)
+        print_label(sym->offset);
+    else
+        output_string(sym->name);
+    newline();
+}
+
+static void gen_tsx(int offset)
+{
+//    printf("GENTSX %d [D%d T%d V%d]\n", offset, xdirty, xtype, xsprel);
+    /* Having a valid tsx state isn't good enoguh because it may be that
+       it's out of range of or variable */
+    if (xdirty == 0  && xtype == 1) {
+//        printf("OFFSET %d\n", offset - stkp);
+        /* Ok we have x holding a value of s but it may be out of range */
+        if (offset - xsprel >= 0 && offset - xsprel < 256)
+            return;
+    }
+    output_line("tsx");
+    xdirty = 0;
+    xsprel = stkp;
+    xtype = 1;
+    offset -= stkp;
+    /* Now it gets fun - we might be out of range ? */
+    if (offset > 255) {
+        output_line("pshb");
+        output_line("ldab #255");
+        while(offset > 255) {
+            output_line("abx");
+            offset -= 256;
+            xsprel += 256;
+        }
+        output_line("pulb");
+    }
+}
+
 /**
  * fetch a static memory cell into the primary register
  * @param sym
@@ -119,18 +176,16 @@ void output_number(int num) {
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
         output_with_tab ("ldab ");
-        output_string(sym->name);
+        describe_access(sym);
         output_line("sex");
         newline ();
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
         output_with_tab("ldab ");
-        output_string(sym->name);
-        newline();
+        describe_access(sym);
         output_line("clra");
     } else {
         output_with_tab ("ldd ");
-        output_string(sym->name);
-        newline ();
+        describe_access(sym);
     }
 }
 
@@ -161,13 +216,11 @@ int gen_get_locale(SYMBOL *sym) {
  */
 void gen_put_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
-        output_with_tab("std ");
-        output_string(sym->name);
-    } else {
         output_with_tab("stab ");
-        output_string(sym->name);
+    } else {
+        output_with_tab("std ");
     }
-    newline ();
+    describe_access(sym);
 }
 
 /**
@@ -192,6 +245,7 @@ void gen_put_indirect(char typeobj) {
 void gen_get_indirect(char typeobj, int reg) {
     if (typeobj == CCHAR) {
         if (reg & DE_REG) {
+            /* FIXME DE cases */
             output_line("ldab ,x");
             output_line("sex");
         } else
@@ -216,8 +270,10 @@ void gen_get_indirect(char typeobj, int reg) {
  */
 int gen_indirected(SYMBOL *s)
 {
-    /* TODO */
-    return 1;
+    if (s->storage == REGISTER || s->storage == LSTATIC)
+        return 0;
+    gen_tsx(s->offset);
+    return 0;
 }
 
 /**
@@ -254,6 +310,7 @@ void gen_push(int reg) {
  */
 void gen_pop(void) {
     output_line ("pulx");
+    xdirty = 1;
     stkp = stkp + INTSIZE;
 }
 
@@ -265,6 +322,7 @@ void gen_swap_stack(void) {
     output_line("ldd ,s");
     output_line("ldx _tmp1");
     output_line("stx ,s");
+    xdirty = 1;
 }
 
 /**
@@ -288,10 +346,32 @@ void declare_entry_point(char *symbol_name) {
 
 void gen_prologue(void)
 {
+    xdirty = 1;
+    nextreg = 0;
 }
 
 void gen_epilogue(void)
 {
+    int i;
+    /* FIXME: usual case we can pop these in this order need to spot the
+       sp position and optimize accordingly */
+    for (i = nextreg - 1; i >= 0; i--) {
+        if (stkp == regv[i]) {
+            stkp += 2;
+            output_line("pulx");
+            xdirty = 1;
+        } else {
+            output_line("tsx");
+            output_with_tab("ldx ");
+            output_number(stkp - i);
+            output_string(", x");
+            newline();
+            xdirty = 1;
+        }
+        output_with_tab("stx <_reg");
+        output_number(i);
+        newline();
+    }
 }
 
 /**
@@ -315,7 +395,7 @@ void callstk(void) {
  */
 void gen_jump(int label)
 {
-    output_with_tab ("jump ");
+    output_with_tab ("jmp ");
     print_label (label);
     newline ();
 }
@@ -368,9 +448,10 @@ int gen_modify_stack(int newstkp) {
     if (k == 0)
         return (newstkp);
     if (k > 0) {
-        if (k >= 8) {
+        if (k <= 8) {
             while(k >= 2) {
                 output_line("pulx");
+                xdirty = 1;
                 k -= 2;
             }
             if (k == 1)
@@ -423,6 +504,26 @@ int gen_defer_modify_stack(int newstkp)
     return gen_modify_stack(newstkp);
 }
 
+int gen_register(int vp, int size, int typ)
+{
+    return -1;
+/*
+    Not clear register helps at all on a 6801
+    if (size > 2)
+        return -1;
+    if (nextreg > 8)
+        return -1;
+    stkp = stkp - 2;
+    regv[nextreg] = stkp;
+    output_with_tab("ldx <_reg");
+    xdirty = 1;
+    output_number(nextreg);
+    newline();
+    output_line("pshx");
+    return nextreg++;
+*/
+}
+
 
 /**
  * multiply the primary register by INTSIZE
@@ -455,13 +556,11 @@ void gen_jump_case(void) {
  * @param lval2
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
-    gen_swap();
     if (dbltest (lval2, lval)) {
         output_line("addd ,s");
         output_line("addd ,s");
     } else
         output_line ("addd ,s");
-    gen_swap();
     gen_pop();
 }
 
@@ -759,6 +858,7 @@ void gnargs(int d)
  */
 void gen_immediate2(void) {
     output_with_tab ("ldx ");
+    xdirty = 1;
 }
 
 /**
@@ -784,12 +884,22 @@ void gen_multiply(int type, int size) {
             output_line("addd _tmp");
             break;
         case STRUCT:
+            /* Might be smarter to pshx/pulx ? */
             output_with_tab("ldx ");
             output_number(size);
             newline();
+            xdirty = 1;
             gen_call("_muld");
             break;
         default:
             break;
     }
+}
+
+/**
+ * To help the optimizer know when r1/r2 are discardable
+ */
+void gen_statement_end(void)
+{
+    output_line(";end");
 }

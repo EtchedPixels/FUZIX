@@ -4,3 +4,37 @@
   and maybe even get rid of the literal pool (2.5K saving)
 - Can we split the preprocessor optionally
 - Work out what is needed for stack frame based Z80 code
+
+- Clean up optimizier rules now we have ;end
+- Flag void v non void to optimizer (elimination of trailing loads)
+- How to do tail load elimination but avoid breaking the way it relies
+  upon that for returns ? - is the jump $1 reliable for that ? (take care if
+  we eliminate the jump $1 for a label)
+
+- Indirection support to multiple output files so we can sort call orders
+
+
+Macro ops for bytecode form
+
+load r1 (fprel)			; with pre/post inc dec
+store r1 (fprel)		; ditto
+
+And ditto with 'and indirect' or bytes (signed and unsigned)
+
+ie so we can generate as a 2 byte op
+
+	load r1 [(2+fp)++]
+
+
+Z80 registers
+
+BC - providing we tweak the varargs bits (int)
+IY - pointer
+IX - pointer (maybe)
+
+RST ops ?
+
+- stack indirections
+- complex ops (RSTm aa ll  RSTn aa ll hh)
+	- pre/post inc load/stores with or without indirection
+	- stack shifts
