@@ -344,6 +344,7 @@ interrupt_return:
             rti
 interrupt_return_x:
 	    tfr x,s
+	    jsr	map_restore
 	    bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
