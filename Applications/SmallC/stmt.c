@@ -28,8 +28,10 @@ int statement(int func) {
     }
     if (match ("{"))
         do_compound (NO);
-    else
+    else {
         do_statement ();
+        gen_statement_end();
+    }
     return (lastst);
 }
 
@@ -38,7 +40,7 @@ int statement(int func) {
  */
 int statement_declare(void) {
     if (amatch("register", 8))
-        do_local_declares(DEFAUTO);
+        do_local_declares(REGISTER);
     else if (amatch("auto", 4))
         do_local_declares(DEFAUTO);
     else if (amatch("static", 6))
@@ -156,8 +158,10 @@ void do_compound(int func) {
                                 gen_modify_stack(stkp);
                                 decls = NO;
                         }
-                } else
+                } else {
                         do_statement ();
+                        gen_statement_end();
+                }
         }
         ncmp--;
 }
@@ -257,18 +261,21 @@ void dofor(void) {
         if (!match (";")) {
                 expression (YES);
                 need_semicolon ();
+                gen_statement_end();
         }
         generate_label (pws->case_test);
         if (!match (";")) {
                 expression (YES);
                 gen_test_jump (pws->body_tab, TRUE);
                 gen_jump (pws->while_exit);
+                gen_statement_end();
                 need_semicolon ();
         } else
                 pws->case_test = pws->body_tab;
         generate_label (pws->incr_def);
         if (!match (")")) {
                 expression (YES);
+                gen_statement_end();
                 needbrack (")");
                 gen_jump (pws->case_test);
         } else

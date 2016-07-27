@@ -67,32 +67,19 @@ static void fd_geom(int minor, blkno_t block)
 
 static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
 {
-    blkno_t block;
-    uint16_t block_xfer;     /* blocks to transfer */
     uint16_t dptr;
-    uint16_t dlen;
     uint16_t ct = 0;
     uint8_t st;
     int map = 0;
     uint16_t *page = &udata.u_page;
 
     if(rawflag == 1) {
-        dlen = udata.u_count;
-        dptr = (uint16_t)udata.u_base;
-        if ((dlen|udata.u_offset) & 0x7F) {
-            udata.u_error = EIO;
+        if (d_blkoff(7))
             return -1;
-        }
-        block = udata.u_offset >> BLKSHIFT;
-        block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
 #ifdef SWAPDEV
     } else if (rawflag == 2) {		/* Swap device special */
-        dlen = swapcnt;
-        dptr = (uint16_t)swapbase;
         page = &swappage;		/* Acting on this page */
-        block = swapblk;
-        block_xfer = dlen >> 7;		/* We want this in 128 byte sectors */
         map = 1;
         /*
          *	In the z80pack case this is simpler than usual. Be very
@@ -101,18 +88,21 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
          *	must be prepared to switch common segment as well during
          *	a swap, or to perform mapping games using the banks
          */
+        udata.u_nblock *= (BLKSIZE / 128);
 #endif
     } else { /* rawflag == 0 */
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        block_xfer = 4;
+        udata.u_nblock = BLKSIZE / 128;		/* BLKSIZE bytes implied */
     }
-    block <<= 2;
+    /* Limits us to 2^14 blocks (8MB) */
+    udata.u_nblock <<= 2;
     /* Read the disk in four sector chunks. FIXME We ought to cache the geometry
        and just bump sector checking for a wrap. */
-    while (ct < block_xfer) {
+
+    /* FIXME: move core to using usize_t ? */
+    dptr = (uint16_t)udata.u_dptr;
+    while (ct < udata.u_nblock) {
         fd_drive = minor;
-        fd_geom(minor, block);
+        fd_geom(minor, udata.u_block);
         /* The Z80pack DMA uses the current MMU mappings... beware that
          * is odd - but most hardware would be PIO (inir/otir etc) anyway */
         fd_dmal = dptr & 0xFF;
@@ -132,14 +122,14 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         st = fd_status;
         /* Real disks would need retries */
         if (st) {
-            kprintf("fd%d: block %d, error %d\n", minor, st, block);
+            kprintf("fd%d: block %d, error %d\n", minor, st, udata.u_block);
             break;
         }
-        block++;
+        udata.u_block++;
         ct++;
         dptr += 128;
     }
-    return ct >> 2;
+    return ct << 7;
 }
 
 int fd_open(uint8_t minor, uint16_t flag)

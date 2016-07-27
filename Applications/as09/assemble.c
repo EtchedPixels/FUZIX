@@ -9,7 +9,7 @@
 #include "scan.h"
 
 static bool_t nocolonlabel;	/* set for labels not followed by ':' */
-static void (*routine) P((void));
+static void (*routine)(void);
 #ifdef I80386
 static opcode_t rep = 0;       /* which rep/repne prefix was seen */
 #endif

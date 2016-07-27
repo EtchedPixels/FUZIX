@@ -1,5 +1,7 @@
 #define __UZIFS_DOT_H__
 
+#define FILENAME_LEN 30
+
 #define ROOTDEV 0
 #define ROOTINODE 1
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */
@@ -258,6 +260,7 @@ static int fuzix_unlink(char *path);
 static int fuzix_read( int16_t d, char *buf, uint16_t nbytes);
 static int fuzix_write( int16_t d, char *buf, uint16_t nbytes);
 static int fuzix_mknod( char *name, int16_t mode, int16_t dev);
+static int fuzix_mkdir(char *name, int mode);
 static blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
 static inoptr rwsetup( int rwflag, int d, char *buf, int nbytes);
 static void oft_deref(int of);
@@ -279,6 +282,7 @@ static inoptr srch_mt( inoptr ino);
 static inoptr i_open( register int dev, register unsigned ino);
 static int ch_link( inoptr wd, char *oldname, char *newname, inoptr nindex);
 static char * filename( char *path);
+static void filename_2( char *path, char *name);
 static int namecomp( char *n1, char *n2);
 static inoptr newfile( inoptr pino, char *name);
 static fsptr getdev( int devno);

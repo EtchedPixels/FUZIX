@@ -1,6 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "defs.h"
 #include "data.h"
+
+static int nextreg = 0;
+static int regv[8];
 
 /*
  *      Some predefinitions:
@@ -31,9 +35,6 @@ void header (void) {
  * @return 
  */
 void newline (void) {
-#if __CYGWIN__ == 1
-    output_byte (CR);
-#endif
     output_byte (LF);
 }
 
@@ -117,10 +118,9 @@ void output_number(int num) {
 
 static void output_number_signed(int num)
 {
-    if (num > 0)
+    if (num >= 0)
         output_byte('+');
-    else
-        output_decimal(num);
+    output_decimal(num);
 }
 
 static void output_bracketed(char *p)
@@ -130,21 +130,67 @@ static void output_bracketed(char *p)
     output_byte(')');
 }
 
-static void describe_access(SYMBOL *sym)
+static void describe_access(SYMBOL *sym, int s)
 {
-    if (sym->storage == LSTATIC) {
+    if (sym->storage == REGISTER) {
+        if (s == 2)
+            output_string("bc");
+        else
+            output_string("c");
+    } else if (sym->storage == LSTATIC) {
         output_byte('(');
         print_label(sym->offset);
         output_byte(')');
     } else if (sym->storage == AUTO || sym->storage == DEFAUTO) {
         output_string("(ix");
-        output_number_signed(sym->offset - stkp);
+        output_number_signed(sym->offset + 2);
         output_byte(')');
-    } else
+    } else {
+        output_byte('(');
         output_string(sym->name);
-    newline();
+        output_byte(')');
+    }
 }
 
+
+static void describe_access_hl(SYMBOL *sym, int d)
+{
+    if (sym->storage == REGISTER) {
+        if (d) {
+            output_line("ld h,b");
+            output_line("ld l,c");
+        } else {
+            output_line("ld b,h");
+            output_line("ld c,l");
+        }
+        return;
+    }
+    if (sym->storage != AUTO && sym->storage != DEFAUTO) {
+        output_with_tab("ld hl,");
+        describe_access(sym, 2);
+        newline();
+        return;
+    }
+    if (d) {
+        output_with_tab("ld l,(ix");
+        output_number_signed(sym->offset + 2 );
+        output_byte(')');
+        newline();
+        output_with_tab("ld h,(ix");
+        output_number_signed(sym->offset + 3);
+        output_byte(')');
+        newline();
+    } else {
+        output_with_tab("ld (ix");
+        output_number_signed(sym->offset + 2);
+        output_string("),l");
+        newline();
+        output_with_tab("ld (ix");
+        output_number_signed(sym->offset + 3);
+        output_string("),h");
+        newline();
+    }
+}
 
 /**
  * fetch a static memory cell into the primary register
@@ -153,19 +199,17 @@ static void describe_access(SYMBOL *sym)
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
         output_with_tab ("ld a,");
-        output_bracketed(sym->name);
-        newline ();
+        describe_access(sym, 1);
+        newline();
         gen_call ("ccsxt");
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
         output_with_tab("ld a,");
-        output_bracketed(sym->name);
+        describe_access(sym, 1);
         newline();
         output_line("ld l,a");
         output_line("ld h,0");
     } else {
-        output_with_tab ("*ld hl,");
-        output_bracketed(sym->name);
-        newline ();
+        describe_access_hl(sym,1);
     }
 }
 
@@ -199,12 +243,10 @@ void gen_put_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type & CCHAR)) {
         output_line ("ld a,l");
         output_with_tab ("ld ");
-        output_bracketed(sym->name);
+        describe_access(sym, 1);
         output_string(",a");
     } else {
-        output_with_tab("ld ");
-        output_bracketed(sym->name);
-        output_string(",hl");
+        describe_access_hl(sym, 0);
     }
     newline ();
 }
@@ -257,10 +299,10 @@ void gen_get_indirect(char typeobj, int reg) {
  */
 int gen_indirected(SYMBOL *s)
 {
-    if (s->storage == LSTATIC)
+    if (s->storage == LSTATIC || s->storage == REGISTER)
         return 0;
-/*    if (abs(s->offset) < 124 && (s->type == CCHAR || s->type == UCHAR))
-        return 0; */
+    if (abs(s->offset) < 124)
+        return 0;
     return 1;
 }
 
@@ -328,21 +370,22 @@ void declare_entry_point(char *symbol_name) {
 
 void gen_prologue(void)
 {
-#if 0
     output_line("push ix");
     output_line("ld ix,#0");
     output_line("add ix,sp");
     stkp = stkp - INTSIZE;
-#endif
+    nextreg = 0;
 }
 
 void gen_epilogue(void)
 {
-#if 0
+    if (nextreg)
+        gen_modify_stack(regv[0]);
+    output_line("pop bc");
+    stkp += 2;
     output_line("ld sp,ix");
     output_line("pop ix");
     stkp = 0;
-#endif
 }
 
 /**
@@ -430,7 +473,7 @@ int gen_modify_stack(int newstkp) {
                 k--;
             }
             while (k) {
-                output_line ("pop bc");
+                output_line ("pop af");
                 k = k - INTSIZE;
             }
             return (newstkp);
@@ -462,6 +505,18 @@ int gen_modify_stack(int newstkp) {
 int gen_defer_modify_stack(int newstkp)
 {
     return gen_modify_stack(newstkp);
+}
+
+int gen_register(int vp, int size, int typ)
+{
+    if (size != 2)
+        return -1;
+    if (nextreg > 0)
+        return -1;
+    stkp = stkp - 2;
+    regv[nextreg] = stkp;
+    output_line("push bc");
+    return nextreg++;
 }
 
 /**
@@ -839,4 +894,12 @@ void gen_multiply(int type, int size) {
         default:
             break;
     }
+}
+
+/**
+ * To help the optimizer know when r1/r2 are discardable
+ */
+void gen_statement_end(void)
+{
+    output_line(";end");
 }

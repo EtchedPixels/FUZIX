@@ -501,22 +501,8 @@ static int cmd_mknod( char *path, char *modes, char *devs)
 
 static int cmd_mkdir(char *path)
 {
-    char dot[100];
-
-    if (fuzix_mknod(path, 040000 | 0777, 0) != 0) {
+    if (fuzix_mkdir(path, 0777) != 0) {
         fprintf(stderr, "mkdir: mknod error %d\n", *syserror);
-        return (-1);
-    }
-    strcpy(dot, path);
-    strcat(dot, "/.");
-    if (fuzix_link(path, dot) != 0) {
-        fprintf(stderr, "mkdir: link \".\" error %d\n", *syserror);
-        return (-1);
-    }
-    strcpy(dot, path);
-    strcat(dot, "/..");
-    if (fuzix_link(".", dot) != 0) {
-        fprintf(stderr, "mkdir: link \"..\" error %d\n", *syserror);
         return (-1);
     }
     return (0);
@@ -1397,6 +1383,66 @@ static int fuzix_umount(char *spec)
 	return (-1);
 }
 
+static int fuzix_mkdir(char *name, int mode)
+{
+	inoptr ino;
+	inoptr parent;
+	char fname[FILENAME_LEN + 1];
+
+	if ((ino = n_open(name, &parent)) != NULL) {
+		udata.u_error = EEXIST;
+		goto nogood;
+	}
+
+	if (!parent) {
+		udata.u_error = ENOENT;
+		return (-1);
+	}
+
+	if (swizzle16(parent->c_node.i_nlink) == 0xFFFF) {
+		udata.u_error = EMLINK;
+		goto nogood2;
+	}
+
+	filename_2(name, fname);
+
+	i_ref(parent);		/* We need it again in a minute */
+	if (!(ino = newfile(parent, fname))) {
+		i_deref(parent);
+		goto nogood2;	/* parent inode is derefed in newfile. */
+	}
+
+	/* Initialize mode and dev */
+	ino->c_node.i_mode = swizzle16(F_DIR | 0200);	/* so ch_link is allowed */
+	setftime(ino, A_TIME | M_TIME | C_TIME);
+	if (ch_link(ino, "", ".", ino) == 0 ||
+	    ch_link(ino, "", "..", parent) == 0)
+		goto cleanup;
+
+	/* Link counts and permissions */
+	ino->c_node.i_nlink = swizzle16(2);
+	parent->c_node.i_nlink =
+	    swizzle16(swizzle16(parent->c_node.i_nlink) + 1);
+	ino->c_node.i_mode = swizzle16(((mode & ~udata.u_mask) & MODE_MASK) | F_DIR);
+	i_deref(parent);
+	wr_inode(ino);
+	i_deref(ino);
+	return (0);
+
+      cleanup:
+	if (!ch_link(parent, fname, "", NULLINODE))
+		fprintf(stderr, "mkdir: bad rec\n");
+	/* i_deref will put the blocks */
+	ino->c_node.i_nlink = 0;
+	wr_inode(ino);
+      nogood:
+	i_deref(ino);
+      nogood2:
+	i_deref(parent);
+	return (-1);
+
+}
+
 static inoptr n_open(register char *name, register inoptr * parent)
 {
 	register inoptr wd;	/* the directory we are currently searching. */
@@ -1697,6 +1743,18 @@ static char *filename(char *path)
 		++ptr;
 	while (*ptr != '/' && ptr-- > path);
 	return (ptr + 1);
+}
+
+static void filename_2(char *path, char *name)
+{
+	register char *ptr;
+
+	ptr = path;
+	while (*ptr)
+		++ptr;
+	while (*ptr != '/' && ptr-- > path);
+	memcpy(name, ptr + 1, FILENAME_LEN);
+	name[FILENAME_LEN] = 0;
 }
 
 
@@ -2216,7 +2274,7 @@ static blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
                 }
                 ******/
 		i = (bn >> sh) & 0xff;
-		if ((swizzle16(nb) == ((blkno_t *) bp)[i]))
+		if ((nb = swizzle16(((blkno_t *) bp)[i])) != 0)
 			brelse(bp);
 		else {
 			if (rwflg || !(nb = blk_alloc(dev))) {

@@ -8,6 +8,8 @@
 #undef  I80386			/* Intel 80386 */
 #define MC6809			/* Motorola 6809 */
 
+#define MEM_SMALL		/* 16bit sbrk memory pool */
+
 /* one of these target operating systems must be defined */
 
 #define FUZIX			/* FUZIX executable */

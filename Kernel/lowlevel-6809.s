@@ -17,6 +17,7 @@
 	.globl	_ashrhi3
 	.globl	_lshrhi3
 	.globl	___ashlsi3
+	.globl  ___ashrsi3
 	.globl	_swab
 
 	; debugging aids
@@ -343,6 +344,7 @@ interrupt_return:
             rti
 interrupt_return_x:
 	    tfr x,s
+	    jsr	map_restore
 	    bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
@@ -572,6 +574,46 @@ _ashlhi3_1:
 _ashlhi3_2:
 	puls	x,pc
 
+
+
+___ashrsi3:
+	pshs	u
+	; FIXME temporary hack until we fix gcc-6809 or our use of it
+	; the argument passing doesn't match so we'll mangle it
+	ldu 4,s
+	stu ,x
+	ldu 6,s
+	stu 2,x
+	ldb 9,s
+	;; FIXME: insert 16 optimization here
+	;; remember to propagate top bit for signage
+try_8@	cmpb	#8
+	blo 	try_rest@
+	subb	#8
+	ldu	1,x		; shift what we can down by 1 byte
+	stu	2,x
+	lda	,x
+	sta	1,x
+	clr	,x		; default top byte to positive
+	tst	1,x		; test old msb for sign
+	bpl     try_8@		; go try another 8 shifts
+	dec	,x		; dec to make top byte negative
+	bra	try_8@		; go try another 8 shifts
+try_rest@
+	tstb		
+	beq	done@
+do_rest@
+	; Shift by 1
+	asr	,x
+	ror	1,x
+	ror	2,x
+	ror	3,x
+	decb
+	bne	do_rest@
+done@
+	puls	u,pc
+
+	
 ___ashlsi3:
 	pshs	u
 

@@ -8,6 +8,7 @@
 #include "type.h"
 #include "globvar.h"
 
+/* FIXME: probably want more ?? */
 #define MAX_LIBS	5
 
 bin_off_t text_base_value = 0;	/* XXX */
@@ -88,9 +89,6 @@ int main(int argc, char **argv)
 	    case 'r':		/* relocatable output */
 	    case 't':		/* trace modules linked */
 	       if (icount > 0) usage();
-#ifdef REL_OUTPUT
-	    case 'B':		/* Broken -r for dosemu. */
-#endif
 #ifdef HAS_32BIT
 	    case '0':		/* use 16-bit libraries */
 	    case '3':		/* use 32-bit libraries */
@@ -170,14 +168,6 @@ int main(int argc, char **argv)
 	    }
     }
     if(icount==0) usage();
-
-#ifdef REL_OUTPUT
-    if( flag['r'] && !flag['N'] )
-    {
-       /* Do a relocatable link -- actually fake it with 'ar.c' */
-       ld86r(argc, argv);
-    }
-#endif
 
     /* Headerless executables can't use symbols. */
     headerless = flag['d'];
