@@ -1,7 +1,10 @@
 /* 
  * Memotech Silicon Disk Driver
  *
- * FIXME: would be sensible to add swap support to this driver
+ * FIXME: would be sensible to add swap support to this driver for boxes with
+ * < 512K RAM.
+ *
+ * FIXME: Check presence of device by probing ?
  */
 
 #include <kernel.h>
@@ -13,37 +16,25 @@
 
 static int sil_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    int block_xfer;
-    uint16_t dptr;
-    int dlen;
     int ct = 0;
-    int map;
+    int map = 0;
+    uint8_t unit = 0x50 + 4 * minor;
 
-    if(rawflag) {
-        dlen = udata.u_count;
-        dptr = (uint16_t)udata.u_base;
-        if (((uint16_t)dptr | dlen) & BLKMASK) {
-            udata.u_error = EIO;
+    if(rawflag == 1) {
+        if (d_blkoff(BLKSHIFT))
             return -1;
-        }
-        block = udata.u_offset >> 9;
-        block_xfer = dlen >> 9;
         map = udata.u_page;
-    } else { /* rawflag == 0 */
-        dlen = 512;
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        block_xfer = 1;
-        map = 0;
     }
-        
-    while (ct < block_xfer) {
-        sil_memcpy(is_read, map, dptr, block, 0x50 + 4 * minor);
-        block++;
+    if (rawflag == 2)
+        return -1;
+
+    while (ct < udata.u_nblock) {
+        sil_memcpy(is_read, map, (uint16_t)udata.u_dptr, udata.u_block, unit);
+        udata.u_dptr += BLKSIZE;
+        udata.u_block++;
         ct++;
     }
-    return ct;
+    return ct << BLKSHIFT;
 }
 
 int sil_open(uint8_t minor, uint16_t flag)

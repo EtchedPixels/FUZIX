@@ -1,3 +1,17 @@
+# $1 is special - it's the return path and the one case we must not eliminate
+# any trailing r1 load so write out the ;end marker if we are merging it
+lbra $1
+;end
+$1:
+=
+$1:
+
+lbra $1
+;end
+=
+lbra $1
+
+# Normal cases
 #
 #	Eliminate pointless branches
 #
@@ -22,6 +36,101 @@ lbra %2
 =
 lbeq %2
 %1:
+
+#
+#	Silly entry fixup
+#
+pshs u
+pshs y
+=
+pshs u,y
+
+#
+#	Register fixups
+#
+
+ldd %1
+std y
+=
+ldy %1
+
+ldd %1
+std u
+ldu %1
+
+tfr u,d
+addd #1
+tfr d,u
+subd #1
+;end
+=
+leau 1,u
+;end
+
+tfr y,d
+addd #1
+tfr d,y
+subd #1
+;end
+=
+leay 1,y
+;end
+
+tfr y,d
+pshs d
+;end
+=
+pshs y
+;end
+
+tfr u,d
+pshs d
+;end
+=
+pshs u
+;end
+
+tfr y,d
+pshs d
+ldd %1
+=
+pshs y
+ldd %1
+
+tfr u,d
+pshs d
+ldd %1
+=
+pshs u
+ldd %1
+
+tfr y,d
+pshs d
+tfr %1,d
+=
+pshs y
+tfr %1,d
+
+tfr u,d
+pshs d
+tfr %1,d
+=
+pshs u
+tfr %1,d
+
+ldd %1
+tfr d,u
+;end
+=
+ldu %1
+;end
+
+ldd %1
+tfr d,y
+;end
+=
+ldy %1
+;end
 
 #
 #	Fix up the stack based add and subtraction

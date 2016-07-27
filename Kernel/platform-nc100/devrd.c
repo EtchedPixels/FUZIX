@@ -13,43 +13,30 @@ static const uint8_t kmap[] = { 0x83, 0x84, 0x85 };
 
 static int rd_transfer(bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    int block_xfer;
     uint16_t dptr;
-    int dlen;
     int ct = 0;
     int map;
-    const uint8_t *p;
+    const uint8_t *p = kmap;
 
     if(rawflag) {
         p = (const uint8_t *)&udata.u_page;
-        dlen = udata.u_count;
-        dptr = (uint16_t)udata.u_base;
-        if ((dlen|udata.u_offset) & BLKMASK) {
-            udata.u_error = EIO;
+        if (d_blkoff(BLKSHIFT))
             return -1;
-        }
-        block = udata.u_offset >> 9;
-        block_xfer = dlen >> 9;
-    } else { /* rawflag == 0 */
-        p = kmap;
-        dlen = 512;
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        block_xfer = 1;
-        map = 0;
     }
-    block += 2*320;	/* ramdisc starts at 320K in */
-        
-    while (ct < block_xfer) {
+
+    udata.u_block += 2*320;	/* ramdisc starts at 320K in */
+
+    dptr = (uint16_t)udata.u_dptr;
+
+    while (ct < udata.u_nblock) {
         /* Pass the page to map for the data */
         map = p[(dptr >> 14)];
-        rd_memcpy(is_read, map, dptr, block);
-        block++;
+        rd_memcpy(is_read, map, dptr, udata.u_block);
+        udata.u_block++;
         ct++;
-        dptr += 512;
+        dptr += BLKSIZE;
     }
-    return ct;
+    return ct << BLKSHIFT;
 }
 
 int rd_open(uint8_t minor, uint16_t flag)

@@ -89,6 +89,8 @@ struct tag_symbol {
 #define LSTATIC 5
 #define DEFAUTO 6
 
+#define REGISTER 7
+
 // "do"/"for"/"while"/"switch" statement stack
 #define WSTABSZ 20
 

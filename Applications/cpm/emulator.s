@@ -6,10 +6,7 @@
     ;
     ;
     ; TODO
-    ; - Recheck all syscall translations
     ; - Fix up directory mapping a bit more
-    ; - Save the syscall vector on entry and go via the saved copy as the
-    ;   RST could be re-used by CP/M programs
     ; - Make the code use indirect pointers to the directory buffer etc
     ;   from the scratch space so that we can eventually make it
     ;   multi-threaded for boxes with a large fixed common where we want to
@@ -86,6 +83,11 @@ EStart:
 
 	LD	HL,#0
 	LD	(0x0003),HL	; Clear IOBYTE and Default Drive/User
+
+	LD	HL, (0x31)		; JP xxxx is what FUZIX leaves at 0x30
+	LD	(syscall+1), HL
+	LD	A, #0xC3		; JP
+	LD	(syscall), A
 
 	JP	__bios		; Go to Cold Start setup
 
@@ -431,7 +433,7 @@ OpenF:	PUSH	DE		; Mode
 	PUSH	HL		;  Path
 	LD	HL,#1		;   Fuzix Open Fcn #
 	PUSH	HL
-	RST	0x30		;    _open (Path, Mode);
+	CALL	syscall		;    _open (Path, Mode);
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -450,7 +452,7 @@ Fcn16:	LD	IY,(_arg)
 
 	LD	HL,#11		; Fuzix sync function #
 	PUSH	HL
-	RST	0x30		; Execute!
+	CALL	syscall		; Execute!
 	POP	BC		; Clean Stack
 
 	JP	Exit0		; Return OK
@@ -461,7 +463,7 @@ Fcn16:	LD	IY,(_arg)
 CloseV:	PUSH	DE
 	LD	HL,#2		;  Fuzix Close Fcn #
 	PUSH	HL
-	RST	0x30		;   Execute!
+	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	RET
@@ -537,7 +539,7 @@ Fcn19:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL		; String
 	LD	HL,#6		;  UZI Unlink Fcn #
 	PUSH	HL
-	RST	0x30		;   Execute!
+	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 
@@ -681,14 +683,14 @@ Fcn21A:	CALL	DoWrite		;   Write
 ;     desc = creat (getname (blk), 0666);
 
 Fcn22:	CALL	CkSrch		; Ensure Search file closed
-	LD	HL,#0q0666	; Own/Grp/Oth are Read/Execute
+	LD	HL,#0x1B6	; Own/Grp/Oth are Read/Execute
 	PUSH	HL		; DE -> arg
 	LD	HL,#0x502	; O_CREAT|O_RDWR|O_TRUNC
 	CALL	GetNam		;  This name string
 	PUSH	HL
 	LD	HL,#1		;   Fuzix open Fcn #
 	PUSH	HL
-	RST	0x30		;    Execute!
+	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -742,7 +744,7 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL
 	LD	HL,#5		;   UZI link Fcn #
 	PUSH	HL
-	RST	0x30		;    Execute!
+	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -757,7 +759,7 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL
 	LD	HL,#6		;  UZI unlink Fcn #
 	PUSH	HL
-	RST	0x30		;   Execute!
+	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	JP	NC,Exit0	;   exit w/0 if Ok
@@ -768,7 +770,7 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL
 	LD	HL,#6		;  UZI unlink Fcn #
 	PUSH	HL
-	RST	0x30		;   Execute!
+	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 
@@ -822,7 +824,7 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL		;  dname
 	LD	HL,#15		;   UZI stat Fcn #
 	PUSH	HL
-	RST	0x30		;    Execute!
+	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stk
 	POP	BC
 	POP	BC
@@ -1002,7 +1004,7 @@ LSeek:	LD	BC,#0		; Push 0 for absolute
 	PUSH	HL
 	LD	HL,#9		; _lseek()
 	PUSH	HL
-	RST	0x30		; Syscall
+	CALL	syscall		; Syscall
 	POP	BC		; Recover stack
 	POP	BC
 	POP	BC
@@ -1316,7 +1318,7 @@ Quit:
 	LD	HL,#0		; Exit Good Status
 	PUSH	HL
 	PUSH	HL		;  UZI Fcn 0 (_exit)
-	RST	0x30		;   Execute!
+	CALL	syscall		;   Execute!
 Spin:	JR	Spin		; Can't happen!
 
 ;.....
@@ -1345,7 +1347,7 @@ ConIn:	call	ConSt
 	PUSH	HL
 	LD	L,#7		;    UZI Read Fcn
 ChrV0:	PUSH	HL
-	RST	0x30		;     Execute
+	CALL	syscall		;     Execute
 	POP	BC
 	POP	BC
 	POP	BC
@@ -1431,7 +1433,7 @@ RdWrt0:	PUSH	DE
 	PUSH	HL
 	LD	E,A		;    Position R/W Fcn #
 	PUSH	DE
-	RST	0x30		;     Execute!
+	CALL	syscall		;     Execute!
 	POP	BC		; Clear Stack
 	POP	BC
 	POP	BC
@@ -1456,7 +1458,7 @@ IoCtl:	PUSH	HL		; &buf
 	PUSH	DE
 	LD	E,#29		;    Fuzix ioctl Fcn #
 	PUSH	DE
-	RST	0x30		;     Execute!
+	CALL	syscall		;     Execute!
 	POP	BC		; Clean Stack
 	POP	BC
 	POP	BC
@@ -1483,6 +1485,8 @@ dpb:	.dw	64		; Dummy Disk Parameter Block
 
 ;----------------------- Data -----------------------
 
+syscall:
+	.ds	3
 ttTermios:
 	.ds	20		; Working TTY Port Settings
 ttTermios0:

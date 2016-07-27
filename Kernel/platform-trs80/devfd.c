@@ -27,13 +27,10 @@ static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x08 };
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    uint16_t dptr;
     int ct = 0;
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = fd_tab + minor;
-    uint8_t nblock;
 
     if(rawflag == 2)
         goto bad2;
@@ -50,26 +47,19 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         fd_reset(driveptr);
 
     fd_map = rawflag;
-    if (rawflag == 0) {
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        nblock = 2;
-    } else {
-        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
-            goto bad2;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> 9;
-        nblock = udata.u_count >> 8;
-    }
+    if (rawflag && d_blkoff(BLKSHIFT))
+            return -1;
+
+    udata.u_nblock *= 2;
 
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
-    fd_cmd[1] = block / 9;		/* 2 sectors per block */
-    fd_cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
+    fd_cmd[1] = udata.u_block / 9;		/* 2 sectors per block */
+    fd_cmd[2] = ((udata.u_block % 9) << 1) + 1;	/*eww.. */
     fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    fd_cmd[4] = dptr & 0xFF;
-    fd_cmd[5] = dptr >> 8;
+    fd_cmd[4] = ((uint16_t)udata.u_dptr) & 0xFF;
+    fd_cmd[5] = ((uint16_t)udata.u_dptr) >> 8;
 
-    while (ct < nblock) {
+    while (ct < udata.u_nblock) {
         for (tries = 0; tries < 4 ; tries++) {
             err = fd_operation(driveptr);
             if (err == 0)
@@ -84,7 +74,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         fd_cmd[2]++;	/* Next sector for 2nd block */
         ct++;
     }
-    return 1;
+    return udata.u_nblock << 8;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:

@@ -36,9 +36,12 @@ void hd_probe(void)
 {
 	unsigned int dev = 0;
 	unsigned int i;
-	uint8_t *d = tmpbuf();
 	/* Second half of second block */
-	struct minipart *p = (struct minipart *)(d + 128);
+	struct minipart *p;
+
+	udata.u_dptr = tmpbuf();
+	p = (struct minipart *)(udata.u_dptr + 128);
+
 	for (dev = 0; dev < 4; dev++) {
 		hd_sdh = 0x80 | (dev << 3);
 		hd_cmd = HDCMD_RESTORE | RATE_4MS;
@@ -54,7 +57,7 @@ void hd_probe(void)
 		hd_cmd = HDCMD_READ;
 		if (hd_waitdrq() & 1)
 			continue;
-		if((hd_xfer(1, (uint16_t)d) & 0x41) != 0x40)
+		if((hd_xfer(1) & 0x41) != 0x40)
 			continue;
 		kprintf("hd%c: ", dev + 'a');
 		if (p->g.magic != MP_SIG_0) {
@@ -89,5 +92,5 @@ void hd_probe(void)
 		hd_waitready();
 		memcpy(&parts[dev], p, sizeof(parts[dev]));
 	}
-	brelse((bufptr)d);
+	brelse((bufptr)udata.u_dptr);
 }

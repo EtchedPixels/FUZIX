@@ -72,7 +72,6 @@ static bin_off_t edataoffset;	/* end of data */
 static bin_off_t endoffset;	/* end of bss */
 static bin_off_t etextoffset;	/* end of text */
 static bin_off_t etextpadoff;	/* end of padded text */
-static unsigned nsym;		/* number of symbols written */
 static unsigned relocsize;	/* current relocation size 1, 2 or 4 */
 static bin_off_t segadj[NSEG];	/* adjusts (file offset - seg offset) */
 				/* depends on zero init */
@@ -221,6 +220,7 @@ void write_fuzix(char *outfilename, bool_pt argsepid, bool_pt argbits32,
 #endif
     {
 	segpos[seg] = segbase[seg] = combase[seg - 1] + comsz[seg - 1];
+        /* Do we want this for IY relative tricks on some builds on Z80 ? */
 #if defined(MC6809) || defined(MC6502)
 	if (seg == DPSEG)
 	{

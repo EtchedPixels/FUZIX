@@ -40,55 +40,43 @@ uint8_t hd_waitdrq(void)
 	return st;
 }
 
-uint8_t hd_xfer(bool is_read, uint16_t addr)
+uint8_t hd_xfer(bool is_read)
 {
 	/* Error ? */
 	if (hd_status & 0x01)
 		return hd_status;
 	if (is_read)
-		hd_xfer_in(addr);
+		hd_xfer_in(udata.u_dptr);
 	else
-		hd_xfer_out(addr);
+		hd_xfer_out(udata.u_dptr);
 	/* Should be returning READY, and maybe SEEKDONE */
 	return hd_status;
 }
 
 int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-	blkno_t block;
-	staticfast uint16_t dptr;
 	uint16_t ct = 0;
 	staticfast uint8_t tries;
 	uint8_t err = 0;
 	uint8_t cmd = HDCMD_READ;
 	uint8_t head;
 	uint8_t sector;
-	uint16_t nblock;
 	staticfast uint16_t cyl;
 	uint8_t dev = minor >> 4;
 	staticfast struct minipart *p;
 
 	p = &parts[dev];
 
-	if (rawflag == 0) {
-		dptr = (uint16_t)udata.u_buf->bf_data;
-		block = udata.u_buf->bf_blk;
-		nblock = 2;
-		hd_page = 0;		/* Kernel */
-	} else if (rawflag == 1) {
-		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
-			goto bad2;
-		dptr = (uint16_t)udata.u_base;
-		nblock = udata.u_count >> 8;
-		block = udata.u_offset >> 9;
-		hd_page = udata.u_page;
-	} else if (rawflag == 2) {
-		nblock = swapcnt >> 8;	/* in 256 byte chunks */
-		dptr = (uint16_t)swapbase;
+	/* FIXME: We only support 512 byte access chunks even for raw I/O */
+	hd_page = 0;
+	if (rawflag == 1) {
+		if (d_blkoff(BLKSHIFT))
+			return -1;
+		hd_page = udata.u_page;		/* Kernel */
+	} else if (rawflag == 2)
 		hd_page = swappage;
-		block = swapblk;
-	} else
-		goto bad2;
+
+	udata.u_nblock *= 2;
 
 	if (!is_read)
 		cmd = HDCMD_WRITE;
@@ -98,10 +86,10 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	hd_precomp = p->g.precomp;
 	hd_seccnt = 1;
 
-	sector = block;
+	sector = udata.u_block;
 	sector = (sector << 1) & 0x1E;
 
-	cyl = block >> 4;
+	cyl = udata.u_block >> 4;
 
 	/* Do the maths once and on 16 bit numbers */
 	head = cyl % p->g.head;
@@ -109,7 +97,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (minor)
 		cyl += p->cyl[(minor-1)&0x0F];
 
-	while (ct < nblock) {
+	while (ct < udata.u_nblock) {
 		/* Head next bits, plus drive */
 		hd_sdh = 0x80 | head | (dev << 3);
 		hd_secnum = sector;
@@ -124,7 +112,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			   for us */
 			err = hd_waitdrq();
 			if (!(err & 1)) {
-				err = hd_xfer(is_read, dptr);
+				err = hd_xfer(is_read);
 				/* Ready, no error ? */
 				if ((err & 0x41) == 0x40)
 					break;
@@ -141,7 +129,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		if (tries == 3)
 			goto bad;
 		ct++;
-		dptr += 256;
+		udata.u_dptr += 256;
 		sector++;
 		/* Cheaper than division! */
 		if (sector == 32) {

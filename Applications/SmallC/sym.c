@@ -250,13 +250,19 @@ void declare_local(int typ, int stclass, int otag) {
                     }
                 }
             }
-            /* FIXME: do one gen_modify_stack at the end and
-               some kind of align method here */
-            if (stclass != LSTATIC) {
-                stkp = gen_defer_modify_stack(stkp - k);
-                add_local(sname, j, typ, stkp, AUTO);
-            } else
+            if (stclass == LSTATIC) {
                 add_local(sname, j, typ, k, LSTATIC);
+                break;
+            }
+            if (stclass == REGISTER) {
+                int r = gen_register(j, k, typ);
+                if (r != -1) {
+                    add_local(sname, j, typ, r, REGISTER);
+                    break;
+                }
+            }
+            stkp = gen_defer_modify_stack(stkp - k);
+            add_local(sname, j, typ, stkp, AUTO);
             break;
         }
         if (!match(","))

@@ -27,12 +27,12 @@ unsigned nhash;
 unsigned nlookup;
 unsigned nsym;
 unsigned nx[30];
-static void printchain P((void));
+static void printchain(void);
 #endif
 
-static void install P((register char *keyptr, unsigned char data));
+static void install(register char *keyptr, unsigned char data);
 
-void inst_keywords()
+void inst_keywords(void)
 {
     install(regs, REGBIT);
 #ifdef I80386

@@ -39,26 +39,17 @@ void fd_motor_timer(void)
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    uint16_t dptr;
+    uint16_t nb = udata.u_nblock;
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = &fd_tab[minor & 1];
     irqflags_t irq;
-    uint8_t nblock;
 
-    if(rawflag == 0) {
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        nblock = 2;
-    } else if (rawflag == 1) {
-        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
-            goto bad2;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> 9;
-        nblock = udata.u_count >> 8;
-    }
-    else
+    if(rawflag == 1 && d_blkoff(9))
+        return -1;
+    udata.u_nblock *= 2;
+
+    if (rawflag == 2)
         goto bad2;
 
     irq = di();
@@ -74,13 +65,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 //    kprintf("Issue command: drive %d block %d\n", minor, block);
     fd_cmd[0] = rawflag;
     fd_cmd[1] = is_read ? FD_READ : FD_WRITE;
-    fd_cmd[2] = block / 16;		/* 2 sectors per block */
-    fd_cmd[3] = ((block & 15) << 1); /* 0 - 1 base is corrected in asm */
+    fd_cmd[2] = udata.u_block / 16;		/* 2 sectors per block */
+    fd_cmd[3] = ((udata.u_block & 15) << 1); /* 0 - 1 base is corrected in asm */
     fd_cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
 
-    fd_data = dptr;
+    fd_data = (uint16_t)udata.u_dptr;
 
-    while (nblock--) {
+    while (udata.u_nblock--) {
         for (tries = 0; tries < 4 ; tries++) {
 //            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
             err = fd_operation(driveptr);
@@ -99,7 +90,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             fd_cmd[2]++;
         }
     }
-    return 1;
+    return nb << BLKSHIFT;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:

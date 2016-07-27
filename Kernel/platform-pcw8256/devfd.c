@@ -109,32 +109,22 @@ static void fd_select(int minor)
  */
 static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
 {
-    blkno_t block;
-    int block_xfer;     /* r/w return value (number of 512 byte blocks transferred) */
     uint16_t dptr;
-    int dlen;
     int ct = 0;
     int st;
     int tries;
 
     /* Direct to user space, or kernel buffered I/O ? */
-    if(rawflag) {
-        dlen = udata.u_count;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> BLKSHIFT;
-        block_xfer = dlen >> 9;
-    } else { /* rawflag == 0 */
-        dlen = 512;
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        block_xfer = 1;
-    }
+    if(rawflag && d_blkoff(BLKSHIFT))
+        return -1;
+
+    dptr = (uint16_t)udata.u_dptr;
     
     fd_select(minor);		/* Select, motor on */
     fd765_user = rawflag;	/* Tell the asm which map */
 //    kprintf("To %d:%x for %d\n", rawflag, dptr, block_xfer);
-    while (ct < block_xfer) {	/* For each block */
-        fd_geom(minor, block);	/* Map it and set the geometry */
+    while (ct < udata.u_nblock) {	/* For each block */
+        fd_geom(minor, udata.u_block);	/* Map it and set the geometry */
         fd765_buffer = dptr;
         for (tries = 0; tries < 3; tries ++) {	/* Try 3 times */
             if (tries != 0)			/* After a fail recalibrate */
@@ -151,15 +141,15 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
                 break;
         }
         if (tries == 3) {
-            kprintf("fd%d: I/O error %d:%d\n", is_read, block);
+            kprintf("fd%d: I/O error %d:%d\n", is_read, udata.u_block);
             if (rawflag)
                 break;
         }
-        block++;
+        udata.u_block++;
         ct++;
         dptr += 512;
     }
-    return ct;
+    return ct ? (ct << BLKSHIFT) : - 1;
 }
 
 int fd_open(uint8_t minor, uint16_t flag)

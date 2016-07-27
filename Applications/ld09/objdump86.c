@@ -216,6 +216,7 @@ void do_module(char *fname, char *archive)
 
 	 if( read_syms() < 0 ) break;
 
+	 /* FIXME: overflow */
 	 strtab = malloc((unsigned int)str_len+1);
 	 if( strtab == 0 ) { error("Out of memory"); break; }
 	 str_off = ftell(ifd);

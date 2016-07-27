@@ -30,12 +30,12 @@ static char * binfilename = 0;
 static char * objfilename = 0;
 static int keep_bad_output = 0;
 
-static void initp1 P((void));
-static int my_creat P((char *name, char *message));
-static void process_args P((int argc, char **argv));
-static void summary P((fd_t fd));
-static void summ_number P((unsigned num));
-static void usage P((void));
+static void initp1(void);
+static int my_creat(char *name, char *message);
+static void process_args(int argc, char **argv);
+static void summary(fd_t fd);
+static void summ_number(unsigned num);
+static void usage(void);
 
 int main(int argc, char *argv[])
 {
@@ -96,11 +96,8 @@ void finishup(void)
 
 static void initp1(void)
 {
-#ifdef I80386
+#if defined(I80386)
     idefsize = defsize = 2;	/* I think this is probably safer (RDB) */
-#endif
-#if 0
-    idefsize = defsize = sizeof (char *) > 2 ? 4 : 2;
 #endif
     lctabtop = lctab + NLOC;
     lstfil = STDOUT;
@@ -139,11 +136,7 @@ static int my_creat(char *name, char *message)
 {
     int fd;
 
-#ifdef O_BINARY
-    if ((fd = open(name, O_RDWR|O_BINARY|O_CREAT|O_TRUNC, CREAT_PERMS)) < 0 || fd > 255)
-#else
     if ((fd = creat(name, CREAT_PERMS)) < 0 || fd > 255)
-#endif
 	as_abort(message);
     return fd;
 }
@@ -185,7 +178,7 @@ static void process_args(int argc, char *argv[])
 	    {
 	    case 'v':
 	       outfd = STDOUT;
-	       writes("as86 version: ");
+	       writes("as version: ");
 #ifdef VERSION
 	       writesn(VERSION);
 #else

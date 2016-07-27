@@ -1,19 +1,19 @@
 The following MTX512 features are supported
 - 6845 based colour text display attributes yet) as /dev/tty1
+- VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
+  interrupts fed into CTC#0 as /dev/tty2. TTY usage is supported.
 - Keyboard including F1/F2 to switch tty
 - SDX WD1791 style floppy controller at 0x10
 - Silicon discs. These are mapped as device 8 not as /dev/hd because their
   contents (on real ones) vanish if you power off. The default build will
-  blindly use the first silicon disc as swap
+  blindly use the first silicon disc as swap. Alter config.h to build
+  without swap.
 - CTC timers
 - Z80 DART RS232
 - Printer
 
 The following are not yet supported
-- Colour/attributes on the display (general vt change)
-- VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
-  interrupts fed into CTC#0 as /dev/tty2. This is partly implemented but
-  scrolling has yet to be debugged!
+- Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
 
