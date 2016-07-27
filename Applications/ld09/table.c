@@ -28,8 +28,16 @@ void syminit(void)
 {
     unsigned i;
 
-    for (i = sizeof(int) <= 2 ? 0xE000 : (unsigned) 0x38000;
-	 i != 0; i -= 512)
+    /* FIXME: use different methods for different system sizes */
+#ifdef MEM_SMALL
+    i = (unsigned char *)&i - (unsigned char *)sbrk(0) - 512;
+    if (i >= 0xFDFF)
+        outofmemory();
+    i &= 0xFE00;
+#else
+    i = sizeof(int) <= 2 ? 0xE000 : (unsigned) 0x38000;
+#endif
+    for (; i != 0; i -= 512)
 	if ((tableptr = malloc(i)) != NUL_PTR)
 	    break;
     if (tableptr == NUL_PTR)

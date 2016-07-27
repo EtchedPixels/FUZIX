@@ -15,53 +15,43 @@
 
 static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    uint16_t dptr;
-    int nblock;
+    int ct = 0;
     int tries;
     uint8_t err;
     uint8_t cmd[8];
-    uint16_t page;
+    uint16_t page = 0;
     irqflags_t irq;
 
-    if (rawflag == 0) {
-        page = 0;
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        nblock = 2;
-    } else if (rawflag == 1) {
-        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
-            goto bad2;
+    /* FIXME: allow raw 256 byte transfers */
+
+    if (rawflag == 1) {
+        if (d_blkoff(BLKSHIFT))
+            return -1;
         page = udata.u_page;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> 9;
-        nblock = udata.u_count >> 8;
     } else if (rawflag == 2) {
 #ifdef SWAPDEV
         page = (uint16_t)swappage;
-        dptr = (uint16_t)swapbase;
-        nblock = swapcnt >> 8;
-        block = swapblk;
 #else
 	goto bad2;
 #endif
-    } else
-        goto bad2;
+    }
 
-//    kprintf("Issue command: drive %d\n", minor);
+    udata.u_nblock *= 2;	/* 256 bytes/block */
+
+/*    kprintf("Issue command: drive %d\n", minor); */
     /* maybe mimicking floppy driver more than needed? */
     cmd[0] = is_read ? DW_READ : DW_WRITE;
-    cmd[1] = block >> 7;	/* 2 sectors per block */
-    cmd[2] = (block << 1) & 0xFF;
-    cmd[3] = dptr >> 8;
-    cmd[4] = dptr & 0xFF;
+    cmd[1] = udata.u_block >> 7;	/* 2 sectors per block */
+    cmd[2] = (udata.u_block << 1) & 0xFF;
+    cmd[3] = (uint16_t)udata.u_dptr >> 8;
+    cmd[4] = (uint16_t)udata.u_dptr & 0xFF;
     cmd[5] = minor;
     cmd[6] = page >> 8;
     cmd[7] = page & 0xFF;
         
-    while (nblock--) {
+    while (ct++ < udata.u_nblock) {
         for (tries = 0; tries < 4 ; tries++) {
-            // kprintf("dw_operation block %d left %d\n", block, nblock);
+            /* kprintf("dw_operation block %d left %d\n", block, nblock); */
             irq = di(); /* for now block interrupts for whole operation */
             err = dw_operation(cmd);
             irqrestore(irq);
@@ -78,7 +68,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (cmd[2] == 0)
             cmd[1]++;
     }
-    return 1;
+    return udata.u_nblock << 8;
 bad:
     kprintf("dw%d: error %x\n", minor, err);
 bad2:
@@ -92,6 +82,7 @@ bad2:
 int dw_open(uint8_t minor, uint16_t flag)
 {
     used(flag);
+    used(minor);
     return 0;
 }
 
@@ -112,11 +103,11 @@ int dw_ioctl(uint8_t minor, uarg_t request, char *data)
 	struct dw_trans s;
 	used( minor );
 
-	if( request != DRIVEWIREC_TRANS )
+	if (request != DRIVEWIREC_TRANS)
 		return -1;
-	if( uget( data, &s, sizeof(struct dw_trans) ) )
+	if (uget( data, &s, sizeof(struct dw_trans)))
 		return -1;
 
-	return dw_transaction( s.sbuf, s.sbufz, s.rbuf, s.rbufz, 1 );
+	return dw_transaction(s.sbuf, s.sbufz, s.rbuf, s.rbufz, 1);
 	
 }

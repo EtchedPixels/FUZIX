@@ -447,6 +447,13 @@ typedef struct u_data {
     inoptr	u_root;		/* Index into inode table of / */
     inoptr	u_rename;	/* Used in n_open for rename() checking */
     inoptr	u_ctty;		/* Controlling tty */
+
+    /* Temporaries used for block I/O */
+    blkno_t	u_block;	/* Block number */
+    uint16_t	u_blkoff;	/* Offset in block */
+    uint16_t	u_nblock;	/* Number of blocks */
+    uint8_t	*u_dptr;	/* Address for I/O */
+
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
     uint8_t	u_ngroup;
@@ -588,7 +595,14 @@ struct s_argblk {
 #define SELECT_BEGIN		0x8000
 #define SELECT_END		0x8001
 
-#define IOCTL_SUPER		0x4000	/* superuser needed */
+#define IOCTL_NORMAL		0x0000	/* No special rules */
+#define IOCTL_SUPER		0x4000	/* Superuser needed */
+#define IOCTL_KERNEL		0x8000	/* Kernel side only */
+#define IOCTL_WRONLY		0xC000	/* Write handle needed */
+
+#define IOCTL_CLASS_SUPER	0x40
+#define IOCTL_CLASS_KERNEL	0x80
+#define IOCTL_CLASS_WRONLY	0xC0
 
 /*
  *	Ioctl ranges
@@ -728,6 +742,7 @@ extern int d_open(uint16_t dev, uint8_t flag);
 extern int d_close(uint16_t dev);
 extern int d_ioctl(uint16_t dev, uint16_t request, char *data);
 extern int d_flush(uint16_t dev);
+extern int d_blkoff(uint8_t bits);
 extern int cdwrite(uint16_t dev, uint8_t flag);
 extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
@@ -836,9 +851,6 @@ extern int _select(void);
 
 /* swap.c */
 extern uint16_t swappage;
-extern uint8_t *swapbase;
-extern unsigned int swapcnt;
-extern blkno_t swapblk;
 
 extern int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
                     uint16_t buf, uint16_t page);

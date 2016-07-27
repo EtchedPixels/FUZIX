@@ -307,7 +307,7 @@ void initobj(void)
 
 void objheader(void)
 {
-    static char module_header[] =
+    static unsigned char module_header[] =
     {
 #ifdef I80386
 	0xA3, 0x86,
@@ -346,7 +346,7 @@ void objheader(void)
 
     if ((objectc = objectg) == 0)
 	return;
-    writeobj(module_header, sizeof module_header);
+    writeobj((char *)module_header, sizeof module_header);
 
     /* calculate number of imported/exported symbols */
     /* and lengths of symbol and string tables */
@@ -443,6 +443,7 @@ void objheader(void)
 
     /* offset to start of text */
 
+    /* FIXME : on 16bit need to force maths to 32bit as well ? */
     putobj4((u32_T) (sizeof module_header + 4 + 4 + 2 + 1 + 1 +
 		     sizeof seg_max_sizes + 4 + segsizebytes + 2 +
 		     symosiz) + strsiz);

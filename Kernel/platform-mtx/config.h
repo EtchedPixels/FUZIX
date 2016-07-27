@@ -32,10 +32,13 @@
 #define PROGTOP     0xBD00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   48	    /* Memory needed per process */
 
+/* Undefine this section if you don't have a silicon disc for swap. It's not
+   really important - you can get 10 processes on a 512K unit anyway */
 #define SWAP_SIZE   0x60 	/* 48K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS   64		/* How many swaps per disc */
+#define SWAPDEV  ((8*256) + 0)  /* Device for swapping. - first silicon disk */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -47,7 +50,7 @@
 #define NUM_DEV_TTY 4	/* Will be 4 two monitors, two serial */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  ((8*256) + 0)  /* Device for swapping. - first silicon disk */
+
 #define NBUFS    16       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

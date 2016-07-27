@@ -122,6 +122,15 @@ void output_number(int num) {
     output_decimal(num);
 }
 
+static void describe_access(SYMBOL *sym)
+{
+    if (sym->storage == LSTATIC)
+        print_label(sym->offset);
+    else
+        output_string(sym->name);
+    newline();
+}
+
 /**
  * fetch a static memory cell into the primary register
  * @param sym
@@ -129,18 +138,16 @@ void output_number(int num) {
 void gen_get_memory(SYMBOL *sym) {
     if ((sym->identity != POINTER) && (sym->type == CCHAR)) {
         output_with_tab ("lda\t");
-        output_string (sym->name);
-        newline ();
+        describe_access(sym);
         gen_call ("ccsxt");
     } else if ((sym->identity != POINTER) && (sym->type == UCHAR)) {
         output_with_tab("lda\t");
-        output_string(sym->name);
-        newline();
+        describe_access(sym);
         output_line("mov \tl,a");
         output_line("mvi \th,#0");
     } else {
         output_with_tab ("lhld\t");
-        output_string (sym->name);
+        describe_access(sym);
         newline ();
     }
 }
@@ -159,6 +166,7 @@ int gen_get_locale(SYMBOL *sym) {
     } else {
         if (uflag && !(sym->identity == ARRAY)) {// ||
                 //(sym->identity == VARIABLE && sym->type == STRUCT))) {
+            /* 8085 */
             output_with_tab("ldsi\t");
             output_number(sym->offset - stkp);
             newline ();
@@ -184,8 +192,7 @@ void gen_put_memory(SYMBOL *sym) {
     } else {
         output_with_tab ("shld\t");
     }
-    output_string (sym->name);
-    newline ();
+    describe_access(sym);
 }
 
 /**
@@ -244,7 +251,8 @@ void gen_get_indirect(char typeobj, int reg) {
  */
 int gen_indirected(SYMBOL *s)
 {
-    /* FIXME: TODO - we can avoid indirecting LSTATIC */
+    if (s->storage == LSTATIC)
+        return 0;
     return 1;
 }
 
@@ -438,6 +446,11 @@ int gen_defer_modify_stack(int newstkp)
     return gen_modify_stack(newstkp);
 }
 
+int gen_register(int vp, int size, int typ)
+{
+    /* For the moment */
+    return -1;
+}
 
 /**
  * multiply the primary register by INTSIZE
@@ -816,3 +829,10 @@ void gen_multiply(int type, int size) {
     }
 }
 
+/**
+ * To help the optimizer know when r1/r2 are discardable
+ */
+void gen_statement_end(void)
+{
+    output_line(";end");
+}

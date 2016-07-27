@@ -4,6 +4,8 @@
 
 static int args;
 
+static int nextreg;
+static int regv[8];
 
 /*
  *	A cheap and cheerful way to see what it's trying to do
@@ -85,10 +87,28 @@ void data_segment_gdata(void) {
 
 void gen_prologue(void)
 {
+    nextreg = 3;
 }
 
 void gen_epilogue(void)
 {
+    int i;
+    /* FIXME: usual case we can pop these in this order need to spot the
+       sp position and optimize accordingly */
+    for (i = nextreg - 1; i >= 3; i--) {
+        if (stkp == regv[i]) {
+            stkp += 2;
+            output_with_tab("pop r");
+            output_number(i);
+        } else {
+            output_with_tab("load r");
+            output_number(i);
+            output_string(" (");
+            output_number(regv[i]);
+            output_string("+fp)");
+        }
+        newline();
+    }
 }
 
 /**
@@ -130,6 +150,12 @@ static void output_bracketed(char *p)
 
 static void describe_access(SYMBOL *sym)
 {
+    if (sym->storage == REGISTER) {
+        output_string("r");
+        output_number(sym->offset);
+        newline();
+        return;
+    }
     output_byte('(');
     if (sym->storage == LSTATIC) {
         print_label(sym->offset);
@@ -378,10 +404,24 @@ int gen_modify_stack(int newstkp) {
     return (newstkp);
 }
 
-/* FIXME */
+/* FIXME - interaction with register needs thought */
 int gen_defer_modify_stack(int newstkp)
 {
     return gen_modify_stack(newstkp);
+}
+
+int gen_register(int vp, int size, int typ)
+{
+    if (size != 2)
+        return -1;
+    if (nextreg > 6)
+        return -1;
+    stkp = stkp - 2;
+    regv[nextreg] = stkp;
+    output_with_tab("push r");
+    output_number(nextreg);
+    newline();
+    return nextreg++;
 }
 
 /**
@@ -710,14 +750,6 @@ void gnargs(int d)
 }
 
 /**
- * print partial instruction to get an immediate value into
- * the secondary register
- */
-void gen_immediate2(void) {
-    output_with_tab ("load r2 ");
-}
-
-/**
  * add offset to primary register
  * @param val the value
  */
@@ -746,4 +778,12 @@ void gen_multiply(int type, int size) {
         default:
             break;
     }
+}
+
+/**
+ * To help the optimizer know when r1/r2 are discardable
+ */
+void gen_statement_end(void)
+{
+    output_line(";end");
 }

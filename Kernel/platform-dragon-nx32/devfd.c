@@ -53,10 +53,8 @@ static uint8_t selmap[4] = {0x00, 0x01, 0x02, 0x03 };
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    uint16_t dptr;
-    uint8_t nblock;
     int tries;
+    int count = 0;
     uint8_t err;
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[7];
@@ -68,30 +66,24 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (err)
             goto bad;
     }
+    udata.u_nblock *= 2;
 
-    if (rawflag == 0) {
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        nblock = 2;
-    } else if (rawflag == 1) {
-        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
+    if (rawflag == 1 && d_blkoff(BLKSHIFT))
+        return -1;
+
+    if (rawflag > 1)
             goto bad2;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> 9;
-        nblock = udata.u_count >> 8;
-    } else
-        goto bad2;
 
 //    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = rawflag;
     cmd[1] = is_read ? FD_READ : FD_WRITE;
-    cmd[2] = block / 9;		/* 2 sectors per block */
-    cmd[3] = ((block % 9) << 1) + 1;	/*eww.. */
+    cmd[2] = udata.u_block / 9;		/* 2 sectors per block */
+    cmd[3] = ((udata.u_block % 9) << 1) + 1;	/*eww.. */
     cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[5] = dptr >> 8;
-    cmd[6] = dptr & 0xFF;
+    cmd[5] = (uint16_t)udata.u_dptr >> 8;
+    cmd[6] = (uint16_t)udata.u_dptr & 0xFF;
         
-    while (nblock) {
+    while (count < udata.u_nblock) {
         for (tries = 0; tries < 4 ; tries++) {
             err = fd_operation(cmd, driveptr);
             if (err == 0)
@@ -108,10 +100,10 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             cmd[3] = 1;	/* Track on */
             cmd[2]++;
         }
-        nblock--;
+        count++;
     }
     fd_motor_idle();
-    return 0;
+    return count << 8;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:

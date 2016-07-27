@@ -76,7 +76,7 @@ void dumpmods(void);
 void dumpsyms(void);
 
 /* io.c */
-void ioinit(char *progname);
+void ioinit(const char *progname);
 void closein(void);
 void closeout(void);
 void errtrace(char *name, int level);

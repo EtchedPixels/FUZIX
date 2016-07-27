@@ -234,24 +234,28 @@ Any device other than a disk will have only raw access.
    out some scheme to do a bank call here - do we need a dev_tab bank
    entry perhaps ? */
 
+static void bdsetup(bufptr bp)
+{
+	udata.u_buf = bp;
+	udata.u_block = bp->bf_blk;
+	udata.u_blkoff = 0;
+	udata.u_nblock = 1;
+	udata.u_dptr = bp->bf_data;
+}
+
 int bdread(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
-
 	validchk(dev, PANIC_BDR);
-
-	udata.u_buf = bp;
+	bdsetup(bp);
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 0, 0));
 }
-
 
 int bdwrite(bufptr bp)
 {
 	uint16_t dev = bp->bf_dev;
-
 	validchk(dev, PANIC_BDW);
-
-	udata.u_buf = bp;
+	bdsetup(bp);
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 0, 0));
 }
 
@@ -308,6 +312,23 @@ int d_flush(uint16_t dev)
 		r = 0;
 	}
 	return r;
+}
+
+/* 128, 256, 512 supported for now */
+static uint16_t masks[] = { 0x7F, 0xFF, 0x1FF };
+
+/* This is not a commonly used path so can be slower */
+int d_blkoff(uint8_t shift)
+{
+	uint16_t m = masks[shift - 7];
+	udata.u_block = udata.u_offset >> shift;
+	if (udata.u_offset & m) {
+		udata.u_error = EIO;
+		return -1;
+	}
+	udata.u_nblock = (udata.u_count + m) >> shift;
+	udata.u_dptr = udata.u_base;
+	return 0;
 }
 
 /*
