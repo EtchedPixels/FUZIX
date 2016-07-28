@@ -108,6 +108,7 @@ n 20660 1025 /dev/mem
 n 20444 1026 /dev/zero  
 n 20666 1027 /dev/proc  
 
+f 0644 /etc/group     etc-files/group
 f 0644 /etc/issue     etc-files/issue
 f 0644 /etc/motd      etc-files/motd
 f 0644 /etc/passwd    etc-files/passwd
