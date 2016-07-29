@@ -84,6 +84,7 @@ standard_device_nodes = \
 	/dev/proc  20660 1027 \
 
 FILESYSTEM += \
+	/etc/group              0644 Standalone/filesystem-src/etc-files/group \
 	/etc/inittab            0644 Standalone/filesystem-src/etc-files/inittab \
 	/etc/issue              0644 Standalone/filesystem-src/etc-files/issue \
 	/etc/motd               0644 Standalone/filesystem-src/etc-files/motd \

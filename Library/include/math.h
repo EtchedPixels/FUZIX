@@ -23,7 +23,7 @@ extern double erf(double);
 extern double exp(double);
 extern double expm1(double);
 extern double fabs(double);
-extern double fdim(double double);
+extern double fdim(double, double);
 extern double floor(double);
 extern double fmax(double, double);
 extern double fmin(double, double);
@@ -36,7 +36,7 @@ extern double j1(double);
 extern double jn(int, double);
 extern double ldexp(double, int);
 extern double lgamma(double);
-extern double lgamma_r, int *);
+extern double lgamma_r(double, int *);
 extern double log(double);
 extern double log10(double);
 extern double log1p(double);
@@ -72,19 +72,19 @@ extern int __signbit(double);
 #define fpclassify(x) ( \
   sizeof(x) == sizeof(float) ? __fpclassifyf(x) : \
   __fpclassify(x))
-      
+
 #define isinf(x) ( \
   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
   (__double_bits(x) & (__uint64_t)-1>>1) == (__uint64_t)0x7ff<<52)
-            
+
 #define isnan(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) > 0x7f800000 : \
    (__double_bits(x) & (__uint64_t)-1>>1) > (__uint64_t)0x7ff<<52)
-                  
+
 #define isnormal(x) ( \
    sizeof(x) == sizeof(float) ? ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
    ((__double_bits(x)+((__uint64_t)1<<52)) & (__uint64_t)-1>>1) >= (__uint64_t)1<<53)
-                        
+
 #define isfinite(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) < 0x7f800000 : \
    (__double_bits(x) & (__uint64_t)-1>>1) < (__uint64_t)0x7ff<<52)
@@ -154,16 +154,16 @@ extern int __signbit(double);
 #define yn(a,b)		ynf(a,b)
 
 #define fpclassify(x) __fpclassify(x))
-      
+
 #define isinf(x) ( \
   (__float_bits(x) & 0x7fffffff) == 0x7f800000)
-            
+
 #define isnan(x) ( \
    (__float_bits(x) & 0x7fffffff) > 0x7f800000)
-                  
+
 #define isnormal(x) ( \
    ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x0100000)
-                        
+
 #define isfinite(x) ( \
    (__float_bits(x) & 0x7fffffff) < 0x7f800000)
 
@@ -212,7 +212,7 @@ extern long lrintf(float);
 extern long lroundf(float);
 extern float modff(float, float *);
 extern float nanf(const char *__tagp);
-extern float nearbyint(float);
+extern float nearbyintf(float);
 extern float nextafterf(float, float);
 extern float remainderf(float, float);
 extern float remquof(float, float, int *);
@@ -224,7 +224,7 @@ extern float sinf(float);
 extern float sinhf(float);
 extern float sqrtf(float);
 extern float tgammaf(float);
-extern float trunc(float);
+extern float truncf(float);
 extern float y0f(float);
 extern float y1f(float);
 extern float ynf(int, float);

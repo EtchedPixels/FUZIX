@@ -17,6 +17,9 @@
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define CONFIG_BANKS	4
+/* 512Kbyte RAM in 16K chunks is 32. 3 reserved?
+   Since we *could* have 1MByte this should be larger.. 64-3
+*/
 #define MAX_MAPS 32-3
 #define MAPBASE 0x0000
 /* And swapping */
@@ -30,10 +33,7 @@
 #define MAX_SWAPS	32
 #define swap_map(x)  ((uint8_t *)(x & 0x3fff ))
 
-/* The Drivewire block dev rawmode=1 doesn't work just now
-   with the bank16k.c memory layout (yet), so we have to
-   use legacy binary loading... */
-#define CONFIG_LEGACY_EXEC
+#undef  CONFIG_LEGACY_EXEC
 
 
 #define TICKSPERSEC 50      /* Ticks per second */
