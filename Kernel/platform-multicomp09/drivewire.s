@@ -160,11 +160,11 @@ ReadEx	 puls  d,x,y,pc
 
 ; Used by DWRead and DWWrite
 IntMasks equ   $50
-NOINTMASK equ  1
+NOINTMASK equ  0
 
 ; Hardcode these for now so that we can use below files unmodified
 H6309    equ 0
-BECKER   equ 1
+BECKER   equ 0
 ARDUINO  equ 0
 JMCPBCK  equ 0
 BAUD38400 equ 0

@@ -24,13 +24,13 @@
    Port 0 and Port 1 mappings can be swapped through a jumper on the PCB.
    Port 2 is a serial port.
 
-   Port 0 is used for tty1, Port 1 for tty2.
+   Port 0 is used for tty1, Port 1 for tty2. Port2 is dedicated to DriveWire.
 */
 static uint8_t *uart[] = {
 	0,      0,                               /* Unused */
 	(uint8_t *)0xFFD1, (uint8_t *)0xFFD0,    /* Virtual UART Data, Status port0, tty1 */
 	(uint8_t *)0xFFD3, (uint8_t *)0xFFD2,    /*         UART Data, Status port1, tty2 */
-	(uint8_t *)0xFFD5, (uint8_t *)0xFFD4,    /*         UART Data, Status port2, tty3 */
+	(uint8_t *)0xFFD5, (uint8_t *)0xFFD4,    /*         UART Data, Status port2, dw   */
 };
 
 #ifdef MC09_VIRTUAL_IN
@@ -58,15 +58,14 @@ uint8_t vtattr_cap;
 
 uint8_t tbuf1[TTYSIZ];   /* virtual serial port 0: console */
 uint8_t tbuf2[TTYSIZ];   /*         serial port 1: UART */
-uint8_t tbuf3[TTYSIZ];   /*         serial port 2: UART */
-uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 0 */
-uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 1 */
-uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 2 */
-uint8_t tbuf7[TTYSIZ];   /* drivewire VSER 3 */
-uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 0 */
-uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 1 */
-uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 2 */
-uint8_t tbufb[TTYSIZ];   /* drivewire VWIN 3 */
+uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
+uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
+uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
+uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
+uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
+uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
+uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
+uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
 
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
@@ -75,17 +74,16 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 	/* Virtual UART/Real UART Consoles */
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 	/* Drivewire Virtual Serial Ports */
+	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf6, tbuf6, tbuf6, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
 	/* Drivewire Virtual Window Ports */
+	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf8, tbuf8, tbuf8, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf9, tbuf9, tbuf9, TTYSIZ, 0, TTYSIZ / 2},
 	{tbufa, tbufa, tbufa, TTYSIZ, 0, TTYSIZ / 2},
-	{tbufb, tbufa, tbufa, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 
@@ -93,7 +91,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
-	if (minor > 3 && ttydata[minor].users == 1)
+	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
 	return (tty_close(minor));
 }
@@ -121,8 +119,9 @@ void kputchar(char c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
+	// [NAC HACK 2016Jul27] do I need to wait for the DW uart? Maybe I do..
 	uint8_t c;
-        if ((minor < 1) || (minor > 3)) {
+        if ((minor < 1) || (minor > 2)) {
 		return TTY_READY_NOW;
         }
 	c = *(uart[minor*2 + 1]); /* 2 entries per UART, +1 to get STATUS */
@@ -131,10 +130,10 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if ((minor > 0) && (minor < 4)) {
+	if ((minor > 0) && (minor < 3)) {
 		*(uart[minor*2]) = c; /* UART Data */
 	}
-	if (minor > 3 ) {
+	if (minor > 2 ) {
 		dw_putc(minor, c);
 	}
 }
@@ -147,7 +146,7 @@ void tty_sleeping(uint8_t minor)
 
 void tty_setup(uint8_t minor)
 {
-	if (minor > 3) {
+	if (minor > 2) {
 		dw_vopen(minor);
 		return;
 	}
@@ -191,9 +190,7 @@ void platform_interrupt(void)
 	c = *(uart[1*2 + 1]);
 	if (c & 0x01) { tty_inproc(1, *(uart[1*2])); }
 	/*	c = *(uart[2*2 + 1]);
-	if (c & 0x01) { tty_inproc(2, *(uart[2*2])); }
-	c = *(uart[3*2 + 1]);
-	if (c & 0x01) { tty_inproc(3, *(uart[3*2])); } */
+	if (c & 0x01) { tty_inproc(2, *(uart[2*2])); } */
 #endif
 
 	c = timer_reg;
@@ -202,7 +199,7 @@ void platform_interrupt(void)
 		timer_interrupt();   /* tell the OS it happened */
 	}
 
-        //	dw_vpoll();
+	dw_vpoll();
 }
 
 
