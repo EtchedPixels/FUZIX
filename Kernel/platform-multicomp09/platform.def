@@ -46,9 +46,9 @@ UARTDAT0	equ $ffd1
 UARTSTA0	equ $ffd0
 
 ;;; Port1, tty2: UART registers - additional console
-UARTDAT1	equ $ffd1
-UARTSTA1	equ $ffd0
+UARTDAT1	equ $ffd3
+UARTSTA1	equ $ffd2
 
 ;;; Port2, tty3: UART registers - drivewire link to server
-UARTDAT2	equ $ffd1
-UARTSTA2	equ $ffd0
+UARTDAT2	equ $ffd5
+UARTSTA2	equ $ffd4
