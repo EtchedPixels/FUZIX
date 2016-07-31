@@ -3,6 +3,8 @@
 #include <printf.h>
 #include <devfd.h>
 
+#include "disciple.h"
+
 #define MAX_FD	2
 
 #define OPDIR_NONE	0

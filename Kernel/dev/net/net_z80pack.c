@@ -164,7 +164,7 @@ int net_listen(struct socket *s)
 int net_connect(struct socket *s)
 {
 	/* This is in host big endian order already */
-	uint8_t *p = &s->s_addr[SADDR_DST].addr;
+	uint8_t *p = (uint8_t*)&s->s_addr[SADDR_DST].addr;
 	uint8_t err;
 	irqflags_t irq = di();
 
@@ -175,7 +175,7 @@ int net_connect(struct socket *s)
 	netctrl = *p++;
 	netctrl = *p++;
 	netctrl = *p;
-	p = &s->s_addr[SADDR_DST].port;
+	p = (uint8_t*)&s->s_addr[SADDR_DST].port;
 	/* Write the port */
 	netctrl = *p++;
 	netctrl = *p;

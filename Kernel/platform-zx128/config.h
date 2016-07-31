@@ -52,7 +52,7 @@
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  2051	/* Microdrive 3 : FIXME - configure and probe */
+/* #define SWAPDEV  2051 */ /* Microdrive 3 : FIXME - configure and probe */
 #define NBUFS    9       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 #define MAX_BLKDEV 2	    /* 2 IDE drives, 1 SD drive */
