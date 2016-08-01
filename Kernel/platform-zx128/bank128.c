@@ -32,8 +32,10 @@ void pagemap_free(ptptr p)
 
 int pagemap_alloc(ptptr p)
 {
+#ifdef SWAPDEV
 	if (pfptr == 0)
 		swapneeded(p, 1);
+#endif
 	if (pfptr == 0)
 		return ENOMEM;
 	p->p_page = pfree[--pfptr];
@@ -59,6 +61,9 @@ uint16_t pagemap_mem_used(void)
  */
 int swapout(ptptr p)
 {
+#ifndef SWAPDEV
+	p; /* to shut the compiler */
+#else
 	uint16_t blk;
 	uint16_t map;
 
@@ -89,6 +94,7 @@ int swapout(ptptr p)
 #ifdef DEBUG
 	kprintf("%x: swapout done %d\n", p, p->p_page);
 #endif
+#endif
 	return 0;
 }
 
@@ -99,6 +105,9 @@ int swapout(ptptr p)
  */
 void swapin(ptptr p, uint16_t map)
 {
+#ifndef SWAPDEV
+	p;map; /* to shut the compiler */
+#else
 	uint16_t blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
@@ -123,5 +132,6 @@ void swapin(ptptr p, uint16_t map)
 	low_bank = p;
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
+#endif
 #endif
 }

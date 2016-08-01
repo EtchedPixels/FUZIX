@@ -58,11 +58,16 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		block = udata.u_offset >> 9;
 		mdv_page = udata.u_page;
 	} else {
+#ifdef SWAPDEV
 		/* Microdrive swap awesomeness */
 		mdv_buf = swapbase;
 		nblock = swapcnt >> 9;
 		block = swapblk;
 		mdv_page = swappage;
+#else
+		/* Attempt to swap when swapping is disabled */
+		goto bad;
+#endif
 	}
 
 	irq = di();

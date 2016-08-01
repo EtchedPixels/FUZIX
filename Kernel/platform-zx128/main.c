@@ -9,10 +9,12 @@ uint16_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
+#ifdef SWAPDEV
   /* Swap */
   swapmap_add(0);
   swapmap_add(1);
   swapmap_add(2);
+#endif
 }
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
@@ -42,3 +44,11 @@ void platform_interrupt(void)
 void map_init(void)
 {
 }
+
+#ifndef SWAPDEV
+/* Adding dummy swapper since it is referenced by tricks.s */
+void swapper(ptptr p)
+{
+  p;
+}
+#endif
