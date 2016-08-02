@@ -19,10 +19,16 @@ provides the following:
   - I/O space from 0xffd0-0xffdf
 - 50Hz Timer interrupt
 - Hardware single-step
+  - NMI is devoted to this function. See source code of "Buggy" for
+  details.
 - SD controller in hw state-machines
 - Virtual 6850-like UART interfacing to an 80x25 colour ANSI terminal
   on a VGA display with PS/2 keyboard input
-- Upto 2 6850-like serial UARTs with RS232 or virtual-RS232/USB interfaces
+- 2 6850-like serial UARTs with RS232 or virtual-RS232/USB interfaces.
+  The baud rate is hard-wired (in Microcomputer.vhd) to 115,200 which
+  suits DriveWire perfectly.
+- Jumper to swap (in hardware) addresses of Virtual UART and actual
+  UART, allowing the boot device to be swapped.
 - coco-style memory mapping unit (2 contexts, 8K banks)
   - upto 1MByte physical RAM
 - RTC through DS1302 bit-banged on GPIO port.
@@ -127,7 +133,7 @@ DEVICES (so far)
 node       major   minor     description
 /dev/tty1  2       1   	     VGA/PS2 console  <-+-- swappable by VDUFFD0
 /dev/tty2  2       2         RS232 port       <-+             jumper
-/dev/tty3  2       3         USB virtual RS232 port
+/dev/tty3  2       3         RS232 port for Drivewire transport to server
 /dev/tty4  2       4         Drivewire Virtual Window #0  (coming soon..)
 /dev/dw?   8       0-256     Drivewire Block Drives       (coming soon..)
 

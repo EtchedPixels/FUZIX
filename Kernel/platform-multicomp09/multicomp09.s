@@ -481,9 +481,9 @@ map_for_swap
 ;;;   returns: nothing
 outchar:
 	pshs    b,cc
-vdubiz  ldb     UARTSTA
+vdubiz  ldb     UARTSTA0
         bitb    #2
-        beq     vdubiz	; busy
+        beq     vdubiz	 ; busy
 
-	sta	UARTDAT	; ready, send character
+	sta	UARTDAT0 ; ready, send character
 	puls	b,cc,pc
