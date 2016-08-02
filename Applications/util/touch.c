@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <utime.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/stat.h>
 
 static time_t settime;
