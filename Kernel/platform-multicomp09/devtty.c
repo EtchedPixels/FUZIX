@@ -4,11 +4,9 @@
 #include <stdbool.h>
 #include <devtty.h>
 #include <device.h>
-#include <vt.h>
 #include <tty.h>
 #include <devdw.h>
 #include <ttydw.h>
-#include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 #undef  MC09_VIRTUAL_IN
@@ -46,14 +44,6 @@ static int imatch = 100;
 static uint8_t input[] = "ls -al\nXpwd\nX";
 static int ccount = 0;
 #endif
-
-
-#define VSECT __attribute__((section(".video")))
-#define VSECTD __attribute__((section(".videodata")))
-
-
-
-uint8_t vtattr_cap;
 
 
 uint8_t tbuf1[TTYSIZ];   /* virtual serial port 0: console */
@@ -119,7 +109,6 @@ void kputchar(char c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	// [NAC HACK 2016Jul27] do I need to wait for the DW uart? Maybe I do..
 	uint8_t c;
         if ((minor < 1) || (minor > 2)) {
 		return TTY_READY_NOW;

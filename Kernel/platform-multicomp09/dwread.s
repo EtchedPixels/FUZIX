@@ -79,5 +79,5 @@ rxExit	  leas      1,s                 ; remove timeout MSB from stack
           leay      ,x                  ; return checksum in Y
           puls      cc,x,u,pc		; restore registers and return
 
-rxTimout  clra				; represents CC.C=0
+rxTimout  clra				; represents CC.C=0, CC.Z=0
 	  bra	    rxExit
