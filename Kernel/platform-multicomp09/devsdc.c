@@ -60,8 +60,6 @@ uint8_t devsd_transfer_sector(void)
 {
 	uint8_t *ptr;                  /* points to 32 bit lba in blk op */
 	sd_transfer_function_t fptr;   /* holds which xfer routine we want */
-        int i;
-        uint8_t tmp;
 
 	/* wait for drive to go non-busy after previous command
 	   (if any)
