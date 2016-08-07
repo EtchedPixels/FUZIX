@@ -64,9 +64,9 @@ rxAvail	  lda	    UARTSTA2
 	  bra	    rxAvail		; test again..
 
 * yes. Get it and move on
-rxGet	  lda	    UARTDAT2
+rxGet	  ldb	    UARTDAT2
 	  abx				; accummulate checksum
-	  sta	    ,u+			; store byte
+	  stb	    ,u+			; store byte
 	  leay	    ,-y			; decrement count
 	  bne	    rxNext
 	  lda	    #4			; represents CC.Z=1
