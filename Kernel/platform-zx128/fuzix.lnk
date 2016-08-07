@@ -25,6 +25,8 @@ platform-zx128/devmdv.rel
 platform-zx128/microdrive.rel
 platform-zx128/devfd.rel
 platform-zx128/disciple.rel
+platform-zx128/betadisk.rel
+platform-zx128/betadisk_internal.rel
 devio.rel
 filesys.rel
 process.rel

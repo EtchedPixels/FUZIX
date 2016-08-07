@@ -1,4 +1,5 @@
 #define CONFIG_IDE
+//#define CONFIG_BETADISK
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -66,3 +67,8 @@
 #define swap_map(x)		((uint8_t *)(x|0xC000))
 
 #define platform_discard()
+
+/* Betadisk functions do not work with modern procedures */
+#ifdef CONFIG_BETADISK
+#define CONFIG_LEGACY_EXEC
+#endif
