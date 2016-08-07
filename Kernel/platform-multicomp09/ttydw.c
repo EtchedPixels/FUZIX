@@ -52,7 +52,7 @@
          "scnt" is the size of the send buffer
          "recv" is a data buffer for the received reply
 	 "rcnt" is the size of the recv buffer
-	 "rawf" rd/wr directly to userspace
+	 "rawf" rd/wr drirectly to userspace
    returns:  0 on no error
             -1 on DW reception framing error (too slow!!)
             -2 on not all bytes received

@@ -116,7 +116,7 @@ format to load the kernel to RAM and pass control to it at its start address
 
 The emulator is started like this:
 
-./m6809-run -s multicomp09 -b ../6809M.bin -I 240000 -m 100000000
+./m6809-run -s multicomp09 -b ../6809M.bin -I 240000 -m 0
 
 *************************
 KEYBOARD
@@ -202,33 +202,22 @@ TO DO
 [NAC HACK 2016Apr23] my TO DO
 
 * Swapping to disk has not been implemented yet
-* Drivewire driver (should be simple based on Brett's work)
 * RTC driver
 * currently assume 64, 8K pages - like coco3. Want actually to do a memory size and cope with 512K
   or 1MByte
 * unify things that need not be different from coco3
 * Add lv.doc ... to man/ ??
-* could ucp do bget AND permissions in one line??
-* could ucp support a comment character??
 * get some fortunes /usr/share/games/fortunes
 * work out where to put advent.db /usr/share/games/advent ??
 * BUG fix exec09 core dump on register print
 * BUG separate memcpy memset out of videoll.s -- for all 6809 platforms.
-* BUG should have CONFIG_SDC in coco config.def otherwise devsdc_init doesn't get called in devices.c
-* BUG coco3 devices.c should #include devide.h devsd.h
-* BUG devsd.h has devsd_init but devsdc.c had devsdc_init, so did devices.c The other routine names
-* are not uniform either..
 * BUG loader does not spot overlapped section or section that overflows address space
-* BUG Library/libs/fuzix has Makefile but this is a derived file and should
-  probably not be committed.. then remove from .gitignore
 * BUG LWASM binary output does not pad from ORG to ORG.. affects boot.s - this is kinda documented
 * BUG LWASM binary output does not pad as a result of .ds directives.. affects boot.s - this is not documented
-* BUG the pcw8256 tree has some checked-in ~ files.
 * BUG exec09 doesn't detect when an out-of-range memory address in a region
   is accessed.. or when an out-of-range memory page is mapped.
 * add more stuff from util - including FORTH
 * work out where advent.db ought to be.
-* Get 2nd PCB working
 
 
 *************************
@@ -237,5 +226,3 @@ BUGS
 
 * Things work better if you compile the userspace utilities (esp. "init")
 with standard gcc optimizations.
-
-

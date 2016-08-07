@@ -24,17 +24,17 @@
 
 DWWrite   pshs      cc,a				; preserve registers
           IFEQ      NOINTMASK
-          orcc      #IntMasks           ; mask interrupts
+          orcc      #IntMasks				; mask interrupts
           ENDC
 
 WrBiz     lda		UARTSTA2
           bita		#2
           beq		WrBiz				; busy
 
-          lda		,x+					; get byte to transmit
+          lda		,x+				; get byte to transmit
           sta		UARTDAT2			; send byte
 
-          leay		,-y                 ; decrement byte counter
+          leay		,-y				; decrement byte counter
           bne		WrBiz				; loop if more to send
 
           puls		cc,a,pc				; restore registers and return
