@@ -6,13 +6,19 @@
 #include <vt.h>
 #include <devmdv.h>
 #include <devfd.h>
+#include <betadisk.h>
 #include <devide.h>
 #include <blkdev.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
+#ifdef CONFIG_BETADISK
+  /* 0: /dev/fd Floppy disc block devices: betadisk */
+  {  betadisk_open, no_close, betadisk_read,  betadisk_write, no_ioctl },
+#else
   /* 0: /dev/fd	Floppy disc block devices: disciple */
   {  fd_open,      no_close,     fd_read,  fd_write,   no_ioctl },
+#endif
 #ifdef CONFIG_IDE
   /* 1: /dev/hd		Hard disc block devices */
   {  blkdev_open,  no_close,     blkdev_read,   blkdev_write,  blkdev_ioctl },
