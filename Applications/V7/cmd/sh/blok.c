@@ -53,7 +53,6 @@ ADDRESS alloc(POS nbytes)
 					p->word = q->word;
 
 /*                                printf("H%d ", ADR(q) - ADR(p)); */
-                                gratuitous_call();
                                 /* Big enough hole */
 				if (ADR(q) - ADR(p) >= rbytes) {
 				        /* blokp is the first byte after
@@ -62,7 +61,6 @@ ADDRESS alloc(POS nbytes)
 					/* Splitting ? */
 					if (q > blokp) {
 /*					        printf("S");*/
-                                                gratuitous_call();
 						blokp->word = p->word;
                                         }
                                         /* Update our block */

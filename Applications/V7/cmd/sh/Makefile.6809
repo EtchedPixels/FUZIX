@@ -5,6 +5,8 @@ ASM = m6809-unknown-as
 AR = m6809-unknown-ar
 LINKER = lwlink
 CFLAGS =  -I../../../../Library/include -I../../../../Library/include/6809 -Wall -pedantic -fno-strict-aliasing
+# Workaround for gcc6809 bug - register copy propagation issue
+CFLAGS += -fno-cprop-registers
 COPT = -Os
 LINKER_OPT = --format=raw -L../../../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
