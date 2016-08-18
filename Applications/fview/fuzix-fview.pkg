@@ -5,4 +5,5 @@ if-file fview
 
 f 0755 /usr/bin/fview		fview
 f 0644 /usr/man/man1/fview.1    fview.1
+f 0644 /usr/share/test.bmp	test.bmp
 
