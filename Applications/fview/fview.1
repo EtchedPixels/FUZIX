@@ -1,0 +1,39 @@
+.TH man 1 "FUZIX System Utilities" "FUZIX" \" -*- nroff -*-
+.SH NAME
+fview \- display Windows .bmp files
+.SH SYNOPSIS
+.B fview
+[\-d] [\-p] file
+.SH DESCRIPTION
+.B fview displays Windows .bmp (dib) files on FUZIX tty's that support 1 bpp graphics.
+.B fview can read 1, 2, 4, 8, 16(5-5-5-1), 24, and 32 bpp source bitmaps.
+No (de)compression is supported.  Floyd-Steinberg is performed, but no 
+scaling or offsetting.
+.SS OPTIONS
+.TP
+.I "-d"
+Do 
+.B not dither.
+.TP
+.I "-p"
+Print header information from dib file and exit.
+.TP
+.SH EXAMPLES
+.IP
+fview test.bmp
+.IP
+fview -d test.bmp
+.IP
+fview -p test.bmp
+.SH EXIT STATUS
+.TP
+.B 0
+Completed successfully.
+.TP
+.B 1
+An error occured.
+.SH BUGS
+Tons!
+.SH AUTHORS
+Brett M. Gordon
+
