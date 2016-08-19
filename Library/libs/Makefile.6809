@@ -138,7 +138,7 @@ $(OBJ_CURS):%.o: %.c
 vfscanf-libm.o: vfscanf.c
 	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
 
-vfprintf-libm.o: vfscanf.c
+vfprintf-libm.o: vfprintf.c
 	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
 
 $(OBJ_HARD):%.o: %.c
