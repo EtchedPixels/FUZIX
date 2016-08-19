@@ -130,7 +130,7 @@ int scan_modes(void) {
 
 
 void exit_err_mess( char *mess ){
-	fprintf( stderr, mess );
+	fputs(mess, stderr);
 	fputc( '\n', stderr );
 	exit(1);
 }
