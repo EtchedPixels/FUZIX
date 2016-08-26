@@ -1,5 +1,5 @@
-export CROSS_LD=m68k-atari-mint-ld
-export CROSS_CC = m68k-atari-mint-gcc
+export CROSS_LD=m68k-linux-gnu-ld
+export CROSS_CC = m68k-linux-gnu-gcc
 export CROSS_CCOPTS=-c -fno-builtin -Wall -Os -m68000 -mshort -I$(ROOT_DIR)/cpu-68000 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_AS=$(CROSS_CC) $(CROSS_CCOPTS) #-Wa,-M
 export CROSS_CC_SEG1=
