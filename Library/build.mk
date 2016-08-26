@@ -144,7 +144,6 @@ libc-functions.localsrcs += \
 	strsignal.c \
 	strtod.c \
 	strtol.c \
-	strtol.c \
 	strxfrm.c \
 	sysconf.c \
 	system.c \
@@ -199,7 +198,6 @@ libc-functions.localsrcs += \
     strspn.c \
     strstr.c \
     strtok.c \
-    strxfrm.c \
 	$(SYSCALL_STUB)
 
 libc-functions.srcs = $(addprefix libs/, \
