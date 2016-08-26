@@ -429,14 +429,6 @@ outnewline:
         jsr outchar
         rts
 
-outd:  ; prints D in hex.
-	pshs b
-        tfr b,a
-        jsr outcharhex
-        puls b
-        jsr outcharhex
-        rts
-
 outx:  ; prints X
 	pshs d
 	tfr x,d
@@ -449,6 +441,12 @@ outy:  ; prints Y
 	bsr outd
 	puls d,pc
 
+outd:  ; prints D in hex.
+	pshs b
+	bsr outcharhex
+	puls a
+	; FALL THROUGH
+
 ; print the byte in A as a two-character hex value
 outcharhex:
 	pshs a
@@ -456,10 +454,9 @@ outcharhex:
         lsra
         lsra
         lsra
-        jsr outnibble
+        bsr outnibble
 	puls a
-        jsr outnibble
-        rts
+	; FALL THROUGH
 
 ; print the nibble in the low four bits of A
 outnibble:
