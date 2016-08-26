@@ -240,9 +240,8 @@ void gen_get_indirect(char typeobj, int reg) {
             output_line("ldb ,x");
         else {
             /* TODO work out what we can damage here */
-            /* Can we avoid using ,u ?? */
-            output_line("tfr d,u");
-            output_line("ldb ,u");
+            output_line("tfr d,x");
+            output_line("ldb ,x");
         }
         if (typeobj == CCHAR)
             output_line("sex");
@@ -250,9 +249,8 @@ void gen_get_indirect(char typeobj, int reg) {
         if (reg & DE_REG)
             output_line("ldd ,x");	/* Can't happen ?? */
         else {
-            output_line("exg d,x");
-            output_line("ldx ,x");
-            output_line("exg d,x");
+            output_line("tfr d,x");
+            output_line("ldd ,x");
         }
     }
 }
@@ -310,11 +308,9 @@ void gen_pop(void) {
  * FIXME: probably want a gen_call_indirect so targets can do sane things
  */
 void gen_swap_stack(void) {
-    /* FIXME: if we can get rid of u register stuff we can get two
-       register variables */
-    output_line("ldu ,s");
+    output_line("ldx ,s");
     output_line("std ,s");
-    output_line("tfr u,d");
+    output_line("tfr x,d");
 }
 
 /**
@@ -360,12 +356,14 @@ void gen_epilogue(void)
         output_number(i);
         newline();
     }
-    /* FIXME: need to adjust the stack if there is cruft in the way */
+    /* Need to adjust the stack if there is cruft in the way */
     if (nextreg > 1) {
+        gen_modify_stack(regv[1]);
         output_line("puls y,u");
         stkp + 4;
     }
     else if (nextreg) {
+        gen_modify_stack(regv[0]);
         output_line("puls y");
         stkp += 2;
     }
@@ -517,10 +515,8 @@ void gen_jump_case(void) {
  * @param lval2
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
-    if (dbltest (lval2, lval)) {
-        output_line("asl 1,s");
-        output_line("rol ,s");
-    }
+    if (dbltest (lval2, lval))
+        output_line("addd ,s");
     output_line ("addd ,s++");
     stkp += INTSIZE;
 }
@@ -849,11 +845,15 @@ void gen_multiply(int type, int size) {
             gen_multiply_by_two();
             break;
         case STRUCT:
+            if (nextreg > 1)
+                output_line("pshs y");
             output_with_tab("ldy ");
             output_immediate(size);
             newline();
             gen_call("__muli ");
             newline();
+            if (nextreg > 1)
+                output_line("puls y");
             break;
         default:
             break;

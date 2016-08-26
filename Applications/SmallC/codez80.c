@@ -527,14 +527,11 @@ void gen_multiply_by_two(void) {
 }
 
 /**
- * divide the primary register by INTSIZE, never used
+ * divide the primary register by INTSIZE
  */
 void gen_divide_by_two(void) {
-    gen_push(HL_REG);        /* push primary in prep for gasr */
-    gen_immediate ();
-    output_number (1);
-    newline ();
-    gen_arithm_shift_right ();  /* divide by two */
+    output_line("srl h");
+    output_line("rr l");
 }
 
 /**
@@ -553,11 +550,8 @@ void gen_jump_case(void) {
  */
 void gen_add(LVALUE *lval, LVALUE *lval2) {
     gen_pop ();
-    if (dbltest (lval2, lval)) {
-        gen_swap ();
-        gen_multiply_by_two();
-        gen_swap ();
-    }
+    if (dbltest (lval2, lval))
+        output_line("add hl,de");
     output_line ("add hl,de");
 }
 

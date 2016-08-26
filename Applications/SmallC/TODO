@@ -1,3 +1,5 @@
+- Parse assignment to local variables
+	auto x = 4; etc
 - Write some copt rules to stop the output sucking so much
 - Steal the rst tricks done by BDS C
 - Output mixed code/data so we can flush the literal pool every line of asm

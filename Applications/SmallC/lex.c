@@ -204,6 +204,7 @@ int get_type(void) {
     if (amatch ("void", 4)) {
         return VOID;
     }
+#if 0
     if (amatch ("register", 8)) {
         if (amatch("char", 4))
             return CCHAR;
@@ -211,13 +212,15 @@ int get_type(void) {
             return CINT;
         else
             return CINT;
-    } else if(amatch("unsigned", 8)) {
+    } else
+#endif
+    if(amatch("unsigned", 8)) {
         if (amatch("char", 4)) {
             return UCHAR;
         } else if (amatch("int", 3)) {
             return UINT;
         }
-    } else if(amatch("signed", 8)) {
+    } else if(amatch("signed", 6)) {
         if (amatch("char", 4)) {
             return CCHAR;
         } else if (amatch("int", 3)) {

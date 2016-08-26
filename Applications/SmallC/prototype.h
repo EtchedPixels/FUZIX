@@ -68,6 +68,8 @@ extern void gen_prologue(void);
 extern void gen_epilogue(void);
 extern int gen_register(int vp, int size, int typ);
 extern void gen_statement_end(void);
+extern void gen_code(void);
+extern void gen_data(void);
 extern char *inclib(void);
 extern void gnargs(int d);
 extern int assemble(char *s);

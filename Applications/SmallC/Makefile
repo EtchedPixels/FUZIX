@@ -41,3 +41,6 @@ clean:
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
 
 $(OBJS_ALL) : $(INC)
+
+clean:
+	rm -f *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk

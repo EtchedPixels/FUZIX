@@ -2,11 +2,12 @@
 #include "defs.h"
 #include "data.h"
 
-int nextreg = 0;
-int xdirty = 0;
-int xsprel = 0;
-int xtype = 0;	/* 0 = D, 1 = S */
-int regv[8];
+static int nextreg = 0;
+static int xdirty = 0;
+static int xsprel = 0;
+static int xtype = 0;	/* 0 = D, 1 = S */
+static int regv[8];
+static int indata;
 
 /*
  *      Some predefinitions:
@@ -33,6 +34,7 @@ void header (void) {
     newline ();
     output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
     output_line ("\t.module SMALLC_GENERATED");
+    gen_code();
 }
 
 /**
@@ -52,7 +54,6 @@ void initmac(void) {
  * Output internal generated label prefix
  */
 void output_label_prefix(void) {
-    xdirty = 1;
     output_byte('$');
 }
 
@@ -61,6 +62,8 @@ void output_label_prefix(void) {
  */
 void output_label_terminator (void) {
     output_byte (':');
+    if (!indata)
+        xdirty = 1;
 }
 
 /**
@@ -902,4 +905,16 @@ void gen_multiply(int type, int size) {
 void gen_statement_end(void)
 {
     output_line(";end");
+}
+
+void gen_data(void)
+{
+    indata = 1;
+    output_line(".data");
+}
+
+void gen_code(void)
+{
+    indata = 0;
+    output_line(".code");
 }
