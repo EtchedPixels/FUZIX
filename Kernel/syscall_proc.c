@@ -158,8 +158,9 @@ arg_t _time(void)
 
 
 /*******************************************
-stime (tvec)                     Function 28
+stime (tvec, type)               Function 28
 time_t *tvec;
+uint16_t type;
 ============================================
 Set Clock Time (Currently unimplemented).
 When active, must be SuperUser to Set Time.
@@ -174,10 +175,10 @@ arg_t _stime(void)
 		udata.u_error = EINVAL;
 		return -1;
 	}
-	if (uget(&t, tvec, sizeof(t)) || esuper())
+	if (uget(tvec, &t, sizeof(t)) || esuper())
 		return -1;
 	wrtime(&t);
-	return (-1);
+	return (0);
 }
 
 #undef tvec
