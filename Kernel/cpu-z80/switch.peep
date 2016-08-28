@@ -1,0 +1,489 @@
+// Some slightly daft reloads
+
+replace restart {
+	ld	hl,#%1 + 0
+	ld	(hl), #<(%2)
+	ld	hl,#%1 + 1
+	ld	(hl), #>(%2)
+} by {
+	ld	hl,#%1 + 0
+	ld	(hl), #<(%2)
+	inc	hl
+	ld	(hl), #>(%2)
+	; AC use inc for half loads
+}
+
+replace restart {
+	ld	hl,#%1+0
+	inc	(hl)
+	jr	NZ,%2
+	ld	hl,#%1+1
+	inc	(hl)
+} by {
+	ld	hl, #%1+0
+	inc	(hl)
+	jr	NZ,%2
+	inc	hl
+	inc	(hl)
+	; AC suppress hl reload on ++x
+}
+
+replace restart {
+	ld	a,(#%1+1)
+	ld	hl,#%1+0
+} by {
+	ld	hl,#%1+1
+	ld	a,(hl)
+	dec	hl
+	; AC suppress hl reload on word zero check
+}
+
+replace restart {
+	ld	a,#0x00
+	ld	(%1),a
+	inc	%1
+	ld	a,#0x00
+	ld	(%1),a
+} by {
+	xor	a,a
+	ld	(%1),a
+	inc	%1
+	ld	(%1),a
+	; AC zero indirect store cleanup
+}
+
+replace restart {
+	ld	a,%1
+	ld	(%2),a
+	inc	%2
+	ld	a,%1
+} by {
+	ld	a,%1
+	ld	(%2),a
+	inc	%2
+	; AC matching halves indirect store cleanup
+} if notVolatile(%1)
+
+//
+//	Should add rules for ix/iy switches with 0 or 1 base!!
+//
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+	sub	a,%6
+	jr	%7,%8
+	ld	a,%1(%5)
+	sub	a,%9
+	jr	%10,%11
+	ld	a,%1(%5)
+	sub	a,%12
+	jr	%13,%14
+	ld	a,%1(%5)
+	sub	a,%15
+	jr	%16,%17
+	ld	a,%1(%5)
+	sub	a,%18
+	jr	%19,%20
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	cp	a,%9
+	jr	%10,%11
+	cp	a,%12
+	jr	%13,%14
+	cp	a,%15
+	jr	%16,%17
+	cp	a,%18
+	jr	%19,%20
+	; AC peephole 82ixiy6 compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a'), notUsedFrom(%11 'a'), notUsedFrom(%14 'a'), notUsedFrom(%17 'a'), notUsedFrom(%20 'a')
+
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+	sub	a,%6
+	jr	%7,%8
+	ld	a,%1(%5)
+	sub	a,%9
+	jr	%10,%11
+	ld	a,%1(%5)
+	sub	a,%12
+	jr	%13,%14
+	ld	a,%1(%5)
+	sub	a,%15
+	jr	%16,%17
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	cp	a,%9
+	jr	%10,%11
+	cp	a,%12
+	jr	%13,%14
+	cp	a,%15
+	jr	%16,%17
+	; AC peephole 82ixiy5 compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a'), notUsedFrom(%11 'a'), notUsedFrom(%14 'a'), notUsedFrom(%17 'a')
+
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+	sub	a,%6
+	jr	%7,%8
+	ld	a,%1(%5)
+	sub	a,%9
+	jr	%10,%11
+	ld	a,%1(%5)
+	sub	a,%12
+	jr	%13,%14
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	cp	a,%9
+	jr	%10,%11
+	cp	a,%12
+	jr	%13,%14
+	; AC peephole 82ixiy4 compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a'), notUsedFrom(%11 'a'), notUsedFrom(%14 'a')
+
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+	sub	a,%6
+	jr	%7,%8
+	ld	a,%1(%5)
+	sub	a,%9
+	jr	%10,%11
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	cp	a,%9
+	jr	%10,%11
+	; AC peephole 82ixiy3 compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a'), notUsedFrom(%11 'a')
+
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+	sub	a,%6
+	jr	%7,%8
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	; AC peephole 82ixiy2 compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a')
+
+replace restart {
+	ld	a,%1(%5)
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1(%5)
+} by {
+	ld	a,%1(%5)
+	cp	a,%2
+	jr	%3,%4
+	; AC peephole 82ixiy compacted switch
+} if notUsed('a'), notUsedFrom(%4 'a')
+
+replace restart {
+	ld	a,%1(%2)
+	or	a, a
+	jr	%3,%4
+	ld	a,%1(%2)
+} by {
+	ld	a,%1(%2)
+	or	a, a
+	jr	%3,%4
+	; AC remove or/reload
+} if notUsed('a'), notUsedFrom(%4 'a')
+
+replace restart {
+	ld	a,%1
+	or	a,a
+	jr	%2,%3
+	ld	a,%1
+	dec	a
+	jr	%4,%5
+	ld	a,%1
+	sub	a,#%6
+	jr	%7,%8
+} by {
+	ld	a,%1
+	or	a,a
+	jr	%2,%3
+	dec	a
+	jr	%4,%5
+	cp	a,#(%6-1)
+	jr	%7,%8
+	; AC Fold together 3 way switch compares from zero
+} if notUsed('a'), notUsedFrom(%3 'a'), notUsedFrom(%5 'a'), notUsedFrom(%8 'a')
+// Switch things but for no n (ix/iy) cases
+// Both sets needed expanding to cover each others type
+
+replace restart {
+	ld	a,%1
+	or	a,a
+	jr	%2,%3
+	ld	a,%1
+	dec	a
+	jr	%4,%5
+} by {
+	ld	a,%1
+	or	a,a
+	jr	%2,%3
+	dec	a
+	jr	%4,%5
+	; AC Fold together 2 way switch compares from zero
+} if notUsed('a'), notUsedFrom(%3 'a'), notUsedFrom(%5 'a')
+
+replace restart {
+	ld	a,%1
+	dec	a
+	jr	%2,%3
+	ld	a,%1
+	sub	a,#%4
+	jr	Z,%6
+	ld	a,%1
+	sub	a, #%7
+	jr	Z,%9
+} by {
+	ld	a,%1
+	dec	a
+	jr	%2,%3
+	cp	a,#%(4-1)
+	jr	Z,%6
+	cp	a,#(%7-1)
+	jr	Z,%9
+	; AC Fold together 3 way switch compares from one base
+} if notUsed('a'), notUsedFrom(%3 'a'), notUsedFrom(%6 'a'), notUsedFrom(%9 'a')
+
+replace restart {
+	ld	a,%1
+	dec	a
+	jr	%2,%3
+	ld	a,%1
+	sub	a,#%4
+	jr	Z,%6
+} by {
+	ld	a,%1
+	dec	a
+	jr	%2,%3
+	cp	a,#(%4-1)
+	jr	Z,%6
+	; AC Fold together 2 way switch compares from one base
+} if notUsed('a'), notUsedFrom(%3 'a'), notUsedFrom(%6 'a')
+
+
+replace restart {
+	ld	a,%1
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1
+	sub	a,%6
+	jr	%7,%8
+	ld	a,%1
+	sub	a,%9
+	jr	%10,%11
+} by {
+	ld	a,%1
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	cp	a,%9
+	jr	%10,%11
+	; AC Fold together 3 way switch compares
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a'), notUsedFrom(%11 'a')
+
+replace restart {
+	ld	a,%1
+	sub	a,%2
+	jr	%3,%4
+	ld	a,%1
+	sub	a,%6
+	jr	%7,%8
+} by {
+	ld	a,%1
+	cp	a,%2
+	jr	%3,%4
+	cp	a,%6
+	jr	%7,%8
+	; AC Fold together 2 way switch compares
+} if notUsed('a'), notUsedFrom(%4 'a'), notUsedFrom(%8 'a')
+
+
+replace restart {
+	ld	hl, #%1+0
+	inc	(hl)
+	jr	NZ,%2
+	ld	hl, #%1+1
+	inc	(hl)
+%2:
+} by {
+	ld	hl, #%1+0
+	inc	(hl)
+	jr	NZ,%2
+	inc	hl
+	inc	(hl)
+	; AC: collapse 16bit increment of static/global
+%2:
+} if notUsed('hl')
+
+replace restart {
+	ld	hl, #%1+0
+	inc	(hl)
+	jr	NZ,%2
+	ld	hl, #%1+1
+	inc	(hl)
+	jr	NZ,%2
+	ld	hl, #%1+2
+	inc	(hl)
+	jr	NZ,%2
+	ld	hl, #%1+3
+	inc	(hl)
+%2:
+} by {
+	ld	hl, #%1+0
+	inc	(hl)
+	jr	NZ,%2
+	inc	hl
+	inc	(hl)
+	jr	NZ,%2
+	inc	hl
+	inc	(hl)
+	jr	NZ,%2
+	inc	hl
+	inc	(hl)
+	; AC: collapse 32bit increment of static/global
+%2:
+} if notUsed('hl')
+
+replace restart {
+	ld	iy,#%1
+	ld	a,%2(iy)
+} by {
+	ld	a,(%1 + %2)
+	; AC	remove iy indirection
+} if notUsed('iy')
+
+replace restart {
+	push	hl
+	ld	%1,(hl)
+	inc	hl
+	ld	%2,(hl)
+	inc	hl
+	ld	%3,(hl)
+	inc	hl
+	ld	%4,(hl)
+	pop	hl
+	ld	a,%1
+	and	a,%5(%6)
+	ld	%1,a
+	ld	a,%2
+	and	a,%7(%6)
+	ld	%2,a
+	ld	a,%3
+	and	a,%8(%6)
+	ld	%3,a
+	ld	a,%4
+	and	a,%9(%6)
+	ld	%4,a
+	ld	(hl),%1
+	inc	hl
+	ld	(hl),%2
+	inc	hl
+	ld	(hl),%3
+	inc	hl
+	ld	(hl),%4
+} by {
+	ld	a,%5(%6)
+	and	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%7(%6)
+	and	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%8(%6)
+	and	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%9(%6)
+	and	a, (hl)
+	ld	(hl),a
+	;	AC fix &= L
+} if notUsed(%1), notUsed(%2), notUsed(%3), notUsed(%4)
+// Clean up the 32bit &= operator
+
+replace restart {
+	push	hl
+	ld	%1,(hl)
+	inc	hl
+	ld	%2,(hl)
+	inc	hl
+	ld	%3,(hl)
+	inc	hl
+	ld	%4,(hl)
+	pop	hl
+	ld	a,%1
+	or	a,%5(%6)
+	ld	%1,a
+	ld	a,%2
+	or	a,%7(%6)
+	ld	%2,a
+	ld	a,%3
+	or	a,%8(%6)
+	ld	%3,a
+	ld	a,%4
+	or	a,%9(%6)
+	ld	%4,a
+	ld	(hl),%1
+	inc	hl
+	ld	(hl),%2
+	inc	hl
+	ld	(hl),%3
+	inc	hl
+	ld	(hl),%4
+} by {
+	ld	a,%5(%6)
+	or	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%7(%6)
+	or	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%8(%6)
+	or	a, (hl)
+	ld	(hl),a
+	inc hl
+	ld	a,%9(%6)
+	or	a, (hl)
+	ld	(hl),a
+	;	AC fix |= L
+} if notUsed(%1), notUsed(%2), notUsed(%3), notUsed(%4)
+// Clean up the 32bit |= operator
