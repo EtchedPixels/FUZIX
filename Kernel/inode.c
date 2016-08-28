@@ -10,6 +10,23 @@
 #define read_direct(flag)		(flag & O_DIRECT)
 #endif
 
+/* This assumes it's called once before we do I/O. That's wrong and we
+   need to integrate this into the I/O loop, but when we do it changes
+   how we handle the psleep_flags bit */
+static uint8_t pipewait(inoptr ino, uint8_t flag)
+{
+        int8_t n;
+        while(ino->c_node.i_size == 0) {
+                n = oft_inuse(ino, INUSE_W);
+                if (n == 0 || psleep_flags(ino, flag)) {
+                        udata.u_count = 0;
+                        return 0;
+                }
+        }
+	udata.u_count = min(udata.u_count, ino->c_node.i_size);
+        return 1;
+}
+
 /* Writei (and readi) need more i/o error handling */
 void readi(inoptr ino, uint8_t flag)
 {
@@ -33,7 +50,6 @@ void readi(inoptr ino, uint8_t flag)
 			udata.u_count = min(udata.u_count,
 				ino->c_node.i_size - udata.u_offset);
                 }
-		toread = udata.u_count;
 		goto loop;
 
         case MODE_R(F_SOCK):
@@ -43,25 +59,16 @@ void readi(inoptr ino, uint8_t flag)
 #endif
 	case MODE_R(F_PIPE):
 		ispipe = true;
-		while (ino->c_node.i_size == 0 && !(flag & O_NDELAY)) {
-			if (ino->c_refs == 1)	/* No writers */
-				break;
-			/* Sleep if empty pipe */
-			if (psleep_flags(ino, flag))
-			        break;
-		}
-		toread = udata.u_count = min(udata.u_count, ino->c_node.i_size);
-		if (toread == 0) {
-			udata.u_error = EWOULDBLOCK;
-			break;
-		}
+		/* This bit really needs to be inside the loop for pipe cases */
+		if (!pipewait(ino, flag))
+		        break;
 		goto loop;
 
 	case MODE_R(F_BDEV):
-		toread = udata.u_count;
 		dev = *(ino->c_node.i_addr);
 
 	      loop:
+		toread = udata.u_count;
 		while (toread) {
 			amount = min(toread, BLKSIZE - BLKOFF(udata.u_offset));
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
@@ -157,7 +164,7 @@ void writei(inoptr ino, uint8_t flag)
 		   in one go - needs merging into the loop */
 		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
 					ino->c_node.i_size) {
-			if (ino->c_refs == 1) {	/* No readers */
+			if (!oft_inuse(ino, INUSE_R)) {	/* No readers */
 				udata.u_count = (usize_t)-1;
 				udata.u_error = EPIPE;
 				ssig(udata.u_ptab, SIGPIPE);

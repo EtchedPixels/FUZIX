@@ -776,6 +776,11 @@ extern void i_free(uint16_t devno, uint16_t ino);
 extern blkno_t blk_alloc(uint16_t devno);
 extern void blk_free(uint16_t devno, blkno_t blk);
 extern int8_t oft_alloc(void);
+extern int8_t oft_inuse(inoptr ino, uint8_t rw);
+/* Yes these are intentionally backwards - there are 3 modes so the loop looks
+   for "not this mode" */
+#define INUSE_R		O_WRONLY
+#define INUSE_W		O_RDONLY
 extern void deflock(struct oft *ofptr);
 extern void oft_deref(int8_t of);
 /* returns index of slot, or -1 on failure */
