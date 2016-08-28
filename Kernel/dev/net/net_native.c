@@ -212,7 +212,7 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 /* General purpose ring buffer operator. Non re-entrant so use every
    trick of the trade to generate non-shite Z80 code, especially given the
    fact we have a 32bit offset and SDCC. This game saves us 768 bytes over
-   a naïve implementation 
+   a naïve implementation.
    Note: for adding to buffer the meaning of sptr and eptr are switched
 
 */
@@ -462,7 +462,7 @@ int net_connect(struct socket *s)
 void net_close(struct socket *s)
 {
 	/* Caution here - the native tcp socket will hang around longer */
-    	netn_synchronous_event(s, SS_CLOSED);
+	netn_synchronous_event(s, SS_CLOSED);
 }
 
 /*
@@ -483,10 +483,10 @@ arg_t net_read(struct socket *s, uint8_t flag)
 		/* FIXME: We should be forced into CLOSED state so is this
 		   check actually needed */
 	        if (net_ino == NULL) {
-		        udata.u_error = EPIPE;
-			ssig(udata.u_ptab, SIGPIPE);        
-		        return -1;
-	 	}			       
+			udata.u_error = EPIPE;
+			ssig(udata.u_ptab, SIGPIPE);
+			return -1;
+		}
 		if (s->s_state < SS_CONNECTED) {
 			udata.u_error = EINVAL;
 			return -1;
