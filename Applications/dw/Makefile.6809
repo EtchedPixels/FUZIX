@@ -15,7 +15,7 @@ CRT0 = ../../Library/libs/crt0_6809.o
 .SUFFIXES: .c .o
 
 
-SRCS  = dw.c dwgetty.c dwterm.c
+SRCS  = dw.c dwgetty.c dwterm.c dwdate.c
 
 OBJS = $(SRCS:.c=.o)
 

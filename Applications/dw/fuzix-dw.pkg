@@ -1,6 +1,8 @@
 package  drivewire
 if-file  dw
 
-f 0755 /usr/bin/dw           dw
-f 0755 /usr/bin/dwgetty      dwgetty
-f 0755 /usr/bin/dwterm       dwterm
+f 0755 /usr/bin/dw             dw
+f 0755 /usr/bin/dwgetty        dwgetty
+f 0755 /usr/bin/dwterm         dwterm
+f 0755 /usr/bin/dwdate         dwdate
+f 0644 /usr/man/man1/dwdate.1  dwdate.1
