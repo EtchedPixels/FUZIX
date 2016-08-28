@@ -41,7 +41,6 @@ int netdev_write(void)
 
 	s = sockets + ne.socket;
 	sd = s->s_priv;
-
 	switch (ne.event) {
 		/* Initialize a new socket */
 	case NE_INIT:
@@ -80,6 +79,7 @@ int netdev_write(void)
 		memcpy(sd->rlen, &ne.info,
 			       sizeof(uint16_t) * NSOCKBUF);
 		s->s_iflag |= SI_DATA;
+		wakeup(&s->s_iflag);
 		break;
 	default:
 		kprintf("netbad %d\n", ne.event);
@@ -95,8 +95,8 @@ static int netdev_report(struct sockdata *sd)
 {
 	struct socket *s = sd->socket;
 
-	if (uput(sd, udata.u_base, sizeof(*sd)) == -1 ||
-		uput(s, udata.u_base + sizeof(*sd), sizeof(*s)) == -1)
+	if (uput(s, udata.u_base, sizeof(*s)) == -1 ||
+		uput(sd, udata.u_base + sizeof(*s), sizeof(*sd)) == -1)
 		return -1;
 	sd->event &= ~NEV_MASK;
 	return udata.u_count;
@@ -129,7 +129,7 @@ int netdev_read(uint8_t flag)
  *	The ioctl interface at the moment is simply the initialization
  *	function.
  */
-static int netdev_ioctl(uarg_t request, char *data)
+int netdev_ioctl(uarg_t request, char *data)
 {
 	int16_t fd;
 
@@ -156,14 +156,16 @@ static int netdev_ioctl(uarg_t request, char *data)
  *	On a close of the daemon close down all the sockets we
  *	have opened.
  */
-static int netdev_close(void)
+int netdev_close(void)
 {
 	struct socket *s = sockets;
 	if (net_ino) {
 		i_deref(net_ino);
+		net_ino = NULL;
 		while (s < sockets + NSOCKET) {
 			if (s->s_state != SS_UNUSED) {
 				s->s_state = SS_CLOSED;
+				s->s_iflag |= SI_SHUTR|SI_SHUTW;
 				wakeup_all(s);
 			}
 			s++;
@@ -187,11 +189,13 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
 	wakeup(&ne);
 
 	do {
-		psleep(s);
+	    if( s->s_state == SS_CLOSED )
+		return -1;
+	    psleep(s);
 	} while (sd->event & NEVW_STATE);
 
 	udata.u_error = sd->ret;
-	return -1;
+	return 0;
 }
 
 /*
@@ -208,7 +212,10 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 /* General purpose ring buffer operator. Non re-entrant so use every
    trick of the trade to generate non-shite Z80 code, especially given the
    fact we have a 32bit offset and SDCC. This game saves us 768 bytes over
-   a naïve implementation */
+   a naïve implementation 
+   Note: for adding to buffer the meaning of sptr and eptr are switched
+
+*/
 
 static uint16_t sptr, eptr, len;
 static uint32_t base;
@@ -219,15 +226,13 @@ static uint16_t ringbop(void)
 	uarg_t spc;
 	uarg_t r = 0;
 
-	if (sptr == eptr)
-		return 0;
 	udata.u_sysio = false;
 	udata.u_error = 0;
 	/* Wrapped part of the ring buffer */
-	if (len && sptr > eptr) {
+	if (len && sptr >= eptr) {
 		/* Write into the end space */
 		spc = RINGSIZ - sptr;
-		if (spc < len)
+		if (len < spc)
 			spc = len;
 		udata.u_count = spc;
 		udata.u_offset = base + sptr;
@@ -244,7 +249,7 @@ static uint16_t ringbop(void)
 	/* If we are not wrapped or just did the overflow write lower */
 	if (len) {
 		spc = eptr - sptr;
-		if (spc < len)
+		if( len < spc )
 			spc = len;
 		udata.u_count = spc;
 		udata.u_offset = base + sptr;
@@ -256,6 +261,7 @@ static uint16_t ringbop(void)
 	}
 	return r;
 }
+
 
 /*
  *	Queue data to a datagram socket. At the moment we use the ring
@@ -275,8 +281,10 @@ static uint16_t netn_putbuf(struct socket *s)
 		udata.u_error = EMSGSIZE;
 		return 0xFFFF;
 	}
-	if (sd->tnext == sd->tbuf)
-		return 0;
+	/* check for fullness */
+	/*  FIXME: giving up 1 of 4 udp buffers to do this check sucks */
+	if( ((sd->tnext+1) & (NSOCKBUF - 1)) == sd->tbuf )
+	    return 0;
 
 	udata.u_sysio = false;
 	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
@@ -302,16 +310,16 @@ static uint16_t netn_getbuf(struct socket *s)
 	struct sockdata *sd = s->s_priv;
 	arg_t n = udata.u_count;
 	arg_t r = 0;
-	
+
 	if (sd->rbuf == sd->rnext)
 		return 0;
 	udata.u_sysio = false;
 	udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
-	udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf++]);
+	udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf]);
 	/* FIXME: check writei returns and readi returns properly */
 	readi(net_ino, 0);
 	/* FIXME: be smarter when we send this */
-	if (sd->rbuf == NSOCKBUF)
+	if (++sd->rbuf == NSOCKBUF)
 		sd->rbuf = 0;
 	netn_asynchronous_event(s, NEV_READ);
 	return udata.u_count;
@@ -326,14 +334,25 @@ static uint16_t netn_queuebytes(struct socket *s)
 {
 	struct sockdata *sd = s->s_priv;
 	arg_t r;
+	uint16_t c;
 
 	len = udata.u_count;
 
 	sptr = sd->tnext;
 	eptr = sd->tbuf;
+	/* check for fullness */
+	if( ((sptr + 1) & (RINGSIZ - 1)) == eptr )
+	    return 0;
+	/* don't put more than 1 less ring size */
+	if( sptr >= eptr )
+	    c = RINGSIZ - ( sptr - eptr );
+	else
+	    c = eptr - sptr;
+	c -= 1;
+	if( len > c ) len = c;
+
 	base = s->s_num * SOCKBUFOFF + RXBUFOFF;
 	op = writei;
-
 	r = ringbop();
 	sd->tnext = sptr;
 
@@ -361,12 +380,12 @@ static uint16_t netn_copyout(struct socket *s)
 
 	sptr = sd->rbuf;
 	eptr = sd->rnext;
+	if( sptr == eptr )
+	    return 0;
 	base = s->s_num * SOCKBUFOFF;
 	op = readi;
-
 	r = ringbop();
-	sd->rnext = sptr;
-
+	sd->rbuf = sptr;
 	if (r != 0xFFFF)
 		netn_asynchronous_event(s, NEV_READ);
 	return r;
@@ -386,6 +405,7 @@ static uint16_t netn_copyout(struct socket *s)
  */
 int net_init(struct socket *s)
 {
+    int x;
 	struct sockdata *sd = sockdata + s->s_num;
 	if (!net_ino) {
 		udata.u_error = ENETDOWN;
@@ -442,12 +462,12 @@ int net_connect(struct socket *s)
 void net_close(struct socket *s)
 {
 	/* Caution here - the native tcp socket will hang around longer */
-	netn_synchronous_event(s, SS_CLOSED);
+    	netn_synchronous_event(s, SS_CLOSED);
 }
 
 /*
  *	Read or recvfrom a socket. We don't yet handle message addresses
- *	sensible and that needs fixing
+ *	sensibly and that needs fixing
  */
 arg_t net_read(struct socket *s, uint8_t flag)
 {
@@ -460,19 +480,29 @@ arg_t net_read(struct socket *s, uint8_t flag)
 		return -1;
 	}
 	while (1) {
+		/* FIXME: We should be forced into CLOSED state so is this
+		   check actually needed */
+	        if (net_ino == NULL) {
+		        udata.u_error = EPIPE;
+			ssig(udata.u_ptab, SIGPIPE);        
+		        return -1;
+	 	}			       
 		if (s->s_state < SS_CONNECTED) {
 			udata.u_error = EINVAL;
 			return -1;
 		}
-
 		if (s->s_type != SOCKTYPE_TCP)
 			n = netn_getbuf(s);
 		else
 			n = netn_copyout(s);
 		if (n == 0xFFFF)
 			return -1;
+		/* If the socket is moved to closed SI_SHUTR must be set. We
+		   don't report an error for a read on a closed socket, we
+		   report 0 (EOF) */
 		if (n || (s->s_iflag & SI_SHUTR))
-			return n;
+		    return n;
+
 		s->s_iflag &= ~SI_DATA;
 		/* Could do with using timeouts here to be clever for non O_NDELAY so
 		   we aggregate data. For now assume a fifo */
@@ -483,7 +513,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 
 /*
  *	Write or sendto a socket. We don't yet handle message addresses
- *	sensible and that needs fixing
+ *	sensibly and that needs fixing
  */
 arg_t net_write(struct socket * s, uint8_t flag)
 {
@@ -513,7 +543,6 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		t += n;
 
 		if (n == 0) {	/* Blocked */
-			netn_asynchronous_event(s, NE_ROOM);
 			if (psleep_flags(&s->s_iflag, flag))
 				return -1;
 		}
@@ -521,7 +550,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	return udata.u_count;
 }
 
-arg_t net_shutdown(struct socket *s, uint8-t flag)
+arg_t net_shutdown(struct socket *s, uint8_t flag)
 {
 	s->s_iflag |= flag;
 	wakeup_all(s);
