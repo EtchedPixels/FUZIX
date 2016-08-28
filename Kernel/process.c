@@ -461,7 +461,7 @@ uint8_t chksigs(void)
 	   isn't quite right but will paper over the holes for the moment
 	   FIXME */
 	if (udata.u_cursig || !pending || udata.u_ptab->p_status == P_STOPPED)
-		return;
+		return udata.u_cursig;
 
 	/* Dispatch the lowest numbered signal */
 	for (j = 1; j < NSIGS; ++j) {
