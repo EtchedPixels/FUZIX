@@ -1,6 +1,10 @@
 /*
  *	Implement binary loading for 32bit platforms. We use the ucLinux binflat
  *	format with a simple magic number tweak to avoid confusion with ucLinux
+ *
+ *	TODO: Right now we do a classic bss/stack layout and dont' support
+ *	fixed stack/expanding BSS, multiple segment loaders for flat binaries
+ *	etc.
  */
 
 #include <kernel.h>
