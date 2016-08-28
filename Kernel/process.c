@@ -448,18 +448,19 @@ static uint8_t dump_core(uint8_t sig)
 
 /* This sees if the current process has any signals set, and handles them.
  */
-void chksigs(void)
+uint8_t chksigs(void)
 {
 	uint8_t j;
 	uint32_t pending = udata.u_ptab->p_pending & ~udata.u_ptab->p_held;
 	int (**svec)(int) = &udata.u_sigvec[0];
 	uint32_t m;
 
-	/* Fast path - no signals pending means no work
+	/* Fast path - no signals pending means no work.
+	   Cursig being set means we've already worked out what to do.
 	   Also don't do signal processing if we are in P_STOPPED. This
 	   isn't quite right but will paper over the holes for the moment
 	   FIXME */
-	if (!pending || udata.u_ptab->p_status == P_STOPPED)
+	if (udata.u_cursig || !pending || udata.u_ptab->p_status == P_STOPPED)
 		return;
 
 	/* Dispatch the lowest numbered signal */
@@ -504,6 +505,7 @@ void chksigs(void)
 			break;
 		}
 	}
+	return udata.u_cursig;
 }
 
 /*

@@ -480,7 +480,7 @@ int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 		return -1;
 	}
 	psleep(p);
-	if (udata.u_cursig || udata.u_ptab->p_pending) {	/* messy */
+	if (chksigs()) {
 	        if (!*n) {
 	                *n = (usize_t)-1;
                         udata.u_error = EINTR;
