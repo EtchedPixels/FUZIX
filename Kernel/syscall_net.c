@@ -573,6 +573,8 @@ arg_t _sendto(void)
 	/* Save the address and then just do a 'write' */
 	if (s->s_type != SOCKTYPE_TCP) {
 		/* Use the address in atmp */
+		/* FIXME: if this is allowable we either need to do this
+		   differently or we need to block sendto + connect */
 		s->s_flag |= SFLAG_ATMP;
 		if (sa_getremote(&uaddr->sio_addr, &sin) == -1)
 			return -1;
