@@ -1,0 +1,38 @@
+.TH man 1 "Drivewire Utilities" "FUZIX" \" -*- nroff -*-
+.SH NAME
+dwdate \- set system date from drivewire time
+.SH SYNOPSIS
+.B dwdate
+[\-d] [\-s] [\-x device]
+.SH DESCRIPTION
+.B dwdate 
+queries the drivewire device for the day/time.  It can display and/or set the system time.  This program will fail if you are not root.
+.SS OPTIONS
+.TP
+.I "-d"
+Display retrieved date/time.
+.TP
+.I "-s"
+Set system date.
+.TP
+.I "-x"
+drivewire device to use. (def: /dev/dw0 )
+.SH EXAMPLES
+.IP
+dwdate -d
+.IP
+dwdate -ds
+.IP
+dwdate -sx /dev/dw1
+.SH EXIT STATUS
+.TP
+.B 0
+Completed successfully.
+.TP
+.B 1
+An error occured.
+.SH BUGS
+Tons!
+.SH AUTHORS
+Brett M. Gordon
+
