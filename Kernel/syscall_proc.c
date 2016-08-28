@@ -178,7 +178,7 @@ arg_t _stime(void)
 	if (uget(tvec, &t, sizeof(t)) || esuper())
 		return -1;
 	wrtime(&t);
-	return (-1);
+	return (0);
 }
 
 #undef tvec
