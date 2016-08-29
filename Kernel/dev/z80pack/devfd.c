@@ -89,12 +89,14 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
          *	a swap, or to perform mapping games using the banks
          */
         udata.u_nblock *= (BLKSIZE / 128);
+        /* Limits us to 2^14 blocks (16MB) */
+        udata.u_block <<= 2;
 #endif
     } else { /* rawflag == 0 */
         udata.u_nblock = BLKSIZE / 128;		/* BLKSIZE bytes implied */
+        /* Limits us to 2^14 blocks (16MB) */
+        udata.u_block <<= 2;
     }
-    /* Limits us to 2^14 blocks (8MB) */
-    udata.u_nblock <<= 2;
     /* Read the disk in four sector chunks. FIXME We ought to cache the geometry
        and just bump sector checking for a wrap. */
 
