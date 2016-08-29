@@ -39,7 +39,9 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			uzero(udata.u_base, udata.u_count);
 		return udata.u_count;
 	case 3:
-		if (udata.u_offset >= PTABSIZE * sizeof(struct p_tab))
+		if (udata.u_count > sizeof(struct p_tab))
+			udata.u_count = sizeof(struct p_tab);
+		if (udata.u_offset + udata.u_count > PTABSIZE * sizeof(struct p_tab))
 			return 0;
 		return uputsys(addr + udata.u_offset, udata.u_count);
 #ifdef CONFIG_NET_NATIVE
