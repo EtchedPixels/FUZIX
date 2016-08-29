@@ -34,6 +34,7 @@ int do_ps(void)
     struct p_tab_buffer *ppbuf;
     struct p_tab *pp;
     static struct p_tab_buffer ptab[PTABSIZE];
+    int ppid_slot[PTABSIZE];
     static char name[10], uname[20];
 
     uid = getuid();
@@ -61,22 +62,21 @@ int do_ps(void)
     
     if (ptsize > PTABSIZE) ptsize = PTABSIZE;
     
-    /* FIXME: we don't need to buffer these first - it's silly */
     for (i = 0; i < ptsize; ++i) {
-        if (read(pfd, (char * ) &ptab[i], nodesize) !=
-                                          nodesize) {
+        if (read(pfd, (char * ) &ptab[i], nodesize) != nodesize) {
             fprintf(stderr, "ps: error reading from /dev/proc\n");
             close(pfd);
             return 1;
         }
+        ppid_slot[i] = ptab[i].p_tab.p_pptr - ptab[0].p_tab.p_pptr;
     }
     close(pfd);
 
     if (!(flags & F_h)) {
         if (flags & F_n)
-	    printf("  PID\tUID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+	    printf("  PID\tPPID\tUID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
 	else
-	    printf("USER\t  PID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+	    printf("USER\t  PID\tPPID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
     }
 
     for (ppbuf = ptab, i = 0; i < ptsize; ++i, ++ppbuf) {
@@ -100,8 +100,8 @@ int do_ps(void)
         }
 
 	if (flags & F_n) {
-	    printf("%5d\t%-3d\t%s\t%04x\t%-5d\t%s\n",
-	           pp->p_pid, pp->p_uid,
+	    printf("%5d\t%5d\t%-3d\t%s\t%04x\t%-5d\t%s\n",
+	           pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid, pp->p_uid,
 	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
 	           name);
 	} else {
@@ -110,8 +110,8 @@ int do_ps(void)
 	        strcpy(uname, pwd->pw_name);
 	    else
 	        sprintf(uname, "%d", pp->p_uid);
-	    printf("%s\t%5d\t%s\t%04x\t%-5d\t%s\n",
-	           uname, pp->p_pid,
+	    printf("%s\t%5d\t%5d\t%s\t%04x\t%-5d\t%s\n",
+	           uname, pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid,
 	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
 	           name);
 	}
