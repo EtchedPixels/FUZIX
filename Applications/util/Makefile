@@ -46,7 +46,6 @@ SRCSNS = \
 	touch.c \
 	tr.c \
 	true.c \
-	uname.c \
 	while1.c \
 	whoami.c \
 	yes.c
@@ -88,6 +87,7 @@ SRCS  = banner.c \
 	su.c \
 	tail.c \
 	umount.c \
+	uname.c \
 	uniq.c \
 	uptime.c \
 	uud.c \

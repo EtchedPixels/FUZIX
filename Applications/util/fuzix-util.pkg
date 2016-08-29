@@ -91,6 +91,7 @@ f 0755 /bin/tee         tee
 f 0755 /bin/termcap     termcap
 f 0755 /bin/tget        tget
 f 0755 /bin/true        true
+f 0755 /bin/uname       uname
 f 0755 /bin/uniq        uniq
 f 0755 /bin/uptime      uptime
 f 0755 /bin/uud         uud
