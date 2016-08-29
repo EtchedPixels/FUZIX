@@ -687,21 +687,6 @@ int8_t oft_alloc(void)
     return -1;
 }
 
-/*	Check if an inode is open for reading or for writing. Needed for pipe
- *	EOF and will one day be needed for shared code segments (8086 etc)
- */
-int8_t oft_inuse(inoptr ino, uint8_t rw)
-{
-    struct oft *ofptr = of_tab;
-    while(ofptr <= &of_tab[OFTSIZE - 1]) {
-        if (ofptr->o_refs && ofptr->o_inode == ino &&
-            O_ACCMODE(ofptr->o_access) != rw)
-            return 1;
-        ofptr++;
-    }
-    return 0;
-}
-
 /*
  *	To minimise storage we don't track exclusive locks explicitly. We know
  *	that if we are dropping an exclusive lock then we must be the owner,

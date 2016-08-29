@@ -128,8 +128,13 @@ arg_t _open(void)
 	of_tab[oftindex].o_access = flag;	/* Save the low bits only */
 	if (flag & O_CLOEXEC)
 		udata.u_cloexec |= (1 << oftindex);
-	/* FIXME: ATIME ? */
 
+	if (O_ACCMODE(flag) != O_RDONLY)
+		ino->c_writers++;
+	if (O_ACCMODE(flag) != O_WRONLY)
+		ino->c_readers++;
+
+	/* FIXME: ATIME ? */
 /*
  *         Sleep process if no writer or reader
  */

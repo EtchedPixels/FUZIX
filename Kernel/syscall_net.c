@@ -324,6 +324,8 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
 	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
+	ino->c_readers = 1;
+	ino->c_writers = 1;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;

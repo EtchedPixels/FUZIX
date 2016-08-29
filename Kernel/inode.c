@@ -15,10 +15,8 @@
    how we handle the psleep_flags bit */
 static uint8_t pipewait(inoptr ino, uint8_t flag)
 {
-        int8_t n;
         while(ino->c_node.i_size == 0) {
-                n = oft_inuse(ino, INUSE_W);
-                if (n == 0 || psleep_flags(ino, flag)) {
+                if (ino->c_writers == 0 || psleep_flags(ino, flag)) {
                         udata.u_count = 0;
                         return 0;
                 }
@@ -164,7 +162,7 @@ void writei(inoptr ino, uint8_t flag)
 		   in one go - needs merging into the loop */
 		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
 					ino->c_node.i_size) {
-			if (!oft_inuse(ino, INUSE_R)) {	/* No readers */
+			if (ino->c_readers == 0) {	/* No readers */
 				udata.u_count = (usize_t)-1;
 				udata.u_error = EPIPE;
 				ssig(udata.u_ptab, SIGPIPE);
@@ -238,18 +236,22 @@ void writei(inoptr ino, uint8_t flag)
 int16_t doclose(uint8_t uindex)
 {
 	int8_t oftindex;
+	struct oft *oftp;
 	inoptr ino;
 	uint16_t flush_dev = NO_DEVICE;
+	uint8_t m;
 
 	if (!(ino = getinode(uindex)))
 		return (-1);
 
 	oftindex = udata.u_files[uindex];
+	oftp = of_tab + udata.u_files[uindex];
+	m = O_ACCMODE(oftp->o_access);
 
-	if (of_tab[oftindex].o_refs == 1) {
+	if (oftp->o_refs == 1) {
 		if (isdevice(ino))
 			d_close((int) (ino->c_node.i_addr[0]));
-		if (getmode(ino) == MODE_R(F_REG) && O_ACCMODE(of_tab[oftindex].o_access))
+		if (getmode(ino) == MODE_R(F_REG) && m)
 			flush_dev = ino->c_dev;
 #ifdef CONFIG_NET
 		if (issocket(ino))
@@ -259,6 +261,11 @@ int16_t doclose(uint8_t uindex)
 	udata.u_files[uindex] = NO_FILE;
 	udata.u_cloexec &= ~(1 << uindex);
 	oft_deref(oftindex);
+
+	if (m != O_RDONLY)
+	        ino->c_writers--;
+        if (m != O_WRONLY)
+                ino->c_readers--;
 
 	/* if we closed a file in write mode, flush the device's cache after inode has been deferenced */
 	if(flush_dev != NO_DEVICE)

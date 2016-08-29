@@ -337,6 +337,8 @@ arg_t _pipe(void)
 	++ino->c_refs;
 	ino->c_node.i_mode = F_PIPE | 0777;	/* No permissions necessary on pipes */
 	ino->c_node.i_nlink = 0;	/* a pipe is not in any directory */
+	ino->c_readers++;
+	ino->c_writers++;
 
 	// write results to userspace
 	uputw(u1, fildes);

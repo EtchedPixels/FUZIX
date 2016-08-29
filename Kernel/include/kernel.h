@@ -219,12 +219,15 @@ struct hd_geometry {
 #define major(x) ((x) >> 8)
 #define minor(x) ((x) & 0xFF)
 
-typedef struct cinode { // note: exists in memory *and* on disk
-    uint16_t   c_magic;           /* Used to check for corruption. */
-    uint16_t   c_dev;             /* Inode's device */
-    uint16_t   c_num;             /* Inode # */
-    dinode     c_node;
-    uint8_t    c_refs;            /* In-core reference count */
+/* In memory inode structure */
+typedef struct cinode {
+    uint16_t   c_magic;         /* Used to check for corruption. */
+    uint16_t   c_dev;           /* Inode's device */
+    uint16_t   c_num;           /* Inode # */
+    dinode     c_node;		/* On disk inode data */
+    uint8_t    c_refs;          /* In-core reference count */
+    uint8_t    c_readers;	/* Count of readers by oft entry */
+    uint8_t    c_writers;	/* Count of writers by oft entry */
     uint8_t    c_flags;           
 #define CDIRTY		0x80	/* Modified flag. */
 #define CRDONLY		0x40	/* On a read only file system */
@@ -776,11 +779,6 @@ extern void i_free(uint16_t devno, uint16_t ino);
 extern blkno_t blk_alloc(uint16_t devno);
 extern void blk_free(uint16_t devno, blkno_t blk);
 extern int8_t oft_alloc(void);
-extern int8_t oft_inuse(inoptr ino, uint8_t rw);
-/* Yes these are intentionally backwards - there are 3 modes so the loop looks
-   for "not this mode" */
-#define INUSE_R		O_WRONLY
-#define INUSE_W		O_RDONLY
 extern void deflock(struct oft *ofptr);
 extern void oft_deref(int8_t of);
 /* returns index of slot, or -1 on failure */
