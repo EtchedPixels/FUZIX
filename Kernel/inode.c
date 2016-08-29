@@ -257,15 +257,14 @@ int16_t doclose(uint8_t uindex)
 		if (issocket(ino))
 			sock_close(ino);
 #endif
+		if (m != O_RDONLY)
+			ino->c_writers--;
+		if (m != O_WRONLY)
+			ino->c_readers--;
 	}
 	udata.u_files[uindex] = NO_FILE;
 	udata.u_cloexec &= ~(1 << uindex);
 	oft_deref(oftindex);
-
-	if (m != O_RDONLY)
-	        ino->c_writers--;
-        if (m != O_WRONLY)
-                ino->c_readers--;
 
 	/* if we closed a file in write mode, flush the device's cache after inode has been deferenced */
 	if(flush_dev != NO_DEVICE)
