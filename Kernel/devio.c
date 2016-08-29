@@ -619,7 +619,7 @@ void idump(void)
 	extern struct cinode i_tab[];
 
 	kprintf("Err %d root %d\n", udata.u_error, root - i_tab);
-	kputs("\tMAGIC\tDEV\tNUM\tMODE\tNLINK\t(DEV)\tREFS\tDIRTY\n");
+	kputs("\tMAGIC\tDEV\tNUM\tMODE\tNLINK\t(DEV)\tREFS\tR/W\tDIRTY\n");
 
 	for (ip = i_tab; ip < i_tab + ITABSIZE; ++ip) {
 		if(ip->c_magic != CMAGIC)
@@ -627,9 +627,9 @@ void idump(void)
 		kprintf("%d\t%d\t%d\t%u\t%u\t",
 			ip - i_tab, ip->c_magic, ip->c_dev, ip->c_num,
 			ip->c_node.i_mode);
-		kprintf("%d\t%d\t%d\t%d\n",	/* line split for compiler */
+		kprintf("%d\t%d\t%d\t%d:%d\t%d\n",
 			ip->c_node.i_nlink, ip->c_node.i_addr[0],
-			ip->c_refs, ip->c_flags);
+			ip->c_refs, ip->c_readers,ip->c_writers, ip->c_flags);
 	}
 
 	kputs
