@@ -485,7 +485,7 @@ uint8_t chksigs(void)
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
 			if (j == SIGCHLD || j == SIGURG || j == SIGSTOP ||
-                            j == SIGTTIN || j == SIGTTOU ||
+                            j == SIGTTIN || j == SIGTTOU || j == SIGWINCH ||
 			    j == SIGIO || j == SIGCONT || udata.u_ptab->p_pid == 1) {
 				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
