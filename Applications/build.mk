@@ -8,7 +8,7 @@ util_apps := \
 	grep head id init kill ll ln logname ls man mkdir mkfs mkfifo mknod \
 	mount more mv od pagesize passwd patchcpm printenv prtroot ps pwd reboot rm rmdir \
 	sleep ssh sort stty sum su sync tee tail telinit touch tr true umount \
-	uniq uud uue wc which who whoami write xargs yes fforth \
+	uname uniq uud uue wc which who whoami write xargs yes fforth \
 
 # ...and in V7/cmd.
 

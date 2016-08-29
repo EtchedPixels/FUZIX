@@ -90,6 +90,7 @@ FILESYSTEM = \
 	/bin/tr                 0755 $(util-tr.result) \
 	/bin/true               0755 $(util-true.result) \
 	/bin/umount             0755 $(util-umount.result) \
+	/bin/uname              0755 $(util-uname.result) \
 	/bin/uniq               0755 $(util-uniq.result) \
 	/bin/uud                0755 $(util-uud.result) \
 	/bin/uue                0755 $(util-uue.result) \
