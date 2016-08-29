@@ -44,6 +44,7 @@ struct p_tab {
 /**HP**/
     uint16_t    p_pgrp;         /* Process group */
     uint8_t     p_nice;
+    uint8_t	p_event;	/* Events */
     uint16_t	p_top;		/* Copy of u_top : FIXME: usize_t */
 };
 
