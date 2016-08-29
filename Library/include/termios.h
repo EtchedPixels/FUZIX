@@ -141,6 +141,18 @@ struct termios {
 #define TIOCHANGUP	7	/* vhangup() */
 #define TIOCOSTOP	8
 #define TIOCOSTART	9
+#define TIOCGWINSZ	10
+#define TIOCSWINSZ	11
+#define TIOCGPGRP	12
+#define TIOCSPGRP	13
+
+
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;
+    unsigned short ws_ypixel;
+};
 
 extern speed_t cfgetispeed(const struct termios *__termios_p);
 extern speed_t cfgetospeed(const struct termios *__termios_p);
