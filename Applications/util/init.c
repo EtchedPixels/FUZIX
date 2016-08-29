@@ -12,6 +12,7 @@
  *	- Give serious consideration to hiding cron/at in the daemon
  *	  to keep our background daemon count as low as we can
  *	- Ditto for syslogd
+ *	(it's not turning into systemd honest)
  */
 
 #include <string.h>
@@ -26,6 +27,7 @@
 #include <errno.h>
 #include <paths.h>
 #include <sys/wait.h>
+#include <termios.h>
 
 #define	INIT_OFF	0
 #define INIT_SYS	1
@@ -43,7 +45,7 @@
 #define crlf()   write(1, "\n", 1)
 
 static void spawn_login(struct passwd *, const char *, const char *);
-static pid_t getty(const char *, const char *);
+static pid_t getty(const char **, const char *);
 
 static struct utmp ut;
 
@@ -134,7 +136,7 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 
 	/* Check for internal processes */
 	if (strcmp(args[2], "getty") == 0)
-		pid = getty(args[3], p + 1);
+		pid = getty(args + 3, p + 1);
 	else {
 		/* External */
 		pid = fork();
@@ -640,8 +642,13 @@ static void envset(const char *a, const char *b)
 
 /*
  *	Internal implementation of "getty" and "login"
+ *
+ *	argv[0] = tty name
+ *	argv[1] = (tty type)
+ *	argv[2] = (rows)
+ *	argv[3] = (cols)
  */
-static pid_t getty(const char *ttyname, const char *id)
+static pid_t getty(const char **argv, const char *id)
 {
 	int fdtty, pid;
 	struct passwd *pwd;
@@ -665,13 +672,24 @@ static pid_t getty(const char *ttyname, const char *id)
 			setpgrp();
 			setpgid(0,0);
 
-			fdtty = open(ttyname, O_RDWR);
+			fdtty = open(argv[0], O_RDWR);
 			if (fdtty < 0)
 				return -1;
 
 			/* here we are inside child's context of execution */
 			envset("PATH", "/bin:/usr/bin");
-			envset("CTTY", ttyname);
+			envset("CTTY", argv[0]);
+
+			if (argv[1]) {
+				envset("TERM", argv[1]);
+				if (argv[2] && argv[3]) {
+					static struct winsize winsz;
+					winsz.ws_col = atoi(argv[2]);
+					winsz.ws_row = atoi(argv[3]);
+					if (ioctl(fdtty, TIOCSWINSZ, &winsz))
+						perror("winsz");
+				}
+			}
 
 			/* make stdin, stdout and stderr point to fdtty */
 
@@ -713,7 +731,7 @@ static pid_t getty(const char *ttyname, const char *id)
 						pr = "";
 					}
 					if (strcmp(pr, pwd->pw_passwd) == 0)
-						spawn_login(pwd, ttyname, id);
+						spawn_login(pwd, argv[0], id);
 				}
 
 				putstr("\nLogin incorrect\n\n");
