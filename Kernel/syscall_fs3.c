@@ -53,7 +53,7 @@ arg_t _open(void)
 		}
 	} else {
 		/* The n_open failed */
-		if (udata.u_error == EFAULT)
+		if (udata.u_error == EFAULT || parent == NULL)
 			goto cantopen;
 
 		/* New file */
