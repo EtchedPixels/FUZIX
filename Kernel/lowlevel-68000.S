@@ -275,6 +275,7 @@ L2:	subql	IMM (1),d4
 		.globl bus_error,addr_error,illegal,divzero,chk,trapv,priv
 		.globl trace,unimpa,unimpf,misctrap,trap15,trap14,sysc_err
 		.globl spurious,unexpected,uninit
+		.globl udata_shadow
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -362,6 +363,7 @@ trap14:		movem.l a2-a6/d2-d7,-(sp)
 		move.b d0,kernel_flag
 		; FIXME: EI per platform really
 		and.w #$F8FF,sr
+		move.l udata_shadow,a5
 		bsr unix_syscall
 		; FIXME: signal handling in the C code or not ?
 	        or.w #$0700,sr
@@ -454,7 +456,8 @@ panic_sig2:	asciz ": ksig"
 		.align 2
 
 sig_user:	movem.l a0-a6/d0-d7,-(sp)
-		move.l (U_DATA__U_PTAB),-(sp)
+	        move.l udata_shadow,a5
+		move.l U_DATA__U_PTAB(a5),-(sp)
 		bsr ssig
 		adda #4,sp
 		; Do signal processing bit here if we return
@@ -504,3 +507,4 @@ outcharhex:	move.w d0,-(sp)
 
 .area data
 kernel_flag:	byte 0
+udata_shadow:	long 0
