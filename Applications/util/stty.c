@@ -89,6 +89,7 @@
 
 char *prog_name;
 struct termios termios;
+struct winsize winsize;
 int column= 0, max_column=80;		/* Assume 80 character terminals. */
 
 void main(int argc, char *argv[]);
