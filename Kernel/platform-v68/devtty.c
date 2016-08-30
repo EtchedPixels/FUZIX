@@ -52,9 +52,9 @@ void tty_sleeping(uint8_t minor)
 void tty_interrupt(void)
 {
 	uint8_t r = *uart_status;
-	if (r & 0x2) {
+	if (r & 1) {
 		r = *uart_data;
-		tty_inproc(2,r);
+		tty_inproc(1,r);
 	}	
 }
 
