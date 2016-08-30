@@ -50,6 +50,17 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
+extern uint16_t swab(uint16_t);
+
+#define	ntohs(x)	(x)
+#define ntohl(x)	(x)
+
+#define cpu_to_le16(x)	swab(x)
+#define le16_to_cpu(x)	swab(x)
+#define cpu_to_le32(x)	((((uint32_t)cpu_to_le16((x) & 0xFFFF)) << 16) | \
+				(uint32_t)cpu_to_le16((x) >> 16))
+#define le32_to_cpu(x)	cpu_to_le32(x)
+
 /* We don't need any banking bits really */
 #define CODE1
 #define CODE2
