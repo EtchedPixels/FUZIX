@@ -566,7 +566,9 @@ void kprintf(const char *fmt, ...)
 					fmt++;
 					continue;
 				}
-
+#ifdef CONFIG_32BIT
+				case 'p':
+#endif
 				case 'l': /* assume an x is following */
 				{
 					long l = va_arg(ap, unsigned long);
@@ -577,6 +579,9 @@ void kprintf(const char *fmt, ...)
 					continue;
 				}
 
+#ifndef CONFIG_32BIT
+				case 'p':
+#endif
 				case 'x':
 				case 'd':
 				case 'u':
