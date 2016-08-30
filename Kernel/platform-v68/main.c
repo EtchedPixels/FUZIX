@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <buddy.h>
 
 void platform_idle(void)
 {
@@ -20,7 +21,7 @@ void do_beep(void)
 void pagemap_init(void)
 {
 	/* Allocate the buddy tables and init them */
-	buddy_init();
+//FIXME	buddy_init();
 }
 
 void map_init(void)
@@ -29,6 +30,8 @@ void map_init(void)
 
 u_block uarea_block[PTABSIZE];
 uaddr_t ramtop;
+uint8_t *membase[PTABSIZE];
+uint8_t need_resched;
 
 /* Offsets into the buddy map for each level, byte aligned */
 const uint16_t buddy_level[BUDDY_NUMLEVEL] = {
@@ -55,8 +58,9 @@ int16_t dofork(ptptr p)
 	uint32_t *csp = (uint32_t *)(uc + 1);
 	uint32_t *psp = up->u_sp;
 	/* Duplicate the memory maps */
+	/* FIXME 
 	if (pagemap_fork(p))
-		return -1;
+		return -1; */
 	/* Duplicate the udata */
 	memcpy(&uc, &up, sizeof(struct u_data));
 	/* Use the child udata for initializing the child */
@@ -74,4 +78,44 @@ int16_t dofork(ptptr p)
 	p->p_status = P_READY;
 	udata.u_ptab->p_status = P_RUNNING;
 	return p->p_pid;
+}
+
+/* All our binaries are zero address based */
+
+void *pagemap_base(void)
+{
+	return 0;
+}
+
+void program_mmu(uint8_t *phys, usize_t top)
+{
+}
+
+uint8_t platform_param(unsigned char *p)
+{
+	return 0;
+}
+
+void platform_discard(void)
+{
+}
+
+void memzero(void *p, usize_t len)
+{
+	memset(p, 0, len);
+}
+
+/* TODO */
+void devide_read_data(void)
+{
+}
+
+void devide_write_data(void)
+{
+}
+
+/* FIXME: move to asm and lowlevel- */
+uint16_t swab(uint16_t a)
+{
+	return (a << 8) | (a >> 8);
 }

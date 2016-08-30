@@ -5,13 +5,28 @@
  *	supervisor stack below us. We are in supervisor mode and the rest
  *	is our problem.
  */
-		.globl _start
-.mri 1
+		.globl __end
+		.globl __bss_start
 
+.mri 1
+		byte $15
+		byte $05
+		byte $C0
+		byte $DE
 start:
 		or #$0700,sr
+		move.l #__bss_start,a0
+		move.l #__end,d0
+		sub.l a0,d0
+		lsr.l #2,d0
+wipebss:
+		clr.l (a0)+
+		dbra d0,wipebss
+
 		/* FIXME: hard coded ugly */
 		move.l #uarea_block+508,a7
+		/* uarea global */
+		move.l #uarea_block,a5
 		bsr init_early
 		bsr init_hardware
 		bsr fuzix_main
