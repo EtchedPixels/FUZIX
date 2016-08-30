@@ -39,5 +39,7 @@
 #define NBUFS    20       /* Number of block buffers */
 #define NMOUNTS	 6	  /* Number of mounts at a time */
 
+#define MAX_BLKDEV 4
+
 /* Programs run under MMU with zero base */
 #define PROGBASE	0
