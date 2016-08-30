@@ -81,6 +81,12 @@ int netdev_write(void)
 		s->s_iflag |= SI_DATA;
 		wakeup(&s->s_iflag);
 		break;
+		/* Remote closed connection */
+	case NE_SHUTR:
+		s->s_iflag |= SI_SHUTR;
+		sd->err = ne.ret;
+		wakeup_all(s);
+		break;
 	default:
 		kprintf("netbad %d\n", ne.event);
 		udata.u_error = EOPNOTSUPP;

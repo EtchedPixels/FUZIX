@@ -50,6 +50,7 @@ struct sockmsg {
 #define NE_INIT		4
 #define NE_ROOM		5
 #define NE_DATA		6
+#define NE_SHUTR        7
 
 struct netevent {
 	uint8_t socket;
@@ -63,5 +64,11 @@ struct netevent {
 };
 
 #define NET_INIT	0x4401
+
+int netdev_write(void);
+int netdev_read(uint8_t flag);
+int netdev_ioctl(uarg_t request, char *data);
+int netdev_close(void);
+
 
 #endif
