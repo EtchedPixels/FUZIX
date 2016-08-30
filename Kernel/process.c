@@ -20,7 +20,7 @@ void psleep(void *event)
 {
 	irqflags_t irq = di();
 #ifdef DEBUG
-	kprintf("psleep(0x%x)", event);	/* WRS */
+	kprintf("psleep(0x%p)", event);
 #endif
 
 	switch (udata.u_ptab->p_status) {
@@ -31,7 +31,7 @@ void psleep(void *event)
 		break;
 	default:
 #ifdef DEBUG
-	        kprintf("psleep(0x%x) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
+	        kprintf("psleep(0x%p) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
 #endif
 		panic(PANIC_VOODOO);
 	}
@@ -63,13 +63,13 @@ void wakeup(void *event)
 	irqflags_t irq;
 
 #ifdef DEBUGHARDER
-	kprintf("wakeup(0x%x)\n", event);
+	kprintf("wakeup(0x%p)\n", event);
 #endif
 	irq = di();
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status > P_RUNNING && p->p_wait == event) {
 #ifdef DEBUG
-			kprintf("wakeup: found proc 0x%x pid %d\n",
+			kprintf("wakeup: found proc 0x%p pid %d\n",
 				p, p->p_pid);
 #endif
 			pwake(p);
@@ -107,7 +107,7 @@ ptptr getproc(void)
 	ptptr pp;
 	kputs("getproc start ... ");
 	for (pp = ptab; pp < ptab_end; pp++)
-		kprintf("ptab[0x%x]: pid=%d uid=%d status=%d, page=0x%x\n",
+		kprintf("ptab[0x%p]: pid=%d uid=%d status=%d, page=0x%x\n",
 			pp, pp->p_pid, pp->p_uid, pp->p_status,
 			pp->p_page);
 #endif
@@ -126,7 +126,7 @@ ptptr getproc(void)
 			panic(PANIC_GETPROC);
 		case P_READY:
 #ifdef DEBUG
-			kprintf("[getproc returning %x pid=%d]\n",
+			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
 			return getproc_nextp;
@@ -166,7 +166,7 @@ ptptr getproc(void)
 		case P_ZOMBIE:
 			/* If we died go to our parent */
 #ifdef DEBUGREALLYHARD
-			kprintf("Zombie: move from %x to %x\n", p,
+			kprintf("Zombie: move from %p to %p\n", p,
 				p->p_pptr);
 #endif
 			p = p->p_pptr;
@@ -176,7 +176,7 @@ ptptr getproc(void)
 		case P_RUNNING:
 			/* If we are running keep running */
 #ifdef DEBUGREALLYHARD
-			kprintf("%x:%s:%d)\n", p, p->p_name, p->p_page);
+			kprintf("%p:%s:%d)\n", p, p->p_name, p->p_page);
 #endif
 			return p;
 		default:
@@ -370,7 +370,7 @@ void timer_interrupt(void)
 	    && !udata.u_insys && inint && nready > 1) {
                  need_resched = 1;
 #ifdef DEBUG_PREEMPT
-		kprintf("[preempt %x %d %x]", udata.u_ptab,
+		kprintf("[preempt %p %d %x]", udata.u_ptab,
 		        udata.u_ptab->p_priority,
 		        *((uint16_t *)0xEAFE));
 #endif
@@ -396,7 +396,7 @@ void unix_syscall(void)
 		udata.u_error = ENOSYS;
 	} else {
 #ifdef DEBUG
-		kprintf("\t\tpid %d: syscall %d\t%s(%x, %x, %x)\n",
+		kprintf("\t\tpid %d: syscall %d\t%s(%p, %p, %p)\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			syscall_name[udata.u_callno], udata.u_argn,
 			udata.u_argn1, udata.u_argn2);
@@ -405,7 +405,7 @@ void unix_syscall(void)
 		udata.u_retval = (*syscall_dispatch[udata.u_callno]) ();
 
 #ifdef DEBUG
-		kprintf("\t\t\tpid %d: ret syscall %d, ret %x err %d\n",
+		kprintf("\t\t\tpid %d: ret syscall %d, ret %p err %p\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			udata.u_retval, udata.u_error);
 #endif
@@ -610,7 +610,7 @@ void doexit(uint16_t val)
 	kprintf("process %d exiting\n", udata.u_ptab->p_pid);
 
 	kprintf
-	    ("udata.u_page %u, udata.u_ptab %x, udata.u_ptab->p_page %u\n",
+	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 	if (udata.u_ptab->p_pid == 1)
@@ -663,7 +663,7 @@ void doexit(uint16_t val)
 	irqrestore(irq);
 #ifdef DEBUG
 	kprintf
-	    ("udata.u_page %u, udata.u_ptab %x, udata.u_ptab->p_page %u\n",
+	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 #ifdef CONFIG_ACCT
