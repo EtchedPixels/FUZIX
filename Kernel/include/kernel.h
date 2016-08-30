@@ -834,7 +834,7 @@ extern void timer_interrupt(void);
 extern void doexit (uint16_t val);
 extern void panic(char *deathcry);
 extern void exec_or_die(void);
-#define need_resched() (nready != 1 && runticks >= udata.u_ptab->p_priority)
+#define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 
 /* select.c */

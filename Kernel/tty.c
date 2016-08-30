@@ -432,7 +432,7 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
            -1 (TTY_READY_LATER) -- blocked, don't spin (eg flow controlled) */
 	if (!udata.u_ininterrupt) {
 		while ((t = tty_writeready(minor)) != TTY_READY_NOW)
-			if (t != TTY_READY_SOON || need_resched()){
+			if (t != TTY_READY_SOON || need_reschedule()){
 				irqflags_t irq = di();
 				tty_sleeping(minor);
 				psleep(&ttydata[minor]);
