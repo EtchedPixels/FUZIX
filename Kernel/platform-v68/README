@@ -1,3 +1,24 @@
 Development subtree for the v68 virtual platform and general 68000
 bootstrap work. There is a lot to do before anything remotely useful will
 happen.
+
+Current status:
+
+Early bootstrap works
+Basic interrupt handling works (although we need to make our supervisor stack
+				bigger and sort out stack switching for an
+				IRQ and timers)
+TTY emulation gets us to the point we can hit return
+
+
+
+Next bits to tackle:
+
+o	Debugging sleep/wakeup sequences so we can get beyond the tty wakeup
+	of the idle process
+o	Untangling the stack handling so that we can do stack switching and
+	pre-emption correctly
+o	Fill in the rest of the IDE driver and user copying so we can mount
+	the root fs.
+o	Begin debugging of the various memory models we can support
+	(swap only, flat with copying to handle fork, simple mmu)
