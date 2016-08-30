@@ -20,13 +20,70 @@ init_early:
 	    lea.l uarea_block,a5	; udata ptr
             rts
 
+;
+;	FIXME: could be in discard if we wanted
+;
 init_hardware:
             ; set system RAM size(hadcode hacks for now) 
 	    move.w #512,d0
 	    move.w d0,ramsize
 	    sub.w  #64,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
+
+	    move.l #0,a0
+	    move.w #256,d0
+	    move.l #unexpected,d1
+init_trap_loop:
+	    move.l d1,(a0)+
+	    dbra d0,init_trap_loop
+	    ;
+	    ; Now set the vectors we care about
+	    ;
+	    move.w #8,a0
+	    move.l #bus_error,(a0)+
+	    move.l #addr_error,(a0)+
+	    move.l #illegal,(a0)+
+	    move.l #divzero,(a0)+
+	    move.l #chk,(a0)+
+	    move.l #trapv,(a0)+
+	    move.l #priv,(a0)+
+	    move.l #trace,(a0)+
+	    move.l #unimpa,(a0)+	; A and F line traps
+	    move.l #unimpf,(a0)+
+	    move.w #$80,a0
+	    move.w #14,d0
+trapset:
+	    move.l #misctrap,(a0)+
+	    dbra d0,trapset
+	    move.l #trap14,(a0)+
+	    move.l #trap15,(a0)+
+	    move.w #$0,a0
+	    move.l #uninit,$3c(a0)
+	    move.l #spurious,$60(a0)
+	    move.l #timer_irq,$78(a0)
+	    move.l #mmu_fault,$7C(a0)
             rts
+
+timer_irq:
+	    movem.l a0-a6/d0-d7,-(a7)
+	    move.l #intmsg,a0
+	    bsr outstring
+	    bsr platform_interrupt
+	    movem.l (a7)+,a0-a6/d0-d7
+	    rte
+
+intmsg:
+	    asciz "IRQ"
+
+mmu_fault:
+	    movem.l a0-a6/d0-d7,-(a7)
+	    move.l #mmutrap,a0
+	    bsr outstring
+	    movem.l (a7)+,a0-a6/d0-d7
+	    rte
+mmutrap:
+	    asciz "MMU TRAP"
+	    byte 0
 
 ;
 ;	Nothing to do in 68000 - all set up once at boot
