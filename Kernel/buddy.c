@@ -53,12 +53,25 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <buddy.h>
 
 #ifdef CONFIG_BUDDY_MMU
 
 #define BUDDY_FREE	0xFF
 
 extern uint16_t buddy_level[BUDDY_NUMLEVEL];
+
+/* Ok this is crap FIXME but will do for now */
+static int buddy_get_level(usize_t size)
+{
+	int l = 0;
+	size >>= BUDDY_BLOCKBITS;
+	while(size) {
+		size >>= 1;
+		l++;
+	}
+	return l;
+}
 
 /* Turn a block number at a given level into a memory address for the
    map bit and a bit number */
@@ -210,6 +223,8 @@ void buddy_init(void)
 /******************* MMU Logic *************************/
 int do_pagemap_alloc(ptptr p, usize_t size)
 {
+	return 0;
+	/* FIXME */
 	uint8_t *m;
 	uint8_t pn = p - ptab;
 	uint8_t level = buddy_order(size);
@@ -224,10 +239,11 @@ int do_pagemap_alloc(ptptr p, usize_t size)
 			p->p_top = (BUDDY_BLOCKSIZE << level) - 1;
 			p->p_page = level;
 			program_mmu(m, p->p_top);
-			return m;
+			return 0;
 		}
+/* FIXME
 		if (swapneeded(p, 1) == NULL)
-			return ENOMEM;
+			return ENOMEM; */
 	}
 }
 
@@ -239,12 +255,23 @@ int pagemap_alloc(ptptr p)
 /* Reallocate for an exec or brk */
 int pagemap_realloc(usize_t size)
 {
-	uint8_t pn = p - ptab;
+	uint8_t pn = udata.u_ptab - ptab;
 	/* We can do this better - on a shrink we can free some of our buddy
 	   pages */
 	/* FIXME: check if space before we do these .. */
-	buddy_free(membase[pn]);
-	return do_pagemap_alloc(p);
+	buddy_free(membase[pn], buddy_get_level(size));
+	return do_pagemap_alloc(udata.u_ptab, size);
+}
+
+void pagemap_free(ptptr p)
+{
+	/* FIXME TODO */
+}
+
+unsigned long pagemap_mem_used(void)
+{
+	/* TODO */
+	return 0;
 }
 
 static uint8_t grow_pn;
@@ -253,20 +280,23 @@ static uint8_t grow_pn;
 static int pagemap_evict(uint8_t owner)
 {
 	if (owner != grow_pn)
-		swapout(ptab + owner);
+		return swapout(ptab + owner);
+	return 0;
 }
 
 int pagemap_grow(usize_t size)
 {
-	uint8_t level = buddy_level(size);
+	uint8_t level = buddy_get_level(size);
 	uint8_t *m, *n, *me, *ne;
+	ptptr p;
 
 	if (level == 0xFF)
 		return ENOMEM;
 	/* We don't give back for the moment */
-	if (level <= p->p_page)
+	if (level <= udata.u_ptab->p_page)
 		return 0;
 
+	p = udata.u_ptab;
 	grow_pn = p - ptab;
 
 	m = membase[grow_pn];
@@ -287,7 +317,7 @@ int pagemap_grow(usize_t size)
 			panic("insfram");
 	}
 	membase[grow_pn] = n;
-	p->p_top = 1 << level - 1;
+	p->p_top = (1 << level) - 1;
 	/* Now copy the code/data/bss/break area if it moved */
 	if (m != n)
 		memcpy(n, m, udata.u_break);
@@ -298,16 +328,18 @@ int pagemap_grow(usize_t size)
 	   do our maths from the tail by using this */
 	/* SECURITY FIXME: someone somewhere between entry and here needs to
 	   spot out of range user stack pointers and kill the process */
-	/* Copy the stack if it moved */
+	/* Copy the stack if it moved - need to copy a bit more FIXME */
 	if (me != ne)
-		memcpy(ne + udata.u_usp, me + udata.u_usp, -udata.u_usp);
+		memcpy(ne + udata.u_syscall_sp, me + udata.u_syscall_sp, -udata.u_syscall_sp);
 	/* Zero the hole in the middle */
 	memzero(n + udata.u_break,
-		1 << level - udata.u_break + udata.u_usp);
+		(1 << level) - udata.u_break + udata.u_syscall_sp);
 	p->p_page = level;
 	program_mmu(m, p->p_top);
 	return 0;
 }
+
+
 
 /* Swappers to do yet  - simple swapmap stuff won't work - we need an 
    actual allocator for swap - should have a general purpose flat physical
@@ -321,4 +353,99 @@ int swapout(ptptr p)
 {
 	return ENOMEM;
 }
+
+/* FIXME: THESE NEED WRITING PROPERLY FOR THE MMU */
+usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+{
+	uint8_t tmp;
+	while(count--) {
+		tmp = *user++;
+		*dest++ = tmp;
+	}
+	return 0;
+}
+
+int16_t _ugetc(const uint8_t *user)
+{
+	uint8_t tmp;
+	tmp = *user;
+	return tmp;
+}
+
+uint16_t _ugetw(const uint16_t *user)
+{
+	uint16_t tmp;
+	tmp = *user;
+	return tmp;
+}
+
+uint32_t ugetl(void *user, int *err)
+{
+	uint32_t tmp;
+	tmp = *(uint32_t *)user;
+	return tmp;
+}
+
+int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
+{
+	uint8_t tmp;
+	while(count--) {
+		tmp = *user++;
+		*dest++ = tmp;
+		if (tmp == '\0')
+			return 0;
+	}
+	/* Ensure terminated */
+	dest[-1] = '\0';
+	return -1;
+}
+
+int _uput(const uint8_t *source, uint8_t *user, usize_t count)
+{
+	uint8_t tmp;
+	while(count--) {
+		tmp = *source++;
+		*user++ = tmp;
+	}
+	return 0;
+
+}
+
+int _uputc(uint16_t value,  uint8_t *user)
+{
+	*user = value;
+	return 0;
+}
+
+int _uputw(uint16_t value,  uint16_t *user)
+{
+	*user = value;
+	return 0;
+}
+
+int uputl(uint32_t value,  void *user)
+{
+	*(uint32_t *)user = value;
+	return 0;
+}
+
+int _uzero(uint8_t *user, usize_t count)
+{
+//	while(count--)
+//		*user++=0;
+	return 0;
+}
+
+arg_t _memalloc(void)
+{
+	udata.u_error = ENOSYS;
+	return -1;
+}
+
+arg_t _memfree(void)
+{
+	udata.u_error = ENOSYS;
+	return -1;
+}
+
 #endif
