@@ -24,9 +24,9 @@ wipebss:
 		dbra d0,wipebss
 
 		/* FIXME: hard coded ugly */
-		move.l #uarea_block+508,a7
-		/* uarea global */
-		move.l #uarea_block,a5
+		move.l #udata_block+508,a7
+		/* udata global */
+		move.l #udata_block,a5
 		bsr init_early
 		bsr init_hardware
 		bsr fuzix_main

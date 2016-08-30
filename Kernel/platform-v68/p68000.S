@@ -8,7 +8,7 @@
 		.globl program_vectors
 		.globl outchar
 		.globl trap_monitor
-		.globl uarea_block
+		.globl udata_block
 
 .mri 1
 trap_reboot:
@@ -17,8 +17,8 @@ trap_monitor:
 	    bra trap_monitor
 
 init_early:
-	    lea.l uarea_block,a5	; udata ptr
-	    move.l a5,uarea_shadow	; shadow copy for entry/exit
+	    lea.l udata_block,a5	; udata ptr
+	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
 ;
@@ -72,8 +72,8 @@ timer_irq:
 	    movem.l a0-a6/d0-d7,-(a7)
 	    move.l #intmsg,a0
 	    bsr outstring
-	    move.l uarea_shadow,a5	; set up the register global
-	    bsr platform_interrupt
+	    move.l udata_shadow,a5	; set up the register global
+	    jsr platform_interrupt
 	    move.b $00F04000,d0		; Re-enable
 	    movem.l (a7)+,a0-a6/d0-d7
 	    rte

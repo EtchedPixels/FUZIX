@@ -28,7 +28,7 @@ void map_init(void)
 {
 }
 
-u_block uarea_block[PTABSIZE];
+u_block udata_block[PTABSIZE];
 uaddr_t ramtop;
 uint8_t *membase[PTABSIZE];
 uint8_t need_resched;
@@ -53,7 +53,7 @@ const uint16_t buddy_level[BUDDY_NUMLEVEL] = {
 int16_t dofork(ptptr p)
 {
 	/* Child and parent udata pointers */
-	struct u_data *uc = &uarea_block[p - ptab].u_d;
+	struct u_data *uc = &udata_block[p - ptab].u_d;
 	struct u_data *up = udata_ptr;
 	uint32_t *csp = (uint32_t *)(uc + 1);
 	uint32_t *psp = up->u_sp;
