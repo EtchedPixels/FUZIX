@@ -152,7 +152,7 @@ struct winsize {
     unsigned short ws_col;
     unsigned short ws_xpixel;
     unsigned short ws_ypixel;
-};
+} winsize;
 
 extern speed_t cfgetispeed(const struct termios *__termios_p);
 extern speed_t cfgetospeed(const struct termios *__termios_p);
