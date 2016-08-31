@@ -90,6 +90,9 @@
 char *prog_name;
 struct termios termios;
 int column= 0, max_column=80;		/* Assume 80 character terminals. */
+#ifdef TIOCGWINSZ
+struct winsize winsize;
+#endif
 
 void main(int argc, char *argv[]);
 void report(int flags);
