@@ -40,8 +40,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "level2.h"
 #else
 
-#define jobcontrol_in(x,y)
-#define jobcontrol_out(x,y)
+#define jobcontrol_in(x,y,z)	0
+#define jobcontrol_out(x,y,z)	0
+#define jobcontrol_ioctl(x,y,z)	0
+
 #define limit_exceeded(x,y) (0)
 #define can_signal(p, sig) \
 	(udata.u_ptab->p_uid == (p)->p_uid || super())

@@ -27,8 +27,9 @@ struct rlimit {
 struct tty;
 
 extern int in_group(uint16_t gid);
-extern void jobcontrol_in(uint8_t minor, struct tty *tty);
-extern void jobcontrol_out(uint8_t minor, struct tty *tty);
+extern uint8_t jobcontrol_in(uint8_t minor, struct tty *tty, usize_t *nread);
+extern uint8_t jobcontrol_out(uint8_t minor, struct tty *tty, usize_t *written);
+extern uint8_t jobcontrol_ioctl(uint8_t minor, struct tty *tty, uarg_t request);
 extern int tcsetpgrp(struct tty *tty, char *data);
 
 /* Platform must implement according to its PATH_MAX and allocators. If

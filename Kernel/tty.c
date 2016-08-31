@@ -33,11 +33,10 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	nread = 0;
 	while (nread < udata.u_count) {
 		for (;;) {
-		        if ((t->flag & TTYF_DEAD)&&(!q->q_count)) {
-		                udata.u_error = ENXIO;
-		                return -1;
-                        }
-                        jobcontrol_in(minor, t);
+                        if (jobcontrol_in(minor, t, &nread))
+				return nread;
+		        if ((t->flag & TTYF_DEAD) && (!q->q_count))
+				goto dead;
 			if (remq(q, &c)) {
 				if (udata.u_sysio)
 					*udata.u_base = c;
@@ -78,8 +77,11 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 out:
 	wakeup(&q->q_count);
 	return nread;
-}
 
+dead:
+        udata.u_error = ENXIO;
+	return -1;
+}
 
 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
@@ -94,15 +96,16 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	while (udata.u_count-- != 0) {
 		for (;;) {	/* Wait on the ^S/^Q flag */
+	                if (jobcontrol_out(minor, t, &written))
+				return written;
 		        if (t->flag & TTYF_DEAD) {
-		                udata.u_error = ENXIO;
-		                return -1;
-                        }
+			        udata.u_error = ENXIO;
+			        return -1;
+			}
 			if (!(t->flag & TTYF_STOP))
 				break;
 			if (psleep_flags_io(&t->flag, flag, &written))
 				return written;
-                        jobcontrol_out(minor, t);
 		}
 		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
@@ -123,6 +126,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	}
 	return written;
 }
+
 
 int tty_open(uint8_t minor, uint16_t flag)
 {
@@ -224,11 +228,13 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 		return -1;
 	}
         t = &ttydata[minor];
+        if (jobcontrol_ioctl(minor, t, request))
+		return -1;
 	if (t->flag & TTYF_DEAD) {
 	        udata.u_error = ENXIO;
 	        return -1;
         }
-        jobcontrol_in(minor, t);
+
 	switch (request) {
 	case TCGETS:
 		return uput(&t->termios, data, sizeof(struct termios));
@@ -466,8 +472,7 @@ void tty_carrier_drop(uint8_t minor)
 
 void tty_carrier_raise(uint8_t minor)
 {
-        if (ttydata[minor].termios.c_cflag & HUPCL)
-                wakeup(&ttydata[minor].termios.c_cflag);
+	wakeup(&ttydata[minor].termios.c_cflag);
 }
 
 /*
@@ -475,6 +480,9 @@ void tty_carrier_raise(uint8_t minor)
  */
 
 #ifdef CONFIG_DEV_PTY
+
+static uint8_t ptyusers[PTY_PAIR];
+
 int ptty_open(uint8_t minor, uint16_t flag)
 {
 	return tty_open(minor + PTY_OFFSET, flag);
@@ -502,11 +510,20 @@ int ptty_ioctl(uint8_t minor, uint16_t request, char *data)
 
 int pty_open(uint8_t minor, uint16_t flag)
 {
-	return tty_open(minor + PTY_OFFSET, flag);
+	int r = tty_open(minor + PTY_OFFSET, flag | O_NOCTTY | O_NDELAY);
+	if (r == 0) {
+		if (!ptyusers[minor])
+			tty_carrier_raise(minor + PTY_OFFSET);
+		ptyusers[minor]++;
+	}
+	return r;
 }
 
 int pty_close(uint8_t minor)
 {
+	ptyusers[minor]--;
+	if (ptyusers[minor] == 0)
+		tty_carrider_drop(minor + PTY_OFFSET);
 	return tty_close(minor + PTY_OFFSET);
 }
 
