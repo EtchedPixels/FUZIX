@@ -27,6 +27,7 @@
 #include <string.h>
 #include <unistd.h>
 
+int fd;
 char *argv0, aflag, mflag, rflag, sflag, vflag, next;
 
 void error(void)
@@ -40,7 +41,7 @@ void putstr(char *str)
 	ssize_t ret, len;
 	len = strlen(str);
 	while (len > 0) {
-		ret = write(STDOUT_FILENO, str, len);
+		ret = write(fd, str, len);
 		if (ret == -1)
 			error();
 		str += ret;
@@ -50,6 +51,7 @@ void putstr(char *str)
 
 void usage(void)
 {
+	fd = STDERR_FILENO;
 	putstr("usage: ");
 	putstr(argv0);
 	putstr(" [-amrsv]\n");
@@ -70,6 +72,7 @@ int main(int argc, char *argv[])
 	char *p;
 	int i;
 
+	fd = STDOUT_FILENO;
 	argv0 = "";
 	if (argc) {
 		argv0 = argv[0];
