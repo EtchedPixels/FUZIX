@@ -242,7 +242,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 					cursory = ncursory;
 				if (ncursorx >= 0 && ncursorx <= VT_RIGHT)
 					cursorx = ncursorx;
-					vtmode = 0;
+				vtmode = 0;
 			} else if (vtmode == 4 ){
 				vtattr = c;
 				vtmode = 0;
