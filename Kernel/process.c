@@ -216,6 +216,9 @@ void newproc(ptptr p)
 	if (!p->p_tty)		/* If no tty, try tty of parent's parent */
 		p->p_tty = udata.u_ptab->p_pptr->p_tty;
 	p->p_uid = udata.u_ptab->p_uid;
+	/* Set default priority */
+	p->p_priority = MAXTICKS;
+
 	udata.u_ptab = p;
 
 	memset(&udata.u_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
@@ -227,10 +230,6 @@ void newproc(ptptr p)
 		i_ref(udata.u_root);
 	udata.u_cursig = 0;
 	udata.u_error = 0;
-
-	/* Set default priority */
-	p->p_priority = MAXTICKS;
-
 	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j) {
 		if (*j != NO_FILE)
 			++of_tab[*j].o_refs;
@@ -461,6 +460,8 @@ uint8_t chksigs(void)
 	/* Fast path - no signals pending means no work.
 	   Cursig being set means we've already worked out what to do.
 	 */
+
+rescan:
 	if (udata.u_cursig || !pending || udata.u_ptab->p_status == P_STOPPED)
 		return udata.u_cursig;
 
@@ -487,6 +488,8 @@ uint8_t chksigs(void)
 				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				irqrestore(irq);
 				switchout();
+				/* Other things may have happened */
+				goto rescan;
 	                }
 	                if ((m & clear) || udata.u_ptab->p_pid == 1) {
 			/* SIGCONT is subtle - we woke the process to handle
