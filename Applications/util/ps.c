@@ -74,9 +74,9 @@ int do_ps(void)
 
     if (!(flags & F_h)) {
         if (flags & F_n)
-	    printf("  PID\tPPID\tUID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+	    printf("  PID\t PPID\t  UID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
 	else
-	    printf("USER\t  PID\tPPID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+	    printf("USER\t  PID\t PPID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
     }
 
     for (ppbuf = ptab, i = 0; i < ptsize; ++i, ++ppbuf) {
@@ -100,7 +100,7 @@ int do_ps(void)
         }
 
 	if (flags & F_n) {
-	    printf("%5d\t%5d\t%-3d\t%s\t%04x\t%-5d\t%s\n",
+	    printf("%5d\t%5d\t%5d\t%s\t%04x\t%-5d\t%s\n",
 	           pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid, pp->p_uid,
 	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
 	           name);
