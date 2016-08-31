@@ -25,8 +25,8 @@ void psleep(void *event)
 
 	switch (udata.u_ptab->p_status) {
 	case P_SLEEP:		// echo output from devtty happens while processes are still sleeping but in-context
-		nready++;	/* We will fix this back up below */
 	case P_STOPPED:		// coming to a halt
+		nready++;	/* We will fix this back up below */
 	case P_RUNNING:		// normal process
 		break;
 	default:
@@ -81,7 +81,7 @@ void wakeup(void *event)
 
 void pwake(ptptr p)
 {
-	if (p->p_status > P_RUNNING && p->p_status < P_FORKING) {
+	if (p->p_status > P_RUNNING && p->p_status < P_STOPPED) {
 		p->p_status = P_READY;
 		p->p_wait = NULL;
 		nready++;
@@ -370,9 +370,8 @@ void timer_interrupt(void)
 	    && !udata.u_insys && inint && nready > 1) {
                  need_resched = 1;
 #ifdef DEBUG_PREEMPT
-		kprintf("[preempt %p %d %x]", udata.u_ptab,
-		        udata.u_ptab->p_priority,
-		        *((uint16_t *)0xEAFE));
+		kprintf("[preempt %p %d]", udata.u_ptab,
+		        udata.u_ptab->p_priority);
 #endif
         }
 #endif
@@ -386,7 +385,6 @@ void timer_interrupt(void)
 // we arrive here from syscall.s with the kernel paged in, using the kernel stack, interrupts enabled.
 void unix_syscall(void)
 {
-	// NO LOCAL VARIABLES PLEASE
 	udata.u_error = 0;
 
 	/* Fuzix saves the Stack Pointer and arguments in the
@@ -448,6 +446,11 @@ static uint8_t dump_core(uint8_t sig)
 
 /* This sees if the current process has any signals set, and handles them.
  */
+
+static const uint32_t stopper = (1UL << SIGSTOP) | (1UL << SIGTTIN) | (1UL << SIGTTOU) | (1UL << SIGTSTP);
+static const uint32_t clear = (1UL << SIGSTOP) | (1UL << SIGTTIN) | (1UL << SIGTTOU) | (1UL << SIGTSTP) |
+			      (1UL << SIGCHLD) | (1UL << SIGURG) | (1UL << SIGWINCH) | (1UL << SIGIO) |
+			      (1UL << SIGCONT);
 uint8_t chksigs(void)
 {
 	uint8_t j;
@@ -457,9 +460,7 @@ uint8_t chksigs(void)
 
 	/* Fast path - no signals pending means no work.
 	   Cursig being set means we've already worked out what to do.
-	   Also don't do signal processing if we are in P_STOPPED. This
-	   isn't quite right but will paper over the holes for the moment
-	   FIXME */
+	 */
 	if (udata.u_cursig || !pending || udata.u_ptab->p_status == P_STOPPED)
 		return udata.u_cursig;
 
@@ -469,32 +470,34 @@ uint8_t chksigs(void)
 		m = sigmask(j);
 		if (!(m & pending))
 			continue;
-	        /* SIGSTOP can't be ignored and puts the process into
-	           P_STOPPED state when it is ready to handle the signal.
-	           Annoyingly right now we have to context switch to the task
-	           in order to stop it in the right place. That would be nice
-	           to fix */
-	        if (j == SIGSTOP || j == SIGTTIN || j == SIGTTOU) {
-			udata.u_ptab->p_status = P_STOPPED;
-			udata.u_ptab->p_event = j;
-			psleep(NULL);
-                }
 		/* This is more complex than in V7 - we have multiple
-		   behaviours (plus the unimplemented as yet core dump) */
+		   behaviours plus core dump */
 		if (*svec == SIG_DFL) {
+		        /* SIGSTOP can't be ignored and puts the process into
+		           P_STOPPED state when it is ready to handle the signal.
+		           Annoyingly right now we have to context switch to the task
+		           in order to stop it in the right place. That would be nice
+		           to fix */
+		        if (m & stopper) {
+				/* Don't allow us to race SIGCONT */
+				irqflags_t irq = di();
+				nready--;
+				udata.u_ptab->p_status = P_STOPPED;
+				udata.u_ptab->p_event = j;
+				udata.u_ptab->p_pending &= ~m;	// unset the bit
+				irqrestore(irq);
+				switchout();
+	                }
+	                if ((m & clear) || udata.u_ptab->p_pid == 1) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
-			if (j == SIGCHLD || j == SIGURG || j == SIGSTOP ||
-                            j == SIGTTIN || j == SIGTTOU || j == SIGWINCH ||
-			    j == SIGIO || j == SIGCONT || udata.u_ptab->p_pid == 1) {
 				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
 			}
-			/* FIXME: core dump on some signals */
 #ifdef DEBUG
 			kprintf("process terminated by signal %d\n", j);
 #endif
-                        doexit(dump_core(j));
+			doexit(dump_core(j));
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
 			udata.u_ptab->p_pending &= ~m;	// unset the bit
@@ -526,6 +529,7 @@ void ssig(ptptr proc, uint8_t sig)
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
                 /* SIGCONT has an unblockable effect */
 		if (sig == SIGCONT) {
+			/* You can never send yourself a SIGCONT when you are stopped */
 			if (proc->p_status == P_STOPPED) {
 			        proc->p_status = P_READY;
 			        proc->p_event = 0;
