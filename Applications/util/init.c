@@ -12,6 +12,7 @@
  *	- Give serious consideration to hiding cron/at in the daemon
  *	  to keep our background daemon count as low as we can
  *	- Ditto for syslogd
+ *	- Debug telinit q handling
  *	(it's not turning into systemd honest)
  */
 
@@ -44,7 +45,7 @@
 
 #define crlf()   write(1, "\n", 1)
 
-static void spawn_login(struct passwd *, const char *, const char *);
+static void spawn_login(struct passwd *, const char *, const char *, const char *);
 static pid_t getty(const char **, const char *);
 
 static struct utmp ut;
@@ -94,7 +95,7 @@ void sigusr1(int sig)
 	dingdong = 1;
 }
 
-int showfile(char *fname)
+int showfile(const char *fname)
 {
 	int fd, len;
 	char buf[80];
@@ -595,8 +596,9 @@ int main(int argc, char *argv[])
 		clear_zombies(0);
 		if (dingdong) {
 			uint8_t newrl;
-			int fd = open("/var/run/intctl", O_RDONLY);
+			int fd = open("/var/run/initctl", O_RDONLY);
 			if (fd != -1 && read(fd, &newrl, 1) == 1) {
+				write(1, &newrl, 1);
 				if (newrl != 'q') {
 					exit_runlevel(1 << runlevel, 1 << newrl);
 					runlevel = newrl;
@@ -642,19 +644,68 @@ static void envset(const char *a, const char *b)
 
 /*
  *	Internal implementation of "getty" and "login"
- *
- *	argv[0] = tty name
- *	argv[1] = (tty type)
- *	argv[2] = (rows)
- *	argv[3] = (cols)
  */
+
+#define CTRL(x)	((x) & 31)
+
+static struct termios tref = {
+	BRKINT | ICRNL,
+	OPOST | ONLCR,
+	CREAD | HUPCL,
+	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
+	{CTRL('D'), 0, CTRL('H'), CTRL('C'),
+	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
+	 CTRL('Z'), CTRL('Y'), CTRL('V'), CTRL('O')
+	 }
+};
+
+static void usage(void)
+{
+	write(2, "getty: invalid arguments\n",25);
+	sleep(5);
+	exit(1);
+}
+
+const char *bauds[] = {
+	"50",
+	"75",
+	"110",
+	"134",
+	"150",
+	"300",
+	"600",
+	"1200",
+	"2400",
+	"4800",
+	"9600",
+	"19200",
+	"38400",
+	"57600",
+	"115200"
+};
+
+static int baudmatch(const char *p)
+{
+	const char **str = bauds;
+	int i;
+	for(i = 1; i < 15; i++) {
+		if (strcmp(p, *str++) == 0)
+			return i;
+	}
+	return B9600;
+}
+
 static pid_t getty(const char **argv, const char *id)
 {
 	int fdtty, pid;
 	struct passwd *pwd;
 	const char *pr;
+	const char *issue = "/etc/issue";
+	const char *host = "";
 	char *p, buf[50], salt[3];
 	char hn[64];
+	long baud = 9600;
+
 	gethostname(hn, sizeof(hn));
 
 	for (;;) {
@@ -665,6 +716,40 @@ static pid_t getty(const char **argv, const char *id)
 			if (pid != 0)
 				/* parent's context: return pid of the child process */
 				return pid;
+
+			while(argv[0] && argv[0][0]=='-') {
+				switch(argv[0][1]) {
+				case 'L':
+					tref.c_cflag |= CLOCAL;
+					break;
+				case 'h':
+					tref.c_cflag |= CRTSCTS;
+					break;
+				case 'i':
+					issue = NULL;
+					break;
+				case 'H':
+					if ((host = *++argv) == NULL)
+						usage();
+					break;
+				case 't':
+					argv++;
+					if (argv[0] == NULL)
+						usage();
+					alarm(atoi(argv[0]));
+					break;
+				case 'f':
+					argv++;
+					if ((issue = *++argv) == NULL)
+						usage();
+					break;
+				default:
+					usage();
+				}
+				argv++;
+			}
+			if (!*argv)
+				usage();
 
 			close(0);
 			close(1);
@@ -681,15 +766,19 @@ static pid_t getty(const char **argv, const char *id)
 			envset("CTTY", argv[0]);
 
 			if (argv[1]) {
-				envset("TERM", argv[1]);
-				if (argv[2] && argv[3]) {
+				if (argv[2])
+					envset("TERM", argv[2]);
+				if (argv[3] && argv[4]) {
 					static struct winsize winsz;
-					winsz.ws_col = atoi(argv[2]);
-					winsz.ws_row = atoi(argv[3]);
+					winsz.ws_col = atoi(argv[3]);
+					winsz.ws_row = atoi(argv[4]);
 					if (ioctl(fdtty, TIOCSWINSZ, &winsz))
 						perror("winsz");
 				}
 			}
+			/* Figure out the baud bits. It's cheaper to do this with strings
+			   than ulongs! */
+			tref.c_cflag |= baudmatch(argv[1]);
 
 			/* make stdin, stdout and stderr point to fdtty */
 
@@ -703,7 +792,8 @@ static pid_t getty(const char **argv, const char *id)
 			pututline(&ut);
 
 			/* display the /etc/issue file, if exists */
-			showfile("/etc/issue");
+			if (issue)
+				showfile(issue);
 			if (*hn) {
 				putstr(hn);
 				putstr(" ");
@@ -731,7 +821,7 @@ static pid_t getty(const char **argv, const char *id)
 						pr = "";
 					}
 					if (strcmp(pr, pwd->pw_passwd) == 0)
-						spawn_login(pwd, argv[0], id);
+						spawn_login(pwd, argv[0], id, host);
 				}
 
 				putstr("\nLogin incorrect\n\n");
@@ -746,7 +836,7 @@ static pid_t getty(const char **argv, const char *id)
 
 static char *argp[] = { "sh", NULL };
 
-static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
+static void spawn_login(struct passwd *pwd, const char *tty, const char *id, const char *host)
 {
 	char *p, buf[50];
 
@@ -757,6 +847,8 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id)
 	strncpy(ut.ut_id, id, 2);
 	time(&ut.ut_time);
 	strncpy(ut.ut_user, pwd->pw_name, UT_NAMESIZE);
+	if (host)
+		strncpy(ut.ut_host, host, UT_HOSTSIZE);
 	pututline(&ut);
 	/* Don't leak utmp into the child */
 	endutent();
