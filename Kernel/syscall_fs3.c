@@ -294,9 +294,16 @@ with node name. Rest is up to the libc.
 
 arg_t _uname(void)
 {
-        uint16_t size = sizeof(sysinfo) + uname_len;
-        if (size > len)
-                size = len;
+	uint16_t part1, part2;
+	uint16_t size = sizeof(sysinfo) + uname_len;
+	if (size > len)
+		size = len;
+	part1 = size;
+	part2 = 0;
+	if (size > sizeof(sysinfo)) {
+		part1 = sizeof(sysinfo);
+		part2 = size-sizeof(sysinfo);
+	}
 	sysinfo.memk = procmem;
 	sysinfo.usedk = pagemap_mem_used();
 	sysinfo.nproc = PTABSIZE;
@@ -304,11 +311,14 @@ arg_t _uname(void)
 	sysinfo.loadavg[0] = loadavg[0].average;
 	sysinfo.loadavg[1] = loadavg[1].average;
 	sysinfo.loadavg[2] = loadavg[2].average;
-	uput(&sysinfo, buf, size);
+	uput(&sysinfo, buf, part1);
+	if (part2 > 0)
+		uput(uname_str, buf+sizeof(sysinfo), part2);
 	return size;
 }
 
 #undef buf
+#undef len
 
 /**************************************
 flock(fd, lockop)	    Function 60
