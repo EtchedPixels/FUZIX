@@ -134,6 +134,13 @@ target:
 	ln -sf platform-$(TARGET) platform
 	+$(MAKE) -C platform-$(TARGET)
 
+$(CSRCS): include/kernel.h
+
+include/kernel.h: include/sysinfoblk.h
+
+include/sysinfoblk.h:
+	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
+
 $(C1OBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
 
