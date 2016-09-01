@@ -129,7 +129,7 @@ usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
 
 lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
 
-target:
+target: include/kernel.h
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
 	+$(MAKE) -C platform-$(TARGET)
@@ -138,7 +138,7 @@ $(CSRCS): include/kernel.h
 
 include/kernel.h: include/sysinfoblk.h
 
-include/sysinfoblk.h:
+include/sysinfoblk.h: tools/makeversion
 	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
