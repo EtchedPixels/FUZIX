@@ -294,7 +294,7 @@ with node name. Rest is up to the libc.
 
 arg_t _uname(void)
 {
-        uint16_t size = sizeof(sysinfo) + uname_len;
+        uint16_t size = sizeof(sysinfo);
         if (size > len)
                 size = len;
 	sysinfo.memk = procmem;

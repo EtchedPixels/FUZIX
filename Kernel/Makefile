@@ -170,8 +170,10 @@ $(CS5OBJS): %$(BINEXT): %.c
 $(AOBJS): %$(BINEXT): %$(ASMEXT)
 	$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<
 
-version.c: makeversion
-	./makeversion $(VERSION) $(SUBVERSION) $(TARGET)
+version.c: tools/makeversion
+	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
+
+tools/makeversion: tools/makeversion.c
 
 tools/filesizes: tools/filesizes.c
 

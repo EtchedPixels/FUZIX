@@ -648,22 +648,7 @@ struct s_argblk {
 /*
  *	System info shared with user space
  */
-struct sysinfoblk {
-  uint8_t infosize;		/* For expandability */
-  uint8_t banks;		/* Banks in our 64K (and thus pagesize) */
-  uint8_t max_open;
-  uint8_t nproc;		/* Number of processes */
-  uint16_t ticks;		/* Tick rate in HZ */
-  uint16_t memk;		/* Memory in KB */
-  uint16_t usedk;		/* Used memory in KB */
-  uint16_t config;		/* Config flag mask */
-#define CONF_PROFIL		1
-#define CONF_NET		2	/* Hah.. 8) */
-#define CONF_LEVEL_2		4
-  uint16_t loadavg[3];
-  uint32_t spare2;
-    			        /* Followed by uname strings */
-};
+#include <sysinfoblk.h>
 
 /* Select: if we do the map optimisation trick then we will want one bit free
    for optimising, so ideal PTABSIZE will become 1 below a multiple of 8 */

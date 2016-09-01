@@ -322,7 +322,7 @@ void fuzix_main(void)
 			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
 			"Copyright (c) 2014-2015 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
-			uname_str);
+			sysinfo.uname);
 
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
