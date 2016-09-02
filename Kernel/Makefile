@@ -120,7 +120,7 @@ COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSO
 
 OBJS  = $(COBJS) $(AOBJS)
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:$(ASMEXT)=.lst) $(ASRCS:$(ASMEXT)=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(ASRCS:$(ASMEXT)=.rst)
+JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:$(ASMEXT)=.lst) $(ASRCS:$(ASMEXT)=.sym) $(CSRCS:.c=.rst) $(CSRCS:.c=.o)  $(CSRCS:.c=.adb)  $(ASRCS:$(ASMEXT)=.rst)
 
 .SUFFIXES:		# delete the default suffixes
 .SUFFIXES: .c .s .rel .S
@@ -129,7 +129,7 @@ usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
 
 lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
 
-target:
+target: include/kernel.h
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
 	+$(MAKE) -C platform-$(TARGET)
@@ -138,7 +138,7 @@ $(CSRCS): include/kernel.h
 
 include/kernel.h: include/sysinfoblk.h
 
-include/sysinfoblk.h:
+include/sysinfoblk.h: tools/makeversion
 	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
@@ -194,7 +194,11 @@ font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6 tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt hogs.txt.old tools/*~
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi
+	rm -f fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6
+	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv
+	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
+	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C cpm-loader clean
 	+$(MAKE) -C tools/bankld clean
@@ -202,6 +206,7 @@ clean:
 clean-all: clean
 	(cd tools/bankld; $(MAKE) clean)
 	$(foreach target,$(TARGET_LIST), $(MAKE) -C $(target) clean;)
+	-rm -f platform
 
 include cpu-$(CPU)/image.mk
 -include platform-$(TARGET)/image.mk
