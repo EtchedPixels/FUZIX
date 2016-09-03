@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
@@ -14,35 +15,39 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: which cmd [cmd, ..]\n");
 		return 1;
 	}
-	if ((envpath = getenv("PATH")) == 0) {
-		envpath = ".";
+	if ((envpath = getenv("PATH")) == NULL) {
+		envpath = "/bin";
 	}
-	argv[argc] = 0;
+	argv[argc] = NULL;
+	found = 0;
+	argc--;
 	for (argv++; *argv; argv++) {
 
-		strcpy(patbuf, envpath);
+		snprintf(patbuf, sizeof(patbuf), "%s", envpath);
 		cp = path = patbuf;
-		quit = found = 0;
+		quit = 0;
 
 		while (!quit) {
-			cp = index(path, ':');
+			cp = strchr(path, ':');
 			if (cp == NULL) {
 				quit++;
 			} else {
-				*cp = '\0';
+				*cp = 0;
 			}
-			snprintf(buf, 512, "%s/%s", (*path ? path : "."), *argv);
+			snprintf(buf, sizeof(buf), "%s/%s", (*path ? path : "."), *argv);
 			path = ++cp;
 
-			if (access(buf, 1) == 0) {
+			if (access(buf, X_OK) == 0) {
 				printf("%s\n", buf);
 				found++;
+				break;
 			}
-		}
-		if (!found) {
-			printf("No %s in %s\n", *argv, envpath);
 		}
 	}
 
-	return 0;
+	/*
+	 *  0: if all the commands have been found and are executable
+	 *  1: if at least one command is not found or not executable
+	 */
+	return found != argc;
 }
