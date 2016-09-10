@@ -152,6 +152,7 @@ libc-functions.localsrcs += \
 	tcflush.c \
 	tcgetattr.c \
 	tcsetattr.c \
+	telldir.c \
 	time.c \
 	tmpfile.c \
 	tmpnam.c \
@@ -175,6 +176,7 @@ libc-functions.localsrcs += \
     memcmp.c \
     memcpy.c \
     memset.c \
+    seekdir.c \
     strcasecmp.c \
     strcasestr.c \
     strcat.c \
