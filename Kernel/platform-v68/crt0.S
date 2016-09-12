@@ -24,7 +24,7 @@ wipebss:
 		dbra d0,wipebss
 
 		/* FIXME: hard coded ugly */
-		move.l #udata_block+508,a7
+		move.l #udata_block+1016,a7
 		/* udata global */
 		move.l #udata_block,a5
 		bsr init_early
