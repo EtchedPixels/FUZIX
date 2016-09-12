@@ -568,6 +568,7 @@ void kprintf(const char *fmt, ...)
 				}
 #ifdef CONFIG_32BIT
 				case 'p':
+					fmt--;
 #endif
 				case 'l': /* assume an x is following */
 				{
