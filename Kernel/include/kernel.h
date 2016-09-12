@@ -472,9 +472,14 @@ typedef struct u_data {
 /* This is the user data structure, padded out to 512 bytes with the
  * System Stack.
  */
+
+#ifndef CONFIG_STACKSIZE
+#define CONFIG_STACKSIZE 512
+#endif
+
 typedef struct u_block {
         u_data u_d;
-        char   u_s [512 - sizeof(struct u_data)];
+        char   u_s [CONFIG_STACKSIZE - sizeof(struct u_data)];
 } u_block;
 
 
