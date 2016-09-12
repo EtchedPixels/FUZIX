@@ -104,18 +104,3 @@ void memzero(void *p, usize_t len)
 {
 	memset(p, 0, len);
 }
-
-/* TODO */
-void devide_read_data(void)
-{
-}
-
-void devide_write_data(void)
-{
-}
-
-/* FIXME: move to asm and lowlevel- */
-uint16_t swab(uint16_t a)
-{
-	return (a << 8) | (a >> 8);
-}
