@@ -9,6 +9,8 @@
 		.globl outchar
 		.globl trap_monitor
 		.globl udata_block
+		.globl devide_read_data
+		.globl devide_write_data
 
 .mri 1
 trap_reboot:
@@ -64,22 +66,17 @@ trapset:
 	    move.l #timer_irq,$78(a0)
 	    move.l #mmu_fault,$7C(a0)
 
-	    moveq #100,d0			; Timer on (but slow)
+	    moveq #1,d0			;
 	    move.b d0,$00F04000
             rts
 
 timer_irq:
 	    movem.l a0-a6/d0-d7,-(a7)
-	    move.l #intmsg,a0
-	    bsr outstring
 	    move.l udata_shadow,a5	; set up the register global
 	    jsr platform_interrupt
 	    move.b $00F04000,d0		; Re-enable
 	    movem.l (a7)+,a0-a6/d0-d7
 	    rte
-
-intmsg:
-	    asciz "IRQ"
 
 mmu_fault:
 	    movem.l a0-a6/d0-d7,-(a7)
@@ -118,6 +115,25 @@ outcharw:
 	    move.w (sp)+,d0
 	    move.b d0,$00F03000
 	    rts
+
+;
+;	IDE
+;
+devide_read_data:
+	move.l blk_op,a0
+	move.w #255,d0
+devide_read_l:
+	move.w $00F01000,(a0)+
+	dbra d0,devide_read_l
+	rts
+
+devide_write_data:
+	move.l blk_op,a0
+	move.w #255,d0
+devide_write_l:
+	move.w (a0)+,$00F01000
+	dbra d0,devide_write_l
+	rts
 
 .section data
 
