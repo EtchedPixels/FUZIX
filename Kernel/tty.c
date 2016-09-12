@@ -18,6 +18,21 @@
 
 struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 
+#ifdef CONFIG_LEVEL_2
+static uint16_t tty_select;		/* Fast path if no selects, could do with being per tty ? */
+
+/* Might be worth tracking tty minor <> inode for performance FIXME */
+static void tty_selwake(uint8_t minor, uint16_t event)
+{
+	if (tty_select) {
+		/* 2 is the tty devices */
+		selwake_dev(2, minor, event);
+	}
+}
+#else
+#define tty_selwake(a,b)	do {} while(0)
+#endif
+
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	usize_t nread;
@@ -223,11 +238,21 @@ void tty_exit(void)
 int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
+
 	if (minor > NUM_DEV_TTY + 1) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
         t = &ttydata[minor];
+
+        /* Special case select ending after a hangup */
+#ifdef CONFIG_LEVEL_2
+	if (request == SELECT_END) {
+		tty_select--;
+		return 0;
+	}
+#endif
+
         if (jobcontrol_ioctl(minor, t, request))
 		return -1;
 	if (t->flag & TTYF_DEAD) {
@@ -249,11 +274,13 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 		if (uget(data, &t->termios, sizeof(struct termios)) == -1)
 		        return -1;
                 tty_setup(minor);
+                tty_selwake(minor, SELECT_IN|SELECT_OUT);
 		break;
 	case TIOCINQ:
 		return uput(&ttyinq[minor].q_count, data, 2);
 	case TIOCFLUSH:
 		clrq(&ttyinq[minor]);
+                tty_selwake(minor, SELECT_OUT);
 		break;
         case TIOCHANGUP:
                 tty_hangup(minor);
@@ -263,6 +290,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 		break;
 	case TIOCOSTART:
 		t->flag &= ~TTYF_STOP;
+                tty_selwake(minor, SELECT_OUT);
 		break;
         case TIOCGWINSZ:
                 return uput(&t->winsize, data, sizeof(struct winsize));
@@ -281,6 +309,31 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
                         return -1;
                 }
                 return tcsetpgrp(t, data);
+	case SELECT_BEGIN:
+		tty_select++;
+		/* Fall through */
+	case SELECT_TEST:
+	{
+		uint8_t n = *data;
+		*data = 0;
+		if (n & SELECT_EX) {
+			if (t->flag & TTYF_DEAD) {
+				*data = SELECT_IN|SELECT_EX;
+				return 0;
+			}
+		}
+		/* FIXME: IRQ race */
+		if (n & SELECT_IN) {
+			/* TODO - this one is hard, we need to peek down the queue to see if
+			   a canonical input would succeed */
+		}
+		if (n & SELECT_OUT) {
+			if ((!(t->flag & TTYF_STOP)) &&
+				tty_writeready(minor) != TTY_READY_LATER)
+					*data |= SELECT_OUT;
+		}
+		return 0;
+	}
 #endif
 	default:
 		udata.u_error = ENOTTY;
@@ -356,6 +409,7 @@ sigout:
 		if (c == t->termios.c_cc[VSTART]) {	/* ^Q */
 		        t->flag &= ~TTYF_STOP;
 			wakeup(&t->flag);
+			tty_selwake(minor, SELECT_OUT);
 			return 1;
 		}
 	}
@@ -382,8 +436,10 @@ sigout:
 		tty_putc(minor, '\007');	/* Beep if no more room */
 
 	if (!canon || c == t->termios.c_cc[VEOL] || c == '\n'
-	    || c == t->termios.c_cc[VEOF])
+	    || c == t->termios.c_cc[VEOF]) {
 		wakeup(q);
+		tty_selwake(minor, SELECT_IN);
+	}
 	return wr;
 
 eraseout:
@@ -404,6 +460,7 @@ eraseout:
 void tty_outproc(uint8_t minor)
 {
 	wakeup(&ttydata[minor]);
+	tty_selwake(minor, SELECT_OUT);
 }
 
 void tty_echo(uint8_t minor, unsigned char c)
@@ -462,6 +519,7 @@ void tty_hangup(uint8_t minor)
         /* Wake stopped stuff */
         wakeup(&t->flag);
         /* and deadflag will clear when the last user goes away */
+	tty_selwake(minor, SELECT_IN|SELECT_OUT|SELECT_EX);
 }
 
 void tty_carrier_drop(uint8_t minor)
@@ -473,6 +531,7 @@ void tty_carrier_drop(uint8_t minor)
 void tty_carrier_raise(uint8_t minor)
 {
 	wakeup(&ttydata[minor].termios.c_cflag);
+	tty_selwake(minor, SELECT_IN|SELECT_OUT);
 }
 
 /*
@@ -581,6 +640,7 @@ void pty_putc_wait(uint8_t minor, char c)
 	struct s_queue q = &ptyq[minor + PTY_OFFSET + PTY_PAIR];
 	/* tty output queue to pty */
 	insq(q, c);
+	/* FIXME: select */
 	wakeup(q);
 }
 #endif

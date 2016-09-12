@@ -80,6 +80,7 @@ void selwait_inode(inoptr i, uint8_t smask, uint8_t setit)
 void selwake_inode(inoptr i, uint16_t mask)
 {
 	struct selmap *s = (struct selmap *) (&i->c_node.i_addr[17]);
+	irqflags_t irq = di();
 	if (mask & SELECT_IN)
 		selwake(s);
 	s++;
@@ -88,6 +89,21 @@ void selwake_inode(inoptr i, uint16_t mask)
 	s++;
 	if (mask & SELECT_EX)
 		selwake(s);
+	irqrestore(irq);
+}
+
+void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask)
+{
+	irqflags_t irq = di();
+	uint16_t v = (major << 8) | minor;
+	inoptr i = i_tab;
+
+	while (i <= &i_tab[ITABSIZE - 1]) {	/* Convoluted form to keep SDCC happy */
+		if (i->c_refs && i->c_node.i_addr[0] == v)
+			selwake_inode(i, mask);
+		i++;
+	}
+	irqrestore(irq);
 }
 
 static int pipesel_begin(inoptr i, uint8_t bits)
@@ -128,22 +144,28 @@ void selwake_pipe(inoptr i, uint16_t mask)
 
 int _select(void)
 {
+	irqflags_t irq;
+	uint16_t seltype = SELECT_BEGIN;
 	inoptr ino;
 	uint16_t sumo;
 	uint8_t i, m, n;
 	uint16_t inr = 0, outr = 0, exr = 0;
 	/* Second 16bits of each spare for expansion */
 	uint16_t in = ugetw(base);
-	uint16_t out = ugetw(base + 4);
-	uint16_t ex = ugetw(base + 8);
+	uint16_t out = ugetw(base + 2);
+	uint16_t ex = ugetw(base + 4);
 
 	uint16_t sum = in | out | ex;
 
 	/* Timeout in 1/10th of a second (BSD api mangling done by libc) */
-	udata.u_ptab->p_timeout = ugetw(base + 12);
+	/* 0 means return immediately, need to sort out a 'forever' FIXME */
+	udata.u_ptab->p_timeout = ugetw(base + 6);
 
 	do {
 		m = 1;
+
+		irq = di();
+
 		for (i = 0; i < nfd; i++) {
 			if (sum & m) {
 				if (in & m)
@@ -172,10 +194,11 @@ int _select(void)
 					/* If unsupported we report the device as read/write ready */
 					if (d_ioctl
 					    (ino->c_node.i_addr[0],
-					     SELECT_BEGIN, &n) == -1) {
+					     seltype, &n) == -1) {
 						udata.u_error = 0;
 						n = SELECT_IN | SELECT_OUT;
-					}
+					} else if (seltype == SELECT_BEGIN)
+						selwait_inode(ino, n, 1);
 				      setbits:
 					/* Set the outputs */
 					if (n & SELECT_IN)
@@ -192,19 +215,25 @@ int _select(void)
 		inr &= in;	/* Don't reply with bits not being selected */
 		outr &= out;
 		exr &= ex;
+		/* FIXME lock against time race */
 		sumo = inr | outr | exr;	/* Are we there yet ? */
-		if (!sumo
-		    && psleep_flags(&udata.u_ptab->p_timeout, 0) == -1)
+		/* No successes, wait requested, not timed out */
+		if (!sumo && udata.u_ptab->p_timeout > 1 &&
+		     psleep_flags(&udata.u_ptab->p_timeout, 0) == -1)
 			break;
+		irqrestore(irq);
+		seltype = SELECT_TEST;
 	}
-	while (!sumo && udata.u_ptab->p_timeout != 1);
+	while (!sumo && udata.u_ptab->p_timeout > 1);
+
+	irqrestore(irq);
 
 	udata.u_ptab->p_timeout = 0;
 
 	/* Return the values to user space */
 	uputw(inr, base);
-	uputw(outr, base + 4);
-	uputw(exr, base + 8);
+	uputw(outr, base + 2);
+	uputw(exr, base + 4);
 
 	/* Tell the device less people care, we may want to remove all this
 	   and just select check. The 0 check we could do instead is cheap */
@@ -216,6 +245,10 @@ int _select(void)
 			case MODE_R(F_CDEV):
 				d_ioctl(ino->c_node.i_addr[0], SELECT_END,
 					NULL);
+				/* Kill the wait */
+				selwait_inode(ino, SELECT_IN|SELECT_OUT|SELECT_EX, 0);
+				/* May be unknown in which case ignore */
+				udata.u_error = 0;
 				break;
 			case MODE_R(F_PIPE):
 				pipesel_end(ino);

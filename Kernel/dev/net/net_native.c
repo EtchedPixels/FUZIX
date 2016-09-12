@@ -15,6 +15,7 @@ static void wakeup_all(struct socket *s)
 	wakeup(s);
 	wakeup(&s->s_data);
 	wakeup(&s->s_iflag);
+	selwake_dev(4, 65, SELECT_IN);
 }
 
 /*
@@ -113,6 +114,17 @@ static int netdev_report(struct sockdata *sd)
  *	the first one we find at the daemon. We should possibly round-robin
  *	these but it's not clear it's that important
  */
+static struct sockdata *netdev_findevent(void)
+{
+	struct sockdata *sd = sockdata;
+	while (sd != sockdata + NSOCKET) {
+		if (sd->event)
+			return sd;
+		sd++;
+	}
+	return NULL;
+}
+
 int netdev_read(uint8_t flag)
 {
 	if (net_ino == NULL || udata.u_count != sizeof(struct sockmsg)) {
@@ -120,12 +132,9 @@ int netdev_read(uint8_t flag)
 		return -1;
 	}
 	while(1) {
-		struct sockdata *sd = sockdata;
-		while (sd != sockdata + NSOCKET) {
-			if (sd->event)
-				return netdev_report(sd);
-			sd++;
-		}
+		struct sockdata *sd = netdev_findevent();
+		if (sd)
+			return netdev_report(sd);
 		if (psleep_flags(&ne, flag))
 			return -1;
 	}
@@ -152,7 +161,15 @@ int netdev_ioctl(uarg_t request, char *data)
 			if ((net_ino = getinode(fd)) == NULLINODE)
 				return -1;
 			i_ref(net_ino);
-			return 0;				
+			return 0;
+		case SELECT_BEGIN:
+		case SELECT_TEST:
+			/* We are always writable, but may not alway be readable */
+			if (*data & SELECT_IN) {
+				if (netdev_findevent() == NULL)
+					*data &= ~SELECT_IN;
+			}
+			*data &= SELECT_IN|SELECT_OUT;
 	}
 	udata.u_error = ENOTTY;
 	return -1;
@@ -193,6 +210,7 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
 	sd->event |= NEV_STATE | NEVW_STATE;
 	sd->newstate = state;
 	wakeup(&ne);
+	selwake_dev(4, 65, SELECT_IN);
 
 	do {
 	    if( s->s_state == SS_CLOSED )
@@ -213,6 +231,7 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 	struct sockdata *sd = s->s_priv;
 	sd->event |= event;
 	wakeup(&ne);
+	selwake_dev(4, 65, SELECT_IN);
 }
 
 /* General purpose ring buffer operator. Non re-entrant so use every

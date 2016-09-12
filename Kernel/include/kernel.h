@@ -598,7 +598,8 @@ struct s_argblk {
  * by userspace.
  */
 #define SELECT_BEGIN		0x8000
-#define SELECT_END		0x8001
+#define SELECT_TEST		0x8001
+#define SELECT_END		0x8002
 
 #define IOCTL_NORMAL		0x0000	/* No special rules */
 #define IOCTL_SUPER		0x4000	/* Superuser needed */
@@ -825,18 +826,20 @@ extern void exec_or_die(void);
 
 
 /* select.c */
+#ifdef CONFIG_LEVEL_2
 extern void seladdwait(struct selmap *s);
 extern void selrmwait(struct selmap *s);
 extern void selwake(struct selmap *s);
-#ifdef CONFIG_LEVEL_2
 extern void selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
 extern void selwake_inode(inoptr i, uint16_t mask);
 extern void selwake_pipe(inoptr i, uint16_t mask);
+extern void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask);
 extern int _select(void);
 #else
 #define selwait_inode(i,smask,setit) do {} while(0)
 #define selwake_inode(i,smask) do {} while(0)
 #define selwake_pipe(i,smask) do {} while(0)
+#define selwake_dev(major,minor,smask) do {} while(0)
 #endif
 
 /* swap.c */
