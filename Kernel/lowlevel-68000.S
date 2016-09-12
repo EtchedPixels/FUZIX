@@ -498,9 +498,10 @@ outa0hex:	move.l a0,d0
 		bsr outcharhex
 		move.l a0,d0
 outcharhex:	move.w d0,-(sp)
-		lsr #4,d0
+		lsr.b #4,d0
 		bsr hexdigit
 		move.w (sp),d0
+		and.b #15,d0
 		bsr hexdigit
 		move.w (sp)+,d0
 		rts
