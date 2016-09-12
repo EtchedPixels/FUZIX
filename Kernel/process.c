@@ -219,6 +219,11 @@ void newproc(ptptr p)
 	/* Set default priority */
 	p->p_priority = MAXTICKS;
 
+	/* For systems where udata is actually a pointer or a register object */
+#ifdef udata
+	p->p_udata = &udata;
+#endif
+
 	udata.u_ptab = p;
 
 	memset(&udata.u_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
