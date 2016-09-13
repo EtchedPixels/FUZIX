@@ -158,7 +158,7 @@ void complete_init(void)
 #define BOOTDEVICENAMES "" /* numeric parsing only */
 #endif
 
-static uint8_t system_param(unsigned char *p)
+static uint8_t system_param(char *p)
 {
 	if (*p == 'r' && p[2] == 0) {
 		if (p[1] == 'o') {
@@ -174,9 +174,9 @@ static uint8_t system_param(unsigned char *p)
 }
 
 /* Parse other arguments */
-void parse_args(unsigned char *p)
+void parse_args(char *p)
 {
-	unsigned char *s; 
+	char *s;
 	while(*p) {
 		while(*p == ' ' || *p == '\n')
 			p++;
@@ -191,11 +191,11 @@ void parse_args(unsigned char *p)
 	}
 }
 
-uint16_t bootdevice(uint8_t *devname)
+uint16_t bootdevice(char *devname)
 {
 	bool match = true;
 	unsigned int b = 0, n = 0;
-	uint8_t *p;
+	char *p;
 	const uint8_t *bdn = (const uint8_t *)BOOTDEVICENAMES;
 	uint8_t c, pc;
 
@@ -272,7 +272,7 @@ uint16_t bootdevice(uint8_t *devname)
 }
 
 /* So its in discard and thrown not on stack */
-static uint8_t bootline[64];
+static char bootline[64];
 
 uint16_t get_root_dev(void)
 {
@@ -283,7 +283,7 @@ uint16_t get_root_dev(void)
 
 	while(rd == BAD_ROOT_DEV){
 		kputs("bootdev: ");
-		udata.u_base = bootline;
+		udata.u_base = (uint8_t *)bootline;
 		udata.u_sysio = 1;
 		udata.u_count = sizeof(bootline)-1;
 		udata.u_euid = 0;		/* Always begin as superuser */
@@ -308,7 +308,9 @@ void fuzix_main(void)
 	inint = false;
 	udata.u_insys = true;
 
-	ramtop = PROGTOP;
+#ifdef PROGTOP		/* FIXME */
+	ramtop = (uaddr_t)PROGTOP;
+#endif
 
 	tty_init();
 

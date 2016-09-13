@@ -456,7 +456,7 @@ typedef struct u_data {
     /* Temporaries used for block I/O */
     blkno_t	u_block;	/* Block number */
     uint16_t	u_blkoff;	/* Offset in block */
-    uint16_t	u_nblock;	/* Number of blocks */
+    usize_t	u_nblock;	/* Number of blocks */
     uint8_t	*u_dptr;	/* Address for I/O */
 
 #ifdef CONFIG_LEVEL_2
@@ -685,10 +685,12 @@ extern usize_t valaddr(const char *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
+extern uint32_t _ugetl(void *uaddr);
 extern int ugets(const void *userspace_source, void *dest, usize_t maxlen);
 extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
 extern int uputw(uint16_t value, void *userspace_dest);
+extern int _uputl(uint32_t val, void *uaddr);
 extern int uzero(void *userspace_dest, usize_t count);
 
 /* usermem.c or usermem_std.s */
@@ -850,10 +852,10 @@ extern int _select(void);
 /* swap.c */
 extern uint16_t swappage;
 
-extern int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-                    uint16_t buf, uint16_t page);
-extern int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-		     uint16_t buf, uint16_t page);
+extern int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
+                    uaddr_t buf, uint16_t page);
+extern int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
+		     uaddr_t buf, uint16_t page);
 
 extern void swapmap_add(uint8_t swap);
 extern int swapmap_alloc(void);
@@ -892,7 +894,7 @@ extern void platform_discard(void);
 extern void platform_idle(void);
 extern uint8_t rtc_secs(void);
 extern void trap_reboot(void);
-extern uint8_t platform_param(unsigned char *p);
+extern uint8_t platform_param(char *p);
 
 /* Will need a uptr_t eventually */
 extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */

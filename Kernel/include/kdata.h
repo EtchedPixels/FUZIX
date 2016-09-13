@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-extern unsigned char *cmdline;
+extern char *cmdline;
 
 extern struct u_block ub;
 
