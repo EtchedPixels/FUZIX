@@ -37,8 +37,8 @@ int swapmap_alloc(void)
    we are in the middle of an I/O (at least for now). If we rework the kernel
    for sleepable I/O this will change */
 
-int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-                    uint16_t buf, uint16_t page)
+int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
+                    uaddr_t buf, uint16_t page)
 {
 	udata.u_dptr = swap_map(buf);
 	udata.u_block = blkno;
@@ -50,8 +50,8 @@ int swapread(uint16_t dev, blkno_t blkno, unsigned int nbytes,
 }
 
 
-int swapwrite(uint16_t dev, blkno_t blkno, unsigned int nbytes,
-		     uint16_t buf, uint16_t page)
+int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
+		     uaddr_t buf, uint16_t page)
 {
 	/* FIXME: duplication here */
 	udata.u_dptr = swap_map(buf);
