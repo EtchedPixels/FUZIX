@@ -48,8 +48,10 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	nread = 0;
 	while (nread < udata.u_count) {
 		for (;;) {
+#ifdef CONFIG_LEVEL_2		
                         if (jobcontrol_in(minor, t, &nread))
 				return nread;
+#endif				
 		        if ((t->flag & TTYF_DEAD) && (!q->q_count))
 				goto dead;
 			if (remq(q, &c)) {
@@ -111,8 +113,10 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	while (udata.u_count-- != 0) {
 		for (;;) {	/* Wait on the ^S/^Q flag */
+#ifdef CONFIG_LEVEL_2		
 	                if (jobcontrol_out(minor, t, &written))
 				return written;
+#endif				
 		        if (t->flag & TTYF_DEAD) {
 			        udata.u_error = ENXIO;
 			        return -1;
@@ -251,10 +255,9 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 		tty_select--;
 		return 0;
 	}
-#endif
-
         if (jobcontrol_ioctl(minor, t, request))
 		return -1;
+#endif		
 	if (t->flag & TTYF_DEAD) {
 	        udata.u_error = ENXIO;
 	        return -1;
