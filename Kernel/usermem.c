@@ -104,6 +104,42 @@ int uzero(void *user, usize_t count)
 	return _uzero(user,count);
 }
 
+#ifdef CONFIG_32BIT
+
+uint32_t ugetl(void *uaddr, int *err)
+{
+	if (!valaddr(uaddr, 4)) {
+		if (err)
+			*err = -1;
+		return -1;
+	}
+#ifdef MISALIGNED
+	if (MISALIGNED(user, 4)) }
+		ssig(udata.u_proc, SIGBUS);
+		*err = -1;
+		return -1;
+	}
+#endif
+	if (err)
+		*err = 0;
+	return _ugetl(uaddr);
+}
+
+int uputl(uint32_t val, void *uaddr)
+{
+	if (!valaddr(uaddr, 4))
+		return -1;
+#ifdef MISALIGNED
+	if (MISALIGNED(user, 2)) }
+		ssig(udata.u_proc, SIGBUS);
+		return -1;
+	}
+#endif
+	return _uputl(val, uaddr);
+}
+
+#endif
+
 /*
  *	Optional C language implementation for porting to new processors
  *	or where asm isn't needed
@@ -194,7 +230,28 @@ int _uzero(uint8_t *user, usize_t count)
 	return 0;
 }
 
+#ifdef CONFIG_32BIT
+
+uint32_t _ugetl(void *uaddr)
+{
+	uint32_t v;
+	BANK_PROCESS;
+	v = *(uint32_t *)uaddr;
+	BANK_KERNEL;
+	return v;
+}
+
+int _uputl(uint32_t val, void *uaddr)
+{
+	BANK_PROCESS;
+	*(uint32_t *)uaddr = val;
+	BANK_KERNEL;
+	return 0;
+}
+
 #endif
+#endif
+
 #ifdef CONFIG_USERMEM_DIRECT
 
 /* Systems where all memory is always mapped for live processes and kernel */
@@ -229,4 +286,19 @@ int _uzero(uint8_t *user, usize_t count)
 	memset(user, 0, count);
 	return 0;
 }
+
+#ifdef CONFIG_32BIT
+
+uint32_t _ugetl(void *uaddr)
+{
+	return *(uint32_t *)uaddr;
+}
+
+int _uputl(uint32_t val, void *uaddr)
+{
+	*(uint32_t *)uaddr = val;
+	return 0;
+}
+
+#endif
 #endif
