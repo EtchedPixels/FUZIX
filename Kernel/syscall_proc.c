@@ -314,6 +314,8 @@ arg_t _waitpid(void)
 
 					/* Add in child's time info.  It was stored on top */
 					/* of p_priority in the childs process table entry. */
+					/* FIXME: make these a union so we don't do type
+					   punning and break strict aliasing */
 					udata.u_cutime += ((clock_t *)&p->p_priority)[0];
 					udata.u_cstime += ((clock_t *)&p->p_priority)[1];
 					return retval;
