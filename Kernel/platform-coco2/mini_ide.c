@@ -22,6 +22,7 @@ uint8_t ide_present = 1;
 static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     uint16_t nb = udata.u_nblock;
+    uint8_t *dptr = udata.u_dptr;
 
     if (rawflag == 1 && d_blkoff(9))
          return -1;
@@ -32,7 +33,7 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     /* FIXME - slices of about 4MB might be saner! */
     *cylh = minor & 0x7F;	/* Slice number */
     *cyll = udata.u_block >> 8;	/* Each slice is 32MB */
-    *sec = udata.ublock & 0xFF;
+    *sec = udata.u_block & 0xFF;
     *count = udata.u_nblock;
     while(!(*status & 0x40));	/* Wait DRDY */
     *cmd = is_read ? 0x20 : 0x30;
