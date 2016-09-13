@@ -26,9 +26,9 @@ int lpr_close(uint8_t minor)
 static int iopoll(int sofar)
 {
 	/* Ought to be a core helper for this lot ? */
-	if (need_resched())
+	if (need_reschedule())
 		_sched_yield();
-	if (udata.u_cursig || udata.u_ptab->p_pending) {
+	if (chksigs()) {
 		if (sofar)
 			return sofar;
 		udata.u_error = EINTR;
