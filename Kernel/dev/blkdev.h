@@ -48,6 +48,6 @@ extern void blkdev_scan(blkdev_t *blk, uint8_t flags);
 extern int blkdev_open(uint8_t minor, uint16_t flags);
 extern int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int blkdev_ioctl(uint8_t minor, uint16_t request, char *data);
+extern int blkdev_ioctl(uint8_t minor, uarg_t request, char *data);
 
 #endif

@@ -146,7 +146,7 @@ int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return blkdev_transfer(minor, rawflag);
 }
 
-int blkdev_ioctl(uint8_t minor, uint16_t request, char *data)
+int blkdev_ioctl(uint8_t minor, uarg_t request, char *data)
 {
     used(data); /* unused */
 
