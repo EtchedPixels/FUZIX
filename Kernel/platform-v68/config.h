@@ -4,10 +4,32 @@
 #undef CONFIG_MONITOR
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
-/* Multiple processes in memory at once */
-#define CONFIG_MULTI
 /* Single tasking - for now while we get it booting */
 #undef CONFIG_SINGLETASK
+
+#define CONFIG_32BIT
+
+/* Multiple processes in memory at once */
+#define CONFIG_MULTI
+
+#define CONFIG_SWAP_ONLY
+#define CONFIG_USERMEM_DIRECT
+#define CONFIG_BANKS 	1
+#define PROC_SIZE	128
+
+#define PROGBASE	0x20000UL
+#define PROGTOP		0x30000UL
+#define SWAP_SIZE	256
+#define SWAPBASE	PROGBASE
+#define SWAPTOP		0x30000UL
+#define MAX_SWAPS	PTABSIZE
+#define swap_map(x)	((uint8_t *)(x))
+
+#define SWAPDEV		(1)
+
+#if 0
+/* Multiple processes in memory at once */
+#define CONFIG_MULTI
 /* Buddy based MMU */
 #define CONFIG_BUDDY_MMU
 #define BUDDY_NUMLEVEL	9		/* 1 MByte */
@@ -20,9 +42,12 @@
 #define BUDDY_TABLE	BUDDY_START	/* Pull the table from the pool */
 #define BUDDY_TREESIZE	511		/* 1MB in 4K pages */
 
-#define CONFIG_32BIT
 #define CONFIG_BANKS	1		/* FIXME */
 #define CONFIG_USERMEM_BUDDY		/* TODO */
+/* Programs run under MMU with zero base */
+#define PROGBASE	0
+
+#endif
 
 #define TICKSPERSEC 100   /* Ticks per second */
 
@@ -41,5 +66,3 @@
 
 #define MAX_BLKDEV 4
 
-/* Programs run under MMU with zero base */
-#define PROGBASE	0

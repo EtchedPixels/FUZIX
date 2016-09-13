@@ -17,12 +17,13 @@ void do_beep(void)
 /*
  *	MMU initialize
  */
-
+#if 0
 void pagemap_init(void)
 {
 	/* Allocate the buddy tables and init them */
 //FIXME	buddy_init();
 }
+#endif
 
 void map_init(void)
 {
@@ -32,7 +33,7 @@ u_block udata_block[PTABSIZE];
 uaddr_t ramtop;
 uint8_t *membase[PTABSIZE];
 uint8_t need_resched;
-
+#if 0
 /* Offsets into the buddy map for each level, byte aligned */
 const uint16_t buddy_level[BUDDY_NUMLEVEL] = {
 	0,		/* 256 4K pages */
@@ -45,7 +46,7 @@ const uint16_t buddy_level[BUDDY_NUMLEVEL] = {
 	508,		/* 2 512K pages */
 	510,		/* 1 1MB page */
 };
-
+#endif
 /*
  *	We can do our fork handling in C for once. The only oddity here is
  *	the fixups to run parent first and avoid needless memory thrashing
@@ -82,16 +83,16 @@ int16_t dofork(ptptr p)
 
 /* All our binaries are zero address based */
 
-void *pagemap_base(void)
+uint8_t *pagemap_base(void)
 {
-	return 0;
+	return (uint8_t*)0x20000UL;
 }
 
 void program_mmu(uint8_t *phys, usize_t top)
 {
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t platform_param(char *p)
 {
 	return 0;
 }
@@ -104,3 +105,16 @@ void memzero(void *p, usize_t len)
 {
 	memset(p, 0, len);
 }
+
+arg_t _memalloc(void)
+{
+	udata.u_error = ENOSYS;
+	return -1;
+}
+
+arg_t _memfree(void)
+{
+	udata.u_error = ENOSYS;
+	return -1;
+}
+
