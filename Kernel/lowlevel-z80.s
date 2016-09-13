@@ -316,7 +316,7 @@ null_handler:
 
 
 
-illegalmsg: .ascii "[trap_illegal]"
+illegalmsg: .ascii "[illegal]"
             .db 13, 10, 0
 
 trap_illegal:
@@ -581,8 +581,7 @@ outnewline:
         ld a, #0x0d  ; output newline
         call outchar
         ld a, #0x0a
-        call outchar
-        ret
+        jp outchar
 
 outhl:  ; prints HL in hex.
 	push af
