@@ -357,75 +357,75 @@ int swapout(ptptr p)
 /* FIXME: THESE NEED WRITING PROPERLY FOR THE MMU */
 usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
-	uint8_t tmp;
-	while(count--) {
-		tmp = *user++;
-		*dest++ = tmp;
-	}
+//	uint8_t tmp;
+//	while(count--) {
+//		tmp = *user++;
+//		*dest++ = tmp;
+//	}
 	return 0;
 }
 
 int16_t _ugetc(const uint8_t *user)
 {
 	uint8_t tmp;
-	tmp = *user;
+//	tmp = *user;
 	return tmp;
 }
 
 uint16_t _ugetw(const uint16_t *user)
 {
 	uint16_t tmp;
-	tmp = *user;
+//	tmp = *user;
 	return tmp;
 }
 
 uint32_t ugetl(void *user, int *err)
 {
 	uint32_t tmp;
-	tmp = *(uint32_t *)user;
+//	tmp = *(uint32_t *)user;
 	return tmp;
 }
 
 int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
 {
-	uint8_t tmp;
-	while(count--) {
-		tmp = *user++;
-		*dest++ = tmp;
-		if (tmp == '\0')
-			return 0;
-	}
-	/* Ensure terminated */
-	dest[-1] = '\0';
+//	uint8_t tmp;
+//	while(count--) {
+//		tmp = *user++;
+//		*dest++ = tmp;
+//		if (tmp == '\0')
+//			return 0;
+//	}
+//	/* Ensure terminated */
+//	dest[-1] = '\0';
 	return -1;
 }
 
 int _uput(const uint8_t *source, uint8_t *user, usize_t count)
 {
-	uint8_t tmp;
-	while(count--) {
-		tmp = *source++;
-		*user++ = tmp;
-	}
+//	uint8_t tmp;
+//	while(count--) {
+//		tmp = *source++;
+//		*user++ = tmp;
+//	}
 	return 0;
 
 }
 
 int _uputc(uint16_t value,  uint8_t *user)
 {
-	*user = value;
+//	*user = value;
 	return 0;
 }
 
 int _uputw(uint16_t value,  uint16_t *user)
 {
-	*user = value;
+//	*user = value;
 	return 0;
 }
 
 int uputl(uint32_t value,  void *user)
 {
-	*(uint32_t *)user = value;
+//	*(uint32_t *)user = value;
 	return 0;
 }
 
