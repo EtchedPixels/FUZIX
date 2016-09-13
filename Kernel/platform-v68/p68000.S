@@ -11,7 +11,6 @@
 		.globl udata_block
 		.globl devide_read_data
 		.globl devide_write_data
-		.globl le32_to_cpu
 
 .mri 1
 trap_reboot:
@@ -134,15 +133,6 @@ devide_write_data:
 devide_write_l:
 	move.w (a0)+,$00F01000
 	dbra d0,devide_write_l
-	rts
-;
-;	Bits we need to deal with breakages in gcc
-;
-le32_to_cpu:
-	move.l 4(sp),d0
-	ror.w #8,d0
-	swap d0
-	ror.w #8,d0
 	rts
 
 .section data
