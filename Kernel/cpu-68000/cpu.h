@@ -58,7 +58,8 @@ extern uint16_t swab(uint16_t);
 #define cpu_to_le16(x)	le16_to_cpu(x)
 #define le16_to_cpu(x)	(uint16_t)(__builtin_bswap16((uint16_t)(x)))
 #define cpu_to_le32(x)	le32_to_cpu(x)
-#define le32_to_cpu(x)	(uint32_t)(__builtin_bswap16((uint32_t)(x)))
+/* This is broken on the Fedora m68k gcc 5.3.1 */
+//#define le32_to_cpu(x)	(uint32_t)(__builtin_bswap32((uint32_t)(x)))
 
 /* We don't need any banking bits really */
 #define CODE1
