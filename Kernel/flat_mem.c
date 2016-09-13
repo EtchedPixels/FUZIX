@@ -524,7 +524,7 @@ int pagemap_realloc(usize_t size)
 	return 0;
 }
 
-void *pagemap_base(void)
+uint8_t *pagemap_base(void)
 {
 	return mmu_context[udata.u_page].base;
 }
