@@ -26,7 +26,7 @@ struct block
 	size_t length; /* high bit set if used */
 };
 
-#define UNUSED(b) (!((b)->length & (1<<31)))
+#define UNUSED(b) (!((b)->length & (1L<<31)))
 
 static struct block start = { NULL, sizeof(struct block) };
 
