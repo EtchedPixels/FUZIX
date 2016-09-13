@@ -6,7 +6,7 @@
 #include <devatsim.h>
 #include <net_z80pack.h>
 
-uint16_t ramtop = PROGTOP;
+uaddr_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
