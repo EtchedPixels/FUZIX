@@ -262,7 +262,7 @@ typedef struct filesys { // note: exists in mem and on disk
     blkno_t       s_free[FILESYS_TABSIZE];
     int16_t       s_ninode;
     uint16_t      s_inode[FILESYS_TABSIZE];
-    bool          s_fmod;
+    uint8_t       s_fmod;
     uint8_t       s_timeh;	/* bits 32-40: FIXME - wire up */
     uint32_t      s_time;
     blkno_t       s_tfree;
