@@ -36,7 +36,7 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 #else
 		while (lpstat & 2) {
 #endif
-			if (need_resched()) {
+			if (need_reschedule()) {
 				if (psleep_flags(NULL, flag)) {
 					if (udata.u_count)
 						udata.u_error = 0;
