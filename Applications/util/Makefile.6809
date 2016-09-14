@@ -85,7 +85,6 @@ SRCS  = \
 	mount.c \
 	od.c \
 	passwd.c \
-	patchcpm.c \
 	ps.c \
 	sed.c \
 	sleep.c \
@@ -96,6 +95,7 @@ SRCS  = \
 	su.c \
 	tar.c \
 	tail.c \
+	tchelp.c \
 	termcap.c \
 	umount.c \
 	uname.c \
@@ -111,8 +111,7 @@ SRCS  = \
 
 SRCTC = tget.c
 
-SKIPPED = \
-	tiddles.c \
+SKIPPED =
 
 
 OBJS = $(SRCS:.c=.o)

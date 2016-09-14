@@ -78,7 +78,6 @@ SRCS  = banner.c \
 	mount.c \
 	od.c \
 	passwd.c \
-	patchcpm.c \
 	ps.c \
 	sleep.c \
 	ssh.c \
@@ -86,6 +85,7 @@ SRCS  = banner.c \
 	stty.c \
 	su.c \
 	tail.c \
+	tchelp.c \
 	umount.c \
 	uname.c \
 	uniq.c \
@@ -98,7 +98,7 @@ SRCS  = banner.c \
 	write.c \
 	xargs.c
 
-SRCSBAD = sed.c socktest.c
+SRCSBAD = sed.c socktest.c seltest.c
 
 OBJS = $(SRCS:.c=.rel)
 OBJSNS = $(SRCSNS:.c=.rel)
@@ -124,6 +124,9 @@ $(OBJSBAD): %.rel: %.c
 
 .c.rel:
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
+
+tchelp: tchelp.rel
+	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 %: %.rel
 	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
