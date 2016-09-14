@@ -68,7 +68,7 @@ SRC_HARD += regexp.c
 #SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c
 
-SRC_CT += termcap.c
+SRC_CT += termcap.c tgetent.c
 
 SRC_CURS = $(shell find curses -name '*.c')
 
