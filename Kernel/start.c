@@ -314,7 +314,7 @@ void fuzix_main(void)
 
 	tty_init();
 
-	if (d_open(TTYDEV, O_NOCTTY) != 0)
+	if (d_open(TTYDEV, 0) != 0)
 		panic(PANIC_NOTTY);
 
 	/* Sign on messages */
