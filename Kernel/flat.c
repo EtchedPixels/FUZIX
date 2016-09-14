@@ -254,7 +254,7 @@ unsigned long pagemap_mem_used(void)
 
 /* Extra helper for exec32 */
 
-uint8_t *pagemap_base(void)
+uaddr_t pagemap_base(void)
 {
 	unsigned int proc = udata.u_page;
 	return mem[proc]->memblk[0].start;

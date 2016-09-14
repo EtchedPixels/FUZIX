@@ -91,14 +91,14 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 
 /* For now we load the binary in one block, including code/data/bss. We can
    look at better formats, split binaries etc later maybe */
-static void relocate(struct binfmt_flat *bf, uint8_t *progbase, uint32_t size)
+static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 {
 	uint32_t *rp = (uint32_t *)(progbase + bf->reloc_start);
 	uint32_t n = bf->reloc_count;
 	while (n--) {
 		uint32_t v = *rp++;
 		if (v < size && !(v&1))	/* Revisit for non 68K */
-			*((uint32_t *)(rp + v)) += (uint32_t)progbase;
+			*((uint32_t *)(rp + v)) += progbase;
 	}
 }
 
@@ -124,7 +124,7 @@ arg_t _execve(void)
 	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uint32_t bin_size;	/* Will need to be bigger on some cpus */
-	uint8_t *progbase, *top;
+	uaddr_t progbase, top;
 	uaddr_t go;
 
 	if (!(ino = n_open(name, NULLINOPTR)))
@@ -207,13 +207,13 @@ arg_t _execve(void)
 
 	bin_size = binflat->reloc_start + 4 * binflat->reloc_count;
 	if (bin_size > 512)
-		bload(ino, 1, progbase + 512, bin_size - 512);
+		bload(ino, 1, (uint8_t *)progbase + 512, bin_size - 512);
 	
 	go = (uint32_t)progbase + binflat->entry;
 
 	relocate(binflat, progbase, bin_size);
 	/* This may wipe the relocations */	
-	uzero(progbase + binflat->data_end, 
+	uzero((uint8_t *)progbase + binflat->data_end,
 		binflat->bss_end - binflat->data_end + binflat->stack_size);
 
 	brelse(buf);
