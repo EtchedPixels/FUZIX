@@ -60,20 +60,11 @@ extern uint16_t swab(uint16_t);
 #define cpu_to_le32(x)	le32_to_cpu(x)
 #define le32_to_cpu(x)	(uint32_t)(__builtin_bswap32((uint32_t)(x)))
 
-/* We don't need any banking bits really */
-#define CODE1
-#define CODE2
-#define COMMON
-#define VIDEO
-#define DISCARD
-
 /* Pointers are 32bit */
 #define POINTER32
 
 /* Sane behaviour for unused parameters */
 #define used(x)
-
-#define __fastcall__
 
 /* Our udata is handled slightly quirkily - use a register global */
 
