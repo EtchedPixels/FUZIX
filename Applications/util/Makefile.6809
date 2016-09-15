@@ -95,7 +95,6 @@ SRCS  = \
 	su.c \
 	tar.c \
 	tail.c \
-	tchelp.c \
 	termcap.c \
 	umount.c \
 	uname.c \
@@ -109,7 +108,8 @@ SRCS  = \
 	write.c \
 	xargs.c
 
-SRCTC = tget.c
+SRCTC = tget.c \
+        tchelp.c
 
 SKIPPED =
 
