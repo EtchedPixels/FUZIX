@@ -153,10 +153,119 @@ _program_vectors:
             ld (0x0001), hl
 
             ld (0x0066), a  ; Set vector for NMI
-            ld hl, #nmi_handler
+            ld hl, #my_nmi_handler
             ld (0x0067), hl
-	    jr map_kernel
+	    jp map_kernel
 
+;
+;	These are shared and agreed with the bootstrap code in the
+;	bootstrap low page
+;
+entry_sp     .equ 0x1BE
+kernel_sp   .equ 0x1C0
+resume_vector .equ 0x1C2
+suspend_map .equ 0x1C4
+entry_banks .equ 0x1C8
+suspend_stack .equ 0x1FE
+
+suspend_r:   .db 0
+
+my_nmi_handler:
+	    push af
+	    xor a
+	    jr suspend_1
+	    push af
+suspend:
+	    ld a,#1
+suspend_1:
+	    ld (suspend_r),a
+	    ld a,i
+	    push af
+	    di
+	    ld a,#0x80
+	    out (0x10),a
+	    ; Save our SP
+	    ld (kernel_sp), sp
+	    ld sp,#suspend_stack
+	    push bc
+	    push de
+	    push hl
+	    push ix
+	    push iy
+	    exx
+	    push bc
+	    push de
+	    push hl
+	    ex af,af'
+	    push af
+	    ; Register map saved
+	    ld hl,#suspend_map
+	    call save_maps
+	    ld hl,#resume
+	    ld (resume_vector),hl
+	    ld de,(suspend_r)
+	    ; Now switch the low 48K (OS) banks back as they were
+	    ; and run the "official" OS NMI handler
+	    ld hl,(entry_banks)
+	    ld sp,(entry_sp);
+	    ld a,l
+	    out (0x10),a
+	    ld a,h
+	    out (0x11),a
+	    ld a,(entry_banks+2)
+	    out (0x12),a
+	    ld a,e
+	    or a
+	    jr z, nmi_and_resume
+	    ; Hand triggered suspend
+	    ld a,(entry_sp)
+	    ; To NC100 OS
+	    ret
+nmi_and_resume:
+	    call 0x66
+;
+;	Called by the booter via our resume vector. The bootstrap or ROM has
+;	already set the high 16K correctly before calling us there
+;
+resume:
+	    ld hl,#0
+	    ld (resume_vector),hl
+	    ld hl,#suspend_map+1
+	    ; Begin by restoring the mapping for 0x4000-0xBFFF
+	    ld a,(hl)
+	    out (0x11),a
+	    inc hl
+	    ld a,(hl)
+	    out (0x12),a
+	    ; Map the bootstrap bank back in at 0x0000-0x3FFF so we can get
+	    ; our data back
+            ld a,#0x80
+	    out (0x10),a
+	    ; Restore the registers
+	    ld sp,#suspend_stack-36
+	    pop af
+	    ex af,af
+	    pop hl
+	    pop de
+	    pop bc
+	    exx
+	    pop iy
+	    pop ix
+	    pop hl
+	    pop de
+	    pop bc
+	    ; Switch back to the kernel stack pointer. This could be in any
+	    ; bank so we must not dereference it until we fix the low 16K
+	    ld sp,(kernel_sp)
+	    ; Grab the low 16K mapping we had before
+	    ld a,(suspend_map)
+	    out (0x10),a	; booter page in 0x0000-0x3FFF vanishes here
+				; and our vectors re-appear
+	    pop af		; IRQ state
+	    jp po,no_irq_on
+	    ei
+no_irq_on:  pop af
+	    ret
 ;
 ;	Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
 ;
@@ -222,6 +331,12 @@ map_save:
 	    push hl
 	    push af
 	    ld hl, #map_savearea
+	    call save_maps
+	    pop af
+	    pop hl
+	    ret
+
+save_maps:
 	    in a, (0x10)
 	    ld (hl), a
 	    inc hl
@@ -233,8 +348,6 @@ map_save:
 	    inc hl
 	    in a, (0x13)
 	    ld (hl), a
-	    pop af
-	    pop hl
 	    ret
 
 map_savearea:

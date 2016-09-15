@@ -44,9 +44,6 @@ resulting nc100.cim as the bootscript for the emulator.
 
 TODO
 
-- baud rate/serial mode setting
-- RTC (note: the RTC only works 1900-1999 so must be rejigged to get it to
-  work 1990 - 2099)
 - driver for the power status bits
 - lots of testing
 - control doesn't seem to work ???
