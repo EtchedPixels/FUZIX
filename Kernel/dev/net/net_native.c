@@ -543,6 +543,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 arg_t net_write(struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
+	uint16_t l = udata.u_count;
 	struct sockdata *sd = s->s_priv;
 
 	if (sd->err) {
@@ -551,7 +552,8 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		return -1;
 	}
 
-	while (t < udata.u_count) {
+	while (t < l) {
+		udata.u_count = l - t;
 		if (s->s_state == SS_CLOSED || (s->s_iflag & SI_SHUTW)) {
 			udata.u_error = EPIPE;
 			ssig(udata.u_ptab, SIGPIPE);
@@ -563,7 +565,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 			n = netn_queuebytes(s);
 		/* FIXME: buffer the error in this case */
 		if (n == 0xFFFFU)
-			return udata.u_count ? (arg_t)udata.u_count : -1;
+			return l ? (arg_t)l : -1;
 
 		t += n;
 
@@ -572,7 +574,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 				return -1;
 		}
 	}
-	return udata.u_count;
+	return l;
 }
 
 arg_t net_shutdown(struct socket *s, uint8_t flag)
