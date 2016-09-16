@@ -129,12 +129,14 @@ usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
 
 lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
 
-target: include/kernel.h
+platform:
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
+
+target: include/kernel.h | platform
 	+$(MAKE) -C platform-$(TARGET)
 
-#$(OBJS): target
+$(OBJS): | platform
 
 $(CSRCS): include/kernel.h
 
