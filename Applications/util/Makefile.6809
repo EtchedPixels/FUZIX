@@ -79,6 +79,7 @@ SRCS  = \
 	ll.c \
 	ls.c \
 	man.c \
+	manscan.c \
 	mkfs.c \
 	mode.c \
 	more.c \
@@ -109,7 +110,8 @@ SRCS  = \
 	xargs.c
 
 SRCTC = tget.c \
-        tchelp.c
+        tchelp.c \
+	marksman.c
 
 SKIPPED =
 

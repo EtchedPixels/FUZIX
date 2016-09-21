@@ -72,6 +72,8 @@ SRCS  = banner.c \
 	ll.c \
 	ls.c \
 	man.c \
+	manscan.c \
+	marksman.c \
 	mkfs.c \
 	mode.c \
 	more.c \
