@@ -16,6 +16,8 @@ SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dc.c dd.c \
 	newgrp.c pr.c ptx.c rev.c split.c su.c sum.c test.c time.c tsort.c \
 	wall.c
 
+SRCSNS = ed.c
+
 SRCSBAD =
 
 OBJS = $(SRCS:.c=.rel)
