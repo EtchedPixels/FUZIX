@@ -13,7 +13,7 @@ util_apps := \
 # ...and in V7/cmd.
 
 cmd_apps := \
-	ac at atrun col comm cron crypt dc dd deroff diff3 diff diffh \
+	ac at atrun col comm cron crypt dc dd deroff diff3 diff diffh ed \
 	join makekey mesg newgrp pr ptx rev split su sum test time tsort \
 	wall
 
