@@ -608,7 +608,7 @@ void onhup(int unused)
 	quit(0);
 }
 
-void error(char *s)
+void error(const char *s)
 {
 	register int c;
 
@@ -1609,4 +1609,3 @@ out:
 	linp = lp;
 }
 
-	
