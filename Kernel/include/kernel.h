@@ -841,7 +841,7 @@ extern void selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
 extern void selwake_inode(inoptr i, uint16_t mask);
 extern void selwake_pipe(inoptr i, uint16_t mask);
 extern void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask);
-extern int _select(void);
+extern arg_t _select(void);
 #else
 #define selwait_inode(i,smask,setit) do {} while(0)
 #define selwake_inode(i,smask) do {} while(0)

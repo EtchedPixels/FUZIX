@@ -121,7 +121,7 @@ extern int net_listen(struct socket *s);
 extern arg_t net_read(struct socket *s, uint8_t flag);
 extern arg_t net_write(struct socket *s, uint8_t flag);
 extern arg_t net_ioctl(uint8_t op, void *p);
-extern int net_shutdown(struct socket *s, uint8_t how); /* bit 0 rd, bit 1 wr */
+extern arg_t net_shutdown(struct socket *s, uint8_t how); /* bit 0 rd, bit 1 wr */
 extern void netdev_init(void);
 extern struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa);
 extern void sock_init(void);

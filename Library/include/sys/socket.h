@@ -4,7 +4,7 @@
 #define AF_INET		1
 
 #define SOCK_RAW	1
-#define SOCK_DGAM	2
+#define SOCK_DGRAM	2
 #define SOCK_STREAM	3
 
 
