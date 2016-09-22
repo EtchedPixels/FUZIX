@@ -28,7 +28,6 @@ arg_t _rename(void)
 {
 	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
-	int ret = -1;
 
 	srci = n_open(src, &srcp);
 	/* Source must exist */
@@ -42,7 +41,16 @@ arg_t _rename(void)
 	udata.u_rename = srci;
 	/* Destination maybe does not exist, but parent must */
 	filename(dst, fname);
+
 	dsti = n_open(dst, &dstp);
+	/* Same file - do nothing */
+	if (dsti == srci) {
+		ret = 0;
+		goto nogood3;
+	}
+
+	ret = -1;
+
 	/* Destination not found, but neither is the directory to
 	   put the new node in -> so fail */
 	if (dstp == NULLINODE)
@@ -50,6 +58,12 @@ arg_t _rename(void)
 	/* Can't rename between devices */
 	if (srci->c_dev != dstp->c_dev) {
 		udata.u_error = EXDEV;
+		goto nogood;
+	}
+	/* Can't rename a directory yet.. need to fix this but to do so we
+	   must update .. in the child. Probably a LEVEL 2 functionality ? */
+	if (getmode(srci) == MODE_R(F_DIR)) {
+		udata.u_error = EISDIR;
 		goto nogood;
 	}
 	/* Can't rename one dir into another */
@@ -66,6 +80,11 @@ arg_t _rename(void)
 	}
 	/* Destination exists ? If so we must remove it if possible */
 	if (dsti) {
+		/* Can't overwrite a directory */
+		if (getmode(dsti) == MODE_R(F_DIR)) {
+			udata.u_error = EISDIR;
+			goto nogood;
+		}
 		if (unlinki(dsti, dstp, fname) == -1)
 			goto nogood;
 		/* Drop the reference to the unlinked file */
