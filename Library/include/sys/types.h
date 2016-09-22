@@ -77,4 +77,9 @@ typedef struct {
 #endif
 typedef int32_t clock_t;
 typedef uint32_t useconds_t;
+
+#define makedev(a,b)	(((a) << 8) | (b))
+#define major(x)	((x) >> 8)
+#define minor(x)	((x) & 0xFF)
+
 #endif
