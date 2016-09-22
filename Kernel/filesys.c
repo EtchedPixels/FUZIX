@@ -8,6 +8,8 @@
  * did not exist.  If the parent existed, and parent is not null,
  * parent will be filled in with the parents inoptr. Otherwise, parent
  * will be set to NULL.
+ *
+ * FIXME: ENAMETOOLONG might be good to add
  */
 
 inoptr n_open(char *uname, inoptr *parent)
