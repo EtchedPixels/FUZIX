@@ -113,7 +113,7 @@ arg_t _open(void)
 		ino = *iptr;
 	}
 
-	if (trunc && getmode(ino) == MODE_R(F_REG)) {
+	if (w && trunc && getmode(ino) == MODE_R(F_REG)) {
 		if (f_trunc(ino))
 			goto idrop;
 		for (j = 0; j < OFTSIZE; ++j)
@@ -136,7 +136,8 @@ arg_t _open(void)
 
 	/* FIXME: ATIME ? */
 /*
- *         Sleep process if no writer or reader
+ *         Sleep process if no writer or reader.
+ *	   FIXME: check for other of pair now we have proper counts
  */
 	if (getmode(ino) == MODE_R(F_PIPE) && of_tab[oftindex].o_refs == 1
 	    && !(flag & O_NDELAY))
