@@ -1,0 +1,40 @@
+UNLINK(2)
+## NAME
+unlink - remove a path to a file
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int unlink*(*const char \**path);
+## DESCRIPTION
+*unlink*() removes a path to an existing file object. A file is deleted when
+the final reference is removed with *unlink*(2) and nobody holds an open
+file handle to the file itself.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to remove the name.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EINVAL*
+  An attempt was made to place a directory within itself and create a loop
+  in the file system.
+:*EIO*
+  An I/O error occurred.
+:*EISDIR*
+  An attempt was made to unlink a directory.
+:*ENOENT*
+  The path does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOTDIR*
+  A path element before the final one was not a directory.
+:*EPERM*
+  There are insufficient permissions to perform the removal or the creation of
+  the paths.
+:*EROFS*
+  The file system is read-only.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001, POSIX.1-2008
+## SEE ALSO
+*link*(2), *rename*(2), *rmdir*(2).

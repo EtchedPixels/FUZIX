@@ -1,0 +1,47 @@
+LINK(2)
+## NAME
+link - add another path to a file
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int link*(*const char \**from, *const char \**to);
+## DESCRIPTION
+*link*() adds a new path to an existing file object. The new path must be on
+the same file system as the file. Both paths reference the same object
+and all the permissions and properties of the file belong to the file not the
+name so are shared.
+
+A file is deleted when the final reference is removed with *unlink*(2) and
+nobody holds an open file handle to the file itself.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to create the new name.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EIO*
+  An I/O error occurred.
+:*EISDIR*
+  An attempt was made to add a link to a directory.
+:*EMLINK*
+  The new link would give the file more links than the filesystem permits.
+:*ENOENT*
+  The source does not exist, or the target directory does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOSPC*
+  No disk space was available for the new name.
+:*ENOTDIR*
+  A path element before the final one was not a directory.
+:*EPERM*
+  There are insufficient permissions to perform the removal or the creation of
+  the paths.
+:*EROFS*
+  The file system is read-only.
+:*EXDEV*
+  The two paths are not on the same file system.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001, POSIX.1-2008
+## SEE ALSO
+*rename*(2), *unlink*(2).

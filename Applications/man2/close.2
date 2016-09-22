@@ -1,0 +1,35 @@
+CLOSE(2)
+## NAME
+close - close a file descriptor
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int close*(*int* fd);
+## DESCRIPTION
+Close a file descriptor that was created with *open*(2), *pipe*(2), *socket*(2),
+or other calls that return a file descriptor. If this is the last reference to
+this file descriptor then any file locks created with *flock*(2) are closed.
+
+If *fd* is the last file descriptor referring to the underlying file table entry
+then the file table entry is freed. If this is the last reference to the file
+object then any resources are freed, devices will go inactive, and any file
+that has been removed using *unlink*(2) will be freed on disc.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EBADF*
+  An invalid file descriptor was passed.
+:*EIO*
+  An I/O error occurred.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001, POSIX.1-2008
+## NOTES
+The return of a *close*() call does not guarantee that the data is on the
+media. If this is required then a call to *sync*(2) is needed.
+## BUGS
+Many systems provide an *fsync*(2) and *fdatasync*(2) call to write back the
+data on just one file. In a small system like Fuzix this is not useful as
+*sync*(2) is just as good, but ought to be provided by wrappers in the C
+library.
+## SEE ALSO
+*flock*(2), *open*(2), *pipe*(2), *socket*(2), *sync*(2), *unlink*(2).

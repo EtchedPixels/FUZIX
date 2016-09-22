@@ -1,0 +1,58 @@
+RENAME(2)
+## NAME
+rename - change the name or location of a file
+## SYNOPSIS
+*#include <stdio.h>*
+
+*int rename*(*const char \**from, *const char \**to);
+## DESCRIPTION
+*rename*() moves a filesystem object from one path to another within a single
+filesystem. If the target path already exists then it will be replaced if
+possible. As only the name is changed other links and open file handles are not
+affected.
+
+*rename*() is atomic in the sense that the transaction either completes or
+fails and the file has either the old or new name but never both barring
+media failure. It is not guaranteed that other processes cannot observe both
+the old or new names at the same time.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to move the file. This may be to remove
+  it from the old location or to create the new name.
+:*EFAULT*
+  One of the addresses passed for the paths is invalid.
+:*EINVAL*
+  An attempt was made to place a directory within itself and create a loop
+  in the file system.
+:*EIO*
+  An I/O error occurred.
+:*EISDIR*
+  The target is an existing directory.
+:*ENOENT*
+  The source does not exist, or the target directory does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOSPC*
+  No disk space was available for the rename.
+:*ENOTDIR*
+  A path element before the final one was not a directory.
+:*EPERM*
+  There are insufficient permissions to perform the removal or the creation of
+  the paths.
+:*EROFS*
+  The file system is read-only.
+:*EXDEV*
+  The two paths are not on the same file system.
+## CONFORMING TO
+4.3BSD, C89, C99, POSIX.1-2001, POSIX.1-2008
+## NOTES
+Some operating systems permit a rename over an empty directory to succeed. Fuzix
+does not.
+
+This functionality is not present in UZI.
+## BUGS
+Fuzix does not currently permit the use of *rename*() to move a directory.
+## SEE ALSO
+*link*(2), *unlink*(2).

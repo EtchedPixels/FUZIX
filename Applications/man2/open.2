@@ -1,0 +1,111 @@
+OPEN(2)
+## NAME
+open - open an existing file or create a new one
+## SYNOPSIS
+*#include <fcntl.h>*
+
+*int open*(*const char \**path, *int* flags);
+
+*int open*(*const char \**path, *int* flags, *mode_t* mode);
+## DESCRIPTION
+The open call accesses the object given by the path, and returns a file descriptor
+referencing this object, which remains valid until the last *close*(2). This
+file descriptor is then used for other system calls while accessing the object.
+
+The file descriptor is a reference to a file table entry. The file table entry
+references the underlying object. Permissions are checked at open time only.
+An open descriptor also ensures the underlying object remains until the final
+*close*(2) even if removed from the filesystem by *unlink*(2). The file 
+table entry is associated with an offset and status flags. Thus the offset
+is shared across descriptors  duplicated via *fork*(2) or *dup*(2) and *dup2*(2)
+calls.
+
+The flags must indicate the access mode desired. The permitted modes are
+*O\_RDONLY*, *O\_WRONLY*, *O\_RDWR*. These request read only, write only, or
+read/write access to the object.
+
+The following additional flags can be included in the open
+:*O\_APPEND*
+All writes to the file extend the file. Each time a write is made the data
+is written to the end of the file and the file offset is set to the end of
+file.
+:*O\_CLOEXEC*
+  The file descriptor should be closed when *execve*(2) is invoked and the process
+  memory image is replaced by something new.
+:*O\_CREAT*
+  If the file does not exist then create it as a new empty file with the mode
+  calculated from the passed mode and the setting of *umask*(2). Without
+  this flag an open of a non-existing file reports an error.
+:*O\_DIRECT*
+  Hint that the file is best accessed directly without caching. Cache coherency
+  with other accessors will be maintained. Useful when large amounts of disk
+  I/O must be done for data that will be read or written once.
+:*O\_EXCL*
+  If specified with *O\_CREAT* this requires that a new file is created, and will
+  error if the file already exists.
+:*O\_NOCTTY*
+  If the pathname refers to a *tty*(4) device then do not make this the
+  controlling terminal even if it would normally do so.
+:*O\_NDELAY*
+  Indicate that neither the open nor any subsequent operation should wait but
+  instead return an error or partially complete.
+:*O\_SYNC*
+  Hint that the file should be written synchronously, so that the data is on
+  the media when I/O calls return.
+:*O\_TRUNC*
+  If the file already exists and is being opened for writing then truncate it
+  back to being empty.
+
+Many of these flags can be changed at runtime via the *fcntl*(2) call.
+## RETURN VALUE
+On success, a file descriptor is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to move the file. This may be to remove
+  it from the old location or to create the new name.
+:*EAGAIN*
+  The open request would block and *O\_NDELAY* is specified.
+:*EEXIST*
+  The file already exists and  *O\_CREAT* and *O\_EXCL* are set.
+:*EFAULT*
+  One of the addresses passed for the paths is invalid.
+:*EINTR*
+  An open of a device was interrupted by a *signal*(7).
+:*EIO*
+  An I/O error occurred.
+:*EISDIR*
+  An attempt was made to open a directory for writing.
+:*EMFILE*
+  The process already has it's maximum number of files open.
+:*ENFILE*
+  The system wide file descriptor table is full.
+:*ENODEV*
+  The pathname refers to a device node for a device that does not exist.
+:*ENOENT*
+  The source does not exist, or the target directory does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOTDIR*
+  A path element before the final one was not a directory.
+:*ENXIO*
+  The pathname refers to a device node for a non existant class of device, or
+  an attempt wa smade to open a *fifo*(7) with *O\_NDELAY|O\_WRONLY* but there is no
+  reader.
+:*EPERM*
+  A device or similar special file is imposing it's own restrictions beyond the
+  filesystem permissions, and may not be opened.
+:*EROFS*
+  The file system is read-only.
+## CONFORMING TO
+4.3BSD, C89, C99, POSIX.1-2001, POSIX.1-2008
+## NOTES
+UZI and early Unix have a separate creat() system call which is semantically
+the same as open with the flags O\_CREAT|O\_WRONLY|O\_TRUNC. This is provided by
+the C library in FUZIX and modern systems.
+## BUGS
+Fuzix currently ignores *O\_SYNC*
+
+FUZIX does not yet implement the *ENXIO* error code for fifo devices.
+## SEE ALSO
+*close*(2), *creat*(3), *dup*(2), *dup2*(2), *execve*(2), *fcntl*(2), *umask*(2),
+*tty*(4), *fifo*(7)

@@ -1,0 +1,29 @@
+_EXIT(2)
+## NAME
+_exit - exit a process freeing its resources
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int _exit*(*int* status);
+## DESCRIPTION
+Upon calling this function the calling process immediately terminates and frees
+up resources. The status value is returned back to the waiting parent via the
+*waitpid* call.
+
+The _exit call does not perform any cleanup specified by *atexit*(3) nor do any
+standard I/O cleanup. Processes would normally exit via the *exit*(3) library
+function.
+
+When a process exits it frees its resources and then enters zombie state until
+the parent waits for it, unless the parent is ignoring notifications about child
+processes, in which case it exits completely and the reported status is lost.
+## RETURN VALUE
+This function does not return.
+## CONFORMING TO
+UZI, POSIX.1-2001
+##NOTES
+While the exit status argument is an *int* only the low 8bits of the status
+passed in exit will be provided to the parent.
+## SEE ALSO
+*exit*(3),*fork*(2),*waitpid*(2).
+
