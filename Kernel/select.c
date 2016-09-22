@@ -142,7 +142,7 @@ void selwake_pipe(inoptr i, uint16_t mask)
 #define nfd (uint16_t)udata.u_argn
 #define base (uint16_t *)udata.u_argn1
 
-int _select(void)
+arg_t _select(void)
 {
 	irqflags_t irq;
 	uint16_t seltype = SELECT_BEGIN;
