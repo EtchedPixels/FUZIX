@@ -392,7 +392,7 @@ uint8_t write_core_image(void)
 		udata.u_count = udata.u_break - MAPBASE;
 		writei(ino, 0);
 		udata.u_base = udata.u_sp;
-		udata.u_count = PROGTOP - udata.u_sp;
+		udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
 		writei(ino, 0);
 		i_deref(ino);
 		return W_COREDUMP;
