@@ -291,7 +291,7 @@ static void wordflush(void)
         }
         t++;
     }
-    if (xpos + wordsize != xright)
+    if (xpos < xright)
         output_byte(' ');
     wordptr = wordbuf;
     wordsize = 0;
@@ -489,11 +489,14 @@ static void table_complete(void)
     /* Any line that is all dashes implies the line above is a title */
     pos = indent;
     while((p = get_text()) != NULL) {
-        /* Do centre/right align here via ttype */
-        /* Also check for table head/body divider */
         if (row != theader + 1) {
             if (row == theader)
                 force_bold(1);
+            if (ttype[t] & CENTRE) {
+                move_column(pos + (twidth[t] - width(p))/2);
+            } else if (ttype[t] & RIGHT) {
+                move_column(pos + twidth[t] - width(p));
+            }
             normal_syntax(p);
             force_bold(0);
             wordflush();
@@ -529,8 +532,10 @@ int header_type(char *p)
         f |= CENTRE;
         p++;
     }
-    while(*p++ == '-')
+    while(*p == '-') {
+        p++;
         n++;
+    }
     if (*p == ':') {
         f |= RIGHT;
         p++;
@@ -579,8 +584,10 @@ static void process_table(char *p)
         *e = 0;
         if (theader == 255) {
             ht = header_type(p);
-            if (ht == -1)
+            if (ht == -1) {
                 hdr = 0;
+                ht = 0;
+            }
             ttype[t] = ht;
         }
         add_text(strdup_err(p));
@@ -651,6 +658,7 @@ static void named_list(char *p)
     if (!in_nlist) {
         in_nlist = 1;
     }
+    newline();
     normal_syntax(p + 1);
     newline();
     listindent = nlist_indent[mode];
@@ -713,7 +721,6 @@ static void parse_line(char *p)
             /* List continuation */
             if (in_ulist || in_olist || in_nlist) {
                 indent += listindent;
-                newline();
                 normal_syntax(p + 2);
                 indent -= listindent;
                 return;
@@ -766,7 +773,7 @@ static void parse_line(char *p)
     case '|':
         process_table(p);
         return;
-    case '\\':
+    case ':':
         named_list(p);
         return;
     default:
