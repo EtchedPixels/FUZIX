@@ -120,4 +120,7 @@ extern void exit(int __status);
 #define F_TLOCK	2
 #define F_TEST	3
 
+extern int fsync(int fd);
+extern int fdatasync(int fd);
+
 #endif /* __UNISTD_H */
