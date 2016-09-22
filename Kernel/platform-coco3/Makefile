@@ -5,15 +5,17 @@ CSRCS += devices.c main.c libc.c devsdc.c
 CDSRCS = ../dev/devide_discard.c
 
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
+NSRCS = ../dev/net/net_native.c
 
 ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = devdw.o blkdev.o devide.o 
+DOBJS = devdw.o blkdev.o devide.o
+NOBJS = net_native.o
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS)
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -28,6 +30,9 @@ $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(NOBJS): %$(BINEXT): ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %$(BINEXT): %.s
@@ -54,7 +59,9 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o dwtime.o 
+	videoll.o dwtime.o \
+	../level2.o ../syscall_level2.o ../select.o ../syscall_net.o \
+	net_native.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s

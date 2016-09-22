@@ -85,3 +85,20 @@ uint8_t platform_param(char *p)
 {
 	return 0;
 }
+
+
+#ifdef CONFIG_LEVEL_2
+
+/* We always use 512 byte paths so no special pathbuf needed */
+
+char *pathbuf(void)
+{
+	return tmpbuf();
+}
+
+void pathfree(char *tb)
+{
+	brelse(tb);
+}
+
+#endif

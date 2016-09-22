@@ -9,7 +9,7 @@
 #include <blkdev.h>
 #include <devide.h>
 #include <dwtime.h>
-
+#include <netdev.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -24,7 +24,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 3: /dev/lpr	Printer devices */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
-  {  no_open,      no_close,    sys_read, sys_write, sys_ioctl  },
+  {  no_open,      sys_close,    sys_read, sys_write, sys_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
@@ -50,5 +50,6 @@ void device_init(void)
 #endif
 	dwtime_init( );
 	inittod();
+	sock_init();
 }
 
