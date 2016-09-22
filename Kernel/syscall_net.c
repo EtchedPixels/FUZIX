@@ -95,6 +95,7 @@ static struct socket *alloc_socket(void)
 	while (s < sockets + NSOCKET) {
 		if (s->s_state == SS_UNUSED) {
 			s->s_state = SS_INIT;
+			s->s_iflag = 0;
 			irqrestore(irq);
 			return s;
 		}
@@ -107,10 +108,13 @@ static struct socket *alloc_socket(void)
 struct socket *sock_alloc_accept(struct socket *s)
 {
 	struct socket *n = alloc_socket();
+	int sockno;
 	if (n == NULL)
 		return NULL;
 
+	sockno = n->s_num;
 	memcpy(n, s, sizeof(*n));
+	n->s_num = sockno;
 	n->s_state = SS_ACCEPTING;
 	n->s_data = s->s_num;
 	return n;
@@ -501,9 +505,9 @@ arg_t _accept(void)
 		udata.u_error = EALREADY;
 		return -1;
 	}
-	
+
 	/* Needs locking versus interrupts */
-	while ((n = sock_pending(s)) != NULL) {
+	while ((n = sock_pending(s)) == NULL) {
 		if (psleep_flags(s, flag))
 			return -1;
 		if (s->s_error)
@@ -665,6 +669,6 @@ void sock_init(void)
 	struct socket *s = sockets;
 	uint8_t n = 0;
 	while (s < sockets + NSOCKET)
-		s++->s_num = n;
+		s++->s_num = n++;
 	netdev_init();
 }
