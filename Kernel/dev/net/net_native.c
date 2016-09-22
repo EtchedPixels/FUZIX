@@ -27,8 +27,9 @@ static void wakeup_all(struct socket *s)
  */
 static struct netevent ne;
 
-int netdev_write(void)
+int netdev_write(uint8_t flags)
 {
+	used(flags);
 	struct socket *s;
 	struct sockdata *sd;
 
@@ -179,8 +180,9 @@ int netdev_ioctl(uarg_t request, char *data)
  *	On a close of the daemon close down all the sockets we
  *	have opened.
  */
-int netdev_close(void)
+int netdev_close(uint8_t minor)
 {
+	used( minor );
 	struct socket *s = sockets;
 	if (net_ino) {
 		i_deref(net_ino);
