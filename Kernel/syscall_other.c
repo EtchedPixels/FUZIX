@@ -28,6 +28,7 @@ arg_t _rename(void)
 {
 	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
+	arg_t ret;
 
 	srci = n_open(src, &srcp);
 	/* Source must exist */
