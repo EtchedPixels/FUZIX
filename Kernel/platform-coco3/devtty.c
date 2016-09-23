@@ -34,13 +34,14 @@ uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
 uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
 uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
 uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
-uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
-uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
-uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
-uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
+/* these have a gee-whiz factor, but take a lot of RAM in level 2
+uint8_t tbuf7[TTYSIZ];   
+uint8_t tbuf8[TTYSIZ];   
+uint8_t tbuf9[TTYSIZ];   
+uint8_t tbufa[TTYSIZ];  
+*/
 
-
-struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	/* GIME Consoles */
@@ -51,11 +52,12 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf6, tbuf6, tbuf6, TTYSIZ, 0, TTYSIZ / 2},
-	/* Drivewire Virtual Window Ports */
+	/* Drivewire Virtual Window Ports
 	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf8, tbuf8, tbuf8, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf9, tbuf9, tbuf9, TTYSIZ, 0, TTYSIZ / 2},
 	{tbufa, tbufa, tbufa, TTYSIZ, 0, TTYSIZ / 2},
+	*/
 };
 
 
