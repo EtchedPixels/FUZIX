@@ -105,9 +105,4 @@ f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs
 f 0755 /bin/yes         yes
 
-########################################################################
-package  util-z80
 
-if-cpu  z80
-
-f 0755 /bin/patchcpm    patchcpm
