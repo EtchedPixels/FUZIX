@@ -70,6 +70,9 @@ static uint8_t ttype[MAX_TABLE_COLS];
 #define CENTRE	1
 #define RIGHT	2
 
+static uint8_t widthcount;	/* Used when measuring for tables */
+static uint8_t counting;
+
 /* Position on screen and of right of screen */
 static uint8_t xright;
 static uint8_t xpos;
@@ -188,10 +191,14 @@ static void under_off(void)
     write(1, "\033[0m", 4);
 }
 
-/* Table stuff to do */
 static int width(char *p)
 {
-    return strlen(p) + 2;	/* FIXME */
+    counting = 1;
+    widthcount = 0;
+    normal_syntax(p);
+    counting = 0;
+    wordptr = wordbuf;
+    return widthcount + 1;
 }
 
 static void oom(void)
@@ -255,6 +262,11 @@ static void wordflush(void)
     if (wordsize == 0)
         return;
 
+    if (counting) {
+        widthcount += wordsize + 1;
+        wordsize = 0;
+        return;
+    }
     if (xpos + wordsize > xright)
         force_newline();
     while (t != wordptr) {
@@ -485,7 +497,6 @@ static void table_complete(void)
     in_table = 0;
     /* Our current implementation is dumb, we just align them. We also don't
        support centre/right align yet */
-    newline();
     /* Any line that is all dashes implies the line above is a title */
     pos = indent;
     while((p = get_text()) != NULL) {
@@ -572,6 +583,7 @@ static void process_table(char *p)
 
     /* Set the max widths to 0 */
     if (!in_table) {
+        newline();
         memset(&twidth, 0, sizeof(twidth));
         trow = 0;	/* Row we are on */
         theader = 255;	/* Headers row */
