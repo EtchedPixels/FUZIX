@@ -160,7 +160,7 @@ void cut(void)
 
 	switch (mode) {
 	case DUMP_STDIN:
-	    puts(line, stdout);
+	    fputs(line, stdout);
 	    break;
 
 	case OPTIONF:
