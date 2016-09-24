@@ -403,7 +403,12 @@ arg_t _read(void)
 	uint8_t flag;
 
 	if (!nbytes)
-	        return 0;
+		return 0;
+
+	if ((ssize_t)nbytes < 0) {
+		udata.u_error = EINVAL;
+	        return -1;
+	}
 
 	if (!valaddr(buf, nbytes))
 	        return -1;
@@ -466,7 +471,12 @@ arg_t _write(void)
 	uint8_t flag;
 
 	if (!nbytes)
-	        return 0;
+		return 0;
+
+	if ((ssize_t)nbytes < 0) {
+		udata.u_error = EINVAL;
+	        return -1;
+	}
 
 	if (!valaddr(buf, nbytes))
 	        return -1;
