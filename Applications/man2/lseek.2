@@ -1,0 +1,59 @@
+LSEEK(2)
+## NAME
+lseek - set or report the file offset
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*off\_t lseek*(*int* fd, *off\_t* offset, int whence);
+## DESCRIPTION
+The *lseek*() call allows the offset of the file table entry referred to by
+file descriptor *fd* to be queried or changed.
+
+The *whence* value controls the nature of the change and three behaviours are
+available.
+
+:*SEEK\_SET*
+  The offset is set to *offset* characters into the file.
+:*SEEK\_CUR*
+  The offset is moved relative to the current position.
+:*SEEK\_END*
+  The offset is set relative to the end of file. The offset passed must be
+  zero or negative.
+
+Fuzix permits the offset to be set beyond the current end of file. The end of
+file position is not changed by this action, but a write of data at that
+position will extend the file.
+## RETURN VALUE
+If the operation succeeds the previous value of the offset is returned. If an
+error occurs (off\_t)-1 is returned, errno is set and the offset remains
+unmodified.
+## ERRORS
+:*EBADF*
+  The file descriptor *fd* is not open.
+:*EFAULT*
+  The address passed for the arguments is invalid.
+:*EINVAL*
+  The *whence* value is not valid, or the resulting offset is negative or beyond
+  the permitted maximum size of the object.
+:*EIO*
+  An I/O error occurred.
+:*EOVERFLOW*
+  The resulting file offset does not fit in an off\_t.
+:*ESPIPE:
+  The file descriptor points to an object (eg a pipe) that does not support
+  the lseek operation.
+## CONFORMING TO
+V7, POSIX.1-2001.
+## NOTES
+The current file position can be read without modification by calling\
+
+*lseek*(*fd*, 0, 0)
+
+Fuzix implements lseek as a wrapper around an _lseek system call entry.
+
+Fuzix will not currently report *EOVERFLOW*.
+## SEE ALSO
+*lseek*(2), *open*(2), *write*(2).
+

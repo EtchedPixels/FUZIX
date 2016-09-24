@@ -1,0 +1,19 @@
+SYNC(2)
+## NAME
+sync - write changes to stable storage
+## SYNOPSIS
+*#include <unistd.h>*
+
+*void sync*(*void*);\
+
+## DESCRIPTION
+When *sync*() is called all buffered modifications to files and to metadata are
+committed to the underlying storage.
+## RETURN VALUE
+None.
+## ERRORS
+None.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001.
+## SEE ALSO
+*fdatasync*(3), *fsync*(3)
