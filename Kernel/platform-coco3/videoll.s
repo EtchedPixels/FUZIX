@@ -11,6 +11,8 @@
 	.globl _video_read
 	.globl _video_write
 	.globl _video_cmd
+	.globl _putq
+	.globl _getq
 
 	include "kernel.def"
 	include "../kernel09.def"
@@ -125,3 +127,38 @@ b@	ldb	,x+		; get a byte from src
 	dec	1,y		; bump row counter
 	bne	a@		; loop
 	puls	u,y,pc		; restore regs, return
+
+
+;;;
+;;; Low Level Queueing Routine
+;;;
+
+
+;;; Put a character into tty queue
+;;; void putq( uint8_t *ptr, uint8_t c )
+;;; takes: B = character, X = ptr to buffer (in queue-space)
+;;; modifies: A
+_putq
+	pshs	cc		; save interrupt state
+	orcc	#0x50		; stop interrupt till we restore map
+	lda	#10		; mmu page 10 for queue structs
+	sta	0xffa9		;
+	stb	,x		; store the character
+	lda	#1		; restore kernel map
+	sta	0xffa9		;
+	puls	cc,pc		; restore interrupts, return
+
+;;; Gets a character from tty queue
+;;; uint8_t getq( uint8_t *ptr )
+;;; takes: X = ptr to buffer (in queue-space)
+;;; returns: B = retrieved character
+;;; modifies: nothing
+_getq
+	pshs	cc		; save interrupt state
+	orcc	#0x50		; stop interrupt till we restore map
+	lda	#10		; mmu page 10 for queue structs
+	sta	0xffa9		;
+	ldb	,x
+	lda	#1		; restore kernel map
+	sta	0xffa9		;
+	puls	cc,pc		; restore interrupts, return
