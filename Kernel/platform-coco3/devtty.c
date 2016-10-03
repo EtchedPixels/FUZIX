@@ -28,19 +28,19 @@ extern uint8_t hz;
 uint8_t vtattr_cap;
 
 
-uint8_t tbuf1[TTYSIZ];   /* console 0 */
-uint8_t tbuf2[TTYSIZ];   /* console 1 */
-uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
-uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
-uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
-uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
-uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
-uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
-uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
-uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
+#define tbuf1 (uint8_t *)(0x2000+TTYSIZ*0)
+#define tbuf2 (uint8_t *)(0x2000+TTYSIZ*1)
+#define tbuf3 (uint8_t *)(0x2000+TTYSIZ*2)
+#define tbuf4 (uint8_t *)(0x2000+TTYSIZ*3)
+#define tbuf5 (uint8_t *)(0x2000+TTYSIZ*4)
+#define tbuf6 (uint8_t *)(0x2000+TTYSIZ*5)
+#define tbuf7 (uint8_t *)(0x2000+TTYSIZ*6)
+#define tbuf8 (uint8_t *)(0x2000+TTYSIZ*7)
+#define tbuf9 (uint8_t *)(0x2000+TTYSIZ*8)
+#define tbufa (uint8_t *)(0x2000+TTYSIZ*9)
 
 
-struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	/* GIME Consoles */

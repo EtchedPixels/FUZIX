@@ -69,7 +69,7 @@ void pagemap_init(void)
     /*  We have 64 8k pages for a CoCo3 so insert every other one
      *  into the kernel allocator map.
      */
-    for (i = 10; i < max ; i+=2)
+    for (i = 12; i < max ; i+=2)
         pagemap_add(i);
     /* add common page last so init gets it */
     pagemap_add(6);
