@@ -1,5 +1,4 @@
 
-	.area	.text
 
 	.globl	_curpty
 	.globl	_di
@@ -22,6 +21,8 @@
 	import	_video_init	; e
 
 changequote(`[', `]')
+
+	.area	.external,constant		 
 
 _curpty		equ	$esyscmd([awk '/curpty/ {print $5}' ../fuzix.map])
 _di		equ	$esyscmd([awk '/_di\ / {print $5}' ../fuzix.map])
