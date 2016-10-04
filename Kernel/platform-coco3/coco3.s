@@ -21,6 +21,10 @@
 	    .globl _hz
 	    .globl _bufpool
 	    .globl _discard_size
+	    .globl _memset
+	    .globl _memcpy
+	    .globl _putq
+	    .globl _getq
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -42,6 +46,31 @@
             include "kernel.def"
             include "../kernel09.def"
 
+
+	.area	.text
+;;;   void *memset(void *d, int c, size_t sz)
+_memset:
+	pshs	x,y
+	ldb	7,s
+	ldy	8,s
+a@	stb	,x+
+	leay	-1,y
+	bne	a@
+	puls	x,y,pc
+
+
+
+;;;   void *memcpy(void *d, const void *s, size_t sz)
+_memcpy:
+	pshs	x,y,u
+	ldu	8,s
+	ldy	10,s
+a@	ldb	,u+
+	stb	,x+
+	leay	-1,y
+	bne	a@
+	puls	x,y,u,pc
+	
 
 	.area	.buffers
 
@@ -363,3 +392,37 @@ map_for_swap
 	sta	0xffa9
 	rts
 
+;;;
+;;; Low Level Queueing Routine
+;;;
+
+	.area	.video
+	
+;;; Put a character into tty queue
+;;; void putq( uint8_t *ptr, uint8_t c )
+;;; takes: B = character, X = ptr to buffer (in queue-space)
+;;; modifies: A
+_putq
+	pshs	cc		; save interrupt state
+	orcc	#0x50		; stop interrupt till we restore map
+	lda	#10		; mmu page 10 for queue structs
+	sta	0xffa9		;
+	stb	,x		; store the character
+	lda	#1		; restore kernel map
+	sta	0xffa9		;
+	puls	cc,pc		; restore interrupts, return
+
+;;; Gets a character from tty queue
+;;; uint8_t getq( uint8_t *ptr )
+;;; takes: X = ptr to buffer (in queue-space)
+;;; returns: B = retrieved character
+;;; modifies: nothing
+_getq
+	pshs	cc		; save interrupt state
+	orcc	#0x50		; stop interrupt till we restore map
+	lda	#10		; mmu page 10 for queue structs
+	sta	0xffa9		;
+	ldb	,x
+	lda	#1		; restore kernel map
+	sta	0xffa9		;
+	puls	cc,pc		; restore interrupts, return

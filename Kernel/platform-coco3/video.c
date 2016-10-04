@@ -13,6 +13,20 @@ extern void video_cmd( char *rlt_data);
 
 */
 
+
+void do_beep( void )
+{
+}
+
+uint8_t vtattr_cap;
+
+
+void vtattr_notify(void)
+{
+        curpty->attr = ((vtink&7)<<3) + (vtpaper&7);
+}
+
+
 static int irq;
 
 static void map_for_video()
