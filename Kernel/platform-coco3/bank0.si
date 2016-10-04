@@ -1,0 +1,51 @@
+
+	.area	.text
+
+	.globl	_curpty
+	.globl	_di
+	.globl 	_irqrestore
+	.globl	_mulhi3
+	.globl	_uget
+	.globl  _ugetw
+	.globl 	_uput
+	.globl  _tty_inproc
+	.globl  _tty_ioctl
+
+
+	import	_vtoutput	; 0
+	import	_vt_ioctl	; 2
+	import	_vt_inproc	; 4
+	import	_vtinit		; 6
+	import	_vt_save	; 8
+	import	_vt_load	; a
+	import	_gfx_draw_op	; c
+	import	_video_init	; e
+
+changequote(`[', `]')
+
+_curpty		equ	$esyscmd([awk '/curpty/ {print $5}' ../fuzix.map])
+_di		equ	$esyscmd([awk '/_di\ / {print $5}' ../fuzix.map])
+_irqrestore	equ	$esyscmd([awk '/_irqrestore/ {print $5}' ../fuzix.map])
+_mulhi3		equ	$esyscmd([awk '/_mulhi3/ {print $5}' ../fuzix.map])
+_uget		equ	$esyscmd([awk '/\ _uget\ / {print $5}' ../fuzix.map])
+_ugetw		equ	$esyscmd([awk '/\ _ugetw\ / {print $5}' ../fuzix.map])
+_uput		equ	$esyscmd([awk '/\ _uput\ / {print $5}' ../fuzix.map])	
+_tty_inproc	equ	$esyscmd([awk '/\ _tty_inproc\ / {print $5}' ../fuzix.map])	
+_tty_ioctl	equ	$esyscmd([awk '/\ _tty_ioctl\ / {print $5}' ../fuzix.map])	
+
+;;; 
+;;; This is a table of pointers to exported symbols
+;;; that the kernel will use to call into this bank
+;;; 
+	
+	.area	.link
+
+	.dw	_vtoutput	; 0
+	.dw	_vt_ioctl	; 2
+	.dw	_vt_inproc	; 4
+	.dw	_vtinit		; 6
+	.dw	_vt_save	; 8
+	.dw	_vt_load	; a
+	.dw	_gfx_draw_op	; c
+	.dw	_video_init	; e
+
