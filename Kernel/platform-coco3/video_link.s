@@ -48,7 +48,7 @@ _vt_inproc
 	sty	2,s
 	puls	y
 	jmp	[$2004]
-	
+
 _vt_save
 	pshs	y
 	lda	#11
@@ -81,8 +81,17 @@ _gfx_draw_op
 	sty	2,s
 	puls	y
 	jmp	[$200c]
-	
+
 _video_init
+	;; clear bss section
+	pshs	x,y
+	ldx	#__sectionbase_.bss__
+	ldy	#__sectionlen_.bss__
+a@	clr	,x+
+	leay	-1,y
+	bne	a@
+	puls	x,y
+	;; normal call
 	pshs	y
 	lda	#11
 	sta	$ffa9
@@ -92,7 +101,8 @@ _video_init
 	sty	2,s
 	puls	y
 	jmp	[$200e]
-	
+
 return
+	lda	#1
+	sta	$ffa9
 	jmp	[ret]
-	
