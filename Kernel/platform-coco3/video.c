@@ -32,14 +32,14 @@ static int irq;
 static void map_for_video()
 {
 	irq=di();
-	*( uint8_t *)0xffa9 = 8;
-	*( uint8_t *)0xffaa = 9;
+	*( uint8_t *)0xffaa = 8;
+	*( uint8_t *)0xffab = 9;
 }
 
 static void map_for_kernel()
 {
-	*( uint8_t *)0xffa9 = 1;
 	*( uint8_t *)0xffaa = 2;
+	*( uint8_t *)0xffab = 3;
 	irqrestore(irq);
 }
 
@@ -131,10 +131,10 @@ unsigned char vt_map(unsigned char c)
 }
 
 // Get copy user buffer to video mem
-// 
+//
 static void video_get( char *usrptr ){
 	map_for_video();
-	uget( usrptr, (char *)0x2000, 512);
+	uget( usrptr, (char *)0x4000, 512);
 	map_for_kernel();
 }
 
@@ -142,7 +142,7 @@ __attribute__((section(".discard")))
 void video_init( )
 {
 	map_for_video();
-	memset( (char *)0x2000, ' ', 0x4000 );
+	memset( (char *)0x4000, ' ', 0x4000 );
 	map_for_kernel();
 }
 
@@ -151,7 +151,7 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 	int err=0;
 	int l;
 	int c = 8;	/* 4 x uint16_t */
-	uint16_t *p = (uint16_t *)(char *)0x5e00;
+	uint16_t *p = (uint16_t *)(char *)0x7e00;
 
 	map_for_video();
 	l = ugetw(ptr);
@@ -161,7 +161,7 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 	}
 	if (arg != GFXIOC_READ)
 		c = l;
-	if (uget(ptr + 2, (char *)0x5e00, c)){
+	if (uget(ptr + 2, (char *)0x7e00, c)){
 		err = EFAULT;
 		goto ret;
 	}
@@ -170,7 +170,7 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 		/* TODO
 		   if (draw_validate(ptr, l, 256, 192))  - or 128!
 		   return EINVAL */
-		video_cmd( ( char *)0x5e00 );
+		video_cmd( ( char *)0x7e00 );
 		break;
 	case GFXIOC_WRITE:
 	case GFXIOC_READ:
@@ -186,12 +186,12 @@ int gfx_draw_op(uarg_t arg, char *ptr)
 			break;
 		}
 		if (arg == GFXIOC_READ) {
-			video_read( (unsigned char *)0x5e00 );
-			if (uput( (char *)0x5e00 + 8, ptr+10, l-2))
+			video_read( (unsigned char *)0x7e00 );
+			if (uput( (char *)0x7e00 + 8, ptr+10, l-2))
 				err = EFAULT;
 			break;
 		}
-		video_write( (unsigned char *)0x5e00 );
+		video_write( (unsigned char *)0x7e00 );
 	}
  ret:
 	map_for_kernel();

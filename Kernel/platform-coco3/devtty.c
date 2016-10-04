@@ -154,10 +154,10 @@ static struct mode_s mode[5] = {
 
 static struct pty ptytab[] VSECTD = {
 	{
-		(unsigned char *) 0x2000, 
-		NULL, 
-		0, 
-		{0, 0, 0, 0}, 
+		(unsigned char *) 0x4000, 
+		NULL,
+		0,
+		{0, 0, 0, 0},
 		0x10000 / 8,
 		0x04,
 		0x74,              /* 80 column */
@@ -169,10 +169,10 @@ static struct pty ptytab[] VSECTD = {
 		050
 	},
 	{
-		(unsigned char *) 0x3000, 
-		NULL, 
-		0, 
-		{0, 0, 0, 0}, 
+		(unsigned char *) 0x5000, 
+		NULL,
+		0,
+		{0, 0, 0, 0},
 		0x11000 / 8,
 		0x04,
 		0x6c,              /* 40 column */
