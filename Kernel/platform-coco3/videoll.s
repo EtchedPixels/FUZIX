@@ -17,12 +17,12 @@
 
 	include "kernel.def"
 	include "../kernel09.def"
-	
-	.area .video
 
-VIDEO_BASE  equ	 $4000
+	.area .text
 
-	
+VIDEO_BASE  equ	 $6000
+
+
 ;;;   void *memset(void *d, int c, size_t sz)
 _memset:
 	pshs	x,y
@@ -165,11 +165,3 @@ _getq
 	puls	cc,pc		; restore interrupts, return
 
 
-;;; Init this bank's bss data
-videoll_init
-	ldx 	#__sectionbase_.bss__
-	ldy 	#__sectionlen_.bss__
-a@	clr 	,x+
-	leay 	-1,y
-	bne 	a@
-	jmp	_video_init

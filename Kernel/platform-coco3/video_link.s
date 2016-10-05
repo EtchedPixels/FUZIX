@@ -10,8 +10,8 @@
 	.globl	_vt_load
 	.globl  _gfx_draw_op
 	.globl  _video_init
-	
-	.area	.video
+
+	.area	.text
 
 ret	.dw	0
 

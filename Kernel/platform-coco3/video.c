@@ -7,10 +7,6 @@ extern void video_cmd( char *rlt_data);
 /* These are routines stolen from the stock vt.c's VT_SIMPLE code, and modified
    to suite multiple vts
 
-   These routines are called by vt.c.   They play with Kernel banking, so this
-   module should be compiled into the .video section.  These routines should 
-   only reference/call things that are in .video or .videodata
-
 */
 
 
@@ -138,7 +134,6 @@ static void video_get( char *usrptr ){
 	map_for_kernel();
 }
 
-__attribute__((section(".discard")))
 void video_init( )
 {
 	map_for_video();
