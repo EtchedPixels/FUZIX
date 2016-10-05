@@ -19,7 +19,7 @@
 	import	_vt_load	; a
 	import	_gfx_draw_op	; c
 	import	_video_init	; e
-	import  videoll_init
+
 
 changequote(`[', `]')
 
@@ -49,5 +49,18 @@ _tty_ioctl	equ	$esyscmd([awk '/\ _tty_ioctl\ / {print $5}' ../fuzix.map])
 	.dw	_vt_save	; 8
 	.dw	_vt_load	; a
 	.dw	_gfx_draw_op	; c
-	.dw	videoll_init	; e
+	.dw	_video_init	; e
 
+;;; This is a hand-build DECB BIN header with banking extension
+
+	.area	.bankstart
+	.db	$a		; Bank extension MMU 11
+	.db	0		; preamble byte
+	.dw	bankend-$2000	; length
+	.dw	$2000		; load address
+
+	.area	.bankend
+bankend				; end of bank
+	.db	$ff		; postamble
+	.dw	0		; exec address (junk for banking)
+	.dw	0		; junk (must be zero or loader will fail)

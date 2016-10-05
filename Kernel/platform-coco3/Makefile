@@ -1,5 +1,5 @@
 
-CSRCS = ttydw.c mbr.c dwtime.c bank0.c
+CSRCS = ttydw.c mbr.c dwtime.c
 CSRCS += devices.c main.c libc.c devsdc.c
 
 CDSRCS = ../dev/devide_discard.c
@@ -41,17 +41,17 @@ $(AOBJS): %$(BINEXT): %.s
 
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~
+	rm -f $(OBJS) $(JUNK) bank0.img core *~
 
 image:	kernel bank0.img
+	cat fuzix.bin0 bank0.bin bank_end.img > ../fuzix.bin
 
 kernel:
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../timer.o ../timer.c
-	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
-	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o ../usermem.o ../usermem.c
-	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../usermem.o ../usermem.c
+	$(CROSS_LD) -o fuzix.bin0 --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
@@ -69,8 +69,9 @@ kernel:
 bank0.img:
 	m4 bank0.si > bank0.s
 	lwasm -obank0.o --obj bank0.s
+	lwasm -obank_end.img -r bank_end.s
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
-	$(CROSS_LD) -r -o bank0.img --map=bank0.map --script=bank.link \
+	$(CROSS_LD) -r -o bank0.bin --map=bank0.map --script=bank.link \
 	../vt.o video.o videoll.o bank0.o
 
 boot.bin: boot/boot.s
