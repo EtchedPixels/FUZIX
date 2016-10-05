@@ -13,15 +13,16 @@
 	.globl _video_cmd
 	.globl _putq
 	.globl _getq
+	.globl videoll_init
 
 	include "kernel.def"
 	include "../kernel09.def"
-	
-	.area .video
 
-VIDEO_BASE  equ	 $4000
+	.area .text
 
-	
+VIDEO_BASE  equ	 $6000
+
+
 ;;;   void *memset(void *d, int c, size_t sz)
 _memset:
 	pshs	x,y
@@ -162,3 +163,5 @@ _getq
 	lda	#1		; restore kernel map
 	sta	0xffa9		;
 	puls	cc,pc		; restore interrupts, return
+
+

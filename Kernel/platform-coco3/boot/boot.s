@@ -5,8 +5,33 @@
 ;;; This bootloader works from a DECB-like evironment, It loads
 ;;; FUZIX.BIN from a DECB disk and plops it in memory, starting
 ;;; at physical address 0x0000.
+
+;;; This loader uses an extension to the standard CoCo's BIN format to
+;;; load banked code. First, the non-banked kernel code is loaded as
+;;; usual. Immediately following the kernel's ending postable, if the next
+;;; byte is not zero, this means that the loader should expect another
+;;; bank also formated as a BIN.  This byte also specifies at which mmu
+;;; page to load the following BIN. If this byte is 0 then loading is
+;;; complete, and no more valid data follows. Banks' EXEC addresses
+;;; are ignored.
+;;;
+;;; Banking mode example: At run-time, physical page 10 is to be used at
+;;; CPU address 0x2000. CPU address 0x2000 translates to MMU register 1
+;;; (each MMU register represents 0x2000 worth of CPU-space).  Because
+;;; this calculated MMU register number is added to our passed banking
+;;; extension number to acheive the final MMU setting, our passed banking
+;;; extension number must be 10 - 1 = 9.  *9* must be the byte prepended
+;;; to the bank's BIN data.  This allows the loader to load different
+;;; sized banks at various CPU addresses, with the cauveate: banks that are
+;;; larger than 0x2000 will be loaded to contiguous physical banks: if in
+;;; our example our bank is 0x3000 bytes long, which spans two physical
+;;; banks, then physical banks 10 and 11 will be used to contain our
+;;; banked code.
+ 
+ 
 	org	$7a00		; where am I loaded.
 
+bank	.db	0		; banking offset
 frame	.dw	0		; on entry frame pointer
 npage	.db	0		; next page no.
 pos	.dw	0		; buffer pos in memory
@@ -95,7 +120,13 @@ post	jsr	getw		; get zero's
 	cmpd	#0		; test D
 	lbne	abort		; abort if not zero
 	jsr	getw		; get exec address
+	tst	bank		; don't save exec address if we are loading
+	bne	f@		; a bank
 	pshs	d		; save on stack
+	;; check for another bank
+f@	jsr	$a176		; A=banking flag/ mmu offset
+	sta	bank		; save bank's mmu offset
+	bne	c@		; not done loading banks - repeat!
 	jsr	close		; close DECB file
 	;; report load
 	clr	$6f		; set stream to console
@@ -232,6 +263,7 @@ setload
 	lsra
 	lsra
 	lsra			; A= blk no
+	adda	bank		; add banking offset
 	sta	$ffaa		; put in mmu
 	puls	d
 	anda	#$1f		; D = offset

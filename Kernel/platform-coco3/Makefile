@@ -9,6 +9,7 @@ NSRCS = ../dev/net/net_native.c
 
 ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
+ASRCS += video_link.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -40,15 +41,17 @@ $(AOBJS): %$(BINEXT): %.s
 
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~
+	rm -f $(OBJS) $(JUNK) bank0.img core *~
 
-image:
+image:	kernel bank0.img
+	cat fuzix.bin0 bank0.bin bank_end.img > ../fuzix.bin
+
+kernel:
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../timer.o ../timer.c
-	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
-	$(CROSS_CC) $(CROSS_CC_VIDEO) $(CROSS_CCOPTS) -O0 -c -o ../usermem.o ../usermem.c
-	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../usermem.o ../usermem.c
+	$(CROSS_LD) -o fuzix.bin0 --map=../fuzix.map --script=fuzix.link \
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
@@ -58,10 +61,18 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
-	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o dwtime.o \
+	../usermem_std-6809.o devtty.o libc.o usermem_gime.o \
+	video_link.o dwtime.o \
 	../level2.o ../syscall_level2.o ../select.o ../syscall_net.o \
 	net_native.o
+
+bank0.img:
+	m4 bank0.si > bank0.s
+	lwasm -obank0.o --obj bank0.s
+	lwasm -obank_end.img -r bank_end.s
+	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o video.o video.c
+	$(CROSS_LD) -r -o bank0.bin --map=bank0.map --script=bank.link \
+	../vt.o video.o videoll.o bank0.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s

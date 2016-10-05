@@ -1,0 +1,13 @@
+define basesympat __sectionbase_%s__
+define lensympat __sectionlen_%s__
+section .bankstart
+section .link load 0x2000
+section .video
+section .text2
+section .text
+section .text.hot
+section .test.unlikely
+section .data
+section	.bss
+section .bankend
+
