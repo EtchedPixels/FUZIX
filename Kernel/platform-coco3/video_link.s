@@ -83,15 +83,6 @@ _gfx_draw_op
 	jmp	[$200c]
 
 _video_init
-	;; clear bss section
-	pshs	x,y
-	ldx	#__sectionbase_.bss__
-	ldy	#__sectionlen_.bss__
-a@	clr	,x+
-	leay	-1,y
-	bne	a@
-	puls	x,y
-	;; normal call
 	pshs	y
 	lda	#11
 	sta	$ffa9

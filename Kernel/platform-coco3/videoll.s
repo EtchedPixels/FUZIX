@@ -13,6 +13,7 @@
 	.globl _video_cmd
 	.globl _putq
 	.globl _getq
+	.globl videoll_init
 
 	include "kernel.def"
 	include "../kernel09.def"
@@ -162,3 +163,13 @@ _getq
 	lda	#1		; restore kernel map
 	sta	0xffa9		;
 	puls	cc,pc		; restore interrupts, return
+
+
+;;; Init this bank's bss data
+videoll_init
+	ldx 	#__sectionbase_.bss__
+	ldy 	#__sectionlen_.bss__
+a@	clr 	,x+
+	leay 	-1,y
+	bne 	a@
+	jmp	_video_init

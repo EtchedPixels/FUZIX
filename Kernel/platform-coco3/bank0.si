@@ -19,6 +19,7 @@
 	import	_vt_load	; a
 	import	_gfx_draw_op	; c
 	import	_video_init	; e
+	import  videoll_init
 
 changequote(`[', `]')
 
@@ -48,5 +49,5 @@ _tty_ioctl	equ	$esyscmd([awk '/\ _tty_ioctl\ / {print $5}' ../fuzix.map])
 	.dw	_vt_save	; 8
 	.dw	_vt_load	; a
 	.dw	_gfx_draw_op	; c
-	.dw	_video_init	; e
+	.dw	videoll_init	; e
 
