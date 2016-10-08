@@ -168,7 +168,7 @@ b@	sta	,x+
 	ldu	#$c000		; src
 c@	ldd	,u++		; copy 2 at a time
 	std	,x++		;
-	cmpx	#$e000		; are we done?
+	cmpx	#$2000		; are we done?
 	bne	c@		; loop if not done
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
