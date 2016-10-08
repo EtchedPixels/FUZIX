@@ -170,6 +170,7 @@ c@	ldd	,u++		; copy 2 at a time
 	std	,x++		;
 	cmpx	#$2000		; are we done?
 	bne	c@		; loop if not done
+	clr	$ffa8		; reset cpu $0000
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
 	ldb	#%01000100	; coco3 mode
