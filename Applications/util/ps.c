@@ -68,7 +68,7 @@ int do_ps(void)
             close(pfd);
             return 1;
         }
-        ppid_slot[i] = ptab[i].p_tab.p_pptr - ptab[0].p_tab.p_pptr;
+        ppid_slot[i] = ((unsigned)ptab[i].p_tab.p_pptr - (unsigned)ptab[0].p_tab.p_pptr)/sizeof(struct p_tab);
     }
     close(pfd);
 
