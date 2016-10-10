@@ -285,13 +285,13 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 			case KBMAPGET:
 				return uput(keymap, data, sizeof(keymap));
 			case KBSETTRANS:
-				if (uget(keyboard, data, sizeof(keyboard)) == -1)
+				if (uget(data, keyboard, sizeof(keyboard)) == -1)
 					return -1;
-				return uget(shiftkeyboard,
-					data + sizeof(keyboard),
+				return uget(data + sizeof(keyboard),
+					shiftkeyboard,
 					sizeof(shiftkeyboard));
 			case KBRATE:
-				if (uget(&keyrepeat, data, sizeof(keyrepeat)) == -1)
+				if (uget(data, &keyrepeat, sizeof(keyrepeat)) == -1)
 					return -1;
 				keyrepeat.first *= (TICKSPERSEC/10);
 				keyrepeat.continual *= (TICKSPERSEC/10);
