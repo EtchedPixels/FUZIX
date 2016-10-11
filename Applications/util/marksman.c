@@ -734,6 +734,7 @@ static void parse_line(char *p)
     case ' ':	/* four spaces: literal copy */
         if (memcmp(p, "    ", 4) == 0) {
             copy_literal(p + 4);
+            newline();		/* Because the source had one we ate */
             return;
         }
         if (memcmp(p, "  ", 2) == 0) {
