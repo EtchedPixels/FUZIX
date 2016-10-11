@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 
 #define MAX_FIELD	80	/* Pointers to the beginning of each field
@@ -159,7 +160,7 @@ void cut(void)
 
 	switch (mode) {
 	case DUMP_STDIN:
-	    printf("%s", line);
+	    fputs(line, stdout);
 	    break;
 
 	case OPTIONF:
@@ -180,7 +181,7 @@ void cut(void)
 	    }
 	    if (maxcol == 1) {
 		if (flag_s != SET)
-		    printf("%s", line);
+		    fputs(line, stdout);
 	    } else {
 		for (i = 0; i < num_args; i++) {
 		    for (j = args[i * 2]; j <= args[i * 2 + 1]; j++)

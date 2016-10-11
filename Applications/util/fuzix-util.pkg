@@ -68,6 +68,7 @@ f 0755 /bin/fsck        fsck
 f 0755 /bin/grep        grep
 f 0755 /bin/head        head
 f 0755 /bin/id          id
+f 0755 /bin/kbdrate     kbdrate
 f 0755 /bin/ll          ll
 f 0755 /bin/logname     logname
 f 0755 /bin/man         man

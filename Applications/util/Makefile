@@ -69,6 +69,7 @@ SRCS  = banner.c \
 	fsck.c \
 	grep.c \
 	id.c \
+	kbdrate.c \
 	ll.c \
 	ls.c \
 	man.c \
