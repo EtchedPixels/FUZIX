@@ -1,6 +1,7 @@
 #include <unistd.h>
 
-main(int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
-    return sync();
+    sync();
+    return 0;
 }
