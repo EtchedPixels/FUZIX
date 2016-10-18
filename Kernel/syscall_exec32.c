@@ -4,7 +4,18 @@
  *
  *	TODO: Right now we do a classic bss/stack layout and dont' support
  *	fixed stack/expanding BSS, multiple segment loaders for flat binaries
- *	etc.
+ *	etc. We really ought to pick a saner format. There's much to be said
+ *	for a.out with relocs over flat, or relocs packed into BSS and letting
+ *	user space do the relocs (so anything that overflows or gets it wrong
+ *	goes bang the right side of the kernel/user boundary). The a.out
+ *	standard relocs are 8bytes each so a packed reloc from user space
+ *	would be far better. That might also be the best way to handle
+ *	shared code segment designs (aka 'resident' in Amiga speak)
+ *
+ *	Note: bFLT is actually broken by design for the corner case of
+ *	splitting the code and data segment into two loads, when a binary
+ *	computes an address that is a negative offset from the data segment
+ *	(eg when biasing the start of an array)
  */
 
 #include <kernel.h>
@@ -15,7 +26,7 @@
 
 /* FIXME: we need to put this back on boxes with a malloc but for now
    lets keep it easy */
-#define ARGBUF_SIZE	2048
+#define ARGBUF_SIZE	512
 
 struct binfmt_flat {
 	uint8_t magic[4];
@@ -73,12 +84,18 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 		return 0;
 	if (bf->data_start > bf->data_end)
 		return 0;
-	if (bf->data_end < bf->bss_end)
+	if (bf->data_end > bf->bss_end)
 		return 0;
 	if (bf->bss_end + bf->stack_size < bf->bss_end)
 		return 0;
 	if (bf->data_end > ino->c_node.i_size)
 		return 0;
+	/* Revisit this for other ports. Avoid alignment traps */
+	if ((bf->data_start | bf->data_end | bf->bss_end | bf->entry) & 1)
+		return 0;
+	/* Fix up the BSS so that it's big enough to hold the relocations
+	   FIXME: this is a) ugly and b) overcautious as we should factor
+	   in the stack space too */
 	if (bf->bss_end - bf->data_end < 4 * bf->reloc_count)
 		bf->bss_end = bf->data_end + 4 * bf->reloc_count;
 	if (bf->reloc_start + bf->reloc_count * 4 > ino->c_node.i_size ||
@@ -97,8 +114,16 @@ static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 	uint32_t n = bf->reloc_count;
 	while (n--) {
 		uint32_t v = *rp++;
+		kprintf("Reloc %x size %x:", v, size);
 		if (v < size && !(v&1))	/* Revisit for non 68K */
-			*((uint32_t *)(rp + v)) += progbase;
+		{
+			kprintf("%p was %p ", progbase + 0x40 + v, 
+				*(uint32_t *)(progbase + 0x40 + v));
+			/* FIXME: go via user access methods */
+			*((uint32_t *)(progbase + 0x40 + v)) += progbase + 0x40;
+			kprintf("%p now %p\n", progbase + 0x40 + v, 
+				*(uint32_t *)(progbase + 0x40 + v));
+		}
 	}
 }
 
@@ -126,9 +151,13 @@ arg_t _execve(void)
 	uint32_t bin_size;	/* Will need to be bigger on some cpus */
 	uaddr_t progbase, top;
 	uaddr_t go;
+	uint32_t true_brk;
 
+	kputs("execve");
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
+
+	kputs("execve - open");
 
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
@@ -147,18 +176,32 @@ arg_t _execve(void)
 	/* Read in the first block of the new program */
 	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
 	binflat = (struct binfmt_flat *)buf;
+	
+	/* FIXME: ugly - save this as valid_hdr modifies it */
+	true_brk = binflat->bss_end;
+
+	kputs("execve - hdr");
 
 	/* Hard coded for our 68K format. We don't quite use the ucLinux
 	   names, we don't want to load a ucLinux binary in error! */
-	if (buf == NULL || memcmp(buf, "bF68", 4) ||
+	if (buf == NULL || memcmp(buf, "bFLT", 4) ||
 		!valid_hdr(ino, binflat)) {
+		kputs("execve - hdr bad");
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
+	kputs("execve - hdr good");
+
 	/* Memory needed */
 	bin_size = binflat->bss_end + binflat->stack_size;
 
+	/* Overflow ? */
+	if (bin_size < binflat->bss_end) {
+		udata.u_error = ENOEXEC;
+		goto nogood2;
+	}
+	
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
 	/* Put environment in another buffer. */
@@ -168,6 +211,7 @@ arg_t _execve(void)
 	if (rargs(argv, abuf) || rargs(envp, ebuf))
 		goto nogood3;
 
+	kputs("execve - alloc");
 	/* This must be the last test as it makes changes if it works */
 	if (pagemap_realloc(bin_size))
 		goto nogood3;
@@ -187,6 +231,9 @@ arg_t _execve(void)
 	
 	progbase = pagemap_base();
 	top = progbase + bin_size;
+
+	kprintf("user space at %p\n", progbase);
+	kprintf("top at %p\n", progbase + bin_size);
 
 	uput(buf, (uint8_t *)progbase, 512);	/* Move 1st Block to user bank */
 
@@ -211,6 +258,7 @@ arg_t _execve(void)
 	
 	go = (uint32_t)progbase + binflat->entry;
 
+	/* Header isn't counted in relocations */
 	relocate(binflat, progbase, bin_size);
 	/* This may wipe the relocations */	
 	uzero((uint8_t *)progbase + binflat->data_end,
@@ -218,8 +266,12 @@ arg_t _execve(void)
 
 	brelse(buf);
 
-	/* brk eats into the stack allocation */
-	udata.u_break = (uaddr_t)(progbase + binflat->bss_end);
+	kputs("bss clear");
+
+	/* Use of brk eats into the stack allocation */
+
+	/* Use the temporary we saved (hack) as we mangled bss_end */
+	udata.u_break = (uaddr_t)true_brk;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -244,6 +296,9 @@ arg_t _execve(void)
 
 	// Set stack pointer for the program
 	udata.u_isp = nenvp - 4;
+
+
+	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
 	// Start execution (never returns)
 	doexec(go);
