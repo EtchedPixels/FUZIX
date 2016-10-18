@@ -83,9 +83,9 @@ int16_t dofork(ptptr p)
 
 /* All our binaries are zero address based */
 
-uint8_t *pagemap_base(void)
+uaddr_t pagemap_base(void)
 {
-	return (uint8_t*)0x20000UL;
+	return 0x20000UL;
 }
 
 void program_mmu(uint8_t *phys, usize_t top)

@@ -12,8 +12,10 @@ typedef int32_t arg_t;
 typedef uint32_t uarg_t;		/* Holds arguments */
 typedef uint32_t usize_t;		/* Largest value passed by userspace */
 typedef int32_t susize_t;
+typedef int32_t ssize_t;
 typedef uint32_t uaddr_t;
 typedef uint32_t uptr_t;		/* User pointer equivalent */
+
 
 #define uputp  uputl			/* Copy user pointer type */
 #define ugetp  ugetl			/* between user and kernel */
