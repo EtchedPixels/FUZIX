@@ -3,7 +3,7 @@ ASM = m68k-linux-gnu-as
 AR = m68k-linux-gnu-ar
 PLATFORM = 68000
 export PLATFORM
-CC_OPT = -m68000 -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m68000 -c -Os -I../include -I../include/68000 -I../include/68000/fixed
+CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m68000 -c -Os -I../include -I../include/68000 -I../include/68000/fixed
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
