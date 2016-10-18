@@ -54,7 +54,7 @@ init_trap_loop:
 	    move.l #unimpa,(a0)+	; A and F line traps
 	    move.l #unimpf,(a0)+
 	    move.w #$80,a0
-	    move.w #14,d0
+	    move.w #13,d0
 trapset:
 	    move.l #misctrap,(a0)+
 	    dbra d0,trapset
