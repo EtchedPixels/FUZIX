@@ -414,15 +414,21 @@ irqrestore:
 		move.w d0,sr
 		rts
 
+;
+;	Put the supervisor stack back as if we had nothing on it (we just
+;	longjmp'd out of the syscall path really). Then we push an exception
+;	frame, clear the registers and rte. We need to rte as we want to
+;	switch modes as we switch address so that we don't fault if there
+;	is memory protection.
+;
 doexec:
-		;
-		;	FIXME: we need to reset sp (we effectively longjmp
-		; 	in supervisor space), then push the values. If we
-		;	don't then the supervisor stack will go awry
-		;
-		move.l (sp)+,a0			; throw the return address
+		move.l 4(sp),a1			; go address
+		lea.l 1024(a5),a7		; reset the supervisor stack
+
+		and.w #$F8FF,sr			; IRQ on
+		move.l a1,-(sp)			; return address
 		clr.w -(sp)			; set up the status register
-		move.l U_DATA__U_ISP,a0
+		move.l U_DATA__U_ISP(a5),a0
 		move.l a0,usp			; set the user stack
 		moveq #0,d0			; wipe the registers
 		move.l d0,d1
@@ -466,22 +472,31 @@ misctrap:	move.w #SIGILL,-(sp)
 		bra sig_or_die
 trap15:		move.w #SIGTRAP,-(sp)			; by convention
 		bra sig_or_die
-trap14:		movem.l a2-a6/d2-d7,-(sp)
+
+		; This path set wants optimising badly
+trap14:		movem.l a0-a6/d2-d7,-(sp)
+		move.l udata_shadow,a5
+		move.b d0,U_DATA__U_CALLNO(a5)
+		move.l usp,a0
+		move.l a0,U_DATA__U_SYSCALL_SP(a5)
+		move.l 4(a0),U_DATA__U_ARGN(a5)
+		move.l 8(a0),U_DATA__U_ARGN1(a5)
+		move.l 12(a0),U_DATA__U_ARGN2(a5)
+		move.l 16(a0),U_DATA__U_ARGN3(a5)
 		move.b #1,d0
 		move.b d0,kernel_flag
 		; FIXME: EI per platform really
 		and.w #$F8FF,sr
-		move.l udata_shadow,a5
 		bsr unix_syscall
 		; FIXME: signal handling in the C code or not ?
 	        or.w #$0700,sr
-		move.w U_DATA__U_ERROR,d1
+		move.w U_DATA__U_ERROR(a5),d1
 		bne sysc_err
-		move.w U_DATA__U_RETVAL,d0
-		movem.l (sp)+,a2-a6/d2-d7
+		move.l U_DATA__U_RETVAL(a5),d0
+		movem.l (sp)+,a0-a6/d2-d7
 		rte
-sysc_err:	move.w #-1,d0
-		movem.l (sp)+,a2-a6/d2-d7
+sysc_err:	moveq #-1,d0
+		movem.l (sp)+,a0-a6/d2-d7
 		rte
 
 spurious:	movem.l a0-a6/d0-d7,-(sp)
@@ -570,6 +585,7 @@ sig_user:	movem.l a0-a6/d0-d7,-(sp)
 		adda #4,sp
 		; Do signal processing bit here if we return
 		movem.l (sp)+,a0-a6/d0-d7
+		adda #4,sp
 		rte
 
 ;
