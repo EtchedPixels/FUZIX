@@ -16,7 +16,8 @@
 #define U_DATA__U_ARGN2		34
 #define U_DATA__U_ARGN3		38
 #define U_DATA__U_ISP		42
-#define U_DATA__U_SIGVEC	46
+#define U_DATA__U_CODEBASE	46
+#define U_DATA__U_SIGVEC	50
 
 #define P_TAB__P_STATUS_OFFSET	0
 #define P_TAB__P_TTY_OFFSET	1

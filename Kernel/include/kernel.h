@@ -402,6 +402,11 @@ typedef struct p_tab {
 #endif
 } p_tab, *ptptr;
 
+/*
+ *	We copy the u_data block between processes when we fork and on some
+ *	platforms it moves. This means that there must be *no* internal pointer
+ *	references to the udata within u_data itself.
+ */
 typedef struct u_data {
     /**** If you change this top section, also update offsets in "kernel.def" ****/
     struct p_tab *u_ptab;       /* Process table pointer */
@@ -422,6 +427,9 @@ typedef struct u_data {
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
+#ifdef CONFIG_32BIT
+    uaddr_t	u_codebase;	/* 32bit platform base pointers */
+#endif
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
     /**** If you change this top section, also update offsets in "kernel.def" ****/
 
