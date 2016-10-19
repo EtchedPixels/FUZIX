@@ -16,6 +16,10 @@
  *	splitting the code and data segment into two loads, when a binary
  *	computes an address that is a negative offset from the data segment
  *	(eg when biasing the start of an array)
+ *
+ *	FIXME: we should set the stack to the top of the available space
+ *	we get allocated not just rely on the stack allocation given. For
+ *	that we need a way to query the space available.
  */
 
 #include <kernel.h>
@@ -114,16 +118,9 @@ static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 	uint32_t n = bf->reloc_count;
 	while (n--) {
 		uint32_t v = *rp++;
-		kprintf("Reloc %x size %x:", v, size);
 		if (v < size && !(v&1))	/* Revisit for non 68K */
-		{
-			kprintf("%p was %p ", progbase + 0x40 + v, 
-				*(uint32_t *)(progbase + 0x40 + v));
 			/* FIXME: go via user access methods */
 			*((uint32_t *)(progbase + 0x40 + v)) += progbase + 0x40;
-			kprintf("%p now %p\n", progbase + 0x40 + v, 
-				*(uint32_t *)(progbase + 0x40 + v));
-		}
 	}
 }
 
@@ -153,11 +150,8 @@ arg_t _execve(void)
 	uaddr_t go;
 	uint32_t true_brk;
 
-	kputs("execve");
 	if (!(ino = n_open(name, NULLINOPTR)))
 		return (-1);
-
-	kputs("execve - open");
 
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
@@ -180,18 +174,13 @@ arg_t _execve(void)
 	/* FIXME: ugly - save this as valid_hdr modifies it */
 	true_brk = binflat->bss_end;
 
-	kputs("execve - hdr");
-
 	/* Hard coded for our 68K format. We don't quite use the ucLinux
 	   names, we don't want to load a ucLinux binary in error! */
 	if (buf == NULL || memcmp(buf, "bFLT", 4) ||
 		!valid_hdr(ino, binflat)) {
-		kputs("execve - hdr bad");
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
-
-	kputs("execve - hdr good");
 
 	/* Memory needed */
 	bin_size = binflat->bss_end + binflat->stack_size;
@@ -211,7 +200,6 @@ arg_t _execve(void)
 	if (rargs(argv, abuf) || rargs(envp, ebuf))
 		goto nogood3;
 
-	kputs("execve - alloc");
 	/* This must be the last test as it makes changes if it works */
 	if (pagemap_realloc(bin_size))
 		goto nogood3;
@@ -229,7 +217,7 @@ arg_t _execve(void)
 	 * so we can start writing over the old program
 	 */
 	
-	progbase = pagemap_base();
+	udata.u_codebase = progbase = pagemap_base();
 	top = progbase + bin_size;
 
 	kprintf("user space at %p\n", progbase);
@@ -255,7 +243,7 @@ arg_t _execve(void)
 	bin_size = binflat->reloc_start + 4 * binflat->reloc_count;
 	if (bin_size > 512)
 		bload(ino, 1, (uint8_t *)progbase + 512, bin_size - 512);
-	
+
 	go = (uint32_t)progbase + binflat->entry;
 
 	/* Header isn't counted in relocations */
@@ -266,12 +254,10 @@ arg_t _execve(void)
 
 	brelse(buf);
 
-	kputs("bss clear");
-
 	/* Use of brk eats into the stack allocation */
 
 	/* Use the temporary we saved (hack) as we mangled bss_end */
-	udata.u_break = (uaddr_t)true_brk;
+	udata.u_break = udata.u_codebase + true_brk;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -296,7 +282,6 @@ arg_t _execve(void)
 
 	// Set stack pointer for the program
 	udata.u_isp = nenvp - 4;
-
 
 	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
@@ -349,6 +334,9 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 	}
 	/*Store total string size. */
 	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;
+	/* Align */
+	if (argbuf->a_arglen & 1)
+		argbuf->a_arglen++ ;
 	/* Success */
 	return false;
 }
