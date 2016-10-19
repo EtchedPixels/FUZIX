@@ -303,7 +303,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
                 sgrpsig(t->pgrp, SIGWINCH);
                 return 0;
         case TIOCGPGRP:
-                return uputw(t->pgrp, data);
+                return uputi(t->pgrp, data);
 #ifdef CONFIG_LEVEL_2
         case TIOCSPGRP:
                 /* Only applicable via controlling terminal */
