@@ -136,8 +136,8 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 	args[an] = NULL;
 
 	/* Check for internal processes */
-	if (strcmp(args[2], "getty") == 0)
-		if ((pid = getty(args + 3, p + 1) == -1)
+	if (strcmp(args[2], "getty") == 0) {
+		if ((pid = getty(args + 3, p + 1)) == -1)
 			return 0;
 	} else {
 		/* External */
@@ -705,7 +705,6 @@ static pid_t getty(const char **argv, const char *id)
 	const char *host = "";
 	char *p, buf[50], salt[3];
 	char hn[64];
-	long baud = 9600;
 
 	gethostname(hn, sizeof(hn));
 
