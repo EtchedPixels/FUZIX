@@ -137,8 +137,9 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 
 	/* Check for internal processes */
 	if (strcmp(args[2], "getty") == 0)
-		pid = getty(args + 3, p + 1);
-	else {
+		if ((pid = getty(args + 3, p + 1) == -1)
+			return 0;
+	} else {
 		/* External */
 		pid = fork();
 		if (pid == -1) {
@@ -712,6 +713,7 @@ static pid_t getty(const char **argv, const char *id)
 		pid = fork();
 		if (pid == -1) {
 			putstr("init: can't fork\n");
+			return -1;
 		} else {
 			if (pid != 0)
 				/* parent's context: return pid of the child process */
