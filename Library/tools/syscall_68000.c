@@ -12,16 +12,28 @@ static char namebuf[128];
 static void write_call(int n)
 {
   FILE *fp;
+  int saves = 0;
   snprintf(namebuf, 128, "fuzix68000/syscall_%s.S", syscall_name[n]);
   fp = fopen(namebuf, "w");
   if (fp == NULL) {
     perror(namebuf);
     exit(1);
   }
+  /*
+   *	We define _fork() as trashing all the registers except the return
+   *	values and a7. This little userspace ick here allows us to avoid saving
+   *	all the registers on syscall entry just in case we are doing a fork and
+   *	have multiple udata blocks.
+   */
+  if (strcmp(syscall_name[n], "_fork") == 0)
+    saves = 1;
+
   fprintf(fp, "\t.text\n\n"
 	      "\t.globl %1$s\n\n"
 	      "%1$s:\n", syscall_name[n]);
   fprintf(fp, ".mri 1\n");
+  if (saves)
+    fprintf(fp, "\tmovem.l d2-d7/a2-a6,-(sp)\n");
   fprintf(fp, "\tmove.w #%d,d0\n"
 	      "\ttrap #14\n", n);
   /* ext is the same speed as tst so we might as well do the ext in case
@@ -29,11 +41,16 @@ static void write_call(int n)
      shorts in kernel for such things and speed the standard says errno
      is integer */
   fprintf(fp, "\text.l d1\n"
-              "\tbne _error\n"
-              "\trts\n"
+              "\tbne _error\n");
+  if (saves)
+    fprintf(fp, "\tmovem.l (sp)+,d2-d7/a2-a6\n");
+
+  fprintf(fp, "\trts\n"
               "_error:\n"
-              "\tmove.l d1,errno\n"
-              "\trts\n");
+              "\tmove.l d1,errno\n");
+  if (saves)
+    fprintf(fp, "\tmovem.l (sp)+,d2-d7/a2-a6\n");
+  fprintf(fp, "\trts\n");
   fclose(fp);
 }
 
