@@ -144,13 +144,13 @@ void swapper(ptptr p)
 	pagemap_alloc(p);	/* May cause a swapout. May also destroy
                                    the old value of p->page2 */
 #ifdef DEBUG
-	kprintf("Swapping in %x (page %d), utab.ptab %x\n", p, p->p_page,
+	kprintf("Swapping in %p (page %d), utab.ptab %p\n", p, p->p_page,
 		udata.u_ptab);
 #endif
 	swapin(p, map);
 	swapmap_add(map);
 #ifdef DEBUG
-	kprintf("Swapped in %x (page %d), udata.ptab %x\n",
+	kprintf("Swapped in %p (page %d), udata.ptab %p\n",
 		p, p->p_page, udata.u_ptab);
 #endif
 }
