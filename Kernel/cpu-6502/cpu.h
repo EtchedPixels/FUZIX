@@ -17,6 +17,8 @@ typedef uint16_t uptr_t;		/* User pointer equivalent */
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
+#define uputi  uputw			/* Copy user int type */
+#define ugeti  ugetw			/* between user and kernel */
 
 extern void ei(void);
 extern irqflags_t di(void);
