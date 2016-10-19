@@ -16,6 +16,7 @@ SECTIONS {
 		. = . + 4;
 		. = ALIGN(0x4) ;
 		_stext = . ;
+		*(.signal)
 		*(.literal .text)
 		*(.literal.* .text.*)
 		*(.gnu.warning)
