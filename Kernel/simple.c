@@ -8,9 +8,6 @@
  *	and reading in the new one. This can be done for either single tasking or
  *	(with a hard disk) multitasking.
  *
- *	Other requirements:
- *	- 16bit address space (FIXME: should be made 32bit clean)
- *
  *	Set:
  *	CONFIG_SWAP_ONLY
  *
@@ -60,11 +57,11 @@ int swapout(ptptr p)
 	uint16_t blk;
 	uint16_t map;
 
-	if (!page)
-		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif
+	if (!page)
+		panic(PANIC_ALREADYSWAP);
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
 	if (map == 0)
@@ -72,9 +69,9 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 #ifdef CONFIG_SPLIT_UDATA
-	swapwrite(SWAPDEV, blk, UDATA_SIZE, (uint16_t)&udata, 1);
+	swapwrite(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 1);
 #endif
-	swapwrite(SWAPDEV, blk+1, SWAPTOP - SWAPBASE,
+	swapwrite(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		  SWAPBASE, 1);
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -100,9 +97,9 @@ void swapin(ptptr p, uint16_t map)
 	}
 
 #ifdef CONFIG_SPLIT_UDATA
-	swapread(SWAPDEV, blk, UDATA_SIZE, (uint16_t)&udata, 1);
+	swapread(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 1);
 #endif
-	swapread(SWAPDEV, blk+1, SWAPTOP - SWAPBASE,
+	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		 SWAPBASE, 1);
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
