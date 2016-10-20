@@ -1,9 +1,9 @@
 PLATFORM = 68000
-CC = m68k-linux-gnu-gcc
-ASM = m68k-linux-gnu-as
-AR = m68k-linux-gnu-ar
-LINKER = m68k-linux-gnu-ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m68000 -I../../../Library/include -I../../../Library/include/68000
+CC = m68k-uclinux-gcc
+ASM = m68k-uclinux-as
+AR = m68k-uclinux-ar
+LINKER = m68k-uclinux-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../../Library/include -I../../../Library/include/68000
 LINKER_OPT = -L../../../Library/libs -lc68000
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../../Library/elf2flt.ld
