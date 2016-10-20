@@ -21,7 +21,6 @@ switchout:
         ; U_DATA__U_SP with the following on the stack:
 	move.l usp,a0
 	movem.l a0/a2-a4/a6/d2-d7,-(sp)
-	bsr outa0hex
 	move.l sp,U_DATA__U_SP(a5)	; this is where the SP is restored in switchin
 
         ; find another process to run (may select this one again)
@@ -36,6 +35,7 @@ switchout:
 switchin:
         or #$0700,sr
 	move.l 4(sp),a0		; task to switch to
+	move.l P_TAB__P_UDATA_OFFSET(a0),a5
 	tst.w P_TAB__P_PAGE_OFFSET(a0)	; swapped or existing process ?
 	bne not_swapped
 
@@ -68,11 +68,15 @@ its_dead_jim:
 	move.l #irqstack+256,sp
 	move.l a1,-(sp)
 	move.l a0,-(sp)
+	move.l a0,-(sp)
 	jsr swapper
+	addq #4,sp
 	move.l (sp)+,a0
 	move.w #1,P_TAB__P_PAGE_OFFSET(a0) ; swapped in
 	move.l (sp)+,a1			; straight into a7 fails
 	move.l a1,a7			; emulator bug or CPU funny ??
+
+	move.b #'2',d0
 
         or #$0700,sr
 
@@ -90,7 +94,6 @@ not_swapped:
         move.l U_DATA__U_SP(a5),sp
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
 	move.l a0,usp
-	bsr outa0hex
 	move.w (sp)+,d0			; FIXME: can we merge ?
 
         tst.b U_DATA__U_ININTERRUPT(a5)
