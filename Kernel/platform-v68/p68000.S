@@ -12,6 +12,7 @@
 		.globl udata_block
 		.globl devide_read_data
 		.globl devide_write_data
+		.globl vdso
 .mri 1
 trap_reboot:
 trap_monitor:
@@ -78,6 +79,7 @@ timer_irq:
 	    jsr platform_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
+	bra no_signal		; FIXME debug
 
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
@@ -173,6 +175,17 @@ devide_write_l:
 	move.w (a0)+,$00F01000
 	dbra d0,devide_write_l
 	rts
+
+;
+;	'VDSO'
+;
+vdso:	trap #14		; syscall entry
+	rts
+	; signal unwind
+	movem.l (sp)+,a0/a1/d0/d1
+	move.w (sp)+,ccr
+	rts
+	; rest is spare for now
 
 .section data
 
