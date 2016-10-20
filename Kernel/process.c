@@ -370,6 +370,7 @@ void timer_interrupt(void)
 #ifndef CONFIG_SINGLETASK
 	/* Check run time of current process */
         /* Time to switch out? */
+        /* FIXME: don't count runticks while swapping in ! */
 	if ((++runticks >= udata.u_ptab->p_priority)
 	    && !udata.u_insys && inint && nready > 1) {
                  need_resched = 1;
