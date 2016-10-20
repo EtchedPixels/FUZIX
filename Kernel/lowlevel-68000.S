@@ -411,7 +411,7 @@ ei:
 irqrestore:
 		move.w sr,d0
 		and.w #$F8FF,d0
-		or.w 4(sp),d0
+		or.w 6(sp),d0
 		move.w d0,sr
 		rts
 
@@ -642,6 +642,8 @@ sig_or_die:
 		bsr outcharhex
 		lea panic_sig,a0
 		bsr outstring
+		move.l 2(sp),a0
+		bsr outa0hex
 		move.w #15,d2
 stackout:
 		move.l (sp)+,a0
@@ -651,7 +653,9 @@ stackout:
 		dbra d2,stackout
 		move.l #panic_sig2,-(sp)
 		bsr panic			; won't return
-panic_sig:	ascii ": signal in kernel mode."
+
+panic_sig:	ascii ": signal in kernel mode @"
+		byte 0
 crnl:
 		byte 13,10,0
 panic_sig2:	asciz "ksig"
