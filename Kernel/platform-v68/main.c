@@ -64,7 +64,7 @@ uint16_t irqstack[128];	/* Used for swapping only */
 
 void install_vdso(void)
 {
-	extern uint8_t *vdso;
+	extern uint8_t vdso[];
 	/* Should be uput etc */
-	memcpy((void *)udata.u_codebase, vdso, 0x40);
+	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
