@@ -222,8 +222,8 @@ arg_t _execve(void)
 	udata.u_codebase = progbase = pagemap_base();
 	top = progbase + bin_size;
 
-	kprintf("user space at %p\n", progbase);
-	kprintf("top at %p\n", progbase + bin_size);
+//	kprintf("user space at %p\n", progbase);
+//	kprintf("top at %p\n", progbase + bin_size);
 
 	uput(buf, (uint8_t *)progbase, 512);	/* Move 1st Block to user bank */
 
@@ -292,7 +292,7 @@ arg_t _execve(void)
 	 */
 	install_vdso();
 
-	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
+//	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
 	// Start execution (never returns)
 	doexec(go);
@@ -378,7 +378,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
 		uputp((uint32_t) ptr, argv);
-		kprintf("arg %p\n", argv);
+//		kprintf("arg %p\n", argv);
 		argv += sizeof(uptr_t);
 		if (argc) {
 			do
