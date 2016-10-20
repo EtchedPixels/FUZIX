@@ -82,6 +82,8 @@ static void close_on_exec(void)
 
 static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 {
+	if (bf->stack_size < 32768)
+		bf->stack_size = 32768;
 	if (bf->rev != 4)
 		return 0;
 	if (bf->entry >= bf->data_start)
@@ -281,7 +283,14 @@ arg_t _execve(void)
 	uputl((uint32_t) argc, nenvp - 2);
 
 	// Set stack pointer for the program
-	udata.u_isp = nenvp - 4;
+	udata.u_isp = nenvp - 2;
+
+	/*
+	 * Sort of - it's a good way to deal with all the stupidity of
+	 * random 68K platforms we will have to handle, and a nice place
+	 * to stuff the signal trampoline 8)
+	 */
+	install_vdso();
 
 	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
@@ -369,6 +378,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	/* Set each element of argv[] to point to its argument string */
 	while (argc--) {
 		uputp((uint32_t) ptr, argv);
+		kprintf("arg %p\n", argv);
 		argv += sizeof(uptr_t);
 		if (argc) {
 			do
