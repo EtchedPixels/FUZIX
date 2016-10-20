@@ -59,3 +59,12 @@ arg_t _memfree(void)
 /* Live udata and kernel stack */
 u_block udata_block;
 uint16_t irqstack[128];	/* Used for swapping only */
+
+/* This will belong in the core 68K code once finalized */
+
+void install_vdso(void)
+{
+	extern uint8_t *vdso;
+	/* Should be uput etc */
+	memcpy((void *)udata.u_codebase, vdso, 0x40);
+}

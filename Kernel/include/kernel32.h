@@ -20,5 +20,6 @@ extern uaddr_t pagemap_base(void);
 extern uint32_t ugetl(void *uaddr, int *err);
 extern int uputl(uint32_t val, void *uaddr);
 
+extern void install_vdso(void);
 
 #endif
