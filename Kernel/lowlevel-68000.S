@@ -498,6 +498,7 @@ trap14:		move.l a5,-(sp)
 		bsr unix_syscall
 	        or.w #$0700,sr
 		clr.b U_DATA__U_INSYS(a5)
+		clr.b kernel_flag
 		; Now we need to be careful. We can make a syscall in a
 		; signal handler and we must not screw up the return from
 		; this call
@@ -635,6 +636,12 @@ intvector7:	movem.l a0-a6/d0-d7,-(sp)
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 #endif
+;
+;	FIXME:
+;	Use the trap frame not flags to test this (exception from supervisor
+;	means bad). Also we need to work out the frame size and move it to
+;	the user stack with a signal to help debuggers.
+;
 sig_or_die:	
 		tst.b kernel_flag
 		beq sig_user
@@ -666,7 +673,8 @@ sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
 		move.l U_DATA__U_PTAB(a5),-(sp)
 		bsr ssig
 		adda #4,sp
-		; Do signal processing bit here if we return
+		; FIXME: we need to do signal processing
+		;  here if we return
 		movem.l (sp)+,a0-a1/a5/d0-d1
 		adda #4,sp
 		rte
