@@ -642,6 +642,8 @@ intvector7:	movem.l a0-a6/d0-d7,-(sp)
 ;	means bad). Also we need to work out the frame size and move it to
 ;	the user stack with a signal to help debuggers.
 ;
+;	On entry (sp) holds the signal number
+;
 sig_or_die:	
 		tst.b kernel_flag
 		beq sig_user
@@ -669,14 +671,35 @@ panic_sig2:	asciz "ksig"
 		.align 2
 
 sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
+		move.w 20(sp),d0		; signal number
+		ext.l d0
 	        move.l udata_shadow,a5
+		; deliver the signal
+		move.l d0,-(sp)
 		move.l U_DATA__U_PTAB(a5),-(sp)
 		bsr ssig
-		adda #4,sp
-		; FIXME: we need to do signal processing
-		;  here if we return
+		addq #8,sp
+		bsr chksigs
+		tst.b d0
+		beq resume_exception
+		;
+		; cook up a signal frame synchronously
+		; We need to unify this, interrupts and syscall better
+		;
+		move.l usp,a0
+		subq #6,a0			; return and ccr
+		move.l 12(sp),-(a0)		; A1
+		move.l 8(sp),-(a0)		; A0
+		move.l 4(sp),-(a0)		; D1
+		move.l (sp),-(a0)		; D0
+		move.l 16(sp),a5
+		add #22,sp			; Remove frame and sig#
+		move.l a5,-(sp)			; ugly
+		bra signal_helper
+
+resume_exception:
 		movem.l (sp)+,a0-a1/a5/d0-d1
-		adda #4,sp
+		addq #2,sp
 		rte
 
 ;
