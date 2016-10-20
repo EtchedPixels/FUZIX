@@ -35,7 +35,7 @@ OMU also got blended in
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on both 6502 (bitrotted), 6809, MSP430 and Z80
+* Kernel boots to userspace on both 6502 (bitrotted), 68000, 6809, MSP430 and Z80
 * Core code can be built for 6502, 6809, 68000, 8086, Z80 and MSP430 so should
   be far more portable
 * Core architecture designed to support building and maintaining
@@ -109,6 +109,7 @@ ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * Tandy COCO3 - boots to userspace and supports drivewire
 * TGL6502 - Test 6502ish environment
 * TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
+* V68 - 68K emulation/debug platform. Being used for bring up
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking
 * Zeta v2 - initial port running to user space
