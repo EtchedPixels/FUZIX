@@ -21,9 +21,12 @@ static void write_call(int n)
   }
   /*
    *	We define _fork() as trashing all the registers except the return
-   *	values and a7. This little userspace ick here allows us to avoid saving
+   *	values a5 and a7. The userspace ick here allows us to avoid saving
    *	all the registers on syscall entry just in case we are doing a fork and
    *	have multiple udata blocks.
+   *
+   *	Note: this does mean if you want a register global you need to use a5
+   *	or ensure you never take a signal in the fork() area - doable but ugly.
    */
   if (strcmp(syscall_name[n], "_fork") == 0)
     saves = 1;
@@ -32,8 +35,11 @@ static void write_call(int n)
 	      "\t.globl %1$s\n\n"
 	      "%1$s:\n", syscall_name[n]);
   fprintf(fp, ".mri 1\n");
+  /* If saving we build a valid stack frame for the syscall below the saves
+     using d0/d1 - d0 is the non-existent return address, d1 is the argument */
   if (saves)
-    fprintf(fp, "\tmovem.l d2-d7/a2-a6,-(sp)\n");
+    fprintf(fp, "\tmove.l 4(sp),d1\n"
+                "\tmovem.l d0-d7/a2-a6,-(sp)\n");
   fprintf(fp, "\tmove.w #%d,d0\n"
 	      "\ttrap #14\n", n);
   /* ext is the same speed as tst so we might as well do the ext in case
@@ -43,13 +49,15 @@ static void write_call(int n)
   fprintf(fp, "\text.l d1\n"
               "\tbne _error\n");
   if (saves)
-    fprintf(fp, "\tmovem.l (sp)+,d2-d7/a2-a6\n");
+    fprintf(fp, "\taddq #8,sp\n"
+                "\tmovem.l (sp)+,d2-d7/a2-a6\n");
 
   fprintf(fp, "\trts\n"
               "_error:\n"
               "\tmove.l d1,errno\n");
   if (saves)
-    fprintf(fp, "\tmovem.l (sp)+,d2-d7/a2-a6\n");
+    fprintf(fp, "\taddq #8,sp\n"
+                "\tmovem.l (sp)+,d2-d7/a2-a6\n");
   fprintf(fp, "\trts\n");
   fclose(fp);
 }
