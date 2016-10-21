@@ -630,7 +630,6 @@ static int envn;
 static void envset(const char *a, const char *b)
 {
 	int al = strlen(a);
-	static char hptr[5];
 	/* May unalign the memory pool but we don't care by this point */
 	char *tp = sbrk(al + strlen(b) + 2);
 	if (tp == (char *) -1) {
@@ -688,6 +687,9 @@ const char *bauds[] = {
 static int baudmatch(const char *p)
 {
 	const char **str = bauds;
+	if (p == NULL)
+		return B9600;
+
 	int i;
 	for(i = 1; i < 15; i++) {
 		if (strcmp(p, *str++) == 0)
