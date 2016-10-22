@@ -4,7 +4,7 @@
 #include <netdev.h>
 
 p_tab *init_process;
-char *cmdline = (unsigned char *) CMDLINE;
+char *cmdline = (char *) CMDLINE;
 uint16_t ramsize, procmem, maxproc, nproc;
 uint8_t nready;
 uint16_t runticks;
