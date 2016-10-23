@@ -9,10 +9,10 @@ TARGETCC = m6809-unknown-gcc
 TARGETCPP = m6809-unknown-cpp -nostdinc -undef -P
 TARGETAS = m6809-unknown-as
 TARGETAR = $(abspath $(BUILD)/tools/lwtools-ar.sh) m6809-unknown-ar
-TARGETLD = $(BUILD)/tools/m6809-unknown-ld
+TARGETLD = m6809-unknown-ld
 TARGETOBJCOPY = $(BUILD)/tools/m6809-unknown-objcopy
 
-targetgcc.includes += -I$(TOP)/Library/include/6502
+targetgcc.includes += -I$(TOP)/Library/include/6809
 
 # CPU architecture and which syscall generator to use.
 
@@ -86,7 +86,6 @@ FILESYSTEM = \
 	/bin/od                 0755 $(util-od.result) \
 	/bin/pagesize           0755 $(util-pagesize.result) \
 	/bin/passwd             0755 $(util-passwd.result) \
-	/bin/patchcpm           0755 $(util-patchcpm.result) \
 	/bin/printenv           0755 $(util-printenv.result) \
 	/bin/prtroot            0755 $(util-prtroot.result) \
 	/bin/ps                 0755 $(util-ps.result) \
