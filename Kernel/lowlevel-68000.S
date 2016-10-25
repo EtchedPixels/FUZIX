@@ -384,7 +384,7 @@ SYM (__umodsi3):
 		.globl trace,unimpa,unimpf,misctrap,trap15,trap14,sysc_err
 		.globl spurious,unexpected,uninit
 		.globl udata_shadow
-		.globl signal_helper
+		.globl trap_via_signal
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -449,29 +449,29 @@ doexec:
 		rte		; hit user space (and will enable interrupts)
 
 
-bus_error:	move.w #SIGBUS,-(sp)
+bus_error:	move.w #SIGBUS,trap_id
 		bra sig_or_die
-addr_error:	move.w #SIGSEGV,-(sp)
+addr_error:	move.w #SIGSEGV,trap_id
 		bra sig_or_die
-illegal:	move.w #SIGILL,-(sp)
+illegal:	move.w #SIGILL,trap_id
 		bra sig_or_die
-divzero:	move.w #SIGFPE,-(sp)
+divzero:	move.w #SIGFPE,trap_id
 		bra sig_or_die
-chk:		move.w #SIGFPE,-(sp)
+chk:		move.w #SIGFPE,trap_id
 		bra sig_or_die
-trapv:		move.w #SIGFPE,-(sp)
+trapv:		move.w #SIGFPE,trap_id
 		bra sig_or_die
-priv:		move.w #SIGFPE,-(sp)
+priv:		move.w #SIGFPE,trap_id
 		bra sig_or_die
-trace:		move.w #SIGTRAP,-(sp)
+trace:		move.w #SIGTRAP,trap_id
 		bra sig_or_die
-unimpa:		move.w #SIGFPE,-(sp)
+unimpa:		move.w #SIGFPE,trap_id
 		bra sig_or_die
-unimpf:		move.w #SIGFPE,-(sp)
+unimpf:		move.w #SIGFPE,trap_id
 		bra sig_or_die
-misctrap:	move.w #SIGILL,-(sp)
+misctrap:	move.w #SIGILL,trap_id
 		bra sig_or_die
-trap15:		move.w #SIGTRAP,-(sp)			; by convention
+trap15:		move.w #SIGTRAP,trap_id			; by convention
 		bra sig_or_die
 
 ;
@@ -521,55 +521,28 @@ sysc_err:	moveq #-1,d0
 ;
 ;		Signal handler return path
 ;
+;	FIXME: All the manipulation of usp relative data will need reworking
+;	for any MMU based code as we don't know that usp is valid and we
+;	need to update it's contents via user* helpers.
+;
+;
+;	Return from a system call via a signal. Enter with only A5 on the
+;	stack above the trap frame.
+;
 return_via_signal:
-		move.l usp,a0
-		subq #6,a0			; make a space for the
-						; return and ccr
-;
-;	This looks weird but think about it. We've executed trap #foo
-; 	so our A0/A1 are some caller destroyed value we don't care about (
-;	and will be D0 on a normal trap return). Thus if we make the signal
-;	handler also restore D0 all is fine. The IRQ path uses signal_helper
-;	below because it does have to stack the true a1/a0/d1/d0
-;
-		move.l d0,-(a0)			; old A1
-		move.l d0,-(a0)			; old A0 (= D0)
-		movem.l d0/d1,-(a0)		; stack ret/errno
-
-signal_helper:
-
-		;
-		;	Now arrange to return via the signal handler
-		;
-		lea U_DATA__U_SIGVEC(a5),a0
-		move.b U_DATA__U_CURSIG(a5),d0
-		clr.b U_DATA__U_CURSIG(a5)
-		; Good for 64 signals..
-		add.b d0,d0
-		add.b d0,d0
-		ext.w d0
-		add.w d0,a0
-		move.l U_DATA__U_CODEBASE(a5),a1
-		add #64,a1			; _sigunwind
-		move.l (sp)+,a5
-		move.w (sp)+,d0			; status word
-		; We don't actually need to copy the CCR except for IRQ
-		move.w d0,16(a0)		; CCR to recover
-		move.l (sp)+,d0			; return address
-		move.l d0,18(a0)		; into user stack
-
-		move.l a0,usp			; set user stack pointer
-		;
-		;	New exception frame. FIXME set program base
-		;	correctly !!!
-		;
-		move.l a1,-(sp)			; _sigunwind
-		clr.w -(sp)			; status
-		moveq #0,d0
-		moveq #0,d1
+		; Stack now is return frame,a5,a1,a0,d1,d0
+		movem.l a0-a1/d0-d1,-(sp)
+trap_via_signal:
+		lea.l 20(sp),a0			; Trap frame pointer
+		move.l a0,-(sp)
+		bsr signal_frame		; Make up the signal frame
+		add.w #20,sp			; Pop call frame
+		moveq #0,d0			; No leaks into handler
+		move.l d0,d1
 		move.l d0,a0
 		move.l d0,a1
-		rte				; exit trap handler
+		move.l (sp)+,a5			; recover user A5
+		rte				; into modified handler
 
 spurious:	movem.l a0-a6/d0-d7,-(sp)
 		move.l #strspurious,a0
@@ -596,58 +569,17 @@ strunexpected:
 
 		.align 2
 ;
-;	We do interrupts a bit differently - we use a single supervisor
-; stack per process, not an interrupt stack. As a result our signal handling
-; is a bit saner than 8bit.
-;
-#if 0
-intvector1:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt1
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector2:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt2
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector3:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt3
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector4:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt4
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector5:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt5
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector6:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt6
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-
-intvector7:	movem.l a0-a6/d0-d7,-(sp)
-		bsr interrupt7
-		movem.l (sp)+,a0-a6/d0-d7
-		rte
-#endif
-;
 ;	FIXME:
 ;	Use the trap frame not flags to test this (exception from supervisor
 ;	means bad). Also we need to work out the frame size and move it to
 ;	the user stack with a signal to help debuggers.
 ;
-;	On entry (sp) holds the signal number
+;	On entry trap_id holds the signal number
 ;
 sig_or_die:	
 		tst.b kernel_flag
 		beq sig_user
-		move.w (sp)+,d0
+		move.w trap_id,d0
 		bsr outcharhex
 		lea panic_sig,a0
 		bsr outstring
@@ -671,7 +603,7 @@ panic_sig2:	asciz "ksig"
 		.align 2
 
 sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
-		move.w 20(sp),d0		; signal number
+		move.w trap_id,d0		; signal number
 		ext.l d0
 	        move.l udata_shadow,a5
 		; deliver the signal
@@ -681,25 +613,13 @@ sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
 		addq #8,sp
 		bsr chksigs
 		tst.b d0
-		beq resume_exception
-		;
-		; cook up a signal frame synchronously
-		; We need to unify this, interrupts and syscall better
-		;
-		move.l usp,a0
-		subq #6,a0			; return and ccr
-		move.l 12(sp),-(a0)		; A1
-		move.l 8(sp),-(a0)		; A0
-		move.l 4(sp),-(a0)		; D1
-		move.l (sp),-(a0)		; D0
-		move.l 16(sp),a5
-		add #22,sp			; Remove frame and sig#
-		move.l a5,-(sp)			; ugly
-		bra signal_helper
-
-resume_exception:
+		bne trap_via_signal
+		; No signal - just unwind and probably fault again
+		; in which case we'll probably loop faulting until pre-empted
+		; and killed by another process. Do a yield here to try
+		; and reduce any damage
+		bsr _sched_yield
 		movem.l (sp)+,a0-a1/a5/d0-d1
-		addq #2,sp
 		rte
 
 ;
@@ -747,3 +667,4 @@ outcharhex:	move.w d0,-(sp)
 .area data
 kernel_flag:	byte 0
 udata_shadow:	long 0
+trap_id:	word 0
