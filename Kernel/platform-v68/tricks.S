@@ -76,8 +76,6 @@ its_dead_jim:
 	move.l (sp)+,a1			; straight into a7 fails
 	move.l a1,a7			; emulator bug or CPU funny ??
 
-	move.b #'2',d0
-
         or #$0700,sr
 
 not_swapped:
@@ -144,6 +142,11 @@ dofork:
 	movem.l a0/a2-a4/a6/d2-d7,-(sp)	;	save state
 	move.l sp,U_DATA__U_SP(a5)	;	save pointer
 	move.l U_DATA__U_PTAB(a5),-(sp)	;	parent p_tab
+
+	; FIXME: for the single case with less swaps than processes the
+	; out of swap case is one out (we must swap out to swap in so need
+	; one swap free after the fork. Right now we deal with this in
+	; Config by not setting it that way
 	jsr swapout
 	add.w #50,sp			;	throw the call frame and
 					;	the frame we built for
@@ -165,7 +168,4 @@ forked_up:
 
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
-swapped: ascii "_switchin: SWAPPED"
-            byte 13,10,0
-
 .even

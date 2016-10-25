@@ -1,3 +1,4 @@
+
 #include "../kernel-68000.def"
 /*
  *	Lots left to fill in
@@ -73,13 +74,15 @@ trapset:
 
 timer_irq:
 	    ; C will save and restore a2+/d2+
-	    movem.l a0-a1/a5/d0-d1,-(a7)
+	    movem.l a0-a1/a5/d0-d1,-(sp)
 	    move.l udata_shadow,a5	; set up the register global
 	    move.b #1,U_DATA__U_ININTERRUPT(a5)
 	    jsr platform_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
-	bra no_signal		; FIXME debug
+
+	    ; DEBUG FIXME
+	    bra no_signal
 
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
@@ -97,37 +100,19 @@ timer_irq:
 no_preempt:
 	    tst.b U_DATA__U_CURSIG(a5)
 	    beq no_signal
-	    clr.b U_DATA__U_CURSIG(a5)
-
-	    move.l usp,a0
-	    subq #6,a0			; Make space for the return and ccr
-
-	    ;
-	    ;	The signal handler will see a0/a1/d0/d1 = 0
-	    ;	but upon return it will get the saved a0/a1/d0/d1
-	    ;
-	    move.l 12(sp),-(a0)		; a1
-	    move.l 8(sp),-(a0)		; a0
-	    move.l 4(sp),-(a0)		; d1
-	    move.l (sp),-(a0)		; d0
-
-	    add.w #16,sp		; throw the return frame except for
-					; A5
-	    bra signal_helper		; will pop A5
+	    bra trap_via_signal		; a0/a1/d0/d1 already stacked
 
 no_signal:
-	    movem.l (a7)+,a0-a1/a5/d0-d1
+	    movem.l (sp)+,a0-a1/a5/d0-d1
 	    rte
 
 mmu_fault:
-	    movem.l a0-a6/d0-d7,-(a7)
-	    move.l #mmutrap,a0
-	    bsr outstring
-	    movem.l (a7)+,a0-a6/d0-d7
-	    rte
-mmutrap:
-	    asciz "MMU TRAP"
-	    byte 0
+	    tst.w $00F02020		; clear the MMU flag
+	    move.l d0,-(sp)
+	    move.b #'M',d0
+	    jsr outchar
+	    move.l (sp)+,d0
+	    bra addr_error		; treat as an address error
 
 ;
 ;	Nothing to do in 68000 - all set up once at boot
