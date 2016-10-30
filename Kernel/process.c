@@ -497,10 +497,15 @@ rescan:
 				/* Other things may have happened */
 				goto rescan;
 	                }
+
+			/* The signal is being handled, so clear it even if
+			   we are exiting (otherwise we'll loop in
+			   chksigs) */
+			udata.u_ptab->p_pending &= ~m;
+
 	                if ((m & clear) || udata.u_ptab->p_pid == 1) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
-				udata.u_ptab->p_pending &= ~m;	// unset the bit
 				continue;
 			}
 #ifdef DEBUG
@@ -632,6 +637,11 @@ void doexit(uint16_t val)
 	sync();		/* Not necessary, but a good idea. */
 
 	irq = di();
+
+	/* We are exiting, hold all signals  (they will never be
+	   delivered). If we don't do this we might take a signal
+	   while exiting which would be ... unfortunate */
+	udata.u_ptab->p_held = 0xFFFFFFFFUL;
 
 	/* Discard our memory before we blow away and reuse the memory */
 	pagemap_free(udata.u_ptab);
