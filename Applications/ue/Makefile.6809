@@ -15,19 +15,24 @@ CRT0NS = ../../Library/libs/crt0nostdio_6809.o
 
 .SUFFIXES: .c .o
 
+APPS = ue.fuzix ue.ansi ue
 
-SRCS  = ue.c
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
 
 OBJS = $(SRCS:.c=.o)
 
-APPS = $(OBJS:.o=)
-
 all: $(APPS) size.report
 
-$(APPS): $(CRT0NS)
+$(APPS): ue.h
 
-$(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $^
+ue.fuzix: ue.o term-fuzix.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term-fuzix.o
+
+ue.ansi: ue.o term-ansi.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) ue.o term-ansi.o
+
+ue: ue.o term.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term.o -ltermcap6809
 
 size.report: $(APPS)
 	ls -l $< > $@

@@ -37,27 +37,17 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <ctype.h>
 #include <string.h>
 #include <termios.h>
-#ifdef ANSIEMU
-# include <stdio.h>
-#endif
 #include <unistd.h>
+#include "ue.h"
 
-#define BUF 4096*6
-#define UBUF 768
-#define MODE 0666
-#define TABSZ 4
-#define TABM TABSZ-1
+COORD outxy;
 
-#define MAXCOLS 96
-
-int MAXLINES = 25;
-
+int ROWS = MAXROWS;
 int COLS = MAXCOLS;
 int LINES = 1;
 int done;
 int row, col;
 
-char str[MAXCOLS];		// used by gotoxy and clrtoeol
 char prompt[]="Look for: ";
 char sstring[MAXCOLS];	// search string, used by look()
 char ubuf[UBUF];			// undo buffer
@@ -77,13 +67,6 @@ typedef struct {
 } U_REC;
 
 U_REC* undop = (U_REC*)&ubuf;
-
-typedef struct {
-        int X;
-        int Y;
-} COORD;
-
-COORD outxy;
 
 struct termios termios, orig;
 
@@ -145,21 +128,6 @@ GetSetTerm(int set)
 	tcsetattr(0, TCSANOW, termiop);
 }
 
-void
-gotoxy(int x, int y){
-#ifdef ANSIEMU
-	sprintf(str,"%c[%03d;%03dH",0x1b,y,x);
-	write(1, (void*)&str, 10);
-#else
-	str[0] = '\x1b';
-	str[1] = 'Y';
-	str[2] = y + 31;
-	str[3] = x + 31;
-	write(1, (void*)&str, 4);
-#endif
-	outxy.Y=y;outxy.X=x;
-}
-
 char
 getch()
 {
@@ -186,19 +154,6 @@ emitch(int c)
 	if(c == '\n'){outxy.X=0;outxy.Y++;};
 }
 
-void
-clrtoeol(void)
-{
-#ifdef ANSIEMU
-	int i=0;
-	while(i < COLS-outxy.X)
-		str[i++]=' ';
-	write(1, (void*)&str, COLS-outxy.X > 0 ? COLS-outxy.X : 0);
-#else
-	write(1, "\x1b" "K", 2);
-#endif
-	gotoxy(outxy.X,outxy.Y);
-}
 // end of I/O
 
 char *prevline(char *p)
@@ -269,7 +224,7 @@ pgdown(void)
 void
 pgup(void)
 {
-	int i = MAXLINES;
+	int i = ROWS;
 	while (0 < --i) {
 		page = prevline(page-1); 
 		up();
@@ -433,7 +388,7 @@ display(void)
 		page = prevline(curp);
 	if (epage <= curp) {
 		page = curp; 
-		i = MAXLINES;
+		i = ROWS;
 		while (1 < i--)
 			page = prevline(page-1);
 	}
@@ -444,7 +399,7 @@ display(void)
 			row = i;
 			col = j;
 		}
-		if (i >= MAXLINES || LINES <= i || etxt <= epage)
+		if (i >= ROWS || LINES <= i || etxt <= epage)
 			break;
 		if (*epage == '\n' || COLS <= j) {
 			++i;
@@ -457,15 +412,7 @@ display(void)
 		}
 		++epage;
 	}
-#ifdef ANSIEMU
-	i = outxy.Y;
-	while(i++ <= MAXLINES){
-		clrtoeol();
-		gotoxy(1,i);
-	}
-#else
-	write(1, "\x1b" "J", 2);	/* clear to end of screen */
-#endif
+	clrtoeos();
 	gotoxy(col+1, row+1);
 }
 
@@ -486,18 +433,20 @@ int main(int argc, char **argv)
 #ifdef VTSIZE
 	vtsize = ioctl(0, VTSIZE, 0);
 	if (vtsize != -1) {
-		MAXLINES = vtsize >> 8;
+		ROWS = vtsize >> 8;
 		COLS = vtsize & 0xFF;
 	}
 #endif
 #ifdef TIOCGWINSZ
 	if (ioctl(0, TIOCGWINSZ, &w) != -1) {
 		if (w.ws_row != 0)
-			MAXLINES = w.ws_row;
+			ROWS = w.ws_row;
 		if (w.ws_col != 0)
 			COLS = w.ws_col;
 	}
 #endif
+	tty_init();
+
 	if (0 < (i = open(filename = *++argv, 0))) {
 		etxt += read(i, buf, BUF);
 		if (etxt < buf)
@@ -529,7 +478,7 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	gotoxy(1,MAXLINES+1);
+	gotoxy(1,ROWS+1);
 	GetSetTerm(1);
 	return (0);
 }
