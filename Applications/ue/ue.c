@@ -41,7 +41,6 @@ terminal is (1,1) based. display() takes care of the conversion.
 # include <stdio.h>
 #endif
 #include <unistd.h>
-#include "tty.h"
 
 #define BUF 4096*6
 #define UBUF 768
@@ -89,26 +88,26 @@ COORD outxy;
 struct termios termios, orig;
 
 // edit key function prototypes
-void left();
-void down();
-void up();
-void right();
-void wleft();
-void pgdown();
-void pgup();
-void wright();
-void lnbegin();
-void lnend();
-void top();
-void bottom();
-void delete();
-void bksp();
-void delrol();
-void file();
-void look();
-void undo();
-void quit();
-void nop();
+void left(void);
+void down(void);
+void up(void);
+void right(void);
+void wleft(void);
+void pgdown(void);
+void pgup(void);
+void wright(void);
+void lnbegin(void);
+void lnend(void);
+void top(void);
+void bottom(void);
+void delete(void);
+void bksp(void);
+void delrol(void);
+void file(void);
+void look(void);
+void undo(void);
+void quit(void);
+void nop(void);
 
 // '& 0X1F' means control key
 char key[20] = { 
@@ -120,7 +119,7 @@ char key[20] = {
 };
 
 // one to one correspondence to key array, above
-void (*func[])() = {
+void (*func[])(void) = {
 	left, down, up, right, 
 	wleft, pgdown, pgup, wright,
 	lnbegin, lnend, top, bottom, 
@@ -136,7 +135,7 @@ GetSetTerm(int set)
 	struct termios *termiop = &orig;
 	if(!set) {
 		tcgetattr(0,&orig);
-		termios = orig;
+		memcpy(&termios, &orig, sizeof(termios));
 		termios.c_lflag    &= (~ICANON & ~ECHO & ~ISIG);
 		termios.c_iflag    &= (~IXON);
 		termios.c_cc[VMIN]  = 1;
@@ -188,7 +187,7 @@ emitch(int c)
 }
 
 void
-clrtoeol()
+clrtoeol(void)
 {
 #ifdef ANSIEMU
 	int i=0;
@@ -224,33 +223,33 @@ char *adjust(char *p, int column)
 }
 
 void
-left()
+left(void)
 {
 	if (buf < curp)
 		--curp;
 } 
 
 void
-down()
+down(void)
 {
 	curp = adjust(nextline(curp), col);
 }
 
 void
-up()
+up(void)
 {
 	curp = adjust(prevline(prevline(curp)-1), col);
 }
 
 void
-right()
+right(void)
 {
 	if (curp < etxt)
 		++curp;
 }
 
 void
-wleft()
+wleft(void)
 {
 	while (isspace(*(curp-1)) && buf < curp)
 		--curp;
@@ -259,7 +258,7 @@ wleft()
 }
 
 void
-pgdown()
+pgdown(void)
 {
 	page = curp = prevline(epage-1);
 	while (0 < row--)
@@ -268,7 +267,7 @@ pgdown()
 }
 
 void
-pgup()
+pgup(void)
 {
 	int i = MAXLINES;
 	while (0 < --i) {
@@ -278,7 +277,7 @@ pgup()
 }
 
 void
-wright()
+wright(void)
 {
 	while (!isspace(*curp) && curp < etxt)
 		++curp;
@@ -287,26 +286,26 @@ wright()
 }
 
 void
-lnbegin()
+lnbegin(void)
 {
 	curp = prevline(curp);
 }
 
 void
-lnend()
+lnend(void)
 {
 	curp = nextline(curp);
 	left();
 }
 
 void
-top()
+top(void)
 {
 	curp = buf;
 }
 
 void
-bottom()
+bottom(void)
 {
 	epage = curp = etxt;
 }
@@ -326,7 +325,7 @@ cmove(char *src, char *dest, int cnt)
 }
 
 void
-delete()
+delete(void)
 {
 	if(curp < etxt){
 		if(*curp == '\n') 
@@ -341,7 +340,7 @@ delete()
 }
 
 void
-bksp()
+bksp(void)
 {
 	if(buf < curp){
 		left();
@@ -350,14 +349,14 @@ bksp()
 }
 
 void
-delrol()
+delrol(void)
 {
 	int l=LINES;
 	do{ delete();} while(curp < etxt && l == LINES);
 }
 
 void
-undo()
+undo(void)
 {
 	if((char *)undop > ubuf){
 		undop--;
@@ -375,14 +374,14 @@ undo()
 }
 
 void
-file()
+file(void)
 {
 	int i;
 	write(i = creat(filename, MODE), buf, (int)(etxt-buf));
 	close(i);
 }
 
-void look()
+void look(void)
 {
 	char c;
 	int i;
@@ -416,18 +415,18 @@ void look()
 }
 
 void
-quit()
+quit(void)
 {
 	done = 1;
 }
 
 void
-nop()
+nop(void)
 {
 }
 
 void
-display()
+display(void)
 {
 	int i=0, j=0;
 	if (curp < page)
@@ -474,11 +473,17 @@ int main(int argc, char **argv)
 {
 	int i;
 	char ch, *p;
+#ifdef VTSIZE
+	int16_t vtsize
+#endif
+#ifdef TIOCGWINSZ
+	struct winsize w;
+#endif
+
 	if (argc < 2)
 		return (2);
 	GetSetTerm(0);
 #ifdef VTSIZE
-	int16_t vtsize;
 	vtsize = ioctl(0, VTSIZE, 0);
 	if (vtsize != -1) {
 		MAXLINES = vtsize >> 8;
@@ -486,7 +491,6 @@ int main(int argc, char **argv)
 	}
 #endif
 #ifdef TIOCGWINSZ
-	struct winsize w;
 	if (ioctl(0, TIOCGWINSZ, &w) != -1) {
 		if (w.ws_row != 0)
 			MAXLINES = w.ws_row;
