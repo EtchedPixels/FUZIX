@@ -642,6 +642,7 @@ void doexit(uint16_t val)
 	   delivered). If we don't do this we might take a signal
 	   while exiting which would be ... unfortunate */
 	udata.u_ptab->p_held = 0xFFFFFFFFUL;
+	udata.u_cursig = 0;
 
 	/* Discard our memory before we blow away and reuse the memory */
 	pagemap_free(udata.u_ptab);
