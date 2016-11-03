@@ -17,6 +17,7 @@
 
             ; exported debugging tools
             .export _trap_monitor
+	    .export _trap_reboot
             .export outchar
 	    .export _di
 	    .export _ei
