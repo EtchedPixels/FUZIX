@@ -1,8 +1,7 @@
 
-CSRCS = devtty.c
-CSRCS += devices.c main.c mini_ide.c
+CSRCS = devices.c main.c mini_ide.c
 
-C3SRCS = libc.c
+C3SRCS = libc.c devtty.c
 
 CDSRCS = discard.c mini_ide_discard.c
 
@@ -57,8 +56,8 @@ image: bootfuz.bin
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	devtty.o libc.o ../vt.o ../syscall_fs3.o
 	../tools/decb-image <../fuzix.bin fuzix.img
-	# Repack the high 4K where the loader wants it
-	dd if=fuzix.img of=fuzix.tmp bs=1024 skip=60
+	# Repack the high 5K where the loader wants it
+	dd if=fuzix.img of=fuzix.tmp bs=1024 skip=59
 	dd if=fuzix.tmp of=fuzix.img bs=1024 seek=32 conv=notrunc
 
 bootfuz.bin: bootloader.s

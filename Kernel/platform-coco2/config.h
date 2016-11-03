@@ -11,6 +11,7 @@
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
+#define UDATA_BLKS 1
 #define CONFIG_USERMEM_DIRECT
 
 #define CONFIG_BANKS	1

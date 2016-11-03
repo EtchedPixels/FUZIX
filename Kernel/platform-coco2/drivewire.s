@@ -9,6 +9,7 @@
 	; exported
 	.globl _dw_operation
 	.globl _dw_reset
+	.globl _dw_transaction
 
 	.globl _dw_lpr
 	.globl _dw_lpr_close
@@ -20,6 +21,29 @@
 	.globl map_kernel
 
 	.area .common
+
+_dw_transaction:
+	pshs	cc,y		; save caller
+	orcc	#0x50		; stop interrupts
+	tstb			; rawflag?
+	beq	skip@		; nope - then skip switching to process map
+	jsr	map_process_always
+skip@	ldy	5,s		; Y = number of bytes to send
+	beq	ok@		; no bytes to write - leave
+	jsr	DWWrite		; send to DW
+	ldx	7,s		; X is receive buffer
+	ldy	9,s		; Y = number of bytes to receive
+	beq	ok@		; no bytes to send - leave
+	jsr	DWRead		; read in that many bytes
+	bcs	frame@		; C set on framing error
+	bne	part@		; Z zet on all bytes received
+ok@	ldx	#0		; no error
+out@	jsr	map_kernel
+	puls	cc,y,pc		; return
+frame@	ldx	#-1		; frame error
+	bra	out@
+part@	ldx	#-2		; not all bytes received!
+	bra 	out@
 
 _dw_reset:
 	; maybe reinitalise PIA here?
