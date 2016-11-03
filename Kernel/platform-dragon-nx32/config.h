@@ -45,9 +45,6 @@
 
 #define VIDEO_BASE	0x0400
 
-/* RS/Tandy Color Computer keyboard */
-#undef CONFIG_COCO_KBD
-
 #define TICKSPERSEC 50   /* Ticks per second */
 /* FIXME: This will move once we put the display in the kernel bank and
    sort the banker out */
