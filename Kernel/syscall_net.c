@@ -669,6 +669,6 @@ void sock_init(void)
 	struct socket *s = sockets;
 	uint8_t n = 0;
 	while (s < sockets + NSOCKET)
-		s++->s_num = n++;
+		(s++)->s_num = n++;
 	netdev_init();
 }
