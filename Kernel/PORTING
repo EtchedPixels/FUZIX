@@ -82,7 +82,10 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  that uses your map_process/map_kernel functions.
 
  CONFIG_VT
- VT_WIDTH, VT_HEIGHT, VT_RIGHT, VT_BOTTOM
+ VT_RIGHT, VT_BOTTOM
+
+ CONFIG_VT_SIMPLE
+ VT_WIDTH (framebuffer stride)
 
  Include a standard virtual terminal core based upon VT52 emulation
 
