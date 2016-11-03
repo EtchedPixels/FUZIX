@@ -27,6 +27,9 @@ wipebss:
 		move.l #udata_block+1016,a7
 		/* udata global */
 		move.l #udata_block,a5
+		/* ensure we have bank 0 mapped */
+		clr.b $00F05000
+		/* Launch the OS */
 		bsr init_early
 		bsr init_hardware
 		bsr fuzix_main

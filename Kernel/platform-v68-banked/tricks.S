@@ -1,7 +1,8 @@
 #include "../kernel-68000.def"
+#include "kernel.def"
 
 
-.globl switchout,switchin,dofork,udata_shadow
+.globl switchout,switchin,dofork,udata_shadow,udata_stash
 
 .mri 1
 
@@ -34,9 +35,9 @@ idling:
 	cmp.b #1,d0
 	bne slow_path
 	move.l U_DATA__U_PTAB(a5),a0
-	cmp.b #P_READY,P_TAB__P_STATUS(a0)
+	cmp.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)
 	bne slow_path
-	mov.b #P_RUNNING,P_TAB_P_STATUS(a0)
+	mov.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
 	addq #2,sp
         and #$F8FF,sr
@@ -67,7 +68,7 @@ switchin:
 	;	We are going to copy over the process stack so use the
 	;	other stack for this
 	;
-	lea.l #irqstack+256,sp	; switch stack to copy the udata/stack
+	lea.l irqstack+256,sp	; switch stack to copy the udata/stack
 
 	;
 	;	Now switch task context
@@ -112,7 +113,7 @@ skip_copyback:
 	bne switchinfail
 
 	move.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
-	move.w P_TAB__P_PAGE_OFFSET(a0), U_DATA__U_PAGE(a5)
+	move.w P_TAB__P_PAGE_OFFSET(a0),U_DATA__U_PAGE(a5)
 
         ; runticks = 0
 	clr.w runticks
@@ -174,9 +175,10 @@ dofork:
 	movem.l a0/a2-a4/a6/d2-d7,-(sp)	;	save state
 	move.l sp,U_DATA__U_SP(a5)	;	save pointer
 
+	move.l a0,-(sp)			;	argument to newproc
+
 	jsr bankfork			;	copy the memory
 
-	move.l a0,-(sp)			;	argument to newproc
 	; Save the udata
 	move.l a5,a0
 	lea.l udata_stash,a1
@@ -185,7 +187,7 @@ copyf:	move.l (a0)+,(a1)+
 	dbra d0,copyf
 
 	; switch memory bank
-	move.l (s0),a0
+	move.l (sp),a0
 	move.w P_TAB__P_PAGE_OFFSET(a0),d0
 	move.b d0,$FFF05000
 	
@@ -196,6 +198,23 @@ copyf:	move.l (a0)+,(a1)+
 	moveq #0,d0			;	child
 	rts
 
+bankfork:
+	; copy the memory banks over (we copy the lot we should fast copy
+	; the actual used low/high chunks and then zero the middle
+	; FIXME: TODO
+	move.l #$02000000,a0
+	; FIXME BANK SWAP
+	move.l (a0),d0
+	; FIXME BANK SWAP
+	move.l d0,(a0)+
+	cmp.l #$03000000,a0
+	bne copyloop
+	; FIXME BANK RESTORE
+	rts
+
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
 .even
+
+
+udata_stash	equ	UDATA_STASH

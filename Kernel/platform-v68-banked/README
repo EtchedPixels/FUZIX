@@ -5,13 +5,12 @@ style)
 
 
 TODO
-- Make bankfixed support 32bit
 - Make bankfixed support only writing out used areas of memory
 
 Look at bankfixed/bankfixed32 split - put the smarts in bankfixed32 and then
 look at a proper swap allocator so we don't waste tons of memory.
 
 - Write the bank copy routines (copy needed bits zero rest and optimise)
-- Write optimised udata copier ?
+- Write optimised udata copier ? (movem based and reverse ?)
 
-
+- Save restore bank on interrupt entry/exit

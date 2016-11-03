@@ -22,6 +22,14 @@ void map_init(void)
 {
 }
 
+void pagemap_init(void)
+{
+	pagemap_add(3);
+	pagemap_add(2);
+	pagemap_add(1);
+	pagemap_add(0);	/* Used for init */
+}
+
 uaddr_t ramtop;
 uint8_t need_resched;
 
@@ -61,6 +69,7 @@ arg_t _memfree(void)
    that has a material cost */
 
 u_block udata_block[PTABSIZE];
+uint16_t irqstack[128];
 
 /* This will belong in the core 68K code once finalized */
 
