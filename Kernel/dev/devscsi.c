@@ -103,7 +103,7 @@ int si_docmd(uint8_t *data)
 
 /*
  *	Si_cmd()	Execute SCSI command with given data
- *			Perform error recoverey (retry command)
+ *			Perform error recovery (retry command)
  */
 
 uint8_t si_cmd(void)
