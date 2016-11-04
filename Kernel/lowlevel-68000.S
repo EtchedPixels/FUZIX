@@ -476,21 +476,21 @@ trap15:		move.w #SIGTRAP,trap_id			; by convention
 
 ;
 ;		Save as little as we can
-;		a0/a1 we are allowed to trash
-;		d0/d1 are our returns
+;		on entry d0 = syscall, d1 = arg1 a0=arg2 a1=arg3 a2 = arg4
+;		d0/d1 are our returns and we trash a0/a1 (a2 will be
+;		preserved not that it matters much)
 ;		a5 we save, but otherwise we leave it to C to do needed
 ;		saves only
 ;
-trap14:		move.l a5,-(sp)
+;		fork is special see the fork code.
+;
+trap14:		move.l a5,-(sp)		; must be first to match fork
+		move.l usp,a5
+		move.l a5,U_DATA__U_SYSCALL_SP(a5)
 		move.l udata_shadow,a5
 		move.b d0,U_DATA__U_CALLNO(a5)
-		move.l usp,a0
-		move.l a0,U_DATA__U_SYSCALL_SP(a5)
 		move.b #1,U_DATA__U_INSYS(a5)
-		move.l 4(a0),U_DATA__U_ARGN(a5)
-		move.l 8(a0),U_DATA__U_ARGN1(a5)
-		move.l 12(a0),U_DATA__U_ARGN2(a5)
-		move.l 16(a0),U_DATA__U_ARGN3(a5)
+		movem.l d1/a0-a2,U_DATA__U_ARGN(a5)
 		move.b #1,d0
 		move.b d0,kernel_flag
 		; FIXME: EI per platform really
