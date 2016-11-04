@@ -100,5 +100,5 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < s; i++)	/* Close all fd's */
 	close(fd[i]);
-  return(0);
+  return 0;
 }

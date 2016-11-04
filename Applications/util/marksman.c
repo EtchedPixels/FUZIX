@@ -854,4 +854,5 @@ int main(int argc, char *argv[])
         parse_line(buf);
     }
     parse_line("");
+    return 0;
 }

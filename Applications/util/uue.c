@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     fprintf(outp, "end\n");
     fclose(outp);
 
-    return (0);
+    return 0;
 }
 
 

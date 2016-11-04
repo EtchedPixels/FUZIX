@@ -79,7 +79,7 @@ int makedname(char *d, char *f, char *out, int outlen)
     int length;
 
     length = strlen(f);
-    if (strlen(d) + length + 2 > outlen) return (0);
+    if (strlen(d) + length + 2 > outlen) return 0;
     for (cp = out; *d; *cp++ = *d++) ;
     if (*(cp - 1) != '/') *cp++ = '/';
     while (length--) *cp++ = *f++;
@@ -223,6 +223,5 @@ int main(int argc, char *argv[])
 	dodir(startdir, levels, 0);
     } while (optind < argc);
 
-    return (0);
+    return 0;
 }
-

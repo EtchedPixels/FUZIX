@@ -19,4 +19,5 @@ int main(int argc, char *argv[])
     uadmin(A_REBOOT,0,0);
   /* If we get here there was an error! */
   perror(argv[0]);
+  return 1;
 }

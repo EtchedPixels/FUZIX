@@ -61,4 +61,5 @@ int main(int argc, char *argv[])
 		printload(loadavg[2]);
 	}
 	printf("\n");
+	return 0;
 }

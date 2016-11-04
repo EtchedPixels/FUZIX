@@ -137,4 +137,5 @@ int main(int argc, char *argv[])
 	}
 	fprintf(stderr, "They don't match; try again.\n");
     }
+    return 0;
 }

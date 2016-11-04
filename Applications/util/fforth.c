@@ -2356,5 +2356,5 @@ int main(int argc, const char* argv[])
 		#endif
 		w->code(w);
 	}
+	return 0;
 }
-

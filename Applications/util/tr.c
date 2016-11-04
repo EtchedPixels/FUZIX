@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
     convert();
 
-    return (0);
+    return 0;
 }
 
 void convert(void)

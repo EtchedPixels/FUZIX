@@ -267,7 +267,7 @@ int main(int argc, char *argval[])
 
         /* Check for User-Requested Exit back to Login Prompt */
         if (strcmp(cmd, "exit") == 0)
-            return (0);                      /* Quit if requested */
+            return 0;                      /* Quit if requested */
 
         /* Check for User request to change Current Working Directory */
         else if (strcmp(cmd, "cd") == 0) {
