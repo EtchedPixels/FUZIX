@@ -4,6 +4,7 @@
 
 sbrk:
 .mri 1
+	move.l 4(sp),d1
 	move.w #31,d0
 	trap #14
 	ext.l d1

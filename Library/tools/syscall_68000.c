@@ -28,37 +28,57 @@ static void write_call(int n)
    *	Note: this does mean if you want a register global you need to use a5
    *	or ensure you never take a signal in the fork() area - doable but ugly.
    */
-  if (strcmp(syscall_name[n], "_fork") == 0)
-    saves = 1;
-
   fprintf(fp, "\t.text\n\n"
 	      "\t.globl %1$s\n\n"
 	      "%1$s:\n", syscall_name[n]);
   fprintf(fp, ".mri 1\n");
-  /* If saving we build a valid stack frame for the syscall below the saves
-     using d0/d1 - d0 is the non-existent return address, d1 is the argument */
-  if (saves)
-    fprintf(fp, "\tmove.l 4(sp),d1\n"
-                "\tmovem.l d0-d7/a2-a6,-(sp)\n");
-  fprintf(fp, "\tmove.w #%d,d0\n"
-	      "\ttrap #14\n", n);
+
+  if (strcmp(syscall_name[n], "_fork") == 0) {
+    /* Fork may trash everything except A5 in order to make our syscall
+       path much faster */
+    fprintf(fp, "\tmovem.l d2-d7/a2-a4/a6,-(sp)\n");
+    fprintf(fp, "\tmove.l 44(sp),d1\n");	/* _fork argument */
+    saves = 1;
+  } else {
+    switch(syscall_args[n]) {
+      case 4:
+        fprintf(fp, "\tmove.l a2,-(sp)\n");
+        fprintf(fp, "\tmove.l 20(sp),a2\n");
+        fprintf(fp, "\tmove.l 16(sp),a1\n");
+        fprintf(fp, "\tmove.l 12(sp),a0\n");
+        fprintf(fp, "\tmove.l 8(sp),d1\n");
+        break;
+      case VARARGS:	/* We have no 4 argument varargs.. */
+      case 3:
+        fprintf(fp, "\tmove.l 12(sp),a1\n");
+      case 2:
+        fprintf(fp, "\tmove.l 8(sp),a0\n");
+      case 1:
+        fprintf(fp, "\tmove.l 4(sp),d1\n");
+      case 0:
+        break;
+    }
+  }
+  fprintf(fp, "\tmove.w #%d,d0\n", n);
+  fprintf(fp, "\ttrap #14\n");
+
+  if (syscall_args[n] == 4)
+    fprintf(fp, "\tmove.l (sp)+,a2\n");
+  else if (saves == 1)
+    fprintf(fp, "\tmovem.l (sp)+,d2-d7/a2-a4/a6\n");
+
   /* ext is the same speed as tst so we might as well do the ext in case
      it is an error code. We have to ext the error because while we use
      shorts in kernel for such things and speed the standard says errno
      is integer */
+
   fprintf(fp, "\text.l d1\n"
               "\tbne _error\n");
-  if (saves)
-    fprintf(fp, "\taddq #8,sp\n"
-                "\tmovem.l (sp)+,d2-d7/a2-a6\n");
-
   fprintf(fp, "\trts\n"
               "_error:\n"
               "\tmove.l d1,errno\n");
-  if (saves)
-    fprintf(fp, "\taddq #8,sp\n"
-                "\tmovem.l (sp)+,d2-d7/a2-a6\n");
   fprintf(fp, "\trts\n");
+
   fclose(fp);
 }
 
