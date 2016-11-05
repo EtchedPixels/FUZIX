@@ -51,7 +51,7 @@ $(AOBJS): %$(BINEXT): %.s
 clean:
 	rm -f *.o *~
 
-image: bootfuz.bin
+image:
 	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
 	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
@@ -64,6 +64,4 @@ image: bootfuz.bin
 	../font8x8.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 
-bootfuz.bin: bootloader.s
-	lwasm -r -b -obootfuz.bin bootloader.s
 
