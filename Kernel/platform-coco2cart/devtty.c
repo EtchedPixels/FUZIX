@@ -146,36 +146,13 @@ static void keyproc(void)
 		}
 		keymap[i] = keyin[i];
 	}
-	if (system_id) { 	/* COCO series */
+	if (system_id && keybit != 6) { 	/* COCO series */
 	  keybit += 2;
 	  if (keybit > 5)
 	    keybit -= 6;
         }
 }
 
-#ifdef CONFIG_COCO_KBD
-uint8_t keyboard[8][7] = {
-	{ '@', 'h', 'p', 'x', '0', '8', KEY_ENTER },
-	{ 'a', 'i', 'q', 'y', '1', '9', 0 /* clear - used as ctrl*/ },
-	{ 'b', 'j', 'r', 'z', '2', ':', KEY_ESC /* break (used for esc) */ },
-	{ 'c', 'k', 's', '^' /* up */, '3', ';' , 0 /* NC */ },
-	{ 'd', 'l', 't', '|' /* down */, '4', ',', 0 /* NC */ },
-	{ 'e', 'm', 'u', KEY_BS /* left */, '5', '-', 0 /* NC */ },
-	{ 'f', 'n', 'v', KEY_TAB /* right */, '6', '.', 0 /* NC */ },
-	{ 'g', 'o', 'w', ' ', '7', '/', 0 /* shift */ },
-};
-
-uint8_t shiftkeyboard[8][7] = {
-	{ '\\', 'H', 'P', 'X', '_', '(', KEY_ENTER },
-	{ 'A', 'I', 'Q', 'Y', '!', ')', 0 /* clear - used as ctrl */ },
-	{ 'B', 'J', 'R', 'Z', '"', '*', CTRL('C') /* break */ },
-	{ 'C', 'K', 'S', '[' /* up */, '#', '+', 0 /* NC */ },
-	{ 'D', 'L', 'T', ']' /* down */, '$', '<', 0 /* NC */ },
-	{ 'E', 'M', 'U', '{' /* left */, '%', '=', 0 /* NC */ },
-	{ 'F', 'N', 'V', '}' /* right */, '&', '>', 0 /* NC */ },
-	{ 'G', 'O', 'W', ' ', '\'', '?', 0 /* shift */ },
-};
-#else
 uint8_t keyboard[8][7] = {
 	{ '0', '8', '@', 'h', 'p', 'x', KEY_ENTER },
 	{ '1', '9', 'a', 'i', 'q', 'y', 0 /* clear - used as ctrl*/ },
@@ -197,7 +174,6 @@ uint8_t shiftkeyboard[8][7] = {
 	{ '&', '>', 'F', 'N', 'V', '}' /* right */, 0 /* NC */ },
 	{ '\'', '?', 'G', 'O', 'W', ' ', 0 /* shift */ },
 };
-#endif /* COCO_KBD */
 
 static void keydecode(void)
 {
