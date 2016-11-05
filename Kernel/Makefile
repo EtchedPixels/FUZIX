@@ -2,7 +2,6 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 
 #export TARGET = 6809simple
 #export TARGET = 68hc11test
-#export TARGET = 8086test
 #export TARGET = atarist
 #export TARGET = bbcmicro
 #export TARGET = dragon
