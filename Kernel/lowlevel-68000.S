@@ -376,7 +376,7 @@ SYM (__umodsi3):
 	rts
 
 
-		.globl di,ei,irqrestore
+		.globl __hard_di,__hard_ei,__hard_irqrestore
 		.globl doexec
 		.globl get_usp, set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
@@ -398,17 +398,17 @@ set_usp:	move.l 4(sp),a0
  *	We don't currently have any fine grained IRQ control. We need to fix
  *	that!
  */
-di:
+__hard_di:
 		move.w sr,d0
 		and.w #$0700,d0
 		or.w #$0700,sr
 		rts
 
-ei:
+__hard_ei:
 		and.w #$F8FF,sr
 		rts
 
-irqrestore:
+__hard_irqrestore:
 		move.w sr,d0
 		and.w #$F8FF,d0
 		or.w 6(sp),d0
@@ -622,9 +622,95 @@ sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
 		movem.l (sp)+,a0-a1/a5/d0-d1
 		rte
 
-;
-;	Debug
-;
+/*
+ *	Block copy helper
+ *
+ *	We use d0 = number of blocks
+ *	       d1 = constant 32 for speeding up the maths
+ *	       a0 = source
+ *	       a1 = destination
+ *	       d2-d7/a2-a6 	- copying registers (44 bytes a go)
+ *
+ */
+
+copy_blocks:
+		move.l 4(sp),a0
+		move.l 8(sp),a1
+		move.l 12(sp),d0
+
+/* asm entry point */
+copy_blocks_d0:
+		movem.l d2-d7/a2-a6,-(sp)
+copy_block512:
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,48(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,96(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,144(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,192(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,248(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,288(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,336(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,384(a1)
+		movem.l (a0)+,d1-d7/a2-a6
+		movem.l d1-d7/a2-a6,432(a1)
+		movem.l (a0)+,d1-d4
+		movem.l d1-d4,480(a1)
+		dbra d0,copy_block512
+		movem.l (sp)+,d2-d7/a2-a6
+		rts
+
+clear_blocks:
+		move.l 4(sp),a0
+		move.l 8(sp),d0
+clear_blocks_d0:
+		movem.l d2-d7/a2-a6,-(sp)
+		moveq #0,d1
+		move.l d1,d2
+		move.l d1,d3
+		move.l d1,d4
+		move.l d1,d5
+		move.l d1,d6
+		move.l d1,d7
+		move.l d1,a1
+		move.l d1,a2
+		move.l d1,a3
+		move.l d1,a4
+		move.l d1,a5
+		move.l d1,a6
+clear512:
+		/* End of the 512 byte block */
+		lea 512(a0),a0
+		/* zero in 52 byte chunks */
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		movem.l d1-d7/a1-a6,-(a0)
+		/* 9 * 52 + 44 */
+		movem.l d1-d7/a1-a4,-(a0)
+		/* Next block */
+		lea 512(a0),a0
+		dbra d0,clear512
+		movem.l (sp)+,d2-d7/a2-a6
+		rts
+
+/*
+ *	Debug. If we end up needing paged kernel these will need to be in
+ *	common space
+ */
 outstring:	move.b (a0)+,d0
 		beq outstrend
 		bsr outchar
