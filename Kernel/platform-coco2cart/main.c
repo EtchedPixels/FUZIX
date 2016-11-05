@@ -9,9 +9,11 @@
 
 uint8_t membanks;
 uint8_t system_id;
+#if 0
 uint8_t cartslots = 1;
 uint8_t carttype[4];
 uint8_t bootslot = 0;
+#endif
 uint16_t swap_dev;
 
 void platform_idle(void)
@@ -30,7 +32,7 @@ void do_beep(void)
 void platform_discard(void)
 {
 }
-
+#if 0
 /* Find a cartridge or it's slot */
 int cart_find(int id)
 {
@@ -41,6 +43,7 @@ int cart_find(int id)
 	}
 	return -1;
 }
+#endif
 
 unsigned char vt_mangle_6847(unsigned char c)
 {

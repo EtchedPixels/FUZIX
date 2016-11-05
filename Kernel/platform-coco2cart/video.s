@@ -59,8 +59,8 @@ _plot_char:
 	lda 4,s
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
-	anda $7F		; no high font bits
-	suba $20		; skip control symbols
+	andb #$7F		; no high font bits
+	subb #$20		; skip control symbols
 	rolb			; multiply by 8
 	rola
 	rolb

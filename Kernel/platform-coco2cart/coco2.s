@@ -84,6 +84,7 @@ init_hardware:
 	lda 0xFF03
 	ora #1
 	sta 0xFF03
+	jsr _vid256x192
 	jsr _vtinit
 	rts
 
@@ -122,9 +123,11 @@ ___hard_irqrestore:		; B holds the data
 ;	No memory management for now
 ;
 _program_vectors:
+	rts
+
 map_kernel:
 	pshs a
-	clr $ffdf	;	ROM in
+	clr $ffde	;	ROM in
 	lda #1
 map_kr:
 	sta romin
@@ -133,7 +136,7 @@ map_kr:
 map_process:
 map_process_always:
 map_process_a:
-	clr $ffde	;	ROM out
+	clr $ffdf	;	ROM out
 	clr romin
 	rts
 
@@ -142,7 +145,7 @@ map_restore:
 	lda romsave
 	sta romin
 	bne map_kr
-	clr $ffde
+	clr $ffdf
 	puls a,pc
 	
 map_save:

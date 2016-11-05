@@ -51,3 +51,6 @@ identified:
 		orcc #0x10
 stop:		bra stop
 
+		.area .magic
+		.db $15,$C0,$DE,$4C,$0C,$02
+

@@ -9,6 +9,7 @@
 
 static const char *sysname[] = {"Dragon", "COCO", "COCO3", "Unknown"};
 
+#if 0
 struct cart_rom_id {
 	uint16_t hash;
 	uint8_t id;
@@ -35,15 +36,21 @@ static struct cart_rom_id *cart_lookup(uint16_t hash)
 	} while(cart++->hash);
 	return NULL;
 }
+#endif
 
 void map_init(void)
 {
 	uint8_t i;
+#if 0
 	uint8_t bslot = 0;
 	uint16_t hash;
 	struct cart_rom_id *rom;
+#endif	
 
 	kprintf("%s system.\n", sysname[system_id]);
+#if 0
+	/* We would have to do the mpi management in asm and we really
+	   don't have enough memory to care about this ! */
 	if (mpi_present()) {
 		kputs("MPI cartridge detected.\n");
 		cartslots = 4;
@@ -66,6 +73,7 @@ void map_init(void)
 				i == bslot ? '*':' ');
 	}
 	mpi_set_slot(bootslot);
+#endif
 	/* We put swap on the start of slice 0, but with the first 64K free
 	   so we can keep the OS image linearly there */
 	for (i = 0; i < MAX_SWAPS; i++)

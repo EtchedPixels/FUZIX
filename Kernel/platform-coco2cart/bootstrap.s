@@ -93,15 +93,28 @@ ud_wipe:
 	std ,x++
 	cmpx #$1C00
 	bne ud_wipe
-endstr:	rts
+	lda ,x+
+	cmpa $15
+	bne wrong
+	lda ,x+
+	cmpa $C0
+	bne wrong
+	rts
 
 load_error:
 	ldu #fail
+	bsr copy_str
+l1:	bra l1
+
 copy_str:
 	lda ,u+
 	beq endstr
 	sta ,y+
 	bra copy_str
+endstr:	rts
 fail:
 	.ascii "Fail"
+	.db 0
+wrong:
+	.ascii "Wrong image"
 	.db 0

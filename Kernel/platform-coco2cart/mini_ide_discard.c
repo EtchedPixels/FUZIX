@@ -51,6 +51,8 @@ static void ide_identify(int dev, uint8_t *buf)
 
 	giveup = set_timer_ms(2000);
 
+	kprintf("%x : ", dev);
+
 	if (ide_wait_nbusy() == -1)
 		return;
 	*devh = dev << 4;	/* Select */
@@ -71,12 +73,14 @@ static void ide_identify(int dev, uint8_t *buf)
 		return;
 	if (ide_wait_drdy() == -1)
 		return;
-	kprintf("%x : ", dev);
 	/* Check the LBA bit is set, and print the name */
 	dptr = buf + 54;		/* Name info */
 	if (*dptr)
-		for (i = 0; i < 40; i++)
-			kputchar(*dptr++);
+		for (i = 0; i < 20; i++) {
+			kputchar(dptr[1]);
+			kputchar(*dptr);
+			dptr += 2;
+		}
 	if (!(buf[99] & 0x02)) {	/* No LBA ? */
 		kputs(" - non-LBA\n");
 		return;
