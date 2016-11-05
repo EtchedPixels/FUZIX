@@ -126,7 +126,7 @@ int pagemap_realloc(usize_t size)
 	/* We don't want to take an interrupt here while our page mappings are
 	   incomplete. We may restore bogus mappings and then take a second IRQ
 	   into hyperspace */
-	irq = di();
+	irq = __hard_di();
 
 	if (have > want) {
 		for (i = want; i < have; i++) {
@@ -145,7 +145,7 @@ int pagemap_realloc(usize_t size)
 		update = 1;
 
 	} else {
-		irqrestore(irq);
+		__hard_irqrestore(irq);
 		return ENOMEM;
 	}
 	/* Copy the updated allocation into the ptab */
@@ -156,7 +156,7 @@ int pagemap_realloc(usize_t size)
 	   we switch to this memory map */
 	if (update)
 		program_vectors(&udata.u_page);
-	irqrestore(irq);
+	__hard_irqrestore(irq);
 	return 0;
 }
 

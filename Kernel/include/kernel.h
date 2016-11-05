@@ -904,6 +904,16 @@ extern uint8_t rtc_secs(void);
 extern void trap_reboot(void);
 extern uint8_t platform_param(char *p);
 
+extern irqflags_t __hard_di(void);
+extern void __hard_irqrestore(irqflags_t f);
+extern void __hard_ei(void);
+
+#ifndef CONFIG_SOFT_IRQ
+#define di __hard_di
+#define irqrestore __hard_irqrestore
+#define ei __hard_ei
+#endif
+
 /* Will need a uptr_t eventually */
 extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */
 extern void platform_interrupt(void);

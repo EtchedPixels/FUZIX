@@ -42,8 +42,9 @@
         .globl trap_illegal
 	.globl nmi_handler
 	.globl interrupt_handler
-	.globl _di
-	.globl _irqrestore
+	.globl ___hard_ei
+	.globl ___hard_di
+	.globl ___hard_irqrestore
 	.globl _out
 	.globl _in
 
@@ -653,6 +654,13 @@ _in:
 	push bc
 	push hl
 	in l, (c)
+	ret
+
+;
+;	Enable interrupts
+;
+___hard_ei:
+	ei
 	ret
 
 ;

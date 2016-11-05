@@ -356,7 +356,7 @@ void fuzix_main(void)
 	ticks_per_dsecond = TICKSPERSEC / 10;
 
 	kputs("Enabling interrupts ... ");
-	ei();
+	__hard_ei();		/* Physical interrupts on */
 	kputs("ok.\n");
 
 	/* get the root device */

@@ -20,9 +20,9 @@
             .globl _trap_monitor
             .globl _trap_reboot
             .globl outchar
-	    .globl _di
-	    .globl _ei
-	    .globl _irqrestore
+	    .globl ___hard_di
+	    .globl ___hard_ei
+	    .globl ___hard_irqrestore
 
             ; imported symbols
             .globl _ramsize
@@ -40,15 +40,15 @@ _trap_monitor:
 	    cwai #0
 	    bra _trap_monitor
 
-_di:
+___hard_di:
 	    tfr cc,b		; return the old irq state
 	    orcc #0x10
 	    rts
-_ei:
+___hard_ei:
 	    andcc #0xef
 	    rts
 
-_irqrestore:			; B holds the data
+___hard_irqrestore:		; B holds the data
 	    tfr b,cc
 	    rts
 

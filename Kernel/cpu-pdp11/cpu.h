@@ -21,10 +21,6 @@ typedef uint16_t uptr_t;		/* User pointer equivalent */
 #define uputi  uputw			/* Copy user int type */
 #define ugeti  ugetw			/* between user and kernel */
 
-extern void ei(void);
-extern irqflags_t di(void);
-extern void irqrestore(irqflags_t f);
-
 /* FIXME: we actually want to use an a.out loader */
 
 #define EMAGIC    0x7E    /* Header of executable  (JMP) */

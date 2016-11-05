@@ -21,10 +21,6 @@ typedef uint16_t uptr_t;		/* User pointer equivalent */
 #define uputi  uputw			/* Copy user int type */
 #define ugeti  ugetw			/* between user and kernel */
 
-extern void ei(void);
-extern irqflags_t di(void);
-extern void __fastcall__ irqrestore(irqflags_t f);
-
 extern void * __fastcall__ memcpy(void *, void *, size_t);
 extern void * __fastcall__ memset(void *, int, size_t);
 extern size_t __fastcall__ strlen(const char *);

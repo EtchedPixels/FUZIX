@@ -1,8 +1,8 @@
 #include "kernel-pdp11.def"
 
-	.globl _di
-	.globl _ei
-	.globl _irqrestore
+	.globl ___hard_di
+	.globl ___hard_ei
+	.globl ___hard_irqrestore
 	.globl _doexec
 	.globl ___udivhi3
 	.globl ___umodhi3
@@ -18,15 +18,15 @@
 	address space - for now 077776 and the other control registers work
 	in a very similar way */
 
-_di:
+___hard_di:
 	mov 0177776,r0
 	bis 0340,0177776
 	rts pc
-_ei:
+___hard_ei:
 	mov 0177776,r0
 	bic 0340,0177776
 	rts pc
-_irqrestore:
+___hard_irqrestore:
 	mov 2(sp),0177776
 	rts pc
 

@@ -22,10 +22,6 @@ typedef uint32_t uptr_t;		/* User pointer equivalent */
 #define uputi  uputl			/* Copy user int type */
 #define ugeti  ugetl			/* between user and kernel */
 
-extern void ei(void);
-extern irqflags_t di(void);
-extern void irqrestore(irqflags_t f);
-
 extern void *memcpy(void *, const void  *, size_t);
 extern void *memset(void *, int, size_t);
 extern int memcmp(const void *, const void *, size_t);

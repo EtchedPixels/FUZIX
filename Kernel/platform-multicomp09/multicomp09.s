@@ -178,7 +178,7 @@ bounce_end@
 ;;; Turn off interrupts
 ;;;    takes: nothing
 ;;;    returns: B = original irq (cc) state
-_di:
+___hard_di:
 	tfr	cc,b		; return the old irq state
 	orcc	#0x10
 	rts
@@ -186,14 +186,14 @@ _di:
 ;;; Turn on interrupts
 ;;;   takes: nothing
 ;;;   returns: nothing
-_ei:
+___hard_ei:
 	andcc	#0xef
 	rts
 
 ;;; Restore interrupts to saved setting
 ;;;   takes: B = saved state (as returned from _di )
 ;;;   returns: nothing
-_irqrestore:			; B holds the data
+___hard_irqrestore:		; B holds the data
 	tfr	b,cc
 	rts
 
