@@ -7,6 +7,7 @@
 #include <carts.h>
 
 uint8_t membanks;
+uint8_t internal32k;
 uint8_t system_id;
 uint8_t cartslots = 1;
 uint8_t carttype[4];

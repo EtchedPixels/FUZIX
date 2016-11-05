@@ -11,11 +11,20 @@
  * with the last page repeated to fill any holes.
  */
 
+extern uint8_t internal32k;
+
 void pagemap_init(void)
 {
 	int i;
+	int extbanks = membanks;
+
+	/* map upper 32K on Dragon 64/200/Tano */
+	if (!internal32k) {
+		pagemap_add(128);
+		extbanks--;
+	}
 	/* map bank 1 last for init, leave 0 for kernel */
-	for (i = membanks - 1; i > 0; i--)
+	for (i = extbanks - 1; i > 0; i--)
 		pagemap_add(i);
 
 #ifdef SWAPDEV

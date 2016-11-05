@@ -20,9 +20,12 @@
 	.globl _ramsize
 	.globl _procmem
 	.globl _membanks
+	.globl _internal32k
 
 banksel	equ 0xFFBF
 bankoff	equ 0xFFBE
+sammap1	equ 0xFFDF
+sammap0	equ 0xFFDE
 
 	include "kernel.def"
 	include "../kernel09.def"
@@ -38,6 +41,9 @@ zbank	sta banksel	; clear test byte on all possible banks
 	inca
 	cmpa #16
 	blo zbank
+	sta sammap1	; internal 64K
+	clr ,x
+	sta sammap0
 	clra		; now test writing to banks
 	ldb #0xA5
 size_next
@@ -52,8 +58,19 @@ size_next
 	bne size_next
 size_nonram
 	clr banksel	; leave bank 0 selected and kdata mapped in
+	sta sammap1	; check for internal 64K
+	cmpb ,x		; already same value?
+	bne notsame
+	incb		; use another value
+notsame stb ,x
+	cmpb ,x
+	bne int32k
+	clrb
+	inca		; add count for internal upper 32K
+int32k	sta sammap0
+	stb _internal32k
 	sta _membanks
-	inca		; add the internal 32K to the count
+	inca		; add the internal lower 32K to the count
 	ldb #32
 	mul
 	std _ramsize
@@ -68,6 +85,7 @@ map_kernel
 	lda #0	
 	sta map_copy
 	sta banksel
+	sta sammap0
 	puls a,pc
 
 map_process
@@ -75,7 +93,11 @@ map_process
 	beq map_kernel
 map_process_a
 	sta map_copy
+	bmi map1	; map 128 is for the internal upper 32K
+	sta sammap0
 	sta banksel
+	rts
+map1	sta sammap1
 	rts
 
 map_process_always
@@ -83,7 +105,11 @@ map_process_always
 	lda U_DATA__U_PAGE+1		; LSB of 16-bit page
 map_set_a
 	sta map_copy
+	bmi map1a
+	sta sammap0
 	sta banksel
+	puls a,pc
+map1a	sta sammap1
 	puls a,pc
 	
 map_save
@@ -104,6 +130,10 @@ copybank
 	lda #0xff
 	tfr a,dp
 	puls a
+	tsta
+	bmi copymap1b	; from SAM map 1 to bank B
+	tstb
+	bmi copyamap1	; from bank A to SAM map 1
 	stu cmpend+1	; self-modiying code FTW
 copyf	sta <banksel
 	ldu ,x
@@ -111,8 +141,30 @@ copyf	sta <banksel
 	stu ,x++
 cmpend	cmpx #0
 	blo copyf
-	stb map_copy
+copyret	stb map_copy
 	puls dp,pc
+
+copymap1b
+	stu cmpendb+1
+	stb <banksel
+copyfb	sta <sammap1
+	ldu ,x
+	sta <sammap0
+	stu ,x++
+cmpendb cmpx #0
+	blo copyfb
+	bra copyret
+
+copyamap1
+	stu cmpenda+1
+	sta <banksel
+copyfa	sta <sammap0
+	ldu ,x
+	sta <sammap1
+	stu ,x++
+cmpenda cmpx #0
+	blo copyfa
+	bra copyret
 
 map_store	.db 0
 map_copy	.db 0
