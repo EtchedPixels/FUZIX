@@ -176,20 +176,11 @@ dofork:
 	move.l sp,U_DATA__U_SP(a5)	;	save pointer
 
 	move.l a0,-(sp)			;	argument to newproc
+	move.w P_TAB__P_PAGE_OFFSET(a0),d0	; page
 
 	jsr bankfork			;	copy the memory
 
-	; Save the udata
-	move.l a5,a0
-	lea.l udata_stash,a1
-	move.w #255,d0
-copyf:	move.l (a0)+,(a1)+
-	dbra d0,copyf
-
-	; switch memory bank
 	move.l (sp),a0
-	move.w P_TAB__P_PAGE_OFFSET(a0),d0
-	move.b d0,$FFF05000
 	
 	jsr newproc			;	Called with the child udata
 	add.w #54,sp			;	toss the stack frames
@@ -201,16 +192,27 @@ copyf:	move.l (a0)+,(a1)+
 bankfork:
 	; copy the memory banks over (we copy the lot we should fast copy
 	; the actual used low/high chunks and then zero the middle
-	; FIXME: TODO
-	move.l #$02000000,a0
-	; FIXME BANK SWAP
+	;
+	; FIXME: write it to run at proper speed etc
+	;
+	; Caution we are copying our own stack here
+	;
+	;
+	move.l d2,-(sp)
+	move.l #$02000000,a0		;	process base
+	move.b $FFF05000,d1		;	parent page
+
+copyloop:
+	move.b d1,$FFF05000		;	parent bank
 	move.l (a0),d0
-	; FIXME BANK SWAP
+	move.b d2,$FFF05000		;	child bank
 	move.l d0,(a0)+
 	cmp.l #$03000000,a0
 	bne copyloop
-	; FIXME BANK RESTORE
-	rts
+	; Return with child bank paged as we want it
+	move.l (sp)+,d2			;	we swapped stack but copied d2
+	rts				;	so popping off the other bank
+					;	is fine
 
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
