@@ -38,6 +38,7 @@ terminal is (1,1) based. display() takes care of the conversion.
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "ue.h"
 
 COORD outxy;
