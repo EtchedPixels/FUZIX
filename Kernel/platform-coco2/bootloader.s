@@ -27,8 +27,8 @@ copy:					; Move the loader somewhere safe
 ;
 ;	Load IDE blocks 1+ into memory off an LBA drive. With 512 byte
 ; sectors we load just under 0xB000 bytes. The first 0x0000-0x8000 bytes are
-; our low memory image. 0x8000-0x8FFF holds the high image (0xF000-0xFFFF) and
-; then the blocks at 0x9000-0xAFFF are used for discard (0x8000-8FFF will be
+; our low memory image. 0x8000-0x93FF holds the high image (0xEC00-0xFFFF) and
+; then the blocks at 0xA000-0xBFFF are used for discard (0x8000-8FFF will be
 ; trashed before discard is gone by the exec arguments). Having done the
 ; shuffle we then jump in 64K mode to 0x0400 which is our start vector.
 ;
@@ -130,11 +130,11 @@ loaded:
 		lda #'@'
 		sta 0x0205
 ;
-;	We have loaded from 0000 to B000 now relocate bits from 8000-8FFF to
-;	F000-FFFF, 9000-B000 is discard space
+;	We have loaded from 0000 to B000 now relocate bits from 8000-93FF to
+;	EC00-FFFF, A000-B000 is discard space
 ;
 		ldx #0x8000
-		ldy #0xF000
+		ldy #0xEC00
 l5:		ldd ,x++
 		std ,y++
 		cmpy #0xFF00		; skip last 256 bytes (I/O area)
