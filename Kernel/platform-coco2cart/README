@@ -6,7 +6,7 @@ COCO2
 COCO or Dragon 64 with an IDE port, cartridge and 64K of RAM
 
 Supported hardware:
-	IDE (Cloud9 or compatible set at FF40) with either built in
+	IDE (Cloud9 or compatible set at FF50) with either built in
 		cartridge RAM or separate cartridge
 
 Memory Map
