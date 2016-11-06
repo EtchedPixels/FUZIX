@@ -136,8 +136,8 @@ map_kr:
 map_process:
 map_process_always:
 map_process_a:
-	clr $ffdf	;	ROM out
 	clr romin
+	clr $ffdf	;	ROM out
 	rts
 
 map_restore:
