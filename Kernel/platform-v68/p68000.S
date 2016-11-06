@@ -1,3 +1,5 @@
+
+#include "../kernel-68000.def"
 /*
  *	Lots left to fill in
  */
@@ -11,7 +13,7 @@
 		.globl udata_block
 		.globl devide_read_data
 		.globl devide_write_data
-
+		.globl vdso
 .mri 1
 trap_reboot:
 trap_monitor:
@@ -54,7 +56,7 @@ init_trap_loop:
 	    move.l #unimpa,(a0)+	; A and F line traps
 	    move.l #unimpf,(a0)+
 	    move.w #$80,a0
-	    move.w #14,d0
+	    move.w #13,d0
 trapset:
 	    move.l #misctrap,(a0)+
 	    dbra d0,trapset
@@ -71,22 +73,46 @@ trapset:
             rts
 
 timer_irq:
-	    movem.l a0-a6/d0-d7,-(a7)
+	    ; C will save and restore a2+/d2+
+	    movem.l a0-a1/a5/d0-d1,-(sp)
 	    move.l udata_shadow,a5	; set up the register global
+	    move.b #1,U_DATA__U_ININTERRUPT(a5)
 	    jsr platform_interrupt
+	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
-	    movem.l (a7)+,a0-a6/d0-d7
+
+	    ; DEBUG FIXME
+	    bra no_signal
+
+	    tst.b U_DATA__U_INSYS(a5)
+	    bne no_preempt
+	    tst.b need_resched
+	    bne no_preempt
+	    ;
+	    ;	Vanish into the scheduler. Some other task will pop back out
+	    ;   and eventually we'll re-appear here and continue.
+	    ;
+	    ;   FIXME: check IRQ masking
+	    ;
+	    move.l U_DATA__U_PTAB(a5),a0
+	    move.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)
+	    bsr switchout
+no_preempt:
+	    tst.b U_DATA__U_CURSIG(a5)
+	    beq no_signal
+	    bra trap_via_signal		; a0/a1/d0/d1 already stacked
+
+no_signal:
+	    movem.l (sp)+,a0-a1/a5/d0-d1
 	    rte
 
 mmu_fault:
-	    movem.l a0-a6/d0-d7,-(a7)
-	    move.l #mmutrap,a0
-	    bsr outstring
-	    movem.l (a7)+,a0-a6/d0-d7
-	    rte
-mmutrap:
-	    asciz "MMU TRAP"
-	    byte 0
+	    tst.w $00F02020		; clear the MMU flag
+	    move.l d0,-(sp)
+	    move.b #'M',d0
+	    jsr outchar
+	    move.l (sp)+,d0
+	    bra addr_error		; treat as an address error
 
 ;
 ;	Nothing to do in 68000 - all set up once at boot
@@ -134,6 +160,17 @@ devide_write_l:
 	move.w (a0)+,$00F01000
 	dbra d0,devide_write_l
 	rts
+
+;
+;	'VDSO'
+;
+vdso:	trap #14		; syscall entry
+	rts
+	; signal unwind
+	movem.l (sp)+,a0/a1/d0/d1
+	move.w (sp)+,ccr
+	rts
+	; rest is spare for now
 
 .section data
 

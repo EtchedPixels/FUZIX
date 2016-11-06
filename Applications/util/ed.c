@@ -67,7 +67,7 @@ static LINE *findline(NUM);
 
 BOOL intflag;
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     if (!initedit())
 	return;
@@ -91,6 +91,7 @@ void main(int argc, char *argv[])
     docommands();
 
     termedit();
+    return 0;
 }
 
 

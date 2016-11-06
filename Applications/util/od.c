@@ -304,5 +304,5 @@ int main(int argc, char *argv[])
     addrout(off);
     printf("\n");
 
-    return(0);
+    return 0;
 }

@@ -12,6 +12,8 @@
 	.export outxa
 	.export stash_zp
 
+	.export _need_resched
+
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall_i
@@ -202,3 +204,6 @@ outxa:	pha
 	jsr outcharhex
 	pla
 	jmp outcharhex
+
+_need_resched:
+	.byte 0

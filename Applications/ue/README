@@ -1,0 +1,116 @@
+
+					ue -- micro editor
+
+ ue is a basic functional terminal screen editor written in C. It uses no
+ libraries except clib. Cursor control is provided by the *nix console. The
+ following functions and associated control keys are provided:
+
+	^E	cursor up
+	^S	cursor left
+	^D	cursor right
+	^X	cursor down
+	^A	word left
+	^F	word right
+	^[	start of line
+	^]	end of line
+	^R	page up
+	^C	page down
+	^T	top of file
+	^B	bottom of file
+	^G	delete cursor char
+	^H	delete previous char
+	^Y	delete rest of line
+	^U	undo
+	^W	write file to disk
+	^L	look (search)
+	^Q	quit
+	^I	insert <TAB> char
+Plus the ever popular insert ASCII chars.
+
+All of this in a smaller binary than the original.
+
+The original was released into the Public Domain, so is this. Do with it what
+you will.
+
+Thanks to Mike McQuade for help optimizing and debugging this package.
+
+September 5, 2002. Terry Loveall
+
+Please send fixes, comments and flames to: <loveall@qwest.net>
+
+Installing:
+
+ue comes as source only. Compile with:
+
+	gcc ue.c -O2 -fomit-frame-pointer -o ue ; strip ue ; ls -al ue 
+
+Copy the binary to a file on the search path, e.g.
+
+	/usr/local/bin or /usr/bin
+
+For the smallest usable binary, get sstrip from Muppet labs in:
+http://www.muppetlabs.com/~breadbox/pub/software/ELFkickers-2.0a.tar.gz
+build and use instead of strip. sstrip will remove an additional 1.5k.
+
+ue size without strip:	18k
+ue size with strip:		6.3k
+ue size with sstrip:	4.6k
+
+Operation:
+
+ue requires a file name. If a file name is not provided, ue will refuse to
+run. If it exists, the file is opened for editing, if not, the file is created
+by writing the newly entered text to disk.
+
+There is no status line. The search prompt pre-empts the first line.
+
+Text buffer size, undo buffer size, horizontal width, vertical height and tab
+size are fixed. Change the source and compile to suit your needs.
+
+The search string input can be terminated by <Esc>, <Enter> or ^L. 
+
+<Esc> aborts the search function, <Enter> or ^L proceeds with the search. 
+
+'Search again' is a '^L^L' sequence away.
+
+The search string is retained and redisplayed. Use ^H to erase prior
+characters in the search string. Undo is not implemented for input to the
+search string.
+
+This editor started life as Anthony Howe's 'ant', the 1991 Obfuscated C Code
+winner. Thanks, Anthony, really elegant logic. 
+
+Since then, the curses library was replaced with STDIN/STDOUT. it was
+converted from a 'vi' style editor to a screen editor, undo, string search,
+backspace delete, 'delete-rest-of-line' and general code size optimization
+were added. 
+
+The original split text buffer model was converted to a standard
+'insert/delete at point of cursor'. 
+
+Limitations:
+
+Can't change file name from within ue.
+
+No redo, but the structure is there.
+
+No marked blocks and associated copy, cut and paste. Use gpm from the text
+console or use xterm/rxvt to copy/paste from/to ue.
+
+Unused control codes are inserted into the text buffer but not displayed.
+This is a limitation of the console not ue. Use ^U (undo) to remove them.
+
+Changes:
+
+1.25 Sept. 6, 2002
+Initial release 'OOPS' fix.
+Added 'Limitations' and 'Changes' sections, this file.
+Corrected 'compile with' command line, this file.
+Improved 'compile with' command line for size in ue.c and this file.
+Picked up a size optimization in function look().
+Fixed getch() to ignore PC function keys and to properly accept 'paste' text
+ from gpm or X terminal.
+Changed array 'key[]' from type short to char for reduced size.
+
+1.24 Sept. 5, 2002
+Initial release.

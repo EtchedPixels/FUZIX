@@ -440,7 +440,7 @@ int main(int argc, char **argv)
 	exit(0);
 
   files_merge(nr_of_files);
-  return(0);
+  return 0;
 }
 
 /* Adjust_options() assigns all global variables set also in the fields

@@ -1,0 +1,16 @@
+See platform-v68
+
+This is a test tree for a configuration using banked memory (N8VEM 680x0
+style)
+
+
+TODO
+- Make bankfixed support only writing out used areas of memory
+
+Look at bankfixed/bankfixed32 split - put the smarts in bankfixed32 and then
+look at a proper swap allocator so we don't waste tons of memory.
+
+- Write the bank copy routines (copy needed bits zero rest and optimise)
+- Write optimised udata copier ? (movem based and reverse ?)
+
+- Save restore bank on interrupt entry/exit

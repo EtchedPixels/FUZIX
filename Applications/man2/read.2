@@ -1,0 +1,53 @@
+READ(2)
+## NAME
+read - read data from a file descriptor
+## SYNOPSIS
+*#include <unistd.h>*
+
+*ssize\_t read*(*int* fd, *void* \*buf, *size\_t* count);
+## DESCRIPTION
+The *read*() call reads up to the specified *count* of bytes into the buffer
+*buf*.
+
+On files that support seeking the read begins at the current file offset and
+the file offset is incremented by the number of bytes read. A read will not
+continue beyond the current end of file, and if no bytes can be read 0 will be
+returned to indicate end of file.
+
+If the count is zero then zero will be returned. If the count is larger than
+*SSIZE\_MAX* an error will be returned.
+
+A read from a device such as a *socket*(4), *tty*(4) or *fifo*(7) may block and
+wait for data. This behaviour is controlled by the *O\_NDELAY* flag when opening
+the file. Waiting read calls may also be interrupted by a *signal*(7).
+## RETURN VALUE
+On success, the number of bytes successfully read is returned. If no data could
+be read due to an error then -1 is returned and errno is set.
+## ERRORS
+:*EAGAIN*
+  The read would block but the *O\_NDELAY* flag is set on the file descriptor.
+:*EBADF*
+  The file descriptor *fd* is not open for reading.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EINTR*
+  The read was interrupted by a *signal*(7) before any data was read.
+:*EINVAL*
+  The file descriptor refers to an object which does not support this operation
+  or the count specified exceeds *SSIZE\_MAX*.
+:*EIO*
+  An I/O error occurred.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001.
+## NOTES
+The behaviour of a *read*(2) when passed a count larger than *SSIZE\_MAX* is
+undefined by the standards. Fuzix returns *EINVAL* to provide a clear defined
+behaviour because on an 8 or 16bit machine it is relatively easy to accidentally
+hit this limit.
+
+Fuzix permits a directory node to be read, and internally implements *readdir*(3)
+this way. Future Fuzix on larger machines may support multiple file system types and if so
+the ability to read from a directory will be removed from those platforms in favour of
+new system calls. Portable application code should always use *readdir*(3).
+## SEE ALSO
+*lseek*(2), *open*(2), *write*(2), *readdir*(3), *socket*(4), *tty*(4), *signal*(7)

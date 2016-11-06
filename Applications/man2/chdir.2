@@ -1,0 +1,45 @@
+CHDIR(2)
+## NAME
+chdir - change working directory
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int chdir*(*const char \**path);\
+
+*int fchdir*(*int* fd);
+## DESCRIPTION
+The *chdir*() call changes the current working directory of the caller to
+that specified by *path*.
+
+The *fchdir* call changes the current working directory to that referred to
+by *fd*.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to walk the path
+:*EBADF*
+  The file descriptor *fd* is not valid.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EIO*
+  An I/O error occurred.
+:*ENOENT*
+  The path does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOTDIR*
+  An element of the path is not a directory or *fd* does not
+  refer to a directory
+## CONFORMING TO
+V7, UZI, POSIX.1-2001.
+## NOTES
+It is possible to save and restore the current working directory as follows
+
+    int fd = open(".", O_RDONLY);
+    ...
+    fchdir(fd);
+    close(fd);
+
+## SEE ALSO
+*chroot*(2), *getcwd*(3).

@@ -18,6 +18,9 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
+#define ACIA_TTY 2
+#define is_dw(minor) (minor >= DW_MIN_OFF)
+
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
 unsigned char tbuf3[TTYSIZ];   /* drivewire VSER 0 */
@@ -45,33 +48,36 @@ struct vt_repeat keyrepeat = { 40, 4 };
 void kputchar(char c)
 {
 	if (c == '\n')
-		tty_putc(1, '\r');
-	tty_putc(1, c);
+		tty_putc(TTYDEV & 0xff, '\r');
+	tty_putc(TTYDEV & 0xff, c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	uint8_t c;
+	uint8_t c = 0xff;
 	if (minor == 1)
 		return TTY_READY_NOW;
-	c = *uart_status;
-	return (c & 16) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
+	else if (minor == ACIA_TTY)
+		c = *uart_status & 16; /* TX DATA empty */
+	return c ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 /* For DragonPlus we should perhaps support both monitors 8) */
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if (minor > 2 ) {
+	if (is_dw(minor)) {
 		dw_putc(minor, c);
+		return;
+	} else if (minor == ACIA_TTY) {
+		*uart_data = c;	/* Data */
 		return;
 	}
 	if (minor == 1) {
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
 			vtoutput(&c, 1);
-	} else
-		*uart_data = c;	/* Data */
+	}
 }
 
 void tty_sleeping(uint8_t minor)
@@ -106,35 +112,35 @@ static uint8_t bitbits[] = {
 void tty_setup(uint8_t minor)
 {
 	uint8_t r;
-	if (minor > 2) {
+	if (is_dw(minor)) {
 		dw_vopen(minor);
 		return;
 	}
-	if (minor != 2)
+	if (minor != ACIA_TTY)
 		return;
-	r = ttydata[2].termios.c_cflag & CBAUD;
+	r = ttydata[ACIA_TTY].termios.c_cflag & CBAUD;
 	if (r > B19200) {
 		r = 0x1F;	/* 19.2 */
-		ttydata[2].termios.c_cflag &=~CBAUD;
-		ttydata[2].termios.c_cflag |= B19200;
+		ttydata[ACIA_TTY].termios.c_cflag &=~CBAUD;
+		ttydata[ACIA_TTY].termios.c_cflag |= B19200;
 	} else
 		r = baudbits[r];
-	r |= bitbits[(ttydata[2].termios.c_cflag & CSIZE) >> 4];
+	r |= bitbits[(ttydata[ACIA_TTY].termios.c_cflag & CSIZE) >> 4];
 	*uart_control = r;
 	r = 0x0A;	/* rx and tx on, !rts low, dtr int off, no echo */
-	if (ttydata[2].termios.c_cflag & PARENB) {
-		if (ttydata[2].termios.c_cflag & PARODD)
+	if (ttydata[ACIA_TTY].termios.c_cflag & PARENB) {
+		if (ttydata[ACIA_TTY].termios.c_cflag & PARODD)
 			r |= 0x20;	/* Odd parity */
 		else
 			r |= 0x60;	/* Even parity */
-		if (ttydata[2].termios.c_cflag & PARMRK)
+		if (ttydata[ACIA_TTY].termios.c_cflag & PARMRK)
 			r |= 0x80;	/* Mark/space */
 	}
 }
 
 int tty_carrier(uint8_t minor)
 {
-	if (minor > 2) return dw_carrier( minor );
+	if (is_dw(minor)) return dw_carrier( minor );
 	/* The serial DCD is status bit 5 but not wired */
 	return 1;
 }
@@ -144,7 +150,7 @@ void tty_interrupt(void)
 	uint8_t r = *uart_status;
 	if (r & 0x8) {
 		r = *uart_data;
-		tty_inproc(2,r);
+		tty_inproc(ACIA_TTY,r);
 	}	
 }
 
@@ -214,29 +220,6 @@ static void keyproc(void)
         }
 }
 
-#ifdef CONFIG_COCO_KBD
-uint8_t keyboard[8][7] = {
-	{ '@', 'h', 'p', 'x', '0', '8', KEY_ENTER },
-	{ 'a', 'i', 'q', 'y', '1', '9', 0 /* clear - used as ctrl*/ },
-	{ 'b', 'j', 'r', 'z', '2', ':', KEY_ESC /* break (used for esc) */ },
-	{ 'c', 'k', 's', '^' /* up */, '3', ';' , 0 /* NC */ },
-	{ 'd', 'l', 't', '|' /* down */, '4', ',', 0 /* NC */ },
-	{ 'e', 'm', 'u', KEY_BS /* left */, '5', '-', 0 /* NC */ },
-	{ 'f', 'n', 'v', KEY_TAB /* right */, '6', '.', 0 /* NC */ },
-	{ 'g', 'o', 'w', ' ', '7', '/', 0 /* shift */ },
-};
-
-uint8_t shiftkeyboard[8][7] = {
-	{ '\\', 'H', 'P', 'X', '_', '(', KEY_ENTER },
-	{ 'A', 'I', 'Q', 'Y', '!', ')', 0 /* clear - used as ctrl */ },
-	{ 'B', 'J', 'R', 'Z', '"', '*', CTRL('C') /* break */ },
-	{ 'C', 'K', 'S', '[' /* up */, '#', '+', 0 /* NC */ },
-	{ 'D', 'L', 'T', ']' /* down */, '$', '<', 0 /* NC */ },
-	{ 'E', 'M', 'U', '{' /* left */, '%', '=', 0 /* NC */ },
-	{ 'F', 'N', 'V', '}' /* right */, '&', '>', 0 /* NC */ },
-	{ 'G', 'O', 'W', ' ', '\'', '?', 0 /* shift */ },
-};
-#else
 uint8_t keyboard[8][7] = {
 	{ '0', '8', '@', 'h', 'p', 'x', KEY_ENTER },
 	{ '1', '9', 'a', 'i', 'q', 'y', 0 /* clear - used as ctrl*/ },
@@ -258,7 +241,6 @@ uint8_t shiftkeyboard[8][7] = {
 	{ '&', '>', 'F', 'N', 'V', '}' /* right */, 0 /* NC */ },
 	{ '\'', '?', 'G', 'O', 'W', ' ', 0 /* shift */ },
 };
-#endif /* COCO_KBD */
 
 static void keydecode(void)
 {
@@ -413,7 +395,7 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-	if (minor > 2)	/* remove once DW get its own ioctl() */
+	if (is_dw(minor))	/* remove once DW get its own ioctl() */
 		return tty_ioctl(minor, arg, ptr);
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
@@ -472,7 +454,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 /* A wrapper for tty_close that closes the DW port properly */
 int my_tty_close(uint8_t minor)
 {
-	if (minor > 2 && ttydata[minor].users == 1)
+	if (is_dw(minor) && ttydata[minor].users == 1)
 		dw_vclose(minor);
 	return (tty_close(minor));
 }

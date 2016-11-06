@@ -160,7 +160,7 @@ static int escout(unsigned char c)
 		return 0;
 	}
 	if (c == 'E') {
-		clear_lines(0, VT_HEIGHT);
+		clear_lines(0, VT_BOTTOM + 1);
 		return 0;
 	}
 	if (c == 'H') {
@@ -285,20 +285,20 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 			case KBMAPGET:
 				return uput(keymap, data, sizeof(keymap));
 			case KBSETTRANS:
-				if (uget(keyboard, data, sizeof(keyboard)) == -1)
+				if (uget(data, keyboard, sizeof(keyboard)) == -1)
 					return -1;
-				return uget(shiftkeyboard,
-					data + sizeof(keyboard),
+				return uget(data + sizeof(keyboard),
+					shiftkeyboard,
 					sizeof(shiftkeyboard));
 			case KBRATE:
-				if (uget(&keyrepeat, data, sizeof(keyrepeat)) == -1)
+				if (uget(data, &keyrepeat, sizeof(keyrepeat)) == -1)
 					return -1;
 				keyrepeat.first *= (TICKSPERSEC/10);
 				keyrepeat.continual *= (TICKSPERSEC/10);
 				return 0;
 #endif					
 			case VTSIZE:
-				return VT_HEIGHT << 8 | VT_WIDTH;
+				return (VT_BOTTOM + 1) << 8 | (VT_RIGHT + 1);
 			case VTATTRS:
 				return vtattr_cap;
 		}
@@ -341,7 +341,7 @@ int vt_inproc(uint8_t minor, unsigned char c)
 void vtinit(void)
 {
 	vtmode = 0;
-	clear_lines(0, VT_HEIGHT);
+	clear_lines(0, VT_BOTTOM + 1);
 	cursor_on(0, 0);
 }
 

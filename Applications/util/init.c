@@ -136,9 +136,10 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 	args[an] = NULL;
 
 	/* Check for internal processes */
-	if (strcmp(args[2], "getty") == 0)
-		pid = getty(args + 3, p + 1);
-	else {
+	if (strcmp(args[2], "getty") == 0) {
+		if ((pid = getty(args + 3, p + 1)) == -1)
+			return 0;
+	} else {
 		/* External */
 		pid = fork();
 		if (pid == -1) {
@@ -629,7 +630,6 @@ static int envn;
 static void envset(const char *a, const char *b)
 {
 	int al = strlen(a);
-	static char hptr[5];
 	/* May unalign the memory pool but we don't care by this point */
 	char *tp = sbrk(al + strlen(b) + 2);
 	if (tp == (char *) -1) {
@@ -687,6 +687,9 @@ const char *bauds[] = {
 static int baudmatch(const char *p)
 {
 	const char **str = bauds;
+	if (p == NULL)
+		return B9600;
+
 	int i;
 	for(i = 1; i < 15; i++) {
 		if (strcmp(p, *str++) == 0)
@@ -704,7 +707,6 @@ static pid_t getty(const char **argv, const char *id)
 	const char *host = "";
 	char *p, buf[50], salt[3];
 	char hn[64];
-	long baud = 9600;
 
 	gethostname(hn, sizeof(hn));
 
@@ -712,6 +714,7 @@ static pid_t getty(const char **argv, const char *id)
 		pid = fork();
 		if (pid == -1) {
 			putstr("init: can't fork\n");
+			return -1;
 		} else {
 			if (pid != 0)
 				/* parent's context: return pid of the child process */

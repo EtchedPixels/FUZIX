@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     uniq();
     fflush(stdout);
 
-    return (0);
+    return 0;
 }
 
 char *skip(char *s)

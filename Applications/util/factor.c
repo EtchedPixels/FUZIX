@@ -96,4 +96,5 @@ int main(int argc,char *argv[])
     if (NULL == gets_s(s, LINE_MAX)) break;
     factor(s);
   }
+  return 0;
 }

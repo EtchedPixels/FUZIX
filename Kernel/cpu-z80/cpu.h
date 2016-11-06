@@ -17,13 +17,11 @@ typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
-
-#define ei()   do {__asm ei __endasm; } while(0);
+#define uputi  uputw			/* Copy user int type */
+#define ugeti  ugetw			/* between user and kernel */
 
 typedef uint16_t irqflags_t;
 
-extern irqflags_t di(void);
-extern void irqrestore(irqflags_t f);
 extern void out(uint8_t addr, uint8_t val);
 extern uint8_t in(uint8_t addr);
 

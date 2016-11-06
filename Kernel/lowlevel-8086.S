@@ -136,14 +136,17 @@ outax:
 outcharhex:	
 	ret
 
-_di:
+___hard_di:
 	pushf
 	pop ax
 	cli
 	ret
 
-_irqrestore:
+___hard_irqrestore:
 	push ax
 	popf
 	ret
-	
+
+___hard_ei:
+	sti
+	ret

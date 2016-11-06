@@ -40,15 +40,15 @@ int scanmem(void)
 	volatile uint8_t *mmu=(uint8_t *)0xffa8;
 	volatile uint8_t *ptr=(uint8_t *)0x0100;
 	int i;
-	for( i = 0; i<256; i+=8 ){
+	for( i = 0; i<256; i+=16 ){
 		*mmu=i;
 		*ptr=0;
 	}
 	*mmu=0;
 	*ptr=0xff;
-	*mmu=8;
-	for( i = 8; i<256 && !*ptr ; ){
-		i+=8;
+	*mmu=16;
+	for( i = 16; i<256 && !*ptr ; ){
+		i+=16;
 		*mmu=i;;
 	}
 	*mmu=0;
@@ -69,7 +69,7 @@ void pagemap_init(void)
     /*  We have 64 8k pages for a CoCo3 so insert every other one
      *  into the kernel allocator map.
      */
-    for (i = 10; i < max ; i+=2)
+    for (i = 12; i < max ; i+=2)
         pagemap_add(i);
     /* add common page last so init gets it */
     pagemap_add(6);

@@ -103,7 +103,7 @@ extern int unlink(const char *path);
 extern ssize_t read(int fd, void *buf, int len);
 extern ssize_t write(int fd, const void *buf, int len);
 extern int chdir(const char *path);
-extern int sync(void);
+extern void sync(void);
 extern int access(const char *path, int way);
 extern int chmod(const char *path, mode_t mode);
 extern int chown(const char *path, uid_t owner, gid_t group);

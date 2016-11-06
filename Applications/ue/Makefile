@@ -1,0 +1,29 @@
+.SUFFIXES: .c .rel
+
+CC = fcc
+CFLAGS = -c
+COPT = -O2
+
+OBJS = ue.rel
+LIBS = term-ansi.c term-fuzix.c term.c
+
+all: ue.fuzix ue.ansi ue
+
+$(OBJS): ue.h
+$(LIBS): ue.h
+
+.c.rel:
+	$(CC) $(COPT) $(CFLAGS) $(DEFS) -c $< -o $@
+
+ue.fuzix: $(OBJS) term-fuzix.rel
+	$(CC) -o $@ --nostdio $(OBJS) term-fuzix.rel
+
+ue.ansi: $(OBJS) term-ansi.rel
+	$(CC) -o $@ $(OBJS) term-ansi.rel
+
+ue: $(OBJS) term.rel
+	$(CC) -o $@ --nostdio $(OBJS) term.rel -ltermcap
+
+clean realclean clobber:
+	rm -f *.rel ue *~
+

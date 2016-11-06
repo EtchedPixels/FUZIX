@@ -96,3 +96,11 @@ extern unsigned char vt_map( unsigned char c );
 #define CONFIG_LEVEL_2
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
+
+/* redefine tty queue primitives to use our banking ones */
+void putq( unsigned char *ptr, char c );
+unsigned char getq( unsigned *ptr );
+#define CONFIG_INDIRECT_QUEUES
+typedef unsigned char *queueptr_t;
+#define GETQ(p) getq(p)
+#define PUTQ(p, v) putq((p), (v))

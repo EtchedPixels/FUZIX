@@ -1,6 +1,6 @@
 		.area _COMMONMEM
 
-_di:		xor a		; NMOS Z80 bug work around as per CPU manual
+___hard_di:	xor a		; NMOS Z80 bug work around as per CPU manual
 		push af
 		pop af		; clear byte on stack below our usage
 		ld a, i
@@ -16,7 +16,8 @@ was_ei:		push af
 		di
 		ret
 
-_irqrestore:	pop hl
+___hard_irqrestore:
+		pop hl
 		pop de
 		pop af
 		jr c, was_di

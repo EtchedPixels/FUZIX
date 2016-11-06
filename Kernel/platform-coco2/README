@@ -1,7 +1,7 @@
 COCO2
 =====
 
-COCO or Dragon 64 with an IDE port and 64K of RAM
+COCO or Dragon 64 with an IDE port, cartridge and 64K of RAM
 
 Supported hardware:
 	IDE (Glenside or compatible)
@@ -14,7 +14,7 @@ Memory Map
 0400-7FFF	Code/Data for kernel (take care to keep this below 8000 and
 		shuffle stuff if needed to make it fit)
 8000-EFFF	User space
-F000-FBFF	More kernel bits
+EC00-FBFF	More kernel bits
 FC00-FEFF	udata
 FF00-FFFF	I/O etc
 

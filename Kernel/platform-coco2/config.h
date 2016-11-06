@@ -11,6 +11,7 @@
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
+#define UDATA_BLKS 1
 #define CONFIG_USERMEM_DIRECT
 
 #define CONFIG_BANKS	1
@@ -18,7 +19,7 @@
 #define SWAPDEV     0x0		/* Uses part of IDE slice 0 */
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot, including stashed uarea */
-#define SWAPTOP     0xF000	/* so it's a round number of 512 byte sectors */
+#define SWAPTOP     0xEC00	/* so it's a round number of 512 byte sectors */
 #define UDATA_SIZE  0x0200	/* one block */
 #define MAX_SWAPS   32
 
@@ -47,7 +48,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xF000  /* Top of program */
+#define PROGTOP     0xEC00  /* Top of program */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */

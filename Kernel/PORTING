@@ -82,7 +82,10 @@ Porting Fuzix to a new Z80 based machine generally requires the following
  that uses your map_process/map_kernel functions.
 
  CONFIG_VT
- VT_WIDTH, VT_HEIGHT, VT_RIGHT, VT_BOTTOM
+ VT_RIGHT, VT_BOTTOM
+
+ CONFIG_VT_SIMPLE
+ VT_WIDTH (framebuffer stride)
 
  Include a standard virtual terminal core based upon VT52 emulation
 
@@ -536,15 +539,16 @@ should probably support vfork().
 Other Processors
 ----------------
 
-Currently only Z80 and 6809 are properly supported. Clones should also work as
-should FPGA cores like T80. The current build uses no undocumented instructions
-in any core code.
+Currently only 68000, 6809 and Z80 are properly supported. Clones should also
+work as should FPGA cores like T80. The current build uses no undocumented
+instructions in any core code but the SDCC library does use them for its
+float support.
 
 It ought to be possible to port UZI to any other small processor with
 banking. That would include banked 6809/6309 systems and perhaps 65C816
 (Apple IIGS anyone ?) with a suitable compiler. The current core code has
 been tested to some extent on 6502, and has been build tested on 8086 and
-68000. Various endianisms in the core code have been fixed but there may be
+PDP/11. Various endianisms in the core code have been fixed but there may be
 more.
 
 The constraints roughly speaking for any port are
@@ -565,8 +569,6 @@ and relocatable binaries. Doable as AmigaOS showed but forget swapping.
 
 As far as I can tell we have suitable open toolchains for
 
-6809 (gcc fork) - although 6809 is well served by NitrOS/9.
-
 68HC11/2 (for the variants with banked RAM)
 
 TI990 (gcc development) - http://www.cozx.com/~dpitts/tigccinst.html
@@ -585,13 +587,47 @@ in 64K and anyone ever built a banked 8080 who knows 8)
 
 Various other early minicomputers probably also fit the target.
 
-Going to early 32bit CPU is hard because
-- not all of the core code is 32bit clean (I've tried to begin marking out
-  the argument parameters and the like to fix it)
-- the fs code knows that you can't write a size bigger than the filesystem
-  so other sanity checks would need adding
+Interrupts
+----------
 
-A 2BSD/RetroBSD port might make a lot more sense anyway on such a system
+The current default behaviour leaves interrupts off for long periods. In
+some cases such as floppy drivers this is hard to avoid on most 8bit
+machines. We try and minimise the harm this causes by loosely tying the
+system clock to the low part of any available RTC (the full RTC isn't used
+both because of the conversion costs, and because of Y2K issues on many
+systems).
+
+It is possible with care to re-enable interrupts during swapping on a task
+switch which is the big nasty but this requires care that mappings are
+always valid. With a fixed common space it isn't too bad.
+
+It's also now possible to define CONFIG_SOFT_IRQ in which case the platform
+provides its own routines for IRQ management and the kernel uses those. The
+requirements for this are:
+
+- You don't call any Fuzix core code while you are in 'di' state
+- You don't try and run extra timer ticks when the 'ei' or 'irqrestore'
+  occurs.
+
+You can thus keep system interrupts on a lot more and copy serial bytes
+into/out of a FIFO buffer or count missed timer ticks. Timer ticks need to
+be processed together in the timer interrupt. so you can call timer_interrupt()
+the correct number of times from the actual timer interrupt handler, but
+because of the context switching must not try and do it anywhere else.
+
+On a 68000 or a 6809 your vectors and stack are usually valid except during
+task switching (tricks.S) so it is fairly easy to handle. On a Z80 a lot of
+care is needed because we must avoid taking an interrupt while the mapped
+low bank does not have valid vectors. Bank16k uses __hard_di for a few
+cases because of this. For a Z80 platform with fixed common and low banks
+you should write the vectors into each bank at early boot time before
+interrupts are enabled.
+
+Fuzix expects physical interrupts to be off on entry, and it will call
+__hard_ei() at the right point in startup. It may call di/ei/irqrestore
+before that but with physical interrupts still off.
+
+
 
 
 Other Things That Would Help

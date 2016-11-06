@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
   resolve();			/* resolve label table indirections */
   execute();			/* execute commands */
   quit(0);			/* everything was O.K. if we got here */
-  return(0);
+  return 0;
 }
 
 

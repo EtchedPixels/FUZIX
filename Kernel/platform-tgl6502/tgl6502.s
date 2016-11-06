@@ -17,10 +17,11 @@
 
             ; exported debugging tools
             .export _trap_monitor
+	    .export _trap_reboot
             .export outchar
-	    .export _di
-	    .export _ei
-	    .export _irqrestore
+	    .export ___hard_di
+	    .export ___hard_ei
+	    .export ___hard_irqrestore
 	    .export vector
 
 	    .import interrupt_handler
@@ -70,16 +71,16 @@ _trap_monitor:
 _trap_reboot:
 	    jmp _trap_reboot	; FIXME: original ROM map and jmp
 
-_di:
+___hard_di:
 	    php
 	    sei			; Save old state in return to C
 	    pla			; Old status
 	    rts
-_ei:
+___hard_ei:
 	    cli			; on 6502 cli enables IRQs!!!
 	    rts
 
-_irqrestore:
+___hard_irqrestore:
 	    and #4		; IRQ flag
 	    beq irq_on
 	    cli

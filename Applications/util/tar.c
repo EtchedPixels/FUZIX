@@ -301,7 +301,7 @@ static void storedir( char *name){
 	case S_IFIFO:
 		h.type='6';
 		break;
-	defailt:
+	default:
 		fprintf(stderr,"unhandled file type error\n");
 		exit(1);
 	}
@@ -610,7 +610,6 @@ static void create( char *argv[] ){
 		perror("writing end of archive");
 	/* close outfile */
 	close(outfile);
-	exit(0);
 }
 
 
@@ -650,10 +649,7 @@ int main( int argc, char *argv[] ){
 		create( argv );
 	default:
 		fprintf(stderr, "tar: option x,c, or t must be used\n" );
+		exit(1);
 	}
-
-}	
-
-
-
-
+	exit(0);
+}

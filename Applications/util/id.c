@@ -48,5 +48,5 @@ int main(int argc, char *argv[])
 	    printf("egid=%d ", egid);
 
     printf("\n");
-    return(0);
+    return 0;
 }

@@ -60,7 +60,8 @@ static uint8_t format[4];	/* Format flags */
 static uint8_t bold_forced;	/* Force text bold */
 static uint8_t indent;
 static uint8_t listindent;	/* List indenting */
-uint16_t olist_count;
+static uint16_t olist_count;
+static uint8_t suppressnl;	/* Next newline shouldn't happen */
 
 static uint8_t tcols;		/* Table columns */
 static uint8_t trow;		/* Table row count */
@@ -147,8 +148,9 @@ static void force_newline(void)
 static void newline(void)
 {
     wordflush();
-    if (xpos)
+    if (xpos && !suppressnl)
         force_newline();
+    suppressnl = 0;
 }
 
 /* FIXME: Replace these with termcap handlers */
@@ -385,6 +387,11 @@ static void normal_syntax(char *p)
             t = NULL;
             if (p[1])
                 p++;
+            else {
+                /* End of line is \ - supress a newline */
+                suppressnl = 1;
+                break;
+            }
         }
 
         /* We've found markdown */
@@ -727,6 +734,7 @@ static void parse_line(char *p)
     case ' ':	/* four spaces: literal copy */
         if (memcmp(p, "    ", 4) == 0) {
             copy_literal(p + 4);
+            newline();		/* Because the source had one we ate */
             return;
         }
         if (memcmp(p, "  ", 2) == 0) {
@@ -846,4 +854,5 @@ int main(int argc, char *argv[])
         parse_line(buf);
     }
     parse_line("");
+    return 0;
 }

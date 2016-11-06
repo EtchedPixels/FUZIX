@@ -54,7 +54,7 @@ BOOL intflag;
 
 static char localbuf[8192];
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     char *str;
     char *cp;
@@ -73,6 +73,7 @@ void main(int argc, char *argv[])
     long outtotal;
     long inmax;
     char *buf;
+    int ret = 1;
 
     infile = NULL;
     outfile = NULL;
@@ -87,7 +88,7 @@ void main(int argc, char *argv[])
 	cp = strchr(str, '=');
 	if (cp == NULL) {
 	    fprintf(stderr, "Bad dd argument\n");
-	    return;
+	    return 1;
 	}
 	*cp++ = '\0';
 
@@ -100,7 +101,7 @@ void main(int argc, char *argv[])
 	case PAR_IF:
 	    if (infile) {
 		fprintf(stderr, "Multiple input files illegal\n");
-		return;
+		return 1;
 	    }
 	    infile = cp;
 	    break;
@@ -108,7 +109,7 @@ void main(int argc, char *argv[])
 	case PAR_OF:
 	    if (outfile) {
 		fprintf(stderr, "Multiple output files illegal\n");
-		return;
+		return 1;
 	    }
 	    outfile = cp;
 	    break;
@@ -117,7 +118,7 @@ void main(int argc, char *argv[])
 	    blocksize = getnum(cp);
 	    if (blocksize <= 0) {
 		fprintf(stderr, "Bad block size value\n");
-		return;
+		return 1;
 	    }
 	    break;
 
@@ -133,7 +134,7 @@ void main(int argc, char *argv[])
 	    seekval = getnum(cp);
 	    if (seekval < 0) {
 		fprintf(stderr, "Bad seek value\n");
-		return;
+		return 1;
 	    }
 	    break;
 
@@ -141,30 +142,30 @@ void main(int argc, char *argv[])
 	    skipval = getnum(cp);
 	    if (skipval < 0) {
 		fprintf(stderr, "Bad skip value\n");
-		return;
+		return 1;
 	    }
 	    break;
 
 	default:
 	    fprintf(stderr, "Unknown dd parameter\n");
-	    return;
+	    return 1;
 	}
     }
 
     if (infile == NULL) {
 	fprintf(stderr, "No input file specified\n");
-	return;
+	return 1;
     }
     if (outfile == NULL) {
 	fprintf(stderr, "No output file specified\n");
-	return;
+	return 1;
     }
     buf = localbuf;
     if (blocksize > sizeof(localbuf)) {
 	buf = malloc(blocksize);
 	if (buf == NULL) {
 	    fprintf(stderr, "Cannot allocate buffer\n");
-	    return;
+	    return 1;
 	}
     }
     intotal = 0;
@@ -175,7 +176,7 @@ void main(int argc, char *argv[])
 	perror(infile);
 	if (buf != localbuf)
 	    free(buf);
-	return;
+	return 1;
     }
     outfd = creat(outfile, 0666);
     if (outfd < 0) {
@@ -183,7 +184,7 @@ void main(int argc, char *argv[])
 	close(infd);
 	if (buf != localbuf)
 	    free(buf);
-	return;
+	return 1;
     }
     if (skipval) {
 	if (lseek(infd, skipval * blocksize, 0) < 0) {
@@ -230,14 +231,20 @@ void main(int argc, char *argv[])
             break;
     }
 
-    if (incc < 0)
+    if (incc < 0) {
 	perror(infile);
+	goto cleanup;
+    }
+
+    ret = 0;
 
   cleanup:
     close(infd);
 
-    if (close(outfd) < 0)
+    if (close(outfd) < 0) {
 	perror(outfile);
+	ret = 1;
+    }
 
     if (buf != localbuf)
 	free(buf);
@@ -247,6 +254,8 @@ void main(int argc, char *argv[])
 
     printf("%d+%d records out\n", outtotal / blocksize,
 	   (outtotal % blocksize) != 0);
+
+    return ret;
 }
 
 

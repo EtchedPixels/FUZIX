@@ -26,9 +26,9 @@
             .globl _trap_monitor
 	    .globl _trap_reboot
             .globl outchar
-	    .globl _di
-	    .globl _ei
-	    .globl _irqrestore
+	    .globl ___hard_di
+	    .globl ___hard_ei
+	    .globl ___hard_irqrestore
 
             ; imported symbols
             .globl _ramsize
@@ -98,7 +98,7 @@ bounce_end@
 ;;; Turn off interrupts
 ;;;    takes: nothing
 ;;;    returns: B = original irq (cc) state
-_di:
+___hard_di:
 	    tfr cc,b		; return the old irq state
 	    orcc #0x10
 	    rts
@@ -106,14 +106,14 @@ _di:
 ;;; Turn on interrupts
 ;;;   takes: nothing
 ;;;   returns: nothing
-_ei:
+___hard_ei:
 	    andcc #0xef
 	    rts
 
 ;;; Restore interrupts to saved setting
 ;;;   takes: B = saved state (as returned from _di )
 ;;;   returns: nothing
-_irqrestore:			; B holds the data
+___hard_irqrestore:		; B holds the data
 	    tfr b,cc
 	    rts
 
@@ -161,15 +161,25 @@ b@	sta	,x+
 	inca
 	decb
 	bne	b@
+	;; move mmu bank 0x6 to 0xB
+	lda	#$0b		; map mmu bank 0xB to cpu $0000
+	sta	$ffa8		;
+	ldx	#$0000		; dest
+	ldu	#$c000		; src
+c@	ldd	,u++		; copy 2 at a time
+	std	,x++		;
+	cmpx	#$2000		; are we done?
+	bne	c@		; loop if not done
+	clr	$ffa8		; reset cpu $0000
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
 	ldb	#%01000100	; coco3 mode
 	stb	$ff90
 	;; detect PAL or NTSC ROM
 	ldb	#$3f		; put Super BASIC in mmu
-	stb	$ffae		; 
+	stb	$ffae		;
 	lda	$c033		; get BASIC's "mirror" of Video Reg
-	ldb	#$06		; put Fuzix Kernel back in mmu
+	ldb	#$0b		; put Fuzix Kernel back in mmu
 	stb	$ffae		;
 	anda	#$8		; mask off 50 hz bit
 	sta	_hz		; save for future use

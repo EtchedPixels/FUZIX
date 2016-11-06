@@ -32,6 +32,8 @@ typedef uint32_t clock_t;
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
+#define uputi  uputw			/* Copy user int type */
+#define ugeti  ugetw			/* between user and kernel */
 
 #define ei() \
 	asm volatile ("eint")
@@ -114,3 +116,4 @@ typedef union {            /* this structure is endian dependent */
 #define EMAGIC   0x08
 #define EMAGIC_2 0x3c
 
+#define no_cache_udata()

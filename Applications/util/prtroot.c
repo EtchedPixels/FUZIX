@@ -87,6 +87,6 @@ int main(int argc, const char *argv[])
 	}
     }
     done(UNKNOWN_DEV, 1);
-    return (0);			/* not reached */
+    return 0;			/* not reached */
 }
 

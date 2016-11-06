@@ -1,0 +1,6 @@
+At the moment this is just build testing and seeing what in the toolchain
+breaks.
+
+Once it all builds and the syscall and some minimal driver code is filled in
+it ought to come in at about 20KW for a pure swap based system so probably
+not useful on an MMUless /11 except for testing.

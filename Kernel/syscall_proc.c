@@ -308,7 +308,7 @@ arg_t _waitpid(void)
 					p->p_pgrp == -pid)) {
 				if (p->p_status == P_ZOMBIE) {
 					if (statloc)
-						uputw(p->p_exitval, statloc);
+						uputi(p->p_exitval, statloc);
 					retval = p->p_pid;
 					p->p_status = P_EMPTY;
 
@@ -369,10 +369,8 @@ arg_t _fork(void)
 	irqflags_t irq;
 
 	if (flags) {
-		/* Brief period of grace... */
-//		udata.u_error = EINVAL;
-//		return -1;
-		kputs("warning: rebuild libc\n");
+		udata.u_error = EINVAL;
+		return -1;
 	}
 
 	new_process = ptab_alloc();
@@ -390,9 +388,10 @@ arg_t _fork(void)
 	 * *MAY* returns in both the child and parent contexts, however in a
 	 * non error case the child may also directly return to userspace
 	 * with the return code of 0 and not return from here. Do not assume
-	 * you can execute any child code reliably beyond this call
+	 * you can execute any child code reliably beyond this call.)
 	 */
 	r = dofork(new_process);
+
 #ifdef DEBUG
 	kprintf("Dofork %x (n %x)returns %d\n", udata.u_ptab,
 		new_process, r);

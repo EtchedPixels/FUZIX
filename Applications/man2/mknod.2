@@ -1,1 +1,79 @@
-[H[J
+MKNOD(2)
+## NAME
+mknod - create a special file
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <sys/stat.h>*\
+
+*#include <fcntl.h>*\
+
+*#include <unistd.h>*
+
+*int mknod*(*const char \**path, *mode\_t* mode, *dev_t* dev);
+## DESCRIPTION
+The *mknod*() call creates a filesystem node at the location given by
+*path*, including special nodes for devices as well as *fifo*(7) nodes.
+
+The *mode* specifies both the file permissions to be used (along with the
+*umask*(2) of the process) to create the node, and also specifies the type
+of node to create.
+
+The *dev* node specifies the device number of the device as computed by
+*makedev*(3) from the major and minor number of the device. The *dev* node is
+ignored for non device files.
+
+The following node types are permitted
+
+:*S\_IFBLK*
+  A block device representing mountable storage.
+:*S\_IFCHR*
+  A character device.
+:*S\_IFDIR*
+  A directory node. This creates a blank directory node. It is not the same as
+  *mkdir*(2) and should only be used for specialist purposes.
+:*S\_IFIFO*
+  A *fifo*(7) node (often called a 'named pipe').
+:*S\_IFREG*
+  An empty regular file.
+
+A normal user is only permitted to use this call to create *fifo* nodes. The
+superuser may create any type of node desired.
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  The caller has insufficient rights to access the path specified or to
+  create the new entry.
+:*EEXIST*
+  The node specified by *path* already exists.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EINVAL*
+  The node type specified is invalid or unsupported.
+:*EIO*
+  An I/O error occurred.
+:*ENOENT*
+  A directory component of the path does not exist.
+:*ENOMEM*
+  No memory was available.
+:*ENOSPC*
+  The filesystem does not have sufficient room to create the new node.
+:*EPERM*
+  An attempt was made to create a node other than a *fifo* and the caller is
+  not superuser.
+:*EROFS*
+  The file system is read-only.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001
+## NOTES
+Historic Unix used this call and a privileged binary in order to create
+directories. The *mkdir*(2) call shoudl be used instead.
+
+POSIX only defines the behaviour of this function for *S_FIFO*. The *mkfifo*(3)
+function should be used in preference.
+
+Fuzix allows the superuser to create any node type. This power should be used
+with great care.
+## SEE ALSO
+*mkdir*(2), *umask*(2), *makedev*(3), *mkfifo*(3), *fifo*(7)

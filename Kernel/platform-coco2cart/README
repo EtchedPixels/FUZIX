@@ -1,0 +1,82 @@
+COCO2
+=====
+
+(Work in progress)
+
+COCO or Dragon 64 with an IDE port, cartridge and 64K of RAM
+
+Supported hardware:
+	IDE (Cloud9 or compatible set at FF50) with either built in
+		cartridge RAM or separate cartridge
+
+Memory Map
+==========
+
+User View
+=========
+0000-00FF	Interrupt stack
+0100-01FF	Vectors (then wasted - could hide libc.o in there ?)
+0200-19FF	Display
+1A00-1BFF	udata/stack
+1C00-7FFF	Common, data and some kernel code
+8000-FEFF	User space
+FF00-FFFF	I/O etc
+
+Kernel Mode View
+================
+0000-00FF	Interrupt stack
+0100-01FF	Vectors
+0200-19FF	Display
+1A00-1BFF	udata/stack
+1C00-7FFF	Common, data and some kernel code
+8000-BFFF	ROM
+C000-FEFF	Kernel
+FF00-FFFF	I/O etc
+
+
+Emulating in XRoar
+==================
+
+Needs the IDE patches
+
+TODO
+====
+
+Make the boot loader robust (timeout handling)
+Add hash of code not just simple magic - so we know bits match
+Why doesn't coco keyboard auto-mapping work ?
+Why don't we find the root fs (IDE mapping bug ?)
+
+Support for a real time clock and clock locking
+Review irq disabling. We shouldn't need much of this at all as we don't have
+floppy hell to contend with, but the switchin/switchout logic needs to be
+reviewed for interrupt safety and the IRQs re-enabled during swap in and
+out. We should also be totally clean now on FIR blocking, so audio might
+actually be doable if not doing drivewire.
+
+MPI switching
+
+- Fix IDE to support the map flip on transfers (needs little asm code
+  adding)
+- reclaim discard space by packing bss, then buffers then discard
+
+We have about 2K left to try and jam those bits in which might just about be
+enough to add support for very minimal MBR parsing and offsets. That would
+be a big improvement.
+
+
+To Test
+=======
+
+Build the image and you'll get a fuzix.ide and fuzix.rom
+
+In the xroar directory where you have a hard disc image do
+
+dd if=/tmp/fuzix.ide of=hd0.img bs=512 seek=3 conv=notrunc
+/opt/xroaride/bin/xroar -default-machine dragon64 -cart ide -cart-rom fuzix.rom
+
+(use dragon64 until I fix the coco keymapping stuff)
+
+exec 49152
+
+enjoy
