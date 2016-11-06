@@ -66,6 +66,7 @@ f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
 f 0755 /bin/fsck        fsck
 f 0755 /bin/grep        grep
+f 0755 /bin/groups      groups
 f 0755 /bin/head        head
 f 0755 /bin/id          id
 f 0755 /bin/kbdrate     kbdrate
@@ -90,6 +91,7 @@ f 0755 /bin/tail        tail
 f 0755 /bin/tar         tar
 f 0755 /usr/lib/tchelp  tchelp
 f 0755 /bin/tee         tee
+f 0755 /bin/telinit     telinit
 f 0755 /bin/termcap     termcap
 f 0755 /bin/tget        tget
 f 0755 /bin/true        true
@@ -105,5 +107,4 @@ f 0755 /bin/whoami      whoami
 f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs
 f 0755 /bin/yes         yes
-
 
