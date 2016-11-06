@@ -45,7 +45,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o usermem_sam.o \
 	dragon.o mem-nx32.o ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \

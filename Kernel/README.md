@@ -19,7 +19,8 @@ this recipe should work on Mac.
 
   6809:
 	gcc-4.6.4 for m6809
-	lwtools 4.11
+	lwtools 4.13
+	Add (prepend) the directory Build/tools to your PATH environment variable.
 
 
 - Set TARGET in the top level Makefile

@@ -45,7 +45,7 @@ clean:
 	rm -f *.o *~
 
 image: bootfuz.bin
-	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
 	coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \

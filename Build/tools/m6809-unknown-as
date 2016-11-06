@@ -1,0 +1,149 @@
+#!/bin/sh
+#
+# Copyright 2009 by William Astle <lost@l-w.ca>
+#
+#This file is part of LWASM.
+#
+#LWASM is free software: you can redistribute it and/or modify it under the
+#terms of the GNU General Public License as published by the Free Software
+#Foundation, either version 3 of the License, or (at your option) any later
+#version.
+#
+#This program is distributed in the hope that it will be useful, but WITHOUT
+#ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+#more details.
+#
+#You should have received a copy of the GNU General Public License along with
+#this program. If not, see <http://www.gnu.org/licenses/>.
+
+# this was based somewhat on the "as" script from gcc6809
+
+#echo "LWASM-as $0 $*"
+
+show_version () {
+cat <<END
+LWASM (GNU assembler frontend) 2.3
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License.  This program has absolutely no warranty.
+END
+}
+
+fatal_error () {
+	echo $* 1>&2
+	exit 1
+}
+
+# Assume nothing.
+
+input_file=
+output_file=
+list_file=
+options=
+
+# Parse the command-line options.  See the GNU 'as' man page for
+# an explanation of all these options.  Our goal is to translate
+# them into lwasm form.
+
+while [ "$1" != "" ]; do
+	arg=$1; shift
+	case $arg in
+		-m6809)
+			true
+			;;
+		-gn)
+			# Generate NoICE debug symbols
+			# ignored - no output formats support debugging symbols
+			;;
+		-gs)
+			# Generate SDCC debug symbols
+			# ignored - no output formats supprt debugging symbols
+			;;
+#		--globalize-symbols)
+#			# Make all symbols global
+#			# lwasm does not support globalizing everything by default
+#			;;
+		-m*)
+			fatal_error "invalid CPU option '$arg'"
+			;;
+		--)
+			fatal_error "standard input not supported"
+			;;
+		-a*)
+			list_file=${arg#${arg%=*}}
+			list_file=${list_file#=}
+			options="$options -l$list_file"
+			;;
+		-I*)
+			#include_file=${arg#-I}
+			#echo "warning: include path '$include_file' ignored"
+			;;
+		-MD)
+			fatal_error "assembler option '$arg' not supported"
+			;;
+		-o)
+			output_file=$1; shift
+			;;
+		--defsym)
+			options="${options} -D$1"; shift
+			;;
+		-v|-version)
+			show_version
+			;;
+		--version)
+			show_version
+			exit 0
+			;;
+		-D|-f|-K|--traditional-format|-w|-x|-Z|-W|--no-warn)
+			# These options are accepted but ignored by GNU as.
+			true
+			;;
+		-Qy)
+			# "identify in output" - ignore
+			true
+			;;
+		-*)
+			echo "as (m6809): unrecognized option $arg"
+			exit 1
+			;;
+		*)
+			input_file=$arg
+			;;
+	esac
+done
+
+# Complain if no input files given.  We don't support redirecting
+# from standard input.
+
+if [ "x$input_file" = "x" ]; then
+	fatal_error "no input file specified"
+fi
+
+# Invoke the real (lwasm) assembler.
+# The -o option specifies the output file name
+# --obj creates object files
+# --pragma=undefextern causes undefined symbols to be assumed external
+# --pragma=cescapes allows C escape syntax in strings
+#echo lwasm -o "$output_file" $options --obj --pragma=undefextern --pragma=cescapes $input_file
+# pragma=newsource allows preprocessed asm files with macro expansion to assemble properly even
+# when the preprocessor interproses extra spaces
+lwasm -o "$output_file" $options --obj --pragma=undefextern --pragma=cescapes --pragma=importundefexport --pragma=newsource $input_file
+rc=$?
+
+# OK, see if the assembler succeeded or not.
+# If it failed, the source is copied to /tmp/as6809_error.s
+# so that it can be inspected.  GCC will normally delete any
+# temporary .s files that it generates.  This makes debugging
+# the compiler easier.
+#
+# lwasm does not create an output file if it errors out but it also doesn't
+# remove an existing file if it fails so we remove it anyway...
+
+if [ "$rc" != "0" ]; then
+	cp -p $input_file /tmp/as6809_error.s
+	rm -f $output_file $list_file
+	exit $rc
+fi
+
+# we don't need anything fancy here since lwasm supports specifying output
+# file names....
