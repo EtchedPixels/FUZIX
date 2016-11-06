@@ -5,7 +5,7 @@
 
 #define MAX_HD		2
 
-uint8_t ide_present = 1;
+uint8_t ide_present = 0;
 
 #define data	((volatile uint8_t *)0xFF50)
 #define error	((volatile uint8_t *)0xFF51)
@@ -24,11 +24,13 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint16_t nb = udata.u_nblock;
     uint8_t *dptr = udata.u_dptr;
 
+    kprintf("IDE xfer dev %d r %d rf %d sec %d\n",
+     minor, is_read, rawflag, udata.u_block);
     if (rawflag == 1 && d_blkoff(9))
          return -1;
     
     while(*status & 0x80);	/* Wait !BUSY */
-    *devh = (minor & 0x80) ? 0x50 : 0x40 ;	/* LBA, device */
+    *devh = (minor & 0x80) ? 0xF0 : 0xE0 ;	/* LBA, device */
     while(*status & 0x80);	/* Wait !BUSY */
     /* FIXME - slices of about 4MB might be saner! */
     *cylh = minor & 0x7F;	/* Slice number */
@@ -37,7 +39,7 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     *count = udata.u_nblock;
     while(!(*status & 0x40));	/* Wait DRDY */
     *cmd = is_read ? 0x20 : 0x30;
-    while(*status & 0x08);	/* Wait DRQ */
+
     while(udata.u_nblock--) {
         unsigned int i;
         while(!(*status & 0x08));	/* Wait DRQ */
@@ -66,7 +68,7 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 int ide_open(uint8_t minor, uint16_t flag)
 {
-    if(minor > 1 || !(ide_present & (1 << minor))) {
+    if (!(ide_present & (1 << (minor >> 7)))) {
         udata.u_error = ENODEV;
         return -1;
     }
