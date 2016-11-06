@@ -94,16 +94,19 @@ ud_wipe:
 	cmpx #$1C00
 	bne ud_wipe
 	lda ,x+
-	cmpa $15
-	bne wrong
+	cmpa #$15
+	bne wrong err
 	lda ,x+
-	cmpa $C0
-	bne wrong
+	cmpa #$C0
+	bne wrong err
 	rts
 
+wrong_err:
+	ldu #wrong
+	bra l2
 load_error:
 	ldu #fail
-	bsr copy_str
+l2:	bsr copy_str
 l1:	bra l1
 
 copy_str:
