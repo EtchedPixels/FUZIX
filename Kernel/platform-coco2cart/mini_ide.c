@@ -18,6 +18,12 @@ uint8_t ide_present = 0;
 #define cmd	((volatile uint8_t *)0xFF57)
 #define datal	((volatile uint8_t *)0xFF58)
 
+/* Assembler glue */
+
+extern void devide_read_data(uint8_t *p);
+extern void devide_write_data(uint8_t *p);
+extern uint8_t idepage;
+
 /* FIXME: switch to the correct mpi slot on entry */
 static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
@@ -26,8 +32,11 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     kprintf("IDE xfer dev %d r %d rf %d sec %d\n",
      minor, is_read, rawflag, udata.u_block);
+
     if (rawflag == 1 && d_blkoff(9))
          return -1;
+
+    idepage = rawflag;
     
     while(*status & 0x80);	/* Wait !BUSY */
     *devh = (minor & 0x80) ? 0xF0 : 0xE0 ;	/* LBA, device */
@@ -43,18 +52,11 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     while(udata.u_nblock--) {
         unsigned int i;
         while(!(*status & 0x08));	/* Wait DRQ */
-        if (is_read) {
-            for (i = 0; i < 256; i++) {
-                *dptr++ = *data;
-                *dptr++ = *datal;
-            }
-        } else {
-            for (i = 0; i < 256; i++) {
-                *datal = dptr[1];
-                *data = *dptr++;
-                dptr++;
-            }
-        }
+        if (is_read)
+          devide_read_data(dptr);
+        else
+          devide_write_data(dptr);
+        dptr += 512;
     }
     while(*status & 0x80);	/* Wait !BUSY */
     if (*status & 0x01) {	/* Error */

@@ -6,16 +6,12 @@
 
 	.globl _devide_read_data
 	.globl _devide_write_data
-
-	.globl _blk_op
+	.globl _idepage
 
         include "kernel.def"
         include "../kernel09.def"
 
 	.area .common
-
-;
-;	Standard mapping for Glenside style IDE
 ;
 ;	We don't really support swap properly but what we do is sufficient
 ;	for a simple memory mapping.
@@ -24,10 +20,9 @@ _devide_read_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	ldx _blk_op
 	leay 512,x
 	sty endp
-	tst _blk_op+2
+	tst _idepage
 	beq readword
 	jsr map_process_always
 readword:
@@ -43,10 +38,9 @@ _devide_write_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	ldx _blk_op
 	leay 512,x
 	sty endp
-	tst _blk_op+2
+	tst _idepage
 	beq writeword
 	jsr map_process_always
 writeword:
@@ -59,4 +53,5 @@ writeword:
 	puls y,dp,pc
 
 endp:	.dw 0
-
+_idepage:
+	.db 0
