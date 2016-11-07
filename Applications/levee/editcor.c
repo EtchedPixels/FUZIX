@@ -345,9 +345,9 @@ docommand(cmdtype cmd)
 	else {
 	    yp = setY(curr);
 	    if (endY != setY(newend))	/* shuffled lines */
-		refresh(setY(disp), setX(disp), disp, pend, TRUE);
+		lvrefresh(setY(disp), setX(disp), disp, pend, TRUE);
 	    else			/* refresh to end position */
-		refresh(setY(disp), setX(disp), disp, newend, FALSE);
+		lvrefresh(setY(disp), setX(disp), disp, newend, FALSE);
 	}
 	if (curr >= bufmax && bufmax > 0) {	/* adjust off end of buffer */
 	    setpos(bufmax-1);

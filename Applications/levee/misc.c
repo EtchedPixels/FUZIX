@@ -20,16 +20,16 @@
 #include "extern.h"
 
 bool PROC
-getline(char *str)
+lvgetline(char *str)
 {
     int len;
     char flag;
-    
+
     flag = line(str, 0, COLS-curpos.x, &len);
     str[len] = 0;
     strput(CE);
     return (flag == EOL);
-} /* getline */
+} /* lvgetline */
 
 
 char PROC
@@ -101,7 +101,7 @@ int PROC
 setX(int cp)
 {
     int top, xp;
-    
+
     top = bseekeol(cp);
     xp = 0;
     while (top < cp) {
@@ -121,7 +121,7 @@ int PROC
 setY(int cp)
 {
     int yp, ix;
-    
+
     ix = ptop;
     yp = -1;
     cp = min(cp,bufmax-1);
@@ -157,12 +157,12 @@ to_index(int line)
     }
     return(cp);
 } /* to_index */
-    
+
 PROC
 void swap(int *a, int *b)
 {
     int c;
-    
+
     c = *a;
     *a = *b;
     *b = c;
@@ -259,7 +259,7 @@ PROC insertmacro(char *cmdstr, int count)
 int PROC lookup(char c)
 {
     int ix = MAXMACROS;
-    
+
     while (--ix >= 0 && mbuffer[ix].token != c)
 	;
     return ix;
@@ -270,7 +270,7 @@ PROC
 void fixmarkers(int base, int offset)
 {
     char c;
-    
+
     for (c = 0;c<'z'-'`';c++)
 	if (contexts[c] > base)
 	    if (contexts[c]+offset < base || contexts[c]+offset >= bufmax)
@@ -313,7 +313,7 @@ void wr_stat(void)
 static int  tabptr,
 	    tabstack[20],
 	    ixp;
-	
+
 PROC
 void back_up(char c)
 {
@@ -340,7 +340,7 @@ line(char *s, int start, int endd, int *size)
     int col0,
 	ip;
     char c;
-    
+
     col0 = ixp = curpos.x;
     ip = start;
     tabptr = 0;
@@ -424,7 +424,7 @@ PROC
 void setend(void)
 {
     int bottom, count;
-    
+
     bottom = ptop;
     count = LINES-1;
     while (bottom < bufmax && count > 0) {
@@ -442,7 +442,7 @@ int PROC
 settop(int lines)
 {
     int top, yp;
-    
+
     top = curr;
     yp = -1;
     do {

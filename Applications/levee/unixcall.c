@@ -67,8 +67,7 @@ void initcon(void)
     struct termios new;
 
     if (!ioset) {
-	tcgetattr(0, &old);
-        /*ioctl(0, TCGETS, &old);*/	/* get editing keys */
+	tcgetattr(0, &old);	/* preserve current terminal setup */
 
         erasechar = old.c_cc[VERASE];
         eraseline = old.c_cc[VKILL];
@@ -79,8 +78,7 @@ void initcon(void)
 	new.c_lflag &= ~(ICANON|ISIG|ECHO);
 	new.c_oflag = 0;
 
-	tcsetattr(0, TCSANOW, &new);
-        /*ioctl(0, TCSETS, &new);*/
+	tcsetattr(0, TCSANOW, &new);	/* terminal setup for editor */
         ioset=1;
     }
 }
@@ -88,12 +86,7 @@ void initcon(void)
 void fixcon(void)
 {
     if (ioset) {
-	 tcsetattr(0, TCSANOW, &old);
-         /*ioctl(0, TCSETS, &old);*/
-/*   More or less blind attempt to fix console corruption.
-     T. Huld 1998-05-19
-         ioctl(0, TCSETA, &old);
-*/
+	 tcsetattr(0, TCSANOW, &old);	/* restore original terminal setup */
          ioset = 0;
     }
 }

@@ -57,13 +57,13 @@ int RE_start[9],		/* start of substitute argument */
 extern
 struct undostack undo;		/* To undo a command */
 		/* R A N D O M   S T R I N G S */
-		
+
 extern
 char instring[],		/* Latest input */
      filenm[],			/* Filename */
      altnm[],			/* Alternate filename */
      gcb[];			/* Command buffer for mutations of insert */
-	
+
 extern
 char undobuf[],
      undotmp[],
@@ -75,7 +75,7 @@ int uread,			/* reading from the undo stack */
 extern
 char rcb[], *rcp,		/* last modification command */
      core[];			/* data space */
-		    
+
 extern
 struct ybuf yank;		/* last deleted/yanked text */
 /* STATIC INITIALIZATIONS: */
@@ -112,7 +112,7 @@ char ED_NOTICE[],		/* Editor version */
      ED_REVISION,		/* Small revisions & corrections */
      fismod[],			/* File is modified message */
      fisro[];			/* permission denied message */
-     
+
 extern
 char *excmds[],
      wordset[],
@@ -132,7 +132,7 @@ int autowrite,
     wrapscan,
     bell,
     magic;
-/*extern 
+/*extern
 char *suffix;	*/
 /* For movement routines */
 extern
@@ -140,7 +140,7 @@ int setstep[];
 /* Where the last diddling left us */
 extern
 struct coord curpos;
-    
+
     /* initialize the buffer */
 extern
 int curr,		/* Global cursor pos */
@@ -162,7 +162,7 @@ bool modified,		/* File has been modified */
      lineonly,		/* Dumb terminal? */
      zotscreen,		/* do more after command in execmode */
      diddled;		/* force redraw when I enter editcore */
-     
+
 extern
 int macro;    /* Index into MCR macro execution stack */
 extern
@@ -173,7 +173,7 @@ cmdtype movemap[];
 #endif /*GLOBALS_D*/
 #ifndef EXTERN_D
 #define EXTERN_D
-#define wc(ch)	(scan(65,'=',(ch),wordset)<65)
+#define wc(ch)	(lvscan(65,'=',(ch),wordset)<65)
 
 #if SYS5
 #define fillchar(p,l,c)	memset((p),(c),(l))
@@ -183,7 +183,7 @@ cmdtype movemap[];
 #endif /*ST*/
 #endif /*SYS5*/
 		/* non int functions to be found elsewhere */
-		
+
 #if 0
 extern findstates findCP();
 extern exec_type editcore();

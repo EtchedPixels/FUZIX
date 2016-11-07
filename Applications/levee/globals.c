@@ -21,8 +21,8 @@
 #include "levee.h"
 #define GLOBALS
 
-char lastchar,		/* Last character read via peekc */
-     ch;		/* Global command char */
+char lastchar,			/* Last character read via peekc */
+     ch;			/* Global command char */
 
 exec_type mode;			/* editor init state */
 int lastexec = 0;		/* last exec command */
@@ -35,50 +35,50 @@ bool adjcurr[PARA_BACK+1],
      adjendp[PARA_BACK+1];
 
 		/* A R G U M E N T S */
-char startcmd[80] = "";	/* initial command after read */
-char **argv;		/* Arguments */
-int  argc=0,		/* # arguments */
-     pc=0;		/* Index into arguments */
+char startcmd[80] = "";		/* initial command after read */
+char **argv;			/* Arguments */
+int  argc=0,			/* # arguments */
+     pc=0;			/* Index into arguments */
 #if 0
-struct stat thisfile;	/* status on current file, for writeout... */
+struct stat thisfile;		/* status on current file, for writeout... */
 #endif
 
 		/* M A C R O   S T U F F */
 struct macrecord mbuffer[MAXMACROS];
-struct tmacro mcr[NMACROS];		/* A place for executing macros */
+struct tmacro mcr[NMACROS];	/* A place for executing macros */
 
 		/* S E A R C H   S T U F F */
-char dst[80] = "",			/* last replacement pattern */
-     lastpatt[80] = "",			/* last search pattern */
-     pattern[MAXPAT] = "";		/* encoded last pattern */
+char dst[80] = "",		/* last replacement pattern */
+     lastpatt[80] = "",		/* last search pattern */
+     pattern[MAXPAT] = "";	/* encoded last pattern */
 
-int RE_start[9],			/* start of substitution arguments */
-    RE_size [9],			/* size of substitution arguments */
-    lastp;				/* end of last pattern */
+int RE_start[9],		/* start of substitution arguments */
+    RE_size [9],		/* size of substitution arguments */
+    lastp;			/* end of last pattern */
 
-struct undostack undo;			/* To undo a command */
+struct undostack undo;		/* To undo a command */
 
 
 		/* R A N D O M   S T R I N G S */
 
-char instring[80],	/* Latest input */
-     filenm[80] = "",	/* Filename */
-     altnm[80] = "";	/* Alternate filename */
-char gcb[16];		/* Command buffer for mutations of insert */
+char instring[80],		/* Latest input */
+     filenm[80] = "",		/* Filename */
+     altnm[80] = "";		/* Alternate filename */
+char gcb[16];			/* Command buffer for mutations of insert */
 
 char undobuf[40];
 char undotmp[40];
 char yankbuf[40];
 
-HANDLE uread,		/* reading from the undo stack */
-       uwrite;		/* writing to the undo stack */
+HANDLE uread,			/* reading from the undo stack */
+       uwrite;			/* writing to the undo stack */
 
-			    /* B U F F E R S */
-char rcb[256];		/* last modification command */
-char *rcp;		/* this points at the end of the redo */
-char core[SIZE+1];	/* data space */
+		/* B U F F E R S */
+char rcb[256];			/* last modification command */
+char *rcp;			/* this points at the end of the redo */
+char core[SIZE+1];		/* data space */
 
-struct ybuf yank;	/* last deleted/yanked text */
+struct ybuf yank;		/* last deleted/yanked text */
 
 
 /* STATIC INITIALIZATIONS: */
@@ -175,7 +175,7 @@ char erasechar = ERASE,			/* our erase character */
 char ED_NOTICE[]  = "(c)3.4",		/* Editor version */
      ED_REVISION = 'm',			/* Small revisions & corrections */
      fismod[] = "File is modified",	/* File is modified message */
-     fisro[] = "File is readonly";	/* when you can't write the file */
+     fisro[] = "File is readonly";	/* When you can't write the file */
 
 char *excmds[] = {
 	"print",	/* lines to screen */
@@ -262,7 +262,7 @@ int setstep[2] = {-1,1};
 /* Where the last diddling left us */
 struct coord curpos={0, 0};
 
-    /* initialize the buffer */
+/* Initialize the buffer */
 int  bufmax = 0,		/* End of file here */
      lstart = 0, lend = 0,	/* Start & end of current line */
      ptop   = 0, pend = 0,	/* Top & bottom of CRT window */
@@ -286,8 +286,7 @@ bool modified= NO,		/* File has been modified */
 int  macro = -1;    		/* Index into MCR */
 char nlsearch = 0;		/* for N and n'ing... */
 
-/* movement, command codes */
-
+/* Movement, command codes */
 cmdtype movemap[256]={
     /*^@*/ BAD_COMMAND,
     /*^A*/ DEBUG_C,
@@ -321,7 +320,7 @@ cmdtype movemap[256]={
     /*^]*/ BAD_COMMAND,
     /*^^*/ BAD_COMMAND,
     /*^_*/ BAD_COMMAND,
-    /*  */ GO_RIGHT,
+    /*  */ GO_RIGHT,		/* 0x20 */
     /*! */ BAD_COMMAND,
     /*" */ BAD_COMMAND,
     /*# */ BAD_COMMAND,
@@ -337,7 +336,7 @@ cmdtype movemap[256]={
     /*- */ CR_BACK,
     /*. */ REDO_C,
     /*/ */ PATT_FWD,
-    /*0 */ BAD_COMMAND,
+    /*0 */ BAD_COMMAND,		/* 0x30 */
     /*1 */ BAD_COMMAND,
     /*2 */ BAD_COMMAND,
     /*3 */ BAD_COMMAND,
@@ -353,7 +352,7 @@ cmdtype movemap[256]={
     /*= */ BAD_COMMAND,
     /*> */ ADJUST_C,
     /*? */ PATT_BACK,
-    /*@ */ BAD_COMMAND,
+    /*@ */ BAD_COMMAND,		/* 0x40 */
     /*A */ A_AT_END,
     /*B */ BACK_WD,
     /*C */ HARDMACRO,
@@ -369,7 +368,7 @@ cmdtype movemap[256]={
     /*M */ PAGE_MIDDLE,
     /*N */ BSEARCH,
     /*O */ OPENUP_C,
-    /*P */ PUT_AFTER,
+    /*P */ PUT_AFTER,		/* 0x50 */
     /*Q */ EDIT_C,
     /*R */ BIG_REPL_C,
     /*S */ BAD_COMMAND,
@@ -385,7 +384,7 @@ cmdtype movemap[256]={
     /*] */ BAD_COMMAND,
     /*^ */ NOTWHITE,
     /*_ */ BAD_COMMAND,
-    /*` */ TO_MARK,
+    /*` */ TO_MARK,		/* 0x60 */
     /*a */ APPEND_C,
     /*b */ BACK_WD,
     /*c */ CHANGE_C,
@@ -401,7 +400,7 @@ cmdtype movemap[256]={
     /*m */ MARKER_C,
     /*n */ FSEARCH,
     /*o */ OPEN_C,
-    /*p */ PUT_BEFORE,
+    /*p */ PUT_BEFORE,		/* 0x70 */
     /*q */ BAD_COMMAND,
     /*r */ REPLACE_C,
     /*s */ HARDMACRO,
@@ -423,126 +422,126 @@ cmdtype movemap[256]={
     /*83*/ BAD_COMMAND,
     /*84*/ BAD_COMMAND,
     /*85*/ BAD_COMMAND,
+    /*86*/ BAD_COMMAND,
+    /*87*/ BAD_COMMAND,
+    /*88*/ BAD_COMMAND,
+    /*89*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*90*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
     /*x6*/ BAD_COMMAND,
     /*x7*/ BAD_COMMAND,
     /*x8*/ BAD_COMMAND,
     /*x9*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND,
-    /*xx*/ BAD_COMMAND
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*A0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*B0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*C0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*D0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*E0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND,
+    /*F0*/ BAD_COMMAND,
+    /*x1*/ BAD_COMMAND,
+    /*x2*/ BAD_COMMAND,
+    /*x3*/ BAD_COMMAND,
+    /*x4*/ BAD_COMMAND,
+    /*x5*/ BAD_COMMAND,
+    /*x6*/ BAD_COMMAND,
+    /*x7*/ BAD_COMMAND,
+    /*x8*/ BAD_COMMAND,
+    /*x9*/ BAD_COMMAND,
+    /*xA*/ BAD_COMMAND,
+    /*xB*/ BAD_COMMAND,
+    /*xC*/ BAD_COMMAND,
+    /*xD*/ BAD_COMMAND,
+    /*xE*/ BAD_COMMAND,
+    /*xF*/ BAD_COMMAND
     };
