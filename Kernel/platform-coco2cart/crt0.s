@@ -18,6 +18,8 @@
 start:
 		orcc #0x10		; interrupts definitely off
 		lds #$0100		; not written by loader
+		clr $ffde		; make sure ROM is mapped
+		clr $ffd4		; low 32K in low 32K
 		jsr load_image		; load the rest of the OS from disk
 		jmp main
 
