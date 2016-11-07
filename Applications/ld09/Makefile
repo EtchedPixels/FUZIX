@@ -3,7 +3,7 @@ CC = m6809-unknown-gcc
 ASM = m6809-unknown-as
 AR = m6809-unknown-ar
 LINKER = m6809-unknown-ld
-CFLAGS =  -I../../Library/include -I../../Library/include/6502 -Wall -pedantic -fno-strict-aliasing
+CFLAGS =  -I../../Library/include -I../../Library/include/6809 -Wall -pedantic -fno-strict-aliasing
 COPT = -Os
 LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
