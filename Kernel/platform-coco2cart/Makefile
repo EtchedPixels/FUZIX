@@ -52,7 +52,8 @@ clean:
 	rm -f *.o *~
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin --map=../fuzix.map --script=fuzix.link \
+	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link \
+	--oformat=decb \
 	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
