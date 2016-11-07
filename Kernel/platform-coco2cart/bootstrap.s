@@ -95,10 +95,10 @@ ud_wipe:
 	bne ud_wipe
 	lda ,x+
 	cmpa #$15
-	bne wrong err
+	bne wrong_err
 	lda ,x+
 	cmpa #$C0
-	bne wrong err
+	bne wrong_err
 	rts
 
 wrong_err:
