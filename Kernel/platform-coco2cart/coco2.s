@@ -127,10 +127,10 @@ _program_vectors:
 
 map_kernel:
 	pshs a
-	clr $ffde	;	ROM in
 	lda #1
-map_kr:
 	sta romin
+map_kr:
+	clr $ffde	;	ROM in
 	puls a,pc
 	
 map_process:
