@@ -66,6 +66,7 @@ ugetsl:
 ugetse:
 	sta ,u
 	ldx #0
+	jsr map_kernel
 	puls u,y,pc
 
 
