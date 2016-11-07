@@ -82,9 +82,9 @@
         .globl _trap_monitor
 	.globl _trap_reboot
         .globl outchar
-	.globl _di
-	.globl _ei
-	.globl _irqrestore
+	.globl ___hard_di
+	.globl ___hard_ei
+	.globl ___hard_irqrestore
 
 	; imported symbols
         .globl _ramsize
