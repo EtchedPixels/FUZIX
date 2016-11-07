@@ -27,42 +27,42 @@ extern uint8_t idepage;
 /* FIXME: switch to the correct mpi slot on entry */
 static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    uint16_t nb = udata.u_nblock;
-    uint8_t *dptr = udata.u_dptr;
-
-    kprintf("IDE xfer dev %d r %d rf %d sec %d\n",
-     minor, is_read, rawflag, udata.u_block);
+    uint16_t nb;
+    uint8_t *dptr;
 
     if (rawflag == 1 && d_blkoff(9))
          return -1;
 
     idepage = rawflag;
+    nb = udata.u_nblock;
+    dptr = udata.u_dptr;
     
     while(*status & 0x80);	/* Wait !BUSY */
     *devh = (minor & 0x80) ? 0xF0 : 0xE0 ;	/* LBA, device */
     while(*status & 0x80);	/* Wait !BUSY */
-    /* FIXME - slices of about 4MB might be saner! */
     *cylh = minor & 0x7F;	/* Slice number */
-    *cyll = udata.u_block >> 8;	/* Each slice is 32MB */
-    *sec = udata.u_block & 0xFF;
-    *count = udata.u_nblock;
-    while(!(*status & 0x40));	/* Wait DRDY */
-    *cmd = is_read ? 0x20 : 0x30;
 
     while(udata.u_nblock--) {
-        unsigned int i;
+        /* FIXME - slices of about 4MB might be saner! */
+        *cyll = udata.u_block >> 8;	/* Each slice is 32MB */
+        *sec = udata.u_block & 0xFF;
+        *count = 1;
+        while(!(*status & 0x40));	/* Wait DRDY */
+        *cmd = is_read ? 0x20 : 0x30;
         while(!(*status & 0x08));	/* Wait DRQ */
         if (is_read)
           devide_read_data(dptr);
         else
           devide_write_data(dptr);
         dptr += 512;
-    }
-    while(*status & 0x80);	/* Wait !BUSY */
-    if (*status & 0x01) {	/* Error */
-        kprintf("ide%d: error %x\n", *error);
-        udata.u_error = EIO;
-        return -1;
+        udata.u_block++;
+
+        while(*status & 0x80);	/* Wait !BUSY */
+        if (*status & 0x01) {	/* Error */
+          kprintf("ide%d: error %x\n", *error);
+          udata.u_error = EIO;
+          return -1;
+        }
     }
     return nb;
 
