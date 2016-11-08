@@ -7,9 +7,9 @@
 __syscall:
 	swi
 	cmpd #0			; D holds errno, if any
-	beq @noerr
+	beq noerr1
 	std _errno		; X is -1 in this case
-@noerr:
+noerr1:
 	rts
 
 ; for variadic functions:
@@ -17,9 +17,9 @@ __syscall:
 __syscall_mangled:
 	swi
 	cmpd #0
-	beq @noerr
+	beq noerr2
 	std _errno
-@noerr:
+noerr2:
 	puls d		; get return address
 	pshs d,x	; inject a word on stack, e.g. X
 	rts
