@@ -37,7 +37,7 @@
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x2000  /* also data base */
 #define PROGLOAD    0x2000
-#define PROGTOP     0xC000  /* Top of program (for debug for now, can go to 10000) */
+#define PROGTOP     0xC000  /* Top of program (for debug for now, can go to FFF9) */
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 

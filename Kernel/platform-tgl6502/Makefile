@@ -14,7 +14,7 @@ JUNK = $(CSRCS:.c=.o) $(CSRCS:.c=.s) $(ASRCS:.s=.o)
 all:	$(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
 
 $(AOBJS): %$(BINEXT): %.s
 	$(CROSS_AS) $(ASOPTS) $< -o $*$(BINEXT)
