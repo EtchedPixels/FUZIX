@@ -21,9 +21,9 @@ _setjmp:
 _longjmp:
 	; read back Y,U,S and return address
 	ldd 2,s		; second argument
-	bne @nz		; must not be 0
+	bne nz		; must not be 0
 	incb
-@nz	ldy ,x++
+nz	ldy ,x++
 	ldu ,x++
 	lds ,x++	; points to clobbered return address
 	ldx ,x

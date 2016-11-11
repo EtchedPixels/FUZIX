@@ -462,9 +462,9 @@ outcharhex:
 outnibble:
         anda #0x0f ; mask off low four bits
         cmpa #9
-        ble numeral ; less than 10?
+        ble num    ; less than 10?
         adda #0x07 ; start at 'A' (10+7+0x30=0x41='A')
-numeral:adda #0x30 ; start at '0' (0x30='0')
+num:    adda #0x30 ; start at '0' (0x30='0')
         jsr outchar
         rts
 
