@@ -138,11 +138,11 @@ $(APPTC): %: %.o
 	$(LINKER) $^ -o $@.bin -ltermcap68000 $(LINKER_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
 
-size.report: $(APPS) $(APPSNS)
+size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
 
 rmbak:
 	rm -f *~ core
