@@ -166,7 +166,7 @@ void pass1(void)
         ++icount;
         /* Check size */
 
-        if (swizzle32(ino.i_size) < 0) {
+        if ((int32_t)swizzle32(ino.i_size) < 0) {
             printf("Inode %d offset is negative with value of %ld. Fix? ",
                     n, (long)swizzle32(ino.i_size));
             if (yes()) {
