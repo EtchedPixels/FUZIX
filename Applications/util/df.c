@@ -143,10 +143,11 @@ void df_all(void)
 
 const char *devname(dev_t devno)
 {
-    DIR dp;
+    static char namebuf[sizeof(DEV_PATH) + MAXNAMLEN + 2];
+    static DIR dp;
+
     struct dirent *entry;
     struct stat fstat;
-    static char namebuf[sizeof(DEV_PATH) + MAXNAMLEN + 2];
 
     if (opendir_r(&dp, DEV_PATH) != (DIR *) NULL) {
         while ((entry = readdir(&dp)) != (struct dirent *) NULL) {
