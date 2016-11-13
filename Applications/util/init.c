@@ -686,11 +686,12 @@ const char *bauds[] = {
 
 static int baudmatch(const char *p)
 {
+	int i;
 	const char **str = bauds;
+
 	if (p == NULL)
 		return B9600;
 
-	int i;
 	for(i = 1; i < 15; i++) {
 		if (strcmp(p, *str++) == 0)
 			return i;
