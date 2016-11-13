@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 int do_change(char *name)
 {
     mode_t m;
-    DIR dir;
+    DIR *dir;
     struct dirent *entp;
     char *namp;
 
@@ -235,7 +235,7 @@ int do_change(char *name)
     }
 
     if (S_ISDIR(st.st_mode) && rflag) {
-	if (!opendir_r(&dir, name)) {
+	if ((dir = opendir(name)) == NULL) {
 	    perror(name);
 	    return (1);
 	}
@@ -243,14 +243,14 @@ int do_change(char *name)
 	    strcpy(path, name);
 	namp = path + strlen(path);
 	*namp++ = '/';
-	while (entp = readdir(&dir))
+	while (entp = readdir(dir))
 	    if (entp->d_name[0] != '.' ||
 		(entp->d_name[1] &&
 		 (entp->d_name[1] != '.' || entp->d_name[2]))) {
 		strcpy(namp, entp->d_name);
 		errors |= do_change(path);
 	    }
-	closedir_r(&dir);
+	closedir(dir);
 	*--namp = '\0';
     }
     return (errors);

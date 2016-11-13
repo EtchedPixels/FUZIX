@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	    count = getnum(cp);
 	    if (count < 0) {
 		fprintf(stderr, "Bad count value\n");
-		return;
+		return 1;
 	    }
 	    break;
 

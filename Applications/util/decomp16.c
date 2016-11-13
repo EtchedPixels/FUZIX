@@ -175,7 +175,7 @@ void die(const char *s)
   /* Write any error message */
   if (s != (const char *) NULL)
 	write(fderr, s, strlen(s));
-  exit((s == (char *) NULL) ? 0 : 1);
+  exit((s == (const char *) NULL) ? 0 : 1);
 }
 
 
@@ -438,4 +438,5 @@ int main(int argc, char *argv[])
 		}
 	}
   }
+  return 0;
 }
