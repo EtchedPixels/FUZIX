@@ -16,16 +16,13 @@
 /*								*/
 /****************************************************************/
 
-int  main(int argc, char **argv);
 void Print(char *comment, char *name);
 void Error(char *message, char *arg);
 
-int main(argc, argv)
-int argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
     char *term;
-    char buffer[TC_BUFFER];
+    static char buffer[TC_BUFFER];
 
     /*  Check for an argument  */
 
@@ -495,7 +492,7 @@ register const char *cp;
 int affcnt;
 int (*outc)(int ch);
 {
-    if (cp == (char *) NULL)
+    if (cp == (const char *) NULL)
 	return (1);
     /* Do any padding interpretation - left null for MINIX just now */
     while (*cp)
