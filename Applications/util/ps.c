@@ -34,7 +34,7 @@ int do_ps(void)
     struct p_tab_buffer *ppbuf;
     struct p_tab *pp;
     static struct p_tab_buffer ptab[PTABSIZE];
-    int ppid_slot[PTABSIZE];
+    static int ppid_slot[PTABSIZE];
     static char name[10], uname[20];
 
     uid = getuid();
