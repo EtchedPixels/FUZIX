@@ -1,0 +1,60 @@
+You need my cc65 git tree, released cc65 can't compile Fuzix as it lacks a
+compiler bug fix I contributed.
+
+Our memory mapping looks like this
+
+	0x0000		ZP
+	0x0100		6502 Stack (per proc) 
+	0x0200		C stack (per proc)
+	0x0400		I stack (per proc)
+	0x0500		Udata actual data per proc
+	0x0600+		Common copy and compiler runtime
+
+	0x2000		Kernel data	(8K)
+	0x4000		Kernel code	(48K)
+			(currently the top the image holds discard, data
+			and common copies for initialisation. That needs
+			tidying up)
+
+And in user space
+
+	0x2000+		User process (with vectors at top)
+
+This ensures we can do all our stack flips in one operation when we switch
+process in switchin.
+
+Things To Do
+
+Debug signals
+
+Checking on the 6502 stack. Probably we should just check for overflows and
+kill, or perhaps copy stacks in/out IFF it would otherwise run out (as 
+Apple ProDOS seems to)
+
+Lots of memory to save in kernel space by making the common and data copies
+come from a bank we then switch out, along perhaps with the const data from
+what would be discard areas on the Z80.
+
+
+To build:
+Set the platform/target
+make clean
+make
+
+and you'll get an image file to dd onto the last 64K of your disk image for
+the emulator.
+
+TODO
+----
+- Signal handling paths
+- Fix brk() checking
+- Interrupts
+
+Optimisations We Need To Do
+--------------------------------------------------------------
+- Only use low bank numbers for low 8K until we have a cache
+- Only copy the needed memory when forking, not 48K (in theory we are copying
+  low->brk, sp->top, S->top of page, and Z)
+- usermem functions that use banking tricks
+- map_save/restore copy/restore entries for kernel mode so we can take an
+  interrupt when we are pulling banking tricks
