@@ -1,5 +1,4 @@
-/* SYSCALLS.H
- */
+/* SYSCALLS.H */
 #ifndef __SYSCALLS_H
 #define __SYSCALLS_H
 #ifndef __TYPES_H
@@ -53,7 +52,7 @@ struct _uzifilesys {
 struct _sockio {
         uint16_t sio_flags;
         uint16_t sio_addr_len;
-        uint8_t sio_addr[0];
+        uint8_t sio_addr[16];
 };
 
 struct hd_geometry {
