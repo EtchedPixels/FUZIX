@@ -64,7 +64,7 @@ $(OBJS):	sed.h
 /* Sed.h -- types and constants for the stream editor */
 
 /* Data area sizes used by both modules */
-#define MAXBUF		4000	/* current line buffer size */
+#define MAXBUF		1000	/* current line buffer size */
 #define MAXAPPENDS	20	/* maximum number of appends */
 #define MAXTAGS		9	/* tagged patterns are \1 to \9 */
 
@@ -167,7 +167,7 @@ typedef struct cmd_t sedcmd;	/* use this name for declarations */
 
 /***** public stuff ******/
 
-#define MAXCMDS		500	/* maximum number of compiled commands */
+#define MAXCMDS		256	/* maximum number of compiled commands */
 #define MAXLINES	256	/* max # numeric addresses to compile */
 
 /* Main data areas */
@@ -183,7 +183,7 @@ char bits[] = {1, 2, 4, 8, 16, 32, 64, 128};
 
 /***** module common stuff *****/
 
-#define POOLSIZE	20000	/* size of string-pool space */
+#define POOLSIZE	10000	/* size of string-pool space */
 #define WFILES		10	/* max # w output files that can be compiled */
 #define RELIMIT		256	/* max chars in compiled RE */
 #define MAXDEPTH	20	/* maximum {}-nesting level */
