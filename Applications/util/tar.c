@@ -93,14 +93,14 @@ static void b8put( uint32_t x, char *ptr ){
 }
 
 /* Print filename for error reporting */
-static void pname(){
+static void pname(void){
 	fprintf(stderr,"%s ", h.name );
 	perror( "" );
 }
 
 
 /* Change owner/group of file to match tar file */
-static void my_chown(){
+static void my_chown(void){
 	int x=chown( h.name, b8get( h.uid, 8 ),
 		     b8get( h.gid, 8 )
 		     );
@@ -109,25 +109,26 @@ static void my_chown(){
 
 
 /* Change mod of file to match tar file */
-static void my_chmod(){
+static void my_chmod(void){
 	int x=chmod( h.name, b8get( h.mode, 8 ) );
 	if( x < 0 ) pname();
 }
 
-static void printusage(){
+static void printusage(void){
 	fprintf(stderr, "usage: tar [-ckxntv] [-f archive] [file]...\n" );
 	exit(1);
 }
 
 /* skip data blocks of regular type file */
-static void skip(){
+static void skip(void){
 	uint32_t size=b8get( h.size, 12 ) ;
 	uint32_t count= size / 512 ;
 	uint16_t rem = size % 512 ;
 	
 	if( h.type == 0 || h.type == '0' ){
+		off_t x;
 		if( rem ) count++;
-		off_t x=lseek( infile, count*512, SEEK_CUR );
+		x=lseek( infile, count*512, SEEK_CUR );
 		if( x < 0 ){
 			pname();
 			exit(1);
@@ -137,7 +138,7 @@ static void skip(){
 }
 
 /* Calculate sum of header */
-static uint32_t cksum_calc(){
+static uint32_t cksum_calc(void){
 	uint32_t acc=0;
 	unsigned char *ptr=(unsigned char *)h.name;
 	while( ptr != (unsigned char *)h.cksum )
@@ -151,7 +152,7 @@ static uint32_t cksum_calc(){
 
 
 /* Prints information in header to stdout (if applicable) */
-static void printheader(){
+static void printheader(void){
 	char pad[10];
 	int pindex=10;
 	unsigned int m;
@@ -245,7 +246,7 @@ static void storedir( char *name){
 	struct stat s;
 	int fd;
 	int ret;
-	DIR dirstream;
+	DIR *dirstream;
 	struct dirent *dir;
 	char cname[100];
 	uint32_t count;
@@ -347,11 +348,11 @@ static void storedir( char *name){
 		break;
 	case S_IFDIR:
 		/* open the directory */
-		if (opendir_r(&dirstream,  name) == NULL) {
+		if ((dirstream = opendir(name)) == NULL) {
 			pname();
 			break;
 		}
-		while( dir = readdir(&dirstream ) ){
+		while( dir = readdir(dirstream ) ){
 			/* dont arch .. or . */
 			if( !strcmp( dir->d_name, "." ) ||
 			    !strcmp( dir->d_name, ".." )
@@ -361,19 +362,19 @@ static void storedir( char *name){
 			strncat( cname, dir->d_name, 100 );
 			{
 				/* save state of files */
-				uint32_t tell=telldir( &dirstream );
-				closedir_r( &dirstream );
+				uint32_t tell=telldir(dirstream );
+				closedir(dirstream );
 				/* recursive call to this dir */
 				storedir( cname );
 				/* restore state of files */
-				if (opendir_r(&dirstream, name) == NULL) {
+				if ((dirstream = opendir(name)) == NULL) {
 					pname();
 					break;
 				}
-				seekdir(&dirstream, tell );
+				seekdir(dirstream, tell );
 			}
 		}
-		closedir_r( &dirstream );
+		closedir(dirstream);
 		break;
 	}
 }
@@ -419,7 +420,6 @@ static void list(void){
 /* Extract all file in archive */
 static void extract( char *argv[] ){
 	int x;
-	char *ptr;
 	int zcount=2;
 
 	if( ofile ) infile=open( ofile, O_RDONLY );
@@ -519,12 +519,13 @@ static void extract( char *argv[] ){
 		case 0:
 			{
 				int i;
+				uint16_t rem;
 				/* get a printable size */
 				uint32_t size=b8get( h.size, 12 ) ;
 				uint32_t count;
 				/* count how many blocks we need */
 				count = size / 512 ;
-				uint16_t rem = size % 512 ;
+				rem = size % 512 ;
 				/* check for existance of file */
 				if( noreplace && !access( h.name, F_OK ) ){
 					errno=EEXIST;
@@ -651,5 +652,5 @@ int main( int argc, char *argv[] ){
 		fprintf(stderr, "tar: option x,c, or t must be used\n" );
 		exit(1);
 	}
-	exit(0);
+	return 0;
 }
