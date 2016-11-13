@@ -26,7 +26,7 @@ static void printload(int i)
 int main(int argc, char *argv[])
 {
 	static struct timespec res;
-	static int loadavg[3];
+	static unsigned int loadavg[3];
 	time_t t;
 	uint32_t days, hours, mins;
 	struct tm *tm;
