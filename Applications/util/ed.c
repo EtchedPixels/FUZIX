@@ -70,18 +70,18 @@ BOOL intflag;
 int main(int argc, char *argv[])
 {
     if (!initedit())
-	return;
+	return 0;
 
     if (argc > 1) {
 	filename = strdup(argv[1]);
 	if (filename == NULL) {
 	    fprintf(stderr, "No memory\n");
 	    termedit();
-	    return;
+	    return 1;
 	}
 	if (!readlines(filename, 1)) {
 	    termedit();
-	    return;
+	    return 1;
 	}
 	if (lastnum)
 	    setcurnum(1);
