@@ -2,7 +2,7 @@
 
 #define ROOTINODE 1
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */
-#define SMOUNTED_WRONGENDIAN 50737   /* byteflipped */
+#define SMOUNTED_WRONGENDIAN 50737U   /* byteflipped */
 
 extern int dev_fd;
 extern int dev_offset;
