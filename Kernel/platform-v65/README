@@ -1,5 +1,6 @@
 You need my cc65 git tree, released cc65 can't compile Fuzix as it lacks a
-compiler bug fix I contributed.
+compiler bug fix I contributed. Actually the latest cc65 might work - I need
+to upgrade and see.
 
 Our memory mapping looks like this
 
@@ -19,13 +20,13 @@ Our memory mapping looks like this
 And in user space
 
 	0x2000+		User process (with vectors at top)
+	0xE000-0xFFFF	Not currently used (need to handle the special sub
+			8K copy in forking)
 
 This ensures we can do all our stack flips in one operation when we switch
 process in switchin.
 
 Things To Do
-
-Debug signals
 
 Checking on the 6502 stack. Probably we should just check for overflows and
 kill, or perhaps copy stacks in/out IFF it would otherwise run out (as 
@@ -34,7 +35,6 @@ Apple ProDOS seems to)
 Lots of memory to save in kernel space by making the common and data copies
 come from a bank we then switch out, along perhaps with the const data from
 what would be discard areas on the Z80.
-
 
 To build:
 Set the platform/target
@@ -46,15 +46,18 @@ the emulator.
 
 TODO
 ----
-- Signal handling paths
+- Test signal handling paths
 - Fix brk() checking
-- Interrupts
+- Fix execl() execle() in userspace (so init can be fully tested)
+- Add pre-emption logic to the interrupt return path
 
 Optimisations We Need To Do
 --------------------------------------------------------------
 - Only use low bank numbers for low 8K until we have a cache
 - Only copy the needed memory when forking, not 48K (in theory we are copying
-  low->brk, sp->top, S->top of page, and Z)
+  low->brk, sp->top, S->top of page, common, udata and ZP)
 - usermem functions that use banking tricks
 - map_save/restore copy/restore entries for kernel mode so we can take an
-  interrupt when we are pulling banking tricks
+  interrupt when we are pulling banking tricks ? (do we care - it's probably
+  better to just use soft interrupts and implement a serial fifo on real hw
+
