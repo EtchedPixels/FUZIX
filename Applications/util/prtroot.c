@@ -59,7 +59,7 @@ void done(const char *name, int status)
 
 int main(int argc, const char *argv[])
 {
-    DIR dp;
+    static DIR dp;
     int i;
     struct dirent *entry;
     struct stat filestat, rootstat;
