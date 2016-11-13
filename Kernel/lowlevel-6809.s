@@ -93,7 +93,7 @@ unix_syscall_entry:
 	SAM_KERNEL
 	std ,y++
 	SAM_USER
-	ldd 1,s		; stacked D register -> syscall number
+	ldb 2,s		; stacked B register -> syscall number
 	SAM_KERNEL
 	stb U_DATA__U_CALLNO
         ; save process stack pointer (in user page)
