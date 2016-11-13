@@ -99,7 +99,7 @@ int find_page(char *name, char *sect)
 	static char defsuff[] = ":.gz:.Z";
 	static char manorcat[] = "man:cat";
 
-	char fbuf[256];
+	static char fbuf[256];
 	char *manpath;
 	char *mansect = sect;
 	char *mansuff;
@@ -193,7 +193,7 @@ int open_page(char *name)
 {
 	char *p;
 	const char *command = 0;
-	char buf[256];
+	static char buf[256];
 
 	if (access(name, 0) < 0)
 		return -1;
@@ -829,7 +829,7 @@ void print_word(char *pword)
 	char *s;
 	int *d, ch = 0;
 	int length = 0;
-	int wword[256];
+	static int wword[256];
 	int sp_font = cur_font;
 
 	/* Eat and translate characters. */
