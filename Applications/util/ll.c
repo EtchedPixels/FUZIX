@@ -33,7 +33,7 @@ int ls(char *path)
 {
     int st;
     struct dirent *d;
-    DIR dp;
+    static DIR dp;
     struct stat statbuf;
     static char dname[512];
 
