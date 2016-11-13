@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	int fd, fd2;
 	int r;
 	unsigned long t = 0;
-	char buf[512];
+	static char buf[512];
 	static char line[81];
 	char *lp;
 	char *p;
