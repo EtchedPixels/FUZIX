@@ -32,8 +32,8 @@ int rm_mtab(char *devname)
 {
 	FILE *inpf, *outf;
 	char *tmp_fname;
-	char tmp[MTAB_LINE];
-	char tmp2[MTAB_LINE];
+	static char tmp[MTAB_LINE];
+	static char tmp2[MTAB_LINE];
 	char* dev;
 	char* mntpt;
 
