@@ -2,10 +2,11 @@ CC = cl65
 ASM = ca65
 AR = ar65
 LINKER = ld65
-CC_OPT = -t none -O -D__STDC__ --all-fastcall -c -O -I../include/ -I../include/6502/
+CC_OPT = -t none -O -D__STDC__ --all-fastcall -c -I../include/ -I../include/6502/
+CC_NOOPT = -t none -D__STDC__ --all-fastcall -c -I../include/ -I../include/6502/
 ASM_OPT = -o
-LINKER_OPT = -m -i -o
-SRC_CRT0 = crt0_6502.s
+LINKER_OPT = -o
+SRC_CRT0 = crt0_6502.s crt0nostdio_6502.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.o)
@@ -32,7 +33,7 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #
 SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c atoi.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
-SRC_C += clock_gettime.c clock_getres.c clock_settime.c
+SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
 SRC_C += difftime.c err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
@@ -44,7 +45,8 @@ SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c index.c initgroups.c
 SRC_C += isatty.c killpg.c libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
-SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c pause.c perror.c
+SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
+SRC_C += pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
 SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
@@ -76,17 +78,18 @@ SRC_HARD += regexp.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c strtol.c
 
 OBJ_C = $(SRC_C:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C)
+OBJ_HARD = $(SRC_HARD:.c=.o)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 
-all: syslib.lib liberror.txt crt0_6502.o
+all: syslib.lib liberror.txt crt0_6502.o crt0nostdio_6502.o
 
 fuzix6502/Makefile: ../tools/syscall_6502.c ../../Kernel/include/syscall_name.h
 	(cd ..; make tools/syscall_6502)
 	../tools/syscall_6502
 
-syslib.lib: fuzix6502/Makefile $(OBJ_C)
+syslib.lib: fuzix6502/Makefile $(OBJ_ALL)
 	(cd fuzix6502; make)
-	$(AR) a syslib.lib $(OBJ_C)
+	$(AR) a syslib.lib $(OBJ_ALL)
 	ln -sf syslib.lib c6502.lib
 
 liberror.txt:
