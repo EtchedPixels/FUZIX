@@ -589,7 +589,7 @@ void kprintf(const char *fmt, ...)
 				{
 					unsigned int v = va_arg(ap, int);
 
-					if (*fmt == 'x')
+					if (*fmt == 'x' || *fmt == 'p')
 						kputhex(v);
 					else if (*fmt == 'd')
 						kputnum(v);
