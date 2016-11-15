@@ -37,6 +37,10 @@ cd ../dw
 make -f Makefile.6809 TARGET=coco3 clean
 make -f Makefile.6809 TARGET=coco3
 
+cd ../netd
+make -f Makefile.6809 TARGET=coco3 clean
+make -f Makefile.6809 TARGET=coco3
+
 # build sh
 cd ../../Applications/V7/cmd/sh
 make -f Makefile.6809 TARGET=coco3 clean

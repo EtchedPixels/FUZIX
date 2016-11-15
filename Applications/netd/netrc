@@ -1,0 +1,6 @@
+# netd rc file
+# Please change to suite.
+ipaddr  192.168.42.2
+gateway 192.168.42.1
+netmask 255.255.255.0
+mac     0:1:2:3:4:5

@@ -11,6 +11,7 @@
 #include <dwtime.h>
 #include <netdev.h>
 
+
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl

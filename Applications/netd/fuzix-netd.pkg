@@ -1,0 +1,20 @@
+package  netd-base
+if-file  dig
+f 0644 /etc/netrc	       netrc
+f 0644 /etc/resolv.conf        resolv.conf
+f 0755 /usr/bin/dig	       dig
+f 0755 /usr/bin/echoping       echoping
+f 0755 /usr/bin/telnet	       telnet
+n 20666 1089 /dev/net 
+
+
+package  netd-lwwire
+if-file  netd-lwwire
+f 0755 /usr/bin/netd-lwwire    netd-lwwire
+n 060666 2048 /dev/dw0
+
+package  netd-coconic
+if-file  netd-coconic
+f 0755 /usr/bin/netd-coconic   netd-coconic
+
+
