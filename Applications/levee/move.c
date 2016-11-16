@@ -31,7 +31,7 @@ findCP(int curp, int *newpos, cmdtype cmd)
 
     *newpos = ERR;
     switch (cmd) {			/* move around */
-    
+
     case GO_LEFT:
 	*newpos = max(lstart, curp-max(count,1));
 	break;
@@ -135,7 +135,7 @@ findCP(int curp, int *newpos, cmdtype cmd)
 
     case TO_MARK:
     case TO_MARK_LINE:
-	*newpos = getcontext((char)tolower(readchar()), cmd==TO_MARK_LINE);
+	*newpos = lvgetcontext((char)tolower(readchar()), cmd==TO_MARK_LINE);
 	break;
 
     case CR_FWD:
@@ -153,7 +153,7 @@ findCP(int curp, int *newpos, cmdtype cmd)
 	clrprompt();
 	if (cmd == PATT_FWD || cmd == PATT_BACK) {
 	    printch(tsearch = instring[0] = chars[cmd-PATT_FWD]);
-	    if (!getline(&instring[1]))
+	    if (!lvgetline(&instring[1]))
 		return ESCAPED;	/* needs to skip later tests */
 	}
 	else {
@@ -184,7 +184,7 @@ PROC
 movearound(cmdtype cmd)
 {
     int cp;
-    
+
     switch (findCP(curr, &cp, cmd)) {
 	case LEGALMOVE:
 	    if (cp < bufmax) {
@@ -231,12 +231,12 @@ movearound(cmdtype cmd)
     }
     mvcur(yp, xp);
 }
-    
+
 int PROC
 findcol(int ip, int col)
 {
     int tcol, endd;
-    
+
     ip = bseekeol(ip);			/* start search here */
     endd = fseekeol(ip);		/* end search here */
 
@@ -260,8 +260,8 @@ match(int p)
 {
     char srcchar, dstchar;
     int lev, step;
-    
-    while((lev = scan(6,'=',core[p],srcpatt)) >= 6 && core[p] != EOL)
+
+    while((lev = lvscan(6,'=',core[p],srcpatt)) >= 6 && core[p] != EOL)
 	p++;
     if (lev < 6) {
 	srcchar = srcpatt[lev];
@@ -317,7 +317,7 @@ moveword(int cp, bool forwd, bool toword)
 {
     int step;
     register char *ccl;
-    
+
     step = setstep[forwd];	/* set direction to move.. */
     if (!toword)
 	cp += step;		/* advance one character */
@@ -351,7 +351,7 @@ int PROC
 fchar(int pos, int npos)
 {
     do
-	pos += scan(lend-pos-1,'=',ch, &core[pos+1]) + 1;
+	pos += lvscan(lend-pos-1,'=',ch, &core[pos+1]) + 1;
     while (--count>0 && pos<lend);
     if (pos<lend)
 	return(pos);
@@ -364,7 +364,7 @@ int PROC
 bchar(int pos, int npos)
 {
     do
-	pos += scan(-pos+lstart+1,'=',ch, &core[pos-1]) - 1;
+	pos += lvscan(-pos+lstart+1,'=',ch, &core[pos-1]) - 1;
     while (--count>0 && pos>=lstart);
     if (pos>=lstart)
 	return(pos);

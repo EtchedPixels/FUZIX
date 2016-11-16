@@ -1,4 +1,15 @@
-package  levee
-if-file  levee
+# vt52 version is always built, so put common files with it
+package  levee-vt52
+if-file  levee-vt52
 
-f 0755 /bin/levee       ../../Applications/levee/levee
+f 0755 /bin/levee-vt52       levee-vt52
+l      /bin/levee-vt52       /bin/levee
+l      /bin/levee            /bin/vi
+f 0644 /usr/man/man1/levee.1 levee.1
+l      /usr/man/man1/levee.1 /usr/man/man1/vi.1
+
+
+package  levee-ansi
+if-file  levee-ansi
+
+f 0755 /bin/levee-ansi       levee-ansi

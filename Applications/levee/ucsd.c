@@ -55,10 +55,10 @@ fillchar(char *src,int length, char ch)
 #endif
 
 int PROC
-scan(int length, char tst, char ch, char *src)
+lvscan(int length, char tst, char ch, char *src)
 {
     register int inc,l;
-    
+
     if (length < 0)
 	inc = -1;
     else

@@ -20,7 +20,7 @@
 #include "extern.h"
 
 #include <string.h>
-#include <ctype.h>    
+#include <ctype.h>
 /* do some undoable modification */
 
 /* These variables make docommand nonrecursive */
@@ -88,7 +88,7 @@ join(int count)
 {
     bool ok;
     int lp, first;
-    
+
     if (lend < bufmax) {	/* are we in the buffer? */
 	disp = lend;				/* start redraw here */
 	newc = lend;
@@ -116,7 +116,7 @@ PROC
 squiggle(int endp, char c, bool dorepl)
 {
     int i;
-    
+
     if (endp >= curr) {
 	ok = move_to_undo(&undo,curr,endp-curr+1);
 	if (ok) {
@@ -139,7 +139,7 @@ PROC
 bigreplace(void)
 {
     int len, tsiz;
-    
+
     tsiz = lend-curr;
     if (move_to_undo(&undo, curr, tsiz))
 	if (SIZE - bufmax > tsiz) {	/* enough room for temp copy? */
@@ -241,7 +241,7 @@ docommand(cmdtype cmd)
 		goto killredo;
 	    }
 	}
-	
+
 	endY = setY(endp);
 	newend = curr;
 	disp = curr;
@@ -345,9 +345,9 @@ docommand(cmdtype cmd)
 	else {
 	    yp = setY(curr);
 	    if (endY != setY(newend))	/* shuffled lines */
-		refresh(setY(disp), setX(disp), disp, pend, TRUE);
+		lvrefresh(setY(disp), setX(disp), disp, pend, TRUE);
 	    else			/* refresh to end position */
-		refresh(setY(disp), setX(disp), disp, newend, FALSE);
+		lvrefresh(setY(disp), setX(disp), disp, newend, FALSE);
 	}
 	if (curr >= bufmax && bufmax > 0) {	/* adjust off end of buffer */
 	    setpos(bufmax-1);
@@ -494,7 +494,7 @@ editcore(void)
 {
     cmdtype cmd;
     extern bool s_wrapped;
-    
+
     /* rcb[0] = 0; rcp = rcb; */
 
     if (diddled) {
@@ -507,7 +507,7 @@ editcore(void)
 
     for (;;) {
 	s_wrapped = 0;
-	ch = readchar();			/* get a char */
+	ch = 0x7f & readchar();			/* get 7-bits of a char */
 	gcount();			/* ... a possible count */
 	switch (cmd = movemap[ch]) {
 	  case FILE_C:

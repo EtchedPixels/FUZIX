@@ -41,7 +41,7 @@ PROC
 mvcur(int y, int x)
 {
     static char gt[30];
-   
+
     if (y == -1)
 	y = curpos.y;
     else
@@ -106,7 +106,7 @@ printi(int num)
 {
     char nb[10];
     register int size;
-    
+
     numtoa(nb,num);
     size = min(strlen(nb),COLS-curpos.x);
     if (size > 0) {
@@ -202,7 +202,7 @@ writeline(int y,int x,int start)
     register int size;
     char buf[MAXCOLS+1];
     register int bi = 0;
-    
+
     endd = fseekeol(start);
     if (start==0 || core[start-1] == EOL)
 	mvcur(y, 0);
@@ -230,10 +230,10 @@ writeline(int y,int x,int start)
 /* redraw && refresh the screen */
 
 PROC
-refresh(int y,int x,int start,int endd, bool rest)
+lvrefresh(int y,int x,int start,int endd, bool rest)
 {
     int sp;
-    
+
 #if ST
     /* turn the cursor off */
     asm(" clr.l  -(sp)     ");
@@ -271,9 +271,9 @@ redisplay(bool flag)
 {
     if (flag)
 	clrprompt();
-    refresh(0, 0, ptop, pend, TRUE);
+    lvrefresh(0, 0, ptop, pend, TRUE);
 }
-    
+
 PROC
 scrollback(int curr)
 {
@@ -303,11 +303,11 @@ bool PROC
 ok_to_scroll(int top, int bottom)
 {
     int nl, i;
-    
+
     nl = dofscroll;
     i = top;
     do
-	i += 1+scan(bufmax-i,'=',EOL, &core[i]);
+	i += 1 + lvscan(bufmax-i,'=',EOL, &core[i]);
     while (--nl > 0 && i < bottom);
     return(nl>0);
 }
