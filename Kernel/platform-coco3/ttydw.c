@@ -244,14 +244,14 @@ void dw_vpoll( ){
 			min=mini( buf[1], qfree( minor ) );
 			b[2]=min;
 			if( !min ){
-				wait=1;
+				wait = MAX_WAIT;
 				break;
 			}
 			dw_transaction( b,3,tbuf, min, 0 );
 			for( i=0; i<min; i++){
 				tty_inproc( minor, tbuf[i] );
 			}
-			wait=1;
+			wait = 16 - (min >> 4);
 			break;
 		}
 		/* VWIN channel single datum */
