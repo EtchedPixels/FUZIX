@@ -44,7 +44,7 @@ static int dwnet_drop( void )
     unsigned char buf[3];
     buf[0] = 0xf3;   /* lwwire's extension op */
     buf[1] = 0x01;   /* extension no */
-    buf[2] = 0x04;   /* op = drop */
+    buf[2] = 0x03;   /* op = drop */
     d.sbuf = buf;
     d.sbufz = 3;
     d.rbuf = NULL;
@@ -84,7 +84,7 @@ static int dwnet_recv_chunk( unsigned char *b, int size )
     unsigned char buf[3];
     buf[0] = 0xf3;   /* lwwire's extension op */
     buf[1] = 0x01;   /* extension no */
-    buf[2] = 0x03;   /* op = read chunk */
+    buf[2] = 0x07;   /* op = read chunk */
     d.sbuf = buf;
     d.sbufz = 3;
     d.rbuf = b;
@@ -151,10 +151,25 @@ int device_read( char *buf, int len )
 /* initialize network device */
 int device_init( void )
 {
+    int ret;
+    struct dw_trans d;
+    unsigned char buf[2];
+
     fd=open( "/dev/dw0", O_RDONLY, 0 );
     if( fd < 0 ){
 	return -1;
     }
+    /* request lwwire extension "packet" */
+    buf[0] = 0xf0;    // request extension
+    buf[1] = 0x01;    // packet
+    d.sbuf = buf;
+    d.sbufz = 2;
+    d.rbuf = buf;
+    d.rbufz = 1;
+    if ( ioctl( fd, DRIVEWIREC_TRANS, &d ) < 0 )
+	return -1;
+    if ( buf[0] != 0x42 )
+	return -1;
     return 0;
 }
 
