@@ -4,8 +4,7 @@ to play with 6502isms easily
 See:
 http://thegaragelab.com/programming-the-tgl-6502/
 
-You need a cc65 git tree, released cc65 can't compile Fuzix as it lacks a
-compiler bug fix I contributed.
+Use a modern cc65 from https://github.com/cc65/cc65
 
 Our memory mapping looks like this
 

@@ -1,6 +1,5 @@
-You need my cc65 git tree, released cc65 can't compile Fuzix as it lacks a
-compiler bug fix I contributed. Actually the latest cc65 might work - I need
-to upgrade and see.
+Use a modern cc65 from https://github.com/cc65/cc65
+
 
 Our memory mapping looks like this
 
