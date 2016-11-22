@@ -28,7 +28,21 @@ int word(void)
 	wdnum = 0;
 	wdset = 0;
 
-	while ((c = nextc(0), space(c)));
+	while (1)
+	{
+		while (c = nextc(0), space(c))		/* skipc() */
+			;
+
+		if (c == COMCHAR)
+		{
+			while ((c = readc()) != NL && c != EOF);
+			peekc = c;
+		}
+		else
+		{
+			break;	/* out of comment - white space loop */
+		}
+	}
 
 	if (!eofmeta(c)) {
 		do {
