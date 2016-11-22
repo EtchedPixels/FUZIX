@@ -57,7 +57,7 @@
 
 
 #ifdef PAGEDMEM
-#define VBLKS 64
+#define VBLKS 63
 #else
 #define VBLKS PBLKS
 #endif
@@ -152,6 +152,10 @@ pagein(uint16_t page)
     int i;
     int victim_block;
 
+#if 0
+    fprintf(stderr, "Pagein: page=%d, translations=%d\n",page, translations);
+#endif
+
     /* First attempt: search pmap for an unassigned block */
     for (i=0; i<PBLKS; i++) {
         if (pmap[i] == -1) {
@@ -179,12 +183,10 @@ pagein(uint16_t page)
                    Page in physical buffer is at byte offset i*2*BLKSIZE
                    Going to transfer 2*BLKSIZE bytes
                 */
-                if (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) >= 0) {
-                    // [NAC HACK 2016Nov19] check read return value, too
-                    i = read(pfp, (unsigned char *)(M+i*BLKSIZE), 2*BLKSIZE);
-                }
-                else {
-                    perror("Seek error replacing clean block");
+                if ( (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) < 0) ||
+                     (2*BLKSIZE != read(pfp, (unsigned char *)(M+i*BLKSIZE), 2*BLKSIZE)) ) {
+                    perror("replace clean");
+                    exit(1);
                 }
             }
             return;
@@ -199,16 +201,13 @@ pagein(uint16_t page)
        pagefile is pmap[victim_block]*2*BLKSIZE. It comes from the physical
        buffer at byte offset victim_block*2*BLKSIZE. It is 2*BLKSIZE bytes.
     */
-    if (lseek(pfp, (uint16_t)(pmap[victim_block]*2*BLKSIZE), SEEK_SET) >= 0) {
-        // [NAC HACK 2016Nov19] check write return value, too
-        i = write(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE);
-    }
-    else {
-        perror("Seek error evicting dirty block");
+    if ( (lseek(pfp, (uint16_t)(pmap[victim_block]*2*BLKSIZE), SEEK_SET) < 0) ||
+         (2*BLKSIZE != write(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE)) ) {
+        perror("page-out dirty");
+        exit(1);
     }
     pagstate[pmap[victim_block]] = PAGCLEAN;
     vmap[pmap[victim_block]] = -1;
-
 
     pmap[victim_block] = page;
     vmap[page] = victim_block;
@@ -218,13 +217,10 @@ pagein(uint16_t page)
            and it will go into the buffer at (of course) the same place as
            victim_block was written out from. Transfer 2*BLKSIZE bytes.
         */
-
-        if (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) >= 0) {
-            // [NAC HACK 2016Nov19] check read return value, too
-            i = read(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE);
-        }
-        else {
-            perror("Seek error replacing dirty block");
+        if ( (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) < 0) ||
+             (2*BLKSIZE != read(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE)) ) {
+            perror("replace dirty");
+            exit(1);
         }
     }
 }
@@ -598,9 +594,9 @@ int main(int argc, char *argv[])
     }
     buf = (char *)pgvec;
     for (i=0; i<VBLKS; i++) {
-        status = write(pfp, buf, 2*BLKSIZE);
-        if (status != 2*BLKSIZE) {
-            printf("Oooer, sommat went wrong for block %d",i); /* [NAC HACK 2016Nov22] */
+        if (2*BLKSIZE != write(pfp, buf, 2*BLKSIZE)) {
+            perror("creating empty page file");
+            exit(1);
         }
     }
 #endif
