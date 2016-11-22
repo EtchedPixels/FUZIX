@@ -1,9 +1,3 @@
-.ds OK [\|
-.ds CK \|]
-.ds LT \s-2<\s0
-.ds GT \s-2>\s0
-.ds LE \s-2<\s0
-.ds ST *
 .TH SH 1
 .SH NAME
 sh,
@@ -127,6 +121,12 @@ Newlines may appear in a
 .I list,
 instead of semicolons,
 to delimit commands.
+.LP
+A
+.B #
+at the beginning of a word
+starts a comment and
+causes the rest of the line to be ignored.
 .LP
 A
 .I command
