@@ -15,5 +15,6 @@ f 0755 /usr/bin/pr         pr
 #which is best? This one or the one in util?
 #f 0755 /usr/bin/tar         tar
 f 0755 /usr/bin/test       test
+l      /usr/bin/test       /usr/bin/[
 f 0755 /usr/bin/ttt        ttt
 f 0755 /usr/bin/units      units

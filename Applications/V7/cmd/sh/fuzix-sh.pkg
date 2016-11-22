@@ -1,3 +1,4 @@
 package  sh
 
-f 0755 /bin/sh           sh
+f 0755 /bin/sh              sh
+f 0644 /usr/man/man1/sh.1   sh.1
