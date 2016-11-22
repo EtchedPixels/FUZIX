@@ -80,18 +80,23 @@
 #include <printf.h>
 #include <tty.h>
 #include <devdw.h>
+#include <ttydw.h>
 
 #define DW_FASTWRITE 0x80
 #define DW_SETSTAT   0xC4
 #define DW_SERREAD   0x43
 #define DW_SERREADM  0x63
 #define DW_INIT      0x5a
+#define DW_TIME      0x23
 
 #define DW_VOPEN     0x29
 #define DW_VCLOSE    0x2A
 
 #define DW_NS_OFF    ( DW_MIN_OFF + DW_VSER_NUM )
 
+
+/* type of connected drivewire server */
+uint8_t dwtype = 0;
 
 /* Internal Structure to represent state of DW ports */
 struct dw_in{
@@ -276,9 +281,49 @@ int dw_carrier( uint8_t minor ){
 
 
 /* (re) Initializes DW */
-void dw_init( ){
-	unsigned char buf[2];
+__attribute__((section(".discard")))
+int dw_init( ){
+	unsigned char buf[6];
+	char *s;
 	buf[0]=DW_INIT;
 	buf[1]=0x42;
-	dw_transaction( buf,2,buf,1,0 );
+	kprintf("DW: ");
+	if ( dwtype == DWTYPE_NOTFOUND ){
+		kprintf("disabled\n");
+		return -1;
+	}
+	if ( dw_transaction( buf,2,buf,1,0 ) ){
+		buf[0] = DW_TIME;
+		if (dw_transaction( buf,1,buf,6,0 ) ){
+			dwtype = DWTYPE_NOTFOUND;
+			kprintf("not found\n");
+			return -1;
+		}
+		else {
+			s = "dw3";
+			dwtype = DWTYPE_DW3;
+		}
+	}
+	else {
+		kprintf(" 0x%x: ", buf[0] );
+		switch ( buf[0] ){
+		case DWTYPE_DW4:
+			s = "dw4";
+			break;
+		case DWTYPE_LWWIRE:
+			s = "lwwire";
+			break;
+		case DWTYPE_PYDRIVEWIRE:
+			s = "n6il";
+			break;
+		default:
+			s = "unknown";
+			buf[0] = DWTYPE_UNKNOWN;
+			break;
+		}
+		dwtype = buf[0];
+	}
+	kprintf("%s\n", s);
+	return 0;
 }
+
