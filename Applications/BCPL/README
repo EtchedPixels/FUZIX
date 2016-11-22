@@ -76,6 +76,16 @@ Where OCODE is the (hard-coded) name of the output file produced by the
 compiler and INTCODE is the (hard-coded) name of the output file produced
 by the code generator.
 
+The makefile takes care of the generation of run-time.i codegen.i and b.i
+and there is a handy script 'bcpl' that performs the four-step sequence above
+that transforms a .b file into a .i file, allowing you to do this:
+
+$ bcpl hello.b
+$ icintv hello.o
+
+In FUZIX, scripts are spotted and by the shell, not by the kernel, so you
+must be running /bin/sh and *not* /bin/ssh (the confusingly-named simple shell)
+in order for bcpl (or any other script) to work.
 
 icint vs icintv
 ---------------
