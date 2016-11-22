@@ -1,4 +1,39 @@
 /* Copyright (c) 2004 Robert Nordier.  All rights reserved. */
+/* Changes to implement disk-based virtual/paged program store
+   (c) 2016 Neal Crook.
+
+   This is an interpreter for BCPL INTCODE: it implements the
+   INTCODE virtual machine.
+
+   The address space of the virtual machine is set to VSIZE
+   (maximum value is 64*1024 locations, each of 16 bits -- these
+   restrictions imposed by INTCODE).
+   The address space is represented on the interpreter by a
+   buffer of size PSIZE.
+
+   By default, VSIZE is set to the value of PSIZE. If PAGEDMEM
+   is defined at compile-time, VSIZE is set to maximum (64*1024)
+   and a file on disk is used as a page file to handle the
+   mismatch betwen VSIZE and PSIZE.
+
+   The page file is controlled through a demand-paged algorithm
+   implemented in pagein().
+
+   If PAGEDMEM is not defined and PSIZE is too small, there will
+   be inadequate address space to run the BCPL compiler or to
+   recompile BCPL from source. This should result in a polite
+   error like this:
+
+   FAULT C=10495 P=18598 VSIZE=18432
+
+   However, if the memory shortfall is too great, the result will
+   be a segmentation fault rather than a polite error. The minimum
+   size required to recompile BCPL from source is around 20*1024
+   locations. This minimum is imposed on Linux hosts but not
+   imposed in general because most FUZIX targets do not have
+   enough memory available - exactly the reason why the PAGEDMEM
+   functionality was implemented.
+*/
 
 /* $Id: icint.c,v 1.6 2004/12/11 12:01:53 rn Exp $ */
 
@@ -10,7 +45,25 @@
 #include <fcntl.h>
 #include "blib.h"
 
-#define VSIZE 20000
+#define BLKSIZE 1024
+#ifdef __linux
+/* this value is set to be large enough to re-compile BCPL on the host system */
+#define PBLKS 20
+#else
+/* this value is set to be large enough to be buildable for "most" FUZIX targets. Make it smaller
+   if your target is particularly short of user-space memory. */
+#define PBLKS 15
+#endif
+
+
+#ifdef PAGEDMEM
+#define VBLKS 64
+#else
+#define VBLKS PBLKS
+#endif
+
+#define PSIZE (BLKSIZE*PBLKS)
+#define VSIZE (BLKSIZE*VBLKS)
 #define MGLOB 1
 #define MPROG 402
 
@@ -255,8 +308,8 @@ fetch:
     itrace2("%d = ", C);
 
     if (C >= VSIZE || P >= VSIZE || C == 0) {
-     fprintf(stderr, "FAULT %d %d\n", C, P);
-     exit(1);
+        fprintf(stderr, "FAULT C=%d P=%d VSIZE=%d\n", C, P, VSIZE);
+        exit(1);
     }
     W = M[C++];
     if ((W & DBIT) == 0)
@@ -348,7 +401,7 @@ fetch:
     }
 }
 
-uint16_t pgvec[VSIZE];
+uint16_t pgvec[PSIZE];
 
 int main(int argc, char *argv[])
 {
