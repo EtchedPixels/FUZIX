@@ -2,33 +2,34 @@
 #	IntCode engine
 #
 
-FCC = fcc
-FCCOPTS = -O2 #--nostdio
-PLATFORM =
+CC = gcc
+CFLAGS =
 
-SRC = icint.c blib.c
-OBJ = $(SRC:.c=.rel) blibv.o icintv.o
+.SUFFIXES: .c .o
 
-.SUFFIXES: .c .rel
+
+SRCS  = icint.c blib.c
+OBJS = $(SRCS:.c=.o) blibv.o icintv.o
 
 APPS = icint icintv run-time.i codegen.i b.i
 
 all: $(APPS) sizes
 
-.c.rel:
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
+$(OBJS): $(SRCS)
 
-icintv.rel: icint.v
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c icint.c
+icintv.o: icint.c
+	$(CC) -c -DPAGEDMEM -o icintv.o icint.c
 
-blibv.rel: blib.c
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c blib.c
+blibv.o: blib.c
+	$(CC) -c -DPAGEDMEM -o blibv.o blib.c
 
-icint:  icint.rel blib.rel
-	$(FCC) $(PLATFORM) $(FCCOPTS) -o $@ icint.rel  blib.rel
+$(APPS): $(CRT0)
 
-icintv: icintv.rel blibv.rel
-	$(FCC) $(PLATFORM) $(FCCOPTS) -o $@ icintv.rel blibv.rel
+icint:  icint.o blib.o
+	$(CC) -o $@ icint.o blib.o
+
+icintv: icintv.o blibv.o
+	$(CC) -o $@ icintv.o blibv.o
 
 sizes: $(APPS)
 	ls -l $(APPS) > size.report
