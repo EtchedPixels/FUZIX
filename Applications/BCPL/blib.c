@@ -17,6 +17,9 @@ static int fi, fo;
 /* Abstract away the difference between the paged and non-paged implementations */
 #ifdef PAGEDMEM
 
+void wrM(uint16_t addr, uint16_t data) ;
+uint16_t rdM(uint16_t addr);
+
 #else
 
 extern uint16_t *M;

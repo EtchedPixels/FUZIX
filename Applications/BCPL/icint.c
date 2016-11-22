@@ -124,6 +124,152 @@ static void icputbyte(uint16_t, uint16_t, uint16_t);
 /* Abstract away the difference between the paged and non-paged implementations */
 #ifdef PAGEDMEM
 
+/* -1 if unmapped, n if this virtual page is in physcal buffer n */
+int vmap[VBLKS];
+/* -1 if unmapped, n if physcal buffer n holds this virtual page */
+int pmap[VBLKS];
+/* stats for replacement algorithm: increment each access */
+int acnt[VBLKS];
+/* stats for replacement algorithm: translation count - like a time-stamp */
+int tcnt[VBLKS];
+/* state of page */
+#define PAGNEVER 0
+#define PAGCLEAN 1
+#define PAGDIRTY 2
+int pagstate[VBLKS];
+
+int translations = 0;
+int pfp;
+
+static int pagein(uint16_t page);
+
+/* Given a virtual page number that is not mapped, map it. Take care of
+   any disk read/write.
+*/
+static int
+pagein(uint16_t page)
+{
+    int i;
+    int victim_block;
+
+    /* First attempt: search pmap for an unassigned block */
+    for (i=0; i<PBLKS; i++) {
+        if (pmap[i] == -1) {
+            /* success - assign physical block i to virtual page */
+            pmap[i] = page;
+            vmap[page] = i;
+            pagstate[page] = PAGCLEAN;
+            return;
+        }
+    }
+
+    /* subsequent attempts assume ALL BLOCKS ARE ALLOCATED */
+
+    /* Second attempt: search pmap for a clean block */
+    for (i=0; i<PBLKS; i++) {
+        if (pagstate[pmap[i]] == PAGCLEAN) {
+            /* success - discard clean page from block, reassign block to virtual page */
+            vmap[pmap[i]] = -1;
+            pmap[i] = page;
+            vmap[page] = i;
+            if (pagstate[page] == PAGCLEAN) {
+                /* page has been used before so need to pull it from disk.
+                   Overwrite block i which is clean, so no need to save it.
+                   Page on disk is at byte offset page*2*BLKSIZE
+                   Page in physical buffer is at byte offset i*2*BLKSIZE
+                   Going to transfer 2*BLKSIZE bytes
+                */
+                if (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) >= 0) {
+                    // [NAC HACK 2016Nov19] check read return value, too
+                    i = read(pfp, (unsigned char *)(M+i*BLKSIZE), 2*BLKSIZE);
+                }
+                else {
+                    perror("Seek error replacing clean block");
+                }
+            }
+            return;
+        }
+    }
+
+    /* Third attempt: search pmap for least recently used block to reassign */
+    /* [NAC HACK 2016Nov22] for now, always reassign physical block 5 */
+    victim_block = 5;
+
+    /* victim_block is dirty so must be written to disk. Its offset in the
+       pagefile is pmap[victim_block]*2*BLKSIZE. It comes from the physical
+       buffer at byte offset victim_block*2*BLKSIZE. It is 2*BLKSIZE bytes.
+    */
+    if (lseek(pfp, (uint16_t)(pmap[victim_block]*2*BLKSIZE), SEEK_SET) >= 0) {
+        // [NAC HACK 2016Nov19] check write return value, too
+        i = write(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE);
+    }
+    else {
+        perror("Seek error evicting dirty block");
+    }
+    pagstate[pmap[victim_block]] = PAGCLEAN;
+    vmap[pmap[victim_block]] = -1;
+
+
+    pmap[victim_block] = page;
+    vmap[page] = victim_block;
+    if (pagstate[page] == PAGCLEAN) {
+        /* Page has been used before, and therefore must be read from disk.
+           Page on disk is at byte offset page*2*BLKSIZE
+           and it will go into the buffer at (of course) the same place as
+           victim_block was written out from. Transfer 2*BLKSIZE bytes.
+        */
+
+        if (lseek(pfp, (uint16_t)(page*2*BLKSIZE), SEEK_SET) >= 0) {
+            // [NAC HACK 2016Nov19] check read return value, too
+            i = read(pfp, (unsigned char *)(M+victim_block*BLKSIZE), 2*BLKSIZE);
+        }
+        else {
+            perror("Seek error replacing dirty block");
+        }
+    }
+}
+
+
+void
+wrM(uint16_t addr, uint16_t data)
+{
+    if (vmap[addr>>10] == -1) {
+        pagein(addr>>10);
+    }
+
+    translations++;
+    acnt[addr>>10]++;
+    pagstate[addr>>10] = PAGDIRTY;
+    tcnt[addr>>10] = translations;
+    M[(vmap[addr>>10]<<10) | (addr & 0x3ff)] = data; /* hardwired for BLKSIZE=1024 */
+}
+
+void
+add2M(uint16_t addr, uint16_t data)
+{
+    if (vmap[addr>>10] == -1) {
+        pagein(addr>>10);
+    }
+
+    translations += 2;
+    acnt[addr>>10] += 2;
+    tcnt[addr>>10] = translations;
+    M[(vmap[addr>>10]<<10) | (addr & 0x3ff)] = M[(vmap[addr>>10]<<10) | (addr & 0x3ff)] + data; /* hardwired for BLKSIZE=1024 */
+}
+
+uint16_t
+rdM(uint16_t addr)
+{
+    if (vmap[addr>>10] == -1) {
+        pagein(addr>>10);
+    }
+
+    translations++;
+    acnt[addr>>10]++;
+    tcnt[addr>>10] = translations;
+    return M[(vmap[addr>>10]<<10) | (addr & 0x3ff)]; /* hardwired for BLKSIZE=1024 */
+}
+
 #else
 
 #define wrM(address, data) M[address]=data
@@ -418,7 +564,6 @@ uint16_t pgvec[PSIZE];
 
 int main(int argc, char *argv[])
 {
-
     if (argc != 2) {
         write(2, "usage: icint file\n",18);
         return 1;
@@ -428,6 +573,38 @@ int main(int argc, char *argv[])
         perror(argv[1]);
         return 0;
     }
+
+#ifdef PAGEDMEM
+    int i, status;
+    char * buf;
+
+    for (i=0; i<PBLKS; i++) {
+        pmap[i] = -1; /* start with no physical buffers assigned */
+    }
+
+    for (i=0; i<VBLKS; i++) {
+        vmap[i] = -1; /* therefore no virtual pages can be assigned */
+        acnt[i] = 0;
+        tcnt[i] = 0;
+        pagstate[i] = PAGNEVER;
+        tcnt[i] = 0;
+    }
+
+    /* create page file */
+    pfp = open("icintv.pag", O_RDWR, 0600);
+    if (pfp == -1) {
+        perror("icintv.pag");
+        return 0;
+    }
+    buf = (char *)pgvec;
+    for (i=0; i<VBLKS; i++) {
+        status = write(pfp, buf, 2*BLKSIZE);
+        if (status != 2*BLKSIZE) {
+            printf("Oooer, sommat went wrong for block %d",i); /* [NAC HACK 2016Nov22] */
+        }
+    }
+#endif
+
     M = pgvec;
     G = MGLOB;
     P = MPROG;
