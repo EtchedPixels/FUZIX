@@ -94,7 +94,7 @@ DOLPTR freeargs(DOLPTR blk)
 	register DOLPTR argr = 0;
 	register DOLPTR argblk;
 
-	if (argblk = blk) {
+	if ( (argblk = blk) ) {
 		argr = argblk->dolnxt;
 		if ((--argblk->doluse) == 0) {
 			for (argp = (char **) argblk->dolarg;
@@ -128,7 +128,7 @@ static const char **copyargs(const char *from[], int n)
 void clearup(void)
 {
 	/* force `for' $* lists to go away */
-	while (argfor = freeargs(argfor));
+	while ( (argfor = freeargs(argfor)) );
 
 	/* clean up io files */
 	while (pop());

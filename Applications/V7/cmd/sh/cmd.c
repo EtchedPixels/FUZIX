@@ -89,7 +89,7 @@ TREPTR cmd(register int sym, int flg)
 			synbad();
 
 	case ';':
-		if (e = cmd(sym, flg | MTFLG))
+		if ( (e = cmd(sym, flg | MTFLG)) )
 			i = makelist(TLST, i, e);
 		break;
 
@@ -307,7 +307,7 @@ static TREPTR item(BOOL flag)
 	}
 	reserv++;
 	word();
-	if (io = inout(io)) {
+	if ( (io = inout(io)) ) {
 		t = makefork(0, t);
 		t->treio = io;
 	}

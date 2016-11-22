@@ -17,7 +17,7 @@
 
 char *movstr(register const char *a, register char *b)
 {
-	while (*b++ = *a++);
+	while ( (*b++ = *a++) );
 	return (--b);
 }
 
@@ -25,7 +25,7 @@ int any(char c, const char *s)
 {
 	register char d;
 
-	while (d = *s++) {
+	while ( (d = *s++) ) {
 		if (d == c) {
 			return (TRUE);
 			;
@@ -49,7 +49,7 @@ int length(const char *as)
 {
 	register const char *s;
 
-	if (s = as) {
+	if ( (s = as) ) {
 		while (*s++);;
 	}
 	return (s - as);

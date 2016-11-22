@@ -77,7 +77,7 @@ retry:
 			CHAR idb[2];
 			char *id = idb;
 
-			if (bra = (c == BRACE))
+			if ( (bra = (c == BRACE)) )
 				c = readc();
 
 			if (letter(c)) {
@@ -141,7 +141,7 @@ retry:
 			if (v) {
 				if (c != '+') {
 					for (;;) {
-						while (c = *v++)
+						while ( (c = *v++) )
 							pushstak(c | quote);
 
 						if (dolg == 0 || (++dolg > dolc))
@@ -239,7 +239,7 @@ static void comsubst(void)
 	tdystak(savptr);
 	staktop = movstr(savptr, stakbot);
 
-	while (d = readc())
+	while ( (d = readc()) )
 		pushstak(d | quote);
 
 	await(0);
@@ -264,7 +264,7 @@ void subst(int in, int ot)
 	push(&fb);
 	initf(in);
 	/* DQUOTE used to stop it from quoting */
-	while (c = (getch(DQUOTE) & STRIP)) {
+	while ( (c = (getch(DQUOTE) & STRIP)) ) {
 		pushstak(c);
 		if (--count == 0) {
 			flush(ot);

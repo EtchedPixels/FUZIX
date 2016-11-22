@@ -164,7 +164,7 @@ int expand(char *as, int rflg)
 	{
 		register char c;
 		s = as;
-		while (c = *s)
+		while ( (c = *s) )
 			*s++ = (c & STRIP ? c : '/');
 	}
 	return count;
@@ -175,7 +175,7 @@ int gmatch(register char *s, register char *p)
 	register int scc;
 	char c;
 
-	if (scc = *s++) {
+	if ( (scc = *s++) ) {
 		if ((scc &= STRIP) == 0) {
 			scc = 0200;
 		}
@@ -187,7 +187,7 @@ int gmatch(register char *s, register char *p)
 			int lc;
 			ok = 0;
 			lc = 077777;
-			while (c = *p++) {
+			while ( (c = *p++) ) {
 				if (c == ']') {
 					return (ok ? gmatch(s, p) : 0);
 				} else if (c == MINUS) {
@@ -234,7 +234,7 @@ static void addg(const char *as1, char *as2, const char *as3)
 	s2 = locstak() + BYTESPERWORD;
 
 	s1 = as1;
-	while (c = *s1++) {
+	while ( (c = *s1++) ) {
 		if ((c &= STRIP) == 0) {
 			*s2++ = '/';
 			break;
@@ -243,12 +243,12 @@ static void addg(const char *as1, char *as2, const char *as3)
 		*s2++ = c;
 	}
 	s1 = as2;
-	while (*s2 = *s1++) {
+	while ( (*s2 = *s1++) ) {
 		s2++;
 	}
-	if (s1 = as3) {
+	if ( (s1 = as3) ) {
 		*s2++ = '/';
-		while (*s2++ = *++s1);
+		while ( (*s2++ = *++s1) );
 	}
 	makearg(endstak(s2));
 }

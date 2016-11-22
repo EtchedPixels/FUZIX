@@ -115,7 +115,7 @@ void copy(IOPTR ioparg)
 	int fd;
 	register IOPTR iop;
 
-	if (iop = ioparg) {
+	if ( (iop = ioparg) ) {
 		copy(iop->iolst);
 		ends = mactrim(iop->ioname);
 

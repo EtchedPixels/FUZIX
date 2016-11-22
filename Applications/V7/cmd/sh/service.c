@@ -133,7 +133,7 @@ void execa(const char **at)
 		path = getpath(*t);
 		namscan(exname);
 		xecenv = sh_setenv();
-		while (path = execs(path, t));
+		while ( (path = execs(path, t)) );
 		failed(*t, xecmsg);
 	}
 }
@@ -149,7 +149,7 @@ static const char *execs(const char *ap, const char *t[])
 	sigchk();
 	execve(p, (char**) &t[0], (char **)xecenv);
 	switch (errno) {
-	case ENOEXEC:
+	case ENOEXEC:		/* could be a shell script */
 		flags = 0;
 		comdiv = 0;
 		ioset = 0;
@@ -240,7 +240,7 @@ void await(int i)
 
 		w_hi = (w >> 8) & LOBYTE;
 
-		if (sig = w & 0177) {
+		if ( (sig = w & 0177) ) {
 			if (sig == 0177) {	/* ptrace! return */
 				prs("ptrace: ");
 				sig = w_hi;
@@ -277,8 +277,8 @@ void trim(char *at)
 	register char c;
 	register char q = 0;
 
-	if (p = at) {
-		while (c = *p) {
+	if ( (p = at) ) {
+		while ( (c = *p) ) {
 			*p++ = c & STRIP;
 			q |= c;
 		}
@@ -304,7 +304,7 @@ char **scan(int argn)
 
 	while (argp) {
 		*--comargn = argp->argval;
-		if (argp = argp->argnxt)
+		if ( (argp = argp->argnxt) )
 			trim(*comargn);
 		if (argp == 0 || ((intptr_t)(argp)) & ARGMK) {
 			gsort(comargn, comargm);
@@ -352,7 +352,7 @@ int getarg(COMPTR ac)
 	register int count = 0;
 	register COMPTR c;
 
-	if (c = ac) {
+	if ( (c = ac) ) {
 		argp = c->comarg;
 		while (argp) {
 			count += split(macro(argp->argval));
@@ -386,7 +386,7 @@ static int split(register const char *s)
 		} else if (c == 0) {
 			s--;
 		}
-		if (c = expand(((ARGPTR) (argp = endstak(argp)))->argval, 0)) {
+		if ( (c = expand(((ARGPTR) (argp = endstak(argp)))->argval, 0)) ) {
 			count += c;
 		} else {	/* assign(&fngnod, argp->argval); */
 			makearg(argp);
