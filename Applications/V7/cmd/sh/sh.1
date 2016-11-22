@@ -1,0 +1,1683 @@
+.\"
+.\" Sccsid @(#)sh.1	1.14 (gritter) 7/13/05
+.\" Derived from sh(1) and test(1), Unix 7th edition:
+.\" Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\"   Redistributions of source code and documentation must retain the
+.\"    above copyright notice, this list of conditions and the following
+.\"    disclaimer.
+.\"   Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"   All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed or owned by Caldera
+.\"      International, Inc.
+.\"   Neither the name of Caldera International, Inc. nor the names of
+.\"    other contributors may be used to endorse or promote products
+.\"    derived from this software without specific prior written permission.
+.\"
+.\" USE OF THE SOFTWARE PROVIDED FOR UNDER THIS LICENSE BY CALDERA
+.\" INTERNATIONAL, INC. AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL CALDERA INTERNATIONAL, INC. BE
+.\" LIABLE FOR ANY DIRECT, INDIRECT INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+.\" BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+.\" WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+.\" OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+.\" EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.TH SH 1 "7/13/05" "Heirloom Bourne Shell" "User Commands"
+.SH NAME
+sh, jsh \- the standard command interpreter
+.SH SYNOPSIS
+\fBsh\fR [\fB\-acefhikmnprstuvx\fR] [\fIarg\fR] ...
+.br
+\fBjsh\fR [\fB\-acefhikmnprstuvx\fR] [\fIarg\fR] ...
+.SH DESCRIPTION
+.I Sh
+is a command programming language
+that executes commands read from a terminal
+or a file.
+See the
+.I invocation
+section
+for the meaning of arguments to the shell.
+.SS Commands
+A
+.I simple-command
+is a sequence of non blank
+.I words
+separated by blanks (a blank is a
+.B tab
+or a
+.BR space ).
+The first word specifies the name of the command to
+be executed.
+Except as specified below
+the remaining words are passed as arguments
+to the invoked command.
+The command name is passed as argument 0
+(see
+.IR exec (2)).
+The
+.I value
+of a simple-command is its exit status
+if it terminates normally or 200+\fIstatus\fP if
+it terminates abnormally (see
+.IR signal (2)
+for a list of
+status values).
+.PP
+A
+.I pipeline
+is a sequence of one or more
+.I commands
+separated by
+.B \(or.
+The standard output of each command but the last
+is connected by a
+.IR pipe (2)
+to the standard input of the next command.
+Each command is run as a separate process;
+the shell waits for the last command to terminate.
+The
+.I value
+of a pipeline
+is the exit status of its last command.
+.PP
+A
+.I list
+is a sequence of one or more
+.I pipelines
+separated by
+.BR ; ,
+.BR & ,
+.B &&
+or
+.B \(or\|\(or
+and optionally terminated by
+.B ;
+or
+.BR & .
+.B ;
+and
+.B &
+have equal precedence
+which is lower than that of
+.B &&
+and
+.BR \(or\|\(or ,
+.B &&
+and
+.B \(or\|\(or
+also have equal precedence.
+A semicolon causes sequential execution; an ampersand causes
+the preceding
+.I pipeline
+to be executed without waiting for it to finish.
+The symbol
+.B &&
+.RB ( \(or\|\(or )
+causes the
+.I list
+following to be executed only if the preceding
+.I pipeline
+returns a zero (non zero) value.
+Newlines may appear in a
+.I list,
+instead of semicolons,
+to delimit commands.
+.PP
+A
+.B #
+at the beginning of a word
+starts a comment and
+causes the rest of the line to be ignored.
+.PP
+A
+.I command
+is either a simple-command
+or one of the following.
+The value returned by a command is that of the
+last simple-command executed in the command.
+.TP
+\fBfor \fIname\fR [\fBin \fIword\fR ...] \fBdo \fIlist \fBdone\fR
+Each time a
+.B for
+command is executed
+.I name
+is set to the next word in the
+.B for
+word list
+If
+.BI in \ word
+\&...
+is omitted then
+.B
+in "$@"
+is assumed.
+Execution ends when there are no more words in the list.
+.TP
+\fBcase \fIword \fBin\fR [\fIpattern \fR[\fB\(or \fIpattern \fR] ... \fB) \fIlist \fB;;\fR] ... \fBesac\fR
+A
+.B case
+command executes the
+.I list
+associated with the first
+pattern that matches
+.I word.
+The form of the patterns is
+the same as that used for
+file name generation.
+.TP
+\fBif \fIlist \fBthen \fIlist\fR [\fBelif \fIlist \fBthen \fIlist\fR] ... [\fBelse \fIlist\fR] \fBfi\fR
+The
+.I list
+following
+.B if
+is executed and if it returns zero the
+.I list
+following
+.B then
+is executed.
+Otherwise, the
+.I list
+following
+.B elif
+is executed and if its value is zero
+the
+.I list
+following
+.B then
+is executed.
+Failing that the
+.B else
+.I list
+is executed.
+.TP
+\fBwhile \fIlist\fR [\fBdo \fIlist\fR] \fBdone\fR
+A
+.B while
+command repeatedly executes the
+.B while
+.I list
+and if its value is zero executes the
+.B do
+.I list;
+otherwise the loop terminates.
+The value returned by a
+.B while
+command is that
+of the last executed command in the
+.B do
+.I list.
+.B until
+may be used in place of
+.B while
+to negate
+the loop termination test.
+.TP
+.BI ( " list " )
+Execute
+.I list
+in a subshell.
+.TP
+.BI { " list" "; }"
+.I list
+is simply executed.
+.TP
+\fIname\fB() { \fIlist\fB; }\fR
+Defines the shell function
+.IR name.
+Each time when
+.I name
+is recognized as a command,
+.I list
+is executed,
+with the positional parameters
+.IR $1 ", " $2 ...
+set to the arguments of the command.
+After the function returns,
+the previous positional parameters are restored.
+.PP
+The following words
+are only recognized as the first word of a command
+and when not quoted.
+.IP
+.B
+if then else elif fi case in esac for while until do done { }
+.SS "Command substitution"
+The standard output from a command enclosed in
+a pair of grave accents
+.RB ( \`\|\` )
+may be used as part or all
+of a word;
+trailing newlines are removed.
+.SS "Parameter substitution"
+The character
+.B $
+is used to introduce substitutable
+parameters.
+Positional parameters may be assigned values by
+.BR set .
+Variables may be set by writing
+.IP
+.IB name = value
+[
+.IB name = value
+] ...
+.TP
+$\fB\|{\fIparameter\fB\|}\fR
+A
+.I parameter
+is a sequence of letters, digits or underscores (a
+.IR name ),
+a digit,
+or any of the characters
+.B
+* @ # ? \- $ !\|.
+The value, if any, of the parameter is substituted.
+The braces are required only when
+.I parameter
+is followed by a letter, digit, or underscore
+that is not to be interpreted as part of its name.
+If
+.I parameter
+is a digit then it is a positional parameter.
+If
+.I parameter
+is
+.BR * " or" " @"
+then all the positional
+parameters, starting with
+.SM
+.BR $1 ,
+are substituted
+separated by spaces.
+.SM
+.B $0
+is set from argument zero when the shell
+is invoked.
+.TP
+$\fB\|{\fIparameter:\-word\|\fB}\fR
+If
+.I parameter
+is set and not empty then substitute its value;
+otherwise substitute
+.I word.
+.TP
+$\fB\|{\fIparameter:=word\|\fB}\fR
+If
+.I parameter
+is not set and not empty then set it to
+.I word;
+the value of the parameter is then substituted.
+Positional parameters may not be assigned to
+in this way.
+.TP
+$\fB\|{\fIparameter:?word\|\fB}\fR
+If
+.I parameter
+is set and not empty then substitute its value;
+otherwise, print
+.I word
+and exit from the shell.
+If
+.I word
+is omitted then a standard message is printed.
+.TP
+$\fB\|{\fIparameter:+word\|\fB}\fR
+If
+.I parameter
+is set and not empty then substitute
+.I word;
+otherwise substitute nothing.
+.PP
+If the
+.B :
+is omitted,
+the substitutions are only executed
+if the
+.I parameter
+is set, even if it is empty.
+.PP
+In the above
+.I word
+is not evaluated unless it is
+to be used as the substituted string.
+(So that, for example,
+echo ${d\-\`pwd\`}
+will only execute
+.I pwd
+if
+.I d
+is unset.)
+.PP
+The following
+.I parameters
+are automatically set by the shell.
+.RS
+.TP
+.B #
+The number of positional parameters in decimal.
+.PD 0
+.TP
+.B \-
+Options supplied to the shell on invocation or by
+.BR set .
+.TP
+.B ?
+The value returned by the last executed command
+in decimal.
+.TP
+.B $
+The process number of this shell.
+.TP
+.B !
+The process number of the last background command invoked.
+.PD
+.RE
+.PP
+The following
+.I parameters
+are used by the shell:
+.RS
+.TP
+.PD 0
+.SM
+.B CDPATH
+The search path for the
+.I cd
+command (see above).
+.TP
+.SM
+.B HOME
+The default argument (home directory) for the
+.B cd
+command.
+.TP
+.SM
+.B OPTARG
+The value of the last option argument processed by the
+.I getopts
+special command.
+.TP
+.SM
+.B OPTIND
+The index of the last option processed by the
+.I getopts
+special command.
+.TP
+.SM
+.B PATH
+The search path for commands (see
+.BR execution ).
+.TP
+.SM
+.B MAIL
+If this variable is set to the name of
+a mail file then the shell informs the user of
+the arrival of mail in the specified file.
+.TP
+.SM
+.B MAILCHECK
+If this variable is set,
+it is interpreted as a value in seconds
+to wait between checks for new mail.
+The default is 600 (10 minutes).
+If the value is zero,
+mail is checked before each prompt.
+.TP
+.SM
+.B MAILPATH
+A colon-separated list of files
+that are checked for new mail.
+.SM MAIL
+is ignored if this variable is set.
+.SM
+.TP
+.SM
+.B PS1
+Primary prompt string, by default `$ '.
+.TP
+.SM
+.B PS2
+Secondary prompt string, by default `> '.
+.TP
+.SM
+.B IFS
+Internal field separators,
+normally
+.BR space ,
+.BR tab ,
+and
+.BR newline .
+.TP
+.SM
+.BR LANG ", " LC_ALL
+See
+.IR locale (7).
+.TP
+.SM
+.B LC_CTYPE
+Affects the mapping of bytes to characters
+for file name generation,
+for the interpretation of `\e',
+and for handling
+.SM $IFS.
+.TP
+.SM
+.B SHACCT
+If this variable is set in the initial environment passed to the shell
+and points to a file writable by the user,
+accounting statistics are written to it.
+.TP
+.SM
+.B TIMEOUT
+The shell exists when prompting for input
+if no command is entered
+for more than the given value in seconds.
+A value of zero means no timeout
+and is the default.
+.PD
+.RE
+.SS "Blank interpretation"
+After parameter and command substitution,
+any results of substitution are scanned for internal field separator
+characters (those found in
+.SM
+.BR $IFS \*S)
+and split into distinct arguments where such characters are found.
+Explicit null arguments ("" or \'\') are retained.
+Implicit null arguments
+(those resulting from
+.I parameters
+that have no values) are removed.
+.SS "File name generation"
+Following substitution, each command word is scanned for
+the characters
+.BR * ,
+.B ?
+and
+.B [.
+If one of these characters appears
+then the word is regarded as a pattern.
+The word is replaced with alphabetically sorted file names that match the pattern.
+If no file name is found that matches the pattern then
+the word is left unchanged.
+The character
+.B .
+at the start of a file name
+or immediately following a
+.BR / ,
+and the character
+.BR / ,
+must be matched explicitly.
+.TP 
+.B *
+Matches any string, including the null string.
+.PD 0
+.TP 
+.B ?
+Matches any single character.
+.TP 
+.B [...]
+Matches any one of the characters
+enclosed.
+A pair of characters separated by
+.B \-
+matches any
+character lexically between the pair.
+.TP
+.B [!...]
+Matches any character except the enclosed ones.
+.PD
+.SS "Quoting"
+The following characters have a special meaning to the shell
+and cause termination of a word unless quoted.
+.PP
+    \fB;   &   (   )   \(or   ^   <   >   newline   space   tab\fP
+.PP
+A character may be
+.I quoted
+by preceding
+it with a
+.B
+\\\|.
+.B \\\\newline
+is ignored.
+All characters enclosed between a pair of quote marks (\fB\'\|\'\fP),
+except a single quote,
+are quoted.
+Inside double quotes
+(\fB"\|"\fP)
+parameter and command substitution occurs and
+.B
+\\
+quotes the characters
+.B
+\\ \` "
+and
+.BR $ \|.
+.PP
+.B
+"$*"
+is equivalent to
+.SM
+.B
+"$1 $2 ..."
+whereas
+.br
+.B
+"$@"
+is equivalent to
+.SM
+.B
+"$1" "$2" ... .
+.SS "Prompting"
+When used interactively,
+the shell prompts with the value of
+.SM $PS1
+before reading a command.
+If at any time a newline is typed and further input is needed
+to complete a command then the secondary prompt
+(\s-1$PS2\s0)
+is issued.
+.SS "Input and output"
+Before a command is executed its input and output
+may be redirected using a special notation interpreted by the shell.
+The following may appear anywhere in a simple-command
+or may precede or follow a
+.I command
+and are not passed on to the invoked command.
+Substitution occurs before
+.I word
+or
+.I digit
+is used.
+.TP
+\fB<\fI\|word\fP
+Use file
+.I word
+as standard input (file descriptor 0).
+.PD
+.TP
+\fB>\fI\|word\fP
+Use file
+.I word
+as standard output (file descriptor 1).
+If the file does not exist then it is created;
+otherwise it is truncated to zero length.
+.TP
+\fB>>\fI\|word\fP
+Use file
+.I word
+as standard output.
+If the file exists then output is appended (by seeking to the end);
+otherwise the file is created.
+.TP
+\fB<<\fR[\fB\-\fR]\fI\|word\fP
+The shell input is read up to a line the same as
+.IR word ,
+or end of file.
+The resulting document becomes
+the standard input.
+If any character of
+.I word
+is quoted then no interpretation
+is placed upon the characters of the document;
+otherwise, parameter and command substitution occurs,
+.B
+\\newline
+is ignored,
+and
+.B
+\\
+is used to quote the characters
+.B
+\\ $ \`
+and the first character of
+.I word.
+The optional
+.B \-
+causes leading tabulator character to be stripped
+from the resulting document;
+.I word
+may then also be prefixed by a tabulator.
+.TP
+\fB<\|&\|\fIdigit\fP
+The standard input is duplicated from file descriptor
+.I digit;
+see
+.IR dup (2).
+Similarly for the standard output using >\|.
+.TP
+\fB<\|&\|\-
+The standard input is closed.
+Similarly for the standard output using >\|.
+.PD
+.PP
+If one of the above is preceded by a digit
+then the
+file descriptor created is that specified
+by the digit
+(instead of the default 0 or 1).
+For example,
+.PP
+	\&... 2>&1
+.PP
+creates file descriptor 2 to be a duplicate
+of file descriptor 1.
+.PP
+If a command is followed by
+.B &
+then the default standard input
+for the command
+is the empty file
+(/dev/null),
+unless job control is enabled.
+Otherwise, the environment for the execution of a command contains the
+file descriptors of the invoking shell as modified by input
+output specifications.
+.SS "Environment"
+The environment
+is a list of name-value pairs that is passed to
+an executed program in the same way as a normal argument list;
+see
+.IR exec (2)
+and
+.IR environ (5).
+The shell interacts with the environment in several ways.
+On invocation, the shell scans the environment
+and creates a
+.I parameter
+for each name found,
+giving it the corresponding value.
+Executed commands inherit the same environment.
+If the user modifies the values of these
+.I parameters
+or creates new ones,
+none of these affects the environment
+unless the
+.I export
+command is used to bind the shell's
+.I parameter
+to the environment.
+The environment seen by any executed command is thus composed
+of any unmodified name-value pairs originally inherited by the shell,
+plus any modifications or additions,
+all of which must be noted in
+.I export
+commands.
+.PP
+The environment for any
+.I simple-command
+may be augmented by prefixing it with one or more assignments to
+.I parameters.
+Thus these two lines are equivalent
+.IP
+TERM=450 cmd args
+.br
+(export TERM; TERM=450; cmd args)
+.PP
+If the
+.I \-k
+flag is set,
+.I all
+keyword arguments are placed in the environment,
+even if the occur after the command name.
+The following prints `a=b c' and `c':
+.nf
+echo a=b c
+set \-k
+echo a=b c
+.fi
+.SS "Signals"
+The INTERRUPT and QUIT signals for an invoked
+command are ignored if the command is followed by
+.B &
+(unless job control is enabled);
+otherwise signals have the values
+inherited by the shell from its parent.
+(But see also
+.IR trap. )
+.SS "Execution"
+Each time a command is executed the above substitutions
+are carried out.
+The shell then first looks if a function with the command name was defined;
+if so, it is chosen for execution.
+Otherwise, except for the `special commands' listed below a new
+process is created and
+an attempt is made to execute the command via an
+.IR exec (2).
+.PP
+The shell parameter
+.SM $PATH
+defines the search path for
+the directory containing the command.
+Each alternative directory name is separated by
+a colon
+.RB ( : ).
+The default path is
+`/usr/5bin:/bin:/usr/bin:'.
+If the command name contains a / then the search path
+is not used.
+Otherwise, each directory in the path is
+searched for an executable file.
+If the file has execute permission but is not an
+.I a.out
+file,
+it is assumed to be a file containing shell commands.
+A subshell (i.e., a separate process) is spawned to read it.
+A parenthesized command is also executed in
+a subshell.
+.SS "Special commands"
+The following commands are executed in the shell process itself:
+.TP
+.B :
+No effect; the command does nothing.
+.PD 0
+.TP
+.BI . \ file
+Read and execute commands from
+.I file
+and return.
+The search path
+.SM $PATH
+is used to find the directory containing
+.IR file .
+.TP
+\fBbreak\fR [\fIn\fR]
+Exit from the enclosing
+.I for
+or
+.I while
+loop, if any.
+If
+.I n
+is specified then break
+.I n
+levels.
+.TP
+\fBcontinue\fR [\fIn\fR]
+Resume the next iteration of the enclosing
+.I for
+or
+.I while
+loop.
+If
+.I n
+is specified then resume at the
+.IR n -th
+enclosing loop.
+.TP
+\fBcd\fR [\fIarg\fR]
+Change the current directory to
+.I arg.
+The shell
+parameter
+.SM $HOME
+is the default
+.IR arg .
+If no directory
+.I arg
+is found and the
+.SM $CDPATH
+parameter contains a list of directories separated by colons,
+each of these directories is used as a prefix to
+.I arg
+in the given order,
+and the current directory is set to the first one that is found.
+.\" BEGIN SPELL
+.IP
+If there has still no suitable directory been found,
+an interactive shell will try to fix spelling errors
+and propose an alternative directory name:
+.sp
+.nf
+        $ cd /usf/lb
+        cd /usr/lib? \fIy\fP
+        ok
+.fi
+.sp
+If the answer is `y' or anything other than `n',
+the shell will set the current directory to the one proposed.
+.\" END SPELL
+.TP
+\fBecho\fR [\fIarg \fR...]
+Each
+.I arg
+is printed to standard output;
+afterwards, a newline is printed.
+The following escapes sequences are recognized in
+.IR arg :
+.PD 0
+.RS
+.TP 7n
+.B \eb
+Prints a backspace character.
+.TP
+.B \ec
+Causes the command to return immediately.
+Any following characters are ignored,
+and the terminating newline is not printed.
+.TP
+.B \ef
+Prints a formfeed character.
+.TP
+.B \en
+Prints a newline character.
+.TP
+.B \er
+Prints a carriage-return character.
+.TP
+.B \et
+Prints a tabulator character.
+.TP
+.B \ev
+Prints a vertical tabulator character.
+.TP
+.B \e\e
+Prints a backslash character.
+.TP
+.BI \e0 nnn
+Prints the character (byte) with octal value
+.IR nnn .
+.PD
+.PP
+If
+.I /usr/ucb
+precedes
+.I /usr/5bin
+or
+.I /usr/bin
+in the current setting of the
+.SM $PATH
+variable and the first argument is
+.BR \-n ,
+the terminating newline is not printed,
+and no escape sequences are recognized.
+If the
+.B $SYSV3
+variable is set in the initial environment passed to the shell,
+the
+.I \-n
+argument is also interpreted,
+but escape sequences are processed as usual.
+.RE
+.TP
+\fBeval\fR [\fIarg \fR...]
+The arguments are read as input
+to the shell
+and the resulting command(s) executed.
+.TP
+\fBexec\fR [\fIarg \fR...]
+The command specified by
+the arguments is executed in place of this shell
+without creating a new process.
+Input output arguments may appear and if no other
+arguments are given cause the shell input
+output to be modified.
+.TP
+\fBexit\fR [\fIn\fR]
+Causes the shell to exit
+with the exit status specified by
+.I n.
+If
+.I n
+is omitted then the exit status is that of the last command executed.
+(An end of file will also exit from the shell.)
+.TP
+\fBexport\fR [\fIname\fR ...]
+The given names are marked
+for automatic export to the
+.I environment
+of subsequently-executed commands.
+If no arguments are given then a list of
+exportable names is printed.
+.\".TP
+.\"\fBlogin\fR [\fIarg\fR ...]
+.\"Equivalent to `exec login arg ...'.
+.TP
+\fBgetopts optstring variable\fR [\fIarg\fR ...]
+Retrieves options and option-arguments
+from
+.I arg
+(or the positional parameters)
+similar to
+.IR getopt (3).
+.I optstring
+is a list of characters (bytes);
+each character represents an option letter.
+A character followed by
+.B :
+indicates that the option has an argument.
+Calling
+.I getopts
+repeatedly causes one option to be retrieved per call.
+The index of the current option is stored in the variable
+.SM OPTIND;
+it is initialized to 1 when the shell starts.
+The option-argument, if any, is stored in the
+.SM OPTARG
+variable.
+The option character is stored in the
+.I variable
+named.
+When the end of the options is reached,
+.I getopts
+returns with a non-zero value.
+A missing argument or an illegal option
+also causes a non-zero return value,
+and an error message is printed to standard error.
+.TP
+\fBhash\fR [\fB\-r\fR] [\fIname\fR ...]
+The shell maintains a hash table
+of the locations of external commands.
+If
+.I name
+arguments are given,
+each one is looked up and is inserted into the table if it is found.
+With the
+.I \-r
+option, the table is cleared.
+Otherwise,
+a list of the commands currently in the table is printed.
+.TP
+\fBnewgrp\fR [\fIarg \fR...]
+Equivalent to `exec newgrp arg ...'.
+.TP
+.B pwd
+Prints the name of the current directory.
+.TP
+\fBread\fR [\fB\-r\fR] \fIname\fR ...
+One line is read from the standard input;
+successive words of the input are assigned to the
+variables
+.I name
+in order,
+with leftover words to the last variable.
+The return code is 0 unless the end-of-file is encountered.
+Normally, backslashes in the line read escape the following character;
+this is inhibited if the
+.B \-r
+option is given.
+.TP
+\fBreadonly\fR [\fIname \fR...]
+The given names are marked readonly and
+the values of the these names may not be changed
+by subsequent assignment.
+If no arguments are given then a list
+of all readonly names is printed.
+.TP
+\fBreturn\fR [\fIn\fR]
+Return from a shell function to the execution level above.
+With the argument
+.IR n ,
+the special variable
+.I $?
+is set to the given value.
+.TP
+\fBset\fR [\fB\-\-aefhknptuvx\fR [\fIarg \fR...]]
+.RS
+.PD 0
+.TP 6n
+.B \-\-
+No effect;
+useful if the first
+.I arg
+begins with
+.IR \- .
+.TP
+.B \-a
+Export any variables that are modified or created from now on.
+.TP
+.B \-e
+If non interactive then exit immediately if a command fails.
+.TP
+.B \-f
+File name generation is disabled.
+.TP
+.B \-h
+When a function is defined,
+look up all external commands it contains as described for the
+.I hash
+special command.
+Normally, these commands are looked up when they are executed.
+.TP
+.B \-k
+All keyword arguments are placed in the environment for a command,
+not just those that precede the command name.
+.TP
+.B \-m
+Enables job control (see below).
+.TP
+.B \-n
+Read commands but do not execute them.
+.TP
+.B \-p
+Makes the shell privileged.
+A privileged shell does not execute the system and user profiles;
+if an non-privileged shell (the default)
+has an effective user or group id
+different to its real user or group id
+or if it has an effective user or group id below 100,
+it resets its effective user or group id, respectively,
+to the corresponding real id at startup.
+.TP
+.B \-t
+Exit after reading and executing one command.
+.TP
+.B \-u
+Treat unset variables as an error when substituting.
+.TP
+.B \-v
+Print shell input lines as they are read.
+.TP
+.B \-x
+Print commands and their arguments as they are executed.
+.TP
+.B \-
+Turn off the
+.B \-x
+and
+.B \-v
+options.
+.PD
+.PP
+These flags can also be used upon invocation of the shell.
+The current set of flags may be found in
+.BR $\- .
+.PP
+If
+.B +
+is used instead of
+.IR \- ,
+the given flags are disabled.
+.PP
+Remaining arguments are positional
+parameters and are assigned, in order, to
+.SM
+.BR $1 ,
+.SM
+.BR $2 ,
+etc.
+If no arguments are given then the values
+of all names are printed.
+.RE
+.TP
+\fBshift\fR [\fIn\fR]
+The positional parameters from
+.SM
+.BR $2 ...
+are renamed
+.SM
+.BR $1 ...
+The
+.I n
+argument causes a shift by the given number,
+i.\|e.
+.SM
+.BI $ n+1
+is renamed to
+.SM
+.B $1
+and so forth.
+.TP
+.B times
+Print the accumulated user and system times for
+processes run from the shell.
+.TP
+\fBtest\fR [\fIexpr\fP]
+.I test
+evaluates the expression
+.IR expr ,
+and if its value is true then returns zero exit status; otherwise, a
+non zero exit status is returned.
+.I test
+returns a non zero exit if there are no arguments.
+.RS
+.PP
+The following primitives are used to construct
+.IR expr :
+.PD 0
+.TP 12n
+.BR \-r " file"
+true if the file exists and is readable.
+.TP
+.BR \-w " file"
+true if the file exists and is writable.
+.TP
+.BR \-u " file"
+true if the file exists and has the setuid bit set.
+.TP
+.BR \-g " file"
+true if the file exists and has the setgid bit set.
+.TP
+.BR \-k " file"
+true if the file exists and has the sticky bit set.
+.TP
+.BR \-f " file"
+true if the file exists and is a regular file
+(or any file other than a directory if
+.I /usr/ucb
+occurs early in the current
+.SM $PATH
+parameter).
+.TP
+.BR \-d " file"
+true if the file exists and is a directory.
+.TP
+.BR \-h " file"
+true if the file exists and is a symbolic link.
+.TP
+.BR \-L " file"
+true if the file exists and is a symbolic link.
+.TP
+.BR \-p " file"
+true if the file exists and is a named pipe.
+.TP
+.BR \-b " file"
+true if the file exists and is a block device.
+.TP
+.BR \-c " file"
+true if the file exists and is a character device.
+.TP
+.BR \-s " file"
+true if the file exists and has a size greater than zero.
+.TP
+.BR \-t " [fildes]"
+true if the open file whose file descriptor number is
+.I fildes
+(1 by default)
+is associated with a terminal device.
+.TP
+.BR \-z " s1"
+true if the length of string
+.I s1
+is zero.
+.TP
+.BR \-n " s1"
+true if the length of the string
+.I s1
+is nonzero.
+.TP
+.RB s1 " = " s2
+true
+if the strings
+.I s1
+and
+.I s2
+are equal.
+.TP
+.RB s1 " != " s2
+true
+if the strings
+.I s1
+and
+.I s2
+are not equal.
+.TP
+s1
+true if 
+.I s1
+is not the null string.
+.TP
+.RB n1 " \-eq " n2
+true if the integers
+.I n1
+and
+.I n2
+are algebraically equal.
+Any of the comparisons
+.BR \-ne ,
+.BR \-gt ,
+.BR \-ge ,
+.BR \-lt ,
+or
+.BR \-le
+may be used in place of
+.BR \-eq .
+.PD
+.PP
+These primaries may be combined with the
+following operators:
+.PD 0
+.TP 12n
+.B  !
+unary negation operator
+.TP
+.B  \-a
+binary
+.I and
+operator
+.TP
+.B  \-o
+binary
+.I or
+operator
+.TP
+.TP 
+.BR "( " "expr" " )"
+parentheses for grouping.
+.PD
+.PP 
+.B \-a
+has higher precedence than
+.B \-o.
+Notice that all the operators and flags are separate
+arguments to
+.IR test .
+Notice also that parentheses are meaningful
+as command separators and must be escaped.
+.RE
+.TP
+\fBtrap\fR [\fIarg\fR] [\fIn\fR|\fIname\fR] ...
+.I Arg
+is a command to be read and executed when the shell
+receives signal(s)
+.I n.
+(Note that
+.I arg
+is scanned once when
+the trap is set and once when the trap
+is taken.)
+Trap commands are executed in order of signal number.
+If
+.I arg
+is absent then all trap(s)
+.I n
+are reset
+to their original values.
+If
+.I arg
+is the null
+string then this signal is ignored by the shell and by invoked commands.
+If
+.I n
+is 0 then the command
+.I arg
+is executed
+on exit from the shell,
+otherwise upon receipt of signal
+.I n
+as numbered in
+.IR signal (2).
+.I Trap
+with no arguments prints a list
+of commands associated with each signal number.
+A symbolic
+.I name
+can be used instead of the
+.I n
+argument;
+it is formed by the signal name in the `C' language
+minus the
+.SM SIG
+prefix,
+e.\|g.
+.SM TERM
+for
+.SM SIGTERM.
+.SM EXIT
+is the same as a `0' argument.
+.TP
+\fBtype\fI name\fR ...
+For each
+.IR name ,
+prints if it would be executed as a shell function,
+as a special command,
+or as an external command.
+In the last case, the full path name to the command is also printed.
+.TP
+\fBulimit\fP [\fB\-\fP[\fBHS\fP][\fBa\fP|\fBcdfmnstuv\fP]]
+.PD 0
+.TP
+\fBulimit\fP [\fB\-\fP[\fBHS\fP][\fBc\fP|\fBd\fP|\fBf\fP|\fBm\fP|\fBn\fP|\fBs\fP|\fBt\fP|\fBu\fP|\fBv\fP]] [\fIlimit\fP]
+Handles resource limits for the shell
+and processes created by it,
+as described in
+.IR getrlimit (2).
+Without a
+.I limit
+argument,
+the current settings are printed;
+otherwise, a new limit is set.
+The following options are accepted:
+.RS
+.PD 0
+.TP
+.B \-H
+Sets a hard limit.
+Only the super-user may raise a hard limit.
+.TP
+.B \-S
+Sets a soft limit.
+A soft limit must not exceed the hard limit.
+.IP
+If neither
+.I \-H
+or
+.I \-S
+is given,
+the soft limit is printed,
+or both limits are set, respectively.
+.TP
+.B \-a
+Chooses all limits described.
+.TP
+.B \-c
+The maximum size of a core dump in 512-byte blocks.
+.TP
+.B \-d
+The maximum size of the data segment in kbytes.
+.TP
+.B \-f
+The maximum size of a file in 512-byte blocks.
+This is the default if no limit is explicitly selected.
+.TP
+.B \-l
+The maximum size of locked memory in kbytes.
+.TP
+.B \-m
+The maximum resident set size in kbytes.
+.TP
+.B \-n
+The maximum number of open file descriptors.
+.TP
+.B \-s
+The maximum size of the stack segment in kbytes.
+.TP
+.B \-t
+The maximum processor time in seconds.
+.TP
+.B \-u
+The maximum number of child processes.
+.TP
+.B \-v
+The maximum address space size in kbytes.
+.PD
+.RE
+.TP
+\fBumask \fR[\fB\-S\fR] [\fInnn\fR]
+The user file creation mask is set to
+the octal value
+.I nnn
+(see
+.IR umask (2)).
+Symbolic modes as described in
+.IR chmod (1)
+are also accepted.
+If
+.I nnn
+is omitted, the current value of the mask is printed.
+With the
+.B \-S
+option, the current mask is printed as a symbolic string.
+.TP
+\fBunset\fI variable \fR...
+Unsets each
+.I variable
+named.
+.TP
+\fBwait\fP [\fIn\fP]
+Wait for the specified process and
+report its termination status.
+If
+.I n
+is not given then all currently active child processes are waited for.
+The return code from this command is that of
+the process waited for.
+If
+.I n
+does not refer to a child process of the shell,
+.I wait
+returns immediately with code 0.
+.PD
+.PP
+.SS "Invocation"
+If the first character of argument zero is
+.BR \- ,
+commands are read from
+.B /etc/profile
+and
+.BR \s-1$HOME\s0/.\|profile ,
+if the respective file exists.
+Commands are then read as described below.
+The following flags are interpreted by the shell
+when it is invoked.
+.PD 0
+.TP 11n
+.BI \-c \ string
+If the
+.B \-c
+flag is present then
+commands are read from
+.I string\|.
+.TP 11n
+.B \-s
+If the
+.B \-s
+flag is present or if no
+arguments remain
+then commands are read from the standard input.
+Shell output is written to
+file descriptor 2.
+.TP 11n
+.B \-i
+If the
+.B \-i
+flag is present or
+if the shell input and output are attached to a terminal (as told by
+.IR isatty (3))
+then this shell is
+.I interactive.
+In this case the terminate signal
+SIGTERM (see
+.IR signal (2))
+is ignored (so that `kill 0'
+does not kill an interactive shell) and the interrupt signal
+SIGINT is caught and ignored
+(so that
+.B wait
+is interruptable).
+In all cases SIGQUIT is ignored by the shell.
+.PD
+.PP
+The remaining flags and arguments are described under the
+.B set
+command.
+.SS "Job Control"
+When an interactive shell is invoked as
+.BR jsh ,
+job control is enabled.
+Job control allows to stop and resume processes,
+and to switch between foreground and background jobs.
+A job consists of the commands of a single pipeline.
+Each job is placed in a separate process group;
+a login shell and all jobs created by it form a session.
+Interrupt, quit, and other terminal control characters
+only affect the current foreground process group.
+The foreground job can be stopped pressing the
+suspend key, typically
+.IR ^Z ;
+any job can be stopped by sending the
+.SM STOP
+signal to it.
+Jobs are identified by
+.I "jod ids"
+of the following form:
+.TP
+.BR % " or " %% " or " %+
+The current job.
+.TP
+.B %\-
+The job that was previously the current job.
+.TP
+.BI ? string
+The only job whose name contains
+.IR string .
+.TP
+.BI % number
+The job with the given number.
+.TP
+.I number
+The job with process group id
+.IR number .
+.TP
+.I string
+The only job for which
+.I string
+is a prefix of its name.
+.PP
+The following built-in commands are additionally available
+with job control:
+.TP
+\fBbg\fR [\fIjobid\fP ...]
+Places each
+.I jobid
+in the background.
+The default job id is the current job.
+.TP 
+\fBfg\fR [\fIjobid\fP ...]
+Sequentially selects each
+.I jobid
+as the foreground job.
+The default job id is the current job.
+.TP
+\fBjobs\fR [\fB\-p\fR|\fB\-l\fR] [\fIjobid\fP ...] | [\fB\-x\fI command \fR[\fIarguments\fR ...]] 
+Prints information about each
+.IR jobid ,
+or executes
+.IR command .
+.RS
+.TP
+.B \-l
+Includes the process group id and the starting directory.
+.TP
+.B \-p
+Includes the process group id.
+.TP
+\fB\-x \fIcommand \fR[\fIarguments\fR ...]
+Executes
+.I command
+with
+.IR arguments ;
+each
+.I argument
+that forms a job id
+is replaced by the process group id
+of the respective job.
+It is an error if a given job does not exist.
+.RE
+.TP
+\fBkill\fR [[\fB\-s\fR \fIsignal\fR | \fB\-\fIsignal\fR] \fIjobid\fR ... | \fB-l \fI[status]\fR
+A special version of the
+.IR kill (1)
+command that recognizes job ids in its arguments.
+.TP
+\fBstop \fIjobid\fR ...
+Stops the given jobs
+(i.\|e. sends a
+.SM STOP
+signal to them).
+.TP
+.B suspend
+Stops the shell itself.
+This is not allowed if the shell is a session leader.
+.TP
+\fBwait \fR[\fIjobid\fR]
+The
+.I wait
+command (see above) recognizes job ids in its arguments.
+.SH FILES
+/etc/profile
+.br
+.RB $HOME/ . \^profile
+.br
+/tmp/sh*
+.br
+/dev/null
+.SH SEE ALSO
+env(1),
+exec(2),
+signal(2)
+.SH DIAGNOSTICS
+Errors detected by the shell, such as syntax errors
+or fatal errors in special commands,
+cause the shell
+to return a non zero exit status.
+If the shell is being used non interactively
+then execution of the shell file is abandoned.
+Otherwise, the shell returns the exit status of
+the last command executed (see also
+.IR exit ).
+.SH NOTES
+For historical reasons,
+.I ^
+is a synonym for
+.I \(or
+as pipeline separator.
+Its use in new applications is discouraged.
+.PP
+If a command other than a simple-command
+(i.\|e. `for ...', `case ...' etc.) is redirected,
+it is executed in a subshell.
+If variable assignments must be visible in the parent shell
+after the input has been redirected, the
+.I exec
+special command can be used:
+.RS
+.sp
+.nf
+exec 5<&0 <input
+while read line
+do
+        ...
+        variable=value
+        ...
+done
+exec <&5 5<&\-
+.fi
+.sp
+.RE
+.PP
+If parameters that have been inherited from the initial environment
+are modified,
+they must be explicitly exported
+to make the change visible to external commands,
+as described under `Environment' above.
+.PP
+The
+.SM $IFS
+parameter is applied to any unquoted word.
+Thus
+.RS
+.sp
+.nf
+IFS=X
+echoXfoo
+.fi
+.sp
+.RE
+executes the `echo' command with the argument `foo'.
+.PP
+The command `set \-\-' without further arguments is a no-op.
+The
+.I shift
+special command can be used to delete all positional parameters.
+.PP
+There is only one namespace for both functions and parameters.
+A function definition will delete a parameter with the same name
+and vice-versa.
+.PP
+Parameter assignments that precede a special command
+affect the shell itself;
+parameter assignments that precede the call of a function are ignored.
