@@ -46,3 +46,4 @@
 #define DOLLAR	'$'
 #define ESCAPE	'\\'
 #define BRACE	'{'
+#define COMCHAR '#'

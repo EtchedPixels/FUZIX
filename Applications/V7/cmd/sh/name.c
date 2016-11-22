@@ -38,7 +38,7 @@ int syslook(char *w, SYSTAB syswds)
 	syscan = syswds;
 	first = *w;
 
-	while (s = syscan->sysnam) {
+	while ( (s = syscan->sysnam) ) {
 		if (first == *s && eq(w, s))
 			return (syscan->sysval);
 		syscan++;
@@ -236,7 +236,7 @@ void printnam(NAMPTR n)
 	register const char *s;
 
 	sigchk();
-	if (s = n->namval) {
+	if ( (s = n->namval) ) {
 		prs(n->namid);
 		prc('=');
 		prs(s);

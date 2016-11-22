@@ -98,7 +98,7 @@ void chktrap(void)
 	while (--i) {
 		if (trapflg[i] & TRAPSET) {
 			trapflg[i] &= ~TRAPSET;
-			if (t = trapcom[i]) {
+			if ( (t = trapcom[i]) ) {
 				int savxit = exitval;
 				execexp(t, 0);
 				exitval = savxit;

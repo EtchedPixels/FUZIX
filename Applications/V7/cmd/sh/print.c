@@ -38,7 +38,7 @@ void prs(const char *as)
 {
 	register const char *s;
 
-	if (s = as)
+	if ( (s = as) )
 		write(output, s, length(s) - 1);
 }
 
@@ -57,7 +57,7 @@ void prt(clock_t t)
 	sec = t % 60;
 	t /= 60;
 	min = t % 60;
-	if (hr = t / 60) {
+	if ( (hr = t / 60) ) {
 		prn(hr);
 		prc('h');
 	}
