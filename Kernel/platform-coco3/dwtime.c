@@ -4,6 +4,7 @@
 #include <drivewire.h>
 #include <printf.h>
 #include <kdata.h>
+#include <ttydw.h>
 #include "config.h"
 
 #define DISC __attribute__((section(".discard")))
@@ -15,7 +16,9 @@ static const uint16_t mktime_moffset[12]= { 0, 31, 59, 90, 120, 151, 181, 212, 2
 static int get_time( uint8_t *tbuf )
 {
 	int ret;
-
+	
+	if ( dwtype == DWTYPE_NOTFOUND )
+		return -1;
 	tbuf[0]=0x23;
 	ret=dw_transaction( tbuf, 1, tbuf, 6, 0 );
 	if( ret ) return -1;

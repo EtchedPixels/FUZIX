@@ -49,7 +49,8 @@ void device_init(void)
 #ifdef CONFIG_COCOSDC
 	devsdc_init( );
 #endif
-	dwtime_init( );
+	if ( ! dw_init() )
+		dwtime_init( );
 	inittod();
 	sock_init();
 }

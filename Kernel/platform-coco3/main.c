@@ -3,9 +3,13 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <ttydw.h>
+
+#define DISC __attribute__((section(".discard")))
 
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
+
 
 void platform_discard(void)
 {
@@ -34,7 +38,7 @@ void do_beep(void)
 }
 
 /* Scan memory return number of 8k pages found */
-__attribute__((section(".discard")))
+DISC
 int scanmem(void)
 {
 	volatile uint8_t *mmu=(uint8_t *)0xffa8;
@@ -60,7 +64,7 @@ int scanmem(void)
  Map handling: We have flexible paging. Each map table consists
  of a set of pages with the last page repeated to fill any holes.
  */
-
+DISC
 void pagemap_init(void)
 {
     int i;
@@ -75,14 +79,18 @@ void pagemap_init(void)
     pagemap_add(6);
 }
 
-
+DISC
 void map_init(void)
 {
 }
 
-
+DISC
 uint8_t platform_param(char *p)
 {
+	if( !strcmp(p,"NODW") ){
+	    dwtype = DWTYPE_NOTFOUND;
+	    return -1;
+	}
 	return 0;
 }
 

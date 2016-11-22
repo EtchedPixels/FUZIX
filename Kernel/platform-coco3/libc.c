@@ -1,5 +1,14 @@
 #include "cpu.h"
 
+int strcmp( char *a, char *b ){
+    int ret;
+    while (1){
+	ret = *a - *b++;
+	if( ! *a || ret )
+	    return ret;
+	a++;
+    }
+}
 
 size_t strlen(const char *p)
 {
