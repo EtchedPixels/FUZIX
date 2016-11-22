@@ -46,7 +46,7 @@
 #include "blib.h"
 
 #define BLKSIZE 1024
-#ifdef __linux
+#ifdef __linux__
 /* this value is set to be large enough to re-compile BCPL on the host system */
 #define PBLKS 20
 #else
@@ -83,6 +83,7 @@
 #define K2 0140002
 #define X22 0160026
 
+/* debug tracing */
 #if 1
 #define itrace(x)
 #define itrace2(x,y)
@@ -119,6 +120,18 @@ static void labref(int16_t, uint16_t);
 static int16_t interpret(void);
 static int16_t icgetbyte(uint16_t, uint16_t);
 static void icputbyte(uint16_t, uint16_t, uint16_t);
+
+/* Abstract away the difference between the paged and non-paged implementations */
+#ifdef PAGEDMEM
+
+#else
+
+#define wrM(address, data) M[address]=data
+#define add2M(address, data) M[address]+=data
+#define rdM(address) M[address]
+#endif
+
+
 
 static void writes(const char *p) {
  write(1, p, strlen(p));
@@ -185,7 +198,7 @@ sw:
         A = rdn() + G;
         if (Ch == 'L') rch();
         else printf("\nBAD CODE AT P = %d\n", P);
-        M[A] = 0;
+        wrM(A, 0);
         labref(rdn(), A);
         goto sw;
     case 'Z': for (i = 0; i <= 500; i++)
@@ -215,7 +228,7 @@ sw:
 static void
 stw(uint16_t w)
 {
-    M[P++] = w;
+    wrM(P++, w);
     Cp = 0;
 }
 
@@ -224,7 +237,7 @@ stc(uint16_t c)
 {
     if (Cp == 0) { stw(0); Cp = WORDSIZE; }
     Cp -= BYTESIZE;
-    M[P - 1] += c << Cp;
+    add2M(P - 1, c << Cp);
 }
 
 static char buf[128];
@@ -280,11 +293,11 @@ setlab(int n)
     if (k < 0) printf("L%d ALREADY SET TO %d AT P = %d\n", n, -k, P);
     while (k > 0) {
 	uint16_t kp = k;
-        uint16_t nv = M[kp];
+        uint16_t nv = rdM(kp);
         /* Removing this debug check breaks under SDCC - FIXME check if
            compiler bug ! */
         if (n == 9499)fprintf(stderr, "setlab %d to %d\n", (unsigned int)kp, (unsigned int)P);
-        M[kp] = P;
+        wrM(kp, P);
         k = nv;
     }
     Labv[n] = -P;
@@ -299,7 +312,7 @@ labref(int16_t n, uint16_t a)
     if (k < 0) k = -k; else Labv[n] = a;
 //    if (n == 499)
 //    fprintf(stderr, "Mod %d by %d from %d\n", (unsigned int)a, (int)k, (unsigned int)M[a]);
-    M[a] += k;
+    add2M(a, k);
 }
 
 static int16_t interpret(void)
@@ -311,18 +324,18 @@ fetch:
         fprintf(stderr, "FAULT C=%d P=%d VSIZE=%d\n", C, P, VSIZE);
         exit(1);
     }
-    W = M[C++];
+    W = rdM(C++);
     if ((W & DBIT) == 0)
         D = W & ABITS;
     else
-        D = M[C++];
+        D = rdM(C++);
 
     itrace3("OP %d, D %d ", W >> FSHIFT, D);
 
     if ((W & PBIT) != 0) { D += P; itrace("+P"); }
     if ((W & GBIT) != 0) { D += G; itrace("+G"); }
-    if ((W & IBIT) != 0) { D = M[D]; itrace("[]"); }
-    
+    if ((W & IBIT) != 0) { D = rdM(D); itrace("[]"); }
+
     itrace4("->%d [A%dB%d]\n", D, A, B);
 
     switch (W >> FSHIFT) {
@@ -331,22 +344,22 @@ fetch:
                     writes("\n");
         return -1;
     case 0: B = A; A = D; goto fetch;
-    case 1: M[D] = A; goto fetch;
+    case 1: wrM(D, A); goto fetch;
     case 2: A = A + D; goto fetch;
     case 3: C = D; goto fetch;
     case 4: A = !A;
     case 5: if (!A) C = D; goto fetch;
     case 6: D += P;
-        M[D] = P; M[D + 1] = C;
+        wrM(D, P); wrM(D + 1, C);
         P = D; C = A;
         goto fetch;
     case 7: switch (D) {
         default: goto error;
-        case 1: A = M[A]; goto fetch;
+        case 1: A = rdM(A); goto fetch;
         case 2: A = -A; goto fetch;
         case 3: A = ~A; goto fetch;
-        case 4: C = M[P + 1];
-            P = M[P];
+        case 4: C = rdM(P + 1);
+            P = rdM(P);
             goto fetch;
         case 5: A = (int16_t)B * (int16_t)A; goto fetch;
         case 6: A = (int16_t)B / (int16_t)A; goto fetch;
@@ -366,10 +379,10 @@ fetch:
         case 20: A = B ^ A; goto fetch;
         case 21: A = B ^ ~A; goto fetch;
         case 22: return 0;
-        case 23: B = M[C]; D = M[C + 1];
+        case 23: B = rdM(C); D = rdM(C + 1);
             while (B != 0) {
                 B--; C += 2;
-                if (A == M[C]) { D = M[C + 1]; break; }
+                if (A == rdM(C)) { D = rdM(C + 1); break; }
             }
             C = D;
             goto fetch;
@@ -381,20 +394,20 @@ fetch:
         case 28: A = findinput(A); goto fetch;
         case 29: A = findoutput(A); goto fetch;
         case 30: return A;
-        case 31: A = M[P]; goto fetch;
+        case 31: A = rdM(P); goto fetch;
         case 32: P = A; C = B; goto fetch;
         case 33: endread(); goto fetch;
         case 34: endwrite(); goto fetch;
         case 35: D = P + B + 1;
-                 M[D] = M[P];
-                 M[D + 1] = M[P + 1];
-                 M[D + 2] = P;
-                 M[D + 3] = B;
+                 wrM(D,     rdM(P));
+                 wrM(D + 1, rdM(P + 1));
+                 wrM(D + 2, P);
+                 wrM(D + 3, B);
                  P = D;
                  C = A;
                  goto fetch;
         case 36: A = getbyte(A, B); goto fetch;
-        case 37: putbyte(A, B, M[P + 4]); goto fetch;
+        case 37: putbyte(A, B, rdM(P + 4)); goto fetch;
         case 38: A = input(); goto fetch;
         case 39: A = output(); goto fetch;
         }
@@ -418,9 +431,9 @@ int main(int argc, char *argv[])
     M = pgvec;
     G = MGLOB;
     P = MPROG;
-    M[P++] = LIG1;
-    M[P++] = K2;
-    M[P++] = X22;
+    wrM(P++, LIG1);
+    wrM(P++, K2);
+    wrM(P++, X22);
     initio();
     writes("INTCODE SYSTEM ENTERED\n");
     assemble();
