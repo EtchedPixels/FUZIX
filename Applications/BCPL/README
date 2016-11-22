@@ -41,8 +41,6 @@ cg.i        - INTCODE for  cg. Can be regenerated from  cg.b but you need this i
 iclib.i     - INTCODE for the linkages between the BCPL run-time environment and the INTCODE world.
               Probably originally hand-generated.
 
-(examples/cgtest.b also came from the BCPL kit)
-
 
 How To Use
 ----------
