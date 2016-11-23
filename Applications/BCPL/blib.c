@@ -24,17 +24,6 @@ uint16_t rdM(uint16_t addr);
 
 extern uint16_t *M;
 #define wrM(address, data) M[address]=data
-#define add2M(address, data) M[address]+=data
-#define rdM(address) M[address]
-#endif
-
-/* Abstract away the difference between the paged and non-paged implementations */
-#ifdef PAGEDMEM
-
-#else
-
-#define wrM(address, data) M[address]=data
-#define add2M(address, data) M[address]+=data
 #define rdM(address) M[address]
 #endif
 
