@@ -19,36 +19,105 @@ variables for some of the key pointers so SDCC makes them register pairs
 would help no end.
 
 
+Files
+-----
+
+The following files are required from the BCPL kit:
+
+LIBHDR      - header file for access to "standard library"
+SYNHDR      - header file for syn.b (constants etc.)
+TRNHDR      - header file for trn.b (constants etc.)
+CGHDR       - header file for  cg.b (constants etc.)
+
+OPTIONS     - options file read by the compiler
+
+syn.b       - BCPL source code for the syntax analyser
+trn.b       - BCPL source code for the translator
+cg.b        - BCPL source code for the code generator
+
+syn.i       - INTCODE for syn. Can be regenerated from syn.b but you need this in order to bootstrap
+trn.i       - INTCODE for trn. Can be regenerated from trn.b but you need this in order to bootstrap
+cg.i        - INTCODE for  cg. Can be regenerated from  cg.b but you need this in order to bootstrap
+iclib.i     - INTCODE for the linkages between the BCPL run-time environment and the INTCODE world.
+              Probably originally hand-generated.
+
+(examples/cgtest.b also came from the BCPL kit)
+
+
 How To Use
 ----------
 
 The BCPL compiler produces OCODE in a file called OCODE. The cg code
 generator turns this into INTCODE which is a sort of assemblerish thing.
 
+The programs icint and icintv are INTCODE interpreters implemented in C.
+
 There is no linker. Just cat the INTCODE files together in any order, the
 BCPL globals do all the magic!
 
-The BCPL kit comes with the BCPL (.b) files and the compiled intcode .i
-files for the compiler itself. So you can can
+The BCPL kit comes with the BCPL (.b) files and the compiled INTCODE .i
+files for the compiler itself. So you can can do this:
 
-cat cg.i blib16.i iclib.i > codegen.i
-cat syn.i trn.i blib16.i iclib.i > b.i
+$ cat blib16.i iclib.i > run-time.i
+$ cat cg.i run-time.i > codegen.i
+$ cat syn.i trn.i run-time.i > b.i
 
-Now you can do
+blib16.i acts as a very simple "standard library" and iclib.i provides the
+definitions that act as the linkage between BCPL and the run-time environment.
 
-icint b.i <file.b
-icint codegen 
+Now you can do this:
 
-and INTCODE contains your output file to run.
+$ icint b.i <file.b
+$ icint codegen.i <OCODE
+$ cat INTCODE run-time.i > file.i
+$ icint file.i
 
-Thus once you've written a minimal INTCODE interpreter for your system you
-have effectively fully bootstrapped the compiler and you can now write an
-OCODE or INTCODE to native code generator, then bootstrap the compiler with
-that to get a native compiler.
+Where OCODE is the (hard-coded) name of the output file produced by the
+compiler and INTCODE is the (hard-coded) name of the output file produced
+by the code generator.
+
+The makefile takes care of the generation of run-time.i codegen.i and b.i
+and there is a handy script 'bcpl' that performs the four-step sequence above
+that transforms a .b file into a .i file, allowing you to do this:
+
+$ bcpl hello.b
+$ icintv hello.o
+
+In FUZIX, scripts are spotted and by the shell, not by the kernel, so you
+must be running /bin/sh and *not* /bin/ssh (the confusingly-named simple shell)
+in order for bcpl (or any other script) to work.
+
+icint vs icintv
+---------------
+
+icint hard-codes the address space available to the INTCODE virtual machine. On
+typical FUZIX targets, there is not enough memory space to build a version of
+icint that can run the BCPL compiler.
+
+icintv overcomes this problem by implementing a demand-paged virtual memory
+system for the INTCODE virtual machine, using the file icintv.pag as backing
+store. Of course, the performance is worse because an access check must be
+performed for each read or write performed by the virtual machine, and because
+any access check that fails (indicating that the location is currently not
+buffered in memory) results in disk activity to re-arrange the data between the
+disk and memory.
+
+In short, use icint in preference (eg for running smaller programs) and use
+icintv when you must. When the slow speed of icintv irritates you enough,
+see "bootstrapping" below.
+
+
+Bootstrapping
+-------------
+
+icint/icintv provide a minimal INTCODE interpreter for the system and allow
+you to fully bootstrap the compiler (regenerate OCODE/INTCODE from the .b
+source files). You can now write an OCODE or INTCODE to native code generator,
+then bootstrap the compiler with that to get a native compiler.
 
 In the FUZIX 8bit case it's a bit more complicated. While native code
 support will be a nice addition it's also going to be less compact so things
-like BCPL won't actually fit. The later compilers use a thing called
+like BCPL won't actually fit. The later BCPL compilers use a thing called
 CINTCODE which is much uglier but was designed to be compact on 8bit
 machines and run at a bearable speed. This was used for things like the BBC
 Micro BCPL environment. INTCODE is more reflective of older eras and word
@@ -57,6 +126,7 @@ addressed machines.
 Probably what we actually need (if anyone really cares) is an INTCODE to
 something-saner and more compact bytecode convertor with a separate runtime
 engine.
+
 
 BCPLKIT COPYRIGHT
 -----------------

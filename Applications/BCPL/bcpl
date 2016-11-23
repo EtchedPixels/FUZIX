@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# bcpl "compiler"
+#
+# usage:
+#        bcpl myprog.b
+#
+# generates file myprog.i which is BCPL INTCODE for myprog.b
+#
+# run the program like this:
+#
+#        icint myprog.i
+#
+#
+# dependencies:
+#
+# - expects to find the INTCODE Interpreter (icint) on the path
+# - expects to find b.i and codegen.i and run-time.i in location defined
+#   by LIBS or, failing that, in the cwd.
+#
+# Working around FUZIX sh limitations:
+# - no kernel #! support, so line 1 here is ignored; this script is processed
+#   by the shell itself, so you must be running sh and not ssh to have any
+#   chance
+# - no support for "!" in the shell, so negation must be after the test:
+#   [ ! -f "foo" ] rather than ! [ -f "foo" ]
+# - basename needs old-style invocation
+
+LIBS=/usr/src/BCPL
+
+if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+   echo ""
+   echo "Generate INTCODE from BCPL source. Usage:"
+   echo ""
+   echo "      bcpl myprog.b"
+   echo "      icintv myprog.i"
+   echo ""
+   exit 1
+fi
+
+if [ ! -f "$LIBS/b.i" ]; then
+    if [ ! -f "./b.i" ]; then
+        echo "**** Error: Could not find $LIBS/b.i or ./b.i required for compilation"
+        exit 1
+    fi
+    LIBS=./
+fi
+
+
+src=$1
+exe=`basename $src b`
+exe=${exe}i
+
+icintv $LIBS/b.i <$src
+if [ "$?" != "0" ]; then
+   echo "**** Error: Compilation failed for $src"
+   exit 1
+fi
+
+icintv $LIBS/codegen.i <OCODE
+if [ "$?" != "0" ]; then
+   echo "**** Error: OCODE to INTCODE conversion for failed for $src"
+   exit 1
+fi
+
+cat INTCODE $LIBS/run-time.i > $exe
+# tidy up
+rm -f OCODE INTCODE
