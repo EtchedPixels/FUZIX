@@ -11,14 +11,25 @@
 
 #define FTSZ 20
 
-extern uint16_t *M;
-
 static int ft[FTSZ];
 static int fi, fo;
 
+/* Abstract away the difference between the paged and non-paged implementations */
+#ifdef PAGEDMEM
+
+void wrM(uint16_t addr, uint16_t data) ;
+uint16_t rdM(uint16_t addr);
+
+#else
+
+extern uint16_t *M;
+#define wrM(address, data) M[address]=data
+#define rdM(address) M[address]
+#endif
+
 uint16_t getbyte(uint16_t s, uint16_t i)
 {
-    uint16_t n = M[s + i / 2];
+    uint16_t n = rdM(s + i / 2);
     if (!(i & 1))
         n >>= 8;
     return n & 0xFF;
@@ -26,14 +37,15 @@ uint16_t getbyte(uint16_t s, uint16_t i)
 
 void putbyte(uint16_t s, uint16_t i, uint16_t ch)
 {
-    uint16_t *p = M + s + i/2;
+    uint16_t word;
+
+    word = rdM(s + i/2);
     if (i & 1) {
-        *p &= 0xFF00;
-        *p |= (uint8_t)ch;
+        word = (word & 0xFF00) |  ch;
     } else {
-        *p &= 0x00FF;
-        *p |= ch << 8;
+        word = (word & 0x00FF) | (ch<<8);
     }
+    wrM(s + i/2, word);
 }
 
 static char *cstr(uint16_t s)

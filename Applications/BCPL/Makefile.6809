@@ -1,0 +1,60 @@
+#
+#	IntCode engine
+#
+
+PLATFORM = 6809
+CC = m6809-unknown-gcc
+ASM = m6809-unknown-as
+AR = m6809-unknown-ar
+LINKER = m6809-unknown-ld
+CFLAGS = -I../../Library/include -I../../Library/include/6809
+LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc
+LINKER_OPT += --script=../util/$(TARGET).link
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6809.o
+
+.SUFFIXES: .c .o
+
+
+SRCS  = icint.c blib.c
+OBJS = $(SRCS:.c=.o) blibv.o icintv.o
+
+APPS = icint icintv run-time.i codegen.i b.i
+
+all: $(APPS) sizes
+
+$(OBJS): $(SRCS)
+
+$(APPS): $(CRT0)
+
+%: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $<
+
+icintv.o: icint.c
+	$(CC) $(CFLAGS) -c -DPAGEDMEM -o icintv.o icint.c
+
+blibv.o: blib.c
+	$(CC) $(CFLAGS) -c -DPAGEDMEM -o blibv.o blib.c
+
+icint:  icint.o blib.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) icint.o  blib.o
+
+icintv: icintv.o blibv.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) icintv.o blibv.o
+
+sizes: $(APPS)
+	ls -l $(APPS) > size.report
+
+run-time.i: blib16.i
+	cat blib16.i iclib.i > run-time.i
+
+codegen.i:  cg.i run-time.i
+	cat cg.i run-time.i > codegen.i
+
+b.i:    syn.i trn.i run-time.i
+	cat syn.i trn.i run-time.i > b.i
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.rel *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report

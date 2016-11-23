@@ -1,0 +1,42 @@
+# BCPL
+package BCPL
+if-file icint
+
+# INTCODE interpreters
+f 0755 /usr/bin/icint           icint
+f 0755 /usr/bin/icintv          icintv
+
+# Wrapper script
+f 0755 /usr/bin/bcpl            bcpl
+
+
+# Sample programs in source (.b) and INTCODE (.i) formats
+d 0755 /usr/src/BCPL
+d 0755 /usr/src/BCPL/examples
+f 0644 /usr/src/BCPL/examples/hello.b    examples/hello.b
+f 0644 /usr/src/BCPL/examples/hello.i    examples/hello.i
+f 0644 /usr/src/BCPL/examples/cgtest.b   examples/cgtest.b
+f 0644 /usr/src/BCPL/examples/cgtest.i   examples/cgtest.i
+f 0644 /usr/src/BCPL/examples/fact.b     examples/fact.b
+f 0644 /usr/src/BCPL/examples/fact.i     examples/fact.i
+
+# Files from the BCPL kit
+f 0644 /usr/src/BCPL/OPTIONS             OPTIONS
+f 0644 /usr/src/BCPL/CGHDR               CGHDR
+f 0644 /usr/src/BCPL/LIBHDR              LIBHDR
+f 0644 /usr/src/BCPL/SYNHDR              SYNHDR
+f 0644 /usr/src/BCPL/TRNHDR              TRNHDR
+
+f 0644 /usr/src/BCPL/cg.b                cg.b
+f 0644 /usr/src/BCPL/cg.i                cg.i
+f 0644 /usr/src/BCPL/syn.b               syn.b
+f 0644 /usr/src/BCPL/syn.i               syn.i
+f 0644 /usr/src/BCPL/trn.b               trn.b
+f 0644 /usr/src/BCPL/trn.i               trn.i
+# effectively hand-written so no source for this one
+f 0644 /usr/src/BCPL/iclib.i             iclib.i
+
+# These are constructed other files by Make
+f 0644 /usr/src/BCPL/run-time.i          run-time.i
+f 0644 /usr/src/BCPL/b.i                 b.i
+f 0644 /usr/src/BCPL/codegen.i           codegen.i
