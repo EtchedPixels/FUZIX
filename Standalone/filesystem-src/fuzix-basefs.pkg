@@ -128,6 +128,7 @@ d 0755 /usr/man/man4
 d 0755 /usr/man/man5
 d 0755 /usr/man/man6
 d 0755 /usr/man/man7
+d 0755 /usr/man/man8
 
 d 0755 /usr/src
 

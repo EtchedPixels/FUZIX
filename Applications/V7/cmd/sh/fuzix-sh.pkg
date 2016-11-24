@@ -1,4 +1,11 @@
-package  sh
+package  V7-sh
 
 f 0755 /bin/sh              sh
+
+
+# Man page - in a separate package so that storage-limited targets can
+# disable it.
+
+package V7-sh-man
+
 f 0644 /usr/man/man1/sh.1   sh.1
