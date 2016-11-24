@@ -2,6 +2,17 @@ package  V7-games
 if-file  arithmetic
 
 f 0755 /usr/bin/arithmetic    arithmetic
-f 0755 /usr/bin/wump          wump
-f 0755 /usr/bin/fish          fish
 f 0755 /usr/bin/backgammon    backgammon
+f 0755 /usr/bin/fish          fish
+f 0755 /usr/bin/wump          wump
+
+
+# Man pages - in a separate package so that storage-limited targets can
+# disable it.
+
+package V7-games-man
+
+f 0644 /usr/man/man6/arithmetic.6     arithmetic.6
+f 0644 /usr/man/man6/backgammon.6     backgammon.6
+# no page for fish
+f 0644 /usr/man/man6/wump.6           wump.6
