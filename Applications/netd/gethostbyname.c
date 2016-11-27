@@ -234,12 +234,11 @@ struct hostent *gethostbyname( char *name ){
 	    if( t->type == 0x01 ){
 		for( j=0; j<t->rdlen; j++ )
 		    addrs[lno][j] = *ptr++;
+		list[lno++] = &addrs[lno][0];
 	    }
 	    else{
 		ptr += t->rdlen;
 	    }
-	    list[lno] = &addrs[lno][0];
-	    lno++;
 	}
 	list[lno] = NULL;
     }
