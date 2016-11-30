@@ -24,9 +24,49 @@ f 0755 /usr/bin/newgrp        newgrp
 f 0755 /usr/bin/ptx           ptx
 f 0755 /usr/bin/rev           rev
 f 0755 /usr/bin/split         split
-f 0755 /usr/bin/sum           sum
 ##f 0755 /usr/bin/su            su
+f 0755 /usr/bin/sum           sum
 ##f 0755 /usr/bin/test          test
 f 0755 /usr/bin/time          time
 f 0755 /usr/bin/tsort         tsort
 f 0755 /usr/bin/wall          wall
+
+# Man pages - in a separate package so that storage-limited targets can
+# disable it.
+# Where a binary is commented out above, the man page is commented out here;
+# the binary is provided by a different package and the man page here may
+# not be correct/appropriate.
+# Where a man page is named .1m it is copied to FUZIX simply as .1 because our
+# man will not find a .1m man in man1
+
+package V7-cmd-man
+
+# no page for accton
+##f 0644 /usr/man/man1/ac.1           ac.1m
+##f 0644 /usr/man/man1/at.1           at.1
+# no page for atrun
+##f 0644 /usr/man/man1/col.1          col.1
+f 0644 /usr/man/man1/comm.1         comm.1
+f 0644 /usr/man/man8/cron.8         cron.8
+f 0644 /usr/man/man1/crypt.1        crypt.1
+f 0644 /usr/man/man1/dc.1           dc.1
+##f 0644 /usr/man/man1/dd.1           dd.1
+##f 0644 /usr/man/man1/deroff.1       deroff.1
+f 0644 /usr/man/man1/diff.1         diff.1
+f 0644 /usr/man/man1/diff3.1        diff3.1
+# no page for diffh
+f 0644 /usr/man/man1/join.1         join.1
+f 0644 /usr/man/man1/look.1         look.1
+f 0644 /usr/man/man8/makekey.8      makekey.8
+f 0644 /usr/man/man1/mesg.1         mesg.1
+f 0644 /usr/man/man1/newgrp.1       newgrp.1
+##f 0644 /usr/man/man1/pr.1           pr.1
+f 0644 /usr/man/man1/ptx.1          ptx.1
+f 0644 /usr/man/man1/rev.1          rev.1
+f 0644 /usr/man/man1/split.1        split.1
+##f 0644 /usr/man/man1/su.1           su.1
+f 0644 /usr/man/man1/sum.1          sum.1
+##f 0644 /usr/man/man1/test.1         test.1
+f 0644 /usr/man/man1/time.1         time.1
+f 0644 /usr/man/man1/tsort.1        tsort.1
+f 0644 /usr/man/man1/wall.1         wall.1m
