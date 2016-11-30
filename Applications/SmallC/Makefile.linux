@@ -3,7 +3,7 @@ CFLAGS = -DTINY -DINCDIR=\"includes/\"
 COPT = -O2
 
 OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
-       lex.o main.o preproc.o primary.o stmt.o struct.o sym.o while.o
+       lex.o main.o outstack.o preproc.o primary.o stmt.o struct.o sym.o while.o
 
 OBJ_Z80 = codez80.o
 OBJ_8080 = code8080.o

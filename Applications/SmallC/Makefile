@@ -5,7 +5,7 @@ CFLAGS = -DTINY
 COPT = -O2
 
 OBJS = initials.rel data.rel error.rel expr.rel function.rel gen.rel io.rel \
-       lex.rel main.rel preproc.rel primary.rel stmt.rel struct.rel sym.rel while.rel
+       lex.rel main.rel outstack.rel preproc.rel primary.rel stmt.rel struct.rel sym.rel while.rel
 
 OBJ_Z80 = codez80.rel
 OBJ_8080 = code8080.rel

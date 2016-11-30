@@ -350,8 +350,10 @@ int spechar(void) {
  */
 void callfunction(char *ptr) {
     int     nargs;
+    int     i;
 
     nargs = 0;
+
     blanks ();
     if (ptr == 0)
         gen_push (HL_REG);
@@ -361,19 +363,25 @@ void callfunction(char *ptr) {
         expression (NO);
         if (ptr == 0)
             gen_swap_stack ();
+        /* Worth making the first argument pass in HL ?? */
         gen_push (HL_REG);
-        nargs = nargs + INTSIZE;
+        nargs++;
+        /* Will need to track sizes later */
         if (!match (","))
             break;
     }
+    /* Now paste the argument generation blocks into the output
+       in reverse order so the stack is right */
+    for (i = 0; i < nargs; i++)
+        end_defer();
     needbrack (")");
     if (aflag)
-        gnargs(nargs / INTSIZE);
+        gnargs(nargs);
     if (ptr)
         gen_call (ptr);
     else
         callstk ();
-    stkp = gen_modify_stack (stkp + nargs);
+    stkp = gen_modify_stack (stkp + nargs * INTSIZE);
 }
 
 void needlval(void) {

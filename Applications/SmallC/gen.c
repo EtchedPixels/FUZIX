@@ -10,7 +10,7 @@
 #include "defs.h"
 #include "data.h"
 
-static char obuf[512];
+char obuf[512];		/* Shared with outstack for defer uses */
 static char *optr = obuf;
 
 void oflush(void)

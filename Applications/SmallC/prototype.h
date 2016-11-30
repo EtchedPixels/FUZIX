@@ -227,3 +227,6 @@ extern WHILE *readwhile(void);
 extern WHILE *findwhile(void);
 extern WHILE *readswitch(void);
 extern void addcase(int val);
+extern void defer_output(void);
+extern void end_defer(void);
+extern void defer_init(void);

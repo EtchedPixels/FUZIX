@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     macptr = 0;
     ctext = 0;
     errs = 0;
-    aflag = 1;
+    aflag = 0;
     uflag = 0;
     
     for (i=1; i<argc; i++) {
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) {
                     case 't': case 'T': // output c source as asm comments
                         ctext = 1;
                         break;
-                    case 'a': case 'A': // no argument count in A to function calls
-                        aflag = 0;
+                    case 'a': case 'A': // argument count in A to function calls
+                        aflag = 1;
                         break;
                     case 'u': case 'U': // use undocumented 8085 instructions
                         uflag = 1;
@@ -92,6 +92,7 @@ void compile(char *file) {
         rglobal_table_index = global_table_index; //rglbptr = glbptr;
         //add_global("etext", ARRAY, CCHAR, 0, EXTERN);
         //add_global("edata", ARRAY, CCHAR, 0, EXTERN);
+        /* Eww FIXME when we do types!! */
         defmac("short\tint");
         initmac();
         // compiler body
@@ -103,6 +104,8 @@ void compile(char *file) {
             output = 1;
         } else if (!openout())
             return;
+        target = output;
+        defer_init();
         header();
         code_segment_gtext();
         parse();
