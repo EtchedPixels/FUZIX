@@ -97,7 +97,7 @@
 #endif
 
 
-uint16_t *M;
+uint16_t M[PSIZE];
 int fp;
 
 static uint16_t G;
@@ -562,8 +562,6 @@ fetch:
     }
 }
 
-uint16_t pgvec[PSIZE];
-
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
@@ -606,7 +604,6 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    M = pgvec;
     G = MGLOB;
     P = MPROG;
     wrM(P++, LIG1);

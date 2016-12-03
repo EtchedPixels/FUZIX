@@ -22,7 +22,7 @@ uint16_t rdM(uint16_t addr);
 
 #else
 
-extern uint16_t *M;
+extern uint16_t M[];
 #define wrM(address, data) M[address]=data
 #define rdM(address) M[address]
 #endif
@@ -171,5 +171,5 @@ void endwrite(void)
 
 void mapstore(void)
 {
-    fprintf(stderr, "\nMAPSTORE NOT IMPLEMENTED\n");
+    write(2, "\nMAPSTORE NOT IMPLEMENTED\n", 26);
 }
