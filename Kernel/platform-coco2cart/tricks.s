@@ -75,10 +75,19 @@ _switchin:
 
 	cmpa #0
 	bne not_swapped
-	jsr _swapper		; void swapper(ptptr p)
+	ldx U_DATA__U_PTAB
+	ldx P_TAB__P_PAGE_OFFSET+1,x
+	beq not_swapout		;	it's dead don't swap it out
+	ldx U_DATA__U_PTAB
+	jsr _swapout		;	swapout(pptr)
+not_swapout:
+	lds #$0100		;	FIXME: need to use something else
+				;	when we enable IRQ during this !!
 	ldx newpp
-	lda P_TAB__P_PAGE_OFFSET+1,x
-
+	jsr _swapper		; 	fetch our process
+	ldx newpp
+	lda #1
+	sta P_TAB__P_PAGE_OFFSET+1,x	; marked paged in
 not_swapped:
 	; we have now new stacks so get new stack pointer before any jsr
 	lds U_DATA__U_SP
@@ -154,14 +163,14 @@ _dofork:
 
 	ldx U_DATA__U_PTAB
 	jsr _swapout
-	cmpd #0
-	bne forked_up
-
-	; We are now in the kernel child context
-
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
+	cmpx #0
+	bne forked_up
+
 	puls x
+	; We are now in the kernel child context
+
 
         ldx fork_proc_ptr
         jsr _newproc
@@ -177,7 +186,8 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
 	puls y,u,pc
-
-forked_up:	; d is already -1
+forked_up:
+	puls x
+	ldx #0
 	puls y,u,pc
-	rts
+
