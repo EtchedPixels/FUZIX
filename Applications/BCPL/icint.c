@@ -141,12 +141,10 @@ int translations = 0;
 int swaps = 0;
 int pfp;
 
-static int pagein(uint16_t page);
-
 /* Given a virtual page number that is not mapped, map it. Take care of
    any disk read/write.
 */
-static int
+static void
 pagein(uint16_t page)
 {
     int i;
@@ -564,6 +562,11 @@ fetch:
 
 int main(int argc, char *argv[])
 {
+#ifdef PAGEDMEM
+    int i, status;
+    char * buf;
+#endif
+
     if (argc != 2) {
         write(2, "usage: icint file\n",18);
         return 1;
@@ -575,9 +578,6 @@ int main(int argc, char *argv[])
     }
 
 #ifdef PAGEDMEM
-    int i, status;
-    char * buf;
-
     for (i=0; i<PBLKS; i++) {
         pmap[i] = -1; /* start with no physical buffers assigned */
     }
@@ -590,12 +590,12 @@ int main(int argc, char *argv[])
     }
 
     /* create page file */
-    pfp = open("icintv.pag", O_RDWR, 0600);
+    pfp = open("icintv.pag", O_RDWR|O_CREAT|O_TRUNC, 0600);
     if (pfp == -1) {
         perror("icintv.pag");
         return 0;
     }
-    buf = (char *)pgvec;
+    buf = (char *)M;
     for (i=0; i<VBLKS; i++) {
         if (2*BLKSIZE != write(pfp, buf, 2*BLKSIZE)) {
             perror("creating empty page file");
