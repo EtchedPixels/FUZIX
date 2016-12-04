@@ -7,10 +7,11 @@ section .magic
 section .common
 section .data
 section .bss
+section .bufpool
+section .discard
 section .videodata
 section .text2
 section .video
-section .discard
 section .start load 0xC000
 section .text
 section .text3

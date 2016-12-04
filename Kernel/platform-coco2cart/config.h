@@ -30,6 +30,12 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
+/* We can reclaim discard into buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
+
+/* Allow for our swap heavy nature */
+#define MAXTICKS 25
+
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
 
