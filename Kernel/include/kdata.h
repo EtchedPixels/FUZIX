@@ -17,6 +17,7 @@ extern uint16_t ramsize;
 extern uint16_t procmem;
 extern uint16_t nproc;	   /* Current number of processes */
 extern uint8_t nready;	   /* Number of ready processes */
+extern uint8_t inswap;	   /* Set when swapping and IRQs are enabled */
 
 extern inoptr root;        /* Address of root dir in inode table */
 extern uint16_t root_dev;  /* Device number of root filesystem. */

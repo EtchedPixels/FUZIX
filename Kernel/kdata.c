@@ -7,6 +7,7 @@ p_tab *init_process;
 char *cmdline = (char *) CMDLINE;
 uint16_t ramsize, procmem, maxproc, nproc;
 uint8_t nready;
+uint8_t inswap;
 uint16_t runticks;
 bool inint;
 uint16_t root_dev;
