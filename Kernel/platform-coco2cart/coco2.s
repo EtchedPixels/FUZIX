@@ -21,6 +21,7 @@
 
 	.globl _ramsize
 	.globl _procmem
+	.globl _bufpool
 
 	; imported
 	.globl unix_syscall_entry
@@ -28,13 +29,14 @@
 	.globl null_handler
 	.globl _vtoutput
 
+	.globl ___hard_di
+	.globl ___hard_ei
+	.globl ___hard_irqrestore
+
 	; exported debugging tools
 	.globl _trap_monitor
 	.globl _trap_reboot
 	.globl outchar
-	.globl ___hard_di
-	.globl ___hard_ei
-	.globl ___hard_irqrestore
 
 	include "kernel.def"
 	include "../kernel09.def"
@@ -233,3 +235,9 @@ romin:
 	.db 0
 romsave:
 	.db 0
+
+	.area .bufpool
+_bufpool:
+	.ds 520*6		; initial buffers
+
+	; Discard follows this so will be reclaimed
