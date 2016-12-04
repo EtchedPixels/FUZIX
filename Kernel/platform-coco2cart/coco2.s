@@ -22,6 +22,7 @@
 	.globl _ramsize
 	.globl _procmem
 	.globl _bufpool
+	.globl _discard_size
 
 	; imported
 	.globl unix_syscall_entry
@@ -241,3 +242,7 @@ _bufpool:
 	.ds 520*6		; initial buffers
 
 	; Discard follows this so will be reclaimed
+
+	.area .discard
+_discard_size:
+	.db	__sectionlen_.discard__/BUFSIZE

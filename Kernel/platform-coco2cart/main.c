@@ -9,12 +9,8 @@
 
 uint8_t membanks;
 uint8_t system_id;
-#if 0
-uint8_t cartslots = 1;
-uint8_t carttype[4];
-uint8_t bootslot = 0;
-#endif
 uint16_t swap_dev;
+struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 void platform_idle(void)
 {
@@ -31,24 +27,18 @@ void do_beep(void)
 
 void platform_discard(void)
 {
-}
-#if 0
-/* Find a cartridge or it's slot */
-int cart_find(int id)
-{
-	int i;
-	for (i = 0; i < id; i++) {
-		if (carttype[i] == id)
-			return i;
-	}
-	return -1;
-}
-#endif
+	extern uint8_t discard_size;
+	bufptr bp = bufpool_end;
 
-unsigned char vt_mangle_6847(unsigned char c)
-{
-	if (c >= 96)
-		c -= 32;
-	c &= 0x3F;
-	return c;
+	kprintf("%d buffers reclaimed from discard\n", discard_size);
+
+	bufpool_end += discard_size;	/* Reclaim the discard space */
+
+	memset(bp, 0, discard_size * sizeof(struct blkbuf));
+	/* discard_size is in discard so it dies here */
+	for (bp = bufpool + NBUFS; bp < bufpool_end; ++bp) {
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
 }
+
