@@ -331,8 +331,10 @@ void load_average(void)
 
 void timer_interrupt(void)
 {
-	/* Increment processes and global tick counters */
-	if (udata.u_ptab->p_status == P_RUNNING) {
+	/* Increment processes and global tick counters. We can't do this
+	   mid swap because we might have half of the bits for one process
+	   and half of another.. */
+	if (!inswap && udata.u_ptab->p_status == P_RUNNING) {
 		if (udata.u_insys)
 			udata.u_stime++;
 		else
@@ -368,10 +370,10 @@ void timer_interrupt(void)
 #endif
 	}
 #ifndef CONFIG_SINGLETASK
-	/* Check run time of current process */
-        /* Time to switch out? */
-        /* FIXME: don't count runticks while swapping in ! */
-	if ((++runticks >= udata.u_ptab->p_priority)
+	/* Check run time of current process. We don't charge time while
+	   swapping as the last thing we want to do is to swap a process in
+	   and decide it took time to swap in so needs to go away again! */
+	if (!inswap && (++runticks >= udata.u_ptab->p_priority)
 	    && !udata.u_insys && inint && nready > 1) {
                  need_resched = 1;
 #ifdef DEBUG_PREEMPT
