@@ -9,6 +9,19 @@ Supported hardware:
 	IDE (Cloud9 or compatible set at FF50) with either built in
 		cartridge RAM or separate cartridge
 
+Disk Layout
+===========
+
+At the moment partitions are not handled. Instead each minor number
+corresponds to a 32MB slice of disc. Slice 0 holds the kernel image and
+the rest is used for swapping processes. Slice 1 then normally holds the
+first file system and so on. Add 128 for the second disc. Remember to keep
+all of them under the offset you have set in the HDBDOS ROM for your disk
+basic floppy images.
+
+TODO: Now we have a bit more room, add minimal partition support for at
+least primary partitions.
+
 Memory Map
 ==========
 
