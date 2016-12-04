@@ -86,6 +86,8 @@ static int header_ok(uint8_t *pp)
 	return 1;
 }
 
+static uint8_t in_execve;
+
 arg_t _execve(void)
 {
 	staticfast inoptr ino;
@@ -150,6 +152,13 @@ arg_t _execve(void)
 		goto nogood2;
 	}
 
+	/* We can't allow multiple execs to occur beyond this point at once
+	   otherwise we may deadlock out of buffers. As we already assume
+	   synchronous block I/O on 8bit boxes this isn't really a hit at all */
+	while(in_execve)
+		psleep(&in_execve);
+	in_execve = 1;
+
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
 	/* Put environment in another buffer. */
@@ -184,7 +193,7 @@ arg_t _execve(void)
 	brelse(buf);
 
 	/* At this point, we are committed to reading in and
-	 * executing the program. */
+	 * executing the program. This call can block. */
 
 	close_on_exec();
 
@@ -242,12 +251,16 @@ arg_t _execve(void)
 	udata.u_isp = nenvp - 2;
 
 	// Start execution (never returns)
+	in_execve = 0;
+	wakeup(&in_execve);
 	doexec(PROGLOAD);
 
 	// tidy up in various failure modes:
 nogood3:
 	brelse(abuf);
 	brelse(ebuf);
+	in_execve = 0;
+	wakeup(&in_execve);
       nogood2:
 	brelse(buf);
       nogood:
