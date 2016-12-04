@@ -19,7 +19,8 @@ User View
 0200-19FF	Display
 1A00-1BFF	udata/stack
 1C00-7FFF	Common, data and some kernel code
-8000-FEFF	User space
+8000-FDFF	User space
+FE00-FEFF	Free
 FF00-FFFF	I/O etc
 
 Kernel Mode View
@@ -44,8 +45,6 @@ TODO
 
 Make the boot loader robust (timeout handling)
 Add hash of code not just simple magic - so we know bits match
-Why doesn't coco keyboard auto-mapping work ?
-Why don't we find the root fs (IDE mapping bug ?)
 
 Support for a real time clock and clock locking
 Review irq disabling. We shouldn't need much of this at all as we don't have
