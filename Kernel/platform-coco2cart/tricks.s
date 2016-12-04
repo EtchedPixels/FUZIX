@@ -16,6 +16,7 @@
         .globl map_process_always
         .globl copybank
 	.globl _nready
+	.globl _inswap
 	.globl _platform_idle
 
 	# exported
@@ -70,25 +71,31 @@ _switchin:
         orcc #0x10		; irq off
 
 	stx newpp
+	inc _inswap
 	; get process table
 	lda P_TAB__P_PAGE_OFFSET+1,x		; LSB of 16-bit page no
 
 	cmpa #0
 	bne not_swapped
+
+	lds #$0200		;	$1xx is vectors and swap stack
+
 	ldx U_DATA__U_PTAB
 	ldx P_TAB__P_PAGE_OFFSET+1,x
 	beq not_swapout		;	it's dead don't swap it out
 	ldx U_DATA__U_PTAB
+	andcc #0xef
 	jsr _swapout		;	swapout(pptr)
 not_swapout:
-	lds #$0100		;	FIXME: need to use something else
-				;	when we enable IRQ during this !!
 	ldx newpp
+	andcc #0xef
 	jsr _swapper		; 	fetch our process
 	ldx newpp
 	lda #1
 	sta P_TAB__P_PAGE_OFFSET+1,x	; marked paged in
 not_swapped:
+	orcc #0x10
+	dec _inswap
 	; we have now new stacks so get new stack pointer before any jsr
 	lds U_DATA__U_SP
 
@@ -162,7 +169,18 @@ _dofork:
 	; process.
 
 	ldx U_DATA__U_PTAB
+	;
+	; FIXME: review what is needed for IRQ safety here before we turn
+	; on IRQs during the swapout
+	;
+	inc _inswap
+	lds #$0200		;	Use the swap stack
+	andcc #0xef
 	jsr _swapout
+	orcc #0x10
+	dec _inswap
+	lds U_DATA__U_SP
+
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
 	cmpx #0

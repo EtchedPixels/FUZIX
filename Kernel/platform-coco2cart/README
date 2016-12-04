@@ -15,7 +15,7 @@ Memory Map
 User View
 =========
 0000-00FF	Interrupt stack
-0100-01FF	Vectors (then wasted - could hide libc.o in there ?)
+0100-01FF	Vectors plus the swap stack
 0200-19FF	Display
 1A00-1BFF	udata/stack
 1C00-7FFF	Common, data and some kernel code
@@ -26,7 +26,7 @@ FF00-FFFF	I/O etc
 Kernel Mode View
 ================
 0000-00FF	Interrupt stack
-0100-01FF	Vectors
+0100-01FF	Vectors plus swap stack
 0200-19FF	Display
 1A00-1BFF	udata/stack
 1C00-7FFF	Common, data and some kernel code
