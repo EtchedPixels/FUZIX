@@ -30,6 +30,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <bank8k.h>
 
 #ifdef CONFIG_BANK8
 
