@@ -36,9 +36,6 @@
 /* Allow for our swap heavy nature */
 #define MAXTICKS 25
 
-extern unsigned char vt_mangle_6847(unsigned char c);
-#define VT_MAP_CHAR(x)	vt_mangle_6847(x)
-
 /* Vt definitions */
 #define VT_WIDTH	32
 #define VT_HEIGHT	24
