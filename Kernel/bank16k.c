@@ -129,6 +129,7 @@ int pagemap_realloc(usize_t size)
 	irq = __hard_di();
 
 	if (have > want) {
+		/* FIXME: swapout handling is needed ahead of this */
 		for (i = want; i < have; i++) {
 			pfree[pfptr++] = ptr[i - 1];
 			ptr[i - 1] = ptr[3];

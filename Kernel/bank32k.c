@@ -120,6 +120,7 @@ int pagemap_realloc(usize_t size) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
+	irqflags_t irq;
 
 	/* If we are shrinking then free pages and propogate the
 	   common page into the freed spaces */
@@ -127,6 +128,7 @@ int pagemap_realloc(usize_t size) {
 		return 0;
 	if (have > want) {
 		pfree[pfptr++] = ptr[1];
+		ptr[1] = *ptr;
 		udata.u_ptab->p_page = udata.u_page;
 		return 0;
 	}
@@ -137,15 +139,16 @@ int pagemap_realloc(usize_t size) {
 	/* We don't want to take an interrupt here while our page mappings are
 	   incomplete. We may restore bogus mappings and then take a second IRQ
 	   into hyperspace */
-	__critical {
-		ptr[0] = pfree[--pfptr];
-		/* Copy the updated allocation into the ptab */
-		udata.u_ptab->p_page = udata.u_page;
-		/* Now fix the vectors up - they've potentially teleported up to 32K up
-		   the user address space, we need to put a copy back in low memory before
-		   we switch to this memory map */
-		program_vectors(&udata.u_page);
-	}
+
+	irq = __hard_di();
+	ptr[0] = pfree[--pfptr];
+	/* Copy the updated allocation into the ptab */
+	udata.u_ptab->p_page = udata.u_page;
+	/* Now fix the vectors up - they've potentially teleported up to 32K up
+	   the user address space, we need to put a copy back in low memory before
+	   we switch to this memory map */
+	program_vectors(&udata.u_page);
+	__hard_irqrestore(irq);
 	return 0;
 }
 
