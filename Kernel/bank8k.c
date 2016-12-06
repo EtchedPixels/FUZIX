@@ -150,7 +150,7 @@ int pagemap_alloc(ptptr p)
 	/* Allocate the pages upwards */
 	for (i = 0; i < needed; i++)
 		*ptr++ = pfree[--pfptr];
-	while (i < PTNUM)
+	while (i++ < PTNUM)
 		*ptr++ = PAGE_INVALID;
 	return 0;
 }
@@ -183,7 +183,7 @@ int pagemap_realloc(usize_t size)
 	if (want < have) {
 		while(want < have) {
 			pfree[--pfptr] = ptr[want];
-			ptr[want] = PAGE_INVALID;
+			ptr[want++] = PAGE_INVALID;
 		}
 		return 0;
 	}
