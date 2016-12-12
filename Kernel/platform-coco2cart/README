@@ -79,8 +79,6 @@ In the xroar directory where you have a hard disc image do
 dd if=/tmp/fuzix.ide of=hd0.img bs=512 seek=3 conv=notrunc
 /opt/xroaride/bin/xroar -default-machine dragon64 -cart ide -cart-rom fuzix.rom
 
-(use dragon64 until I fix the coco keymapping stuff)
-
 exec 49152
 
 enjoy
