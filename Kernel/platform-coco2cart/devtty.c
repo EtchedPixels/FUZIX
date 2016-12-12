@@ -11,10 +11,12 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart_data = (uint8_t *)0xFF04;	/* ACIA data */
+uint8_t *uart_data = (uint8_t *)0xFF04;		/* ACIA data */
 uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
+
+#define ACIA_TTY 2
 
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
@@ -26,7 +28,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 };
 
 uint8_t vtattr_cap = 0;
-struct vt_repeat keyrepeat;
+struct vt_repeat keyrepeat = { 40, 4 };
 static uint8_t kbd_timer;
 
 /* tty1 is the screen tty2 is the serial port */
@@ -63,12 +65,52 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
+/* 6551 mode handling */
+
+static uint8_t baudbits[] = {
+	0x11,		/* 50 */
+	0x12,		/* 75 */
+	0x13,		/* 110 */
+	0x14,		/* 134 */
+	0x15,		/* 150 */
+	0x16,		/* 300 */
+	0x17,		/* 600 */
+	0x18,		/* 1200 */
+	0x1A,		/* 2400 */
+	0x1C,		/* 4800 */
+	0x1E,		/* 9600 */
+	0x1F,		/* 19200 */
+};
+
+static uint8_t bitbits[] = {
+	0x30,
+	0x20,
+	0x10,
+	0x00
+};
+
 void tty_setup(uint8_t minor)
 {
-	if (minor == 2) {
-		/* FIXME: do proper mode setting */
-		*uart_command = 0x01;	/* DTR high, IRQ enabled, TX irq disabled 8N1 */
-		*uart_control = 0x1E;	/* 9600 baud */
+	uint8_t r;
+	if (minor != ACIA_TTY)
+		return;
+	r = ttydata[ACIA_TTY].termios.c_cflag & CBAUD;
+	if (r > B19200) {
+		r = 0x1F;	/* 19.2 */
+		ttydata[ACIA_TTY].termios.c_cflag &=~CBAUD;
+		ttydata[ACIA_TTY].termios.c_cflag |= B19200;
+	} else
+		r = baudbits[r];
+	r |= bitbits[(ttydata[ACIA_TTY].termios.c_cflag & CSIZE) >> 4];
+	*uart_control = r;
+	r = 0x0A;	/* rx and tx on, !rts low, dtr int off, no echo */
+	if (ttydata[ACIA_TTY].termios.c_cflag & PARENB) {
+		if (ttydata[ACIA_TTY].termios.c_cflag & PARODD)
+			r |= 0x20;	/* Odd parity */
+		else
+			r |= 0x60;	/* Even parity */
+		if (ttydata[ACIA_TTY].termios.c_cflag & PARMRK)
+			r |= 0x80;	/* Mark/space */
 	}
 }
 
