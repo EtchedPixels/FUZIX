@@ -89,7 +89,7 @@ static void ide_identify(int dev, uint8_t *buf)
 	ide_present |= (1 << dev);
 }
 
-int ide_probe(void)
+void ide_probe(void)
 {
 	uint8_t *buf = (uint8_t *)tmpbuf();
 	/* Issue an EDD if we can - timeout -> no drives */
