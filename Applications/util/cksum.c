@@ -84,15 +84,8 @@ static unsigned long strncrc(unsigned char *b, int n, unsigned long s)
 
   while (n-- > 0) {
 	/* Compute the index to the crc table */
-	i = (s >> 24) ^ ((unsigned int) (*b++));
-
-	if (i == 0) {
-		/* Replace an intermediate zero with the next value
-		 * from the sequence */
-		i = aux++;
-		if (aux >= sizeof(crctab) / sizeof(crctab[0])) aux = 0;
-	}
-
+      i = ((s >> 24) ^ *b++) & 0xff;
+	
 	/* New checksum value */
 	s = (s << 8) ^ crctab[i];
   }
@@ -102,7 +95,7 @@ static unsigned long strncrc(unsigned char *b, int n, unsigned long s)
 /* Compute crc and size of input file descriptor. */
 static void crc(int fd, char *name)
 {
-  off_t f_size;
+  off_t f_size,length;
   unsigned long crc;
   int nb;
 
@@ -127,6 +120,10 @@ static void crc(int fd, char *name)
 	crc = strncrc(buffer, nb, crc);
   }
   close(fd);
+  length = f_size;
+  for (; length; length >>=8)
+      crc = (crc << 8) ^ crctab[((crc >> 24) ^ length) & 0xff];
+  crc = ~crc & 0xffffffff;
   printf("%lu %ld", crc, f_size);
   if (name)
 	printf(" %s\n", name);
