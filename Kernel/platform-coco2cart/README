@@ -8,6 +8,7 @@ COCO or Dragon 64 with an IDE port, cartridge and 64K of RAM
 Supported hardware:
 	IDE (Cloud9 or compatible set at FF50) with either built in
 		cartridge RAM or separate cartridge
+	COCO SDC (in progress)
 
 Disk Layout
 ===========
@@ -56,8 +57,11 @@ Needs the IDE patches
 TODO
 ====
 
+Fix use of CONFIG_LEGACY_EXEC in the devsdc driver
+
 Make the boot loader robust (timeout handling)
 Add hash of code not just simple magic - so we know bits match
+Merge coco and IDE boot code so it works out which is present
 
 Support for a real time clock and clock locking
 
@@ -67,6 +71,8 @@ actually be doable if not doing drivewire.
 We have about 2K left to try and jam those bits in which might just about be
 enough to add support for very minimal MBR parsing and offsets. That would
 be a big improvement.
+
+Automatically pick swap according to whether IDE or SDC is present.
 
 
 To Test

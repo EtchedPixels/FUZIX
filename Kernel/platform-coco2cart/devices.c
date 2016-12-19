@@ -9,6 +9,7 @@
 #include <vt.h>
 #include <devtty.h>
 #include <mini_ide.h>
+#include <devsdc.h>
 #include <device.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -31,6 +32,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
   /* 8: /dev/dw		DriveWire remote disk images */
   {  dw_open,       no_close,    dw_read,   dw_write,  no_ioctl },
+  {  no_open,       no_close,    sdc_read,  sdc_write, no_ioctl },
 };
 
 bool validdev(uint16_t dev)
@@ -46,4 +48,5 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
     ide_probe();
+    devsdc_init();
 }
