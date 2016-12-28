@@ -109,9 +109,9 @@ int main(int argc, char *argv[])
 	ProcessMap(map);
 	fclose(map);
 
-	if (s__COMMONMEM > 0xFFFF || s__COMMONMEM + l__COMMONMEM > 0xFFFF) {
+	if (s__COMMONMEM > 0xFFFF || s__COMMONMEM + l__COMMONMEM > 0x10000) {
 		fprintf(stderr, "Move common down by at least %d bytes\n",
-			s__COMMONMEM + l__COMMONMEM - 0xFFFF);
+			s__COMMONMEM + l__COMMONMEM - 0x10000);
 		exit(1);
 	}
 
