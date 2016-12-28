@@ -105,9 +105,7 @@ int main(int argc, char *argv[])
 /*								*/
 /****************************************************************/
 
-void Print(comment, name)
-char *comment;
-char *name;
+void Print(char *comment, char *name)
 {
     char entry[50];
     char *p = entry;
@@ -137,9 +135,7 @@ char *name;
 /*								*/
 /****************************************************************/
 
-void Error(message, arg)
-char *message;
-char *arg;
+void Error(char *message, char *arg)
 {
     fprintf(stderr, message, arg);
     exit(1);
@@ -202,9 +198,7 @@ extern char *UP;		/* up cursor movement */
  *	termcap entry found, 0 if not found, and -1 if file not found.
  */
 
-int tgetent(bp, name)
-char *bp;
-const char *name;
+int tgetent(char *bp, const char *name)
 {
     FILE *fp;
     char *file;
@@ -276,8 +270,7 @@ const char *name;
  *	to id. Returns the value, -1 if invalid.
  */
 
-int tgetnum(id)
-char *id;
+int tgetnum(char *id)
 {
     register char *cp = capab;
 
@@ -304,8 +297,7 @@ char *id;
  *	present.
  */
 
-int tgetflag(id)
-char *id;
+int tgetflag(char *id)
 {
     register char *cp = capab;
 
@@ -332,9 +324,7 @@ char *id;
  *	etc. Returns the string, or NULL if it can't do it.
  */
 
-char *tgetstr(id, area)
-char *id;
-char **area;
+char *tgetstr(char *id, char **area)
 {
     register char *cp = capab;
     register char *wsp = *area;	/* workspace pointer  */
@@ -417,10 +407,7 @@ char **area;
  *	Returns "OOPS" if something's gone wrong, or the string otherwise.
  */
 
-char *tgoto(cm, destcol, destline)
-const char *cm;
-int destcol;
-int destline;
+char *tgoto(const char *cm, int destcol, int destline)
 {
     static char ret[24];
     char *rp = ret;
@@ -487,10 +474,8 @@ int destline;
  *	terminal that needs padding at the moment...
  */
 
-int tputs(cp, affcnt, outc)
-register const char *cp;
-int affcnt;
-int (*outc)(int ch);
+int tputs(const char *cp, int affcnt, 
+        int (*outc)(int ch))
 {
     if (cp == (const char *) NULL)
 	return (1);
