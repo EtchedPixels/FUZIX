@@ -134,6 +134,9 @@ $(OBJSBAD): %.rel: %.c
 tchelp: tchelp.rel
 	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
+tget: tget.rel
+	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
+
 %: %.rel
 	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
 
