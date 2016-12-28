@@ -88,6 +88,9 @@ SRCS  = banner.c \
 	stty.c \
 	su.c \
 	tail.c \
+	tar.c \
+	termcap.c \
+	tget.c \
 	tchelp.c \
 	umount.c \
 	uname.c \
