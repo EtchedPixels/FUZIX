@@ -20,6 +20,7 @@
 #include "extern.h"
 
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 /* do a gotoXY -- allowing -1 for same row/column */
 

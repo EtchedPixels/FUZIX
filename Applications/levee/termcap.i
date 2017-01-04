@@ -122,7 +122,6 @@ void tc_init(void)
 #if RMX
     char *p = termcap;
 #else
-    char *getenv();
     char *p = getenv("TERMCAP");
 #endif
     char *lp, *ptr;
@@ -137,7 +136,7 @@ void tc_init(void)
 	exit(1);
     }
 #endif
-    lp = Malloc(strlen(p)+1);
+    lp = malloc(strlen(p)+1);
     if (!lp) {
 	puts("lv: out of memory\n");
 	exit(1);
