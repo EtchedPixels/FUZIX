@@ -1,7 +1,4 @@
 levee
-levee-l
-levee-a
-levee-v
-*.o-l
-*.o-a
-*.o-v
+levee-termcap
+levee-ansi
+levee-vt52

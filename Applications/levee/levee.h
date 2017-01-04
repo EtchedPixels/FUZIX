@@ -61,8 +61,8 @@
 /* use "-DANSI=1 -DVT52=0" etc. on compile line */
 /*#define VT52	0*/		/* this must be nonzero for the Atari ST */
 /*#define ANSI	0*/
-#define TERMCAP	0
-#define ZTERM	0
+/*#define TERMCAP	0 */
+/*#define ZTERM	0 */
 
 #if ST
 

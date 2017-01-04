@@ -13,3 +13,9 @@ package  levee-ansi
 if-file  levee-ansi
 
 f 0755 /bin/levee-ansi       levee-ansi
+
+
+package  levee-termcap
+if-file  levee-termcap
+
+f 0755 /bin/levee-termcap    levee-termcap
