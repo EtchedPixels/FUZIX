@@ -88,6 +88,9 @@ SRCS  = banner.c \
 	stty.c \
 	su.c \
 	tail.c \
+	tar.c \
+	termcap.c \
+	tget.c \
 	tchelp.c \
 	umount.c \
 	uname.c \
@@ -129,6 +132,9 @@ $(OBJSBAD): %.rel: %.c
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
 
 tchelp: tchelp.rel
+	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
+
+tget: tget.rel
 	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 %: %.rel
