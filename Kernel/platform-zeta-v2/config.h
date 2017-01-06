@@ -24,7 +24,7 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
-#define KERNTOP     0xF000  /* Top of kernel (first 3 banks), base of shared bank */
+#define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
 #define PROC_SIZE   64	  /* Memory needed per process */
 
 /* WRS: this is probably wrong -- we want to swap the full 64K minus the common code */
