@@ -24,7 +24,6 @@
 #define PANIC_VALIDBLK_INV	"validblk: invalid blk"
 #define PANIC_GETINO_BADT	"getinode: bad desc table"
 #define PANIC_GETINO_OFT	"getinode: bad OFT"
-#define PANIC_FMOUNT_NOPEN	"fmount: can't open filesystem"
 #define PANIC_CORRUPTI		"corrupt inode"
 #define PANIC_VOODOO		"psleep: voodoo"
 #define PANIC_GETPROC		"getproc: extra running"
