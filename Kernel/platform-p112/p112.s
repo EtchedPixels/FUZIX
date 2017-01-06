@@ -13,6 +13,7 @@
         .globl outcharhex
         .globl platform_interrupt_all
         .globl _trap_reboot
+        .globl _bufpool
 
         ; imported symbols
         .globl z180_init_hardware
@@ -23,6 +24,13 @@
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
         .include "../kernel.def"
+
+; -----------------------------------------------------------------------------
+; Buffers
+; -----------------------------------------------------------------------------
+        .area _BUFFERS
+_bufpool:
+        .ds (BUFSIZE * 4) ; adjust NBUFS in config.h in line with this
 
 ; -----------------------------------------------------------------------------
 ; Initialisation code
