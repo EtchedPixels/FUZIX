@@ -18,7 +18,7 @@ tools/bin2z80: tools/bin2z80.c
 tools/bankld/sdldz80:
 	+(cd tools/bankld; make)
 
-cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/makecpmloader.c
+cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/fuzixload.s cpm-loader/makecpmloader.c
 	+make -C cpm-loader
 
 tools/makejv3: tools/makejv3.c
