@@ -1,0 +1,5 @@
+package  flashrom
+
+# specify the full path to the target - path must already
+# exist. Source file is specified relative to the location of the pkg file
+f 0755 /bin/flashrom    flashrom
