@@ -21,6 +21,7 @@
         ; imported symbols
         .globl _ramsize
         .globl _procmem
+        .globl _init_hardware_c
         .globl outhl
         .globl outnewline
 	.globl interrupt_handler
@@ -130,11 +131,6 @@ foundpage:
 	ret
 
 init_hardware:
-        ld hl, #RAM_KB			; set system RAM size
-        ld (_ramsize), hl
-        ld hl,#(RAM_KB-64)		; 64K for kernel
-        ld (_procmem), hl
-
         ; program vectors for the kernel
         ld hl, #0
         push hl
@@ -186,8 +182,7 @@ init_partial_uart:
 	ld a,h				; get bits 15-8 of int. vectors table
 	ld i,a				; load to I register
 	im 2				; set Z80 CPU interrupt mode 2
-
-	ret
+        jp _init_hardware_c             ; pass control to C, which returns for us
 
 ;=========================================================================
 ; Kernel code

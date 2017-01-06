@@ -4,12 +4,20 @@
 #include <devtty.h>
 #include <ds1302.h>
 #include "config.h"
+#include "devrd.h"
+
+/* Everything in here is discarded after init starts */
 
 #ifdef CONFIG_PPIDE
 #include <devide.h>
-
 void ppide_init(void);
 #endif
+
+void init_hardware_c(void)
+{
+    ramsize = 512;
+    procmem = 512 - 64 - (DEV_RD_RAM_PAGES<<4);
+}
 
 void pagemap_init(void)
 {
@@ -21,7 +29,7 @@ void pagemap_init(void)
 	 * Page 35 is the common area
 	 * Pages starting from DEV_RD_START are used by RAM disk
 	 */
-	for (i = 32 + 4; i < DEV_RD_START; i++)
+	for (i = 32 + 4; i < DEV_RD_RAM_START; i++)
 		pagemap_add(i);
 
 	/* finally add the common area */
@@ -31,7 +39,6 @@ void pagemap_init(void)
 void map_init(void)
 {
 }
-
 
 void device_init(void)
 {
