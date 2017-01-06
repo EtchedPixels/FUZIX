@@ -1106,7 +1106,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     struct filesys *fp;
 
     if(d_open(dev, 0) != 0)
-        panic(PANIC_FMOUNT_NOPEN);
+        return true;    /* Bad device */
 
     m = newfstab();
     if (m == NULL) {
