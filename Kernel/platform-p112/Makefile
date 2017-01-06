@@ -4,7 +4,8 @@ DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/devfd.c ../dev/mbr.c
 DSRCS += ../dev/ds1302.c
-DASRCS = ../dev/devfd_hw.s
+DSRCS += ../dev/devrd_z180.c
+DASRCS = ../dev/devfd_hw.s ../dev/devrd_z180_hw.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)

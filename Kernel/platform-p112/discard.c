@@ -8,8 +8,15 @@
 #ifdef CONFIG_P112_FLOPPY
 #include "devfd.h"
 #endif
+#include <devrd_z180.h>
 #include <devide.h>
 #include <ds1302.h>
+
+void init_hardware_c(void)
+{
+    ramsize = 1024;
+    procmem = 1024 - 64 - (DEV_RD_RAM_PAGES<<2);
+}
 
 void pagemap_init(void)
 {
@@ -19,9 +26,8 @@ void pagemap_init(void)
      * First 64K is used by the kernel. 
      * Each process gets the full 64K for now.
      * Page size is 4KB. */
-    for(i = 0x10; i < 0x100; i+=0x10){
+    for(i = 0x10; i < ((1024 - (DEV_RD_RAM_PAGES<<2))>>2); i+=0x10)
         pagemap_add(i);
-    }
 }
 
 void map_init(void)
