@@ -25,13 +25,15 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF800  /* Top of program, base of U_DATA copy */
+#define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#,,,rd"
 
-#define NBUFS    10       /* Number of block buffers */
+#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
+#define NBUFS    4        /* Number of block buffers, keep in line with space reserved in mark4.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Hardware parameters */
@@ -76,5 +78,3 @@
 	/* ASCI0 as the console */
 	#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #endif
-
-#define platform_discard()
