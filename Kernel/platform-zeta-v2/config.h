@@ -24,6 +24,7 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
+#define KERNTOP     0xF000  /* Top of kernel (first 3 banks), base of shared bank */
 #define PROC_SIZE   64	  /* Memory needed per process */
 
 /* WRS: this is probably wrong -- we want to swap the full 64K minus the common code */
@@ -38,7 +39,8 @@
 #define BOOTDEVICENAMES "hd#,fd,,rd"
 
 //#define SWAPDEV  (256 + 1)  /* Device for swapping */
-#define NBUFS    10       /* Number of block buffers */
+#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
+#define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV 4	    /* 1 ROM disk, 1 RAM disk, 1 floppy, 1 PPIDE */
@@ -80,5 +82,3 @@
 #endif
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-
-#define platform_discard()

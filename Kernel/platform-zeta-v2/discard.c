@@ -17,6 +17,8 @@ void init_hardware_c(void)
 {
     ramsize = 512;
     procmem = 512 - 64 - (DEV_RD_RAM_PAGES<<4);
+    /* zero out the initial bufpool */
+    memset(bufpool, 0, (char*)bufpool_end - (char*)bufpool);
 }
 
 void pagemap_init(void)
