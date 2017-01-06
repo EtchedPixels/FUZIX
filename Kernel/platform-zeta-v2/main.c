@@ -20,8 +20,6 @@ void platform_discard(void)
         bufpool_end->bf_dev = NO_DEVICE;
         bufpool_end++;
     }
-
-    kprintf("platform_discard: bufpool=%x, bufpool_end=%x\n", bufpool, bufpool_end);
 }
 
 void platform_idle(void)
