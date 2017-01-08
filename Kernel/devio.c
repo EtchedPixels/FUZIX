@@ -61,6 +61,7 @@ uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
 		if (!rewrite) {
 			if (bdread(bp) == -1) {
 				udata.u_error = EIO;
+				bp->bf_busy = BF_FREE;
 				return (NULL);
 			}
 		}
