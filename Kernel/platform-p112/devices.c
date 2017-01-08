@@ -7,6 +7,7 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <ds1302.h>
+#include <devrd_z180.h>
 #ifdef CONFIG_P112_FLOPPY
 #include <devfd.h>
 #endif
@@ -21,7 +22,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl },	/* 1: unused slot */
 #endif
   {  tty_open,	    tty_close,	tty_read,	tty_write,	tty_ioctl },	/* 2: /dev/tty -- serial ports */
-  {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl },	/* 3: unused slot */
+  {  rd_open,	    no_close,	rd_read,	rd_write,	no_ioctl },	/* 3: /dev/rd?, /dev/physmem -- memory backed devices */
   {  no_open,	    no_close,	sys_read,	sys_write,	sys_ioctl  },	/* 4: /dev/mem etc	System devices (one offs) */
 };
 

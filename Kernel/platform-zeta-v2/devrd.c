@@ -1,119 +1,147 @@
-/* Zeta SBC V2 RAM disk driver 
+/* Zeta SBC V2  memory driver
  *
- * Implements a single RAM disk DEV_RD_PAGES size and
- * starting from DEV_RD_START page
+ *     /dev/rd0      (block device)      RAM disk
+ *     /dev/rd1      (block device)      ROM disk 
+ *     /dev/physmem  (character device)  physical memory driver 
  *
- * */
+ * 2017-01-03 William R Sowerbutts, based on RAM disk code by Sergey Kiselev
+ */
 
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#define DEVRD_PRIVATE
+#include "devrd.h"
 
-extern uint8_t src_page;	/* source page number */
-extern uint8_t dst_page;	/* destination page number */
-extern uint16_t src_offset;	/* offset of the data in the source page */
-extern uint16_t dst_offset;	/* offset of the data in the destination page */
-extern uint16_t cpy_count;	/* data transfer length */
-extern uint8_t kernel_pages[];	/* kernel's page table */
+static const uint32_t dev_limit[NUM_DEV_RD] = {
+    (uint32_t)(DEV_RD_RAM_PAGES + DEV_RD_RAM_START) << 14, /* block /dev/rd0: RAM */
+    (uint32_t)(DEV_RD_ROM_PAGES + DEV_RD_ROM_START) << 14, /* block /dev/rd1: ROM */
+    1L << 20                                               /* char  /dev/physmem: full 1MB address space */
+};
 
-int ramdisk_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
-int page_copy(void);		/* assembler code */
+static const uint32_t dev_start[NUM_DEV_RD] = {
+    (uint32_t)DEV_RD_RAM_START << 14,                      /* block /dev/rd0: RAM */
+    (uint32_t)DEV_RD_ROM_START << 14,                      /* block /dev/rd1: ROM */
+    0                                                      /* char  /dev/physmem: full 1MB address space */
+};
 
-int rd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag) /* implements both rd_read and rd_write */
 {
-    flag;
-    return ramdisk_transfer(true, minor, rawflag);
-}
+#if (DEV_RD_RAM_PAGES+DEV_RD_ROM_PAGES) == 0 /* this is not right -- kills /dev/physmem also */
+    flag;    /* unused */
+    minor;   /* unused */
+    rawflag; /* unused */
+    
+    /* neither device is present -- just return an error */
+    udata.u_error = ENXIO;
+    return -1;
+#else
+    bool error = false;
+    uint16_t count, rv, maxcpy;
 
-int rd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    flag;
-    return ramdisk_transfer(false, minor, rawflag);
-}
+    flag;    /* unused */
 
-int ramdisk_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
-{
-	blkno_t block;
-	int block_xfer;     /* r/w return value (number of 512 byte blocks transferred) */
-	uint32_t rd_addr;
-	uint16_t buffer_addr;
-	usize_t xfer_count;
+    /* check device exists; do not allow writes to ROM */
+    if(minor >= NUM_DEV_RD || (minor == RD_MINOR_ROM && rd_reverse)){
+        error = true;
+        count = rv = 0; /* keep the compiler happy */
+    }else{
+        rd_src_address = dev_start[minor];
 
-	if (minor >= NUM_DEV_RD) {
-		udata.u_error = ENXIO;
-		return -1;
-	}
+        if(rawflag || minor == RD_MINOR_PHYSMEM){ 
+            /* rawflag == 1, userspace transfer */
+            rd_dst_userspace = true;
+            rd_dst_address = (uint16_t)udata.u_base;
+            rd_src_address += udata.u_offset;
+            count = udata.u_count;
+            if(minor == RD_MINOR_PHYSMEM) /* /dev/physmem is a character device -- return # bytes */
+                rv = count;
+            else
+                rv = count >> 9;          /* block devices return # blocks */
+        }else{
+            /* rawflag == 0, kernel transfer */
+            rd_dst_userspace = false;
+            rd_dst_address = (uint16_t)&udata.u_buf->bf_data;
+            rd_src_address += ((uint32_t)udata.u_buf->bf_blk << 9);
+            count = 512;
+            rv = 1;
+        }
 
-	if (rawflag) { /* rawflag == 1, read to or write from user space */
-		xfer_count = udata.u_count;
-		buffer_addr = (uint16_t) udata.u_base;
-		block = udata.u_offset >> 9;
-		block_xfer = xfer_count >> 9;
-	} else { /* rawflag == 0, read to or write from kernel space */
-		xfer_count = 512;
-		buffer_addr = (uint16_t) udata.u_buf->bf_data;
-		block = udata.u_buf->bf_blk;
-		block_xfer = 1;
-	}
+        if(rd_src_address >= dev_limit[minor]){
+            error = true;
+        }
+    }
 
-	if (block > (DEV_RD_PAGES * 16 * 2)) { /* block beyond RAM disk end? */
-		udata.u_error = EIO;
-		return -1;
-	}
-
-	/* calculate physical address of the RAM drive data */
-	/* rd_addr = block * 512 + DEV_RD_START * 16K; */
-	rd_addr = ((unsigned long) block << 9) + DEV_RD_START * 16384UL;
-	while (xfer_count > 0) {
-		if (is_read) {
-			/* RAM disk page number = rd_addr / 16K */
-			src_page = rd_addr >> 14;
-			/* offset within RAM disk page */
-			src_offset = rd_addr & 0x3FFF;
-			/* destination page number */
-			if (rawflag)
-				dst_page = ((uint8_t *) &udata.u_page)[buffer_addr >> 14];
-			else
-				dst_page = kernel_pages[buffer_addr >> 14];
-			/* offset in the destination page */
-			dst_offset = buffer_addr & 0x3FFF;
-		} else {
-			/* source page number */
-			if (rawflag)
-				src_page = ((uint8_t *) &udata.u_page)[buffer_addr >> 14];
-			else
-				src_page = kernel_pages[buffer_addr >> 14];
-			/* offset in the source page */
-			src_offset = buffer_addr & 0x3FFF;
-			/* RAM disk page number = rd_addr / 16K */
-			dst_page = rd_addr >> 14;
-			/* offset within RAM disk page */
-			dst_offset = rd_addr & 0x3FFF;
-		}
-		cpy_count = xfer_count;
-		if (cpy_count > 16384 - src_offset)
-			cpy_count = 16384 - src_offset;
-		if (cpy_count > 16384 - dst_offset)
-			cpy_count = 16384 - dst_offset;
-#ifdef DEBUG
-		kprintf("page_cpy(src_page=%x, src_offset=%x, dst_page=%x, dst_offset=%x, cpy_count=%x)\n", src_page, src_offset, dst_page, dst_offset, cpy_count);
-#endif
-		page_copy();
-		xfer_count -= cpy_count;
-		buffer_addr += cpy_count;
-		rd_addr += cpy_count;
-	}
-
-	return block_xfer;
-}
-
-
-int rd_open(uint8_t minor)
-{
-    if(minor < NUM_DEV_RD){
-        return 0;
-    } else {
+    if(error){
         udata.u_error = EIO;
         return -1;
     }
+
+    if(count == 1){
+        /* fast path for single byte transfers */
+        rd_cpy_count = 1;
+        rd_page_copy();
+    }else{
+        while(true){
+            rd_cpy_count = count;
+            /* check if transfer will span over a 16KB bank boundary */
+            maxcpy = ((uint16_t)rd_src_address) & 0x3FFF;
+            if((rd_dst_address & 0x3FFF) > maxcpy)
+                maxcpy = rd_dst_address & 0x3FFF;
+            maxcpy = 0x4000 - maxcpy;
+            if(rd_cpy_count > maxcpy)
+                rd_cpy_count = maxcpy;
+#ifdef DEBUG
+            kprintf("rd_transfer: src=0x%lx, dst=0x%x(%s) reverse=%d count=%d\n",
+                    rd_src_address, rd_dst_address, rd_dst_userspace?"user":"kern",
+                    rd_reverse, rd_cpy_count);
+#endif
+            rd_page_copy();
+
+            count -= rd_cpy_count;
+            if(!count)
+                break;
+            rd_dst_address += rd_cpy_count;
+            rd_src_address += rd_cpy_count;
+        }
+    }
+
+    return rv;
+#endif
+}
+
+
+int rd_open(uint8_t minor, uint16_t flags)
+{
+    flags; /* unused */
+
+#ifdef DEBUG
+    kprintf("rd_open(%d)\n", minor);
+#endif
+
+#if (DEV_RD_RAM_PAGES+DEV_RD_ROM_PAGES) == 0
+    minor; /* unused */
+
+    udata.u_error = EIO;
+    return -1;
+#else
+    switch(minor){
+#if DEV_RD_RAM_PAGES > 0
+        case RD_MINOR_RAM:
+#endif
+#if DEV_RD_ROM_PAGES > 0
+        case RD_MINOR_ROM:
+#endif
+#ifdef CONFIG_DEV_PHYSMEM
+        case RD_MINOR_PHYSMEM:
+#endif
+#ifdef DEBUG
+    kprintf("rd_open(%d): ok!\n", minor);
+#endif
+            return 0;
+        default:
+            udata.u_error = ENXIO;
+            return -1;
+    }
+#endif
 }
