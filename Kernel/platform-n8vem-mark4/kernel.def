@@ -8,7 +8,6 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 
 ; N8VEM Mark IV mnemonics
 FIRST_RAM_BANK              .equ 0x80         ; low 512K of physical memory is ROM/ECB window.
-RAM_KB                      .equ 512
 Z180_IO_BASE                .equ 0x40
 MARK4_IO_BASE               .equ 0x80
 

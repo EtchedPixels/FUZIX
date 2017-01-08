@@ -49,6 +49,17 @@
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
 
+/* Memory backed devices */
+#define CONFIG_DEV_MEM          /* enable /dev/mem driver */
+#define CONFIG_RAMDISK          /* enable memory-backed device driver */
+#define DEV_RD_ROM_PAGES 0      /* ROM is too small on this platform -- only 32KB */
+#define DEV_RD_RAM_PAGES 0      /* size of the RAM disk (/dev/rd1) in 4KB pages */
+
+#define DEV_RD_ROM_START 0      /* ROM is too small on this platform -- only 32KB */
+#define DEV_RD_ROM_SIZE  0
+#define DEV_RD_RAM_START ((uint32_t)(256-DEV_RD_RAM_PAGES) << 12)
+#define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 12)
+
 /* We have the P112 floppy controller */
 #define CONFIG_P112_FLOPPY
 

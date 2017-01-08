@@ -29,7 +29,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
-#define BOOTDEVICENAMES "hd#"
+#define BOOTDEVICENAMES "hd#,,,rd"
 
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
@@ -52,6 +52,17 @@
 /* On-board DS1302 on Mark IV, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
+
+/* Memory backed devices */
+#define CONFIG_DEV_MEM          /* enable /dev/mem driver */
+#define CONFIG_RAMDISK          /* enable memory-backed device driver */
+#define DEV_RD_ROM_PAGES 64     /* size of the ROM disk (/dev/rd0) in 4KB pages */
+#define DEV_RD_RAM_PAGES 0      /* size of the RAM disk (/dev/rd1) in 4KB pages */
+
+#define DEV_RD_ROM_START ((uint32_t)(128-DEV_RD_ROM_PAGES) << 12)
+#define DEV_RD_RAM_START ((uint32_t)(256-DEV_RD_RAM_PAGES) << 12)
+#define DEV_RD_ROM_SIZE  ((uint32_t)DEV_RD_ROM_PAGES << 12)
+#define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 12)
 
 /* Optional PropIOv2 board on ECB bus */
 //#define CONFIG_PROPIO2		/* #define CONFIG_PROPIO2 to enable as tty3 */

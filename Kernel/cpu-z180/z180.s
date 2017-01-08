@@ -7,6 +7,7 @@
         ; exported symbols
         .globl z180_init_hardware
         .globl z180_init_early
+        .globl _init_hardware_c
         .globl _program_vectors
         .globl _copy_and_map_process
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment
@@ -186,7 +187,8 @@ z180_init_hardware:
         ; Enable external interrupts (INT0/INT1/INT2) 
         ld a, #0x87
         out0 (INT_ITC), a
-        ret
+
+        jp _init_hardware_c
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
