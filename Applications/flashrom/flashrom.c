@@ -332,7 +332,7 @@ bool flashrom_verify_and_write(bool perform_write)
         rom_address = flashrom_sector_address(sector);
 
         /* check for EOF */
-        if(rom_address > file_size)
+        if(rom_address >= file_size)
             break;
 
         /* verify sector */
@@ -380,7 +380,7 @@ bool flashrom_verify_and_write(bool perform_write)
         printf("\rWrite complete: Reprogrammed %d/%d sectors.\n", mismatch, flashrom_type->sector_count);
     }else{
         if(sector != flashrom_type->sector_count)
-            printf("\rPartial verify (%d/%d sectors)", sector-1, flashrom_type->sector_count);
+            printf("\rPartial verify (%d/%d sectors)", sector, flashrom_type->sector_count);
         else
             printf("\rVerify (%d sectors)", flashrom_type->sector_count);
 
