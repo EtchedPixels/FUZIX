@@ -103,10 +103,13 @@ n 60660 256 /dev/fd0
 n 60660 257 /dev/fd1   
 n 60660 258 /dev/fd2   
 n 60660 259 /dev/fd3   
+n 60660 768 /dev/rd0
+n 60660 769 /dev/rd1
 n 20666 1024 /dev/null  
-n 20660 1025 /dev/mem   
+n 20660 1025 /dev/kmem
 n 20444 1026 /dev/zero  
 n 20666 1027 /dev/proc  
+n 20660 1028 /dev/mem
 
 f 0644 /etc/group     etc-files/group
 f 0644 /etc/issue     etc-files/issue

@@ -25,13 +25,15 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF800  /* Top of program, base of U_DATA copy */
+#define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
-#define BOOTDEVICENAMES "hd#"
+#define BOOTDEVICENAMES "hd#,,,rd"
 
-#define NBUFS    10       /* Number of block buffers */
+#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
+#define NBUFS    4        /* Number of block buffers, keep in line with space reserved in mark4.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Hardware parameters */
@@ -53,6 +55,17 @@
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
 
+/* Memory backed devices */
+#define CONFIG_DEV_MEM          /* enable /dev/mem driver */
+#define CONFIG_RAMDISK          /* enable memory-backed device driver */
+#define DEV_RD_ROM_PAGES 64     /* size of the ROM disk (/dev/rd0) in 4KB pages */
+#define DEV_RD_RAM_PAGES 0      /* size of the RAM disk (/dev/rd1) in 4KB pages */
+
+#define DEV_RD_ROM_START ((uint32_t)(128-DEV_RD_ROM_PAGES) << 12)
+#define DEV_RD_RAM_START ((uint32_t)(256-DEV_RD_RAM_PAGES) << 12)
+#define DEV_RD_ROM_SIZE  ((uint32_t)DEV_RD_ROM_PAGES << 12)
+#define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 12)
+
 /* Optional PropIOv2 board on ECB bus */
 //#define CONFIG_PROPIO2		/* #define CONFIG_PROPIO2 to enable as tty3 */
 #define PROPIO2_IO_BASE		0xA8
@@ -69,5 +82,3 @@
 	/* ASCI0 as the console */
 	#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #endif
-
-#define platform_discard()

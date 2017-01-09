@@ -13,18 +13,24 @@
         .globl outcharhex
         .globl platform_interrupt_all
         .globl _trap_reboot
+        .globl _bufpool
 
         ; imported symbols
         .globl z180_init_hardware
         .globl z180_init_early
-        .globl _ramsize
-        .globl _procmem
         .globl outhl
         .globl outnewline
 
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
         .include "../kernel.def"
+
+; -----------------------------------------------------------------------------
+; Buffers
+; -----------------------------------------------------------------------------
+        .area _BUFFERS
+_bufpool:
+        .ds (BUFSIZE * 4) ; adjust NBUFS in config.h in line with this
 
 ; -----------------------------------------------------------------------------
 ; Initialisation code
@@ -44,12 +50,6 @@ init_early:
         jp z180_init_early
 
 init_hardware:
-        ; set system RAM size
-        ld hl, #RAM_KB
-        ld (_ramsize), hl
-        ld hl, #(RAM_KB-64)        ; 64K for kernel
-        ld (_procmem), hl
-
         ; configure ASCI UART
         ; in0 a, (ASCI_STAT0)
         ; or #0x08                ; enable ASCI0 receive interrupts

@@ -65,8 +65,8 @@ void fstabinit(void)
       size differ due to memory models etc. We use uputp and we allow
       room for the pointers to be bigger than kernel */
 
-static uaddr_t progptr;
-static uaddr_t argptr;
+static uaddr_t progptr, old_progptr;
+static uaddr_t argptr, old_argptr;
 
 void add_argument(const char *s)
 {
@@ -162,7 +162,7 @@ static uint8_t system_param(char *p)
 {
 	if (*p == 'r' && p[2] == 0) {
 		if (p[1] == 'o') {
-			ro = 1;
+			ro = MS_RDONLY;
 			return 1;
 		} else if (p[1] == 'w') {
 			ro = 0;
@@ -278,8 +278,10 @@ uint16_t get_root_dev(void)
 {
 	uint16_t rd = BAD_ROOT_DEV;
 
-	if (cmdline && *cmdline)
+	if (cmdline && *cmdline){
 		rd = bootdevice(cmdline);
+                cmdline=NULL;                   /* ignore cmdline if get_root_dev() is called again */
+        }
 
 	while(rd == BAD_ROOT_DEV){
 		kputs("bootdev: ");
@@ -359,26 +361,33 @@ void fuzix_main(void)
 	__hard_ei();		/* Physical interrupts on */
 	kputs("ok.\n");
 
-	/* get the root device */
-	root_dev = get_root_dev();
-
-	/* finish building argv */
-	complete_init();
-
 	/* initialise hardware devices */
 	device_init();
 
-	/* Mount the root device */
-	kprintf("Mounting root fs (root_dev=%d, r%c): ", root_dev,
-		ro ? 'o' : 'w');
+        while(true){
+            old_progptr = progptr;
+            old_argptr = argptr;
+            /* Get a root device to try */
+            root_dev = get_root_dev();
+            /* Mount the root device */
+            kprintf("Mounting root fs (root_dev=%d, r%c): ", root_dev, ro ? 'o' : 'w');
+            if(fmount(root_dev, NULLINODE, ro) == 0)
+                break;
+            kputs("failed\n");
+            /* reset potentially altered state before prompting the user for command line again */
+            progptr = old_progptr;
+            argptr = old_argptr;
+            ro = 0;
+        }
 
-	if (fmount(root_dev, NULLINODE, ro))
-		panic(PANIC_NOFILESYS);
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)
 		panic(PANIC_NOROOT);
 
 	kputs("OK\n");
+
+	/* finish building argv */
+	complete_init();
 
 	udata.u_cwd = i_ref(root);
 	udata.u_root = i_ref(root);

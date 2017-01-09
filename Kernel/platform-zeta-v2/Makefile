@@ -1,11 +1,11 @@
 ASRCS = crt0.s tricks.s commonmem.s zeta-v2.s monitor.s
-ASRCS += ds1302-n8vem.s devrd_hw.s
-CSRCS = devices.c main.c devtty.c devrd.c ppide.c
+ASRCS += ds1302-n8vem.s devrd_zeta2_hw.s
+CSRCS = devices.c main.c devtty.c devrd_zeta2.c ppide.c
 DISCARD_CSRCS = discard.c devtty_discard.c
 DISCARD_DSRCS = ../dev/ds1302_discard.c ../dev/devide_discard.c
 DSRCS = ../dev/devfd.c ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
-DSRCS += ../dev/ds1302.c ../dev/devide.c
-DASRCS = ../dev/devfd_hw.s
+DSRCS += ../dev/ds1302.c ../dev/devide.c ../dev/devrd.c
+DASRCS = ../dev/devfd_hw.s ../dev/devrd_hw.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -54,3 +54,4 @@ image:
 	makebin -s 136 bootrom.ihx > bootrom.bin
 	cat bootrom.bin ../fuzix.bin | dd conv=sync bs=65536 count=1 of=fuzix.rom
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
+	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix

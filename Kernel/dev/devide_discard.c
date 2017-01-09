@@ -60,12 +60,16 @@ void devide_init_drive(uint8_t drive)
         default: return;
     }
 
-    kprintf("IDE drive %d: ", drive);
-
     ide_select(drive);
+
+    devide_writeb(ide_reg_devhead, select);
+    kprintf("IDE drive %d: ", drive);
 
 #ifdef IDE_8BIT_ONLY
     /* set 8-bit mode -- mostly only supported by CF cards */
+    if (!devide_wait(IDE_STATUS_READY))
+        goto out;
+
     devide_writeb(ide_reg_devhead, select);
     if (!devide_wait(IDE_STATUS_READY))
         goto out;

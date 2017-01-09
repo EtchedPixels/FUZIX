@@ -36,6 +36,9 @@ platform-n8vem-mark4/discard.rel
 platform-n8vem-mark4/devtty.rel
 platform-n8vem-mark4/devide.rel
 platform-n8vem-mark4/devide_discard.rel
+platform-n8vem-mark4/devrd.rel
+platform-n8vem-mark4/devrd_hw.rel
+platform-n8vem-mark4/devrd_z180_hw.rel
 platform-n8vem-mark4/devsd.rel
 platform-n8vem-mark4/devsd_discard.rel
 platform-n8vem-mark4/devsdspi.rel

@@ -7,7 +7,6 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 
 ; P112
 FIRST_RAM_BANK              .equ 0x00         ; all memory is RAM on P112
-RAM_KB                      .equ 1024
 Z180_IO_BASE                .equ 0x00
 Z80_TYPE		    .equ 2
 

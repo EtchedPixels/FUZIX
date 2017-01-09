@@ -4,15 +4,17 @@
 #include <devsys.h>
 #include <audio.h>
 #include <netdev.h>
+#include <devmem.h>
 #include <net_native.h>
 
 /*
  *	System devices:
  *
  *	Minor	0	null
- *	Minor 	1	mem
+ *	Minor 	1	kmem    (kernel memory)
  *	Minor	2	zero
  *	Minor	3	proc
+ *	Minor   4       mem     (physical memory)
  *	Minor	64	audio
  *	Minor	65	net_native
  *
@@ -44,6 +46,10 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		if (udata.u_offset + udata.u_count > PTABSIZE * sizeof(struct p_tab))
 			return 0;
 		return uputsys(addr + udata.u_offset, udata.u_count);
+#ifdef CONFIG_DEV_MEM
+        case 4:
+                return devmem_read();
+#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_read(flag);
@@ -69,6 +75,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	case 3:
 		udata.u_error = EINVAL;
 		return -1;
+#ifdef CONFIG_DEV_MEM
+        case 4:
+                return devmem_write();
+#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_write(flag);
