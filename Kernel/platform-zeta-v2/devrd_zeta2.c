@@ -19,14 +19,12 @@ void rd_platform_copy(void)
 
     while(true){
         /* ensure transfer will not span a 16KB bank boundary */
-        if(count > 1){
-            maxcpy = ((uint16_t)rd_src_address) & 0x3FFF;
-            if((rd_dst_address & 0x3FFF) > maxcpy)
-                maxcpy = rd_dst_address & 0x3FFF;
-            maxcpy = 0x4000 - maxcpy;
-            if(rd_cpy_count > maxcpy)
-                rd_cpy_count = maxcpy;
-        }
+        maxcpy = ((uint16_t)rd_src_address) & 0x3FFF;
+        if((rd_dst_address & 0x3FFF) > maxcpy)
+            maxcpy = rd_dst_address & 0x3FFF;
+        maxcpy = 0x4000 - maxcpy;
+        if(rd_cpy_count > maxcpy)
+            rd_cpy_count = maxcpy;
 #ifdef DEBUG
         kprintf("rd_transfer: src=0x%lx, dst=0x%x(%s) reverse=%d count=%d\n",
                 rd_src_address, rd_dst_address, rd_dst_userspace?"user":"kern",
