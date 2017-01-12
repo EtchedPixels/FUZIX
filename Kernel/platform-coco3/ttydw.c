@@ -117,6 +117,11 @@ struct dw_in dwtab[ DW_VSER_NUM + DW_VWIN_NUM ];
 
 int wait=MAX_WAIT;
 
+/* How many vsync ticks to wait until polling again after a FastWrite */
+#define FASTWRITE_WAIT     1
+#define FASTWRITE_WAIT_COUNT  8
+int fastWriteWait = 0;
+
 /* Number of ports open. IF zero then polling routine
    will not poll */
 int open_ports=0;
@@ -162,6 +167,9 @@ void dw_putc( uint8_t minor, unsigned char c ){
 	buf[0]=DW_FASTWRITE | dw_port( minor ) ;
 	buf[1]=c;
 	dw_transaction( buf, 2, NULL, 0, 0 );
+	/* set wait and fastWriteWait for interactive performance */
+	wait=FASTWRITE_WAIT;
+	fastWriteWait=FASTWRITE_WAIT_COUNT;
 }
 
 
@@ -200,7 +208,17 @@ int qfree( uint8_t minor ){
 	return q->q_size - q->q_count;
 }
 
-
+/* Sets the wait time to v if not in fast wait */
+static inline void setWait( int v )
+{
+       if (fastWriteWait) {
+               fastWriteWait--;
+               wait = FASTWRITE_WAIT;
+       } else {
+               wait = v;
+       }
+       return;
+}
 
 /* Poll and add chars (if any) to input q
  */
@@ -217,13 +235,14 @@ void dw_vpoll( ){
 		dw_transaction( buf, 1, buf, 2, 0 );
 		/* nothing waiting ? */
 		if( ! (buf[0] & 0x7f) ) {
-			wait=MAX_WAIT;
+			setWait(MAX_WAIT);
 			break;
 		}
 		/* VSER Channel single datum */
 		if( buf[0]<16 ){
 			int minor=dw_minor( buf[0] - 1 );
 			tty_inproc( minor, buf[1] );
+			fastWriteWait = 0;
 			continue;
 		}
 		/* VSER Channel closed? */
@@ -249,7 +268,7 @@ void dw_vpoll( ){
 			min=mini( buf[1], qfree( minor ) );
 			b[2]=min;
 			if( !min ){
-				wait = MAX_WAIT;
+				setWait(MAX_WAIT);
 				break;
 			}
 			dw_transaction( b,3,tbuf, min, 0 );
@@ -257,6 +276,7 @@ void dw_vpoll( ){
 				tty_inproc( minor, tbuf[i] );
 			}
 			wait = 16 - (min >> 4);
+			fastWriteWait = 0;
 			break;
 		}
 		/* VWIN channel single datum */
