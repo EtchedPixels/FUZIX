@@ -1,4 +1,5 @@
 package  flashrom
+if-file  flashrom
 
 # specify the full path to the target - path must already
 # exist. Source file is specified relative to the location of the pkg file
