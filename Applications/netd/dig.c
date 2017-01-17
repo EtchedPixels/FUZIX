@@ -1,9 +1,6 @@
 /*
   A Cheesey Dig Client
 
-  todo:  
-     allow setting of dns server :)
-
 */
 
 #include <stdio.h>
@@ -36,7 +33,8 @@ struct RRtail{
 
 int fd;
 char buf[1024];
-char server[17];
+char server[17] = "1921.168.1.1";
+char name[256] = ".";
 
 void alarm_handler( int signum ){
     return;
@@ -188,6 +186,13 @@ int main( int argc, char *argv[] ){
 
     readrc();
 
+    for( x = 1; x < argc; x++ ){
+	if( argv[x][0] == '@' )
+	    strncpy( server, &(argv[x][1]), 16);
+	else
+	    strncpy( name, argv[x], 16 );
+    }
+
     fd = socket( AF_INET, SOCK_DGRAM, 0);
     if( fd < 0 ){
 	perror("socket");
@@ -204,7 +209,7 @@ int main( int argc, char *argv[] ){
     }
 
     for( ; tries ; tries-- ){
-	send_question( argv[1] );
+	send_question( name );
 	signal( SIGALRM, alarm_handler );
 	alarm(2);
 	x = read( fd, buf, 1024 );
