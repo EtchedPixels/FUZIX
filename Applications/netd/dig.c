@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -35,7 +36,7 @@ struct RRtail{
 
 int fd;
 char buf[1024];
-
+char server[17];
 
 void alarm_handler( int signum ){
     return;
@@ -144,11 +145,48 @@ print_entry( char **pptr, int no ){
     *pptr = ptr;
 }
 
+/* open up /etc/resolv.conf and read in
+   fixme: handles only small config files < 512 bytes */
+int readrc( void ){
+    char *ws = " \f\n\r\t\v";
+    char *ptr;
+    int ret = 0;
+    int x;
+
+    fd = open( "/etc/resolv.conf", O_RDONLY );
+    if ( fd < 0 ){
+	return -1;
+    }
+    x = read( fd, buf, 511 );
+    if( x < 1 )
+	goto reterr;
+    buf[x] = 0;
+    ptr = strtok( buf, ws );
+    while ( ptr ){
+	if ( ! strcmp( ptr, "nameserver" ) ){
+	    ptr = strtok( NULL, ws );
+	    if( ptr == NULL )
+		goto reterr;
+	    strcpy( server, ptr );
+	    goto retok;
+	}
+	ptr = strtok( NULL, ws );
+    }
+ reterr:
+    close(fd);
+    return -1;
+ retok:
+    close(fd);
+    return 0;
+}
+
 int main( int argc, char *argv[] ){
 
     struct sockaddr_in addr;
     int x;
     int tries = 5;
+
+    readrc();
 
     fd = socket( AF_INET, SOCK_DGRAM, 0);
     if( fd < 0 ){
@@ -158,7 +196,7 @@ int main( int argc, char *argv[] ){
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons( 53 );
-    inet_pton( AF_INET, "192.168.1.1", &addr.sin_addr.s_addr );
+    inet_pton( AF_INET, server, &addr.sin_addr.s_addr );
 
     if( connect( fd, (struct sockaddr *)&addr, sizeof(addr) ) < 0 ){
 	perror("connect");
