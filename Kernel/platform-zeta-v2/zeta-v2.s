@@ -226,13 +226,6 @@ _program_vectors:
 	jr map_kernel
 
 ;=========================================================================
-; Memory management
-; - kernel pages:     32 - 34
-; - common page:      35
-; - user space pages: 36 - 63
-;=========================================================================
-
-;=========================================================================
 ; map_process_always - map process pages
 ; Inputs: page table address in #U_DATA__U_PAGE
 ; Outputs: none; all registers preserved
@@ -263,31 +256,25 @@ map_kernel:
         jr map_process_2_pophl_ret
 
 ;=========================================================================
-; map_process_2 - map process or kernel pages
+; map_process_2 - map process or kernel pages, update mpgsel_cache
 ; Inputs: page table address in HL
 ; Outputs: none, HL destroyed
 ;=========================================================================
 map_process_2:
-	push de
-	push af
-	ld de,#mpgsel_cache		; paging registers are write only
-					; so cache their content in RAM
-	ld a,(hl)			; memory page number for bank #0
-	ld (de),a
-	out (MPGSEL_0),a		; set bank #0
-	inc hl
-	inc de
-	ld a,(hl)			; memory page number for bank #1
-	ld (de),a
-	out (MPGSEL_1),a		; set bank #1
-	inc hl
-	inc de
-	ld a,(hl)			; memory page number for bank #2
-	ld (de),a
-	out (MPGSEL_2),a		; set bank #2
-	pop af
-	pop de
-	ret
+        push af
+        ld a, (hl)
+        ld (mpgsel_cache+0), a
+        out (MPGSEL_0), a
+        inc hl
+        ld a, (hl)
+        ld (mpgsel_cache+1), a
+        out (MPGSEL_1), a
+        inc hl
+        ld a, (hl)
+        ld (mpgsel_cache+2), a
+        out (MPGSEL_2), a
+        pop af
+        ret
 
 ;=========================================================================
 ; map_restore - restore a saved page mapping
