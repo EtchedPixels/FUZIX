@@ -88,8 +88,14 @@ void updatetod(void)
 #ifdef CONFIG_RTC_INTERVAL
 	/* on some platforms reading the RTC is expensive so we don't do it
 	   every decisecond. */
-	if(++tod_deci != CONFIG_RTC_INTERVAL)
+	if(++tod_deci != CONFIG_RTC_INTERVAL){
+            if(!(tod_deci % 10)){ /* we still need to count each second */
+                rtcsec++;
+                slide=1;
+                goto addtod;
+            }
 	    return;
+        }
 	tod_deci = 0;
 #endif
 
@@ -98,12 +104,13 @@ void updatetod(void)
 	if (rtcnew == rtcsec)
 		return;
 	slide = rtcnew - rtcsec;	/* Seconds elapsed */
+	rtcsec = rtcnew;
+addtod:
 	if (slide < 0)
 		slide += 60;		/* Seconds wrapped */
 	tod.low += slide;
 	if (tod.low < slide)		/* 32bit wrap ? */
 		tod.high++;
-	rtcsec = rtcnew;
 }
 
 void inittod(void)
