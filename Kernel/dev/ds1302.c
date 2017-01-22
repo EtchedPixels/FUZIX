@@ -3,6 +3,8 @@
 /* 2014-12-30 Will Sowerbutts                                            */
 /*-----------------------------------------------------------------------*/
 
+#define _DS1302_PRIVATE
+
 #include <kernel.h>
 #include <kdata.h>
 #include <stdbool.h>
