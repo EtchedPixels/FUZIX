@@ -434,11 +434,12 @@ typedef struct u_data {
     uaddr_t	u_codebase;	/* 32bit platform base pointers */
 #endif
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
-    /**** If you change this top section, also update offsets in "kernel.def" ****/
 
     uint8_t *   u_base;         /* Source or dest for I/O */
     usize_t     u_count;        /* Amount for I/O */
     off_t       u_offset;       /* Place in file for I/O */
+    /**** If you change this top section, also update offsets in "kernel.def" ****/
+
     struct blkbuf *u_buf;
     bool        u_sysio;        /* True if I/O to system space */
 
