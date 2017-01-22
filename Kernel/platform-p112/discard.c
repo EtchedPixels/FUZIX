@@ -61,3 +61,9 @@ void device_init(void)
     ds1302_init();
     tty_hw_init();
 }
+
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
