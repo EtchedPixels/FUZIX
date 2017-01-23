@@ -443,15 +443,27 @@ FdcDn0: CALL    WRdy1
 ; Uses  : HL.  Remaining Registers Preserved/Not Affected
 
 Motor:  PUSH    AF              ; Save Regs
-        LD      A,(motim)       ; Get remaining Seconds
-        OR      A               ; Already On?
-        LD      A,#MONTIM       ;  (get On Time)
-        LD      (motim),A       ;   always reset
-        JR      NZ,MotorX       ; ..exit if already running
         PUSH    BC
-        LD      A,(hdr)         ; Get current Drive
-        OR      #0xF4           ;   Set All Motors On and Controller Active
-        CALL    Activ8          ;     Do It!
+        LD      A,#MONTIM       ; Get motor timeout
+        LD      (motim),A       ; Reset the countdown timer
+        LD      A,(drive)       ; Get current Drive (range 0...3)
+        LD      B,#0x10         ; Bit for drive 0 motor
+        OR      A               ; Test if zero
+MtrNxt: JR      Z,MtrSet        ; Drive bit in position?
+        SLA     B               ; Shift bit
+        DEC     A               ; Count down
+        JR      MtrNxt          ; See if we're done
+MtrSet: ; now B contains the relevant motor bit we need to be set in the FDC DOR
+        LD      A,(active)      ; Load current DOR contents
+        AND     #0xFC           ; Clear bottom two bits (selected drive number)
+        LD      C,A             ; Save copy in C
+        AND     B               ; Is the relevant motor bit set?
+        JR      NZ,MotorX       ; Motor is on already, we're done here
+        LD      A,(drive)       ; Load active drive
+        OR      C               ; Mix in current DOR contents
+        OR      B               ; Set bit for additional motor to spin up
+        CALL    Activ8          ; Send to FDC DOR, update active
+        ; TODO this is a busy loop -- we should set a timer and yield
         LD      A,(drive)       ; Get Current drive
         CALL    GetPrm          ;  Pt to Param table
         LD      BC,#oSPIN
@@ -463,8 +475,8 @@ MotoLp: LD      A,(mtm)         ;  ..otherwise, loop never times out!
         OR      A               ; Up to Speed?
         JR      NZ,MotoLp       ; ..loop if Not
         DI                      ; No Ints now..
-        POP     BC
-MotorX: POP     AF              ; Restore Reg
+MotorX: POP     BC
+        POP     AF              ; Restore Reg
         RET
 
 ;-------------------------------------------------------------
