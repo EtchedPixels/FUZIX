@@ -1299,10 +1299,9 @@ uip_process(uint8_t flag)
   /* RAW socket processing. */
 #if UIP_RAW
  raw_found:
-  uip_len = uip_len - UIP_IPH_LEN;
   uip_conn = NULL;
   uip_flags = UIP_NEWDATA;
-  uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN + UIP_IPH_LEN];
+  uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN];
   uip_slen = 0;
   UIP_RAW_APPCALL();
 
