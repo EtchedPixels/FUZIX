@@ -5,6 +5,7 @@ f 0644 /etc/resolv.conf        resolv.conf
 f 0755 /usr/bin/dig	       dig
 f 0755 /usr/bin/echoping       echoping
 f 0755 /usr/bin/telnet	       telnet
+f 0755 /usr/bin/ping	       ping
 n 20666 1089 /dev/net 
 
 
