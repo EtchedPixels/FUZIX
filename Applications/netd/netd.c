@@ -19,7 +19,8 @@ todo:
 * deamonize (detach) this proggie. (will we always have setsid() ? )
 * UDP local bind
 * TCP passive open
-
+* RAW pass protocol number via socket() not connect()
+* refactor  RAW with UDP code as they are very similar
 
 */
 
