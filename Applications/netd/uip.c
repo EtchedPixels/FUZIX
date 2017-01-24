@@ -522,7 +522,6 @@ uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto)
   register struct uip_raw_conn *conn;
 
   /* disallow UDP,TCP ?
-  /* FIXME: check raw pool for anything already using this protocol */
 
   /* find an unused RAW connection */
   conn = 0;
@@ -1034,13 +1033,19 @@ uip_process(uint8_t flag)
       /* fix icmp handling now doesn't need to check for prot and type!!! */
       goto icmp_input;
   }
-  /* find raw socket that matches protocol */
+  /* find any raw sockets that matches protocol and send
+   packet to each one */
   for(uip_raw_conn = &uip_raw_conns[0];
       uip_raw_conn < &uip_raw_conns[UIP_RAW_CONNS];
       ++uip_raw_conn){
-      if(uip_raw_conn->proto !=0 &&
-	 uip_raw_conn->proto == BUF->proto )
-	  goto raw_found;
+      if(uip_raw_conn->proto != 0 &&
+	 uip_raw_conn->proto == BUF->proto ){
+	  uip_conn = NULL;
+	  uip_flags = UIP_NEWDATA;
+	  uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN];
+	  uip_slen = 0;
+	  UIP_RAW_APPCALL();
+      }
   }
   goto drop;
 #endif /* UIP_RAW */
@@ -1298,13 +1303,7 @@ uip_process(uint8_t flag)
 
   /* RAW socket processing. */
 #if UIP_RAW
- raw_found:
-  uip_conn = NULL;
-  uip_flags = UIP_NEWDATA;
-  uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN];
-  uip_slen = 0;
-  UIP_RAW_APPCALL();
-
+ 
  raw_send:
   if(uip_slen == 0 ) {
       goto drop;
