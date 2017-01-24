@@ -2240,15 +2240,16 @@ uint16_t uip_icmp6chksum(void);
 /*  Support for RAW sockets here
  *  BMG
  *
- *  - all packets matching protocol go to socket/connection
- *  - packets sent and received start at the protocol header (for now)
- *  
+ *  - received packets get duplicated and sent to each matching socket
+ *  - on write: send just level 4 + header
+ *  - on read: uip will send level 3 (ip) header
+ *  - you can send but not receive UDP/TCP packets via raw socks 
  */
 
 struct uip_raw_conn {
     uip_ipaddr_t ripaddr;           /* IP address of remote peer */
     uint8_t      proto;             /* IP protocol number */
-    uint8_t      ttl;               /* defualt time-to-live */
+    uint8_t      ttl;               /* default time-to-live */
     uip_raw_appstate_t appstate;    /* application's state */
 };
 
@@ -2258,7 +2259,7 @@ extern struct uip_raw_conn uip_raw_conns[UIP_RAW_CONNS];
 struct uip_raw_conn *
 uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto);
 
-#define uip_raw_remove(conn) (conn)->proto = 0
+#define uip_raw_remove(conn) (conn)->proto = 255
 
 #define uip_raw_send(len) uip_send((char *)uip_appdata, len)
 

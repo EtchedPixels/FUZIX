@@ -385,7 +385,7 @@ uip_init(void)
 
 #if UIP_RAW
   for(c = 0; c < UIP_RAW_CONNS; ++c) {
-    uip_raw_conns[c].proto = 0;
+    uip_raw_conns[c].proto = 255;
   }
 #endif /* UIP_RAW */
 
@@ -526,7 +526,7 @@ uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto)
   /* find an unused RAW connection */
   conn = 0;
   for(c = 0; c < UIP_RAW_CONNS; ++c) {
-    if(uip_raw_conns[c].proto == 0) {
+    if(uip_raw_conns[c].proto == 255) {
       conn = &uip_raw_conns[c];
       break;
     }
@@ -871,7 +871,7 @@ uip_process(uint8_t flag)
 
 #if UIP_RAW
   if(flag == UIP_RAW_TIMER) {
-    if(uip_raw_conn->proto != 0) {
+    if(uip_raw_conn->proto != 255) {
       uip_conn = NULL;
       uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN + UIP_IPH_LEN];
       uip_len = uip_slen = 0;
@@ -1038,7 +1038,7 @@ uip_process(uint8_t flag)
   for(uip_raw_conn = &uip_raw_conns[0];
       uip_raw_conn < &uip_raw_conns[UIP_RAW_CONNS];
       ++uip_raw_conn){
-      if(uip_raw_conn->proto != 0 &&
+      if(uip_raw_conn->proto != 255 &&
 	 uip_raw_conn->proto == BUF->proto ){
 	  uip_conn = NULL;
 	  uip_flags = UIP_NEWDATA;
