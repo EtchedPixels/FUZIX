@@ -1,6 +1,8 @@
 /*
   A Cheesey ipv4 ping client
 
+  (C) 2017, Brett M. Gordon, GPL2 under Fuzix
+
   todo:
   * add timestamp to packets to measure delta-t
   * add time max/min/avg/sdev stats like real ping
@@ -118,7 +120,7 @@ my_open( int argc, char *argv[]){
     }
 
     /* fuzix raw sockets (for now) repurposes the connect() 
-       address struct to pass it's protocol number
+       address struct's port no to pass it's protocol number
      */  
     addr.sin_port = 1;  
     addr.sin_family = AF_INET;
