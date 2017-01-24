@@ -16,7 +16,7 @@ CRT0 = ../../Library/libs/crt0_6809.o
 .SUFFIXES: .c .o
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
-SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c
+SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -32,6 +32,7 @@ netd: $(OBJS)
 	$(LINKER) $(LINKER_OPT) -o echoping $(CRT0) echoping.o
 	$(LINKER) $(LINKER_OPT) -o dig $(CRT0) dig.o
 	$(LINKER) $(LINKER_OPT) -o httpd $(CRT0) httpd.o
+	$(LINKER) $(LINKER_OPT) -o ping $(CRT0) ping.o gethostbyname.o
 
 
 
