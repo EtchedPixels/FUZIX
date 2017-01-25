@@ -39,8 +39,8 @@ _bufpool:
 
 init_early:
         ; P112: stop the floppy motor in case it is running
-        ld a, #0x0c
-        out0 (0x92), a
+        ld a, #0x08
+        out0 (FDC_DOR), a
 
         ; Z80182: disable ROM, entire physical address space maps to RAM
         in0 a, (Z182_SYSCONFIG)
