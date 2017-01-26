@@ -15,16 +15,17 @@
 #include "uip.h"
 
 
-#define rxtx     *(volatile uint16_t *)0xff40 /* rxrx data */
-#define rxtx8low *(volatile uint8_t *)0xff40 /* Low byte of rxtx data */
-#define rxtx8hi  *(volatile uint8_t *)0xff41 /* high byte of rxtx data */
-#define txcmd  *(volatile uint16_t *)0xff44 /* transmit command register */
-#define txlen  *(volatile uint16_t *)0xff46 /* transmit length register */
-#define pageptr  *(volatile uint16_t *)0xff4a  /* packetpage pointer register */
-#define pagedata *(volatile uint16_t *)0xff4c /* packetpage data register */
-#define page8low *(volatile uint8_t *)0xff4c /* packetpage data register */
-#define page8hi  *(volatile uint8_t *)0xff4d /* packetpage data register */
+#define rxtx     *(volatile uint16_t *)0xff60 /* rxrx data */
+#define rxtx8low *(volatile uint8_t *)0xff60 /* Low byte of rxtx data */
+#define rxtx8hi  *(volatile uint8_t *)0xff61 /* high byte of rxtx data */
+#define txcmd  *(volatile uint16_t *)0xff64 /* transmit command register */
+#define txlen  *(volatile uint16_t *)0xff66 /* transmit length register */
+#define pageptr  *(volatile uint16_t *)0xff6a  /* packetpage pointer register */
+#define pagedata *(volatile uint16_t *)0xff6c /* packetpage data register */
+#define page8low *(volatile uint8_t *)0xff6c /* packetpage data register */
+#define page8hi  *(volatile uint8_t *)0xff6d /* packetpage data register */
 
+#define cardctl *(volatile uint8_t *)0xff80 /* cntl reg (change address) */
 
 
 /* swap bytes in word */
@@ -34,9 +35,9 @@
 /* Get 16 bit word from NIC */
 static uint16_t getpp( uint16_t addr )
 {
-    /* for 16 bit read fixed card
-	 pageptr = bswap( addr );
-	 return bswap( pagedata );
+    /*
+    pageptr = bswap( addr );
+    return bswap( pagedata );
     */
     pageptr = bswap( addr );
     return ( page8hi << 8 ) | page8low;
@@ -81,9 +82,7 @@ int device_send( char *sbuf, int len )
 	drop();
     /* send words from frame to NIC */
     while( alen-- ){
-	//rxtx = *ptr++;
-	rxtx8low = *sbuf++;
-	rxtx8hi  = *sbuf++;
+	rxtx = *ptr++;
     }
     return 0;
 }
@@ -113,9 +112,7 @@ int device_read( char *buf, int len )
     }
     /* get words from NIC into buffer */
     while( alen-- ){
-	//*ptr++ = rxtx;
-	*buf++ = rxtx8low;
-	*buf++ = rxtx8hi;
+	*ptr++ = rxtx;
     }
     return rlen;
 }
@@ -127,6 +124,13 @@ int device_read( char *buf, int len )
 */
 int device_init( void )
 {
+    /* change card's address */
+    cardctl = 0x55;
+    cardctl = 0xaa;
+    cardctl = 0x22;
+    cardctl = 0x01;
+    cardctl = 0x60;
+
     /* check for card */
     uint16_t id = getpp( 0x0000 );
     if( id != 0x630e ){
