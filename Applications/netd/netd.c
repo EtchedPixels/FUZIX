@@ -19,7 +19,8 @@ todo:
 * deamonize (detach) this proggie. (will we always have setsid() ? )
 * UDP local bind
 * TCP passive open
-
+* RAW pass protocol number via socket() not connect()
+* refactor  RAW with UDP code as they are very similar
 
 */
 
@@ -127,6 +128,24 @@ void send_udp( struct link *s )
 	if ( read( bfd, uip_appdata, len ) < 0 )
 		exit_err("cannot read from backing file\n");
 	uip_udp_send( len );
+	if ( ++s->tstart == NSOCKBUF )
+		s->tstart = 0;
+	/* Send Room event back to kernel */
+	ne.socket = s->socketn;
+	ne.data = s->tstart;
+	ksend( NE_ROOM );
+}
+
+/* send raw data FIXME: fold together with send_udp */
+void send_raw( struct link *s )
+{
+	/* Send packet to net */
+	uint32_t base = s->socketn * RINGSIZ * 2 + RINGSIZ;
+	uint16_t len = s->tsize[s->tstart];
+	lseek( bfd, base + s->tstart * TXPKTSIZ, SEEK_SET );
+	if ( read( bfd, uip_appdata, len ) < 0 )
+		exit_err("cannot read from backing file\n");
+	uip_raw_send( len );
 	if ( ++s->tstart == NSOCKBUF )
 		s->tstart = 0;
 	/* Send Room event back to kernel */
@@ -375,6 +394,68 @@ void netd_udp_appcall()
 	}
 }
 
+/* uIP callbck for UDP event */
+void netd_raw_appcall()
+{
+	/* debug
+	   printe( "appcall udp: " );
+	   if( uip_aborted() ) printe("aborted");
+	   if( uip_acked() )  printe("acked");
+	   if( uip_closed() ) printe("closed");
+	   if( uip_newdata() ) printe("new data");
+	   if( uip_poll() ) printe("polled");
+	   if( uip_rexmit() ) printe("rexmit");
+	   if( uip_timedout() ) printe("timed out");
+	   if( uip_connected() ) printe("connected" );
+	   printe("\n");
+	*/
+
+	struct link *s = & map[uip_raw_conn->appstate];
+	ne.socket = s->socketn;
+
+	if ( uip_poll() ){
+		/* send data if there's data waiting on this connection */
+		/*    doing this before testing for close ??? */
+		if ( s->tend != s->tstart ){
+			send_raw( s );
+			return; /* short circuit LINK_CLOSED until EOD. */
+		}
+		/* if flagged close from kernel, then really close, confirm w/ kernel */
+		if ( s->flags & LINK_CLOSED ){
+			/* send closed event back to kernel */
+			ne.socket = sm.s.s_num;
+			ne.data = SS_CLOSED;
+			ksend( NE_NEWSTATE );
+			/* release private link resource */
+			rel_map( uip_raw_conn->appstate );
+			uip_raw_remove( uip_raw_conn );
+			return;
+		}
+	}
+
+	if ( uip_newdata() ){
+		/* there new data in the packet buffer */
+		uint16_t len = uip_datalen();
+		char *ptr = uip_appdata;
+		uint32_t base = ne.socket * RINGSIZ * 2;
+
+		if ( (s->rend + 1)&(NSOCKBUF-1) == s->rstart )
+			return; /* full - drop it */
+		s->rsize[s->rend] = len;
+		memcpy( &ne.info, s->rsize, sizeof(uint16_t) * NSOCKBUF );
+		lseek( bfd, base + s->rend * RXPKTSIZ, SEEK_SET );
+		if ( write( bfd, ptr, len ) < 0 )
+		    exit_err("cannot write to backing file\n");
+		if ( ++s->rend == NSOCKBUF )
+			s->rend = 0;
+		/* FIXME: throttle incoming data if there's no room in ring buf */
+		/* tell kernel we have data */
+		ne.data = s->rend;
+		/* ne.info = ???; for udp only? */
+		ksend( NE_DATA );
+	}
+}
+
 
 /* unused (for now) */
 void uip_log(char *m)
@@ -449,6 +530,24 @@ int dokernel( void )
 					ksend( NE_NEWSTATE );
 					break;
 				}
+				else if ( sm.s.s_type == SOCKTYPE_RAW ){
+					struct uip_raw_conn *conptr;
+					uip_ipaddr_t addr;
+					int port = sm.s.s_addr[SADDR_DST].port;
+					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
+							 &sm.s.s_addr[SADDR_DST].addr );
+					/* need some HTONS'ing done here? */
+					conptr = uip_raw_new( &addr, port );
+					if ( !conptr ){
+						break; /* fixme: actually handler the error */
+					}
+					m->conn = ( struct uip_conn *)conptr; /* fixme: needed? */
+					conptr->appstate = sm.sd.lcn;
+					/* refactor: same as tcp action from connect event */
+					ne.data = SS_CONNECTED;
+					ksend( NE_NEWSTATE );
+					break;
+				}
 				break; /* FIXME: handle unknown/unhandled sock types here */
 			case SS_CLOSED:
 				if ( sm.s.s_type == SOCKTYPE_TCP ){
@@ -469,7 +568,8 @@ int dokernel( void )
 						m->flags += LINK_CLOSED;
 					}
 				}
-				else if ( sm.s.s_type == SOCKTYPE_UDP ){
+				else if ( sm.s.s_type == SOCKTYPE_UDP ||
+					sm.s.s_type == SOCKTYPE_RAW ){
 					m->flags += LINK_CLOSED;
 				}
 				break;
@@ -537,6 +637,13 @@ int douip( void )
 		}
 		for (i = 0; i < UIP_UDP_CONNS; i++) {
 			uip_udp_periodic(i);
+			if (uip_len > 0) {
+				uip_arp_out();
+				device_send( uip_buf, uip_len );
+			}
+		}
+		for (i = 0; i < UIP_RAW_CONNS; i++) {
+			uip_raw_periodic(i);
 			if (uip_len > 0) {
 				uip_arp_out();
 				device_send( uip_buf, uip_len );

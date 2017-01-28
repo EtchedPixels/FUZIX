@@ -1603,6 +1603,10 @@ void uip_process(uint8_t flag);
 #define UIP_UDP_TIMER     5
 #endif /* UIP_UDP */
 
+#if UIP_RAW
+#define UIP_RAW_TIMER     6
+#endif /* UIP_RAW */
+
 /* The TCP states used in the uip_conn->tcpstateflags. */
 #define UIP_CLOSED      0
 #define UIP_SYN_RCVD    1
@@ -2230,6 +2234,37 @@ uint16_t uip_udpchksum(void);
  */
 uint16_t uip_icmp6chksum(void);
 
+
+
+
+/*  Support for RAW sockets here
+ *  BMG
+ *
+ *  - received packets get duplicated and sent to each matching socket
+ *  - on write: send just level 4 + header
+ *  - on read: uip will send level 3 (ip) header
+ *  - you can send but not receive UDP/TCP packets via raw socks 
+ */
+
+struct uip_raw_conn {
+    uip_ipaddr_t ripaddr;           /* IP address of remote peer */
+    uint8_t      proto;             /* IP protocol number */
+    uint8_t      ttl;               /* default time-to-live */
+    uip_raw_appstate_t appstate;    /* application's state */
+};
+
+extern struct uip_raw_conn *uip_raw_conn;
+extern struct uip_raw_conn uip_raw_conns[UIP_RAW_CONNS];
+
+struct uip_raw_conn *
+uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto);
+
+#define uip_raw_remove(conn) (conn)->proto = 255
+
+#define uip_raw_send(len) uip_send((char *)uip_appdata, len)
+
+#define uip_raw_periodic(conn) do { uip_raw_conn = &uip_raw_conns[conn]; \
+    uip_process(UIP_RAW_TIMER); } while(0)
 
 #endif /* UIP_H_ */
 

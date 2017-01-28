@@ -155,6 +155,12 @@ struct uip_udp_conn *uip_udp_conn;
 struct uip_udp_conn uip_udp_conns[UIP_UDP_CONNS];
 #endif /* UIP_UDP */
 
+
+#if UIP_RAW
+struct uip_raw_conn *uip_raw_conn;
+struct uip_raw_conn uip_raw_conns[UIP_RAW_CONNS];
+#endif /* UIP_RAW */
+
 static uint16_t ipid;           /* Ths ipid variable is an increasing
 				number that is used for the IP ID
 				field. */
@@ -211,7 +217,6 @@ static uint16_t tmp16;
 #define FBUF ((struct uip_tcpip_hdr *)&uip_reassbuf[0])
 #define ICMPBUF ((struct uip_icmpip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UDPBUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
-
 
 #if UIP_STATISTICS == 1
 struct uip_stats uip_stat;
@@ -378,6 +383,12 @@ uip_init(void)
   }
 #endif /* UIP_UDP */
 
+#if UIP_RAW
+  for(c = 0; c < UIP_RAW_CONNS; ++c) {
+    uip_raw_conns[c].proto = 255;
+  }
+#endif /* UIP_RAW */
+
 
   /* IPv4 initialization. */
 #if UIP_FIXEDADDR == 0
@@ -502,6 +513,43 @@ uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport)
   return conn;
 }
 #endif /* UIP_UDP */
+
+
+#if UIP_RAW
+struct uip_raw_conn *
+uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto)
+{
+  register struct uip_raw_conn *conn;
+
+  /* disallow UDP,TCP ?
+
+  /* find an unused RAW connection */
+  conn = 0;
+  for(c = 0; c < UIP_RAW_CONNS; ++c) {
+    if(uip_raw_conns[c].proto == 255) {
+      conn = &uip_raw_conns[c];
+      break;
+    }
+  }
+
+  if(conn == 0) {
+    return 0;
+  }
+
+  conn->proto = proto;
+  if(ripaddr == NULL) {
+    memset(&conn->ripaddr, 0, sizeof(uip_ipaddr_t));
+  } else {
+    uip_ipaddr_copy(&conn->ripaddr, ripaddr);
+  }
+  conn->ttl = UIP_TTL;
+
+  return conn;
+}
+#endif /* UIP_RAW */
+
+
+
 /*---------------------------------------------------------------------------*/
 void
 uip_unlisten(uint16_t port)
@@ -819,7 +867,22 @@ uip_process(uint8_t flag)
       goto drop;
     }
   }
-#endif
+#endif /* UIP_UDP */
+
+#if UIP_RAW
+  if(flag == UIP_RAW_TIMER) {
+    if(uip_raw_conn->proto != 255) {
+      uip_conn = NULL;
+      uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN + UIP_IPH_LEN];
+      uip_len = uip_slen = 0;
+      uip_flags = UIP_POLL;
+      UIP_RAW_APPCALL();
+      goto raw_send;
+    } else {
+      goto drop;
+    }
+  }
+#endif /* UIP_RAW */
 
   /* This is where the input processing starts. */
   UIP_STAT(++uip_stat.ip.recv);
@@ -965,6 +1028,28 @@ uip_process(uint8_t flag)
   }
 #endif /* UIP_UDP */
 
+#if UIP_RAW
+  if (BUF->proto == UIP_PROTO_ICMP && ICMPBUF->type == ICMP_ECHO){
+      /* fix icmp handling now doesn't need to check for prot and type!!! */
+      goto icmp_input;
+  }
+  /* find any raw sockets that matches protocol and send
+   packet to each one */
+  for(uip_raw_conn = &uip_raw_conns[0];
+      uip_raw_conn < &uip_raw_conns[UIP_RAW_CONNS];
+      ++uip_raw_conn){
+      if(uip_raw_conn->proto != 255 &&
+	 uip_raw_conn->proto == BUF->proto ){
+	  uip_conn = NULL;
+	  uip_flags = UIP_NEWDATA;
+	  uip_sappdata = uip_appdata = &uip_buf[UIP_LLH_LEN];
+	  uip_slen = 0;
+	  UIP_RAW_APPCALL();
+      }
+  }
+  goto drop;
+#endif /* UIP_RAW */
+
 #if !NETSTACK_CONF_WITH_IPV6
   /* ICMPv4 processing code follows. */
   if(BUF->proto != UIP_PROTO_ICMP) { /* We only allow ICMP packets from
@@ -975,9 +1060,7 @@ uip_process(uint8_t flag)
     goto drop;
   }
 
-#if UIP_PINGADDRCONF
  icmp_input:
-#endif /* UIP_PINGADDRCONF */
   UIP_STAT(++uip_stat.icmp.recv);
 
   /* ICMP echo (i.e., ping) processing. This is simple, we only change
@@ -1216,6 +1299,26 @@ uip_process(uint8_t flag)
   UIP_STAT(++uip_stat.udp.sent);
   goto ip_send_nolen;
 #endif /* UIP_UDP */
+
+
+  /* RAW socket processing. */
+#if UIP_RAW
+ 
+ raw_send:
+  if(uip_slen == 0 ) {
+      goto drop;
+  }
+  uip_len = uip_slen + UIP_IPH_LEN;
+  BUF->len[0] = (uip_len >> 8);
+  BUF->len[1] = (uip_len & 0xff);
+  BUF->ttl = uip_raw_conn->ttl;
+  BUF->proto = uip_raw_conn->proto;
+  uip_ipaddr_copy(&BUF->srcipaddr, &uip_hostaddr);
+  uip_ipaddr_copy(&BUF->destipaddr, &uip_raw_conn->ripaddr);
+  uip_appdata = &uip_buf[UIP_LLH_LEN + UIP_IPH_LEN];
+  goto ip_send_nolen;
+#endif /* UIP_RAW */
+
 
   /* TCP input processing. */
 #if UIP_TCP
