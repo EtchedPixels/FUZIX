@@ -3,6 +3,7 @@
 ;       Copyright (C) 1998 by Harold F. Bower
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; 2015-01-17 Will Sowerbutts: Ported to sdas/Fuzix from UZI-180
+; 2017-01-21 Will Sowerbutts: Improvements for reliable operation at 6MHz
 
         .module devfd_hw
 
@@ -90,6 +91,9 @@ _devfd_init:
         LD      (motim),A       ; Mark Motors as initially OFF
         LD      (hd),A          ;  and initially Head #0
 
+        LD A, #0x20             ; increase delay time for init
+        LD (dlyCnt),A
+
         POP     HL              ; Return Addr
         POP     BC              ;  minor (in C)
         PUSH    BC              ;   Keep on Stack for Exit
@@ -124,7 +128,7 @@ NoDrv:  LD      HL,#0xFFFF      ; Set Error Status
         RET
 
 ;-------------------------------------------------------------
-; This routine Reads/Writes data from buffer trying up to 4 times
+; This routine Reads/Writes data from buffer trying up to 15 times
 ; before giving up.  If an error occurs after the next-to-last
 ; try, the heads are homed to force a re-seek.
 ;
@@ -146,14 +150,10 @@ _devfd_write:
         PUSH    HL
         LD      A,C
         LD      (drive),A       ; Save Desired Device
-;;      CP      4               ; Legal?
-;;      JR      NC,NoDrv        ; ..Exit if Error
 
         CALL    Setup           ; Set up subsystem
-;;--    LD      HL,buffer       ;  Point to the host buffer
-;;--    LD      (actDma),HL     ;   and set Memory Pointer
 
-        LD      A,#4            ; Get the maximum retry count
+        LD      A,#15           ; Get the maximum retry count
 Rwf1:   LD      (rwRtry),A
         LD      D,#0xFF         ;  (Verify needed)
         CALL    SEEK            ; Try to seek to the desired track
@@ -174,8 +174,7 @@ SWrite: OR      #0x40           ;  Set MFM Mode Bit
         LD      A,(sect)        ; Get Desired Sector #
         LD      (eot),A         ;  make last to Read only one Sector
 
-;;--    LD      HL,(actDma)     ; Get actual DMA Addr
-        ld      hl,(_devfd_buffer)      ;;--
+        ld      hl,(_devfd_buffer)
         CALL    FdCmd           ; Execute Read/Write
 
         POP     AF              ; Restore Last Sctr #
@@ -444,15 +443,27 @@ FdcDn0: CALL    WRdy1
 ; Uses  : HL.  Remaining Registers Preserved/Not Affected
 
 Motor:  PUSH    AF              ; Save Regs
-        LD      A,(motim)       ; Get remaining Seconds
-        OR      A               ; Already On?
-        LD      A,#MONTIM       ;  (get On Time)
-        LD      (motim),A       ;   always reset
-        JR      NZ,MotorX       ; ..exit if already running
         PUSH    BC
-        LD      A,(hdr)         ; Get current Drive
-        OR      #0xF4           ;   Set All Motors On and Controller Active
-        CALL    Activ8          ;     Do It!
+        LD      A,#MONTIM       ; Get motor timeout
+        LD      (motim),A       ; Reset the countdown timer
+        LD      A,(drive)       ; Get current Drive (range 0...3)
+        LD      B,#0x10         ; Bit for drive 0 motor
+        OR      A               ; Test if zero
+MtrNxt: JR      Z,MtrSet        ; Drive bit in position?
+        SLA     B               ; Shift bit
+        DEC     A               ; Count down
+        JR      MtrNxt          ; See if we're done
+MtrSet: ; now B contains the relevant motor bit we need to be set in the FDC DOR
+        LD      A,(active)      ; Load current DOR contents
+        AND     #0xFC           ; Clear bottom two bits (selected drive number)
+        LD      C,A             ; Save copy in C
+        AND     B               ; Is the relevant motor bit set?
+        JR      NZ,MotorX       ; Motor is on already, we're done here
+        LD      A,(drive)       ; Load active drive
+        OR      C               ; Mix in current DOR contents
+        OR      B               ; Set bit for additional motor to spin up
+        CALL    Activ8          ; Send to FDC DOR, update active
+        ; TODO this is a busy loop -- we should set a timer and yield
         LD      A,(drive)       ; Get Current drive
         CALL    GetPrm          ;  Pt to Param table
         LD      BC,#oSPIN
@@ -464,8 +475,8 @@ MotoLp: LD      A,(mtm)         ;  ..otherwise, loop never times out!
         OR      A               ; Up to Speed?
         JR      NZ,MotoLp       ; ..loop if Not
         DI                      ; No Ints now..
-        POP     BC
-MotorX: POP     AF              ; Restore Reg
+MotorX: POP     BC
+        POP     AF              ; Restore Reg
         RET
 
 ;-------------------------------------------------------------
@@ -551,17 +562,20 @@ FdCmd:  PUSH    HL              ; Save regs (for Exit)
         PUSH    BC
         PUSH    DE
 
-        PUSH    HL              ; save pointer for possible Transfer
-        CALL    Motor           ; Ensure motors are On
-        LD      HL,#comnd       ; Point to Command Block
-        LD      (HL),C          ;  command passed in C
-        LD      C,#FDC_DATA     ;   FDC Data Port
+        ; rewrite FdCmdXfer code so data flows in the correct direction
+        LD      A,(rdOp)
+        OR      A
+        LD      A,#0xA2         ; Load second byte of INI opcode (doesn't update flags)
+        JR      NZ,FdCiUpd      ; ... if read, skip increment
+        INC     A               ; ... if write, A=0xA3, second byte of OUTI opcode
+FdCiUpd:LD      (FdCiR1+1),A    ; update second byte of INI/OUTI instruction
+
+        ; is the buffer in user memory?
         LD      A,(_devfd_userbuf)
         LD      D,A             ; store userbuf flag in D
-OtLoop: CALL    WRdy            ; Wait for RQM (hoping DIO is Low) (No Ints)
-        OUTI                    ; Output Command bytes to FDC
-        JR      NZ,OtLoop       ; ..loop til all bytes sent
-        POP     HL              ; Restore Possible Transfer Addr
+
+        ; prepare the drive
+        CALL    Motor           ; Ensure motors are On
 
         CALL    FdCmdXfer       ; Do the data transfer (using code in _COMMONMEM)
 
@@ -589,15 +603,28 @@ FdCmdXfer:
         BIT     0,D             ; Buffer in user memory?
         CALL    NZ, map_process_always
 
-FdCi1:  CALL    WRdy
-        BIT     5,A             ; In Execution Phase?
-        JR      Z,FdCmdXferDone ; ... tidy up and return if not
-        BIT     6,A             ; Write?
-        JR      NZ,FdCi2        ; ... jump if Not to Read
-        OUTI                    ; Write a Byte from (HL) to (C)
-        JR      FdCi1           ; check for next byte
-FdCi2:  INI                     ; Read a byte from (C) to (HL)
-        JR      FdCi1           ; check for next byte
+        ; send the command (length is in B, command is in C)
+        PUSH    HL              ; save pointer for possible Transfer
+        LD      HL,#comnd       ; Point to Command Block
+        LD      (HL),C          ;  command passed in C
+        LD      C,#FDC_DATA     ;   FDC Data Port
+OtLoop: CALL    WRdy            ; Wait for RQM (hoping DIO is Low) (No Ints)
+        OUTI                    ; Output Command bytes to FDC
+        JR      NZ,OtLoop       ; ..loop til all bytes sent
+        POP     HL              ; Restore Possible Transfer Addr
+        JR      FdCiR2          ; start sampling MSR
+
+; transfer loop
+FdCiR1: INI                     ; *** THIS INSTRUCTION IS MODIFIED IN PLACE to INI/OUTI
+        ; INI  = ED A2
+        ; OUTI = ED A3
+FdCiR2: IN      A,(FDC_MSR)     ; Read Main Status Register
+        BIT     7,A
+        JR      Z, FdCiR2       ; loop until interrupt requested
+FdCiR3: AND     #0x20           ; are we still in the Execution Phase? (1 cycle faster than BIT 5,A but destroys A)
+        JR      NZ, FdCiR1      ; if so, next byte!
+
+; tidy up and return
 FdCmdXferDone:
         BIT     0,D             ; Buffer in user memory?
         RET     Z               ; done if not
@@ -620,6 +647,17 @@ WRdyL:  IN      A,(FDC_MSR)     ; Read Main Status Register
 
 dlyCnt: .db     (CPU_CLOCK_KHZ/1000)    ; Delay to avoid over-sampling status register
 
+; FDC command staging area
+comnd:  .ds     1               ; Storage for Command in execution
+hdr:    .ds     1               ; Head (B2), Drive (B0,1)
+trk:    .ds     1               ; Track (t)
+hd:     .ds     1               ; Head # (h)
+sect:   .ds     1               ; Physical Sector Number
+rsz:    .ds     1               ; Bytes/Sector (n)
+eot:    .ds     1               ; End-of-Track Sect #
+gpl:    .ds     1               ; Gap Length
+dtl:    .ds     1               ; Data Length
+
 ;------------------------------------------------------------
 ; DATA MEMORY
 ;------------------------------------------------------------
@@ -635,16 +673,6 @@ _devfd_buffer:  .ds     2
 _devfd_userbuf: .ds     1
 
 ; DISK Subsystem Variable Storage
-comnd:  .ds     1               ; Storage for Command in execution
-hdr:    .ds     1               ; Head (B2), Drive (B0,1)
-trk:    .ds     1               ; Track (t)
-hd:     .ds     1               ; Head # (h)
-sect:   .ds     1               ; Physical Sector Number
-rsz:    .ds     1               ; Bytes/Sector (n)
-eot:    .ds     1               ; End-of-Track Sect #
-gpl:    .ds     1               ; Gap Length
-dtl:    .ds     1               ; Data Length
-
 ; FDC Operation Result Storage Area
 st0:    .ds     1               ; Status Byte 0
 st1:    .ds     1               ; Status Byte 1 (can also be PCN)
@@ -655,8 +683,8 @@ st1:    .ds     1               ; Status Byte 1 (can also be PCN)
         .ds     1               ; RN - Sector Size
 
 ; -->>> NOTE: Do NOT move these next two variables out of sequence !!! <<<--
-motim:  .ds     1               ; Motor On Time Counter
-mtm:    .ds     1               ; Floppy Spinup Time down-counter
+motim:  .ds     1               ; Motor On Time Counter                <<<--
+mtm:    .ds     1               ; Floppy Spinup Time down-counter      <<<--
 
 rdOp:   .ds     1               ; Read/write flag
 retrys: .ds     1               ; Number of times to try Opns

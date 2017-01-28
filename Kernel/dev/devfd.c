@@ -125,7 +125,7 @@ static int fd_transfer(bool rwflag, uint8_t minor, uint8_t rawflag)
 	if (devfd_error) {
 		kprintf("fd_%s: error %d track %d sector %d\n",
 				rwflag ? "read" : "write", devfd_error, devfd_track, devfd_sector);
-		panic("fd_transfer");
+		goto failout;
 	}
 
 	if (retc) 
