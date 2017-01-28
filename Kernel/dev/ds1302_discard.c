@@ -3,6 +3,8 @@
 /* 2014-12-30 Will Sowerbutts                                            */
 /*-----------------------------------------------------------------------*/
 
+#define _DS1302_PRIVATE
+
 #include <kernel.h>
 #include <kdata.h>
 #include <stdbool.h>
@@ -65,6 +67,24 @@ muldone:
 
 static const uint16_t mktime_moffset[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
+void ds1302_write_register(uint8_t reg, uint8_t val)
+{
+    ds1302_set_pin_ce(true);
+    ds1302_send_byte(reg);
+    ds1302_send_byte(val);
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+}
+
+void ds1302_write_seconds(uint8_t seconds)
+{
+    irqflags_t irq = di();
+    ds1302_write_register(0x8E, 0x00);    /* write to control register: disable write-protect */
+    ds1302_write_register(0x80, seconds); /* write to seconds register (bit 7 set: halts clock) */
+    ds1302_write_register(0x8E, 0x80);    /* write to control register: enable write-protect */
+    irqrestore(irq);
+}
+
 uint32_t ds1302_read_rtc(void)
 {
     uint32_t ret;
@@ -82,6 +102,11 @@ uint32_t ds1302_read_rtc(void)
         hour   = uint8_from_bcd(buffer[2] & 0x3F);
     minute = uint8_from_bcd(buffer[1]);
     second = uint8_from_bcd(buffer[0] & 0x7F);
+
+    if(buffer[0] & 0x80){ /* is the clock halted? */
+        kputs("ds1302: start clock\n");
+        ds1302_write_seconds(second); /* start it */
+    }
 
     if(year < 70)
         year += 100;
