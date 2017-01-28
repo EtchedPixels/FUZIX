@@ -32,3 +32,9 @@ void map_init(void)
     copy_and_map_process(&init_process->p_page);
     /* kernel bank udata (0x300 bytes) is never used again -- could be reused? */
 }
+
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}

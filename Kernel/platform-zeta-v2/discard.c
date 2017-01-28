@@ -51,3 +51,9 @@ void device_init(void)
 	devide_init();
 #endif
 }
+
+uint8_t platform_param(unsigned char *p)
+{
+    used(p);
+    return 0;
+}
