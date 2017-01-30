@@ -59,6 +59,7 @@ struct timer periodic_timer, arp_timer;
 struct link map[NSOCKET];
 int freelist[NSOCKET];
 int freeptr = 0;
+int looplen = 0;
 
 
 /* print an error message */
@@ -603,12 +604,51 @@ int dokernel( void )
 	return 0;
 }
 
+/* 
+   The next two functions wrap low-level device sending and receiving.
+   This allows uip to connect to itself by short-circuiting frames
+   we send that are destined for us.
+*/
+void send_or_loop( void )
+{
+	/* 
+	   This filters on layer 2 destination address. (mac address)
+	   for devices (like SLIP) that interface on layer 3 (ip),
+	   we'll have to filter for IP address, rather 
+	*/
+	static char broad[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	/* on broadcast send to self and peers */
+	if (!memcmp(uip_buf, &broad[0], 6 )){
+		looplen = uip_len;
+		device_send(uip_buf, uip_len);
+		return;
+	}
+	/* if dest is our mac then just send to self, no peers */
+	if (!memcmp(uip_buf, &uip_lladdr.addr[0], 6)){
+		looplen = uip_len;
+		return;
+	}
+	/* if else then just send to peers */
+	device_send(uip_buf, uip_len);
+}
+
+int loop_or_read( void )
+{
+	int l = looplen;
+	if (looplen){
+		looplen = 0;
+		return l;
+	}
+	return device_read( uip_buf, UIP_BUFSIZE );
+}
+
+
 /* handle events from uIP */
 /* returns 0 if nothing going on */
 int douip( void )
 {
 	int ret = 0;
-	int i = device_read( uip_buf, UIP_BUFSIZE );
+	int i = loop_or_read();
 	if (i > 0){
 		ret = 1;
 		uip_len = i;
@@ -618,12 +658,12 @@ int douip( void )
 				uip_input();
 				if (uip_len > 0) {
 					uip_arp_out();
-					device_send( uip_buf, uip_len);
+					send_or_loop();
 				}
 			}else if ( BUF->type == UIP_HTONS(UIP_ETHTYPE_ARP)){
 				uip_arp_arpin();
 				if (uip_len > 0 )
-					device_send( uip_buf, uip_len);
+					send_or_loop();
 			}
 		}
 	} else if (timer_expired(&periodic_timer)) {
@@ -632,21 +672,21 @@ int douip( void )
 			uip_periodic(i);
 			if (uip_len > 0) {
 				uip_arp_out();
-				device_send( uip_buf, uip_len );
+				send_or_loop();
 			}
 		}
 		for (i = 0; i < UIP_UDP_CONNS; i++) {
 			uip_udp_periodic(i);
 			if (uip_len > 0) {
 				uip_arp_out();
-				device_send( uip_buf, uip_len );
+				send_or_loop();
 			}
 		}
 		for (i = 0; i < UIP_RAW_CONNS; i++) {
 			uip_raw_periodic(i);
 			if (uip_len > 0) {
 				uip_arp_out();
-				device_send( uip_buf, uip_len );
+				send_or_loop();
 			}
 		}
 		if ( timer_expired(&arp_timer)){
