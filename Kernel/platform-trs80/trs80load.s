@@ -2,10 +2,11 @@
 ;
 ;	TRS80 bootblock (256 bytes)
 ;
-;	    .org #0x0
+.area	    BOOT	(ABS)
+.org	    0x000
 start:
-	    ld a, #0x06			; kernel map, 80 column, no remap
-	    out (0x84), a
+	    ld a, #0x86			; kernel map, 80 column, no remap
+	    out (0x84), a		; video page 1
 	    ld a, #0x50			; 80 column, sound, altchars off,
 					; ext I/O on , 4MHz
 	    out (0xEC), a
@@ -49,27 +50,26 @@ flopstat:
 fail:	    jr fail
 ;
 go:   
-	    ld sp, #floppy_read
+	    ld sp, #0xEE00		; temp stackpointer
 
             ; load the 6845 parameters
-	    ld hl, #_ctc6845
-	    ld bc, #1588
-ctcloop:    out (c), b			; register
+	    ld hl, #_ctc6845		; reverse order
+	    ld bc, #0x0F88
+ctcloop:    out (c), b			; select register
 	    ld a, (hl)
-	    out (0x89), a		; data
-	    inc hl
+	    out (0x89), a		; output data
+	    dec hl
 	    djnz ctcloop
 
    	    ; clear screen
 	    ld hl, #0xF800
-	    inc hl
 	    ld de, #0xF801
-	    ld bc, #1999
+	    ld bc, #0x07FF
 	    ld (hl), #' '
 	    ldir
 	    ld de, #0xF800
 	    call prints
-	    .ascii 'TRS80Load 0.1\0'
+	    .ascii 'TRS80Load 0.2\0'
 
 	    ld hl, #0x0100
 ;
@@ -102,12 +102,13 @@ seekstat:
 	    .ascii 'seek\0'
 bad:	    jr bad
 secmove:    xor a
+	    dec a	
 	    ld (secnum), a
 nextsec:
 	    ld a, (secnum)
 	    inc a
 	    ld (secnum), a
-	    cp #19
+	    cp #18
 	    jr z, lastsec
 	    push hl
 	    call floppy_read
@@ -117,7 +118,7 @@ nextsec:
 
 tracknum:   .db 28			; tracks 29-39 (50688 bytes)
 
-_ctc6845:				; registers in reverse order
+				; ctc6845 registers in reverse order
 	    .db 99
 	    .db 80
 	    .db 85
@@ -132,9 +133,8 @@ _ctc6845:				; registers in reverse order
 	    .db 9
 	    .db 0
 	    .db 0
-	    .db 0
-; recycle last crc value as secnum so we fit 256 bytes
-secnum:	    .db 0
+secnum:	    .db 0		; recycle last crc value as secnum so we fit 256 bytes
+_ctc6845:   .db 0
 
 
 prints:
