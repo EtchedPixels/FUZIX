@@ -1,7 +1,7 @@
 Big TODO Items Before 0.1 Release
 ---------------------------------
 
-- [x] BSD groups can be done but do we care ? (yes but Level 2 only)
+- [x]   BSD groups can be done but do we care ? (yes but Level 2 only)
 
 - [x]	Termios and speed hooks to tty drivers
 
@@ -13,7 +13,7 @@ Big TODO Items Before 0.1 Release
 
 - [x]	SYS5 signal holding
 
-- [x]	ptrace
+- [ ]	ptrace
 
 - [IP]	Core dumps
 
@@ -39,9 +39,9 @@ Big TODO Items Before 0.1 Release
 	objects and less memory usage. Might be nicer alternative to the BSD
 	inode shrinking hack (although that would fix the time_t question!)
 
-- [ ]	Finish the cpm emulator port
+- [x]	Finish the cpm emulator port
 
-- IP	Make object alignments 16bit friendly
+- [x]	Make object alignments 16bit friendly
 
 - [x]	Add fields to binaries giving load page (so can load Z80 0x8000
 	binaries safely etc)
@@ -84,7 +84,7 @@ Maybe
 
 Other
 -----
-- [ ]	Check safety of changes to allow interrupts during swapper
+- [IP]	Check safety of changes to allow interrupts during swapper
 
 - [ ]	Check we don't have any races of the form
 	kill()
