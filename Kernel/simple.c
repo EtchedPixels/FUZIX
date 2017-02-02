@@ -12,6 +12,13 @@
  *	CONFIG_SWAP_ONLY
  *
  *	Zero is used as swapped, 1 is used as in memory.
+ *
+ *	TODO:
+ *	Write a simple-big module for systems like 68000 where it may be worth
+ *	writing out only the used areas of memory and fast zeroing the rest
+ *	on switches. It makes no sense to support it here because to do that
+ *	well we want to support a simple first fit allocator for swap ranges
+ *	so our swap isn't huge and empty.
  */
 
 #include <kernel.h>
