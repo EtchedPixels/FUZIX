@@ -41,7 +41,7 @@ void map_init(void)
     udata.u_page2 = 0x0202;
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t platform_param(char *p)
 {
     return 0;
 }

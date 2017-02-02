@@ -38,7 +38,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t platform_param(char *p)
 {
  used(p);
  return 0;
