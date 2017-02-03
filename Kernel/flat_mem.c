@@ -27,26 +27,31 @@
  */
 
 #include "kernel.h"
+#include "kdata.h"
+#include "printf.h"
 #include "flat_mem.h"
+
+#ifdef CONFIG_VMMU
 
 /* These are essentially inline functions and should help speed things
    up a bit */
 
-#define wholeblks(a)	(((a) + BLKSIZE - 1) / BLKSIZE)
+#define wholeblks(a)	(((a) + MMU_BLKSIZE - 1) / MMU_BLKSIZE)
 #define mapped(a)	((a)->vaddr == blktoadd(a))
 #define partof(l,b)	((b)->home == l)
 
 static struct memblk *memmap;
+static struct memblk freelist;
 static unsigned long freemem;
 
 static uint8_t *blktoadd(struct memblk *m)
 {
-	return membase + (m - memmap) * BLKSIZE;
+	return membase + (m - memmap) * MMU_BLKSIZE;
 }
 
-static struct memblk *addtoblk(uint 8_t *p)
+static struct memblk *addtoblk(uint8_t *p)
 {
-	return memmap + (p - membase) / BLKSIZE;
+	return memmap + (p - membase) / MMU_BLKSIZE;
 }
 
 /*
@@ -59,17 +64,17 @@ void vmmu_init(void)
 	struct memblk *blk, *last;
 	uint8_t	*addr;
 	/* How many blocks + headers fit into the space ? */
-	ssize_t mapsize = (memtop - membase) / (BLKSIZE + sizeof(struct memblk));
+	ssize_t mapsize = (memtop - membase) / (MMU_BLKSIZE + sizeof(struct memblk));
 
 	/* The map array */
-	memmap = membase;
+	memmap = (struct memblk *)membase;
 	/* The memory blocks themselves */
 	membase += mapsize * sizeof(struct memblk);
 
 	/* Consume the bottom of memory creating a block map */
 	last = &freelist;
 	last->prev = NULL;
-	for(addr = membase; addr < memtop; addr += BLKSIZE) {
+	for(addr = membase; addr < memtop; addr += MMU_BLKSIZE) {
 		blk = last->next = addtoblk(addr);
 		blk->vaddr = addr;
 		blk->prev = last;
@@ -77,7 +82,7 @@ void vmmu_init(void)
 		last = blk;
 	}
 	last->next = NULL;
-	freemem = mapsize * BLKSIZE;
+	freemem = mapsize * MMU_BLKSIZE;
 	/* Trim off any partial block at the top */
 	memtop = membase + freemem;
 }
@@ -130,9 +135,9 @@ static void moveblks(struct memblk *slist, struct memblk *dlist,
 		after->gap = 0;
 		after = after->next;
 		if (dlist == &freelist)
-			freemem += BLKSIZE;
+			freemem += MMU_BLKSIZE;
 		if (slist == &freelist)
-			freemem -= BLKSIZE;
+			freemem -= MMU_BLKSIZE;
 	}
 
 	/* This will be overwritten unless the operation is a simple join */
@@ -192,7 +197,7 @@ static void moveblks(struct memblk *slist, struct memblk *dlist,
 void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int safe)
 {
 	unsigned int nblks = wholeblks(size);
-	struct memblk *this, *freeb, *start, *bstart;
+	struct memblk *this, *start, *bstart;
 	int	num, tot, bestlen, back, i;
 	uint8_t	*base, *proposed, *proposed_end;
 	int	lastmove;
@@ -276,7 +281,7 @@ void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int 
 	 * some simple sort ordering of the list by vaddr. FIXME.
 	 */
 
-	proposed_end = proposed + BLKSIZE * nblks;
+	proposed_end = proposed + MMU_BLKSIZE * nblks;
 
 	/* This stops infinite up/down/up/down loops */
 	lastmove = 0;	
@@ -299,7 +304,7 @@ void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int 
 			}
 			/* Also check a possible reserved area attached */
 			if (this->gap) {
-				gapend = this->vaddr + (this->gap * BLKSIZE);
+				gapend = this->vaddr + (this->gap * MMU_BLKSIZE);
 				if (gapend > proposed &&
 					gapend < proposed_end) {
 					hit = 1;
@@ -317,17 +322,17 @@ void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int 
 			break;
 		/* There is a clash, so try to fix it by moving the new one
 		   down */
-		if ((ssize_t)lowhit - nblks * BLKSIZE >= membase
+		if ((ssize_t)lowhit - nblks * MMU_BLKSIZE >= (ssize_t)membase
 						&& lastmove != 1) {
 			lastmove = -1;
-			proposed = lowhit - nblks * BLKSIZE;
+			proposed = lowhit - nblks * MMU_BLKSIZE;
 			continue;
 		}
 		/* Alternatively move the new virtual address up */
-		if ((ssize_t)tophit + nblks * BLKSIZE < memtop
+		if ((ssize_t)tophit + nblks * MMU_BLKSIZE < (ssize_t)memtop
 							&& lastmove != -1) {
 			lastmove = 1;
-			proposed = tophit + nblks * BLKSIZE;
+			proposed = tophit + nblks * MMU_BLKSIZE;
 			continue;
 		}
 		/* If we get here then we couldn't resolve the conflict */
@@ -343,7 +348,7 @@ void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int 
 mapper:
 	moveblks(&freelist, list, bstart, nblks);
 	base = addr ? addr : proposed;
-	for (this = bstart, i = 0; i < nblks; i++, base += BLKSIZE) {
+	for (this = bstart, i = 0; i < nblks; i++, base += MMU_BLKSIZE) {
 		fast_zero_block(blktoadd(this));
 		this->vaddr = base;
 		this = this->next;
@@ -400,7 +405,7 @@ void vmmu_free(struct memblk *list)
 int vmmu_dup(struct memblk *list, struct memblk *dest)
 {
 	dest->next = 0;
-	if (vmmu_alloc(dest, listlen(list) * BLKSIZE, list->vaddr)) {
+	if (vmmu_alloc(dest, listlen(list) * MMU_BLKSIZE, list->vaddr, 0, 1)) {
 		struct memblk *new  = dest->next, *here = list;
 		while(here) {
 			new->vaddr = here->vaddr;
@@ -415,70 +420,36 @@ int vmmu_dup(struct memblk *list, struct memblk *dest)
 }
 
 
-struct mmu_context {
-	struct memblk mmu;
-	uint8_t *base;
-};
-
 static uint16_t last_context;
 static struct mmu_context *last_mmu;
-static struct mmu_context mmu_context[PTABSIZE]
+static struct mmu_context mmu_context[PTABSIZE];
 
 /* For the moment. If we add separate va info then we can use that if not
    we use the map table */
-usize_t valaddr(const char *pp, usize_t l)
+usize_t valaddr(const char *ppv, usize_t l)
 {
+	uint8_t *pp = (uint8_t *)ppv;
 	struct memblk *m = addtoblk(pp);
 	usize_t n = 0;
 	/* Number of bytes we have in the first page */
-	usize_t slack = BLKSIZE - ((usize_t)pp & (BLKSIZE - 1));
+	usize_t slack = MMU_BLKSIZE - ((usize_t)pp & (MMU_BLKSIZE - 1));
+
+	/* FIXME: we need to handle the initial init map somehow */
 
 	if (pp < membase || pp + l >= memtop || pp + l < pp)
 		return 0;
+
+	l = (l + MMU_BLKSIZE - 1) / MMU_BLKSIZE;
+
 	/* Note the usual path through here avoids the computation and
 	   most calls do the loop only once */
 	while(n < l) {
-		if (m->home != &last_mmu.mmu)
-			return (n - 1) * BLKSIZE + slack;
+		if (m->home != &last_mmu->mmu)
+			return (n - 1) * MMU_BLKSIZE + slack;
 		n++;
 		m++;
 	}
 	return l;
-}
-
-/* Uget/Uput 32bit */
-
-uint32_t ugetl(void *uaddr, int *err)
-{
-	if (!valaddr(uaddr, 4)) {
-		if (err)
-			*err = -1;
-		return -1;
-	}
-	if (err)
-		*err = 0;
-#ifdef MISALIGNED
-	if (MISALIGNED(uaddr, 4)) {
-		*err = -1;
-		ssig(udata.u_proc, SIGBUS);
-		return -1;
-	}
-#endif
-	return *(uint32_t *)uaddr;
-
-}
-
-int uputl(uint32_t val, void *uaddr)
-{
-	if (!valaddr(uaddr, 4))
-		return -1;
-#ifdef MISALIGNED
-	if (MISALIGNED(uaddr, 4)) {
-		ssig(udata.u_proc, SIGBUS);
-		return -1;
-	}
-#endif
-	return *(uint32_t *)uaddr;
 }
 
 /* Fork and similar */
@@ -493,7 +464,7 @@ int pagemap_alloc(ptptr p)
 		platform_mmu_setup(m);
 		return 0;
 	}
-	if (vmm_dup(&mmu_context[udata.p_page].mmu->head, &m.mmu))
+	if (vmmu_dup(mmu_context[udata.u_page].mmu.next, &m->mmu))
 		return ENOMEM;
 	return 0;
 }
@@ -505,7 +476,7 @@ void pagemap_switch(ptptr p)
 		return;
 	last_context = udata.u_page;
 	last_mmu = &mmu_context[udata.u_page];
-	vmmu_setcontext(&last_context->mmu);
+	vmmu_setcontext(&last_mmu->mmu);
 }
 
 void pagemap_free(ptptr p)
@@ -518,7 +489,7 @@ int pagemap_realloc(usize_t size)
 {
 	struct mmu_context *mmu = mmu_context + udata.u_page;
 	pagemap_free(udata.u_ptab);
-	mmu->base = mmu_alloc(&mmu->mmu, size, NULL, 0, 1);
+	mmu->base = vmmu_alloc(&mmu->mmu, size, NULL, 0, 1);
 	if (mmu->base == NULL)
 		return ENOMEM;
 	return 0;
@@ -526,7 +497,7 @@ int pagemap_realloc(usize_t size)
 
 uaddr_t pagemap_base(void)
 {
-	return mmu_context[udata.u_page].base;
+	return (uaddr_t)mmu_context[udata.u_page].base;
 }
 
 usize_t pagemap_mem_used(void)
@@ -536,22 +507,22 @@ usize_t pagemap_mem_used(void)
 
 int pagemap_fork(ptptr p)
 {
-	struct mmu_context *parent = mmu_context + p->page;
+	struct mmu_context *parent = mmu_context + p->p_page;
 	struct mmu_context *child = mmu_context + udata.u_page;
-	return vmmu_dup(parent->mmu.next, &child.mmu);
+	return vmmu_dup(parent->mmu.next, &child->mmu);
 }
 
 #define size (uint32_t)udata.u_argn
 #define flags (uint32_t)udata.u_argn1
 
-static arg_t memalloc(void)
+arg_t _memalloc(void)
 {
 	void *addr;
 	if (flags) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
-	addr = mmu_alloc(&mmu->mmu, size, NULL, 0, 0);
+	addr = vmmu_alloc(&last_mmu->mmu, size, NULL, 0, 0);
 	if (addr == NULL) {
 		udata.u_error = ENOMEM;
 		return -1;
@@ -564,7 +535,7 @@ static arg_t memalloc(void)
 
 #define base (void *)udata.u_argn
 
-static arg_t memfree(void)
+arg_t _memfree(void)
 {
 	/* Not yet supported - needs reworking of vmmu_free to support
 	   freeing page ranges nicely */
@@ -572,3 +543,4 @@ static arg_t memfree(void)
 	return -1;
 }
 
+#endif

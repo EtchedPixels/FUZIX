@@ -8,8 +8,8 @@
 #include <kdata.h>
 #include <printf.h>
 
-/* Flat mode has to use its own valaddr */
-#ifndef CONFIG_FLAT
+/* Flat mode has to use its own valaddr: tidy this */
+#if !defined(CONFIG_FLAT) && !defined(CONFIG_VMMU)
 
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const char *base, usize_t size)

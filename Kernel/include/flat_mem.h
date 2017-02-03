@@ -11,8 +11,8 @@
 /* Choose BLKSIZE so that the full memory range fits into an unsigned int.
    The bigger the block size the less overhead and the more wastage. If your
    CPU lacks a fast multiply stick to powers of two */
-#ifndef BLKSIZE
-#define BLKSIZE		8192
+#ifndef MMU_BLKSIZE
+#define MMU_BLKSIZE		8192
 #endif
 
 struct memblk
@@ -25,8 +25,13 @@ struct memblk
 					   to reserve beyond this block */
 };
 
+struct mmu_context {
+	struct memblk mmu;
+	uint8_t *base;
+};
+
 extern void vmmu_init(void);
-extern void *vmmu_alloc(struct memblk *list, ssize_t size, void *addr, int resv);
+extern void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int safe);
 extern void vmmu_setcontext(struct memblk *list);
 extern void vmmu_free(struct memblk *list);
 extern int vmmu_dup(struct memblk *list, struct memblk *dest);
@@ -43,5 +48,8 @@ extern void fast_copy_block(void *s, void *d);
 /* Hook to allow the batching of operations on machines with handy things
    like a blitter that copies faster than the CPU */
 extern void fast_op_complete(void);
+
+extern void platform_mmu_setup(struct mmu_context *m);
+
 #endif
 
