@@ -97,7 +97,7 @@ sub build_pkg_list {
             elsif (exists($cmd{$bits[0]}) and $in_pkg) {
                 # command: prepend line number (for error reporting) then file it away for later
                 unshift @bits, ($.);
-                push $pkg[$current]->[2], \@bits;
+                push @{$pkg[$current]->[2]}, \@bits;
             }
             else {
                 $error = $error + 1;
