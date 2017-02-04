@@ -15,6 +15,9 @@
 #define MMU_BLKSIZE		8192
 #endif
 
+/* These are much too big. We need to split virtual and physical management
+   and pull some other tricks to get the size down. At the moment with 8K
+   pages it costs us 2.5K / MB of RAM */
 struct memblk
 {
 	struct memblk	*next;		/* Next allocation block */
