@@ -12,10 +12,10 @@ TODO:
   may be worth running the slightly bigger 'Heritage' /bin/sh with SYS5 type
   features instead
 - date gives bogus results, probably some sizing issues
-- signal handling needs further testing
+- signal handling needs further testing (disabled on IRQ path currently)
 - copy exception/trap frames onto user stack along with trap identifiers
   so we can support stuff like CP/M68K emulators.
-- pre-emption needs more testing
+- pre-emption needs more testing (also disabled on IRQ path currently)
 - support multiple IRQ sources and IRQ priority nesting when appropriate
 - enable IRQ during swap on context switch
 - optimize swap out/in. With bigger amounts of RAM we want to be smarter
