@@ -24,6 +24,23 @@
  *		Pinning. This is actually quite hairy because we need to know
  *		that the address we are pinning has *no* users in any list.
  *		That will require better data structures for va management.
+ *
+ *	SWAPPING:
+ *		Two options
+ *		- we swap out processes (remembering the outgoing process
+ *		might not be identity mapped) but we then need to implement
+ *		a hole list for swap, and coalescing and the like
+ *		- we have a memblk entry for each page of RAM or swap and
+ *		we keep track of whether the 'page' is in RAM or swap. That
+ *		lets us do partial swap outs, swap out non identity mapped
+ *		pages first and try other things of that kind. At the
+ *		moment any memblk has a pa and va and we fast_swap_block
+ *		when we need too. Disk swapping would push them out to
+ *		the end part of the array that didn't exist in RAM but isn't
+ *		quite the same as 'exchange' isn't a disk function. Swap in
+ *		would magically happen as part of vmmu_setcontext, the
+ *		array offset tells us where in swap and we don't have to
+ *		coalesce.
  */
 
 #include "kernel.h"
