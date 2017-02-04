@@ -58,6 +58,8 @@ static struct memblk *addtoblk(uint8_t *p)
  *  This needs to be called before any allocations occur
  *  FIXME: put the map at the *top* of space and we can then align the
  *  data blocks if the platform needs big alignments.
+ *  FIXME: some platforms need table and user RAM split (eg the mini68K can
+ *  put the tables below 64K in protected space but not user pages)
  */
 void vmmu_init(void)
 {
@@ -130,6 +132,8 @@ static void moveblks(struct memblk *slist, struct memblk *dlist,
 	   reserved gaps */
 	i = num;
 	after = first;
+
+	/* Assign the blocks correctly */
 	while (after && i--) {
 		after->home = dlist;
 		after->gap = 0;
@@ -157,9 +161,9 @@ static void moveblks(struct memblk *slist, struct memblk *dlist,
 			first->prev = dlist;
 			break;
 		}
-		if (dlist->next < first)
+		if (dlist->next < first) {
 			dlist = dlist->next;
-		else if (dlist->next > first) {
+		} else if (dlist->next > first) {
 			nlink = dlist->next;
 			dlist->next = first;
 			first->prev = dlist;
@@ -336,7 +340,6 @@ void *vmmu_alloc(struct memblk *list, size_t size, void *addr, size_t resv, int 
 			continue;
 		}
 		/* If we get here then we couldn't resolve the conflict */
-		kputs("alloc: vaddr conflict");
 		return NULL;	/* Whole call fails */
 	}
 #else
@@ -424,8 +427,12 @@ static uint16_t last_context;
 static struct mmu_context *last_mmu;
 static struct mmu_context mmu_context[PTABSIZE];
 
-/* For the moment. If we add separate va info then we can use that if not
-   we use the map table */
+/*
+ *	Our process can have multiple memory segments via memalloc/free so
+ *	we have to actually use the mapping table to work out what we are
+ *	using. Fortunately most of our queries will be within the page
+ *	so the usual path is a single lookup with no overlap.
+ */
 usize_t valaddr(const char *ppv, usize_t l)
 {
 	uint8_t *pp = (uint8_t *)ppv;
@@ -436,8 +443,11 @@ usize_t valaddr(const char *ppv, usize_t l)
 
 	/* FIXME: we need to handle the initial init map somehow */
 
-	if (pp < membase || pp + l >= memtop || pp + l < pp)
+	if (pp < membase || pp + l >= memtop || pp + l < pp) {
+		kprintf("BAD ADDR %p\n", pp);
 		return 0;
+	}
+#ifdef FIXME
 
 	l = (l + MMU_BLKSIZE - 1) / MMU_BLKSIZE;
 
@@ -449,6 +459,7 @@ usize_t valaddr(const char *ppv, usize_t l)
 		n++;
 		m++;
 	}
+#endif	
 	return l;
 }
 
@@ -464,7 +475,7 @@ int pagemap_alloc(ptptr p)
 		platform_mmu_setup(m);
 		return 0;
 	}
-	if (vmmu_dup(mmu_context[udata.u_page].mmu.next, &m->mmu))
+	if (vmmu_dup(&mmu_context[udata.u_page].mmu, &m->mmu))
 		return ENOMEM;
 	return 0;
 }
@@ -488,10 +499,13 @@ void pagemap_free(ptptr p)
 int pagemap_realloc(usize_t size)
 {
 	struct mmu_context *mmu = mmu_context + udata.u_page;
+	kprintf("Reallocating mmu %d to %d\n", udata.u_page, size);
 	pagemap_free(udata.u_ptab);
 	mmu->base = vmmu_alloc(&mmu->mmu, size, NULL, 0, 1);
 	if (mmu->base == NULL)
 		return ENOMEM;
+	kprintf("Allocated at %p\n", mmu->base);
+	vmmu_setcontext(&mmu->mmu);
 	return 0;
 }
 
