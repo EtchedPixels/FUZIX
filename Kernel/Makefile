@@ -28,6 +28,7 @@ export TARGET = coco2cart
 #export TARGET = v65
 #export TARGET = v68
 #export TARGET = v68-banked
+#export TARGET = v68-softmmu
 #export TARGET = z80pack
 #export TARGET = z80pack-lite
 #export TARGET = zeta-v2
@@ -77,7 +78,7 @@ C1SRCS =  version.c filesys.c devio.c kdata.c
 C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank8k.c bank16k.c bank16k_low.c bank32k.c
-C2SRCS += bankfixed.c flat.c buddy.c
+C2SRCS += bankfixed.c flat.c flat_mem.c buddy.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
 #	Assume we'll never be doing overlays with level2 or networking
