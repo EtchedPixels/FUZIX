@@ -485,12 +485,12 @@ trap15:		move.w #SIGTRAP,trap_id			; by convention
 ;		fork is special see the fork code.
 ;
 trap14:		move.l a5,-(sp)		; must be first to match fork
-		move.l usp,a5
-		move.l a5,U_DATA__U_SYSCALL_SP(a5)
 		move.l udata_shadow,a5
 		move.b d0,U_DATA__U_CALLNO(a5)
 		move.b #1,U_DATA__U_INSYS(a5)
 		movem.l d1/a0-a2,U_DATA__U_ARGN(a5)
+		move.l usp,a0
+		move.l a0,U_DATA__U_SYSCALL_SP(a5)
 		move.b #1,d0
 		move.b d0,kernel_flag
 		; FIXME: EI per platform really
