@@ -97,43 +97,87 @@ switchinfail:
 	; 4(sp) = child process table entry
 	;
 	; Exit:
-	; We are running as the child, A5 = u_data pointer of child, on
-	; child stack and leap directly back to user mode
+	; We are running as the parent, A5 = u_data pointer of parent.
 	;
 dofork:
-	moveq #-1,d0
-	rts
 	;
-	; We need the child to return off its own stack so this is very
-	; different to other platforms.
+	; On a flat_mem system the software MMU already cloned the memory
+	; map except that the child is not currently identity mapped. The
+	; parent will return via its copy of the udata, but the child udata
+	; is not mapped at the same address so we must build the child a
+	; fake task switch frame that returns to user space.
 	;
 	move.l 4(sp),a0			;	child p_tab
-	;
-	; in the simple case we only have one udata. In the complex cases
-	; we would have to compute the new one and load it into a5 and
-	; offset
+
+	move.l P_TAB__P_UDATA(a0),a1	;	child udata
 
 	;
-	; Set up a switchin frame for the parent process
+	; Copy the parent udata into the child. Only copy the struct data.
+	; Probably not worth saving registers and using movem to speed up.
 	;
-	move.w P_TAB__P_PID_OFFSET(a0),-(sp)	;	child pid (parent return)
-	move.l usp,a0
-	movem.l a0/a2-a4/a6/d2-d7,-(sp)	;	save state
-	move.l sp,U_DATA__U_SP(a5)	;	save pointer
 
-	move.l a0,-(sp)			;	argument to newproc
-	move.w P_TAB__P_PAGE_OFFSET(a0),d0	; page
+	movem.l a1/a5,-(sp)
+	moveq #U_DATA_COPYSIZE-1,d0
+cplp:
+	move.l (a5)+,(a1)+
+	dbra d0,cplp
 
-;	jsr bankfork			;	copy the memory
+	movem.l (sp)+,a1/a5
 
-	move.l (sp),a0
+
+	lea.l a0,512(a1)		;	top of child kernel stack
+
+	;
+	; Stack a task switch frame into a1
+	;
+
+	move.l 508(a5),-(a0)		;	trap frame
+	move.l 504(a5),-(a0)		;	 ""    ""
+	move.l 500(a5),-(a0)		;	A5
+	move.l #child_rte,-(a0)		;	under the 3 copied words
+	movem.l a0/a2-a4/a6/d2-d7,-(a0)	;	the faked switchin frame
+	move.l a0,U_DATA__U_SP(a1)	;	set child frame pointer
+
+	;
+	; Now finish up the process creation
+	;
+	move.l	a5,-(sp)		;	save true udata
+	move.l P_TAB_P__UDATA(a1),a5	;	child
+	move.l a5,udata_shadow		; 	paranoia
 	
 	jsr newproc			;	Called with the child udata
-	add.w #54,sp			;	toss the stack frames
 
-	clr.w runticks
-	moveq #0,d0			;	child
-	rts
+	move.l U_DATA__U_PTAB(a5),a1	;	reload child pptr
+	move.w P_TAB__P_PID(a1),d0	;	pid of child
+	ext.l d0
+	move.l (sp)+, a5		;	recover parent udata
+	move.l a5,udata_shadow		; 	paranoia
+	rts				; 	return as parent
+
+;
+;	This is called with the faked stack frame from dofork. All we have
+;	on the stack is the A5 to restore and the fake stack frame. All the
+;	other register restores will be done via the fork() syscall code in
+;	userspace. The child returns this way not via syscall paths.
+;
+child_rte:
+	move.l (sp)+,a5
+	moveq #0,d0
+	move.l d0,d1
+	move.l d1,d2
+	move.l d2,d3
+	move.l d3,d4
+	move.l d4,d5
+	move.l d5,d6
+	move.l d6,d7
+	move.l d7,a0
+	move.l a0,a1
+	move.l a1,a2
+	move.l a2,a3
+	move.l a3,a4
+	move.l a4,a6
+	rte
+
 
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
