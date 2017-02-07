@@ -29,10 +29,10 @@ static void write_call(int n)
 	/* then put return address back */
 	fprintf(fp, "\tpuls d,x\n"
 		    "\tpshs d\n"
-		    "\tldd #%d\n"
+		    "\tldb #%d\n"
 		    "\tjmp __syscall_mangled\n", n);
   } else {
-	fprintf(fp, "\tldd #%d\n"
+	fprintf(fp, "\tldb #%d\n"
 		    "\tjmp __syscall\n", n);
   }
   fclose(fp);
