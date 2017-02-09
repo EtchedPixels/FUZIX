@@ -3,8 +3,6 @@
 
   (C) 2017, Brett M. Gordon, GPL2 under Fuzix
 
-  todo:
-    * add port no argument
 */
 
 #include <stdio.h>
@@ -16,6 +14,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <time.h>
+#include <getopt.h>
 #include "netdb.h"
 
 #define AF_INET     1
@@ -45,13 +44,18 @@ struct ntp_t {
 int fd;
 char buf[MAXBUF];
 struct sockaddr_in addr;
-
+int setflg = 0;
+int disflg = 0;
+int port = 123;  /* default port no */
 
 void alarm_handler( int signum ){
     return;
 }
 
-
+void pusage( void ){
+    fprintf(stderr, "ntpdate -sd [-o tz] server\n");
+    exit(1);
+}
 
 /* sends query to remote */
 void send( void ){
@@ -64,8 +68,8 @@ void send( void ){
 my_open( int argc, char *argv[]){
     struct hostent *h;
 
-    h=gethostbyname( argv[1] );
-    if( ! h ){
+    h=gethostbyname( argv[optind] );
+    if (!h){
 	fprintf( stderr, "cannot resolve hostname\n" );
 	exit(1);
     }
@@ -73,14 +77,11 @@ my_open( int argc, char *argv[]){
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
-	perror("af_inet sock_stream 0");
+	perror("af_inet sock_dgram 0");
 	exit(1);
     }
 
-    /* fuzix raw sockets (for now) repurposes the connect() 
-       address struct's port no to pass it's protocol number
-     */  
-    addr.sin_port = 123;  
+    addr.sin_port = port;
     addr.sin_family = AF_INET;
     if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 	perror("connect");
@@ -92,34 +93,68 @@ my_open( int argc, char *argv[]){
 int main( int argc, char *argv[] ){
     int retries;
     int rv;
-    
-    if( argc < 2 ){
-	fprintf( stderr,"usage: ntpdate hostname\n");
-	exit(1);
+    uint32_t uv = 0;
+    int tz = 0;
+    struct ntp_t *ptr = (struct ntp_t *)buf;
+    char *p;
+
+    while ((rv = getopt( argc, argv, "p:o:ds" )) > 0 ){
+	switch (rv){
+	case 'p':
+	    port = atoi( optarg );
+	    break;
+	case 'o':
+	    tz = atoi( optarg );
+	    if (tz < -12 || tz > 12){
+		fprintf(stderr, "bad timezone\n");
+		exit(1);
+	    }
+	    break;
+	case 's':
+	    setflg = 1;
+	    break;
+	case 'd':
+	    disflg = 1;
+	    break;
+	case '?':
+	    pusage();
+	}
     }
+    if( ! argv[optind] )
+	pusage();
 
     my_open( argc, argv );
-    
-    retries = 5;
-    while( retries--){
+
+    retries = 3;
+    while (retries--){
 	send();
 	signal( SIGALRM, alarm_handler );
 	alarm(2);
-	rv=read( fd, buf, MAXBUF);
+	rv = read( fd, buf, MAXBUF);
+	if (rv < 0 )
+	    continue;
 	if (rv >= sizeof( struct ntp_t ))
 	    goto process;
+
     }
-    fprintf(stderr, "timeout");
+    fprintf(stderr, "timeout\n");
     exit(1);
 
  process:
-    {
-	int i = 48;
-	while( i-- ){
-	    printf("%02x ", buf[i] );
+
+    uv = ptr->xmit.sec;
+    uv -= 2208988800L;
+    uv += tz * 60 * 60;
+
+    if (disflg || !setflg)
+	printf(ctime((time_t *)&uv));
+
+    if (setflg){
+	rv = stime((time_t *)&uv);
+	if (rv){
+	    perror( "stime" );
+	    exit(1);
 	}
-	printf("\n");
     }
     exit(0);
-
 }
