@@ -78,32 +78,35 @@ BCKSTAT   equ   $FF41
 BCKPORT   equ   $FF42
           ENDC
 * NOTE: There is no timeout currently on here...
-DWRead    clra                          ; clear Carry (no framing error)
-          deca                          ; clear Z flag, A = timeout msb ($ff)
-          tfr       cc,b
-          pshs      u,x,dp,b,a          ; preserve registers, push timeout msb
-          leau   ,x
-          ldx    #$0000
+DWRead    pshs   dp,x,u                 ; preserve registers, push timeout msb
+          ldd    #(60*256)+$ff          ; A = timeout of 1+ sec, B = new DP
+          tfr    b,dp                   ; set DP
+          tfr    x,u                    ; U = data pointer
+          ldx    #$0000                 ; X = chksum
           IFEQ   NOINTMASK
           orcc   #IntMasks
           ENDC
-loop@     ldb    BCKSTAT
+loop@	  tst    <$ff03                 ; test for vsync
+	  bpl    a@                     ; no vsync continue
+	  tst    <$ff02                 ; clear vsync flag
+	  deca                          ; dec timeout
+	  bne    a@                     ; not timeout continue
+	  ;; return w/ timeout!
+	  inca                          ; A was zero so inc to clear Z (timeout)
+	  puls   dp,x,u,pc              ; restore return
+	  ;; no timeout continue checking for data  
+a@	  ldb    <BCKSTAT
           bitb   #$02
           beq    loop@
-          ldb    BCKPORT
+          ldb    <BCKPORT
           stb    ,u+
           abx
           leay   ,-y
           bne    loop@
-          tfr    x,y
-          ldb    #0
-          lda    #3
-timeout   leas      1,s                 ; remove timeout msb from stack
-          inca                          ; A = status to be returned in C and Z
-          ora       ,s                  ; place status information into the..
-          sta       ,s                  ; ..C and Z bits of the preserved CC
-          leay      ,x                  ; return checksum in Y
-          puls      cc,dp,x,u,pc        ; restore registers and return
+	  ;; return w/ ok! 
+          tfr    x,y                   ; make y = cksum
+          clra                         ; set Z (no timeout), clear carry (no framing errors possible)
+          puls   dp,x,u,pc             ; restore registers and return
           ENDC
           ENDC
           ENDC
