@@ -61,8 +61,7 @@ image:
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o \
-	../level2.o ../syscall_level2.o ../select.o ../syscall_net.o \
-	net_native.o
+	../syscall_net.o net_native.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s
