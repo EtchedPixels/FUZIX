@@ -93,7 +93,7 @@ extern unsigned char vt_map( unsigned char c );
 #define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */
 
 /* Level 2 groups, coredumps, network */
-#define CONFIG_LEVEL_2
+#undef CONFIG_LEVEL_2
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
 

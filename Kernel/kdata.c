@@ -102,14 +102,15 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_acct,			/* FUZIX system call 63 */
 	_memalloc,		/* FUZIX system call 64 */
 	_memfree,		/* FUZIX system call 65 */
-	/* Level 2 calls */
-#if defined(CONFIG_LEVEL_2)
+	/* Level 2 calls and Networking calls */
+#if defined(CONFIG_LEVEL_2) || defined(CONFIG_NET)
 	_nosys,			/* 66-71 reserved */
 	_nosys,
 	_nosys,
 	_nosys,
 	_nosys,
 	_nosys,
+#ifdef CONFIG_LEVEL_2
 	_select,		/* FUZIX system call 72 */
 	_setgroups,		/* FUZIX system call 73 */
 	_getgroups,		/* FUZIX system call 74 */
@@ -118,6 +119,16 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_setpgid,		/* FUZIX system call 77 */
 	_setsid,		/* FUZIX system call 78 */
 	_getsid,		/* FUZIX system call 79 */
+#else
+	_nosys, 	        /* FUZIX system call 72 */
+	_nosys, 	        /* FUZIX system call 73 */
+	_nosys, 	        /* FUZIX system call 74 */
+	_nosys, 	        /* FUZIX system call 75 */
+	_nosys, 	        /* FUZIX system call 76 */
+	_nosys, 	        /* FUZIX system call 77 */
+	_nosys, 	        /* FUZIX system call 78 */
+	_nosys, 	        /* FUZIX system call 79 */
+#endif
 	_nosys,			/* 80-89 reserved */
 	_nosys,
 	_nosys,
@@ -128,7 +139,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_nosys,
 	_nosys,
 	_nosys,
-#if defined(CONFIG_NET)		/* For now require L2 */
+#ifdef CONFIG_NET		/* For now require L2 */
 	_socket,		/* FUZIX system call 90 */
 	_listen,		/* FUZIX system call 91 */
 	_bind,			/* FUZIX system call 92 */

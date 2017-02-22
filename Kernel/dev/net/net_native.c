@@ -163,6 +163,7 @@ int netdev_ioctl(uarg_t request, char *data)
 				return -1;
 			i_ref(net_ino);
 			return 0;
+#ifdef CONFIG_LEVEL_2
 		case SELECT_BEGIN:
 		case SELECT_TEST:
 			/* We are always writable, but may not alway be readable */
@@ -171,6 +172,7 @@ int netdev_ioctl(uarg_t request, char *data)
 					*data &= ~SELECT_IN;
 			}
 			*data &= SELECT_IN|SELECT_OUT;
+#endif
 	}
 	udata.u_error = ENOTTY;
 	return -1;
