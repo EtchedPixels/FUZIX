@@ -133,16 +133,8 @@ ptptr swapneeded(ptptr p, int notself)
 	return n;
 }
 
-/*
- *	Called from switchin when we discover that we want to run
- *	a swapped process. We let pagemap_alloc cause any needed swap
- *	out of idle processes.
- */
-void swapper(ptptr p)
+void swapper2(ptptr p, uint16_t map)
 {
-        uint16_t map = p->p_page2;
-	pagemap_alloc(p);	/* May cause a swapout. May also destroy
-                                   the old value of p->page2 */
 #ifdef DEBUG
 	kprintf("Swapping in %p (page %d), utab.ptab %p\n", p, p->p_page,
 		udata.u_ptab);
@@ -154,4 +146,18 @@ void swapper(ptptr p)
 		p, p->p_page, udata.u_ptab);
 #endif
 }
+
+/*
+ *	Called from switchin when we discover that we want to run
+ *	a swapped process. We let pagemap_alloc cause any needed swap
+ *	out of idle processes.
+ */
+void swapper(ptptr p)
+{
+        uint16_t map = p->p_page2;
+	pagemap_alloc(p);	/* May cause a swapout. May also destroy
+                                   the old value of p->page2 */
+	return swapper2(p, map);
+}
+
 #endif

@@ -79,12 +79,14 @@ static int maps_needed(uint16_t top)
  *
  *	Use p-> not udata. The udata is not yet swapped in!
  */
-int pagemap_alloc(ptptr p)
+static int pagemap_alloc2(ptptr p, uint8_t c)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
 	int needed = maps_needed(p->p_top);
 	int i;
 
+	if (c)
+		needed--;
 #ifdef SWAPDEV
 	/* Throw our toys out of our pram until we have enough room */
 	while (needed > pfptr)
@@ -99,11 +101,17 @@ int pagemap_alloc(ptptr p)
 	for (i = 0; i < needed; i++)
 		ptr[i] = pfree[--pfptr];
 
+	if (!c)
+		c = ptr[i - 1];
 	while (i < 4) {
-		ptr[i] = ptr[i - 1];
+		ptr[i] = c;
 		i++;
 	}
 	return 0;
+}
+
+int pagemap_alloc( ptptr p ){
+	return pagemap_alloc2(p, 0);
 }
 
 /*
@@ -167,6 +175,45 @@ usize_t pagemap_mem_used(void)
 }
 
 #ifdef SWAPDEV
+
+/* Returns a page with common copied to it
+   used by swapping 16k platforms to procure a common page.
+   platforms will have to provide a void copy_common(uint8_t page)
+   that copies the current common page to the specified page.
+*/
+
+uint8_t get_common()
+{
+	ptptr p = NULL;
+	/* if current context is dead, then reuse it's common */
+	if (udata.u_ptab->p_status == P_ZOMBIE ||
+	    udata.u_ptab->p_status == P_EMPTY){
+		return pfree[--pfptr];
+	}
+	/* otherwise get alloc a page and copy common to it */
+	if (pfptr){
+		int ret = pfree[--pfptr];
+		copy_common(ret);
+		return ret;
+	}
+	/* No free pages so swap something out */
+	/* and return it's common */
+	swapneeded(p, 0);
+	return pfree[--pfptr];
+}
+
+/* Finish swapping in rest of task p, using page as it's common
+   - called from swapping 16k platforms to finish the swapping
+   processes, after starting it with get_common()
+
+*/
+void swap_finish(uint8_t page, ptptr p)
+{
+	uint16_t map = p->p_page2;
+	pagemap_alloc2(p, page);
+	swapper2(p, map);
+}
+
 
 /*
  *	Swap out the memory of a process to make room

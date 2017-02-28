@@ -873,6 +873,9 @@ extern void swapmap_add(uint8_t swap);
 extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
+extern void swapper2(ptptr p, uint16_t map);
+extern uint8_t get_common();
+extern void swap_finish(uint8_t page, ptptr p);
 /* These two are provided by the bank code selected for the port */
 extern int swapout(ptptr p);
 extern void swapin(ptptr p, uint16_t map);
@@ -894,6 +897,7 @@ extern void inittod(void);
 /* provided by architecture or helpers */
 extern void device_init(void);	/* provided by platform */
 extern void pagemap_init(void);
+extern void copy_common(uint8_t page);
 extern void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
