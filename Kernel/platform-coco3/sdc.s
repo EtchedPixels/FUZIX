@@ -37,9 +37,7 @@ _devsdc_write
 	pshs	y,u
 	ldy	#PREG2		; set Y to point at data reg a
 	ldd 	#64*256+4      	; A = chunk count (64), B = bytes per chunk (4)
-	tst	_blk_op+2	; test user/kernel xfer
-	beq	wrChnk		; if zero then stay in kernel space
-	jsr	map_process_always ; else flip in user space
+	jsr	blkdev_rawflg	; map memory based on blkopt flag
 wrChnk  ldu    	,x             	; get 2 data bytes from source
 	stu    	,y             	; send data to controller
 	ldu    	2,x            	; two more bytes..
@@ -47,7 +45,7 @@ wrChnk  ldu    	,x             	; get 2 data bytes from source
 	abx                   	; increment X by chunk size (4)
 	deca                  	; decrement loop counter
 	bne    	wrChnk         	; loop until all chunks written
-	jsr	map_kernel	; reset to kernel space
+	jsr	blkdev_unrawflg	; reset memory
 	puls	y,u,pc		; return
 
 ;;; Reads 256 bytes from SDC
@@ -55,9 +53,7 @@ _devsdc_read
 	pshs	y,u
 	ldy	#PREG2	        ; set Y to point to data reg a
 	ldd    	#32*256+8       ; A = chunk count (32), B = bytes per chunk (8)
-	tst	_blk_op+2	; test usr/kernel xfer
-	beq	rdChnk		; if zero then stay in kernel space
-	jsr	map_process_always ; else flip to user space
+	jsr	blkdev_rawflg	; map memory based on blkopt flag
 rdChnk 	ldu    	,y              ; read 1st pair of bytes for the chunk
 	stu    	,x              ; store to buffer
 	ldu    	,y              ; bytes 3 and 4 of..
@@ -69,5 +65,5 @@ rdChnk 	ldu    	,y              ; read 1st pair of bytes for the chunk
 	abx                     ; increment X by chunk size (8)
 	deca                    ; decrement loop counter
 	bne    	rdChnk          ; loop if more chunks to read
-	jsr	map_kernel	; reset to kernel space
+	jsr	blkdev_unrawflg	; reset memory
 	puls	y,u,pc		; return

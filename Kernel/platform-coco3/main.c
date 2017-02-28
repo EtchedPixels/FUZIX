@@ -7,7 +7,7 @@
 
 #define DISC __attribute__((section(".discard")))
 
-
+unsigned int swapdev = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 
@@ -77,6 +77,9 @@ void pagemap_init(void)
         pagemap_add(i);
     /* add common page last so init gets it */
     pagemap_add(6);
+    /* initialize swap pages */
+    for (i = 0; i<MAX_SWAPS; i++)
+	swapmap_add(i);
 }
 
 DISC
@@ -87,8 +90,13 @@ void map_init(void)
 DISC
 uint8_t platform_param(char *p)
 {
-	if( !strcmp(p,"NODW") ){
+	if (!strcmp(p,"NODW") ){
 	    dwtype = DWTYPE_NOTFOUND;
+	    return -1;
+	}
+	if (!strncmp(p,"SWAP=",5)){
+	    swapdev = bootdevice(p+5);
+	    kprintf("swap: %d\n",swapdev);
 	    return -1;
 	}
 	return 0;

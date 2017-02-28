@@ -8,6 +8,8 @@
         .globl _chksigs
         .globl _getproc
         .globl _trap_monitor
+	.globl _get_common
+	.globl _swap_finish
 
 	;; exported
         .globl _switchout
@@ -25,9 +27,9 @@
 _ramtop:
 	.dw 0
 
-_swapstack
-	.dw 	0
-	.dw 	0
+swapstack
+	zmb	256
+swapstacktop
 
 fork_proc_ptr:
 	.dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
@@ -72,9 +74,46 @@ badswitchmsg:
 _switchin:
         orcc 	#0x10		; irq off
 
-	stx 	_swapstack	; save passed page table *
+	stx 	swapstack	; save passed page table *
+
+	lda	P_TAB__P_PAGE_OFFSET+1,x ; LSB of 16 page
+	bne	notswapped		 ; clear
+	;; Our choosen process is swapped out
+	jsr	_get_common 	; realloc dead's common page
+	;; B is now our hand-picked common page
+
+        ; save the above as we are going to switch bank so they will
+        ; cease to be accessible if in common (we could put then in
+        ; kernel space and probably should)
+        lds 	#swapstacktop           ; switch to swap stack
+	tfr	b,a
+	inca
+        sta	0xffa7                  ; transfer to new common
+        sta 	0xffaf			; *poof* we now run from new common
+	;; save our stashed page no, as pagemap will detroy it
+	ldx	swapstack
+        jsr 	_swap_finish            ; need to call swapper with
+        ;; fix up udata's copy of the page tables
+        ;; and fix up the mmu's also
+	ldx	swapstack
+	ldd     P_TAB__P_PAGE_OFFSET+0,x
+	std     U_DATA__U_PAGE
+	sta     0xffa0
+	inca    
+	sta     0xffa1
+	stb     0xffa2
+	incb
+	stb     0xffa3
+	ldd     P_TAB__P_PAGE_OFFSET+2,x
+	std     U_DATA__U_PAGE2 
+	sta     0xffa4
+	inca
+	sta     0xffa5
+	stb     0xffa6
+	stx 	swapstack	; save passed page table *
 
 	;; flip in the newly choosen task's common page
+notswapped
 	lda	P_TAB__P_PAGE_OFFSET+3,x
 	inca
 	sta	0xffa7
@@ -83,7 +122,7 @@ _switchin:
 	;; --------- No Stack ! --------------
 
         ; check u_data->u_ptab matches what we wanted
-	ldx 	_swapstack
+	ldx 	swapstack
 	cmpx 	U_DATA__U_PTAB
         bne 	switchinfail
 

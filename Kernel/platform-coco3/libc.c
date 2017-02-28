@@ -1,13 +1,18 @@
 #include "cpu.h"
 
 int strcmp( char *a, char *b ){
+    return strncmp(a, b, strlen(a));
+}
+
+int strncmp( char *a, char *b, int n){
     int ret;
-    while (1){
+    while (n--){
 	ret = *a - *b++;
 	if( ! *a || ret )
 	    return ret;
 	a++;
     }
+    return 0;
 }
 
 size_t strlen(const char *p)

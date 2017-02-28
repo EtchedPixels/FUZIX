@@ -20,11 +20,12 @@
 #define MAX_MAPS 128-3
 #define MAPBASE 0x0000
 /* And swapping */
-/* #define SWAPDEV  2051	 */
-#define SWAP_SIZE   0x62
+extern unsigned int swapdev;
+#define SWAPDEV  swapdev
+#define SWAP_SIZE   0x71
 /* FIXME */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xC300	/* uarea so its a round number of sectors */
+#define SWAPTOP	    0xe200	/* uarea so its a round number of sectors */
 #define UDATA_BLOCKS	0	/* We swap the uarea in the data */
 #define UDATA_SWAPSIZE	0
 #define MAX_SWAPS	32
