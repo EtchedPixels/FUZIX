@@ -96,7 +96,6 @@ uint8_t platform_param(char *p)
 	}
 	if (!strncmp(p,"SWAP=",5)){
 	    swapdev = bootdevice(p+5);
-	    kprintf("swap: %d\n",swapdev);
 	    return -1;
 	}
 	return 0;
