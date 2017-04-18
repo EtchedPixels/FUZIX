@@ -7,7 +7,7 @@ CDSRCS = ../dev/devide_discard.c
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
 NSRCS = ../dev/net/net_native.c
 
-ASRCS = coco3.s crt0.s ../platform-dragon-nx32/ide.s
+ASRCS = coco3.s crt0.s ide.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -54,15 +54,14 @@ image:
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devide.o devide_discard.o \
-	../platform-dragon-nx32/ide.o devsdc.o sdc.o \
+	ide.o devsdc.o sdc.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o \
-	../level2.o ../syscall_level2.o ../select.o ../syscall_net.o \
-	net_native.o
+	../syscall_net.o net_native.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s

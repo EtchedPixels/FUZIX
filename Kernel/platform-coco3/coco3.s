@@ -21,6 +21,9 @@
 	    .globl _hz
 	    .globl _bufpool
 	    .globl _discard_size
+            .globl _copy_common
+	    .globl blkdev_rawflg
+	    .globl blkdev_unrawflg
 
             ; exported debugging tools
             .globl _trap_monitor
@@ -373,3 +376,46 @@ map_for_swap
 	sta	0xffa9
 	rts
 
+;;; Copy existing common area to page
+;;;   takes: B = destination page
+;;;   returns: nothing
+_copy_common
+	pshs	u
+	incb
+	stb	0xffa8
+	ldx	#0xe200
+	ldu	#0xe200&0x1fff
+a@	ldd	,x++
+	std	,u++
+	cmpx	#0xff00
+	bne	a@
+	clr	0xffa8
+	puls	u,pc
+
+;;; Helper for blkdev drivers to setup memory based on rawflag
+blkdev_rawflg
+	ldx #_blk_op ; X = blkdev operations
+        ldb 0xffa8   ; get mmu setting
+        stb ret+1    ; save in stash
+        ldb 2,x      ; get raw mode
+        decb         ; compare to 1
+        bmi out@     ; less than or equal: 0, or 1 don't do map
+	beq proc@    ; is direct to process
+        ;; is swap so map page into kernel memory at 0x0000
+        ldb 3,x      ; get page no
+        stb 0xffa8   ; task 1, kernel task regs.
+        incb         ; inc page no... next block no.
+        stb 0xffa9   ; store it in mmu
+	rts
+proc@	jsr map_process_always
+ 	; get parameters from C, X points to cmd packet
+out@	rts
+
+;;; Helper for blkdev drivers to clean up memory after blkdev_rawflg
+blkdev_unrawflg
+ret     ldb #0
+        stb 0xffa8
+        incb
+        stb 0xffa9
+        jsr map_kernel
+	rts
