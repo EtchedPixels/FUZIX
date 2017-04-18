@@ -109,7 +109,7 @@ dofork:
 	;
 	move.l 4(sp),a0			;	child p_tab
 
-	move.l P_TAB__P_UDATA(a0),a1	;	child udata
+	move.l P_TAB__P_UDATA_OFFSET(a0),a1	;	child udata
 
 	;
 	; Copy the parent udata into the child. Only copy the struct data.
@@ -125,7 +125,7 @@ cplp:
 	movem.l (sp)+,a1/a5
 
 
-	lea.l a0,512(a1)		;	top of child kernel stack
+	lea.l 512(a1),a0		;	top of child kernel stack
 
 	;
 	; Stack a task switch frame into a1
@@ -142,15 +142,15 @@ cplp:
 	; Now finish up the process creation
 	;
 	move.l	a5,-(sp)		;	save true udata
-	move.l P_TAB_P__UDATA(a1),a5	;	child
+	move.l P_TAB__P_UDATA_OFFSET(a1),a5	;	child
 	move.l a5,udata_shadow		; 	paranoia
 	
 	jsr newproc			;	Called with the child udata
 
 	move.l U_DATA__U_PTAB(a5),a1	;	reload child pptr
-	move.w P_TAB__P_PID(a1),d0	;	pid of child
+	move.w P_TAB__P_PID_OFFSET(a1),d0	;	pid of child
 	ext.l d0
-	move.l (sp)+, a5		;	recover parent udata
+	move.l (sp)+,a5			;	recover parent udata
 	move.l a5,udata_shadow		; 	paranoia
 	rts				; 	return as parent
 
