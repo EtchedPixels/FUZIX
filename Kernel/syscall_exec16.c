@@ -210,7 +210,11 @@ arg_t _execve(void)
 
 	if (bin_size > 512) {
 		bin_size -= 512;
-		bload(ino, 1, progptr, bin_size);
+		if (bload(ino, 1, progptr, bin_size) < 0) {
+			/* Must not run userspace */
+			ssig(udata.u_ptab, SIGKILL);
+			goto nogood3;
+		}
 		progptr += bin_size;
 	}
 
