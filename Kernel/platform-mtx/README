@@ -56,7 +56,7 @@ the image.
 To build an 80 track image once everthing else is built go into
 Standalone/filesystem-src and do
 
-./build-filesystem /tmp/root.fs 128 2560
+./build-mini-filesystem /tmp/root.fs 128 2560
 
 
 A 40 track image will need to be hand built with a few of the less useful
