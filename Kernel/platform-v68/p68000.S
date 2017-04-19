@@ -81,9 +81,6 @@ timer_irq:
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
 
-	    ; DEBUG FIXME
-	    bra no_signal
-
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
 	    tst.b need_resched
