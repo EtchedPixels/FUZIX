@@ -11,6 +11,11 @@ extended from V7 to somewhere in the SYS3 to SYS5.x world with bits of POSIX
 thrown in for good measure. Various learnings and tricks from ELKS and from
 OMU also got blended in
 
+# Pre-built images
+
+Some pre-built filesystems are now available on www.fuzix.org, and other
+images should follow in time.
+
 ## What does FUZIX have over UZI
 
 
