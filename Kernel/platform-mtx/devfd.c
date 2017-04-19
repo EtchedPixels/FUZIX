@@ -34,19 +34,20 @@ void fd_motor_timer(void)
 }
 
 /*
- *	We only support normal block I/O
+ *	We only support normal block I/O not swap.
  */
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    uint16_t nb = udata.u_nblock;
+    uint16_t nb = 0;
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = &fd_tab[minor & 1];
     irqflags_t irq;
 
-    if(rawflag == 1 && d_blkoff(9))
+    if(rawflag == 1 && d_blkoff(BLKSHIFT))
         return -1;
+
     udata.u_nblock *= 2;
 
     if (rawflag == 2)
@@ -62,18 +63,26 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     irqrestore(irq);
 
 
-//    kprintf("Issue command: drive %d block %d\n", minor, block);
+//    kprintf("Issue command: %c drive %d block %d for %d\n", "wr"[is_read], minor, udata.u_block, udata.u_nblock);
     fd_cmd[0] = rawflag;
     fd_cmd[1] = is_read ? FD_READ : FD_WRITE;
-    fd_cmd[2] = udata.u_block / 16;		/* 2 sectors per block */
-    fd_cmd[3] = ((udata.u_block & 15) << 1); /* 0 - 1 base is corrected in asm */
+
+    /* There are 16 256 byte sectors for DSDD. These are organised so that we
+       switch head then step.
+
+       Sectors 0-15 (our block 0-7)	Track 0, side 0
+       Sectors 16-31 (our block 8-15)	Track 0, side 1
+
+       etc */
+    fd_cmd[2] = udata.u_block / 16;		/* Get the track we need */
+    fd_cmd[3] = ((udata.u_block & 15) << 1);    /* 0 - 1 base is corrected in asm */
     fd_cmd[4] = is_read ? OPDIR_READ: OPDIR_WRITE;
 
     fd_data = (uint16_t)udata.u_dptr;
 
     while (udata.u_nblock--) {
         for (tries = 0; tries < 4 ; tries++) {
-//            kprintf("Sector: %d Track %d\n", cmd[2]+1, cmd[1]);
+//            kprintf("Sector: %d Head: %d Track %d\n", (fd_cmd[3]&15)+1, fd_cmd[3]>>4, fd_cmd[2]);
             err = fd_operation(driveptr);
             if (err == 0)
                 break;
@@ -85,12 +94,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             goto bad;
         fd_data += 256;
         fd_cmd[3]++;	/* Next sector for next block */
-        if (fd_cmd[3] == 16) {	/* Next track */
+        if (fd_cmd[3] == 32) {	/* Next track */
             fd_cmd[3] = 0;
             fd_cmd[2]++;
         }
+        nb++;
     }
-    return nb << BLKSHIFT;
+    return nb << (BLKSHIFT - 1);
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:
