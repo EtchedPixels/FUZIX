@@ -189,7 +189,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint16_t shiftmask[8] = {
-	0, 0, 1, 0, 1, 0, 63, 0
+	0, 0, 1, 0, 1, 0, 65 , 0
 };
 __sfr __at 0x05 keyport;
 __sfr __at 0x06 keyporth;
