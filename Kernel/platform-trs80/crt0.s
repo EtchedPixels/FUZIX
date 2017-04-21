@@ -55,9 +55,9 @@ start:
 		ldir
 		; then the discard
 ; Discard can just be linked in but is next to the buffers
-;		ld de, #s__DISCARD
-;		ld bc, #l__DISCARD
-;		ldir
+		ld de, #s__DISCARD
+		ld bc, #l__DISCARD
+		ldir
 		; then zero the data area
 		ld hl, #s__DATA
 		ld de, #s__DATA + 1
