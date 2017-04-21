@@ -36,7 +36,7 @@ static void jvc_writeheaders(int dd, int ntrack, int nside, int nsec, uint8_t *p
      offset */
   for (i = 0; i < ntrack; i++) {
     for (j = 0; j < nside ; j ++) {
-      for (k = 1; k <= nsec ; k++) {
+      for (k = 0; k < nsec ; k++) {
         *ptr++=i;
         *ptr++=k; /*skew[dd][k] + 1;*/
         *ptr++= (0x80 * dd) | (0x10 * j);
