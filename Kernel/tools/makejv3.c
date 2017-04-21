@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 
 
 /* JV3 consists of a bunch of byte packed misaligned fields in an array,
