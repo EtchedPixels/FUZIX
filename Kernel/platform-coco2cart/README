@@ -57,8 +57,6 @@ Needs the IDE patches
 TODO
 ====
 
-Fix use of CONFIG_LEGACY_EXEC in the devsdc driver
-
 Make the boot loader robust (timeout handling)
 Add hash of code not just simple magic - so we know bits match
 Merge coco and IDE boot code so it works out which is present

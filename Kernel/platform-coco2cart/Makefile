@@ -11,7 +11,7 @@ CDSRCS = discard.c mini_ide_discard.c
 DSRCS = ../dev/devdw.c
 
 ASRCS = crt0.s coco2.s ide.s usermem.s sdc.s
-ASRCS += bootstrap.s bootstrap_sdc.s bootstrap_dw.s
+ASRCS += bootstrap.s bootstrap_sdc.s #bootstrap_dw.s
 ASRCS += tricks.s commonmem.s drivewire.s video.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))

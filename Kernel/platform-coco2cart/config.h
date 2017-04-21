@@ -15,7 +15,8 @@
 
 #define CONFIG_BANKS	1
 /* And swapping */
-#define SWAPDEV     0x900      	/* Uses part of IDE slice 0 */
+#define SWAPDEV     0x000      	/* Uses part of IDE slice 0 */
+//#define SWAPDEV     0x900      	/* Uses part of SD slice 0 */
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot */
 #define SWAPTOP     0xFE00	/* so it's a round number of 512 byte sectors */
@@ -24,7 +25,6 @@
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
-#define CONFIG_LEGACY_EXEC
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
