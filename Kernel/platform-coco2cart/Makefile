@@ -55,7 +55,7 @@ clean:
 image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link \
 	--oformat=decb \
-	crt0.o bootstrap_sdc.o commonmem.o coco2.o discard.o ../simple.o \
+	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
@@ -68,3 +68,19 @@ image:
 	dd if=fuzix.img of=fuzix.rom bs=1024 skip=48 count=16
 	dd if=fuzix.img of=fuzix.ide bs=256 skip=26 count=102
 	dd if=fuzix.img of=fuzix.ide bs=256 skip=1 count=1 conv=notrunc
+
+	$(CROSS_LD) -o ../fuzix-sdc.bin -Map=../fuzix-sdc.map --script=fuzix.link \
+	--oformat=decb \
+	crt0.o bootstrap_sdc.o commonmem.o coco2.o discard.o ../simple.o \
+	../start.o ../version.o ../lowlevel-6809.o \
+	tricks.o main.o ../timer.o ../kdata.o devices.o \
+	drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
+	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
+	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
+	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
+	../font8x8.o devsdc.o sdc.o
+	../tools/decb-image <../fuzix-sdc.bin fuzix-sdc.img
+	dd if=fuzix-sdc.img of=fuzixsdc.rom bs=1024 skip=48 count=16
+	dd if=fuzix-sdc.img of=fuzix.sdc bs=256 skip=26 count=102
+	dd if=fuzix-sdc.img of=fuzix.sdc bs=256 skip=1 count=1 conv=notrunc

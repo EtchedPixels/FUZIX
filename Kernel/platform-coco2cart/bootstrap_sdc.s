@@ -14,8 +14,11 @@
 	.module bootstrap
 
 	.globl load_image
+	.globl _cocoswap_dev
 
 	.area .text
+_cocoswap_dev:
+	.dw $0900		; SD card slice 0 rest of
 
 ;;; Load a sector from SDC
 ;;;   takes: B - sector number, X = dest address

@@ -1,14 +1,12 @@
 COCO2
 =====
 
-(Work in progress)
-
 COCO or Dragon 64 with an IDE port, cartridge and 64K of RAM
 
 Supported hardware:
 	IDE (Cloud9 or compatible set at FF50) with either built in
 		cartridge RAM or separate cartridge
-	COCO SDC (in progress)
+	COCO SDC
 
 Disk Layout
 ===========
@@ -52,14 +50,13 @@ FF00-FFFF	I/O etc
 Emulating in XRoar
 ==================
 
-Needs the IDE patches
+Needs the IDE patches, no support for COCOSDC emulation in xroar as of 0.33.2
 
 TODO
 ====
 
 Make the boot loader robust (timeout handling)
 Add hash of code not just simple magic - so we know bits match
-Merge coco and IDE boot code so it works out which is present
 
 Support for a real time clock and clock locking
 
@@ -70,9 +67,6 @@ We have about 2K left to try and jam those bits in which might just about be
 enough to add support for very minimal MBR parsing and offsets. That would
 be a big improvement.
 
-Automatically pick swap according to whether IDE or SDC is present.
-
-
 To Test
 =======
 
@@ -80,9 +74,15 @@ Build the image and you'll get a fuzix.ide and fuzix.rom
 
 In the xroar directory where you have a hard disc image do
 
-dd if=/tmp/fuzix.ide of=hd0.img bs=512 seek=3 conv=notrunc
-/opt/xroaride/bin/xroar -default-machine dragon64 -cart ide -cart-rom fuzix.rom
+dd if=platform/fuzix.ide of=hd0.img bs=512 seek=3 conv=notrunc
+/opt/xroaride/bin/xroar -default-machine dragon64 -cart ide -cart-rom platform/fuzix.rom
 
 exec 49152
+
+A 32MB filesystem can be put in slice 1 using dd with an offset of 32MB + 2
+sectors.
+
+For the CocoSDC the same procedure applies (without an emulator however) but
+using the fuzixsdc rom and SD image.
 
 enjoy

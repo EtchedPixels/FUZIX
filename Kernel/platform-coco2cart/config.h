@@ -15,8 +15,10 @@
 
 #define CONFIG_BANKS	1
 /* And swapping */
-#define SWAPDEV     0x000      	/* Uses part of IDE slice 0 */
-//#define SWAPDEV     0x900      	/* Uses part of SD slice 0 */
+
+extern unsigned int cocoswap_dev;
+
+#define SWAPDEV     cocoswap_dev    /* Uses part of IDE slice 0 or SD 0*/
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot */
 #define SWAPTOP     0xFE00	/* so it's a round number of 512 byte sectors */

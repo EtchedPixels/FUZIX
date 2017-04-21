@@ -11,8 +11,12 @@
 	.module bootstrap
 
 	.globl load_image
+	.globl _cocoswap_dev
 
 	.area .text
+
+_cocoswap_dev:
+	.dw 0
 
 load_block:
 	lda #$FF
