@@ -27,7 +27,7 @@ extern uint8_t idepage;
 /* FIXME: switch to the correct mpi slot on entry */
 static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    uint16_t nb;
+    uint16_t nb = 0;
     uint8_t *dptr;
 
     if (rawflag == 1 && d_blkoff(9))
@@ -63,8 +63,9 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
           udata.u_error = EIO;
           return -1;
         }
+        nb++;
     }
-    return nb;
+    return nb << BLKSHIFT;
 
 }
 
