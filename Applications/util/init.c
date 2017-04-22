@@ -437,6 +437,7 @@ static void reload_inittab(void)
 	/* FIXME: we don't kill and restart an entry that has changed but
 	   will respawn the new form. There isn't an easy way to fix that
 	   without further major reworking */
+	/* FIXME: do all the HUPs then one sleep then all the KILLs */
 	for (i = 0; i < oldcount; i++) {
 		struct initpid *n = find_id(p->id);
 		if (n == NULL && p->pid) {
@@ -447,6 +448,7 @@ static void reload_inittab(void)
 		} else {
 			n->pid = p->pid;
 		}
+		p++;
 	}
 	/* We could shuffle all the pointers back down and free the old
 	   pid table, but there is no point. If we do a further reload
