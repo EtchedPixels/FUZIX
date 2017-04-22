@@ -141,7 +141,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			}
 		}
 	}
-	return 1;
+	return ct << 8;
 bad:
 	if (err & 1)
 		kprintf("hd%d: error %x\n", minor, hd_err);
