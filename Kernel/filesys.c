@@ -488,8 +488,7 @@ fsptr getdev(uint16_t dev)
 }
 
 
-/* Returns true if the magic number of a superblock is corrupt.
-*/
+/* Returns true if the magic number of a superblock is corrupt. */
 
 bool inline baddev(fsptr dev)
 {
@@ -728,8 +727,7 @@ void oft_deref(int8_t of)
 }
 
 
-/* Uf_alloc finds an unused slot in the user file table.
-*/
+/* Uf_alloc finds an unused slot in the user file table.*/
 
 int8_t uf_alloc_n(int base)
 {
@@ -1048,8 +1046,7 @@ uint8_t getperm(inoptr ino)
 }
 
 
-/* This sets the times of the given inode, according to the flags.
-*/
+/* This sets the times of the given inode, according to the flags. */
 void setftime(inoptr ino, uint8_t flag)
 {
     if (ino->c_flags & CRDONLY)
@@ -1098,8 +1095,7 @@ struct mount *fs_tab_get(uint16_t dev)
     return NULL;
 }
 
-/* Fmount places the given device in the mount table with mount point info.
-*/
+/* Fmount places the given device in the mount table with mount point info. */
 bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
 {
     struct mount *m;
