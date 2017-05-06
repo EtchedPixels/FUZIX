@@ -33,11 +33,24 @@ typedef unsigned short word;
 #define NULL 0
 #endif
 
-byte *memory = NULL;
+FILE *infile = NULL;
+uint16_t offset = 0;
 
-#define OPCODE(address)  memory[address&0xffff]
-#define ARGBYTE(address) memory[address&0xffff]
-#define ARGWORD(address) (word)((memory[address&0xffff]<<8)|memory[(address+1)&0xffff])
+#define OPCODE(address)  getb(address)
+#define ARGBYTE(address) getb(address)
+#define ARGWORD(address) getword(address)
+
+static uint8_t getb(uint16_t addr)
+{
+    fseek(infile, addr-offset, SEEK_SET);
+    return getc(infile);
+}
+
+static uint16_t getword(uint16_t addr)
+{
+    fseek(infile, addr-offset, SEEK_SET);
+    return (getc(infile)<<8) | getc(infile);
+}
 
 #include "dasm09.h"
 
@@ -66,13 +79,12 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
-   unsigned begin=0,end=0,offset=0,pc,add;
+   unsigned begin=0,end=0,pc,add;
    char *fname=NULL,*outname=NULL;
    int showhex=TRUE,showaddr=TRUE;
    int i,j,n;
    char buf[30];
    int off;
-   FILE *f;
    FILE *out=stdout;
 
    printf("dasm09: M6809/H6309/OS9 disassembler V0.1 © 2000 Arto Salmi\n");
@@ -123,14 +135,14 @@ int main(int argc, char *argv[])
       }
    }
 
-   f=fopen(fname,"rb");
-   if(!f) usage();
+   infile=fopen(fname,"rb");
+   if(!infile) usage();
    if(!end)
    {
-      fseek(f,0,SEEK_END);
-      off=ftell(f);
+      fseek(infile,0,SEEK_END);
+      off=ftell(infile);
       end=(offset+off)-1;
-      rewind(f);
+      rewind(infile);
    }
 
    if(!begin) if(offset) begin=offset;
@@ -140,11 +152,6 @@ int main(int argc, char *argv[])
       out=fopen(outname,"w");
       if(!out) printf("can't open %s \n",outname);
    }
-
-   memory=(byte *)malloc(0x4000);
-   if(!memory) {printf("no mem buffer\n");goto exit;}
-   memset(memory,0x01,0x4000);
-   fread(&memory[offset&0xFFFF],sizeof(byte),0x4000-(offset&0xFFFF),f);
 
    begin&=0xFFFF;
    end&=0xFFFF;
@@ -161,7 +168,7 @@ int main(int argc, char *argv[])
      {
        for(i=0;i<5;i++)
        {
-         if(add) {add--;fprintf(out,"%02X ",memory[(pc++)&0xFFFF]);}
+	 if(add) {add--;fprintf(out,"%02X ",getb(pc++));}
          else fprintf(out,"   ");
        }
      } else pc+=add;
@@ -174,9 +181,8 @@ int main(int argc, char *argv[])
    printf("Done\n");
 
    exit:
-   if(f)       fclose(f);
+   if(infile)       fclose(infile);
    if(outname) if(out)    fclose(out);
-   if(memory)  free(memory);
 
    return(0);
 }
