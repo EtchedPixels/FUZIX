@@ -1,0 +1,5 @@
+package  dasm09
+if-file  dasm09
+
+f 0755 /usr/bin/dasm09         dasm09
+f 0644 /usr/man/man1/dasm09.1  dasm09.1

@@ -1,3 +1,12 @@
+Lightly modified to compile and run under Fuzix by Brett M. Gordon 2017:
+
+- original loads entire image to a buffer and dasms from there.  I
+redefined the low-level macro to call read functions that read
+directly from a FILE stream.  A 32K userspace would have a hard time
+with large images using the original method!
+
+
+Original README:
 
 dasm09: M6809/H6309/OS9 disassembler V0.1 © 2000 Arto Salmi
 Usage: dasm09 [options] <filename>
