@@ -40,15 +40,24 @@ uint16_t offset = 0;
 #define ARGBYTE(address) getb(address)
 #define ARGWORD(address) getword(address)
 
+
+static void readerr(void)
+{
+    perror("infile");
+    exit(1);
+}
+
 static uint8_t getb(uint16_t addr)
 {
-    fseek(infile, addr-offset, SEEK_SET);
+    if (fseek(infile, addr-offset, SEEK_SET)<0)
+	readerr();
     return getc(infile);
 }
 
 static uint16_t getword(uint16_t addr)
 {
-    fseek(infile, addr-offset, SEEK_SET);
+    if (fseek(infile, addr-offset, SEEK_SET)<0)
+	readerr();
     return (getc(infile)<<8) | getc(infile);
 }
 
