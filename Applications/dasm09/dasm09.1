@@ -1,0 +1,48 @@
+.TH man 1 "dasm09 M6809/H6309 Disassembler" "FUZIX" \" -*- nroff -*-
+.SH NAME
+dasm09 \- Disassemble 6809/6309 images
+.SH SYNOPSIS
+.B dasm09
+[options] <filename>
+.SH DESCRIPTION
+.B dasm09
+disassembles a 6809/6309 machine code image. 
+.SS OPTIONS
+.TP
+.I "-begin"
+start disassembly address
+.TP
+.I "-end"
+end disassembly address
+.TP
+.I "-offset"
+address to load program
+.TP
+.I "-out"
+output file
+.TP
+.I "-noaddr"
+no address dump
+.TP
+.I "-nohex"
+no hex dump
+.TP
+.I "-os0"
+use os9 psuedo-opcode for swi2
+.TP 
+All address values are in hexadecimal.
+.SH EXAMPLES
+.IP
+dasm09 -out cat.asm -offset 100 /bin/cat
+.SH EXIT STATUS
+.TP
+.B 0
+Completed successfully.
+.TP
+.B 1
+An error occured.
+.SH BUGS
+os9 call table is not tested.
+.SH AUTHORS
+Arto Salmi
+

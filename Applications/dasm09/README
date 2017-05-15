@@ -1,0 +1,51 @@
+Lightly modified to compile and run under Fuzix by Brett M. Gordon 2017:
+
+- original loads entire image to a buffer and dasms from there.  I
+redefined the low-level macro to call read functions that read
+directly from a FILE stream.  A 32K userspace would have a hard time
+with large images using the original method!
+
+
+Original README:
+
+dasm09: M6809/H6309/OS9 disassembler V0.1 © 2000 Arto Salmi
+Usage: dasm09 [options] <filename>
+Available options are:
+ -begin  - start disassembly address [offset]
+ -end    - end disassembly address  [auto]
+ -offset - address to load program [0]
+ -out    - output file [stdout]
+ -noaddr - no address dump
+ -nohex  - no hex dump
+ -x      - use 6309 opcodes
+ -os9    - patch swi2 (os9 call)
+All values should be entered in hexadecimal
+
+NOTE! os9 call table is not tested.
+
+see file COPYING for copying ;)
+
+Files
+dasm09/
+       COPYING   - Gnu Public Licence
+       README    - this file
+	  dasm09.c  - dummy main
+       dasm09.h  - disassembler
+       test/
+  	  test.bin  - 6809 test file (binary)
+       test.asm  - 6809 test file (source)
+       test.out  - 6809 test file (output)
+       test2.bin - 6309 test file (binary)
+       test2.asm - 6309 test file (source)
+       test2.out - 6309 test file (output)
+
+test.asm is assembled using a09 by L.C. Benschop
+(AS09 has a bug in direct jump at least in amiga version)
+test2.asm is assembled using AS09 (V1.04 amiga) by Frank A. Vorstenbosch.
+
+dasm09 is tested on vbcc (V0.7 amiga), dice (V0.16 amiga)
+Borland C++ (V5.02 Win95) and lcc-win32 (V?.? 15.5.1998 Win95)
+(gcc V2.7 should work too)
+
+Latest version www.mbnet.fi/~atjs/mc6809/index.html
+email: asalmi@ratol.fi

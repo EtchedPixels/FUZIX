@@ -1,0 +1,38 @@
+PLATFORM = 6809
+CC = m6809-unknown-gcc
+# These are wrappers for lwasm and lwar
+ASM = m6809-unknown-as
+AR = m6809-unknown-ar
+LINKER = lwlink
+CFLAGS = -I../../Library/include -I../../Library/include/6809
+CFLAGS += -O0 -msoft-reg-count=0 -mfar-stack-param -fomit-frame-pointer
+LINKER_OPT = --format=raw -L../../Library/libs -lc6809
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc
+LINKER_OPT += --script=../util/$(TARGET).link
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6809.o
+
+.SUFFIXES: .c .o
+
+SRCS  = dasm09.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = dasm09
+
+all: $(APPS)
+
+
+dasm09: $(OBJS)
+	$(LINKER) $(LINKER_OPT) -o dasm09 $(CRT0) dasm09.o
+
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
+
+rmbak:
+	rm -f *~ core
