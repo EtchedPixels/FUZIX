@@ -38,8 +38,8 @@ extern size_t strlen(const char *);
 typedef unsigned long clock_t;
 
 typedef struct {
-  uint32_t low;
   uint32_t high;
+  uint32_t low;
 } time_t;
 
 typedef union {            /* this structure is endian dependent */
