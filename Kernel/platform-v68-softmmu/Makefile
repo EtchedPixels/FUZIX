@@ -40,4 +40,4 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o > ../fuzix.map
-	m68k-linux-gnu-objcopy fuzix.elf -O binary ../fuzix.bin
+	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
