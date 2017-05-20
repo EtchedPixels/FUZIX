@@ -35,8 +35,8 @@ init_hardware:
 	    sub.w  #64,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
 
-	    move.l #0,a0
-	    move.w #256,d0
+	    move.l #8,a0
+	    move.w #253,d0
 	    move.l #unexpected,d1
 init_trap_loop:
 	    move.l d1,(a0)+
@@ -80,9 +80,6 @@ timer_irq:
 	    jsr platform_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
-
-	    ; DEBUG FIXME
-	    bra no_signal
 
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
