@@ -29,14 +29,14 @@ init_early:
 ;	FIXME: could be in discard if we wanted
 ;
 init_hardware:
-            ; set system RAM size(hadcode hacks for now) 
+            ; set system RAM size(hardcode hacks for now)
 	    move.w #512,d0
 	    move.w d0,ramsize
 	    sub.w  #64,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
 
-	    move.l #0,a0
-	    move.w #256,d0
+	    move.l #8,a0
+	    move.w #253,d0
 	    move.l #unexpected,d1
 init_trap_loop:
 	    move.l d1,(a0)+
@@ -81,9 +81,6 @@ timer_irq:
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
 
-	    ; DEBUG FIXME
-	    bra no_signal
-
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
 	    tst.b need_resched
@@ -121,14 +118,24 @@ program_vectors:
 	    rts
 
 ;
-;	TODO
+;	Switch the banking hardware.
 ;
 map_process_always:
+	; make sure the current process is mapped.
+	move.b U_DATA__U_PAGEB(a5),$00F05000
+	rts
 map_process:
-map_kernel:
+	; map a specific process (not actually used)
+	move.b P_TAB__P_PAGE_OFFSETB(a5),$00F05000
+	rts
 map_restore:
+	move.b $00F05000,banksave
+	rts
 map_save:
-	    rts
+	move.b banksave,$00F05000
+	rts
+map_kernel:				; we never bank out the kernel
+	rts
 
 ; outchar: Wait for UART TX idle, then print the char in d0
 
@@ -143,7 +150,8 @@ outcharw:
 	    rts
 
 ;
-;	IDE
+;	IDE. This differs a tiny bit from the simple case because we must
+;	support bank switching while handling swap.
 ;
 devide_read_data:
 	move.l blk_op,a0
@@ -189,3 +197,4 @@ vdso:	trap #14		; syscall entry
 .section data
 
 kernel_flag: byte 1
+banksave:    byte 0
