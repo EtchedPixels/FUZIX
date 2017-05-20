@@ -33,9 +33,10 @@ void pagemap_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
+/* Each process is mapped into the same banked address */
 uaddr_t pagemap_base(void)
 {
-	return 0x20000UL;
+	return MAPBASE;
 }
 
 uint8_t platform_param(char *p)

@@ -62,6 +62,9 @@ idling:
 	mov.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
 	addq #2,sp
+;
+;	FIXME: check if in interrupt and if so don't restore IRQ ?
+;
         and #$F8FF,sr
 	rts
 
@@ -244,7 +247,7 @@ bankfork:
 	;
 	;
 	move.l d2,-(sp)
-	move.l #$02000000,a0		;	process base
+	move.l #$00200000,a0		;	process base
 	move.b $FFF05000,d1		;	parent page
 
 copyloop:
@@ -252,7 +255,7 @@ copyloop:
 	move.l (a0),d0
 	move.b d2,$FFF05000		;	child bank
 	move.l d0,(a0)+
-	cmp.l #$03000000,a0
+	cmp.l #$00300000,a0
 	bne copyloop
 	; Return with child bank paged as we want it
 	move.l (sp)+,d2			;	we swapped stack but copied d2

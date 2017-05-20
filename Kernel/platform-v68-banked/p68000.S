@@ -154,7 +154,7 @@ outcharw:
 ;	support bank switching while handling swap.
 ;
 devide_read_data:
-	move.l blk_op,a0
+	lea.l blk_op,a0
 	move.b 4(a0),d0
 	move.b $00F05000,d1
 	cmp.b #2,d0
@@ -162,6 +162,7 @@ devide_read_data:
 	move.b 5(a0),$00F05000
 notswap:
 	move.w #255,d0
+	move.l (a0),a0
 devide_read_l:
 	move.w $00F01000,(a0)+
 	dbra d0,devide_read_l
@@ -169,7 +170,7 @@ devide_read_l:
 	rts
 
 devide_write_data:
-	move.l blk_op,a0
+	lea.l blk_op,a0
 	move.b 4(a0),d0
 	move.b $00F05000,d1
 	cmp.b #2,d0
@@ -177,6 +178,7 @@ devide_write_data:
 	move.b 5(a0),$00F05000
 notswapw:
 	move.w #255,d0
+	move.l (a0),a0
 devide_write_l:
 	move.w (a0)+,$00F01000
 	dbra d0,devide_write_l
