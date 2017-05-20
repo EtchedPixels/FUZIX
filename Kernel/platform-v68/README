@@ -8,13 +8,12 @@ uses a pure swap model and dumps userspace apps at 0x20000-0x2FFFF which is
 a quick getting started hack to debug all the user issues.
 
 TODO:
-- bourne shell crashes when you type a command (known to have 16bit-isms,
+- bourne shell crashes on exit (known to have 16bit-isms,
   may be worth running the slightly bigger 'Heritage' /bin/sh with SYS5 type
   features instead
-- date gives bogus results, probably some sizing issues
 - signal handling needs further testing (disabled on IRQ path currently)
 - copy exception/trap frames onto user stack along with trap identifiers
-  so we can support stuff like CP/M68K emulators.
+  so we can support stuff like CP/M 68K and TOS emulators.
 - pre-emption needs more testing (also disabled on IRQ path currently)
 - support multiple IRQ sources and IRQ priority nesting when appropriate
 - enable IRQ during swap on context switch
