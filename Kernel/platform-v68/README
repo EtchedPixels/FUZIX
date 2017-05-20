@@ -1,16 +1,26 @@
 Development subtree for the v68 virtual platform and general 68000
 bootstrap work.
 
+This version of the code implements a simple 68K machine and needs about 128K
+of RAM to be useful. Once you get past 256K or so including the kernel this
+single process in RAM model starts to make a lot less sense.
+
+If your board can protect low memory from supervisor mode accesses then it will
+help. The emulator supports protection of the low 64K - as the N8VEM board can
+do. That is sufficient to run with almost full kernel protection. To get full
+protection would require MMIO space was supervisor only.
+
 Current status:
 
-Kernel boots, loads userspace and you can run commands. At the moment it
-uses a pure swap model and dumps userspace apps at 0x20000-0x2FFFF which is
-a quick getting started hack to debug all the user issues.
+At the moment we dump  userspace apps at 0x20000-0x2FFFF which is a quick
+getting started hack to debug all the user issues. On a real platform you'd want
+to start user space straight after the kernel or if need be just above the
+protection boundary.
 
 TODO:
-- bourne shell crashes on exit (known to have 16bit-isms,
-  may be worth running the slightly bigger 'Heritage' /bin/sh with SYS5 type
-  features instead
+- bourne shell crashes on exit with MMU enforcement with an access to 0. This
+  appears to be a bug in the v7 version of sh in 32bit. It would make more
+  sense to use the heritage sh which is sys5 ish and a bit bigger.
 - signal handling needs further testing (disabled on IRQ path currently)
 - copy exception/trap frames onto user stack along with trap identifiers
   so we can support stuff like CP/M 68K and TOS emulators.
@@ -20,15 +30,14 @@ TODO:
 - optimize swap out/in. With bigger amounts of RAM we want to be smarter
   where it doesn't matter on 8bit.
 
-Once that is done it should be worth trying both to target some of the old
-68K SBCs and the N8VEM ECB 68000 (which can support both a swap based model
-and with the 4MB paged expansion board actual 'real' memory models without
-copying hacks)
+Possible optimizations:
 
-Also on the list is looking at a vfork() style function for faster fork/exec
-when we support multiple process in memory models, and whether we can do
-resident/shared code type stuff. The Amiga style re-entrant code might be a
-good model.
+- when we swap in or out just zero the area between bss and sp rather than
+  read or write from disk media. Once you go over about 64K of userspace (128K
+  RAM on the board) this makes a lot of sense.
+- vfork style functionality for faster fork/exec when we support multiple
+process in memory models, and whether we can do resident/shared code type stuff.
+The Amiga style re-entrant code might be a good model.
 
 
 The build environment is gcc 6.2.0 configured with
