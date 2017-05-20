@@ -167,8 +167,8 @@ $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
 clean:
-	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt
-	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~)
+	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt *.o
+	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~ *.o)
 	(cd fuzix; $(MAKE) clean)
 
 install:
