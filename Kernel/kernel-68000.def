@@ -2,6 +2,7 @@
 
 #define U_DATA__U_PTAB		0
 #define U_DATA__U_PAGE		4
+#define U_DATA__U_PAGEB		5
 #define U_DATA__U_PAGE2		6
 #define U_DATA__U_INSYS		8
 #define U_DATA__U_CALLNO	9
@@ -25,6 +26,7 @@
 #define P_TAB__P_TTY_OFFSET	1
 #define P_TAB__P_PID_OFFSET	2
 #define P_TAB__P_PAGE_OFFSET	20
+#define P_TAB__P_PAGE_OFFSETB	21
 #define P_TAB__P_UDATA_OFFSET	24
 
 #define P_RUNNING		1
