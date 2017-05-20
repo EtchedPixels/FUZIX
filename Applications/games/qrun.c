@@ -1130,7 +1130,7 @@ static void initgame(void)
 		state.flags[n] = 0;
 
 	NUMCAR = 0;
-	for (n = 0; n < 255; n++) {
+	for (n = 0; n < nobj; n++) {
 		state.objpos[n] = zmem(obase + n);
 		if (state.objpos[n] == 254)
 			NUMCAR++;
@@ -1736,7 +1736,7 @@ static void initdisplay(void)
 		has_gfx = 0;
 		return;
 	}
-	if (m.commands & (GFX_WRITE | GFX_DRAW) == (GFX_WRITE | GFX_DRAW))
+	if ((m.commands & (GFX_WRITE | GFX_DRAW)) == (GFX_WRITE | GFX_DRAW))
 		has_gfx = 1;
 	pixw = m.width;
 	pixh = m.height;
