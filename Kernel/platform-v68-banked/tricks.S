@@ -113,6 +113,7 @@ switchin:
 	move.l (sp)+,a0
 
         or #$0700,sr
+	bra copyud
 
 not_swapped:
 	move.w P_TAB__P_PAGE_OFFSET(a0),d0
@@ -122,6 +123,7 @@ not_swapped:
 	move.l P_TAB__P_UDATA_OFFSET(a0),a5
 	cmp.l U_DATA__U_PTAB(a5),a0
 	beq skip_copyback
+copyud:
 	;
 	;	Recover the udata block
 	;
