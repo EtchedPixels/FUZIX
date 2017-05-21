@@ -197,8 +197,8 @@ dofork:
 	; parent state is valid
 	;
 	move.w P_TAB__P_PID_OFFSET(a0),-(sp)	;	child pid (parent return)
-	move.l usp,a0
-	movem.l a0/a2-a4/a6/d2-d7,-(sp)	;	save state
+	move.l usp,a1
+	movem.l a1-a4/a6/d2-d7,-(sp)	;	save state
 	move.l sp,U_DATA__U_SP(a5)	;	save pointer
 	;
 	; At this point we can make a copy of the parent udata into the
@@ -231,7 +231,7 @@ copyif:	move.l (a1)+,(a0)+
 	;	We enter this on the child's mappings with its udata
 	;
 	jsr newproc			;	Called with the child udata
-	add.w #54,sp			;	toss the stack frames
+	add.w #50,sp			;	toss the stack frames
 
 	clr.w runticks
 	moveq #0,d0			;	child
@@ -252,10 +252,10 @@ bankfork:
 
 copyloop:
 	move.b d1,$FFF05000		;	parent bank
-	move.l (a0),d0
-	move.b d2,$FFF05000		;	child bank
-	move.l d0,(a0)+
-	cmp.l #$00300000,a0
+	move.l (a0),d2
+	move.b d0,$FFF05000		;	child bank
+	move.l d2,(a0)+
+	cmp.l #$00220000,a0
 	bne copyloop
 	; Return with child bank paged as we want it
 	move.l (sp)+,d2			;	we swapped stack but copied d2
