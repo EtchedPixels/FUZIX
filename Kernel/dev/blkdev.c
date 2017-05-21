@@ -74,7 +74,8 @@ int blkdev_open(uint8_t minor, uint16_t flags)
 
 static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
 {
-    uint8_t partition, n, count=0;
+    uint8_t partition, n;
+    uint16_t count = 0;
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk_op.blkdev = &blkdev_table[minor >> 4];

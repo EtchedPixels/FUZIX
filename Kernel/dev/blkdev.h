@@ -27,7 +27,7 @@ struct blkparam {
     uint8_t swap_page;                      /* page to pass to map_swap */
     blkdev_t *blkdev;                       /* active block device */
     uint32_t lba;                           /* LBA for first sectors to transfer */
-    uint8_t nblock;                         /* number of sectors to transfer */
+    uint16_t nblock;                        /* number of sectors to transfer */
     bool is_read;                           /* true: read sectors, false: write sectors */
 };
 /* macros that inline assembler code can use to access blkparam fields */
