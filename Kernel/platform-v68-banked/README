@@ -9,9 +9,11 @@ faster task switch if we kept udata banks all in the kernel and moved a5
 
 We simulate 4 banks of 128K plus swap.
 
-TODO
+The current model this uses only makes sense for small memory sizes. If you
+have lots of memory then we need a much smarter swap algorithm that does real
+allocation and we also need to avoid copying empty zones we can zero.
 
-- Debug swap (swap out works, swap in fails)
+TODO
 
 - Make bankfixed support only writing out used areas of memory
 
