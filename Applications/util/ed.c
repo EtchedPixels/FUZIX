@@ -134,7 +134,7 @@ static void docommands(void)
 
 	cp = buf;
 	while (isblank(*cp))
-	    *cp++;
+	    cp++;
 
 	have1 = FALSE;
 	have2 = FALSE;
@@ -468,7 +468,7 @@ static void subcommand(char *cp, NUM num1, NUM num2)
 		printlines(num1, num1, FALSE);
 		needprint = FALSE;
 	    }
-	    lp = nlp->next;
+	    lp = lp->next;
 	    num1++;
 	    continue;
 	}
@@ -926,7 +926,7 @@ static BOOL printlines(NUM num1, NUM num2, BOOL expandflag)
 	 * Show control characters and characters with the
 	 * high bit set specially.
 	 */
-	cp = lp->data;
+	cp = (unsigned char *)lp->data;
 	count = lp->len;
 	if ((count > 0) && (cp[count - 1] == '\n'))
 	    count--;
