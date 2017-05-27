@@ -137,7 +137,10 @@ arg_t _execve(void)
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
+
 	progload = (*(uint8_t *)(buf + 7)) << 8;
+	if ( ! progload )
+		progload = PROGLOAD;
 
 	top = *(uint16_t *)(buf + 8);
 	if (top == 0)	/* Legacy 'all space' binary */
