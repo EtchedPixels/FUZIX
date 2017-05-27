@@ -81,8 +81,8 @@ static int header_ok(uint8_t *pp)
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
-	if (*p && *p != (PROGLOAD >> 8))
-		return 0;
+//	if (*p && *p != (PROGLOAD >> 8))
+//      	return 0;
 	return 1;
 }
 
@@ -97,6 +97,7 @@ arg_t _execve(void)
 	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uint16_t progptr;
+	uint16_t progload;
 	staticfast uint16_t top;
 	uint16_t bin_size;	/* Will need to be bigger on some cpus */
 	uint16_t bss;
@@ -136,18 +137,23 @@ arg_t _execve(void)
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
+
+	progload = (*(uint8_t *)(buf + 7)) << 8;
+	if ( ! progload )
+		progload = PROGLOAD;
+
 	top = *(uint16_t *)(buf + 8);
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
-		top += PROGLOAD;
+		top += progload;
 
 	bss = *(uint16_t *)(buf + 14);
 
 	/* Binary doesn't fit */
 	bin_size = ino->c_node.i_size;
 	progptr = bin_size + 1024 + bss;
-	if (top - PROGBASE < progptr || progptr < bin_size) {
+	if (top - progload < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
@@ -189,7 +195,7 @@ arg_t _execve(void)
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(buf, (uint8_t *)PROGLOAD, 512);	/* Move 1st Block to user bank */
+	uput(buf, (uint8_t *)progload, 512);	/* Move 1st Block to user bank */
 	brelse(buf);
 
 	/* At this point, we are committed to reading in and
@@ -203,7 +209,7 @@ arg_t _execve(void)
 	 *  same buffer to avoid cycling our small cache on this. Indirect blocks
 	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
 	 */
-	progptr = PROGLOAD + 512;	// we copied the first block already
+	progptr = progload + 512;	// we copied the first block already
 
 	/* Compute this once otherwise each loop we must recalculate this
 	   as the compiler isn't entitled to assume the loop didn't change it */
@@ -217,6 +223,7 @@ arg_t _execve(void)
 		}
 		progptr += bin_size;
 	}
+
 
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
@@ -257,7 +264,7 @@ arg_t _execve(void)
 	// Start execution (never returns)
 	in_execve = 0;
 	wakeup(&in_execve);
-	doexec(PROGLOAD);
+	doexec(progload);
 
 	// tidy up in various failure modes:
 nogood3:
