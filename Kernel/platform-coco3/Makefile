@@ -1,6 +1,6 @@
 
 CSRCS = ttydw.c mbr.c dwtime.c
-CSRCS += devices.c main.c libc.c devsdc.c
+CSRCS += devices.c main.c libc.c devsdc.c devlpr.c
 
 CDSRCS = ../dev/devide_discard.c
 
@@ -54,7 +54,7 @@ image:
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devide.o devide_discard.o \
-	ide.o devsdc.o sdc.o \
+	ide.o devsdc.o sdc.o devlpr.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
