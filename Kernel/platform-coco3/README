@@ -88,7 +88,7 @@ node       major   minor     description
 /dev/tty2  2       2         virtual terminal No. 2.
 /dev/tty3  2       3         Drivewire Virtual Window #0
 /dev/dw?   8       0-256     Drivewire Block Drives
-
+/dev/lpr   3       0         Drivewire Printer
 
 **************************
 BUILDING
@@ -172,16 +172,9 @@ DONE
 TO DO
 *************************
 
-* Swapping to disk has not been implemented yet, so a standard 512k
-upgrade is required.
-
-* IDE Drivers.
-
-* SDC Drivers.
+* Finish SDC Drivers Need ioctl for meta methods, userspace cntl program.
 
 * SCSI Drivers.
-
-* Better and more DriveWire Virtual Serial Ports.
 
 * Better support of the GIME chip's video modes
 
