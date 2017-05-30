@@ -128,117 +128,58 @@ uint8_t sd_spi_receive_byte(void)
  * Target page is always mapped to slot_page2, and the target address offset accordingly.
  *
  */
-bool sd_spi_receive_sector(void) __naked
+void sd_spi_txrx_sector(bool is_read)
 {
-    __asm
+    uint16_t addr, len, len2;
+    uint8_t *page;
+    uint8_t page_offset;
 
-    ; map sd interface
-    ;
-    ld a,(_slotmfr)
-    call _mapslot_bank1
-    ld a, #MSD_PAGE
-    ld (MFR_BANKSEL0),a
+    addr = ((uint16_t) blk_op.addr) % 0x4000 + 0x8000;
+    page_offset = (((uint16_t)blk_op.addr) / 0x4000);
+    page = &udata.u_page;
 
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)
-    push af
-    or a
-    jr z, starttx
+    len = 0xC000 - addr;
+    sd_spi_map_interface();
 
-    ; map process target page in slot_page2 if needed
-    ;
-    ld a,d
-    and #0xC0
-    rlca
-    rlca    ;  a contains the page to map
-    ld b,#0
-    ld c,a
-    ld hl,#U_DATA__U_PAGE
-    add hl,bc
-    ld a,(hl)
-    out(_RAM_PAGE2),a
-
-starttx:
-    ; calculate offset address in target page
-    ld a,d
-    and #0x3F
-    or #0x80
-    ld d,a
-    ld hl,#MSD_RDWR
-    ld bc,#512
-    jp looptxrx
-    __endasm;
+    if (blk_op.is_user) {
+        RAM_PAGE2 = *(page + page_offset);
+        if (is_read)
+                memcpy((uint8_t *)addr, (uint8_t *)MSD_RDWR,
+                        len < BLKSIZE ? len : BLKSIZE);
+        else
+                memcpy((uint8_t *)MSD_RDWR, (uint8_t *)addr,
+                        len < BLKSIZE ? len : BLKSIZE);
+        if (len < BLKSIZE) {
+                /* handle page crossing */
+                len2 = BLKSIZE - len;
+                RAM_PAGE2 = *(page + page_offset + 1);
+                if (is_read)
+                        memcpy((uint8_t *)0x8000, (uint8_t *)MSD_RDWR, len2);
+                else
+                        memcpy((uint8_t *)MSD_RDWR, (uint8_t *)0x8000, len2);
+        }
+        RAM_PAGE2 = 1;
+    } else {
+        /* kernel only */
+        if (is_read)
+                memcpy((uint8_t *)addr, (uint8_t *)MSD_RDWR, BLKSIZE);
+        else
+                memcpy((uint8_t *)MSD_RDWR, (uint8_t *)addr, BLKSIZE);
+    }
+    sd_spi_unmap_interface();
 }
 
-bool sd_spi_transmit_sector(void) __naked
+
+bool sd_spi_receive_sector(void)
 {
-    __asm
+    sd_spi_txrx_sector(true);
+    return true;
+}
 
-    ; map sd interface
-    ;
-    ld a,(_slotmfr)
-    call _mapslot_bank1
-    ld a, #MSD_PAGE
-    ld (MFR_BANKSEL0),a
-
-    ; map process target page in slot_page2
-    ;
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld de, (_blk_op+BLKPARAM_ADDR_OFFSET);
-    push af
-    or a
-    jr z, startrx
-
-    ; map process target page in slot_page2 if needed
-    ;
-    ld a,d
-    and #0xC0
-    rlca
-    rlca    ;  a contains the page to map
-    ld b,#0
-    ld c,a
-    ld hl,#U_DATA__U_PAGE
-    add hl,bc
-    ld a,(hl)
-    out(_RAM_PAGE2),a
-
-startrx:
-    ; calculate offset address in target page
-    ld a,d
-    and #0x3F
-    or #0x80
-    ld d,a
-    ld hl,#MSD_RDWR
-    ex de,hl
-    ld bc,#512
-looptxrx:
-    ldi	; 16x ldi: 19% faster
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    ldi
-    jp pe, looptxrx
-
-    ; unmap interface
-    ;
-    ld a,(_slotram)
-    call _mapslot_bank1
-    pop af
-    or a
-    ret z
-    jp _map_kernel
-    __endasm;
+bool sd_spi_transmit_sector(void)
+{
+    sd_spi_txrx_sector(false);
+    return true;
 }
 
 #endif
