@@ -45,7 +45,7 @@ uint8_t slotmfr;
 int megasd_probe()
 {
     uint8_t *sigp = (uint8_t *) MSD_MAGIC_ADDR;
-    uint8_t slot = 1;
+    uint8_t slot;
 
     for (slot = 1; slot < 3; slot++) {
         /* try to find MegaFlashRom signature in slots 1 and 2 */
@@ -56,7 +56,11 @@ int megasd_probe()
             goto found;
     }
     mapslot_bank1(slotram);
-    return 0;
+    // XXX: this that makes it easier to run witn megaSD when using openmsx
+    //      otherwise setting up the megaSD for proper detection is a hassle
+    slot = 2;
+    slotmfr = 0x80 | MSD_SUBSLOT << 2 | 2;
+    //return 0;
 
 found:
     mapslot_bank1(slotram);
