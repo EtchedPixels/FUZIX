@@ -29,9 +29,15 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_dptr;
 
     while (ct < udata.u_nblock) {
+        uint16_t len;
         /* Pass the page to map for the data */
         map = p[(dptr >> 14)];
-        rd_memcpy(is_read, map, dptr, udata.u_block);
+        len = 0x4000 - (dptr & 0x3FFF);
+        if (len >= BLKSIZE)
+            rd_memcpy(is_read, map, dptr, udata.u_block, BLKSIZE, 0, 0);
+        else
+            rd_memcpy(is_read, map, dptr, udata.u_block, len,
+                p[(dptr >> 14) + 1], BLKSIZE - len);
         udata.u_block++;
         ct++;
         dptr += BLKSIZE;

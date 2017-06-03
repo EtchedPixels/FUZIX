@@ -366,12 +366,13 @@ outcharw:
             ret
 
 ;
-; Disk helper  - FIXME should be IRQ safe nowdays
+; Disk helper - FIXME - do we need the di/ei still
 ;
 _rd_memcpy:  push ix
 	    ld ix, #0
 	    add ix, sp
 	    ; 4(ix) = is_read, 5(ix) = dptr page 6-7(ix) = dptr, 8-9(ix) = block
+	    ; 10-11(ix) = len, 12(ix) = map2, 13-14(ix) = len2
             ld l, 6(ix)
 	    ld h, 7(ix)
 	    ld c, 5(ix)
@@ -410,8 +411,24 @@ _rd_memcpy:  push ix
 	    ;
 	    ;	All mapped, and then its simple
 	    ;
-rd_write:   ld bc, #512
+rd_write:   ld c, 10(ix)
+	    ld b, 11(ix)
 	    ldir
+
+	    ld a, 12(ix)		; second page map or 0 = none
+	    or a
+	    jr z, rd_done	; usual case
+	    out (0x12) ,a
+	    ld c, 13(ix)
+	    ld b, 14(ix)
+	    ld a, 4(ix)
+	    or a
+	    jr z, rd_part2
+	    ld hl, #0x8000
+	    jr copy_part2
+rd_part2:   ld de, #0x8000
+copy_part2: ldir
+rd_done:
             call map_kernel	; map the kernel and return
 	    ei
 	    pop ix
