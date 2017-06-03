@@ -491,7 +491,10 @@ int net_connect(struct socket *s)
 void net_close(struct socket *s)
 {
 	/* Caution here - the native tcp socket will hang around longer */
-	netn_synchronous_event(s, SS_CLOSED);
+	sd->newstate = SS_CLOSED;
+	netn_asynchronous_event(s, NEV_STATE|NEVW_STATE);
+	/* Don't block. We won't reuse the entry until it moves to
+	   CLOSED state */
 }
 
 /*
