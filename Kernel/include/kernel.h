@@ -300,6 +300,7 @@ struct mount {
 #define P_STOPPED       4    /* Sleeping, don't wake up for signal */
 #define P_FORKING       5    /* In process of forking; do not mess with */
 #define P_ZOMBIE        6    /* Exited. */
+#define P_NOSLEEP	7    /* In an internal state where sleep is forbidden */
 
 
 /* 0 is used to mean 'check we could signal this process' */

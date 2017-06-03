@@ -16,13 +16,13 @@
  * event equal to the process's own ptab address is a wait().
  */
 
+
 void psleep(void *event)
 {
 	irqflags_t irq = di();
 #ifdef DEBUG
 	kprintf("psleep(0x%p)", event);
 #endif
-
 	switch (udata.u_ptab->p_status) {
 	case P_SLEEP:		// echo output from devtty happens while processes are still sleeping but in-context
 	case P_STOPPED:		// coming to a halt
