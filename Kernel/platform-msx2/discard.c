@@ -55,6 +55,10 @@ void device_init(void)
 	ticks_per_dsecond = 5;
     }
 
+    /* Default key repeat values in 10ths of seconds */
+    keyrepeat.first = 2 * ticks_per_dsecond;
+    keyrepeat.continual = 1 * ticks_per_dsecond;
+
     if (megasd_probe()) {
         /* probe for megaflash rom sd */
         devsd_init();
@@ -64,5 +68,3 @@ void device_init(void)
 void map_init(void)
 {
 }
-
-
