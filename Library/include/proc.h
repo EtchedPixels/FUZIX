@@ -13,6 +13,7 @@
 #define P_STOPPED       4    /* Stopped waiting for SIGCONT */
 #define P_FORKING       5    /* In process of forking; do not mess with */
 #define P_ZOMBIE        6    /* Exited. */
+#define P_NOSLEEP	7    /* Internal no-sleep state, never visible to ps */
 
 /* Process table entry */
 
