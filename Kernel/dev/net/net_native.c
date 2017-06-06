@@ -490,6 +490,7 @@ int net_connect(struct socket *s)
  */
 void net_close(struct socket *s)
 {
+	struct sockdata *sd = s->s_priv;
 	/* Caution here - the native tcp socket will hang around longer */
 	sd->newstate = SS_CLOSED;
 	netn_asynchronous_event(s, NEV_STATE|NEVW_STATE);
