@@ -34,6 +34,7 @@
 #include <dirent.h>
 /* #include <time.h> */
 #include <errno.h>
+#include <stdlib.h>
 
 /* tar header format, with ustar extension */
 struct header {
@@ -642,6 +643,8 @@ int main(int argc, char *argv[])
 {
 	int o;
 
+	ofile = getenv("TAPE");
+	
 	while ((o = getopt(argc, argv, "xtcvnkf:")) > 0) {
 		switch (o) {
 		case 'x':
@@ -669,10 +672,13 @@ int main(int argc, char *argv[])
 	switch (key) {
 	case 'x':
 		extract(argv);
+		break;
 	case 't':
 		list();
+		break;
 	case 'c':
 		create(argv);
+		break;
 	default:
 		fprintf(stderr, "tar: option x,c, or t must be used\n");
 		exit(1);
