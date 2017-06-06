@@ -454,8 +454,12 @@ static void extract(char *argv[])
 
 	while (1) {
 		x = read(infile, &h, 512);
+		if (x < 0 ){
+			perror(ofile);
+			exit(1);
+		}
 		if (x < 512) {
-			fprintf(stderr, "bad filesize\n");
+			fprintf(stderr, "bad read size: %d\n", x);
 			exit(1);
 		}
 
