@@ -10,6 +10,7 @@
 #undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
+#define CONFIG_VT_MULTI
 /* 16K banking so use the helper */
 #define CONFIG_BANK16
 #define MAX_MAPS 255
@@ -25,6 +26,9 @@
 #define VT_RIGHT	79
 #define VT_BOTTOM	23
 
+/* MODE TEXT2 supports up to 16 VT's */
+#define MAX_VT          4
+
 #define TICKSPERSEC 60	    /* default value, it will be upated on device_init */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
@@ -38,7 +42,8 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY 5
+#define TTYSIZ  64
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */

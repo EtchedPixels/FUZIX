@@ -67,6 +67,8 @@
 
 #define MODE_EXTEND_CMD	    0x40
 
+#define V99xx_VRAM_PAGE_SIZE        0x4000
+
 /* vram access flags */
 #define REG_VRAM_ADDR_MASK  1
 #define REG_VRAM_WRITE_FLAG  0x40
