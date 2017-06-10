@@ -18,6 +18,9 @@
 /* As reported to user space - 4 banks, 16K page size */
 #define CONFIG_BANKS	4
 
+/* reclaim discarded space for buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
+
 #define CONFIG_FONT6X8
 
 /* Vt definitions */
@@ -43,9 +46,9 @@
 
 /* Device parameters */
 #define NUM_DEV_TTY 5
-#define TTYSIZ  64
+#define TTYSIZ  128
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
+#define NBUFS    6       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define CONFIG_SD
@@ -55,5 +58,3 @@
 #define MAX_BLKDEV 1      /* Single SD drive */
 #define CONFIG_RTC
 //#define CONFIG_RTC_RP5C01_NVRAM
-
-#define platform_discard()

@@ -162,9 +162,9 @@ void sd_spi_txrx_sector(bool is_read)
     } else {
         /* kernel only */
         if (is_read)
-                memcpy((uint8_t *)addr, (uint8_t *)MSD_RDWR, BLKSIZE);
+                memcpy(blk_op.addr, (uint8_t *)MSD_RDWR, BLKSIZE);
         else
-                memcpy((uint8_t *)MSD_RDWR, (uint8_t *)addr, BLKSIZE);
+                memcpy((uint8_t *)MSD_RDWR, blk_op.addr, BLKSIZE);
     }
     sd_spi_unmap_interface();
 }
