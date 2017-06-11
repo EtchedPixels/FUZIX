@@ -46,6 +46,8 @@
 		.globl _infobits
 		.globl _machine_type
 
+		.globl _discard_size
+
 	        ; startup code @0x100
 	        .area _CODE
 
@@ -149,3 +151,6 @@ cpfont:
 stop:		halt
 		jr stop
 
+		.area _DISCARD
+_discard_size:
+		.dw l__DISCARD
