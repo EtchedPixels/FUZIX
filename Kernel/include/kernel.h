@@ -694,6 +694,18 @@ extern void idump(void);
 extern bool validdev(uint16_t dev);
 
 /* usermem.c */
+#ifdef CONFIG_LEVEL_0
+extern size_t strlcpy(char *, const char *, size_t);
+#define valaddr(a,b)	(1)
+#define uget(a,b,c)	(memcpy(b,a,c) && 0)
+#define uput(a,b,c)	(memcpy(b,a,c) && 0)
+#define ugetc(a)	(*(uint8_t *)(a))
+#define ugetw(a)	(*(uint8_t *)(a))
+#define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
+#define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
+#define ugets(a,b,c)	((int)(strlcpy(b,a,c) && 0))
+#define uzero(a,b)	(memset(a,0,b) && 0)
+#else
 extern usize_t valaddr(const char *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
@@ -722,6 +734,7 @@ extern int16_t _ugetc(const uint8_t *user);
 extern uint16_t _ugetw(const uint16_t *user);
 extern int _uputc(uint16_t value,  uint8_t *user);
 extern int _uputw(uint16_t value,  uint16_t *user);
+#endif
 #endif
 
 /* platform/tricks.s */
