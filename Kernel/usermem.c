@@ -8,6 +8,8 @@
 #include <kdata.h>
 #include <printf.h>
 
+#if !defined(CONFIG_LEVEL_0)
+
 /* Flat mode has to use its own valaddr: tidy this */
 #if !defined(CONFIG_FLAT) && !defined(CONFIG_VMMU)
 
@@ -300,5 +302,6 @@ int _uputl(uint32_t val, void *uaddr)
 	return 0;
 }
 
+#endif
 #endif
 #endif
