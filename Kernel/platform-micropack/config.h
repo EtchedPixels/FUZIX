@@ -14,8 +14,8 @@
 #undef CONFIG_BANK_FIXED
 /* Swap only */
 #define CONFIG_SWAP_ONLY
-/* Simple user copies */
-#define CONFIG_USERMEM_DIRECT
+/* Mini platform */
+#define CONFIG_LEVEL_0
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1

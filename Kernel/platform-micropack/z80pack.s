@@ -78,7 +78,7 @@ init_hardware:
             ; set system RAM size
             ld hl, #64
             ld (_ramsize), hl
-            ld hl, #32			; 64K for kernel
+            ld hl, #32			; 32K for kernel
             ld (_procmem), hl
 
 	    ld a, #1
@@ -159,6 +159,9 @@ outchar:
 	    out (0x01), a
             ret
 
+;
+;	Not used yet - will be needed if we do the 3 overlays
+;
 overlay_syscall_entry:
 	ld hl, #18
 	add hl, sp
@@ -206,4 +209,6 @@ bank_switch_a:
 _need_resched:
 	.db 0
 _curbank:
+	.db 0
+_syscall_bank:
 	.db 0

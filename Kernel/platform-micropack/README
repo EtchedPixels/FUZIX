@@ -1,33 +1,35 @@
 A FUZIX target for z80pack.
 
 Test environment for a very squashed build to see what we can achieve in
-64K + disk banking and explore ROM banking ideas
+64K
 
-Not a useful target, but memory testing stuff
+We build a kernel from 0x8000-0xFFFF and everything needs to either fit in
+that space, or we will need some kind of overlay for obscure syscalls. We
+can't however swap the overlays over userspace because there may be pointers
+to userspace addresses in the syscalls. One option might be to mark binaries
+by required level and have level 1 binaries given less room but loaded with
+the overlay. That would work well since it's only a few obscure calls we need
+to boot out.
 
-File system code is paged with the banks being 4K spaced 0xE00 length copies
-of the bank and any fixed data that dribbles over the end.
+The obvious calls to bank out are
 
-TODO: 
-Turn memory images into a loadable binary and a block for the disk
-Preload the exec syscall bank into the main binary so startup works
+rename (526 bytes)
+mkdir (481 bytes)
+rmdir (356 bytes)
+
+It may also be possible to bank out some of execve if we don't allow the
+code/data of a binary to be the full space so we have room for it.
+
+Other options include just having an overlay zone of about 1.5K which would
+hold either
+
+rename
+mkdir
+rmdir
+
+execve (and helpers)
+
+waitpid
+flock
 
 
-Savings:
-
-Other candidates for the bot which are big are waitpid at 380 bytes and
-signal + sigdisp at 621 bytes the pair. signal/sigdisp normally occur only
-at startup and signal handling so would be acceptable-ish, waitpid always
-involves a task switch anyway. Neither are ideal but they might work.
-
-Some inline tricks with tty might also save a tiny bit of RAM
-Put the swap stack at 0x80-0xFF as we can't realistically run CP/M
-emulation.
-
-Other thoughts. When working with small app have a version of some of the
-overlays that can be loaded in the top of app space - how to do relocations
-and patches ?
-
-Do we want to keep the overlays in the swap space gapped between each
-swapped app. Disk swap is usually cheap spacewise and it would speed up
-their fetching.

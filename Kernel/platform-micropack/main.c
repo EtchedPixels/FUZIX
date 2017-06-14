@@ -32,3 +32,12 @@ uint8_t platform_param(char *p)
  used(p);
  return 0;
 }
+
+size_t strlcpy(char *dst, const char *src, size_t dstsize)
+{
+  size_t len = strlen(src);
+  size_t cp = len >= dstsize ? dstsize - 1 : len;
+  memcpy(dst, src, cp);
+  dst[cp] = 0;
+  return len;
+}

@@ -24,7 +24,7 @@ progress:	.db '/', '-', '\', '|'
 
 diskload:	di
 		ld sp, #stack
-		ld hl, #0x88
+		ld hl, #0x6000
 		exx
 		xor a
 		ld h, a
