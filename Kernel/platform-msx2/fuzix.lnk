@@ -1,6 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0000
+-b _BUFFERS=0xD000
 -b _COMMONMEM=0xF000
 -b _DISCARD=0xE000
 -b _FONT=0xFA00

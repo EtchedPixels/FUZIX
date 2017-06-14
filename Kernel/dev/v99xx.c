@@ -136,6 +136,7 @@ void v99xx_copy_from_vram(uint8_t *dst, uint16_t vaddr, uint16_t size)
 	pop de
 	ld bc, (_vdpport)
 	out (c),e
+	ld a,d
 	out (c),d
 	pop de
 	push de
@@ -143,6 +144,9 @@ void v99xx_copy_from_vram(uint8_t *dst, uint16_t vaddr, uint16_t size)
 	push hl
 	push iy
 	dec c
+	cp #0x3f
+	jp m,cpfvram_loop
+	in a,(c)
 cpfvram_loop:
 	ini
 	dec de
@@ -216,5 +220,3 @@ void v99xx_set_blink_period(uint8_t fg, uint8_t bg)
 {
     v99xx_write_reg(V99xx_REG_BLINK_PERIOD, (fg << 4) | (bg & 0xf));
 }
-
-

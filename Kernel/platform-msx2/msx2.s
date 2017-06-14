@@ -20,6 +20,7 @@
 	    .globl _mapslot_bank1
 	    .globl _mapslot_bank2
 	    .globl _need_resched
+            .globl _bufpool
 
 	    ; video driver
 	    .globl _vtinit
@@ -56,6 +57,10 @@
             .include "kernel.def"
             .include "../kernel.def"
 
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
