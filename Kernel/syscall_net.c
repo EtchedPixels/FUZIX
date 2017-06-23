@@ -567,25 +567,49 @@ arg_t _sendto(void)
 	struct socket *s = sock_get(fd, NULL);
 	struct sockaddr_in sin;
 	uint16_t flags;
+	uint16_t alen;
+	uint16_t err;
 
 	if (s == NULL)
 		return -1;
 
+	if (s->state == SS_UNCONNECTED) {
+		err = sock_autobind(s);
+		if (err)
+			return err;
+	}
+	if (s->state < SS_BOUND) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	if (s->state != SS_BOUND && s->state < SS_CONNECTED) {
+		udata.u_error = ENOTCONN;
+		return -1;
+	}
 	flags = ugetw(&uaddr->sio_flags);
 	if (flags) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
+	alen = ugetw(&uaddr->sio_flags);
 	/* Save the address and then just do a 'write' */
-	if (s->s_type != SOCKTYPE_TCP) {
+	if (s->s_type != SOCKTYPE_TCP && alen) {
+		if (s->state >= SS_CONNECTING) {
+			udata.u_error = EISCONN;
+			return -1;
+		}
 		/* Use the address in atmp */
-		/* FIXME: if this is allowable we either need to do this
-		   differently or we need to block sendto + connect */
 		s->s_flag |= SFLAG_ATMP;
 		if (sa_getremote(&uaddr->sio_addr, &sin) == -1)
 			return -1;
 		s->s_addr[SADDR_TMP].addr = sin.sin_addr.s_addr;
 		s->s_addr[SADDR_TMP].port = sin.sin_port;
+	} else {
+		s->s_flag &= ~SFLAG_ATMP;
+		if (s->state < SS_CONNECTED) {
+			udata.u_error = EDESTADDRREQ;
+			return -1;
+		}
 	}
 	return _write();
 }
