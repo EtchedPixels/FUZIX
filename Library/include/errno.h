@@ -54,9 +54,20 @@
 #define EADDRNOTAVAIL	41		/* Address not available */
 #define ENOSYS		42		/* No such system call */
 #define EPFNOSUPPORT	43		/* Protocol not supported */
-#define EOPNOTSUPP	43		/* Operation not supported on transport endpoint */
-#define ECONNRESET	44		/* Connection reset by peer */
-#define __ERRORS	45
+#define EOPNOTSUPP	44		/* Operation not supported on transport endpoint */
+#define ECONNRESET	45		/* Connection reset by peer */
+#define ENETDOWN	46		/* Network is down */
+#define EMSGSIZE	47		/* Message too long */
+
+#define ETIMEDOUT	48		/* Connection timed out */
+#define ECONNREFUSED	49		/* Connection refused */
+#define EHOSTUNREACH	50		/* No route to host */
+#define EHOSTDOWN	51		/* Host is down */
+#define	ENETUNREACH	52		/* Network is unreachable */
+#define ENOTCONN	53		/* Transport endpoint is not connected */
+#define EINPROGRESS	54		/* Operation now in progress */
+#define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
+#define __ERRORS	56
 
 extern int sys_nerr;
 extern char *sys_errlist[];
