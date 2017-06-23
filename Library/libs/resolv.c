@@ -47,11 +47,6 @@
 
 #include "resolv.h"
 
-/* FIXME */
-#define EMSGSIZE EINVAL
-
-
-
 struct res_state res;
 
 static int res_nsend(struct res_state *statp, const char *buf, int buflen,
@@ -104,6 +99,7 @@ static int printable(int ch)
 {
 	return (ch > 0x20 && ch < 0x7f);
 }
+
 
 //
 // dn_find
@@ -546,6 +542,48 @@ static int ns_name_unpack(const unsigned char *msg,
 }
 
 //
+// dn_comp
+//
+
+int dn_comp(const char *src, unsigned char *dst, int dstsiz,
+	    unsigned char **dnptrs, unsigned char **lastdnptr)
+{
+	unsigned char tmp[NS_MAXCDNAME];
+	int rc;
+
+	rc = ns_name_pton(src, tmp, sizeof tmp);
+	if (rc < 0)
+		return rc;
+
+	return ns_name_pack(tmp, dst, dstsiz, dnptrs, lastdnptr);
+}
+
+//
+// dn_expand
+//
+
+int dn_expand(const unsigned char *msg, const unsigned char *eom,
+	      const unsigned char *src, char *dst, int dstsiz)
+{
+	unsigned char tmp[NS_MAXCDNAME];
+	int n;
+	int rc;
+
+	n = ns_name_unpack(msg, eom, src, tmp, sizeof tmp);
+	if (n < 0)
+		return n;
+
+	rc = ns_name_ntop(tmp, dst, dstsiz);
+	if (rc < 0)
+		return rc;
+
+	if (n > 0 && dst[0] == '.')
+		dst[0] = '\0';
+	return n;
+}
+
+
+//
 // res_randomid
 //
 
@@ -652,9 +690,10 @@ static int send_vc(struct res_state *statp,
 	int resplen, n;
 	unsigned short len;
 	unsigned char *cp;
-	struct iovec iov[2];
 	int s;
 	int rc;
+
+	/* Need a timer on this */
 
 	// Connect to name server
 	s = socket(AF_INET, SOCK_STREAM, 0);
@@ -670,16 +709,10 @@ static int send_vc(struct res_state *statp,
 		return 0;
 	}
 
-	/* FIXME: we don't have writev() */
 	// Send length & message
 	len = htons((unsigned short) buflen);
-	iov[0].iov_base = &len;
-	iov[0].iov_len = sizeof(unsigned short);
-	iov[1].iov_base = (char *) buf;
-	iov[1].iov_len = buflen;
 
-	rc = writev(s, iov, 2);
-	if (rc != sizeof(unsigned short) + buflen) {
+	if (write(s, &len, 2) != 2 || (rc = write(s, buf, buflen)) != buflen) {
 		*terrno = rc;
 		close(s);
 		return 0;
@@ -772,9 +805,13 @@ static int send_dg(struct res_state *statp,
 	if (timeout <= 0)
 		timeout = 1;
 	timeout = timeout * 1000;
-	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int));
 
-      wait:
+	/* We need to use a timer instead */
+#ifdef FIXME	
+	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int));
+#endif	
+
+wait:
 	fromlen = sizeof(struct sockaddr_in);
 	resplen =
 	    recvfrom(s, (char *) answer, anslen, 0,
@@ -787,7 +824,7 @@ static int send_dg(struct res_state *statp,
 	}
 
 	if (resplen < 0) {
-		if (errno == ETIMEOUT) {
+		if (errno == ETIMEDOUT) {
 			*gotsomewhere = 1;
 			close(s);
 			return 0;
@@ -843,7 +880,7 @@ static int res_nsend(struct res_state *statp, const char *buf, int buflen,
 
 	v_circuit = (statp->options & RES_USEVC) || buflen > NS_PACKETSZ;
 	gotsomewhere = 0;
-	terrno = -ETIMEOUT;
+	terrno = -ETIMEDOUT;
 
 	// FIXME: add dns cache lookup here
 
@@ -852,12 +889,12 @@ static int res_nsend(struct res_state *statp, const char *buf, int buflen,
 		struct sockaddr_in ina;
 		int lastns = statp->nscount - 1;
 
-		ina = statp->nsaddr_list[0];
+		memcpy(&ina, &statp->nsaddr_list[0], sizeof(ina));
 		for (ns = 0; ns < lastns; ns++) {
-			statp->nsaddr_list[ns] =
-			    statp->nsaddr_list[ns + 1];
+			memcpy(&statp->nsaddr_list[ns],
+			    &statp->nsaddr_list[ns + 1], sizeof(struct sockaddr_in));
 		}
-		statp->nsaddr_list[lastns] = ina;
+		memcpy(&statp->nsaddr_list[lastns], &ina, sizeof(ina));
 	}
 	// Send request, RETRY times, or until successful.
 	for (try = 0; try < statp->retry; try++) {
@@ -902,7 +939,7 @@ static int res_nsend(struct res_state *statp, const char *buf, int buflen,
 			errno = ECONNREFUSED;	// No nameservers found
 			return -1;
 		} else {
-			errno = ETIMEOUT;	// No answer obtained
+			errno = ETIMEDOUT;	// No answer obtained
 			return -1;
 		}
 	} else {
@@ -928,6 +965,7 @@ static int res_nquery(struct res_state *statp, const char *dname,
 		      int class, int type, unsigned char *answer,
 		      int anslen)
 {
+	/* Big.. ugly, FIXME and brk this */
 	unsigned char buf[QUERYBUF_SIZE];
 	struct dns_hdr *hp = (struct dns_hdr *) answer;
 	int n;
@@ -943,28 +981,8 @@ static int res_nquery(struct res_state *statp, const char *dname,
 	if (n < 0)
 		return n;
 
-	if (hp->rcode != 0 || ntohs(hp->ancount) == 0) {
-		switch (hp->rcode) {
-		case DNS_ERR_NXDOMAIN:
-			errno = EHOSTNOTFOUND;
-			return -1;
-
-		case DNS_ERR_SERVFAIL:
-			errno = ETRYAGAIN;
-			return -1;
-
-		case DNS_ERR_NOERROR:
-			errno = ENODATA;
-			return -1;
-
-		case DNS_ERR_FORMERR:
-		case DNS_ERR_NOTIMPL:
-		case DNS_ERR_REFUSED:
-		default:
-			errno = ENORECOVERY;
-			return -1;
-		}
-	}
+	if (hp->rcode != 0 || ntohs(hp->ancount) == 0)
+		return -1;
 
 	return n;
 }
@@ -1043,7 +1061,7 @@ static int res_nsearch(struct res_state *statp, const char *name,
 				return -1;
 
 			switch (errno) {
-			case ETIMEOUT:
+			case ETIMEDOUT:
 				got_nodata++;
 				// FALLTHROUGH
 
@@ -1089,7 +1107,7 @@ static int res_nsearch(struct res_state *statp, const char *name,
 	if (saved_rc != 0) {
 		return saved_rc;
 	} else if (got_nodata) {
-		errno = ETIMEOUT;
+		errno = ETIMEDOUT;
 		return -1;
 	} else if (got_servfail) {
 		errno = EAGAIN;
@@ -1297,45 +1315,4 @@ int res_mkquery(int op, const char *dname, int class, int type, char *data,
 {
 	return res_nmkquery(&res, op, dname, class, type, data, datalen,
 			    newrr, buf, buflen);
-}
-
-//
-// dn_comp
-//
-
-int dn_comp(const char *src, unsigned char *dst, int dstsiz,
-	    unsigned char **dnptrs, unsigned char **lastdnptr)
-{
-	unsigned char tmp[NS_MAXCDNAME];
-	int rc;
-
-	rc = ns_name_pton(src, tmp, sizeof tmp);
-	if (rc < 0)
-		return rc;
-
-	return ns_name_pack(tmp, dst, dstsiz, dnptrs, lastdnptr);
-}
-
-//
-// dn_expand
-//
-
-int dn_expand(const unsigned char *msg, const unsigned char *eom,
-	      const unsigned char *src, char *dst, int dstsiz)
-{
-	unsigned char tmp[NS_MAXCDNAME];
-	int n;
-	int rc;
-
-	n = ns_name_unpack(msg, eom, src, tmp, sizeof tmp);
-	if (n < 0)
-		return n;
-
-	rc = ns_name_ntop(tmp, dst, dstsiz);
-	if (rc < 0)
-		return rc;
-
-	if (n > 0 && dst[0] == '.')
-		dst[0] = '\0';
-	return n;
 }

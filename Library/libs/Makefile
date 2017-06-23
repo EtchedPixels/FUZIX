@@ -41,8 +41,10 @@ SRC_C += lrand48.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
 SRC_C += pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
-SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
-SRC_C += regsub.c remove.c rewind.c rewinddir.c rindex.c seekdir.c setbuffer.c setenv.c
+SRC_C += raise.c rand.c readdir.c readlink.c realloc.c recv.c
+SRC_C += recvfrom.c regerror.c
+SRC_C += regsub.c remove.c rewind.c rewinddir.c rindex.c seekdir.c
+SRC_C += send.c sendto.c setbuffer.c setenv.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sleep.c sprintf.c 
 SRC_C += stat.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
@@ -88,6 +90,8 @@ SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
 
 SRC_TM = tinymalloc.c
 
+SRC_RES = resolv.c
+
 OBJ_C = $(SRC_C:.c=.rel)
 OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_CT = $(SRC_CT:.c=.rel)
@@ -95,8 +99,9 @@ OBJ_LM = $(SRC_LM:.c=.rel)
 OBJ_TM = $(SRC_TM:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
+OBJ_RES = $(SRC_RES:.c=.rel)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib
+all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -139,6 +144,10 @@ tinymalloc$(PLATFORM).lib: $(OBJ_TM)
 	$(AR) rc tinymalloc$(PLATFORM).lib $(OBJ_TM)
 	$(AR) s tinymalloc$(PLATFORM).lib
 
+resolv$(PLATFORM).lib: $(OBJ_RES)
+	$(AR) rc resolv$(PLATFORM).lib $(OBJ_RES)
+	$(AR) s resolv$(PLATFORM).lib
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -161,6 +170,9 @@ $(OBJ_LM):%.rel: %.c
 	$(CC) $(CC_OPT) -DBUILD_LIBM $< -o $@
 
 $(OBJ_TM):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c)
+
+$(OBJ_RES):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
 $(OBJ_HARD):%.rel: %.c
