@@ -9,7 +9,8 @@ static unsigned char out[65536];
 static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, s__VIDEO, l__INITIALIZED,
     l__GSFINAL, l__GSINIT, l__COMMONMEM, s__FONT, l__FONT, s__DISCARD,
-    l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST;
+    l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST,
+    s__HEAP, l__HEAP;
 
 
 static void ProcessMap(FILE * fp)
@@ -68,6 +69,10 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &l__COMMONMEM);
 		if (strcmp(p2, "l__FONT") == 0)
 			sscanf(p1, "%x", &l__FONT);
+		if (strcmp(p2, "s__HEAP") == 0)
+			sscanf(p1, "%x", &s__HEAP);
+		if (strcmp(p2, "l__HEAP") == 0)
+			sscanf(p1, "%x", &l__HEAP);
 	}
 }
 
@@ -160,6 +165,11 @@ int main(int argc, char *argv[])
         }
 
 	end = s__INITIALIZER;
+	if (end < start) {
+		/* We are dealing with an unpacked binary where the end
+		   will instead be _HEAP */
+		end = s__HEAP;
+	}
 
 	if (s__CODE2 < 0x10000) {
 		/* Move the initialized data into the right spot rather than sdcc's
