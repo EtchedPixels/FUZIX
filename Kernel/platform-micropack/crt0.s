@@ -33,11 +33,14 @@
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
+	.globl init
 
         ; startup code
         .area _CODE
 init:
         di
+	ld a,#'*'
+	out (1),a
         ld sp, #kstack_top
 
         ; Configure memory map

@@ -34,7 +34,8 @@ diskload:	di
 		ld a, #59		; start on track 60
 		out (11), a
 		exx
-		ld c, #17		; number of tracks to load (56Kish)
+		ld c, #12		; number of tracks to load (0x6000
+					; to 0xFBFF)
 load_tracks:	in a, (11)
 		inc a			; track
 		out (11), a
@@ -66,6 +67,8 @@ load_sectors:	exx
 		ld de, #128
 		add hl, de
 		djnz load_sectors	; 26 sectors = 3328 bytes
+		ld a,#'@'
+		out (1),a
 		dec c
 		jr nz, load_tracks
 		ld a, #0xc9		; to help debug
@@ -74,8 +77,8 @@ load_sectors:	exx
 		out (1), a
 		ld a, #10
 		out (1), a
-		jp 0x88
+		jp 0x8000
 
-		.ds 25
+		.ds 20
 stack:
 		.db 0xff
