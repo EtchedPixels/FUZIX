@@ -221,6 +221,8 @@ void vtoutput(unsigned char *p, unsigned int len)
 	vtbusy = 1;
 	irqrestore(irq);
 	cursor_off();
+	/* FIXME: do we ever get called with len > 1, if not we could strip
+	   this right down */
 	do {
 		while (len--) {
 			unsigned char c = *p++;

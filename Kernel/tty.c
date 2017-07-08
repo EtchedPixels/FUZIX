@@ -85,6 +85,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				nread = 0;
 				break;
 			}
+			/* FIXME: check VEOL ??  */
 			if (c == '\n')
 				break;
 		}
@@ -107,7 +108,6 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	uint8_t c;
 
 	used(rawflag);
-	used(flag);
 
 	t = &ttydata[minor];
 
@@ -138,6 +138,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				else if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
+			/* FIXME: this needs to learn O_NDELAY */
 			tty_putc_wait(minor, c);
 		}
 		++udata.u_base;
@@ -243,7 +244,8 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
 
-	if (minor > NUM_DEV_TTY + 1) {
+        /* FIXME: can this go away ? */
+	if (minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
@@ -357,11 +359,12 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 int tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
-	int canon;
+	uint8_t canon;
 	uint8_t wr;
 	struct tty *t = &ttydata[minor];
 	struct s_queue *q = &ttyinq[minor];
 
+	/* This is safe as ICANON is in the low bits */
 	canon = t->termios.c_lflag & ICANON;
 
 	if (t->termios.c_iflag & ISTRIP)
@@ -384,6 +387,7 @@ int tty_inproc(uint8_t minor, unsigned char c)
 		if(t->termios.c_iflag & ICRNL)
 			c = '\n';
 	}
+	/* Q: should this be else .. */
 	if (c == '\n' && (t->termios.c_iflag & INLCR))
 		c = '\r';
 
