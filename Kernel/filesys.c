@@ -12,6 +12,8 @@
  * FIXME: ENAMETOOLONG might be good to add
  */
 
+#ifndef CONFIG_LEVEL_0
+
 inoptr n_open(char *uname, inoptr *parent)
 {
     inoptr r;
@@ -35,6 +37,7 @@ inoptr n_open(char *uname, inoptr *parent)
 
     return r;
 }
+#endif
 
 inoptr kn_open(char *namep, inoptr *parent)
 {

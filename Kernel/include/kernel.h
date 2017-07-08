@@ -782,7 +782,11 @@ extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
+#ifndef CONFIG_LEVEL_0
 extern inoptr n_open(char *uname, inoptr *parent);
+#else
+#define n_open	kn_open
+#endif
 /* open file, "name" in kernel address space */
 extern inoptr kn_open(char *uname, inoptr *parent);
 extern inoptr i_open(uint16_t dev, uint16_t ino);
