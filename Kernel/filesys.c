@@ -89,10 +89,12 @@ inoptr kn_open(char *namep, inoptr *parent)
         }
 
         /* See if we are going up through a mount point */
+        /* FIXME: re-order for speed */
         if((wd == udata.u_root || (wd->c_num == ROOTINODE && wd->c_dev != root_dev)) &&
                 name[0] == '.' && name[1] == '.' &&
                 (name[2] == '/' || name[2] == '\0')){
             if (wd == udata.u_root) {
+                /* FIXME: is this assignment ever needed */
                 ninode = wd;
                 name += 2;
                 continue;
