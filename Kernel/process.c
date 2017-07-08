@@ -213,6 +213,7 @@ void newproc(ptptr p)
 	p->p_pptr = udata.u_ptab;
 	p->p_ignored = udata.u_ptab->p_ignored;
 	p->p_tty = udata.u_ptab->p_tty;
+	/* FIXME: is this correct now we have proper ctty handling */
 	if (!p->p_tty)		/* If no tty, try tty of parent's parent */
 		p->p_tty = udata.u_ptab->p_pptr->p_tty;
 	p->p_uid = udata.u_ptab->p_uid;
@@ -270,6 +271,8 @@ ptptr ptab_alloc(void)
 			if (nextpid++ > MAXPID)
 				nextpid = 20;
 			newp->p_pid = nextpid;
+			/* FIXME: we don't needto keep scanning on finding a
+			   clash ! */
 			for (p = ptab; p < ptab_end; p++)
 				if (p->p_status != P_EMPTY
 				    && p->p_pid == nextpid)
@@ -373,6 +376,7 @@ void timer_interrupt(void)
 	/* Check run time of current process. We don't charge time while
 	   swapping as the last thing we want to do is to swap a process in
 	   and decide it took time to swap in so needs to go away again! */
+	/* FIXME: can we kill off inint ? */
 	if (!inswap && (++runticks >= udata.u_ptab->p_priority)
 	    && !udata.u_insys && inint && nready > 1) {
                  need_resched = 1;
@@ -605,6 +609,7 @@ void acctexit(ptptr p)
 #endif
 
 /* Perform the terminal process signalling */
+/* FIXME: why return a value - we don't use it */
 static int signal_parent(ptptr p)
 {
         if (p->p_ignored & (1UL << SIGCHLD)) {
@@ -675,6 +680,7 @@ void doexit(uint16_t val)
 			continue;
 		/* Set any child's parents to our parent */
 		/* FIXME: do we need to wakeup the parent if we do this ? */
+		/* FIXME: shouldn't this go to init ? */
 		if (p->p_pptr == udata.u_ptab)
 			p->p_pptr = udata.u_ptab->p_pptr;
 		/* Send SIGHUP to any pgrp members and remove
