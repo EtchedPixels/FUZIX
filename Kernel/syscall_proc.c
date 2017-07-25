@@ -235,6 +235,7 @@ arg_t _brk(void)
 	   the extra as we no longer guarantee it is clear already */
 	if (addr > udata.u_break)
 		uzero((void *)udata.u_break, addr - udata.u_break);
+	/* FIXME: review  can brk() below base address */
 	udata.u_break = addr;
 	return 0;
 }
@@ -601,8 +602,7 @@ getpgrp (void)                    Function 61
 
 arg_t _getpgrp(void)
 {
-	udata.u_ptab->p_pgrp = udata.u_ptab->p_pid;
-	return (0);
+	return udata.u_ptab->p_pgrp;
 }
 
 /*******************************************
