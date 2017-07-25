@@ -743,7 +743,7 @@ int8_t uf_alloc_n(int base)
             return j;
         }
     }
-    udata.u_error = ENFILE;
+    udata.u_error = EMFILE;
     return -1;
 }
 
