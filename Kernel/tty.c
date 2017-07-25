@@ -355,6 +355,8 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
  * at the user.
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
+ *
+ * FIXME: do we ever use the return value if not why bother ?
  */
 int tty_inproc(uint8_t minor, unsigned char c)
 {
@@ -499,7 +501,11 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
            The driver should return a value from the ttyready_t enum:
             1 (TTY_READY_NOW) -- send bytes now
             0 (TTY_READY_SOON) -- spinning may be useful
-           -1 (TTY_READY_LATER) -- blocked, don't spin (eg flow controlled) */
+           -1 (TTY_READY_LATER) -- blocked, don't spin (eg flow controlled)
+
+           FIXME: we can make tty_sleeping an add on to a hardcoded function using tty
+	   flags, and tty_outproc test it. Then only devices wanting to mask
+	   an actual IRQ need to care */
 	if (!udata.u_ininterrupt) {
 		while ((t = tty_writeready(minor)) != TTY_READY_NOW)
 			if (t != TTY_READY_SOON || need_reschedule()){
