@@ -181,6 +181,7 @@ struct tty {
 #define TTYF_STOP	1
 #define TTYF_DISCARD	2
 #define TTYF_DEAD	4
+ /* FIXME add TTYF_SLEEPING 8 here so can generalize code */
     uint16_t pgrp;
     struct termios termios;
     struct winsize winsize;	/* 8 byte so takes us up to 32 */
@@ -217,7 +218,7 @@ extern int pty_open(uint8_t minor, uint16_t flag);
 extern int pty_close(uint8_t minor);
 extern int pty_ioctl(uint8_t minor, uint16_t request, char *data);
 
-extern int tty_inproc(uint8_t minor, unsigned char c);
+extern void tty_inproc(uint8_t minor, unsigned char c);
 extern void tty_outproc(uint8_t minor);
 extern void tty_echo(uint8_t minor, unsigned char c);
 extern void tty_erase(uint8_t minor);
