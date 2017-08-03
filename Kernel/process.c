@@ -213,9 +213,6 @@ void newproc(ptptr p)
 	p->p_pptr = udata.u_ptab;
 	p->p_ignored = udata.u_ptab->p_ignored;
 	p->p_tty = udata.u_ptab->p_tty;
-	/* FIXME: is this correct now we have proper ctty handling */
-	if (!p->p_tty)		/* If no tty, try tty of parent's parent */
-		p->p_tty = udata.u_ptab->p_pptr->p_tty;
 	p->p_uid = udata.u_ptab->p_uid;
 	/* Set default priority */
 	p->p_priority = MAXTICKS;
@@ -271,12 +268,13 @@ ptptr ptab_alloc(void)
 			if (nextpid++ > MAXPID)
 				nextpid = 20;
 			newp->p_pid = nextpid;
-			/* FIXME: we don't needto keep scanning on finding a
-			   clash ! */
+
 			for (p = ptab; p < ptab_end; p++)
 				if (p->p_status != P_EMPTY
-				    && p->p_pid == nextpid)
+				    && p->p_pid == nextpid) {
 					newp->p_pid = 0;	/* try again */
+					break;
+				}
 		}
 		newp->p_top = udata.u_top;
 		if (pagemap_alloc(newp) == 0) {
@@ -678,11 +676,14 @@ void doexit(uint16_t val)
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status == P_EMPTY || p == udata.u_ptab)
 			continue;
-		/* Set any child's parents to our parent */
-		/* FIXME: do we need to wakeup the parent if we do this ? */
-		/* FIXME: shouldn't this go to init ? */
-		if (p->p_pptr == udata.u_ptab)
-			p->p_pptr = udata.u_ptab->p_pptr;
+		/* Set any child's parents to init */
+		if (p->p_pptr == udata.u_ptab) {
+			p->p_pptr = ptab;	/* ptab is always init */
+			/* Suppose our child is a zombie and init has
+			   SIGCLD blocked */
+		        if (ptab[0].p_ignored & (1UL << SIGCHLD))
+				p->p_status = P_EMPTY;
+		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
                 if (p->p_pgrp == udata.u_ptab->p_pid) {
