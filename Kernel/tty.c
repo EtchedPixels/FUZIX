@@ -85,8 +85,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				nread = 0;
 				break;
 			}
-			/* FIXME: check VEOL ??  */
-			if (c == '\n')
+			if (c == '\n' || c == t->termios.c_cc[VEOL])
 				break;
 		}
 
@@ -151,6 +150,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 int tty_open(uint8_t minor, uint16_t flag)
 {
 	struct tty *t;
+	irqflags_t irq;
 
 	if (minor > NUM_DEV_TTY) {
 		udata.u_error = ENODEV;
@@ -173,11 +173,14 @@ int tty_open(uint8_t minor, uint16_t flag)
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 		goto out;
 
-        /* FIXME: racy - need to handle IRQ driven carrier events safely */
+	irq = di();
         if (!tty_carrier(minor)) {
-                if (psleep_flags(&t->termios.c_cflag, flag))
+		if (psleep_flags(&t->termios.c_cflag, flag)) {
+			irqrestore(irq);
                         return -1;
+		}
         }
+        irqrestore(irq);
         /* Carrier spiked ? */
         if (t->flag & TTYF_DEAD) {
                 udata.u_error = ENXIO;
@@ -244,11 +247,6 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
 
-        /* FIXME: can this go away ? */
-	if (minor > NUM_DEV_TTY) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
         t = &ttydata[minor];
 
         /* Special case select ending after a hangup */
@@ -355,10 +353,8 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
  * at the user.
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
- *
- * FIXME: do we ever use the return value if not why bother ?
  */
-int tty_inproc(uint8_t minor, unsigned char c)
+void tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
 	uint8_t canon;
@@ -372,7 +368,7 @@ int tty_inproc(uint8_t minor, unsigned char c)
 	if (t->termios.c_iflag & ISTRIP)
 		c &= 0x7f;	/* Strip off parity */
 	if (canon && !c)
-		return 1;	/* Simply quit if Null character */
+		return;		/* Simply quit if Null character */
 
 #ifdef CONFIG_IDUMP
 	if (c == 0x1a)		/* ^Z */
@@ -385,7 +381,7 @@ int tty_inproc(uint8_t minor, unsigned char c)
 
 	if (c == '\r' ){
 		if(t->termios.c_iflag & IGNCR )
-			return 1;
+			return;
 		if(t->termios.c_iflag & ICRNL)
 			c = '\n';
 	}
@@ -403,23 +399,23 @@ sigout:
 			sgrpsig(t->pgrp, wr);
 			clrq(q);
 			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
-			return 1;
+			return;
 		}
 	}
 	if (c == t->termios.c_cc[VDISCARD]) {	/* ^O */
 	        t->flag ^= TTYF_DISCARD;
-		return 1;
+		return;
 	}
 	if (t->termios.c_iflag & IXON) {
 		if (c == t->termios.c_cc[VSTOP]) {	/* ^S */
 		        t->flag |= TTYF_STOP;
-			return 1;
+			return;
 		}
 		if (c == t->termios.c_cc[VSTART]) {	/* ^Q */
 		        t->flag &= ~TTYF_STOP;
 			wakeup(&t->flag);
 			tty_selwake(minor, SELECT_OUT);
-			return 1;
+			return;
 		}
 	}
 	if (canon) {
@@ -438,8 +434,7 @@ sigout:
 			tty_echo(minor, '\r');
 	}
 
-	wr = insq(q, c);
-	if (wr)
+	if (insq(q, c))
 		tty_echo(minor, c);
 	else
 		tty_putc(minor, '\007');	/* Beep if no more room */
@@ -449,7 +444,7 @@ sigout:
 		wakeup(q);
 		tty_selwake(minor, SELECT_IN);
 	}
-	return wr;
+	return;
 
 eraseout:
 	while (uninsq(q, &oc)) {
@@ -462,7 +457,7 @@ eraseout:
                 if (wr == ECHOE)
                         break;
 	}
-	return 1;
+	return;
 }
 
 /* called when a UART transmitter is ready for the next character */
