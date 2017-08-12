@@ -25,3 +25,9 @@ void platform_interrupt(void)
 void map_init(void)
 {
 }
+
+uint8_t platform_param(char *p)
+{
+    used(p);
+    return 0;
+}
