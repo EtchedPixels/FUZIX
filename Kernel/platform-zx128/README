@@ -4,6 +4,10 @@ An FUZIX target for ZX Spectrum 128.
 		(Strictly speaking this is a choice of ROMs and magic
 		 overlaying hardware ROMs like the interface 1). We need the
 		48K one so we can use the font and the 0x3900 hack
+
+		(Some clones and add in cards can overlay this with RAM or
+		banked RAM of their own)
+
 4000-7FFF	Kernel data, common read/write space, constants, common read
 		only, plenty of space
 8000-BFFF	_DISCARD area - blown away when we exec init
@@ -45,37 +49,8 @@ Swap over IDE
 Set vectors for syscalls somewhere safe and common (can't use the normal RST
 ones). Need a reloc hack to pick syscall method ??
 
-Support the +2A and +3 platform. These have the same banking options but
-also "special mode". In special mode we get a choice of four other pure RAM
-bank setups
-
-	00  40  80  C0
-conf0	[0] [1] [2] [3]
-conf1	[4] [5] [6] [7]
-conf2	[4] [5] [6] [3]
-conf3	[4] [7] [6] [3]
-
-
-That gives us a conventional low 0/1 and 4/5 for user space with the kernel
-using 2/3/6/7.
-
-Kernel maps are then
-
-3 = common (always mapped high)
-2/6 = banked (at 0x8000)
-7 = banked with screen (at 0x4000)
-
-although 7 does not appear to be part of the banks we cannot map 2 and 7
-together so it's effectively banked.
-
-Alternatively we could go with a single 64K swapping user space with
-kernel mapped normally at 4-7  (with screen hole at C000) and user at 0-3
-and a small copied common in bank 3 and 7
-
-No IM2 hack needed.
-
-
-The Timx is different again. Memory is 3 banks of 64K. The main bank is laid
+Note:
+The Timx is different. Memory is 3 banks of 64K. The main bank is laid
 out like the Spectrum 48K but with the screen at 0x4000 (or for 80 col mode
 most of 0x4000-0x8000). Each 8K can come from either main memory or an
 external bank (EX-ROM or DOCK). Dock and EX_ROM pages cannot be mapped at
@@ -107,3 +82,6 @@ Spectrum 48K with ZXMMC etc. In this case the screen being stuck at 0x4000
 rather limits the options beyond a ZX128 like set up but with kernel low
 just as with cartridge.
 
+Scorpion can have more RAM (256K) and can also map one of the pages low but
+not bank it. This doesn't seem to buy us much except for more copyable banks
+before we hit disk. Pentagon is much the same.
