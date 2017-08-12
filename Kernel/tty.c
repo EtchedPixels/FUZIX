@@ -133,12 +133,13 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 			if (t->termios.c_oflag & OPOST) {
 				if (c == '\n' && (t->termios.c_oflag & ONLCR))
-					tty_putc_wait(minor, '\r');
+					if (tty_putc_maywait(minor, '\r', flag))
+						break;
 				else if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
-			/* FIXME: this needs to learn O_NDELAY */
-			tty_putc_wait(minor, c);
+			if (tty_putc_maywait(minor, c, flag))
+				break;
 		}
 		++udata.u_base;
 		++written;
@@ -481,9 +482,12 @@ void tty_erase(uint8_t minor)
 }
 
 
-void tty_putc_wait(uint8_t minor, unsigned char c)
+int tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 {
         uint8_t t;
+
+        flag &= O_NDELAY;
+
 #ifdef CONFIG_DEV_PTY
 	if (minor >= PTY_OFFSET)
 		ptty_putc_wait(minor, c);
@@ -500,9 +504,15 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
 
            FIXME: we can make tty_sleeping an add on to a hardcoded function using tty
 	   flags, and tty_outproc test it. Then only devices wanting to mask
-	   an actual IRQ need to care */
+	   an actual IRQ need to care
+
+	*/
 	if (!udata.u_ininterrupt) {
 		while ((t = tty_writeready(minor)) != TTY_READY_NOW)
+			if (t == TTY_READY_LATER && flag) {
+				udata.u_error = EAGAIN;
+				return -1;
+			}
 			if (t != TTY_READY_SOON || need_reschedule()){
 				irqflags_t irq = di();
 				tty_sleeping(minor);
@@ -511,6 +521,12 @@ void tty_putc_wait(uint8_t minor, unsigned char c)
 			}
 	}
 	tty_putc(minor, c);
+	return 1;
+}
+
+void tty_putc_wait(uint8_t minor, unsigned char ch)
+{
+	tty_putc_maywait(minor, ch, 0);
 }
 
 void tty_hangup(uint8_t minor)

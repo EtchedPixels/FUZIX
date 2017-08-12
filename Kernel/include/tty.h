@@ -222,6 +222,7 @@ extern void tty_inproc(uint8_t minor, unsigned char c);
 extern void tty_outproc(uint8_t minor);
 extern void tty_echo(uint8_t minor, unsigned char c);
 extern void tty_erase(uint8_t minor);
+extern int tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flags);
 extern void tty_putc_wait(uint8_t minor, unsigned char c);
 
 typedef enum {
