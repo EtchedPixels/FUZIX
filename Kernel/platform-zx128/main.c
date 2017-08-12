@@ -45,6 +45,15 @@ void map_init(void)
 {
 }
 
+size_t strlcpy(char *dst, const char *src, size_t dstsize)
+{
+  size_t len = strlen(src);
+  size_t cp = len >= dstsize ? dstsize - 1 : len;
+  memcpy(dst, src, cp);
+  dst[cp] = 0;
+  return len;
+}
+
 #ifndef SWAPDEV
 /* Adding dummy swapper since it is referenced by tricks.s */
 void swapper(ptptr p)

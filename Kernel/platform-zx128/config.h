@@ -1,3 +1,5 @@
+#define CONFIG_LEVEL_0
+
 #define CONFIG_IDE
 //#define CONFIG_BETADISK
 
