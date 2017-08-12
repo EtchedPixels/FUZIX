@@ -667,6 +667,9 @@ _in:
 	in l, (c)
 	ret
 
+___hard_ei:
+	ei
+	ret
 
 ;
 ;	Pull in the CPU specific workarounds
