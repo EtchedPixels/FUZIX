@@ -218,7 +218,7 @@ extern int pty_open(uint8_t minor, uint16_t flag);
 extern int pty_close(uint8_t minor);
 extern int pty_ioctl(uint8_t minor, uint16_t request, char *data);
 
-extern void tty_inproc(uint8_t minor, unsigned char c);
+extern uint8_t tty_inproc(uint8_t minor, unsigned char c);
 extern void tty_outproc(uint8_t minor);
 extern void tty_echo(uint8_t minor, unsigned char c);
 extern void tty_erase(uint8_t minor);
