@@ -355,7 +355,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
  */
-void tty_inproc(uint8_t minor, unsigned char c)
+uint8_t tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
 	uint8_t canon;
@@ -369,7 +369,7 @@ void tty_inproc(uint8_t minor, unsigned char c)
 	if (t->termios.c_iflag & ISTRIP)
 		c &= 0x7f;	/* Strip off parity */
 	if (canon && !c)
-		return;		/* Simply quit if Null character */
+		return 1;	/* Simply quit if Null character */
 
 #ifdef CONFIG_IDUMP
 	if (c == 0x1a)		/* ^Z */
@@ -382,7 +382,7 @@ void tty_inproc(uint8_t minor, unsigned char c)
 
 	if (c == '\r' ){
 		if(t->termios.c_iflag & IGNCR )
-			return;
+			return 1;
 		if(t->termios.c_iflag & ICRNL)
 			c = '\n';
 	}
@@ -400,23 +400,23 @@ sigout:
 			sgrpsig(t->pgrp, wr);
 			clrq(q);
 			t->flag &= ~(TTYF_STOP | TTYF_DISCARD);
-			return;
+			return 1;
 		}
 	}
 	if (c == t->termios.c_cc[VDISCARD]) {	/* ^O */
 	        t->flag ^= TTYF_DISCARD;
-		return;
+		return 1;
 	}
 	if (t->termios.c_iflag & IXON) {
 		if (c == t->termios.c_cc[VSTOP]) {	/* ^S */
 		        t->flag |= TTYF_STOP;
-			return;
+			return 1;
 		}
 		if (c == t->termios.c_cc[VSTART]) {	/* ^Q */
 		        t->flag &= ~TTYF_STOP;
 			wakeup(&t->flag);
 			tty_selwake(minor, SELECT_OUT);
-			return;
+			return 1;
 		}
 	}
 	if (canon) {
@@ -435,7 +435,8 @@ sigout:
 			tty_echo(minor, '\r');
 	}
 
-	if (insq(q, c))
+	wr = insq(q, c);
+	if (wr)
 		tty_echo(minor, c);
 	else
 		tty_putc(minor, '\007');	/* Beep if no more room */
@@ -445,7 +446,7 @@ sigout:
 		wakeup(q);
 		tty_selwake(minor, SELECT_IN);
 	}
-	return;
+	return wr;
 
 eraseout:
 	while (uninsq(q, &oc)) {
@@ -458,7 +459,7 @@ eraseout:
                 if (wr == ECHOE)
                         break;
 	}
-	return;
+	return 1;
 }
 
 /* called when a UART transmitter is ready for the next character */
