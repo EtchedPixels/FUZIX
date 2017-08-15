@@ -1,6 +1,8 @@
 #ifndef _SYS_SOCKET_H
 #define _SYS_SOCKET_H
 
+#include "types.h"
+
 #define AF_INET		1
 
 #define SOCK_RAW	1
