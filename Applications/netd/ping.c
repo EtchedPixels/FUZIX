@@ -53,7 +53,7 @@ struct sockaddr_in addr;
 int id;
 int seq=0;
 int sent=0;
-int recv=0;
+int nrecv=0;
 
 void alarm_handler( int signum ){
     return;
@@ -61,7 +61,7 @@ void alarm_handler( int signum ){
 
 void int_handler( int signum ){
     printf("sent %d, recv %d, %d%%\n",
-	   sent, recv, recv*100/sent );
+	   sent, nrecv, nrecv*100/sent );
     exit(0);
 }
 
@@ -89,7 +89,7 @@ uint16_t cksum( char *b, int len ){
 
 
 /* sends ping to remote */
-void send( void ){
+void sendping( void ){
     struct icmp *i = (struct icmp *)buf;
     int l = strlen(data) + 8;
     memset( buf, 0, MAXBUF);
@@ -153,7 +153,7 @@ int main( int argc, char *argv[] ){
     
 
     while(1){
-	send();
+	sendping();
 	signal( SIGALRM, alarm_handler );
 	alarm(2);
     ragain:
@@ -180,7 +180,7 @@ int main( int argc, char *argv[] ){
 	    if( icmpbuf->id != id )
 		goto ragain;
 	    /* passed filters, so this must be one of our pings */
-	    recv++;
+	    nrecv++;
 	    printf("%d bytes from %s (", x, argv[1] );
 	    ipprint( &ipbuf->src );
 	    printf(") req=%d", icmpbuf->seq );
