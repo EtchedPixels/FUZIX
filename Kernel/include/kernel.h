@@ -610,6 +610,8 @@ struct s_argblk {
 #define ENOTCONN	53		/* Transport endpoint is not connected */
 #define EINPROGRESS	54		/* Operation now in progress */
 #define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
+#define EISCONN         56              /* Socket is already connected */
+#define EDESTADDRREQ    57              /* No destination address specified */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued

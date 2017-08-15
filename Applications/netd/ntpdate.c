@@ -58,7 +58,7 @@ void pusage( void ){
 }
 
 /* sends query to remote */
-void send( void ){
+void sendq( void ){
     memset( buf, 0, MAXBUF );
     struct ntp_t *i = (struct ntp_t *)buf;
     i->lvm = 0xe3;
@@ -127,7 +127,7 @@ int main( int argc, char *argv[] ){
 
     retries = 3;
     while (retries--){
-	send();
+	sendq();
 	signal( SIGALRM, alarm_handler );
 	alarm(2);
 	rv = read( fd, buf, MAXBUF);
