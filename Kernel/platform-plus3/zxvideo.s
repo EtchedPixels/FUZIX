@@ -35,7 +35,7 @@ videopos:
         ld e,a
         ld a,d
         and #0x18
-        or #0xC0	    ; not 0x40 as in screen 7
+        or #0x40	    ; page 7 is mapped here
         ld d,a
         ret
 
@@ -71,6 +71,7 @@ nofiddle:
         rl b
         ld c, a
 
+	; FIXME: Can't do this any more!
         ld hl, #0x3C00	    ; ROM font
         add hl, bc          ; hl points to first byte of char data
 

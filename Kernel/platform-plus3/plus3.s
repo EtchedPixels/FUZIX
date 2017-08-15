@@ -27,8 +27,6 @@
         .globl map_restore
 	.globl map_process_save
 	.globl map_kernel_restore
-	.globl map_video
-	.globl unmap_video
 	.globl map_for_swap
 
         .globl _need_resched
@@ -97,11 +95,10 @@ init_hardware:
         ld hl, #(128 - 64)        ; 64K for kernel/screen/etc
         ld (_procmem), hl
 
-	call map_video
         ; screen initialization
         ; clear
-        ld hl, #0xC000
-        ld de, #0xC001
+        ld hl, #0x4000
+        ld de, #0x4001
         ld bc, #0x1800            ; There should be 0x17FF, but we are going
         xor a                     ; to copy additional byte to avoid need of
         ld (hl), a                ; DE and HL increment before attribute
@@ -113,7 +110,6 @@ init_hardware:
         ld (hl), a
         ldir
 
-	call unmap_video
         ret
 
 ;------------------------------------------------------------------------------
@@ -160,8 +156,7 @@ _program_vectors:
 
 switch_kernel:
 	ld a, (port_map)
-	and #0xF8		; Preserve the other bits
-	or #0x05		; Map 4,5,6,3
+	or #0x07		; Map 4,7,6,3
 switchit:
 	push bc
 	ld (port_map), a
@@ -174,11 +169,7 @@ switch_user:
 	ld a, (port_map)
 	and #0xF8		; Preserve the other bits
 	and #0x01		; Map 0,1,2,3
-	jr switch_kernel
-
-switch_video:
-	ld a, (port_map)
-	or #0x7			; Map 4,7,6,3
+	or #0x04
 	jr switchit
 
 map_process:
@@ -192,17 +183,10 @@ map_process_always:
 	pop af
 	ret
 
-unmap_video:
 map_kernel:
 map_kernel_restore:
 	push af
 	call switch_kernel
-	pop af
-	ret
-
-map_video:
-	push af
-	call switch_video
 	pop af
 	ret
 

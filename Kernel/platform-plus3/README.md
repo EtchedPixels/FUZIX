@@ -26,6 +26,7 @@ We then map
 0/1/2/3	-	user process 0: 48K, 16K common
 4/5/6/3 -	user process 1: 32K, 16K common, 16K is kernel reserved
 4/7/6/3 -	kernel: 48K minus screen, common 16K (some kernel in it)
+		(conveniently the map 'BOOT' uses)
 
 As an aside this only works for the +2A/+3. The various clones even with
 lots of RAM clone the original 128K and add more pages of memory in the top

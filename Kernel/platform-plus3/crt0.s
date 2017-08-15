@@ -2,14 +2,12 @@
 
         .module crt0
 
-	;
-	; Bank 4-7
-	;
-        .area _CODE
-        .area _CODE2
+        .area _CODE		; Code lives at 0000-0x3FFF in bank 4
+        .area _CODE2		; Lives at 0x5B00 onwards in bank 7/6
 	.area _CODE3
         .area _CONST
 	.area _VIDEO
+	.area _FONT
         .area _INITIALIZED
         .area _DATA
         .area _BSEG
@@ -21,7 +19,6 @@
         .area _GSINIT
         .area _GSFINAL
 	.area _DISCARD
-	.area _FONT
 	;
 	;	Above 0xC000 in the top of bank 3
 	;

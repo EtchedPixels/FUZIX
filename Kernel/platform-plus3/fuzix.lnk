@@ -1,9 +1,10 @@
 -mwxuy
--r
 -i fuzix.ihx
 -b _COMMONDATA=0xF800
--b _CODE=0x0000
--b _DISCARD=0xC000
+-b _COMMONMEM=0xF000
+-b _CODE=0x0100
+-b _CODE2=0x5B00
+-b _DISCARD=0xE400
 -l z80
 platform-plus3/crt0.rel
 platform-plus3/commonmem.rel
