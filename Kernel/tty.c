@@ -509,7 +509,7 @@ int tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 
 	*/
 	if (!udata.u_ininterrupt) {
-		while ((t = tty_writeready(minor)) != TTY_READY_NOW)
+		while ((t = tty_writeready(minor)) != TTY_READY_NOW){
 			if (t == TTY_READY_LATER && flag) {
 				udata.u_error = EAGAIN;
 				return -1;
@@ -520,9 +520,10 @@ int tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 				psleep(&ttydata[minor]);
 				irqrestore(irq);
 			}
+		}
 	}
 	tty_putc(minor, c);
-	return 1;
+	return 0;
 }
 
 void tty_putc_wait(uint8_t minor, unsigned char ch)
