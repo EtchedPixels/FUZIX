@@ -34,7 +34,7 @@ void header (void) {
     newline ();
     output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
     output_line ("\t.module SMALLC_GENERATED");
-    gen_code();
+    code_segment_gtext();
 }
 
 /**
@@ -85,6 +85,7 @@ void trailer(void) {
  */
 void code_segment_gtext(void) {
     output_line ("\t.text");
+    indata = 0;
 }
 
 /**
@@ -92,6 +93,7 @@ void code_segment_gtext(void) {
  */
 void data_segment_gdata(void) {
     output_line ("\t.data");
+    indata = 1;
 }
 
 /**
@@ -907,14 +909,3 @@ void gen_statement_end(void)
     output_line(";end");
 }
 
-void gen_data(void)
-{
-    indata = 1;
-    output_line(".data");
-}
-
-void gen_code(void)
-{
-    indata = 0;
-    output_line(".code");
-}
