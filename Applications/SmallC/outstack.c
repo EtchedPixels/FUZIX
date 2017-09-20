@@ -64,6 +64,10 @@ void end_defer(void)
 
 void defer_init(void)
 {
-    defer = open("scc-spool", O_RDWR|O_CREAT|O_TRUNC, 0600);
-//    unlink("scc-spool");
+    defer = open(".scc-spool", O_RDWR|O_CREAT|O_TRUNC, 0600);
+    if (defer == -1) {
+        error("tmp file open failed");
+        exit(1);
+    }
+    unlink("scc-spool");
 }
