@@ -38,7 +38,6 @@ void print_label(int label) {
 
 /**
  * glabel - generate label
- * not used ?
  * @param lab label number
  */
 void glabel(char *lab) {

@@ -7,7 +7,7 @@
 #include "defs.h"
 #include "data.h"
 
-void error (char *ptr)
+void error(char *ptr)
 {
         int tempfile;
 
@@ -42,4 +42,3 @@ void doerror(char *ptr)
         output_string ("  ******");
         newline ();
 }
-

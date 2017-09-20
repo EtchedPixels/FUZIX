@@ -183,7 +183,7 @@ extern void result(LVALUE *lval, LVALUE *lval2);
 extern int constant(int val[]);
 extern int number(int val[]);
 extern int quoted_char(int *value);
-extern int quoted_string(int *position);
+extern int quoted_string(int *len, int *position);
 extern int spechar(void);
 extern void callfunction(char *ptr);
 extern void needlval(void);

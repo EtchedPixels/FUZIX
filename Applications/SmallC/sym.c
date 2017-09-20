@@ -95,13 +95,16 @@ int declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_str
  */
 int initials(char *symbol_name, int type, int identity, int dim, int otag) {
     int dim_unknown = 0;
-    litptr = 0;
+    int n;
+
     if(dim == 0) { // allow for xx[] = {..}; declaration
         dim_unknown = 1;
     }
     if (!(type & CCHAR) && !(type & CINT) && !(type == STRUCT)) {
         error("unsupported storage size");
     }
+    data_segment_gdata();
+    glabel(symbol_name);
     if(match("=")) {
         // an array or struct
         if(match("{")) {
@@ -131,6 +134,19 @@ int initials(char *symbol_name, int type, int identity, int dim, int otag) {
                 }
                 if(--dim_unknown == 0)
                     identity = POINTER;
+                else {
+                    /* Pad any missing objects */
+                    n = dim;
+                    gen_def_storage();
+                    if (identity != ARRAY && type != STRUCT) {
+                        if (!(type & CCHAR))
+                           n *= 2;
+                    } else
+                        n = tag_table[otag].size;
+
+                    output_number(n);
+                    newline();
+                }
             }
             needbrack("}");
         // single constant
@@ -138,6 +154,7 @@ int initials(char *symbol_name, int type, int identity, int dim, int otag) {
             init(symbol_name, type, identity, &dim, 0);
         }
     }
+    code_segment_gtext();
     return identity;
 }
 
@@ -148,15 +165,19 @@ int initials(char *symbol_name, int type, int identity, int dim, int otag) {
 void struct_init(TAG_SYMBOL *tag, char *symbol_name) {
 	int dim ;
 	int member_idx;
+	int size = tag->size;
 
 	member_idx = tag->member_idx;
 	while (member_idx < tag->member_idx + tag->number_of_members) {
-		init(symbol_name, member_table[tag->member_idx + member_idx].type,
+		size -= init(symbol_name, member_table[tag->member_idx + member_idx].type,
                         member_table[tag->member_idx + member_idx].identity, &dim, tag);
 		++member_idx;
+		/* FIXME:  not an error - zero rest */
 		if ((match(",") == 0) && (member_idx != (tag->member_idx + tag->number_of_members))) {
-			error("struct initialisaton out of data");
-			break ;
+		    gen_def_storage();
+		    output_number(size);
+		    newline();
+		    break;
 		}
 	}
 }
@@ -169,31 +190,32 @@ void struct_init(TAG_SYMBOL *tag, char *symbol_name) {
  * @param dim
  * @param tag
  * @return
+ *	returns size of initializer, or 0 for none (a null string is size 1)
+ *
  */
 int init(char *symbol_name, int type, int identity, int *dim, TAG_SYMBOL *tag) {
-    int value, number_of_chars;
+    int value, n;
     if(identity == POINTER) {
         error("cannot assign to pointer");
     }
-    if(quoted_string(&value)) {
+    /* FIXME: may need to distinguish const string v data in future */
+    if(quoted_string(&n, NULL)) {
         if((identity == VARIABLE) || !(type & CCHAR))
             error("found string: must assign to char pointer or array");
-        number_of_chars = litptr - value;
-        *dim = *dim - number_of_chars;
-        while (number_of_chars > 0) {
-            add_data_initials(symbol_name, CCHAR, litq[value++], tag);
-            number_of_chars = number_of_chars - 1;
-        }
-    } else if (number(&value)) {
-        add_data_initials(symbol_name, CINT, value, tag);
-        *dim = *dim - 1;
-    } else if(quoted_char(&value)) {
-        add_data_initials(symbol_name, CCHAR, value, tag);
-        *dim = *dim - 1;
-    } else {
-        return 0;
+        *dim = *dim - n; /* ??? FIXME arrays of char only */
+        return n;
     }
-    return 1;
+
+    if (type & CCHAR)
+        gen_def_byte();
+    else
+        gen_def_word();
+    if (!number(&value) && !quoted_char(&value))
+        return 0;
+    *dim = *dim - 1;
+    output_number(value);
+    newline();
+    return (type & CCHAR) ? 1 : 2;
 }
 
 /**

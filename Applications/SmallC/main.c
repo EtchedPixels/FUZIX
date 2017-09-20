@@ -73,7 +73,6 @@ void compile(char *file) {
         iflevel =
         skiplevel =
         swstp =
-        litptr =
         stkp =
         errcnt =
         ncmp =
@@ -85,7 +84,6 @@ void compile(char *file) {
         cmode = 1;
         glbflag = 1;
         nxtlab = 0;
-        litlab = getlabel();
         defmac("end\tmemory");
         //add_global("memory", ARRAY, CCHAR, 0, EXTERN);
         //add_global("stack", ARRAY, CCHAR, 0, EXTERN);
@@ -111,7 +109,6 @@ void compile(char *file) {
         parse();
         close(input);
         data_segment_gdata();
-        dumplits();
         dumpglbs();
         errorsummary();
         trailer();
@@ -206,31 +203,6 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
 }
 
 /**
- * dump the literal pool
- */
-void dumplits(void) {
-    int j, k;
-
-    if (litptr == 0)
-        return;
-    print_label(litlab);
-    output_label_terminator();
-    k = 0;
-    while (k < litptr) {
-        gen_def_byte();
-        j = 8;
-        while (j--) {
-            output_number(litq[k++] & 127);
-            if ((j == 0) | (k >= litptr)) {
-                newline();
-                break;
-            }
-            output_byte(',');
-        }
-    }
-}
-
-/**
  * dump all static variables
  */
 void dumpglbs(void) {
@@ -240,85 +212,11 @@ void dumpglbs(void) {
     current_symbol_table_idx = rglobal_table_index;
     while (current_symbol_table_idx < global_table_index) {
         SYMBOL *symbol = &symbol_table[current_symbol_table_idx];
-        if (symbol->identity != FUNCTION) {
+        if (symbol->identity != FUNCTION)
             ppubext(symbol);
-            if (symbol->storage != EXTERN) {
-                output_string(symbol->name);
-                output_label_terminator();
-                dim = symbol->offset;
-                list_size = 0;
-                line_count = 0;
-                if (find_symbol_initials(symbol->name)) { // has initials
-                    list_size = get_size(symbol->name);
-                    if (dim == -1) {
-                        dim = list_size;
-                    }
-                }
-                for (i=0; i<dim; i++) {
-                    if (symbol->type == STRUCT) {
-                        dump_struct(symbol, i);
-                    } else {
-                        if (line_count % 10 == 0) {
-                            newline();
-                            if ((symbol->type & CINT) || (symbol->identity == POINTER)) {
-                                gen_def_word();
-                            } else {
-                                gen_def_byte();
-                            }
-                        }
-                        if (i < list_size) {
-                            // dump data
-                            value = get_item_at(symbol->name, i, &tag_table[symbol->tagidx]);
-                            output_number(value);
-                        } else {
-                            // dump zero, no more data available
-                            output_number(0);
-                        }
-                        line_count++;
-                        if (line_count % 10 == 0) {
-                            line_count = 0;
-                        } else {
-                            if (i < dim-1) {
-                                output_byte( ',' );
-                            }
-                        }
-                    }
-                }
-                newline();
-            }
-        } else {
+        else
             fpubext(symbol);
-        }
         current_symbol_table_idx++;
-    }
-}
-
-/**
- * dump struct data
- * @param symbol struct variable
- * @param position position of the struct in the array, or zero
- */
-void dump_struct(SYMBOL *symbol, int position) {
-    int i, number_of_members, value;
-    number_of_members = tag_table[symbol->tagidx].number_of_members;
-    newline();
-    for (i=0; i<number_of_members; i++) {
-        // i is the index of current member, get type
-        int member_type = member_table[tag_table[symbol->tagidx].member_idx + i].type;
-        if (member_type & CINT) {
-            gen_def_word();
-        } else {
-            gen_def_byte();
-        }
-        if (position < get_size(symbol->name)) {
-            // dump data
-            value = get_item_at(symbol->name, position*number_of_members+i, &tag_table[symbol->tagidx]);
-            output_number(value);
-        } else {
-            // dump zero, no more data available
-            output_number(0);
-        }
-        newline();
     }
 }
 
@@ -333,18 +231,6 @@ void errorsummary(void) {
     output_decimal(errcnt);
     if (errcnt) errfile = YES;
     output_string(" error(s) in compilation");
-    newline();
-    gen_comment();
-    output_with_tab("literal pool:");
-    output_decimal(litptr);
-    newline();
-    gen_comment();
-    output_with_tab("global pool:");
-    output_decimal(global_table_index - rglobal_table_index);
-    newline();
-    gen_comment();
-    output_with_tab("Macro pool:");
-    output_decimal(macptr);
     newline();
     if (errcnt > 0)
         pl("Error(s)");

@@ -9,8 +9,6 @@ extern  int     while_table_index;
 extern  int     swstcase[];
 extern  int     swstlab[];
 extern  int     swstp;
-extern  char    litq[];
-extern  int     litptr;
 extern  char    macq[];
 extern  int     macptr;
 extern  char    line[];
@@ -25,7 +23,6 @@ extern int	member_table_index;	// ptr to next member<
 
 /* miscellaneous storage */
 extern  int     nxtlab,
-                litlab,
                 stkp,
                 argstk,
                 ncmp,

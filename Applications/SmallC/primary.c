@@ -175,10 +175,14 @@ int constant(int val[]) {
         gen_immediate ();
     else if (quoted_char (val))
         gen_immediate ();
-    else if (quoted_string (val)) {
+    /* Quoted strings are constants so we don't need to do any mucking about
+       with segments - however we move them to data as we'd otherwise put
+       them mid code stream ! */
+    else if (quoted_string (NULL, val)) {
         gen_immediate ();
-        print_label (litlab);
-        output_byte ('+');
+        print_label (val[0]);
+        newline();
+        return 1;
     } else
         return (0);
     output_number (val[0]);
@@ -249,30 +253,50 @@ int quoted_char(int *value) {
 /**
  * Test if we have string enclosed in double quotes. e.g. "abc".
  * Load the string into literal pool.
- * @param position returns beginning of the string
+ * @param position returns label for this string
  * @return 1 if such string found, 0 otherwise
  */
-int quoted_string(int *position) {
+int quoted_string(int *len, int *position) {
     char    c;
+    int     x;
+    int     l;
 
     if (!match ("\""))
         return (0);
-    *position = litptr;
+    if (position) {
+        data_segment_gdata();
+        *position = getlabel();
+        generate_label(*position);
+    }
+    x = 0;
     while (ch () != '"') {
-        if (ch () == 0)
+        if (ch () == 0) {
+            /* Should error ?? FIXME */
             break;
-        if (litptr >= LITMAX) {
-            error ("string space exhausted");
-            while (!match ("\""))
-                if (gch () == 0)
-                    break;
-            return (1);
         }
         c = gch();
-        litq[litptr++] = (c == '\\') ? spechar(): c;
+        c = (c == '\\') ? spechar(): c;
+        if (x == 0)
+            gen_def_byte();
+        else
+            output_byte(',');
+         output_number(c);
+         if (x++ == 7) {
+             x = 0;
+             newline();
+        }
+        l++;
     }
     gch ();
-    litq[litptr++] = 0;
+    if (x != 0)
+        newline();
+    gen_def_byte();
+    output_number(0);
+    newline();
+    if (len)
+        *len = l + 1;
+    if (position)
+        code_segment_gtext();
     return (1);
 }
 

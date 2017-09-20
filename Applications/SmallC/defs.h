@@ -71,6 +71,28 @@ struct tag_symbol {
  * possible entries for "type"
  * high order 14 bits give length of object
  * low order 2 bits make type unique within length
+ *
+ *
+ * Proposed new encoding
+ *	15:	const
+ *	14:	volatile
+ *	13:	complex object
+ *	12-10:	ptr depth
+ *
+ * complex object
+ *	9-0:	pointer into object table (including function pointers so
+ *		we can one day do type checking)
+ *
+ * simple object
+ *
+ *	9-8:	unused
+ *	7:	unsigned
+ *	6-5:
+ *		00 char/short/int/long
+ *		01 float/double
+ *		10 void
+ *		11 spare
+ *	0-4:	size (1-8) not valid for complex objects
  */
 #define UNSIGNED        1
 #define STRUCT          2
@@ -80,7 +102,8 @@ struct tag_symbol {
 #define UINT            ((2 << 2) + 1)
 #define VOID		(0 << 2)
 
-// possible entries for storage
+/* possible entries for storage: to change */
+
 #define PUBLIC  1
 #define AUTO    2
 #define EXTERN  3
@@ -113,14 +136,6 @@ struct while_rec {
 
 /* "switch" label stack */
 #define SWSTSZ  100
-
-/* literal pool */
-#ifdef TINY
-#define LITABSZ 2500
-#else
-#define LITABSZ 5000
-#endif
-#define LITMAX  LITABSZ-1
 
 /* input line */
 #define LINESIZE        150
@@ -157,6 +172,7 @@ struct while_rec {
 #define HL_REG 1<<1
 #define DE_REG 1<<2
 
+/* This we can switch to the new encoding when ready */
 struct lvalue {
 	SYMBOL *symbol;		// symbol table address, or 0 for constant
 	int indirect;		// type of indirect object, 0 for static object
@@ -207,6 +223,8 @@ void gen_put_memory(SYMBOL *sym);
 #define INIT_LENGTH  NAMESIZE+1
 #define INITIALS_SIZE 5*1024
 
+/* For arrays we need to use the type and point the type at the object
+   info so we can do multi-dimensional arrays properly */
 struct initials_table {
 	char name[NAMESIZE];	// symbol name
 	int type;               // type

@@ -17,8 +17,6 @@ int     while_table_index;
 int     swstcase[SWSTSZ];
 int     swstlab[SWSTSZ];
 int     swstp;
-char    litq[LITABSZ];
-int     litptr;
 char    macq[MACQSIZE];
 int     macptr;
 char    line[LINESIZE];
@@ -33,7 +31,6 @@ int	member_table_index;	// ptr to next member
 
 /* miscellaneous storage */
 int     nxtlab,
-        litlab,
         stkp,
         argstk,
         ncmp,
@@ -61,5 +58,4 @@ int     aflag;
 int     uflag;  // undocumented 8085 instructions
 
 INITIALS initials_table[NUMBER_OF_GLOBALS];
-char initials_data_table[INITIALS_SIZE];      // 5kB space for initialisation data
-int initials_idx = 0, initials_data_idx = 0;
+int initials_idx = 0;
