@@ -1,0 +1,133 @@
+/*
+ *	This module provides bank support for the WDC65C816
+ *
+ *	The low 64K is assumed to contain the I/O space, some RAM used
+ *	for stacks and DP areas. We don't make any direct attempt to use the
+ *	rest of the low 64K, although on a box with lots of low RAM you could
+ *	put the kernel there too.
+ *
+ *	Banks 1...n hold processes (each has 64K) or the kernel. We could but
+ *	don't support split I/D (different code/data page) at this point.
+ *
+ *	Beyond that it's a normal banked platform. The oddities are that we
+ *	have no common, and that we must also swap the ZP/Stack separately
+ *	from bank 0, as well as the program bank.
+ *
+ *	Define MAP_SIZE for the space in the 64K available to the process,
+ *	this needs to be no more than 63.5K (udata and kstack copies...)
+ */
+
+#include <kernel.h>
+#include <kdata.h>
+#include <printf.h>
+
+#ifdef CONFIG_BANK_65C812
+
+uint16_t pzero[NPROC];
+/* Kernel is 0, apps 1,2,3 etc */
+static unsigned char pfree[MAX_MAPS];
+static unsigned char pfptr = 0;
+static unsigned char pfmax;
+
+void pagemap_add(uint8_t page)
+{
+	pfree[pfptr++] = page;
+	pfmax = pfptr;
+}
+
+void pagemap_free(ptptr p)
+{
+	if (p->p_page == 0)
+		panic(PANIC_FREE0);
+	pfree[pfptr++] = p->p_page;
+}
+
+int pagemap_alloc(ptptr p)
+{
+#ifdef SWAPDEV
+	if (pfptr == 0) {
+		swapneeded(p, 1);
+	}
+#endif
+	if (pfptr == 0)
+		return ENOMEM;
+	p->p_page = pfree[--pfptr];
+	return 0;
+}
+
+/* Realloc is trivial - we can't do anything useful */
+int pagemap_realloc(usize_t size)
+{
+	if (size > MAP_SIZE)
+		return ENOMEM;
+	return 0;
+}
+
+usize_t pagemap_mem_used(void)
+{
+	return (pfmax - pfptr) * (MAP_SIZE >> 10);
+}
+
+#ifdef SWAPDEV
+/*
+ *	Swap out the memory of a process to make room
+ *	for something else
+ *
+ *	FIXME: we can write out base - p_top, then the udata providing
+ *	we also modify our read logic here as well
+ */
+int swapout(ptptr p)
+{
+	uint16_t page = p->p_page;
+	uint16_t blk;
+	uint16_t map;
+
+	if (!page)
+		panic(PANIC_ALREADYSWAP);
+#ifdef DEBUG
+	kprintf("Swapping out %x (%d)\n", p, p->p_page);
+#endif
+	/* Are we out of swap ? */
+	map = swapmap_alloc();
+	if (map == 0)
+		return ENOMEM;
+	blk = map * SWAP_SIZE;
+	/* Write the kstack and zero page to disk */
+	swapwrite(SWAPDEV, blk, 512, pzero[p-ptab], 0);
+	/* Write the app (and possibly the uarea etc..) to disk */
+	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
+	pagemap_free(p);
+	p->p_page = 0;
+	p->p_page2 = map;
+#ifdef DEBUG
+	kprintf("%x: swapout done %d\n", p, p->p_page);
+#endif
+	return 0;
+}
+
+/*
+ * Swap ourself in: must be on the swap stack when we do this
+ */
+void swapin(ptptr p, uint16_t map)
+{
+	uint16_t blk = map * SWAP_SIZE;
+
+#ifdef DEBUG
+	kprintf("Swapin %x, %d\n", p, p->p_page);
+#endif
+	if (!p->p_page) {
+		kprintf("%x: nopage!\n", p);
+		return;
+	}
+	/* Read the kstack and zero page from disk */
+	swapread(SWAPDEV, blk, 512, pzero[p-ptab], 0);
+	/* Read the process back in */
+	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
+#ifdef DEBUG
+	kprintf("%x: swapin done %d\n", p, p->p_page);
+#endif
+}
+
+#endif
+
+#endif
