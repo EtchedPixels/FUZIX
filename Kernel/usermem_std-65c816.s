@@ -1,225 +1,241 @@
 	.include "platform/kernel.def"
-        .include "kernel02.def"
+        .include "kernel816.def"
 	.include "platform/zeropage.inc"
 
-		.export __uget, __ugetc, __ugetw, __ugets
-		.export __uput, __uputc, __uputw, __uzero
+	.export __uget, __ugetc, __ugetw, __ugets
+	.export __uput, __uputc, __uputw, __uzero
 
-		.import map_kernel, map_process_always
-		.import outxa, popax
-		.importzp ptr2, tmp2
+	.import outxa, popax
+	.importzp ptr2, tmp2
 ;
-;	65c816 specific usermem access functions. These should use and know we
-;	are using the processor bank register but are not yet optimized for
-;	this.
+;	ptr1 and tmp1 are reserved for map_* functions in 6502 but
+;	are actually free here. We keep the convention however in case
+;	of future changes
 ;
-;	ptr1 and tmp1 are reserved for map_* functions
-;
-;
-		.segment "COMMONMEM"
+	.segment "COMMONMEM"
 
 ; user, dst, count(count in ax)
 ;
-;	Decidedly unoptimised (even the 6502 could manage a word a switch)
+;	Compiler glue is not pretty - might be worth having some optimized
+;	16bit aware stack handlers
 ;
-__uget:		sta tmp2
-		stx tmp2+1		; save the count
-		jsr popax		; pop the destination
-		sta ptr2		; (ptr2) is our target
-		stx ptr2+1
-		jsr popax		; (ptr2) is our source
-		sta ptr3
-		stx ptr3+1
+__uget:	sta	tmp2
+	stx	tmp2+1			; save the count
+	jsr	popax			; pop the destination
+	sta	ptr2			; (ptr2) is our target
+	stx	ptr2+1
+	jsr	popax			; (ptr2) is our source
+	sta	ptr3
+	stx	ptr3+1
+	lda	U_DATA__U_PAGE
+	sta	ugetpatch+1
+	phb
+	.i16
+	.a16
+	rep	#$30
+	ldx	ptr3			; source
+	ldy	ptr2			; destination
+	lda	tmp2
+	beq	ug_nomov		; 0 means 64K!
+	dec				; need 1 less than size
+ugetpatch:
+	mvn	0,KERNEL_BANK:0
+ug_nomov:
+	.i8
+	.a8
+	sep	#$30
+	plb
+	lda	#0
+	tax
+	rts
 
-		ldy #0			; counter
+;
+;	This could be done more nicely using .i16 and wants optimizing
+;
+__ugets:
+	sta	tmp2
+	stx	tmp2+1			; save the count
+	jsr	popax			; pop the destination
+	sta	ptr2			; (ptr2) is our target
+	stx	ptr2+1
+	jsr	popax			; (ptr2) is our source
+	sta	ptr3
+	stx	ptr3+1
 
-		ldx tmp2+1		; how many 256 byte blocks
-		beq __uget_tail		; if none skip to the tail
+	ldy	#0			; counter
 
-__uget_blk:
-		jsr map_process_always	; map the user process in
-		lda (ptr3), y		; get a byte of user data
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2), y		; save it to the kernel buffer
-		iny			; move on one
-		bne __uget_blk		; not finished a block ?
-		inc ptr2+1		; move src ptr 256 bytes on
-		inc ptr3+1		; move dst ptr the same
-		dex			; one less block to do
-		bne __uget_blk		; out of blocks ?
-
-__uget_tail:	cpy tmp2		; finished ?
-		beq __uget_done
-
-		jsr map_process_always	; map the user process
-		lda (ptr3),y		; get a byte of user data
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2),y		; save it to the kernel buffer
-		iny			; move on
-		bne __uget_tail		; always taken (y will be non zero)
-
-__uget_done:
-		lda #0
-		tax
-		rts
-
-__ugets:	sta tmp2
-		stx tmp2+1		; save the count
-		jsr popax		; pop the destination
-		sta ptr2		; (ptr2) is our target
-		stx ptr2+1
-		jsr popax		; (ptr2) is our source
-		sta ptr3
-		stx ptr3+1
-
-		ldy #0			; counter
-
-		ldx tmp2+1		; how many 256 byte blocks
-		beq __uget_tail		; if none skip to the tail
+	ldx	tmp2+1			; how many 256 byte blocks
+	beq	__uget_tail		; if none skip to the tail
 
 __ugets_blk:
-		jsr map_process_always	; map the user process in
-		lda (ptr3), y		; get a byte of user data
-		beq __ugets_end
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2), y		; save it to the kernel buffer
-		iny			; move on one
-		bne __ugets_blk		; not finished a block ?
-		inc ptr3+1		; move src ptr 256 bytes on
-		inc ptr2+1		; move dst ptr the same
-		dex			; one less block to do
-		bne __ugets_blk		; out of blocks ?
+	phb
+	lda	U_DATA__U_PAGE		; switch to user bank read
+	pha
+	plb
+	lda	(ptr3), y		; get a byte of user data
+	beq	__ugets_end
+	plb				; back to kernel
+	sta	(ptr2), y		; save it to the kernel buffer
+	iny				; move on one
+	bne	__ugets_blk		; not finished a block ?
+	inc	ptr3+1			; move src ptr 256 bytes on
+	inc	ptr2+1			; move dst ptr the same
+	dex				; one less block to do
+	bne	__ugets_blk		; out of blocks ?
 
-__ugets_tail:	cpy tmp2		; finished ?
-		beq __ugets_bad
+__ugets_tail:
+	cpy	tmp2			; finished ?
+	beq	__ugets_bad
 
-		jsr map_process_always	; map the user process
-		lda (ptr3),y		; get a byte of user data
-		beq __ugets_end
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2),y		; save it to the kernel buffer
-		iny			; move on
-		bne __ugets_tail	; always taken (y will be non zero)
+	phb
+	lda	U_DATA__U_PAGE
+	pha
+	plb
+	lda	(ptr3),y		; get a byte of user data
+	beq	__ugets_end
+	plb
+	sta	(ptr2),y		; save it to the kernel buffer
+	iny				; move on
+	bne	__ugets_tail		; always taken (y will be non zero)
 
 __ugets_bad:
-		dey
-		lda #0
-		sta (ptr2), y		; terminate kernel buffer
-		lda #$FF		; string too large
-		tax			; return $FFFF
-		rts
+	dey
+	lda	#0
+	sta	(ptr2), y		; terminate kernel buffer
+	lda	#$FF			; string too large
+	tax				; return $FFFF
+	rts
 
 __ugets_end:
-		jsr map_kernel
-		lda #0
-		sta (ptr2), y
-		tax
-		rts
+	plb
+	lda	#0
+	sta	(ptr2), y
+	tax
+	rts
 
-__ugetc:	sta ptr2
-		stx ptr2+1
-__uget_ptr2:
-		jsr map_process_always
-		ldy #0
-		lda (ptr2),y
-		jmp map_kernel
+__ugetc:
+	sta	ptr2
+	stx	ptr2+1
+	phb
+	lda	U_DATA__U_PAGE
+	pha
+	plb
+	lda	(ptr2)
+	plb
+	rts
 
-__ugetw:	sta ptr2
-		stx ptr2+1
-		jsr map_process_always
-		ldy #1
-		lda (ptr2),y
-		tax
-		dey
-		lda (ptr2),y
-		jmp map_kernel
-
-
-__uput:		sta tmp2
-		stx tmp2+1
-		jsr popax	; dest
-		sta ptr2
-		stx ptr2+1
-		jsr popax	; source
-		sta ptr3
-		stx ptr3+1
-
-		ldy #0
-
-		ldx tmp2+1
-		beq __uput_tail
-__uput_blk:
-		jsr map_kernel
-		lda (ptr3), y
-		jsr map_process_always
-		sta (ptr2), y
-		iny
-		bne __uput_blk
-		inc ptr2+1
-		inc ptr3+1
-		dex
-		bne __uput_blk
-
-__uput_tail:	cpy tmp2
-		beq __uput_done
-		jsr map_kernel
-		lda (ptr3),y
-		jsr map_process_always
-		sta (ptr2),y
-		iny
-		bne __uput_tail
-
-__uput_done:
-		jsr map_kernel
-		lda #0
-		tax
-		rts
-
-__uputc:	sta ptr2
-		stx ptr2+1
-		jsr map_process_always
-		jsr popax
-		ldy #0
-		sta (ptr2),y
-		jmp map_kernel
-
-__uputw:	sta ptr2
-		stx ptr2+1
-		jsr map_process_always
-		jsr popax
-		ldy #0
-		sta (ptr2),y
-		txa
-		iny
-		sta (ptr2),y
-		jmp map_kernel
-
-__uzero:	sta tmp2
-		stx tmp2+1
-		jsr map_process_always
-		jsr popax		; ax is now the usermode address
-		sta ptr2
-		stx ptr2+1
-
-		ldy #0
-		tya
-
-		ldx tmp2+1		; more than 256 bytes
-		beq __uzero_tail	; no - just do dribbles
-__uzero_blk:
-		sta (ptr2),y
-		iny
-		bne __uzero_blk
-		inc ptr2+1		; next 256 bytes
-		dex			; are we done with whole blocks ?
-		bne __uzero_blk
-
-__uzero_tail:
-		cpy tmp2
-		beq __uzero_done
-		sta (ptr2),y
-		iny
-		bne __uzero_tail
-__uzero_done:	jmp map_kernel
+__ugetw:
+	sta	ptr2
+	stx	ptr2+1
+	phb
+	lda	U_DATA__U_PAGE
+	pha
+	plb
+	ldy	#1
+	lda	(ptr2),y
+	tax
+	lda	(ptr2)
+	plb
+	rts
 
 
+__uput:
+	sta	tmp2
+	stx	tmp2+1
+	jsr	popax			; dest
+	sta	ptr2
+	stx	ptr2+1
+	jsr	popax			; source
+	sta	ptr3
+	stx	ptr3+1
+	lda	U_DATA__U_PAGE
+	sta	uputpatch+2
+	phb
+	.i16
+	.a16
+	rep	#$30
+	ldx	ptr3			; source
+	ldy	ptr2			; destination
+	lda	tmp2
+	beq	up_nomov		; 0 means 64K!
+	dec				; need 1 less than size
+uputpatch:
+	mvn	KERNEL_BANK:0,0
+up_nomov:
+	.i8
+	.a8
+	sep	#$30
+	plb
+	lda	#0
+	tax
+	rts
+
+__uputc:
+	sta	ptr2
+	stx	ptr2+1
+	jsr	popax
+	phb
+	lda	U_DATA__U_PAGE
+	pha
+	plb
+	sta	(ptr2)
+	plb
+	rts
+
+__uputw:
+	sta	ptr2
+	stx	ptr2+1
+	jsr	popax
+	phb
+	lda	U_DATA__U_PAGE
+	pha
+	plb
+	sta	(ptr2)
+	txa
+	ldy	#1
+	sta	(ptr2),y
+	plb
+	rts
+
+__uzero:
+	sta	tmp2
+	stx	tmp2+1
+	jsr	popax			; ax is now the usermode address
+	sta	ptr2
+	stx	ptr2+1
+
+	lda	U_DATA__U_PAGE
+	sta	uzero_patch+1
+	sta	uzero_patch+2
+
+	; Clear lead byte in user space
+	phb
+	pha
+	plb
+	clz	(ptr2)
+	plb
+
+	phb
+	.i16
+	.a16
+	rep	#$30
+	ldx	ptr2			; copy from x to x+1 moving the 0 up
+	ldy	ptr2
+	iny
+	lda	tmp2			; no bytes means we are done
+	beq	nozero
+	dec				; 1 byte means our clz did it
+	beq	nozero
+	; Use mvn to wipe the range required
+	; The set up is worth it as most uzero() calls are big
+	; ranges
+uzero_patch:
+	mvn	0,0
+nozero:
+	plb
+	sep	#$30
+	.i8
+	.a8
+	lda	#0
+	tax
+	rts
