@@ -21,12 +21,12 @@
 
 	.import outchar
 	.import _kernel_flag
-	.import _unix_syscall_i
+	.import _unix_syscall
 	.import map_restore
 	.import map_save
 	.import map_process_always
 	.import map_kernel
-	.import _platform_interrupt_i
+	.import _platform_interrupt
 	.import platform_doexec
 	.import _inint
 	.import _trap_monitor
@@ -137,7 +137,7 @@ noargs:
 	lda	#1
 	sta	_kernel_flag		; In kernel mode
 	cli				; Interrupts now ok
-	jsr	_unix_syscall_i		; Enter C space via the __interrupt wrapper
+	jsr	_unix_syscall		; Enter C space
 	sei				; Interrupts back off
 	stz	_kernel_flag
 	rep	#$10
@@ -329,7 +329,7 @@ interrupt_handler:
 
 	lda	#1
 	sta	_inint
-	jsr	_platform_interrupt_i	; call via C int wrapper
+	jsr	_platform_interrupt
 	stz	_inint
 
 	; Restore the stack we arrived on
