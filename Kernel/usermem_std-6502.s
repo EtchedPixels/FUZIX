@@ -89,7 +89,7 @@ __ugets:	sta tmp2
 		ldy #0			; counter
 
 		ldx tmp2+1		; how many 256 byte blocks
-		beq __uget_tail		; if none skip to the tail
+		beq __ugets_tail	; if none skip to the tail
 
 __ugets_blk:
 		jsr map_process_always	; map the user process in
