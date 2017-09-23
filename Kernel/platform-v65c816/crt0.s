@@ -1,27 +1,35 @@
-		; imported symbols
-		.import init_early
-		.import init_hardware
-		.import _fuzix_main
-		.import kstack_top
-		.import vector
-		.import nmi_handler
+	; imported symbols
+	.import init_early
+	.import init_hardware
+	.import _fuzix_main
+	.import kstack_top
+	.import kstackc_top
+	.import vector
+	.import nmi_handler
+	.import interrupt_handler
+	.import emulation
+	.import illegal_inst
+	.import trap_inst
+	.import abort_inst
 
-		.import  __BSS_RUN__, __BSS_SIZE__
-		.importzp	ptr1, ptr2, tmp1
+	.import  __BSS_RUN__, __BSS_SIZE__
+	.importzp	ptr1, ptr2, tmp1
 
-	        ; startup code @0
-		.include "zeropage.inc"
+	; startup code @0200
+        .include "kernel.def"
+        .include "../kernel816.def"
+	.include "zeropage.inc"
 
 ;
 ;	So we end up first in the image
 ;
-	        .segment "START"
-		.byte 65
-		.byte 81
+	.segment "START"
+	.byte 65
+	.byte 81
 
-		.a8
-		.i8
-		.p816
+	.p816
+	.a8
+	.i8
 
 entry:
 ;
@@ -30,83 +38,110 @@ entry:
 ;	We get run from bank 0, our I/O writes would otherwise need to be
 ;	24bit
 ;
-		sep #$30		; ensure we are in 8bit mode
-		lda #'F'
-		sta $FE20		; signal our arrival
+	sep	#$30		; ensure we are in 8bit mode
+	lda	#'F'
+	sta	$FE20		; signal our arrival
 
-		sei			; interrupts off
-		cld			; decimal off
+	sei			; interrupts off
+	cld			; decimal off
 
-		rep #$10
-		.i16
-		ldx #kstack
-		txs			; Stack (6502 not C)
+	rep	#$10
+	.i16
 
-		lda #'u'
-		sta $FE20
+	ldx	#kstack_top
+	txs			; Stack (6502 not C)
 
-		ldx #kstack_top	; C stack
-		sta sp
+	lda	#'u'
+	sta	$FE20
 
-		ldx #__BSS_RUN__
+	ldx	#kstackc_top	; C stack
+	sta	sp
 
-		lda #'z'
-		sta $FE20
+	ldx	#__BSS_RUN__
 
-		txy
-		iny
+	lda	#'z'
+	sta	$FE20
 
-		; Wipe the BSS
+	txy
+	iny
 
-		rep #$20
-		.a16
-		lda #__BSS_SIZE-2	; must be >=2  bytes or else
-		clz 0,x
-		mvn 0,0
+	; Wipe the BSS
 
+	rep #$20
+	.a16
+
+	lda	#__BSS_SIZE__-2	; must be >=2  bytes or else
+	stz	0,x
+	mvn	0,0
 		
-		sep #$30
-		.a8
-		.i8
+	sep #$30
+	.a8
+	.i8
 
-		lda #'i'
-		sta $FE20
+	lda	#'i'
+	sta	$FE20
 
-		lda #'x'
-		sta $FE20
+	lda	#'x'
+	sta	$FE20
 
-		jsr init_early
-		lda #'.'
-		sta $FE20
-		jsr init_hardware
-		lda #13
-		sta $FE20
-		lda #10
-		sta $FE20
-		jmp code
+	jsr	init_early
+	lda	#'.'
+	sta	$FE20
+	jsr	init_hardware
+	lda	#13
+	sta	$FE20
+	lda	#10
+	sta	$FE20
+	jmp	code
 
 ; The above gets blasted into udata space
-		.code
+	.code
 
 code:
-		rep #$30
-		.a8
-		.i8
-		ldx #$U_DATA
-		ldy #$U_DATA+1
-		lda #$UDATA_TOTALSIZE-2
-		clz 0,x
-		mvn 0,0
+	rep	#$30
+	.a16
+	.i16
 
-		sep #$30
-		.a8
-		.i8
+	ldx	#U_DATA
+	ldy	#U_DATA+1
+	lda	#U_DATA__TOTALSIZE-2
+	stz	0,x
+	mvn	0,0
 
-		jsr _fuzix_main		; Should never return
-		sei			; Spin
-stop:		jmp stop
+	sep	#$30
+	.a8
+	.i8
 
-		.segment "VECTORS"
-		.addr	vector
-		.addr	$0202		; does it matter ???
-		.addr	nmi_handler
+	jsr	_fuzix_main	; Should never return
+	sei			; Spin
+stop:	bra stop
+
+
+;
+;	Processor vector table (0xFFE0)
+;
+	.segment "VECTORS"
+
+
+	.word	0		; unused
+	.word	0		; unused
+	.word	illegal_inst	; COP
+	.word	trap_inst	; BRK
+	.word	abort_inst	; ABORT
+	.word	nmi_handler	; NMI
+	.word	0		; Unused (native reset)
+	.word	interrupt_handler
+
+	;
+	;	Emulation mode vectors. If called badness occurred
+	;
+	.word	emulation
+	.word	emulation
+	.word	emulation
+	.word	emulation
+	.word	emulation
+	.word	emulation
+	.word	emulation
+	.word	emulation
+
+

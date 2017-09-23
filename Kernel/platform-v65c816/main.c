@@ -5,6 +5,7 @@
 #include <devtty.h>
 
 uint8_t kernel_flag = 1;
+uint16_t ramtop = PROGTOP;
 
 void platform_idle(void)
 {
@@ -18,16 +19,15 @@ void do_beep(void)
 }
 
 /*
- * Map handling: We have flexible paging. Each map table consists of a set of pages
- * with the last page repeated to fill any holes.
+ * 7 banks, kernel in bank 0
  */
 
 void pagemap_init(void)
 {
     int i;
     /* Bank 0 is the kernel */
-    for (i = 15 ; i > 0; i--)
-        pagemap_add(i * 8);
+    for (i = 7 ; i > 0; i--)
+        pagemap_add(i);
 }
 
 void map_init(void)

@@ -19,8 +19,11 @@
  *	if we add swap.
  */
 #define CONFIG_BANK_65C816
+#define KERNEL_BANK	0
 #define MAX_MAPS 	7
 #define MAP_SIZE    0xFC00  /* 0-FBFF */
+
+#define STACK_BANKOFF	0xF5	/* F600-FCFF */
 
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define MAPBASE	    0x0000  /* We map from 0 */

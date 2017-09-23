@@ -13,17 +13,14 @@
 	    .export ___hard_di
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
-	    .export vector
 
 	    .import _ramsize
 	    .import _procmem
 	    .import nmi_handler
-	    .import unix_syscall_entry
+	    .import syscall_vector
 	    .import kstack_top
 	    .import istack_switched_sp
 	    .import istack_top
-	    .import _unix_syscall
-	    .import _platform_interrupt
 	    .import _kernel_flag
 	    .import pushax
 
@@ -31,12 +28,13 @@
 	    .import outxa
 	    .import incaxy
 
-	    .import _create_init_common
-
             .include "kernel.def"
             .include "../kernel816.def"
 	    .include "zeropage.inc"
 
+	.p816
+	.a8
+	.i8
 ;
 ;	syscall is jsr [$00fe]
 ;
@@ -71,10 +69,36 @@ irq_on:
 	sei
 	rts
 
+;
+;	This could go in discard once we make that useful FIXME
+;
 init_early:
-	; copy the stubs from bank 0 to all banks so we can keep the
-	jsr _create_init_common
+	lda	#1
+init_loop:
+	sep	#$30
+	.a8
+	.i8
+	sta	common_patch+1		; destination bank
+	phb				; save our bank (mvn will mess it)
+	pha				; and count
+
+	rep	#$30
+	.a16
+	.i16
+	ldx	#$FF00
+	txy
+	lda	#$00FE
+common_patch:
+	mvn	KERNEL_FAR,0		; copy the block
+	pla
+	plb				; bank to kernel bank
+	dec
+	cmp	#8
+	bne	init_loop
         rts
+
+	.a8
+	.i8
 
 init_hardware:
         ; set system RAM size for test purposes
@@ -84,13 +108,8 @@ init_hardware:
 	stx _ramsize
 	ldx #512-64
 	stx _procmem
-	; TODO - correct vectors for the 816
-	ldx #vector
-	stx $FFFE
-	ldx #<nmi_handler
-	stx $FFFA
-	ldx #syscall_entry
-	stx #syscall
+	ldx #syscall_vector
+	stx syscall
 
 	rep #$10
 	.i8
@@ -130,6 +149,9 @@ sigret:
 ;	I/O logic
 ;
 
+	.export _hd_kmap
+	.export _hd_read_data
+	.export _hd_write_data
 
 ;
 ;	Disk copier (needs to be in common), call with ints off
@@ -149,11 +171,12 @@ _hd_read_data:
 	lda _hd_kmap		; page number
 	pha
 	plb			; data now points into user app
-	ldy #00FE
+	ldy #$00FE
 	phy
 	pld			; DP is now the I/O space
 	
 	ldy #512
+hd_read:
 	lda $34			; I/O data via DP
 	sta 0,x			; stores into data (user) bank
 	inx
@@ -176,16 +199,17 @@ _hd_write_data:
 	lda _hd_kmap		; page number
 	pha
 	plb			; data now points into user app
-	ldy #00FE
+	ldy #$00FE
 	phy
 	pld			; DP is now the I/O space
 	
 	ldy #512
+hd_write:
 	lda 0,x			; load from data (user) bank
 	sta $34			; I/O data via DP
 	inx
 	dey
-	bne hd_read
+	bne hd_write
 	plb			; restore bank registers
 	pld
 	sep #$10
@@ -194,5 +218,5 @@ _hd_write_data:
 
 	.bss
 
-_hd_map:
+_hd_kmap:
 	.res 1

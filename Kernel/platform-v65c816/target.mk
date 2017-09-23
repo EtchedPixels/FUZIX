@@ -1,1 +1,1 @@
-export CPU = 658C16
+export CPU = 65c816

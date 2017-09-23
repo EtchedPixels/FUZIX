@@ -6,25 +6,36 @@
         .export _ub
         .export _udata
         .export kstack_top
+	.export kstackc_top
         .export istack_top
+	.export istackc_top
         .export istack_switched_sp
-	.export CTemp
 
         .segment "COMMONDATA"
 	.include "zeropage.inc"
 
+	.p816
+	.a8
+	.i8
+
 ;
-;	In 6502 land these are the C stacks, we will need to handle the
-;	hardware stack separately, and also to save sp,sp+1 etc on irqs
+;	The udata for 65C816 is a bit different to 6502 as we have both a C
+;	stack and a small CPU stack in the banking
 ;
-;	Declared as BSS so no non zero bytes here please
+;	Our current layout is
+;	[udata][cpu stack]		in 256 bytes
+;	[C stack]			in 256 (will it be sufficient ?)
+;
+;	There is a separate IRQ DP, stack and C stack.
 ;
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstack_base:
-	.res 512,0
+	.res 256,0
 kstack_top:
-FIXME: C stack of 512 - udata, 65C816 stack follows
+kstackc_base:
+	.res 256,0
+kstackc_top:
 
 ;
 ;	We have a single istack so we can stuff that anywhere we like
@@ -32,7 +43,10 @@ FIXME: C stack of 512 - udata, 65C816 stack follows
 	.bss
 
 istack_base:
-	.res 254,0
+	.res 64,0			; should be tons
 istack_top:
-FIXME: interrupt CPU stack (64 ?)
-istack_switched_sp: .word 0
+istackc_base:
+	.res 254,0			; overkill - tune me
+istackc_top:
+istack_switched_sp:
+	.word 0

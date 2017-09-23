@@ -7,7 +7,7 @@
 #include <printf.h>
 #include <devhd.h>
 
-extern uint8_t hd_map;
+extern uint8_t hd_kmap;
 
 extern void hd_read_data(uint16_t addr);
 extern void hd_write_data(uint16_t addr);
@@ -29,7 +29,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         return -1;
 
     /* For swap it'll be the swap bank passed */
-    hd_map = rawflag ? udata.u_page : KERNEL_BANK;
+    hd_kmap = rawflag ? udata.u_page : KERNEL_BANK;
 
     dptr = (uint16_t)udata.u_dptr;
     nb = udata.u_nblock;

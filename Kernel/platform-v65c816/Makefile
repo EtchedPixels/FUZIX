@@ -2,12 +2,15 @@
 CSRCS = devtty.c devhd.c
 CSRCS += devices.c main.c
 
+LSRCS = ../lib/65c816.s
+LOBJS = $(patsubst ../lib/%.s,%.o, $(LSRCS))
+
 ASRCS = v65.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS += commonmem.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-OBJS  = $(COBJS) $(AOBJS)
+OBJS  = $(COBJS) $(AOBJS) $(LOBJS)
 
 JUNK = $(CSRCS:.c=.o) $(CSRCS:.c=.s) $(ASRCS:.s=.o)
 
@@ -19,6 +22,9 @@ $(COBJS): %$(BINEXT): %.c
 $(AOBJS): %$(BINEXT): %.s
 	$(CROSS_AS) $(ASOPTS) $< -o $*$(BINEXT)
 
+$(LOBJS): %$(BINEXT): ../lib/%.s
+	$(CROSS_AS) $(ASOPTS) $< -o $*$(BINEXT)
+
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
@@ -26,9 +32,9 @@ image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg \
 	crt0.o commonmem.o \
 	v65.o ../start.o ../version.o ../lowlevel-65c816.o \
-	../lib/65c816.o main.o ../timer.o ../kdata.o devhd.o devices.o \
+	65c816.o main.o ../timer.o ../kdata.o devhd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank65c816.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
 	../syscall_exec16.o ../usermem.o ../usermem_std-65c816.o devtty.o
-	dd if=../fuzix.bin of=fuzix.img bs=512 skip=1
+	dd if=../fuzix.bin of=fuzix.img bs=512

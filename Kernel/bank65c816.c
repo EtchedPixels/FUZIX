@@ -10,20 +10,22 @@
  *	don't support split I/D (different code/data page) at this point.
  *
  *	Beyond that it's a normal banked platform. The oddities are that we
- *	have no common, and that we must also swap the ZP/Stack separately
+ *	have no common, and that we must also swap the Stack separately
  *	from bank 0, as well as the program bank.
  *
- *	Define MAP_SIZE for the space in the 64K available to the process,
- *	this needs to be no more than 63.5K (udata and kstack copies...)
+ *	Note: The code assumes we have the normal user map of 0x0000-0xFBFF
+ *	then 512 bytes of udata material, then a gap then stubs and that we
+ *	swap the full 64K minus stubs/gap. If we extend udata then stubs will
+ *	end up getting swapped in the final block but it's R/O so nobody
+ *	should care.
  */
 
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 
-#ifdef CONFIG_BANK_65C812
+#ifdef CONFIG_BANK_65C816
 
-uint16_t pzero[NPROC];
 /* Kernel is 0, apps 1,2,3 etc */
 static unsigned char pfree[MAX_MAPS];
 static unsigned char pfptr = 0;
@@ -92,10 +94,10 @@ int swapout(ptptr p)
 	if (map == 0)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
-	/* Write the kstack and zero page to disk */
-	swapwrite(SWAPDEV, blk, 512, pzero[p-ptab], 0);
-	/* Write the app (and possibly the uarea etc..) to disk */
-	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
+	/* Write the user CPU stack to disk */
+	swapwrite(SWAPDEV, blk, 512, (STACK_BANKOFF+(p-ptab)) << 8, 0);
+	/* Write the process including DP and C stack, plus the udata cache */
+	swapwrite(SWAPDEV, blk + 1, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 	pagemap_free(p);
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -119,10 +121,12 @@ void swapin(ptptr p, uint16_t map)
 		kprintf("%x: nopage!\n", p);
 		return;
 	}
-	/* Read the kstack and zero page from disk */
-	swapread(SWAPDEV, blk, 512, pzero[p-ptab], 0);
+	/* Read the user stack from disk: FIXME - this is half a block
+	   so we need to make sure our disk drivers can cope with this for
+	   read (write is ok) */
+	swapread(SWAPDEV, blk, 256, (STACK_BANKOFF+(p-ptab)) << 8, 0);
 	/* Read the process back in */
-	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
+	swapread(SWAPDEV, blk + 1, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif

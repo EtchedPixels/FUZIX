@@ -7,12 +7,17 @@
 
 	.import outxa, popax
 	.importzp ptr2, tmp2
+
+	.p816
+	.a8
+	.i8
+
 ;
 ;	ptr1 and tmp1 are reserved for map_* functions in 6502 but
 ;	are actually free here. We keep the convention however in case
 ;	of future changes
 ;
-	.segment "COMMONMEM"
+	.code
 
 ; user, dst, count(count in ax)
 ;
@@ -39,7 +44,7 @@ __uget:	sta	tmp2
 	beq	ug_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 ugetpatch:
-	mvn	0,KERNEL_BANK:0
+	mvn	0,KERNEL_FAR
 ug_nomov:
 	.i8
 	.a8
@@ -65,7 +70,7 @@ __ugets:
 	ldy	#0			; counter
 
 	ldx	tmp2+1			; how many 256 byte blocks
-	beq	__uget_tail		; if none skip to the tail
+	beq	__ugets_tail		; if none skip to the tail
 
 __ugets_blk:
 	phb
@@ -160,7 +165,7 @@ __uput:
 	beq	up_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 uputpatch:
-	mvn	KERNEL_BANK:0,0
+	mvn	KERNEL_FAR,0
 up_nomov:
 	.i8
 	.a8
@@ -212,7 +217,8 @@ __uzero:
 	phb
 	pha
 	plb
-	clz	(ptr2)
+	lda	#0
+	sta	(ptr2)
 	plb
 
 	phb

@@ -4,10 +4,21 @@
 	.I8
 	.A8
 	
-	.export unix_syscall_entry
 	.export _doexec
 	.export interrupt_handler
 	.export nmi_handler
+	.export map_process_always
+	.export map_kernel
+	.export _userpage
+
+	.export sigret_irq
+	.export sigret
+	.export syscall_vector
+
+	.export illegal_inst
+	.export trap_inst
+	.export abort_inst
+	.export emulation
 
 	.export outstring
 	.export outstringhex
@@ -15,27 +26,33 @@
 	.export outcharhex
 	.export outxa
 
-	.export _userpage
-
 	.export _need_resched
+
+	.import istack_top
+	.import istackc_top
+	.import istack_switched_sp
+
+	.import kstack_top
+	.import kstackc_top
+
+	.import _ssig
 
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall
-	.import map_restore
-	.import map_save
-	.import map_process_always
-	.import map_kernel
 	.import _platform_interrupt
 	.import platform_doexec
 	.import _inint
 	.import _trap_monitor
 
+	.import push0
+	.import incaxy
+
 	.include "platform/zeropage.inc"
 	.include "platform/kernel.def"
 	.include "kernel816.def"
 
-	.segment "COMMONMEM"
+	.code
 ;
 ;	Unlike Z80 we need to deal with systems that have no overlapping
 ;	memory banks. We pass the arguments is a single pointer therefore
@@ -61,6 +78,9 @@
 ;	  stubs (syscall and signal return)
 ;	- audit and begin testing
 ;
+
+syscall	=	$fe
+
 ;
 ;	This is called from a stub we put into each user process bank that
 ;	does a jsl to the kernel entry point then an rts
@@ -69,7 +89,7 @@ syscall_entry:
 	php				; save cpu mode of caller on ustack
 	sei				; interrupts off
 	cld				; get into sane mode - no decimal, known state
-	sep 	$30
+	sep 	#$30
 	.a8
 	.i8
 	stx	U_DATA__U_CALLNO
@@ -100,59 +120,68 @@ copy_args:
 	dey
 	dey
 	lda	(ptr1),y		; copy the arguments over
-	ld
-	sta	KERNEL_BANK:U_DATA__U_ARGN,x
+	sta	KERNEL_FAR+U_DATA__U_ARGN,x
         inx
 	inx
 	cpy	#0
 	bne	copy_args
 
 noargs:
-	rep	#$30
-	.a16
-	.i16
+	sep	#$30
+	.a8
+	.i8
+
 	lda	#KERNEL_BANK		; our direct and base bank need setting
 	pha
 	plb
+
+	rep	#$30
+	.a16
+	.i16
+
 	lda	#KERNEL_DP
 	tcd
+
 	rep	#$30
-	.a8
-	.i8
-	rep	#$10
+	.a16
 	.i16
+
 	ldx	sp			; save the C stack
-	pshx				; on the main stack
+	phx				; on the main stack
 	; FIXME: how to check stack space in brk when this is not visible ?
 	tsx
 	stx	U_DATA__U_SYSCALL_SP
-	ldx	#kstack_top
+	ldx	#kstack_top-1
 	txs				; set our CPU stack
-	ldx	#kstack_c		; set our C stack
+	ldx	#kstackc_top-1		; set our C stack
 	stx	sp			; 
 	cli				; sane state achieved
 
 	sep	#$10
 	.i8
+
 	lda	#1
 	sta	_kernel_flag		; In kernel mode
 	cli				; Interrupts now ok
 	jsr	_unix_syscall		; Enter C space
 	sei				; Interrupts back off
 	stz	_kernel_flag
+
 	rep	#$10
 	.i16
+
 	ldx	U_DATA__U_SYSCALL_SP
 	txs				; Back to the old stack
 					; We can't restore sp yet as we are
 					; in the wrong bank
-	.i8
 	sep	#$10
+	.i8
+
 	lda	U_DATA__U_CURSIG
 	bne	signal_out
 	sep	#$20
+	.a8
 	lda	U_DATA__U_PAGE
-	.a16
 	;
 	;	We use this trick several times. U_PAGE holds the bank
 	;	register. As we want our DP to be bank:0000 we need to
@@ -164,17 +193,20 @@ noargs:
 	lda	#0
 	tcd
 
+	rep	#$20
+	.a16
 	pla				; pull the saved sp off the ustack
 	sta	sp			; and store it 16bit
 
-	rep	#$20
-	.a8 
-	plp				; off ustack
+	sep	#$20
+	.a8
+	.i8
 	; We may now be in decimal !
 	ldy	U_DATA__U_RETVAL
 	ldx	U_DATA__U_RETVAL+1
 	; also sets z for us
 	lda	U_DATA__U_ERROR
+	plp
 	rtl
 
 	;
@@ -199,7 +231,7 @@ noargs:
 	;	rts	in bank return to the interruption point
 	;
 signal_out:
-	clz	U_DATA__U_CURSIG
+	stz	U_DATA__U_CURSIG
 	
 	rep	#$10
 	.i16
@@ -212,29 +244,28 @@ signal_out:
 	txs
 	sep	#$10
 	.i8
-	tax				; Save signal code in X
 	; Stack the signal return (the signal itself can cause syscalls)
 	; Be careful here stack ops are currently going to user stack but
 	; data ops to kernel. Don't mix them up!
-	lda	#>sigret		; needs to be a fixed address in user
-	pha
-	lda	#<sigret		; FIXME
-	pha
+	pea	sigret
 	phx				; signal number
 	phy				; temporarily save C sp value
-	txa
 	asl a				; vector offset
 	tay
-	rep	#$10
+	rep	#$30
+	.a16
 	.i16
+	lda	#0
 	ldx	U_DATA__U_SIGVEC,y	; get signal vector
-	clz	U_DATA__U_SIGVEC,y	; and reset it
+	sta	U_DATA__U_SIGVEC,y	; and reset it
 	ply				; get the temporary sp save back
 	phx
+	sep	#$20
+	.a8
 	; Needs to change for split I/D
 	lda	U_DATA__U_PAGE		; target code page
 	pha
-	pea	#PROGLOAD+20		; trap handler in user app
+	pea	PROGLOAD+20		; trap handler in user app
 	pha
 	plb				; get the right user data bank
 	xba				; get into ff00 format
@@ -249,30 +280,31 @@ signal_out:
 ;	registers and return directly to the start of the user process
 ;
 _doexec:
-	; FIXME how do we find the correct cpu stack for this process
-	;
-	; Would (bank + offset) << 8 work ?
-	sta	_tmp1
-	stx	_tmp1+1
+	sta	tmp1
+	stx	tmp1+1
 	sei
 	stz	_kernel_flag
 	rep	#$30
 	.i16
 	.a16
-	ldx	_tmp1		;	target address
+	ldx	tmp1		;	target address
 	sep	#$20
 	.a8
 	lda	U_DATA__U_PAGE	;	get our bank
 	clc
 	adc	#STACK_BANKOFF
 	xba			;	swap to xx00
-	lda	#FF		;	stack top is xxff
+	lda	#$FF		;	stack top is xxff
 	tcs			;	Set CPU stack at xxFF
 	; Split I/D will need to change this logic
 	lda	U_DATA__U_PAGE	;	our bank
 	xba			;	now in the form xx00 as we need
 	tcd			;	set the user DP
 	; We are now on the correct DP and CPU stack
+	; So fix up the syscall vector
+	ldy	#syscall_vector
+	sty	syscall
+	; And the C stack pointer
 	ldy	U_DATA__U_ISP
 	sty	sp		;	sp is in DP so we write user version
 	sep	#$30
@@ -292,6 +324,47 @@ _doexec:
 	sep	#$10
 	.i8
 	rtl
+
+;
+;	The basic idea of taking a trap and signalling is to make sure we
+;	look like an interrupt and can re-cycle much of that code. The
+;	caller already saved the CPU state. Interrupts are off at this point
+;	as it we got here via a trap.
+;
+shoot_myself:
+	sep	#$30
+	.a8
+	.i8
+	lda	#KERNEL_BANK
+	pha
+	plb
+	rep	#$30
+	.a16
+	.i16
+	lda	#IRQ_DP
+	tcd
+	tsx
+	stx 	istack_switched_sp
+	ldx	#istack_top-1
+	txs
+	ldx	#istackc_top -1
+	stx	sp
+
+	;
+	;	We have now arrived in kernel mappings for an interrupt
+	;
+
+	sep	#$30
+	.a8
+	.i8
+	jsr	push0
+	lda	#1
+	sta	_inint
+	pla			; top of stack is the saved signal number
+	ldx	#0
+	jsr 	_ssig
+	jmp	join_interrupt_path
+
 	
 ;
 ;	The C world here is fairly ugly. We have to stash various bits of
@@ -317,9 +390,9 @@ interrupt_handler:
 	; Switch stacks
 	tsx
 	stx	istack_switched_sp
-	ldx	#istack
+	ldx	#istack_top-1
 	txs
-	ldx	#istack_c	; set up C istack (may not need eventually)
+	ldx	#istackc_top-1	; set up C istack (may not need eventually)
 	stx	sp		
 
 	sep	#$30
@@ -330,6 +403,13 @@ interrupt_handler:
 	lda	#1
 	sta	_inint
 	jsr	_platform_interrupt
+
+	;
+	;	A synchronously delivered signal trap joins the interrupt
+	;	return flow
+	;
+
+join_interrupt_path:
 	stz	_inint
 
 	; Restore the stack we arrived on
@@ -353,7 +433,7 @@ interrupt_handler:
 	;	save the bank as a task switch or swap might move the
 	;	process
 	;
-	lda	U_DATA_U_PAGE
+	lda	U_DATA__U_PAGE
 	sep	#$30
 
 	.a8
@@ -383,8 +463,8 @@ interrupt_handler:
 	.a8
 	.i16
 signal_exit:
-	clz	U_DATA__U_CURSIG
-	sta	_tmp1		; save signal 8bits (irq tmp1)
+	stz	U_DATA__U_CURSIG
+	sta	tmp1		; save signal 8bits (irq tmp1)
 
 
 	; Move down the stack frame
@@ -407,8 +487,6 @@ signal_exit:
 	;		A16
 	;		X16
 	;		Y16
-	;		error
-	;		retval
 	;		sigret_irq
 	;		signal number
 	;
@@ -432,18 +510,7 @@ signal_exit:
 	tcs	; stick y in s
 
 	sep	#$20
-	.a8
-	;
-	;	Stack the signal bits
-	;
-	lda	U_DATA__U_ERROR
-	pha
-	lda	U_DATA__U_RETVAL
-	pha
-	lda	U_DATA__U_RETVAL+1
-	pha
-	pea	#sigret_irq
-				; sig	nal return
+	pea	sigret_irq	; signal return
 	sep	#$10
 	.i8
 	phy			; signal code
@@ -451,11 +518,12 @@ signal_exit:
 	asl a
 	tay
 	rep	#$30
-	.i16
 	.a16
-	lda	U_DATA__U_SIGVEC,y
-	clz	U_DATA__U_SIGVEC,y
-	pha
+	.i16
+	lda	#0
+	ldx	U_DATA__U_SIGVEC,y
+	sta	U_DATA__U_SIGVEC,y
+	phx
 	sep	#$20
 	.a8
 	lda	U_DATA__U_PAGE
@@ -465,13 +533,55 @@ signal_exit:
 	.i16
 	ldx	#0
 	txy
-	pea	#PROGLOAD+20
+	pea	PROGLOAD+20
 	sep	#$30
 	.i8
 	.a8
 	lda	#$30		; i8a8
 	pha
 	rti
+
+;
+;	Trap handlers
+;
+illegal_inst:
+	rep	#$30
+	.a16
+	.i16
+	pha
+	phx
+	ply
+	cld
+	lda	#4
+sync_sig:
+	sep	#$30
+	.a8
+	.i8
+	pha
+	jmp	shoot_myself
+
+trap_inst:
+	rep	#$30
+	.a16
+	.i16
+	pha
+	phx
+	ply
+	cld
+	lda	#5
+	bra	sync_sig
+
+abort_inst:
+	rep	#$30
+	.a16
+	.i16
+	pha
+	phx
+	ply
+	cld
+	lda	#7
+	bra	sync_sig
+
 ;
 ;	We can make the map routines generic as all 65c816 are the same
 ;	mapping model. We don't change anything but instead track the page
@@ -484,6 +594,10 @@ signal_exit:
 ;	some custom swap logic in the disk drivers which is sucky but I
 ;	don't currently have any better idea!
 ;
+
+	.a8
+	.i8
+
 map_process_always:
 	lda U_DATA__U_PAGE
 	sta _userpage
@@ -491,7 +605,7 @@ map_process_always:
 map_process:
 	cmp #0
 	bne map_process_2
-	cmpx #0
+	cpx #0
 	bne map_process_2
 map_kernel:
 	rts
@@ -513,6 +627,14 @@ nmi_stop:
 	jmp _trap_monitor
 nmi_trap:
 	.byte "NMI!", 0
+
+emulation:
+	ldx #>emu_trap
+	lda #<emu_trap
+	jsr outstring
+	jmp _trap_monitor
+emu_trap:
+	.byte "EM!", 0
 
 outstring:
 	sta ptr1
@@ -582,3 +704,39 @@ outxa:	pha
 
 _need_resched:
 	.byte 0
+
+
+;
+;	Stubs get propogated into each segment at FF00
+;
+	.segment "STUBS"
+
+	.a8
+	.i8
+
+sigret:
+	sep #$30
+	plx			; pull the return and error code back
+	ply
+	pla
+	plp			; recover the flags
+	rts			; back to the interrupted syscall return
+
+
+sigret_irq:
+	rep #$30
+	.a16
+	.i16
+	ply
+	plx
+	pla
+	plp			; flags and status bits (back to 8/8 usually)
+	rts
+
+	.a8
+	.i8
+
+syscall_vector:
+	jsl	KERNEL_FAR+syscall_entry
+	rts
+

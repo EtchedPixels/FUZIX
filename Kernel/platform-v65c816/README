@@ -5,10 +5,9 @@ Our memory mapping looks like this
 
 Bank 0:
 	0x0000		Kernel DP
-	0x0100		UData + C stack
-	0x0200		Bootcode / Replaced with C stack
-	0x0300		CPU stack (kernel mode)
-	0x0400		Kernel image
+	0x0100		UData + C stack etc
+	0x0300		Bootcode
+	...		Kernel image
 	0xF700		7 x 256 byte CPU stacks for processes
 	0xFE00		I/O page
 	0xFF00		Vectors
@@ -33,15 +32,14 @@ the emulator.
 
 TODO
 ----
+- Sort out memory map (move udata to 0100 and boot upwards)
+- Fix fork() to copy the user C stacks in dofork()
 - Debug initial sketches
-- Add stubs and correct stub copier (+ syscall vector)
-- Add vectors correctly for the 816
-- Figure out how to set stacks up nicely
-- Test signal handling paths
 - Fix brk() checking [right now its busted entirely]
+- Make discard sane so we can discard for buffers
+- Test signal handling paths
 - Fix execl() execle() in userspace (so init can be fully tested)
 - Add pre-emption logic to the interrupt return path
-- Fix fork() to copy the user C stacks in dofork()
 - Add swap logic
 
 Optimisations We Need To Do

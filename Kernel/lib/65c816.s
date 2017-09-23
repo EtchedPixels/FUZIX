@@ -2,18 +2,19 @@
 ;	The 65C816 memory management and switching logic is common
 ;	to all systems so keep it all here
 ;
-        .include "kernel.def"
+        .include "../platform/kernel.def"
         .include "../kernel816.def"
-	.include "zeropage.inc"
+	.include "../platform/zeropage.inc"
 
 	.export _switchout
 	.export _switchin
 	.export _dofork
 
 	.importzp ptr1
-	.import jump_monitor
+	.import _trap_monitor
 	.import _chksigs
 	.import _platform_idle
+	.import _newproc
 	.import _nready
 	.import _inint
 	.import _getproc
@@ -21,7 +22,8 @@
 	.import outcharhex
 	.import outstring
 
-	.segment "COMMONMEM"
+
+	.code
 	.p816
 	.i8
 	.a8
@@ -86,10 +88,10 @@ slow_path:
 	lda	#U_DATA__TOTALSIZE-1		; including our live stack
 	phb
 switch_patch_1:
-	mv	KERNEL_BANK:0,0		; save stack and udata
+	mvn	KERNEL_FAR,0		; save stack and udata
 	plb
 	sep #$30
-	clz	_inint
+	stz	_inint
 	jsr	_getproc			; x,a holds process
 	jsr	_switchin			; switch to process
 	jsr	_trap_monitor			; bug out if it fails
@@ -125,14 +127,14 @@ _switchin:
 	lda	#U_DATA__TOTALSIZE-1
 switch_patch_2:
 	;	FIXME check syntax required for bank value ??
-	mvn	0,KERNEL_BANK:0
+	mvn	0,KERNEL_FAR
 	;	after the MVN our data bank is KERNEL_DATA
 	;	Our stack is now valid and we may use it again, our UDATA
 	;	is for the new process
 	ldx	U_DATA__U_PTAB
 	cpx	ptr1
 	bne	switchinfail	;	wrong process !!
-	clz	_runticks
+	stz	_runticks
 	sep	#$20
 	.a8
 	lda	#P_RUNNING
@@ -145,7 +147,7 @@ switch_patch_2:
 	stx	sp
 	sep	#$10
 	.i8
-	lda	U_DATA__U_INTERRUPT
+	lda	U_DATA__U_ININTERRUPT
 	beq	notisr
 	cli	; interrupts back on
 notisr:
@@ -161,16 +163,17 @@ switchinfail:
 	ldx	#>badswitchmsg
         jsr 	outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _	trap_monitor
-badswitchmsg: .byte "_switchin: FAIL"
-	.byte 13, 10, 0
+        jmp	_trap_monitor
+badswitchmsg:
+	.byte	"_switchin: FAIL"
+	.byte	13, 10, 0
 
 _dofork:
 	sta	ptr1		; new process ptr. U_DATA gives parent
 	stx	ptr1+1
 	lda	U_DATA__U_PAGE
 	sta	fork_patch+2	;	source bank (parent)
-	ldy	#P_TAB__P_PAGE
+	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
 	sta	fork_patch+1	;	destination bank (child)
 	sta	fork_patch_2+1
@@ -195,12 +198,12 @@ _dofork:
 	lda	#MAP_SIZE	; 64K - udata shadow
 	phb
 fork_patch:
-	mvn	0,0		; copy the entire bank
+	mvn	0,0		; copy the entire bank below the save
 	ldx	#U_DATA
 	ldy	#U_DATA_STASH
-	lda	#U_DATA_TOTALSIZE-1
+	lda	#U_DATA__TOTALSIZE-1
 fork_patch_2:
-	mvn	KERNEL_BANK:0,0
+	mvn	KERNEL_FAR,0
 	plb			; back to kernel bank
 
 	; At this point we have copied the parent into the child bank
@@ -208,7 +211,7 @@ fork_patch_2:
 	plx			; discard frame we build for child
 	plx
 
-	.sep	#$30		; back to 8bit mode for C
+	sep	#$30		; back to 8bit mode for C
 	.a8
 	.i8
 	lda	ptr1
