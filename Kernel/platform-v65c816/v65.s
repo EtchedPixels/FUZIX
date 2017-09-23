@@ -129,21 +129,6 @@ outchar:
 	sta $0000FE20
 	rts
 
-;
-;	Code that will live in each bank
-;
-	.segment "STUBS"
-sigret:
-	pla		; Unstack the syscall return pieces
-	tax
-	pla
-	tay
-	pla
-	plp		; from original stack frame
-	rts
-
-; FIXME: add sig ret interrupt path
-
 
 ;
 ;	I/O logic
