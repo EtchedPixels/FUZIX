@@ -26,7 +26,7 @@ void pagemap_init(void)
 {
     int i;
     /* Bank 0 is the kernel */
-    for (i = 7 ; i > 0; i--)
+    for (i = MAX_MAPS ; i > 0; i--)
         pagemap_add(i);
 }
 
