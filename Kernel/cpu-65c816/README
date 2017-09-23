@@ -1,0 +1,24 @@
+The 65c816 code tries to provide a single consistent implementation for all the
+code that has to be shared by different systems by virtue of the fact that
+the 'MMU' is the bank registers provided by the processor.
+
+The plus side of this is that providing you put your kernel in bank 0 you should
+be able to take the reference code and need only provide your own I/O device
+implementations and minor changes to the example platform-v65c816/ code to
+get things running.
+
+Aside from the bits in v65 for your platform (notably outchar and any hardware
+init), you need to update config.h and kernel.def to reflect your memory
+layout, as well as ld65.cfg to match. Right now that's about it except for
+hardware drivers!
+
+
+
+TODO:
+
+Add swap and adjust bank code so we don't use 0 as 'swapped out' but 0xFF.
+Otherwise if you need to place the kernel outside of bank 0 (eg because bank 0
+is the legacy memory map of a board with a 65c816 upgrade) it'll break.
+
+Verify kernel in banks other than 0 works
+
