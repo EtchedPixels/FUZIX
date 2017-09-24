@@ -81,6 +81,29 @@
 
 syscall	=	$fe
 
+
+;
+;	Helper - given the udata bank in A set the DP value correctly. May
+;	be worth optimizing one day.
+;
+setdp:
+	php
+
+	rep	#$30
+	.a16
+	.i16
+
+	pha
+	asl	a			; twice page
+	adc	#STACK_BANKOFF		; we now point at the stack
+	adc	#$0100			; now the DP
+	pla
+
+	plp
+	rts
+
+	.a8
+	.i8
 ;
 ;	This is called from a stub we put into each user process bank that
 ;	does a jsl to the kernel entry point then an rts
@@ -155,7 +178,6 @@ noargs:
 	txs				; set our CPU stack
 	ldx	#kstackc_top-1		; set our C stack
 	stx	sp			; 
-	cli				; sane state achieved
 
 	sep	#$10
 	.i8
@@ -189,9 +211,7 @@ noargs:
 	;
 	pha
 	plb				; User mapping for data bits
-	xba				; from xx to xx00 for DP
-	lda	#0
-	tcd
+	jsr	setdp			; Set DP from A, corrupts A
 
 	rep	#$20
 	.a16
@@ -268,9 +288,7 @@ signal_out:
 	pea	PROGLOAD+20		; trap handler in user app
 	pha
 	plb				; get the right user data bank
-	xba				; get into ff00 format
-	lda	#0
-	tcd				; set user DP correctly
+	jsr	setdp
 	sty	sp			; and finally restore the user C sp
 	sep	#$10			; i8a8 on entry to handler
 	.i8
@@ -292,14 +310,18 @@ _doexec:
 	.a8
 	lda	U_DATA__U_PAGE	;	get our bank
 	clc
-	adc	#STACK_BANKOFF
+	adc	U_DATA__U_PAGE	;	two * bank
+	adc	#STACK_BANKOFF	;	plus offset
 	xba			;	swap to xx00
 	lda	#$FF		;	stack top is xxff
 	tcs			;	Set CPU stack at xxFF
+	rep	#$20
+	inc			;	gives us the DP at xx+100
+	pha
+	pld
 	; Split I/D will need to change this logic
 	lda	U_DATA__U_PAGE	;	our bank
-	xba			;	now in the form xx00 as we need
-	tcd			;	set the user DP
+	jsr	setdp
 	; We are now on the correct DP and CPU stack
 	; So fix up the syscall vector
 	ldy	#syscall_vector
@@ -381,11 +403,14 @@ interrupt_handler:
 	cld			; no funnies with decimal
 
 	; Now switch our data and DP to the kernel ones
+	lda	#IRQ_DP		; interrupt has a private direct page
+	tcd
+
+	sep	#$20
+	.a8
 	lda	#KERNEL_BANK
 	pha
 	plb
-	lda	#IRQ_DP		; interrupt has a private direct page
-	tcd
 
 	; Switch stacks
 	tsx
@@ -395,9 +420,7 @@ interrupt_handler:
 	ldx	#istackc_top-1	; set up C istack (may not need eventually)
 	stx	sp		
 
-	sep	#$30
-
-	.a8
+	sep	#$10
 	.i8
 
 	lda	#1
@@ -418,6 +441,23 @@ join_interrupt_path:
 	.i16
 	ldx	istack_switched_sp
 	txs
+
+	lda	_kernel_flag
+	beq	ret_to_user
+
+	lda	#KERNEL_BANK
+	pha
+	plb
+	ldx	#KERNEL_DP
+	phx
+	pld
+
+	ply
+	plx
+	pla
+	rti
+
+ret_to_user:
 	; TODO .. pre-emption
 
 
@@ -441,16 +481,12 @@ join_interrupt_path:
 
 	pha
 	plb	; Now data is the user bank
-	xba
-	lda	#0
-	tcd	; and DP is right
+	jsr	setdp
 
 	rep	#$30
 	.a16
 	.i16
 
-	ldx	istack_switched_sp
-	txs
 	ply
 	plx
 	pla
@@ -558,7 +594,28 @@ sync_sig:
 	.a8
 	.i8
 	pha
+	lda	_kernel_flag
+	bne	ktrap
+	lda	_inint
+	bne	itrap
 	jmp	shoot_myself
+
+itrap:
+	lda	#<itrap_msg
+	ldx	#>itrap_msg
+outfail:
+	jsr	outstring
+	jmp	_trap_monitor
+itrap_msg:
+	.byte	"itrap!", 0
+
+ktrap:
+	lda	#<ktrap_msg
+	ldx	#>ktrap_msg
+	bra	outfail
+ktrap_msg:
+	.byte	"ktrap!", 0
+
 
 trap_inst:
 	rep	#$30

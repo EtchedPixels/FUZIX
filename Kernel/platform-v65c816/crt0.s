@@ -33,7 +33,7 @@
 
 entry:
 ;
-;	We are entered at $0202 just after the required magic number
+;	We are entered at $0102 just after the required magic number
 ;
 ;	We get run from bank 0, our I/O writes would otherwise need to be
 ;	24bit
@@ -45,13 +45,31 @@ entry:
 	sei			; interrupts off
 	cld			; decimal off
 
+
+	; vectors is packed in DP, move it to FF00
+	rep	#$30
+	.a16
+	.i16
+	lda	#255
+	ldx	#0
+	ldy	#$FF00
+	mvn	KERNEL_FAR,KERNEL_FAR
+
+	sep	#$30
+	.a8
+	.i8
+
+
+	lda	#'u'
+	sta	$FE20
+
 	rep	#$10
 	.i16
 
 	ldx	#kstack_top
 	txs			; Stack (6502 not C)
 
-	lda	#'u'
+	lda	#'z'
 	sta	$FE20
 
 	ldx	#kstackc_top	; C stack
@@ -59,7 +77,7 @@ entry:
 
 	ldx	#__BSS_RUN__
 
-	lda	#'z'
+	lda	#'i'
 	sta	$FE20
 
 	txy
@@ -78,26 +96,25 @@ entry:
 	.a8
 	.i8
 
-	lda	#'i'
-	sta	$FE20
-
 	lda	#'x'
 	sta	$FE20
 
-	jsr	init_early
+;	jsr	init_early
 	lda	#'.'
 	sta	$FE20
 	jsr	init_hardware
+	jmp	code
+
+	.code
+
+	.a8
+	.i8
+code:
 	lda	#13
 	sta	$FE20
 	lda	#10
 	sta	$FE20
-	jmp	code
 
-; The above gets blasted into udata space
-	.code
-
-code:
 	rep	#$30
 	.a16
 	.i16
@@ -106,12 +123,14 @@ code:
 	ldy	#U_DATA+1
 	lda	#U_DATA__TOTALSIZE-2
 	stz	0,x
-	mvn	0,0
+	mvn	KERNEL_FAR,KERNEL_FAR
 
 	sep	#$30
 	.a8
 	.i8
 
+	lda	#'G'
+	sta	$FE20
 	jsr	_fuzix_main	; Should never return
 	sei			; Spin
 stop:	bra stop

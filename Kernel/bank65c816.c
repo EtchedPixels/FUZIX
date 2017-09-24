@@ -94,8 +94,8 @@ int swapout(ptptr p)
 	if (map == 0)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
-	/* Write the user CPU stack to disk */
-	swapwrite(SWAPDEV, blk, 512, (STACK_BANKOFF+(p-ptab)) << 8, 0);
+	/* Write the user CPU stack and DP to disk */
+	swapwrite(SWAPDEV, blk, 512, (STACK_BANKOFF + 2 * (p - ptab)) << 8, 0);
 	/* Write the process including DP and C stack, plus the udata cache */
 	swapwrite(SWAPDEV, blk + 1, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 	pagemap_free(p);
@@ -121,10 +121,8 @@ void swapin(ptptr p, uint16_t map)
 		kprintf("%x: nopage!\n", p);
 		return;
 	}
-	/* Read the user stack from disk: FIXME - this is half a block
-	   so we need to make sure our disk drivers can cope with this for
-	   read (write is ok) */
-	swapread(SWAPDEV, blk, 256, (STACK_BANKOFF+(p-ptab)) << 8, 0);
+	/* Read the user stack and DP from disk */
+	swapread(SWAPDEV, blk, 512, (STACK_BANKOFF + 2 * (p - ptab)) << 8, 0);
 	/* Read the process back in */
 	swapread(SWAPDEV, blk + 1, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
 #ifdef DEBUG

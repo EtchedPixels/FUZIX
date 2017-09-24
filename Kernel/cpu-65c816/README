@@ -22,3 +22,33 @@ is the legacy memory map of a board with a 65c816 upgrade) it'll break.
 
 Verify kernel in banks other than 0 works
 
+
+RULES FOR APPLICATION SPACE
+
++ Don't assume that DP is 0000 in your current bank. It's not. Likewise your
+  CPU stack is not 0100. Both are some random place in bank 0 because the CPU
+  is brain dead.
+
+- cc65 shouldn't care as it only uses S for temporaries and return addresses,
+  while the C stack it uses *is* in your bank. This does force us not to use
+  all the nice stack offset addressing due to this but does mean you can write
+  8/16bit code and take the address of stack objects.
+
+- Don't save and restore S or do maths on it. This may also move during a
+  fork or swap. cc65 doesn't do this in its runtime so this is ok for cc65
+  (it does have a stkchk routine which isn't safe to use). If you push, pop,
+  jsr and ret all will be fine even across a swap. In other words treat the
+  stack as a non-addressible object.
+
+- Don't do long operations, save or restore any bank register or use mvn/mvp.
+  We might move bank if we are interrupted and swapped. Remember mvn/mvp is
+  interruptible. A stub for calling it needs adding
+
+- Syscalls are via jmp $fe for the moment. This needs thought and may change
+  especially if I implement an o65 loader to sort all the 6502 mess out
+
+- Binaries load at $0100
+
+- If you use > 6502 isntructions then check and print an error at startup.
+  This will eventually ned up in the o65 handling instead
+

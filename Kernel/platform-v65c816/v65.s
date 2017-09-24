@@ -63,10 +63,10 @@ ___hard_ei:
 ___hard_irqrestore:
 	and	#4		; IRQ flag
 	beq	irq_on
-	cli
+	sei
 	rts
 irq_on:
-	sei
+	cli
 	rts
 
 ;
@@ -74,10 +74,11 @@ irq_on:
 ;
 init_early:
 	lda	#1
-init_loop:
 	sep	#$30
 	.a8
 	.i8
+
+init_loop:
 	sta	common_patch+1		; destination bank
 	phb				; save our bank (mvn will mess it)
 	pha				; and count
@@ -85,14 +86,20 @@ init_loop:
 	rep	#$30
 	.a16
 	.i16
+
 	ldx	#$FF00
 	txy
 	lda	#$00FE
 common_patch:
 	mvn	KERNEL_FAR,0		; copy the block
+
+	sep	#$30
+	.a8
+	.i8
+
 	pla
 	plb				; bank to kernel bank
-	dec
+	inc
 	cmp	#8
 	bne	init_loop
         rts

@@ -8,13 +8,14 @@ Bank 0:
 	0x0100		UData + C stack etc
 	0x0300		Bootcode
 	...		Kernel image
-	0xF700		7 x 256 byte CPU stacks for processes
+	0xF000		7 x 256 byte CPU stacks for processes paired
+			with their direct pages
 	0xFE00		I/O page
-	0xFF00		Vectors
+	0xFF00		Vectors			[packed at 0 in image]
 
 And in user space
 
-	0x0000		User DP
+	0x0000		Unused
 	0x0100		Program (CPU stack is in bank 0)
 	0xFC00		Udata copy (768 bytes)
 	0xFF00		Stubs [signal return etc]
@@ -32,8 +33,6 @@ the emulator.
 
 TODO
 ----
-- Sort out memory map (move udata to 0100 and boot upwards)
-- Fix fork() to copy the user C stacks in dofork()
 - Debug initial sketches
 - Fix brk() checking [right now its busted entirely]
 - Make discard sane so we can discard for buffers
