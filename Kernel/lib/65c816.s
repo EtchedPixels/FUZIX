@@ -169,15 +169,23 @@ badswitchmsg:
 	.byte	13, 10, 0
 
 _dofork:
-	sta	ptr1		; new process ptr. U_DATA gives parent
+	sta	ptr1			; new process ptr. U_DATA gives parent
 	stx	ptr1+1
 	lda	U_DATA__U_PAGE
-	sta	fork_patch+2	;	source bank (parent)
+	sta	fork_patch+2		; source bank (parent)
+	asl	a
+	adc	#STACK_BANKOFF
+	sta	tmp1+1			; source for S and DP
+	stz	tmp1
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
-	sta	fork_patch+1	;	destination bank (child)
+	sta	fork_patch+1		; destination bank (child)
 	sta	fork_patch_2+1
-
+	asl	a
+	adc	#STACK_BANKOFF		; find our S and DP banks as
+					; those need copying too
+	sta	tmp2+1			; dest for S and DP
+	stz	tmp2
 
 	rep	#$20
 	.a16
@@ -205,6 +213,23 @@ fork_patch:
 fork_patch_2:
 	mvn	KERNEL_FAR,0
 	plb			; back to kernel bank
+
+	ldx	tmp1
+	ldy	tmp2
+	lda	#$01FF		; DP and stack
+	mvn	KERNEL_FAR,KERNEL_FAR
+
+	;
+	;	Final hairy detail - the child S value needs to be shifted
+	;	versus parent so we restore it correctly
+	;
+
+	lda	U_DATA__U_SYSCALL_SP
+	clc
+	adc	tmp1
+	sec
+	sbc	tmp2
+	sta	U_DATA__U_SYSCALL_SP
 
 	; At this point we have copied the parent into the child bank
 	; and copied the current uarea into the child uarea
