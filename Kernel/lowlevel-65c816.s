@@ -452,6 +452,9 @@ join_interrupt_path:
 	phx
 	pld
 
+	rep	#$20
+	.a16
+
 	ply
 	plx
 	pla
