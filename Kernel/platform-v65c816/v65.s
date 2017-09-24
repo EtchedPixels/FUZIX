@@ -111,7 +111,7 @@ init_hardware:
         ; set system RAM size for test purposes
 	rep #$10
 	.i16
-	ldx #8
+	ldx #512
 	stx _ramsize
 	ldx #512-64
 	stx _procmem
