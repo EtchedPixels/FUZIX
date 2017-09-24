@@ -60,7 +60,7 @@ idling:
 	cmp	#P_READY
 	bne	slow_path
 	lda	#P_RUNNING
-	sta	0,x
+	sta	P_TAB__P_STATUS_OFFSET,x
 	plx
 	stx	sp
 	plx				; discard 0
