@@ -76,7 +76,7 @@ ___hard_ei:
 
 ___hard_irqrestore:
 	    and #4		; IRQ flag
-	    beq irq_on
+	    bne irq_on
 	    cli
 	    rts
 irq_on:
