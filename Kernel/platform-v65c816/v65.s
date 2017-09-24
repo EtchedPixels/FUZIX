@@ -170,7 +170,7 @@ _hd_read_data:
 	ldy #512
 hd_read:
 	lda $34			; I/O data via DP
-	sta 0,x			; stores into data (user) bank
+	sta a:$0000,x		; stores into data (user) bank
 	inx
 	dey
 	bne hd_read
@@ -197,7 +197,7 @@ _hd_write_data:
 	
 	ldy #512
 hd_write:
-	lda 0,x			; load from data (user) bank
+	lda a:$0000,x		; load from data (user) bank
 	sta $34			; I/O data via DP
 	inx
 	dey
@@ -209,6 +209,5 @@ hd_write:
 	rts
 
 	.bss
-
 _hd_kmap:
 	.res 1
