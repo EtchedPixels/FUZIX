@@ -22,6 +22,10 @@ is the legacy memory map of a board with a 65c816 upgrade) it'll break.
 
 Verify kernel in banks other than 0 works
 
+Support for memory over 8MB. At that point we have U_DATA__U_PAGE > 0x7F
+which means our asl/adc wraps and it breaks in several bits of the support
+logic.
+
 
 RULES FOR APPLICATION SPACE
 
@@ -38,7 +42,7 @@ RULES FOR APPLICATION SPACE
   fork or swap. cc65 doesn't do this in its runtime so this is ok for cc65
   (it does have a stkchk routine which isn't safe to use). If you push, pop,
   jsr and ret all will be fine even across a swap. In other words treat the
-  stack as a non-addressible object.
+  stack as a non-addressible object, or only addressible via ,S addressing.
 
 - Don't do long operations, save or restore any bank register or use mvn/mvp.
   We might move bank if we are interrupted and swapped. Remember mvn/mvp is
