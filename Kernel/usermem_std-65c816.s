@@ -154,7 +154,7 @@ __uput:
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	uputpatch+2
+	sta	uputpatch+1
 	phb
 	.i16
 	.a16

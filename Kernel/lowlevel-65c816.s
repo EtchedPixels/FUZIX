@@ -299,52 +299,72 @@ signal_out:
 ;
 _doexec:
 	sta	tmp1
-	stx	tmp1+1
+	stx	tmp1+1		;	address to execute from
 	sei
 	stz	_kernel_flag
+
 	rep	#$30
 	.i16
 	.a16
+
 	ldx	tmp1		;	target address
+
 	sep	#$20
 	.a8
+
 	lda	U_DATA__U_PAGE	;	get our bank
-	clc
-	adc	U_DATA__U_PAGE	;	two * bank
+	asl	a
 	adc	#STACK_BANKOFF	;	plus offset
 	xba			;	swap to xx00
 	lda	#$FF		;	stack top is xxff
 	tcs			;	Set CPU stack at xxFF
+
 	rep	#$20
+	.a16
+
 	inc			;	gives us the DP at xx+100
 	pha
 	pld
-	; Split I/D will need to change this logic
-	lda	U_DATA__U_PAGE	;	our bank
-	jsr	setdp
-	; We are now on the correct DP and CPU stack
-	; So fix up the syscall vector
+
+	;
+	;	From this point onwards exec is referencing the user DP
+	;	user S and kernel B (data)
+	;
+
+	sep 	#$20
+	.a8
+
+	; Fix up the syscall vector
+
 	ldy	#syscall_vector
-	sty	syscall
+	sty	syscall		;	stores into user DP
 	; And the C stack pointer
 	ldy	U_DATA__U_ISP
 	sty	sp		;	sp is in DP so we write user version
-	sep	#$30
-	.i8
-	.a8
-	; Will need to change for split I/D
+
+	;
+	;	From here we are entirely referencing user data but kernel
+	;	code
+	;
+	;	(Will need to change for split I/D)
+
 	lda	U_DATA__U_PAGE	;	bank
 	pha			;	switch to userdata bank
 	plb
+
 	pha			;	stack bank for rtl
-	rep	#$10
-	.i16
+
+	dex			;	Points to end of last instruction
+				;	for a return
 	phx			;	Execution address within bank
-	cli
 	lda	#0		;	
 	tay			;	DP base is 0
-	sep	#$10
+
+	sep	#$30
+	.a8
 	.i8
+
+	cli
 	rtl
 
 ;
