@@ -66,14 +66,14 @@ entry:
 	rep	#$10
 	.i16
 
-	ldx	#kstack_top
+	ldx	#kstack_top-1
 	txs			; Stack (6502 not C)
 
 	lda	#'z'
 	sta	$FE20
 
-	ldx	#kstackc_top	; C stack
-	sta	sp
+	ldx	#kstackc_top-1	; C stack
+	stx	sp
 
 	ldx	#__BSS_RUN__
 
@@ -89,7 +89,7 @@ entry:
 	.a16
 
 	lda	#__BSS_SIZE__-2	; must be >=2  bytes or else
-	stz	0,x
+	stz	a:0,x
 	mvn	0,0
 		
 	sep #$30
@@ -99,7 +99,7 @@ entry:
 	lda	#'x'
 	sta	$FE20
 
-;	jsr	init_early
+	jsr	init_early
 	lda	#'.'
 	sta	$FE20
 	jsr	init_hardware
@@ -113,23 +113,6 @@ code:
 	lda	#13
 	sta	$FE20
 	lda	#10
-	sta	$FE20
-
-	rep	#$30
-	.a16
-	.i16
-
-	ldx	#U_DATA
-	ldy	#U_DATA+1
-	lda	#U_DATA__TOTALSIZE-2
-	stz	0,x
-	mvn	KERNEL_FAR,KERNEL_FAR
-
-	sep	#$30
-	.a8
-	.i8
-
-	lda	#'G'
 	sta	$FE20
 	jsr	_fuzix_main	; Should never return
 	sei			; Spin

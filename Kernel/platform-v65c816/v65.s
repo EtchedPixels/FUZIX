@@ -108,17 +108,15 @@ common_patch:
 	.i8
 
 init_hardware:
-        ; set system RAM size for test purposes
+        ; set system RAM size	(FIXME: dynamic probe)
 	rep #$10
 	.i16
 	ldx #512
 	stx _ramsize
 	ldx #512-64
 	stx _procmem
-	ldx #syscall_vector
-	stx syscall
 
-	rep #$10
+	sep #$10
 	.i8
 
 	rts
@@ -163,7 +161,7 @@ _hd_read_data:
 	lda _hd_kmap		; page number
 	pha
 	plb			; data now points into user app
-	ldy #$00FE
+	ldy #$FE00
 	phy
 	pld			; DP is now the I/O space
 	
@@ -191,7 +189,7 @@ _hd_write_data:
 	lda _hd_kmap		; page number
 	pha
 	plb			; data now points into user app
-	ldy #$00FE
+	ldy #$FE00
 	phy
 	pld			; DP is now the I/O space
 	
