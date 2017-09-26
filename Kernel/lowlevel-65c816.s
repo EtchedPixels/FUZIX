@@ -84,7 +84,7 @@ syscall	=	$fe
 
 ;
 ;	Helper - given the udata bank in A set the DP value correctly. May
-;	be worth optimizing one day.
+;	be worth optimizing one day. Must not corrupt X or Y
 ;
 setdp:
 	php
@@ -96,7 +96,10 @@ setdp:
 	pha
 	asl	a			; twice page
 	adc	#STACK_BANKOFF		; we now point at the stack
-	adc	#$0100			; now the DP
+	inc	a			; plus 0x100
+	xba				; Swap to get xx00 format we need
+	and	#$FF00
+	tcd
 	pla
 
 	plp
@@ -106,18 +109,23 @@ setdp:
 	.i8
 ;
 ;	This is called from a stub we put into each user process bank that
-;	does a jsl to the kernel entry point then an rts
+;	does a jsl to the kernel entry point then an rts. Must be called
+;	in a8i8 state (or at least that's how you'll get the CPU back)
 ;
 syscall_entry:
-	php				; save cpu mode of caller on ustack
 	sei				; interrupts off
 	cld				; get into sane mode - no decimal, known state
+
 	sep 	#$30
 	.a8
 	.i8
-	stx	U_DATA__U_CALLNO
+
+	txa
+	sta	f:KERNEL_FAR+U_DATA__U_CALLNO
 	cpy	#0
 	beq	noargs
+
+	; FIXME check if Y too large
 
 	lda	sp
 	sta	ptr1
@@ -143,7 +151,7 @@ copy_args:
 	dey
 	dey
 	lda	(ptr1),y		; copy the arguments over
-	sta	KERNEL_FAR+U_DATA__U_ARGN,x
+	sta	f:KERNEL_FAR+U_DATA__U_ARGN,x
         inx
 	inx
 	cpy	#0
@@ -162,6 +170,8 @@ noargs:
 	.a16
 	.i16
 
+	ldx	sp			; save the C stack before we swich DP
+
 	lda	#KERNEL_DP
 	tcd
 
@@ -169,9 +179,9 @@ noargs:
 	.a16
 	.i16
 
-	ldx	sp			; save the C stack
-	phx				; on the main stack
-	; FIXME: how to check stack space in brk when this is not visible ?
+	phx				; push user sp onto stack so we can
+					; see it (only brk() needs it, nor
+					; is it needed for save/restore)
 	tsx
 	stx	U_DATA__U_SYSCALL_SP
 	ldx	#kstack_top-1
@@ -179,7 +189,8 @@ noargs:
 	ldx	#kstackc_top-1		; set our C stack
 	stx	sp			; 
 
-	sep	#$10
+	sep	#$30
+	.a8
 	.i8
 
 	lda	#1
@@ -194,15 +205,24 @@ noargs:
 
 	ldx	U_DATA__U_SYSCALL_SP
 	txs				; Back to the old stack
-					; We can't restore sp yet as we are
-					; in the wrong bank
+
 	sep	#$10
 	.i8
 
 	lda	U_DATA__U_CURSIG
 	bne	signal_out
-	sep	#$20
-	.a8
+
+	pla				; pull the saved sp off the ustack
+	pla				; discard it (it's still fine in
+					; bank)
+
+	; We may now be in decimal !
+	ldy	U_DATA__U_RETVAL
+	ldx	U_DATA__U_RETVAL+1
+	; also sets z for us
+	lda	U_DATA__U_ERROR
+	pha				; save A
+
 	lda	U_DATA__U_PAGE
 	;
 	;	We use this trick several times. U_PAGE holds the bank
@@ -213,20 +233,7 @@ noargs:
 	plb				; User mapping for data bits
 	jsr	setdp			; Set DP from A, corrupts A
 
-	rep	#$20
-	.a16
-	pla				; pull the saved sp off the ustack
-	sta	sp			; and store it 16bit
-
-	sep	#$20
-	.a8
-	.i8
-	; We may now be in decimal !
-	ldy	U_DATA__U_RETVAL
-	ldx	U_DATA__U_RETVAL+1
-	; also sets z for us
-	lda	U_DATA__U_ERROR
-	plp
+	pla				; Sets Z based on error
 	rtl
 
 	;
@@ -253,6 +260,10 @@ noargs:
 signal_out:
 	stz	U_DATA__U_CURSIG
 	
+	;
+	;	Fixme stack correct U_DATA in x y a
+	;
+
 	rep	#$10
 	.i16
 	ply				; user stack pointer to go to sp
@@ -334,13 +345,12 @@ _doexec:
 	sep 	#$20
 	.a8
 
-	; Fix up the syscall vector
-
-	ldy	#syscall_vector
-	sty	syscall		;	stores into user DP
-	; And the C stack pointer
+	; Set the C stack pointer
 	ldy	U_DATA__U_ISP
 	sty	sp		;	sp is in DP so we write user version
+	; Fix up the syscall vector in ZP
+	ldy	#syscall_vector
+	sty	syscall		;	stores into user DP
 
 	;
 	;	From here we are entirely referencing user data but kernel
@@ -351,6 +361,8 @@ _doexec:
 	lda	U_DATA__U_PAGE	;	bank
 	pha			;	switch to userdata bank
 	plb
+
+	sty	a:syscall	;	and in bank:00FE
 
 	pha			;	stack bank for rtl
 
@@ -480,6 +492,9 @@ join_interrupt_path:
 	pla
 	rti
 
+	.a8
+	.i16
+
 ret_to_user:
 	; TODO .. pre-emption
 
@@ -496,15 +511,17 @@ ret_to_user:
 	;	save the bank as a task switch or swap might move the
 	;	process
 	;
-	lda	U_DATA__U_PAGE
 	sep	#$30
 
 	.a8
 	.i8
 
+	lda	U_DATA__U_PAGE
+
 	pha
 	plb	; Now data is the user bank
-	jsr	setdp
+
+	jsr	setdp	; as is DP
 
 	rep	#$30
 	.a16
