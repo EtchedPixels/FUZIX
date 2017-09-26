@@ -81,8 +81,6 @@ static int header_ok(uint8_t *pp)
 	p += 3;
 	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
 		return 0;
-//	if (*p && *p != (PROGLOAD >> 8))
-//      	return 0;
 	return 1;
 }
 
@@ -137,7 +135,7 @@ arg_t _execve(void)
 	}
 
 	progload = (*(uint8_t *)(buf + 7)) << 8;
-	if ( ! progload )
+	if (progload == 0)
 		progload = PROGLOAD;
 
 	top = *(uint16_t *)(buf + 8);
@@ -149,6 +147,7 @@ arg_t _execve(void)
 	bss = *(uint16_t *)(buf + 14);
 
 	/* Binary doesn't fit */
+	/* FIXME: review overflows */
 	bin_size = ino->c_node.i_size;
 	progptr = bin_size + 1024 + bss;
 	if (top - progload < progptr || progptr < bin_size) {
