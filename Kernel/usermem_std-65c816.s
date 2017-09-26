@@ -192,9 +192,11 @@ __uputw:
 	stx	ptr2+1
 	jsr	popax
 	phb
+	pha
 	lda	U_DATA__U_PAGE
 	pha
 	plb
+	pla
 	sta	(ptr2)
 	txa
 	ldy	#1
