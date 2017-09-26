@@ -6,7 +6,7 @@ TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80
 #export TARGET = bbcmicro
 #export TARGET = dragon
 #export TARGET = coco2
-export TARGET = coco2cart
+#export TARGET = coco2cart
 #export TARGET = coco3
 #export TARGET = dragon-nx32
 #export TARGET = multicomp09
@@ -26,6 +26,7 @@ export TARGET = coco2cart
 #export TARGET = trs80
 #export TARGET = ubee
 #export TARGET = v65
+export TARGET = v65c816
 #export TARGET = v68
 #export TARGET = v68-banked
 #export TARGET = v68-softmmu
@@ -78,7 +79,7 @@ C1SRCS =  version.c filesys.c devio.c kdata.c
 C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank8k.c bank16k.c bank16k_low.c bank32k.c
-C2SRCS += bankfixed.c flat.c flat_mem.c buddy.c
+C2SRCS += bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
 #	Assume we'll never be doing overlays with level2 or networking
