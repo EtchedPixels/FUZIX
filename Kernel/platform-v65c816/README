@@ -16,9 +16,12 @@ Bank 0:
 And in user space
 
 	0x0000		Unused
+	0x00FE		syscall vector
 	0x0100		Program (CPU stack is in bank 0)
-	0xFC00		Udata copy (768 bytes)
+	0xFC00		Udata copy (512 bytes)
+	0xFE00		Spare
 	0xFF00		Stubs [signal return etc]
+			(keep in 0 page ?)
 
 We don't yet allow for a split I/D program using two banks and having 64K
 code and 64K data.
