@@ -86,6 +86,24 @@ syscall	=	$fe
 ;	Helper - given the udata bank in A set the DP value correctly. May
 ;	be worth optimizing one day. Must not corrupt X or Y
 ;
+;	FIXME: there are various pieces of code that break if bank is > 0x80
+;	and thus overflows. It might be cleaner if we re-arranged page here
+;	and in the bank code as
+;			code bank.8	}  For split I/D
+;			data bank.8	}  0xFFFF = swapped?
+;			dp.16		}  Our direct page (and swap)
+;			(if swapped -> swap bank number)
+;	that way doexec would do al the work along with bank65c816 and we
+;	would be able to do things like sparse bank numbering in the C code
+;
+;	Even then we can't really make much use of 16MB of RAM because we
+;	are worst case 128 processes with split I/D and we just don't have
+;	enough bank 0 memory for that many DP and S pages!
+;
+;	(actually we could lazy swap DP and S up and down memory but really
+;	who can use that much space except as a ramdisk ?)
+;
+;
 setdp:
 	php
 
@@ -94,11 +112,11 @@ setdp:
 	.i16
 
 	pha
-	asl	a			; twice page
+	and	#$00FF			; clear top bits
+	asl	a			; twice page (clears c)
 	adc	#STACK_BANKOFF		; we now point at the stack
 	inc	a			; plus 0x100
 	xba				; Swap to get xx00 format we need
-	and	#$FF00
 	tcd
 	pla
 
