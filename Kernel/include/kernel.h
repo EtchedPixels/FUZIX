@@ -53,7 +53,16 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define in_group(x)	0
 #endif
 
-#define CPM_EMULATOR_FILENAME    "/usr/cpm/emulator"
+/* CPU families */
+#define CPUTYPE_Z80	0
+#define CPUTYPE_6809	1
+#define CPUTYPE_6502	2
+#define CPUTYPE_68000	3
+#define CPUTYPE_PDP11	4
+#define CPUTYPE_MSP430	5
+#define CPUTYPE_68HC11	6
+#define CPUTYPE_8086	7
+#define CPUTYPE_65C816	8
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
@@ -890,6 +899,7 @@ extern int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
 		     uaddr_t buf, uint16_t page);
 
 extern void swapmap_add(uint8_t swap);
+extern void swapmap_init(uint8_t swap);
 extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
