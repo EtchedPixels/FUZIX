@@ -41,5 +41,5 @@ void device_init(void)
   devide_init();
 
   for (i = 1; i <= MAX_SWAPS; i++)
-    swapmap_add(i);
+    swapmap_init(i);
 }

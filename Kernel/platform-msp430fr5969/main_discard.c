@@ -15,7 +15,7 @@ void platform_init(void)
 	memset(&udata, 0, sizeof(udata));
 
 	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_add(i);
+		swapmap_init(i);
 
 	tty_rawinit();
 	fuzix_main();

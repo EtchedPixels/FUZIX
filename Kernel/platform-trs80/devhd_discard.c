@@ -27,7 +27,7 @@ static void hd_swapon(struct minipart *p, unsigned int d, unsigned int i)
 	if (cyls >= MAX_SWAPS)
 		cyls = MAX_SWAPS - 1;
 	for (i = 0; i < cyls; i++) {
-		swapmap_add(i);
+		swapmap_init(i);
 	}
 	kputs("swap-");
 }

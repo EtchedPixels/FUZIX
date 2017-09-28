@@ -11,9 +11,9 @@ void pagemap_init(void)
 {
 #ifdef SWAPDEV
   /* Swap */
-  swapmap_add(0);
-  swapmap_add(1);
-  swapmap_add(2);
+  swapmap_init(0);
+  swapmap_init(1);
+  swapmap_init(2);
 #endif
 }
 

@@ -45,5 +45,5 @@ void device_init(void)
 {
 //  int i;
 //  for (i = 0; i < MAX_SWAPS; i++)
-//   swapmap_add(i);
+//   swapmap_init(i);
 }

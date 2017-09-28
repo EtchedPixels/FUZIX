@@ -29,7 +29,7 @@ void pagemap_init(void)
 
 #ifdef SWAPDEV
 	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_add(i);
+		swapmap_init(i);
 #endif
 }
 

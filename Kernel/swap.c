@@ -1,6 +1,10 @@
 /*
- *	Very simplistic for now disk swap logic. As we have a fixed
- *	process size at this point we use a fixed swap size too
+ *	For small machines it's cheaper to simply allocate banks in the size
+ *	needed for the largest swapout of the application as that'll be under
+ *	64K. For split I/D we can allocate pairs of swap banks.
+ *
+ *	It's possible to be a lot smarter about this and for 32bit systems
+ *	it becomes a necessity not to use this simple swap logic.
  */
 
 #include <kernel.h>
@@ -18,19 +22,32 @@ uint16_t swappage;			/* Target page */
 static uint8_t swapmap[MAX_SWAPS];
 static uint8_t swapptr = 0;
 
+static const char maxswap[] = PANIC_MAXSWAP;
+
 void swapmap_add(uint8_t swap)
 {
 	if (swapptr == MAX_SWAPS)
-		panic(PANIC_MAXSWAP);
+		panic(maxswap);
 	swapmap[swapptr++] = swap;
+	sysinfo.swapusedk += SWAP_SIZE / 2;
 }
 
 int swapmap_alloc(void)
 {
-        if (swapptr)
+        if (swapptr) {
+		sysinfo.swapusedk -= SWAP_SIZE / 2;
                 return swapmap[--swapptr];
+	}
         else
                 return 0;
+}
+
+void swapmap_init(uint8_t swap)
+{
+	if (swapptr == MAX_SWAPS)
+		panic(maxswap);
+	swapmap[swapptr++] = swap;
+	sysinfo.swapk += SWAP_SIZE / 2;
 }
 
 /* We can re-use udata.u_block and friends as we can never be swapped while

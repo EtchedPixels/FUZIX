@@ -77,5 +77,5 @@ void map_init(void)
 	/* We put swap on the start of slice 0, but with the first 64K free
 	   so we can keep the OS image linearly there */
 	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_add(i + 128);
+		swapmap_init(i + 128);
 }

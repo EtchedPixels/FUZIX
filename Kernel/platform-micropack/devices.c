@@ -40,5 +40,5 @@ void device_init(void)
   /* The first swap area is reserved for the banked syscall blocks */
   /* Add a max of 63 swaps (4MB) to use the entire J drive */
   for (i = 1; i <= MAX_SWAPS; i++)
-    swapmap_add(i);
+    swapmap_init(i);
 }
