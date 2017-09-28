@@ -300,6 +300,7 @@ void swapin(ptptr p, uint16_t map)
 		else
 			size = 0x20;	/* 16 K */
 	}
+
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
 #endif
