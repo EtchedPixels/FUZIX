@@ -68,3 +68,5 @@ typedef union {            /* this structure is endian dependent */
 #define gcc_miscompile_workaround()	__asm("":::"memory")
 
 #define BIG_ENDIAN
+
+#define CPUTYPE	CPUTYPE_6809

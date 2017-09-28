@@ -82,3 +82,5 @@ typedef union {            /* this structure is endian dependent */
 #define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
 #define ntohl(x)	((((x) & 0xFF) << 24) | (((x) & 0xFF00) << 8) | \
                          (((x) & 0xFF0000) >> 8) | (((x >> 24) & 0xFF)))
+
+#define CPUTYPE	CPUTYPE_Z80

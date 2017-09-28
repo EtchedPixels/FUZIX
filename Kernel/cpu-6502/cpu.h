@@ -60,3 +60,5 @@ typedef union {            /* this structure is endian dependent */
 #define inline
 
 #define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
+
+#define CPUTYPE	CPUTYPE_6502

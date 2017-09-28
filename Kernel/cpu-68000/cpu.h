@@ -75,3 +75,5 @@ register struct u_data *udata_ptr asm ("a5");
 #define BIG_ENDIAN
 
 #define CONFIG_STACKSIZE	1024
+
+#define CPUTYPE	CPUTYPE_68000

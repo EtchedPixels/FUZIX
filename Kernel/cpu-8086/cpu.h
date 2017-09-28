@@ -60,3 +60,5 @@ typedef union {            /* this structure is endian dependent */
 #define inline
 
 #define const
+
+#define CPUTYPE	CPU_8086

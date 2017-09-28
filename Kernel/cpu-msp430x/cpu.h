@@ -117,3 +117,5 @@ typedef union {            /* this structure is endian dependent */
 #define EMAGIC_2 0x3c
 
 #define no_cache_udata()
+
+#define CPUTYPE	CPUTYPE_MSP340X

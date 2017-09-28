@@ -66,3 +66,5 @@ typedef union {            /* this structure is endian dependent */
 #define used(x)
 
 #define BIG_ENDIAN
+
+#define CPUTYPE	CPUTYPE_68HC11

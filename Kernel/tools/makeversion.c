@@ -23,10 +23,12 @@ struct sysinfoblk sysinfo = {\n\
 #ifdef CONFIG_LEVEL_2\n\
 	CONF_LEVEL_2 |\n\
 #endif\n\
-	0,\n\
 	{0, 0, 0},\n\
 	0,\n\
 	0,\n\
+	CPUTYPE,\n\
+	{0, 0, 0},\n\
+	{0, 0, 0, 0, 0, 0, 0, 0},\n\
 	/* Quoting to work around cc65 bug */\n\
 	\"%s\\0\"\"Fuzix\\0\"\"%s\\0\"\"%s\"\n\
 };\n\n",
@@ -54,6 +56,9 @@ struct sysinfoblk {\n\
   uint16_t loadavg[3];\n\
   uint16_t swapk;\n\
   uint16_t swapusedk;\n\
+  uint8_t cputype;		/* CPU type information */\n\
+  uint8_t cpu[3];		/* CPU type specific data */\n\
+  uint16_t spare[8];\n\
   char uname[%d];\n\
 };\n\
 \n", (int)(strlen(v) + strlen(sv) + strlen(p) + 9));
