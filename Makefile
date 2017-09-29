@@ -1,51 +1,29 @@
-TOP = .
-BUILD = $(TOP)/Build
+TARGET=z80pack
+CPU=z80
 
-OBJ = .obj
-hide = @
+export TARGET CPU
 
-CFLAGS = -g -Os
-LDFLAGS = -g
+all: stand ltools libs apps kernel
 
-VERSION = "0.1"
-SUBVERSION = "ac1"
 
-host.cflags = $(CFLAGS)
-host.ldflags = $(LDFLAGS)
+stand:
+	(cd Standalone; make)
 
-all:
+ltools:
+	(cd Library; make; make install)
 
-ifeq ($(PLATFORM),)
-$(error You must specify a PLATFORM)
-endif
+libs:
+	(cd Library/libs; make -f Makefile.$(CPU))
 
-# Export these files from the build system.
+apps:
+	(cd Applications; make)
 
-chmem.result = bin/chmem
-size.result = bin/size
-mkfs.result = bin/mkfs
-fsck.result = bin/fsck
-ucp.result = bin/ucp
+kernel:
+	(cd Kernel; make)
 
-filesystem.result = filesystem-$(PLATFORM).img
-
-include $(BUILD)/bake.mk
-include $(BUILD)/platforms/$(PLATFORM).mk
-include $(BUILD)/rules/standard.rules.mk
-include $(TOP)/Kernel/tools/build.mk
-include $(TOP)/Standalone/build.mk
-include $(TOP)/Library/build.mk
-include $(TOP)/Library/tests/build.mk
-include $(TOP)/Applications/build.mk
-include $(TOP)/Applications/V7/cmd/sh/build.mk
-include $(TOP)/Applications/levee/build.mk
-include $(TOP)/Standalone/filesystem-src/build.mk
-
-ifeq ($(wildcard $(TOP)/Kernel/platform-$(PLATFORM)/build.mk),)
-$(warning (building the kernel for $(PLATFORM) isn't set up from here yet))
-else
-include $(TOP)/Kernel/platform-$(PLATFORM)/build.mk
-all: kernel
-endif
-
-all: tests standalones filesystem
+clean:
+	(cd Standalone; make clean)
+	(cd Library/libs; make -f Makefile.$(CPU) clean)
+	(cd Library; make clean)
+	(cd Kernel; make clean)
+	(cd Applications; make clean)
