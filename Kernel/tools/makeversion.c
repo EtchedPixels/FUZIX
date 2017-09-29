@@ -23,6 +23,7 @@ struct sysinfoblk sysinfo = {\n\
 #ifdef CONFIG_LEVEL_2\n\
 	CONF_LEVEL_2 |\n\
 #endif\n\
+	0,\n\
 	{0, 0, 0},\n\
 	0,\n\
 	0,\n\
