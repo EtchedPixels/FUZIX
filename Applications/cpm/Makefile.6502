@@ -1,0 +1,4 @@
+all:
+
+clean:
+	rm -f *~ *.rel *.ihx *.tmp *.bin *.lst *.lk *.noi *.map cpm.def *.sym runcpm emulator runcpm.asm
