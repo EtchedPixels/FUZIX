@@ -14,8 +14,8 @@ this recipe should work on Mac.
 	patches merged.
 
   6502:
-	CC65 (You will need to build from the fork in EtchedPixels github
-	at this point to get --all-fastcall)
+	CC65. Current versions default to fastcall as Fuzix needs and also
+	have the \0 misparsing bug fixed.
 
   6809:
 	gcc-4.6.4 for m6809
@@ -39,32 +39,6 @@ this recipe should work on Mac.
   right spot so it occupies the end of the media and then dd the boot block
   on the front.
 
-For testing:
-
-6809 - uses xroar with patches to simulated the Dragon-NX32 platform.
-
-MSX2 - OpenMSX (currently you need a snapshot to get the SD card working)
-
-MTX512 - uses memu. Not yet tested on a Remomotech
-
-N8VEM Mark 4 - real hardware only
-
-NC100 - includes the bits to run under nc100emu
-
-P112 - real hardware only
-
-PCW8256 - boots under Joyce
-
-SocZ80 - real hardware only
-
-TGL6502 - uses the emulator code that goes with the tgl6502 distro
-
-TRS80 - tested on sdltrs with fixes (sdltrs fixes are in my github)
-
-Z80Pack - Use Z80Pack 1.24 or higher
-
-ZX128 - fuse
-
 Kernel Image Notes
 
 The Z80 image is usually built as an SDCC ihx file. SDCC output is intended for
@@ -75,7 +49,6 @@ those up to their correct high memory addresses and clears the DATA area.
 
 It doesn't have to work this way. The test px4plus code orders things
 differently and binman knows how to handle a few combinations of needs.
-
 
 --------------------------- Historical README files ------------------------------
 
