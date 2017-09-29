@@ -1,39 +1,4 @@
-TARGET_LIST = platform-nc100 platform-micropack platform-pcw8256 platform-socz80 platform-zx128 platform-trs80 platform-z80pack platform-z80pack-lite platform-z80pack32 platform-dragon platform-tgl6502 platform-plus3 platform-zeta-v2 platform-coco3 platform-multicomp09
-
-#export TARGET = 6809simple
-#export TARGET = 68hc11test
-#export TARGET = atarist
-#export TARGET = bbcmicro
-#export TARGET = dragon
-#export TARGET = coco2
-#export TARGET = coco2cart
-#export TARGET = coco3
-#export TARGET = dragon-nx32
-#export TARGET = multicomp09
-#export TARGET = micropack
-#export TARGET = msx1
-#export TARGET = msx2
-#export TARGET = mtx
-#export TARGET = n8vem-mark4
-#export TARGET = nc100
-#export TARGET = p112
-#export TARGET = pcw8256
-#export TARGET = pdp11
-#export TARGET = plus3
-#export TARGET = px4plus
-#export TARGET = socz80
-#export TARGET = tgl6502
-#export TARGET = trs80
-#export TARGET = ubee
-#export TARGET = v65
-export TARGET = v65c816
-#export TARGET = v68
-#export TARGET = v68-banked
-#export TARGET = v68-softmmu
-#export TARGET = z80pack
-#export TARGET = z80pack-lite
-#export TARGET = zeta-v2
-#export TARGET = zx128
+TARGET_LIST = $(wildcard platform-*)
 
 export VERSION = "0.1"
 export SUBVERSION = "ac1"
@@ -208,8 +173,8 @@ clean:
 	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion
+	rm -f *.rel *.lst *.sym *.o
 	+$(MAKE) -C platform-$(TARGET) clean
-	+$(MAKE) -C cpm-loader clean
 	+$(MAKE) -C tools/bankld clean
 
 clean-all: clean
