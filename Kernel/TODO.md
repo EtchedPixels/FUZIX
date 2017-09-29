@@ -72,7 +72,7 @@ Maybe
 
 - [x]	Uptime/loadaverage/free
 
-- [ ]	swapfree
+- [x]	swapfree
 
 - [ ]	Virtual device hooks for networking
 
