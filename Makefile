@@ -25,7 +25,7 @@
 # v65c816:	Virtual platform for 65c816 development
 # v68:		Virtual platfomr for 68000 development
 
-TARGET=coco2cart
+TARGET=v65c816
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -50,7 +50,7 @@ ltools:
 	(cd Library; make; make install)
 
 libs:
-	(cd Library/libs; make -f Makefile.$(CPU))
+	(cd Library/libs; make -f Makefile.$(USERCPU))
 
 apps:
 	(cd Applications; make)
@@ -60,7 +60,7 @@ kernel:
 
 clean:
 	(cd Standalone; make clean)
-	(cd Library/libs; make -f Makefile.$(CPU) clean)
+	(cd Library/libs; make -f Makefile.$(USERCPU) clean)
 	(cd Library; make clean)
 	(cd Kernel; make clean)
 	(cd Applications; make clean)
