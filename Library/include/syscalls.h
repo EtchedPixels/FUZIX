@@ -24,7 +24,6 @@ struct _uzisysinfoblk {
   uint16_t usedk;		/* Used memory in KB */
   uint16_t config;		/* Config flag mask */
   uint16_t loadavg[3];
-  uint32_t spare;
   uint16_t swapk;
   uint16_t swapusedk;
   uint8_t cputype;		/* CPU type information */
