@@ -1,0 +1,59 @@
+PLATFORM = 6809
+CC = m6809-unknown-gcc
+ASM = m6809-unknown-as
+AR = m6809-unknown-ar
+LINKER = m6809-unknown-ld
+CFLAGS =  -I../../Library/include -I../../Library/include/6809 -Wall -pedantic -fno-strict-aliasing
+COPT = -Os
+LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc -Map=ld09.map
+LINKER_OPT += --script=../util/$(TARGET).link
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6809.o
+
+LIBDIR	=/usr/bin
+LDFLAGS	=
+
+DEFS	=
+
+OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
+       lex.o main.o outstack.o preproc.o primary.o stmt.o struct.o sym.o while.o
+
+OBJ_Z80 = codez80.o
+OBJ_8080 = code8080.o
+OBJ_6801 = code6801.o
+OBJ_6809 = code6809.o
+
+OBJ_COPT = copt.o
+
+INC = data.h defs.h prototype.h
+
+OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
+all:    scc6801 scc6809 scc8080 sccz80 copt
+
+sccz80: $(OBJS) $(OBJ_Z80)
+	$(LINKER) $(LINKER_OPT) -o sccz80 $(OBJS) $(OBJ_Z80)
+
+scc8080: $(OBJS) $(OBJ_8080)
+	$(LINKER) $(LINKER_OPT) -o scc8080 $(OBJS) $(OBJ_8080)
+
+scc6801: $(OBJS) $(OBJ_6801)
+	$(LINKER) $(LINKER_OPT) -o scc6801 $(OBJS) $(OBJ_6801)
+
+scc6809: $(OBJS) $(OBJ_6809)
+	$(LINKER) $(LINKER_OPT) -o scc6809 $(OBJS) $(OBJ_6809)
+
+copt:	$(OBJ_COPT)
+	$(LINKER) $(LINKER_OPT) -o copt $(OBJ_COPT)
+
+clean:
+	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *.o *~
+
+.c.o:
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(OBJS_ALL) : $(INC)
+
+clean:
+	rm -f *~ *.o *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
