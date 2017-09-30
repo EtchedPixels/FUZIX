@@ -59,13 +59,13 @@ static void write_makefile(void)
   for (i = 1; i < NR_SYSCALL; i++)
     fprintf(fp, "ASRCS += syscall_%s.s\n", syscall_name[i]);
   fprintf(fp, "\n\nASRCALL = $(ASRCS) $(ASYS)\n");
-  fprintf(fp, "\n$(ASRCS): ../../tools/syscall_6502\n");
-  fprintf(fp, "\t(cd ..;../tools/syscall_6502)\n\n");
   fprintf(fp, "\nAOBJS = $(ASRCALL:.s=.o)\n\n");
   fprintf(fp, "../syslib.lib: $(AOBJS)\n");
   fprintf(fp, "\t$(AR) a ../syslib.lib $(AOBJS)\n\n");
   fprintf(fp, "$(AOBJS): %%.o: %%.s\n");
   fprintf(fp, "\t$(AS) -o $*.o $<\n\n");
+  fprintf(fp, "\n$(ASRCS): ../../tools/syscall_6502\n");
+  fprintf(fp, "\t(cd ..;../tools/syscall_6502)\n\n");
   fprintf(fp, "clean:\n");
   fprintf(fp, "\trm -f $(AOBJS) $(ASRCS) *~\n\n");
   fclose(fp);
