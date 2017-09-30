@@ -14,8 +14,8 @@
 double round(double x)
 {
 	/* Most significant word, least significant word. */
-	__int32_t msw, exponent_less_1023;
-	__uint32_t lsw;
+	int32_t msw, exponent_less_1023;
+	uint32_t lsw;
 
 	EXTRACT_WORDS(msw, lsw, x);
 
@@ -30,7 +30,7 @@ double round(double x)
 				msw |= (1023 << 20);
 			lsw = 0;
 		} else {
-			__uint32_t exponent_mask = 0x000fffff >> exponent_less_1023;
+			uint32_t exponent_mask = 0x000fffff >> exponent_less_1023;
 			if ((msw & exponent_mask) == 0 && lsw == 0)
 				/* x in an integral value. */
 				return x;
@@ -46,8 +46,8 @@ double round(double x)
 		else
 			return x;
 	} else {
-		__uint32_t exponent_mask = 0xffffffff >> (exponent_less_1023 - 20);
-		__uint32_t tmp;
+		uint32_t exponent_mask = 0xffffffff >> (exponent_less_1023 - 20);
+		uint32_t tmp;
 
 		if ((lsw & exponent_mask) == 0)
 			/* x is an integral value. */
