@@ -25,7 +25,7 @@
 # v65c816:	Virtual platform for 65c816 development
 # v68:		Virtual platfomr for 68000 development
 
-TARGET=z80pack
+TARGET=v65c816
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -53,7 +53,8 @@ ltools:
 	(cd Library; make; make install)
 
 libs:
-	(cd Library/libs; make -f Makefile.$(USERCPU))
+	(cd Library/libs; make -f Makefile.$(USERCPU); \
+		make -f Makefile.$(USERCPU) install)
 
 apps:
 	(cd Applications; make)
