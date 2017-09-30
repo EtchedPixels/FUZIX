@@ -556,7 +556,7 @@ platform_doexec:
 	    sta ptr1
 
 ;
-;	Set up the C stack
+;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
 ;
 	    lda U_DATA__U_ISP
 	    sta sp
@@ -570,6 +570,7 @@ platform_doexec:
 	    txs
 	    ldx #>PROGLOAD	; For the relocation engine
 	    lda #ZPBASE
+	    ldy #0
 	    jmp (ptr1)		; Enter user application
 
 ;
