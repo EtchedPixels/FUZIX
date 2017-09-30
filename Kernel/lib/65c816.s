@@ -168,6 +168,9 @@ badswitchmsg:
 	.byte	"_switchin: FAIL"
 	.byte	13, 10, 0
 
+	.a8
+	.i8
+
 _dofork:
 	sta	ptr1			; new process ptr. U_DATA gives parent
 	stx	ptr1+1
@@ -192,13 +195,13 @@ _dofork:
 
 	ldy	#P_TAB__P_PID_OFFSET	; Stack pid and sp
 	lda	(ptr1),y
-	pha
+	pha				; Return value for parent
 	rep	#$10
 	.i16
 	ldx	sp
-	phx
+	phx				; Saved user sp
 	tsx
-	stx	U_DATA__U_SP
+	stx	U_DATA__U_SP		; Stack pointer in udata
 
 	; Our context is now a valid child stack frame so we can save stuff
 	ldx	#0
@@ -217,19 +220,19 @@ fork_patch_2:
 	ldx	tmp1
 	ldy	tmp2
 	lda	#$01FF		; DP and stack
-	mvn	KERNEL_FAR,KERNEL_FAR
+	mvn	0,0
 
 	;
 	;	Final hairy detail - the child S value needs to be shifted
 	;	versus parent so we restore it correctly
 	;
 
-	lda	U_DATA__U_SYSCALL_SP
+	lda	U_DATA__U_SYSCALL_SP+1
 	clc
 	adc	tmp1
 	sec
 	sbc	tmp2
-	sta	U_DATA__U_SYSCALL_SP
+	sta	U_DATA__U_SYSCALL_SP+1
 
 	; At this point we have copied the parent into the child bank
 	; and copied the current uarea into the child uarea
