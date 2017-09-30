@@ -25,7 +25,7 @@
 # v65c816:	Virtual platform for 65c816 development
 # v68:		Virtual platfomr for 68000 development
 
-TARGET=v65c816
+TARGET=z80pack
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -34,11 +34,14 @@ ifeq ($(USERCPU),)
 	USERCPU = $(CPU)
 endif
 
+# FIXME: we should make it possible to do things entirely without /opt/fcc
+PATH := /opt/fcc/bin:$(PATH)
+
 # TARGET is what we are building
 # CPU is the CPU type for the kernel
 # USERCPU is the CPU type for userspace and eventually may be different
 # (eg for 65c816 with 6502 user)
-export TARGET CPU USERCPU
+export TARGET CPU USERCPU PATH
 
 all: stand ltools libs apps kernel
 
