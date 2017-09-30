@@ -3,6 +3,15 @@ Initial target API (SYS5.2 equivalent - ish)
 Z80 = implementation for float form in the SDCC library and we should eventually
 use that not our own if possible
 
+CODE: we have code
+FIXME: we have buggy code
+MISSING: needs to be added
+NO: function that may in in SYS 5.2 and similar but we won't implement
+OBSOLETE: function that is obsolete so will not be added
+Z80: optimized code in SDCC we should favour for Z80
+
+This doesn't cover the networking API which is currently rather minimal
+
 a64l			CODE
 abort			FIXME
 abs			CODE
@@ -11,7 +20,7 @@ acos			CODE
 acosf			Z80 | CODE
 acosh			CODE
 acoshf			CODE (check Z80)
-advance
+advance			NO
 alarm			CODE
 asctime			CODE
 asin			CODE
@@ -56,8 +65,8 @@ endutent		CODE
 erand48			CODE
 erf			CODE
 erfc			CODE
-execl			CODE
-execle			*MISSING ?*
+execl			CODE (MISSING on 6502)
+execle			MISSING
 execlp			CODE
 execv			CODE
 execve			CODE
@@ -97,7 +106,7 @@ fscanf			CODE
 fseek			CODE
 fstat			CODE
 ftell			CODE
-ftw			https://opensource.apple.com/source/Libc/Libc-825.26/gen/nftw.c ?
+ftw			MISSING https://opensource.apple.com/source/Libc/Libc-825.26/gen/nftw.c ?
 fwrite			CODE
 gamma			OBSOLETE (added lgamma, tgamma)
 getc			CODE
@@ -124,9 +133,9 @@ getutline		CODE
 getw			CODE
 gmtime			CODE
 gsignal			OBSOLETE
-hcreate
-hdestroy
-hsearch
+hcreate			MISSING
+hdestroy		MISSING
+hsearch			MISSING
 hypot			CODE
 hypotf			CODE
 ioctl			CODE
@@ -165,11 +174,11 @@ longjmp			CODE
 lrand48			CODE
 lsearch			CODE
 lseek			CODE
-mallinfo
+mallinfo		NO
 malloc			CODE
-mallopt
-MARK
-matherr
+mallopt			NO
+MARK			NO
+matherr			OBSOLETE
 memccpy			CODE
 memchr			CODE
 memcmp			CODE
@@ -179,10 +188,10 @@ mknod			CODE
 mktemp			OBSOLETE
 modf			CODE
 modff			Z80 | CODE
-monitor
+monitor			OBSOLETE ?
 mount			CODE
 mrand48			CODE
-nlist
+nlist			MISSING		Needs a native object file format
 nrand48			CODE
 open			CODE
 pause			CODE
@@ -190,7 +199,7 @@ pclose			CODE
 perror			CODE
 pipe			CODE
 popen			CODE
-pow			Z80 | ULY
+pow			Z80 | CODE
 printf			CODE (check all fmts included)
 putc			CODE
 putchar			CODE
@@ -204,8 +213,8 @@ rand			CODE
 read			CODE
 realloc			CODE
 rewind			CODE
-round						; MUSL ones unsuitable licence
-roundf						;
+round			MISSING			; MUSL ones unsuitable licence
+roundf			MISSING			;
 scanf			CODE
 seed48			CODE
 setbuf			CODE
@@ -217,21 +226,21 @@ setpgrp			CODE
 setuid			CODE
 setutent		CODE
 setvbuf			CODE
-sgetl
-signal			CODE (but kernel bits to do)
+sgetl			CODE
+signal			CODE
 sin			CODE
 sinf			CODE | Z80
 sinh			CODE
 sinhf			CODE
 sleep			CODE
 sprintf			CODE
-sputl
-sqrt			Z80
+sputl			CODE
+sqrt			Z80 | CODE
 srand			CODE
 srand48			CODE
 ssignal			OBSOLETE
 stat			CODE
-step
+step			OBSOLETE ?
 stime			CODE
 strcat			CODE
 strchr			CODE
@@ -254,9 +263,9 @@ tan			CODE
 tanf			CODE | Z80
 tanh			CODE
 tanhf			CODE
-tdelete
-tempnam		
-tfind
+tdelete			MISSING
+tempnam			OBSOLETE
+tfind			MISSING
 time			CODE
 times			CODE
 tmpfile			CODE
@@ -266,17 +275,17 @@ tolower			CODE
 _tolower		CODE
 toupper			CODE
 _toupper		CODE
-tsearch
+tsearch			MISSING
 ttyname			CODE
-twalk
+twalk			MISSING
 tzset			CODE
-ulimit
+ulimit			OBSOLETE (need to get rlimit into L2 kernel)
 umask			CODE
 umount			CODE
 uname			CODE
 ungetc			CODE
 unlink			CODE
-ustat
+ustat			OBSOLETE (but need to implement statfs in kernel ?)
 utime			CODE
 utmpname		CODE
 vfprintf		CODE
