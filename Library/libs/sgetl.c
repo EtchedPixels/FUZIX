@@ -3,7 +3,7 @@
 
 long sgetl(const char *buffer)
 {
-    uint8_t p = (uint8_t *)buffer;
+    const uint8_t *p = (uint8_t *)buffer;
     uint32_t r;
     
     r = *p++;
