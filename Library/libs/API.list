@@ -263,9 +263,9 @@ tan			CODE
 tanf			CODE | Z80
 tanh			CODE
 tanhf			CODE
-tdelete			MISSING
+tdelete			CODE
 tempnam			OBSOLETE
-tfind			MISSING
+tfind			CODE
 time			CODE
 times			CODE
 tmpfile			CODE
@@ -275,9 +275,9 @@ tolower			CODE
 _tolower		CODE
 toupper			CODE
 _toupper		CODE
-tsearch			MISSING
+tsearch			CODE
 ttyname			CODE
-twalk			MISSING
+twalk			CODE
 tzset			CODE
 ulimit			OBSOLETE (need to get rlimit into L2 kernel)
 umask			CODE

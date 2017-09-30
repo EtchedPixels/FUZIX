@@ -15,7 +15,9 @@ typedef int (*__compar_fn_t)(__ptr_t, __ptr_t);
 typedef struct entry { char *key; char *data; } ENTRY;
 typedef enum { FIND, ENTER } ACTION;
 
-extern ENTRY * hsearch(ENTRY __item, ACTION __action);
+/* Some of our compilers can't do struct arguments at all */
+extern ENTRY * __hsearch(ENTRY __item, ACTION __action);
+#define hsearch(a,b,c)	__hsearch(&(a),(b),(c))
 extern int     hcreate(unsigned __nel);
 extern void    hdestroy(void);
 
