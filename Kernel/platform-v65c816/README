@@ -36,13 +36,16 @@ the emulator.
 
 TODO
 ----
-- Debug initial sketches
+- Debug fork and task switching
 - Fix brk() checking [right now its busted entirely]
 - Make discard sane so we can discard for buffers
 - Test signal handling paths
+- Fix signal when not loaded at PROGBASE
 - Fix execl() execle() in userspace (so init can be fully tested)
 - Add pre-emption logic to the interrupt return path
 - Add swap logic
+- Relocatable binaries
+- cc65 stubs optimized for 65c816
 
 Optimisations We Need To Do
 --------------------------------------------------------------
