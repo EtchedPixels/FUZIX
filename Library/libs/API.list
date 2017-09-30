@@ -213,8 +213,8 @@ rand			CODE
 read			CODE
 realloc			CODE
 rewind			CODE
-round			MISSING			; MUSL ones unsuitable licence
-roundf			MISSING			;
+round			CODE
+roundf			CODE
 scanf			CODE
 seed48			CODE
 setbuf			CODE
