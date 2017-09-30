@@ -3,6 +3,10 @@ Edit the top level Makefile and set ARCH
 Read Kernel/platform-$ARCH/README
 Adjust anything it recommends for your platform
 
+The Z80 build tools get stuck in /opt/fcc as will others in future. Right now
+/opt/fcc isn't moveable (yes we suck) but you can create that directory and
+chown it to the building user.
+
 Make sure you have the needed compilers on your path
 If you are running cc65 remember you also need CC65_HOME set properly!
 
