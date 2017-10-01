@@ -327,8 +327,8 @@ signal_out:
 ;	registers and return directly to the start of the user process
 ;
 _doexec:
-	sta	tmp1
-	stx	tmp1+1		;	address to execute from
+	sta	ptr1
+	stx	ptr1+1		;	address to execute from
 	sei
 	stz	_kernel_flag
 
@@ -336,7 +336,7 @@ _doexec:
 	.i16
 	.a16
 
-	ldx	tmp1		;	target address
+	ldx	ptr1		;	target address
 
 	sep	#$20
 	.a8
@@ -403,6 +403,8 @@ _doexec:
 ;	caller already saved the CPU state. Interrupts are off at this point
 ;	as it we got here via a trap.
 ;
+;	FIXME save the right registers to return correctly if caught
+;
 shoot_myself:
 	sep	#$30
 	.a8
@@ -450,6 +452,8 @@ interrupt_handler:
 	pha
 	phx
 	phy
+	phb
+	phd
 	cld			; no funnies with decimal
 
 	; Now switch our data and DP to the kernel ones
@@ -495,12 +499,11 @@ join_interrupt_path:
 	lda	_kernel_flag
 	beq	ret_to_user
 
-	lda	#KERNEL_BANK
-	pha
-	plb
-	ldx	#KERNEL_DP
-	phx
+	;	Kernel interrupt path may change B and D itself so we must
+	;	preserve them
+
 	pld
+	plb
 
 	rep	#$20
 	.a16
@@ -515,6 +518,13 @@ join_interrupt_path:
 
 ret_to_user:
 	; TODO .. pre-emption
+
+	; Discard saved B and D - for user we will compute the correct
+	; one (we could optimize this a shade and only throw on a
+	; pre-empt FIXME)
+
+	plx
+	pla
 
 
 	; Signal return path
@@ -854,4 +864,73 @@ sigret_irq:
 syscall_vector:
 	jsl	KERNEL_FAR+syscall_entry
 	rts
+
+;
+;	Relocation stub (as it's easier to do relocation when in the user
+;	bank than bouncing around and we have no common!). Called with i16
+;	and X holding the binary start, tmp1 the shift and Y the code to
+;	process
+;
+;	Returns with X pointing to end zero (so we can run it twice to do
+;	ZP). We wipe the data as we go since it will become BSS.
+;
+;	Our relocation table lives in BSS start and is a byte table in the
+;	format
+;	0,0	end
+;	0,n	skip n bytes and read next table entry
+;	1-255	skip 1-255 bytes and relocate the byte now pointed at
+;		then read next table entry
+;
+;	Our first table is high bytes of 16bit addresses to relocate (we
+;	keep page alignment). Our second is ZP addresses to relocate.
+;
+;	Call with interrupts off until sure our irq code will get odd
+;	code banks right.
+;
+;	FIXME: move out of stubs - run with code = normal dp = kernel
+;	b = user and it'll work better
+;
+;	FIXME: consider checking if run off end with either X or Y
+;
+relocate:
+	.i16
+	.a8
+	stz tmp2+1	; FIXME
+reloc_loop:
+	lda 0,x
+	stz 0,x
+	beq multi
+	sta tmp2
+	; skip 1-255 bytes and then relocate one byte
+	rep #$20
+	.a16
+	tya
+	adc tmp2
+	tay
+	sep #$20
+	.a8
+	; now relocate
+	lda 0,y
+	clc
+	adc tmp1
+	sta 0,y
+	bra reloc_loop
+multi:
+	.i16
+	.a8
+	inx
+	lda 0,x
+	stz 0,x
+	beq endofreloc		; 	(0,0 -> end)
+	sta tmp2
+	rep #$20
+	.a16
+	tya
+	adc tmp2
+	tay
+	sep #$20
+	.a8
+	bra reloc_loop
+endofreloc:
+	rtl			; as called from bank KERNEL
 

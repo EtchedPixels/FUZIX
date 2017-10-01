@@ -14,8 +14,7 @@
 
 ;
 ;	ptr1 and tmp1 are reserved for map_* functions in 6502 but
-;	are actually free here. We keep the convention however in case
-;	of future changes
+;	are actually free here.
 ;
 	.code
 
@@ -24,23 +23,23 @@
 ;	Compiler glue is not pretty - might be worth having some optimized
 ;	16bit aware stack handlers
 ;
-__uget:	sta	tmp2
-	stx	tmp2+1			; save the count
+__uget:	sta	ptr1
+	stx	ptr1+1			; save the count
 	jsr	popax			; pop the destination
 	sta	ptr2			; (ptr2) is our target
 	stx	ptr2+1
-	jsr	popax			; (ptr2) is our source
+	jsr	popax			; (ptr3) is our source
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	ugetpatch+1
+	sta	ugetpatch+2
 	phb
 	.i16
 	.a16
 	rep	#$30
 	ldx	ptr3			; source
 	ldy	ptr2			; destination
-	lda	tmp2
+	lda	ptr1
 	beq	ug_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 ugetpatch:
@@ -145,8 +144,8 @@ __ugetw:
 
 
 __uput:
-	sta	tmp2
-	stx	tmp2+1
+	sta	ptr1
+	stx	ptr1+1
 	jsr	popax			; dest
 	sta	ptr2
 	stx	ptr2+1
@@ -161,7 +160,7 @@ __uput:
 	rep	#$30
 	ldx	ptr3			; source
 	ldy	ptr2			; destination
-	lda	tmp2
+	lda	ptr1
 	beq	up_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 uputpatch:
@@ -180,11 +179,15 @@ __uputc:
 	stx	ptr2+1
 	jsr	popax
 	phb
+	pha
 	lda	U_DATA__U_PAGE
 	pha
 	plb
+	pla
 	sta	(ptr2)
 	plb
+	lda	#0
+	tax
 	rts
 
 __uputw:
@@ -202,6 +205,8 @@ __uputw:
 	ldy	#1
 	sta	(ptr2),y
 	plb
+	lda	#0
+	tax
 	rts
 
 __uzero:
