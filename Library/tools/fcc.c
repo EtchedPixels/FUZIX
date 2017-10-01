@@ -101,7 +101,6 @@ static void add_library_path(const char *p)
     libptail->next = a;
   libptail = a;
 }
-
 struct arglist *libhead, *libtail;
 
 static void add_library(const char *p)
@@ -124,6 +123,18 @@ static void add_include_path(const char *p)
   else
     includetail->next = a;
   includetail = a;
+}
+
+struct arglist *extrahead, *extratail;
+
+static void add_extra(const char *p)
+{
+  struct arglist *a = arg_make(p);
+  if (extrahead == NULL)
+    extrahead = a;
+  else
+    extratail->next = a;
+  extratail = a;
 }
 
 static char *target;
@@ -421,6 +432,8 @@ static void build_command(void)
   add_argument("-Ddouble=float");
   /* User provided macros */
   add_argument_list(machead);
+  /* -Wc, options */
+  add_argument_list(extrahead);
   /* Paths */
   add_option_list("-I", includehead);
   if (mode == MODE_LINK)
@@ -548,6 +561,12 @@ int main(int argc, const char *argv[]) {
         case 'g':
           debug = 1;
           break;
+        case 'W':	/* -Wc,-foo to pass on -foo directly */
+          if (p[2] == 'c' && p[3] == ',') {
+            add_extra(p + 4);
+            break;
+          }
+          /* Fall through */
         default:
           if (strcmp(p, "-Werror") == 0)
             werror = 1;
