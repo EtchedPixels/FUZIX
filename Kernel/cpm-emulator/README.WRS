@@ -1,3 +1,0 @@
-Assemble with "zmac emulator.s"
-
-Copy output file zout/emulator.cim to /usr/cpm/emulator on target filesystem
