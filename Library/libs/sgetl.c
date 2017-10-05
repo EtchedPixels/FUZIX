@@ -7,9 +7,9 @@ long sgetl(const char *buffer)
     uint32_t r;
     
     r = *p++;
-    r |= (*p++ << 8);
-    r |= (*p++ << 16);
-    r |= (*p << 24);
+    r |= (((uint16_t)*p++) << 8);
+    r |= (((uint32_t)*p++) << 16);
+    r |= (((uint32_t)*p) << 24);
     
     return (long)r;
 }
