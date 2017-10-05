@@ -20,13 +20,14 @@
 
 .segment "STARTUP"
 
+head:
 	jmp	start
 
 	.byte	'F'
 	.byte	'Z'
 	.byte	'X'
 	.byte	'1'
-	.byte	$20
+	.byte	>head
 	.word	0
 	.word	__CODE_SIZE__ + __RODATA_SIZE__
 	.word	__DATA_SIZE__
