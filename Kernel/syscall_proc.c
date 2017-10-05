@@ -476,8 +476,10 @@ arg_t _signal(void)
 	retval = (arg_t) udata.u_sigvec[sig];
 	if (sig != SIGKILL && sig != SIGSTOP)
 		udata.u_sigvec[sig] = func;
+	/* Force recalculation of signal pending in the syscall return path */
+	udata.u_cursig = 0;
 	irqrestore(irq);
-
+	
 	return (retval);
 
 nogood:
@@ -506,6 +508,8 @@ arg_t _sigdisp(void)
 		udata.u_ptab->p_held |= sigmask(sig);
 	else
 		udata.u_ptab->p_held &= ~sigmask(sig);
+	/* Force recalculation of signal pending in the syscall return path */
+	udata.u_cursig = 0;
 	return 0;
 }
 

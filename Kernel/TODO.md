@@ -86,8 +86,10 @@ Other
 -----
 - [IP]	Check safety of changes to allow interrupts during swapper
 
-- [ ]	Check we don't have any races of the form
+- [x]	Check we don't have any races of the form
 	kill()
 		checks signal has handler
 	signal(x, SIG_DFL)
 		signal serviced
+
+	(We now clear the cached signal in this and the mask case)
