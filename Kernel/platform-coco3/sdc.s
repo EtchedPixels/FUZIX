@@ -34,10 +34,11 @@ DATREGB     equ    PREG3          ; second data register
 
 ;;; Write 256 bytes from SDC
 _devsdc_write
-	pshs	y,u
+	pshs	x,y,u
+	jsr	blkdev_rawflg	; map memory based on blkopt flag
+	puls	x
 	ldy	#PREG2		; set Y to point at data reg a
 	ldd 	#64*256+4      	; A = chunk count (64), B = bytes per chunk (4)
-	jsr	blkdev_rawflg	; map memory based on blkopt flag
 wrChnk  ldu    	,x             	; get 2 data bytes from source
 	stu    	,y             	; send data to controller
 	ldu    	2,x            	; two more bytes..
@@ -50,10 +51,11 @@ wrChnk  ldu    	,x             	; get 2 data bytes from source
 
 ;;; Reads 256 bytes from SDC
 _devsdc_read
-	pshs	y,u
+	pshs	x,y,u
+	jsr	blkdev_rawflg	; map memory based on blkopt flag
+	puls	x
 	ldy	#PREG2	        ; set Y to point to data reg a
 	ldd    	#32*256+8       ; A = chunk count (32), B = bytes per chunk (8)
-	jsr	blkdev_rawflg	; map memory based on blkopt flag
 rdChnk 	ldu    	,y              ; read 1st pair of bytes for the chunk
 	stu    	,x              ; store to buffer
 	ldu    	,y              ; bytes 3 and 4 of..
