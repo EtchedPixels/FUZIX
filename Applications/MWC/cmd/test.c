@@ -198,9 +198,9 @@ STRING_UNOP(strfile_executable)
 
 struct op {
 	const char *op_name;
-	void *op_func;
+	void (*op_func)(void);
 };
-#define	OP(name,func)	{ name, (void *)func }
+#define	OP(name,func)	{ name, (void (*)(void *))func }
 
 const struct op string_binop[] = {
 	OP("=", cmp_eq), OP("!=", cmp_neq), OP("<", cmp_lt),
