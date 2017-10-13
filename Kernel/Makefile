@@ -176,6 +176,7 @@ clean:
 	rm -f *.rel *.lst *.sym *.o
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
+	+$(MAKE) -C cpm-loader clean
 
 clean-all: clean
 	(cd tools/bankld; $(MAKE) clean)
