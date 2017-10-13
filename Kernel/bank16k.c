@@ -182,7 +182,7 @@ usize_t pagemap_mem_used(void)
    that copies the current common page to the specified page.
 */
 
-uint8_t get_common()
+uint8_t get_common(void)
 {
 	ptptr p = NULL;
 	/* if current context is dead, then reuse it's common */
