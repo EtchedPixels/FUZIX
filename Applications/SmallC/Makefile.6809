@@ -7,10 +7,10 @@ CFLAGS =  -I../../Library/include -I../../Library/include/6809 -Wall -pedantic -
 COPT = -Os
 LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += -L$(LIBGCCDIR) -lgcc -Map=ld09.map
-LINKER_OPT += --script=../util/$(TARGET).link
-ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc -Map=ld09.map 
+LINKER_OPT += --script=../util/$(TARGET).link $(CRT0)
+ASM_OPT = -o
 
 LIBDIR	=/usr/bin
 LDFLAGS	=
