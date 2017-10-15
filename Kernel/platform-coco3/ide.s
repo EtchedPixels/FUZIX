@@ -21,8 +21,8 @@ _devide_read_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	jsr blkdev_rawflg
 	ldx _blk_op
+	jsr blkdev_rawflg
 	leay 512,x
 	sty endp
 readword:
@@ -38,8 +38,8 @@ _devide_write_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	jsr blkdev_rawflg
 	ldx _blk_op
+	jsr blkdev_rawflg
 	leay 512,x
 	sty endp
 writeword:

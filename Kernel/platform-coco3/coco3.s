@@ -392,8 +392,11 @@ a@	ldd	,x++
 	clr	0xffa8
 	puls	u,pc
 
+	.area	.common
 ;;; Helper for blkdev drivers to setup memory based on rawflag
+;;; WARNING: the blk_op struct will not be available for rawflag=1/2 after calling this!
 blkdev_rawflg
+	pshs d,x     ; save regs
 	ldx #_blk_op ; X = blkdev operations
         ldb 0xffa8   ; get mmu setting
         stb ret+1    ; save in stash
@@ -406,10 +409,10 @@ blkdev_rawflg
         stb 0xffa8   ; task 1, kernel task regs.
         incb         ; inc page no... next block no.
         stb 0xffa9   ; store it in mmu
-	rts
+	puls d,x,pc
 proc@	jsr map_process_always
  	; get parameters from C, X points to cmd packet
-out@	rts
+out@	puls d,x,pc
 
 ;;; Helper for blkdev drivers to clean up memory after blkdev_rawflg
 blkdev_unrawflg
