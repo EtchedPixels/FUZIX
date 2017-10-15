@@ -7,6 +7,8 @@
 	.global kstack_top
 	.global istack_top
 
+#include	"../kernel-8086.def"
+
 udata:
 	.bss 512
 kstack_top:
@@ -44,6 +46,215 @@ program_vectors:
 trap_monitor:
 trap_reboot:
 	jmp trap_monitor
+
+/*
+ *	Interrupt and trap handlers. The 8086 doesn't have real protection
+ *	but it does at least actually throw real traps for the things it
+ *	does which makes it easier to handle
+ */
+
+int1:
+	pushw	%ax
+	movb	$1,%al
+	jmp	do_irq
+int2:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int3:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int4:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int5:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int6:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int7:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int8:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int9:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int10:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int11:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int12:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int13:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int14:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int15:
+	pushw	%ax
+	movb	$2,%al
+	jmp	do_irq
+int0:
+	pushw	%ax
+	xorb	%al,%al
+do_irq:
+	/* Save base registers on current stack */
+	pushw	%ds
+	pushw	%es
+	pushw	%bx
+	pushw	%cx
+	pushw	%dx
+	pushw	%bp
+
+
+	/* Reload segment registers */
+	movw	%cs:kernel_ds,%bx
+	movw	%bx,%ds
+	movw	%bx,%es
+
+	/* At this point our ds/es/cs are all kernel but our SS could be
+	   one of several stacks */
+	movw	%ss,%dx
+	movw	%sp,%bp
+
+	/* Switch to the IRQ stack and save the old stack */
+	movw	%bx,%ss
+	movw	$istack_top,%sp
+	pushw	%dx
+	pushw	%bp
+
+	movb	$1,inint
+	movb	$1,udata + U_DATA__U_ININTERRUPT
+	pushw	%ax
+	call	platform_interrupt
+	popw	%bx
+	movb	$0,inint
+	movb	$0,udata + U_DATA__U_ININTERRUPT
+
+	cmpb	$1,udata + U_DATA__U_INSYS
+	je	ret_user
+
+	/* Pull the data off the stack and life continues */
+	popw	%bp
+	popw	%dx
+
+	movw	%bp,%sp
+	movw	%dx,%ss
+
+	popw	%bp
+	popw	%dx
+	popw	%cx
+	popw	%bx
+	popw	%es
+	popw	%ds
+	iret
+
+	/* The user path is more complicated. We might have been signalled
+	   or need to task switch. At this point we are on the kernel stack */
+ret_user:
+	cmpb	$0,need_resched
+	je	no_resched
+
+	popw	%bp
+	popw	%dx
+
+	/* 
+	 * Save our data for the user stack where the registers are saved. This
+	 * matters big time because the istack will get reused before
+	 * we re-run. Instead we borrow our kstack (which is private and -
+	 * as we are not in a syscall free for use
+   	 */
+	movw	%cs:kernel_ds,%ss
+	movw	$kstack_top,%sp
+
+	pushw	%dx
+	pushw	%bp
+
+	movw	udata + U_DATA__U_PTAB,%bp
+	movb	$P_READY,P_TAB__P_STATUS_OFFSET(%bp)
+
+	call	switchout
+
+	/* Another task will start execution, time will pass and eventually
+	 * we'll pop back out of here */
+
+no_resched:
+	popw	%bp
+	popw	%dx
+	movw	%dx,%ss
+	movw	%bp,%sp
+
+	/* Back on our user stack */
+
+	/* We are now on the user stack via ss
+	/* Dispatch signals if required */
+	movb	udata + U_DATA__U_CURSIG,%al
+	cmpb	$0,%al
+	je	no_signal
+	/*
+	 *	We have a pending signal
+	 */
+	movb	$0,udata + U_DATA__U_CURSIG;
+	xorb	%ah,%ah
+	movw	udata + U_DATA__U_SIGVEC,%bp
+	addw	%ax,%bp
+	addw	%ax,%bp
+	movw	(%bp),%bx
+	movw	$0,(%bp)
+
+	/*
+	 *	Build a deeper return frame
+	 */
+	movw	$20,%ax		/* __sigeturn in binary */
+	pushw	%ax
+	pushf			/* IRET frame */
+	pushw	%bx
+	/* FIXME: we need to wire the MMU code in here and get the *new*
+	   correct CS */
+	movw	4(%bp),%ax	/* Get CS from original frame */
+	pushw	%ax		/* And push it */
+	/* Clean registers */
+	xorw	%ax,%ax
+	xorw	%bx,%bx
+	xorw	%cx,%cx
+	xorw	%dx,%dx
+	xorw	%bp,%bp
+	iret
+
+	/* _sigreturn does
+	   recover registers including flags
+	   skip over spare cs: ret */
+
+	/* The usual path is uneventful */
+no_signal:
+	popw	%bp
+	pop	%dx
+	pop	%cx
+	pop	%bx
+	popw	%es
+	popw	%ds
+	popw	%ax
+	iret
+
 
 /* Returns the BIOS parameter data CX:DX as a long DX:AX to the C code or
    FFFF if we don't get the right answer
@@ -194,3 +405,5 @@ kernel_ds:
 	.data
 equipment_word:
 	.word 0
+
+
