@@ -124,7 +124,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         st = fd_status;
         /* Real disks would need retries */
         if (st) {
-            kprintf("fd%d: block %d, error %d\n", minor, st, udata.u_block);
+            kprintf("fd%d: block %d, error %d\n", minor, udata.u_block, st);
             break;
         }
         udata.u_block++;
