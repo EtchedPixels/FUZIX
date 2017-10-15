@@ -1,0 +1,4 @@
+At the moment this is just build testing the core code and totally incomplete
+(no usable drivers, no loader, no task switching, no __ashldi/rdi stubs and
+tons more)
+
