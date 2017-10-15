@@ -1,9 +1,15 @@
 - Parse assignment to local variables
 	auto x = 4; etc
+- Assignment to global pointers (generate
+
+foo: defw L1234
+L1234: data ..
+)
+
+- tokenize and parse types properly so we can add real types to the compiler
+  (even if we don't yet do anything remotely valid for type promotions)
 - Write some copt rules to stop the output sucking so much
 - Steal the rst tricks done by BDS C
-- Output mixed code/data so we can flush the literal pool every line of asm
-  and maybe even get rid of the literal pool (2.5K saving)
 - Can we split the preprocessor optionally
 - Work out what is needed for stack frame based Z80 code
 
@@ -12,9 +18,8 @@
 - How to do tail load elimination but avoid breaking the way it relies
   upon that for returns ? - is the jump $1 reliable for that ? (take care if
   we eliminate the jump $1 for a label)
-
-- Indirection support to multiple output files so we can sort call orders
-
+- Proper constant typing
+- Type promotion
 
 Macro ops for bytecode form
 
@@ -40,3 +45,13 @@ RST ops ?
 - complex ops (RSTm aa ll  RSTn aa ll hh)
 	- pre/post inc load/stores with or without indirection
 	- stack shifts
+
+
+Insane compression idea
+
+Generate code as tags plus expression trees
+Native code them in order to get a size / perf cost
+At link time re-scan *all* the trees and identify the duplicated subtrees
+if they exceed a certain cost then call them as helper code
+
+Turn that program into native code (or final bytecode)
