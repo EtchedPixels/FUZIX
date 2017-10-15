@@ -4,7 +4,8 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
-typedef signed int size_t;
+typedef unsigned int size_t;
+typedef signed int ssize_t;
 
 typedef uint8_t irqflags_t;
 
@@ -20,7 +21,7 @@ typedef uint16_t uptr_t;		/* User pointer equivalent */
 #define uputi  uputw			/* Copy user int type */
 #define ugeti  ugetw			/* between user and kernel */
 
-extern void *  memcpy(void *, void *, size_t);
+extern void *  memcpy(void *, const void *, size_t);
 extern void *  memset(void *, int, size_t);
 extern size_t  strlen(const char *);
 
@@ -55,10 +56,4 @@ typedef union {            /* this structure is endian dependent */
 /* Sane behaviour for unused parameters */
 #define used(x)
 
-/* No inline or const */
-
-#define inline
-
-#define const
-
-#define CPUTYPE	CPU_8086
+#define CPUTYPE	CPUTYPE_8086
