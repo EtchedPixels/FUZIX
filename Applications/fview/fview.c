@@ -230,7 +230,7 @@ void bpp32( int no ){
 			fs_dist( e, erri );
 			erri++;
 		}
-		*out++ = c; /* every 8 samples write c to dest
+		*out++ = c; /* every 8 samples write c to dest */
 	}
 }
 

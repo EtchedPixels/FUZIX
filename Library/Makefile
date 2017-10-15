@@ -36,6 +36,7 @@ tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 install:
+ifeq ( $(CROSS_CC), "sdcc" )
 	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
 	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
 	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
@@ -48,3 +49,4 @@ install:
 	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
 	install -m 0644 include/sys/*.h /opt/fcc/include/sys
 	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
+endif
