@@ -384,6 +384,7 @@ void callfunction(char *ptr) {
     while (!streq (line + lptr, ")")) {
         if (endst ())
             break;
+        defer_output();
         expression (NO);
         if (ptr == 0)
             gen_swap_stack ();
