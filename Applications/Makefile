@@ -1,6 +1,9 @@
 #
+APPS = util cmd sh games cave cpm v7games games as09 ld09 netd SmallC MWC
 
-all:	util cmd sh games cave cpm games ld09 netd SmallC MWC
+.PHONY: $(APPS)
+
+all:	$(APPS)
 
 util:
 	+(cd util; $(MAKE) -f Makefile.$(USERCPU))
@@ -11,7 +14,7 @@ cmd:
 sh:
 	+(cd V7/cmd/sh; $(MAKE) -f Makefile.$(USERCPU))
 
-games:
+v7games:
 	+(cd V7/games; $(MAKE) -f Makefile.$(USERCPU))
 
 cave:
@@ -25,6 +28,9 @@ games:
 
 ld09:
 	+(cd ld09; $(MAKE) -f Makefile.$(USERCPU))
+
+as09:
+	+(cd as09; $(MAKE) -f Makefile.$(USERCPU))
 
 netd:
 	+(cd netd; $(MAKE) -f Makefile.$(USERCPU))

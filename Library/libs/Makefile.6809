@@ -151,3 +151,5 @@ clean:
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)
 	-cd curses && rm -rf *.o *.asm *.sym *.lst *~
+
+install: ;
