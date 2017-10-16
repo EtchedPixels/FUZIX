@@ -1,5 +1,5 @@
 #
-APPS = util cmd sh games cave cpm v7games games as09 ld09 netd SmallC MWC
+APPS = util cmd sh games cave cpm v7games games as09 ld09 netd SmallC MWC flashrom
 
 .PHONY: $(APPS)
 
@@ -40,6 +40,9 @@ SmallC:
 
 MWC:
 	+(cd MWC/cmd; $(MAKE) -f Makefile.$(USERCPU))
+
+flashrom:
+	+(cd flashrom; $(MAKE) -f Makefile.$(USERCPU))
 
 clean:
 	(cd util; $(MAKE) -f Makefile.$(USERCPU) clean)
