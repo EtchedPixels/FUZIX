@@ -1,66 +1,18 @@
-
-# remake kernel
-cd ..
-make TARGET=coco3 clean
-
-# specially make bank16.c (bug fix for compile fart?)
-#m6809-unknown-gcc -c -Wall -msoft-reg-count=0 -mfar-stack-param -I cpu-6809 -I platform-coco3 -I include -o bank16k.o bank16k.c
-
-# make rest of kernel
-make TARGET=coco3
-
-
-# make boot.dsk
-cd platform-coco3
-rm fuzix.dsk ; make fuzix.dsk
+HDIR=$(pwd)
 
 if [ $1 = "kernel" ];  then 
+   cd ../..
+   make TARGET=coco3 kernel
+   cd $HDIR
    exit
 fi
 
-
-# make Libs
-cd ../../Library
-rm tools/syscall_6809
-make tools/syscall_6809
-cd libs
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build utils
-cd ../../Applications/util
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build dw command
-cd ../dw
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-cd ../netd
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build dasm09
-cd ../dasm09
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build sh
-cd ../../Applications/V7/cmd/sh
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build levee
-cd ../../../levee
-make -f Makefile.6809 TARGET=coco3 clean
-make -f Makefile.6809 TARGET=coco3
-
-# build utils
-cd ../../Standalone
-make
+cd ../..
+make TARGET=coco3 clean
+make TARGET=coco3 
 
 # build boot disk image
-cd filesystem-src
+cd Standalone/filesystem-src
 ./build-filesystem -X fuzixfs.dsk 256 65535
 
+cd $HDIR
