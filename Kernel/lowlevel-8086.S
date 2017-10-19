@@ -14,6 +14,9 @@
 	.global set_irq
 	.global	cpu_detect
 
+	.global copy_to_far
+	.global copy_from_far
+
 	/* GCC glue */
 	.global __ashrsi3
 	.global	__ashlsi3
@@ -412,6 +415,57 @@ cpu_detect:
 always_16bit:
 	movb	$16,bus_width
 	ret
+
+/*
+ *	Handy routines for block copying to/from far memory. These
+ *	are not optimized. We should be smarter about using movsw
+ *	and alignment on 8086+
+ *
+ *	Warning: don't use prefixes with rep as we have to run on 8086
+ *
+ *	copy_to_far(int16_t seg, int16_t to, void *from, int16_t len)
+ *	copy_from_far(int16_t seg, void *to, int16_t from, int16_t len)
+ */
+
+copy_to_far:
+	pushw	%bp
+	movw	%sp,%bp
+	pushw	%es
+	pushw	%si
+	pushw	%di
+	pushw	%ds
+	movw	4(%bp),%ax
+	movw	%ax,%es
+copier:
+	movw	6(%bp),%di
+	movw	8(%bp),%si
+	movw	10(%bp),%ax
+	movw	%ax,%cx
+	shr	%cx
+	jz	noblock
+	rep	movsw
+noblock:
+	testb	$1,%al
+	jne	nofinal
+	movsb
+nofinal:
+	popw	%ds
+	popw	%di
+	popw	%si
+	popw	%es
+	popw	%bp
+	ret
+
+copy_from_far:
+	pushw	%bp
+	movw	%sp,%bp
+	pushw	%es
+	pushw	%si
+	pushw	%di
+	pushw	%ds
+	movw	4(%bp),%ax
+	movw	%ax,%ds
+	jmp	copier
 
 /* FIXME: extract from C library or write nice ones */
 __ashlsi3:

@@ -60,6 +60,10 @@
 
 #ifdef CONFIG_BANK_8086
 
+/* private : asm helpers */
+extern void do_copy_page(uint16_t, uint16_t);
+extern void do_zero_page(uint16_t);
+
 typedef uint8_t page_t;
 
 /* Assuming a 640K PC/XT. This model needs some work to handle a 16MB 286
@@ -222,6 +226,21 @@ static int do_process_create(uint8_t csize, uint8_t dsize, uint8_t ssize)
 	m->ssize = ssize;
 	m->cseg = page_to_segment(m->cbase);
 	return 0;
+}
+
+static void copy_pages(page_t to, page_t from, uint16_t len)
+{
+	uint16_t ts = page_to_segment(to);
+	uint16_t fs = page_to_segment(from);
+	while(len--)
+		do_copy_page(ts++, fs++);
+}
+
+static void zero_pages(page_t to, uint16_t len)
+{
+	uint16_t ts = page_to_segment(to);
+	while(len--)
+		do_zero_page(ts++);
 }
 
 /*
