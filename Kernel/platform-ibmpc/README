@@ -2,3 +2,110 @@ At the moment this is just build testing the core code and totally incomplete
 (no usable drivers, no loader, no task switching, no __ashldi/rdi stubs and
 tons more)
 
+
+
+Theory of operation:
+
+The bootload is loaded at 0x7C00 and loads a kernel image
+That kernel image somehow ends up at 0x500 (lowest place it can in case
+we are on a small memory machine)
+We figure out the machine type and memory
+We instantiate the 8086 banking module
+
+The kernel itself runs in small (or even maybe tiny) mode at 0x500
+Applications have a code segment which is code + udata store, and data/stack
+which need juggling around
+(We could keep a bank of max processes x 512 bytes of udata's somewhere)
+
+The current assumption is that we'll use interrupts directly for timers,
+keyboard, serial, and the BIOS for disk. Video is probably best done directly
+but how to handle weird-ass non 'PC' systems ?
+
+Current guess with swap is a minimum configuration would be 256K
+
+Proposed Memory Map:
+
+0000-03FF	Vectors
+0400-04FF	BIOS page
+0500-05FF	Interrupt stack		Kernel DS/ES/SS
+0600-07FF	Udata
+		<------ loaded image starts from 0800 and skips bss ----->
+0800-0865	LOADALL hole		[also the table the loader uses]
+0866-????	Data
+????-E000	Code			Kernel CS
+E000-EFFF	Discard			
+
+E000-1FFFF	User space with 128K RAM (probably means a custom single
+		process boot)
+20000-3FFFF	128-256K
+40000-7FFFF	512K
+80000-9FFFF	640K		(but allow for an EBDA)
+A0000-FFFFF	I/O and ROM spaces
+
+On boot up the header plus image is loaded 'somewhere' above 7C00. The stack
+pointer is set to 05FF, 0600-07FF is wiped and the image is loaded down to
+0800. An info structure could possibly be posted at 0810 giving
+
+CPU type
+bus width 8/16 (/32)
+FPU type
+
+(and maybe some other bits - eg base video config)
+
+Finally the image is jumped to at whatever code entry point is in the header
+with cs/ds/es/ss set correctly for the image and interrupts off.
+
+
+TODO
+
+Finish sketching out interrupt and syscall paths
+Missing shift helpers
+Write trap paths
+Write timer setup
+Setup EBDA allocation if needed
+Write IRQ setup
+Move interrupt core code to lowlevel-8086
+Boot loader (can borrow most of it from ELKS)
+Drivers for keyboard/video
+Debug disk drivers
+Partition support
+Write core disk tweaks so split I/D systems can read direct to core (execve)
+or data (execve and syscalls) (raw == 3 mode ?)
+Write a new binary loader module for split I/D binary types
+Keymaps ?
+
+Libc port
+Applications port
+
+Shared code segments
+
+Mouse
+Joystick
+Printer
+
+
+Much longer term:
+
+Native XT, AT and 8bit IDE disk drivers
+286 protected mode ?
+286 LOADALL based ramdisc if do real mode only
+BIOSes call us back for events (more so from later XT onwards) we can use some
+of those to our advantage in BIOS drivers but it does mean a task switch in
+"kernel" mode where cs/ds is somewhere in BIOSland.
+
+EMM/EMS 3.0+
+
+Would need to know which expanded memory board as the interface both the bank
+and the addressing are vendor specific. We can probably use it best for
+application data as we can just put everyone's DS/ES/SS into the 64K window and
+avoid the more expensive juggling to fit proceses into holes.
+
+Another use would be ramdisc
+
+Trickier would be hiding most of the kernel in it.
+
+Configurable driver hooks - serial ports, emm, etc for post boot config of
+resources
+
+EMM needs to be hooked into the design of the mmu->ds and task switching
+logic so we can do something like 'set_process_mmu'
