@@ -31,6 +31,8 @@ istack_top:
 	.global biosdata_read
 	.global equipment_word
 
+	.global	do_copy_page
+	.global do_zero_page
 
 init_early:
 	/* Dig useful information out of the BIOS */
@@ -418,6 +420,47 @@ biosdata_read:
 	popw	%bp
 	ret
 
+do_copy_page:
+	pushw	%bp
+	movw	%sp,%bp
+	pushw	%es
+	pushw	%ds
+	pushw	%si
+	pushw	%di
+	movw	4(%bp),%ax
+	movw	%ax,%es
+	movw	6(%bp),%ax
+	movw	%ax,%ds
+	xorw	%si,%si
+	movw	%si,%di
+	movw	$0x0800,%cx	/* Change me if not using 4K pages */
+	rep	movsw
+	popw	%di
+	popw	%si
+	popw	%ds
+	popw	%es
+	popw	%bp
+	ret
+
+do_zero_page:
+	pushw	%bp
+	movw	%sp,%bp
+	pushw	%es
+	pushw	%di
+	movw	4(%bp),%ax
+	movw	%ax,%es
+	movw	6(%bp),%ax
+	movw	%ax,%ds
+	xorw	%ax,%ax
+	xorw	%ax,%si
+	movw	%ax,%di
+	movw	$0x0800,%cx	/* Change me if not using 4K pages */
+	rep	stosw
+	popw	%si
+	popw	%es
+	popw	%bp
+	ret
+	
 kernel_ds:
 	.word 0
 
