@@ -93,5 +93,5 @@ int ide_probe(void)
 	ide_identify(0, buf);
 	if (ide_present)
 		ide_identify(1, buf);
-	brelse((bufptr) buf);
+	tmpfree(buf);
 }

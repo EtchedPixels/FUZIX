@@ -56,7 +56,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     if (draw_validate(ptr, l, 480, 64))
       goto bad; */
     video_cmd(tmp);
-    brelse((bufptr) tmp);
+    tmpfree(tmp);
     return 0;
   default:
     udata.u_error = EINVAL;

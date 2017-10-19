@@ -1,4 +1,4 @@
-#undef DEBUG
+#define DEBUG
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -379,7 +379,7 @@ void filename(char *userspace_upath, char *name)
     /* And move past the slash, or not the string start */
     ptr++;
     memcpy(name, ptr, FILENAME_LEN);
-    brelse(buf);
+    tmpfree(buf);
 }
 
 

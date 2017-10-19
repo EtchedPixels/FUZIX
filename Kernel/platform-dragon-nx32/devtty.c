@@ -440,7 +440,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 
 		tmp = (uint8_t *)tmpbuf();
 		err = gfx_draw_op(arg, ptr, tmp);
-		brelse((bufptr) tmp);
+		tmpfree(tmp);
 		if (err) {
 			udata.u_error = err;
 			err = -1;

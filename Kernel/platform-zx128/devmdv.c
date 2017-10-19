@@ -150,7 +150,7 @@ int mdv_open(uint8_t minor, uint16_t flag)
 			kprintf("mdv_open: had to use secondary map\n");
 		}
 		memcpy(mdvmap[minor], t, 256);
-		brelse(t);
+		tmpfree(t);
 		mdv_motor_off();
 	}
 	mdv_count[minor]++;

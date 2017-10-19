@@ -55,7 +55,7 @@ char *pathbuf(void)
 
 void pathfree(char *tb)
 {
- brelse(tb);
+ tmpfree(tb);
 }
 
 #endif

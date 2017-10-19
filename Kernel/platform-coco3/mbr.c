@@ -83,5 +83,5 @@ void mbr_parse(char letter)
 	}
 		
 	/* release temporary memory */
-	brelse((bufptr)br);
+	tmpfree(br);
 }
