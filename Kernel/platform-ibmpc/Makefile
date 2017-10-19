@@ -1,8 +1,8 @@
 
 CSRCS = devtty.c
-CSRCS += devices.c main.c libc.c biosdisk.c
+CSRCS += devices.c main.c libc.c biosdisk.c bioscon.c 8259a.c
 
-ASRCS = ibmpc.S crt0.S
+ASRCS = ibmpc.S crt0.S biosvid.S
 ASRCS += tricks.S
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -30,5 +30,6 @@ image:
 	../tty.o ../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	ibmpc.o ../syscall_proc.o ../syscall_other.o ../mm.o \
 	../devsys.o ../usermem.o ../syscall_exec16.o ../syscall_fs2.o \
-	tricks.o ../syscall_fs3.o biosdisk.o \
+	tricks.o ../syscall_fs3.o biosdisk.o ../vt.o bioscon.o biosvid.o \
+	../bank8086.o 8259a.o \
 	../usermem_std-8086.o devtty.o libc.o > ../fuzix.map

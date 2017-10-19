@@ -6,7 +6,7 @@
 #undef CONFIG_PROFIL
 
 #define CONFIG_MULTI
-#define CONFIG_SWAP_ONLY
+#define CONFIG_BANK_8086
 #define CONFIG_USERMEM_DIRECT
 #define CONFIG_BANKS 	1
 #define PROC_SIZE	128			/* 64K, 128 * 512 */
@@ -15,16 +15,24 @@
 #define UDATA_SIZE	512
 #define UDATA_BLKS	1
 
+#define CONFIG_VT
+#define	VT_WIDTH	vt_width
+#define VT_HEIGHT	vt_height
+#define VT_RIGHT	(vt_width - 1)
+#define VT_BOTTOM	(vt_height - 1)
+extern signed char vt_width, vt_height;
+
 #define PROGBASE	0x8000UL
 #define PROGLOAD	PROGBASE
 #define PROGTOP		0xE000UL
+#if 0
 #define SWAP_SIZE	(130 + 2)		/* 2 for the udata */
 #define SWAPBASE	PROGBASE
 #define SWAPTOP		0xE000UL
 #define MAX_SWAPS	PTABSIZE		/* Mandatory for swap only */
 #define swap_map(x)	((uint8_t *)(x))
-
 #define SWAPDEV		(1)
+#endif
 
 #define TICKSPERSEC 50   /* Ticks per second */
 

@@ -63,59 +63,62 @@ int2:
 	jmp	do_irq
 int3:
 	pushw	%ax
-	movb	$2,%al
+	movb	$3,%al
 	jmp	do_irq
 int4:
 	pushw	%ax
-	movb	$2,%al
+	movb	$4,%al
 	jmp	do_irq
 int5:
 	pushw	%ax
-	movb	$2,%al
+	movb	$5,%al
 	jmp	do_irq
 int6:
 	pushw	%ax
-	movb	$2,%al
+	movb	$6,%al
 	jmp	do_irq
 int7:
 	pushw	%ax
-	movb	$2,%al
+	movb	$7,%al
 	jmp	do_irq
 int8:
 	pushw	%ax
-	movb	$2,%al
+	movb	$8,%al
 	jmp	do_irq
 int9:
 	pushw	%ax
-	movb	$2,%al
+	movb	$9,%al
 	jmp	do_irq
 int10:
 	pushw	%ax
-	movb	$2,%al
+	movb	$10,%al
 	jmp	do_irq
 int11:
 	pushw	%ax
-	movb	$2,%al
+	movb	$11,%al
 	jmp	do_irq
 int12:
 	pushw	%ax
-	movb	$2,%al
+	movb	$12,%al
 	jmp	do_irq
 int13:
 	pushw	%ax
-	movb	$2,%al
+	movb	$13,%al
 	jmp	do_irq
 int14:
 	pushw	%ax
-	movb	$2,%al
+	movb	$14,%al
 	jmp	do_irq
 int15:
 	pushw	%ax
-	movb	$2,%al
+	movb	$15,%al
 	jmp	do_irq
 int0:
 	pushw	%ax
 	xorb	%al,%al
+
+	/* FIXME: we need a way to cleanly hook the schedule/signal parts
+	   of this into an int handler for the BIOS timer callback */
 do_irq:
 	/* Save base registers on current stack */
 	pushw	%ds
@@ -145,8 +148,24 @@ do_irq:
 	movb	$1,inint
 	movb	$1,udata + U_DATA__U_ININTERRUPT
 	pushw	%ax
-	call	platform_interrupt
-	popw	%bx
+	call	do_platform_interrupt
+	popw	%ax
+
+	/* This little chunk is machine specific so we'll need to work out
+	   how to move most of this to lowlevel-8086 and keep the 8259A bits
+	   behind */
+	cmpb	$16,%al
+	jb	internal	/* CPU generated */
+	cmpb	$8,%al
+	movb	$0x20,%al
+	jb	xt_int
+	outb	%al,$0xA0
+	/* The 8259 is slower than the 8086 so we need to wait */
+	jmp	delay
+delay:	jmp	xt_int
+xt_int:
+	outb	%al,$0x20
+internal:
 	movb	$0,inint
 	movb	$0,udata + U_DATA__U_ININTERRUPT
 
@@ -400,10 +419,6 @@ biosdata_read:
 	ret
 
 kernel_ds:
-	.word 0
-
-	.data
-equipment_word:
 	.word 0
 
 

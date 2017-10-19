@@ -1,5 +1,22 @@
 /*
  *	PC BIOS disk driver
+ *
+ *	FIXME: make this use the block stuff and partitions
+ *	FIXME2: some crapware blows up if the buffer crosses a 64K boundary
+ *	so we need to check this for user (and do smaller I/O) and it probably
+ *	means we need to 512 byte align the buffer cache (ick). Whle user is
+ *	4K aligned they could pass a pointer on a DMA boundary so we may need
+ *	a global disk bounce buffer too 8(
+ *	(OTOH it's a real hardware limit so we can't escape it in native
+ *	drivers either)
+ *	FIXME3: some crapware also blows up if a track or head boundary
+ *	is crossed, maybe we should just do 512 bytes at a time and cry
+ *	in our beer.
+ *	FIXME4: for floppies we need to try and read sector 0/0/1 on open
+ *	and use fn 17 to try different settings until it works (and work out
+ *	how to deal with 1.44 ??)
+ *	FIXME5: we need an ioctl to setup and use the format services for
+ *	floppy
  */
 
 #include <kernel.h>
@@ -52,27 +69,33 @@ int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return bios_transfer(false, rawflag, &harddisk[minor]);
 }
 
+/* FIXME: udata.u_page points into the mm so we need a helper to get our
+   mapping *but* we don't know if it's cs: or ds: because we might be
+   loading it ???? */
 static int bios_transfer(bool is_read, uint8_t rawflag, struct disk_geom *g)
 {
     uint16_t dptr;
     uint16_t ct = 0;
     uint32_t st;
-    int map = 0;
     uint16_t page = kernel_ds;
     uint16_t left;
     uint16_t cylsec;
     uint8_t tries;
 
     /* Sort the actual request out */
-    if(rawflag == 1) {
+    if(rawflag == 1 || rawflag == 3) {
         if (d_blkoff(9))
             return -1;
-        map = 1;
-        page = udata.u_page;
+        /* We need a standard way to wrap the segment gets and page so
+           we can share code with PDP11 etc */
+        if (rawflag == 1)
+            page = get_data_segment(udata.u_page2);
+        else
+            page = get_code_segment(udata.u_page2);
 #ifdef SWAPDEV
     } else if (rawflag == 2) {		/* Swap device special */
         page = swappage;		/* Acting on this page */
-        map = 1;
+        /* FIXME: EMM means bank flipping here */
 #endif
     }
 

@@ -1,3 +1,9 @@
+/*
+ *	Just to get us going assume we have a console and keyboard and leave
+ *	the PC serial ports alone as we can't sanely drive them via BIOS.
+ *	We have other stuff to bring up before working on those tricky bits.
+ */
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -5,9 +11,7 @@
 #include <devtty.h>
 #include <device.h>
 #include <tty.h>
-
-volatile uint8_t *uart_data = (volatile uint8_t *)0xF03000;	/* UART data */
-volatile uint8_t *uart_status = (volatile uint8_t *)0xF03010;	/* UART status */
+#include <vt.h>
 
 unsigned char tbuf1[TTYSIZ];
 
@@ -26,13 +30,12 @@ void kputchar(char c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	uint8_t c = *uart_status;
-	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
+	return TTY_READY_NOW;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	*uart_data = c;	/* Data */
+	vtoutput(&c, 1);
 }
 
 void tty_setup(uint8_t minor)
@@ -46,20 +49,4 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
-}
-
-/* Currently run off the timer */
-void tty_interrupt(void)
-{
-	uint8_t r = *uart_status;
-	if (r & 1) {
-		r = *uart_data;
-		tty_inproc(1,r);
-	}	
-}
-
-void platform_interrupt(void)
-{
-	timer_interrupt();
-	tty_interrupt();
 }

@@ -35,8 +35,8 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-  int i;
+/*  int i;
 
   for (i = 1; i <= MAX_SWAPS; i++)
-    swapmap_init(i);
+    swapmap_init(i); */
 }
