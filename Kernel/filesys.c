@@ -1,4 +1,4 @@
-#define DEBUG
+#undef DEBUG
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>

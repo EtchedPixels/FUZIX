@@ -21,6 +21,47 @@ CROSS_CCOPTS += -I../dev/
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o) $(DSRCS:.c=.o)
 
+# Set 'SUBTARGET' to one of: emu, real, fpga, nano. 
+
+ifndef SUBTARGET
+SUBTARGET = emu
+endif
+
+ifeq ($(SUBTARGET),real)
+COCO_IDE = 1
+COCO_SDC = 1
+endif
+
+ifeq ($(SUBTARGET),emu)
+COCO_IDE = 1
+COCO_BECKER = 1
+endif
+
+ifeq ($(SUBTARGET),fpga)
+COCO_SDFPGA = 1
+COCO_BECKER = 1
+endif
+
+ifeq ($(SUBTARGET),nano)
+COCO_SDNANO = 1
+endif
+
+ifdef COCO_SDC
+DRIVERS += devsdc.o sdc.o
+CROSS_CC += -DCONFIG_COCOSDC
+endif
+
+ifdef COCO_IDE
+DRIVERS += devide.o devide_discard.o ide.o
+CROSS_CC += -DCONFIG_COCOIDE
+endif
+
+ifdef COCO_BECKER
+ASOPTS = --defsym BECKER=1
+else
+ASOPTS = --defsym BECKER=0 
+endif
+
 all:	$(OBJS)
 
 $(COBJS): %$(BINEXT): %.c
@@ -53,15 +94,14 @@ image: boot.bin
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devide.o devide_discard.o \
-	ide.o devsdc.o sdc.o devlpr.o \
+	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devlpr.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o \
-	../syscall_net.o net_native.o
+	../syscall_net.o net_native.o $(DEVICES)
 # make DECB disk w/ new kernel
 	rm -f fuzix.dsk
 	decb dskini fuzix.dsk
