@@ -166,7 +166,9 @@ arg_t _execve(void)
 		goto nogood3;	/* SN */
 
 	/* This must be the last test as it makes changes if it works */
-	if (pagemap_realloc(top - MAPBASE))
+	/* FIXME: once we sort out chmem we can make stack and data
+	   two elements. We never allocate 'code' as there is no split I/D */
+	if (pagemap_realloc(0, top - MAPBASE, 0))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
@@ -236,8 +238,8 @@ arg_t _execve(void)
 	ugets((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
-	brelse(abuf);
-	brelse(ebuf);
+	tmpfree(abuf);
+	tmpfree(ebuf);
 	i_deref(ino);
 
 	// Shove argc and the address of argv just below envp

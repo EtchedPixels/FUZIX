@@ -123,7 +123,7 @@ void devide_init_drive(uint8_t drive)
     blk->drive_lba_count = le32_to_cpu(*((uint32_t*)&buffer[120]));
 
     /* done with our temporary memory */
-    brelse((bufptr)buffer);
+    tmpfree(buffer);
 
     /* Deselect the IDE, as we will re-select it in the partition scan and
        it may not recursively stack de-selections */
@@ -134,7 +134,7 @@ void devide_init_drive(uint8_t drive)
 
     return;
 failout:
-    brelse((bufptr)buffer);
+    tmpfree(buffer);
 out:
     ide_deselect();
     return;

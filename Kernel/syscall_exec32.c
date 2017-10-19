@@ -203,7 +203,9 @@ arg_t _execve(void)
 		goto nogood3;
 
 	/* This must be the last test as it makes changes if it works */
-	if (pagemap_realloc(bin_size))
+	/* FIXME: need to update this to support split code/data and to fix
+	   stack handling nicely */
+	if (pagemap_realloc(0, bin_size, 0))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */

@@ -767,6 +767,7 @@ extern void bufsync(void);
 extern bufptr bfind(uint16_t dev, blkno_t blk);
 extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
+#define tmpfree	brelse
 extern void bufinit(void);
 extern void bufdiscard(bufptr bp);
 extern void bufdump (void);
@@ -931,7 +932,7 @@ extern void copy_common(uint8_t page);
 extern void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
-extern int pagemap_realloc(usize_t p);
+extern int pagemap_realloc(usize_t c, usize_t d, usize_t s);
 extern usize_t pagemap_mem_used(void);
 extern void map_init(void);
 #ifndef platform_discard

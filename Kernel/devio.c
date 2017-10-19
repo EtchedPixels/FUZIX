@@ -104,7 +104,10 @@ int bfree(bufptr bp, uint8_t dirty)
 
 /* This returns a busy block not belonging to any device, with
  * garbage contents.  It is essentially a malloc for the kernel.
- * Free it with brelse()!
+ * Free it with tmpfree.
+ *
+ * API note: Nothing guarantees a connection between a bufcache entry
+ * and tmpbuf in future. Always free with tmpfree.
  */
 void *tmpbuf(void)
 {
@@ -117,7 +120,7 @@ void *tmpbuf(void)
 	return bp->bf_data;
 }
 
-
+/* Allocate an empty _disk cache_ buffer */
 void *zerobuf(void)
 {
 	void *b;

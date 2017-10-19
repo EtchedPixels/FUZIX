@@ -101,5 +101,5 @@ void mbr_parse(char letter)
 	kputs("> ");
 
     /* release temporary memory */
-    brelse((bufptr)br);
+    tmpfree(br);
 }
