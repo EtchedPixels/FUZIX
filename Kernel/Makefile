@@ -45,6 +45,7 @@ C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank8k.c bank16k.c bank16k_low.c bank32k.c
 C2SRCS += bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
+C2SRCS += bank8086.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
 #	Assume we'll never be doing overlays with level2 or networking

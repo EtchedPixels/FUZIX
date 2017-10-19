@@ -18,6 +18,10 @@
  *	- Review, Test, Debug
  *	- Finish swap support
  *	- Custom usermem including valaddr to handle holes.
+ *	- Offset the page base to be a 512 byte boundary above the
+ *	  end of the code (covering discard). Right now we can lose memory
+ *	  because of EBDA (top 1K .. costs us 4K if present) and alignment
+ *	  of end of code.
  *
  *	This module relies upon the split I/D execve code as well as the
  *	platform specific copy_page and zero_page functionality that is
@@ -30,6 +34,24 @@
  *	far but then it's not clear Fuzix does either 8) as you'd need at
  *	least 128 things running to fill the space given we have no plan
  *	to support all the crazy large model stuff that Xenix 286 could.
+ *
+ *	If you have an EMM implementation then it must implement the following
+ *	routines
+ *
+ *	emm_alloc_bank(m)
+ *	-	if a 64K EMM bank is not free set m->emm = 0 return ENOMEM
+ *	-	otherwise set m->emm to your own non zero token and
+ *		set m->dseg to the matching EMM page frame
+ *
+ *	emm_free_bamk(m)
+ *	-	return a 64K EMM bank m->emm to to the pool
+ *
+ *	emm_select(emm)
+ *	-	select the EMM bank matching the token m->emm
+ *
+ *	emm_space_used(void)
+ *	-	return the number of KB of emm in use
+ *	-	on EMM init also add the emm space to ramsize
  */
 
 #include <kernel.h>
@@ -42,53 +64,79 @@ typedef uint8_t page_t;
 
 /* Assuming a 640K PC/XT. This model needs some work to handle a 16MB 286
    and it's not clear how to extend it to EMM */
+
+/* 4K keeps the page count down into 8bits and also ensures the shift between
+   page and segment is trivial */
 #define PAGESIZE	4096
 #define PAGESHIFT	12
 #define PAGES_64K	(page_t)(65536L >> PAGESHIFT)
 #define NUM_PAGES	((640) >> (PAGESHIFT -  10))
 
+#define PAGES_IN(x)	(((x) + PAGESIZE - 1) >> PAGESHIFT)
+
 /* 4K is a bit wasteful perhaps but it does mean that we have < 256 pages
    which makes life roll along much more nicely */
 static page_t pagemap[NUM_PAGES];
-
-struct proc_map {
-	page_t cbase;
-	uint8_t csize;
-	page_t dbase;
-	uint8_t dsize;
-	uint8_t ssize;
-};
+static uint16_t total_pages;
+static uint16_t free_pages;
 
 /* Pointed to by udata.u_page2 */
-static struct proc_map proc_mmu[NUMPROC];
+static struct proc_map proc_mmu[PTABSIZE];
+
+static uint16_t page_to_segment(page_t page)
+{
+	return (page << (PAGESHIFT - 4));
+}
+
+uint16_t get_data_segment(uint16_t pv)
+{
+	struct proc_map *m = (struct proc_map *)pv;
+	return page_to_segment(m->dseg);
+}
+
+uint16_t get_code_segment(uint16_t pv)
+{
+	struct proc_map *m = (struct proc_map *)pv;
+	return page_to_segment(m->cseg);
+}
 
 /* Mark a region as owned by us: FIXME once debugged #define this */
 static void claim_region(page_t base, uint8_t len, uint8_t owner)
 {
 	memset(pagemap + base, owner, len);
+	if (owner)
+		free_pages -= len;
+	else
+		free_pages += len;
 }
 
 /* Claim the regions owned by a process, also used to free them */
-static void claim_regions(struct proc_mmu *m, uint8_t owner)
+static void claim_regions(struct proc_map *m, uint8_t owner)
 {
 	claim_region(m->cbase, m->csize, owner);
 	claim_region(m->dbase, m->dsize, owner);
 	claim_region(m->dbase + PAGES_64K -  m->ssize, m->ssize, owner);
 }
 
-static void claim_data_regions(struct proc_mmu *m, uint8_t owner)
+static void claim_data_regions(struct proc_map *m, uint8_t owner)
 {
-	claim_region(m->cbase, m->csize, owner);
 	claim_region(m->dbase, m->dsize, owner);
 	claim_region(m->dbase + PAGES_64K -  m->ssize, m->ssize, owner);
 }
 
 /* Size a free block by counting zero (free) bytes */
-static uint8_t need_zeros(uint8_t *addr, uint8_t m)
+static uint8_t need_zeros(uint8_t *addr, uint8_t n)
 {
 	uint8_t ct = 0;
 	while(*addr == 0 && ct++ < n);
 	return ct;
+}
+
+static uint8_t *skip_used(uint8_t *p)
+{
+	while(*p && p < &pagemap[NUM_PAGES])
+		p++;
+	return p;
 }
 
 /* Finds the space but doesn't book it out - so we can look for slack and if
@@ -98,15 +146,18 @@ static uint8_t need_zeros(uint8_t *addr, uint8_t m)
    that works if we move our existing allocation rather than just do a new
    one ? */
 
-static uint16_t alloc_data(uint8_t dataneed, uint8_t stackneed)
+static page_t alloc_data(uint8_t dataneed, uint8_t stackneed)
 {
 	uint8_t *addr = pagemap;
+	uint8_t x;
+	uint8_t y;
+
 	while(addr = skip_used(addr)) {
-		x = need_zeros(addr, need);
+		x = need_zeros(addr, dataneed);
 		y = need_zeros(addr + PAGES_64K - stackneed, stackneed);
-		if (x == need) {
+		if (x == dataneed) {
 			if (y == stackneed)
-				return addr;
+				return addr - pagemap;
 			else {
 				addr++;
 				continue;
@@ -123,13 +174,15 @@ static uint16_t alloc_data(uint8_t dataneed, uint8_t stackneed)
    into the space in order to keep the udata copy here. This is problematic
    if we implement shared code, so will require a cunning plan (tm) */
 
-static uint16_t alloc_code(uint8_t need)
+static page_t alloc_code(uint8_t need)
 {
-	addr = start;
+	uint8_t *addr = pagemap;
+	uint8_t x;
+
 	while(addr = skip_used(addr)) {
 		x = need_zeros(addr, need);
 		if (x == need)
-			return x;
+			return addr - pagemap;
 		addr += x;
 	}
 	return 0;
@@ -148,18 +201,26 @@ static uint16_t alloc_code(uint8_t need)
  */
 static int do_process_create(uint8_t csize, uint8_t dsize, uint8_t ssize)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
+#ifdef CONFIG_IBMPC_EMM
+	if (emm_alloc_bank(m) == 0) {
+		m->dbase = alloc_data(m->dsize, m->ssize);
+		if (m->dbase == 0)
+			return -1;
+		m->dseg = page_to_segment(m->dbase);
+	}
+#endif	
 	m->cbase = alloc_code(csize);
-	if (m->cbase == 0)
-		return -1;
-	m->csize = csize;
-	m->dbase = alloc_data(m->dsize, m->ssize);
-	if (m->dbase == 0) {
-		free_range(m->cbase, m->csize);
+	if (m->cbase == 0) {
+#ifdef COFNIG_IBMPC_EMM	
+		emm_free_bank(m);
+#endif		
 		return -1;
 	}
+	m->csize = csize;
 	m->dsize = dsize;
 	m->ssize = ssize;
+	m->cseg = page_to_segment(m->cbase);
 	return 0;
 }
 
@@ -168,10 +229,13 @@ static int do_process_create(uint8_t csize, uint8_t dsize, uint8_t ssize)
  *	Try and find a place to move our data and stacks so that they can
  *	grow as desired. If need be start swapping stuff out.
  *
+ *	Invariant: never called for emm banked processes
  */
 static int relocate_data(uint8_t dsize, uint8_t ssize)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
+	page_t dbase;
+
 	/* Mark our memory free */
 	claim_data_regions(m, 0);
 	
@@ -179,7 +243,7 @@ static int relocate_data(uint8_t dsize, uint8_t ssize)
 	   hole pair. We aren't very bright here but it's not clear that being
 	   smart helps anyway */
 	while((dbase = alloc_data(dsize, ssize)) == 0) {
-		if (swapneeded(udata.u_ptab, 1) == ENOMEM)
+		if (swapneeded(udata.u_ptab, 1) == NULL)
 			return ENOMEM;
 	}
 	if (dbase == 0)
@@ -203,42 +267,66 @@ static int relocate_data(uint8_t dsize, uint8_t ssize)
 	m->ssize = ssize;
 	/* Mark the regions we used */
 	claim_data_regions(m, udata.u_page);
+	m->dseg = page_to_segment(m->dbase);
 }
 
 /* Stack growth via software handled fake fault */
 static int stack_fault(uint8_t ssize)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
-	uint8_t *p = &pagemap[m->dbase + PAGEMAP_64K - ssize];
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
+	uint8_t *p = &pagemap[m->dbase + PAGES_64K - ssize];
 	int8_t mod = ssize - m->ssize;
-	/* FIXME: check rlimt */
+	
+	/* Collided ? if so we will wrap */
+	if (m->ssize + m->dsize > m->ssize)
+		return ENOMEM;
+#ifdef CONFIG_IBMPC_EMM		
+	if (m->emm) {
+		m->ssize = ssize;
+		return 0;
+	}
+#endif
+	/* FIXME: check rlimitt */
 	if (need_zeros(p, mod) != mod)
-		return reallocate_data(m->dsize, ssize);
-	claim_zero_range(m->dbase + PAGES_64K - m->ssize, mod);
+		return relocate_data(m->dsize, ssize);
 	m->ssize += mod;
+	claim_region(m->dbase + PAGES_64K - m->ssize, mod, udata.u_page);
+	zero_pages(m->dbase + PAGES_64K - m->ssize, mod);
 	return 0;
 }
 
 /* Data change via brk() */
 static int data_change(uint8_t dsize)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
 	uint8_t *p = &pagemap[m->dbase + m->dsize];
 	int8_t mod = dsize - m->dsize;
 
 	if (dsize == m->dsize)
 		return 0;
 
-	/* Give back pages */
-	if (dsize < m->dsize) {
-		free_range(m->dbase + dsize, -mod);
+#ifdef CONFIG_IBMPC_EMM
+	if (m->emm) {
+		if (dsize > m->dsize && dsize + m->ssize < dsize)
+			return ENOMEM;
 		m->dsize = dsize;
 		return 0;
 	}
+#endif	
+	/* Give back pages */
+	if (dsize < m->dsize) {
+		claim_region(m->dbase + dsize, -mod, 0);
+		m->dsize = dsize;
+		return 0;
+	}
+	/* Growing and wraps ? */
+	if (dsize + m->ssize > m->ssize)
+		return ENOMEM;
 	/* Claim pages */
 	if (need_zeros(p, mod) != mod)
 		return relocate_data(dsize, m->ssize);
-	claim_zero_range(m->dbase + m->dsize, mod);
+	/* The caller with zero it */
+	claim_region(m->dbase + m->dsize, mod, udata.u_page);
 	m->dsize = dsize;
 	return 0;
 }
@@ -250,8 +338,8 @@ static int data_change(uint8_t dsize)
    call is different to the simple 8bit one */
 int pagemap_realloc(usize_t csize, usize_t dsize, usize_t ssize)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
-	static struct proc_mmu tmp;
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
+	static struct proc_map tmp;
 	int err = 0;
 
 	csize = PAGES_IN(csize);
@@ -271,12 +359,19 @@ int pagemap_realloc(usize_t csize, usize_t dsize, usize_t ssize)
 /* Report in Kbytes how much memory is in use */
 usize_t pagemap_mem_used(void)
 {
-	return (total_pages - free_pages) << (PAGESHIFT - 10);
+	usize_t r = (total_pages - free_pages) << (PAGESHIFT - 10);
+#ifdef CONFIG_IBMPC_EMM
+	r += emm_space_used();
+#endif
+	return r;
 }
 
 /* ktop is a page number as is ramtop */
-void pagemap_init(page_t ktop, page_t ramtop)
+void pagemap_init_range(page_t ktop, page_t ramtop)
 {
+	/* FIXME: should round _up_ on ktop! */
+	ktop >>= (PAGESHIFT - 10);
+	ramtop >>= (PAGESHIFT - 10);
 	/* Reserve the kernel */
 	memset(pagemap, 0xFE, ktop);
 	memset(pagemap + ktop, 0, ramtop - ktop);
@@ -291,18 +386,18 @@ void pagemap_init(page_t ktop, page_t ramtop)
    swapout the new process anyway, but must avoid swapping out the live task */
 static int do_pagemap_alloc(ptptr p, ptptr keep)
 {
-	struct proc_mmu *m = (struct proc_mmu *)udata.u_page2;
+	struct proc_map *m = (struct proc_map *)udata.u_page2;
 	/* This is called during a fork where we need to allocate a new
 	   set of maps. At the point of calling p points to the new process
 	   and udata the current one */
 
 	/* Set up our new mmu pointers */
 	p->p_page = p - ptab;
-	p->p_page2 = &proc_mmu[p->p_page];
+	p->p_page2 = (uint16_t)&proc_mmu[p->p_page];
 
 	/* Create the new mmu allocation */
 	while (do_process_create(m->csize, m->dsize, m->ssize))
-		if (swapneeded(keep, 1) == ENOMEM)
+		if (swapneeded(keep, 1) == NULL)
 			return ENOMEM;
 
 	/* Now claim our mapping */
@@ -317,6 +412,18 @@ int pagemap_alloc(ptptr p)
 	return do_pagemap_alloc(p, udata.u_ptab);
 }
 
+void pagemap_free(ptptr p)
+{
+	struct proc_map *m = (struct proc_map *)p->p_page2;
+#ifdef CONFIG_IBMPC_EMM
+	if (m->emm) {
+		emm_free_bank(m);
+		return;
+	}
+#endif
+	claim_regions(m, 0);
+}
+
 #ifdef CONFIG_SWAP
 
 int swapout(ptptr p)
@@ -328,9 +435,9 @@ void swapin(ptptr p)
 }
 
 #else /* CONFIG_SWAP */ 
-int swapneeded(ptptr p, int f)
+ptptr swapneeded(ptptr p, int f)
 {
-	return ENOMEM;
+	return NULL;
 }
 
 #endif
