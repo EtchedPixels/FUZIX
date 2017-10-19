@@ -115,8 +115,10 @@ int pagemap_alloc(ptptr p)
  *	to worry about this in the 32K + common case because we'll switchin
  *	at one size, and switchout at the other and the udata will just get
  *	saved/restored to the right places.
+ *
+ *	FIXME: needs fixing as we update memory management
  */
-int pagemap_realloc(usize_t size) {
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;

@@ -57,8 +57,11 @@ int pagemap_alloc(ptptr p)
 	return 0;
 }
 
-/* Realloc is trivial - we can't do anything useful */
-int pagemap_realloc(usize_t size)
+/* Realloc is trivial - we can't do anything useful
+
+   FIXME: when we redo the loader this will need to handle split I/D
+   and new stack model */
+int pagemap_realloc(usize_t csize, usize_t size, usize_t stack)
 {
 	if (size > MAP_SIZE)
 		return ENOMEM;

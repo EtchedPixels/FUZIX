@@ -48,7 +48,8 @@ int pagemap_alloc(ptptr p)
 	return 0;
 }
 
-int pagemap_realloc(usize_t size)
+/* FIXME: update once the new mmu logic is done */
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	if (size >= (usize_t) ramtop)
 		return ENOMEM;

@@ -160,8 +160,10 @@ int pagemap_alloc(ptptr p)
  *
  *	Currently only called on execve and we rely on this in the
  *	specific case of bank8k
+ *
+ *	FIXME: needs updating once we have all the new sizes/stack etc right
  */
-int pagemap_realloc(usize_t size)
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size);
