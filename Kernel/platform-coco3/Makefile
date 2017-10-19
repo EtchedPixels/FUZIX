@@ -40,9 +40,9 @@ $(AOBJS): %$(BINEXT): %.s
 
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~
+	rm -f $(OBJS) $(JUNK) fuzix.dsk boot.bin core *~
 
-image:
+image: boot.bin
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o devtty.o devtty.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../timer.o ../timer.c
@@ -62,14 +62,15 @@ image:
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o \
 	../syscall_net.o net_native.o
-
-boot.bin: boot/boot.s
-	lwasm -lboot.list -oboot.bin boot/boot.s
-
-fuzix.dsk: boot.bin
+# make DECB disk w/ new kernel
 	rm -f fuzix.dsk
 	decb dskini fuzix.dsk
 	decb copy -2 -b ../fuzix.bin ./fuzix.dsk,FUZIX.BIN
 	decb copy -2 -b boot.bin ./fuzix.dsk,BOOT.BIN
 	decb copy -l -0 -a AUTOEXEC.BAS ./fuzix.dsk,AUTOEXEC.BAS
+
+boot.bin: boot/boot.s
+	lwasm -lboot.list -oboot.bin boot/boot.s
+
+
 
