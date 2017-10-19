@@ -123,8 +123,6 @@ void tty_setup(uint8_t minor)
 	irqflags_t flags;
 	int i;
 	char *p = dart_setup;
-	struct tty_*t;
-	uint8_t cf;
 	struct tty *t = &ttydata[minor];
 	uint8_t cf = t->termios.c_cflag;
 	uint8_t r;
