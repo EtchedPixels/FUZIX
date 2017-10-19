@@ -17,9 +17,9 @@ start:
 	movw	$__bss_start+1,%di
 	movw	$__end,%cx
 	subw	$__bss_start+1,%cx
-	movb	$0,(%si)
+	xorb	%al,%al
 	rep
-	movsb
+	stosb
 
 	call	init_early
 	call	init_hardware
