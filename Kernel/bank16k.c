@@ -119,7 +119,7 @@ int pagemap_alloc( ptptr p ){
  *
  *	FIXME: this is a quick hack for non split I/D old style chmem
  */
-int pagemap_realloc(usize_t code, usize_data size, usize_t stack)
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size);
