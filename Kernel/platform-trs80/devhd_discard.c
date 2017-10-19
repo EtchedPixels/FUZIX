@@ -92,5 +92,5 @@ void hd_probe(void)
 		hd_waitready();
 		memcpy(&parts[dev], p, sizeof(parts[dev]));
 	}
-	brelse((bufptr)udata.u_dptr);
+	tmpfree(udata.u_dptr);
 }
