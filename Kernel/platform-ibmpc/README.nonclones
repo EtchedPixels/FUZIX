@@ -1,0 +1,68 @@
+Not all early MSDOS machines are IBM PC
+
+It would be nice to cover some of this with BIOS mode but the BIOS is not
+sufficient for our keyboard and serial I/O drivers, and not ideal for video.
+In addition our hadcoded assumption of 640K lowmem maximum is wrong for
+these systems many of which could actually go higher. We may be able to get
+some useful info from stuff like FOSSIL drivers for the serial. Keyboard may
+be a challenge
+
+Many of these systems had their own firmware (eg Apricot) or disk loaded
+BIOS which may be a challenge!
+
+
+Dec Rainbow:
+	Keyboard is an 8251A 4800 8N1
+	Dual MPSC serial
+	Non PC Video
+	62K of RAM shared with a Z80
+	2K Z80 only (low 2K not shared)
+	Rest of memory (> 640K allowed) is 8088 only
+	Timing via Vblank 
+	Z80 can be interrupted (im0) by the 8088 (write to F7)
+	Z80 - drivers an RX50
+	RAM to EC000 (or so)
+	NVM at ED000 (256 x 4bit)
+	Video at EE000, attributes at EF000
+	I/O map in table 4/4
+	Z80A has I/O mappings to poke other CPU and FDC
+	Video has h/w scroll under line/reverse/bold/blink and double h/w
+	Lines of 80 or 132 chars followed by FF line attributes and next ptr
+Zenith Z100/Heathkit H100
+	BIOS source available in docs
+	Custom keyboard and serial drivers needed
+Apricot/Sirius
+	Very non standard indeed, BIOS is loaded with OS, Xi and later
+	have a custom different BIOS layer !
+MBC-550	
+	BIOS not in ROM
+	http://www.seasip.info/VintagePC/sanyo.html
+	no HD option
+
+How to handle keyboards via BIOS - sick thought department.
+
+The keyboard BIOS isn't designed to be called from an IRQ nor are the
+keyboard BIOS routines re-entrant (even on an original IBM PC). However
+if we *only* call the BIOS keyboard routine with the keyboard IRQ masked
+at the end of the keyboard IRQ then no keyboard re-entrancy occurs and we
+can just run the official BIOS vector then loop emptying out the buffer into
+an OS buffer, then iret.
+
+Similar approach for timer hooking
+
+Doesn't work for serial as usually not IRQ driven, but for those that are
+might
+
+
+Do we need a config area
+
+console    drivertouse
+kbd	   driver
+ttyS0..3   driver for each / port / irq
+printer    driver
+disk0..3   driver to use
+fd0..3	   driver to use
+emm	   driver/params
+
+(joystick etc ... net ...)
+
