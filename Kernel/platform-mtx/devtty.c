@@ -67,6 +67,8 @@ void tty_putc(uint8_t minor, unsigned char c)
 	irqflags_t irq;
 
 	if (minor < 3) {
+		/* FIXME: this makes our vt handling messy as we have the
+		   IRQ off for the character I/O */
 		irq = di();
 		if (curtty != minor - 1) {
 			vt_save(&ttysave[curtty]);
@@ -121,9 +123,15 @@ void tty_setup(uint8_t minor)
 	irqflags_t flags;
 	int i;
 	char *p = dart_setup;
+	struct tty_*t;
+	uint8_t cf;
 	struct tty *t = &ttydata[minor];
 	uint8_t cf = t->termios.c_cflag;
 	uint8_t r;
+
+	/* Console */
+	if (minor < 2)
+		return;
 
 	if ((cf & CBAUD) < B150) {
 		cf &= ~CBAUD;
@@ -145,7 +153,7 @@ void tty_setup(uint8_t minor)
 	dart_setup[7] = r;
 	dart_setup[7] = r;
 
-	if (minor == 1) {
+	if (minor == 3) {
 		ctc1 = 0x45;
 		ctc1 = dartbaud[cf & CBAUD];
 	} else {
