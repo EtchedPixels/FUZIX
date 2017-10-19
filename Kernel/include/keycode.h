@@ -38,6 +38,8 @@
 #define KEY_MINUS	ESC('-')
 #define KEY_EXIT	ESC('q')
 #define KEY_PAUSE	ESC('p')
+#define KEY_PGDOWN	ESC('>')
+#define KEY_PGUP	ESC('<')
 
 #define KEY_F1		ESC('1')
 #define KEY_F2		ESC('2')
