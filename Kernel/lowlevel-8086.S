@@ -1,4 +1,5 @@
 	.arch i8086,jumps
+	.arch .287
 	.code16
 	.att_syntax prefix
 
@@ -11,6 +12,7 @@
 	.global __hard_irqrestore
 	.global __hard_ei
 	.global set_irq
+	.global	cpu_detect
 
 	/* GCC glue */
 	.global __ashrsi3
@@ -34,6 +36,9 @@
  *	1. We always make a syscall from user space
  *	2. We never make a syscall with interrupts off
  *	3. We treat the compiler scratch registers as fair game
+ *
+ *	Useful to know: an interrupt pushes the words in this order
+ *	flags, segment, ip
  */
 
 unix_syscall_entry:
@@ -81,6 +86,8 @@ unix_syscall_entry:
 	movw	kstack_top,%sp
 
 	movb	$1,kernel_flag
+
+	cld
 
 	sti	
 	call	unix_syscall
@@ -133,21 +140,19 @@ unix_syscall_entry:
 	xorb	%ah,%ah
 	movw	%ax,-4(%bp)
 	movw	$23,-6(%bp)
-	pushf
-	/* FIXME: enable interrupts in mask */
-	popw	%ax
+	movw	%ax,-8(%bp)
+	movw	udata+U_DATA__U_PAGE,%ax
 	movw	%ax,-10(%bp)
 	movw	%cx,-12(%bp)
 	/* FIXME: need to fix MMU logic */
-	movw	udata+U_DATA__U_PAGE,%ax
-	movw	%ax,-14(%bp)
 	subw	$-14,%bp
 	movw	%es,%ax
 	movw	%ax,%ds
 	movw	%ax,%ss
 	movw	%bp,%sp
 	/* To signal handler */
-	iret
+	sti
+	retf
 no_signal:
 	/*
 	 * We effective return a 32bit ulong to gcc half of which is return
@@ -180,23 +185,21 @@ no_signal:
  */
 doexec:
 	movw %sp,%bp
-	movw 4(%bp),%ax
+	movw 2(%bp),%ax
 	cli
 	movb $0,kernel_flag
+
+	/* SS:SP to the user stack segment */
+	movw udata+U_DATA__U_PAGE2,%dx
+	movw %dx, %ss
+	movw udata+U_DATA__U_ISP,%dx
+	movw %dx,%sp
 	/*
 	 * Stack the new CS:IP
 	 */
-	movw udata+U_DATA__U_PAGE2,%dx
-	pushw %dx
-	pushw %ax
-	/*
-	 * Load the initial stack
-	 */
-	movw udata+U_DATA__U_ISP,%dx
-	movw %dx,%sp
-	/* SS = DS */
 	movw udata+U_DATA__U_PAGE,%dx
-	movw %dx, %ss
+	pushw %dx	/* CS: */
+	pushw %ax	/* IP */
 	/*
 	 * Load the data segment into ES
 	 */
@@ -206,6 +209,7 @@ doexec:
 	 * Just ES and DS left to go
 	 */
 	movb $0,udata+U_DATA__U_INSYS
+
 	/*
 	 * And go
 	 */
@@ -219,10 +223,6 @@ doexec:
 	movw %ax, %bp
 	sti			/* will occur after the retf completes */
 	retf
-
-interrupt_handler:
-	/* TODO */
-	iret
 
 trap_signal:
 	mov udata+U_DATA__U_PTAB, %ax
@@ -253,7 +253,7 @@ __hard_ei:
 	sti
 	ret
 
-set_irq:
+set_irqvec:
 	pushw	%bp
 	movw	%sp,%bp
 	movw	4(%bp),%bx
@@ -267,8 +267,151 @@ set_irq:
 	movw	%bp,%sp
 	ret
 
-	
+/*
+ *	Useful differences
+ *	8088/86	- cannot modify top 4 bits of flags, 80826 can
+ *	8088/8086/80186 - push sp is buggy and pushes the wrong value
+ *	8088/86 - word write to xx:FFFF wraps, 80186 doesn't wrap, 80286
+ *		  traps
+ *
+ *	This lot needs to end up in discard
+ *
+ *	Returns
+ *	0	8088/6
+ *	1	80C88/C86
+ *	2	NEC V20/30
+ *	3	186
+ *	4	286 or higher
+ *
+ *	We don't bother trying to tell 186/188 and 86/89 bus width as we
+ *	don't need to know.
+ */
 
+test_cputype:
+	/* See if shifts wrap - if so it's an 8086 or 8088 */
+	movw	$0x121,%cx
+	shl	%cl,%ch
+	jne	is808x
+
+	/* So it's a 186 or better. See if the push sp quirk is fixed */
+	pushw	%sp
+	popw	%bx
+	cmpw	%bx,%sp
+	/* 286 or better fix the push sp funny */
+	jne	is8028x
+	/* 186 ? */
+	movb	$3,%al
+	ret
+is808x:
+	/* See if we have an NEC V20/V30 */
+	xorb	%al,%al		/* Z */
+	movb	$40,%al
+	mul	%al
+	jne	notnec
+	movb	$2,%al
+	ret
+notnec:
+	/* See if we have the prefix rep fail bug. On a non CMOS 8086
+	   the CPU restarts the instruction only allowing for the last
+	   prefix - so the rep is forgotten only the es is used. interrupts
+	   must be enabled and the timer running for this check */
+	/* Needs to be enough loops that we guarantee an IRQ hits but not
+	   too many more */
+	movw	$0xffff,%cx
+	rep	lodsb %es:(%si)	/* Spin for IRQ */
+	jcxz	cmos86
+	xorw	%ax,%ax
+	ret
+cmos86:
+	movb	1,%al
+	ret
+is8028x:
+	/* 286 or higher, We can trivially check for 386 but we just
+	   don't care about it */
+	movb	$4,%al
+	ret
+
+/*
+ *	Call this only for older processors. It won't give a valid
+ *	answer for a 286. It can only be run once and self modifies.
+ */
+bus_width_test:
+	pushw %di
+	xorw %dx,%dx
+	pushf
+	pushw %ds
+	cli
+	movw %cs,%ax
+	movw %ax,%ds
+	lea patch+2,%di
+	movb $0x90,%al
+	movw $3,%cx
+	std
+	rep stosb
+	nop
+	nop
+	nop
+	nop
+patch:	inc %dx
+	nop
+	nop
+	popw %ds
+	popf
+	popw %di
+	testw %dx,%dx
+	je eightbit
+	movb $16,bus_width
+	ret
+eightbit:
+	movb $8,bus_width
+	ret
+
+test_fputype:
+	fninit
+	movw	$0x55AA, scratch
+	fnstsw	scratch
+	cmpb	$0,scratch
+	jne	no_fpu
+	fnstcw	scratch
+	movw	scratch,%ax
+	andw	$0x103F,%ax
+	cmpw	$0x3F,%ax
+	jne	no_fpu
+	andw	$0xff7f,%ax	/* clear interrupt bit - FIXME do we need ? */
+	fldcw	scratch
+	fdisi
+	fstcw	scratch
+	testb	$80,scratch	/* Did the int bit change */
+	jnz	fpu_8087
+	/* 287 or better - do we care about 387 probably not */
+	movb	$2, fpu_type
+	ret
+fpu_8087:
+	movb	$1, fpu_type
+	ret
+no_fpu:
+	movb	$0, fpu_type
+
+/*
+ *	Must be called with interrupts on and a timer running. When this
+ *	completes we know the processor type, the fpu type (if any) and
+ *	the bus width 8 v 16bit
+ *
+ *	We don't detect anything beyond 286 because we don't care about
+ *	any features beyond that. Detecting processor clock rate is rather
+ *	tricky (the PC/AT for example runs at 1 wait state) and we don't
+ *	really have a use for that either - so we don't.
+ */
+cpu_detect:
+	call	test_fputype
+	call	test_cputype
+	movb	%al,cpu_type
+	cmpb	$4,%al
+	je	always_16bit
+	jmp	bus_width_test
+always_16bit:
+	movb	$16,bus_width
+	ret
 
 /* FIXME: extract from C library or write nice ones */
 __ashlsi3:
@@ -279,3 +422,8 @@ __ashrsi3:
 /* FIXME */
 abort:
 	jmp trap_monitor
+
+	.data
+
+scratch:
+	.word	0
