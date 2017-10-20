@@ -87,8 +87,6 @@ extern unsigned char vt_map( unsigned char c );
 
 /* Block device define */
 #define MAX_BLKDEV  4     /* 2 IDE + 2 SDC */
-#undef  CONFIG_COCOSDC    /* Darren Atkinson's "CoCoSDC" cartridge */
-#define CONFIG_IDE        /* enable if IDE interface present */
 
 #define CONFIG_RTC        /* enable RTC code */
 #define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */

@@ -46,7 +46,9 @@ bool validdev(uint16_t dev)
 }
 void device_init(void)
 {
+#ifdef CONFIG_COCOIDE
 	devide_init( );
+#endif
 #ifdef CONFIG_COCOSDC
 	devsdc_init( );
 #endif
