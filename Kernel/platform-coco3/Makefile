@@ -101,7 +101,7 @@ image: boot.bin
 	../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o \
-	../syscall_net.o net_native.o $(DEVICES)
+	../syscall_net.o net_native.o $(DRIVERS)
 # make DECB disk w/ new kernel
 	rm -f fuzix.dsk
 	decb dskini fuzix.dsk
