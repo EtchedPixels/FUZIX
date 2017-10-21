@@ -163,14 +163,38 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
    some more care on copies, block indexes and directory ops */
+
 typedef struct blkbuf {
-    uint8_t     bf_data[BLKSIZE];    /* This MUST be first ! */
+#ifdef CONFIG_BLKBUF_EXTERNAL
+    uint8_t	*__bf_data;
+#else
+    uint8_t     __bf_data[BLKSIZE];    /* This MUST be first ! */
+#endif
     uint16_t    bf_dev;
     blkno_t     bf_blk;
     uint8_t     bf_dirty;	/* bit 0 used */
     uint8_t     bf_busy;	/* bits 0-1 used */
     uint16_t    bf_time;        /* LRU time stamp */
 } blkbuf, *bufptr;
+
+#ifndef CONFIG_BLKBUF_EXTERNAL
+#define blktouser(baddr,uaddr)	uput((baddr), (uaddr), BLKSIZE)
+#define blkfromuser(baddr,uaddr) uget((uaddr), (baddr), BLKSIZE)
+#define blktok(kaddr,buf,off,len) \
+    memcpy((kaddr), (buf)->__bf_data + (off), (len))
+#define blkfromk(kaddr,buf, off,len) \
+    memcpy((buf)->__bf_data + (off), (kaddr), (len))
+#define blkptr(buf, off, len)	((void *)((buf)->__bf_data + (off)))
+#define blkzero(buf)		memset(buf->__bf_data, 0, BLKSIZE)
+#else
+extern void *blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern void *blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern int blkfromuser(void *baddr, void *uaddr);
+extern int blktouser(void *baddr, void *uaddr);
+/* Worst case is needing to copy over about 64 bytes */
+extern void *blkptr(struct blkbuf *buf, uint16_t offset, uint16_t len);
+extern void blkzero(struct blkbuf *buf);
+#endif
 
 /* TODO: consider smaller inodes or clever caching. 2BSD uses small
    direct block lists to keep inodes small as they must be in memory when
@@ -293,11 +317,12 @@ typedef struct oft {
 struct mount {
     uint16_t m_dev;
     uint16_t m_flags;
-    struct filesys *m_fs;
+    struct filesys m_fs;
 };
-/* The flags are not yet implemented */
+/* The flags are not yet fully implemented */
 #define MS_RDONLY	1
 #define MS_NOSUID	2
+#define MS_REMOUNT	128
 
 /* Process table p_status values */
 
@@ -757,9 +782,9 @@ extern uint8_t need_resched;
 
 /* devio.c */
 extern void validchk(uint16_t dev, const char *p);
-extern uint8_t *bread (uint16_t dev, blkno_t blk, bool rewrite);
-extern void brelse(void *bp);
-extern void bawrite(void *bp);
+extern bufptr bread (uint16_t dev, blkno_t blk, bool rewrite);
+extern void brelse(bufptr);
+extern void bawrite(bufptr);
 extern int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 extern void *tmpbuf(void);
 extern void *zerobuf(void);
@@ -767,7 +792,7 @@ extern void bufsync(void);
 extern bufptr bfind(uint16_t dev, blkno_t blk);
 extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
-#define tmpfree	brelse
+#define tmpfree(x)	brelse((void *)x)
 extern void bufinit(void);
 extern void bufdiscard(bufptr bp);
 extern void bufdump (void);
@@ -852,8 +877,8 @@ extern int dev_openi(inoptr *ino, uint16_t flag);
 extern void sync(void);
 
 /* mm.c */
-extern unsigned int uputsys(unsigned char *from, usize_t size);
-extern unsigned int ugetsys(unsigned char *to, usize_t size);
+extern unsigned int uputblk(bufptr bp, usize_t to, usize_t size);
+extern unsigned int ugetblk(bufptr bp, usize_t from, usize_t size);
 
 /* process.c */
 extern void psleep(void *event);

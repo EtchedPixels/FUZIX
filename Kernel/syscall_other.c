@@ -347,10 +347,11 @@ arg_t _mount(void)
 
 
 /*******************************************
-  umount (spec)                    Function 34
+  _umount (spec)                   Function 34
   char *spec;
  ********************************************/
 #define spec (char *)udata.u_argn
+#define flags (uint16_t)udata.u_argn1
 
 arg_t _umount(void)
 {
@@ -358,6 +359,7 @@ arg_t _umount(void)
 	uint16_t dev;
 	inoptr ptr;
 	struct mount *mnt;
+	uint8_t rm;
 
 	if (esuper())
 		return (-1);
@@ -376,24 +378,36 @@ arg_t _umount(void)
 		goto nogood;
 	}
 
+	rm = flags & MS_REMOUNT;
+
 	mnt = fs_tab_get(dev);
 	if (mnt == NULL) {
 		udata.u_error = EINVAL;
 		goto nogood;
 	}
 
-	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr)
+	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr) {
 		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
-			udata.u_error = EBUSY;
-			goto nogood;
+			if (rm) {
+				ptr->c_flags &= ~CRDONLY;
+				if (flags & MS_RDONLY)
+					ptr->c_flags |= CRDONLY;
+			} else {
+				udata.u_error = EBUSY;
+				goto nogood;
+			}
 		}
+	}
 
 	sync();
 
-	i_deref(mnt->m_fs->s_mntpt);
-	/* Give back the buffer we pinned at mount time */
-	((bufptr)mnt->m_fs)->bf_busy = BF_BUSY; /* downgrade from BF_SUPERBLOCK */
-	bfree((bufptr)mnt->m_fs, 2);
+	if (flags & MS_REMOUNT) {
+		mnt->m_flags &= ~(MS_RDONLY|MS_NOSUID);
+		mnt->m_flags |= flags & (MS_RDONLY|MS_NOSUID);
+		return 0;
+	}
+
+	i_deref(mnt->m_fs.s_mntpt);
 	/* Vanish the entry */
 	mnt->m_dev = NO_DEVICE;
 	i_deref(sino);
@@ -405,7 +419,7 @@ arg_t _umount(void)
 }
 
 #undef spec
-
+#undef flags
 
 
 /*******************************************

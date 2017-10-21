@@ -37,7 +37,7 @@ char *syscall_name[NR_SYSCALL] = {
 	"sbrk",
 	"_fork",
 	"mount",
-	"umount",
+	"_umount",
 	"signal",
 	"dup2",
 	"_pause",
@@ -139,7 +139,7 @@ int syscall_args[NR_SYSCALL] = {
 	1, //sbrk
 	2, //_fork
 	3, //mount
-	1, //umount
+	2, //_umount
 	2, //signal
 	2, //dup2
 	1, //_pause

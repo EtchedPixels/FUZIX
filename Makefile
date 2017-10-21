@@ -63,8 +63,8 @@ kernel: ltools
 	+(cd Kernel; $(MAKE))
 
 clean:
-	(cd Standalone; $(MAKE) clean)
-	(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) clean)
-	(cd Library; $(MAKE) clean)
-	(cd Kernel; $(MAKE) clean)
-	(cd Applications; $(MAKE) clean)
+	+(cd Standalone; $(MAKE) clean)
+	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) clean)
+	+(cd Library; $(MAKE) clean)
+	+(cd Kernel; $(MAKE) clean)
+	+(cd Applications; $(MAKE) clean)

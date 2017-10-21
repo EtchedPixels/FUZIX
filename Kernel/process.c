@@ -418,7 +418,6 @@ void unix_syscall(void)
 #endif
 	}
 	udata.u_ptab->p_timeout = 0;
-	chksigs();
 
 	di();
 	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
@@ -428,6 +427,7 @@ void unix_syscall(void)
 		switchout();
 	}
 	ei();
+	chksigs();
 }
 
 void sgrpsig(uint16_t pgrp, uint8_t sig)

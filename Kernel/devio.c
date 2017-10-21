@@ -40,7 +40,7 @@ the data.  This is very important.
 
 uint16_t bufclock;		/* Time-stamp counter for LRU */
 
-uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
+bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 {
 	register bufptr bp;
 
@@ -68,19 +68,19 @@ uint8_t *bread(uint16_t dev, blkno_t blk, bool rewrite)
 	}
 
 	bp->bf_time = ++bufclock;	/* Time stamp it */
-	return (bp->bf_data);
+	return bp;
 }
 
 
-void brelse(void *bp)
+void brelse(bufptr bp)
 {
-	bfree((bufptr) bp, 0);
+	bfree(bp, 0);
 }
 
 
-void bawrite(void *bp)
+void bawrite(bufptr bp)
 {
-	bfree((bufptr) bp, 1);
+	bfree(bp, 1);
 }
 
 
@@ -117,10 +117,11 @@ void *tmpbuf(void)
 	bp->bf_dev = NO_DEVICE;
 	bp->bf_busy = BF_BUSY;
 	bp->bf_time = ++bufclock;	/* Time stamp it */
-	return bp->bf_data;
+	return bp->__bf_data;
 }
 
-/* Allocate an empty _disk cache_ buffer */
+/* Allocate an empty _disk cache_ buffer. This won't be able to use tmpbuf
+   on platforms where we split disk and temporary buffers */
 void *zerobuf(void)
 {
 	void *b;
@@ -240,7 +241,7 @@ static void bdsetup(bufptr bp)
 	udata.u_block = bp->bf_blk;
 	udata.u_blkoff = 0;
 	udata.u_nblock = 1;
-	udata.u_dptr = bp->bf_data;
+	udata.u_dptr = bp->__bf_data;
 }
 
 int bdread(bufptr bp)

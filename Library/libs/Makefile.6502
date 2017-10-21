@@ -49,13 +49,14 @@ SRC_C += malloc.c mkfifo.c mkstemps.c nanosleep.c opendir.c opendir_r.c
 SRC_C += pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
-SRC_C += regsub.c remove.c rewind.c rindex.c setbuffer.c setenv.c setjmp.c
+SRC_C += regsub.c remove.c remount.c rewind.c rindex.c
+SRC_C += setbuffer.c setenv.c setjmp.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
 SRC_C += sputl.c stat.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnicmp.c strnlen.c strsep.c strsignal.c swab.c
 SRC_C += system.c time.c tmpfile.c tmpnam.c ttyname.c
-SRC_C += tzset.c ungetc.c usleep.c utent.c utimes.c utsname.c
+SRC_C += tzset.c umount.c ungetc.c usleep.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 SRC_C += strtol.c
@@ -110,3 +111,6 @@ $(OBJ_HARD):%.o: %.c
 clean:
 	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l liberror.txt
 	(cd fuzix6502; make clean)
+
+# Blank for now until we sort stuff out properly for 6502
+install:

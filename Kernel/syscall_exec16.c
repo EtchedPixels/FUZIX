@@ -3,46 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 
-static int bload(inoptr i, uint16_t bl, uint16_t base, uint16_t len)
-{
-	blkno_t blk;
-	while(len) {
-		uint16_t cp = min(len, 512);
-		blk = bmap(i, bl, 1);
-		if (blk == NULLBLK)
-			uzero((uint8_t *)base, 512);
-		else {
-#ifdef CONFIG_LEGACY_EXEC
-			uint8_t *buf;
-			buf = bread(i->c_dev, blk, 0);
-			if (buf == NULL) {
-				kputs("bload failed.\n");
-				return -1;
-			}
-			uput(buf, (uint8_t *)base, cp);
-			bufdiscard((bufptr)buf);
-			brelse((bufptr)buf);
-#else
-			/* FIXME: allow for async queued I/O here. We want
-			   an API something like breadasync() that either
-			   does the cdread() or queues for a smart platform
-			   or box with floppy tape devices */
-			udata.u_offset = (off_t)blk << 9;
-			udata.u_count = 512;
-			udata.u_base = (uint8_t *)base;
-			if (cdread(i->c_dev, 0) < 0) {
-				kputs("bload failed.\n");
-				return -1;
-			}
-#endif
-		}
-		base += cp;
-		len -= cp;
-		bl++;
-	}
-	return 0;
-}
-
 static void close_on_exec(void)
 {
 	int j;
@@ -86,8 +46,9 @@ static int header_ok(uint8_t *pp)
 
 arg_t _execve(void)
 {
+	/* We aren't re-entrant where this matters */
+	staticfast uint8_t hdr[16];
 	staticfast inoptr ino;
-	unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
@@ -112,6 +73,7 @@ arg_t _execve(void)
 
 	/* Core dump and ptrace permission logic */
 #ifdef CONFIG_LEVEL_2
+	/* Q: should uid == 0 mean we always allow core */
 	if ((!(getperm(ino) & OTH_RD)) ||
 		(ino->c_node.i_mode & (SET_UID | SET_GID)))
 		udata.u_flags |= U_FLAG_NOCORE;
@@ -121,30 +83,33 @@ arg_t _execve(void)
 
 	setftime(ino, A_TIME);
 
-	if (ino->c_node.i_size == 0) {
+	udata.u_offset = 0;
+	udata.u_count = 16;
+	udata.u_base = hdr;
+	udata.u_sysio = true;
+
+	readi(ino, 0);
+	if (udata.u_count != 16) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
 
-	/* Read in the first block of the new program */
-	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
-
-	if (!header_ok(buf)) {
+	if (!header_ok(hdr)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
-	progload = (*(uint8_t *)(buf + 7)) << 8;
+	progload = hdr[7] << 8;
 	if (progload == 0)
 		progload = PROGLOAD;
 
-	top = *(uint16_t *)(buf + 8);
+	top = *(uint16_t *)(hdr + 8);
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += progload;
 
-	bss = *(uint16_t *)(buf + 14);
+	bss = *(uint16_t *)(hdr + 14);
 
 	/* Binary doesn't fit */
 	/* FIXME: review overflows */
@@ -168,6 +133,8 @@ arg_t _execve(void)
 	/* This must be the last test as it makes changes if it works */
 	/* FIXME: once we sort out chmem we can make stack and data
 	   two elements. We never allocate 'code' as there is no split I/D */
+	/* This is only safe from deadlocks providing pagemap_realloc doesn't
+	   sleep */
 	if (pagemap_realloc(0, top - MAPBASE, 0))
 		goto nogood3;
 
@@ -188,36 +155,36 @@ arg_t _execve(void)
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(buf, (uint8_t *)progload, 512);	/* Move 1st Block to user bank */
-	brelse(buf);
+	uput(hdr, (uint8_t *)progload, 16);
+	udata.u_count = 512 - 16;
+	udata.u_base = (uint8_t *)(progload + 16);
+	udata.u_sysio = false;
+	readi(ino, 0);
+	if (udata.u_count != 512 - 16)
+		goto nogood4;
 
 	/* At this point, we are committed to reading in and
-	 * executing the program. This call can block. */
+	 * executing the program. This call must not block. */
 
 	close_on_exec();
 
 	/*
-	 *  Read in the rest of the program, block by block
-	 *  We use bufdiscard so that we load the entire app through the
-	 *  same buffer to avoid cycling our small cache on this. Indirect blocks
-	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
+	 *  Read in the rest of the program, block by block. We rely upon
+	 *  the optimization path in readi to spot this is a big move to user
+	 *  space and move it directly.
 	 */
-	progptr = progload + 512;	// we copied the first block already
 
-	/* Compute this once otherwise each loop we must recalculate this
-	   as the compiler isn't entitled to assume the loop didn't change it */
-
-	if (bin_size > 512) {
+	 progptr = progload + 512;
+	 if (bin_size > 512) {
 		bin_size -= 512;
-		if (bload(ino, 1, progptr, bin_size) < 0) {
-			/* Must not run userspace */
-			ssig(udata.u_ptab, SIGKILL);
-			goto nogood3;
-		}
+		udata.u_base = (uint8_t *)progptr;		/* We copied the first block already */
+		udata.u_count = bin_size;
+		udata.u_sysio = false;
+		readi(ino, 0);
+		if (udata.u_count != bin_size)
+			goto nogood4;
 		progptr += bin_size;
 	}
-
-
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
@@ -234,7 +201,7 @@ arg_t _execve(void)
 	nargv = wargs(((char *) top - 2), abuf, &argc);
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
-	// Fill in udata.u_name with Program invocation name
+	// Fill in udata.u_name with program invocation name
 	ugets((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
@@ -242,7 +209,9 @@ arg_t _execve(void)
 	tmpfree(ebuf);
 	i_deref(ino);
 
-	// Shove argc and the address of argv just below envp
+	/* Shove argc and the address of argv just below envp
+	   FIXME: should flip them in crt0.S of app for R2L setups
+	   so we can get rid of the ifdefs */
 #ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
 	uputw((uint16_t) nargv, nenvp - 2);
 	uputw((uint16_t) argc, nenvp - 1);
@@ -251,20 +220,22 @@ arg_t _execve(void)
 	uputw((uint16_t) argc, nenvp - 2);
 #endif
 
-	// Set stack pointer for the program
+	/* Set stack pointer for the program */
 	udata.u_isp = nenvp - 2;
 
-	// Start execution (never returns)
+	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
 	doexec(progload);
 
-	// tidy up in various failure modes:
+	/* tidy up in various failure modes */
+nogood4:
+	/* Must not run userspace */
+	ssig(udata.u_ptab, SIGKILL);
 nogood3:
 	udata.u_ptab->p_status = P_RUNNING;
-	brelse(abuf);
-	brelse(ebuf);
+	tmpfree(abuf);
+	tmpfree(ebuf);
 nogood2:
-	brelse(buf);
 nogood:
 	i_deref(ino);
 	return (-1);

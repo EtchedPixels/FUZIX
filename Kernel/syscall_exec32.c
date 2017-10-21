@@ -1,3 +1,5 @@
+#error "Convert me to readi"
+
 /*
  *	Implement binary loading for 32bit platforms. We use the ucLinux binflat
  *	format with a simple magic number tweak to avoid confusion with ucLinux
