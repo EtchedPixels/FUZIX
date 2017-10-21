@@ -44,6 +44,9 @@
 ; from switchout().
 ; 
 ; This function can have no arguments or auto variables.
+;
+;	FIXME: can we optimise all the pushes and move them into slow_path
+;
 _switchout:
         di
         call _chksigs
