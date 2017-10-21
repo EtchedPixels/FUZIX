@@ -1,27 +1,13 @@
 Big TODO Items Before 0.1 Release
 ---------------------------------
 
-- [x]   BSD groups can be done but do we care ? (yes but Level 2 only)
-
-- [x]	Termios and speed hooks to tty drivers
-
-- [x]	hangup ioctl (vhangup) plus hangups for group leader exits
-
-- [x]	rename should delete old files it renames over
-
-- [x]	SYS5 signal functionality and other signals (SIGCLD, STOP etc)
-
-- [x]	SYS5 signal holding
+- [ ]	rename enhancements (directory, overwrite etc) may be L2
 
 - [ ]	ptrace
 
 - [IP]	Core dumps
 
 - [ ]	time_t bits hidden in inode
-
-- NA	RTC setting (do in user space)
-
-- [x]	Lock clock to RTC seconds
 
 - [ ]	Can we make the mount point buffers writable to disk too so we can
 	drop the quiet ones when busy ?
@@ -39,22 +25,17 @@ Big TODO Items Before 0.1 Release
 	objects and less memory usage. Might be nicer alternative to the BSD
 	inode shrinking hack (although that would fix the time_t question!)
 
-- [x]	Finish the cpm emulator port
+Functionality
 
-- [x]	Make object alignments 16bit friendly
+- [ ]	remount
 
-- [x]	Add fields to binaries giving load page (so can load Z80 0x8000
-	binaries safely etc)
+- [ ]	config tool
+
 
 Big Speed Up Points
 -------------------
 
 - [ ]	Rewrite the compressor in assembler
-
-- [x]	Support 'raw' I/O on files	(done for O_DIRECT read and as an
-	optimisation). Needs cleaning up.
-
-- [x]	Make execve use this to avoid all the copies
 
 - [ ]	Vfork
 
@@ -66,13 +47,7 @@ Maybe
 - [ ]	Different magic for "big" fs - 32bit block numbers only on raw
 	devices. Split blkno_t into blkno_t blknodev_t or similar
 
-- [x]	Carrier handling for tty devices
-
 - [ ]	Revoke 8)
-
-- [x]	Uptime/loadaverage/free
-
-- [x]	swapfree
 
 - [ ]	Virtual device hooks for networking
 
@@ -92,4 +67,5 @@ Other
 	signal(x, SIG_DFL)
 		signal serviced
 
-	(We now clear the cached signal in this and the mask case)
+	(We now clear the cached signal in this and the mask case. We
+	might need to spot 0/-1 sig vector and skip)
