@@ -216,7 +216,7 @@ static int do_process_create(uint8_t csize, uint8_t dsize, uint8_t ssize)
 #endif	
 	m->cbase = alloc_code(csize);
 	if (m->cbase == 0) {
-#ifdef COFNIG_IBMPC_EMM	
+#ifdef COFNIG_IBMPC_EMM
 		emm_free_bank(m);
 #endif		
 		return -1;
@@ -299,7 +299,7 @@ static int stack_fault(uint8_t ssize)
 	/* Collided ? if so we will wrap */
 	if (m->ssize + m->dsize > m->ssize)
 		return ENOMEM;
-#ifdef CONFIG_IBMPC_EMM		
+#ifdef CONFIG_IBMPC_EMM
 	if (m->emm) {
 		m->ssize = ssize;
 		return 0;
@@ -442,6 +442,26 @@ void pagemap_free(ptptr p)
 #endif
 	claim_regions(m, 0);
 }
+
+void fork_copy(ptptr p)
+{
+	struct proc_map *parent_m = (struct proc_map *)udata.u_page2;
+	struct proc_map *child_m = (struct proc_map *)p->p_page2;
+	/* udata is the parent ptptr p is the child */
+#ifdef CONFIG_IBMPC_EMM
+	if (emm) {
+		/* This one is hard as both might be EMM so we'll need to do
+		   a pair of 32K/32K mappings to copy them over */
+		emm_copy_data_pages(parent_m, child_m);
+	}
+	else
+#endif
+	copy_pages(child->m_dbase, parent->m_dbase, parent->m_dsize);
+	/* This last one will need to be reworked once we've got shared
+	   code segments */
+	copy_pages(child->m_cbase, parent->m_cbase, parent->m_csize);
+}
+
 
 #ifdef CONFIG_SWAP
 
