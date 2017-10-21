@@ -35,8 +35,9 @@ tools/binman: tools/binman.c
 tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+
 install:
-ifeq ( $(CROSS_CC), "sdcc" )
+ifeq ($(USERCPU),z80)
 	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
 	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
 	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
