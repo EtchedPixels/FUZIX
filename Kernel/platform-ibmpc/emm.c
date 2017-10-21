@@ -13,6 +13,15 @@
  *	(write 128,0,128,0 for D 128,0,0,0 to 259,4259,8259,C259)
  *
  *	For data write 0x258/4258,8258,C258 with the page number.
+ *
+ *	TODO:
+ *	According to John Elliot the T3100e implements 8MB of EMM 3.2 as if
+ *	it was 4 x 2MB boards with intel decode 1 at 208/218/258/268
+ *	(and also probes 2A8/2B8/2E8 as alternative EMM ports). We don't at
+ *	the moment have a model for multiple EMM cards.
+ *
+ *	We don't address the case of having two EMM cards with code segments
+ *	in one and data the other. It's not clear that is actually very useful
  */
 
 static uint16_t emm[MAX_EMM];
@@ -43,6 +52,12 @@ void emm_free_bank(struct proc_mmu *m)
     emm[++emm_ptr] = m->emm;
 }
 
+/*
+ *	Select routines. We may need to move these to asm for neatness
+ *	with C wrappers for the C invoked cases. Note that the emm can be
+ *	any emm code the driver tries to add and isn't limited to MAX_EMM
+ *	as the space that didn't fit (if any) will become EMM ramdisc.
+ */
 /*
  *	Used for things like the Opti chipset support
  */
