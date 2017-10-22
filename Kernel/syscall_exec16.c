@@ -155,13 +155,6 @@ arg_t _execve(void)
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-	uput(hdr, (uint8_t *)progload, 16);
-	udata.u_count = 512 - 16;
-	udata.u_base = (uint8_t *)(progload + 16);
-	udata.u_sysio = false;
-	readi(ino, 0);
-	if (udata.u_count != 512 - 16)
-		goto nogood4;
 
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
@@ -174,9 +167,9 @@ arg_t _execve(void)
 	 *  space and move it directly.
 	 */
 
-	 progptr = progload + 512;
-	 if (bin_size > 512) {
-		bin_size -= 512;
+	 progptr = progload + 16;
+	 if (bin_size > 16) {
+		bin_size -= 16;
 		udata.u_base = (uint8_t *)progptr;		/* We copied the first block already */
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
