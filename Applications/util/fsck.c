@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 typedef uint16_t	blkno_t;
 
@@ -18,6 +20,8 @@ struct filesys {
     int16_t       s_ninode;
     uint16_t      s_inode[50];
     uint8_t       s_fmod;
+#define FMOD_DIRTY	1
+#define FMOD_CLEAN	2
     uint8_t	s_timeh;	/* top bits of time */
     uint32_t      s_time;
     blkno_t     s_tfree;
@@ -64,6 +68,9 @@ static int swizzling = 0;		/* Wrongendian ? */
 static long offset;
 static int dev_fd;
 static int dev_offset;
+static int error;
+static int rootfs;
+static int aflag;
 
 static unsigned char *bitmap;
 static int16_t *linkmap;
@@ -85,16 +92,25 @@ static void pass3(void);
 static void pass4(void);
 static void pass5(void);
 
-static int yes(void)
+static int yes_noerror(void)
 {
     static char buf[16];
+    fflush(stdout);
     do {
         if (fgets(buf, 15, stdin) == NULL)
             exit(1);
         if (isupper(*buf))
             *buf = tolower(*buf);
     } while(*buf != 'n' && *buf != 'y');
-    return (*buf == 'y') ? 1 : 0;
+    return  (*buf == 'y') ? 1 : 0;
+}
+
+static int yes(void) {
+    int ret = yes_noerror();
+    if (ret)
+        error |= 1;
+    else
+        error |= 4;
 }
 
 static void bitset(uint16_t b)
@@ -112,35 +128,45 @@ static int bittest(uint16_t b)
     return (bitmap[b >> 3] & (1 << (b & 7))) ? 1 : 0;
 }
 
+static void panic(char *s)
+{
+	fprintf(stderr, "panic: %s\n", s);
+	exit(error | 8);
+}
+
 static int fd_open(char *name)
 {
-	char *namecopy, *sd;
+	char *sd;
 	int bias = 0;
+	struct stat rootst;
+	struct stat work;
 
-	namecopy = strdup(name);
-	sd = index(namecopy, ':');
+	sd = index(name, ':');
 	if (sd) {
 		*sd = 0;
 		sd++;
 		bias = atoi(sd);
 	}
 
-	printf("Opening %s (offset %d)\n", namecopy, bias);
+	printf("Opening %s (offset %d)\n", name, bias);
 	dev_offset = bias;
-	dev_fd = open(namecopy, O_RDWR | O_CREAT, 0666);
-	free(namecopy);
+	dev_fd = open(name, O_RDWR | O_CREAT, 0666);
 
 	if (dev_fd < 0)
 		return -1;
 	/* printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset); */
+
+	if (stat("/", &rootst) == -1)
+	    panic("stat /");
+        if (fstat(dev_fd, &work) == -1)
+            panic("statfd");
+
+        if (rootst.st_dev == work.st_rdev) {
+            printf("Checking root file system.\n");
+            rootfs = 1;
+        }
+
 	return 0;
-}
-
-
-static void panic(char *s)
-{
-	fprintf(stderr, "panic: %s\n", s);
-	exit(1);
 }
 
 static uint16_t swizzle16(uint32_t v)
@@ -148,7 +174,7 @@ static uint16_t swizzle16(uint32_t v)
         int top = v & 0xFFFF0000UL;
 	if (top && top != 0xFFFF0000) {
 		fprintf(stderr, "swizzle16 given a 32bit input\n");
-		exit(1);
+		exit(error | 8);
 	}
 	if (swizzling)
 		return (v & 0xFF) << 8 | ((v & 0xFF00) >> 8);
@@ -170,9 +196,15 @@ int main(int argc, char **argv)
     char *buf;
     char *op;
 
+    if (argc == 3 && strcmp(argv[1],"-a") == 0) {
+        argc--;
+        argv++;
+        aflag = 1;
+    }
+
     if(argc != 2){
-        fprintf(stderr, "syntax: fsck [devfile][:offset]\n");
-        return 1;
+        fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
+        return 16;
     }
     
     op = strchr(argv[1], ':');
@@ -183,11 +215,18 @@ int main(int argc, char **argv)
 
     if(fd_open(argv[1])){
         printf("Cannot open file\n");
-        return -1;
+        return 16;
     }
 
     buf = daread(1);
     bcopy(buf, (char *) &superblock, sizeof(struct filesys));
+
+    if (superblock.s_fmod == FMOD_DIRTY) {
+        printf("Filesystem was not cleanly unmounted.\n");
+        error |= 1;
+    }
+    else if (aflag)
+        return 0;
 
     /* Verify the fsize and isize parameters */
     if (superblock.s_mounted == SMOUNTED_WRONGENDIAN) {
@@ -198,14 +237,14 @@ int main(int argc, char **argv)
     if (swizzle16(superblock.s_mounted) != SMOUNTED) {
         printf("Device %d has invalid magic number %d. Fix? ", dev, superblock.s_mounted);
         if (!yes())
-            exit(-1);
+            exit(error|32);
         superblock.s_mounted = swizzle16(SMOUNTED);
         dwrite((blkno_t) 1, (char *) &superblock);
     }
     printf("Device %d has fsize = %d and isize = %d. Continue? ",
             dev, swizzle16(superblock.s_fsize), swizzle16(superblock.s_isize));
     if (!yes())
-        exit(-1);
+        exit(error | 32);
 
     bitmap = calloc((swizzle16(superblock.s_fsize) + 7) / 8, sizeof(char));
     linkmap = (int16_t *) calloc(8 * swizzle16(superblock.s_isize), sizeof(int16_t));
@@ -215,7 +254,7 @@ int main(int argc, char **argv)
         swizzle16(superblock.s_fsize + 7) / 8);
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
-        exit(-1);
+        exit(error | 8);
     }
 
     printf("Pass 1: Checking inodes...\n");
@@ -233,9 +272,22 @@ int main(int argc, char **argv)
     printf("Pass 5: Checking link counts...\n");
     pass5();
 
+    /* If we fixed things, and no errors were left uncorrected */
+    if ((error & 5) == 1) {
+        superblock.s_fmod = FMOD_CLEAN;
+        dwrite((blkno_t) 1, (char *) &superblock);
+        if (rootfs) {
+            error |= 2;
+            printf("**** Root filesystem was modified, immediate reboot required.\n");
+            sleep(5);
+            /* Sync it all out and reboot */
+            uadmin(A_REBOOT, 0, 0);
+        }
+    }
+
     printf("Done.\n");
 
-    exit(0);
+    exit(error);
 }
 
 
@@ -369,12 +421,12 @@ static void pass2(void)
     blkno_t j;
     blkno_t oldtfree;
     int s;
-    int yes();
 
     printf("Rebuild free list? ");
-    if (!yes())
+    if (!yes_noerror())
         return;
 
+    error |= 1;
     oldtfree = swizzle16(superblock.s_tfree);
 
     /* Initialize the superblock-block */
@@ -437,9 +489,10 @@ static void pass3(void)
                             b, n, swizzle16(ino.i_addr[b]));
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
-                        if (newno == 0)
+                        if (newno == 0) {
                             printf("Sorry... No more free blocks.\n");
-                        else {
+                            error |= 4;
+                        } else {
                             dwrite(newno, daread(swizzle16(ino.i_addr[b])));
                             ino.i_addr[b] = swizzle16(newno);
                             iwrite(n, &ino);
@@ -460,9 +513,10 @@ static void pass3(void)
                             bno, n, b);
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
-                        if (newno == 0)
+                        if (newno == 0) {
                             printf("Sorry... No more free blocks.\n");
-                        else {
+                            error |= 4;
+                        } else {
                             dwrite(newno, daread(b));
                             setblkno(&ino, bno, newno);
                             iwrite(n, &ino);
@@ -596,7 +650,6 @@ static void pass5(void)
 {
     uint16_t n;
     struct dinode ino;
-    int yes();
 
     for (n = ROOTINODE; n < 8 * (swizzle16(superblock.s_isize) - 2); ++n) {
         iread(n, &ino);
@@ -689,6 +742,7 @@ static void mkentry(uint16_t inum)
         }
     }
     printf("Sorry... No empty slots in root directory.\n");
+    error |= 4;
 }
 
 /*
