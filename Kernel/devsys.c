@@ -32,8 +32,10 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	case 0:
 		return 0;
 	case 1:
-		return uput((unsigned char *) udata.u_offset, udata.u_base,
-			       udata.u_count);
+		if (uput((unsigned char *) udata.u_offset, udata.u_base,
+			       udata.u_count))
+			return -1;
+		return udata.u_count;
 	case 2:
 		if (udata.u_sysio)
 			memset(udata.u_base, 0, udata.u_count);
@@ -45,8 +47,8 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			udata.u_count = sizeof(struct p_tab);
 		if (udata.u_offset + udata.u_count > PTABSIZE * sizeof(struct p_tab))
 			return 0;
-		if (uput(addr + udata.u_offset, udata.u_base, udata.u_count) )
-			return 0;
+		if (uput(addr + udata.u_offset, udata.u_base, udata.u_count))
+			return -1;
 		return udata.u_count;
 #ifdef CONFIG_DEV_MEM
         case 4:
@@ -72,8 +74,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	case 2:
 		return udata.u_count;
 	case 1:
-		return uget((unsigned char *) udata.u_offset, udata.u_base,
-			       udata.u_count);
+		if(uget((unsigned char *) udata.u_offset, udata.u_base,
+			       udata.u_count))
+			return -1;
+		return udata.u_count;
 	case 3:
 		udata.u_error = EINVAL;
 		return -1;
