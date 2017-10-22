@@ -495,7 +495,7 @@ fsptr getdev(uint16_t dev)
     rdtime(&t);
     mnt->m_fs.s_time = t.low;
     mnt->m_fs.s_timeh = t.high;
-    mnt->m_fs.s_fmod = true;
+    mnt->m_fs.s_fmod = FMOD_DIRTY;
     return &mnt->m_fs;
 }
 
@@ -537,7 +537,7 @@ tryagain:
     }
     /* We must scan the inodes, and fill up the table */
 
-    _sync();           /* Make on-disk inodes consistent */
+    sync();           /* Make on-disk inodes consistent */
     k = 0;
     for(blk = 2; blk < dev->s_isize; blk++) {
         buf = bread(devno, blk, 0);
@@ -1175,12 +1175,25 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
         return true; // failure
     }
 
+    if (fp->s_fmod == FMOD_DIRTY) {
+        kputs("warning: mounting dirty file system, forcing r/o.\n");
+        flags |= MS_RDONLY;
+    }
+    if (!(flags & MS_RDONLY))
+        /* Dirty - and will write dirty mark back to media */
+        fp->s_fmod = FMOD_DIRTY;
+    else	/* Clean in memory, don't write it back to media */
+        fp->s_fmod = FMOD_CLEAN;
     fp->s_mntpt = ino;
     if(ino)
         ++ino->c_refs;
     m->m_flags = flags;
     /* Makes our entry findable */
     m->m_dev = dev;
+
+    /* Mark the filesystem dirty on disk */
+    sync();
+
     return false; // success
 }
 

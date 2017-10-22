@@ -350,22 +350,80 @@ arg_t _mount(void)
   _umount (spec)                   Function 34
   char *spec;
  ********************************************/
+
 #define spec (char *)udata.u_argn
 #define flags (uint16_t)udata.u_argn1
+
+static int do_umount(uint16_t dev)
+{
+	struct mount *mnt;
+	uint8_t rm = flags & MS_REMOUNT;
+	inoptr ptr;
+
+	mnt = fs_tab_get(dev);
+	if (mnt == NULL) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+
+	/* If anything on this file system is open for write then you
+	   can't remount it read only */
+	if (flags & (MS_RDONLY|MS_REMOUNT) == (MS_RDONLY|MS_REMOUNT)) {
+		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
+			if (ptr->c_dev == dev && ptr->c_writers) {
+				udata.u_error = EBUSY;
+				return -1;
+			}
+		}
+	}
+
+	/* Sweep the inode table. If unmounting look for any references
+	   and if so fail. If remounting update the CRDONLY flags */
+	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr) {
+		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
+			if (rm) {
+				ptr->c_flags &= ~CRDONLY;
+				if (flags & MS_RDONLY)
+					ptr->c_flags |= CRDONLY;
+			} else {
+				udata.u_error = EBUSY;
+				return -1;
+			}
+		}
+	}
+
+	if (!rm)
+		mnt->m_fs.s_fmod = FMOD_GO_CLEAN;
+
+	sync();
+
+	if (rm) {
+		mnt->m_flags &= ~(MS_RDONLY|MS_NOSUID);
+		mnt->m_flags |= flags & (MS_RDONLY|MS_NOSUID);
+		/* You can choose to remount a corrupt fs r/o in which case
+		   it gets marked clean. We may want to rethink that FIXME */
+		if (mnt->m_flags & MS_RDONLY)
+			mnt->m_fs.s_fmod = FMOD_GO_CLEAN;
+		return 0;
+	}
+
+	i_deref(mnt->m_fs.s_mntpt);
+	/* Vanish the entry */
+	mnt->m_dev = NO_DEVICE;
+	return 0;
+}
 
 arg_t _umount(void)
 {
 	inoptr sino;
 	uint16_t dev;
-	inoptr ptr;
-	struct mount *mnt;
-	uint8_t rm;
+	arg_t ret = -1;
 
 	if (esuper())
-		return (-1);
+		return -1;
 
 	if (!(sino = n_open(spec, NULLINOPTR)))
-		return (-1);
+		return -1;
 
 	if (getmode(sino) != MODE_R(F_BDEV)) {
 		udata.u_error = ENOTBLK;
@@ -377,45 +435,10 @@ arg_t _umount(void)
 		udata.u_error = ENXIO;
 		goto nogood;
 	}
-
-	rm = flags & MS_REMOUNT;
-
-	mnt = fs_tab_get(dev);
-	if (mnt == NULL) {
-		udata.u_error = EINVAL;
-		goto nogood;
-	}
-
-	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr) {
-		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
-			if (rm) {
-				ptr->c_flags &= ~CRDONLY;
-				if (flags & MS_RDONLY)
-					ptr->c_flags |= CRDONLY;
-			} else {
-				udata.u_error = EBUSY;
-				goto nogood;
-			}
-		}
-	}
-
-	sync();
-
-	if (flags & MS_REMOUNT) {
-		mnt->m_flags &= ~(MS_RDONLY|MS_NOSUID);
-		mnt->m_flags |= flags & (MS_RDONLY|MS_NOSUID);
-		return 0;
-	}
-
-	i_deref(mnt->m_fs.s_mntpt);
-	/* Vanish the entry */
-	mnt->m_dev = NO_DEVICE;
+	ret = do_umount(dev);
+nogood:
 	i_deref(sino);
-	return 0;
-
-      nogood:
-	i_deref(sino);
-	return -1;
+	return ret;
 }
 
 #undef spec
@@ -481,7 +504,8 @@ arg_t _uadmin(void)
 {
 	if (esuper())
 		return -1;
-	sync();
+	if (func != AD_NOSYNC)
+		sync();
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
 		trap_monitor();

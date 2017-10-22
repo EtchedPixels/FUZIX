@@ -301,6 +301,11 @@ typedef struct filesys { // note: exists in mem and on disk
     int16_t       s_ninode;
     uint16_t      s_inode[FILESYS_TABSIZE];
     uint8_t       s_fmod;
+    /* 0 is 'legacy' and never written to disk */
+#define FMOD_GO_CLEAN	0	/* Write a clean to the disk (internal) */
+#define FMOD_DIRTY	1	/* Mounted or uncleanly unmounted from r/w */
+#define FMOD_CLEAN	2	/* Clean. Used internally to mean don't
+				   update the super block */
     uint8_t       s_timeh;	/* bits 32-40: FIXME - wire up */
     uint32_t      s_time;
     blkno_t       s_tfree;
@@ -393,7 +398,7 @@ struct mount {
 #define A_FTRACE		18	/* Unimplemented: 
                                           Hook to the syscall trace debug */
 
-#define AD_NOSYNC		1	/* Unimplemented */
+#define AD_NOSYNC		1
                                           
 /* Process table entry */
 

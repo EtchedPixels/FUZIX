@@ -354,8 +354,10 @@ void sync(void)
 		}
 	for (m = fs_tab; m < fs_tab + NMOUNTS; m++) {
 		if (m->m_dev != NO_DEVICE &&
-			m->m_fs.s_fmod) {
-			m->m_fs.s_fmod = 0;
+			m->m_fs.s_fmod != FMOD_CLEAN) {
+			/* GO_CLEAN means write a CLEAN to the media */
+			if (m->m_fs.s_fmod == FMOD_GO_CLEAN)
+				m->m_fs.s_fmod = FMOD_CLEAN;
 			/* FIXME: I/O error handling */
 			buf = bread(m->m_dev, 1, 1);
 			blkfromk(&m->m_fs, buf, 0, sizeof(struct filesys));
