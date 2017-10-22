@@ -36,6 +36,7 @@ f 0755 /bin/mv          mv
 f 0755 /bin/printenv    printenv
 f 0755 /bin/ps          ps
 f 0755 /bin/pwd         pwd
+f 0755 /bin/remount     remount
 f 0755 /bin/rm          rm
 f 0755 /bin/rmdir       rmdir
 f 0755 /bin/ssh         ssh
