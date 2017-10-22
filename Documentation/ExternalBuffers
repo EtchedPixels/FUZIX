@@ -1,0 +1,39 @@
+External Buffers
+
+If your platform requires you to place the buffer cache outside of the kernel
+address space (or you want to for other reasons) then you need to provide the
+following functionality and define CONFIG_BLKBUF_EXTERNAL.
+
+void blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
+
+Copy the section of the buffer from offset off, for len bytes into the kernel
+addres space beginning at kaddr.
+
+void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
+
+Copy from kaddr into the section of the buffer from offset off, for len bytes.
+
+void blktou(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
+
+Copy the section of the buffer from offset off, for len bytes into the current
+user address space starting at uaddr.
+
+void blkfromu(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
+
+Copy from uaddr in the current user address space into the section of the
+buffer from offset off, for len bytes.
+
+void blkzero(struct blkbuf *buf)
+
+Fill the given buffer data with zero bytes
+
+void *blkptr(struct blkbuf *buf, uint16_t offset, uint16_t len)
+
+Return a pointer to a temporary copy of the data in buf from offset to offset
++ len. The copy is lost on further calls. The largest value of len required is
+currently about 64 bytes.
+
+The buffers have a private __bf_data field which is native platform sized
+pointer. This is entirely free for the user of your buffer cache manager
+and should be filled in at initialization time using whatever scheme you
+prefer (eg address within the block buffer bank).
