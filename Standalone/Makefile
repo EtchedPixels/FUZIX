@@ -10,8 +10,8 @@ clean:
 mkfs:	mkfs.o util.o
 	$(CC) $(CCOPTS) -o $@ $< util.o
 
-fsck:	fsck.o util.o
-	$(CC) $(CCOPTS) -o $@ $< util.o
+fsck:	fsck.o
+	$(CC) $(CCOPTS) -o $@ $<
 
 ucp:	ucp.o $(UTILS)
 	$(CC) $(CCOPTS) -o $@ $< util.o
