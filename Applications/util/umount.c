@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/mount.h>
 
 /* Assumed length of a line in /etc/mtab */
 #define MTAB_LINE 160
