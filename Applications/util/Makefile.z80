@@ -82,6 +82,7 @@ SRCS  = banner.c \
 	od.c \
 	passwd.c \
 	ps.c \
+	remount.c \
 	sleep.c \
 	ssh.c \
 	sort.c \

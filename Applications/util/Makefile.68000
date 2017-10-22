@@ -87,6 +87,7 @@ SRCS  = \
 	od.c \
 	passwd.c \
 	ps.c \
+	remount.c \
 	sed.c \
 	sleep.c \
 	ssh.c \

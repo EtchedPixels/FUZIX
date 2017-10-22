@@ -36,7 +36,6 @@ int rm_mtab(char *devname)
 	static char tmp[MTAB_LINE];
 	static char tmp2[MTAB_LINE];
 	char* dev;
-	char* mntpt;
 
 	if ((tmp_fname = tmpnam(NULL)) == NULL) {
 		perror("Error getting temporary file name");
@@ -79,7 +78,7 @@ int main(int argc, char *argv[])
 	char *dev;
 	
 	if (argc != 2) {
-		printf("usage: umount device\n");
+		fprintf(stderr, "%s: umount device\n", argv[0]);
 		return 1;
 	}
 
