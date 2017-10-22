@@ -189,10 +189,10 @@ typedef struct blkbuf {
 #define blkptr(buf, off, len)	((void *)((buf)->__bf_data + (off)))
 #define blkzero(buf)		memset(buf->__bf_data, 0, BLKSIZE)
 #else
-extern void *blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
-extern void *blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
-extern void *blktou(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
-extern void *blkfromu(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern void blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern void blktou(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
+extern void blkfromu(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
 /* Worst case is needing to copy over about 64 bytes */
 extern void *blkptr(struct blkbuf *buf, uint16_t offset, uint16_t len);
 extern void blkzero(struct blkbuf *buf);
