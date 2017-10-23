@@ -196,6 +196,8 @@ static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 			ut.ut_id[1] = p[2];
 			*ut.ut_user = 0;
 			pututline(&ut);
+			/* So we don't leave this open for write */
+			endutent();
 			/* Mark as done */
 			initpid[i].pid = 0;
 			/* Respawn the task if appropriate */
@@ -358,6 +360,9 @@ static void brk_warn(void *p)
  */
 static void parse_inittab(void)
 {
+	struct initpid *ip;
+	uint8_t *p;
+	int i;
 	idata = inittab = sdata;
 	while (sdata < sdata_end)
 		parse_initline();
@@ -365,7 +370,15 @@ static void parse_inittab(void)
 	initpid = (struct initpid *) idata;
 	idata += sizeof(struct initpid) * initcount;
 	brk_warn(idata);
-	memset(initpid, 0, sizeof(struct initpid) * initcount);
+	ip = initpid;
+	p = inittab;
+	for (i = 0; i < initcount; i++) {
+		ip->id[0] = p[1];
+		ip->id[1] = p[2];
+		ip->pid = 0;
+		p += *p;
+		ip++;
+	}
 }
 
 /*
@@ -504,7 +517,7 @@ static void exit_runlevel(uint8_t oldmask, uint8_t newmask)
 }
 
 /*
- *	Start everything that should be runnign at this run level. Take
+ *	Start everything that should be running at this run level. Take
  *	care not to re-start stuff that survives the transition
  */
 static void do_for_runlevel(uint8_t newmask, int op)
@@ -513,8 +526,6 @@ static void do_for_runlevel(uint8_t newmask, int op)
 	struct initpid *t = initpid;
 	int n = 0;
 	while (n < initcount) {
-		t->id[0] = p[1];
-		t->id[1] = p[2];
 		if (!(p[3] & newmask))
 			goto next;
 		if ((p[4] & INIT_OPMASK) == op) {
@@ -601,7 +612,6 @@ int main(int argc, char *argv[])
 			uint8_t newrl;
 			int fd = open("/var/run/initctl", O_RDONLY);
 			if (fd != -1 && read(fd, &newrl, 1) == 1) {
-				write(1, &newrl, 1);
 				if (newrl != 'q') {
 					exit_runlevel(1 << runlevel, 1 << newrl);
 					runlevel = newrl;
@@ -796,6 +806,7 @@ static pid_t getty(const char **argv, const char *id)
 			ut.ut_id[0] = id[0];
 			ut.ut_id[1] = id[1];
 			pututline(&ut);
+			endutent();
 
 			/* display the /etc/issue file, if exists */
 			if (issue)
