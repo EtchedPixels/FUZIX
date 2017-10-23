@@ -492,10 +492,12 @@ fsptr getdev(uint16_t dev)
         /* Return needed to persuade SDCC all is ok */
         return NULL;
     }
-    rdtime(&t);
-    mnt->m_fs.s_time = t.low;
-    mnt->m_fs.s_timeh = t.high;
-    mnt->m_fs.s_fmod = FMOD_DIRTY;
+    if (!(mnt->m_flags & MS_RDONLY)) {
+        rdtime(&t);
+        mnt->m_fs.s_time = t.low;
+        mnt->m_fs.s_timeh = t.high;
+        mnt->m_fs.s_fmod = FMOD_DIRTY;
+    }
     return &mnt->m_fs;
 }
 

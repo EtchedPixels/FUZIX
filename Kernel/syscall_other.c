@@ -370,7 +370,8 @@ static int do_umount(uint16_t dev)
 	   can't remount it read only */
 	if (flags & (MS_RDONLY|MS_REMOUNT) == (MS_RDONLY|MS_REMOUNT)) {
 		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
-			if (ptr->c_dev == dev && ptr->c_writers) {
+			if (ptr->c_dev == dev && ptr->c_writers &&
+				!isdevice(ptr)) {
 				udata.u_error = EBUSY;
 				return -1;
 			}
@@ -380,12 +381,14 @@ static int do_umount(uint16_t dev)
 	/* Sweep the inode table. If unmounting look for any references
 	   and if so fail. If remounting update the CRDONLY flags */
 	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr) {
-		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
+		if (ptr->c_dev == dev) {
 			if (rm) {
 				ptr->c_flags &= ~CRDONLY;
 				if (flags & MS_RDONLY)
 					ptr->c_flags |= CRDONLY;
-			} else {
+				else
+					ptr->c_flags &= ~CRDONLY;
+			} else if (ptr->c_refs) {
 				udata.u_error = EBUSY;
 				return -1;
 			}
