@@ -155,7 +155,7 @@ arg_t _execve(void)
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
 	 */
-
+	uput(hdr, (uint8_t *)progload, 16);
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
 
