@@ -66,6 +66,7 @@ SRCS  = banner.c \
 	factor.c \
 	fdisk.c \
 	fgrep.c \
+	free.c \
 	fsck.c \
 	grep.c \
 	id.c \

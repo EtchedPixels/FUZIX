@@ -65,6 +65,7 @@ f 0755 /bin/env         env
 f 0755 /bin/factor      factor
 f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
+f 0755 /bin/free        free
 f 0755 /bin/fsck        fsck
 f 0755 /bin/grep        grep
 f 0755 /bin/groups      groups
