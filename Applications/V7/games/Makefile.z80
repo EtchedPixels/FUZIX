@@ -11,7 +11,7 @@ PROGLOAD=`(cat ../../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail
 
 .SUFFIXES: .c .rel
 
-SRCS  = arithmetic.c backgammon.c fish.c wump.c
+SRCS  = arithmetic.c backgammon.c fish.c hangman.c quiz.c wump.c
 
 SRCSBAD =
 
