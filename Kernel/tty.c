@@ -11,7 +11,6 @@
  *	- Parity
  *	- Various misc minor flags
  *	- Software Flow control
- *	- Don't echo EOF char ?
  *
  *	Add a small echo buffer to each tty
  */
@@ -436,7 +435,7 @@ sigout:
 	}
 
 	wr = insq(q, c);
-	if (wr)
+	if (wr && (!canon || c != t->termios.c_cc[VEOF]))
 		tty_echo(minor, c);
 	else
 		tty_putc(minor, '\007');	/* Beep if no more room */
