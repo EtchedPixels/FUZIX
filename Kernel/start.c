@@ -109,9 +109,9 @@ void complete_init(void)
 	/* Terminate argv, also use this as the env ptr */
 	uputp(0, (void *)argptr);
 	/* Set up things to look like the process is calling _execve() */
+	udata.u_argn2 = (arg_t)argptr; /* Environment (none) */
 	udata.u_argn =  (arg_t)PROGLOAD + 2048; /* "/init" */
 	udata.u_argn1 = (arg_t)PROGLOAD; /* Arguments */
-	udata.u_argn2 = (arg_t)argptr; /* Environment (none) */
 
 #ifdef CONFIG_LEVEL_2
 	init_process->p_session = 1;
