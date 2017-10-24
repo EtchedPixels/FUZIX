@@ -52,6 +52,7 @@ SRCSNS = \
 
 SRCS  = banner.c \
 	bd.c \
+	bogomips.c \
 	cal.c \
 	cksum.c \
 	cut.c \
