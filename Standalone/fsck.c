@@ -243,12 +243,12 @@ int main(int argc, char **argv)
     if (!yes())
         exit(error | 32);
 
-    bitmap = calloc((swizzle16(superblock.s_fsize) + 7) / 8, sizeof(char));
+    bitmap = calloc((swizzle16(superblock.s_fsize) + 7UL) / 8, sizeof(char));
     linkmap = (int16_t *) calloc(8 * swizzle16(superblock.s_isize), sizeof(int16_t));
 
     printf("Memory pool %d bytes\n",
         16 * swizzle16(superblock.s_isize) +
-        swizzle16(superblock.s_fsize + 7) / 8);
+        swizzle16(superblock.s_fsize + 7UL) / 8);
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
         exit(error | 8);
