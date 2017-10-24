@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 
     printf("Memory pool %d bytes\n",
         16 * swizzle16(superblock.s_isize) +
-        swizzle16(superblock.s_fsize + 7) / 8);
+        swizzle16((uint16_t)((int)superblock.s_fsize + 7) / 8));
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
         exit(error | 8);
