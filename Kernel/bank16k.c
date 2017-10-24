@@ -173,7 +173,7 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 
 usize_t pagemap_mem_used(void)
 {
-	return pfptr << 4;
+	return (MAX_MAPS - pfptr) << 4;
 }
 
 #ifdef SWAPDEV
