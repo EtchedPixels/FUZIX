@@ -1,0 +1,34 @@
+LINKER = sdcc
+FCC = ../../../../Library/tools/fcc -O2
+PLATFORM =
+#PLATFORM = -tzx128
+
+.SUFFIXES: .c .rel
+
+SRCS  = as0.c as1.c as2.c as3.c as4.c as5.c as6.c
+
+INCS  = as.h
+
+OBJS = $(SRCS:.c=.rel)
+
+LIBS = ../../../../Library/libs/syslib.lib
+
+all: as
+
+as: $(OBJS)
+	$(FCC) $(PLATFORM) $(OBJS) -o $@
+
+$(OBJS): $(INCS)
+
+.c.rel:
+	$(FCC) $(PLATFORM) -c $<
+
+%: %.rel
+	$(FCC) $(PLATFORM) $< -o $@
+
+clean:
+	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+
+rmbak:
+	rm -f *~ core
+
