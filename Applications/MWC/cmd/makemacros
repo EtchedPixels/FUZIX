@@ -1,0 +1,17 @@
+# /usr/lib/makemacros 2/14/92
+# Default macro definitions.
+
+.SUFFIXES: .o .obj .c .y .l .s .m
+AR	= ar
+AS	= as
+ASFLAGS	= -gx
+CC	= cc
+CFLAGS	=  -O
+CPP	= cpp
+CPPFLAGS= -E
+LEX	= lex
+LFLAGS	= 
+YACC	= yacc
+YFLAGS	= 
+
+# end of /usr/lib/makemacros
