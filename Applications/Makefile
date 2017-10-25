@@ -1,5 +1,6 @@
 #
-APPS = util cmd sh games cave cpm v7games games as09 ld09 netd SmallC MWC flashrom
+APPS = util cmd sh games cave cpm v7games games\
+       as09 ld09 netd SmallC MWC asz80 flashrom
 
 .PHONY: $(APPS)
 
@@ -41,6 +42,9 @@ SmallC:
 MWC:
 	+(cd MWC/cmd; $(MAKE) -f Makefile.$(USERCPU))
 
+asz80:
+	+(cd MWC/cmd/asz80; $(MAKE) -f Makefile.$(USERCPU))
+
 flashrom:
 	+(cd flashrom; $(MAKE) -f Makefile.$(USERCPU))
 
@@ -56,4 +60,4 @@ clean:
 	(cd netd; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd SmallC; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd MWC/cmd; $(MAKE) -f Makefile.$(USERCPU) clean)
-
+	(cd MWC/cmd/asz80; $(MAKE) -f Makefile.$(USERCPU) clean)
