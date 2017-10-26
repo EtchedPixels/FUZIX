@@ -10,6 +10,7 @@ f 0755 /usr/bin/deroff     deroff
 f 0755 /usr/bin/expr       expr
 f 0755 /usr/bin/find       find
 f 0755 /usr/bin/m4         m4
+f 0755 /usr/bin/make       make
 f 0755 /usr/bin/moo        moo
 f 0755 /usr/bin/pr         pr
 #which is best? This one or the one in util?

@@ -92,7 +92,7 @@ extern void addtoken(int);
 extern void endtoken(void);
 extern TOKEN *listtoken(char *, TOKEN *);
 extern TOKEN *freetoken(TOKEN *);
-extern void input(char *);
+extern void input(const char *);
 extern void inlib(char *);
 extern void inpath(char *, ...);
 extern time_t getmdate(char *);
