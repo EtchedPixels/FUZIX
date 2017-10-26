@@ -84,6 +84,7 @@ f 0755 /bin/pagesize    pagesize
 f 0755 /bin/passwd      passwd
 f 0755 /bin/prtroot     prtroot
 f 0755 /bin/reboot      reboot
+l /bin/reboot /bin/halt
 f 0755 /bin/sed         sed
 f 0755 /bin/sleep       sleep
 f 0755 /bin/sort        sort
