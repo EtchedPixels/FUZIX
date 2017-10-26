@@ -6,6 +6,7 @@
 #include	<stdio.h>
 #include	<string.h>
 #include 	<stdlib.h>
+#include	<stdint.h>
 #include	<ctype.h>
 #include	<setjmp.h>
 
@@ -20,6 +21,7 @@
 #define	NCODE	128			/* # of characters in code buffer */
 #define	NINPUT	128			/* # of characters in input line */
 #define	NLPP	60			/* # of lines on a page */
+#define NSEGMENT 4			/* # of segments */
 #define	XXXX	0			/* Unused value */
 
 /*
@@ -44,11 +46,12 @@
  * symbol flags hide in the register
  * field of the address.
  */
-#define	TMREG	0x00FF			/* Register code */
+#define	TMREG	0x007F			/* Register code */
 #define	TMMDF	0x0001			/* Multidef */
 #define	TMASG	0x0002			/* Defined by "=" */
 #define	TMMODE	0xFF00			/* Mode */
 #define	TMINDIR	0x8000			/* Indirect flag in mode */
+#define TPUBLIC	0x0080			/* Exported symbol */
 
 #define	TNEW	0x0000			/* Virgin */
 #define	TUSER	0x0100			/* User name */
@@ -79,6 +82,8 @@
 #define	TLD	0x1C00			/* ld */
 #define	TCC	0x1D00			/* condition code */
 #define	TSUB	0x1E00			/* sub et al */
+#define TSEGMENT 0x1F00			/* segments by number */
+#define TEXPORT 0x2000			/* symbol export */
 
 /*
  * Registers.
@@ -116,7 +121,16 @@
 #define	CP	6
 #define	CM	7
 
-typedef	unsigned int	VALUE;		/* For symbol values */
+/*
+ * Segments
+ */
+#define UNKNOWN		-1
+#define ABSOLUTE	0
+#define CODE		1
+#define DATA		2
+#define BSS		3
+
+typedef	uint16_t	VALUE;		/* For symbol values */
 
 /*
  * Address description.
@@ -124,6 +138,7 @@ typedef	unsigned int	VALUE;		/* For symbol values */
 typedef	struct	ADDR	{
 	int	a_type;			/* Type */
 	VALUE	a_value;		/* Index offset, etc */
+	int	a_segment;		/* Segment relative to */
 }	ADDR;
 
 /*
@@ -134,6 +149,7 @@ typedef	struct	SYM	{
 	char	s_id[NCPS];		/* Name */
 	int	s_type;			/* Type */
 	VALUE	s_value;		/* Value */
+	int	s_segment;		/* Segment this symbol is relative to */
 }	SYM;
 
 /*
@@ -157,7 +173,8 @@ extern	SYM	*phash[];
 extern	SYM	*uhash[];
 extern	int	lflag;
 extern	jmp_buf	env;
-extern	VALUE	dot;
+extern	VALUE	dot[NSEGMENT];
+extern  int	segment;
 
 extern void asmline(void);
 extern void asmld(void);
@@ -184,12 +201,16 @@ extern void expr1(ADDR *, int, int);
 extern void expr2(ADDR *);
 extern void expr3(ADDR *, int);
 extern void isokaors(ADDR *, int);
-extern void outaw(int);
-extern void outab(int);
+extern void outpass(void);
+extern void outabsolute(int);
+extern void outsegment(int);
+extern void outaw(uint16_t);
+extern void outab(uint8_t);
+extern void outraw(ADDR *);
+extern void outrab(ADDR *);
 extern void outeof(void);
-extern void outbyte(int);
+extern void outbyte(uint8_t);
 extern void outflush(void);
-extern void outhex(int);
 extern void list(void);
 extern void list1(char *, int, int);
 extern void syminit(void);

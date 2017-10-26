@@ -52,12 +52,12 @@ void asmline(void)
 	ADDR a1;
 	ADDR a2;
 
-	laddr = dot;
+	laddr = dot[segment];
 	lmode = SLIST;
 loop:
 	if ((c=getnb())=='\n' || c==';')
 		return;
-	if (isalpha(c) == 0)
+	if (isalpha(c) == 0 && c != '_' && c != '.')
 		qerr();
 	getid(id, c);
 	if ((c=getnb()) == ':') {
@@ -68,11 +68,12 @@ loop:
 				sp->s_type |= TMMDF;
 			sp->s_type &= ~TMMODE;
 			sp->s_type |= TUSER;
-			sp->s_value = dot;
+			sp->s_value = dot[segment];
+			sp->s_segment = segment;
 		} else {
 			if ((sp->s_type&TMMDF) != 0)
 				err('m');
-			if (sp->s_value != dot)
+			if (sp->s_value != dot[segment])
 				err('p');
 		}
 		lmode = ALIST;
@@ -100,6 +101,7 @@ loop:
 		sp->s_type &= ~TMMODE;
 		sp->s_type |= TUSER|TMASG;
 		sp->s_value = a1.a_value;
+		sp->s_segment = a1.a_segment;
 		laddr = a1.a_value;
 		lmode = ALIST;
 		goto loop;
@@ -111,15 +113,34 @@ loop:
 	case TORG:
 		getaddr(&a1);
 		istuser(&a1);
+		if (a1.a_segment != ABSOLUTE)
+			qerr();
 		lmode = ALIST;
-		laddr = dot = a1.a_value;
+		segment = 0;
+		laddr = dot[segment] = a1.a_value;
+		/* Tell the binary generator we've got a new absolute
+		   segment. */
+		outabsolute(laddr);
+		break;
+
+	case TEXPORT:
+		getid(id, getnb());
+		sp = lookup(id, phash, 1);
+		sp->s_type |= TPUBLIC;
+		break;
+		/* .code etc */
+	case TSEGMENT:
+		segment = sp->s_value;
+		/* Tell the binary generator about a segment switch to a non
+		   absolute segnent */
+		outsegment(segment);
 		break;
 
 	case TDEFB:
 		do {
 			getaddr(&a1);
 			istuser(&a1);
-			outab(a1.a_value);
+			outrab(&a1);
 		} while ((c=getnb()) == ',');
 		unget(c);
 		break;
@@ -129,7 +150,7 @@ loop:
 		do {
 			getaddr(&a1);
 			istuser(&a1);
-			outaw(a1.a_value);
+			outraw(&a1);
 		} while ((c=getnb()) == ',');
 		unget(c);
 		break;
@@ -145,11 +166,14 @@ loop:
 		break;
 
 	case TDEFS:
-		laddr = dot;
+		laddr = dot[segment];
 		lmode = ALIST;
 		getaddr(&a1);
 		istuser(&a1);
-		dot += a1.a_value;
+		/* Write out the bytes. The BSS will deal with the rest */
+		for (value = 0 ; value < a1.a_value; value++)
+			outab(0);
+		dot[segment] += a1.a_value;
 		break;
 
 	case TNOP:
@@ -178,7 +202,7 @@ loop:
 			getaddr(&a1);
 		}
 		istuser(&a1);
-		disp = a1.a_value-dot-2;
+		disp = a1.a_value-dot[segment]-2;
 		if (disp<-128 || disp>127)
 			aerr();
 		outab(opcode);
@@ -214,7 +238,7 @@ loop:
 		}
 		istuser(&a1);
 		outab(opcode);
-		outaw(a1.a_value);
+		outraw(&a1);
 		break;
 
 	case TPUSH:
@@ -480,13 +504,13 @@ void asmld(void)
 			return;
 		}
 		if (msrc == (TMINDIR|TUSER)) {
-			outab(0x3A);			/* lda */
-			outaw(src.a_value);
+			outab(0x3A);			/* ld a,(addr) */
+			outraw(&src);
 			return;
 		}
 		if (msrc == (TMINDIR|TWR)) {
 			if (rsrc==BC || rsrc==DE) {
-				outab(0x0A|(rsrc<<4));	/* ldax */
+				outab(0x0A|(rsrc<<4));	/* ld a,(r16) */
 				return;
 			}
 		}
@@ -500,57 +524,57 @@ void asmld(void)
 			return;
 		}
 		if (mdst == (TMINDIR|TUSER)) {
-			outab(0x32);			/* sta */
-			outaw(dst.a_value);
+			outab(0x32);			/* ld (addr),a */
+			outraw(&dst);
 			return;
 		}
 		if (mdst == (TMINDIR|TWR)) {
 			if (rdst==BC || rdst==DE) {
-				outab(0x02|(rdst<<4));	/* stax */
+				outab(0x02|(rdst<<4));	/* ld (r16),a */
 				return;
 			}
 		}
 	}
 	if (dst.a_type==(TWR|SP) && msrc==TWR) {
 		if (rsrc == HL) {
-			outab(0xF9);			/* sphl */
+			outab(0xF9);			/* ld sp,hl */
 			return;
 		}
 	}
 	if (msrc == TUSER) {
 		if (mdst == TBR) {
-			outab(0x06|(rdst<<3));		/* mvi */
+			outab(0x06|(rdst<<3));		/* ld r8,#n */
 			if (indexap != NULL)
 				outab(indexap->a_value);
-			outab(src.a_value);
+			outrab(&src);
 			return;
 		}
 		if (mdst == TWR) {
-			outab(0x01|(rdst<<4));		/* lxi */
-			outaw(src.a_value);
+			outab(0x01|(rdst<<4));		/* ld r16,#n */
+			outraw(&src);
 			return;
 		}
 	}
 	if (mdst==TWR && msrc==(TMINDIR|TUSER)) {
 		if (rdst == HL)
-			outab(0x2A);			/* lhld */
+			outab(0x2A);			/* ld hl,(xxxx) */
 		else
 			outaw(0x4BED|(rdst<<12));	/* ld rp,(ppqq) */
-		outaw(src.a_value);
+		outraw(&src);
 		return;
 	}
 	if (mdst==(TMINDIR|TUSER) && msrc==TWR) {
 		if (rsrc == HL)
-			outab(0x22);			/* shld */
+			outab(0x22);			/* ld (xxxx),hl */
 		else
 			outaw(0x43ED|(rsrc<<12));	/* ld (ppqq),rp */
-		outaw(dst.a_value);
+		outraw(&dst);
 		return;
 	}
 	if (mdst==TBR && msrc==TBR && (rdst!=M || rsrc!=M)) {
 		outab(0x40|(rdst<<3)|rsrc);
 		if (indexap != NULL)
-			outab(indexap->a_value);
+			outrab(indexap);
 		return;
 	}
 	aerr();
@@ -628,13 +652,13 @@ void outop(int op, ADDR *ap)
 	if ((op&0xFF00) != 0) {
 		outab(op>>8);
 		if (needisp != 0) {
-			outab(ap->a_value);
+			outrab(ap);
 			needisp = 0;
 		}
 	}
 	outab(op);
 	if (needisp != 0)
-		outab(ap->a_value);
+		outrab(ap);
 }
 
 /*

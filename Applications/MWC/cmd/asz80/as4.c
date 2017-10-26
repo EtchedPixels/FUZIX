@@ -3,24 +3,82 @@
  * Output Intel compatable
  * hex files.
  */
+
 #include	"as.h"
+#include	"obj.h"
 
-#define	NHEX	32			/* Longest record */
+#define	NHEX	8			/* Nice format size */
 
-VALUE	hexla;
-VALUE	hexpc;
-char	hexb[NHEX];
-char	*hexp	= &hexb[0];
+static uint16_t segsize[NSEGMENT];
+static uint16_t truesize[NSEGMENT];
+static off_t segbase[NSEGMENT];
+
+struct objhdr obh;
+
+static void outc(char c);
+
+void outpass(void)
+{
+	off_t base = sizeof(obh);
+	int i;
+	if (pass == 1) {
+		/* Lay the file out */
+		for (i = 1; i < NSEGMENT; i++) {
+			if (i != BSS) {
+				obh.o_segbase[i] = base;
+				segbase[i] = base;
+				printf("BASE %d %d\n", i, base);
+				base += segsize[i];
+				printf("SIZE %d %d\n", i, truesize[i]);
+			}
+			obh.o_size[i] = truesize[i];
+		}
+		obh.o_magic = 0;
+		obh.o_symbase = base;
+		obh.o_dbgbase = 0;	/* for now */
+	}
+}
+
+/*
+ * Absolute address change
+ */
+
+void outabsolute(int addr)
+{
+}
+
+/*
+ * Segment change
+ */
+
+void outsegment(int seg)
+{
+	/* Seek to the current writing address for this segment */
+	if (pass == 1)
+		fseek(ofp, segbase[seg], SEEK_SET);
+}
 
 /*
  * Output a word. Use the
  * standard Z-80 ordering (low
  * byte then high byte).
  */
-void outaw(int w)
+void outaw(uint16_t w)
 {
 	outab(w);
 	outab(w >> 8);
+}
+
+void outraw(ADDR *a)
+{
+	if (a->a_segment != ABSOLUTE) {
+		/* FIXME@ handle symbols */
+		if (segment == BSS && a->a_value)
+			err('b');
+		outbyte(REL_ESC);
+		outbyte((2 << 4) | REL_SIMPLE | a->a_segment);
+	}
+	outaw(a->a_value);
 }
 
 /*
@@ -28,94 +86,55 @@ void outaw(int w)
  * byte to the code and listing
  * streams.
  */
-void outab(int b)
+void outab(uint8_t b)
 {
-	if (pass != 0) {
-		if (cp < &cb[NCODE])
-			*cp++ = b;
-		outbyte(b);
+	/* Not allowed to put data in the BSS except zero */
+	if (segment == BSS && b)
+		err('b');
+	if (segment == ABSOLUTE)
+		err('A');
+	outbyte(b);
+	if (b == 0xDA)	/* Quote relocation markers */
+		outbyte(0x00);
+	++dot[segment];
+	++truesize[segment];
+	if (truesize[segment] == 0 || dot[segment] == 0)
+		err('o');
+}
+
+void outrab(ADDR *a)
+{
+	/* FIXME: handle symbols */
+	if (segment == BSS && a->a_value) {
+		err('b');
+		outbyte(REL_ESC);
+		outbyte((2 << 4) | REL_SIMPLE | a->a_segment);
 	}
-	++dot;
+	outab(a->a_value);
 }
 
 /*
  * Put out the end of file
- * hex item at the very end of 
+ * hex item at the very end of
  * the object file.
  */
 void outeof(void)
 {
-	outflush();
-	fprintf(ofp, ":00000001FF\n");
+	rewind(ofp);
+	obh.o_magic = MAGIC_OBJ;
+	fwrite(&obh, sizeof(obh), 1, ofp);
+	printf("Code %d byyes: Data %d bytes: BSS %d bytes\n",
+		truesize[CODE], truesize[DATA], truesize[BSS]);
 }
 
 /*
- * Output a hex byte. Flush
- * the buffer if no room. Store the
- * byte in the buffer, for future
- * checksumming. Remember the load
- * address for flushing.
+ * Output a byte and track our position. For BSS we care about sizes
+ * only.
  */
-void outbyte(int b)
+void outbyte(uint8_t b)
 {
-	if (hexp>=&hexb[NHEX] || hexpc!=dot) {
-		outflush();
-		hexp = &hexb[0];
-	}
-	if (hexp == &hexb[0]) {
-		hexla = dot;
-		hexpc = dot;
-	}
-	*hexp++ = b;
-	++hexpc;
-}
-
-/*
- * Flush out a block of
- * code to the hex file. Figure
- * out the length word and the
- * checksum byte.
- */
-void outflush(void)
-{
-	char *p;
-	int b;
-	int c;
-
-	if ((b = hexp-&hexb[0]) != 0) {
-		putc(':', ofp);
-		outhex(b);
-		outhex(hexla >> 8);
-		outhex(hexla);
-		outhex(0);
-		c = b + (hexla>>8) + hexla;
-		p = &hexb[0];
-		while (p < hexp) {
-			b = *p++;
-			outhex(b);
-			c += b;
-		}
-		outhex(-c);
-		putc('\n', ofp);
-	}
-}
-
-/*
- * Put out "b", as a 
- * two character hex value.
- * We cannot use printf because
- * of case problems on VMS.
- * Upper case ascii.
- */
-void outhex(int b)
-{
-	static	const char hex[] = {
-		'0',	'1',	'2',	'3',
-		'4',	'5',	'6',	'7',
-		'8',	'9',	'A',	'B',
-		'C',	'D',	'E',	'F'
-	};
-
-	putc(hex[(b>>4)&0x0F], ofp);
-	putc(hex[b&0x0F], ofp);
+	if (pass == 1 && segment != BSS)
+		putc(b, ofp);
+	segbase[segment]++;
+	segsize[segment]++;
 }

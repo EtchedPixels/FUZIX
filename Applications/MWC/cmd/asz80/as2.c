@@ -108,7 +108,7 @@ void getid(char *id, int c)
 
 	if (c < 0) {
 		c = getnb();
-		if (isalpha(c) == 0)
+		if (isalpha(c) == 0 && c != '_' && c != '.')
 			qerr();
 	}
 	p = &id[0];
@@ -120,7 +120,7 @@ void getid(char *id, int c)
 		}
 		if ((c = *ip) != '\n')
 			++ip;
-	} while (c=='\'' || isalnum(c)!=0);
+	} while (c=='\'' || isalnum(c)!=0 || c == '_');
 	if (c != '\n')
 		--ip;
 	while (p < &id[NCPS])
@@ -154,6 +154,7 @@ SYM	*lookup(char *id, SYM *htable[], int cf)
 		htable[hash] = sp;
 		sp->s_type = TNEW;
 		sp->s_value = 0;
+		sp->s_segment = UNKNOWN;
 		symcopy(sp->s_id, id);
 	}
 	return (sp);

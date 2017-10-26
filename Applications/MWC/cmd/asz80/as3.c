@@ -58,6 +58,40 @@ void getaddr(ADDR *ap)
 	}
 }
 
+static void chkabsolute(ADDR *a)
+{
+	/* Not symbols, doesn't matter */
+	if ((a->a_type & TMMODE) != TUSER)
+		return;
+	if (a->a_segment != ABSOLUTE)
+		aerr();
+}
+
+static void chksegment(ADDR *left, ADDR *right, int op)
+{
+	/* Not symbols, doesn't matter */
+	if ((left->a_type & TMMODE) != TUSER ||(right->a_type & TMMODE) != TUSER)
+		return;
+
+	/* Anything goes with absolutes */
+	if (left->a_segment == ABSOLUTE && right->a_segment == ABSOLUTE)
+		return;
+
+	/* This relies on ABSOLUTE being 0, an addition of segment offset and
+	   absolute either way around produces a segment offset */
+	if ((left->a_segment == ABSOLUTE || right->a_segment == ABSOLUTE) &&
+		op == '+') {
+		left->a_segment += right->a_segment;
+		return;
+	}
+	/* Subtraction within segment produces an absolute */
+	if (left->a_segment == right->a_segment && op == '-') {
+		left->a_segment = ABSOLUTE;
+		return;
+	}
+	aerr();
+}
+
 /*
  * Expression reader,
  * real work, part I. Read
@@ -88,22 +122,29 @@ void expr1(ADDR *ap, int lpri, int paren)
 			else
 				ap->a_type = right.a_type;
 			isokaors(ap, paren);
+			chksegment(ap, &right, '+');
 			ap->a_value += right.a_value;
 			break;
 		case '-':
 			istuser(&right);
 			isokaors(ap, paren);
+			chksegment(ap, &right, '-');
 			ap->a_value -= right.a_value;
 			break;
 		case '*':
 			istuser(ap);
 			istuser(&right);
+			chksegment(ap, &right, '*');
 			ap->a_value *= right.a_value;
 			break;
 		case '/':
 			istuser(ap);
 			istuser(&right);
-			ap->a_value /= right.a_value;
+			chksegment(ap, &right, '/');
+			if (right.a_value == 0)
+				err('z');
+			else
+				ap->a_value /= right.a_value;
 		}
 	}
 	unget(c);
@@ -131,18 +172,21 @@ void expr2(ADDR *ap)
 	if (c == '-') {
 		expr1(ap, HIPRI, 0);
 		istuser(ap);
+		chkabsolute(ap);
 		ap->a_value = -ap->a_value;
 		return;
 	}
 	if (c == '~') {
 		expr1(ap, HIPRI, 0);
 		istuser(ap);
+		chkabsolute(ap);
 		ap->a_value = ~ap->a_value;
 		return;
 	}
 	if (c == '\'') {
 		ap->a_type  = TUSER;
 		ap->a_value = get();
+		ap->a_segment = ABSOLUTE;
 		while ((c=get()) != '\'') {
 			if (c == '\n')
 				qerr();
@@ -150,7 +194,7 @@ void expr2(ADDR *ap)
 		}
 		return;
 	}
-	if (c>='0' && c<='9') {
+	if (c>='0' && c<='9' || c == '$') {
 		expr3(ap, c);
 		return;
 	}
@@ -169,6 +213,7 @@ void expr2(ADDR *ap)
 			uerr(id);
 		ap->a_type  = TUSER;
 		ap->a_value = sp->s_value;
+		ap->a_segment = sp->s_segment;
 		return;
 	}
 	qerr();
@@ -215,6 +260,20 @@ void expr3(ADDR *ap, int c)
 	}
 	np2 = &num[0];
 	value = 0;
+	/* No trailing tag, so look for 0octab, 0xhex and $xxxx */
+	if (radix == 10) {
+		if (*np2 == '0') {
+			radix = 8;
+			np2++;
+			if (*np2 == 'x') {
+				radix = 16;
+				np2++;
+			}
+		} else if (*np2 =='$') {
+			radix = 16;
+			np2++;
+		}
+	}
 	while (np2 < np1) {
 		if ((c = *np2++)>='0' && c<='9')
 			c -= '0';
@@ -228,6 +287,7 @@ void expr3(ADDR *ap, int c)
 	}
 	ap->a_type  = TUSER;
 	ap->a_value = value;
+	ap->a_segment = ABSOLUTE;
 }
 
 /*

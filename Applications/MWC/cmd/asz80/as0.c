@@ -17,7 +17,8 @@ char	*ip;
 int	lflag;
 VALUE	laddr;
 int	lmode;
-VALUE	dot;
+VALUE	dot[NSEGMENT];
+int	segment = CODE;
 SYM	*phash[NHASH];
 SYM	*uhash[NHASH];
 int	pass;
@@ -103,8 +104,9 @@ int main(int argc, char *argv[])
 	}
 	syminit();
 	for (pass=0; pass<2; ++pass) {
+		outpass();
 		line = 0;
-		dot  = 0;
+		memset(dot, 0, sizeof(dot));
 		fseek(ifp, 0L, 0);
 		while (fgets(ib, NINPUT, ifp) != NULL) {
 			++line;

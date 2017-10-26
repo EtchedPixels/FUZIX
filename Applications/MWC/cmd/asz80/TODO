@@ -1,49 +1,64 @@
 Add outraw outrab and use them so that we can generate relocations
 
-Change the output format to some kind of binary folow
-
-Header
-Code
-Data
-BSS
-Symbols
-DebugSymbols (optional copy of local only symbols)
-
-Code/Data is packed as follows (BSS is 0 anyway but you can have a sym in
-BSS)
-
-0	END
-1-223	copy this many bytes
-
-224-239 reserved
-241	relocate next byte low
-242	relocate next byte high
-243	relocate next word (native order)
-	followed by symnum.w
-	followed by data byte/word
-
-Special symnums for versus our own base (for simple relocs) or a different
-byte code (eg 240-247 / 248-255 where latter don't give sym ?)
-
-Future
-
-244	relocate ZP ref (6502)
-245	24bit
-246	32bit
-
-etc
-
-Symbol Table
-type.b seg.b {addr} sym\0
-
-type
-
-bits 0-2 -> size of addr	1-4
-bits 3-6 -> free
-bit 7
-	0x00	import
-	0x80	export
+- Need to add .code .equ and all the other .byte type stuff that is nice to have
+- Check error cases (seg +seg , unknown + seg etc)
+- Automatic symbols __code __data __bss __endcode __enddata __endbss
 
 
-Write a matching nlist(3) and nm to test the basics
+What are the right rules for segment v absolute
 
+	seg - seg	=	absolute		if same seg
+	seg - seg	=	error			if not
+
+	seg + abs	=	seg
+	seg - abs	= 	seg
+
+	abs any abs	= 	abs
+
+	multiply/divide of segs -> disallow ? and require things like
+		x / 2 - y / 2 is done as (x - y) / 2 ?
+
+Proper error messaeges needed
+
+later:
+	need a syntax/operator for high/low byte of seg
+	output is then segbyteh or segbytel and follows same rules as segment
+	(what about mixing them ?)
+
+- Proper output logic
+	- write an invalid header
+	- for each segment
+		- write segment (counting relocs)
+		- write reloc tab (or fold it in ?)
+	- write symbol table
+	- write debug table
+	- rewind and fix header
+
+Relocation types
+
+1.	versus our segment base for this object module (usual)
+2.	versus other segment base for this module
+3.	versus unresolved symbol
+
+Need to support relocations for 16bit and also 8bit ZP. Do we need to extend
+the assembler to support relocations for high 8 / low 8 ? Probably not for Z80
+and means more reloc info in syms/addrs but would do for other processors like
+6502. Ugly because if we do then we need not just a segment for an address
+but also to know if its address high/address low/address/absolute - add to
+a_type somehow ?
+
+link
+	read each module header that we include
+	load its symbols
+
+	compute base of each versus segment
+	compute base of segments (split I/D differs a bit etc)
+
+	resolve all symbols we can
+
+	write out segments relocating and resolving
+
+	Unresolved symbols allowed for -r
+
+	scan each module header again
+	copy all the debug symbols (relocating as we go)
