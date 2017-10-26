@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 
     printf("Device %d has fsize = %d and isize = %d. Continue? ",
             dev, swizzle16(superblock.s_fsize), swizzle16(superblock.s_isize));
-    if (!yes())
+    if (!yes_noerror())
         exit(error | 32);
 
     bitmap = calloc((swizzle16(superblock.s_fsize) + 7UL) / 8, sizeof(char));
@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 
     printf("Memory pool %d bytes\n",
         16 * swizzle16(superblock.s_isize) +
-        swizzle16(superblock.s_fsize + 7UL) / 8);
+        (swizzle16(superblock.s_fsize) + 7UL) / 8);
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
         exit(error | 8);
