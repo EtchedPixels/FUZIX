@@ -111,6 +111,7 @@ static int yes(void) {
         error |= 1;
     else
         error |= 4;
+    return ret;
 }
 
 static void bitset(uint16_t b)
@@ -251,7 +252,7 @@ int main(int argc, char **argv)
 
     printf("Memory pool %d bytes\n",
         16 * swizzle16(superblock.s_isize) +
-        swizzle16(superblock.s_fsize + 7UL) / 8);
+        (swizzle16(superblock.s_fsize) + 7UL) / 8);
 
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
