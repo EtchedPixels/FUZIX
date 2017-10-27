@@ -98,10 +98,12 @@ loop:
 		if ((sp->s_type&TMMODE) != TNEW
 		&&  (sp->s_type&TMASG) == 0)
 			err('m');
-		sp->s_type &= ~TMMODE;
+		sp->s_type &= ~(TMMODE|TPUBLIC);
 		sp->s_type |= TUSER|TMASG;
 		sp->s_value = a1.a_value;
 		sp->s_segment = a1.a_segment;
+		/* FIXME: review .equ to an external symbol/offset and
+		   what should happen */
 		laddr = a1.a_value;
 		lmode = ALIST;
 		goto loop;
@@ -125,7 +127,7 @@ loop:
 
 	case TEXPORT:
 		getid(id, getnb());
-		sp = lookup(id, phash, 1);
+		sp = lookup(id, uhash, 1);
 		sp->s_type |= TPUBLIC;
 		break;
 		/* .code etc */

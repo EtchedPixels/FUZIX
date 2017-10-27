@@ -73,10 +73,17 @@ void outraw(ADDR *a)
 {
 	if (a->a_segment != ABSOLUTE) {
 		/* FIXME@ handle symbols */
-		if (segment == BSS && a->a_value)
+		if (segment == BSS)
 			err('b');
-		outbyte(REL_ESC);
-		outbyte((2 << 4) | REL_SIMPLE | a->a_segment);
+		if (a->a_sym == NULL) {
+			outbyte(REL_ESC);
+			outbyte((1 << 4) | REL_SIMPLE | a->a_segment);
+		} else {
+			outbyte(REL_ESC);
+			outbyte((1 << 4 ) | REL_SYMBOL);
+			outbyte(a->a_sym->s_number & 0xFF);
+			outbyte(a->a_sym->s_number >> 8);
+		}
 	}
 	outaw(a->a_value);
 }
@@ -105,12 +112,64 @@ void outab(uint8_t b)
 void outrab(ADDR *a)
 {
 	/* FIXME: handle symbols */
-	if (segment == BSS && a->a_value) {
-		err('b');
-		outbyte(REL_ESC);
-		outbyte((2 << 4) | REL_SIMPLE | a->a_segment);
+	if (a->a_segment != ABSOLUTE) {
+		if (segment == BSS)
+			err('b');
+		if (a->a_sym == NULL) {
+			outbyte(REL_ESC);
+			outbyte((0 << 4) | REL_SIMPLE | a->a_segment);
+		} else {
+			outbyte(REL_ESC);
+			outbyte((0 << 4 ) | REL_SYMBOL);
+			outbyte(a->a_sym->s_number & 0xFF);
+			outbyte(a->a_sym->s_number >> 8);
+		}
 	}
 	outab(a->a_value);
+}
+
+static void putsymbol(SYM *s, FILE *ofp)
+{
+	int i;
+	uint8_t flag = 0;
+	printf("Putsymbol %s\n", s->s_id);
+	if (s->s_type == TNEW)
+		flag |= S_UNKNOWN;
+	else {
+		if (s->s_type & TPUBLIC)
+			flag |= S_PUBLIC;
+		flag |= s->s_segment;
+	}
+	putc(flag, ofp);
+	putc(s->s_number, ofp);
+	putc(s->s_number >> 8, ofp);
+	for (i = 0; i < 16; i++) {
+		putc(s->s_id[i], ofp);
+		if (!s->s_id[i])
+			break;
+	}
+	if (!(flag & S_UNKNOWN)) {
+		putc(s->s_value, ofp);
+		putc(s->s_value >> 8, ofp);
+	}
+}
+
+static void writesymbols(SYM *hash[], FILE *ofp, int flag)
+{
+	int i;
+	fseek(ofp, obh.o_symbase, SEEK_SET);
+	for (i = 0; i < NHASH; i++) {
+		SYM *s;
+		for (s = hash[i]; s != NULL; s = s->s_fp) {
+			int t = s->s_type & TMMODE;
+			int n;
+			if (t != TUSER && t != TNEW)
+				continue;
+			n =  (t == TNEW) || (t == TUSER && (s->s_type & TPUBLIC));
+			if (n == flag)
+				putsymbol(s, ofp);
+		}
+	}
 }
 
 /*
@@ -120,6 +179,13 @@ void outrab(ADDR *a)
  */
 void outeof(void)
 {
+	writesymbols(phash, ofp, 1);
+	writesymbols(uhash, ofp, 1);
+	if (debug_write) {
+		obh.o_dbgbase = ftell(ofp);
+		writesymbols(phash, ofp, 0);
+		writesymbols(uhash, ofp, 0);
+	}
 	rewind(ofp);
 	obh.o_magic = MAGIC_OBJ;
 	fwrite(&obh, sizeof(obh), 1, ofp);

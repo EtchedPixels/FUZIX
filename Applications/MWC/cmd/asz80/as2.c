@@ -137,6 +137,7 @@ SYM	*lookup(char *id, SYM *htable[], int cf)
 {
 	SYM *sp;
 	int hash;
+	static int symnext;
 
 	hash = symhash(id);
 	sp  = htable[hash];
@@ -155,6 +156,7 @@ SYM	*lookup(char *id, SYM *htable[], int cf)
 		sp->s_type = TNEW;
 		sp->s_value = 0;
 		sp->s_segment = UNKNOWN;
+		sp->s_number = ++symnext;
 		symcopy(sp->s_id, id);
 	}
 	return (sp);

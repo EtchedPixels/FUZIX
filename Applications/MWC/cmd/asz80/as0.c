@@ -24,6 +24,7 @@ SYM	*uhash[NHASH];
 int	pass;
 int	line;
 jmp_buf	env;
+int	debug_write = 1 ;
 
 
 /*
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: cannot open\n", ifn);
 		exit(BAD);
 	}
-	mkname(fn, ifn, "hex");
+	mkname(fn, ifn, "o");
 	if ((ofp=fopen(fn, "w")) == NULL) {
 		fprintf(stderr, "%s: cannot create\n", fn);
 		exit(BAD);

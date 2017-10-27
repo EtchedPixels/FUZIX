@@ -139,6 +139,8 @@ typedef	struct	ADDR	{
 	int	a_type;			/* Type */
 	VALUE	a_value;		/* Index offset, etc */
 	int	a_segment;		/* Segment relative to */
+	struct SYM *a_sym;		/* Symbol tied to this address */
+					/* NULL indicates simple own segment */
 }	ADDR;
 
 /*
@@ -150,6 +152,7 @@ typedef	struct	SYM	{
 	int	s_type;			/* Type */
 	VALUE	s_value;		/* Value */
 	int	s_segment;		/* Segment this symbol is relative to */
+	uint16_t s_number;		/* Symbol number 1..n */
 }	SYM;
 
 /*
@@ -175,6 +178,7 @@ extern	int	lflag;
 extern	jmp_buf	env;
 extern	VALUE	dot[NSEGMENT];
 extern  int	segment;
+extern	int	debug_write;
 
 extern void asmline(void);
 extern void asmld(void);

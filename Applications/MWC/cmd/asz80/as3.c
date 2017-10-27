@@ -81,14 +81,20 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 	   absolute either way around produces a segment offset */
 	if ((left->a_segment == ABSOLUTE || right->a_segment == ABSOLUTE) &&
 		op == '+') {
+		if (left->a_sym)
+			right->a_sym = left->a_sym;
+		else if (right->a_sym)
+			left->a_sym = right->a_sym;
 		left->a_segment += right->a_segment;
 		return;
 	}
 	/* Subtraction within segment produces an absolute */
 	if (left->a_segment == right->a_segment && op == '-') {
 		left->a_segment = ABSOLUTE;
+		left->a_sym = NULL;
 		return;
 	}
+	left->a_sym = NULL;
 	aerr();
 }
 
@@ -209,8 +215,14 @@ void expr2(ADDR *ap)
 			ap->a_value = 0;
 			return;
 		}
-		if (mode == TNEW)
+		/* An external symbol has to be tracked and output in
+		   the relocations. Any known internal symbol is just
+		   encoded as a relocation relative to a segment */
+		if (mode == TNEW) {
 			uerr(id);
+			ap->a_sym = sp;
+		} else
+			ap->a_sym = NULL;
 		ap->a_type  = TUSER;
 		ap->a_value = sp->s_value;
 		ap->a_segment = sp->s_segment;
