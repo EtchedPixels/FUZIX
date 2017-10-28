@@ -179,8 +179,8 @@ static void writesymbols(SYM *hash[], FILE *ofp)
 {
 	fseek(ofp, obh.o_symbase, SEEK_SET);
 	dosymbols(hash, ofp, 1, putsymbol);
+	obh.o_dbgbase = ftell(ofp);
 	if (debug_write) {
-		obh.o_dbgbase = ftell(ofp);
 		dosymbols(uhash, ofp, 0, putsymbol);
 	}
 }
