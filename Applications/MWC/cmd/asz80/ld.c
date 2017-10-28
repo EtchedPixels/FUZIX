@@ -28,11 +28,24 @@ static struct object *new_object(void)
 {
     struct object *o = xmalloc(sizeof(struct object));
     o->next = NULL;
+    o->syment = NULL;
+    return o;
+}
+
+static void insert_object(struct object *o)
+{
     if (otail)
         otail->next = o;
     else
         objects = o;
     otail = o;
+}
+
+static void free_object(struct object *o)
+{
+    if (o->syment)
+        free(o->syment);
+    free(o);
 }
 
 struct symbol *new_symbol(char *name, int hash)
@@ -53,6 +66,18 @@ struct symbol *find_symbol(char *name, int hash)
         s = s->next;
     }
     return NULL;
+}
+
+/* Check if a symbol name is known but undefined. We use this to decide
+   whether to incorporate a library module */
+int is_undefined(char *name)
+{
+    int hash = hash_symbol(name);
+    struct symbol *s = find_symbol(name, hash);
+    if (s == NULL || !(s->type & S_UNDEFINED))
+        return 0;
+    /* This is a symbol we need */
+    return 1;
 }
 
 struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint16_t value)
@@ -85,7 +110,7 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
     }
     /* Two definitions.. usually bad but allow duplicate absolutes */
     if ((s->type|type) & S_SEGMENT != ABSOLUTE ||
-            s->value |= value)
+            s->value != value)
         /* FIXME: expand to report files somehow ? */
         printf("%s: multiply defined.\n", id);
     }
@@ -93,7 +118,7 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
     return s;
 }
         
-struct object *load_object(FILE *fp, off_t base)
+struct object *load_object(FILE *fp, off_t base, int lib)
 {
     int i;
     uint8_t type;
@@ -107,22 +132,15 @@ struct object *load_object(FILE *fp, off_t base)
     if (fread(&o->oh, sizeof(o->oh), 1, &fp) != 1 || o->o.oh_magic != MAGIC_OBJ ||
         o->oh.o_symbase == 0)
             error("bad object file");
-    /* Make sure all the files are the same architeture */
-    if (arch) {
-        if (o->oh.o_arch != arch)
-            error("wrong architecture");
-    } else
-        arch = o->oh.o_arch;
-    /* The CPU features required is the sum of all the flags in the objects */
-    arch_flags |= o->oh.o_cpuflags;
-
     /* Load up the symbols */
-    fseek(fp, base + o->oh.o_symbase, SEEK_SET);
     nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE:
     if (nsym < 0)
         error("bad object file");
+    /* Allocate the symbol entries */
     o->syment = (struct symbol **)xmalloc(sizeof(struct symbol *) * nsym);
     o->nsym = nsym;
+restart:
+    fseek(fp, base + o->oh.o_symbase, SEEK_SET);
     sp = o->syment;
     for (i = 0; i < nsym; i++) {
         type = fgetc(fp);
@@ -131,8 +149,30 @@ struct object *load_object(FILE *fp, off_t base)
         read(name. 16, 1, fp);
         name[16] = 0;
         value = fgetc(fp) + (fgetc(fp) << 8);
-        *sp++ = find_alloc_symbol(o, type, name, value);
+        /* In library mode we look for a symbol that means we will load
+           this object - and then restart wih lib = 0 */
+        if (lib) {
+            if (is_undefined(name)) {
+                lib = 0;
+                goto restart;
+        } else
+            *sp++ = find_alloc_symbol(o, type, name, value);
     }
+    /* If we get here with lib set then this was a library module we didn't
+       in fact require */
+    if (lib) {
+        free_object(o);
+        return NULL;
+    }
+    insert_object(o);
+    /* Make sure all the files are the same architeture */
+    if (arch) {
+        if (o->oh.o_arch != arch)
+            error("wrong architecture");
+    } else
+        arch = o->oh.o_arch;
+    /* The CPU features required is the sum of all the flags in the objects */
+    arch_flags |= o->oh.o_cpuflags;
     return o;
 }
 
@@ -158,10 +198,10 @@ void set_segment_bases(void)
         error("image too large");
     /* Whoopee it fits */
     /* Insert the linker symbols */
-    insert_internal_symbol("__code", base[0]);
-    insert_internal_symbol("__data", base[1]);
-    insert_internal_symbol("__bss", base[2]);
-    insert_internal_symbol("__end", bas[2] + size[2]);
+    insert_internal_symbol("__code", base[1]);
+    insert_internal_symbol("__data", base[2]);
+    insert_internal_symbol("__bss", base[3]);
+    insert_internal_symbol("__end", bas[3] + size[3]);
     /* Now set the base of each object appropriately */
     memcpy(&pos, &base, sizeof(pos));
     for (o = objects; o != NULL; o = o->next) {
@@ -184,7 +224,7 @@ void set_segment_bases(void)
             s = s->next;
         }
     }
-    /* We now know all the base addresses and all the symbolv values are
+    /* We now know all the base addresses and all the symbol values are
        corrected. Everything needed for relocation is present */
 }
 
