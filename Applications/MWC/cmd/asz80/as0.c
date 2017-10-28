@@ -8,15 +8,12 @@
 FILE	*ifp;
 FILE	*ofp;
 FILE	*lfp;
-char	cb[NCODE];
 char	eb[NERR];
 char	ib[NINPUT];
 char	*cp;
 char	*ep;
 char	*ip;
-int	lflag;
-VALUE	laddr;
-int	lmode;
+char	*fname;
 VALUE	dot[NSEGMENT];
 int	segment = CODE;
 SYM	*phash[NHASH];
@@ -25,6 +22,7 @@ int	pass;
 int	line;
 jmp_buf	env;
 int	debug_write = 1 ;
+int	noobj;
 
 
 /*
@@ -67,10 +65,6 @@ int main(int argc, char *argv[])
 		if (*p == '-') {
 			while ((c = *++p) != 0) {
 				switch (c) {
-				case 'l':
-					++lflag;
-					break;
-
 				default:
 					fprintf(stderr, "Bad option %c\n", c);
 					exit(BAD);
@@ -87,6 +81,9 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "No source file\n");
 		exit(BAD);
 	}
+
+	fname = ifn;
+
 	if ((ifp=fopen(ifn, "r")) == NULL) {
 		fprintf(stderr, "%s: cannot open\n", ifn);
 		exit(BAD);
@@ -96,13 +93,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: cannot create\n", fn);
 		exit(BAD);
 	}
-	if (lflag != 0) {
-		mkname(fn, ifn, "lis");
-		if ((lfp=fopen(fn, "w")) == NULL) {
-			fprintf(stderr, "%s: cannot create\n", fn);
-			exit(BAD);
-		}
-	}
 	syminit();
 	for (pass=0; pass<2; ++pass) {
 		outpass();
@@ -111,13 +101,10 @@ int main(int argc, char *argv[])
 		fseek(ifp, 0L, 0);
 		while (fgets(ib, NINPUT, ifp) != NULL) {
 			++line;
-			cp = &cb[0];
 			ep = &eb[0];
 			ip = &ib[0];
 			if (setjmp(env) == 0)
 				asmline();
-			if (pass != 0)
-				list();
 		}
 	}
 	outeof();

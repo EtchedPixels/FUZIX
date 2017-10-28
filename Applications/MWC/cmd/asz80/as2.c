@@ -25,76 +25,79 @@ int symhash(char *id)
 	return (hash&HMASK);
 }
 
+/* We may want to move this out into a a helper app at the end to dump
+   errors without using assembler space */
+
+static char *etext[] = {
+	"unexpected character",
+	"phase error",
+	"multiple definitions",
+	"syntax error",
+	"must be absolute",
+	"missing delimiter",
+	"invalid constant",
+	"JR out of range",
+	"condition required",
+	"invalid register for operation",
+	"address required",
+	"invalid id",
+	"must be C",
+	"divide by 0",
+	"invalid constant",
+	"data in BSS",
+	"segment overflow"
+};
+
+static void errstr(uint8_t code)
+{
+	if (code < 10) {
+		printf("%c expected.\n", "),]%"[code-1]);
+		return;
+	}
+	printf("%s.\n", etext[code - 10]);
+}
+	
 /*
  * Handle an error.
  * If no listing file, write out
  * the error directly. Otherwise save
  * the error in the error buffer.
+ *
+ * Will need tweaking once we support .include as we must show the file
+ * name then. TODO
  */
-void err(char c)
+void err(char c, uint8_t code)
 {
 	if (pass != 0) {
-		if (lflag != 0)
-			storerror(c);
-		else
-			printf("%04d %c\n", line, c);
+		printf("%s: %d: %c: ", fname, line, toupper(c));
+		errstr(code);
+		noobj = 1;
 	}
 	if (c == 'q')
 		longjmp(env, 1);
 }
 
 /*
- * This routine is like
- * "err", but it has the "u"
- * code screwed into it, and it
- * prints the name of the identifier
- * "id" in the message.
+ * Not really an error any more (we resolve at link time)
  */
 void uerr(char *id)
 {
-	if (pass != 0) {
-		if (lflag != 0)
-			storerror('u');
-		else
-			printf("%04d u %.*s\n", line, NCPS, id);
-	}
 }
 
 /*
  * The "a" error is common.
  */
-void aerr(void)
+void aerr(uint8_t code)
 {
-	err('a');
+	err('a', code);
 }
 
 /*
  * Ditto the "q" error.
  */
-void qerr(void)
+void qerr(uint8_t code)
 {
-	err('q');
-}
-
-/*
- * Put the error code
- * "c" into the error buffer.
- * Check that it is not already
- * there.
- */
-
-void storerror(int c)
-{
-	char *p;
-
-	p = &eb[0];
-	while (p < ep)
-		if (*p++ == c)
-			return;
-	if (p < &eb[NERR]) {
-		*p++ = c;
-		ep = p;
-	}
+	err('q', code);
 }
 
 /*
@@ -109,7 +112,7 @@ void getid(char *id, int c)
 	if (c < 0) {
 		c = getnb();
 		if (isalpha(c) == 0 && c != '_' && c != '.')
-			qerr();
+			qerr(INVALID_ID);
 	}
 	p = &id[0];
 	do {
@@ -137,7 +140,6 @@ SYM	*lookup(char *id, SYM *htable[], int cf)
 {
 	SYM *sp;
 	int hash;
-	static int symnext;
 
 	hash = symhash(id);
 	sp  = htable[hash];
@@ -156,7 +158,7 @@ SYM	*lookup(char *id, SYM *htable[], int cf)
 		sp->s_type = TNEW;
 		sp->s_value = 0;
 		sp->s_segment = UNKNOWN;
-		sp->s_number = ++symnext;
+		sp->s_number = -1;
 		symcopy(sp->s_id, id);
 	}
 	return (sp);

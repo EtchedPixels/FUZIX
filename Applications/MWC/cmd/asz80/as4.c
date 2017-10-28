@@ -7,15 +7,13 @@
 #include	"as.h"
 #include	"obj.h"
 
-#define	NHEX	8			/* Nice format size */
-
 static uint16_t segsize[NSEGMENT];
 static uint16_t truesize[NSEGMENT];
 static off_t segbase[NSEGMENT];
 
-struct objhdr obh;
+static struct objhdr obh;
 
-static void outc(char c);
+static void numbersymbols(void);
 
 void outpass(void)
 {
@@ -27,15 +25,19 @@ void outpass(void)
 			if (i != BSS) {
 				obh.o_segbase[i] = base;
 				segbase[i] = base;
-				printf("BASE %d %d\n", i, base);
 				base += segsize[i];
-				printf("SIZE %d %d\n", i, truesize[i]);
 			}
 			obh.o_size[i] = truesize[i];
 		}
 		obh.o_magic = 0;
+		obh.o_arch = OA_Z80;
+		obh.o_flags = 0;
+		/* Will need changing if we add .Z180 and the Z180 ops */
+		obh.o_cpuflags = 0;
 		obh.o_symbase = base;
 		obh.o_dbgbase = 0;	/* for now */
+		/* Number the symbols for output */
+		numbersymbols();
 	}
 }
 
@@ -72,9 +74,8 @@ void outaw(uint16_t w)
 void outraw(ADDR *a)
 {
 	if (a->a_segment != ABSOLUTE) {
-		/* FIXME@ handle symbols */
 		if (segment == BSS)
-			err('b');
+			err('b', DATA_IN_BSS);
 		if (a->a_sym == NULL) {
 			outbyte(REL_ESC);
 			outbyte((1 << 4) | REL_SIMPLE | a->a_segment);
@@ -97,16 +98,16 @@ void outab(uint8_t b)
 {
 	/* Not allowed to put data in the BSS except zero */
 	if (segment == BSS && b)
-		err('b');
+		err('b', DATA_IN_BSS);
 	if (segment == ABSOLUTE)
-		err('A');
+		err('A', MUST_BE_ABSOLUTE);
 	outbyte(b);
 	if (b == 0xDA)	/* Quote relocation markers */
 		outbyte(0x00);
 	++dot[segment];
 	++truesize[segment];
 	if (truesize[segment] == 0 || dot[segment] == 0)
-		err('o');
+		err('o', SEGMENT_OVERFLOW);
 }
 
 void outrab(ADDR *a)
@@ -114,7 +115,7 @@ void outrab(ADDR *a)
 	/* FIXME: handle symbols */
 	if (a->a_segment != ABSOLUTE) {
 		if (segment == BSS)
-			err('b');
+			err('b', DATA_IN_BSS);
 		if (a->a_sym == NULL) {
 			outbyte(REL_ESC);
 			outbyte((0 << 4) | REL_SIMPLE | a->a_segment);
@@ -132,7 +133,6 @@ static void putsymbol(SYM *s, FILE *ofp)
 {
 	int i;
 	uint8_t flag = 0;
-	printf("Putsymbol %s\n", s->s_id);
 	if (s->s_type == TNEW)
 		flag |= S_UNKNOWN;
 	else {
@@ -141,8 +141,6 @@ static void putsymbol(SYM *s, FILE *ofp)
 		flag |= s->s_segment;
 	}
 	putc(flag, ofp);
-	putc(s->s_number, ofp);
-	putc(s->s_number >> 8, ofp);
 	for (i = 0; i < 16; i++) {
 		putc(s->s_id[i], ofp);
 		if (!s->s_id[i])
@@ -154,10 +152,15 @@ static void putsymbol(SYM *s, FILE *ofp)
 	}
 }
 
-static void writesymbols(SYM *hash[], FILE *ofp, int flag)
+static void enumerate(SYM *s, FILE *dummy)
+{
+	static int sym = 0;
+	s->s_number = sym++;
+}
+
+static void dosymbols(SYM *hash[], FILE *ofp, int flag, void (*op)(SYM *, FILE *f))
 {
 	int i;
-	fseek(ofp, obh.o_symbase, SEEK_SET);
 	for (i = 0; i < NHASH; i++) {
 		SYM *s;
 		for (s = hash[i]; s != NULL; s = s->s_fp) {
@@ -167,9 +170,24 @@ static void writesymbols(SYM *hash[], FILE *ofp, int flag)
 				continue;
 			n =  (t == TNEW) || (t == TUSER && (s->s_type & TPUBLIC));
 			if (n == flag)
-				putsymbol(s, ofp);
+				op(s, ofp);
 		}
 	}
+}
+
+static void writesymbols(SYM *hash[], FILE *ofp)
+{
+	fseek(ofp, obh.o_symbase, SEEK_SET);
+	dosymbols(hash, ofp, 1, putsymbol);
+	if (debug_write) {
+		obh.o_dbgbase = ftell(ofp);
+		dosymbols(uhash, ofp, 0, putsymbol);
+	}
+}
+
+static void numbersymbols(void)
+{
+	dosymbols(uhash, NULL, 1, enumerate);
 }
 
 /*
@@ -179,18 +197,17 @@ static void writesymbols(SYM *hash[], FILE *ofp, int flag)
  */
 void outeof(void)
 {
-	writesymbols(phash, ofp, 1);
-	writesymbols(uhash, ofp, 1);
-	if (debug_write) {
-		obh.o_dbgbase = ftell(ofp);
-		writesymbols(phash, ofp, 0);
-		writesymbols(uhash, ofp, 0);
-	}
+	/* We don't do the final write out if there was an error. That
+	   leaves the magic wrong on the object file so it can't be used */
+	if (noobj || pass == 0)
+		return;
+
+	writesymbols(uhash, ofp);
 	rewind(ofp);
 	obh.o_magic = MAGIC_OBJ;
 	fwrite(&obh, sizeof(obh), 1, ofp);
-	printf("Code %d byyes: Data %d bytes: BSS %d bytes\n",
-		truesize[CODE], truesize[DATA], truesize[BSS]);
+/*	printf("Code %d bytes: Data %d bytes: BSS %d bytes\n",
+		truesize[CODE], truesize[DATA], truesize[BSS]); */
 }
 
 /*

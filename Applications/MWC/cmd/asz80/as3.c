@@ -31,17 +31,17 @@ void getaddr(ADDR *ap)
 	}
 	expr1(ap, LOPRI, 1);
 	if (getnb() != ')')
-		qerr();
+		qerr(BRACKET_EXPECTED);
 	reg = ap->a_type&TMREG;
 	switch (ap->a_type&TMMODE) {
 	case TBR:
 		if (reg != C)
-			aerr();
+			aerr(REG_MUST_BE_C);
 		ap->a_type |= TMINDIR;
 		break;
 	case TSR:
 	case TCC:
-		aerr();
+		aerr(ADDR_REQUIRED);
 		break;
 	case TUSER:
 		ap->a_type |= TMINDIR;
@@ -52,7 +52,7 @@ void getaddr(ADDR *ap)
 		else if (reg==IX || reg==IY)
 			ap->a_type = TBR|reg;
 		else if (reg==AF || reg==AFPRIME)
-			aerr();
+			aerr(INVALID_REG);
 		else
 			ap->a_type |= TMINDIR;
 	}
@@ -64,7 +64,7 @@ static void chkabsolute(ADDR *a)
 	if ((a->a_type & TMMODE) != TUSER)
 		return;
 	if (a->a_segment != ABSOLUTE)
-		aerr();
+		aerr(MUST_BE_ABSOLUTE);
 }
 
 static void chksegment(ADDR *left, ADDR *right, int op)
@@ -95,7 +95,7 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 		return;
 	}
 	left->a_sym = NULL;
-	aerr();
+	aerr(MUST_BE_ABSOLUTE);
 }
 
 /*
@@ -148,7 +148,7 @@ void expr1(ADDR *ap, int lpri, int paren)
 			istuser(&right);
 			chksegment(ap, &right, '/');
 			if (right.a_value == 0)
-				err('z');
+				err('z', DIVIDE_BY_ZERO);
 			else
 				ap->a_value /= right.a_value;
 		}
@@ -172,7 +172,7 @@ void expr2(ADDR *ap)
 	if (c == '[') {
 		expr1(ap, LOPRI, 0);
 		if (getnb() != ']')
-			qerr();
+			qerr(SQUARE_EXPECTED);
 		return;
 	}
 	if (c == '-') {
@@ -195,7 +195,7 @@ void expr2(ADDR *ap)
 		ap->a_segment = ABSOLUTE;
 		while ((c=get()) != '\'') {
 			if (c == '\n')
-				qerr();
+				qerr(PERCENT_EXPECTED);
 			ap->a_value = (ap->a_value<<8) + c;
 		}
 		return;
@@ -228,7 +228,7 @@ void expr2(ADDR *ap)
 		ap->a_segment = sp->s_segment;
 		return;
 	}
-	qerr();
+	qerr(SYNTAX_ERROR);
 }
 
 /*
@@ -292,9 +292,9 @@ void expr3(ADDR *ap, int c)
 		else if (c>='a' && c<='f')
 			c -= 'a'-10;
 		else
-			err('n');
+			err('n', INVALID_CONSTANT);
 		if (c >= radix)
-			err('n');
+			err('n', INVALID_CONSTANT);
 		value = radix*value + c;
 	}
 	ap->a_type  = TUSER;
@@ -322,5 +322,5 @@ void isokaors(ADDR *ap, int paren)
 		if (reg==IX || reg==IY)
 			return;
 	}
-	aerr();
+	aerr(ADDR_REQUIRED);
 }

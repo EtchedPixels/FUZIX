@@ -32,8 +32,7 @@
  * Assemble one line.
  * The line in in "ib", the "ip"
  * scans along it. The code is written
- * right out, and also stashed in the
- * "cb" for the listing.
+ * right out.
  */
 void asmline(void)
 {
@@ -52,13 +51,11 @@ void asmline(void)
 	ADDR a1;
 	ADDR a2;
 
-	laddr = dot[segment];
-	lmode = SLIST;
 loop:
 	if ((c=getnb())=='\n' || c==';')
 		return;
 	if (isalpha(c) == 0 && c != '_' && c != '.')
-		qerr();
+		qerr(UNEXPECTED_CHR);
 	getid(id, c);
 	if ((c=getnb()) == ':') {
 		sp = lookup(id, uhash, 1);
@@ -72,11 +69,10 @@ loop:
 			sp->s_segment = segment;
 		} else {
 			if ((sp->s_type&TMMDF) != 0)
-				err('m');
+				err('m', MULTIPLE_DEFS);
 			if (sp->s_value != dot[segment])
-				err('p');
+				err('p', PHASE_ERROR);
 		}
-		lmode = ALIST;
 		goto loop;
 	}
 	/*
@@ -89,7 +85,7 @@ loop:
 		getid(id1, c);
 		if ((sp1=lookup(id1, phash, 0)) == NULL
 		||  (sp1->s_type&TMMODE) != TEQU) {
-			err('o');
+			err('o', SYNTAX_ERROR);
 			return;
 		}
 		getaddr(&a1);
@@ -97,32 +93,28 @@ loop:
 		sp = lookup(id, uhash, 1);
 		if ((sp->s_type&TMMODE) != TNEW
 		&&  (sp->s_type&TMASG) == 0)
-			err('m');
+			err('m', MULTIPLE_DEFS);
 		sp->s_type &= ~(TMMODE|TPUBLIC);
 		sp->s_type |= TUSER|TMASG;
 		sp->s_value = a1.a_value;
 		sp->s_segment = a1.a_segment;
 		/* FIXME: review .equ to an external symbol/offset and
 		   what should happen */
-		laddr = a1.a_value;
-		lmode = ALIST;
 		goto loop;
 	}
 	unget(c);
-	lmode = BLIST;
 	opcode = sp->s_value;
 	switch (sp->s_type&TMMODE) {
 	case TORG:
 		getaddr(&a1);
 		istuser(&a1);
 		if (a1.a_segment != ABSOLUTE)
-			qerr();
-		lmode = ALIST;
+			qerr(MUST_BE_ABSOLUTE);
 		segment = 0;
-		laddr = dot[segment] = a1.a_value;
+		dot[segment] = a1.a_value;
 		/* Tell the binary generator we've got a new absolute
 		   segment. */
-		outabsolute(laddr);
+		outabsolute(a1.a_value);
 		break;
 
 	case TEXPORT:
@@ -148,7 +140,6 @@ loop:
 		break;
 
 	case TDEFW:
-		lmode = WLIST;
 		do {
 			getaddr(&a1);
 			istuser(&a1);
@@ -159,17 +150,15 @@ loop:
 
 	case TDEFM:
 		if ((delim=getnb()) == '\n')
-			qerr();
+			qerr(MISSING_DELIMITER);
 		while ((c=get()) != delim) {
 			if (c == '\n')
-				qerr();
+				qerr(MISSING_DELIMITER);
 			outab(c);
 		}
 		break;
 
 	case TDEFS:
-		laddr = dot[segment];
-		lmode = ALIST;
 		getaddr(&a1);
 		istuser(&a1);
 		/* Write out the bytes. The BSS will deal with the rest */
@@ -191,22 +180,22 @@ loop:
 			outab(OPRST|(a1.a_value<<3));
 			break;	
 		}
-		aerr();
+		aerr(INVALID_CONST);
 		break;
 
 	case TREL:
 		getaddr(&a1);
 		if ((cc=ccfetch(&a1)) >= 0) {
 			if (opcode==OPDJNZ || cc>=CPO)
-				aerr();
+				aerr(SYNTAX_ERROR);
 			opcode = OPJR | (cc<<3);
 			comma();
 			getaddr(&a1);
 		}
 		istuser(&a1);
 		disp = a1.a_value-dot[segment]-2;
-		if (disp<-128 || disp>127)
-			aerr();
+		if (disp<-128 || disp>127 || a1.a_segment != segment)
+			aerr(JR_RANGE);
 		outab(opcode);
 		outab(disp);
 		break;
@@ -216,7 +205,7 @@ loop:
 		if (c!='\n' && c!=';') {
 			getaddr(&a1);
 			if ((cc=ccfetch(&a1)) < 0)
-				aerr();
+				aerr(CONDCODE_ONLY);
 			opcode = OPRET | (cc<<3);
 		}
 		outab(opcode);
@@ -233,7 +222,7 @@ loop:
 			reg = a1.a_type&TMREG;
 			if (reg==M || reg==IX || reg==IY) {
 				if (opcode != OPJP)
-					aerr();
+					aerr(INVALID_REG);
 				outop(OPPCHL, &a1);
 				break;
 			}
@@ -261,19 +250,19 @@ loop:
 				break;
 			case SP:
 			case AFPRIME:
-				aerr();
+				aerr(INVALID_REG);
 			}
 			outab(opcode|(reg<<4));
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TIM:
 		getaddr(&a1);
 		istuser(&a1);
 		if ((value=a1.a_value) > 2)
-			aerr();
+			aerr(INVALID_CONST);
 		else if (value != 0)
 			++value;
 		outab(0xED);
@@ -292,7 +281,7 @@ loop:
 		if ((a1.a_type&TMMODE)==TBR && a2.a_type==(TBR|TMINDIR|C)) {
 			reg = a1.a_type&TMREG;
 			if (reg==M || reg==IX || reg==IY)
-				aerr();
+				aerr(INVALID_REG);
 			outab(0xED);
 			if (opcode == OPIN)
 				opcode = OPIIN; else
@@ -300,7 +289,7 @@ loop:
 			outab(opcode|(reg<<3));
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TBIT:
@@ -315,7 +304,7 @@ loop:
 			outop(opcode|(a1.a_value<<3)|reg, &a2);
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TSHR:
@@ -326,7 +315,7 @@ loop:
 			outop(opcode|reg, &a1);
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 
 	case TINC:
 		getaddr(&a1);
@@ -343,7 +332,7 @@ loop:
 				break;
 			case AF:
 			case AFPRIME:
-				aerr();
+				aerr(INVALID_REG);
 			}
 			if (opcode == OPINC)
 				opcode = OPINCRP; else
@@ -357,7 +346,7 @@ loop:
 			outop(opcode|(reg<<3), &a1);
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TEX:
@@ -373,7 +362,7 @@ loop:
 		else if (a1.a_type == (TWR|TMINDIR|SP))
 			opcode = OPXTHL;
 		else
-			aerr();
+			aerr(INVALID_REG);
 		if (a2.a_type == (TWR|HL))
 			outab(opcode);
 		else if (a2.a_type == (TWR|IX)) {
@@ -383,7 +372,7 @@ loop:
 			outab(0xFD);
 			outab(opcode);
 		} else
-			aerr();
+			aerr(INVALID_REG);
 		break;
 
 	case TSUB:
@@ -399,7 +388,7 @@ loop:
 			outop(opcode|reg, &a1);
 			break;
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TADD:
@@ -423,14 +412,14 @@ loop:
 			switch(reg = a1.a_type&TMREG) {
 			case IX:
 				if (opcode != OPADD)
-					aerr();
+					aerr(INVALID_REG);
 				outab(0xDD);
 				opcode = OPDAD;
 				srcreg = IX;
 				break;
 			case IY:
 				if (opcode != OPADD)
-					aerr();
+					aerr(INVALID_REG);
 				outab(0xFD);
 				opcode = OPDAD;
 				srcreg = IY;
@@ -448,7 +437,7 @@ loop:
 				srcreg = HL;
 				break;
 			default:
-				aerr();
+				aerr(INVALID_REG);
 			}
 			if ((a2.a_type&TMMODE) == TWR) {
 				reg = a2.a_type&TMREG;
@@ -462,7 +451,7 @@ loop:
 				}
 			}
 		}
-		aerr();
+		aerr(INVALID_REG);
 		break;
 
 	case TLD:
@@ -470,7 +459,7 @@ loop:
 		break;
 
 	default:
-		err('o');
+		aerr(SYNTAX_ERROR);
 	}
 	goto loop;
 }
@@ -579,7 +568,7 @@ void asmld(void)
 			outrab(indexap);
 		return;
 	}
-	aerr();
+	aerr(INVALID_REG);
 }
 
 /*
@@ -624,7 +613,7 @@ ADDR	*getldaddr(ADDR *ap, int *modep, int *regp, ADDR *iap)
 
 	case TWR|AF:
 	case TWR|AFPRIME:
-		aerr();
+		aerr(INVALID_REG);
 		reg = HL;
 	}
 	*modep = mode;
@@ -671,7 +660,7 @@ void outop(int op, ADDR *ap)
 void comma(void)
 {
 	if (getnb() != ',')
-		qerr();
+		qerr(MISSING_COMMA);
 }
 
 /*
@@ -682,7 +671,7 @@ void comma(void)
 void istuser(ADDR *ap)
 {
 	if ((ap->a_type&TMMODE) != TUSER)
-		aerr();
+		aerr(ADDR_REQUIRED);
 }
 
 /*

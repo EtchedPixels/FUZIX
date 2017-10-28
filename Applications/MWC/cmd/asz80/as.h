@@ -31,15 +31,6 @@
 #define	BAD	1
 
 /*
- * Listing modes.
- */
-#define	NLIST	0			/* No list */
-#define	ALIST	1			/* Address only */
-#define	BLIST	2			/* Byte format */
-#define	WLIST	3			/* Word format */
-#define	SLIST	4			/* Source text only */
-
-/*
  * Types. These are used
  * in both symbols and in address
  * descriptions. Observe the way the
@@ -130,6 +121,33 @@
 #define DATA		2
 #define BSS		3
 
+/*
+ *	Error message numbers
+ */
+
+#define BRACKET_EXPECTED 1
+#define MISSING_COMMA	2
+#define SQUARE_EXPECTED 3
+#define PERCENT_EXPECTED 4
+#define UNEXPECTED_CHR	10
+#define PHASE_ERROR	11
+#define MULTIPLE_DEFS	12
+#define SYNTAX_ERROR	13
+#define MUST_BE_ABSOLUTE	14
+#define MISSING_DELIMITER 15
+#define INVALID_CONST	16
+#define JR_RANGE	17
+#define CONDCODE_ONLY	18
+#define INVALID_REG	19
+#define ADDR_REQUIRED	20
+#define INVALID_ID	21
+#define REG_MUST_BE_C	22
+#define DIVIDE_BY_ZERO	23
+#define INVALID_CONSTANT 24
+#define DATA_IN_BSS	 25
+#define SEGMENT_OVERFLOW 26
+
+
 typedef	uint16_t	VALUE;		/* For symbol values */
 
 /*
@@ -159,10 +177,7 @@ typedef	struct	SYM	{
  * External variables.
  */
 extern	char	*cp;
-extern	char	*ep;
 extern	char	*ip;
-extern	char	cb[];
-extern	char	eb[];
 extern	char	ib[];
 extern	FILE	*ifp;
 extern	FILE	*ofp;
@@ -179,6 +194,8 @@ extern	jmp_buf	env;
 extern	VALUE	dot[NSEGMENT];
 extern  int	segment;
 extern	int	debug_write;
+extern	char	*fname;
+extern	int	noobj;
 
 extern void asmline(void);
 extern void asmld(void);
@@ -188,10 +205,10 @@ extern void comma(void);
 extern void istuser(ADDR *);
 extern int ccfetch(ADDR *);
 extern int symhash(char *);
-extern void err(char);
+extern void err(char, uint8_t);
 extern void uerr(char *);
-extern void aerr(void);
-extern void qerr(void);
+extern void aerr(uint8_t);
+extern void qerr(uint8_t);
 extern void storerror(int);
 extern void getid(char *, int);
 extern SYM *lookup(char *, SYM *[], int);
@@ -215,6 +232,4 @@ extern void outrab(ADDR *);
 extern void outeof(void);
 extern void outbyte(uint8_t);
 extern void outflush(void);
-extern void list(void);
-extern void list1(char *, int, int);
 extern void syminit(void);

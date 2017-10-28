@@ -17,13 +17,13 @@ CRT0 = ../../../../Library/libs/crt0_6809.o
 .SUFFIXES: .c .o
 
 
-SRCS  = as0.c as1.c as2.c as3.c as4.c as5.c as6.c
+SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
 
-INCS  = as.h
+INCS  = as.h obj.h
 
 OBJS = $(SRCS:.c=.o)
 
-all: as
+all: as nm
 
 $(OBJS): $(INCS)
 
@@ -31,6 +31,11 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 as: $(OBJS) $(CRT0)
+	$(LINKER) -o $@ $(LINKER_OPT) $^
+
+nm.c: obj.h
+
+nm: nm.o $(CRT0)
 	$(LINKER) -o $@ $(LINKER_OPT) $^
 
 clean:
