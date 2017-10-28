@@ -85,14 +85,10 @@ friends, while UMZIX has a neat unified "make anything" function.
 
 ## Tool Issues
 
-* No useful 8086 compiler option (started work on pcc 8086 but help
-	needed, coherent may provide a suitable cc but that also needs work)
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
 * SDCC can generate ROMmable binaries but not banked ones (hack fixes done)
 * SDCC has no register passing function call support, and for some
 	stuff it really shows
-* SDCC generates quite bloaty small applications. Needs research
-	on how to improve.
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
 
