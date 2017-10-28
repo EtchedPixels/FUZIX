@@ -332,6 +332,7 @@ static void set_segment_bases(void)
 			/* base will be 0 for absolute */
 			if (s->definedby)
 				s->value += s->definedby->base[seg];
+			/* FIXME: check overflow */
 			s = s->next;
 		}
 	}
@@ -437,14 +438,7 @@ void relocate_stream(struct object *o, FILE * op, FILE * ip)
 			r = fgetc(ip);
 			if (size == 2)
 				r |= fgetc(ip) << 8;
-			/* Add the base of the relevant segment of the defining
-			   object module - unless it's an absolute constant */
-			if ((s->type & S_SEGMENT) != ABSOLUTE)
-				r += s->definedby->base[s->type & S_SEGMENT];
-			/* Check it didn't overflow */
-			if (r < base[s->type & S_SEGMENT])
-				error("relocation exceeded");
-			/* Add the offset from the segment base of the object to the
+			/* Add the offset from the output segment base to the
 			   symbol */
 			r += s->value;
 			/* Check again */
@@ -452,8 +446,10 @@ void relocate_stream(struct object *o, FILE * op, FILE * ip)
 				error("relocation exceeded");
 			/* If we are not fully resolving then turn this into a
 			   simple relocation */
-			if (ldmode != LD_ABSOLUTE)
+			if (ldmode != LD_ABSOLUTE) {
+				fputc(REL_ESC, op);
 				fputc(REL_SIMPLE | (s->type & S_SEGMENT) | (size - 1) << 4, op);
+			}
 			fputc(r, op);
 			if (size == 2)
 				fputc(r >> 8, op);
