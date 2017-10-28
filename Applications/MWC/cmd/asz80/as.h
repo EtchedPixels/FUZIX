@@ -233,3 +233,5 @@ extern void outeof(void);
 extern void outbyte(uint8_t);
 extern void outflush(void);
 extern void syminit(void);
+
+#include "obj.h"

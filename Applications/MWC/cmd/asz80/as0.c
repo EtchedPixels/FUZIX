@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
 				asmline();
 		}
 	}
+	pass = 1;
 	outeof();
 	exit(GOOD);
 }

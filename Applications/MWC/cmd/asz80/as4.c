@@ -5,7 +5,6 @@
  */
 
 #include	"as.h"
-#include	"obj.h"
 
 static uint16_t segsize[NSEGMENT];
 static uint16_t truesize[NSEGMENT];
@@ -22,10 +21,10 @@ void outpass(void)
 	if (pass == 1) {
 		/* Lay the file out */
 		for (i = 1; i < NSEGMENT; i++) {
+			segbase[i] = base;
 			if (i != BSS) {
 				obh.o_segbase[i] = base;
-				segbase[i] = base;
-				base += segsize[i];
+				base += segsize[i] + 2; /* 2 for the EOF mark */
 			}
 			obh.o_size[i] = truesize[i];
 		}
@@ -102,8 +101,8 @@ void outab(uint8_t b)
 	if (segment == ABSOLUTE)
 		err('A', MUST_BE_ABSOLUTE);
 	outbyte(b);
-	if (b == 0xDA)	/* Quote relocation markers */
-		outbyte(0x00);
+	if (b == REL_ESC)	/* Quote relocation markers */
+		outbyte(REL_REL);
 	++dot[segment];
 	++truesize[segment];
 	if (truesize[segment] == 0 || dot[segment] == 0)
@@ -141,7 +140,7 @@ static void putsymbol(SYM *s, FILE *ofp)
 		flag |= s->s_segment;
 	}
 	putc(flag, ofp);
-	fwrite(cs->s_id, 16, 1, ofp);
+	fwrite(s->s_id, 16, 1, ofp);
 	putc(s->s_value, ofp);
 	putc(s->s_value >> 8, ofp);
 }
@@ -196,6 +195,14 @@ void outeof(void)
 	if (noobj || pass == 0)
 		return;
 
+	segment = CODE;
+	outsegment(CODE);
+	outbyte(REL_ESC);
+	outbyte(REL_EOF);
+	segment = DATA;
+	outsegment(DATA);
+	outbyte(REL_ESC);
+	outbyte(REL_EOF);
 	writesymbols(uhash, ofp);
 	rewind(ofp);
 	obh.o_magic = MAGIC_OBJ;
