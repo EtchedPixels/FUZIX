@@ -141,15 +141,9 @@ static void putsymbol(SYM *s, FILE *ofp)
 		flag |= s->s_segment;
 	}
 	putc(flag, ofp);
-	for (i = 0; i < 16; i++) {
-		putc(s->s_id[i], ofp);
-		if (!s->s_id[i])
-			break;
-	}
-	if (!(flag & S_UNKNOWN)) {
-		putc(s->s_value, ofp);
-		putc(s->s_value >> 8, ofp);
-	}
+	fwrite(cs->s_id, 16, 1, ofp);
+	putc(s->s_value, ofp);
+	putc(s->s_value >> 8, ofp);
 }
 
 static void enumerate(SYM *s, FILE *dummy)

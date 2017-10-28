@@ -42,12 +42,15 @@ struct objhdr
 
 /* symbols and debug are in the format 
     uint8_t flags
-    char name[1..16] (0 terminated if < 16)
-    uint16_t data	if not unknown */
+    char name[16] (0 terminated if < 16)
+    uint16_t data */
 
 #define	S_UNKNOWN	0x80
 #define S_PUBLIC	0x40		/* unknown is public .. */
 #define S_SEGMENT	0x0F		/* 00 means absolute */
+
+#define S_SIZE		19
+
 
 
 

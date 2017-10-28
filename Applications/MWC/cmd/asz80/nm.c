@@ -54,19 +54,14 @@ static int do_nm(FILE *fp, const char *name)
             return 0;
         type = (uint8_t)c;
         base++;
-        for (i = 0; i < 16; i++) {
-            c = fgetc(fp);
-            base++;
-            symname[i] = (char)c;
-            if (c == 0)
-                break;
-        }
+        fread(symname, 16, 1, fp);
+        base += 16;
         symname[16] = 0;
         /* Address if defined */
+        addr = fgetc(fp);
+        addr |= fgetc(fp) << 8;
+        base += 2;
         if (!(type & S_UNKNOWN)) {
-            addr = fgetc(fp);
-            addr |= fgetc(fp) << 8;
-            base += 2;
             c = segname[type & S_SEGMENT];
             /* Showing undefined only */
             if (show_undef)
