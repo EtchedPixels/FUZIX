@@ -6,226 +6,525 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <string,h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
+#include <ctype.h>
 
+#include "obj.h"
 #include "ld.h"
 
-struct object *objects, *otail;
-struct symbol *symhash[NHASH];
-uint16_t base[4];
-uint16_t size[4];
+static char *arg0;
+static struct object *processing;
+static struct object *objects, *otail;
+static struct symbol *symhash[NHASH];
+static uint16_t base[4];
+static uint16_t size[4];
+#define LD_RELOC	0
+#define LD_RFLAG	1
+#define LD_ABSOLUTE	2
+static uint8_t ldmode = LD_RELOC;
+static uint8_t split_id;
+static uint8_t arch;
+static uint16_t arch_flags;
+static uint8_t verbose;
+static int err;
+static int syms = 1;
+static int dbgsyms = 1;
+static char *mapname;
+static char *outname;
 
-void *xmalloc(size_t s) {
-    void *p = malloc(s);
-    if (p == NULL)
-        error("out of memory");
-    return p;
+void error(const char *p)
+{
+	if (processing)
+		fprintf(stderr, "While processing: %s\n", processing->path);
+	fputs(p, stderr);
+	fputc('\n', stderr);
+	err |= 2;
+
+	exit(err | 2);
+}
+
+void *xmalloc(size_t s)
+{
+	void *p = malloc(s);
+	if (p == NULL)
+		error("out of memory");
+	return p;
 }
 
 static struct object *new_object(void)
 {
-    struct object *o = xmalloc(sizeof(struct object));
-    o->next = NULL;
-    o->syment = NULL;
-    return o;
+	struct object *o = xmalloc(sizeof(struct object));
+	o->next = NULL;
+	o->syment = NULL;
+	return o;
 }
 
 static void insert_object(struct object *o)
 {
-    if (otail)
-        otail->next = o;
-    else
-        objects = o;
-    otail = o;
+	if (otail)
+		otail->next = o;
+	else
+		objects = o;
+	otail = o;
 }
 
 static void free_object(struct object *o)
 {
-    if (o->syment)
-        free(o->syment);
-    free(o);
+	if (o->syment)
+		free(o->syment);
+	free(o);
 }
 
 struct symbol *new_symbol(char *name, int hash)
 {
-    struct symbol *s = xmalloc(sizeof(struct symbol));
-    strncpy(s->name, name, 16);
-    s-next = symhash[hash];
-    symhash[hash] = s;
-    return s;
+	struct symbol *s = xmalloc(sizeof(struct symbol));
+	strncpy(s->name, name, 16);
+	s->next = symhash[hash];
+	symhash[hash] = s;
+	return s;
 }
 
 struct symbol *find_symbol(char *name, int hash)
 {
-    struct symbol *s = symhash[hash];
-    while(s) {
-        if (strncmp(s->name. name, 16) == 0)
-            return s;
-        s = s->next;
-    }
-    return NULL;
+	struct symbol *s = symhash[hash];
+	while (s) {
+		if (strncmp(s->name, name, 16) == 0)
+			return s;
+		s = s->next;
+	}
+	return NULL;
+}
+
+static uint8_t hash_symbol(const char *name)
+{
+	/* TODO */
+	return 0;
 }
 
 /* Check if a symbol name is known but undefined. We use this to decide
    whether to incorporate a library module */
 int is_undefined(char *name)
 {
-    int hash = hash_symbol(name);
-    struct symbol *s = find_symbol(name, hash);
-    if (s == NULL || !(s->type & S_UNDEFINED))
-        return 0;
-    /* This is a symbol we need */
-    return 1;
+	int hash = hash_symbol(name);
+	struct symbol *s = find_symbol(name, hash);
+	if (s == NULL || !(s->type & S_UNKNOWN))
+		return 0;
+	/* This is a symbol we need */
+	return 1;
 }
 
 struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint16_t value)
 {
-    uint8_t hash = hash_symbol(id);
-    struct symbol *s = find_symbol(id, hash);
+	uint8_t hash = hash_symbol(id);
+	struct symbol *s = find_symbol(id, hash);
 
-    if (s == NULL) {
-        s = new_symbol(id, hash);
-        s->type = = type;
-        strlcpy(s->name, id, 16);
-        s->value = value    
-        if (!(type & S_UNKNOWN))
-            s->definer = o;
-        else
-            s->definer = NULL;
-        return s;
-    }
-    /* Already exists. See what is going on */
-    if (type & S_UNKNOWN)
-        /* We are an external reference to a symbol. No work needed */
-        return s;
-    if (s->type & S_UNKNOWN) {
-        /* We are referencing a symbol that was previously unknown but which
-           we define. Fill in the details */
-        s->type = type;
-        s->value = value;
-        s->definer = o;
-        return s;
-    }
-    /* Two definitions.. usually bad but allow duplicate absolutes */
-    if ((s->type|type) & S_SEGMENT != ABSOLUTE ||
-            s->value != value)
-        /* FIXME: expand to report files somehow ? */
-        printf("%s: multiply defined.\n", id);
-    }
-    /* Duplicate absolutes - just keep current entry */
-    return s;
-}
-        
-struct object *load_object(FILE *fp, off_t base, int lib)
-{
-    int i;
-    uint8_t type;
-    char name[17];
-    struct object *o = new_object();
-    struct symbol **sp;
-    int nsym;
-    uin16_t value;
-
-    fseek(fp, base, SEEK_SET);
-    if (fread(&o->oh, sizeof(o->oh), 1, &fp) != 1 || o->o.oh_magic != MAGIC_OBJ ||
-        o->oh.o_symbase == 0)
-            error("bad object file");
-    /* Load up the symbols */
-    nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE:
-    if (nsym < 0)
-        error("bad object file");
-    /* Allocate the symbol entries */
-    o->syment = (struct symbol **)xmalloc(sizeof(struct symbol *) * nsym);
-    o->nsym = nsym;
-restart:
-    fseek(fp, base + o->oh.o_symbase, SEEK_SET);
-    sp = o->syment;
-    for (i = 0; i < nsym; i++) {
-        type = fgetc(fp);
-        if ((type & S_SEGMENT) > BSS)
-            error("bad symbol");
-        read(name. 16, 1, fp);
-        name[16] = 0;
-        value = fgetc(fp) + (fgetc(fp) << 8);
-        /* In library mode we look for a symbol that means we will load
-           this object - and then restart wih lib = 0 */
-        if (lib) {
-            if (is_undefined(name)) {
-                lib = 0;
-                goto restart;
-        } else
-            *sp++ = find_alloc_symbol(o, type, name, value);
-    }
-    /* If we get here with lib set then this was a library module we didn't
-       in fact require */
-    if (lib) {
-        free_object(o);
-        return NULL;
-    }
-    insert_object(o);
-    /* Make sure all the files are the same architeture */
-    if (arch) {
-        if (o->oh.o_arch != arch)
-            error("wrong architecture");
-    } else
-        arch = o->oh.o_arch;
-    /* The CPU features required is the sum of all the flags in the objects */
-    arch_flags |= o->oh.o_cpuflags;
-    return o;
+	if (s == NULL) {
+		s = new_symbol(id, hash);
+		s->type = type;
+/*FIXME         strlcpy(s->name, id, 16); */
+		strncpy(s->name, id, 16);
+		s->value = value;
+		if (!(type & S_UNKNOWN))
+			s->definedby = o;
+		else
+			s->definedby = NULL;
+		return s;
+	}
+	/* Already exists. See what is going on */
+	if (type & S_UNKNOWN)
+		/* We are an external reference to a symbol. No work needed */
+		return s;
+	if (s->type & S_UNKNOWN) {
+		/* We are referencing a symbol that was previously unknown but which
+		   we define. Fill in the details */
+		s->type = type;
+		s->value = value;
+		s->definedby = o;
+		return s;
+	}
+	/* Two definitions.. usually bad but allow duplicate absolutes */
+	if (((s->type | type) & S_SEGMENT) != ABSOLUTE || s->value != value) {
+		/* FIXME: expand to report files somehow ? */
+		printf("%s: multiply defined.\n", id);
+	}
+	/* Duplicate absolutes - just keep current entry */
+	return s;
 }
 
-void set_segment_bases(void)
+static void insert_internal_symbol(char *name, uint16_t val)
 {
-    struct object *o;
-    uint16_t pos[4];
-    /* We are doing a simple model here without split I/D for now */
-    for (i = 1; i < 4; i++)
-        size[i] = 0;
-    /* Now run through once computing the basic size of each segment */    
-    for (o = objects; o != NULL; o = o->next) {
-        for (i = 1; i < 4; i++) {
-            size[i] += o->oh.o_size[i];
-            if (size[i] < o->oh.o_size[i])
-                error("segment too large");
-        }
-    }
-    /* We now know where to put the binary */
-    base[2] = base[1] + size[1];
-    base[3] = base[2] + size[2];
-    if (base[2] < base[1] || base[3] < base[2] || base[3] + size[3] < base[3])
-        error("image too large");
-    /* Whoopee it fits */
-    /* Insert the linker symbols */
-    insert_internal_symbol("__code", base[1]);
-    insert_internal_symbol("__data", base[2]);
-    insert_internal_symbol("__bss", base[3]);
-    insert_internal_symbol("__end", bas[3] + size[3]);
-    /* Now set the base of each object appropriately */
-    memcpy(&pos, &base, sizeof(pos));
-    for (o = objects; o != NULL; o = o->next) {
-        o->base[0] = 0;
-        for (i = 1; i < 4; i++) {
-            o->base[i] = pos]i];
-            pos[i] += o->oh.o_size[i];
-        }
-    }
-    /* At this point we have correctly relocated the base for each object. What
-       we have yet to do is to relocate the symbols. Internal symbols are always
-       created as absolute with no definer */
-    for (i = 0; i < NHASH; i++) {
-        struct symbol *s = symhash[i];
-        while (s != NULL) {
-            uint8_t seg = s->type & S_SEGMENT;
-            /* base will be 0 for absolute */
-            if (s->definer)
-                s->value += s->definer->base[seg];
-            s = s->next;
-        }
-    }
-    /* We now know all the base addresses and all the symbol values are
-       corrected. Everything needed for relocation is present */
+	find_alloc_symbol(NULL, ABSOLUTE | S_PUBLIC, name, val);
+}
+
+
+/* Number the symbols that we will write out. We don't care about the mode
+   too much. In valid reloc mode we won't have any S_UNKNOWN symbols anyway */
+static void renumber_symbols(void)
+{
+	static int sym = 0;
+	struct symbol *s;
+	int i;
+	for (i = 0; i < NHASH; i++)
+		for (s = symhash[i]; s != NULL; s=s->next)
+			if (s->type & (S_PUBLIC|S_UNKNOWN))
+				s->number = sym++;
+}
+
+/* Write the symbols to the output file */
+static void write_symbols(FILE *fp)
+{
+	struct symbol *s;
+	int i;
+	for (i = 0; i < NHASH; i++) {
+		for (s = symhash[i]; s != NULL; s=s->next) {
+			fputc(s->type, fp);
+			fwrite(s->name, 16, 1, fp);
+			fputc(s->value, fp);
+			fputc(s->value >> 8, fp);
+		}
+	}
+}
+
+/* Fold all these symbol table walks into a helper */
+static void print_symbol(struct symbol *s, FILE *fp)
+{
+	char c;
+	if (s->type & S_UNKNOWN)
+		c = 'U';
+	else {
+		c = "acdb"[s->type & S_SEGMENT];
+		if (s->type & S_PUBLIC)
+			c = toupper(c);
+	}
+	fprintf(fp, "%04X %c %s\n", s->value, c, s->name);
+}
+
+static void write_map_file(FILE *fp)
+{
+	struct symbol *s;
+	int i;
+	for (i = 0; i < NHASH; i++) {
+		for (s = symhash[i]; s != NULL; s=s->next)
+			print_symbol(s, fp);
+	}
+}
+
+struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
+{
+	int i;
+	uint8_t type;
+	char name[17];
+	struct object *o = new_object();
+	struct symbol **sp;
+	int nsym;
+	uint16_t value;
+
+	o->path = path;
+	processing = o;	/* For error reporting */
+
+	fseek(fp, off, SEEK_SET);
+	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0)
+		error("bad object file");
+	/* Load up the symbols */
+	nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE;
+	if (nsym < 0)
+		error("bad object file");
+	/* Allocate the symbol entries */
+	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
+	o->nsym = nsym;
+      restart:
+	fseek(fp, off + o->oh.o_symbase, SEEK_SET);
+	sp = o->syment;
+	for (i = 0; i < nsym; i++) {
+		type = fgetc(fp);
+		if ((type & S_SEGMENT) > BSS)
+			error("bad symbol");
+		fread(name, 16, 1, fp);
+		name[16] = 0;
+		value = fgetc(fp) + (fgetc(fp) << 8);
+		/* In library mode we look for a symbol that means we will load
+		   this object - and then restart wih lib = 0 */
+		if (lib) {
+			if (is_undefined(name)) {
+				lib = 0;
+				goto restart;
+			}
+		} else
+			*sp++ = find_alloc_symbol(o, type, name, value);
+	}
+	/* If we get here with lib set then this was a library module we didn't
+	   in fact require */
+	if (lib) {
+		free_object(o);
+		processing = NULL;
+		return NULL;
+	}
+	insert_object(o);
+	/* Make sure all the files are the same architeture */
+	if (arch) {
+		if (o->oh.o_arch != arch)
+			error("wrong architecture");
+	} else
+		arch = o->oh.o_arch;
+	/* The CPU features required is the sum of all the flags in the objects */
+	arch_flags |= o->oh.o_cpuflags;
+	processing = NULL;
+	return o;
+}
+
+static void set_segment_bases(void)
+{
+	struct object *o;
+	uint16_t pos[4];
+	int i;
+
+	/* We are doing a simple model here without split I/D for now */
+	for (i = 1; i < 4; i++)
+		size[i] = 0;
+	/* Now run through once computing the basic size of each segment */
+	for (o = objects; o != NULL; o = o->next) {
+		for (i = 1; i < 4; i++) {
+			size[i] += o->oh.o_size[i];
+			if (size[i] < o->oh.o_size[i])
+				error("segment too large");
+		}
+	}
+	/* We now know where to put the binary */
+	if (ldmode != LD_RFLAG) {
+		/* Creating a binary - put the segments together */
+		if (split_id)
+			base[2] = size[1];
+		else {
+			base[2] = base[1] + size[1];
+			if (base[2] < base[1])
+				error("image too large");
+		}
+		base[3] = base[2] + size[2];
+
+		if (base[3] < base[2] || base[3] + size[3] < base[3])
+			error("image too large");
+		/* Whoopee it fits */
+		/* Insert the linker symbols */
+		insert_internal_symbol("__code", base[1]);
+		insert_internal_symbol("__data", base[2]);
+		insert_internal_symbol("__bss", base[3]);
+		insert_internal_symbol("__end", base[3] + size[3]);
+	}
+	/* Now set the base of each object appropriately */
+	memcpy(&pos, &base, sizeof(pos));
+	for (o = objects; o != NULL; o = o->next) {
+		o->base[0] = 0;
+		for (i = 1; i < 4; i++) {
+			o->base[i] = pos[i];
+			pos[i] += o->oh.o_size[i];
+		}
+	}
+	/* At this point we have correctly relocated the base for each object. What
+	   we have yet to do is to relocate the symbols. Internal symbols are always
+	   created as absolute with no definedby */
+	for (i = 0; i < NHASH; i++) {
+		struct symbol *s = symhash[i];
+		while (s != NULL) {
+			uint8_t seg = s->type & S_SEGMENT;
+			/* base will be 0 for absolute */
+			if (s->definedby)
+				s->value += s->definedby->base[seg];
+			s = s->next;
+		}
+	}
+	/* We now know all the base addresses and all the symbol values are
+	   corrected. Everything needed for relocation is present */
+}
+
+/*
+ *	Relocate the stream of input from ip to op
+ *
+ * We support three behaviours
+ * LD_ABSOLUTE: all symbols are resolved and the relocation quoting is removed
+ * LD_RFLAG: quoting is copied, internal symbols are resovled, externals kept
+ * LD_RELOC: a relocation stream is output with no remaining symbol relocations
+ *	     and all internal relocations resolved.
+ */
+void relocate_stream(struct object *o, FILE * op, FILE * ip)
+{
+	int c;
+	uint8_t size;
+	uint16_t r;
+	struct symbol *s;
+
+	processing = o;
+
+	while ((c = fgetc(ip)) != EOF) {
+		uint8_t code = (uint8_t) c;
+		/* Unescaped material is just copied over */
+		if (code != REL_ESC) {
+			fputc(code, op);
+			continue;
+		}
+		code = fgetc(ip);
+		if (code == REL_EOF) {
+			processing = NULL;
+			return;
+		}
+		/* Escaped 0xDA byte. Just copy it over, and if in absolute mode
+		   remove the escaped byte */
+		if (code == REL_REL) {
+			if (ldmode != LD_ABSOLUTE)
+				fputc(REL_ESC, op);
+			fputc(REL_REL, op);
+			continue;
+		}
+		/* Relocations */
+
+		size = ((code & S_SIZE) >> 4) + 1;
+
+		/* Simple relocation - adjust versus base of a segment of this object */
+		if (code & REL_SIMPLE) {
+			uint8_t seg = code & S_SEGMENT;
+			/* Check entry is valid */
+			if (seg == ABSOLUTE || seg > BSS || size > 2)
+				error("invalid reloc");
+			/* If we are not building an absolute then keep the tag */
+			if (ldmode != LD_ABSOLUTE) {
+				fputc(REL_ESC, op);
+				fputc(code, op);
+			}
+			/* Relocate the value versus the new segment base and offset of the
+			   object */
+			r = fgetc(ip);
+			if (size == 2)
+				r |= fgetc(ip) << 8;
+			r += o->base[seg];
+			if (r < o->base[seg] || (size == 1 && r > 255))
+				error("relocation exceeded");
+			fputc(r, op);
+			if (size == 2)
+				fputc(r >> 8, op);
+			continue;
+		}
+		/* Symbolic relocations - may be inter-segment and inter-object */
+		if ((code & REL_TYPE) != REL_SYMBOL)
+			error("invalid reloc type");
+		r = fgetc(ip);
+		r |= fgetc(ip) << 8;
+		/* r is the symbol number */
+		if (r >= o->nsym)
+			error("invalid reloc sym");
+		s = o->syment[r];
+		if (s->type & S_UNKNOWN) {
+			if (ldmode != LD_RFLAG) {
+				if (processing)
+				fprintf(stderr, "%s: Unknown symbol '%.16s'.\n", o->path, s->name);
+				err |= 1;
+			}
+			if (ldmode != LD_ABSOLUTE) {
+				/* Rewrite the record with the new symbol number */
+				fputc(REL_ESC, op);
+				fputc(code, op);
+				fputc(s->value, op);
+				fputc(s->value >> 8, op);
+			}
+			/* Copy the bytes to relocate */
+			fputc(fgetc(ip), op);
+			if (size == 2)
+				fputc(fgetc(ip), op);
+		} else {
+			/* Get the relocation bytes. These hold the offset versus
+			   the referenced symbol */
+			r = fgetc(ip);
+			if (size == 2)
+				r |= fgetc(ip) << 8;
+			/* Add the base of the relevant segment of the defining
+			   object module - unless it's an absolute constant */
+			if ((s->type & S_SEGMENT) != ABSOLUTE)
+				r += s->definedby->base[s->type & S_SEGMENT];
+			/* Check it didn't overflow */
+			if (r < base[s->type & S_SEGMENT])
+				error("relocation exceeded");
+			/* Add the offset from the segment base of the object to the
+			   symbol */
+			r += s->value;
+			/* Check again */
+			if (r < s->value || (size == 1 && r > 255))
+				error("relocation exceeded");
+			/* If we are not fully resolving then turn this into a
+			   simple relocation */
+			if (ldmode != LD_ABSOLUTE)
+				fputc(REL_SIMPLE | (s->type & S_SEGMENT) | (size - 1) << 4, op);
+			fputc(r, op);
+			if (size == 2)
+				fputc(r >> 8, op);
+		}
+	}
+	error("corrupt reloc stream");
+}
+
+FILE *openobject(struct object *o)
+{
+	FILE *fp = fopen(o->path, "r");
+	if (fp == NULL) {
+		perror(o->path);
+		exit(1);
+	}
+	fseek(fp, o->off, SEEK_SET);
+	return fp;
+}
+
+void write_stream(FILE * op, int seg)
+{
+	struct object *o = objects;
+
+	while (o != NULL) {
+		FILE *ip = openobject(o);	/* So we can hide library gloop */
+		if (verbose)
+			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
+		fseek(ip, o->off + o->oh.o_segbase[seg], SEEK_SET);
+		relocate_stream(o, op, ip);
+		fclose(ip);
+		o = o->next;
+	}
+	if (ldmode != LD_ABSOLUTE) {
+		fputc(REL_ESC, op);
+		fputc(REL_EOF, op);
+	}
+}
+
+void write_binary(FILE * op, FILE *mp)
+{
+	static struct objhdr hdr;
+	hdr.o_arch = arch;
+	hdr.o_cpuflags = arch_flags;
+	hdr.o_segbase[0] = sizeof(hdr);
+	hdr.o_size[0] = size[0];
+	hdr.o_size[1] = size[1];
+	hdr.o_size[2] = size[2];
+
+	rewind(op);
+	if (ldmode != LD_ABSOLUTE)
+		fwrite(&hdr, sizeof(hdr), 1, op);
+	/* For LD_RFLAG number the symbols for output, for othe forms
+	   check for unknowmn symbols and error them out */
+	if (ldmode != LD_ABSOLUTE)
+		renumber_symbols();
+	write_stream(op, CODE);
+	hdr.o_segbase[1] = ftell(op);
+	write_stream(op, DATA);
+	if (syms) {
+		hdr.o_symbase = ftell(op);
+		write_symbols(op);
+	}
+	hdr.o_dbgbase = ftell(op);
+	hdr.o_magic = MAGIC_OBJ;
+	/* TODO: needs a special pass
+	if (dbgsyms)
+		copy_debug_all(op, mp);*/ 
+	if (err == 0 && ldmode != LD_ABSOLUTE) {
+		fseek(op, 0, SEEK_SET);
+		fwrite(&hdr, sizeof(hdr), 1, op);
+	}
 }
 
 /*
@@ -263,3 +562,80 @@ void set_segment_bases(void)
  *		is an index of all the symbols by library module for speed.
  */
 
+static void add_object(const char *name, off_t off, int lib)
+{
+	FILE *fp = fopen(name, "r");
+	if (fp == NULL) {
+		perror(name);
+		exit(1);
+	}
+	fseek(fp, off, SEEK_SET);
+	load_object(fp, off, lib, name);
+	fclose(fp);
+}
+
+int main(int argc, char *argv[])
+{
+	int opt;
+	FILE *bp, *mp;
+
+	arg0 = argv[0];
+
+	while ((opt = getopt(argc, argv, "rbvo:m:")) != -1) {
+		switch (opt) {
+		case 'r':
+			ldmode = LD_RFLAG;
+			break;
+		case 'b':
+			ldmode = LD_ABSOLUTE;
+		case 'v':
+			verbose = 1;
+			break;
+		case 'o':
+			outname = optarg;
+			break;
+		case 'm':
+			mapname = optarg;
+			break;
+		default:
+			fprintf(stderr, "%s: name ...\n", argv[0]);
+			exit(1);
+		}
+	}
+	if (outname == NULL)
+		outname = "a.out";
+
+	while (optind < argc) {
+		/* FIXME: spot libraries and handle here */
+		if (verbose)
+			printf("Loading %s\n", argv[optind]);
+		add_object(argv[optind], 0, 0);
+		optind++;
+	}
+	if (verbose)
+		printf("Computing memory map.\n");
+	set_segment_bases();
+	if (verbose)
+		printf("Writing output.\n");
+
+	bp = fopen(outname, "w");
+	if (bp == NULL) {
+		perror(outname);
+		exit(1);
+	}
+	if (mapname) {
+		mp = fopen(mapname, "w");
+		if (mp == NULL) {
+			perror(mapname);
+			exit(1);
+		}
+		if (verbose)
+			printf("Writing map file.\n");
+		write_map_file(mp);
+	}
+	write_binary(bp,mp);
+	fclose(bp);
+	if (mp)
+		fclose(mp);
+	exit(err);
+}

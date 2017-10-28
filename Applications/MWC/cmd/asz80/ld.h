@@ -7,6 +7,7 @@ struct symbol
     struct object *definedby;
     char name[16];
     uint16_t value;
+    uint16_t number;	/* Needed when doing ld -r */
     uint8_t type;
     uint8_t flags;
 };
@@ -15,13 +16,12 @@ struct object {
     struct object *next;
     struct symbol **syment;
     /* We might want to store a subset of this */
-    struct objheader oh;
+    struct objhdr oh;
     uint16_t base[4];	/* Base address we select for this object */
     int nsym;
+    const char *path;		/* We need more for library nodes.. */
+    off_t off;		/* For libraries */
 };
 
 #define NHASH	64
 
-struct symbol *symhash[NHASH];
-struct object *objects, *otail;
-extern uint16_t base[4], size[4];
