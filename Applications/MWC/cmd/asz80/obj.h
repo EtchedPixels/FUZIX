@@ -21,7 +21,6 @@ struct objhdr
 
 /* This byte introduces a relocation or may be escaped */
 #define REL_ESC		0xDA
-#define REL_REL		0x00	/* DA00 means write in DA */
 
 #define REL_SIZE	0x30	/* 1-4 bytes */
 /* If REL_SIMPLE then ... */
@@ -34,6 +33,11 @@ struct objhdr
 #define REL_TYPE	0x0F
 /* 00 is reserved */
 #define REL_SYMBOL	0x01
+#define REL_SPECIAL	0x00	/* REL_REL REL_EOF etc */
+
+#define REL_REL		(REL_SPECIAL| (0 << 4))	/* 00 */
+#define REL_EOF		(REL_SPECIAL| (1 << 4)) /* 10 */
+
 /* 02-0F reserved */
 /* Followed by 2 byte number of symbol in symbol table */
 
@@ -51,6 +55,11 @@ struct objhdr
 
 #define S_SIZE		19
 
-
-
-
+/*
+ * Segments
+ */
+#define UNKNOWN		-1
+#define ABSOLUTE	0
+#define CODE		1
+#define DATA		2
+#define BSS		3
