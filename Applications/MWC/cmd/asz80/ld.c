@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <ar.h>
 
 #include "obj.h"
 #include "ld.h"
@@ -140,6 +141,11 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
 	if (s->type & S_UNKNOWN) {
 		/* We are referencing a symbol that was previously unknown but which
 		   we define. Fill in the details */
+		if ((s->type & S_SEGMENT) != S_ANY &&
+			(s->type & S_SEGMENT) != (type & S_SEGMENT)) {
+			fprintf(stderr, "Segment mismatch for symbol '%s'.\n", id);
+			err |= 2;
+		}
 		s->type = type;
 		s->value = value;
 		s->definedby = o;
@@ -154,9 +160,10 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
 	return s;
 }
 
-static void insert_internal_symbol(char *name, uint16_t val)
+static void insert_internal_symbol(char *name, int seg, uint16_t val)
 {
-	find_alloc_symbol(NULL, ABSOLUTE | S_PUBLIC, name, val);
+	printf("%s is %X in seg %d\n", name, val, seg);
+	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
 
 
@@ -226,8 +233,13 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	processing = o;	/* For error reporting */
 
 	fseek(fp, off, SEEK_SET);
-	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0)
-		error("bad object file");
+	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
+		/* A library may contain other things, just ignore them */
+		if (lib)
+			return NULL;
+		else	/* But an object file must be valid */
+			error("bad object file");
+	}
 	/* Load up the symbols */
 	nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE;
 	if (nsym < 0)
@@ -240,7 +252,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
 		type = fgetc(fp);
-		if ((type & S_SEGMENT) > BSS)
+		if (!(type & S_UNKNOWN) && (type & S_SEGMENT) > BSS)
 			error("bad symbol");
 		fread(name, 16, 1, fp);
 		name[16] = 0;
@@ -308,10 +320,10 @@ static void set_segment_bases(void)
 			error("image too large");
 		/* Whoopee it fits */
 		/* Insert the linker symbols */
-		insert_internal_symbol("__code", base[1]);
-		insert_internal_symbol("__data", base[2]);
-		insert_internal_symbol("__bss", base[3]);
-		insert_internal_symbol("__end", base[3] + size[3]);
+		insert_internal_symbol("__code", CODE, 0);
+		insert_internal_symbol("__data", DATA, 0);
+		insert_internal_symbol("__bss", BSS, 0);
+		insert_internal_symbol("__end", BSS, size[3]);
 	}
 	/* Now set the base of each object appropriately */
 	memcpy(&pos, &base, sizeof(pos));
@@ -330,8 +342,15 @@ static void set_segment_bases(void)
 		while (s != NULL) {
 			uint8_t seg = s->type & S_SEGMENT;
 			/* base will be 0 for absolute */
-			if (s->definedby)
+			if (s->definedby) {
+				printf("%s moved by %x\n",
+					s->name, s->definedby->base[seg]);
 				s->value += s->definedby->base[seg];
+			} else {
+				printf("%s moved by %x\n",
+					s->name, base[seg]);
+				s->value += base[seg];
+			}
 			/* FIXME: check overflow */
 			s = s->next;
 		}
@@ -558,12 +577,52 @@ void write_binary(FILE * op, FILE *mp)
  *		is an index of all the symbols by library module for speed.
  */
 
+/*
+ *	Scan through all the object modules in this ar archive and offer
+ *	them to the linker.
+ */
+static void process_library(const char *name, FILE *fp)
+{
+	static struct ar_hdr ah;
+	off_t pos = SARMAG;
+	unsigned long size;
+
+	while(1) {
+		fseek(fp, pos, SEEK_SET);
+		if (fread(&ah, sizeof(ah), 1, fp) == 0)
+			break;
+		if (ah.ar_fmag[0] != 96 || ah.ar_fmag[1] != '\n')
+			break;
+		size = atol(ah.ar_size);
+#if 0 /* TODO */
+		if (strncmp(ah.ar_name, ".RANLIB") == 0)
+			process_ranlib();
+#endif
+		pos += sizeof(ah);
+		load_object(fp, pos, 1, name);
+		pos += size;
+		if (pos & 1)
+			pos++;
+	}
+}
+
 static void add_object(const char *name, off_t off, int lib)
 {
+	static char x[SARMAG];
 	FILE *fp = fopen(name, "r");
 	if (fp == NULL) {
 		perror(name);
 		exit(1);
+	}
+	if (off == 0 && !lib) {
+		/* Is it a bird, is it a plane ? */
+		fread(x, SARMAG, 1, fp);
+		if (memcmp(x, ARMAG, SARMAG) == 0) {
+			/* No it's a library */
+			process_library(name, fp);
+			fclose(fp);
+			return;
+		}
 	}
 	fseek(fp, off, SEEK_SET);
 	load_object(fp, off, lib, name);
