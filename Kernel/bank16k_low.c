@@ -155,7 +155,7 @@ int pagemap_realloc(uint16_t size)
 
 uint16_t pagemap_mem_used(void)
 {
-	return pfptr << 4;
+	return procmem - (pfptr << 4);
 }
 
 
