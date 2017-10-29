@@ -52,6 +52,7 @@ struct objhdr
 #define	S_UNKNOWN	0x80
 #define S_PUBLIC	0x40		/* unknown is public .. */
 #define S_SEGMENT	0x0F		/* 00 means absolute */
+#define S_ANY		0x0F
 
 #define S_SIZE		19
 
