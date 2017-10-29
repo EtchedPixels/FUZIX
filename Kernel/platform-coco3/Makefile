@@ -2,17 +2,18 @@
 CSRCS = ttydw.c mbr.c dwtime.c
 CSRCS += devices.c main.c libc.c devsdc.c devlpr.c
 
-CDSRCS = ../dev/devide_discard.c
+CDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
 
-DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c
+DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c ../dev/devsd.c
+
 NSRCS = ../dev/net/net_native.c
 
-ASRCS = coco3.s crt0.s ide.s
+ASRCS = coco3.s crt0.s ide.s sd.s
 ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = devdw.o blkdev.o devide.o
+DOBJS = devdw.o blkdev.o devide.o devsd.o
 NOBJS = net_native.o
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS) $(NOBJS)
@@ -54,6 +55,11 @@ endif
 ifdef COCO_IDE
 DRIVERS += devide.o devide_discard.o ide.o
 CROSS_CC += -DCONFIG_COCOIDE
+endif
+
+ifdef COCO_SDFPGA
+DRIVERS += devsd.o devsd_discard.o sd.o
+CROSS_CC += -DCONFIG_COCOSDFPGA
 endif
 
 ifdef COCO_BECKER
