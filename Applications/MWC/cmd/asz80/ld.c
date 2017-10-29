@@ -33,8 +33,8 @@ static uint8_t verbose;
 static int err;
 static int dbgsyms = 1;
 static int strip = 0;
-static char *mapname;
-static char *outname;
+static const char *mapname;
+static const char *outname;
 
 static void error(const char *p)
 {
@@ -105,7 +105,7 @@ static void free_object(struct object *o)
 	free(o);
 }
 
-struct symbol *new_symbol(char *name, int hash)
+struct symbol *new_symbol(const char *name, int hash)
 {
 	struct symbol *s = xmalloc(sizeof(struct symbol));
 	strncpy(s->name, name, 16);
@@ -114,7 +114,7 @@ struct symbol *new_symbol(char *name, int hash)
 	return s;
 }
 
-struct symbol *find_symbol(char *name, int hash)
+struct symbol *find_symbol(const char *name, int hash)
 {
 	struct symbol *s = symhash[hash];
 	while (s) {
@@ -133,7 +133,7 @@ static uint8_t hash_symbol(const char *name)
 
 /* Check if a symbol name is known but undefined. We use this to decide
    whether to incorporate a library module */
-int is_undefined(char *name)
+static int is_undefined(const char *name)
 {
 	int hash = hash_symbol(name);
 	struct symbol *s = find_symbol(name, hash);
@@ -143,7 +143,7 @@ int is_undefined(char *name)
 	return 1;
 }
 
-struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint16_t value)
+static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const char *id, uint16_t value)
 {
 	uint8_t hash = hash_symbol(id);
 	struct symbol *s = find_symbol(id, hash);
@@ -186,7 +186,7 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
 	return s;
 }
 
-static void insert_internal_symbol(char *name, int seg, uint16_t val)
+static void insert_internal_symbol(const char *name, int seg, uint16_t val)
 {
 	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
@@ -388,7 +388,7 @@ static void set_segment_bases(void)
  * LD_RELOC: a relocation stream is output with no remaining symbol relocations
  *	     and all internal relocations resolved.
  */
-void relocate_stream(struct object *o, FILE * op, FILE * ip)
+static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 {
 	int c;
 	uint8_t size;
@@ -497,14 +497,14 @@ void relocate_stream(struct object *o, FILE * op, FILE * ip)
 	error("corrupt reloc stream");
 }
 
-FILE *openobject(struct object *o)
+static FILE *openobject(struct object *o)
 {
 	FILE *fp = xfopen(o->path, "r");
 	xfseek(fp, o->off);
 	return fp;
 }
 
-void write_stream(FILE * op, int seg)
+static void write_stream(FILE * op, int seg)
 {
 	struct object *o = objects;
 
@@ -523,7 +523,7 @@ void write_stream(FILE * op, int seg)
 	}
 }
 
-void write_binary(FILE * op, FILE *mp)
+static void write_binary(FILE * op, FILE *mp)
 {
 	static struct objhdr hdr;
 	hdr.o_arch = arch;
@@ -644,7 +644,7 @@ static void add_object(const char *name, off_t off, int lib)
 int main(int argc, char *argv[])
 {
 	int opt;
-	FILE *bp, *mp;
+	FILE *bp, *mp = NULL;
 
 	arg0 = argv[0];
 
