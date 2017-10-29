@@ -31,12 +31,12 @@ static uint8_t arch;
 static uint16_t arch_flags;
 static uint8_t verbose;
 static int err;
-static int syms = 1;
 static int dbgsyms = 1;
+static int strip = 0;
 static char *mapname;
 static char *outname;
 
-void error(const char *p)
+static void error(const char *p)
 {
 	if (processing)
 		fprintf(stderr, "While processing: %s\n", processing->path);
@@ -47,12 +47,38 @@ void error(const char *p)
 	exit(err | 2);
 }
 
-void *xmalloc(size_t s)
+static void *xmalloc(size_t s)
 {
 	void *p = malloc(s);
 	if (p == NULL)
 		error("out of memory");
 	return p;
+}
+
+static FILE *xfopen(const char *path, const char *mode)
+{
+	FILE *fp = fopen(path, mode);
+	if (fp == NULL) {
+		perror(path);
+		exit(err | 1);
+	}
+	return fp;
+}
+
+static void xfclose(FILE *fp)
+{
+	if (fclose(fp)) {
+		perror("fclose");
+		exit(err | 1);
+	}
+}
+
+static void xfseek(FILE *fp, off_t pos)
+{
+	if (fseek(fp, pos, SEEK_SET) < 0) {
+		perror("fseek");
+		exit(err | 1);
+	}
 }
 
 static struct object *new_object(void)
@@ -154,7 +180,7 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
 	/* Two definitions.. usually bad but allow duplicate absolutes */
 	if (((s->type | type) & S_SEGMENT) != ABSOLUTE || s->value != value) {
 		/* FIXME: expand to report files somehow ? */
-		printf("%s: multiply defined.\n", id);
+		fprintf(stderr, "%s: multiply defined.\n", id);
 	}
 	/* Duplicate absolutes - just keep current entry */
 	return s;
@@ -162,7 +188,6 @@ struct symbol *find_alloc_symbol(struct object *o, uint8_t type, char *id, uint1
 
 static void insert_internal_symbol(char *name, int seg, uint16_t val)
 {
-	printf("%s is %X in seg %d\n", name, val, seg);
 	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
 
@@ -232,7 +257,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	o->path = path;
 	processing = o;	/* For error reporting */
 
-	fseek(fp, off, SEEK_SET);
+	xfseek(fp, off);
 	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
 		/* A library may contain other things, just ignore them */
 		if (lib)
@@ -248,7 +273,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
 	o->nsym = nsym;
       restart:
-	fseek(fp, off + o->oh.o_symbase, SEEK_SET);
+	xfseek(fp, off + o->oh.o_symbase);
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
 		type = fgetc(fp);
@@ -342,15 +367,10 @@ static void set_segment_bases(void)
 		while (s != NULL) {
 			uint8_t seg = s->type & S_SEGMENT;
 			/* base will be 0 for absolute */
-			if (s->definedby) {
-				printf("%s moved by %x\n",
-					s->name, s->definedby->base[seg]);
+			if (s->definedby)
 				s->value += s->definedby->base[seg];
-			} else {
-				printf("%s moved by %x\n",
-					s->name, base[seg]);
+			else
 				s->value += base[seg];
-			}
 			/* FIXME: check overflow */
 			s = s->next;
 		}
@@ -479,12 +499,8 @@ void relocate_stream(struct object *o, FILE * op, FILE * ip)
 
 FILE *openobject(struct object *o)
 {
-	FILE *fp = fopen(o->path, "r");
-	if (fp == NULL) {
-		perror(o->path);
-		exit(1);
-	}
-	fseek(fp, o->off, SEEK_SET);
+	FILE *fp = xfopen(o->path, "r");
+	xfseek(fp, o->off);
 	return fp;
 }
 
@@ -496,9 +512,9 @@ void write_stream(FILE * op, int seg)
 		FILE *ip = openobject(o);	/* So we can hide library gloop */
 		if (verbose)
 			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
-		fseek(ip, o->off + o->oh.o_segbase[seg], SEEK_SET);
+		xfseek(ip, o->off + o->oh.o_segbase[seg]);
 		relocate_stream(o, op, ip);
-		fclose(ip);
+		xfclose(ip);
 		o = o->next;
 	}
 	if (ldmode != LD_ABSOLUTE) {
@@ -527,17 +543,17 @@ void write_binary(FILE * op, FILE *mp)
 	write_stream(op, CODE);
 	hdr.o_segbase[1] = ftell(op);
 	write_stream(op, DATA);
-	if (syms) {
+	if (!strip) {
 		hdr.o_symbase = ftell(op);
 		write_symbols(op);
 	}
 	hdr.o_dbgbase = ftell(op);
 	hdr.o_magic = MAGIC_OBJ;
 	/* TODO: needs a special pass
-	if (dbgsyms)
+	if (dbgsyms )
 		copy_debug_all(op, mp);*/ 
 	if (err == 0 && ldmode != LD_ABSOLUTE) {
-		fseek(op, 0, SEEK_SET);
+		xfseek(op, 0);
 		fwrite(&hdr, sizeof(hdr), 1, op);
 	}
 }
@@ -588,7 +604,7 @@ static void process_library(const char *name, FILE *fp)
 	unsigned long size;
 
 	while(1) {
-		fseek(fp, pos, SEEK_SET);
+		xfseek(fp, pos);
 		if (fread(&ah, sizeof(ah), 1, fp) == 0)
 			break;
 		if (ah.ar_fmag[0] != 96 || ah.ar_fmag[1] != '\n')
@@ -609,24 +625,20 @@ static void process_library(const char *name, FILE *fp)
 static void add_object(const char *name, off_t off, int lib)
 {
 	static char x[SARMAG];
-	FILE *fp = fopen(name, "r");
-	if (fp == NULL) {
-		perror(name);
-		exit(1);
-	}
+	FILE *fp = xfopen(name, "r");
 	if (off == 0 && !lib) {
 		/* Is it a bird, is it a plane ? */
 		fread(x, SARMAG, 1, fp);
 		if (memcmp(x, ARMAG, SARMAG) == 0) {
 			/* No it's a library */
 			process_library(name, fp);
-			fclose(fp);
+			xfclose(fp);
 			return;
 		}
 	}
-	fseek(fp, off, SEEK_SET);
+	xfseek(fp, off);
 	load_object(fp, off, lib, name);
-	fclose(fp);
+	xfclose(fp);
 }
 
 int main(int argc, char *argv[])
@@ -636,7 +648,7 @@ int main(int argc, char *argv[])
 
 	arg0 = argv[0];
 
-	while ((opt = getopt(argc, argv, "rbvo:m:")) != -1) {
+	while ((opt = getopt(argc, argv, "rbvtsio:m:c:")) != -1) {
 		switch (opt) {
 		case 'r':
 			ldmode = LD_RFLAG;
@@ -644,6 +656,9 @@ int main(int argc, char *argv[])
 		case 'b':
 			ldmode = LD_ABSOLUTE;
 		case 'v':
+			printf("FuzixLD 0.1\n");
+			break;
+		case 't':
 			verbose = 1;
 			break;
 		case 'o':
@@ -651,6 +666,15 @@ int main(int argc, char *argv[])
 			break;
 		case 'm':
 			mapname = optarg;
+			break;
+		case 's':
+			strip = 1;
+			break;
+		case 'i':
+			split_id = 1;
+			break;
+		case 'c':
+			base[1] = atoi(optarg);
 			break;
 		default:
 			fprintf(stderr, "%s: name ...\n", argv[0]);
@@ -673,23 +697,15 @@ int main(int argc, char *argv[])
 	if (verbose)
 		printf("Writing output.\n");
 
-	bp = fopen(outname, "w");
-	if (bp == NULL) {
-		perror(outname);
-		exit(1);
-	}
+	bp = xfopen(outname, "w");
 	if (mapname) {
-		mp = fopen(mapname, "w");
-		if (mp == NULL) {
-			perror(mapname);
-			exit(1);
-		}
+		mp = xfopen(mapname, "w");
 		if (verbose)
 			printf("Writing map file.\n");
 		write_map_file(mp);
 	}
 	write_binary(bp,mp);
-	fclose(bp);
+	xfclose(bp);
 	if (mp)
 		fclose(mp);
 	exit(err);
