@@ -89,10 +89,23 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 		return;
 	}
 	/* Subtraction within segment produces an absolute */
-	if (left->a_segment == right->a_segment && op == '-') {
-		left->a_segment = ABSOLUTE;
-		left->a_sym = NULL;
-		return;
+	if (op == '-') {
+		/* Unknown symbols may get segment forced as a result */
+		if (left->a_segment == -1) {
+			left->a_segment = right->a_segment;
+			if (left->a_sym)
+				left->a_sym->s_segment = left->a_segment;
+		}
+		if (right->a_segment == -1) {
+			right->a_segment = left->a_segment;
+			if (right->a_sym)
+				right->a_sym->s_segment = right->a_segment;
+		}
+		if (left->a_segment == right->a_segment && op == '-') {
+			left->a_segment = ABSOLUTE;
+			left->a_sym = NULL;
+			return;
+		}
 	}
 	left->a_sym = NULL;
 	aerr(MUST_BE_ABSOLUTE);
@@ -204,7 +217,7 @@ void expr2(ADDR *ap)
 		expr3(ap, c);
 		return;
 	}
-	if (isalpha(c)) {
+	if (isalpha(c) || c == '_') {
 		getid(id, c);
 		if ((sp=lookup(id, uhash, 0)) == NULL
 		&&  (sp=lookup(id, phash, 0)) == NULL)

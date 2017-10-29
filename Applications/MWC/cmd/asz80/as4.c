@@ -137,8 +137,9 @@ static void putsymbol(SYM *s, FILE *ofp)
 	else {
 		if (s->s_type & TPUBLIC)
 			flag |= S_PUBLIC;
-		flag |= s->s_segment;
 	}
+	/* 0 absolute, 1-n segments, -1 don't care */
+	flag |= (s->s_segment & S_SEGMENT);
 	putc(flag, ofp);
 	fwrite(s->s_id, 16, 1, ofp);
 	putc(s->s_value, ofp);
