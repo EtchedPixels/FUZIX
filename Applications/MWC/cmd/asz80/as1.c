@@ -164,7 +164,6 @@ loop:
 		/* Write out the bytes. The BSS will deal with the rest */
 		for (value = 0 ; value < a1.a_value; value++)
 			outab(0);
-		dot[segment] += a1.a_value;
 		break;
 
 	case TNOP:
