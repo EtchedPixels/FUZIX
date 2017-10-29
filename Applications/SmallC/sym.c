@@ -195,8 +195,17 @@ void struct_init(TAG_SYMBOL *tag, char *symbol_name) {
  */
 int init(char *symbol_name, int type, int identity, int *dim, TAG_SYMBOL *tag) {
     int value, n;
+
+    /* A pointer is initialized as a word holding the address of the struct
+       or string etc that directly follows */
     if(identity == POINTER) {
-        error("cannot assign to pointer");
+        int x = getlabel();
+        gen_def_word();
+        print_label(x);
+        newline();
+        print_label(x);
+        output_label_terminator();
+        newline();
     }
     /* FIXME: may need to distinguish const string v data in future */
     if(quoted_string(&n, NULL)) {
