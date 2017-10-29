@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdint.h>
+#include <ctype.h>
 
 #include "obj.h"
 
@@ -18,7 +19,7 @@ static int show_debug = 1;
 static int show_name;
 static int show_undef;
 
-static char segname[] = "ATDB????????????";
+static char segname[] = "ATDB???????????U";
 
 static int do_nm(FILE *fp, const char *name)
 {
@@ -61,14 +62,15 @@ static int do_nm(FILE *fp, const char *name)
         addr = fgetc(fp);
         addr |= fgetc(fp) << 8;
         base += 2;
+        c = segname[type & S_SEGMENT];
         if (!(type & S_UNKNOWN)) {
-            c = segname[type & S_SEGMENT];
             /* Showing undefined only */
             if (show_undef)
                 continue;
         } else {
+            if (c != 'U')
+                c = tolower(c);
             addr = 0;
-            c = 'U';
         }
         printf("%04X %c %s\n", addr, c, symname);
     }
