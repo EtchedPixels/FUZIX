@@ -58,6 +58,15 @@ void output_label_terminator (void) {
 }
 
 /**
+ * Output a C label with leading _
+ */
+void output_label_name(char *p)
+{
+    output_byte('_');
+    output_string(p);
+}
+
+/**
  * begin a comment line for the assembler
  */
 void gen_comment(void) {
@@ -163,7 +172,7 @@ static void describe_access(SYMBOL *sym)
         output_number(sym->offset);
         output_string("+fp");
     } else
-        output_string(sym->name);
+        output_label_name(sym->name);
     output_byte(')');
     newline();
 }

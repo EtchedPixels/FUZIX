@@ -109,7 +109,7 @@ int primary(LVALUE *lval) {
                 gen_get_locale(symbol);
             } else {
                 gen_immediate();
-                output_string(symbol->name);
+                output_label_name(symbol->name);
                 newline();
             }
             lval->indirect = symbol->type;

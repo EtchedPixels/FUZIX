@@ -21,6 +21,42 @@ L1234: data ..
 - Proper constant typing
 - Type promotion
 
+We need a post processor that does
+
+1. Turn error number/lines into error reporting (so we can avoid the strings
+   in the compiler)
+2. Parses a record for each definition/use of a function checking the
+   prototype and doing mismatch warnings and use before defines
+
+In particular we need to encode prototypes very tightly in main memory so
+can't afford to do all the work in the cc first pass but we can write the
+full thing out and internally pack a function as
+
+[type|nargs][name][argbits]
+
+and pack each argument including return as
+
+0000	char
+0001	short/int
+0011	long int
+0100	unsigned char
+0101	unsigned short/int
+0110	float/double
+0111	unsigned long
+1000	ptr (to anytbing)
+1110	...(with implied endmark) 
+1111	endmark
+
+thus representing each possible type in 4 bits with enough information for
+casting and promotion.
+
+This lets us store functions as
+
+name[typelist]
+
+where the first typelist is the return. foo() is foo(...) and foo(void) is
+zero arguments
+
 Macro ops for bytecode form
 
 load r1 (fprel)			; with pre/post inc dec

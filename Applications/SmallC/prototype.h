@@ -106,6 +106,7 @@ extern void glabel(char *lab);
 extern void generate_label(int nlab);
 extern int output_byte(char c);
 extern void output_string(char ptr[]);
+extern void output_label_name(char ptr[]);
 extern void print_tab(void);
 extern void output_line(char ptr[]);
 extern void output_with_tab(char ptr[]);

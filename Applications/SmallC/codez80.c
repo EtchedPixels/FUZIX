@@ -21,13 +21,7 @@ static int regv[8];
  * print all assembler info before any code is generated
  */
 void header (void) {
-    output_string ("; Small C Z80\n;\tCoder (ac0)\n;");
-    frontend_version();
-    newline ();
-    output_line ("\t;program area SMALLC_GENERATED is RELOCATABLE");
-    output_line ("\t.module SMALLC_GENERATED");
-    output_line ("\t.list   (err, loc, bin, eqt, cyc, lin, src, lst, md)");
-    output_line ("\t.nlist  (pag)");
+    output_line("\t.code");
 }
 
 /**
@@ -39,16 +33,23 @@ void newline (void) {
 }
 
 void initmac(void) {
-    defmac("cpm\t1");
-    defmac("Z80\t1");
-    defmac("smallc\t1");
 }
 
 /**
  * Output internal generated label prefix
  */
 void output_label_prefix(void) {
-    output_byte('$');
+    output_byte('L');
+}
+
+/**
+ * Output a label with leading _
+ */
+
+void output_label_name(char *p)
+{
+    output_byte('_');
+    output_string(p);
 }
 
 /**
@@ -76,14 +77,14 @@ void trailer(void) {
  * text (code) segment
  */
 void code_segment_gtext(void) {
-    output_line ("\t.area  SMALLC_GENERATED  (REL,CON,CSEG)");
+    output_line ("\t.code");
 }
 
 /**
  * data segment
  */
 void data_segment_gdata(void) {
-    output_line ("\t.area  SMALLC_GENERATED_DATA  (REL,CON,DSEG)");
+    output_line ("\t.data");
 }
 
 /**
@@ -92,9 +93,11 @@ void data_segment_gdata(void) {
  */
 void ppubext(SYMBOL *scptr)  {
     if (symbol_table[current_symbol_table_idx].storage == STATIC) return;
-    output_with_tab (scptr->storage == EXTERN ? ";extrn\t" : ".globl\t");
-    output_string (scptr->name);
-    newline();
+    if (scptr->storage != EXTERN) {
+        output_with_tab (".export\t");
+        output_label_name (scptr->name);
+        newline();
+    }
 }
 
 /**
@@ -103,9 +106,11 @@ void ppubext(SYMBOL *scptr)  {
  */
 void fpubext(SYMBOL *scptr) {
     if (scptr->storage == STATIC) return;
-    output_with_tab (scptr->offset == FUNCTION ? ".globl\t" : ";extrn\t");
-    output_string (scptr->name);
-    newline ();
+    if (scptr->offset == FUNCTION) {
+        output_with_tab(".export\t");
+        output_label_name (scptr->name);
+        newline ();
+    }
 }
 
 /**
@@ -121,13 +126,6 @@ static void output_number_signed(int num)
     if (num >= 0)
         output_byte('+');
     output_decimal(num);
-}
-
-static void output_bracketed(char *p)
-{
-    output_byte('(');
-    output_string(p);
-    output_byte(')');
 }
 
 static void describe_access(SYMBOL *sym, int s)
@@ -147,7 +145,7 @@ static void describe_access(SYMBOL *sym, int s)
         output_byte(')');
     } else {
         output_byte('(');
-        output_string(sym->name);
+        output_label_name(sym->name);
         output_byte(')');
     }
 }
@@ -355,7 +353,7 @@ void gen_swap_stack(void) {
  */
 void gen_call(char *sname) {
     output_with_tab ("call ");
-    output_string (sname);
+    output_label_name (sname);
     newline ();
 }
 
@@ -363,7 +361,7 @@ void gen_call(char *sname) {
  * declare entry point
  */
 void declare_entry_point(char *symbol_name) {
-    output_string(symbol_name);
+    output_label_name(symbol_name);
     output_label_terminator();
     newline();
 }
@@ -371,7 +369,7 @@ void declare_entry_point(char *symbol_name) {
 void gen_prologue(void)
 {
     output_line("push ix");
-    output_line("ld ix,#0");
+    output_line("ld ix,0");
     output_line("add ix,sp");
     stkp = stkp - INTSIZE;
     nextreg = 0;
@@ -381,7 +379,8 @@ void gen_epilogue(void)
 {
     if (nextreg)
         gen_modify_stack(regv[0]);
-    output_line("pop bc");
+    if (nextreg)
+        output_line("pop bc");
     stkp += 2;
     output_line("ld sp,ix");
     output_line("pop ix");
@@ -399,12 +398,8 @@ void gen_ret(void) {
  * perform subroutine call to value on top of stack
  */
 void callstk(void) {
-    gen_immediate ();
-    output_string ("#.+5");
-    newline ();
-    gen_swap_stack ();
-    output_line ("jp (hl)");
-    stkp = stkp + INTSIZE;
+    gen_pop();
+    gen_call("callhl");		/* call to a jp(hl) */
 }
 
 /**
@@ -439,21 +434,21 @@ void gen_test_jump(int label, int ft)
  * print pseudo-op  to define a byte
  */
 void gen_def_byte(void) {
-    output_with_tab (".db ");
+    output_with_tab (".byte ");
 }
 
 /**
  * print pseudo-op to define storage
  */
 void gen_def_storage(void) {
-    output_with_tab (".ds ");
+    output_with_tab (".blkb ");
 }
 
 /**
  * print pseudo-op to define a word
  */
 void gen_def_word(void) {
-    output_with_tab (".dw ");
+    output_with_tab (".word ");
 }
 
 /**

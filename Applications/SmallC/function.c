@@ -101,7 +101,7 @@ void newfunc_typed(int storage, char *n, int type)
     if (symbol->offset == FUNCTION)
             multidef(n);
     symbol->offset = FUNCTION;
-    output_string(n);
+    output_label_name(n);
     output_label_terminator();
     newline();
     gen_prologue();

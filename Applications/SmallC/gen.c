@@ -41,7 +41,7 @@ void print_label(int label) {
  * @param lab label number
  */
 void glabel(char *lab) {
-    output_string (lab);
+    output_label_name(lab);
     output_label_terminator ();
     newline ();
 }
