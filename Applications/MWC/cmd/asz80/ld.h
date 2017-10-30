@@ -23,5 +23,5 @@ struct object {
     off_t off;		/* For libraries */
 };
 
-#define NHASH	64
+#define NHASH	64	/* Must be a power of 2 */
 

@@ -127,8 +127,13 @@ struct symbol *find_symbol(const char *name, int hash)
 
 static uint8_t hash_symbol(const char *name)
 {
-	/* TODO */
-	return 0;
+	int hash = 0;
+	uint8_t n = 16;
+
+	do {
+		hash += *name++;
+	} while (--n);
+	return (hash&(NHASH-1));
 }
 
 /* Check if a symbol name is known but undefined. We use this to decide
