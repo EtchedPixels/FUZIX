@@ -29,10 +29,9 @@ void outpass(void)
 			obh.o_size[i] = truesize[i];
 		}
 		obh.o_magic = 0;
-		obh.o_arch = OA_Z80;
+		obh.o_arch = OA_8080;
 		obh.o_flags = 0;
-		/* Will need changing if we add .Z180 and the Z180 ops */
-		obh.o_cpuflags = 0;
+		obh.o_cpuflags = cpu_flags;
 		obh.o_symbase = base;
 		obh.o_dbgbase = 0;	/* for now */
 		/* Number the symbols for output */
@@ -109,6 +108,13 @@ void outab(uint8_t b)
 		err('o', SEGMENT_OVERFLOW);
 }
 
+void outabchk(uint16_t b)
+{
+	if (b > 255)
+		err('o', CONSTANT_RANGE);
+	outab(b);
+}
+
 void outrab(ADDR *a)
 {
 	/* FIXME: handle symbols */
@@ -125,7 +131,7 @@ void outrab(ADDR *a)
 			outbyte(a->a_sym->s_number >> 8);
 		}
 	}
-	outab(a->a_value);
+	outabchk(a->a_value);
 }
 
 static void putsymbol(SYM *s, FILE *ofp)

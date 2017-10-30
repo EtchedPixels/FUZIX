@@ -126,6 +126,18 @@ SYM	sym[] = {
 	{	0,	"xor",		TSUB,		0x00A8	},
 	{	0,	"or",		TSUB,		0x00B0	},
 	{	0,	"cp",		TSUB,		0x00B8	},
+	/* Z180 */
+	{	0,	"slp",		TNOP180,	0xED76  },
+	{	0,	"otim",		TNOP180,	0xED83	},
+	{	0,	"otimr",	TNOP180,	0xED93	},
+	{	0,	"otdm",		TNOP180,	0xED8B	},
+	{	0,	"otdmr",	TNOP180,	0xED9B	},
+	{	0,	"tst",		TTST180,	0xED04	},
+	{	0,	"tstio",	TIMMED8,	0xED74	},
+	{	0,	"mlt",		TMUL,		0xED4C  },
+	{	0,	"in0",		TIO180,		0xED00	},
+	{	0,	"out0",		TIO180,		0xED01	},
+	/* The joys of ld */
 	{	0,	"ld",		TLD,		XXXX    }
 };
 

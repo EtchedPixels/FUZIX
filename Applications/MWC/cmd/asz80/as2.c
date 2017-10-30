@@ -43,9 +43,10 @@ static char *etext[] = {
 	"invalid id",
 	"must be C",
 	"divide by 0",
-	"invalid constant",
+	"constant out of range",
 	"data in BSS",
-	"segment overflow"
+	"segment overflow",
+	"Z180 instruction"
 };
 
 static void errstr(uint8_t code)

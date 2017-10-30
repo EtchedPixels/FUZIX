@@ -75,6 +75,11 @@
 #define	TSUB	0x1E00			/* sub et al */
 #define TSEGMENT 0x1F00			/* segments by number */
 #define TEXPORT 0x2000			/* symbol export */
+#define TNOP180	0x2100			/* Z180 immediate */
+#define TTST180	0x2200			/* TST m/g/(hl) */
+#define TIMMED8	0x2300			/* TSTIO m */
+#define	TMUL	0x2400			/* MUL */
+#define TIO180	0x2500			/* IN0/OUT0 */
 
 /*
  * Registers.
@@ -143,10 +148,10 @@
 #define INVALID_ID	21
 #define REG_MUST_BE_C	22
 #define DIVIDE_BY_ZERO	23
-#define INVALID_CONSTANT 24
+#define CONSTANT_RANGE  24
 #define DATA_IN_BSS	 25
 #define SEGMENT_OVERFLOW 26
-
+#define REQUIRE_Z180	27
 
 typedef	uint16_t	VALUE;		/* For symbol values */
 
@@ -196,6 +201,7 @@ extern  int	segment;
 extern	int	debug_write;
 extern	char	*fname;
 extern	int	noobj;
+extern	int	cpu_flags;
 
 extern void asmline(void);
 extern void asmld(void);
@@ -227,6 +233,7 @@ extern void outabsolute(int);
 extern void outsegment(int);
 extern void outaw(uint16_t);
 extern void outab(uint8_t);
+extern void outabchk(uint16_t);
 extern void outraw(ADDR *);
 extern void outrab(ADDR *);
 extern void outeof(void);

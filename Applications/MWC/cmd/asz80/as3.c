@@ -305,9 +305,9 @@ void expr3(ADDR *ap, int c)
 		else if (c>='a' && c<='f')
 			c -= 'a'-10;
 		else
-			err('n', INVALID_CONSTANT);
+			err('n', INVALID_CONST);
 		if (c >= radix)
-			err('n', INVALID_CONSTANT);
+			err('n', INVALID_CONST);
 		value = radix*value + c;
 	}
 	ap->a_type  = TUSER;

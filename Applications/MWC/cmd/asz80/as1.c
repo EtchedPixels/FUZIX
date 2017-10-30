@@ -28,6 +28,14 @@
 #define	OPJR	0x20			/* Opcode: jr cc base */
 #define	OPRET	0xC0			/* Opcode: ret cc base */
 
+static void require_z180(void)
+{
+	if (!(cpu_flags & OA_8080_Z180)) {
+		cpu_flags |= OA_8080_Z180;
+		err('1',REQUIRE_Z180);
+	}
+}
+
 /*
  * Assemble one line.
  * The line in in "ib", the "ip"
@@ -166,6 +174,9 @@ loop:
 			outab(0);
 		break;
 
+	case TNOP180:
+		require_z180();
+		/* Fall through */
 	case TNOP:
 		if ((opcode&0xFF00) != 0)
 			outab(opcode >> 8);
@@ -268,13 +279,37 @@ loop:
 		outab(OPIM|(value<<3));
 		break;
 
+	case TIMMED8:
+		require_z180();
+		getaddr(&a1);
+		istuser(&a1);
+		outab(opcode);
+		outabchk(value);
+		break;
+
+	case TIO180:	/* out0 and in0 */
+		require_z180();
+		getaddr((opcode & 1) ? &a2 : &a1);
+		comma();
+		getaddr((opcode & 1) ? &a1 : &a2);
+		if ((a1.a_type&TMMODE) == TBR && a2.a_type == (TUSER|TMINDIR)) {
+			reg = a1.a_type & TMREG;
+			if (reg == M || reg == IX || reg == IY)
+				aerr(INVALID_REG);
+			outab(opcode << 8);
+			outab(opcode | (reg << 3));
+			outabchk(a2.a_value);
+			break;
+		}
+		aerr(INVALID_REG);
+
 	case TIO:
 		getaddr(opcode==OPIN ? &a1 : &a2);
 		comma();
 		getaddr(opcode==OPIN ? &a2 : &a1);
 		if (a1.a_type==(TBR|A) && a2.a_type==(TUSER|TMINDIR)) {
 			outab(opcode);
-			outab(a2.a_value);
+			outabchk(a2.a_value);
 			break;
 		}
 		if ((a1.a_type&TMMODE)==TBR && a2.a_type==(TBR|TMINDIR|C)) {
@@ -374,11 +409,30 @@ loop:
 			aerr(INVALID_REG);
 		break;
 
+	case TMUL:
+		getaddr(&a1);
+		if ((a1.a_type & TMMODE) == TWR) {
+			reg = a1.a_type & TMREG;
+			switch(reg) {
+				case IX:
+				case IY:
+				case AF:
+				case AFPRIME:
+					aerr(INVALID_REG);
+					break;
+			}
+			outab(opcode >> 8);
+			outab(opcode|(reg << 3));
+			break;
+		}
+		aerr(INVALID_REG);
+		break;
+
 	case TSUB:
 		getaddr(&a1);
 		if (a1.a_type == TUSER) {
 			outab(opcode | OPSUBI);
-			outab(a1.a_value);
+			outabchk(a1.a_value);
 			break;
 		}
 		if ((a1.a_type&TMMODE) == TBR) {
@@ -397,7 +451,7 @@ loop:
 		if (a1.a_type == (TBR|A)) {
 			if (a2.a_type == TUSER) {
 				outab(opcode | OPSUBI);
-				outab(a2.a_value);
+				outabchk(a2.a_value);
 				break;
 			}
 			if ((a2.a_type&TMMODE) == TBR) {
@@ -535,7 +589,7 @@ void asmld(void)
 		if (mdst == TBR) {
 			outab(0x06|(rdst<<3));		/* ld r8,#n */
 			if (indexap != NULL)
-				outab(indexap->a_value);
+				outrab(indexap);
 			outrab(&src);
 			return;
 		}
