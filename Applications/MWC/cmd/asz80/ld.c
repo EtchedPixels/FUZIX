@@ -128,11 +128,10 @@ struct symbol *find_symbol(const char *name, int hash)
 static uint8_t hash_symbol(const char *name)
 {
 	int hash = 0;
-	uint8_t n = 16;
+	uint8_t n = 0;
 
-	do {
+	while(*name && n++ < 16)
 		hash += *name++;
-	} while (--n);
 	return (hash&(NHASH-1));
 }
 
