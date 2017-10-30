@@ -7,12 +7,14 @@ struct objhdr
 {
     uint16_t o_magic;
     uint8_t o_arch;
-#define OA_Z80		1
+#define OA_8080		1
     uint8_t o_flags;
     uint16_t o_cpuflags;
-#define OA_Z80_Z180	1
-#define OA_Z80_Z280	2
-#define OA_Z80_R800	4
+#define OA_8080_Z80	1
+#define OA_8080_Z180	2
+#define OA_8080_Z280	4
+#define OA_8080_R800	8
+#define OA_8080_8085	16
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
     uint32_t o_symbase;
