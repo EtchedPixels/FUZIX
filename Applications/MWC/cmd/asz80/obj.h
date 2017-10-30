@@ -8,6 +8,7 @@ struct objhdr
     uint16_t o_magic;
     uint8_t o_arch;
 #define OA_8080		1
+#define OA_6502		2
     uint8_t o_flags;
     uint16_t o_cpuflags;
 #define OA_8080_Z80	1
@@ -15,6 +16,15 @@ struct objhdr
 #define OA_8080_Z280	4
 #define OA_8080_R800	8
 #define OA_8080_8085	16
+
+#define OA_6502_BCD	1	/* Uses BCD instructions */
+#define OA_6502_NMOS	2	/* Uses NMOS undocumented */
+#define OA_6502_65C02	4	/* Uses 65C02 */
+#define OA_6502_BITOPS	8	/* Uses extended bit operations */
+#define OA_6502_65C816	16	/* 65C816 and relatives */
+#define OA_6502_ZPAT0	32	/* Binary Assumes ZP is at 0 */
+#define OA_6502_65CE02	64	/* Does anyone really care ? */
+
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
     uint32_t o_symbase;
@@ -66,3 +76,4 @@ struct objhdr
 #define CODE		1
 #define DATA		2
 #define BSS		3
+#define ZP		4

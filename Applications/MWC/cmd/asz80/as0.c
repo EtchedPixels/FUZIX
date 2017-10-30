@@ -23,7 +23,7 @@ int	line;
 jmp_buf	env;
 int	debug_write = 1 ;
 int	noobj;
-int	cpu_flags = OA_8080_Z80;
+int	cpu_flags = ARCH_FLAGS;
 
 /*
  * Make up a file name.

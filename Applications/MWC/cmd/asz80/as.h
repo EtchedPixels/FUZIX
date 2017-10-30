@@ -21,7 +21,6 @@
 #define	NCODE	128			/* # of characters in code buffer */
 #define	NINPUT	128			/* # of characters in input line */
 #define	NLPP	60			/* # of lines on a page */
-#define NSEGMENT 4			/* # of segments */
 #define	XXXX	0			/* Unused value */
 
 /*
@@ -29,6 +28,15 @@
  */
 #define	GOOD	0
 #define	BAD	1
+
+#ifdef TARGET_Z80
+
+typedef	uint16_t	VALUE;		/* For symbol values */
+
+#define NSEGMENT 4			/* # of segments */
+
+#define ARCH OA_8080
+#define ARCH_FLAGS OA_8080_Z80
 
 /*
  * Types. These are used
@@ -57,6 +65,8 @@
 #define	TEQU	0x0A00			/* equ */
 #define	TCOND	0x0B00			/* conditional */
 #define	TENDC	0x0C00			/* end conditional */
+#define TSEGMENT 0x0D00			/* segments by number */
+#define TEXPORT 0x0E00			/* symbol export */
 #define	TNOP	0x0F00			/* nop */
 #define	TRST	0x1000			/* restarts */
 #define	TREL	0x1100			/* djnz, jr */
@@ -73,8 +83,6 @@
 #define	TLD	0x1C00			/* ld */
 #define	TCC	0x1D00			/* condition code */
 #define	TSUB	0x1E00			/* sub et al */
-#define TSEGMENT 0x1F00			/* segments by number */
-#define TEXPORT 0x2000			/* symbol export */
 #define TNOP180	0x2100			/* Z180 immediate */
 #define TTST180	0x2200			/* TST m/g/(hl) */
 #define TIMMED8	0x2300			/* TSTIO m */
@@ -118,13 +126,104 @@
 #define	CM	7
 
 /*
- * Segments
+ *	Error message numbers: FIXME - sort general first
  */
-#define UNKNOWN		-1
-#define ABSOLUTE	0
-#define CODE		1
-#define DATA		2
-#define BSS		3
+
+#define BRACKET_EXPECTED 1
+#define MISSING_COMMA	2
+#define SQUARE_EXPECTED 3
+#define PERCENT_EXPECTED 4
+#define UNEXPECTED_CHR	10
+#define PHASE_ERROR	11
+#define MULTIPLE_DEFS	12
+#define SYNTAX_ERROR	13
+#define MUST_BE_ABSOLUTE	14
+#define MISSING_DELIMITER 15
+#define INVALID_CONST	16
+#define BRA_RANGE	17
+#define CONDCODE_ONLY	18
+#define INVALID_REG	19
+#define ADDR_REQUIRED	20
+#define INVALID_ID	21
+#define REG_MUST_BE_C	22
+#define DIVIDE_BY_ZERO	23
+#define CONSTANT_RANGE  24
+#define DATA_IN_BSS	 25
+#define SEGMENT_OVERFLOW 26
+#define DATA_IN_ZP	27
+#define REQUIRE_Z180	28
+
+
+
+#elif TARGET_6502
+
+typedef	uint16_t	VALUE;		/* For symbol values */
+
+#define NSEGMENT 5			/* # of segments */
+
+#define ARCH OA_6502
+#define ARCH_FLAGS OA_6502_BCD	/* For now until CPU type properly settable */
+
+
+/*
+ * Types. These are used
+ * in both symbols and in address
+ * descriptions. Observe the way the
+ * symbol flags hide in the register
+ * field of the address.
+ */
+#define	TMREG	0x000F			/* Register code */
+#define	TMMDF	0x0001			/* Multidef */
+#define	TMASG	0x0002			/* Defined by "=" */
+#define	TMMODE	0xFF00			/* Mode */
+#define	TMINDIR	0x8000			/* Indirect flag in mode */
+#define TPUBLIC	0x0080			/* Exported symbol */
+#define TMADDR	0x00F0			/* Addressing mode bits */
+
+#define	TZP	0x0010			/* 0000 is TUSER */
+#define TACCUM	0x0020
+#define TZPX	0x0030
+#define TZPY	0x0040
+#define TABSX	0x0050
+#define TABSY	0x0060
+#define TZPX_IND	0x0070
+#define TZPY_IND	0x0080
+#define TZP_IND	0x0090
+
+
+#define	TNEW	0x0000			/* Virgin */
+#define	TUSER	0x0100			/* User name */
+#define	TBR	0x0200			/* Byte register */
+#define	TWR	0x0300			/* Word register */
+#define	TSR	0x0400			/* Special register (I, R) */
+#define	TDEFB	0x0500			/* defb */
+#define	TDEFW	0x0600			/* defw */
+#define	TDEFS	0x0700			/* defs */
+#define	TDEFM	0x0800			/* defm */
+#define	TORG	0x0900			/* org */
+#define	TEQU	0x0A00			/* equ */
+#define	TCOND	0x0B00			/* conditional */
+#define	TENDC	0x0C00			/* end conditional */
+#define TSEGMENT 0x0D00			/* segments by number */
+#define TEXPORT 0x0E00			/* symbol export */
+#define TCC	0x0F00
+/* CPU specific codes */
+#define	TCLASS0	0x1000			/* xxxyyy00 instructions */
+#define TCLASS1	0x1100			/* xxxyyy01 instructions */
+#define TCLASS2	0x1200			/* xxxyyy10 instructions */
+#define TCLASS2Y 0x1300			/* ditto but taking Y */
+#define TJMP	0x1400			/* JMP */
+#define TREL8	0x1500			/* Bcc */
+#define TIMPL	0x1600			/* Implicit */
+#define TBRK	0x1700			/* BRK */
+#define TJSR	0x1800			/* JSR */
+
+/*
+ * Registers.
+ */
+#define	A	0
+#define	X	1
+#define	Y	2
 
 /*
  *	Error message numbers
@@ -141,19 +240,40 @@
 #define MUST_BE_ABSOLUTE	14
 #define MISSING_DELIMITER 15
 #define INVALID_CONST	16
-#define JR_RANGE	17
+#define BRA_RANGE	17
 #define CONDCODE_ONLY	18
 #define INVALID_REG	19
 #define ADDR_REQUIRED	20
 #define INVALID_ID	21
-#define REG_MUST_BE_C	22
+#define BADMODE		22
 #define DIVIDE_BY_ZERO	23
 #define CONSTANT_RANGE  24
 #define DATA_IN_BSS	 25
 #define SEGMENT_OVERFLOW 26
-#define REQUIRE_Z180	27
+#define DATA_IN_ZP	27
 
-typedef	uint16_t	VALUE;		/* For symbol values */
+
+#else
+#error "Unknown target"
+#endif
+
+/*
+ * Segments
+ */
+#define UNKNOWN		-1
+#define ABSOLUTE	0
+#define CODE		1
+#define DATA		2
+#define BSS		3
+
+/*
+ * Expression priority
+ */
+
+#define	LOPRI	0
+#define	ADDPRI	1
+#define	MULPRI	2
+#define	HIPRI	3
 
 /*
  * Address description.
@@ -204,12 +324,8 @@ extern	int	noobj;
 extern	int	cpu_flags;
 
 extern void asmline(void);
-extern void asmld(void);
-extern ADDR *getldaddr(ADDR *, int *, int *, ADDR *);
-extern void outop(int, ADDR *);
 extern void comma(void);
 extern void istuser(ADDR *);
-extern int ccfetch(ADDR *);
 extern int symhash(char *);
 extern void err(char, uint8_t);
 extern void uerr(char *);
@@ -240,5 +356,7 @@ extern void outeof(void);
 extern void outbyte(uint8_t);
 extern void outflush(void);
 extern void syminit(void);
+
+extern char *etext[];
 
 #include "obj.h"

@@ -1,5 +1,5 @@
 LINKER = sdcc
-FCC = ../../../../Library/tools/fcc -O2
+FCC = ../../../../Library/tools/fcc -O2 -DTARGET_Z80
 PLATFORM =
 #PLATFORM = -tzx128
 

@@ -161,3 +161,47 @@ void syminit(void)
 		++sp;
 	}
 }
+
+char *etext[] = {
+	"unexpected character",
+	"phase error",
+	"multiple definitions",
+	"syntax error",
+	"must be absolute",
+	"missing delimiter",
+	"invalid constant",
+	"JR out of range",
+	"condition required",
+	"invalid register for operation",
+	"address required",
+	"invalid id",
+	"must be C",
+	"divide by 0",
+	"constant out of range",
+	"data in BSS",
+	"segment overflow",
+	"Z180 instruction"
+};
+
+/*
+ * Make sure that the
+ * mode and register fields of
+ * the type of the "ADDR" pointed to
+ * by "ap" can participate in an addition
+ * or a subtraction.
+ */
+void isokaors(ADDR *ap, int paren)
+{
+	int mode;
+	int reg;
+
+	mode = ap->a_type&TMMODE;
+	if (mode == TUSER)
+		return;
+	if (mode==TWR && paren!=0) {
+		reg = ap->a_type&TMREG;
+		if (reg==IX || reg==IY)
+			return;
+	}
+	aerr(ADDR_REQUIRED);
+}

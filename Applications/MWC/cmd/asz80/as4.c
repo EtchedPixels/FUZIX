@@ -22,14 +22,14 @@ void outpass(void)
 		/* Lay the file out */
 		for (i = 1; i < NSEGMENT; i++) {
 			segbase[i] = base;
-			if (i != BSS) {
+			if (i != BSS && i != ZP) {
 				obh.o_segbase[i] = base;
 				base += segsize[i] + 2; /* 2 for the EOF mark */
 			}
 			obh.o_size[i] = truesize[i];
 		}
 		obh.o_magic = 0;
-		obh.o_arch = OA_8080;
+		obh.o_arch = ARCH;
 		obh.o_flags = 0;
 		obh.o_cpuflags = cpu_flags;
 		obh.o_symbase = base;
@@ -69,11 +69,18 @@ void outaw(uint16_t w)
 	outab(w >> 8);
 }
 
+static void check_store_allowed(uint8_t segment, uint16_t value)
+{
+	if (segment == BSS)
+		err('b', DATA_IN_BSS);
+	if (segment == ZP)
+		err('z', DATA_IN_ZP);
+}
+
 void outraw(ADDR *a)
 {
 	if (a->a_segment != ABSOLUTE) {
-		if (segment == BSS)
-			err('b', DATA_IN_BSS);
+		check_store_allowed(segment, a->a_value);
 		if (a->a_sym == NULL) {
 			outbyte(REL_ESC);
 			outbyte((1 << 4) | REL_SIMPLE | a->a_segment);
@@ -95,8 +102,8 @@ void outraw(ADDR *a)
 void outab(uint8_t b)
 {
 	/* Not allowed to put data in the BSS except zero */
-	if (segment == BSS && b)
-		err('b', DATA_IN_BSS);
+	check_store_allowed(segment, b);
+	/* FIXME: wrong error ?? */
 	if (segment == ABSOLUTE)
 		err('A', MUST_BE_ABSOLUTE);
 	outbyte(b);
@@ -119,8 +126,7 @@ void outrab(ADDR *a)
 {
 	/* FIXME: handle symbols */
 	if (a->a_segment != ABSOLUTE) {
-		if (segment == BSS)
-			err('b', DATA_IN_BSS);
+		check_store_allowed(segment, a->a_value);
 		if (a->a_sym == NULL) {
 			outbyte(REL_ESC);
 			outbyte((0 << 4) | REL_SIMPLE | a->a_segment);

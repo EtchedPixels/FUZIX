@@ -28,6 +28,11 @@
 #define	OPJR	0x20			/* Opcode: jr cc base */
 #define	OPRET	0xC0			/* Opcode: ret cc base */
 
+static void asmld(void);
+static ADDR *getldaddr(ADDR *ap, int *modep, int *regp, ADDR *iap);
+static void outop(int op, ADDR *ap);
+static int ccfetch(ADDR *ap);
+
 static void require_z180(void)
 {
 	if (!(cpu_flags & OA_8080_Z180)) {
@@ -35,6 +40,55 @@ static void require_z180(void)
 		err('1',REQUIRE_Z180);
 	}
 }
+
+/*
+ * Read in an address
+ * descriptor, and fill in
+ * the supplied "ADDR" structure
+ * with the mode and value.
+ * Exits directly to "qerr" if
+ * there is no address field or
+ * if the syntax is bad.
+ */
+void getaddr(ADDR *ap)
+{
+	int reg;
+	int c;
+
+	if ((c=getnb()) != '(') {
+		unget(c);
+		expr1(ap, LOPRI, 0);
+		return;
+	}
+	expr1(ap, LOPRI, 1);
+	if (getnb() != ')')
+		qerr(BRACKET_EXPECTED);
+	reg = ap->a_type&TMREG;
+	switch (ap->a_type&TMMODE) {
+	case TBR:
+		if (reg != C)
+			aerr(REG_MUST_BE_C);
+		ap->a_type |= TMINDIR;
+		break;
+	case TSR:
+	case TCC:
+		aerr(ADDR_REQUIRED);
+		break;
+	case TUSER:
+		ap->a_type |= TMINDIR;
+		break;
+	case TWR:
+		if (reg == HL)
+			ap->a_type = TBR|M;
+		else if (reg==IX || reg==IY)
+			ap->a_type = TBR|reg;
+		else if (reg==AF || reg==AFPRIME)
+			aerr(INVALID_REG);
+		else
+			ap->a_type |= TMINDIR;
+	}
+}
+
 
 /*
  * Assemble one line.
@@ -205,7 +259,7 @@ loop:
 		istuser(&a1);
 		disp = a1.a_value-dot[segment]-2;
 		if (disp<-128 || disp>127 || a1.a_segment != segment)
-			aerr(JR_RANGE);
+			aerr(BRA_RANGE);
 		outab(opcode);
 		outab(disp);
 		break;
@@ -525,7 +579,7 @@ loop:
  * indexing. This layer just screens out the many
  * cases, and emits the correct bytes.
  */
-void asmld(void)
+static void asmld(void)
 {
 	int mdst;
 	int rdst;
@@ -633,7 +687,7 @@ void asmld(void)
  * pointer "ap" if indexing is required, otherwise just
  * pass the "iap" through.
  */
-ADDR	*getldaddr(ADDR *ap, int *modep, int *regp, ADDR *iap)
+static ADDR *getldaddr(ADDR *ap, int *modep, int *regp, ADDR *iap)
 {
 	int mode;
 	int reg;
@@ -681,7 +735,7 @@ ADDR	*getldaddr(ADDR *ap, int *modep, int *regp, ADDR *iap)
  * the address mode to see if the bytes
  * are needed.
  */
-void outop(int op, ADDR *ap)
+static void outop(int op, ADDR *ap)
 {
 	int needisp;
 
@@ -706,35 +760,13 @@ void outop(int op, ADDR *ap)
 }
 
 /*
- * The next character
- * in the input must be a comma
- * or it is a fatal error.
- */
-void comma(void)
-{
-	if (getnb() != ',')
-		qerr(MISSING_COMMA);
-}
-
-/*
- * Check if the mode of
- * an ADDR is TUSER. If not, give
- * an error.
- */
-void istuser(ADDR *ap)
-{
-	if ((ap->a_type&TMMODE) != TUSER)
-		aerr(ADDR_REQUIRED);
-}
-
-/*
  * Try to interpret an "ADDR"
  * as a condition code name. Return
  * the condition, or "-1" if it cannot
  * be interpreted as a condition. The
  * "c" condition is a pain.
  */
-int ccfetch(ADDR *ap)
+static int ccfetch(ADDR *ap)
 {
 	if (ap->a_type == (TBR|C))
 		return (CC);

@@ -5,58 +5,19 @@
  */
 #include	"as.h"
 
-#define	LOPRI	0
-#define	ADDPRI	1
-#define	MULPRI	2
-#define	HIPRI	3
+
 
 /*
- * Read in an address
- * descriptor, and fill in
- * the supplied "ADDR" structure
- * with the mode and value.
- * Exits directly to "qerr" if
- * there is no address field or
- * if the syntax is bad.
+ * Check if the mode of
+ * an ADDR is TUSER. If not, give
+ * an error.
  */
-void getaddr(ADDR *ap)
+void istuser(ADDR *ap)
 {
-	int reg;
-	int c;
-
-	if ((c=getnb()) != '(') {
-		unget(c);
-		expr1(ap, LOPRI, 0);
-		return;
-	}
-	expr1(ap, LOPRI, 1);
-	if (getnb() != ')')
-		qerr(BRACKET_EXPECTED);
-	reg = ap->a_type&TMREG;
-	switch (ap->a_type&TMMODE) {
-	case TBR:
-		if (reg != C)
-			aerr(REG_MUST_BE_C);
-		ap->a_type |= TMINDIR;
-		break;
-	case TSR:
-	case TCC:
+	if ((ap->a_type&TMMODE) != TUSER)
 		aerr(ADDR_REQUIRED);
-		break;
-	case TUSER:
-		ap->a_type |= TMINDIR;
-		break;
-	case TWR:
-		if (reg == HL)
-			ap->a_type = TBR|M;
-		else if (reg==IX || reg==IY)
-			ap->a_type = TBR|reg;
-		else if (reg==AF || reg==AFPRIME)
-			aerr(INVALID_REG);
-		else
-			ap->a_type |= TMINDIR;
-	}
 }
+
 
 static void chkabsolute(ADDR *a)
 {
@@ -313,27 +274,6 @@ void expr3(ADDR *ap, int c)
 	ap->a_type  = TUSER;
 	ap->a_value = value;
 	ap->a_segment = ABSOLUTE;
+	ap->a_sym = NULL;
 }
 
-/*
- * Make sure that the
- * mode and register fields of
- * the type of the "ADDR" pointed to
- * by "ap" can participate in an addition
- * or a subtraction.
- */
-void isokaors(ADDR *ap, int paren)
-{
-	int mode;
-	int reg;
-
-	mode = ap->a_type&TMMODE;
-	if (mode == TUSER)
-		return;
-	if (mode==TWR && paren!=0) {
-		reg = ap->a_type&TMREG;
-		if (reg==IX || reg==IY)
-			return;
-	}
-	aerr(ADDR_REQUIRED);
-}

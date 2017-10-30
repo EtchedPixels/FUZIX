@@ -25,30 +25,6 @@ int symhash(char *id)
 	return (hash&HMASK);
 }
 
-/* We may want to move this out into a a helper app at the end to dump
-   errors without using assembler space */
-
-static char *etext[] = {
-	"unexpected character",
-	"phase error",
-	"multiple definitions",
-	"syntax error",
-	"must be absolute",
-	"missing delimiter",
-	"invalid constant",
-	"JR out of range",
-	"condition required",
-	"invalid register for operation",
-	"address required",
-	"invalid id",
-	"must be C",
-	"divide by 0",
-	"constant out of range",
-	"data in BSS",
-	"segment overflow",
-	"Z180 instruction"
-};
-
 static void errstr(uint8_t code)
 {
 	if (code < 10) {
@@ -99,6 +75,17 @@ void aerr(uint8_t code)
 void qerr(uint8_t code)
 {
 	err('q', code);
+}
+
+/*
+ * The next character
+ * in the input must be a comma
+ * or it is a fatal error.
+ */
+void comma(void)
+{
+	if (getnb() != ',')
+		qerr(MISSING_COMMA);
 }
 
 /*

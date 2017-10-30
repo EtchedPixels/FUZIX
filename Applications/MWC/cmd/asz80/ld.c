@@ -281,7 +281,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
 		type = fgetc(fp);
-		if (!(type & S_UNKNOWN) && (type & S_SEGMENT) > BSS)
+		if (!(type & S_UNKNOWN) && (type & S_SEGMENT) > ZP)
 			error("bad symbol");
 		fread(name, 16, 1, fp);
 		name[16] = 0;
@@ -344,6 +344,8 @@ static void set_segment_bases(void)
 				error("image too large");
 		}
 		base[3] = base[2] + size[2];
+
+		/* ZP if any is assumed to be set on input */
 
 		if (base[3] < base[2] || base[3] + size[3] < base[3])
 			error("image too large");
@@ -429,7 +431,7 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 		if (code & REL_SIMPLE) {
 			uint8_t seg = code & S_SEGMENT;
 			/* Check entry is valid */
-			if (seg == ABSOLUTE || seg > BSS || size > 2)
+			if (seg == ABSOLUTE || seg > ZP || size > 2)
 				error("invalid reloc");
 			/* If we are not building an absolute then keep the tag */
 			if (ldmode != LD_ABSOLUTE) {
@@ -659,6 +661,8 @@ int main(int argc, char *argv[])
 			break;
 		case 'b':
 			ldmode = LD_ABSOLUTE;
+			strip = 1;
+			break;
 		case 'v':
 			printf("FuzixLD 0.1\n");
 			break;
