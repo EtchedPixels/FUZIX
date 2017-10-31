@@ -1,7 +1,12 @@
 /*
- * Z-80 assembler.
- * Output Intel compatable
- * hex files.
+ * Output FUZIX object files for 8/16bit machines.
+ *
+ * Currently we understand little endian 8 and 16bit formats along with
+ * PC relative.
+ *
+ * FIXME: We need to manage dot[segment] properly for word addressed machines
+ * so that we track and write in words not bytes. Right now word addressing
+ * is broken
  */
 
 #include	"as.h"
@@ -18,6 +23,7 @@ void outpass(void)
 {
 	off_t base = sizeof(obh);
 	int i;
+
 	if (pass == 1) {
 		/* Lay the file out */
 		for (i = 1; i < NSEGMENT; i++) {
@@ -36,15 +42,6 @@ void outpass(void)
 		obh.o_dbgbase = 0;	/* for now */
 		/* Number the symbols for output */
 		numbersymbols();
-		outsegment(1);
-#ifdef TARGET_WORDMACHINE
-		outbyte(REL_WORDMACHINE);
-		outbyte(BYTES_PER_ADDRESS);
-#elif TARGET_BIGENDIAN
-		outbyte(REL_BIGENDIAN);
-#else
-		outbyte(REL_LITTLEENDIAN);
-#endif
 	}
 }
 
@@ -74,8 +71,13 @@ void outsegment(int seg)
  */
 void outaw(uint16_t w)
 {
+#ifdef TARGET_BE
+	outab(w >> 8);
+	outab(w);
+#else
 	outab(w);
 	outab(w >> 8);
+#endif
 }
 
 static void check_store_allowed(uint8_t segment, uint16_t value)
@@ -86,6 +88,10 @@ static void check_store_allowed(uint8_t segment, uint16_t value)
 		err('z', DATA_IN_ZP);
 }
 
+/*
+ *	Symbol numbers and relocatios are always written little endian
+ *	for simplicity.
+ */
 void outraw(ADDR *a)
 {
 	if (a->a_segment != ABSOLUTE) {
@@ -120,7 +126,7 @@ void outab(uint8_t b)
 		outbyte(REL_REL);
 	++dot[segment];
 	++truesize[segment];
-	if (truesize[segment] == 0 || dot[segment] == 0)
+	if (truesize[segment] == SEGMENT_LIMIT || dot[segment] == SEGMENT_LIMIT)
 		err('o', SEGMENT_OVERFLOW);
 }
 
@@ -137,10 +143,12 @@ void outrabrel(ADDR *a)
 		check_store_allowed(segment, a->a_value);
 		if (a->a_sym) {
 			outbyte(REL_ESC);
-			outbyte((0 << 4 ) | PCREL);
+			outbyte((0 << 4 ) | REL_PCREL);
 			outbyte(a->a_sym->s_number & 0xFF);
 			outbyte(a->a_sym->s_number >> 8);
-			outaw(a->a_value);
+			outbyte(a->a_value);
+			outab(a->a_value >> 8);
+			return;
 		}
 		/* relatives without a symbol don't need relocation */
 	}
