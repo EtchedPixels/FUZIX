@@ -18,6 +18,21 @@ void istuser(ADDR *ap)
 		aerr(ADDR_REQUIRED);
 }
 
+/*
+ * A segment needs to meet a rule. Make sure that we don't have
+ * internmal inconsistency
+ */
+static void setsegment(SYM *s, int seg)
+{
+	if (seg == UNKNOWN)
+		return;
+
+	if (s->s_segment == UNKNOWN || s->s_segment == seg) {
+		s->s_segment = seg;
+		return;
+	}
+	aerr(SEGMENT_CLASH);
+}
 
 static void chkabsolute(ADDR *a)
 {
@@ -55,12 +70,12 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 		if (left->a_segment == -1) {
 			left->a_segment = right->a_segment;
 			if (left->a_sym)
-				left->a_sym->s_segment = left->a_segment;
+				setsegment(left->a_sym, left->a_segment);
 		}
 		if (right->a_segment == -1) {
 			right->a_segment = left->a_segment;
 			if (right->a_sym)
-				right->a_sym->s_segment = right->a_segment;
+				setsegment(right->a_sym, right->a_segment);
 		}
 		if (left->a_segment == right->a_segment && op == '-') {
 			left->a_segment = ABSOLUTE;
