@@ -11,6 +11,8 @@ struct objhdr
 #define OA_6502		2
 #define OA_DGNOVA	3	/* So I can test PC relative */
     uint8_t o_flags;
+#define OF_BIGENDIAN	1
+#define OF_WORDMACHINE	2	/* 16bit word addressed */
     uint16_t o_cpuflags;
 #define OA_8080_Z80	1
 #define OA_8080_Z180	2
@@ -60,11 +62,13 @@ struct objhdr
 
 #define REL_REL		(REL_SPECIAL| (0 << 4))	/* 00 */
 #define REL_EOF		(REL_SPECIAL| (1 << 4)) /* 10 */
-/* this must appear first followed by a wordsize in bytes */
-#define	REL_WORDMACHINE	(REL_SPECIAL| (2 << 4))	/* 20 */
-/* target is big-endian for 16bit fixups */
-#define REL_BIGENDIAN	(REL_SPECIAL| (3 << 4))	/* 30 */
-#define REL_LITTLEENDIAN (REL_SPECIAL| (4 << 4)) /* 40 */
+/* Overflow suppresses overflow checking on the relocation that follows (no
+   second REL_ESC */
+#define REL_OVERFLOW	(REL_SPECIAL| (2 << 4))	/* 20 */
+/* Indicate a high byte relocation. Treated as normal until the final absolute
+   write where the two bytes of reloc are relocated and the high byte used. If
+   used with overflow must follow it directly */
+#define REL_HIGH	(REL_SPECIAL| (3 << 4))	/* 30 */
 
 /* symbols and debug are in the format 
     uint8_t flags

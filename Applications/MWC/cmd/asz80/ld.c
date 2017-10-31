@@ -33,8 +33,10 @@ static uint8_t verbose;
 static int err;
 static int dbgsyms = 1;
 static int strip = 0;
+static int obj_flags;
 static const char *mapname;
 static const char *outname;
+static uint16_t dot;
 
 static void error(const char *p)
 {
@@ -111,6 +113,8 @@ struct symbol *new_symbol(const char *name, int hash)
 	strncpy(s->name, name, 16);
 	s->next = symhash[hash];
 	symhash[hash] = s;
+	if (verbose)
+		printf("+%.16s\n", name);
 	return s;
 }
 
@@ -163,9 +167,11 @@ static void segment_mismatch(struct symbol *s, uint8_t type2)
 	}
 	/* Regardless of the claimed type, an absolute definition fulfills
 	   any need. */
-	if (seg2 == ABSOLUTE)
+	if (seg2 == ABSOLUTE || seg2 == S_ANY)
 		return;
 	fprintf(stderr, "Segment mismatch for symbol '%.16s'.\n", s->name);
+	fprintf(stderr, "Want segment %d but constrained to %d/\n",
+		seg2, seg1);
 	err |= 2;
 }
 
@@ -196,6 +202,7 @@ static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const ch
 		/* We are referencing a symbol that was previously unknown but which
 		   we define. Fill in the details */
 		segment_mismatch(s, type);
+		s->type &= ~S_UNKNOWN;
 		s->value = value;
 		s->definedby = o;
 		return s;
@@ -213,7 +220,6 @@ static void insert_internal_symbol(const char *name, int seg, uint16_t val)
 {
 	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
-
 
 /* Number the symbols that we will write out. We don't care about the mode
    too much. In valid reloc mode we won't have any S_UNKNOWN symbols anyway */
@@ -267,7 +273,20 @@ static void write_map_file(FILE *fp)
 	}
 }
 
-struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
+static void compatible_obj(struct objhdr *oh)
+{
+	if (obj_flags != -1 && oh->o_flags != obj_flags) {
+		fprintf(stderr, "Mixed object types not supported.\n");
+		exit(1);
+	}
+	if (oh->o_flags & OF_BIGENDIAN) {
+		fprintf(stderr, "Big endian not yet supported.\n");
+		exit(1);
+	}
+	obj_flags = oh->o_flags;
+}
+
+static struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 {
 	int i;
 	uint8_t type;
@@ -288,6 +307,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 		else	/* But an object file must be valid */
 			error("bad object file");
 	}
+	compatible_obj(&o->oh);
 	/* Load up the symbols */
 	nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE;
 	if (nsym < 0)
@@ -295,7 +315,7 @@ struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 	/* Allocate the symbol entries */
 	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
 	o->nsym = nsym;
-      restart:
+restart:
 	xfseek(fp, off + o->oh.o_symbase);
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
@@ -404,6 +424,33 @@ static void set_segment_bases(void)
 	   corrected. Everything needed for relocation is present */
 }
 
+static void target_put(struct object *o, uint16_t value, uint16_t size, FILE *op)
+{
+	if (size == 1)
+		fputc(value, op);
+	else {
+		if (o->oh.o_flags&OF_BIGENDIAN) {
+			fputc(value >> 8, op);
+			fputc(value, op);
+		} else {
+			fputc(value, op);
+			fputc(value >> 8, op);
+		}
+	}
+}
+
+static uint16_t target_get(struct object *o, uint16_t size, FILE *ip)
+{
+	if (size == 1)
+		return fgetc(ip);
+	else {
+		if (o->oh.o_flags & OF_BIGENDIAN)
+			return (fgetc(ip) << 8) + fgetc(ip);
+		else
+			return fgetc(ip) + (fgetc(ip) << 8);
+	}
+}
+
 /*
  *	Relocate the stream of input from ip to op
  *
@@ -424,9 +471,14 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 
 	while ((c = fgetc(ip)) != EOF) {
 		uint8_t code = (uint8_t) c;
+		uint8_t optype;
+		uint8_t overflow = 1;
+		uint8_t high = 0;
+
 		/* Unescaped material is just copied over */
 		if (code != REL_ESC) {
 			fputc(code, op);
+			dot++;
 			continue;
 		}
 		code = fgetc(ip);
@@ -440,14 +492,19 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 			if (ldmode != LD_ABSOLUTE)
 				fputc(REL_ESC, op);
 			fputc(REL_REL, op);
+			dot++;
 			continue;
 		}
-		if (code == REL_LITTLEENDIAN)
-			continue;
-		if (code == REL_BIGENDIAN || code == REL_WORDMACHINE)
-			error("unsupported architecture");
-		/* Relocations */
 
+		if (code == REL_OVERFLOW) {
+			overflow = 0;
+			code = fgetc(ip);
+		}
+		if (code == REL_HIGH) {
+			high = 1;
+			code = fgetc(ip);
+		}
+		/* Relocations */
 		size = ((code & S_SIZE) >> 4) + 1;
 
 		/* Simple relocation - adjust versus base of a segment of this object */
@@ -459,68 +516,99 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 			/* If we are not building an absolute then keep the tag */
 			if (ldmode != LD_ABSOLUTE) {
 				fputc(REL_ESC, op);
+				if (!overflow)
+					fputc(REL_OVERFLOW, op);
+				if (high)
+					fputc(REL_HIGH, op);
 				fputc(code, op);
 			}
 			/* Relocate the value versus the new segment base and offset of the
 			   object */
-			r = fgetc(ip);
-			if (size == 2)
-				r |= fgetc(ip) << 8;
+			r = target_get(o, size, ip);
 			r += o->base[seg];
-			if (r < o->base[seg] || (size == 1 && r > 255))
+			if (overflow && (r < o->base[seg] || (size == 1 && r > 255)))
 				error("relocation exceeded");
-			fputc(r, op);
-			if (size == 2)
-				fputc(r >> 8, op);
+			if (high && ldmode == LD_ABSOLUTE) {
+				r >>= 8;
+				size = 1;
+			}
+			target_put(o, r, size, op);
+			dot += size;
 			continue;
 		}
+		optype = code & REL_TYPE;
 		/* Symbolic relocations - may be inter-segment and inter-object */
-		if ((code & REL_TYPE) != REL_SYMBOL)
-			error("invalid reloc type");
-		r = fgetc(ip);
-		r |= fgetc(ip) << 8;
-		/* r is the symbol number */
-		if (r >= o->nsym)
-			error("invalid reloc sym");
-		s = o->syment[r];
-		if (s->type & S_UNKNOWN) {
-			if (ldmode != LD_RFLAG) {
-				if (processing)
-				fprintf(stderr, "%s: Unknown symbol '%.16s'.\n", o->path, s->name);
-				err |= 1;
-			}
-			if (ldmode != LD_ABSOLUTE) {
-				/* Rewrite the record with the new symbol number */
-				fputc(REL_ESC, op);
-				fputc(code, op);
-				fputc(s->value, op);
-				fputc(s->value >> 8, op);
-			}
-			/* Copy the bytes to relocate */
-			fputc(fgetc(ip), op);
-			if (size == 2)
-				fputc(fgetc(ip), op);
-		} else {
-			/* Get the relocation bytes. These hold the offset versus
-			   the referenced symbol */
-			r = fgetc(ip);
-			if (size == 2)
+		switch(optype)
+		{
+			default:
+				error("invalid reloc type");
+			case REL_SYMBOL:
+			case REL_PCREL:
+				r = fgetc(ip);
 				r |= fgetc(ip) << 8;
-			/* Add the offset from the output segment base to the
-			   symbol */
-			r += s->value;
-			/* Check again */
-			if (r < s->value || (size == 1 && r > 255))
-				error("relocation exceeded");
-			/* If we are not fully resolving then turn this into a
-			   simple relocation */
-			if (ldmode != LD_ABSOLUTE) {
-				fputc(REL_ESC, op);
-				fputc(REL_SIMPLE | (s->type & S_SEGMENT) | (size - 1) << 4, op);
-			}
-			fputc(r, op);
-			if (size == 2)
-				fputc(r >> 8, op);
+				/* r is the symbol number */
+				if (r >= o->nsym)
+					error("invalid reloc sym");
+				s = o->syment[r];
+				if (s->type & S_UNKNOWN) {
+					if (ldmode != LD_RFLAG) {
+						if (processing)
+						fprintf(stderr, "%s: Unknown symbol '%.16s'.\n", o->path, s->name);
+						err |= 1;
+					}
+					if (ldmode != LD_ABSOLUTE) {
+						/* Rewrite the record with the new symbol number */
+						fputc(REL_ESC, op);
+						if (!overflow)
+							fputc(REL_OVERFLOW, op);
+						if (high)
+							fputc(REL_HIGH, op);
+						fputc(code, op);
+						fputc(s->number, op);
+						fputc(s->number >> 8, op);
+					}
+					/* Copy the bytes to relocate */
+					fputc(fgetc(ip), op);
+					if (size == 2 || optype == REL_PCREL)
+						fputc(fgetc(ip), op);
+				} else {
+					/* Get the relocation data */
+					r = target_get(o, optype == REL_PCREL ? 2 : size, ip);
+					/* Add the offset from the output segment base to the
+					   symbol */
+					r += s->value;
+					if (optype == REL_PCREL) {
+						int16_t off = r;
+						if (obj_flags & OF_WORDMACHINE)
+							off -= dot / 2;
+						else
+							off -= dot;
+						if (overflow && size == 1 && (off < -128 || off > 127))
+							error("relocation exceeded");
+						r = (uint16_t)off;
+					} else {
+						/* Check again */
+						if (overflow && (r < s->value || (size == 1 && r > 255)))
+							error("relocation exceeded");
+					}
+					/* If we are not fully resolving then turn this into a
+					   simple relocation */
+					if (ldmode != LD_ABSOLUTE && optype != REL_PCREL) {
+						fputc(REL_ESC, op);
+						if (!overflow)
+							fputc(REL_OVERFLOW, op);
+						if (high)
+							fputc(REL_HIGH, op);
+						fputc(REL_SIMPLE | (s->type & S_SEGMENT) | (size - 1) << 4, op);
+					}
+					if (ldmode == LD_ABSOLUTE && high) {
+						r >>= 8;
+						size = 1;
+					}
+				}
+				target_put(o, r, size, op);
+				dot += size;
+				break;
 		}
 	}
 	error("corrupt reloc stream");
@@ -542,6 +630,7 @@ static void write_stream(FILE * op, int seg)
 		if (verbose)
 			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
 		xfseek(ip, o->off + o->oh.o_segbase[seg]);
+		dot = o->base[seg];
 		relocate_stream(o, op, ip);
 		xfclose(ip);
 		o = o->next;
@@ -557,6 +646,7 @@ static void write_binary(FILE * op, FILE *mp)
 	static struct objhdr hdr;
 	hdr.o_arch = arch;
 	hdr.o_cpuflags = arch_flags;
+	hdr.o_flags = obj_flags;
 	hdr.o_segbase[0] = sizeof(hdr);
 	hdr.o_size[0] = size[0];
 	hdr.o_size[1] = size[1];
