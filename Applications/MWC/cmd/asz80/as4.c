@@ -36,6 +36,15 @@ void outpass(void)
 		obh.o_dbgbase = 0;	/* for now */
 		/* Number the symbols for output */
 		numbersymbols();
+		outsegment(1);
+#ifdef TARGET_WORDMACHINE
+		outbyte(REL_WORDMACHINE);
+		outbyte(BYTES_PER_ADDRESS);
+#elif TARGET_BIGENDIAN
+		outbyte(REL_BIGENDIAN);
+#else
+		outbyte(REL_LITTLEENDIAN);
+#endif
 	}
 }
 
@@ -122,9 +131,25 @@ void outabchk(uint16_t b)
 	outab(b);
 }
 
+void outrabrel(ADDR *a)
+{
+	if (a->a_segment != ABSOLUTE) {
+		check_store_allowed(segment, a->a_value);
+		if (a->a_sym) {
+			outbyte(REL_ESC);
+			outbyte((0 << 4 ) | REL_SYMBOL);
+			outbyte(a->a_sym->s_number & 0xFF);
+			outbyte(a->a_sym->s_number >> 8);
+		}
+		/* relatives without a symbol don't need relocation */
+	}
+	if (a->a_value < -128 || a->a_value > 127)
+		err('o', CONSTANT_RANGE);
+	outab(a->a_value);
+}
+
 void outrab(ADDR *a)
 {
-	/* FIXME: handle symbols */
 	if (a->a_segment != ABSOLUTE) {
 		check_store_allowed(segment, a->a_value);
 		if (a->a_sym == NULL) {
