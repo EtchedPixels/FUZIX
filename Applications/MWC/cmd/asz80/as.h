@@ -352,7 +352,7 @@ typedef	uint32_t	VALUE;		/* For symbol values */
 /*
  * Segments
  */
-#define UNKNOWN		-1
+#define UNKNOWN		15
 #define ABSOLUTE	0
 #define CODE		1
 #define DATA		2
@@ -375,9 +375,12 @@ typedef	uint32_t	VALUE;		/* For symbol values */
  * Address description.
  */
 typedef	struct	ADDR	{
-	int	a_type;			/* Type */
+	uint16_t a_type;			/* Type */
 	VALUE	a_value;		/* Index offset, etc */
-	int	a_segment;		/* Segment relative to */
+	uint8_t	a_segment;		/* Segment relative to */
+	uint8_t a_flags;		/* To track high */
+#define A_HIGH		1
+#define A_LOW		2
 	struct SYM *a_sym;		/* Symbol tied to this address */
 					/* NULL indicates simple own segment */
 }	ADDR;

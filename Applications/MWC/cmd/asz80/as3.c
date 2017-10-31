@@ -67,12 +67,12 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 	/* Subtraction within segment produces an absolute */
 	if (op == '-') {
 		/* Unknown symbols may get segment forced as a result */
-		if (left->a_segment == -1) {
+		if (left->a_segment == UNKNOWN) {
 			left->a_segment = right->a_segment;
 			if (left->a_sym)
 				setsegment(left->a_sym, left->a_segment);
 		}
-		if (right->a_segment == -1) {
+		if (right->a_segment == UNKNOWN) {
 			right->a_segment = left->a_segment;
 			if (right->a_sym)
 				setsegment(right->a_sym, right->a_segment);
@@ -204,6 +204,8 @@ void expr2(ADDR *ap)
 			ap->a_value = 0;
 			return;
 		}
+		if (mode != TNEW && mode != TUSER)
+			qerr(SYNTAX_ERROR);
 		/* An external symbol has to be tracked and output in
 		   the relocations. Any known internal symbol is just
 		   encoded as a relocation relative to a segment */

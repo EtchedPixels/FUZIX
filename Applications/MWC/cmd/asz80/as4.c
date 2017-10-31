@@ -82,6 +82,8 @@ void outaw(uint16_t w)
 
 static void check_store_allowed(uint8_t segment, uint16_t value)
 {
+	if (value == 0)
+		return;
 	if (segment == BSS)
 		err('b', DATA_IN_BSS);
 	if (segment == ZP)
@@ -91,22 +93,38 @@ static void check_store_allowed(uint8_t segment, uint16_t value)
 /*
  *	Symbol numbers and relocatios are always written little endian
  *	for simplicity.
+ *
+ *	A_LOW and A_HIGH indicate 8bit partial relocations. We handle these
+ *	internally.
  */
 void outraw(ADDR *a)
 {
+	int s = 1 << 4;
 	if (a->a_segment != ABSOLUTE) {
-		check_store_allowed(segment, a->a_value);
+		outbyte(REL_ESC);
+		check_store_allowed(segment, 1);
+		/* low bits of 16 bit is an 8bit relocation with
+		   overflow suppressed */
+		if (a->a_flags & A_LOW) {
+			outbyte(REL_OVERFLOW);
+			s = 0 << 4;
+		}
+		if (a->a_flags & A_HIGH)
+			outbyte(REL_HIGH);
 		if (a->a_sym == NULL) {
-			outbyte(REL_ESC);
-			outbyte((1 << 4) | REL_SIMPLE | a->a_segment);
+			/* low bits of 16 bit is an 8bit relocation with
+			   overflow suppressed */
+			outbyte(s | REL_SIMPLE | a->a_segment);
 		} else {
-			outbyte(REL_ESC);
-			outbyte((1 << 4 ) | REL_SYMBOL);
+			outbyte(s | REL_SYMBOL);
 			outbyte(a->a_sym->s_number & 0xFF);
 			outbyte(a->a_sym->s_number >> 8);
 		}
 	}
-	outaw(a->a_value);
+	if (a->a_flags & A_LOW)
+		outab(a->a_value);
+	else
+		outaw(a->a_value);
 }
 
 /*
@@ -140,7 +158,7 @@ void outabchk(uint16_t b)
 void outrabrel(ADDR *a)
 {
 	if (a->a_segment != ABSOLUTE) {
-		check_store_allowed(segment, a->a_value);
+		check_store_allowed(segment, 1);
 		if (a->a_sym) {
 			outbyte(REL_ESC);
 			outbyte((0 << 4 ) | REL_PCREL);
@@ -157,21 +175,36 @@ void outrabrel(ADDR *a)
 	outab(a->a_value);
 }
 
+/*
+ *	We should probably fold outraw and outrab as they are not very
+ *	different except in the default value of s.
+ */
 void outrab(ADDR *a)
 {
+	int s = 0;
 	if (a->a_segment != ABSOLUTE) {
-		check_store_allowed(segment, a->a_value);
+		check_store_allowed(segment, 1);
+		outbyte(REL_ESC);
+		if (a->a_flags & A_LOW) {
+			outbyte(REL_OVERFLOW);
+			a->a_value &= 0xFF;
+		}
+		if (a->a_flags & A_HIGH) {
+			outbyte(REL_HIGH);
+			s = 1 << 4;
+		}
 		if (a->a_sym == NULL) {
-			outbyte(REL_ESC);
-			outbyte((0 << 4) | REL_SIMPLE | a->a_segment);
+			outbyte(s | REL_SIMPLE | a->a_segment);
 		} else {
-			outbyte(REL_ESC);
-			outbyte((0 << 4 ) | REL_SYMBOL);
+			outbyte(s | REL_SYMBOL);
 			outbyte(a->a_sym->s_number & 0xFF);
 			outbyte(a->a_sym->s_number >> 8);
 		}
 	}
-	outabchk(a->a_value);
+	if (s)
+		outaw(a->a_value);
+	else
+		outabchk(a->a_value);
 }
 
 static void putsymbol(SYM *s, FILE *ofp)
@@ -184,7 +217,7 @@ static void putsymbol(SYM *s, FILE *ofp)
 		if (s->s_type & TPUBLIC)
 			flag |= S_PUBLIC;
 	}
-	/* 0 absolute, 1-n segments, -1 don't care */
+	/* 0 absolute, 1-n segments, 15 don't care */
 	flag |= (s->s_segment & S_SEGMENT);
 	putc(flag, ofp);
 	fwrite(s->s_id, 16, 1, ofp);

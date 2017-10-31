@@ -85,7 +85,7 @@ struct objhdr
 /*
  * Segments
  */
-#define UNKNOWN		-1
+#define UNKNOWN		15
 #define ABSOLUTE	0		/* Constant, not relocated */
 #define CODE		1		/* Relocated versus code */
 #define DATA		2		/* Relocated versus data */

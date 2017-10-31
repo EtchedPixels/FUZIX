@@ -19,6 +19,10 @@ void getaddr(ADDR *ap)
 	int reg;
 	int c;
 
+	ap->a_sym = NULL;
+	ap->a_flags = 0;
+	ap->a_type = 0;
+
 	/* We only have one addressing format we ever use.. an address.
 	   Quite how we encode it is another saga because our memory ops
 	   use register relative or pc relative */

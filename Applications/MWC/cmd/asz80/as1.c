@@ -55,8 +55,16 @@ void getaddr(ADDR *ap)
 	int reg;
 	int c;
 
+	ap->a_flags = 0;
+	ap->a_sym = NULL;
+
 	if ((c=getnb()) != '(') {
-		unget(c);
+		if (c == '<')
+			ap->a_flags |= A_LOW;
+		else if (c == '>')
+			ap->a_flags |= A_HIGH;
+		else
+			unget(c);
 		expr1(ap, LOPRI, 0);
 		return;
 	}
