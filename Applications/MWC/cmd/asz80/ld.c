@@ -147,6 +147,28 @@ static int is_undefined(const char *name)
 	return 1;
 }
 
+static void segment_mismatch(struct symbol *s, uint8_t type2)
+{
+	uint8_t seg1 = s->type & S_SEGMENT;
+	uint8_t seg2 = type2 & S_SEGMENT;
+
+	/* Matching */
+	if (seg1 == seg2)
+		return;
+	/* Existing entry was 'anything'. Co-erce to definition */
+	if (seg1 == S_ANY) {
+		s->type &= ~S_SEGMENT;
+		s->type |= seg2;
+		return;
+	}
+	/* Regardless of the claimed type, an absolute definition fulfills
+	   any need. */
+	if (seg2 == ABSOLUTE)
+		return;
+	fprintf(stderr, "Segment mismatch for symbol '%.16s'.\n", s->name);
+	err |= 2;
+}
+
 static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const char *id, uint16_t value)
 {
 	uint8_t hash = hash_symbol(id);
@@ -165,18 +187,15 @@ static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const ch
 		return s;
 	}
 	/* Already exists. See what is going on */
-	if (type & S_UNKNOWN)
+	if (type & S_UNKNOWN) {
 		/* We are an external reference to a symbol. No work needed */
+		segment_mismatch(s, type);
 		return s;
+	}
 	if (s->type & S_UNKNOWN) {
 		/* We are referencing a symbol that was previously unknown but which
 		   we define. Fill in the details */
-		if ((s->type & S_SEGMENT) != S_ANY &&
-			(s->type & S_SEGMENT) != (type & S_SEGMENT)) {
-			fprintf(stderr, "Segment mismatch for symbol '%s'.\n", id);
-			err |= 2;
-		}
-		s->type = type;
+		segment_mismatch(s, type);
 		s->value = value;
 		s->definedby = o;
 		return s;
@@ -423,6 +442,10 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 			fputc(REL_REL, op);
 			continue;
 		}
+		if (code == REL_LITTLEENDIAN)
+			continue;
+		if (code == REL_BIGENDIAN || code == REL_WORDMACHINE)
+			error("unsupported architecture");
 		/* Relocations */
 
 		size = ((code & S_SIZE) >> 4) + 1;
