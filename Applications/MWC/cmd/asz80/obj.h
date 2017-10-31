@@ -9,6 +9,7 @@ struct objhdr
     uint8_t o_arch;
 #define OA_8080		1
 #define OA_6502		2
+#define OA_DGNOVA	3	/* So I can test PC relative */
     uint8_t o_flags;
     uint16_t o_cpuflags;
 #define OA_8080_Z80	1
@@ -24,6 +25,11 @@ struct objhdr
 #define OA_6502_65C816	16	/* 65C816 and relatives */
 #define OA_6502_ZPAT0	32	/* Binary Assumes ZP is at 0 */
 #define OA_6502_65CE02	64	/* Does anyone really care ? */
+
+#define OA_DGNOVA_MUL	1
+#define OA_DGNOVA_FPU	2
+#define OA_DGNOVA_NOVA3	4
+#define	OA_DGNOVA_NOVA4	8
 
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
@@ -44,17 +50,17 @@ struct objhdr
 /* Otherwise */
 #define REL_TYPE	0x0F
 /* 00 is reserved */
-#define REL_SYMBOL	0x01
 #define REL_SPECIAL	0x00	/* REL_REL REL_EOF etc */
+#define REL_SYMBOL	0x01	/* Followed by a 2 byte symbol code then 
+                                   offset to relocate */
 
 #define REL_REL		(REL_SPECIAL| (0 << 4))	/* 00 */
 #define REL_EOF		(REL_SPECIAL| (1 << 4)) /* 10 */
-
-/* 02-0F reserved */
-/* Followed by 2 byte number of symbol in symbol table */
-
-/*	followed by the bytes to relocate */
-
+/* this must appear first followed by a wordsize in bytes */
+#define	REL_WORDMACHINE	(REL_SPECIAL| (2 << 4))	/* 20 */
+/* target is big-endian for 16bit fixups */
+#define REL_BIGENDIAN	(REL_SPECIAL| (3 << 4))	/* 30 */
+#define REL_LITTLEENDIAN (REL_SPECIAL| (4 << 4)) /* 40 */
 
 /* symbols and debug are in the format 
     uint8_t flags
@@ -72,8 +78,11 @@ struct objhdr
  * Segments
  */
 #define UNKNOWN		-1
-#define ABSOLUTE	0
-#define CODE		1
-#define DATA		2
-#define BSS		3
-#define ZP		4
+#define ABSOLUTE	0		/* Constant, not relocated */
+#define CODE		1		/* Relocated versus code */
+#define DATA		2		/* Relocated versus data */
+#define BSS		3		/* Relocated versus BSS */
+#define ZP		4		/* Relocated versus zero page */
+/* Special cases 8+ don't exist as real segments */
+#define PCREL		14		/* assumed signed */
+/* and 15 is 'any' */
