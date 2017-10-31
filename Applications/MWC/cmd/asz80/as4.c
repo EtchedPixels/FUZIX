@@ -137,9 +137,10 @@ void outrabrel(ADDR *a)
 		check_store_allowed(segment, a->a_value);
 		if (a->a_sym) {
 			outbyte(REL_ESC);
-			outbyte((0 << 4 ) | REL_SYMBOL);
+			outbyte((0 << 4 ) | PCREL);
 			outbyte(a->a_sym->s_number & 0xFF);
 			outbyte(a->a_sym->s_number >> 8);
+			outaw(a->a_value);
 		}
 		/* relatives without a symbol don't need relocation */
 	}

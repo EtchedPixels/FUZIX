@@ -53,6 +53,10 @@ struct objhdr
 #define REL_SPECIAL	0x00	/* REL_REL REL_EOF etc */
 #define REL_SYMBOL	0x01	/* Followed by a 2 byte symbol code then 
                                    offset to relocate */
+#define	REL_PCREL	0x02	/* Followed by a 2 byte symbol code then
+				   a word sized value regardless of reloc size
+                                   but the resulting reloc is written to the
+                                   size given */
 
 #define REL_REL		(REL_SPECIAL| (0 << 4))	/* 00 */
 #define REL_EOF		(REL_SPECIAL| (1 << 4)) /* 10 */
