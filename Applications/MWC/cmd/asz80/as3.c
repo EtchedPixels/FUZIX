@@ -158,12 +158,21 @@ void expr2(ADDR *ap)
 	char id[NCPS];
 
 	c = getnb();
+#ifndef TARGET_USES_SQUARE
 	if (c == '[') {
 		expr1(ap, LOPRI, 0);
 		if (getnb() != ']')
 			qerr(SQUARE_EXPECTED);
 		return;
 	}
+#else
+	if (c == '(') {
+		expr1(ap, LOPRI, 0);
+		if (getnb() != ')')
+			qerr(BRACKET_EXPECTED);
+		return;
+	}
+#endif
 	if (c == '-') {
 		expr1(ap, HIPRI, 0);
 		istuser(ap);
