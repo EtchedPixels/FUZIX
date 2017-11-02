@@ -345,6 +345,109 @@ typedef	uint32_t	VALUE;		/* For symbol values */
 #define BAD_PCREL	BRA_RANGE
 #define	SEGMENT_CLASH	31
 
+#elif TARGET_6809
+
+typedef	uint16_t	VALUE;		/* For symbol values */
+
+#define NSEGMENT 4			/* # of segments */
+
+#define ARCH OA_6809
+#define ARCH_FLAGS 0
+
+#define TARGET_BIGENDIAN
+#define TARGET_USES_SQUARE
+
+/*
+ * Types. These are used
+ * in both symbols and in address
+ * descriptions. Observe the way the
+ * symbol flags hide in the register
+ * field of the address.
+ */
+#define	TMREG	0x007F			/* Register code */
+#define	TMMDF	0x0001			/* Multidef */
+#define	TMASG	0x0002			/* Defined by "=" */
+#define	TMMODE	0xFF00			/* Mode */
+#define	TMINDIR	0x8000			/* Indirect flag in mode */
+#define TPUBLIC	0x0080			/* Exported symbol */
+
+#define	TNEW	0x0000			/* Virgin */
+#define	TUSER	0x0100			/* User name */
+#define	TBR	0x0200			/* Byte register */
+#define	TWR	0x0300			/* Word register */
+#define	TSR	0x0400			/* Special register (I, R) */
+#define	TDEFB	0x0500			/* defb */
+#define	TDEFW	0x0600			/* defw */
+#define	TDEFS	0x0700			/* defs */
+#define	TDEFM	0x0800			/* defm */
+#define	TORG	0x0900			/* org */
+#define	TEQU	0x0A00			/* equ */
+#define	TCOND	0x0B00			/* conditional */
+#define	TENDC	0x0C00			/* end conditional */
+#define TSEGMENT 0x0D00			/* segments by number */
+#define TEXPORT 0x0E00			/* symbol export */
+/* CPU specific codes */
+#define THI	0x1100			/* all modes opcodes 0x80+ */
+#define THIW	0x1200			/* ditto word mode */
+#define THINOIMM 0x1300			/* ditto byte no immediate */
+#define THIWNOIMM 0x1400		/* ditto word no immediate */
+#define TIMM8	0x1500			/* 8bit immediate only */
+#define TEXG	0x1600			/* registers as 8bit immediate */
+#define TPUSH	0x1700			/* register mask as 8bit immediate */
+#define TIMP	0x1800			/* implied by instruction */
+#define TLO	0x1900			/* low instructions with some modes */
+#define TLEA	0x1A00			/* lea */
+#define TBR	0x1B00			/* branch */
+#define TLBR	0x1C00			/* long branch */
+
+#define TAIMM	0x0000			/* #x :immediate mode 8bit */
+#define TADIR	0x0010			/* dp:x */
+#define TAIND	0x0020			/* Indexed postbyte forms */
+#define TAEXT	0x0030			/* xx : extended addressing */
+
+/*
+ * Registers.
+ */
+#define	A	0		/* re-arrange to match bit patterns */
+#define	B	1
+#define	DP	2
+#define	CC	3
+#define	D	4
+#define	U	5
+#define	X	6
+#define	Y	7
+#define	S	8
+#define PCR	9
+
+/*
+ *	Error message numbers: FIXME - sort general first
+ */
+
+#define BRACKET_EXPECTED 1
+#define MISSING_COMMA	2
+#define SQUARE_EXPECTED 3
+#define PERCENT_EXPECTED 4
+#define UNEXPECTED_CHR	10
+#define PHASE_ERROR	11
+#define MULTIPLE_DEFS	12
+#define SYNTAX_ERROR	13
+#define MUST_BE_ABSOLUTE	14
+#define MISSING_DELIMITER 15
+#define INVALID_CONST	16
+#define BRA_RANGE	17
+#define CONDCODE_ONLY	18
+#define INVALID_REG	19
+#define ADDR_REQUIRED	20
+#define INVALID_ID	21
+#define REG_MUST_BE_C	22
+#define DIVIDE_BY_ZERO	23
+#define CONSTANT_RANGE  24
+#define DATA_IN_BSS	 25
+#define SEGMENT_OVERFLOW 26
+#define DATA_IN_ZP	27
+#define REQUIRE_Z180	28
+#define	SEGMENT_CLASH	29
+
 #else
 #error "Unknown target"
 #endif
