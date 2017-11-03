@@ -27,9 +27,11 @@ todo:
 
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/drivewire.h>
 #include <sys/netdev.h>
@@ -176,7 +178,7 @@ uint16_t cap( struct link *s )
 }
 
 /* uIP callback for TCP events */
-void netd_appcall()
+void netd_appcall(void)
 {
 	/*
 	  printe( "appcall: " );
@@ -334,7 +336,7 @@ void netd_appcall()
 
 
 /* uIP callbck for UDP event */
-void netd_udp_appcall()
+void netd_udp_appcall(void)
 {
 	/* debug
 	   printe( "appcall udp: " );
@@ -396,7 +398,7 @@ void netd_udp_appcall()
 }
 
 /* uIP callbck for UDP event */
-void netd_raw_appcall()
+void netd_raw_appcall(void)
 {
 	/* debug
 	   printe( "appcall udp: " );
@@ -616,7 +618,7 @@ void send_or_loop( void )
 	   for devices (like SLIP) that interface on layer 3 (ip),
 	   we'll have to filter for IP address, rather 
 	*/
-	static char broad[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	static uint8_t broad[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	/* on broadcast send to self and peers */
 	if (!memcmp(uip_buf, &broad[0], 6 )){
 		looplen = uip_len;
@@ -649,18 +651,22 @@ int douip( void )
 {
 	int ret = 0;
 	int i = loop_or_read();
+	if (i < 0)
+		return i;
 	if (i > 0){
 		ret = 1;
 		uip_len = i;
 		if (uip_len > 0) {
 			if ( BUF->type == UIP_HTONS(UIP_ETHTYPE_IP)){
-				uip_arp_ipin();
+				if (has_arp)
+					uip_arp_ipin();
 				uip_input();
 				if (uip_len > 0) {
-					uip_arp_out();
+					if (has_arp)
+						uip_arp_out();
 					send_or_loop();
 				}
-			}else if ( BUF->type == UIP_HTONS(UIP_ETHTYPE_ARP)){
+			} else if (has_arp &&  BUF->type == UIP_HTONS(UIP_ETHTYPE_ARP)){
 				uip_arp_arpin();
 				if (uip_len > 0 )
 					send_or_loop();
@@ -689,7 +695,7 @@ int douip( void )
 				send_or_loop();
 			}
 		}
-		if ( timer_expired(&arp_timer)){
+		if (has_arp &&  timer_expired(&arp_timer)){
 			timer_reset(&arp_timer);
 			uip_arp_timer();
 		}
@@ -702,7 +708,7 @@ int douip( void )
 
 /* Get charactor from rc file */
 /*   returns charactor from file, -1 on EOF */
-int mygetc( )
+int mygetc(void)
 {
 	static char *ibuf[80];
 	static char *pos;
@@ -863,7 +869,8 @@ int main( int argc, char *argv[] )
 	 */
 
 	timer_set(&periodic_timer, CLOCK_SECOND / 4);
-	timer_set(&arp_timer, CLOCK_SECOND * 10 );
+	if (has_arp)
+		timer_set(&arp_timer, CLOCK_SECOND * 10 );
 
 	uip_init();
 
@@ -901,6 +908,12 @@ int main( int argc, char *argv[] )
 		int a,b;
 		a = dokernel();
 		b = douip();
+		/* FIXME: we should probably run blocking on the /dev/net
+		   interface and use alarm() based upon the next needed
+		   uIP timer expiry because on some of our platforms bogus
+		   net wakeups are not cheap */
+		/* a driver can return -1 to indicate that device_read will
+		   do the relevnt delays/polling */
 		if( ! (a || b) )
 			_pause(3);
 	}
