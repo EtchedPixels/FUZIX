@@ -159,6 +159,4 @@ int device_init( void )
 }
 
 
-
-
-
+int has_arp = 1;
