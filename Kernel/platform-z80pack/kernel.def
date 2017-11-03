@@ -8,4 +8,12 @@ U_DATA_STASH		    .equ 0xED00	      ; ED00-EFFF
 PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
-Z80_TYPE		    .equ 0
+Z80_TYPE		    .equ 1
+
+Z80_MMU_HOOKS		    .equ 1
+
+
+		.globl mmu_user
+		.globl mmu_kernel
+		.globl mmu_kernel_irq
+		.globl mmu_restore_irq
