@@ -521,7 +521,7 @@ uip_raw_new(const uip_ipaddr_t *ripaddr, uint8_t proto)
 {
   register struct uip_raw_conn *conn;
 
-  /* disallow UDP,TCP ?
+  /* disallow UDP,TCP ? */
 
   /* find an unused RAW connection */
   conn = 0;
