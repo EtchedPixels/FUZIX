@@ -18,6 +18,20 @@ int lpr_close(uint8_t minor)
     return 0;
 }
 
+static int iopoll(int sofar)
+{
+	/* Ought to be a core helper for this lot ? */
+	if (need_reschedule())
+		_sched_yield();
+	if (chksigs()) {
+		if (sofar)
+			return sofar;
+		udata.u_error = EINTR;
+		return -1;
+	}
+	return 0;
+}
+
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     int c = udata.u_count;
@@ -28,8 +42,9 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
         /* Note; on real hardware it might well be necessary to
            busy wait a bit just to get acceptable performance */
         while (lpstat != 0xFF) {
-//            if (psleep_flags(&clocktick, flag))
-//                return -1;
+            int n;
+            if (n = iopoll(p - udata.u_base))
+                return n;
         }
         /* FIXME: tidy up ugetc and sysio checks globally */
         lpdata = ugetc(p++);
