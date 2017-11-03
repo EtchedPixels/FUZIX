@@ -48,6 +48,8 @@
 	.globl _out
 	.globl _in
 
+	.globl mmu_irq_ret
+
         ; imported symbols
         .globl _trap_monitor
         .globl _unix_syscall
@@ -108,6 +110,9 @@ deliver_signals_2:
 
 	ex de, hl
 	ei
+	.ifne Z80_MMU_HOOKS
+	call mmu_user		; must preserve HL
+	.endif
 	jp (hl)		; return to user space. This will then return via
 			; the return path handler passed in BC
 
@@ -117,6 +122,9 @@ deliver_signals_2:
 signal_return:
 	pop hl		; argument
 	di
+	.ifne Z80_MMU_HOOKS
+	call mmu_kernel
+	.endif
 	;
 	;	We must keep IRQ disabled in the kernel mapped
 	;	element of this processing, as we don't want to
@@ -141,8 +149,8 @@ unix_syscall_entry:
         push af
         ex af, af'
         exx
-        push bc
-        push de
+        push bc		; FIXME we don't I tihnk need to save bc/de/hl
+        push de		; as they are compiler caller save
         push hl
         exx
         push bc
@@ -150,10 +158,13 @@ unix_syscall_entry:
         push ix
         push iy
 	; We don't save AF or HL
-
         ; locate function call arguments on the userspace stack
         ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
         add hl, sp
+
+	.ifne Z80_MMU_HOOKS
+	call mmu_kernel		; must preserve HL
+	.endif
         ; save system call number
         ld a, (hl)
         ld (U_DATA__U_CALLNO), a
@@ -163,7 +174,7 @@ unix_syscall_entry:
         ; copy arguments to common memory
         ld bc, #8      ; four 16-bit values
         ld de, #U_DATA__U_ARGN
-        ldir           ; copy
+        ldir           ; copy  FIXME use LDI x 8
 
 	ld a, #1
 	ld (U_DATA__U_INSYS), a
@@ -227,13 +238,14 @@ not_error:
 	; Undo the stacking and go back to user space
 	;
 unix_pop:
+	.ifne Z80_MMU_HOOKS
+	call mmu_user		; must preserve HL
+	.endif
         ; restore machine state
         pop iy
         pop ix
-        ; pop hl ;; WRS: skip this!
         pop de
         pop bc
-        ; pop af ;; WRS: skip this!
         exx
         pop hl
         pop de
@@ -286,6 +298,9 @@ _doexec:
 
 	; for the relocation engine - tell it where it is
 	ld iy, #PROGLOAD
+	.ifne Z80_MMU_HOOKS
+	call mmu_user		; must preserve HL
+	.endif
         ei
         jp (hl)
 
@@ -299,6 +314,8 @@ null_handler:
 	ld a, (U_DATA__U_INSYS)
 	or a
 	jp nz, trap_illegal
+	ld a, (_inint)
+	jp nz, trap_illegal
 	; user is merely not good
 	ld hl, #7
 	push hl
@@ -308,12 +325,12 @@ null_handler:
 	push hl
 	ld hl, #39		; signal (getpid(), SIGBUS)
 	push hl
-	rst #0x30		; syscall
+	call unix_syscall_entry		; syscall
 	ld hl, #0xFFFF
 	push hl
 	dec hl			; #0
 	push hl
-	rst #0x30		; exit
+	call unix_syscall_entry
 
 
 
@@ -333,6 +350,9 @@ nmimsg: .ascii "[NMI]"
         .db 13,10,0
 
 nmi_handler:
+	.ifne Z80_MMU_HOOKS
+	call mmu_kernel
+	.endif
 	call map_kernel
         ld hl, #nmimsg
         call outstring
@@ -359,6 +379,15 @@ interrupt_handler:
         push hl
         push ix
         push iy
+	;
+	; This is a bit exciting - if our MMU enforces r/o then the entire
+	; stack state might be bogus!
+	;
+	.ifne Z80_MMU_HOOKS
+	ld hl, #mmu_irq_ret
+	jp mmu_kernel_irq
+	.endif
+mmu_irq_ret:
 
 	; Some platforms (MSX for example) have devices we *must*
 	; service irrespective of kernel state in order to shut them
@@ -441,6 +470,9 @@ intret:
 	; of the handler so ensure everything is fixed before this !
 
 	call deliver_signals
+	.ifne Z80_MMU_HOOKS
+	call mmu_restore_irq
+	.endif
 
 	; Then unstack and go.
 interrupt_pop:
@@ -471,6 +503,7 @@ null_pointer_trap:
 trap_signal:
 	push hl
 	ld hl, (U_DATA__U_PTAB);
+	push hl
         call _ssig
         pop hl
         pop hl
@@ -548,6 +581,9 @@ intret2:call map_kernel
 	;
 	; pop the stack and go
 	;
+	.ifne Z80_MMU_HOOKS
+	call mmu_user
+	.endif
 	jr interrupt_pop
 
 ;
