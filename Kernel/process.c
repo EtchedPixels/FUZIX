@@ -630,7 +630,7 @@ void doexit(uint16_t val)
 	irqflags_t irq;
 
 #ifdef DEBUG
-	kprintf("process %d exiting\n", udata.u_ptab->p_pid);
+	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
 
 	kprintf
 	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
