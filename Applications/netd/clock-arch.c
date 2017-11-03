@@ -46,15 +46,12 @@
 clock_time_t
 clock_time(void)
 {
-  struct timeval tv;
-  struct timezone tz;
-
-  //  gettimeofday(&tv, &tz);
   struct{
       uint16_t high;
       uint16_t low;
   }now;
   _time((__ktime_t *)&now,1);
+  /* FIXME: needs a multiplier to turn into ms FIXME */
   return now.low;
   //  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
