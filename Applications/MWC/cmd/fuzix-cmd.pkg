@@ -7,6 +7,7 @@ f 0755 /usr/bin/at         at
 f 0755 /usr/bin/calendar   calendar
 f 0755 /usr/bin/col        col
 f 0755 /usr/bin/deroff     deroff
+f 0755 /bin/du		   du
 f 0755 /usr/bin/expr       expr
 f 0755 /usr/bin/find       find
 f 0755 /usr/bin/m4         m4
