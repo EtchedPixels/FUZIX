@@ -109,3 +109,52 @@ resources
 
 EMM needs to be hooked into the design of the mmu->ds and task switching
 logic so we can do something like 'set_process_mmu'
+
+
+
+80x86 Errata
+============
+
+As these are not well documented anywhere. These are the real mode errata I
+know about
+
+1.	On the 8088/8086 (but not C86/88 and later) a rep of a prefixed
+instruction restarts after interrupt one byte before the instruction not
+at the start. Thus
+
+	rep es lodsb
+
+will execute a single es lodsb and not repeat after interrupt.
+
+If needed the workaround is to generate
+
+foo:
+	rep %es:movsb
+	jcxz 1f
+	jmp foo
+1f:
+
+2.	Very early 8086 processors do not mask interrupts on a mov to ss or pop
+ss. Instead you need to cli first. *Need to review this in core code but we
+are probably safe by accident*
+
+2.	B2/B3 80286 processors have the delightful feature that popf may
+randomly enable interrupts. The workaround (besides not using it!) is to
+push an iret frame and iret. Our core code doesn't use it in a problematic
+way but the ibmpc drivers need reviewing.
+
+In protected mode the 286 B2/B3 are way worse in particular a push that
+causes a stack extend fault can corrupt CX. Basically you need a C step 286
+to use protected mode properly or to do real mode emulation via LOADALL.
+
+3.	A1 and B1 80286 forget to clear the trap flag when taking an INT in
+real mode.
+
+4,	MOVS or INS without REP save the wrong CS:IP (after not before) on
+an exception
+
+5.	REP MOVS/etc can't restart properly on A1.B1 because CX is restored
+as the original not iteration count
+
+6.	On A1/B1 LOADALL is busted. Set bit 0 of 804H to eero and pray or
+you may end up in protected mode from real
