@@ -312,12 +312,12 @@ null_handler:
 	ld h,P_TAB__P_PID_OFFSET+1(ix)
 	push hl
 	ld hl, #39		; signal (getpid(), SIGBUS)
-	rst #0x30		; syscall
+	call unix_syscall_entry; syscall
 	ld hl, #0xFFFF
 	push hl
 	dec hl			; #0
 	push hl
-	rst #0x30		; exit
+	call unix_syscall_entry; exit
 
 
 
