@@ -26,3 +26,14 @@ typedef uint8_t uip_stats_t;
 #define UIP_RAW_CONNS 8
 
 #define MIN(n, m)   (((n) < (m)) ? (n) : (m))
+
+/* gcc can do struct assignment, the others cannot */
+
+#ifndef __GNUC__
+#define uip_ipaddr_copy(dest,src)	memcpy((dest),(src), sizeof(*dest))
+#define uip_ip4addr_copy(dest,src)	memcpy((dest),(src), sizeof(uip_ip4addr_t))
+#define uip_ip6addr_copy(dest,src)	memcpy((dest),(src), sizeof(uip_ip6addr_t))
+#endif
+
+extern void netd_appcall(void);
+extern void netd_udp_appcall(void);
