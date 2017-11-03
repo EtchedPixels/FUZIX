@@ -1,5 +1,5 @@
 
-DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c ../dev/z80pack/devatsim.c
+DSRCS = ../dev/z80pack/devlpr.c ../dev/z80pack/devtty.c ../dev/z80pack/devfd.c ../dev/z80pack/devrtc.c
 #NSRCS = ../dev/net/net_at.c
 #NSRCS = ../dev/net/net_native.c
 NSRCS = ../dev/net/net_z80pack.c
