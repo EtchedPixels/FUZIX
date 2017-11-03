@@ -472,6 +472,10 @@ static void pass3(void)
     blkno_t newno;
     /*--- was blk_alloc ---*/
 
+    /* FIXME:
+        1. Cache the swizzle sizes so we generate nice code for the loops
+        2. Set the bits below s_isize
+     */
     for (b = swizzle16(superblock.s_isize); b < swizzle16(superblock.s_fsize); ++b)
         bitclear(b);
 
