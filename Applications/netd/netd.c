@@ -723,11 +723,11 @@ int douip( void )
 /*   returns charactor from file, -1 on EOF */
 int mygetc(void)
 {
-	static char *ibuf[80];
+	static char ibuf[80];
 	static char *pos;
 	static int len = 0;
 	if ( ! len ){
-		pos = (char *)ibuf;
+		pos = ibuf;
 		len = read( rc, ibuf, 80 );
 		if( len < -1 )
 			exit_err( "Error Reading rc file.\n" );
@@ -803,7 +803,6 @@ int getaddr( uip_ipaddr_t *ipaddr )
 /* read, parse, and apply rc file */
 int parse_rcfile( void ){
 
-	int x;
 	char buf[80];
 	uip_ipaddr_t ipaddr;        /* ip address buffer */
 	uip_eth_addr ethaddr;       /* mac address buffer */
