@@ -597,7 +597,6 @@ int dokernel( void )
 			m->tsize[last] = sm.sd.tlen[last];
 		}
 		if ( sm.sd.event & NEV_READ ){
-			int last;
 			m->rstart = sm.sd.rbuf;
 			m->rend = sm.sd.rnext;
 		}
@@ -619,19 +618,33 @@ void send_or_loop( void )
 	   we'll have to filter for IP address, rather 
 	*/
 	static uint8_t broad[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-	/* on broadcast send to self and peers */
-	if (!memcmp(uip_buf, &broad[0], 6 )){
-		looplen = uip_len;
+
+	if (has_arp) {
+
+		/* on broadcast send to self and peers */
+		if (!memcmp(uip_buf, &broad[0], 6 )){
+			looplen = uip_len;
+			device_send(uip_buf, uip_len);
+			return;
+		}
+		/* if dest is our mac then just send to self, no peers */
+		if (!memcmp(uip_buf, &uip_lladdr.addr[0], 6)){
+			looplen = uip_len;
+			return;
+		}
+		/* if else then just send to peers */
 		device_send(uip_buf, uip_len);
-		return;
+	} else {
+		uint8_t *bp = uip_buf + 14;	/* TODO don't hard code */
+		if ((bp[0] & 0xF0) == 0x40) {	/* IP v4 */
+			/* 127.* or our address. We don't implement bcast
+			   or mcast p2p */
+			if (bp[16] == 127 || memcmp(bp + 16, &uip_hostaddr, 4) == 0)
+				looplen = uip_len;
+			else
+				device_send(uip_buf, uip_len);
+		}
 	}
-	/* if dest is our mac then just send to self, no peers */
-	if (!memcmp(uip_buf, &uip_lladdr.addr[0], 6)){
-		looplen = uip_len;
-		return;
-	}
-	/* if else then just send to peers */
-	device_send(uip_buf, uip_len);
 }
 
 int loop_or_read( void )
