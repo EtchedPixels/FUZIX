@@ -114,7 +114,7 @@ static int slip_recv( unsigned char *b, int len )
 /* send packet to net device */
 int device_send( char *sbuf, int len )
 {
-    sbuf += 14	/* Don't send a mac header */
+    sbuf += 14;	/* Don't send a mac header */
     slip_begin();
     while(len--)
         slip_out(*sbuf++);
