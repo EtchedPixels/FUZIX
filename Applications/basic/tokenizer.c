@@ -156,7 +156,7 @@ void tokenize_line(uint8_t * input)
 			uint8_t *f = p++;
 			/* Otherwise we keep adding letters and trying to tokenize. This
 			   is inefficient but we don't do it often */
-			while (isalnum(*p) || *p == '.') {
+			while (*p) {
 				*p |= 0x80;
 				t = tokget(f);
 				if (t == 0)

@@ -5,8 +5,11 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include "tokens_def.h"
 
-static const char *ctypes[9] = {
+#define DEBUG
+
+static const char *ctypes[11] = {
     "eof",
     "constant",
     "leftassoc",
@@ -16,6 +19,24 @@ static const char *ctypes[9] = {
     "unary",
     "symbol",
     "postfix",
+    "function arg",
+    "rightassoc"
+};
+
+enum {
+    LOGIC_OR,
+    LOGIC_AND,
+    LOGIC_NOT,
+    LOGIC_COMPARE,
+    ARITH_AS,		/* add sub */
+    ARITH_DM,		/* div mul */
+    ARITH_UM,		/* umary minus */
+    ARITH_O,		/* orders */
+    ARITH_B,		/* brackets */
+    ARITH_FUNC,		/* functions */
+    ARITH_ARRAY,	/* array dereferencing */
+    FN_COMMA,		/* , in functions */
+    FN_CALL,		/* function call */
 };
 
 struct token {
@@ -32,6 +53,8 @@ struct token {
 #define UNARY			6
 #define SYMBOL			7
 #define POSTFIX			8
+#define FN_ARG			9
+#define	RIGHT_ASSOC		10
     uint16_t data;
 };
 
@@ -43,7 +66,40 @@ struct token {
 
 char *input;
 
-static const char ops[] = {"+-*/%"};
+static const uint8_t ops[] = {
+                        '!',		/* FIXME: for testing only */
+                        '+', '-',
+                        '*', '/',
+                        '(',')',
+                        TOK_ORD, '^',
+                        TOK_NOT, TOK_AND, TOK_OR,
+                        '=', '<', '>',
+                        TOK_NE, TOK_LE, TOK_GE,
+                        ',',
+                        0
+};
+
+static uint8_t oppri[] = {
+                            FN_CALL,
+                            ARITH_AS, ARITH_AS,
+                            ARITH_DM, ARITH_DM,
+                            ARITH_B, 0,
+                            ARITH_O, ARITH_O,
+                            LOGIC_NOT, LOGIC_AND, LOGIC_OR,
+                            LOGIC_COMPARE, LOGIC_COMPARE, LOGIC_COMPARE,
+                            LOGIC_COMPARE, LOGIC_COMPARE, LOGIC_COMPARE,
+                            FN_COMMA,
+                          };
+static uint8_t opclass[] = { FUNCTION,
+                             LEFT_ASSOC, LEFT_ASSOC,	/* +- */
+                             LEFT_ASSOC, LEFT_ASSOC, /* */
+                             LEFTPAREN, RIGHTPAREN,
+                             RIGHT_ASSOC, RIGHT_ASSOC,
+                             UNARY, LEFT_ASSOC, LEFT_ASSOC,
+                             LEFT_ASSOC, LEFT_ASSOC, LEFT_ASSOC,
+                             LEFT_ASSOC, LEFT_ASSOC, LEFT_ASSOC,
+                             FN_ARG,
+                          };
 
 static struct token eoftok = {
     0,
@@ -51,10 +107,10 @@ static struct token eoftok = {
     0
 };
 
-static struct token eoftok2 = {
-    ';',
-    EOF_TOKEN,
-    0
+static struct token starttok = {
+    '(',
+    LEFTPAREN,
+    ARITH_B
 };
 
 static struct token peek;
@@ -63,7 +119,7 @@ static int peeked;
 struct token *token(void)
 {
     static struct token n;
-    char *x;
+    uint8_t *x;
 
     if (peeked) {
         peeked = 0;
@@ -75,32 +131,12 @@ struct token *token(void)
     if (*input == 0)
         return &eoftok;
 
-    if (*input == ';')
-        return &eoftok2;
+    n.tok = *input;
 
     if ((x = strchr(ops, *input)) != NULL) {
-        n.tok = *input;		/* Op code */
-        n.class = LEFT_ASSOC;
-        n.data = 1 + x - ops;	/* Priority */
-        input++;
-        return &n;
-    }
-    if (*input == '(') {
-        n.tok = *input;
-        n.class = LEFTPAREN;
-        input++;
-        return &n;
-    }
-    if (*input == ')') {
-        n.tok = *input;
-        n.class = RIGHTPAREN;
-        input++;
-        return &n;
-    }
-    if (*input == '!') {
-        n.tok = '!';
-        n.class = UNARY;
-        n.data = 0;
+        uint8_t o = (uint8_t)(x - ops);
+        n.class = opclass[o];
+        n.data = oppri[o];
         input++;
         return &n;
     }
@@ -170,6 +206,9 @@ void popop(void)
         exit(1);
     }
     t = *--optop;
+#ifdef DEBUG
+    printf("popop %c\n", t.tok);
+#endif    
     switch(t.tok) {
         case '(':
             break;
@@ -181,11 +220,8 @@ void popop(void)
             break;
         case '/':
             tmp = pop();
+//            if (tmp === 0) ...
             push(pop() / tmp);
-            break;
-        case '%':
-            tmp = pop();
-            push(pop() % tmp);
             break;
         case '-':
             tmp = pop();
@@ -195,7 +231,58 @@ void popop(void)
                 push(-tmp);
             break;
         case '!':
+        case TOK_NOT:
             push(!pop());
+            break;
+        case TOK_AND:
+            push(pop() && pop());
+            break;
+        case TOK_OR:
+            push(pop() || pop());
+            break;
+        case '=':
+            push(pop() == pop());
+            break;
+        case '<':
+            push(pop() >= pop());
+            break;
+        case '>':
+            push(pop() <= pop());
+            break;
+        case TOK_NE:
+            push(pop() != pop());
+            break;
+        case TOK_LE:
+            push(pop() > pop());
+            break;
+        case TOK_GE:
+            push(pop() < pop());
+            break;
+#ifdef FLOAT            
+        case TOK_ORD:
+            tmp = pop();
+            push powf(pop(), tnp);
+            break;
+#endif
+        case TOK_INT:
+            push((int)pop());
+            break;
+        case TOK_ABS:
+            push(abs(pop()));
+            break;
+        case TOK_SGN:
+            tmp = pop();
+            if (tmp < 0)
+                push(-1);
+            else if (tmp == 0)
+                push(0);
+            else
+                push(1);
+            break;
+        case TOK_MOD:
+            tmp = pop();
+//            if (tmp == 0)...
+            push(pop() % tmp);
             break;
         default:
             if (t.class == FUNCTION) {
@@ -212,7 +299,7 @@ void pushop(const struct token *t)
         fprintf(stderr, "pushop: too complex\n");
         exit(1);
     }
-#ifdef DEBUG
+#ifdef DEBUG    
     printf("pushop %d %c\n",t->class,t->tok);
 #endif    
     *optop++ = *t;
@@ -237,6 +324,7 @@ void popout(void) {
 void popout_final(void)
 {
     do_popout(LEFTPAREN);
+    popop();
     if (optop != opstack)
         fprintf(stderr, "Unbalanced brackets expression end.\n");
     printf("Answer = %u\n", pop());
@@ -269,7 +357,7 @@ void neednext(uint8_t h, uint8_t n)
 static const struct token fncall = {
     FUNCTION,
     FUNCTION,
-    0
+    FN_CALL
 };
 
 /* Write out an expression tree as we linearly parse the code. We arrange
@@ -290,13 +378,13 @@ static const struct token fncall = {
    
    */
 
-const struct token *eval(int in_decl)
+void eval(void)
 {
     struct token *t;
     next = OPERAND;
 
     while((t = token())->class != EOF_TOKEN) {
-#if DEBUG
+#ifdef DEBUG
         printf("|Token %d Class %s Data %d\n",
             t->tok, ctypes[t->class], t->data);
 #endif            
@@ -306,31 +394,46 @@ const struct token *eval(int in_decl)
                 push(t->data);
                 break;
             case SYMBOL:
-                /* symbols might be functions - tidy this up */
                 neednext(OPERAND, OPERATOR|LPAREN);
                 push(t->data);
                 break;
             case UNARY:
-                neednext(OPERAND, OPERAND);
+                neednext(OPERAND|LPAREN, OPERAND);
                 pushop(t);
                 break;
             case LEFT_ASSOC:
                 /* Umary minus is special */
                 if (t->tok == '-' && next == OPERAND) {
-                    neednext(OPERAND, OPERAND);
+                    neednext(OPERAND|LPAREN, OPERAND);
                     t->class = UNARY;
                     pushop(t);
                     break;
                 }
             case FUNCTION:
-                neednext(OPERATOR, OPERAND);
-                while (optop > opstack && optop->class == LEFT_ASSOC &&
-                       PRECEDENCE(t) <= PRECEDENCE(optop))
+            case RIGHT_ASSOC:
+                if (CLASS(t) == FUNCTION)
+                    neednext(OPERAND, OPERAND);
+                else
+                    neednext(OPERATOR, OPERAND);
+                do {
+                    if (optop == opstack || CLASS(optop-1) == LEFTPAREN) {
+                        pushop(t);
+                        break;
+                    }
+                    if (PRECEDENCE(t) > PRECEDENCE(optop-1)) {
+                        pushop(t);
+                        break;
+                    }
+                    if (CLASS(t) == RIGHT_ASSOC && PRECEDENCE(t) == PRECEDENCE(optop-1)) {
+                        pushop(t);
+                        break;
+                    }
                     popop();
-                pushop(t);
-                if (optop > opstack && optop->class == FUNCTION)
-                    popop();
+                } while (optop > opstack);
+                if (optop == opstack)
+                    fprintf(stderr, "internal -> bracket lost\n");
                 break;
+                
             case LEFTPAREN:
                 if (next & OPERATOR) {
                     /* Function call */
@@ -340,6 +443,12 @@ const struct token *eval(int in_decl)
                     /* Else precedence bracketing */
                     neednext(OPERAND|LPAREN,OPERAND);
                 pushop(t);
+                break;
+            case FN_ARG:
+                /* Calculate the argument before the comma if any and put
+                   it on the data stack */
+                do_popout(FUNCTION);
+                neednext(OPERATOR,OPERAND|LPAREN);
                 break;
             case RIGHTPAREN:
                 neednext(OPERATOR|RPAREN, OPERATOR);
@@ -353,7 +462,6 @@ const struct token *eval(int in_decl)
 done:
     neednext(OPERATOR,0);
     popout_final();
-    return t;
 }
 
 int main(int argc, char *argv[])
@@ -361,5 +469,6 @@ int main(int argc, char *argv[])
     char buf[512];
     fgets(buf, 512, stdin);
     input = buf;
-    eval(0);
+    pushop(&starttok);
+    eval();
 }

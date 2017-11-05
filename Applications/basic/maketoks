@@ -1,0 +1,3 @@
+#!/bin/sh
+./maketokens |grep '^#' >tokens_def.h
+./maketokens > tokens.h

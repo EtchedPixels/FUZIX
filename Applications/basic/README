@@ -1,1 +1,66 @@
 Internal working tree for the replacmeent of ubasic
+
+- Ideas
+
+Put the start of the workspace above the end of the biggest of interpreter
+and editor, add a fixed entry point to each and we can then treat them as
+overlays with a common header stub!
+
+- Compiler
+
+- Expressions
+
+Fix FOO(bar,baz)
+
+Make PI and RND not functions but constants
+
+Parse FN X as a special type of function and also FN X(y)
+
+
+
+Strings
+
+need to push ptr to string and length in calc (so we can treat "foo" and
+A$ the same way)
+
+temporary strings go just below the return stack as we don;t change that
+during anything with string variables.
+
+Note: GOSUB expr will result in an eval to an integer thus removing any string
+temporary need *before* the stacking.
+
+
+Ecma-55 requires unique to two letters. So given case doesn't matter we could
+pack variables with a 16bit lead tag as
+
+[5.first][6.second]		(A0-A9 AA-ZZ]
+[type.2]
+00				number
+01				integer (for xx% if we add it)
+10				string
+11				fornext
+[dims.3]			number of array dims  (0 = not array)
+
+lead byte 0 = end (because would be variable '@@'
+
+Then we can pack vars as
+
+[type/code.w]
+[value]
+
+or for array or string
+
+[type/code.w]
+[totalsize]
+[lengths.w * n]  (0 if non array)
+[data]
+
+
+which means our search becomes
+
+	while (*ptr && (*(uint16_t *)ptr & LOW11) != seek) {
+		if (ptr[1] & SIZED)
+			ptr += *(uint16_t *)(ptr + 2);
+		else
+			ptr += 2;	/* 2 or 5 if fp basic)
+	}
