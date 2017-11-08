@@ -62,6 +62,9 @@ apps: libs
 kernel: ltools
 	+(cd Kernel; $(MAKE))
 
+kclean:
+	+(cd Kernel; $(MAKE) clean)
+
 clean:
 	+(cd Standalone; $(MAKE) clean)
 	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) clean)
