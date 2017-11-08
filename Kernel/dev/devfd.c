@@ -65,40 +65,31 @@ static int fd_transfer(bool rwflag, uint8_t minor, uint8_t rawflag)
 	uint16_t retc;
 	irqflags_t irq;
 
-	switch(rawflag){
-		case 0:
-			nblocks = 1;
-			devfd_buffer = udata.u_buf->bf_data;
-			devfd_userbuf = 0;
-			firstblk = udata.u_buf->bf_blk;
-			break;
-		case 1:
-			nblocks = udata.u_count >> BLKSHIFT;
-			devfd_buffer = udata.u_base;
-			devfd_userbuf = 0xFF;
-			firstblk = udata.u_offset >> BLKSHIFT;
-			break;
-#ifdef SWAPDEV
-		case 2:
-			nblocks = swapcnt >> 9;
-			devfd_buffer = swapbase;
-			devfd_userbuf = 0xFF;
-			firstblk = swapblk;
-			break;
-#endif
-		default:
-			goto failout;
+	if (rawflag == 1)
+		if (d_blkoff(9))
+			return -1;
+
+	/* Needs to learn to listen to swappage to support this */
+	if (rawflag == 2) {
+		udata.u_error = EIO;
+		return -1;
 	}
 
+	if (rawflag)
+		devfd_userbuf = 0xFF;
+
+	firstblk = udata.u_block;
 	devfd_track = firstblk / devfd_dtbl[minor].spt;
 	devfd_sector = firstblk % devfd_dtbl[minor].spt; /* Base 0 Sect # */
 	devfd_error = 0;
 
-	if (devfd_track >= devfd_dtbl[minor].ncyl){
+	if (devfd_track >= devfd_dtbl[minor].ncyl)
 		goto failout;
-	}
 
-	blocks = nblocks;
+	devfd_buffer = udata.u_dptr;
+	blocks = udata.u_nblock;
+	nblocks = blocks;
+
 	for (;;)
 	{
 		irq = di();
@@ -131,9 +122,9 @@ static int fd_transfer(bool rwflag, uint8_t minor, uint8_t rawflag)
 	if (retc) 
 		goto failout;
 
-	return blocks;
+	return blocks << BLKSHIFT;
 failout:
-	udata.u_error = ENXIO;
+	udata.u_error = EIO;
 	return -1;
 }
 
