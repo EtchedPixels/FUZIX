@@ -324,6 +324,11 @@ arg_t _pipe(void)
 		goto nogood2;
 	}
 
+	if (ino->c_flags & CRDONLY) {
+		udata.u_error = EROFS;
+		goto nogood3;
+	}
+
 	udata.u_files[u2] = oft2;
 
 	of_tab[oft1].o_ptr = 0;
@@ -345,6 +350,8 @@ arg_t _pipe(void)
 	uputw(u2, fildes + 1);
 	return (0);
 
+      nogood3:
+	i_deref(ino);
       nogood2:
 	oft_deref(oft1);
 	udata.u_files[u1] = NO_FILE;
