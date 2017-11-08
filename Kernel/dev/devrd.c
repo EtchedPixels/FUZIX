@@ -23,45 +23,35 @@ static const uint32_t dev_start[NUM_DEV_RD] = {
     DEV_RD_RAM_START, /* /dev/rd1: RAM */
 };
 
-int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag) /* implements both rd_read and rd_write */
+/* implements both rd_read and rd_write */
+int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    bool error = false;
-
     used(flag);
 
     /* check device exists; do not allow writes to ROM */
-    if(minor >= NUM_DEV_RD || (minor == RD_MINOR_ROM && rd_reverse)){
-        error = true;
-    }else{
+    if (minor == RD_MINOR_ROM && rd_reverse) {
+        udata.u_error = EROFS;
+        return -1;
+    } else {
         rd_src_address = dev_start[minor];
 
-        if(rawflag){
+        if (rawflag) {
+            if (d_blkoff(9))
+                return -1;
             /* rawflag == 1, userspace transfer */
-            rd_dst_userspace = true;
-            rd_dst_address = (uint16_t)udata.u_base;
-            rd_src_address += udata.u_offset;
-            rd_cpy_count = udata.u_count;
-        }else{
-            /* rawflag == 0, kernel transfer */
-            rd_dst_userspace = false;
-            rd_dst_address = (uint16_t)&udata.u_buf->bf_data;
-            rd_src_address += ((uint32_t)udata.u_buf->bf_blk << 9);
-            rd_cpy_count = 512;
         }
+        rd_dst_userspace = rawflag;
 
-        if(rd_src_address >= dev_limit[minor]){
-            error = true;
+        rd_dst_address = (uint16_t)udata.u_dptr;
+        rd_src_address += ((uint32_t)udata.u_block) << BLKSHIFT;
+
+        if (rd_src_address >= dev_limit[minor]) {
+           udata.u_error = EIO;
+           return -1;
         }
     }
-
-    if(error){
-        udata.u_error = EIO;
-        return -1;
-    }
-
     rd_platform_copy();
-
-    return rd_cpy_count >> 9;
+    return rd_cpy_count;
 }
 
 int rd_open(uint8_t minor, uint16_t flags)
