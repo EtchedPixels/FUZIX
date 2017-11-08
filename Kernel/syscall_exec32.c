@@ -1,5 +1,3 @@
-#error "Convert me to readi"
-
 /*
  *	Implement binary loading for 32bit platforms. We use the ucLinux binflat
  *	format with a simple magic number tweak to avoid confusion with ucLinux
@@ -47,30 +45,6 @@ struct binfmt_flat {
 	uint32_t flags;
 	uint32_t filler[6];
 };
-
-static int bload(inoptr i, uint16_t bl, void *base, uint32_t len)
-{
-	blkno_t blk;
-	while(len) {
-		uint16_t cp = min(len, 512);
-		blk = bmap(i, bl, 1);
-		if (blk == NULLBLK)
-			uzero(base, 512);
-		else {
-			udata.u_offset = (off_t)blk << 9;
-			udata.u_count = 512;
-			udata.u_base = base;
-			if (cdread(i->c_dev, 0) < 0) {
-				kputs("bload failed.\n");
-				return -1;
-			}
-		}
-		base += cp;
-		len -= cp;
-		bl++;
-	}
-	return 0;
-}
 
 static void close_on_exec(void)
 {
@@ -142,9 +116,9 @@ char *envp[];
 
 arg_t _execve(void)
 {
-	struct binfmt_flat *binflat;
+	/* Not ideal on stack */
+	struct binfmt_flat binflat;
 	inoptr ino;
-	unsigned char *buf;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
@@ -166,31 +140,33 @@ arg_t _execve(void)
 
 	setftime(ino, A_TIME);
 
-	if (ino->c_node.i_size == 0) {
+	udata.u_offset = 0;
+	udata.u_count = sizeof(struct binfmt_flat);
+	udata.u_base = (void *)&binflat;
+	udata.u_sysio = true;
+
+	readi(ino, 0);
+	if (udata.u_count != sizeof(struct binfmt_flat)) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
 
-	/* Read in the first block of the new program */
-	buf = bread(ino->c_dev, bmap(ino, 0, 1), 0);
-	binflat = (struct binfmt_flat *)buf;
 	
 	/* FIXME: ugly - save this as valid_hdr modifies it */
-	true_brk = binflat->bss_end;
+	true_brk = binflat.bss_end;
 
 	/* Hard coded for our 68K format. We don't quite use the ucLinux
 	   names, we don't want to load a ucLinux binary in error! */
-	if (buf == NULL || memcmp(buf, "bFLT", 4) ||
-		!valid_hdr(ino, binflat)) {
+	if (memcmp(binflat.magic, "bFLT", 4) || !valid_hdr(ino, &binflat)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
 	/* Memory needed */
-	bin_size = binflat->bss_end + binflat->stack_size;
+	bin_size = binflat.bss_end + binflat.stack_size;
 
 	/* Overflow ? */
-	if (bin_size < binflat->bss_end) {
+	if (bin_size < binflat.bss_end) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
@@ -210,7 +186,20 @@ arg_t _execve(void)
 	if (pagemap_realloc(0, bin_size, 0))
 		goto nogood3;
 
-	/* From this point on we are commmited to the exec() completing */
+	/* Core dump and ptrace permission logic */
+#ifdef CONFIG_LEVEL_2
+	/* Q: should uid == 0 mean we always allow core */
+	if ((!(getperm(ino) & OTH_RD)) ||
+		(ino->c_node.i_mode & (SET_UID | SET_GID)))
+		udata.u_flags |= U_FLAG_NOCORE;
+	else
+		udata.u_flags &= ~U_FLAG_NOCORE;
+#endif
+
+	udata.u_codebase = progbase = pagemap_base();
+	/* From this point on we are commmited to the exec() completing
+	   so we can start writing over the old program */
+	uput(&binflat, (uint8_t *)progbase, sizeof(struct binfmt_flat));
 
 	/* setuid, setgid if executable requires it */
 	if (ino->c_node.i_mode & SET_UID)
@@ -219,46 +208,39 @@ arg_t _execve(void)
 	if (ino->c_node.i_mode & SET_GID)
 		udata.u_egid = ino->c_node.i_gid;
 
-	/* We are definitely going to succeed with the exec,
-	 * so we can start writing over the old program
-	 */
-	
-	udata.u_codebase = progbase = pagemap_base();
 	top = progbase + bin_size;
 
 //	kprintf("user space at %p\n", progbase);
 //	kprintf("top at %p\n", progbase + bin_size);
 
-	uput(buf, (uint8_t *)progbase, 512);	/* Move 1st Block to user bank */
-
-	/* At this point, we are committed to reading in and
-	 * executing the program. */
+	bin_size = binflat.reloc_start + 4 * binflat.reloc_count;
+	go = (uint32_t)progbase + binflat.entry;
 
 	close_on_exec();
 
 	/*
-	 *  Read in the rest of the program, block by block
-	 *  We use bufdiscard so that we load the entire app through the
-	 *  same buffer to avoid cycling our small cache on this. Indirect blocks
-	 *  will still be cached. - Hat tip to Steve Hosgood's OMU for that trick
+	 *  Read in the rest of the program, block by block. We rely upon
+	 *  the optimization path in readi to spot this is a big move to user
+	 *  space and move it directly.
 	 */
 
-	/* Compute this once otherwise each loop we must recalculate this
-	   as the compiler isn't entitled to assume the loop didn't change it */
-
-	bin_size = binflat->reloc_start + 4 * binflat->reloc_count;
-	if (bin_size > 512)
-		bload(ino, 1, (uint8_t *)progbase + 512, bin_size - 512);
-
-	go = (uint32_t)progbase + binflat->entry;
+	 if (bin_size > sizeof(struct binfmt_flat)) {
+		/* We copied the header already */
+		bin_size -= sizeof(struct binfmt_flat);
+		udata.u_base = (uint8_t *)progbase +
+					sizeof(struct binfmt_flat);
+		udata.u_count = bin_size;
+		udata.u_sysio = false;
+		readi(ino, 0);
+		if (udata.u_count != bin_size)
+			goto nogood4;
+	}
 
 	/* Header isn't counted in relocations */
-	relocate(binflat, progbase, bin_size);
+	relocate(&binflat, progbase, bin_size);
 	/* This may wipe the relocations */	
-	uzero((uint8_t *)progbase + binflat->data_end,
-		binflat->bss_end - binflat->data_end + binflat->stack_size);
-
-	brelse(buf);
+	uzero((uint8_t *)progbase + binflat.data_end,
+		binflat.bss_end - binflat.data_end + binflat.stack_size);
 
 	/* Use of brk eats into the stack allocation */
 
@@ -278,8 +260,8 @@ arg_t _execve(void)
 	uget((void *) ugetl(nargv, NULL), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
-	brelse(abuf);
-	brelse(ebuf);
+	tmpfree(abuf);
+	tmpfree(ebuf);
 	i_deref(ino);
 
 	/* Shove argc and the address of argv just below envp */
@@ -298,15 +280,15 @@ arg_t _execve(void)
 
 //	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
-	// Start execution (never returns)
 	doexec(go);
 
-	// tidy up in various failure modes:
+nogood4:
+	/* Must not run userspace */
+	ssig(udata.u_ptab, SIGKILL);
 nogood3:
-	brelse(abuf);
-	brelse(ebuf);
+	tmpfree(abuf);
+	tmpfree(ebuf);
 nogood2:
-	brelse(buf);
 nogood:
 	i_deref(ino);
 	return (-1);
