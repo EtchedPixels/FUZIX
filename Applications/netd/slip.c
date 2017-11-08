@@ -154,4 +154,4 @@ int device_init(void)
     return 0;
 }
 
-int has_arp = 0;
+uint8_t has_arp = 0;
