@@ -213,7 +213,7 @@ long duentry(char *ep)
  * structure that is too deep to fit into
  * user's open files.
  */
-long dufork(char *ep)
+long dufork(const char *ep)
 {
 	int i;
 	int pid;
