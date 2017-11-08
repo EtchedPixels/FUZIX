@@ -47,7 +47,7 @@ static int header_ok(uint8_t *pp)
 arg_t _execve(void)
 {
 	/* We aren't re-entrant where this matters */
-	staticfast uint8_t hdr[16];
+	uint8_t hdr[16];
 	staticfast inoptr ino;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
@@ -70,16 +70,6 @@ arg_t _execve(void)
 		udata.u_error = EACCES;
 		goto nogood;
 	}
-
-	/* Core dump and ptrace permission logic */
-#ifdef CONFIG_LEVEL_2
-	/* Q: should uid == 0 mean we always allow core */
-	if ((!(getperm(ino) & OTH_RD)) ||
-		(ino->c_node.i_mode & (SET_UID | SET_GID)))
-		udata.u_flags |= U_FLAG_NOCORE;
-	else
-		udata.u_flags &= ~U_FLAG_NOCORE;
-#endif
 
 	setftime(ino, A_TIME);
 
@@ -139,6 +129,16 @@ arg_t _execve(void)
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
+
+	/* Core dump and ptrace permission logic */
+#ifdef CONFIG_LEVEL_2
+	/* Q: should uid == 0 mean we always allow core */
+	if ((!(getperm(ino) & OTH_RD)) ||
+		(ino->c_node.i_mode & (SET_UID | SET_GID)))
+		udata.u_flags |= U_FLAG_NOCORE;
+	else
+		udata.u_flags &= ~U_FLAG_NOCORE;
+#endif
 	udata.u_top = top;
 	udata.u_ptab->p_top = top;
 
