@@ -47,8 +47,8 @@ clock_time_t
 clock_time(void)
 {
   struct{
-      uint16_t high;
-      uint16_t low;
+      uint32_t high;
+      uint32_t low;
   }now;
   _time((__ktime_t *)&now,1);
   /* FIXME: needs a multiplier to turn into ms FIXME */
