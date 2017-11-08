@@ -339,12 +339,9 @@ illegalmsg: .ascii "[illegal]"
 
 trap_illegal:
         ld hl, #illegalmsg
+traphl:
         call outstring
         call _trap_monitor
-
-dpsmsg: .ascii "[dispsig]"
-        .db 13, 10, 0
-
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0
@@ -355,8 +352,7 @@ nmi_handler:
 	.endif
 	call map_kernel
         ld hl, #nmimsg
-        call outstring
-        jp _trap_monitor
+	jr traphl
 
 ;
 ;	Interrupt handler. Not quite the same as syscalls, we need to
