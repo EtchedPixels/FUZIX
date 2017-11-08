@@ -25,3 +25,5 @@ int device_read( char *buf, int len );
 */
 int device_init( void );
 
+/* set this is 1 if interface needs ARP */
+extern uint8_t has_arp;
