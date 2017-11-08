@@ -370,10 +370,14 @@ static int do_umount(uint16_t dev)
 	   can't remount it read only */
 	if (flags & (MS_RDONLY|MS_REMOUNT) == (MS_RDONLY|MS_REMOUNT)) {
 		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
-			if (ptr->c_dev == dev && ptr->c_writers &&
-				!isdevice(ptr)) {
-				udata.u_error = EBUSY;
-				return -1;
+			if (ptr->c_dev == dev && !isdevice(ptr)) {
+			/* Files being written block the remount ro, but so
+			   do files that when closed will be deleted */
+				if (ptr->c_writers ||
+					!ptr->c_node.i_nlink) {
+					udata.u_error = EBUSY;
+					return -1;
+				}
 			}
 		}
 	}
