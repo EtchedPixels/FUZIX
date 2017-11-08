@@ -32,7 +32,9 @@ static int dwnet_poll( void )
     if( ret < 0 ){
 	return -1;
     }
-    return (buf[0]<<8) + buf[1];
+    ret = (buf[0]<<8) + buf[1];
+    if (ret<0) return 0;
+    return ret;
 }
 
 
