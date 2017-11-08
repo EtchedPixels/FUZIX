@@ -97,7 +97,6 @@ static uint8_t hd_xfer(bool is_read, uint16_t addr)
 
 static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-	blkno_t block;
 	uint16_t dptr;
 	uint16_t ct = 0;
 	int tries;
@@ -105,20 +104,19 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	uint8_t cmd = HDCMD_READ;
 	uint8_t head;
 	uint8_t sector;
-	uint16_t nblock;
 
-	if (rawflag == 0) {
-		dptr = (uint16_t)udata.u_buf->bf_data;
-		block = udata.u_buf->bf_blk;
-		nblock = 1;
-		hd_page = 0;		/* Kernel */
-	} else if (rawflag == 2) {
-		nblock = swapcnt >> 9;	/* in 512 byte chunks */
-		dptr = (uint16_t)swapbase;
-		hd_page = swappage;
-		block = swapblk;
-	} else
-		goto bad2;
+	if (rawflag) {
+		if (rawflag == 1) {
+			if (d_blkoff(9))
+				return -1;
+			/* TODO */
+			hd_page = 0xFF;
+		} else {
+			hd_page = swappage;
+		}
+	}
+
+	dptr = (uint16_t)udata.u_dptr;
 
 	if (!is_read)
 		cmd = HDCMD_WRITE;
@@ -126,9 +124,9 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	/* We don't touch precomp and hope the firmware set it right */
 	hd_seccnt = 1;
 
-	while (ct < nblock) {
-		uint16_t b = block / spt[minor];
-		sector = block % spt[minor];
+	while (ct < udata.u_nblock) {
+		uint16_t b = udata.u_block / spt[minor];
+		sector = udata.u_block % spt[minor];
 		head = b % heads[minor];
 		if (minor < MAX_HD) {
 			/* ECC, 512 bytes, head and drive */
@@ -170,9 +168,9 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			goto bad;
 		ct++;
 		dptr += 512;
-		block ++;
+		udata.u_block ++;
 	}
-	return 1;
+	return ct << BLKSHIFT;
 bad:
 	if (err & 1)
 		kprintf("hd%d: error %x\n", minor, hd_err);

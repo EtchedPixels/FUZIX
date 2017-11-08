@@ -66,3 +66,8 @@ uint8_t rtc_secs(void)
 	rtc_c = 0x00;
 	return rtc_d;
 }
+
+uint8_t platform_param(char *p)
+{
+	return 0;
+}

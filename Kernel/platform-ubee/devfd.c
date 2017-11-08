@@ -45,10 +45,11 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int tries;
     uint8_t err = 0;
     uint8_t *driveptr = fd_tab + minor;
-    uint8_t cmd[6];
+    uint8_t cmd[7];
 
     if(rawflag)
-        goto bad2;
+        if (d_blkoff(9))
+            return -1;
 
     if (fd_selected != minor) {
         uint8_t err;
@@ -61,30 +62,36 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     if (*driveptr == 0xFF)
         fd_reset(driveptr);
 
-    dptr = (uint16_t)udata.u_buf->bf_data;
-    block = udata.u_buf->bf_blk;
+    dptr = (uint16_t)udata.u_dptr;
+    block = udata.u_block;
 
-    cmd[0] = is_read ? FD_READ : FD_WRITE;
-    /* Double sided assumed FIXME */
-    cmd[1] = block / 20;
-    /* floppy.s will sort the side out */
-    cmd[2] = ((block % 20) << 1) + 1;
-    cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[4] = dptr & 0xFF;
-    cmd[5] = dptr >> 8;
+    while(ct < udata.u_nblock) {
+        cmd[0] = is_read ? FD_READ : FD_WRITE;
+        /* Double sided assumed FIXME */
+        cmd[1] = block / 20;
+        /* floppy.s will sort the side out */
+        cmd[2] = ((block % 20) << 1) + 1;
+        cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
+        cmd[4] = dptr & 0xFF;
+        cmd[5] = dptr >> 8;
+        cmd[6] = rawflag;
 
-    for (tries = 0; tries < 4 ; tries++) {
-        err = fd_operation(cmd, driveptr);
-        if (err == 0)
-            break;
-        if (tries > 1)
-            fd_reset(driveptr);
-   }
-   if (tries != 4)
-       return 1;
+        for (tries = 0; tries < 4 ; tries++) {
+            err = fd_operation(cmd, driveptr);
+            if (err == 0)
+                break;
+            if (tries > 1)
+                fd_reset(driveptr);
+        }
+        if (tries == 4)
+            goto bad;
+        udata.u_block++;
+        udata.u_dptr += 512;
+        ct++;
+    }
+    return ct << BLKSHIFT;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
-bad2:
     udata.u_error = EIO;
     return -1;
 }
