@@ -48,7 +48,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define can_signal(p, sig) \
 	(udata.u_ptab->p_uid == (p)->p_uid || super())
 #define pathbuf()	tmpbuf()
-#define pathfree(tb)	brelse(tb)
+#define pathfree(tb)	tmpfree(tb)
 #define dump_core(sig)	sig
 #define in_group(x)	0
 #endif
