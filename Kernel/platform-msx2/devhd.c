@@ -19,25 +19,11 @@ static int hd_transfer(bool is_read, uint8_t rawflag)
     
     is_read;
 
-    /* FIXME: raw is broken unless nicely aligned */
     if(rawflag) {
-        dlen = udata.u_count;
-        dptr = (uint16_t)udata.u_base;
-        if (((uint16_t)dptr | dlen) & BLKMASK) {
-            udata.u_error = EIO;
+        if (d_blkoff(9))
             return -1;
-        }
-        block = udata.u_offset >> 9;
-        block_xfer = dlen >> 9;
         map = 1;
-    } else { /* rawflag == 0 */
-        dlen = 512;
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        block_xfer = 1;
-        map = 0;
     }
-        
     while (ct < block_xfer) {
         /* FIXME: Do stuff */
         block++;

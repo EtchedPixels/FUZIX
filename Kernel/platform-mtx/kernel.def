@@ -12,4 +12,4 @@ Z80_TYPE		    .equ 0
 
 VRAM_CH			    .equ 3	      ; font data 0x1800-1BFF ?
 
-
+Z80_MMU_HOOKS		    .equ 0
