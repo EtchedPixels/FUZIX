@@ -40,9 +40,6 @@ int fc=7;
 int bc=0;
 int inten=0;
 
-#define AF_INET		1
-#define SOCK_STREAM	3
-
 
 struct sockaddr_in addr;
 struct sockaddr_in laddr;
@@ -96,7 +93,7 @@ void ckint(){
 }
 
 /* Send a char to the console, processing for ANSI/TELNET chars */
-void charout( char c ){
+void charout( uint8_t c ){
 	static char mode=0;
 	int i;
 
@@ -263,7 +260,7 @@ void charout( char c ){
 }
 
 /* print string to console under ANSI/TELNET */
-int mywrite( char *ptr, int len ){
+int mywrite( uint8_t *ptr, int len ){
 	int i=len;
 	while( i-- ) charout( *ptr++ );
 	return len;
@@ -416,7 +413,7 @@ int myread( void ){
 	}
 }
 
-my_open( int argc, char *argv[]){
+int my_open( int argc, char *argv[]){
     int port = 23;    /* default port */
     struct hostent *h;
 
