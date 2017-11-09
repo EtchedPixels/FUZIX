@@ -180,7 +180,10 @@ uint16_t cap( struct link *s )
 /* uIP callback for TCP events */
 void netd_appcall(void)
 {
-	/*
+	struct link *s = & map[uip_conn->appstate];
+	ne.socket = s->socketn;
+
+#ifdef TRACE
 	  printe( "appcall: " );
 	  if( uip_aborted() ) printe("aborted.\n");
 	  if( uip_acked() )  printe("acked.\n");
@@ -190,10 +193,7 @@ void netd_appcall(void)
 	  if( uip_rexmit() ) printe("rexmit.\n");
 	  if( uip_timedout() ) printe("timed out.\n");
 	  if( uip_connected() ) printe("connected.\n" );
-	*/
-	struct link *s = & map[uip_conn->appstate];
-	ne.socket = s->socketn;
-
+#endif
 	/* uIP sends up a connected event for both
 	   active and passive opens */
 	if ( uip_connected() ){
@@ -338,7 +338,10 @@ void netd_appcall(void)
 /* uIP callbck for UDP event */
 void netd_udp_appcall(void)
 {
-	/* debug
+	struct link *s = & map[uip_udp_conn->appstate];
+	ne.socket = s->socketn;
+
+#ifdef TRACE
 	   printe( "appcall udp: " );
 	   if( uip_aborted() ) printe("aborted");
 	   if( uip_acked() )  printe("acked");
@@ -349,10 +352,7 @@ void netd_udp_appcall(void)
 	   if( uip_timedout() ) printe("timed out");
 	   if( uip_connected() ) printe("connected" );
 	   printe("\n");
-	*/
-
-	struct link *s = & map[uip_udp_conn->appstate];
-	ne.socket = s->socketn;
+#endif
 
 	if ( uip_poll() ){
 		/* send data if there's data waiting on this connection */
@@ -400,8 +400,11 @@ void netd_udp_appcall(void)
 /* uIP callbck for UDP event */
 void netd_raw_appcall(void)
 {
-	/* debug
-	   printe( "appcall udp: " );
+	struct link *s = & map[uip_raw_conn->appstate];
+	ne.socket = s->socketn;
+
+#ifdef TRACE
+	   printe( "appcall raw: " );
 	   if( uip_aborted() ) printe("aborted");
 	   if( uip_acked() )  printe("acked");
 	   if( uip_closed() ) printe("closed");
@@ -411,10 +414,7 @@ void netd_raw_appcall(void)
 	   if( uip_timedout() ) printe("timed out");
 	   if( uip_connected() ) printe("connected" );
 	   printe("\n");
-	*/
-
-	struct link *s = & map[uip_raw_conn->appstate];
-	ne.socket = s->socketn;
+#endif
 
 	if ( uip_poll() ){
 		/* send data if there's data waiting on this connection */
@@ -477,12 +477,12 @@ int dokernel( void )
 		return 0;
 	}
 	else if ( i == sizeof( sm ) && (sm.sd.event & 127)){
-		/* debug*/
+#ifdef TRACE
 		   fprintf(stderr,"read size: %d ", i );
 		   fprintf(stderr,"knet lcn: %d ", sm.sd.lcn );
 		   fprintf(stderr,"event: %x ", sm.sd.event );
 		   fprintf(stderr,"newstat: %x\n", sm.sd.newstate );
-		/**/
+#endif
 		m = & map[sm.sd.lcn];
 		if ( sm.sd.event & NEV_STATE ){
 			ne.socket = sm.s.s_num;
@@ -665,8 +665,8 @@ int douip( void )
 	int ret = 0;
 	int i = loop_or_read();
 	if (i < 0)
-		return i;
-	if (i > 0){
+		ret = i;
+	if (i > 0) {
 		ret = 1;
 		uip_len = i;
 		if (uip_len > 0) {
@@ -685,26 +685,30 @@ int douip( void )
 					send_or_loop();
 			}
 		}
-	} else if (timer_expired(&periodic_timer)) {
+	}
+	if (timer_expired(&periodic_timer)) {
 		timer_reset(&periodic_timer);
 		for (i = 0; i < UIP_CONNS; i++) {
 			uip_periodic(i);
 			if (uip_len > 0) {
-				uip_arp_out();
+				if (has_arp)
+					uip_arp_out();
 				send_or_loop();
 			}
 		}
 		for (i = 0; i < UIP_UDP_CONNS; i++) {
 			uip_udp_periodic(i);
 			if (uip_len > 0) {
-				uip_arp_out();
+				if (has_arp)
+					uip_arp_out();
 				send_or_loop();
 			}
 		}
 		for (i = 0; i < UIP_RAW_CONNS; i++) {
 			uip_raw_periodic(i);
 			if (uip_len > 0) {
-				uip_arp_out();
+				if (has_arp)
+					uip_arp_out();
 				send_or_loop();
 			}
 		}
@@ -879,9 +883,9 @@ int main( int argc, char *argv[] )
 	 * Set up uIP
 	 */
 
-	timer_set(&periodic_timer, CLOCK_SECOND / 4);
+	timer_set(&periodic_timer, 1);
 	if (has_arp)
-		timer_set(&arp_timer, CLOCK_SECOND * 10 );
+		timer_set(&arp_timer, 10 );
 
 	uip_init();
 
