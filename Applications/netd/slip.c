@@ -105,6 +105,7 @@ static int slip_poll( void )
 /* receive packet to a buffer */
 static int slip_recv( unsigned char *b, int len )
 {
+    len = iptr - ibuf;
     /* Mark it as IP */
     b[12] = 0x08;
     b[13] = 0x00;
