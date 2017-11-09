@@ -35,6 +35,6 @@
 #define __CLOCK_ARCH_H__
 
 typedef int clock_time_t;
-#define CLOCK_CONF_SECOND 10
+#define CLOCK_CONF_SECOND 1
 
 #endif /* __CLOCK_ARCH_H__ */

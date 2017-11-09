@@ -46,13 +46,16 @@
 clock_time_t
 clock_time(void)
 {
-  struct{
-      uint32_t high;
-      uint32_t low;
-  }now;
-  _time((__ktime_t *)&now,1);
-  /* FIXME: needs a multiplier to turn into ms FIXME */
-  return now.low;
-  //  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+  static uint8_t init;
+  static time_t tbase;
+  time_t t;
+
+  if (!init) {
+    init = 1;
+    time(&tbase);
+  }
+  time(&t);
+  t -= tbase;
+  return t;
 }
 /*---------------------------------------------------------------------------*/
