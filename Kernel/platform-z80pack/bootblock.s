@@ -5,7 +5,7 @@
 ;
 ;	Floppy loader: 
 ;	Our boot disc is 77 tracks of 26 x 128 byte sectors, and we put
-;	the OS on tracks 60+, which means we can put a file system in the
+;	the OS on tracks 58+, which means we can put a file system in the
 ;	usual place providing its a bit smaller than a whole disc.
 ;
 ;
@@ -31,10 +31,10 @@ diskload:	di
 		ld b, a
 		out (17), a		; sector high always 0
 		out (10), a		; drive always 0
-		ld a, #59		; start on track 60
+		ld a, #57		; start on track 58
 		out (11), a
 		exx
-		ld c, #17		; number of tracks to load (56Kish)
+		ld c, #19		; number of tracks to load (56Kish)
 load_tracks:	in a, (11)
 		inc a			; track
 		out (11), a

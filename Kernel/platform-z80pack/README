@@ -9,7 +9,8 @@ Bank 0:
 0081-0084	Saved CP/M command info
 0088		UZI kernel start
 ????		UZI kernel end ~= A000
-E000		Discard (blown away by user processes)
+(big kernels go up to E400 or so!)
+E800		Discard (blown away by user processes)
 End of kernel:	Common >= 0xF000
 		uarea
 		uarea stack
@@ -32,12 +33,12 @@ ED00-EFFF	uarea stash
 Disk swap device recommended
 
 Put the kernel at the end of a floppy image from cyl 60
-Add the fs in the first 60 cyls (390 blocks)
+Add the fs in the first 58 cyls (366 blocks)
 
 Put the bootblock in sector 0
 
-dd the kernel image to offset 199680
+dd the kernel image to offset 193024
 
 ie
 
-dd if=fuzix.bin of=drivea.cpm bs=1 seek=199680 conv=notrunc
+dd if=fuzix.bin of=drivea.cpm bs=1 seek=193024 conv=notrunc

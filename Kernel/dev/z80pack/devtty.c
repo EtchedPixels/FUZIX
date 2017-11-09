@@ -46,8 +46,10 @@ char tty_writeready(uint8_t minor)
         return TTY_READY_NOW;
     if (minor == 2)
         s = tty2stat;
-    else
+    else if (minor == 3)
         s = tty3stat;
+    else
+        s = tty4stat;
     return s & 2 ? TTY_READY_NOW: TTY_READY_LATER;
 }
 
@@ -86,7 +88,7 @@ void tty_pollirq(void)
     }
     while(tty4stat & 1) {
         c = tty4data;
-        tty_inproc(3, c);
+        tty_inproc(4, c);
     }
     if ((ttypoll & 4) && (tty2stat & 2)) {
         ttypoll &= ~4;
@@ -96,8 +98,8 @@ void tty_pollirq(void)
         ttypoll &= ~8;
         wakeup(&ttydata[3]);
     }
-    if ((ttypoll & 8) && (tty4stat & 2)) {
-        ttypoll &= ~8;
+    if ((ttypoll & 16) && (tty4stat & 2)) {
+        ttypoll &= ~16;
         wakeup(&ttydata[4]);
     }
 }    
