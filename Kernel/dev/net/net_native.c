@@ -29,10 +29,10 @@ static struct netevent ne;
 
 int netdev_write(uint8_t flags)
 {
-	used(flags);
 	struct socket *s;
 	struct sockdata *sd;
 
+	used(flags);
 	/* Grab a message from the service daemon */
 	if (net_ino == NULL || udata.u_count != sizeof(ne) || 
 		uget(udata.u_base, &ne, sizeof(ne)) == -1 ||
@@ -184,8 +184,8 @@ int netdev_ioctl(uarg_t request, char *data)
  */
 int netdev_close(uint8_t minor)
 {
-	used( minor );
 	struct socket *s = sockets;
+	used(minor);
 	if (net_ino) {
 		i_deref(net_ino);
 		net_ino = NULL;
