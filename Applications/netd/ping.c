@@ -94,10 +94,10 @@ void sendping( void ){
     int l = strlen(data) + 8;
     memset( buf, 0, MAXBUF);
     i->type = 8;  // echo request
-    i->id = id;
-    i->seq = seq;
+    i->id = htons(id);
+    i->seq = htons(seq);
     strcpy( &buf[8], data );
-    i->cksum = cksum(buf, l);
+    i->cksum = htons(cksum(buf, l));
     write(fd, buf, l);
     sent++;
     seq++;
@@ -154,14 +154,18 @@ int main( int argc, char *argv[] ){
 
     while(1){
 	sendping();
+	/* FIXME: this breaks if the alarm occurs before the read under
+	   load - sigsetjmp/siglongjmp needed I think */
 	signal( SIGALRM, alarm_handler );
 	alarm(2);
     ragain:
 	x=read( fd, buf, MAXBUF);
-	if (x>0){
+	if (x > 0){
 	    ipbuf = (struct ip *)buf;
-	    if (ipbuf->ver >> 4 != 4)
+	    if (ipbuf->ver >> 4 != 4) {
+	        printf("Not v4 ?\n");
 		goto ragain;
+            }
 	    icmpbuf = (struct icmp *)(buf + (ipbuf->ver & 15) * 4);
 	    /* check for dest unreachable icmp messages */
 	    if ( icmpbuf->type == 3 ){
@@ -169,7 +173,7 @@ int main( int argc, char *argv[] ){
 		ipbuf2 = (struct ip *)(icmpbuf + 1);
 		icmpbuf = (struct icmp *)((char *)ipbuf2 + (ipbuf2->ver & 15) * 4);
 		/* check the bombed-out ip packet to see if it's ours */
-		if( icmpbuf->id == id ){
+		if( icmpbuf->id == htons(id) ){
 		    printf("ICMP: from ");
 		    ipprint( &ipbuf->src );
 		    printf(" dest unreachable\n");
@@ -177,13 +181,15 @@ int main( int argc, char *argv[] ){
 		goto ragain;
 	    }	
 	    /* filter for our id */
-	    if( icmpbuf->id != id )
+	    if( icmpbuf->id != htons(id) ) {
+	        printf("Bad id %d\n", ntohs(icmpbuf->id));
 		goto ragain;
+            }
 	    /* passed filters, so this must be one of our pings */
 	    nrecv++;
 	    printf("%d bytes from %s (", x, argv[1] );
 	    ipprint( &ipbuf->src );
-	    printf(") req=%d", icmpbuf->seq );
+	    printf(") req=%d", ntohs(icmpbuf->seq));
 	    printf("\n");
 	}
 	sleep(1);
