@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "netdb.h"
 
 /* DNS packet header */
@@ -109,6 +110,7 @@ static struct hostent host={      /* static returned hostent struct */
 /* Get a host by it's name */ 
 struct hostent *gethostbyname( char *name ){
     struct sockaddr_in addr;
+    static uint32_t av;
     int x;
     int tries = 5;
     int lno=0;
@@ -117,8 +119,9 @@ struct hostent *gethostbyname( char *name ){
     char *ws = " \f\n\r\t\v";
 
     /* Try to just translate passed stringified IP address */
-    x = inet_pton( AF_INET, name, list[0] );
+    x = inet_pton( AF_INET, name, &av );
     if( x == 1 ){
+	list[0] = (void *)&av;
 	list[1] = NULL;
 	return &host;
     }
