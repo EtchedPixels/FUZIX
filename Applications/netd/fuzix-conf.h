@@ -16,7 +16,14 @@ typedef uint8_t uip_stats_t;
 
 #define UIP_CONF_LLH_LEN 14
 
-#define UIP_CONF_BYTE_ORDER      UIP_BIG_ENDIAN
+
+#if defined(NETD_LITTLE_ENDIAN)
+#define UIP_CONF_BYTE_ORDER	UIP_LITTLE_ENDIAN
+#elif defined(NETD_BIG_ENDIAN)
+#define UIP_CONF_BYTE_ORDER     UIP_BIG_ENDIAN
+#else
+#error "Must -D the correct endianness"
+#endif
 
 #define UIP_CONF_ACTIVE_OPEN 1
 

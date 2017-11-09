@@ -59,8 +59,8 @@ void pusage( void ){
 
 /* sends query to remote */
 void sendq( void ){
-    memset( buf, 0, MAXBUF );
     struct ntp_t *i = (struct ntp_t *)buf;
+    memset( buf, 0, MAXBUF );
     i->lvm = 0xe3;
     write(fd, buf, 48);
 }

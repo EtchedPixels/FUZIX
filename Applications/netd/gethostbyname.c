@@ -54,16 +54,16 @@ static char buf[512];   /* packet buffer */
 static int send_question( char *name ){
     struct header *p=( struct header *)buf;
     struct RRtail *t;
-    
+    char *i = name;
+    char *o = buf + sizeof(struct header);
+    char *l = o++;
+
     memset( p, 0, sizeof(buf) );
     p->id = 42;     /* "random" query ID */
     p->cntl = 0x1;  /* request a recursive query */
     p->qdcount = 1; /* one question */
     /* fill out name string */
-    char *i = name;
-    char *o = buf + sizeof(struct header);
-    char *l = o++;
-    
+
     while(1){
 	if( ! *i )
 	    break;

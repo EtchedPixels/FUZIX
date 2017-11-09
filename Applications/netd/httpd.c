@@ -32,7 +32,7 @@ my_open( int argc, char *argv[]){
 	exit(1);
     }
 
-    if( bind( lfd, &addr, sizeof(addr) ) ){
+    if( bind( lfd, (struct sockaddr *)&addr, sizeof(addr) ) ){
 	perror("bind");
 	exit(1);
     }

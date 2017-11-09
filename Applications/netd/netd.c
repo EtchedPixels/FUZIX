@@ -476,13 +476,13 @@ int dokernel( void )
 	if ( i < 0 ){
 		return 0;
 	}
-	else if ( i == sizeof( sm ) && sm.sd.event & 127 ){
-		/* debug
+	else if ( i == sizeof( sm ) && (sm.sd.event & 127)){
+		/* debug*/
 		   fprintf(stderr,"read size: %d ", i );
 		   fprintf(stderr,"knet lcn: %d ", sm.sd.lcn );
 		   fprintf(stderr,"event: %x ", sm.sd.event );
 		   fprintf(stderr,"newstat: %x\n", sm.sd.newstate );
-		*/
+		/**/
 		m = & map[sm.sd.lcn];
 		if ( sm.sd.event & NEV_STATE ){
 			ne.socket = sm.s.s_num;
@@ -875,7 +875,6 @@ int main( int argc, char *argv[] )
 	/* initialize our map */
 	init_map();
 
-
 	/*
 	 * Set up uIP
 	 */
@@ -908,13 +907,11 @@ int main( int argc, char *argv[] )
 	ethaddr.addr[5] = 0x05;
 	uip_setethaddr(ethaddr);
 
-
 	parse_rcfile();
 
 	if( device_init() ){
 		exit_err( "cannot init net device\n");
 	}
-
 
 	while(1) {
 		int a,b;

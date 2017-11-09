@@ -15,7 +15,7 @@
 static int fd;  /* fd of the tty */
 
 static char ibuf[297];
-static char *iptr;
+static char *iptr = ibuf;
 
 #define SLIP_END		0xC0
 #define SLIP_ESC		0xDB
@@ -47,6 +47,7 @@ static void slip_out(uint8_t c)
 static void slip_begin(void)
 {
     /* Should send an end mark if idle for a bit */
+    slip_outbuf(SLIP_END);
 }
 
 static void slip_end(void)
@@ -109,6 +110,7 @@ static int slip_recv( unsigned char *b, int len )
     b[13] = 0x00;
     memcpy(b+14, ibuf, len);
     iptr = ibuf;
+    return len;
 }
 
 /* send packet to net device */
@@ -125,7 +127,7 @@ int device_send( char *sbuf, int len )
 int device_read( char *buf, int len )
 {
     if (slip_poll() == 0)
-        return 0;
+        return -1;
     return slip_recv(buf, len);
 }
 
@@ -134,9 +136,9 @@ static struct termios t;
 int device_init(void)
 {
     /* FIXME: don't hard code */
-    fd=open( "/dev/tty3", O_RDWR);
+    fd=open( "/dev/tty4", O_RDWR|O_NOCTTY);
     if( fd < 0  || tcgetattr(fd, &t) < 0) {
-        perror("/dev/tty3");
+        perror("/dev/tty4");
 	return -1;
     }
     t.c_iflag  = IGNBRK;
@@ -148,7 +150,7 @@ int device_init(void)
     t.c_cc[VTIME] = 3;	/* 0.3 seconds */
 
     if (tcsetattr(fd, 0, &t) < 0) {
-        perror("/dev/tty3");
+        perror("/dev/tty4");
         return -1;
     }
     return 0;
