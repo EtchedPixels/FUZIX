@@ -29,6 +29,7 @@ typedef uint8_t uip_stats_t;
 
 #define UIP_CONF_RECEIVE_WINDOW 1500
 
+#define UIP_CONF_TCP_MSS	(mtu - 40)
 #define UIP_RAW 1
 #define UIP_RAW_CONNS 8
 
@@ -45,3 +46,5 @@ typedef uint8_t uip_stats_t;
 extern void netd_appcall(void);
 extern void netd_udp_appcall(void);
 extern void netd_raw_appcall(void);
+
+extern uint16_t mtu;
