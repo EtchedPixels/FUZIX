@@ -796,6 +796,8 @@ static pid_t getty(const char **argv, const char *id)
 			   than ulongs! */
 			tref.c_cflag |= baudmatch(argv[1]);
 
+			tcsetattr(fdtty, TCSANOW, &tref);
+
 			/* make stdin, stdout and stderr point to fdtty */
 
 			dup(fdtty);
