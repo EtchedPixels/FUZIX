@@ -62,42 +62,49 @@ static void badpacket(void)
     fprintf(stderr, "overlong frame\n");
 }
 
+static char scratch[256];
+
 /* returns number of byte in next packet, 0 = nothing waiting */
 static int slip_poll( void )
 {
     static uint8_t esc = 0;
+    int l;
     uint8_t c;
+    uint8_t *p = scratch;
 
-    if (read(fd, &c, 1) < 1 )
+    if ((l = read(fd, scratch, 256)) < 1)
         return 0;
-
-    /* If we saw an escape then process the escapes */
-    if (esc) {
-        esc = 0;
-        if (c == ESC_END)
-            *iptr++ = SLIP_END;
-        else if (c == ESC_ESC)
-            *iptr++ = SLIP_ESC;
-        else {
+    
+    while(l) {
+        /* If we saw an escape then process the escapes */
+        c = *p++;
+        if (esc) {
+            esc = 0;
+            if (c == ESC_END)
+                *iptr++ = SLIP_END;
+            else if (c == ESC_ESC)
+                *iptr++ = SLIP_ESC;
+            else {
+                badpacket();
+                return 0;
+            }
+        } else {
+            /* An escape begins */
+            if (c == SLIP_ESC) {
+                esc = 1;
+                return 0;
+            }
+            /* End of frame */
+            if (c == SLIP_END) { 
+                int len = iptr - ibuf;
+                return len;
+            }
+            /* Queue the byte */
+            *iptr++ = c;
+        }
+        if (iptr == ibuf + 296)
             badpacket();
-            return 0;
-        }
-    } else {
-        /* An escape begins */
-        if (c == SLIP_ESC) {
-            esc = 1;
-            return 0;
-        }
-        /* End of frame */
-        if (c == SLIP_END) { 
-            int len = iptr - ibuf;
-            return len;
-        }
-        /* Queue the byte */
-        *iptr++ = c;
     }
-    if (iptr == ibuf + 296)
-        badpacket();
     return 0;
 }
 
@@ -158,3 +165,4 @@ int device_init(void)
 }
 
 uint8_t has_arp = 0;
+uint16_t mtu = 296;
