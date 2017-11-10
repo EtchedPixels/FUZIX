@@ -186,3 +186,92 @@ clean-all: clean
 
 include cpu-$(CPU)/image.mk
 -include platform-$(TARGET)/image.mk
+# DO NOT DELETE
+
+audio.o: include/kernel.h include/panic.h include/sysinfoblk.h
+audio.o: include/kdata.h include/printf.h include/audio.h
+bank16k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank16k.o: include/kdata.h include/printf.h
+bank16k_low.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank16k_low.o: include/kdata.h include/printf.h
+bank32k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank32k.o: include/kdata.h include/printf.h
+bank65c816.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank65c816.o: include/kdata.h include/printf.h
+bank8086.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank8086.o: include/kdata.h include/printf.h
+bank8k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bank8k.o: include/kdata.h include/printf.h include/bank8k.h
+bankfixed.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bankfixed.o: include/kdata.h include/printf.h
+bankrigid.o: include/kernel.h include/panic.h include/sysinfoblk.h
+bankrigid.o: include/kdata.h include/printf.h
+buddy.o: include/kernel.h include/panic.h include/sysinfoblk.h
+buddy.o: include/kdata.h include/printf.h include/buddy.h
+devio.o: include/kernel.h include/panic.h include/sysinfoblk.h
+devio.o: include/printf.h include/kdata.h
+devsys.o: include/kernel.h include/panic.h include/sysinfoblk.h
+devsys.o: include/version.h include/kdata.h include/devsys.h include/audio.h
+devsys.o: include/netdev.h include/devmem.h include/net_native.h
+filesys.o: include/kernel.h include/panic.h include/sysinfoblk.h
+filesys.o: include/kdata.h include/printf.h
+flat.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
+flat.o: include/printf.h
+flat_mem.o: include/kernel.h include/panic.h include/sysinfoblk.h
+flat_mem.o: include/kdata.h include/printf.h include/flat_mem.h
+inode.o: include/kernel.h include/panic.h include/sysinfoblk.h
+inode.o: include/kdata.h include/printf.h include/tty.h include/netdev.h
+kdata.o: include/kernel.h include/panic.h include/sysinfoblk.h
+kdata.o: include/version.h include/kdata.h include/netdev.h
+level2.o: include/kernel.h include/panic.h include/sysinfoblk.h
+level2.o: include/kdata.h include/printf.h include/tty.h
+lowlevel-msp430x.o: include/kernel.h include/panic.h include/sysinfoblk.h
+lowlevel-msp430x.o: include/kdata.h include/printf.h
+malloc.o: include/kernel.h include/panic.h include/sysinfoblk.h
+malloc.o: include/printf.h
+mm.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
+mm.o: include/printf.h
+process.o: include/kernel.h include/panic.h include/sysinfoblk.h
+process.o: include/tty.h include/kdata.h include/printf.h include/audio.h
+select.o: include/kernel.h include/panic.h include/sysinfoblk.h
+select.o: include/version.h include/kdata.h include/printf.h
+simple.o: include/kernel.h include/panic.h include/sysinfoblk.h
+simple.o: include/kdata.h include/printf.h
+single.o: include/kernel.h include/panic.h include/sysinfoblk.h
+single.o: include/kdata.h include/printf.h
+start.o: include/kernel.h include/panic.h include/sysinfoblk.h
+start.o: include/version.h include/kdata.h include/printf.h include/tty.h
+swap.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
+swap.o: include/printf.h
+syscall_exec16.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_exec16.o: include/version.h include/kdata.h include/printf.h
+syscall_exec32.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_exec32.o: include/kernel32.h include/version.h include/kdata.h
+syscall_exec32.o: include/printf.h
+syscall_fs2.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_fs2.o: include/version.h include/kdata.h include/printf.h
+syscall_fs3.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_fs3.o: include/version.h include/kdata.h include/printf.h
+syscall_fs.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_fs.o: include/version.h include/kdata.h include/printf.h
+syscall_fs.o: include/userstructs.h
+syscall_level2.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_level2.o: include/version.h include/kdata.h include/printf.h
+syscall_net.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_net.o: include/kdata.h include/netdev.h
+syscall_other.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_other.o: include/version.h include/kdata.h include/printf.h
+syscall_proc.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_proc.o: include/kdata.h include/printf.h
+timer.o: include/kernel.h include/panic.h include/sysinfoblk.h
+timer.o: include/kdata.h include/timer.h include/printf.h
+tty.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
+tty.o: include/printf.h include/tty.h
+unbanked.o: include/kernel.h include/panic.h include/sysinfoblk.h
+unbanked.o: include/kdata.h include/printf.h
+usermem.o: include/kernel.h include/panic.h include/sysinfoblk.h
+usermem.o: include/kdata.h include/printf.h
+version.o: include/kernel.h include/panic.h include/sysinfoblk.h
+version.o: include/version.h
+vt.o: include/kernel.h include/panic.h include/sysinfoblk.h include/tty.h
+vt.o: include/vt.h include/keycode.h
