@@ -160,3 +160,4 @@ int device_init( void )
 
 
 uint8_t has_arp = 1;
+uint16_t mtu = 1500;
