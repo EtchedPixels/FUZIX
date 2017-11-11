@@ -1,7 +1,39 @@
 /*
  *	Ld symbol loading support. For the moment we don't do anything clever
- *	to avoid memory wastage. We may want to move to fixed size symbol
- *	records in obj files to speed things up.
+ *	to avoid memory wastage.
+ *
+ *	Theory of operation
+ *
+ *	We scan the header and load the symbols (non debug) for each object
+ *	We then compute the total size of each segment
+ *	We calculate the base address of each object file code/data/bss
+ *	We write a dummy executable header
+ *	We relocate each object code and write all the code to the file
+ *	We do the same with the data
+ *	We set up the header and bss sizes
+ *	We write out symbols (optional)
+ *	We write the header back
+ *
+ *	The relocation can be one of three forms eventually
+ *	ld -r:
+ *		We write the entire object out as one .o file with all the
+ *		internal references resolved and all the symbols adjusted
+ *		versus that. Undefined symbols are allowed and carried over
+ *	a.out (or similar format)
+ *		We resolve the entire object as above but write out with a
+ *		binary header. No undefined symbols are allowed
+ *	bin:
+ *		We resolve the entire object and perform all relocations
+ *		to generate a binary with a fixed load address. No undefined
+ *		symbols or relocations are left
+ *
+ *	There are a few things not yet addressed
+ *	1.	For speed libraries can stat with an _RANLIB ar file node whic
+ *		is an index of all the symbols by library module for speed.
+ *	2.	Testing bigendian support.
+ *	3.	Banked binaries (segments 5-7 ?).
+ *	4.	Use typedefs and the like to support 32bit as well as 16bit
+ *		addresses when built on bigger machines..
  */
 
 #include <stdio.h>
@@ -16,28 +48,37 @@
 #include "obj.h"
 #include "ld.h"
 
-static char *arg0;
-static struct object *processing;
-static struct object *objects, *otail;
-static struct symbol *symhash[NHASH];
-static uint16_t base[4];
-static uint16_t size[4];
-#define LD_RELOC	0
-#define LD_RFLAG	1
-#define LD_ABSOLUTE	2
-static uint8_t ldmode = LD_RELOC;
-static uint8_t split_id;
-static uint8_t arch;
-static uint16_t arch_flags;
-static uint8_t verbose;
-static int err;
-static int dbgsyms = 1;
-static int strip = 0;
-static int obj_flags;
-static const char *mapname;
-static const char *outname;
-static uint16_t dot;
+static char *arg0;			/* Command name */
+static struct object *processing;	/* Object being processed */
+static struct object *objects, *otail;	/* List of objects */
+static struct symbol *symhash[NHASH];	/* Symbol has tables */
+static uint16_t base[4];		/* Base of each segment */
+static uint16_t size[4];		/* SIze of each segment */
 
+#define LD_RELOC	0		/* Output a relocatable binary */
+#define LD_RFLAG	1		/* Output an object module */
+#define LD_ABSOLUTE	2		/* Output a linked binary */
+static uint8_t ldmode = LD_RELOC;	/* Operating mode */
+
+static uint8_t split_id;		/* True if code and data both zero based */
+static uint8_t arch;			/* Architecture */
+static uint16_t arch_flags;		/* Architecture specific flags */
+static uint8_t verbose;			/* Verbose reporting */
+static int err;				/* Error tracking */
+static int dbgsyms = 1;			/* Set to dumb debug symbols */
+static int strip = 0;			/* Set to strip symbols */
+static int obj_flags;			/* Object module flags for compat */
+static const char *mapname;		/* Name of map file to write */
+static const char *outname;		/* Name of output file */
+static uint16_t dot;			/* Working address as we link */
+
+static uint8_t progress;		/* Did we make forward progress ?
+					   Used while library linking */
+
+/*
+ *	Report an error, and if possible give the object or library that
+ *	we were processing.
+ */
 static void error(const char *p)
 {
 	if (processing)
@@ -49,6 +90,9 @@ static void error(const char *p)
 	exit(err | 2);
 }
 
+/*
+ *	Standard routines wrapped with error exit tests
+ */
 static void *xmalloc(size_t s)
 {
 	void *p = malloc(s);
@@ -83,6 +127,10 @@ static void xfseek(FILE *fp, off_t pos)
 	}
 }
 
+/*
+ *	Manage the linked list of object files and object modules within
+ *	libraries that we have seen.
+ */
 static struct object *new_object(void)
 {
 	struct object *o = xmalloc(sizeof(struct object));
@@ -107,6 +155,10 @@ static void free_object(struct object *o)
 	free(o);
 }
 
+/*
+ *	Add a symbol to our symbol tables as we discover it. Log the
+ *	fact if tracing.
+ */
 struct symbol *new_symbol(const char *name, int hash)
 {
 	struct symbol *s = xmalloc(sizeof(struct symbol));
@@ -118,6 +170,9 @@ struct symbol *new_symbol(const char *name, int hash)
 	return s;
 }
 
+/*
+ *	Find a symbol in a given has table	
+ */
 struct symbol *find_symbol(const char *name, int hash)
 {
 	struct symbol *s = symhash[hash];
@@ -129,6 +184,10 @@ struct symbol *find_symbol(const char *name, int hash)
 	return NULL;
 }
 
+/*
+ *	A simple but adequate hashing algorithm. A better one would
+ *	be worth it for performance.
+ */
 static uint8_t hash_symbol(const char *name)
 {
 	int hash = 0;
@@ -139,8 +198,10 @@ static uint8_t hash_symbol(const char *name)
 	return (hash&(NHASH-1));
 }
 
-/* Check if a symbol name is known but undefined. We use this to decide
-   whether to incorporate a library module */
+/*
+ *	Check if a symbol name is known but undefined. We use this to decide
+ *	whether to incorporate a library module
+ */
 static int is_undefined(const char *name)
 {
 	int hash = hash_symbol(name);
@@ -148,9 +209,13 @@ static int is_undefined(const char *name)
 	if (s == NULL || !(s->type & S_UNKNOWN))
 		return 0;
 	/* This is a symbol we need */
+	progress = 1;
 	return 1;
 }
 
+/*
+ *	Check that two versions of a symbol are compatible.
+ */
 static void segment_mismatch(struct symbol *s, uint8_t type2)
 {
 	uint8_t seg1 = s->type & S_SEGMENT;
@@ -170,11 +235,17 @@ static void segment_mismatch(struct symbol *s, uint8_t type2)
 	if (seg2 == ABSOLUTE || seg2 == S_ANY)
 		return;
 	fprintf(stderr, "Segment mismatch for symbol '%.16s'.\n", s->name);
-	fprintf(stderr, "Want segment %d but constrained to %d/\n",
+	fprintf(stderr, "Want segment %d but constrained to %d.\n",
 		seg2, seg1);
 	err |= 2;
 }
 
+/*
+ *	We have learned about a new symbol. Find the symbol if it exists, or
+ *	create it if not. Do the necessary work to promote unknown symbols
+ *	to known and also to ensure we don't have multiple incompatible
+ *	definitions or have incompatible definition and requirement.
+ */
 static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const char *id, uint16_t value)
 {
 	uint8_t hash = hash_symbol(id);
@@ -216,13 +287,20 @@ static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const ch
 	return s;
 }
 
+/*
+ *	Add the internal symbols indicating where the segments start and
+ *	end.
+ */
 static void insert_internal_symbol(const char *name, int seg, uint16_t val)
 {
 	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
 
-/* Number the symbols that we will write out. We don't care about the mode
-   too much. In valid reloc mode we won't have any S_UNKNOWN symbols anyway */
+/*
+ *	Number the symbols that we will write out in the order they will
+ *	appear in the output file. We don't care about the mode too much.
+ *	In valid reloc mode we won't have any S_UNKNOWN symbols anyway
+ */
 static void renumber_symbols(void)
 {
 	static int sym = 0;
@@ -249,7 +327,13 @@ static void write_symbols(FILE *fp)
 	}
 }
 
-/* Fold all these symbol table walks into a helper */
+/*
+ *	TODO: Fold all these symbol table walks into a helper
+ */
+
+/*
+ *	Print a symbol for the map file
+ */
 static void print_symbol(struct symbol *s, FILE *fp)
 {
 	char c;
@@ -263,6 +347,9 @@ static void print_symbol(struct symbol *s, FILE *fp)
 	fprintf(fp, "%04X %c %s\n", s->value, c, s->name);
 }
 
+/*
+ *	Walk the symbol table generating a map file as we go
+ */
 static void write_map_file(FILE *fp)
 {
 	struct symbol *s;
@@ -273,6 +360,11 @@ static void write_map_file(FILE *fp)
 	}
 }
 
+/*
+ *	Check that the newly discovered object file is the same format
+ *	as the existing one. Also check for big endian as we don't yet
+ *	support that (although we are close).
+ */
 static void compatible_obj(struct objhdr *oh)
 {
 	if (obj_flags != -1 && oh->o_flags != obj_flags) {
@@ -286,6 +378,14 @@ static void compatible_obj(struct objhdr *oh)
 	obj_flags = oh->o_flags;
 }
 
+/*
+ *	Load a new object file. The off argument allows us to load an
+ *	object module out of a library by giving the library file handle
+ *	and the byte offset into it.
+ *
+ *	Do all the error reporting and processing needed to incorporate
+ *	the module, and load and add all the symbols.
+ */
 static struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
 {
 	int i;
@@ -355,6 +455,12 @@ restart:
 	return o;
 }
 
+/*
+ *	Once all the objects are loaded this function walks the list and
+ *	assigns each object file a base address for each segment. We do
+ *	this by walking the list once to find the total size of code/data/bss
+ *	and then a second time to set the offsets.
+ */
 static void set_segment_bases(void)
 {
 	struct object *o;
@@ -424,6 +530,9 @@ static void set_segment_bases(void)
 	   corrected. Everything needed for relocation is present */
 }
 
+/*
+ *	Write a word to the target in the correct endianness
+ */
 static void target_put(struct object *o, uint16_t value, uint16_t size, FILE *op)
 {
 	if (size == 1)
@@ -439,6 +548,12 @@ static void target_put(struct object *o, uint16_t value, uint16_t size, FILE *op
 	}
 }
 
+/*
+ *	Read a work from the target in the correct endianness. For
+ *	better or worse all our relocation streams are always little endian
+ *	while the instruction stream being relocated is of necessity native
+ *	endian.
+ */
 static uint16_t target_get(struct object *o, uint16_t size, FILE *ip)
 {
 	if (size == 1)
@@ -614,6 +729,10 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 	error("corrupt reloc stream");
 }
 
+/*
+ *	Open an object file and seek to the right location in case it is
+ *	a library module.
+ */
 static FILE *openobject(struct object *o)
 {
 	FILE *fp = xfopen(o->path, "r");
@@ -621,6 +740,11 @@ static FILE *openobject(struct object *o)
 	return fp;
 }
 
+/*
+ *	Write out all the segments of the output file with any needed
+ *	relocations performed. We write out the code and data segments but
+ *	BSS and ZP must always be zero filled so do not need writing.
+ */
 static void write_stream(FILE * op, int seg)
 {
 	struct object *o = objects;
@@ -641,6 +765,14 @@ static void write_stream(FILE * op, int seg)
 	}
 }
 
+/*
+ *	Write out the target file including any necessary headers if we are
+ *	writing out a relocatable object. At this point we don't have any
+ *	support for writing out a nice loader friendly format, and that
+ *	may want to be a separate tool that consumes a resolved relocatable
+ *	binary and generates a separate relocation block in the start of
+ *	BSS.
+ */
 static void write_binary(FILE * op, FILE *mp)
 {
 	static struct objhdr hdr;
@@ -678,41 +810,6 @@ static void write_binary(FILE * op, FILE *mp)
 }
 
 /*
- *	Theory of operation
- *
- *	We scan the header and load the symbols (non debug) for each object
- *	We then compute the total size of each segment
- *	We calculate the base address of each object file code/data/bss
- *	We write a dummy executable header
- *	We relocate each object code and write all the code to the file
- *	We do the same with the data
- *	We set up the header and bss sizes
- *	We write out symbols (optional)
- *	We write the header back
- *
- *	The relocation can be one of three forms eventually
- *	ld -r:
- *		We write the entire object out as one .o file with all the
- *		internal references resolved and all the symbols adjusted
- *		versus that. Undefined symbols are allowed and carried over
- *	a.out (or similar format)
- *		We resolve the entire object as above but write out with a
- *		binary header. No undefined symbols are allowed
- *	bin:
- *		We resolve the entire object and perform all relocations
- *		to generate a binary with a fixed load address. No undefined
- *		symbols or relocations are left
- *
- *	There are a few things not yet addressed
- *	1.	We need to support library objects. A library object is only
- *		linked if it provides a symbol someone requires
- *	2.	Libraries are stored in .a files so we need to support walking
- *		down a library (hence the offset argument to the loader)
- *	3.	For speed libraries can stat with an _RANLIB ar file node whic
- *		is an index of all the symbols by library module for speed.
- */
-
-/*
  *	Scan through all the object modules in this ar archive and offer
  *	them to the linker.
  */
@@ -741,6 +838,12 @@ static void process_library(const char *name, FILE *fp)
 	}
 }
 
+/*
+ *	This is called for each object module and library passed on the
+ *	command line and in the order given. We process them in that order
+ *	including libraries, so you need to put termcap.a before libc.a etc
+ *	or you'll get errors.
+ */
 static void add_object(const char *name, off_t off, int lib)
 {
 	static char x[SARMAG];
@@ -749,8 +852,17 @@ static void add_object(const char *name, off_t off, int lib)
 		/* Is it a bird, is it a plane ? */
 		fread(x, SARMAG, 1, fp);
 		if (memcmp(x, ARMAG, SARMAG) == 0) {
-			/* No it's a library */
-			process_library(name, fp);
+			/* No it's a library. Do the library until a
+			   pass of the library resolves nothing. This isn't
+			   as fast as we'd like but we need ranlib support
+			   to do faster */
+			do {
+				progress = 0;
+				xfseek(fp, SARMAG);
+				process_library(name, fp);
+			/* FIXME: if we counted unresolved symbols we might
+			   be able to exit earlier ? */
+			} while(progress);
 			xfclose(fp);
 			return;
 		}
@@ -760,6 +872,9 @@ static void add_object(const char *name, off_t off, int lib)
 	xfclose(fp);
 }
 
+/*
+ *	Process the arguments, open the files and run the entire show
+ */
 int main(int argc, char *argv[])
 {
 	int opt;
