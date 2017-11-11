@@ -285,6 +285,7 @@ static void parse_initline(void)
 		bad_line();
 		return;
 	}
+	*idata = 0;
 	while (*sdata != ':') {
 		if (*sdata == '\n' || sdata > sdata_end) {
 			bad_line();
@@ -482,7 +483,7 @@ static int cleanup_runlevel(uint8_t oldmask, uint8_t newmask, int sig)
 
 	while (n < initcount) {
 		/* Dying ? */
-		if ((p[3] & oldmask) && !(p[3] && newmask)) {
+		if ((p[3] & oldmask) && !(p[3] & newmask)) {
 			/* Count number still to die */
 			if (p[4] == INIT_RESPAWN && initpid[n].pid) {
 				/* Group kill */
