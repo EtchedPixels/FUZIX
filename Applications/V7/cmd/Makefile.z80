@@ -1,7 +1,6 @@
-CC = sdcc
+CC = fcc
 ASM = sdasz80
-AR = sdar
-LINKER = sdcc
+LINKER = ../../../Library/tools/fcc
 FCC = ../../../Library/tools/fcc
 FCCOPTS = -O2
 PLATFORM =
@@ -18,26 +17,35 @@ SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dc.c dd.c \
 
 SRCSNS = ed.c
 
+SRCSTC = clear.c
+
 SRCSBAD =
 
 OBJS = $(SRCS:.c=.rel)
 OBJSNS = $(SRCSNS:.c=.rel)
+OBJSTC = $(SRCSTC:.c=.rel)
 OBJSBAD = $(SRCSBAD:.c=.rel)
 
 LIBS = ../../../Library/libs/syslib.lib
 
 APPSNS = $(OBJSNS:.rel=)
 
-APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=) $(OBJSNS:.rel=)
+APPSTC = $(OBJSTC:.rel=)
+
+APPS = $(OBJS:.rel=) $(OBJSBAD:.rel=) $(OBJSNS:.rel=) $(OBJSTC:.rel=)
 
 all: $(APPS) sizes
 
 
 $(APPSNS): OPTS = --nostdio
 
+$(APPSTC): OPTS = -ltermcap
+
 $(OBJS): %.rel: %.c
 
 $(OBJSNS): %.rel: %.c
+
+$(OBJSTC): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
 	$(FCC) $(PLATFORM) -c $<
