@@ -78,6 +78,7 @@ static time_t idletimer, tmptime;
 static struct passwd *userinfo;
 
 static char inbuf[256];
+static char input[256];
 
 static struct dlist *additem(char *item, struct dlist *p)
 {
@@ -505,8 +506,8 @@ static void parseinput(void)
 	int i, j, outcol, c, found = 0;
 	if (*inbuf == '\0')
 		return;
-	/* Do we really need this copy FIXME */
-	tok[i = 0] = inbuf;
+	strcpy(input, inbuf);
+	tok[i = 0] = input;
 	while (tok[i] != NULL && i < 5)
 		if ((tmp = strchr(tok[i], ' ')) != NULL) {
 			tok[++i] = &tmp[1];
@@ -593,9 +594,9 @@ static void parseinput(void)
 			return;
 		}
 		sprintf(lineout, "PRIVMSG %s :%s\n", obj->name, inbuf);
-		outcol = printf("> %s", tok[j = 0]);
+/*		outcol = printf("> %s", tok[j = 0]);
 		while (tok[++j])
-			outcol = wordwrapout(tok[j], outcol);
+			outcol = wordwrapout(tok[j], outcol); */
 	}
 	sendline();
 	idletimer = time(NULL);
@@ -700,7 +701,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	if (argv[2])
-		strlcpy(ircname, argv[i], sizeof(ircname));
+		strlcpy(ircname, argv[2], sizeof(ircname));
 	else
 		strlcpy(ircname, userinfo->pw_name, sizeof(ircname));
 	irclogin = userinfo->pw_name;
