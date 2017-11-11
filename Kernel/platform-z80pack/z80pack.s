@@ -108,9 +108,9 @@ init_early:
 
 init_hardware:
             ; set system RAM size
-            ld hl, #480
+            ld hl, #484
             ld (_ramsize), hl
-            ld hl, #(480-64)		; 64K for kernel
+            ld hl, #(484-64)		; 64K for kernel
             ld (_procmem), hl
 
 	    ld a, #1
