@@ -71,22 +71,33 @@ void tty_sleeping(uint8_t minor)
 }
 
 /* Called every timer tick */
+/* This looks a bit odd but we have the classic emulator problem of the
+   serial ports suddenly being empty then getting blasted with data from
+   an unrealistic fifo running at what is effectively MHz+ speeds. So we
+   gate the number of bytes we allow per clock to simulate a real baud rate
+   (in this case 100Hz 80 chars  ~= 9600 baud input) */
 void tty_pollirq(void)
 {
     unsigned char c; 	/* sdcc bug workaround */
-    while(tty1stat) {
+    unsigned char l;
+
+    l = 80;
+    while(tty1stat && l--) {
         c = tty1data;
         tty_inproc(1, c);
     }
-    while(tty2stat & 1) {
+    l = 80;
+    while((tty2stat & 1) &&& l--) {
         c = tty2data;
         tty_inproc(2, c);
     }
-    while(tty3stat & 1) {
+    l = 80;
+    while((tty3stat & 1) && l--) {
         c = tty3data;
         tty_inproc(3, c);
     }
-    while(tty4stat & 1) {
+    l = 80;
+    while((tty4stat & 1) && l--) {
         c = tty4data;
         tty_inproc(4, c);
     }
