@@ -48,6 +48,12 @@ asz80:
 flashrom:
 	+(cd flashrom; $(MAKE) -f Makefile.$(USERCPU))
 
+levee:
+	+(cd levee; $(MAKE) -f Makefile.$(USERCPU))
+
+ue:
+	+(cd ue; $(MAKE) -f Makefile.$(USERCPU))
+
 clean:
 	(cd util; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd V7/cmd; $(MAKE) -f Makefile.$(USERCPU) clean)
@@ -61,3 +67,6 @@ clean:
 	(cd SmallC; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd MWC/cmd; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd MWC/cmd/asz80; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd flashrom; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd levee; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd ue; $(MAKE) -f Makefile.$(USERCPU) clean)
