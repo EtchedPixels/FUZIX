@@ -29,13 +29,13 @@ void swapmap_add(uint8_t swap)
 	if (swapptr == MAX_SWAPS)
 		panic(maxswap);
 	swapmap[swapptr++] = swap;
-	sysinfo.swapusedk += SWAP_SIZE / 2;
+	sysinfo.swapusedk -= SWAP_SIZE / 2;
 }
 
 int swapmap_alloc(void)
 {
         if (swapptr) {
-		sysinfo.swapusedk -= SWAP_SIZE / 2;
+		sysinfo.swapusedk += SWAP_SIZE / 2;
                 return swapmap[--swapptr];
 	}
         else
