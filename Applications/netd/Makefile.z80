@@ -43,7 +43,7 @@ irc: tinyirc.rel linein.rel gethostbyname.rel
 	fcc -o $@ $^
 
 htget: htget.rel gethostbyname.rel
-	fcc -o $@ $^
+	fcc --nostdio -o $@ $^
 
 clean:
 	rm -f *.rel *.lst *.asm *.noi *.map *.lk *.sym *~ *.ihx *.bin $(APPS)
