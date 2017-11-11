@@ -62,11 +62,14 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			}
 			if (!(t->termios.c_lflag & ICANON)) {
 			        uint8_t n = t->termios.c_cc[VTIME];
-			        if (n)
+
+				if ((nread || !n) && nread >= t->termios.c_cc[VMIN])
+					goto out;
+				if (n)
 			                udata.u_ptab->p_timeout = n + 1;
                         }
 			if (psleep_flags_io(q, flag, &nread))
-			        return nread;
+			        goto out;
                         /* timer expired */
                         if (udata.u_ptab->p_timeout == 1)
                                 goto out;
@@ -75,10 +78,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		++nread;
 
 		/* return according to mode */
-		if (!(t->termios.c_lflag & ICANON)) {
-			if (nread >= t->termios.c_cc[VMIN])
-				break;
-		} else {
+		if (t->termios.c_lflag & ICANON) {
 			if (nread == 1 && (c == t->termios.c_cc[VEOF])) {
 				/* ^D */
 				nread = 0;
@@ -402,10 +402,6 @@ sigout:
 			return 1;
 		}
 	}
-	if (c == t->termios.c_cc[VDISCARD]) {	/* ^O */
-	        t->flag ^= TTYF_DISCARD;
-		return 1;
-	}
 	if (t->termios.c_iflag & IXON) {
 		if (c == t->termios.c_cc[VSTOP]) {	/* ^S */
 		        t->flag |= TTYF_STOP;
@@ -419,6 +415,10 @@ sigout:
 		}
 	}
 	if (canon) {
+		if (c == t->termios.c_cc[VDISCARD]) {	/* ^O */
+		        t->flag ^= TTYF_DISCARD;
+			return 1;
+		}
 		if (c == t->termios.c_cc[VERASE]) {
 		        wr = ECHOE;
 		        goto eraseout;
