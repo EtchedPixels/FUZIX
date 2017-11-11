@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -41,7 +42,17 @@ void xwrites(const char *p)
 
 int xread(void)
 {
-    int len = read(sock, buf, 512);
+    int len;
+
+    /* The first call we return the stray bytes from the line parser */
+    if (bufend != buf && bufend > readp) {
+        len = bufend - readp;
+        memcpy(buf, readp, bufend - readp);
+        bufend = buf;
+        readp = buf;
+        return len;
+    }
+    len = read(sock, buf, 512);
     if (len < 0) {
         perror("read");
         exit(1);
@@ -89,13 +100,13 @@ int main(int argc, char *argv[])
     uint16_t port = 80;
     char *pp;
     char *fp;
-    int of = 1;
+    int of;
     int code;
     int len;
     uint8_t looped = 0;
 
-    if (argc != 2) {
-        writes(2, "htget url\n");
+    if (argc != 3) {
+        writes(2, "htget url file\n");
         exit(1);
     }
     if (strncmp(argv[1], "http://", 7)) {
@@ -103,6 +114,11 @@ int main(int argc, char *argv[])
         exit(2);
     }
     argv[1] += 7;
+
+    fp = strchr(argv[1], '/');
+    if (fp)
+        *fp++ = 0;
+
     pp = strrchr(argv[1], ':');
     if (pp) {
         *pp++ = 0;
@@ -113,9 +129,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    fp = strchr(argv[1], '/');
-    if (fp)
-        *fp = 0;
 
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
@@ -182,6 +195,12 @@ int main(int argc, char *argv[])
         if (code == 100)
             xreadline();
     } while (code == 100 && !looped++);
+
+    of = open(argv[2], O_WRONLY|O_CREAT, 0666);
+    if (of == -1) {
+        perror(argv[2]);
+        exit(1);
+    }
     /* FIXME: if we saw a Transfer-Encoding: chunked" we need to do this
        bit differently */
     if (code == 200) {
@@ -190,10 +209,11 @@ int main(int argc, char *argv[])
                 perror("write");
                 exit(1);
             }
+            write(1,".",1);
         }
     }
+    write(1,"\n",1);
+    close(of);
+    close(sock);
     return 0;
 }
-
-    
-            
