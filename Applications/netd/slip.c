@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
+#include <errno.h>
 
 #include "device.h"
 
@@ -68,14 +69,30 @@ static char scratch[256];
 static int slip_poll( void )
 {
     static uint8_t esc = 0;
-    int l;
+    static uint8_t *p = scratch;
+    static int l = 0;
+    int n;
     uint8_t c;
-    uint8_t *p = scratch;
 
-    if ((l = read(fd, scratch, 256)) < 1)
-        return 0;
-    
-    while(l) {
+    if (scratch != p && l)
+        memmove(scratch, p, l);
+    p = scratch;
+
+    if (l < 192) {
+        /* Ok so this should be a ring buffer FIXME */
+        n = read(fd, scratch + l, 256 - l);
+        if (n == -1) {
+            if (errno != EAGAIN) {
+                fprintf(stderr, "port failed\n");
+                exit(1);
+            }
+            n = 0;
+        }
+        l += n;
+        if (l == 0)
+            return 0;
+    }
+    while(l--) {
         /* If we saw an escape then process the escapes */
         c = *p++;
         if (esc) {
@@ -86,28 +103,30 @@ static int slip_poll( void )
                 *iptr++ = SLIP_ESC;
             else {
                 badpacket();
-                return 0;
+                continue;
             }
         } else {
             /* An escape begins */
             if (c == SLIP_ESC) {
                 esc = 1;
-                return 0;
+                continue;
             }
             /* End of frame */
             if (c == SLIP_END) { 
                 int len = iptr - ibuf;
+                if (len == 0)
+                    continue;
                 return len;
             }
             /* Queue the byte */
             *iptr++ = c;
         }
-        if (iptr == ibuf + 296)
+        if (iptr == ibuf + 297)
             badpacket();
     }
+    l = 0;
     return 0;
 }
-
 
 /* receive packet to a buffer */
 static int slip_recv( unsigned char *b, int len )
@@ -121,7 +140,8 @@ static int slip_recv( unsigned char *b, int len )
     return len;
 }
 
-/* send packet to net device */
+/* send packet to net device
+   We should do this asynchronously to receive ideally */
 int device_send( char *sbuf, int len )
 {
     sbuf += 14;	/* Don't send a mac header */
@@ -154,6 +174,7 @@ int device_init(void)
     t.c_cflag &= ~(CSIZE|PARENB|HUPCL);
     t.c_cflag |= CREAD|CS8;
     t.c_lflag &= ~(ISIG|ICANON|ECHO|ECHOE|ECHOK);
+    memset(t.c_cc, 0, NCCS);
     t.c_cc[VMIN] = 0;
     t.c_cc[VTIME] = 3;	/* 0.3 seconds */
 
