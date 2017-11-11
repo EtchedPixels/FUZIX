@@ -13,7 +13,7 @@ OBJS = $(SRCS:.c=.rel)
 
 LIBS = ../../../../Library/libs/syslib.lib
 
-all: as nm
+all: as nm ld
 
 as: $(OBJS)
 	$(FCC) $(PLATFORM) $(OBJS) -o $@
@@ -22,6 +22,11 @@ nm.c: obj.h
 
 nm: nm.rel
 	$(FCC) $(PLATFORM) nm.rel -o $@
+
+ld.c: obj.h
+
+ld: ld.rel
+	$(FCC)	$(PLATFORM) ld.rel -o $@
 
 $(OBJS): $(INCS)
 
