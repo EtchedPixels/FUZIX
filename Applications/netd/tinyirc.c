@@ -523,17 +523,17 @@ static void parseinput(void)
 			found = (strncmp(clist[i], tok[0], strlen(tok[0])) == 0);
 		i--;
 		if (!found) {
-			printf("*** Invalid command");
+			printf("*** Invalid command\n");
 			return;
 		}
 		if (i == DO_JOIN) {
 			if ((newobj = finditem(tok[1], olist)) != NULL) {
 				obj = newobj;
-				printf("*** Now talking in %s", obj->name);
+				printf("*** Now talking in %s\n", obj->name);
 				return;
 			} else if (!ischan(tok[1])) {
 				obj = olist = additem(tok[1], olist);
-				printf("*** Now talking to %s", obj->name);
+				printf("*** Now talking to %s\n", obj->name);
 				return;
 			}
 		}
@@ -545,12 +545,13 @@ static void parseinput(void)
 				printf("*** No longer talking to %s", tok[1]);
 				if (obj != NULL)
 					printf(", now %s", obj->name);
+				putchar('\n');
 				return;
 			}
 		if (i == DO_MSG)
 			i = DO_PRIVMSG;
 		if (i == DO_PRIVMSG && (tok[1] == NULL || tok[2] == NULL)) {
-			printf("*** Unable to parse message");
+			printf("*** Unable to parse message\n");
 			return;
 		}
 		strcpy(lineout, clist[i]);
@@ -581,7 +582,7 @@ static void parseinput(void)
 		strcat(lineout, "\n");
 	} else {
 		if (obj == NULL) {
-			printf("*** Nowhere to send");
+			printf("*** Nowhere to send\n");
 			return;
 		}
 		if (*tok[0] == ASCIIHEXCHAR) {
