@@ -78,6 +78,7 @@
 // #include "../ipv4/uip-neighbor.h"
 
 #include <string.h>
+#include <stdlib.h>
 // #include "../ip/cc.h"
 
 /*---------------------------------------------------------------------------*/
@@ -373,10 +374,6 @@ uip_init(void)
   for(c = 0; c < UIP_CONNS; ++c) {
     uip_conns[c].tcpstateflags = UIP_CLOSED;
   }
-#if UIP_ACTIVE_OPEN || UIP_UDP
-  lastport = 1024;
-#endif /* UIP_ACTIVE_OPEN || UIP_UDP */
-
 #if UIP_UDP
   for(c = 0; c < UIP_UDP_CONNS; ++c) {
     uip_udp_conns[c].lport = 0;
@@ -394,6 +391,15 @@ uip_init(void)
 #if UIP_FIXEDADDR == 0
   /*  uip_hostaddr[0] = uip_hostaddr[1] = 0;*/
 #endif /* UIP_FIXEDADDR */
+  srand(getpid()^time(NULL));
+  iss[0] = rand() >> 4;
+  iss[1] = rand() >> 3;
+  iss[2] = rand() >> 1;
+  iss[3] = rand() >> 6;
+
+#if UIP_ACTIVE_OPEN || UIP_UDP
+  lastport = 1024 + rand() & 0x3FFF;
+#endif /* UIP_ACTIVE_OPEN || UIP_UDP */
 
 }
 /*---------------------------------------------------------------------------*/
