@@ -30,7 +30,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netdb.h>
+#include "netdb.h"
 #include <termcap.h>
 
 #include "linein.h"
@@ -358,6 +358,7 @@ int donumeric(int num)
 		tmp = ircname;
 		tty_restore();
 		printf("New Nick? ");
+		fflush(stdout);
 		fgets(ircname, 32, stdin);
 		tmp = strchr(ircname, '\n');
 		if (tmp)
@@ -683,7 +684,8 @@ int main(int argc, char *argv[])
 {
 	char *hostname;
 	int i = 0;
-	printf(lineout);
+
+	puts(lineout);
 
 	if (argc < 2) {
 		fprintf(stderr, "%s: server:port [name]\n", argv[0]);
