@@ -16,8 +16,8 @@ char *getdev(char *arg)
 	f = fopen("/etc/mtab", "r");
 	if (f) {
 		while (fgets(tmp, sizeof(tmp), f)) {
-			dev = strtok(tmp, " ");
-			mntpt = strtok(NULL, " ");
+			dev = strtok(tmp, " \t");
+			mntpt = strtok(NULL, " \t");
 			if ((strcmp(dev, arg) == 0) || (strcmp(mntpt, arg) == 0)) {
 				fclose(f);
 				return strdup(dev);
