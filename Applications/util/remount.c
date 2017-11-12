@@ -17,7 +17,11 @@ char *getdev(char *arg)
 	if (f) {
 		while (fgets(tmp, sizeof(tmp), f)) {
 			dev = strtok(tmp, " \t");
+			if (*tmp == '#' || dev == NULL)
+				continue;
 			mntpt = strtok(NULL, " \t");
+			if (mntpt == NULL)
+				continue;
 			if ((strcmp(dev, arg) == 0) || (strcmp(mntpt, arg) == 0)) {
 				fclose(f);
 				return strdup(dev);
