@@ -159,6 +159,8 @@ inoptr srch_dir(inoptr wd, char *compname)
 
     for(curblock=0; curblock < nblocks; ++curblock) {
         buf = bread(wd->c_dev, bmap(wd, curblock, 1), 0);
+        if (buf == NULL)
+            break;
         for(curentry = 0; curentry < (512 / DIR_LEN); ++curentry) {
             d = blkptr(buf, curentry * DIR_LEN, DIR_LEN);
             if(namecomp(compname, d->d_name)) {
@@ -245,6 +247,9 @@ inoptr i_open(uint16_t dev, uint16_t ino)
     }
 
     buf = bread(dev,(ino >> 3) + 2, 0);
+    if (buf == NULL)
+        return NULLINODE;
+
     blktok(&(nindex->c_node), buf, 64 * (ino & 7), 64);
     brelse(buf);
 
@@ -543,6 +548,8 @@ tryagain:
     k = 0;
     for(blk = 2; blk < dev->s_isize; blk++) {
         buf = bread(devno, blk, 0);
+        if (buf == NULL)
+            goto corrupt;
         for(j=0; j < 8; j++) {
             /* Optimisation: add offsetof and use that to reduce blkptr range */
             di = blkptr(buf, sizeof(struct dinode) * j, sizeof(struct dinode));
@@ -626,6 +633,8 @@ blkno_t blk_alloc(uint16_t devno)
     if(!dev->s_nfree)
     {
         buf = bread(devno, newno, 0);
+        if (buf == NULL)
+            goto corrupt;
         blktok(&dev->s_nfree, buf, 0,
             sizeof(int) + FILESYS_TABSIZE * sizeof(blkno_t));
         /* This assumes no padding: this is an UZI era assumption */
@@ -640,6 +649,8 @@ blkno_t blk_alloc(uint16_t devno)
 
     /* Zero out the new block */
     buf = bread(devno, newno, 2);
+    if (buf == NULL)
+        goto corrupt;
     blkzero(buf);
     bawrite(buf);
     return newno;
@@ -672,11 +683,14 @@ void blk_free(uint16_t devno, blkno_t blk)
 
     if(dev->s_nfree == FILESYS_TABSIZE) {
         buf = bread(devno, blk, 1);
-        /* nfree must directly preced the blocks and without padding. That's
-           the assumption UZI always had */
-        blkfromk(&dev->s_nfree, buf, 0, sizeof(int) + 50 * sizeof(blkno_t));
-        bawrite(buf);
-        dev->s_nfree = 0;
+        if (buf) {
+            /* nfree must directly preced the blocks and without padding. That's
+               the assumption UZI always had */
+            blkfromk(&dev->s_nfree, buf, 0, sizeof(int) + 50 * sizeof(blkno_t));
+            bawrite(buf);
+            dev->s_nfree = 0;
+        } else
+            dev->s_mounted = 1;
     }
 
     ++dev->s_tfree;
@@ -803,7 +817,12 @@ void i_deref(inoptr ino)
     }
 }
 
-
+static void corrupt_fs(uint16_t devno)
+{
+    struct mount *mnt = fs_tab_get(devno);
+    mnt->m_fs.s_mounted = 1;
+    kputs("filesystem corrupt.\n");
+}
 /* Wr_inode writes out the given inode in the inode table out to disk,
  * and resets its dirty bit.
  */
@@ -817,10 +836,13 @@ void wr_inode(inoptr ino)
 
     blkno =(ino->c_num >> 3) + 2;
     buf = bread(ino->c_dev, blkno,0);
-    blkfromk(&ino->c_node, buf,
-        sizeof(struct dinode) * (ino->c_num & 0x07), sizeof(struct dinode));
-    bfree(buf, 2);
-    ino->c_flags &= ~CDIRTY;
+    if (buf) {
+        blkfromk(&ino->c_node, buf,
+            sizeof(struct dinode) * (ino->c_num & 0x07), sizeof(struct dinode));
+        bfree(buf, 2);
+        ino->c_flags &= ~CDIRTY;
+    } else
+        corrupt_fs(ino->c_dev);
 }
 
 
@@ -889,6 +911,10 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 
     if(level){
         buf = bread(dev, blk, 0);
+        if (buf == NULL) {
+            corrupt_fs(dev);
+            return:
+        }
         for(j=255; j >= 0; --j)
             blktok(&bn, buf, j * sizeof(blkno_t), sizeof(blkno_t));
             freeblk(dev, bn[j], level-1);
@@ -911,6 +937,10 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 
     if(level){
         buf = bread(dev, blk, 0);
+        if (buf == NULL) {
+            corrupt_fs(dev);
+            return;
+        }
         bn = blkptr(buf, 0, BLKSIZE);
         for(j=255; j >= 0; --j)
             freeblk(dev, bn[j], level-1);
@@ -980,6 +1010,10 @@ blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
     */
     for(; j<=2; j++) {
         bp = bread(dev, nb, 0);
+        if (bp == NULL) {
+            corrupt_fs(ip->c_dev);
+            return 0;
+        }
         /******
           if(bp->bf_error) {
           brelse(bp);
@@ -1159,10 +1193,8 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
 
     /* Get the buffer with the superblock (block 1) */
     buf = bread(dev, 1, 0);
-    if (buf == NULL) {
-        udata.u_error = EIO;
+    if (buf == NULL)
         return true;
-    }
     blktok(fp, buf, 0, sizeof(struct filesys));
     brelse(buf);
 

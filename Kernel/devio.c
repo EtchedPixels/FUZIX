@@ -59,7 +59,7 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 		/* If rewrite is set, we are about to write over the entire block,
 		   so we don't need the previous contents */
 		if (!rewrite) {
-			if (bdread(bp) == -1) {
+			if (bdread(bp) != BLKSIZE) {
 				udata.u_error = EIO;
 				bp->bf_busy = BF_FREE;
 				return (NULL);
@@ -93,7 +93,7 @@ int bfree(bufptr bp, uint8_t dirty)
 		bp->bf_busy = BF_FREE;
 
 	if (dirty > 1) {	/* immediate writeback */
-		if (bdwrite(bp) == -1)
+		if (bdwrite(bp) != BLKSIZE)
 			udata.u_error = EIO;
 		bp->bf_dirty = false;
 		return -1;
