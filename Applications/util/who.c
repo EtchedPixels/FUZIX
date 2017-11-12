@@ -24,11 +24,17 @@
 
 void main(int argc, char *argv[])
 {
-	register struct utmp *entry;
+	struct utmp *entry;
 	char *timestr;
+	char *p;
 	uint8_t fmt = 0;
 
-	if (strcmp(argv[0], "users") == 0)
+	p = strchr(argv[0],'/');
+	if (p)
+		p++;
+	else
+		p = argv[0];
+	if (strcmp(p, "users") == 0)
 		fmt = 1;
 	setutent();
 	while ((entry = getutent()) != NULL) {
