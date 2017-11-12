@@ -16,27 +16,36 @@
  */
 
 
-#include <fcntl.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <utmp.h>
 
 void main(int argc, char *argv[])
 {
-    register struct utmp * entry;
-    char * timestr;
+	register struct utmp *entry;
+	char *timestr;
+	uint8_t fmt = 0;
 
-    setutent();
-    while ((entry = getutent()) != NULL)
-	if (entry->ut_type == USER_PROCESS) {
-	    timestr = ctime(&entry->ut_time);
-	    timestr[strlen(timestr) - 1] = '\0';
-	    printf("%s	tty%c%c	%s %s\n", entry->ut_user,
-			entry->ut_id[0],
-			entry->ut_id[1] ? entry->ut_id[1] : 0,
-			timestr,
-			entry->ut_host);
+	if (strcmp(argv[0], "users") == 0)
+		fmt = 1;
+	setutent();
+	while ((entry = getutent()) != NULL) {
+		if (entry->ut_type == USER_PROCESS) {
+			if (fmt == 0) {
+				timestr = ctime(&entry->ut_time);
+				timestr[strlen(timestr) - 1] = '\0';
+				printf("%s	tty%c%c	%s %s\n", entry->ut_user, entry->ut_id[0], entry->ut_id[1] ? entry->ut_id[1] : 0, timestr, entry->ut_host);
+			} else {
+				if (fmt == 2)
+					putchar(' ');
+				printf("%s", entry->ut_user);
+				fmt = 2;
+			}
+		}
 	}
-    exit(0);
+	if (fmt == 2)
+		putchar('\n');
+	exit(0);
 }
