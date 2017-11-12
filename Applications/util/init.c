@@ -830,9 +830,10 @@ static pid_t getty(const char **argv, const char *id)
 
 				pwd = getpwnam(buf);
 
+				if (pwd == NULL || *pwd->pw_passwd)
+					p = getpass("Password: ");
 				if (pwd) {
-					if (pwd->pw_passwd[0] != '\0') {
-						p = getpass("Password: ");
+					if (*pwd->pw_passwd) {
 						salt[0] = pwd->pw_passwd[0];
 						salt[1] = pwd->pw_passwd[1];
 						salt[2] = '\0';
@@ -842,7 +843,8 @@ static pid_t getty(const char **argv, const char *id)
 					}
 					if (strcmp(pr, pwd->pw_passwd) == 0)
 						spawn_login(pwd, argv[0], id, host);
-				}
+				} else /* So you can't tell by the delay time */
+					crypt(p, "ZZ");
 
 				putstr("\nLogin incorrect\n\n");
 				signal(SIGALRM, sigalarm);
