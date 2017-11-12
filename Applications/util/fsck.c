@@ -137,7 +137,8 @@ static void panic(char *s)
 	exit(error | 8);
 }
 
-/* Find the device in /etc/mtab for the specified mount */
+/* Find the device in /etc/fstab for the specified mount */
+
 static char tmp[FSTAB_LINE];
 
 const char *mntread(FILE *fp)
