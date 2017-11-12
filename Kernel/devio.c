@@ -93,10 +93,12 @@ int bfree(bufptr bp, uint8_t dirty)
 		bp->bf_busy = BF_FREE;
 
 	if (dirty > 1) {	/* immediate writeback */
-		if (bdwrite(bp) != BLKSIZE)
+		if (bdwrite(bp) != BLKSIZE) {
 			udata.u_error = EIO;
+			return -1;
+		}
 		bp->bf_dirty = false;
-		return -1;
+		return 0;
 	}
 	return 0;
 }
