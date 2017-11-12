@@ -9,6 +9,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+/* Assumed length of a line in /etc/mtab */
+#define FSTAB_LINE 160
+
 typedef uint16_t	blkno_t;
 
 struct filesys {
@@ -67,7 +70,6 @@ static struct filesys superblock;
 static int swizzling = 0;		/* Wrongendian ? */
 static long offset;
 static int dev_fd;
-static int dev_offset;
 static int error;
 static int rootfs;
 static int aflag;
@@ -135,27 +137,69 @@ static void panic(char *s)
 	exit(error | 8);
 }
 
+/* Find the device in /etc/mtab for the specified mount */
+static char tmp[FSTAB_LINE];
+
+const char *mntread(FILE *fp)
+{
+    char *dev;
+    while (fgets(tmp, sizeof(tmp), fp) != NULL) {
+        dev = strtok(tmp, " \t");
+        if (dev == NULL || *tmp == '#')
+            continue;
+        return dev;
+    }
+    return NULL;
+}
+
+const char *mntpoint(const char *mount)
+{
+    FILE *fp;
+    const char *dev;
+    const char *mntpt;
+
+    fp = fopen("/etc/fstab", "r");
+    if (fp) {
+        while (dev = mntread(fp)) {
+            mntpt = strtok(NULL, " \t");
+            if (mntpt == NULL)
+                continue;
+            if (strcmp(mntpt, mount) == 0) {
+                fclose(fp);
+                return dev;
+            }
+        }
+        fclose(fp);
+    }
+    return NULL;
+}
+
 static int fd_open(char *name)
 {
 	char *sd;
+	const char *p;
 	int bias = 0;
 	struct stat rootst;
 	struct stat work;
 
-	sd = index(name, ':');
+	sd = strrchr(name, ':');
 	if (sd) {
 		*sd = 0;
 		sd++;
 		bias = atoi(sd);
-	}
+	} else {
+	    p = mntpoint(name);
+	    if (p)
+	        name = (char *)p;
+        }
 
 	printf("Opening %s (offset %d)\n", name, bias);
-	dev_offset = bias;
+	offset = bias;
 	dev_fd = open(name, O_RDWR | O_CREAT, 0666);
 
 	if (dev_fd < 0)
 		return -1;
-	/* printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset); */
+	/* printf("fd=%d, offset = %ld\n", dev_fd, dev_offset); */
 
 	if (stat("/", &rootst) == -1)
 	    panic("stat /");
@@ -192,29 +236,11 @@ static uint32_t swizzle32(uint32_t v)
 	    (v & 0xFF000000) >> 24;
 }
 
-int main(int argc, char **argv)
+int perform_fsck(char *name)
 {
     char *buf;
-    char *op;
 
-    if (argc == 3 && strcmp(argv[1],"-a") == 0) {
-        argc--;
-        argv++;
-        aflag = 1;
-    }
-
-    if(argc != 2){
-        fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
-        return 16;
-    }
-    
-    op = strchr(argv[1], ':');
-    if (op) {
-        *op++ = 0;
-        offset = atol(op);
-    }
-
-    if(fd_open(argv[1])){
+    if(fd_open(name)){
         printf("Cannot open file\n");
         return 16;
     }
@@ -245,7 +271,7 @@ int main(int argc, char **argv)
     printf("Device %d has fsize = %d and isize = %d. Continue? ",
             dev, swizzle16(superblock.s_fsize), swizzle16(superblock.s_isize));
     if (!yes_noerror())
-        exit(error | 32);
+        return (error |= 32);
 
     bitmap = calloc((swizzle16(superblock.s_fsize) + 7UL) / 8, sizeof(char));
     linkmap = (int16_t *) calloc(8 * swizzle16(superblock.s_isize), sizeof(int16_t));
@@ -256,7 +282,7 @@ int main(int argc, char **argv)
 
     if (!bitmap || !linkmap) {
         fprintf(stderr, "Not enough memory.\n");
-        exit(error | 8);
+        return(error |= 8);
     }
 
     printf("Pass 1: Checking inodes...\n");
@@ -286,11 +312,40 @@ int main(int argc, char **argv)
             uadmin(A_REBOOT, 0, 0);
         }
     }
+    return error;
+}
 
+int main(int argc, char **argv)
+{
+    const char *p;
+    if (argc > 1 && strcmp(argv[1],"-a") == 0) {
+        argc--;
+        argv++;
+        aflag = 1;
+    }
+
+    if (argc == 1 && aflag) {
+        FILE *fp = fopen("/etc/fstab", "r");
+        if (fp == NULL) {
+            perror("/etc/fstab");
+            exit(1);
+        }
+        while((p = mntread(fp)) != NULL) {
+            if (perform_fsck(p))
+                exit(error);
+        }
+        fclose(fp);
+    } else {
+        if(argc != 2) {
+            fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
+            return 16;
+        }
+        perform_fsck(argv[1]);
+    }
     printf("Done.\n");
-
     exit(error);
 }
+
 
 
 /*
@@ -934,4 +989,3 @@ static void dirwrite(struct dinode *ino, uint16_t j, struct direct *dentry)
     bcopy((char *) dentry, buf + 32 * (j % 16), 32);
     dwrite(blkno, buf);
 }
-
