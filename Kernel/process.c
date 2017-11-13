@@ -82,13 +82,13 @@ void wakeup(void *event)
 void pwake(ptptr p)
 {
 	if (p->p_status > P_RUNNING && p->p_status < P_STOPPED) {
-		p->p_status = P_READY;
+		if (p->p_status != P_READY) {
+			nready++;
+			p->p_status = P_READY;
+		}
 		p->p_wait = NULL;
-		nready++;
 	}
 }
-
-
 
 /* Getproc returns the process table pointer of a runnable process.
  * It is actually the scheduler.  If there are none, it loops.
@@ -492,6 +492,7 @@ rescan:
 		        if (m & stopper) {
 				/* Don't allow us to race SIGCONT */
 				irqflags_t irq = di();
+				/* FIXME: can we ever end up here not in READY/RUNNING ? */
 				nready--;
 				udata.u_ptab->p_status = P_STOPPED;
 				udata.u_ptab->p_event = j;
@@ -515,6 +516,14 @@ rescan:
 #ifdef DEBUG
 			kprintf("process terminated by signal %d\n", j);
 #endif
+			/* We may have marked ourselves as asleep and
+			   then been caught by the chksigs when we tried
+			   to task switch into bed. In that case we need
+			   to put the process back in running state */
+			if (udata.u_ptab->p_status == P_SLEEP) {
+				udata.u_ptab->p_status = P_RUNNING;
+				nready++;
+			}
 			doexit(dump_core(j));
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
@@ -681,8 +690,12 @@ void doexit(uint16_t val)
 			p->p_pptr = ptab;	/* ptab is always init */
 			/* Suppose our child is a zombie and init has
 			   SIGCLD blocked */
-		        if (ptab[0].p_ignored & (1UL << SIGCHLD))
+		        if (ptab[0].p_ignored & (1UL << SIGCHLD)) {
 				p->p_status = P_EMPTY;
+			} else {
+				ssig(&ptab[0], SIGCHLD);
+				wakeup(&ptab[0]);
+			}
 		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
