@@ -295,3 +295,12 @@ write			CODE
 y0			CODE
 y1			CODE
 yn			CODE
+
+
+Post 5.2 the following routines have been encountered along the way that
+are used by apps
+
+mktime			MISSING
+psignal			MISSING
+strsignal		MISSING
+
