@@ -220,7 +220,7 @@ static void clear_zombies(int flags)
 	/* See if we care what died. If we do then also check that
 	 * do not need to respawn it
 	 */
-	 if (clear_utmp(initpid, initcount, pid) == 0)
+	if (clear_utmp(initpid, initcount, pid) == 0)
 	 	return;
 	if (oldpid)
 		clear_utmp(oldpid, oldcount, pid);
@@ -486,8 +486,7 @@ static int cleanup_runlevel(uint8_t oldmask, uint8_t newmask, int sig)
 		if ((p[3] & oldmask) && !(p[3] & newmask)) {
 			/* Count number still to die */
 			if (p[4] == INIT_RESPAWN && initpid[n].pid) {
-				/* Group kill */
-				if (kill(-initpid[n].pid, sig) == 0)
+				if (kill(initpid[n].pid, sig) == 0)
 					nrun++;
 			}
 		}
@@ -588,17 +587,10 @@ int main(int argc, char *argv[])
 
 	/* make stdin, stdout and stderr point to /dev/tty1 */
 
-	if (fdtty1 != 0)
-		close(0);
 	dup(fdtty1);
-	close(1);
-	dup(fdtty1);
-	close(2);
 	dup(fdtty1);
 
 	putstr("init version 0.9.0ac#1\n");
-
-	close(open("/var/run/utmp", O_WRONLY | O_CREAT | O_TRUNC));
 
 	membase = sbrk(0);
 
@@ -610,14 +602,10 @@ int main(int argc, char *argv[])
 	for (;;) {
 		clear_zombies(0);
 		if (dingdong) {
-			uint8_t newrl;
+			uint8_t newrl, orl;
 			int fd = open("/var/run/initctl", O_RDONLY);
 			if (fd != -1 && read(fd, &newrl, 1) == 1) {
-				if (newrl != 'q') {
-					exit_runlevel(1 << runlevel, 1 << newrl);
-					runlevel = newrl;
-					enter_runlevel(1 << runlevel);
-				} else {
+				if (newrl == 'q') {
 					/* Reload */
 					reload_inittab();
 					/* Prune anything running that should
@@ -626,6 +614,13 @@ int main(int argc, char *argv[])
 					/* Start anything added to the current
 					   run level */
 					enter_runlevel(1 << runlevel);
+				} else if (newrl != runlevel) {
+					orl = runlevel;
+					/* Set this before we reap anything
+					   or it will respawn */
+					runlevel = newrl;
+					exit_runlevel(1 << orl, 1 << newrl);
+					enter_runlevel(1 << newrl);
 				}
 			}
 			close(fd);
