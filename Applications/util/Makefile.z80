@@ -26,6 +26,7 @@ SRCSNS = \
 	head.c \
 	init.c \
 	kill.c \
+	line.c \
 	ln.c \
 	logname.c \
 	mkdir.c \
