@@ -509,6 +509,10 @@ uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 	*/
 	if (!udata.u_ininterrupt) {
 		while ((t = tty_writeready(minor)) != TTY_READY_NOW) {
+			if (chksigs()) {
+				udata.u_error = EINTR;
+				return 1;
+			}
 			if (t == TTY_READY_LATER && flag) {
 				udata.u_error = EAGAIN;
 				return 1;
