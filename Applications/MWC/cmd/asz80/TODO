@@ -6,7 +6,6 @@ DONE	- Need to add .code .equ and all the other .byte type stuff that is nice to
 	- .include for asm hacking (or parse cpp #line)
 
 
-
 Check that JR works with symbols properly (require they are in the same .o maybe)
 
 DONE
@@ -49,7 +48,7 @@ Relocation types
 DONE	versus our segment base for this object module (usual)
 DONE	versus other segment base for this module
 DONE	versus unresolved symbol
-	PC relative (not so much Z80)
+IP	PC relative (not so much Z80)
 
 Need to support relocations for 16bit and also 8bit ZP. Do we need to extend
 the assembler to support relocations for high 8 / low 8 ? Probably not for Z80
