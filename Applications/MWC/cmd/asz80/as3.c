@@ -66,6 +66,11 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 	}
 	/* Subtraction within segment produces an absolute */
 	if (op == '-') {
+		/* We can't currently represent this and it's hard because
+		   we'd actually need to pass the expression tree to the
+		   linker. Only allow known symbols so that you can
+		   do a-b providing a and b are in your object module */
+#if 0
 		/* Unknown symbols may get segment forced as a result */
 		if (left->a_segment == UNKNOWN) {
 			left->a_segment = right->a_segment;
@@ -77,6 +82,9 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 			if (right->a_sym)
 				setsegment(right->a_sym, right->a_segment);
 		}
+#else
+		if (left->a_segment != UNKNOWN && right->a_segment != UNKNOWN)
+#endif
 		if (left->a_segment == right->a_segment && op == '-') {
 			left->a_segment = ABSOLUTE;
 			left->a_sym = NULL;
