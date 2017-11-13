@@ -372,8 +372,7 @@ static void compatible_obj(struct objhdr *oh)
 		exit(1);
 	}
 	if (oh->o_flags & OF_BIGENDIAN) {
-		fprintf(stderr, "Big endian not yet supported.\n");
-		exit(1);
+		fprintf(stderr, "Warning: Big endian not tested.\n");
 	}
 	obj_flags = oh->o_flags;
 }
@@ -500,6 +499,9 @@ static void set_segment_bases(void)
 		insert_internal_symbol("__data", DATA, 0);
 		insert_internal_symbol("__bss", BSS, 0);
 		insert_internal_symbol("__end", BSS, size[3]);
+		insert_internal_symbol("__code_size", ABSOLUTE, size[1]);
+		insert_internal_symbol("__data_size", ABSOLUTE, size[2]);
+		insert_internal_symbol("__bss_size", ABSOLUTE, size[3]);
 	}
 	/* Now set the base of each object appropriately */
 	memcpy(&pos, &base, sizeof(pos));
