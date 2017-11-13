@@ -1,0 +1,39 @@
+- Clean nice resolv interface
+- More 'conventional' telnet etc clients
+
+Fix the state machines a bit
+
+- An abort is supposed to report error ECONNREFUSED or ECONNRESET back
+  depending whether the socket is connected or not
+- A close should be immediate always. We need to have a few more uIP sockets
+  that native ones, and on a close break the kernel link but keep the uIP
+  socket around until it expires
+- Incoming connections appear broken
+- We need to make the sweep of connections in uIP report the time it will
+  next want to wakeup unless there is some kind of event. Wakeups are really
+  expensive so we should sleep the optimium time or until the kernel kicks us
+- Look at udp and raw send polling and if we need to do special handling
+- Fix the clock handling. We only have a 1 second clock, but in fact in the
+  kernel we have a 1/10th second real time clock we don't provide access too
+  but could make clock 2 (clock 1 is cputime used)
+
+Drivers
+
+- coconic belongs in kernel
+- slip needs to queue the writes then keep trying to write more data as
+  it reads. Otherwise we may drop a packet arriving as we send. For crap
+  uarts we may need more kernel side help too, and maybe a kslip driver
+  hookable directly to a port (don't want to add ldiscs: not nice for
+  8bit systems so thought required!)
+- we should pass the uip buffer to the kernel state calls that way we can
+  add a new event of 'kernel networking received packet' and that would mean
+  that for most devices we'd have a single device open and sleep on it or
+  a timeout (_alarm is in 1/10ths).
+- rework socz80 ethernet this way
+
+Stack
+
+- Update to a newer uIP
+- Check/fix if need be handling for loopback (127.*) addressing
+- Check we have enough INADDR_ANY matching in uIP to get Unix semantics
+- uip_connect() picks a port, if we did a bind() then it should use that one
