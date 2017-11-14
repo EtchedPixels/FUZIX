@@ -376,6 +376,9 @@ static void pass1(void)
                         bitset(swizzle16(buf[b]));
                 }
             }
+            /* FIXME: if we have a giant sparse file we need to look up
+               the indirect blocks and skip on when they are zero not
+               blindly view them all */
             /* Check the rest */
             for (bno = 0; bno <= swizzle32(ino.i_size)/512; ++bno) {
                 b = getblkno(&ino, bno);
