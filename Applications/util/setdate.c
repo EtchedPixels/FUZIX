@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/rtc.h>
 
 static uint8_t dim[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static char day[] = {
@@ -90,6 +93,62 @@ time_t mktime(struct tm	*t)
 	return(result);
 }
 
+void unbc(uint8_t *p)
+{
+    uint8_t c = *p & 0x0F;
+    c += 10 * ((*p & 0xF0) >> 4);
+    *p = c;
+}
+
+int rtcdate(void)
+{
+    struct tm tm;
+    struct cmos_rtc rtc;
+    uint8_t *p;
+    uint8_t i;
+
+    int fd = open("/dev/rtc", O_RDONLY);
+    if (fd == -1)
+        return 0;
+    if (read(fd, &rtc, sizeof(rtc)) != sizeof(rtc)) {
+        close(fd);
+        return 0;
+    }
+    close(fd);
+
+    switch (rtc.type) {
+    case CMOS_RTC_BCD:
+        p = rtc.data.bytes;
+        for (i = 0; i < 7; i++)
+            unbc(p++);
+    case CMOS_RTC_DEC:
+        p = rtc.data.bytes;
+        tm.tm_year = (*p + (p[1] << 8)) - 1900;
+        p += 2;
+        tm.tm_mon = *p++;
+        tm.tm_mday = *p++;
+        tm.tm_hour = *p++;
+        tm.tm_min = *p++;
+        tm.tm_sec = *p;
+        tm.tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
+        rtc.data.clock = mktime(&tm);
+    case CMOS_RTC_TIME:
+        if (stime(&rtc.data.clock) == -1) {
+            perror("stime");
+            exit(1);
+        }
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+void usage(void)
+{
+    fprintf(stderr, "Usage: setdate [-a] [-u]\n");
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
     struct tm *tm;
@@ -97,7 +156,30 @@ int main(int argc, char *argv[])
     char newval[128];
     int y,m,d,h,s;
     int set;
-    
+    int opt;
+    int user = 0, autom = 0;
+
+    while ((opt = getopt(argc, argv, "au")) != -1) {
+        switch(opt) {
+        case 'a':
+            autom = 1;
+            break;
+        case 'u':
+            user = 1;
+            break;
+        default:
+            usage();
+        }
+    }
+    if (optind != argc)
+        usage();
+
+    if (!user && rtcdate())
+        exit(0);
+
+    if (autom)
+        exit(1);
+
     time(&t);
     tm = localtime(&t);
     if (tm) {
@@ -144,7 +226,7 @@ retime:
     }
     if (!set)
         return 0;
-    tm->tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
+    tm.tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
     t = mktime(tm);
     if (t == (time_t) -1) {
         fprintf(stderr, "mktime: internal error.\n");
