@@ -885,6 +885,8 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id, con
 	envset("HOME", pwd->pw_dir);
 	envset("SHELL", pwd->pw_shell);
 
+	umask(022);
+
 	/* home directory */
 
 	if (chdir(pwd->pw_dir))
