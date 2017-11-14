@@ -11,6 +11,9 @@ struct link{
 #define LINK_CLOSED 1
 #define LINK_SHUTR  2       /* don't release our link/state until */
 #define LINK_SHUTW  4       /* both are set */
+#define LINK_OPEN   8	    /* TCP connected onward */
+#define LINK_DEAD   16      /* No longer exists to the kernel (may be live
+                               internally to uIP still */
     uint8_t socketn;        /* Kernel's socket no */
     uint8_t lcn;            /* Kernel's idea of lcn ???*/
     struct uip_conn *conn;  /* uIP's idea of lcn */

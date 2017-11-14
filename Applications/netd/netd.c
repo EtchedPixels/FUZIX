@@ -23,7 +23,7 @@ todo:
 * refactor  RAW with UDP code as they are very similar
 
 */
-
+#define TRACE
 
 
 #include <stdio.h>
@@ -33,6 +33,7 @@ todo:
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/drivewire.h>
 #include <sys/netdev.h>
 #include <sys/net_native.h>
@@ -63,6 +64,7 @@ int freelist[NSOCKET];
 int freeptr = 0;
 int looplen = 0;
 
+uint16_t activity;		/* Must be enough bits for NSOCKET */
 
 /* print an error message */
 void printe( char *mesg )
@@ -81,6 +83,14 @@ void exit_err( char *mesg )
 void ksend( int event )
 {
 	ne.ret = 0;
+	ne.event = event;
+	if ( write( knet, &ne, sizeof(ne) ) < 0 )
+		exit_err("cannot write kernel net dev\n");
+}
+
+/* wrapper around writing to kernel net device */
+void ksende( int event)
+{
 	ne.event = event;
 	if ( write( knet, &ne, sizeof(ne) ) < 0 )
 		exit_err("cannot write kernel net dev\n");
@@ -194,6 +204,9 @@ void netd_appcall(void)
 	  if( uip_timedout() ) printe("timed out.\n");
 	  if( uip_connected() ) printe("connected.\n" );
 #endif
+
+	if (s->flags & LINK_DEAD)
+		return;
 	/* uIP sends up a connected event for both
 	   active and passive opens */
 	if ( uip_connected() ){
@@ -220,6 +233,7 @@ void netd_appcall(void)
 			/* Not a listing port so assume a active open */
 			ne.data = SS_CONNECTED;
 			ksend( NE_NEWSTATE );
+			s->flags |= LINK_OPEN;
 		}
 	}
 
@@ -293,11 +307,16 @@ void netd_appcall(void)
 
 		/* test for local close - LINK_CLOSED is set by kernel event thread */
 		if ( s->flags & LINK_CLOSED ){
-			uip_close();
+			if (uip_outstanding(uip_conn))
+				uip_abort();
+			else
+				uip_close();
 			s->flags &= ~LINK_CLOSED;
-			s->flags |= LINK_SHUTW;
-			if ( s->flags & LINK_SHUTR )
-				rel_map( uip_conn->appstate );
+			s->flags |= LINK_SHUTW | LINK_DEAD;
+			ne.socket = s->socketn;
+			rel_map( uip_conn->appstate );
+			ne.data = SS_CLOSED;
+			ksend(NE_NEWSTATE);
 		}
 
 	}
@@ -307,29 +326,39 @@ void netd_appcall(void)
 		send_tcp( s );
 	}
 
-	if ( uip_closed() || uip_aborted() ){
+	if (uip_aborted()) {
+		s->flags |= LINK_SHUTR|LINK_SHUTW;
+		if (s->flags & LINK_OPEN)
+			ne.ret = ECONNRESET;
+		else
+			ne.ret = ECONNREFUSED;
+		ksende(NE_RESET);
+		s->flags |= LINK_DEAD;
+		rel_map( uip_conn->appstate );
+	} else if (uip_timedout()) {
+		ne.ret = ETIMEDOUT;
+		ksende(NE_RESET);
+		s->flags |= LINK_DEAD;
+		rel_map( uip_conn->appstate );
+	} else if ( uip_closed()) {
 		int e;
 		switch ( s->flags & (LINK_SHUTR | LINK_SHUTW) ){
-		case 0:
+		case 0:	/* Shutting before us */
 			e = NE_SHUTR;
+			/* formulate and send reset of message */
+			ksend( e );
 			break;
-		case LINK_SHUTR:
-			goto close;
+		case LINK_SHUTR:	/* We already did a SHUT_R */
+			break;
+		/* Shutting after us : in theory can't happen */
 		case LINK_SHUTW:
 			e = NE_NEWSTATE;
 			break;
 		case LINK_SHUTR | LINK_SHUTW:
+			s->flags |= LINK_DEAD;
+			rel_map( uip_conn->appstate );
 			return;
 		}
-		/* formulate and send reset of message */
-		ne.data = SS_CLOSED;
-		ksend( e );
-		/* release link resource if both sides closed */
-		/* mark link as remote closed */
-	close:
-		s->flags |= LINK_SHUTR;
-		if ( s->flags & LINK_SHUTW )
-			rel_map( uip_conn->appstate );
 	}
 }
 
@@ -353,13 +382,15 @@ void netd_udp_appcall(void)
 	   if( uip_connected() ) printe("connected" );
 	   printe("\n");
 #endif
+	if (s->flags & LINK_DEAD)
+		return;
 
 	if ( uip_poll() ){
 		/* send data if there's data waiting on this connection */
 		/*    doing this before testing for close ??? */
 		if ( s->tend != s->tstart ){
 			send_udp( s );
-			return; /* short circuit LINK_CLOSED until EOD. */
+//			return; /* short circuit LINK_CLOSED until EOD. */
 		}
 		/* if flagged close from kernel, then really close, confirm w/ kernel */
 		if ( s->flags & LINK_CLOSED ){
@@ -368,6 +399,7 @@ void netd_udp_appcall(void)
 			ne.data = SS_CLOSED;
 			ksend( NE_NEWSTATE );
 			/* release private link resource */
+			s->flags |= LINK_DEAD;
 			rel_map( uip_udp_conn->appstate );
 			uip_udp_remove( uip_udp_conn );
 			return;
@@ -415,13 +447,15 @@ void netd_raw_appcall(void)
 	   if( uip_connected() ) printe("connected" );
 	   printe("\n");
 #endif
+	if (s->flags & LINK_DEAD)
+		return;
 
 	if ( uip_poll() ){
 		/* send data if there's data waiting on this connection */
 		/*    doing this before testing for close ??? */
 		if ( s->tend != s->tstart ){
 			send_raw( s );
-			return; /* short circuit LINK_CLOSED until EOD. */
+//			return; /* short circuit LINK_CLOSED until EOD. */
 		}
 		/* if flagged close from kernel, then really close, confirm w/ kernel */
 		if ( s->flags & LINK_CLOSED ){
@@ -431,6 +465,7 @@ void netd_raw_appcall(void)
 			ksend( NE_NEWSTATE );
 			/* release private link resource */
 			rel_map( uip_raw_conn->appstate );
+			s->flags |= LINK_DEAD;
 			uip_raw_remove( uip_raw_conn );
 			return;
 		}
@@ -473,6 +508,8 @@ int dokernel( void )
 {
 	struct link *m;
 	int i = read( knet, &sm, sizeof(sm) );
+	int c;
+
 	if ( i < 0 ){
 		return 0;
 	}
@@ -484,6 +521,9 @@ int dokernel( void )
 		   fprintf(stderr,"newstat: %x\n", sm.sd.newstate );
 #endif
 		m = & map[sm.sd.lcn];
+		c = m->conn - uip_conns;
+		printf("Connection %d\n", c);
+
 		if ( sm.sd.event & NEV_STATE ){
 			ne.socket = sm.s.s_num;
 			switch ( sm.sd.newstate ){
@@ -505,13 +545,21 @@ int dokernel( void )
 					int port = sm.s.s_addr[SADDR_DST].port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
 							 &sm.s.s_addr[SADDR_DST].addr );
-					/* need some HTONS'ing done here? */
 					conptr = uip_connect( &addr, port );
 					if ( !conptr ){
-						break; /* fixme: actually handler the error */
+						ne.data = SS_CLOSED;
+						ne.ret = ENOMEM;	/* should be ENOBUFS I think */
+						ksende(NE_NEWSTATE);
+						break;
 					}
 					m->conn = conptr; /* fixme: needed? */
 					conptr->appstate = sm.sd.lcn;
+					ne.data = SS_CONNECTING;
+					ksend( NE_NEWSTATE );
+					m->conn->userrequest = 1;
+					c = conptr - uip_conns;
+					if (sm.s.s_type == SOCKTYPE_TCP)
+						activity |= (1 << c);
 					break;
 				}
 				else if ( sm.s.s_type == SOCKTYPE_UDP ){
@@ -553,28 +601,10 @@ int dokernel( void )
 				}
 				break; /* FIXME: handle unknown/unhandled sock types here */
 			case SS_CLOSED:
-				if ( sm.s.s_type == SOCKTYPE_TCP ){
-					m->flags += LINK_SHUTW;
-					/* if remote already closed then send closing synch event
-					   directly back to kernel, and release our link */
-					if ( m->flags & LINK_SHUTR ){
-						ne.data = SS_CLOSED;
-						ksend( NE_NEWSTATE );
-						rel_map( sm.sd.lcn );
-					}
-					/* tell uIP thread that local has closed, but we
-					   cant send anything directly to uIP from here -
-					   so set a flag and let uip_poll() handler do the job
-					   the next time through the main program loop
-					*/
-					else {
-						m->flags += LINK_CLOSED;
-					}
-				}
-				else if ( sm.s.s_type == SOCKTYPE_UDP ||
-					sm.s.s_type == SOCKTYPE_RAW ){
-					m->flags += LINK_CLOSED;
-				}
+				if ( sm.s.s_type == SOCKTYPE_TCP )
+					activity |= (1 << c);
+				m->flags |= LINK_CLOSED;
+				m->conn->userrequest = 1;
 				break;
 			case SS_LISTENING:
 				/* htons here? */
@@ -685,6 +715,19 @@ int douip( void )
 					send_or_loop();
 			}
 		}
+	}
+	if (activity) {
+		for (i = 0; i < NSOCKET; i++) {
+			if (activity & (1 << i)) {
+				uip_poll_conn(&uip_conns[i]);
+				if (uip_len > 0) {
+					if (has_arp)
+						uip_arp_out();
+					send_or_loop();
+				}
+			}
+		}
+		activity = 0;
 	}
 	if (timer_expired(&periodic_timer)) {
 		timer_reset(&periodic_timer);

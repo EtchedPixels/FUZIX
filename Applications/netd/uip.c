@@ -737,6 +737,11 @@ uip_process(uint8_t flag)
   /* Check if we were invoked because of a poll request for a
      particular connection. */
   if(flag == UIP_POLL_REQUEST) {
+    if(uip_connr->userrequest) {
+	uip_flags = UIP_POLL;
+	UIP_APPCALL();
+	goto appsend;
+    }
     if((uip_connr->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED &&
        !uip_outstanding(uip_connr)) {
 	uip_flags = UIP_POLL;
