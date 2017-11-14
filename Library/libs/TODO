@@ -93,60 +93,60 @@ TCP/IP stuff
 
 Commands Required
 -----------------
-cat
-cd
-chgrp
-chmod
-chown
-cmp
-cp
-cpio
-date
-dd
-df
-echo
-ed
-ex
-expr
-false
-find
-grep
-id
-kill
-line
-ln
-logname
-lp
-ls
-mkdir
-mv
-passwd
-pg
-pr
-pwd
-rm
-rmdir
-sed
-sh
-sleep
-sort
-stty
-su
-tail
-tar
-tee
-test
-touch
-tr
-true
-tty
-umask
-uname
-uucp		[duh ???]
-uulog
-uustart
-uux
-vi
-wait
-who
+cat				Yes
+cd				Yes
+chgrp				Yes
+chmod				Yes
+chown				Yes
+cmp				Yes
+cp				Yes
+cpio				No
+date				Yes
+dd				Yes
+df				Yes
+echo				Yes
+ed				Yes
+ex				SIZE
+expr				Yes
+false				Yes
+find				Yes
+grep				Yes
+id				Yes
+kill				Yes
+line				??
+ln				Yes
+logname				Yes
+lp				Noo
+ls				Yes
+mkdir				Yes
+mv				Yes
+passwd				Yes
+pg				no
+pr				Yes
+pwd				Yes
+rm				Yes
+rmdir				Yes
+sed				Yes
+sh				Yes
+sleep				Yes
+sort				Yes
+stty				Yes
+su				Yes
+tail				Yes
+tar				Yes
+tee				Yes
+test				Yes
+touch				Yes
+tr				Yes
+true				Yes
+tty				Yes
+umask				Yes
+uname				Yes
+uucp		[duh ???]	XXX
+uulog				XXX
+uustart				XXX
+uux				XXX
+vi				Yes
+wait				Yes
+who				Yes
 
