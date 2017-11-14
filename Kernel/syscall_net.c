@@ -470,7 +470,7 @@ arg_t _connect(void)
 		if (net_connect(s))
 			return -1;
 		if (sock_wait_leave(s, 0, SS_CONNECTING)) {
-			/* API oddity, thanks Berkley */
+			/* API oddity, thanks Berkeley */
 			if (udata.u_error == EAGAIN)
 				udata.u_error = EINPROGRESS;
 			return -1;

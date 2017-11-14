@@ -125,5 +125,5 @@ extern arg_t net_shutdown(struct socket *s, uint8_t how); /* bit 0 rd, bit 1 wr 
 extern void netdev_init(void);
 extern struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa);
 extern void sock_init(void);
-
+extern int sock_error(struct socket *s);
 extern struct netdevice net_dev;
