@@ -22,7 +22,6 @@
 
 struct sockdata {
 	void *socket;
-	uint8_t err;
 	uint8_t ret;
 	uint8_t event;		/* Waiting events to go to user space */
 #define NEV_STATE	1
@@ -52,6 +51,7 @@ struct sockmsg {
 #define NE_ROOM		5
 #define NE_DATA		6
 #define NE_SHUTR        7
+#define NE_RESET        8
 
 struct netevent {
 	uint8_t socket;
