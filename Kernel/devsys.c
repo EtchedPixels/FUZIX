@@ -54,6 +54,10 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
         case 4:
                 return devmem_read();
 #endif
+#ifdef CONFIG_RTC_FULL
+	case 5:
+		return platform_rtc_read();
+#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_read(flag);
@@ -84,6 +88,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 #ifdef CONFIG_DEV_MEM
         case 4:
                 return devmem_write();
+#endif
+#ifdef CONFIG_RTC_FULL
+	case 5:
+		return platform_rtc_write();
 #endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:

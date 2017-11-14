@@ -979,6 +979,9 @@ extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
 
+extern int platform_rtc_read(void);
+extern int platform_rtc_write(void);
+
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di
 #define irqrestore __hard_irqrestore
