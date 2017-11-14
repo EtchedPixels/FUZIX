@@ -61,7 +61,8 @@ int netdev_write(uint8_t flags)
 		/* Asynchronous state changing event */
 	case NE_EVENT:
 		s->s_state = ne.data;
-		sd->err = ne.ret;
+		if (ne.ret)
+			s->s_error = ne.ret;
 		wakeup_all(s);
 		break;
 		/* Change an address */
@@ -83,10 +84,15 @@ int netdev_write(uint8_t flags)
 		s->s_iflag |= SI_DATA;
 		wakeup(&s->s_iflag);
 		break;
+		/* Remote reset */
+	case NE_RESET:
+		s->s_iflag |= SI_SHUTW;
+		s->s_state = SS_CLOSED;
 		/* Remote closed connection */
 	case NE_SHUTR:
 		s->s_iflag |= SI_SHUTR;
-		sd->err = ne.ret;
+		if (ne.ret)
+			s->s_error = ne.ret;
 		wakeup_all(s);
 		break;
 	default:
@@ -191,8 +197,10 @@ int netdev_close(uint8_t minor)
 		net_ino = NULL;
 		while (s < sockets + NSOCKET) {
 			if (s->s_state != SS_UNUSED) {
+				struct sockdata *sd = s->s_priv;
 				s->s_state = SS_CLOSED;
 				s->s_iflag |= SI_SHUTR|SI_SHUTW;
+				s->s_error = ENETDOWN;
 				wakeup_all(s);
 			}
 			s++;
@@ -442,7 +450,6 @@ int net_init(struct socket *s)
 	}
 	s->s_priv = sd;
 	sd->socket = s;
-	sd->err = 0;
 	sd->event = 0;
 	sd->rbuf = sd->rnext = 0;
 	sd->tbuf = sd->tnext = 0;
@@ -507,12 +514,15 @@ arg_t net_read(struct socket *s, uint8_t flag)
 	uint16_t n = 0;
 	struct sockdata *sd = s->s_priv;
 
-	if (sd->err) {
-		udata.u_error = sd->err;
-		sd->err = 0;
-		return -1;
-	}
 	while (1) {
+		/* Partial I/O saves the error for the rext call but
+		   returns */
+		if (s->s_error) {
+			if (n == 0)
+				return sock_error(s);
+			else
+				return n;
+		}
 		/* FIXME: We should be forced into CLOSED state so is this
 		   check actually needed */
 	        if (net_ino == NULL) {
@@ -554,11 +564,8 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	uint16_t l = udata.u_count;
 	struct sockdata *sd = s->s_priv;
 
-	if (sd->err) {
-		udata.u_error = sd->err;
-		sd->err = 0;
+	if (sock_error(s))
 		return -1;
-	}
 
 	while (t < l) {
 		udata.u_count = l - t;
@@ -574,6 +581,12 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		/* FIXME: buffer the error in this case */
 		if (n == 0xFFFFU)
 			return l ? (arg_t)l : -1;
+
+		if (s->s_error){
+			if (l == 0)
+				return sock_error(s);
+			return l;
+		}
 
 		t += n;
 
