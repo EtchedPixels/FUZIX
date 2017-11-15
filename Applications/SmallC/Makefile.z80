@@ -5,7 +5,8 @@ CFLAGS = -DTINY
 COPT = -O2
 
 OBJS = initials.rel data.rel error.rel expr.rel function.rel gen.rel io.rel \
-       lex.rel main.rel outstack.rel preproc.rel primary.rel stmt.rel struct.rel sym.rel while.rel
+       lex.rel main.rel outstack.rel preproc.rel primary.rel stmt.rel \
+       struct.rel sym.rel while.rel
 
 OBJ_Z80 = codez80.rel
 OBJ_8080 = code8080.rel
@@ -14,10 +15,12 @@ OBJ_6809 = code6809.rel
 
 OBJ_COPT = copt.rel
 
+OBJ_CC = frontend.rel
+
 INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
-all:    scc6801 scc6809 scc8080 sccz80 copt
+all:    scc6801 scc6809 scc8080 sccz80 copt cc
 
 sccz80: $(OBJS) $(OBJ_Z80)
 	$(CC) -o sccz80 --nostdio $(OBJS) $(OBJ_Z80)
@@ -33,6 +36,9 @@ scc6809: $(OBJS) $(OBJ_6809)
 
 copt:	$(OBJ_COPT)
 	$(CC) -o copt $(OBJ_COPT)
+
+cc:	$(OBJ_CC)
+	$(CC) -o cc $(OBJ_CC)
 
 clean:
 	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *.rel *~
