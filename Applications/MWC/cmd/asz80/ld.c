@@ -409,7 +409,7 @@ static struct object *load_object(FILE * fp, off_t off, int lib, const char *pat
 	compatible_obj(&o->oh);
 	/* Load up the symbols */
 	nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_SIZE;
-	if (nsym < 0)
+	if (nsym < 0||nsym > 65535)
 		error("bad object file");
 	/* Allocate the symbol entries */
 	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
