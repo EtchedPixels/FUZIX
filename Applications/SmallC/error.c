@@ -3,42 +3,32 @@
  *
  */
 
-#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 #include "defs.h"
 #include "data.h"
 
-void error(char *ptr)
+void errchar(char c)
 {
-        int tempfile;
-
-        tempfile = output;
-        output = 1;
-        doerror(ptr);
-        output = tempfile;
-        doerror(ptr);
-        errcnt++;
+        write(2, &c, 1);
 }
 
-void doerror(char *ptr)
+void error(char *ptr)
 {
-        int k;
-        gen_comment ();
-        output_string (line);
-        newline ();
-        gen_comment ();
-        k = 0;
+        int k = 0;;
+
+        write(2, line, strlen(line));
+        errchar('\n');
         while (k < lptr) {
                 if (line[k] == 9)
-                        print_tab ();
+                        errchar('\t');
                 else
-                        output_byte (' ');
+                        errchar(' ');
                 k++;
         }
-        output_byte ('^');
-        newline ();
-        gen_comment ();
-        output_string ("******  ");
-        output_string (ptr);
-        output_string ("  ******");
-        newline ();
+        errchar('^');
+        errchar('\n');
+        write(2, ptr, strlen(ptr));
+        errchar('\n');
+        errcnt++;
 }
