@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -DTINY -DINCDIR=\"includes/\"
+CFLAGS = -DTINY -DINCDIR=\"includes/\" -DCROSS
 COPT = -O2
 
 OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
@@ -13,11 +13,13 @@ OBJ_GENERIC = codegeneric.o
 
 OBJ_COPT = copt.o
 
+OBJ_CC = frontend.o
+
 INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
 
-all:    lscc6801 lscc6809 lscc8080 lsccgeneric lsccz80 copt
+all:    lscc6801 lscc6809 lscc8080 lsccgeneric lsccz80 copt cc
 
 lsccz80: $(OBJS) $(OBJ_Z80)
 	$(CC) -o lsccz80 $(OBJS) $(OBJ_Z80)
@@ -36,6 +38,9 @@ lsccgeneric: $(OBJS) $(OBJ_GENERIC)
 
 copt:	$(OBJ_COPT)
 	$(CC) -o copt $(OBJ_COPT)
+
+cc:	$(OBJ_CC)
+	$(CC) -o cc $(OBJ_CC)
 
 clean:
 	rm -f $(OBJ) lscc8080 lsccz80 lscc6801 lscc6809 lsccgeneric *.o *~
