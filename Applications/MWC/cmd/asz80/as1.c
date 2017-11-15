@@ -248,11 +248,10 @@ loop:
 	case TRST:
 		getaddr(&a1);
 		istuser(&a1);
-		if (a1.a_value < 8) {
-			outab(OPRST|(a1.a_value<<3));
-			break;	
-		}
-		aerr(INVALID_CONST);
+		if ((a1.a_value & 7) || a1.a_value < 0 || a1.a_value > 0x38)
+			aerr(INVALID_CONST);
+		else
+			outab(OPRST|a1.a_value);
 		break;
 
 	case TREL:
