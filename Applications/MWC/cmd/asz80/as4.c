@@ -182,6 +182,12 @@ void outrabrel(ADDR *a)
 void outrab(ADDR *a)
 {
 	int s = 0;
+	uint16_t mode = (a->a_type & TMMODE);
+	if (mode == TBR || mode == TWR) {
+		a->a_flags |= A_LOW;
+		if (a->a_segment != ABSOLUTE)
+			aerr(MUST_BE_ABSOLUTE);
+	}
 	if (a->a_segment != ABSOLUTE) {
 		check_store_allowed(segment, 1);
 		outbyte(REL_ESC);
