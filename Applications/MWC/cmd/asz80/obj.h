@@ -32,7 +32,7 @@ struct objhdr
 #define OA_DGNOVA_FPU	2
 #define OA_DGNOVA_NOVA3	4
 #define	OA_DGNOVA_NOVA4	8
-
+    uint16_t o_unused;		/* So it packs right */
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
     uint32_t o_symbase;
