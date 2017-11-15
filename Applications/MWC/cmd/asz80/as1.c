@@ -63,7 +63,7 @@ void getaddr(ADDR *ap)
 			ap->a_flags |= A_LOW;
 		else if (c == '>')
 			ap->a_flags |= A_HIGH;
-		else
+		else if (c != '#')
 			unget(c);
 		expr1(ap, LOPRI, 0);
 		return;
