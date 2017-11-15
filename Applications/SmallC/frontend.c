@@ -53,6 +53,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#ifdef CROSS
+#define	CMD_AS	"/tmp/cross/as"
+#define CMD_CC	"/tmp/cross/scc"
+#define CMD_COPT "/tmp/cross/copt"
+#define COPT_FILE "/tmp/cross/ccc-copt"
+#define CMD_LD	"/tmp/cross/ld"
+#define CMD_CPP	"/tmp/cross/cpp"
+#define CRT0	"/tmp/cross/crt0.o"
+#else
 #define CMD_AS	"/bin/as"
 #define CMD_CC	"/usr/lib/cc"
 #define CMD_COPT "/usr/lib/copt"
@@ -60,6 +69,7 @@
 #define CMD_LD	"/bin/ld"
 #define CMD_CPP "/usr/lib/cpp"
 #define CRT0	"/usr/lib/crt0.o"
+#endif
 
 struct obj {
 	struct obj *next;
@@ -106,7 +116,7 @@ static void remove_temporaries(void)
 	char **p = rmlist;
 	while (p < rmptr) {
 		if (keep_temp == 0)
-			printf("remove %s\n", *p);
+			unlink(*p);
 		free(*p++);
 	}
 	rmptr = rmlist;
@@ -196,6 +206,8 @@ static void run_command(void)
 		fatal();
 	}
 	if (pid == 0) {
+//		printf("Run %s\n", arglist[0]);
+		fflush(stdout);
 		if (arginfd != -1) {
 			dup2(arginfd, 0);
 			close(arginfd);
@@ -218,8 +230,10 @@ static void run_command(void)
 			fatal();
 		}
 	}
-	if (WIFSIGNALED(status) || WEXITSTATUS(status))
+	if (WIFSIGNALED(status) || WEXITSTATUS(status)) {
+//		printf("cc: %s failed.\n", arglist[0]);
 		fatal();
+	}
 }
 
 static void redirect_in(const char *p)
@@ -233,7 +247,7 @@ static void redirect_in(const char *p)
 
 static void redirect_out(const char *p)
 {
-	argoutfd = open(p, O_WRONLY | O_CREAT, 0666);
+	argoutfd = open(p, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (argoutfd == -1) {
 		perror(p);
 		fatal();
@@ -270,6 +284,7 @@ void convert_c_to_s(char *path)
 	add_argument(COPT_FILE);
 	redirect_in(tmp);
 	redirect_out(pathmod(path, ".%", ".s", 2));
+	run_command();
 	free(tmp);
 }
 
@@ -298,6 +313,8 @@ void link_phase(void)
 {
 	build_arglist(CMD_LD);
 	add_argument("-b");
+	add_argument("-c");
+	add_argument("256");
 	if (strip)
 		add_argument("-s");
 	add_argument("-o");
@@ -311,7 +328,8 @@ void link_phase(void)
 
 void sequence(struct obj *i)
 {
-	printf("Processing %s %d\n", i->name, i->type);
+//	printf("Last Phase %d\n", last_phase);
+//	printf("1:Processing %s %d\n", i->name, i->type);
 	if (i->type == TYPE_S) {
 		convert_S_to_s(i->name);
 		i->type = TYPE_s;
@@ -324,7 +342,7 @@ void sequence(struct obj *i)
 	}
 	if (last_phase == 1)
 		return;
-	printf("Processing %s %d\n", i->name, i->type);
+//	printf("2:Processing %s %d\n", i->name, i->type);
 	if (i->type == TYPE_C_pp) {
 		convert_c_to_s(i->name);
 		i->type = TYPE_s;
@@ -332,7 +350,7 @@ void sequence(struct obj *i)
 	}
 	if (last_phase == 2)
 		return;
-	printf("Processing %s %d\n", i->name, i->type);
+//	printf("3:Processing %s %d\n", i->name, i->type);
 	if (i->type == TYPE_s) {
 		convert_s_to_o(i->name);
 		i->type = TYPE_O;
