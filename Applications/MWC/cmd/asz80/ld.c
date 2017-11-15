@@ -378,6 +378,22 @@ static void compatible_obj(struct objhdr *oh)
 }
 
 /*
+ *	See if we already merged an object module. With a library we
+ *	scan mutiple times but we don't import the same module twice
+ */
+
+static int have_object(off_t pos, const char *name)
+{
+	struct object *o = objects;
+	while(o) {
+		if (o->off == pos && strcmp(name, o->path) == 0)
+			return 1;
+		o = o->next;
+	}
+	return 0;
+}
+
+/*
  *	Load a new object file. The off argument allows us to load an
  *	object module out of a library by giving the library file handle
  *	and the byte offset into it.
@@ -396,6 +412,7 @@ static struct object *load_object(FILE * fp, off_t off, int lib, const char *pat
 	uint16_t value;
 
 	o->path = path;
+	o->off = off;
 	processing = o;	/* For error reporting */
 
 	xfseek(fp, off);
@@ -428,6 +445,8 @@ restart:
 		   this object - and then restart wih lib = 0 */
 		if (lib) {
 			if (is_undefined(name)) {
+				if (verbose)
+					printf("importing for '%s'\n", name);
 				lib = 0;
 				goto restart;
 			}
@@ -805,9 +824,12 @@ static void write_binary(FILE * op, FILE *mp)
 	/* TODO: needs a special pass
 	if (dbgsyms )
 		copy_debug_all(op, mp);*/ 
-	if (err == 0 && ldmode != LD_ABSOLUTE) {
-		xfseek(op, 0);
-		fwrite(&hdr, sizeof(hdr), 1, op);
+	if (err == 0) {
+		if (ldmode != LD_ABSOLUTE) {
+			xfseek(op, 0);
+			fwrite(&hdr, sizeof(hdr), 1, op);
+		} else	/* FIXME: honour umask! */
+			fchmod (fileno(op), 0755);
 	}
 }
 
@@ -833,7 +855,8 @@ static void process_library(const char *name, FILE *fp)
 			process_ranlib();
 #endif
 		pos += sizeof(ah);
-		load_object(fp, pos, 1, name);
+		if (!have_object(pos, name))
+			load_object(fp, pos, 1, name);
 		pos += size;
 		if (pos & 1)
 			pos++;
