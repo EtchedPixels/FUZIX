@@ -148,11 +148,11 @@ static char *pathmod(char *p, char *f, char *t, int rmif)
 		fprintf(stderr, "cc: no extension on '%s'.\n", p);
 		fatal();
 	}
-	if (strcmp(x, f)) {
-		fprintf(stderr, "cc: internal got '%s' expected '%s'.\n",
-			p, t);
-		fatal();
-	}
+//	if (strcmp(x, f)) {
+//		fprintf(stderr, "cc: internal got '%s' expected '%s'.\n",
+//			p, t);
+//		fatal();
+//	}
 	strcpy(x, t);
 	if (rmif != last_phase) {
 		*rmptr = strdup(p);
@@ -306,6 +306,7 @@ void link_phase(void)
 		add_argument(CRT0);
 	add_argument_list(NULL, &objlist);
 	add_argument_list(NULL, &liblist);
+	run_command();
 }
 
 void sequence(struct obj *i)
@@ -347,7 +348,7 @@ void processing_loop(void)
 		remove_temporaries();
 		i = i->next;
 	}
-	if (last_phase == 3)
+	if (last_phase < 4)
 		return;
 	link_phase();
 }
@@ -429,7 +430,8 @@ void add_file(char *p)
 		append_obj(&objlist, p, TYPE_S);
 		break;
 	case 'c':
-		append_obj(&objlist, p, TYPE_C);
+		/* HACK should be TYPE_C once we split cpp */
+		append_obj(&objlist, p, TYPE_C_pp);
 		c_files++;
 		break;
 	case 'o':
