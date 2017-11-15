@@ -13,7 +13,7 @@
 /*
  * Table sizes, etc.
  */
-#define	NCPS	8			/* # of characters in symbol */
+#define	NCPS	16			/* # of characters in symbol */
 #define	NHASH	64			/* # of hash buckets */
 #define	HMASK	077			/* Mask for above */
 #define	NFNAME	32			/* # of characters in filename */
