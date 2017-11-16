@@ -1,9 +1,9 @@
 		.code
 		.export	_isupper
-_isupper:	pop bc
+_isupper:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp 'A'

@@ -1,9 +1,9 @@
 		.code
 		.export	_islower
-_islower:	pop bc
+_islower:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp 'a'

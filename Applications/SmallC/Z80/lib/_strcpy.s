@@ -1,12 +1,12 @@
 		.code
 		.export _strcpy
 
-_strcpy:	pop bc		;ret
+_strcpy:	pop af		;ret
 		pop de		;dest
 		pop hl		;src
 		push hl
 		push de
-		push bc
+		push af
 		push de		; for return code
 _strcpy_1:	ld a,(hl)
 		ld (de),a

@@ -1,9 +1,9 @@
 		.code
 		.export	_isgraph
-_isgraph:	pop bc
+_isgraph:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp 33
 		jr c, ret0

@@ -1,9 +1,9 @@
 		.code
 		.export	_isprint
-_isprint:	pop bc
+_isprint:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp 32
 		jr c, ret0

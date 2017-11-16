@@ -2,11 +2,12 @@
 		.export _strcmp
 
 _strcmp:
-		pop bc
+		pop af
 		pop de
 		pop hl
 		push hl
 		push de
+		push af
 
 _strcmp_1:
 		ld a,(de)

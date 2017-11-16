@@ -1,9 +1,9 @@
 		.code
 		.export	_isdigit
-_isdigit:	pop bc
+_isdigit:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp '0'
 		jr c, ret0

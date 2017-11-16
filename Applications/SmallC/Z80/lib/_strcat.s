@@ -1,12 +1,12 @@
 		.code
 		.export _strcat
 
-_strcat:	pop bc		;ret
+_strcat:	pop af		;ret
 		pop de		;dest
 		pop hl		;src
 		push hl
 		push de
-		push bc
+		push af
 		push de		; for return code
 _strcat_1:	ld a,(de)
 		or a

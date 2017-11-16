@@ -2,6 +2,7 @@
 		.export _memset
 
 _memset:	push ix
+		push bc
 		ld ix,0
 		add ix,sp
 		ld h,(ix+4)
@@ -23,5 +24,6 @@ _memset:	push ix
 		ldir
 _memset_none:	ld l,(ix+4)
 		ld h,(ix+5)
+		pop bc
 		pop ix
 		ret

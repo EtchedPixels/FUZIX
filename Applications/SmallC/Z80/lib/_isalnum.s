@@ -1,10 +1,10 @@
 		.code
 		.export	_isalnum
 
-_isalnum:	pop bc
+_isalnum:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp '9'
 		jr nc, isalnum1

@@ -3,6 +3,7 @@
 
 _strncat:
 		push	ix
+		push	bc
 		ld	ix,#0
 		add	ix,sp
 		ld	l,(ix+4)
@@ -32,6 +33,7 @@ _strncat_1:
 		jr	_strncat_1
 _strncat_2:	ld	l,(ix+4)
 		ld	h,(ix+5)
+		pop	bc
 		pop	ix
 		ret
 		; Copy \0 until limit

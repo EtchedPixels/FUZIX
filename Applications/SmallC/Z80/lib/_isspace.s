@@ -1,9 +1,9 @@
 		.code
 		.export	_isspace
-_isspace:	pop bc
+_isspace:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp 32

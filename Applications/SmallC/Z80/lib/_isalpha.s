@@ -1,9 +1,9 @@
 		.code
 		.export	_isalpha
-_isalpha:	pop bc
+_isalpha:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp 'a'
 		jr c, isalpha1

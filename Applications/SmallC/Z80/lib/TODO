@@ -4,14 +4,10 @@ _strncmp
 _strncasecmp
 _strpbrk
 _strspn
-_strstr
 _strxfrm
-_memcpy
 _memccpy
 _memchr
 _memmove
-_memset
 _bcopy
 _bzero
-_bswap
 _ispunct

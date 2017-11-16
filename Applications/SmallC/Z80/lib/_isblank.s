@@ -1,9 +1,9 @@
 		.code
 		.export	_isblank
-_isblank:	pop bc
+_isblank:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp 32

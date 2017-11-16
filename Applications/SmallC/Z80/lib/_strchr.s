@@ -2,12 +2,12 @@
 		.export	_strchr
 
 _strchr:
-		pop de		; char
+		pop af
 		pop hl		; ptr
-		pop bc
-		push bc
-		push hl
+		pop de		; char
 		push de
+		push hl
+		push af
 _strchr_1:	ld a,(hl)	; "The terminting nul is considered part
 		cp e		;  of the string"
 		ret z

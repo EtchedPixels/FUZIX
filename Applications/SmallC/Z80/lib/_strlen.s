@@ -6,6 +6,7 @@ _strlen:
 		pop de
 		push de
 		push hl
+		push bc
 		xor a
 		ld b,a
 		ld c,a
@@ -14,4 +15,5 @@ _strlen:
 		cpir
 		dec hl
 		sbc hl,de
+		pop bc
 		ret

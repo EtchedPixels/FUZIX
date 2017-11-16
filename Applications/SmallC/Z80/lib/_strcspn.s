@@ -2,12 +2,12 @@
 		.export _strcspn
 
 _strcspn:
-		pop bc
+		pop af
 		pop hl		;	string
 		pop de		;	match
 		push de
 		push hl
-		push bc
+		push af
 
 _strcspn_1:
 		ld a,(hl)

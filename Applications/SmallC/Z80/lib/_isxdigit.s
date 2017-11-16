@@ -1,9 +1,9 @@
 		.code
 		.export	_isxdigit
-_isxdigit:	pop bc
+_isxdigit:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp '0'

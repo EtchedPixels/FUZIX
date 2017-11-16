@@ -1,9 +1,9 @@
 		.code
 		.export	_iscntrl
-_iscntrl:	pop bc
+_iscntrl:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		; Space
 		cp 32

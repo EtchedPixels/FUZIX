@@ -1,9 +1,9 @@
 		.code
 		.export	_isascii
-_isascii:	pop bc
+_isascii:	pop de
 		pop hl
 		push hl
-		push bc
+		push de
 		ld a,l
 		cp 32
 		jr c, ret0
