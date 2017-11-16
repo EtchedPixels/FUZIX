@@ -24,7 +24,7 @@ _strcspn_2:
 		ret z		;	Matched HL ponts to right spot
 		inc de
 		jr _strcspn_2
-_strcpsn_3:	pop de
+_strcspn_3:	pop de
 		inc hl
 		jr _strcspn_1
 _strcspn_4:	ld h,a		;	A always 0 here

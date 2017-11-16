@@ -16,5 +16,3 @@ _strchr_1:	ld a,(hl)	; "The terminting nul is considered part
 		jr nz,_strchr_1
 		ld hl,0
 		ret
-
-		

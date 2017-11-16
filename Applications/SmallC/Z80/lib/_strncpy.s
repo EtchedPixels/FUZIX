@@ -3,14 +3,14 @@
 
 _strncpy:
 		push	ix
-		ld	ix,#0
+		ld	ix,0
 		add	ix,sp
-		ld	l,4(ix)
-		ld	h,5(ix)
-		ld	e,6(ix)
-		ld	d,7(ix)
-		ld	c,8(ix)
-		ld	b,9(ix)
+		ld	l,(ix+4)
+		ld	h,(ix+5)
+		ld	e,(ix+6)
+		ld	d,(ix+7)
+		ld	c,(ix+8)
+		ld	b,(ix+9)
 		; Copy bytes until limit or \0
 _strncpy_1:
 		ld	a,b
@@ -24,8 +24,8 @@ _strncpy_1:
 		inc	hl
 		dec	bc
 		jr	_strncpy_1
-_strncpy_2:	ld	l,4(ix)
-		ld	h,5(ix)
+_strncpy_2:	ld	l,(ix+4)
+		ld	h,(ix+5)
 		pop	ix
 		ret
 		; Copy \0 until limit

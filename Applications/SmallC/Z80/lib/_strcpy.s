@@ -11,7 +11,7 @@ _strcpy:	pop bc		;ret
 _strcpy_1:	ld a,(hl)
 		ld (de),a
 		or a
-		jr z _strcpy_2
+		jr z,_strcpy_2
 		inc hl
 		inc de
 		jr _strcpy_1

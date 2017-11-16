@@ -11,9 +11,9 @@ _strcmp:
 _strcmp_1:
 		ld a,(de)
 		cp (hl)
-		jr nz, strcmp_2
+		jr nz, _strcmp_2
 		or a
-		jr z, strcmp_4
+		jr z, _strcmp_4
 		inc hl
 		inc de
 		jr _strcmp_1

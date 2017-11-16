@@ -24,4 +24,3 @@ _strrchr_3:
 		ld b,h
 		ld c,l
 		jr _strrchr_1
-	

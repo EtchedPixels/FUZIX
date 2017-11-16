@@ -1,5 +1,5 @@
 		.code
-		.global	_isxdigit
+		.export	_isxdigit
 _isxdigit:	pop bc
 		pop hl
 		push hl
@@ -15,7 +15,7 @@ _isxdigit:	pop bc
 		cp '9'+1
 		jr nc, ret0
 		jr ret1
-ascii1:		add 32
+ascii1:		add a,32
 ascii2:
 		cp 'a'
 		jr c, ret0

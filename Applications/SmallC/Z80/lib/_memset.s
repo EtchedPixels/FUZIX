@@ -4,11 +4,11 @@
 _memset:	push ix
 		ld ix,0
 		add ix,sp
-		ld h,4(ix)
-		ld l,5(ix)
-		ld e,6(ix)
-		ld c,8(ix)
-		ld b,9(ix)
+		ld h,(ix+4)
+		ld l,(ix+5)
+		ld e,(ix+6)
+		ld c,(ix+8)
+		ld b,(ix+9)
 		ld a,b
 		or c
 		jr z, _memset_none
@@ -21,6 +21,7 @@ _memset:	push ix
 		ld d,h
 		inc de
 		ldir
-_memset_none:	ld l,4(ix)
-		ld h,5(ix)
+_memset_none:	ld l,(ix+4)
+		ld h,(ix+5)
+		pop ix
 		ret

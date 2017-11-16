@@ -17,9 +17,9 @@ _strcat_2:
 		ld a,(hl)
 		ld (de),a
 		or a
-		jr z _strcat_3
+		jr z,_strcat_3
 		inc hl
 		inc de
 		jr _strcat_2
-strcat_3:	pop de
+_strcat_3:	pop de
 		ret

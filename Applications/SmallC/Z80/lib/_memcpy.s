@@ -4,16 +4,17 @@
 _memcpy:	push ix
 		ld ix,#0
 		add ix,sp
-		ld e,4(ix)
-		ld d,5(ix)
-		ld l,6(ix)
-		ld h,7(ix)
-		ld c,8(ix)
-		ld b,9(ix)
+		ld e,(ix+4)
+		ld d,(ix+5)
+		ld l,(ix+6)
+		ld h,(ix+7)
+		ld c,(ix+8)
+		ld b,(ix+9)
 		ld a,b
 		or c
 		jr z, _memcpy_none
 		ldir
-_memcpy_none:	ld l,4(ix)
-		ld h,5(ix)
+_memcpy_none:	ld l,(ix+4)
+		ld h,(ix+5)
+		pop ix
 		ret
