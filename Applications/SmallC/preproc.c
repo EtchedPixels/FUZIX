@@ -33,13 +33,13 @@ int fix_include_name (void) {
         }
         *(--ibp) = 0;
         fp = -1;
-        if (c1 == '<' || ((fp = open(buf, O_RDONLY)) != -1)) {
+        if (c1 == '<' || ((fp = open(buf, O_RDONLY)) == -1)) {
 #ifndef __linux__
                 strcpy(buf2, DEFLIB);
                 strlcat(buf2, buf, sizeof(buf2));
 #else
                 snprintf(buf2, sizeof(buf2), "%s%s", DEFLIB, buf);
-#endif                
+#endif
                 fp = open(buf2, O_RDONLY);
         }
         return (fp);
@@ -266,6 +266,7 @@ int cpp(void)
         lptr = mptr = 0;
         while((line[lptr++] = mline[mptr++]) != 0);
         lptr = 0;
+        printf(">%s\n", line);
         return(cpped);
 
 }
