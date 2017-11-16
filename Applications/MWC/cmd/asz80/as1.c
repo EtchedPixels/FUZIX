@@ -265,7 +265,9 @@ loop:
 		}
 		istuser(&a1);
 		disp = a1.a_value-dot[segment]-2;
-		if (disp<-128 || disp>127 || a1.a_segment != segment)
+		if (a1.a_segment == UNKNOWN)
+			aerr(UNKNOWN_SYMBOL);
+		else if (disp<-128 || disp>127 || a1.a_segment != segment)
 			aerr(BRA_RANGE);
 		outab(opcode);
 		outab(disp);

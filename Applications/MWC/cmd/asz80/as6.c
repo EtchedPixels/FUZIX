@@ -180,8 +180,10 @@ char *etext[] = {
 	"constant out of range",
 	"data in BSS",
 	"segment overflow",
+	"",
 	"Z180 instruction",
-	"segment conflict"
+	"segment conflict",
+	"unknown symbol"
 };
 
 /*

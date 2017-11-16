@@ -153,7 +153,7 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define DATA_IN_ZP	27
 #define REQUIRE_Z180	28
 #define	SEGMENT_CLASH	29
-
+#define UNKNOWN_SYMBOL	30
 
 
 #elif TARGET_6502
