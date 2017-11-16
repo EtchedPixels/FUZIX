@@ -196,11 +196,21 @@ void blanks(void) {
 
 /**
  * returns declaration type
- * @return VOID, CCHAR, CINT, UCHAR, UINT
+ * @return VOID, CCHAR, CINT, UCHAR, UINT. STRUCT
  *
  * FIXME: wants rewriting to collect property bits and base type right
  */
 int get_type(void) {
+    int otag;
+    char symbol_name[NAMEMAX];
+    int sflag = 0;
+    if (sflag = amatch("struct", 6) || amatch("union", 5)) {
+        if (symname(symbol_name) == 0)
+            illname();
+        if ((otag = find_tag(symbol_name)) == -1)
+            error("unknown struct/union");
+        return STRUCT;
+    }
     if (amatch ("void", 4)) {
         return VOID;
     }
