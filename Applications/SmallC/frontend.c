@@ -164,7 +164,7 @@ static char *pathmod(char *p, char *f, char *t, int rmif)
 //		fatal();
 //	}
 	strcpy(x, t);
-	if (rmif != last_phase) {
+	if (last_phase > rmif) {
 		*rmptr = strdup(p);
 		if (*rmptr++ == NULL)
 			memory();
@@ -267,7 +267,7 @@ void convert_s_to_o(char *path)
 	build_arglist(CMD_AS);
 	add_argument(path);
 	run_command();
-	pathmod(path, ".s", ".o", 3);	/* 3 ?? check */
+	pathmod(path, ".s", ".o", 5);
 }
 
 void convert_c_to_s(char *path)
@@ -305,7 +305,7 @@ void preprocess_c(char *path)
 	add_argument(path);
 	/* Weird one .. -E goes to stdout */
 	if (last_phase != 1)
-		redirect_out(pathmod(path, ".c", ".%", -1));
+		redirect_out(pathmod(path, ".c", ".%", 0));
 	run_command();
 }
 
@@ -369,6 +369,9 @@ void processing_loop(void)
 	if (last_phase < 4)
 		return;
 	link_phase();
+	/* And clean up anything we couldn't wipe earlier */
+	last_phase = 255;
+	remove_temporaries();
 }
 
 void unused_files(void)
