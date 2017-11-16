@@ -196,6 +196,10 @@ void doLocalAnsiArgument(int type) {
     if (match("*")) {
         identity = POINTER;
     } else {
+        if (type == STRUCT) {
+            error("cannot pass struct");
+            return;
+        }
         identity = VARIABLE;
         if (type == VOID)
             return;
