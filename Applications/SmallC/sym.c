@@ -450,6 +450,9 @@ int symname(char *sname) {
     while (alphanumeric(ch ()))
         if (k < NAMEMAX)
             sname[k++] = gch ();
+        else
+            gch();
+
     sname[k] = 0;
     return (1);
 }
