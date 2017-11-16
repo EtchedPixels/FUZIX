@@ -292,7 +292,12 @@ void declare_local(int typ, int stclass, int otag) {
                     break;
                 }
             }
-            stkp = gen_defer_modify_stack(stkp - k);
+            if (match("=")) {
+                gen_modify_stack(stkp);
+                expression(0);
+                gen_push(0);
+            } else
+                stkp = gen_defer_modify_stack(stkp - k);
             add_local(sname, j, typ, stkp, AUTO);
             break;
         }
