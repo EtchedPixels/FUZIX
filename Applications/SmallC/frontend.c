@@ -169,7 +169,12 @@ static char *pathmod(char *p, char *f, char *t, int rmif)
 		if (*rmptr++ == NULL)
 			memory();
 	}
-	return p;
+	/* Traditionally compilers dump the work files in the current dir
+	   even if the source is /foo/bar/baz.c - follow this */
+	x = strrchr(p,'/');
+	if (x == NULL)
+		return p;
+	return x+1;
 }
 
 static void add_argument(char *p)
