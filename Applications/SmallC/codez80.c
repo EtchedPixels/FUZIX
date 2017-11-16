@@ -555,7 +555,9 @@ void gen_add(LVALUE *lval, LVALUE *lval2) {
  */
 void gen_sub(void) {
     gen_pop ();
-    gen_call ("ccsub");
+    output_line("ex de,hl");
+    output_line("or a");
+    output_line("sbc hl,de");
 }
 
 /**
