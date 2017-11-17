@@ -405,24 +405,31 @@ uip_init(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_ACTIVE_OPEN
 struct uip_conn *
-uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
+uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport, uint16_t lport)
 {
   register struct uip_conn *conn, *cconn;
 
   /* Find an unused local port. */
+  if(!lport) {
  again:
-  ++lastport;
+    ++lastport;
 
-  if(lastport >= 32000) {
-    lastport = 4096;
+    if(lastport >= 32000) {
+      lastport = 4096;
+    }
   }
-
+  else {
+    lastport = lport;
+  }
   /* Check if this port is already in use, and if so try to find
      another one. */
   for(c = 0; c < UIP_CONNS; ++c) {
     conn = &uip_conns[c];
     if(conn->tcpstateflags != UIP_CLOSED &&
        conn->lport == uip_htons(lastport)) {
+      if(lport) {
+	return 0;
+      }
       goto again;
     }
   }
@@ -476,20 +483,27 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 struct uip_udp_conn *
-uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport)
+uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport, uint16_t lport)
 {
   register struct uip_udp_conn *conn;
 
   /* Find an unused local port. */
+  if(!lport) {
  again:
-  ++lastport;
+    ++lastport;
 
-  if(lastport >= 32000) {
-    lastport = 4096;
+    if(lastport >= 32000) {
+      lastport = 4096;
+    }
   }
-
+  else {
+    lastport = lport;
+  }
   for(c = 0; c < UIP_UDP_CONNS; ++c) {
     if(uip_udp_conns[c].lport == uip_htons(lastport)) {
+      if(lport) {
+	return 0;
+      }
       goto again;
     }
   }
