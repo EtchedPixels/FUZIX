@@ -578,7 +578,6 @@ int dokernel( void )
 					}
 					m->conn = ( struct uip_conn *)conptr; /* fixme: needed? */
 					conptr->appstate = sm.sd.lcn;
-					/* fixme: assign local address/port !!! */
 					/* refactor: same as tcp action from connect event */
 					ne.data = SS_CONNECTED;
 					ksend( NE_NEWSTATE );
