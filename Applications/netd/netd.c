@@ -534,6 +534,9 @@ int dokernel( void )
 				ksend( NE_INIT );
 				break;
 			case SS_BOUND:
+				/* fixme: set IP here?*/
+				m->port = sm.s.s_addr[SADDR_SRC].port;
+				printf("bind port = %u\n", m->port );
 				/* FIXME: probably needs to do something here  */
 				ne.data = SS_BOUND;
 				ksend( NE_NEWSTATE );
@@ -545,7 +548,7 @@ int dokernel( void )
 					int port = sm.s.s_addr[SADDR_DST].port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
 							 &sm.s.s_addr[SADDR_DST].addr );
-					conptr = uip_connect( &addr, port );
+					conptr = uip_connect( &addr, port, m->port );
 					if ( !conptr ){
 						ne.data = SS_CLOSED;
 						ne.ret = ENOMEM;	/* should be ENOBUFS I think */
@@ -569,13 +572,12 @@ int dokernel( void )
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
 							 &sm.s.s_addr[SADDR_DST].addr );
 					/* need some HTONS'ing done here? */
-					conptr = uip_udp_new( &addr, port );
+					conptr = uip_udp_new( &addr, port, m->port );
 					if ( !conptr ){
 						break; /* fixme: actually handler the error */
 					}
 					m->conn = ( struct uip_conn *)conptr; /* fixme: needed? */
 					conptr->appstate = sm.sd.lcn;
-					/* fixme: assign local address/port !!! */
 					/* refactor: same as tcp action from connect event */
 					ne.data = SS_CONNECTED;
 					ksend( NE_NEWSTATE );

@@ -596,8 +596,10 @@ void uip_unlisten(uint16_t port);
  * \return A pointer to the uIP connection identifier for the new connection,
  * or NULL if no connection could be allocated.
  *
+ * lport is local port to bind to, 0 = any.
  */
-struct uip_conn *uip_connect(const uip_ipaddr_t *ripaddr, uint16_t port);
+struct uip_conn *uip_connect(const uip_ipaddr_t *ripaddr, uint16_t port,
+			     uint16_t lport);
 
 
 
@@ -864,8 +866,11 @@ CCIF void uip_send(const void *data, int len);
  *
  * \return The uip_udp_conn structure for the new connection, or NULL
  * if no connection could be allocated.
+ *
+ * lport = local port, 0 = any
  */
-struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
+struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport,
+				 uint16_t lport);
 
 /**
  * Remove a UDP connection.
