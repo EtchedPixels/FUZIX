@@ -559,9 +559,7 @@ int dokernel( void )
 					ksend( NE_NEWSTATE );
 					m->conn->userrequest = 1;
 					c = conptr - uip_conns;
-					if (sm.s.s_type == SOCKTYPE_TCP)
-						activity |= (1 << c);
-					break;
+					activity |= (1 << c);
 				}
 				else if ( sm.s.s_type == SOCKTYPE_UDP ){
 					struct uip_udp_conn *conptr;
