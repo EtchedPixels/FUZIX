@@ -226,7 +226,7 @@ retime:
     }
     if (!set)
         return 0;
-    tm.tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
+    tm->tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
     t = mktime(tm);
     if (t == (time_t) -1) {
         fprintf(stderr, "mktime: internal error.\n");
