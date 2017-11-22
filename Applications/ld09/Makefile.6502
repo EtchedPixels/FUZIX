@@ -1,0 +1,32 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
+LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6502.o
+CRT0NS = ../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+
+SRC = dumps.c io.c ld.c readobj.c table.c typeconv.c linksyms.c \
+      writefuzix.c
+OBJ = $(SRC:.c=.o)
+
+all: ld09
+
+ld09: $(OBJ)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+clean realclean clobber:
+	rm -f *.o as09 *~
+
+$(OBJ): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
+	 syshead.h type.h
+
+ar.h:
+	test -f ar.h || \
+	{ rm -f ar.h ; ln -s ../libc/include/ar.h . ; } || \
+	ln ../libc/include/ar.h .
+

@@ -1,0 +1,6 @@
+#
+#	For now don't build netd on 6502
+#
+all:
+
+clean:

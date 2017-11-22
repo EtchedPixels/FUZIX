@@ -1,0 +1,26 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
+LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6502.o
+CRT0NS = ../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+
+SRC = flashrom.c
+OBJ = $(SRC:.c=.o)
+APPS = $(OBJ:.o=)
+
+all: $(APPS)
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+clean:
+	rm -f $(OBJS) $(APPS) core *~ *.o
+
+rmbak:
+	rm -f *~ core

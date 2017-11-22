@@ -1,0 +1,34 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../../Library/include -I../../../Library/include/6502
+LINKER_OPT = -L../../../Library/libs -C ../../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../../Library/libs/crt0_6502.o
+CRT0NS = ../../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+
+SRCS  = arithmetic.c backgammon.c fish.c quiz.c wump.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = $(OBJS:.o=)
+
+all: $(APPS) sizes
+
+$(OBJS): %.o: %.c
+
+%: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+sizes: $(APPS)
+	ls -l $(APPS) >size.report
+
+clean:
+	rm -f $(OBJS)$(APPS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+
+rmbak:
+	rm -f *~ core
+
