@@ -1,0 +1,41 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
+LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6502.o
+CRT0NS = ../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+
+SRCSNS = qrun.c fortune.c
+
+SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
+        adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
+        myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
+        myst08.c myst09.c myst10.c myst11.c fortune-gen.c
+
+OBJS = $(SRCS:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
+
+APPS = $(OBJS:.o=)
+APPSNS = $(OBJSNS:.o=)
+
+all: $(APPS) $(APPSNS) size.report
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+$(APPSNS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ c6502.lib -m $@.map
+
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core
