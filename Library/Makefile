@@ -51,3 +51,6 @@ ifeq ($(USERCPU),z80)
 	install -m 0644 include/sys/*.h /opt/fcc/include/sys
 	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
 endif
+ifeq ($(USERCPU),6502)
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+endif
