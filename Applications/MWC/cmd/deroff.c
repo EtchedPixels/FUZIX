@@ -20,8 +20,9 @@ char **flist;			/* list of files to open */
 
 typedef struct FNAME {
 	struct FNAME *fn_next;
-	char fn_name[0];
 } FNAME;
+
+#define FN_NAME(x)	((char *)((x) + 1))
 
 FNAME *fnames;
 
@@ -48,7 +49,7 @@ FILE *dopen(char *fname)
 	register FILE *fp;
 
 	for (fnp = fnames; fnp != NULL; fnp = fnp->fn_next)
-		if (strcmp(fnp->fn_name, fname) == 0)
+		if (strcmp(FN_NAME(fnp), fname) == 0)
 			return (NULL);
 	if ((fp = fopen(fname, "r")) == NULL)
 		fprintf(stderr, "deroff: cannot open `%s'\n", fname);
@@ -57,7 +58,7 @@ FILE *dopen(char *fname)
 		 NULL) {
 		fnp->fn_next = fnames;
 		fnames = fnp;
-		strcpy(fnp->fn_name, fname);
+		strcpy(FN_NAME(fnp), fname);
 	}
 	return (fp);
 }
