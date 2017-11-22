@@ -1,4 +1,4 @@
-#define GRAPHICS
+//#define GRAPHICS
 
 
 /* 
@@ -260,6 +260,11 @@ static int fast, slow, miss;
 
 #define isoptch(c) ( (c) == '-' )
 
+/* Keep static for cc65. Used for snapshot headers and also for save
+   load filename */
+static unsigned char header[256];
+
+
 void errstr(const char *t1, const char *t2)
 {
 	write(2, t1, strlen(t1));
@@ -346,7 +351,6 @@ int main(int argc, char *argv[])
 	}
 	if (!memcmp(snapid, "VICE Snapshot File\032", 19)) {	/* VICE snapshot */
 		int n;
-		unsigned char header[256];
 
 		arch = ARCH_C64;
 		memset(header, 0, sizeof(header));
@@ -1141,7 +1145,6 @@ static void savegame(void)
 {
 	uchr xor = fileid, l, n;
 	int savefd;
-	char filename[80];
 
 	state.v2 = 2;
 	state.v1 = 1;
@@ -1153,22 +1156,22 @@ static void savegame(void)
 	state.xor = xor;
 	nl();
 	write(1, "Save game to file>", 18);
-	readbuf(filename, sizeof(filename));
-	l = strlen(filename) - 1;
-	if ((filename[l] == '\r') || (filename[l] == '\n'))
-		filename[l] = 0;
+	readbuf(header, sizeof(header));
+	l = strlen(header) - 1;
+	if ((header[l] == '\r') || (header[l] == '\n'))
+		header[l] = 0;
 
 	/* FIXME: remove stdio */
-	savefd = open(filename,  O_WRONLY|O_CREAT|O_TRUNC, 0600);
+	savefd = open(header,  O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	if (savefd == -1) {
 		/* FIXME - via game output.. */
-		errstr("Could not create", filename);
+		errstr("Could not create", header);
 		return;
 	}
 	if (write(savefd, &state, sizeof(state)) != sizeof(state) ||
 		close(savefd) == -1) {
 		opstr32("Write error on ");
-		opstr32(filename);
+		opstr32(header);
 		nl();
 		/* Doing a double close is harmless */
 		close(savefd);
@@ -1190,34 +1193,34 @@ DS 0DBh		;Object locations table, terminated with 0FFh.
 DB xsum		;XOR of all bytes except the 0102h.
 */
 
+static struct gstate load;
+
 static void loadgame(void)
 {
 	uchr xor = 0, l;
 	ushrt n;
 	int loadfd;
-	char filename[80];
-	struct gstate load;
 	uint8_t *p = ((uint8_t *)&load) + 2;
 
 	nl();
 	write(1, "Load game from file>", 14);
 
-	readbuf(filename, sizeof(filename));
-	l = strlen(filename) - 1;
-	if ((filename[l] == '\r') || (filename[l] == '\n'))
-		filename[l] = 0;
+	readbuf(header, sizeof(header));
+	l = strlen(header) - 1;
+	if ((header[l] == '\r') || (header[l] == '\n'))
+		header[l] = 0;
 
-	loadfd = open(filename, O_RDONLY);
+	loadfd = open(header, O_RDONLY);
 	if (loadfd == -1) {
 		opstr32("Could not open ");
-		opstr32(filename);
+		opstr32(header);
 		nl();
 		return;
 	}
 	if (read(loadfd, &load, sizeof(load)) != sizeof(load)) {
 		close(loadfd);
 		opstr32("Read error on ");
-		opstr32(filename);
+		opstr32(header);
 		nl();
 		return;
 	}
@@ -1227,7 +1230,7 @@ static void loadgame(void)
 	    || (load.v2 != 2)
 	    || (load.v1 != 1)
 	    || (load.fileid != fileid)) {
-		opstr32(filename);
+		opstr32(header);
 		opstr32(" is not a suitable save file\nPress RETURN...");
 		getch();
 		return;
