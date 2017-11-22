@@ -1,0 +1,59 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
+LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6502.o
+CRT0NS = ../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+
+SRC = initials.c data.c error.c expr.c function.c gen.c io.c \
+       lex.c main.c outstack.c preproc.c primary.c stmt.c \
+       struct.c sym.c while.c
+OBJ = $(SRC:.c=.o)
+
+SRC_Z80 = codez80.c
+SRC_8080 = code8080.c
+SRC_6801 = code6801.c
+SRC_6809 = code6809.c
+
+SRC_COPT = copt.c
+SRC_CC = frontend.c
+
+OBJ_Z80 = $(SRC_Z80:.c=.o)
+OBJ_8080 = $(SRC_8080:.c=.o)
+OBJ_6801 = $(SRC_6801:.c=.o)
+OBJ_6809 = $(SRC_6809:.c=.o)
+
+OBJ_COPT = $(SRC_COPT:.c=.o)
+OBJ_CC = $(SRC_CC:.c=.o)
+
+INC = data.h defs.h prototype.h
+
+all: scc6801 scc6809 scc8080 sccz80 copt cc
+
+sccz80: $(OBJ) $(OBJ_Z80)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+scc8080: $(OBJ) $(OBJ_8080)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+scc6801: $(OBJ) $(OBJ_6801)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+scc6809: $(OBJ) $(OBJ_6809)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+copt:	$(OBJ_COPT)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+cc:	$(OBJ_CC)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+
+clean realclean clobber:
+	rm -f *.o sccz80 scc8080 scc6801 copt cc
+

@@ -550,9 +550,10 @@ static int match(char *ins, char *pat)
 /*
  * Substitute variables in a string
  */
+static char buf[MAXLINE];
+
 static char *subst(char *pat)
 {
-  char buf[MAXLINE];
   char *cp, *cp1, *cp2, *varptr;
   long num;
   int i = 0;
