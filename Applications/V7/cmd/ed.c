@@ -132,7 +132,7 @@ void	putchr(int ac);
 void	putd(void);
 void	putfile(void);
 int	putline(void);
-void	putstr(char *sp);
+void	putstr(const char *sp);
 void	reverse(int *a1, int *a2);
 void	quit(int);
 void	rdelete(int *ad1, int *ad2);
@@ -967,12 +967,14 @@ void init(void)
 	dot = dol = zero;
 }
 
+/* For 6502 at least we want this off the stack 8( */
+static char globuf[GBSIZE];
+
 void global(int k)
 {
 	register char *gp;
 	register int c;
 	register int *a1;
-	char globuf[GBSIZE];
 
 	if (globp)
 		error(Q);
@@ -1554,7 +1556,7 @@ void putd(void)
 	putchr(r + '0');
 }
 
-void putstr(char *sp)
+void putstr(const char *sp)
 {
 	col = 0;
 	while (*sp)
