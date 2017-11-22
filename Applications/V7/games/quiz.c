@@ -35,7 +35,7 @@ extern int disj(int);
 extern int string(int s);
 extern int eat(int, char);
 extern int fold(char);
-extern int publ(int);
+extern void publ(int);
 extern int publish(char *);
 extern int segment(char *, char *[]);
 extern int perm(char *u[],int m,char *v[],int n,int p[]);
@@ -195,7 +195,7 @@ int fold(char c)
 	return(c|040);
 }
 
-int pub1(int s)
+void pub1(int s)
 {
 	for(;;ev++){
 		switch(*ev) {
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 	int x;
 	int z;
 	const char *info;
-	long tm;
+	time_t tm;
 	int count;
 	info = "/usr/games/quiz.k/index";
 	time(&tm);
