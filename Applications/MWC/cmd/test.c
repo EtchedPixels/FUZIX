@@ -278,7 +278,7 @@ enum {
 	IN_PAREN
 };
 
-int test_boolor(int argc, const char *argv[], int *matchedp, int paren);
+int test_boolor(int argc, char *argv[], int *matchedp, int paren);
 
 
 /*
@@ -287,7 +287,7 @@ int test_boolor(int argc, const char *argv[], int *matchedp, int paren);
  * operand, and thus that argv [argc - 2] is an operator of some form.
  */
 
-int test_primop(int argc, const char *argv[], int *matchedp, int paren)
+int test_primop(int argc, char *argv[], int *matchedp, int paren)
 {
 	int result;
 	int operator_flag = 1;
@@ -415,7 +415,7 @@ int test_primop(int argc, const char *argv[], int *matchedp, int paren)
  * from disjunction because conjunction has higher "precedence".
  */
 
-int test_booland(int argc, const char *argv[], int *matchedp, int paren)
+int test_booland(int argc, char *argv[], int *matchedp, int paren)
 {
 	int right = 0;		/* "true" */
 
@@ -456,7 +456,7 @@ int test_booland(int argc, const char *argv[], int *matchedp, int paren)
  * Process an optional sequence of boolean disjunctions.
  */
 
-int test_boolor(int argc, const char *argv[], int *matchedp, int paren)
+int test_boolor(int argc, char *argv[], int *matchedp, int paren)
 {
 	int right = 1;		/* "false" */
 
