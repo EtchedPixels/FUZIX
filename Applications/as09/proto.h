@@ -1,7 +1,7 @@
 /* extern functions */
 
 /* as.c */
-int main(int argc, char **argv);
+int main(int argc, char *argv[]);
 void as_abort(char *message);
 void finishup(void);
 void initp1p2(void);

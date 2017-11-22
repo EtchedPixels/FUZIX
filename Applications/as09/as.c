@@ -32,7 +32,7 @@ static int keep_bad_output = 0;
 
 static void initp1(void);
 static int my_creat(char *name, char *message);
-static void process_args(int argc, char **argv);
+static void process_args(int argc, char *argv[]);
 static void summary(fd_t fd);
 static void summ_number(unsigned num);
 static void usage(void);
