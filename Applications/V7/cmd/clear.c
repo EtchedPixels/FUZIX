@@ -17,6 +17,8 @@ int tputchar(int c)
 	return 0;
 }
 
+static char buf[1024];
+
 int main(int argc, char *argv[])
 {
 	char *cp = getenv("TERM");
@@ -25,7 +27,6 @@ int main(int argc, char *argv[])
 	char *clbp = clbuf;
 	char *pcbp = pcbuf;
 	char *clear;
-	char buf[1024];
 	char *pc;
 
 	if (cp == (char *) 0)
