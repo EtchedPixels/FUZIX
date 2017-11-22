@@ -126,7 +126,7 @@ $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ c6502.lib -m $@.map
 
 $(APPTC): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib termcap6502.lib
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ termcap6502.lib c6502.lib
 
 size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@
