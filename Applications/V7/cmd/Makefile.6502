@@ -47,8 +47,14 @@ $(OBJSTC): %.o: %.c
 
 $(OBJSBAD): %.o: %.c
 
-%: %.o
+$(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+$(APPSNS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ c6502.lib -m $@.map
+
+$(APPSTC): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ termcap6502.lib c6502.lib -m $@.map
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report
