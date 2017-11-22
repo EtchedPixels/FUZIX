@@ -359,6 +359,11 @@ static int do_command(void)
     default:
       while((w = wait(&status)) != pid);
   }
+  if (WIFSIGNALED(status)) {
+    fprintf(stderr, "%s exited with signal %s\n",
+      argvec[0], strsignal(WTERMSIG(status)));
+    return 255;
+  }
   return (WEXITSTATUS(status));
 }
 
