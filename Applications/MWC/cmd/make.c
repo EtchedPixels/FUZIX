@@ -480,7 +480,7 @@ char *path(const char *p1, const char *p2, int mode)
 }
 
 /* Input with library lookup */
-void inlib(char *file)
+void inlib(const char *file)
 {
 	const char *p, *cp;
 	if ((p = getenv("LIBPATH")) == NULL)
@@ -498,7 +498,7 @@ void inpath(char *file, ...)
 	va_start(ap, file);
 
 	cp = NULL;
-	for (vp = va_arg(ap, char *); *vp != NULL;)
+	for (vp = va_arg(ap, char **); *vp != NULL;)
 		if (access(*vp, R_OK) >= 0) {
 			cp = *vp;
 			break;
@@ -506,7 +506,7 @@ void inpath(char *file, ...)
 	va_end(ap);
 	if ( ! cp) {
 		va_start(ap, file);
-		for (vp = va_arg(ap, char *); *vp != NULL; vp += 1)
+		for (vp = va_arg(ap, char **); *vp != NULL; vp += 1)
 			if ((cp = path(srcpath, *vp, R_OK)) != NULL)
 				break;
 		va_end(ap);

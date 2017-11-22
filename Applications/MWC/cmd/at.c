@@ -192,7 +192,7 @@ void copywd(void)
 {
 	int pid;
 	int stat;
-	static const char *args[] = {
+	static char *const args[] = {
 				"pwd",
 				NULL
 			};
