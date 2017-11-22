@@ -27,11 +27,12 @@ int badline(char *s, int l)
 	return (0);
 }
 
+static char line[256];
+
 int main(int argc, char *argv[])
 {
 	char moo[10];
 	int nmoo;
-	char line[256];
 	int i, j;
 	int nbull, ncow;
 	union {

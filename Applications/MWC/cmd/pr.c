@@ -255,10 +255,11 @@ FILE *openf(char *file)
  * Formfeed advances output of that stream to the next page.
  * Eof is only indicated when all streams give this condition.
  */
+static char lbuf[LSIZE];
+
 int page1(void (*putline) (char *, int))
 {
 	int i, j;
-	char lbuf[LSIZE];
 
 	for (i = 0; i < length; ++i) {
 		for (j = 0; j < ncol; ++j) {
@@ -289,7 +290,6 @@ int page1(void (*putline) (char *, int))
 int page2(void (*putline) (char *, int))
 {
 	int i, j, k;
-	char lbuf[LSIZE];
 
 	for (i = 0; i < (ncol - 1) * length; ++i) {
 		if ((i % length) == 0)
@@ -333,7 +333,7 @@ int page2(void (*putline) (char *, int))
  * many columns per file (page2).  The latter requires page buffering.
  * init( ) makes this selection.
  */
-char **init(int ac, char **av)
+char **init(int ac, char *av[])
 {
 	int mar = MARGIN;
 	static char obuf[BUFSIZ];
@@ -400,7 +400,7 @@ char **init(int ac, char **av)
 	if (mflag && av[0]) {
 		ncol = 0;
 		do {
-			f[ncol++].f_stream = openf(av++[0]);
+			f[ncol++].f_stream = openf((av++)[0]);
 		} while (av[0]);
 	}
 
