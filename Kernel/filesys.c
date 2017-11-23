@@ -849,7 +849,7 @@ void wr_inode(inoptr ino)
 /* isdevice(ino) returns true if ino points to a device */
 bool isdevice(inoptr ino)
 {
-    return (ino->c_node.i_mode & F_CDEV);
+    return !!(ino->c_node.i_mode & F_CDEV);
 }
 
 
