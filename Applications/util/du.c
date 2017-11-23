@@ -129,7 +129,7 @@ long dodir(char *d, int thislev, dev_t dev)
     int  maybe_print;
     struct stat s;
     long total;
-    DIR  dir;
+    DIR  *dir;
     struct dirent *entry;
     static char dent[LINELEN];
 
@@ -155,8 +155,8 @@ long dodir(char *d, int thislev, dev_t dev)
 	 * directory should not already have been done.
 	 */
 	maybe_print = !silent;
-	if (opendir_r(&dir, d) == NULL) break;
-	while ((entry = readdir(&dir)) != NULL) {
+	if (dir = opendir(d) == NULL) break;
+	while ((entry = readdir(dir)) != NULL) {
 	    if (strcmp(entry->d_name, ".") == 0 ||
 		strcmp(entry->d_name, "..") == 0)
 		continue;
@@ -164,7 +164,7 @@ long dodir(char *d, int thislev, dev_t dev)
 		continue;
 	    total += dodir(dent, thislev - 1, s.st_dev);
 	}
-	closedir_r(&dir);
+	closedir(dir);
 	break;
 
     case S_IFBLK:
