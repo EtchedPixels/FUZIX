@@ -30,7 +30,9 @@ inoptr n_open(char *uname, inoptr *parent)
 
     if (ugets(uname, tb, 512) == -1) {
         udata.u_error = EFAULT;
-        *parent = NULLINODE;
+        if (parent)
+            *parent = NULLINODE;
+        pathfree(tb);
         return NULLINODE;
     }
 
