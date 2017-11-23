@@ -49,8 +49,10 @@ ifeq ($(USERCPU),z80)
 	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
 	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
 	install -m 0644 include/sys/*.h /opt/fcc/include/sys
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
 endif
 ifeq ($(USERCPU),6502)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 endif
