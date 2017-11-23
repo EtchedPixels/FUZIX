@@ -73,7 +73,6 @@ void platform_interrupt(void)
 	uint8_t t = *timer;
 	tty_poll();
 	while(t--) {
-		kputs(">");
 		timer_interrupt();
 	}
 }
