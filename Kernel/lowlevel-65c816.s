@@ -44,6 +44,7 @@
 	.import platform_doexec
 	.import _inint
 	.import _trap_monitor
+	.import _switchout
 
 	.import push0
 	.import incaxy
@@ -233,20 +234,22 @@ noargs:
 	pla				; pull the saved sp off the ustack
 	pla				; discard it (it's still fine in
 					; bank)
+	rep	#$10
+	.i16
+	lda	U_DATA__U_PAGE
+	tsx
+	sta	3,x
 
-	; We may now be in decimal !
+	sep	#$10
+	.i8
+
 	ldy	U_DATA__U_RETVAL
 	ldx	U_DATA__U_RETVAL+1
 	; also sets z for us
 	lda	U_DATA__U_ERROR
 	pha				; save A
 
-	lda	U_DATA__U_PAGE
-	;
-	;	We use this trick several times. U_PAGE holds the bank
-	;	register. As we want our DP to be bank:0000 we need to
-	;	shift left 8 and add 00 to get our DP value
-	;
+	lda	U_DATA__U_PAGE		; so we can set up DP
 	pha
 	plb				; User mapping for data bits
 	jsr	setdp			; Set DP from A, corrupts A
@@ -276,6 +279,8 @@ noargs:
 	;	rts	in bank return to the interruption point
 	;
 signal_out:
+	.a8
+	.i8
 	stz	U_DATA__U_CURSIG
 	
 	;
@@ -376,10 +381,11 @@ _doexec:
 	;
 	;	(Will need to change for split I/D)
 
-	lda	U_DATA__U_PAGE	;	bank
+	lda	U_DATA__U_PAGE	;	bank for data
 	pha			;	switch to userdata bank
 	plb
 
+	; lda U_DATA__U_PAGE+1	;	bank for code
 	sty	a:syscall	;	and in bank:00FE
 
 	pha			;	stack bank for rtl
@@ -442,7 +448,8 @@ shoot_myself:
 	
 ;
 ;	The C world here is fairly ugly. We have to stash various bits of
-;	zero page magic because its not re-entrant.
+;	ZP on a 6502, fortunately on the 65C816 we can have a separate
+;	interrupt DP
 ;
 interrupt_handler:
 	; Make sure we save all of the register bits
@@ -517,15 +524,57 @@ join_interrupt_path:
 	.i16
 
 ret_to_user:
-	; TODO .. pre-emption
+	lda	_need_resched
+	beq	no_preempt
 
+	lda	#0
+	sta	_need_resched
+
+	ldx	istack_switched_sp
+	stx	U_DATA__U_SYSCALL_SP
+	;
+	;	Switch to our kernel stack (free because we are not
+	;	pre-empting in a syscall
+	;
+	ldx	#kstack_top
+	txs
+	;
+	;	Fix up the C stack
+	;
+	;
+	;	Mark ourselves as in a syscall
+	;
+	lda	#1
+	sta	U_DATA__U_INSYS
+	;
+	;	Drop back to a8i8 and schedule ourself out
+	;
+	sep	#$30
+	.a8
+	.i8
+	lda	U_DATA__U_PTAB
+	ldx	U_DATA__U_PTAB+1
+	jsr	_switchout
+	;
+	;	We will (one day maybe) pop back out here. It's not
+	;	guaranteed (we might be killed off)
+	;
+	lda	#0
+	sta	U_DATA__U_INSYS
+	;
+	;	And exit the handler
+	;
+	rep	#$10
+
+	.a8
+	.i16
+no_preempt:
 	; Discard saved B and D - for user we will compute the correct
 	; one (we could optimize this a shade and only throw on a
 	; pre-empt FIXME)
 
 	plx
 	pla
-
 
 	; Signal return path
 	; The basic idea here is that if a signal is pending we
@@ -539,13 +588,16 @@ ret_to_user:
 	;	save the bank as a task switch or swap might move the
 	;	process
 	;
-	sep	#$30
-
-	.a8
-	.i8
 
 	lda	U_DATA__U_PAGE
 
+	tsx
+	lda	U_DATA__U_PAGE	;+1 for split ID
+	sta	9,x		; Might have moved bank if swapping
+
+	sep	#$30
+	.a8
+	.i8
 	pha
 	plb	; Now data is the user bank
 
@@ -554,11 +606,10 @@ ret_to_user:
 	rep	#$30
 	.a16
 	.i16
-
 	ply
 	plx
 	pla
-	rti
+	rti			; to bank we patched in
 
 ;
 ;	If we hit this we are on the user stack with all kernel mappings
@@ -614,6 +665,7 @@ signal_exit:
 	tcs	; stick y in s
 
 	sep	#$20
+	.a8
 	pea	sigret_irq	; signal return
 	sep	#$10
 	.i8
