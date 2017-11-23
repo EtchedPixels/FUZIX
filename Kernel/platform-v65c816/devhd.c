@@ -54,7 +54,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         udata.u_block++;
         dptr += 512;
     }
-    return nb;
+    return nb << BLKSHIFT;
 }
 
 int hd_open(uint8_t minor, uint16_t flag)
