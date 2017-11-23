@@ -87,7 +87,7 @@ start:
 	inx
 l1:	sta	_environ
 	stx	_environ+1
-	jsr	popax		; Pull argv off the stack leaving argc
+;	jsr	popax		; Pull argv off the stack leaving argc
 	ldy	#2		; 2 bytes of args
         jsr     _main
 
