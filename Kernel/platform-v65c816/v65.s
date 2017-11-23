@@ -46,6 +46,9 @@ _trap_monitor:
 	jmp	_trap_monitor
 
 _trap_reboot:
+	sep	#$30
+	.a8
+	.i8
 	lda	#$A5
 	sta	$FE40		; Off
 	jmp	_trap_reboot	; FIXME: original ROM map and jmp
