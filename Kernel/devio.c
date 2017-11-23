@@ -62,6 +62,7 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 			if (bdread(bp) != BLKSIZE) {
 				udata.u_error = EIO;
 				bp->bf_busy = BF_FREE;
+				bp->bf_dev = NO_DEVICE;
 				return (NULL);
 			}
 		}
