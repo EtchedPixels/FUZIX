@@ -54,8 +54,7 @@ __sighandler:
 	sta	jmpvec+2	; ptr1 is now the function
 	pla
 
-	ldx	#0
-	jsr	pushax		; signal(int sig)
+	ldx	#0		; signal(sig)
 	jsr	jmpvec		; no jsr (x) so fake it
 	jsr	stash_zp	; recovers sp
 initmainargs:			; Hardcoded compiler dumbness
