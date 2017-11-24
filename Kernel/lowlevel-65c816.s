@@ -197,8 +197,7 @@ noargs:
 	.i16
 
 	phx				; push user sp onto stack so we can
-					; see it (only brk() needs it but it
-					; is needed for save/restore)
+					; see it (only brk() needs it)
 	tsx
 	stx	U_DATA__U_SYSCALL_SP
 	ldx	#kstack_top-1
@@ -222,6 +221,9 @@ noargs:
 
 	ldx	U_DATA__U_SYSCALL_SP
 	txs				; Back to the old stack
+	plx				; pull the saved sp off the ustack
+					; discard it (it's still fine in
+					; bank)
 
 	sep	#$10
 	.i8
@@ -229,11 +231,9 @@ noargs:
 	lda	U_DATA__U_CURSIG
 	bne	signal_out
 
-	pla				; pull the saved sp off the ustack
-	pla				; discard it (it's still fine in
-					; bank)
 	rep	#$10
 	.i16
+
 	lda	U_DATA__U_PAGE
 	tsx
 	sta	3,x
@@ -253,6 +253,7 @@ noargs:
 	jsr	setdp			; Set DP from A, corrupts A
 
 	pla				; Sets Z based on error
+	cli
 	rtl
 
 	;
@@ -261,10 +262,6 @@ noargs:
 	;	space PROGLOAD+0x20 (0x220) with a stack frame holding
 	;	the desired vector and a return path to a cleanup routine
 	;	to recover stuff
-	;
-	;	The tricky bit here is keeping the user C sp somewhere safe
-	;	we pop it into y and carefully juggle it around until we can
-	;	write into the correct DP
 	;
 	;	The sigret code is stuffed into each user bank, and it
 	;	does the following
@@ -276,40 +273,60 @@ noargs:
 	;	plp	recover cpu state
 	;	rts	in bank return to the interruption point
 	;
+	;	65xx signal handling is horrible, use another port as an
+	;	example if porting.
+	;
 signal_out:
 	.a8
 	.i8
 	stz	U_DATA__U_CURSIG
 
-	; TRACE FIXME
-	pha
-	lda	#1
-	sta	$FE41			; trace on
-	pla
-	
-	;
-	;	Fixme stack correct U_DATA in x y a
-	;
-
 	tax				; save signal into x
+
+	; The bottom of ths stack right now is the return address
+	; then a bank value. We discard the bank value by moving
+	; the address up one byte and we then discard a byte to get
+	; back in sync
+
 	rep	#$30
 	.a16
 	.i16
-	ply				; user stack pointer to go to sp
+
 	lda	1,s			; move the return up
 	sta	2,s
-	rep	#$30
+
+	sep	#$30
+	.a8
 	.i8
+
 	pla				; and drop the byte from removing
 					; the bank
+
+	;
+	; This frame will be popped just before we return to the user
+	; function that was running before we ran the signal handler. It
+	; will pop the registers thus getting back the syscall return as
+	; expected
+	;
+	php
+	lda	U_DATA__U_ERROR
+	pha
+	lda	U_DATA__U_RETVAL
+	pha
+	lda	U_DATA__U_RETVAL+1
+	pha
+
 	txa				; signal back into a
 
 	; Stack the signal return (the signal itself can cause syscalls)
 	; Be careful here stack ops are currently going to user stack but
 	; data ops to kernel. Don't mix them up!
+
 	pea	sigret-1		; RTL incs
 	pha				; signal number
-	phy				; temporarily save C sp value
+
+	sep	#$30
+	.i8
 	asl a				; vector offset
 	tay
 	rep	#$30
@@ -318,12 +335,18 @@ signal_out:
 	lda	#0
 	ldx	U_DATA__U_SIGVEC,y	; get signal vector
 	sta	U_DATA__U_SIGVEC,y	; and reset it
-	ply				; get the temporary sp save back
 	phx
 	sep	#$20
 	.a8
+
+	; Now we build a 3 byte frame that is correct from rtl to use
+	; to end up in the signal handler stub of the application. The
+	; only tricky bit here is that we need to switch B to user space
+	; before we look up the vector and we must decrement the target
+	; as rtl will increment it.
+
 	; Needs to change for split I/D
-	lda	U_DATA__U_PAGE		; target code page
+	lda	U_DATA__U_PAGE		; +1  target code page
 	pha
 	pha
 	plb				; get the right user data bank
@@ -333,9 +356,9 @@ signal_out:
 	phx
 
 	jsr	setdp
-	sty	sp			; and finally restore the user C sp
 	sep	#$10			; i8a8 on entry to handler
 	.i8
+	cli
 	rtl			;	return into user app handler
 ;
 ;	doexec is a special case syscall exit path. Set up the bank
@@ -896,13 +919,21 @@ _need_resched:
 
 
 ;
-;	Stubs get propogated into each segment at FF00
+;	Stubs get propogated into each segment at FF00. These get run
+;	by 6502 application code as it comes back from a signal handler.
+;	On the 6502/65C811 it's much easier to do it this way than set
+;	it all up in the kernel stack proper.
 ;
 	.segment "STUBS"
 
 	.a8
 	.i8
 
+;
+;	Run when we return from a signal handler that was run when exiting
+;	a system call. The rts will actually always go the rts in
+;	syscall_vector
+;
 sigret:
 	sep #$30
 	plx			; pull the return and error code back
@@ -912,6 +943,12 @@ sigret:
 	rts			; back to the interrupted syscall return
 
 
+;
+;	When we handle a signal and come back from an IRQ we restore
+;	all the 16bit state because while an application must (for now)
+;	make syscalls in a8i8 it could be in a16 or i16 mode when it gets
+;	interrupted.
+;
 sigret_irq:
 	rep #$30
 	.a16
