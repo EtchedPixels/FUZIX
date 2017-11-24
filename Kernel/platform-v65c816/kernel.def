@@ -6,7 +6,7 @@ U_DATA                  .set $0100	; stomps over bootstrap
 U_DATA__TOTALSIZE       .set $0200
 U_DATA_STASH		.set $FC00	; leaves FFxx for vectors and stubs
 
-PROGLOAD		.set $0200
+PROGLOAD		.set $0100
 ZPBASE			.set $0
 
 KERNEL_BANK		.set $0		; bank number
