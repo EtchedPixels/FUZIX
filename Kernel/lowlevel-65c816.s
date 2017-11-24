@@ -1,5 +1,3 @@
-
-
 	.P816
 	.I8
 	.A8
@@ -399,6 +397,7 @@ _doexec:
 	sep	#$30
 	.a8
 	.i8
+	ldx	#>PROGLOAD
 
 	cli
 	rtl
@@ -525,6 +524,7 @@ join_interrupt_path:
 
 ret_to_user:
 	lda	_need_resched
+	jmp	no_preempt
 	beq	no_preempt
 
 	lda	#0
