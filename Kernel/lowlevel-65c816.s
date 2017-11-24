@@ -197,8 +197,8 @@ noargs:
 	.i16
 
 	phx				; push user sp onto stack so we can
-					; see it (only brk() needs it, nor
-					; is it needed for save/restore)
+					; see it (only brk() needs it but it
+					; is needed for save/restore)
 	tsx
 	stx	U_DATA__U_SYSCALL_SP
 	ldx	#kstack_top-1
@@ -280,27 +280,35 @@ signal_out:
 	.a8
 	.i8
 	stz	U_DATA__U_CURSIG
+
+	; TRACE FIXME
+	pha
+	lda	#1
+	sta	$FE41			; trace on
+	pla
 	
 	;
 	;	Fixme stack correct U_DATA in x y a
 	;
 
-	rep	#$10
+	tax				; save signal into x
+	rep	#$30
+	.a16
 	.i16
 	ply				; user stack pointer to go to sp
-	tsx
-	dex				; move past existing frame P
-	dex				; return PC
-	dex				; return PC
-					; lose the bank
-	txs
-	sep	#$10
+	lda	1,s			; move the return up
+	sta	2,s
+	rep	#$30
 	.i8
+	pla				; and drop the byte from removing
+					; the bank
+	txa				; signal back into a
+
 	; Stack the signal return (the signal itself can cause syscalls)
 	; Be careful here stack ops are currently going to user stack but
 	; data ops to kernel. Don't mix them up!
-	pea	sigret
-	phx				; signal number
+	pea	sigret-1		; RTL incs
+	pha				; signal number
 	phy				; temporarily save C sp value
 	asl a				; vector offset
 	tay
@@ -317,9 +325,13 @@ signal_out:
 	; Needs to change for split I/D
 	lda	U_DATA__U_PAGE		; target code page
 	pha
-	pea	PROGLOAD+20		; trap handler in user app
 	pha
 	plb				; get the right user data bank
+
+	ldx	PROGLOAD+20		; trap handler in user app
+	dex				; rtl incs this
+	phx
+
 	jsr	setdp
 	sty	sp			; and finally restore the user C sp
 	sep	#$10			; i8a8 on entry to handler
@@ -666,7 +678,7 @@ signal_exit:
 
 	sep	#$20
 	.a8
-	pea	sigret_irq	; signal return
+	pea	sigret_irq-1	; signal return
 	sep	#$10
 	.i8
 	phy			; signal code
@@ -689,7 +701,7 @@ signal_exit:
 	.i16
 	ldx	#0
 	txy
-	pea	PROGLOAD+20
+	pea	PROGLOAD+20-1
 	sep	#$30
 	.i8
 	.a8
