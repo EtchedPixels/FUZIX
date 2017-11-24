@@ -25,6 +25,7 @@ SRCSNS = \
 	head.c \
 	init.c \
 	kill.c \
+	line.c \
 	ln.c \
 	logname.c \
 	mkdir.c \
@@ -49,16 +50,16 @@ SRCSNS = \
 	whoami.c \
 	yes.c
 
-
-SRCS  = \
-	banner.c \
+SRCS  = banner.c \
 	bd.c \
 	cal.c \
 	cksum.c \
 	cut.c \
 	dd.c \
+	decomp16.c \
 	df.c \
 	dosread.c \
+	du.c \
 	echo.c \
 	ed.c \
 	env.c \
@@ -66,6 +67,7 @@ SRCS  = \
 	fdisk.c \
 	fgrep.c \
 	free.c \
+	fsck.c \
 	grep.c \
 	id.c \
 	kbdrate.c \
@@ -82,13 +84,14 @@ SRCS  = \
 	ps.c \
 	remount.c \
 	sed.c \
+	setdate.c \
 	sleep.c \
 	ssh.c \
 	sort.c \
 	stty.c \
 	su.c \
-	tar.c \
 	tail.c \
+	tar.c \
 	termcap.c \
 	umount.c \
 	uname.c \
