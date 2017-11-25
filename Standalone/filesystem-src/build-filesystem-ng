@@ -63,6 +63,7 @@ sub build_pkg_list {
     my %pkgs; # to check for duplicate package names
     foreach my $x (@file) {
         open IN, "$x->[0]/$x->[1]" or die "ERROR could not open file $x->[0]/$x->[1]\n";
+        print "Scanning file $x->[0]/$x->[1]\n" if $verbose;
         my $in_pkg = 0;
         my $current = 0;
         while (my $line = <IN>) {
@@ -408,14 +409,19 @@ sub gen_ucp {
 sub build_dsk {
     my $swizzle = $args{endian} eq 'little' ? '' : '-X';
     if (system "../mkfs $swizzle $args{file} $args{isize} $args{bsize}") {
-        die "ERROR mkfs failed - exit status $?\n";
+        my $status = $? >> 8;
+        die "ERROR mkfs failed - exit status $status\n";
     }
     if (system "../ucp $args{file} < ucp-tmp.txt") {
         # [NAC HACK 2016Jun14] ucp bug: exit status good even tho errors occur.
-        die "ERROR ucp failed - exit status $?\n";
+        my $status = $? >> 8;
+        die "ERROR ucp failed - exit status $status\n";
     }
     if (system "../fsck $args{file}") {
-        die "ERROR fsck failed - exit status $?\n";
+        my $status = $? >> 8;
+        if ($status & ~1) {
+            die "ERROR fsck failed - exit status $status\n";
+        }
     }
 }
 
