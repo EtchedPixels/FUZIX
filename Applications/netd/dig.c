@@ -191,7 +191,7 @@ int main( int argc, char *argv[] ){
 	if( argv[x][0] == '@' )
 	    strncpy( server, &(argv[x][1]), 16);
 	else
-	    strncpy( name, argv[x], 16 );
+	    strncpy( name, argv[x], 256 );
     }
 
     fd = socket( AF_INET, SOCK_DGRAM, 0);
