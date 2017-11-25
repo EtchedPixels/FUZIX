@@ -90,6 +90,7 @@ SRCS  = \
 	ps.c \
 	remount.c \
 	sed.c \
+	seq.c \
 	sleep.c \
 	ssh.c \
 	socktest.c \
