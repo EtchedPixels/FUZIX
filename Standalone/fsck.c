@@ -70,6 +70,7 @@ static int dev_fd;
 static int dev_offset;
 static int error;
 static int aflag;
+static int yflag;
 
 static unsigned char *bitmap;
 static int16_t *linkmap;
@@ -94,6 +95,8 @@ static void pass5(void);
 static int yes_noerror(void)
 {
     static char buf[16];
+    if (yflag)
+        return 1;
     do {
         if (fgets(buf, 15, stdin) == NULL)
             exit(1);
@@ -192,14 +195,21 @@ int main(int argc, char **argv)
     char *buf;
     char *op;
 
-    if (argc == 3 && strcmp(argv[1],"-a") == 0) {
+    while (argc > 1 && *argv[1] == '-') {
+        if (strcmp(argv[1], "-a") == 0) {
+            aflag = 1;
+        } else if (strcmp(argv[1], "-y") == 0) {
+            yflag = 1;
+        } else {
+            fprintf(stderr, "Bad option: %s\n", argv[1]);
+            return 16;
+        }
         argc--;
         argv++;
-        aflag = 1;
     }
 
     if(argc != 2){
-        fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
+        fprintf(stderr, "syntax: fsck [-a] [-y] [devfile][:offset]\n");
         return 16;
     }
     
