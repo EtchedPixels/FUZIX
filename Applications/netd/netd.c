@@ -232,7 +232,8 @@ void netd_appcall(void)
 		if ( ! flag ){
 			/* Not a listing port so assume a active open */
 			ne.data = SS_CONNECTED;
-			ksend( NE_NEWSTATE );
+			ne.ret = 0;
+			ksend( NE_EVENT );
 			s->flags |= LINK_OPEN;
 		}
 	}
@@ -574,7 +575,7 @@ int dokernel( void )
 						break; /* fixme: actually handler the error */
 					}
 					m->conn = ( struct uip_conn *)conptr; /* fixme: needed? */
-					conptr->appstate = sm.sd.lcn;
+					m->lcn = conptr->appstate = sm.sd.lcn;
 					/* fixme: assign local address/port !!! */
 					/* refactor: same as tcp action from connect event */
 					ne.data = SS_CONNECTED;
@@ -601,6 +602,13 @@ int dokernel( void )
 				}
 				break; /* FIXME: handle unknown/unhandled sock types here */
 			case SS_CLOSED:
+				if ( sm.s.s_type == SOCKTYPE_UDP ){
+					uip_udp_remove(m->conn);
+					rel_map(m->lcn);
+					ne.data = SS_CLOSED;
+					ksend( NE_NEWSTATE );
+					break;
+				}
 				if ( sm.s.s_type == SOCKTYPE_TCP )
 					activity |= (1 << c);
 				m->flags |= LINK_CLOSED;

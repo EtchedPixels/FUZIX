@@ -180,6 +180,7 @@ struct hostent *gethostbyname( char *name ){
 
  process:
     /* process packet */
+    alarm(0);
     {
 	struct header *h = (struct header *)buf;
 	struct RRtail *t;
