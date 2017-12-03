@@ -25,6 +25,7 @@ SRCSNS = \
 	head.c \
 	init.c \
 	kill.c \
+	killall.c \
 	line.c \
 	ln.c \
 	logname.c \
