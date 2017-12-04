@@ -786,6 +786,9 @@ static blkno_t getblkno(struct dinode *ino, blkno_t num)
     buf = (blkno_t *) daread(indb);
 
     dindb = swizzle16(buf[(num - (18 + 256)) >> 8]);
+    if (dindb == 0)
+        return 0;
+
     buf = (blkno_t *) daread(dindb);
 
     return swizzle16(buf[(num - (18 + 256)) & 0x00ff]);
@@ -872,9 +875,15 @@ static blkno_t blk_alloc0(struct filesys *filesys)
     return (newno);
 }
 
+static uint16_t lblk;
+
 static char *daread(uint16_t blk)
 {
     static char da_buf[512];
+
+    if (blk == lblk)
+        return da_buf;
+
     if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
@@ -883,6 +892,7 @@ static char *daread(uint16_t blk)
         perror("read");
         exit(1);
     }
+    lblk = blk;
     return da_buf;
 }
 
@@ -896,6 +906,7 @@ static void dwrite(uint16_t blk, char *addr)
         perror("write");
         exit(1);
     }
+    lblk = 0;
 }
 
 static void iread(uint16_t ino, struct dinode *buf)
