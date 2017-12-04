@@ -376,7 +376,10 @@ _doexec:
 	.i16
 	.a16
 
+	; ptr1 might be PROGBASE but that's fine !!
 	ldx	ptr1		;	target address
+	lda	a:$20,x		;	fetch the signal vector pointer
+	sta	PROGBASE+$20	;	and stuff it in the base
 
 	sep	#$20
 	.a8
