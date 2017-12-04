@@ -211,10 +211,12 @@ noargs:
 
 	lda	#1
 	sta	_kernel_flag		; In kernel mode
+	sta	U_DATA__U_INSYS
 	cli				; Interrupts now ok
 	jsr	_unix_syscall		; Enter C space
 	sei				; Interrupts back off
 	stz	_kernel_flag
+	stz	U_DATA__U_INSYS
 
 	rep	#$10
 	.i16
@@ -235,8 +237,7 @@ noargs:
 	.i16
 
 	lda	U_DATA__U_PAGE
-	tsx
-	sta	3,x
+	sta	3,s
 
 	sep	#$10
 	.i8
@@ -369,6 +370,7 @@ _doexec:
 	stx	ptr1+1		;	address to execute from
 	sei
 	stz	_kernel_flag
+	stz	U_DATA__U_INSYS
 
 	rep	#$30
 	.i16
@@ -537,7 +539,7 @@ join_interrupt_path:
 	ldx	istack_switched_sp
 	txs
 
-	lda	_kernel_flag
+	lda	U_DATA__U_INSYS
 	beq	ret_to_user
 
 	;	Kernel interrupt path may change B and D itself so we must
@@ -559,11 +561,10 @@ join_interrupt_path:
 
 ret_to_user:
 	lda	_need_resched
-	jmp	no_preempt
 	beq	no_preempt
 
-	lda	#0
-	sta	_need_resched
+
+	stz	_need_resched
 
 	ldx	istack_switched_sp
 	stx	U_DATA__U_SYSCALL_SP
@@ -582,6 +583,12 @@ ret_to_user:
 	lda	#1
 	sta	U_DATA__U_INSYS
 	;
+	;	Mark outselves as idle
+	;
+	ldx	U_DATA__U_PTAB
+	lda	#P_READY
+	sta	a:P_TAB__P_STATUS_OFFSET,x
+	;
 	;	Drop back to a8i8 and schedule ourself out
 	;
 	sep	#$30
@@ -594,15 +601,19 @@ ret_to_user:
 	;	We will (one day maybe) pop back out here. It's not
 	;	guaranteed (we might be killed off)
 	;
+	rep	#$10
+	.a8
+	.i16
+
 	lda	#0
 	sta	U_DATA__U_INSYS
+
+	ldx	U_DATA__U_SYSCALL_SP
+	txs
+
 	;
 	;	And exit the handler
 	;
-	rep	#$10
-
-	.a8
-	.i16
 no_preempt:
 	; Discard saved B and D - for user we will compute the correct
 	; one (we could optimize this a shade and only throw on a
@@ -624,11 +635,8 @@ no_preempt:
 	;	process
 	;
 
-	lda	U_DATA__U_PAGE
-
-	tsx
 	lda	U_DATA__U_PAGE	;+1 for split ID
-	sta	9,x		; Might have moved bank if swapping
+	sta	10,s		; Might have moved bank if swapping
 
 	sep	#$30
 	.a8
@@ -965,73 +973,3 @@ sigret_irq:
 syscall_vector:
 	jsl	KERNEL_FAR+syscall_entry
 	rts
-
-;
-;	Relocation stub (as it's easier to do relocation when in the user
-;	bank than bouncing around and we have no common!). Called with i16
-;	and X holding the binary start, tmp1 the shift and Y the code to
-;	process
-;
-;	Returns with X pointing to end zero (so we can run it twice to do
-;	ZP). We wipe the data as we go since it will become BSS.
-;
-;	Our relocation table lives in BSS start and is a byte table in the
-;	format
-;	0,0	end
-;	0,n	skip n bytes and read next table entry
-;	1-255	skip 1-255 bytes and relocate the byte now pointed at
-;		then read next table entry
-;
-;	Our first table is high bytes of 16bit addresses to relocate (we
-;	keep page alignment). Our second is ZP addresses to relocate.
-;
-;	Call with interrupts off until sure our irq code will get odd
-;	code banks right.
-;
-;	FIXME: move out of stubs - run with code = normal dp = kernel
-;	b = user and it'll work better
-;
-;	FIXME: consider checking if run off end with either X or Y
-;
-relocate:
-	.i16
-	.a8
-	stz tmp2+1	; FIXME
-reloc_loop:
-	lda 0,x
-	stz 0,x
-	beq multi
-	sta tmp2
-	; skip 1-255 bytes and then relocate one byte
-	rep #$20
-	.a16
-	tya
-	adc tmp2
-	tay
-	sep #$20
-	.a8
-	; now relocate
-	lda 0,y
-	clc
-	adc tmp1
-	sta 0,y
-	bra reloc_loop
-multi:
-	.i16
-	.a8
-	inx
-	lda 0,x
-	stz 0,x
-	beq endofreloc		; 	(0,0 -> end)
-	sta tmp2
-	rep #$20
-	.a16
-	tya
-	adc tmp2
-	tay
-	sep #$20
-	.a8
-	bra reloc_loop
-endofreloc:
-	rtl			; as called from bank KERNEL
-

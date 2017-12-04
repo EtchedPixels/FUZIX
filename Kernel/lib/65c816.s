@@ -56,11 +56,11 @@ idling:
 	rep #$10
 	.i16
 	ldx	U_DATA__U_PTAB
-	lda	0,x
+	lda	a:0,x
 	cmp	#P_READY
 	bne	slow_path
 	lda	#P_RUNNING
-	sta	P_TAB__P_STATUS_OFFSET,x
+	sta	a:P_TAB__P_STATUS_OFFSET,x
 	plx
 	stx	sp
 	plx				; discard 0
@@ -140,10 +140,10 @@ switch_patch_2:
 	sep	#$20
 	.a8
 	lda	#P_RUNNING
-	sta	P_TAB__P_STATUS_OFFSET,x
+	sta	a:P_TAB__P_STATUS_OFFSET,x
 	;	This will only be needed once we swap, and we will need to
 	;	do a few other fixups too
-	lda	P_TAB__P_PAGE_OFFSET,x
+	lda	a:P_TAB__P_PAGE_OFFSET,x
 	sta	U_DATA__U_PAGE
 	plx	; stacked kernel space C sp
 	stx	sp
