@@ -14,10 +14,12 @@ KERNEL_FAR		.set $000000	; 24 bit
 
 ; Add this to the bank number to get the high 8bits of the 16bit CPU stack
 ; for this process
-STACK_BANKOFF		.set $F0	; F000-FCFF
+STACK_BANKOFF		.set $F0	; F000-FBFF
 ; Direct page for IRQ processing (saves us saving/restoring DP registers)
 ; Can probably use the same page as the IRQ CPU stack... FIXME
 IRQ_DP			.set $FD00	; FD00-FDFF
 KERNEL_DP		.set $00	; We use the real ZP for kernel DP
 
 MAP_SIZE		.set $FC00
+
+PROGBASE		.set $0100
