@@ -25,7 +25,7 @@
 
 #define STACK_BANKOFF	0xF5	/* F600-FCFF */
 
-#define TICKSPERSEC 10	    /* Ticks per second */
+#define TICKSPERSEC 100	    /* Ticks per second */
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0100  /* also data base */
 #define PROGLOAD    0x0100
