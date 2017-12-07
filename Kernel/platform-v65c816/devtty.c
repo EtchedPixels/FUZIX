@@ -19,8 +19,6 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	PTY_QUEUES
 };
 
-/* tty1 is the screen tty2 is the serial port */
-
 /* Output for the system console (kprintf etc) */
 void kputchar(uint8_t c)
 {
