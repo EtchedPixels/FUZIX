@@ -23,7 +23,7 @@
 #define MAX_MAPS 	7
 #define MAP_SIZE    0xFC00  /* 0-FBFF */
 
-#define STACK_BANKOFF	0xF5	/* F600-FCFF */
+#define STACK_BANKOFF	0xF0	/* F000-FBFF */
 
 #define TICKSPERSEC 100	    /* Ticks per second */
 #define MAPBASE	    0x0000  /* We map from 0 */
