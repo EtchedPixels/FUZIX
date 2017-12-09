@@ -214,18 +214,23 @@ void netd_appcall(void)
 		/* find see if anything is listening on this port */
 		{
 			int i;
-			for ( i = 0; i< NSOCKET; i++ ){
-				if ( map[i].port == uip_conn->lport ){
-					/* found a listening port */
-					/* FIXME: what am I supposed to send to the
-					   listening socket?
-					*/
-					ne.data = SS_ACCEPTWAIT;
-					ksend( NE_EVENT );
-					/* make a new link and Associate the new uip_connection
-					   with some lcn/socket the kernel readied */
-					flag = 1;
-					break;
+			/* fixme: this is next chunk is for listen() logic -
+			   it needs a better idea if a socket is listening, or
+			   just autobound */
+			if (0){
+				for ( i = 0; i< NSOCKET; i++ ){
+					if ( map[i].port == uip_conn->lport ){
+						/* found a listening port */
+						/* FIXME: what am I supposed to send to the
+						   listening socket?
+						*/
+						ne.data = SS_ACCEPTWAIT;
+						ksend( NE_EVENT );
+						/* make a new link and Associate the new uip_connection
+						   with some lcn/socket the kernel readied */
+						flag = 1;
+						break;
+					}
 				}
 			}
 		}
@@ -536,6 +541,9 @@ int dokernel( void )
 				break;
 			case SS_BOUND:
 				/* FIXME: probably needs to do something here  */
+				/* fixme: set IP here? */
+				if (sm.s.s_type == SOCKTYPE_TCP)
+					m->port = sm.s.s_addr[SADDR_SRC].port;
 				ne.data = SS_BOUND;
 				ksend( NE_NEWSTATE );
 				break;
@@ -546,7 +554,7 @@ int dokernel( void )
 					int port = sm.s.s_addr[SADDR_DST].port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
 							 &sm.s.s_addr[SADDR_DST].addr );
-					conptr = uip_connect( &addr, port );
+					conptr = uip_connect( &addr, port, m->port );
 					if ( !conptr ){
 						ne.data = SS_CLOSED;
 						ne.ret = ENOMEM;	/* should be ENOBUFS I think */
@@ -559,9 +567,7 @@ int dokernel( void )
 					ksend( NE_NEWSTATE );
 					m->conn->userrequest = 1;
 					c = conptr - uip_conns;
-					if (sm.s.s_type == SOCKTYPE_TCP)
-						activity |= (1 << c);
-					break;
+					activity |= (1 << c);
 				}
 				else if ( sm.s.s_type == SOCKTYPE_UDP ){
 					struct uip_udp_conn *conptr;
