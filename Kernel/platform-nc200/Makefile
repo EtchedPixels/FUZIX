@@ -3,8 +3,9 @@ bootfloppy.img: bootblock.img autoprg.bin
 	cp bootblock.img bootfloppy.img
 	truncate bootfloppy.img --size 7680
 	mcopy -i bootfloppy.img autoprg.bin ::auto.prg
-	mcopy -i bootfloppy.img big ::bank80.img
-	mcopy -i bootfloppy.img big ::bank81.img
+	#mcopy -i bootfloppy.img kernel1 ::load4000.80
+	#mcopy -i bootfloppy.img kernel2 ::load4000.81
+	#echo -n | mcopy -i bootfloppy.img - ::call4000.80
 
 bootblock.img: bootblock.s
 	sdasz80 -fflopzws bootblock.rel bootblock.s

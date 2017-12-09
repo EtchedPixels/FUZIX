@@ -43,6 +43,12 @@
     .org 0x01fe
     .db 0x55, 0xaa
     
+; We mark bad blocks in the cluster map because the Amstrad floppy disk routines
+; have a bug in it which means that in bootable disks it's unable to read clusters
+; which span tracks --- it applies the reserved sector offset *after* it calculates
+; track/head/sector, which means that it thinks that some clusters occupy sectors
+; 9 and 10 of a track, which doesn't work. We mark these as being inaccessible.
+;
 ; The FAT entries for two cylinders (four physical tracks).
 ; That's 18*4 = 72 sectors = 0x12 clusters. But we are offset left
 ; by one sector, so clusters 0 and 5 span two tracks (and are inaccessible).
