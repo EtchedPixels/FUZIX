@@ -6,7 +6,7 @@
     .dw reserved_sectors
     .db 2    ; FAT count
     .dw 0x70 ; number of root directory entries
-    .dw 108  ; filesystem size, in sectors
+    .dw 144  ; filesystem size, in sectors
     .db 0xf9 ; media byte
     .dw 3    ; sectors per FAT
     .dw 9    ; number of sectors per track
@@ -28,17 +28,17 @@
     .db 0          ; partition status (not bootable)
     .db 0, 2, 0    ; encoded CHS of start
     .db 0xda       ; partition type
-    .db 1, 8, 5    ; encoded CHS of end
+    .db 1, 8, 7    ; encoded CHS of end
     .dw 1, 0       ; LBA of start
-    .dw 0x6a, 0    ; LBA of end
+    .dw 0x8e, 0    ; LBA of end
 
     ; partition 1
     .db 0          ; partition status (not bootable)
-    .db 1, 9, 5    ; encoded CHS of start
+    .db 1, 9, 7    ; encoded CHS of start
     .db 0x83       ; partition type
     .db 1, 9, 0x4f ; encoded CHS of end
-    .dw 0x6b, 0    ; LBA of start
-    .dw 0x534, 0   ; LBA of end
+    .dw 0x8f, 0    ; LBA of start
+    .dw 0x511, 0   ; LBA of end
 
     .org 0x01fe
     .db 0x55, 0xaa
@@ -73,6 +73,7 @@
     .db 0xf7, 0x0f, 0x00 ; clusters 8, 9
     .db 0x00, 0x00, 0x00 ; clusters a, b
 
+    four_tracks
     four_tracks
     four_tracks
 .endm
