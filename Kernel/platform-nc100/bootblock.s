@@ -8,12 +8,25 @@
 ;
 ;	These must match the actual nc100.s code
 ;
-entry_so	.equ 0x1BE
+entry_sp	.equ 0x1BE
 kernel_sp	.equ 0x1C0
 resume_vector	.equ 0x1C2
 suspend_map	.equ 0x1C4
 entry_banks	.equ 0x1C8
 suspend_stack	.equ 0x1FE
+
+.area BOOTBLOCK (ABS)
+
+; NC200 entry point, when booting from floppy. We're paged in at 0x4000. This section
+; will get overwritten by vectors later but we don't care about that (it's only used
+; once on startup).
+
+	.org 0x0
+nc200_entry:
+	di
+	ld a, #0x80
+	out (0x13), a
+	jp 0xc100
 
 		.org 0xE0
 ;
@@ -49,33 +62,33 @@ suspend_stack	.equ 0x1FE
 	        jp 0xE0		; stub to bank switch and jp
 
 no_resume:
-		ld a, 0x83	; map the low 16K of the kernel
+		ld a, #0x83	; map the low 16K of the kernel
 	        out (0x10), a
-		ld hl, 0xC000	; copy ourself into the low 16K
-		ld de, 0x0000
-		ld bc, 0x4000
+		ld hl, #0xC000	; copy ourself into the low 16K
+		ld de, #0x0000
+		ld bc, #0x4000
 		ldir
-		ld a, 0x84
+		ld a, #0x84
 		out (0x11), a
-		ld a, 0x81
+		ld a, #0x81
 		out (0x12), a
-		ld hl, 0x8000
-		ld de, 0x4000
-		ld bc, 0x4000
+		ld hl, #0x8000
+		ld de, #0x4000
+		ld bc, #0x4000
 		ldir
-		ld a, 0x85
+		ld a, #0x85
 		out (0x11), a
-		ld a, 0x82
+		ld a, #0x82
 		out (0x12), a
-		ld hl, 0x8000
-		ld de, 0x4000
-		ld bc, 0x4000
+		ld hl, #0x8000
+		ld de, #0x4000
+		ld bc, #0x4000
 		ldir
-		ld a, 0x84	; map the other 32K of the kernel
+		ld a, #0x84	; map the other 32K of the kernel
 		out (0x11), a
-		ld a, 0x85
+		ld a, #0x85
 		out (0x12), a
-		ld a, 0x86
+		ld a, #0x86
 		jp switch	; get out of the segment that is going to vanish
 switch:		out (0x13), a	; map the common
 		jp 0x0213	; into crt0.s
@@ -84,7 +97,7 @@ switch:		out (0x13), a	; map the common
 ;
 ;	We should hide a logo in here ...
 ;
-signature:	.db     "NC100PRG"
+signature:	.ascii "NC100PRG"
 padding2:	.db	0,0,0,0,0,0,0,0
 
 ;
