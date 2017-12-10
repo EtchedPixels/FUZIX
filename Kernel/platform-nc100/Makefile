@@ -22,5 +22,12 @@ $(AOBJS): %.rel: %.s
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
+bootblock.img: bootblock.s
+	sdasz80 -fflopzws bootblock.rel bootblock.s
+	sdldz80 -nwmx -b BOOTBLOCK=0 -i bootblock.ihx bootblock.rel
+	srec_cat -disable-sequence-warning \
+                bootblock.ihx -intel \
+                -output bootblock.img -binary
+
 image:
-	dd if=bootblock.cim of=../fuzix.bin bs=1 seek=256 conv=notrunc
+	dd if=bootblock.img of=../fuzix.bin bs=1 conv=notrunc

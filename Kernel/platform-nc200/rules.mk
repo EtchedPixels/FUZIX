@@ -1,0 +1,1 @@
+export CROSS_CCOPTS += -I$(ROOT_DIR)/platform-nc100 -DCONFIG_NC200
