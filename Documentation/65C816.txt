@@ -31,14 +31,17 @@ stack and zero page reside in bank 0, while the 6502/65C02 places them at
 the bottom of the current bank.
 
 o	The 65C816 supports separate 64K code and data spaces. This is not
-yet supported.
+yet supported. In theory with the right kernel magic multiple code banks are
+supportable.
 
 o	Relocation of loaded executables is not yet supported.
 
 o	Swapping, kernel out of bank 0 and some other things are not yet
 	completed.
 
-o	cc65 does not know how to generate 65C816 optimized code.
+o	cc65 does not know how to generate 65C816 optimized code. For the
+kernel in particular it would be a good project for someone to teach ANSI
+pcc how to generate 65c816 code, even if only for bank 0 data/stack.
 
 o	No proper support for exceptions such as abort yet.
 
@@ -59,11 +62,10 @@ and CPU stack) for each process in memory at the same time. Thus with 512K
 RAM we have 7 processes in memory (and bank 0 holds the rest), so we need
 3.5K for DP/ZP spaces.
 
-With 8MB of RAM that rises to 56K which requires that the kernel moves to
+With 8MB of RAM that rises to 63.5K which requires that the kernel moves to
 another bank. In practice it's quite hard to use 8MB of RAM for processes on
 a 65C816 as that amounts to 128 processes which for such a slow processor is
 unlikely to be a practical workload.
-
 
 Execution Environment
 
@@ -102,6 +104,7 @@ also means that the compiler knows that zp:0 is the C stack pointer, and
 this is also hardcoded until we get relocations.
 
 System call state is returned in XY and the error code if any is in A.
+If there is no error then A is zero.
 
 At any point the binary that is being executed may be swapped out and at
 some point swapped back in from storage and resumed. When it is resumed it
@@ -172,7 +175,7 @@ The following other values might need touching
 KERNEL_BANK	- 	the bank number of the kernel
 KERNEL_FAR	-	the 24bit base of the kernel
 
-But not that as of writing only bank 0 kernel has been tested
+But note that as of writing only bank 0 kernel has been tested
 
 
 The low level platform code lives in v65.s and crt0.s. crt0.s is the setup
@@ -264,10 +267,10 @@ space for networking and a lot of buffers. Such a configuration could
 support up to 8MB without the core code changing. Beyond that point there
 are assumptions in lowlevel-65c816.s that you can take the user page number
 shift it left and add it to a base to get an offset. This breaks once you
-pass 128 banks (8MB).
+pass 128 banks (8MB). In addition once you hit 128 processes you run out of
+bank 0 memory to hold their DP/stack.
 
 Moving the kernel also of course requires updating the exception vectors to
 jump into the right bank, and their return paths to do the right thing. None
 of that is simple because we may enter and task switch out via another path.
-
 
