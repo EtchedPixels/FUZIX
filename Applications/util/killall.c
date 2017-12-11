@@ -46,7 +46,7 @@ static int kill_pids(int sig)
             perror("read");
             return 255;
         }
-        if (buf.p_tab.p_pid != ppid && buf.p_tab.p_pid != pid && buf.p_tab.p_pid != 1) {
+        if (buf.p_tab.p_status != P_EMPTY && buf.p_tab.p_pid != ppid && buf.p_tab.p_pid != pid && buf.p_tab.p_pid != 1) {
             kill(buf.p_tab.p_pid, sig);
             ct++;
         }
