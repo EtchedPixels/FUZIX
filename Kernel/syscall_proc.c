@@ -455,23 +455,26 @@ arg_t _signal(void)
 {
 	int16_t retval;
 	irqflags_t irq;
+	struct sigbits *sb = udata.u_ptab->p_sig;
 
 	if (sig < 1 || sig >= NSIGS) {
 		udata.u_error = EINVAL;
 		goto nogood;
 	}
+	if (sig > 15)
+		sb++;
 
 	irq = di();
 
 	if (func == SIG_IGN) {
 		if (sig != SIGKILL && sig != SIGSTOP)
-			udata.u_ptab->p_ignored |= sigmask(sig);
+			sb->s_ignored |= sigmask(sig);
 	} else {
 		if (func != SIG_DFL && !valaddr((char *) func, 1)) {
 			udata.u_error = EFAULT;
 			goto nogood;
 		}
-		udata.u_ptab->p_ignored &= ~sigmask(sig);
+		sb->s_ignored &= ~sigmask(sig);
 	}
 	retval = (arg_t) udata.u_sigvec[sig];
 	if (sig != SIGKILL && sig != SIGSTOP)
@@ -500,14 +503,17 @@ int16_t disp;
 /* Implement sighold/sigrelse */
 arg_t _sigdisp(void)
 {
+	struct sigbits *sb = udata.u_ptab->p_sig;
 	if (sig < 1 || sig >= NSIGS || sig == SIGKILL || sig == SIGSTOP) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
+	if (sig > 15)
+		sb++;
 	if (disp == 1)
-		udata.u_ptab->p_held |= sigmask(sig);
+		sb->s_held |= sigmask(sig);
 	else
-		udata.u_ptab->p_held &= ~sigmask(sig);
+		sb->s_held &= ~sigmask(sig);
 	/* Force recalculation of signal pending in the syscall return path */
 	udata.u_cursig = 0;
 	return 0;

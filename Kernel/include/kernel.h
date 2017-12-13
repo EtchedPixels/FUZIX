@@ -385,7 +385,7 @@ struct mount {
 #define  SIG_DFL   (int (*)(int))0	/* Must be 0 */
 #define  SIG_IGN   (int (*)(int))1
 
-#define sigmask(sig)    (1UL<<(sig))
+#define sigmask(sig)    (1U<<((sig) & 0x0F))
 
 /* uadmin */
 
@@ -401,6 +401,12 @@ struct mount {
 #define AD_NOSYNC		1
                                           
 /* Process table entry */
+
+struct sigbits {
+    uint16_t	s_pending;
+    uint16_t	s_ignored;
+    uint16_t	s_held;
+};
 
 typedef struct p_tab {
     /* WRS: UPDATE kernel.def IF YOU CHANGE THIS STRUCTURE */
@@ -421,9 +427,7 @@ typedef struct p_tab {
     /* Everything below here is overlaid by time info at exit.
 	 * Make sure it's 32-bit aligned. */
     uint16_t    p_priority;     /* Process priority */
-    uint32_t    p_pending;      /* Bitmask of pending signals */
-    uint32_t    p_ignored;      /* Bitmask of ignored signals */
-    uint32_t    p_held;         /* Bitmask of held signals */
+    struct sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
     uint16_t    p_timeout;      /* timeout in centiseconds - 1 */
                                 /* 0 indicates no timeout, 1 = expired */
