@@ -736,7 +736,8 @@ signal_exit:
 	pea	sigret_irq-1	; signal return
 	sep	#$10
 	.i8
-	phy			; signal code
+	ldy	tmp1		; signal code
+	phy
 	tya
 	asl a
 	tay
@@ -749,19 +750,26 @@ signal_exit:
 	phx
 	sep	#$20
 	.a8
-	lda	U_DATA__U_PAGE
+	lda	U_DATA__U_PAGE		; bank
 	pha
+	pha
+	plb				; set the data bank to the caller
 	rep	#$30
 	.a16 
 	.i16
+	ldx	PROGLOAD+20		; from the user data bank
+	phx				; vector
+	sep	#$20
+	.a8
+	lda	#$30			; i8a8 status
+	pha
+	rep	#$30
+	.a16
+	.i16
+	; Clear registers
 	ldx	#0
 	txy
-	pea	PROGLOAD+20-1
-	sep	#$30
-	.i8
-	.a8
-	lda	#$30		; i8a8
-	pha
+	txa
 	rti
 
 ;
