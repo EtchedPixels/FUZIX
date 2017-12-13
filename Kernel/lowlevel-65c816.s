@@ -680,11 +680,6 @@ no_preempt:
 	.a8
 	.i16
 signal_exit:
-	; DEBUG FIXME
-	pha
-	lda	#1
-	sta	$FE41
-	pla
 	stz	U_DATA__U_CURSIG
 	sta	tmp1		; save signal 8bits (irq tmp1)
 
