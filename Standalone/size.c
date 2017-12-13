@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
     }
 
     basepage = 0;
-    if (buf[0] == 0xC3) {
-	/* Z-80 */
+    if (buf[0] == 0xC3 || buf[0] == 0x18 || buf[0] == 0x4C || buf[0] == 0x38) {
+	/* Z-80 or 6502 */
 	endian = 0;
 	basepage = buf[7] << 8;
     } else if (buf[0] == 0x7E) {
@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     printf(" base text data  bss   size  hex filename\n");
 
     /* Text, data, BSS */
-    txtsz = bufpair(endian, buf, 10) - basepage;
-    datsz = bufpair(endian, buf, 12) - basepage;
+    txtsz = bufpair(endian, buf, 10);
+    datsz = bufpair(endian, buf, 12);
     bsssz = bufpair(endian, buf, 14);
 
     printf("%5x%5x%5x%5x%7d%5x %s\n",
