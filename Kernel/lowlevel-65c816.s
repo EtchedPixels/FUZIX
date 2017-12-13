@@ -693,13 +693,13 @@ signal_exit:
 	;
 	; Right now it looks like this
 	;
-	;		Bank
-	;		PC high
-	;		PC low
-	;		P
-	;		A16
-	;		X16
-	;		Y16
+	;		Bank		10
+	;		PC high		9
+	;		PC low		8
+	;		P		7
+	;		A16		5,6
+	;		X16		3,4
+	;		Y16		1,2
 	;	SP
 	;
 	; We want it to look like
@@ -716,12 +716,25 @@ signal_exit:
 	.i16
 	.a16
 
+	;
+	;	We unwind this with an RTS but we created it with an RTI
+	;	so we need to decrement the saved PC.
+	;
+
+	lda 8,s
+	dec
+	sta 8,s
+
 	tsc			; stack to accumulator
 	clc
 	adc	#10		; top of block to change
 	tax
 	tay
 	dex			; source one below dest
+
+	;
+	;	Y now points at bank, X points at PC high
+	;
 	lda	#8		; copy 9 bytes
 	mvp	0,0
 	;

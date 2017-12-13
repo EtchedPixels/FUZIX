@@ -1,9 +1,10 @@
 -mwxuy
 -i fuzix.ihx
--b _INITIALIZER=0x1000
+-b _INITIALIZER=0x2000
 -b _DISCARD=0x5000
--b _UDATA=0x6D00
--b _CODE=0x7000
+-b _BANK=0x1000
+-b _UDATA=0x7D00
+-b _CODE=0x8000
 -l z80
 platform-micropack/crt0.rel
 platform-micropack/commonmem.rel
