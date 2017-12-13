@@ -490,6 +490,11 @@ shoot_myself:
 ;	ZP on a 6502, fortunately on the 65C816 we can have a separate
 ;	interrupt DP
 ;
+;	Additional foulness - the 65c816 doesn't implement any way to enable
+;	interrupts one instruction on. We could avoid using rtl and stack
+;	frame for rti but the brain dead processor design makes this extra
+;	hard as the return address is differently stored!
+;
 interrupt_handler:
 	; Make sure we save all of the register bits
 	rep	#$30
@@ -543,11 +548,21 @@ join_interrupt_path:
 	txs
 
 	lda	U_DATA__U_INSYS
-	beq	ret_to_user
+	bne	ret_to_kernel
+
+	;
+	;	Peek in the frame and see if the return bank si the kernel
+	;	bank. If so its a kernel return irrespective of INSYS
+	;
+
+	lda	13,s
+	cmp 	#KERNEL_BANK
+	bne	ret_to_user
 
 	;	Kernel interrupt path may change B and D itself so we must
 	;	preserve them
 
+ret_to_kernel:
 	pld
 	plb
 
@@ -604,6 +619,7 @@ ret_to_user:
 	;	We will (one day maybe) pop back out here. It's not
 	;	guaranteed (we might be killed off)
 	;
+
 	rep	#$10
 	.a8
 	.i16
@@ -664,6 +680,11 @@ no_preempt:
 	.a8
 	.i16
 signal_exit:
+	; DEBUG FIXME
+	pha
+	lda	#1
+	sta	$FE41
+	pla
 	stz	U_DATA__U_CURSIG
 	sta	tmp1		; save signal 8bits (irq tmp1)
 
