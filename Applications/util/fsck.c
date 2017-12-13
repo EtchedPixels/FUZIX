@@ -247,7 +247,7 @@ int perform_fsck(char *name)
     }
 
     buf = daread(1);
-    bcopy(buf, (char *) &superblock, sizeof(struct filesys));
+    memcpy((char *) &superblock, buf, sizeof(struct filesys));
 
     if (superblock.s_fmod == FMOD_DIRTY) {
         printf("Filesystem was not cleanly unmounted.\n");
@@ -363,10 +363,12 @@ static void pass1(void)
     blkno_t bno;
     uint16_t icount;
     blkno_t *buf;
+    uint16_t imax =  8 * (swizzle16(superblock.s_isize) - 2);
+    uint32_t bmax;
 
     icount = 0;
 
-    for (n = ROOTINODE; n < 8 * (swizzle16(superblock.s_isize) - 2); ++n) {
+    for (n = ROOTINODE; n < imax; ++n) {
         iread(n, &ino);
         linkmap[n] = -1;
         if (ino.i_mode == 0)
@@ -444,7 +446,8 @@ static void pass1(void)
                 }
             }
             /* Check the rest */
-            for (bno = 0; bno <= swizzle32(ino.i_size)/512; ++bno) {
+            bmax = swizzle32(ino.i_size)/512;
+            for (bno = 0; bno <= bmax ; ++bno) {
                 b = getblkno(&ino, bno);
 
                 if (b != 0 && (b < swizzle16(superblock.s_isize) || b >= swizzle16(superblock.s_fsize))) {
@@ -479,6 +482,7 @@ static void pass2(void)
     blkno_t j;
     blkno_t oldtfree;
     int s;
+    uint16_t imax = swizzle16(superblock.s_isize);
 
     printf("Rebuild free list? ");
     if (!yes_noerror())
@@ -496,7 +500,7 @@ static void pass2(void)
 
     /* Free each block, building the free list */
 
-    for (j = swizzle16(superblock.s_fsize) - 1; j >= swizzle16(superblock.s_isize); --j) {
+    for (j = swizzle16(superblock.s_fsize) - 1; j >= imax; --j) {
         if (bittest(j) == 0) {
             if (swizzle16(superblock.s_nfree) == 50) {
                 dwrite(j, (char *) &superblock.s_nfree);
@@ -526,16 +530,18 @@ static void pass3(void)
     blkno_t b;
     blkno_t bno;
     blkno_t newno;
+    uint16_t bmax = swizzle16(superblock.s_fsize);
+    uint16_t imax = 8 * (swizzle16(superblock.s_isize) - 2);
+    uint32_t nmax;
     /*--- was blk_alloc ---*/
 
     /* FIXME:
-        1. Cache the swizzle sizes so we generate nice code for the loops
-        2. Set the bits below s_isize
+        1. Set the bits below s_isize
      */
-    for (b = swizzle16(superblock.s_isize); b < swizzle16(superblock.s_fsize); ++b)
+    for (b = swizzle16(superblock.s_isize); b < bmax; ++b)
         bitclear(b);
 
-    for (n = ROOTINODE; n < 8 * (swizzle16(superblock.s_isize) - 2); ++n) {
+    for (n = ROOTINODE; n < imax; ++n) {
         iread(n, &ino);
 
         mode = swizzle16(ino.i_mode) & F_MASK;
@@ -566,7 +572,8 @@ static void pass3(void)
         }
 
         /* Check the rest */
-        for (bno = 0; bno <= swizzle32(ino.i_size)/512; ++bno) {
+        nmax = swizzle32(ino.i_size)/512;
+        for (bno = 0; bno <= nmax; ++bno) {
             b = getblkno(&ino, bno);
 
             if (b != 0) {
@@ -799,9 +806,11 @@ static void mkentry(uint16_t inum)
     struct dinode rootino;
     struct direct dentry;
     uint16_t d;
+    uint32_t dmax;
 
     iread(ROOTINODE, &rootino);
-    for (d = 0; d < swizzle32(rootino.i_size)/32; ++d) {
+    dmax = swizzle32(rootino.i_size)/32;
+    for (d = 0; d < dmax; ++d) {
         dirread(&rootino, d, &dentry);
         if (dentry.d_ino == 0 && dentry.d_name[0] == '\0') {
             dentry.d_ino = swizzle16(inum);
@@ -844,6 +853,9 @@ static blkno_t getblkno(struct dinode *ino, blkno_t num)
     buf = (blkno_t *) daread(indb);
 
     dindb = swizzle16(buf[(num - (18 + 256)) >> 8]);
+    if (dindb == 0)
+        return 0;
+
     buf = (blkno_t *) daread(dindb);
 
     return swizzle16(buf[(num - (18 + 256)) & 0x00ff]);
@@ -930,9 +942,19 @@ static blkno_t blk_alloc0(struct filesys *filesys)
     return (newno);
 }
 
+
+static uint16_t lblk = 0;
+
 static char *daread(uint16_t blk)
 {
     static char da_buf[512];
+
+    if (blk == 0)
+        panic("reading block 0");
+
+    if (blk == lblk)
+        return da_buf;
+
     if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
@@ -941,6 +963,7 @@ static char *daread(uint16_t blk)
         perror("read");
         exit(1);
     }
+    lblk = blk;
     return da_buf;
 }
 
@@ -954,6 +977,7 @@ static void dwrite(uint16_t blk, char *addr)
         perror("write");
         exit(1);
     }
+    lblk = 0;
 }
 
 static void iread(uint16_t ino, struct dinode *buf)
@@ -961,7 +985,7 @@ static void iread(uint16_t ino, struct dinode *buf)
     struct dinode *addr;
 
     addr = (struct dinode *) daread((ino >> 3) + 2);
-    bcopy((char *) &addr[ino & 7], (char *) buf, sizeof(struct dinode));
+    memcpy(buf, &addr[ino & 7], sizeof(struct dinode));
 }
 
 static void iwrite(uint16_t ino, struct dinode *buf)
@@ -969,7 +993,7 @@ static void iwrite(uint16_t ino, struct dinode *buf)
     struct dinode *addr;
 
     addr = (struct dinode *) daread((ino >> 3) + 2);
-    bcopy((char *) buf, (char *) &addr[ino & 7], sizeof(struct dinode));
+    memcpy(&addr[ino & 7], buf, sizeof(struct dinode));
     dwrite((ino >> 3) + 2, (char *) addr);
 }
 
@@ -982,7 +1006,7 @@ static void dirread(struct dinode *ino, uint16_t j, struct direct *dentry)
     if (blkno == 0)
         panic("Missing block in directory");
     buf = daread(blkno);
-    bcopy(buf + 32 * (j % 16), (char *) dentry, 32);
+    memcpy(dentry, buf + 32 * (j % 16), 32);
 }
 
 static void dirwrite(struct dinode *ino, uint16_t j, struct direct *dentry)
@@ -994,6 +1018,6 @@ static void dirwrite(struct dinode *ino, uint16_t j, struct direct *dentry)
     if (blkno == 0)
         panic("Missing block in directory");
     buf = daread(blkno);
-    bcopy((char *) dentry, buf + 32 * (j % 16), 32);
+    memcpy(buf + 32 * (j % 16), dentry, 32);
     dwrite(blkno, buf);
 }
