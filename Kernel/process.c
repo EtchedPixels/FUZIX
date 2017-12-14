@@ -59,7 +59,7 @@ void psleep(void *event)
 
 void wakeup(void *event)
 {
-	ptptr p;
+	regptr ptptr p;
 	irqflags_t irq;
 
 #ifdef DEBUGHARDER
@@ -154,7 +154,7 @@ ptptr getproc(void)
 
 ptptr getproc(void)
 {
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 
 #ifdef DEBUGREALLYHARD
 	kputs("getproc(");
@@ -193,7 +193,7 @@ ptptr getproc(void)
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
  */
-void newproc(ptptr p)
+void newproc(regptr ptptr p)
 {				/* Passed New process table entry */
 	uint8_t *j;
 	irqflags_t irq;
@@ -249,7 +249,8 @@ void newproc(ptptr p)
 uint16_t nextpid = 0;
 ptptr ptab_alloc(void)
 {
-	ptptr p, newp;
+	regptr ptptr p;
+	regptr ptptr newp;
 	irqflags_t irq;
 
 	newp = NULL;
@@ -298,7 +299,7 @@ ptptr ptab_alloc(void)
 
 void load_average(void)
 {
-	struct runload *r;
+	regptr struct runload *r;
 	static uint8_t utick;
 	uint8_t i;
 	uint16_t nr;
@@ -432,7 +433,7 @@ void unix_syscall(void)
 
 void sgrpsig(uint16_t pgrp, uint8_t sig)
 {
-	ptptr p;
+	regptr ptptr p;
 	if (pgrp) {
 		for (p = ptab; p < ptab_end; ++p)
 			if (p->p_pgrp == pgrp)
@@ -462,15 +463,13 @@ static uint8_t dump_core(uint8_t sig)
 
 #define SIGBIT(x)	(1 << (x & 15))
 
-static const uint16_t stopper = {
-	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP)
-};
+static const uint16_t stopper =
+	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP);
 
-static const uint16_t clear = {
+static const uint16_t clear =
 	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP) |
 	SIGBIT(SIGCHLD) | SIGBIT(SIGURG) | SIGBIT(SIGWINCH) | SIGBIT(SIGIO) |
-	SIGBIT(SIGCONT)
-};
+	SIGBIT(SIGCONT);
 
 /* Process a block of 16 signals so we can avoid using longs */
 
