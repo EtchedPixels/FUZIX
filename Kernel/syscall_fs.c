@@ -55,7 +55,7 @@ arg_t _lseek(void)
 	else if (flag == 1)
 		pt = &p;
 	else if (flag == 2)
-		pt = &ino->c_node.i_size;
+		pt = (off_t *)&ino->c_node.i_size;
 	else
                 goto bad;
 
