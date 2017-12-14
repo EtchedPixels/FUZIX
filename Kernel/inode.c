@@ -26,6 +26,12 @@ static uint8_t pipewait(inoptr ino, uint8_t flag)
         return 1;
 }
 
+/* We need this because SDCC otherwise makes a right hash of it */
+static uint16_t uoff(void)
+{
+	return BLKOFF((uint16_t)udata.u_offset);
+}
+
 /* Writei (and readi) need more i/o error handling */
 void readi(regptr inoptr ino, uint8_t flag)
 {
@@ -69,7 +75,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 	      loop:
 		toread = udata.u_count;
 		while (toread) {
-			amount = min(toread, BLKSIZE - BLKOFF(udata.u_offset));
+			amount = min(toread, BLKSIZE - uoff());
 			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
 
 #if defined(read_direct)
@@ -98,7 +104,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 					bp = bread(dev, pblk, 0);
 				if (bp == NULL)
 					break;
-				uputblk(bp, BLKOFF(udata.u_offset), amount);
+				uputblk(bp, uoff(), amount);
 
 				brelse(bp);
 			}
@@ -184,7 +190,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 	      	flag = flag & O_SYNC ? 2 : 1;
 
 		while (towrite) {
-			amount = min(towrite, BLKSIZE - BLKOFF(udata.u_offset));
+			amount = min(towrite, BLKSIZE - uoff());
 
                         if (udata.u_offset >> BLKOVERSIZE) {
                                 udata.u_error = EFBIG;
@@ -204,7 +210,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 			if (bp == NULL)
 				break;
 
-			ugetblk(bp, BLKOFF(udata.u_offset), amount);
+			ugetblk(bp, uoff(), amount);
 
 			/* O_SYNC */
 			if (bfree(bp, flag))
