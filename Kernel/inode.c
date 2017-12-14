@@ -12,16 +12,17 @@
 
 /* This assumes it's called once before we do I/O. That's wrong and we
    need to integrate this into the I/O loop, but when we do it changes
-   how we handle the psleep_flags bit */
+   how we handle the psleep_flags bit. Pipes wrap before 64k so we can
+   shorten the check */
 static uint8_t pipewait(inoptr ino, uint8_t flag)
 {
-        while(ino->c_node.i_size == 0) {
+        while((uint16_t)ino->c_node.i_size == 0) {
                 if (ino->c_writers == 0 || psleep_flags(ino, flag)) {
                         udata.u_count = 0;
                         return 0;
                 }
         }
-	udata.u_count = min(udata.u_count, ino->c_node.i_size);
+	udata.u_count = min(udata.u_count, (uint16_t)ino->c_node.i_size);
         return 1;
 }
 
