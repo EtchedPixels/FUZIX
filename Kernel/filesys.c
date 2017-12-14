@@ -787,12 +787,14 @@ int8_t uf_alloc(void)
 
 void i_deref(inoptr ino)
 {
+    uint16_t mode = ino->c_node.i_mode & F_MASK;
+
     magic(ino);
 
     if(!ino->c_refs)
         panic(PANIC_INODE_FREED);
 
-    if((ino->c_node.i_mode & F_MASK) == F_PIPE)
+    if (mode == F_PIPE)
         wakeup((char *)ino);
 
     /* If the inode has no links and no refs, it must have
@@ -802,9 +804,7 @@ void i_deref(inoptr ino)
         /*
            SN (mcy)
            */
-        if(((ino->c_node.i_mode & F_MASK) == F_REG) ||
-                ((ino->c_node.i_mode & F_MASK) == F_DIR) ||
-                ((ino->c_node.i_mode & F_MASK) == F_PIPE))
+        if (mode == F_REG || mode == F_DIR || mode == F_PIPE)
             f_trunc(ino);
 
     /* If the inode was modified, we must write it to disk. */
