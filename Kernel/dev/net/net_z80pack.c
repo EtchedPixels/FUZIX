@@ -214,7 +214,6 @@ void net_close(struct socket *s)
  */
 arg_t net_read(struct socket *s, uint8_t flag)
 {
-	usize_t n = 0;
 	struct sockdata *sd = s->s_priv;
 	irqflags_t irq;
 	uint8_t st;
@@ -248,20 +247,20 @@ arg_t net_read(struct socket *s, uint8_t flag)
         				break;
                         }
 			uputc(data, udata.u_base++);
-			n++;
-			if (n < udata.u_count)
+			udata.u_done++;
+			if (udata.u_done < udata.u_count)
 			        continue;
 		}
-		if (n)
+		if (udata.u_done)
 		        break;
 		s->s_iflag &= ~SI_DATA;
-		if (psleep_flags_io(&s->s_iflag, flag, &n)) {
+		if (psleep_flags_io(&s->s_iflag, flag)) {
         		irqrestore(irq);
 			return -1;
                 }
 	}
-	if (n)
-		return n;
+	if (udata.u_done)
+		return udata.u_done;
 	if (st & 0x80) {
 		err_xlate(s);
 		return -1;
@@ -275,7 +274,6 @@ arg_t net_read(struct socket *s, uint8_t flag)
  */
 arg_t net_write(struct socket * s, uint8_t flag)
 {
-	usize_t n = 0;
 	uint8_t p = 0;
 	struct sockdata *sd = s->s_priv;
 	irqflags_t irq;
@@ -298,10 +296,10 @@ arg_t net_write(struct socket * s, uint8_t flag)
 			break;
 
 		/* Good status after a write means byte ok */
-		n += p;
-		if (n == udata.u_count) {
+		udata.u_done += p;
+		if (udata.u_done == udata.u_count) {
 		        irqrestore(irq);
-			return n;
+			return udata.u_done;
                 }
 		/* Can we send more bytes ? */
 		p = 0;
@@ -315,7 +313,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 			continue;
 		}
 		s->s_iflag |= SI_THROTTLE;
-		if (psleep_flags_io(&s->s_iflag, flag, &n)) {
+		if (psleep_flags_io(&s->s_iflag, flag)) {
                         irqrestore(irq);
 			return n;
                 }
@@ -323,10 +321,10 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	}
 	/* It broke mummy ! */
         irqrestore(irq);
-	if (n) {
+	if (udata.u_done) {
 	        s->s_error = udata.u_error;
 	        udata.u_error = 0;
-		return n;
+		return udata.u_done;
         }
 	err_xlate(s);
 	if (udata.u_error == EPIPE)

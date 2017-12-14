@@ -34,7 +34,6 @@ static void tty_selwake(uint8_t minor, uint16_t event)
 
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	usize_t nread;
 	unsigned char c;
 	struct s_queue *q;
 	struct tty *t;
@@ -44,12 +43,12 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	q = &ttyinq[minor];
 	t = &ttydata[minor];
-	nread = 0;
-	while (nread < udata.u_count) {
+
+	while (udata.u_done < udata.u_count) {
 		for (;;) {
 #ifdef CONFIG_LEVEL_2		
-                        if (jobcontrol_in(minor, t, &nread))
-				return nread;
+                        if (jobcontrol_in(minor, t))
+				return udata.u_done;
 #endif				
 		        if ((t->flag & TTYF_DEAD) && (!q->q_count))
 				goto dead;
@@ -63,25 +62,25 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			if (!(t->termios.c_lflag & ICANON)) {
 			        uint8_t n = t->termios.c_cc[VTIME];
 
-				if ((nread || !n) && nread >= t->termios.c_cc[VMIN])
+				if ((udata.u_done || !n) && udata.u_done >= t->termios.c_cc[VMIN])
 					goto out;
 				if (n)
 			                udata.u_ptab->p_timeout = n + 1;
                         }
-			if (psleep_flags_io(q, flag, &nread))
+			if (psleep_flags_io(q, flag))
 			        goto out;
                         /* timer expired */
                         if (udata.u_ptab->p_timeout == 1)
                                 goto out;
 		}
 
-		++nread;
+		++udata.u_done;
 
 		/* return according to mode */
 		if (t->termios.c_lflag & ICANON) {
-			if (nread == 1 && (c == t->termios.c_cc[VEOF])) {
+			if (udata.u_done == 1 && (c == t->termios.c_cc[VEOF])) {
 				/* ^D */
-				nread = 0;
+				udata.u_done = 0;
 				break;
 			}
 			if (c == '\n' || c == t->termios.c_cc[VEOL])
@@ -92,7 +91,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	}
 out:
 	wakeup(&q->q_count);
-	return nread;
+	return udata.u_done;
 
 dead:
         udata.u_error = ENXIO;
@@ -102,18 +101,17 @@ dead:
 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	struct tty *t;
-	usize_t written = 0;
 	uint8_t c;
 
 	used(rawflag);
 
 	t = &ttydata[minor];
 
-	while (udata.u_count-- != 0) {
+	while (udata.u_done != udata.u_count) {
 		for (;;) {	/* Wait on the ^S/^Q flag */
 #ifdef CONFIG_LEVEL_2		
-	                if (jobcontrol_out(minor, t, &written))
-				return written;
+	                if (jobcontrol_out(minor, t))
+				return udata.u_done;
 #endif				
 		        if (t->flag & TTYF_DEAD) {
 			        udata.u_error = ENXIO;
@@ -121,8 +119,8 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			}
 			if (!(t->flag & TTYF_STOP))
 				break;
-			if (psleep_flags_io(&t->flag, flag, &written))
-				return written;
+			if (psleep_flags_io(&t->flag, flag))
+				return udata.u_done;
 		}
 		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
@@ -141,9 +139,9 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				break;
 		}
 		++udata.u_base;
-		++written;
+		++udata.u_done;
 	}
-	return written;
+	return udata.u_done;
 }
 
 

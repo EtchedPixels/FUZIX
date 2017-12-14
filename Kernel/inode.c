@@ -293,6 +293,7 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 	udata.u_sysio = false;	/* I/O to user data space */
 	udata.u_base = (unsigned char *) udata.u_argn1;	/* buf */
 	udata.u_count = (susize_t) udata.u_argn2;	/* nbytes */
+	udata.u_done = 0;		/* bytes done so far */
 
 	if ((ino = getinode(udata.u_argn)) == NULLINODE) {
 		/* kprintf("[WRS: rwsetup(): getinode(%x) fails]", udata.u_argn); */

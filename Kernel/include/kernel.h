@@ -21,6 +21,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NULL (void *)0
 #endif
 
+#ifndef regptr
+#define regptr
+#endif
+
 #define min(a,b) ( (a) < (b) ? (a) : (b) )
 #define max(a,b) ( (a) > (b) ? (a) : (b) )
 #define aligndown(v,a) (uint8_t*)((intptr_t)(v) & ~((a)-1))
@@ -40,8 +44,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "level2.h"
 #else
 
-#define jobcontrol_in(x,y,z)	0
-#define jobcontrol_out(x,y,z)	0
+#define jobcontrol_in(x,y)	0
+#define jobcontrol_out(x,y)	0
 #define jobcontrol_ioctl(x,y,z)	0
 
 #define limit_exceeded(x,y) (0)
@@ -516,6 +520,7 @@ typedef struct u_data {
     uint16_t	u_blkoff;	/* Offset in block */
     usize_t	u_nblock;	/* Number of blocks */
     uint8_t	*u_dptr;	/* Address for I/O */
+    usize_t	u_done;		/* Counter for driver methods */
 
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
@@ -820,7 +825,7 @@ extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
 extern void clrq(struct s_queue *q);
 extern bool uninsq(struct s_queue *q, unsigned char *cp);
-extern int psleep_flags_io(void *event, unsigned char flags, usize_t *n);
+extern int psleep_flags_io(void *event, unsigned char flags);
 extern int psleep_flags(void *event, unsigned char flags);
 extern int nxio_open(uint8_t minor, uint16_t flag);
 extern int no_open(uint8_t minor, uint16_t flag);

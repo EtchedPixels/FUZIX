@@ -474,19 +474,19 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
              Miscellaneous helpers
 **********************************************************************/
 
-int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
+int psleep_flags_io(void *p, unsigned char flags)
 {
 	if (flags & O_NDELAY) {
-	        if (!*n) {
-	                *n = (usize_t)-1;
+	        if (!udata.u_done) {
+	                udata.u_done = (usize_t)-1;
 			udata.u_error = EAGAIN;
                 }
 		return -1;
 	}
 	psleep(p);
 	if (chksigs()) {
-	        if (!*n) {
-	                *n = (usize_t)-1;
+	        if (!udata.u_done) {
+	                udata.u_done = (usize_t)-1;
                         udata.u_error = EINTR;
                 }
 		return -1;
@@ -496,8 +496,16 @@ int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 
 int psleep_flags(void *p, unsigned char flags)
 {
-        usize_t dummy = 0;
-        return psleep_flags_io(p, flags, &dummy);
+	if (flags & O_NDELAY) {
+		udata.u_error = EAGAIN;
+		return -1;
+	}
+	psleep(p);
+	if (chksigs()) {
+                udata.u_error = EINTR;
+		return -1;
+	}
+	return 0;
 }
 
 void kputs(const char *p)
