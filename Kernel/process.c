@@ -593,7 +593,7 @@ rescan:
 void ssig(ptptr proc, uint8_t sig)
 {
 	struct sigbits *m = proc->p_sig;
-	uint32_t sigm;
+	uint16_t sigm;
 	uint8_t sigbit = sig & 0x0F;
 	irqflags_t irq;
 
