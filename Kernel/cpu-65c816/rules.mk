@@ -1,7 +1,7 @@
 export CROSS_AS=ca65
 export CROSS_LD=cl65
 export CROSS_CC=cl65
-export CROSS_CCOPTS=--cpu 65c02 -c -O -t none -I$(ROOT_DIR)/cpu-65c816 -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=--cpu 65c02 -c -O -Os -Or -t none -I$(ROOT_DIR)/cpu-65c816 -I$(ROOT_DIR)/cpu-6502 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 #
 #	It really doesn't matter how we map the segments as it's one binary
 #	with no banking or tricks. The only exception is the discard area
