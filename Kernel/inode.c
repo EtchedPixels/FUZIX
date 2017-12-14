@@ -107,7 +107,7 @@ void readi(inoptr ino, uint8_t flag)
 #endif                        
 			udata.u_base += amount;
 			udata.u_offset += amount;
-			if (ispipe && udata.u_offset >= 18 * BLKSIZE)
+			if (ispipe && (uint16_t)udata.u_offset >= 18 * BLKSIZE)
 				udata.u_offset = 0;
 			toread -= amount;
 			if (ispipe) {
@@ -212,7 +212,7 @@ void writei(inoptr ino, uint8_t flag)
 			udata.u_base += amount;
 			udata.u_offset += amount;
 			if (ispipe) {
-				if (udata.u_offset >= 18 * 512)
+				if ((uint16_t)udata.u_offset >= 18 * 512)
 					udata.u_offset = 0;
 				ino->c_node.i_size += amount;
 				/* Wake up any readers */
