@@ -44,21 +44,18 @@ arg_t _lseek(void)
 	o = &of_tab[udata.u_files[file]];
 	p = o->o_ptr;
 
-	switch (flag) {
-	case 0:
+	if (flag == 0)
 		p = n;
-		break;
-	case 1:
+	else if (flag == 1)
 		p += n;
-		break;
-	case 2:
+	else if (flag == 2)
 		p = ino->c_node.i_size + n;
-		break;
-	default:
+	else
                 goto bad;
-	}
+
 	if (p < 0)
 	        goto bad;
+
         o->o_ptr = p;
 	uput(&p, offset, sizeof(n));
 	return 0;
