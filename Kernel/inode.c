@@ -167,7 +167,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
 		   in one go - needs merging into the loop */
 		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
-					ino->c_node.i_size) {
+					(uint16_t)ino->c_node.i_size) {
 			if (ino->c_readers == 0) {	/* No readers */
 				udata.u_count = (usize_t)-1;
 				udata.u_error = EPIPE;
