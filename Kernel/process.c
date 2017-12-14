@@ -256,7 +256,7 @@ ptptr ptab_alloc(void)
 	udata.u_error = EAGAIN;
 
 	irq = di();
-	for (p = ptab; p < ptab_end; p++)
+	for (p = ptab; p < ptab_end; p++) {
 		if (p->p_status == P_EMPTY) {
 			newp = p;
 			/* zero process structure */
