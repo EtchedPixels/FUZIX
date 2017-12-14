@@ -465,15 +465,11 @@ static uint8_t dump_core(uint8_t sig)
 
 #define SIGBIT(x)	(1 << (x & 15))
 
-static const uint16_t stopper[2] = {
-	0,
-	/* And the high signals */
+static const uint16_t stopper = {
 	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP)
 };
 
-static const uint16_t clear[2] = {
-	0,
-	/* And the high signals */
+static const uint16_t clear = {
 	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP) |
 	SIGBIT(SIGCHLD) | SIGBIT(SIGURG) | SIGBIT(SIGWINCH) | SIGBIT(SIGIO) |
 	SIGBIT(SIGCONT)
@@ -511,7 +507,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 		           Annoyingly right now we have to context switch to the task
 		           in order to stop it in the right place. That would be nice
 		           to fix */
-		        if (m & stopper[b]) {
+		        if (b && (m & stopper)) {
 				/* Don't allow us to race SIGCONT */
 				irqflags_t irq = di();
 				/* FIXME: can we ever end up here not in READY/RUNNING ? */
@@ -530,7 +526,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 			   chksigs) */
 			sb->s_pending &= ~m;
 
-	                if ((m & clear[b]) || udata.u_ptab->p_pid == 1) {
+	                if ((b && (m & clear)) || udata.u_ptab->p_pid == 1) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
 				continue;
@@ -615,7 +611,7 @@ void ssig(ptptr proc, uint8_t sig)
 		}
 		/* STOP discards pending conts */
 		if (sig >= SIGSTOP && sig <= SIGTTOU)
-			proc->p_sig[0].s_pending &= ~SIGBIT(SIGCONT);
+			proc->p_sig[1].s_pending &= ~SIGBIT(SIGCONT);
 
 		/* Routine signal behaviour */
 		if (!(m->s_ignored & sigm)) {
