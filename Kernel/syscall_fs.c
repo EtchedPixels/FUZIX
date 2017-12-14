@@ -25,10 +25,12 @@ void updoff(void)
    as a 32bit OS might */
 arg_t _lseek(void)
 {
+	static off_t zero;
 	inoptr ino;
 	struct oft *o;
 	off_t p;
 	off_t n;
+	off_t *pt;
 	
 	if (uget(offset, &n, sizeof(n)))
 	        return -1;
@@ -44,14 +46,20 @@ arg_t _lseek(void)
 	o = &of_tab[udata.u_files[file]];
 	p = o->o_ptr;
 
+	/* 32bit maths is really messy on some processors and the three cases
+	   produce three sets of 32bit maths operations. Instead we take a
+	   pointer to what to use as the offset and do the maths once */
+
 	if (flag == 0)
-		p = n;
+		pt = &zero;
 	else if (flag == 1)
-		p += n;
+		pt = &p;
 	else if (flag == 2)
-		p = ino->c_node.i_size + n;
+		pt = &ino->c_node.i_size;
 	else
                 goto bad;
+
+	p = *pt + n;
 
 	if (p < 0)
 	        goto bad;
