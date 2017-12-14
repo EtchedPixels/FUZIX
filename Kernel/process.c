@@ -259,40 +259,37 @@ ptptr ptab_alloc(void)
 	for (p = ptab; p < ptab_end; p++)
 		if (p->p_status == P_EMPTY) {
 			newp = p;
-			break;
+			/* zero process structure */
+			memset(newp, 0, sizeof(struct p_tab));
+
+			/* select a unique pid */
+			while (newp->p_pid == 0) {
+				if (nextpid++ > MAXPID)
+					nextpid = 20;
+				newp->p_pid = nextpid;
+
+				for (p = ptab; p < ptab_end; p++)
+					if (p->p_status != P_EMPTY
+					    && p->p_pid == nextpid) {
+						newp->p_pid = 0;	/* try again */
+						break;
+					}
+			}
+			newp->p_top = udata.u_top;
+			if (pagemap_alloc(newp) == 0) {
+				newp->p_status = P_FORKING;
+				nproc++;
+			} else {
+				udata.u_error = ENOMEM;
+				newp = NULL;
+	                }
+	                newp->p_pgrp = udata.u_ptab->p_pgrp;
+	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			udata.u_error = 0;
+	                break;
 		}
-
-	if (newp) {		/* found a slot? */
-		/* zero process structure */
-		memset(newp, 0, sizeof(struct p_tab));
-
-		/* select a unique pid */
-		while (newp->p_pid == 0) {
-			if (nextpid++ > MAXPID)
-				nextpid = 20;
-			newp->p_pid = nextpid;
-
-			for (p = ptab; p < ptab_end; p++)
-				if (p->p_status != P_EMPTY
-				    && p->p_pid == nextpid) {
-					newp->p_pid = 0;	/* try again */
-					break;
-				}
-		}
-		newp->p_top = udata.u_top;
-		if (pagemap_alloc(newp) == 0) {
-			newp->p_status = P_FORKING;
-			nproc++;
-		} else {
-			udata.u_error = ENOMEM;
-			newp = NULL;
-                }
-                newp->p_pgrp = udata.u_ptab->p_pgrp;
-                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
 	}
 	irqrestore(irq);
-	if (newp)
-		udata.u_error = 0;
 	return newp;
 }
 
