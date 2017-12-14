@@ -127,7 +127,8 @@ the 6502 itself.
 
 cc65 (as of the lates version) handles these rules correctly. Older cc65
 assumes ZP is at $0000 but the C library has a workaround to replace the
-problem routine with its own.
+problem routine with its own. The C library also contains a less than pretty
+implementation of longjmp that does the right thing.
 
 Signal Handling
 
