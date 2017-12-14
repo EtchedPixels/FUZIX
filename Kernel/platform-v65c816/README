@@ -11,7 +11,7 @@ Bank 0:
 	0xF000		7 x 256 byte CPU stacks for processes paired
 			with their direct pages
 	0xFE00		I/O page
-	0xFF00		Vectors			[packed at 0 in image]
+	0xFF00		Vectors	and IRQ DP	[packed at 0 in image]
 
 And in user space
 
