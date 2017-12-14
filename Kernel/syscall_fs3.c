@@ -326,7 +326,7 @@ arg_t _flock(void)
 {
 #ifndef CONFIG_LEVEL_0
 	inoptr ino;
-	struct oft *o;
+	regptr struct oft *o;
 	staticfast uint8_t c;
 	staticfast uint8_t lock;
 	staticfast int self;

@@ -207,7 +207,8 @@ inoptr srch_mt(inoptr ino)
 inoptr i_open(uint16_t dev, uint16_t ino)
 {
     struct blkbuf *buf;
-    inoptr nindex, j;
+    regptr inoptr nindex;
+    regptr inoptr j;
     struct mount *m;
     bool isnew = false;
 
@@ -431,7 +432,7 @@ bool namecomp(char *n1, char *n2) // return true if n1 == n2
 
 inoptr newfile(inoptr pino, char *name)
 {
-    inoptr nindex;
+    regptr inoptr nindex;
     uint8_t j;
 
     /* No parent? */
@@ -489,7 +490,7 @@ nogood:
 
 fsptr getdev(uint16_t dev)
 {
-    struct mount *mnt;
+    regptr struct mount *mnt;
     time_t t;
 
     mnt = fs_tab_get(dev);
@@ -526,7 +527,7 @@ uint16_t i_alloc(uint16_t devno)
     staticfast fsptr dev;
     staticfast blkno_t blk;
     struct blkbuf *buf;
-    struct dinode *di;
+    regptr struct dinode *di;
     staticfast uint16_t j;
     uint16_t k;
     unsigned ino;
@@ -725,7 +726,7 @@ int8_t oft_alloc(void)
  *	and if we are dropping a lock that is not exclusive we must own one of
  *	the non exclusive locks.
  */
-void deflock(struct oft *ofptr)
+void deflock(regptr struct oft *ofptr)
 {
     inoptr i = ofptr->o_inode;
     uint8_t c = i->c_flags & CFLOCK;
@@ -785,7 +786,7 @@ int8_t uf_alloc(void)
  * links, the inode itself and its blocks(if not a device) is freed.
  */
 
-void i_deref(inoptr ino)
+void i_deref(regptr inoptr ino)
 {
     uint8_t mode = getmode(ino);
 
@@ -865,7 +866,7 @@ uint16_t devnum(inoptr ino)
 /* F_trunc frees all the blocks associated with the file, if it
  * is a disk file.
  */
-int f_trunc(inoptr ino)
+int f_trunc(regptr inoptr ino)
 {
     uint16_t dev;
     int8_t j;
@@ -905,7 +906,7 @@ int f_trunc(inoptr ino)
 void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 {
     struct blkbuf *buf;
-    blkno_t *bn;
+    regptr blkno_t *bn;
     int16_t j;
 
     if(!blk)
@@ -931,7 +932,7 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 {
     struct blkbuf *buf;
-    blkno_t *bn;
+    regptr blkno_t *bn;
     int16_t j;
 
     if(!blk)
@@ -1179,7 +1180,7 @@ struct mount *fs_tab_get(uint16_t dev)
 bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
 {
     struct mount *m;
-    struct filesys *fp;
+    regptr struct filesys *fp;
     bufptr buf;
 
     if(d_open(dev, 0) != 0)

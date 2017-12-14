@@ -356,9 +356,9 @@ arg_t _mount(void)
 
 static int do_umount(uint16_t dev)
 {
-	struct mount *mnt;
+	regptr struct mount *mnt;
 	uint8_t rm = flags & MS_REMOUNT;
-	inoptr ptr;
+	regptr inoptr ptr;
 
 	mnt = fs_tab_get(dev);
 	if (mnt == NULL) {
@@ -471,7 +471,7 @@ arg_t _profil(void)
 	/* For performance reasons scale as
 	   passed to the kernel is a shift value
 	   not a divider */
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 
 	if (scale == 0) {
 		p->p_profscale = scale;
@@ -533,7 +533,7 @@ int16_t pri;
 
 arg_t _nice(void)
 {
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 	int16_t np;
 
 	if (pri < 0 && !esuper())

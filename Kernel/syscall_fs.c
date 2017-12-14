@@ -310,7 +310,7 @@ int fildes[];
 arg_t _pipe(void)
 {
 	int8_t u1, u2, oft1, oft2;
-	inoptr ino;
+	regptr inoptr ino;
 
 /* bug fix SN */
 	if ((u1 = uf_alloc()) == -1)

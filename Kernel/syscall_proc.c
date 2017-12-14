@@ -275,25 +275,15 @@ int options;
 
 arg_t _waitpid(void)
 {
-	ptptr p;
+	regptr ptptr p;
 	int retval;
+	uint8_t found;
 
 	if (statloc && !valaddr((char *) statloc, sizeof(int))) {
 		udata.u_error = EFAULT;
 		return (-1);
 	}
 
-	/* FIXME: move this scan into the main loop and also error
-	   on a complete loop finding no matchi for pid */
-	/* See if we have any children. */
-	for (p = ptab; p < ptab_end; ++p) {
-		if (p->p_status && p->p_pptr == udata.u_ptab
-		    && p != udata.u_ptab)
-			goto ok;
-	}
-	udata.u_error = ECHILD;
-	return (-1);
-      ok:
 	if (pid == 0)
 		pid = -udata.u_ptab->p_pgrp;
 	/* Search for an exited child; */
@@ -303,30 +293,39 @@ arg_t _waitpid(void)
 			udata.u_error = EINTR;
 			return -1;
 		}
+		/* Each scan we check that we have a child, if we have a child
+		   then all is good. If not then we ECHILD out */
+		found = 0;
 		for (p = ptab; p < ptab_end; ++p) {
-			if (p->p_pptr == udata.u_ptab &&
-				(pid == -1 || p->p_pid == pid ||
-					p->p_pgrp == -pid)) {
-				if (p->p_status == P_ZOMBIE) {
-					if (statloc)
-						uputi(p->p_exitval, statloc);
-					retval = p->p_pid;
-					p->p_status = P_EMPTY;
+			if (p->p_status && p->p_pptr == udata.u_ptab) {
+				found = 1;
+				if (pid == -1 || p->p_pid == pid ||
+					p->p_pgrp == -pid) {
+					if (p->p_status == P_ZOMBIE) {
+						if (statloc)
+							uputi(p->p_exitval, statloc);
+						retval = p->p_pid;
+						p->p_status = P_EMPTY;
 
-					/* Add in child's time info.  It was stored on top */
-					/* of p_priority in the childs process table entry. */
-					/* FIXME: make these a union so we don't do type
-					   punning and break strict aliasing */
-					udata.u_cutime += ((clock_t *)&p->p_priority)[0];
-					udata.u_cstime += ((clock_t *)&p->p_priority)[1];
-					return retval;
-				}
-				if (p->p_event && (options & WUNTRACED)) {
-					retval = (uint16_t)p->p_event << 8 | _WSTOPPED;
-					p->p_event = 0;
-					return retval;
+						/* Add in child's time info.  It was stored on top */
+						/* of p_priority in the childs process table entry. */
+						/* FIXME: make these a union so we don't do type
+						   punning and break strict aliasing */
+						udata.u_cutime += ((clock_t *)&p->p_priority)[0];
+						udata.u_cstime += ((clock_t *)&p->p_priority)[1];
+						return retval;
+					}
+					if (p->p_event && (options & WUNTRACED)) {
+						retval = (uint16_t)p->p_event << 8 | _WSTOPPED;
+						p->p_event = 0;
+						return retval;
+					}
 				}
 			}
+		}
+		if (!found) {
+			udata.u_error = ECHILD;
+			return -1;
 		}
 		/* Nothing yet, so wait */
 		if (options & WNOHANG)
@@ -532,7 +531,7 @@ int16_t sig;
 
 arg_t _kill(void)
 {
-	ptptr p;
+	regptr ptptr p;
 	int f = 0, s = 0;
 
 	if (sig < 0 || sig >= NSIGS) {

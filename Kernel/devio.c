@@ -42,7 +42,7 @@ uint16_t bufclock;		/* Time-stamp counter for LRU */
 
 bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 {
-	register bufptr bp;
+	regptr bufptr bp;
 
 	if ((bp = bfind(dev, blk)) != NULL) {
 		if (bp->bf_busy == BF_BUSY)
@@ -85,7 +85,7 @@ void bawrite(bufptr bp)
 }
 
 
-int bfree(bufptr bp, uint8_t dirty)
+int bfree(regptr bufptr bp, uint8_t dirty)
 {				/* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 	if (dirty)
 		bp->bf_dirty = true;
@@ -114,7 +114,7 @@ int bfree(bufptr bp, uint8_t dirty)
  */
 void *tmpbuf(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	bp = freebuf();
 	bp->bf_dev = NO_DEVICE;
@@ -127,15 +127,13 @@ void *tmpbuf(void)
    on platforms where we split disk and temporary buffers */
 void *zerobuf(void)
 {
-	void *b;
-
-	b = tmpbuf();
+	void *b = tmpbuf();
 	memset(b, 0, 512);
 
 	return b;
 }
 
-static void bdput(bufptr bp)
+static void bdput(regptr bufptr bp)
 {
 	bdwrite(bp);
 	if (bp->bf_busy == BF_FREE)
@@ -145,7 +143,7 @@ static void bdput(bufptr bp)
 
 void bufsync(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	/* FIXME: this can generate a lot of d_flush calls when you have
 	   plenty of buffers */
@@ -168,7 +166,7 @@ bufptr bfind(uint16_t dev, blkno_t blk)
 
 void bdrop(uint16_t dev)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bp->bf_dev == dev) {
@@ -180,7 +178,7 @@ void bdrop(uint16_t dev)
 
 bufptr freebuf(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 	bufptr oldest;
 	int16_t oldtime;
 

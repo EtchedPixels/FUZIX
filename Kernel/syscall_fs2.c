@@ -312,7 +312,7 @@ arg_t _fchown(void)
 
 arg_t _utime(void)
 {
-	inoptr ino;
+	regptr inoptr ino;
 	time_t t[2];
 
 	if (!(ino = n_open(file, NULLINOPTR)))
