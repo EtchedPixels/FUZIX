@@ -586,21 +586,17 @@ rescan:
 /*
  *	Send signal, avoid touching uarea
  */
-/* SDCC bug #2472: SDCC generates hideous code for this function due to bad
-   code generation when masking longs. Not clear we can do much about it but
-   file a bug */
 
 void ssig(ptptr proc, uint8_t sig)
 {
 	struct sigbits *m = proc->p_sig;
 	uint16_t sigm;
-	uint8_t sigbit = sig & 0x0F;
 	irqflags_t irq;
 
 	if (sig > 15)
 		m++;
 
-	sigm = 1 << sigbit;
+	sigm = 1 << (sig & 0x0F);
 
 	irq = di();
 
