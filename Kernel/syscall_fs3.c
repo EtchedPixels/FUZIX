@@ -256,7 +256,7 @@ arg_t _fcntl(void)
 							O_NDELAY));
 		return 0;
 	case F_GETFL:
-		return data;
+		return *acc;
 	case F_GETFD:
 		return udata.u_cloexec & (1 << fd) ? O_CLOEXEC : 0;
 	case F_SETFD:
