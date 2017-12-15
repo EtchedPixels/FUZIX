@@ -57,7 +57,7 @@ static uint8_t jobop(uint8_t minor, uint8_t sig, struct tty *t, uint8_t ign)
 	        kprintf("[stop %d %d %d]\n",
 	                t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
 #endif
-		if ((udata.u_ptab->p_held & sigmask(sig)) || udata.u_sigvec[sig] == SIG_IGN)
+		if ((udata.u_ptab->p_sig[1].s_held & sigmask(sig)) || udata.u_sigvec[sig] == SIG_IGN)
 			ignored = 1;
 
 		if ((ignored && ign) || orphan_pgrp(p->p_pgrp, p->p_session)) {
