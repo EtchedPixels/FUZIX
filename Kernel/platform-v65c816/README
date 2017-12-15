@@ -37,7 +37,6 @@ the emulator.
 TODO
 ----
 - Fix brk() checking [right now its busted entirely]
-- Make discard sane so we can discard for buffers
 - Test signal handling paths
 - Add swap logic
 - Relocatable binaries
