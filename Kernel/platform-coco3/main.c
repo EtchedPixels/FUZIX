@@ -98,6 +98,10 @@ uint8_t platform_param(char *p)
 	    swapdev = bootdevice(p+5);
 	    return -1;
 	}
+	if (!strncmp(p,"VTMODE=", 7)){
+	    set_defmode( p );
+	    return -1;
+	}
 	return 0;
 }
 
