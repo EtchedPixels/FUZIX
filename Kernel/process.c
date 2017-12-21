@@ -545,7 +545,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 #ifdef DEBUG
 			kprintf("about to process signal %d\n", j);
 #endif
-			udata.u_cursig = j + b << 4;
+			udata.u_cursig = j + (b << 4);
 			break;
 		}
 	}
