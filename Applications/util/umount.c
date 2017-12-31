@@ -4,9 +4,6 @@
 #include <sys/mount.h>
 #include <mntent.h>
 
-/* Assumed length of a line in /etc/mtab */
-/* FIXME */
-#define MTAB_LINE 160
 #define MAXFS	16
 
 static char *devlist[MAXFS];
@@ -50,7 +47,6 @@ static void queue_rm_mtab(const char *p)
 		*devp++ = strdup(p);
 }
 
-/* FIXME: error checking, atomicity */
 static int rewrite_mtab(void)
 {
 	FILE *inpf, *outf;
