@@ -5,9 +5,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
-
-/* Assumed length of a line in /etc/mtab */
-#define MTAB_LINE 160
+#include <mntent.h>
 
 const char *devname(dev_t);
 const char *mntpoint(const char *);
@@ -119,19 +117,13 @@ void df_dev(dev_t dev)
 void df_all(void)
 {
     FILE *f;
-	char tmp[MTAB_LINE];
-	char* dev;
-	char* mntpt;
+    struct mntent *mnt;
     
-    f = fopen("/etc/mtab", "r");
+    f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, MTAB_LINE, f)) {
-	    dev = strtok(tmp, " ");
-	    mntpt = strtok(NULL, " ");
-            if (mntpt)
-                df_path(mntpt);
-        }
-        fclose(f);
+        while (mnt = getmntent(f))
+                df_path(mnt->mnt_dir);
+        endmntent(f);
     } else {
         fprintf(stderr, "df: cannot open /etc/mtab: %s\n", strerror(errno));
     }
@@ -173,21 +165,17 @@ const char *devname(dev_t devno)
 const char *mntpoint(const char *devname)
 {
     FILE *f;
-	char tmp[MTAB_LINE];
-	char* dev;
-	char* mntpt;
+    struct mntent *mnt;
     
-    f = fopen("/etc/mtab", "r");
+    f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, sizeof(tmp), f)) {
-			dev = strtok(tmp, " ");
-			mntpt = strtok(NULL, " ");
-            if (strcmp(dev, devname) == 0) {
-                fclose(f);
-                return strdup(mntpt);
+        while (mnt = getmntent(f)) {
+            if (strcmp(mnt->mnt_fsname, devname) == 0) {
+                endmntent(f);
+                return strdup(mnt->mnt_dir);
             }
         }
-        fclose(f);
+        endmntent(f);
     }
 
     return "???";
