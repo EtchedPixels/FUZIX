@@ -8,9 +8,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-/* Assumed length of a line in /etc/mtab */
-#define FSTAB_LINE 160
+#include <mntent.h>
 
 typedef uint16_t	blkno_t;
 
@@ -137,45 +135,25 @@ static void panic(char *s)
 	exit(error | 8);
 }
 
-/* Find the device in /etc/fstab for the specified mount */
-
-static char tmp[FSTAB_LINE];
-
-char *mntread(FILE *fp)
-{
-    char *dev;
-    while (fgets(tmp, sizeof(tmp), fp) != NULL) {
-        dev = strtok(tmp, " \t");
-        if (dev == NULL || *tmp == '#')
-            continue;
-        return dev;
-    }
-    return NULL;
-}
-
 const char *mntpoint(const char *mount)
 {
     FILE *fp;
-    const char *dev;
-    const char *mntpt;
+    struct mntent *mnt;
 
-    fp = fopen("/etc/fstab", "r");
+    fp = setmntent("/etc/fstab", "r");
     if (fp) {
-        while (dev = mntread(fp)) {
-            mntpt = strtok(NULL, " \t");
-            if (mntpt == NULL)
-                continue;
-            if (strcmp(mntpt, mount) == 0) {
-                fclose(fp);
-                return dev;
+        while (mnt = getmntent(fp)) {
+            if (strcmp(mnt->mnt_dir, mount) == 0) {
+                endmntent(fp);
+                return mnt->mnt_fsname;
             }
         }
-        fclose(fp);
+        endmntent(fp);
     }
     return NULL;
 }
 
-static int fd_open(char *name)
+static int fd_open(char *name, int search)
 {
 	char *sd;
 	const char *p;
@@ -189,9 +167,11 @@ static int fd_open(char *name)
 		sd++;
 		bias = atoi(sd);
 	} else {
-	    p = mntpoint(name);
-	    if (p)
-	        name = (char *)p;
+	    if (search) {
+		p = mntpoint(name);
+		if (p)
+		    name = (char *)p;
+            }
         }
 
 	printf("Opening %s (offset %d)\n", name, bias);
@@ -237,11 +217,11 @@ static uint32_t swizzle32(uint32_t v)
 	    (v & 0xFF000000) >> 24;
 }
 
-int perform_fsck(char *name)
+int perform_fsck(char *name, int search)
 {
     char *buf;
 
-    if(fd_open(name)){
+    if (fd_open(name, search)){
         printf("Cannot open file\n");
         return 16;
     }
@@ -318,7 +298,7 @@ int perform_fsck(char *name)
 
 int main(int argc, char *argv[])
 {
-    char *p;
+    struct mntent *mnt;
     if (argc > 1 && strcmp(argv[1],"-a") == 0) {
         argc--;
         argv++;
@@ -326,22 +306,22 @@ int main(int argc, char *argv[])
     }
 
     if (argc == 1 && aflag) {
-        FILE *fp = fopen("/etc/fstab", "r");
+        FILE *fp = setmntent("/etc/fstab", "r");
         if (fp == NULL) {
             perror("/etc/fstab");
             exit(1);
         }
-        while((p = mntread(fp)) != NULL) {
-            if (perform_fsck(p))
+        while((mnt = getmntent(fp)) != NULL) {
+            if (perform_fsck(mnt->mnt_fsname, 0))
                 exit(error);
         }
-        fclose(fp);
+        endmntent(fp);
     } else {
         if(argc != 2) {
             fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
             return 16;
         }
-        perform_fsck(argv[1]);
+        perform_fsck(argv[1], 0);
     }
     printf("Done.\n");
     exit(error);
