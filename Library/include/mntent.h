@@ -19,7 +19,9 @@ extern int addmntent(FILE *fp, struct mntent *mnt);
 extern int endmntent(FILE *fp);
 extern char *hasmntopt(struct mntent *mnt, char *opt);
 
-/* Extended function found in some Unixen */
-extern int delmntent(FILE *fp, struct mntent *mnt);
+/* GNUism but useful and we provide it */
+extern struct mntent *getmntent_r(FILE *fp, struct mntent *mnt, char *buf, int len);
+/* Extended function found in some Unixen. Not yet supported */
+/*extern int delmntent(FILE *fp, struct mntent *mnt); */
 
 #endif

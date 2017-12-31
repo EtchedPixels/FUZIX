@@ -24,9 +24,9 @@ FILE *setmntent(char *filep, char *type)
 	if (fp == NULL)
 		return NULL;
 	if (strchr(type,'w') || strchr(type,'a'))
-		lock = LOCK_SH;
-	else
 		lock = LOCK_EX;
+	else
+		lock = LOCK_SH;
 	if (flock(fileno(fp), lock) == -1) {
 		fclose(fp);
 		return NULL;
@@ -44,6 +44,7 @@ static int isoct(char c)
 static int mntparse(char *p, char **t, char *def)
 {
 	char *d = strtok(p, " \t\n");
+	char *ds = d;
 	if (d == NULL)
 		d = def;
 	else {
@@ -58,28 +59,33 @@ static int mntparse(char *p, char **t, char *def)
 		}
 	}
 	if (t)
-		*t = d;
-	return atoi(d);
+		*t = ds;
+	return atoi(ds);
+}
+
+struct mntent *getmntent_r(FILE * fp, struct mntent *me, char *buf, int len)
+{
+	char *p = buf;
+	/* Skip blank lines and comments */
+	do {
+		if (fgets(buf, len, fp) == NULL)
+			return NULL;
+	} while(*p == '\n' || *p == '#');
+	mntparse(buf, &me->mnt_fsname, NULL);
+	mntparse(NULL, &me->mnt_dir, NULL);
+	mntparse(NULL, &me->mnt_type, "fuzix");
+	mntparse(NULL, &me->mnt_opts, "");
+	me->mnt_freq = mntparse(NULL, NULL, "0");
+	me->mnt_passno = mntparse(NULL, NULL, "0");
+	if (me->mnt_fsname == NULL || me->mnt_dir == NULL)
+		return NULL;
+	return me;
 }
 
 struct mntent *getmntent(FILE * fp)
 {
 	static struct mntent me;
-	char *p = mntbuf;
-	/* Skip blank lines and comments */
-	do {
-		if (fgets(mntbuf, _MAX_MNTLEN, fp) == NULL)
-			return NULL;
-	} while(*p == '\n' || *p == '#');
-	mntparse(mntbuf, &me.mnt_fsname, NULL);
-	mntparse(NULL, &me.mnt_dir, NULL);
-	mntparse(NULL, &me.mnt_type, "fuzix");
-	mntparse(NULL, &me.mnt_opts, "");
-	me.mnt_freq = mntparse(NULL, NULL, "0");
-	me.mnt_passno = mntparse(NULL, NULL, "0");
-	if (me.mnt_fsname == NULL || me.mnt_dir == NULL)
-		return NULL;
-	return &me;
+	return getmntent_r(fp, &me, mntbuf, _MAX_MNTLEN);
 }
 
 void quote_out(char **p, char *s)
@@ -89,6 +95,7 @@ void quote_out(char **p, char *s)
 		return;
 	while (t < mntbuf + _MAX_MNTLEN - 1) {
 		if (*s == 0) {
+			*t++ = ' ';
 			*p = t;
 			return;
 		}
@@ -122,7 +129,7 @@ int addmntent(FILE * fp, struct mntent *mnt)
 	quote_out_int(&p, mnt->mnt_freq);
 	quote_out_int(&p, mnt->mnt_passno);
 	if (p) {
-		*p = '\n';
+		p[-1] = '\n';
 		if (fwrite(mntbuf, p - mntbuf, 1, fp) == 1)
 			return 0;
 	}
