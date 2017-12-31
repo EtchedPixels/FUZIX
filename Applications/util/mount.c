@@ -1,93 +1,144 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <mntent.h>
+#include <sys/mount.h>
 
-/* Assumed length of a line in /etc/mtab */
-#define MTAB_LINE 160
+static int err = 0;
+static int all = 0;
+static char *fstype = "fuzix";
 
-int lsmtab(void)
+static void usage(void)
+{
+    fputs("Usage: mount [-a] [-t type] name [path].\n", stderr);
+    exit(1);
+}
+
+static int lsmtab(void)
 {
     FILE *f;
-	char tmp[MTAB_LINE];
-	char* dev;
-	char* mntpt;
-	char* fstype;
-	char* rwflag;
+    struct mntent *mnt;
     
-    f = fopen("/etc/mtab", "r");
+    f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (fgets(tmp, sizeof(tmp), f)) {
-			dev = strtok(tmp, " ");
-			mntpt = strtok(NULL, " ");
-			fstype = strtok(NULL, " ");
-			rwflag = strtok(NULL, "\n");
-            if (strcmp(fstype, "swap") == 0)
-                printf("%s is swapspace\n", dev);
+        while (mnt = getmntent(f)) {
+            if (strcmp(mnt->mnt_type, "swap") == 0)
+                printf("%s is swapspace\n", mnt->mnt_fsname);
             else
-                printf("%s mounted on %s read-%s\n", dev, mntpt,
-                       (strcmp(rwflag, "ro") == 0) ? "only" : "write");
+                printf("%s mounted on %s read-%s\n",
+                    mnt->mnt_fsname,
+                    mnt->mnt_dir,
+                    hasmntopt(mnt, "ro") ? "only" : "write");
         }
-        fclose(f);
-    }
+        endmntent(f);
+    } else
+        err = 1;
     
     return 0;
 }
 
-int add2mtab(char *dev, char *mntpt, char *fstype, char *rwflag)
+static void add2mtab(struct mntent *mnt)
 {
-    FILE *inpf, *outf;
-    char *tmp_fname;
-	int c;
+    FILE *f;
 
-    if ((tmp_fname = tmpnam(NULL)) == NULL) {
-        perror("Error getting temporary file name");
+    f = setmntent("/etc/mtab", "a");
+    if (f == NULL) {
+        perror("/etc/mtab");
         exit(1);
     }
-    inpf = fopen("/etc/mtab", "r");
-    outf = fopen(tmp_fname, "w");
-    if (!outf) {
-        perror("Can't create temporary file");
-        exit(1);
-    }
-    if (inpf) {
-		for (;;) {
-			c = fgetc(inpf);
-			if (c == EOF)
-				break;
-			fputc(c, outf);
+    addmntent(f, mnt);
+    endmntent(f);
+}
+
+static int flagsof(struct mntent *mnt)
+{
+    int f = 0;
+    if (hasmntopt(mnt, "ro"))
+        f |= MS_RDONLY;
+    if (hasmntopt(mnt, "nosuid"))
+        f |= MS_NOSUID;
+    return f;
+}
+
+static int is_mounted(struct mntent *ent)
+{
+    FILE *f = setmntent("/etc/mtab", "r");
+    struct mntent mnt;
+    static char buf[_MAX_MNTLEN];
+    
+    while(getmntent_r(f, &mnt, buf, _MAX_MNTLEN)) {
+        if (strcmp(mnt.mnt_fsname, ent->mnt_fsname) == 0) {
+            endmntent(f);
+            return 1;
         }
-        fclose(inpf);
     }
-    fprintf(outf, "%s %s %s %s\n", dev, mntpt, fstype, rwflag);
-    fclose(outf);
-    if (inpf && unlink("/etc/mtab") < 0) {
-        perror("Can't delete old /etc/mtab file");
-        exit(1);
-    }
-    if (rename(tmp_fname, "/etc/mtab") < 0) {
-        perror("Error installing /etc/mtab");
-        exit(1);
-    }
+    endmntent(f);
     return 0;
+}
+
+static void do_mount(struct mntent *mnt)
+{
+    if (strcmp(mnt->mnt_type, "swap") == 0)
+        return;
+    if (mount(mnt->mnt_fsname, mnt->mnt_dir, flagsof(mnt)) == -1) {
+        err = errno;
+        perror(mnt->mnt_fsname);
+        return;
+    }
+    add2mtab(mnt);
+}
+
+static void automount(char *match)
+{
+    FILE *f = setmntent("/etc/fstab", "r");
+    struct mntent *mnt;
+
+    while (mnt = getmntent(f)) {
+        /* Warning - mnt contents go invalid if we do work on mtab so
+           be careful here and use getmntent_r in is_mounted */
+        if (is_mounted(mnt))
+            continue;
+        if (match == NULL || strcmp(mnt->mnt_fsname, match) == 0 ||
+                                strcmp(mnt->mnt_dir, match) == 0)
+                do_mount(mnt);
+        if (err)
+            break;
+    }
+    endmntent(f);
 }
 
 int main(int argc, char *argv[])
 {
-    if (argc == 1) {
-        lsmtab();
-        return 0;
+    int opt;
+
+    while((opt = getopt(argc, argv, "at:")) != -1) {
+        if (opt == 'a')
+            all = 1;
+        else if (opt == 't')
+            fstype = optarg;
+        else
+            usage();
     }
 
-    if (argc != 3) {
-        printf("usage: mount device path\n");
-        return 1;
+    if (optind >= argc) {
+        if (all)
+            automount(NULL);
+        else
+            lsmtab();
+        return err;
     }
-
-    if (mount(argv[1], argv[2], 0) == 0) {
-        add2mtab(argv[1], argv[2], "uzi", "rw");
-    } else {
-        perror("mount");
-        return 1;
+    if (optind == argc - 1)
+        automount(argv[optind]);
+    else if (optind <= argc - 2) {
+        static struct mntent mnt;
+        mnt.mnt_fsname = argv[optind++];
+        mnt.mnt_dir = argv[optind++];
+        mnt.mnt_type = fstype;
+        if (optind != argc)
+            mnt.mnt_opts = argv[optind++];
+        if (optind != argc)
+            usage();
+        do_mount(&mnt);
     }
-    return 0;
+    return err;
 }

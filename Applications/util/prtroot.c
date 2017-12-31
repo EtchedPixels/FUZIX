@@ -27,7 +27,7 @@
 #include <dirent.h>
 
 #define DEV_PATH	"/dev/"
-#define MESSAGE		" / fuzix rw\n"
+#define MESSAGE		" / fuzix rw 0 0\n"
 #define UNKNOWN_DEV	"/dev/unknown"
 #define ROOT		"/"
 
