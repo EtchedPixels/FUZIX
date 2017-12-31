@@ -37,10 +37,11 @@ the emulator.
 TODO
 ----
 - Fix brk() checking [right now its busted entirely]
-- Test signal handling paths
 - Add swap logic
 - Relocatable binaries
 - cc65 stubs optimized for 65c816
+- debug and properly implement abort/brk handlers to kill process etc
+- switch to partition supporting block I/O as we have space for it
 
 Optimisations We Need To Do
 --------------------------------------------------------------
