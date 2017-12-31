@@ -30,9 +30,11 @@ APPSNS = $(OBJSNS:.o=)
 
 APPSTC = $(OBJSTC:.o=)
 
-APPS = $(OBJS:.o=) $(OBJSBAD:.o=) $(OBJSNS:.o=) $(OBJSTC:.o=)
+APPS = $(OBJS:.o=) $(OBJSBAD:.o=)
 
-all: $(APPS) sizes
+APPS_ALL = $(APPS) $(APPSNS) $(APPSTC)
+
+all: $(APPS_ALL) sizes
 
 
 $(APPSNS): OPTS =
