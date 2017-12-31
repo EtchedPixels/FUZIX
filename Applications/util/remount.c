@@ -2,35 +2,27 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/mount.h>
+#include <mntent.h>
 
-/* Assumed length of a line in /etc/mtab */
-#define MTAB_LINE 160
-
-char *getdev(char *arg)
+static char *getdev(char *arg)
 {
 	FILE *f;
-	char tmp[MTAB_LINE];
-	char* dev;
-	char* mntpt;
+	struct mntent *mnt;
 
-	f = fopen("/etc/mtab", "r");
+	f = setmntent("/etc/mtab", "r");
 	if (f) {
-		while (fgets(tmp, sizeof(tmp), f)) {
-			dev = strtok(tmp, " \t");
-			if (*tmp == '#' || dev == NULL)
-				continue;
-			mntpt = strtok(NULL, " \t");
-			if (mntpt == NULL)
-				continue;
-			if ((strcmp(dev, arg) == 0) || (strcmp(mntpt, arg) == 0)) {
-				fclose(f);
-				return strdup(dev);
+		while (mnt = getmntent(f)) {
+			if ((strcmp(mnt->mnt_fsname, arg) == 0) || (strcmp(mnt->mnt_dir, arg) == 0)) {
+				endmntent(f);
+				return strdup(mnt->mnt_fsname);
 			}
 		}
-		fclose(f);
+		endmntent(f);
 	}
 	return NULL;
 }
+
+/* FIXME: needs to update mtab entry / support nosuid etc ? */
 
 int main(int argc, char *argv[])
 {
