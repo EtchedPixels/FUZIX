@@ -687,7 +687,7 @@ void blk_free(uint16_t devno, blkno_t blk)
     if(dev->s_nfree == FILESYS_TABSIZE) {
         buf = bread(devno, blk, 1);
         if (buf) {
-            /* nfree must directly preced the blocks and without padding. That's
+            /* nfree must directly preceed the blocks and without padding. That's
                the assumption UZI always had */
             blkfromk(&dev->s_nfree, buf, 0, sizeof(int) + 50 * sizeof(blkno_t));
             bawrite(buf);
