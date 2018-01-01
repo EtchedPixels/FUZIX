@@ -51,6 +51,13 @@ entry:
 	.i16
 
 ;
+;	Move the stubs up high so the vectors are set and the trampoline
+;
+	ldx	#$0000
+	ldy	#$FF00
+	lda	#$00FF
+	mvn	$0,$0
+;
 ;	Move the stubs into bank 1 
 ;
 	ldx	#$0000
@@ -68,7 +75,7 @@ entry:
 ;	Move the data into bank 2
 ;
 	ldx	#$F200
-	ldy	#$0200
+	ldy	#$0300
 	lda	#$09FF
 	mvn	$2,$0
 ;
@@ -132,13 +139,8 @@ switch:
 	ldx	#kstackc_top-1	; C stack
 	stx	sp
 
-	ldx	#__BSS_RUN__
-
 	lda	#'i'
 	sta	f:$00FE20
-
-	txy
-	iny
 
 	sep #$30
 	.a8
@@ -167,6 +169,36 @@ code:
 	sei			; Spin
 stop:	bra stop
 
+	.segment "STUBS"
+;
+;	So this ends up in bank 0
+;
+;	These actually are jump longs to the routine but in bank 1
+;
+illegal_inst_l:
+	.byte $5C
+	.word illegal_inst
+	.byte $01
+trap_inst_l:
+	.byte $5C
+	.word trap_inst
+	.byte $01
+abort_inst_l:
+	.byte $5C
+	.word abort_inst
+	.byte $01
+nmi_handler_l:
+	.byte $5C
+	.word nmi_handler
+	.byte $01
+interrupt_handler_l:
+	.byte $5C
+	.word interrupt_handler
+	.byte $01
+emulation_l:
+	.byte $5C
+	.word emulation
+	.byte $01
 
 ;
 ;	Processor vector table (0:0xFFE0)
@@ -176,23 +208,21 @@ stop:	bra stop
 
 	.word	0		; unused
 	.word	0		; unused
-	.word	illegal_inst	; COP
-	.word	trap_inst	; BRK
-	.word	abort_inst	; ABORT
-	.word	nmi_handler	; NMI
+	.word	illegal_inst_l	; COP
+	.word	trap_inst_l	; BRK
+	.word	abort_inst_l	; ABORT
+	.word	nmi_handler_l	; NMI
 	.word	0		; Unused (native reset)
-	.word	interrupt_handler
+	.word	interrupt_handler_l
 
 	;
 	;	Emulation mode vectors. If called badness occurred
 	;
-	.word	emulation
-	.word	emulation
-	.word	emulation
-	.word	emulation
-	.word	emulation
-	.word	emulation
-	.word	emulation
-	.word	emulation
-
-
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
+	.word	emulation_l
