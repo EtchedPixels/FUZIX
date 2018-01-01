@@ -6,17 +6,12 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devhd.h>
+#include <io.h>
 
 extern uint8_t hd_kmap;
 
 extern void hd_read_data(uint16_t addr);
 extern void hd_write_data(uint16_t addr);
-
-volatile uint8_t *disknum  = (volatile uint8_t *)0xFE30;
-volatile uint8_t *diskcylh = (volatile uint8_t *)0xFE31;
-volatile uint8_t *diskcyll = (volatile uint8_t *)0xFE32;
-volatile uint8_t *diskcmd  = (volatile uint8_t *)0xFE33;
-volatile uint8_t *diskstat = (volatile uint8_t *)0xFE35;
 
 static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
@@ -35,11 +30,11 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     nb = udata.u_nblock;
         
     while (udata.u_nblock--) {
-        *disknum = minor;
-        *diskcylh = udata.u_block >> 8;
-        *diskcyll = udata.u_block;
-        *diskcmd = 1;
-        if ((err = *diskstat) != 0) {
+        poke(0x3000|minor);
+        poke(0x3100|(udata.u_block >> 8));
+        poke(0x3200|(udata.u_block & 0xFF));
+        poke(0x3301);
+        if ((err = peek(0x35)) != 0) {
             kprintf("hd%d: disk error %x\n", err);
             udata.u_error = EIO;
             return -1;
@@ -62,9 +57,9 @@ int hd_open(uint8_t minor, uint16_t flag)
     uint8_t err;
 
     used(flag);
-    err = *diskstat;
-    *disknum = minor;
-    if(*diskstat) {
+    err = peek(0x35);
+    poke(0x3300|minor);
+    if(peek(0x35)) {
         udata.u_error = ENODEV;
         return -1;
     }
