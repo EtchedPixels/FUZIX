@@ -32,7 +32,7 @@ __uget:	sta	ptr1
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	ugetpatch+2
+	sta	f:KERNEL_CODE_FAR+ugetpatch+2
 	phb
 	.i16
 	.a16
@@ -153,7 +153,7 @@ __uput:
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	uputpatch+1
+	sta	f:KERNEL_CODE_FAR+uputpatch+1
 	phb
 	.i16
 	.a16
@@ -217,8 +217,8 @@ __uzero:
 	stx	ptr2+1
 
 	lda	U_DATA__U_PAGE
-	sta	uzero_patch+1
-	sta	uzero_patch+2
+	sta	f:KERNEL_CODE_FAR+uzero_patch+1
+	sta	f:KERNEL_CODE_FAR+uzero_patch+2
 
 	; Clear lead byte in user space
 	phb
