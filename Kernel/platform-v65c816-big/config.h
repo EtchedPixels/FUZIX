@@ -25,7 +25,7 @@
  *	if we add swap.
  */
 #define CONFIG_BANK_65C816
-#define KERNEL_BANK	0
+#define KERNEL_BANK	2
 #define MAX_MAPS 	125
 #define MAP_SIZE    0xFC00  /* 0-FBFF */
 

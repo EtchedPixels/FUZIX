@@ -19,14 +19,17 @@ void do_beep(void)
 }
 
 /*
- * 7 banks, kernel in bank 0
+ * User in banks 3-125 or thereabouts
+ * 2 is kdata
+ * 1 is kcode
+ * 0 is all the stacks and DP stuff we can't put elsehwere
  */
 
 void pagemap_init(void)
 {
     int i;
     /* Bank 0 is the kernel */
-    for (i = MAX_MAPS ; i > 0; i--)
+    for (i = MAX_MAPS ; i > 2; i--)
         pagemap_add(i);
 }
 
