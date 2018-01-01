@@ -59,8 +59,12 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 int hd_open(uint8_t minor, uint16_t flag)
 {
+    uint8_t err;
+
     used(flag);
-    if(minor != 0) {
+    err = *diskstat;
+    *disknum = minor;
+    if(*diskstat) {
         udata.u_error = ENODEV;
         return -1;
     }

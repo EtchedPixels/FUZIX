@@ -147,68 +147,61 @@ outchar:
 	.export _hd_write_data
 
 ;
-;	Disk copier (needs to be in common), call with ints off
-;	for now
+;	Disk copier
 ;
-;	AX = ptr, length always 512, page in globals
+;	XA = ptr, length always 512, page in globals
 ;
 
 _hd_read_data:
-	sta ptr3
-	stx ptr3+1
-	phd
-	phb
+	xba
+	txa			; A now holds the 16 bit buffer address
+	xba
 	rep #$10
 	.i16
-	ldx ptr3		; buffer address
-	lda _hd_kmap		; page number
-	pha
-	plb			; data now points into user app
-	ldy #$FE00
-	phy
-	pld			; DP is now the I/O space
-	
-	ldy #512
-hd_read:
-	lda $34			; I/O data via DP
-	sta a:$0000,x		; stores into data (user) bank
-	inx
-	dey
-	bne hd_read
-	plb			; restore bank registers
-	pld
-	sep #$10
-	.i8			; restore expected CPU state
+	tay			; Y is target
+	ldx #$0			; FF0000 is source for block transfer
+				; (range all maps to disk I/O port)
+	lda _hd_kmap
+	sta hd_rpatch+1		; destination is bank we want
+	phb			; bank will be corrupted
+
+	rep #$30
+	.a16
+
+	lda #$200-1		; 1 sector
+hd_rpatch:
+	mvn $FF,$FF
+	plb
+	sep #$30
+	.a8
+	.i8
 	rts
 
 _hd_write_data:
-	sta ptr3
-	stx ptr3+1
-	phd
-	phb
+	xba
+	txa			; A now holds the 16 bit buffer address
+	xba
 	rep #$10
 	.i16
-	ldx ptr3		; buffer address
-	lda _hd_kmap		; page number
-	pha
-	plb			; data now points into user app
-	ldy #$FE00
-	phy
-	pld			; DP is now the I/O space
-	
-	ldy #512
-hd_write:
-	lda a:$0000,x		; load from data (user) bank
-	sta $34			; I/O data via DP
-	inx
-	dey
-	bne hd_write
-	plb			; restore bank registers
-	pld
-	sep #$10
-	.i8			; restore expected CPU state
+	tax			; X is source
+	ldy #$0			; FF0000 is target for block transfer
+				; (range all maps to disk I/O port)
+	lda _hd_kmap
+	sta hd_wpatch+2		; source is bank we want
+	phb			; bank will be corrupted
+
+	rep #$30
+	.a16
+
+	lda #$200-1		; 1 sector
+
+hd_wpatch:
+	mvn $FF,$FF
+	plb
+	sep #$30
+	.a8
+	.i8
 	rts
 
-	.bss
 _hd_kmap:
 	.res 1
