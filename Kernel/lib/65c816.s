@@ -79,7 +79,7 @@ slow_path:
 	.i8
 	.a8
 	lda	U_DATA__U_PAGE
-	sta	switch_patch_1+1		; target bank of save
+	sta	f:KERNEL_CODE_FAR+switch_patch_1+1		; target bank of save
 	rep	#$30
 	.i16
 	.a16
@@ -115,7 +115,7 @@ _switchin:
 	; If this is zero we need swapping so the swapper checks go here
 	; FIXME
 
-	sta	switch_patch_2+2		; source bank of retrieve
+	sta	f:KERNEL_CODE_FAR+switch_patch_2+2	; source bank of retrieve
 	rep	#$30
 	.i16
 	.a16
@@ -180,15 +180,15 @@ _dofork:
 	sta	ptr1			; new process ptr. U_DATA gives parent
 	stx	ptr1+1
 	lda	U_DATA__U_PAGE
-	sta	fork_patch+2		; source bank (parent)
-	sta	fork_patch_2+1		; destination udata stash
+	sta	f:KERNEL_CODE_FAR+fork_patch+2	 ; source bank (parent)
+	sta	f:KERNEL_CODE_FAR+fork_patch_2+1 ; destination udata stash
 	asl	a
 	adc	#STACK_BANKOFF
 	sta	ptr2+1			; source for S and DP
 	stz	ptr2
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
-	sta	fork_patch+1		; destination bank (child)
+	sta	f:KERNEL_CODE_FAR+fork_patch+1	; destination bank (child)
 	asl	a
 	adc	#STACK_BANKOFF		; find our S and DP banks as
 					; those need copying too
