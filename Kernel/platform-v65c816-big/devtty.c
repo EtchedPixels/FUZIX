@@ -57,7 +57,7 @@ void tty_poll(void)
 {
         uint8_t x;
         
-        x = peek(0x21);
+        x = peek(0x21) & 1 ;
         if (x) {
         	x = peek(0x20);
 		tty_inproc(1, x);
