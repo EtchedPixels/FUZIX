@@ -82,7 +82,7 @@ init_early:
 	.i8
 
 init_loop:
-	sta	common_patch+1		; destination bank
+	sta	f:KERNEL_CODE_FAR+common_patch+1 ; destination bank
 	phb				; save our bank (mvn will mess it)
 	pha				; and count
 
@@ -94,7 +94,7 @@ init_loop:
 	txy
 	lda	#$00FE
 common_patch:
-	mvn	KERNEL_BANK,0		; copy the block
+	mvn	0,KERNEL_CODE_BANK	; copy the block
 
 	sep	#$30
 	.a8
@@ -134,7 +134,7 @@ _program_vectors:
 ; outchar: Wait for UART TX idle, then print the char in a without
 ; corrupting other registers
 outchar:
-	sta $0000FE20
+	sta f:$0000FE20
 	rts
 
 
@@ -163,7 +163,7 @@ _hd_read_data:
 	ldx #$0			; FF0000 is source for block transfer
 				; (range all maps to disk I/O port)
 	lda _hd_kmap
-	sta hd_rpatch+1		; destination is bank we want
+	sta f:KERNEL_CODE_FAR+hd_rpatch+1	; destination is bank we want
 	phb			; bank will be corrupted
 
 	rep #$30
@@ -188,7 +188,7 @@ _hd_write_data:
 	ldy #$0			; FF0000 is target for block transfer
 				; (range all maps to disk I/O port)
 	lda _hd_kmap
-	sta hd_wpatch+2		; source is bank we want
+	sta f:KERNEL_CODE_FAR+hd_wpatch+2	; source is bank we want
 	phb			; bank will be corrupted
 
 	rep #$30
