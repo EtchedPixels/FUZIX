@@ -46,4 +46,6 @@ image:
 	../syscall_net.o net_native.o ../level2.o ../syscall_level2.o \
 	../select.o
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=255 count=1
-	dd if=../fuzix.bin of=fuzix.img bs=256 seek=1 skip=1 conv=notrunc
+	dd if=/dev/zero of=fuzix.img bs=256 seek=1  count=2
+	dd if=fuzix.i of=fuzix.img bs=256 seek=3 count=239
+	dd if=fuzix.d of=fuzix.img bs=256 seek=242 count=10

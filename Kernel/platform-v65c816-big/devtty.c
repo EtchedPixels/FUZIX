@@ -6,9 +6,7 @@
 #include <device.h>
 #include <vt.h>
 #include <tty.h>
-
-static volatile uint8_t *uart = (volatile uint8_t *)0xFE20;
-static volatile uint8_t *timer = (volatile uint8_t *)0xFE10;
+#include <io.h>
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -35,7 +33,7 @@ ttyready_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
-	uart[0] = c;
+	poke(0x2000|c);
 }
 
 void tty_setup(uint8_t minor)
@@ -59,16 +57,16 @@ void tty_poll(void)
 {
         uint8_t x;
         
-        x = uart[1] & 1;
+        x = peek(0x21);
         if (x) {
-        	x = uart[0];
+        	x = peek(0x20);
 		tty_inproc(1, x);
 	}
 }
                 
 void platform_interrupt(void)
 {
-	uint8_t t = *timer;
+	uint8_t t = peek(0x10);
 	tty_poll();
 	while(t--) {
 		timer_interrupt();

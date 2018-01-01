@@ -145,6 +145,7 @@ outchar:
 	.export _hd_kmap
 	.export _hd_read_data
 	.export _hd_write_data
+	.export _peek,_poke
 
 ;
 ;	Disk copier
@@ -205,3 +206,35 @@ hd_wpatch:
 
 _hd_kmap:
 	.res 1
+
+;
+;	For non bank 0 we can't just poke addresses from C but need helpers.
+;	We pass a single argument of dataoffset,data so we get a single
+;	value in XA for speed (X is offset A data)
+;
+_poke:
+	stx ptr1
+	ldx #$FE
+	stx ptr1+1
+	ldx #0
+	phb
+	phx
+	plb
+	sta (ptr1)
+	plb
+	rts
+_peek:
+	sta ptr1
+	lda #$FE
+	sta ptr1+1
+	phb
+	lda #0
+	pha
+	plb
+	lda (ptr1)
+	plb
+	ldx #0
+	rts
+
+
+	
