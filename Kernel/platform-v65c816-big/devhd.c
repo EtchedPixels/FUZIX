@@ -28,7 +28,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     dptr = (uint16_t)udata.u_dptr;
     nb = udata.u_nblock;
-        
+
     while (udata.u_nblock--) {
         poke(0x3000|minor);
         poke(0x3100|(udata.u_block >> 8));
