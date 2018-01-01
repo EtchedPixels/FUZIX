@@ -10,7 +10,8 @@ PROGLOAD		.set $0100
 ZPBASE			.set $0
 
 KERNEL_BANK		.set $0		; bank number
-KERNEL_FAR		.set $000000	; 24 bit
+KERNEL_FAR		.set $000000	; data 24 bit
+KERNEL_CODE_FAR		.set $000000	; code 24bit
 
 ; Add this to twice the bank number to get the high 8bits of the 16bit CPU stack
 ; for this process
