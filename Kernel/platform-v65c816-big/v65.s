@@ -76,7 +76,7 @@ irq_on:
 ;	This could go in discard once we make that useful FIXME
 ;
 init_early:
-	lda	#1
+	lda	#3
 	sep	#$30
 	.a8
 	.i8
@@ -103,7 +103,7 @@ common_patch:
 	pla
 	plb				; bank to kernel bank
 	inc
-	cmp	#8
+	cmp	#128
 	bne	init_loop
         rts
 
@@ -114,9 +114,9 @@ init_hardware:
         ; set system RAM size	(FIXME: dynamic probe)
 	rep #$10
 	.i16
-	ldx #512
+	ldx #8192
 	stx _ramsize
-	ldx #512-64
+	ldx #8192-64
 	stx _procmem
 
 	sep #$10
@@ -237,4 +237,24 @@ _peek:
 	rts
 
 
-	
+	.segment "STUBS"
+	.export jmpvec
+
+;
+;	Hack to deal with CC65 not supporting split I/D properly. It tries
+;	to generate stores to jmpvec+1/+2 them jsr jmpvec assuming they are
+;	in fact all in the same bank.
+;
+;	FIXME: we need to save 2:jmpvec+1/+2 across interrupts
+;
+jmpvec:
+	.a8
+	.i8
+	rep #$10
+	.i16
+	ldx jmpvec+1		; in bank 2 not bank 1
+	dex			; as rts will inc
+	phx
+	sep #$10
+	.i8
+	rts

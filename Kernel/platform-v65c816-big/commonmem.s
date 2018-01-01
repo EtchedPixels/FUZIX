@@ -30,9 +30,6 @@
 ;
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
-kstack_base:
-	.res 256,0
-kstack_top:
 kstackc_base:
 	.res 256,0
 kstackc_top:
@@ -42,11 +39,22 @@ kstackc_top:
 ;
 	.bss
 
-istack_base:
-	.res 64,0			; should be tons
-istack_top:
 istackc_base:
 	.res 254,0			; overkill - tune me
 istackc_top:
 istack_switched_sp:
 	.word 0
+
+
+;
+;	Stacks go in bank 0 0100-02FF
+;
+	.segment "STACK"
+
+kstack_base:
+	.res 256,0
+kstack_top:
+
+istack_base:
+	.res 64,0			; should be tons
+istack_top:
