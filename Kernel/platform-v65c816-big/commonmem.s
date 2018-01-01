@@ -23,15 +23,15 @@
 ;	stack and a small CPU stack in the banking
 ;
 ;	Our current layout is
-;	[udata][cpu stack]		in 256 bytes
-;	[C stack]			in 256 (will it be sufficient ?)
+;	[udata][C stack]		256 bytes
+;	[C stack]			256 
 ;
 ;	There is a separate IRQ DP, stack and C stack.
 ;
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstackc_base:
-	.res 256,0
+	.res 512,0
 kstackc_top:
 
 ;
