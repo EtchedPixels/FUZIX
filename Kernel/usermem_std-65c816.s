@@ -43,7 +43,7 @@ __uget:	sta	ptr1
 	beq	ug_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 ugetpatch:
-	mvn	0,KERNEL_BANK
+	mvn	KERNEL_BANK,0
 ug_nomov:
 	.i8
 	.a8
@@ -164,7 +164,7 @@ __uput:
 	beq	up_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 uputpatch:
-	mvn	KERNEL_BANK,0
+	mvn	0,KERNEL_BANK
 up_nomov:
 	.i8
 	.a8
