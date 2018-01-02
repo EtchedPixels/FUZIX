@@ -8,6 +8,7 @@
 	.export map_process_always
 	.export map_kernel
 	.export _userpage
+	.export _brk_limit
 
 	.export sigret_irq
 	.export sigret
@@ -116,6 +117,7 @@ setdp:
 	adc	#STACK_BANKOFF		; we now point at the stack
 	inc	a			; plus 0x100
 	xba				; Swap to get xx00 format we need
+	and	#$FF00			; remove any carry bits
 	tcd
 	pla
 
@@ -362,10 +364,33 @@ signal_out:
 	cli
 	rtl			;	return into user app handler
 ;
+;
+;	Helper for brk(). In this case we need it in asm to deal with the
+;	strange dual stack setup
+;
+_brk_limit:
+	.a8
+	.i8
+	rep #$10
+	.i16
+	ldx U_DATA__U_SYSCALL_SP
+	lda f:2,x
+	tax
+	lda f:1,x
+	dex
+	dex
+	dex				; allow 384 bytes headroom
+	sep #$10
+	.i8
+	rts
+
+;
 ;	doexec is a special case syscall exit path. Set up the bank
 ;	registers and return directly to the start of the user process
 ;
 _doexec:
+	.a8
+	.i8
 	sta	ptr1
 	stx	ptr1+1		;	address to execute from
 	sei
@@ -1011,5 +1036,5 @@ sigret_irq:
 	.i8
 
 syscall_vector:
-	jsl	KERNEL_FAR+syscall_entry
+	jsl	KERNEL_CODE_FAR+syscall_entry
 	rts
