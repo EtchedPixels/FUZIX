@@ -49,13 +49,6 @@ make
 
 TODO
 ----
-- Fix task switching: on big model our udata is in bank 2 and our kstack
-  ring 0 so we can't save them as single 512 byte xfer but as we know we
-  won't be using nearly all the 512 bytes of C stack we can save udata and
-  most of C stack just fine.
 - See 65c816 port for general notes
 - Save jmpvec+1/2 in seg 2 on IRQ entry and restore on exit
 
-Optimisations We Need To Do
---------------------------------------------------------------
-- Only copy the needed memory when forking, not 64K ?

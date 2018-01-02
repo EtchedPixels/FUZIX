@@ -6,6 +6,7 @@
         .export _ub
         .export _udata
         .export kstack_top
+	.export kstack_base
 	.export kstackc_top
         .export istack_top
 	.export istackc_top
@@ -23,8 +24,8 @@
 ;	stack and a small CPU stack in the banking
 ;
 ;	Our current layout is
-;	[udata][C stack]		256 bytes
-;	[C stack]			256 
+;	[udata]				~256 bytes (279 with L2)
+;	[C stack]			256  (or thereabouts)
 ;
 ;	There is a separate IRQ DP, stack and C stack.
 ;
@@ -33,6 +34,7 @@ _udata:
 kstackc_base:
 	.res 512,0
 kstackc_top:
+	; and our saved area follows this by a copy of kstack
 
 ;
 ;	We have a single istack so we can stuff that anywhere we like

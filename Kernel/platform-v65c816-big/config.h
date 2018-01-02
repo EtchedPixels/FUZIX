@@ -26,8 +26,8 @@
  */
 #define CONFIG_BANK_65C816
 #define KERNEL_BANK	2
-#define MAX_MAPS 	125
-#define MAP_SIZE    0xFC00  /* 0-FBFF */
+#define MAX_MAPS	125
+#define MAP_SIZE    0xFB00  /* 0-FAFF */
 
 /* 0xEE because our first bank is 1 and 0xEE + 2 * 1 = 0xF0 */
 #define STACK_BANKOFF	0x00	/* 0400-FDFF */
@@ -36,7 +36,7 @@
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0100  /* also data base */
 #define PROGLOAD    0x0100
-#define PROGTOP     0xFC00  /* Top of program. If we fixed a few things we
+#define PROGTOP     0xFB00  /* Top of program. If we fixed a few things we
                                could go to FE00 */
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */

@@ -4,7 +4,7 @@
 U_DATA                  .set $0100	; avoid ZP
 ; 256+256		(U, kstack copy, k C stack copy)
 U_DATA__TOTALSIZE       .set $0200
-U_DATA_STASH		.set $FC00	; leaves FFxx for vectors and stubs
+U_DATA_STASH		.set $FB00	; leaves FFxx for vectors and stubs
 
 PROGLOAD		.set $0100
 ZPBASE			.set $0
@@ -21,6 +21,6 @@ STACK_BANKOFF		.set $FE	; 0400-FDFF
 IRQ_DP			.set $FF80	; FF80-FFBF
 KERNEL_DP		.set $00	; We use the real ZP for kernel DP
 
-MAP_SIZE		.set $FC00
+MAP_SIZE		.set $FB00
 
 PROGBASE		.set $0100
