@@ -18,7 +18,6 @@
 	    .import _procmem
 	    .import nmi_handler
 	    .import syscall_vector
-	    .import kstack_top
 	    .import istack_switched_sp
 	    .import istack_top
 	    .import _kernel_flag
@@ -239,6 +238,7 @@ _peek:
 
 	.segment "STUBS"
 	.export jmpvec
+	.export callax
 
 ;
 ;	Hack to deal with CC65 not supporting split I/D properly. It tries
@@ -247,6 +247,12 @@ _peek:
 ;
 ;	FIXME: we need to save 2:jmpvec+1/+2 across interrupts
 ;
+callax:		; FIXME: optimise
+	.a8
+	.i8
+
+	sta     jmpvec+1
+        stx     jmpvec+2
 jmpvec:
 	.a8
 	.i8
