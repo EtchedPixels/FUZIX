@@ -36,11 +36,13 @@ the emulator.
 
 TODO
 ----
-- Fix brk() checking [right now its busted entirely]
+- Test revized brk() checking
 - Add swap logic
 - Relocatable binaries
 - cc65 stubs optimized for 65c816
 - debug and properly implement abort/brk handlers to kill process etc
+- crt0 entry stacking of ZP state in user
+- video/console support
 - switch to partition supporting block I/O as we have space for it
 
 Optimisations We Need To Do
