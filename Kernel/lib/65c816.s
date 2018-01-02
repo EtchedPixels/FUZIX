@@ -88,7 +88,7 @@ slow_path:
 	lda	#U_DATA__TOTALSIZE-1		; including our live stack
 	phb
 switch_patch_1:
-	mvn	KERNEL_BANK,0		; save stack and udata
+	mvn	0,KERNEL_BANK		; save stack and udata
 	plb
 	sep #$30
 	stz	_inint
@@ -126,7 +126,6 @@ _switchin:
 	ldy	#U_DATA
 	lda	#U_DATA__TOTALSIZE-1
 switch_patch_2:
-	;	FIXME check syntax required for bank value ??
 	mvn	KERNEL_BANK,0
 	;	after the MVN our data bank is KERNEL_DATA
 	;	Our stack is now valid and we may use it again, our UDATA
@@ -219,7 +218,7 @@ fork_patch:
 	ldy	#U_DATA_STASH
 	lda	#U_DATA__TOTALSIZE-1
 fork_patch_2:
-	mvn	KERNEL_BANK,0
+	mvn	0,KERNEL_BANK
 	plb			; back to kernel bank
 
 	ldx	ptr2
