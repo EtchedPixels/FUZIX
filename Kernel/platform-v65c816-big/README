@@ -49,16 +49,12 @@ make
 
 TODO
 ----
-- Rewrite crt0.s to set up the banks correctly and clear the data not code
-- Set memory size etc correctly
-- Add code to copy vectors from the right bank to each user bank
-- Stubs in bank 0 to long jump vectors into bank 2 (65C816 pushes the bank
-  so we just need to jump long into the right universe)
-- Rework KERNEL_BANK/KERNEL_FAR according to whether it is data or code
-- Fix compiler generated and helper stubs that self modify code (jmpvec in
-  particular must be modified to force kernel code bank and link itself into
-  kernel code)
+- Fix task switching: on big model our udata is in bank 2 and our kstack
+  ring 0 so we can't save them as single 512 byte xfer but as we know we
+  won't be using nearly all the 512 bytes of C stack we can save udata and
+  most of C stack just fine.
 - See 65c816 port for general notes
+- Save jmpvec+1/2 in seg 2 on IRQ entry and restore on exit
 
 Optimisations We Need To Do
 --------------------------------------------------------------
