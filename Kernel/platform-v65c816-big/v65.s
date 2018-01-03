@@ -217,8 +217,12 @@ hd_wpatch:
 
 	rts
 
+	.data
+
 _hd_kmap:
 	.res 1
+
+	.code
 
 ;
 ;	For non bank 0 we can't just poke addresses from C but need helpers.
