@@ -165,6 +165,9 @@ _hd_read_data:
 	sta hd_rpatch+1		; destination is bank we want
 	phb			; bank will be corrupted
 
+	lda  #$34		; DMA port
+	sta f:$00FE11		; point it at the disk port
+
 	rep #$30
 	.a16
 
@@ -172,9 +175,13 @@ _hd_read_data:
 hd_rpatch:
 	mvn $FF,$FF
 	plb
-	sep #$30
+	sep #$30		; go anywhere
 	.a8
 	.i8
+
+	lda #0
+	sta f:$00FE11		; ensure any DMA window I/O doesn't
+
 	rts
 
 _hd_write_data:
@@ -188,6 +195,10 @@ _hd_write_data:
 				; (range all maps to disk I/O port)
 	lda _hd_kmap
 	sta hd_wpatch+2		; source is bank we want
+
+	lda  #$34		; DMA port
+	sta f:$00FE11		; point it at the disk port
+
 	phb			; bank will be corrupted
 
 	rep #$30
@@ -198,9 +209,13 @@ _hd_write_data:
 hd_wpatch:
 	mvn $FF,$FF
 	plb
-	sep #$30
+	sep #$30		; go anywhere
 	.a8
 	.i8
+
+	lda #0
+	sta f:$00FE11		; ensure any DMA window I/O doesn't
+
 	rts
 
 _hd_kmap:
