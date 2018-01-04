@@ -546,7 +546,7 @@ static void apply_defmode( uint8_t defmode )
 __attribute__((section(".discard")))
 void set_defmode( uint8_t *s )
 {
-	defmode = s[7]-0x30;
+	int defmode = s[7]-0x30;
 	if( defmode > 4 )
 		defmode = 0;
 	apply_defmode(defmode);
