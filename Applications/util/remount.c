@@ -52,7 +52,7 @@ static char *getdev(char *arg, char *p)
 	return NULL;
 }
 
-static void rewrite_mtab(char *name, flags)
+static void rewrite_mtab(char *name, int flags)
 {
 	FILE *inpf, *outf;
 	struct mntent *mnt;
