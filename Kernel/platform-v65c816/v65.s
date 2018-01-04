@@ -18,6 +18,7 @@
 	    .import _procmem
 	    .import nmi_handler
 	    .import syscall_vector
+	    .import _vtinit
 	    .import kstack_top
 	    .import istack_switched_sp
 	    .import istack_top
@@ -122,6 +123,8 @@ init_hardware:
 	sep #$10
 	.i8
 
+	jsr _vtinit
+
 	rts
 ;
 ;	We did this at early boot when we set up the vectors and copied
@@ -218,5 +221,185 @@ hd_wpatch:
 
 	rts
 
+;
+;	Frame buffer driver. On entry A is the char
+;
+	.import _fb_off
+	.import _fontdata_8x8
+	.import _fb_count
+
+	.export _charprint
+	.export _scroll_up
+	.export _scroll_down
+	.export _do_clear_bytes
+	.export _cursor_off
+	.export _do_cursor_on
+
+_charprint:
+	rep #$30
+	.a16
+	.i16
+	and #$ff
+	asl
+	asl
+	asl
+	tax
+
+	ldy _fb_off
+
+	sep #$20
+	.a8
+
+	phb
+	lda #$fe
+	pha
+	plb
+
+;
+;	For a bank 0 kernel or at least font we could maybe instead
+;	of the tax do phd pha pld and use 0-7 of ZP as the font
+;	source (saves 16 clocks minus the extra setup costs). Otherwise it
+;	saves one clock per 1 byte if you can put the font in the same
+;	bank as the video ram by using AI/X not ALI/X
+;
+
+	; 5 clocks
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8,x
+	; 5 clocks
+	sta a:0,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+1,x
+	sta a:80,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+2,x
+	sta a:160,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+3,x
+	sta a:240,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+4,x
+	sta a:320,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+5,x
+	sta a:400,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+6,x
+	sta a:480,y
+	lda f:KERNEL_FAR+_fontdata_8x8-32*8+7,x
+	sta a:560,y
+
+	plb
+
+	sep #$10
+	.i8
+	rts
+
+_scroll_up:
+	phb
+	rep #$30
+	.a16
+	.i16
+	;
+	;	Do the scroll. For once something we are good at
+	;
+	ldx #640
+	ldy #0
+	lda #15360-1		; 192 pixel rows
+	mvn $FE,$FE
+	sep #$30
+	.a8
+	.i8
+	plb
+	rts
+
+_scroll_down:
+	phb
+	rep #$30
+	.a16
+	.i16
+	ldx #16000-1
+	ldy #15360-1
+	lda #15360-1
+	mvp $FE,$FE
+	sep #$30
+	.a8
+	.i8
+	plb
+	rts
+
+;
+;	We use this both to clear short bursts 8 times (clear across)
+;	and to clear lines (80 bytes * 8 per row * lines)
+;
+_do_clear_bytes:
+	rep #$10
+	.i16
+	ldx _fb_off
+	ldy _fb_off
+	iny
+	lda #0
+	sta f:$FE0000,x
+	rep #$20
+	.a16
+	lda _fb_count
+	phb
+	mvn $FE,$FE
+	sep #$30
+	.a8
+	.i8
+	plb
+	rts
+
+	.a8
+	.i8
+
+_cursor_off:
+	rep #$10
+	.i16
+	ldx cursorpos
+	bra cursormod
+
+	.a8
+	.i8
+
+_do_cursor_on:
+	rep #$10
+	.i16
+	ldx _fb_off
+	stx cursorpos
+cursormod:
+	phb
+	lda #$fe
+	pha
+	plb
+	lda #$ff
+	eor a:0,x
+	sta a:0,x
+	lda #$ff
+	eor a:80,x
+	sta a:80,x
+	lda #$ff
+	eor a:160,x
+	sta a:160,x
+	lda #$ff
+	eor a:240,x
+	sta a:240,x
+
+	lda #$ff
+	eor a:320,x
+	sta a:320,x
+	lda #$ff
+	eor a:400,x
+	sta a:400,x
+	lda #$ff
+	eor a:480,x
+	sta a:480,x
+	lda #$ff
+	eor a:560,x
+	sta a:560,x
+
+	plb
+	sep #$10
+	.i8
+	rts
+
+	.data
+
+cursorpos:
+	.word $7FF0		; off screen bytes to poop on
 _hd_kmap:
 	.res 1
