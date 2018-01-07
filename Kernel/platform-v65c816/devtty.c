@@ -6,6 +6,7 @@
 #include <device.h>
 #include <vt.h>
 #include <tty.h>
+#include <graphics.h>
 
 extern void charprint(uint8_t ch);
 extern void do_clear_bytes(void);
@@ -58,7 +59,6 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
 {
 	fb_off = y * 640 + x;
 	charprint(c);
-	uart[0] = c;
 }
 
 void cursor_on(int8_t y, int8_t x)
@@ -125,4 +125,45 @@ void platform_interrupt(void)
 	while(t--) {
 		timer_interrupt();
 	}
+}
+
+/* Declare a single 640x200 mappable display that doesn't bother supporting
+   kernel mode graphics helpers (because it's mappable */
+static struct display display[1] = {
+	{
+		0,
+		640, 200,
+		640, 200,
+		FMT_MONO_BW,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE,
+		0,
+		0,
+	}
+};
+
+static struct videomap displaymap = {
+	0,
+	0,
+	0,		/* Base is 0 in bank */
+	16384,
+	0,
+	0xFE,		/* Bank $FE is framebuffer */
+	0,
+	MAP_FBMEM|MAP_FBMEM_SEG
+};
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	if (minor > 1 || arg >> 8 != 0x03)
+		return vt_ioctl(minor, arg, ptr);
+	switch(arg) {
+	case GFXIOC_GETINFO:
+		return uput(&display[0], ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		return uput(&displaymap, ptr, sizeof(displaymap));
+	case GFXIOC_UNMAP:
+		return 0;
+	}
+	return -1;
 }
