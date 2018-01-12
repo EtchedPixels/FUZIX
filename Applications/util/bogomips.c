@@ -3,7 +3,24 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#ifdef __SDCC_z80
+#if defined(__m6809__) && defined(__GNUC__)
+
+__attribute__((naked))
+void delay(unsigned long r)
+{
+    asm(
+	" ldd 4,s     \n"
+	" ldx 2,s     \n"
+        "a@ addd #-1  \n"   
+	" bne a@      \n"  
+	" leax  ,x    \n"
+	" beq b@      \n"
+	" leax -1,x   \n"   
+	" bra a@      \n"   
+	"b@ rts       \n"
+	);
+}
+#elif defined(__SDCC_z80)
 void delay(unsigned long r)
 {
 __asm
