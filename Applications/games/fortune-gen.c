@@ -66,4 +66,5 @@ int main(int argc, char *argv[])
     perror("fwrite3");
     exit(1);
   }
+  return 0;
 }
