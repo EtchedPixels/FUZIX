@@ -684,7 +684,6 @@ arg_t _shutdown(void)
 #undef fd
 #undef how
 
-#endif
 
 /* FIXME: Move to _discard */
 
@@ -696,3 +695,5 @@ void sock_init(void)
 		(s++)->s_num = n++;
 	netdev_init();
 }
+
+#endif
