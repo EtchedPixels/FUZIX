@@ -137,16 +137,9 @@ Swap1:  ldx     CTemp,y
 	.macpack	cpu
 
 callax:
-
-.if (.cpu .bitand ::CPU_ISET_65SC02)
-	phx
-	pha
-	rts
-.else
 	sta     jmpvec+1
         stx     jmpvec+2
         jmp     (jmpvec+1)         ; jump there
-.endif
 
 
 
