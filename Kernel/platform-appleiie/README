@@ -66,6 +66,8 @@ Our planned memory mapping looks like this
 	BF00-BFFF	ProDOS leaves us info here before we kill it off
 	C000-CFFF	I/O
 	D000-FFFF	Kernel (with a 4K extra overlay if we need it)
+	(and we might want to leave some ProDOS driver code from F800 up or
+	 so to drive the 140K floppies)
 
 And in alt banks
 

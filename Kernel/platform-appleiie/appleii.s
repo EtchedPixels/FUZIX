@@ -534,12 +534,20 @@ _platform_interrupt_i:
 
 	.segment "COMMONDATA"
 
+	.export _statusdata
 _hd_map:
 	.res 1
+_statusdata:
+	.res 8
 
 	.code
 	; Dummy stubs for now
-	.export _block_rw
+	.export _block_rw_pascal
+	.export _block_rw_prodos
+	.export _pascal_status
+_block_rw_pascal:
+_block_rw_prodos:
+	rts
 
-_block_rw:
+_pascal_status:
 	rts

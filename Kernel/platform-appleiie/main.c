@@ -4,14 +4,14 @@
 #include <printf.h>
 #include <devtty.h>
 #include <devhd.h>
+#include <apple.h>
 
 uint8_t kernel_flag = 1;
 uint8_t cols = 40;
 uint8_t card_present;
+uint8_t prodos_slot;
+uint8_t pascal_slot;
 uint8_t model;
-#define APPLE_UNKNOWN	0
-#define APPLE_IIE	1
-#define APPLE_IIC	2
 
 void platform_idle(void)
 {
@@ -68,6 +68,66 @@ static void unsupported(void)
     kputs(" (unsupported) ");
 }
 
+/* Make sure all the strings in this lot end up in discard */
+static const char *classid[] = {
+    "printer",
+    "joystick",
+    "serial/parallel",
+    "modem",
+    "sound/speech",
+    "clock",
+    "storage",
+    "80 column card",
+    "network/bus",
+    "special"
+};
+
+static void pascal_card(uint8_t slot, uint8_t cid)
+{
+    uint8_t class = cid >> 4;
+    if (class == 0 || class > 10) {
+        kputs("unknown");
+        return;
+    }
+    kputs(classid[class - 1]);
+    switch(class) {
+#if 0
+    case 1:
+        printer_install(slot, cid);
+        break;
+    case 2:
+        joystick_install(slot, cid);
+        break;
+    case 3:
+        /* 31 is superserial etc */
+        serial_install(slot, cid);
+        break;
+    case 4:
+        serial_install(slot, cid);
+        break;
+    case 5:
+        audio_install(slot, cid);
+        break;
+    case 6:
+        clock_install(slot, cid);
+        break;
+    case 8:
+        break;
+    case 9:
+        network_install(slot, cid);
+        break;
+    case 10:
+        special_install(slot, cid);
+        break;
+#endif
+    case 7:
+        hd_install(slot);
+        break;
+    default:
+        unsupported();
+    }
+}
+
 /* Slot detection on Apple is a bit magic. It started out as sneaky ROM
    peeking and evolved later into proper protocols */
 
@@ -82,20 +142,38 @@ void scan_slots(void)
             kputs("empty");
             continue;
         }
-        if (card[1] == 0x20 && card[3] == 0x00 && card[5] == 0x03) {
-            /* storage */
-            
-            /* Old ROM floppy drive: needs custom driver */
-            if (card[255] == 0xFF) {
-                kputs("13 sector/track floppy");
+        /* Pascal and also Serial cards: from dumb to dumber if they don't
+           have the Pascal interface present */
+        if (card[5] == 0x38 && card[7] == 0x18) {
+            if (card[11] == 0x01) {
+                /* This slot has a pascal (aka Protocol Convertor) attached.
+                   In other words basically we've got device driver firmware
+                   that does all the work for us, and we have a card id for
+                   type/device */
+                pascal_slot |= (1 << i);
+                pascal_card(i, card[12]);
+            } else {
+                kputs("serial");
                 unsupported();
             }
-            /* New ROM floppy drive: needs custom driver */
-            else if (card[255] == 0x00) {
+            continue;
+        }
+        /* This is how ProDOS finds disk driver interfaces. The ProDOS
+           interface isn't as nice as the Pascal one */
+        if (card[1] == 0x20 && card[3] == 0x00 && card[5] == 0x03) {
+            /* storage */
+            if (card[255] == 0xFF) {
+                /* Old ROM floppy drive: needs custom driver */
+                kputs("13 sector/track floppy");
+                unsupported();
+            } else if (card[255] == 0x00) {
+                /* New ROM floppy drive: needs custom driver */
                 kputs("16 sector/track floppy");
                 unsupported();
-            } else { /* We use the firmware interface */
+            } else {
+                /* We use the firmware interface */
                 kputs("storage");
+                prodos_slot |= (1 << i);
                 hd_install(i);
             }
             continue;
@@ -111,17 +189,8 @@ void scan_slots(void)
             kputs("mouse");
             continue;
         }
-        /* Serial cards: from dumb to dumber */
-        if (card[5] == 0x38 && card[7] == 0x18) {
-            if (card[11] == 0x01 && card[12] == 0x31)
-                kputs("super serial");
-            else {
-                kputs("serial");
-                unsupported();
-            } 
-            continue;
-        }
-        if (card[0] == 0x08 && card[2] == 0x28 && card[4] == 0x5B &&
+        /* This is how ProDOS recognizes a clock card */
+        if (card[0] == 0x08 && card[2] == 0x28 && card[4] == 0x58 &&
             card[6] == 0x70) {
             kputs("clock");
             continue;

@@ -9,11 +9,11 @@
 
 /* Ignore super serial and friends for the moment */
 
-static volatile uint8_t *kbd_read = (volatile uint8_t *)0xC000;
-static volatile uint8_t *kbd_strobe = (volatile uint8_t *)0xC010;
+#define kbd_read ((volatile uint8_t *)0xC000)
+#define kbd_strobe ((volatile uint8_t *)0xC010)
 /* Assume a //c for the moment */
-static volatile uint8_t *irq_check = (volatile uint8_t *)0xC041;
-static volatile uint8_t *irq_reset = (volatile uint8_t *)0xC019;
+#define irq_check ((volatile uint8_t *)0xC041)
+#define irq_reset ((volatile uint8_t *)0xC019)
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
