@@ -145,6 +145,7 @@ init_early:
 init_hardware:
 	;; High speed poke
 	sta	0xffd9		; high speed poke
+	sta	0xffdf		; RAM mode
 	;; set system RAM size
 	jsr	_scanmem	; X = number of pages
 	tfr 	x,d
