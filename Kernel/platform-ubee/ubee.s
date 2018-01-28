@@ -40,6 +40,8 @@
 	    .globl fd_nmi_handler
 	    .globl null_handler
 
+	    .globl _ubee_model
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
@@ -65,12 +67,56 @@ _trap_reboot:
 	    call map_kernel
 	    jp to_reboot
 
+;
+;	Sit in common and play with th banks to see what we have
+;
+size_ram:
+	    ; We could have < 128, 128 or various extensions up to 512K or
+	    ; so.
+	    ld ix,#0x80			; safe scribble
+	    ld c,#0x01
+	    ld de,#page_codes
+	    ld (ix),#0			; clear in bank 0 low
+	    ld hl,#32
+scan_ram:
+	    add hl,hl
+	    ld a,(de)			; try entry in table
+	    or a
+	    jr z,scan_done		; finished
+	    inc de
+	    out (0x50),a		; select proposed bank
+	    ld (ix),c			; write to it
+	    ld a,#4
+	    out (0x50),a		; back to bank 0
+	    ld a,(ix)			; read it back
+	    cp c			; did it mess with bank 0L ?
+	    jr nz, scan_ram
+
+;	We found our first mismatch HL is our memory size
+;	info if at least 128K is present (or 64 if not)
+scan_done:
+	    ret
+
+page_codes:
+	    ; Detect a standard or premium 128K system
+	    .byte 0x06  ;	write 1 to bank 1L 0x80
+	    ; Detect a system with a 256K expansion mod
+	    .byte 0x44	;	write 1 to bank 2L 0x80
+	    ; Detect a system with a 512K expansion mod
+	    .byte 0x84	;	write 1 to bank 4L 0x80
+	    ; We don't handle the modern ubee premium plus emulated thing
+	    .byte 0x00  ;	and done
+
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .area _CODE
 
-; These two must be below 32K and not use the stack until they hit ROM space
+; These two must be below 32K and not use the stack until they hit ROM
+; space.
+;
+; Not sure we can do this for most cases because not everyone has all that
+; ROM
 ;
 to_monitor:
 	    xor a			; 0 or 1 to keep low 32K right ? */
@@ -91,16 +137,15 @@ _ctc6845:				; registers in reverse order
 	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
 
 init_early:
-
             ; load the 6845 parameters
 	    ld hl, #_ctc6845
-	    ld bc, #0x100C
+	    ld bc, #0x0F0C
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
 	    out (0x0D), a		; data
 	    inc hl
 	    dec b
-	    jp po, ctcloop		; check V not C
+	    jp p, ctcloop
 	    ; ensure the CTC clock is right
 	    ld a, #0
 	    in a, (9)			; manual says in but double check
@@ -118,10 +163,15 @@ ctcloop:    out (c), b			; register
             ret
 
 init_hardware:
-            ; set system RAM size
-            ld hl, #128			; FIXME according to platform
+	    ld a,(_ubee_model)
+	    cp #2			; 256TC
+	    ld hl,#256			; 256TC has 256K
+	    call nz, size_ram
+is_tc:
             ld (_ramsize), hl
-            ld hl, #(128-64)		; 64K for kernel
+	    ld de,#64			; 64K for kernel
+	    or a
+	    sbc hl,de
             ld (_procmem), hl
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
@@ -133,6 +183,8 @@ init_hardware:
 	    ;
 	    ; set up the RTC driven periodic timer. The PIA should already
 	    ; have been configured for us
+	    ;
+	    ; FIXME: RTC is an option - use vblank instead  (pio bit 7)
 	    ;
 	    ld a, #0x0A			; PIR timer
 	    out (0x04), a
@@ -205,7 +257,6 @@ map_kernel:
 	    out (0x50), a
 	    pop af
 	    ret
-
 map_process:
 	    ld a, h
 	    or l

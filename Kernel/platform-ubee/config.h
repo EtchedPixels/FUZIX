@@ -1,27 +1,31 @@
-/* We have an RTC */
+/* We have an RTC - well maybe (its optional) */
 #define CONFIG_RTC
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
 #undef CONFIG_MONITOR
 /* Profil syscall support (not yet complete) */
-#define CONFIG_PROFIL
+#undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* Simple character addressed device */
+/* Simple character addressed device (for now) */
 #define CONFIG_VT_SIMPLE
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
-#define MAX_MAPS	32		/* 1MByte... */
+#define MAX_MAPS	16		/* 512 KByte... */
 #define MAP_SIZE	0x8000
+
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
-/* Vt definitions */
+/* Vt definitions. Eventually we need to sort this out and do mapping of
+   video, correct video attributes, mode setting etc */
 #define VT_BASE		((uint8_t *)0xF000)
 #define VT_WIDTH	80
 #define VT_HEIGHT	24
@@ -49,7 +53,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (256)	  /* Device for swapping (1st hd). */
 #define NBUFS    10       /* Number of block buffers */
