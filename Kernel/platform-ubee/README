@@ -1,1 +1,47 @@
 uBee draft code
+
+
+uBee disk formats
+
+These are stored by the emulator
+
+	track / head / sector
+
+	some tracks are differently biased in some cases (sector ids range
+	is weird)
+
+DS40
+	side 0 track 0, side 1 track 0, side 0 track 1....
+SS80
+	side 0 track 0, track 1, track 2 ...
+DS80
+	side 0 track 0, side 1 track 0, side 0 track 1....
+
+HD3	490 cyl 4 heads 32 sectors/track 512bytes/sec
+
+
+IMG or NW (nanowasp) 40 track
+DS40
+	40 track, 2 head, 10 sectors per track 512 bytes per sector
+	double desnity 250Kbits/sec sector ids start at 1
+
+SS80:
+	80 tracks, 1 head, 10 sectors per track 512 bytes per sector
+	sector offset is 1
+DS80:
+	as above but system sectors range 1-10 and data uses 21-30
+	(tracks 2+ of each head)
+
+DS82/4: like DS80 but sane sector ids
+
+
+SS80 seems to be the normal boot format
+
+Skew: 2 5 8 1 4 7 10 3 6 9 (usually done by OS)
+
+
+CP/M seems to load as
+
+Track 0 Side 0 1-10, Side 1 1-9 (no skew)
+
+then switches to CP/M itself which is doing soft skews
