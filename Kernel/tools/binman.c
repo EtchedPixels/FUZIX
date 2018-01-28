@@ -127,6 +127,15 @@ int main(int argc, char *argv[])
 			s__DISCARD + l__DISCARD - s__COMMONMEM);
 		exit(1);
 	}
+	/* If we have a discard area that overlaps the initializer block
+	   then the compiler will have messed it up. Even though we then
+	   copy the initializers into initialized we can only use the space
+	   for bss */
+	if (s__DISCARD && s__DISCARD + l__DISCARD >= s__INITIALIZER &&
+		s__INITIALIZER + l__INITIALIZED >= s__DISCARD) {
+		fprintf(stderr, "Initializer will have overwritten DISCARD\n");
+		exit(1);
+	}
 
         printf("Scanning data from 0x%x to 0x%x\n",
                 s__DATA, s__DATA + l__DATA);
