@@ -93,17 +93,20 @@ static void pascal_card(uint8_t slot, uint8_t cid)
     switch(class) {
 #if 0
     case 1:
-        printer_install(slot, cid);
+        pascal_printer_install(slot, cid);
         break;
     case 2:
         joystick_install(slot, cid);
         break;
     case 3:
         /* 31 is superserial etc */
-        serial_install(slot, cid);
+        if (cid == 0x31)
+            superserial_install(slot);
+        else
+            pascal_serial_install(slot, cid);
         break;
     case 4:
-        serial_install(slot, cid);
+        pascal_serial_install(slot, cid);
         break;
     case 5:
         audio_install(slot, cid);
@@ -198,6 +201,7 @@ void scan_slots(void)
         /* TODO cards with pascal idents not in the above */
         kputs("unknown");
     }
+    kputs("\n\n");
 }
 
 /* Process the ProDOS bits */

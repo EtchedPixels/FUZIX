@@ -12,7 +12,8 @@ extern uint8_t model;
 #define APPLE_IIE	1
 #define APPLE_IIC	2
 
-extern uint8_t pascal_status(uint8_t, uint8_t);
-extern uint8_t statusdata[];
+extern uint8_t pascal_op(uint16_t);
+extern uint8_t dos_op(uint8_t);
+extern uint8_t pascal_cmd[9];
 
 #endif

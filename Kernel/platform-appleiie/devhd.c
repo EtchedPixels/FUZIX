@@ -24,15 +24,17 @@
 #include <apple.h>
 
 extern uint8_t hd_map;
-uint8_t rw_cmd[7];
 uint8_t block_units[8];
 uint8_t readonly;
+
+#define dos_cmd	((uint8_t *)0x42)
 
 static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     uint16_t dptr, nb;
     uint8_t err;
-    uint8_t slotbit = 1 << (minor >> 5);
+    uint8_t slot = minor >> 5;
+    uint8_t slotbit = 1 << slot;
 
     /* FIXME: swap support */
     if(rawflag == 1 && d_blkoff(9))
@@ -46,28 +48,28 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     while (udata.u_nblock--) {
         /* Fill in the protocol convertor information */
         /* Note hd_map will be fun to handle */
-
-        rw_cmd[2] = dptr;
-        rw_cmd[3] = dptr >> 8;
-        rw_cmd[4] = udata.u_block;
-        rw_cmd[5] = udata.u_block >> 8;
-        rw_cmd[6] = 0;	/* If we do big disks this will be 16-23 */
-
         if (pascal_slot & slotbit) {
-            rw_cmd[0] = is_read ? 0x03 : 0x04;
-            rw_cmd[1] = minor & 0x1F;
+            pascal_cmd[0] = (minor & 0x1F) + 1;
+            pascal_cmd[1] = dptr;
+            pascal_cmd[2] = dptr >> 8;
+            pascal_cmd[3] = udata.u_block;
+            pascal_cmd[4] = udata.u_block >> 8;
+            pascal_cmd[5] = 0;	/* If we do big disks this will be 16-23 */
             if (rawflag)
-                rw_cmd[6] = 0x80;	/* Should select alt bank */
-            err = block_rw_pascal();
+                pascal_cmd[5] = 0x80;	/* Should select alt bank */
+            err = pascal_op((is_read ? 0x0300 : 0x0400) | slot);
         } else {
             /* DOS mode only allows 2 devices/slot */
             /* TODO: No alt bank access */
-            rw_cmd[0] = is_read ? 1 : 2;
+            dos_cmd[0] = is_read ? 1 : 2;
             /* FIXME: check these are correct shifts */
-            rw_cmd[1] = ((minor & 0xE0) >> 2);
+            dos_cmd[1] = ((minor & 0xE0) >> 2);
             if (minor & 1)
-                rw_cmd[1] |= 0x80;
-            rw_cmd[1] |= (minor & 1) << 6;
+                dos_cmd[1] |= 0x80;
+            dos_cmd[2] = dptr;
+            dos_cmd[3] = dptr >> 8;
+            dos_cmd[4] = udata.u_block;
+            dos_cmd[5] = udata.u_block >> 8;
             err = block_rw_prodos();
         }
 
@@ -84,6 +86,18 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     return nb;
 }
 
+static uint8_t statusdata[8];
+
+static uint8_t pascal_status(uint8_t slot, uint8_t unit)
+{
+    pascal_cmd[0] = 3;
+    pascal_cmd[1] = unit;
+    pascal_cmd[2] = (uint8_t)statusdata;
+    pascal_cmd[3] = ((uint16_t)statusdata) >> 8;
+    pascal_cmd[4] = 0;
+    return pascal_op(slot);
+}
+
 int hd_open(uint8_t minor, uint16_t flag)
 {
     uint8_t slot = minor >> 5;
@@ -96,7 +110,7 @@ int hd_open(uint8_t minor, uint16_t flag)
         return -1;
     }
     if (pascal_slot & (1 << slot)) {
-        if (pascal_status(slot, unit) || (statusdata[0] & 0xA0) != 0xA0) {
+        if (pascal_status(slot, unit + 1) || (statusdata[0] & 0xA0) != 0xA0) {
             udata.u_error = ENXIO;
             return -1;
         }
@@ -105,17 +119,27 @@ int hd_open(uint8_t minor, uint16_t flag)
             udata.u_error = EROFS;
             return -1;
         }
+        /* Offline / No Media */
         if (!(statusdata[0] & 0x10)) {
-            /* FIXME: better errno code */
-            udata.u_error = ENXIO;
+            udata.u_error = EIO;
             return -1;
         }
     } else {
-        if (( readonly & (1 << slot)) && O_ACCMODE(flag)) {
+        /* Driver ROM reports it is an R/O interface */
+        if ((readonly & (1 << slot)) && O_ACCMODE(flag)) {
             udata.u_error = EROFS;
             return -1;
         }
-        /* FIXME: ProDOS status wants doing here for media check */
+        /* Status check */
+        dos_cmd[0] = 0;
+        dos_cmd[1] = (slot << 3);
+        if (minor)
+            dos_cmd[1] |= 0x80;
+        /* DOS status op - check if we are ready */
+        if (dos_op(slot)) {
+            udata.u_error = EIO;
+            return -1;
+        }
     }
     return 0;
 }
@@ -132,11 +156,16 @@ int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return hd_transfer(minor, false, rawflag);
 }
 
-/* This assumes a ProDOS type structure is present and we are doing
-   ProDOS things */
+/*
+ * Initialize a discovered hard disk interface. Needs to move into discard
+ * space eventually. We query the interface to see if it makes sense and
+ * record any read only or other information. We know how to use both the
+ * pascal interface (preferred) and the ProDOS one.
+ */
+
 void hd_install(uint8_t slot)
 {
-    uint8_t *p = (uint8_t *)0xC000 + (((uint16_t)slot) << 8);
+    register uint8_t *p = (uint8_t *)0xC000 + (((uint16_t)slot) << 8);
     uint8_t err;
 
     if (pascal_slot & (1 << slot)) {
@@ -150,6 +179,6 @@ void hd_install(uint8_t slot)
         if (!(p[254] & 4))
             readonly |= (1 << slot);
         block_units[slot] = (p[254] >> 4) & 3 + 1;
-        /* And at this point we ought to scan it for a swap signature */
     }
+    /* And at this point we ought to scan it for a swap signature */
 }
