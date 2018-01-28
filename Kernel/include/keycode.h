@@ -51,6 +51,8 @@
 #define KEY_F8		ESC('8')
 #define KEY_F9		ESC('9')
 #define KEY_F10		ESC('0')
+#define KEY_F11		ESC(':')
+#define KEY_F12		ESC(';')
 
 /* Specials that vt.c will expand - in the range 0x80-0x9F. These are the odd
    2 byte codes that sneak into UK and US type keyboards */
