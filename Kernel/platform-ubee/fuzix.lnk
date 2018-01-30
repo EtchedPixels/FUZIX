@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0200
--b _DISCARD=0xDB00
+-b _DISCARD=0xDC00
 -b _COMMONMEM=0xE400
 -l z80
 platform-ubee/crt0.rel

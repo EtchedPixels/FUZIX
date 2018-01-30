@@ -18,10 +18,46 @@ void do_beep(void)
 {
 }
 
+static uint8_t has_rtc;
+
+__sfr __at 0x02 pia0b;
+__sfr __at 0x04 cmos_reg;
+__sfr __at 0x07 cmos_read;
+
+uint8_t rtc_secs(void)
+{
+	cmos_reg = 0x00;
+	return cmos_read;
+}
+
+void has_cmos_rtc(void)
+{
+	/* See if the week looks valid - probably want a stronger check */
+	cmos_reg = 0x06;
+	if (cmos_read == 0 || cmos_read > 7)
+		panic("RTC required");
+}
+
 void platform_interrupt(void)
 {
-	kbd_interrupt();
-	timer_interrupt();
+	static uint8_t icount;
+	uint8_t r = pia0b;
+	/* TODO: printer interrupt */
+	/* Need to check if TC */
+	if (r & 0x02)
+		kbd_interrupt();
+	if (r & 0x80) {
+		cmos_reg = 0x0C;
+		if (cmos_read & 0x40) {
+			icount++;
+			timer_interrupt();
+			/* Turn 8Hz into 10Hz */
+			if (icount == 4) {
+				timer_interrupt();
+				icount = 0;
+			}
+		}
+	}
 }
 
 void map_init(void)
@@ -54,19 +90,13 @@ void pagemap_init(void)
 {
 	uint8_t i;
 	uint8_t nbank = procmem / 32;
+
+	/* Just a handy spot to run it early */
+	has_cmos_rtc();
+
 	for (i = 1; i < nbank; i++)
 		pagemap_add(map_mod(i));
 
-}
-
-/* FIXME: check RTC is not an option on supported devices, if so probe it */
-__sfr __at 0x04 rtc_c;
-__sfr __at 0x06 rtc_d;
-
-uint8_t rtc_secs(void)
-{
-	rtc_c = 0x00;
-	return rtc_d;
 }
 
 uint8_t platform_param(char *p)

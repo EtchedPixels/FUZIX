@@ -226,14 +226,12 @@ static void keymap_up(uint8_t c)
 /* 256TC */
 void kbd_interrupt(void)
 {
-	uint8_t x = tc256_kstat;
-	if (x & 1) {
-		x = tc256_kcode;
-		if (x & 0x80)
-			keymap_down(x & 0x7F);
-		else
-			keymap_up(x & 0x7F);
-		if (keysdown < 3)
-			keydecode_tc();
-	}
+	uint8_t x = tc256_kcode;
+	newkey = 0;
+	if (x & 0x80)
+		keymap_down(x & 0x7F);
+	else
+		keymap_up(x & 0x7F);
+	if (keysdown < 3 && newkey)
+		keydecode_tc();
 }

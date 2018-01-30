@@ -1,5 +1,5 @@
 ;
-;	    TRS 80  hardware support
+;	    Microbee 128K and 256TC  hardware support
 ;
 
             .module ubee
@@ -112,6 +112,8 @@ page_codes:
 ; -----------------------------------------------------------------------------
             .area _CODE
 
+; FIXME: most of this belongs in discard
+
 ; These two must be below 32K and not use the stack until they hit ROM
 ; space.
 ;
@@ -132,13 +134,13 @@ to_reboot:
 ;	This setting list comes from the Microbee 256TC documentation
 ;	and is the quoted table for 80x25 mode
 ;
-_ctc6845:				; registers in reverse order
+_ctc6545:				; registers in reverse order
 	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
 	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
 
 init_early:
-            ; load the 6845 parameters
-	    ld hl, #_ctc6845
+            ; load the 6545 parameters
+	    ld hl, #_ctc6545
 	    ld bc, #0x0F0C
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
@@ -180,21 +182,98 @@ is_tc:
             call _program_vectors
             pop hl
 
+	    ld a,(_ubee_model)
+	    cp #2
+	    ld hl,#pio_setup
+	    jr nz, not_t256
+	    ld hl,#pio_setup_t256
+not_t256:
+	    call init_ports
+	    call init_ports
 	    ;
 	    ; set up the RTC driven periodic timer. The PIA should already
 	    ; have been configured for us
 	    ;
-	    ; FIXME: RTC is an option - use vblank instead  (pio bit 7)
+	    ; we don't necessarily have one in which case we have a
+	    ; (arguably far more useful) vblank timer. In which case this
+	    ; routine will pee into the void and do no harm whatsoever
 	    ;
-	    ld a, #0x0A			; PIR timer
-	    out (0x04), a
-	    ld a, #0x1001		; 64 ints/second
+	    ld bc,#0x0A04
+	    out (c), b			; select register A
+	    ld a,#0x70			; reset divier
 	    out (0x06), a
+	    ld a,#0x2D			; and select 32KHz operation
+	    out (0x06), a		; with an 8Hz interrupt
+	    ld a,#0x40
+	    inc b
+	    out (c),b
+	    ld a,#0x46			; PIE, binary, 24 hour
+	    out (0x06), a
+	    inc b
+	    out (c),b
+	    in a,(0x07)			; Clear pending interrupt
 
             im 1 ; set CPU interrupt mode
 
             ret
 
+;
+;	This nifty routine is c/o Stewart Kay's CP/M 3 for the Microbee
+;	- slightly tweaked to make it re-callable for series of tables
+;
+init_ports:
+	    ld b,(hl)
+	    inc hl
+	    ld c,(hl)
+	    inc hl
+	    otir
+	    ld a,(hl)
+	    or a
+	    jr nz,init_ports
+	    inc hl
+	    ret
+
+pio_setup:
+	    .byte	0x04
+	    .byte	0x01
+	    ; vector, mode 0 (output), int control off, on
+	    .byte	0x00,0x0F,0x03,0x83
+	    .byte	0
+	    ; and port B
+	    .byte	0x06
+	    .byte	0x03
+	    ; vector 0, mode 3, 7/4/3/0 are input
+	    ; interrupt enable, or, high, mask follows
+	    ; interrupt on 7/4
+	    ; int control on
+	    .byte	0x00, 0xCF, 0x99, 0xB7, 0x6F, 0x83
+	    .byte	0x01
+	    .byte	0x02
+	    ; and set the data lines so the rs232 looks sane (not that
+	    ; we care right now).
+	    .byte	0x24
+	    .byte	0x00
+
+pio_setup_t256:
+	    .byte	0x04
+	    .byte	0x01
+	    ; vector, mode 0 (output), int control off, on
+	    .byte	0x00,0x0F,0x03,0x83
+	    .byte	0
+	    ; and port B
+	    .byte	0x06
+	    .byte	0x03
+	    ; vector 0, mode 3, 7/4/3/1/0 are input
+	    ; interrupt enable, or, high, mask follows
+	    ; interrupt on 7/4/1
+	    ; int control on
+	    .byte	0x00, 0xCF, 0x9B, 0xB7, 0x6D, 0x83
+	    .byte	0x01
+	    .byte	0x02
+	    ; and set the data lines so the rs232 looks sane (not that
+	    ; we care right now).
+	    .byte	0x24
+	    .byte	0x00
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
