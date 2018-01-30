@@ -1,47 +1,110 @@
-uBee draft code
+Memory Map:
+
+First 64K
+
+	0000-00FF		Vectors
+	0100-01FF		Free
+	0200-wherever		Kernel
+	DB00			Discard
+	E400			Common
+	F000			Video
+
+(this will change once the video code is reworked to be)
+
+	0000-0100		Vectors
+	0100-0200		Free for now (IRQ stack ?)
+	0200-wherever		Kernel
+	wherever		Discard (turned into buffers)
+	F400			Common & Video
+
+	(Video overlaid temporarily on 8000-8FFF)
+
+The other memory is then overlaid on 0000-7FFF for user space
+
+	0000-00FF		Vectors
+	0100-7CFF		Application
+	7D00-7FFF		Udata/stack cache (may be able to move
+				oto 7DFF/7E00)
+
+Done so far:
+
+- Bootloader. Loads the image into 0200 using the ROM and runs it
+- Code to generate an SS80 bootable disk image
+- Basic initialization and setup, video and machine type probing
+- Sketch of various drivers
+
+To Do:
+- Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
+- Begin floppy and hard disk driver debug
+- Bank the video
+- Get init loading, load and test userspace
+- IDE driver
+- How to tell wd1010 system from 2793 from both with 0x58 switch
+- If we have wd1010 and fd wtf do we put IDE in major/minors ?
+
+Longer Term
+- Support attributes, colour, RAM based fonts (load the ROM one into RAM
+  customised for bold/italic ?)
+- Hardware 6x45 scrolling
+- Do delayed video output via a buffer off vblank event for non premium
+- Non TC keyboard (lightpen keyboard)
+- Proper support for Z80 PIO interfaces
+- Z8530 SCC
+- Graphics not just vt interfaces
+- Maybe eventually switch to soft interrupt model and support soft serial
+  interrupts (ick)
 
 
-uBee disk formats
+Notes:
 
-These are stored by the emulator
+The Microbee disk systems do various early magic and then end up in the copy
+of the boot rom with rom services at E000-EFFF and using DE00-DFFF for data.
+(paging register is 0x04). Disk track 0 side 0 sector 1 is loaded at $80 and
+then executed from $80.
 
-	track / head / sector
+At this point you have use of the ROM services and can load more data. The
+firmware routine loads sequential sectors without software skew loading in
+sector order then the next track same side. It seems to check for unknown
+sectors so probably works for any sector count.
 
-	some tracks are differently biased in some cases (sector ids range
-	is weird)
+Disk formats DS40, SS80 are nothing unusual (40 track or 80 track 512 bytes
+per sector) but store 10 sectors per track. They are soft skewed by the OS
+usually.
 
-DS40
-	side 0 track 0, side 1 track 0, side 0 track 1....
-SS80
-	side 0 track 0, track 1, track 2 ...
-DS80
-	side 0 track 0, side 1 track 0, side 0 track 1....
+DS80 is weird. Tracks 0/1 behave as expected but the sectors on a DS80 for
+the later tracks are numbered 21-30. The emulator only stores those sectors
+so you can't use this for sane stuff
 
-HD3	490 cyl 4 heads 32 sectors/track 512bytes/sec
+DS82 is like DS80 but without the weird skew and only 1 system track for CP/M
+
+Fuzix should probably default to 9 sectors/track for compatibility with other
+platforms, but offer switches for 10 sec and density/side detect.
+
+(General question - should we add geometry hints to the superblock - we have
+room)
+
+There are three kinds of video
+
+Standard:
+	A 6545 with 2K of display memory and 128 8x16 ROM characters plus
+	128 in programmable character memory. No colour
+
+Premium:
+	The 6545 has
+	2K character memory
+	2K attribute memory
+	2K colour memory
+	up to 4 banks of programmable character memory
+
+256TC:
+	The 6545 has
+	2K character memory
+	2K attribute memory
+	16K PCG ram (up to 32K supported)
 
 
-IMG or NW (nanowasp) 40 track
-DS40
-	40 track, 2 head, 10 sectors per track 512 bytes per sector
-	double desnity 250Kbits/sec sector ids start at 1
 
-SS80:
-	80 tracks, 1 head, 10 sectors per track 512 bytes per sector
-	sector offset is 1
-DS80:
-	as above but system sectors range 1-10 and data uses 21-30
-	(tracks 2+ of each head)
+High resolution video is sort of MSX like but cruder. The character memory is
+filled with unique character codes and the character ram is loaded with the
+bit patterns.
 
-DS82/4: like DS80 but sane sector ids
-
-
-SS80 seems to be the normal boot format
-
-Skew: 2 5 8 1 4 7 10 3 6 9 (usually done by OS)
-
-
-CP/M seems to load as
-
-Track 0 Side 0 1-10, Side 1 1-9 (no skew)
-
-then switches to CP/M itself which is doing soft skews
