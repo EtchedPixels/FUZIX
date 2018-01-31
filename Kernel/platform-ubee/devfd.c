@@ -3,6 +3,11 @@
 #include <printf.h>
 #include <devfd.h>
 
+/*
+ *	Floppy controller logic for the Microbee systems with a 2793
+ *	controller
+ */
+
 #define MAX_FD	4
 
 #define OPDIR_NONE	0
@@ -41,8 +46,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     blkno_t block;
     uint16_t dptr;
-    int ct = 0;
-    int tries;
+    uint16_t ct = 0;
+    uint8_t tries;
     uint8_t err = 0;
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[7];
@@ -65,12 +70,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_dptr;
     block = udata.u_block;
 
+    kprintf("Reading from block %d\n", block);
     while(ct < udata.u_nblock) {
         cmd[0] = is_read ? FD_READ : FD_WRITE;
         /* Double sided assumed FIXME */
         cmd[1] = block / 20;
         /* floppy.s will sort the side out */
-        cmd[2] = ((block % 20) << 1) + 1;
+        cmd[2] = (block % 20) + 1;
         cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
         cmd[4] = dptr & 0xFF;
         cmd[5] = dptr >> 8;
@@ -80,6 +86,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
+            kprintf("Try %d err %d\n", tries, err);
             if (tries > 1)
                 fd_reset(driveptr);
         }
@@ -89,6 +96,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         udata.u_dptr += 512;
         ct++;
     }
+    kprintf("Read return %x\n", ct << BLKSHIFT);
     return ct << BLKSHIFT;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
