@@ -3,6 +3,7 @@
 -b _CODE=0x0200
 -b _DISCARD=0xDC00
 -b _COMMONMEM=0xE400
+-b _INITIALIZER=0xF000
 -l z80
 platform-ubee/crt0.rel
 platform-ubee/commonmem.rel
