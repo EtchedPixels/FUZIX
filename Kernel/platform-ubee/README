@@ -32,13 +32,17 @@ Done so far:
 - Code to generate an SS80 bootable disk image
 - Basic initialization and setup, video and machine type probing
 - Sketch of various drivers
+- Basic floppy driver code
 
 To Do:
+- Floppy - media detect/sectors per track etc
+- Try mounting a file system on floppy
 - Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
-- Begin floppy and hard disk driver debug
+- Hard disk driver debug
 - Bank the video
 - Get init loading, load and test userspace
-- IDE driver
+- IDE driver (note the ubee512 emulator ide appears to be very busted as
+  on 5.8.0)
 - How to tell wd1010 system from 2793 from both with 0x58 switch
 - If we have wd1010 and fd wtf do we put IDE in major/minors ?
 
