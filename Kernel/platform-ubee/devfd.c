@@ -70,7 +70,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     dptr = (uint16_t)udata.u_dptr;
     block = udata.u_block;
 
-    kprintf("Reading from block %d\n", block);
     while(ct < udata.u_nblock) {
         cmd[0] = is_read ? FD_READ : FD_WRITE;
         /* Double sided assumed FIXME */
@@ -86,7 +85,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             err = fd_operation(cmd, driveptr);
             if (err == 0)
                 break;
-            kprintf("Try %d err %d\n", tries, err);
             if (tries > 1)
                 fd_reset(driveptr);
         }
@@ -96,7 +94,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         udata.u_dptr += 512;
         ct++;
     }
-    kprintf("Read return %x\n", ct << BLKSHIFT);
     return ct << BLKSHIFT;
 bad:
     kprintf("fd%d: error %x\n", minor, err);
