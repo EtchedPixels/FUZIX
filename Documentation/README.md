@@ -1,6 +1,9 @@
+# README
+
 This directory reflects all the documentation necessary for the successful development of Fuzix.
 
-TODO.md: Contains the list of all TO-DO documented by programmers..
+
+TODO.md: Contains the list of all TO-DO documented by programmers.
  
 FIXME.md: Contains the listing of everything that needs to be refactored or corrected.
 
