@@ -3,14 +3,14 @@
 This directory reflects all the documentation necessary for the successful development of Fuzix.
 
 
-TODO.md: Contains the list of all TO-DO documented by programmers.
- 
-FIXME.md: Contains the listing of everything that needs to be refactored or corrected.
+> TODO.md: Contains the list of all TO-DO documented by programmers.
 
-65C816.txt: FUZIX 65C816 Guide
+> FIXME.md: Contains the listing of everything that needs to be refactored or corrected.
 
-ExternalBuffers: Document how the model works
+> 65C816.txt: FUZIX 65C816 Guide
 
-MSP430FR5969.md: Describe how to build Fuzix for the MSP430FR5969.
+> ExternalBuffers: Document how the model works
 
-build-filesystem-ng.md: Describe how to use build-filesystem-ng
+> MSP430FR5969.md: Describe how to build Fuzix for the MSP430FR5969.
+
+> build-filesystem-ng.md: Describe how to use build-filesystem-ng
