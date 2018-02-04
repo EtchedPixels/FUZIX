@@ -44,7 +44,33 @@ To Do:
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
   on 5.8.0)
 - How to tell wd1010 system from 2793 from both with 0x58 switch
-- If we have wd1010 and fd wtf do we put IDE in major/minors ?
+	-	Select 0x58 = 0
+		See if track register writes to values
+		See if it changes when we flip 0x58 (try several cases)
+		Y = has 0x58 switch
+	-	WD 2793 has a track register we can play with which is
+		mirrored on the ubee 4 registers down I think
+	-	WD1010 has lots more registers
+
+	Algorithm therefore is
+
+	Write 0x45 (mirrrored track) Read back at 0x41/0x45 a few times
+
+	If it mirrors to 0x41 then it's a 2793
+	If it writes/reads back but does not mirror it's a WD1002-5
+
+	Now check if writes to 0x45 affect 0x5 with 0x58 switched
+	(if so its two controllers and we can repeat the probe algorithm
+	for the other one)
+
+	Finally check 0x48 on the floppies. If it has low bits set then
+	it's a dream disk or if setting bits is reflected back it's a dream
+	disk. So set bit 3 (DD), read back. 0x80 -> normal else DD
+
+	*Never write 0x41 while probing as it's precomp on the WD. 0x45
+	however is either cyl_high or track_w so safe
+
+- If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
 
 Longer Term
 - Support attributes, colour, RAM based fonts (load the ROM one into RAM

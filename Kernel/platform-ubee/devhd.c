@@ -5,12 +5,21 @@
  *	with additional glue chips that also manage and front up a floppy
  *	controller for us including the DMA management. It's actually a better
  *	floppy controller than almost anything that followed it !
+ *
+ *	Minor is arranged as
+ *
+ * 	S		slot (0 or 1 via port 0x58)
+ *	DDD		drive identifier
+ *			0-2	hdc
+ *			3-6	fdc
+ *	MMMM		0000 (reserved for partitioning on hd)
  */
 
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <devhd.h>
+#include <ubee.h>
 
 __sfr __at 0x40 hd_data;
 __sfr __at 0x41 hd_precomp;	/* W/O */
@@ -61,9 +70,11 @@ static int heads[7] = { 4, 4, 4, 2, 2, 2, 2 };
 static uint8_t hd_waitready(void)
 {
 	uint8_t st;
+	uint16_t tick = 0;
 	do {
 		st = hd_status;
-	} while (!(st & 0x40));
+		tick++;
+	} while (!(st & 0x40) && !tick);
 	return st;
 }
 
@@ -123,6 +134,11 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	/* We don't touch precomp and hope the firmware set it right */
 	hd_seccnt = 1;
+	
+	/* Get rid of port 58 selector */
+	minor &= 0x7F;
+	/* Reserve low bits fo rfuture partition tables */
+	minor >>= 4;
 
 	while (ct < udata.u_nblock) {
 		uint16_t b = udata.u_block / spt[minor];
@@ -183,12 +199,18 @@ bad2:
 
 int hd_open(uint8_t minor, uint16_t flag)
 {
+	uint8_t sel = (minor & 0x80) ? 1 : 0;
 	flag;
-	if (minor >= MAX_HD + MAX_FDC) {
+	
+	minor &= 0x7F;
+
+	if (disk_type[sel] != DISK_TYPE_HDC || minor >= MAX_HD + MAX_FDC) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
-	fdc_devsel = 1;
+	fdc_devsel = sel;
+	/* Reserve low bits for future partition table support */
+	minor >>= 4;
 	if (minor <= MAX_HD) {
 		hd_sdh = 0xA0 | (minor << 3);
 		hd_cmd = HDCMD_RESTORE | RATE_2MS;
@@ -206,13 +228,13 @@ int hd_open(uint8_t minor, uint16_t flag)
 int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	flag;
-	fdc_devsel = 1;
+	fdc_devsel = (minor & 0x80) ? 1 : 0;
 	return hd_transfer(minor, true, rawflag);
 }
 
 int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	flag;
-	fdc_devsel = 1;
+	fdc_devsel = (minor & 0x80) ? 1 : 0;
 	return hd_transfer(minor, false, rawflag);
 }

@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devfd.h>
+#include <ubee.h>
 
 /*
  *	Floppy controller logic for the Microbee systems with a 2793
@@ -52,6 +53,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[7];
 
+    minor &= 0x7F;
+
     if(rawflag)
         if (d_blkoff(9))
             return -1;
@@ -59,7 +62,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     if (fd_selected != minor) {
         uint8_t err;
         /* FIXME: We force DD for now. Side isn't handled here */
-        err = fd_motor_on(selmap[minor]|FDC_DOUBLE);
+        err = fd_motor_on(selmap[minor & 0x7F]|FDC_DOUBLE);
         if (err)
             goto bad;
     }
@@ -103,8 +106,11 @@ bad:
 
 int fd_open(uint8_t minor, uint16_t flag)
 {
+    uint8_t sel = (minor & 0x80) ? 1 : 0;
     flag;
-    if(minor >= MAX_FD) {
+    fdc_devsel = sel;
+    if((disk_type[sel] != DISK_TYPE_FDC && disk_type[sel] != DISK_TYPE_FDC_D) ||
+            minor >= MAX_FD) {
         udata.u_error = ENODEV;
         return -1;
     }
@@ -114,13 +120,13 @@ int fd_open(uint8_t minor, uint16_t flag)
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag;
-    fdc_devsel = 0;
+    fdc_devsel = (minor & 0x80) ? 1: 0;
     return fd_transfer(minor, true, rawflag);
 }
 
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     flag;rawflag;minor;
-    fdc_devsel = 0;
+    fdc_devsel = (minor & 0x80) ? 1: 0;
     return fd_transfer(minor, false, rawflag);
 }
