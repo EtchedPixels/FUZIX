@@ -7,6 +7,7 @@
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
+#include <ubee.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -38,6 +39,8 @@ void device_init(void)
   int i;
   /* Time of day clock */
   inittod();
+  /* Figure out what disks we have */
+  diskprobe();
   /* Add 64 swaps (2MB) */
   for (i = MAX_SWAPS - 1 ; i >= 0; i--)
     swapmap_init(i);
