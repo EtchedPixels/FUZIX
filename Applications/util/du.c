@@ -155,7 +155,7 @@ long dodir(char *d, int thislev, dev_t dev)
 	 * directory should not already have been done.
 	 */
 	maybe_print = !silent;
-	if (dir = opendir(d) == NULL) break;
+	if ((dir = opendir(d)) == NULL) break;
 	while ((entry = readdir(dir)) != NULL) {
 	    if (strcmp(entry->d_name, ".") == 0 ||
 		strcmp(entry->d_name, "..") == 0)
