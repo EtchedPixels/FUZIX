@@ -238,6 +238,12 @@ fdio_out1:
 	jr	z, fdio_out1
 	outi				; Stuff byte into FDC while we think
 	jr	nz,fdio_out1
+fdio_out2:
+	in	a, (FDCREG)		; Wait for DRQ (or error)
+	and	e
+	jr	z, fdio_out2
+	outi				; Stuff byte into FDC while we think
+	jr	nz,fdio_out2
 fdio_nmiout:
 ;
 ;	Now tidy up
