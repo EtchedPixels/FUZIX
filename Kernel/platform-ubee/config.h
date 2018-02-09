@@ -32,7 +32,7 @@
 #define VT_RIGHT	79
 #define VT_BOTTOM	23
 
-#define TICKSPERSEC 64   /* Ticks per second */
+#define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
 #define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
