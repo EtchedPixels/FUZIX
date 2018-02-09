@@ -157,12 +157,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 /* Help the 8bit compilers out by preventing any 32bit promotions */
 #define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
 
-/* we need a busier-than-busy state for superblocks, so that if those blocks
- * are read by userspace through bread() they are not subsequently freed by 
- * bfree() until the filesystem is unmounted */
+/* State of the block. We have some free bits here if we need them */
 #define BF_FREE		0
 #define BF_BUSY		1
-#define BF_SUPERBLOCK	2
 
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
@@ -210,7 +207,7 @@ extern void blkzero(struct blkbuf *buf);
    disk safely */
 typedef struct dinode {
     uint16_t i_mode;
-    uint16_t i_nlink;
+    uint16_t i_nlink;		/* Note we have 64K inodes so we never overflow */
     uint16_t i_uid;
     uint16_t i_gid;
     uoff_t    i_size;		/* Never negative */

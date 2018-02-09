@@ -49,7 +49,6 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 			panic(PANIC_WANTBSYB);
 		else if (bp->bf_busy == BF_FREE)
 			bp->bf_busy = BF_BUSY;
-		/* BF_SUPERBLOCK is fine */
 	} else {
 		bp = freebuf();
 		bp->bf_dev = dev;
@@ -90,8 +89,7 @@ int bfree(regptr bufptr bp, uint8_t dirty)
 	if (dirty)
 		bp->bf_dirty = true;
 	
-	if(bp->bf_busy == BF_BUSY) /* do not free BF_SUPERBLOCK */
-		bp->bf_busy = BF_FREE;
+	bp->bf_busy = BF_FREE;
 
 	if (dirty > 1) {	/* immediate writeback */
 		if (bdwrite(bp) != BLKSIZE) {
