@@ -321,11 +321,11 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
         readi(wd, 0);
 
         /* Read until EOF or name is found.  readi() advances udata.u_offset */
-        if(udata.u_count == 0 || namecomp(oldname, curentry.d_name))
+        if(udata.u_done == 0 || namecomp(oldname, curentry.d_name))
             break;
     }
 
-    if(udata.u_count == 0 && *oldname) {
+    if(udata.u_done == 0 && *oldname) {
         udata.u_error = ENOENT;
         return false;                  /* Entry not found */
     }
@@ -344,7 +344,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
         curentry.d_ino = 0;
 
     /* If an existing slot is being used, we must back up the file offset */
-    if(udata.u_count){
+    if(udata.u_done){
         udata.u_offset -= DIR_LEN;
     }
 

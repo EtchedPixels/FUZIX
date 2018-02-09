@@ -883,6 +883,7 @@ extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* inode.c */
 extern void readi(inoptr ino, uint8_t flag);
+extern uint16_t umove(uint16_t n);	/* Probably wants to move ? */
 extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);

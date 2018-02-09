@@ -32,11 +32,25 @@ static uint16_t uoff(void)
 	return BLKOFF((uint16_t)udata.u_offset);
 }
 
+uint16_t umove(uint16_t n)
+{
+	udata.u_offset += n;
+	udata.u_count -= n;
+	udata.u_done += n;
+	udata.u_base += n;
+	return udata.u_done;
+}
+
+static uint16_t mapcalc(inoptr ino, uint16_t *size, uint8_t m)
+{
+	*size = min(udata.u_count, BLKSIZE - uoff());
+	return bmap(ino, udata.u_offset >> BLKSHIFT, m);
+}
+
 /* Writei (and readi) need more i/o error handling */
 void readi(regptr inoptr ino, uint8_t flag)
 {
 	usize_t amount;
-	usize_t toread;
 	blkno_t pblk;
 	bufptr bp;
 	uint16_t dev;
@@ -44,6 +58,8 @@ void readi(regptr inoptr ino, uint8_t flag)
 
 	dev = ino->c_dev;
 	ispipe = false;
+	udata.u_done = 0;
+
 	switch (getmode(ino)) {
 	case MODE_R(F_DIR):
 	case MODE_R(F_REG):
@@ -59,7 +75,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 
         case MODE_R(F_SOCK):
 #ifdef CONFIG_NET
-                udata.u_count = sock_read(ino, flag);
+                udata.u_done = sock_read(ino, flag);
                 break;
 #endif
 	case MODE_R(F_PIPE):
@@ -73,10 +89,8 @@ void readi(regptr inoptr ino, uint8_t flag)
 		dev = *(ino->c_node.i_addr);
 
 	      loop:
-		toread = udata.u_count;
-		while (toread) {
-			amount = min(toread, BLKSIZE - uoff());
-			pblk = bmap(ino, udata.u_offset >> BLKSHIFT, 1);
+		while (udata.u_count) {
+			pblk = mapcalc(ino, &amount, 1);
 
 #if defined(read_direct)
 			if (!ispipe && pblk != NULLBLK && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
@@ -111,28 +125,22 @@ void readi(regptr inoptr ino, uint8_t flag)
 			/* Bletch */
 #if defined(__M6809__)
                         gcc_miscompile_workaround();
-#endif                        
-			udata.u_base += amount;
-			udata.u_offset += amount;
+#endif
+			umove(amount);
 			if (ispipe && (uint16_t)udata.u_offset >= 18 * BLKSIZE)
 				udata.u_offset = 0;
-			toread -= amount;
 			if (ispipe) {
 				ino->c_node.i_size -= amount;
 				wakeup(ino);
 			}
 		}
 		/* Compute return value */
-		udata.u_count -= toread;
-		if (udata.u_count == 0 && udata.u_error)
-			udata.u_count = (usize_t) -1;
+		if (udata.u_done == 0 && udata.u_error)
+			udata.u_done = (usize_t) -1;
 		break;
 
 	case MODE_R(F_CDEV):
-		udata.u_count = cdread(ino->c_node.i_addr[0], flag);
-
-		if (udata.u_count != (usize_t)-1)
-			udata.u_offset += udata.u_count;
+		udata.u_done = cdread(ino->c_node.i_addr[0], flag);
 		break;
 
 	default:
@@ -145,22 +153,18 @@ void readi(regptr inoptr ino, uint8_t flag)
 void writei(regptr inoptr ino, uint8_t flag)
 {
 	usize_t amount;
-	usize_t towrite;
 	bufptr bp;
-	bool ispipe;
+	bool ispipe = false;
 	blkno_t pblk;
 	uint16_t dev;
 
 	dev = ino->c_dev;
+	udata.u_done = 0;
 
 	switch (getmode(ino)) {
 
 	case MODE_R(F_BDEV):
 		dev = *(ino->c_node.i_addr);
-	case MODE_R(F_DIR):
-	case MODE_R(F_REG):
-		ispipe = false;
-		towrite = udata.u_count;
 		goto loop;
 
 #ifdef CONFIG_NET
@@ -172,10 +176,10 @@ void writei(regptr inoptr ino, uint8_t flag)
 		ispipe = true;
 		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
 		   in one go - needs merging into the loop */
-		while ((towrite = udata.u_count) > (16 * BLKSIZE) - 
+		while (udata.u_count > (16 * BLKSIZE) -
 					(uint16_t)ino->c_node.i_size) {
 			if (ino->c_readers == 0) {	/* No readers */
-				udata.u_count = (usize_t)-1;
+				udata.u_done = (usize_t)-1;
 				udata.u_error = EPIPE;
 				ssig(udata.u_ptab, SIGPIPE);
 				return;
@@ -186,11 +190,13 @@ void writei(regptr inoptr ino, uint8_t flag)
 		}
 		/* Sleep if empty pipe */
 
+	case MODE_R(F_DIR):
+	case MODE_R(F_REG):
 	      loop:
 	      	flag = flag & O_SYNC ? 2 : 1;
 
-		while (towrite) {
-			amount = min(towrite, BLKSIZE - uoff());
+		while (udata.u_count) {
+			pblk = mapcalc(ino, &amount, 0);
 
                         if (udata.u_offset >> BLKOVERSIZE) {
                                 udata.u_error = EFBIG;
@@ -198,9 +204,7 @@ void writei(regptr inoptr ino, uint8_t flag)
                                 break;
                         }
 
-			if ((pblk =
-			     bmap(ino, udata.u_offset >> BLKSHIFT,
-				  0)) == NULLBLK)
+			if (pblk == NULLBLK)
 				break;	/* No space to make more blocks */
 
 			/* If we are writing an entire block, we don't care
@@ -216,8 +220,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 			if (bfree(bp, flag))
 				break;
 
-			udata.u_base += amount;
-			udata.u_offset += amount;
+			umove(amount);
 			if (ispipe) {
 				if ((uint16_t)udata.u_offset >= 18 * 512)
 					udata.u_offset = 0;
@@ -225,7 +228,6 @@ void writei(regptr inoptr ino, uint8_t flag)
 				/* Wake up any readers */
 				wakeup(ino);
 			}
-			towrite -= amount;
 		}
 
 		/* Update size if file grew */
@@ -236,16 +238,12 @@ void writei(regptr inoptr ino, uint8_t flag)
 			}
 		}
 		/* Compute return value */
-		udata.u_count -= towrite;
-		if (udata.u_count == 0 && udata.u_error)
-			udata.u_count = (usize_t) -1;
+		if (udata.u_done == 0 && udata.u_error)
+			udata.u_done = (usize_t) -1;
 		break;
 
 	case MODE_R(F_CDEV):
-		udata.u_count = cdwrite(ino->c_node.i_addr[0], flag);
-
-		if (udata.u_count != -1)
-			udata.u_offset += udata.u_count;
+		udata.u_done = cdwrite(ino->c_node.i_addr[0], flag);
 		break;
 	default:
 		udata.u_error = ENODEV;
@@ -300,7 +298,6 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 	udata.u_sysio = false;	/* I/O to user data space */
 	udata.u_base = (unsigned char *) udata.u_argn1;	/* buf */
 	udata.u_count = (susize_t) udata.u_argn2;	/* nbytes */
-	udata.u_done = 0;		/* bytes done so far */
 
 	if ((ino = getinode(udata.u_argn)) == NULLINODE) {
 		/* kprintf("[WRS: rwsetup(): getinode(%x) fails]", udata.u_argn); */

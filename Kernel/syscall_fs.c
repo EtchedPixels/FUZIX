@@ -409,7 +409,7 @@ uint16_t nbytes;
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
-arg_t _read(void)
+arg_t readwrite(uint8_t reading)
 {
 	inoptr ino;
 	uint8_t flag;
@@ -425,13 +425,18 @@ arg_t _read(void)
 	if (!valaddr(buf, nbytes))
 	        return -1;
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
-	if ((ino = rwsetup(true, &flag)) == NULLINODE)
+	if ((ino = rwsetup(reading, &flag)) == NULLINODE)
 		return -1;	/* bomb out if error */
 
-	readi(ino, flag);
+	(reading ? readi : writei)(ino, flag);
 	updoff();
 
-	return (udata.u_count);
+	return udata.u_done;
+}
+
+arg_t _read(void)
+{
+	return readwrite(1);
 }
 
 #undef d
@@ -479,27 +484,7 @@ uint16_t nbytes;
 
 arg_t _write(void)
 {
-	inoptr ino;
-	uint8_t flag;
-
-	if (!nbytes)
-		return 0;
-
-	if ((ssize_t)nbytes < 0) {
-		udata.u_error = EINVAL;
-	        return -1;
-	}
-
-	if (!valaddr(buf, nbytes))
-	        return -1;
-	/* Set up u_base, u_offset, ino; check permissions, file num. */
-	if ((ino = rwsetup(false, &flag)) == NULLINODE)
-		return (-1);	/* bomb out if error */
-
-	writei(ino, flag);
-	updoff();
-
-	return (udata.u_count);
+	return readwrite(0);
 }
 
 #undef d

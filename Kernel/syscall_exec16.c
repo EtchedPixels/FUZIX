@@ -79,7 +79,7 @@ arg_t _execve(void)
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_count != 16) {
+	if (udata.u_done != 16) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
@@ -174,7 +174,7 @@ arg_t _execve(void)
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
 		readi(ino, 0);
-		if (udata.u_count != bin_size)
+		if (udata.u_done != bin_size)
 			goto nogood4;
 		progptr += bin_size;
 	}

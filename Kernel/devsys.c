@@ -35,7 +35,7 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		if (uput((unsigned char *) udata.u_offset, udata.u_base,
 			       udata.u_count))
 			return -1;
-		return udata.u_count;
+		return umove(udata.u_count);
 	case 2:
 		if (udata.u_sysio)
 			memset(udata.u_base, 0, udata.u_count);
@@ -49,7 +49,7 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			return 0;
 		if (uput(addr + udata.u_offset, udata.u_base, udata.u_count))
 			return -1;
-		return udata.u_count;
+		return umove(udata.u_count);
 #ifdef CONFIG_DEV_MEM
         case 4:
                 return devmem_read();
@@ -81,7 +81,7 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		if(uget((unsigned char *) udata.u_offset, udata.u_base,
 			       udata.u_count))
 			return -1;
-		return udata.u_count;
+		return umove(udata.u_count);
 	case 3:
 		udata.u_error = EINVAL;
 		return -1;
