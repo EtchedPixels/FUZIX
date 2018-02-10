@@ -15,52 +15,44 @@
  * did not exist.  If the parent existed, and parent is not null,
  * parent will be filled in with the parents inoptr. Otherwise, parent
  * will be set to NULL.
+ * The last node parsed is saved in lastname and is useful to some system
+ * calls as they want a parent and to create the new node.
  *
  * FIXME: ENAMETOOLONG might be good to add
  */
 
-#ifndef CONFIG_LEVEL_0
+char lastname[31];
+uint8_t n_open_fault;
+static char *name, *nameend;
 
-inoptr n_open(char *uname, inoptr *parent)
+static uint8_t getcf(void)
 {
-    inoptr r;
-    char *tb;
-
-    tb = (char*)pathbuf(); /* temporary memory to hold kernel's copy of the filename */
-
-    if (ugets(uname, tb, 512) == -1) {
-        udata.u_error = EFAULT;
-        if (parent)
-            *parent = NULLINODE;
-        pathfree(tb);
-        return NULLINODE;
+    int16_t c;
+    c = ugetc(name);
+    if (c == -1 || name == nameend) {
+        n_open_fault = 1;
+        return 0;
     }
-
-#ifdef DEBUG
-    kprintf("n_open(\"%s\")\n", tb);
-#endif
-
-    r = kn_open(tb, parent);
-
-    pathfree(tb);
-
-    return r;
+    return (uint8_t)c;
 }
-#endif
 
-inoptr kn_open(char *namep, inoptr *parent)
+inoptr n_open(char *namep, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
     staticfast inoptr ninode;
     inoptr temp;
-    staticfast char *name;
+    uint8_t c;
+    char *fp;
 
     name = namep;
+    n_open_fault = 0;
+    nameend = namep + 512;	/* For now our pathmax is 512 */
+
 #ifdef DEBUG
     kprintf("kn_open(\"%s\")\n", name);
 #endif
 
-    if(*name == '/')
+    if(getcf() == '/')
         wd = udata.u_root;
     else
         wd = udata.u_cwd;
@@ -81,9 +73,9 @@ inoptr kn_open(char *namep, inoptr *parent)
         if(ninode)
             ninode = srch_mt(ninode);
 
-        while(*name == '/')    /* Skip(possibly repeated) slashes */
+        while((c = getcf()) == '/')    /* Skip(possibly repeated) slashes */
             ++name;
-        if(!*name)           /* No more components of path? */
+        if(!c || n_open_fault)           /* No more components of path? */
             break;
         if(!ninode){
             udata.u_error = ENOENT;
@@ -100,11 +92,20 @@ inoptr kn_open(char *namep, inoptr *parent)
             goto nodir;
         }
 
+        fp = lastname;
+        while(c = getcf()) {
+            if (c == '/')
+                break;
+            if (fp != lastname + 30)
+                *fp++ = c;
+            ++name;
+        }
+        *fp = 0;
         /* See if we are going up through a mount point */
         /* FIXME: re-order for speed */
         if((wd == udata.u_root || (wd->c_num == ROOTINODE && wd->c_dev != root_dev)) &&
-                name[0] == '.' && name[1] == '.' &&
-                (name[2] == '/' || name[2] == '\0')){
+                fp[0] == '.' && fp[1] == '.' &&
+                (fp[2] == '/' || fp[2] == '\0')){
             if (wd == udata.u_root) {
                 /* FIXME: is this assignment ever needed */
                 ninode = wd;
@@ -117,11 +118,11 @@ inoptr kn_open(char *namep, inoptr *parent)
             wd = temp;
         }
 
-        ninode = srch_dir(wd, name);
-
-        while(*name != '/' && *name)
-            ++name;
+        ninode = srch_dir(wd, lastname);
     }
+    /* If we faulted then treat it as invalid */
+    if (n_open_fault)
+        goto nodir;
 
     if(parent)
         *parent = wd;
@@ -364,41 +365,6 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 
     return true; // success
 }
-
-
-
-/* Filename is given a path name in user space, and copies
- * the final component of it to name(in system space).
- */
-
-void filename(char *userspace_upath, char *name)
-{
-    char *buf;
-    char *ptr;
-
-    buf = tmpbuf();
-    if(ugets(userspace_upath, buf, 512) == -1) {
-        tmpfree(buf);
-        *name = '\0';
-        return;          /* An access violation reading the name */
-    }
-    ptr = buf;
-    /* Find the end of the buffer */
-    while(*ptr)
-        ++ptr;
-    /* Special case for "...name.../". SuS requires that mkdir foo/ works
-       (see the clarifications to the standard) */
-    if (*--ptr == '/')
-        *ptr-- = 0;
-    /* Walk back until we drop off the start of the buffer or find the
-       slash */
-    while(*ptr != '/' && ptr-- > buf);
-    /* And move past the slash, or not the string start */
-    ptr++;
-    memcpy(name, ptr, FILENAME_LEN);
-    tmpfree(buf);
-}
-
 
 /* Namecomp compares two strings to see if they are the same file name.
  * It stops at FILENAME_LEN chars or a null or a slash. It returns 0 for difference.

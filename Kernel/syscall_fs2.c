@@ -89,7 +89,6 @@ arg_t _mknod(void)
 {
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
 	udata.u_error = 0;
 
@@ -107,8 +106,7 @@ arg_t _mknod(void)
 		return (-1);
 	}
 
-	filename(name, fname);
-	ino = newfile(parent, fname);
+	ino = newfile(parent, lastname);
 	if(!ino)
 		goto nogood3;	/* parent inode is derefed in newfile. SN */
 

@@ -124,7 +124,6 @@ map_process:
 	.globl sigdispatch
 	.globl _ugetc
 	.globl _ugetw
-	.globl _ugets
 	.globl _uget
 	.globl _uputc
 	.globl _uputw
@@ -176,18 +175,6 @@ _ugetw:
 	ldaa usrbank
 	jmp fargetw
 
-;
-;	D = src, 2(s) = dest, 4(s) = size
-;
-_ugets:
-	tsx
-	xgdy		; D was src, we want it in Y
-	ldd 4,x		; size
-	std tmp1	; in tmp1
-	ldx 2,x		; destination in X
-	clrb		; 0 = kernel
-	ldaa usrbank	; user space
-	jmp farzcopy	; returns error/size in D
 ;
 ;	D = src, 2(s) = dest, 4(s) = size
 ;

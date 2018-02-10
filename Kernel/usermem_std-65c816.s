@@ -2,7 +2,7 @@
         .include "kernel816.def"
 	.include "platform/zeropage.inc"
 
-	.export __uget, __ugetc, __ugetw, __ugets
+	.export __uget, __ugetc, __ugetw
 	.export __uput, __uputc, __uputw, __uzero
 
 	.import outxa, popax
@@ -50,70 +50,6 @@ ug_nomov:
 	sep	#$30
 	plb
 	lda	#0
-	tax
-	rts
-
-;
-;	This could be done more nicely using .i16 and wants optimizing
-;
-__ugets:
-	sta	tmp2
-	stx	tmp2+1			; save the count
-	jsr	popax			; pop the destination
-	sta	ptr2			; (ptr2) is our target
-	stx	ptr2+1
-	jsr	popax			; (ptr2) is our source
-	sta	ptr3
-	stx	ptr3+1
-
-	ldy	#0			; counter
-
-	ldx	tmp2+1			; how many 256 byte blocks
-	beq	__ugets_tail		; if none skip to the tail
-
-__ugets_blk:
-	phb
-	lda	U_DATA__U_PAGE		; switch to user bank read
-	pha
-	plb
-	lda	(ptr3), y		; get a byte of user data
-	beq	__ugets_end
-	plb				; back to kernel
-	sta	(ptr2), y		; save it to the kernel buffer
-	iny				; move on one
-	bne	__ugets_blk		; not finished a block ?
-	inc	ptr3+1			; move src ptr 256 bytes on
-	inc	ptr2+1			; move dst ptr the same
-	dex				; one less block to do
-	bne	__ugets_blk		; out of blocks ?
-
-__ugets_tail:
-	cpy	tmp2			; finished ?
-	beq	__ugets_bad
-
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	plb
-	lda	(ptr3),y		; get a byte of user data
-	beq	__ugets_end
-	plb
-	sta	(ptr2),y		; save it to the kernel buffer
-	iny				; move on
-	bne	__ugets_tail		; always taken (y will be non zero)
-
-__ugets_bad:
-	dey
-	lda	#0
-	sta	(ptr2), y		; terminate kernel buffer
-	lda	#$FF			; string too large
-	tax				; return $FFFF
-	rts
-
-__ugets_end:
-	plb
-	lda	#0
-	sta	(ptr2), y
 	tax
 	rts
 

@@ -12,7 +12,6 @@
         ; exported symbols
         .globl __uget
         .globl __ugetc
-        .globl __ugets
         .globl __ugetw
 
         .globl __uput
@@ -209,43 +208,3 @@ checkzero:
         jr nz, nextbyte
         jr ugetputret
 
-__ugets:
-        push ix
-        ld ix, #0   ; load ix with stack pointer
-        add ix, sp
-        ; store interrupt state, disable interrupts
-        ld a, i
-        di
-        push af
-        ; load DE with source address (in userspace)
-        ld e, 4(ix)
-        ld d, 5(ix)
-        call ugetputsetup
-        ; load HL with destination address
-        ld l, 6(ix)
-        ld h, 7(ix)
-        ; load DE with the byte count
-        ld e, 8(ix) ; byte count
-        ld d, 9(ix)
-        ; read from page17, write to HL for AT MOST DE bytes or until 0 byte found
-        ld bc, #MMU_PAGE17 ; also loads B=0
-        jr checkzeros
-nextbytes:
-        in a, (c) ; read from page17
-        ld (hl), a ; write to string
-        or a
-        jr z, getsdone
-        inc hl ; advance pointer
-        dec de ; decrement remaining byte counter
-checkzeros:
-        ld a, d
-        or e
-        jr nz, nextbytes
-        ; ah - we've run out of space
-        dec hl ; back it up
-        ld (hl), #0 ; terminate string
-        ; leave HL as nonzero
-        jp ugetputret ; too far for a jr
-getsdone:
-        ld hl, #0 ; indicate success
-        jp ugetputret ; too far for a jr

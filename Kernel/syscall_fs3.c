@@ -21,7 +21,6 @@ arg_t _open(void)
 	staticfast inoptr ino;
 	int16_t perm;
 	staticfast inoptr parent;
-	char fname[FILENAME_LEN + 1];
 	int trunc;
 	int r;
 	int w;
@@ -61,10 +60,8 @@ arg_t _open(void)
 			udata.u_error = ENOENT;
 			goto cantopen;
 		}
-		filename(name, fname);
-
 		/* newfile drops parent for us */
-		ino = newfile(parent, fname);
+		ino = newfile(parent, lastname);
 		if (!ino) {
 			/* on error, newfile sets udata.u_error */
 			goto cantopen;
@@ -174,7 +171,6 @@ arg_t _link(void)
 	inoptr ino;
 	inoptr ino2;
 	inoptr parent2;
-	char fname[FILENAME_LEN + 1];
 
 	if (!(ino = n_open(name1, NULLINOPTR)))
 		return (-1);
@@ -204,9 +200,7 @@ arg_t _link(void)
 		goto nogood;
 	}
 
-	filename(name2, fname);
-
-	if (!ch_link(parent2, "", fname, ino)) {
+	if (!ch_link(parent2, "", lastname, ino)) {
 		i_deref(parent2);
 		goto nogood;
 	}

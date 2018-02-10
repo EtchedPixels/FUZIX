@@ -378,7 +378,6 @@ arg_t _unlink(void)
 	inoptr ino;
 	inoptr pino;
 	int r;
-	char fname[FILENAME_LEN + 1];
 
 	ino = n_open(path, &pino);
 
@@ -388,8 +387,7 @@ arg_t _unlink(void)
 		udata.u_error = ENOENT;
 		return (-1);
 	}
-	filename(path, fname);
-	r = unlinki(ino, pino, fname);
+	r = unlinki(ino, pino, lastname);
 	i_deref(pino);
 	i_deref(ino);
 	return r;

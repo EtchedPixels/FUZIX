@@ -298,8 +298,7 @@ typedef struct direct {
 
 
 /*
- *	This is actually overlaid over a blkbuf holding the actual
- *	record in question, and pinned until we umount the fs.
+ * Superblock structure
  */
 #define FILESYS_TABSIZE 50
 typedef struct filesys { // note: exists in mem and on disk
@@ -321,6 +320,7 @@ typedef struct filesys { // note: exists in mem and on disk
     blkno_t       s_tfree;
     uint16_t      s_tinode;
     inoptr        s_mntpt;     /* Mount point */
+    /* TODO: Add geometry hints and support > 512 byte blocks */
 } filesys, *fsptr;
 
 typedef struct oft {
@@ -336,9 +336,8 @@ struct mount {
     uint16_t m_flags;
     struct filesys m_fs;
 };
-/* The flags are not yet fully implemented */
 #define MS_RDONLY	1
-#define MS_NOSUID	2
+#define MS_NOSUID	2	/* Not yet implemented */
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -356,7 +355,6 @@ struct mount {
 
 /* 0 is used to mean 'check we could signal this process' */
 
-/* FIXME: finish signal handling */
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3
@@ -761,7 +759,6 @@ extern size_t strlcpy(char *, const char *, size_t);
 #define ugetw(a)	(*(uint8_t *)(a))
 #define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
 #define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
-#define ugets(a,b,c)	((int)(strlcpy(b,a,c) && 0))
 #define uzero(a,b)	(memset(a,0,b) && 0)
 #else
 extern usize_t valaddr(const char *base, usize_t size);
@@ -769,7 +766,6 @@ extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
 extern uint32_t _ugetl(void *uaddr);
-extern int ugets(const void *userspace_source, void *dest, usize_t maxlen);
 extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
 extern int uputw(uint16_t value, void *userspace_dest);
@@ -779,7 +775,6 @@ extern int uzero(void *userspace_dest, usize_t count);
 /* usermem.c or usermem_std.s */
 extern usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
 extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
-extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
 extern int _uzero(uint8_t *user, usize_t count);
 
 #if defined CONFIG_USERMEM_DIRECT
@@ -841,18 +836,12 @@ extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
-#ifndef CONFIG_LEVEL_0
+extern char lastname[31];
 extern inoptr n_open(char *uname, inoptr *parent);
-#else
-#define n_open	kn_open
-#endif
-/* open file, "name" in kernel address space */
-extern inoptr kn_open(char *uname, inoptr *parent);
 extern inoptr i_open(uint16_t dev, uint16_t ino);
 extern inoptr srch_dir(inoptr wd, char *compname);
 extern inoptr srch_mt(inoptr ino);
 extern bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
-extern void filename(char *userspace_upath, char *name);
 /* return true if n1 == n2 */
 extern bool namecomp(char *n1, char *n2);
 extern inoptr newfile(inoptr pino, char *name);

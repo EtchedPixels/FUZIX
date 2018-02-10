@@ -2,7 +2,7 @@
         .include "kernel02.def"
 	.include "platform/zeropage.inc"
 
-		.export __uget, __ugetc, __ugetw, __ugets
+		.export __uget, __ugetc, __ugetw
 		.export __uput, __uputc, __uputw, __uzero
 
 		.import map_kernel, map_process_always
@@ -74,59 +74,6 @@ __uget_tail:	cpy tmp2		; finished ?
 
 __uget_done:
 		lda #0
-		tax
-		rts
-
-__ugets:	sta tmp2
-		stx tmp2+1		; save the count
-		jsr popax		; pop the destination
-		sta ptr2		; (ptr2) is our target
-		stx ptr2+1
-		jsr popax		; (ptr2) is our source
-		sta ptr3
-		stx ptr3+1
-
-		ldy #0			; counter
-
-		ldx tmp2+1		; how many 256 byte blocks
-		beq __ugets_tail	; if none skip to the tail
-
-__ugets_blk:
-		jsr map_process_always	; map the user process in
-		lda (ptr3), y		; get a byte of user data
-		beq __ugets_end
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2), y		; save it to the kernel buffer
-		iny			; move on one
-		bne __ugets_blk		; not finished a block ?
-		inc ptr3+1		; move src ptr 256 bytes on
-		inc ptr2+1		; move dst ptr the same
-		dex			; one less block to do
-		bne __ugets_blk		; out of blocks ?
-
-__ugets_tail:	cpy tmp2		; finished ?
-		beq __ugets_bad
-
-		jsr map_process_always	; map the user process
-		lda (ptr3),y		; get a byte of user data
-		beq __ugets_end
-		jsr map_kernel		; map the kernel back in
-		sta (ptr2),y		; save it to the kernel buffer
-		iny			; move on
-		bne __ugets_tail	; always taken (y will be non zero)
-
-__ugets_bad:
-		dey
-		lda #0
-		sta (ptr2), y		; terminate kernel buffer
-		lda #$FF		; string too large
-		tax			; return $FFFF
-		rts
-
-__ugets_end:
-		jsr map_kernel
-		lda #0
-		sta (ptr2), y
 		tax
 		rts
 

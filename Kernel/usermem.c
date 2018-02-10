@@ -54,21 +54,6 @@ uint16_t ugetw(const void *user)
 	return _ugetw(user);
 }
 
-/* ugets is a bit odd - we don't know the length of the passed string
-   so we trim to the end of the allowed memory and if we don't find a
-   \0 in time we error */
-int ugets(const void *user, void *dest, usize_t maxlen)
-{
-	int ret;
-	maxlen = valaddr(user, maxlen);
-	if (!maxlen)
-		return -1;
-	ret = _ugets(user, dest, maxlen);
-	if (ret == -1)
-		udata.u_error = EFAULT;
-	return ret;
-}
-
 int uput(const void *source,   void *user, usize_t count)
 {
 	if (!valaddr(user, count))
@@ -176,22 +161,6 @@ uint16_t _ugetw(const uint16_t *user)
 	return tmp;
 }
 
-int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
-{
-	uint8_t tmp;
-	while(count--) {
-		BANK_PROCESS;
-		tmp = *user++;
-		BANK_KERNEL;
-		*dest++ = tmp;
-		if (tmp == '\0')
-			return 0;
-	}
-	/* Ensure terminated */
-	dest[-1] = '\0';
-	return -1;
-}
-
 int _uput(const uint8_t *source, uint8_t *user, usize_t count)
 {
 	uint8_t tmp;
@@ -260,19 +229,6 @@ usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	memcpy(dest, user, count);
 	return 0;
-}
-
-int _ugets(const uint8_t *user, uint8_t *dest, usize_t count)
-{
-	while(count--) {
-		*dest = *user++;
-		if (*dest == '\0')
-			return 0;
-		dest++;
-	}
-	/* Ensure terminated */
-	dest[-1] = '\0';
-	return -1;
 }
 
 int _uput(const uint8_t *source, uint8_t *user, usize_t count)

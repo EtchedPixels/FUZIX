@@ -215,7 +215,7 @@ int hd_open(uint8_t minor, uint16_t flag)
 		hd_sdh = 0xA0 | (minor << 3);
 		hd_cmd = HDCMD_RESTORE | RATE_2MS;
 	} else {
-		hd_sdh = 0x38 | minor << 1;
+		hd_sdh = 0x38 | ((minor - MAX_HD) << 1);
 		hd_cmd = HDCMD_RESTORE | RATE_6MS;
 	}
 	if (hd_waitready() & 1) {

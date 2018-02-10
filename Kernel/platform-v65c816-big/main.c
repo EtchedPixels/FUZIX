@@ -41,13 +41,3 @@ uint8_t platform_param(char *p)
 {
     return 0;
 }
-
-char *pathbuf(void)
-{
-    return tmpbuf();
-}
-
-void pathfree(char *p)
-{
-    tmpfree(p);
-}

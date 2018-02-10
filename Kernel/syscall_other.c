@@ -38,13 +38,15 @@ arg_t _rename(void)
 			i_deref(srcp);
 		return -1;
 	}
+	/* Save the source name */
+	memcpy(fname, lastname, FILENAME_LEN + 1);
 	/* n_open will wipe u_rename if it walks that inode
 	   so it tells us whether we are trying to create a loop */
 	udata.u_rename = srci;
 	/* Destination maybe does not exist, but parent must */
-	filename(dst, fname);
 
 	dsti = n_open(dst, &dstp);
+	/* lastname now holds destination name element */
 	/* Same file - do nothing */
 	if (dsti == srci) {
 		ret = 0;
@@ -87,15 +89,14 @@ arg_t _rename(void)
 			udata.u_error = EISDIR;
 			goto nogood;
 		}
-		if (unlinki(dsti, dstp, fname) == -1)
+		if (unlinki(dsti, dstp, lastname) == -1)
 			goto nogood;
 		/* Drop the reference to the unlinked file */
 		i_deref(dsti);
 	}
 	/* Ok we may proceed: we set up fname earlier */
-	if (!ch_link(dstp, "", fname, srci))
+	if (!ch_link(dstp, "", lastname, srci))
 		goto nogood2;
-	filename(src, fname);
 	/* A fail here is bad */
 	if (!ch_link(srcp, fname, "", NULLINODE)) {
 		kputs("WARNING: rename: unlink fail\n");
@@ -156,10 +157,8 @@ arg_t _mkdir(void)
 		goto nogood2;
 	}
 
-	filename(name, fname);
-
 	i_ref(parent);		/* We need it again in a minute */
-	if (!(ino = newfile(parent, fname))) {
+	if (!(ino = newfile(parent, lastname))) {
 		i_deref(parent);
 		goto nogood2;	/* parent inode is derefed in newfile. */
 	}
@@ -211,7 +210,6 @@ arg_t _rmdir(void)
 #ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
 	ino = n_open(path, &parent);
 
@@ -242,8 +240,7 @@ arg_t _rmdir(void)
 		goto nogood;
 
 	/* Remove the directory entry */
-	filename(path, fname);
-	if (!ch_link(parent, fname, "", NULLINODE))
+	if (!ch_link(parent, lastname, "", NULLINODE))
 		goto nogood;
 
 	/* We are unused, parent is now one link down (removal of ..) */
@@ -252,7 +249,7 @@ arg_t _rmdir(void)
 	/* Decrease the link count of the parent inode */
 	if (!(parent->c_node.i_nlink--)) {
 		parent->c_node.i_nlink += 2;
-		kprintf("_rmdir: bad nlink\n");
+		kputs("_rmdir: bad nlink\n");
 	}
 	setftime(ino, C_TIME);
 	wr_inode(parent);

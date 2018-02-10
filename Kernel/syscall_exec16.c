@@ -195,7 +195,7 @@ arg_t _execve(void)
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
-	ugets((void *) ugetw(nargv), udata.u_name, 8);
+	uget((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	tmpfree(abuf);
@@ -342,7 +342,11 @@ uint8_t write_core_image(void)
 
 	udata.u_error = 0;
 
-	ino = kn_open("core", &parent);
+	/* FIXME: need to think more about the case sp is lala */
+	if (uput("core", udata.u_syscall_sp - 5, 5))
+		return 0;
+
+	ino = n_open(udata.u_syscall_sp - 5, &parent);
 	if (ino) {
 		i_deref(parent);
 		return 0;
