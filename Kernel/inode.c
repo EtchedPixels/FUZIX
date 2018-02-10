@@ -22,7 +22,7 @@ static uint8_t pipewait(inoptr ino, uint8_t flag)
                         return 0;
                 }
         }
-	udata.u_count = min(udata.u_count, (uint16_t)ino->c_node.i_size);
+	udata.u_count = min(udata.u_count, LOWORD(ino->c_node.i_size));
         return 1;
 }
 
@@ -127,7 +127,7 @@ void readi(regptr inoptr ino, uint8_t flag)
                         gcc_miscompile_workaround();
 #endif
 			umove(amount);
-			if (ispipe && (uint16_t)udata.u_offset >= 18 * BLKSIZE)
+			if (ispipe && LOWORD(udata.u_offset) >= 18 * BLKSIZE)
 				udata.u_offset = 0;
 			if (ispipe) {
 				ino->c_node.i_size -= amount;
@@ -177,7 +177,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
 		   in one go - needs merging into the loop */
 		while (udata.u_count > (16 * BLKSIZE) -
-					(uint16_t)ino->c_node.i_size) {
+					LOWORD(ino->c_node.i_size)) {
 			if (ino->c_readers == 0) {	/* No readers */
 				udata.u_done = (usize_t)-1;
 				udata.u_error = EPIPE;
@@ -198,7 +198,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 		while (udata.u_count) {
 			pblk = mapcalc(ino, &amount, 0);
 
-                        if (udata.u_offset >> BLKOVERSIZE) {
+                        if (HIBYTE32(udata.u_offset) & BLKOVERSIZE32) {
                                 udata.u_error = EFBIG;
                                 ssig(udata.u_ptab, SIGXFSZ);
                                 break;
@@ -222,7 +222,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 
 			umove(amount);
 			if (ispipe) {
-				if ((uint16_t)udata.u_offset >= 18 * 512)
+				if (LOWORD(udata.u_offset) >= 18 * 512)
 					udata.u_offset = 0;
 				ino->c_node.i_size += amount;
 				/* Wake up any readers */

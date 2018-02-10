@@ -40,6 +40,15 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define ALIGNDOWN(v) (v)
 #endif
 
+/* These work fine for most compilers but can be overriden for those where the
+   resulting code generation is foul */
+#ifndef LOWORD
+#define LOWORD(x)	((uint16_t)(x))
+#endif
+#ifndef HIBYTE32
+#define HIBYTE32(x)	((uint8_t)((x) >> 24))
+#endif
+
 #ifdef CONFIG_LEVEL_2
 #include "level2.h"
 #else
@@ -152,7 +161,7 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BLKSIZE		512
 #define BLKSHIFT	9
 #define BLKMASK		511
-#define BLKOVERSIZE	25	/* Bits 25+ mean we exceeded the file size */
+#define BLKOVERSIZE32	0xFE	/* Bits 25+ mean we exceeded the file size */
 
 /* Help the 8bit compilers out by preventing any 32bit promotions */
 #define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
