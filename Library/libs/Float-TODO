@@ -1,13 +1,7 @@
 exp2()
 exp2f()
-round()
-roundf()
 
 Sort out exceptions within this code and the Z80 SDCC intrinsics
 
 Figure out which bits to pull from SDCC for Z80 builds
 
-Clean up properly to get a libm/libc divided correctly
-
-Make the _libm versions of stdio do #define #include <foo.c> to make
-Makefiles tidier
