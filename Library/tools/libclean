@@ -18,4 +18,6 @@ sdar d tmp.lib rand.rel _calloc.rel _malloc.rel _realloc.rel _free.rel
 sdar d tmp.lib malloc.rel calloc.rel free.rel realloc.rel
 sdar d tmp.lib printf_large.rel puts.rel gets.rel assert.rel time.rel
 sdar d tmp.lib tolower.rel toupper.rel _ltoa.rel _itoa.rel abs.rel atoi.rel
+# Added in 3.7.0rc so we can't rely on it yet and must always use our own
+sdar d tmp.lib strtoul.rel
 mv tmp.lib sdccz80.lib
