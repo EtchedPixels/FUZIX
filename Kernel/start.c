@@ -289,6 +289,7 @@ uint16_t get_root_dev(void)
 		udata.u_sysio = 1;
 		udata.u_count = sizeof(bootline)-1;
 		udata.u_euid = 0;		/* Always begin as superuser */
+		udata.u_done = 0;
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
 		rd = bootdevice(bootline);
