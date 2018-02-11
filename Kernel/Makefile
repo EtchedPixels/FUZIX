@@ -4,10 +4,6 @@ export VERSION = "0.1"
 export SUBVERSION = "ac1"
 export ROOT_DIR
 
-ifeq ($(MAKE),)
-  export MAKE = "make"
-endif
-
 UNAME_S := $(shell uname -s)
 
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -169,6 +165,7 @@ font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
+	rm -rf platform
 	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi
 	rm -f fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6
 	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv

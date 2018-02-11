@@ -9,7 +9,7 @@ PLATFORM =
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
-.SUFFIXES: .c .rel
+.SUFFIXES: .c .rel .y
 
 SRCSNS = expr.c test.c
 
@@ -40,10 +40,8 @@ $(OBJSBAD): %.rel: %.c
 	$(FCC) $(PLATFORM) -c $<
 
 expr.c: expr.y
-	byacc -o expr.c expr.y
 
 find.c: find.y
-	byacc -o find.c find.y
 
 .c.rel:
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
