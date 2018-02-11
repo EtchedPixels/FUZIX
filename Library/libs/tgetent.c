@@ -72,7 +72,7 @@ int tgetent(char *bp, const char *name)
     /* Definition and TERM equals "name" then use TERMCAP as the   */
     /* Definition. Otherwise use "/etc/termcap" as the path name.  */
 
-    if ((file = getenv("TERMCAP")) == (char *) NULL)
+    if ((file = getenv("TERMCAP")) == (const char *) NULL)
 	file = "/etc/termcap";
     else if (*file != '/')
 	if ((term = getenv("TERM")) != (char *) NULL

@@ -247,7 +247,7 @@ char *tgoto(const char *cm, int destcol, int destline)
 
 int tputs(const char *cp, int affcnt, int (*outc)(int ch))
 {
-    if (cp == (char *) NULL)
+    if (cp == (const char *) NULL)
 	return (1);
     /* Do any padding interpretation - left null for MINIX just now */
     while (*cp)
