@@ -65,3 +65,7 @@ typedef union {            /* this structure is endian dependent */
 
 /* cc65 really wants register tags on struct pointers used repeatedly */
 #define regptr	register
+
+/* CC65 is bright enough to partly optimise this but not fully so do it
+   by hand */
+#define HIBYTE32(x)	(((uint8_t *)&(x))[3])
