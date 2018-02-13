@@ -12,7 +12,7 @@
 extern void set_active_vt(uint8_t curtty);
 extern void set_visible_vt(uint8_t curtty);
 
-__sfr __at 0x2F tty_debug2;
+__sfr __at 0x2F tty_debug;
 __sfr __at 0xAA kbd_row_set;
 __sfr __at 0xA9 kbd_row_read;
 
@@ -24,7 +24,7 @@ char tbuf5[TTYSIZ];
 
 uint8_t curtty;
 uint8_t inputtty;
-static struct vt_switch ttysave[5];
+static struct vt_switch ttysave[NUM_DEV_TTY];
 struct vt_repeat keyrepeat;
 uint8_t vtattr_cap;
 static uint8_t kbd_timer;
@@ -35,21 +35,27 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 uint8_t keyboard[11][8];
 uint8_t shiftkeyboard[11][8];
 
-/* tty1 to tty4 is the screen tty5 is the debug port */
+/* tty1 to tty4 is the screen */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+static void
+kputc(uint8_t minor, char c)
 {
 	/* Debug port for bringup */
+	tty_debug = c;
+	tty_putc(minor, c);
+}
+
+void kputchar(char c)
+{
 	if (c == '\n')
-		tty_putc(5, '\r');
-	tty_putc(5, c);
+		kputc(minor(TTYDEV), '\r');
+	kputc(minor(TTYDEV), c);
 }
 
 /* All tty are always ready */
@@ -72,19 +78,16 @@ void vtexchange()
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	irqflags_t irq;
-	if (minor == 5)
-		tty_debug2 = c;
-	else {
-		irq = di();
-		if (curtty != minor -1) {
-			vt_save(&ttysave[curtty]);
-			curtty = minor - 1;
-			vt_load(&ttysave[curtty]);
-			set_active_vt(curtty);
-		}
-		vtoutput(&c, 1);
-		irqrestore(irq);
+
+	irq = di();
+	if (curtty != minor -1) {
+		vt_save(&ttysave[curtty]);
+		curtty = minor - 1;
+		vt_load(&ttysave[curtty]);
+		set_active_vt(curtty);
 	}
+	vtoutput(&c, 1);
+	irqrestore(irq);
 }
 
 int tty_carrier(uint8_t minor)
