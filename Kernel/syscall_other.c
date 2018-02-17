@@ -365,7 +365,7 @@ static int do_umount(uint16_t dev)
 
 	/* If anything on this file system is open for write then you
 	   can't remount it read only */
-	if (flags & (MS_RDONLY|MS_REMOUNT) == (MS_RDONLY|MS_REMOUNT)) {
+	if ((flags & (MS_RDONLY|MS_REMOUNT)) == (MS_RDONLY|MS_REMOUNT)) {
 		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
 			if (ptr->c_dev == dev && !isdevice(ptr)) {
 			/* Files being written block the remount ro, but so
