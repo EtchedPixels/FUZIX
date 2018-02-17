@@ -72,8 +72,8 @@ int inet_aton(const char *cp, struct in_addr *addr)
 	uint32_t val;
 	int base, n;
 	char c;
-	unsigned int parts[4];
-	unsigned int *pp = parts;
+	uint32_t parts[4];
+	uint32_t *pp = parts;
 
 	c = *cp;
 	for (;;) {
