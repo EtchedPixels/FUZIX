@@ -158,6 +158,8 @@ inoptr srch_dir(inoptr wd, char *compname)
     int nblocks;
     uint16_t inum;
 
+    i_lock(wd);
+
     nblocks = (wd->c_node.i_size + BLKMASK) >> BLKSHIFT;
 
     for(curblock=0; curblock < nblocks; ++curblock) {
@@ -169,11 +171,13 @@ inoptr srch_dir(inoptr wd, char *compname)
             if(namecomp(compname, d->d_name)) {
                 inum = d->d_ino;
                 brelse(buf);
+                i_unlock(wd);
                 return i_open(wd->c_dev, inum);
             }
         }
         brelse(buf);
     }
+    i_unlock(wd);
     return NULLINODE;
 }
 
@@ -293,6 +297,8 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     struct direct curentry;
     int i;
 
+    i_islocked(wd);
+
     if (wd->c_flags & CRDONLY) {
         udata.u_error = EROFS;
         return false;
@@ -394,6 +400,10 @@ bool namecomp(char *n1, char *n2) // return true if n1 == n2
  * file, and initializes the inode table entry for the new file.
  * The new file will have one reference, and 0 links to it.
  * Better make sure there isn't already an entry with the same name.
+ *
+ * Returns the new inode locked so nobody can access it before ready. We need
+ * to think hard about newfile taking a callback to fix up the ino struct so
+ * it's cleaner ???
  */
 
 inoptr newfile(inoptr pino, char *name)
@@ -423,6 +433,8 @@ inoptr newfile(inoptr pino, char *name)
         goto nogood;
     }
 
+    i_lock(pino);	/* Lock in tree order */
+    i_lock(ino);
     /* This does not implement BSD style "sticky" groups */
     nindex->c_node.i_uid = udata.u_euid;
     nindex->c_node.i_gid = udata.u_egid;
@@ -434,17 +446,16 @@ inoptr newfile(inoptr pino, char *name)
         nindex->c_node.i_addr[j] = 0;
     }
     wr_inode(nindex);
-
     if (!ch_link(pino, "", name, nindex)) {
         i_deref(nindex);
 	/* ch_link sets udata.u_error */
         goto nogood;
     }
-    i_deref(pino);
+    i_unlock_deref(pino);
     return nindex;
 
 nogood:
-    i_deref(pino);
+    i_unlock_deref(pino);
     return NULLINODE;
 }
 

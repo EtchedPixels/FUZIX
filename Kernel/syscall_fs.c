@@ -144,6 +144,9 @@ int stcpy(inoptr ino, char *buf)
 	 * copy sequential runs of identical types (the only members which the
 	 * compiler guarantees are next to each other). */
 
+	/* VIRTUAL: If we ever do true virtual memory we'll need to copy the
+	   structure first or we may sleep and copy bits from different inode
+	   states */
 	uint32_t zero = 0;
 	struct _uzistat* st = (struct _uzistat*) buf;
 	int err = uput(&ino->c_dev,            &st->st_dev,   2 * sizeof(uint16_t));
@@ -422,12 +425,14 @@ arg_t readwrite(uint8_t reading)
 
 	if (!valaddr(buf, nbytes))
 	        return -1;
+
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
 	if ((ino = rwsetup(reading, &flag)) == NULLINODE)
 		return -1;	/* bomb out if error */
 
 	(reading ? readi : writei)(ino, flag);
 	updoff();
+	i_unlock(ino);
 
 	return udata.u_done;
 }

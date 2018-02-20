@@ -61,7 +61,7 @@ arg_t _execve(void)
 
 	top = ramtop;
 
-	if (!(ino = n_open(name, NULLINOPTR)))
+	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
 
 	if (!((getperm(ino) & OTH_EX) &&
@@ -230,7 +230,7 @@ nogood3:
 	tmpfree(ebuf);
 nogood2:
 nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (-1);
 }
 
@@ -351,7 +351,7 @@ uint8_t write_core_image(void)
 		i_deref(parent);
 		return 0;
 	}
-	if (parent && (ino = newfile(parent, "core"))) {
+	if (parent && i_lock(parent) && (ino = newfile(parent, "core"))) {
 		ino->c_node.i_mode = F_REG | 0400;
 		setftime(ino, A_TIME | M_TIME | C_TIME);
 		wr_inode(ino);
@@ -377,7 +377,7 @@ uint8_t write_core_image(void)
 		udata.u_base = udata.u_sp;
 		udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
 		writei(ino, 0);
-		i_deref(ino);
+		i_unlock_deref(ino);
 		return W_COREDUMP;
 	}
 	return 0;

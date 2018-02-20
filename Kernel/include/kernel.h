@@ -49,6 +49,15 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define HIBYTE32(x)	((uint8_t)((x) >> 24))
 #endif
 
+#ifndef CONFIG_BLOCK_SLEEP
+#define i_unlock(x)	do {} while(0)
+#define i_lock(x)	do {} while(0)
+#define i_islocked(x)	do {} while(0)
+#define i_unlock_deref(x)	i_deref(x)
+#define n_open_lock(a,b)	n_open((a),(b))
+#define getinode_lock(x)	getinode(x)
+#endif
+
 #ifdef CONFIG_LEVEL_2
 #include "level2.h"
 #else

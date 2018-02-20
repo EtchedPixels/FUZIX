@@ -128,7 +128,7 @@ arg_t _execve(void)
 	uaddr_t go;
 	uint32_t true_brk;
 
-	if (!(ino = n_open(name, NULLINOPTR)))
+	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
 
 	if (!((getperm(ino) & OTH_EX) &&
@@ -262,7 +262,7 @@ arg_t _execve(void)
 
 	tmpfree(abuf);
 	tmpfree(ebuf);
-	i_deref(ino);
+	i_unlock_deref(ino);
 
 	/* Shove argc and the address of argv just below envp */
 	uputl((uint32_t) nargv, nenvp - 1);
@@ -290,7 +290,7 @@ nogood3:
 	tmpfree(ebuf);
 nogood2:
 nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (-1);
 }
 

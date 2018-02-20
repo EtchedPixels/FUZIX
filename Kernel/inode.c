@@ -317,6 +317,7 @@ inoptr rwsetup(bool is_read, uint8_t * flag)
 		oftp->o_ptr = ino->c_node.i_size;
 	/* Initialize u_offset from file pointer */
 	udata.u_offset = oftp->o_ptr;
+	i_lock(ino);
 	return (ino);
 }
 

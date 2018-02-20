@@ -42,7 +42,7 @@ arg_t _open(void)
 	if ((oftindex = oft_alloc()) == -1)
 		goto nooft;
 
-	ino = n_open(name, &parent);
+	ino = n_open_lock(name, &parent);
 	if (ino) {
 		i_deref(parent);
 		/* O_EXCL test */
@@ -60,7 +60,7 @@ arg_t _open(void)
 			udata.u_error = ENOENT;
 			goto cantopen;
 		}
-		/* newfile drops parent for us */
+		/* newfile drops parent for us, ino is now locked */
 		ino = newfile(parent, lastname);
 		if (!ino) {
 			/* on error, newfile sets udata.u_error */
@@ -80,18 +80,18 @@ arg_t _open(void)
 	perm = getperm(ino);
 	if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
 		udata.u_error = EACCES;
-		goto cantopen;
+		goto idrop;//cantopen;
 	}
 	if (w) {
 		if (getmode(ino) == MODE_R(F_DIR)) {
 			udata.u_error = EISDIR;
-			goto cantopen;
+			goto idrop;//cantopen;
 		}
 		/* Special case - devices on a read only file system may
 		   be opened read/write */
 		if (!isdevice(ino) && (ino->c_flags & CRDONLY)) {
 			udata.u_error = EROFS;
-			goto cantopen;
+			goto idrop;//cantopen;
 		}
 	}
 
@@ -101,16 +101,17 @@ arg_t _open(void)
 		   parent (but we don't need it again). It may also be changed
 		   by the call to dev_openi */
 
-		if (dev_openi(iptr, flag) != 0)
+		i_unlock(*iptr);
+		if (dev_openi(iptr, flag) != 0) {
+			i_deref(*iptr);
 			goto cantopen;
-
+		}
 		/* May have changed */
 		/* get the static pointer back in case it changed via dev 
 		   usage or just because we blocked */
 		ino = *iptr;
-	}
-
-	if (w && trunc && getmode(ino) == MODE_R(F_REG)) {
+		i_lock(ino);
+	} else if (w && trunc && getmode(ino) == MODE_R(F_REG)) {
 		if (f_trunc(ino))
 			goto idrop;
 		for (j = 0; j < OFTSIZE; ++j)
@@ -131,6 +132,8 @@ arg_t _open(void)
 	if (O_ACCMODE(flag) != O_WRONLY)
 		ino->c_readers++;
 
+	i_unlock(ino);
+
 	/* FIXME: ATIME ? */
 /*
  *         Sleep process if no writer or reader.
@@ -144,7 +147,7 @@ arg_t _open(void)
 
 	return (uindex);
       idrop:
-	i_deref(ino);
+	i_unlock_deref(ino);
       cantopen:
 	oft_deref(oftindex);	/* This will call i_deref() */
       nooft:
@@ -200,9 +203,10 @@ arg_t _link(void)
 		goto nogood;
 	}
 
+	i_lock(parent2);
 	if (!ch_link(parent2, "", lastname, ino)) {
-		i_deref(parent2);
-		goto nogood;
+		i_unlock_deref(parent2);
+		goto nogoodl;
 	}
 
 	/* Update the link count. */
@@ -210,11 +214,13 @@ arg_t _link(void)
 	wr_inode(ino);
 	setftime(ino, C_TIME);
 
-	i_deref(parent2);
+	i_unlock_deref(parent2);
 	i_deref(ino);
 	return 0;
 
-      nogood:
+nogoodl:
+	i_unlock(ino);
+nogood:
 	i_deref(ino);
 	return -1;
 }

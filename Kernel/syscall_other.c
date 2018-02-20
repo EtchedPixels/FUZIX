@@ -94,15 +94,22 @@ arg_t _rename(void)
 		/* Drop the reference to the unlinked file */
 		i_deref(dsti);
 	}
+	i_lock(dstp);
 	/* Ok we may proceed: we set up fname earlier */
-	if (!ch_link(dstp, "", lastname, srci))
+	if (!ch_link(dstp, "", lastname, srci)) {
+		i_unlock(dstp);
 		goto nogood2;
+	}
+	i_unlock(dstp);
 	/* A fail here is bad */
+	i_lock(srcp);
 	if (!ch_link(srcp, fname, "", NULLINODE)) {
+		i_unlock(srcp);
 		kputs("WARNING: rename: unlink fail\n");
 		goto nogood2;
 	}
 	/* get it onto disk - probably overkill */
+	i_unlock(srcp);
 	wr_inode(dstp);
 	wr_inode(srcp);
 	sync();
@@ -159,7 +166,7 @@ arg_t _mkdir(void)
 
 	i_ref(parent);		/* We need it again in a minute */
 	if (!(ino = newfile(parent, lastname))) {
-		i_deref(parent);
+//		i_deref(parent);
 		goto nogood2;	/* parent inode is derefed in newfile. */
 	}
 
@@ -176,17 +183,19 @@ arg_t _mkdir(void)
 	ino->c_node.i_mode = ((mode & ~udata.u_mask) & MODE_MASK) | F_DIR;
 	i_deref(parent);
 	wr_inode(ino);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (0);
 
-      cleanup:
+cleanup:
+	i_lock(parent);
 	if (!ch_link(parent, fname, "", NULLINODE))
 		kprintf("_mkdir: bad rec\n");
+	i_unlock(parent);
 	/* i_deref will put the blocks */
 	ino->c_node.i_nlink = 0;
 	wr_inode(ino);
       nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
       nogood2:
 	i_deref(parent);
 	return (-1);
@@ -221,6 +230,7 @@ arg_t _rmdir(void)
 		return (-1);
 	}
 
+	i_lock(parent);
 	/* Fixme: check for rmdir of /. - ditto for unlink ? */
 
 	/* Not a directory */
@@ -254,7 +264,7 @@ arg_t _rmdir(void)
 	setftime(ino, C_TIME);
 	wr_inode(parent);
 	wr_inode(ino);
-	i_deref(parent);
+	i_unlock_deref(parent);
 	i_deref(ino);
 	return (0);
 
@@ -294,7 +304,7 @@ arg_t _mount(void)
 	if (!(sino = n_open(spec, NULLINOPTR)))
 		return (-1);
 
-	if (!(dino = n_open(dir, NULLINOPTR))) {
+	if (!(dino = n_open_lock(dir, NULLINOPTR))) {
 		i_deref(sino);
 		return (-1);
 	}
@@ -328,7 +338,7 @@ arg_t _mount(void)
 		goto nogood;
 	}
 
-	i_deref(dino);
+	i_unlock_deref(dino);
 	i_deref(sino);
 	return (0);
 
@@ -426,7 +436,7 @@ arg_t _umount(void)
 	if (esuper())
 		return -1;
 
-	if (!(sino = n_open(spec, NULLINOPTR)))
+	if (!(sino = n_open_lock(spec, NULLINOPTR)))
 		return -1;
 
 	if (getmode(sino) != MODE_R(F_BDEV)) {
@@ -441,7 +451,7 @@ arg_t _umount(void)
 	}
 	ret = do_umount(dev);
 nogood:
-	i_deref(sino);
+	i_unlock_deref(sino);
 	return ret;
 }
 
