@@ -60,3 +60,4 @@ image:
 	devsd.o devsd_discard.o spi.o devscsi.o devscsi_discard.o \
 	scsi_tc3.o discard.o
 	../tools/pad256 ../fuzix.bin
+	../tools/lw-checkmap ../fuzix.map
