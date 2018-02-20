@@ -11,6 +11,7 @@
 */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -39,23 +40,23 @@
 struct stat Statb, Xstatb;
 
 struct header {
-	short h_magic, h_dev, h_ino, h_mode, h_uid, h_gid, h_nlink, h_rdev;
-	short h_mtime[2];
-	short h_namesize;
-	short h_filesize[2];
+	int16_t h_magic, h_dev, h_ino, h_mode, h_uid, h_gid, h_nlink, h_rdev;
+	int16_t h_mtime[2];
+	int16_t h_namesize;
+	int16_t h_filesize[2];
 	char h_name[256];
 } Hdr;
 
 int Bufsize = 512;
-short Buf[256], *Dbuf;
+int16_t Buf[256], *Dbuf;
 int Wct;
-short *Wp;
+int16_t *Wp;
 
-short Option,
+int16_t Option,
     Dir, Uncond, Link, Rename, Toc, Verbose, Select, Mod_time, Swap;
 
 int Ifile, Ofile, Input = 0, Output = 1;
-long Blocks;
+int32_t Blocks;
 
 char Fullname[256], Name[256];
 int Pathend;
@@ -63,18 +64,18 @@ int Pathend;
 FILE *Rtty, *Wtty;
 
 char *Pattern;
-short Dev, Uid, Gid, A_directory, A_special;
+int16_t Dev, Uid, Gid, A_directory, A_special;
 extern char *cd(char *);
 char *Cd_name;
 
 union {
-	long l;
-	short s[2];
+	int32_t l;
+	int16_t s[2];
 	char c[4];
 } U;
 
 /* for VAX, Interdata, ... */
-long mklong(short v[])
+int32_t mklong(int16_t v[])
 {
 	U.l = 1;
 	if (U.c[0])
@@ -92,7 +93,7 @@ void err(char *a, ...)
 int getname(void)
 {
 	register char *namep = Name;
-	static long tlong;
+	static int32_t tlong;
 
 	for (;;) {
 		if (fgets(namep, sizeof(namep), stdin) == NULL)
@@ -154,10 +155,10 @@ int chgreel(int x, int fl)
 
 int bread(void *bp, int c)
 {
-	short *b = bp;
+	int16_t *b = bp;
 	static int nleft = 0;
-	static short *ip;
-	register short *p = ip;
+	static int16_t *ip;
+	register int16_t *p = ip;
 
 	c = (c + 1) >> 1;
 	while (c--) {
@@ -179,8 +180,8 @@ int bread(void *bp, int c)
 
 void bwrite(void *r, int c)
 {
-	short *rp = r;
-	register short *wp = Wp;
+	int16_t *rp = r;
+	register int16_t *wp = Wp;
 
 	c = (c + 1) >> 1;
 	while (c--) {
@@ -204,7 +205,7 @@ void swap(void *p, int ct)
 {
 	register char c;
 	union swp {
-		short shortw;
+		int16_t int16_tw;
 		char charv[2];
 	} *buf = p;
 
@@ -318,7 +319,7 @@ int ckname(char *namep)
 	return !Toc;
 }
 
-void set_time(char *namep, long atime, long mtime)
+void set_time(char *namep, int32_t atime, int32_t mtime)
 {
 	struct utimbuf ut;
 	if (Uid || !Mod_time)
@@ -360,7 +361,7 @@ int postml(char *namep, char *np)
 {
 	register int i;
 	static struct ml {
-		short m_dev, m_ino;
+		int16_t m_dev, m_ino;
 		char m_name[2];
 	} *ml[LINKS];
 	static int mlinks = 0;
@@ -477,7 +478,7 @@ int openout(char *namep)
 void pentry(char *namep)
 {
 
-	static short lastid = -1;
+	static int16_t lastid = -1;
 	static struct passwd *pw;
 	static char tbuf[32];
 
@@ -555,7 +556,7 @@ char *cd(char *n)
 int main(int argc, char *argv[])
 {
 	register int ct;
-	long filesz;
+	off_t filesz;
 	register char *lastarg, *fullp;
 
 	if (argc < 2 || argc > 4) {
