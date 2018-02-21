@@ -281,6 +281,28 @@ badino:
     return NULLINODE;
 }
 
+bool emptydir(inoptr wd)
+{
+    struct direct curentry;
+
+    i_islocked(wd);
+
+    udata.u_offset =  2 * DIR_LEN;	/* . .. ignored */
+
+    do
+    {
+        udata.u_count = DIR_LEN;
+        udata.u_base  =(unsigned char *)&curentry;
+        udata.u_sysio = true;
+        readi(wd, 0);
+
+        /* Read until EOF or name is found.  readi() advances udata.u_offset */
+        if (*curentry.d_name)
+            return false;
+    } while(udata.u_done == DIR_LEN);
+
+    return true;
+}
 
 
 /* Ch_link modifies or makes a new entry in the directory for the name

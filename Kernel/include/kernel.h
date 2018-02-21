@@ -848,6 +848,7 @@ extern inoptr n_open(char *uname, inoptr *parent);
 extern inoptr i_open(uint16_t dev, uint16_t ino);
 extern inoptr srch_dir(inoptr wd, char *compname);
 extern inoptr srch_mt(inoptr ino);
+extern bool emptydir(inoptr ino);
 extern bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
 /* return true if n1 == n2 */
 extern bool namecomp(char *n1, char *n2);
