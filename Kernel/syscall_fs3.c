@@ -178,8 +178,10 @@ arg_t _link(void)
 	if (!(ino = n_open(name1, NULLINOPTR)))
 		return (-1);
 
-	if (getmode(ino) == MODE_R(F_DIR))
+	if (getmode(ino) == MODE_R(F_DIR)) {
+		udata.u_error = EISDIR;
 		goto nogood;
+	}
 
 	if (ino->c_node.i_nlink == 0xFFFF) {
 		udata.u_error = EMLINK;
