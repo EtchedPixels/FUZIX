@@ -40,7 +40,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         *diskcyll = udata.u_block;
         *diskcmd = 1;
         if ((err = *diskstat) != 0) {
-            kprintf("hd%d: disk error %x\n", err);
+            kprintf("hd%d: disk error %x\n", minor, err);
             udata.u_error = EIO;
             return -1;
         }

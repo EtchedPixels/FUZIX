@@ -35,7 +35,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         poke(0x3200|(udata.u_block & 0xFF));
         poke(0x3301);
         if ((err = peek(0x35)) != 0) {
-            kprintf("hd%d: disk error %x\n", err);
+            kprintf("hd%d: disk error %x\n", minor, err);
             udata.u_error = EIO;
             return -1;
         }
