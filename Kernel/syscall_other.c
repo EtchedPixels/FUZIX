@@ -89,10 +89,13 @@ arg_t _rename(void)
 			udata.u_error = EISDIR;
 			goto nogood;
 		}
-		if (unlinki(dsti, dstp, lastname) == -1)
+		i_lock(dstp);
+		if (unlinki(dsti, dstp, lastname) == -1) {
+			i_unlock(dstp);
 			goto nogood;
+		}
 		/* Drop the reference to the unlinked file */
-		i_deref(dsti);
+		i_unlock_deref(dstp);
 	}
 	i_lock(dstp);
 	/* Ok we may proceed: we set up fname earlier */
@@ -164,6 +167,7 @@ arg_t _mkdir(void)
 		goto nogood2;
 	}
 
+
 	i_ref(parent);		/* We need it again in a minute */
 	if (!(ino = newfile(parent, lastname))) {
 //		i_deref(parent);
@@ -173,6 +177,7 @@ arg_t _mkdir(void)
 	/* Initialize mode and dev */
 	ino->c_node.i_mode = F_DIR | 0200;	/* so ch_link is allowed */
 	setftime(ino, A_TIME | M_TIME | C_TIME);
+	/* Ensure the directory is fully formed before anyone can see it */
 	if (ch_link(ino, "", ".", ino) == 0 ||
 	    ch_link(ino, "", "..", parent) == 0)
 		goto cleanup;
@@ -187,13 +192,17 @@ arg_t _mkdir(void)
 	return (0);
 
 cleanup:
-	i_lock(parent);
-	if (!ch_link(parent, fname, "", NULLINODE))
-		kprintf("_mkdir: bad rec\n");
-	i_unlock(parent);
+	/* We need to unlock inode before we are allowed to lock the parent */
 	/* i_deref will put the blocks */
 	ino->c_node.i_nlink = 0;
 	wr_inode(ino);
+	i_unlock_deref(ino);
+	/* In the error case it may be observed but it's consistently empty */
+	i_lock(parent);
+	if (!ch_link(parent, fname, "", NULLINODE))
+		kprintf("_mkdir: bad rec\n");
+	i_unlock_deref(parent);
+	return -1;
       nogood:
 	i_unlock_deref(ino);
       nogood2:
@@ -220,18 +229,30 @@ arg_t _rmdir(void)
 	inoptr ino;
 	inoptr parent;
 
+	/* Q: rmdir . */
 	ino = n_open(path, &parent);
 
 	/* It and its parent must exist */
 	if (!(parent && ino)) {
-		if (parent)	/* parent exist */
-			i_deref(parent);
 		udata.u_error = ENOENT;
-		return (-1);
+		goto nogood_early;
+	}
+
+	if (*lastname == '.' && !lastname[1]) {
+		udata.u_error = EINVAL;
+		i_deref(ino);
+		goto nogood_early;
 	}
 
 	i_lock(parent);
-	/* Fixme: check for rmdir of /. - ditto for unlink ? */
+	/* So nobody gets to access it while it's being dismantled */
+	i_lock(ino);
+
+	/* Make sure we don't remove a mount point */
+	if (ino->c_num == ROOTINODE) {
+		udata.u_error = EBUSY;
+		goto nogood;
+	}
 
 	/* Not a directory */
 	if (getmode(ino) != MODE_R(F_DIR)) {
@@ -240,7 +261,7 @@ arg_t _rmdir(void)
 	}
 
 	/* Busy */
-	if (ino->c_node.i_nlink != 2) {
+	if (ino->c_node.i_nlink != 2 || !emptydir(ino)) {
 		udata.u_error = ENOTEMPTY;
 		goto nogood;
 	}
@@ -262,15 +283,24 @@ arg_t _rmdir(void)
 		kputs("_rmdir: bad nlink\n");
 	}
 	setftime(ino, C_TIME);
+	/* We have a lock on the inode so we know nobody else is walking the
+	   directory at the moment. We have to truncate it now rather than
+	   only final de-reference as a user might have a cwd set here and
+	   would have access to the invalid . and .. */
+	f_trunc(ino);
 	wr_inode(parent);
 	wr_inode(ino);
 	i_unlock_deref(parent);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (0);
 
       nogood:
-	i_deref(parent);
-	i_deref(ino);
+	i_unlock_deref(parent);
+	i_unlock_deref(ino);
+	return (-1);
+      nogood_early:
+	if (parent)	/* parent exist */
+		i_deref(parent);
 	return (-1);
 #else
 	udata.u_error = -ENOSYS;
@@ -377,7 +407,7 @@ static int do_umount(uint16_t dev)
 	   can't remount it read only */
 	if ((flags & (MS_RDONLY|MS_REMOUNT)) == (MS_RDONLY|MS_REMOUNT)) {
 		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
-			if (ptr->c_dev == dev && !isdevice(ptr)) {
+			if (ptr->c_refs && ptr->c_dev == dev && !isdevice(ptr)) {
 			/* Files being written block the remount ro, but so
 			   do files that when closed will be deleted */
 				if (ptr->c_writers ||
