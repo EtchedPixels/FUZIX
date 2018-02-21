@@ -144,7 +144,6 @@ arg_t _mkdir(void)
 {
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
 	if ((ino = n_open(name, &parent)) != NULL) {
 		udata.u_error = EEXIST;
@@ -193,7 +192,7 @@ cleanup:
 	i_unlock_deref(ino);
 	/* In the error case it may be observed but it's consistently empty */
 	i_lock(parent);
-	if (!ch_link(parent, fname, "", NULLINODE))
+	if (!ch_link(parent, lastname, "", NULLINODE))
 		kprintf("_mkdir: bad rec\n");
 	i_unlock_deref(parent);
 	return -1;
