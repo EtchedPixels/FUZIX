@@ -95,7 +95,9 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 		if (!rewrite) {
 			if (bdread(bp) != BLKSIZE) {
 				udata.u_error = EIO;
+				/* Don't cache the failure */
 				bp->bf_dev = NO_DEVICE;
+				bp->bf_dirty = false;
 				bunlock(bp);
 				return (NULL);
 			}
@@ -110,7 +112,6 @@ void brelse(bufptr bp)
 {
 	bfree(bp, 0);
 }
-
 
 void bawrite(bufptr bp)
 {
@@ -279,8 +280,7 @@ bufptr freebuf(void)
 
 	block(oldest);
 	if (oldest->bf_dirty) {
-		if (bdwrite(oldest) == -1)
-			udata.u_error = EIO;
+		bdwrite(oldest);
 		oldest->bf_dirty = false;
 	}
 	return oldest;
@@ -743,8 +743,8 @@ void idump(void)
 			pp->p_pptr - ptab, pp->p_alarm, 
 			/* kprintf has no %lx so we write out 32-bit
 			 * values as two 16-bit values instead */
-			(uint16_t)(pp->p_pending >> 16), (uint16_t)pp->p_pending,
-			(uint16_t)(pp->p_ignored >> 16), (uint16_t)pp->p_ignored);
+			pp->p_sig[0].s_pending, pp->p_sig[1].s_pending,
+			pp->p_sig[0].s_ignored, pp->p_sig[1].s_ignored);
 	}
 
 	bufdump();
