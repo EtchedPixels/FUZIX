@@ -390,7 +390,7 @@ arg_t _unlink(void)
 		udata.u_error = ENOENT;
 		return (-1);
 	}
-	i_lock(ino);
+	i_lock(pino);
 	r = unlinki(ino, pino, lastname);
 	i_unlock_deref(pino);
 	i_deref(ino);
