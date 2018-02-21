@@ -26,7 +26,6 @@ put inside itself!
 
 arg_t _rename(void)
 {
-#ifndef CONFIG_LEVEL_0
 	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
 	arg_t ret;
@@ -127,10 +126,6 @@ arg_t _rename(void)
 	if (dsti)
 		i_deref(dsti);
 	goto nogood2;
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
 }
 
 #undef src
@@ -147,7 +142,6 @@ arg_t _rename(void)
 
 arg_t _mkdir(void)
 {
-#ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	inoptr parent;
 	char fname[FILENAME_LEN + 1];
@@ -208,10 +202,6 @@ cleanup:
       nogood2:
 	i_deref(parent);
 	return (-1);
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
 }
 
 #undef name
@@ -225,7 +215,6 @@ char *path;
 
 arg_t _rmdir(void)
 {
-#ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	inoptr parent;
 
@@ -302,10 +291,6 @@ arg_t _rmdir(void)
 	if (parent)	/* parent exist */
 		i_deref(parent);
 	return (-1);
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
 
 }
 
