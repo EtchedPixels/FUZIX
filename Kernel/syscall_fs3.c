@@ -324,7 +324,6 @@ Perform locking upon a file.
 
 arg_t _flock(void)
 {
-#ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	regptr struct oft *o;
 	staticfast uint8_t c;
@@ -397,10 +396,6 @@ done:
 	o->o_access |= O_FLOCK;
 	wakeup(&ino->c_flags);
 	return 0;
-#else
-	udata.u_error = ENOSYS;
-	return -1;
-#endif
 }
 
 
