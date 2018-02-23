@@ -617,6 +617,12 @@ void kputhex(unsigned int v)
 	putdigit0(v);
 }
 
+void kputhexbyte(unsigned int v)
+{
+	putdigit0(v >> 4);
+	putdigit0(v);
+}
+
 void kputunum(unsigned int v)
 {
 	unsigned char n = 0;
@@ -670,6 +676,14 @@ void kprintf(const char *fmt, ...)
 					/* TODO: not 32-bit safe */
 					kputhex((uint16_t)(l >> 16));
 					kputhex((uint16_t)l);
+					fmt += 2;
+					continue;
+				}
+
+				case '2': /* assume an x is following */
+				{
+					char c = va_arg(ap, int);
+					kputhexbyte(c);
 					fmt += 2;
 					continue;
 				}
