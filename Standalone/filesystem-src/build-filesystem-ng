@@ -44,9 +44,6 @@ my %args;
 # always try to continue, accumulating errors.
 my $error = 0;
 
-# toggled by -v command-line option.
-my $verbose = 0;
-
 cmdline_args();
 build_file_list();
 build_pkg_list();
@@ -63,7 +60,7 @@ sub build_pkg_list {
     my %pkgs; # to check for duplicate package names
     foreach my $x (@file) {
         open IN, "$x->[0]/$x->[1]" or die "ERROR could not open file $x->[0]/$x->[1]\n";
-        print "Scanning file $x->[0]/$x->[1]\n" if $verbose;
+        print "Scanning file $x->[0]/$x->[1]\n" if $args{verbose};
         my $in_pkg = 0;
         my $current = 0;
         while (my $line = <IN>) {
@@ -196,7 +193,7 @@ sub resolve_pkg {
                         if ($pkg{$p}->[1]->{enabled} == 0) {
                             $changes = $changes + 1;
                             $pkg{$p}->[1]->{enabled} = 1;
-                            print "Enabled  package $p\n" if $verbose;
+                            print "Enabled  package $p\n" if $args{verbose};
                         }
                     }
                     else {
@@ -222,7 +219,7 @@ sub resolve_pkg {
                 if (exists $pkg{$p}) {
                     if ($pkg{$p}->[1]->{enabled} == 1) {
                         $pkg{$p}->[1]->{enabled} = 0;
-                        print "Disabled package $p\n" if $verbose;
+                        print "Disabled package $p\n" if $args{verbose};
                     }
                 }
                 else {
@@ -417,7 +414,7 @@ sub build_dsk {
         my $status = $? >> 8;
         die "ERROR ucp failed - exit status $status\n";
     }
-    if (system "../fsck $args{file}") {
+    if (system "../fsck $args{fsck_args} $args{file}") {
         my $status = $? >> 8;
         if ($status & ~1) {
             die "ERROR fsck failed - exit status $status\n";
@@ -433,6 +430,8 @@ sub cmdline_args {
     $args{endian} = 'little';
     $args{isize} = 256;
     $args{bsize} = 65535;
+    $args{verbose} = 0;
+    $args{fsck_args} = '';
 
     while (my $arg = shift @ARGV) {
         $arg = lc $arg;
@@ -440,7 +439,7 @@ sub cmdline_args {
             help_exit();
         }
         elsif ($arg eq '-v') {
-            $verbose = 1;
+            $args{verbose} = 1;
         }
         elsif ($arg eq '-p') {
             $args{pkg} = shift @ARGV;
@@ -457,6 +456,9 @@ sub cmdline_args {
             $args{isize} = shift @ARGV;
             $args{bsize} = shift @ARGV;
         }
+	elsif ($arg eq '-y') {
+	    $args{fsck_args} = '-y';
+	}
         else {
             print "ERROR unrecognised option $arg -- try -h for help\n";
             exit 1;
@@ -481,6 +483,7 @@ Options:
 -x           swizzle disk image (for big-endian processors like 6809). Default: no swizzle.
 -f FILENAME  filename of disk image. Default: $args{file}
 -g N M       disk geometry N=inode size, M=block size. Default: $args{isize} $args{bsize}
+-y           run fsck without interactive prompt
 
 EOF
 exit 1;
