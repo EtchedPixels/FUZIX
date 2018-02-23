@@ -33,6 +33,8 @@
 #define CONFIG_SD               /* enable if SD  interface present */
 #define CONFIG_IDE              /* enable if IDE interface present */
 
+#define CONFIG_GPT
+
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 #define CONFIG_FONT8X8
