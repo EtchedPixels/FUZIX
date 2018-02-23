@@ -177,6 +177,7 @@ int lnend(void);
 int pgdown(void);
 int pgup(void);
 int pgup_half(void);
+int pgdown_half(void);
 int redraw(void);
 int right(void);
 int replace(void);
@@ -226,7 +227,6 @@ keytable_t modeless[] = {
  *	Basic vi commands missing (note not all below exactly match vi yet
  *	in their behaviour - much testing is needed
  *
- *	CTRL-D/CTRL-U	half screen scrolls
  *	CTRL-F/CTRL-B	implemented but not exactly as vi
  *	nG		goto line n
  *	W and S		word skip with punctuation
@@ -272,6 +272,7 @@ keytable_t modual[] = {
         { CTRL('F'), 0, pgdown },	/* Need D for half screen too */
         { CTRL('B'), 0, pgup },
         { CTRL('U'), 0, pgup_half },
+        { CTRL('D'), 0, pgdown_half },
         { 'w', 0, wright },
         { '^', NORPT, lnbegin },
         { '$', NORPT, lnend },
@@ -466,13 +467,24 @@ int pgup(void)
         return 0;
 }
 
-/* TODO FIXME */
+/* The cursor stays in the same spot and the page moves up, unless we'd hit
+   the top in which case the cursor hits the top */
 int pgup_half(void)
 {
         int i = LINES/2;
         while (0 < --i) {
                 page = prevline(page-1);
                 up();
+        }
+        return 0;
+}
+
+int pgdown_half(void)
+{
+        int i = LINES/2;
+        while (0 < --i) {
+                page = nextline(page);
+                down();
         }
         return 0;
 }
