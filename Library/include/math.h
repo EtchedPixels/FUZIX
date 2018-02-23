@@ -214,7 +214,7 @@ extern float modff(float, float *);
 extern float nanf(const char *__tagp);
 extern float nearbyintf(float);
 extern float nextafterf(float, float);
-extern float powf(float);
+extern float powf(float, float);
 extern float remainderf(float, float);
 extern float remquof(float, float, int *);
 extern float rintf(float);
