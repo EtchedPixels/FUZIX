@@ -1,0 +1,137 @@
+This is now obsolete but retained for the moment
+
+
+NAME
+        ae        Ant's Editor  Mar '92
+
+
+USAGE
+        ae <filename>        
+        ea <filename>
+
+where <filename> is the text file to edit or create.
+
+
+DESCRIPTION
+<< ae >> is a full screen, VI style text editor.  The source should be
+portable to any environment that provides a K&R C compiler and a
+CURSES library.  << ea >> is a full screen, EMACS style text editor.
+
+Text files consists of lines of printable text or tab characters.  
+A line can be of arbitary length and is delimited by either a
+newline or the end of file.  Carriage return is mapped to newline
+on input and ignored on output.  Tab stops are every eight columns.
+Non-printable characters may have unpredictable results depending
+on the implementation of CURSES.
+
+
+COMMANDS
+
+VI STYLE
+h j k l                left, down, up, right cursor movement
+H J K L                word left, page down, page up, word right
+[ ]                beginning and end of line
+t b                top and bottom of file
+i                enter insert mode, formfeed to quit
+x                delete character under the cursor
+W                write buffer to file
+R                refresh the screen
+Q                quit
+Z                switch to EMACS style
+
+EMACS STYLE
+cursor keys        left, down, up, right cursor movement
+^W ^E                word left,  word right
+^N ^P                page down, page up
+^A ^D                beginning and end of line
+^T ^B                top and bottom of file
+backspace        delete character left of the cursor
+delete                delete character under the cursor
+^F                write buffer to file
+^R                refresh the screen
+^\                quit
+^Z                switch to VI style
+
+
+EXIT STATUS
+0        success
+1        general error
+2        usage error
+3        CURSES screen initialization failed
+
+
+INSTALLATION
+Requires K&R C and a CURSES library for the given target machine.
+
+The file creation MODE should be set at compile time to 0600 for
+Unix systems, or 0 for the Atari ST and PC.
+
+The BUF size should be set at compile time to 32767.  This value
+was used because the Sozobon C compiler for the Atari ST has 16
+bit ints and a limit on the size of arrays & structures of 32k.  
+Also the WatCom C compiler for the PC also has 16 bits ints.  On
+machines that have 32 bit ints (most unix boxes), a larger value
+for BUF could be used.
+
+It is recommend that compact memory model be used on PC class
+machines.  Small memory model may work too provided BUF is not
+too large.
+
+The character constants '\b', '\f', '\n', '\r', '\t' are used
+in order to provide more portable code, since the compiler should
+handle the translation of them into the native character set.
+Note that '\f' (formfeed) was used to exit insert mode because
+K&R C had no escape constant for the escape-key.
+
+Note that the "int " definition at the top of the source was for
+the benifit of Turbo C, which returns lots of warnings.  WatCom C
+should return no warnings provided your curses.h has no NULL
+expression defined for functions.  System V and BSD should also
+generate no warnings.  The source should pass basic linting.
+The source still looks like a mess when passed through our
+C beautifier (your milleage may vary).
+
+On EBCDIC machines text files are made up of fixed length records.
+My code should be portable in terms of character set and compiler
+independance, however the Buffer Gap Scheme assumes a stream file
+format used for UNIX text files and most personal computers.  A bit
+of alteration may be required if the C library routinues for read
+and write() do not hide this fact.  Switching to the stream i/o
+library may solve this problem.  One other problem that was not
+addressed concerns block mode terminals.
+
+My goals for this project was to learn and experiment with the
+Buffer Gap Scheme [Fin80][net90], write a useful and *portable*
+programme, and meet the requirements of the IOCCC.  I initially
+planned to have a mini CURSES built-in like the IOCCC Tetris entry
+from a previous year, however this was not as portable as using a
+CURSES library with TERMINFO/TERMCAP support.  
+
+
+BUGS
+This editor will display a file with long lines, but has trouble
+scrolling the screen with long lines.  Paging up and down should
+work correctly, however.
+
+
+REFERENCES
+[Fin80]        Craig A. Finseth, "Theory and Practice of Text Editors or
+        A Cookbook For An EMACS", TM-165, MIT Lab. for Computer
+        Science
+
+[KeP81]        Kernighan & Plauger, "Software Tools in Pascal",
+        Addison-Wesley, 81, chapter 6
+
+[Mil86]        Eugene W. Myers & Webb Miller, "Row-replacement Algorithums
+        for Screen Editors", TR 86-19, Dept. of Compter Science,
+        U. of Arizona
+
+[MyM86]        Eugene W. Myers & Webb Miller, "A simple row-replacement
+        method", TR 86-28, Dept. of Compter Science, U. of Arizona
+
+[Mil87]        Webb Miller, "A Software Tools Sampler", Prentice Hall, 87
+        ISBN 0-13-822305-X, chapter 5
+
+[net90]        "Editor 101/102" articles from comp.editors
+
+
