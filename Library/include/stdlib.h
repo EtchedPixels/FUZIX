@@ -31,6 +31,8 @@ extern void exit(int __status);
 extern void abort(void);
 
 
+#define RAND_MAX	32767
+
 extern int rand(void);
 extern void srand(unsigned int __seed);
 
