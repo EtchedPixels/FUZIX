@@ -103,3 +103,8 @@ unsigned char getq( unsigned *ptr );
 typedef unsigned char *queueptr_t;
 #define GETQ(p) getq(p)
 #define PUTQ(p, v) putq((p), (v))
+
+
+/* define for SD */
+#define SD_DRIVE_COUNT 1
+#define CONFIG_SD
