@@ -75,6 +75,7 @@ extern int __signbit(double);
   sizeof(x) == sizeof(float) ? __fpclassifyf(x) : \
   __fpclassify(x))
 
+#ifndef NO_64BIT
 #define isinf(x) ( \
   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
   (__double_bits(x) & (__uint64_t)-1>>1) == (__uint64_t)0x7ff<<52)
@@ -94,6 +95,37 @@ extern int __signbit(double);
 #define signbit(x) ( \
   sizeof(x) == sizeof(float) ? (int)(__float_bits(x)>>31) : \
   (int)(__double_bits(x)>>63))
+
+#else
+
+extern int __isinf(double x);
+extern int __isnan(double x);
+extern int __isnormal(double x);
+extern int __isfinite(double x);
+extern int __signbit(double x);
+
+#define isinf(x) ( \
+  sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
+  __isinf(x))
+
+#define isnan(x) ( \
+   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) > 0x7f800000 : \
+   __isnan(x))
+
+#define isnormal(x) ( \
+   sizeof(x) == sizeof(float) ? ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
+   __isnormal(x))
+
+#define isfinite(x) ( \
+   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) < 0x7f800000 : \
+   __isfinite(x))
+
+#define signbit(x) ( \
+  sizeof(x) == sizeof(float) ? (int)(__float_bits(x)>>31) : \
+  __signbit(x))
+
+
+#endif
 
 #else
 

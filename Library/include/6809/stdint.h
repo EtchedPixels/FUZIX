@@ -16,6 +16,4 @@ typedef uint16_t uintptr_t;
 #define __SIZE_T_DEFINED
 #define NO_64BIT
 
-#define double float
-
 #endif
