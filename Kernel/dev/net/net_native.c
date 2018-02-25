@@ -327,12 +327,12 @@ static uint16_t netn_putbuf(struct socket *s)
 	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
 	/* FIXME: check writei returns and readi returns properly */
 	writei(net_ino, 0);
-	sd->tlen[sd->tnext++] = udata.u_count;
+	sd->tlen[sd->tnext++] = udata.u_done;
 	if (sd->tnext == NSOCKBUF)
 		sd->tnext = 0;
 	/* Tell the network stack there is another buffer to consume */
 	netn_asynchronous_event(s, NEV_WRITE);
-	return udata.u_count;
+	return udata.u_done;
 }
 
 /*
@@ -359,7 +359,7 @@ static uint16_t netn_getbuf(struct socket *s)
 	if (++sd->rbuf == NSOCKBUF)
 		sd->rbuf = 0;
 	netn_asynchronous_event(s, NEV_READ);
-	return udata.u_count;
+	return udata.u_done;
 }
 
 /*
