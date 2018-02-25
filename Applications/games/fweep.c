@@ -382,7 +382,9 @@ void store(uint8_t var, uint16_t value)
 void storei(uint16_t value)
 {
 	store(pc(), value);
-} void enter_routine(uint32_t address, boolean stored, int argc)
+}
+
+void enter_routine(uint32_t address, boolean stored, int argc)
 {
 	int c = read8(address);
 	int i;
@@ -449,7 +451,9 @@ void obj_tree_put(obj_t obj, int f, uint16_t v)
 	write8(object_table + 57 + obj * 9 + f, v);
 
 #endif				/*  */
-} obj_t obj_tree_get(obj_t obj, int f)
+}
+
+obj_t obj_tree_get(obj_t obj, int f)
 {
 
 #if (VERSION > 3)
@@ -1702,6 +1706,7 @@ void game_begin(void)
 	object_table = read16low(0x0A);
 	global_table = read16low(0x0C);
 	static_start = read16low(0x0E);
+	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
 	write8low(0x11, read8low(0x11) & 0x53);
 	if (VERSION > 1)
 		synonym_table = read16low(0x18);
