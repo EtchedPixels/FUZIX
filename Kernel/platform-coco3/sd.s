@@ -3,7 +3,10 @@
 ;;;  implementation for Will's fuzix sd driver
 ;;;  This is almost so trivial it's stupid.
 ;;; 
-	
+;;;  NOTE: When the FPGA is in high speed (25mhz), we
+;;;  can out-run the built-in SPI interface (12mhz),
+;;;  So we sprinkle in some NOP's.
+;;; 
 	.globl _sd_spi_clock
 	.globl _sd_spi_raise_cs
 	.globl _sd_spi_lower_cs
