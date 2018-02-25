@@ -39,7 +39,7 @@ typedef struct {
 } StackFrame;
 const char zscii_conv_1[128] = {
 	[155 - 128] =
-	    'a', 'o', 'u', 'A', 'O', 'U', 's', '>', '<', 'e', 'i', 'y',
+	'a', 'o', 'u', 'A', 'O', 'U', 's', '>', '<', 'e', 'i', 'y',
 	'E', 'I', 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O',
 	'U', 'Y', 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U',
 	'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U', 'a', 'A',
@@ -47,16 +47,23 @@ const char zscii_conv_1[128] = {
 	't', 't', 'T', 'T', 'L', 'o', 'O', '!', '?'
 };
 
+/* FIXME: probably smaller as function */
 const char zscii_conv_2[128] = {
-	[155 - 128] = 'e', 'e', 'e',[161 - 128] =
-	    's', '>', '<',[211 - 128] = 'e', 'E',[215 - 128] =
-	    'h', 'h', 'h', 'h',[220 - 128] = 'e', 'E'
+	[155 - 128] = 'e', 'e', 'e',
+	[161 - 128] = 's', '>', '<',
+	[211 - 128] = 'e', 'E',
+	[215 - 128] = 'h', 'h', 'h', 'h',
+	[220 - 128] = 'e', 'E'
 };
 
-const char v1alpha[78] =
+#if (VERSION == 1)
+const char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789.,!?_#'\"/\\<-:()";
-const char v2alpha[78] =
+#else
+const char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ^0123456789.,!?_#'\"/\\-:()";
+#endif
+
 char *story_name;
 FILE *story;
 byte auxname[11];
@@ -98,7 +105,7 @@ int rmargin = 0;
 uint16_t inst_args[8];
 
 #define inst_sargs ((int16_t*)inst_args)
-char text_buffer[1024];
+char text_buffer[128];
 int textptr;
 uint8_t cur_prop_size;
 int zch_shift;
@@ -152,11 +159,13 @@ void write16low(uint8_t address, uint16_t value)
 }
 
 /* Can be uint16 except when debugging */
-void write16(uint32_t address, uint16_t value)
+void write16(uint16_t address, uint16_t value)
 {
 	memory[address] = value >> 8;
 	memory[address + 1] = value & 255;
-} uint8_t read8low(uint8_t address)
+}
+
+uint8_t read8low(uint8_t address)
 {
 	return memory[address];
 }
@@ -226,7 +235,7 @@ void char_print(uint8_t zscii)
 		} else if (zscii & 0x6F) {
 			text_buffer[textptr++] = zscii;
 		}
-		if (zscii <= 32 || textptr > 1000 || !buffering)
+		if (zscii <= 32 || textptr > 125 || !buffering)
 			text_flush();
 		if (zscii == 13) {
 			putchar('\n');
@@ -296,11 +305,7 @@ void zch_print(int z)
 				   (alphabet_table + z + (zch_shift * 26) -
 				    6));
 
-		else if (VERSION == 1)
-			char_print(v1alpha[z + (zch_shift * 26) - 6]);
-
-		else
-			char_print(v2alpha[z + (zch_shift * 26) - 6]);
+		char_print(alpha[z + (zch_shift * 26) - 6]);
 		zch_shift = zch_shiftlock;
 	}
 }
@@ -567,8 +572,7 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 	/* FIXME: memory direct reference still here */
 	const uint8_t *al =
 	    (alphabet_table ? (const uint8_t *) memory +
-	     alphabet_table : (const uint8_t *) (VERSION >
-						 1 ? v2alpha : v1alpha));
+	     alphabet_table : (const uint8_t *) alpha);
 	while (c && len && *text) {
 
 		// Since line breaks cannot be in an input line of text, and VAR:252 is only available in version 5, line breaks need not be considered here.
