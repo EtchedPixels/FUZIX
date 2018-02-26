@@ -45,6 +45,8 @@ void bufinit(void)
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
+		bp->bf_dirty = 0;
+		bp->bf_time = 0;
 	}
 }
 
