@@ -3,9 +3,19 @@
 
 int __fpclassify(double x)
 {
-	union dshape u = { x };
-	int e = u.bits>>52 & 0x7ff;
-	if (!e) return u.bits<<1 ? FP_SUBNORMAL : FP_ZERO;
-	if (e==0x7ff) return u.bits<<12 ? FP_NAN : FP_INFINITE;
+	uint32_t lo,hi;
+	EXTRACT_WORDS(hi,lo,x);
+
+	int e = hi>>7 & 0x7ff;
+	if (!e) {
+		if (lo == 0 && (hi << 1) == 0)
+			return FP_ZERO;
+		return FP_SUBNORMAL;
+	}
+	if (e==0x7ff) {
+		if (lo || hi & 0x000FFFFF)
+			return FP_NAN;
+		return FP_INFINITE;
+	}
 	return FP_NORMAL;
 }
