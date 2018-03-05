@@ -45,6 +45,8 @@ void bufinit(void)
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
+		bp->bf_dirty = 0;
+		bp->bf_time = 0;
 	}
 }
 
@@ -301,7 +303,13 @@ uint16_t get_root_dev(void)
 
 inline uint16_t get_root_dev(void)
 {
-	return BOOTDEVICE;
+	static uint8_t first = 1;
+
+	if (first) {
+		first = 0;
+		return BOOTDEVICE;
+	}
+	return BAD_ROOT_DEV;
 }
 #endif
 
@@ -370,6 +378,8 @@ void fuzix_main(void)
             old_argptr = argptr;
             /* Get a root device to try */
             root_dev = get_root_dev();
+            if (root_dev == BAD_ROOT_DEV)
+                panic(PANIC_NOROOT);
             /* Mount the root device */
             kprintf("Mounting root fs (root_dev=%d, r%c): ", root_dev, ro ? 'o' : 'w');
             if(fmount(root_dev, NULLINODE, ro) == 0)

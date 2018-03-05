@@ -39,13 +39,12 @@
 
 #define BOOT_TTY (512 + 1)        /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
-                            /* Temp FIXME set to serial port for debug ease */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 5
+#define NUM_DEV_TTY 4
 #define TTYSIZ  128
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6       /* Number of block buffers */

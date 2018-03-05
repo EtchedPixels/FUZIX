@@ -2,7 +2,6 @@ CC = fcc
 ASM = sdasz80
 AR = sdar
 LINKER = sdldz80
-export MAKE = make
 # This gets set for 'awkward' devices like ZX128
 #PLATFORM = -zx128
 PLATFORM =

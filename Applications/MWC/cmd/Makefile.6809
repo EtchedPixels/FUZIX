@@ -11,7 +11,7 @@ LINKER_OPT += --script=../../util/$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../../Library/libs/crt0_6809.o
 
-.SUFFIXES: .c .o
+.SUFFIXES: .c .o .y
 
 
 SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c ed.c expr.c find.c m4.c make.c moo.c pr.c tar.c test.c ttt.c units.c du.c
@@ -28,10 +28,8 @@ $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $^
 
 expr.c: expr.y
-	byacc -o expr.c expr.y
 
 find.c: find.y
-	byacc -o find.c find.y
 
 size.report: $(APPS)
 	ls -l $^ > $@

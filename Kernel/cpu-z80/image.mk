@@ -18,10 +18,10 @@ tools/bin2z80: tools/bin2z80.c
 tools/flat2z80: tools/flat2z80.c
 
 tools/bankld/sdldz80:
-	+(cd tools/bankld; make)
+	+(cd tools/bankld; $(MAKE))
 
 cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/fuzixload.s cpm-loader/makecpmloader.c
-	+make -C cpm-loader
+	+$(MAKE) -C cpm-loader
 
 tools/makejv3: tools/makejv3.c
 
@@ -34,5 +34,5 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	head -5 hogs.txt
 	tools/bihx fuzix.ihx
 	tools/binprep
-	+make -C platform-$(TARGET) image
+	+$(MAKE) -C platform-$(TARGET) image
 
