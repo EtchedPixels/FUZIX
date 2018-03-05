@@ -20,17 +20,17 @@ double round(double x)
 	EXTRACT_WORDS(msw, lsw, x);
 
 	/* Extract exponent field. */
-	exponent_less_1023 = ((msw & 0x7ff00000) >> 20) - 1023;
+	exponent_less_1023 = ((msw & 0x7ff00000UL) >> 20) - 1023;
 
 	if (exponent_less_1023 < 20) {
 		if (exponent_less_1023 < 0) {
-			msw &= 0x80000000;
+			msw &= 0x80000000UL;
 			if (exponent_less_1023 == -1)
 				/* Result is +1.0 or -1.0. */
-				msw |= (1023 << 20);
+				msw |= (1023UL << 20);
 			lsw = 0;
 		} else {
-			uint32_t exponent_mask = 0x000fffff >> exponent_less_1023;
+			uint32_t exponent_mask = 0x000fffffUL >> exponent_less_1023;
 			if ((msw & exponent_mask) == 0 && lsw == 0)
 				/* x in an integral value. */
 				return x;
