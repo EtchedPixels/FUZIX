@@ -4,11 +4,10 @@
 #include "libm.h"
 
 double copysign(double x, double y) {
-	union dshape ux, uy;
-
-	ux.value = x;
-	uy.value = y;
-	ux.bits &= (uint64_t)-1>>1;
-	ux.bits |= uy.bits & (uint64_t)1<<63;
-	return ux.value;
+	uint32_t hi;
+	uint32_t his;
+	GET_HIGH_WORD(x, hi);
+	GET_HIGH_WORD(y, his);
+	SET_HIGH_WORD(x, (hi & 0x7FFFFFFFUL) | (his & 0x80000000UL));
+	return x;
 }
