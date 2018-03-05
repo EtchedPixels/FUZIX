@@ -170,7 +170,7 @@ double expm1(double x)
 			hi = x - t*ln2_hi;  /* t*ln2_hi is exact here */
 			lo = t*ln2_lo;
 		}
-		STRICT_ASSIGN(double, x, hi - lo);
+		x = hi - lo;
 		c = (hi-x)-lo;
 	} else if (hx < 0x3c900000) {  /* |x| < 2**-54, return x */
 		/* raise inexact flags when x != 0 */
