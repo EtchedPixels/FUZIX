@@ -1,40 +1,75 @@
-/* From MUSL */
-
 #include <math.h>
 #include "libm.h"
 
-double modf(double x, double *iptr)
+/*
+ * ====================================================
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
+ * ====================================================
+ */
+
+
+/*
+ * modf(double x, double *iptr)
+ * return fraction part of x, and return x's integral part in *iptr.
+ * Method:
+ *	Bit twiddling.
+ *
+ * Exception:
+ *	No exception.
+ */
+
+static const double one = 1.0;
+
+double
+modf(double x, double *iptr)
 {
-	union {double x; uint64_t n;} u = {x};
-	uint64_t mask;
-	int e;
-
-	e = (int)(u.n>>52 & 0x7ff) - 0x3ff;
-
-	/* no fractional part */
-	if (e >= 52) {
-		*iptr = x;
-		if (e == 0x400 && u.n<<12 != 0) /* nan */
-			return x;
-		u.n &= (uint64_t)1<<63;
-		return u.x;
-	}
-
-	/* no integral part*/
-	if (e < 0) {
-		u.n &= (uint64_t)1<<63;
-		*iptr = u.x;
+	int32_t i0,i1,j0;
+	uint32_t i;
+	EXTRACT_WORDS(i0,i1,x);
+	j0 = ((i0>>20)&0x7ff)-0x3ff;	/* exponent of x */
+	if(j0<20) {			/* integer part in high x */
+	    if(j0<0) {			/* |x|<1 */
+	        INSERT_WORDS(*iptr,i0&0x80000000,0);	/* *iptr = +-0 */
 		return x;
-	}
-
-	mask = (uint64_t)-1>>12 >> e;
-	if ((u.n & mask) == 0) {
+	    } else {
+		i = (0x000fffff)>>j0;
+		if(((i0&i)|i1)==0) {		/* x is integral */
+		    uint32_t high;
+		    *iptr = x;
+		    GET_HIGH_WORD(high,x);
+		    INSERT_WORDS(x,high&0x80000000,0);	/* return +-0 */
+		    return x;
+		} else {
+		    INSERT_WORDS(*iptr,i0&(~i),0);
+		    return x - *iptr;
+		}
+	    }
+	} else if (j0>51) {		/* no fraction part */
+	    uint32_t high;
+	    if (j0 == 0x400) {		/* inf/NaN */
 		*iptr = x;
-		u.n &= (uint64_t)1<<63;
-		return u.x;
+		return 0.0 / x;
+	    }
+	    *iptr = x*one;
+	    GET_HIGH_WORD(high,x);
+	    INSERT_WORDS(x,high&0x80000000,0);	/* return +-0 */
+	    return x;
+	} else {			/* fraction part in low x */
+	    i = ((uint32_t)(0xffffffff))>>(j0-20);
+	    if((i1&i)==0) { 		/* x is integral */
+	        uint32_t high;
+		*iptr = x;
+		GET_HIGH_WORD(high,x);
+		INSERT_WORDS(x,high&0x80000000,0);	/* return +-0 */
+		return x;
+	    } else {
+	        INSERT_WORDS(*iptr,i0,i1&(~i));
+		return x - *iptr;
+	    }
 	}
-	u.n &= ~mask;
-	*iptr = u.x;
-	STRICT_ASSIGN(double, x, x - *iptr);
-	return x;
 }
