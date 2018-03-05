@@ -251,7 +251,10 @@ keytable_t modeless[] = {
  *	All regexps /?nN
  *
  *	Try to write ops as far as possible in terms of each other and a few
- *	non-command 'ops. The goal is to make a lot of this macrocode for size.
+ *	non-command 'ops. The goal is to make a lot of this macrocode for size
+ *	using the commands plus some extra ops (if x , rpt x, repeat LINES,
+ *	repeat LINES/2, repeat rows plus repeat 'difference between cursor
+ *	when we started and now' (lets us do d^ d$ etc nicely)
  */
 
 keytable_t modual[] = {
