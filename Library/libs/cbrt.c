@@ -93,7 +93,14 @@ double cbrt(double x)
 	 * before the final error is larger than 0.667 ulps.
 	 */
 	u.value = t;
+#ifdef NO_64BIT
+	if (u.bits[LOBIT] & 0x80000000UL)
+		u.bits[HIBIT]++;
+	u.bits[LOBIT] ^= 0x80000000UL;
+	u.bits[LOBIT] &= 0xC0000000UL;
+#else
 	u.bits = (u.bits + 0x80000000) & 0xffffffffc0000000ULL;
+#endif
 	t = u.value;
 
 	/* one step Newton iteration to 53 bits with error < 0.667 ulps */
