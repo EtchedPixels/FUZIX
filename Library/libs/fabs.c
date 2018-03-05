@@ -5,9 +5,10 @@
 
 double fabs(double x)
 {
-	union dshape u;
+	uint32_t hi;
 
-	u.value = x;
-	u.bits &= (uint64_t)-1 / 2;
-	return u.value;
+	GET_HIGH_WORD(x, hi);
+	hi &= 0x7FFFFFFFUL;
+	SET_HIGH_WORD(x, hi);
+	return x;
 }
