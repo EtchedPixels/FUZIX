@@ -94,9 +94,9 @@ arg_t _rename(void)
 			goto nogood;
 		}
 		/* Drop the reference to the unlinked file */
-		i_unlock_deref(dstp);
-	}
-	i_lock(dstp);
+		i_deref(dsti);
+	} else
+		i_lock(dstp);
 	/* Ok we may proceed: we set up fname earlier */
 	if (!ch_link(dstp, "", lastname, srci)) {
 		i_unlock(dstp);
