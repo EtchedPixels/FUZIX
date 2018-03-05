@@ -15,7 +15,7 @@ extern double acos(double);
 extern double asin(double);
 extern double atan(double);
 extern double atan2(double, double);
-extern double atof(char *);
+extern double atof(const char *);
 extern double cbrt(double);
 extern double ceil(double);
 extern double copysign(double, double);
