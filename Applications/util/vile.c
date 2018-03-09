@@ -52,6 +52,7 @@ typedef struct keytable_t {
         int flags;
 #define NORPT	1
 #define KEEPRPT	2
+#define USERPT	4
         int (*func)(void);
 } keytable_t;
 
@@ -65,7 +66,7 @@ char *ebuf;
 char *gap = buf;
 char *egap;
 char *filename;
-keytable_t *table;
+int modified;
 
 /*
  *        The following assertions must be maintained.
@@ -134,12 +135,10 @@ keytable_t *table;
  *	Add some minimal : commands (:w notably and :n)
  *	Yank/paste
  *	Remove stdio and curses use
- *	ZZ
  *	Use uint8, uint when we can for speed
  *	Use memmove not loops
  *	Macros out of the command blocks we have - may need them all to return
  *	an error status
- *	: blank lines vi style
  *	status bars etc in modeless mode
  *	long line support (including fixing insert_mode)
  *
@@ -187,7 +186,6 @@ int right(void);
 int replace(void);
 int quit(void);
 int flip(void);
-int top(void);
 int up(void);
 int wleft(void);
 int wright(void);
@@ -201,41 +199,16 @@ int eword(void);
 int findleft(void);
 int findright(void);
 int zz(void);
+int do_goto(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
-
-keytable_t modeless[] = {
-#ifdef KEY_LEFT
-        { KEY_LEFT, 0, left },
-        { KEY_RIGHT, 0, right },
-        { KEY_DOWN, 0, down },
-        { KEY_UP, 0, up },
-        { KEY_BACKSPACE, 0, backsp },
-        { KEY_DC, 0, delete },
-#endif
-        { CTRL('w'), 0, wleft },
-        { CTRL('e'), 0, wright },
-        { CTRL('n'), 0, pgdown },
-        { CTRL('p'), 0, pgup },
-        { CTRL('a'), NORPT, lnbegin },
-        { CTRL('d'), NORPT, lnend },
-        { CTRL('t'), NORPT, top },
-        { CTRL('b'), NORPT, bottom },
-        { '\b', 0, backsp },
-        { CTRL('f'), NORPT, file },
-        { CTRL('r'), NORPT, redraw },
-        { CTRL('\\'), NORPT, quit },
-        { CTRL('z'), NORPT, flip },
-        { 0, 0, insert }
-};
 
 /*
  *	Basic vi commands missing (note not all below exactly match vi yet
  *	in their behaviour - much testing is needed
  *
  *	CTRL-F/CTRL-B	implemented but not exactly as vi
- *	nG		goto line n
  *	W and S		word skip with punctuation
  *	[] and ()	setence and paragraph skip
  *	H M L		top/niddle/bottom of screen
@@ -264,7 +237,7 @@ keytable_t modeless[] = {
  *	when we started and now' (lets us do d^ d$ etc nicely)
  */
 
-keytable_t modual[] = {
+keytable_t table[] = {
 #ifdef KEY_LEFT
         { KEY_LEFT, 0, left },
         { KEY_RIGHT, 0, right },
@@ -288,8 +261,7 @@ keytable_t modual[] = {
         { 'w', 0, wright },
         { '^', NORPT, lnbegin },
         { '$', NORPT, lnend },
-        { 't', NORPT, top },		/* Should be 0G */
-        { 'b', NORPT, bottom },		/* Should be G  b is begin of word */
+        { 'G', USERPT, do_goto },	/* Should be 0G */
         { 'i', NORPT, insert_mode },
         { 'I', NORPT, insert_before },
         { 'J', 0, join },
@@ -301,23 +273,23 @@ keytable_t modual[] = {
         { 'R', NORPT, redraw },
         { 'Q', NORPT, quit },
         { 'Z', NORPT, zz },
-        { 'd', 0, delete_line },	/* Should be dd */
+        { 'D', 0, delete_line },	/* Should also be dd */
         { 'a', NORPT, append_mode },
         { 'A', NORPT, append_end },
         { 'r', 0, replace },
         { 'F', NORPT, findleft },
         { 'f', NORPT, findright },
-        { '0', KEEPRPT, digit },
-        { '1', KEEPRPT, digit },
-        { '2', KEEPRPT, digit },
-        { '3', KEEPRPT, digit },
-        { '4', KEEPRPT, digit },
-        { '5', KEEPRPT, digit },
-        { '6', KEEPRPT, digit },
-        { '7', KEEPRPT, digit },
-        { '8', KEEPRPT, digit },
-        { '9', KEEPRPT, digit },
-        { 0, KEEPRPT, noop }
+        { '0', KEEPRPT|USERPT, digit },
+        { '1', KEEPRPT|USERPT, digit },
+        { '2', KEEPRPT|USERPT, digit },
+        { '3', KEEPRPT|USERPT, digit },
+        { '4', KEEPRPT|USERPT, digit },
+        { '5', KEEPRPT|USERPT, digit },
+        { '6', KEEPRPT|USERPT, digit },
+        { '7', KEEPRPT|USERPT, digit },
+        { '8', KEEPRPT|USERPT, digit },
+        { '9', KEEPRPT|USERPT, digit },
+        { 0, 0, noop }
 };
 
 
@@ -333,16 +305,15 @@ int pos(char *pointer)
         return (pointer-buf - (pointer < egap ? 0 : egap-gap));
 }
 
-int top(void)
+int do_goto(void)
 {
+        if (repeat == -1) {
+                epage = indexp = pos(ebuf);
+                return 0;
+        }
+        /* FIXME: we need to do line tracking really to do this nicely */
         indexp = 0;
-        return 0;
-}
-
-int bottom(void)
-{
-        epage = indexp = pos(ebuf);
-        return 0;
+        while(repeat-- && !down());
 }
 
 int quit(void)
@@ -360,6 +331,8 @@ int redraw(void)
 
 int digit(void)
 {
+        if (repeat == -1)
+                repeat = 0;
         repeat = repeat * 10 + input - '0';
         return 0;
 }
@@ -427,6 +400,8 @@ int up(void)
 
 int down(void)
 {
+        if (indexp == pos(ebuf))
+                return 1;
         indexp = adjust(nextline(indexp), col);
         return 0;	/* FIXME */
 }
@@ -440,7 +415,7 @@ int lnbegin(void)
 int lnend(void)
 {
         indexp = nextline(indexp);
-        return left();		/* FIXME? if on end of last lie already ? */
+        return left();		/* FIXME? if on end of last line already ? */
 }
 /* We want to the top of the next page: in theory I believe we shouldn't
    move at all unless we can move this far. Need to save pointers and test ? */
@@ -571,6 +546,7 @@ int insertch(char ch)
         if (gap < egap) {
                 *gap++ = ch == '\r' ? '\n' : ch;
                 indexp = pos(egap);
+                modified = 1;
                 return 0;
         }
         return 1;
@@ -603,6 +579,7 @@ int insert_mode(void)
                                 --gap;
                 } else if (gap < egap) {
                         *gap++ = ch == '\r' ? '\n' : ch;
+                        modified = 1;
                 }
                 indexp = pos(egap);
                 display();
@@ -659,6 +636,7 @@ int delete(void)
 {
         movegap();
         if (egap < ebuf) {
+                modified = 1;
                 indexp = pos(++egap);
                 return 0;
         }
@@ -717,6 +695,7 @@ int save(char *fn)
                 ok = fwrite(egap, sizeof (char), length, fp) == length;
                 (void) fclose(fp);
                 indexp = i;
+                modified = 0;
         }
         return (ok);
 }
@@ -733,12 +712,6 @@ int zz(void)
                 warning(strerror(errno));
         else
                 exit(0);
-}
-
-int flip(void)
-{
-        table = table == modual ? modeless : modual;
-        return 0;
 }
 
 int noop(void)
@@ -810,12 +783,6 @@ int main(int argc, char *argv[])
         while (0 <= i && p[i] != '\\' && p[i] != '/')
                 --i;
         p += i+1;
-        if (strncmp(p, "vi", 2) == 0)
-                table = modual;
-        else if (strncmp(p, "ev", 2) == 0 || strncmp(p, "ev", 2) == 0)
-                table = modeless;
-        else
-                return (2);
         if (initscr() == NULL)
                 return (3);
         raw();
@@ -827,19 +794,20 @@ int main(int argc, char *argv[])
                 gap += fread(buf, sizeof (char), (size_t) BUF, fp);
                 fclose(fp);
         }
-        top();
+        do_goto();
+        repeat = -1;
         while (!done) {
                 display();
                 i = 0;
                 input = getch();
                 while (table[i].key != 0 && input != table[i].key)
                         ++i;
-                if (!repeat || (table[i].flags & NORPT))
+                if (repeat < 2 || (table[i].flags & (NORPT|USERPT)))
                         (*table[i].func)();
                 else while(repeat--)
                         (*table[i].func)();
                 if (!(table[i].flags & KEEPRPT))
-                        repeat = 0;
+                        repeat = -1;
         }
         endwin();
         return (0);
