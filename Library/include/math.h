@@ -78,19 +78,19 @@ extern int __signbit(double);
 #ifndef NO_64BIT
 #define isinf(x) ( \
   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
-  (__double_bits(x) & (__uint64_t)-1>>1) == (__uint64_t)0x7ff<<52)
+  (__double_bits(x) & (uint64_t)-1>>1) == (uint64_t)0x7ff<<52)
 
 #define isnan(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) > 0x7f800000 : \
-   (__double_bits(x) & (__uint64_t)-1>>1) > (__uint64_t)0x7ff<<52)
+   (__double_bits(x) & (uint64_t)-1>>1) > (uint64_t)0x7ff<<52)
 
 #define isnormal(x) ( \
    sizeof(x) == sizeof(float) ? ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
-   ((__double_bits(x)+((__uint64_t)1<<52)) & (__uint64_t)-1>>1) >= (__uint64_t)1<<53)
+   ((__double_bits(x)+((uint64_t)1<<52)) & (uint64_t)-1>>1) >= (uint64_t)1<<53)
 
 #define isfinite(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) < 0x7f800000 : \
-   (__double_bits(x) & (__uint64_t)-1>>1) < (__uint64_t)0x7ff<<52)
+   (__double_bits(x) & (uint64_t)-1>>1) < (uint64_t)0x7ff<<52)
 
 #define signbit(x) ( \
   sizeof(x) == sizeof(float) ? (int)(__float_bits(x)>>31) : \
