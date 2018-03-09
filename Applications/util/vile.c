@@ -31,17 +31,20 @@
  *	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdint.h>
 #include <ctype.h>
 #include <curses.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef BUF
 #define BUF        16384
 #endif /* BUF */
 
 #ifndef HUP
-#define HUP        "ae.hup"
+#define HUP        "vile.hup"
 #endif /* HUP */
 
 typedef struct keytable_t {
@@ -154,6 +157,7 @@ int prevline(int);
 int save(char *);
 char *ptr(int);
 
+void warning(const char *);
 void display(void);
 void movegap(void);
 int insertch(char);
@@ -196,15 +200,20 @@ int join(void);
 int eword(void);
 int findleft(void);
 int findright(void);
+int zz(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
 
 keytable_t modeless[] = {
+#ifdef KEY_LEFT
         { KEY_LEFT, 0, left },
         { KEY_RIGHT, 0, right },
         { KEY_DOWN, 0, down },
         { KEY_UP, 0, up },
+        { KEY_BACKSPACE, 0, backsp },
+        { KEY_DC, 0, delete },
+#endif
         { CTRL('w'), 0, wleft },
         { CTRL('e'), 0, wright },
         { CTRL('n'), 0, pgdown },
@@ -213,9 +222,7 @@ keytable_t modeless[] = {
         { CTRL('d'), NORPT, lnend },
         { CTRL('t'), NORPT, top },
         { CTRL('b'), NORPT, bottom },
-        { KEY_BACKSPACE, 0, backsp },
         { '\b', 0, backsp },
-        { KEY_DC, 0, delete },
         { CTRL('f'), NORPT, file },
         { CTRL('r'), NORPT, redraw },
         { CTRL('\\'), NORPT, quit },
@@ -258,10 +265,12 @@ keytable_t modeless[] = {
  */
 
 keytable_t modual[] = {
+#ifdef KEY_LEFT
         { KEY_LEFT, 0, left },
         { KEY_RIGHT, 0, right },
         { KEY_DOWN, 0, down },
         { KEY_UP, 0, up },
+#endif
         {  27, NORPT, noop },
         { 'h', 0, left },
         { '\b', 0, left },
@@ -291,7 +300,7 @@ keytable_t modual[] = {
         { 'W', NORPT, file },
         { 'R', NORPT, redraw },
         { 'Q', NORPT, quit },
-        { 'Z', NORPT, flip },
+        { 'Z', NORPT, zz },
         { 'd', 0, delete_line },	/* Should be dd */
         { 'a', NORPT, append_mode },
         { 'A', NORPT, append_end },
@@ -712,6 +721,20 @@ int save(char *fn)
         return (ok);
 }
 
+int zz(void)
+{
+        int c = getch();
+        if (c != 'Z' && c != 'z') {
+                beep();
+                return 0;
+        }
+        /* Check if changed ? */
+        if (!save(filename))
+                warning(strerror(errno));
+        else
+                exit(0);
+}
+
 int flip(void)
 {
         table = table == modual ? modeless : modual;
@@ -721,6 +744,18 @@ int flip(void)
 int noop(void)
 {
         return 0;
+}
+
+void warning(const char *p)
+{
+        /* This sort of assumes the error fits one line */
+        /* Ideally inverse video etc and clr to end */
+        mvaddstr(LINES-1, 0, p);
+        clrtoeol();
+        refresh();
+        beep();
+        getch();
+        display();
 }
 
 void display(void)

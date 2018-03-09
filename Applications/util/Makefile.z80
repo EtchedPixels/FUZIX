@@ -105,6 +105,7 @@ SRCS  = banner.c \
 	uptime.c \
 	uud.c \
 	uue.c \
+	vile.c \
 	wc.c \
 	which.c \
 	who.c \
@@ -143,6 +144,9 @@ tchelp: tchelp.rel
 
 tget: tget.rel
 	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
+
+vile: vile.rel
+	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -lcurses -ltermcap
 
 %: %.rel
 	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
