@@ -200,6 +200,9 @@ int findleft(void);
 int findright(void);
 int zz(void);
 int do_goto(void);
+int do_del(void);
+int do_change(void);
+int changeend(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
@@ -214,15 +217,10 @@ int do_goto(void);
  *	H M L		top/niddle/bottom of screen
  *	R		replace mode
  *	t		swap two characters
- *	cw/cc/c.	change word, change line, change one char (+c$ etc)
- *	C		change to end of line
+ *	cw/ce		change word variants
  *	s		substitute
  *	u		undo
- *	dw,dd,de,d$	delete word/space, delete line, delete word, delete
- *			to eol (and d. I think delete char) d^ delete to
- *			start of line
- *	D		synonum for d$ (aka c$ = C)
- *	f/Fc		move forward and back to char c
+ *	dw,de		delete word variants
  *	%		move to associated bracket pair
  *	.		repeat last text changing command
  *
@@ -279,6 +277,9 @@ keytable_t table[] = {
         { 'r', 0, replace },
         { 'F', NORPT, findleft },
         { 'f', NORPT, findright },
+        { 'd', 0, do_del },
+        { 'c', 0, do_change },
+        { 'C', 0, changeend },
         { '0', KEEPRPT|USERPT, digit },
         { '1', KEEPRPT|USERPT, digit },
         { '2', KEEPRPT|USERPT, digit },
@@ -292,6 +293,11 @@ keytable_t table[] = {
         { 0, 0, noop }
 };
 
+
+void beep(void)
+{
+        write(1, "\007", 1);
+}
 
 char *ptr(int offset)
 {
@@ -314,6 +320,7 @@ int do_goto(void)
         /* FIXME: we need to do line tracking really to do this nicely */
         indexp = 0;
         while(repeat-- && !down());
+        return 0;
 }
 
 int quit(void)
@@ -650,6 +657,38 @@ int delete_left(void)
         return 1;
 }
 
+int do_del(void)
+{
+        int c = getch();
+        if (c == '$')	/* Delete to end */
+                return delete_line();
+        else if (c == 'd') {
+                lnbegin();
+                return delete_line();
+        } else if (c == '^') {
+                while(indexp && *ptr(indexp) != '\n' && !delete_left());
+                return 0;
+        } else {
+                beep();
+                return 1;
+        }
+        /* TODO dw and de */
+}
+
+int do_change(void)
+{
+        if (!do_del())
+                return insert_mode();
+        return 1;
+}
+
+int changeend(void)
+{
+        if (!delete_line())
+                return insert_mode();
+        return 1;
+}
+
 int join(void)
 {
         lnend();
@@ -712,6 +751,7 @@ int zz(void)
                 warning(strerror(errno));
         else
                 exit(0);
+        return 1;
 }
 
 int noop(void)
@@ -735,6 +775,7 @@ void display(void)
 {
         char *p;
         int i, j;
+        int opage = page;
         if (indexp < page)
                 page = prevline(indexp);
         if (epage <= indexp) {
@@ -743,6 +784,12 @@ void display(void)
                 while (0 < i--)
                         page = prevline(page-1);
         }
+
+        /* opage is the delta so we know if we are going to scroll. If it's
+           negative then we need to reverse scroll, if its positive we need
+           to normal scroll */
+        opage -= page;
+
         move(0, 0);
         i = j = 0;
         epage = page;
@@ -756,6 +803,7 @@ void display(void)
                         break;
                 if (*p != '\r') {
                         addch(*p);
+                        /* FIXME: soft/hard tabs */
                         j += *p == '\t' ? 8-(j&7) : 1;
                 }
                 if (*p == '\n' || COLS <= j) {
