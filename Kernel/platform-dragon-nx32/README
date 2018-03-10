@@ -67,6 +67,10 @@ Quick build instructions
 # 1. Build the kernel:
 make -C Kernel TARGET=dragon-nx32
 
+- or for using DriveWire in an emulator (i.e. XRoar):
+
+make -C Kernel TARGET=dragon-nx32 BECKER=1
+
 # 2. Build the libraries
 make -C Library tools/syscall_6809
 make -C Library/libs -f Makefile.6809

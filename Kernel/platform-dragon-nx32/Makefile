@@ -22,6 +22,8 @@ OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
+drivewire.o: ASOPTS += --defsym BECKER=$(BECKER)
+
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
 
 all: $(OBJS)
