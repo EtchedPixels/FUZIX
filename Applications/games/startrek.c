@@ -135,11 +135,6 @@ void compute_vector(void);
 void sub1(void);
 void sub2(void);
 void showfile(char *filename);
-int openfile(char *sFilename, char *sMode);
-void closefile(void);
-int getline(char *s);
-void randomize(void);
-int get_rand(int iSpread);
 double rnd(void);
 
 /* Global Variables */
@@ -191,13 +186,30 @@ double w1;			/* Warp Factor */
 double x, y, x1, x2;		/* Navigational coordinates */
 
 char sA[4];			/* An Object in a Sector */
-char sC[7];			/* Condition */
+char *sC;			/* Condition */
 char sQ[194];			/* Visual Display of Quadrant */
 
 string sG2;			/* Used to pass string results */
 
 FILE *stream;
-bool bFlag = FALSE;		/* Prevent multiple file opens */
+
+
+/*
+ *	Returns an integer from 1 to iSpread
+ */
+static int get_rand(int iSpread)
+{
+	return ((rand() % iSpread) + 1);
+}
+
+
+/*
+ *	Get a random co-ordinate
+ */
+static int rand8(void)
+{
+	return (get_rand(8));
+}
 
 /* Main Program */
 
@@ -211,35 +223,41 @@ int main(void)
 	return (0);
 }
 
+static const char *intro_1 = " *************************************";
+static const char *intro_2 = " *                                   *";
 void intro(void)
 {
 	string sTemp;
 
-	printf("\n\n");
-	printf(" *************************************\n");
-	printf(" *                                   *\n");
-	printf(" *                                   *\n");
-	printf(" *      * * Super Star Trek * *      *\n");
-	printf(" *                                   *\n");
-	printf(" *                                   *\n");
-	printf(" *************************************\n\n\n\n\n");
+	/* FIXME: consider moving these into files and showfiling them */
 
-	printf("\nDo you need instructions (y/n): ");
+	puts("\n");
+	puts(intro_1);
+	puts(intro_2);
+	puts(intro_2);
+	puts(" *      * * Super Star Trek * *      *");
+	puts(intro_2);
+	puts(intro_2);
+	puts(intro_1);
+	puts("\n\n\n");
+
+	fputs("\nDo you need instructions (y/n): ", stdout);
 
 	fgets(sTemp, sizeof(sTemp), stdin);
 
 	if (sTemp[0] == 'y' || sTemp[0] == 'Y')
 		showfile("startrek.doc");
 
-	printf("\n\n\n\n\n\n\n");
-	printf("                         ------*------\n");
-	printf("         -------------   `---  ------'\n");
-	printf("         `-------- --'      / /\n");
-	printf("                  \\\\-------  --\n");
-	printf("                  '-----------'\n");
-	printf("\n       The USS Enterprise --- NCC - 1701\n\n\n");
+	puts("\n\n\n\n\n\n");
+	puts("                         ------*------");
+	puts("         -------------   `---  ------'");
+	puts("         `-------- --'      / /");
+	puts("                  \\\\-------  --");
+	puts("                  '-----------'");
+	puts("\n       The USS Enterprise --- NCC - 1701\n\n");
 
-	randomize();
+	/* Seed the randomizer with the timer */
+	srand((unsigned) time(NULL));
 
 	t = (get_rand(20) + 20) * 100;
 }
@@ -256,18 +274,17 @@ void new_game(void)
 
 	while (1) {
 		if (s + e <= 10 && (e < 10 || d[7] < 0)) {
-			printf("\n** Fatal Error **   ");
-			printf("You've just stranded your ship in space.\n\n");
-			printf("You have insufficient maneuvering energy,");
-			printf(" and Shield Control is presently\n");
-			printf("incapable of cross circuiting to engine room!!\n\n");
+			/* Could be a showfile FIXME */
+			puts("\n** Fatal Error **   You've just stranded your ship in space.\n");
+			puts("You have insufficient maneuvering energy, and Shield Control is presently");
+			puts("incapable of cross circuiting to engine room!!\n");
 			end_of_time();
 		}
 
-		printf("Command? ");
+		fputs("Command? ", stdout);
 
 		gets(sTemp);
-		printf("\n");
+		putchar('\n');
 
 		if (!strncmp(sTemp, "nav", 3))
 			course_control();
@@ -288,17 +305,17 @@ void new_game(void)
 		else if (!strncmp(sTemp, "xxx", 3))
 			resign_commision();
 		else {
-			printf("Enter one of the following:\n\n");
-			printf("  nav - To Set Course\n");
-			printf("  srs - Short Range Sensors\n");
-			printf("  lrs - Long Range Sensors\n");
-			printf("  pha - Phasers\n");
-			printf("  tor - Photon Torpedoes\n");
-			printf("  she - Shield Control\n");
-			printf("  dam - Damage Control\n");
-			printf("  com - Library Computer\n");
-			printf("  xxx - Resign Command\n");
-			printf("\n");
+			/* FIXME: showfile */
+			puts("Enter one of the following:\n");
+			puts("  nav - To Set Course");
+			puts("  srs - Short Range Sensors");
+			puts("  lrs - Long Range Sensors");
+			puts("  pha - Phasers");
+			puts("  tor - Photon Torpedoes");
+			puts("  she - Shield Control");
+			puts("  dam - Damage Control");
+			puts("  com - Library Computer");
+			puts("  xxx - Resign Command\n");
 		}
 	}
 }
@@ -322,10 +339,10 @@ void initialize(void)
 	p = p0;
 	s = 0;
 
-	q1 = function_r();
-	q2 = function_r();
-	s1 = (double) function_r();
-	s2 = (double) function_r();
+	q1 = rand8();
+	q2 = rand8();
+	s1 = (double) rand8();
+	s2 = (double) rand8();
 
 	for (i = 1; i <= 8; i++)
 		d[i] = 0.0;
@@ -352,7 +369,7 @@ void initialize(void)
 
 			b9 = b9 + b3;
 
-			g[i][j] = k3 * 100 + b3 * 10 + function_r();
+			g[i][j] = k3 * 100 + b3 * 10 + rand8();
 		}
 
 	if (k9 > t9)
@@ -367,8 +384,8 @@ void initialize(void)
 		g[q1][q2] = g[q1][q2] + 10;
 		b9++;
 
-		q1 = function_r();
-		q2 = function_r();
+		q1 = rand8();
+		q2 = rand8();
 	}
 
 	k7 = k9;
@@ -378,13 +395,13 @@ void initialize(void)
 		strcpy(sX0, "are");
 	}
 
-	printf("Your orders are as follows:\n\n");
-	printf("   Destroy the %d Klingon warships which have invaded\n", k9);
-	printf(" the galaxy before they can attack Federation Headquarters\n");
-	printf(" on stardate %d. This gives you %d days. There %s\n", t0 + t9, t9, sX0);
-	printf(" %d starbase%s in the galaxy for resupplying your ship.\n\n", b9, sX);
-
-	printf("Hit any key to accept command. ");
+	printf("Your orders are as follows:\n"
+	       " Destroy the %d Klingon warships which have invaded\n"
+	       " the galaxy before they can attack Federation Headquarters\n"
+	       " on stardate %d. This gives you %d days. There %s\n"
+	       " %d starbase%s in the galaxy for resupplying your ship.\n\n"
+	       "Hit any key to accept command. ",
+	       k9, t0 + t9, t9, sX0, b9, sX);
 	getchar();
 }
 
@@ -407,7 +424,7 @@ void new_quadrant(void)
 		if (t0 != t)
 			printf("Now entering %s quadrant...\n\n", sG2);
 		else {
-			printf("\nYour mission begins with your starship located\n");
+			puts("\nYour mission begins with your starship located");
 			printf("in the galactic quadrant %s.\n\n", sG2);
 		}
 	}
@@ -486,12 +503,11 @@ void course_control(void)
 {
 	register int i;
 	/* @@@ int c2, c3, q4, q5; */
-	int q4, q5;
 	string sTemp;
 	double c1;
 	char sX[4] = "8";
 
-	printf("Course (0-9): ");
+	fputs("Course (0-9): ", stdout);
 
 	gets(sTemp);
 
@@ -503,8 +519,7 @@ void course_control(void)
 		c1 = 1.0;
 
 	if (c1 < 0 || c1 > 9.0) {
-		printf("Lt. Sulu roports:\n");
-		printf("  Incorrect course data, sir!\n\n");
+		puts("Lt. Sulu roports:\n  Incorrect course data, sir!\n");
 		return;
 	}
 
@@ -515,13 +530,13 @@ void course_control(void)
 
 	gets(sTemp);
 
-	printf("\n");
+	putchar('\n');
 
 	w1 = atof(sTemp);
 
 	if (d[1] < 0.0 && w1 > 0.21) {
-		printf("Warp Engines are damaged. ");
-		printf("Maximum speed = Warp 0.2.\n\n");
+		printf("Warp Engines are damaged. "
+		       "Maximum speed = Warp 0.2.\n\n");
 		return;
 	}
 
@@ -529,21 +544,21 @@ void course_control(void)
 		return;
 
 	if (w1 > 8.1) {
-		printf("Chief Engineer Scott reports:\n");
-		printf("  The engines won't take warp %4.1f!\n\n", w1);
+		printf("Chief Engineer Scott reports:\n"
+		       "  The engines won't take warp %4.1f!\n\n", w1);
 		return;
 	}
 
 	n = cint(w1 * 8.0);	/* @@@ note: this is a real round in the original basic */
 
 	if (e - n < 0) {
-		printf("Engineering reports:\n");
-		printf("  Insufficient energy available for maneuvering");
-		printf(" at warp %4.1f!\n\n", w1);
+		printf("Engineering reports:\n"
+		       "  Insufficient energy available for maneuvering"
+		       " at warp %4.1f!\n\n", w1);
 
 		if (s >= n && d[7] >= 0.0) {
-			printf("Deflector Control Room acknowledges:\n");
-			printf("  %d units of energy presently deployed to shields.\n", s);
+			printf("Deflector Control Room acknowledges:\n"
+			       "  %d units of energy presently deployed to shields.\n", s);
 		}
 
 		return;
@@ -571,8 +586,6 @@ void course_control(void)
 
 	x = s1;
 	y = s2;
-	q4 = q1;
-	q5 = q2;
 
 	for (i = 1; i <= n; i++) {
 		s1 = s1 + x1;
@@ -594,8 +607,8 @@ void course_control(void)
 		if (z3 != 1) {	/* Sector not empty */
 			s1 = s1 - x1;
 			s2 = s2 - x2;
-			printf("Warp Engines shut down at sector ");
-			printf("%d, %d due to bad navigation.\n\n", z1, z2);
+			printf("Warp Engines shut down at sector "
+			       "%d, %d due to bad navigation.\n\n", z1, z2);
 			i = n + 1;
 		}
 	}
@@ -687,15 +700,15 @@ void exceed_quadrant_limits(void)
 	}
 
 	if (x5 == 1) {
-		printf("LT. Uhura reports:\n");
-		printf("  Message from Starfleet Command:\n\n");
-		printf("  Permission to attempt crossing of galactic perimeter\n");
-		printf("  is hereby *denied*. Shut down your engines.\n\n");
-		printf("Chief Engineer Scott reports:\n");
-		/* @@@ printf("  Warp Engines shut down at sector %d, ", cint(s1)); */
-		printf("  Warp Engines shut down at sector %d, ", (int) s1);
-		/* @@@ printf("%d of quadrant %d, %d.\n\n", cint(s2), q1, q2); */
-		printf("%d of quadrant %d, %d.\n\n", (int) s2, q1, q2);
+		/* Mostly showfile ? FIXME */
+		printf("LT. Uhura reports:\n"
+		       "  Message from Starfleet Command:\n\n"
+		       "  Permission to attempt crossing of galactic perimeter\n"
+		       "  is hereby *denied*. Shut down your engines.\n\n"
+		       "Chief Engineer Scott reports:\n"
+		       "  Warp Engines shut down at sector %d, "
+		       "%d of quadrant %d, %d.\n\n",
+		       (int) s1, (int) s2, q1, q2);
 	}
 	/* else 
 	   new_quadrant(); @@@ this causes bugs when bouncing off galaxy walls.
@@ -734,7 +747,7 @@ void maneuver_energy(void)
 	if (e >= 0)
 		return;
 
-	printf("Shield Control supplies energy to complete maneuver.\n\n");
+	puts("Shield Control supplies energy to complete maneuver.\n");
 
 	s = s + e;
 	e = 0;
@@ -743,17 +756,19 @@ void maneuver_energy(void)
 		s = 0;
 }
 
+static const char *srs_1 = "------------------------";
+
 void short_range_scan(void)
 {
 	register int i, j;
 
-	strcpy(sC, "GREEN");
+	sC = "GREEN";
 
 	if (e < e0 * .1)
-		strcpy(sC, "YELLOW");
+		sC = "YELLOW";
 
 	if (k3 > 0)
-		strcpy(sC, "*RED*");
+		sC = "*RED*";
 
 	/* @@@ need to clear the docked flag here */
 	d0 = 0;
@@ -769,20 +784,20 @@ void short_range_scan(void)
 				string_compare();
 				if (z3 == 1) {
 					d0 = 1;
-					strcpy(sC, "DOCKED");
+					sC = "DOCKED";
 					e = e0;
 					p = p0;
-					printf("Shields dropped for docking purposes.\n");
+					puts("Shields dropped for docking purposes.");
 					s = 0;
 				}
 			}
 
 	if (d[2] < 0.0) {
-		printf("\n*** Short Range Sensors are out ***\n");
+		puts("\n*** Short Range Sensors are out ***");
 		return;
 	}
 
-	printf("------------------------\n");
+	puts(srs_1);
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 24; j++)
 			putchar(sQ[i * 24 + j]);
@@ -805,34 +820,37 @@ void short_range_scan(void)
 		if (i == 7)
 			printf("    Klingons Remaining  %d\n", k9);
 	}
-	printf("------------------------\n\n");
+	puts(srs_1);
+	putchar('\n');
 
 	return;
 }
+
+static const char *lrs_1 = "--------------------\n";
 
 void long_range_scan(void)
 {
 	register int i, j;
 
 	if (d[3] < 0.0) {
-		printf("Long Range Sensors are inoperable.\n");
+		puts("Long Range Sensors are inoperable.");
 		return;
 	}
 
 	printf("Long Range Scan for Quadrant %d, %d\n\n", q1, q2);
 
 	for (i = q1 - 1; i <= q1 + 1; i++) {
-		printf("--------------------\n:");
+		printf("%s:", lrs_1);
 		for (j = q2 - 1; j <= q2 + 1; j++)
 			if (i > 0 && i <= 8 && j > 0 && j <= 8) {
 				z[i][j] = g[i][j];
 				printf(" %3.3d :", z[i][j]);
 			} else
-				printf(" *** :");
-		printf("\n");
+				fputs(" *** :", stdout);
+		putchar('\n');
 	}
 
-	printf("--------------------\n\n");
+	printf("%s\n", lrs_1);
 }
 
 void phaser_control(void)
@@ -843,28 +861,27 @@ void phaser_control(void)
 	string sTemp;
 
 	if (d[4] < 0.0) {
-		printf("Phasers Inoperative\n\n");
+		puts("Phasers Inoperative\n");
 		return;
 	}
 
 	if (k3 <= 0) {
-		printf("Science Officer Spock reports:\n");
-		printf("  'Sensors show no enemy ships in this quadrant'\n\n");
+		puts("Science Officer Spock reports:\n"
+		     "  'Sensors show no enemy ships in this quadrant'\n");
 		return;
 	}
 
 	if (d[8] < 0.0)
 		/* @@@ printf("Computer failure happers accuracy.\n"); */
-		printf("Computer failure hampers accuracy.\n");
+		puts("Computer failure hampers accuracy.");
 
-	printf("Phasers locked on target;\n");
-	printf("Energy available = %d units\n\n", e);
-
-	printf("Number of units to fire: ");
+	printf("Phasers locked on target;\n"
+	       "Energy available = %d units\n\n"
+	       "Number of units to fire: ", e);
 
 	gets(sTemp);
 
-	printf("\n");
+	putchar('\n');
 
 	iEnergy = atoi(sTemp);
 
@@ -872,7 +889,7 @@ void phaser_control(void)
 		return;
 
 	if (e - iEnergy < 0) {
-		printf("Not enough energy available.\n\n");
+		puts("Not enough energy available.\n");
 		return;
 	}
 
@@ -889,14 +906,15 @@ void phaser_control(void)
 			/* @@@ h = (h1 / function_d(0) * (rnd() + 2)); */
 			h = (int) (h1 / function_d(0) * (rnd() + 2));
 			if (h <= .15 * k[i][3]) {
-				printf("Sensors show no damage to enemy at ");
-				printf("%d, %d\n\n", k[i][1], k[i][2]);
+				printf("Sensors show no damage to enemy at "
+				       "%d, %d\n\n", k[i][1], k[i][2]);
 			} else {
 				k[i][3] = k[i][3] - h;
-				printf("%d unit hit on Klingon at sector ", h);
-				printf("%d, %d\n", k[i][1], k[i][2]);
+				printf("%d unit hit on Klingon at sector "
+				       "%d, %d\n",
+					h, k[i][1], k[i][2]);
 				if (k[i][3] <= 0) {
-					printf("*** Klingon Destroyed ***\n\n");
+					puts("*** Klingon Destroyed ***\n");
 					k3--;
 					k9--;
 					z1 = k[i][1];
@@ -921,21 +939,21 @@ void phaser_control(void)
 void photon_torpedoes(void)
 {
 	/* @@@ int c2, c3, x3, y3, x5; */
-	int x3, y3, x5;
+	int x3, y3;
 	string sTemp;
 	double c1;
 
 	if (p <= 0) {
-		printf("All photon torpedoes expended\n");
+		puts("All photon torpedoes expended");
 		return;
 	}
 
 	if (d[5] < 0.0) {
-		printf("Photon Tubes not operational\n");
+		puts("Photon Tubes not operational");
 		return;
 	}
 
-	printf("Course (0-9): ");
+	fputs("Course (0-9): ", stdout);
 
 	gets(sTemp);
 
@@ -948,8 +966,8 @@ void photon_torpedoes(void)
 
 	/* @@@ if (c1 < 0 || c1 > 9.0) */
 	if (c1 < 1.0 || c1 > 9.0) {
-		printf("Ensign Chekov roports:\n");
-		printf("  Incorrect course data, sir!\n\n");
+		puts("Ensign Chekov roports:\n"
+		     "  Incorrect course data, sir!\n");
 		return;
 	}
 
@@ -971,9 +989,7 @@ void photon_torpedoes(void)
 	x3 = cint(x);		/* @@@ note: this is a true integer round in the MS BASIC version */
 	y3 = cint(y);		/* @@@ note: this is a true integer round in the MS BASIC version */
 
-	x5 = 0;
-
-	printf("Torpedo Track:\n");
+	puts("Torpedo Track:");
 
 	while (x3 >= 1 && x3 <= 8 && y3 >= 1 && y3 <= 8) {
 		printf("    %d, %d\n", x3, y3);
@@ -997,7 +1013,7 @@ void photon_torpedoes(void)
 		y3 = cint(y);	/* @@@ note: this is a true integer round in the MS BASIC version */
 	}
 
-	printf("Torpedo Missed\n\n");
+	puts("Torpedo Missed\n");
 
 	klingons_shoot();
 }
@@ -1023,7 +1039,7 @@ void torpedo_hit(void)
 	string_compare();
 
 	if (z3 == 1) {
-		printf("*** Klingon Destroyed ***\n\n");
+		puts("*** Klingon Destroyed ***\n");
 		k3--;
 		k9--;
 
@@ -1039,20 +1055,21 @@ void torpedo_hit(void)
 	string_compare();
 
 	if (z3 == 1) {
-		printf("*** Starbase Destroyed ***\n");
+		puts("*** Starbase Destroyed ***");
 		b3--;
 		b9--;
 
 		if (b9 <= 0 && k9 <= t - t0 - t9) {
-			printf("That does it, Captain!!");
-			printf("You are hereby relieved of command\n");
-			printf("and sentanced to 99 stardates of hard");
-			printf("labor on Cygnus 12!!\n");
+			/* showfile ? FIXME */
+			puts("That does it, Captain!!"
+			     "You are hereby relieved of command\n"
+			     "and sentanced to 99 stardates of hard"
+			     "labor on Cygnus 12!!\n");
 			resign_commision();
 		}
 
-		printf("Starfleet Command reviewing your record to consider\n");
-		printf("court martial!\n\n");
+		puts("Starfleet Command reviewing your record to consider\n"
+		     "court martial!\n");
 
 		d0 = 0;		/* Undock */
 	}
@@ -1072,8 +1089,9 @@ void damage_control(void)
 	double d3 = 0.0;
 	register int i;
 
+	/* FIXME: should be blocked if Klingons present */
 	if (d[6] < 0.0) {
-		printf("Damage Control report not available.\n");
+		puts("Damage Control report not available.");
 
 		if (d0 == 0)
 			return;
@@ -1090,10 +1108,9 @@ void damage_control(void)
 		if (d3 >= 1.0)
 			d3 = 0.9;
 
-		printf("\nTechnicians standing by to effect repairs to your");
-		/* @@@ printf("ship; Will you authorize the repair order (Y/N)? "); */
-		printf("ship;\nEstimated time to repair: %4.2f stardates.\n", d3);
-		printf("Will you authorize the repair order (Y/N)? ");
+		printf("\nTechnicians standing by to effect repairs to your"
+		       "ship;\nEstimated time to repair: %4.2f stardates.\n"
+		       "Will you authorize the repair order (Y/N)? ", d3);
 
 		a1 = getchar();
 
@@ -1106,16 +1123,11 @@ void damage_control(void)
 		}
 	}
 
-	printf("Device            State of Repair\n");
+	puts("Device            State of Repair");
 
 	for (r1 = 1; r1 <= 8; r1++) {
 		get_device_name();
-		printf(sG2);
-		/* @@@ for (i = 1; i < 25 - strlen(sG2); i++) */
-		for (i = 1; i < 25 - (int) strlen(sG2); i++)
-			printf(" ");
-		/* @@@ printf("%4.1f\n", d[r1]); */
-		printf("%4.2f\n", d[r1]);
+		printf("%-25s%4.2f\n", sG2, d[r1]);
 	}
 
 	printf("\n");
@@ -1127,37 +1139,36 @@ void shield_control(void)
 	string sTemp;
 
 	if (d[7] < 0.0) {
-		printf("Shield Control inoperable\n");
+		puts("Shield Control inoperable\n");
 		return;
 	}
 
-	printf("Energy available = %d\n\n", e + s);
-
-	printf("Input number of units to shields: ");
+	printf("Energy available = %d\n\n"
+	       "Input number of units to shields: ", e + s);
 
 	gets(sTemp);
 
-	printf("\n");
+	putchar('\n');
 
 	i = atoi(sTemp);
 
 	if (i < 0 || s == i) {
-		printf("<Shields Unchanged>\n\n");
+unchanged:
+		puts("<Shields Unchanged>\n");
 		return;
 	}
 
 	if (i >= e + s) {
-		printf("Shield Control Reports:\n");
-		printf("  'This is not the Federation Treasury.'\n");
-		printf("<Shields Unchanged>\n\n");
-		return;
+		puts("Shield Control Reports:\n"
+		     "  'This is not the Federation Treasury.'");
+		goto unchanged;
 	}
 
 	e = e + s - i;
 	s = i;
 
-	printf("Deflector Control Room report:\n");
-	printf("  'Shields now at %d units per your command.'\n\n", s);
+	printf("Deflector Control Room report:\n"
+	       "  'Shields now at %d units per your command.'\n\n", s);
 }
 
 void library_computer(void)
@@ -1165,14 +1176,14 @@ void library_computer(void)
 	string sTemp;
 
 	if (d[8] < 0.0) {
-		printf("Library Computer inoperable\n");
+		puts("Library Computer inoperable\n");
 		return;
 	}
 
-	printf("Computer active and awating command: ");
+	fputs("Computer active and awating command: ", stdout);
 
 	gets(sTemp);
-	printf("\n");
+	putchar('\n');
 
 	if (!strncmp(sTemp, "0", 1))
 		galactic_record();
@@ -1187,27 +1198,28 @@ void library_computer(void)
 	else if (!strncmp(sTemp, "5", 1))
 		galaxy_map();
 	else {
-		printf("Functions available from Library-Computer:\n\n");
-		printf("   0 = Cumulative Galactic Record\n");
-		printf("   1 = Status Report\n");
-		printf("   2 = Photon Torpedo Data\n");
-		printf("   3 = Starbase Nav Data\n");
-		printf("   4 = Direction/Distance Calculator\n");
-		printf("   5 = Galaxy 'Region Name' Map\n\n");
+		/* FIXME: showfile */
+		puts("Functions available from Library-Computer:\n\n"
+		     "   0 = Cumulative Galactic Record\n"
+		     "   1 = Status Report\n"
+		     "   2 = Photon Torpedo Data\n"
+		     "   3 = Starbase Nav Data\n"
+		     "   4 = Direction/Distance Calculator\n"
+		     "   5 = Galaxy 'Region Name' Map\n");
 	}
 }
+
+static const char *gr_1 = "   ----- ----- ----- ----- ----- ----- ----- -----\n";
 
 void galactic_record(void)
 {
 	int i, j;
 
 	printf("\n     Computer Record of Galaxy for Quadrant %d,%d\n\n", q1, q2);
-	printf("     1     2     3     4     5     6     7     8\n");
+	puts("     1     2     3     4     5     6     7     8");
 
 	for (i = 1; i <= 8; i++) {
-		printf("   ----- ----- ----- ----- ----- ----- ----- -----\n");
-
-		printf("%d", i);
+		printf("%s%d", gr_1, i);
 
 		for (j = 1; j <= 8; j++) {
 			printf("   ");
@@ -1217,57 +1229,56 @@ void galactic_record(void)
 			else
 				printf("%3.3d", z[i][j]);
 		}
-
-		printf("\n");
+		putchar('\n');
 	}
 
-	printf("   ----- ----- ----- ----- ----- ----- ----- -----\n\n");
+	printf("%s\n", gr_1);
 }
+
+static const char *str_s = "s";
 
 void status_report(void)
 {
-	char sX[2] = "";
+	const char *plural = str_s + 1;
 
-	printf("   Status Report:\n\n");
+	puts("   Status Report:\n");
 
 	if (k9 > 1)
-		strcpy(sX, "s");
+		plural = str_s;
 
-	printf("Klingon%s Left: %d\n", sX, k9);
-
-	printf("Mission must be completed in %4.1f stardates\n",
+	printf("Klingon%s Left: %d\n"
+	       "Mission must be completed in %4.1f stardates\n",
+		plural, k9,
 	       /* @@@ .1 * cint((t0 + t9 - t) * 10)); */
 	       .1 * (int) ((t0 + t9 - t) * 10));
 
 	if (b9 < 1) {
-		printf("Your stupidity has left you on your own in the galaxy\n");
-		printf(" -- you have no starbases left!\n");
+		puts("Your stupidity has left you on your own in the galaxy\n"
+		     " -- you have no starbases left!\n");
 	} else {
-		strcpy(sX, "s");
+		plural = str_s;
 		if (b9 < 2)
-			strcpy(sX, "");
+			plural++;
 
-		printf("The Federation is maintaining %d starbase%s in the galaxy\n", b9, sX);
+		printf("The Federation is maintaining %d starbase%s in the galaxy\n\n", b9, plural);
 	}
-
-	printf("\n");
 }
 
 void torpedo_data(void)
 {
 	int i;
-	char sX[2] = "";
+	const char *plural = str_s + 1;
 
 	if (k3 <= 0) {
-		printf("Science Officer Spock reports:\n");
-		printf("  'Sensors show no enemy ships in this quadrant.'\n\n");
+		puts("Science Officer Spock reports:\n"
+		     "  'Sensors show no enemy ships in this quadrant.'\n");
 		return;
 	}
 
 	if (k3 > 1)
-		strcpy(sX, "s");
+		plural--;
 
-	printf("From Enterprise to Klingon battlecriuser%s:\n\n", sX);
+	printf("From Enterprise to Klingon battlecriuser%s:\n\n", plural);
 
 	for (i = 1; i <= 3; i++) {
 		if (k[i][3] > 0) {
@@ -1284,8 +1295,8 @@ void torpedo_data(void)
 void nav_data(void)
 {
 	if (b3 <= 0) {
-		printf("Mr. Spock reports,\n");
-		printf("  'Sensors show no starbases in this quadrant.'\n\n");
+		puts("Mr. Spock reports,\n"
+		     "  'Sensors show no starbases in this quadrant.'\n");
 		return;
 	}
 
@@ -1301,29 +1312,32 @@ void dirdist_calc(void)
 {
 	string sTemp;
 
-	printf("Direction/Distance Calculator\n\n");
-	printf("You are at quadrant %d,%d sector %d,%d\n\n", q1, q2,
+	printf("Direction/Distance Calculator\n"
+	       "You are at quadrant %d,%d sector %d,%d\n\n"
+	       "Please enter initial X coordinate: ",
+	       q1, q2,
 	       /* @@@ cint(s1), cint(s2)); */
 	       (int) s1, (int) s2);
 
-	printf("Please enter initial X coordinate: ");
 	gets(sTemp);
 	c1 = atoi(sTemp);
 
-	printf("Please enter initial Y coordinate: ");
+	fputs("Please enter initial Y coordinate: ", stdout);
 	gets(sTemp);
 	a = atoi(sTemp);
 
-	printf("Please enter final X coordinate: ");
+	fputs("Please enter final X coordinate: ", stdout);
 	gets(sTemp);
 	w1 = atoi(sTemp);
 
-	printf("Please enter final Y coordinate: ");
+	fputs("Please enter final Y coordinate: ", stdout);
 	gets(sTemp);
 	x = atoi(sTemp);
 
 	compute_vector();
 }
+
+static const char *gm_1 = "  ----- ----- ----- ----- ----- ----- ----- -----\n";
 
 void galaxy_map(void)
 {
@@ -1335,9 +1349,7 @@ void galaxy_map(void)
 	printf("    1     2     3     4     5     6     7     8\n");
 
 	for (i = 1; i <= 8; i++) {
-		printf("  ----- ----- ----- ----- ----- ----- ----- -----\n");
-
-		printf("%d ", i);
+		printf("%s%d ", gm_1, i);
 
 		z4 = i;
 		z5 = 1;
@@ -1346,15 +1358,15 @@ void galaxy_map(void)
 		j0 = (int) (11 - (strlen(sG2) / 2));
 
 		for (j = 0; j < j0; j++)
-			printf(" ");
+			putchar(' ');
 
-		printf(sG2);
+		fputs(sG2, stdout);
 
 		for (j = 0; j < j0; j++)
-			printf(" ");
+			putchar(' ');
 
 		if (!(strlen(sG2) % 2))
-			printf(" ");
+			putchar(' ');
 
 		z5 = 5;
 		quadrant_name();
@@ -1362,14 +1374,12 @@ void galaxy_map(void)
 		j0 = (int) (12 - (strlen(sG2) / 2));
 
 		for (j = 0; j < j0; j++)
-			printf(" ");
+			putchar(' ');
 
-		printf(sG2);
-
-		printf("\n");
+		puts(sG2);
 	}
 
-	printf("  ----- ----- ----- ----- ----- ----- ----- -----\n\n");
+	puts(gm_1);
 
 }
 
@@ -1399,17 +1409,22 @@ void compute_vector(void)
 	}
 }
 
+static const char *dir_1 = "  DIRECTION = ";
+static const char *dist_1 = "  DISTANCE = %4.2f\n\n";
+static const char *f42 = "%4.2f\n";
+
 void sub1(void)
 {
 	x = fabs(x);
 	a = fabs(a);
 
+	fputs(dir_1, stdout);
 	if (a <= x)
-		printf("  DIRECTION = %4.2f\n", c1 + (a / x));
+		printf(f42, c1 + (a / x));
 	else
-		printf("  DIRECTION = %4.2f\n", c1 + (((a * 2) - x) / a));
+		printf(f42, c1 + (((a * 2) - x) / a));
 
-	printf("  DISTANCE = %4.2f\n\n", (x > a) ? x : a);
+	printf(dist_1, (x > a) ? x : a);
 }
 
 void sub2(void)
@@ -1417,20 +1432,21 @@ void sub2(void)
 	x = fabs(x);
 	a = fabs(a);
 
+	fputs(dir_1, stdout);
 	if (a >= x)
-		printf("  DIRECTION = %4.2f\n", c1 + (x / a));
+		printf(f42, c1 + (x / a));
 	else
 		/* @@@ printf("  DIRECTION = %4.2f\n\n", c1 + (((x * 2) - a) / x)); */
-		printf("  DIRECTION = %4.2f\n", c1 + (((x * 2) - a) / x));
+		printf(f42, c1 + (((x * 2) - a) / x));
 
 	/* @@@ printf("  DISTANCE = %4.2f\n", (x > a) ? x : a); */
-	printf("  DISTANCE = %4.2f\n\n", (x > a) ? x : a);
+	printf(dist_1, (x > a) ? x : a);
 }
 
 void ship_destroyed(void)
 {
-	printf("The Enterprise has been destroyed. ");
-	printf("The Federation will be conquered.\n\n");
+	puts("The Enterprise has been destroyed. "
+	     "The Federation will be conquered.\n");
 
 	end_of_time();
 }
@@ -1444,16 +1460,16 @@ void end_of_time(void)
 
 void resign_commision(void)
 {
-	printf("There were %d Klingon Battlecruisers left at the", k9);
-	printf(" end of your mission.\n\n");
+	printf("There were %d Klingon Battlecruisers left at the"
+	       " end of your mission.\n\n", k9);
 
 	end_of_game();
 }
 
 void won_game(void)
 {
-	printf("Congradulations, Captain!  The last Klingon Battle Cruiser\n");
-	printf("menacing the Federation has been destoyed.\n\n");
+	puts("Congratulations, Captain!  The last Klingon Battle Cruiser\n"
+	     "menacing the Federation has been destoyed.\n");
 
 	if (t - t0 > 0)
 		printf("Your efficiency rating is %4.2f\n", 1000 * pow(k7 / (t - t0), 2));
@@ -1466,13 +1482,14 @@ void end_of_game(void)
 	string sTemp;
 
 	if (b9 > 0) {
-		printf("The Federation is in need of a new starship commander");
-		printf(" for a similar mission.\n");
-		printf("If there is a volunteer, let him step forward and");
-		printf(" enter 'aye': ");
+		/* FIXME: showfile ? */
+		fputs("The Federation is in need of a new starship commander"
+		     " for a similar mission.\n"
+		     "If there is a volunteer, let him step forward and"
+		     " enter 'aye': ", stdout);
 
 		gets(sTemp);
-		printf("\n");
+		putchar('\n');
 
 		if (!strncmp(sTemp, "aye", 3))
 			new_game();
@@ -1504,6 +1521,8 @@ void klingons_move(void)
 	klingons_shoot();
 }
 
+static const char *dcr_1 = "Damage Control report:";
+
 void klingons_shoot(void)
 {
 	int h, i;
@@ -1512,7 +1531,7 @@ void klingons_shoot(void)
 		return;
 
 	if (d0 != 0) {
-		printf("Starbase shields protect the Enterprise\n\n");
+		puts("Starbase shields protect the Enterprise\n");
 		return;
 	}
 
@@ -1523,11 +1542,11 @@ void klingons_shoot(void)
 			/* @@@ k[i][3] = k[i][3] / (3 + rnd()); */
 			k[i][3] = (int) (k[i][3] / (3 + rnd()));
 
-			printf("%d unit hit on Enterprise from sector ", h);
-			printf("%d, %d\n", k[i][1], k[i][2]);
+			printf("%d unit hit on Enterprise from sector "
+			       "%d, %d\n", h, k[i][1], k[i][2]);
 
 			if (s <= 0) {
-				printf("\n");
+				putchar('\n');
 				ship_destroyed();
 			}
 
@@ -1535,13 +1554,13 @@ void klingons_shoot(void)
 
 			if (h >= 20) {
 				if (rnd() <= 0.6 || (h / s) > 0.2) {
-					r1 = function_r();
+					r1 = rand8();
 					d[r1] = d[r1] - (h / s) - (0.5 * rnd());
 
 					get_device_name();
-
-					printf("Damage Control reports\n");
-					printf("   '%s' damaged by hit\n\n", sG2);
+					/* FIXME: can we use dcr_1 here ?? */
+					printf("Damage Control reports\n"
+					       "   '%s' damaged by hit\n\n", sG2);
 				}
 			}
 		}
@@ -1567,7 +1586,7 @@ void repair_damage(void)
 				if (d1 != 1)
 					d1 = 1;
 
-				printf("Damage Control report:\n");
+				puts(dcr_1);
 				r1 = i;
 				get_device_name();
 				printf("    %s repair completed\n\n", sG2);
@@ -1576,16 +1595,16 @@ void repair_damage(void)
 	}
 
 	if (rnd() <= 0.2) {
-		r1 = function_r();
+		r1 = rand8();
 
 		if (rnd() < .6) {
 			d[r1] = d[r1] - (rnd() * 5.0 + 1.0);
-			printf("Damage Control report:\n");
+			puts(dcr_1);
 			get_device_name();
 			printf("    %s damaged\n\n", sG2);
 		} else {
 			d[r1] = d[r1] + (rnd() * 3.0 + 1.0);
-			printf("Damage Control report:\n");
+			puts(dcr_1);
 			get_device_name();
 			printf("    %s state of repair improved\n\n", sG2);
 		}
@@ -1598,8 +1617,8 @@ void find_empty_place(void)
 {
 	/* @@@ while (z3 == 0) this is a nasty one. */
 	do {
-		r1 = function_r();
-		r2 = function_r();
+		r1 = rand8();
+		r2 = rand8();
 
 		strcpy(sA, "   ");
 
@@ -1701,10 +1720,6 @@ int function_d(int i)
 	return j;
 }
 
-int function_r(void)
-{
-	return (get_rand(8));
-}
 
 void mid_str(char *a, char *b, int x, int y)
 {
@@ -1731,62 +1746,23 @@ int cint(double d)
 
 void showfile(char *filename)
 {
+	FILE *fp;
 	line lBuffer;
 	int iRow = 0;
 
-	if (openfile(filename, "r") != 0)
+	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		perror(filename);
 		return;
-
-	while (getline(lBuffer) != 0) {
-		printf(lBuffer);
-
+	}
+	while (fgets(lBuffer, sizeof(lBuffer), fp) != NULL) {
+		fputs(lBuffer, stdout);
 		if (iRow++ > MAXROW - 3) {
 			getchar();
 			iRow = 0;
 		}
 	}
-
-	closefile();
-}
-
-int openfile(char *sFilename, char *sMode)
-{
-	if (bFlag || (stream = fopen(sFilename, sMode)) == NULL) {
-		fprintf(stderr, "\nError - Unable to open file: %s.\n\n", sFilename);
-		return 1;
-	}
-
-	bFlag = TRUE;
-
-	return 0;
-}
-
-void closefile(void)
-{
-	if (!bFlag)
-		fclose(stream);
-
-	bFlag = FALSE;
-}
-
-int getline(char *s)
-{
-	if (fgets(s, MAXCOL, stream) == NULL)
-		return (0);
-	else
-		return (strlen(s));
-}
-
-/* Seed the randomizer with the timer */
-void randomize(void)
-{
-	srand((unsigned) time(NULL));
-}
-
-/* Returns an integer from 1 to iSpread */
-int get_rand(int iSpread)
-{
-	return ((rand() % iSpread) + 1);
+	fclose(fp);
 }
 
 double rnd(void)
