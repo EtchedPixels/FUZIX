@@ -131,7 +131,7 @@ static void klingons_shoot(void);
 static void repair_damage(void);
 static void find_empty_place(void);
 static void insert_in_quadrant(void);
-static void get_device_name(void);
+static const char *get_device_name(int n);
 static void string_compare(void);
 static void quadrant_name(void);
 static int function_d(int i);
@@ -194,7 +194,7 @@ static char sA[4];			/* An Object in a Sector */
 static char *sC;			/* Condition */
 static char sQ[194];			/* Visual Display of Quadrant */
 
-static string sG2;			/* Used to pass string results */
+static char quadname[12];		/* Quadrant name */
 
 
 /*
@@ -427,10 +427,10 @@ static void new_quadrant(void)
 		quadrant_name();
 
 		if (t0 != t)
-			printf("Now entering %s quadrant...\n\n", sG2);
+			printf("Now entering %s quadrant...\n\n", quadname);
 		else {
 			puts("\nYour mission begins with your starship located");
-			printf("in the galactic quadrant %s.\n\n", sG2);
+			printf("in the galactic quadrant %s.\n\n", quadname);
 		}
 	}
 
@@ -1130,10 +1130,8 @@ static void damage_control(void)
 
 	puts("Device            State of Repair");
 
-	for (r1 = 1; r1 <= 8; r1++) {
-		get_device_name();
-		printf("%-25s%4.2f\n", sG2, d[r1]);
-	}
+	for (r1 = 1; r1 <= 8; r1++)
+		printf("%-25s%4.2f\n", get_device_name(r1), d[r1]);
 
 	printf("\n");
 }
@@ -1360,28 +1358,28 @@ static void galaxy_map(void)
 		z5 = 1;
 		quadrant_name();
 
-		j0 = (int) (11 - (strlen(sG2) / 2));
+		j0 = (int) (11 - (strlen(quadname) / 2));
 
 		for (j = 0; j < j0; j++)
 			putchar(' ');
 
-		fputs(sG2, stdout);
+		fputs(quadname, stdout);
 
 		for (j = 0; j < j0; j++)
 			putchar(' ');
 
-		if (!(strlen(sG2) % 2))
+		if (!(strlen(quadname) % 2))
 			putchar(' ');
 
 		z5 = 5;
 		quadrant_name();
 
-		j0 = (int) (12 - (strlen(sG2) / 2));
+		j0 = (int) (12 - (strlen(quadname) / 2));
 
 		for (j = 0; j < j0; j++)
 			putchar(' ');
 
-		puts(sG2);
+		puts(quadname);
 	}
 
 	puts(gm_1);
@@ -1562,10 +1560,9 @@ static void klingons_shoot(void)
 					r1 = rand8();
 					d[r1] = d[r1] - (h / s) - (0.5 * rnd());
 
-					get_device_name();
 					/* FIXME: can we use dcr_1 here ?? */
 					printf("Damage Control reports\n"
-					       "   '%s' damaged by hit\n\n", sG2);
+					       "   '%s' damaged by hit\n\n", get_device_name(r1));
 				}
 			}
 		}
@@ -1592,9 +1589,8 @@ static void repair_damage(void)
 					d1 = 1;
 
 				puts(dcr_1);
-				r1 = i;
-				get_device_name();
-				printf("    %s repair completed\n\n", sG2);
+				printf("    %s repair completed\n\n",
+					get_device_name(i));
 			}
 		}
 	}
@@ -1605,13 +1601,12 @@ static void repair_damage(void)
 		if (rnd() < .6) {
 			d[r1] = d[r1] - (rnd() * 5.0 + 1.0);
 			puts(dcr_1);
-			get_device_name();
-			printf("    %s damaged\n\n", sG2);
+			printf("    %s damaged\n\n", get_device_name(r1));
 		} else {
 			d[r1] = d[r1] + (rnd() * 3.0 + 1.0);
 			puts(dcr_1);
-			get_device_name();
-			printf("    %s state of repair improved\n\n", sG2);
+			printf("    %s state of repair improved\n\n",
+					get_device_name(r1));
 		}
 	}
 }
@@ -1649,20 +1644,17 @@ static void insert_in_quadrant(void)
 	return;
 }
 
-static char *device_name[] = {
+static const char *device_name[] = {
 	"", "Warp Engines", "Short Range Sensors", "Long Range Sensors",
 	"Phaser Control", "Photon Tubes", "Damage Control", "Shield Control",
 	"Library-Computer"
 };
 
-static void get_device_name(void)
+static const char *get_device_name(int n)
 {
-	if (r1 < 0 || r1 > 8)
-		r1 = 0;
-
-	strcpy(sG2, device_name[r1]);
-
-	return;
+	if (n < 0 || n > 8)
+		n = 0;
+	return device_name[n];
 }
 
 static void string_compare(void)
@@ -1687,7 +1679,7 @@ static void string_compare(void)
 	return;
 }
 
-static char *quad_name[] = { "",
+static const char *quad_name[] = { "",
 	"Antares", "Rigel", "Procyon", "Vega", "Canopus", "Altair",
 	"Sagittarius", "Pollux", "Sirius", "Deneb", "Capella",
 	"Betelgeuse", "Aldebaran", "Regulus", "Arcturus", "Spica"
@@ -1699,17 +1691,17 @@ static void quadrant_name(void)
 	static char *sect_name[] = { "", " I", " II", " III", " IV" };
 
 	if (z4 < 1 || z4 > 8 || z5 < 1 || z5 > 8)
-		strcpy(sG2, "Unknown");
+		strcpy(quadname, "Unknown");
 
 	if (z5 <= 4)
-		strcpy(sG2, quad_name[z4]);
+		strcpy(quadname, quad_name[z4]);
 	else
-		strcpy(sG2, quad_name[z4 + 8]);
+		strcpy(quadname, quad_name[z4 + 8]);
 
 	if (g5 != 1) {
 		if (z5 > 4)
 			z5 = z5 - 4;
-		strcat(sG2, sect_name[z5]);
+		strcat(quadname, sect_name[z5]);
 	}
 
 	return;
