@@ -20,8 +20,4 @@
 #define UINT_MAX	0xffff		/* maximum unsigned int value */
 #define ULONG_MAX	0xffffffff	/* maximum unsigned long value */
 
-#ifndef RAND_MAX
-#define RAND_MAX	INT_MAX
-#endif
-
 #endif
