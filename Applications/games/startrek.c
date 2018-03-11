@@ -1780,9 +1780,7 @@ int getline(char *s)
 /* Seed the randomizer with the timer */
 void randomize(void)
 {
-	time_t timer;
-
-	srand((unsigned) time(&timer));
+	srand((unsigned) time(NULL));
 }
 
 /* Returns an integer from 1 to iSpread */
