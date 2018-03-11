@@ -1625,14 +1625,14 @@ void insert_in_quadrant(void)
 	return;
 }
 
+static char *device_name[] = {
+	"", "Warp Engines", "Short Range Sensors", "Long Range Sensors",
+	"Phaser Control", "Photon Tubes", "Damage Control", "Shield Control",
+	"Library-Computer"
+};
+
 void get_device_name(void)
 {
-	static char *device_name[] = {
-		"", "Warp Engines", "Short Range Sensors", "Long Range Sensors",
-		"Phaser Control", "Photon Tubes", "Damage Control", "Shield Control",
-		"Library-Computer"
-	};
-
 	if (r1 < 0 || r1 > 8)
 		r1 = 0;
 
@@ -1663,12 +1663,14 @@ void string_compare(void)
 	return;
 }
 
+static char *quad_name[] = { "",
+	"Antares", "Rigel", "Procyon", "Vega", "Canopus", "Altair",
+	"Sagittarius", "Pollux", "Sirius", "Deneb", "Capella",
+	"Betelgeuse", "Aldebaran", "Regulus", "Arcturus", "Spica"
+};
+
 void quadrant_name(void)
 {
-	static char *quad_name[] = { "", "Antares", "Rigel", "Procyon", "Vega",
-		"Canopus", "Altair", "Sagittarius", "Pollux", "Sirius", "Deneb", "Capella",
-		"Betelgeuse", "Aldebaran", "Regulus", "Arcturus", "Spica"
-	};
 
 	static char *sect_name[] = { "", " I", " II", " III", " IV" };
 
