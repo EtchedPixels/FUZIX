@@ -6,14 +6,17 @@ static void ttysetflags(void)
   _tty.c_iflag |= ICRNL | IXON;
   _tty.c_oflag |= OPOST | ONLCR;
   _tty.c_lflag |= ECHO | ICANON | IEXTEN | ISIG;
+  _tty.c_cc[VEOF] = 4;
 
   if (_cursvar.rawmode) {
 	_tty.c_iflag &= ~(ICRNL | IXON);
 	_tty.c_oflag &= ~(OPOST);
 	_tty.c_lflag &= ~(ICANON | IEXTEN | ISIG);
+	_tty.c_cc[VMIN] = 1;
   }
   if (_cursvar.cbrkmode) {
 	_tty.c_lflag &= ~(ICANON);
+	_tty.c_cc[VMIN] = 1;
   }
   if (!_cursvar.echoit) {
 	_tty.c_lflag &= ~(ECHO | ECHONL);
