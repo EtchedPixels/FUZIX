@@ -1,10 +1,10 @@
 #include "cpu.h"
 
-int strcmp( char *a, char *b ){
+int strcmp( const char *a, const char *b ){
     return strncmp(a, b, strlen(a));
 }
 
-int strncmp( char *a, char *b, int n){
+int strncmp( const char *a, const char *b, int n){
     int ret;
     while (n--){
 	ret = *a - *b++;
