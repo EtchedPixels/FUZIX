@@ -107,7 +107,7 @@ void phaser_control(void);
 void photon_torpedoes(void);
 void torpedo_hit(void);
 void damage_control(void);
-void sheild_control(void);
+void shield_control(void);
 void library_computer(void);
 void galactic_record(void);
 void status_report(void);
@@ -280,7 +280,7 @@ void new_game(void)
 		else if (!strncmp(sTemp, "tor", 3))
 			photon_torpedoes();
 		else if (!strncmp(sTemp, "she", 3))
-			sheild_control();
+			shield_control();
 		else if (!strncmp(sTemp, "dam", 3))
 			damage_control();
 		else if (!strncmp(sTemp, "com", 3))
@@ -294,7 +294,7 @@ void new_game(void)
 			printf("  lrs - Long Range Sensors\n");
 			printf("  pha - Phasers\n");
 			printf("  tor - Photon Torpedoes\n");
-			printf("  she - Sheild Control\n");
+			printf("  she - Shield Control\n");
 			printf("  dam - Damage Control\n");
 			printf("  com - Library Computer\n");
 			printf("  xxx - Resign Command\n");
@@ -1121,13 +1121,13 @@ void damage_control(void)
 	printf("\n");
 }
 
-void sheild_control(void)
+void shield_control(void)
 {
 	int i;
 	string sTemp;
 
 	if (d[7] < 0.0) {
-		printf("Sheild Control inoperable\n");
+		printf("Shield Control inoperable\n");
 		return;
 	}
 
@@ -1142,14 +1142,14 @@ void sheild_control(void)
 	i = atoi(sTemp);
 
 	if (i < 0 || s == i) {
-		printf("<Sheilds Unchanged>\n\n");
+		printf("<Shields Unchanged>\n\n");
 		return;
 	}
 
 	if (i >= e + s) {
-		printf("Sheild Control Reports:\n");
+		printf("Shield Control Reports:\n");
 		printf("  'This is not the Federation Treasury.'\n");
-		printf("<Sheilds Unchanged>\n\n");
+		printf("<Shields Unchanged>\n\n");
 		return;
 	}
 
@@ -1629,7 +1629,7 @@ void get_device_name(void)
 {
 	static char *device_name[] = {
 		"", "Warp Engines", "Short Range Sensors", "Long Range Sensors",
-		"Phaser Control", "Photon Tubes", "Damage Control", "Sheild Control",
+		"Phaser Control", "Photon Tubes", "Damage Control", "Shield Control",
 		"Library-Computer"
 	};
 
