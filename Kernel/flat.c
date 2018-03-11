@@ -242,6 +242,7 @@ int pagemap_realloc(usize_t size)
 
 	mb->start = kmalloc(size);
 	mb->end = mb->start + size;
+	/* FIXME: on the fail case we should put back the old maps */
 	if (mb->start == NULL)
 		return ENOMEM;
 	return 0;
