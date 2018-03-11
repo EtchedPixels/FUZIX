@@ -4,6 +4,8 @@
  * Super Star Trek Classic (v1.1)
  * Retro Star Trek Game 
  * C Port Copyright (C) 1996  <Chris Nystrom>
+ *
+ * Rather hacked for Fuzix by Alan Cox 2018
  * 
  * This program is free software; you can redistribute it and/or modify
  * in any way that you wish. _Star Trek_ is a trademark of Paramount
@@ -63,6 +65,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifndef FALSE
 #define FALSE        0
@@ -70,6 +73,10 @@
 
 #ifndef TRUE
 #define TRUE         ! FALSE
+#endif
+
+#ifndef TREK_DIR
+#define TREK_DIR	"/usr/lib/trek/"
 #endif
 
 /* Standard Line Length */
@@ -93,105 +100,101 @@ typedef char string[MAXLEN];
 
 /* Function Declarations */
 
-void intro(void);
-void new_game(void);
-void initialize(void);
-void new_quadrant(void);
-void course_control(void);
-void complete_maneuver(void);
-void exceed_quadrant_limits(void);
-void maneuver_energy(void);
-void short_range_scan(void);
-void long_range_scan(void);
-void phaser_control(void);
-void photon_torpedoes(void);
-void torpedo_hit(void);
-void damage_control(void);
-void shield_control(void);
-void library_computer(void);
-void galactic_record(void);
-void status_report(void);
-void torpedo_data(void);
-void nav_data(void);
-void dirdist_calc(void);
-void galaxy_map(void);
-void end_of_time(void);
-void resign_commision(void);
-void won_game(void);
-void end_of_game(void);
-void klingons_move(void);
-void klingons_shoot(void);
-void repair_damage(void);
-void find_empty_place(void);
-void insert_in_quadrant(void);
-void get_device_name(void);
-void string_compare(void);
-void quadrant_name(void);
-int function_d(int i);
-int function_r(void);
-void mid_str(char *a, char *b, int x, int y);
-int cint(double d);
-void compute_vector(void);
-void sub1(void);
-void sub2(void);
-void showfile(char *filename);
-double rnd(void);
+static void intro(void);
+static void new_game(void);
+static void initialize(void);
+static void new_quadrant(void);
+static void course_control(void);
+static void complete_maneuver(void);
+static void exceed_quadrant_limits(void);
+static void maneuver_energy(void);
+static void short_range_scan(void);
+static void long_range_scan(void);
+static void phaser_control(void);
+static void photon_torpedoes(void);
+static void torpedo_hit(void);
+static void damage_control(void);
+static void shield_control(void);
+static void library_computer(void);
+static void galactic_record(void);
+static void status_report(void);
+static void torpedo_data(void);
+static void nav_data(void);
+static void dirdist_calc(void);
+static void galaxy_map(void);
+static void end_of_time(void);
+static void resign_commision(void);
+static void won_game(void);
+static void end_of_game(void);
+static void klingons_move(void);
+static void klingons_shoot(void);
+static void repair_damage(void);
+static void find_empty_place(void);
+static void insert_in_quadrant(void);
+static void get_device_name(void);
+static void string_compare(void);
+static void quadrant_name(void);
+static int function_d(int i);
+static void mid_str(char *a, char *b, int x, int y);
+static int cint(double d);
+static void compute_vector(void);
+static void sub1(void);
+static void sub2(void);
+static void showfile(char *filename);
+static double rnd(void);
 
 /* Global Variables */
 
-int b3;				/* Starbases in Quadrant */
-int b4, b5;			/* Starbase Location in sector */
-int b9;				/* Total Starbases */
+static int b3;				/* Starbases in Quadrant */
+static int b4, b5;			/* Starbase Location in sector */
+static int b9;				/* Total Starbases */
 
 			  /* @@@ int c[2][10] = *//* Used for location and movement */
-int c[3][10] =			/* modified to match MS BASIC array indicies */
+static int c[3][10] =			/* modified to match MS BASIC array indicies */
 {
 	{0},
 	{0, 0, -1, -1, -1, 0, 1, 1, 1, 0},
 	{1, 1, 1, 0, -1, -1, -1, 0, 1, 1}
 };
 
-int d0;				/* Docked flag */
-int d1;				/* Damage Repair Flag */
-int e;				/* Current Energy */
-int e0 = 3000;			/* Starting Energy */
-int g[9][9];			/* Galaxy */
-int g5;				/* Quadrant name flag */
-int k[4][4];			/* Klingon Data */
-int k3;				/* Klingons in Quadrant */
-int k7;				/* Klingons at start */
-int k9;				/* Total Klingons left */
-int n;				/* Number of secors to travel */
-int p;				/* Photon Torpedoes left */
-int p0 = 10;			/* Photon Torpedo capacity */
-int q1, q2;			/* Quadrant Position of Enterprise */
-int r1, r2;			/* Temporary Location Corrdinates */
-int s;				/* Current shield value */
-int s3;				/* Stars in quadrant */
-int s8;				/* Quadrant locating index */
-int s9 = 200;			/* Klingon Power */
-int t0;				/* Starting Stardate */
-int t9;				/* End of time */
-int z[9][9];			/* Cumulative Record of Galaxy */
-int z3;				/* string_compare return value */
-int z1, z2;			/* Temporary Sector Coordinates */
-int z4, z5;			/* Temporary quadrant coordinates */
+static int d0;				/* Docked flag */
+static int d1;				/* Damage Repair Flag */
+static int e;				/* Current Energy */
+static int e0 = 3000;			/* Starting Energy */
+static int g[9][9];			/* Galaxy */
+static int g5;				/* Quadrant name flag */
+static int k[4][4];			/* Klingon Data */
+static int k3;				/* Klingons in Quadrant */
+static int k7;				/* Klingons at start */
+static int k9;				/* Total Klingons left */
+static int n;				/* Number of secors to travel */
+static int p;				/* Photon Torpedoes left */
+static int p0 = 10;			/* Photon Torpedo capacity */
+static int q1, q2;			/* Quadrant Position of Enterprise */
+static int r1, r2;			/* Temporary Location Corrdinates */
+static int s;				/* Current shield value */
+static int s3;				/* Stars in quadrant */
+static int s8;				/* Quadrant locating index */
+static int t0;				/* Starting Stardate */
+static int t9;				/* End of time */
+static int z[9][9];			/* Cumulative Record of Galaxy */
+static int z3;				/* string_compare return value */
+static int z1, z2;			/* Temporary Sector Coordinates */
+static int z4, z5;			/* Temporary quadrant coordinates */
 
-double a, c1;			/* Used by Library Computer */
-double d[9];			/* Damage Array */
-double d4;			/* Used for computing damage repair time */
-double s1, s2;			/* Current Sector Position of Enterprise */
-double t;			/* Current Stardate */
-double w1;			/* Warp Factor */
-double x, y, x1, x2;		/* Navigational coordinates */
+static double a, c1;			/* Used by Library Computer */
+static double d[9];			/* Damage Array */
+static double d4;			/* Used for computing damage repair time */
+static double s1, s2;			/* Current Sector Position of Enterprise */
+static double t;			/* Current Stardate */
+static double w1;			/* Warp Factor */
+static double x, y, x1, x2;		/* Navigational coordinates */
 
-char sA[4];			/* An Object in a Sector */
-char *sC;			/* Condition */
-char sQ[194];			/* Visual Display of Quadrant */
+static char sA[4];			/* An Object in a Sector */
+static char *sC;			/* Condition */
+static char sQ[194];			/* Visual Display of Quadrant */
 
-string sG2;			/* Used to pass string results */
-
-FILE *stream;
+static string sG2;			/* Used to pass string results */
 
 
 /*
@@ -213,8 +216,9 @@ static int rand8(void)
 
 /* Main Program */
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	chdir(TREK_DIR);
 	intro();
 
 	new_game();
@@ -225,7 +229,8 @@ int main(void)
 
 static const char *intro_1 = " *************************************";
 static const char *intro_2 = " *                                   *";
-void intro(void)
+
+static void intro(void)
 {
 	string sTemp;
 
@@ -262,7 +267,7 @@ void intro(void)
 	t = (get_rand(20) + 20) * 100;
 }
 
-void new_game(void)
+static void new_game(void)
 {
 	string sTemp;
 
@@ -320,7 +325,7 @@ void new_game(void)
 	}
 }
 
-void initialize(void)
+static void initialize(void)
 {
 	int i, j;
 	char sX[2] = "";
@@ -405,7 +410,7 @@ void initialize(void)
 	getchar();
 }
 
-void new_quadrant(void)
+static void new_quadrant(void)
 {
 	int i;
 
@@ -499,7 +504,7 @@ void new_quadrant(void)
 	}
 }
 
-void course_control(void)
+static void course_control(void)
 {
 	register int i;
 	/* @@@ int c2, c3, q4, q5; */
@@ -616,7 +621,7 @@ void course_control(void)
 	complete_maneuver();
 }
 
-void complete_maneuver(void)
+static void complete_maneuver(void)
 {
 	double t8;
 
@@ -642,7 +647,7 @@ void complete_maneuver(void)
 	short_range_scan();
 }
 
-void exceed_quadrant_limits(void)
+static void exceed_quadrant_limits(void)
 {
 	int x5 = 0;		/* Outside galaxy flag */
 
@@ -740,7 +745,7 @@ void exceed_quadrant_limits(void)
 	new_quadrant();
 }
 
-void maneuver_energy(void)
+static void maneuver_energy(void)
 {
 	e = e - n - 10;
 
@@ -758,7 +763,7 @@ void maneuver_energy(void)
 
 static const char *srs_1 = "------------------------";
 
-void short_range_scan(void)
+static void short_range_scan(void)
 {
 	register int i, j;
 
@@ -828,7 +833,7 @@ void short_range_scan(void)
 
 static const char *lrs_1 = "--------------------\n";
 
-void long_range_scan(void)
+static void long_range_scan(void)
 {
 	register int i, j;
 
@@ -853,7 +858,7 @@ void long_range_scan(void)
 	printf("%s\n", lrs_1);
 }
 
-void phaser_control(void)
+static void phaser_control(void)
 {
 	register int i;
 	int iEnergy;
@@ -936,7 +941,7 @@ void phaser_control(void)
 	klingons_shoot();
 }
 
-void photon_torpedoes(void)
+static void photon_torpedoes(void)
 {
 	/* @@@ int c2, c3, x3, y3, x5; */
 	int x3, y3;
@@ -1018,7 +1023,7 @@ void photon_torpedoes(void)
 	klingons_shoot();
 }
 
-void torpedo_hit(void)
+static void torpedo_hit(void)
 {
 	int i, x3, y3;
 
@@ -1083,7 +1088,7 @@ void torpedo_hit(void)
 	z[q1][q2] = g[q1][q2];
 }
 
-void damage_control(void)
+static void damage_control(void)
 {
 	int a1;
 	double d3 = 0.0;
@@ -1133,7 +1138,7 @@ void damage_control(void)
 	printf("\n");
 }
 
-void shield_control(void)
+static void shield_control(void)
 {
 	int i;
 	string sTemp;
@@ -1171,7 +1176,7 @@ unchanged:
 	       "  'Shields now at %d units per your command.'\n\n", s);
 }
 
-void library_computer(void)
+static void library_computer(void)
 {
 	string sTemp;
 
@@ -1211,7 +1216,7 @@ void library_computer(void)
 
 static const char *gr_1 = "   ----- ----- ----- ----- ----- ----- ----- -----\n";
 
-void galactic_record(void)
+static void galactic_record(void)
 {
 	int i, j;
 
@@ -1237,7 +1242,7 @@ void galactic_record(void)
 
 static const char *str_s = "s";
 
-void status_report(void)
+static void status_report(void)
 {
 	const char *plural = str_s + 1;
 
@@ -1264,7 +1269,7 @@ void status_report(void)
 	}
 }
 
-void torpedo_data(void)
+static void torpedo_data(void)
 {
 	int i;
 	const char *plural = str_s + 1;
@@ -1292,7 +1297,7 @@ void torpedo_data(void)
 	}
 }
 
-void nav_data(void)
+static void nav_data(void)
 {
 	if (b3 <= 0) {
 		puts("Mr. Spock reports,\n"
@@ -1308,7 +1313,7 @@ void nav_data(void)
 	compute_vector();
 }
 
-void dirdist_calc(void)
+static void dirdist_calc(void)
 {
 	string sTemp;
 
@@ -1339,7 +1344,7 @@ void dirdist_calc(void)
 
 static const char *gm_1 = "  ----- ----- ----- ----- ----- ----- ----- -----\n";
 
-void galaxy_map(void)
+static void galaxy_map(void)
 {
 	int i, j, j0;
 
@@ -1383,7 +1388,7 @@ void galaxy_map(void)
 
 }
 
-void compute_vector(void)
+static void compute_vector(void)
 {
 	x = x - a;
 	a = c1 - w1;
@@ -1413,7 +1418,7 @@ static const char *dir_1 = "  DIRECTION = ";
 static const char *dist_1 = "  DISTANCE = %4.2f\n\n";
 static const char *f42 = "%4.2f\n";
 
-void sub1(void)
+static void sub1(void)
 {
 	x = fabs(x);
 	a = fabs(a);
@@ -1427,7 +1432,7 @@ void sub1(void)
 	printf(dist_1, (x > a) ? x : a);
 }
 
-void sub2(void)
+static void sub2(void)
 {
 	x = fabs(x);
 	a = fabs(a);
@@ -1443,7 +1448,7 @@ void sub2(void)
 	printf(dist_1, (x > a) ? x : a);
 }
 
-void ship_destroyed(void)
+static void ship_destroyed(void)
 {
 	puts("The Enterprise has been destroyed. "
 	     "The Federation will be conquered.\n");
@@ -1451,14 +1456,14 @@ void ship_destroyed(void)
 	end_of_time();
 }
 
-void end_of_time(void)
+static void end_of_time(void)
 {
 	printf("It is stardate %d.\n\n", (int) t);
 
 	resign_commision();
 }
 
-void resign_commision(void)
+static void resign_commision(void)
 {
 	printf("There were %d Klingon Battlecruisers left at the"
 	       " end of your mission.\n\n", k9);
@@ -1466,7 +1471,7 @@ void resign_commision(void)
 	end_of_game();
 }
 
-void won_game(void)
+static void won_game(void)
 {
 	puts("Congratulations, Captain!  The last Klingon Battle Cruiser\n"
 	     "menacing the Federation has been destoyed.\n");
@@ -1477,7 +1482,7 @@ void won_game(void)
 	end_of_game();
 }
 
-void end_of_game(void)
+static void end_of_game(void)
 {
 	string sTemp;
 
@@ -1498,7 +1503,7 @@ void end_of_game(void)
 	exit(0);
 }
 
-void klingons_move(void)
+static void klingons_move(void)
 {
 	int i;
 
@@ -1523,7 +1528,7 @@ void klingons_move(void)
 
 static const char *dcr_1 = "Damage Control report:";
 
-void klingons_shoot(void)
+static void klingons_shoot(void)
 {
 	int h, i;
 
@@ -1567,7 +1572,7 @@ void klingons_shoot(void)
 	}
 }
 
-void repair_damage(void)
+static void repair_damage(void)
 {
 	int i;
 	double d6;		/* Repair Factor */
@@ -1613,7 +1618,7 @@ void repair_damage(void)
 
 /* Misc Functions and Subroutines */
 
-void find_empty_place(void)
+static void find_empty_place(void)
 {
 	/* @@@ while (z3 == 0) this is a nasty one. */
 	do {
@@ -1631,7 +1636,7 @@ void find_empty_place(void)
 	z3 = 0;
 }
 
-void insert_in_quadrant(void)
+static void insert_in_quadrant(void)
 {
 	int i, j = 0;
 
@@ -1650,7 +1655,7 @@ static char *device_name[] = {
 	"Library-Computer"
 };
 
-void get_device_name(void)
+static void get_device_name(void)
 {
 	if (r1 < 0 || r1 > 8)
 		r1 = 0;
@@ -1660,7 +1665,7 @@ void get_device_name(void)
 	return;
 }
 
-void string_compare(void)
+static void string_compare(void)
 {
 	int i;
 	char sB[4];
@@ -1688,7 +1693,7 @@ static char *quad_name[] = { "",
 	"Betelgeuse", "Aldebaran", "Regulus", "Arcturus", "Spica"
 };
 
-void quadrant_name(void)
+static void quadrant_name(void)
 {
 
 	static char *sect_name[] = { "", " I", " II", " III", " IV" };
@@ -1710,7 +1715,7 @@ void quadrant_name(void)
 	return;
 }
 
-int function_d(int i)
+static int function_d(int i)
 {
 	int j;
 
@@ -1721,7 +1726,7 @@ int function_d(int i)
 }
 
 
-void mid_str(char *a, char *b, int x, int y)
+static void mid_str(char *a, char *b, int x, int y)
 {
 	--x;
 	y += x;
@@ -1735,7 +1740,7 @@ void mid_str(char *a, char *b, int x, int y)
 
 /* Round off floating point numbers instead of truncating */
 
-int cint(double d)
+static int cint(double d)
 {
 	int i;
 
@@ -1744,7 +1749,7 @@ int cint(double d)
 	return (i);
 }
 
-void showfile(char *filename)
+static void showfile(char *filename)
 {
 	FILE *fp;
 	line lBuffer;
@@ -1765,7 +1770,7 @@ void showfile(char *filename)
 	fclose(fp);
 }
 
-double rnd(void)
+static double rnd(void)
 {
 	double d;
 
