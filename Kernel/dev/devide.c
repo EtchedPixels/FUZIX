@@ -17,6 +17,8 @@
 #include <devide.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_IDE
+
 bool devide_wait(uint8_t bits)
 {
     uint8_t status;
@@ -195,3 +197,5 @@ swapout:
 }
 #endif
 #endif
+
+#endif /* CONFIG_IDE */

@@ -19,6 +19,8 @@
 #include <devscsi.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_SCSI
+
 static uint8_t nscsi;
 static uint8_t identify[36];
 static uint8_t cap[8];
@@ -114,3 +116,5 @@ void devscsi_init(void)
   }
   kprintf("\r%d SCSI device(s) detected.\n", nscsi);
 }
+
+#endif /* CONFIG_SCSI */

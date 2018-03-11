@@ -84,9 +84,11 @@ void device_init(void)
     }
     devide_init();
 #endif
+#ifdef CONFIG_SCSI
     i = cart_find(CART_TC3);
     if (i >= 0) {
       scsi_slot = i;
       devscsi_init();
     }
+#endif
 }

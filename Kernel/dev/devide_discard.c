@@ -17,6 +17,8 @@
 #include <devide.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_IDE
+
 /****************************************************************************/
 /* Code in this file is used only once, at startup, so we want it to live   */
 /* in the DISCARD segment. sdcc only allows us to specify one segment for   */
@@ -151,3 +153,5 @@ void devide_init(void)
     for(d=0; d < IDE_DRIVE_COUNT; d++)
         devide_init_drive(d);
 }
+
+#endif /* CONFIG_IDE */
