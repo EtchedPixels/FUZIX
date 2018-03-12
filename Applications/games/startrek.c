@@ -130,13 +130,10 @@ static void end_of_game(void);
 static void klingons_move(void);
 static void klingons_shoot(void);
 static void repair_damage(void);
-static void find_empty_place(void);
-static void insert_in_quadrant(void);
+static void find_set_empty_place(uint8_t t);
 static const char *get_device_name(int n);
-static void string_compare(void);
 static void quadrant_name(void);
 static int function_d(int i);
-static void mid_str(char *a, char *b, int x, int y);
 static int cint(double d);
 static void compute_vector(void);
 static void sub1(void);
@@ -175,11 +172,9 @@ static int q1, q2;			/* Quadrant Position of Enterprise */
 static int r1, r2;			/* Temporary Location Corrdinates */
 static int s;				/* Current shield value */
 static uint8_t s3;			/* Stars in quadrant */
-static int s8;				/* Quadrant locating index */
 static uint16_t t0;			/* Starting Stardate */
 static uint16_t t9;			/* End of time */
 static unsigned int z[9][9];		/* Cumulative Record of Galaxy */
-static int z3;				/* string_compare return value */
 static int z1, z2;			/* Temporary Sector Coordinates */
 static int z4, z5;			/* Temporary quadrant coordinates */
 
@@ -191,12 +186,18 @@ static uint16_t t;			/* Current Stardate */
 static double w1;			/* Warp Factor */
 static double x, y, x1, x2;		/* Navigational coordinates */
 
-static char sA[4];			/* An Object in a Sector */
 static char *sC;			/* Condition */
-static char sQ[194];			/* Visual Display of Quadrant */
+
+static uint8_t quad[8][8];
+#define Q_SPACE		0
+#define Q_STAR		1
+#define Q_BASE		2
+#define Q_KLINGON	3
+#define Q_SHIP		4
 
 static char quadname[12];		/* Quadrant name */
 
+/* We probably need double digit for co-ordinate maths, single for time */
 #define TO_FIXED(x)	((x) * 10)
 #define FROM_FIXED(x)	((x) / 10)
 
@@ -447,29 +448,14 @@ static void new_quadrant(void)
 		k[i][3] = 0;
 	}
 
-	for (i = 0; i <= 192; i++)
-		sQ[i] = ' ';
+	memset(quad, Q_SPACE, 64);
 
-	sQ[193] = '\0';
-
-	/* Position Enterprise, then Klingons, Starbases, and stars */
-
-	strcpy(sA, "<*>");
-	/* @@@ z1 = cint(s1); */
-	z1 = (int) s1;
-	/* @@@ z2 = cint(s2); */
-	z2 = (int) s2;
-	insert_in_quadrant();
-
+	/* FIXME: do we need 0.5 shifts ? */
+	quad[(int)s1 - 1][(int)s2 - 1] = Q_SHIP;
+	
 	if (k3 > 0) {
 		for (i = 1; i <= k3; i++) {
-			find_empty_place();
-
-			strcpy(sA, "+K+");
-			z1 = r1;
-			z2 = r2;
-			insert_in_quadrant();
-
+			find_set_empty_place(Q_KLINGON);
 			k[i][1] = r1;
 			k[i][2] = r2;
 			k[i][3] = 100 + get_rand(200);
@@ -477,26 +463,17 @@ static void new_quadrant(void)
 	}
 
 	if (b3 > 0) {
-		find_empty_place();
-
-		strcpy(sA, ">!<");
-		z1 = r1;
-		z2 = r2;
-		insert_in_quadrant();
+		find_set_empty_place(Q_BASE);
 
 		b4 = r1;
 		b5 = r2;
 	}
 
-	for (i = 1; i <= s3; i++) {
-		find_empty_place();
-
-		strcpy(sA, " * ");
-		z1 = r1;
-		z2 = r2;
-		insert_in_quadrant();
-	}
+	for (i = 1; i <= s3; i++)
+		find_set_empty_place(Q_STAR);
 }
+
+static const char *inc_1 = "reports:\n  Incorrect course data, sir!\n";
 
 static void course_control(void)
 {
@@ -518,7 +495,7 @@ static void course_control(void)
 		c1 = 1.0;
 
 	if (c1 < 0 || c1 > 9.0) {
-		puts("Lt. Sulu roports:\n  Incorrect course data, sir!\n");
+		printf("Lt. Sulu%s", inc_1);
 		return;
 	}
 
@@ -567,12 +544,11 @@ static void course_control(void)
 
 	repair_damage();
 
-	strcpy(sA, "   ");
 	/* @@@ z1 = cint(s1); */
 	z1 = (int) s1;
 	/* @@@ z2 = cint(s2); */
 	z2 = (int) s2;
-	insert_in_quadrant();
+	quad[z1-1][z2-1] = Q_SPACE;
 
 	/* @@@ c2 = cint(c1); */
 	/* @@@ c3 = c2 + 1; */
@@ -601,9 +577,7 @@ static void course_control(void)
 			return;
 		}
 
-		string_compare();
-
-		if (z3 != 1) {	/* Sector not empty */
+		if (quad[z1-1][z2-1] != Q_SPACE) {	/* Sector not empty */
 			s1 = s1 - x1;
 			s2 = s2 - x2;
 			printf("Warp Engines shut down at sector "
@@ -619,12 +593,11 @@ static void complete_maneuver(void)
 {
 	int t8;
 
-	strcpy(sA, "<*>");
 	/* @@@ z1 = cint(s1); */
 	z1 = (int) s1;
 	/* @@@ z2 = cint(s2); */
 	z2 = (int) s2;
-	insert_in_quadrant();
+	quad[z1-1][z2-1] = Q_SHIP;
 
 	maneuver_energy();
 
@@ -757,6 +730,14 @@ static void maneuver_energy(void)
 
 static const char *srs_1 = "------------------------";
 
+static const char *tilestr[] = {
+	"   ",
+	" * ",
+	">!<",
+	"+K+",
+	"<*>"
+};
+
 static void short_range_scan(void)
 {
 	register int i, j;
@@ -777,11 +758,8 @@ static void short_range_scan(void)
 		/* @@@ for (j = s2 - 1; j <= s2 + 1; j++) */
 		for (j = (int) (s2 - 1); j <= (int) (s2 + 1); j++)
 			if (i >= 1 && i <= 8 && j >= 1 && j <= 8) {
-				strcpy(sA, ">!<");
-				z1 = i;
-				z2 = j;
-				string_compare();
-				if (z3 == 1) {
+				/* This is dumb - we store the base co-ords! */
+				if (quad[i-1][j-1] == Q_BASE) {
 					d0 = 1;
 					sC = "DOCKED";
 					e = e0;
@@ -798,8 +776,11 @@ static void short_range_scan(void)
 
 	puts(srs_1);
 	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 24; j++)
-			putchar(sQ[i * 24 + j]);
+		for (j = 0; j < 8; j++) {
+			if (quad[i][j] > 4)
+				printf("FUCK");
+			fputs(tilestr[quad[i][j]], stdout);
+		}
 
 		if (i == 0)
 			printf("    Stardate            %d\n", FROM_FIXED(t));
@@ -857,10 +838,8 @@ static void phaser_control(void)
 	int h1, h;
 	string sTemp;
 
-	if (d[4] < 0.0) {
-		puts("Phasers Inoperative\n");
+	if (inoperable(4))
 		return;
-	}
 
 	if (k3 <= 0) {
 		puts("Science Officer Spock reports:\n"
@@ -916,8 +895,7 @@ static void phaser_control(void)
 					k9--;
 					z1 = k[i][1];
 					z2 = k[i][2];
-					strcpy(sA, "   ");
-					insert_in_quadrant();
+					quad[z1-1][z2-1] = Q_SPACE;
 					k[i][3] = 0;
 					g[q1][q2] = g[q1][q2] - 100;
 					z[q1][q2] = g[q1][q2];
@@ -961,8 +939,7 @@ static void photon_torpedoes(void)
 
 	/* @@@ if (c1 < 0 || c1 > 9.0) */
 	if (c1 < 1.0 || c1 > 9.0) {
-		puts("Ensign Chekov roports:\n"
-		     "  Incorrect course data, sir!\n");
+		printf("Ensign Chekov%s", inc_1);
 		return;
 	}
 
@@ -989,13 +966,10 @@ static void photon_torpedoes(void)
 	while (x3 >= 1 && x3 <= 8 && y3 >= 1 && y3 <= 8) {
 		printf("    %d, %d\n", x3, y3);
 
-		strcpy(sA, "   ");
 		z1 = x3;
 		z2 = y3;
 
-		string_compare();
-
-		if (z3 == 0) {
+		if (quad[z1-1][z2-1] != Q_SPACE) {
 			torpedo_hit();
 			klingons_shoot();
 			return;
@@ -1020,20 +994,11 @@ static void torpedo_hit(void)
 	x3 = cint(x);		/* @@@ note: this is a true integer round in the MS BASIC version */
 	y3 = cint(y);		/* @@@ note: this is a true integer round in the MS BASIC version */
 
-	z3 = 0;
-
-	strcpy(sA, " * ");
-	string_compare();
-
-	if (z3 == 1) {
+	switch(quad[x3-1][y3-1]) {
+	case Q_STAR:
 		printf("Star at %d, %d absorbed torpedo energy.\n\n", x3, y3);
 		return;
-	}
-
-	strcpy(sA, "+K+");
-	string_compare();
-
-	if (z3 == 1) {
+	case Q_KLINGON:
 		puts("*** Klingon Destroyed ***\n");
 		k3--;
 		k9--;
@@ -1044,12 +1009,8 @@ static void torpedo_hit(void)
 		for (i = 0; i <= 3; i++)
 			if (x3 == k[i][1] && y3 == k[i][2])
 				k[i][3] = 0;
-	}
-
-	strcpy(sA, ">!<");
-	string_compare();
-
-	if (z3 == 1) {
+		break;
+	case Q_BASE:					
 		puts("*** Starbase Destroyed ***");
 		b3--;
 		b9--;
@@ -1067,12 +1028,11 @@ static void torpedo_hit(void)
 		     "court martial!\n");
 
 		d0 = 0;		/* Undock */
+		break;
 	}
-
 	z1 = x3;
 	z2 = y3;
-	strcpy(sA, "   ");
-	insert_in_quadrant();
+	quad[z1-1][z2-1] = Q_SPACE;
 
 	g[q1][q2] = (k3 * 100) + (b3 * 10) + s3;
 	z[q1][q2] = g[q1][q2];
@@ -1084,7 +1044,6 @@ static void damage_control(void)
 	double d3 = 0.0;
 	register int i;
 
-	/* FIXME: should be blocked if Klingons present */
 	if (d[6] < 0.0)
 		puts("Damage Control report not available.");
 
@@ -1231,19 +1190,24 @@ static const char *str_s = "s";
 static void status_report(void)
 {
 	const char *plural = str_s + 1;
+	uint16_t left = TO_FIXED(t0 + t9) - t;
 
 	puts("   Status Report:\n");
 
 	if (k9 > 1)
 		plural = str_s;
 
+	/* Assumes fixed point is single digit fixed */
 	printf("Klingon%s Left: %d\n"
-	       "Mission must be completed in %4.1f stardates\n",
+	       "Mission must be completed in %d.%d stardates\n",
 		plural, k9,
+		FROM_FIXED(left), left%10);
+#if 0		
 	       /* @@@ .1 * cint((t0 + t9 - t) * 10)); */
 	       /* Force long to avoid overflows: FIXME clean this all up
 	          into fixed point forms */
 	       .1 * (int) ((t0 + t9 - FROM_FIXED(t)) * 10L));
+#endif	       
 
 	if (b9 < 1) {
 		puts("Your stupidity has left you on your own in the galaxy\n"
@@ -1497,17 +1461,14 @@ static void klingons_move(void)
 
 	for (i = 1; i <= 3; i++) {
 		if (k[i][3] > 0) {
-			strcpy(sA, "   ");
 			z1 = k[i][1];
 			z2 = k[i][2];
-			insert_in_quadrant();
+			quad[z1-1][z2-1] = Q_SPACE;
 
-			find_empty_place();
+			find_set_empty_place(Q_KLINGON);
 
 			k[i][1] = z1;
 			k[i][2] = z2;
-			strcpy(sA, "+K+");
-			insert_in_quadrant();
 		}
 	}
 
@@ -1608,35 +1569,15 @@ static void repair_damage(void)
 
 /* Misc Functions and Subroutines */
 
-static void find_empty_place(void)
+static void find_set_empty_place(uint8_t t)
 {
-	/* @@@ while (z3 == 0) this is a nasty one. */
 	do {
 		r1 = rand8();
 		r2 = rand8();
-
-		strcpy(sA, "   ");
-
-		z1 = r1;
-		z2 = r2;
-
-		string_compare();
-	} while (z3 == 0);
-
-	z3 = 0;
-}
-
-static void insert_in_quadrant(void)
-{
-	int i, j = 0;
-
-	/* @@@ s8 = ((z2 - 1) * 3) + ((z1 - 1) * 24) + 1; */
-	s8 = ((int) (z2 - 0.5) * 3) + ((int) (z1 - 0.5) * 24) + 1;
-
-	for (i = s8 - 1; i <= s8 + 1; i++)
-		sQ[i] = sA[j++];
-
-	return;
+	} while (quad[r1-1][r2-1] != Q_SPACE );
+	quad[r1-1][r2-1] = t;
+	z1 = r1;
+	z2 = r2;
 }
 
 static const char *device_name[] = {
@@ -1650,28 +1591,6 @@ static const char *get_device_name(int n)
 	if (n < 0 || n > 8)
 		n = 0;
 	return device_name[n];
-}
-
-static void string_compare(void)
-{
-	int i;
-	char sB[4];
-
-	z1 = (int) (z1 + 0.5);
-	z2 = (int) (z2 + 0.5);
-
-	s8 = ((z2 - 1) * 3) + ((z1 - 1) * 24) + 1;
-
-	mid_str(sB, sQ, s8, 3);
-
-	i = strncmp(sB, sA, 3);
-
-	if (i == 0)
-		z3 = 1;
-	else
-		z3 = 0;
-
-	return;
 }
 
 static const char *quad_name[] = { "",
@@ -1712,18 +1631,6 @@ static int function_d(int i)
 	return j;
 }
 
-
-static void mid_str(char *a, char *b, int x, int y)
-{
-	--x;
-	y += x;
-
-	/* @@@ while (x < y && x <= strlen(b)) */
-	while (x < y && x <= (int) strlen(b))
-		*a++ = *(b + x++);
-
-	*a = '\0';
-}
 
 /* Round off floating point numbers instead of truncating */
 
