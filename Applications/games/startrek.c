@@ -146,39 +146,39 @@ static double rnd(void);
 
 /* Global Variables */
 
-static int b3;				/* Starbases in Quadrant */
+static int8_t b3;			/* Starbases in Quadrant */
 static int b4, b5;			/* Starbase Location in sector */
-static int b9;				/* Total Starbases */
+static int8_t b9;			/* Total Starbases */
 
 			  /* @@@ int c[2][10] = *//* Used for location and movement */
-static int c[3][10] =			/* modified to match MS BASIC array indicies */
+static int8_t c[3][10] =		/* modified to match MS BASIC array indicies */
 {
 	{0},
 	{0, 0, -1, -1, -1, 0, 1, 1, 1, 0},
 	{1, 1, 1, 0, -1, -1, -1, 0, 1, 1}
 };
 
-static int d0;				/* Docked flag */
+static uint8_t d0;			/* Docked flag */
 static int d1;				/* Damage Repair Flag */
 static int e;				/* Current Energy */
 static int e0 = 3000;			/* Starting Energy */
-static int g[9][9];			/* Galaxy */
+static unsigned int g[9][9];		/* Galaxy */
 static int g5;				/* Quadrant name flag */
 static int k[4][4];			/* Klingon Data */
-static int k3;				/* Klingons in Quadrant */
-static int k7;				/* Klingons at start */
-static int k9;				/* Total Klingons left */
-static int n;				/* Number of secors to travel */
-static int p;				/* Photon Torpedoes left */
-static int p0 = 10;			/* Photon Torpedo capacity */
+static uint8_t k3;			/* Klingons in Quadrant */
+static uint8_t k7;			/* Klingons at start */
+static uint8_t k9;			/* Total Klingons left */
+static int n;				/* Number of sectors to travel */
+static uint8_t p;			/* Photon Torpedoes left */
+static uint8_t p0 = 10;			/* Photon Torpedo capacity */
 static int q1, q2;			/* Quadrant Position of Enterprise */
 static int r1, r2;			/* Temporary Location Corrdinates */
 static int s;				/* Current shield value */
-static int s3;				/* Stars in quadrant */
+static uint8_t s3;			/* Stars in quadrant */
 static int s8;				/* Quadrant locating index */
 static uint16_t t0;			/* Starting Stardate */
 static uint16_t t9;			/* End of time */
-static int z[9][9];			/* Cumulative Record of Galaxy */
+static unsigned int z[9][9];		/* Cumulative Record of Galaxy */
 static int z3;				/* string_compare return value */
 static int z1, z2;			/* Temporary Sector Coordinates */
 static int z4, z5;			/* Temporary quadrant coordinates */
@@ -208,7 +208,6 @@ static int get_rand(int iSpread)
 	return ((rand() % iSpread) + 1);
 }
 
-
 /*
  *	Get a random co-ordinate
  */
@@ -230,8 +229,16 @@ int main(int argc, char *argv[])
 	return (0);
 }
 
-static const char *intro_1 = " *************************************";
-static const char *intro_2 = " *                                   *";
+static uint8_t inoperable(uint8_t u)
+{
+	if (d[u] < 0.0) {
+		printf("%s %s inoperable.\n",
+			get_device_name(u),
+			u == 5 ? "are":"is");
+		return 1;
+	}
+	return 0;
+}
 
 static void intro(void)
 {
@@ -239,30 +246,14 @@ static void intro(void)
 
 	/* FIXME: consider moving these into files and showfiling them */
 
-	puts("\n");
-	puts(intro_1);
-	puts(intro_2);
-	puts(intro_2);
-	puts(" *      * * Super Star Trek * *      *");
-	puts(intro_2);
-	puts(intro_2);
-	puts(intro_1);
-	puts("\n\n\n");
-
-	fputs("\nDo you need instructions (y/n): ", stdout);
+	showfile("startrek.intro");
 
 	fgets(sTemp, sizeof(sTemp), stdin);
 
 	if (sTemp[0] == 'y' || sTemp[0] == 'Y')
 		showfile("startrek.doc");
 
-	puts("\n\n\n\n\n\n");
-	puts("                         ------*------");
-	puts("         -------------   `---  ------'");
-	puts("         `-------- --'      / /");
-	puts("                  \\\\-------  --");
-	puts("                  '-----------'");
-	puts("\n       The USS Enterprise --- NCC - 1701\n\n");
+	showfile("startrek.logo");
 
 	/* Seed the randomizer with the timer */
 	srand((unsigned) time(NULL));
@@ -285,9 +276,7 @@ static void new_game(void)
 	while (1) {
 		if (s + e <= 10 && (e < 10 || d[7] < 0)) {
 			/* Could be a showfile FIXME */
-			puts("\n** Fatal Error **   You've just stranded your ship in space.\n");
-			puts("You have insufficient maneuvering energy, and Shield Control is presently");
-			puts("incapable of cross circuiting to engine room!!\n");
+			showfile("startrek.fatal");
 			end_of_time();
 		}
 
@@ -315,7 +304,7 @@ static void new_game(void)
 		else if (!strncmp(sTemp, "xxx", 3))
 			resign_commision();
 		else {
-			/* FIXME: showfile */
+			/* FIXME: showfile ?*/
 			puts("Enter one of the following:\n");
 			puts("  nav - To Set Course");
 			puts("  srs - Short Range Sensors");
@@ -842,10 +831,8 @@ static void long_range_scan(void)
 {
 	register int i, j;
 
-	if (d[3] < 0.0) {
-		puts("Long Range Sensors are inoperable.");
+	if (inoperable(3))
 		return;
-	}
 
 	printf("Long Range Scan for Quadrant %d, %d\n\n", q1, q2);
 
@@ -958,10 +945,8 @@ static void photon_torpedoes(void)
 		return;
 	}
 
-	if (d[5] < 0.0) {
-		puts("Photon Tubes not operational");
+	if (inoperable(5))
 		return;
-	}
 
 	fputs("Course (0-9): ", stdout);
 
@@ -1073,7 +1058,7 @@ static void torpedo_hit(void)
 			/* showfile ? FIXME */
 			puts("That does it, Captain!!"
 			     "You are hereby relieved of command\n"
-			     "and sentanced to 99 stardates of hard"
+			     "and sentenced to 99 stardates of hard"
 			     "labor on Cygnus 12!!\n");
 			resign_commision();
 		}
@@ -1148,10 +1133,8 @@ static void shield_control(void)
 	int i;
 	string sTemp;
 
-	if (d[7] < 0.0) {
-		puts("Shield Control inoperable\n");
+	if (inoperable(7))
 		return;
-	}
 
 	printf("Energy available = %d\n\n"
 	       "Input number of units to shields: ", e + s);
@@ -1185,10 +1168,8 @@ static void library_computer(void)
 {
 	string sTemp;
 
-	if (d[8] < 0.0) {
-		puts("Library Computer inoperable\n");
+	if (inoperable(8))
 		return;
-	}
 
 	fputs("Computer active and awating command: ", stdout);
 
@@ -1659,9 +1640,9 @@ static void insert_in_quadrant(void)
 }
 
 static const char *device_name[] = {
-	"", "Warp Engines", "Short Range Sensors", "Long Range Sensors",
-	"Phaser Control", "Photon Tubes", "Damage Control", "Shield Control",
-	"Library-Computer"
+	"", "Warp engines", "Short range sensors", "Long range sensors",
+	"Phaser control", "Photon tubes", "Damage control", "Shield control",
+	"Library computer"
 };
 
 static const char *get_device_name(int n)
