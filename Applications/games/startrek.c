@@ -63,6 +63,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
@@ -175,8 +176,8 @@ static int r1, r2;			/* Temporary Location Corrdinates */
 static int s;				/* Current shield value */
 static int s3;				/* Stars in quadrant */
 static int s8;				/* Quadrant locating index */
-static int t0;				/* Starting Stardate */
-static int t9;				/* End of time */
+static uint16_t t0;			/* Starting Stardate */
+static uint16_t t9;			/* End of time */
 static int z[9][9];			/* Cumulative Record of Galaxy */
 static int z3;				/* string_compare return value */
 static int z1, z2;			/* Temporary Sector Coordinates */
@@ -186,7 +187,7 @@ static double a, c1;			/* Used by Library Computer */
 static double d[9];			/* Damage Array */
 static double d4;			/* Used for computing damage repair time */
 static double s1, s2;			/* Current Sector Position of Enterprise */
-static double t;			/* Current Stardate */
+static uint16_t t;			/* Current Stardate */
 static double w1;			/* Warp Factor */
 static double x, y, x1, x2;		/* Navigational coordinates */
 
@@ -196,6 +197,8 @@ static char sQ[194];			/* Visual Display of Quadrant */
 
 static char quadname[12];		/* Quadrant name */
 
+#define TO_FIXED(x)	((x) * 10)
+#define FROM_FIXED(x)	((x) / 10)
 
 /*
  *	Returns an integer from 1 to iSpread
@@ -264,7 +267,9 @@ static void intro(void)
 	/* Seed the randomizer with the timer */
 	srand((unsigned) time(NULL));
 
-	t = (get_rand(20) + 20) * 100;
+	/* Max of 4000, which works nicely with our 0.1 fixed point giving
+	   us a 16bit unsigned range of time */
+	t = TO_FIXED((get_rand(20) + 20) * 100);
 }
 
 static void new_game(void)
@@ -301,7 +306,7 @@ static void new_game(void)
 			phaser_control();
 		else if (!strncmp(sTemp, "tor", 3))
 			photon_torpedoes();
-		else if (!strncmp(sTemp, "she", 3))
+		else if (!strncmp(sTemp, "shi", 3))
 			shield_control();
 		else if (!strncmp(sTemp, "dam", 3))
 			damage_control();
@@ -317,7 +322,7 @@ static void new_game(void)
 			puts("  lrs - Long Range Sensors");
 			puts("  pha - Phasers");
 			puts("  tor - Photon Torpedoes");
-			puts("  she - Shield Control");
+			puts("  shi - Shield Control");
 			puts("  dam - Damage Control");
 			puts("  com - Library Computer");
 			puts("  xxx - Resign Command\n");
@@ -334,7 +339,7 @@ static void initialize(void)
 	/* InItialize time */
 
 	/* @@@ t0 = t; */
-	t0 = (int) t;
+	t0 = FROM_FIXED(t);
 	t9 = 25 + get_rand(10);
 
 	/* Initialize Enterprise */
@@ -403,7 +408,7 @@ static void initialize(void)
 	printf("Your orders are as follows:\n"
 	       " Destroy the %d Klingon warships which have invaded\n"
 	       " the galaxy before they can attack Federation Headquarters\n"
-	       " on stardate %d. This gives you %d days. There %s\n"
+	       " on stardate %u. This gives you %d days. There %s\n"
 	       " %d starbase%s in the galaxy for resupplying your ship.\n\n"
 	       "Hit any key to accept command. ",
 	       k9, t0 + t9, t9, sX0, b9, sX);
@@ -623,7 +628,7 @@ static void course_control(void)
 
 static void complete_maneuver(void)
 {
-	double t8;
+	int t8;
 
 	strcpy(sA, "<*>");
 	/* @@@ z1 = cint(s1); */
@@ -634,14 +639,14 @@ static void complete_maneuver(void)
 
 	maneuver_energy();
 
-	t8 = 1.0;
+	t8 = TO_FIXED(1);
 
 	if (w1 < 1.0)
-		t8 = w1;
+		t8 = TO_FIXED(w1);
 
 	t = t + t8;
 
-	if (t > t0 + t9)
+	if (FROM_FIXED(t) > t0 + t9)
 		end_of_time();
 
 	short_range_scan();
@@ -730,7 +735,7 @@ static void exceed_quadrant_limits(void)
 	   end_of_time();
 	 */
 
-	if (t > t0 + t9)
+	if (FROM_FIXED(t) > t0 + t9)
 		end_of_time();
 
 	/* @@@ what does this do?? It's in the original.
@@ -808,7 +813,7 @@ static void short_range_scan(void)
 			putchar(sQ[i * 24 + j]);
 
 		if (i == 0)
-			printf("    Stardate            %d\n", (int) t);
+			printf("    Stardate            %d\n", FROM_FIXED(t));
 		if (i == 1)
 			printf("    Condition           %s\n", sC);
 		if (i == 2)
@@ -1064,7 +1069,7 @@ static void torpedo_hit(void)
 		b3--;
 		b9--;
 
-		if (b9 <= 0 && k9 <= t - t0 - t9) {
+		if (b9 <= 0 && k9 <= FROM_FIXED(t) - t0 - t9) {
 			/* showfile ? FIXME */
 			puts("That does it, Captain!!"
 			     "You are hereby relieved of command\n"
@@ -1095,12 +1100,11 @@ static void damage_control(void)
 	register int i;
 
 	/* FIXME: should be blocked if Klingons present */
-	if (d[6] < 0.0) {
+	if (d[6] < 0.0)
 		puts("Damage Control report not available.");
 
-		if (d0 == 0)
-			return;
-
+	/* Offer repair if docked */
+	if (d0) {
 		d3 = 0.0;
 		for (i = 1; i <= 8; i++)
 			if (d[i] < 0.0)
@@ -1124,9 +1128,12 @@ static void damage_control(void)
 				if (d[i] < 0.0)
 					d[i] = 0.0;
 
-			t = t + d3 + 0.1;
+			t = t + TO_FIXED(d3 + 0.1);
 		}
 	}
+
+	if (d[6] < 0.0)
+		return;
 
 	puts("Device            State of Repair");
 
@@ -1253,7 +1260,9 @@ static void status_report(void)
 	       "Mission must be completed in %4.1f stardates\n",
 		plural, k9,
 	       /* @@@ .1 * cint((t0 + t9 - t) * 10)); */
-	       .1 * (int) ((t0 + t9 - t) * 10));
+	       /* Force long to avoid overflows: FIXME clean this all up
+	          into fixed point forms */
+	       .1 * (int) ((t0 + t9 - FROM_FIXED(t)) * 10L));
 
 	if (b9 < 1) {
 		puts("Your stupidity has left you on your own in the galaxy\n"
@@ -1456,7 +1465,7 @@ static void ship_destroyed(void)
 
 static void end_of_time(void)
 {
-	printf("It is stardate %d.\n\n", (int) t);
+	printf("It is stardate %d.\n\n",  FROM_FIXED(t));
 
 	resign_commision();
 }
@@ -1474,8 +1483,8 @@ static void won_game(void)
 	puts("Congratulations, Captain!  The last Klingon Battle Cruiser\n"
 	     "menacing the Federation has been destoyed.\n");
 
-	if (t - t0 > 0)
-		printf("Your efficiency rating is %4.2f\n", 1000 * pow(k7 / (t - t0), 2));
+	if (FROM_FIXED(t) - t0 > 0)
+		printf("Your efficiency rating is %4.2f\n", 1000 * pow(k7 / (FROM_FIXED(t) - t0), 2));
 
 	end_of_game();
 }
@@ -1577,7 +1586,7 @@ static void repair_damage(void)
 	d6 = w1;
 
 	if (w1 >= 1.0)
-		d6 = w1 / 10;
+		d6 = 1.0;
 
 	for (i = 1; i <= 8; i++) {
 		if (d[i] < 0.0) {
@@ -1585,12 +1594,13 @@ static void repair_damage(void)
 			if (d[i] > -0.1 && d[i] < 0)
 				d[i] = -0.1;
 			else if (d[i] >= 0.0) {
-				if (d1 != 1)
+				if (d1 != 1) {
 					d1 = 1;
-
-				puts(dcr_1);
+					puts(dcr_1);
+				}
 				printf("    %s repair completed\n\n",
 					get_device_name(i));
+				d[i] = 0.0;
 			}
 		}
 	}
@@ -1607,6 +1617,10 @@ static void repair_damage(void)
 			puts(dcr_1);
 			printf("    %s state of repair improved\n\n",
 					get_device_name(r1));
+#if 0 // Basic allows it to go +ve ??
+			if (d[r1] > 0.0)
+				d[r1] = 0.0;
+#endif
 		}
 	}
 }
