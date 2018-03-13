@@ -256,6 +256,34 @@ static double input_dec(void)
 	return atof(x);
 }
 
+/* Input a value between 0.00 and 9.99 */
+static int16_t input_f00(void)
+{
+	int16_t v;
+	char buf[8];
+	char *x;
+	input(buf, 8);
+	x = buf;
+	if (!isdigit(*x))
+		return -1;
+	v = 100 * (*x++ - '0');
+	if (*x == 0)
+		return v;
+	if (*x++ != '.')
+		return -1;
+	if (!*x)
+		return v;
+	if (!isdigit(*x))
+		return -1;
+	v += 10 * (*x++ - '0');
+	if (!*x)
+		return v;
+	if (!isdigit(*x))
+		return -1;
+	v += *x++ - '0';
+	return v;
+}
+
 /* Integer: unsigned, or returns -1 for blank/error */
 static int input_int(void)
 {
