@@ -67,6 +67,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #ifndef FALSE
 #define FALSE        0
@@ -201,6 +202,9 @@ static char quadname[12];		/* Quadrant name */
 #define TO_FIXED(x)	((x) * 10)
 #define FROM_FIXED(x)	((x) / 10)
 
+#define TO_FIXED00(x)	((x) * 100)
+#define FROM_FIXED00(x)	((x) / 100)
+
 /*
  *	Returns an integer from 1 to iSpread
  */
@@ -212,9 +216,54 @@ static int get_rand(int iSpread)
 /*
  *	Get a random co-ordinate
  */
-static int rand8(void)
+static uint8_t rand8(void)
 {
 	return (get_rand(8));
+}
+
+/* This is basically a fancier fgets that always eats the line even if it
+   only copies part of it */
+static void input(char *b, uint8_t l)
+{
+	int c;
+
+	fflush(stdout);
+	while((c = getchar()) != '\n') {
+		if (c == EOF)
+			exit(1);
+		if (l > 1) {
+			*b++ = c;
+			l--;
+		}
+	}
+	*b = '0';
+}
+
+static uint8_t yesno(void)
+{
+	char b[2];
+	input(b,2);
+	if (tolower(*b) == 'y')
+		return 1;
+	return 0;
+}
+
+/* We'll turn this fixed point in time */
+static double input_dec(void)
+{
+	char x[8];
+	input(x, 8);
+	return atof(x);
+}
+
+/* Integer: unsigned, or returns -1 for blank/error */
+static int input_int(void)
+{
+	char x[8];
+	input(x, 8);
+	if (!isdigit(*x))
+		return -1;
+	return atoi(x);
 }
 
 /* Main Program */
@@ -243,15 +292,11 @@ static uint8_t inoperable(uint8_t u)
 
 static void intro(void)
 {
-	string sTemp;
-
 	/* FIXME: consider moving these into files and showfiling them */
 
 	showfile("startrek.intro");
 
-	fgets(sTemp, sizeof(sTemp), stdin);
-
-	if (sTemp[0] == 'y' || sTemp[0] == 'Y')
+	if (yesno())
 		showfile("startrek.doc");
 
 	showfile("startrek.logo");
@@ -266,7 +311,7 @@ static void intro(void)
 
 static void new_game(void)
 {
-	string sTemp;
+	char cmd[4];
 
 	initialize();
 
@@ -283,26 +328,26 @@ static void new_game(void)
 
 		fputs("Command? ", stdout);
 
-		gets(sTemp);
+		input(cmd, 4);
 		putchar('\n');
 
-		if (!strncmp(sTemp, "nav", 3))
+		if (!strncmp(cmd, "nav", 3))
 			course_control();
-		else if (!strncmp(sTemp, "srs", 3))
+		else if (!strncmp(cmd, "srs", 3))
 			short_range_scan();
-		else if (!strncmp(sTemp, "lrs", 3))
+		else if (!strncmp(cmd, "lrs", 3))
 			long_range_scan();
-		else if (!strncmp(sTemp, "pha", 3))
+		else if (!strncmp(cmd, "pha", 3))
 			phaser_control();
-		else if (!strncmp(sTemp, "tor", 3))
+		else if (!strncmp(cmd, "tor", 3))
 			photon_torpedoes();
-		else if (!strncmp(sTemp, "shi", 3))
+		else if (!strncmp(cmd, "shi", 3))
 			shield_control();
-		else if (!strncmp(sTemp, "dam", 3))
+		else if (!strncmp(cmd, "dam", 3))
 			damage_control();
-		else if (!strncmp(sTemp, "com", 3))
+		else if (!strncmp(cmd, "com", 3))
 			library_computer();
-		else if (!strncmp(sTemp, "xxx", 3))
+		else if (!strncmp(cmd, "xxx", 3))
 			resign_commision();
 		else {
 			/* FIXME: showfile ?*/
@@ -479,17 +524,12 @@ static void course_control(void)
 {
 	register int i;
 	/* @@@ int c2, c3, q4, q5; */
-	string sTemp;
 	double c1;
 	char sX[4] = "8";
 
 	fputs("Course (0-9): ", stdout);
 
-	gets(sTemp);
-
-	printf("\n");
-
-	c1 = atof(sTemp);
+	c1 = input_dec();
 
 	if (c1 == 9.0)
 		c1 = 1.0;
@@ -504,11 +544,7 @@ static void course_control(void)
 
 	printf("Warp Factor (0-%s): ", sX);
 
-	gets(sTemp);
-
-	putchar('\n');
-
-	w1 = atof(sTemp);
+	w1 = input_dec();
 
 	if (d[1] < 0.0 && w1 > 0.21) {
 		printf("Warp Engines are damaged. "
@@ -836,7 +872,6 @@ static void phaser_control(void)
 	register int i;
 	int iEnergy;
 	int h1, h;
-	string sTemp;
 
 	if (inoperable(4))
 		return;
@@ -855,11 +890,7 @@ static void phaser_control(void)
 	       "Energy available = %d units\n\n"
 	       "Number of units to fire: ", e);
 
-	gets(sTemp);
-
-	putchar('\n');
-
-	iEnergy = atoi(sTemp);
+	iEnergy = input_int();
 
 	if (iEnergy <= 0)
 		return;
@@ -915,7 +946,6 @@ static void photon_torpedoes(void)
 {
 	/* @@@ int c2, c3, x3, y3, x5; */
 	int x3, y3;
-	string sTemp;
 	double c1;
 
 	if (p <= 0) {
@@ -928,11 +958,7 @@ static void photon_torpedoes(void)
 
 	fputs("Course (0-9): ", stdout);
 
-	gets(sTemp);
-
-	printf("\n");
-
-	c1 = atof(sTemp);
+	c1 = input_dec();
 
 	if (c1 == 9.0)
 		c1 = 1.0;
@@ -1040,7 +1066,6 @@ static void torpedo_hit(void)
 
 static void damage_control(void)
 {
-	int a1;
 	double d3 = 0.0;
 	register int i;
 
@@ -1063,11 +1088,9 @@ static void damage_control(void)
 
 		printf("\nTechnicians standing by to effect repairs to your"
 		       "ship;\nEstimated time to repair: %4.2f stardates.\n"
-		       "Will you authorize the repair order (Y/N)? ", d3);
+		       "Will you authorize the repair order (y/N)? ", d3);
 
-		a1 = getchar();
-
-		if (a1 == 'Y' || a1 == 'y') {
+		if (yesno()) {
 			for (i = 1; i <= 8; i++)
 				if (d[i] < 0.0)
 					d[i] = 0.0;
@@ -1090,7 +1113,6 @@ static void damage_control(void)
 static void shield_control(void)
 {
 	int i;
-	string sTemp;
 
 	if (inoperable(7))
 		return;
@@ -1098,11 +1120,7 @@ static void shield_control(void)
 	printf("Energy available = %d\n\n"
 	       "Input number of units to shields: ", e + s);
 
-	gets(sTemp);
-
-	putchar('\n');
-
-	i = atoi(sTemp);
+	i = input_int();
 
 	if (i < 0 || s == i) {
 unchanged:
@@ -1125,37 +1143,43 @@ unchanged:
 
 static void library_computer(void)
 {
-	string sTemp;
 
 	if (inoperable(8))
 		return;
 
 	fputs("Computer active and awating command: ", stdout);
 
-	gets(sTemp);
-	putchar('\n');
-
-	if (!strncmp(sTemp, "0", 1))
-		galactic_record();
-	else if (!strncmp(sTemp, "1", 1))
-		status_report();
-	else if (!strncmp(sTemp, "2", 1))
-		torpedo_data();
-	else if (!strncmp(sTemp, "3", 1))
-		nav_data();
-	else if (!strncmp(sTemp, "4", 1))
-		dirdist_calc();
-	else if (!strncmp(sTemp, "5", 1))
-		galaxy_map();
-	else {
-		/* FIXME: showfile */
-		puts("Functions available from Library-Computer:\n\n"
-		     "   0 = Cumulative Galactic Record\n"
-		     "   1 = Status Report\n"
-		     "   2 = Photon Torpedo Data\n"
-		     "   3 = Starbase Nav Data\n"
-		     "   4 = Direction/Distance Calculator\n"
-		     "   5 = Galaxy 'Region Name' Map\n");
+	switch(input_int()) {
+		/* -1 means 'typed nothing or junk */
+		case -1:
+			break;
+		case 0:
+			galactic_record();
+			break;
+		case 1:
+			status_report();
+			break;
+		case 2:
+			torpedo_data();
+			break;
+		case 3:
+			nav_data();
+			break;
+		case 4:
+			dirdist_calc();
+			break;
+		case 5:
+			galaxy_map();
+			break;
+		default:
+			/* FIXME: showfile */
+			puts("Functions available from Library-Computer:\n\n"
+			     "   0 = Cumulative Galactic Record\n"
+			     "   1 = Status Report\n"
+			     "   2 = Photon Torpedo Data\n"
+			     "   3 = Starbase Nav Data\n"
+			     "   4 = Direction/Distance Calculator\n"
+			     "   5 = Galaxy 'Region Name' Map\n");
 	}
 }
 
@@ -1267,8 +1291,6 @@ static void nav_data(void)
 
 static void dirdist_calc(void)
 {
-	string sTemp;
-
 	printf("Direction/Distance Calculator\n"
 	       "You are at quadrant %d,%d sector %d,%d\n\n"
 	       "Please enter initial X coordinate: ",
@@ -1276,21 +1298,24 @@ static void dirdist_calc(void)
 	       /* @@@ cint(s1), cint(s2)); */
 	       (int) s1, (int) s2);
 
-	gets(sTemp);
-	c1 = atoi(sTemp);
+	c1 = input_int();
+	if (c1 < 0)
+		return;
 
 	fputs("Please enter initial Y coordinate: ", stdout);
-	gets(sTemp);
-	a = atoi(sTemp);
+	a = input_int();
+	if (a < 0)
+		return;
 
 	fputs("Please enter final X coordinate: ", stdout);
-	gets(sTemp);
-	w1 = atoi(sTemp);
+	w1 = input_int();
+	if (w1 < 0)
+		return;
 
 	fputs("Please enter final Y coordinate: ", stdout);
-	gets(sTemp);
-	x = atoi(sTemp);
-
+	x = input_int();
+	if (x < 0)
+		return;
 	compute_vector();
 }
 
@@ -1436,8 +1461,7 @@ static void won_game(void)
 
 static void end_of_game(void)
 {
-	string sTemp;
-
+	char x[4];
 	if (b9 > 0) {
 		/* FIXME: showfile ? */
 		fputs("The Federation is in need of a new starship commander"
@@ -1445,13 +1469,10 @@ static void end_of_game(void)
 		     "If there is a volunteer, let him step forward and"
 		     " enter 'aye': ", stdout);
 
-		gets(sTemp);
-		putchar('\n');
-
-		if (!strncmp(sTemp, "aye", 3))
+		input(x,4);
+		if (!strncmp(x, "aye", 3))
 			new_game();
 	}
-
 	exit(0);
 }
 
