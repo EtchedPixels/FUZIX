@@ -180,8 +180,8 @@ static int z1, z2;			/* Temporary Sector Coordinates */
 static int z4, z5;			/* Temporary quadrant coordinates */
 
 static double a, c1;			/* Used by Library Computer */
-static double d[9];			/* Damage Array */
-static double d4;			/* Used for computing damage repair time */
+static int16_t d[9];			/* Damage Array */
+static int16_t d4;			/* Used for computing damage repair time */
 static double s1, s2;			/* Current Sector Position of Enterprise */
 static uint16_t t;			/* Current Stardate */
 static double w1;			/* Warp Factor */
@@ -236,7 +236,7 @@ static void input(char *b, uint8_t l)
 			l--;
 		}
 	}
-	*b = '0';
+	*b = 0;
 }
 
 static uint8_t yesno(void)
@@ -294,6 +294,18 @@ static int input_int(void)
 	return atoi(x);
 }
 
+static const char *print100(int16_t v)
+{
+	static char buf[16];
+	char *p = buf;
+	if (v < 0) {
+		v = -v;
+		*p++ = '-';
+	}
+	p += sprintf(p, "%d.%02d", v / 100, v%100);
+	return buf;
+}
+
 /* Main Program */
 
 int main(int argc, char *argv[])
@@ -309,7 +321,7 @@ int main(int argc, char *argv[])
 
 static uint8_t inoperable(uint8_t u)
 {
-	if (d[u] < 0.0) {
+	if (d[u] < 0) {
 		printf("%s %s inoperable.\n",
 			get_device_name(u),
 			u == 5 ? "are":"is");
@@ -418,11 +430,11 @@ static void initialize(void)
 	s2 = (double) rand8();
 
 	for (i = 1; i <= 8; i++)
-		d[i] = 0.0;
+		d[i] = 0;
 
 	/* Setup What Exists in Galaxy */
 
-	for (i = 1; i <= 8; i++)
+	for (i = 1; i <= 8; i++) {
 		for (j = 1; j <= 8; j++) {
 			k3 = 0;
 			z[i][j] = 0;
@@ -442,19 +454,22 @@ static void initialize(void)
 
 			b9 = b9 + b3;
 
-			g[i][j] = k3 * 100 + b3 * 10 + rand8();
+			g[i][j] = (k3 << 8) + (b3 << 4) + rand8();
 		}
+	}
 
+	/* Give more time for more Klingons */
 	if (k9 > t9)
 		t9 = k9 + 1;
 
+	/* Add a base if we don't have one */
 	if (b9 == 0) {
-		if (g[q1][q2] < 200) {
-			g[q1][q2] = g[q1][q2] + 100;
+		if (g[q1][q2] < 0x200) {
+			g[q1][q2] += (1 << 8);
 			k9++;
 		}
 
-		g[q1][q2] = g[q1][q2] + 10;
+		g[q1][q2] += (1 << 4);
 		b9++;
 
 		q1 = rand8();
@@ -481,6 +496,7 @@ static void initialize(void)
 static void new_quadrant(void)
 {
 	int i;
+	uint16_t tmp;
 
 	z4 = q1;
 	z5 = q2;
@@ -488,13 +504,20 @@ static void new_quadrant(void)
 	b3 = 0;
 	s3 = 0;
 	g5 = 0;
-	d4 = (double) get_rand(100) / 100 / 50;
+
+	/* Random factor for damage repair. We compute it on each new
+	   quadrant to stop the user just retrying until they get a number
+	   they like. The conversion here was wrong and now copies the BASIC
+	   code generate 0.00 to 0.49 */
+	d4 = get_rand(50) - 1;
+
+	/* Copy to computer */
 	z[q1][q2] = g[q1][q2];
 
 	if (q1 >= 1 && q1 <= 8 && q2 >= 1 && q2 <= 8) {
 		quadrant_name();
 
-		if (t0 != t)
+		if (TO_FIXED(t0) != t)
 			printf("Now entering %s quadrant...\n\n", quadname);
 		else {
 			puts("\nYour mission begins with your starship located");
@@ -503,10 +526,10 @@ static void new_quadrant(void)
 	}
 
 	/* @@@ k3 = g[q1][q2] * .01; */
-	k3 = (int) (g[q1][q2] * .01);
-	/* @@@ b3 = g[q1][q2] * .1 - 10 * k3; */
-	b3 = (int) (g[q1][q2] * .1 - 10 * k3);
-	s3 = g[q1][q2] - 100 * k3 - 10 * b3;
+	tmp = g[q1][q2];
+	k3 = tmp >> 8;
+	b3 = (tmp >> 4) & 0x0F;
+	s3 = tmp & 0x0F;
 
 	if (k3 > 0) {
 		printf("Combat Area  Condition Red\n");
@@ -567,14 +590,14 @@ static void course_control(void)
 		return;
 	}
 
-	if (d[1] < 0.0)
+	if (d[1] < 0)
 		strcpy(sX, "0.2");
 
 	printf("Warp Factor (0-%s): ", sX);
 
 	w1 = input_dec();
 
-	if (d[1] < 0.0 && w1 > 0.21) {
+	if (d[1] < 0 && w1 > 0.21) {
 		printf("Warp Engines are damaged. "
 		       "Maximum speed = Warp 0.2.\n\n");
 		return;
@@ -596,7 +619,7 @@ static void course_control(void)
 		       "  Insufficient energy available for maneuvering"
 		       " at warp %4.1f!\n\n", w1);
 
-		if (s >= n && d[7] >= 0.0) {
+		if (s >= n && d[7] >= 0) {
 			printf("Deflector Control Room acknowledges:\n"
 			       "  %d units of energy presently deployed to shields.\n", s);
 		}
@@ -833,18 +856,15 @@ static void short_range_scan(void)
 				}
 			}
 
-	if (d[2] < 0.0) {
+	if (d[2] < 0) {
 		puts("\n*** Short Range Sensors are out ***");
 		return;
 	}
 
 	puts(srs_1);
 	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 8; j++) {
-			if (quad[i][j] > 4)
-				printf("FUCK");
+		for (j = 0; j < 8; j++)
 			fputs(tilestr[quad[i][j]], stdout);
-		}
 
 		if (i == 0)
 			printf("    Stardate            %d\n", FROM_FIXED(t));
@@ -870,11 +890,25 @@ static void short_range_scan(void)
 	return;
 }
 
-static const char *lrs_1 = "--------------------\n";
+static const char *lrs_1 = "-------------------\n";
+
+static void put1bcd(uint8_t v)
+{
+	v &= 0x0F;
+	putchar('0' + v);
+}
+
+static void putbcd(uint16_t x)
+{
+	put1bcd(x >> 8);
+	put1bcd(x >> 4);
+	put1bcd(x);
+}
 
 static void long_range_scan(void)
 {
 	register int i, j;
+	uint16_t tmp;
 
 	if (inoperable(3))
 		return;
@@ -883,12 +917,16 @@ static void long_range_scan(void)
 
 	for (i = q1 - 1; i <= q1 + 1; i++) {
 		printf("%s:", lrs_1);
-		for (j = q2 - 1; j <= q2 + 1; j++)
+		for (j = q2 - 1; j <= q2 + 1; j++) {
+			putchar(' ');
 			if (i > 0 && i <= 8 && j > 0 && j <= 8) {
-				z[i][j] = g[i][j];
-				printf(" %3.3d :", z[i][j]);
+				tmp = g[i][j];
+				z[i][j] = tmp;
+				putbcd(tmp);
 			} else
-				fputs(" *** :", stdout);
+				fputs("***", stdout);
+			fputs(" :", stdout);
+		}
 		putchar('\n');
 	}
 
@@ -910,7 +948,7 @@ static void phaser_control(void)
 		return;
 	}
 
-	if (d[8] < 0.0)
+	if (d[8] < 0)
 		/* @@@ printf("Computer failure happers accuracy.\n"); */
 		puts("Computer failure hampers accuracy.");
 
@@ -930,7 +968,7 @@ static void phaser_control(void)
 
 	e = e - iEnergy;
 
-	if (d[8] < 0.0)
+	if (d[8] < 0)
 		/* @@@ iEnergy = iEnergy * rnd(); */
 		iEnergy = (int) (iEnergy * rnd());
 
@@ -956,7 +994,8 @@ static void phaser_control(void)
 					z2 = k[i][2];
 					quad[z1-1][z2-1] = Q_SPACE;
 					k[i][3] = 0;
-					g[q1][q2] = g[q1][q2] - 100;
+					/* Minus a Klingon.. */
+					g[q1][q2] -= 0x100;
 					z[q1][q2] = g[q1][q2];
 					if (k9 <= 0)
 						won_game();
@@ -1018,12 +1057,14 @@ static void photon_torpedoes(void)
 	puts("Torpedo Track:");
 
 	while (x3 >= 1 && x3 <= 8 && y3 >= 1 && y3 <= 8) {
+		uint8_t p;
+
 		printf("    %d, %d\n", x3, y3);
 
-		z1 = x3;
-		z2 = y3;
-
-		if (quad[z1-1][z2-1] != Q_SPACE) {
+		p = quad[x3-1][y3=1];
+		/* In certain corner cases the first trace we'll step is
+		   ourself. If so treat it as space */
+		if (p != Q_SPACE && p != Q_SHIP) {
 			torpedo_hit();
 			klingons_shoot();
 			return;
@@ -1088,52 +1129,56 @@ static void torpedo_hit(void)
 	z2 = y3;
 	quad[z1-1][z2-1] = Q_SPACE;
 
-	g[q1][q2] = (k3 * 100) + (b3 * 10) + s3;
+	g[q1][q2] = (k3 << 8) + (b3 << 4) + s3;
 	z[q1][q2] = g[q1][q2];
 }
 
 static void damage_control(void)
 {
-	double d3 = 0.0;
+	int16_t d3 = 0;
 	register int i;
 
-	if (d[6] < 0.0)
+	if (d[6] < 0)
 		puts("Damage Control report not available.");
 
 	/* Offer repair if docked */
 	if (d0) {
-		d3 = 0.0;
+		/* d3 is x.xx fixed point */
+		d3 = 0;
 		for (i = 1; i <= 8; i++)
-			if (d[i] < 0.0)
-				d3 = d3 + .1;
+			if (d[i] < 0)
+				d3 = d3 + 10;
 
-		if (d3 == 0.0)
-			return;
+		if (d3) {
+			d3 = d3 + d4;
+			if (d3 >= 100)
+				d3 = 90;	/* 0.9 */
 
-		d3 = d3 + d4;
-		if (d3 >= 1.0)
-			d3 = 0.9;
+			printf("\nTechnicians standing by to effect repairs to your"
+			       "ship;\nEstimated time to repair: %s stardates.\n"
+			       "Will you authorize the repair order (y/N)? ", print100(d3));
 
-		printf("\nTechnicians standing by to effect repairs to your"
-		       "ship;\nEstimated time to repair: %4.2f stardates.\n"
-		       "Will you authorize the repair order (y/N)? ", d3);
+			if (yesno()) {
+				for (i = 1; i <= 8; i++)
+					if (d[i] < 0)
+						d[i] = 0;
 
-		if (yesno()) {
-			for (i = 1; i <= 8; i++)
-				if (d[i] < 0.0)
-					d[i] = 0.0;
-
-			t = t + TO_FIXED(d3 + 0.1);
+				/* Work from two digit to one digit. We might actually
+				   have to give in and make t a two digt offset from
+				   a saved constant base only used in printing to
+				   avoid that round below FIXME */
+				t = t + (d3 + 5)/10 + 1;
+			}
 		}
 	}
 
-	if (d[6] < 0.0)
+	if (d[6] < 0)
 		return;
 
 	puts("Device            State of Repair");
 
 	for (r1 = 1; r1 <= 8; r1++)
-		printf("%-25s%4.2f\n", get_device_name(r1), d[r1]);
+		printf("%-25s%6s\n", get_device_name(r1), print100(d[r1]));
 
 	printf("\n");
 }
@@ -1229,7 +1274,7 @@ static void galactic_record(void)
 			if (z[i][j] == 0)
 				printf("***");
 			else
-				printf("%3.3d", z[i][j]);
+				putbcd(z[i][j]);
 		}
 		putchar('\n');
 	}
@@ -1481,8 +1526,9 @@ static void won_game(void)
 	puts("Congratulations, Captain!  The last Klingon Battle Cruiser\n"
 	     "menacing the Federation has been destoyed.\n");
 
+	/* FIXME: finish integerising this */
 	if (FROM_FIXED(t) - t0 > 0)
-		printf("Your efficiency rating is %4.2f\n", 1000 * pow(k7 / (FROM_FIXED(t) - t0), 2));
+		printf("Your efficiency rating is %4.2f\n", 1000 * pow(k7 / (float)(FROM_FIXED(t) - t0), 2));
 
 	end_of_game();
 }
@@ -1556,9 +1602,16 @@ static void klingons_shoot(void)
 			printf("    <Shields down to %d units>\n\n", s);
 
 			if (h >= 20) {
-				if (rnd() <= 0.6 || (h / s) > 0.2) {
+				/* The check in basic is float and is h/s >.02. We
+				   have to use 32bit values here to avoid an overflow
+				   FIXME: use a better algorithm perhaps ? */
+				uint32_t ratio = TO_FIXED00((uint32_t)h)/s;
+				if (get_rand(10) <= 6 || ratio > 2) {
 					r1 = rand8();
-					d[r1] = d[r1] - (h / s) - (0.5 * rnd());
+					/* The original basic code computed h/s in
+					   float form the C conversion broke this. We correct it in the fixed
+					   point change */
+					d[r1] = d[r1] - ratio - get_rand(50);
 
 					/* FIXME: can we use dcr_1 here ?? */
 					printf("Damage Control reports\n"
@@ -1572,46 +1625,46 @@ static void klingons_shoot(void)
 static void repair_damage(void)
 {
 	int i;
-	double d6;		/* Repair Factor */
+	int16_t d6;		/* Repair Factor */
 
-	d6 = w1;
+	d6 = TO_FIXED00(w1);	/* FIXME: undo this when we make w1 fixed100 */
 
 	if (w1 >= 1.0)
-		d6 = 1.0;
+		d6 = TO_FIXED00(1);
 
 	for (i = 1; i <= 8; i++) {
-		if (d[i] < 0.0) {
+		if (d[i] < 0) {
 			d[i] = d[i] + d6;
-			if (d[i] > -0.1 && d[i] < 0)
-				d[i] = -0.1;
-			else if (d[i] >= 0.0) {
+			if (d[i] > -10 && d[i] < 0)	/* -0.1 */
+				d[i] = -10;
+			else if (d[i] >= 0) {
 				if (d1 != 1) {
 					d1 = 1;
 					puts(dcr_1);
 				}
 				printf("    %s repair completed\n\n",
 					get_device_name(i));
-				d[i] = 0.0;
+				d[i] = 0;
 			}
 		}
 	}
 
-	if (rnd() <= 0.2) {
+	if (get_rand(10) <= 2) {
 		r1 = rand8();
 
 		if (rnd() < .6) {
-			d[r1] = d[r1] - (rnd() * 5.0 + 1.0);
+			/* Working in 1/100ths */
+			d[r1] = d[r1] - (get_rand(500) + 100);
+			//TO_FIXED00((rnd() * 5.0 + 1.0));
 			puts(dcr_1);
 			printf("    %s damaged\n\n", get_device_name(r1));
 		} else {
-			d[r1] = d[r1] + (rnd() * 3.0 + 1.0);
+			/* Working in 1/100ths */
+			d[r1] = d[r1] + get_rand(300) + 100;
+			// TO_FIXED00(rnd() * 3.0 + 1.0);
 			puts(dcr_1);
 			printf("    %s state of repair improved\n\n",
 					get_device_name(r1));
-#if 0 // Basic allows it to go +ve ??
-			if (d[r1] > 0.0)
-				d[r1] = 0.0;
-#endif
 		}
 	}
 }
