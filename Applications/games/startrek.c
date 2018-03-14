@@ -161,7 +161,8 @@ static uint8_t d0;			/* Docked flag */
 static int d1;				/* Damage Repair Flag */
 static int e;				/* Current Energy */
 static int e0 = 3000;			/* Starting Energy */
-static unsigned int g[9][9];		/* Galaxy */
+static unsigned int g[9][9];		/* Galaxy. BCD of k b s plus flag */
+#define MAP_VISITED 0x1000		/* Set if this sector was mapped */
 static int g5;				/* Quadrant name flag */
 static int k[4][4];			/* Klingon Data */
 static uint8_t k3;			/* Klingons in Quadrant */
@@ -176,7 +177,6 @@ static int s;				/* Current shield value */
 static uint8_t s3;			/* Stars in quadrant */
 static uint16_t t0;			/* Starting Stardate */
 static uint16_t t9;			/* End of time */
-static unsigned int z[9][9];		/* Cumulative Record of Galaxy */
 static int z1, z2;			/* Temporary Sector Coordinates */
 static int z4, z5;			/* Temporary quadrant coordinates */
 
@@ -436,7 +436,6 @@ static void initialize(void)
 	for (i = 1; i <= 8; i++) {
 		for (j = 1; j <= 8; j++) {
 			k3 = 0;
-			z[i][j] = 0;
 			r1 = get_rand(100);
 			if (r1 > 98)
 				k3 = 3;
@@ -511,7 +510,7 @@ static void new_quadrant(void)
 	d4 = get_rand(50) - 1;
 
 	/* Copy to computer */
-	z[q1][q2] = g[q1][q2];
+	g[q1][q2] |= MAP_VISITED;
 
 	if (q1 >= 1 && q1 <= 8 && q2 >= 1 && q2 <= 8) {
 		quadrant_name();
@@ -526,7 +525,7 @@ static void new_quadrant(void)
 
 	/* @@@ k3 = g[q1][q2] * .01; */
 	tmp = g[q1][q2];
-	k3 = tmp >> 8;
+	k3 = (tmp >> 8) & 0x0F;
 	b3 = (tmp >> 4) & 0x0F;
 	s3 = tmp & 0x0F;
 
@@ -915,7 +914,6 @@ static void putbcd(uint16_t x)
 static void long_range_scan(void)
 {
 	register int i, j;
-	uint16_t tmp;
 
 	if (inoperable(3))
 		return;
@@ -927,9 +925,8 @@ static void long_range_scan(void)
 		for (j = q2 - 1; j <= q2 + 1; j++) {
 			putchar(' ');
 			if (i > 0 && i <= 8 && j > 0 && j <= 8) {
-				tmp = g[i][j];
-				z[i][j] = tmp;
-				putbcd(tmp);
+				g[i][j] |= MAP_VISITED;
+				putbcd(g[i][j]);
 			} else
 				fputs("***", stdout);
 			fputs(" :", stdout);
@@ -1003,7 +1000,6 @@ static void phaser_control(void)
 					k[i][3] = 0;
 					/* Minus a Klingon.. */
 					g[q1][q2] -= 0x100;
-					z[q1][q2] = g[q1][q2];
 					if (k9 <= 0)
 						won_game();
 				} else
@@ -1111,6 +1107,7 @@ static void torpedo_hit(void)
 		for (i = 0; i <= 3; i++)
 			if (x3 == k[i][1] && y3 == k[i][2])
 				k[i][3] = 0;
+		g[q1][q2] -= 0x100;
 		break;
 	case Q_BASE:					
 		puts("*** Starbase Destroyed ***");
@@ -1130,14 +1127,12 @@ static void torpedo_hit(void)
 		     "court martial!\n");
 
 		d0 = 0;		/* Undock */
+		g[q1][q2] -= 0x10;
 		break;
 	}
 	z1 = x3;
 	z2 = y3;
 	quad[z1-1][z2-1] = Q_SPACE;
-
-	g[q1][q2] = (k3 << 8) + (b3 << 4) + s3;
-	z[q1][q2] = g[q1][q2];
 }
 
 static void damage_control(void)
@@ -1278,10 +1273,10 @@ static void galactic_record(void)
 		for (j = 1; j <= 8; j++) {
 			printf("   ");
 
-			if (z[i][j] == 0)
-				printf("***");
+			if (g[i][j] & MAP_VISITED)
+				putbcd(g[i][j]);
 			else
-				putbcd(z[i][j]);
+				printf("***");
 		}
 		putchar('\n');
 	}
