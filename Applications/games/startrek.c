@@ -136,6 +136,7 @@ static const char *get_device_name(int n);
 static void quadrant_name(void);
 static int function_d(int i);
 static int cint(double d);
+static int cint100(int16_t d);
 static void compute_vector(void);
 static void sub1(void);
 static void sub2(void);
@@ -184,7 +185,7 @@ static int16_t d[9];			/* Damage Array */
 static int16_t d4;			/* Used for computing damage repair time */
 static double s1, s2;			/* Current Sector Position of Enterprise */
 static uint16_t t;			/* Current Stardate */
-static double w1;			/* Warp Factor */
+static int16_t w1;			/* Warp Factor */
 static double x, y, x1, x2;		/* Navigational coordinates */
 
 static char *sC;			/* Condition */
@@ -271,8 +272,6 @@ static int16_t input_f00(void)
 		return v;
 	if (*x++ != '.')
 		return -1;
-	if (!*x)
-		return v;
 	if (!isdigit(*x))
 		return -1;
 	v += 10 * (*x++ - '0');
@@ -595,29 +594,31 @@ static void course_control(void)
 
 	printf("Warp Factor (0-%s): ", sX);
 
-	w1 = input_dec();
+	w1 = input_f00();
 
-	if (d[1] < 0 && w1 > 0.21) {
+	if (d[1] < 0 && w1 > 20) {
 		printf("Warp Engines are damaged. "
 		       "Maximum speed = Warp 0.2.\n\n");
 		return;
 	}
 
-	if (w1 <= 0.0)
+	if (w1 <= 0)
 		return;
 
-	if (w1 > 8.1) {
+	if (w1 > 800) {
 		printf("Chief Engineer Scott reports:\n"
-		       "  The engines won't take warp %4.1f!\n\n", w1);
+		       "  The engines won't take warp %s!\n\n", print100(w1));
 		return;
 	}
 
-	n = cint(w1 * 8.0);	/* @@@ note: this is a real round in the original basic */
+	n = w1 * 8;
+
+	n = cint100(n);	/* @@@ note: this is a real round in the original basic */
 
 	if (e - n < 0) {
 		printf("Engineering reports:\n"
 		       "  Insufficient energy available for maneuvering"
-		       " at warp %4.1f!\n\n", w1);
+		       " at warp %s!\n\n", print100(w1));
 
 		if (s >= n && d[7] >= 0) {
 			printf("Deflector Control Room acknowledges:\n"
@@ -650,8 +651,13 @@ static void course_control(void)
 	y = s2;
 
 	for (i = 1; i <= n; i++) {
+//		printf(">%d %4.1f %4.1f %4.1f %4.1f\n",
+//			i, s1, s2, x1, x2);
 		s1 = s1 + x1;
 		s2 = s2 + x2;
+
+//		printf("=%d %4.1f %4.1f %4.1f %4.1f\n",
+//			i, s1, s2, x1, x2);
 
 		/* @@@ z1 = cint(s1); */
 		z1 = (int) s1;
@@ -690,8 +696,9 @@ static void complete_maneuver(void)
 
 	t8 = TO_FIXED(1);
 
-	if (w1 < 1.0)
-		t8 = TO_FIXED(w1);
+	/* Ick FIXME - re really want to tidy up time to FIXED00 */
+	if (w1 < 100)
+		t8 = TO_FIXED(FROM_FIXED00(w1));
 
 	t = t + t8;
 
@@ -1061,7 +1068,7 @@ static void photon_torpedoes(void)
 
 		printf("    %d, %d\n", x3, y3);
 
-		p = quad[x3-1][y3=1];
+		p = quad[x3-1][y3-1];
 		/* In certain corner cases the first trace we'll step is
 		   ourself. If so treat it as space */
 		if (p != Q_SPACE && p != Q_SHIP) {
@@ -1441,7 +1448,8 @@ static void galaxy_map(void)
 static void compute_vector(void)
 {
 	x = x - a;
-	a = c1 - w1;
+	/* FIXME: until we finish the job */
+	a = c1 - (double)w1;
 
 	if (x <= 0.0) {
 		if (a > 0.0) {
@@ -1627,9 +1635,8 @@ static void repair_damage(void)
 	int i;
 	int16_t d6;		/* Repair Factor */
 
-	d6 = TO_FIXED00(w1);	/* FIXME: undo this when we make w1 fixed100 */
-
-	if (w1 >= 1.0)
+	d6 = w1;
+	if (w1 >= 100)
 		d6 = TO_FIXED00(1);
 
 	for (i = 1; i <= 8; i++) {
@@ -1743,6 +1750,11 @@ static int cint(double d)
 	i = (int) (d + 0.5);
 
 	return (i);
+}
+
+static int cint100(int16_t d)
+{
+	return (d + 50) / 100;
 }
 
 static void showfile(char *filename)
