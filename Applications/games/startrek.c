@@ -5,7 +5,24 @@
  * Retro Star Trek Game 
  * C Port Copyright (C) 1996  <Chris Nystrom>
  *
- * Rather hacked for Fuzix by Alan Cox 2018
+ * Reworked for Fuzix by Alan Cox (C) 2018
+ *	- Removed all floating point
+ *	- Fixed multiple bugs in the BASIC to C conversion
+ *	- Fixed a couple of bugs in the BASIC that either got in during it's
+ *	  conversion between BASICs or from the original trek
+ *	- Put it on a diet to get it to run in 32K. No features were harmed
+ *	  in the making of this code smaller.
+ *
+ * TODO:
+ *	- Look hard at all the rounding cases
+ *	- Review some of the funnies in the BASIC code that appear to be bugs
+ *	  either in the conversion or between the original and 'super' trek
+ *	  Notably need to fix the use of shield energy directly for warp
+ *	- Find a crazy person to draw ascii art bits we can showfile for things
+ *	  like messages from crew/docking/klingons etc
+ *	- I think it would make a lot of sense to switch to real angles, but
+ *	  trek game traditionalists might consider that heresy.
+ *
  * 
  * This program is free software; you can redistribute it and/or modify
  * in any way that you wish. _Star Trek_ is a trademark of Paramount
@@ -847,7 +864,7 @@ static void short_range_scan(void)
 
 	sC = "GREEN";
 
-	if (e < e0 * .1)
+	if (e < e0 / 10)
 		sC = "YELLOW";
 
 	if (k3 > 0)
