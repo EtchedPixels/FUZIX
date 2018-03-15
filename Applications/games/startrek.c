@@ -947,22 +947,31 @@ static void long_range_scan(void)
 	printf("%s\n", lrs_1);
 }
 
+static uint8_t no_klingon(void)
+{
+	if (k3 <= 0) {
+		puts("Science Officer Spock reports:\n"
+		     "  'Sensors show no enemy ships in this quadrant'\n");
+		return 1;
+	}
+	return 0;
+}
+
+
 static void phaser_control(void)
 {
 	register int i;
-	uint32_t iEnergy;
+	int32_t iEnergy;
 	uint32_t h1;
 	int h;
 
 	if (inoperable(4))
 		return;
 
-	if (k3 <= 0) {
-		puts("Science Officer Spock reports:\n"
-		     "  'Sensors show no enemy ships in this quadrant'\n");
+	if (no_klingon())
 		return;
-	}
 
+	/* There's Klingon's on the starboard bow... */
 	if (d[8] < 0)
 		/* @@@ printf("Computer failure happers accuracy.\n"); */
 		puts("Computer failure hampers accuracy.");
@@ -1362,11 +1371,9 @@ static void torpedo_data(void)
 	int i;
 	const char *plural = str_s + 1;
 
-	if (k3 <= 0) {
-		puts("Science Officer Spock reports:\n"
-		     "  'Sensors show no enemy ships in this quadrant.'\n");
+	/* Need to also check sensors here ?? */
+	if (no_klingon())
 		return;
-	}
 
 	if (k3 > 1)
 		plural--;
@@ -1484,24 +1491,34 @@ static void compute_vector(void)
 	x = x - a;
 	a = c1 - w1;
 
-	if (x <= 0) {
-		if (a > 0) {
+	if (x < 0) {
+/*8350*/	if (a > 0) {
 			c1 = 300;
-			sub2();
+/* 8420 */		sub2();
 			return;
-		} else {
-			c1 = 500;
-			sub1();
+		} else if (x != 0){
+/* 8360 */		c1 = 500;
+/* 8290 */		sub1();
+			return;
+/* 8410 */	} else {
+			c1 = 700;
+/* 8420 */		sub2();
 			return;
 		}
-	} else if (a < 0) {
-		c1 = 700;
-		sub2();
+/*8250*/} else if (a < 0) {
+/*8410*/	c1 = 700;
+/*8420*/	sub2();
 		return;
+/* 8260 */} else if (x > 0) {
+/* 8280 */	c1 = 100;
+/* 8290 */		sub1();
+		return;
+	} else if (a == 0) {
+		c1 = 500;
+		sub1();
 	} else {
 		c1 = 100;
 		sub1();
-		return;
 	}
 }
 
@@ -1510,23 +1527,23 @@ static const char *dist_1 = "  DISTANCE = %s\n\n";
 
 static void sub1(void)
 {
-	uint32_t xl = abs(x);
+/* 8290 */uint32_t xl = abs(x);
 	uint32_t al = abs(a);
 
 	fputs(dir_1, stdout);
 	/* Multiply the top half by 100 as well so that we keep it in fixed00
 	   format. Our larget value is int 9 (900) so we must do this 32bit */
-	if (al <= xl)
-		printf("%s", print100(c1 + ((al * 100) / xl)));
+/* 8290 */if (al <= xl)
+/*8330 */	printf("%s", print100(c1 + ((al * 100) / xl)));
 	else
-		printf("%s", print100(c1 + ((((al * 2) - xl) * 100) / al)));
+/*8310 */	printf("%s", print100(c1 + ((((al * 2) - xl) * 100) / al)));
 
 	printf(dist_1, print100((xl > al) ? xl : al));
 }
 
 static void sub2(void)
 {
-	uint32_t xl = abs(x);
+/* 8420 */	uint32_t xl = abs(x);
 	uint32_t al = abs(a);
 
 	fputs(dir_1, stdout);
@@ -1535,7 +1552,7 @@ static void sub2(void)
 		printf("%s", print100(c1 + ((xl * 100) / al)));
 	else
 		/* @@@ printf("  DIRECTION = %4.2f\n\n", c1 + (((x * 2) - a) / x)); */
-		printf("%s", print100(c1 + ((((xl * 2) - al) * 100)  / x)));
+		printf("%s", print100(c1 + ((((xl * 2) - al) * 100)  / xl)));
 
 	/* @@@ printf("  DISTANCE = %4.2f\n", (x > a) ? x : a); */
 	printf(dist_1, print100((x > a) ? x : a));
