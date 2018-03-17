@@ -50,7 +50,7 @@
  * BASIC -> Conversion Issues
  *
  *     - String Names changed from A$ to sA
- *     - Arrays changed from G(8,8) to g[9][9] so indexes can
+ *     - Arrays changed from G(8,8) to map[9][9] so indexes can
  *       stay the same.
  *
  * Here is the original BASIC header:
@@ -114,8 +114,6 @@
 /* Useful typedefs */
 
 typedef int bool;
-typedef char line[MAXCOL];
-typedef char string[MAXLEN];
 
 /* Function Declarations */
 
@@ -124,9 +122,9 @@ static void new_game(void);
 static void initialize(void);
 static void new_quadrant(void);
 static void course_control(void);
-static void complete_maneuver(void);
-static void exceed_quadrant_limits(void);
-static void maneuver_energy(void);
+static void complete_maneuver(uint16_t, uint16_t);
+static void exceed_quadrant_limits(uint16_t);
+static void maneuver_energy(uint16_t);
 static void short_range_scan(void);
 static void long_range_scan(void);
 static void phaser_control(void);
@@ -147,23 +145,21 @@ static void won_game(void);
 static void end_of_game(void);
 static void klingons_move(void);
 static void klingons_shoot(void);
-static void repair_damage(void);
-static void find_set_empty_place(uint8_t t);
+static void repair_damage(uint16_t warp);
+static void find_set_empty_place(uint8_t t, uint8_t *z1, uint8_t *z2);
 static const char *get_device_name(int n);
-static void quadrant_name(void);
+static void quadrant_name(uint8_t small, uint8_t y, uint8_t x);
 static int distance_to(int i);
 static int square00(int16_t t);
 static int cint100(int16_t d);
-static void compute_vector(void);
-static void sub1(void);
-static void sub2(void);
+static void compute_vector(int16_t, int16_t, int16_t, int16_t);
 static void showfile(char *filename);
 
 /* Global Variables */
 
-static int8_t b3;			/* Starbases in Quadrant */
-static int b4, b5;			/* Starbase Location in sector */
-static int8_t b9;			/* Total Starbases */
+static int8_t starbases;			/* Starbases in Quadrant */
+static uint8_t base_y, base_x;				/* Starbase Location in sector */
+static int8_t starbases_left;			/* Total Starbases */
 
 			  /* @@@ int c[2][10] = *//* Used for location and movement */
 static int8_t c[3][10] =		/* modified to match MS BASIC array indicies */
@@ -173,38 +169,28 @@ static int8_t c[3][10] =		/* modified to match MS BASIC array indicies */
 	{1, 1, 1, 0, -1, -1, -1, 0, 1, 1}
 };
 
-static uint8_t d0;			/* Docked flag */
-static int d1;				/* Damage Repair Flag */
-static int e;				/* Current Energy */
-static int e0 = 3000;			/* Starting Energy */
-static unsigned int g[9][9];		/* Galaxy. BCD of k b s plus flag */
+static uint8_t docked;			/* Docked flag */
+static int energy;			/* Current Energy */
+static const int energy0 = 3000;	/* Starting Energy */
+static unsigned int map[9][9];		/* Galaxy. BCD of k b s plus flag */
 #define MAP_VISITED 0x1000		/* Set if this sector was mapped */
-static int g5;				/* Quadrant name flag */
-static int k[4][4];			/* Klingon Data */
-static uint8_t k3;			/* Klingons in Quadrant */
-static uint8_t k7;			/* Klingons at start */
-static uint8_t k9;			/* Total Klingons left */
-static int n;				/* Number of sectors to travel */
-static uint8_t p;			/* Photon Torpedoes left */
-static uint8_t p0 = 10;			/* Photon Torpedo capacity */
+static int kdata[4][4];			/* Klingon Data */
+static uint8_t klingons;		/* Klingons in Quadrant */
+static uint8_t total_klingons;		/* Klingons at start */
+static uint8_t klingons_left;		/* Total Klingons left */
+static uint8_t torps;			/* Photon Torpedoes left */
+static const uint8_t torps0 = 10;	/* Photon Torpedo capacity */
 static int q1, q2;			/* Quadrant Position of Enterprise */
-static int r1, r2;			/* Temporary Location Corrdinates */
-static int s;				/* Current shield value */
-static uint8_t s3;			/* Stars in quadrant */
-static uint16_t t0;			/* Starting Stardate */
-static uint16_t t9;			/* End of time */
-static int z1, z2;			/* Temporary Sector Coordinates */
-static int z4, z5;			/* Temporary quadrant coordinates */
+static int shield;			/* Current shield value */
+static uint8_t stars;			/* Stars in quadrant */
+static uint16_t time_start;		/* Starting Stardate */
+static uint16_t time_up;		/* End of time */
 
-static int16_t a, c1;			/* Used by Library Computer */
 static int16_t d[9];			/* Damage Array */
 static int16_t d4;			/* Used for computing damage repair time */
 static int16_t s1, s2;			/* Current Sector Position of Enterprise, fixed point */
-static uint16_t t;			/* Current Stardate */
-static int16_t w1;			/* Warp Factor */
+static uint16_t stardate;		/* Current Stardate */
 static int16_t x, y, x1, x2;		/* Navigational coordinates, fixed point */
-
-static char *sC;			/* Condition */
 
 static uint8_t quad[8][8];
 #define Q_SPACE		0
@@ -351,7 +337,7 @@ static void intro(void)
 
 	/* Max of 4000, which works nicely with our 0.1 fixed point giving
 	   us a 16bit unsigned range of time */
-	t = TO_FIXED((get_rand(20) + 20) * 100);
+	stardate = TO_FIXED((get_rand(20) + 20) * 100);
 }
 
 static void new_game(void)
@@ -365,7 +351,7 @@ static void new_game(void)
 	short_range_scan();
 
 	while (1) {
-		if (s + e <= 10 && (e < 10 || d[7] < 0)) {
+		if (shield + energy <= 10 && (energy < 10 || d[7] < 0)) {
 			showfile("startrek.fatal");
 			end_of_time();
 		}
@@ -417,16 +403,16 @@ static void initialize(void)
 
 	/* InItialize time */
 
-	/* @@@ t0 = t; */
-	t0 = FROM_FIXED(t);
-	t9 = 25 + get_rand(10);
+	/* @@@ time_start = t; */
+	time_start = FROM_FIXED(stardate);
+	time_up = 25 + get_rand(10);
 
 	/* Initialize Enterprise */
 
-	d0 = 0;
-	e = e0;
-	p = p0;
-	s = 0;
+	docked = 0;
+	energy = energy0;
+	torps = torps0;
+	shield = 0;
 
 	q1 = rand8();
 	q2 = rand8();
@@ -440,48 +426,48 @@ static void initialize(void)
 
 	for (i = 1; i <= 8; i++) {
 		for (j = 1; j <= 8; j++) {
-			k3 = 0;
-			r1 = get_rand(100);
-			if (r1 > 98)
-				k3 = 3;
-			else if (r1 > 95)
-				k3 = 2;
-			else if (r1 > 80)
-				k3 = 1;
+			uint8_t r = get_rand(100);
+			klingons = 0;
+			if (r > 98)
+				klingons = 3;
+			else if (r > 95)
+				klingons = 2;
+			else if (r > 80)
+				klingons = 1;
 
-			k9 = k9 + k3;
-			b3 = 0;
+			klingons_left = klingons_left + klingons;
+			starbases = 0;
 
 			if (get_rand(100) > 96)
-				b3 = 1;
+				starbases = 1;
 
-			b9 = b9 + b3;
+			starbases_left = starbases_left + starbases;
 
-			g[i][j] = (k3 << 8) + (b3 << 4) + rand8();
+			map[i][j] = (klingons << 8) + (starbases << 4) + rand8();
 		}
 	}
 
 	/* Give more time for more Klingons */
-	if (k9 > t9)
-		t9 = k9 + 1;
+	if (klingons_left > time_up)
+		time_up = klingons_left + 1;
 
 	/* Add a base if we don't have one */
-	if (b9 == 0) {
-		if (g[q1][q2] < 0x200) {
-			g[q1][q2] += (1 << 8);
-			k9++;
+	if (starbases_left == 0) {
+		if (map[q1][q2] < 0x200) {
+			map[q1][q2] += (1 << 8);
+			klingons_left++;
 		}
 
-		g[q1][q2] += (1 << 4);
-		b9++;
+		map[q1][q2] += (1 << 4);
+		starbases_left++;
 
 		q1 = rand8();
 		q2 = rand8();
 	}
 
-	k7 = k9;
+	total_klingons = klingons_left;
 
-	if (b9 != 1) {
+	if (starbases_left != 1) {
 		strcpy(sX, "s");
 		strcpy(sX0, "are");
 	}
@@ -492,7 +478,7 @@ static void initialize(void)
 	       " on stardate %u. This gives you %d days. There %s\n"
 	       " %d starbase%s in the galaxy for resupplying your ship.\n\n"
 	       "Hit any key to accept command. ",
-	       k9, t0 + t9, t9, sX0, b9, sX);
+	       klingons_left, time_start + time_up, time_up, sX0, starbases_left, sX);
 	getchar();
 }
 
@@ -500,13 +486,11 @@ static void new_quadrant(void)
 {
 	int i;
 	uint16_t tmp;
+	uint8_t z1, z2;
 
-	z4 = q1;
-	z5 = q2;
-	k3 = 0;
-	b3 = 0;
-	s3 = 0;
-	g5 = 0;
+	klingons = 0;
+	starbases = 0;
+	stars = 0;
 
 	/* Random factor for damage repair. We compute it on each new
 	   quadrant to stop the user just retrying until they get a number
@@ -515,12 +499,12 @@ static void new_quadrant(void)
 	d4 = get_rand(50) - 1;
 
 	/* Copy to computer */
-	g[q1][q2] |= MAP_VISITED;
+	map[q1][q2] |= MAP_VISITED;
 
 	if (q1 >= 1 && q1 <= 8 && q2 >= 1 && q2 <= 8) {
-		quadrant_name();
+		quadrant_name(0, q1, q2);
 
-		if (TO_FIXED(t0) != t)
+		if (TO_FIXED(time_start) != stardate)
 			printf("Now entering %s quadrant...\n\n", quadname);
 		else {
 			puts("\nYour mission begins with your starship located");
@@ -528,23 +512,23 @@ static void new_quadrant(void)
 		}
 	}
 
-	/* @@@ k3 = g[q1][q2] * .01; */
-	tmp = g[q1][q2];
-	k3 = (tmp >> 8) & 0x0F;
-	b3 = (tmp >> 4) & 0x0F;
-	s3 = tmp & 0x0F;
+	/* @@@ klingons = map[q1][q2] * .01; */
+	tmp = map[q1][q2];
+	klingons = (tmp >> 8) & 0x0F;
+	starbases = (tmp >> 4) & 0x0F;
+	stars = tmp & 0x0F;
 
-	if (k3 > 0) {
+	if (klingons > 0) {
 		printf("Combat Area  Condition Red\n");
 
-		if (s < 200)
+		if (shield < 200)
 			printf("Shields Dangerously Low\n");
 	}
 
 	for (i = 1; i <= 3; i++) {
-		k[i][1] = 0;
-		k[i][2] = 0;
-		k[i][3] = 0;
+		kdata[i][1] = 0;
+		kdata[i][2] = 0;
+		kdata[i][3] = 0;
 	}
 
 	memset(quad, Q_SPACE, 64);
@@ -552,24 +536,21 @@ static void new_quadrant(void)
 	/* FIXME: do we need 0.5 shifts ? */
 	quad[FROM_FIXED00(s1) - 1][FROM_FIXED00(s2) - 1] = Q_SHIP;
 	
-	if (k3 > 0) {
-		for (i = 1; i <= k3; i++) {
-			find_set_empty_place(Q_KLINGON);
-			k[i][1] = r1;
-			k[i][2] = r2;
-			k[i][3] = 100 + get_rand(200);
+	if (klingons > 0) {
+		for (i = 1; i <= klingons; i++) {
+			find_set_empty_place(Q_KLINGON, &z1, &z2);
+			kdata[i][1] = z1;
+			kdata[i][2] = z2;
+			kdata[i][3] = 100 + get_rand(200);
 		}
 	}
 
-	if (b3 > 0) {
-		find_set_empty_place(Q_BASE);
-
-		b4 = r1;
-		b5 = r2;
+	if (starbases > 0) {
+		find_set_empty_place(Q_BASE, &base_y, &base_x);
 	}
 
-	for (i = 1; i <= s3; i++)
-		find_set_empty_place(Q_STAR);
+	for (i = 1; i <= stars; i++)
+		find_set_empty_place(Q_STAR, &z1, &z2);
 }
 
 static const char *inc_1 = "reports:\n  Incorrect course data, sir!\n";
@@ -577,9 +558,11 @@ static const char *inc_1 = "reports:\n  Incorrect course data, sir!\n";
 static void course_control(void)
 {
 	register int i;
-	/* @@@ int c2, c3, q4, q5; */
 	int16_t c1;
+	int16_t warp;
+	uint16_t n;
 	int c2, c3, c4;
+	int16_t z1, z2;
 	char sX[4] = "8";
 
 	fputs("Course (0-9): ", stdout);
@@ -599,36 +582,36 @@ static void course_control(void)
 
 	printf("Warp Factor (0-%s): ", sX);
 
-	w1 = input_f00();
+	warp = input_f00();
 
-	if (d[1] < 0 && w1 > 20) {
+	if (d[1] < 0 && warp > 20) {
 		printf("Warp Engines are damaged. "
 		       "Maximum speed = Warp 0.2.\n\n");
 		return;
 	}
 
-	if (w1 <= 0)
+	if (warp <= 0)
 		return;
 
-	if (w1 > 800) {
+	if (warp > 800) {
 		printf("Chief Engineer Scott reports:\n"
-		       "  The engines won't take warp %s!\n\n", print100(w1));
+		       "  The engines won't take warp %s!\n\n", print100(warp));
 		return;
 	}
 
-	n = w1 * 8;
+	n = warp * 8;
 
 	n = cint100(n);	/* @@@ note: this is a real round in the original basic */
 
 	/* FIXME: should be  s + e - n > 0 iff shield control undamaged */
-	if (e - n < 0) {
+	if (energy - n < 0) {
 		printf("Engineering reports:\n"
 		       "  Insufficient energy available for maneuvering"
-		       " at warp %s!\n\n", print100(w1));
+		       " at warp %s!\n\n", print100(warp));
 
-		if (s >= n && d[7] >= 0) {
+		if (shield >= n && d[7] >= 0) {
 			printf("Deflector Control Room acknowledges:\n"
-			       "  %d units of energy presently deployed to shields.\n", s);
+			       "  %d units of energy presently deployed to shields.\n", shield);
 		}
 
 		return;
@@ -636,7 +619,7 @@ static void course_control(void)
 
 	klingons_move();
 
-	repair_damage();
+	repair_damage(warp);
 
 	/* @@@ z1 = cint(s1); */
 	z1 = FROM_FIXED00(s1);
@@ -685,8 +668,8 @@ static void course_control(void)
 		z2 = FROM_FIXED00(s2);	/* ?? cint100 ?? */
 
 		if (z1 < 1 || z1 >= 9 || z2 < 1 || z2 >= 9) {
-			exceed_quadrant_limits();
-			complete_maneuver();
+			exceed_quadrant_limits(n);
+			complete_maneuver(warp, n);
 			return;
 		}
 
@@ -699,12 +682,13 @@ static void course_control(void)
 		}
 	}
 
-	complete_maneuver();
+	complete_maneuver(warp, n);
 }
 
-static void complete_maneuver(void)
+static void complete_maneuver(uint16_t warp, uint16_t n)
 {
-	int t8;
+	int time_used;
+	uint8_t z1, z2;
 
 	/* @@@ z1 = cint(s1); */
 	z1 = FROM_FIXED00(s1);
@@ -712,23 +696,23 @@ static void complete_maneuver(void)
 	z2 = FROM_FIXED00(s2);
 	quad[z1-1][z2-1] = Q_SHIP;
 
-	maneuver_energy();
+	maneuver_energy(n);
 
-	t8 = TO_FIXED(1);
+	time_used = TO_FIXED(1);
 
 	/* Ick FIXME - re really want to tidy up time to FIXED00 */
-	if (w1 < 100)
-		t8 = TO_FIXED(FROM_FIXED00(w1));
+	if (warp < 100)
+		time_used = TO_FIXED(FROM_FIXED00(warp));
 
-	t = t + t8;
+	stardate += time_used;
 
-	if (FROM_FIXED(t) > t0 + t9)
+	if (FROM_FIXED(stardate) > time_start + time_up)
 		end_of_time();
 
 	short_range_scan();
 }
 
-static void exceed_quadrant_limits(void)
+static void exceed_quadrant_limits(uint16_t n)
 {
 	int x5 = 0;		/* Outside galaxy flag */
 
@@ -808,16 +792,16 @@ static void exceed_quadrant_limits(void)
 	   won't match your LRS.  Cool huh? */
 
 
-	maneuver_energy();
+	maneuver_energy(n);
 
 	/* this section has a different order in the original.
 	   t = t + 1;
 
-	   if (t > t0 + t9)
+	   if (t > time_start + time_up)
 	   end_of_time();
 	 */
 
-	if (FROM_FIXED(t) > t0 + t9)
+	if (FROM_FIXED(stardate) > time_start + time_up)
 		end_of_time();
 
 	/* @@@ what does this do?? It's in the original.
@@ -827,25 +811,25 @@ static void exceed_quadrant_limits(void)
 	   }
 	 */
 
-	t = t + 1;
+	stardate = stardate + TO_FIXED(1);
 
 	new_quadrant();
 }
 
-static void maneuver_energy(void)
+static void maneuver_energy(uint16_t n)
 {
-	e = e - n - 10;
+	energy -= n - 10;
 
-	if (e >= 0)
+	if (energy >= 0)
 		return;
 
 	puts("Shield Control supplies energy to complete maneuver.\n");
 
-	s = s + e;
-	e = 0;
+	shield = shield + energy;
+	energy = 0;
 
-	if (s <= 0)
-		s = 0;
+	if (shield <= 0)
+		shield = 0;
 }
 
 static const char *srs_1 = "------------------------";
@@ -861,17 +845,16 @@ static const char *tilestr[] = {
 static void short_range_scan(void)
 {
 	register int i, j;
+	char *sC = "GREEN";
 
-	sC = "GREEN";
-
-	if (e < e0 / 10)
+	if (energy < energy0 / 10)
 		sC = "YELLOW";
 
-	if (k3 > 0)
+	if (klingons > 0)
 		sC = "*RED*";
 
 	/* @@@ need to clear the docked flag here */
-	d0 = 0;
+	docked = 0;
 
 	/* @@@ for (i = s1 - 1; i <= s1 + 1; i++) */
 	for (i = (int) (FROM_FIXED00(s1) - 1); i <= (int) (FROM_FIXED00(s1) + 1); i++)
@@ -880,12 +863,12 @@ static void short_range_scan(void)
 			if (i >= 1 && i <= 8 && j >= 1 && j <= 8) {
 				/* This is dumb - we store the base co-ords! */
 				if (quad[i-1][j-1] == Q_BASE) {
-					d0 = 1;
+					docked = 1;
 					sC = "DOCKED";
-					e = e0;
-					p = p0;
+					energy = energy0;
+					torps = torps0;
 					puts("Shields dropped for docking purposes.");
-					s = 0;
+					shield = 0;
 				}
 			}
 
@@ -900,7 +883,7 @@ static void short_range_scan(void)
 			fputs(tilestr[quad[i][j]], stdout);
 
 		if (i == 0)
-			printf("    Stardate            %d\n", FROM_FIXED(t));
+			printf("    Stardate            %d\n", FROM_FIXED(stardate));
 		if (i == 1)
 			printf("    Condition           %s\n", sC);
 		if (i == 2)
@@ -909,13 +892,13 @@ static void short_range_scan(void)
 			/* @@@ printf("    Sector              %d, %d\n", cint(s1), cint(s2)); */
 			printf("    Sector              %d, %d\n", FROM_FIXED00(s1), FROM_FIXED00(s2));
 		if (i == 4)
-			printf("    Photon Torpedoes    %d\n", p);
+			printf("    Photon Torpedoes    %d\n", torps);
 		if (i == 5)
-			printf("    Total Energy        %d\n", e + s);
+			printf("    Total Energy        %d\n", energy + shield);
 		if (i == 6)
-			printf("    Shields             %d\n", s);
+			printf("    Shields             %d\n", shield);
 		if (i == 7)
-			printf("    Klingons Remaining  %d\n", k9);
+			printf("    Klingons Remaining  %d\n", klingons_left);
 	}
 	puts(srs_1);
 	putchar('\n');
@@ -952,8 +935,8 @@ static void long_range_scan(void)
 		for (j = q2 - 1; j <= q2 + 1; j++) {
 			putchar(' ');
 			if (i > 0 && i <= 8 && j > 0 && j <= 8) {
-				g[i][j] |= MAP_VISITED;
-				putbcd(g[i][j]);
+				map[i][j] |= MAP_VISITED;
+				putbcd(map[i][j]);
 			} else
 				fputs("***", stdout);
 			fputs(" :", stdout);
@@ -966,7 +949,7 @@ static void long_range_scan(void)
 
 static uint8_t no_klingon(void)
 {
-	if (k3 <= 0) {
+	if (klingons <= 0) {
 		puts("Science Officer Spock reports:\n"
 		     "  'Sensors show no enemy ships in this quadrant'\n");
 		return 1;
@@ -978,9 +961,10 @@ static uint8_t no_klingon(void)
 static void phaser_control(void)
 {
 	register int i;
-	int32_t iEnergy;
+	int32_t phaser_energy;
 	uint32_t h1;
 	int h;
+	uint8_t z1, z2;
 
 	if (inoperable(4))
 		return;
@@ -995,35 +979,35 @@ static void phaser_control(void)
 
 	printf("Phasers locked on target;\n"
 	       "Energy available = %d units\n\n"
-	       "Number of units to fire: ", e);
+	       "Number of units to fire: ", energy);
 
-	iEnergy = input_int();
+	phaser_energy = input_int();
 
-	if (iEnergy <= 0)
+	if (phaser_energy <= 0)
 		return;
 
-	if (e - iEnergy < 0) {
+	if (energy - phaser_energy < 0) {
 		puts("Not enough energy available.\n");
 		return;
 	}
 
-	e = e - iEnergy;
+	energy -=  phaser_energy;
 
 	/* We can fire up to nearly 3000 points of energy so we do this
 	   bit in 32bit math */
 
 	if (d[8] < 0)
-		/* @@@ iEnergy = iEnergy * rnd(); */
-		iEnergy = iEnergy * get_rand(100);
+		/* @@@ energy = energy * rnd(); */
+		phaser_energy *= get_rand(100);
 	else
-		iEnergy *= 100;
+		phaser_energy *= 100;
 
-	h1 = iEnergy / k3;
+	h1 = phaser_energy / klingons;
 
 //	printf("h1 = %d\n", h1);
 
 	for (i = 1; i <= 3; i++) {
-		if (k[i][3] > 0) {
+		if (kdata[i][3] > 0) {
 			/* @@@ h = (h1 / distance_to(0) * (rnd() + 2)); */
 			/* We are now 32bit with four digits accuracy */
 			h = h1 * (get_rand(100) + 200);
@@ -1035,30 +1019,30 @@ static void phaser_control(void)
 
 //			printf("damage base %d\n", h);
 
-			if (h <= 15 * k[i][3]) {	/* was 0.15 */
+			if (h <= 15 * kdata[i][3]) {	/* was 0.15 */
 				printf("Sensors show no damage to enemy at "
-				       "%d, %d\n\n", k[i][1], k[i][2]);
+				       "%d, %d\n\n", kdata[i][1], kdata[i][2]);
 			} else {
 				h = FROM_FIXED00(h);
-				k[i][3] = k[i][3] - h;
+				kdata[i][3] = kdata[i][3] - h;
 				printf("%d unit hit on Klingon at sector "
 				       "%d, %d\n",
-					h, k[i][1], k[i][2]);
-				if (k[i][3] <= 0) {
+					h, kdata[i][1], kdata[i][2]);
+				if (kdata[i][3] <= 0) {
 					puts("*** Klingon Destroyed ***\n");
-					k3--;
-					k9--;
-					z1 = k[i][1];
-					z2 = k[i][2];
+					klingons--;
+					klingons_left--;
+					z1 = kdata[i][1];
+					z2 = kdata[i][2];
 					quad[z1-1][z2-1] = Q_SPACE;
-					k[i][3] = 0;
+					kdata[i][3] = 0;
 					/* Minus a Klingon.. */
-					g[q1][q2] -= 0x100;
-					if (k9 <= 0)
+					map[q1][q2] -= 0x100;
+					if (klingons_left <= 0)
 						won_game();
 				} else
 					/* @@@ printf("\n"); */
-					printf("   (Sensors show %d units remaining.)\n\n", k[i][3]);
+					printf("   (Sensors show %d units remaining.)\n\n", kdata[i][3]);
 			}
 		}
 	}
@@ -1073,7 +1057,7 @@ static void photon_torpedoes(void)
 	int16_t c1;
 	int c2, c3, c4;
 
-	if (p <= 0) {
+	if (torps <= 0) {
 		puts("All photon torpedoes expended");
 		return;
 	}
@@ -1094,8 +1078,9 @@ static void photon_torpedoes(void)
 		return;
 	}
 
-	e = e - 2;
-	p--;
+	/* FIXME: energy underflow check ? */
+	energy = energy - 2;
+	torps--;
 
 #if 0
 	/* @@@ c2 = cint(c1); */
@@ -1156,6 +1141,7 @@ static void photon_torpedoes(void)
 static void torpedo_hit(void)
 {
 	int i, x3, y3;
+	uint8_t z1, z2;
 
 	x3 = cint100(x);	/* @@@ note: this is a true integer round in the MS BASIC version */
 	y3 = cint100(y);	/* @@@ note: this is a true integer round in the MS BASIC version */
@@ -1166,23 +1152,23 @@ static void torpedo_hit(void)
 		return;
 	case Q_KLINGON:
 		puts("*** Klingon Destroyed ***\n");
-		k3--;
-		k9--;
+		klingons--;
+		klingons_left--;
 
-		if (k9 <= 0)
+		if (klingons_left <= 0)
 			won_game();
 
 		for (i = 0; i <= 3; i++)
-			if (x3 == k[i][1] && y3 == k[i][2])
-				k[i][3] = 0;
-		g[q1][q2] -= 0x100;
+			if (x3 == kdata[i][1] && y3 == kdata[i][2])
+				kdata[i][3] = 0;
+		map[q1][q2] -= 0x100;
 		break;
 	case Q_BASE:					
 		puts("*** Starbase Destroyed ***");
-		b3--;
-		b9--;
+		starbases--;
+		starbases_left--;
 
-		if (b9 <= 0 && k9 <= FROM_FIXED(t) - t0 - t9) {
+		if (starbases_left <= 0 && klingons_left <= FROM_FIXED(stardate) - time_start - time_up) {
 			/* showfile ? FIXME */
 			puts("That does it, Captain!!"
 			     "You are hereby relieved of command\n"
@@ -1194,8 +1180,8 @@ static void torpedo_hit(void)
 		puts("Starfleet Command reviewing your record to consider\n"
 		     "court martial!\n");
 
-		d0 = 0;		/* Undock */
-		g[q1][q2] -= 0x10;
+		docked = 0;		/* Undock */
+		map[q1][q2] -= 0x10;
 		break;
 	}
 	z1 = x3;
@@ -1212,7 +1198,7 @@ static void damage_control(void)
 		puts("Damage Control report not available.");
 
 	/* Offer repair if docked */
-	if (d0) {
+	if (docked) {
 		/* d3 is x.xx fixed point */
 		d3 = 0;
 		for (i = 1; i <= 8; i++)
@@ -1237,7 +1223,7 @@ static void damage_control(void)
 				   have to give in and make t a two digt offset from
 				   a saved constant base only used in printing to
 				   avoid that round below FIXME */
-				t = t + (d3 + 5)/10 + 1;
+				stardate += (d3 + 5)/10 + 1;
 			}
 			return;
 		}
@@ -1248,8 +1234,8 @@ static void damage_control(void)
 
 	puts("Device            State of Repair");
 
-	for (r1 = 1; r1 <= 8; r1++)
-		printf("%-25s%6s\n", get_device_name(r1), print100(d[r1]));
+	for (i = 1; i <= 8; i++)
+		printf("%-25s%6s\n", get_device_name(i), print100(d[i]));
 
 	printf("\n");
 }
@@ -1262,27 +1248,27 @@ static void shield_control(void)
 		return;
 
 	printf("Energy available = %d\n\n"
-	       "Input number of units to shields: ", e + s);
+	       "Input number of units to shields: ", energy + shield);
 
 	i = input_int();
 
-	if (i < 0 || s == i) {
+	if (i < 0 || shield == i) {
 unchanged:
 		puts("<Shields Unchanged>\n");
 		return;
 	}
 
-	if (i >= e + s) {
+	if (i >= energy + shield) {
 		puts("Shield Control Reports:\n"
 		     "  'This is not the Federation Treasury.'");
 		goto unchanged;
 	}
 
-	e = e + s - i;
-	s = i;
+	energy = energy + shield - i;
+	shield = i;
 
 	printf("Deflector Control Room report:\n"
-	       "  'Shields now at %d units per your command.'\n\n", s);
+	       "  'Shields now at %d units per your command.'\n\n", shield);
 }
 
 static void library_computer(void)
@@ -1342,8 +1328,8 @@ static void galactic_record(void)
 		for (j = 1; j <= 8; j++) {
 			printf("   ");
 
-			if (g[i][j] & MAP_VISITED)
-				putbcd(g[i][j]);
+			if (map[i][j] & MAP_VISITED)
+				putbcd(map[i][j]);
 			else
 				printf("***");
 		}
@@ -1358,28 +1344,28 @@ static const char *str_s = "s";
 static void status_report(void)
 {
 	const char *plural = str_s + 1;
-	uint16_t left = TO_FIXED(t0 + t9) - t;
+	uint16_t left = TO_FIXED(time_start + time_up) - stardate;
 
 	puts("   Status Report:\n");
 
-	if (k9 > 1)
+	if (klingons_left > 1)
 		plural = str_s;
 
 	/* Assumes fixed point is single digit fixed */
 	printf("Klingon%s Left: %d\n"
 	       "Mission must be completed in %d.%d stardates\n",
-		plural, k9,
+		plural, klingons_left,
 		FROM_FIXED(left), left%10);
 
-	if (b9 < 1) {
+	if (starbases_left < 1) {
 		puts("Your stupidity has left you on your own in the galaxy\n"
 		     " -- you have no starbases left!\n");
 	} else {
 		plural = str_s;
-		if (b9 < 2)
+		if (starbases_left < 2)
 			plural++;
 
-		printf("The Federation is maintaining %d starbase%s in the galaxy\n\n", b9, plural);
+		printf("The Federation is maintaining %d starbase%s in the galaxy\n\n", starbases_left, plural);
 	}
 }
 
@@ -1392,42 +1378,34 @@ static void torpedo_data(void)
 	if (no_klingon())
 		return;
 
-	if (k3 > 1)
+	if (klingons > 1)
 		plural--;
 
 	printf("From Enterprise to Klingon battlecriuser%s:\n\n", plural);
 
 	for (i = 1; i <= 3; i++) {
-		if (k[i][3] > 0) {
-			w1 = TO_FIXED00(k[i][1]);
-			x = TO_FIXED00(k[i][2]);
-			c1 = s1;
-			a = s2;
-
-			compute_vector();
+		if (kdata[i][3] > 0) {
+			compute_vector(TO_FIXED00(kdata[i][1]),
+				       TO_FIXED00(kdata[i][2]),
+				       s1, s2);
 		}
 	}
 }
 
 static void nav_data(void)
 {
-	if (b3 <= 0) {
+	if (starbases <= 0) {
 		puts("Mr. Spock reports,\n"
 		     "  'Sensors show no starbases in this quadrant.'\n");
 		return;
 	}
-
-	w1 = TO_FIXED00(b4);
-	x = TO_FIXED00(b5);
-	c1 = s1;
-	a = s2;
-
-	compute_vector();
+	compute_vector(TO_FIXED00(base_y), TO_FIXED00(base_x), s1, s2);
 }
 
 /* Q: do we want to support fractional co-ords ? */
 static void dirdist_calc(void)
 {
+	int16_t c1, a, w1, x;
 	printf("Direction/Distance Calculator\n"
 	       "You are at quadrant %d,%d sector %d,%d\n\n"
 	       "Please enter initial X coordinate: ",
@@ -1453,7 +1431,7 @@ static void dirdist_calc(void)
 	x = TO_FIXED00(input_int());
 	if (x < 0 || x > 900)
 		return;
-	compute_vector();
+	compute_vector(w1, x, c1, a);
 }
 
 static const char *gm_1 = "  ----- ----- ----- ----- ----- ----- ----- -----\n";
@@ -1462,17 +1440,13 @@ static void galaxy_map(void)
 {
 	int i, j, j0;
 
-	g5 = 1;
-
 	printf("\n                   The Galaxy\n\n");
 	printf("    1     2     3     4     5     6     7     8\n");
 
 	for (i = 1; i <= 8; i++) {
 		printf("%s%d ", gm_1, i);
 
-		z4 = i;
-		z5 = 1;
-		quadrant_name();
+		quadrant_name(1, i, 1);
 
 		j0 = (int) (11 - (strlen(quadname) / 2));
 
@@ -1487,8 +1461,7 @@ static void galaxy_map(void)
 		if (!(strlen(quadname) % 2))
 			putchar(' ');
 
-		z5 = 5;
-		quadrant_name();
+		quadrant_name(1, i, 5);
 
 		j0 = (int) (12 - (strlen(quadname) / 2));
 
@@ -1502,79 +1475,63 @@ static void galaxy_map(void)
 
 }
 
-static void compute_vector(void)
+static const char *dist_1 = "  DISTANCE = %s\n\n";
+
+static void compute_vector(int16_t w1, int16_t x, int16_t c1, int16_t a)
 {
+	uint32_t xl, al;
+
+	fputs("  DIRECTION = ", stdout);
 	/* All this is happening in fixed point */
 	x = x - a;
 	a = c1 - w1;
 
+	xl = abs(x);
+	al = abs(a);
+
 	if (x < 0) {
-/*8350*/	if (a > 0) {
+		if (a > 0) {
 			c1 = 300;
-/* 8420 */		sub2();
+estimate2:
+		/* Multiply the top half by 100 to keep in fixed0 */
+			if (al >= xl)
+				printf("%s", print100(c1 + ((xl * 100) / al)));
+			else
+				/* @@@ printf("  DIRECTION = %4.2f\n\n", c1 + (((x * 2) - a) / x)); */
+				printf("%s", print100(c1 + ((((xl * 2) - al) * 100)  / xl)));
+
+			/* @@@ printf("  DISTANCE = %4.2f\n", (x > a) ? x : a); */
+			printf(dist_1, print100((x > a) ? x : a));
 			return;
 		} else if (x != 0){
-/* 8360 */		c1 = 500;
-/* 8290 */		sub1();
+			c1 = 500;
+			goto estimate1;
 			return;
-/* 8410 */	} else {
+		} else {
 			c1 = 700;
-/* 8420 */		sub2();
-			return;
+			goto estimate2;
 		}
-/*8250*/} else if (a < 0) {
-/*8410*/	c1 = 700;
-/*8420*/	sub2();
-		return;
-/* 8260 */} else if (x > 0) {
-/* 8280 */	c1 = 100;
-/* 8290 */		sub1();
-		return;
+	} else if (a < 0) {
+		c1 = 700;
+		goto estimate2;
+	} else if (x > 0) {
+		c1 = 100;
+		goto estimate1;
 	} else if (a == 0) {
 		c1 = 500;
-		sub1();
+		goto estimate1;
 	} else {
 		c1 = 100;
-		sub1();
+estimate1:
+		/* Multiply the top half by 100 as well so that we keep it in fixed00
+		   format. Our larget value is int 9 (900) so we must do this 32bit */
+		if (al <= xl)
+			printf("%s", print100(c1 + ((al * 100) / xl)));
+		else
+			printf("%s", print100(c1 + ((((al * 2) - xl) * 100) / al)));
+		printf(dist_1, print100((xl > al) ? xl : al));
 	}
 }
-
-static const char *dir_1 = "  DIRECTION = ";
-static const char *dist_1 = "  DISTANCE = %s\n\n";
-
-static void sub1(void)
-{
-/* 8290 */uint32_t xl = abs(x);
-	uint32_t al = abs(a);
-
-	fputs(dir_1, stdout);
-	/* Multiply the top half by 100 as well so that we keep it in fixed00
-	   format. Our larget value is int 9 (900) so we must do this 32bit */
-/* 8290 */if (al <= xl)
-/*8330 */	printf("%s", print100(c1 + ((al * 100) / xl)));
-	else
-/*8310 */	printf("%s", print100(c1 + ((((al * 2) - xl) * 100) / al)));
-
-	printf(dist_1, print100((xl > al) ? xl : al));
-}
-
-static void sub2(void)
-{
-/* 8420 */	uint32_t xl = abs(x);
-	uint32_t al = abs(a);
-
-	fputs(dir_1, stdout);
-	/* Multiply the top half by 100 to keep in fixed0 */
-	if (al >= xl)
-		printf("%s", print100(c1 + ((xl * 100) / al)));
-	else
-		/* @@@ printf("  DIRECTION = %4.2f\n\n", c1 + (((x * 2) - a) / x)); */
-		printf("%s", print100(c1 + ((((xl * 2) - al) * 100)  / xl)));
-
-	/* @@@ printf("  DISTANCE = %4.2f\n", (x > a) ? x : a); */
-	printf(dist_1, print100((x > a) ? x : a));
-}
-
 static void ship_destroyed(void)
 {
 	puts("The Enterprise has been destroyed. "
@@ -1585,7 +1542,7 @@ static void ship_destroyed(void)
 
 static void end_of_time(void)
 {
-	printf("It is stardate %d.\n\n",  FROM_FIXED(t));
+	printf("It is stardate %d.\n\n",  FROM_FIXED(stardate));
 
 	resign_commision();
 }
@@ -1593,7 +1550,7 @@ static void end_of_time(void)
 static void resign_commision(void)
 {
 	printf("There were %d Klingon Battlecruisers left at the"
-	       " end of your mission.\n\n", k9);
+	       " end of your mission.\n\n", klingons_left);
 
 	end_of_game();
 }
@@ -1603,18 +1560,17 @@ static void won_game(void)
 	puts("Congratulations, Captain!  The last Klingon Battle Cruiser\n"
 	     "menacing the Federation has been destoyed.\n");
 
-	/* FIXME: finish integerising this */
-	if (FROM_FIXED(t) - t0 > 0)
+	if (FROM_FIXED(stardate) - time_start > 0)
 		printf("Your efficiency rating is %s\n",
-			print100(square00(TO_FIXED00(k7)/(FROM_FIXED(t) - t0))));
-		// 1000 * pow(k7 / (float)(FROM_FIXED(t) - t0), 2));
+			print100(square00(TO_FIXED00(total_klingons)/(FROM_FIXED(stardate) - time_start))));
+		// 1000 * pow(total_klingons / (float)(FROM_FIXED(t) - time_start), 2));
 	end_of_game();
 }
 
 static void end_of_game(void)
 {
 	char x[4];
-	if (b9 > 0) {
+	if (starbases_left > 0) {
 		/* FIXME: showfile ? */
 		fputs("The Federation is in need of a new starship commander"
 		     " for a similar mission.\n"
@@ -1631,17 +1587,18 @@ static void end_of_game(void)
 static void klingons_move(void)
 {
 	int i;
+	uint8_t z1, z2;
 
 	for (i = 1; i <= 3; i++) {
-		if (k[i][3] > 0) {
-			z1 = k[i][1];
-			z2 = k[i][2];
+		if (kdata[i][3] > 0) {
+			z1 = kdata[i][1];
+			z2 = kdata[i][2];
 			quad[z1-1][z2-1] = Q_SPACE;
 
-			find_set_empty_place(Q_KLINGON);
+			find_set_empty_place(Q_KLINGON, &z1, &z2);
 
-			k[i][1] = z1;
-			k[i][2] = z2;
+			kdata[i][1] = z1;
+			kdata[i][2] = z2;
 		}
 	}
 
@@ -1655,63 +1612,64 @@ static void klingons_shoot(void)
 	uint32_t h;
 	uint8_t i;
 
-	if (k3 <= 0)
+	if (klingons <= 0)
 		return;
 
-	if (d0 != 0) {
+	if (docked) {
 		puts("Starbase shields protect the Enterprise\n");
 		return;
 	}
 
 	for (i = 1; i <= 3; i++) {
-		if (k[i][3] > 0) {
-			h = k[i][3] * (200 + get_rand(100));
+		if (kdata[i][3] > 0) {
+			h = kdata[i][3] * (200 + get_rand(100));
 			h *= 100;	/* Ready for division in fixed */
 			h /= distance_to(i);
 			/* Takes us back into FIXED00 */
-			s = s - FROM_FIXED00(h);
-			/* @@@ k[i][3] = k[i][3] / (3 + rnd()); */
+			shield = shield - FROM_FIXED00(h);
+			/* @@@ kdata[i][3] = kdata[i][3] / (3 + rnd()); */
 
-			k[i][3] = (k[i][3] * 100) / (300 + get_rand(100));
+			kdata[i][3] = (kdata[i][3] * 100) / (300 + get_rand(100));
 
 			printf("%d unit hit on Enterprise from sector "
-			       "%d, %d\n", FROM_FIXED00(h), k[i][1], k[i][2]);
+			       "%d, %d\n", FROM_FIXED00(h), kdata[i][1], kdata[i][2]);
 
-			if (s <= 0) {
+			if (shield <= 0) {
 				putchar('\n');
 				ship_destroyed();
 			}
 
-			printf("    <Shields down to %d units>\n\n", s);
+			printf("    <Shields down to %d units>\n\n", shield);
 
 			if (h >= 20) {
 				/* The check in basic is float and is h/s >.02. We
 				   have to use 32bit values here to avoid an overflow
 				   FIXME: use a better algorithm perhaps ? */
-				uint32_t ratio = ((uint32_t)h)/s;
+				uint32_t ratio = ((uint32_t)h)/shield;
 				if (get_rand(10) <= 6 || ratio > 2) {
-					r1 = rand8();
+					uint8_t r = rand8();
 					/* The original basic code computed h/s in
 					   float form the C conversion broke this. We correct it in the fixed
 					   point change */
-					d[r1] = d[r1] - ratio - get_rand(50);
+					d[r] -= ratio - get_rand(50);
 
 					/* FIXME: can we use dcr_1 here ?? */
 					printf("Damage Control reports\n"
-					       "   '%s' damaged by hit\n\n", get_device_name(r1));
+					       "   '%s' damaged by hit\n\n", get_device_name(r));
 				}
 			}
 		}
 	}
 }
 
-static void repair_damage(void)
+static void repair_damage(uint16_t warp)
 {
 	int i;
-	int16_t d6;		/* Repair Factor */
+	int d1;
+	uint16_t d6;		/* Repair Factor */
 
-	d6 = w1;
-	if (w1 >= 100)
+	d6 = warp;
+	if (warp >= 100)
 		d6 = TO_FIXED00(1);
 
 	for (i = 1; i <= 8; i++) {
@@ -1732,36 +1690,40 @@ static void repair_damage(void)
 	}
 
 	if (get_rand(10) <= 2) {
-		r1 = rand8();
+		uint8_t r = rand8();
 
 		if (get_rand(10) < 6) {
 			/* Working in 1/100ths */
-			d[r1] = d[r1] - (get_rand(500) + 100);
+			d[r] -= (get_rand(500) + 100);
 			//TO_FIXED00((rnd() * 5.0 + 1.0));
 			puts(dcr_1);
-			printf("    %s damaged\n\n", get_device_name(r1));
+			printf("    %s damaged\n\n", get_device_name(r));
 		} else {
 			/* Working in 1/100ths */
-			d[r1] = d[r1] + get_rand(300) + 100;
+			d[r] += get_rand(300) + 100;
 			// TO_FIXED00(rnd() * 3.0 + 1.0);
 			puts(dcr_1);
 			printf("    %s state of repair improved\n\n",
-					get_device_name(r1));
+					get_device_name(r));
 		}
 	}
 }
 
-/* Misc Functions and Subroutines */
+/* Misc Functions and Subroutines
+   Returns co-ordinates r1/r2 and for now z1/z2 */
 
-static void find_set_empty_place(uint8_t t)
+static void find_set_empty_place(uint8_t t, uint8_t *z1, uint8_t *z2)
 {
+	uint8_t r1, r2;
 	do {
 		r1 = rand8();
 		r2 = rand8();
 	} while (quad[r1-1][r2-1] != Q_SPACE );
 	quad[r1-1][r2-1] = t;
-	z1 = r1;
-	z2 = r2;
+	if (z1)
+		*z1 = r1;
+	if (z2)
+		*z2 = r2;
 }
 
 static const char *device_name[] = {
@@ -1783,23 +1745,23 @@ static const char *quad_name[] = { "",
 	"Betelgeuse", "Aldebaran", "Regulus", "Arcturus", "Spica"
 };
 
-static void quadrant_name(void)
+static void quadrant_name(uint8_t y, uint8_t x, uint8_t small)
 {
 
 	static char *sect_name[] = { "", " I", " II", " III", " IV" };
 
-	if (z4 < 1 || z4 > 8 || z5 < 1 || z5 > 8)
+	if (y < 1 || y > 8 || x < 1 || x > 8)
 		strcpy(quadname, "Unknown");
 
-	if (z5 <= 4)
-		strcpy(quadname, quad_name[z4]);
+	if (x <= 4)
+		strcpy(quadname, quad_name[y]);
 	else
-		strcpy(quadname, quad_name[z4 + 8]);
+		strcpy(quadname, quad_name[y + 8]);
 
-	if (g5 != 1) {
-		if (z5 > 4)
-			z5 = z5 - 4;
-		strcat(quadname, sect_name[z5]);
+	if (small != 1) {
+		if (x > 4)
+			x = x - 4;
+		strcat(quadname, sect_name[x]);
 	}
 
 	return;
@@ -1846,15 +1808,15 @@ static int distance_to(int i)
 	int j;
 
 	/* We do the squares in fixed point maths */
-	j = square00(TO_FIXED00(k[i][1]) - s1);
-	j += square00(TO_FIXED00(k[i][2]) - s2);
+	j = square00(TO_FIXED00(kdata[i][1]) - s1);
+	j += square00(TO_FIXED00(kdata[i][2]) - s2);
 
 	/* Find the integer square root */
 	j = isqrt(j);
 	/* Correct back into 0.00 fixed point */
 	j *= 10;
-	/* @@@ j = sqrt(pow((k[i][1] - s1), 2) + pow((k[i][2] - s2), 2)); */
-//	j = (int) sqrt(pow((k[i][1] - s1), 2) + pow((k[i][2] - s2), 2));
+	/* @@@ j = sqrt(pow((kdata[i][1] - s1), 2) + pow((kdata[i][2] - s2), 2)); */
+//	j = (int) sqrt(pow((kdata[i][1] - s1), 2) + pow((kdata[i][2] - s2), 2));
 
 	return j;
 }
@@ -1870,19 +1832,19 @@ static int cint100(int16_t d)
 static void showfile(char *filename)
 {
 	FILE *fp;
-	line lBuffer;
-	int iRow = 0;
+	char buffer[MAXCOL];
+	int row = 0;
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
 		perror(filename);
 		return;
 	}
-	while (fgets(lBuffer, sizeof(lBuffer), fp) != NULL) {
-		fputs(lBuffer, stdout);
-		if (iRow++ > MAXROW - 3) {
+	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+		fputs(buffer, stdout);
+		if (row++ > MAXROW - 3) {
 			getchar();
-			iRow = 0;
+			row = 0;
 		}
 	}
 	fclose(fp);
