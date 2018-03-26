@@ -10,10 +10,11 @@
 /* The sleeping range must be together see swap.c */
 #define P_READY         2    /* Runnable   */
 #define P_SLEEP         3    /* Sleeping; can be awakened by signal */
-#define P_STOPPED       4    /* Stopped waiting for SIGCONT */
-#define P_FORKING       5    /* In process of forking; do not mess with */
-#define P_ZOMBIE        6    /* Exited. */
-#define P_NOSLEEP	7    /* Internal no-sleep state, never visible to ps */
+#define P_IOWAIT        4    /* Sleeping; cannot be awakened by signal */
+#define P_STOPPED       5    /* Stopped waiting for SIGCONT */
+#define P_FORKING       6    /* In process of forking; do not mess with */
+#define P_ZOMBIE        7    /* Exited. */
+#define P_NOSLEEP	8    /* Internal no-sleep state, never visible to ps */
 
 /* Process table entry */
 
