@@ -386,3 +386,53 @@ void sync(void)
 	/* WRS: also call d_flush(dev) here for each dirty dev ? */
 	bufsync();		/* Clear buffer pool */
 }
+
+#ifdef CONFIG_BLOCK_SLEEP
+
+/* ptab is an array so won't exceed 64K so this crude cast works nicely */
+
+static void i_lock(struct inode *i)
+{
+	if (i->lock == (uint16_t)udata.u_ptab)
+		panic(LOCKLOCK);
+	while(i->i_lock)
+		psleep_nosig(i);
+	i->i_lock = (uint16_t)udata.u_ptab;
+}
+
+static void i_unlock(struct inode *i)
+{
+	i_islocked(i);
+	i->i_lock = 0;
+	pwakeup_nosig(i);
+}
+
+static void i_unlock_deref(struct inode *i)
+{
+	i->i_lock = 0;
+	i_deref(i);
+}
+
+void i_islocked(struct inode *i)
+{
+	if (i->lock != (uint16_t)udata.u_ptab)
+		panic(IUNLOCK);
+}
+
+struct inode *n_open_lock(char *uname, struct inode **parent)
+{
+	struct inode *i = n_open(uname, parent);
+	if (i)
+		i_lock(i);
+	return i;
+}
+
+struct inode *getinode_lock(uint8_t uindex)
+{
+	struct inode *i = getinode(uindex);
+	if (i)
+		i_lock(i);
+	return i;
+}
+
+#endif
