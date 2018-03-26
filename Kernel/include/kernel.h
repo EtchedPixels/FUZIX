@@ -291,6 +291,9 @@ typedef struct cinode {
 #define CFLOCK		0x0F	/* flock bits */
 #define CFLEX		0x0F	/* locked exclusive */
 #define CFMAX		0x0E	/* highest shared lock count permitted */
+#ifdef CONFIG_BLOCK_SLEEP
+   uint16_t    c_lock;		/* inode lock state */
+#endif
 } cinode, *inoptr;
 
 #define NULLINODE ((inoptr)NULL)
@@ -354,10 +357,11 @@ struct mount {
 /* The sleeping range must be together see swap.c */
 #define P_READY         2    /* Runnable   */
 #define P_SLEEP         3    /* Sleeping; can be awakened by signal */
-#define P_STOPPED       4    /* Sleeping, don't wake up for signal */
-#define P_FORKING       5    /* In process of forking; do not mess with */
-#define P_ZOMBIE        6    /* Exited. */
-#define P_NOSLEEP	7    /* In an internal state where sleep is forbidden */
+#define P_IOWAIT	4    /* Sleeping: don't wake for a signal */
+#define P_STOPPED       5    /* Sleeping, signal driven halt */
+#define P_FORKING       6    /* In process of forking; do not mess with */
+#define P_ZOMBIE        7    /* Exited. */
+#define P_NOSLEEP	8    /* In an internal state where sleep is forbidden */
 
 
 /* 0 is used to mean 'check we could signal this process' */
@@ -902,6 +906,7 @@ extern unsigned int ugetblk(bufptr bp, usize_t from, usize_t size);
 
 /* process.c */
 extern void psleep(void *event);
+extern void psleep_nosig(void *event);
 extern void wakeup(void *event);
 extern void pwake(ptptr p);
 extern ptptr getproc(void);

@@ -17,11 +17,12 @@ int flags;
 char *mapstat(char s)
 {
     switch (s) {
-	case P_ZOMBIE: return "Defunct";
+	case P_ZOMBIE:  return "Defunct";
 	case P_FORKING: return "Forking";
 	case P_RUNNING: return "Running";
 	case P_READY:   return "Ready";
 	case P_SLEEP:   return "Asleep";
+	case P_IOWAIT:  return "I/O Wait";
 	case P_STOPPED: return "Stopped";
     }
     return "?";
