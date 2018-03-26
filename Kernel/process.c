@@ -57,7 +57,7 @@ void psleep(void *event)
 
 void psleep_nosig(void *event)
 {
-	do_pleep(event, P_IOWAIT);
+	do_psleep(event, P_IOWAIT);
 }
 
 /* wakeup() looks for any process waiting on the event,
@@ -569,7 +569,7 @@ uint8_t chksigs(void)
 	uint8_t b;
 
 	/* Sleeping without signals allowed */
-	if (p->status == P_IOWAIT)
+	if (udata.u_ptab->p_status == P_IOWAIT)
 		return 0;
 
 	/* Fast path - no signals pending means no work.
