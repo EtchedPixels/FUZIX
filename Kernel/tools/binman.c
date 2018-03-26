@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	   then the compiler will have messed it up. Even though we then
 	   copy the initializers into initialized we can only use the space
 	   for bss */
-	if (s__DISCARD && s__DISCARD + l__DISCARD >= s__INITIALIZER &&
+	if (s__DISCARD && s__DISCARD + l__DISCARD > s__INITIALIZER &&
 		s__INITIALIZER + l__INITIALIZED >= s__DISCARD) {
 		fprintf(stderr, "Initializer will have overwritten DISCARD\n");
 		exit(1);
