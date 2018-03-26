@@ -51,6 +51,9 @@ _switchout:
         di
         call _chksigs
         ; save machine state
+	ld a,l
+	or a
+	jr nz, switchsig
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
@@ -83,6 +86,14 @@ idling:
 	pop iy
 	pop ix
 	pop hl
+	ei
+	ret
+
+; As we tried to sleep we raced a signal so got the boot back out
+; into the land of the living.
+switchsig:
+	ld hl, (U_DATA__U_PTAB)
+	ld (hl), #P_RUNNING
 	ei
 	ret
 
