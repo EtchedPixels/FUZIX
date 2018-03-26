@@ -2,7 +2,7 @@
 
 #define VARARGS 	-1
 
-char *syscall_name[NR_SYSCALL] = {
+const char *syscall_name[NR_SYSCALL] = {
 	"_exit",
 	"open",
 	"close",
