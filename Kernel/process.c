@@ -17,7 +17,7 @@
  */
 
 
-void psleep(void *event)
+static void do_psleep(void *event, uint8_t state)
 {
 	irqflags_t irq = di();
 #ifdef DEBUG
@@ -25,6 +25,7 @@ void psleep(void *event)
 #endif
 	switch (udata.u_ptab->p_status) {
 	case P_SLEEP:		// echo output from devtty happens while processes are still sleeping but in-context
+	case P_IOWAIT:
 	case P_STOPPED:		// coming to a halt
 		nready++;	/* We will fix this back up below */
 	case P_RUNNING:		// normal process
@@ -36,22 +37,28 @@ void psleep(void *event)
 		panic(PANIC_VOODOO);
 	}
 
-	udata.u_ptab->p_status = P_SLEEP;
+	udata.u_ptab->p_status = state;
 	udata.u_ptab->p_wait = event;
 	udata.u_ptab->p_waitno = ++waitno;
 	nready--;
 
-	/* It is safe to restore interrupts here. We have already updated the
-	   process state. The worst case is that a wakeup as we switchout
-	   leads us to switch out and back in, or that we wake and run
-	   after other candidates - no different to it occuring after the
-	   switch */
-	irqrestore(irq);
+	/* Invalidate signal cache if in IOWAIT */
+	if (state == P_IOWAIT)
+		udata.u_cursig = 0;
+
 	switchout();		/* Switch us out, and start another process */
 	/* Switchout doesn't return in this context until we have been switched back in, of course. */
 }
 
+void psleep(void *event)
+{
+	do_psleep(event, P_SLEEP);
+}
 
+void psleep_nosig(void *event)
+{
+	do_pleep(event, P_IOWAIT);
+}
 
 /* wakeup() looks for any process waiting on the event,
  * and makes it runnable
@@ -295,7 +302,8 @@ ptptr ptab_alloc(void)
 }
 
 /* Follow Unix tradition with load reporting (or more accurately it
-   is pre-Unix from Tenex) */
+   is pre-Unix from Tenex). We don't report P_IOWAIT the same way as Unix
+   does ... need to keep track of two nready values to do that */
 
 void load_average(void)
 {
@@ -507,6 +515,8 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 				/* Don't allow us to race SIGCONT */
 				irqflags_t irq = di();
 				/* FIXME: can we ever end up here not in READY/RUNNING ? */
+				/* Yes: we could be in P_SLEEP on a close race
+				   with do_psleep() */
 				nready--;
 				udata.u_ptab->p_status = P_STOPPED;
 				udata.u_ptab->p_event = j;
@@ -557,6 +567,10 @@ uint8_t chksigs(void)
 	struct sigbits *sb = udata.u_ptab->p_sig;
 	uint8_t r;
 	uint8_t b;
+
+	/* Sleeping without signals allowed */
+	if (p->status == P_IOWAIT)
+		return 0;
 
 	/* Fast path - no signals pending means no work.
 	   Cursig being set means we've already worked out what to do.
