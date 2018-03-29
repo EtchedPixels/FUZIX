@@ -2,6 +2,7 @@
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
+#define DEBUG_NREADY		/* debug nready counting */
 
 #include <kernel.h>
 #include <tty.h>
@@ -15,7 +16,6 @@
  * already been disabled.   An event of 0 means a pause(), while an
  * event equal to the process's own ptab address is a wait().
  */
-
 
 static void do_psleep(void *event, uint8_t state)
 {
@@ -40,7 +40,6 @@ static void do_psleep(void *event, uint8_t state)
 	udata.u_ptab->p_status = state;
 	udata.u_ptab->p_wait = event;
 	udata.u_ptab->p_waitno = ++waitno;
-	nready--;
 
 	/* Invalidate signal cache if in IOWAIT */
 	if (state == P_IOWAIT)
@@ -86,6 +85,11 @@ void wakeup(void *event)
 }
 
 
+/*
+ * When we wake a process in Fuzix we don't force any kind of reschedule
+ * even if the priority is higher. It's too expensive on many systems to
+ * be that fair.
+ */
 void pwake(ptptr p)
 {
 	if (p->p_status > P_RUNNING && p->p_status < P_STOPPED) {
@@ -95,6 +99,66 @@ void pwake(ptptr p)
 		}
 		p->p_wait = NULL;
 	}
+}
+
+/* This used to be an assembly function in older FUZIX but it turns out we
+   have to do a lot of common optimizations so it is now a C helper fronting
+   platform_switchout(). For speed and sanity reasons not every platform goes
+   via this path when pre-empting, but instead implements a subset of the checks
+   in the platform code.
+
+   switchout() is called when a process is giving up the processor for some
+   reason
+ */
+
+void switchout(void)
+{
+	di();
+
+	/* We do the accounting in switchout as it's cheaper and easier to
+	   do it once. Useful trick borrowed from Linux */
+	if (udata.u_ptab->p_status > P_READY)
+		nready--;
+
+#ifdef DEBUG_NREADY
+	{
+		ptptr p;
+		uint8_t n = 0;
+		for (p = ptab; p < ptab_end; ++p) {
+			if (p->p_status == P_RUNNING ||
+				p->p_status == P_READY)
+					n++;
+		}
+		if (n != nready)
+			panic("nready");
+	}
+#endif
+	/* If we have a signal we need to get to processing them we keep
+	   running until it happens */
+	if (chksigs()) {
+		if (udata.u_ptab->p_status > P_READY)
+			nready++;
+		udata.u_ptab->p_status = P_RUNNING;
+		ei();
+		return;
+	}
+	/* When we are idle we widdle our thumbs here until a polled event
+	   in platform_idle or an interrupt wakes someone up */
+	while (nready == 0) {
+		ei();
+		platform_idle();
+		di();
+	}
+	/* If only one process is ready to run and it's us then just
+	   return. This is the normal path in most Fuzix use cases as we
+	   are waiting for input while mostly system idle */
+	if (nready == 1 && udata.u_ptab->p_status == P_READY) {
+		udata.u_ptab->p_status = P_RUNNING;
+		ei();
+		return;
+	}
+	/* We probably need to run somehting else */
+	platform_switchout();
 }
 
 /* Getproc returns the process table pointer of a runnable process.
@@ -433,7 +497,10 @@ void unix_syscall(void)
 		/* Time to switch out? - we may have overstayed our welcome inside
 		   a syscall so switch straight afterwards */
 		udata.u_ptab->p_status = P_READY;
-		switchout();
+		/* We know there will be a switch if we hit this point so
+		   don't look for optimizations. Likewise we know a signal
+		   process will stay running/ready */
+		platform_switchout();
 	}
 	ei();
 	chksigs();
@@ -517,11 +584,9 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 				/* FIXME: can we ever end up here not in READY/RUNNING ? */
 				/* Yes: we could be in P_SLEEP on a close race
 				   with do_psleep() */
-				nready--;
 				udata.u_ptab->p_status = P_STOPPED;
 				udata.u_ptab->p_event = j;
 				sb->s_pending &= ~m;	// unset the bit
-				irqrestore(irq);
 				switchout();
 				/* Other things may have happened */
 				return 0xFF;
@@ -670,6 +735,8 @@ void acctexit(ptptr p)
 
 /* Perform the terminal process signalling */
 /* FIXME: why return a value - we don't use it */
+/* FIXME: pass the process id not parent in then can reuse in doexit
+   special cases */
 static int signal_parent(ptptr p)
 {
         if (p->p_sig[1].s_ignored & (1UL << SIGCHLD)) {

@@ -14,7 +14,7 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -38,23 +38,14 @@
 
         .area _COMMONMEM
 
-; Switchout switches out the current process, finds another that is READY,
+; __switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ; 
 ; This function can have no arguments or auto variables.
 ;
-;	FIXME: can we optimise all the pushes and move them into slow_path
-;
-_switchout:
-        di
-        call _chksigs
-        ; save machine state
-	ld a,l
-	or a
-	jr nz, switchsig
-
+_platform_switchout:
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
@@ -63,41 +54,6 @@ _switchout:
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
-	ld a, (_nready)
-	or a
-	jr nz, slow_path
-
-idling:
-	ei
-	call _platform_idle
-	di
-	ld a, (_nready)
-	or a
-	jr z, idling
-	cp #1
-	jr nz, slow_path
-	ld hl, (U_DATA__U_PTAB)
-	ld a, (hl)		; Process table status is first byte
-	; Are we the one process ?
-	cp #P_READY
-	jr nz, slow_path
-	; We are - fast path return from switchout
-	ld (hl), #P_RUNNING
-	pop iy
-	pop ix
-	pop hl
-	ei
-	ret
-
-; As we tried to sleep we raced a signal so got the boot back out
-; into the land of the living.
-switchsig:
-	ld hl, (U_DATA__U_PTAB)
-	ld (hl), #P_RUNNING
-	ei
-	ret
-
-slow_path:
 	; Stash the uarea back into process memory
 	call map_process_always
 	ld hl, #U_DATA
