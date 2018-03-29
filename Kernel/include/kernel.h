@@ -40,6 +40,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define ALIGNDOWN(v) (v)
 #endif
 
+#ifndef FS_MAX_SHIFT
+#define FS_MAX_SHIFT	0
+#endif
+
 /* These work fine for most compilers but can be overriden for those where the
    resulting code generation is foul */
 #ifndef LOWORD
@@ -291,6 +295,7 @@ typedef struct cinode {
 #define CFLOCK		0x0F	/* flock bits */
 #define CFLEX		0x0F	/* locked exclusive */
 #define CFMAX		0x0E	/* highest shared lock count permitted */
+   uint8_t     c_super;		/* Superblock index */
 #ifdef CONFIG_BLOCK_SLEEP
    uint16_t    c_lock;		/* inode lock state */
 #endif
@@ -312,7 +317,7 @@ typedef struct direct {
  */
 #define FILESYS_TABSIZE 50
 typedef struct filesys { // note: exists in mem and on disk
-    uint16_t       s_mounted;
+    uint16_t      s_mounted;
     uint16_t      s_isize;
     uint16_t      s_fsize;
     uint16_t      s_nfree;
@@ -329,6 +334,9 @@ typedef struct filesys { // note: exists in mem and on disk
     uint32_t      s_time;
     blkno_t       s_tfree;
     uint16_t      s_tinode;
+    uint8_t	  s_shift;	/* Extent size */
+    uint8_t	  s_reserved;
+    /* Below this is only used in memory so alignments don't matter */
     inoptr        s_mntpt;     /* Mount point */
     /* TODO: Add geometry hints and support > 512 byte blocks */
 } filesys, *fsptr;
@@ -992,6 +1000,7 @@ extern void platform_idle(void);
 extern uint8_t rtc_secs(void);
 extern void trap_reboot(void);
 extern uint8_t platform_param(char *p);
+extern void platform_switchout(void);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
