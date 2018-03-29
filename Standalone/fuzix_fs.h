@@ -129,18 +129,19 @@ typedef struct cinode {
 } cinode, *inoptr;
 
 typedef struct filesys {
-    uint16_t      s_mounted;
-    uint16_t      s_isize;
-    uint16_t      s_fsize;
-    int16_t       s_nfree;
+    uint16_t    s_mounted;
+    uint16_t    s_isize;
+    uint16_t    s_fsize;
+    int16_t     s_nfree;
     blkno_t     s_free[50];
-    int16_t       s_ninode;
-    uint16_t      s_inode[50];
-    uint8_t       s_fmod;
+    int16_t     s_ninode;
+    uint16_t    s_inode[50];
+    uint8_t     s_fmod;
     uint8_t	s_timeh;	/* top bits of time */
-    uint32_t      s_time;
+    uint32_t    s_time;
     blkno_t     s_tfree;
-    uint16_t      s_tinode;
+    uint16_t    s_tinode;
+    uint8_t	s_shift;
     inoptr      s_mntpt;
 } filesys, *fsptr;
 
