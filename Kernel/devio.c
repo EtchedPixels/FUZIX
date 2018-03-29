@@ -167,7 +167,7 @@ void *tmpbuf(void)
  * Allocate an empty _disk cache_ buffer. We use this when dealing with file
  * holes. It would be nice if this API could go way and readi just use uzero()
  *
- * This won't be able to use tmpbuf if we split disk and temporary buffers. 
+ * This won't be able to use tmpbuf if we split disk and temporary buffers.
  */
 void *zerobuf(void)
 {

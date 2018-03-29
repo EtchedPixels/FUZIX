@@ -111,6 +111,9 @@ void readi(regptr inoptr ino, uint8_t flag)
 			} else
 #endif
 			{
+				/* FIXME: for big file system support we need
+				   to zero the rest of the logical extent here
+				   and then allocate and write the one we want */
 				/* we transfer through the buffer pool */
 				if (pblk == NULLBLK)
 					bp = zerobuf();
@@ -391,7 +394,7 @@ void sync(void)
 
 /* ptab is an array so won't exceed 64K so this crude cast works nicely */
 
-static void i_lock(struct inode *i)
+static void i_lock(inoptr i)
 {
 	if (i->lock == (uint16_t)udata.u_ptab)
 		panic(LOCKLOCK);
@@ -400,36 +403,36 @@ static void i_lock(struct inode *i)
 	i->i_lock = (uint16_t)udata.u_ptab;
 }
 
-static void i_unlock(struct inode *i)
+static void i_unlock(inoptr i)
 {
 	i_islocked(i);
 	i->i_lock = 0;
 	pwakeup_nosig(i);
 }
 
-static void i_unlock_deref(struct inode *i)
+static void i_unlock_deref(inoptr i)
 {
 	i->i_lock = 0;
 	i_deref(i);
 }
 
-void i_islocked(struct inode *i)
+void i_islocked(inoptr i)
 {
 	if (i->lock != (uint16_t)udata.u_ptab)
 		panic(IUNLOCK);
 }
 
-struct inode *n_open_lock(char *uname, struct inode **parent)
+inoptr n_open_lock(char *uname, inoptr *parent)
 {
-	struct inode *i = n_open(uname, parent);
+	inoptr i = n_open(uname, parent);
 	if (i)
 		i_lock(i);
 	return i;
 }
 
-struct inode *getinode_lock(uint8_t uindex)
+inoptr getinode_lock(uint8_t uindex)
 {
-	struct inode *i = getinode(uindex);
+	inoptr i = getinode(uindex);
 	if (i)
 		i_lock(i);
 	return i;
