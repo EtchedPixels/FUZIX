@@ -6,7 +6,7 @@
         .include "../kernel816.def"
 	.include "../platform/zeropage.inc"
 
-	.export _switchout
+	.export _platform_switchout
 	.export _switchin
 	.export _dofork
 
@@ -29,9 +29,8 @@
 	.i8
 	.a8
 
-_switchout:
+_platform_switchout:
 	sei
-	jsr	_chksigs
 	rep	#$10			; Index to 16bit
 	.i16
 	ldx	#0
@@ -40,38 +39,6 @@ _switchout:
 	phx
 	tsx
 	stx	U_DATA__U_SP
-	sep	#$10			; Back to 8 for C code
-
-	.i8
-	lda	_nready
-	bne	slow_path
-idling:
-	cli
-	jsr	_platform_idle
-	sei
-	lda	_nready
-	beq	idling
-	cmp	#1
-	bne	slow_path
-
-	rep #$10
-	.i16
-	ldx	U_DATA__U_PTAB
-	lda	a:0,x
-	cmp	#P_READY
-	bne	slow_path
-	lda	#P_RUNNING
-	sta	a:P_TAB__P_STATUS_OFFSET,x
-	plx
-	stx	sp
-	plx				; discard 0
-	sep	#$30
-	; Get back into the way C expects us
-	.i8
-	.a8
-	cli
-	rts
-slow_path:
 	;
 	;	Switch of task - save our udata and stack. Note we are
 	;	saving the stack we are executing upon !

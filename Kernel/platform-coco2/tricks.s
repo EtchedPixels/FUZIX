@@ -20,7 +20,7 @@
 
 	# exported
         .globl _switchout
-        .globl _switchin
+        .globl _platform_switchin
         .globl _dofork
 	.globl _ramtop
 
@@ -37,12 +37,8 @@ _ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-;
-; 
-; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	orcc #0x10		; irq off
-        jsr _chksigs
 
         ; save machine state, including Y and U used by our C code
         ldd #0 ; return code set here is ignored, but _switchin can 

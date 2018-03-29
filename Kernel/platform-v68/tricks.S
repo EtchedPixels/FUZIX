@@ -1,7 +1,7 @@
 #include "../kernel-68000.def"
 
 
-.globl switchout,switchin,dofork,udata_shadow
+.globl platform_switchout,switchin,dofork,udata_shadow
 
 .mri 1
 
@@ -9,11 +9,8 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-; 
-; This function can have no arguments or auto variables.
-switchout:
+platform_switchout:
         or #$0700,sr
-        bsr chksigs
         ; save machine state
 
         clr.w -(sp) ; return code set here is ignored, but switchin can

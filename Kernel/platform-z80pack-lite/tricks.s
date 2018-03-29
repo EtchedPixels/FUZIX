@@ -8,7 +8,7 @@
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -40,12 +40,8 @@ _ramtop:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
-; This function can have no arguments or auto variables.
-_switchout:
+_platform__switchout:
         di
-        call _chksigs
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 

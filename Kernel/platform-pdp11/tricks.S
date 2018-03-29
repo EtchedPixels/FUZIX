@@ -6,9 +6,8 @@
 	.globl _switchout
 	.globl _dofork
 
-_switchout:
+_platform_switchout:
 	bis 0340,0177776
-	jsr pc,_chksigs
 	clr -(sp)
 	mov r5,-(sp)
 	mov r4,-(sp)

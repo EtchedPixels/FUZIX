@@ -7,7 +7,7 @@
         .globl _trap_monitor
         .globl trap_illegal
         .globl _inint
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -33,9 +33,8 @@
 ; FIXME: make sure we optimise the switch to self case higher up the stack!
 ; 
 ; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
         di
-        call _chksigs
         ; save machine state
 
 	ld a, #'O'

@@ -20,7 +20,7 @@
 	.globl _platform_idle
 
 	# exported
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -41,9 +41,8 @@ _ramtop:
 ;
 ; 
 ; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	orcc #0x10		; irq off
-        jsr _chksigs
 
         ; save machine state, including Y and U used by our C code
         ldd #0 ; return code set here is ignored, but _switchin can 

@@ -1,7 +1,7 @@
 ;
 ;	6502 version
 ;
-        .export _switchout
+        .export _platform_switchout
         .export _switchin
         .export _dofork
 	.export _ramtop
@@ -36,14 +36,9 @@ _ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
-; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	sei
 
-        jsr _chksigs
 ;
 ;	Put the C stack on the CPU stack, and store that in U_SP
 ;

@@ -12,7 +12,7 @@
         .globl getproc
         .globl trap_monitor
         .globl inint
-        .globl switchout
+        .globl platform_switchout
         .globl switchin
         .globl dofork
 	.globl ramtop
@@ -43,13 +43,11 @@ switchstack:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; This function can have no arguments or auto variables.
 ; We have no registers to preserve as the compiler assumes a function call
 ; clobbers the works.
 ;
-switchout:
+platform_switchout:
 	sei
-        jsr chksigs
 
         ; save machine state
         ldx #0 ; return code set here is ignored, but _switchin can 

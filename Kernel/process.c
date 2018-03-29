@@ -501,6 +501,8 @@ void unix_syscall(void)
 		   don't look for optimizations. Likewise we know a signal
 		   process will stay running/ready */
 		platform_switchout();
+		/* We will check the signals before we return to user space
+		   so all is good */
 	}
 	ei();
 	chksigs();

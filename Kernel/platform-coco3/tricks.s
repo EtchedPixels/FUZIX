@@ -12,7 +12,7 @@
 	.globl _swap_finish
 
 	;; exported
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -40,13 +40,8 @@ fork_proc_ptr:
 ;;; possibly the same process, and switches it in.  When a process is
 ;;; restarted after calling switchout, it thinks it has just returned
 ;;; from switchout().
-;;;
-;;; FIXME: make sure we optimise the switch to self case higher up the stack!
-;;;
-;;; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	orcc 	#0x10		; irq off
-        jsr 	_chksigs	; check for signals
 
         ;; save machine state
         ldd 	#0		; return zero

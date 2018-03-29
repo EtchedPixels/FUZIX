@@ -7,11 +7,10 @@
 
         .globl _ptab_alloc
         .globl _newproc
-        .globl _chksigs
         .globl _getproc
         .globl _trap_monitor
         .globl trap_illegal
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
 	.globl _low_bank
 	.globl _dup_low_page
@@ -35,13 +34,8 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-;
-; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
         di
-	push af
-        call _chksigs
-	pop af
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 

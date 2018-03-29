@@ -38,9 +38,8 @@ _ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-; 
-; This function can have no arguments or auto variables.
 _platform_switchout:
+	di
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
