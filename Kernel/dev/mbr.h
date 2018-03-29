@@ -3,7 +3,7 @@
 
 /* 2015-01-04 Will Sowerbutts */
 
-typedef struct __attribute((packed)) {
+typedef struct __packed {
     /* Described this way so that it packs */
     uint8_t  status_chs_first[4];
     uint8_t  type_chs_last[4];
@@ -13,7 +13,7 @@ typedef struct __attribute((packed)) {
 
 #define MBR_ENTRY_COUNT 4
 #define MBR_SIGNATURE 0xAA55
-typedef struct __attribute((packed)) {
+typedef struct __packed {
     uint8_t bootcode[446];
     partition_table_entry_t partition[MBR_ENTRY_COUNT];
     uint16_t signature;
