@@ -69,3 +69,5 @@ typedef union {            /* this structure is endian dependent */
 /* CC65 is bright enough to partly optimise this but not fully so do it
    by hand */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
+
+#define __packed

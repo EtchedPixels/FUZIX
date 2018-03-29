@@ -76,3 +76,5 @@ typedef union {            /* this structure is endian dependent */
 
 /* cc65 really wants structs used repeatedly to be marked register */
 #define regptr	register
+
+#define __packed

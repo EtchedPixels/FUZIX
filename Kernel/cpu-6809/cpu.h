@@ -71,3 +71,4 @@ typedef union {            /* this structure is endian dependent */
 #define BIG_ENDIAN
 
 #define CPUTYPE	CPUTYPE_6809
+#define __packed		__attribute__((packed))
