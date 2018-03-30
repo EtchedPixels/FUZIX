@@ -111,14 +111,24 @@ void rel_map( int n )
 	freelist[ freeptr++ ] = n;
 }
 
+/* release a linkage and if appropriate tell the kernel */
+void unhook_and_rel_map(int n)
+{
+	struct link *s = & map[n];
+	if (s->flags & LINK_UNBIND) {
+		ksend(NE_UNHOOK);
+		s->flags &= ~LINK_UNBIND;
+	}
+	rel_map(n);
+}
+
 /* initialize the free map of links */
 void init_map( void )
 {
 	int n;
 	for ( n = 0; n<NSOCKET; n++)
-		rel_map( n );
+		freelist[ freeptr++ ] = n;
 }
-
 
 /* send or resend tcp data */
 void send_tcp( struct link *s )
@@ -320,7 +330,7 @@ void netd_appcall(void)
 			s->flags &= ~LINK_CLOSED;
 			s->flags |= LINK_SHUTW | LINK_DEAD;
 			ne.socket = s->socketn;
-			rel_map( uip_conn->appstate );
+			unhook_and_rel_map( uip_conn->appstate );
 			ne.data = SS_CLOSED;
 			ksend(NE_NEWSTATE);
 		}
@@ -340,12 +350,12 @@ void netd_appcall(void)
 			ne.ret = ECONNREFUSED;
 		ksende(NE_RESET);
 		s->flags |= LINK_DEAD;
-		rel_map( uip_conn->appstate );
+		unhook_and_rel_map( uip_conn->appstate );
 	} else if (uip_timedout()) {
 		ne.ret = ETIMEDOUT;
 		ksende(NE_RESET);
 		s->flags |= LINK_DEAD;
-		rel_map( uip_conn->appstate );
+		unhook_and_rel_map( uip_conn->appstate );
 	} else if ( uip_closed()) {
 		int e;
 		switch ( s->flags & (LINK_SHUTR | LINK_SHUTW) ){
@@ -362,7 +372,7 @@ void netd_appcall(void)
 			break;
 		case LINK_SHUTR | LINK_SHUTW:
 			s->flags |= LINK_DEAD;
-			rel_map( uip_conn->appstate );
+			unhook_and_rel_map( uip_conn->appstate );
 			return;
 		}
 	}
@@ -470,7 +480,7 @@ void netd_raw_appcall(void)
 			ne.data = SS_CLOSED;
 			ksend( NE_NEWSTATE );
 			/* release private link resource */
-			rel_map( uip_raw_conn->appstate );
+			unhook_and_rel_map( uip_raw_conn->appstate );
 			s->flags |= LINK_DEAD;
 			uip_raw_remove( uip_raw_conn );
 			return;
@@ -516,7 +526,8 @@ int dokernel( void )
 	int i = read( knet, &sm, sizeof(sm) );
 	int c;
 
-	if ( i < 0 ){
+	if ( i < 0 && errno != EAGAIN) {
+		perror("knet read");
 		return 0;
 	}
 	else if ( i == sizeof( sm ) && (sm.sd.event & 127)){
@@ -603,18 +614,28 @@ int dokernel( void )
 					conptr->appstate = sm.sd.lcn;
 					/* refactor: same as tcp action from connect event */
 					ne.data = SS_CONNECTED;
-					ksend( NE_NEWSTATE );
+					ksend(NE_NEWSTATE);
 					break;
 				}
 				break; /* FIXME: handle unknown/unhandled sock types here */
+			case SS_DEAD:
 			case SS_CLOSED:
 				if ( sm.s.s_type == SOCKTYPE_UDP ){
 					uip_udp_remove(m->conn);
 					rel_map(m->lcn);
 					ne.data = SS_CLOSED;
-					ksend( NE_NEWSTATE );
+					ksend(NE_UNHOOK);
 					break;
 				}
+				/* If the tcp session died before we ask, then
+				   we respond with an immeidate unhook */
+				if ( m->flags & LINK_DEAD) {
+					ksend(NE_UNHOOK);
+					break;
+				}
+				/* If not then we ask for a notification and
+				   kick the process off */
+				m->flags |= LINK_UNBIND;
 				if ( sm.s.s_type == SOCKTYPE_TCP )
 					activity |= (1 << c);
 				m->flags |= LINK_CLOSED;
