@@ -165,7 +165,7 @@ nmi_handler:
 	jsr map_kernel
 	ldx #nmimsg
 	jsr outstring
-	jsr trap_monitor
+	jsr platform_monitor
 
 nmimsg:
 	.ascii "[NMI]"

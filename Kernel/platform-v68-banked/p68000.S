@@ -4,21 +4,21 @@
  *	Lots left to fill in
  */
 
-		.globl trap_reboot
+		.globl platform_reboot
 		.globl init_early
 		.globl init_hardware
 		.globl program_vectors
 		.globl outchar
-		.globl trap_monitor
+		.globl platform_monitor
 		.globl udata_block
 		.globl devide_read_data
 		.globl devide_write_data
 		.globl vdso
 .mri 1
-trap_reboot:
-trap_monitor:
+platform_reboot:
+platform_monitor:
 	    or #0700,sr
-	    bra trap_monitor
+	    bra platform_monitor
 
 init_early:
 	    lea.l udata_block,a5	; udata ptr

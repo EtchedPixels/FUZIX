@@ -23,8 +23,8 @@
 	    .globl _irqvector
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -67,11 +67,11 @@ intvectors:
 	    .dw trace_int	; can be used for CPU tracing etc
 	    .dw serial_int	; we don't use the vector mod functions
 
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
 
-_trap_reboot:
+_platform_reboot:
 	    di
 	    xor a
 	    out (0),a		; ROM mode, we are in common so survive

@@ -1,7 +1,7 @@
 	.text
 	.globl _program_vectors
-	.globl _trap_monitor
-	.globl _trap_reboot
+	.globl _platform_monitor
+	.globl _platform_reboot
 	.globl outchar
 	.globl init_hardware
 	.globl init_early
@@ -10,9 +10,9 @@ init_early:
 _program_vectors:
 	rts pc
 	
-_trap_monitor:
-_trap_reboot:
-	jmp _trap_reboot
+_platform_monitor:
+_platform_reboot:
+	jmp _platform_reboot
 
 /*	.data FOR now */
 	.even

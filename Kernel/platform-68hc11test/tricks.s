@@ -10,7 +10,7 @@
         .globl newproc
         .globl chksigs
         .globl getproc
-        .globl trap_monitor
+        .globl platform_monitor
         .globl inint
         .globl platform_switchout
         .globl switchin
@@ -105,7 +105,7 @@ slow_path:
         jsr getproc
         jsr switchin
         ; we should never get here
-        jsr trap_monitor
+        jsr platform_monitor
 
 badswitchmsg:
 	.ascii "switchin: FAIL"
@@ -179,7 +179,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp trap_monitor
+        jmp platform_monitor
 
 fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

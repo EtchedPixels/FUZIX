@@ -51,7 +51,7 @@
 	.globl mmu_irq_ret
 
         ; imported symbols
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -341,7 +341,7 @@ trap_illegal:
         ld hl, #illegalmsg
 traphl:
         call outstring
-        call _trap_monitor
+        call _platform_monitor
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0

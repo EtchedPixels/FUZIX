@@ -18,8 +18,8 @@
 	    .export _hd_map
 
             ; exported debugging tools
-            .export _trap_monitor
-	    .export _trap_reboot
+            .export _platform_monitor
+	    .export _platform_reboot
             .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
@@ -62,11 +62,11 @@ syscall	     =  $FE
 ;
 ;	Fixme - can we get back to the AppleII monitor ?
 ;
-_trap_monitor:
-	    jmp _trap_monitor
+_platform_monitor:
+	    jmp _platform_monitor
 
-_trap_reboot:
-	    jmp _trap_reboot	; FIXME: original ROM map and jmp
+_platform_reboot:
+	    jmp _platform_reboot	; FIXME: original ROM map and jmp
 
 ___hard_di:
 	    php

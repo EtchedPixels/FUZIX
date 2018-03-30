@@ -42,7 +42,7 @@
 	.import _platform_interrupt
 	.import platform_doexec
 	.import _inint
-	.import _trap_monitor
+	.import _platform_monitor
 	.import _switchout
 
 	.import push0
@@ -833,7 +833,7 @@ itrap:
 	ldx	#>itrap_msg
 outfail:
 	jsr	outstring
-	jmp	_trap_monitor
+	jmp	_platform_monitor
 itrap_msg:
 	.byte	"itrap!", 0
 
@@ -909,7 +909,7 @@ nmi_handler:
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp _trap_monitor
+	jmp _platform_monitor
 nmi_trap:
 	.byte "NMI!", 0
 
@@ -917,7 +917,7 @@ emulation:
 	ldx #>emu_trap
 	lda #<emu_trap
 	jsr outstring
-	jmp _trap_monitor
+	jmp _platform_monitor
 emu_trap:
 	.byte "EM!", 0
 

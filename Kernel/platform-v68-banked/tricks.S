@@ -82,7 +82,7 @@ copyi:	move.l (a1)+,(a0)+
         bsr switchin
 
         ; we should never get here
-        bra trap_monitor
+        bra platform_monitor
 
 switchin:
         or #$0700,sr
@@ -161,7 +161,7 @@ switchinfail:
         lea badswitchmsg,a0
         bsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        bra trap_monitor
+        bra platform_monitor
 
 	;
 	; this gets exciting on the 68000 because our udata is not always in

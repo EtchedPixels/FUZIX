@@ -475,7 +475,7 @@ __ashrsi3:
 
 /* FIXME */
 abort:
-	jmp trap_monitor
+	jmp platform_monitor
 
 	.data
 

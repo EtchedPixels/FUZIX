@@ -6,7 +6,7 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl trap_illegal
         .globl _inint
         .globl _platform_switchout
@@ -72,7 +72,7 @@ switchoutlow:
         call _switchin
 
         ; we should never get here
-        call _trap_monitor
+        call _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -187,7 +187,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _trap_monitor
+        jp _platform_monitor
 
 ; (hl) points to cached page ptr, a is desired page
 update_cache:

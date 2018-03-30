@@ -852,7 +852,7 @@ void panic(char *deathcry)
 {
 	kputs("\r\npanic: ");
 	kputs(deathcry);
-	trap_monitor();
+	platform_monitor();
 }
 
 /* We put this here so that we can blow the start.c code away on exec

@@ -15,7 +15,7 @@
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
 	.globl _kernel_pages
-	.globl _trap_reboot
+	.globl _platform_reboot
 	.globl _bufpool
 
         ; imported symbols
@@ -118,7 +118,7 @@ init_partial_uart:
 ;=========================================================================
         .area _CODE
 
-_trap_reboot:
+_platform_reboot:
         ; We need to map the ROM back in -- ideally into every page.
         ; This little trick based on a clever suggestion from John Coffman.
         di

@@ -29,7 +29,7 @@ _platform_switchout:
         bsr _switchin
 
         ; we should never get here
-        bra _trap_monitor
+        bra _platform_monitor
 
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
@@ -67,4 +67,4 @@ switchinfail:
         lea badswitchmsg,a0
         bsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        bra _trap_monitor
+        bra _platform_monitor

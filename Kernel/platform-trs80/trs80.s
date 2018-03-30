@@ -24,8 +24,8 @@
 	    .globl _video_exg
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -34,7 +34,7 @@
             .globl istack_top
             .globl istack_switched_sp
             .globl unix_syscall_entry
-            .globl trap_illegal
+            .globl platform_illegal
             .globl outcharhex
 	    .globl fd_nmi_handler
 	    .globl null_handler
@@ -64,7 +64,7 @@ _bufpool:
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
 
@@ -72,7 +72,7 @@ platform_interrupt_all:
 	    in a,(0xef)
 	    ret
 
-_trap_reboot:
+_platform_reboot:
 	   di
 	   halt
 

@@ -7,7 +7,7 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _krn_mmu_map
         .globl _usr_mmu_map
 	.globl curr_tr
@@ -55,7 +55,7 @@ _platform_switchout:
         jsr 	_getproc	; X = next process ptr
         jsr 	_switchin	; and switch it in
         ; we should never get here
-        jsr 	_trap_monitor
+        jsr 	_platform_monitor
 
 
 badswitchmsg:
@@ -124,7 +124,7 @@ switchinfail:
         ldx 	#badswitchmsg
         jsr 	outstring
 	;; something went wrong and we didn't switch in what we asked for
-        jmp 	_trap_monitor
+        jmp 	_platform_monitor
 
 
 ;;;

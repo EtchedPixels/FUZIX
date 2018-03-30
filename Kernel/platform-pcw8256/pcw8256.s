@@ -17,8 +17,8 @@
 	    .globl platform_interrupt_all
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 	    .globl _bugout
 
@@ -67,14 +67,14 @@ font8x8	    .equ	0x9C00		; font loaded after framebuffer
 ;
 ;	Ask the controller to reboot
 ;
-_trap_reboot:
+_platform_reboot:
 	    ld a, #0x01
 	    out (0xF8), a
             ; should never get here
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
-	    jr _trap_monitor
+	    jr _platform_monitor
 
 platform_interrupt_all:
 	    ret

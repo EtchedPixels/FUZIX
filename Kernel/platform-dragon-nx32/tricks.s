@@ -7,7 +7,7 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _inint
         .globl map_kernel
         .globl map_process
@@ -64,7 +64,7 @@ stash:	ldd ,x++
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13
@@ -142,7 +142,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _trap_monitor
+        jmp _platform_monitor
 
 	.area .data
 

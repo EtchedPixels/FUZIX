@@ -18,8 +18,8 @@
 	.globl outchar
 
         ; exported debugging tools
-        .globl trap_monitor
-        .globl trap_reboot
+        .globl platform_monitor
+        .globl platform_reboot
 
 	include "cpu.def"
 	include "eeprom.def"
@@ -41,11 +41,11 @@ savedbank:
 	.word 0
 
 	.sect .text
-trap_monitor:
+platform_monitor:
 	sei
-	bra trap_monitor
+	bra platform_monitor
 
-trap_reboot:
+platform_reboot:
 	jmp reboot
 
 outchar:
@@ -144,7 +144,7 @@ doexec:
 ;	If this returns we should probably do an exit call or something
 ;	FIXME
 ;
-	jmp trap_monitor
+	jmp platform_monitor
 
 
 ;

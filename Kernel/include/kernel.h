@@ -762,7 +762,6 @@ struct selmap {
 /* functions in common memory */
 
 /* debug functions */
-extern void trap_monitor(void);
 extern void idump(void);
 
 /* platform/device.c */
@@ -993,21 +992,26 @@ extern int pagemap_alloc(ptptr p);
 extern int pagemap_realloc(usize_t c, usize_t d, usize_t s);
 extern usize_t pagemap_mem_used(void);
 extern void map_init(void);
+
+/* Platform interfaces */
+
 #ifndef platform_discard
 extern void platform_discard(void);
 #endif
 extern void platform_idle(void);
-extern uint8_t rtc_secs(void);
-extern void trap_reboot(void);
+extern uint8_t platform_rtc_secs(void);
+extern int platform_rtc_read(void);
+extern int platform_rtc_write(void);
+extern void platform_reboot(void);
+extern void platform_monitor(void);
 extern uint8_t platform_param(char *p);
 extern void platform_switchout(void);
+extern void platform_interrupt(void);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
 
-extern int platform_rtc_read(void);
-extern int platform_rtc_write(void);
 
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di
@@ -1017,7 +1021,6 @@ extern int platform_rtc_write(void);
 
 /* Will need a uptr_t eventually */
 extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */
-extern void platform_interrupt(void);
 extern void invalidate_cache(uint16_t page);
 extern void flush_cache(ptptr p);
 

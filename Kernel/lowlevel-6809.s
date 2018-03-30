@@ -50,7 +50,7 @@
 	.globl interrupt_handler
 
         ; imported symbols
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -382,7 +382,7 @@ illegalmsg: .ascii "[trap_illegal]"
 trap_illegal:
 	    ldx #illegalmsg
 	    jsr outstring
-	    jsr _trap_monitor
+	    jsr _platform_monitor
 
 dpsmsg:	    .ascii "[dispsig]"
             .db 13,10,0
@@ -397,7 +397,7 @@ nmi_handler:
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -472,7 +472,7 @@ num:    adda #0x30 ; start at '0' (0x30='0')
 div0:
 	ldx	#div0msg
 	jsr	outstring
-	jsr	_trap_monitor
+	jsr	_platform_monitor
 div0msg	.ascii	'Divby0'
 	.db	13,10,0
 ;

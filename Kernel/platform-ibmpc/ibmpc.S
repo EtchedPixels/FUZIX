@@ -20,8 +20,8 @@ istack_top:
 	.global init_early
 	.global init_hardware
 	.global program_vectors
-	.global trap_monitor
-	.global trap_reboot
+	.global platform_monitor
+	.global platform_reboot
 	.global kernel_ds
 
 	.global bioshd_param
@@ -45,9 +45,9 @@ init_hardware:
 	ret
 program_vectors:
 	ret
-trap_monitor:
-trap_reboot:
-	jmp trap_monitor
+platform_monitor:
+platform_reboot:
+	jmp platform_monitor
 
 /*
  *	Interrupt and trap handlers. The 8086 doesn't have real protection

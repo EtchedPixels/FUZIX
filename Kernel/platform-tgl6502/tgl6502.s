@@ -16,8 +16,8 @@
 	    .export platform_doexec
 
             ; exported debugging tools
-            .export _trap_monitor
-	    .export _trap_reboot
+            .export _platform_monitor
+	    .export _platform_reboot
             .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
@@ -55,7 +55,7 @@ syscall	     =  $FE
 ; -----------------------------------------------------------------------------
             .segment "COMMONMEM"
 
-_trap_monitor:
+_platform_monitor:
 ;
 ;	Put the ROM back as it was at entry including the second 8K bank we
 ;	only use for vectors, then jump to $E000 which should enter whatever
@@ -68,8 +68,8 @@ _trap_monitor:
 	    stx $FF91		; $E000
 	    jmp $E000
 
-_trap_reboot:
-	    jmp _trap_reboot	; FIXME: original ROM map and jmp
+_platform_reboot:
+	    jmp _platform_reboot	; FIXME: original ROM map and jmp
 
 ___hard_di:
 	    php

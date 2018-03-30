@@ -82,7 +82,7 @@ platform_switchout:
 	call getproc
 	push %ax
 	call switchin
-	jmp trap_monitor
+	jmp platform_monitor
 
 switchin:
 	/* We can trash registers here because we'll restore them
@@ -118,7 +118,7 @@ switchfail:
 	call  outaxhex
 	mov $badswitchmsg,ax
 	calloutstring		
-	jmp _trap_monitor
+	jmp _platform_monitor
 dofork:
 	pushw %bp
 	movw %sp,%bp

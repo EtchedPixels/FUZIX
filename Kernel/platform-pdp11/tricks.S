@@ -21,7 +21,7 @@ _platform_switchout:
 	jsr pc,_getproc
 	mov r0,-(sp)
 	jsr pc,_switchin
-	jmp _trap_monitor
+	jmp _platform_monitor
 
 /* Simple swap based to begin with */
 _switchin:
@@ -71,7 +71,7 @@ switchfail:
 	jsr pc,outr0hex
 	mov $badswitchmsg,r0
 	jsr pc,outstring		
-	jmp _trap_monitor
+	jmp _platform_monitor
 
 _dofork:
 	mov 2(sp),r0

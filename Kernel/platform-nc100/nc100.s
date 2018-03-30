@@ -35,8 +35,8 @@
 	    .globl _vtattr_notify
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -64,12 +64,12 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
-	    jr _trap_monitor
+	    jr _platform_monitor
 
-_trap_reboot:
+_platform_reboot:
 	    xor a
 	    out (0x70), a
 

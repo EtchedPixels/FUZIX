@@ -12,7 +12,7 @@
         .globl outstring
         .globl outcharhex
         .globl platform_interrupt_all
-        .globl _trap_reboot
+        .globl _platform_reboot
         .globl _bufpool
 
         ; imported symbols
@@ -111,7 +111,7 @@ inchar:
         in0 a, (ESCC_DATA_A)
         ret
 
-_trap_reboot:
+_platform_reboot:
         in0 a, (Z182_SYSCONFIG)
         res 3, a                    ; re-enable the ROM select line
         out0 (Z182_SYSCONFIG), a

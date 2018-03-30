@@ -374,7 +374,7 @@ uint8_t tty_inproc(uint8_t minor, unsigned char c)
 #endif
 #ifdef CONFIG_MONITOR
 	if (c == 0x01)		/* ^A */
-		trap_monitor();
+		platform_monitor();
 #endif
 
 	if (c == '\r' ){

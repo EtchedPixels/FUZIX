@@ -17,8 +17,8 @@
 	    .globl _need_resched
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 	    .globl ___hard_di
 	    .globl ___hard_ei
@@ -35,10 +35,10 @@
 
             .area .common
 
-_trap_reboot:
-_trap_monitor:
+_platform_reboot:
+_platform_monitor:
 	    cwai #0
-	    bra _trap_monitor
+	    bra _platform_monitor
 
 ___hard_di:
 	    tfr cc,b		; return the old irq state

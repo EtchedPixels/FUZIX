@@ -4,22 +4,21 @@
  *	We need pretty much nothing here as we don't do page mapping.
  */
 
-		.globl _trap_reboot
 		.globl init_early
 		.globl init_hardware
 		.globl _program_vectors
 		.globl outchar
-		.globl _trap_reboot,_trap_monitor
+		.globl _platform_reboot,_platform_monitor
 		.globl _scroll_down,_scroll_up,_plot_char,_clear_lines
 		.globl _clear_across,_cursor_on,_cursor_off
 		.globl _fontdata_8x8, _screenbase
 		.globl _uarea_block
 
 .mri 1
-_trap_reboot:
-_trap_monitor:
+_platform_reboot:
+_platform_monitor:
 	    or #0700,sr
-	    bra _trap_monitor
+	    bra _platform_monitor
 init_early:
 	    lea.l _uarea_block,a5	; udata ptr
             rts

@@ -23,8 +23,8 @@
 	    .globl platform_interrupt_all
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -67,8 +67,8 @@
             .area _COMMONMEM
 
 ; FIXME: figure out how to reboot into CP/M
-_trap_monitor:
-_trap_reboot:
+_platform_monitor:
+_platform_reboot:
 	    di
 	    halt
 platform_interrupt_all:

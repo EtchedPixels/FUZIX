@@ -1,5 +1,5 @@
 ;
-;	Boot blocks for UZI+ on the NC100
+;	Boot blocks for FUZIX on the NC100
 ;
 ;
 ;	FIXME: we need a valid NMI vector in the low 0x100 at all times

@@ -536,9 +536,9 @@ arg_t _uadmin(void)
 		sync();
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
-		trap_monitor();
+		platform_monitor();
 	if (cmd == A_REBOOT)
-		trap_reboot();
+		platform_reboot();
 
 	/* We don't do SWAPCTL yet */
 	udata.u_error = EINVAL;

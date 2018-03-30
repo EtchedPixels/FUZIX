@@ -49,7 +49,7 @@
 	.globl _out
 
         ; imported symbols
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -327,7 +327,7 @@ illegalmsg: .ascii "[trap_illegal]"
 trap_illegal:
         ld hl, #illegalmsg
         call outstring
-        call _trap_monitor
+        call _platform_monitor
 
 dpsmsg: .ascii "[dispsig]"
         .db 13, 10, 0
@@ -340,7 +340,7 @@ nmi_handler:
 	call map_kernel
         ld hl, #nmimsg
         call outstring
-        jp _trap_monitor
+        jp _platform_monitor
 
 ;
 ;	Interrupt handler. Not quite the same as syscalls, we need to
