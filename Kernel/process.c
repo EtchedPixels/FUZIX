@@ -749,12 +749,19 @@ void acctexit(ptptr p)
 }
 #endif
 
-/* Perform the terminal process signalling */
-/* FIXME: why return a value - we don't use it */
-/* FIXME: pass the process id not parent in then can reuse in doexit
-   special cases */
-static int signal_parent(ptptr p)
+/*
+ *	Perform the terminal process signalling for process c
+ *
+ *	POSIX requires
+ *	1. If SIGCHLD is ignored - the process dies
+ *	2. Otherwise it becomes a zombie and we signal the parent
+ *
+ *	This gets called both when a process dies and when it gets reparented
+ *	to init (parent dies), because init is entitled to ignore SIGCHLD too
+ */
+static int signal_parent(ptptr c)
 {
+	ptptr p = c->p_pptr;
         if (p->p_sig[1].s_ignored & (1UL << SIGCHLD)) {
 		/* POSIX.1 says that SIG_IGN for SIGCHLD means don't go
 		   zombie, just clean up as we go */
@@ -825,14 +832,9 @@ void doexit(uint16_t val)
 		/* Set any child's parents to init */
 		if (p->p_pptr == udata.u_ptab) {
 			p->p_pptr = ptab;	/* ptab is always init */
-			/* Suppose our child is a zombie and init has
-			   SIGCLD blocked */
-		        if (ptab[0].p_sig[1].s_ignored & SIGBIT(SIGCHLD)) {
-				p->p_status = P_EMPTY;
-			} else {
-				ssig(&ptab[0], SIGCHLD);
-				wakeup(&ptab[0]);
-			}
+			/* Figure out if we are signalling init or just
+			   blowing the slot away */
+			signal_parent(p);
 		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
@@ -854,7 +856,7 @@ void doexit(uint16_t val)
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;
-        signal_parent(udata.u_ptab->p_pptr);
+        signal_parent(udata.u_ptab);
 	nready--;
 	nproc--;
 
