@@ -305,6 +305,8 @@ in_kernel:
 	    ; Pre emption occurs on the task stack. Conceptually its a
 	    ; not quite a syscall
 	    lds #kstack_top
+	    jsr _chksigs		; check signal state
+	    ;
 	    ldx U_DATA__U_PTAB
 	    ; Move to ready state
 	    lda #P_READY

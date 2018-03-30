@@ -522,7 +522,6 @@ preemption:
 
 	;
 intret2:call map_kernel
-
 	;
 	; Semantically we are doing a null syscall for pre-empt. We need
 	; to record ourselves as in a syscall so we can't be recursively
@@ -530,6 +529,13 @@ intret2:call map_kernel
 	;
 	ld a, #1
 	ld (U_DATA__U_INSYS), a
+	;
+	; Check for signals
+	;
+	push af
+	call chksigs
+	pop af
+
 	;
 	; Process status is offset 0
 	;

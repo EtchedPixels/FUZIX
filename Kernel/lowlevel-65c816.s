@@ -44,6 +44,7 @@
 	.import _inint
 	.import _platform_monitor
 	.import _platform_switchout
+	.import _chksigs
 
 	.import push0
 	.import incaxy
@@ -625,6 +626,10 @@ ret_to_user:
 	;
 	lda	#1
 	sta	U_DATA__U_INSYS
+	;
+	;	Check for signals (the kstack is sane at this point)
+	;
+	jsr	_chksigs
 	;
 	;	Mark outselves as idle
 	;
