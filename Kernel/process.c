@@ -1,4 +1,5 @@
-#undef DEBUG			/* turn this on to enable syscall tracing */
+#undef DEBUG_SYSCALL		/* turn this on to enable syscall tracing */
+#define DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
@@ -20,7 +21,7 @@
 static void do_psleep(void *event, uint8_t state)
 {
 	irqflags_t irq = di();
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf("psleep(0x%p)", event);
 #endif
 	switch (udata.u_ptab->p_status) {
@@ -31,7 +32,7 @@ static void do_psleep(void *event, uint8_t state)
 	case P_RUNNING:		// normal process
 		break;
 	default:
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	        kprintf("psleep(0x%p) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
 #endif
 		panic(PANIC_VOODOO);
@@ -40,10 +41,6 @@ static void do_psleep(void *event, uint8_t state)
 	udata.u_ptab->p_status = state;
 	udata.u_ptab->p_wait = event;
 	udata.u_ptab->p_waitno = ++waitno;
-
-	/* Invalidate signal cache if in IOWAIT */
-	if (state == P_IOWAIT)
-		udata.u_cursig = 0;
 
 	switchout();		/* Switch us out, and start another process */
 	/* Switchout doesn't return in this context until we have been switched back in, of course. */
@@ -74,7 +71,7 @@ void wakeup(void *event)
 	irq = di();
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status > P_RUNNING && p->p_wait == event) {
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 			kprintf("wakeup: found proc 0x%p pid %d\n",
 				p, p->p_pid);
 #endif
@@ -113,6 +110,9 @@ void pwake(ptptr p)
 
 void switchout(void)
 {
+#ifdef DEBUG_SLEEP
+	kprintf("switchout %d\n", udata.u_ptab->p_status);
+#endif
 	di();
 
 	/* We do the accounting in switchout as it's cheaper and easier to
@@ -152,10 +152,12 @@ void switchout(void)
 	/* If only one process is ready to run and it's us then just
 	   return. This is the normal path in most Fuzix use cases as we
 	   are waiting for input while mostly system idle */
-	if (nready == 1 && udata.u_ptab->p_status == P_READY) {
-		udata.u_ptab->p_status = P_RUNNING;
-		ei();
-		return;
+	if (udata.u_ptab->p_status == P_RUNNING) {
+		if (nready == 1) {
+			ei();
+			return;
+		}
+		udata.u_ptab->p_status = P_READY;
 	}
 	/* We probably need to run somehting else */
 	platform_switchout();
@@ -173,7 +175,7 @@ ptptr getproc_nextp = &ptab[0];
 ptptr getproc(void)
 {
 	ptptr haltafter;
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 #ifdef DEBUGREALLYHARD
 	ptptr pp;
 	kputs("getproc start ... ");
@@ -196,7 +198,7 @@ ptptr getproc(void)
 		case P_RUNNING:
 			panic(PANIC_GETPROC);
 		case P_READY:
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
@@ -459,7 +461,7 @@ void timer_interrupt(void)
 #endif
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 #include "syscall_name.h"
 #endif
 
@@ -475,7 +477,7 @@ void unix_syscall(void)
 	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
 		udata.u_error = ENOSYS;
 	} else {
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 		kprintf("\t\tpid %d: syscall %d\t%s(%p, %p, %p)\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			syscall_name[udata.u_callno], udata.u_argn,
@@ -484,7 +486,7 @@ void unix_syscall(void)
 		// dispatch system call
 		udata.u_retval = (*syscall_dispatch[udata.u_callno]) ();
 
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 		kprintf("\t\t\tpid %d: ret syscall %d, ret %p err %p\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			udata.u_retval, udata.u_error);
@@ -495,7 +497,7 @@ void unix_syscall(void)
 	di();
 	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
 		/* Time to switch out? - we may have overstayed our welcome inside
-		   a syscall so switch straight afterwards */
+		   a syscall so swtch straight afterwards */
 		udata.u_ptab->p_status = P_READY;
 		/* We know there will be a switch if we hit this point so
 		   don't look for optimizations. Likewise we know a signal
@@ -604,8 +606,9 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 			   the signal so ignoring here works fine */
 				continue;
 			}
-#ifdef DEBUG
-			kprintf("process terminated by signal %d\n", j);
+#ifdef DEBUG_SLEEP
+			kprintf("process terminated by signal %d (%d)\n",
+				j, udata.u_ptab->p_status);
 #endif
 			/* We may have marked ourselves as asleep and
 			   then been caught by the chksigs when we tried
@@ -619,7 +622,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
 			sb->s_pending &= ~m;	// unset the bit
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 			kprintf("about to process signal %d\n", j);
 #endif
 			udata.u_cursig = j + (b << 4);
@@ -635,7 +638,9 @@ uint8_t chksigs(void)
 	uint8_t r;
 	uint8_t b;
 
-	/* Sleeping without signals allowed */
+	/* Sleeping without signals allowed. We rely upon the fact that
+	   P_IOWAIT is never pre-empted or returns to user space so
+	   udata.u_cursig is not consulted until it is safe to do so */
 	if (udata.u_ptab->p_status == P_IOWAIT)
 		return 0;
 
@@ -671,6 +676,11 @@ void ssig(ptptr proc, uint8_t sig)
 
 	sigm = 1 << (sig & 0x0F);
 
+#ifdef DEBUG_SLEEP
+	kprintf("sig to %d(%d) %p %p\n",
+		proc->p_pid, proc->p_status, proc, udata.u_ptab);
+#endif
+
 	irq = di();
 
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
@@ -704,6 +714,10 @@ void ssig(ptptr proc, uint8_t sig)
 			}
 			m->s_pending |= sigm;
 		}
+		/* FIXME: need to clean up the way we handle ready/running
+		   so we have a simple 'make runnable' */
+		if (proc->p_status == P_READY && udata.u_ptab == proc)
+			proc->p_status = P_RUNNING;
 	}
 	irqrestore(irq);
 }
@@ -760,7 +774,7 @@ void doexit(uint16_t val)
 	ptptr p;
 	irqflags_t irq;
 
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
 
 	kprintf
@@ -830,7 +844,7 @@ void doexit(uint16_t val)
 	}
 	tty_exit();
 	irqrestore(irq);
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf
 	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
