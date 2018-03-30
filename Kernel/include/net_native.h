@@ -51,6 +51,7 @@ struct sockmsg {
 #define NE_DATA		6
 #define NE_SHUTR        7
 #define NE_RESET        8
+#define NE_UNHOOK	9
 
 struct netevent {
 	uint8_t socket;
