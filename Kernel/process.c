@@ -1,5 +1,5 @@
 #undef DEBUG_SYSCALL		/* turn this on to enable syscall tracing */
-#define DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
+#undef DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
