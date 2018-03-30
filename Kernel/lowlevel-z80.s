@@ -32,7 +32,7 @@
 	.globl _platform_interrupt
 	.globl platform_interrupt_all
 	.globl _need_resched
-	.globl _switchout
+	.globl _platform_switchout
 
         ; exported symbols
 	.globl _chksigs
@@ -554,7 +554,7 @@ intret2:call map_kernel
 	;
 	ld hl, (U_DATA__U_PTAB)
 	ld (hl), #P_READY
-	call _switchout
+	call _platform_switchout
 	;
 	; We are no longer in an interrupt or a syscall
 	;
