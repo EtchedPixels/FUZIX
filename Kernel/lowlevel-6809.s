@@ -311,7 +311,7 @@ in_kernel:
 	    sta P_TAB__P_STATUS_OFFSET,x
 	    ; Sleep on the kernel stack, IRQs will get re-enabled if need
 	    ; be
-	    jsr _switchout
+	    jsr _platform_switchout
 	    ;
 	    ; We will resume here after the pre-emption. Get back onto
 	    ; the user stack and map ourself in

@@ -43,7 +43,7 @@
 	.import platform_doexec
 	.import _inint
 	.import _platform_monitor
-	.import _switchout
+	.import _platform_switchout
 
 	.import push0
 	.import incaxy
@@ -639,7 +639,7 @@ ret_to_user:
 	.i8
 	lda	U_DATA__U_PTAB
 	ldx	U_DATA__U_PTAB+1
-	jsr	_switchout
+	jsr	_platform_switchout
 	;
 	;	We will (one day maybe) pop back out here. It's not
 	;	guaranteed (we might be killed off)
