@@ -227,7 +227,7 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
 	do {
 	    if( s->s_state == SS_CLOSED )
 		return -1;
-	    psleep(s);
+	    psleep_nosig(s);
 	} while (sd->event & NEVW_STATE);
 
 	udata.u_error = sd->ret;
