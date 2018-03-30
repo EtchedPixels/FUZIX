@@ -130,12 +130,17 @@ void sock_close(inoptr ino)
 	/* For the moment */
 	struct socket *s = &sockets[ino->c_node.i_nlink];
 	net_close(s);
-	sock_wait_enter(s, 0, SS_CLOSED);
+	/* Dead but not unbound from netd activity yet */
+	s->s_state = SS_DEAD;
+}
+
+void sock_closed(struct socket *s)
+{
 	s->s_state = SS_UNUSED;
 	/* You re-use something you pays the price. Probably should switch
 	   to using data 0 as devices do ? FIXME */
-	ino->c_node.i_nlink = 0;
-	ino->c_flags |= CDIRTY;
+	s->s_ino->c_node.i_nlink = 0;
+	s->s_ino->c_flags |= CDIRTY;
 }
 
 /*
@@ -330,6 +335,8 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
 	ino->c_readers = 1;
 	ino->c_writers = 1;
+
+	n->s_ino = ino;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;
