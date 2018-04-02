@@ -17,8 +17,6 @@
  * will be set to NULL.
  * The last node parsed is saved in lastname and is useful to some system
  * calls as they want a parent and to create the new node.
- *
- * FIXME: ENAMETOOLONG might be good to add
  */
 
 char lastname[31];
@@ -30,6 +28,8 @@ static uint8_t getcf(void)
     int16_t c;
     c = ugetc(name);
     if (c == -1 || name == nameend) {
+        if (name == nameend)
+            udata.u_error = ENAMETOOLONG;
         n_open_fault = 1;
         return 0;
     }
