@@ -135,9 +135,9 @@ int main(int argc, char **argv)
 	   block after the last inode */
 	  
 	isize <<= shift;
-	isize++;
 
-	for (j = fsize - 1; j >= isize; --j) {
+	/* Don't free the block isize because it's got the / directory in it */
+	for (j = fsize - 1; j > isize; --j) {
 		int n;
 		if (swizzle16(fs_super.fs.s_nfree) == 50) {
 			dwrite(j, (char *) &fs_super.fs.s_nfree);
