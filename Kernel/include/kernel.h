@@ -920,6 +920,7 @@ extern ptptr getproc(void);
 extern void newproc(ptptr p);
 extern ptptr ptab_alloc(void);
 extern void ssig(ptptr proc, uint8_t sig);
+extern void recalc_cursig(void);
 extern uint8_t chksigs(void);
 extern void program_vectors(uint16_t *pageptr);
 extern void sgrpsig(uint16_t pgrp, uint8_t sig);

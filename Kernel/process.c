@@ -550,8 +550,22 @@ static const uint16_t clear =
 	SIGBIT(SIGCHLD) | SIGBIT(SIGURG) | SIGBIT(SIGWINCH) | SIGBIT(SIGIO) |
 	SIGBIT(SIGCONT);
 
-/* Process a block of 16 signals so we can avoid using longs */
+/* Put back a computed signal so that we can recalculate what needs to be
+   serviced correctly */
+void recalc_cursig(void)
+{
+	if (udata.u_cursig) {
+		struct sigbits *sb = udata.u_ptab->p_sig;
+		if (udata.u_cursig & 16) {
+			sb++;
+			udata.u_cursig &= ~16;
+		}
+		sb->s_pending |= 1 << udata.u_cursig;
+		udata.u_cursig = 0;
+	}
+}
 
+/* Process a block of 16 signals so we can avoid using longs */
 static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 {
 	uint8_t j = 1;
@@ -641,8 +655,10 @@ uint8_t chksigs(void)
 	/* Sleeping without signals allowed. We rely upon the fact that
 	   P_IOWAIT is never pre-empted or returns to user space so
 	   udata.u_cursig is not consulted until it is safe to do so */
-	if (udata.u_ptab->p_status == P_IOWAIT)
+	if (udata.u_ptab->p_status == P_IOWAIT) {
+		recalc_cursig();
 		return 0;
+	}
 
 	/* Fast path - no signals pending means no work.
 	   Cursig being set means we've already worked out what to do.
