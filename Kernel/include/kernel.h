@@ -112,8 +112,9 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 
 #ifndef MAXTICKS
-#define MAXTICKS     10   /* Max ticks before switching out (time slice)
-                            default process time slice */
+#define MAXTICKS     (TICKSPERSEC/10)
+                           /* Max ticks before switching out (time slice)
+                              default process time slice */
 #endif
 
 // #define MAXBACK      3   /* Process time slice for tasks not connected
