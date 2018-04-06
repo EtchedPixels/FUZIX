@@ -21,7 +21,6 @@
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
-	.globl _swapper
 	.globl _need_resched
 	.globl _nready
 	.globl _platform_idle
@@ -93,6 +92,8 @@ _switchin:
 	add hl, de	; process ptr
 	pop de
 
+.ifne CONFIG_SWAP
+	.globl _swapper
 	;
 	;	Always use the swapstack, otherwise when we call map_kernel
 	;	having copied the udata stash back to udata we will crap
@@ -124,7 +125,7 @@ _switchin:
 	pop de
 	pop hl
 	di
-
+.endif
 	ld a, (hl)
 not_swapped:
 	ld hl, (U_DATA__U_PTAB)
