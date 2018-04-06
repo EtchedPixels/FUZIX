@@ -1,0 +1,179 @@
+FUZIX on a Cromenco (no hard disk support right now - need docs for that and
+suitable emulation!)
+
+We expect
+
+0		tuart / 4 FDC
+4		fdc aux
+5-9		times
+32		tuart / parallel 36
+48		fdc
+64		mmu
+80		tuart / parallel 84
+255		front panel
+
+
+
+
+The MMU settings we use are
+
+1 << n		That bank 0-6
+
+0x80		Turn on comon writing (write to all banks)
+
+
+UARTs: TMS 5501 x 2 per board. These can do Z80 IM2 where the vector is
+determined by A7-A5 of the IRQ (used as D7-D5 of the vector)
+
+R 0		Status
+
+7: set if tx buffer empty
+6: set if rx data available
+5: irq pending
+4: start bit detected
+3: full bit detected
+2: serial receive line state
+1: overrun (clear on read)
+0: frame error (clear on valid rx)
+
+W 0
+7: 1 for one stop 0 for 2
+0-6 set baud rate (all 0 off)
+0: 110
+1: 150
+2: 300
+3: 1200
+4: 2400
+5: 4800
+6: 9600
+(but see later)
+
+R 1		Data received
+
+W 1		Load tx
+
+W 2		cmd
+
+0:		reset (self clears)
+1:		break send
+2:		IRQ on parallel msb
+3:		May respond to an IRQ by gating an RST
+		Low prevents gating instructions
+4:		Baud rate x8
+5:		Test
+
+
+R 3:		Interrupt address (gives service priority order for events)
+		Each read clears a priority
+
+		C7 timer 1
+		CF timer 2
+		D7 !sens
+		DF timer 3
+		E7 rx data
+		EF tx data
+		F7 timer 4
+		FF timer 5 (or none)
+
+W 3:		Interrupt mask
+
+7: timer 5
+6: timer 4
+5: tx buffer empty
+4: rx data ready
+3: timer 3
+2: !sens
+1: timer 2
+0: timer 1
+
+R 4:
+	Read parallel input data captured after strobe
+W 4:
+	Write parallel
+
+	(Parallel will halt the CPU for the other end to respond .. !)
+
+W 5:	timer 1 (decremented ever 64uS - longest interval 16.32ms)
+
+W 6:	timer 2 (ditto)
+
+W 7:	timer 3 (ditto)
+
+W 8:	timer 4 (ditto)
+
+W 9:	timer 5 (ditto)
+
+
+
+
+The 4FDC has a uart at 0 (parallel out is used for disk control)
+Disk (FD1771).  16FDC is same ports but a 1793
+
+Parallel in is wired so that (16FDC)
+	D7 = DRQ/RTC (Jumper sets it to 512ms clock used with 5501 int)
+	D6 = Seek in progress
+	D3 = Switch 5
+	D2 = Switch 6
+	D1 = Switch 7
+	D0 = Switch 8
+
+4FDC has only D7 (DRQ) optional - default off, D6 seek in progress
+
+64FDC
+	D7 = DRQ/RTC
+	D6 = 1
+	D5 = ?
+	D4-D0 Switch 5/1-4
+
+
+16FDC out
+	D6 clear to eject (not always supported)
+	D5 set to disconnect drive select (shared disk configurations)
+	D4 clear for fast  step mode (8" drives), set once seek complete sent
+	D3 clear to force drive to track 0 (restore)
+	D2 clear activates control OUT (test pin)
+	D1 side select (0 for second side of 2 sided media)
+
+4FDC out
+	D6: eject left
+	D5: eject right
+	D4: clear for fast seek
+	D3:  cler for restore
+	D2: clear activates daisy chain
+
+64FDC out
+	D5: drive select override (as 16FDC)
+	D2: control out (as 16FDC)
+	D1: side select (as 16FDC)
+	
+(hex)
+R 30	status 
+W 30	command
+R 31	track
+W 31	track
+R 32	sector
+W 32	sector
+R 33	data
+W 33	data
+R 34	flags
+	D7: !DRQ
+	D6: !BOOT (0 SW3 set to boot)
+	D5  HEADLOAD	(Drive sect if high on 64FDC)
+	D4  Zero mean switch inhibit init is on (16FDC)
+	D3  motor is on (16FDC) on = 1
+	D2  motor timeout (16FDC) timedout = 1
+	D1 autowait timeout if 1
+	D0: End of Job
+W 34	control
+	D7: autowait - 34H will hold CPU in wait until DRQ or EOJ or RESET
+	D6: double density (4FDC not ??)
+	D5: motor on
+	D4: 1 = 8" (fast step) 0 = 5.25 (slow step)
+	D3-D0 - drive select (only one at a time)
+
+W 40	Disables boot rom as a side effect
+
+
+W 40	bank select
+
+
