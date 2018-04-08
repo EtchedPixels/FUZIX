@@ -39,7 +39,7 @@ nm: nm.o $(CRT0)
 	$(LINKER) -o $@ $(LINKER_OPT) $^
 
 clean:
-	rm -f $(OBJS) as $(SRCS:.c=) core *~
+	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.o
 
 rmbak:
 	rm -f *~ core
