@@ -108,7 +108,7 @@ DISC int dwtime_init( void )
 
 
 /* Called every every decisec from timer.c */
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
 	static uint8_t ticks=10;
 	static uint8_t longt=CONFIG_DWTIME_INTERVAL;
