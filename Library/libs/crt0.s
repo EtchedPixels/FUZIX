@@ -69,9 +69,9 @@ start2:		ld hl, #l__DATA - 1	 ; work around linker limit
 		push hl
 		ld (___argv), hl	; needed for stuff like err()
 		push de
-		ld hl, #_exit		; return vector
+		call _main		; go
 		push hl
-		jp _main		; go
+		call _exit
 
 		.area _GSINIT
 ;
