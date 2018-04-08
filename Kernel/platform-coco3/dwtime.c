@@ -105,7 +105,7 @@ DISC int dwtime_init( void )
 
 
 /* Called every every so often from updatetod from timer.c */
-uint16_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
 	uint8_t t[6];
 	/* poll dw time and return it */

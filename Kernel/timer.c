@@ -99,7 +99,7 @@ void updatetod(void)
 	tod_deci = 0;
 #endif
 
-	rtcnew = rtc_secs();		/* platform function */
+	rtcnew = platform_rtc_secs();		/* platform function */
 
 	if (rtcnew == rtcsec)
 		return;
@@ -115,7 +115,7 @@ addtod:
 
 void inittod(void)
 {
-	rtcsec = rtc_secs();
+	rtcsec = platform_rtc_secs();
 }
 
 #endif				/* NO_RTC */
