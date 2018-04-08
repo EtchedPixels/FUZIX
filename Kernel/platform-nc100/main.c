@@ -49,7 +49,7 @@ __sfr __at 0xD0 rtc_secl;
 __sfr __at 0xD1 rtc_sech;
 __sfr __at 0xDD rtc_page;
 
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
     uint8_t sl, rv;
     /* Make sure we are seeing the seconds not NVRAM */

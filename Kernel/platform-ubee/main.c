@@ -24,7 +24,7 @@ __sfr __at 0x02 pia0b;
 __sfr __at 0x04 cmos_reg;
 __sfr __at 0x07 cmos_read;
 
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
 	cmos_reg = 0x00;
 	return cmos_read;
