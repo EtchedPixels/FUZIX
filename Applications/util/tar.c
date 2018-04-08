@@ -576,7 +576,7 @@ static void extract(char *argv[])
 					continue;
 				}
 				/* open output file */
-				outfile = open(h.name, O_CREAT | O_WRONLY);
+				outfile = open(h.name, O_CREAT | O_WRONLY | O_TRUNC);
 				if (outfile < 0) {
 					pname();
 					break;
