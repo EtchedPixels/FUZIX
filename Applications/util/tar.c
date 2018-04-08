@@ -435,6 +435,23 @@ static void list(void)
 	}			/* block while */
 }
 
+/* Attempt to make all parent directories */
+static void makeparents(char *path)
+{
+	static char c[100];
+	char *s = path;
+	int l;
+	while (1){
+		char *e = index(s,'/');
+		if (!e)
+			return;
+		l = e - path;
+		memcpy(c,path,l);
+		c[l] = 0;
+		mkdir(c,0755);
+		s = e + 1;
+	}
+}
 
 /* Extract all file in archive */
 static void extract(char *argv[])
@@ -493,6 +510,8 @@ static void extract(char *argv[])
 		printheader();
 
 		uflag = !strncmp(h.ustar, "ustar", 5);
+
+		makeparents(h.name);
 
 		switch (h.type) {
 		case '1':	/* a hard link */
@@ -557,7 +576,7 @@ static void extract(char *argv[])
 					continue;
 				}
 				/* open output file */
-				outfile = open(h.name, O_CREAT | O_WRONLY);
+				outfile = open(h.name, O_CREAT | O_WRONLY | O_TRUNC);
 				if (outfile < 0) {
 					pname();
 					break;
