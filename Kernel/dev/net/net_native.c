@@ -96,8 +96,10 @@ int netdev_write(uint8_t flags)
 		wakeup_all(s);
 		break;
 	case NE_UNHOOK:
-		if (s->s_state == SS_DEAD)
+		if (s->s_state == SS_DEAD){
+			sd->event = 0;
 			sock_closed(s);
+		}
 		else
 			kputs("bad unhook (in use)\n");
 		break;
