@@ -55,7 +55,7 @@ static void write_makefile(void)
   fprintf(fp, "AS = ca65\n");
   fprintf(fp, "AR = ar65\n");
   fprintf(fp, "ASYS = syscall.s\n");
-  fprintf(fp, "ASRCS = syscall_%s.s\n", syscall_name[i]);
+  fprintf(fp, "ASRCS = syscall_%s.s\n", syscall_name[0]);
   for (i = 1; i < NR_SYSCALL; i++)
     fprintf(fp, "ASRCS += syscall_%s.s\n", syscall_name[i]);
   fprintf(fp, "\n\nASRCALL = $(ASRCS) $(ASYS)\n");
