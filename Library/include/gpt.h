@@ -1,6 +1,8 @@
 #ifndef __GPT_DOT_H__
 #define __GPT_DOT_H__
 
+#include <sys/compiler.h>
+
 /* Copyright 2018 Tormod Volden */
 
 #define MBR_GPT_PROTECTED_TYPE 0xEE
@@ -9,7 +11,7 @@
 #define GPT_FUZIX_ROOT_UUID 63ce1ba5-46ab-49bd-abf4-2859975849e1
 #define GPT_FUZIX_ROOT_UUID_16BIT 1ba5
 
-typedef struct __attribute((packed)) {
+typedef struct __packed {
 	uint8_t	signature[8];
 	uint32_t	revision;
 	uint32_t	header_size;
@@ -32,7 +34,7 @@ typedef struct __attribute((packed)) {
 	/* reserved to end of block */
 } gpt_header_t;
 
-typedef struct __attribute((packed)) {
+typedef struct __packed {
 	uint8_t	type_guid[16];
 	uint8_t	uniq_part_guid[16];
 	uint32_t	first_lba_lsb;
