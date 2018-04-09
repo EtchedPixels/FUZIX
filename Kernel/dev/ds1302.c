@@ -77,7 +77,7 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
 }
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
     uint8_t buffer;
     ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
