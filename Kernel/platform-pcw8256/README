@@ -12,6 +12,8 @@ Need to try and keep kernel under 48K or so to make it easier to handle the
 screen memory, fonts etc. We need to put the screen (720x256 pixels + roller
 ram table of 512 bytes or so = ~ 24K) in the low 128K
 
+WIP - lots to do to add swap support and memory map needs a re-arrange so we
+can get fork() going
 
 Building A Boot Image
 ---------------------
