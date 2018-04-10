@@ -337,8 +337,16 @@ typedef struct filesys { // note: exists in mem and on disk
     uint16_t      s_tinode;
     uint8_t	  s_shift;	/* Extent size */
     uint8_t	  s_reserved;
-    /* Below this is only used in memory so alignments don't matter */
-    /* TODO: Add geometry hints and support > 512 byte blocks */
+    uint16_t	  s_props;	/* Property bits indicating which are valid */
+    /* For now only one property set - geometry. We'll eventually use this
+       when we don't know physical geometry and need to handle stuff with
+       tools etc */
+    uint16_t      s_geo_heads;	/* If 0/0/0 is specified and valid it means */
+    uint16_t	  s_geo_cylinders; /* pure LBA - no idea of geometry */
+    uint16_t	  s_geo_sectors;
+    uint8_t	  s_geo_skew;	/* Soft skew if present (for hard sectored media) */
+                                /* Gives the skew (1/2/3/4/5/... etc) */
+    uint8_t	  s_geo_secsize;/* Physical sector size in log2 form*/
 } filesys, *fsptr;
 
 typedef struct oft {
