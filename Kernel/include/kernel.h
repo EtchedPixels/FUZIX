@@ -338,7 +338,6 @@ typedef struct filesys { // note: exists in mem and on disk
     uint8_t	  s_shift;	/* Extent size */
     uint8_t	  s_reserved;
     /* Below this is only used in memory so alignments don't matter */
-    inoptr        s_mntpt;     /* Mount point */
     /* TODO: Add geometry hints and support > 512 byte blocks */
 } filesys, *fsptr;
 
@@ -353,6 +352,7 @@ typedef struct oft {
 struct mount {
     uint16_t m_dev;
     uint16_t m_flags;
+    inoptr   m_mntpt;     /* Mount point */
     struct filesys m_fs;
 };
 #define MS_RDONLY	1

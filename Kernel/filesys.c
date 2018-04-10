@@ -112,7 +112,7 @@ inoptr n_open(char *namep, inoptr *parent)
                 name += 2;
                 continue;
             }
-            temp = fs_tab[wd->c_super].m_fs.s_mntpt;
+            temp = fs_tab[wd->c_super].m_mntpt;
             ++temp->c_refs;
             i_deref(wd);
             wd = temp;
@@ -193,7 +193,7 @@ inoptr srch_mt(inoptr ino)
     struct mount *m = &fs_tab[0];
 
     for(j=0; j < NMOUNTS; ++j){
-        if(m->m_dev != NO_DEVICE &&  m->m_fs.s_mntpt == ino) {
+        if(m->m_dev != NO_DEVICE &&  m->m_mntpt == ino) {
             i_deref(ino);
             return i_open(m->m_dev, ROOTINODE);
         }
@@ -1282,7 +1282,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
         fp->s_fmod = FMOD_DIRTY;
     else	/* Clean in memory, don't write it back to media */
         fp->s_fmod = FMOD_CLEAN;
-    fp->s_mntpt = ino;
+    m->m_mntpt = ino;
     if(ino)
         ++ino->c_refs;
     m->m_flags = flags;
