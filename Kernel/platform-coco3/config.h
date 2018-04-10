@@ -90,7 +90,7 @@ extern unsigned char vt_map( unsigned char c );
 #define CONFIG_IDE
 
 #define CONFIG_RTC        /* enable RTC code */
-#define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */
+#define CONFIG_RTC_INTERVAL 100    /* time in deciseconds to atually poll rtc */
 
 /* Level 2 groups, coredumps, network */
 #undef CONFIG_LEVEL_2
