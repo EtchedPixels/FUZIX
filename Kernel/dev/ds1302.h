@@ -3,7 +3,7 @@
 
 /* public interface */
 void ds1302_init(void);
-uint8_t rtc_secs(void);
+uint8_t platform_rtc_secs(void);
 
 #ifdef _DS1302_PRIVATE
 /* consult the DS1302 datasheet for data format;
