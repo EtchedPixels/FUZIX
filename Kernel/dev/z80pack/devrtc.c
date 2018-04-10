@@ -16,7 +16,7 @@ void zrtc_init(void)
 	inittod();
 }
 
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
 	return clkd;
 }
