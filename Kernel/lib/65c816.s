@@ -11,7 +11,7 @@
 	.export _dofork
 
 	.importzp ptr1
-	.import _trap_monitor
+	.import _platform_monitor
 	.import _chksigs
 	.import _platform_idle
 	.import _newproc
@@ -79,7 +79,7 @@ switch_patch_2:
 	stz	_inint
 	jsr	_getproc			; x,a holds process
 	jsr	_switchin			; switch to process
-	jsr	_trap_monitor			; bug out if it fails
+	jsr	_platform_monitor		; bug out if it fails
 
 ;
 ;	FIXME: add swap support
@@ -177,7 +177,7 @@ switchinfail:
 	ldx	#>badswitchmsg
         jsr 	outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp	_trap_monitor
+        jmp	_platform_monitor
 badswitchmsg:
 	.byte	"_switchin: FAIL"
 	.byte	13, 10, 0

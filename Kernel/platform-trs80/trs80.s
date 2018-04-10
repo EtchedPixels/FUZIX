@@ -34,7 +34,6 @@
             .globl istack_top
             .globl istack_switched_sp
             .globl unix_syscall_entry
-            .globl platform_illegal
             .globl outcharhex
 	    .globl fd_nmi_handler
 	    .globl null_handler
@@ -81,7 +80,7 @@ _platform_reboot:
 ; -----------------------------------------------------------------------------
             .area _CODE
 
-_ctc6845:				; registers in reverse order
+_ctc6845:				; registers in order
 	    .db 99, 80, 85, 10, 25, 4, 24, 24, 0, 9, 101, 9, 0, 0, 0, 0
 init_early:
 	    ld a, (_opreg)
@@ -91,13 +90,14 @@ init_early:
 
             ; load the 6845 parameters
 	    ld hl, #_ctc6845
-	    ld bc, #0x1088
+	    ld bc, #0x88
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
 	    out (0x89), a		; data
 	    inc hl
-	    dec b
-	    jp p, ctcloop
+	    inc b
+	    bit 4,b
+	    jr z, ctcloop
 
    	    ; clear screen
 	    ld hl, #0xF800

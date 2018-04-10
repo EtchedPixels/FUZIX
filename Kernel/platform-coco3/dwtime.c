@@ -102,9 +102,7 @@ DISC int dwtime_init( void )
 	return 0;
 }
 
-
-
-/* Called every every so often from updatetod from timer.c */
+/* Called every every decisec from timer.c */
 uint8_t platform_rtc_secs(void)
 {
 	uint8_t t[6];

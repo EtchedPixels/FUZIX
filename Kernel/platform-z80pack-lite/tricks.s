@@ -40,7 +40,7 @@ _ramtop:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-_platform__switchout:
+_platform_switchout:
         di
         ; save machine state
 

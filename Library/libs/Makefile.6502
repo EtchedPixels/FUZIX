@@ -130,6 +130,7 @@ $(OBJ_HARD):%.o: %.c
 
 clean:
 	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l liberror.txt
+	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~ *.o)
 	(cd fuzix6502; make clean)
 
 # Blank for now until we sort stuff out properly for 6502

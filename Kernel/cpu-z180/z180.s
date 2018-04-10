@@ -23,7 +23,7 @@
         .globl _chksigs
         .globl _inint
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _switchin
         .globl _platform_switchout
         .globl _dofork
@@ -695,7 +695,7 @@ _platform_switchout:
         call _switchin
 
         ; we should never get here
-        jp _trap_monitor
+        jp _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -766,7 +766,7 @@ switchinfail:
         call outhl
         ld hl, #badswitchmsg
         call outstring
-        jp _trap_monitor
+        jp _platform_monitor
 
 map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         push af
