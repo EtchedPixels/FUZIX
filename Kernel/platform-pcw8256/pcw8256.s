@@ -15,6 +15,7 @@
 	    .globl map_save
 	    .globl map_restore
 	    .globl platform_interrupt_all
+	    .globl _copy_common
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -235,6 +236,23 @@ map_restore:push hl
 	    pop af
             pop hl
             ret
+
+;
+;	Make a copy of common into a new page in order to use it for a
+;	process.
+;
+_copy_common:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ld a,e
+	    out (0xf1),a	; 4000-7FFF
+	    ld hl,#0xF000
+	    ld de,#0x7000
+	    ld bc,#0x1000
+	    ldir
+	    jr map_kernel
 
 
 _bugout:    pop hl
