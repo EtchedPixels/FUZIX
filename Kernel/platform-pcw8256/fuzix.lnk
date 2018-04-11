@@ -38,4 +38,11 @@ platform-pcw8256/devlpr.rel
 platform-pcw8256/devtty.rel
 vt.rel
 font8x8.rel
+platform-pcw8256/blkdev.rel
+platform-pcw8256/mbr.rel
+platform-pcw8256/devide.rel
+platform-pcw8256/devide_discard.rel
+platform-pcw8256/devfhd.rel
+platform-pcw8256/fidhd.rel
+
 -e

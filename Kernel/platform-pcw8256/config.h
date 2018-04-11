@@ -31,6 +31,9 @@
 #define VT_RIGHT	89
 #define VT_BOTTOM	31
 
+#define MAX_BLKDEV	1	/* UIDE or FIDHD never both */
+#define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
+
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x0000	/* memory base of program */
 #define PROGLOAD    0x0100	/* load base of program */
@@ -55,6 +58,6 @@
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 
-#define swap_map(x)	((uint8_t *)(x))	/* For now */
+#define swap_map(x)	(uint8_t *)(0x4000 + ((x) & 0x3FFF))	/* For now */
 
 #define platform_discard()
