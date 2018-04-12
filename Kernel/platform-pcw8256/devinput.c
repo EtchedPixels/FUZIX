@@ -1,0 +1,111 @@
+#include <kernel.h>
+#include <kdata.h>
+#include <input.h>
+#include <devinput.h>
+
+__sfr __at 0xA0 amx_v;
+__sfr __at 0xA1 amx_h;
+__sfr __at 0xA2 amx_button;
+__sfr __at 0xA3 amx_ctrl;
+
+__sfr __at 0xD0 kemp_x;
+__sfr __at 0xD1 kemp_y;
+__sfr __at 0xD4 kemp_button;
+
+static uint8_t has_amx, has_kemp;
+static uint8_t okx, oky;
+
+static char buf[32];
+static struct s_queue kqueue = {
+ buf, buf, buf, sizeof(buf), 0, sizeof(buf) / 2
+};
+
+/* Queue a character to the input device */
+void queue_input(uint8_t c)
+{
+    insq(&kqueue, c);
+    wakeup(&kqueue);
+}
+
+static uint8_t delta(uint8_t old, uint8_t new)
+{
+    /* Rolled over positive */
+    if (old > 0xE0 && new < 0x20)
+       return new + (0x100 - old);
+    /* Rolled over negative */
+    if (old < 0x20 && new > 0xE0)
+       return -((0x100 - new) + old);
+    else
+        /* Actully this is signed 8bit but it doesn't matter here */
+        return new - old;
+}
+        
+/* First cut - we really should do the mouse delta accumulation in the
+   vblank interrupt and just ouput the sum here */
+int platform_input_read(uint8_t *slot)
+{
+    uint8_t r;
+    if (remq(&kqueue, &r)) {
+	*slot++ = KEYPRESS_CODE | KEYPRESS_UP;
+	*slot++ = r;
+	return 2;
+    }
+    if (has_amx) {
+        *slot++ = MOUSE_REL|BUTTONS(2);
+        r = amx_v;
+        *slot++ = (r >> 4) - (r & 0x0F);
+        *slot++ = (r & 0x0F) - (r >> 4);
+        *slot++ = amx_button & 3;
+        return 4;
+    }
+    if (has_kemp) {
+        uint8_t kx = kemp_x;
+        uint8_t ky = kemp_y;            
+        *slot++ = MOUSE_REL|BUTTONS(2);
+        *slot++ = delta(okx, kx);
+        *slot++ = delta(oky, ky);
+        /* Need to think about this eg 0xF0 -> 0x0F is a positive move
+           of 0x1F while 0x0F->0xF0 is a negative move of 0x1F */
+        *slot++ = kemp_button;
+        oky = ky;
+        okx = kx;
+        return 4;
+    }
+    return 0;
+}
+
+/* All our devices are polled */
+
+/* On an IRQ based system this routine is internally responsible for avoiding
+   races between event wakeup and sleep */
+void platform_input_wait(void)
+{
+    /* Mice need polling every vblank, for a typical tty only machine however
+       we can do less wakeups. Really we need to move the mouse to the timer
+       and do a wakeup only if there is a delta */
+    if (has_amx||has_kemp)
+	psleep(&vblank);
+    else
+	psleep(&kqueue);
+}
+
+int platform_input_write(uint8_t flag)
+{
+    flag;
+    udata.u_error = EINVAL;
+    return -1;
+}
+
+uint8_t platform_input_init(void)
+{
+    if (kemp_x != 0xFF || kemp_y != 0xFF || kemp_button != 0xFF)
+        has_kemp = 1;
+    else if (amx_ctrl != 0xFF && amx_button != 0x10) {
+        amx_ctrl = 0x93;
+        amx_button = 0xFF;
+        amx_button = 0x00;
+        has_amx = 1;
+    } else
+        return 0;
+    return 1;
+}

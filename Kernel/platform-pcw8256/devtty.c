@@ -5,6 +5,8 @@
 #include <devtty.h>
 #include <tty.h>
 #include <vt.h>
+#include <input.h>
+#include <devinput.h>
 
 #undef  DEBUG            /* UNdefine to delete debug code sequences */
 
@@ -251,8 +253,23 @@ static void keydecode(void)
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 /*        kprintf("ttyinproc %d\n", (int) c); */
-	vt_inproc(1, c);
+	switch(keyboard_grab) {
+		case 1:
+			/* FIXME: proper rule needed */
+			if (c >= 0x84)
+				queue_input(c);
+			/* Fall through */
+		case 0:
+			vt_inproc(1, c);
+			return;
+		case 2:
+			queue_input(c);
+			return;
+	}
 }
+
+/* Vblank ticker */
+uint8_t vblank;
 
 /* FIXME: keyboard repeat
           floppy motor etc */
@@ -269,5 +286,8 @@ void platform_interrupt(void)
 			kbd_timer = keyrepeat.continual;
 		}
 	}
+	vblank++;
+	wakeup(&vblank);
+	/* Should also run the mouse accumulator here FIXME */
 	timer_interrupt();
 }

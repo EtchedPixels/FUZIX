@@ -31,6 +31,8 @@
 #define VT_RIGHT	89
 #define VT_BOTTOM	31
 
+#define CONFIG_INPUT
+#define CONFIG_INPUT_GRABMAX 2	/* We could in theory do full up/down but later */
 #define MAX_BLKDEV	1	/* UIDE or FIDHD never both */
 #define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
 
