@@ -764,6 +764,10 @@ struct s_argblk {
  */
 
 /*
+ *	Input ioctls 0x052x (see input.h)
+ */
+
+/*
  *	System info shared with user space
  */
 #include <sysinfoblk.h>
