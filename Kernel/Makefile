@@ -56,7 +56,7 @@ CS5SRCS = syscall_exec$(BITS).c
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
 #
-C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c
+C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c devinput.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c
 
