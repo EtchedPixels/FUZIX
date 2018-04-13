@@ -126,7 +126,7 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 	if (minor == 65)
 		return netdev_ioctl(request, data);
 #endif
-#ifdef CONFIG_NET_NATIVE
+#ifdef CONFIG_INPUT
 	if (minor == 66)
 		return inputdev_ioctl(request, data);
 #endif
