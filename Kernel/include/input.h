@@ -13,8 +13,10 @@
                                            bits show u/d and 3 spare bits */
 #define		KEYPRESS_DOWN	0x00
 #define		KEYPRESS_UP	0x01
+#define	LIGHTPEN_ABS	0x50		/* Light pen or similar, 16 x 16bit virtual coords */
 
-#define BUTTONS(x)	((x)&0x0F)	/* 1-4 buttons */
+#define BUTTON(x)	(1 << (x))	/* Button 1-7 (top bit never used) */
+#define BUTTONS(x)	((x)&0x07)	/* 0-7 buttons */
 
 
 #define INPUT_GRABKB	0x0520
