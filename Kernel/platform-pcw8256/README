@@ -75,24 +75,19 @@ The roller RAM must also be within the low 128K and is 512 bytes.
 The keyboard magically replaces the top 16 bytes of bank 3.
 
 Our loader puts the screen into bank 4 and bank 5 (part of), then loads the
-OS into bank 0/1/2/3. We really need to rearrange this so we set the
-final kernel map as something like
+OS into bank 0/1/2/3.
 
-0 1 3 5 (4 is display in map)
+Other work needed here is to put the buffer cache at the end followed by the
+font data if we do it this way, then discard. At that point we can move the
+font into video mappings.
 
-except that means we must field a hole between BFF0 (keyboard) and Cxxx (
-display). We then end up with a map of
+Right now bank 0-3 are fully used if we do the buffer reclaim (which gets us
+a nice 12 or so extra buffers), bank 4 is all video and bank 5 would have
+5K left after the fonts.  An obvious use for that would be to go to 256
+byte tty queues and add ptys - (costing us about 3K)
 
-0000-0087	Boot loader
-0088-BFEF	Kernel image
-BFF0-BFFF	Keyboard
-C000-D9FF	Video (lower window)
-DA00-DBFF	Roller map
-DC00-E3FF	Font
-E400-...	Video
-... -FFFF	Common
+Other candidates would be the low level graphics rendering routines as we'll
+want those for a graphics mode (or we need to support an mmap like mode for
+direct mapping a 16K graphics window over the app memory)
 
-Whilst doing video we map over 8000-BFFF and rely upon the video and common
-mappings
 
-That leaves bank 2, 6+ for userspace (kernel + video costs us 80K)

@@ -200,7 +200,7 @@ static void keyproc(void)
 	}
 }
 
-uint8_t keyboard[12][8] = {
+const uint8_t keyboard[12][8] = {
 	{'2', '3', '6', '9', KEY_PASTE ,KEY_F1, '0', KEY_F3},
 	{'1', '5', '4', '8', KEY_COPY, KEY_CUT, KEY_PRINT, KEY_EXIT},
 	{KEY_PLUS, KEY_HALF, 0, '7', '#', 13, ']', KEY_DELR},
@@ -215,7 +215,7 @@ uint8_t keyboard[12][8] = {
 	{0, 0, 0, 0, 0, 0, 0, 0}	/* FIXME: js 2 */
 };
 
-uint8_t shiftkeyboard[12][8] = {
+const uint8_t shiftkeyboard[12][8] = {
 	{'2', '3', '6', '9', KEY_PASTE, KEY_F2, '0', KEY_F4},
 	{'1', '5', '4', '8', KEY_COPY, KEY_CUT, KEY_PRINT, KEY_EXIT},
 	{KEY_PLUS, '@', 0, '7', '>', 13, '}', KEY_DELR},
