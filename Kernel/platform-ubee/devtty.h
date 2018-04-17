@@ -3,6 +3,8 @@
 
 extern void tty_interrupt(void);
 extern void kbd_interrupt(void);
-extern int trstty_close(uint8_t minor);
+extern void lpen_kbd_poll(void);
 
+extern uint8_t kbscan(void);
+extern uint8_t kbtest(uint16_t code);
 #endif

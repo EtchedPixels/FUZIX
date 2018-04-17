@@ -1,5 +1,5 @@
 ;
-;	Core floppy routines for the TRS80 1791 FDC
+;	Core floppy routines for the Microbee 2791 FDC
 ;	Based on the 6809 code
 ;
 ;	FIXME: double sided media
