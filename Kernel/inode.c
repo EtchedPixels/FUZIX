@@ -123,6 +123,9 @@ void readi(regptr inoptr ino, uint8_t flag)
 					bp = bread(dev, pblk, 0);
 					if (bp == NULL)
 						break;
+				} else {
+					/* FIXME: this has to get sorted ASAP */
+					bp->bf_time = ++bufclock;
 				}
 				uputblk(bp, uoff(), amount);
 
