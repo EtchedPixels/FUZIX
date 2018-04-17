@@ -92,8 +92,10 @@ void readi(regptr inoptr ino, uint8_t flag)
 		while (udata.u_count) {
 			pblk = mapcalc(ino, &amount, 1);
 
-#if defined(read_direct)
-			if (!ispipe && pblk != NULLBLK && amount == BLKSIZE && read_direct(flag) && bfind(dev, pblk) == 0) {
+#if !defined(read_direct)
+			bp = NULL;
+#else
+			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(flag) == 0) {
 				/* we can transfer direct from disk to the userspace buffer */
 				/* FIXME: allow for async queued I/O here. We want
 				   an API something like breadasync() that either
@@ -117,10 +119,11 @@ void readi(regptr inoptr ino, uint8_t flag)
 				/* we transfer through the buffer pool */
 				if (pblk == NULLBLK)
 					bp = zerobuf();
-				else
+				else if (bp == NULL) {
 					bp = bread(dev, pblk, 0);
-				if (bp == NULL)
-					break;
+					if (bp == NULL)
+						break;
+				}
 				uputblk(bp, uoff(), amount);
 
 				brelse(bp);
