@@ -2,5 +2,6 @@
 #define __DEVICE_DOT_H__
 
 extern void mod_control(uint8_t set, uint8_t clr);
+extern void mod_irqen(uint8_t set, uint8_t clr);
 
 #endif /* __DEVICE_DOT_H__ */
