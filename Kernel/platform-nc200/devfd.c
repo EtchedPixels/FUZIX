@@ -1,20 +1,12 @@
-/* 
- *	Amstrad PCW8256 Floppy Driver
- */
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <devfd.h>
 #include <device.h>
 #include <blkdev.h>
+#include <timer.h>
 
-bool fd765_ready;
-
-static uint8_t motorct;
-static int8_t devsel = -1;
-
-__sfr __at 0xe0 fd_st;
+static timer_t spindown_timer = 0;
 
 void devfd_init(void)
 {
@@ -22,29 +14,28 @@ void devfd_init(void)
     if (!blk)
         return;
 
+    fd765_do_nudge_tc();
     fd765_track = 0xff; /* not on a known track */
     blk->transfer = devfd_transfer;
     blk->drive_lba_count = 1440; /* 512-byte sectors */
     blkdev_scan(blk, 0);
 }
 
+static void nudge_timer(void)
+{
+    di();
+    spindown_timer = set_timer_sec(2);
+    ei();
+}
+
+/* (called from interrupt context) */
 void devfd_spindown(void)
 {
-}
-
-static void motor_on(int minor)
-{
-    minor;
-    mod_control(0x00, 0x20); /* motor on (active low) */
-    fd765_ready = false;
-    mod_irqen(0x20, 0x00); /* enable FDC IRQ */
-}
-
-static void motor_off(void)
-{
-    mod_control(0x20, 0x00); /* motor off (active low( */
-    mod_irqen(0x00, 0x20); /* disable FDC IRQ */
-    devsel = -1;
+    if (spindown_timer && timer_expired(spindown_timer))
+    {
+        mod_control(0x20, 0x00); /* motor off (active low) */
+        spindown_timer = 0;
+    }
 }
 
 /* Seek to track 0. */
@@ -56,31 +47,31 @@ static void fd_recalibrate(void)
 
     for (;;)
     {
+        nudge_timer();
         fd765_do_recalibrate();
         if (((fd765_status[0] & 0xf8) == 0x20) && !fd765_status[1])
             break;
     }
 
-    fd765_track = 0;
+    /* Forget which track we've saught to */
+    fd765_track = 0xff;
 }
 
 /* Set up the controller for a given block, seek, and wait for spinup. */
-static void fd_seek(void)
+static void fd_seek(uint16_t lba)
 {
-    uint16_t block = blk_op.lba;
-    uint8_t track2 = block / 9;
+    uint8_t track2 = lba / 9;
     uint8_t newtrack = track2 >> 1;
 
-    fd765_sector = (block % 9) + 1;
+    fd765_sector = (lba % 9) + 1;
     fd765_head = track2 & 1;
 
     if (newtrack != fd765_track)
     {
-        fd765_track = newtrack;
-
         for (;;)
         {
-            fd765_do_nudge_tc();
+            fd765_track = newtrack;
+            nudge_timer();
             fd765_do_seek();
             if ((fd765_status[0] & 0xf8) == 0x20)
                 break;
@@ -93,33 +84,40 @@ static void fd_seek(void)
 /* Select a drive and ensure the motor is on. */
 static void fd_select(int minor)
 {
-    if (devsel == minor)
-        return;
-    motor_on(minor);
+    (void)minor;
+
+    mod_control(0x00, 0x20); /* motor on (active low) */
+    nudge_timer();
 }
 
-/*
- *	Block transfer
- */
 uint8_t devfd_transfer(void)
 {
     int ct = 0;
     int tries;
+    int blocks = blk_op.nblock;
+    uint16_t lba = blk_op.lba;
 
-    fd_select(0);		/* Select, motor on */
+    fd_select(0);
     fd765_is_user = blk_op.is_user;
-    while (ct < blk_op.nblock) {	/* For each block */
-        for (tries = 0; tries < 3; tries ++) {	/* Try 3 times */
+    fd765_buffer = blk_op.addr;
+
+    while (blocks != 0)
+    {
+        for (tries = 0; tries < 3; tries ++)
+        {
+            nudge_timer();
             if (tries != 0)
                 fd_recalibrate();
-            fd_seek();
+            fd_seek(lba);
 
-            fd765_buffer = blk_op.addr;
-            if (blk_op.is_read) {
+            fd765_sectors = 10 - fd765_sector;
+            if (fd765_sectors > blocks)
+                fd765_sectors = blocks;
+
+            if (blk_op.is_read)
                 fd765_do_read();
-            } else {
+            else
                 fd765_do_write();
-            }
 
             /* Did it work ? */
             if ((fd765_status[0] & 0xc0) == 0)
@@ -127,13 +125,14 @@ uint8_t devfd_transfer(void)
         }
         if (tries == 3)
         {
-            kprintf("fd%d: I/O error %d:%d\n", blk_op.is_read, blk_op.lba);
+            kprintf("fd%d: I/O error %d:%d\n", blk_op.is_read, lba);
             udata.u_error = EIO;
             break;
         }
-        udata.u_block++;
-        ct++;
-        blk_op.addr += 512;
+        lba += fd765_sectors;
+        blocks -= fd765_sectors;
+        ct += fd765_sectors;
     }
+
     return ct;
 }

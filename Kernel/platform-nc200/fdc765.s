@@ -22,6 +22,7 @@
 	.globl _fd765_status
 	.globl _fd765_buffer
 	.globl _fd765_is_user
+	.globl _fd765_sectors
 
 	.area _COMMONMEM
 
@@ -131,7 +132,9 @@ _fd765_do_read:
 	ld hl, (_fd765_buffer)
 	ld c, #FD_DT
 	ld b, #0
-	ld e, #2
+	ld a, (_fd765_sectors)
+	add a
+	ld e, a
 read_loop:
 	in a, (FD_ST)
 	rla							; RQM...
@@ -144,6 +147,7 @@ read_loop:
 	dec e
 	jr nz, read_loop			; outer loop: 2 iterations
 read_finished:
+	ld (_fd765_buffer), hl
 	call _fd765_do_nudge_tc		; Tell FDC we've finished
 	call fd765_read_status
 	ei
@@ -165,7 +169,9 @@ _fd765_do_write:
 	ld hl, (_fd765_buffer)
 	ld c, #FD_DT
 	ld b, #0
-	ld e, #2
+	ld a, (_fd765_sectors)
+	add a
+	ld e, a
 write_loop:
 	in a, (FD_ST)
 	rla							; RQM...
@@ -178,6 +184,7 @@ write_loop:
 	dec e
 	jr nz, write_loop			; outer loop: 2 iterations
 write_finished:
+	ld (_fd765_buffer), hl
 	call _fd765_do_nudge_tc		; Tell FDC we've finished
 	call fd765_read_status
 	ei
@@ -201,7 +208,9 @@ setup_read_or_write:
 	call fd765_tx
 	ld a, #2					; 5: bytes per sector: 512
 	call fd765_tx
-	ld a, b                     ; 6: last sector (same as start sector)
+	ld a, (_fd765_sectors)		
+	add b						; add first sector
+	dec a						; 6: last sector (*inclusive*)
 	call fd765_tx
 	ld a, #27  					; 7: Gap 3 length (27 is standard for 3.5" drives)
 	call fd765_tx
@@ -212,6 +221,8 @@ setup_read_or_write:
 _fd765_buffer:
 	.dw 0
 _fd765_is_user:
+	.db 0
+_fd765_sectors:
 	.db 0
 
 ; Read the next sector ID off the disk.
