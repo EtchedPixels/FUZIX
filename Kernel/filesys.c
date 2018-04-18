@@ -650,6 +650,11 @@ blkno_t blk_alloc(uint16_t devno)
         goto corrupt;
     --dev->s_tfree;
 
+   /*
+    * FIXME: When we implement the rest of the bigger block size fs support
+    * this routine is responsible for zeroing the entire extent not just the
+    * 512 byte block
+    */
     /* Zero out the new block */
     buf = bread(devno, newno, 2);
     if (buf == NULL)

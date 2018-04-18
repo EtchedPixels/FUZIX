@@ -113,22 +113,14 @@ void readi(regptr inoptr ino, uint8_t flag)
 			} else
 #endif
 			{
-				/* FIXME: for big file system support we need
-				   to zero the rest of the logical extent here
-				   and then allocate and write the one we want */
 				/* we transfer through the buffer pool */
 				if (pblk == NULLBLK)
 					bp = zerobuf();
-				else if (bp == NULL) {
+				else if (bp == NULL)
 					bp = bread(dev, pblk, 0);
-					if (bp == NULL)
-						break;
-				} else {
-					/* FIXME: this has to get sorted ASAP */
-					bp->bf_time = ++bufclock;
-				}
+				if (bp == NULL)
+					break;
 				uputblk(bp, uoff(), amount);
-
 				brelse(bp);
 			}
 			/* Bletch */
