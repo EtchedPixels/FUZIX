@@ -39,6 +39,7 @@
             .globl outcharhex
 	    .globl fd_nmi_handler
 	    .globl null_handler
+	    .globl _vtinit
 
 	    .globl _ubee_model
 
@@ -48,9 +49,20 @@
             .include "kernel.def"
             .include "../kernel.def"
 
-; -----------------------------------------------------------------------------
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	    .globl _bufpool
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
+
+;
 ; COMMON MEMORY BANK (kept even when we task switch)
-; -----------------------------------------------------------------------------
+;
             .area _COMMONMEM
 
 _platform_monitor:
@@ -59,7 +71,7 @@ _platform_monitor:
 	    jp to_monitor
 
 platform_interrupt_all:
-	    in a,(0xef)
+	    in a,(0xef)			; FIXME: remove this line once debugged
 	    ret
 
 _platform_reboot:
@@ -112,8 +124,6 @@ page_codes:
 ; -----------------------------------------------------------------------------
             .area _CODE
 
-; FIXME: most of this belongs in discard
-
 ; These two must be below 32K and not use the stack until they hit ROM
 ; space.
 ;
@@ -129,6 +139,8 @@ to_reboot:
 	    xor a
 	    out (0x50), a
 	    jp 0xE000
+
+	    .area _DISCARD
 	
 ;
 ;	This setting list comes from the Microbee 256TC documentation
@@ -137,6 +149,7 @@ to_reboot:
 _ctc6545:				; registers in reverse order
 	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
 	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
+
 
 init_early:
             ; load the 6545 parameters
@@ -151,18 +164,45 @@ ctcloop:    out (c), b			; register
 	    ; ensure the CTC clock is right
 	    ld a, #0
 	    in a, (9)			; manual says in but double check
-	    in a, (0x1C)
-	    and #0x7F
-	    out (0x1C), a		; ensure we are in simple mode for now
+	    xor a
+	    out (0x0B),a		; vanish the character rom
+	    ld a,#0x40
+	    out (0x08),a		; colour, black background
+	    ld a,#0x14			; map the video in at 0x8000
+	    out (0x50),a
    	    ; clear screen
-	    ld hl, #0xF000
+	    ld hl, #0x8000
 	    ld (hl), #'*'		; debugging aid in top left
 	    inc hl
-	    ld de, #0xF002
+	    ld de, #0x8002
 	    ld bc, #1998
 	    ld (hl), #' '
 	    ldir
-            ret
+	    ld hl,#0x8800
+	    ld de,#0x8801
+	    ld (hl), #4			; green characters/black
+	    ld bc,#1999
+	    ldir
+	    ld a,(_ubee_model)
+	    or a
+	    jr z, no_attribs
+	    ;
+	    ;	Map in and wipe attribute memory on the premium and tc
+	    ;	models.
+	    ;
+	    ld a,#0x10			; Enable attribute memory and
+	    out (0x1C),a		; wipe it
+	    ld hl,#0x8000
+ 	    ld de,#0x8001
+	    ld bc,#1999
+	    ld (hl),#0
+	    ldir
+	    ld a,#0x80			; extended PCG on
+	    out (0x1C),a
+no_attribs:
+	    ld a,#0x0C			; video back off
+	    out (0x50),a
+	    jp _vtinit
 
 init_hardware:
 	    ld a,(_ubee_model)
@@ -296,6 +336,7 @@ _program_vectors:
 
 	    call map_process
 
+	    out (0xfe), a
             ; write zeroes across all vectors
             ld hl, #0
             ld de, #1
@@ -330,7 +371,7 @@ _program_vectors:
 ;
 map_kernel:
 	    push af
-	    ld a, #0x04		; bank 0, 1 no ROM - FIXME: map video over kernel
+	    ld a, #0x0C		; bank 0, 1 no ROM or video
 	    ld (mapreg), a
 	    out (0x50), a
 	    pop af
@@ -418,8 +459,6 @@ _hd_xfer_out:
 	    .globl _lpen_kbd_last
 ;
 _kbscan:
-	    ; FIXME set right register ??? or do we always put it right
-	    ; irq handling versus video setup !
 	    in a,(0x0C)
 	    bit 6,a		; No light pen signal - no key
 	    jr z, nokey		; Fast path exit
@@ -525,3 +564,157 @@ scanner_done:
             xor a
             out (0x0b),a
 	    ret
+
+
+;
+;	Video support code. This has to live below F000 so it can use the
+;	video memory and not common. Note that this means we need to disable
+;	interrupts briefly when we do the flipping
+;
+;	TODO: it would make sense to map the ROM and RAM font space and
+;	copy the ROM font to RAM so we can support font setting ?
+;
+
+	    .area _VIDEO
+
+	    .globl _cursor_off
+	    .globl _cursor_on
+	    .globl _scroll_up
+	    .globl _scroll_down
+	    .globl _vwrite
+	    .globl _patch_std
+	    .globl _patch_std_end
+
+	    .globl ___hard_di
+
+	    .globl _vtwidth
+	    .globl _vtaddr
+	    .globl _vtcount
+	    .globl _vtattrib
+	    .globl _vtchar
+;
+;	6545 Hardware Cursor
+;
+_cursor_off:
+	    ret
+_cursor_on:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ; ld a,i handling is buggy on NMOS Z80
+	    call ___hard_di
+	    push af
+	    ld c,#0x0d
+	    ld a,#0x0e
+	    out (0x0c),a
+	    out (c),d
+	    inc a
+	    out (0x0c),a
+	    out (c),e
+popout:
+	    pop af
+	    ret c
+	    ei
+	    ret
+;
+;	Scroll the display (the memory wraps on a 2K boundary, the
+;	display wraps on 2000 bytes). Soft scroll - hard scroll only works
+;	in 64x16 mode
+;
+;	FIXME: on premium/tc we also need to scroll the attribute RAM!
+;
+_scroll_up:
+	    call ___hard_di
+	    push af
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,#0x8000
+	    push hl
+	    ld de, (_vtwidth)
+	    add hl,de
+	    pop de
+	    ld bc,#4016		; FIXME compute for variable width
+	    ldir
+unmap_out:
+	    ; now put the RAM back
+	    pop af
+	    ld (mapreg),a
+	    out (0x50),a
+	    ; We usually only do one char
+	    jr popout
+
+_scroll_down:
+	    call ___hard_di
+	    push af
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,#0x8FCF	; end of display
+	    push hl
+	    ld de, (_vtwidth)
+	    or a
+	    sbc hl,de
+	    pop de
+	    ex de,hl
+	    ld bc,#4016		; FIXME compute for widths
+	    lddr
+	    jr unmap_out
+;
+;	Write to the display
+;
+;	In theory we can avoid the di/ei but that needs some careful review
+;	of the banking paths on interrupt
+;
+_vwrite:
+	    call ___hard_di
+	    push af
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,(_vtaddr)
+	    ld bc,(_vtcount)
+	    ld a,h
+	    and #0x07
+	    or #0x80
+	    ld h,a
+	    ld de,(_vtattrib)
+	    ld a,(_vtchar)
+vloop:
+	    ld (hl),a		; character
+	    ld a,#0x90		; attribute RAM / 0x90 if we enable PCG extended
+_patch_std:
+	    out (0x1c),a	; latch in attribute RAM
+	    ld (hl),e		; attribute
+	    xor a		; #0x80 if enable PCG extended
+	    out (0x1c),a
+_patch_std_end:
+	    set 3,h		; colour is at F8-FF
+	    ld (hl),d		; colour
+	    dec bc
+	    ld a,b
+	    or c
+	    jr nz, nextchar
+	    jr unmap_out
+nextchar:
+	    res 3,h
+	    inc hl
+	    jr vloop
+;
+;	Ensure these are in the video mapping
+;
+_vtaddr:    .word 0
+_vtcount:   .word 0
+_vtattrib:  .word 0
+_vtwidth:   .word 80			; FIXME should be variable
+_vtchar:    .byte 0

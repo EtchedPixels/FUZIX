@@ -4,6 +4,7 @@
 	        ; when they are first seen.	
 	        .area _CODE
 	        .area _CODE2
+		; Load video later on so it ends up above 0x8800
 		.area _VIDEO
 	        .area _CONST
 	        .area _INITIALIZED
@@ -13,8 +14,9 @@
 	        .area _HEAP
 	        .area _GSINIT
 	        .area _GSFINAL
-	        .area _COMMONMEM
+		.area _BUFFERS
 		.area _DISCARD
+	        .area _COMMONMEM
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
 	        .area _INITIALIZER
@@ -48,7 +50,9 @@
 		.word 0xC0DE
 start:
 		di
-		ld sp, #kstack_top
+		; We can't use the kstack yet - we've still got video mapped
+		; all over it
+		ld sp, #0x0200
 		;
 		; Figure out our hardware type. We need to work this out
 		; before we can shuffle the memory map and set up video
@@ -68,33 +72,41 @@ start:
 		ld a,#2
 		ld (_ubee_model),a
 		; Do we need to touch ROM etc - not clear we need do
-		; anything as we are already in RAM mode. Turn on video
-		; mapping at Fxxx just while we boot up so we can poke it
-		; for debug. Some day we can map the video just for
-		; the video writes.
-		ld a,#0x04
+		; anything as we are already in RAM mode. Turn off video
+		; mapping
+		ld a,#0x0C
 		out (0x50),a
 		jr relocate
 
-not256tc:	; The uBee might have colour support
-		ld hl, (0xF7FF)
-		ld (hl),#0x90		; zero the last byte
-		ld a, #0x10
-		out (0x1C),a		; attribute latch
-		ld (hl),#0xFF		; set to 0xFF
-		ld a,#0x00		; back to video
-		out (0x1c),a
-		ld a,(hl)
-		ld (_ubee_model),a	; 1 - premium
-		or a
-		jr z, unsupported_model	; 128K required and premium
-		ld a,#0x04		; ROMs off video at Fxxx
+not256tc:	; Are we a premium model
+		ld a,#0x10		; Attribute latch
+		out (0x1c),a		; Set
+	        in a,(0x1c)		; Read
+	        cp #0x10		; If reads back we are premium
+		jr nz, premium_model
+		ld a,#0x40		; Colour control register
+		out (0x08),a		; Set
+		in a,(0x08)		; Read
+		cp #0x40
+		jr nz, unsupported_model; not colour
+		xor a
+		jr colour_standard
+;
+;		uBee Premium Board
+;
+premium_model:
+		ld a,#1
+colour_standard:
+		ld (_ubee_model),a	; model - 1 premium 0 colour standard
+		ld a,#0x0C		; ROMs off video off
 		out (0x50),a
 
 		; FIXME: support SBC (128K non premium 5.25 or 3.5
-		; drives, flicker on video writes)
+		; drives, without colour flicker on video writes)
+		; may also have a 1793 not 2793 fdc
 
 relocate:
+		ld sp,#kstack_top
 		;
 		; move the common memory where it belongs    
 		ld hl, #s__DATA

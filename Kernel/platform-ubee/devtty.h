@@ -7,4 +7,13 @@ extern void lpen_kbd_poll(void);
 
 extern uint8_t kbscan(void);
 extern uint8_t kbtest(uint16_t code);
+
+extern uint16_t vtattrib;
+extern uint16_t vtaddr;
+extern uint16_t vtbase;
+extern uint16_t vtcount;
+extern uint8_t vtchar;
+
+extern void vwrite(void);
+
 #endif

@@ -25,6 +25,12 @@ The other memory is then overlaid on 0000-7FFF for user space
 	0100-7CFF		Application
 	7D00-7FFF		Udata/stack cache (may be able to move
 				oto 7DFF/7E00)
+	(User space sees video mapped at 0x8000-8FFF)
+
+
+Testing with uBee512
+
+ubee512
 
 Done so far:
 
@@ -118,7 +124,8 @@ There are three kinds of video
 
 Standard:
 	A 6545 with 2K of display memory and 128 8x16 ROM characters plus
-	128 in programmable character memory. No colour
+	128 in programmable character memory.
+	Colour option (includes flicker workaround)
 
 Premium:
 	The 6545 has
@@ -137,5 +144,25 @@ Premium:
 
 High resolution video is sort of MSX like but cruder. The character memory is
 filled with unique character codes and the character ram is loaded with the
-bit patterns.
+bit patterns. Also it's banked and banked so will be horrible to program and
+we'll need graphics mode support for other modes
 
+
+
+Currently in progress
+
+- Video support (colour, attributes)			DEBUGGING
+- Map video at 0x8000					DONE
+- Clear attribute ram if present			DONE
+- Move common up					DONE
+- Do buffer over discard change				UNTESTED
+- Check we have video latches/map right everywhere	DEBUGGING
+- Init vtattr_cap and the video variables correctly	PARTLY DONE
+- Check if scrolling in hw is doable or not in 80x25	NO
+- Support 'map video into my process at 0x8000 hack'	PARTLY DONE
+- Non premium video
+- Non premium video setup
+- Copy ROM font to RAM, support RAM font setting
+- Figure out how I broke the 6545 cursor
+
+Currently debugging scrolling and multichar writes
