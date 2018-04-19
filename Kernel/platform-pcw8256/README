@@ -52,8 +52,42 @@ At that point the keyboard should work.
 The floppy driver is incomplete but given a rootfs image on /dev/fd1 you
 should be able to at least get it to mount
 
-device 0 = fd0 1 = fd1
+device 256 = fd0 257 = fd1
+
+(0-255 are the UIDE hard disks, or FID hard disks on Joyce)
 
 
 Mixed boot/root images are not currently supported (this just needs a modified
 boot block that starts at a different offset)
+
+
+Memory
+------
+
+Then PCW8256 memory is split into multiple banks not all of which can be used
+for any purpose
+
+The display takes 23040 bytes of video line memory. Each line must be within
+the low 128K and is indexed by the roller RAM
+
+The roller RAM must also be within the low 128K and is 512 bytes.
+
+The keyboard magically replaces the top 16 bytes of bank 3.
+
+Our loader puts the screen into bank 4 and bank 5 (part of), then loads the
+OS into bank 0/1/2/3.
+
+Other work needed here is to put the buffer cache at the end followed by the
+font data if we do it this way, then discard. At that point we can move the
+font into video mappings.
+
+Right now bank 0-3 are fully used if we do the buffer reclaim (which gets us
+a nice 12 or so extra buffers), bank 4 is all video and bank 5 would have
+5K left after the fonts.  An obvious use for that would be to go to 256
+byte tty queues and add ptys - (costing us about 3K)
+
+Other candidates would be the low level graphics rendering routines as we'll
+want those for a graphics mode (or we need to support an mmap like mode for
+direct mapping a 16K graphics window over the app memory)
+
+

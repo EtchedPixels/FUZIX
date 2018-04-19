@@ -336,11 +336,33 @@ typedef struct filesys { // note: exists in mem and on disk
     blkno_t       s_tfree;
     uint16_t      s_tinode;
     uint8_t	  s_shift;	/* Extent size */
-    uint8_t	  s_reserved;
-    /* Below this is only used in memory so alignments don't matter */
-    inoptr        s_mntpt;     /* Mount point */
-    /* TODO: Add geometry hints and support > 512 byte blocks */
 } filesys, *fsptr;
+
+/*
+ * Superblock with userspace fields that are not kept in the kernel
+ * mount table.
+ */
+struct filesys_user {
+    struct filesys s_fs;
+    /* Allow for some kernel expansion */
+    uint8_t	  s_reserved;
+    uint16_t	  s_reserved2[16];
+    /* This is only used by userspace */
+    uint16_t	  s_props;	/* Property bits indicating which are valid */
+#define S_PROP_LABEL	1
+#define S_PROP_GEO	2
+    /* For now only one property set - geometry. We'll eventually use this
+       when we don't know physical geometry and need to handle stuff with
+       tools etc */
+    uint8_t	  s_label_name[32];
+
+    uint16_t      s_geo_heads;	/* If 0/0/0 is specified and valid it means */
+    uint16_t	  s_geo_cylinders; /* pure LBA - no idea of geometry */
+    uint16_t	  s_geo_sectors;
+    uint8_t	  s_geo_skew;	/* Soft skew if present (for hard sectored media) */
+                                /* Gives the skew (1/2/3/4/5/... etc) */
+    uint8_t	  s_geo_secsize;/* Physical sector size in log2 form*/
+};
 
 typedef struct oft {
     off_t     o_ptr;      /* File position pointer */
@@ -353,6 +375,7 @@ typedef struct oft {
 struct mount {
     uint16_t m_dev;
     uint16_t m_flags;
+    inoptr   m_mntpt;     /* Mount point */
     struct filesys m_fs;
 };
 #define MS_RDONLY	1
@@ -738,6 +761,10 @@ struct s_argblk {
 
 /*
  *	Drivewire ioctls 050x (see drivewire.h)
+ */
+
+/*
+ *	Input ioctls 0x052x (see input.h)
  */
 
 /*

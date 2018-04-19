@@ -5,6 +5,7 @@
 #include <audio.h>
 #include <netdev.h>
 #include <devmem.h>
+#include <input.h>
 #include <net_native.h>
 
 /*
@@ -17,6 +18,7 @@
  *	Minor   4       mem     (physical memory)
  *	Minor	64	audio
  *	Minor	65	net_native
+ *	Minor	66	input
  *
  *	Use Minor 128+ for platform specific devices
  */
@@ -62,6 +64,10 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	case 65:
 		return netdev_read(flag);
 #endif
+#ifdef CONFIG_INPUT
+	case 65:
+		return inputdev_read(flag);
+#endif
 	default:
 		udata.u_error = ENXIO;
 		return -1;
@@ -97,6 +103,10 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	case 65:
 		return netdev_write(flag);
 #endif
+#ifdef CONFIG_INPUT
+	case 66:
+		return inputdev_write(flag);
+#endif
 	default:
 		udata.u_error = ENXIO;
 		return -1;
@@ -115,6 +125,10 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 #ifdef CONFIG_NET_NATIVE
 	if (minor == 65)
 		return netdev_ioctl(request, data);
+#endif
+#ifdef CONFIG_INPUT
+	if (minor == 66)
+		return inputdev_ioctl(request, data);
 #endif
 	if (minor != 3) {
 		udata.u_error = ENOTTY;
@@ -143,6 +157,10 @@ int sys_close(uint8_t minor)
 #ifdef CONFIG_NET_NATIVE
 	if (minor == 65)
 		return netdev_close(minor);
+#endif
+#ifdef CONFIG_INPUT
+	if (minor == 66)
+		return inputdev_close();
 #endif
 	return 0;
 }

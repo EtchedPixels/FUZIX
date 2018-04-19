@@ -103,7 +103,6 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 			}
 		}
 	}
-	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp;
 }
 
@@ -142,6 +141,11 @@ int bfree(regptr bufptr bp, uint8_t dirty)
 		}
 		bp->bf_dirty = false;
 	}
+	/* Time stamp the buffer on free up. It doesn't matter if we stamp it
+	   on read or free as while locked it can't go away. However if we
+	   stamp it on free we can in future make smarter decisions such as
+	   recycling full dirty buffers faster than partial ones */
+	bp->bf_time = ++bufclock;
 	bunlock(bp);
 	return ret;
 }

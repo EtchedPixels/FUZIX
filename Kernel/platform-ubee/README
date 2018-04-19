@@ -5,7 +5,7 @@ First 64K
 	0000-00FF		Vectors
 	0100-01FF		Free
 	0200-wherever		Kernel
-	DB00			Discard
+	DB00			Discard	(need to fix to reclaim buffers here)
 	E400			Common
 	F000			Video
 
@@ -33,16 +33,8 @@ Done so far:
 - Basic initialization and setup, video and machine type probing
 - Sketch of various drivers
 - Basic floppy driver code
-
-To Do:
-- Floppy - media detect/sectors per track etc
 - Try mounting a file system on floppy
-- Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
-- Hard disk driver debug
-- Bank the video
 - Get init loading, load and test userspace
-- IDE driver (note the ubee512 emulator ide appears to be very busted as
-  on 5.8.0)
 - How to tell wd1010 system from 2793 from both with 0x58 switch
 	-	Select 0x58 = 0
 		See if track register writes to values
@@ -70,19 +62,28 @@ To Do:
 	*Never write 0x41 while probing as it's precomp on the WD. 0x45
 	however is either cyl_high or track_w so safe
 
+
+To Do:
+- Floppy - media detect/sectors per track etc/ hard skew
+- Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
+- Hard disk driver debug
+- Bank the video
+- IDE driver (note the ubee512 emulator ide appears to be very busted as
+  on 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
+- Non TC keyboard (lightpen keyboard)
 
 Longer Term
 - Support attributes, colour, RAM based fonts (load the ROM one into RAM
   customised for bold/italic ?)
 - Hardware 6x45 scrolling
 - Do delayed video output via a buffer off vblank event for non premium
-- Non TC keyboard (lightpen keyboard)
 - Proper support for Z80 PIO interfaces
 - Z8530 SCC
 - Graphics not just vt interfaces
 - Maybe eventually switch to soft interrupt model and support soft serial
   interrupts (ick)
+- Buffer reclaim of discard memory
 
 
 Notes:

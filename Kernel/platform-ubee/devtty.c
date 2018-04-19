@@ -69,47 +69,6 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
-#if 0
-static uint8_t shiftmask[8] = {
-	0, 0, 0, 0, 0, 0, 0, 7
-};
-
-static void keyproc(void)
-{
-	int i;
-	uint8_t key;
-
-	for (i = 0; i < 8; i++) {
-		/* Set one of A0 to A7, and read the byte we get back.
-		   Invert that to get a mask of pressed buttons */
-		keyin[i] = *(uint8_t *) (0xF400 | (1 << i));
-		key = keyin[i] ^ keymap[i];
-		if (key) {
-			int n;
-			int m = 1;
-			for (n = 0; n < 8; n++) {
-				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
-						keysdown--;
-				}
-				if ((key & m) && !(keymap[i] & m)) {
-					if (!(shiftmask[i] & m)) {
-						keysdown++;
-						newkey = 1;
-						keybyte = i;
-						keybit = n;
-					}
-				}
-				m += m;
-
-			}
-		}
-		keymap[i] = keyin[i];
-	}
-}
-
-#endif
-
 static uint8_t keymap[15];
 static uint8_t keyin[15];
 static uint8_t keybyte, keybit;
@@ -188,17 +147,6 @@ static void keydecode_tc(void)
 	tty_inproc(1, c);
 }
 
-#if 0
-void kbd_interrupt(void)
-{
-	newkey = 0;
-	keyproc();
-	if (keysdown < 3 && newkey)
-		keydecode();
-}
-
-#endif
-
 __sfr __at 0x02	tc256_kstat;
 __sfr __at 0x18 tc256_kcode;
 
@@ -234,4 +182,74 @@ void kbd_interrupt(void)
 		keymap_up(x & 0x7F);
 	if (keysdown < 3 && newkey)
 		keydecode_tc();
+}
+
+static const uint8_t xlate[64] = {
+	'@',
+	'a','b','c','d','e','f','g','h',
+	'i','j','k','l','m','n','o','p',
+	'q','r','s','t','u','v','w','x',
+	'y','z',
+	'[','\\',']',
+	'^', KEY_DEL,
+	'0','1','2','3','4','5','6','7','8','9',
+	':',';',',','-','.','/',
+	KEY_ESC, KEY_BS, KEY_TAB,
+	KEY_PGDOWN, KEY_ENTER, 0/*CAPSLOCK*/, KEY_STOP,
+	' ', KEY_UP, 0/*Control*/, KEY_DOWN,
+	KEY_LEFT, 0 /* Unused */, 0 /* Unused */, KEY_RIGHT, 0/*Shift*/
+};
+
+static const uint8_t xlate_shift[64] = {
+	'@',
+	'A','B','C','D','E','F','G','H',
+	'I','J','K','L','M','N','O','P',
+	'Q','R','S','T','U','V','W','X',
+	'Y','Z',
+	'{','|','}',
+	'~', KEY_DEL,
+	/* We map _ to shift-0 */
+	'_','!','"','#','$','%','&','\'','(',')',
+	'*','+','<','=','>','?',
+	KEY_ESC, KEY_BS, KEY_TAB,
+	KEY_PGDOWN, KEY_ENTER, 0/*CAPSLOCK*/, KEY_STOP,
+	' ', KEY_UP, 0/*Control*/, KEY_DOWN,
+	KEY_LEFT, 0 /* Unused */, 0 /* Unused */, KEY_RIGHT, 0/*Shift*/
+};
+
+/*
+ *	Poll the non-TC keyboard: Need to add autorepeat once it works.
+ *
+ *	On the asm side the scan needs fixing to skip ctrl, as we don't want
+ *	to report ctrl as it'll hide down/left/right !
+ */
+
+uint8_t lpen_kbd_last = 0xFF;
+static uint8_t capslock;
+
+void lpen_kbd_poll(void)
+{
+	uint8_t k = kbscan();
+	/* Don't want shift/ctrl */
+	if (k != 0xFF && xlate[k]) {
+		lpen_kbd_last = k;
+		return;
+	}
+	/* Key up ? */
+	if (lpen_kbd_last == 0xFF)
+		return;
+	if (lpen_kbd_last == 53) {	/* Caps lock */
+		capslock ^= 1;
+		return;
+	}
+	if (kbtest(63))
+		k = xlate_shift[k];
+	else
+		k = xlate[k];
+	if (capslock && (k >= 'a' && k <= 'z'))
+		k -= 32;
+	if (k >= 64 && k <= 127 && kbtest(57))
+		k &= 31;
+	tty_inproc(1, k);
+	lpen_kbd_last = 0xFF;
 }

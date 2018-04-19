@@ -49,7 +49,7 @@
             .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xE800 upwards)
+; COMMON MEMORY BANK (kept even when we task switch)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
@@ -68,7 +68,7 @@ _platform_reboot:
 	    jp to_reboot
 
 ;
-;	Sit in common and play with th banks to see what we have
+;	Sit in common and play with the banks to see what we have
 ;
 size_ram:
 	    ; We could have < 128, 128 or various extensions up to 512K or
@@ -194,8 +194,7 @@ not_t256:
 	    ; set up the RTC driven periodic timer. The PIA should already
 	    ; have been configured for us
 	    ;
-	    ; we don't necessarily have one in which case we have a
-	    ; (arguably far more useful) vblank timer. In which case this
+	    ; we don't necessarily have one. In which case this
 	    ; routine will pee into the void and do no harm whatsoever
 	    ;
 	    ld bc,#0x0A04
@@ -310,7 +309,7 @@ _program_vectors:
             ld hl, #interrupt_handler
             ld (0x0039), hl
 
-            ; set restart vector for UZI system calls
+            ; set restart vector for FUZIX system calls
             ld (0x0030), a   ;  (rst 30h is unix function call vector)
             ld hl, #unix_syscall_entry
             ld (0x0031), hl
@@ -378,29 +377,151 @@ outchar:
 ;	Swap helpers
 ;
 _hd_xfer_in:
-	   pop de
-	   pop hl
-	   push hl
-	   push de
-	   ld a, (_hd_page)
-	   or a
-	   call nz, map_process_a
-	   ld bc, #0x40			; 512 bytes from 0x40
-	   inir
-	   inir
-	   call map_kernel
-	   ret
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a, (_hd_page)
+	    or a
+	    call nz, map_process_a
+	    ld bc, #0x40			; 512 bytes from 0x40
+	    inir
+	    inir
+	    call map_kernel
+	    ret
 
 _hd_xfer_out:
-	   pop de
-	   pop hl
-	   push hl
-	   push de
-	   ld a, (_hd_page)
-	   or a
-	   call nz, map_process_a
-	   ld bc, #0x40			; 512 bytes to 0x40
-	   otir
-	   otir
-	   call map_kernel
-	   ret
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a, (_hd_page)
+	    or a
+	    call nz, map_process_a
+	    ld bc, #0x40			; 512 bytes to 0x40
+	    otir
+	    otir
+	    call map_kernel
+	    ret
+
+;
+;	Ubee Keyboard. Except for the TC the Ubee pulls this crazy (or neat
+;	depending how you look at it) trick of demuxing a keyboard with the
+;	lightpen input.
+;
+;	See the Ubee technical manual for more information on scanning.
+;
+	    .area _CODE
+
+	    .globl _kbscan
+	    .globl _kbtest
+	    .globl _lpen_kbd_last
+;
+_kbscan:
+	    ; FIXME set right register ??? or do we always put it right
+	    ; irq handling versus video setup !
+	    in a,(0x0C)
+	    bit 6,a		; No light pen signal - no key
+	    jr z, nokey		; Fast path exit
+            ld a, (_lpen_kbd_last)	; Rather than the slow scan try and
+            cp #255		; test if we are holding down the same key
+            jr z, notlast	; assuming one was held down
+            call ispressed	; see if the key is held down (usual case)
+	    ld a, (_lpen_kbd_last)
+				; if so return the last key
+	    bit 0,l		; b = 1 if we found it
+            jr nz, key_return
+notlast:
+	    ld l,#57		; Scan the keys in two banks, the first 57
+	    ld de,#0x0000
+	    call scanner
+	    ld a,#57
+	    jr nz, gotkey
+            ld l,#5
+	    ld de,#0x03A0	; and if that fails the last 5 oddities
+	    call scanner	; in order to handle shift etc
+            ld a,#63
+gotkey:
+	    sub b
+	    jr key_return
+nokey:
+	    ld a,#255
+key_return:
+	    ld l,a
+	    ret
+
+_kbtest:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ld a,e
+;
+;	Check if key is currently pressed
+;	Split the key by matrix position and use our scanner
+;
+ispressed:
+	    rrca
+	    rrca
+	    rrca
+	    rrca
+	    ld e,a
+	    and #0x0F
+	    ld d,a
+            ld a,e
+            and #0xF0
+            ld e,a
+            ld l,#1
+
+;
+;	Test for keys
+;
+;	On entry L is the number of keys to test
+;	DE is the address to scan
+;
+;	Returns L holding the count of keys until we found a hit
+;
+scanner:
+	    ld a,#1
+	    out (0x0b),a		; character ROM so we can scan
+	    ld bc,#0x130c		; for convenience
+	    ld h,#31			; port numbers used in the loop
+	    ld a,#16			; select lpen high
+            out (c),a
+            in a,(0x0d)			; clear status
+sethigh:    ld a,#18			; update register high
+            out (c),a
+            ld a,d
+            out (0x0d),a		; load passed address
+            ld a,e
+            push de			; save working address
+            ld d,#16
+setlow:     out (c),b			; set the low byte from the passed address
+	    out (0x0d),a
+            out (c),h			; dummy read to reset
+            out (0x0d),a
+strobe:     in e,(c)			; spin for a strobe
+            jp p, strobe
+            in e,(c)
+            bit 6,e			; did we get a strobe ?
+            jr nz,scanner_done
+            dec l			; next key to test
+            jr z,scanner_done		; are we done ?
+            add a,d
+            jp nz,setlow		; next inner scan
+            pop de
+            ld e,a
+            inc d
+            jp sethigh			; next outer scan
+	    ;
+	    ;	L holds the count remaining and thus computes the keycode
+	    ;   0 means 'we found nothing'
+	    ;
+scanner_done:
+	    pop de			; recover position we are at
+            ld a,#16			; lpen reset
+            out (0x0c),a
+            in a,(0x0d)			; VDU reset
+            xor a
+            out (0x0b),a
+	    ret

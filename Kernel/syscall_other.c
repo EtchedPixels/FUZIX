@@ -435,7 +435,7 @@ static int do_umount(uint16_t dev)
 		return 0;
 	}
 
-	i_deref(mnt->m_fs.s_mntpt);
+	i_deref(mnt->m_mntpt);
 	/* Vanish the entry */
 	mnt->m_dev = NO_DEVICE;
 	return 0;

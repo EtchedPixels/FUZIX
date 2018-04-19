@@ -14,6 +14,7 @@
 	    .globl _need_resched
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_for_swap
 	    .globl platform_interrupt_all
 	    .globl _copy_common
 
@@ -177,6 +178,11 @@ map_kernel:
 	    call map_process_1
             pop hl
 	    pop af
+	    ret
+
+map_for_swap:
+	    ld (map_current+1),a
+	    out (0xF1),a	; map at 0x4000
 	    ret
 
 map_process_always:

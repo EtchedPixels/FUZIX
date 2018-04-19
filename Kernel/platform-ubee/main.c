@@ -11,7 +11,14 @@ uint16_t ramtop = PROGTOP;
    for the polled ports */
 void platform_idle(void)
 {
-	__asm halt __endasm;
+	if (ubee_model == UBEE_256TC)
+		__asm halt __endasm;
+	else {
+		/* Try to make the keyboard suck as little as possible */
+		irqflags_t irq = di();
+		lpen_kbd_poll();
+		irqrestore(irq);
+	}
 }
 
 void do_beep(void)
@@ -43,8 +50,7 @@ void platform_interrupt(void)
 	static uint8_t icount;
 	uint8_t r = pia0b;
 	/* TODO: printer interrupt */
-	/* Need to check if TC */
-	if (r & 0x02)
+	if (ubee_model == UBEE_256TC && (r & 0x02))
 		kbd_interrupt();
 	if (r & 0x80) {
 		cmos_reg = 0x0C;
@@ -57,6 +63,8 @@ void platform_interrupt(void)
 				icount = 0;
 			}
 		}
+		if (ubee_model != UBEE_256TC)
+			lpen_kbd_poll();
 	}
 }
 
