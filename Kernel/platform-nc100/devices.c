@@ -19,7 +19,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/fd		Floppy disc block devices (NC200 only) */
 #if defined CONFIG_NC200
-  {  blkdev_open, no_close, blkdev_read, blkdev_write, blkdev_ioctl },
+  {  devfd_open, no_close, devfd_read, devfd_write, no_ioctl },
 #else
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
 #endif
@@ -48,7 +48,6 @@ void device_init(void)
 {
   inittod();
   nc100_tty_init();
-  devfd_init();
 }
 
 __sfr __at 0x30 control;

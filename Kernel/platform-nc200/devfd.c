@@ -8,17 +8,16 @@
 
 static timer_t spindown_timer = 0;
 
-void devfd_init(void)
+int devfd_open(uint8_t minor, uint16_t flag)
 {
-    blkdev_t* blk = blkdev_alloc();
-    if (!blk)
-        return;
-
+    flag;
+    if(minor != 0) {
+        udata.u_error = ENODEV;
+        return -1;
+    }
     fd765_do_nudge_tc();
     fd765_track = 0xff; /* not on a known track */
-    blk->transfer = devfd_transfer;
-    blk->drive_lba_count = 1440; /* 512-byte sectors */
-    blkdev_scan(blk, 0);
+    return 0;
 }
 
 static void nudge_timer(void)
@@ -90,16 +89,24 @@ static void fd_select(int minor)
     nudge_timer();
 }
 
-uint8_t devfd_transfer(void)
+static int devfd_transfer(bool is_read, uint8_t is_raw)
 {
     int ct = 0;
     int tries;
-    int blocks = blk_op.nblock;
-    uint16_t lba = blk_op.lba;
+    int blocks = udata.u_nblock;
+    uint16_t lba = udata.u_block;
+
+    // kprintf("[%s %d @ %x : %d:%x]\n", is_read ? "read" : "write",
+    //     blocks, lba, is_raw, udata.u_dptr);
+    // if (!is_read)
+    //     return blocks << BLKSHIFT;
+
+    if (is_raw && d_blkoff(BLKSHIFT))
+        return -1;
 
     fd_select(0);
-    fd765_is_user = blk_op.is_user;
-    fd765_buffer = blk_op.addr;
+    fd765_is_user = is_raw;
+    fd765_buffer = udata.u_dptr;
 
     while (blocks != 0)
     {
@@ -114,7 +121,7 @@ uint8_t devfd_transfer(void)
             if (fd765_sectors > blocks)
                 fd765_sectors = blocks;
 
-            if (blk_op.is_read)
+            if (is_read)
                 fd765_do_read();
             else
                 fd765_do_write();
@@ -125,7 +132,7 @@ uint8_t devfd_transfer(void)
         }
         if (tries == 3)
         {
-            kprintf("fd%d: I/O error %d:%d\n", blk_op.is_read, lba);
+            kprintf("fd%d: I/O error %d:%d\n", is_read, lba);
             udata.u_error = EIO;
             break;
         }
@@ -134,5 +141,18 @@ uint8_t devfd_transfer(void)
         ct += fd765_sectors;
     }
 
-    return ct;
+    return ct << BLKSHIFT;
 }
+
+int devfd_read(uint8_t minor, uint8_t is_raw, uint8_t flag)
+{
+    flag;minor;
+    return devfd_transfer(true, is_raw);
+}
+
+int devfd_write(uint8_t minor, uint8_t is_raw, uint8_t flag)
+{
+    flag;minor;
+    return devfd_transfer(false, is_raw);
+}
+

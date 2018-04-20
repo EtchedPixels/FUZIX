@@ -2,9 +2,11 @@
 #define __DEVFD_DOT_H__
 
 /* public interface */
-extern void devfd_init(void);
+int devfd_open(uint8_t minor, uint16_t flag);
+int devfd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
+int devfd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
+
 extern void devfd_spindown(void);
-extern uint8_t devfd_transfer(void);
 
 extern void fd765_do_nudge_tc(void);
 extern void fd765_do_recalibrate(void);
