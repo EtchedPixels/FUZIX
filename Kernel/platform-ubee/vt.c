@@ -27,7 +27,7 @@ void clear_lines(int8_t y, int8_t ct)
 	char_addr(y, 0);
 	vtcount = ct * (uint16_t)VT_WIDTH;
 	vtchar = ' ';
-//	vwrite();
+	vwrite();
 }
 
 void clear_across(int8_t y, int8_t x, int16_t l)
