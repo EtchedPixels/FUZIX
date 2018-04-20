@@ -626,7 +626,7 @@ popout:
 ;
 _scroll_up:
 	    call ___hard_di
-	    push af
+	    push hl
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
@@ -638,7 +638,7 @@ _scroll_up:
 	    ld de, (_vtwidth)
 	    add hl,de
 	    pop de
-	    ld bc,#4016		; FIXME compute for variable width
+	    ld bc,#1920		; FIXME
 	    ldir
 unmap_out:
 	    ; now put the RAM back
@@ -650,7 +650,7 @@ unmap_out:
 
 _scroll_down:
 	    call ___hard_di
-	    push af
+	    push hl
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
@@ -675,7 +675,7 @@ _scroll_down:
 ;
 _vwrite:
 	    call ___hard_di
-	    push af
+	    push hl
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
@@ -689,8 +689,8 @@ _vwrite:
 	    or #0x80
 	    ld h,a
 	    ld de,(_vtattrib)
-	    ld a,(_vtchar)
 vloop:
+	    ld a,(_vtchar)
 	    ld (hl),a		; character
 	    ld a,#0x90		; attribute RAM / 0x90 if we enable PCG extended
 _patch_std:
