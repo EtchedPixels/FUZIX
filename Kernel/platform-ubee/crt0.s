@@ -33,6 +33,7 @@
 	        .globl l__COMMONMEM
 		.globl s__INITIALIZER
 	        .globl kstack_top
+		.globl map_kernel
 
 		.globl _ubee_model
 
@@ -123,6 +124,8 @@ relocate:
 		ld bc, #l__DATA - 1
 		ld (hl), #0
 		ldir
+
+		call map_kernel
 
 		call init_early
 		call init_hardware
