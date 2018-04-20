@@ -26,9 +26,9 @@
 
 /* For now we don't support resizing */
 #define VT_WIDTH	80
-#define VT_HEIGHT	24
+#define VT_HEIGHT	25
 #define VT_RIGHT	79
-#define VT_BOTTOM	23
+#define VT_BOTTOM	24
 
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
