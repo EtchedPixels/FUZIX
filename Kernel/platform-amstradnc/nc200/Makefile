@@ -38,22 +38,27 @@ clean:
 	rm -f $(OBJS) $(JUNK) core *~ 
 	rm -f floppyskeleton.img autoprg.bin bootfloppy.img
 
-bootblock.img: ../platform-nc100/bootblock.s
-	sdasz80 -fflopzws bootblock.rel ../platform-nc100/bootblock.s
+bootblock.img: ../bootblock.s
+	sdasz80 -fflopzws bootblock.rel ../bootblock.s
 	sdldz80 -nwmx -b BOOTBLOCK=0 -i bootblock.ihx bootblock.rel
 	srec_cat -disable-sequence-warning \
                 bootblock.ihx -intel \
                 -output bootblock.img -binary
 
-image: floppyskeleton.img autoprg.bin bootblock.img ../fuzix.bin
-	dd if=bootblock.img of=../fuzix.bin bs=1 conv=notrunc
-	cp floppyskeleton.img ../fuzixfloppy.img
-	truncate ../fuzixfloppy.img --size 7680
-	mcopy -i ../fuzixfloppy.img autoprg.bin ::auto.prg
-	dd if=../fuzix.bin bs=16k skip=0 count=1 | mcopy -i ../fuzixfloppy.img - ::load4000.80
-	dd if=../fuzix.bin bs=16k skip=1 count=1 | mcopy -i ../fuzixfloppy.img - ::load4000.81
-	dd if=../fuzix.bin bs=16k skip=2 count=1 | mcopy -i ../fuzixfloppy.img - ::load4000.82
-	echo -n | mcopy -i ../fuzixfloppy.img - ::call4000.80
+.PHONY: image floppyimage cardimage
+image: floppyimage cardimage
+
+cardimage: $(ROOT_DIR)/fuzix.bin bootblock.img
+	dd if=bootblock.img of=$(ROOT_DIR)/fuzix.bin bs=1 conv=notrunc
+
+floppyimage: cardimage floppyskeleton.img autoprg.bin $(ROOT_DIR)/fuzix.bin
+	cp floppyskeleton.img $(ROOT_DIR)/fuzixfloppy.img
+	truncate $(ROOT_DIR)/fuzixfloppy.img --size 7680
+	mcopy -i $(ROOT_DIR)/fuzixfloppy.img autoprg.bin ::auto.prg
+	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=0 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.80
+	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=1 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.81
+	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=2 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.82
+	echo -n | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::call4000.80
 
 floppyskeleton.img: floppyskeleton.s
 	sdasz80 -fflopzws floppyskeleton.rel floppyskeleton.s
