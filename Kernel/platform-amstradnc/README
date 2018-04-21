@@ -3,6 +3,7 @@ Support for the Amstrad NC series of Z80 portable computers.
 Use:
 
     TARGET=amstradnc/nc100 for the NC100
+    TARGET=amstradnc/nc200 for the NC200 (not working yet)
 
 
 Memory map. All off PCMCIA root, 16K arbitrary banks

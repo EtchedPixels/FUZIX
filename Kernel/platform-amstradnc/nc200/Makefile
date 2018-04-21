@@ -1,17 +1,17 @@
 CSRCS = \
-	../platform-nc100/devlpr.c \
-	../platform-nc100/devtty.c \
-	../platform-nc100/devrd.c \
-	../platform-nc100/devaudio.c \
-	../platform-nc100/devgfx.c \
-	../platform-nc100/devices.c \
-	../platform-nc100/main.c \
+	../devlpr.c \
+	../devtty.c \
+	../devrd.c \
+	../devaudio.c \
+	../devgfx.c \
+	../devices.c \
+	../main.c \
 
 ASRCS = \
-	../platform-nc100/nc100.s \
-	../platform-nc100/crt0.s \
-	../platform-nc100/tricks.s \
-	../platform-nc100/commonmem.s \
+	../nc100.s \
+	../crt0.s \
+	../tricks.s \
+	../commonmem.s \
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
