@@ -1,3 +1,10 @@
+Support for the Amstrad NC series of Z80 portable computers.
+
+Use:
+
+    TARGET=amstradnc/nc100 for the NC100
+
+
 Memory map. All off PCMCIA root, 16K arbitrary banks
 
 No CP/M emulation (due to NMI)
@@ -39,8 +46,8 @@ then
 dd if=myfs of=mycard.img bs=16384 seek=20 conv=notrunc
 
 
-To boot from NC100emu use nc100emu.s. Compile it with sdas80 and use the
-resulting nc100.cim as the bootscript for the emulator.
+To boot from NC100emu use nc100emu.s. Compile it with the makefile and use the
+resulting nc100.cim as the boot image for the emulator.
 
 TODO
 

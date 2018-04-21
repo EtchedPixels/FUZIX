@@ -4,18 +4,18 @@
 -b _COMMONMEM=0xF000
 -b _DISCARD=0xE000
 -l z80
-platform-nc100/crt0.rel
-platform-nc100/commonmem.rel
-platform-nc100/nc100.rel
+platform-amstradnc/crt0.rel
+platform-amstradnc/commonmem.rel
+platform-amstradnc/nc100.rel
 start.rel
 version.rel
 lowlevel-z80.rel
-platform-nc100/tricks.rel
-platform-nc100/main.rel
+platform-amstradnc/tricks.rel
+platform-amstradnc/main.rel
 timer.rel
 kdata.rel
-platform-nc100/devrd.rel
-platform-nc100/devices.rel
+platform-amstradnc/devrd.rel
+platform-amstradnc/devices.rel
 devio.rel
 filesys.rel
 process.rel
@@ -35,9 +35,9 @@ devsys.rel
 audio.rel
 usermem.rel
 usermem_std-z80.rel
-platform-nc100/devlpr.rel
-platform-nc100/devtty.rel
-platform-nc100/devaudio.rel
-platform-nc100/devgfx.rel
+platform-amstradnc/devlpr.rel
+platform-amstradnc/devtty.rel
+platform-amstradnc/devaudio.rel
+platform-amstradnc/devgfx.rel
 font4x6.rel
 -e

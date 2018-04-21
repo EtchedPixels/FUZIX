@@ -55,8 +55,8 @@
             .globl outstring
             .globl outstringhex
 
-            .include "kernel.def"
-            .include "../kernel.def"
+            .include "platform/kernel.def"
+            .include "../../kernel.def" ; Kernel
 	    .include "nc100.def"
 
 ; -----------------------------------------------------------------------------

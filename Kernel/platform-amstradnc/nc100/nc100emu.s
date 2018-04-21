@@ -3,11 +3,10 @@
 ;
 
 		.area ASEG(ABS)
-		.org 0x0
+		.org 0x100
 ;
 ;	Switch to the PCMCIA card as if run by FN-x
 ;
-		.ds #0x100
 start:		di
 		ld a, #0x43		; screen RAM
 		out (0x13),a
