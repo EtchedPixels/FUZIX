@@ -57,7 +57,7 @@ static uint8_t jobop(uint8_t minor, uint8_t sig, struct tty *t, uint8_t ign)
 	        kprintf("[stop %d %d %d]\n",
 	                t->pgrp, udata.u_ptab->p_pgrp, udata.u_ptab->p_tty);
 #endif
-		if ((udata.u_ptab->p_held & sigmask(sig)) || udata.u_sigvec[sig] == SIG_IGN)
+		if ((udata.u_ptab->p_sig[1].s_held & sigmask(sig)) || udata.u_sigvec[sig] == SIG_IGN)
 			ignored = 1;
 
 		if ((ignored && ign) || orphan_pgrp(p->p_pgrp, p->p_session)) {
@@ -79,28 +79,28 @@ static uint8_t jobop(uint8_t minor, uint8_t sig, struct tty *t, uint8_t ign)
 }
 
 /* For input readign with SIGTTIN blocked gets you an EIO */
-uint8_t jobcontrol_in(uint8_t minor, struct tty *t, usize_t *nread)
+uint8_t jobcontrol_in(uint8_t minor, struct tty *t)
 {
 	if (!jobop(minor, SIGTTIN, t, 0))
 		return 0;
-	if (*nread == 0) {
+	if (udata.u_done == 0) {
 		udata.u_error = EINTR;
-		*nread = (usize_t)-1;
+		udata.u_done = (usize_t)-1;
 	}
 	return 1;
 }
 
 
 /* For output ignored stop is taken to mean as write anyway */
-uint8_t jobcontrol_out(uint8_t minor, struct tty *t, usize_t *written)
+uint8_t jobcontrol_out(uint8_t minor, struct tty *t)
 {
 	if (!(t->termios.c_lflag & TOSTOP))
 		return 0;
         if (!jobop(minor, SIGTTOU, t, 1))
 		return 0;
-	if (*written == 0) {
+	if (udata.u_done == 0) {
 		udata.u_error = EINTR;
-		*written = (usize_t)-1;
+		udata.u_done = (usize_t)-1;
 	}
 	return 1;
 }

@@ -6,8 +6,10 @@
 #include <device.h>
 #include <tty.h>
 
-volatile uint8_t *uart_data = (volatile uint8_t *)0xF03000;	/* UART data */
-volatile uint8_t *uart_status = (volatile uint8_t *)0xF03010;	/* UART status */
+volatile uint16_t *uart_rxstatus = (volatile uint16_t *)0177560;
+volatile uint8_t *uart_rxdata = (volatile uint8_t *)0177562;
+volatile uint8_t *uart_txstatus = (volatile uint8_t *)0177564;
+volatile uint8_t *uart_txdata = (volatile uint8_t *)0177566;
 
 unsigned char tbuf1[TTYSIZ];
 
@@ -26,13 +28,14 @@ void kputchar(char c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	uint8_t c = *uart_status;
-	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
+	uint8_t c = *uart_txstatus;
+	return (c & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	*uart_data = c;	/* Data */
+	/* Just the console for now */
+	*uart_txdata = c;
 }
 
 void tty_setup(uint8_t minor)
@@ -51,9 +54,9 @@ void tty_sleeping(uint8_t minor)
 /* Currently run off the timer */
 void tty_interrupt(void)
 {
-	uint8_t r = *uart_status;
-	if (r & 1) {
-		r = *uart_data;
+	uint8_t r = *uart_rxstatus;
+	if (r & 0x80) {
+		r = *uart_rxdata;
 		tty_inproc(1,r);
 	}	
 }

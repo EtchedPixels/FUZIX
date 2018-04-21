@@ -116,22 +116,27 @@ SRCTC = tget.c \
         tchelp.c \
 	marksman.c
 
+SRCCURSES = vile.c
+
 SKIPPED =
 
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
 OBJTC = $(SRCTC:.c=.o)
+OBJCURSES = $(SRCCURSES:.c=.o)
 
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
 APPTC = $(OBJTC:.o=)
+APPCURSES = $(OBJCURSES:.o=)
 
-all: $(APPS) $(APPSNS) $(APPTC) size.report
+all: $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
 
 $(APPS): $(CRT0)
 $(APPSNS): $(CRT0NS)
 $(APPTC): $(CRT0)
+$(APPCURSES): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
@@ -139,6 +144,10 @@ $(APPS) $(APPSNS): %: %.o
 
 $(APPTC): %: %.o
 	$(LINKER) $^ -o $@.bin -ltermcap68000 $(LINKER_OPT)
+	$(ELF2FUZIX) -o $@ $@.bin
+
+$(APPCURSES): %: %.o
+	$(LINKER) $^ -o $@.bin -lcurses68000 -ltermcap68000 $(LINKER_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 size.report: $(APPS) $(APPSNS) $(APPTC)

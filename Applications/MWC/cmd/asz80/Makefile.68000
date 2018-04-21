@@ -1,5 +1,5 @@
 PLATFORM = 68000
-CC = m68k-uclinux-gcc
+CC = m68k-uclinux-gcc -DTARGET_Z80
 ASM = m68k-uclinux-as
 AR = m68k-uclinux-ar
 LINKER = m68k-uclinux-ld

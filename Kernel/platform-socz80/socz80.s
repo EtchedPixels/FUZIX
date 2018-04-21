@@ -23,8 +23,8 @@
 	    .globl _irqwork
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -67,8 +67,8 @@ tm_stack:
 tm_stack_top:
 
 ; For now both hit monitor
-_trap_reboot:
-_trap_monitor:
+_platform_reboot:
+_platform_monitor:
             ; stash SP
             ld (tm_user_sp), sp
             ; switch to temporary stack
@@ -203,7 +203,7 @@ _tty_writeready:
             jr z, uart0wr
             cp #2
             jr z, uart1wr
-            call _trap_monitor
+            call _platform_monitor
             ret ; not a console we recognise
 uart1wr:    in a, (UART1_STATUS)
             jr testready

@@ -3,36 +3,51 @@
 #include <kdata.h>
 #include <devlpr.h>
 
-__sfr __at 0x02 lpstat;		/* I/O 2 and 3 */
-__sfr __at 0x03 lpdata;
+__sfr __at 0x00 lpdata;		/* I/O 0 PIO A data */
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
-    minor; flag; // shut up compiler
+    used(flag);
+    if (minor) {
+        udata.u_error = ENODEV;
+        return -1;
+    }
     return 0;
 }
 
 int lpr_close(uint8_t minor)
 {
-    minor; // shut up compiler
+    used(minor);
     return 0;
+}
+
+static volatile uint8_t lpready = 1;
+
+void lpr_interrupt(void)
+{
+    lpready = 1;
+    wakeup(&lpready);
 }
 
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    int c = udata.u_count;
-    char *p = udata.u_base;
-    minor; rawflag; flag; // shut up compiler
+    used(minor);
+    used(rawflag);
 
-    while(c) {
-        /* Note; on real hardware it might well be necessary to
-           busy wait a bit just to get acceptable performance */
-        while (lpstat != 0xFF) {
-//            if (psleep_flags(&clocktick, flag))
-//                return -1;
+    /* Unusually for an 8bit micro  the MicroBee has interrupt driven
+       parallel managed via the Z80PIOA. It's not always used for a printer
+       so we do need to fix interactions if we add other devices for that
+       port and interlock them */
+    while(udata.u_done < udata.u_count) {
+        /* Avoid IRQ race */
+        irqflags_t irq = di();
+        if (!lpready && psleep_flags_io(&lpready, flag)) {
+            irqrestore(irq);
+            break;
         }
-        /* FIXME: tidy up ugetc and sysio checks globally */
-        lpdata = ugetc(p++);
+        irqrestore(irq);
+        lpready = 0;
+        lpdata = ugetc(udata.u_base++);
     }
-    return (-1);
+    return udata.u_done;
 }

@@ -11,4 +11,3 @@ typedef void *va_list;
 
 #endif
 #endif
-

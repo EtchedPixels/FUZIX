@@ -14,11 +14,13 @@
 	    .globl _need_resched
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_for_swap
 	    .globl platform_interrupt_all
+	    .globl _copy_common
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 	    .globl _bugout
 
@@ -67,14 +69,14 @@ font8x8	    .equ	0x9C00		; font loaded after framebuffer
 ;
 ;	Ask the controller to reboot
 ;
-_trap_reboot:
+_platform_reboot:
 	    ld a, #0x01
 	    out (0xF8), a
             ; should never get here
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
-	    jr _trap_monitor
+	    jr _platform_monitor
 
 platform_interrupt_all:
 	    ret
@@ -178,6 +180,11 @@ map_kernel:
 	    pop af
 	    ret
 
+map_for_swap:
+	    ld (map_current+1),a
+	    out (0xF1),a	; map at 0x4000
+	    ret
+
 map_process_always:
 	    push af
 	    push hl
@@ -235,6 +242,23 @@ map_restore:push hl
 	    pop af
             pop hl
             ret
+
+;
+;	Make a copy of common into a new page in order to use it for a
+;	process.
+;
+_copy_common:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ld a,e
+	    out (0xf1),a	; 4000-7FFF
+	    ld hl,#0xF000
+	    ld de,#0x7000
+	    ld bc,#0x1000
+	    ldir
+	    jr map_kernel
 
 
 _bugout:    pop hl

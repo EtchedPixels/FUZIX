@@ -8,11 +8,7 @@
 	.globl longjmp
 .mri 1
 
-setjmp:
-	tst.l d0
-	bne _setok
-	addq #1,d0			; never return 0 on longjmp
-_setok:	move.l 4(sp),a0
+setjmp: move.l 4(sp),a0
 	add #48,a0
 	movem.l d2-d7/a2-a7,-(a0)	; 12 * 4 = 48 bytes
 	moveq #0,d0			; return 0 from setjmp
@@ -20,5 +16,10 @@ _setok:	move.l 4(sp),a0
 
 longjmp:
 	move.l 4(sp),a0
+	move.l 8(sp),d0
+	tst.l  d0
+	beq    d0_ok
+	moveq  #1,d0
+d0_ok:
 	movem.l (a0)+,d2-d7/a2-a7
 	rts

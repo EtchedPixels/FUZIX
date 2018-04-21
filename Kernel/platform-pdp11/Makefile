@@ -39,3 +39,7 @@ image:
 	tricks.o ../syscall_fs3.o \
 	../usermem_std-pdp11.o devtty.o libc.o > ../fuzix.map
 	pdp11-aout-objcopy fuzix.aout -O binary ../fuzix.bin
+
+	pdp11-aout-as boot-rx0.s -o boot-rx0.o
+	pdp11-aout-ld boot-rx0.o -o boot-rx0.aout
+	pdp11-aout-objcopy boot-rx0.aout -O binary boot-rx0

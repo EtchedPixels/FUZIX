@@ -35,40 +35,74 @@ read() wants to read an unallocated block of a file.
 Bufsync() write outs all dirty blocks.
 
 Note that a pointer to a buffer structure is the same as a pointer to
-the data.  This is very important.
+the data if the buffer is inline. This is very important.
+
+FIXME: need to add locking to this for the sleeping case, and a hash for
+the bigger systems
 **********************************************************************/
 
-uint16_t bufclock;		/* Time-stamp counter for LRU */
+static uint16_t bufclock;		/* Time-stamp counter for LRU */
 
+#define bisbusy(x)	((x)->bf_busy == BF_BUSY)
+
+#ifndef CONFIG_BLOCK_SLEEP
+#define	block(x)	((x)->bf_busy = BF_BUSY)
+#define bunlock(x)	((x)->bf_busy = BF_FREE)
+#define bcheck(x)	bisbusy(x)
+#define block_s(x)
+#define bunlock_s(x)
+#else
+
+static void block(bufptr bp)
+{
+	while (bp->bf_busy == BF_BUSY)
+		psleep_nosig(bp);
+	bp->bf_busy = BF_BUSY;
+}
+
+static void bunlock(bufptr bp)
+{
+	if (bp->bf_busy == BF_FREE)
+		panic(BFREEFREE);
+	bp->bf_busy = BF_FREE;
+	pwake(bp);
+}
+
+#define block_s(x)	block(x)
+#define bunlock_s(x)	bunlock(x)
+#define bcheck(x)	0
+
+#endif
+
+/*
+ *	Make an entry in the buffer cache and fill it. If rewrite is
+ *	set then we are not keeping any of the old data but overwriting
+ *	it all.
+ *
+ *	Hands back either a locked buffer, or NULL on an error.
+ */
 bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 {
-	register bufptr bp;
+	regptr bufptr bp;
 
-	if ((bp = bfind(dev, blk)) != NULL) {
-		if (bp->bf_busy == BF_BUSY)
-			panic(PANIC_WANTBSYB);
-		else if (bp->bf_busy == BF_FREE)
-			bp->bf_busy = BF_BUSY;
-		/* BF_SUPERBLOCK is fine */
-	} else {
+	if ((bp = bfind(dev, blk)) == NULL) {
 		bp = freebuf();
 		bp->bf_dev = dev;
 		bp->bf_blk = blk;
-		bp->bf_busy = BF_BUSY;
 
 		/* If rewrite is set, we are about to write over the entire block,
 		   so we don't need the previous contents */
 		if (!rewrite) {
 			if (bdread(bp) != BLKSIZE) {
 				udata.u_error = EIO;
-				bp->bf_busy = BF_FREE;
+				/* Don't cache the failure */
 				bp->bf_dev = NO_DEVICE;
+				bp->bf_dirty = false;
+				bunlock(bp);
 				return (NULL);
 			}
 		}
 	}
-
-	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp;
 }
 
@@ -78,101 +112,153 @@ void brelse(bufptr bp)
 	bfree(bp, 0);
 }
 
-
 void bawrite(bufptr bp)
 {
 	bfree(bp, 1);
 }
 
-
-int bfree(bufptr bp, uint8_t dirty)
+/*
+ *	Release an entry in the buffer cache. Passed a locked buffer and
+ *	a dirty status
+ *
+ *	0: Caller did not dirty buffer (but may be dirty already)
+ *	1: Caller did dirty buffer
+ *	2: Caller dirtied buffer and wants it written back now
+ *
+ *	If a writeback now is requested an an error occurs then u_error will
+ *	be set and -1 returned.
+ */
+int bfree(regptr bufptr bp, uint8_t dirty)
 {				/* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
+	int ret = 0;
 	if (dirty)
 		bp->bf_dirty = true;
 	
-	if(bp->bf_busy == BF_BUSY) /* do not free BF_SUPERBLOCK */
-		bp->bf_busy = BF_FREE;
-
 	if (dirty > 1) {	/* immediate writeback */
 		if (bdwrite(bp) != BLKSIZE) {
 			udata.u_error = EIO;
-			return -1;
+			ret = -1;
 		}
 		bp->bf_dirty = false;
-		return 0;
 	}
-	return 0;
+	/* Time stamp the buffer on free up. It doesn't matter if we stamp it
+	   on read or free as while locked it can't go away. However if we
+	   stamp it on free we can in future make smarter decisions such as
+	   recycling full dirty buffers faster than partial ones */
+	bp->bf_time = ++bufclock;
+	bunlock(bp);
+	return ret;
 }
 
-
-/* This returns a busy block not belonging to any device, with
- * garbage contents.  It is essentially a malloc for the kernel.
- * Free it with tmpfree.
+/*
+ * Allocate a buffer for scratch use by the kernel. This buffer can then
+ * be freed with tmpfree.
  *
  * API note: Nothing guarantees a connection between a bufcache entry
  * and tmpbuf in future. Always free with tmpfree.
  */
 void *tmpbuf(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	bp = freebuf();
 	bp->bf_dev = NO_DEVICE;
-	bp->bf_busy = BF_BUSY;
 	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp->__bf_data;
 }
 
-/* Allocate an empty _disk cache_ buffer. This won't be able to use tmpbuf
-   on platforms where we split disk and temporary buffers */
+/*
+ * Allocate an empty _disk cache_ buffer. We use this when dealing with file
+ * holes. It would be nice if this API could go way and readi just use uzero()
+ *
+ * This won't be able to use tmpbuf if we split disk and temporary buffers.
+ */
 void *zerobuf(void)
 {
-	void *b;
-
-	b = tmpbuf();
+	void *b = tmpbuf();
 	memset(b, 0, 512);
 
 	return b;
 }
 
-static void bdput(bufptr bp)
+/*
+ * Write back a buffer doing the locking outselves. This is called when
+ * we do a sync or when we get a media change and need to write back
+ * data.
+ *
+ * FIXME: for the simple case I don't think we can ever get called within
+ * an active I/O so the block/bunlock should be fine - but not needed. In
+ * async mode they are
+ */
+static void bdput(regptr bufptr bp)
 {
-	bdwrite(bp);
-	if (bp->bf_busy == BF_FREE)
+	block_s(bp);
+	if (bp->bf_dirty) {
+		bdwrite(bp);
 		bp->bf_dirty = false;
-	d_flush(bp->bf_dev);
+		bunlock_s(bp);
+		d_flush(bp->bf_dev);
+	} else
+		bunlock_s(bp);
 }
 
+/*
+ * The low level logic for sync(). We write back each dirty buffer that
+ * belongs to a device.
+ */
 void bufsync(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	/* FIXME: this can generate a lot of d_flush calls when you have
 	   plenty of buffers */
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
-		if ((bp->bf_dev != NO_DEVICE) && bp->bf_dirty)
+		if (bp->bf_dev != NO_DEVICE)
 		        bdput(bp);
 	}
 }
 
+/*
+ *	Find a matching buffer in the block pool. As we have few buffers
+ *	we do a simple linear search. The buffer we return is locked so
+ *	that it can't vanish under the caller when we do sleeping block
+ *	devices.
+ */
 bufptr bfind(uint16_t dev, blkno_t blk)
 {
 	bufptr bp;
 
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
-		if (bp->bf_dev == dev && bp->bf_blk == blk)
+		if (bp->bf_dev == dev && bp->bf_blk == blk) {
+			/* FIXME: this check is only relevant for non sync stuff
+			   if it's sleeping then this is fine as we'll block here
+			   and sleep until the buffer is unlocked */
+			if (bcheck(bp))
+				panic(PANIC_WANTBSYB);
+			block(bp);
 			return bp;
+		}
 	}
 	return NULL;
 }
 
+/*
+ *	Handle umount or media change where we need to discard any old
+ *	read buffers.
+ *
+ *	FIXME: If we want to support mediachange notifications then
+ *	we'll need a way to call this that reports errors rather than
+ *	trying to write back each block. We'll also need to pass in a mask
+ *	for partitioned devices. Maybe the media change case has to be
+ *	irq safe ?
+ */
 void bdrop(uint16_t dev)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bp->bf_dev == dev) {
-		        bdput(bp);
+			bdput(bp);
 		        bp->bf_dev = NO_DEVICE;
                 }
 	}
@@ -180,7 +266,7 @@ void bdrop(uint16_t dev)
 
 bufptr freebuf(void)
 {
-	bufptr bp;
+	regptr bufptr bp;
 	bufptr oldest;
 	int16_t oldtime;
 
@@ -188,7 +274,7 @@ bufptr freebuf(void)
 	oldest = NULL;
 	oldtime = 0;
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
-		if (bufclock - bp->bf_time >= oldtime && bp->bf_busy == BF_FREE) {
+		if (bufclock - bp->bf_time >= oldtime && !bisbusy(bp)) {
 			oldest = bp;
 			oldtime = bufclock - bp->bf_time;
 		}
@@ -196,9 +282,9 @@ bufptr freebuf(void)
 	if (!oldest)
 		panic(PANIC_NOFREEB);
 
+	block(oldest);
 	if (oldest->bf_dirty) {
-		if (bdwrite(oldest) == -1)
-			udata.u_error = EIO;
+		bdwrite(oldest);
 		oldest->bf_dirty = false;
 	}
 	return oldest;
@@ -474,19 +560,19 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
              Miscellaneous helpers
 **********************************************************************/
 
-int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
+int psleep_flags_io(void *p, unsigned char flags)
 {
 	if (flags & O_NDELAY) {
-	        if (!*n) {
-	                *n = (usize_t)-1;
+	        if (!udata.u_done) {
+	                udata.u_done = (usize_t)-1;
 			udata.u_error = EAGAIN;
                 }
 		return -1;
 	}
 	psleep(p);
 	if (chksigs()) {
-	        if (!*n) {
-	                *n = (usize_t)-1;
+	        if (!udata.u_done) {
+	                udata.u_done = (usize_t)-1;
                         udata.u_error = EINTR;
                 }
 		return -1;
@@ -496,8 +582,16 @@ int psleep_flags_io(void *p, unsigned char flags, usize_t *n)
 
 int psleep_flags(void *p, unsigned char flags)
 {
-        usize_t dummy = 0;
-        return psleep_flags_io(p, flags, &dummy);
+	if (flags & O_NDELAY) {
+		udata.u_error = EAGAIN;
+		return -1;
+	}
+	psleep(p);
+	if (chksigs()) {
+                udata.u_error = EINTR;
+		return -1;
+	}
+	return 0;
 }
 
 void kputs(const char *p)
@@ -523,6 +617,12 @@ void kputhex(unsigned int v)
 {
 	putdigit0(v >> 12);
 	putdigit0(v >> 8);
+	putdigit0(v >> 4);
+	putdigit0(v);
+}
+
+void kputhexbyte(unsigned int v)
+{
 	putdigit0(v >> 4);
 	putdigit0(v);
 }
@@ -580,6 +680,14 @@ void kprintf(const char *fmt, ...)
 					/* TODO: not 32-bit safe */
 					kputhex((uint16_t)(l >> 16));
 					kputhex((uint16_t)l);
+					fmt += 2;
+					continue;
+				}
+
+				case '2': /* assume an x is following */
+				{
+					char c = va_arg(ap, int);
+					kputhexbyte(c);
 					fmt += 2;
 					continue;
 				}
@@ -653,8 +761,8 @@ void idump(void)
 			pp->p_pptr - ptab, pp->p_alarm, 
 			/* kprintf has no %lx so we write out 32-bit
 			 * values as two 16-bit values instead */
-			(uint16_t)(pp->p_pending >> 16), (uint16_t)pp->p_pending,
-			(uint16_t)(pp->p_ignored >> 16), (uint16_t)pp->p_ignored);
+			pp->p_sig[0].s_pending, pp->p_sig[1].s_pending,
+			pp->p_sig[0].s_ignored, pp->p_sig[1].s_ignored);
 	}
 
 	bufdump();

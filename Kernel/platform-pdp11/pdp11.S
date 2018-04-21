@@ -1,7 +1,7 @@
 	.text
 	.globl _program_vectors
-	.globl _trap_monitor
-	.globl _trap_reboot
+	.globl _platform_monitor
+	.globl _platform_reboot
 	.globl outchar
 	.globl init_hardware
 	.globl init_early
@@ -10,9 +10,9 @@ init_early:
 _program_vectors:
 	rts pc
 	
-_trap_monitor:
-_trap_reboot:
-	jmp _trap_reboot
+_platform_monitor:
+_platform_reboot:
+	jmp _platform_reboot
 
 /*	.data FOR now */
 	.even
@@ -29,7 +29,7 @@ _udata:
  */ 
 
 outchar:
-	bit $0x8000,0177564		/* test bit 7 of TCSR (tx ready) */
+	bitb $0x80,0177564		/* test bit 7 of TCSR (tx ready) */
 	beq outchar
 	mov r0,0177566
 	rts pc
@@ -43,5 +43,7 @@ init_hardware:
 	mov r0,_procmem
 	/* KW11: Enable IRQ at 0100 every line frequency tick BR 6 vec 100 */
 	mov $0x4000,0177546
+	/* Polling for now on the console */
+	clr 0177560
 	rts pc
 

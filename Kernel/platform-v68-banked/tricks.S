@@ -1,7 +1,7 @@
 #include "../kernel-68000.def"
 #include "kernel.def"
 
-.globl switchout,switchin,dofork,udata_shadow,udata_stash
+.globl platform_switchout,switchin,dofork,udata_shadow,udata_stash
 
 
 .mri 1
@@ -31,9 +31,8 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-switchout:
+platform_switchout:
         or #$0700,sr
-        bsr chksigs
         ; save machine state
 
         clr.w -(sp) ; return code set here is ignored, but switchin can
@@ -83,7 +82,7 @@ copyi:	move.l (a1)+,(a0)+
         bsr switchin
 
         ; we should never get here
-        bra trap_monitor
+        bra platform_monitor
 
 switchin:
         or #$0700,sr
@@ -162,7 +161,7 @@ switchinfail:
         lea badswitchmsg,a0
         bsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        bra trap_monitor
+        bra platform_monitor
 
 	;
 	; this gets exciting on the 68000 because our udata is not always in

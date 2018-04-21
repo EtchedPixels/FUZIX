@@ -26,6 +26,7 @@ f 0755 /bin/echo        echo
 f 0755 /bin/ed          ed
 f 0755 /bin/fgrep       fgrep
 f 0755 /bin/kill        kill
+f 0755 /bin/killall     killall
 f 0755 /bin/ln          ln
 f 0755 /bin/ls          ls
 f 0755 /bin/mkdir       mkdir
@@ -66,6 +67,7 @@ f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
 f 0755 /bin/free        free
 f 0755 /bin/fsck        fsck
+f 0755 /bin/gptparse    gptparse
 f 0755 /bin/grep        grep
 f 0755 /bin/groups      groups
 f 0755 /bin/head        head
@@ -103,6 +105,7 @@ f 0755 /bin/uniq        uniq
 f 0755 /bin/uptime      uptime
 f 0755 /bin/uud         uud
 f 0755 /bin/uue         uue
+f 0755 /bin/vile        vile
 f 0755 /bin/wc          wc
 f 0755 /bin/which       which
 f 0755 /bin/who         who

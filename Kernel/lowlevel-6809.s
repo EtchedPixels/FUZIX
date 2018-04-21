@@ -50,7 +50,7 @@
 	.globl interrupt_handler
 
         ; imported symbols
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -305,13 +305,15 @@ in_kernel:
 	    ; Pre emption occurs on the task stack. Conceptually its a
 	    ; not quite a syscall
 	    lds #kstack_top
+	    jsr _chksigs		; check signal state
+	    ;
 	    ldx U_DATA__U_PTAB
 	    ; Move to ready state
 	    lda #P_READY
 	    sta P_TAB__P_STATUS_OFFSET,x
 	    ; Sleep on the kernel stack, IRQs will get re-enabled if need
 	    ; be
-	    jsr _switchout
+	    jsr _platform_switchout
 	    ;
 	    ; We will resume here after the pre-emption. Get back onto
 	    ; the user stack and map ourself in
@@ -382,7 +384,7 @@ illegalmsg: .ascii "[trap_illegal]"
 trap_illegal:
 	    ldx #illegalmsg
 	    jsr outstring
-	    jsr _trap_monitor
+	    jsr _platform_monitor
 
 dpsmsg:	    .ascii "[dispsig]"
             .db 13,10,0
@@ -397,7 +399,7 @@ nmi_handler:
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -472,7 +474,7 @@ num:    adda #0x30 ; start at '0' (0x30='0')
 div0:
 	ldx	#div0msg
 	jsr	outstring
-	jsr	_trap_monitor
+	jsr	_platform_monitor
 div0msg	.ascii	'Divby0'
 	.db	13,10,0
 ;

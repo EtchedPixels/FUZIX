@@ -9,8 +9,6 @@
 
 #define DISC __attribute__((section(".discard")))
 
-static uint8_t secs;
-
 static const uint16_t mktime_moffset[12]= { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
 static int get_time( uint8_t *tbuf )
@@ -22,7 +20,6 @@ static int get_time( uint8_t *tbuf )
 	tbuf[0]=0x23;
 	ret=dw_transaction( tbuf, 1, tbuf, 6, 0 );
 	if( ret ) return -1;
-	secs = tbuf[5];
 	return 0;
 }
 
@@ -105,30 +102,13 @@ DISC int dwtime_init( void )
 	return 0;
 }
 
-
-
 /* Called every every decisec from timer.c */
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
-	static uint8_t ticks=10;
-	static uint8_t longt=CONFIG_DWTIME_INTERVAL;
 	uint8_t t[6];
-
-	/* count to 10 deci's before doing anything */
-	if( --ticks )
-		return secs;
-	ticks=10;
-	/* count to INTERVAL before polling */
-	if( --longt ) 
-		goto nopoll;
-	longt=CONFIG_DWTIME_INTERVAL;
 	/* poll dw time and return it */
-	if( get_time( t ) ) goto nopoll;
-	return secs;
-	
- nopoll:
-	if( (++secs) > 59 ) secs = 0;
-	return secs;
+	get_time(t);
+	return t[5];
 }
 
 

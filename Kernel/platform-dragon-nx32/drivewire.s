@@ -223,15 +223,15 @@ IntMasks equ   $50
 NOINTMASK equ  1
 
 ; Hardcode these for now so that we can use below files unmodified
+; "BECKER" is defined through our Makefile
 H6309    equ 0
-BECKER   equ 1
 ARDUINO  equ 0
 JMCPBCK  equ 0
 BAUD38400 equ 0
 
 ; These files are copied almost as-is from HDB-DOS
 	*PRAGMA nonewsource
-         include "dw.def"
-         include "dwread.s"
-         include "dwwrite.s"
+         include "../dev/drivewire/dw-6809.def"
+         include "../dev/drivewire/dwread-6809.s"
+         include "../dev/drivewire/dwwrite-6809.s"
 

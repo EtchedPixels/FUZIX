@@ -11,4 +11,4 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	tools/binman common.bin fuzix.map fuzix.bin
 	tools/bihx fuzix_boot.ihx
 	-cp common.bin fuzix_boot.bin
-	+make -C platform-$(TARGET) image
+	+$(MAKE) -C platform-$(TARGET) image

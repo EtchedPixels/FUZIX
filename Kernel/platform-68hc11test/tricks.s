@@ -10,9 +10,9 @@
         .globl newproc
         .globl chksigs
         .globl getproc
-        .globl trap_monitor
+        .globl platform_monitor
         .globl inint
-        .globl switchout
+        .globl platform_switchout
         .globl switchin
         .globl dofork
 	.globl ramtop
@@ -43,13 +43,11 @@ switchstack:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; This function can have no arguments or auto variables.
 ; We have no registers to preserve as the compiler assumes a function call
 ; clobbers the works.
 ;
-switchout:
+platform_switchout:
 	sei
-        jsr chksigs
 
         ; save machine state
         ldx #0 ; return code set here is ignored, but _switchin can 
@@ -107,7 +105,7 @@ slow_path:
         jsr getproc
         jsr switchin
         ; we should never get here
-        jsr trap_monitor
+        jsr platform_monitor
 
 badswitchmsg:
 	.ascii "switchin: FAIL"
@@ -181,7 +179,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp trap_monitor
+        jmp platform_monitor
 
 fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

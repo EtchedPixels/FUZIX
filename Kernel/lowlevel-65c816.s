@@ -8,6 +8,7 @@
 	.export map_process_always
 	.export map_kernel
 	.export _userpage
+	.export _brk_limit
 
 	.export sigret_irq
 	.export sigret
@@ -41,8 +42,9 @@
 	.import _platform_interrupt
 	.import platform_doexec
 	.import _inint
-	.import _trap_monitor
-	.import _switchout
+	.import _platform_monitor
+	.import _platform_switchout
+	.import _chksigs
 
 	.import push0
 	.import incaxy
@@ -116,6 +118,7 @@ setdp:
 	adc	#STACK_BANKOFF		; we now point at the stack
 	inc	a			; plus 0x100
 	xba				; Swap to get xx00 format we need
+	and	#$FF00			; remove any carry bits
 	tcd
 	pla
 
@@ -362,10 +365,33 @@ signal_out:
 	cli
 	rtl			;	return into user app handler
 ;
+;
+;	Helper for brk(). In this case we need it in asm to deal with the
+;	strange dual stack setup
+;
+_brk_limit:
+	.a8
+	.i8
+	rep #$10
+	.i16
+	ldx U_DATA__U_SYSCALL_SP
+	lda f:2,x
+	tax
+	lda f:1,x
+	dex
+	dex
+	dex				; allow 384 bytes headroom
+	sep #$10
+	.i8
+	rts
+
+;
 ;	doexec is a special case syscall exit path. Set up the bank
 ;	registers and return directly to the start of the user process
 ;
 _doexec:
+	.a8
+	.i8
 	sta	ptr1
 	stx	ptr1+1		;	address to execute from
 	sei
@@ -490,6 +516,11 @@ shoot_myself:
 ;	ZP on a 6502, fortunately on the 65C816 we can have a separate
 ;	interrupt DP
 ;
+;	Additional foulness - the 65c816 doesn't implement any way to enable
+;	interrupts one instruction on. We could avoid using rtl and stack
+;	frame for rti but the brain dead processor design makes this extra
+;	hard as the return address is differently stored!
+;
 interrupt_handler:
 	; Make sure we save all of the register bits
 	rep	#$30
@@ -543,11 +574,21 @@ join_interrupt_path:
 	txs
 
 	lda	U_DATA__U_INSYS
-	beq	ret_to_user
+	bne	ret_to_kernel
+
+	;
+	;	Peek in the frame and see if the return bank si the kernel
+	;	bank. If so its a kernel return irrespective of INSYS
+	;
+
+	lda	13,s
+	cmp 	#KERNEL_BANK
+	bne	ret_to_user
 
 	;	Kernel interrupt path may change B and D itself so we must
 	;	preserve them
 
+ret_to_kernel:
 	pld
 	plb
 
@@ -586,6 +627,10 @@ ret_to_user:
 	lda	#1
 	sta	U_DATA__U_INSYS
 	;
+	;	Check for signals (the kstack is sane at this point)
+	;
+	jsr	_chksigs
+	;
 	;	Mark outselves as idle
 	;
 	ldx	U_DATA__U_PTAB
@@ -599,11 +644,12 @@ ret_to_user:
 	.i8
 	lda	U_DATA__U_PTAB
 	ldx	U_DATA__U_PTAB+1
-	jsr	_switchout
+	jsr	_platform_switchout
 	;
 	;	We will (one day maybe) pop back out here. It's not
 	;	guaranteed (we might be killed off)
 	;
+
 	rep	#$10
 	.a8
 	.i16
@@ -672,13 +718,13 @@ signal_exit:
 	;
 	; Right now it looks like this
 	;
-	;		Bank
-	;		PC high
-	;		PC low
-	;		P
-	;		A16
-	;		X16
-	;		Y16
+	;		Bank		10
+	;		PC high		9
+	;		PC low		8
+	;		P		7
+	;		A16		5,6
+	;		X16		3,4
+	;		Y16		1,2
 	;	SP
 	;
 	; We want it to look like
@@ -695,12 +741,25 @@ signal_exit:
 	.i16
 	.a16
 
+	;
+	;	We unwind this with an RTS but we created it with an RTI
+	;	so we need to decrement the saved PC.
+	;
+
+	lda 8,s
+	dec
+	sta 8,s
+
 	tsc			; stack to accumulator
 	clc
 	adc	#10		; top of block to change
 	tax
 	tay
 	dex			; source one below dest
+
+	;
+	;	Y now points at bank, X points at PC high
+	;
 	lda	#8		; copy 9 bytes
 	mvp	0,0
 	;
@@ -715,7 +774,8 @@ signal_exit:
 	pea	sigret_irq-1	; signal return
 	sep	#$10
 	.i8
-	phy			; signal code
+	ldy	tmp1		; signal code
+	phy
 	tya
 	asl a
 	tay
@@ -728,19 +788,26 @@ signal_exit:
 	phx
 	sep	#$20
 	.a8
-	lda	U_DATA__U_PAGE
+	lda	U_DATA__U_PAGE		; bank
 	pha
+	pha
+	plb				; set the data bank to the caller
 	rep	#$30
 	.a16 
 	.i16
+	ldx	PROGLOAD+20		; from the user data bank
+	phx				; vector
+	sep	#$20
+	.a8
+	lda	#$30			; i8a8 status
+	pha
+	rep	#$30
+	.a16
+	.i16
+	; Clear registers
 	ldx	#0
 	txy
-	pea	PROGLOAD+20-1
-	sep	#$30
-	.i8
-	.a8
-	lda	#$30		; i8a8
-	pha
+	txa
 	rti
 
 ;
@@ -771,7 +838,7 @@ itrap:
 	ldx	#>itrap_msg
 outfail:
 	jsr	outstring
-	jmp	_trap_monitor
+	jmp	_platform_monitor
 itrap_msg:
 	.byte	"itrap!", 0
 
@@ -847,7 +914,7 @@ nmi_handler:
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp _trap_monitor
+	jmp _platform_monitor
 nmi_trap:
 	.byte "NMI!", 0
 
@@ -855,7 +922,7 @@ emulation:
 	ldx #>emu_trap
 	lda #<emu_trap
 	jsr outstring
-	jmp _trap_monitor
+	jmp _platform_monitor
 emu_trap:
 	.byte "EM!", 0
 
@@ -974,5 +1041,5 @@ sigret_irq:
 	.i8
 
 syscall_vector:
-	jsl	KERNEL_FAR+syscall_entry
+	jsl	KERNEL_CODE_FAR+syscall_entry
 	rts

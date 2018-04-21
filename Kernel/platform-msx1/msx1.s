@@ -21,7 +21,7 @@
 	    .globl _vtinit
 
             ; exported debugging tools
-            .globl _trap_monitor
+            .globl _platform_monitor
             .globl outchar
 
             ; imported symbols
@@ -30,7 +30,7 @@
 
             .globl _tty_inproc
             .globl unix_syscall_entry
-            .globl _trap_reboot
+            .globl _platform_reboot
 	    .globl nmi_handler
 	    .globl null_handler
 
@@ -69,12 +69,12 @@ tm_stack:
 tm_stack_top:
 
 ; Ideally return to any debugger/monitor
-_trap_monitor:
+_platform_monitor:
 	    di
 	    halt
 
 
-_trap_reboot:
+_platform_reboot:
 ;FIXME: TODO
 	    di
 	    halt

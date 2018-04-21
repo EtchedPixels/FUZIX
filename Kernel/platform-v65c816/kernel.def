@@ -10,14 +10,16 @@ PROGLOAD		.set $0100
 ZPBASE			.set $0
 
 KERNEL_BANK		.set $0		; bank number
-KERNEL_FAR		.set $000000	; 24 bit
+KERNEL_FAR		.set $000000	; data 24 bit
+KERNEL_CODE_FAR		.set $000000	; code 24bit
 
-; Add this to the bank number to get the high 8bits of the 16bit CPU stack
+; Add this to twice the bank number to get the high 8bits of the 16bit CPU stack
 ; for this process
-STACK_BANKOFF		.set $F0	; F000-FBFF
+STACK_BANKOFF		.set $EE	; F000-FDFF
 ; Direct page for IRQ processing (saves us saving/restoring DP registers)
 ; Can probably use the same page as the IRQ CPU stack... FIXME
-IRQ_DP			.set $FD00	; FD00-FDFF
+; FIXME clashes with end of stack banks
+IRQ_DP			.set $FF00	; FF00-FF3F
 KERNEL_DP		.set $00	; We use the real ZP for kernel DP
 
 MAP_SIZE		.set $FC00

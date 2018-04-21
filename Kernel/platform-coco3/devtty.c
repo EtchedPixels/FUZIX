@@ -533,21 +533,33 @@ uint8_t rgb_def_pal[16]={
 	0, 8, 32, 40, 16, 24, 48, 63
 };
 
+
+static void apply_defmode( uint8_t defmode )
+{
+	int i;
+	for( i=0; i<2; i++){
+		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
+	}
+	apply_gime(1);
+}
+
+__attribute__((section(".discard")))
+void set_defmode( uint8_t *s )
+{
+	int defmode = s[7]-0x30;
+	if( defmode > 4 )
+		defmode = 0;
+	apply_defmode(defmode);
+}
+
 __attribute__((section(".discard")))
 void devtty_init()
 {
 	int i;
-	int defmode=0;
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC/10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC/10);
-	/* scan cmdline for params for vt */
-
-       	/* apply default/cmdline mode to terminal structs */
-	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
-	}
-	apply_gime( 1 );    /* apply initial tty1 to regs */
+	apply_defmode(0);
 	/* make video palettes match vt.h's definitions. */
 	memcpy( (uint8_t *)0xffb0, rgb_def_pal, 16 );
 }

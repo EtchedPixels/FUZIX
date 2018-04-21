@@ -4,3 +4,15 @@ breaks.
 Once it all builds and the syscall and some minimal driver code is filled in
 it ought to come in at about 20KW for a pure swap based system so probably
 not useful on an MMUless /11 except for testing.
+
+Boot notes:
+	start block with nop apparently sometimes needed
+	Generally first block, but on rx appears to be first sector of track 1
+	(not 0 as expected)
+
+Boot logic:
+	Load inode 1 (hardcoded offset)
+	Walk direct link blocks looking for /bootstrap
+	Load only direct blocks of the referenced inode
+
+	Run /bootstrap

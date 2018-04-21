@@ -25,10 +25,12 @@ void updoff(void)
    as a 32bit OS might */
 arg_t _lseek(void)
 {
+	static off_t zero;
 	inoptr ino;
 	struct oft *o;
 	off_t p;
 	off_t n;
+	off_t *pt;
 	
 	if (uget(offset, &n, sizeof(n)))
 	        return -1;
@@ -44,21 +46,24 @@ arg_t _lseek(void)
 	o = &of_tab[udata.u_files[file]];
 	p = o->o_ptr;
 
-	switch (flag) {
-	case 0:
-		p = n;
-		break;
-	case 1:
-		p += n;
-		break;
-	case 2:
-		p = ino->c_node.i_size + n;
-		break;
-	default:
+	/* 32bit maths is really messy on some processors and the three cases
+	   produce three sets of 32bit maths operations. Instead we take a
+	   pointer to what to use as the offset and do the maths once */
+
+	if (flag == 0)
+		pt = &zero;
+	else if (flag == 1)
+		pt = &p;
+	else if (flag == 2)
+		pt = (off_t *)&ino->c_node.i_size;
+	else
                 goto bad;
-	}
+
+	p = *pt + n;
+
 	if (p < 0)
 	        goto bad;
+
         o->o_ptr = p;
 	uput(&p, offset, sizeof(n));
 	return 0;
@@ -139,6 +144,9 @@ int stcpy(inoptr ino, char *buf)
 	 * copy sequential runs of identical types (the only members which the
 	 * compiler guarantees are next to each other). */
 
+	/* VIRTUAL: If we ever do true virtual memory we'll need to copy the
+	   structure first or we may sleep and copy bits from different inode
+	   states */
 	uint32_t zero = 0;
 	struct _uzistat* st = (struct _uzistat*) buf;
 	int err = uput(&ino->c_dev,            &st->st_dev,   2 * sizeof(uint16_t));
@@ -305,7 +313,7 @@ int fildes[];
 arg_t _pipe(void)
 {
 	int8_t u1, u2, oft1, oft2;
-	inoptr ino;
+	regptr inoptr ino;
 
 /* bug fix SN */
 	if ((u1 = uf_alloc()) == -1)
@@ -373,7 +381,6 @@ arg_t _unlink(void)
 	inoptr ino;
 	inoptr pino;
 	int r;
-	char fname[FILENAME_LEN + 1];
 
 	ino = n_open(path, &pino);
 
@@ -383,9 +390,9 @@ arg_t _unlink(void)
 		udata.u_error = ENOENT;
 		return (-1);
 	}
-	filename(path, fname);
-	r = unlinki(ino, pino, fname);
-	i_deref(pino);
+	i_lock(pino);
+	r = unlinki(ino, pino, lastname);
+	i_unlock_deref(pino);
 	i_deref(ino);
 	return r;
 }
@@ -404,7 +411,7 @@ uint16_t nbytes;
 #define buf (char *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
-arg_t _read(void)
+arg_t readwrite(uint8_t reading)
 {
 	inoptr ino;
 	uint8_t flag;
@@ -419,14 +426,21 @@ arg_t _read(void)
 
 	if (!valaddr(buf, nbytes))
 	        return -1;
+
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
-	if ((ino = rwsetup(true, &flag)) == NULLINODE)
+	if ((ino = rwsetup(reading, &flag)) == NULLINODE)
 		return -1;	/* bomb out if error */
 
-	readi(ino, flag);
+	(reading ? readi : writei)(ino, flag);
 	updoff();
+	i_unlock(ino);
 
-	return (udata.u_count);
+	return udata.u_done;
+}
+
+arg_t _read(void)
+{
+	return readwrite(1);
 }
 
 #undef d
@@ -474,27 +488,7 @@ uint16_t nbytes;
 
 arg_t _write(void)
 {
-	inoptr ino;
-	uint8_t flag;
-
-	if (!nbytes)
-		return 0;
-
-	if ((ssize_t)nbytes < 0) {
-		udata.u_error = EINVAL;
-	        return -1;
-	}
-
-	if (!valaddr(buf, nbytes))
-	        return -1;
-	/* Set up u_base, u_offset, ino; check permissions, file num. */
-	if ((ino = rwsetup(false, &flag)) == NULLINODE)
-		return (-1);	/* bomb out if error */
-
-	writei(ino, flag);
-	updoff();
-
-	return (udata.u_count);
+	return readwrite(0);
 }
 
 #undef d

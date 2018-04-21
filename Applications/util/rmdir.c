@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 unsigned short newmode;
 
@@ -9,11 +10,17 @@ void writes(const char *p)
     write(2, p, strlen(p));
 }
 
-int remove_dir(char *name, int f)
+int remove_dir(char *ni, int f)
 {
     int er, era = 2;
     char *line;
+    char *name = strdup(ni);
     char *p = name + strlen(name) - 1;
+
+    if (name == NULL) {
+        writes("rmdir: out of memory\n");
+	exit(255);
+    }
     while(p >= name && *p == '/')
         *p-- = '\0';
 
@@ -23,6 +30,7 @@ int remove_dir(char *name, int f)
 	line[1] = 0;
 	era = 0;
     }
+    free(name);
     return (er && era);
 }
 

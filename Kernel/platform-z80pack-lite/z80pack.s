@@ -28,8 +28,8 @@
 	    .globl _need_resched
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -58,13 +58,13 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_trap_monitor:
+_platform_monitor:
 	    ld a, #128
 	    out (29), a
 platform_interrupt_all:
 	    ret
 
-_trap_reboot:
+_platform_reboot:
 	    ld a, #1
 	    out (29), a
 

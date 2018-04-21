@@ -89,7 +89,6 @@ arg_t _mknod(void)
 {
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
 	udata.u_error = 0;
 
@@ -107,8 +106,7 @@ arg_t _mknod(void)
 		return (-1);
 	}
 
-	filename(name, fname);
-	ino = newfile(parent, fname);
+	ino = newfile(parent, lastname);
 	if(!ino)
 		goto nogood3;	/* parent inode is derefed in newfile. SN */
 
@@ -118,7 +116,7 @@ arg_t _mknod(void)
 	setftime(ino, A_TIME | M_TIME | C_TIME);
 	wr_inode(ino);
 
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (0);
 
       nogood:
@@ -211,10 +209,10 @@ arg_t _chmod(void)
 	inoptr ino;
 	int ret;
 
-	if (!(ino = n_open(path, NULLINOPTR)))
+	if (!(ino = n_open_lock(path, NULLINOPTR)))
 		return (-1);
 	ret = chmod_op(ino);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return ret;
 }
 
@@ -230,11 +228,14 @@ arg_t _chmod(void)
 arg_t _fchmod(void)
 {
 	inoptr ino;
+	int ret;
 
-	if ((ino = getinode(fd)) == NULLINODE)
+	if ((ino = getinode_lock(fd)) == NULLINODE)
 		return (-1);
 
-	return chmod_op(ino);
+	ret = chmod_op(ino);
+	i_unlock_deref(ino);
+	return ret;
 }
 
 #undef fd
@@ -273,17 +274,17 @@ arg_t _chown(void)
 	inoptr ino;
 	int ret;
 
-	if (!(ino = n_open(path, NULLINOPTR)))
+	if (!(ino = n_open_lock(path, NULLINOPTR)))
 		return (-1);
 	ret = chown_op(ino);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return ret;
 }
 
 #undef path
 
 /*******************************************
-  fchown (path, owner, group)       Function 50
+  fchown (fd, owner, group)       Function 50
   int fd;
   int  owner;
   int  group;
@@ -293,10 +294,13 @@ arg_t _chown(void)
 arg_t _fchown(void)
 {
 	inoptr ino;
+	int ret;
 
-	if ((ino = getinode(fd)) == NULLINODE)
+	if ((ino = getinode_lock(fd)) == NULLINODE)
 		return (-1);
-	return chown_op(ino);
+	ret = chown_op(ino);
+	i_unlock(ino);
+	return ret;
 }
 
 #undef fd
@@ -312,10 +316,10 @@ arg_t _fchown(void)
 
 arg_t _utime(void)
 {
-	inoptr ino;
+	regptr inoptr ino;
 	time_t t[2];
 
-	if (!(ino = n_open(file, NULLINOPTR)))
+	if (!(ino = n_open_lock(file, NULLINOPTR)))
 		return (-1);
 	if (ino->c_flags & CRDONLY) {
 		udata.u_error = EROFS;
@@ -339,12 +343,12 @@ arg_t _utime(void)
 	ino->c_node.i_atime = t[0].low;
 	ino->c_node.i_mtime = t[1].low;
 	setftime(ino, C_TIME);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (0);
 out:
 	udata.u_error = EPERM;
 out2:
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return -1;
 }
 

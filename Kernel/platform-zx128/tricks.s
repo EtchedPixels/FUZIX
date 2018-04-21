@@ -7,11 +7,10 @@
 
         .globl _ptab_alloc
         .globl _newproc
-        .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl trap_illegal
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
 	.globl _low_bank
 	.globl _dup_low_page
@@ -35,13 +34,8 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-;
-; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
         di
-	push af
-        call _chksigs
-	pop af
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
@@ -86,7 +80,7 @@ _switchout:
         call _switchin
 
         ; we should never get here
-        call _trap_monitor
+        call _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -253,7 +247,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _trap_monitor
+        jp _platform_monitor
 
 ; Interrupts should be off when this is called
 _dup_low_page:

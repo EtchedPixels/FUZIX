@@ -65,3 +65,4 @@ extern unsigned int cocoswap_dev;
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
+#define CONFIG_IDE

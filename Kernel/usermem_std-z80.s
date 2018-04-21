@@ -12,7 +12,6 @@
         ; exported symbols
         .globl __uget
         .globl __ugetc
-        .globl __ugets
         .globl __ugetw
 
 	.globl outcharhex
@@ -139,35 +138,6 @@ uget_l:
 	djnz uget_l
 	dec c
 	jr nz, uget_l
-	jr uput_out
-
-__ugets:
-	push ix
-	ld ix, #0
-	add ix, sp
-	call uputget			; source in HL dest in DE, count in BC
-	jr z, ugets_bad			; but count is at this point magic
-	
-ugets_l:
-	call map_process_always
-	ld a, (hl)
-	inc hl
-	call map_kernel
-	ld (de), a
-	or a
-	jr z, ugets_good
-	inc de
-	djnz ugets_l
-	dec c
-	jr nz, ugets_l
-	dec de
-	xor a
-	ld (de), a
-ugets_bad:
-	ld hl,  #0xFFFF			; flag an error
-	jr uput_out
-ugets_good:
-	ld hl,#0
 	jr uput_out
 
 ;

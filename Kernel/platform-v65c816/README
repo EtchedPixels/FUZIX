@@ -11,7 +11,7 @@ Bank 0:
 	0xF000		7 x 256 byte CPU stacks for processes paired
 			with their direct pages
 	0xFE00		I/O page
-	0xFF00		Vectors			[packed at 0 in image]
+	0xFF00		Vectors	and IRQ DP	[packed at 0 in image]
 
 And in user space
 
@@ -36,13 +36,21 @@ the emulator.
 
 TODO
 ----
-- Fix brk() checking [right now its busted entirely]
-- Make discard sane so we can discard for buffers
-- Test signal handling paths
 - Add swap logic
 - Relocatable binaries
 - cc65 stubs optimized for 65c816
+- debug and properly implement abort/brk handlers to kill process etc
+- crt0 entry stacking of ZP state in user
+- video/console support
+- switch to partition supporting block I/O as we have space for it
 
 Optimisations We Need To Do
 --------------------------------------------------------------
 - Only copy the needed memory when forking, not 64K ?
+- Can we keep udata in kernel ZP (at least for level 1). Would need to
+  audit that we don't take pointers to ZP but might be faster and we
+  need to do the same audit for some cases with 68K etc anyway
+- Can we put the kernel per process CPU stack (kstack) into the upper half
+  of ZP for each process. We don't need 256 bytes of ZP per process
+- Can we trim down to say 64 bytes ZP + 256 stack per process so we can go
+  above 8MB - do we care ??

@@ -18,36 +18,36 @@ int lpr_close(uint8_t minor)
     return 0;
 }
 
-static int iopoll(int sofar)
+static uint8_t iopoll(void)
 {
 	/* Ought to be a core helper for this lot ? */
 	if (need_reschedule())
 		_sched_yield();
 	if (chksigs()) {
-		if (sofar)
-			return sofar;
-		udata.u_error = EINTR;
-		return -1;
+		if (!udata.u_done) {
+			udata.u_error = EINTR;
+			udata.u_done = (usize_t)-1;
+                }
+                return 1;
 	}
 	return 0;
 }
 
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    int c = udata.u_count;
     char *p = udata.u_base;
     minor; rawflag; flag; // shut up compiler
 
-    while(c) {
+    while(udata.u_done < udata.u_count) {
         /* Note; on real hardware it might well be necessary to
            busy wait a bit just to get acceptable performance */
         while (lpstat != 0xFF) {
-            int n;
-            if (n = iopoll(p - udata.u_base))
-                return n;
+            if (iopoll())
+                return udata.u_done;
         }
         /* FIXME: tidy up ugetc and sysio checks globally */
         lpdata = ugetc(p++);
+        udata.u_done++;
     }
-    return (-1);
+    return udata.u_done;
 }

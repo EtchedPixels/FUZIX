@@ -35,6 +35,12 @@
 	extern int setjmp(jmp_buf __env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
 
+#elif defined(__pdp11__)
+
+	typedef uint16_t jmp_buf[5];
+	extern int setjmp(jmp_buf __env);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
+
 #else
 	#error jmp_buf definition not set for this architecture
 #endif

@@ -22,7 +22,7 @@ uint16_t swappage;			/* Target page */
 static uint8_t swapmap[MAX_SWAPS];
 static uint8_t swapptr = 0;
 
-static const char maxswap[] = PANIC_MAXSWAP;
+static char maxswap[] = PANIC_MAXSWAP;
 
 void swapmap_add(uint8_t swap)
 {
@@ -174,7 +174,7 @@ void swapper(ptptr p)
         uint16_t map = p->p_page2;
 	pagemap_alloc(p);	/* May cause a swapout. May also destroy
                                    the old value of p->page2 */
-	return swapper2(p, map);
+	swapper2(p, map);
 }
 
 #endif

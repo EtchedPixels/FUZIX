@@ -25,7 +25,7 @@
 	.import platform_doexec
 	.import _inint
 	.import CTemp
-	.import _trap_monitor
+	.import _platform_monitor
 
 	.include "platform/zeropage.inc"
 	.include "platform/kernel.def"
@@ -135,7 +135,7 @@ nmi_handler:
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp _trap_monitor
+	jmp _platform_monitor
 nmi_trap:
 	.byte "NMI!", 0
 

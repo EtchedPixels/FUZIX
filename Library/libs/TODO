@@ -1,28 +1,15 @@
 Hot problem items
 -----------------
-__modslonglong is not found from base C lib ?
 
-
-tool to wrap the build and also make a Fuzix binary not a ROM image
-
-- Import other bits we can from BCC libs
 - Longlong in printf (plus other modern bits ?)
 - bits of libbsd
-- rest of opendir (telldir etc)
 Make exec* try via shell if ENOEXEC
-
-Add libm, and build stdio fprintf/fscanf and any other bloaty floaty bits
-with a libm define into libm and integer into libc
-
-Split termcap and curses into own libraries
 
 Missing
 
 terminfo (but have termcap)
 streams (intentional)
 X11 (right)
-
-DIR needs dd_loc, dd_size wiring up dirent tweaks in C code
 
 Errors: define the full range required by SVID
 
@@ -48,7 +35,7 @@ sys/shm.h
 signal.h	sigaction bits need defining plus SA_NOCLDSTOP
 sys/statfs	need to add fakery for it
 
-stdio		_NFILE, L_ctermid, P_tmpdir, L_tmpnam
+stdio		P_tmpdir, L_tmpnam
 
 stropts.h 	(streams)
 
@@ -57,11 +44,7 @@ termios.h	Define struct termio as well, need to double check all
 		Defines for the initial chars (CNUL, CDEL etc)
 		TCWINSZ + a few other oddments
 
-time.h		sort out CLK_TCK
-
 sys/tiuser	streams
-
-utmp.h		ut_exit ??? ACCOUNTING
 
 API functions
 
@@ -71,12 +54,8 @@ Need
 cfree(a,b,c)	-> free(a)
 ecvt()
 fcvt()
-frexp
 gcvt
-getw
 isnand()	'is nan ?'
-ldexp
-putw
 sighold
 sigignore
 sigpause
@@ -113,10 +92,10 @@ find				Yes
 grep				Yes
 id				Yes
 kill				Yes
-line				??
+line				Yes
 ln				Yes
 logname				Yes
-lp				Noo
+lp				No
 ls				Yes
 mkdir				Yes
 mv				Yes

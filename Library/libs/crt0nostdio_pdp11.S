@@ -1,0 +1,33 @@
+		.text
+		.even
+
+		.globl _main
+		.globl _exit
+		.globl _environ
+		.globl ___argv
+		.globl _start
+
+
+_start:		br	_start2
+		.byte	'F'
+		.byte	'Z'
+		.byte	'X'
+		.byte	'1'
+		/* FIXME make the linker do these */
+		.byte	0		/* Patched to load addr page */
+		.word	0
+		.word	_etext		/* Patched to code size */
+		.word	_edata		/* Patched to data size */
+		.word	_ebss		/* Patched to BSS size */
+_start2:
+		mov	sp,r0
+		mov	r0,___argv
+		inc	r0
+		inc	r0
+		mov	r0,_environ
+		jsr	pc,_main
+		mov	r0,-(sp)
+		jsr	pc,_exit
+
+		.data
+_environ:	.word	0

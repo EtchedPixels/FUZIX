@@ -101,8 +101,7 @@ double sqrt(double x)
 			return x;  /* sqrt(+-0) = +-0 */
 		if (ix0 < 0) {
 			raise(SIGFPE);
-			return __sNAN;
-			/* return (x-x)/(x-x); */ /* sqrt(-ve) = sNaN */
+			return (x-x)/(x-x); /* sqrt(-ve) = sNaN */
 		}
 	}
 	/* normalize x */

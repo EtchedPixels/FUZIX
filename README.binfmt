@@ -25,6 +25,9 @@ Proposed changes:
 	0 base will mean 'has relocations'
 	BSS will start with relocation data
 
+	Rework the header so that code/data/bss are in terms of 256 byte
+	pages. Makes exec a lot simpler (no overflow maths).
+
 	0.w will become
 		cpufeature.b
 		cpuspecific.b
@@ -90,6 +93,19 @@ by the ZP base of the platform
 65C816 if we disallow swapping and support large mode will also need a 3rd
 pass that updates banks from 0..n to the ones assigned
 
+Stick relocation data at end of data segment in a place we load but then
+count as bss (so brk will go over it). So the loader will consume the relocs
+and then brk them out of existance.
+
+Need to think about compressed binaries and especially for 6502 a fixed
+lib6502 for the intrinsics code which is a fair size, common to all binaries for
+the most part, and also could be shared with kernel (eg on Apple IIe) where
+we have the right mappings.
+
+
+PDP-11
+
+Do we want to just use a.out ?
 
 
 32bit

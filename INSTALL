@@ -20,3 +20,6 @@ Standalone/filesystem-src contains some scripts to build filesystems
 fuzix.org contains a bunch ready to download
 
 
+For Z80 your VM needs at least 16GB including swap because sdcc is a bit of a
+memory monster. Also use sdcc 3.6.x as 3.7.0pre is broken in ways that cause
+Fuzix to break.

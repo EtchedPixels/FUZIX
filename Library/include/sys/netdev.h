@@ -55,6 +55,7 @@ struct socket
 #define SS_CLOSEWAIT		9	/* Remote has closed */
 #define SS_CLOSING		10	/* Protocol close in progress */
 #define SS_CLOSED		11	/* Protocol layers done, not close()d */
+#define SS_DEAD			12
 	/* FIXME: need state for shutdown handling */
 	uint8_t s_data;			/* Socket we are an accept() for */
 	uint8_t s_error;
@@ -72,6 +73,7 @@ struct socket
 #define SI_EOF		8		/* At EOF */
 #define SI_THROTTLE	16		/* Transmit is throttled */
 	void *s_priv;			/* Private pointer for lower layers */
+	void *s_ino;
 };
 
 #define NSOCKTYPE 3

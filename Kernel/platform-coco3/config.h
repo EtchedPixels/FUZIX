@@ -87,9 +87,10 @@ extern unsigned char vt_map( unsigned char c );
 
 /* Block device define */
 #define MAX_BLKDEV  4     /* 2 IDE + 2 SDC */
+#define CONFIG_IDE
 
 #define CONFIG_RTC        /* enable RTC code */
-#define CONFIG_DWTIME_INTERVAL 10  /* time between dw timer polls in secs */
+#define CONFIG_RTC_INTERVAL 100    /* time in deciseconds to atually poll rtc */
 
 /* Level 2 groups, coredumps, network */
 #undef CONFIG_LEVEL_2
@@ -103,3 +104,8 @@ unsigned char getq( unsigned *ptr );
 typedef unsigned char *queueptr_t;
 #define GETQ(p) getq(p)
 #define PUTQ(p, v) putq((p), (v))
+
+
+/* define for SD */
+#define SD_DRIVE_COUNT 1
+#define CONFIG_SD

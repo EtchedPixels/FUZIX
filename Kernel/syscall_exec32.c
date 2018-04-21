@@ -128,7 +128,7 @@ arg_t _execve(void)
 	uaddr_t go;
 	uint32_t true_brk;
 
-	if (!(ino = n_open(name, NULLINOPTR)))
+	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
 
 	if (!((getperm(ino) & OTH_EX) &&
@@ -146,7 +146,7 @@ arg_t _execve(void)
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_count != sizeof(struct binfmt_flat)) {
+	if (udata.u_done != sizeof(struct binfmt_flat)) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
@@ -232,7 +232,7 @@ arg_t _execve(void)
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
 		readi(ino, 0);
-		if (udata.u_count != bin_size)
+		if (udata.u_done != bin_size)
 			goto nogood4;
 	}
 
@@ -262,7 +262,7 @@ arg_t _execve(void)
 
 	tmpfree(abuf);
 	tmpfree(ebuf);
-	i_deref(ino);
+	i_unlock_deref(ino);
 
 	/* Shove argc and the address of argv just below envp */
 	uputl((uint32_t) nargv, nenvp - 1);
@@ -290,7 +290,7 @@ nogood3:
 	tmpfree(ebuf);
 nogood2:
 nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (-1);
 }
 

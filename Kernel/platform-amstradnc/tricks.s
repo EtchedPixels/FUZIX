@@ -6,9 +6,8 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
-        .globl trap_illegal
-        .globl _switchout
+        .globl _platform_monitor
+        .globl _platform_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -40,12 +39,8 @@ _need_resched:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
 ; This function can have no arguments or auto variables.
-_switchout:
-        di
-        call _chksigs
+_platform_switchout:
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
@@ -63,7 +58,7 @@ _switchout:
         call _switchin
 
         ; we should never get here
-        call _trap_monitor
+        call _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -121,7 +116,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _trap_monitor
+        jp _platform_monitor
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

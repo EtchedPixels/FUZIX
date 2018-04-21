@@ -61,7 +61,7 @@ arg_t _execve(void)
 
 	top = ramtop;
 
-	if (!(ino = n_open(name, NULLINOPTR)))
+	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
 
 	if (!((getperm(ino) & OTH_EX) &&
@@ -79,7 +79,7 @@ arg_t _execve(void)
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_count != 16) {
+	if (udata.u_done != 16) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
@@ -174,7 +174,7 @@ arg_t _execve(void)
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
 		readi(ino, 0);
-		if (udata.u_count != bin_size)
+		if (udata.u_done != bin_size)
 			goto nogood4;
 		progptr += bin_size;
 	}
@@ -195,7 +195,7 @@ arg_t _execve(void)
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
-	ugets((void *) ugetw(nargv), udata.u_name, 8);
+	uget((void *) ugetw(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	tmpfree(abuf);
@@ -230,7 +230,7 @@ nogood3:
 	tmpfree(ebuf);
 nogood2:
 nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (-1);
 }
 
@@ -342,39 +342,46 @@ uint8_t write_core_image(void)
 
 	udata.u_error = 0;
 
-	ino = kn_open("core", &parent);
+	/* FIXME: need to think more about the case sp is lala */
+	if (uput("core", udata.u_syscall_sp - 5, 5))
+		return 0;
+
+	ino = n_open(udata.u_syscall_sp - 5, &parent);
 	if (ino) {
 		i_deref(parent);
 		return 0;
 	}
-	if (parent && (ino = newfile(parent, "core"))) {
-		ino->c_node.i_mode = F_REG | 0400;
-		setftime(ino, A_TIME | M_TIME | C_TIME);
-		wr_inode(ino);
-		f_trunc(ino);
+	if (parent) {
+		i_lock(parent);
+		if (ino = newfile(parent, "core")) {
+			ino->c_node.i_mode = F_REG | 0400;
+			setftime(ino, A_TIME | M_TIME | C_TIME);
+			wr_inode(ino);
+			f_trunc(ino);
 
-		/* FIXME: need to add some arch specific header bits, and
-		   also pull stuff like the true sp and registers out of
-		   the return stack properly */
+			/* FIXME: need to add some arch specific header bits, and
+			   also pull stuff like the true sp and registers out of
+			   the return stack properly */
 
-		corehdr.ch_base = MAPBASE;
-		corehdr.ch_break = udata.u_break;
-		corehdr.ch_sp = udata.u_syscall_sp;
-		corehdr.ch_top = PROGTOP;
-		udata.u_offset = 0;
-		udata.u_base = (uint8_t *)&corehdr;
-		udata.u_sysio = true;
-		udata.u_count = sizeof(corehdr);
-		writei(ino, 0);
-		udata.u_sysio = false;
-		udata.u_base = MAPBASE;
-		udata.u_count = udata.u_break - MAPBASE;
-		writei(ino, 0);
-		udata.u_base = udata.u_sp;
-		udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
-		writei(ino, 0);
-		i_deref(ino);
-		return W_COREDUMP;
+			corehdr.ch_base = MAPBASE;
+			corehdr.ch_break = udata.u_break;
+			corehdr.ch_sp = udata.u_syscall_sp;
+			corehdr.ch_top = PROGTOP;
+			udata.u_offset = 0;
+			udata.u_base = (uint8_t *)&corehdr;
+			udata.u_sysio = true;
+			udata.u_count = sizeof(corehdr);
+			writei(ino, 0);
+			udata.u_sysio = false;
+			udata.u_base = MAPBASE;
+			udata.u_count = udata.u_break - MAPBASE;
+			writei(ino, 0);
+			udata.u_base = udata.u_sp;
+			udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
+			writei(ino, 0);
+			i_unlock_deref(ino);
+			return W_COREDUMP;
+		}
 	}
 	return 0;
 }

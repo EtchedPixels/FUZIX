@@ -42,9 +42,9 @@ double atanh(double x)
 	EXTRACT_WORDS(hx, lx, x);
 	ix = hx & 0x7fffffff;
 	if ((ix | ((lx|-lx)>>31)) > 0x3ff00000)  /* |x| > 1 */
-		return __sNaN;
+		return (x-x)/(x-x);
 	if (ix == 0x3ff00000)
-		return __Nan;
+		return x/0.0;
 	if (ix < 0x3e300000 && (huge+x) > 0.0)   /* x < 2**-28 */
 		return x;
 	SET_HIGH_WORD(x, ix);

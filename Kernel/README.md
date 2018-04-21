@@ -13,7 +13,10 @@ this recipe should work on Mac.
 	both work. The newest SDCC has the essential parts of the entry size
 	patches merged.
 
-  6502:
+	Do not use SDCC 3.7.0 it miscompiles a file. This is fixed in
+	r10265
+
+  6502/65C816:
 	CC65. Current versions default to fastcall as Fuzix needs and also
 	have the \0 misparsing bug fixed.
 

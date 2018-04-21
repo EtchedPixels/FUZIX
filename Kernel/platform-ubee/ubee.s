@@ -1,5 +1,5 @@
 ;
-;	    TRS 80  hardware support
+;	    Microbee 128K and 256TC  hardware support
 ;
 
             .module ubee
@@ -25,8 +25,8 @@
 	    .globl _hd_page
 
             ; exported debugging tools
-            .globl _trap_monitor
-            .globl _trap_reboot
+            .globl _platform_monitor
+            .globl _platform_reboot
             .globl outchar
 
             ; imported symbols
@@ -39,6 +39,9 @@
             .globl outcharhex
 	    .globl fd_nmi_handler
 	    .globl null_handler
+	    .globl _vtinit
+
+	    .globl _ubee_model
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -46,31 +49,86 @@
             .include "kernel.def"
             .include "../kernel.def"
 
-; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xE800 upwards)
-; -----------------------------------------------------------------------------
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	    .globl _bufpool
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
+
+;
+; COMMON MEMORY BANK (kept even when we task switch)
+;
             .area _COMMONMEM
 
-_trap_monitor:
+_platform_monitor:
 	    di
 	    call map_kernel
 	    jp to_monitor
 
 platform_interrupt_all:
-	    in a,(0xef)
+	    in a,(0xef)			; FIXME: remove this line once debugged
 	    ret
 
-_trap_reboot:
+_platform_reboot:
 	    di
 	    call map_kernel
 	    jp to_reboot
+
+;
+;	Sit in common and play with the banks to see what we have
+;
+size_ram:
+	    ; We could have < 128, 128 or various extensions up to 512K or
+	    ; so.
+	    ld ix,#0x80			; safe scribble
+	    ld c,#0x01
+	    ld de,#page_codes
+	    ld (ix),#0			; clear in bank 0 low
+	    ld hl,#32
+scan_ram:
+	    add hl,hl
+	    ld a,(de)			; try entry in table
+	    or a
+	    jr z,scan_done		; finished
+	    inc de
+	    out (0x50),a		; select proposed bank
+	    ld (ix),c			; write to it
+	    ld a,#4
+	    out (0x50),a		; back to bank 0
+	    ld a,(ix)			; read it back
+	    cp c			; did it mess with bank 0L ?
+	    jr nz, scan_ram
+
+;	We found our first mismatch HL is our memory size
+;	info if at least 128K is present (or 64 if not)
+scan_done:
+	    ret
+
+page_codes:
+	    ; Detect a standard or premium 128K system
+	    .byte 0x06  ;	write 1 to bank 1L 0x80
+	    ; Detect a system with a 256K expansion mod
+	    .byte 0x44	;	write 1 to bank 2L 0x80
+	    ; Detect a system with a 512K expansion mod
+	    .byte 0x84	;	write 1 to bank 4L 0x80
+	    ; We don't handle the modern ubee premium plus emulated thing
+	    .byte 0x00  ;	and done
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .area _CODE
 
-; These two must be below 32K and not use the stack until they hit ROM space
+; These two must be below 32K and not use the stack until they hit ROM
+; space.
+;
+; Not sure we can do this for most cases because not everyone has all that
+; ROM
 ;
 to_monitor:
 	    xor a			; 0 or 1 to keep low 32K right ? */
@@ -81,47 +139,81 @@ to_reboot:
 	    xor a
 	    out (0x50), a
 	    jp 0xE000
+
+	    .area _DISCARD
 	
 ;
 ;	This setting list comes from the Microbee 256TC documentation
 ;	and is the quoted table for 80x25 mode
 ;
-_ctc6845:				; registers in reverse order
+_ctc6545:				; registers in reverse order
 	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
 	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
 
-init_early:
 
-            ; load the 6845 parameters
-	    ld hl, #_ctc6845
-	    ld bc, #0x100C
+init_early:
+            ; load the 6545 parameters
+	    ld hl, #_ctc6545
+	    ld bc, #0x0F0C
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
 	    out (0x0D), a		; data
 	    inc hl
 	    dec b
-	    jp po, ctcloop		; check V not C
+	    jp p, ctcloop
 	    ; ensure the CTC clock is right
 	    ld a, #0
 	    in a, (9)			; manual says in but double check
-	    in a, (0x1C)
-	    and #0x7F
-	    out (0x1C), a		; ensure we are in simple mode for now
+	    xor a
+	    out (0x0B),a		; vanish the character rom
+	    ld a,#0x40
+	    out (0x08),a		; colour, black background
+	    ld a,#0x14			; map the video in at 0x8000
+	    out (0x50),a
    	    ; clear screen
-	    ld hl, #0xF000
+	    ld hl, #0x8000
 	    ld (hl), #'*'		; debugging aid in top left
 	    inc hl
-	    ld de, #0xF002
+	    ld de, #0x8002
 	    ld bc, #1998
 	    ld (hl), #' '
 	    ldir
-            ret
+	    ld hl,#0x8800
+	    ld de,#0x8801
+	    ld (hl), #4			; green characters/black
+	    ld bc,#1999
+	    ldir
+	    ld a,(_ubee_model)
+	    or a
+	    jr z, no_attribs
+	    ;
+	    ;	Map in and wipe attribute memory on the premium and tc
+	    ;	models.
+	    ;
+	    ld a,#0x10			; Enable attribute memory and
+	    out (0x1C),a		; wipe it
+	    ld hl,#0x8000
+ 	    ld de,#0x8001
+	    ld bc,#1999
+	    ld (hl),#0
+	    ldir
+	    ld a,#0x80			; extended PCG on
+	    out (0x1C),a
+no_attribs:
+	    ld a,#0x0C			; video back off
+	    out (0x50),a
+	    jp _vtinit
 
 init_hardware:
-            ; set system RAM size
-            ld hl, #128			; FIXME according to platform
+	    ld a,(_ubee_model)
+	    cp #2			; 256TC
+	    ld hl,#256			; 256TC has 256K
+	    call nz, size_ram
+is_tc:
             ld (_ramsize), hl
-            ld hl, #(128-64)		; 64K for kernel
+	    ld de,#64			; 64K for kernel
+	    or a
+	    sbc hl,de
             ld (_procmem), hl
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
@@ -130,19 +222,97 @@ init_hardware:
             call _program_vectors
             pop hl
 
+	    ld a,(_ubee_model)
+	    cp #2
+	    ld hl,#pio_setup
+	    jr nz, not_t256
+	    ld hl,#pio_setup_t256
+not_t256:
+	    call init_ports
+	    call init_ports
 	    ;
 	    ; set up the RTC driven periodic timer. The PIA should already
 	    ; have been configured for us
 	    ;
-	    ld a, #0x0A			; PIR timer
-	    out (0x04), a
-	    ld a, #0x1001		; 64 ints/second
+	    ; we don't necessarily have one. In which case this
+	    ; routine will pee into the void and do no harm whatsoever
+	    ;
+	    ld bc,#0x0A04
+	    out (c), b			; select register A
+	    ld a,#0x70			; reset divier
 	    out (0x06), a
+	    ld a,#0x2D			; and select 32KHz operation
+	    out (0x06), a		; with an 8Hz interrupt
+	    ld a,#0x40
+	    inc b
+	    out (c),b
+	    ld a,#0x46			; PIE, binary, 24 hour
+	    out (0x06), a
+	    inc b
+	    out (c),b
+	    in a,(0x07)			; Clear pending interrupt
 
             im 1 ; set CPU interrupt mode
 
             ret
 
+;
+;	This nifty routine is c/o Stewart Kay's CP/M 3 for the Microbee
+;	- slightly tweaked to make it re-callable for series of tables
+;
+init_ports:
+	    ld b,(hl)
+	    inc hl
+	    ld c,(hl)
+	    inc hl
+	    otir
+	    ld a,(hl)
+	    or a
+	    jr nz,init_ports
+	    inc hl
+	    ret
+
+pio_setup:
+	    .byte	0x04
+	    .byte	0x01
+	    ; vector, mode 0 (output), int control off, on
+	    .byte	0x00,0x0F,0x03,0x83
+	    .byte	0
+	    ; and port B
+	    .byte	0x06
+	    .byte	0x03
+	    ; vector 0, mode 3, 7/4/3/0 are input
+	    ; interrupt enable, or, high, mask follows
+	    ; interrupt on 7/4
+	    ; int control on
+	    .byte	0x00, 0xCF, 0x99, 0xB7, 0x6F, 0x83
+	    .byte	0x01
+	    .byte	0x02
+	    ; and set the data lines so the rs232 looks sane (not that
+	    ; we care right now).
+	    .byte	0x24
+	    .byte	0x00
+
+pio_setup_t256:
+	    .byte	0x04
+	    .byte	0x01
+	    ; vector, mode 0 (output), int control off, on
+	    .byte	0x00,0x0F,0x03,0x83
+	    .byte	0
+	    ; and port B
+	    .byte	0x06
+	    .byte	0x03
+	    ; vector 0, mode 3, 7/4/3/1/0 are input
+	    ; interrupt enable, or, high, mask follows
+	    ; interrupt on 7/4/1
+	    ; int control on
+	    .byte	0x00, 0xCF, 0x9B, 0xB7, 0x6D, 0x83
+	    .byte	0x01
+	    .byte	0x02
+	    ; and set the data lines so the rs232 looks sane (not that
+	    ; we care right now).
+	    .byte	0x24
+	    .byte	0x00
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -166,6 +336,7 @@ _program_vectors:
 
 	    call map_process
 
+	    out (0xfe), a
             ; write zeroes across all vectors
             ld hl, #0
             ld de, #1
@@ -179,7 +350,7 @@ _program_vectors:
             ld hl, #interrupt_handler
             ld (0x0039), hl
 
-            ; set restart vector for UZI system calls
+            ; set restart vector for FUZIX system calls
             ld (0x0030), a   ;  (rst 30h is unix function call vector)
             ld hl, #unix_syscall_entry
             ld (0x0031), hl
@@ -200,12 +371,11 @@ _program_vectors:
 ;
 map_kernel:
 	    push af
-	    ld a, #0x04		; bank 0, 1 no ROM - FIXME: map video over kernel
+	    ld a, #0x0C		; bank 0, 1 no ROM or video
 	    ld (mapreg), a
 	    out (0x50), a
 	    pop af
 	    ret
-
 map_process:
 	    ld a, h
 	    or l
@@ -248,29 +418,303 @@ outchar:
 ;	Swap helpers
 ;
 _hd_xfer_in:
-	   pop de
-	   pop hl
-	   push hl
-	   push de
-	   ld a, (_hd_page)
-	   or a
-	   call nz, map_process_a
-	   ld bc, #0x40			; 512 bytes from 0x40
-	   inir
-	   inir
-	   call map_kernel
-	   ret
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a, (_hd_page)
+	    or a
+	    call nz, map_process_a
+	    ld bc, #0x40			; 512 bytes from 0x40
+	    inir
+	    inir
+	    call map_kernel
+	    ret
 
 _hd_xfer_out:
-	   pop de
-	   pop hl
-	   push hl
-	   push de
-	   ld a, (_hd_page)
-	   or a
-	   call nz, map_process_a
-	   ld bc, #0x40			; 512 bytes to 0x40
-	   otir
-	   otir
-	   call map_kernel
-	   ret
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a, (_hd_page)
+	    or a
+	    call nz, map_process_a
+	    ld bc, #0x40			; 512 bytes to 0x40
+	    otir
+	    otir
+	    call map_kernel
+	    ret
+
+;
+;	Ubee Keyboard. Except for the TC the Ubee pulls this crazy (or neat
+;	depending how you look at it) trick of demuxing a keyboard with the
+;	lightpen input.
+;
+;	See the Ubee technical manual for more information on scanning.
+;
+	    .area _CODE
+
+	    .globl _kbscan
+	    .globl _kbtest
+	    .globl _lpen_kbd_last
+;
+_kbscan:
+	    in a,(0x0C)
+	    bit 6,a		; No light pen signal - no key
+	    jr z, nokey		; Fast path exit
+            ld a, (_lpen_kbd_last)	; Rather than the slow scan try and
+            cp #255		; test if we are holding down the same key
+            jr z, notlast	; assuming one was held down
+            call ispressed	; see if the key is held down (usual case)
+	    ld a, (_lpen_kbd_last)
+				; if so return the last key
+	    bit 0,l		; b = 1 if we found it
+            jr nz, key_return
+notlast:
+	    ld l,#57		; Scan the keys in two banks, the first 57
+	    ld de,#0x0000
+	    call scanner
+	    ld a,#57
+	    jr nz, gotkey
+            ld l,#5
+	    ld de,#0x03A0	; and if that fails the last 5 oddities
+	    call scanner	; in order to handle shift etc
+            ld a,#63
+gotkey:
+	    sub b
+	    jr key_return
+nokey:
+	    ld a,#255
+key_return:
+	    ld l,a
+	    ret
+
+_kbtest:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ld a,e
+;
+;	Check if key is currently pressed
+;	Split the key by matrix position and use our scanner
+;
+ispressed:
+	    rrca
+	    rrca
+	    rrca
+	    rrca
+	    ld e,a
+	    and #0x0F
+	    ld d,a
+            ld a,e
+            and #0xF0
+            ld e,a
+            ld l,#1
+
+;
+;	Test for keys
+;
+;	On entry L is the number of keys to test
+;	DE is the address to scan
+;
+;	Returns L holding the count of keys until we found a hit
+;
+scanner:
+	    ld a,#1
+	    out (0x0b),a		; character ROM so we can scan
+	    ld bc,#0x130c		; for convenience
+	    ld h,#31			; port numbers used in the loop
+	    ld a,#16			; select lpen high
+            out (c),a
+            in a,(0x0d)			; clear status
+sethigh:    ld a,#18			; update register high
+            out (c),a
+            ld a,d
+            out (0x0d),a		; load passed address
+            ld a,e
+            push de			; save working address
+            ld d,#16
+setlow:     out (c),b			; set the low byte from the passed address
+	    out (0x0d),a
+            out (c),h			; dummy read to reset
+            out (0x0d),a
+strobe:     in e,(c)			; spin for a strobe
+            jp p, strobe
+            in e,(c)
+            bit 6,e			; did we get a strobe ?
+            jr nz,scanner_done
+            dec l			; next key to test
+            jr z,scanner_done		; are we done ?
+            add a,d
+            jp nz,setlow		; next inner scan
+            pop de
+            ld e,a
+            inc d
+            jp sethigh			; next outer scan
+	    ;
+	    ;	L holds the count remaining and thus computes the keycode
+	    ;   0 means 'we found nothing'
+	    ;
+scanner_done:
+	    pop de			; recover position we are at
+            ld a,#16			; lpen reset
+            out (0x0c),a
+            in a,(0x0d)			; VDU reset
+            xor a
+            out (0x0b),a
+	    ret
+
+
+;
+;	Video support code. This has to live below F000 so it can use the
+;	video memory and not common. Note that this means we need to disable
+;	interrupts briefly when we do the flipping
+;
+;	TODO: it would make sense to map the ROM and RAM font space and
+;	copy the ROM font to RAM so we can support font setting ?
+;
+
+	    .area _VIDEO
+
+	    .globl _cursor_off
+	    .globl _cursor_on
+	    .globl _scroll_up
+	    .globl _scroll_down
+	    .globl _vwrite
+	    .globl _patch_std
+	    .globl _patch_std_end
+
+	    .globl ___hard_di
+
+	    .globl _vtwidth
+	    .globl _vtaddr
+	    .globl _vtcount
+	    .globl _vtattrib
+	    .globl _vtchar
+;
+;	6545 Hardware Cursor
+;
+_cursor_off:
+	    ret
+_cursor_on:
+	    pop hl
+	    pop de
+	    push de
+	    push hl
+	    ; ld a,i handling is buggy on NMOS Z80
+	    call ___hard_di
+	    push af
+	    ld c,#0x0d
+	    ld a,#0x0e
+	    out (0x0c),a
+	    out (c),d
+	    inc a
+	    out (0x0c),a
+	    out (c),e
+popout:
+	    pop af
+	    ret c
+	    ei
+	    ret
+;
+;	Scroll the display (the memory wraps on a 2K boundary, the
+;	display wraps on 2000 bytes). Soft scroll - hard scroll only works
+;	in 64x16 mode
+;
+;	FIXME: on premium/tc we also need to scroll the attribute RAM!
+;
+_scroll_up:
+	    call ___hard_di
+	    push hl
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,#0x8000
+	    push hl
+	    ld de, (_vtwidth)
+	    add hl,de
+	    pop de
+	    ld bc,#1920		; FIXME
+	    ldir
+unmap_out:
+	    ; now put the RAM back
+	    pop af
+	    ld (mapreg),a
+	    out (0x50),a
+	    ; We usually only do one char
+	    jr popout
+
+_scroll_down:
+	    call ___hard_di
+	    push hl
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,#0x8FCF	; end of display
+	    push hl
+	    ld de, (_vtwidth)
+	    or a
+	    sbc hl,de
+	    pop de
+	    ex de,hl
+	    ld bc,#4016		; FIXME compute for widths
+	    lddr
+	    jr unmap_out
+;
+;	Write to the display
+;
+;	In theory we can avoid the di/ei but that needs some careful review
+;	of the banking paths on interrupt
+;
+_vwrite:
+	    call ___hard_di
+	    push hl
+	    ld a, (mapreg)
+	    push af
+	    and #0xF7		; enable video memory
+	    or #0x10		; and put it at 0x8000
+            ld (mapreg),a
+	    out (0x50),a
+	    ld hl,(_vtaddr)
+	    ld bc,(_vtcount)
+	    ld a,h
+	    and #0x07
+	    or #0x80
+	    ld h,a
+	    ld de,(_vtattrib)
+vloop:
+	    ld a,(_vtchar)
+	    ld (hl),a		; character
+	    ld a,#0x90		; attribute RAM / 0x90 if we enable PCG extended
+_patch_std:
+	    out (0x1c),a	; latch in attribute RAM
+	    ld (hl),e		; attribute
+	    xor a		; #0x80 if enable PCG extended
+	    out (0x1c),a
+_patch_std_end:
+	    set 3,h		; colour is at F8-FF
+	    ld (hl),d		; colour
+	    dec bc
+	    ld a,b
+	    or c
+	    jr nz, nextchar
+	    jr unmap_out
+nextchar:
+	    res 3,h
+	    inc hl
+	    jr vloop
+;
+;	Ensure these are in the video mapping
+;
+_vtaddr:    .word 0
+_vtcount:   .word 0
+_vtattrib:  .word 0
+_vtwidth:   .word 80			; FIXME should be variable
+_vtchar:    .byte 0

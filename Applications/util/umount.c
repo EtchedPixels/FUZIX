@@ -2,49 +2,32 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/mount.h>
+#include <mntent.h>
 
-/* Assumed length of a line in /etc/mtab */
-#define MTAB_LINE 160
 #define MAXFS	16
 
 static char *devlist[MAXFS];
 static char **devp = &devlist[0];
 
-static char tmp[MTAB_LINE];
-
-const char *readmtab(FILE *fp)
-{
-    char *dev;
-    while (fgets(tmp, sizeof(tmp), fp) != NULL) {
-        dev = strtok(tmp, " \t");
-        if (dev == NULL || *tmp == '#')
-            continue;
-        return dev;
-    }
-    return NULL;
-}
-
-char *getdev(char *arg)
+static char *getdev(char *arg)
 {
 	FILE *f;
-	const char *dev;
-	char* mntpt;
+	struct mntent *mnt;
 
-	f = fopen("/etc/mtab", "r");
+	f = setmntent("/etc/mtab", "r");
 	if (f) {
-		while ((dev = readmtab(f)) != NULL) {
-			mntpt = strtok(NULL, " \t");
-			if ((strcmp(dev, arg) == 0) || (strcmp(mntpt, arg) == 0)) {
-				fclose(f);
-				return strdup(dev);
+		while (mnt = getmntent(f)) {
+			if ((strcmp(mnt->mnt_fsname, arg) == 0) || (strcmp(mnt->mnt_dir, arg) == 0)) {
+				endmntent(f);
+				return strdup(mnt->mnt_fsname);
 			}
 		}
-		fclose(f);
+		endmntent(f);
 	}
 	return NULL;
 }
 
-int deleted(const char *p)
+static int deleted(const char *p)
 {
 	char **d = &devlist[0];
 
@@ -64,36 +47,30 @@ static void queue_rm_mtab(const char *p)
 		*devp++ = strdup(p);
 }
 
-/* FIXME: error checking, atomicity */
-int rewrite_mtab(void)
+static int rewrite_mtab(void)
 {
 	FILE *inpf, *outf;
-	char *tmp_fname;
-	static char tmp[MTAB_LINE];
-	static char tmp2[MTAB_LINE];
-	char* dev;
+	struct mntent *mnt;
 
-	inpf = fopen("/etc/mtab", "r");
+	inpf = setmntent("/etc/mtab", "r");
 	if (!inpf) {
 		perror("Can't open /etc/mtab");
 		exit(1);
 	}
-	outf = fopen("/etc/mtab.new", "w");
+	outf = setmntent("/etc/mtab.new", "w");
 	if (!outf) {
 		perror("Can't create temporary file");
 		exit(1);
 	}
-	while (fgets(tmp, sizeof(tmp), inpf)) {
-		strncpy( tmp2, tmp, MTAB_LINE );
-		dev = strtok(tmp, " \t");
-		if (dev && deleted(dev)) {
+	while (mnt = getmntent(inpf)) {
+		/* FIXME: should we check device and dir ? */
+		if (deleted(mnt->mnt_fsname))
 			continue;
-		} else {
-			fputs(tmp2, outf);
-		}
+		else
+			addmntent(outf, mnt);
 	}
-	fclose(inpf);
-	fclose(outf);
+	endmntent(inpf);
+	endmntent(outf);
 	if (rename("/etc/mtab.new", "/etc/mtab") < 0) {
 		perror("Error installing /etc/mtab");
 		exit(1);
@@ -103,6 +80,7 @@ int rewrite_mtab(void)
 
 int main(int argc, char *argv[])
 {
+	struct mntent *mnt;
 	const char *dev;
 	char **dp;
 	FILE *f;
@@ -117,18 +95,17 @@ int main(int argc, char *argv[])
 	if (strcmp(argv[1], "-a") == 0) {
 		/* We need to umount things in reverse order if we have
 		   mounts on mounts */
-		f = fopen("/etc/mtab", "r");
+		f = setmntent("/etc/mtab", "r");
 		if (f == NULL) {
 			perror("mtab");
 			exit(1);
 		}
-		while((dev = readmtab(f)) != NULL) {
-			char *mntpt = strtok(NULL, " \t");
+		while(mnt = getmntent(f)) {
 			/* We can't unmount / */
-			if (strcmp(mntpt, "/"))
-				queue_rm_mtab(dev);
+			if (strcmp(mnt->mnt_dir, "/"))
+				queue_rm_mtab(mnt->mnt_fsname);
 		}
-		fclose(f);
+		endmntent(f);
 		dp = devp;
 		/* Unmount in reverse order of mounting */
 		while(--dp >= devlist) {

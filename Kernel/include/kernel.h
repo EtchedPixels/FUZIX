@@ -21,6 +21,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define NULL (void *)0
 #endif
 
+#ifndef regptr
+#define regptr
+#endif
+
 #define min(a,b) ( (a) < (b) ? (a) : (b) )
 #define max(a,b) ( (a) > (b) ? (a) : (b) )
 #define aligndown(v,a) (uint8_t*)((intptr_t)(v) & ~((a)-1))
@@ -36,19 +40,39 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define ALIGNDOWN(v) (v)
 #endif
 
+#ifndef FS_MAX_SHIFT
+#define FS_MAX_SHIFT	0
+#endif
+
+/* These work fine for most compilers but can be overriden for those where the
+   resulting code generation is foul */
+#ifndef LOWORD
+#define LOWORD(x)	((uint16_t)(x))
+#endif
+#ifndef HIBYTE32
+#define HIBYTE32(x)	((uint8_t)((x) >> 24))
+#endif
+
+#ifndef CONFIG_BLOCK_SLEEP
+#define i_unlock(x)	do {} while(0)
+#define i_lock(x)	do {} while(0)
+#define i_islocked(x)	do {} while(0)
+#define i_unlock_deref(x)	i_deref(x)
+#define n_open_lock(a,b)	n_open((a),(b))
+#define getinode_lock(x)	getinode(x)
+#endif
+
 #ifdef CONFIG_LEVEL_2
 #include "level2.h"
 #else
 
-#define jobcontrol_in(x,y,z)	0
-#define jobcontrol_out(x,y,z)	0
+#define jobcontrol_in(x,y)	0
+#define jobcontrol_out(x,y)	0
 #define jobcontrol_ioctl(x,y,z)	0
 
 #define limit_exceeded(x,y) (0)
 #define can_signal(p, sig) \
 	(udata.u_ptab->p_uid == (p)->p_uid || super())
-#define pathbuf()	tmpbuf()
-#define pathfree(tb)	tmpfree(tb)
 #define dump_core(sig)	sig
 #define in_group(x)	0
 #endif
@@ -88,8 +112,9 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 
 #ifndef MAXTICKS
-#define MAXTICKS     10   /* Max ticks before switching out (time slice)
-                            default process time slice */
+#define MAXTICKS     (TICKSPERSEC/10)
+                           /* Max ticks before switching out (time slice)
+                              default process time slice */
 #endif
 
 // #define MAXBACK      3   /* Process time slice for tasks not connected
@@ -148,17 +173,14 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BLKSIZE		512
 #define BLKSHIFT	9
 #define BLKMASK		511
-#define BLKOVERSIZE	25	/* Bits 25+ mean we exceeded the file size */
+#define BLKOVERSIZE32	0xFE	/* Bits 25+ mean we exceeded the file size */
 
 /* Help the 8bit compilers out by preventing any 32bit promotions */
 #define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
 
-/* we need a busier-than-busy state for superblocks, so that if those blocks
- * are read by userspace through bread() they are not subsequently freed by 
- * bfree() until the filesystem is unmounted */
+/* State of the block. We have some free bits here if we need them */
 #define BF_FREE		0
 #define BF_BUSY		1
-#define BF_SUPERBLOCK	2
 
 /* FIXME: if we could split the data and the header we could keep blocks
    outside of our kernel data (as ELKS does) which would be a win, but need
@@ -206,7 +228,7 @@ extern void blkzero(struct blkbuf *buf);
    disk safely */
 typedef struct dinode {
     uint16_t i_mode;
-    uint16_t i_nlink;
+    uint16_t i_nlink;		/* Note we have 64K inodes so we never overflow */
     uint16_t i_uid;
     uint16_t i_gid;
     uoff_t    i_size;		/* Never negative */
@@ -274,6 +296,10 @@ typedef struct cinode {
 #define CFLOCK		0x0F	/* flock bits */
 #define CFLEX		0x0F	/* locked exclusive */
 #define CFMAX		0x0E	/* highest shared lock count permitted */
+   uint8_t     c_super;		/* Superblock index */
+#ifdef CONFIG_BLOCK_SLEEP
+   uint16_t    c_lock;		/* inode lock state */
+#endif
 } cinode, *inoptr;
 
 #define NULLINODE ((inoptr)NULL)
@@ -288,12 +314,11 @@ typedef struct direct {
 
 
 /*
- *	This is actually overlaid over a blkbuf holding the actual
- *	record in question, and pinned until we umount the fs.
+ * Superblock structure
  */
 #define FILESYS_TABSIZE 50
 typedef struct filesys { // note: exists in mem and on disk
-    uint16_t       s_mounted;
+    uint16_t      s_mounted;
     uint16_t      s_isize;
     uint16_t      s_fsize;
     uint16_t      s_nfree;
@@ -310,8 +335,34 @@ typedef struct filesys { // note: exists in mem and on disk
     uint32_t      s_time;
     blkno_t       s_tfree;
     uint16_t      s_tinode;
-    inoptr        s_mntpt;     /* Mount point */
+    uint8_t	  s_shift;	/* Extent size */
 } filesys, *fsptr;
+
+/*
+ * Superblock with userspace fields that are not kept in the kernel
+ * mount table.
+ */
+struct filesys_user {
+    struct filesys s_fs;
+    /* Allow for some kernel expansion */
+    uint8_t	  s_reserved;
+    uint16_t	  s_reserved2[16];
+    /* This is only used by userspace */
+    uint16_t	  s_props;	/* Property bits indicating which are valid */
+#define S_PROP_LABEL	1
+#define S_PROP_GEO	2
+    /* For now only one property set - geometry. We'll eventually use this
+       when we don't know physical geometry and need to handle stuff with
+       tools etc */
+    uint8_t	  s_label_name[32];
+
+    uint16_t      s_geo_heads;	/* If 0/0/0 is specified and valid it means */
+    uint16_t	  s_geo_cylinders; /* pure LBA - no idea of geometry */
+    uint16_t	  s_geo_sectors;
+    uint8_t	  s_geo_skew;	/* Soft skew if present (for hard sectored media) */
+                                /* Gives the skew (1/2/3/4/5/... etc) */
+    uint8_t	  s_geo_secsize;/* Physical sector size in log2 form*/
+};
 
 typedef struct oft {
     off_t     o_ptr;      /* File position pointer */
@@ -324,11 +375,11 @@ typedef struct oft {
 struct mount {
     uint16_t m_dev;
     uint16_t m_flags;
+    inoptr   m_mntpt;     /* Mount point */
     struct filesys m_fs;
 };
-/* The flags are not yet fully implemented */
 #define MS_RDONLY	1
-#define MS_NOSUID	2
+#define MS_NOSUID	2	/* Not yet implemented */
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -338,15 +389,15 @@ struct mount {
 /* The sleeping range must be together see swap.c */
 #define P_READY         2    /* Runnable   */
 #define P_SLEEP         3    /* Sleeping; can be awakened by signal */
-#define P_STOPPED       4    /* Sleeping, don't wake up for signal */
-#define P_FORKING       5    /* In process of forking; do not mess with */
-#define P_ZOMBIE        6    /* Exited. */
-#define P_NOSLEEP	7    /* In an internal state where sleep is forbidden */
+#define P_IOWAIT	4    /* Sleeping: don't wake for a signal */
+#define P_STOPPED       5    /* Sleeping, signal driven halt */
+#define P_FORKING       6    /* In process of forking; do not mess with */
+#define P_ZOMBIE        7    /* Exited. */
+#define P_NOSLEEP	8    /* In an internal state where sleep is forbidden */
 
 
 /* 0 is used to mean 'check we could signal this process' */
 
-/* FIXME: finish signal handling */
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3
@@ -385,7 +436,7 @@ struct mount {
 #define  SIG_DFL   (int (*)(int))0	/* Must be 0 */
 #define  SIG_IGN   (int (*)(int))1
 
-#define sigmask(sig)    (1UL<<(sig))
+#define sigmask(sig)    (1U<<((sig) & 0x0F))
 
 /* uadmin */
 
@@ -401,6 +452,12 @@ struct mount {
 #define AD_NOSYNC		1
                                           
 /* Process table entry */
+
+struct sigbits {
+    uint16_t	s_pending;
+    uint16_t	s_ignored;
+    uint16_t	s_held;
+};
 
 typedef struct p_tab {
     /* WRS: UPDATE kernel.def IF YOU CHANGE THIS STRUCTURE */
@@ -421,9 +478,7 @@ typedef struct p_tab {
     /* Everything below here is overlaid by time info at exit.
 	 * Make sure it's 32-bit aligned. */
     uint16_t    p_priority;     /* Process priority */
-    uint32_t    p_pending;      /* Bitmask of pending signals */
-    uint32_t    p_ignored;      /* Bitmask of ignored signals */
-    uint32_t    p_held;         /* Bitmask of held signals */
+    struct sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
     uint16_t    p_timeout;      /* timeout in centiseconds - 1 */
                                 /* 0 indicates no timeout, 1 = expired */
@@ -512,6 +567,7 @@ typedef struct u_data {
     uint16_t	u_blkoff;	/* Offset in block */
     usize_t	u_nblock;	/* Number of blocks */
     uint8_t	*u_dptr;	/* Address for I/O */
+    usize_t	u_done;		/* Counter for driver methods */
 
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
@@ -708,6 +764,10 @@ struct s_argblk {
  */
 
 /*
+ *	Input ioctls 0x052x (see input.h)
+ */
+
+/*
  *	System info shared with user space
  */
 #include <sysinfoblk.h>
@@ -730,7 +790,6 @@ struct selmap {
 /* functions in common memory */
 
 /* debug functions */
-extern void trap_monitor(void);
 extern void idump(void);
 
 /* platform/device.c */
@@ -746,7 +805,6 @@ extern size_t strlcpy(char *, const char *, size_t);
 #define ugetw(a)	(*(uint8_t *)(a))
 #define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
 #define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
-#define ugets(a,b,c)	((int)(strlcpy(b,a,c) && 0))
 #define uzero(a,b)	(memset(a,0,b) && 0)
 #else
 extern usize_t valaddr(const char *base, usize_t size);
@@ -754,7 +812,6 @@ extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
 extern uint32_t _ugetl(void *uaddr);
-extern int ugets(const void *userspace_source, void *dest, usize_t maxlen);
 extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
 extern int uputw(uint16_t value, void *userspace_dest);
@@ -764,7 +821,6 @@ extern int uzero(void *userspace_dest, usize_t count);
 /* usermem.c or usermem_std.s */
 extern usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
 extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
-extern int _ugets(const uint8_t *user, uint8_t *dest, usize_t maxlen);
 extern int _uzero(uint8_t *user, usize_t count);
 
 #if defined CONFIG_USERMEM_DIRECT
@@ -816,7 +872,7 @@ extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
 extern void clrq(struct s_queue *q);
 extern bool uninsq(struct s_queue *q, unsigned char *cp);
-extern int psleep_flags_io(void *event, unsigned char flags, usize_t *n);
+extern int psleep_flags_io(void *event, unsigned char flags);
 extern int psleep_flags(void *event, unsigned char flags);
 extern int nxio_open(uint8_t minor, uint16_t flag);
 extern int no_open(uint8_t minor, uint16_t flag);
@@ -826,18 +882,13 @@ extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
-#ifndef CONFIG_LEVEL_0
+extern char lastname[31];
 extern inoptr n_open(char *uname, inoptr *parent);
-#else
-#define n_open	kn_open
-#endif
-/* open file, "name" in kernel address space */
-extern inoptr kn_open(char *uname, inoptr *parent);
 extern inoptr i_open(uint16_t dev, uint16_t ino);
 extern inoptr srch_dir(inoptr wd, char *compname);
 extern inoptr srch_mt(inoptr ino);
+extern bool emptydir(inoptr ino);
 extern bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
-extern void filename(char *userspace_upath, char *name);
 /* return true if n1 == n2 */
 extern bool namecomp(char *n1, char *n2);
 extern inoptr newfile(inoptr pino, char *name);
@@ -877,6 +928,7 @@ extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* inode.c */
 extern void readi(inoptr ino, uint8_t flag);
+extern uint16_t umove(uint16_t n);	/* Probably wants to move ? */
 extern void writei(inoptr ino, uint8_t flag);
 extern int16_t doclose (uint8_t uindex);
 extern inoptr rwsetup (bool is_read, uint8_t *flag);
@@ -889,12 +941,14 @@ extern unsigned int ugetblk(bufptr bp, usize_t from, usize_t size);
 
 /* process.c */
 extern void psleep(void *event);
+extern void psleep_nosig(void *event);
 extern void wakeup(void *event);
 extern void pwake(ptptr p);
 extern ptptr getproc(void);
 extern void newproc(ptptr p);
 extern ptptr ptab_alloc(void);
 extern void ssig(ptptr proc, uint8_t sig);
+extern void recalc_cursig(void);
 extern uint8_t chksigs(void);
 extern void program_vectors(uint16_t *pageptr);
 extern void sgrpsig(uint16_t pgrp, uint8_t sig);
@@ -967,20 +1021,26 @@ extern int pagemap_alloc(ptptr p);
 extern int pagemap_realloc(usize_t c, usize_t d, usize_t s);
 extern usize_t pagemap_mem_used(void);
 extern void map_init(void);
+
+/* Platform interfaces */
+
 #ifndef platform_discard
 extern void platform_discard(void);
 #endif
 extern void platform_idle(void);
-extern uint8_t rtc_secs(void);
-extern void trap_reboot(void);
+extern uint8_t platform_rtc_secs(void);
+extern int platform_rtc_read(void);
+extern int platform_rtc_write(void);
+extern void platform_reboot(void);
+extern void platform_monitor(void);
 extern uint8_t platform_param(char *p);
+extern void platform_switchout(void);
+extern void platform_interrupt(void);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
 
-extern int platform_rtc_read(void);
-extern int platform_rtc_write(void);
 
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di
@@ -990,7 +1050,6 @@ extern int platform_rtc_write(void);
 
 /* Will need a uptr_t eventually */
 extern uaddr_t ramtop;	     /* Note: ramtop must be in common in some cases */
-extern void platform_interrupt(void);
 extern void invalidate_cache(uint16_t page);
 extern void flush_cache(ptptr p);
 

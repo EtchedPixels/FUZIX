@@ -2,7 +2,7 @@
         .include "kernel816.def"
 	.include "platform/zeropage.inc"
 
-	.export __uget, __ugetc, __ugetw, __ugets
+	.export __uget, __ugetc, __ugetw
 	.export __uput, __uputc, __uputw, __uzero
 
 	.import outxa, popax
@@ -32,7 +32,7 @@ __uget:	sta	ptr1
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	ugetpatch+2
+	sta	f:KERNEL_CODE_FAR+ugetpatch+2
 	phb
 	.i16
 	.a16
@@ -43,77 +43,13 @@ __uget:	sta	ptr1
 	beq	ug_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 ugetpatch:
-	mvn	0,KERNEL_FAR
+	mvn	KERNEL_BANK,0
 ug_nomov:
 	.i8
 	.a8
 	sep	#$30
 	plb
 	lda	#0
-	tax
-	rts
-
-;
-;	This could be done more nicely using .i16 and wants optimizing
-;
-__ugets:
-	sta	tmp2
-	stx	tmp2+1			; save the count
-	jsr	popax			; pop the destination
-	sta	ptr2			; (ptr2) is our target
-	stx	ptr2+1
-	jsr	popax			; (ptr2) is our source
-	sta	ptr3
-	stx	ptr3+1
-
-	ldy	#0			; counter
-
-	ldx	tmp2+1			; how many 256 byte blocks
-	beq	__ugets_tail		; if none skip to the tail
-
-__ugets_blk:
-	phb
-	lda	U_DATA__U_PAGE		; switch to user bank read
-	pha
-	plb
-	lda	(ptr3), y		; get a byte of user data
-	beq	__ugets_end
-	plb				; back to kernel
-	sta	(ptr2), y		; save it to the kernel buffer
-	iny				; move on one
-	bne	__ugets_blk		; not finished a block ?
-	inc	ptr3+1			; move src ptr 256 bytes on
-	inc	ptr2+1			; move dst ptr the same
-	dex				; one less block to do
-	bne	__ugets_blk		; out of blocks ?
-
-__ugets_tail:
-	cpy	tmp2			; finished ?
-	beq	__ugets_bad
-
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	plb
-	lda	(ptr3),y		; get a byte of user data
-	beq	__ugets_end
-	plb
-	sta	(ptr2),y		; save it to the kernel buffer
-	iny				; move on
-	bne	__ugets_tail		; always taken (y will be non zero)
-
-__ugets_bad:
-	dey
-	lda	#0
-	sta	(ptr2), y		; terminate kernel buffer
-	lda	#$FF			; string too large
-	tax				; return $FFFF
-	rts
-
-__ugets_end:
-	plb
-	lda	#0
-	sta	(ptr2), y
 	tax
 	rts
 
@@ -153,7 +89,7 @@ __uput:
 	sta	ptr3
 	stx	ptr3+1
 	lda	U_DATA__U_PAGE
-	sta	uputpatch+1
+	sta	f:KERNEL_CODE_FAR+uputpatch+1
 	phb
 	.i16
 	.a16
@@ -164,7 +100,7 @@ __uput:
 	beq	up_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 uputpatch:
-	mvn	KERNEL_FAR,0
+	mvn	0,KERNEL_BANK
 up_nomov:
 	.i8
 	.a8
@@ -217,8 +153,8 @@ __uzero:
 	stx	ptr2+1
 
 	lda	U_DATA__U_PAGE
-	sta	uzero_patch+1
-	sta	uzero_patch+2
+	sta	f:KERNEL_CODE_FAR+uzero_patch+1
+	sta	f:KERNEL_CODE_FAR+uzero_patch+2
 
 	; Clear lead byte in user space
 	phb

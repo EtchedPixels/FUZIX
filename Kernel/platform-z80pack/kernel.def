@@ -12,6 +12,7 @@ Z80_TYPE		    .equ 1
 
 Z80_MMU_HOOKS		    .equ 1
 
+CONFIG_SWAP		    .equ 1
 
 		.globl mmu_user
 		.globl mmu_kernel

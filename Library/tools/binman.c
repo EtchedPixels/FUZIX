@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,12 +10,12 @@
  *	the magic segments in the kernel
  */
 
-static unsigned char buf[65536];
+static uint8_t buf[65536];
 
 static unsigned int s__INITIALIZER, s__INITIALIZED;
 static unsigned int l__INITIALIZER;
 
-static unsigned int s__DATA;
+static unsigned int s__DATA, l__DATA;
 
 static unsigned int progload = 0x100;
                       
@@ -35,6 +36,8 @@ static void ProcessMap(FILE *fp)
           
     if (strcmp(p2, "s__DATA") == 0)
       sscanf(p1, "%x", &s__DATA);
+    if (strcmp(p2, "l__DATA") == 0)
+      sscanf(p1, "%x", &l__DATA);
     if (strcmp(p2, "s__INITIALIZED") == 0)
       sscanf(p1, "%x", &s__INITIALIZED);
     if (strcmp(p2, "s__INITIALIZER") == 0)
@@ -48,6 +51,7 @@ static void ProcessMap(FILE *fp)
 int main(int argc, char *argv[])
 {
   FILE *map, *bin;
+  uint8_t *bp;
 
   if (argc != 5) {
     fprintf(stderr, "%s: <PROGLOAD address> <binary> <map> <output>\n", argv[0]);
@@ -84,6 +88,15 @@ int main(int argc, char *argv[])
     exit(1);
   }
   memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZER);
+
+  bp = buf + progload + 10;
+  *bp++ = s__INITIALIZED - progload;
+  *bp++ = (s__INITIALIZED - progload) >> 8;
+  *bp++ = s__DATA - s__INITIALIZED;
+  *bp++ = (s__DATA - s__INITIALIZED) >> 8;
+  *bp++ = l__DATA;
+  *bp = l__DATA >> 8;
+
   /* Write out everything that is data, omit everything that will 
      be zapped */
   if (fwrite(buf + progload, s__DATA - progload, 1, bin) != 1) {

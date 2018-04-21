@@ -1,7 +1,9 @@
-#undef DEBUG			/* turn this on to enable syscall tracing */
+#undef DEBUG_SYSCALL		/* turn this on to enable syscall tracing */
+#undef DEBUG_SLEEP		/* turn this on to trace sleep/wakeup activity */
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
+#define DEBUG_NREADY		/* debug nready counting */
 
 #include <kernel.h>
 #include <tty.h>
@@ -16,42 +18,43 @@
  * event equal to the process's own ptab address is a wait().
  */
 
-
-void psleep(void *event)
+static void do_psleep(void *event, uint8_t state)
 {
 	irqflags_t irq = di();
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf("psleep(0x%p)", event);
 #endif
 	switch (udata.u_ptab->p_status) {
 	case P_SLEEP:		// echo output from devtty happens while processes are still sleeping but in-context
+	case P_IOWAIT:
 	case P_STOPPED:		// coming to a halt
 		nready++;	/* We will fix this back up below */
 	case P_RUNNING:		// normal process
 		break;
 	default:
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	        kprintf("psleep(0x%p) -> %d:%d", event, udata.u_ptab->p_pid, udata.u_ptab->p_status);
 #endif
 		panic(PANIC_VOODOO);
 	}
 
-	udata.u_ptab->p_status = P_SLEEP;
+	udata.u_ptab->p_status = state;
 	udata.u_ptab->p_wait = event;
 	udata.u_ptab->p_waitno = ++waitno;
-	nready--;
 
-	/* It is safe to restore interrupts here. We have already updated the
-	   process state. The worst case is that a wakeup as we switchout
-	   leads us to switch out and back in, or that we wake and run
-	   after other candidates - no different to it occuring after the
-	   switch */
-	irqrestore(irq);
 	switchout();		/* Switch us out, and start another process */
 	/* Switchout doesn't return in this context until we have been switched back in, of course. */
 }
 
+void psleep(void *event)
+{
+	do_psleep(event, P_SLEEP);
+}
 
+void psleep_nosig(void *event)
+{
+	do_psleep(event, P_IOWAIT);
+}
 
 /* wakeup() looks for any process waiting on the event,
  * and makes it runnable
@@ -59,7 +62,7 @@ void psleep(void *event)
 
 void wakeup(void *event)
 {
-	ptptr p;
+	regptr ptptr p;
 	irqflags_t irq;
 
 #ifdef DEBUGHARDER
@@ -68,7 +71,7 @@ void wakeup(void *event)
 	irq = di();
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status > P_RUNNING && p->p_wait == event) {
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 			kprintf("wakeup: found proc 0x%p pid %d\n",
 				p, p->p_pid);
 #endif
@@ -79,6 +82,11 @@ void wakeup(void *event)
 }
 
 
+/*
+ * When we wake a process in Fuzix we don't force any kind of reschedule
+ * even if the priority is higher. It's too expensive on many systems to
+ * be that fair.
+ */
 void pwake(ptptr p)
 {
 	if (p->p_status > P_RUNNING && p->p_status < P_STOPPED) {
@@ -88,6 +96,71 @@ void pwake(ptptr p)
 		}
 		p->p_wait = NULL;
 	}
+}
+
+/* This used to be an assembly function in older FUZIX but it turns out we
+   have to do a lot of common optimizations so it is now a C helper fronting
+   platform_switchout(). For speed and sanity reasons not every platform goes
+   via this path when pre-empting, but instead implements a subset of the checks
+   in the platform code.
+
+   switchout() is called when a process is giving up the processor for some
+   reason
+ */
+
+void switchout(void)
+{
+#ifdef DEBUG_SLEEP
+	kprintf("switchout %d\n", udata.u_ptab->p_status);
+#endif
+	di();
+
+	/* We do the accounting in switchout as it's cheaper and easier to
+	   do it once. Useful trick borrowed from Linux */
+	if (udata.u_ptab->p_status > P_READY)
+		nready--;
+
+#ifdef DEBUG_NREADY
+	{
+		ptptr p;
+		uint8_t n = 0;
+		for (p = ptab; p < ptab_end; ++p) {
+			if (p->p_status == P_RUNNING ||
+				p->p_status == P_READY)
+					n++;
+		}
+		if (n != nready)
+			panic("nready");
+	}
+#endif
+	/* If we have a signal we need to get to processing them we keep
+	   running until it happens */
+	if (chksigs()) {
+		if (udata.u_ptab->p_status > P_READY)
+			nready++;
+		udata.u_ptab->p_status = P_RUNNING;
+		ei();
+		return;
+	}
+	/* When we are idle we widdle our thumbs here until a polled event
+	   in platform_idle or an interrupt wakes someone up */
+	while (nready == 0) {
+		ei();
+		platform_idle();
+		di();
+	}
+	/* If only one process is ready to run and it's us then just
+	   return. This is the normal path in most Fuzix use cases as we
+	   are waiting for input while mostly system idle */
+	if (udata.u_ptab->p_status == P_RUNNING) {
+		if (nready == 1) {
+			ei();
+			return;
+		}
+		udata.u_ptab->p_status = P_READY;
+	}
+	/* We probably need to run somehting else */
+	platform_switchout();
 }
 
 /* Getproc returns the process table pointer of a runnable process.
@@ -102,7 +175,7 @@ ptptr getproc_nextp = &ptab[0];
 ptptr getproc(void)
 {
 	ptptr haltafter;
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 #ifdef DEBUGREALLYHARD
 	ptptr pp;
 	kputs("getproc start ... ");
@@ -125,7 +198,7 @@ ptptr getproc(void)
 		case P_RUNNING:
 			panic(PANIC_GETPROC);
 		case P_READY:
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
@@ -154,7 +227,7 @@ ptptr getproc(void)
 
 ptptr getproc(void)
 {
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 
 #ifdef DEBUGREALLYHARD
 	kputs("getproc(");
@@ -193,7 +266,7 @@ ptptr getproc(void)
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
  */
-void newproc(ptptr p)
+void newproc(regptr ptptr p)
 {				/* Passed New process table entry */
 	uint8_t *j;
 	irqflags_t irq;
@@ -211,7 +284,10 @@ void newproc(ptptr p)
 	nready++;		/* runnable process count */
 
 	p->p_pptr = udata.u_ptab;
-	p->p_ignored = udata.u_ptab->p_ignored;
+	p->p_sig[0].s_ignored = udata.u_ptab->p_sig[0].s_ignored;
+	p->p_sig[1].s_ignored = udata.u_ptab->p_sig[1].s_ignored;
+	p->p_sig[0].s_held = udata.u_ptab->p_sig[0].s_held;
+	p->p_sig[1].s_held = udata.u_ptab->p_sig[1].s_held;
 	p->p_tty = udata.u_ptab->p_tty;
 	p->p_uid = udata.u_ptab->p_uid;
 	/* Set default priority */
@@ -246,59 +322,58 @@ void newproc(ptptr p)
 uint16_t nextpid = 0;
 ptptr ptab_alloc(void)
 {
-	ptptr p, newp;
+	regptr ptptr p;
+	regptr ptptr newp;
 	irqflags_t irq;
 
 	newp = NULL;
 	udata.u_error = EAGAIN;
 
 	irq = di();
-	for (p = ptab; p < ptab_end; p++)
+	for (p = ptab; p < ptab_end; p++) {
 		if (p->p_status == P_EMPTY) {
 			newp = p;
-			break;
+			/* zero process structure */
+			memset(newp, 0, sizeof(struct p_tab));
+
+			/* select a unique pid */
+			while (newp->p_pid == 0) {
+				if (nextpid++ > MAXPID)
+					nextpid = 20;
+				newp->p_pid = nextpid;
+
+				for (p = ptab; p < ptab_end; p++)
+					if (p->p_status != P_EMPTY
+					    && p->p_pid == nextpid) {
+						newp->p_pid = 0;	/* try again */
+						break;
+					}
+			}
+			newp->p_top = udata.u_top;
+			if (pagemap_alloc(newp) == 0) {
+				newp->p_status = P_FORKING;
+				nproc++;
+			} else {
+				udata.u_error = ENOMEM;
+				newp = NULL;
+	                }
+	                newp->p_pgrp = udata.u_ptab->p_pgrp;
+	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			udata.u_error = 0;
+	                break;
 		}
-
-	if (newp) {		/* found a slot? */
-		/* zero process structure */
-		memset(newp, 0, sizeof(struct p_tab));
-
-		/* select a unique pid */
-		while (newp->p_pid == 0) {
-			if (nextpid++ > MAXPID)
-				nextpid = 20;
-			newp->p_pid = nextpid;
-
-			for (p = ptab; p < ptab_end; p++)
-				if (p->p_status != P_EMPTY
-				    && p->p_pid == nextpid) {
-					newp->p_pid = 0;	/* try again */
-					break;
-				}
-		}
-		newp->p_top = udata.u_top;
-		if (pagemap_alloc(newp) == 0) {
-			newp->p_status = P_FORKING;
-			nproc++;
-		} else {
-			udata.u_error = ENOMEM;
-			newp = NULL;
-                }
-                newp->p_pgrp = udata.u_ptab->p_pgrp;
-                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
 	}
 	irqrestore(irq);
-	if (newp)
-		udata.u_error = 0;
 	return newp;
 }
 
 /* Follow Unix tradition with load reporting (or more accurately it
-   is pre-Unix from Tenex) */
+   is pre-Unix from Tenex). We don't report P_IOWAIT the same way as Unix
+   does ... need to keep track of two nready values to do that */
 
 void load_average(void)
 {
-	struct runload *r;
+	regptr struct runload *r;
 	static uint8_t utick;
 	uint8_t i;
 	uint16_t nr;
@@ -386,7 +461,7 @@ void timer_interrupt(void)
 #endif
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 #include "syscall_name.h"
 #endif
 
@@ -402,7 +477,7 @@ void unix_syscall(void)
 	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
 		udata.u_error = ENOSYS;
 	} else {
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 		kprintf("\t\tpid %d: syscall %d\t%s(%p, %p, %p)\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			syscall_name[udata.u_callno], udata.u_argn,
@@ -411,7 +486,7 @@ void unix_syscall(void)
 		// dispatch system call
 		udata.u_retval = (*syscall_dispatch[udata.u_callno]) ();
 
-#ifdef DEBUG
+#ifdef DEBUG_SYSCALL
 		kprintf("\t\t\tpid %d: ret syscall %d, ret %p err %p\n",
 			udata.u_ptab->p_pid, udata.u_callno,
 			udata.u_retval, udata.u_error);
@@ -422,9 +497,14 @@ void unix_syscall(void)
 	di();
 	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
 		/* Time to switch out? - we may have overstayed our welcome inside
-		   a syscall so switch straight afterwards */
+		   a syscall so swtch straight afterwards */
 		udata.u_ptab->p_status = P_READY;
-		switchout();
+		/* We know there will be a switch if we hit this point so
+		   don't look for optimizations. Likewise we know a signal
+		   process will stay running/ready */
+		platform_switchout();
+		/* We will check the signals before we return to user space
+		   so all is good */
 	}
 	ei();
 	chksigs();
@@ -432,7 +512,7 @@ void unix_syscall(void)
 
 void sgrpsig(uint16_t pgrp, uint8_t sig)
 {
-	ptptr p;
+	regptr ptptr p;
 	if (pgrp) {
 		for (p = ptab; p < ptab_end; ++p)
 			if (p->p_pgrp == pgrp)
@@ -453,32 +533,59 @@ static uint8_t dump_core(uint8_t sig)
 }
 #endif                                    
 
+
+/* FIXME: we should keep a dirty flag so we know if we need to check for
+   signals so we can optimise this path */
+
 /* This sees if the current process has any signals set, and handles them.
  */
 
-static const uint32_t stopper = (1UL << SIGSTOP) | (1UL << SIGTTIN) | (1UL << SIGTTOU) | (1UL << SIGTSTP);
-static const uint32_t clear = (1UL << SIGSTOP) | (1UL << SIGTTIN) | (1UL << SIGTTOU) | (1UL << SIGTSTP) |
-			      (1UL << SIGCHLD) | (1UL << SIGURG) | (1UL << SIGWINCH) | (1UL << SIGIO) |
-			      (1UL << SIGCONT);
-uint8_t chksigs(void)
+#define SIGBIT(x)	(1 << (x & 15))
+
+static const uint16_t stopper =
+	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP);
+
+static const uint16_t clear =
+	SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN) | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP) |
+	SIGBIT(SIGCHLD) | SIGBIT(SIGURG) | SIGBIT(SIGWINCH) | SIGBIT(SIGIO) |
+	SIGBIT(SIGCONT);
+
+/* Put back a computed signal so that we can recalculate what needs to be
+   serviced correctly */
+void recalc_cursig(void)
 {
-	uint8_t j;
-	uint32_t pending = udata.u_ptab->p_pending & ~udata.u_ptab->p_held;
+	if (udata.u_cursig) {
+		struct sigbits *sb = udata.u_ptab->p_sig;
+		if (udata.u_cursig & 16) {
+			sb++;
+			udata.u_cursig &= ~16;
+		}
+		sb->s_pending |= 1 << udata.u_cursig;
+		udata.u_cursig = 0;
+	}
+}
+
+/* Process a block of 16 signals so we can avoid using longs */
+static uint8_t chksigset(struct sigbits *sb, uint8_t b)
+{
+	uint8_t j = 1;
 	int (**svec)(int) = &udata.u_sigvec[0];
-	uint32_t m;
+	uint16_t m;
+	uint16_t pending = sb->s_pending & ~sb->s_held;
 
-	/* Fast path - no signals pending means no work.
-	   Cursig being set means we've already worked out what to do.
-	 */
+	if (pending == 0)
+		return 0;
 
-rescan:
-	if (udata.u_cursig || !pending || udata.u_ptab->p_status == P_STOPPED)
-		return udata.u_cursig;
+	if (b == 1)  {
+		j = 0;
+		svec = &udata.u_sigvec[15]; /* ++ done at start */
+	}
 
 	/* Dispatch the lowest numbered signal */
-	for (j = 1; j < NSIGS; ++j) {
+	for (; j < 15; ++j) {
 		svec++;
-		m = sigmask(j);
+		/* FIXME: optimise by setting up m once and shifting */
+		m = 1 << j;
 		if (!(m & pending))
 			continue;
 		/* This is more complex than in V7 - we have multiple
@@ -489,32 +596,33 @@ rescan:
 		           Annoyingly right now we have to context switch to the task
 		           in order to stop it in the right place. That would be nice
 		           to fix */
-		        if (m & stopper) {
+		        if (b && (m & stopper)) {
 				/* Don't allow us to race SIGCONT */
 				irqflags_t irq = di();
 				/* FIXME: can we ever end up here not in READY/RUNNING ? */
-				nready--;
+				/* Yes: we could be in P_SLEEP on a close race
+				   with do_psleep() */
 				udata.u_ptab->p_status = P_STOPPED;
 				udata.u_ptab->p_event = j;
-				udata.u_ptab->p_pending &= ~m;	// unset the bit
-				irqrestore(irq);
+				sb->s_pending &= ~m;	// unset the bit
 				switchout();
 				/* Other things may have happened */
-				goto rescan;
+				return 0xFF;
 	                }
 
 			/* The signal is being handled, so clear it even if
 			   we are exiting (otherwise we'll loop in
 			   chksigs) */
-			udata.u_ptab->p_pending &= ~m;
+			sb->s_pending &= ~m;
 
-	                if ((m & clear) || udata.u_ptab->p_pid == 1) {
+	                if ((b && (m & clear)) || udata.u_ptab->p_pid == 1) {
 			/* SIGCONT is subtle - we woke the process to handle
 			   the signal so ignoring here works fine */
 				continue;
 			}
-#ifdef DEBUG
-			kprintf("process terminated by signal %d\n", j);
+#ifdef DEBUG_SLEEP
+			kprintf("process terminated by signal %d (%d)\n",
+				j, udata.u_ptab->p_status);
 #endif
 			/* We may have marked ourselves as asleep and
 			   then been caught by the chksigs when we tried
@@ -527,29 +635,67 @@ rescan:
 			doexit(dump_core(j));
 		} else if (*svec != SIG_IGN) {
 			/* Arrange to call the user routine at return */
-			udata.u_ptab->p_pending &= ~m;	// unset the bit
-#ifdef DEBUG
+			sb->s_pending &= ~m;	// unset the bit
+#ifdef DEBUG_SLEEP
 			kprintf("about to process signal %d\n", j);
 #endif
-			udata.u_cursig = j;
+			udata.u_cursig = j + (b << 4);
 			break;
 		}
 	}
 	return udata.u_cursig;
 }
 
+uint8_t chksigs(void)
+{
+	struct sigbits *sb = udata.u_ptab->p_sig;
+	uint8_t r;
+	uint8_t b;
+
+	/* Sleeping without signals allowed. We rely upon the fact that
+	   P_IOWAIT is never pre-empted or returns to user space so
+	   udata.u_cursig is not consulted until it is safe to do so */
+	if (udata.u_ptab->p_status == P_IOWAIT) {
+		recalc_cursig();
+		return 0;
+	}
+
+	/* Fast path - no signals pending means no work.
+	   Cursig being set means we've already worked out what to do.
+	 */
+rescan:
+	if (udata.u_cursig || udata.u_ptab->p_status == P_STOPPED)
+		return udata.u_cursig;
+
+	for (b = 0; b < 2; b++, sb++) {
+		r = chksigset(sb, b);
+		if (r == 0xFF)
+			goto rescan;
+		else if (r)
+			return udata.u_cursig;
+	}
+	return 0;
+}
+
 /*
  *	Send signal, avoid touching uarea
  */
-/* SDCC bug #2472: SDCC generates hideous code for this function due to bad
-   code generation when masking longs. Not clear we can do much about it but
-   file a bug */
+
 void ssig(ptptr proc, uint8_t sig)
 {
-	uint32_t sigm;
+	struct sigbits *m = proc->p_sig;
+	uint16_t sigm;
 	irqflags_t irq;
 
-	sigm = sigmask(sig);
+	if (sig > 15)
+		m++;
+
+	sigm = 1 << (sig & 0x0F);
+
+#ifdef DEBUG_SLEEP
+	kprintf("sig to %d(%d) %p %p\n",
+		proc->p_pid, proc->p_status, proc, udata.u_ptab);
+#endif
 
 	irq = di();
 
@@ -563,17 +709,17 @@ void ssig(ptptr proc, uint8_t sig)
 			        nready++;
 			}
 			/* CONT discards pending stops */
-			proc->p_pending &= ~((1L << SIGSTOP) | (1L << SIGTTIN) |
-					     (1L << SIGTTOU) | (1L << SIGTSTP));
+			proc->p_sig[1].s_pending &= ~(SIGBIT(SIGSTOP) | SIGBIT(SIGTTIN)
+						     | SIGBIT(SIGTTOU) | SIGBIT(SIGTSTP));
 		}
 		/* STOP discards pending conts */
 		if (sig >= SIGSTOP && sig <= SIGTTOU)
-			proc->p_pending &= ~(1L << SIGCONT);
+			proc->p_sig[1].s_pending &= ~SIGBIT(SIGCONT);
 
 		/* Routine signal behaviour */
-		if (!(proc->p_ignored & sigm)) {
+		if (!(m->s_ignored & sigm)) {
 			/* Don't wake for held signals */
-			if (!(proc->p_held & sigm)) {
+			if (!(m->s_held & sigm)) {
 				switch (proc->p_status) {
 				case P_SLEEP:
 					proc->p_status = P_READY;
@@ -582,8 +728,12 @@ void ssig(ptptr proc, uint8_t sig)
 				}
 				proc->p_wait = NULL;
 			}
-			proc->p_pending |= sigm;
+			m->s_pending |= sigm;
 		}
+		/* FIXME: need to clean up the way we handle ready/running
+		   so we have a simple 'make runnable' */
+		if (proc->p_status == P_READY && udata.u_ptab == proc)
+			proc->p_status = P_RUNNING;
 	}
 	irqrestore(irq);
 }
@@ -615,11 +765,20 @@ void acctexit(ptptr p)
 }
 #endif
 
-/* Perform the terminal process signalling */
-/* FIXME: why return a value - we don't use it */
-static int signal_parent(ptptr p)
+/*
+ *	Perform the terminal process signalling for process c
+ *
+ *	POSIX requires
+ *	1. If SIGCHLD is ignored - the process dies
+ *	2. Otherwise it becomes a zombie and we signal the parent
+ *
+ *	This gets called both when a process dies and when it gets reparented
+ *	to init (parent dies), because init is entitled to ignore SIGCHLD too
+ */
+static int signal_parent(ptptr c)
 {
-        if (p->p_ignored & (1UL << SIGCHLD)) {
+	ptptr p = c->p_pptr;
+        if (p->p_sig[1].s_ignored & (1UL << SIGCHLD)) {
 		/* POSIX.1 says that SIG_IGN for SIGCHLD means don't go
 		   zombie, just clean up as we go */
 		udata.u_ptab->p_status = P_EMPTY;
@@ -638,7 +797,7 @@ void doexit(uint16_t val)
 	ptptr p;
 	irqflags_t irq;
 
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
 
 	kprintf
@@ -655,7 +814,8 @@ void doexit(uint16_t val)
 	/* We are exiting, hold all signals  (they will never be
 	   delivered). If we don't do this we might take a signal
 	   while exiting which would be ... unfortunate */
-	udata.u_ptab->p_held = 0xFFFFFFFFUL;
+	udata.u_ptab->p_sig[0].s_held = 0xFFFFU;
+	udata.u_ptab->p_sig[1].s_held = 0xFFFFU;
 	udata.u_cursig = 0;
 
 	/* Discard our memory before we blow away and reuse the memory */
@@ -688,14 +848,9 @@ void doexit(uint16_t val)
 		/* Set any child's parents to init */
 		if (p->p_pptr == udata.u_ptab) {
 			p->p_pptr = ptab;	/* ptab is always init */
-			/* Suppose our child is a zombie and init has
-			   SIGCLD blocked */
-		        if (ptab[0].p_ignored & (1UL << SIGCHLD)) {
-				p->p_status = P_EMPTY;
-			} else {
-				ssig(&ptab[0], SIGCHLD);
-				wakeup(&ptab[0]);
-			}
+			/* Figure out if we are signalling init or just
+			   blowing the slot away */
+			signal_parent(p);
 		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
@@ -707,7 +862,7 @@ void doexit(uint16_t val)
 	}
 	tty_exit();
 	irqrestore(irq);
-#ifdef DEBUG
+#ifdef DEBUG_SLEEP
 	kprintf
 	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
@@ -717,7 +872,7 @@ void doexit(uint16_t val)
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;
-        signal_parent(udata.u_ptab->p_pptr);
+        signal_parent(udata.u_ptab);
 	nready--;
 	nproc--;
 
@@ -729,7 +884,7 @@ void panic(char *deathcry)
 {
 	kputs("\r\npanic: ");
 	kputs(deathcry);
-	trap_monitor();
+	platform_monitor();
 }
 
 /* We put this here so that we can blow the start.c code away on exec

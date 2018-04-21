@@ -29,7 +29,7 @@ int audio_ioctl(uarg_t op, void *val)
         devaudio_wait(i);
       return 0;
     case AUDIOC_PLAY:
-      if (uget(&sound, val, sizeof(sound)) == -1)
+      if (uget(val, &sound, sizeof(sound)) == -1)
         return -1;
       if (sound.channel > audio_info.channels) {
         udata.u_error = ERANGE;

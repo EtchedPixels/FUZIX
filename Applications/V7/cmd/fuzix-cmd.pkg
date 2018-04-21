@@ -30,6 +30,7 @@ f 0755 /usr/bin/sum           sum
 f 0755 /usr/bin/time          time
 f 0755 /usr/bin/tsort         tsort
 f 0755 /usr/bin/wall          wall
+f 0755 /usr/bin/pg            pg
 
 # Man pages - in a separate package so that storage-limited targets can
 # disable it.

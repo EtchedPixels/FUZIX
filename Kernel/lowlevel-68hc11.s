@@ -147,10 +147,11 @@ interrupt_handler:
 	ldd istack_switched_sp
 	std U_DATA__U_SYSCALL_SP
 	lds #kstack_top
+	jsr chksigs
 	ldx U_DATA__U_PTAB
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
-	jsr switchout
+	jsr platform_switchout
 	jsr map_process_always
 	; caller will switch back to stack in X
 	ldx U_DATA__U_SYSCALL_SP
@@ -165,7 +166,7 @@ nmi_handler:
 	jsr map_kernel
 	ldx #nmimsg
 	jsr outstring
-	jsr trap_monitor
+	jsr platform_monitor
 
 nmimsg:
 	.ascii "[NMI]"

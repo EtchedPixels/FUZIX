@@ -54,6 +54,7 @@
 
 /* PPIDE support */
 #define CONFIG_PPIDE 		/* #define CONFIG_PPIDE to enable IDE on 8255A */
+#define CONFIG_IDE		/* required for CONFIG_PPIDE */
 
 /* Optional ParPortProp board connected to PPI */
 //#define CONFIG_PPP		/* #define CONFIG_PPP to enable as tty3 */

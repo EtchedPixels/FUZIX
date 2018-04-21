@@ -12,16 +12,15 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl trap_illegal
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
         .globl interrupt_handler
-	.globl _swapper
 	.globl _need_resched
 	.globl _nready
 	.globl _platform_idle
@@ -38,20 +37,14 @@
 
         .area _COMMONMEM
 
-; Switchout switches out the current process, finds another that is READY,
+; __switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ; 
 ; This function can have no arguments or auto variables.
 ;
-;	FIXME: can we optimise all the pushes and move them into slow_path
-;
-_switchout:
-        di
-        call _chksigs
-        ; save machine state
-
+_platform_switchout:
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
@@ -60,33 +53,6 @@ _switchout:
         push iy
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
-	ld a, (_nready)
-	or a
-	jr nz, slow_path
-
-idling:
-	ei
-	call _platform_idle
-	di
-	ld a, (_nready)
-	or a
-	jr z, idling
-	cp #1
-	jr nz, slow_path
-	ld hl, (U_DATA__U_PTAB)
-	ld a, (hl)		; Process table status is first byte
-	; Are we the one process ?
-	cp #P_READY
-	jr nz, slow_path
-	; We are - fast path return from switchout
-	ld (hl), #P_RUNNING
-	pop iy
-	pop ix
-	pop hl
-	ei
-	ret
-
-slow_path:
 	; Stash the uarea back into process memory
 	call map_process_always
 	ld hl, #U_DATA
@@ -102,7 +68,7 @@ slow_path:
         call _switchin
 
         ; we should never get here
-        call _trap_monitor
+        call _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -126,6 +92,8 @@ _switchin:
 	add hl, de	; process ptr
 	pop de
 
+.ifne CONFIG_SWAP
+	.globl _swapper
 	;
 	;	Always use the swapstack, otherwise when we call map_kernel
 	;	having copied the udata stash back to udata we will crap
@@ -157,7 +125,7 @@ _switchin:
 	pop de
 	pop hl
 	di
-
+.endif
 	ld a, (hl)
 not_swapped:
 	ld hl, (U_DATA__U_PTAB)
@@ -221,7 +189,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _trap_monitor
+        jp _platform_monitor
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

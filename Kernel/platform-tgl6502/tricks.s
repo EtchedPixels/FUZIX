@@ -7,7 +7,7 @@
 	.export _ramtop
 
 	.import _chksigs
-	.import _trap_monitor
+	.import _platform_monitor
 
 	.import map_kernel
 
@@ -65,7 +65,7 @@ _switchout:
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 badswitchmsg: .byte "_switchin: FAIL"
 	.byte 13, 10, 0
@@ -139,7 +139,7 @@ switchinfail:
 	ldx	#>badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _trap_monitor
+        jmp _platform_monitor
 
 ; Must not put this in ZP ?
 ;

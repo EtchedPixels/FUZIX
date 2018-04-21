@@ -405,16 +405,21 @@ uip_init(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_ACTIVE_OPEN
 struct uip_conn *
-uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
+uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport, uint16_t lport)
 {
   register struct uip_conn *conn, *cconn;
 
   /* Find an unused local port. */
+  if(!lport){
  again:
-  ++lastport;
+    ++lastport;
 
-  if(lastport >= 32000) {
-    lastport = 4096;
+    if(lastport >= 32000) {
+      lastport = 4096;
+    }
+  }
+  else {
+      lastport = lport;
   }
 
   /* Check if this port is already in use, and if so try to find
@@ -423,6 +428,8 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
     conn = &uip_conns[c];
     if(conn->tcpstateflags != UIP_CLOSED &&
        conn->lport == uip_htons(lastport)) {
+      if(lport)
+	    return 0;
       goto again;
     }
   }

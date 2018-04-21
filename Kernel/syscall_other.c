@@ -26,7 +26,6 @@ put inside itself!
 
 arg_t _rename(void)
 {
-#ifndef CONFIG_LEVEL_0
 	staticfast inoptr srci, srcp, dsti, dstp;
 	char fname[FILENAME_LEN + 1];
 	arg_t ret;
@@ -38,13 +37,15 @@ arg_t _rename(void)
 			i_deref(srcp);
 		return -1;
 	}
+	/* Save the source name */
+	memcpy(fname, lastname, FILENAME_LEN + 1);
 	/* n_open will wipe u_rename if it walks that inode
 	   so it tells us whether we are trying to create a loop */
 	udata.u_rename = srci;
 	/* Destination maybe does not exist, but parent must */
-	filename(dst, fname);
 
 	dsti = n_open(dst, &dstp);
+	/* lastname now holds destination name element */
 	/* Same file - do nothing */
 	if (dsti == srci) {
 		ret = 0;
@@ -87,21 +88,30 @@ arg_t _rename(void)
 			udata.u_error = EISDIR;
 			goto nogood;
 		}
-		if (unlinki(dsti, dstp, fname) == -1)
+		i_lock(dstp);
+		if (unlinki(dsti, dstp, lastname) == -1) {
+			i_unlock(dstp);
 			goto nogood;
+		}
 		/* Drop the reference to the unlinked file */
 		i_deref(dsti);
-	}
+	} else
+		i_lock(dstp);
 	/* Ok we may proceed: we set up fname earlier */
-	if (!ch_link(dstp, "", fname, srci))
+	if (!ch_link(dstp, "", lastname, srci)) {
+		i_unlock(dstp);
 		goto nogood2;
-	filename(src, fname);
+	}
+	i_unlock(dstp);
 	/* A fail here is bad */
+	i_lock(srcp);
 	if (!ch_link(srcp, fname, "", NULLINODE)) {
+		i_unlock(srcp);
 		kputs("WARNING: rename: unlink fail\n");
 		goto nogood2;
 	}
 	/* get it onto disk - probably overkill */
+	i_unlock(srcp);
 	wr_inode(dstp);
 	wr_inode(srcp);
 	sync();
@@ -116,10 +126,6 @@ arg_t _rename(void)
 	if (dsti)
 		i_deref(dsti);
 	goto nogood2;
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
 }
 
 #undef src
@@ -136,10 +142,8 @@ arg_t _rename(void)
 
 arg_t _mkdir(void)
 {
-#ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
 	if ((ino = n_open(name, &parent)) != NULL) {
 		udata.u_error = EEXIST;
@@ -156,17 +160,17 @@ arg_t _mkdir(void)
 		goto nogood2;
 	}
 
-	filename(name, fname);
 
 	i_ref(parent);		/* We need it again in a minute */
-	if (!(ino = newfile(parent, fname))) {
-		i_deref(parent);
+	if (!(ino = newfile(parent, lastname))) {
+//		i_deref(parent);
 		goto nogood2;	/* parent inode is derefed in newfile. */
 	}
 
 	/* Initialize mode and dev */
 	ino->c_node.i_mode = F_DIR | 0200;	/* so ch_link is allowed */
 	setftime(ino, A_TIME | M_TIME | C_TIME);
+	/* Ensure the directory is fully formed before anyone can see it */
 	if (ch_link(ino, "", ".", ino) == 0 ||
 	    ch_link(ino, "", "..", parent) == 0)
 		goto cleanup;
@@ -177,24 +181,26 @@ arg_t _mkdir(void)
 	ino->c_node.i_mode = ((mode & ~udata.u_mask) & MODE_MASK) | F_DIR;
 	i_deref(parent);
 	wr_inode(ino);
-	i_deref(ino);
+	i_unlock_deref(ino);
 	return (0);
 
-      cleanup:
-	if (!ch_link(parent, fname, "", NULLINODE))
-		kprintf("_mkdir: bad rec\n");
+cleanup:
+	/* We need to unlock inode before we are allowed to lock the parent */
 	/* i_deref will put the blocks */
 	ino->c_node.i_nlink = 0;
 	wr_inode(ino);
+	i_unlock_deref(ino);
+	/* In the error case it may be observed but it's consistently empty */
+	i_lock(parent);
+	if (!ch_link(parent, lastname, "", NULLINODE))
+		kprintf("_mkdir: bad rec\n");
+	i_unlock_deref(parent);
+	return -1;
       nogood:
-	i_deref(ino);
+	i_unlock_deref(ino);
       nogood2:
 	i_deref(parent);
 	return (-1);
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
 }
 
 #undef name
@@ -208,22 +214,33 @@ char *path;
 
 arg_t _rmdir(void)
 {
-#ifndef CONFIG_LEVEL_0
 	inoptr ino;
 	inoptr parent;
-	char fname[FILENAME_LEN + 1];
 
+	/* Q: rmdir . */
 	ino = n_open(path, &parent);
 
 	/* It and its parent must exist */
 	if (!(parent && ino)) {
-		if (parent)	/* parent exist */
-			i_deref(parent);
 		udata.u_error = ENOENT;
-		return (-1);
+		goto nogood_early;
 	}
 
-	/* Fixme: check for rmdir of /. - ditto for unlink ? */
+	if (*lastname == '.' && !lastname[1]) {
+		udata.u_error = EINVAL;
+		i_deref(ino);
+		goto nogood_early;
+	}
+
+	i_lock(parent);
+	/* So nobody gets to access it while it's being dismantled */
+	i_lock(ino);
+
+	/* Make sure we don't remove a mount point */
+	if (ino->c_num == ROOTINODE) {
+		udata.u_error = EBUSY;
+		goto nogood;
+	}
 
 	/* Not a directory */
 	if (getmode(ino) != MODE_R(F_DIR)) {
@@ -232,7 +249,7 @@ arg_t _rmdir(void)
 	}
 
 	/* Busy */
-	if (ino->c_node.i_nlink != 2) {
+	if (ino->c_node.i_nlink != 2 || !emptydir(ino)) {
 		udata.u_error = ENOTEMPTY;
 		goto nogood;
 	}
@@ -242,8 +259,7 @@ arg_t _rmdir(void)
 		goto nogood;
 
 	/* Remove the directory entry */
-	filename(path, fname);
-	if (!ch_link(parent, fname, "", NULLINODE))
+	if (!ch_link(parent, lastname, "", NULLINODE))
 		goto nogood;
 
 	/* We are unused, parent is now one link down (removal of ..) */
@@ -252,23 +268,28 @@ arg_t _rmdir(void)
 	/* Decrease the link count of the parent inode */
 	if (!(parent->c_node.i_nlink--)) {
 		parent->c_node.i_nlink += 2;
-		kprintf("_rmdir: bad nlink\n");
+		kputs("_rmdir: bad nlink\n");
 	}
 	setftime(ino, C_TIME);
+	/* We have a lock on the inode so we know nobody else is walking the
+	   directory at the moment. We have to truncate it now rather than
+	   only final de-reference as a user might have a cwd set here and
+	   would have access to the invalid . and .. */
+	f_trunc(ino);
 	wr_inode(parent);
 	wr_inode(ino);
-	i_deref(parent);
-	i_deref(ino);
+	i_unlock_deref(parent);
+	i_unlock_deref(ino);
 	return (0);
 
       nogood:
-	i_deref(parent);
-	i_deref(ino);
+	i_unlock_deref(parent);
+	i_unlock_deref(ino);
 	return (-1);
-#else
-	udata.u_error = -ENOSYS;
-	return -1;
-#endif		
+      nogood_early:
+	if (parent)	/* parent exist */
+		i_deref(parent);
+	return (-1);
 
 }
 
@@ -297,7 +318,7 @@ arg_t _mount(void)
 	if (!(sino = n_open(spec, NULLINOPTR)))
 		return (-1);
 
-	if (!(dino = n_open(dir, NULLINOPTR))) {
+	if (!(dino = n_open_lock(dir, NULLINOPTR))) {
 		i_deref(sino);
 		return (-1);
 	}
@@ -331,7 +352,7 @@ arg_t _mount(void)
 		goto nogood;
 	}
 
-	i_deref(dino);
+	i_unlock_deref(dino);
 	i_deref(sino);
 	return (0);
 
@@ -356,9 +377,9 @@ arg_t _mount(void)
 
 static int do_umount(uint16_t dev)
 {
-	struct mount *mnt;
+	regptr struct mount *mnt;
 	uint8_t rm = flags & MS_REMOUNT;
-	inoptr ptr;
+	regptr inoptr ptr;
 
 	mnt = fs_tab_get(dev);
 	if (mnt == NULL) {
@@ -368,9 +389,9 @@ static int do_umount(uint16_t dev)
 
 	/* If anything on this file system is open for write then you
 	   can't remount it read only */
-	if (flags & (MS_RDONLY|MS_REMOUNT) == (MS_RDONLY|MS_REMOUNT)) {
+	if ((flags & (MS_RDONLY|MS_REMOUNT)) == (MS_RDONLY|MS_REMOUNT)) {
 		for (ptr = i_tab ; ptr < i_tab + ITABSIZE; ++ptr) {
-			if (ptr->c_dev == dev && !isdevice(ptr)) {
+			if (ptr->c_refs && ptr->c_dev == dev && !isdevice(ptr)) {
 			/* Files being written block the remount ro, but so
 			   do files that when closed will be deleted */
 				if (ptr->c_writers ||
@@ -414,7 +435,7 @@ static int do_umount(uint16_t dev)
 		return 0;
 	}
 
-	i_deref(mnt->m_fs.s_mntpt);
+	i_deref(mnt->m_mntpt);
 	/* Vanish the entry */
 	mnt->m_dev = NO_DEVICE;
 	return 0;
@@ -429,7 +450,7 @@ arg_t _umount(void)
 	if (esuper())
 		return -1;
 
-	if (!(sino = n_open(spec, NULLINOPTR)))
+	if (!(sino = n_open_lock(spec, NULLINOPTR)))
 		return -1;
 
 	if (getmode(sino) != MODE_R(F_BDEV)) {
@@ -444,7 +465,7 @@ arg_t _umount(void)
 	}
 	ret = do_umount(dev);
 nogood:
-	i_deref(sino);
+	i_unlock_deref(sino);
 	return ret;
 }
 
@@ -471,7 +492,7 @@ arg_t _profil(void)
 	/* For performance reasons scale as
 	   passed to the kernel is a shift value
 	   not a divider */
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 
 	if (scale == 0) {
 		p->p_profscale = scale;
@@ -515,9 +536,9 @@ arg_t _uadmin(void)
 		sync();
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
-		trap_monitor();
+		platform_monitor();
 	if (cmd == A_REBOOT)
-		trap_reboot();
+		platform_reboot();
 
 	/* We don't do SWAPCTL yet */
 	udata.u_error = EINVAL;
@@ -533,7 +554,7 @@ int16_t pri;
 
 arg_t _nice(void)
 {
-	ptptr p = udata.u_ptab;
+	regptr ptptr p = udata.u_ptab;
 	int16_t np;
 
 	if (pri < 0 && !esuper())

@@ -40,7 +40,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         *diskcyll = udata.u_block;
         *diskcmd = 1;
         if ((err = *diskstat) != 0) {
-            kprintf("hd%d: disk error %x\n", err);
+            kprintf("hd%d: disk error %x\n", minor, err);
             udata.u_error = EIO;
             return -1;
         }
@@ -59,8 +59,12 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 int hd_open(uint8_t minor, uint16_t flag)
 {
+    uint8_t err;
+
     used(flag);
-    if(minor != 0) {
+    err = *diskstat;
+    *disknum = minor;
+    if(*diskstat) {
         udata.u_error = ENODEV;
         return -1;
     }

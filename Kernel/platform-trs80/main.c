@@ -71,7 +71,7 @@ void platform_discard(void)
 __sfr __at 0xB0 rtc_secl;
 __sfr __at 0xB1 rtc_sech;
 
-uint8_t rtc_secs(void)
+uint8_t platform_rtc_secs(void)
 {
     uint8_t sl, rv;
     /* BCD encoded */

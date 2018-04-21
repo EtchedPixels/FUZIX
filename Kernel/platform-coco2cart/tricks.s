@@ -8,7 +8,7 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _inint
         .globl map_kernel
         .globl map_process
@@ -20,7 +20,7 @@
 	.globl _platform_idle
 
 	# exported
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -41,9 +41,8 @@ _ramtop:
 ;
 ; 
 ; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	orcc #0x10		; irq off
-        jsr _chksigs
 
         ; save machine state, including Y and U used by our C code
         ldd #0 ; return code set here is ignored, but _switchin can 
@@ -56,7 +55,7 @@ _switchout:
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 badswitchmsg:
 	.ascii "_switchin: FAIL"
@@ -134,7 +133,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _trap_monitor
+        jmp _platform_monitor
 
 	.area .data
 

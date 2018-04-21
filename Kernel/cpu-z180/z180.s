@@ -23,9 +23,9 @@
         .globl _chksigs
         .globl _inint
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _switchin
-        .globl _switchout
+        .globl _platform_switchout
         .globl _dofork
         .globl map_kernel
         .globl map_process_always
@@ -674,13 +674,9 @@ z180_irq_unused:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-; 
-; This function can have no arguments or auto variables.
-_switchout:
-        di
-        call _chksigs
+_platform_switchout:
+	di
         ; save machine state
-
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
@@ -699,7 +695,7 @@ _switchout:
         call _switchin
 
         ; we should never get here
-        jp _trap_monitor
+        jp _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -770,7 +766,7 @@ switchinfail:
         call outhl
         ld hl, #badswitchmsg
         call outstring
-        jp _trap_monitor
+        jp _platform_monitor
 
 map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         push af

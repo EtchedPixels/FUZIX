@@ -75,7 +75,7 @@
 
 static uint8_t vtmode;
 uint8_t vtattr;
-uint8_t vtink;
+uint8_t vtink = 7;
 uint8_t vtpaper;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
@@ -343,6 +343,7 @@ int vt_inproc(uint8_t minor, unsigned char c)
 void vtinit(void)
 {
 	vtmode = 0;
+	vtattr_notify();
 	clear_lines(0, VT_BOTTOM + 1);
 	cursor_on(0, 0);
 }
@@ -365,6 +366,7 @@ void vt_load(struct vt_switch *vt)
 	cursorx = vt->cursorx;
 	cursory = vt->cursory;
 	ncursory = vt->ncursory;
+	vtattr_notify();
 }
 #endif
 

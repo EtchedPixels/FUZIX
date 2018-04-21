@@ -48,13 +48,13 @@ static long chk_strtol(const char *s)
 int main(int argc, char **argv)
 {
   char **argp = argv;
-  appname = argv[0];
   long start = 1;
   long step = 1;
   long end;
   const char *sep = newline;
   bool printed = false;
 
+  appname = argv[0];
   while(*++argp && (*argp)[0] == '-'
         && ((*argp)[1] < '0' || (*argp)[1] > '9')) {
     --argc;

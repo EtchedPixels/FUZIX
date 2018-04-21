@@ -11,7 +11,7 @@
 	.text
 
 	.globl switchin
-	.globl switchout
+	.globl platform_switchout
 	.globl dofork
 
 
@@ -68,28 +68,8 @@ fork_copy:
 	/* Called to give up processor time. We will pop out of this in
 	   potentially some other process, but we might also come back
 	   directly */
-switchout:
+platform_switchout:
 	cli
-	call chksigs
-	movb nready,%al
-	cmpb $1,%al
-	bne slow_path
-idling:
-	sti
-	call platform_idle
-	cli
-	movb nready,%al
-	cmpb $0,%al
-	je idling
-
-	/* Ok there is something to run - but is it us ? */
-	cmpb $1,%al
-	jne slow_path
-
-	/* Fast path out */
-	ret
-
-slow_path:
 	xorw %ax,%ax
 	pushw %ax
 	pushw %ei
@@ -102,7 +82,7 @@ slow_path:
 	call getproc
 	push %ax
 	call switchin
-	jmp trap_monitor
+	jmp platform_monitor
 
 switchin:
 	/* We can trash registers here because we'll restore them
@@ -138,7 +118,7 @@ switchfail:
 	call  outaxhex
 	mov $badswitchmsg,ax
 	calloutstring		
-	jmp _trap_monitor
+	jmp _platform_monitor
 dofork:
 	pushw %bp
 	movw %sp,%bp

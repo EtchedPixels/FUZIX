@@ -13,7 +13,6 @@
 	.globl __ugetc
 	.globl __ugetw
 	.globl __uget
-	.globl __ugets
 	.globl __uputc
 	.globl __uputw
 	.globl __uput
@@ -46,29 +45,6 @@ ugetl:
 	ldx #0
 	jsr map_kernel
 	puls u,y,pc
-
-__ugets:
-	pshs u,y
-	ldu 6,s		; user address
-	ldy 8,s		; count
-	jsr map_process_always
-ugetsl:
-	lda ,x+
-	beq ugetse
-	sta ,u+
-	leay -1,y
-	bne ugetsl
-	jsr map_kernel
-	ldx #0xffff	; unterminated - error
-	lda #0
-	sta -1,u	; force termination
-	puls u,y,pc
-ugetse:
-	sta ,u
-	ldx #0
-	jsr map_kernel
-	puls u,y,pc
-
 
 __uputc:
 	ldd 2,s

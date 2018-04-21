@@ -18,7 +18,7 @@ HP
 #define UCP
 #include "fuzix_fs.h"
 
-#define UCP_VERSION  "1.2ac"
+#define UCP_VERSION  "1.3ac"
 
 static int16_t *syserror = (int16_t*)&udata.u_error;
 static char cwd[100];
@@ -227,20 +227,6 @@ int main(int argc, char *argval[])
                     retc = cmd_rmdir(arg1);
                 break;
 
-            case 15:        /* mount */
-                if (*arg1 && *arg2)
-                    if ((retc = fuzix_mount(arg1, arg2, 0)) != 0) {
-                        printf("Mount error: %d\n", *syserror);
-                    }
-                break;
-
-            case 16:        /* umount */
-                if (*arg1)
-                    if ((retc = fuzix_umount(arg1)) != 0) {
-                        printf("Umount error: %d\n", *syserror);
-                    }
-                break;
-	
 	    case 17:        /* ln */
 		if (*arg1 && *arg2)
 		    retc = cmd_link(arg1, arg2);
@@ -302,10 +288,6 @@ static int match(char *cmd)
         return (13);
     else if (strcmp(cmd, "rmdir") == 0)
         return (14);
-    else if (strcmp(cmd, "mount") == 0)
-        return (15);
-    else if (strcmp(cmd, "umount") == 0)
-        return (16);
     else if (strcmp(cmd, "ln" ) == 0 )
 	return (17);
     else if (strcmp(cmd, "help") == 0)
@@ -334,8 +316,6 @@ static void usage(void)
     printf("rm path\n");
     printf("rmdir dirname\n");
     printf("df\n");
-    printf("mount dev# path\n");
-    printf("umount path\n");
     printf("ln sourcefile destfile\n");
 }
 
@@ -532,13 +512,14 @@ static int cmd_get( char *src, char *dest, int binflag)
     d = fuzix_creat(basename(dest), 0666);
     if (d < 0) {
         fprintf(stderr, "Can't open destination file '%s'; error %d\n", dest, *syserror);
+        fclose(fp);
         return (-1);
     }
     for (;;) {
         nread = fread(cbuf, 1, 512, fp);
         if (nread == 0)
             break;
-        if (fuzix_write(d, cbuf, nread) != nread) {
+        if (fuzix_write(d, cbuf, nread)) {
             fprintf(stderr, "fuzix_write error %d\n", *syserror);
             fclose(fp);
             fuzix_close(d);
@@ -863,8 +844,6 @@ static int fuzix_creat(char *name, int16_t mode)
 			wr_inode(ino);
 		} else {
 			/* Doesn't exist and can't make it */
-			if (parent)
-				i_deref(parent);
 			goto nogood;
 		}
 	}
@@ -963,34 +942,35 @@ static int fuzix_unlink(char *path)
 	return (-1);
 }
 
-static int fuzix_read(int16_t d, char *buf, uint16_t nbytes)
+static uint16_t fuzix_read(int16_t d, char *buf, uint16_t nbytes)
 {
 	register inoptr ino;
+	uint16_t r;
 
 	udata.u_error = 0;
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
 	if ((ino = rwsetup(1, d, buf, nbytes)) == NULLINODE)
 		return (-1);	/* bomb out if error */
 
-	readi(ino);
+	r = readi(ino);
 	updoff(d);
-
-	return (udata.u_count);
+	return r;
 }
 
-static int fuzix_write(int16_t d, char *buf, uint16_t nbytes)
+static uint16_t fuzix_write(int16_t d, char *buf, uint16_t nbytes)
 {
 	register inoptr ino;
+	uint16_t r;
 
 	udata.u_error = 0;
 	/* Set up u_base, u_offset, ino; check permissions, file num. */
 	if ((ino = rwsetup(0, d, buf, nbytes)) == NULLINODE)
 		return (-1);	/* bomb out if error */
 
-	writei(ino);
+	r = writei(ino);
 	updoff(d);
 
-	return (udata.u_count);
+	return r;
 }
 
 static inoptr rwsetup(int rwflag, int d, char *buf, int nbytes)
@@ -1018,15 +998,13 @@ static inoptr rwsetup(int rwflag, int d, char *buf, int nbytes)
 	return (ino);
 }
 
-static void readi(inoptr ino)
+static uint16_t readi(inoptr ino)
 {
 	register uint16_t amount;
 	register uint16_t toread;
 	register blkno_t pblk;
 	register char *bp;
-	int dev;
 
-	dev = ino->c_dev;
 	switch (fuzix_getmode(ino)) {
 
 	case F_DIR:
@@ -1036,17 +1014,10 @@ static void readi(inoptr ino)
 		toread = udata.u_count =
 		    min(udata.u_count,
 			swizzle32(ino->c_node.i_size) - udata.u_offset);
-		goto loop;
-
-	case F_BDEV:
-		toread = udata.u_count;
-		dev = swizzle16(*(ino->c_node.i_addr));
-
-	      loop:
 		while (toread) {
 			if ((pblk =
 			     bmap(ino, udata.u_offset >> 9, 1)) != NULLBLK)
-				bp = bread(dev, pblk, 0);
+				bp = bread(0, pblk, 0);
 			else
 				bp = zerobuf();
 
@@ -1059,37 +1030,30 @@ static void readi(inoptr ino)
 			udata.u_offset += amount;
 			toread -= amount;
 		}
-		break;
+		return udata.u_count - toread;
 
 	default:
 		udata.u_error = ENODEV;
 	}
+	return 0;
 }
 
 
 
 /* Writei (and readi) need more i/o error handling */
 
-static void writei(inoptr ino)
+static uint16_t writei(inoptr ino)
 {
 	register uint16_t amount;
 	register uint16_t towrite;
 	register char *bp;
 	blkno_t pblk;
-	int dev;
-
-	dev = ino->c_dev;
 
 	switch (fuzix_getmode(ino)) {
 
-	case F_BDEV:
-		dev = swizzle16(*(ino->c_node.i_addr));
 	case F_DIR:
 	case F_REG:
 		towrite = udata.u_count;
-		goto loop;
-
-	      loop:
 		while (towrite) {
 			amount =
 			    min(towrite, 512 - (udata.u_offset & 511));
@@ -1100,7 +1064,7 @@ static void writei(inoptr ino)
 
 			/* If we are writing an entire block, we don't care
 			   about its previous contents */
-			bp = bread(dev, pblk, (amount == 512));
+			bp = bread(0, pblk, (amount == 512));
 
 			bcopy(udata.u_base, bp + (udata.u_offset & 511),
 			      amount);
@@ -1116,11 +1080,12 @@ static void writei(inoptr ino)
 			ino->c_node.i_size = swizzle32(udata.u_offset);
 			ino->c_dirty = 1;
 		}
-		break;
+		return towrite;
 
 	default:
 		udata.u_error = ENODEV;
 	}
+	return udata.u_count;
 }
 
 
@@ -1295,94 +1260,6 @@ static int fuzix_getfsys(int dev, char *buf)
 	return (0);
 }
 
-static int fuzix_mount(char *spec, char *dir, int rwflag)
-{
-	register inoptr sino, dino;
-	register int dev;
-
-	udata.u_error = 0;
-	ifnot(sino = n_open(spec, NULLINOPTR))
-	    return (-1);
-
-	ifnot(dino = n_open(dir, NULLINOPTR)) {
-		i_deref(sino);
-		return (-1);
-	}
-	if (fuzix_getmode(sino) != F_BDEV) {
-		udata.u_error = ENOTBLK;
-		goto nogood;
-	}
-	if (fuzix_getmode(dino) != F_DIR) {
-		udata.u_error = ENOTDIR;
-		goto nogood;
-	}
-	dev = (int) swizzle16(sino->c_node.i_addr[0]);
-
-	if (dev >= NDEVS)	/* || d_open(dev)) */
-	{
-		udata.u_error = ENXIO;
-		goto nogood;
-	}
-	if (fs_tab[dev].s_mounted || dino->c_refs != 1
-	    || dino->c_num == ROOTINODE) {
-		udata.u_error = EBUSY;
-		goto nogood;
-	}
-	fuzix_sync();
-
-	if (fmount(dev, dino)) {
-		udata.u_error = EBUSY;
-		goto nogood;
-	}
-	i_deref(dino);
-	i_deref(sino);
-	return (0);
-      nogood:
-	i_deref(dino);
-	i_deref(sino);
-	return (-1);
-}
-
-static int fuzix_umount(char *spec)
-{
-	register inoptr sino;
-	register int dev;
-	register inoptr ptr;
-
-	udata.u_error = 0;
-
-	ifnot(sino = n_open(spec, NULLINOPTR))
-	    return (-1);
-
-	if (fuzix_getmode(sino) != F_BDEV) {
-		udata.u_error = ENOTBLK;
-		goto nogood;
-	}
-
-	dev = (int) swizzle16(sino->c_node.i_addr[0]);
-
-	if (!fs_tab[dev].s_mounted) {
-		udata.u_error = EINVAL;
-		goto nogood;
-	}
-
-	for (ptr = i_tab; ptr < i_tab + ITABSIZE; ++ptr)
-		if (ptr->c_refs > 0 && ptr->c_dev == dev) {
-			udata.u_error = EBUSY;
-			goto nogood;
-		}
-	fuzix_sync();
-	fs_tab[dev].s_mounted = 0;
-	i_deref(fs_tab[dev].s_mntpt);
-
-	i_deref(sino);
-	return (0);
-
-      nogood:
-	i_deref(sino);
-	return (-1);
-}
-
 static int fuzix_mkdir(char *name, int mode)
 {
 	inoptr ino;
@@ -1447,7 +1324,6 @@ static inoptr n_open(register char *name, register inoptr * parent)
 {
 	register inoptr wd;	/* the directory we are currently searching. */
 	register inoptr ninode;
-	register inoptr temp;
 
 	if (*name == '/')
 		wd = root;
@@ -1478,15 +1354,6 @@ static inoptr n_open(register char *name, register inoptr * parent)
 		if (fuzix_getmode(wd) != F_DIR) {
 			udata.u_error = ENOTDIR;
 			goto nodir;
-		}
-
-		/* See if we are going up through a mount point */
-		if (wd->c_num == ROOTINODE && wd->c_dev != ROOTDEV
-		    && name[1] == '.') {
-			temp = fs_tab[wd->c_dev].s_mntpt;
-			++temp->c_refs;
-			i_deref(wd);
-			wd = temp;
 		}
 
 		ninode = srch_dir(wd, name);
@@ -1675,7 +1542,6 @@ static int ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 	for (;;) {
 		udata.u_count = 32;
 		udata.u_base = (char *) &curentry;
-/*        udata.u_sysio = 1;                                    280*/
 		readi(wd);
 
 		/* Read until EOF or name is found */
@@ -1712,10 +1578,9 @@ static int ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 	udata.u_count = 32;
 	udata.u_base = (char *) &curentry;
 	udata.u_sysio = 1;	/*280 */
-	writei(wd);
+	if (writei(wd))
+		return 0;
 
-	if (udata.u_error)
-		return (0);
 
 	setftime(wd, A_TIME | M_TIME | C_TIME);	/* Sets c_dirty */
 

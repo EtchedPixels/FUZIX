@@ -17,6 +17,7 @@
         .area _GSINIT
         .area _GSFINAL
 
+	.area _BANK
 	.area _DISCARD
 	.area _UDATA
 

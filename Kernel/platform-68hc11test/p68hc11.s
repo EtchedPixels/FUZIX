@@ -18,8 +18,8 @@
 	.globl outchar
 
         ; exported debugging tools
-        .globl trap_monitor
-        .globl trap_reboot
+        .globl platform_monitor
+        .globl platform_reboot
 
 	include "cpu.def"
 	include "eeprom.def"
@@ -41,11 +41,11 @@ savedbank:
 	.word 0
 
 	.sect .text
-trap_monitor:
+platform_monitor:
 	sei
-	bra trap_monitor
+	bra platform_monitor
 
-trap_reboot:
+platform_reboot:
 	jmp reboot
 
 outchar:
@@ -124,7 +124,6 @@ map_process:
 	.globl sigdispatch
 	.globl _ugetc
 	.globl _ugetw
-	.globl _ugets
 	.globl _uget
 	.globl _uputc
 	.globl _uputw
@@ -145,7 +144,7 @@ doexec:
 ;	If this returns we should probably do an exit call or something
 ;	FIXME
 ;
-	jmp trap_monitor
+	jmp platform_monitor
 
 
 ;
@@ -176,18 +175,6 @@ _ugetw:
 	ldaa usrbank
 	jmp fargetw
 
-;
-;	D = src, 2(s) = dest, 4(s) = size
-;
-_ugets:
-	tsx
-	xgdy		; D was src, we want it in Y
-	ldd 4,x		; size
-	std tmp1	; in tmp1
-	ldx 2,x		; destination in X
-	clrb		; 0 = kernel
-	ldaa usrbank	; user space
-	jmp farzcopy	; returns error/size in D
 ;
 ;	D = src, 2(s) = dest, 4(s) = size
 ;

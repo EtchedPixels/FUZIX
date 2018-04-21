@@ -72,17 +72,23 @@ void device_init(void)
 {
     int i;
 
+#ifdef CONFIG_SD
     if (spi_setup())
         devsd_init();
+#endif
+#ifdef CONFIG_IDE
     i = cart_find(CART_IDE);
     if (i >= 0) {
       ide_base = cartaddr[i] ? cartaddr[i]: ide_base;
       ide_slot = i;
     }
     devide_init();
+#endif
+#ifdef CONFIG_SCSI
     i = cart_find(CART_TC3);
     if (i >= 0) {
       scsi_slot = i;
       devscsi_init();
     }
+#endif
 }

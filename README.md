@@ -40,8 +40,8 @@ images should follow in time.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on both 6502 (bitrotted), 68000, 6809, MSP430 and Z80/Z180
-* Core code can be built for 6502, 6809, 68000, 8086, MSP430, pdp11 and Z80/Z180 so should
+* Kernel boots to userspace on both 6502 (bitrotted), 65C816, 68000, 6809, MSP430 and Z80/Z180
+* Core code can be built for 6502, 65C816, 6809, 68HC11, 68000, 8086, MSP430, pdp11 and Z80/Z180 so should
   be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
@@ -91,6 +91,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 	stuff it really shows
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
+* We need a 'proper' 65C816 C compiler
 
 ## Platforms
 
@@ -113,6 +114,7 @@ ECB expansion bus only the PropIO V2 serial port is supported at this time.
 * TGL6502 - Test 6502ish environment
 * TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
 * V65 - 6502 emulation/debug platform. Being used for bring up
+* V65C816 - 65C816 emulation/debug platform.
 * V68 - 68K emulation/debug platform. Being used for bring up
 * Z80Pack - used as a dev and test environment for both large swapping
 	multiprocess and for small single tasking

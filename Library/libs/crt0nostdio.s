@@ -45,9 +45,10 @@ start:		jp start2
 ;
 		.db 0x01		; page to load at
 		.dw 0			; chmem ("0 - 'all'")
-		.dw s__INITIALIZED	; gives us code size info
-		.dw s__DATA		; gives us data size info
-		.dw l__DATA		; bss size info
+		; These three are set by binman
+		.dw 0			; code
+		.dw 0			; data
+		.dw 0			; bss size
 		.dw 0			; spare
 
 start2:		ld hl, #l__DATA - 1	 ; work around linker limit
@@ -67,9 +68,9 @@ start2:		ld hl, #l__DATA - 1	 ; work around linker limit
 		push hl
 		ld (___argv), hl	; needed for stuff like err()
 		push de
-		ld hl, #_exit		; return vector
+		call _main		; go
 		push hl
-		jp _main		; go
+		call _exit
 
 		.area _GSINIT
 gsinit:

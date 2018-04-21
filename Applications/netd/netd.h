@@ -14,6 +14,8 @@ struct link{
 #define LINK_OPEN   8	    /* TCP connected onward */
 #define LINK_DEAD   16      /* No longer exists to the kernel (may be live
                                internally to uIP still */
+#define LINK_UNBIND 32	    /* The kernel wants netd to confirm this link is
+                               dead and will receive no more messages */
     uint8_t socketn;        /* Kernel's socket no */
     uint8_t lcn;            /* Kernel's idea of lcn ???*/
     struct uip_conn *conn;  /* uIP's idea of lcn */

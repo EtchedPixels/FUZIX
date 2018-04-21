@@ -1,6 +1,6 @@
 An UZI target for z80pack.
 
-Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run UZI
+Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run FUZIX
 with one application per bank and the memory map currently is
 
 Bank 0:

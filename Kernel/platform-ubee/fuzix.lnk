@@ -1,8 +1,8 @@
 -mwxuy
 -i fuzix.ihx
--b _CODE=0x0100
--b _DISCARD=0xD000
--b _COMMONMEM=0xE800
+-b _CODE=0x0200
+-b _COMMONMEM=0xF000
+-b _INITIALIZER=0x0001
 -l z80
 platform-ubee/crt0.rel
 platform-ubee/commonmem.rel
@@ -14,6 +14,7 @@ usermem.rel
 usermem_std-z80.rel
 platform-ubee/tricks.rel
 platform-ubee/main.rel
+platform-ubee/discard.rel
 timer.rel
 kdata.rel
 platform-ubee/devfd.rel
@@ -28,14 +29,17 @@ syscall_exec16.rel
 syscall_fs.rel
 syscall_fs2.rel
 syscall_fs3.rel
+syscall_net.rel
 syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
 swap.rel
+platform-ubee/net_native.rel
 bankfixed.rel
 vt.rel
 devsys.rel
 platform-ubee/devlpr.rel
 platform-ubee/devtty.rel
+platform-ubee/vt.rel
 -e

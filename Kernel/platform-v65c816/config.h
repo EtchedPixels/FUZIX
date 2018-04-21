@@ -13,6 +13,16 @@
 
 #define CONFIG_CALL_R2L		/* Runtime stacks arguments backwards */
 
+/* Networking (not usable yet but for debug/development) */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
+
+#define CONFIG_VT
+#define CONFIG_FONT8X8
+#define CONFIG_FONT8X8SMALL	/* for now until fix loaders */
+#define VT_RIGHT 79
+#define VT_BOTTOM 24
+
 /*
  *	We have 512K of RAM and have to allocate it in banks due to the CPU
  *	bank granularity. That gives us 7 processes plus kernel and more
@@ -23,7 +33,8 @@
 #define MAX_MAPS 	7
 #define MAP_SIZE    0xFC00  /* 0-FBFF */
 
-#define STACK_BANKOFF	0xF0	/* F000-FBFF */
+/* 0xEE because our first bank is 1 and 0xEE + 2 * 1 = 0xF0 */
+#define STACK_BANKOFF	0xEE	/* F000-FDFF */
 
 #define TICKSPERSEC 100	    /* Ticks per second */
 #define MAPBASE	    0x0000  /* We map from 0 */
@@ -38,9 +49,13 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 1
+#define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    8        /* Number of block buffers */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
+#define NBUFS    7       /* Number of block buffers */
+#define NMOUNTS	 3	  /* Number of mounts at a time */
 
 #define platform_discard()	/* for now - wants fixing */
+
+
+#define OFTSIZE		24
+#define ITABSIZE	32

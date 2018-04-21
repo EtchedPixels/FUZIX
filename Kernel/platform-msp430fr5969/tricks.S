@@ -30,7 +30,7 @@ proc load_overlay
 ; from switchout().
 
 .globl switchin
-proc switchout
+proc platform_switchout
 	dint                              // interrupts off
 	clr r12                           // set return code
 	pushm #12, r15                    // save all registers (r15 to r4)

@@ -8,7 +8,7 @@ ASM_OPT = -o
 CRT0 = ../../../Library/libs/crt0_6502.o
 CRT0NS = ../../../Library/libs/crt0nostdio_6502.o
 
-.SUFFIXES: .c .o
+.SUFFIXES: .c .o .y
 
 SRC  = ac.c almanac.c at.c col.c cron.c deroff.c ed.c find.c make.c \
 	moo.c pr.c tar.c ttt.c calendar.c m4.c
@@ -24,10 +24,8 @@ APPSNS = $(OBJNS:.o=)
 all: $(APPS) $(APPSNS) sizes
 
 expr.c: expr.y
-	byacc -o expr.c expr.y
 
 find.c: find.y
-	byacc -o find.c find.y
 
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map

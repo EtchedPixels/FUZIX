@@ -1,0 +1,129 @@
+Early Draft For Apple IIe
+
+Assumptions:
+- Single process in memory at a time
+- 128K machine
+- Some kind of timer/clock present that can provide an interrupt
+
+System Problems To Solve:
+- Do we call disk devices via the PASCAL or ProDOS firmware gloop
+- Can some or any of the devices handle being asked to do I/O to alt
+  bank and/or language card spaces
+- How to drive the 140K floppies
+- C000-CFFF are unavailable putting a big hole mid memory, how do we handle
+  that sanely on the user side.
+- Can we do more banking tricks to get more of Fuzix in language card space
+- How do we cleanly deal with Z and S when we can't load directly into them
+- How do you tell a ram drive from a hard disk
+- How do we pick the right swap device
+- Can we put discard over other bits of low memory so we at least can blow
+  some of it away into the second text screen and maybe merge the rest with
+  buffers
+- Glue for talking to the mouse, appletalk, clock etc
+- Can we bank the syscall blocks to make best use of the wacky 4K window
+  in order to get networking in ?
+- Can we stuff fonts into an alt bank if we do graphics (eg on ramworks)
+- Can we hide the tty buffers in the 4K funny altbank bit ?
+- Non sucky console I/O
+
+Architectural Problems To Solve:
+- Support interrupt enabled simple swap mode
+- The swapper has no understanding of the fact we have not just udata/C stack
+  to swap along with user space but also a kernel S and Z
+- There is no way to move the S stack around. The tricks.s proposed code has
+  a suggested trick but that implies we'll need to play interesting games
+  at swap time
+- Pre-emption in IRQ logic for 6502 Apple style
+- 6502 dynamic loader and ZP assignment is needed for AppleIIe. Also maybe
+  an opportunity to tweak the binary format to create two banks normally
+  relocated together as one, but can be split (eg stuff libc/runtime high).
+  - and perhaps factors in to the 'shared library' idea where we have the
+  shared library in high memory with a jump table, and a small block of
+  app space for writable library data. Runtime however would be too expensive
+  to jump table so would need to build a fixed size version that matched up
+  on 6502 and 65C02 - doable but tedious.
+- HTF do we load it all into memory ? Do we need a ProDOS loader where we
+  just blow up /RAM, load all the extras into alt bank from files and then
+  do a giant shuffle when we kill off ProDOS ?
+
+Later
+
+- Add a multiple binary kernel to use RAMworks banking
+- Can we do double hires then ?
+
+
+Use a modern cc65 from https://github.com/cc65/cc65
+
+Our planned memory mapping looks like this
+
+	0000-00FF	Zero Page
+	0100-01FF	Stack (Kernel/Interrupt/Firmware usually)
+	0200-03FF	Firmware reserved for now (to be cautious)
+	0400-07FF	Half of 80 column display / All of 40
+	0800-1FFF	Discard area
+	2000-BEFF	Kernel load and execution area (covers double
+			hi-res space)
+	BF00-BFFF	ProDOS leaves us info here before we kill it off
+	C000-CFFF	I/O
+	D000-FFFF	Kernel (with a 4K extra overlay if we need it)
+	(and we might want to leave some ProDOS driver code from F800 up or
+	 so to drive the 140K floppies)
+
+And in alt banks
+
+	0000-00FF	Alt ZP (used for user space and a few bytes for
+			our IRQ helpers etc)
+	0100-01FF	User stack
+	0200-03FF	Reserve for now
+	0400-07FF	Half of 80 column display / Free in 40
+	0800-BFFF	Application 47.5 K
+	C000-CFFF	I/O
+	D000-FEFF	?? (cc65 runtime 'shared' libc ?)
+	FF00-FFFF	Stubs and extra IRQ paging logic
+
+For multiple bank (Ramworks) we could instead use bank 2+ for most apps
+and bank 0 would then be kernel with a hole at 2000-3FFF for video and the
+rest for the OS (with the video output/scroll etc hiding in the 4K hole in
+the language ram space along with the font)
+
+
+TODO
+----
+- Most of the work! This is just a sketch but in particular I've yet to
+	* Write the hack code that preserves a bit of S for swapping
+	* Write any of the glue to the protocol convertor methods
+	* Figure out how to load it off disk (some kind of prodos boot
+	  strap system file or fuzix itself loading the rest of the code ?
+	  (could we do some kind of unpack or is there too much non zero ?)
+	  Trouble is we only get 2000-BEFF which is 40K, or 0800-BEFF with
+	  the cc65 loader (46848 bytes)
+
+	  For unpacking we might need to build an image with the data, udata
+	  and bss all low (just over 8K) and stuff the loader into it at
+	  $2000 so that we do
+
+	  Load at $2000
+	  Move blocks about
+	  Jump out of BSS
+	  wipe BSS
+
+	  By my maths it still wouldn't fit.
+
+	  Maybe for that matter boot in DOS3 as it won't muck about with
+	  banks on us ?
+
+- Look at banking system calls. The core kernel is designed to allow the
+  syscalls to be banked (SYS1-SYS5), each of which is about $A00 bytes. That
+  would let us hide the syscalls in the language ROM space along with common
+  and use the awkward other 4K. We might need to do this to get network in.
+
+
+- Test signal handling paths
+- Fix brk() checking
+- Fix execl() execle() in userspace (so init can be fully tested)
+- Add pre-emption logic to the interrupt return path (and a clock based
+  check for non-timer machines on syscall paths is needed in the core code
+  as it's not yet a supported configuration)
+
+
+

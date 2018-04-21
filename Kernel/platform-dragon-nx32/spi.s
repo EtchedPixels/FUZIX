@@ -111,6 +111,7 @@ _sd_spi_receive_sector:
 	jsr map_process_always
 rdspi:	lda #0x14		; FRX on, external clock on
 	sta <SPICTRL
+	lda <SPIDATA		; read old value, triggers shifting in new
 read8:
 	lda <SPIDATA
 	ldb <SPIDATA

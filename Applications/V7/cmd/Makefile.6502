@@ -12,7 +12,7 @@ CRT0NS = ../../../Library/libs/crt0nostdio_6502.o
 
 SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dc.c dd.c \
 	deroff.c diff3.c diff.c diffh.c join.c look.c makekey.c mesg.c \
-	newgrp.c pr.c ptx.c rev.c split.c su.c sum.c test.c time.c tsort.c \
+	newgrp.c pg.c pr.c ptx.c rev.c split.c su.c sum.c test.c time.c tsort.c \
 	wall.c
 
 SRCSNS = ed.c
@@ -30,9 +30,11 @@ APPSNS = $(OBJSNS:.o=)
 
 APPSTC = $(OBJSTC:.o=)
 
-APPS = $(OBJS:.o=) $(OBJSBAD:.o=) $(OBJSNS:.o=) $(OBJSTC:.o=)
+APPS = $(OBJS:.o=) $(OBJSBAD:.o=)
 
-all: $(APPS) sizes
+APPS_ALL = $(APPS) $(APPSNS) $(APPSTC)
+
+all: $(APPS_ALL) sizes
 
 
 $(APPSNS): OPTS =

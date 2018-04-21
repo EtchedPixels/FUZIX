@@ -77,3 +77,5 @@ register struct u_data *udata_ptr asm ("a5");
 #define CONFIG_STACKSIZE	1024
 
 #define CPUTYPE	CPUTYPE_68000
+
+#define __packed		__attribute__((packed))

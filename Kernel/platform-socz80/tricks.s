@@ -7,10 +7,10 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl trap_illegal
         .globl _inint
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _dofork
         .globl _runticks
@@ -40,9 +40,8 @@
 ; from switchout().
 ; 
 ; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
         di
-        call _chksigs
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
@@ -60,7 +59,7 @@ _switchout:
         call _switchin
 
         ; we should never get here
-        call _trap_monitor
+        call _platform_monitor
 
 _switchin:
         di
@@ -134,7 +133,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _trap_monitor
+        jp _platform_monitor
 
 
 _dofork:

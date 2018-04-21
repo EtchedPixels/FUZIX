@@ -1,0 +1,54 @@
+Use a modern cc65 from https://github.com/cc65/cc65
+
+Prototyping for 'large model' kernels for bigger memory maps. This set up uses
+a split I/D arrangement for the kernel with bank 0 holding kernel DP/S IRQ S
+and IRQ DP plus the I/O window and vectors. Bank 1 holds kernel code which with
+the room available can be built optimized better. Bank 2 holds the kernel data
+including 32K of buffer cache and the other buffers tuned to match the 2BSD
+Unix recommendations for a 16 user system.
+
+
+Our memory mapping looks like this
+
+Bank 0:
+	0x0000		Kernel DP
+	0x0100		Kernel Stack (CPU)
+	0x0200		IRQ stack
+	0x0400		First user DP/Stack
+	0xFE00		I/O Window
+	0xFF00		Vectors and IRQ DP
+
+Bank 1:
+	...		Kernel image
+
+Bank 2:
+	...		Kernel data and C stacks
+
+
+Bank 3+
+
+And in user space
+
+	0x0000		Unused
+	0x00FE		syscall vector
+	0x0100		Program (CPU stack is in bank 0)
+	0xFC00		Udata copy (512 bytes)
+	0xFE00		Spare
+	0xFF00		Stubs [signal return etc]
+			(keep in 0 page ?)
+
+We don't yet allow for a split I/D user program using two banks and having 64K
+code and 64K data. We also then need to track 'texts' as V7 does so that we
+can share code segments when possible (often).
+
+To build:
+Set the platform/target
+make clean
+make
+
+
+TODO
+----
+- See 65c816 port for general notes
+- Save jmpvec+1/2 in seg 2 on IRQ entry and restore on exit
+

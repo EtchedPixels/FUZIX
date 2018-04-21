@@ -32,7 +32,7 @@
 	.globl _platform_interrupt
 	.globl platform_interrupt_all
 	.globl _need_resched
-	.globl _switchout
+	.globl _platform_switchout
 
         ; exported symbols
 	.globl _chksigs
@@ -51,7 +51,7 @@
 	.globl mmu_irq_ret
 
         ; imported symbols
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -341,7 +341,7 @@ trap_illegal:
         ld hl, #illegalmsg
 traphl:
         call outstring
-        call _trap_monitor
+        call _platform_monitor
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0
@@ -541,7 +541,6 @@ preemption:
 
 	;
 intret2:call map_kernel
-
 	;
 	; Semantically we are doing a null syscall for pre-empt. We need
 	; to record ourselves as in a syscall so we can't be recursively
@@ -550,11 +549,15 @@ intret2:call map_kernel
 	ld a, #1
 	ld (U_DATA__U_INSYS), a
 	;
+	; Check for signals
+	;
+	call _chksigs
+	;
 	; Process status is offset 0
 	;
 	ld hl, (U_DATA__U_PTAB)
 	ld (hl), #P_READY
-	call _switchout
+	call _platform_switchout
 	;
 	; We are no longer in an interrupt or a syscall
 	;

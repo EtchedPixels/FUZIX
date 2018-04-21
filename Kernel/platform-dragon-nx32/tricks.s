@@ -7,7 +7,7 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _trap_monitor
+        .globl _platform_monitor
         .globl _inint
         .globl map_kernel
         .globl map_process
@@ -18,7 +18,7 @@
 	.globl _platform_idle
 
 	# exported
-        .globl _switchout
+        .globl _platform_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -37,12 +37,8 @@ _ramtop:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-; FIXME: make sure we optimise the switch to self case higher up the stack!
-; 
-; This function can have no arguments or auto variables.
-_switchout:
+_platform_switchout:
 	orcc #0x10		; irq off
-        jsr _chksigs
 
         ; save machine state, including Y and U used by our C code
         ldd #0 ; return code set here is ignored, but _switchin can 
@@ -51,53 +47,6 @@ _switchout:
 	pshs d,y,u
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
-	; See if we are about to go idle
-	lda _nready
-	; Someone else will run - go the slow path into the scheduler
-	bne slow_path
-
-	;
-	; Wait for something to become ready
-	;
-idling:
-	andcc #0xef
-	jsr _platform_idle
-	orcc #0x10
-
-	lda _nready
-	beq idling
-
-	; Did multiple things wake up, if so we must follow the slow
-	; path
-	cmpa #1
-	bne slow_path
-
-	; Was the waker us ?
-	ldx U_DATA__U_PTAB
-	lda P_TAB__P_STATUS_OFFSET,x
-	cmpa #P_READY
-	; No: follow the slow path
-	bne slow_path
-
-	; We can use the fast path for returning.
-	;
-	; Mark ourself running with a new time slice allocation
-	;
-	lda #P_RUNNING
-	sta P_TAB__P_STATUS_OFFSET,x
-	ldx #0
-	stx _runticks
-	;
-	; We idled and got the CPU back - fast path, and we know
-	; we are not a pre-emption. In effect the switchout() becomes
-	; a normal function call and we don't have to stash anything or
-	; bank switch.
-	;
-	andcc #0xef
-	puls d,y,u,pc
-
-
-slow_path:
 	; Stash the uarea into process memory bank
 	jsr map_process_always
 
@@ -115,7 +64,7 @@ stash:	ldd ,x++
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _trap_monitor
+        jsr _platform_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13
@@ -193,7 +142,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _trap_monitor
+        jmp _platform_monitor
 
 	.area .data
 

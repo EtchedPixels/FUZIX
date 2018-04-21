@@ -5,7 +5,7 @@
  *	direct page likewise.
  *
  *	Because cc65 stores temporaries and return addresses on the CPU stack,
- *	and uses ZP for register variables (who in C you cannot take the
+ *	and uses ZP for register variables (whom in C you cannot take the
  *	address of) this works fine for CC65 apps and the kernel likewise only
  *	has to worry about 16bit pointers except for user copies and asm bits.
  */
@@ -42,12 +42,10 @@ extern size_t __fastcall__ strlen(const char *);
 /* We use SEC BCS not CLC BCC because CLC is 0x18 which is the Z80 JR header
    so the two would be identical - not good! */
 
-
-/* High byte is saved, low byte is a mystery so take worst case. Also allow
-   a bit less as C stack is not return stack */
-#define brk_limit() ((((uint16_t)udata.u_syscall_sp) | 0xFF) - 384)
-
 #define staticfast	static
+
+/* Handled with an asm helper on this processor due to the dual stacks */
+extern uint16_t brk_limit(void);
 
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
@@ -75,3 +73,8 @@ typedef union {            /* this structure is endian dependent */
 #define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
 
 #define CPUTYPE	CPUTYPE_65C816
+
+/* cc65 really wants structs used repeatedly to be marked register */
+#define regptr	register
+
+#define __packed

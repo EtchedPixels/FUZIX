@@ -44,3 +44,4 @@
 
 #define MAX_BLKDEV 4
 
+#define CONFIG_IDE

@@ -1,6 +1,8 @@
 #ifndef _MATH_H
 #define _MATH_H
 
+#include <stdint.h>
+
 /* Large elements of this are drawn from MUSL */
 
 extern int signgam;
@@ -13,7 +15,7 @@ extern double acos(double);
 extern double asin(double);
 extern double atan(double);
 extern double atan2(double, double);
-extern double atof(char *);
+extern double atof(const char *);
 extern double cbrt(double);
 extern double ceil(double);
 extern double copysign(double, double);
@@ -73,25 +75,57 @@ extern int __signbit(double);
   sizeof(x) == sizeof(float) ? __fpclassifyf(x) : \
   __fpclassify(x))
 
+#ifndef NO_64BIT
 #define isinf(x) ( \
   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
-  (__double_bits(x) & (__uint64_t)-1>>1) == (__uint64_t)0x7ff<<52)
+  (__double_bits(x) & (uint64_t)-1>>1) == (uint64_t)0x7ff<<52)
 
 #define isnan(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) > 0x7f800000 : \
-   (__double_bits(x) & (__uint64_t)-1>>1) > (__uint64_t)0x7ff<<52)
+   (__double_bits(x) & (uint64_t)-1>>1) > (uint64_t)0x7ff<<52)
 
 #define isnormal(x) ( \
    sizeof(x) == sizeof(float) ? ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
-   ((__double_bits(x)+((__uint64_t)1<<52)) & (__uint64_t)-1>>1) >= (__uint64_t)1<<53)
+   ((__double_bits(x)+((uint64_t)1<<52)) & (uint64_t)-1>>1) >= (uint64_t)1<<53)
 
 #define isfinite(x) ( \
    sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) < 0x7f800000 : \
-   (__double_bits(x) & (__uint64_t)-1>>1) < (__uint64_t)0x7ff<<52)
+   (__double_bits(x) & (uint64_t)-1>>1) < (uint64_t)0x7ff<<52)
 
 #define signbit(x) ( \
   sizeof(x) == sizeof(float) ? (int)(__float_bits(x)>>31) : \
   (int)(__double_bits(x)>>63))
+
+#else
+
+extern int __isinf(double x);
+extern int __isnan(double x);
+extern int __isnormal(double x);
+extern int __isfinite(double x);
+extern int __signbit(double x);
+
+#define isinf(x) ( \
+  sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) == 0x7f800000 : \
+  __isinf(x))
+
+#define isnan(x) ( \
+   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) > 0x7f800000 : \
+   __isnan(x))
+
+#define isnormal(x) ( \
+   sizeof(x) == sizeof(float) ? ((__float_bits(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
+   __isnormal(x))
+
+#define isfinite(x) ( \
+   sizeof(x) == sizeof(float) ? (__float_bits(x) & 0x7fffffff) < 0x7f800000 : \
+   __isfinite(x))
+
+#define signbit(x) ( \
+  sizeof(x) == sizeof(float) ? (int)(__float_bits(x)>>31) : \
+  __signbit(x))
+
+
+#endif
 
 #else
 
@@ -214,6 +248,7 @@ extern float modff(float, float *);
 extern float nanf(const char *__tagp);
 extern float nearbyintf(float);
 extern float nextafterf(float, float);
+extern float powf(float, float);
 extern float remainderf(float, float);
 extern float remquof(float, float, int *);
 extern float rintf(float);

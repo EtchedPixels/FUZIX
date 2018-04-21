@@ -23,6 +23,8 @@ uint8_t si_user;
 static struct Sierr error;
 static uint8_t status[2];
 
+#ifdef CONFIG_SCSI
+
 /*
  *	Si_cmdend()	Wait till end of scsi comand and return errors.
  */
@@ -189,3 +191,5 @@ int si_flush(void)
 {
         return 0;
 }
+
+#endif /* CONFIG_SCSI */

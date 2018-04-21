@@ -61,6 +61,6 @@ void __tm_conv(struct tm *tmbuf, time_t * pt, int offset)
 struct tm *gmtime(time_t *timep)
 {
 	static struct tm tmb;
-	__tm_conv(&tmb, timep, (int) (timezone / 60));
+	__tm_conv(&tmb, timep, 0);
 	return &tmb;
 }
