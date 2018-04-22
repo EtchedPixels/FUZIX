@@ -639,7 +639,31 @@ _scroll_up:
 	    add hl,de
 	    pop de
 	    ld bc,#1920		; FIXME
+	    push bc
 	    ldir
+	    ld hl,#0x8800	; copy the colour
+	    push hl
+	    ld de, (_vtwidth)
+	    add hl,de
+	    pop de
+	    pop bc
+	    push bc
+	    ldir
+	    pop bc
+	    ld a, (_ubee_model)
+	    or a
+	    jr z, unmap_out
+	    ; and attribute RAM
+	    ld a,#0x90
+	    out (0x1c),a
+	    ld hl,#0x8000
+	    push hl
+	    ld de, (_vtwidth)
+	    add hl,de
+	    pop de
+	    ldir
+	    ld a,#0x80
+	    out (0x1c),a
 unmap_out:
 	    ; now put the RAM back
 	    pop af
@@ -648,6 +672,10 @@ unmap_out:
 	    ; We usually only do one char
 	    jr popout
 
+;
+;	FIXME: this needs rewriting to match scroll_up once scroll_up is
+;	       right
+;
 _scroll_down:
 	    call ___hard_di
 	    push hl
