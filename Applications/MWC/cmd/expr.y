@@ -80,6 +80,8 @@ int	cbsiz = CODELEN;			/* Initial size of codebuf */
 
 #define YYSTYPE	char *
 
+char	**av;		/* Global version of argv[] in main() */
+int	avx;		/* Index into av[] */
 %}
 
 
@@ -153,9 +155,6 @@ expr:
 
 
 
-
-char	**av;		/* Global version of argv[] in main() */
-int	avx;		/* Index into av[] */
 
 int main(int argc, char *argv[])
 {

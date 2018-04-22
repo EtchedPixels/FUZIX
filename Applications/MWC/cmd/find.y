@@ -29,6 +29,34 @@
 #define	snode(f,s)	lnode(FUN,f,0,s)
 
 #define YYSTYPE	NODE *
+
+NODE	*code;
+int	seflag;			/* Set if a side effect (print, exec) found */
+
+char	*next(void);
+NODE	*bnode(int, NODE *, NODE *);
+NODE	*enode(int type);
+NODE	*lnode(int op, int (*fn)(NODE *), int val, char *str);
+NODE	*nnode(int (*fun)(NODE *));
+NODE	*onode(int (*fun)(NODE *));
+NODE	*getuser(void);
+NODE	*getgroup(void);
+NODE	*getnewer(void);
+int	xname(NODE *np);
+int	xperm(NODE *np);
+int	xtype(NODE *np);
+int	xlinks(NODE *np);
+int	xuser(NODE *np);
+int	xgroup(NODE *np);
+int	xsize(NODE *np);
+int	xinum(NODE *np);
+int	xatime(NODE *np);
+int	xctime(NODE *np);
+int	xmtime(NODE *np);
+int	xnewer(NODE *np);
+int	xexec(NODE *np);
+int	xprint(NODE *np);
+int	xnop(NODE *np);
 %}
 %start	command
 
@@ -111,39 +139,12 @@ char	nospace[] = "out of memory";
 
 time_t	curtime;
 
-NODE	*code;
-int	seflag;			/* Set if a side effect (print, exec) found */
-
 char	*buildname(struct dirent *dp, char *ep);
 int	execute(NODE *np);
 void	find(char *dir);
 void	fentry(char *ep, struct stat *sbp);
 void	ffork(char *ep, struct stat *sbp);
 void	usage(void);
-char	*next(void);
-NODE	*bnode(int, NODE *, NODE *);
-NODE	*enode(int type);
-NODE	*lnode(int op, int (*fn)(NODE *), int val, char *str);
-NODE	*nnode(int (*fun)(NODE *));
-NODE	*onode(int (*fun)(NODE *));
-NODE	*getuser(void);
-NODE	*getgroup(void);
-NODE	*getnewer(void);
-int	xname(NODE *np);
-int	xperm(NODE *np);
-int	xtype(NODE *np);
-int	xlinks(NODE *np);
-int	xuser(NODE *np);
-int	xgroup(NODE *np);
-int	xsize(NODE *np);
-int	xinum(NODE *np);
-int	xatime(NODE *np);
-int	xctime(NODE *np);
-int	xmtime(NODE *np);
-int	xnewer(NODE *np);
-int	xexec(NODE *np);
-int	xprint(NODE *np);
-int	xnop(NODE *np);
 
 int main(int argc, char *argv[])
 {
