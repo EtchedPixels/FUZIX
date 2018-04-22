@@ -21,8 +21,8 @@
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
-        .include "kernel.def"
-        .include "../kernel.def"
+        .include "platform/kernel.def"
+        .include "../../kernel.def" ; Kernel
 
         .area _COMMONMEM
 
