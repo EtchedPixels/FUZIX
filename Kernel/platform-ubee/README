@@ -5,19 +5,9 @@ First 64K
 	0000-00FF		Vectors
 	0100-01FF		Free
 	0200-wherever		Kernel
+		0x8000-0x8FFF	Video memory overlays here
 	DB00			Discard	(need to fix to reclaim buffers here)
-	E400			Common
-	F000			Video
-
-(this will change once the video code is reworked to be)
-
-	0000-0100		Vectors
-	0100-0200		Free for now (IRQ stack ?)
-	0200-wherever		Kernel
-	wherever		Discard (turned into buffers)
-	F400			Common & Video
-
-	(Video overlaid temporarily on 8000-8FFF)
+	F000			Common
 
 The other memory is then overlaid on 0000-7FFF for user space
 
@@ -67,29 +57,29 @@ Done so far:
 
 	*Never write 0x41 while probing as it's precomp on the WD. 0x45
 	however is either cyl_high or track_w so safe
+- Support attributes, colour.
+- Buffer reclaim of discard memory
+- Bank the video
 
 
 To Do:
 - Floppy - media detect/sectors per track etc/ hard skew
 - Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
 - Hard disk driver debug
-- Bank the video
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
-  on 5.8.0)
+  of 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
 - Non TC keyboard (lightpen keyboard)
 
 Longer Term
-- Support attributes, colour, RAM based fonts (load the ROM one into RAM
+- RAM based fonts (load the ROM one into RAM
   customised for bold/italic ?)
-- Hardware 6x45 scrolling
 - Do delayed video output via a buffer off vblank event for non premium
 - Proper support for Z80 PIO interfaces
 - Z8530 SCC
 - Graphics not just vt interfaces
 - Maybe eventually switch to soft interrupt model and support soft serial
   interrupts (ick)
-- Buffer reclaim of discard memory
 
 
 Notes:
@@ -160,9 +150,9 @@ Currently in progress
 - Init vtattr_cap and the video variables correctly	PARTLY DONE
 - Check if scrolling in hw is doable or not in 80x25	NO
 - Support 'map video into my process at 0x8000 hack'	PARTLY DONE
-- Non premium video
-- Non premium video setup
+- Non premium video					COLOUR IN PROGRESS
+- Non premium video setup				COLOUR IN PROGRESS
 - Copy ROM font to RAM, support RAM font setting
-- Figure out how I broke the 6545 cursor
+- Figure out how I broke the 6545 cursor		DONE
 
-Currently debugging scrolling and multichar writes
+Currently debugging scrolling
