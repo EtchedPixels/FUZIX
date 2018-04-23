@@ -207,6 +207,10 @@ inoptr srch_mt(inoptr ino)
  * and makes an entry in the inode table for them, or
  * increases it reference count if it is already there.
  * An inode # of zero means a newly allocated inode.
+ *
+ * Once we support sleeping on bigger boxes during I/O we will need
+ * a lock (superblock lock perhaps) to cover allocation of blocks and
+ * inodes.
  */
 
 inoptr i_open(uint16_t dev, uint16_t ino)
@@ -520,6 +524,8 @@ bool inline baddev(fsptr dev)
 
 /* I_alloc finds an unused inode number, and returns it, or 0
  * if there are no more inodes available.
+ *
+ * This will need to happen under the superblock lock once we do sleeping
  */
 
 uint16_t i_alloc(uint16_t devno)
@@ -587,6 +593,8 @@ corrupt:
 /* I_free is given a device and inode number, and frees the inode.
  * It is assumed that there are no references to the inode in the
  * inode table or in the filesystem.
+ *
+ * This will need to happen under the superblock lock once we do sleeping
  */
 
 void i_free(uint16_t devno, uint16_t ino)
@@ -607,6 +615,8 @@ void i_free(uint16_t devno, uint16_t ino)
 
 /* Blk_alloc is given a device number, and allocates an unused block
  * from it. A returned block number of zero means no more blocks.
+ *
+ * This will need to happen under the superblock lock once we do sleeping
  */
 
 blkno_t blk_alloc(uint16_t devno)
@@ -674,6 +684,8 @@ corrupt2:
 
 /* Blk_free is given a device number and a block number,
  * and frees the block.
+ *
+ * This will need to happen under the superblock lock once we do sleeping
  */
 
 void blk_free(uint16_t devno, blkno_t blk)
