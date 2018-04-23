@@ -3,7 +3,6 @@
 #include <printf.h>
 #include <devfd.h>
 #include <device.h>
-#include <blkdev.h>
 #include <timer.h>
 
 static timer_t spindown_timer = 0;

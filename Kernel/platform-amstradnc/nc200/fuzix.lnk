@@ -35,6 +35,8 @@ devsys.rel
 audio.rel
 usermem.rel
 usermem_std-z80.rel
+platform-amstradnc/devfd.rel
+platform-amstradnc/fdc765.rel
 platform-amstradnc/devlpr.rel
 platform-amstradnc/devtty.rel
 platform-amstradnc/devaudio.rel

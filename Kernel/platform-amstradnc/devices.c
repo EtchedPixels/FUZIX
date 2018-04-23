@@ -11,20 +11,19 @@
 #include <printf.h>
 
 #if defined CONFIG_NC200
-#include <devfd.h>
-#include <blkdev.h>
+#include "devfd.h"
 #endif
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
-  /* 0: /dev/fd		Floppy disc block devices (NC200 only) */
+  /* 0: /dev/hd		Hard disc block devices (Really PCMCIA) */
+  {  rd_open,     no_close,    rd_read,   rd_write,   no_ioctl },
+  /* 1: /dev/fd		Floppy disc block devices (NC200 only) */
 #if defined CONFIG_NC200
   {  devfd_open, no_close, devfd_read, devfd_write, no_ioctl },
 #else
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
 #endif
-  /* 1: /dev/hd		Hard disc block devices (Really PCMCIA) */
-  {  rd_open,     no_close,    rd_read,   rd_write,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
   {  nc100_tty_open,     nc100_tty_close,   tty_read,  tty_write,  gfx_ioctl },
   /* 3: /dev/lpr	Printer devices */

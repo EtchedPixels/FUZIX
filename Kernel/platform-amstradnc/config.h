@@ -58,7 +58,7 @@
 #define NBUFS    10       /* Number of block buffers */
 #ifdef CONFIG_NC200
 #define NMOUNTS	2	  /* Floppy can also be mounted */
-#define BOOTDEVICENAMES "fd#,hd#"
+#define BOOTDEVICENAMES "hd#,fd#"
 #define MAX_BLKDEV 1  /* Single floppy */
 #else
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
