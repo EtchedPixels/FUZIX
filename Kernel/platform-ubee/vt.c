@@ -38,6 +38,12 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 	vwrite();
 }
 
+void cursor_on(int8_t y, int8_t x)
+{
+	char_addr(y,x);
+	do_cursor_on();
+}
+
 void vtattr_notify(void)
 {
 	if (ubee_model == UBEE_256TC) {

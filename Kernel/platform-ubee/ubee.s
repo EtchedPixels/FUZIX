@@ -578,7 +578,7 @@ scanner_done:
 	    .area _VIDEO
 
 	    .globl _cursor_off
-	    .globl _cursor_on
+	    .globl _do_cursor_on
 	    .globl _scroll_up
 	    .globl _scroll_down
 	    .globl _vwrite
@@ -597,17 +597,15 @@ scanner_done:
 ;
 _cursor_off:
 	    ret
-_cursor_on:
-	    pop hl
-	    pop de
-	    push de
-	    push hl
+_do_cursor_on:
 	    ; ld a,i handling is buggy on NMOS Z80
 	    call ___hard_di
 	    push af
+	    ld de, (_vtaddr)
 	    ld c,#0x0d
 	    ld a,#0x0e
 	    out (0x0c),a
+	    set 5,d		; As seen by the 6545 its 0x20xx
 	    out (c),d
 	    inc a
 	    out (0x0c),a

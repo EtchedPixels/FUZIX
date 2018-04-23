@@ -15,5 +15,6 @@ extern uint16_t vtcount;
 extern uint8_t vtchar;
 
 extern void vwrite(void);
+extern void do_cursor_on(void);
 
 #endif
