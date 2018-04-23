@@ -1,4 +1,5 @@
 CSRCS = \
+	../devfd.c \
 	../devlpr.c \
 	../devtty.c \
 	../devrd.c \
@@ -12,6 +13,7 @@ ASRCS = \
 	../crt0.s \
 	../tricks.s \
 	../commonmem.s \
+	../fdc765.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
