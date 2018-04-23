@@ -8,11 +8,21 @@
 #include <vt.h>
 #include <devtty.h>
 #include <devgfx.h>
+#include <printf.h>
+
+#if defined CONFIG_NC200
+#include <devfd.h>
+#include <blkdev.h>
+#endif
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/fd		Floppy disc block devices (NC200 only) */
+#if defined CONFIG_NC200
+  {  devfd_open, no_close, devfd_read, devfd_write, no_ioctl },
+#else
   {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
+#endif
   /* 1: /dev/hd		Hard disc block devices (Really PCMCIA) */
   {  rd_open,     no_close,    rd_read,   rd_write,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
@@ -41,7 +51,7 @@ void device_init(void)
 }
 
 __sfr __at 0x30 control;
-static uint8_t control_shadow = 0x10;
+static uint8_t control_shadow = 0xb8; // card common, floppy motor off, uPD4711 off, UART reset
 
 /* We need to track the state of the control port */
 void mod_control(uint8_t set, uint8_t clr)
@@ -49,4 +59,14 @@ void mod_control(uint8_t set, uint8_t clr)
   control_shadow &= ~clr;
   control_shadow |= set;
   control = control_shadow;
+}
+
+__sfr __at 0x60 irqen;
+static uint8_t irqen_shadow = 0x08; // keyboard IRQ only
+
+void mod_irqen(uint8_t set, uint8_t clr)
+{
+  irqen_shadow &= ~clr;
+  irqen_shadow |= set;
+  irqen = irqen_shadow;
 }

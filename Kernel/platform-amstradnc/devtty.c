@@ -7,12 +7,15 @@
 #include <vt.h>
 #include <tty.h>
 
+#ifdef CONFIG_NC200
+#include <devfd.h>
+#endif
+
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
 __sfr __at 0xC0 uarta;
 __sfr __at 0xC1 uartb;
 
-__sfr __at 0x60 irqen;
 __sfr __at 0x90 irqmap;
 
 __sfr __at 0xB0 kmap0;
@@ -59,9 +62,9 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 		nap();
 		mod_control(0x06, 0x01);	/* 9600 baud */
 #ifdef CONFIG_NC200
-		irqen = 0x1C;
+		mod_irqen(0x0C, 0x00);    /* single Rx/Tx interrupt on NC200 */
 #else
-		irqen = 0x0B;			/* Allow serial interrupts */
+		mod_irqen(0x03, 0x00);    /* separate Rx/Tx interrupts on NC100 */
 #endif
 	}
 	return (0);
@@ -75,9 +78,9 @@ int nc100_tty_close(uint8_t minor)
 		return 0;
 	if (minor == 2) {
 #ifdef CONFIG_NC200
-		irqen = 0x18;
+		mod_irqen(0x00, 0x0C);    /* single Rx/Tx interrupt on NC200 */
 #else
-		irqen = 0x08;		/* mask serial interrupts */
+		mod_irqen(0x00, 0x03);    /* separate Rx/Tx interrupts on NC100 */
 #endif
 		mod_control(0x10, 0);	/* turn off the line driver */
 	}
@@ -325,13 +328,14 @@ void platform_interrupt(void)
 			}
 		}
 		timer_interrupt();
+		devfd_spindown();
 	}
 	if (!(a & 16)) {
 		/* FIXME: Power button */
 		;
 	}
 	if (!(a & 32)) {
-		/* FIXME: FDC interrupt */
+		/* FIXME: FDC */
 		;
 	}
 	/* clear the mask */
