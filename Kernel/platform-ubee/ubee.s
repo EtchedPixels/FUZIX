@@ -620,7 +620,7 @@ popout:
 ;	display wraps on 2000 bytes). Soft scroll - hard scroll only works
 ;	in 64x16 mode
 ;
-;	FIXME: on premium/tc we also need to scroll the attribute RAM!
+;	FIXME: remove hardcoding of 80x25 display size
 ;
 _scroll_up:
 	    call ___hard_di
@@ -683,6 +683,17 @@ _scroll_down:
 	    or #0x10		; and put it at 0x8000
             ld (mapreg),a
 	    out (0x50),a
+	    ld hl,#0x87CF	; end of display
+	    push hl
+	    ld de, (_vtwidth)
+	    or a
+	    sbc hl,de
+	    pop de
+	    ex de,hl
+	    ld bc,#1920		; FIXME compute for widths
+	    push bc
+	    lddr
+	    pop bc
 	    ld hl,#0x8FCF	; end of display
 	    push hl
 	    ld de, (_vtwidth)
@@ -690,8 +701,24 @@ _scroll_down:
 	    sbc hl,de
 	    pop de
 	    ex de,hl
-	    ld bc,#4016		; FIXME compute for widths
+	    push bc
 	    lddr
+	    pop bc
+	    ld a, (_ubee_model)
+	    or a
+	    jr z, unmap_out
+	    ; and attribute RAM
+	    ld a,#0x90
+	    out (0x1c),a
+	    ld hl,#0x87CF
+	    push hl
+	    ld de, (_vtwidth)
+	    add hl,de
+	    pop de
+	    ex de,hl
+	    lddr
+	    ld a,#0x80
+	    out (0x1c),a
 	    jr unmap_out
 ;
 ;	Write to the display
@@ -731,7 +758,7 @@ _patch_std_end:
 	    ld a,b
 	    or c
 	    jr nz, nextchar
-	    jr unmap_out
+	    jp unmap_out
 nextchar:
 	    res 3,h
 	    inc hl
