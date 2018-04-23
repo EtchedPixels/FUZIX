@@ -95,7 +95,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 #if !defined(read_direct)
 			bp = NULL;
 #else
-			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(flag) == 0) {
+			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(flag)) {
 				/* we can transfer direct from disk to the userspace buffer */
 				/* FIXME: allow for async queued I/O here. We want
 				   an API something like breadasync() that either
