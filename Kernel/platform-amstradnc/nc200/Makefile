@@ -60,7 +60,7 @@ floppyimage: cardimage floppyskeleton.img autoprg.bin $(ROOT_DIR)/fuzix.bin
 	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=0 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.80
 	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=1 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.81
 	dd if=$(ROOT_DIR)/fuzix.bin bs=16k skip=2 count=1 | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::load4000.82
-	echo -n | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::call4000.80
+	echo -n | mcopy -i $(ROOT_DIR)/fuzixfloppy.img - ::call4100.80
 
 floppyskeleton.img: floppyskeleton.s
 	sdasz80 -fflopzws floppyskeleton.rel floppyskeleton.s
