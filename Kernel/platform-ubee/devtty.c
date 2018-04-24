@@ -117,7 +117,7 @@ static uint8_t shift_keyboard_tc[15][8] = {
 	/* 5x */
 	{ KEY_F11, ')', 'P', ':', KEY_DEL, '"', '|', '>' },
 	{ KEY_F12, '_', '{', '\'', 0, '+', '}', '?' },
-	/* 60 shift 67 ctrl 70 alt */
+	/* 67 shift 6F ctrl 77 alt */
 };
 
 
@@ -133,12 +133,12 @@ static void keydecode_tc(void)
 	}
 
 	/* TODO: ALT */
-	if (keymap[6] & 0x80)	/* shift */
+	if (keymap[12] & 0x80)	/* shift */
 		c = shift_keyboard_tc[keybyte][keybit];
 	else
 		c = keyboard_tc[keybyte][keybit];
 
-	if (keymap[7] & 0x80) {	/* control */
+	if (keymap[13] & 0x80) {	/* control */
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
@@ -157,7 +157,7 @@ static void keymap_down(uint8_t c)
 	keybyte = c >> 3;
 	keybit = c & 7; 
 	if (keybyte < 15) {
-		keymap[keybyte] |= keybit;
+		keymap[keybyte] |= (1 << keybit);
 		keysdown++;
 		newkey = 1;
 	}
@@ -166,7 +166,7 @@ static void keymap_down(uint8_t c)
 static void keymap_up(uint8_t c)
 {
 	if (keybyte < 15) {
-		keymap[c >> 3] &= ~(c & 7);
+		keymap[c >> 3] &= ~(1 << (c & 7));
 		keysdown--;
 	}
 }

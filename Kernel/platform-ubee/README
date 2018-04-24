@@ -47,7 +47,7 @@ Done so far:
 	If it mirrors to 0x41 then it's a 2793
 	If it writes/reads back but does not mirror it's a WD1002-5
 
-	Now check if writes to 0x45 affect 0x5 with 0x58 switched
+	Now check if writes to 0x45 affect 0x45 with 0x58 switched
 	(if so its two controllers and we can repeat the probe algorithm
 	for the other one)
 
@@ -60,16 +60,18 @@ Done so far:
 - Support attributes, colour.
 - Buffer reclaim of discard memory
 - Bank the video
+- Debug TC keyboard code: shift/ctrl are busted
 
 
 To Do:
 - Floppy - media detect/sectors per track etc/ hard skew
-- Debug TC keyboard code: shift/ctrl are busted - do we need repeat ?
 - Hard disk driver debug
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
   of 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
 - Non TC keyboard (lightpen keyboard)
+- Fix reboot/panic logic
+- Keyboard repeat
 
 Longer Term
 - RAM based fonts (load the ROM one into RAM
@@ -145,7 +147,7 @@ Currently in progress
 - Map video at 0x8000					DONE
 - Clear attribute ram if present			DONE
 - Move common up					DONE
-- Do buffer over discard change				UNTESTED
+- Do buffer over discard change				DONE
 - Check we have video latches/map right everywhere	DEBUGGING
 - Init vtattr_cap and the video variables correctly	PARTLY DONE
 - Check if scrolling in hw is doable or not in 80x25	NO
