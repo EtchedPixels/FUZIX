@@ -92,16 +92,19 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
 {
     int ct = 0;
     int tries;
-    int blocks = udata.u_nblock;
-    uint16_t lba = udata.u_block;
+    int blocks;
+    uint16_t lba;
+
+    /* This must happen first, as it updates the udata variables. */
+    if (is_raw && d_blkoff(BLKSHIFT))
+        return -1;
+    blocks = udata.u_nblock;
+    lba = udata.u_block;
 
     // kprintf("[%s %d @ %x : %d:%x]\n", is_read ? "read" : "write",
     //     blocks, lba, is_raw, udata.u_dptr);
     // if (!is_read)
     //     return blocks << BLKSHIFT;
-
-    if (is_raw && d_blkoff(BLKSHIFT))
-        return -1;
 
     fd_select(0);
     fd765_is_user = is_raw;
