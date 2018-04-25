@@ -23,6 +23,10 @@
 #include <vt.h>
 #include <devtty.h>
 #include <stdarg.h>
+#include <graphics.h>
+#include <ubee.h>
+
+static uint8_t vmode;
 
 static char tbuf1[TTYSIZ];
 
@@ -50,7 +54,9 @@ uint8_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
-	vtoutput(&c, 1);
+	/* FIXME: eventually add support for 64x16 text as well */
+	if (vmode == 0)
+		vtoutput(&c, 1);
 }
 
 void tty_setup(uint8_t minor)
@@ -252,4 +258,81 @@ void lpen_kbd_poll(void)
 		k &= 31;
 	tty_inproc(1, k);
 	lpen_kbd_last = 0xFF;
+}
+
+static const struct display display[2] = {
+    /* 80 x 25 */
+    {
+        0,
+        80,25,
+        80,25,
+        0xFF,0xFF,
+        FMT_UBEE,
+        HW_UNACCEL,
+        GFX_MAPPABLE|GFX_TEXT|GFX_MULTIMODE,
+        0,
+        0,
+    },
+    {
+        1,
+        64, 16,
+        64, 16,
+        0xFF, 0xFF,
+        FMT_UBEE,
+        HW_UNACCEL,
+        GFX_MAPPABLE|GFX_MULTIMODE,	/* We need to fix up text yet */
+        0,
+        0,
+    },
+    {
+        2,
+        40, 25,
+        40, 25,
+        0xFF, 0xFF,
+        FMT_UBEE,
+        HW_UNACCEL,
+        GFX_MAPPABLE|GFX_MULTIMODE,	/* We need to fix up text yet */
+        0,
+        0,
+    },
+};
+
+static const struct videomap displaymap = {
+    0,
+    0,
+    0x8000,
+    0x1000,
+    0, 0,
+    0,
+    MAP_FBMEM
+};
+
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+    /* Change this if we add multiple console support */
+    if (minor != 1 || (arg >> 8) != 0x03)
+        return vt_ioctl(minor, arg, ptr);
+    switch(arg) {
+    case GFXIOC_GETINFO:
+        return uput(&display[vmode], ptr, sizeof(struct display));
+    case GFXIOC_MAP:
+        return uput(&displaymap, ptr, sizeof(displaymap));
+    case GFXIOC_UNMAP:
+        return 0;
+    case GFXIOC_GETMODE:
+    case GFXIOC_SETMODE:
+    {
+        uint8_t m = ugetc(ptr);
+        if (m > 1 || (m == 2 && ubee_model == UBEE_BASIC)) {
+            udata.u_error = EINVAL;
+            return -1;
+        }
+        if (arg == GFXIOC_GETMODE)
+            return uput(&display[m], ptr, sizeof(struct display));
+//TODO        vt_modeset(m);
+        return 0;
+    }
+    }
+    return -1;
 }
