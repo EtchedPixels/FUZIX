@@ -166,3 +166,25 @@ If we go this way then
    code and some stuff is a lot faster that way (eg TRS80 can use otir)
    YES - GFX_READ and GFX_WRITE core are almost identical on most boxes and
    can nicely self modify.
+
+9. We need an API for sprites, for character based displays with loadable
+   fonts and also for >8bit chars in char display.
+
+	struct fontinfo {
+		uint8_t width;	/* Bits */
+		uint8_t height;	/* Lines */
+		uint16_t base;	/* First symbol that is programable */
+		uint16_t last;	/* Last programmable symbol */
+	};
+
+	struct fontload {
+		uint16_t base;
+		uint16_t last
+		uint8_t *data;
+	};
+
+  or similar
+
+10. What about displays that don't really attach as such to a tty
+
+11. Hardware cursor on/off

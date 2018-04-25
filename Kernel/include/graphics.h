@@ -17,6 +17,7 @@ struct display {
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
+#define FMT_UBEE	130	/* Microbee 6545 modes */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918	128	/* Not neccessarily MSX... */
