@@ -98,7 +98,7 @@ scan_ram:
 	    inc de
 	    out (0x50),a		; select proposed bank
 	    ld (ix),c			; write to it
-	    ld a,#4
+	    ld a,#0x0C
 	    out (0x50),a		; back to bank 0
 	    ld a,(ix)			; read it back
 	    cp c			; did it mess with bank 0L ?
@@ -111,11 +111,11 @@ scan_done:
 
 page_codes:
 	    ; Detect a standard or premium 128K system
-	    .byte 0x06  ;	write 1 to bank 1L 0x80
+	    .byte 0x0E  ;	write 1 to bank 1L 0x80
 	    ; Detect a system with a 256K expansion mod
-	    .byte 0x44	;	write 1 to bank 2L 0x80
+	    .byte 0x4C	;	write 1 to bank 2L 0x80
 	    ; Detect a system with a 512K expansion mod
-	    .byte 0x84	;	write 1 to bank 4L 0x80
+	    .byte 0x8C	;	write 1 to bank 4L 0x80
 	    ; We don't handle the modern ubee premium plus emulated thing
 	    .byte 0x00  ;	and done
 
