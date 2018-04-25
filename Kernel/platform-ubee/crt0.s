@@ -84,7 +84,7 @@ not256tc:	; Are we a premium model
 		out (0x1c),a		; Set
 	        in a,(0x1c)		; Read
 	        cp #0x10		; If reads back we are premium
-		jr nz, premium_model
+		jr z, premium_model
 		ld a,#0x40		; Colour control register
 		out (0x08),a		; Set
 		in a,(0x08)		; Read
