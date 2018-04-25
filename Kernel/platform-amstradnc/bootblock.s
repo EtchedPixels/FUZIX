@@ -17,81 +17,86 @@ suspend_stack	.equ 0x1FE
 
 .area BOOTBLOCK (ABS)
 
-; NC200 entry point, when booting from floppy. We're paged in at 0x4000. This section
-; will get overwritten by vectors later but we don't care about that (it's only used
-; once on startup).
+; Stub to switch into the resume bank and code
+.org 0xE0
+	out (0x13),a
+	jp (hl)
 
-	.org 0x0
-nc200_entry:
+; On entry, the map looks like this:
+; 	0x0000: OS workspace
+;   0x4000: us (on the NC200 w/ floppy boot)
+;   0x8000: OS common
+;   0xc000: us (on either w/ PCMCIA boot)
+; We expect to run in the 0x0000 page, so the first thing we need to do is
+; remap ourselves.
+
+.org 0x100
 	di
 	ld a, #0x80
-	out (0x13), a
-	jp 0xc100
+	out (0x10), a				; map boot page to 0x0000
+	jp relocated
+relocated:
+	; At this point the OS common page is in 0x8000-0xbfff.
+	ld (entry_sp),sp
+	ld sp, #suspend_stack
+	ld hl, (0xB000)	; Save MMU bank copies from the OS
+	ld (entry_banks),hl
+	ld hl, (0xB002)
+	ld (entry_banks+2),hl
 
-		.org 0xE0
-;
-;	Stub to switch into the resume bank and code
-;
-		out (0x13),a
-		jp (hl)
-;
-;	We are assembled for 0x100 but actually load at 0xC000 initially
-;	but will relocate ourselves.
-;
-		.org 0x100
-		di
-	        ld (entry_sp),sp
-                ld hl, (0xB000)	; Save MMU bank copies from the OS
-	        ld (entry_banks),hl
-	        ld hl, (0xB002)
-	        ld (entry_banks+2),hl
-		;
-		;	Resume or new ?
-		;
-	        ld hl,(resume_vector)
-	        ld de,#0
-	        ld (resume_vector),de
-	        ld a,h
-	        or l
-	        jr z, no_resume
-;
-;	We want to put our suspend page back at 0xC000 but we can't do that
-;	directly as we are right now executing that bank
-;
-	        ld a,(suspend_map + 3)
-	        jp 0xE0		; stub to bank switch and jp
+	; Resume or new ?
+	ld hl, (resume_vector)
+	ld de, #0
+	ld (resume_vector), de
+	ld a, h
+	or l
+	jr z, no_resume
+
+; To resume, we map the suspend page at 0xc000 and jump to the resume
+; vector. As we're running from 0x0000, we can do that directly.
+
+	ld a, (suspend_map + 3)
+	out (0x12), a
+	jp (hl)
 
 no_resume:
-		ld a, #0x83	; map the low 16K of the kernel
-	        out (0x10), a
-		ld hl, #0xC000	; copy ourself into the low 16K
-		ld de, #0x0000
-		ld bc, #0x4000
-		ldir
-		ld a, #0x84
-		out (0x11), a
-		ld a, #0x81
-		out (0x12), a
-		ld hl, #0x8000
-		ld de, #0x4000
-		ld bc, #0x4000
-		ldir
-		ld a, #0x85
-		out (0x11), a
-		ld a, #0x82
-		out (0x12), a
-		ld hl, #0x8000
-		ld de, #0x4000
-		ld bc, #0x4000
-		ldir
-		ld a, #0x84	; map the other 32K of the kernel
-		out (0x11), a
-		ld a, #0x85
-		out (0x12), a
-		ld a, #0x86
-		jp switch	; get out of the segment that is going to vanish
-switch:		out (0x13), a	; map the common
-		jp 0x0213	; into crt0.s
+	; We want to boot proper now. To do this, we need to copy the clean
+	; copy of the kernel (in pages 0x80, 0x81, 0x82) into the working copy
+	; (in 0x83, 0x84, 0x85).
+	ld a, #0x80
+	ld b, #0x83
+	call copy_page
+	ld a, #0x81
+	ld b, #0x84
+	call copy_page
+	ld a, #0x82
+	ld b, #0x85
+	call copy_page
+
+	; Now map the working copy.
+	ld a, #0x83
+	out (0x10), a ; THIS IS SAFE because pages 0x80 and 0x83 contain the same code
+	inc a
+	out (0x11), a
+	inc a
+	out (0x12), a
+	inc a
+	out (0x13), a ; Page 0x86 contains the common.
+
+	; And go.
+	jp 0x0213
+
+	; Copies a single page. Source is in A, dest is in B.
+	; Uses 0x4000 as the source and 0x8000 as the dest.
+copy_page:
+	out (0x11), a
+	ld a, b
+	out (0x12), a
+	ld hl, #0x4000 ; source
+	ld de, #0x8000 ; dest
+	ld bc, #0x4000 ; size
+	ldir
+	ret
 
 		.org 0x200
 ;
