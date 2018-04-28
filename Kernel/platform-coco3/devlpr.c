@@ -60,5 +60,5 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			dw_transaction(buf, 2, NULL, 0, 0);
 		}
 	} 
-	return pe - p;
+	return udata.u_count;
 }
