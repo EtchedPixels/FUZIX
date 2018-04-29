@@ -1,15 +1,11 @@
-CC = fcc
-ASM = sdasz80
+CC = fcc -m$(USERCPU)
+ASM ?= sdasz80
 AR = sdar
 LINKER = sdldz80
 # This gets set for 'awkward' devices like ZX128
 #PLATFORM = -zx128
 PLATFORM =
 export PLATFORM
-#CC_OPT = -mz80 -c --opt-code-size --std-c99 --max-allocs-per-node 2000000 -I../include
-#CC_OPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 20000 -I../include -I../../Kernel/include
-# for stuff that gives sdcc nightmares
-#CC_NOOPT = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../include
 CC_OPT = -O2 -c
 CC_NOOPT = -c
 ASM_OPT = -l -o -s
@@ -18,7 +14,7 @@ SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
 SRC_CRT0NS = crt0nostdio$(PLATFORM).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
-SRC_ASM = enter.s htonl-z80.s htons-z80.s
+SRC_ASM = enter.s htonl-$(USERCPU).s htons-$(USERCPU).s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c a64l.c abort.c asctime.c assert.c atexit.c atoi_small.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -101,29 +97,31 @@ OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 OBJ_RES = $(SRC_RES:.c=.rel)
 
-all: syslib$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
+all: c$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
 syscall.l: fuzix/syslib.l
-	../tools/syscall
-	(cd fuzix; $(MAKE))
-	cat fuzix/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix\//" >syscall.l
+	../tools/syscall $(USERCPU)
+	(cd fuzix$(USERCPU); $(MAKE))
+	cat fuzix$(USERCPU)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix"$(USERCPU)"\//" >syscall.l
 
-sdccz80.lib:
-	../tools/libclean
+sdcc$(USERCPU).lib:
+	../tools/libclean $(USERCPU)
 
-syslib$(PLATFORM).lib: syscall.l libc.l sdccz80.lib
+syslib$(PLATFORM).lib: syscall.l libc.l sdcc$(USERCPU).lib
 	cat libc.l syscall.l >syslib.l
-	cp sdccz80.lib syslib$(PLATFORM).lib
+	cp sdcc$(USERCPU).lib syslib$(PLATFORM).lib
 	$(AR) rc syslib$(PLATFORM).lib @syslib.l
 	$(AR) s syslib$(PLATFORM).lib
+
+c$(PLATFORM).lib: syslib$(PLATFORM).lib
 	ln -sf syslib$(PLATFORM).lib c$(PLATFORM).lib
 
 fuzix/syslib.l:
-	../tools/syscall
-	$(MAKE) -C fuzix
+	../tools/syscall $(USERCPU)
+	$(MAKE) -C fuzix$(USERCPU)
 
 liberror.txt:
 	../tools/liberror > liberror.txt
