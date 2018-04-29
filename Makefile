@@ -16,6 +16,7 @@
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # trs80:	TRS80 Model 4P with 128K RAM (some other TRS80 extension
 #		mappers have untested code in the tree)
+# ubee:		Microbee (256TC currently - older models in progress)
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta retrobrew SBC
 #
@@ -23,7 +24,7 @@
 #
 # v65:		Virtual platform for 6502 development
 # v65c816:	Virtual platform for 65c816 development
-# v68:		Virtual platfomr for 68000 development
+# v68:		Virtual platform for 68000 development
 
 TARGET=z80pack
 
