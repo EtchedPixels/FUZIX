@@ -4,7 +4,7 @@
 #	IMHO beats forking the library or building a private copy.
 #
 #
-CPU=z80
+CPU=$1
 LIBZ80=$(../../Kernel/tools/findsdcc $CPU)
 
 cp $LIBZ80/$CPU.lib tmp.lib
@@ -20,4 +20,4 @@ sdar d tmp.lib printf_large.rel puts.rel gets.rel assert.rel time.rel
 sdar d tmp.lib tolower.rel toupper.rel _ltoa.rel _itoa.rel abs.rel atoi.rel
 # Added in 3.7.0rc so we can't rely on it yet and must always use our own
 sdar d tmp.lib strtoul.rel
-mv tmp.lib sdccz80.lib
+mv tmp.lib sdcc$CPU.lib

@@ -196,8 +196,8 @@ static void set_cpu(const char *p)
     exit(1);
   }
   cpu = mstrdup(p);
-  if (strcmp(cpu, "z80") && strcmp(cpu, "z180")) {
-    fprintf(stderr,"fcc: only z80 and z180 targets currently handled.\n");
+  if (strcmp(cpu, "z80") && strcmp(cpu, "z180") && strcmp(cpu, "r2k") && strcmp(cpu, "r3ka")) {
+    fprintf(stderr,"fcc: only Zilog z80, z180 and Rabbit r2k/r3ka targets currently handled.\n");
     exit(1);
   }
 }
