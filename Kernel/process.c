@@ -159,7 +159,7 @@ void switchout(void)
 		}
 		udata.u_ptab->p_status = P_READY;
 	}
-	/* We probably need to run somehting else */
+	/* We probably need to run something else */
 	platform_switchout();
 }
 
