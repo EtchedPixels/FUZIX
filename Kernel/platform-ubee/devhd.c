@@ -74,7 +74,7 @@ static uint8_t hd_waitready(void)
 	do {
 		st = hd_status;
 		tick++;
-	} while (!(st & 0x40) && !tick);
+	} while (!(st & 0x40) && tick);
 	return st;
 }
 
@@ -137,7 +137,7 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	
 	/* Get rid of port 58 selector */
 	minor &= 0x7F;
-	/* Reserve low bits fo rfuture partition tables */
+	/* Reserve low bits for future partition tables */
 	minor >>= 4;
 
 	while (ct < udata.u_nblock) {
