@@ -1,7 +1,4 @@
-CC = fcc
-ASM = sdasz80
-LINKER = ../../../Library/tools/fcc
-FCC = ../../../Library/tools/fcc
+FCC = ../../../Library/tools/fcc -m$(USERCPU)
 FCCOPTS = -O2
 PLATFORM =
 #PLATFORM = -tzx128

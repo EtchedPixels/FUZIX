@@ -1,8 +1,4 @@
-CC = sdcc
-ASM = sdasz80
-AR = sdar
-LINKER = sdcc
-FCC = ../../../Library/tools/fcc
+FCC = ../../../Library/tools/fcc -m$(USERCPU)
 FCCOPTS = -O2
 PLATFORM =
 #PLATFORM = -tzx128

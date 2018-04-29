@@ -1,6 +1,6 @@
 .SUFFIXES: .c .rel
 
-FCC = ../../Library/tools/fcc 
+FCC = ../../Library/tools/fcc -m$(USERCPU)
 FCCOPTS = -O2
 SRCS  = flashrom.c
 OBJS = $(SRCS:.c=.rel)

@@ -1,5 +1,4 @@
-LINKER = sdcc
-FCC = ../../../../Library/tools/fcc -O2 -fsigned-char
+FCC = ../../../../Library/tools/fcc -m $(USERCPU) -O2 -fsigned-char
 PLATFORM =
 #PLATFORM = -tzx128
 

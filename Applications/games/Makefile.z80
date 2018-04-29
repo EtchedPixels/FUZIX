@@ -1,15 +1,12 @@
 CC = sdcc
-ASM = sdasz80
-AR = sdar
-LINKER = sdcc
-FCC = ../../Library/tools/fcc -O2
+FCC = ../../Library/tools/fcc -O2 -m$(USERCPU)
 PLATFORM =
 #PLATFORM = -tzx128
 
 PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 # Used for programs that make sdcc go boom or take hours
-CC_CRAP = -mz80 --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../../Library/include
+CC_CRAP = -m$(USERCPU) --std-c99 -c --opt-code-size --max-allocs-per-node 1000 -I../../Library/include
 ASM_OPT = -l -o -s
 LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
 BINMAN = ../../Library/tools/binman

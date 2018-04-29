@@ -3,7 +3,7 @@
 #	do endian swapping if building on PC for 6809
 #
 
-FCC = fcc
+FCC = fcc -m$(USERCPU)
 FCCOPTS = -O2 --nostdio
 PLATFORM =
 

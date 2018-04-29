@@ -1,5 +1,4 @@
-LINKER = sdcc
-FCC = ../../../../Library/tools/fcc -O2 -DTARGET_Z80
+FCC = ../../../../Library/tools/fcc -m($USERCPU) -O2 -DTARGET_Z80
 PLATFORM =
 #PLATFORM = -tzx128
 
