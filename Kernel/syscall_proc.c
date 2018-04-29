@@ -620,7 +620,6 @@ _sched_yield (void)              Function 62
 
 arg_t _sched_yield(void)
 {
-	if (nready > 1)
-		switchout();
+	switchout();
 	return 0;
 }
