@@ -1,6 +1,6 @@
 .SUFFIXES: .c .rel
 
-CC = fcc
+CC = fcc -m$(USERCPU)
 CFLAGS = -c
 COPT = -O2
 
