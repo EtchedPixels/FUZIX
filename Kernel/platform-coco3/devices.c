@@ -11,6 +11,7 @@
 #include <dwtime.h>
 #include <netdev.h>
 #include <devlpr.h>
+#include <devrtsd.h>
 
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -54,6 +55,9 @@ void device_init(void)
 #endif
 #ifdef CONFIG_COCOSDC
 	devsdc_init( );
+#endif
+#ifdef CONFIG_COCOSDNANO
+	devrtsd_init();
 #endif
 	if ( ! dw_init() )
 		dwtime_init( );
