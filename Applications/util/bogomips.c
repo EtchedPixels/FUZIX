@@ -20,7 +20,7 @@ void delay(unsigned long r)
 	"b@ rts       \n"
 	);
 }
-#elif defined(__SDCC_z80)
+#elif defined(__SDCC_z80) || defined(__SDCC_r2k)
 void delay(unsigned long r)
 {
 __asm
@@ -31,10 +31,10 @@ __asm
 loop:
     dec de
     ld a,d
-    or e
+    or a,e
     jp nz,loop
     ld a,b
-    or c
+    or a,c
     dec bc
     jp nz,loop
     push bc
