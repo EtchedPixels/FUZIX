@@ -355,7 +355,10 @@ to a bank register. In more complex systems it may be a lookup table index.
 This value is the value passed into map_process and map_process_a.
 
 uint8_t platform_param(char *p) : Called with each string on the boot
-command line. If a string is recognized as an option return 1, otherwise 0.
+command line. If a string is recognized as an option return 1 and act upon
+it, otherwise 0. This method is invoked after device_init but before we
+mount the root file system. It is therefore allowed to modify the device
+tables.
 
 void device_init(void) : This is invoked after interrupts are enabled and
 allows device probing and setup to occur before we mount the root file
