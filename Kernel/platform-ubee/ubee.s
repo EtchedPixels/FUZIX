@@ -336,7 +336,6 @@ _program_vectors:
 
 	    call map_process
 
-	    out (0xfe), a
             ; write zeroes across all vectors
             ld hl, #0
             ld de, #1
