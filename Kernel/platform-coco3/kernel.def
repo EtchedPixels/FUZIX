@@ -4,22 +4,6 @@ U_DATA                      equ 0xe000       ; (this is struct u_data from kerne
 U_DATA__TOTALSIZE           equ 0x200        ; 256+256 bytes.
 
 
-;;; We don't need these macros for we have no
-;;; SAM shenanigans on a CoCo3
-
-SAM_USER macro
-	endm
-
-SAM_KERNEL macro
-	endm
-
-SAM_SAVE macro
-	endm
-
-SAM_RESTORE macro
-	endm
-
-
 ;; asm/c shared IDE stuff
 IDEDATA			    equ 0xFF50
 IDEDATA_L		    equ 0xFF58

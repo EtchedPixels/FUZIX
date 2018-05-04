@@ -11,16 +11,3 @@ IDEDATA_L		    equ 0xFF58
 
 PROGBASE                    equ 0x8000       ; programs and data start here
 
-; Have these defined so that lowlevel-6809.s can be used as-is
-SAM_USER macro
-	endm
-
-SAM_KERNEL macro
-	endm
-
-SAM_SAVE macro
-	endm
-
-SAM_RESTORE macro
-	endm
-
