@@ -192,149 +192,146 @@ _doexec:
 ;	better.
 ;
 interrupt_handler:
-	    ; Do not use the stack before the switch...
+	; Do not use the stack before the switch...
+	; FIXME: add profil support here (need to keep profil ptrs
+	; unbanked if so ?)
 
-	    ; FIXME: add profil support here (need to keep profil ptrs
-	    ; unbanked if so ?)
+	lda #1
+        sta U_DATA__U_ININTERRUPT
 
-	    lda #1
-            sta U_DATA__U_ININTERRUPT
+        ; switch stacks
+        sts istack_switched_sp
+        lds #istack_top-2
+	; FIXME: check store/dec order might not need to be -2 here!!!!
 
-            ; switch stacks
-            sts istack_switched_sp
-            lds #istack_top-2
-	    ; FIXME: check store/dec order might not need to be -2 here!!!!
+	jsr map_save
 
-	    jsr map_save
+	lda 0		; save address 0 contents for checking
 
-	    lda 0		; save address 0 contents for checking
+	; preserves registers
+	jsr map_kernel
+	;
+	; kernel_flag is in the kernel map so we need to map early, we
+	; need to map anyway for trap_signal
+	;
+	ldb U_DATA__U_INSYS	; In a system call ?
+	bne in_kernel
 
-	    ; preserves registers
-	    jsr map_kernel
-	    ;
-	    ; kernel_flag is in the kernel map so we need to map early, we
-	    ; need to map anyway for trap_signal
-	    ;
-	    ldb U_DATA__U_INSYS	; In a system call ?
-	    bne in_kernel
-
-            ; we're not in kernel mode, check for signals and fault
-            cmpa #0x7E		; JMP at 0
-	    beq nofault
-	    jsr map_process_always ; map the process
-	    lda #0x7E		; put it back
-	    sta 0		; write
-	    jsr map_kernel	; restore the map
-	    ldx #11		; SIGSEGV
-	    jsr trap_signal	; signal the user with a fault
+        ; we're not in kernel mode, check for signals and fault
+        cmpa #0x7E		; JMP at 0
+	beq nofault
+	jsr map_process_always ; map the process
+	lda #0x7E		; put it back
+	sta 0		; write
+	jsr map_kernel	; restore the map
+	ldx #11		; SIGSEGV
+	jsr trap_signal	; signal the user with a fault
 
 nofault:
 in_kernel:
-            ; set inint to true
-            lda #1
-            sta _inint
+        ; set inint to true
+        lda #1
+        sta _inint
 
-	    ;
-	    ; If the kernel decides to task switch it will set
-	    ; _need_resched, and will only do so if the caller was in
-	    ; user space so has a free kernel stack
+	;
+	; If the kernel decides to task switch it will set
+	; _need_resched, and will only do so if the caller was in
+	; user space so has a free kernel stack
 
-            jsr _platform_interrupt
+        jsr _platform_interrupt
 
-            clr _inint
-            ldx istack_switched_sp	; stack back
-            clr U_DATA__U_ININTERRUPT
-            lda U_DATA__U_INSYS
-            bne interrupt_return_x
-	    lda _need_resched
-	    beq no_switch
+        clr _inint
+        ldx istack_switched_sp	; stack back
+        clr U_DATA__U_ININTERRUPT
+        lda U_DATA__U_INSYS
+        bne interrupt_return_x
+	lda _need_resched
+	beq no_switch
 
-	    clr _need_resched
-	    stx U_DATA__U_SYSCALL_SP	; save again somewhere safe for
+	clr _need_resched
+	stx U_DATA__U_SYSCALL_SP	; save again somewhere safe for
 					; preemption
-	    ; Pre emption occurs on the task stack. Conceptually its a
-	    ; not quite a syscall
-	    lds #kstack_top
-	    jsr _chksigs		; check signal state
-	    ;
-	    ldx U_DATA__U_PTAB
-	    ; Move to ready state
-	    lda #P_READY
-	    sta P_TAB__P_STATUS_OFFSET,x
-	    ; Sleep on the kernel stack, IRQs will get re-enabled if need
-	    ; be
-	    jsr _platform_switchout
-	    ;
-	    ; We will resume here after the pre-emption. Get back onto
-	    ; the user stack and map ourself in
-	    jsr map_process_always
-	    lds U_DATA__U_SYSCALL_SP
-	    bra intdone
+	; Pre emption occurs on the task stack. Conceptually its a
+	; not quite a syscall
+	lds #kstack_top
+	jsr _chksigs		; check signal state
+	;
+	ldx U_DATA__U_PTAB
+	; Move to ready state
+	lda #P_READY
+	sta P_TAB__P_STATUS_OFFSET,x
+	; Sleep on the kernel stack, IRQs will get re-enabled if need
+	; be
+	jsr _platform_switchout
+	;
+	; We will resume here after the pre-emption. Get back onto
+	; the user stack and map ourself in
+	jsr map_process_always
+	lds U_DATA__U_SYSCALL_SP
+	bra intdone
 
 	    ; Not task switching - the easy and usual path
 no_switch:   
-	    ; On a return from an interrupt restore the old mapping as it
-	    ; will vary during kernel activity and we need to put it put
-	    ; it back as it was before the interrupt
-	    ; pre-emption is handled differently...
-	    jsr map_restore
-	    lds istack_switched_sp
+	; On a return from an interrupt restore the old mapping as it
+	; will vary during kernel activity and we need to put it put
+	; it back as it was before the interrupt
+	; pre-emption is handled differently...
+	jsr map_restore
+	lds istack_switched_sp
 
 intdone: 
-            ; we're not in kernel mode, check for signals
-	    ; runs off the user stack
-	    pshs y
-            jsr dispatch_process_signal
-	    puls y
+        ; we're not in kernel mode, check for signals
+	; runs off the user stack
+	pshs y
+        jsr dispatch_process_signal
+	puls y
 
 interrupt_return:
-            rti
+        rti
 interrupt_return_x:
-	    tfr x,s
-	    jsr	map_restore
-	    bra interrupt_return
+	tfr x,s
+	jsr	map_restore
+	bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
 trap_signal:
-	    pshs x
-	    ldx U_DATA__U_PTAB	;  ssig(pid, X)
-            jsr _ssig
-	    puls x,pc
+	pshs x
+	ldx U_DATA__U_PTAB	;  ssig(pid, X)
+        jsr _ssig
+	puls x,pc
 
 ;  Called from process context (hopefully)
 null_handler:
-	    ; kernel jump to NULL is bad
-	    lda U_DATA__U_INSYS
-	    beq trap_illegal
-	    ; user is merely not good
-	    ; check order of push arguments !!
-            ldx #7
-	    ldy U_DATA__U_PTAB
-	    ldd #10		;	signal (getpid(), SIGBUS)
-	    pshs d,y
-	    swi
-	    puls d,y
-	    ldd #0
-	    tfr d,x
-	    pshs d,x
-            swi			; exit
-
-
+	; kernel jump to NULL is bad
+	lda U_DATA__U_INSYS
+	beq trap_illegal
+	; user is merely not good
+	; check order of push arguments !!
+        ldx #7
+	ldy U_DATA__U_PTAB
+	ldd #10		;	signal (getpid(), SIGBUS)
+	pshs d,y
+	swi
+	puls d,y
+	ldd #0
+	tfr d,x
+	pshs d,x
+        swi			; exit
 
 illegalmsg: .ascii "[trap_illegal]"
-            .db 13,10,0
+        .db 13,10,0
 
 trap_illegal:
-	    ldx #illegalmsg
-	    jsr outstring
-	    jsr _platform_monitor
+	ldx #illegalmsg
+	jsr outstring
+	jsr _platform_monitor
 
-dpsmsg:	    .ascii "[dispsig]"
-            .db 13,10,0
+dpsmsg:	.ascii "[dispsig]"
+        .db 13,10,0
 
 
-nmimsg:     .ascii "[NMI]"
-            .db 13,10,0
+nmimsg: .ascii "[NMI]"
+        .db 13,10,0
 
 nmi_handler:
 	lds #istack_top-2		; We aren't coming back so this is ok
