@@ -131,15 +131,19 @@ page_codes:
 ; ROM
 ;
 to_monitor:
-	    jp to_monitor
-
 	    ; Until we figure out how/if we can fix this
+	    di
+	    halt
+	    jr to_monitor;
 
 	    xor a			; 0 or 1 to keep low 32K right ? */
 	    out (0x50), a		; ROMS please
-	    jp 0xE003			; Monitor
+	    jp 0x8000			; Monitor
 
 to_reboot:
+	    di
+	    halt
+	    jr to_reboot
 	    xor a
 	    out (0x50), a
 	    jp 0xE000
