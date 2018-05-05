@@ -466,15 +466,13 @@ _kbscan:
 	    bit 6,a		; No light pen signal - no key
 	    jr z, nokey		; Fast path exit
 
-jr notlast ; FIXME
-
             ld a, (_lpen_kbd_last)	; Rather than the slow scan try and
             cp #255		; test if we are holding down the same key
             jr z, notlast	; assuming one was held down
             call ispressed	; see if the key is held down (usual case)
 	    ld a, (_lpen_kbd_last)
 				; if so return the last key
-            jr z, nokey
+            jr nz, retkey
 notlast:
 	    ld l,#57		; Scan the keys in two banks, the first 57
 	    ld de,#0x0000
@@ -491,6 +489,7 @@ nokey:
 	    ret
 gotkey:
 	    sub l
+retkey:
 	    ld l,a
 	    ret
 
