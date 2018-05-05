@@ -249,9 +249,11 @@ void lpen_kbd_poll(void)
 		return;
 	}
 	if (kbtest(63))
-		k = xlate_shift[k];
+		k = xlate_shift[lpen_kbd_last];
 	else
-		k = xlate[k];
+		k = xlate[lpen_kbd_last];
+	if (k == 0)
+		return;
 	if (capslock && (k >= 'a' && k <= 'z'))
 		k -= 32;
 	if (k >= 64 && k <= 127 && kbtest(57))
