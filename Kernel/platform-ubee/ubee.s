@@ -131,6 +131,10 @@ page_codes:
 ; ROM
 ;
 to_monitor:
+	    jp to_monitor
+
+	    ; Until we figure out how/if we can fix this
+
 	    xor a			; 0 or 1 to keep low 32K right ? */
 	    out (0x50), a		; ROMS please
 	    jp 0xE003			; Monitor
@@ -461,14 +465,16 @@ _kbscan:
 	    in a,(0x0C)
 	    bit 6,a		; No light pen signal - no key
 	    jr z, nokey		; Fast path exit
+
+jr notlast ; FIXME
+
             ld a, (_lpen_kbd_last)	; Rather than the slow scan try and
             cp #255		; test if we are holding down the same key
             jr z, notlast	; assuming one was held down
             call ispressed	; see if the key is held down (usual case)
 	    ld a, (_lpen_kbd_last)
 				; if so return the last key
-	    bit 0,l		; b = 1 if we found it
-            jr nz, key_return
+            jr z, nokey
 notlast:
 	    ld l,#57		; Scan the keys in two banks, the first 57
 	    ld de,#0x0000
@@ -479,12 +485,12 @@ notlast:
 	    ld de,#0x03A0	; and if that fails the last 5 oddities
 	    call scanner	; in order to handle shift etc
             ld a,#63
-gotkey:
-	    sub b
-	    jr key_return
+	    jr nz, gotkey
 nokey:
-	    ld a,#255
-key_return:
+	    ld l,#255
+	    ret
+gotkey:
+	    sub l
 	    ld l,a
 	    ret
 
@@ -519,6 +525,18 @@ ispressed:
 ;
 ;	Returns L holding the count of keys until we found a hit
 ;
+;	Internal use of registers is as follows
+;	A - scratch				A
+;	B - low update register			E
+;	C - 6545 control port			C
+;	DE - from caller			HL
+;	H - dummy register index		D
+;	L - counter from caller			B
+;
+; Obscure Z80ism in a,(n) does not affect flags but in r,(c) does. We
+; rely on this for the scanner and scanner exit code so don't mess with the
+; use of in here as we have a cunning plan...
+;
 scanner:
 	    ld a,#1
 	    out (0x0b),a		; character ROM so we can scan
@@ -536,10 +554,12 @@ sethigh:    ld a,#18			; update register high
             ld d,#16
 setlow:     out (c),b			; set the low byte from the passed address
 	    out (0x0d),a
-            out (c),h			; dummy read to reset
+            out (c),h			; dummy reg to reset
             out (0x0d),a
 strobe:     in e,(c)			; spin for a strobe
             jp p, strobe
+	    ; for the below we could do in f,(c) jr nz but we are sticking
+	    ; to documented instructions for the moment even if longer
             in e,(c)
             bit 6,e			; did we get a strobe ?
             jr nz,scanner_done
@@ -554,13 +574,14 @@ strobe:     in e,(c)			; spin for a strobe
 	    ;
 	    ;	L holds the count remaining and thus computes the keycode
 	    ;   0 means 'we found nothing'
+	    ;   Also Z = no luck, NZ = got one
 	    ;
 scanner_done:
 	    pop de			; recover position we are at
             ld a,#16			; lpen reset
             out (0x0c),a
             in a,(0x0d)			; VDU reset
-            xor a
+            ld a,#0			; Not xor as we are preserving Z
             out (0x0b),a
 	    ret
 
