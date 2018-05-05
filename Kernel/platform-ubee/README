@@ -20,7 +20,21 @@ The other memory is then overlaid on 0000-7FFF for user space
 
 Testing with uBee512
 
-ubee512
+Use the built Kernel/platform-ubee/fuzix.ss80 as a boot image
+
+cd Standalone/filesystem
+./build-mini-filesystem root.ds82 64 1600
+
+Then run either
+
+	ubee512 --model=256tc -a fuzix.ss80 -b root.ds82
+	ubee512	--model=p512k -a fuzix.ss80 -b root.ds82
+	ubee512 --model=p128k -a fuzix.ss80 -b root.ds82 --rtc=1
+
+(as an RTC is required).
+
+and when asked for the root file system reply 1
+
 
 Done so far:
 
@@ -61,6 +75,7 @@ Done so far:
 - Buffer reclaim of discard memory
 - Bank the video
 - Debug TC keyboard code: shift/ctrl are busted
+- Non TC keyboard (lightpen keyboard)
 
 
 To Do:
@@ -69,9 +84,9 @@ To Do:
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
   of 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
-- Non TC keyboard (lightpen keyboard)
 - Fix reboot/panic logic
 - Keyboard repeat
+- Graphics not just vt interfaces
 
 Longer Term
 - RAM based fonts (load the ROM one into RAM
@@ -79,7 +94,6 @@ Longer Term
 - Do delayed video output via a buffer off vblank event for non premium
 - Proper support for Z80 PIO interfaces
 - Z8530 SCC
-- Graphics not just vt interfaces
 - Maybe eventually switch to soft interrupt model and support soft serial
   interrupts (ick)
 
@@ -149,9 +163,9 @@ Currently in progress
 - Move common up					DONE
 - Do buffer over discard change				DONE
 - Check we have video latches/map right everywhere	DEBUGGING
-- Init vtattr_cap and the video variables correctly	PARTLY DONE
+- Init vtattr_cap and the video variables correctly	DONE (I think)
 - Check if scrolling in hw is doable or not in 80x25	NO
-- Support 'map video into my process at 0x8000 hack'	PARTLY DONE
+- Support 'map video into my process at 0x8000 hack'	DONE
 - Non premium video					COLOUR IN PROGRESS
 - Non premium video setup				COLOUR IN PROGRESS
 - Copy ROM font to RAM, support RAM font setting
