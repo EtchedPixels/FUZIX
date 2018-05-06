@@ -26,6 +26,9 @@
 /****************************************************************************/
 
 #ifdef IDE_REG_CONTROL
+
+#define IDE_HAS_RESET
+
 static void devide_delay(void)
 {
     timer_t timeout;
@@ -146,7 +149,7 @@ void devide_init(void)
 {
     uint8_t d;
 
-#ifdef IDE_REG_CONTROL
+#ifdef IDE_HAS_RESET
     devide_reset();
 #endif
 

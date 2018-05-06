@@ -136,7 +136,7 @@ fail:
 /* The innermost part of the transfer routines has to live in common memory */
 /* since it must be able to bank switch to the user memory bank.            */
 /****************************************************************************/
-#ifndef IDE_REG_INDIRECT
+#if !defined(IDE_REG_INDIRECT) && !defined(IDE_NONSTANDARD_XFER)
 
 #ifndef IDE_IS_MMIO
 
