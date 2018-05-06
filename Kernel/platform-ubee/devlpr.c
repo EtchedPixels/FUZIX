@@ -2,13 +2,14 @@
 #include <version.h>
 #include <kdata.h>
 #include <devlpr.h>
+#include <ubee.h>
 
 __sfr __at 0x00 lpdata;		/* I/O 0 PIO A data */
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
     used(flag);
-    if (minor) {
+    if (ubee_parallel != UBEE_PARALLEL_LPR || minor) {
         udata.u_error = ENODEV;
         return -1;
     }
@@ -48,6 +49,7 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
         irqrestore(irq);
         lpready = 0;
         lpdata = ugetc(udata.u_base++);
+        udata.u_done++;
     }
     return udata.u_done;
 }

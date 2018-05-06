@@ -14,4 +14,4 @@ Z80_MMU_HOOKS		    .equ 0
 
 CONFIG_SWAP		    .equ 1
 
-NBUFS			    .equ 7
+NBUFS			    .equ 6

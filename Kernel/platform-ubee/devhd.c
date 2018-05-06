@@ -20,6 +20,7 @@
 #include <printf.h>
 #include <devhd.h>
 #include <ubee.h>
+#include <blkdev.h>
 
 __sfr __at 0x40 hd_data;
 __sfr __at 0x41 hd_precomp;	/* W/O */
@@ -90,160 +91,173 @@ static uint8_t hd_waitidle(void)
 	return st;
 }
 
-static uint8_t hd_xfer(bool is_read, uint16_t addr)
-{
-	/* Error ? */
-	if (hd_status & 0x01)
-		return hd_status;
-	if (is_read)
-		hd_xfer_in(addr);
-	else
-		hd_xfer_out(addr);
-	/* Should be returning READY, and maybe SEEKDONE */
-	return hd_status;
-}
-
 /*
- *	We only support normal block I/O for the moment. We do need to
- *	add swapping!
+ *	Transfer for routine for the WD1010 (ST-506) interface.
  */
 
-static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static uint8_t hd_transfer_sector(void)
 {
-	uint16_t dptr;
-	uint16_t ct = 0;
-	int tries;
-	uint8_t err = 0;
-	uint8_t cmd = HDCMD_READ;
-	uint8_t head;
-	uint8_t sector;
+	uint8_t drive = blk_op.blkdev->driver_data & 0x0F;
+	uint8_t sel = !!(drive & 0x08);
 
-	if (rawflag) {
-		if (rawflag == 1) {
-			if (d_blkoff(9))
-				return -1;
-			/* TODO */
-			hd_page = 0xFF;
-		} else {
-			hd_page = swappage;
-		}
-	}
+	uint32_t b;
+	uint8_t sector, head;
+	uint8_t err;
+	uint8_t tries;
 
-	dptr = (uint16_t)udata.u_dptr;
+	drive &= 0x07;
 
-	if (!is_read)
-		cmd = HDCMD_WRITE;
+	b = blk_op.lba / spt[drive];
+	sector = blk_op.lba % spt[drive];
+	head = b % heads[drive];
+	b /= heads[drive];
 
-	/* We don't touch precomp and hope the firmware set it right */
-	hd_seccnt = 1;
-	
-	/* Get rid of port 58 selector */
-	minor &= 0x7F;
-	/* Reserve low bits for future partition tables */
-	minor >>= 4;
-
-	while (ct < udata.u_nblock) {
-		uint16_t b = udata.u_block / spt[minor];
-		sector = udata.u_block % spt[minor];
-		head = b % heads[minor];
-		if (minor < MAX_HD) {
-			/* ECC, 512 bytes, head and drive */
-			hd_sdh = 0xA0 | head | (minor << 3);
-		} else {
-			/* Floppy setup */
-			hd_fdcside = head;
-			/* CRC, 512 bytes, head (0/1), FDC unit, fdc number */
-			hd_sdh = 0x38 | head | ((minor - MAX_HD) << 1);
-		}
-		hd_secnum = sector + 1;
-
-		/* cylinder bits */
-		b /= heads[minor];
-		hd_cyllo = b;
-		hd_cylhi = b >> 8;
-
-		for (tries = 0; tries < 4; tries++) {
-			/* issue the command */
-			hd_cmd = cmd;
-			err = 0;
-			/* Wait for busy to drop if reading before xfer */
-			if (is_read) {
-				hd_waitidle();
-				err = hd_status;
-			}
-			if (!(err & 1)) {
-				err = hd_xfer(is_read, dptr);
-				/* Wait for busy to drop after xfer if writing */
-				if (!is_read)
-					err = hd_waitidle();
-				/* Ready, no error, not busy ? */
-				if ((err & 0xC1) == 0x40)
-					break;
-			} else
-				kprintf("hd%d: err %x\n", minor, err);
-
-			if (tries > 1) {
-				hd_cmd = HDCMD_RESTORE;
-				if (hd_waitready() & 1)
-					kprintf("hd%d: restore error %z\n", minor, err);
-			}
-		}
-		if (tries == 3)
-			goto bad;
-		ct++;
-		dptr += 512;
-		udata.u_block ++;
-	}
-	return ct << BLKSHIFT;
-bad:
-	if (err & 1)
-		kprintf("hd%d: error %x\n", minor, hd_err);
-	else
-		kprintf("hd%d: status %x\n", minor, err);
-bad2:
-	udata.u_error = EIO;
-	return -1;
-}
-
-int hd_open(uint8_t minor, uint16_t flag)
-{
-	uint8_t sel = (minor & 0x80) ? 1 : 0;
-	flag;
-	
-	minor &= 0x7F;
-	/* Reserve low bits for future partition table support */
-	minor >>= 4;
-
-	if (disk_type[sel] != DISK_TYPE_HDC || minor >= MAX_HD + MAX_FDC) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
 	fdc_devsel = sel;
-	if (minor <= MAX_HD) {
-		hd_sdh = 0xA0 | (minor << 3);
-		hd_cmd = HDCMD_RESTORE | RATE_2MS;
+
+	if (drive < MAX_HD) {
+		/* ECC, 512 bytes, head and drive */
+		hd_sdh = 0xA0 | head | (drive << 3);
 	} else {
-		hd_sdh = 0x38 | ((minor - MAX_HD) << 1);
-		hd_cmd = HDCMD_RESTORE | RATE_6MS;
+		/* Floppy setup */
+		hd_fdcside = head;
+		/* CRC, 512 bytes, head (0/1), FDC unit, fdc number */
+		hd_sdh = 0x38 | head | ((drive - MAX_HD) << 1);
 	}
-	if (hd_waitready() & 1) {
-		if ((hd_err & 0x12) == 0x12) {
-			return -ENODEV;
+	hd_secnum = sector + 1;
+
+	/* cylinder bits */
+	hd_cyllo = b;
+	hd_cylhi = b >> 8;
+
+	for (tries = 0; tries < 4; tries++) {
+		/* issue the command */
+		hd_cmd = blk_op.is_read ? HDCMD_READ : HDCMD_WRITE;
+		err = 0;
+		/* Wait for busy to drop if reading before xfer */
+		if (blk_op.is_read) {
+			hd_waitidle();
+			hd_xfer_in();
+			err = hd_status;
+		} else {
+			hd_xfer_out();
+			/* Wait for busy to drop after xfer if writing */
+			err = hd_waitidle();
+			/* Ready, no error, not busy ? */
+		}
+		if ((err & 0xC1) == 0x40)
+			return 1;
+
+		kprintf("hd%d: err %x\n", drive, err);
+
+		if (tries > 1) {
+			hd_cmd = HDCMD_RESTORE | RATE_6MS;
+			if (hd_waitready() & 1)
+				kprintf("hd%d: restore error %x\n", drive, err);
 		}
 	}
+	if (err & 1)
+		kprintf("hd%d: error %x\n", drive, hd_err);
+	else
+		kprintf("hd%d: status %x\n", drive, err);
 	return 0;
 }
 
-int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+static void hd_init_drive(uint8_t drive)
 {
-	flag;
-	fdc_devsel = (minor & 0x80) ? 1 : 0;
-	return hd_transfer(minor, true, rawflag);
+	blkdev_t *blk;
+	uint8_t sel = !!(drive & 0x08);
+
+	/* Only probe controllers that are present */
+	if (disk_type[sel] != DISK_TYPE_HDC)
+		return;
+
+	fdc_devsel = sel;
+
+	drive &= 0x07;
+
+	if (drive < MAX_HD) {
+		hd_sdh = 0xA0 | (drive << 3);
+		hd_cmd = HDCMD_RESTORE | RATE_2MS;
+	} else {
+		hd_sdh = 0x38 | ((drive - MAX_HD) << 1);
+		hd_cmd = HDCMD_RESTORE | RATE_6MS;
+	}
+	if (hd_waitready() & 1) {
+		if ((hd_err & 0x12) == 0x12)
+			return;
+	}
+	/* Found */
+	blk = blkdev_alloc();
+	if (blk == NULL) {
+		kputs("hd: too many drives.\n");
+		return;
+	}
+	blk->transfer = hd_transfer_sector;
+	blk->flush = NULL;
+	blk->driver_data = drive | (sel << 3);
+	blk->drive_lba_count = 0xFFFFFF;
+	/* No partitions on floppy disks thank you */
+	if (drive < MAX_HD)
+		blkdev_scan(blk, SWAPSCAN);
 }
 
-int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+void hd_init(void)
 {
-	flag;
-	fdc_devsel = (minor & 0x80) ? 1 : 0;
-	return hd_transfer(minor, false, rawflag);
+	uint8_t d;
+	/* 0 1 2 are hard disks, 3-7 floppy appearing as hd */
+	/* 8+ because we also need to scan the other slot if present */
+	for (d = 0; d < 15; d++)
+		hd_init_drive(d);
+}
+
+COMMON_MEMORY
+
+void hd_xfer_in(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            ld bc, #0x40	                    ; setup port number
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapin
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr swapin
+not_swapin:
+#endif
+            or a                                    ; test is_user
+            call nz, map_process_always             ; map user memory first if required
+swapin:
+            inir                                    ; transfer first 256 bytes
+            inir                                    ; transfer second 256 bytes
+            or a                                    ; test is_user
+            ret z                                   ; done if kernel memory transfer
+            jp map_kernel                           ; else map kernel then return
+    __endasm;
+}
+
+void hd_xfer_out(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            ld bc, #0x40	                    ; setup port number
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapout
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr swapout
+not_swapout:
+#endif
+            or a                                    ; test is_user
+            call nz, map_process_always             ; else map user memory first if required
+swapout:
+            otir                                    ; transfer first 256 bytes
+            otir                                    ; transfer second 256 bytes
+            or a                                    ; test is_user
+            ret z                                   ; done if kernel memory transfer
+            jp map_kernel                           ; else map kernel then return
+    __endasm;
 }

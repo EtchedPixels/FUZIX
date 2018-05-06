@@ -19,12 +19,6 @@
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
 
-	    ; hard disk helpers
-	    .globl _hd_xfer_in
-	    .globl _hd_xfer_out
-	    ; and the page from the C code
-	    .globl _hd_page
-
             ; exported debugging tools
             .globl _platform_monitor
             .globl _platform_reboot
@@ -424,37 +418,6 @@ outchar:
             ret
 
 ;
-;	Swap helpers
-;
-_hd_xfer_in:
-	    pop de
-	    pop hl
-	    push hl
-	    push de
-	    ld a, (_hd_page)
-	    or a
-	    call nz, map_process_a
-	    ld bc, #0x40			; 512 bytes from 0x40
-	    inir
-	    inir
-	    call map_kernel
-	    ret
-
-_hd_xfer_out:
-	    pop de
-	    pop hl
-	    push hl
-	    push de
-	    ld a, (_hd_page)
-	    or a
-	    call nz, map_process_a
-	    ld bc, #0x40			; 512 bytes to 0x40
-	    otir
-	    otir
-	    call map_kernel
-	    ret
-
-;
 ;	Ubee Keyboard. Except for the TC the Ubee pulls this crazy (or neat
 ;	depending how you look at it) trick of demuxing a keyboard with the
 ;	lightpen input.
@@ -796,3 +759,13 @@ _vtcount:   .word 0
 _vtattrib:  .word 0
 _vtwidth:   .word 80			; FIXME should be variable
 _vtchar:    .byte 0
+
+;
+;	Double speed upgrade
+;
+	    .globl _engage_warp_drive
+
+_engage_warp_drive:
+	    ld a,#2
+	    in a,(9)
+	    ret

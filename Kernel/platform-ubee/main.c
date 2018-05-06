@@ -5,7 +5,10 @@
 #include <devtty.h>
 #include <ubee.h>
 
+uint8_t ubee_parallel;
+
 uint16_t ramtop = PROGTOP;
+uint16_t swap_dev = 0xFFFF;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
@@ -37,6 +40,18 @@ uint8_t platform_rtc_secs(void)
 	return cmos_read;
 }
 
+/*
+ *	PIA0 bit 7 is variously connected to
+ *	- RTC
+ *	- Vertical blank
+ *	- Net
+ *	- Nothing (well actually a pull up resistor)
+ *
+ *	On machines with a vertical blank connection we get a 50Hz timer
+ *	from the PIA transitions. On machines with an RTC then the RTC is
+ *	normally on the pia bit. We only care about the RTC because the
+ *	machines we support normally don't have a vblank rtc
+ */
 void platform_interrupt(void)
 {
 	static uint8_t icount;

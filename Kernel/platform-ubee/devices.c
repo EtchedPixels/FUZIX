@@ -7,20 +7,24 @@
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
+#include <blkdev.h>
+#include <devhd.h>
+#include <devide.h>
+#include <printf.h>
 #include <ubee.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
-  /* 0: /dev/fd		Floppy disc block devices */
-  {  fd_open,     no_close,     fd_read,   fd_write,   no_ioctl  },
-  /* 1: /dev/hd		Hard disc block devices */
-  {  hd_open,     no_close,     hd_read,   hd_write,   no_ioctl  },
+  /* 0: /dev/hd		Hard disc block devices */
+  {  blkdev_open, no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl  },
+  /* 1: /dev/fd		Floppy disc block devices */
+  {  fd_open,     no_close,     fd_read,       fd_write,       no_ioctl  },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,    tty_close,    tty_read,  tty_write,  gfx_ioctl },
+  {  tty_open,    tty_close,    tty_read,      tty_write,      gfx_ioctl },
   /* 3: /dev/lpr	Printer devices */
-  {  lpr_open,    lpr_close,    no_rdwr,   lpr_write,  no_ioctl  },
+  {  lpr_open,    lpr_close,    no_rdwr,       lpr_write,      no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
-  {  no_open,     no_close,     sys_read,  sys_write,  sys_ioctl },
+  {  no_open,     no_close,     sys_read,      sys_write,      sys_ioctl },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
@@ -32,18 +36,4 @@ bool validdev(uint16_t dev)
 	return false;
     else
         return true;
-}
-
-void device_init(void)
-{
-  int i;
-  /* Time of day clock */
-  inittod();
-  /* Figure out what disks we have */
-  diskprobe();
-  /* IDE */
-  devide_init();
-  /* Add 64 swaps (2MB) */
-  for (i = MAX_SWAPS - 1 ; i >= 0; i--)
-    swapmap_init(i);
 }

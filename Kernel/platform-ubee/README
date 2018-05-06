@@ -29,11 +29,22 @@ Then run either
 
 	ubee512 --model=256tc -a fuzix.ss80 -b root.ds82
 	ubee512	--model=p512k -a fuzix.ss80 -b root.ds82
-	ubee512 --model=p128k -a fuzix.ss80 -b root.ds82 --rtc=1
+	ubee512 --model=p128k -a fuzix.ss80 -b root.ds82 --rtc=1 --piob7=rtc
 
 (as an RTC is required).
 
 and when asked for the root file system reply 1
+
+For a full on test of everything try something like
+
+ubee512 --model=p128k -a /tmp/fuzix.ss80 --hdd3=/tmp/root.ds82 --hdd0=$(pwd)/rootfs.hd3 --port58h --modio=+hdd --modio=+mem --rtc=1 --modio=+ide --piob7=rtc
+
+with a valid partitioned disk image including an 0x7F type partition that is
+512K or so for swap. The disk image needs to be a .hd3 type as the kernel right
+now assumes .hd3 geometry for ST506 drives (ie 62720 sectors)
+
+Don't expect the IDE to work - it may work on the real box but not the emulator.
+
 
 
 Done so far:
@@ -76,14 +87,15 @@ Done so far:
 - Bank the video
 - Debug TC keyboard code: shift/ctrl are busted
 - Non TC keyboard (lightpen keyboard)
-
-
-To Do:
-- Floppy - media detect/sectors per track etc/ hard skew
 - Hard disk driver debug
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
   of 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
+
+In Progress
+
+To Do:
+- Floppy - media detect/sectors per track etc/ hard skew
 - Fix reboot/panic logic
 - Keyboard repeat
 - Graphics not just vt interfaces
@@ -171,4 +183,4 @@ Currently in progress
 - Copy ROM font to RAM, support RAM font setting
 - Figure out how I broke the 6545 cursor		DONE
 
-Currently debugging scrolling
+Currently debugging scrolling, swap

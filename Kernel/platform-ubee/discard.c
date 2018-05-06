@@ -3,10 +3,15 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <blkdev.h>
+#include <devide.h>
+#include <devhd.h>
 #include <ubee.h>
 
 __sfr __at 0x04 cmos_reg;
 __sfr __at 0x07 cmos_read;
+
+extern int strcmp(const char *, const char *);
 
 void has_cmos_rtc(void)
 {
@@ -115,6 +120,58 @@ void pagemap_init(void)
 
 uint8_t platform_param(char *p)
 {
-	used(p);
+	/* Q: do we need to remember we are running at 6.75MHz anywhere ? */
+	if (strcmp(p, "turbo") == 0) {
+		engage_warp_drive();
+		return 1;
+	}
+	if (strcmp(p, "joystick") == 0) {
+		ubee_parallel = UBEE_PARALLEL_JOYSTICK;
+		return 1;
+	}
+	if (strcmp(p, "beetalker") == 0) {
+		ubee_parallel = UBEE_PARALLEL_BEETALKER;
+		return 1;
+	}
+	if (strcmp(p, "beethoven") == 0) {
+		ubee_parallel = UBEE_PARALLEL_BEETHOVEN;
+		return 1;
+	}
+	if (strcmp(p, "dac") == 0) {
+		ubee_parallel = UBEE_PARALLEL_DAC;
+		return 1;
+	}
+	if (strcmp(p, "compumuse") == 0) {
+		ubee_parallel = UBEE_PARALLEL_COMPUMUSE;
+		return 1;
+	}
 	return 0;
+}
+
+void platform_swap_found(uint8_t letter, uint8_t m)
+{
+  blkdev_t *blk = blk_op.blkdev;
+  uint16_t n;
+  if (swap_dev != 0xFFFF)
+    return;
+  letter -= 'a';
+  kputs("(swap) ");
+  swap_dev = letter << 4 | m;
+  n = blk->lba_count[m - 1] / SWAP_SIZE;
+  if (n > MAX_SWAPS)
+    n = MAX_SWAPS;
+  while(n)
+    swapmap_add(n--);
+}
+
+void device_init(void)
+{
+  /* Time of day clock */
+  inittod();
+  /* Figure out what disks we have */
+  diskprobe();
+  /* IDE */
+  devide_init();
+  /* ST506 */
+  hd_init();
 }

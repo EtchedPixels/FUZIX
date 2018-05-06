@@ -2,12 +2,11 @@
 #define __DEVHD_DOT_H__
 
 /* public interface */
-int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int hd_open(uint8_t minor, uint16_t flag);
+static uint8_t hd_transfer_sector(void);
+void hd_init(void);
 
 /* helpers in common memory for the block transfers */
-int hd_xfer_in(uint16_t addr);
-int hd_xfer_out(uint16_t addr);
+static void hd_xfer_in(void);
+static void hd_xfer_out(void);
 
 #endif /* __DEVHD_DOT_H__ */
