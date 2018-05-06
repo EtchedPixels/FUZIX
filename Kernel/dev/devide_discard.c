@@ -153,7 +153,6 @@ void devide_init(void)
     devide_reset();
 #endif
 
-    kprintf("X");
     for(d=0; d < IDE_DRIVE_COUNT; d++)
         devide_init_drive(d);
 }
