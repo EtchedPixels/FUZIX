@@ -99,6 +99,7 @@ To Do:
 - Fix reboot/panic logic
 - Keyboard repeat
 - Graphics not just vt interfaces
+- Premium models hang somewhere as if there's a memory banking bug
 
 Longer Term
 - RAM based fonts (load the ROM one into RAM

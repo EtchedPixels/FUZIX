@@ -53,7 +53,7 @@ void vtattr_notify(void)
 		if (vtattr & VTA_INVERSE)
 			vtattrib |= 0x40;
 		/* 5 4 must be zero 3-0 are extended font select -> 0 for now */
-	} else if (ubee_model == UBEE_PREMIUM) {
+	} else if (ubee_model == UBEE_PREMIUM || ubee_model == UBEE_BASIC) {
 		if (vtattr & VTA_INVERSE)
 			vtattrib = (((uint16_t)vtpaper) << 8) | (((uint16_t)vtink) << 12);
 		else

@@ -5,6 +5,7 @@ extern uint8_t ubee_model;
 #define UBEE_BASIC	0
 #define UBEE_PREMIUM	1
 #define UBEE_256TC	2
+#define UBEE_BASIC_MONO	3
 
 extern uint8_t ubee_parallel;
 #define UBEE_PARALLEL_LPR	0

@@ -85,20 +85,21 @@ not256tc:	; Are we a premium model
 		out (0x1c),a		; Set
 	        in a,(0x1c)		; Read
 	        cp #0x10		; If reads back we are premium
-		jr z, premium_model
-		ld a,#0x40		; Colour control register
-		out (0x08),a		; Set
-		in a,(0x08)		; Read
-		cp #0x40
-		jr nz, unsupported_model; not colour
-		xor a
-		jr colour_standard
-;
-;		uBee Premium Board
-;
-premium_model:
 		ld a,#1
-colour_standard:
+		jr z, set_model
+		dec a
+		; Colour ?
+		ld hl,#0xFFFF		; Out of sight end of video
+		out (0x08),a		; Select text
+		ld (hl),a		; Clear it
+		ld a,#0x40		; Select colour (no-op if absent)
+		out (0x08),a
+		ld (hl),a		; Set it
+		xor a
+		out (0x08),a		; Back to text
+		cp (hl)			; Was it affected ?
+		jr nz, unsupported_model ; Yes -> no colour support
+set_model:
 		ld (_ubee_model),a	; model - 1 premium 0 colour standard
 		ld a,#0x0C		; ROMs off video off
 		out (0x50),a
