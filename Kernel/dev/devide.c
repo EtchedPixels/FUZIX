@@ -55,7 +55,7 @@ uint8_t devide_transfer_sector(void)
 #endif
 
 
-    drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+    drive = blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK;
 
     ide_select(drive);
 
@@ -103,7 +103,7 @@ int devide_flush_cache(void)
 {
     uint8_t drive;
 
-    drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+    drive = blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK;
 
     ide_select(drive);
 

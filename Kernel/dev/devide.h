@@ -91,14 +91,17 @@ void devide_writeb(uint8_t regaddr, uint8_t value);
 #define IDE_CMD_IDENTIFY        0xEC
 #define IDE_CMD_SET_FEATURES    0xEF
 
+#ifndef IDE_DRIVE_NR_MASK
+#define IDE_DRIVE_NR_MASK    0x0F   /* low bit used to select master/slave */
+#endif
+
 #ifdef _IDE_PRIVATE
 
 #ifndef IDE_DRIVE_COUNT
-#define IDE_DRIVE_COUNT 2       /* at most 16 drives without adjusting DRIVE_NR_MASK */
+#define IDE_DRIVE_COUNT 2       /* at most 16 drives without adjusting IDE_DRIVE_NR_MASK */
 #endif
 
 /* we use the bits in the driver_data field of blkdev_t as follows: */
-#define DRIVE_NR_MASK    0x0F   /* low bit used to select master/slave */
 #define FLAG_CACHE_DIRTY 0x40
 #define FLAG_WRITE_CACHE 0x80
 

@@ -113,7 +113,7 @@ void devide_init_drive(uint8_t drive)
 
     blk->transfer = devide_transfer_sector;
     blk->flush = devide_flush_cache;
-    blk->driver_data = drive & DRIVE_NR_MASK;
+    blk->driver_data = drive & IDE_DRIVE_NR_MASK;
 
     if( !(((uint16_t*)buffer)[82] == 0x0000 && ((uint16_t*)buffer)[83] == 0x0000) ||
          (((uint16_t*)buffer)[82] == 0xFFFF && ((uint16_t*)buffer)[83] == 0xFFFF) ){
@@ -153,6 +153,7 @@ void devide_init(void)
     devide_reset();
 #endif
 
+    kprintf("X");
     for(d=0; d < IDE_DRIVE_COUNT; d++)
         devide_init_drive(d);
 }
