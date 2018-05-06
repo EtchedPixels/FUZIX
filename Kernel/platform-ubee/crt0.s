@@ -4,6 +4,7 @@
 	        ; when they are first seen.	
 	        .area _CODE
 	        .area _CODE2
+		.area _HOME
 		; Load video later on so it ends up above 0x8800
 		.area _VIDEO
 	        .area _CONST
