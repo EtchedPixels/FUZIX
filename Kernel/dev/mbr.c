@@ -87,7 +87,7 @@ void mbr_parse(char letter)
 		    kprintf("hd%c%d ", letter, next);
 #ifdef CONFIG_DYNAMIC_SWAP
 		    if(t == FUZIX_SWAP)
-		    	platform_swap_found(next - 1);
+			platform_swap_found(letter, next);
 #endif
 	    }
 	}

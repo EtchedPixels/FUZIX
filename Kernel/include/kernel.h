@@ -1037,10 +1037,11 @@ extern uint8_t platform_param(char *p);
 extern void platform_switchout(void);
 extern void platform_interrupt(void);
 
+extern void platform_swap_found(uint8_t part, uint8_t letter);
+
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
-
 
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di
