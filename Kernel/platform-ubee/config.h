@@ -21,6 +21,7 @@
 #define CONFIG_NET_NATIVE
 
 #define CONFIG_DYNAMIC_BUFPOOL
+#define CONFIG_DYNAMIC_SWAP
 #define CONFIG_LARGE_IO_DIRECT
 
 #define MAX_BLKDEV	4
@@ -40,6 +41,7 @@
 #define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
+#define SWAPDEV     (swap_dev)
 #define SWAP_SIZE   0x40 	/* 32K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
@@ -57,7 +59,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  (256)	  /* Device for swapping (1st hd). */
-#define NBUFS    7        /* Number of block buffers */
+#define NBUFS    6        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
+extern unsigned int swap_dev;
