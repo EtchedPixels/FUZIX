@@ -63,7 +63,7 @@ uint8_t hd_page;
 	80 x 2 x 10 x 512 double sided 3.5
 
 	For now just use double sided : FIXME */
-static int spt[7] = { 16, 16, 16, 10, 10, 10, 10 };
+static int spt[7] = { 32, 32, 32, 10, 10, 10, 10 };
 static int heads[7] = { 4, 4, 4, 2, 2, 2, 2 };
 
 /* Wait for the drive to show ready */
@@ -78,13 +78,15 @@ static uint8_t hd_waitready(void)
 	return st;
 }
 
-/* Wait for DRQ or an error */
-static uint8_t hd_waitdrq(void)
+/* Wait for the controller to show idle */
+static uint8_t hd_waitidle(void)
 {
 	uint8_t st;
+	uint16_t tick = 0;
 	do {
 		st = hd_status;
-	} while (!(st & 0x09));
+		tick++;
+	} while ((st & 0x80) && tick);
 	return st;
 }
 
@@ -153,23 +155,29 @@ static int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			/* CRC, 512 bytes, head (0/1), FDC unit, fdc number */
 			hd_sdh = 0x38 | head | ((minor - MAX_HD) << 1);
 		}
-		hd_secnum = sector;
+		hd_secnum = sector + 1;
 
 		/* cylinder bits */
 		b /= heads[minor];
-		hd_cyllo = (b >> 7) & 0xFF;
-		hd_cylhi = (b >> 15) & 0xFF;
+		hd_cyllo = b;
+		hd_cylhi = b >> 8;
 
 		for (tries = 0; tries < 4; tries++) {
 			/* issue the command */
 			hd_cmd = cmd;
-			/* DRQ will go high once the controller is ready
-			   for us */
-			err = hd_waitdrq();
+			err = 0;
+			/* Wait for busy to drop if reading before xfer */
+			if (is_read) {
+				hd_waitidle();
+				err = hd_status;
+			}
 			if (!(err & 1)) {
 				err = hd_xfer(is_read, dptr);
-				/* Ready, no error ? */
-				if ((err & 0x41) == 0x40)
+				/* Wait for busy to drop after xfer if writing */
+				if (!is_read)
+					err = hd_waitidle();
+				/* Ready, no error, not busy ? */
+				if ((err & 0xC1) == 0x40)
 					break;
 			} else
 				kprintf("hd%d: err %x\n", minor, err);
@@ -203,14 +211,14 @@ int hd_open(uint8_t minor, uint16_t flag)
 	flag;
 	
 	minor &= 0x7F;
+	/* Reserve low bits for future partition table support */
+	minor >>= 4;
 
 	if (disk_type[sel] != DISK_TYPE_HDC || minor >= MAX_HD + MAX_FDC) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
 	fdc_devsel = sel;
-	/* Reserve low bits for future partition table support */
-	minor >>= 4;
 	if (minor <= MAX_HD) {
 		hd_sdh = 0xA0 | (minor << 3);
 		hd_cmd = HDCMD_RESTORE | RATE_2MS;
@@ -219,8 +227,9 @@ int hd_open(uint8_t minor, uint16_t flag)
 		hd_cmd = HDCMD_RESTORE | RATE_6MS;
 	}
 	if (hd_waitready() & 1) {
-		if ((hd_err & 0x12) == 0x12)
+		if ((hd_err & 0x12) == 0x12) {
 			return -ENODEV;
+		}
 	}
 	return 0;
 }
