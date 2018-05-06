@@ -21,4 +21,6 @@ typedef struct __packed {
 
 void mbr_parse(char letter);
 
+#define FUZIX_SWAP	0x7F
+
 #endif /* __MBR_DOT_H__ */

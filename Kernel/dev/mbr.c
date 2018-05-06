@@ -55,7 +55,8 @@ void mbr_parse(char letter)
         blk_op.lba = 0;
 
 	for(i=0; i<MBR_ENTRY_COUNT && next < MAX_PARTITIONS; i++){
-	    switch(br->partition[i].type_chs_last[0]){
+	    uint8_t t = br->partition[i].type_chs_last[0];
+	    switch(t) {
 #ifdef CONFIG_GPT
 		case MBR_GPT_PROTECTED_TYPE:
 		    // TODO assert next is zero (unless hybrid...)
@@ -84,6 +85,10 @@ void mbr_parse(char letter)
 		    blk_op.blkdev->lba_count[next] = le32_to_cpu(br->partition[i].lba_count);
 		    next++;
 		    kprintf("hd%c%d ", letter, next);
+#ifdef CONFIG_DYNAMIC_SWAP
+		    if(t == FUZIX_SWAP)
+		    	platform_swap_found(next - 1);
+#endif
 	    }
 	}
 	seen++;
