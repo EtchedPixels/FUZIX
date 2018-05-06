@@ -21,6 +21,10 @@
 #define CONFIG_NET_NATIVE
 
 #define CONFIG_DYNAMIC_BUFPOOL
+#define CONFIG_LARGE_IO_DIRECT
+
+#define MAX_BLKDEV	4
+#define CONFIG_IDE
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
 

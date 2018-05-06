@@ -15,6 +15,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_for_swap
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
 
@@ -389,6 +390,7 @@ map_process:
 	    jr z, map_kernel
 map_process_hl:
 	    ld a, (hl)
+map_for_swap:
 map_process_a:			; used by bankfork
 	    ld (mapreg), a
 	    out (0x50), a

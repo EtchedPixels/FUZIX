@@ -42,4 +42,9 @@ devsys.rel
 platform-ubee/devlpr.rel
 platform-ubee/devtty.rel
 platform-ubee/vt.rel
+platform-ubee/blkdev.rel
+platform-ubee/mbr.rel
+platform-ubee/devide.rel
+platform-ubee/devide_discard.rel
+platform-ubee/ide.rel
 -e

@@ -1,11 +1,16 @@
+CROSS_CCOPTS += -I../dev/
+
 
 CSRCS = devlpr.c devtty.c devfd.c devhd.c
-CSRCS += devices.c main.c vt.c
+CSRCS += devices.c main.c vt.c ide.c
 
 DISCSRCS = discard.c
 
 ASRCS = ubee.s crt0.s
 ASRCS += tricks.s commonmem.s floppy.s
+
+DISCARD_DSRCS = ../dev/devide_discard.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 
 NSRCS = ../dev/net/net_native.c
 
@@ -13,8 +18,10 @@ COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 DISCOBJS = $(DISCSRCS:.c=.rel)
+DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 
-OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS)
+OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS)
 
 JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
 
@@ -24,6 +31,12 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCOBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../dev/net/%.c
