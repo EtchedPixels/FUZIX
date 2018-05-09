@@ -11,6 +11,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define IVERSION "fe0.01"
 
@@ -65,7 +66,7 @@ const char alpha[78] =
 #endif
 
 char *story_name;
-FILE *story;
+int story = -1;
 byte auxname[11];
 boolean original = 1;
 boolean verified = 0;
@@ -87,9 +88,9 @@ uint32_t program_counter;	/* Can be in high memory */
 
 #define STACKSIZE 256
 #define FRAMESIZE 32
-StackFrame frames[32];
+StackFrame frames[FRAMESIZE];
 int framemax;
-uint16_t stack[256];
+uint16_t stack[STACKSIZE];
 int frameptr;
 int stackptr;
 int stackmax;
@@ -153,12 +154,83 @@ void input(char *b, uint16_t l)
 		}
 		if (*s < 32)
 			continue;
+		s++;
 	}
 	waitcr();
 	*s = 0;
 }
 
-	
+static uint8_t iobad;
+
+void xwriteb(int f, uint8_t v)
+{
+	/* for now */
+	if (write(f, &v, 1) != 1)
+		iobad = 1;
+}
+
+void xwritew(int f, uint16_t v)
+{
+	/* for now */
+	if (write(f, &v, 2) != 2)
+		iobad = 1;
+}
+
+uint8_t xreadb(int f)
+{
+	uint8_t v;
+	if (read(f, &v, 1) != 1)
+		iobad = 1;
+	return v;
+}
+
+uint16_t xreadw(int f)
+{
+	uint16_t v;
+	if (read(f, &v, 2) != 2)
+		iobad = 1;
+	return v;
+}
+
+void xwrite(int f, void *ptr, uint16_t n, uint16_t size)
+{
+	n *= size;
+	xwritew(f, n);
+	if (write(f, ptr, n) != n)
+		iobad = 1;
+}
+
+int xread(int f, void *ptr, uint16_t n, uint16_t size)
+{
+	uint16_t r;
+	n *= size;
+	r = xreadw(f);
+	if (r > n) {
+		error("Save mismatch ?\n");
+		iobad = 1;
+		return 0;
+	}
+	if (read(f, ptr, r) != r)
+		iobad = 1;
+	return r/size;
+}
+
+int xopen(const char *path, int flags, int perm)
+{
+	iobad = 0;
+	return open(path, flags, perm);
+}
+
+int xclose(int f)
+{
+	if (close(f))
+		iobad = 1;
+	if (iobad)
+		return -1;
+	return 0;
+}
+
+		
 /*
  *	Memory management
  */
@@ -216,30 +288,26 @@ uint8_t read8(uint32_t address)
 	return memory[address];
 }
 
-uint8_t write8(uint16_t address, uint8_t value)
+void write8(uint16_t address, uint8_t value)
 {
 	memory[address] = value;
 }
 
 void text_flush(void)
 {
-	int c;
 	text_buffer[textptr] = 0;
 	if (textptr + cur_column >= sc_columns - rmargin) {
-		putchar('\n');
+		writes("\n");
 		cur_row++;
 		cur_column = 0;
 		while (cur_column < lmargin) {
-			putchar(32);
+			writes(" ");
 			cur_column++;
 		}
 	}
 	if (cur_row >= sc_rows && sc_rows != 255) {
-		write(1, "[MORE]", 6);
+		writes("[MORE]");
 		waitcr();
-		while ((c = fgetc(stdin)) != '\n')
-			if (c == EOF)
-				return;
 		cur_row = 2;
 	}
 	writes(text_buffer);
@@ -273,11 +341,11 @@ void char_print(uint8_t zscii)
 		if (zscii <= 32 || textptr > 125 || !buffering)
 			text_flush();
 		if (zscii == 13) {
-			putchar('\n');
+			writes("\n");
 			cur_row++;
 			cur_column = 0;
 			while (cur_column < lmargin) {
-				putchar(32);
+				writes(" ");
 				cur_column++;
 			}
 		}
@@ -512,7 +580,7 @@ obj_t obj_tree_get(obj_t obj, int f)
 void insert_object(obj_t obj, uint16_t dest)
 {
 	obj_t p = parent(obj);
-	obj_t s = sibling(obj);
+//	obj_t s = sibling(obj);
 	obj_t x;
 	if (p) {
 		x = child(p);
@@ -570,15 +638,15 @@ uint16_t property_address(uint16_t obj, uint8_t p)
 
 uint8_t system_input(char **out)
 {
-	char *p;
-	uint32_t i;
 	time_t t;
 input_again:
 	text_flush();
 	cur_row = 2;
 	cur_column = 0;
 	time(&t);
-	input(textbuffer, 128);
+	input(text_buffer, 128);
+	if (!*text_buffer)
+		goto input_again;
 	if (!predictable)
 		randv += time(NULL) - t;
 	*out = text_buffer;
@@ -807,46 +875,20 @@ uint8_t char_input(void)
 
 void game_restart(void)
 {
-	uint32_t addr = 64;
 	stackptr = frameptr = 0;
 	program_counter = restart_address;
-	clearerr(story);
-	fseek(story, 64, SEEK_SET);
-	while (!feof(story)) {
-
-		/* FIXME: memory */
-		if (!fread(memory + addr, 1024, 1, story))
-			return;
-		addr += 1024;
-	}
-}
-
-void game_save_many(FILE * fp, long count)
-{
-	long i;
-	while (count > 0) {
-		fputc(0, fp);
-		if (count >= 129) {
-			i = count;
-			if (i > 0x3FFF)
-				i = 0x3FFF;
-			fputc(((i - 1) & 0x7F) | 0x80, fp);
-			fputc((i - ((i - 1) & 0x7F) - 0x80) >> 7, fp);
-			count -= i;
-		} else {
-			fputc(count - 1, fp);
-			count = 0;
-		}
-	}
+	lseek(story, 64, SEEK_SET);
+	if (read(story, memory + 64, sizeof(memory)) < 1024)
+		panic("invalid story file.\n");
 }
 
 void game_save(uint8_t storage)
 {
 	char filename[64];
-	FILE *fp;
-	int i;
+	int f;
 	uint8_t c;
-	long o, q;
+	uint16_t o, q;
+	uint16_t oo;
 	writes("\n*** Save? ");
 	input(filename, 64);
 	if (*filename == '.' && !filename[1]) {
@@ -868,61 +910,68 @@ void game_save(uint8_t storage)
 			store(storage, strtol(filename + 1, 0, 0));
 		return;
 	}
-	fp = fopen(filename, "wb");
-	if (!fp) {
-		if (VERSION < 4)
-			branch(0);
-		else
-			store(storage, 0);
-		return;
-	}
+	f = xopen(filename, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+	if (f == -1)
+		goto bad;
+		
 	if (VERSION < 4)
 		branch(1);
 	else
 		store(storage, 2);
+	/* Fweep has a nice endian safe blah blah de blah byte by byte
+	   Save/Restore. We don't bother. Saved games are platfor specific
+	   Deal with it! */
 	frames[frameptr].pc = program_counter;
 	frames[frameptr + 1].start = stackptr;
-	fputc(frameptr + 1, fp);
-	for (i = 0; i <= frameptr; i++) {
-		fputc((frames[i + 1].start - frames[i].start) >> 1, fp);
-		fputc((((frames[i + 1].start -
-			 frames[i].
-			 start) & 1) << 7) | ((!frames[i].stored) << 6) |
-		      (frames[i].pc >> 16), fp);
-		fputc((frames[i].pc >> 8) & 255, fp);
-		fputc(frames[i].pc & 255, fp);
-	}
-	for (i = 0; i < stackptr; i++) {
-		fputc(stack[i] >> 8, fp);
-		fputc(stack[i] & 255, fp);
-	}
-	clearerr(story);
-	fseek(story, o = 0x38, SEEK_SET);
+	
+	xwrite(f, frames, frameptr + 1, sizeof(StackFrame));
+	xwrite(f, stack, stackptr, 2);
+
+	xwriteb(f, 0xAA);
+	lseek(story, o = 0x38, SEEK_SET);
 	q = 0;
 	while (o < static_start) {
-		c = fgetc(story);
+		read(story, &c, 1);
 		if (read8low(o) == c) {
+			if (q == 0)
+				oo = o;
 			q++;
-		} else {
-			game_save_many(fp, q);
-			q = 0;
-			fputc(read8low(o) ^ c, fp);
+		}
+		else {
+			if (q) {
+				xwriteb(f, 0);
+				xwritew(f, q);
+				q = 0;
+			}
+			xwriteb(f, read8low(o) ^ c);
 		}
 		o++;
 	}
-	fclose(fp);
+	xwriteb(f, 0);
+	xwritew(f, 0);
+	if (xclose(f) == -1)
+		goto bad;
 	if (VERSION < 4)
 		return;
 	fetch(storage);
 	store(storage, 1);
+	return;
+bad:
+	writes("BAD\n");
+	/* This seems to fail for V3 games.. investigate */
+	if (VERSION < 4)
+		branch(0);
+	else
+		store(storage, 0);
+
 }
 
 void game_restore(void)
 {
 	char filename[64];
-	FILE *fp;
-	int i, c, d;
-	long o;
+	int f;
+	uint8_t d;
+	uint16_t o, c;
 	writes("\n*** Restore? ");
 	input(filename, 64);
 	if (*filename == '.' && !filename[1]) {
@@ -933,46 +982,47 @@ void game_restore(void)
 	cur_column = 0;
 	if (!*filename)
 		return;
-	fp = fopen(filename, "rb");
-	if (!fp)
+	f = xopen(filename, O_RDONLY, 0600);
+	if (f == -1)
 		return;
-	frameptr = fgetc(fp) - 1;
-	stackptr = 0;
-	for (i = 0; i <= frameptr; i++) {
-		c = fgetc(fp);
-		d = fgetc(fp);
-		frames[i].start = stackptr;
-		stackptr += (c << 1) | (d >> 7);
-		frames[i].stored = !(d & 0x40);
-		frames[i].pc = (d & 0x3F) << 16;
-		frames[i].pc |= fgetc(fp) << 8;
-		frames[i].pc |= fgetc(fp);
-	}
-	for (i = 0; i < stackptr; i++) {
-		stack[i] = fgetc(fp) << 8;
-		stack[i] |= fgetc(fp);
-	}
-	clearerr(story);
-	fseek(story, o = 0x38, SEEK_SET);
-	i = 0;
+	frameptr = xread(f, frames, FRAMESIZE, sizeof(StackFrame));
+	if (frameptr == -1)
+		goto bad;
+	frameptr--;
+	stackptr = xread(f, stack, STACKSIZE, 2);
+	
+	if (xreadb(f) != 0xAA)
+		goto bad;
+
+	lseek(story, o = 0x38, SEEK_SET);
+	/* FIXME: buffering - but this will look different anyway once
+	   we have the virtual management done */
 	while (o < static_start) {
-		d = fgetc(fp);
-		if (d == EOF)
-			break;
-		if (d) {
-			write8(o++, fgetc(story) ^ d);
-		} else {
-			c = fgetc(fp);
-			if (c & 0x80)
-				c += fgetc(fp) << 7;
-			while (c-- >= 0)
-				write8(o++, fgetc(story));
+		d = xreadb(f);
+		/* We xor and save different so a 0 never occurs in a block.
+		   It indicates a skip followed by a literal byte xor which
+		   may be zero... */
+		if (d == 0) {
+			c = xreadw(f);
+			if (c == 0)
+				break;	/* EOF */
+			while (c-- > 0)
+				write8(o++, xreadb(story));
 		}
+		else 
+			write8(o++, xreadb(story) ^ d);
 	}
-	fclose(fp);
+	if (xclose(f) == -1)
+		goto bad;
+
 	while (o < static_start)
-		write8(o++, fgetc(story));
+		write8(o++, xreadb(story));
 	program_counter = frames[frameptr].pc;
+	return;
+	
+bad:
+	writes("Read error\n");
+	game_restart();
 }
 
 void switch_output(int st)
@@ -1011,7 +1061,7 @@ void execute_instruction(void)
 {
 	uint8_t in = pc();
 	uint16_t at;
-	int16_t m, n;
+	int16_t n;
 	uint32_t u;
 	int argc;
 	if (!predictable)
@@ -1123,7 +1173,7 @@ void execute_instruction(void)
 		text_flush();
 		storei((*inst_args == 1 || *inst_args == 4) ? 4 : 0);
 		if (!tandy)
-			putchar(*inst_args == 3 ? 14 : 15);
+			write(1, inst_args == 3 ? 14 : 15, 1);
 		break;
 	case 0x08:		// Set margins
 		if (!window) {
@@ -1134,7 +1184,7 @@ void execute_instruction(void)
 			if (VERSION == 5)
 				write16(41, inst_args[1]);
 			while (cur_column < *inst_args) {
-				putchar(32);
+				writes(" ");
 				cur_column++;
 			}
 		}
@@ -1369,7 +1419,7 @@ void execute_instruction(void)
 		storei(read8(inst_args[0] + inst_sargs[1]));
 		break;
 	case 0xD1:		// Read property
-		if (u = property_address(inst_args[0], inst_args[1]))
+		if ((u = property_address(inst_args[0], inst_args[1])) != 0)
 			storei(cur_prop_size == 1 ? read8low(u) : read16low(u));
 
 		else
@@ -1549,12 +1599,12 @@ void execute_instruction(void)
 		break;
 	case 0xED:		// Clear window
 		if (*inst_args != 1) {
-			putchar('\n');
+			writes("\n");
 			textptr = 0;
 			cur_row = 2;
 			cur_column = 0;
 			while (cur_column < lmargin) {
-				putchar(32);
+				writes(" ");
 				cur_column++;
 			}
 		}
@@ -1587,7 +1637,7 @@ void execute_instruction(void)
 	case 0xF4:		// Select input stream
 		break;
 	case 0xF5:		// Sound effects
-		putchar(7);
+		writes("\007");
 		break;
 
 #if (VERSION > 3)
@@ -1699,16 +1749,16 @@ void execute_instruction(void)
 
 void game_begin(void)
 {
-	if (!story)
-		story = fopen(story_name, "rb");
-	if (!story) {
-		error("\n*** Unable to load story file: ")
+	if (story == -1)
+		story = open(story_name, O_RDONLY);
+	if (story == -1) {
+		error("\n*** Unable to load story file: ");
 		error(story_name);
 		panic("\n");
 		exit(1);
 	}
-	rewind(story);
-	fread(memory, 64, 1, story);
+	lseek(story, 0L, SEEK_SET);
+	read(story, memory, 64);
 	if (read8low(0) != VERSION) {
 		panic("\n*** Unsupported Z-machine version.\n");
 		exit(1);
@@ -1768,7 +1818,7 @@ void game_begin(void)
 	cur_row = 2;
 	cur_column = 0;
 	randomize(0);
-	putchar('\n');
+	writes("\n");
 }
 
 int main(int argc, char **argv)
