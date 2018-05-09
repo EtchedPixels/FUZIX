@@ -109,8 +109,8 @@ uint16_t inst_args[8];
 char text_buffer[128];
 int textptr;
 uint8_t cur_prop_size;
-int zch_shift;
-int zch_shiftlock;
+uint8_t zch_shift;
+uint8_t zch_shiftlock;
 int zch_code;
 
 /*
@@ -497,6 +497,7 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	if (frameptr == FRAMESIZE - 1)
 		panic("out of frames.\n");
 
+	/* FIXME: use pointers */
 	frames[frameptr].pc = program_counter;
 	frames[++frameptr].argc = argc;
 	frames[frameptr].start = stackptr;
@@ -521,6 +522,7 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 
 void exit_routine(uint16_t result)
 {
+	/* FIXME: we want a live ptr to top frame */
 	stackptr = frames[frameptr].start;
 	program_counter = frames[--frameptr].pc;
 	if (frames[frameptr + 1].stored)
@@ -654,6 +656,7 @@ input_again:
 	return 13;
 }
 
+/* FIXME: stop using uint64_t */
 uint64_t dictionary_get(uint32_t addr)
 {
 	uint64_t v = 0;
@@ -665,6 +668,7 @@ uint64_t dictionary_get(uint32_t addr)
 
 uint64_t dictionary_encode(uint8_t * text, int len)
 {
+	/* FIXME: stop using uint64_t */
 	uint64_t v = 0;
 	int c = VERSION > 3 ? 9 : 6;
 	int i;
