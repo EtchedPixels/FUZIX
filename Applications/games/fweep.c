@@ -73,17 +73,17 @@ boolean tandy = 0;
 boolean qtospace = 0;
 int sc_rows = 25;
 int sc_columns = 80;
-uint32_t routine_start;
-uint32_t text_start;
-uint32_t object_table;
-uint32_t dictionary_table;
-uint32_t restart_address;
-uint32_t synonym_table;
-uint32_t alphabet_table;
-uint32_t static_start;
-uint32_t global_table;
+uint32_t routine_start;		/* > 16bit */
+uint32_t text_start;		/* > 16bit */
+uint16_t object_table;
+uint16_t dictionary_table;
+uint16_t restart_address;
+uint16_t synonym_table;
+uint16_t alphabet_table;
+uint16_t static_start;
+uint16_t global_table;
 uint8_t memory[0x20000];
-uint32_t program_counter;
+uint32_t program_counter;	/* Can be in high memory */
 
 #define STACKSIZE 256
 #define FRAMESIZE 32
@@ -112,6 +112,53 @@ int zch_shift;
 int zch_shiftlock;
 int zch_code;
 
+/*
+ *	Low level I/O
+ */
+
+void error(const char *s)
+{
+	write(2, s, strlen(s));
+}
+
+void panic(const char *s)
+{
+	error(s);
+	exit(1);
+}
+
+void writes(const char *s)
+{
+	write(1, s, strlen(s));
+}
+
+void waitcr(void)
+{
+	uint8_t c;
+	while(read(0, &c, 1) == 1) {
+		if (c == '\n')
+			return;
+	}
+	exit(0);
+}
+
+void input(char *b, uint16_t l)
+{
+	char *s = b;
+	char *e = b + l;
+	while(s < e && read(0, s, 1) == 1) {
+		if (*s == 13 || *s == 10) {
+			*s = 0;
+			return;
+		}
+		if (*s < 32)
+			continue;
+	}
+	waitcr();
+	*s = 0;
+}
+
+	
 /*
  *	Memory management
  */
@@ -142,7 +189,7 @@ void randomize(uint16_t seed)
 	}
 }
 
-uint16_t read16low(uint8_t address)
+uint16_t read16low(uint16_t address)
 {
 	return (memory[address] << 8) | memory[address + 1];
 }
@@ -152,12 +199,6 @@ uint16_t read16(uint32_t address)
 	return (memory[address] << 8) | memory[address + 1];
 }
 
-void write16low(uint8_t address, uint16_t value)
-{
-	memory[address] = value >> 8;
-	memory[address + 1] = value & 255;
-}
-
 /* Can be uint16 except when debugging */
 void write16(uint16_t address, uint16_t value)
 {
@@ -165,7 +206,7 @@ void write16(uint16_t address, uint16_t value)
 	memory[address + 1] = value & 255;
 }
 
-uint8_t read8low(uint8_t address)
+uint8_t read8low(uint16_t address)
 {
 	return memory[address];
 }
@@ -175,12 +216,7 @@ uint8_t read8(uint32_t address)
 	return memory[address];
 }
 
-uint8_t write8low(uint8_t address, uint8_t value)
-{
-	memory[address] = value;
-}
-
-uint8_t write8(uint32_t address, uint8_t value)
+uint8_t write8(uint16_t address, uint8_t value)
 {
 	memory[address] = value;
 }
@@ -199,16 +235,15 @@ void text_flush(void)
 		}
 	}
 	if (cur_row >= sc_rows && sc_rows != 255) {
-		printf("[MORE]");
-		fflush(stdout);
+		write(1, "[MORE]", 6);
+		waitcr();
 		while ((c = fgetc(stdin)) != '\n')
 			if (c == EOF)
 				return;
 		cur_row = 2;
 	}
-	fputs(text_buffer, stdout);
+	writes(text_buffer);
 	cur_column += textptr;
-	fflush(stdout);
 	textptr = 0;
 }
 
@@ -217,13 +252,13 @@ void char_print(uint8_t zscii)
 	if (!zscii)
 		return;
 	if (stream3ptr != stream3addr - 1) {
-		uint16_t w = read16(*stream3ptr);
+		uint16_t w = read16low(*stream3ptr);
 		write8(*stream3ptr + 2 + w, zscii);
 		write16(*stream3ptr, w + 1);
 		return;
 	}
 	if ((read8low(0x11) & 1) && !window) {
-		write8low(0x10, read8low(0x10) | 4);
+		write8(0x10, read8low(0x10) | 4);
 	}
 	if (texting && !window) {
 		if (zscii & 0x80) {
@@ -349,7 +384,7 @@ void make_rectangle(uint32_t addr, int width, int height, int skip)
 uint16_t fetch(uint8_t var)
 {
 	if (var & 0xF0) {
-		return read16(global_table + ((var - 16) << 1));
+		return read16low(global_table + ((var - 16) << 1));
 	} else if (var) {
 		return stack[frames[frameptr].start + var - 1];
 	} else {
@@ -359,10 +394,8 @@ uint16_t fetch(uint8_t var)
 
 void pushstack(uint16_t value)
 {
-	if (stackptr == STACKSIZE) {
-		fprintf(stderr, "stack overflow.\n");
-		exit(1);
-	}
+	if (stackptr == STACKSIZE)
+		panic("stack overflow.\n");
 	stack[stackptr++] = value;
 	if (stackptr > stackmax)
 		stackmax = stackptr;
@@ -388,10 +421,9 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 {
 	int c = read8(address);
 	int i;
-	if (frameptr == FRAMESIZE - 1) {
-		fprintf(stderr, "out of frames.\n");
-		exit(1);
-	}
+	if (frameptr == FRAMESIZE - 1)
+		panic("out of frames.\n");
+
 	frames[frameptr].pc = program_counter;
 	frames[++frameptr].argc = argc;
 	frames[frameptr].start = stackptr;
@@ -457,10 +489,10 @@ obj_t obj_tree_get(obj_t obj, int f)
 {
 
 #if (VERSION > 3)
-	return read16(object_table + 118 + obj * 14 + f * 2);
+	return read16low(object_table + 118 + obj * 14 + f * 2);
 
 #else				/*  */
-	return read8(object_table + 57 + obj * 9 + f);
+	return read8low(object_table + 57 + obj * 9 + f);
 
 #endif				/*  */
 }
@@ -473,7 +505,7 @@ obj_t obj_tree_get(obj_t obj, int f)
 #define set_sibling(x,y) obj_tree_put(x,1,y)
 #define set_child(x,y) obj_tree_put(x,2,y)
 #define attribute(x) (VERSION>3?object_table+112+(x)*14:object_table+53+(x)*9)
-#define obj_prop_addr(o) (read16(VERSION>3?(object_table+124+(o)*14):(object_table+60+(o)*9)))
+#define obj_prop_addr(o) (read16low(VERSION>3?(object_table+124+(o)*14):(object_table+60+(o)*9)))
 
 /* FIXME: rewrite these directly for the two formats and using z pointers
    as it'll be much shorter */
@@ -508,23 +540,23 @@ void insert_object(obj_t obj, uint16_t dest)
 	set_parent(obj, dest);
 }
 
-uint32_t property_address(uint16_t obj, uint8_t p)
+uint16_t property_address(uint16_t obj, uint8_t p)
 {
-	uint32_t a = obj_prop_addr(obj);
+	uint16_t a = obj_prop_addr(obj);
 	uint8_t n = 1;
-	a += (read8(a) << 1) + 1;
-	while (read8(a)) {	/* FIXME save and reuse this value! */
+	a += (read8low(a) << 1) + 1;
+	while (read8low(a)) {	/* FIXME save and reuse this value! */
 		if (VERSION < 4) {
-			n = read8(a) & 31;
+			n = read8low(a) & 31;
 			cur_prop_size = (read8(a) >> 5) + 1;
-		} else if (read8(a) & 0x80) {
-			n = read8(a) & 63;
-			cur_prop_size = read8(++a) & 63;
+		} else if (read8low(a) & 0x80) {
+			n = read8low(a) & 63;
+			cur_prop_size = read8low(++a) & 63;
 			if (cur_prop_size == 0)
 				cur_prop_size = 64;
 		} else {
-			n = read8(a) & 63;
-			cur_prop_size = (read8(a) >> 6) + 1;
+			n = read8low(a) & 63;
+			cur_prop_size = (read8low(a) >> 6) + 1;
 		}
 		a++;
 
@@ -541,19 +573,14 @@ uint8_t system_input(char **out)
 	char *p;
 	uint32_t i;
 	time_t t;
-      input_again:text_flush();
+input_again:
+	text_flush();
 	cur_row = 2;
 	cur_column = 0;
 	time(&t);
-	if (!fgets(text_buffer, 128, stdin)) {
-		fprintf(stderr, "*** Unable to continue.\n");
-		exit(1);
-	}
+	input(textbuffer, 128);
 	if (!predictable)
 		randv += time(NULL) - t;
-	p = text_buffer + strlen(text_buffer);
-	while (p != text_buffer && p[-1] < 32)
-		*--p = 0;	// Let's removing "CRLF", etc
 	*out = text_buffer;
 	return 13;
 }
@@ -696,8 +723,8 @@ void tokenise(uint32_t text, uint32_t dict, uint32_t parsebuf, int len,
 		ws[memory[dict + i]] = 1;
 	memory[parsebuf + 1] = 0;
 	k = p = p1 = 0;
-	el = read8(dict + read8(dict) + 1);
-	ne = read16(dict + read8(dict) + 2);
+	el = read8low(dict + read8(dict) + 1);
+	ne = read16low(dict + read8(dict) + 2);
 	if (ne < 0)
 		ne *= -1;	// Currently, it won't care about the order; it doesn't use binary search.
 	dict += memory[dict] + 4;
@@ -737,7 +764,7 @@ uint8_t line_input(void)
 
 	/* ? is there another copy of this FIXME */
 	if (read8low(0x11) & 1)
-		write8low(0x10, read8(0x10) | 4);
+		write8(0x10, read8low(0x10) | 4);
 	p = ptr;
 	while (*p) {
 		if (*p >= 'A' && *p <= 'Z')
@@ -746,7 +773,7 @@ uint8_t line_input(void)
 	}
 	p = ptr;
 	c = 0;
-	cmax = read8(inst_args[0]);
+	cmax = read8low(inst_args[0]);
 	if (VERSION > 4) {
 
 		// "Left over" characters are not implemented.
@@ -815,16 +842,18 @@ void game_save_many(FILE * fp, long count)
 
 void game_save(uint8_t storage)
 {
-	char filename[1024];
+	char filename[64];
 	FILE *fp;
 	int i;
 	uint8_t c;
 	long o, q;
-	printf("\n*** Save? ");
-	fflush(stdout);
-	gets(filename);
-	if (*filename == '.' && !filename[1])
-		sprintf(filename, "%s.sav", story_name);
+	writes("\n*** Save? ");
+	input(filename, 64);
+	if (*filename == '.' && !filename[1]) {
+		/* FIXME: strlcpy/cat */
+		strcpy(filename, story_name);
+		strcat(filename, ".sav");
+	}
 	cur_column = 0;
 	if (!*filename) {
 		if (VERSION < 4)
@@ -872,12 +901,12 @@ void game_save(uint8_t storage)
 	q = 0;
 	while (o < static_start) {
 		c = fgetc(story);
-		if (read8(o) == c) {
+		if (read8low(o) == c) {
 			q++;
 		} else {
 			game_save_many(fp, q);
 			q = 0;
-			fputc(read8(o) ^ c, fp);
+			fputc(read8low(o) ^ c, fp);
 		}
 		o++;
 	}
@@ -890,15 +919,17 @@ void game_save(uint8_t storage)
 
 void game_restore(void)
 {
-	char filename[1024];
+	char filename[64];
 	FILE *fp;
 	int i, c, d;
 	long o;
-	printf("\n*** Restore? ");
-	fflush(stdout);
-	gets(filename);
-	if (*filename == '.' && !filename[1])
-		sprintf(filename, "%s.sav", story_name);
+	writes("\n*** Restore? ");
+	input(filename, 64);
+	if (*filename == '.' && !filename[1]) {
+		/* strlcpy */
+		strcpy(filename, story_name);
+		strcat(filename, ".sav");
+	}
 	cur_column = 0;
 	if (!*filename)
 		return;
@@ -951,7 +982,7 @@ void switch_output(int st)
 		texting = 1;
 		break;
 	case 2:
-		write8low(0x11, read8low(0x11) | 1);
+		write8(0x11, read8low(0x11) | 1);
 		break;
 	case 3:
 		if (stream3ptr != stream3addr + 15) {
@@ -965,7 +996,7 @@ void switch_output(int st)
 		texting = 0;
 		break;
 	case -2:
-		write8low(0x11, read8low(0x11) & ~1);
+		write8(0x11, read8low(0x11) & ~1);
 		break;
 	case -3:
 		if (stream3ptr != stream3addr - 1)
@@ -981,7 +1012,7 @@ void execute_instruction(void)
 	uint8_t in = pc();
 	uint16_t at;
 	int16_t m, n;
-	uint32_t u;		//=program_counter-1;
+	uint32_t u;
 	int argc;
 	if (!predictable)
 		randv -= 0x0200;
@@ -1134,11 +1165,11 @@ void execute_instruction(void)
 		break;
 	case 0x0F:		// Read byte from long property
 		u = property_address(inst_args[0], inst_args[1]);
-		storei(read8(u));
+		storei(read8low(u));
 		break;
 	case 0x1D:		// Read word from long property
 		u = property_address(inst_args[0], inst_args[1]);
-		storei(read16(u));
+		storei(read16low(u));
 		break;
 
 #endif				/*  */
@@ -1157,7 +1188,7 @@ void execute_instruction(void)
 		storei(parent(*inst_args));
 		break;
 	case 0x84:		// Property length
-		in = read8(*inst_args - 1);
+		in = read8low(*inst_args - 1);
 		storei(VERSION <
 		       4 ? (in >> 5) +
 		       1 : in & 0x80 ? (in & 63 ? (in & 63) : 64) : (in >>
@@ -1258,8 +1289,10 @@ void execute_instruction(void)
 		break;
 	case 0xBA:		// Quit
 		text_flush();
+#ifdef DEBUG		
 		fprintf(stderr, "stackmax %d framemax %d\n", stackmax,
 			framemax);
+#endif			
 		exit(0);
 		break;
 	case 0xBB:		// Line break
@@ -1311,7 +1344,7 @@ void execute_instruction(void)
 		storei(inst_args[0] & inst_args[1]);
 		break;
 	case 0xCA:		// Test attributes
-		branch(read8(attribute(*inst_args) + (inst_args[1] >> 3)) &
+		branch(read8low(attribute(*inst_args) + (inst_args[1] >> 3)) &
 		       (0x80 >> (inst_args[1] & 7)));
 		break;
 	case 0xCB:		// Set attribute
@@ -1337,7 +1370,7 @@ void execute_instruction(void)
 		break;
 	case 0xD1:		// Read property
 		if (u = property_address(inst_args[0], inst_args[1]))
-			storei(cur_prop_size == 1 ? read8(u) : read16(u));
+			storei(cur_prop_size == 1 ? read8low(u) : read16low(u));
 
 		else
 			storei(read16
@@ -1350,11 +1383,11 @@ void execute_instruction(void)
 		if (inst_args[1]) {
 			u = property_address(inst_args[0], inst_args[1]);
 			u += cur_prop_size;
-			storei(read8(u) & (VERSION > 3 ? 63 : 31));
+			storei(read8low(u) & (VERSION > 3 ? 63 : 31));
 		} else {
 			u = obj_prop_addr(inst_args[0]);
-			u += (read8(u) << 1) + 1;
-			storei(read8(u) & (VERSION > 3 ? 63 : 31));
+			u += (read8low(u) << 1) + 1;
+			storei(read8low(u) & (VERSION > 3 ? 63 : 31));
 		}
 		break;
 	case 0xD4:		// Addition
@@ -1371,7 +1404,7 @@ void execute_instruction(void)
 			n = inst_sargs[0] / inst_sargs[1];
 
 		else
-			fprintf(stderr, "\n*** Division by zero\n", in);
+			panic("\n*** Division by zero\n");
 		storei(n);
 		break;
 	case 0xD8:		// Modulo
@@ -1379,7 +1412,7 @@ void execute_instruction(void)
 			n = inst_sargs[0] % inst_sargs[1];
 
 		else
-			fprintf(stderr, "\n*** Division by zero\n", in);
+			panic("\n*** Division by zero\n");
 		storei(n);
 		break;
 
@@ -1568,7 +1601,7 @@ void execute_instruction(void)
 		u = inst_args[1];
 		while (inst_args[2]) {
 			if (*inst_args ==
-			    (inst_args[3] & 0x80 ? read16(u) : read8(u)))
+			    (inst_args[3] & 0x80 ? read16low(u) : read8low(u)))
 				break;
 			u += inst_args[3] & 0x7F;
 			inst_args[2]--;
@@ -1626,7 +1659,7 @@ void execute_instruction(void)
 			m = inst_sargs[2];
 			while (m--)
 				write8(inst_args[1] + m,
-				       read8(inst_args[0] + m));
+				       read8low(inst_args[0] + m));
 		} else {
 
 			// forward!
@@ -1635,7 +1668,7 @@ void execute_instruction(void)
 			m = 0;
 			while (m < inst_sargs[2])
 				write8(inst_args[1] + m,
-				       read8(inst_args[0] + m), m);
+				       read8low(inst_args[0] + m), m);
 			m++;
 		}
 		break;
@@ -1652,10 +1685,14 @@ void execute_instruction(void)
 
 #endif				/*  */
 	default:
+#ifdef DEBUG	
 		fprintf(stderr,
 			"\n*** Invalid instruction: %02X (near %06X)\n",
 			in, program_counter);
 		exit(1);
+#else
+		panic("illegal");
+#endif				
 		break;
 	}
 }
@@ -1665,29 +1702,28 @@ void game_begin(void)
 	if (!story)
 		story = fopen(story_name, "rb");
 	if (!story) {
-		fprintf(stderr, "\n*** Unable to load story file: %s\n",
-			story_name);
+		error("\n*** Unable to load story file: ")
+		error(story_name);
+		panic("\n");
 		exit(1);
 	}
 	rewind(story);
 	fread(memory, 64, 1, story);
 	if (read8low(0) != VERSION) {
-		fprintf(stderr,
-			"\n*** Unsupported Z-machine version: %d\n",
-			VERSION);
+		panic("\n*** Unsupported Z-machine version.\n");
 		exit(1);
 	}
 	switch (VERSION) {
 	case 1:
 	case 2:
-		write8low(0x01, 0x10);
+		write8(0x01, 0x10);
 		break;
 	case 3:
-		write8low(0x01,
+		write8(0x01,
 			  (read8low(0x01) & 0x8F) | 0x10 | (tandy << 3));
 		break;
 	case 4:
-		write8low(0x01, 0x00);
+		write8(0x01, 0x00);
 		break;
 	case 5:
 		alphabet_table = read16low(0x34);
@@ -1706,27 +1742,29 @@ void game_begin(void)
 	object_table = read16low(0x0A);
 	global_table = read16low(0x0C);
 	static_start = read16low(0x0E);
+#ifdef DEBUG	
 	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
-	write8low(0x11, read8low(0x11) & 0x53);
+#endif	
+	write8(0x11, read8low(0x11) & 0x53);
 	if (VERSION > 1)
 		synonym_table = read16low(0x18);
 	if (VERSION > 3) {
-		write8low(0x1E, tandy ? 11 : 1);
-		write8low(0x20, sc_rows);
-		write8low(0x21, sc_columns);
+		write8(0x1E, tandy ? 11 : 1);
+		write8(0x20, sc_rows);
+		write8(0x21, sc_columns);
 	}
 	if (VERSION > 4) {
-		write8low(0x01, 0x10);
-		write8low(0x23, sc_columns);
-		write8low(0x25, sc_rows);
-		write8low(0x26, 1);
-		write8low(0x27, 1);
-		write8low(0x2C, 2);
-		write8low(0x2D, 9);
+		write8(0x01, 0x10);
+		write8(0x23, sc_columns);
+		write8(0x25, sc_rows);
+		write8(0x26, 1);
+		write8(0x27, 1);
+		write8(0x2C, 2);
+		write8(0x2D, 9);
 	}
 	if (!(read8low(2) & 128))
-		write16low(0x02, 0x0802);
-	write8low(0x11, read8low(0x11) & 0x43);
+		write16(0x02, 0x0802);
+	write8(0x11, read8low(0x11) & 0x43);
 	cur_row = 2;
 	cur_column = 0;
 	randomize(0);
@@ -1750,15 +1788,12 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
-	if (optind >= argc) {
-		fprintf(stderr, "fweeplet: story name required.\n");
-		exit(1);
-	}
+	if (optind >= argc)
+		panic("fweeplet: story name required.\n");
 	story_name = argv[optind];
 	if (argv[optind + 1]) {
-
 		/* Restore file in future ?? */
-		fprintf(stderr, "fweeplet: only one story name.\n");
+		panic("fweeplet: only one story name.\n");
 		exit(1);
 	}
 	game_begin();
