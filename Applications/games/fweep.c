@@ -293,18 +293,22 @@ void write8(uint16_t address, uint8_t value)
 	memory[address] = value;
 }
 
+static void newline_margin(void)
+{
+	writes("\n");
+	cur_row++;
+	cur_column = 0;
+	while (cur_column < lmargin) {
+		writes(" ");
+		cur_column++;
+	}
+}
+
 void text_flush(void)
 {
 	text_buffer[textptr] = 0;
-	if (textptr + cur_column >= sc_columns - rmargin) {
-		writes("\n");
-		cur_row++;
-		cur_column = 0;
-		while (cur_column < lmargin) {
-			writes(" ");
-			cur_column++;
-		}
-	}
+	if (textptr + cur_column >= sc_columns - rmargin)
+		newline_margin();
 	if (cur_row >= sc_rows && sc_rows != 255) {
 		writes("[MORE]");
 		waitcr();
@@ -340,15 +344,8 @@ void char_print(uint8_t zscii)
 		}
 		if (zscii <= 32 || textptr > 125 || !buffering)
 			text_flush();
-		if (zscii == 13) {
-			writes("\n");
-			cur_row++;
-			cur_column = 0;
-			while (cur_column < lmargin) {
-				writes(" ");
-				cur_column++;
-			}
-		}
+		if (zscii == 13)
+			newline_margin();
 	}
 }
 
@@ -371,24 +368,31 @@ void zch_print(int z)
 	} else if (zch_shift >= 5) {
 		zsl = zch_shiftlock;
 		text_print(read16
+			/* FIXME: might need to force cast some of this 32bit */
 			   (synonym_table + (z << 1) +
 			    ((zch_shift - 5) << 6)) << 1);
 		zch_shift = zch_shiftlock = zsl;
 	} else if (z == 0) {
 		char_print(32);
 		zch_shift = zch_shiftlock;
+#if (VERSION == 1)		
 	} else if (z == 1 && VERSION == 1) {
 		char_print(13);
 		zch_shift = zch_shiftlock;
+#endif		
 	} else if (z == 1) {
 		zch_shift = 5;
+#if (VERSION > 2)		
 	} else if ((z == 4 || z == 5) && VERSION > 2
 		   && (zch_shift == 1 || zch_shift == 2)) {
 		zch_shift = zch_shiftlock = zch_shift & (z - 3);
+#endif
+#if (VERSION < 3)		
 	} else if (z == 4 && VERSION < 3) {
 		zch_shift = zch_shiftlock = (zch_shift + 1) % 3;
 	} else if (z == 5 && VERSION < 3) {
 		zch_shift = zch_shiftlock = (zch_shift + 2) % 3;
+#endif		
 	} else if ((z == 2 && VERSION < 3) || z == 4) {
 		zch_shift = (zch_shift + 1) % 3;
 	} else if ((z == 3 && VERSION < 3) || z == 5) {
@@ -399,9 +403,11 @@ void zch_print(int z)
 		zch_shift = 7;
 	} else if (z == 6 && zch_shift == 2) {
 		zch_shift = 3;
+#if (VERSION != 1)		
 	} else if (z == 7 && zch_shift == 2 && VERSION != 1) {
 		char_print(13);
 		zch_shift = zch_shiftlock;
+#endif		
 	} else {
 		if (alphabet_table)
 			char_print(read8
@@ -446,9 +452,8 @@ void make_rectangle(uint32_t addr, int width, int height, int skip)
 	}
 	text_flush();
 }
-
-
 #endif				/*  */
+
 uint16_t fetch(uint8_t var)
 {
 	if (var & 0xF0) {
@@ -546,10 +551,8 @@ void obj_tree_put(obj_t obj, int f, uint16_t v)
 
 #if (VERSION > 3)
 	write16(object_table + 118 + obj * 14 + f * 2, v);
-
 #else				/*  */
 	write8(object_table + 57 + obj * 9 + f, v);
-
 #endif				/*  */
 }
 
@@ -558,10 +561,8 @@ obj_t obj_tree_get(obj_t obj, int f)
 
 #if (VERSION > 3)
 	return read16low(object_table + 118 + obj * 14 + f * 2);
-
 #else				/*  */
 	return read8low(object_table + 57 + obj * 9 + f);
-
 #endif				/*  */
 }
 
@@ -888,7 +889,6 @@ void game_save(uint8_t storage)
 	int f;
 	uint8_t c;
 	uint16_t o, q;
-	uint16_t oo;
 	writes("\n*** Save? ");
 	input(filename, 64);
 	if (*filename == '.' && !filename[1]) {
@@ -932,11 +932,8 @@ void game_save(uint8_t storage)
 	q = 0;
 	while (o < static_start) {
 		read(story, &c, 1);
-		if (read8low(o) == c) {
-			if (q == 0)
-				oo = o;
+		if (read8low(o) == c)
 			q++;
-		}
 		else {
 			if (q) {
 				xwriteb(f, 0);
@@ -1339,7 +1336,7 @@ void execute_instruction(void)
 		break;
 	case 0xBA:		// Quit
 		text_flush();
-#ifdef DEBUG		
+#ifdef DEBUG	
 		fprintf(stderr, "stackmax %d framemax %d\n", stackmax,
 			framemax);
 #endif			
@@ -1599,14 +1596,9 @@ void execute_instruction(void)
 		break;
 	case 0xED:		// Clear window
 		if (*inst_args != 1) {
-			writes("\n");
+			cur_row = 1;	/* Will be bumped to 2 in call */
 			textptr = 0;
-			cur_row = 2;
-			cur_column = 0;
-			while (cur_column < lmargin) {
-				writes(" ");
-				cur_column++;
-			}
+			newline_margin();
 		}
 		break;
 	case 0xEE:		// Erase line
@@ -1735,7 +1727,7 @@ void execute_instruction(void)
 
 #endif				/*  */
 	default:
-#ifdef DEBUG	
+#ifdef DEBUG
 		fprintf(stderr,
 			"\n*** Invalid instruction: %02X (near %06X)\n",
 			in, program_counter);
@@ -1792,7 +1784,7 @@ void game_begin(void)
 	object_table = read16low(0x0A);
 	global_table = read16low(0x0C);
 	static_start = read16low(0x0E);
-#ifdef DEBUG	
+#ifdef DEBUG
 	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
 #endif	
 	write8(0x11, read8low(0x11) & 0x53);
@@ -1821,31 +1813,32 @@ void game_begin(void)
 	writes("\n");
 }
 
+static void usage(void)
+{
+	panic("fweep [-t] [-p] [-q] storyfile\n");
+}
+
 int main(int argc, char **argv)
 {
-	int opt;
 	srand(getpid() ^ time(NULL));
-	while ((opt = getopt(argc, argv, "tpq")) != -1) {
-		switch (opt) {
-		case 't':
-			tandy = 1;
-			break;
-		case 'p':
-			original = 0;
-			break;
-		case 'q':
-			qtospace = 0;
-			break;
+	while(*++argv && *argv[0] == '-') {
+		switch(*argv[1]) {
+			case 't':
+				tandy = 1;
+				break;
+			case 'p':
+				original = 0;
+				break;
+			case 'q':
+				qtospace = 0;
+				break;
+			default:
+				usage();
 		}
 	}
-	if (optind >= argc)
-		panic("fweeplet: story name required.\n");
-	story_name = argv[optind];
-	if (argv[optind + 1]) {
-		/* Restore file in future ?? */
-		panic("fweeplet: only one story name.\n");
-		exit(1);
-	}
+	story_name = *argv++;
+	if (!story_name || *argv)
+		usage();
 	game_begin();
 	game_restart();
 	for (;;)
