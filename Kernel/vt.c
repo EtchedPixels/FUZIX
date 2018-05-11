@@ -187,11 +187,11 @@ static int escout(unsigned char c)
 		clear_across(cursory, cursorx, VT_RIGHT - cursorx + 1);
 		return 0;
 	}
-	if (c == '_') {
+	if (c == 'e') {
 		cursorhide = 0;
 		return 0;
 	}
-	if (c == ' ') {
+	if (c == 'f') {
 		cursorhide = 1;
 		cursor_disable();
 		return 0;
