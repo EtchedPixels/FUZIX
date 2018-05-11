@@ -657,7 +657,7 @@ input_again:
 }
 
 /* FIXME: stop using uint64_t */
-uint64_t dictionary_get(uint32_t addr)
+uint64_t dictionary_get(uint16_t addr)
 {
 	uint64_t v = 0;
 	int c = VERSION > 3 ? 6 : 4;
@@ -743,7 +743,7 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 	return v | 0x8000;
 }
 
-void add_to_parsebuf(uint32_t parsebuf, uint32_t dict, uint8_t * d,
+void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 		     int k, int el, int ne, int p, uint16_t flag)
 {
 	uint64_t v = dictionary_encode(d, k);
@@ -777,7 +777,7 @@ void add_to_parsebuf(uint32_t parsebuf, uint32_t dict, uint8_t * d,
 
 
 #define Add_to_parsebuf() if(k)add_to_parsebuf(parsebuf,dict,d,k,el,ne,p1,flag),k=0;p1=p+1;
-void tokenise(uint32_t text, uint32_t dict, uint32_t parsebuf, int len,
+void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	      uint16_t flag)
 {
 	boolean ws[256];
