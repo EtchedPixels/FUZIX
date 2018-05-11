@@ -12,7 +12,7 @@
 #define FONTDATAMAX 2048
 #endif
 
-const unsigned char fontdata_8x8[FONTDATAMAX] = {
+unsigned char fontdata_8x8[FONTDATAMAX] = {
 #ifndef CONFIG_FONT8X8SMALL
 	/* 0 0x00 '^@' */
 	0x00, /* 00000000 */
