@@ -4,6 +4,8 @@
 #include <net_native.h>
 #include <printf.h>
 
+#ifdef CONFIG_NET_NATIVE
+
 /* This holds the additional kernel context for the sockets */
 static struct sockdata sockdata[NSOCKET];
 /* This is the inode of the backing file object */
@@ -634,3 +636,5 @@ arg_t net_ioctl(uint8_t op, void *p)
 void netdev_init(void)
 {
 }
+
+#endif
