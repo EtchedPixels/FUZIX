@@ -170,8 +170,10 @@ void device_init(void)
   inittod();
   /* Figure out what disks we have */
   diskprobe();
+#ifdef CONFIG_IDE
   /* IDE */
   devide_init();
+#endif
   /* ST506 */
   hd_init();
 }
