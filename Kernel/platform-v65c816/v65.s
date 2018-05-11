@@ -233,6 +233,7 @@ hd_wpatch:
 	.export _scroll_down
 	.export _do_clear_bytes
 	.export _cursor_off
+	.export _cursor_disable
 	.export _do_cursor_on
 
 _charprint:
@@ -395,6 +396,7 @@ cursormod:
 	plb
 	sep #$10
 	.i8
+_cursor_disable:
 	rts
 
 	.data

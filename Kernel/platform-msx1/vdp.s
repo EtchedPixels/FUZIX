@@ -14,6 +14,7 @@
 	    .globl _scroll_up
 	    .globl _scroll_down
 	    .globl _plot_char
+	    .globl _cursor_disable
 
 ;
 ; VDP routines are directly hooked into the vt layer
@@ -30,4 +31,5 @@ VDP_DIRECT	.equ	1
 platform_interrupt_all:
 	    ld c, #0x99
 	    in a, (c)
+_cursor_disable:
 	    ret

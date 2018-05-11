@@ -9,6 +9,7 @@
 	.globl _clear_lines
 	.globl _cursor_on
 	.globl _cursor_off
+	.globl _cursor_disable
 	.globl _vtattr_notify
 
 	.globl _video_read
@@ -334,6 +335,7 @@ _cursor_off:
 	com 192,x
 	com 224,x
 nocursor:
+_cursor_disable:
 _vtattr_notify:
 	rts
 ;

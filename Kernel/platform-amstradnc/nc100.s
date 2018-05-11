@@ -26,6 +26,7 @@
 	    .globl _clear_across
 	    .globl _cursor_on
 	    .globl _cursor_off
+	    .globl _cursor_disable
 	    .globl _cursorpos
 	    ; need the font
 	    .globl _font4x6
@@ -469,6 +470,7 @@ vtdone:	    pop af
 	    ret po
 	    ei
 _vtattr_notify:
+_cursor_disable:
 	    ret
 
 ;

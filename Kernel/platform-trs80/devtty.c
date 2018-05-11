@@ -88,7 +88,8 @@ void vtexchange(void)
                 ret
         __endasm;
         /* Cursor back */
-        cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
+        if (!ttysave[inputtty].cursorhide)
+            cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -107,7 +108,8 @@ void tty_putc(uint8_t minor, unsigned char c)
             curtty = minor - 1;
             vt_load(&ttysave[curtty]);
             /* Fix up the cursor */
-            cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
+            if (!ttysave[curtty].cursorhide)
+                cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
        }
        vtoutput(&c, 1);
        irqrestore(irq);

@@ -75,6 +75,10 @@ void cursor_on(int8_t y, int8_t x)
     cur_blink_addr = blink_addr;
 }
 
+void cursor_disable(void)
+{
+}
+
 void memcpy_vram(uint16_t dst, uint16_t src, uint16_t size)
 {
     uint16_t i;

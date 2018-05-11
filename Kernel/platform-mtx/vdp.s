@@ -12,6 +12,7 @@
 	    .globl _clear_lines
 	    .globl _cursor_off
 	    .globl _cursor_on
+	    .globl _cursor_disable
 	    .globl _plot_char
 	    .globl vdpload
 
@@ -105,6 +106,7 @@ _cursor_on:  ld a, (_curtty)
 _cursor_off: ld a, (_curtty)
 	     or a
 	     jp nz, cursor_off		; VDP
+_cursor_disable:
 	     ret
 
 _clear_across:

@@ -51,6 +51,10 @@ void cursor_on(int8_t y, int8_t x)
 	map_for_kernel();
 }
 
+void cursor_disable(void)
+{
+}
+
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
 	unsigned char *p=char_addr(y,x);

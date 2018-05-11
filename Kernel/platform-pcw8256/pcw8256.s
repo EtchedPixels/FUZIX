@@ -29,6 +29,7 @@
 	    .globl _scroll_down
 	    .globl _cursor_on
 	    .globl _cursor_off
+	    .globl _cursor_disable
 	    .globl _plot_char
 	    .globl _do_beep
 	    .globl _clear_lines
@@ -416,6 +417,7 @@ _cursor_off:
 	    ld de, (cursorpos)
 	    jr cursordo
 
+_cursor_disable:
 _do_beep:
 	    ret
 

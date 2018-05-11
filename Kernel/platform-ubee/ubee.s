@@ -566,6 +566,7 @@ scanner_done:
 	    .area _VIDEO
 
 	    .globl _cursor_off
+	    .globl _cursor_disable
 	    .globl _do_cursor_on
 	    .globl _scroll_up
 	    .globl _scroll_down
@@ -585,6 +586,15 @@ scanner_done:
 ;
 _cursor_off:
 	    ret
+_cursor_disable:
+	    call ___hard_di
+	    push af
+	    ld bc,#0x0e0c	; Address register
+	    out (c),b
+	    ld bc,#0x000d	; Set to 0 will hide cursor nicely
+				; as the 6545 sees video RAM as 0x2000+
+	    out (c),b
+	    jr popout
 _do_cursor_on:
 	    ; ld a,i handling is buggy on NMOS Z80
 	    call ___hard_di

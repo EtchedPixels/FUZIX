@@ -80,6 +80,7 @@ uint8_t vtpaper;
 static signed char cursorx;
 static signed char cursory = VT_INITIAL_LINE;
 static signed char ncursory;
+static uint8_t cursorhide;
 static uint8_t vtpend;
 static uint8_t vtbusy;
 
@@ -186,6 +187,15 @@ static int escout(unsigned char c)
 		clear_across(cursory, cursorx, VT_RIGHT - cursorx + 1);
 		return 0;
 	}
+	if (c == '_') {
+		cursorhide = 0;
+		return 0;
+	}
+	if (c == ' ') {
+		cursorhide = 1;
+		cursor_disable();
+		return 0;
+	}
 	if (c == 'Y')
 		return 2;
 	if (c == 'a')
@@ -220,7 +230,8 @@ void vtoutput(unsigned char *p, unsigned int len)
 	}
 	vtbusy = 1;
 	irqrestore(irq);
-	cursor_off();
+	if (!cursorhide)
+		cursor_off();
 	/* FIXME: do we ever get called with len > 1, if not we could strip
 	   this right down */
 	do {
@@ -270,8 +281,8 @@ void vtoutput(unsigned char *p, unsigned int len)
 		len = 1;
 		/* Until we don't get interrupted */
 	} while(cq);
-
-	cursor_on(cursory, cursorx);
+	if (!cursorhide)
+		cursor_on(cursory, cursorx);
 	vtbusy = 0;
 }
 
@@ -357,6 +368,7 @@ void vt_save(struct vt_switch *vt)
 	vt->cursorx = cursorx;
 	vt->cursory = cursory;
 	vt->ncursory = ncursory;
+	vt->cursorhide = cursorhide;
 }
 
 void vt_load(struct vt_switch *vt)
@@ -366,6 +378,7 @@ void vt_load(struct vt_switch *vt)
 	cursorx = vt->cursorx;
 	cursory = vt->cursory;
 	ncursory = vt->ncursory;
+	cursorhide = vt->cursorhide;
 	vtattr_notify();
 }
 #endif
@@ -386,6 +399,11 @@ void cursor_off(void)
 {
 	if (cpos)
 		*cpos = csave;
+}
+
+/* Only needed for hardware cursors */
+void cursor_disable(void)
+{
 }
 
 void cursor_on(int8_t y, int8_t x)
