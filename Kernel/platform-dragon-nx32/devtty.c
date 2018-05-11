@@ -349,7 +349,9 @@ static uint8_t piabits[] = { 0xF0, 0xF8, 0xE0, 0xE8};
 ///* V0 V1 V2 */
 //static uint8_t sambits[] = { 0x6, 0x6, 0x6, 0x6 };
 
-
+static struct fontinfo fontinfo = {
+	0, 255, 128, 255, FONT_INFO_8X8
+};
 
 #define pia1b	((volatile uint8_t *)0xFF22)
 #define sam_v	((volatile uint8_t *)0xFFC0)
@@ -395,8 +397,26 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+	extern unsigned char fontdata_8x8[];
+
 	if (is_dw(minor))	/* remove once DW get its own ioctl() */
 		return tty_ioctl(minor, arg, ptr);
+	if (minor == 1) {
+		uint16_t size = 128 * 8;
+		uint16_t base = 128 * 8;
+		switch (arg) {
+		case VTFONTINFO:
+			return uput(&fontinfo, ptr, sizeof(fontinfo));
+		case VTSETFONT:
+			size = base = 0;
+		case VTSETUDG:
+			return uget(fontdata_8x8 + base, ptr, size);
+		case VTGETFONT:
+			size = base = 0;
+		case VTGETUDG:
+			return uput(fontdata_8x8 + base, ptr, size);
+		}
+	}
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
 	switch(arg) {
