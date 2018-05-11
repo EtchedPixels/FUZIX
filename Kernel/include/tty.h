@@ -152,6 +152,12 @@ struct termios {
 #define VTATTRS		0x24
 #define KBRATE		0x25
 
+#define VTFONTINFO	0x30
+#define VTSETFONT	(0x31|IOCTL_SUPER)
+#define VTGETFONT	0x32
+#define VTSETUDG	0x33
+#define VTGETUDG	0x34
+
 /* Fuzix systems to level 2 have 256 byte tty buffers as per standards, level 1
    boxes may not */
 #if defined(CONFIG_LEVEL_2)
@@ -168,6 +174,20 @@ struct winsize {		/* Keep me 8bytes on small boxes */
     unsigned short ws_col;
     unsigned short ws_xpixel;
     unsigned short ws_ypixel;
+};
+
+struct fontinfo {
+    uint8_t font_low;
+    uint8_t font_high;
+    uint8_t udg_low;
+    uint8_t udg_high;
+    uint8_t format;
+#define FONT_INFO_8X8	0
+#define FONT_INFO_6X8	1
+#define FONT_INFO_4X8	2	/* packed twice in each byte */
+#define FONT_INFO_4X6	3
+#define FONT_INFO_8X11P16  4	/* 8 x 11 but packed 16 line packed */
+#define FONT_INFO_8X16	5
 };
 
 /* Group the tty into a single object. That lets 8bit processors keep all
