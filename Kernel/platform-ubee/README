@@ -91,19 +91,35 @@ Done so far:
 - IDE driver (note the ubee512 emulator ide appears to be very busted as
   of 5.8.0)
 - If we have wd1002-5 and fd wtf do we put IDE in major/minors ?
+- Video support (colour, attributes)			DONE
+- Map video at 0x8000					DONE
+- Clear attribute ram if present			DONE
+- Move common up					DONE
+- Do buffer over discard change				DONE
+- Check we have video latches/map right everywhere	DONE
+- Init vtattr_cap and the video variables correctly	DONE (I think)
+- Check if scrolling in hw is doable or not in 80x25	NO
+- Support 'map video into my process at 0x8000 hack'	DONE
+- Non premium video					COLOUR DONE
+- Non premium video setup				COLOUR DONE
+- Support RAM font setting				DONE
+- Figure out how I broke the 6545 cursor		DONE
 
 In Progress
+- Debugging floppy driver - we seem to have broken it
+- Swap
+- Graphics not just vt interfaces
+- RAM based fonts
+- Premium models hang somewhere as if there's a memory banking bug
+  (seems to be a size related Heisenbug)
 
 To Do:
 - Floppy - media detect/sectors per track etc/ hard skew
 - Fix reboot/panic logic
 - Keyboard repeat
-- Graphics not just vt interfaces
-- Premium models hang somewhere as if there's a memory banking bug
+- Speed up RTC timer a bit for lpen based boxes so we don't miss keys
 
 Longer Term
-- RAM based fonts (load the ROM one into RAM
-  customised for bold/italic ?)
 - Do delayed video output via a buffer off vblank event for non premium
 - Proper support for Z80 PIO interfaces
 - Z8530 SCC
@@ -167,21 +183,3 @@ bit patterns. Also it's banked and banked so will be horrible to program and
 we'll need graphics mode support for other modes
 
 
-
-Currently in progress
-
-- Video support (colour, attributes)			DEBUGGING
-- Map video at 0x8000					DONE
-- Clear attribute ram if present			DONE
-- Move common up					DONE
-- Do buffer over discard change				DONE
-- Check we have video latches/map right everywhere	DEBUGGING
-- Init vtattr_cap and the video variables correctly	DONE (I think)
-- Check if scrolling in hw is doable or not in 80x25	NO
-- Support 'map video into my process at 0x8000 hack'	DONE
-- Non premium video					COLOUR IN PROGRESS
-- Non premium video setup				COLOUR IN PROGRESS
-- Copy ROM font to RAM, support RAM font setting
-- Figure out how I broke the 6545 cursor		DONE
-
-Currently debugging scrolling, swap

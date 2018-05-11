@@ -143,20 +143,12 @@ to_reboot:
 	    out (0x50), a
 	    jp 0xE000
 
-	    .area _DISCARD
-	
-;
-;	This setting list comes from the Microbee 256TC documentation
-;	and is the quoted table for 80x25 mode
-;
-_ctc6545:				; registers in reverse order
-	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
-	    .db 0x1a, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
-
-
-init_early:
-            ; load the 6545 parameters
-	    ld hl, #_ctc6545
+_ctc_load:
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+ctcload:
 	    ld bc, #0x0F0C
 ctcloop:    out (c), b			; register
 	    ld a, (hl)
@@ -164,6 +156,28 @@ ctcloop:    out (c), b			; register
 	    inc hl
 	    dec b
 	    jp p, ctcloop
+	    ret
+
+;
+;	This setting list comes from the Microbee 256TC documentation
+;	and is the quoted table for 80x25 mode
+;
+_ctc6545:				; registers in reverse order
+	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x09, 0x0A, 0x48
+	    .db 0x1A, 0x19, 0x05, 0x1B, 0x37, 0x58, 0x50, 0x6B
+_ctc6545_64:
+	    .db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x2F, 0x0F, 0x48
+	    .db 0x12, 0x10, 0x09, 0x12, 0x37, 0x51, 0x40, 0x6B
+_ctc6545_40:
+	    .db 0x00, 0x00, 0x00, 0x20, 0x0A, 0x2A, 0x0A, 0x48
+	    .db 0x1A, 0x19, 0x05, 0x1B, 0x24, 0x2D, 0x28, 0x35
+
+	    .area _DISCARD
+
+init_early:
+            ; load the 6545 parameters
+	    ld hl, #_ctc6545
+	    call ctcload
 	    ; ensure the CTC clock is right
 	    ld a, #0
 	    in a, (9)			; manual says in but double check
@@ -571,8 +585,8 @@ scanner_done:
 	    .globl _scroll_up
 	    .globl _scroll_down
 	    .globl _vwrite
-	    .globl _patch_std
-	    .globl _patch_std_end
+	    .globl _map_video_font
+	    .globl _unmap_video_font
 
 	    .globl ___hard_di
 
@@ -743,13 +757,15 @@ _vwrite:
 vloop:
 	    ld a,(_vtchar)
 	    ld (hl),a		; character
+	    ld a,(_ubee_model)
+	    or a
+	    jr z, noattrib
 	    ld a,#0x90		; attribute RAM / 0x90 if we enable PCG extended
-_patch_std:
 	    out (0x1c),a	; latch in attribute RAM
 	    ld (hl),e		; attribute
 	    xor a		; #0x80 if enable PCG extended
 	    out (0x1c),a
-_patch_std_end:
+noattrib:
 	    set 3,h		; colour is at F8-FF
 	    ld (hl),d		; colour
 	    dec bc
@@ -761,6 +777,23 @@ nextchar:
 	    res 3,h
 	    inc hl
 	    jr vloop
+
+_map_video_font:
+	    ld a, (mapreg)
+	    and #0xF7
+	    or #0x10
+	    di
+	    out (0x50),a
+	    xor a
+	    out (0x08),a
+	    ret
+_unmap_video_font:
+	    ld a,#0x40
+	    out (0x08),a
+	    ld a, (mapreg)
+	    out (0x50),a
+	    ei
+	    ret
 ;
 ;	Ensure these are in the video mapping
 ;

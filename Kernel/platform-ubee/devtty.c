@@ -309,11 +309,38 @@ static const struct videomap displaymap = {
     MAP_FBMEM
 };
 
+/* The low characters are in ROM so we only really have the UDG range */
+static const struct fontinfo fontinfo = {
+    128, 255, 128, 255, FONT_INFO_8X11P16
+};
 
+/* FIXME: need to make sure we have done the rest of the stuff to get all
+   the fonts into 'from RAM' mode */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+    uint16_t size = 0x400;
+    uint8_t *base = (uint8_t *)0x8C00;
+    int r;
     /* Change this if we add multiple console support */
-    if (minor != 1 || (arg >> 8) != 0x03)
+    if (minor != 1)
+        return tty_ioctl(minor, arg, ptr);
+    switch(arg) {
+    case VTFONTINFO:
+        return uput(&fontinfo, ptr, sizeof(fontinfo));
+    case VTGETFONT:
+    case VTGETUDG:
+        map_video_font();
+        r = uget(base, ptr, size);
+        unmap_video_font();
+        return r;
+    case VTSETFONT:
+    case VTSETUDG:
+        map_video_font();
+        r = uput(base, ptr, size);
+        unmap_video_font();
+        return r;
+    }
+    if ((arg >> 8) != 0x03)
         return vt_ioctl(minor, arg, ptr);
     switch(arg) {
     case GFXIOC_GETINFO:

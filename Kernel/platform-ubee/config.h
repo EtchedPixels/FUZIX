@@ -17,15 +17,17 @@
 #define MAX_MAPS	16		/* 512 KByte... */
 #define MAP_SIZE	0x8000
 
-#define CONFIG_NET
-#define CONFIG_NET_NATIVE
+/* Set these two for networking - no point right now */
+//#define CONFIG_NET
+//#define CONFIG_NET_NATIVE
+/* Set this for IDE */
+//#define CONFIG_IDE
 
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 #define CONFIG_LARGE_IO_DIRECT
 
 #define MAX_BLKDEV	4
-#define CONFIG_IDE
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
@@ -59,7 +61,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    6        /* Number of block buffers */
+#define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 extern unsigned int swap_dev;
