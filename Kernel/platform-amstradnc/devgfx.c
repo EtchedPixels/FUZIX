@@ -38,7 +38,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t *tmp;
   uint16_t l;
-  if (arg >> 8 != 0x03)
+  if (minor != 1 || (arg >> 8 != 0x03))
     return vt_ioctl(minor, arg, ptr);
 
   switch(arg) {
