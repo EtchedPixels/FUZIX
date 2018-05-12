@@ -203,6 +203,9 @@ int do_goto(void);
 int do_del(void);
 int do_change(void);
 int changeend(void);
+int pagetop(void);
+int pagemiddle(void);
+int pagebottom(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
@@ -277,6 +280,9 @@ keytable_t table[] = {
         { 'r', 0, replace },
         { 'F', NORPT, findleft },
         { 'f', NORPT, findright },
+        { 'H', NORPT, pagetop },
+        { 'L', NORPT, pagebottom },
+        { 'M', NORPT, pagemiddle },
         { 'd', 0, do_del },
         { 'c', 0, do_change },
         { 'C', 0, changeend },
@@ -294,7 +300,7 @@ keytable_t table[] = {
 };
 
 
-void beep(void)
+int dobeep(void)
 {
         write(1, "\007", 1);
 }
@@ -483,6 +489,36 @@ int pgdown_half(void)
         return 0;
 }
 
+int pagetop(void)
+{
+        int y = row;
+        while(y--)
+                up();
+        return 0;
+}
+
+int pagemiddle(void)
+{
+        int y = row;
+        int t = LINES/2;
+        while(y < t) {
+                down();
+                y++;
+        }
+        while(y-- > t)
+                up();
+        return 0;
+}
+
+int pagebottom(void)
+{
+        int y = row;
+        while(y++ < LINES - 1)
+                down();
+        return 0;
+}
+
+        
 int wleft(void)
 {
         char *p;
@@ -606,7 +642,7 @@ int append_mode(void)
 int append_end(void)
 {
         lnend();
-        return append_mode();
+        return insert_mode();
 }
 
 int replace(void)
@@ -669,7 +705,7 @@ int do_del(void)
                 while(indexp && *ptr(indexp) != '\n' && !delete_left());
                 return 0;
         } else {
-                beep();
+                dobeep();
                 return 1;
         }
         /* TODO dw and de */
@@ -743,14 +779,14 @@ int zz(void)
 {
         int c = getch();
         if (c != 'Z' && c != 'z') {
-                beep();
+                dobeep();
                 return 0;
         }
         /* Check if changed ? */
         if (!save(filename))
                 warning(strerror(errno));
         else
-                exit(0);
+                done = 1;
         return 1;
 }
 
@@ -766,7 +802,7 @@ void warning(const char *p)
         mvaddstr(LINES-1, 0, p);
         clrtoeol();
         refresh();
-        beep();
+        dobeep();
         getch();
         display();
 }
