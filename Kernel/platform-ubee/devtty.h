@@ -24,5 +24,7 @@ extern void unmap_video_font(void);
 
 extern void ctc_load(uint8_t *map);
 extern uint8_t ctc6545[48];
+extern void video_40(void);
+extern void video_80(void);
 
 #endif

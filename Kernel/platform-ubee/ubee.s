@@ -560,6 +560,8 @@ scanner_done:
 	    .globl _vwrite
 	    .globl _map_video_font
 	    .globl _unmap_video_font
+	    .globl _video_40
+	    .globl _video_80
 
 	    .globl ___hard_di
 
@@ -766,6 +768,14 @@ _unmap_video_font:
 	    ld a, (mapreg)
 	    out (0x50),a
 	    ei
+	    ret
+_video_40:
+	    ld a,#1
+	    jr _video_set
+_video_80:
+	    xor a
+_video_set:
+	    in a,(9)
 	    ret
 ;
 ;	Ensure these are in the video mapping

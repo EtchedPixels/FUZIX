@@ -262,7 +262,7 @@ void lpen_kbd_poll(void)
 	lpen_kbd_last = 0xFF;
 }
 
-static const struct display display[2] = {
+static const struct display display[3] = {
     /* 80 x 25 */
     {
         0,
@@ -359,7 +359,11 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
         }
         if (arg == GFXIOC_GETMODE)
             return uput(&display[m], ptr, sizeof(struct display));
-//TODO        vt_modeset(m);
+        if (m == 2)
+		video_40();
+	else
+		video_80();
+	ctc_load(ctc6545 + 16 * m);
         return 0;
     }
     }
