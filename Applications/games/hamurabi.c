@@ -151,9 +151,9 @@ uint16_t births(city_st *cty) {
 resp step(city_st *cty) {
   uint16_t died = 0;
   died += starvation(cty);
-  if (died > cty->population * 0.45)
+  if (died > ((cty->population * 9) / 20))
     return ESTARVE;
-  cty->avg_starved = 0.1*died + 0.9*cty->avg_starved; // EMA
+  cty->avg_starved = (died + 9*cty->avg_starved)/10; // EMA
 
   if (RAND(15) == 0)
     died += plague(cty);
@@ -161,7 +161,7 @@ resp step(city_st *cty) {
 
   cty->population += births(cty);
 
-  cty->migrated  = 0.1*RAND(cty->population);
+  cty->migrated  = RAND(cty->population)/10;
   cty->trade_val = 17+RAND(10);
   cty->yield = RAND(10)+1;
 
