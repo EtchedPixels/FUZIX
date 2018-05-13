@@ -12,6 +12,9 @@
 	.globl _fd_motor_on
 	.globl fd_nmi_handler
 
+	.globl map_kernel
+	.globl map_process_always
+
 FDCREG	.equ	0x40
 FDCTRK	.equ	0x41
 FDCSEC	.equ	0x42
@@ -39,6 +42,7 @@ TRACK	.equ	1
 SECTOR	.equ	2
 DIRECT	.equ	3		; 0 = read 2 = write 1 = status
 DATA	.equ	4
+USER	.equ	6
 
 	.area	_COMMONMEM
 ;
@@ -178,6 +182,10 @@ fdiosetup:
 	ld	a, (fdcctrl)
 	ld	d, a			; we need this in a register
 					; to meet timing
+	ld	a, USER(ix)
+	or	a
+	call	nz, map_process_always
+
 	ld	a, #1
 	ld	(fdc_active), a		; NMI pop and jump
 	jr	z, fdio_in
@@ -190,6 +198,7 @@ fdiosetup:
 ;
 fdxferdone:
 	ei
+	call	map_kernel
 fdxferdone2:
 	xor	a
 	ld	(fdc_active), a

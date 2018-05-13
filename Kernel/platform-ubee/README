@@ -104,9 +104,9 @@ Done so far:
 - Non premium video setup				COLOUR DONE
 - Support RAM font setting				DONE
 - Figure out how I broke the 6545 cursor		DONE
+- Debugging floppy driver - need to add direct I/O to user support	DONE
 
 In Progress
-- Debugging floppy driver - we seem to have broken it
 - Swap
 - Graphics not just vt interfaces
 - RAM based fonts
