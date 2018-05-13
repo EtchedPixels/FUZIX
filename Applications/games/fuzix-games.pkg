@@ -30,3 +30,4 @@ f 0755 /usr/bin/myst09        myst09
 f 0755 /usr/bin/myst10        myst10
 f 0755 /usr/bin/myst11        myst11
 f 0755 /usr/bin/qrun          qrun
+f 0755 /usr/bin/hamurabi      hamurabi
