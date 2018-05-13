@@ -314,7 +314,7 @@ _kernel_flag:
 
 ## C Level Platform Interface
 
-### Functions that not be in the discard segment
+### Functions that may not be in the discard segment
 
 void platform_idle(void) : This function is invoked whenever there is no
 work to run. On a purely interrupt driven machine it can invoke halt
