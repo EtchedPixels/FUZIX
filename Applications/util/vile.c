@@ -168,7 +168,6 @@ int bottom(void);
 int delete(void);
 int delete_line(void);
 int down(void);
-int file(void);
 int insert(void);
 int insert_mode(void);
 int insert_before(void);
@@ -208,6 +207,7 @@ int pagemiddle(void);
 int pagebottom(void);
 int swapchars(void);
 int bracket(void);
+int colon_mode(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
@@ -220,12 +220,12 @@ int bracket(void);
  *	W and S		word skip with punctuation
  *	[] and ()	setence and paragraph skip
  *	R		replace mode
- *	t		swap two characters
  *	cw/ce		change word variants
  *	s		substitute
+ *	/ and ?		search forward/back
+ *	n/N		next search forward/back
  *	u		undo
  *	dw,de		delete word variants
- *	%		move to associated bracket pair
  *	.		repeat last text changing command
  *
  *	All : functionality
@@ -271,7 +271,6 @@ keytable_t table[] = {
         { 'X', 0, delete_left },
         { 'o', 0, open_after },
         { 'O', 0, open_before },
-        { 'W', NORPT, file },
         { 'R', NORPT, redraw },
         { CTRL('L'), NORPT, redraw },
         { 'Q', NORPT, quit },
@@ -300,6 +299,7 @@ keytable_t table[] = {
         { '7', KEEPRPT|USERPT, digit },
         { '8', KEEPRPT|USERPT, digit },
         { '9', KEEPRPT|USERPT, digit },
+        { ':', NORPT, colon_mode },
         { 0, 0, noop }
 };
 
@@ -826,13 +826,6 @@ int open_after(void)
         return 0;
 }
 
-int file(void)
-{
-        if (!save(filename))
-                save(HUP);
-        return 0;
-}
-
 int save(char *fn)
 {
         FILE *fp;
@@ -852,13 +845,8 @@ int save(char *fn)
         return (ok);
 }
 
-int zz(void)
+int save_done(void)
 {
-        int c = getch();
-        if (c != 'Z' && c != 'z') {
-                dobeep();
-                return 0;
-        }
         /* Check if changed ? */
         if (!save(filename))
                 warning(strerror(errno));
@@ -867,11 +855,88 @@ int zz(void)
         return 1;
 }
 
+int zz(void)
+{
+        int c = getch();
+        if (c != 'Z' && c != 'z') {
+                dobeep();
+                return 0;
+        }
+        return save_done();
+}
+
 int noop(void)
 {
         return 0;
 }
 
+/*
+ *	We need to emulate a minimal subset of commands people habitually use
+ *
+ *	:q :q!
+ *	:x
+ *
+ *	:w :w! (with path)
+ *	:r (maybe)
+ *	:number
+ *	:s/
+ *	:e file
+ *	:!shell
+ *	!!
+ */
+static void colon_process(char *buf)
+{
+        if (*buf == 'q') {
+                if (!modified || buf[1] == '!')
+                        done = 1;
+                else
+                        warning("No write since last change.");
+                return;
+        }
+        if (*buf == 'x') {
+                save_done();
+                return;
+        }
+        warning("unknown : command.");
+}	
+
+int colon_mode(void)
+{
+        char buf[132];
+        char *bp = buf;
+        int c;
+
+        mvaddstr(LINES-1, 0, ":");
+        clrtoeol();
+        refresh();
+        *bp = 0;
+        while(1) {
+                c = getch();
+                if (c < 0 || c > 255 || c == 27)
+                        break;
+                if (c == '\n' || c == '\r') {
+                        colon_process(buf);
+                        break;
+                }
+                if (c == 8 || c == 127) {
+                        if(bp != buf)
+                                *--bp = 0;
+                } else {
+                        if (bp < buf + 130 && bp < buf + COLS - 2) {
+                                *bp++ = c;
+                                *bp = 0;
+                        }
+                }
+                mvaddstr(LINES-1, 1, buf);
+                clrtoeol();
+                refresh();
+        }
+        move(LINES-1, 0);
+        clrtoeol();
+        display();
+        return 0;
+}
+        
 void warning(const char *p)
 {
         /* This sort of assumes the error fits one line */
@@ -949,7 +1014,6 @@ int main(int argc, char *argv[])
         raw();
         noecho();
         idlok(stdscr, 1);
-        keypad(stdscr, 1);
         fp = fopen(filename = *++argv, "r");
         if (fp != NULL) {
                 gap += fread(buf, sizeof (char), (size_t) BUF, fp);
