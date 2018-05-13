@@ -262,7 +262,7 @@ uint16_t input(void) {
   if (fgets(input, 16, stdin) == NULL)
    exit(EXIT_FAILURE);
   errno = 0;
-  q = (uint16_t) strtol(input, &endptr, 16);
+  q = (uint16_t) strtol(input, &endptr, 10);
   if ((errno == ERANGE && (q == LONG_MAX || q == LONG_MIN))
       || (errno != 0 && q == 0)) {
     perror("strtol");
