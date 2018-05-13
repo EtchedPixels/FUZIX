@@ -58,7 +58,7 @@ typedef struct keytable_t {
 
 int done;
 int row, col;
-int indexp, page, epage;
+int indexp, page, epage;	/* Limits us to 32K buffer.. look at uint16?*/
 int input;
 int repeat;
 char buf[BUF];
@@ -206,6 +206,8 @@ int changeend(void);
 int pagetop(void);
 int pagemiddle(void);
 int pagebottom(void);
+int swapchars(void);
+int bracket(void);
 
 #undef CTRL
 #define CTRL(x)                ((x) & 0x1f)
@@ -217,7 +219,6 @@ int pagebottom(void);
  *	CTRL-F/CTRL-B	implemented but not exactly as vi
  *	W and S		word skip with punctuation
  *	[] and ()	setence and paragraph skip
- *	H M L		top/niddle/bottom of screen
  *	R		replace mode
  *	t		swap two characters
  *	cw/ce		change word variants
@@ -272,6 +273,7 @@ keytable_t table[] = {
         { 'O', 0, open_before },
         { 'W', NORPT, file },
         { 'R', NORPT, redraw },
+        { CTRL('L'), NORPT, redraw },
         { 'Q', NORPT, quit },
         { 'Z', NORPT, zz },
         { 'D', 0, delete_line },	/* Should also be dd */
@@ -286,6 +288,8 @@ keytable_t table[] = {
         { 'd', 0, do_del },
         { 'c', 0, do_change },
         { 'C', 0, changeend },
+        { 't', 0, swapchars },
+        { '%', 0, bracket },
         { '0', KEEPRPT|USERPT, digit },
         { '1', KEEPRPT|USERPT, digit },
         { '2', KEEPRPT|USERPT, digit },
@@ -518,7 +522,20 @@ int pagebottom(void)
         return 0;
 }
 
-        
+int swapchars(void)
+{
+        if (indexp) {
+                char *p = ptr(indexp);
+                char *q = ptr(indexp-1);
+                char x = *p;
+                *p = *q;
+                *q = x;
+                modified = 1;
+                return 0;
+        }
+        return 1;
+}
+
 int wleft(void)
 {
         char *p;
@@ -580,6 +597,61 @@ int findright(void)
         if (c < 0 || c > 255)
                 return 1;
         return fright(c);
+}
+
+/* Does it make sense to merge these with fleft/fright ? */
+int findpair(char in, char out, char dir)
+{
+        unsigned int depth = 0;
+
+        while(1) {
+                char *p = ptr(indexp);
+                char c = *p;
+                if (c == in)
+                        depth++;
+                if (c == out) {
+                        if (--depth == 0)
+                                return 0;
+                }
+                if (dir == -1) {
+                        if (indexp == 0)
+                                return 1;
+                        indexp--;
+                } else {
+                        if (p == ebuf)
+                                return 1;
+                        indexp++;
+                }
+        }
+}
+
+
+/* Real vi doesn't match < > but it's two bytes cost to add and really rather
+   useful */
+static const char brackettab[] = "([{<)]}>";
+
+int bracket(void)
+{
+        char c = *ptr(indexp);
+        int ip = indexp;
+        char *x = strchr(brackettab, c);
+
+        if (x == NULL)
+                return 1;
+
+        if (x < brackettab + 4) {
+                if (findpair(*x, x[4], 1) == 0)
+                        return 0;
+                indexp = ip;
+                dobeep();
+                return 1;
+        } else {
+                if (findpair(*x, x[-4], -1) == 0)
+                        return 0;
+                indexp = ip;
+                dobeep();
+                return 1;
+        }
 }
 
 /* Do we need a filter on this and insert_mode ? */
@@ -656,12 +728,18 @@ int replace(void)
         return 0;
 }
 
+static int do_delete_line(void)
+{
+        movegap();
+        while(egap < ebuf - 1 && *egap != '\n')
+                indexp = pos(++egap);
+        return 0;
+}
+
 int delete_line(void)
 {
         lnbegin();
-        while(egap < ebuf - 1 && egap[1] != '\n')
-                indexp = pos(++egap);
-        return 0;
+        do_delete_line();
 }
 
 int backsp(void)
@@ -697,9 +775,8 @@ int do_del(void)
 {
         int c = getch();
         if (c == '$')	/* Delete to end */
-                return delete_line();
+                return do_delete_line();
         else if (c == 'd') {
-                lnbegin();
                 return delete_line();
         } else if (c == '^') {
                 while(indexp && *ptr(indexp) != '\n' && !delete_left());
