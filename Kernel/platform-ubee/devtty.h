@@ -22,4 +22,7 @@ extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 extern void map_video_font(void);
 extern void unmap_video_font(void);
 
+extern void ctc_load(uint8_t *map);
+extern uint8_t ctc6545[48];
+
 #endif

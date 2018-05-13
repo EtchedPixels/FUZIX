@@ -60,20 +60,14 @@ _bufpool:
 ;
             .area _COMMONMEM
 
-_platform_monitor:
-	    di
-	    call map_kernel
-	    jp to_monitor
-
 platform_interrupt_all:
 	    in a,(0xef)			; FIXME: remove this line once debugged
 	    ret
 
+_platform_monitor:
 _platform_reboot:
 	    di
-	    call map_kernel
-	    jp to_reboot
-
+	    halt
 ;
 ;	Sit in common and play with the banks to see what we have
 ;
@@ -119,29 +113,8 @@ page_codes:
 ; -----------------------------------------------------------------------------
             .area _CODE
 
-; These two must be below 32K and not use the stack until they hit ROM
-; space.
-;
-; Not sure we can do this for most cases because not everyone has all that
-; ROM
-;
-to_monitor:
-	    ; Until we figure out how/if we can fix this
-	    di
-	    halt
-	    jr to_monitor;
-
-	    xor a			; 0 or 1 to keep low 32K right ? */
-	    out (0x50), a		; ROMS please
-	    jp 0x8000			; Monitor
-
-to_reboot:
-	    di
-	    halt
-	    jr to_reboot
-	    xor a
-	    out (0x50), a
-	    jp 0xE000
+	    .globl _ctc_load
+	    .globl _ctc6545
 
 _ctc_load:
 	    pop de
