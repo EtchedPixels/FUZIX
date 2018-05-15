@@ -13,7 +13,7 @@ BINMAN = ../../Library/tools/binman
 
 .SUFFIXES: .c .rel
 
-SRCSNS = qrun.c fortune.c fweep.c
+SRCSNS = advint.c fortune.c fweep.c qrun.c
 
 SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
