@@ -32,6 +32,12 @@
             .area _CODE
 
 init_hardware:
+	    in a,(0x94)			; Check for the Huffman banking
+	    cp #0xFF			; mod. If so set 0x94 bit 0 so 
+	    jr z, bank_normal		; we run sanely
+	    set 0,a
+	    out (0x94),a
+bank_normal:
             ; set system RAM size
             ld hl, #128
             ld (_ramsize), hl
