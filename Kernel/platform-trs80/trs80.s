@@ -68,12 +68,25 @@ _platform_monitor:
 	    halt
 
 platform_interrupt_all:
-	    in a,(0xef)
 	    ret
 
+;
+;	We write the following into low memory
+;	out (0x84),a
+;	inc a
+;	out (0x9c),a
+;	.. then resets into ROM (see the technical reference manual)
+;
 _platform_reboot:
 	   di
-	   halt
+	   ld hl,#0x84D3		; out (0x84),a
+	   ld (0),hl
+	   ld hl,#0xD33C		; inc a, out (
+	   ld (2),hl
+	   ld a,#0x9C			; 9c),a
+	   ld (4),a
+	   xor a
+	   rst 0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
@@ -83,6 +96,8 @@ _platform_reboot:
 _ctc6845:				; registers in order
 	    .db 99, 80, 85, 10, 25, 4, 24, 24, 0, 9, 101, 9, 0, 0, 0, 0
 init_early:
+	    ld a, #0x24			; uart rx, timer
+	    out (0xE0), a
 	    ld a, (_opreg)
 	    out (0x84), a
 	    ld a, (_modout)
