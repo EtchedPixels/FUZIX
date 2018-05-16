@@ -33,13 +33,15 @@ uint8_t platform_param(char *p)
 
 void platform_interrupt(void)
 {
-  uint8_t irq = irqstat;
+  uint8_t irq = ~irqstat;
+  uint8_t dummy;
   if (irq & 0x20)
     tty_interrupt();
-  if (!(irq & 0x80))
-    return;
-  kbd_interrupt();
-  timer_interrupt();
+  if (irq & 0x04) {
+    kbd_interrupt();
+    timer_interrupt();
+    dummy = irqack;
+  }
 }
 
 /*
