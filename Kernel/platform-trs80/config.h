@@ -18,7 +18,12 @@
 #define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
+#ifdef CONFIG_BANK94
+#define MAX_MAPS	62
+#else
 #define MAX_MAPS	2
+#endif
+
 #define MAP_SIZE	0x8000
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
