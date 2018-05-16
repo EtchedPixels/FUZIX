@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <devhd.h>
 #include <devtty.h>
+#include <tty.h>
 
 void device_init(void)
 {
@@ -10,6 +11,7 @@ void device_init(void)
   inittod();
 #endif
   hd_probe();
+  tty_setup(3);
 }
 
 void map_init(void)
