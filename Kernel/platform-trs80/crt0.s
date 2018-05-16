@@ -70,6 +70,11 @@ start:
 		ld bc, #l__BUFFERS - 1
 		ld (hl), #0
 		ldir
+		ld hl,#s__COMMONMEM
+		ld de,#s__DISCARD
+		or a
+		sbc hl,de
+		ld (_discard_size),hl
 		call init_early
 		call init_hardware
 		call _fuzix_main
@@ -79,4 +84,4 @@ stop:		halt
 
 		.area _DISCARD
 _discard_size:
-		.dw l__DISCARD
+		.dw 0
