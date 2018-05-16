@@ -61,6 +61,9 @@ nap:	dec	bc
 ;
 ;	The motor off logic is driven from hardware
 ;
+;	fdc_active must never be set when interrupts are enabled or we may
+;	take a motor off during an interrupt...
+;
 fd_nmi_handler:
 	push	af
 	push	bc
@@ -185,17 +188,16 @@ rwiowt:	djnz	rwiowt
 ;	Status registers
 ;
 fdxferdone:
-	ei
-fdxferdone2:
 	xor	a
 	ld	(fdc_active), a
+	ei
 	in	a, (FDCREG)
 	and	#0x19		; Error bits + busy
 	bit	0, a		; Wait for busy to drop, return in a
 	ret	z
 	ld	a, (fdcctrl)
 	out	(FDCCTRL), a
-	jr	fdxferdone2
+	jr	fdxferdone
 ;
 ;	Read from the disk - HL points to the target buffer
 ;
