@@ -146,6 +146,7 @@ void tty_setup(uint8_t minor)
         ttydata[3].termios.c_cflag |= B19200;
         baud = B19200;
     }
+    baud = trsbaud[baud];
     tr1865_baud = baud | (baud << 4);
 
     ctrl = 3;
