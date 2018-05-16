@@ -16,6 +16,7 @@ f 0755 /usr/bin/adv12         adv12
 f 0755 /usr/bin/adv13         adv13
 f 0755 /usr/bin/adv14a        adv14a
 f 0755 /usr/bin/adv14b        adv14b
+f 0755 /usr/bin/advint        advint
 f 0755 /usr/bin/fortune       fortune
 f 0755 /usr/bin/fortune-gen   fortune-gen
 f 0755 /usr/bin/myst01        myst01
