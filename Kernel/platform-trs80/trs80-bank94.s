@@ -35,11 +35,6 @@
 
 init_hardware:
 	    call detect94
-	    or a
-	    jr z, extended_system
-            ; set system RAM size
-            ld hl, #128
-extended_system:
             ld (_ramsize), hl
 	    ld de, #64		; for kernel
 	    or a
@@ -72,34 +67,11 @@ save94:	    .db 0x01
 _opreg:	    .db 0x06	; kernel map, 80 columns
 _modout:    .db 0x50	; 80 column, sound enabled, altchars off,
 			; external I/O enabled, 4MHz
-_mirror94:  .db 0x01	; mirror of 0x94 port
 
 detect94:
-;
-;	This will spot 0x94 bank switches eventually. For now report none
-;
-	    ld a, (_opreg)
-	    and #0x8C
-	    or #0x73
-	    out (_opreg), a
-	    xor a
-	    out (0x94), a
-;
-;	If we have 0x94 banking then the the low 32K is a mirror of the high
-;	32K
-;
-	    ld hl, #0x800
-	    ld a, (0x8800)
-	    cp (hl)
-	    jr nz, nobank94
-;
-;	Could be the same could be luck.
-;
-	    inc (hl)
-	    ld a, (0x8800)
-	    cp (hl)
-	    jr nz, nobank64_f1
-	    dec (hl)
+	     in a,(0x94)
+	     cp #0xFF
+             jr z, nobank94
 ;
 ;	Seems we have banking extensions present
 ;
@@ -109,14 +81,15 @@ detect94:
 ;	it. When we see a bank not reporting A5 we have found the wrap.
 ;
 	    ld a, #0xA5
-	    ld bc, #0x3f94
+	    ld bc, #0x1f94
+	    ld hl, #0x80	; pick somewhere which won't hit us!
 markall:
 	    out (c), b
 	    ld (hl), a
 	    djnz markall
 
 scanall:    inc b
-	    bit 6, a
+	    bit 5, b
 	    jr nz, scandone
 	    out (c), b
 	    cp (hl)		; Still A5 ?
@@ -136,11 +109,7 @@ scandone:
 	    ld l, a	; Report size in HL
 	    ld h, b
 	    ret
-	    
-	    
-nobank64_f1
-	    dec (hl)
-nobank64:
+nobank94:
 	    xor a
 	    ld h, a
 	    ld l, #128		; We ought to check/abort on a 64K box ?
@@ -181,9 +150,8 @@ maplo:
 	    ld (_opreg), a
 	    out (0x84), a
 	    ld a, (hl)
-	    and #0x3F
+	    and #0x1F
 	    ret z		; not using bank94
-	    ld (_mirror94), a
 	    out (0x94), a
 	    ret
 
@@ -201,9 +169,8 @@ maplo2:
 	    ld (_opreg), a
 	    out (0x84), a
 	    ld a, b
-	    and #0x3f
+	    and #0x1f
 	    jr z, nobank94	; zero means no bank94 hw present
-	    ld (_mirror94), a
 	    out (0x94), a
 nobank94:
 	    pop bc
@@ -223,7 +190,7 @@ map_save:   push af
 	    ld a, (_opreg)
 	    and #0x73
 	    ld (opsave), a
-	    ld a, (_mirror94)
+	    in a,(0x94)
 	    ld (save94), a
 	    pop af
 	    ret
@@ -238,7 +205,7 @@ map_restore:
 	    ld (_opreg), a
 	    out (0x84), a
 	    ld a, b
-	    and #0x3f
+	    and #0x1f
 	    jr z, norestore94
 	    out (0x94), a
 norestore94:
