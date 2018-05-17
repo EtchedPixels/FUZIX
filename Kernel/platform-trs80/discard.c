@@ -18,7 +18,7 @@ void map_init(void)
 {
 }
 
-uint8_t nbanks = 1;	/* Default 1 bank, unless port 94 probe updates */
+uint8_t nbanks = 2;	/* Default 2 banks, unless port 94 probe updates */
 
 void pagemap_init(void)
 {
