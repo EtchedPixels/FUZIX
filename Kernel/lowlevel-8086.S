@@ -288,6 +288,11 @@ set_irqvec:
  *
  *	We don't bother trying to tell 186/188 and 86/89 bus width as we
  *	don't need to know.
+ *
+ *	If we need to we can detect an early 8086 by setting a trace trap
+ *	and seeing if we take it on pop of a segment register. If we do it's
+ *	an early one. If it doesn't then its a later one (and if it also
+ *	doesn't take one on push of a segment register its a Harris CMOS one
  */
 
 test_cputype:
