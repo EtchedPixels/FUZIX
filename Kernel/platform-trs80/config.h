@@ -18,7 +18,11 @@
 #define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
-#ifdef CONFIG_BANK94
+
+
+/* Support extra banked expansion memory using port 0x94 */
+#define CONFIG_MAP94
+#ifdef CONFIG_MAP94
 #define MAX_MAPS	62
 #else
 #define MAX_MAPS	2
