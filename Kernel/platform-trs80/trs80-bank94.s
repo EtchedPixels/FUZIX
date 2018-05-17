@@ -71,7 +71,7 @@ _modout:    .db 0x50	; 80 column, sound enabled, altchars off,
 detect94:
 	     in a,(0x94)
 	     cp #0xFF
-             jr z, nobank94
+             jr z, bank94_absent
 ;
 ;	Seems we have banking extensions present
 ;
@@ -80,6 +80,8 @@ detect94:
 ;	For each bank check the byte selected is A5 and write the bank into
 ;	it. When we see a bank not reporting A5 we have found the wrap.
 ;
+	    ld a, #0x63		; map extended memory into low 32K
+	    out (0x84),a
 	    ld a, #0xA5
 	    ld bc, #0x1f94
 	    ld hl, #0x80	; pick somewhere which won't hit us!
@@ -97,6 +99,8 @@ scanall:    inc b
 	    ld (hl), b
 	    jr scanall
 scandone:
+	    ld a,(_opreg)	; restore mapping of kernel
+	    out (0x84),a
 	    ld a, b
 	    ld (_nbanks), a
 	    xor a
@@ -109,7 +113,7 @@ scandone:
 	    ld l, a	; Report size in HL
 	    ld h, b
 	    ret
-nobank94:
+bank94_absent:
 	    xor a
 	    ld h, a
 	    ld l, #128		; We ought to check/abort on a 64K box ?
