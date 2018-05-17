@@ -439,8 +439,8 @@ __stub_1_ret:
 	call switch_bank
 	pop de
 	push de		; dummy the caller will discard
-	push de
-	ret
+	push de		; FIXME don't we need to use BC and can't we get
+	ret		; rid of all non 0_x stubs ?
 __stub_1_3:
 	ld a, #7
 	jr __stub_1_a
