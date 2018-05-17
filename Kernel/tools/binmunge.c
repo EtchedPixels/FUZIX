@@ -219,7 +219,7 @@ int stub_code(char *name)
     return 1;
   if(strcmp(name, "_COMMONMEM") == 0)
     return 1;
-  if(strcmp(name, "_DISCARD") == 0)
+  if(strncmp(name, "_DISCARD", 8) == 0)
     return 1;
   if(strncmp(name, "_BOOT", 5) == 0)
     return 1;
