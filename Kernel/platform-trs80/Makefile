@@ -35,7 +35,7 @@ $(DISCARD_COBJS): %.rel: %.c
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
-image: trs80load.bin trs80load94.bin
+image: trs80load.bin
 
 trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s
