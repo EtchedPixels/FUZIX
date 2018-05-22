@@ -49,7 +49,7 @@ Drivers:
 	including finding where 'swap' lives
 
 Adding Support For Other Banked RAM:
-	See trs80.s, and the various map_* functions. These can be extended
+	See trs80-map*s, and the various map_* functions. These can be extended
 	to use U_DATA__U_PAGE+1 to carry a second byte of data. The
 	main.c for the platform sets up the pagemaps as a 16bit value
 	which currently is just the opreg bits for the two banks.
@@ -130,25 +130,11 @@ Banking Models
 
 Currently Supported:
 	TRS80 model 4 with inbuilt memory bank switching
-
-In Progress:
 	Port 0x94 modification to add extra internal RAM to a 4 and 4P
 
-Not Yet Started:
-	"Selector" for Model 1. Port 31 allows memory reshuffling away from
-the model 1 default. Either the upper or lower 32K is switchable but not
-both at once. bits 4/5 control the selection between a further 4 32K banks.
-Also needs model 1 support adding of course.
-
-
 Documentation Needed:
-	Various other RAM banking boards (AlphaTech and the like)
+	Various other RAM banking boards (AlphaTech for Model 4P and the like)
 
 	HD64180 mods with more RAM (these are I suspect almost a different port)
 	(XLR8R etc)
 
-Not Usable:
-	Various model 1 interfaces that provide 64K RAM or near 64K RAM. Not
-enough for Fuzix on Z80. Possibly enough for UZI with a hard disc.
-
-	LNW80 model II (same problem - 64K only)
