@@ -1,0 +1,104 @@
+TRS80 Model 1
+
+	This is just a development tree. It doesn't yet have a loader nor
+	has it been tested!
+
+Emulator Bugs:
+	The emulator is horribly insecure, it's default is to allow all
+	sorts of direct access to things. Even if you turn this off I've
+	had it segfault with FUZIX bugs which suggests its not too secure.
+
+	Repeating instructions like LDIR appear to be misemulated. LDIR
+	is performed an emulated block copy, not as an iterated LDI. The
+	real processor actually implements LDIR as  "LDI, if not done
+	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
+	be affected.
+
+	The interrupt flags are misemulated. A patch for this is in the
+	Fuzix tree and is needed to run Fuzix on xtrs/sdltrs
+
+Requirements: 
+	TRS80 Model 1
+	Preferably the lower case mod
+	Supermem or compatible expansion
+	Floppy drive or Hard drive (strongly recommend the latter)
+
+Memory Map:
+	0000-3FFF	Various fixed model 1 functionality
+	4000-41FF	Kept clear for ROM bits
+	4200-7FFF	Kernel data, common etc
+	8000-FFFF	Bank0: kernel code
+	8000-FFFF	Bank1: kernel code
+
+	Remaining banks of 32K are user apps.
+
+	The kernel doesn't actually need 80K but it also doesn't fit in
+	the available 48K unbanked either (although a minimalish setup might)
+
+	Need to move buffers out of line using the external buffers code so we
+	can better balance memory
+
+Drivers:
+	Display 64x16			In progress (mod from existing)
+	Keyboard			Just an address change I think
+	Hard drive			Straight model 4 port
+	Floppy				In progress (initial code design)
+	Floppy drivers do not yet deal with double sided disks or sd/dd
+	media detection
+	Hard disk reads block 0, and handle partitions of some form
+	including finding where 'swap' lives
+
+Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs)
+
+	This needs patches currently in progress
+
+	# Tool to make disk images
+	make tools/makejv3
+	# Double density single sided 40 track boot disk
+	tools/makejv3 dd40s /dev/zero disk1-0
+	# Build kernel and boot block (edit Makefile, set target then)
+	make
+	# Add pieces to the disk (boot block in sector 0, kernel at end)
+	dd if=zout/trs80load.cim of=disk1-0 bs=1 seek=8960 conv=notrunc
+	dd if=fuzix.bin of=disk1-0 bs=1 seek=142336 conv=notrunc
+	# Once we get that far you can also put a filesystem in the lower
+	# blocks
+	#
+	xtrs -model 1 -emtsafe --supermem
+
+To set up for hard disk, create a hard disk with the xtrs tools and
+
+	mkdisk -h hard1-0
+	# This assumes the default disk size
+	cd Standalone/filesystem-src
+	./build-filesystem trs80.hd 256 21760
+	dd if=trs80.hd of=hard1-0 bs=256 seek=1 conv=notrunc
+	tools/trslabel hard1-0
+	#
+	xtrs -model 1 -emtsafe -supermem
+
+
+You will still need a boot floppy at this point but just boot with device
+0 (or hit return). Swap is configured to be on the end of the hard disk
+
+
+
+Banking Models
+
+Currently Supported:
+	Alpha Technology Supermem upper 32K banking only.
+
+Not Yet Started:
+	"Selector" for Model 1. Port 31 allows memory reshuffling away from
+the model 1 default. Either the upper or lower 32K is switchable but not
+both at once. bits 4/5 control the selection between a further 4 32K banks.
+
+
+
+Useful rom addresses
+
+04C3 -> 64 column
+04F6 -> 32 column
+
+0060 -> 14.5*BC uS delay
+

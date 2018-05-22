@@ -1,0 +1,48 @@
+-mwxuy
+-r
+-i fuzix.ihx
+-b _INITIALIZER=0x0001
+-b _CODE=0x4200
+-b _CODE1=0x8000
+-b _CODE2=0x8000
+-b _COMMONMEM=0x4300
+-l z80
+platform-trs80m1/crt0.rel
+platform-trs80m1/commonmem.rel
+platform-trs80m1/trs80.rel
+platform-trs80m1/trs80-bank.rel
+start.rel
+version.rel
+lowlevel-z80-banked.rel
+usermem.rel
+usermem_std-z80-banked.rel
+platform-trs80m1/tricks.rel
+platform-trs80m1/main.rel
+timer.rel
+kdata.rel
+platform-trs80m1/devfd.rel
+platform-trs80m1/floppy.rel
+platform-trs80m1/devhd.rel
+platform-trs80m1/devhd_discard.rel
+platform-trs80m1/devgfx.rel
+platform-trs80m1/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+swap.rel
+bankfixed.rel
+vt.rel
+devsys.rel
+platform-trs80m1/devlpr.rel
+platform-trs80m1/devtty.rel
+platform-trs80m1/discard.rel
+-e
