@@ -38,7 +38,14 @@ start:
 	    call prints
 	    .ascii 'TRS80Load 0.2m1\0'
 	    out (0x43),a		; a is 0 on prints return
+	    in a,(0x43)
+	    or a
+	    jr z, bank_ok
+	    call printse
+	    .ascii 'Supermem not found\0'
+bad:	    jr bad
 
+bank_ok:
 	    ld bc, #0x4300		; page aligned buffer we read into
 	    ld de, #FDCDATA		; data port
 	    ld hl, #FDCREG		; command port
@@ -46,8 +53,6 @@ start:
 lastsec:    ld a, #0			; self modifying to save space
 	    inc a
 	    ld (lastsec+1), a		; track number... (start on 1)
-	    cp #33
-	    jp z, booted
 	    ld (de),a			; Desired track into data
 	    ld (hl),#0x1B		; seek, lowest step speed
 	    push bc
@@ -62,7 +67,7 @@ seekstat:
 	    jr z, secmove
 	    call printse
 	    .ascii 'seek\0'
-bad:	    jr bad
+bad2:	    jr bad2
 secmove:    xor a
 	    dec a	
 	    ld (nextsec+1), a
@@ -101,7 +106,10 @@ flopin:	    bit 1,(hl)
 	    inc b			; correct bc for next call
 	    jr nz, flopstat		; passed FFFF ?
 	    ld b,#0x80			; go back to 8000 and change bank
-	    ld a,#1
+	    in a,(0x43)
+	    or a
+	    jr nz, booted		; already on second bank so boot
+	    ld a,#1			; switch to bank 2
             out (0x43),a
 flopstat:
 	    ld a, (hl)
