@@ -23,10 +23,10 @@ struct pty {
 	unsigned char right;    /* right most coord */
 	unsigned char bottom;   /* bottom most coord */
 	struct display *fdisp;  /* ptr to struct for ioctl */
-	uint8_t attr;           /* attribute byte to apply */
 };
 
 extern struct pty *curpty;
+extern uint8_t curattr;
 
 int my_tty_close( uint8_t minor ); /* wrapper call to close DW ports */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
