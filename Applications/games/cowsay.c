@@ -1,3 +1,14 @@
+/*
+A C version of "cowsay"
+
+Copyright (C) 2012 Federico Pomar & Federico Bond
+https://github.com/federicobond/fedux
+
+Lightly modified for Fuzix by Brett Gordon
+
+
+*/
+
 #include <stdio.h>
 #include <string.h>
 
