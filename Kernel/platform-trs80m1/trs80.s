@@ -97,7 +97,7 @@ not_lnw:
 	    ld de,#0x4E53	; 'SN' for VG, 'L3' for TRS80 Model 1
 	    or a
 	    sbc hl,de
-	    jr z, not_vg
+	    jr nz, not_vg
 	    ld a,#3
 	    ld (_trs80_model),a	; Video Genie
 not_vg:
