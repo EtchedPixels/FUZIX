@@ -48,21 +48,17 @@ lastsec:    ld a, #0			; self modifying to save space
 	    ld (lastsec+1), a		; track number... (start on 1)
 	    cp #33
 	    jp z, booted
-	    ld (FDCTRK),a
-	    ld (0x3CF0),a		; XX
-	    ld (hl),#21			; seek, lowest step speed
-	    ld b, c			; 0x00 256 delays
+	    ld (de),a			; Desired track into data
+	    ld (hl),#0x1B		; seek, lowest step speed
+	    push bc
+	    ld b, #0			; 0x00 256 delays
 cmd1:	    djnz cmd1
-cmdwait:    bit 0, (hl)
-	    jr z, seekstat
-	    bit 7, (hl)
-	    jr z, cmdwait
 seekstat:
+	    pop bc
+	    bit 0, (hl)
+	    jr nz, seekstat
 	    ld a,(hl)
 	    and #0x18
-	    bit 0, a
-	    jr nz, seekstat
-	    or a
 	    jr z, secmove
 	    call printse
 	    .ascii 'seek\0'
@@ -71,7 +67,6 @@ secmove:    xor a
 	    dec a	
 	    ld (nextsec+1), a
 nextsec:
-	    ld (0x3CF1),a	; XX
 	    ld a, #255		; self modifying sector count
 	    inc a
 	    ld (nextsec+1), a
@@ -93,8 +88,10 @@ floppy_read:
 	    ld (LATCHD0), a		; keep motor on
 	    ld a, #0x8C			; READ
 	    ld (hl), a
+	    push bc
 	    ld b, a			; 8C is an acceptable delay!
 l1:	    djnz l1
+	    pop bc
 flopin:	    bit 1,(hl)
 	    jr z, flopin
 	    ld a,(de)
@@ -102,7 +99,7 @@ flopin:	    bit 1,(hl)
 	    inc c			; page aligned
 	    jr nz,flopin
 	    inc b			; correct bc for next call
-	    jr nc, flopstat		; passed FFFF ?
+	    jr nz, flopstat		; passed FFFF ?
 	    ld b,#0x80			; go back to 8000 and change bank
 	    ld a,#1
             out (0x43),a
@@ -119,7 +116,7 @@ fail:	    jr fail
 
 
 printse:
-	   ld de, #0x3850
+	   ld de, #0x3C40
 prints:
 	   pop hl
 printsl:
