@@ -24,7 +24,7 @@
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
 /* Vt definitions */
-#define VT_BASE		((uint16_t)0x3C00
+#define VT_BASE		((uint8_t *)0x3C00)
 #define VT_WIDTH	64
 #define VT_HEIGHT	16
 #define VT_RIGHT	63
