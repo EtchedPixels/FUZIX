@@ -35,23 +35,25 @@ init_hardware:
             ; set system RAM size
 	    ld hl,#0xFFFF		; FFFF is free in all our pages
 	    ld bc,#0xFF43		; kernel included
+	    xor a
 mark_pages:
 	    out (c),b
-	    ld (hl),b
+	    ld (hl),a
 	    djnz mark_pages
 scan_pages:
-	    ld a,#2
+	    ld b,#2
 scan_pages_l:
-	    out (c),a
-	    cp (hl)
+	    out (c),b
+	    cp (hl)			; still 0 ?
 	    jr nz, mismatch
-	    inc a
+	    ld (hl),b
+	    inc b
 	    jr nz, scan_pages_l
-mismatch:				; A holds the first page above
+mismatch:				; B holds the first page above
 					; the limit (4 for 128K etc)
-	    dec a
-	    dec a			; remove kernel
-	    ld h,a
+	    dec b
+	    dec b			; remove kernel
+	    ld h,b
 	    ld l,#0			; effectively * 256
 	    srl h
 	    rr  l			; * 128
