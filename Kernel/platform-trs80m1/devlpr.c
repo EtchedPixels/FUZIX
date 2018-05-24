@@ -2,8 +2,11 @@
 #include <version.h>
 #include <kdata.h>
 #include <devlpr.h>
+#include <trs80.h>
 
 #define lp	*((volatile uint8_t *)0x37E8)
+
+__sfr __at 0xFD vg_lp;
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
@@ -38,14 +41,21 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     minor; rawflag; flag; // shut up compiler
 
     while(udata.u_done < udata.u_count) {
-        /* Note; on real hardware it might well be necessary to
-           busy wait a bit just to get acceptable performance */
-        while (lp & 0x80) {
-            if (iopoll())
-                return udata.u_done;
+        if (trs80_model == VIDEOGENIE) {
+            while (vg_lp & 0x80) {
+                if (iopoll())
+                    return udata.u_done;
+            }
+            /* FIXME: tidy up ugetc and sysio checks globally */
+            vg_lp = ugetc(p++);
+        } else {
+            while (lp & 0x80) {
+                if (iopoll())
+                    return udata.u_done;
+            }
+            /* FIXME: tidy up ugetc and sysio checks globally */
+            lp = ugetc(p++);
         }
-        /* FIXME: tidy up ugetc and sysio checks globally */
-        lp = ugetc(p++);
         udata.u_done++;
     }
     return udata.u_done;
