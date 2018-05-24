@@ -27,17 +27,42 @@
             .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (above 08000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .area _CODE
 
 init_hardware:
             ; set system RAM size
-	    ; TODO - sizing
-            ld hl, #144
-            ld (_ramsize), hl
-            ld hl, #(144-80)		; 80K for kernel
+	    ld hl,#0xFFFF		; FFFF is free in all our pages
+	    ld bc,#0xFF43		; kernel included
+mark_pages:
+	    out (c),b
+	    ld (hl),b
+	    djnz mark_pages
+scan_pages:
+	    ld a,#2
+scan_pages_l:
+	    out (c),a
+	    cp (hl)
+	    jr nz, mismatch
+	    inc a
+	    jr nz, scan_pages_l
+mismatch:				; A holds the first page above
+					; the limit (4 for 128K etc)
+	    dec a
+	    dec a			; remove kernel
+	    ld h,a
+	    ld l,#0			; effectively * 256
+	    srl h
+	    rr  l			; * 128
+	    srl h
+	    rr	l			; * 64
+	    srl h
+	    rr  l			; * 32 so now in Kbytes
             ld (_procmem), hl
+	    ld de,#80			; Kernel costs us 80K due to bank
+	    add hl,de			; annoyances
+            ld (_ramsize), hl
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
             ld hl, #0
