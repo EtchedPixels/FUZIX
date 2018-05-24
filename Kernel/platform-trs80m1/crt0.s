@@ -28,6 +28,7 @@
         	.globl _fuzix_main
 	        .globl init_early
 	        .globl init_hardware
+		.globl _vtinit
 	        .globl s__DATA
 	        .globl l__DATA
 	        .globl s__BUFFERS
@@ -68,6 +69,9 @@ start:
 		ld (_discard_size),hl
 		call init_early
 		call init_hardware
+		push af
+		call _vtinit
+		pop af
 		push af
 		call _fuzix_main
 		pop af
