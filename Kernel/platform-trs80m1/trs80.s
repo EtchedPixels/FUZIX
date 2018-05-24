@@ -10,6 +10,20 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl platform_interrupt_all
+	    .globl map_kernel
+	    .globl map_process
+	    .globl map_process_a
+	    .globl map_process_always
+	    .globl map_save
+	    .globl map_restore
+
+	    .globl s__COMMONMEM
+	    .globl l__COMMONMEM
+
+	    .globl _bufpool
+	    .globl bufend
+
+	    .globl _trs80_model
 
 	    ; hard disk helpers
 	    .globl _hd_xfer_in
@@ -30,18 +44,7 @@
             .globl unix_syscall_entry
             .globl outcharhex
 	    .globl null_handler
-	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_a
-	    .globl map_process_always
-	    .globl map_save
-	    .globl map_restore
 
-	    .globl s__COMMONMEM
-	    .globl l__COMMONMEM
-
-	    .globl _bufpool
-	    .globl bufend
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -75,8 +78,34 @@ _platform_reboot:
 ; -----------------------------------------------------------------------------
             .area _CODE
 
+
 init_early:
+	    ; Detect machine type (Model 1 or LNW80 or VideoGenie ?)
+	    ld a,#8
+	    out (0xFE),a	; turn off ROM on the LNW80
+	    ld hl,#0
+	    ld a,(hl)
+	    inc (hl)
+	    cp (hl)
+	    jr z, not_lnw
+	    dec (hl)
+	    xor a
+	    out (0xFE),a	; ROM back on, normal video mode for now
+	    ld a,#2		; LWN80
+	    ld (_trs80_model), a
+not_lnw:
+	    ld hl,(0x18F5)
+	    ld de,#0x4E53	; 'SN' for VG, 'L3' for TRS80 Model 1
+	    or a
+	    sbc hl,de
+	    jr z, not_vg
+	    ld a,#3
+	    ld (_trs80_model),a	; Video Genie
+not_vg:
             ret
+
+	    .area _DATA
+	    .byte 0x01		; Default model is TRS80 model 1
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
