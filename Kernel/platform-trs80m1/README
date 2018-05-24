@@ -102,3 +102,11 @@ Useful rom addresses
 
 0060 -> 14.5*BC uS delay
 
+
+Floppy boot seems to be
+
+	read sector 0 track 0  (is FDC 0 based - check!)
+	place at 4200-42FF
+	JP 4200	(stack is around 407D)
+
+must be single sided single density boot disk
