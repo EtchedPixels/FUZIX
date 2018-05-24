@@ -533,7 +533,7 @@ intret2:call map_kernel
 	; Check for signals
 	;
 	push af
-	call chksigs
+	call _chksigs
 	pop af
 
 	;
