@@ -2,143 +2,124 @@
 ;
 ;	TRS80 bootblock (256 bytes)
 ;
-;	FIXME rewrite for model 1
+;
+;	We load from 0x4300-0xFFFF into common and bank 0, then switch
+;	to loading from 0x8000-0xFFFF in bank1. That takes 320 sectors
+;	at 10 sectors per track so 32 tracks of those available (which may
+;	only be 35). Track 0 holds the boot block.
+;
+;	We could optimize this once we have the layout better planned so we
+;	load less empty space. On the other hand we've only got 256 bytes
+;	of space to play in.
 ;
 .area	    BOOT	(ABS)
-.org	    0x000
+.org	    0x4200
+
+;
+;	The 1791 is memory mapped
+;
+FDCREG	.equ	0x37EC
+FDCTRK	.equ	0x37ED
+FDCSEC	.equ	0x37EE
+FDCDATA	.equ	0x37EF
+;
+;	Drive select is also more complicated than other models
+;
+LATCHD0	.equ	0x37E1		; also drive select
+LATCHD1	.equ	0x37E3
+LATCHD2	.equ	0x37E5
+LATCHD3	.equ	0x37E7
+
 start:
-	    ld a, #0x86			; kernel map, 80 column, no remap
-	    out (0x84), a		; video page 1
-	    ld a, #0x50			; 80 column, sound, altchars off,
-					; ext I/O on , 4MHz
-	    out (0xEC), a
-	    ld hl, #0x4300
-	    ld de, #0x0
-	    ld bc, #256
-	    ldir
-	    jp go
-;
-;	Assume the boot ROM left us on track 0 and motor on
-;
-floppy_read:
-	    ld bc, #0x81F4		; select drive
-	    out (c), b
-	    out (0xF2), a		; sector please
-	    ld a, #0x80			; READ
-	    out (0xF0), a
-	    ld b, #100
-l1:	    djnz l1
-	    ld de, #0x8116
-	    ld bc, #0xF3
-flopin:	    in a, (0xF0)
-	    and e
-	    jr z, flopin
-	    ini
-	    ld a, d
-flopind:
-	    out (0xF4), a
-	    ini
-	    jr nz, flopind
-flopstat:
-	    in a, (0xF0)
-	    and #0x19
-	    bit 0, a
-	    jr nz, flopstat
-	    or a
-	    ret z
-	    ld de, #0xF850
+	    call 0x04C3			; 64 columns
+	    ; Stack is at 407D
+   	    ; Loader message
+	    ld de, #0x3C00
 	    call prints
-	    .ascii 'Read\0'
-fail:	    jr fail
-;
-go:   
-	    ld sp, #0xEE00		; temp stackpointer
+	    .ascii 'TRS80Load 0.2m1\0'
+	    out (0x43),a		; a is 0 on prints return
 
-            ; load the 6845 parameters
-	    ld hl, #_ctc6845		; reverse order
-	    ld bc, #0x0F88
-ctcloop:    out (c), b			; select register
-	    ld a, (hl)
-	    out (0x89), a		; output data
-	    dec hl
-	    djnz ctcloop
+	    ld bc, #0x4300		; page aligned buffer we read into
+	    ld de, #FDCDATA		; data port
+	    ld hl, #FDCREG		; command port
 
-   	    ; clear screen
-	    ld hl, #0xF800
-	    ld de, #0xF801
-	    ld bc, #0x07FF
-	    ld (hl), #' '
-	    ldir
-	    ld de, #0xF800
-	    call prints
-	    .ascii 'TRS80Load 0.2\0'
-
-	    ld hl, #0x0100
-;
-
-
-lastsec:    ld a, (tracknum)
+lastsec:    ld a, #0			; self modifying to save space
 	    inc a
-	    ld (tracknum), a
-	    cp #40
-	    jr z, booted
-	    out (0xF3), a
-	    ld a, #0x18			; seek
-	    out (0xF0), a
-	    ld b, #100
+	    ld (lastsec+1), a		; track number... (start on 1)
+	    cp #33
+	    jp z, booted
+	    ld (FDCTRK),a
+	    ld (0x3CF0),a		; XX
+	    ld (hl),#21			; seek, lowest step speed
+	    ld b, c			; 0x00 256 delays
 cmd1:	    djnz cmd1
-cmdwait:    in a, (0xF0)
-	    bit 0, a
+cmdwait:    bit 0, (hl)
 	    jr z, seekstat
-	    bit 7, a
+	    bit 7, (hl)
 	    jr z, cmdwait
 seekstat:
-	    in a, (0xF0)
+	    ld a,(hl)
 	    and #0x18
 	    bit 0, a
 	    jr nz, seekstat
 	    or a
 	    jr z, secmove
-	    ld de, #0xF850
-	    call prints
+	    call printse
 	    .ascii 'seek\0'
 bad:	    jr bad
 secmove:    xor a
 	    dec a	
-	    ld (secnum), a
+	    ld (nextsec+1), a
 nextsec:
-	    ld a, (secnum)
+	    ld (0x3CF1),a	; XX
+	    ld a, #255		; self modifying sector count
 	    inc a
-	    ld (secnum), a
-	    cp #18
+	    ld (nextsec+1), a
+	    cp #10
 	    jr z, lastsec
-	    push hl
 	    call floppy_read
+	    push hl
+	    ld h,#0x3D
+	    ld l,b
+	    inc (hl)
 	    pop hl
-	    inc h
 	    jr nextsec
+;
+;	Assume the boot ROM left us on track 0 and motor on
+;
+floppy_read:
+	    ld (FDCSEC), a		; sector please
+	    ld a, #0x01			; drive 0 select
+	    ld (LATCHD0), a		; keep motor on
+	    ld a, #0x8C			; READ
+	    ld (hl), a
+	    ld b, a			; 8C is an acceptable delay!
+l1:	    djnz l1
+flopin:	    bit 1,(hl)
+	    jr z, flopin
+	    ld a,(de)
+	    ld (bc),a
+	    inc c			; page aligned
+	    jr nz,flopin
+	    inc b			; correct bc for next call
+	    jr nc, flopstat		; passed FFFF ?
+	    ld b,#0x80			; go back to 8000 and change bank
+	    ld a,#1
+            out (0x43),a
+flopstat:
+	    ld a, (hl)
+	    and #0x19
+	    rra				; test bit 0
+	    jr nz, flopstat
+	    or a			; safe even though we rotated right
+	    ret z
+	    call printse
+	    .ascii 'Read\0'
+fail:	    jr fail
 
-tracknum:   .db 28			; tracks 29-39 (50688 bytes)
 
-				; ctc6845 registers in reverse order
-	    .db 99
-	    .db 80
-	    .db 85
-	    .db 10
-	    .db 25
-	    .db 4
-	    .db 24
-	    .db 24
-	    .db 0
-	    .db 9
-	    .db 101
-	    .db 9
-	    .db 0
-	    .db 0
-secnum:	    .db 0		; recycle last crc value as secnum so we fit 256 bytes
-_ctc6845:   .db 0
-
-
+printse:
+	   ld de, #0x3850
 prints:
 	   pop hl
 printsl:
@@ -151,8 +132,6 @@ printsl:
 	   jr printsl
 out:	   jp (hl)
 
-booted:	    ld de, #0xF850
-	    call prints
+booted:	   call printse
 	    .ascii 'Booting..\0'
-
-; OS starts on the following byte
+	   jr 0x4300
