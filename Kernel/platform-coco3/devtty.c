@@ -26,7 +26,7 @@ extern uint8_t hz;
 
 
 uint8_t vtattr_cap;
-
+uint8_t curattr;
 
 #define tbuf1 (uint8_t *)(0x2000+TTYSIZ*0)
 #define tbuf2 (uint8_t *)(0x2000+TTYSIZ*1)
@@ -476,7 +476,7 @@ void platform_interrupt(void)
 
 void vtattr_notify(void)
 {
-	curpty->attr = ((vtink&7)<<3) + (vtpaper&7);
+	curattr = ((vtink&7)<<3) + (vtpaper&7);
 }
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)

@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include <vt.h>
 #include <devtty.h>
 #include <video.h>
 
@@ -60,7 +61,7 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
 	unsigned char *p=char_addr(y,x);
 	map_for_video();
 	*p++ = VT_MAP_CHAR(c);
-	*p = curpty->attr;
+	*p = curattr;
 	map_for_kernel();
 }
 
@@ -69,7 +70,7 @@ void clear_lines(int8_t y, int8_t ct)
 	uint16_t wc= ct * VT_WIDTH;
 	map_for_video();
 	uint16_t *s = (uint16_t *)char_addr(y, 0);
-	uint16_t w = ' ' * 0x100 + curpty->attr;
+	uint16_t w = ' ' * 0x100 + curattr;
 	while(  wc-- )
 		*s++=w;
 	map_for_kernel();
@@ -79,7 +80,7 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 {
 	map_for_video();
 	uint16_t *s = (uint16_t *)char_addr(y, x);
-	uint16_t w=' ' * 0x100 + curpty->attr;
+	uint16_t w=' ' * 0x100 + curattr;
 	while( l-- )
 		*s++=w;
 	map_for_kernel();

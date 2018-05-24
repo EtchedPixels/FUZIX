@@ -32,6 +32,8 @@ struct vt_switch {
   signed char cursory;
   signed char ncursory;
   uint8_t cursorhide;
+  uint8_t ink;
+  uint8_t paper;
 };
 
 struct vt_repeat {

@@ -369,6 +369,8 @@ void vt_save(struct vt_switch *vt)
 	vt->cursory = cursory;
 	vt->ncursory = ncursory;
 	vt->cursorhide = cursorhide;
+	vt->ink = vtink;
+	vt->paper = vtpaper;
 }
 
 void vt_load(struct vt_switch *vt)
@@ -379,6 +381,8 @@ void vt_load(struct vt_switch *vt)
 	cursory = vt->cursory;
 	ncursory = vt->ncursory;
 	cursorhide = vt->cursorhide;
+	vtink = vt->ink;
+        vtpaper = vt->paper;
 	vtattr_notify();
 }
 #endif
