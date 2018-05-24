@@ -40,7 +40,7 @@ image: trs80load.bin
 	# And then bank2 (32K)
 	dd if=../bank2.bin of=boot.raw bs=256 count=128 seek=199 conv=notrunc
 	# And turn it into a single sided 40 track fm image
-	../tools/makejv3 sd40s boot.raw boot.jv3
+	../tools/makejv3 -t sd40s -d boot.raw boot.jv3
 
 trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s
