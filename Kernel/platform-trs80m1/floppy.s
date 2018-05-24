@@ -6,7 +6,9 @@
 ;	FIXME: tandy doubler
 ;	FIXME: correct step rates (per drive ?)
 ;	FIXME: precompensation ??
-;	FIXME: support speed setting (turbo cards)
+;	FIXME: support speed setting (turbo cards) out 254,0 / 1 if present
+;		(but how to tell ??)
+;	FIXME: do we want to support switching between M1 and M3 ?
 ;
 	.globl _fd_reset
 	.globl _fd_operation
@@ -59,7 +61,7 @@ T_SET_PRECOMP	.equ	0xE0
 ;
 
 ;
-;	interrupt register reports 0x80 for interrut, 0x40 for drq
+;	interrupt register reports 0x80 for interrupt, 0x40 for drq
 ;	(0x20 is the unrelated reset button)
 ;
 
