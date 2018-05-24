@@ -34,11 +34,11 @@ image: trs80load.bin
 	# Boot block at 0,0
 	dd if=trs80load.bin of=boot.raw bs=256 count=1 conv=notrunc
 	# 16K of common at 1,0
-	dd if=../common.bin of=boot.raw bs=256 count=61 seek=10 conv=notrunc
+	dd if=../common.bin of=boot.raw bs=256 count=61 seek=10 conv=notrunc skip=67
 	# Followed directly by bank1 (32K)
-	dd if=../bank1.bin of=boot.raw bs=256 count=128 seek=71 conv=notrunc
+	dd if=../bank1.bin of=boot.raw bs=256 count=128 seek=71 conv=notrunc skip=128
 	# And then bank2 (32K)
-	dd if=../bank2.bin of=boot.raw bs=256 count=128 seek=199 conv=notrunc
+	dd if=../bank2.bin of=boot.raw bs=256 count=128 seek=199 conv=notrunc skip=128
 	# And turn it into a single sided 40 track fm image
 	../tools/makejv3 -t sd40s -d boot.raw boot.jv3
 
