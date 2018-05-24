@@ -42,7 +42,7 @@
 		.globl _discard_size
 
 	        ; startup code
-	        .area _CODE
+	        .area _BOOT
 
 ;
 ;	Once the loader completes it jumps here

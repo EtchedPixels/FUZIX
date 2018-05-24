@@ -74,3 +74,15 @@ uint8_t platform_rtc_secs(void)
 
 #endif
 
+/*
+ *	So that we don't suck in a library routine we can't use from
+ *	the runtime
+ */
+
+int strlen(const char *p)
+{
+  int len = 0;
+  while(*p++)
+    len++;
+  return len;
+}

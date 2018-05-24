@@ -6,7 +6,6 @@
 
             ; exported symbols
             .globl init_early
-            .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl platform_interrupt_all
@@ -74,9 +73,9 @@ _platform_reboot:
 	   rst 0
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (above 0x8000)
+; BOOT MEMORY BANK (below 0x8000)
 ; -----------------------------------------------------------------------------
-            .area _CODE
+            .area _BOOT
 
 
 init_early:

@@ -29,7 +29,7 @@
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (above 08000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
-            .area _CODE
+            .area _BOOT
 
 init_hardware:
             ; set system RAM size

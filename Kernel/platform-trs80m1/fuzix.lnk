@@ -2,10 +2,10 @@
 -r
 -i fuzix.ihx
 -b _INITIALIZER=0x0001
--b _CODE=0x4200
+-b _BOOT=0x4300
 -b _CODE1=0x8000
 -b _CODE2=0x8000
--b _COMMONMEM=0x4300
+-b _COMMONMEM=0x4400
 -l z80
 platform-trs80m1/crt0.rel
 platform-trs80m1/commonmem.rel
