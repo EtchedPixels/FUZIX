@@ -101,6 +101,7 @@ not_lnw:
 	    ld a,#3
 	    ld (_trs80_model),a	; Video Genie
 not_vg:
+	    call _rom_vectors
             ret
 
 	    .area _DATA
