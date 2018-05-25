@@ -14,6 +14,8 @@
 	    .globl map_kernel_restore
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_save_kmap
+	    .globl map_restore_kmap
 
             ; imported symbols
 	    .globl _program_vectors	
@@ -41,6 +43,8 @@ mark_pages:
 	    ld (hl),a
 	    djnz mark_pages
 scan_pages:
+	    out (c),a			; bank 0
+	    ld (hl),#0xff		; so we catch any wrapping
 	    ld b,#2
 scan_pages_l:
 	    out (c),b
@@ -127,8 +131,11 @@ map_process_a:			; used by bankfork
 map_process_save:
 map_process_always:
 	    push af
-	    ld a, (map_reg);
-	    ld (map_store), a
+	    ld a, (map_reg)
+	    ld (ksave_map), a
+	    ld a,(U_DATA__U_PAGE)
+	    ld (map_reg),a
+	    out (0x43),a
 	    pop af
 	    ret
 
@@ -144,6 +151,15 @@ map_restore:
 	    ld (map_reg), a
 	    out (0x43), a
 	    pop af
+	    ret
+
+map_save_kmap:
+	    ld a,(map_reg)
+	    ret
+
+map_restore_kmap:
+	    ld (map_reg),a
+	    out (0x43),a
 	    ret
 
 ;
