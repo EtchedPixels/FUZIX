@@ -10,13 +10,7 @@
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
-uint8_t curtty;		/* output side */
-uint8_t inputtty;	/* input side */
-static struct vt_switch ttysave[2];
-static uint8_t vtbackbuf[VT_WIDTH * VT_HEIGHT];
 struct vt_repeat keyrepeat;
-
-uint8_t *vtbase[2] = { 0xF800, vtbackbuf };
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
@@ -40,15 +34,10 @@ void kputchar(char c)
 ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t reg;
-    if (minor != 3)
+    if (minor != 2)
         return TTY_READY_NOW;
     reg = tr1865_status;
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
-}
-
-void vtbuf_init(void)
-{
-    memset(vtbackbuf, ' ', VT_WIDTH * VT_HEIGHT);
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -140,7 +129,7 @@ static void keyproc(void)
 	for (i = 0; i < 8; i++) {
 	        /* Set one of A0 to A7, and read the byte we get back.
 	           Invert that to get a mask of pressed buttons */
-		keyin[i] = *(uint8_t *)(0xF400 | (1 << i));
+		keyin[i] = *(uint8_t *)(0x3800 | (1 << i));
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
@@ -233,7 +222,7 @@ static void keydecode(void)
 	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c)
-		vt_inproc(inputtty+1, c);
+		vt_inproc(1, c);
 }
 
 void kbd_interrupt(void)

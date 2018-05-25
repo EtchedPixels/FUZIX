@@ -5,13 +5,11 @@
 
 void device_init(void)
 {
-  vtbuf_init();
 #ifdef CONFIG_RTC
   /* Time of day clock */
   inittod();
 #endif
   hd_probe();
-  tty_setup(3);
 }
 
 void map_init(void)
