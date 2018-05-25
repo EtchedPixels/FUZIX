@@ -2,6 +2,7 @@
 #include <devhd.h>
 #include <devtty.h>
 #include <tty.h>
+#include <kdata.h>
 
 void device_init(void)
 {
@@ -20,15 +21,12 @@ uint8_t nbanks = 2;	/* Default 2 banks, unless port 94 probe updates */
 
 void pagemap_init(void)
 {
-#ifdef CONFIG_MAP94
- int i = nbanks - 1;
- while (i) {
-  pagemap_add(i);	/* Mode 3, U64K low 32K mapped as low 32K */
-  pagemap_add(i|0x80);	/* Mode 3, U64K high 32K mapped as low 32K */
+ int i = procmem / 32;	/* How many banks do we have */
+ if (i > MAX_MAPS)
+  i = MAX_MAPS;
+ i += 2;		/* Banks 0/1 are the kernel and not included */
+ while (i > 1) {
+  pagemap_add(i);
   i--;
  }
-#else
- pagemap_add(0x63);	/* Mode 3, U64K low 32K mapped as low 32K */
- pagemap_add(0x73);	/* Mode 3, U64K high 32K mapped as low 32K */
-#endif
 }
