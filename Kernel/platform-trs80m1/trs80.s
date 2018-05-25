@@ -15,6 +15,7 @@
 	    .globl map_process_always
 	    .globl map_save
 	    .globl map_restore
+	    .globl map_kernel_restore
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -146,10 +147,12 @@ _hd_xfer_in:
 	   push de
 	   ld a, (_hd_page)
 	   or a
+	   push af
 	   call nz, map_process_a
 	   ld bc, #0xC8			; 256 bytes from 0xC8
 	   inir
-	   call map_kernel
+	   pop af
+	   call nz, map_kernel_restore
 	   ret
 
 _hd_xfer_out:
@@ -161,9 +164,11 @@ _hd_xfer_out:
 	   push de
 	   ld a, (_hd_page)
 	   or a
+	   push af
 	   call nz, map_process_a
 	   ld bc, #0xC8			; 256 bytes to 0xC8
 	   otir
-	   call map_kernel
+	   pop af
+	   call nz, map_kernel_restore
 	   ret
 
