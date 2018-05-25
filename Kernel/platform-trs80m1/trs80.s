@@ -139,8 +139,10 @@ outchar:
 ;
 _hd_xfer_in:
 	   pop de
+	   pop bc
 	   pop hl
 	   push hl
+	   push bc
 	   push de
 	   ld a, (_hd_page)
 	   or a
@@ -152,8 +154,10 @@ _hd_xfer_in:
 
 _hd_xfer_out:
 	   pop de
+	   pop bc
 	   pop hl
 	   push hl
+	   push bc
 	   push de
 	   ld a, (_hd_page)
 	   or a
