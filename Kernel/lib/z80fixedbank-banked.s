@@ -71,6 +71,7 @@ _platform_switchout:
 	pop af
 
         push hl
+	push af
         call _switchin
 
         ; we should never get here
@@ -84,11 +85,13 @@ swapped: .ascii "_switchin: SWAPPED"
 _switchin:
         di
         pop bc  ; return address
+	pop hl  ; return address part 2
         pop de  ; new process pointer
 ;
 ;	FIXME: do we actually *need* to restore the stack !
 ;
         push de ; restore stack
+	push hl ; restore stack
         push bc ; restore stack
 
 ; FIXME???	call map_kernel_save
@@ -155,6 +158,8 @@ not_swapped:
 	ldir
 	exx
 
+	call map_kernel_restore
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
@@ -179,10 +184,10 @@ skip_copyback:
         ; _switchout or _dofork
         ld sp, (U_DATA__U_SP)
 
+	pop af
         pop iy
         pop ix
         pop hl ; return code
-	pop af
 
 	call map_restore_kmap
 
