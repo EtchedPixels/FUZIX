@@ -29,20 +29,28 @@ uint8_t platform_param(char *p)
     return 0;
 }
 
+/* Work around SDCC bugs */
+uint8_t sdcc_bug_2753(uint8_t v) __z88dk_fastcall
+{
+  return v;
+}
+
+/* We assign these to dummy to deal with what I think is an SDCC bug */
 void platform_interrupt(void)
 {
   uint8_t irq = *((volatile uint8_t *)0x37E0);
   uint8_t dummy;
+
+  tty_interrupt();
+  kbd_interrupt();
+
   /* FIXME: do we care about floppy interrupts */
-  if (irq & 0x80)
-    *((volatile uint8_t *)0x37EC);
-  else {
-    tty_interrupt();
-    kbd_interrupt();
-    if (irq & 0x80) {	/* FIXME??? */
-      timer_interrupt();
-      *((volatile uint8_t *)0x37E0);	/* Ack the timer */
-    }
+
+  if (irq & 0x40)
+    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37EC));
+  if (irq & 0x80) {	/* FIXME??? */
+    timer_interrupt();
+    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37E0));	/* Ack the timer */
   }
 }
 
