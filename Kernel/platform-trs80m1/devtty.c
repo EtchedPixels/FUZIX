@@ -53,7 +53,7 @@ void tty_interrupt(void)
     uint8_t reg = tr1865_status;
     if (reg & 0x80) {
         reg = tr1865_rxtx;
-        tty_inproc(3, reg);
+        tty_inproc(2, reg);
     }
 }
 
@@ -221,8 +221,10 @@ static void keydecode(void)
 	}
 	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
+	if (c) {
+//	    kprintf("Typed %d:%c\n", c, c);
 		vt_inproc(1, c);
+            }
 }
 
 void kbd_interrupt(void)
