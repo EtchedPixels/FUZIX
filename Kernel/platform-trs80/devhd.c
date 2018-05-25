@@ -72,7 +72,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (rawflag == 1) {
 		if (d_blkoff(BLKSHIFT))
 			return -1;
-		hd_page = udata.u_page;		/* Kernel */
+		hd_page = udata.u_page;		/* User space */
 	} else if (rawflag == 2)
 		hd_page = swappage;
 
