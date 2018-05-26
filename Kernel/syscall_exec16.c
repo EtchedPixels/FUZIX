@@ -105,7 +105,7 @@ arg_t _execve(void)
 	/* FIXME: review overflows */
 	bin_size = ino->c_node.i_size;
 	progptr = bin_size + 1024 + bss;
-	if (top - progload < progptr || progptr < bin_size) {
+	if (progload < PROGLOAD || top - progload < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
