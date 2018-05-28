@@ -1,6 +1,6 @@
 .SUFFIXES: .c .rel
 
-CC = fcc -m$(USERCPU)
+CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
 CFLAGS = -c
 COPT = -O2
 

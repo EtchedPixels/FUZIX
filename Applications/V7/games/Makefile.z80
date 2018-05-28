@@ -1,9 +1,5 @@
 FCC = ../../../Library/tools/fcc -m$(USERCPU)
 FCCOPTS = -O2
-PLATFORM =
-#PLATFORM = -tzx128
-
-PROGLOAD=`(cat ../../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 .SUFFIXES: .c .rel
 
@@ -14,8 +10,6 @@ SRCSBAD =
 OBJS = $(SRCS:.c=.rel)
 OBJSNS = $(SRCSNS:.c=.rel)
 OBJSBAD = $(SRCSBAD:.c=.rel)
-
-LIBS = ../../../Library/libs/syslib.lib
 
 APPSNS = $(OBJSNS:.rel=)
 
@@ -31,13 +25,13 @@ $(OBJS): %.rel: %.c
 $(OBJSNS): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
-	$(FCC) $(PLATFORM) -c $<
+	$(FCC) $(Z80_PLATFORM) -c $<
 
 .c.rel:
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report

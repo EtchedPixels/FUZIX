@@ -13,13 +13,13 @@ OPTS = -DNETD_LITTLE_ENDIAN
 all: $(APPS)
 
 netd-slip: $(OBJS)
-	fcc -m$(USERCPU) -o netd netd.rel uip.rel uiplib.rel timer.rel clock-arch.rel \
+	fcc -m$(USERCPU) $(Z80_PLATFORM) -o netd netd.rel uip.rel uiplib.rel timer.rel clock-arch.rel \
 	       uip_arp.rel slip.rel
 
 $(OBJS): %.rel: %.c
 
 .c.rel:
-	fcc -m$(USERCPU) $(PLATFORM) $(OPTS) -c $<
+	fcc -m$(USERCPU) $(Z80_PLATFORM) $(OPTS) -c $<
 
 telnet:	telnet.rel gethostbyname.rel
 	fcc -o $@ $^

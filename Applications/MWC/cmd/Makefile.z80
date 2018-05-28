@@ -1,9 +1,5 @@
-FCC = ../../../Library/tools/fcc -m$(USERCPU)
+FCC = ../../../Library/tools/fcc -m$(USERCPU) $(Z80_PLATFORM)
 FCCOPTS = -O2
-PLATFORM =
-#PLATFORM = -tzx128
-
-PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 .SUFFIXES: .c .rel .y
 
@@ -43,13 +39,13 @@ find.c: find.y
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
+	$(FCC) $(PLATFORM) $(FCCOPTS) $< -o $@
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.y *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core

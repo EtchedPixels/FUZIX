@@ -1,6 +1,4 @@
 FCC = ../../../../Library/tools/fcc -m$(USERCPU) -O2 -DTARGET_Z80
-PLATFORM =
-#PLATFORM = -tzx128
 
 .SUFFIXES: .c .rel
 
@@ -15,25 +13,25 @@ LIBS = ../../../../Library/libs/syslib.lib
 all: as nm ld
 
 as: $(OBJS)
-	$(FCC) $(PLATFORM) $(OBJS) -o $@
+	$(FCC) $(Z80_PLATFORM) $(OBJS) -o $@
 
 nm.c: obj.h
 
 nm: nm.rel
-	$(FCC) $(PLATFORM) nm.rel -o $@
+	$(FCC) $(Z80_PLATFORM) nm.rel -o $@
 
 ld.c: obj.h
 
 ld: ld.rel
-	$(FCC)	$(PLATFORM) ld.rel -o $@
+	$(FCC)	$(Z80_PLATFORM) ld.rel -o $@
 
 $(OBJS): $(INCS)
 
 .c.rel:
-	$(FCC) $(PLATFORM) -c $<
+	$(FCC) $(Z80_PLATFORM) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $< -o $@
 
 clean:
 	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin

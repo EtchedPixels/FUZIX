@@ -1,9 +1,5 @@
 FCC = ../../Library/tools/fcc -m$(USERCPU)
 FCCOPTS = -O2
-PLATFORM =
-#PLATFORM = -tzx128
-
-PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 .SUFFIXES: .c .rel
 
@@ -131,22 +127,22 @@ $(OBJS): %.rel: %.c
 $(OBJSNS): %.rel: %.c
 
 $(OBJSBAD): %.rel: %.c
-	$(FCC) $(PLATFORM) -c $<
+	$(FCC) $(Z80_PLATFORM) -c $<
 
 .c.rel:
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
 
 tchelp: tchelp.rel
-	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
+	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 tget: tget.rel
-	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -ltermcap
+	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 vile: vile.rel
-	$(FCC)	$(PLATFORM) $(OPTS) $< -o $@ -lcurses -ltermcap
+	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -lcurses -ltermcap
 
 %: %.rel
-	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report

@@ -1,6 +1,4 @@
 FCC = ../../../../Library/tools/fcc -m $(USERCPU) -O2 -fsigned-char
-PLATFORM =
-#PLATFORM = -tzx128
 
 .SUFFIXES: .c .rel
 
@@ -12,20 +10,18 @@ INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 
 OBJS = $(SRCS:.c=.rel)
 
-LIBS = ../../../../Library/libs/syslib.lib
-
 all: sh
 
 sh: $(OBJS)
-	$(FCC) $(PLATFORM) $(OBJS) -o $@
+	$(FCC) $(Z80_PLATFORM) $(OBJS) -o $@
 
 $(OBJS): $(INCS)
 
 .c.rel:
-	$(FCC) $(PLATFORM) -c $<
+	$(FCC) $(Z80_PLATFORM) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $< -o $@
 
 clean:
 	rm -f $(OBJS) sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
