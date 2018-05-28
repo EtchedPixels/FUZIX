@@ -1,7 +1,7 @@
 .SUFFIXES: .c .rel
 
 FCC = ../../Library/tools/fcc -m$(USERCPU)
-FCCOPTS = -O2
+FCCOPTS = -O2 $(Z80_PLATFORM)
 SRCS  = flashrom.c
 OBJS = $(SRCS:.c=.rel)
 APPS = $(OBJS:.rel=)

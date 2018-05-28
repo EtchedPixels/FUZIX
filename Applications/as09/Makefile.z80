@@ -1,7 +1,7 @@
 .SUFFIXES: .c .rel
 
 PLATFORM = 6809
-CC = fcc -m$(USERCPU)
+CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
 CFLAGS = -c
 COPT = -O2
 

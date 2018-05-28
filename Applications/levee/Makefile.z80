@@ -1,4 +1,4 @@
-CC = fcc -m $(USERCPU)
+CC = fcc -m $(USERCPU) $(Z80_PLATFORM)
 
 .SUFFIXES: .c -vt52.rel -ansi.rel -termcap.rel
 

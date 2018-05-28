@@ -1,4 +1,6 @@
 #
+#	We can't build this for platforms other than 0 based so don't bother
+# with Z80_PLATFORM
 #
 BASE=49152
 #
