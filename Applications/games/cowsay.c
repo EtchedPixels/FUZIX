@@ -16,12 +16,12 @@ Lightly modified for Fuzix by Brett Gordon
 #define BLANK_WARNING       "Nothing to say."
 
 typedef struct {
-    char *opt;
-    char *eyes;
-    char tongue;
+    const char *opt;
+    const char *eyes;
+    const char tongue;
 } design_t;
 
-static design_t designs[] = {
+static const design_t designs[] = {
     { "-b", "==", ' ' },
     { "-d", "XX", ' ' },
     { "-g", "$$", ' ' },
@@ -33,8 +33,9 @@ static design_t designs[] = {
     { NULL, "\0\0", 0 }
 };
 
-int
-args_shift(int n, int *argc, char ***argv)
+static const design_t defdesign =  { NULL, "oo", ' ' };
+
+static int args_shift(int n, int *argc, char ***argv)
 {
     if (*argc >= n)
     {
@@ -113,21 +114,21 @@ cowsay_print_bubble(int argc, char **argv)
 }
 
 void
-cowsay_print_cow(design_t design)
+cowsay_print_cow(const design_t *design)
 {
     printf("        \\   ^__^\n"
            "         \\  (%s)\\_______\n"
            "            (__)\\       )\\/\\\n"
            "             %c  ||----w |\n"
            "                ||     ||\n",
-           design.eyes, design.tongue);
+           design->eyes, design->tongue);
 }
 
 int
 main(int argc, char **argv)
 {
     int i;
-    design_t current = { NULL, "oo", ' ' };
+    const design_t *current = &defdesign;
 
     args_shift(1, &argc, &argv);
 
@@ -162,7 +163,7 @@ main(int argc, char **argv)
     {
         if (strcmp(argv[0], designs[i].opt) == 0)
         {
-            current = designs[i];
+            current = designs + i;
             args_shift(1, &argc, &argv);
         }
     }
