@@ -1,13 +1,6 @@
-CC = sdcc
-ASM = sdasz80
-AR = sdar
 LINKER = sdcc
 FCC = ../../Library/tools/fcc
 FCCOPTS = -O2
-PLATFORM =
-#PLATFORM = -tzx128
-
-PROGLOAD=`(cat ../../Kernel/platform/config.h; echo PROGLOAD) | cpp -E | tail -n1`
 
 .SUFFIXES: .c .rel
 
@@ -24,10 +17,10 @@ all: $(APPS) sizes
 $(OBJS): %.rel: %.c
 
 .c.rel:
-	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
 
 %: %.rel
-	$(FCC) $(PLATFORM) $(OPTS) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report
