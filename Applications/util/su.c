@@ -5,9 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 /* True if the invoker need not give a password. */
-#define privileged()	(getgid() == 0)
+#define privileged()	(getuid() == 0)
 
 static char *shell1 = "/bin/sh";
 static char *shell2 = "/usr/bin/sh";
@@ -17,10 +18,18 @@ static char USER[20], LOGNAME[25], HOME[100], SHELL[100];
 
 int main(int argc, char *argv[])
 {
-    register char *name, *password;
-    register struct passwd *pwd;
+    const char *name;
+    char *password;
+    struct passwd *pwd;
     int  login_shell = 0;
+    int  fd;
     char *shell, arg0[20];
+
+    /* Stop people trying funny stuff like running it with handle 2 closed
+       and making stderr write to the password file ! */
+    fd = open("/dev/null", O_RDONLY);
+    if (fd == -1 || fd < 3)
+	exit(1);
 
     if (argc > 1 && strcmp(argv[1], "-") == 0) {
 	login_shell = 1;	/* Read .profile */
