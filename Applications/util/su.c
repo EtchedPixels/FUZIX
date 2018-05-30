@@ -14,7 +14,7 @@ static char *shell1 = "/bin/sh";
 static char *shell2 = "/usr/bin/sh";
 static char *shell3 = "/bin/ssh";
 
-static char USER[20], LOGNAME[25], HOME[100], SHELL[100];
+static char USER[20], LOGNAME[25], HOME[PATHLEN + 6], SHELL[100];
 
 int main(int argc, char *argv[])
 {
@@ -79,21 +79,22 @@ int main(int argc, char *argv[])
 	argv[0]++;
 
     if (login_shell) {
+    	/* FIXME: assemble this lot using sbrk ? */
 	arg0[0] = '-';
 	strncpy(arg0 + 1, argv[0], sizeof(arg0) - 2);
 	arg0[sizeof(arg0) - 1] = 0;
 	argv[0] = arg0;
 	strcpy(USER, "USER=");
-	strcpy(USER + 5, name);
+	strlcpy(USER + 5, name, sizeof(USER) - 5);
 	putenv(USER);
 	strcpy(LOGNAME, "LOGNAME=");
-	strcpy(LOGNAME + 8, name);
+	strlcpy(LOGNAME + 8, name, sizeof(LOGNAME) - 8);
 	putenv(LOGNAME);
 	strcpy(SHELL, "SHELL=");
-	strcpy(SHELL + 6, shell);
+	strlcpy(SHELL + 6, shell, sizeof(SHELL) - 6);
 	putenv(SHELL);
 	strcpy(HOME, "HOME=");
-	strcpy(HOME + 5, pwd->pw_dir);
+	strlcpy(HOME + 5, pwd->pw_dir, sizeof(HOME) - 5);
 	putenv(HOME);
 	chdir(pwd->pw_dir);
     }
