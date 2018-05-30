@@ -34,8 +34,6 @@ scc6809: $(OBJS) $(OBJ_6809)
 copt:	$(OBJ_COPT)
 	$(CC) -o copt $(OBJ_COPT)
 
-clean:
-	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *.rel *~
 
 .c.rel:
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
@@ -43,4 +41,4 @@ clean:
 $(OBJS_ALL) : $(INC)
 
 clean:
-	rm -f *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
+	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
