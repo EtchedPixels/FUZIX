@@ -48,7 +48,6 @@ static char sccsid[] = "@(#)cal.c	8.4 (Berkeley) 4/2/94";
 #include <time.h>
 
 int time_zone = 0;
-long timezone = 0;
 
 void errx(int exv, char *str)
 {
