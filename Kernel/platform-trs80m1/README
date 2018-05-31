@@ -1,7 +1,6 @@
 TRS80 Model 1
 
-	This is just a development tree. I am still debugging the boot
-	blocks.
+	This is a development tree only
 
 Emulator Bugs:
 	The emulator is horribly insecure, it's default is to allow all
@@ -9,7 +8,7 @@ Emulator Bugs:
 	had it segfault with FUZIX bugs which suggests its not too secure.
 
 	Repeating instructions like LDIR appear to be misemulated. LDIR
-	is performed an emulated block copy, not as an iterated LDI. The
+	is performed as an emulated block copy, not as an iterated LDI. The
 	real processor actually implements LDIR as  "LDI, if not done
 	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
 	be affected.
@@ -17,11 +16,28 @@ Emulator Bugs:
 	The interrupt flags are misemulated. A patch for this is in the
 	Fuzix tree and is needed to run Fuzix on xtrs/sdltrs
 
+User Space:
+	The TRS80 Model I/III have ROM in the low 16K. At the moment our
+	binaries are not relocatable so you need to build a custom user
+	space for this platform.
+
 Requirements: 
-	TRS80 Model 1
+	TRS80 Model I (or emulator)
 	Preferably the lower case mod
 	Supermem or compatible expansion
 	Floppy drive or Hard drive (strongly recommend the latter)
+
+Optional:
+	Lower case modification (or will be)
+
+To Do:
+	Keyboard mappings for keys not present on Model 1
+	Other banked expansions
+	Turbo card support (using port 0xFE)
+	Model III support
+	Hires card
+	Stringy floppy
+	Orchestra
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality
@@ -39,14 +55,14 @@ Memory Map:
 	can better balance memory
 
 Drivers:
-	Display 64x16			In progress (mod from existing)
-	Keyboard			Just an address change I think
+	Display 64x16			Done, but may add back multi-console
+	Keyboard			Key mappings needed
 	Hard drive			Straight model 4 port
 	Floppy				In progress (initial code design)
 	Floppy drivers do not yet deal with double sided disks or sd/dd
 	media detection
-	Hard disk reads block 0, and handle partitions of some form
-	including finding where 'swap' lives
+	Hard disk reads block 0, and handle partitions of some form Done
+	including finding where 'swap' lives	Done (swap not tested)
 
 Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs)
 
@@ -80,21 +96,19 @@ Not Yet Started:
 	"Selector" for Model 1. Port 31 allows memory reshuffling away from
 the model 1 default. Either the upper or lower 32K is switchable but not
 both at once. bits 4/5 control the selection between a further 4 32K banks.
+Really selector is its own port.
 
-
+Not Supported:
+	Omikron Mapper: This gives you only 64K (a bit less) so isn't useful.
 
 Useful rom addresses
 
 04C3 -> 64 column
 04F6 -> 32 column
 
-0060 -> 14.5*BC uS delay
+0060 -> 14.5*BC uS delay @ 1.774MHz
 
 
-Floppy boot seems to be
-
-	read sector 0 track 0  (is FDC 0 based - check!)
-	place at 4200-42FF
-	JP 4200	(stack is around 407D)
-
-must be single sided single density boot disk
+Floppy boot requires a single density disk. The Level II ROM reads
+disk 0 side 0 track 0 sector 0 (TRS80 disks are 0 offset sector count)
+into 4200-42FF and then does a JP 4200	(stack is around 407D)
