@@ -774,8 +774,8 @@ struct blk *div(struct blk *ddivd, struct blk *ddivr)
 	p = salloc(0);
 	if (length(ddivr) == 0) {
 		pushp(ddivr);
-		/* BUG: this returns NULL, which will cause a crash later */
-		errorrt("divide by 0\n");
+		puts("divide by 0");
+		return 1;
 	}
 	divsign = remsign = 0;
 	divr = ddivr;
@@ -915,8 +915,8 @@ int dscale(void)
 	if (sfbeg(dr) == 1 || (sfbeg(dr) == 0 && sbackc(dr) == 0)) {
 		sputc(dr, skr);
 		pushp(dr);
-		/* BUG: this returns NULL, which will cause a crash later */
-		errorrt("divide by 0\n");
+		puts("divide by 0");
+		return 1;
 	}
 	c = k - skd + skr;
 	if (c < 0)
