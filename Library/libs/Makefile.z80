@@ -179,7 +179,7 @@ $(OBJ_HARD):%.rel: %.c
 clean:
 	rm -rf *.rel *.asm *.sym *.lst *.lib *~ syscall.l  libc.l syslib.l liberror.txt *.o
 	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~ *.o)
-	(cd fuzix; $(MAKE) clean)
+	(cd fuzixz80; $(MAKE) clean; rm -f Makefile)
 
 install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
