@@ -773,6 +773,9 @@ static pid_t getty(const char **argv, const char *id)
 			if (fdtty < 0)
 				return -1;
 
+			if (fchown(fdtty, 0, 0))
+				putstr("getty: can not reset owner of tty\n");
+
 			/* here we are inside child's context of execution */
 			envset("PATH", "/bin:/usr/bin");
 			envset("CTTY", argv[0]);
@@ -872,6 +875,10 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id, con
 
 	/* We don't care if initgroups fails - it only grants extra rights */
 	initgroups(pwd->pw_name, pwd->pw_gid);
+
+	/* change owner of tty device */
+	if (fchown(0, pwd->pw_uid, pwd->pw_gid))
+		putstr("login: unable to change owner of controlling tty\n");
 
 	/* But we do care if these fail! */
 	if (setgid(pwd->pw_gid) == -1 ||
