@@ -17,6 +17,8 @@
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
 
+#define CONFIG_LARGE_IO_DIRECT
+
 #define MAX_MAPS	16
 
 #define MAP_SIZE	0x8000
