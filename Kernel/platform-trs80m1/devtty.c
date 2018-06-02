@@ -40,12 +40,27 @@ ttyready_t tty_writeready(uint8_t minor)
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
+static uint8_t vtbuf[64];
+static uint8_t *vtq = vtbuf;
+
+static void vtflush(void)
+{
+    vtoutput(vtbuf, vtq - vtbuf);
+    vtq = vtbuf;
+}
+
 void tty_putc(uint8_t minor, unsigned char c)
 {
+    irqflags_t irq;
     if (minor == 2)
         tr1865_rxtx = c;
-    else
-       vtoutput(&c, 1);
+    else {
+        irq = di();
+        if (vtq == vtbuf + sizeof(vtbuf))
+            vtflush();
+        *vtq++ = c;
+        irqrestore(irq);
+    }
 }
 
 void tty_interrupt(void)
@@ -227,6 +242,7 @@ static void keydecode(void)
             }
 }
 
+/* Polled 40 times a second */
 void kbd_interrupt(void)
 {
 	newkey = 0;
@@ -240,4 +256,6 @@ void kbd_interrupt(void)
 			kbd_timer = keyrepeat.continual;
 		}
 	}
+        if (vtq != vtbuf)
+                vtflush();
 }
