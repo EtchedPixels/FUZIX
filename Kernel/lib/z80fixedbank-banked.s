@@ -288,8 +288,8 @@ _dofork:
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
         pop bc
-        pop bc
-        pop bc
+        pop iy	; We need these two back
+        pop ix	; as the compiler expects it
 	pop bc
 
         ; Make a new process table entry, etc.
@@ -309,42 +309,6 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
-
-;
-;	This is related so we will keep it here. Copy the process memory
-;	for a fork. a is the page base of the parent, c of the child
-;
-;	Assumption - fits into a fixed number of whole 256 byte blocks
-;
-bankfork:
-	ld b, #(U_DATA_STASH - PROGBASE)/256
-	ld hl, #PROGBASE	; base of memory to fork (vectors included)
-bankfork_1:
-	push bc			; Save our counter and also child offset
-	push hl
-	call map_process_a
-	ld de, #bouncebuffer
-	ld bc, #256
-	ldir			; copy into the bounce buffer
-	call map_kernel_restore
-	pop de			; recover source of copy to bounce
-				; as destination in new bank
-	pop bc			; recover child page number
-	push bc
-	ld b, a			; save the parent bank id
-	ld a, c			; switch to the child
-	call map_process_a
-	push bc			; save the bank pointers
-	ld hl, #bouncebuffer
-	ld bc, #256
-	ldir			; copy into the child
-	call map_kernel_restore
-	pop bc			; recover the bank pointers
-	ex de, hl		; destination is now source for next bank
-	ld a, b			; parent bank is wanted in a
-	pop bc
-	djnz bankfork_1		; rinse, repeat
-	ret
 
 bouncebuffer:
 	.ds 256
