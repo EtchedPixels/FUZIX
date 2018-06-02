@@ -20,6 +20,9 @@
 ;	Interrupts are off so I guess the stack pointer is spare (Watch
 ;	out for NMI if we do model 3 this way!)
 ;
+;	NOTE: comments are out of date it's actually now doing 16's for
+;	more. I'll fix these ASAP
+;
 bankfork:
 	ld (cpatch0 + 1),a	; patch parent into loop
 	ld a,c
