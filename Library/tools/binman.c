@@ -95,8 +95,15 @@ int main(int argc, char *argv[])
   }
   memcpy(buf + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZER);
 
+  if (progload & 0xFF) {
+    fprintf(stderr, "%s: load address must be page aligned.\n", argv[0]);
+    exit(1);
+  }
 
-  bp = buf + progload + 10;
+  bp = buf + progload + 7;
+  *bp++ = progload >> 8;
+  *bp++ = 0;
+  *bp++ = 0;
   *bp++ = s__INITIALIZED - progload;
   *bp++ = (s__INITIALIZED - progload) >> 8;
   *bp++ = s__DATA - s__INITIALIZED;
