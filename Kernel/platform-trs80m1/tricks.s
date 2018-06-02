@@ -20,9 +20,6 @@
 ;	Interrupts are off so I guess the stack pointer is spare (Watch
 ;	out for NMI if we do model 3 this way!)
 ;
-;	NOTE: comments are out of date it's actually now doing 16's for
-;	more. I'll fix these ASAP
-;
 bankfork:
 	ld (cpatch0 + 1),a	; patch parent into loop
 	ld a,c
@@ -32,15 +29,13 @@ bankfork:
 	;
 	call fork_mapsave
 	ld (spcache),sp
-	; 32256 bytes to copy. We actually overcopy by 512 bytes right
-	; now which is harmless in this case (and may even be useful once
-	; the core bank code is tweaked a bit).
+	; 32256 bytes to copy.
 	; Stack pointer at the target buffer
 	ld sp,#PROGBASE	; Base of memory to fork
 	; 8 outer loops
 	ld a,#8
 	ld (copyct),a
-	xor a		; Count 256 * 16 byte copies
+	ld a,#252	; Count 252 * 16 byte copies
 copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
@@ -70,7 +65,7 @@ cpatch1:
 	push bc
 	ex af,af'	; Get counter back
 	dec a
-	jr z, setdone	; 256 loops ?
+	jr z, setdone	; 252 loops ?
 copy_cont:
 sp_patch:
 	ld sp,#0
@@ -83,7 +78,7 @@ setdone:
 	ld hl,#copyct
 	dec (hl)	
 	jr z, copy_over
-	xor a
+	ld a,#252
 	jr copy_cont
 copy_over:
 	;
