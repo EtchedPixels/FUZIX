@@ -6,7 +6,7 @@ SRCS += linein.c tinyirc.c htget.c
 
 OBJS = $(SRCS:.c=.rel)
 
-APPS = netd-slip telnet echoping dig httpd ping ntpdate irc htget
+APPS = netd-slip telnet echoping dig httpd ping ntpdate tinyirc htget
 
 OPTS = -DNETD_LITTLE_ENDIAN
 
@@ -39,7 +39,7 @@ ping: ping.rel gethostbyname.rel
 ntpdate: ntpdate.rel gethostbyname.rel
 	fcc -o $@ $^
 
-irc: tinyirc.rel linein.rel gethostbyname.rel
+tinyirc: tinyirc.rel linein.rel gethostbyname.rel
 	fcc -o $@ $^
 
 htget: htget.rel gethostbyname.rel
