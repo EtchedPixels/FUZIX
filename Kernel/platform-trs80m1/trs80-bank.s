@@ -16,6 +16,7 @@
 	    .globl map_restore
 	    .globl map_save_kmap
 	    .globl map_restore_kmap
+	    .globl fork_mapsave
 
             ; imported symbols
 	    .globl _program_vectors	
@@ -102,6 +103,11 @@ map_kernel_restore:
 	    ld (map_reg), a
 	    out (0x43), a
 	    pop af
+	    ret
+
+fork_mapsave:
+	    ld a,(map_reg)
+	    ld (ksave_map),a
 	    ret
 ;
 ;	Select the bank for the relevant process. Update the ksave_map so we
