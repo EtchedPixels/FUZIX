@@ -17,6 +17,9 @@
 	    .globl map_restore
 	    .globl map_kernel_restore
 
+	    .globl go_fast
+	    .globl go_slow
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
@@ -113,6 +116,25 @@ not_vg:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
+;
+;	TRS80 speed control. Save anything used except AF
+;	The LNW80 does automatic slowing on floppy disk access
+;	The Model 3 sprinter type card uses port 95h the same way but
+;	also does automatic slow down when needed
+;
+go_slow:
+	    ld a,(_trs80_model)
+	    or a
+	    ret nz
+	    out (254),a
+	    ret
+go_fast:
+	    ld a,(_trs80_model)
+	    or a
+	    ret nz
+	    inc a
+	    out (254),a
+	    ret
 
 _program_vectors:
 	    ret
