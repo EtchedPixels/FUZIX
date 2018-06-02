@@ -31,24 +31,22 @@ bankfork:
 	;	Set up ready for the copy
 	;
 	call fork_mapsave
-	ld hl, #PROGBASE	; base of memory to fork (vectors included)
 	ld (spcache),sp
-	; 32256 bytes to copy. Purely by luck this is divisible by 18 so
-	; we just need to do 1792 loops. Even better 1792 is 7 * 256 so
-	; we have no corner cases to worry about.
-
+	; 32256 bytes to copy. We actually overcopy by 512 bytes right
+	; now which is harmless in this case (and may even be useful once
+	; the core bank code is tweaked a bit).
 	; Stack pointer at the target buffer
-	ld sp,hl
-	; 7 outer loops
+	ld sp,#PROGBASE	; Base of memory to fork
+	; 8 outer loops
 	ld a,#8
 	ld (copyct),a
-	xor a		; Count 256 * 18 cycles
+	xor a		; Count 256 * 16 byte copies
 copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
 	ld a,#0		; parent bank (patched in for speed)
 	out (0x43),a
-	pop bc		; copy 18 bytes out of parent
+	pop bc		; copy 16 bytes out of parent
 	pop de
 	pop hl
 	exx
@@ -84,7 +82,7 @@ sp_patch:
 setdone:
 	ld hl,#copyct
 	dec (hl)	
-	jp z, copy_over
+	jr z, copy_over
 	xor a
 	jr copy_cont
 copy_over:
