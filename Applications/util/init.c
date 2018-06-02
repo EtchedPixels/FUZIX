@@ -12,7 +12,6 @@
  *	- Give serious consideration to hiding cron/at in the daemon
  *	  to keep our background daemon count as low as we can
  *	- Ditto for syslogd
- *	- Debug telinit q handling
  *	(it's not turning into systemd honest)
  */
 
