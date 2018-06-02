@@ -10,6 +10,9 @@
 #include <sys/stat.h>
 #include <mntent.h>
 
+#define swizzle16(x)	(x)
+#define swizzle32(x)	(x)
+
 typedef uint16_t	blkno_t;
 
 struct filesys {
@@ -65,7 +68,6 @@ struct direct {
 
 static int dev = 0;
 static struct filesys superblock;
-static int swizzling = 0;		/* Wrongendian ? */
 static long offset;
 static int dev_fd;
 static int error;
@@ -174,13 +176,11 @@ static int fd_open(char *name, int search)
             }
         }
 
-	printf("Opening %s (offset %d)\n", name, bias);
 	offset = bias;
 	dev_fd = open(name, O_RDWR | O_CREAT, 0666);
 
 	if (dev_fd < 0)
 		return -1;
-	/* printf("fd=%d, offset = %ld\n", dev_fd, dev_offset); */
 
 	if (stat("/", &rootst) == -1)
 	    panic("stat /");
@@ -188,33 +188,11 @@ static int fd_open(char *name, int search)
             panic("statfd");
 
         if (rootst.st_dev == work.st_rdev) {
-            printf("Checking root file system.\n");
+            puts("Checking root file system.");
             rootfs = 1;
         }
 
 	return 0;
-}
-
-static uint16_t swizzle16(uint32_t v)
-{
-        int top = v & 0xFFFF0000UL;
-	if (top && top != 0xFFFF0000) {
-		fprintf(stderr, "swizzle16 given a 32bit input\n");
-		exit(error | 8);
-	}
-	if (swizzling)
-		return (v & 0xFF) << 8 | ((v & 0xFF00) >> 8);
-	else
-		return v;
-}
-
-static uint32_t swizzle32(uint32_t v)
-{
-	if (!swizzling)
-		return v;
-
-	return (v & 0xFF) << 24 | (v & 0xFF00) << 8 | (v & 0xFF0000) >> 8 |
-	    (v & 0xFF000000) >> 24;
 }
 
 int perform_fsck(char *name, int search)
@@ -222,7 +200,7 @@ int perform_fsck(char *name, int search)
     char *buf;
 
     if (fd_open(name, search)){
-        printf("Cannot open file\n");
+        puts("Cannot open file\n");
         return 16;
     }
 
@@ -230,7 +208,7 @@ int perform_fsck(char *name, int search)
     memcpy((char *) &superblock, buf, sizeof(struct filesys));
 
     if (superblock.s_fmod == FMOD_DIRTY) {
-        printf("Filesystem was not cleanly unmounted.\n");
+        puts("Filesystem was not cleanly unmounted.");
         error |= 1;
     }
     else if (aflag)
@@ -238,8 +216,7 @@ int perform_fsck(char *name, int search)
 
     /* Verify the fsize and isize parameters */
     if (superblock.s_mounted == SMOUNTED_WRONGENDIAN) {
-        swizzling = 1;
-        printf("Checking file system with reversed byte order.\n");
+        panic("Reversed byte order.\n");
     }
 
     if (swizzle16(superblock.s_mounted) != SMOUNTED) {
@@ -257,28 +234,24 @@ int perform_fsck(char *name, int search)
     bitmap = calloc((swizzle16(superblock.s_fsize) + 7UL) / 8, sizeof(char));
     linkmap = (int16_t *) calloc(8 * swizzle16(superblock.s_isize), sizeof(int16_t));
 
-    printf("Memory pool %u bytes\n",
-        16 * swizzle16(superblock.s_isize) +
-        (swizzle16(superblock.s_fsize) + 7UL) / 8);
-
     if (!bitmap || !linkmap) {
-        fprintf(stderr, "Not enough memory.\n");
+        fputs("Not enough memory.\n", stderr);
         return(error |= 8);
     }
 
-    printf("Pass 1: Checking inodes...\n");
+    puts("Pass 1: Checking inodes...");
     pass1();
 
-    printf("Pass 2: Rebuilding free list...\n");
+    puts("Pass 2: Rebuilding free list...");
     pass2();
 
-    printf("Pass 3: Checking block allocation...\n");
+    puts("Pass 3: Checking block allocation...");
     pass3();
 
-    printf("Pass 4: Checking directory entries...\n");
+    puts("Pass 4: Checking directory entries...");
     pass4();
 
-    printf("Pass 5: Checking link counts...\n");
+    puts("Pass 5: Checking link counts...");
     pass5();
 
     /* If we fixed things, and no errors were left uncorrected */
@@ -287,7 +260,7 @@ int perform_fsck(char *name, int search)
         dwrite((blkno_t) 1, (char *) &superblock);
         if (rootfs) {
             error |= 2;
-            printf("**** Root filesystem was modified, immediate reboot required.\n");
+            puts("**** Root filesystem was modified, immediate reboot required.");
             sleep(5);
             /* Sync it all out and reboot */
             uadmin(A_REBOOT, 0, 0);
@@ -318,12 +291,12 @@ int main(int argc, char *argv[])
         endmntent(fp);
     } else {
         if(argc != 2) {
-            fprintf(stderr, "syntax: fsck[-a] [devfile][:offset]\n");
+            fputs("syntax: fsck[-a] [devfile][:offset]\n", stderr);
             return 16;
         }
         perform_fsck(argv[1], 0);
     }
-    printf("Done.\n");
+    puts("Done.");
     exit(error);
 }
 
@@ -538,7 +511,7 @@ static void pass3(void)
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
                         if (newno == 0) {
-                            printf("Sorry... No more free blocks.\n");
+                            puts("Sorry... No more free blocks.");
                             error |= 4;
                         } else {
                             dwrite(newno, daread(swizzle16(ino.i_addr[b])));
@@ -563,7 +536,7 @@ static void pass3(void)
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
                         if (newno == 0) {
-                            printf("Sorry... No more free blocks.\n");
+                            puts("Sorry... No more free blocks.");
                             error |= 4;
                         } else {
                             dwrite(newno, daread(b));
@@ -799,7 +772,7 @@ static void mkentry(uint16_t inum)
             return;
         }
     }
-    printf("Sorry... No empty slots in root directory.\n");
+    puts("Sorry... No empty slots in root directory.");
     error |= 4;
 }
 
@@ -915,7 +888,7 @@ static blkno_t blk_alloc0(struct filesys *filesys)
     filesys->s_tfree = swizzle16(swizzle16(filesys->s_tfree) - 1);
 
     if (newno < swizzle16(filesys->s_isize) || newno >= swizzle16(filesys->s_fsize)) {
-        printf("Free list is corrupt.  Did you rebuild it?\n");
+        puts("Free list is corrupt.  Did you rebuild it?");
         return (0);
     }
     dwrite((blkno_t) 1, (char *) filesys);
