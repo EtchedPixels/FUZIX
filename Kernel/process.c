@@ -778,7 +778,7 @@ void acctexit(ptptr p)
 static int signal_parent(ptptr c)
 {
 	ptptr p = c->p_pptr;
-        if (p->p_sig[1].s_ignored & (1UL << SIGCHLD)) {
+        if (p->p_sig[1].s_ignored & (1UL << (SIGCHLD - 16))) {
 		/* POSIX.1 says that SIG_IGN for SIGCHLD means don't go
 		   zombie, just clean up as we go */
 		udata.u_ptab->p_status = P_EMPTY;
