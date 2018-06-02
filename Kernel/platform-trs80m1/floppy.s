@@ -18,7 +18,8 @@
 	.globl _fd_selected
 	.globl _fd_tab
 	.globl _fd_cmd
-	.globl map_kernel, map_process_always
+	.globl map_kernel_restore, map_process_always
+	.globl go_fast, go_slow
 
 ;
 ;	The 1791 is memory mapped
@@ -287,6 +288,7 @@ _fd_reset:
 	pop	hl
 	push	hl
 	push	de
+	call	go_slow
 	ld	a, #1
 	ld	(FDCSEC), a
 	xor	a
@@ -296,6 +298,7 @@ _fd_reset:
 	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
 	call	waitcmd
+	call	go_fast
 	cp	#0xff
 	ret	z
 	and	#0x99		; Error bit from the reset
@@ -309,24 +312,26 @@ _fd_reset:
 ;	running.
 ;
 _fd_operation:
-	ld	a, (_fd_map)
-	or	a
-	call	nz, map_process_always
 	pop	bc		; return address
 	pop	de		; drive track ptr
 	push	de
 	push	bc
 	push	ix
+	ld	a, (_fd_map)
+	or	a
+	push	af
+	call	nz, map_process_always
+	call	go_slow
 	ld	ix, #_fd_cmd
 	ld	c, DATA(ix)
 	ld	b, DATA+1(ix)
 	call	fdsetup		; Set up for a command
 	ld	h, #0
+	call	go_fast
+	pop	af
 	pop	ix
-	ld	a, (_fd_map)
-	or	a
 	ret	z
-	jp	map_kernel
+	jp	map_kernel_restore
 ;
 ;	Delay loops
 ;
@@ -390,6 +395,7 @@ _fd_motor_on:
 	ret
 
 must_config:
+	call	go_slow
 	ld	a,c		; Save the new configuration
 	ld	(last_drive),a
 
@@ -415,6 +421,7 @@ must_config:
 	jr	z, motor_running
 
 	call	waitdisk	; wait 500ms or so for spin up
+	call	go_fast
 motor_running:
 	ld	(hl),d
 	call	wait45		; Wait 45ms for the head to load
