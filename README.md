@@ -93,34 +93,3 @@ friends, while UMZIX has a neat unified "make anything" function.
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
 
-## Platforms
-
-* Amstrad NC100/NC200 - real hardware sanity check
-* Amstrad PCW8256 - fork and memory management needs some fixing up
-* Atari 520ST - 68000 core code build test only at this point
-* Dragon Nx32 - Dragon with Tormod's memory expansion card (SPInx)
-* Epson PX4/4Plus - WIP port to a very early Z80 laptop
-* Memotech MTX512 - boots to userspace in emulation, should run on real hardware
-* MSP430FR5969 - decent functionality; see Documentation/MSP430FR5969.md
-* MSX - basic functionality
-* Multicomp09 - decent functionality. This is an FPGA 6809 system extended from the design by Grant Searle.
-* N8VEM-MarkIV - Supports the on-board RTC, RS232, RS422, IDE and SD interfaces, on the
-ECB expansion bus only the PropIO V2 serial port is supported at this time.
-* P112 - Supports the floppy disk controller, ESCC serial ports, and optional G-IDE interface.
-* SocZ80 - 128MHz extreme Z80 FPGA machine. Boots to shell, drivers need work
-* Tandy COCO2 - minimal platform (64K machine needed, not enough room to run bigger apps)
-* Tandy COCO2 - with COCO-SDC or Cloud9 IDE/Cartridge
-* Tandy COCO3 - boots to userspace and supports drivewire
-* TGL6502 - Test 6502ish environment
-* TRS80 - boots to userspace in emulation, swapping, floppy and hard disc done
-* V65 - 6502 emulation/debug platform. Being used for bring up
-* V65C816 - 65C816 emulation/debug platform.
-* V68 - 68K emulation/debug platform. Being used for bring up
-* Z80Pack - used as a dev and test environment for both large swapping
-	multiprocess and for small single tasking
-* Zeta v2 - initial port running to user space
-* ZX Spectrum 128K - can boot to shell but needs swap debugging to get further
-
-Various other platforms are partly filled out to sanity check assumptions
-and start making progress on them. The main need there is now to tackle all
-the billion different ways of interfacing the floppy controllers.

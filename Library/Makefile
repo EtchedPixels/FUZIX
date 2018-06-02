@@ -9,7 +9,7 @@ all: tools/syscall tools/binman tools/fcc tools/syscall_6502 \
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
-	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809
+	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
 
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
