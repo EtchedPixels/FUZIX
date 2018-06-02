@@ -219,10 +219,12 @@ _dofork:
 	; FIXME: we should no longer need interrupts off for most of a
 	; fork() call.
 	;
+	pop bc	; bank
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
         push de
+	push bc
 
         ld (fork_proc_ptr), hl
 
