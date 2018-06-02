@@ -104,35 +104,38 @@ static void cursor_fix(void)
 
 static void charout(unsigned char c)
 {
-	if (c == 7) {
-		do_beep();
-		return;
-	}
-	if (c == 8) {
-		cursorx--;
-		goto fix;
-	}
-	if (c == 9) {
-		do {
-			charout(' ');
-		} while (cursorx&7);
-		goto fix;
-	}
-	if (c == 10) {
-		cursory++;
-		goto fix;
-	}
-	if (c == 13) {
-		cursorx = 0;
-		return;
-	}
-	if (c == 0x1b) {
-		vtmode = 1;
-		return;
+	/* Fast path printable symbols */
+	if (c <= 0x1b) {
+		if (c == 7) {
+			do_beep();
+			return;
+		}
+		if (c == 8) {
+			cursorx--;
+			goto fix;
+		}
+		if (c == 9) {
+			do {
+				charout(' ');
+			} while (cursorx&7);
+			goto fix;
+		}
+		if (c == 10) {
+			cursory++;
+			goto fix;
+		}
+		if (c == 13) {
+			cursorx = 0;
+			return;
+		}
+		if (c == 0x1b) {
+			vtmode = 1;
+			return;
+		}
 	}
 	plot_char(cursory, cursorx, c);
 	cursorx++;
-      fix:
+fix:
 	cursor_fix();
 }
 
