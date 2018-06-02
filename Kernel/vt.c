@@ -6,7 +6,6 @@
 
 
 #include <devtty.h>
-
 /*
  *	Mini vt52 terminal emulation
  *
@@ -116,7 +115,7 @@ static void charout(unsigned char c)
 	if (c == 9) {
 		do {
 			charout(' ');
-		} while (cursorx%8);
+		} while (cursorx&7);
 		goto fix;
 	}
 	if (c == 10) {
