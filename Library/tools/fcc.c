@@ -217,8 +217,15 @@ static void set_platform(const char *p)
     oom();
   sprintf(n, "-%s", p);
   platform = n;
-  if (strcmp(platform, "-zx128") == 0)
+  /* TRS80m1 don't need special libraries just a new base address */
+  if (strcmp(platform, "-trs80m1") == 0) {
+    platform="";
     progbase = 0x8000;
+  }
+  if (strcmp(platform, "-zx128") == 0) {
+  /* ZX128 does because it can't use RST for syscalls */
+    progbase = 0x8000;
+  }
 }
 
 static int debug;
