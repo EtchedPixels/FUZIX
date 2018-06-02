@@ -64,7 +64,6 @@ bufend:
 
 _platform_monitor:
 	    di
-	    halt
 	    jr _platform_monitor
 
 platform_interrupt_all:
