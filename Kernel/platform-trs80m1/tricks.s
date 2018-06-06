@@ -12,10 +12,8 @@
 ;	This is related so we will keep it here. Copy the process memory
 ;	for a fork. a is the page base of the parent, c of the child
 ;
-;	Assumption - fits into a fixed number of whole 256 byte blocks
-;
 ;	We violate all the rules of good programming for speed here. It
-;	really matters on a 1.7Mhz processor !
+;	really matters on a 1.77Mhz processor !
 ;
 ;	Interrupts are off so I guess the stack pointer is spare (Watch
 ;	out for NMI if we do model 3 this way!)
@@ -71,7 +69,7 @@ sp_patch:
 	ld sp,#0
 	jp copyloop
 ;
-;	This outer loop only runs 7 times so isn't quite so performance
+;	This outer loop only runs 8 times so isn't quite so performance
 ;	critical
 ;
 setdone:
