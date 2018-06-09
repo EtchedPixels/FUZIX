@@ -83,6 +83,17 @@ _platform_reboot:
 
 
 init_early:
+	    ld a,(4)
+	    cp #0x30
+	    jr z, not_m3
+	    ld a,#1
+	    ld (_trs80_model),a
+	    ld a,#0x74
+	    out (0xE0),a	; Mask iobus, cassette
+	    xor a
+	    out (0xE4),a	; and NMI sources
+	    jr not_vg
+not_m3:
 	    ; Detect machine type (Model 1 or LNW80 or VideoGenie ?)
 	    ld a,#8
 	    out (0xFE),a	; turn off ROM on the LNW80
@@ -96,6 +107,7 @@ init_early:
 	    out (0xFE),a	; ROM back on, normal video mode for now
 	    ld a,#2		; LWN80
 	    ld (_trs80_model), a
+	    jr not_vg
 not_lnw:
 	    ld hl,(0x18F5)
 	    ld de,#0x4E53	; 'SN' for VG, 'L3' for TRS80 Model 1
