@@ -218,7 +218,7 @@ fdio_inbyte:
 	jr	fdxferdone
 
 ;
-;	Read from the disk - HL points to the target buffer
+;	Write to the disk - HL points to the target buffer
 ;
 fdio_out:
 	set	6,d			; halt mode bit
