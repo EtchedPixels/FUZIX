@@ -35,22 +35,40 @@ uint8_t sdcc_bug_2753(uint8_t v) __z88dk_fastcall
   return v;
 }
 
-/* We assign these to dummy to deal with what I think is an SDCC bug */
+__sfr __at 0xE0 irqstat3;
+__sfr __at 0xEC irqack3;
+
+/* We assign these to dummy to deal with an sdcc bug (should be fixed in next
+   SDCC) */
 void platform_interrupt(void)
 {
-  uint8_t irq = *((volatile uint8_t *)0x37E0);
   uint8_t dummy;
+  if (trs_model != TRS80_MODEL3) {
+    uint8_t irq = *((volatile uint8_t *)0x37E0);
 
-  tty_interrupt();
-  kbd_interrupt();
+    tty_interrupt();
+    kbd_interrupt();
 
-  /* FIXME: do we care about floppy interrupts */
+    /* FIXME: do we care about floppy interrupts */
 
-  if (irq & 0x40)
-    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37EC));
-  if (irq & 0x80) {	/* FIXME??? */
-    timer_interrupt();
-    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37E0));	/* Ack the timer */
+    if (irq & 0x40)
+      dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37EC));
+    if (irq & 0x80) {	/* FIXME??? */
+      timer_interrupt();
+      dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37E0));	/* Ack the timer */
+    }
+  } else {
+    /* The Model III IRQ handling has to be different... */
+    uint8_t irq = ~irqstat3;
+    /* Serial port ? */
+    if (irq & 0x70)
+      tty_interrupt();
+    /* We don't handle IOBUS */
+    if (irq & 0x04)
+      kbd_interrupt();
+      timer_interrupt();
+      dummy = irqack3;
+    }
   }
 }
 
