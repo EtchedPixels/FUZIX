@@ -19,16 +19,17 @@
    
    One of the weirder disk formats emulation folk use */
 
-/* We should do skewing, but that makes writing the image fun, so it's
-   optional */
-
+/* FIXME: need a skew table for PC style media */
 static const int skew[2][18] = {
 	{
-	 0x06, 0x0C, 0x01, 0x07, 0x0D, 0x02, 0x08, 0x0E,
-	 0x03, 0x09, 0x0F, 0x04, 0x0A, 0x10, 0x05, 0x0b,
-	 0x11, 0x00},
+		0x01, 0x08, 0x05, 0x02, 0x09, 0x6, 0x03, 0x00,
+		0x07, 0x04
+	},
 	{
-	 0x01, 0x05, 0x09, 0x02, 0x06, 0x0A, 0x03, 0x00, 0x07, 0x04}
+		0x06, 0x0C, 0x01, 0x07, 0x0D, 0x02, 0x08, 0x0E,
+		0x03, 0x09, 0x0F, 0x04, 0x0A, 0x10, 0x05, 0x0b,
+		0x11, 0x00
+	},
 };
 
 static int skewed;
@@ -50,7 +51,8 @@ static void jvc_writeheaders(uint8_t * ptr)
 		for (j = 0; j < nside; j++) {
 			for (k = 0; k < nsec; k++) {
 				*ptr++ = i;
-				*ptr++ = skewed == 0 ? k : skew[ddens][k];
+				/* DD media start at sector 1 like sane computers */
+				*ptr++ = ddens + (skewed == 0 ? k: skew[ddens][k]);
 				*ptr++ = (0x80 * ddens) | (0x10 * j);
 			}
 		}
@@ -87,6 +89,9 @@ static void jvc_writesectors(void)
 	for (i = 0; i < ntrack; i++) {
 		for (j = 0; j < nside; j++) {
 			for (k = 0; k < nsec; k++) {
+				/* 0 relative sector */
+				int s = skewed == 0 ? k: skew[ddens][k];
+				lseek(infd, 256 * (s + nsec * j + (nsec * nside) * i), 0);
 				/* 0 itself is fine - we just blank the rest */
 				if (data && read(infd, buf, 256) < 0) {
 					perror("read sectors");
@@ -106,7 +111,10 @@ static void jvc_pc_writesectors(void)
 	int i, j, k;
 	for (i = 0; i < ntrack; i++) {
 		for (j = 0; j < nside; j++) {
-			for (k = 1; k <= nsec; k++) {
+			for (k = 0; k < nsec; k++) {
+				/* 0 relative sector */
+				int s = skewed == 0 ? k: skew[ddens][k];
+				lseek(infd, 512 * (s + nsec * j + (nsec * nside) * k), 0);
 				/* 0 itself is fine - we just blank the rest */
 				if (data && read(infd, buf, 512) < 0) {
 					perror("read sectors");
@@ -163,8 +171,8 @@ void main(int argc, char *argv[])
 
 	if ((*p != 's' && *p != 'd') || p[1] != 'd')
 		usage();
-	if (*p == 's')
-		ddens = 0;
+	if (*p == 'd')
+		ddens = 1;
 	p += 2;
 	while (isdigit(*p)) {
 		ntrack = ntrack * 10 + (*p - '0');
@@ -184,12 +192,6 @@ void main(int argc, char *argv[])
 			exit(1);
 		}
 		data = 1;
-		if (skewed) {
-			fprintf(stderr,
-				"%s: skewing and data not supported together.\n",
-				argv[0]);
-			exit(1);
-		}
 	}
 	outfd = open(argv[optind], O_WRONLY | O_TRUNC | O_CREAT, 0666);
 	if (outfd == -1) {
