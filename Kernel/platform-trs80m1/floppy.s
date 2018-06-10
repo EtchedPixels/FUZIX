@@ -6,9 +6,7 @@
 ;	FIXME: tandy doubler
 ;	FIXME: correct step rates (per drive ?)
 ;	FIXME: precompensation ??
-;	FIXME: support speed setting (turbo cards) out 254,0 / 1 if present
-;		(but how to tell ??)
-;	FIXME: do we want to support switching between M1 and M3 ?
+;	FIXME: 512 byte sector support
 ;
 	.globl _fd_reset
 	.globl _fd_operation
@@ -449,4 +447,4 @@ _fd_selected:
 _fd_tab:
 	.db	0xFF, 0xFF, 0xFF, 0xFF
 _fd_cmd:
-	.ds	6
+	.ds	7
