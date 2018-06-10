@@ -10,6 +10,8 @@
 #include <vt.h>
 #include <devtty.h>
 #include <devgfx.h>
+#include <devfd3.h>
+#include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -35,3 +37,11 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+void floppy_setup(void)
+{
+  if (trs80_model == TRS80_MODEL3) {
+    dev_tab[1].dev_open = fd3_open;
+    dev_tab[1].dev_read = fd3_read;
+    dev_tab[1].dev_write = fd3_write;
+  }
+}

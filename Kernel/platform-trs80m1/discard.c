@@ -10,6 +10,7 @@ void device_init(void)
   /* Time of day clock */
   inittod();
 #endif
+  floppy_setup();
   hd_probe();
 }
 

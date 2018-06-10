@@ -47,6 +47,7 @@
             .globl unix_syscall_entry
             .globl outcharhex
 	    .globl null_handler
+	    .globl fd_nmi_handler
 
 
             .include "kernel.def"
@@ -85,7 +86,7 @@ _platform_reboot:
 init_early:
 	    ld a,(4)
 	    cp #0x30
-	    jr z, not_m3
+	    jr nz, not_m3
 	    ld a,#1
 	    ld (_trs80_model),a
 	    ld a,#0x74
@@ -161,6 +162,9 @@ _rom_vectors:
             ld hl, #unix_syscall_entry
             ld (0x4010), hl
 
+	    ; Model III only but just writing it does no harm
+	    ld hl,#fd_nmi_handler
+	    ld (0x4049), hl
 	    jp map_kernel
 	    
 ; outchar: Wait for UART TX idle, then print the char in A
