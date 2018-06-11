@@ -1,35 +1,22 @@
+dist: trusty
+sudo: required
+
 matrix:
     include:
-        - env: PLATFORM=6502test
-        - env: PLATFORM=msp430fr5969
-        - env: PLATFORM=dragon-nx32
-        - env: PLATFORM=trs80
-before_install:
-    - sudo add-apt-repository ppa:david.given/ppa -y
-    - sudo add-apt-repository ppa:tormodvolden/m6809 -y
-    - sudo apt-get update -q
-    - sudo apt-get install libmpc2 libc6-i386 lib32stdc++6 lib32z1 libmpc2:i386
-    - export PATH=$PATH:/usr/local/bin:$HOME/msp430/bin
-    - |
-        if [ $PLATFORM = "6502test" ]; then
-            sudo apt-get install cc65
-        fi
-    - |
-        if [ $PLATFORM = "trs80" ]; then
-            sudo apt-get install sdcc
-        fi
-    - |
-        if [ $PLATFORM = "msp430fr5969" ]; then
-            wget http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/exports/msp430-gcc-linux-installer-3.5.0.0.run -O /tmp/msp430.installer
-            chmod a+rx /tmp/msp430.installer
-            /tmp/msp430.installer --mode unattended --prefix $HOME/msp430
-            rm /tmp/msp430.installer
-        fi
-    - |
-        if [ $PLATFORM = "dragon-nx32" ]; then
-            sudo apt-get install lwtools gcc6809
-        fi
-language: c
-script:
-    - make PLATFORM=$PLATFORM -j4
+        - env: TARGET=rc2014
+        - env: TARGET=trs80
+        - env: TARGET=z80pack
+        - env: TARGET=dragon-nx32
 
+before_install:
+    - sudo add-apt-repository -y ppa:p-pisati/fuzix
+    - sudo apt-get update -q
+    - sudo apt-get install -y byacc automake			# FUZIX build deps
+    - sudo apt-get install -y sdcc						# z80pack build deps
+    - sudo apt-get install -y lwtools gcc6809			# dragon-nx32 build deps
+    - sudo update-alternatives --set yacc /usr/bin/byacc
+
+language: c
+
+script:
+    - FUZIX_CCOPTS=-O0 make TARGET=$TARGET -j2
