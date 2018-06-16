@@ -113,7 +113,8 @@ SRCS  = \
 	which.c \
 	who.c \
 	write.c \
-	xargs.c
+	xargs.c \
+	xxd.c
 
 SRCTC = tget.c \
         tchelp.c \

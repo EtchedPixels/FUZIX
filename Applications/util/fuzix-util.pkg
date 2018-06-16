@@ -112,5 +112,7 @@ f 0755 /bin/who         who
 f 0755 /bin/whoami      whoami
 f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs
+f 0755 /bin/xxd         xxd
 f 0755 /bin/yes         yes
 
+f 0644 /usr/man/man1/xxd.1   xxd.1
