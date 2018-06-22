@@ -6,7 +6,7 @@ LINKER = sdldz80
 #PLATFORM = -zx128
 PLATFORM =
 export PLATFORM
-CC_OPT = -O2 -c
+CC_OPT = $(FUZIX_CCOPTS) -c
 CC_NOOPT = -c
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
