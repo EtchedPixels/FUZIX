@@ -1,4 +1,4 @@
-FCC = ../../../../Library/tools/fcc -m $(USERCPU) -O2 -fsigned-char
+FCC = ../../../../Library/tools/fcc -m $(USERCPU) $(FUZIX_CCOPTS) -fsigned-char
 
 .SUFFIXES: .c .rel
 
