@@ -44,6 +44,12 @@ PATH := /opt/fcc/bin:$(PATH)
 # (eg for 65c816 with 6502 user)
 export TARGET CPU USERCPU PATH
 
+# FUZIX_CCOPTS is the global CC optimization level
+ifeq ($(FUZIX_CCOPTS),)
+	FUZIX_CCOPTS = -O2
+endif
+export FUZIX_CCOPTS
+
 all: stand ltools libs apps kernel
 
 
