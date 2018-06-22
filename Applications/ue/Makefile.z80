@@ -2,7 +2,7 @@
 
 CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
 CFLAGS = -c
-COPT = -O2
+COPT = $(FUZIX_CCOPTS)
 
 OBJS = ue.rel
 LIBS = term-ansi.c term-fuzix.c term.c
