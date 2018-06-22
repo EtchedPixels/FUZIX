@@ -1,5 +1,5 @@
 FCC = ../../../Library/tools/fcc -m$(USERCPU)
-FCCOPTS = -O2
+FCCOPTS = $(FUZIX_CCOPTS)
 
 .SUFFIXES: .c .rel
 
