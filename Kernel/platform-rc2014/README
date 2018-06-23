@@ -1,0 +1,48 @@
+--- README for RC2014 ---
+This is Fuzix for the RC2014
+
+Imported into the current tree from Scott Baker's git tree and adjusted to
+build against a current kernel. Don't blame Scott for any bugs!
+
+Modified for RC2014 with FlashROM/Ram board by Scott Baker <smbaker@gmail.com>.
+
+Heavily based on prior work by Will Sowerbutts <will@sowerbutts.com>, 
+Sergey Kiselev <skiselev@gmail.com>, and others.
+
+Supported Hardware
+
+  * The Flash ROM / RAM board is required. This board is basically a clone of
+    the memory management subsystem of the Zeta V2. It replaces the RC2014's
+    default ROM and RAM boards.
+
+  * A serial IO board is required. This can either be an SIO/2 board or a 
+    68B50 ACIA board. The 68B50 ACIA is the one that comes standard with the
+    RC2014 kit.
+
+  * VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD Terminal
+    will be supported. This will display all output to the serial port on the
+    VFD. If it's defined and you don't have a VFD, then it probably won't hurt
+    anything, other than some useless io to ports 0-3. 
+
+Notes
+
+  * This platform is based heavily on the Zeta V2 platform, so consult the
+    Zeta V2 readme for more instructions. This instructions are intentionally
+    minimal, focusing on items specific to the RC2014 configuration.
+
+Configuration
+
+  * Make sure to edit config.h and kernel.def to specify whether you are
+    using SIO/2 or ACIA. 
+
+  * The Makefile assumes a file system image exists in ../rc2014_root_fs. 
+    See the Zeta V2 instructions for building a filesystem.
+
+Things that don't work
+
+  * The RC2014 doesn't come with a clock. I added fakeclock.c, which is a 
+    clock that always returns 0. 
+
+  * I couldn't get the WD37C65 floppy to work.
+
+  * Flow control isn't yet enabled for the serial port.
