@@ -91,8 +91,8 @@ init_early:
 	    ld (_trs80_model),a
 	    ld a,#0x74
 	    out (0xE0),a	; Mask iobus, cassette
-	    xor a
-	    out (0xE4),a	; and NMI sources
+	    ld a,#0x40
+	    out (0xE4),a	; and NMI sources except motor off
 	    jr not_vg
 not_m3:
 	    ; Detect machine type (Model 1 or LNW80 or VideoGenie ?)
