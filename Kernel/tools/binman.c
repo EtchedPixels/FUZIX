@@ -121,8 +121,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* linker will allow us to overlap _DISCARD (which may grow)
-	   with _COMMONMEM. */
-	if(s__DISCARD && s__DISCARD+l__DISCARD > s__COMMONMEM){
+	   with _COMMONMEM. Don't however worry if DISCARD is above common
+	   as can happen in some odder layouts */
+	if(s__DISCARD && s__DISCARD+l__DISCARD > s__COMMONMEM &&
+		s__DISCARD < s__COMMONMEM + l__COMMONMEM) {
 		fprintf(stderr, "Move _DISCARD down by at least %d bytes\n",
 			s__DISCARD + l__DISCARD - s__COMMONMEM);
 		exit(1);
