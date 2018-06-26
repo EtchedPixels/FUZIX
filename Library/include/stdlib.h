@@ -89,10 +89,7 @@ extern void qsort(void *__base, size_t __num, size_t __size, cmp_func_t __cmp);
 
 #define mb_len(a,b)	strnlen(a,b)
 
-extern int opterr;
-extern int optind;
-extern char *optarg;
-extern int getopt(int __argc, char *__argv[], char *__optstring);
+#include <getopt.h>
 
 extern char *getpass(char *__prompt);
 
