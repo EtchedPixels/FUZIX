@@ -55,7 +55,7 @@ image:
 #	cat bootrom.bin ../fuzix.bin | dd conv=sync bs=65536 count=1 of=fuzix.rom
 	cat bootrom.bin ../fuzix.bin > tmp.rom
 	cat tmp.rom | dd conv=sync bs=65536 count=1 of=fuzix.rom
-	cat fuzix.rom ../rc2014_root_fs > fuzix_rc2014_sio_bootfs.rom
+	-cat fuzix.rom ../rc2014_root_fs > fuzix_rc2014_sio_bootfs.rom
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
 	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
 
