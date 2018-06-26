@@ -18,6 +18,7 @@
 
 int   opterr = 1;		/* error => print message */
 int   optind = 1;		/* next argv[] index */
+int   optopt;
 const char *optarg = NULL;	/* option parameter if any */
 
 static int Err(const char *name, const char *mess, int c)
@@ -30,6 +31,7 @@ static int Err(const char *name, const char *mess, int c)
 		     name, mess, c
 	  );
    }
+   optopt = c;
    return '?';			/* erroneous-option marker */
 }
 
