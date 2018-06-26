@@ -3,7 +3,7 @@
 PLATFORM = 6809
 CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
 CFLAGS = -c
-COPT = -O2
+COPT = $(FUZIX_CCOPTS)
 
 OBJS =	as.rel assemble.rel errors.rel express.rel \
 	genbin.rel genlist.rel genobj.rel gensym.rel \

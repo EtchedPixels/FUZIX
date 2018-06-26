@@ -2,7 +2,7 @@
 
 CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
 CFLAGS = -DTINY
-COPT = -O2
+COPT = $(FUZIX_CCOPTS)
 
 OBJS = initials.rel data.rel error.rel expr.rel function.rel gen.rel io.rel \
        lex.rel main.rel outstack.rel preproc.rel primary.rel stmt.rel \

@@ -1,4 +1,4 @@
-FCC = ../../Library/tools/fcc -O2 -m$(USERCPU)
+FCC = ../../Library/tools/fcc $(FUZIX_CCOPTS) -m$(USERCPU)
 ASM_OPT = -l -o -s
 LINKER_OPT = -mz80 --nostdlib --no-std-crt0 --code-loc $(PROGLOAD) --data-loc  0
 BINMAN = ../../Library/tools/binman

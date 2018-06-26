@@ -1,4 +1,4 @@
-FCC = ../../../../Library/tools/fcc -m$(USERCPU) -O2 -DTARGET_Z80
+FCC = ../../../../Library/tools/fcc -m$(USERCPU) $(FUZIX_CCOPTS) -DTARGET_Z80
 
 .SUFFIXES: .c .rel
 
