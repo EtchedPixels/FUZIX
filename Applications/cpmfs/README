@@ -1,0 +1,20 @@
+Title:		CPM
+
+Author:		Helge Skrivervik
+		bergensveien 8, N - Oslo 9, Norway
+		(obsoleted)
+
+Net address:	helge@berkeley
+		helge@nta-vax (norway)
+		now (1994) helge@mellvik.no
+
+Description:
+
+Cpm lets UNIX users read and write standard cp/m 8" floppy disks and
+provides a cp/m like user interface for manipulating cp/m files.
+
+
+Somewhat cleaned up and ANSIfied by Alan Cox for Fuzix
+
+This is WIP for 16bit int, a lot of type clean up is needed to begin with so
+use with care and don't expect it to work on larger media types.
