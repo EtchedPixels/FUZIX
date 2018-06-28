@@ -7,6 +7,7 @@ matrix:
         - env: TARGET=trs80
         - env: TARGET=z80pack
         - env: TARGET=dragon-nx32
+        - env: TARGET=v65c816
 
 before_install:
     - sudo add-apt-repository -y ppa:p-pisati/fuzix
