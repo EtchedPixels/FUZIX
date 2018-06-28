@@ -373,7 +373,8 @@ void handleTimer(void)
 			// find the first alien from the bottom
 			for (y = aliens.emptyBottom - 1; y >= 0; y--) {
 				if (aliens.table[(aliens.cols * y) + x] > ALIEN_EMPTY) {
-					if (1 == (int) (50.0 * rand() / (RAND_MAX + 1.0))) {
+					/* Might be fun to make this grow by level.. */
+					if (1 == rand()%50) {
 						addBomb(aliens.x + (x * ALIEN_WIDTH) + (ALIEN_WIDTH / 2), aliens.y + (y * ALIEN_HEIGHT) + ALIEN_HEIGHT - 1);
 					}
 					break;
@@ -399,7 +400,8 @@ void handleTimer(void)
 	// handle alien movements
 	if (--aliens.paintWait <= 0) {
 		// time to repaint one row of aliens (speeds up as you shoot aliens)
-		aliens.paintWait = (int) ((double) PAINT_WAIT * ((double) aliens.count / (double) (aliens.cols * aliens.rows)));;
+//		aliens.paintWait = (int) ((double) PAINT_WAIT * ((double) aliens.count / (double) (aliens.cols * aliens.rows)));;
+		aliens.paintWait = (PAINT_WAIT * aliens.count) / (aliens.cols * aliens.rows);
 		aliens.paintRow--;
 		paintAlienRow(aliens.paintRow, 0);
 		refresh();
