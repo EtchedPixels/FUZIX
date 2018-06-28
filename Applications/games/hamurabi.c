@@ -249,11 +249,11 @@ uint16_t avg_starved(const city_st *cty) {
 
 uint16_t input(void);
 
-void retire();
-void storm_out();
-void ejected();
+void retire(void);
+void storm_out(void);
+void ejected(void);
 void game_end(const city_st *cty);
-void nero_end();
+void nero_end(void);
 void not_so_bad_end(const city_st *cty);
 
 uint16_t input(void) {
@@ -280,18 +280,18 @@ uint16_t input(void) {
 
    Someday I dream of being in curses.
  */
-void retire() {
+void retire(void) {
   printf("So long for now.\n");
   exit(EXIT_SUCCESS);
 }
 
-void storm_out() {
+void storm_out(void) {
   printf("Hamurabi: I cannot do what you wish.\n");
   printf("Get yourself another steward!!!!!\n");
   retire();
 }
 
-void ejected() {
+void ejected(void) {
   printf("Due to this extreme mismanagement you have not only\n");
   printf("been impeached and thrown out of office but you have\n");
   printf("also been declared 'National Fink' !!\n");
@@ -312,7 +312,7 @@ void game_end(const city_st *cty) {
   if ((avg_starved(cty)>3)  || (l<10)) not_so_bad_end(cty);
 }
 
-void nero_end() {
+void nero_end(void) {
   printf("Your heavy handed performance smacks of Nero and Ivan IV.\n");
   printf("The people (remaining) find you an unpleasant ruler, and,\n");
   printf("frankly, hate your guts!\n");
