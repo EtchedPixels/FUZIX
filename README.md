@@ -1,3 +1,5 @@
+[![Build Status][travis-image]][travis-url]
+
 **FuzixOS**: Because Small Is Beautiful
 
 This is the initial public tree for the FuzixOS project. It is not yet useful although you can build and boot it and run
@@ -93,3 +95,5 @@ friends, while UMZIX has a neat unified "make anything" function.
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
 
+[travis-image]: https://travis-ci.org/EtchedPixels/FUZIX.png?branch=master
+[travis-url]: https://travis-ci.org/EtchedPixels/FUZIX
