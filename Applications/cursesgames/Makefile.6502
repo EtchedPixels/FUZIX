@@ -17,7 +17,7 @@ APPS = $(OBJS:.o=)
 all: $(APPS) size.report
 
 $(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ curses.lib termcap.lib c6502.lib -m $@.map
 
 size.report: $(APPS) $(APPSNS)
 	ls -l $^ > $@
