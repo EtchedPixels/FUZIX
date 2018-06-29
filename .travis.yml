@@ -13,6 +13,7 @@ before_install:
     - sudo add-apt-repository -y ppa:p-pisati/fuzix
     - sudo apt-get update -q
     - sudo apt-get install -y byacc automake			# FUZIX build deps
+    - sudo apt-get install -y cc65						# 65xx build deps
     - sudo apt-get install -y sdcc						# z80pack build deps
     - sudo apt-get install -y lwtools gcc6809			# dragon-nx32 build deps
     - sudo update-alternatives --set yacc /usr/bin/byacc
