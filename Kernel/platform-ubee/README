@@ -105,12 +105,12 @@ Done so far:
 - Support RAM font setting				DONE
 - Figure out how I broke the 6545 cursor		DONE
 - Debugging floppy driver - need to add direct I/O to user support	DONE
+- Swap							DONE
+- Graphics not just vt interfaces			DONE
 
 In Progress
-- Swap
-- Graphics not just vt interfaces
-- RAM based fonts
-- Premium models hang somewhere as if there's a memory banking bug
+- RAM based fonts					DONE (needs testing)
+- Premium models sometimes hang somewhere as if there's a memory banking bug
   (seems to be a size related Heisenbug)
 
 To Do:
