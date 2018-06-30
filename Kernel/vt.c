@@ -440,16 +440,14 @@ void vtattr_notify(void)
 {
 }
 
-/* FIXME: these should use memmove */
-
 void scroll_up(void)
 {
-	memcpy(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
+	memmove(VT_BASE, VT_BASE + VT_WIDTH, VT_WIDTH * VT_BOTTOM);
 }
 
 void scroll_down(void)
 {
-	memcpy(VT_BASE + VT_WIDTH, VT_BASE, VT_WIDTH * VT_BOTTOM);
+	memmove(VT_BASE + VT_WIDTH, VT_BASE, VT_WIDTH * VT_BOTTOM);
 }
 
 #endif
