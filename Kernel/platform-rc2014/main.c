@@ -24,6 +24,8 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
+	/* FIXME: for the non CTC case we should poll the DS1302 here and
+	   fake up appopriate timer events */
 	/* Let's go to sleep while we wait for something to interrupt us;
 	 * Makes the HALT LED go yellow, which amuses me greatly. */
 	__asm
