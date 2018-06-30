@@ -521,7 +521,8 @@ preemption:
 	; hence the need to reti
 
 	;
-intret2:call map_kernel
+intret2:di
+	call map_kernel
 	;
 	; Semantically we are doing a null syscall for pre-empt. We need
 	; to record ourselves as in a syscall so we can't be recursively

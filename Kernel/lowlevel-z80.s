@@ -149,7 +149,7 @@ unix_syscall_entry:
         push af
         ex af, af'
         exx
-        push bc		; FIXME we don't I tihnk need to save bc/de/hl
+        push bc		; FIXME we don't I think need to save bc/de/hl
         push de		; as they are compiler caller save
         push hl
         exx
@@ -531,7 +531,7 @@ preemption:
 				; and the controllers have seen the
 				; reti M1 cycle. However we still
 				; have DI set
-
+	di			; see undocumented Z80 notes on RETI
 	;
 	; We are now on the syscall stack (which is fine, we don't
 	; pre-empt mid syscall so therefore it is free.  We will now
