@@ -24,7 +24,7 @@ sizes: $(APPS)
 	ls -l $(APPS) >size.report
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f $(OBJS) *.o $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core
