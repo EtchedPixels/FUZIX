@@ -32,6 +32,7 @@ void z180_timer_interrupt(void)
     a = TIME_TMDR0L;
     a = TIME_TCR;
 
+    /* FIXME: we are calling this twice the rate it expects */
 #ifdef CONFIG_P112_FLOPPY
     fd_tick();
 #endif
