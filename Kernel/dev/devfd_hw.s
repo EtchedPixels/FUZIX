@@ -16,6 +16,7 @@ CPU_Z180	.equ	Z80_TYPE-2
         .globl map_kernel
         .globl map_process_always
         .globl _devfd_dtbl
+	.globl _platform_idle
 
         ; exported sybols
         .globl _devfd_init
@@ -98,6 +99,7 @@ _devfd_init:
         POP     BC              ;  minor (in C)
         PUSH    BC              ;   Keep on Stack for Exit
         PUSH    HL
+	PUSH	IY		; Must be saved for the C caller
         LD      A,C
         LD      (drive),A       ; Save Desired Device
         CP      #4              ; Legal?
@@ -122,9 +124,11 @@ indel2: DJNZ    indel2          ;    (settle, B already =0)
         JR      NZ,NoDrv        ; ..Error if it failed
         LD      oFLG(IY), #1    ; Mark drive as active
         LD      HL,#0           ; Load Ok Status
+	POP	IY
         RET
 
 NoDrv:  LD      HL,#0xFFFF      ; Set Error Status
+	POP	IY
         RET
 
 ;-------------------------------------------------------------
@@ -148,6 +152,9 @@ _devfd_write:
         POP     BC              ;  minor (->C)
         PUSH    BC              ;   Keep on Stack for Exit
         PUSH    HL
+
+	PUSH	IY
+
         LD      A,C
         LD      (drive),A       ; Save Desired Device
 
@@ -196,6 +203,7 @@ Rwf2:   LD      A,(rwRtry)      ; Get retry count
         OR      #0xFF           ; Else show Error
 FhdrX:  LD      L,A
         LD      H,#0
+	POP	IY
         RET                     ;   and Exit
 
 ;-------------------------------------------------------------
@@ -471,7 +479,16 @@ MtrSet: ; now B contains the relevant motor bit we need to be set in the FDC DOR
         LD      A,(HL)          ;    Get value
         LD      (mtm),A         ;     to GP Counter
         EI                      ; Ensure Ints are ABSOLUTELY Active..
-MotoLp: LD      A,(mtm)         ;  ..otherwise, loop never times out!
+;
+;	FIXME: this is wrong on two levels
+;	#1 We shouldn't rely upon an IRQ (we can busy wait too)
+;	#2 The timers are set in 1/20ths but it's not clear everyone is
+;	using 1/20ths for the IRQ call (See p112)
+;
+MotoLp:	PUSH	DE
+	CALL	_platform_idle
+	POP	DE
+	LD      A,(mtm)         ;  ..otherwise, loop never times out!
         OR      A               ; Up to Speed?
         JR      NZ,MotoLp       ; ..loop if Not
         DI                      ; No Ints now..
