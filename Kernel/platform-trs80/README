@@ -1,19 +1,18 @@
 TRS80 Model 4/4P
 (or right now more accurately sdltrs/xtrs)
 
-Emulator Bugs:
-	The emulator is horribly insecure, it's default is to allow all
-	sorts of direct access to things. Even if you turn this off I've
-	had it segfault with FUZIX bugs which suggests its not too secure.
+Requres:
+	Patched xtrs from Fuzix git tree
 
+Emulator Bugs:
 	Repeating instructions like LDIR appear to be misemulated. LDIR
 	is performed an emulated block copy, not as an iterated LDI. The
 	real processor actually implements LDIR as  "LDI, if not done
 	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
 	be affected.
 
-	The interrupt flags are misemulated. A patch for this is in the
-	Fuzix tree and is needed to run Fuzix on xtrs/sdltrs
+	Other bugs in RETI, IFF handling etc have been fixed in my xtrs
+	tree.
 
 Requirements: 
 	128K RAM fitted
@@ -60,7 +59,7 @@ Adding Support For Other Banked RAM:
 	Finally up MAX_BANKS in platform/config.h accordingly.
 
 
-Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs)
+Setting It Up (xtrs from EtchedPixels github)
 
 	This needs patches currently in progress
 
@@ -76,7 +75,7 @@ Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs)
 	# Once we get that far you can also put a filesystem in the lower
 	# blocks
 	#
-	xtrs -model 4p -emtsafe
+	xtrs -model 4p
 
 To set up for hard disk, create a hard disk with the xtrs tools and
 
@@ -87,44 +86,11 @@ To set up for hard disk, create a hard disk with the xtrs tools and
 	dd if=trs80.hd of=hard4p-0 bs=256 seek=1 conv=notrunc
 	tools/trslabel hard4p-0
 	#
-	xtrs -model 4p -emtsafe
-
-
-Setting It Up (patched SDLTRS)
-
-	# Tool to make disk images
-	make tools/makejv3
-	# Double density single sided 40 track boot disk
-	tools/makejv3 -t dd40s mydisk.jv3
-	# Build kernel and boot block (edit Makefile, set target then)
-	make
-	# Add pieces to the disk (boot block in sector 0, kernel at end)
-	dd if=zout/trs80load.cim of=mydisk.jv3 bs=1 seek=8960 conv=notrunc
-	dd if=fuzix.bin of=mydisk.jv3 bs=1 seek=142336 conv=notrunc
-	# Once we get that far you can also put a filesystem in the lower
-	# blocks
-	#
-	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3
-	#
-	# and remember to mark the fd volume as writeable
-
-To set up for hard disk, create a hard disk with the xtrs tools and
-
-	mkdisk -h hard4-0
-	# This assumes the default disk size
-	cd Standalone/filesystem-src
-	./build-filesystem trs80.hd 256 21760
-	dd if=trs80.hd of=hard4-0 bs=256 seek=1 conv=notrunc
-	tools/trslabel hard4-0
-	#
-	sdltrs -model 4p -emtsafe -disk0 mydisk.jv3 -hard0 hard4-0
-
+	xtrs -model 4p
 
 
 You will still need a boot floppy at this point but just boot with device
 0 (or hit return). Swap is configured to be on the end of the hard disk
-
-
 
 Banking Models
 
@@ -137,4 +103,3 @@ Documentation Needed:
 
 	HD64180 mods with more RAM (these are I suspect almost a different port)
 	(XLR8R etc)
-
