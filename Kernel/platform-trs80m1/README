@@ -3,10 +3,6 @@ TRS80 Model 1
 	This is a development tree only
 
 Emulator Bugs:
-	The emulator is horribly insecure, it's default is to allow all
-	sorts of direct access to things. Even if you turn this off I've
-	had it segfault with FUZIX bugs which suggests its not too secure.
-
 	Repeating instructions like LDIR appear to be misemulated. LDIR
 	is performed as an emulated block copy, not as an iterated LDI. The
 	real processor actually implements LDIR as  "LDI, if not done
@@ -14,7 +10,7 @@ Emulator Bugs:
 	be affected.
 
 	The interrupt flags are misemulated. A patch for this is in the
-	Fuzix tree and is needed to run Fuzix on xtrs/sdltrs
+	Fuzix tree and is needed to run Fuzix.
 
 User Space:
 	The TRS80 Model I/III have ROM in the low 16K. At the moment our
@@ -22,7 +18,7 @@ User Space:
 	space for this platform.
 
 Requirements: 
-	TRS80 Model I (or emulator)
+	TRS80 Model I or III (or emulator)
 	Preferably the lower case mod
 	Supermem or compatible expansion
 	Floppy drive or Hard drive (strongly recommend the latter)
@@ -33,8 +29,6 @@ Optional:
 To Do:
 	Keyboard mappings for keys not present on Model 1
 	Other banked expansions
-	Turbo card support (using port 0xFE)
-	Model III support
 	Hires card
 	Stringy floppy
 	Orchestra
@@ -61,10 +55,10 @@ Drivers:
 	Floppy				In progress (initial code design)
 	Floppy drivers do not yet deal with double sided disks or sd/dd
 	media detection
-	Hard disk reads block 0, and handle partitions of some form Done
-	including finding where 'swap' lives	Done (swap not tested)
+	Hard disk reads block 0, and handle partitions of some form
+	including finding where 'swap' lives (swap not tested)
 
-Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs)
+Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs with patches)
 
 	make
 	cp boot.jv3  /whereever/disk1-0
@@ -101,7 +95,7 @@ Really selector is its own port.
 Not Supported:
 	Omikron Mapper: This gives you only 64K (a bit less) so isn't useful.
 
-Useful rom addresses
+Useful rom addresses(Model I) 
 
 04C3 -> 64 column
 04F6 -> 32 column
@@ -112,3 +106,5 @@ Useful rom addresses
 Floppy boot requires a single density disk. The Level II ROM reads
 disk 0 side 0 track 0 sector 0 (TRS80 disks are 0 offset sector count)
 into 4200-42FF and then does a JP 4200	(stack is around 407D)
+
+Floppy boot for a model III is similar but double density to 4300
