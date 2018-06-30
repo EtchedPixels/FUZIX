@@ -12,7 +12,6 @@
 
 	.importzp ptr1
 	.import _platform_monitor
-	.import _chksigs
 	.import _platform_idle
 	.import _newproc
 	.import _nready
