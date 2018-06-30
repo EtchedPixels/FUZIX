@@ -33,6 +33,7 @@
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
+        .include "../kernel.def"
         .include "kernel.def"
 
         .area _COMMONMEM
