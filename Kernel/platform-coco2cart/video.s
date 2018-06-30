@@ -9,6 +9,7 @@
 	.globl _clear_lines
 	.globl _cursor_on
 	.globl _cursor_off
+	.globl _cursor_disable
 	.globl _vtattr_notify
 
 	.globl _video_read
@@ -337,6 +338,7 @@ _cursor_off:
 	com 224,x
 nocursor:
 _vtattr_notify:
+_cursor_disable:
 	rts
 ;
 ;	These routines wortk in both 256x192x2 and 128x192x4 modes
