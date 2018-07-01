@@ -236,10 +236,6 @@ fdio_outbyte:
 ;
 ;	C glue interface.
 ;
-;	Because of the brain dead memory paging we dump the bits into
-;	kernel space always. The thought of taking an NMI while in the
-;	user memory and bank flipping to recover is just too odious !
-;
 
 ;
 ;	Reset to track 0, wait for the command then idle
