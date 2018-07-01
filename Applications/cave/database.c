@@ -26,7 +26,7 @@ static void dbstring(uint16_t * off)
 
 void db_init(void)
 {
-	db_fd = open("advent.db", O_RDONLY);
+	db_fd = open(ADVDB_PATH, O_RDONLY);
 	if (db_fd == -1) {
 		perror("advent.db");
 		exit(1);

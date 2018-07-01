@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define ADVDB_PATH		    "/usr/games/lib/advent.db"
+
 #define NUL			    '\0'
 
 #define MAXDIM(a)		    (sizeof(a) / sizeof(a[0]))
