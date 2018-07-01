@@ -12,11 +12,11 @@ uint8_t vtattr_cap;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 /* We need to spin here because we don't have interrupts for the UART on the
-   model I */
+   model I, or for the keyboard on model I or III */
 void platform_idle(void)
 {
   irqflags_t irq = di();
-  platform_interrupt();
+  tty_interrupt();
   irqrestore(irq);
 }
 
