@@ -19,8 +19,8 @@
 	.globl _platform_idle
 
 	# exported
-        .globl _switchout
-        .globl _platform_switchin
+        .globl _platform_switchout
+        .globl _switchin
         .globl _dofork
 	.globl _ramtop
 
