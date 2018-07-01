@@ -21,7 +21,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/fd		Floppy disc block devices  */
   {  no_open,       no_close,    no_rdwr,   no_rdwr ,  no_ioctl },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,      tty_close,   tty_read,  tty_write, vt_ioctl },
+  {  tty_open,      tty_close,   tty_read,  tty_write, gfx_ioctl },
     /* 3: /dev/lpr	Printer devices */
   {  no_open,       no_close,    no_rdwr,   no_rdwr,   no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */

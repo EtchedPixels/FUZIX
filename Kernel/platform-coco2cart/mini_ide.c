@@ -34,7 +34,6 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
          return -1;
 
     idepage = rawflag;
-    nb = udata.u_nblock;
     dptr = udata.u_dptr;
     
     while(*status & 0x80);	/* Wait !BUSY */

@@ -30,6 +30,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 uint8_t vtattr_cap = 0;
 struct vt_repeat keyrepeat = { 40, 4 };
 static uint8_t kbd_timer;
+static uint8_t vmode;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -54,9 +55,10 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if (minor == 1)
-		vtoutput(&c, 1);
-	else
+	if (minor == 1) {
+		if (vmode < 2)
+			vtoutput(&c, 1);
+	} else
 		*uart_data = c;	/* Data */
 }
 
@@ -251,6 +253,128 @@ void platform_interrupt(void)
 //                fd_timer_tick();
 		timer_interrupt();
 	}
+}
+
+static struct display display[4] = {
+	/* Two variants of 256x192 with different palette */
+	/* 256 x 192 */
+	{
+		0,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_WB,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_MONO_WB,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE,
+	},
+	/* 128 x 192 four colour modes */
+	{
+		2,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
+	},
+	{
+		3,
+		128, 192,
+		128, 192,
+		0xFF, 0xFF,		/* For now */
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_VBLANK,
+		0,
+		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
+	},
+	/* Possibly we should also allow for SG6 and SG4 ?? */
+};
+
+static struct videomap displaymap = {
+	0,
+	0,
+	VIDEO_BASE,
+	6 * 1024,
+	0,
+	0,
+	0,
+	MAP_FBMEM|MAP_FBMEM_SIMPLE
+};
+
+/* bit 7 - A/G 6 GM2 5 GM1 4 GM0 & INT/EXT 3 CSS */
+static uint8_t piabits[] = { 0xF0, 0xF8, 0xE0, 0xE8};
+
+static struct fontinfo fontinfo = {
+	32, 127, 0, 0, FONT_INFO_8X8
+};
+
+#define pia1b	((volatile uint8_t *)0xFF22)
+#define sam_v	((volatile uint8_t *)0xFFC0)
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	extern unsigned char fontdata_8x8[];
+	uint16_t size = 96 * 8;
+	uint16_t base = 32 * 8;
+
+	if (minor != 1 || (arg >> 8 != 0x03))
+		return vt_ioctl(minor, arg, ptr);
+
+	switch (arg) {
+	case VTFONTINFO:
+		return uput(&fontinfo, ptr, sizeof(fontinfo));
+	case VTSETFONT:
+//			size = base = 0;
+//		case VTSETUDG:
+		return uget(fontdata_8x8 + base, ptr, size);
+		case VTGETFONT:
+//			size = base = 0;
+//		case VTGETUDG:
+		return uput(fontdata_8x8 + base, ptr, size);
+	case GFXIOC_GETINFO:
+		return uput(&display[vmode], ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		return uput(&displaymap, ptr, sizeof(displaymap));
+	case GFXIOC_UNMAP:
+		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:
+	{
+		uint8_t m = ugetc(ptr);
+		if (m > 3) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&display[m], ptr, sizeof(struct display));
+		vmode = m;
+		*pia1b = (*pia1b & 0x07) | piabits[m];
+		return 0;
+	}
+	case GFXIOC_WAITVB:
+		/* Our system clock is our vblank, use the standard timeout
+		   to pause for one clock */
+		udata.u_ptab->p_timeout = 2;
+		psleep(NULL);
+		return 0;
+	}
+	return -1;
 }
 
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
