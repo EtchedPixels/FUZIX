@@ -239,7 +239,7 @@ romsave:
 
 	.area .bufpool
 _bufpool:
-	.ds 520*6		; initial buffers
+	.ds 520*5		; initial buffers
 
 	; Discard follows this so will be reclaimed
 

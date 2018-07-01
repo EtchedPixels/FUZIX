@@ -61,7 +61,7 @@ extern unsigned int cocoswap_dev;
 #define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   513	 /* Device used by kernel for messages, panics */
-#define NBUFS    6       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
