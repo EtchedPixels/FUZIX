@@ -30,7 +30,7 @@ void pagemap_init(void)
 {
 	int i;
 
-	/* ZETA SBC V2 has RAM in the top 512 KiB of physical memory
+	/* RC2014 512/512K has RAM in the top 512 KiB of physical memory
 	 * corresponding pages are 32-63 (page size is 16 KiB)
 	 * Pages 32-34 are used by the kernel
 	 * Page 35 is the common area
