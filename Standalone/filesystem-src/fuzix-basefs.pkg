@@ -17,6 +17,8 @@ d 0700 /root
 
 d 0755 /usr/lib
 d 0755 /usr/bin
+d 0755 /usr/games
+d 0755 /usr/games/lib
 d 0755 /usr/include
 d 0755 /usr/share
 
