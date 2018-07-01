@@ -9,8 +9,9 @@ Emulator Bugs:
 	PC -= 2". FUZIX doesn't do any overlapped LDIR tricks so shouldn't
 	be affected.
 
-	The interrupt flags are misemulated. A patch for this is in the
-	Fuzix tree and is needed to run Fuzix.
+	The interrupt flags are misemulated and RETI is also wrong.
+
+	Use the xtrs in the EtchedPixels github
 
 User Space:
 	The TRS80 Model I/III have ROM in the low 16K. At the moment our
@@ -24,14 +25,20 @@ Requirements:
 	Floppy drive or Hard drive (strongly recommend the latter)
 
 Optional:
-	Lower case modification (or will be)
+	Lower case modification
 
 To Do:
-	Keyboard mappings for keys not present on Model 1
 	Other banked expansions
 	Hires card
-	Stringy floppy
+	Stringy floppy (Model 1 looks easy but needs ROM image)
 	Orchestra
+	Graphics hooks (both hires and also describe 64x16 lo-res pixel blocks)
+	Look at RTS/CTS flow control
+	- Needs tty sleeping support
+	- Needs to deal with model 1 case where it's polled so we need
+	  to check the flow control on timer ticks if needed
+	Fast block copy routines for uget/uput
+	Hint based pre-fetching uget
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality

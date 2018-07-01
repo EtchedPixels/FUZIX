@@ -7,10 +7,17 @@
 #include <devtty.h>
 #include <stdarg.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
 
+static uint8_t curtty;		/* output side */
+static uint8_t inputtty;	/* input side */
+static struct vt_switch ttysave[2];
+static uint8_t vtbackbuf[VT_WIDTH * VT_HEIGHT];
 struct vt_repeat keyrepeat;
+
+uint8_t *vtbase[2] = { 0xF800, vtbackbuf };
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
@@ -20,7 +27,8 @@ __sfr __at 0xEB tr1865_rxtx;
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 }
+    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
+    {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
 /* Write to system console */
@@ -36,6 +44,7 @@ ttyready_t tty_writeready(uint8_t minor)
     uint8_t reg;
     if (minor != 2)
         return TTY_READY_NOW;
+    /* TODO: check model status & 0x80 for CTS flow control if appropriate */
     reg = tr1865_status;
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
@@ -49,6 +58,27 @@ static void vtflush(void)
     vtq = vtbuf;
 }
 
+static void vtexchange(void)
+{
+        /* Swap the pointers over: TRS80 video we switch by copying not
+           flipping hardware pointers */
+        uint8_t *v = vtbase[0];
+        vtbase[0] = vtbase[1];
+        vtbase[1] = v;
+        /* The cursor x/y for current tty are stale in the save area
+           so save them */
+        vt_save(&ttysave[curtty]);
+
+        /* Before we flip the memory */
+        cursor_off();
+
+        vtswap();
+
+        /* Cursor back */
+        if (!ttysave[inputtty].cursorhide)
+            cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
+}
+
 void tty_putc(uint8_t minor, unsigned char c)
 {
     irqflags_t irq;
@@ -56,7 +86,20 @@ void tty_putc(uint8_t minor, unsigned char c)
         tr1865_rxtx = c;
     else {
         irq = di();
-        if (vtq == vtbuf + sizeof(vtbuf))
+        if (curtty != minor -1) {
+            /* Kill the cursor as we are changing the memory buffers. If
+               we don't do this the next cursor_off will hit the wrong
+               buffer */
+            vtflush();
+            cursor_off();
+            vt_save(&ttysave[curtty]);
+            curtty = minor - 1;
+            vt_load(&ttysave[curtty]);
+            /* Fix up the cursor */
+            if (!ttysave[curtty].cursorhide)
+                cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
+        }
+        else if (vtq == vtbuf + sizeof(vtbuf))
             vtflush();
         *vtq++ = c;
         irqrestore(irq);
@@ -68,7 +111,7 @@ void tty_interrupt(void)
     uint8_t reg = tr1865_status;
     if (reg & 0x80) {
         reg = tr1865_rxtx;
-        tty_inproc(2, reg);
+        tty_inproc(3, reg);
     }
 }
 
@@ -85,37 +128,37 @@ void tty_setup(uint8_t minor)
 {
     uint8_t baud;
     uint8_t ctrl;
-    if (minor != 2)
+    if (minor != 3)
         return;
-    baud = ttydata[2].termios.c_cflag & CBAUD;
+    baud = ttydata[3].termios.c_cflag & CBAUD;
     if (baud > B19200) {
-        ttydata[2].termios.c_cflag &= ~CBAUD;
-        ttydata[2].termios.c_cflag |= B19200;
+        ttydata[3].termios.c_cflag &= ~CBAUD;
+        ttydata[3].termios.c_cflag |= B19200;
         baud = B19200;
     }
     baud = trsbaud[baud];
     tr1865_baud = baud | (baud << 4);
 
-    ctrl = 3;
-    if (ttydata[2].termios.c_cflag & PARENB) {
-        if (ttydata[2].termios.c_cflag & PARODD)
+    ctrl = 3;	/* DTR|RTS */
+    if (ttydata[3].termios.c_cflag & PARENB) {
+        if (ttydata[3].termios.c_cflag & PARODD)
             ctrl |= 0x80;
     } else
         ctrl |= 0x8;		/* No parity */
-    ctrl |= trssize[(ttydata[2].termios.c_cflag & CSIZE) >> 4];
+    ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
     tr1865_ctrl = ctrl;
 }
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 2 && ttydata[2].users == 0)
-        tr1865_ctrl = 0;	/* Drop carrier */
+    if (minor == 3 && ttydata[3].users == 0)
+        tr1865_ctrl = 0;	/* Drop carrier and rts */
     return tty_close(minor);
 }
 
 int tty_carrier(uint8_t minor)
 {
-    if (minor != 2)
+    if (minor != 3)
         return 1;
     if (tr1865_ctrl & 0x80)
         return 1;
@@ -174,22 +217,25 @@ uint8_t keyboard[8][8] = {
 	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
 	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
-	{'x', 'y', 'z', '[', '\\', ']', '^', '_' },
+	{'x', 'y', 'z',   0,   0,   0,   0,  0  },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
-	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_LEFT, KEY_RIGHT, ' '},
+	/* The Model 1 only has bit 0 of this for its shift key. The Model 3
+	   has bit 2 for right shift. Some add-ons used bit 4 for control,
+	   other things borrowed the down arrow */
+	{ 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 uint8_t shiftkeyboard[8][8] = {
 	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
 	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
 	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
-	{'X', 'Y', 'Z', '{', '|', '}', '^', '_' },
+	{'X', 'Y', 'Z',   0,   0,   0,   0,  0  },
 	{'0', '!', '"', '#', '$', '%', '&', '\'' },
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
-	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_LEFT, KEY_RIGHT, ' '},
+	{ 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 static uint8_t capslock = 0;
@@ -204,14 +250,23 @@ static void keydecode(void)
 		return;
 	}
 
-	if (keymap[7] & 3) {	/* shift */
+	/* Only the model 3 has right shift (2) */
+	if (keymap[7] & 3) {	/* shift (left/right) */
 		c = shiftkeyboard[keybyte][keybit];
+		/* VT switcher */
+		if (c == KEY_F1 || c == KEY_F2) {
+                        if (inputtty != c - KEY_F1) {
+                                inputtty = c - KEY_F1;
+                                vtexchange();	/* Exchange the video and backing buffer */
+                        }
+                        return;
+                }
         } else
 		c = keyboard[keybyte][keybit];
 
         /* The keyboard lacks some rather important symbols so remap them
-           with control */
-	if (keymap[7] & 4) {	/* control */
+           with control (down arrow)*/
+	if ((keymap[6] | keymap[7]) & 16) {	/* control */
                 if (keymap[7] & 3) {	/* shift */
                     if (c == '(')
                         c = '{';
@@ -224,9 +279,9 @@ static void keydecode(void)
                     if (c == '<')
                         c = '^';
                 } else {
-                    if (c == '(')
+                    if (c == '8'/*'('*/)
                         c = '[';
-                    else if (c == ')')
+                    else if (c == '9'/*')'*/)
                         c = ']';
                     else if (c == '-')
                         c = '|';
