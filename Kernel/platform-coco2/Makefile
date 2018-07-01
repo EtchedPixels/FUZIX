@@ -1,14 +1,14 @@
 
-CSRCS = devices.c main.c mini_ide.c
+CSRCS = devices.c main.c mini_ide.c devtty.c
 
-C3SRCS = libc.c devtty.c
+C3SRCS = libc.c
 
 CDSRCS = discard.c mini_ide_discard.c
 
 DSRCS = ../dev/devdw.c
 
 ASRCS = crt0.s coco2.s ide.s
-ASRCS += tricks.s commonmem.s drivewire.s
+ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
@@ -22,12 +22,13 @@ CROSS_CCOPTS += -I../dev/
 all: $(OBJS)
 
 export CROSS_CC_SEGD=-mcode-section=.text3 -mfar-code-page=2
+export CROSS_CC_SEGI=-mcode-section=.page1 -mfar-code-page=2
 
 $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(C3OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGI) -c $<
 
 $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
@@ -50,7 +51,7 @@ image: bootfuz.bin
 	coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o mini_ide.o mini_ide_discard.o \
+	mini_ide.o mini_ide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

@@ -14,12 +14,14 @@
 #define UDATA_BLKS 1
 #define CONFIG_USERMEM_DIRECT
 
+#define CONFIG_LEVEL_0		/* Minimal system */
+
 #define CONFIG_BANKS	1
 /* And swapping */
 #define SWAPDEV     0x0		/* Uses part of IDE slice 0 */
-#define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
+#define SWAP_SIZE   0x39	/* 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot, including stashed uarea */
-#define SWAPTOP     0xEC00	/* so it's a round number of 512 byte sectors */
+#define SWAPTOP     0xF200	/* so it's a round number of 512 byte sectors */
 #define UDATA_SIZE  0x0200	/* one block */
 #define MAX_SWAPS   32
 
@@ -48,7 +50,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xEC00  /* Top of program */
+#define PROGTOP     0xF200  /* Top of program */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
@@ -58,7 +60,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   513	 /* Device used by kernel for messages, panics */
-#define NBUFS    6       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
