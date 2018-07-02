@@ -39,6 +39,7 @@ To Do:
 	  to check the flow control on timer ticks if needed
 	Fast block copy routines for uget/uput
 	Hint based pre-fetching uget
+	Consider moving the tty buffers into banked space (INDIRECT_QUEUE)
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality
