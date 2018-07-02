@@ -52,6 +52,7 @@ void vtbuf_init(void)
 {
     memset(vtbackbuf, ' ', VT_WIDTH * VT_HEIGHT);
 }
+
 void vtexchange(void)
 {
         /* Swap the pointers over: TRS80 video we switch by copying not
