@@ -101,7 +101,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   uint8_t m;
   int err;
 
-  if (arg >> 8 != 0x03)
+  if (minor > 2 || (arg >> 8 != 0x03))
     return vt_ioctl(minor, arg, ptr);
 
   switch(arg) {
