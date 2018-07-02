@@ -16,10 +16,10 @@ static const struct display trsdisplay[2] = {
     /* Once we get around to it this is probably best described as
        160 x 72 sixel */
     0,
-    80, 24,
+    160, 72,
     80, 24,
     255, 255,
-    FMT_TEXT,
+    FMT_6PIXEL_128,
     HW_UNACCEL,
     GFX_MULTIMODE|GFX_TEXT,
     2,
@@ -47,6 +47,7 @@ static const struct videomap trsmap = {
   1,		/* Standard spacing */
   MAP_PIO
 };
+
 
 __sfr __at 0x83 gfx_ctrl;
 
