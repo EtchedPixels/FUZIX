@@ -36,12 +36,20 @@ static void format(int n) {
     case FMT_COLOUR16:
       printf("sixteen colour");
       break;
+    case FMT_MONO_WB_TILE8:
+      printf("8x8 tiled white on black mono");
+      break;
+    case FMT_6PIXEL_128:
+      printf("2x3 block graphics, char 128 based");
+      break;
     case FMT_SPECTRUM:
       printf("Sinclair Spectrum");
       break;
     case FMT_VDP:
       printf("VDP");
       break;
+    case FMT_UBEE:
+      printf("UBEE");
     default:
       printf("Unknown(%d)", n);
   }
