@@ -1,8 +1,7 @@
 /*
- *	Graphics logic for the TRS80 graphics add on board
+ *	Graphics logic for the TRS80 2x3 block graphics
  *
- *	FIXME: - turn the gfx on/off when we switch tty
- *	       - tie gfx to one tty and report EBUSY for the other on enable
+ *	We don't yet address the high res board for the Model III (and I ?)
  */
 
 #include <kernel.h>
@@ -13,16 +12,14 @@
 
 static const struct display trsdisplay[1] = {
   {
-    /* Once we get around to it this is probably best described as
-       128 x 96 sixel */
     0,
-    64, 16,
+    128, 48,
     64, 16,
     255, 255,
-    FMT_TEXT,
+    FMT_6PIXEL_128,
     HW_UNACCEL,
-    GFX_MULTIMODE|GFX_TEXT,
-    2,
+    GFX_MAPPABLE|GFX_MULTIMODE|GFX_TEXT,
+    1,
     0
   }
 };
@@ -32,7 +29,7 @@ static const struct videomap trsmap = {
   0,
   0,
   0x3C00,
-  0x0400,		/* Directly mapped */
+  0x0400,	/* Directly mapped */
   0, 0, 	/* No segmentation */
   1,		/* Standard spacing */
   MAP_FBMEM_SIMPLE|MAP_FBMEM
@@ -45,7 +42,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   uint8_t m;
   int err;
 
-  if (arg >> 8 != 0x03)
+  if (minor > 2 || (arg >> 8 != 0x03))
     return vt_ioctl(minor, arg, ptr);
 
   switch(arg) {
@@ -62,7 +59,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     return 0;
   case GFXIOC_UNMAP:
     return 0;
-  /* Users can "map" 8) the MMIO into their process and use the
+  /* Users can "map" 8) the framebuffer into their process and use the
      card directly */
   case GFXIOC_MAP:
     if (vmode == 0)
