@@ -187,9 +187,9 @@ static int bankmagic(struct areax *ax)
                 return 1;
         if (strcmp(a->a_id, "_DISCARD2") == 0)
                 return 2;
-        if (strncmp(a->a_id, "_CODE", 5))
+        if (strncmp(a->a_id, "_CODE", 5) && strncmp(a->a_id, "_DATA", 5))
                 return 0;
-        if (a->a_id[5] == 0)	/* We count _CODE and _CODE1 both as first bank */
+        if (a->a_id[0] == 'C' && a->a_id[5] == 0)	/* We count _CODE and _CODE1 both as first bank */
                 return 1;
         c = a->a_id[5] - '0';
         if (c < 1 || c > 9)

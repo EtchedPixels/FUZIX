@@ -226,7 +226,7 @@ int stub_code(char *name)
   /* Data */
   if(strcmp(name, "_INITIALIZER") == 0)
     return 0;
-  if(strcmp(name, "_DATA") == 0)
+  if(strncmp(name, "_DATA", 5) == 0)
     return 0;
   if(strcmp(name, "_FONT") == 0)
     return 0;
