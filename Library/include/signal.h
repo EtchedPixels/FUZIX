@@ -64,6 +64,7 @@ extern void sighold(int __sig);
 extern void sigrelse(int __sig);
 extern void sigignore(int __sig);
 extern sighandler_t sigset(int __sig, sighandler_t __disp);
+extern sighandler_t signal(int signum, sighandler_t sighandler);
 
 extern int raise(int __sig);
 
