@@ -3,6 +3,8 @@
 #include <devtty.h>
 #include <tty.h>
 #include <kdata.h>
+#include "devfd3.h"
+#include "devgfx.h"
 
 void device_init(void)
 {
@@ -12,6 +14,7 @@ void device_init(void)
 #endif
   floppy_setup();
   hd_probe();
+  gfx_init();
 }
 
 void map_init(void)
