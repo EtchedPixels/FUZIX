@@ -49,7 +49,6 @@
 	    .globl null_handler
 	    .globl fd_nmi_handler
 
-
             .include "kernel.def"
             .include "../kernel.def"
 
@@ -170,7 +169,7 @@ _rom_vectors:
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
-            out (0xEB), a
+            ld (0x37E8), a
             ret
 
 ;
