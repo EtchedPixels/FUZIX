@@ -11,13 +11,11 @@ static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
 
-static uint8_t curtty;		/* output side */
+uint8_t curtty;			/* output side */
 static uint8_t inputtty;	/* input side */
 static struct vt_switch ttysave[2];
-static uint8_t vtbackbuf[VT_WIDTH * VT_HEIGHT];
 struct vt_repeat keyrepeat;
-
-uint8_t *vtbase[2] = { 0xF800, vtbackbuf };
+extern uint8_t *vtbase[2];
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
@@ -42,7 +40,7 @@ void kputchar(char c)
 ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t reg;
-    if (minor != 2)
+    if (minor != 3)
         return TTY_READY_NOW;
     /* TODO: check model status & 0x80 for CTS flow control if appropriate */
     reg = tr1865_status;
@@ -82,7 +80,7 @@ static void vtexchange(void)
 void tty_putc(uint8_t minor, unsigned char c)
 {
     irqflags_t irq;
-    if (minor == 2)
+    if (minor == 3)
         tr1865_rxtx = c;
     else {
         irq = di();
@@ -91,13 +89,13 @@ void tty_putc(uint8_t minor, unsigned char c)
                we don't do this the next cursor_off will hit the wrong
                buffer */
             vtflush();
-            cursor_off();
+//          cursor_off();
             vt_save(&ttysave[curtty]);
             curtty = minor - 1;
             vt_load(&ttysave[curtty]);
             /* Fix up the cursor */
-            if (!ttysave[curtty].cursorhide)
-                cursor_on(ttysave[curtty].cursory, ttysave[curtty].cursorx);
+//            if (!ttysave[inputtty].cursorhide)
+//                cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
         }
         else if (vtq == vtbuf + sizeof(vtbuf))
             vtflush();
@@ -254,9 +252,11 @@ static void keydecode(void)
 	if (keymap[7] & 3) {	/* shift (left/right) */
 		c = shiftkeyboard[keybyte][keybit];
 		/* VT switcher */
-		if (c == KEY_F1 || c == KEY_F2) {
-                        if (inputtty != c - KEY_F1) {
-                                inputtty = c - KEY_F1;
+		if (c == KEY_LEFT || c == KEY_RIGHT) {
+		        c -= KEY_RIGHT;
+		        c ^= 1;
+                        if (inputtty != c) {
+                                inputtty = c;
                                 vtexchange();	/* Exchange the video and backing buffer */
                         }
                         return;
@@ -293,7 +293,7 @@ static void keydecode(void)
 		c -= 'a' - 'A';
 	if (c) {
 //	    kprintf("Typed %d:%c\n", c, c);
-		vt_inproc(1, c);
+		vt_inproc(inputtty + 1, c);
             }
 }
 

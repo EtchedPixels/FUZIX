@@ -5,6 +5,7 @@
 	        .area _CODE
 	        .area _CODE1
 	        .area _CODE2
+		.area _DATA2
 		.area _DISCARD2
 		.area _VIDEO
 	        .area _COMMONMEM

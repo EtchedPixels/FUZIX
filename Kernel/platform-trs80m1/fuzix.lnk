@@ -46,6 +46,6 @@ vt.rel
 devsys.rel
 platform-trs80m1/devlpr.rel
 platform-trs80m1/devtty.rel
-platform-trs80m1/vtswap.rel
+platform-trs80m1/vtsupport.rel
 platform-trs80m1/discard.rel
 -e

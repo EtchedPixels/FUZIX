@@ -22,6 +22,7 @@
 	    .globl _program_vectors	
             .globl _ramsize
             .globl _procmem
+	    .globl vtbufinit
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -35,6 +36,9 @@
             .area _BOOT
 
 init_hardware:
+	    push af
+	    call vtbufinit
+	    pop af
             ; set system RAM size
 	    ld hl,#0xFFFF		; FFFF is free in all our pages
 	    ld bc,#0xFF43		; kernel included

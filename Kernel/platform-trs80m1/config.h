@@ -12,8 +12,7 @@
 #undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* Simple character addressed device */
-#define CONFIG_VT_SIMPLE
+/* Switchable console */
 #define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
@@ -27,7 +26,6 @@
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
 /* Vt definitions */
-#define VT_BASE		((uint8_t *)0x3C00)
 #define VT_WIDTH	64
 #define VT_HEIGHT	16
 #define VT_RIGHT	63
