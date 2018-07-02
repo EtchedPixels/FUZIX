@@ -14,9 +14,11 @@ struct display {
 #define FMT_COLOUR16	3
 #define FMT_TEXT	4	/* Text only mode */
 #define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
+#define FMT_6PIXEL_128	6	/* 2x3 tiles from 128 (TRS80 style) */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
+#define FMT_UBEE	130	/* Microbee 6545 modes */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918	128	/* Not neccessarily MSX... */
