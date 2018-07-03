@@ -1,10 +1,10 @@
 
 CSRCS = devlpr.c devtty.c devfd.c devfd3.c devhd.c devgfx.c
-CSRCS += devices.c main.c
+CSRCS += devices.c main.c devstringy.c
 DISCARD_CSRCS = discard.c devhd_discard.c
 
 ASRCS = trs80.s trs80-bank.s crt0.s vtsupport.s
-ASRCS += tricks.s commonmem.s floppy.s floppy3.s
+ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

@@ -170,7 +170,7 @@ void gfx_init(void)
       max_mode = 1;
       displaymap[1] = 1;
     } else {
-      uint8_t *fb = 0x3C00;
+      uint8_t *fb = (uint8_t *)0x3C00;
       uint8_t c = *fb;
       *fb = 128;
       ioctrl = 0xB2;

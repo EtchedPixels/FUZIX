@@ -11,6 +11,7 @@
 #include <devtty.h>
 #include <devgfx.h>
 #include <devfd3.h>
+#include <devstringy.h>
 #include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -25,6 +26,14 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  lpr_open,    lpr_close,    no_rdwr,   lpr_write,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,     no_close,     sys_read,  sys_write,  sys_ioctl },
+  /* 5: reserved */
+  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
+  /* 6: reserved */
+  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
+  /* 7: reserved */
+  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
+  /* 8: tape (for now - may move to 5 if lots of boxes have tape) */
+  {  tape_open,     tape_close, tape_read, tape_write, tape_ioctl },
 };
 
 bool validdev(uint16_t dev)
@@ -43,5 +52,6 @@ void floppy_setup(void)
     dev_tab[1].dev_open = fd3_open;
     dev_tab[1].dev_read = fd3_read;
     dev_tab[1].dev_write = fd3_write;
+    dev_tab[8].dev_open = nxio_open;
   }
 }

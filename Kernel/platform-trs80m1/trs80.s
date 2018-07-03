@@ -133,6 +133,8 @@ not_vg:
 ;	The Model 3 sprinter type card uses port 95h the same way but
 ;	also does automatic slow down when needed
 ;
+;	Only allowed to mess with AF
+;
 go_slow:
 	    ld a,(_trs80_model)
 	    or a

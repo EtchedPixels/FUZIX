@@ -27,6 +27,8 @@ platform-trs80m1/floppy3.rel
 platform-trs80m1/devhd.rel
 platform-trs80m1/devhd_discard.rel
 platform-trs80m1/devgfx.rel
+platform-trs80m1/devstringy.rel
+platform-trs80m1/stringy.rel
 platform-trs80m1/devices.rel
 devio.rel
 filesys.rel
