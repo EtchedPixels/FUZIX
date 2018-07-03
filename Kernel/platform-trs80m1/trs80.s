@@ -48,6 +48,7 @@
             .globl outcharhex
 	    .globl null_handler
 	    .globl fd_nmi_handler
+	    .globl _vtflush
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -63,8 +64,12 @@ bufend:
             .area _COMMONMEM
 
 _platform_monitor:
+	    push af
+	    call _vtflush		; get any panic onscreen
+	    pop af
+monitor_spin:
 	    di
-	    jr _platform_monitor
+	    jr monitor_spin
 
 platform_interrupt_all:
 	    ret
