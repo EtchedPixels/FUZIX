@@ -6,26 +6,27 @@ This port supports the following configurations currently
 	Options:
 		Floppy Disk
 		Hard Disk (Tandy compatible)
-		Lower Case Kit
+		Lower Case Kit (Optional, either Tandy or the simple mods)
 		Percom Compatible Doubler
 		Holmes style speed up board (anything using port 254 bit 0)
+		Real Time Clock (supported for time locking, can't do dates as
+				 is not Y2K capable)
+
 	In Progress:
 		Exatron stringy
 		HR1G Graphics Card
-		Real Time Clock (supported for time locking but not yet
-				 date setting)
 	Planned:
-		Holmes speed up board (using port 95)
 		Orchestra 80 sound card
 		Alpha Products Joystick
 
 	TRS80 model III with Alpha SuperMem (or compatibles), 256K+ recommended
 	Options:
 		Hard Disk (Tandy compatible, so not afaik MIOSYS)
+		Holmes speed up board (using port 95)
+		Real Time Clock (supported for time locking, can't do dates as
+				 is not Y2K capable)
 	In Progress:
 		Micro Labs Graphyx
-		Real Time Clock (supported for time locking but not yet
-				 date setting)
 		Tandy Hi-Res Card
 	Planned:
 		Orchestra 90 sound card
@@ -33,7 +34,7 @@ This port supports the following configurations currently
 Under Investigation:
 
 	Video Genie I/II with banked memory (eg via S100)
-	LNW80 with banked memory
+	LNW80 with banked memory (selector and similar)
 
 
 Not Supported:

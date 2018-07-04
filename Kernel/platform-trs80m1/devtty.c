@@ -215,6 +215,29 @@ static void keyproc(void)
 	}
 }
 
+/*
+ *	The TRS80 keyboard is a little lacking in some rather useful symbols
+ *
+ *	There are conventions for some of these
+ *	shift-0 is capslock
+ *	downarrow-xx is ctrl
+ *	There was also a popular keyboard mod
+ *
+ *	We also map as follows
+ *	left arrow - backspace
+ *	right arrow - delete
+ *	shift left/right arrow - switch vt
+ *	stop - ^C
+ *	control-shift-brackets give curly brackets
+ *	control-shift minus gives underscore
+ *	control-shift slash gives backquote
+ *	control-shift les-than gives hat
+ *	control-brackets gives square brackets
+ *	control-minus gives pipe
+ *
+ *	We may want to add others if need be
+ */
+
 uint8_t keyboard[8][8] = {
 	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
@@ -222,11 +245,11 @@ uint8_t keyboard[8][8] = {
 	{'x', 'y', 'z',   0,   0,   0,   0,  0  },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_LEFT, KEY_RIGHT, ' '},
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_BS, KEY_DEL, ' '},
 	/* The Model 1 only has bit 0 of this for its shift key. The Model 3
 	   has bit 2 for right shift. Some add-ons used bit 4 for control,
 	   other things borrowed the down arrow */
-	{ 0, 0, 0, 0, 0, 0, 0, 0 }
+	{ 0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0 }
 };
 
 uint8_t shiftkeyboard[8][8] = {
@@ -234,10 +257,10 @@ uint8_t shiftkeyboard[8][8] = {
 	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
 	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
 	{'X', 'Y', 'Z',   0,   0,   0,   0,  0  },
-	{'0', '!', '"', '#', '$', '%', '&', '\'' },
+	{ KEY_CAPSLOCK, '!', '"', '#', '$', '%', '&', '\'' },
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_LEFT, KEY_RIGHT, ' '},
-	{ 0, 0, 0, 0, 0, 0, 0, 0 }
+	{ 0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0 }
 };
 
 static uint8_t capslock = 0;
@@ -247,11 +270,11 @@ static void keydecode(void)
 {
 	uint8_t c;
 
-	if (keybyte == 7 && keybit == 3) {
+	/* Convention for capslock or the mod */
+	if (c == KEY_CAPSLOCK) {
 		capslock = 1 - capslock;
 		return;
 	}
-
 	/* Only the model 3 has right shift (2) */
 	if (keymap[7] & 3) {	/* shift (left/right) */
 		c = shiftkeyboard[keybyte][keybit];
