@@ -3,14 +3,13 @@
 ;
 ;	Must be in the same bank as vt
 ;
-		.module vtswap
+		.module vtsupport
 
 
 		.globl _vtswap
 		.globl vtbufinit
 		.globl _vtbase
 
-		.globl _vtbase
 		.globl _curtty
 
 		.globl _cursor_off
@@ -32,13 +31,15 @@ _vtbackbuf:
 _vtbase:
 		.dw	0x3C00
 		.dw	_vtbackbuf
+video_lower:
+		.db	1	; Assume we have lower case
 
 		.area _CODE2
 _vtswap:
                 ld hl, #0x3C00
                 ld de, #_vtbackbuf
                 ld bc, #1024	; 64 * 16
-        exchit:
+exchit:
                 push bc
                 ld a, (de)	; Could be optimised but its only 1K
                 ld c, (hl)	; Probably worth doing eventuallly
@@ -54,6 +55,15 @@ _vtswap:
                 jr nz, exchit
                 ret
 vtbufinit:
+		ld hl,#0x3C00
+		xor a
+		ld (hl),a
+		cp (hl)
+		jr z, have_lower
+		xor a
+		ld (video_lower),a
+have_lower:
+		ld (hl),#32
 		ld hl,#_vtbackbuf
 		ld de,#_vtbackbuf+1
 		ld bc,#1023
@@ -127,6 +137,23 @@ _plot_char:
 		push hl
 		push ix
 		call addr
+		ld a,(video_lower)	; hot path, maybe we should runtime
+		or a			; patch
+		jr nz, plot_lower
+		;
+		; Deal with gate Z30 fun and games. The default model 1
+		; doesn't have bit 6 of the video RAM instead it's generated
+		; by looking at bit 5 and bit 7, and setting bit 6 if both
+		; are low. If we try to print in the lower case range then
+		; bit 5 is high, and we end up printing symbols 32-63
+		; instead.
+		;
+		ld a, c
+		and #0xE0		; Z30 bits
+		cp #0x60		; problem case
+		jr nz, plot_lower
+		res 5,c			; force into upper
+plot_lower:
 		ld (hl),c
 		ret
 
