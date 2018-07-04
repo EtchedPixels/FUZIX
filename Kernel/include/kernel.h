@@ -769,6 +769,10 @@ struct s_argblk {
  */
 
 /*
+ *	Tape ioctls 0x06xx (see tape.h)
+ */
+
+/*
  *	System info shared with user space
  */
 #include <sysinfoblk.h>
