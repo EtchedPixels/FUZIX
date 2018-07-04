@@ -7,7 +7,7 @@
 
 #define BAD_ROOT_DEV 0xFFFF
 
-static uint8_t ro;
+static uint8_t ro = 1;
 
 /*
  *	Put nothing here that cannot be discarded. We make the entirety
