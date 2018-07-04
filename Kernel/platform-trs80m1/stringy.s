@@ -13,17 +13,31 @@
 	.globl go_slow
 	.globl go_fast
 
+	.globl map_process_always
+	.globl map_kernel_restore
+
 _tape_op:
 	call go_slow
-	pop bc
-	pop de
-	push de		; file ID in D op in E
-	push bc
-	ld hl,(U_DATA__U_BASE)
-	ld bc,(U_DATA__U_COUNT)
+	call map_process_always
+	call do_tape_op
+	push af
+	call map_kernel_restore
+	call go_fast
+	pop af
+	ret
+
+do_tape_op:
 	xor a
 	ld (_tape_err),a
-	ld a,e
+
+	ld hl,#6		; SP + 6
+	add hl,sp
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
+
+	ld hl,(U_DATA__U_BASE)
+	ld bc,(U_DATA__U_COUNT)
 	or a
 	jr z, write_op
 	dec a
@@ -39,7 +53,6 @@ _tape_op:
 	dec a
 	jr z, erase_op
 	ld hl,#0xFFFF
-	call go_fast
 	ret
 find_op:
 	ld a,d
@@ -53,9 +66,6 @@ seekf_op:
 	ld a,d
 	call 0x300F		; find file A
 tape_error:
-	push af
-	call go_fast
-	pop af
 	ld hl,#0		; return 0 if good or -1 if bad and save err
 	ret z
 	dec hl
@@ -71,9 +81,6 @@ rewind_op:
 	jr tape_error		; file 0 itself)
 read_op:
 	call 0x3003
-	push af
-	call go_fast
-	pop af
 	ld h,b
 	ld l,c			; actual bytes fetched
 	ret z
@@ -83,9 +90,6 @@ rwerr:
 	ret
 write_op:
 	call 0x3006
-	push af
-	call go_fast
-	pop af
 	ld hl,(U_DATA__U_COUNT)
 	ret z
 	jr rwerr

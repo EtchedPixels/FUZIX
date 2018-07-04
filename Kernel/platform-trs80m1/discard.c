@@ -15,6 +15,7 @@ void device_init(void)
   floppy_setup();
   hd_probe();
   gfx_init();
+  tape_init();
 }
 
 void map_init(void)
