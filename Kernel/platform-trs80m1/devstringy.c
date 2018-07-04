@@ -104,6 +104,7 @@ int tape_close(uint8_t minor)
     minor;
     busy = 0;
     inio = 0;
+    inpos = 0;
     if (mode == O_WRONLY)
         if (tape_op(fileid, TAPE_CLOSEW))
             return tape_error();
@@ -117,19 +118,13 @@ static int tape_rw(uint8_t op)
     uint8_t pos = fileid;
 
     if (!inpos) {
-            pos--;
-            kprintf("find %d\n", pos);
-            if (!pos &&  tape_rewind() == 0)
-                inpos = 1;
-            else if (pos && tape_op(pos, TAPE_FIND) == 0)
+            if (tape_op(pos, TAPE_FIND) == 0)
                 inpos = 1;
             else
                 return tape_error();
     }
-    kprintf("do tapeop %d %d\n", fileid, op);
     inio = 1;
     udata.u_done = tape_op(fileid, op);
-    kprintf("read %d\n", udata.u_done);
     if (tape_err)
         return tape_error();
     return udata.u_done;
