@@ -17,6 +17,10 @@ static struct vt_switch ttysave[2];
 struct vt_repeat keyrepeat;
 extern uint8_t *vtbase[2];
 
+/* FIXME: The Video Genie EG3020 is similar but the TR1865 is
+   data in: 8, status out F8, data out: F9 status in F9,
+   and serial printer on FD with the baud set by switches */
+
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
 __sfr __at 0xEA tr1865_status;
@@ -50,7 +54,7 @@ ttyready_t tty_writeready(uint8_t minor)
 static uint8_t vtbuf[64];
 static uint8_t *vtq = vtbuf;
 
-static void vtflush(void)
+void vtflush(void)
 {
     vtoutput(vtbuf, vtq - vtbuf);
     vtq = vtbuf;
