@@ -1,5 +1,5 @@
 ;
-;	    TRS 80 banking logic for the base Model 4 and 4P
+;	    TRS 80 banking logic for the Model1 with Supermem
 ;
 
             .module trs80bank
