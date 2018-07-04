@@ -1,6 +1,53 @@
-TRS80 Model 1
+TRS80 Model I and III
 
-	This is a development tree only
+This port supports the following configurations currently
+
+	TRS80 model I with Alpha SuperMem (or compatibles), 256K+ recommended
+	Options:
+		Floppy Disk
+		Hard Disk (Tandy compatible)
+		Lower Case Kit
+		Percom Compatible Doubler
+		Holmes style speed up board (anything using port 254 bit 0)
+	In Progress:
+		Exatron stringy
+		HR1G Graphics Card
+		Real Time Clock (supported for time locking but not yet
+				 date setting)
+	Planned:
+		Holmes speed up board (using port 95)
+		Orchestra 80 sound card
+		Alpha Products Joystick
+
+	TRS80 model III with Alpha SuperMem (or compatibles), 256K+ recommended
+	Options:
+		Hard Disk (Tandy compatible, so not afaik MIOSYS)
+	In Progress:
+		Micro Labs Graphyx
+		Real Time Clock (supported for time locking but not yet
+				 date setting)
+		Tandy Hi-Res Card
+	Planned:
+		Orchestra 90 sound card
+
+Under Investigation:
+
+	Video Genie I/II with banked memory (eg via S100)
+	LNW80 with banked memory
+
+
+Not Supported:
+	Lubomir Soft Banker	-	only provides 96K RAM (not enough
+					for this build)
+	Various 64K only CP/M adapters
+
+Would Be Nice:
+	ChromaTRS		-	not enough emulation, or
+					software such as ChromaBasic to build
+					emulation support
+	80-Grafix		-	need docs, example apps to debug
+					an emulator
+
 
 Emulator Bugs:
 	Repeating instructions like LDIR appear to be misemulated. LDIR
@@ -11,7 +58,8 @@ Emulator Bugs:
 
 	The interrupt flags are misemulated and RETI is also wrong.
 
-	Use the xtrs in the EtchedPixels github
+	Use the xtrs in the EtchedPixels github which fixes the ones that
+	matter.
 
 User Space:
 	The TRS80 Model I/III have ROM in the low 16K. At the moment our
@@ -57,10 +105,10 @@ Memory Map:
 	can better balance memory
 
 Drivers:
-	Display 64x16			Done, but may add back multi-console
-	Keyboard			Key mappings needed
+	Display 64x16			Done
+	Keyboard			Done
 	Hard drive			Straight model 4 port
-	Floppy				In progress (initial code design)
+	Floppy				Minimal at this point
 	Floppy drivers do not yet deal with double sided disks or sd/dd
 	media detection
 	Hard disk reads block 0, and handle partitions of some form
@@ -99,9 +147,6 @@ Not Yet Started:
 the model 1 default. Either the upper or lower 32K is switchable but not
 both at once. bits 4/5 control the selection between a further 4 32K banks.
 Really selector is its own port.
-
-Not Supported:
-	Omikron Mapper: This gives you only 64K (a bit less) so isn't useful.
 
 Useful rom addresses(Model I) 
 
