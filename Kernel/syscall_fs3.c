@@ -102,10 +102,8 @@ arg_t _open(void)
 		   by the call to dev_openi */
 
 		i_unlock(*iptr);
-		if (dev_openi(iptr, flag) != 0) {
-			i_deref(*iptr);
+		if (dev_openi(iptr, flag) != 0)
 			goto cantopen;
-		}
 		/* May have changed */
 		/* get the static pointer back in case it changed via dev 
 		   usage or just because we blocked */
