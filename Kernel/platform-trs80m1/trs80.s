@@ -135,23 +135,37 @@ not_vg:
 ;
 ;	TRS80 speed control. Save anything used except AF
 ;	The LNW80 does automatic slowing on floppy disk access
-;	The Model 3 sprinter type card uses port 95h the same way but
-;	also does automatic slow down when needed
+;	The Model 3 sprinter type card uses port 95 the same way but
+;	also does automatic slow down when needed.
 ;
 ;	Only allowed to mess with AF
 ;
 go_slow:
 	    ld a,(_trs80_model)
 	    or a
-	    ret nz
+	    jr nz, snot_model_1
+	    ; A = 0
 	    out (254),a
+	    ret
+snot_model_1:
+	    cp #1		; model III ?
+	    ret nz
+	    xor a
+	    out (95),a
 	    ret
 go_fast:
 	    ld a,(_trs80_model)
 	    or a
-	    ret nz
+	    jr nz,fnot_model_1
+	    ; A = 0
 	    inc a
 	    out (254),a
+	    ret
+fnot_model_1:
+	    cp #1
+	    ret nz
+	    ; A = 1
+	    out (95),a
 	    ret
 
 _program_vectors:
