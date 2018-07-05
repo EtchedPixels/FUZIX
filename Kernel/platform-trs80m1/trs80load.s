@@ -139,4 +139,5 @@ out:	   jp (hl)
 
 booted:	   call printse
 	    .ascii 'Booting..\0'
+	   xor a
 	   jr 0x4300
