@@ -18,9 +18,6 @@ first file system and so on. Add 128 for the second disc. Remember to keep
 all of them under the offset you have set in the HDBDOS ROM for your disk
 basic floppy images.
 
-TODO: Now we have a bit more room, add minimal partition support for at
-least primary partitions.
-
 Memory Map
 ==========
 
