@@ -49,6 +49,7 @@
 	    .globl null_handler
 	    .globl fd_nmi_handler
 	    .globl _vtflush
+	    .globl mapper_init
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -88,6 +89,7 @@ _platform_reboot:
 
 
 init_early:
+	    call mapper_init	; A is the mapper type passed from crt0.s
 	    ld a,(4)
 	    cp #0x30
 	    jr nz, not_m3

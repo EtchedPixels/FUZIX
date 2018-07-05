@@ -5,6 +5,9 @@ extern uint8_t trs80_model;
 #define LNW80		2	/* Need to handle LNW80 model II.. */
 #define VIDEOGENIE	3	/* But colour genie may be too different.. */
 
+extern uint8_t trs80_mapper;
+#define MAP_SUPERMEM	0	/* Alpha Supermem and compatibles */
+#define MAP_SELECTOR	1	/* Selector */
 
 /*
  *	Differences versus model 1

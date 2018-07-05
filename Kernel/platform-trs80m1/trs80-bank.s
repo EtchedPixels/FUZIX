@@ -1,5 +1,5 @@
 ;
-;	    TRS 80 banking logic for the Model1 with Supermem
+;	    TRS 80 banking logic for the selector board
 ;
 
             .module trs80bank
@@ -17,12 +17,14 @@
 	    .globl map_save_kmap
 	    .globl map_restore_kmap
 	    .globl fork_mapsave
+	    .globl mapper_init
 
             ; imported symbols
 	    .globl _program_vectors	
             .globl _ramsize
             .globl _procmem
 	    .globl vtbufinit
+	    .globl _trs80_mapper
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -39,6 +41,9 @@ init_hardware:
 	    push af
 	    call vtbufinit
 	    pop af
+	    ld a,(_trs80_mapper)
+	    or a
+	    jr nz, memsize_selector
             ; set system RAM size
 	    ld hl,#0xFFFF		; FFFF is free in all our pages
 	    ld bc,#0xFF43		; kernel included
@@ -60,9 +65,44 @@ scan_pages_l:
 	    jr nz, scan_pages_l
 mismatch:				; B holds the first page above
 					; the limit (4 for 128K etc)
-	    dec b
-	    dec b			; remove kernel
-	    ld h,b
+	    ld e,b
+	    dec e
+	    jr scan_done
+
+memsize_selector:
+            ; set system RAM size
+	    ld bc,#0x381f
+	    ld hl,#0xFFFF		; free space
+	    ld e,#4			; only 4 pages to test
+mark_up:
+	    out (c),b
+	    ld (hl),e
+	    ld a,#0xF0			; subtract 0x10
+	    add b
+	    ld b,a
+	    dec e
+	    jr nz, mark_up
+	    ld bc,#0x081f
+	    ld e,#1
+scan:
+	    out (c),b
+	    ld a,(hl)
+	    cp e
+	    jr nz,scan_done
+	    ld a,#0x10
+	    add b
+	    ld b,a
+	    inc e
+	    ld a,#5
+	    cp e
+	    jr nz,scan
+	    dec e
+scan_done:
+;
+;	At this point E is the number of external banks we have
+;
+	    dec e			; one holds kernel code
+	    ld h,e
 	    ld l,#0			; effectively * 256
 	    srl h
 	    rr  l			; * 128
@@ -84,16 +124,43 @@ mismatch:				; B holds the first page above
             im 1 ; set CPU interrupt mode
             ret
 
+;
+;	Must live here as we need the mapper set up before we make any
+;	banked calls.
+;
+mapper_init:
+	    ld (_trs80_mapper),a
+	    or a
+	    jr nz, mapper_selector
+	    ld hl,#0x0043
+	    ld (ksave_map),hl
+	    ld (map_reg),hl
+	    ld (map_bank1),hl
+	    inc h
+	    ld (map_bank2),hl
+mapper_selector:
+	    ret
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
 
-ksave_map:  .db 0x00	; saved kernel map version
-map_port:   .db 0x43	; cheap hack so we can ld bc and out (c),b
-map_reg:    .db 0x00	; current value written to map register
-map_store:  .db 0x00	; save value from map_save
+_trs80_mapper:
+	    .db 0x01	; Tell kernel mapper is Selector
+ksave_map:  .db 0x1f
+	    .db 0x00	; saved kernel map version
+map_reg:    .db 0x1f	; so we can write a reg pair into map_reg
+	    .db 0x00	; current value written to map register
+map_bank1:  .db 0x1f	; port
+	    .db 0x00	; kernel map using system RAM, assuming no low 16K
+			; and high banking with I/O mapped
+map_bank2:  .db 0x1f	; port
+	    .db 0x08	; kernel map using first 32K of expansion memory
+			; and high banking with I/O mapper
+map_store:  .db 0x1f
+	    .db 0x00	; save value from map_save
+
 ;
 ;	Map in the kernel. We are in common and all kernel entry points are
 ;	in common. Thus someone will always have banked in the right page
@@ -102,16 +169,18 @@ map_store:  .db 0x00	; save value from map_save
 ;
 map_kernel:
 map_kernel_restore:
-	    push af
-	    ld a, (ksave_map)
-	    ld (map_reg), a
-	    out (0x43), a
-	    pop af
+	    push bc
+	    ld bc, (ksave_map)
+	    ld (map_reg), bc
+	    out (c), b
+	    pop bc
 	    ret
 
 fork_mapsave:
-	    ld a,(map_reg)
-	    ld (ksave_map),a
+	    push bc
+	    ld bc,(map_reg)
+	    ld (ksave_map),bc
+	    pop bc
 	    ret
 ;
 ;	Select the bank for the relevant process. Update the ksave_map so we
@@ -122,54 +191,61 @@ map_process:
 	    or l
 	    jr z, map_kernel
 map_process_hl:
-            ld a, (map_reg)
-	    ld (ksave_map),a	; for map_kernel_restore
-	    ld a,(hl)		; udata page
-	    ld (map_reg),a
-	    out (0x43), a
+            ld bc, (map_reg)
+	    ld (ksave_map),bc	; for map_kernel_restore
+	    ld b,(hl)		; udata page
+	    ld (map_reg),bc
+	    out (c), b
             ret
 
 map_process_a:			; used by bankfork
-	    push af
-	    ld a, (map_reg)
-	    ld (ksave_map), a
-	    pop af
-	    ld (map_reg), a
-	    out (0x43), a
+	    push bc
+	    ld bc, (map_reg)
+	    ld (ksave_map), bc
+	    ld b, a
+	    ld (map_reg), bc
+	    out (c), b
+	    pop bc
 	    ret
 
 map_process_save:
 map_process_always:
 	    push af
-	    ld a, (map_reg)
-	    ld (ksave_map), a
+	    push bc
+	    ld bc, (map_reg)
+	    ld (ksave_map), bc
 	    ld a,(U_DATA__U_PAGE)
-	    ld (map_reg),a
-	    out (0x43),a
+	    ld b,a
+	    ld (map_reg),bc
+	    out (c),b
+	    pop bc
 	    pop af
 	    ret
 
-map_save:   push af
-	    ld a, (map_reg)
-	    ld (map_store), a
-	    pop af
+map_save:   push bc
+	    ld bc, (map_reg)
+	    ld (map_store), bc
+	    pop bc
 	    ret
 
 map_restore:
-	    push af
-	    ld a, (map_store)
-	    ld (map_reg), a
-	    out (0x43), a
-	    pop af
+	    push bc
+	    ld bc, (map_store)
+	    ld (map_reg), bc
+	    out (c), b
+	    pop bc
 	    ret
 
 map_save_kmap:
-	    ld a,(map_reg)
+	    ld a,(map_reg + 1)
 	    ret
 
 map_restore_kmap:
-	    ld (map_reg),a
-	    out (0x43),a
+	    ld (map_reg + 1),a
+	    push bc
+	    ld bc, (map_reg)
+	    out (c),b
+	    pop bc
 	    ret
 
 ;
@@ -206,10 +282,10 @@ map_restore_kmap:
 ;	space we have to do the restore as we return.
 ;
 __bank_0_2:			; Call from common to bank 2
-	ld a,#1
+	ld bc,(map_bank2)
 	jr bankina
 __bank_0_1:			; Call from common to bank 1
-	xor a
+	ld bc,(map_bank1)
 bankina:
 	pop hl			; Get the return address
 	ld e,(hl)		; The two bytes following it are the true
@@ -217,59 +293,56 @@ bankina:
 	ld d,(hl)
 	inc hl
 	push hl
-	ld bc,(map_port)
-	ld (map_reg),a
-	out (c),a
+	ld (map_reg),bc
+	out (c),b
 	ex de,hl
-	ld a,b
-	or a
+	ld a,(map_bank1 + 1)
+	cp b
 	jr z, retbank1		; Arrange that we put the banks back as they
 	call callhl		; were before the call. Needed because calls
-	ld a,#1			; to common routines don't do banking so
-	ld (map_reg),a		; the return won't either.
-	out (0x43),a
+	ld bc,(map_bank2)	; to common routines don't do banking so
+	ld (map_reg),bc		; the return won't either.
+	out (c),b
 	ret
 retbank1:
 	call callhl
-	xor a
-	ld (map_reg),a
-	out (0x43),a
+	ld bc,(map_bank1)
+	ld (map_reg),bc
+	out (c),b
 	ret
 
 __bank_1_2:
-	ld a,#1
+	ld bc,(map_bank2)
 	pop hl			; Get the return address
 	ld e,(hl)		; The two bytes following it are the true
 	inc hl			; function to call
 	ld d,(hl)
 	inc hl
 	push hl
-	ld bc,(map_port)
-	ld (map_reg),a
-	out (c),a
+	ld (map_reg),bc
+	out (c),b
 	ex de,hl
 	call callhl
-	xor a
-	ld (map_reg),a
-	out (0x43),a
+	ld bc,(map_bank1)
+	ld (map_reg),bc
+	out (c),b
 	ret
 
 __bank_2_1:
-	xor a
+	ld bc,(map_bank1)
 	pop hl			; Get the return address
 	ld e,(hl)		; The two bytes following it are the true
 	inc hl			; function to call
 	ld d,(hl)
 	inc hl
 	push hl
-	ld bc,(map_port)
-	ld (map_reg),a
-	out (c),a
+	ld (map_reg),bc
+	out (c),b
 	ex de,hl
 	call callhl
-	ld a,#1
-	ld (map_reg),a
-	out (0x43),a
+	ld bc,(map_bank2)
+	ld (map_reg),bc
+	out (c),b
 	ret
 
 ;
@@ -284,29 +357,29 @@ __bank_2_1:
 ;	banking setup.
 ;
 __stub_0_1:
-	xor a
+	ld bc,(map_bank1)
 	jr stub_call
 __stub_0_2:
-	ld a,#1
+	ld bc,(map_bank2)
 stub_call:
 	pop hl			; return address
 	ex (sp),hl		; swap the junk word for the return
-	ld bc,(map_port)
-	ld (map_reg),a
-	out (c),a
+	ld a,(map_reg+1)	; where are we going back to ?
+	ld (map_reg),bc
+	out (c),b
 	ex de,hl
-	ld a,b
-	or a
+	ld bc,(map_bank1)
+	cp b
 	jr z, stub_ret_1
 	call callhl
-	ld a,#1
+	ld bc,(map_bank2)
 	jr stub_ret
 stub_ret_1:
 	call callhl		; invoke code in other bank
-	xor a			; and back to bank 1
+	ld bc,(map_bank1)	; and back to bank 1
 stub_ret:
-	ld (map_reg),a
-	out (0x43),a
+	ld (map_reg),bc
+	out (c),b
 	pop bc			; bc is now the return
 	push bc			; stack it twice
 	push bc
