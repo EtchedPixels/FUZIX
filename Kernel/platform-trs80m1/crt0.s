@@ -48,8 +48,13 @@
 
 ;
 ;	Once the loader completes it jumps here
+;	A holds the type of mapper the boot block was for
+;
+;	0: Supermem
+;	1: Selector
 ;
 start:
+		; Take care to preserve A until init_early
 		ld sp, #kstack_top
 		; then zero the data area
 		ld hl, #s__DATA
@@ -68,6 +73,7 @@ start:
 		or a
 		sbc hl,de
 		ld (_discard_size),hl
+		; We pass A into init_eatly holding the mapper type
 		call init_early
 		call init_hardware
 		push af
