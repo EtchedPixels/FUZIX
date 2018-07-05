@@ -1,6 +1,24 @@
 TRS80 Model 4/4P
 (or right now more accurately sdltrs/xtrs)
 
+This port supports the following configurations currently
+
+	TRS80 Model 4/4P (including gate array floppy disk workarounds)
+	Options:
+		Floppy Disk (somewhat basic support, no format tool yet)
+		Hard Disk (Tandy compatible)
+		Dave Huffman style banked memory (on Port 0x94)
+	In Progress:
+		Tandy hi-res graphics
+		Orchestra 90 sound card
+	Planned:
+		Micro Labs Grafyx
+		Alpha Joystick
+		IDE adapter
+	Not Supported:
+		XLR8R - to do it well is a different port
+
+
 Requres:
 	Patched xtrs from Fuzix git tree
 
