@@ -62,4 +62,6 @@
 #define KEY_EURO	0x82
 #define KEY_DOT		0x83
 #define KEY_YEN		0x84
+
+#define KEY_CAPSLOCK	0x9F	/* Never sent to the user, for internal tables */
 #endif
