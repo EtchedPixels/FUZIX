@@ -11,9 +11,9 @@ Supported hardware:
 Disk Layout
 ===========
 
-At the moment partitions are not handled. Instead each minor number
-corresponds to a 32MB slice of disc. Slice 0 holds the kernel image and
-the rest is used for swapping processes. Slice 1 then normally holds the
+Standard disk partitions are not handled due to limited memory. Instead each
+minor number corresponds to a 32MB slice of disc. Slice 0 holds the kernel image
+and the rest is used for swapping processes. Slice 1 then normally holds the
 first file system and so on. Add 128 for the second disc. Remember to keep
 all of them under the offset you have set in the HDBDOS ROM for your disk
 basic floppy images.
@@ -60,9 +60,8 @@ Support for a real time clock and clock locking
 We should be totally clean now on FIR blocking, so audio might
 actually be doable if not doing drivewire.
 
-We have about 2K left to try and jam those bits in which might just about be
-enough to add support for very minimal MBR parsing and offsets. That would
-be a big improvement.
+See if given an extra loader a 64K machine with Tormod's 32K RAM cart would
+work.
 
 To Test
 =======
