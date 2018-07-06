@@ -7,6 +7,7 @@
 #include <devtty.h>
 #include <input.h>
 #include <devinput.h>
+#include <devgfx.h>
 #include <stdarg.h>
 
 static char tbuf1[TTYSIZ];
@@ -89,6 +90,8 @@ void tty_putc(uint8_t minor, unsigned char c)
     if (minor == 3)
         tr1865_rxtx = c;
     else {
+        if (video_mode == 2)	/* Micrografyx */
+          return;
         irq = di();
         if (curtty != minor -1) {
             /* Kill the cursor as we are changing the memory buffers. If
