@@ -17,7 +17,8 @@ __sfr __at 0x82 gfx_data;
 __sfr __at 0x83 gfx_ctrl;
 __sfr __at 0xFF ioctrl;
 
-uint8_t has_hr1g;
+uint8_t has_hrg1;
+uint8_t video_mode;
 static uint8_t max_mode = 0;
 
 static struct display trsdisplay[4] = {
@@ -39,19 +40,19 @@ static struct display trsdisplay[4] = {
     640, 240,
     640, 240,
     255, 255,
-    FMT_MONO_BW,
+    FMT_MONO_WB,
     HW_TRS80GFX,
-    GFX_MULTIMODE|GFX_MAPPABLE,
+    GFX_MULTIMODE|GFX_MAPPABLE,	/* No overlay control on Model 3 */
     32,
     0			/* For now lets just worry about map */
   },
-  /* Microlabs Graphyx */
+  /* Microlabs Grafyx */
   {
     1,
     512, 192,
     512, 192,
     255, 255,
-    FMT_MONO_BW,
+    FMT_MONO_WB,
     HW_MICROLABS,
     GFX_MULTIMODE|GFX_MAPPABLE,
     12,
@@ -63,9 +64,9 @@ static struct display trsdisplay[4] = {
     384, 192,
     384, 192,
     255, 255,
-    FMT_MONO_BW,
+    FMT_MONO_WB,
     HW_HRG1B,
-    GFX_MULTIMODE|GFX_MAPPABLE,
+    GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
     9,
     0
   }
@@ -110,7 +111,6 @@ static struct videomap trsmap[4] = {
   },
 };
 
-static uint8_t vmode;
 static uint8_t displaymap[2] = {0, 0};
 
 /* TODO: Arbitrate graphics between tty 1 and tty 2 */
@@ -123,7 +123,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 
   switch(arg) {
   case GFXIOC_GETINFO:
-    return uput(&trsdisplay[vmode], ptr, sizeof(struct display));
+    return uput(&trsdisplay[video_mode], ptr, sizeof(struct display));
   case GFXIOC_GETMODE:
   case GFXIOC_SETMODE:
     m = ugetc(ptr);
@@ -132,11 +132,11 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     m = displaymap[m];
     if (arg == GFXIOC_GETMODE)
       return uput(&trsdisplay[m], ptr, sizeof(struct display));
-    vmode = m;
+    video_mode = m;
     /* Going back to text mode we need to turn off graphics cards. Going the
        other way we let the applications handle it as they may want to do
        memory wipes and the like first */
-    if (vmode == 0) {
+    if (video_mode == 0) {
       if (displaymap[1] == 1)
         gfx_ctrl = 0;
       else if (displaymap[1] == 2)
@@ -150,7 +150,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   /* Users can "map" 8) the framebuffer into their process and use the
      card directly */
   case GFXIOC_MAP:
-    return uput(&trsmap[vmode], ptr, sizeof(struct videomap));
+    return uput(&trsmap[video_mode], ptr, sizeof(struct videomap));
   }
   return -1;
 }
@@ -163,29 +163,29 @@ void gfx_init(void)
     if (hrg_data != 0xFF) {	/* We ought to test more carefully */
       max_mode = 1;
       displaymap[1] = 3;
-      has_hr1g = 1;
+      has_hrg1 = 1;
     }
   } else if (trs80_model == TRS80_MODEL3) {
     /* The model 3 might have an 80-Grafix UDG card, or a Graphyx
        or a Tandy card */
-    if (gfx_data != 0xFF) {
+    uint8_t *fb = (uint8_t *)0x3C00;
+    uint8_t c = *fb;
+    *fb = 128;
+    ioctrl = 0xB2;
+    if (*fb != 128) {
+      /* Hopeful */
+      *fb = 128;
+      if (*fb == 128) { /* 80 Grafix only has 6bit wide RAM but wants
+                           the top bit set on writes.. */
+        displaymap[1] = 2;
+        max_mode = 1;
+      } /* else add UDG support FIXME */
+    }
+    ioctrl = 0x20;
+    *fb = c;
+    if (max_mode == 0 && gfx_data != 0xFF) {
       max_mode = 1;
       displaymap[1] = 1;
-    } else {
-      uint8_t *fb = (uint8_t *)0x3C00;
-      uint8_t c = *fb;
-      *fb = 128;
-      ioctrl = 0xB2;
-      if (*fb != 128) {
-        /* Hopeful */
-        *fb = 128;
-        if (*fb == 128) { /* 80 Grafix only has 6bit wide RAM but wants
-                             the top bit set on writes.. */
-          displaymap[1] = 2;
-          max_mode = 1;
-        } /* else add UDG support FIXME */
-      }
-      *fb = c;
     }
   }
 }
