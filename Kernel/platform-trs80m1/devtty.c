@@ -21,7 +21,7 @@ struct vt_repeat keyrepeat;
 extern uint8_t *vtbase[2];
 
 /* FIXME: The Video Genie EG3020 is similar but the TR1865 is
-   data in: 8, status out F8, data out: F9 status in F9,
+   data in: F8, status out F8, data out: F9 status in F9,
    and serial printer on FD with the baud set by switches */
 
 __sfr __at 0xE8 tr1865_ctrl;
