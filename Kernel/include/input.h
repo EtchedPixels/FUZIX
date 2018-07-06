@@ -1,6 +1,8 @@
 #ifndef _INPUT_H
 #define _INPUT_H
 
+/* Low four bits indicate device number usually */
+
 #define MOUSE_REL	0x00		/* 8bit deltas - may need 16 ? */
 #define MOUSE_ABS	0x10		/* 16bit x 16bit virtual coords */
 #define STICK_DIGITAL	0x20		/* UDLR + buttons byte */
@@ -9,10 +11,16 @@
 #define		STICK_DIGITAL_L	0x20
 #define		STICK_DIGITAL_R	0x10
 #define STICK_ANALOG	0x30		/* 16bit signed X / Y, sign */
-#define KEYPRESS_CODE	0x40		/* Followed by keycode byte. Button
-                                           bits show u/d and 3 spare bits */
+
+/* No device number - but 3 bits reserved if needed */
+#define KEYPRESS_CODE	0x40		/* Followed by keycode byte. Number
+                                           bits show u/d and modifiers */
 #define		KEYPRESS_DOWN	0x00
 #define		KEYPRESS_UP	0x01
+#define		KEYPRESS_SHIFT	0x02
+#define		KEYPRESS_CTRL	0x04
+#define		kEYPRESS_ALT	0x08
+
 #define	LIGHTPEN_ABS	0x50		/* Light pen or similar, 16 x 16bit virtual coords */
 
 #define BUTTON(x)	(1 << (x))	/* Button 1-7 (top bit never used) */
