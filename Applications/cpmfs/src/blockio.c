@@ -10,10 +10,10 @@
  * if nsect is negative then always read a full block.
  */
 
-int getblock(int blockno, char *buffer, int nsect)
+int getblock(unsigned int blockno, char *buffer, int nsect)
 {
 
-	int sect, track, counter;
+	unsigned int sect, track, counter;
 
 #ifdef DEBUG
 	printf("block: %d\n", blockno);
@@ -42,10 +42,10 @@ int getblock(int blockno, char *buffer, int nsect)
  * If nsects is negative, write a full block.
  */
 
-int putblock(int blockno, char *buffer, int nsect)
+int putblock(unsigned int blockno, char *buffer, int nsect)
 {
 
-	int sect, track, counter;
+	unsigned int sect, track, counter;
 
 	if (nsect < 0)
 		nsect = blksiz / seclth;

@@ -36,7 +36,7 @@ extern int skew;
 extern int restrk;		/* reserved tracks (for system) */
 
 extern int *bitmap, *skewtab;
-extern int bm_size;
+extern unsigned int bm_size;
 extern int use16bitptrs;
 /*	cpmfio.h	1.5	83/05/13	*/
 
@@ -67,13 +67,13 @@ extern C_FILE c_iob[C_NFILE];
 #define MODFLG	0x08
 #define BINARY	0x10
 
-extern int alloc(void);
+extern unsigned int alloc(void);
 extern void dbmap(const char *str);
-extern int blks_used(void);
+extern unsigned int blks_used(void);
 extern void build_bmap(void);
 
-extern int getblock(int blockno, char *buffer, int nsect);
-extern int putblock(int blockno, char *buffer, int nsect);
+extern int getblock(unsigned int blockno, char *buffer, int nsect);
+extern int putblock(unsigned int blockno, char *buffer, int nsect);
 
 extern int c_close(C_FILE * fptr);
 extern C_FILE *c_creat(const char *name, const char *ext, int flag);
@@ -81,7 +81,7 @@ extern int c_fillbuf(C_FILE * fptr);
 extern int c_flush(C_FILE * fptr);
 extern int c_flsbuf(int c, C_FILE * fptr);
 extern int c_write(C_FILE * fptr, char *buf, int cnt);
-extern int cmdinp(const char *cmd);
+extern void cmdinp(char *cmd, int len);
 extern int chkcmd(const char *cmd);
 extern void help(void);
 extern int namesep(const char *fname, char *name, char *ext);
@@ -108,8 +108,8 @@ extern void hexdump(C_FILE * fp);
 extern void printline(FILE * piped, int *cbuf, int nc);
 extern void interact(void);
 extern void intrpt(int sig);
-extern int putpsect(int tr, int sect, const char *buf);
-extern int getpsect(int tr, int sect, const char *buf);
+extern int putpsect(unsigned int tr, unsigned int sect, const char *buf);
+extern int getpsect(unsigned int tr, unsigned int sect, char *buf);
 extern int initcpm(const char *name);
 extern void pip(char *cmdline, int bin);
 extern void pipc(const char *unixfile, const char *cpmfile, int bin);

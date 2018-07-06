@@ -8,13 +8,14 @@ int c_fillbuf(C_FILE * fptr)
 
 	int nsect;
 
-	if (++fptr->c_blk == (use16bitptrs ? 8 : 16))
+	if (++fptr->c_blk == (use16bitptrs ? 8 : 16)) {
 		if (fptr->c_dirp->blkcnt == (char) 0x80) {
 			/* find next extent (if it exists) */
-			if (getnext(fptr) == NULL)
+			if (getnext(fptr) == 0)
 				return EOF;
 		} else
 			return EOF;
+	}
 	/* This seems to reccur - uninline ? */
 	nsect = (fptr->c_seccnt > blksiz / seclth) ? blksiz / seclth : fptr->c_seccnt;
 	if (nsect == 0)

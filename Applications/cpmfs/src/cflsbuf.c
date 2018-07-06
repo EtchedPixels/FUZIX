@@ -28,7 +28,7 @@ int c_flush(C_FILE * fptr)
 		fptr->c_dirp->blkcnt = (char) 0x80;
 		savedir();
 		/* create new extent */
-		if ((it = creext(fptr->c_ext)) == NULL) {
+		if ((it = creext(fptr->c_ext)) == 0) {
 			fprintf(stderr, "can't create new extent, current: %d\n", fptr->c_ext);
 			return EOF;
 		}

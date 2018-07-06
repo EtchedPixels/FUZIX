@@ -7,7 +7,7 @@
 #include "cpm.h"
 
 #ifndef HELPFILE
-#define HELPFILE "/usr/local/lib/cpm.hlp"
+#define HELPFILE "/usr/lib/cpm.hlp"
 #endif
 
 /*
@@ -16,21 +16,16 @@
  * return the number of characters read.
  */
 
-int cmdinp(char *cmd)
+void cmdinp(char *cmd, int len)
 {
-
-	int cnt = 0, c;
-
-	while (cnt == 0) {
+	char *p;
+	do {
 		printf("cpm> ");
-		/* BUFFER OVERFLOW FIXME */
-		while ((c = getchar()) != EOF && c != '\n')
-			cmd[cnt++] = c;
-		if (c == EOF)
+		if (fgets(cmd, len - 1, stdin) == NULL)
 			exit(0);
-		cmd[cnt] = '\0';
-	}
-	return cnt;
+		p = cmd + strlen(cmd);
+		p[-1] = 0;
+	} while(*cmd);
 }
 
 /*
@@ -109,8 +104,8 @@ int namesep(const char *fname, char *name, char *ext)
 
 	int i = 0;
 
-	strncpy(name, "         ", 9);
-	strncpy(ext, "    ", 4);
+	memcpy(name, "         ", 9);
+	memcpy(ext, "    ", 4);
 	while (i < 8 && !(iscntrl(fname[i])) && fname[i] != '.') {
 		name[i] = fname[i];
 		i++;

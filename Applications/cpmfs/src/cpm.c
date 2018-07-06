@@ -56,7 +56,7 @@
 #include <signal.h>
 #include "cpm.h"
 
-#define BIG	2147483647UL
+#define BIG	0xFFFFUL
 
 C_FILE c_iob[C_NFILE];
 int fid;
@@ -342,24 +342,19 @@ int number(int big)
 			continue;
 
 		case 'w':
-			n *= sizeof(int);
+			n *= 2;
 			continue;
 
 		case 'b':
 			n *= 512;
 			continue;
 
-		case '*':
-		case 'x':
-			string = cs;
-			n *= number(BIG);
-
 		case '\0':
 			if (n >= big || n < 0) {
-				fprintf(stderr, "number: argument %D out of range\n", n);
+				fprintf(stderr, "number: argument %ld out of range\n", n);
 				exit(1);
 			}
-			return (n);
+			return n;
 		}
 }
 

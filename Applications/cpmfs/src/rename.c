@@ -32,7 +32,7 @@ int Rename(char *cmdline)
 		do {
 			strncpy(cio->c_dirp->name, newname, 8);
 			strncpy(cio->c_dirp->ext, newext, 3);
-		} while (getnext(cio) != NULL);
+		} while (getnext(cio) != 0);
 	} else {
 		fnfound(oldname, oldext);
 		return 1;

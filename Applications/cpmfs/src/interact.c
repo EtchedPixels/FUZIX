@@ -22,8 +22,7 @@ void interact(void)
 			signal(SIGINT, intrpt);
 			(void) setjmp(env);
 		}
-		if (cmdinp(cmd) < 0)
-			return;
+		cmdinp(cmd, 80);
 		rest = strchr(cmd, ' ');
 		if (rest)
 			*rest++ = '\0';
@@ -93,7 +92,7 @@ void interact(void)
 
 void intrpt(int sig)
 {
-	/* FIXME: restore signal handler! */
+	signal(sig, intrpt);
 	firsttime = 0;
 	printf("\n");
 	longjmp(env, 0);

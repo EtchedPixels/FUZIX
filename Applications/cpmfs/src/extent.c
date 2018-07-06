@@ -15,7 +15,7 @@
 int creext(int curext)
 {
 
-	int i, j;
+	unsigned int i, j;
 
 	for (i = 0; i < maxdir; i++)
 		if ((dirbuf + i)->status == (char) 0xe5)
@@ -45,7 +45,7 @@ int creext(int curext)
 int getnext(C_FILE * cur)
 {
 
-	int ind;
+	unsigned int ind;
 
 	cur->c_extno++;
 	for (ind = 0; ind < maxdir; ind++)

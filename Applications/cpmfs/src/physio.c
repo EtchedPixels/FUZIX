@@ -6,15 +6,14 @@
 #include <unistd.h>
 #include "cpm.h"
 
-/* Again look at sizes - think we need uint16_t's */
 /*
  * Write physical sector to floppy disk file
  */
 
-int putpsect(int tr, int sect, const char *buf)
+int putpsect(unsigned int tr, unsigned int sect, const char *buf)
 {
 
-	long newpos;
+	off_t newpos;
 
 	if (sect > sectrk || sect < 1) {
 		fprintf(stderr, "putpsect: sector number out of range: %d\n", sect);
@@ -36,10 +35,10 @@ int putpsect(int tr, int sect, const char *buf)
  * Read physical sector from floppy disk file
  */
 
-int getpsect(int tr, int sect, const char *buf)
+int getpsect(unsigned int tr, unsigned int sect, char *buf)
 {
 
-	long newpos;
+	off_t newpos;
 
 	if (sect > sectrk || sect < 1) {
 		fprintf(stderr, "getpsect: sector number out of range: %d\n", sect);

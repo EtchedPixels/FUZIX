@@ -7,7 +7,7 @@
 
 #include "cpm.h"
 
-int bm_size;
+unsigned int bm_size;
 
 /*
  * Bit map handling routines;
@@ -25,9 +25,10 @@ int bm_size;
 /* 
  * Allocate a new disk block, return NULL if disk full 
  */
-int alloc(void)
+unsigned int alloc(void)
 {
-	int i, j, blk;
+	unsigned int i, blk;
+	int j;
 
 	/* FIXME use ptr and ++ for bitmap */
 	for (i = 0; i < bm_size; i++) {
@@ -55,7 +56,7 @@ void dbmap(const char *str)
 {
 #ifdef DEBUG
 
-	int i;
+	unsigned int i;
 
 	printf("%s\n", str);
 	for (i = 0; i < bm_size; i++)
@@ -68,7 +69,7 @@ void dbmap(const char *str)
  * directory, including the directory blocks
  */
 
-int blks_used(void)
+unsigned int blks_used(void)
 {
 
 	int j, i, temp;
@@ -95,9 +96,10 @@ int blks_used(void)
 void build_bmap(void)
 {
 
-	int i, j, offset, block;
+	unsigned int i, j;
+	unsigned int offset, block;
 
-	bm_size = 1 + ((seclth * sectrk * (tracks - restrk)) / blksiz) / INTSIZE;
+	bm_size = 1 + (((uint32_t)seclth * sectrk * (tracks - restrk)) / blksiz) / INTSIZE;
 
 	if (!bitmap) {
 		if ((bitmap = malloc(bm_size * 4)) == NULL) {
@@ -119,7 +121,7 @@ void build_bmap(void)
 	for (i = 0; i < maxdir; i++) {
 		if ((dirbuf + i)->status != (char) 0xe5) {
 #ifdef DEBUG
-			printf("%d ->%8s\n", i, (dirbuf + i)->name);
+			printf("%u ->%8s\n", i, (dirbuf + i)->name);
 #endif
 			if (use16bitptrs)
 				for (j = 0; (j < 8) && (((dirbuf + i)->pointers[2 * j] != '\0')
@@ -128,7 +130,7 @@ void build_bmap(void)
 					    + (0xff00 & ((int) (dirbuf + i)->pointers[2 * j + 1] << 8));
 					offset = block / INTSIZE;
 #ifdef DEBUG
-					printf("blk:%d, offs:%d, bit:%d\n", block, offset, block % INTSIZE);
+					printf("blk:%u, offs:%u, bit:%u\n", block, offset, block % INTSIZE);
 #endif
 					if (offset < 0 || offset > bm_size * 4) {
 						fprintf(stderr, "bad offset into bitmap, wrong format?\n");
