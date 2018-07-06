@@ -8,7 +8,6 @@
 	        .area _CONST
 	        .area _INITIALIZED
 	        .area _DATA
-	        .area _INITIALIZER
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
@@ -21,6 +20,9 @@
 		.area _BUFFERS
 		.area _DISCARD
 	        .area _COMMONMEM
+	        ; Doesn't matter if these go over the I/O space as they are
+		; removed at the end of the build
+	        .area _INITIALIZER
 
         	; imported symbols
         	.globl _fuzix_main
