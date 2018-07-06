@@ -5,6 +5,8 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
+#include <input.h>
+#include <devinput.h>
 #include <stdarg.h>
 
 char tbuf1[TTYSIZ];
@@ -205,8 +207,13 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+					        if (keyboard_grab == 3) {
+						    queue_input(KEYPRESS_UP);
+						    queue_input(keyboard[i][n]);
+                                                }
 						keysdown--;
+                                        }
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -252,6 +259,7 @@ static uint8_t kbd_timer;
 static void keydecode(void)
 {
 	uint8_t c;
+	uint8_t m = 0;
 
 	if (keybyte == 7 && keybit == 3) {
 		capslock = 1 - capslock;
@@ -259,6 +267,7 @@ static void keydecode(void)
 	}
 
 	if (keymap[7] & 3) {	/* shift */
+	        m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
 		/* VT switcher */
 		if (c == KEY_F1 || c == KEY_F2) {
@@ -274,6 +283,7 @@ static void keydecode(void)
         /* The keyboard lacks some rather important symbols so remap them
            with control */
 	if (keymap[7] & 4) {	/* control */
+	        m |= KEYPRESS_CTRL;
                 if (keymap[7] & 3) {	/* shift */
                     if (c == '(')
                         c = '{';
@@ -286,10 +296,10 @@ static void keydecode(void)
                     if (c == '<')
                         c = '^';
                 } else {
-                    if (c == '(')
+                    if (c == '8')
                         c = '[';
                     else if (c == ')')
-                        c = ']';
+                        c = '9';
                     else if (c == '-')
                         c = '|';
                     else if (c > 31 && c < 127)
@@ -298,8 +308,30 @@ static void keydecode(void)
 	}
 	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
-		vt_inproc(inputtty+1, c);
+	if (c) {
+	        switch(keyboard_grab) {
+	        case 0:
+	            vt_inproc(inputtty + 1, c);
+		    break;
+                case 1:
+                    /* Proper rule needed FIXME */
+                    if (c <= 0x83) {
+		        vt_inproc(inputtty + 1, c);
+		        break;
+                    }
+                    /* Fall through */
+                case 2:
+                    queue_input(KEYPRESS_DOWN);
+                    queue_input(c);
+                    break;
+                case 3:
+                    /* Queue an event giving the base key (unshifted)
+                       and the state of shift/ctrl/alt */
+                    queue_input(KEYPRESS_DOWN | m);
+	            queue_input(keyboard[keybyte][keybit]);
+	            break;
+                }
+        }
 }
 
 void kbd_interrupt(void)

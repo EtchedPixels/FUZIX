@@ -18,7 +18,10 @@
 #define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
-
+/* Input device support */
+#define CONFIG_INPUT
+/* Full key up/down support */
+#define CONFIG_INPUT_GRABMAX 3
 
 /* Support extra banked expansion memory using port 0x94 */
 #define CONFIG_MAP94

@@ -1,6 +1,6 @@
 
 CSRCS = devlpr.c devtty.c devfd.c devhd.c devgfx.c
-CSRCS += devices.c main.c
+CSRCS += devices.c main.c devinput.c
 DISCARD_CSRCS = discard.c devhd_discard.c
 
 ASRCS = trs80.s trs80-bank94.s crt0.s

@@ -38,9 +38,11 @@ swap.rel
 bankfixed.rel
 vt.rel
 devsys.rel
+devinput.rel
 platform-trs80/devlpr.rel
 platform-trs80/devtty.rel
 platform-trs80/discard.rel
 platform-trs80/devdw.rel
 platform-trs80/drivewire.rel
+platform-trs80/devinput.rel
 -e
