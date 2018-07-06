@@ -13,14 +13,19 @@ int inputdev_read(uint8_t flag)
 
     while(1)
     {
-        s = platform_input_read(m + 1);
+        s = platform_input_read(m);
         if (s > 0) {
-            *m = s;
-            udata.u_count = min(udata.u_count, s + 1);
-            return uput(m, udata.u_base, udata.u_count);
+            udata.u_count = min(udata.u_count, s);
+            if (uput(m, udata.u_base, udata.u_count))
+                return -1;
+            return udata.u_count;
         }
         if (s == 0 && (flag & O_NDELAY)) {
             udata.u_error = EAGAIN;
+            return -1;
+        }
+        if (chksigs()) {
+            udata.u_error = EINTR;
             return -1;
         }
         if (s < 0)

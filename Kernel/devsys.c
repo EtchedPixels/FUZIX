@@ -65,7 +65,7 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		return netdev_read(flag);
 #endif
 #ifdef CONFIG_INPUT
-	case 65:
+	case 66:
 		return inputdev_read(flag);
 #endif
 	default:
