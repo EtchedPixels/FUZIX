@@ -16,10 +16,14 @@
 #define CONFIG_VT_MULTI
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
-
+/* Direct I/O support */
 #define CONFIG_LARGE_IO_DIRECT
+/* Raw input layer */
+#define CONFIG_INPUT
+/* Full keycode level grabbing supported */
+#define CONFIG_INPUT_GRABMAX	3
 
-#define MAX_MAPS	16
+#define MAX_MAPS	16	/* 512K */
 
 #define MAP_SIZE	0x8000
 

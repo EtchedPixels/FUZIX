@@ -5,6 +5,8 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
+#include <input.h>
+#include <devinput.h>
 #include <stdarg.h>
 
 static char tbuf1[TTYSIZ];
@@ -196,8 +198,13 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+					        if (keyboard_grab == 3) {
+						    queue_input(KEYPRESS_UP);
+						    queue_input(keyboard[i][n]);
+                                                }
 						keysdown--;
+                                        }
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -269,14 +276,12 @@ static uint8_t kbd_timer;
 static void keydecode(void)
 {
 	uint8_t c;
+	uint8_t m = 0;
 
 	/* Convention for capslock or the mod */
-	if (c == KEY_CAPSLOCK) {
-		capslock = 1 - capslock;
-		return;
-	}
 	/* Only the model 3 has right shift (2) */
 	if (keymap[7] & 3) {	/* shift (left/right) */
+	        m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
 		/* VT switcher */
 		if (c == KEY_LEFT || c == KEY_RIGHT) {
@@ -291,9 +296,14 @@ static void keydecode(void)
         } else
 		c = keyboard[keybyte][keybit];
 
+	if (c == KEY_CAPSLOCK) {
+		capslock = 1 - capslock;
+		return;
+	}
         /* The keyboard lacks some rather important symbols so remap them
            with control (down arrow)*/
 	if ((keymap[6] | keymap[7]) & 16) {	/* control */
+	        m |= KEYPRESS_CTRL;
                 if (keymap[7] & 3) {	/* shift */
                     if (c == '(')
                         c = '{';
@@ -319,9 +329,29 @@ static void keydecode(void)
 	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c) {
-//	    kprintf("Typed %d:%c\n", c, c);
-		vt_inproc(inputtty + 1, c);
-            }
+	        switch(keyboard_grab) {
+	        case 0:
+	            vt_inproc(inputtty + 1, c);
+		    break;
+                case 1:
+                    /* Proper rule needed FIXME */
+                    if (c <= 0x83) {
+		        vt_inproc(inputtty + 1, c);
+		        break;
+                    }
+                    /* Fall through */
+                case 2:
+                    queue_input(KEYPRESS_DOWN);
+                    queue_input(c);
+                    break;
+                case 3:
+                    /* Queue an event giving the base key (unshifted)
+                       and the state of shift/ctrl/alt */
+                    queue_input(KEYPRESS_DOWN | m);
+	            queue_input(keyboard[keybyte][keybit]);
+	            break;
+                }
+        }
 }
 
 /* Polled 40 times a second */
@@ -340,4 +370,5 @@ void kbd_interrupt(void)
 	}
         if (vtq != vtbuf)
                 vtflush();
+        poll_input();
 }

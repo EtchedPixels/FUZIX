@@ -4,7 +4,7 @@ This port supports the following configurations currently
 
 	TRS80 model I with Alpha SuperMem (or compatibles), 256K+ recommended
 	Options:
-		Floppy Disk
+		Floppy Disk (somewhat basic support, no format tool yet)
 		Hard Disk (Tandy compatible)
 		Lower Case Kit (Optional, either Tandy or the simple mods)
 		Percom Compatible Doubler
@@ -14,10 +14,10 @@ This port supports the following configurations currently
 
 	In Progress:
 		Exatron stringy
+		Alpha Products Joystick
 		HR1G Graphics Card
 	Planned:
 		Orchestra 80 sound card
-		Alpha Products Joystick
 
 	TRS80 model III with Alpha SuperMem (or compatibles), 256K+ recommended
 	Options:
@@ -28,6 +28,7 @@ This port supports the following configurations currently
 	In Progress:
 		Micro Labs Graphyx
 		Tandy Hi-Res Card
+		Alpha Products Joystick
 	Planned:
 		Orchestra 90 sound card
 		Lo-tech IDE adapter
