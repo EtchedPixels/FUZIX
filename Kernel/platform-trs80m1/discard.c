@@ -5,6 +5,7 @@
 #include <kdata.h>
 #include "devfd3.h"
 #include "devgfx.h"
+#include <devstringy.h>
 #include "trs80.h"
 
 void device_init(void)
@@ -48,7 +49,7 @@ static void pagemap_init_selector(void)
   i = MAX_MAPS;
  while(i) {
   /* 32K bank i, map 0 (I/O in low 16K bank in top 32), banking on */
-  pagemap_add(i << 4 + 8);
+  pagemap_add((i << 4) + 8);
   i--;
  }
 }
