@@ -1,0 +1,21 @@
+FCC = fcc -m$(USERCPU)
+FCCOPTS = -O2 --nostdio
+
+SRC = bitmap.c blockio.c cclose.c ccreat.c cfillbuf.c cflsbuf.c cmdhdl.c \
+      copen.c copy.c cpm.c delete.c dirhdl.c extent.c ffc.c gensktab.c \
+      hexdmp.c interact.c physio.c pip.c rename.c
+
+OBJ = $(SRC:.c=.rel)
+
+.SUFFIXES: .c .rel
+
+all: cpmfs
+
+.c.rel:
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
+
+cpmfs: $(OBJ)
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -o $@ $(OBJ)
+
+clean:
+	rm -f cpmfs *.o *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
