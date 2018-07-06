@@ -97,8 +97,8 @@ init_early:
 	    ld (_trs80_model),a
 	    ld a,#0x74
 	    out (0xE0),a	; Mask iobus, cassette
-	    ld a,#0x40
-	    out (0xE4),a	; and NMI sources except motor off
+	    xor a
+	    out (0xE4),a	; and NMI sources
 	    jr not_vg
 not_m3:
 	    ; Detect machine type (Model 1 or LNW80 or VideoGenie ?)
@@ -186,7 +186,7 @@ _rom_vectors:
 
 	    ; Model III only but just writing it does no harm
 	    ld hl,#fd_nmi_handler
-	    ld (0x4049), hl
+	    ld (0x404A), hl
 	    jp map_kernel
 	    
 ; outchar: Wait for UART TX idle, then print the char in A
