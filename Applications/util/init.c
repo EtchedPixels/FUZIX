@@ -18,6 +18,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -44,7 +45,7 @@
 
 #define crlf()   write(1, "\n", 1)
 
-static void spawn_login(struct passwd *, const char *, const char *, const char *);
+static void spawn_login(struct passwd *, const char *, const char *, const char *, uint8_t);
 static pid_t getty(const char **, const char *);
 
 static struct utmp ut;
@@ -715,6 +716,7 @@ static pid_t getty(const char **argv, const char *id)
 	const char *host = "";
 	char *p, buf[50], salt[3];
 	char hn[64];
+	uint8_t console = 0;
 
 	gethostname(hn, sizeof(hn));
 
@@ -753,6 +755,9 @@ static pid_t getty(const char **argv, const char *id)
 					argv++;
 					if ((issue = *++argv) == NULL)
 						usage();
+					break;
+				case 'c':
+					console = 1;
 					break;
 				default:
 					usage();
@@ -839,7 +844,7 @@ static pid_t getty(const char **argv, const char *id)
 						pr = "";
 					}
 					if (strcmp(pr, pwd->pw_passwd) == 0)
-						spawn_login(pwd, argv[0], id, host);
+						spawn_login(pwd, argv[0], id, host, console);
 				} else /* So you can't tell by the delay time */
 					crypt(p, "ZZ");
 
@@ -855,7 +860,7 @@ static pid_t getty(const char **argv, const char *id)
 
 static char *argp[] = { "sh", NULL };
 
-static void spawn_login(struct passwd *pwd, const char *tty, const char *id, const char *host)
+static void spawn_login(struct passwd *pwd, const char *tty, const char *id, const char *host, uint8_t console)
 {
 	char *p, buf[50];
 
@@ -878,6 +883,11 @@ static void spawn_login(struct passwd *pwd, const char *tty, const char *id, con
 	/* change owner of tty device */
 	if (fchown(0, pwd->pw_uid, pwd->pw_gid))
 		putstr("login: unable to change owner of controlling tty\n");
+	if (console) {
+		/* Claim console associated files */
+		chown("/dev/input", pwd->pw_uid, pwd->pw_gid);
+		chmod("/dev/input", 0600);
+	}
 
 	/* But we do care if these fail! */
 	if (setgid(pwd->pw_gid) == -1 ||
