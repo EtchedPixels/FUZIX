@@ -12,7 +12,6 @@
 ;	FIXME: precompensation
 ;		- not on single density
 ;		- track dependant for double density based on trsdos dir pos
-;	FIXME: wire up NMI and correct the masking of it we do
 ;	FIXME: fix the tiny motor/start command race. I think it's safe
 ;		but check
 ;	FIXME: backport fixes to model 4
@@ -28,6 +27,7 @@
 	.globl _fd_tab
 	.globl _fd_cmd
 	.globl map_kernel, map_process_always
+	.globl nmi_handler
 
 FDCREG	.equ	0xF0
 FDCTRK	.equ	0xF1
@@ -73,11 +73,19 @@ nap:	dec	bc
 ;	fdc_active must never be set when interrupts are enabled or we may
 ;	take a motor off during an interrupt...
 ;
+;	Nasties:
+;	The model 3 executes the following code on an NMI (plus some misc
+;	jumps in the process)
+;	IN A(E4)	; corrupting A of whatever is running
+;	BIT 5,A
+;	JP NZ, 4049	; if not reset button user vector
+;
+;	So we can only enable the NMI in tightly controlled situations
+;
 fd_nmi_handler:
-	push	af
 	ld 	a, (fdc_active)
 	or	a
-	jr 	z, boring_nmi
+	jp 	z, nmi_handler	; Dead
 	xor	a
 	out	(FDCINT), a
 	push	bc
@@ -88,12 +96,6 @@ fd_nmi_handler:
 	pop	af		; discard return address
 	jp	fdio_nmiout	; and jump
 
-;
-;	FIXME: check for motor off here
-;
-boring_nmi:
-	pop	af
-	retn
 ;
 ;	Wait for the drive controller to become ready
 ;	Preserve HL, DE
@@ -208,9 +210,10 @@ patchfor256:
 ;
 	nop				; 44
 fdxferdone:
-	xor	a			; 48
-	ld	(fdc_active), a		; 55
-	ei				; 59
+	xor	a			;
+	ld	(fdc_active), a		; 
+	out	(FDCINT),a		; 
+	ei				;
 	in	a, (FDCREG)
 	and	#0x19			; Error bits + busy
 	bit	0, a			; Wait for busy to drop, return in a
@@ -280,10 +283,12 @@ fdio_waitlock:
 	jr	z, fdio_waitlock
 	out	(c), b
 	ld	a, d
+	ld	b, #1
 fdio_outbyte:
 	out	(FDCCTRL), a		; stalls
 	outi
-	jr	fdio_outbyte
+	jr	nz,fdio_outbyte
+	
 fdio_nmiout:
 ;
 ;	Now tidy up
