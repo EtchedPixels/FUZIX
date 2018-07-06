@@ -17,6 +17,7 @@ __sfr __at 0x82 gfx_data;
 __sfr __at 0x83 gfx_ctrl;
 __sfr __at 0xFF ioctrl;
 
+uint8_t has_hr1g;
 static uint8_t max_mode = 0;
 
 static struct display trsdisplay[4] = {
@@ -162,6 +163,7 @@ void gfx_init(void)
     if (hrg_data != 0xFF) {	/* We ought to test more carefully */
       max_mode = 1;
       displaymap[1] = 3;
+      has_hr1g = 1;
     }
   } else if (trs80_model == TRS80_MODEL3) {
     /* The model 3 might have an 80-Grafix UDG card, or a Graphyx

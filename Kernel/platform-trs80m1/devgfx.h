@@ -6,4 +6,6 @@
 extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 extern void gfx_init(void);
 
+extern uint8_t has_hr1g;
+
 #endif
