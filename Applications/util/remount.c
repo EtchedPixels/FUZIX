@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/mount.h>
 #include <mntent.h>
+#include <dirent.h>
 
 static int quiet;
 
@@ -34,6 +35,33 @@ static char *modify_opts(char *opts, int flags)
 	return optbuf;
 }
 
+#define DEV_PATH "/dev/"
+
+static char *root_device(void)
+{
+    static DIR dp;
+    struct dirent *entry;
+    struct stat filestat, rootstat;
+    static char namebuf[sizeof(DEV_PATH) + MAXNAMLEN + 1];
+
+    if (stat("/", &rootstat) == 0
+	&& opendir_r(&dp,DEV_PATH) != (DIR *) NULL) {
+	while ((entry = readdir(&dp)) != (struct dirent *) NULL) {
+	    strcpy(namebuf, DEV_PATH);
+	    strlcat(namebuf, entry->d_name, sizeof(namebuf));
+	    if (stat(namebuf, &filestat) != 0)
+		continue;
+	    if (!S_ISBLK(filestat.st_mode))
+		continue;
+	    if (filestat.st_rdev != rootstat.st_dev)
+		continue;
+            return namebuf;
+	}
+    }
+    return NULL;
+}
+
+
 static char *getdev(char *arg, char *p)
 {
 	FILE *f;
@@ -49,7 +77,11 @@ static char *getdev(char *arg, char *p)
 		}
 		endmntent(f);
 	}
-	return NULL;
+	/* Special case / for boot scripts. If you have no fstab or mtab
+	   we want it to do the right thing anyway so you can clean up nicely */
+	if (strcmp(arg, "/"))
+		return NULL;
+	return root_device();
 }
 
 static void rewrite_mtab(char *name, int flags)
