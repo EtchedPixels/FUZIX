@@ -26,6 +26,9 @@
 	    .globl vtbufinit
 	    .globl _trs80_mapper
 
+	    .globl bankpatch1
+	    .globl bankpatch2
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
@@ -138,7 +141,12 @@ mapper_init:
 	    ld (map_bank1),hl
 	    inc h
 	    ld (map_bank2),hl
+	    ret
 mapper_selector:
+	    ; Patch the fast copier for our port numbering
+	    ld a,#0x1f
+	    ld (bankpatch1 + 1),a
+	    ld (bankpatch2 + 1),a
 	    ret
 
 ;------------------------------------------------------------------------------

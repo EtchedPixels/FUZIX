@@ -8,6 +8,12 @@
 
 	.globl bankfork		; for debugging
 
+	.globl bankpatch1	; so the mapping code can patch us
+	.globl bankpatch2
+
+
+	.area _COMMONMEM
+
 ;
 ;	This is related so we will keep it here. Copy the process memory
 ;	for a fork. a is the page base of the parent, c of the child
@@ -16,7 +22,7 @@
 ;	really matters on a 1.77Mhz processor !
 ;
 ;	Interrupts are off so I guess the stack pointer is spare (Watch
-;	out for NMI if we do model 3 this way!)
+;	out for NMI as we do model 3 this way!)
 ;
 bankfork:
 	ld (cpatch0 + 1),a	; patch parent into loop
@@ -38,6 +44,7 @@ copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
 	ld a,#0		; parent bank (patched in for speed)
+bankpatch1:
 	out (0x43),a
 	pop bc		; copy 16 bytes out of parent
 	pop de
@@ -51,6 +58,7 @@ cpatch0:
 	ld (sp_patch+1),sp
 cpatch1:
 	ld a,#0		; child bank (also patched in for speed)
+bankpatch2:
 	out (0x43),a
 	push iy		; and put them back into the child
 	push ix
