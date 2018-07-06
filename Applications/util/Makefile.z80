@@ -63,9 +63,11 @@ SRCS  = banner.c \
 	fgrep.c \
 	free.c \
 	fsck.c \
+	gfxtest.c \
 	gptparse.c \
 	grep.c \
 	id.c \
+	jstest.c \
 	kbdrate.c \
 	ll.c \
 	ls.c \
