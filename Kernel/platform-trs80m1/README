@@ -11,11 +11,12 @@ This port supports the following configurations currently
 		Holmes style speed up board (anything using port 254 bit 0)
 		Real Time Clock (supported for time locking, can't do dates as
 				 is not Y2K capable)
+		HRG1B Graphics Card
+		Alpha Products Joystick
 
 	In Progress:
 		Exatron stringy
-		Alpha Products Joystick
-		HR1G Graphics Card
+
 	Planned:
 		Orchestra 80 sound card
 
@@ -25,10 +26,10 @@ This port supports the following configurations currently
 		Holmes speed up board (using port 95)
 		Real Time Clock (supported for time locking, can't do dates as
 				 is not Y2K capable)
-	In Progress:
 		Micro Labs Graphyx
 		Tandy Hi-Res Card
 		Alpha Products Joystick
+
 	Planned:
 		Orchestra 90 sound card
 		Lo-tech IDE adapter
@@ -37,6 +38,7 @@ Under Investigation:
 
 	Video Genie I/II with banked memory (eg via S100)
 	LNW80 with banked memory (selector and similar)
+
 
 
 Not Supported:
