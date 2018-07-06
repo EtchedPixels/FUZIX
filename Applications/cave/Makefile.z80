@@ -5,7 +5,6 @@
 
 FCC = fcc -m$(USERCPU)
 FCCOPTS = -O2 --nostdio
-Z80_PLATFORM =
 
 SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
       turn.c verb.c
