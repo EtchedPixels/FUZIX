@@ -30,7 +30,7 @@ int platform_input_read(uint8_t *slot)
     }
 
     /* Clashes with Alpha joystick */
-    if (has_hr1g)
+    if (has_hrg1)
         return 0;
 
     r = ~stick;
@@ -74,7 +74,7 @@ int platform_input_write(uint8_t flag)
 
 void poll_input(void)
 {
-    if (has_hr1g)
+    if (has_hrg1)
         return;
     if (~stick != old_stick)
         wakeup(&kqueue);
