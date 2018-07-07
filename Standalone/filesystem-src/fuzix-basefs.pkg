@@ -112,6 +112,8 @@ n 20660 1025 /dev/kmem
 n 20444 1026 /dev/zero  
 n 20666 1027 /dev/proc  
 n 20660 1028 /dev/mem
+n 20600 1029 /dev/rtc
+n 20600 1090 /dev/input
 
 f 0644 /etc/group     etc-files/group
 f 0644 /etc/issue     etc-files/issue
@@ -119,6 +121,10 @@ f 0644 /etc/motd      etc-files/motd
 f 0644 /etc/passwd    etc-files/passwd
 f 0644 /etc/inittab   etc-files/inittab
 f 0644 /etc/termcap   etc-files/termcap
+f 0755 /etc/rc	      etc-files/rc
+f 0755 /etc/rc.halt   etc-files/rc.halt
+f 0644 /etc/mtab      etc-files/mtab
+f 0644 /etc/fstab     etc-files/fstab 
 
 f 0755 /init          ../../Applications/util/init
 
