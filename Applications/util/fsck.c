@@ -200,7 +200,7 @@ int perform_fsck(char *name, int search)
     char *buf;
 
     if (fd_open(name, search)){
-        puts("Cannot open file\n");
+        puts("Cannot open file");
         return 16;
     }
 
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
             fputs("syntax: fsck[-a] [devfile][:offset]\n", stderr);
             return 16;
         }
-        perform_fsck(argv[1], 0);
+        perform_fsck(argv[1], 1);
     }
     puts("Done.");
     exit(error);
