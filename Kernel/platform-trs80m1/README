@@ -13,6 +13,8 @@ This port supports the following configurations currently
 				 is not Y2K capable)
 		HRG1B Graphics Card
 		Alpha Products Joystick
+		ChromaTRS (as jostick and a graphics device only - need a VDP
+			emulation in xtrs to do console support)
 
 	In Progress:
 		Exatron stringy
@@ -29,6 +31,8 @@ This port supports the following configurations currently
 		Micro Labs Graphyx
 		Tandy Hi-Res Card
 		Alpha Products Joystick
+		ChromaTRS (as jostick and a graphics device only - need a VDP
+			emulation in xtrs to do console support)
 
 	Planned:
 		Orchestra 90 sound card
@@ -47,9 +51,6 @@ Not Supported:
 	Various 64K only CP/M adapters
 
 Would Be Nice:
-	ChromaTRS		-	not enough emulation, or
-					software such as ChromaBasic to build
-					emulation support
 	80-Grafix		-	need docs, example apps to debug
 					an emulator
 
