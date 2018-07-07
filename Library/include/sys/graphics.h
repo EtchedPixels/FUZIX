@@ -21,7 +21,7 @@ struct display {
 #define FMT_UBEE	130	/* Microbee 6545 modes */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
-#define HW_VDP_9918	128	/* Not neccessarily MSX... */
+#define HW_VDP_9918A	128	/* Not neccessarily MSX... */
 #define HW_VDP_9938	129
 #define HW_TRS80GFX	130	/* TRS80 model 4 graphics board */
 #define HW_HRG1B	131	/* HRG1B for TRS80 and VidoeGenie */

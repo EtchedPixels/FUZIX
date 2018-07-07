@@ -71,8 +71,8 @@ static void decode_mode_c(int c)
     case HW_UNACCEL:
       printf("unaccelerated framebuffer");
       break;
-    case HW_VDP_9918:
-      printf("9918");
+    case HW_VDP_9918A:
+      printf("9918A");
       break;
     case HW_VDP_9938:
       printf("9938");
