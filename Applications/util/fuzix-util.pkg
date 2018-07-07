@@ -23,7 +23,8 @@ f 0755 /bin/date        date
 f 0755 /bin/dd          dd
 f 0755 /bin/df          df
 f 0755 /bin/echo        echo
-f 0755 /bin/ed          ed
+# The real thing is far better
+#f 0755 /bin/ed          ed
 f 0755 /bin/fgrep       fgrep
 f 0755 /bin/kill        kill
 f 0755 /bin/killall     killall

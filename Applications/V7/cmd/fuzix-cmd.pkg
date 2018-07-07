@@ -15,6 +15,7 @@ f 0755 /usr/bin/dc            dc
 f 0755 /usr/bin/diff          diff
 f 0755 /usr/bin/diff3         diff3
 f 0755 /usr/bin/diffh         diffh
+f 0755 /bin/ed		      ed
 f 0755 /usr/bin/join          join
 f 0755 /usr/bin/look          look
 f 0755 /usr/bin/makekey       makekey
