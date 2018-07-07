@@ -12,6 +12,9 @@
 ;	load less empty space. On the other hand we've only got 256 bytes
 ;	of space to play in.
 ;
+;	We have zero free bytes, so to add anything you need to squash
+;	it a bit.
+;
 .area	    BOOT	(ABS)
 .org	    0x4200
 
@@ -36,15 +39,31 @@ start:
    	    ; Loader message
 	    ld de, #0x3C00
 	    call prints
-	    .ascii 'TRS80Load 0.2m1\0'
+	    .ascii 'TRS80LOAD 0.3M1\0'
 	    out (0x43),a		; a is 0 on prints return
 	    in a,(0x43)
 	    or a
 	    jr z, bank_ok
+	    ld hl,(3)
+	    ld bc,#0x011f
+	    ld a,c
+	    ld (patch+3),a		; patch the port
+	    ld a,#0x08
+	    ld (patch+1),a		; patch the value
+	    ld a,b
+	    ld (patch2+1),a		; pass the banker type
+	    out (c),b
+	    ld de,(3)
+	    dec b
+	    out (c),b
+	    or a
+	    sbc hl,de
+	    jr nz, bank_ok
 	    call printse
-	    .ascii 'Supermem not found\0'
+	    .ascii 'BANKED MEMORY NOT FOUND\0'
 bad:	    jr bad
-
+second_block:
+	    .byte  0			; if we need to save use bank_ok+1 !
 bank_ok:
 	    ld bc, #0x4300		; page aligned buffer we read into
 	    ld de, #FDCDATA		; data port
@@ -106,10 +125,12 @@ flopin:	    bit 1,(hl)
 	    inc b			; correct bc for next call
 	    jr nz, flopstat		; passed FFFF ?
 	    ld b,#0x80			; go back to 8000 and change bank
-	    in a,(0x43)
+	    ld a,(second_block)
 	    or a
 	    jr nz, booted		; already on second bank so boot
 	    ld a,#1			; switch to bank 2
+	    ld (second_block),a
+patch:	    ld a,#1			; patch for non supermem
             out (0x43),a
 flopstat:
 	    ld a, (hl)
@@ -119,7 +140,7 @@ flopstat:
 	    or a			; safe even though we rotated right
 	    ret z
 	    call printse
-	    .ascii 'Read\0'
+	    .ascii 'READ\0'
 fail:	    jr fail
 
 
@@ -138,6 +159,5 @@ printsl:
 out:	   jp (hl)
 
 booted:	   call printse
-	    .ascii 'Booting..\0'
-	   xor a
-	   jr 0x4300
+	    .ascii 'BOOTING..\0'
+patch2:	   ld a,#0
