@@ -5,7 +5,11 @@
 #include <devinput.h>
 
 __sfr __at 0x00 stick;
-uint8_t old_stick;
+static uint8_t old_stick;
+
+__sfr __at 0x7C chroma0;
+__sfr __at 0x7E chroma1;
+static uint8_t old_cj[2];
 
 static char buf[32];
 static struct s_queue kqueue = {
@@ -19,6 +23,28 @@ void queue_input(uint8_t c)
     wakeup(&kqueue);
 }
 
+/* If both are present number the Chroma joysticks 1 and 2 */
+static int chroma_js(uint8_t *slot, uint8_t n, uint8_t v)
+{
+    uint8_t k = 0;
+    if (v == old_cj[n])
+        return 0;
+    old_cj[n] = v;
+    if (v & 1)
+        k = STICK_DIGITAL_L;
+    if (v & 2)
+        k = STICK_DIGITAL_R;
+    if (v & 4)
+        k = STICK_DIGITAL_U;
+    if (v & 8)
+        k = STICK_DIGITAL_D;
+    if (v & 16)
+        k = BUTTON(0);
+    *slot++ = STICK_DIGITAL | (n + 1);
+    *slot = k;
+    return 2;
+}
+     
 int platform_input_read(uint8_t *slot)
 {
     uint8_t r, k;
@@ -29,6 +55,12 @@ int platform_input_read(uint8_t *slot)
 	return 2;
     }
 
+    if (has_chroma) {
+        if (chroma_js(slot, 0, ~chroma0))
+	    return 2;
+        if (chroma_js(slot, 1, ~chroma1))
+	    return 2;
+    }
     /* Clashes with Alpha joystick */
     if (has_hrg1)
         return 0;
@@ -56,7 +88,7 @@ int platform_input_read(uint8_t *slot)
     if (r & 16)
         k |= BUTTON(0);
     *slot++ = STICK_DIGITAL;
-    *slot++ = k;
+    *slot = k;
     return 2;
 }
 
@@ -74,8 +106,7 @@ int platform_input_write(uint8_t flag)
 
 void poll_input(void)
 {
-    if (has_hrg1)
-        return;
-    if (~stick != old_stick)
-        wakeup(&kqueue);
+    if ((!has_hrg1 && ~stick != old_stick) || 
+	(has_chroma && (old_cj[0] != ~chroma0 || old_cj[1] != ~chroma1)))
+	    wakeup(&kqueue);
 }

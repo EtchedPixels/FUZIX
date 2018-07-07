@@ -8,5 +8,6 @@ extern void gfx_init(void);
 
 extern uint8_t video_mode;
 extern uint8_t has_hrg1;
+extern uint8_t has_chroma;
 
 #endif

@@ -13,15 +13,18 @@
 
 __sfr __at 0x00 hrg_off;
 __sfr __at 0x04 hrg_data;
+__sfr __at 0x79 vdps;
+__sfr __at 0x7C chromajs0;
 __sfr __at 0x82 gfx_data;
 __sfr __at 0x83 gfx_ctrl;
 __sfr __at 0xFF ioctrl;
 
 uint8_t has_hrg1;
+uint8_t has_chroma;	/* and thus 2 joystick ports */
 uint8_t video_mode;
 static uint8_t max_mode = 0;
 
-static struct display trsdisplay[4] = {
+static struct display trsdisplay[5] = {
   /* Text mode */
   {
     0,
@@ -69,10 +72,22 @@ static struct display trsdisplay[4] = {
     GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
     9,
     0
+  },
+  /* CHROMAtrs */
+  {
+    1,
+    256, 192,
+    256, 192,
+    255, 255,
+    FMT_VDP,
+    HW_VDP_9918A,
+    GFX_MAPPABLE,	/* We don't support it as a console yet */
+    16,
+    0
   }
 };
 
-static struct videomap trsmap[4] = {
+static struct videomap trsmap[5] = {
   {
     0,
     0,
@@ -109,6 +124,15 @@ static struct videomap trsmap[4] = {
     1,		/* Standard spacing */
     MAP_PIO
   },
+  /* CHROMAtrs */
+  {
+    0,
+    0x78,	/* I/O ports 0x78/79 */
+    0, 0,
+    0, 0,
+    1,
+    MAP_PIO	/* VDP is I/O mapped */
+  }
 };
 
 static uint8_t displaymap[2] = {0, 0};
@@ -187,5 +211,14 @@ void gfx_init(void)
       max_mode = 1;
       displaymap[1] = 1;
     }
+  }
+  /* It's possible to have a CHROMAtrs and other adapters as it fits
+     on the external bus. 70-7C is also a common location for RTC clocks
+     which makes detection trickier. The clock will show 0 in the upper
+     bits, the joystick port will not */
+  if (vdps != 0xFF && (chromajs0 & 0xC0) == 0xC0) {
+    displaymap[++max_mode] = 4;
+    trsdisplay[4].mode = max_mode;
+    has_chroma = 1;
   }
 }
