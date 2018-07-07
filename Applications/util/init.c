@@ -276,6 +276,11 @@ static void parse_initline(void)
 			sdata++;
 		return;
 	}
+	/* Handle a blank line gracefully */
+	if (*sdata == '\n') {
+		sdata++;
+		return;
+	}
 	/* We start with a line length then the id: bits. Don't write
 	 * the length yet - we may still be using that byte for input */
 	linelen = idata++;
@@ -365,7 +370,7 @@ static void parse_inittab(void)
 	uint8_t *p;
 	int i;
 	idata = inittab = sdata;
-	while (sdata < sdata_end)
+	while (sdata && sdata < sdata_end)
 		parse_initline();
 	/* Allocate space for the control arrays */
 	initpid = (struct initpid *) idata;
