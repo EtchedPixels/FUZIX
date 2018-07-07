@@ -535,8 +535,10 @@ arg_t _uadmin(void)
 	if (func != AD_NOSYNC)
 		sync();
 	/* Wants moving into machine specific files */
-	if (cmd == A_SHUTDOWN || cmd == A_DUMP)
+	if (cmd == A_SHUTDOWN || cmd == A_DUMP) {
+		kputs("Halted.\n");
 		platform_monitor();
+	}
 	if (cmd == A_REBOOT)
 		platform_reboot();
 
