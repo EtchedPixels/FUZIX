@@ -238,7 +238,7 @@ uint8_t keyboard[8][8] = {
 	{'x', 'y', 'z', '[', '\\', ']', '^', '_' },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_BS, KEY_DEL, ' '},
 	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
 };
 
