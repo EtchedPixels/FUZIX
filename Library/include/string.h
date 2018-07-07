@@ -43,11 +43,12 @@ extern char *rindex(const char *__s, int __c);
 extern void bcopy(const void *__src, void *__dst, size_t __n);
 extern void bzero(void *__dst, size_t __n);
 
-/* Other common BSD functions */
+/* Other common string functions */
 extern char *strpbrk(const char *__s, const char *__accept);
 extern char *strsep(char **__stringp, const char *__delim);
 extern char *strstr(const char *__haystack, const char *__needle);
 extern char *strtok(char *__str, const char *__delim);
+extern char *strtok_r(char *__str, const char *__delim, char **__olds);
 extern size_t strcspn(const char *__s, const char *__reject);
 extern size_t strspn(const char *__s, const char *__accept);
 
