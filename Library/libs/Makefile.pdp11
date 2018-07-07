@@ -57,10 +57,10 @@ SRC_C += cfmakeraw.c cfspeed.c revoke.c
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
 # Seems to give the compiler a hard time
 SRC_HARD += regexp.c
-# Pieces we inherit in this case from the compiler library instead
+# Pieces we inherit in some cases from the compiler library instead
 SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
 SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
-SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c
+SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c strtok_r.c
 SRC_C += memchr.c memcmp.c memcpy.c memset.c memmove.c
 
 SRC_CT += termcap.c tgetent.c
