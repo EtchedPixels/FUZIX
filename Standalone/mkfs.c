@@ -170,6 +170,7 @@ int main(int argc, char **argv)
 
 	/* Write out super block */
 	dwrite(1, (char *) &fs_super);
+	return 0;
 }
 
 void dwrite(uint16_t blk, char *addr)
