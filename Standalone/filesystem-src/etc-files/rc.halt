@@ -1,0 +1,4 @@
+killall
+umount -a
+remount / ro
+halt
