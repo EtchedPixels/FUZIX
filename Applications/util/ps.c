@@ -14,29 +14,85 @@
 
 int flags;
 
-char *mapstat(char s)
+char mapstat(char s)
 {
     switch (s) {
-	case P_ZOMBIE:  return "Defunct";
-	case P_FORKING: return "Forking";
-	case P_RUNNING: return "Running";
-	case P_READY:   return "Ready";
-	case P_SLEEP:   return "Asleep";
-	case P_IOWAIT:  return "I/O Wait";
-	case P_STOPPED: return "Stopped";
+	case P_ZOMBIE:  return 'Z';
+	case P_FORKING: return 'F';
+	case P_RUNNING: return 'R';
+	case P_READY:   return 'R';
+	case P_SLEEP:   return 'S';
+	case P_IOWAIT:  return 'D';
+	case P_STOPPED: return 'T';
     }
-    return "?";
+    return '?';
+}
+
+static struct p_tab_buffer ptab[PTABSIZE];
+static int ppid_slot[PTABSIZE];
+static int uid;
+
+void print_header(void)
+{
+    if (!(flags & F_h)) {
+        if (flags & F_n)
+	    printf("  PID\t PPID\t  UID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+	else
+	    printf("USER\t  PID\t PPID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
+    }
+}
+
+int show_process(struct p_tab *pp)
+{
+    if (pp->p_status == 0)
+        return 0;
+
+    if ((flags & F_r) && (pp->p_status != P_RUNNING && pp->p_status != P_READY))
+        return 0;
+	    
+    if (!(flags & F_a) && (pp->p_uid != uid))
+        return 0;
+
+    return 1;
+}
+
+void display_process(struct p_tab *pp, int i)
+{
+    struct passwd *pwd;
+    static char name[10], uname[20];
+    int j;
+
+        strncpy(name, pp->p_name, 8);
+        name[8] = '\0';
+
+        for (j = 0; j < 8; ++j) {
+            if (name[j] != 0)
+                if (name[j] < ' ') name[j] = '?';
+        }
+
+	if (flags & F_n) {
+	    printf("%5d\t%5d\t%5d\t%c\t%04x\t%-5d\t%s\n",
+	           pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid, pp->p_uid,
+	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
+	           name);
+	} else {
+	    pwd = getpwuid(pp->p_uid);
+	    if (pwd)
+	        strcpy(uname, pwd->pw_name);
+	    else
+	        sprintf(uname, "%d", pp->p_uid);
+	    printf("%s\t%5d\t%5d\t%c\t%04x\t%-5d\t%s\n",
+	           uname, pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid,
+	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
+	           name);
+        }
 }
 
 int do_ps(void)
 {
-    int i, j, uid, pfd, ptsize, nodesize;
-    struct passwd *pwd;
+    int i, pfd, ptsize, nodesize;
     struct p_tab_buffer *ppbuf;
     struct p_tab *pp;
-    static struct p_tab_buffer ptab[PTABSIZE];
-    static int ppid_slot[PTABSIZE];
-    static char name[10], uname[20];
 
     uid = getuid();
 
@@ -55,6 +111,7 @@ int do_ps(void)
         fprintf(stderr, "kernel/user include mismatch.\n");
         exit(1);
     }
+ 
     if (ioctl(pfd, 1, (char *) &ptsize) != 0) {
         perror("ioctl");
         close(pfd);
@@ -73,51 +130,16 @@ int do_ps(void)
     }
     close(pfd);
 
-    if (!(flags & F_h)) {
-        if (flags & F_n)
-	    printf("  PID\t PPID\t  UID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
-	else
-	    printf("USER\t  PID\t PPID\tSTAT\tWCHAN\tALARM\tCOMMAND\n");
-    }
+    print_header();
 
     for (ppbuf = ptab, i = 0; i < ptsize; ++i, ++ppbuf) {
         pp = &ppbuf->p_tab;
-	if (pp->p_status == 0)
-	    continue;
-
-	if ((flags & F_r) &&
-	    (pp->p_status != P_RUNNING && pp->p_status != P_READY))
-	    continue;
-	    
-	if (!(flags & F_a) && (pp->p_uid != uid))
-	    continue;
-
-        strncpy(name, pp->p_name, 8);
-        name[8] = '\0';
-
-        for (j = 0; j < 8; ++j) {
-            if (name[j] != 0)
-                if (name[j] < ' ') name[j] = '?';
-        }
-
-	if (flags & F_n) {
-	    printf("%5d\t%5d\t%5d\t%s\t%04x\t%-5d\t%s\n",
-	           pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid, pp->p_uid,
-	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
-	           name);
-	} else {
-	    pwd = getpwuid(pp->p_uid);
-	    if (pwd)
-	        strcpy(uname, pwd->pw_name);
-	    else
-	        sprintf(uname, "%d", pp->p_uid);
-	    printf("%s\t%5d\t%5d\t%s\t%04x\t%-5d\t%s\n",
-	           uname, pp->p_pid, ptab[ppid_slot[i]].p_tab.p_pid,
-	           mapstat(pp->p_status), pp->p_wait, pp->p_alarm,
-	           name);
-	}
+ 
+        if (!show_process(pp))
+            continue;
+                   
+        display_process(pp, i);
     }
-
     return 0;
 }
 
