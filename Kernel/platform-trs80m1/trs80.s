@@ -108,11 +108,11 @@ not_m3:
 	    ld a,(hl)
 	    inc (hl)
 	    cp (hl)
-	    jr z, not_lnw
+	    jr z, not_lnw	; if it's RAM it's an LNW80
 	    dec (hl)
 	    xor a
 	    out (0xFE),a	; ROM back on, normal video mode for now
-	    ld a,#2		; LWN80
+	    ld a,#2		; LNW80
 	    ld (_trs80_model), a
 	    jr not_vg
 not_lnw:
