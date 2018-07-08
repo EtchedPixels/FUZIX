@@ -29,6 +29,9 @@ __sfr __at 0xE9 tr1865_baud;
 __sfr __at 0xEA tr1865_status;
 __sfr __at 0xEB tr1865_rxtx;
 
+/*__sfr __at 0xF8 vg_trs1865_wrst;
+  __sfr __at 0xF9 vg_trs1865_ctrd; */
+
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
@@ -246,19 +249,23 @@ static void keyproc(void)
  *	control-minus gives pipe
  *
  *	We may want to add others if need be
+ *
+ *	TODO: Where does the LNW80 hide F1/F2 ?
  */
 
 uint8_t keyboard[8][8] = {
 	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
 	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
-	{'x', 'y', 'z',   0,   0,   0,   0,  0  },
+	/* F1-F4 are only present on Video Genie II/Dick Smith II */
+	{'x', 'y', 'z',   0,   KEY_F2,   KEY_F3,   KEY_F4,  KEY_F1 },
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_BS, KEY_DEL, ' '},
 	/* The Model 1 only has bit 0 of this for its shift key. The Model 3
 	   has bit 2 for right shift. Some add-ons used bit 4 for control,
-	   other things borrowed the down arrow */
+	   other things borrowed the down arrow
+	   The VideoGenie has MS on bit 1, RPT on 3 and CTRL on 4 */
 	{ 0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0 }
 };
 
