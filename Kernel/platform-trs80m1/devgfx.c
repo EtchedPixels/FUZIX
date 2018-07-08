@@ -17,6 +17,8 @@ __sfr __at 0x79 vdps;
 __sfr __at 0x7C chromajs0;
 __sfr __at 0x82 gfx_data;
 __sfr __at 0x83 gfx_ctrl;
+__sfr __at 0xEC le18_data;
+__sfr __at 0xEF le18_ctrl;
 __sfr __at 0xFF ioctrl;
 
 uint8_t has_hrg1;
@@ -24,7 +26,7 @@ uint8_t has_chroma;	/* and thus 2 joystick ports */
 uint8_t video_mode;
 static uint8_t max_mode = 0;
 
-static struct display trsdisplay[5] = {
+static struct display trsdisplay[6] = {
   /* Text mode */
   {
     0,
@@ -84,10 +86,22 @@ static struct display trsdisplay[5] = {
     GFX_MAPPABLE,	/* We don't support it as a console yet */
     16,
     0
+  },
+  /* Lowe Electronics LE-18 */
+  {
+    1,
+    256, 192,
+    256, 192,
+    255, 255,
+    FMT_MONO_WB,
+    HW_LOWE_LE18,
+    GFX_MAPPABLE,	/* We don't support it as a console yet */
+    16,
+    0
   }
 };
 
-static struct videomap trsmap[5] = {
+static struct videomap trsmap[6] = {
   {
     0,
     0,
@@ -132,10 +146,19 @@ static struct videomap trsmap[5] = {
     0, 0,
     1,
     MAP_PIO	/* VDP is I/O mapped */
+  },
+  /* Lowe Electronics LE-18 */
+  {
+    0,
+    0xEC,	/* I/O ports 0xEC-0xEF */
+    0, 0,
+    0, 0,
+    1,
+    MAP_PIO	/* VDP is I/O mapped */
   }
 };
 
-static uint8_t displaymap[2] = {0, 0};
+static uint8_t displaymap[4] = {0, 0, 0, 0};
 
 /* TODO: Arbitrate graphics between tty 1 and tty 2 */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
@@ -167,6 +190,8 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
         ioctrl = 0x20;
       else if (displaymap[1] == 3)
         hrg_off = 1;
+      else if (displaymap[1] == 5)
+        le18_ctrl = 0;
     }
     return 0;
   case GFXIOC_UNMAP:
@@ -188,6 +213,11 @@ void gfx_init(void)
       max_mode = 1;
       displaymap[1] = 3;
       has_hrg1 = 1;
+    }
+    /* LE-18 */
+    if(trs80_model == VIDEOGENIE && le18_data != 0xFF) {
+      displaymap[++max_mode] = 5;
+      trsdisplay[5].mode = max_mode;
     }
   } else if (trs80_model == TRS80_MODEL3) {
     /* The model 3 might have an 80-Grafix UDG card, or a Graphyx
