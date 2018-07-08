@@ -35,6 +35,10 @@
 #define VT_RIGHT	63
 #define VT_BOTTOM	15
 
+/* Keyboard bitmap definitions */
+#define KEY_ROWS	8
+#define KEY_COLS	8
+
 #define TICKSPERSEC 40	    /* Ticks per second */
 #define PROGBASE    0x8000  /* Base of user  */
 #define PROGLOAD    0x8000  /* Load and run here */
