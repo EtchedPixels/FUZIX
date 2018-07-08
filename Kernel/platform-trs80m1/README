@@ -62,7 +62,13 @@ This port supports the following configurations currently
 
 Under Investigation:
 
-	Video Genie I/II with banked memory (eg via S100)
+	Video Genie I/II with banked memory (eg on the earlier expansion unit
+	via S100 instead of the supplied 32K card)
+	(In theory something like a BG 256S 256K RAM S100 card in the expansion
+	 unit jumpered for AMOS II 8x32K user banks, with the I/O port
+	 jumpered for 0x43 should just work as it'll behave the same way
+	 as the SuperMEM for things that matter)
+
 
 
 Not Supported:
