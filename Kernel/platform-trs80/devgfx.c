@@ -34,7 +34,7 @@ static const struct display trsdisplay[2] = {
     HW_TRS80GFX,
     GFX_MULTIMODE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
     32,
-    GFX_DRAW|GFX_READ|GFX_WRITE
+    0
   }
   /* FIXME: Need to add Micrographyx at some point (needs a different id to
      the TRS80 model III one */
