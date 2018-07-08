@@ -11,12 +11,29 @@ uint8_t vtattr_cap;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-/* We need to spin here because we don't have interrupts for the UART on the
-   model I */
+/*
+ *	Called when there is no work to do. On the models without serial
+ *	interrupts we poll here so that the normal case of idling while
+ *	waiting for input feels ok.
+ */
 void platform_idle(void)
 {
-  irqflags_t irq = di();
-  tty_interrupt();
+  irqflags_t irq;
+  /* The Model III has a real interrupt driven serial port */
+  if (trs80_model == TRS80_MODEL3) {
+    __asm
+      halt
+    __endasm;
+    return;
+  }
+  /* The others .. do not. For the model I and LNW80 we just poll the
+     port as if it interrupted, for the Video Genie we have a different
+     helper */
+  irq = di();
+  if (trs80_model == VIDEOGENIE)
+    tty_vg_poll();
+  else
+    tty_interrupt();
   irqrestore(irq);
 }
 

@@ -9,6 +9,7 @@
 #include <devinput.h>
 #include <devgfx.h>
 #include <stdarg.h>
+#include <trs80.h>
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
@@ -20,17 +21,20 @@ static struct vt_switch ttysave[2];
 struct vt_repeat keyrepeat;
 extern uint8_t *vtbase[2];
 
-/* FIXME: The Video Genie EG3020 is similar but the TR1865 is
+/* The Video Genie EG3020 is similar but the TR1865 is
    data in: F8, status out F8, data out: F9 status in F9,
-   and serial printer on FD with the baud set by switches */
+   baud by switches.
+
+   Or at least it probably does. In theory you can use an adapter
+   cable and Tandy bits with the Genie and then for serial we break... */
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
 __sfr __at 0xEA tr1865_status;
 __sfr __at 0xEB tr1865_rxtx;
 
-/*__sfr __at 0xF8 vg_trs1865_wrst;
-  __sfr __at 0xF9 vg_trs1865_ctrd; */
+__sfr __at 0xF8 vg_tr1865_wrst;
+__sfr __at 0xF9 vg_tr1865_ctrd;
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
@@ -52,8 +56,10 @@ ttyready_t tty_writeready(uint8_t minor)
     uint8_t reg;
     if (minor != 3)
         return TTY_READY_NOW;
-    /* TODO: check model status & 0x80 for CTS flow control if appropriate */
-    reg = tr1865_status;
+    if (trs80_model == VIDEOGENIE)
+        reg = vg_tr1865_wrst;
+    else
+	reg = tr1865_status;
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
@@ -90,9 +96,12 @@ static void vtexchange(void)
 void tty_putc(uint8_t minor, unsigned char c)
 {
     irqflags_t irq;
-    if (minor == 3)
-        tr1865_rxtx = c;
-    else {
+    if (minor == 3) {
+        if (trs80_model == VIDEOGENIE)
+	    vg_tr1865_wrst = c;
+	else
+	    tr1865_rxtx = c;
+    } else {
         if (video_mode == 2)	/* Micrografyx */
           return;
         irq = di();
@@ -116,11 +125,21 @@ void tty_putc(uint8_t minor, unsigned char c)
     }
 }
 
+/* Only the Model III has this as an actual interrupt */
 void tty_interrupt(void)
 {
     uint8_t reg = tr1865_status;
     if (reg & 0x80) {
         reg = tr1865_rxtx;
+        tty_inproc(3, reg);
+    }
+}
+
+void tty_vg_poll(void)
+{
+    uint8_t reg = vg_tr1865_wrst;
+    if (reg & 0x80) {
+        reg = vg_tr1865_ctrd;
         tty_inproc(3, reg);
     }
 }
@@ -138,7 +157,7 @@ void tty_setup(uint8_t minor)
 {
     uint8_t baud;
     uint8_t ctrl;
-    if (minor != 3)
+    if (minor != 3 || trs80_model == VIDEOGENIE || trs80_model == LNW80)
         return;
     baud = ttydata[3].termios.c_cflag & CBAUD;
     if (baud > B19200) {
@@ -161,8 +180,12 @@ void tty_setup(uint8_t minor)
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 3 && ttydata[3].users == 0)
-        tr1865_ctrl = 0;	/* Drop carrier and rts */
+    if (minor == 3 && ttydata[3].users == 0) {
+        if (trs80_model == VIDEOGENIE)
+            vg_tr1865_ctrd = 0;
+        else
+            tr1865_ctrl = 0;	/* Drop carrier and rts */
+    }
     return tty_close(minor);
 }
 
@@ -170,8 +193,11 @@ int tty_carrier(uint8_t minor)
 {
     if (minor != 3)
         return 1;
-    if (tr1865_ctrl & 0x80)
-        return 1;
+    if (trs80_model != VIDEOGENIE) {
+        if (tr1865_ctrl & 0x80)
+            return 1;
+    } else if (vg_tr1865_ctrd & 0x80)
+            return 1;
     return 0;
 }
 
