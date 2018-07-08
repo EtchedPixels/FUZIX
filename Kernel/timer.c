@@ -101,7 +101,7 @@ void updatetod(void)
 
 	rtcnew = platform_rtc_secs();		/* platform function */
 
-	if (rtcnew == rtcsec)
+	if (rtcnew == rtcsec || rtcnew == 255)
 		return;
 	slide = rtcnew - rtcsec;	/* Seconds elapsed */
 	rtcsec = rtcnew;

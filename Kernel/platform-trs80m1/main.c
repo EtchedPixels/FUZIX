@@ -50,8 +50,6 @@ void platform_interrupt(void)
     tty_interrupt();
     kbd_interrupt();
 
-    /* FIXME: do we care about floppy interrupts */
-
     if (irq & 0x40)
       dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37EC));
     if (irq & 0x80) {	/* FIXME??? */
@@ -94,6 +92,9 @@ uint8_t platform_rtc_secs(void)
     /* BCD encoded */
     do {
         sl = rtc_secl;
+        /* RTC may be absent */
+        if (sl == 255)
+          return 255;
         rv = sl + rtc_sech * 10;
     } while (sl != rtc_secl);
     return rv;
