@@ -2,6 +2,7 @@
 #define _DEVTTY_H
 
 extern void tty_interrupt(void);
+extern void tty_vg_poll(void);
 extern void kbd_interrupt(void);
 extern int trstty_close(uint8_t minor);
 extern void vtbuf_init(void);
