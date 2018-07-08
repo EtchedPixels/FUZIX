@@ -83,7 +83,7 @@ static struct display trsdisplay[6] = {
     255, 255,
     FMT_VDP,
     HW_VDP_9918A,
-    GFX_MAPPABLE,	/* We don't support it as a console yet */
+    GFX_MULTIMODE|GFX_MAPPABLE,	/* We don't support it as a console yet */
     16,
     0
   },
@@ -95,7 +95,7 @@ static struct display trsdisplay[6] = {
     255, 255,
     FMT_MONO_WB,
     HW_LOWE_LE18,
-    GFX_MAPPABLE,	/* We don't support it as a console yet */
+    GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
     16,
     0
   }
