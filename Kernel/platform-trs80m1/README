@@ -4,12 +4,12 @@ This port supports the following configurations currently
 
 	TRS80 model I with Alpha SuperMem (or compatibles), or Selector
 		(256K+ recommended or a hard disk for swap) and
-		expansion unit
+		expansion interface (26-1140/1/2), or equivalent.
 	Options:
 		Floppy Disk (somewhat basic support, no format tool yet)
-		Serial Adapter
-		Hard Disk (Tandy compatible)
-		Lower Case Kit (Optional, either Tandy or the simple mods)
+		RS-232-C Interface(26-1145, or compatible)
+		Hard Disk (Tandy compatible 26-1132)
+		Lower Case Kit (either Tandy 26-1104 or the simple mods)
 		Percom Compatible Doubler
 		Holmes style speed up board (anything using port 254 bit 0)
 		Real Time Clock (supported for time locking, can't do dates as
@@ -24,6 +24,7 @@ This port supports the following configurations currently
 
 	Planned:
 		Orchestra 80 sound card
+		Tandy Model I Double Density Kit (26-1143)
 
 	TRS80 model III with Alpha SuperMem (or compatibles)
 		(256K+ recommended or a hard disk for swap)
@@ -34,7 +35,7 @@ This port supports the following configurations currently
 		Real Time Clock (supported for time locking, can't do dates as
 				 is not Y2K capable, must be at 0xB0)
 		Micro Labs Graphyx
-		Tandy Hi-Res Card
+		Tandy Hi-Res Card (26-1125)
 		Alpha Products Joystick
 		ChromaTRS (as jostick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
@@ -57,24 +58,66 @@ This port supports the following configurations currently
 		Extra keys (F1 and F2)
 		LNW80 Graphics Modes (once emulator support is done)
 
+	Upsupported:
+		LNW80 II
+		Low 16K in the base unit. This would be good to support
+		but becomes almost a different port as we could unbank
+		the OS. Alternatively it might be possible to use it for
+		buffers.
+
 	Note:
 		The LNW80 serial does not permit baud rate setting in software
 
-Under Investigation:
+	Video Genie & Video Genie I/II  / Dick Smith System 80 MkI & MkII /
+	PMC-80/81 / TRZ-80 with EG3014/X-4010/X-4020 and suitable memory
+	expansion (see notes)
 
-	Video Genie I/II with banked memory (eg on the earlier expansion unit
-	via S100 instead of the supplied 32K card)
-	(In theory something like a BG 256S 256K RAM S100 card in the expansion
-	 unit jumpered for AMOS II 8x32K user banks, with the I/O port
-	 jumpered for 0x43 should just work as it'll behave the same way
-	 as the SuperMEM for things that matter)
+	Options:
+		Floppy Disk (somewhat basic support, no format tool yet)
+		Lower case mod or built in lower case
+		X-4010 expansion interface
+		EG3014 / X-4020 expansion interface
+		EG3016 printer interface
+		EG3020 RS232 interface
+		EG3022 S100 adapter (but no specific card drivers)
+		Percom compatible double density kit
+		HRG1B Graphics Card
+		Tandy style RTC at 0xB0 (only usable for time locking)
+		Anything on the model I list that works with a Genie/System-80
+		to TRS80 expansion convertor (*)
+	In Progress:
+		Lowe Electronics LE18 graphics adapter
+
+	Planned:
+		Lowe Electronics FRED
+		Tandy compatible double density kit
+
+	Unsupported:
+		TRS80 mapped serial/printer port on Video Genie (BUG)
+		Genie IIs/III: These are CP/M capable systems with a different
+		memory model.
+		Any non memory S100 cards that don't match the TRS80/VG
+		devices (ie the X-4010 S100 printer card should work)
+
+	(*) Right now printer and serial ports don't because we assume the
+	different VideoGenie addressing for them...
+
+	Notes:
+	(In theory having no RAM but something like a BG 256S 256K RAM S100
+	 card in an expansion unit jumpered for AMOS II 8x32K user banks,
+	 with the I/O port jumpered for 0x43 should just work as it'll
+	 behave the same way as the SuperMEM for things that matter)
+
+	Also I suspect an S100 hard disk controller could also be used
+	if a driver was added - providing it doesn't do DMA and it avoids the
+	high ports F8-FF.
 
 
-
-Not Supported:
+Generally Not Supported:
 	Lubomir Soft Banker	-	only provides 96K RAM (not enough
 					for this build)
 	Various 64K only CP/M adapters
+	(Unless someone knows one that stacks with the supermem!)
 
 Would Be Nice:
 	80-Grafix		-	need docs, example apps to debug
@@ -98,21 +141,8 @@ User Space:
 	binaries are not relocatable so you need to build a custom user
 	space for this platform.
 
-Requirements: 
-	TRS80 Model I or III (or emulator)
-	Preferably the lower case mod
-	Supermem or compatible expansion
-	Floppy drive or Hard drive (strongly recommend the latter)
-
-Optional:
-	Lower case modification
-
 To Do:
-	Other banked expansions
-	Hires card
-	Stringy floppy (Model 1 looks easy but needs ROM image)
 	Orchestra
-	Graphics hooks (both hires and also describe 64x16 lo-res pixel blocks)
 	Look at RTS/CTS flow control
 	- Needs tty sleeping support
 	- Needs to deal with model 1 case where it's polled so we need
@@ -120,6 +150,7 @@ To Do:
 	Fast block copy routines for uget/uput
 	Hint based pre-fetching uget
 	Consider moving the tty buffers into banked space (INDIRECT_QUEUE)
+	When we have > 512K or so RAM use the rest as a ramdisc
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality
@@ -135,16 +166,6 @@ Memory Map:
 
 	Need to move buffers out of line using the external buffers code so we
 	can better balance memory
-
-Drivers:
-	Display 64x16			Done
-	Keyboard			Done
-	Hard drive			Straight model 4 port
-	Floppy				Minimal at this point
-	Floppy drivers do not yet deal with double sided disks or sd/dd
-	media detection
-	Hard disk reads block 0, and handle partitions of some form
-	including finding where 'swap' lives (swap not tested)
 
 Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs with patches)
 
@@ -172,9 +193,8 @@ You will still need a boot floppy at this point but just boot with device
 Banking Models
 
 Currently Supported:
-	Alpha Technology Supermem upper 32K banking only.
+	Alpha Technology Supermem upper 32K banking.
 
-Not Yet Started:
 	"Selector" for Model 1. Port 31 allows memory reshuffling away from
 the model 1 default. Either the upper or lower 32K is switchable but not
 both at once. bits 4/5 control the selection between a further 4 32K banks.
