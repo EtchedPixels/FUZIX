@@ -191,6 +191,7 @@ _rom_vectors:
 	    
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
+; FIXME: need to do different things for Video Genie and Model III
 outchar:
             ld (0x37E8), a
             ret
