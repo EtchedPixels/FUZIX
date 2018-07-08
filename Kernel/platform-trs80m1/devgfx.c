@@ -90,8 +90,8 @@ static struct display trsdisplay[6] = {
   /* Lowe Electronics LE-18 */
   {
     1,
-    256, 192,
-    256, 192,
+    384, 192,
+    384, 192,
     255, 255,
     FMT_MONO_WB,
     HW_LOWE_LE18,
