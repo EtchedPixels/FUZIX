@@ -16,6 +16,5 @@ _start:
 	move.l a0,environ
 	move.l 4(sp),__argv
 	jsr main
-	move.l,d0,-(sp)
-	call _exit
-
+	move.l d0,-(sp)
+	jsr _exit
