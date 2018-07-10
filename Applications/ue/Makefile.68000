@@ -22,8 +22,6 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(APPS) size.report
 
-$(APPS): ue.h
-
 ue.fuzix: $(CRT0NS) ue.o term-fuzix.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
