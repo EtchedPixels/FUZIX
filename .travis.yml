@@ -3,20 +3,29 @@ sudo: required
 
 matrix:
     include:
+        - env: TARGET=dragon-nx32
         - env: TARGET=rc2014
         - env: TARGET=trs80
-        - env: TARGET=z80pack
-        - env: TARGET=dragon-nx32
         - env: TARGET=v65c816
+        - env: TARGET=z80pack
 
 before_install:
     - sudo add-apt-repository -y ppa:p-pisati/fuzix
     - sudo apt-get update -q
     - sudo apt-get install -y byacc automake			# FUZIX build deps
-    - sudo apt-get install -y cc65						# 65xx build deps
-    - sudo apt-get install -y sdcc						# z80pack build deps
-    - sudo apt-get install -y lwtools gcc6809			# dragon-nx32 build deps
     - sudo update-alternatives --set yacc /usr/bin/byacc
+    - |
+      if [ "$TARGET" = "dragon-nx32" ]; then
+        sudo apt-get install -y lwtools gcc6809
+      fi
+    - |
+      if [ "$TARGET" = "rc2014" -o "$TARGET" = "trs80" -o "$TARGET" = "z80pack" ]; then
+        sudo apt-get install -y sdcc
+      fi
+    - |
+      if [ "$TARGET" = "v65c816" ]; then
+        sudo apt-get install -y cc65
+      fi
 
 language: c
 
