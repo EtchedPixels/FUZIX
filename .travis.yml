@@ -8,6 +8,7 @@ matrix:
         - env: TARGET=trs80
         - env: TARGET=v65c816
         - env: TARGET=v68
+        - env: TARGET=v68-banked
         - env: TARGET=z80pack
 
 before_install:
@@ -28,7 +29,7 @@ before_install:
         sudo apt-get install -y cc65
       fi
     - |
-      if [ "$TARGET" = "v68" ]; then
+      if [ "$TARGET" = "v68" -o "$TARGET" = "v68-banked" ]; then
         sudo apt-get install -y m68k-uclinux-binutils m68k-uclinux-elf2flt m68k-uclinux-gcc
         sudo update-alternatives --install /usr/bin/elf2flt elf2flt /usr/bin/m68k-uclinux-elf2flt 100
       fi
