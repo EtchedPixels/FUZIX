@@ -26,6 +26,11 @@ before_install:
       if [ "$TARGET" = "v65c816" ]; then
         sudo apt-get install -y cc65
       fi
+    - |
+      if [ "$TARGET" = "v68" ]; then
+        sudo apt-get install -y m68k-uclinux-binutils m68k-uclinux-elf2flt m68k-uclinux-gcc
+        sudo update-alternatives --install /usr/bin/elf2flt elf2flt /usr/bin/m68k-uclinux-elf2flt 100
+      fi
 
 language: c
 
