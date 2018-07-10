@@ -31,7 +31,7 @@ ue.ansi: $(CRT0NS) ue.o term-ansi.o
 	$(ELF2FUZIX) -o $@ $@.bin
 
 ue: $(CRT0) ue.o term.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin -ltermcap68000 $(LINKER_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 size.report: $(APPS)
