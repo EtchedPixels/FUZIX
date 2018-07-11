@@ -82,11 +82,10 @@ This port supports the following configurations currently
 		EG3022 S100 adapter (but no specific card drivers)
 		Percom compatible double density kit
 		HRG1B Graphics Card
+		Lowe Electronics LE18 graphics adapter
 		Tandy style RTC at 0xB0 (only usable for time locking)
 		Anything on the model I list that works with a Genie/System-80
 		to TRS80 expansion convertor (*)
-	In Progress:
-		Lowe Electronics LE18 graphics adapter
 
 	Planned:
 		Lowe Electronics FRED
