@@ -121,9 +121,13 @@ int rtcdate(void)
         p = rtc.data.bytes;
         for (i = 0; i < 7; i++)
             unbc(p++);
+        /* The date is now effectively encoded in Binary Coded Hundreds */
+        tm.tm_year = (*p * 100) + p[1];
+        /* Fall through */
     case CMOS_RTC_DEC:
         p = rtc.data.bytes;
-        tm.tm_year = (*p + (p[1] << 8)) - 1900;
+        if (rtc.type != CMOS_RTC_BCD)
+            tm.tm_year = (*p + (p[1] << 8)) - 1900;
         p += 2;
         tm.tm_mon = *p++;
         tm.tm_mday = *p++;
