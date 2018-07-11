@@ -6,7 +6,7 @@
 platform-trs80/crt0.rel
 platform-trs80/commonmem.rel
 platform-trs80/trs80.rel
-platform-trs80/trs80-bank94.rel
+platform-trs80/trs80-bank.rel
 start.rel
 version.rel
 lowlevel-z80.rel

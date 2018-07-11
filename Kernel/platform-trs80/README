@@ -3,7 +3,8 @@ TRS80 Model 4/4P
 
 This port supports the following configurations currently
 
-	TRS80 Model 4/4P (including gate array floppy disk workarounds)
+	TRS80 Model 4/4P (including gate array floppy disk workarounds) with
+	128K of RAM fitted
 	Options:
 		Floppy Disk (somewhat basic support, no format tool yet)
 		Hard Disk (Tandy compatible)
@@ -15,6 +16,8 @@ This port supports the following configurations currently
 		Micro Labs Grafyx
 		Alpha Joystick
 		IDE adapter
+		Alpha Technologies SuperMem (on port 0x43)
+		Anitek HyperMem (on port 0x90)
 	Not Supported:
 		XLR8R - to do it well is a different port
 
@@ -33,7 +36,7 @@ Emulator Bugs:
 	tree.
 
 Requirements: 
-	128K RAM fitted
+	128K or banked RAM fitted
 	Hard disk drive (will be used for swap), or a suitable memory
 	expander board could be used with a bit of tweaking (or both!)
 	(The hard disk code should work with the Lo-tech IDE adapter but

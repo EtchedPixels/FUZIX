@@ -3,7 +3,7 @@ CSRCS = devlpr.c devtty.c devfd.c devhd.c devgfx.c
 CSRCS += devices.c main.c devinput.c
 DISCARD_CSRCS = discard.c devhd_discard.c
 
-ASRCS = trs80.s trs80-bank94.s crt0.s
+ASRCS = trs80.s trs80-bank.s crt0.s
 ASRCS += tricks.s commonmem.s floppy.s drivewire.s
 
 DSRCS = ../dev/devdw.c
@@ -36,6 +36,12 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image: trs80load.bin
+	dd if=/dev/zero of=boot.raw bs=256 count=720
+	# Boot block at 0,0
+	dd if=trs80load.bin of=boot.raw bs=256 count=1 conv=notrunc
+	# Kernel lives on the end of the disk (so we can add an fs)
+	dd if=../fuzix.bin of=boot.raw bs=1 seek=133632 conv=notrunc
+	../tools/makejv3 -s -t dd40s -d boot.raw boot4p.jv3
 
 trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s

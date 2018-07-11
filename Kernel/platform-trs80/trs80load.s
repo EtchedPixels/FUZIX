@@ -102,13 +102,12 @@ seekstat:
 	    .ascii 'seek\0'
 bad:	    jr bad
 secmove:    xor a
-	    dec a	
 	    ld (secnum), a
 nextsec:
 	    ld a, (secnum)
 	    inc a
 	    ld (secnum), a
-	    cp #18
+	    cp #19		; was 18
 	    jr z, lastsec
 	    push hl
 	    call floppy_read

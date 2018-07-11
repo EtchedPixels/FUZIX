@@ -23,13 +23,7 @@
 /* Full key up/down support */
 #define CONFIG_INPUT_GRABMAX 3
 
-/* Support extra banked expansion memory using port 0x94 */
-#define CONFIG_MAP94
-#ifdef CONFIG_MAP94
 #define MAX_MAPS	62
-#else
-#define MAX_MAPS	2
-#endif
 
 #define MAP_SIZE	0x8000
 
