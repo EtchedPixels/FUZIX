@@ -20,7 +20,7 @@ This port supports the following configurations currently
 		Anitek HyperMem (on port 0x90)
 	Not Supported:
 		XLR8R - to do it well is a different port
-
+		M3SE (except as far as it's compatibility features go)
 
 Requres:
 	Patched xtrs from Fuzix git tree
