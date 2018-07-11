@@ -1,0 +1,7 @@
+all:
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
+
+rmbak:
+	rm -f *~ core
