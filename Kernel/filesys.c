@@ -933,13 +933,13 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
         buf = bread(dev, blk, 0);
         if (buf == NULL) {
             corrupt_fs(dev);
-            return:
+            return;
         }
-        for(j=255; j >= 0; --j)
+        for(j=255; j >= 0; --j) {
             blktok(&bn, buf, j * sizeof(blkno_t), sizeof(blkno_t));
             freeblk(dev, bn[j], level-1);
         }
-        brelse((char *)buf);
+        brelse(buf);
     }
     blk_free(dev, blk);
 }
