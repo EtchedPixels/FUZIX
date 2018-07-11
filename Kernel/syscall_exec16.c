@@ -111,6 +111,12 @@ arg_t _execve(void)
 	}
 
 	udata.u_ptab->p_status = P_NOSLEEP;
+
+	/* If we made pagemap_realloc keep hold of some defined area we
+	   could in theory just move the arguments up or down as part of
+	   the process - that would save us all this hassle but replace it
+	   with new hassle */
+
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
 	/* Put environment in another buffer. */
