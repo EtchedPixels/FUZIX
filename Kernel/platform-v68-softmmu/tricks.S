@@ -1,6 +1,4 @@
 #include "../kernel-68000.def"
-#include "kernel.def"
-
 
 .globl platform_switchout,switchin,dofork,udata_shadow
 
@@ -116,7 +114,7 @@ dofork:
 	;
 
 	movem.l a1/a5,-(sp)
-	moveq #U_DATA_COPYSIZE-1,d0
+	moveq #udata_copysize-1,d0
 cplp:
 	move.l (a5)+,(a1)+
 	dbra d0,cplp
@@ -181,3 +179,5 @@ child_rte:
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0
 .even
+
+udata_copysize equ U_DATA__COPYSIZE
