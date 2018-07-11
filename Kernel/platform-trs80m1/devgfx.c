@@ -1,7 +1,8 @@
 /*
- *	Graphics logic for the TRS80 2x3 block graphics
+ *	Graphics logic for the TRS80 model I, III and friends
  *
- *	We don't yet address the high res board for the Model III (and I ?)
+ *	- Need to figure out how to interact with console switches
+ *	- Need to add LNW80 graphics modes
  */
 
 #include <kernel.h>
