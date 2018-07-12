@@ -20,7 +20,6 @@
 	        .area _GSINIT
 	        .area _GSFINAL
 	        .area _DATA
-		.area _BUFFERS
 	        .area _INITIALIZER
 		; Buffers must be directly before discard as they will
 		; expand over it
@@ -32,16 +31,10 @@
 		.globl _vtinit
 	        .globl s__DATA
 	        .globl l__DATA
-	        .globl s__BUFFERS
-	        .globl l__BUFFERS
 	        .globl s__COMMONMEM
 	        .globl l__COMMONMEM
 		.globl s__INITIALIZER
 	        .globl kstack_top
-		.globl bufend
-
-		; exports
-		.globl _discard_size
 
 	        ; startup code
 	        .area _BOOT
@@ -62,17 +55,6 @@ start:
 		ld bc, #l__DATA - 1
 		ld (hl), #0
 		ldir
-;		Zero buffers area
-		ld hl, #s__BUFFERS
-		ld de, #s__BUFFERS + 1
-		ld bc, #l__BUFFERS - 1
-		ld (hl), #0
-		ldir
-		ld hl,#0x8000
-		ld de,#bufend
-		or a
-		sbc hl,de
-		ld (_discard_size),hl
 		; We pass A into init_eatly holding the mapper type
 		call init_early
 		call init_hardware
@@ -86,9 +68,6 @@ start:
 stop:		halt
 		jr stop
 
-		.area _DATA
-_discard_size:
-		.dw 0
 
 	.area _STUBS
 stubs:

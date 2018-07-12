@@ -30,6 +30,7 @@ platform-trs80m1/devgfx.rel
 platform-trs80m1/devstringy.rel
 platform-trs80m1/stringy.rel
 platform-trs80m1/devices.rel
+platform-trs80m1/buffers.rel
 devio.rel
 filesys.rel
 process.rel

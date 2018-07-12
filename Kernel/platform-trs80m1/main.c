@@ -10,8 +10,6 @@ uint16_t ramtop = PROGTOP;
 uint8_t trs80_model;
 uint8_t vtattr_cap;
 
-struct blkbuf *bufpool_end = bufpool + NBUFS;
-
 /*
  *	Called when there is no work to do. On the models without serial
  *	interrupts we poll here so that the normal case of idling while

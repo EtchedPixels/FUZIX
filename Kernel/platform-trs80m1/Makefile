@@ -1,15 +1,20 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devfd3.c devhd.c devgfx.c
+CSRCS = devlpr.c devtty.c devgfx.c
 CSRCS += devices.c main.c devstringy.c devinput.c
 DISCARD_CSRCS = discard.c devhd_discard.c
 
 ASRCS = trs80.s trs80-bank.s crt0.s vtsupport.s
 ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s
 
+# buffers.c must be in CODE2, direct users are more convenient there as
+# the asm helpers then can avoid another switch
+C2SRCS = buffers.c devfd.c devfd3.c devhd.c
+
 COBJS = $(CSRCS:.c=.rel)
+C2OBJS = $(C2SRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
+OBJS  = $(COBJS) $(C2OBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -19,6 +24,9 @@ all:	$(OBJS) trs80load.bin
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+
+$(C2OBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<

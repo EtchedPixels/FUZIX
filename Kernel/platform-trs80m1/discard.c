@@ -10,6 +10,7 @@
 
 void device_init(void)
 {
+  bufsetup();
 #ifdef CONFIG_RTC
   /* Time of day clock */
   inittod();
