@@ -211,6 +211,7 @@ typedef struct blkbuf {
     uget((uaddr),(buf)->__bf_data + (off), (len))
 #define blkptr(buf, off, len)	((void *)((buf)->__bf_data + (off)))
 #define blkzero(buf)		memset(buf->__bf_data, 0, BLKSIZE)
+#define tmpfree(x)	brelse((void *)x)
 #else
 extern void blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
 extern void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len);
@@ -219,6 +220,7 @@ extern void blkfromu(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len
 /* Worst case is needing to copy over about 64 bytes */
 extern void *blkptr(struct blkbuf *buf, uint16_t offset, uint16_t len);
 extern void blkzero(struct blkbuf *buf);
+extern void tmpfree(void *p);
 #endif
 
 /* TODO: consider smaller inodes or clever caching. 2BSD uses small
@@ -855,12 +857,11 @@ extern void brelse(bufptr);
 extern void bawrite(bufptr);
 extern int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 extern void *tmpbuf(void);
-extern void *zerobuf(void);
+extern bufptr zerobuf(void);
 extern void bufsync(void);
 extern bufptr bfind(uint16_t dev, blkno_t blk);
 extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
-#define tmpfree(x)	brelse((void *)x)
 extern void bufinit(void);
 extern void bufdiscard(bufptr bp);
 extern void bufdump (void);

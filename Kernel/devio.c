@@ -151,12 +151,29 @@ int bfree(regptr bufptr bp, uint8_t dirty)
 }
 
 /*
+ * Allocate an empty _disk cache_ buffer. We use this when dealing with file
+ * holes. It would be nice if this API could go way and readi just use uzero()
+ */
+bufptr zerobuf(void)
+{
+	regptr bufptr bp;
+
+	bp = freebuf();
+	bp->bf_dev = NO_DEVICE;
+	bp->bf_time = ++bufclock;	/* Time stamp it */
+	blkzero(bp);
+	return bp;
+}
+
+#ifndef CONFIG_BLKBUF_EXTERNAL
+/*
  * Allocate a buffer for scratch use by the kernel. This buffer can then
  * be freed with tmpfree.
  *
  * API note: Nothing guarantees a connection between a bufcache entry
  * and tmpbuf in future. Always free with tmpfree.
  */
+
 void *tmpbuf(void)
 {
 	regptr bufptr bp;
@@ -166,20 +183,7 @@ void *tmpbuf(void)
 	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp->__bf_data;
 }
-
-/*
- * Allocate an empty _disk cache_ buffer. We use this when dealing with file
- * holes. It would be nice if this API could go way and readi just use uzero()
- *
- * This won't be able to use tmpbuf if we split disk and temporary buffers.
- */
-void *zerobuf(void)
-{
-	void *b = tmpbuf();
-	memset(b, 0, 512);
-
-	return b;
-}
+#endif
 
 /*
  * Write back a buffer doing the locking outselves. This is called when
