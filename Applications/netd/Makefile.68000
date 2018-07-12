@@ -61,7 +61,7 @@ tinyirc: $(CRT0) tinyirc.o linein.o gethostbyname.o
 	$(ELF2FUZIX) -o $@ $@.bin
 
 
-ize.report: $(APPS)
+size.report: $(APPS)
 	ls -l $^ > $@
 
 clean:
