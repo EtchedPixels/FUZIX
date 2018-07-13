@@ -55,10 +55,10 @@ extern uint8_t bufdata[];
    again to assign data to the extra allocated buffers */
 
 static bufptr bnext = bufpool;
+static uint8_t *bdnext = bufdata;
 
 void bufsetup(void)
 {
-    extern uint8_t *bdnext;
     bufptr bp;
 
     for(bp = bnext; bp < bufpool_end; ++bp) {

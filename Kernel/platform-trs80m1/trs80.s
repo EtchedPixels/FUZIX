@@ -237,11 +237,7 @@ _hd_xfer_out:
 	    .area _BUFFERS2
 	    .globl _bufdata
 	    .globl _bufdata_end
-	    .globl _bdnext
 _bufdata:
 	    .ds 512 * 5
 _bufdata_end:
 
-	    .area _COMMONMEM
-_bdnext:
-	    .dw _bufdata
