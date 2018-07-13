@@ -23,9 +23,6 @@
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
-	    .globl _bufpool
-	    .globl bufend
-
 	    .globl _trs80_model
 
 	    ; hard disk helpers
@@ -54,11 +51,6 @@
             .include "kernel.def"
             .include "../kernel.def"
 
-	    .area _BUFFERS
-
-_bufpool:
-	    .ds BUFSIZE * NBUFS
-bufend:
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xE800 upwards)
 ; -----------------------------------------------------------------------------
@@ -197,7 +189,12 @@ outchar:
             ret
 
 ;
-;	Swap helpers
+;	Swap helpers.
+;	We have our buffers mapepd in Bank 2 but we don't need to do
+;	anything here as we are in common memory and we've carefully
+;	arranged that the device driver callers are in BANK2 thus we'll
+;	have BANK2 mapped by default, although we may map a user bank
+;	in temporarily if going direct to user.
 ;
 _hd_xfer_in:
 	   pop de
@@ -233,3 +230,11 @@ _hd_xfer_out:
 	   call nz, map_kernel_restore
 	   ret
 
+
+;
+;	Storage for buffers. Must be banked with CODE2
+;
+	    .area _DATA2
+	    .globl _bufdata
+_bufdata:
+	    .ds 512 * 10

@@ -23,6 +23,8 @@
 #define CONFIG_INPUT
 /* Full keycode level grabbing supported */
 #define CONFIG_INPUT_GRABMAX	3
+/* External buffers (so we can balance things better) */
+#define CONFIG_BLKBUF_EXTERNAL
 
 #define MAX_MAPS	16	/* 512K */
 
@@ -64,9 +66,7 @@
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    5        /* Number of block buffers - keep in sync with asm! */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
-/* Reclaim the discard space for buffers */
-#define CONFIG_DYNAMIC_BUFPOOL
+#define NBUFS    10        /* Number of block buffers - keep in sync with asm! */
+#define NMOUNTS	 3	   /* Number of mounts at a time */
 
 extern void platform_discard(void);

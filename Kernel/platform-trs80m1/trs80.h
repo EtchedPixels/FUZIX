@@ -31,3 +31,5 @@ extern uint8_t trs80_mapper;
  *	Note that the Colour Genie is a very different beast.
  *	
  */
+
+extern void bufsetup(void);
