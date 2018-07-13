@@ -33,7 +33,6 @@ SRCSNS = \
 	reboot.c \
 	rm.c \
 	rmdir.c \
-	substroot.c \
 	sum.c \
 	sync.c \
 	tee.c \
