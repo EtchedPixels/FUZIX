@@ -214,9 +214,9 @@ static void bankingstub(struct sym *s, struct areax *bx, int bmagic, int addr)
                 fprintf(ofp, "; Banking Stub %s:%s(%s)\n",
                         a->a_id, s->s_id, s->m_id);
                 fprintf(ofp, "; From area %s\n", bx->a_bap->a_id);
-                fprintf(ofp, "B %02X %04X %02X %s\n",
+                fprintf(ofp, "B %02X %04X %02X %s %s\n",
                         bxm, addr,
-                        bmagic, bx->a_bap->a_id);
+                        bmagic, bx->a_bap->a_id, a->a_id);
         }
         return;
 }
