@@ -1,0 +1,19 @@
+CPUINFO(1)
+## NAME
+*cpuinfo* - display information about the processor(s) in use
+## SYNOPSIS
+*cpuinfo* \[-p port\]
+## DESCRIPTION
+The *cpuinfo* command displays available information about the processor.
+The information displayed and the detail level is dependant upon the
+processor itself, and what identication facilities are available.
+
+For some processors such as the Z80 it is necessary to provide a suitable
+I/O port for parts of the identification. For a Z80 system this should be a
+port which can be written and reads back the same value while not having any
+immediate side effect. The command will restore the port state.
+
+## STANDARDS
+cpuinfo is a Fuzix specific command
+## AUTHOR
+Written by Alan Cox
