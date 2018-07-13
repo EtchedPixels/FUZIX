@@ -16,7 +16,7 @@ This port supports the following configurations currently
 				 is not Y2K capable, must be at 0xB0)
 		HRG1B Graphics Card
 		Alpha Products Joystick
-		ChromaTRS (as jostick and a graphics device only - need a VDP
+		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
 
 	In Progress:
@@ -43,6 +43,10 @@ This port supports the following configurations currently
 	Planned:
 		Orchestra 90 sound card
 		Lo-tech IDE adapter
+
+	Unsupported:
+		M3SE (except as far as it's compatibility features go)
+
 
 	LNW80 1 with Selector or Alpha SuperMem compatible banking
 		(256K+ recommended or a hard disk for swap) and
@@ -141,7 +145,10 @@ User Space:
 	space for this platform.
 
 To Do:
-	Orchestra
+
+	Only hide/show cursor if curtty == inputty
+	Reclaim 768 bytes by moving irq stack and udata down to 4100
+	Faster user copiers once it works
 	Look at RTS/CTS flow control
 	- Needs tty sleeping support
 	- Needs to deal with model 1 case where it's polled so we need
@@ -150,6 +157,8 @@ To Do:
 	Hint based pre-fetching uget
 	Consider moving the tty buffers into banked space (INDIRECT_QUEUE)
 	When we have > 512K or so RAM use the rest as a ramdisc
+	Orchestra
+	M3SE video at least
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality
@@ -159,6 +168,12 @@ Memory Map:
 	8000-FFFF	Bank1: kernel code
 
 	Remaining banks of 32K are user apps.
+
+	It is possible with some bankers to overlay the low 32K of RAM but
+	this cannot be done with the systems that use S100 banked RAM. Also
+	by mapping high we have the video accessible. This does mean the
+	Model 1 and III are not binary compatible in user space with the 4 but
+	that'll get fixed when we have relocatable binaries sorted.
 
 	The kernel doesn't actually need 80K but it also doesn't fit in
 	the available 48K unbanked either (although a minimalish setup might)
