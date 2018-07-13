@@ -81,7 +81,6 @@ vtbase:		ld hl,(_vtbase)
 		or a
 		ret z
 		ld hl,(_vtbase + 2)
-		call debughook
 		ret
 
 ;
@@ -225,8 +224,3 @@ csave:		.byte	0
 cpos:		.word	0
 
 
-		.area _COMMONMEM
-
-		.globl debughook
-debughook:
-		ret
