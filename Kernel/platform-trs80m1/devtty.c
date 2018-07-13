@@ -11,9 +11,11 @@
 #include <stdarg.h>
 #include <trs80.h>
 
+/* FIXME: move to external tty buffers and bank them */
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
 
 uint8_t curtty;			/* output side */
 static uint8_t inputtty;	/* input side */
@@ -21,12 +23,17 @@ static struct vt_switch ttysave[2];
 struct vt_repeat keyrepeat;
 extern uint8_t *vtbase[2];
 
+/* Default to having /dev/tty and the two consoles openable. Our probe
+   routine will add tty3/tty4 as appropriate */
+
+static uint8_t ports = 7;
+
 /* The Video Genie EG3020 is similar but the TR1865 is
    data in: F8, status out F8, data out: F9 status in F9,
    baud by switches.
 
    Or at least it probably does. In theory you can use an adapter
-   cable and Tandy bits with the Genie and then for serial we break... */
+   cable and Tandy bits so we treat them as two ports */
 
 __sfr __at 0xE8 tr1865_ctrl;
 __sfr __at 0xE9 tr1865_baud;
@@ -40,7 +47,8 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
     {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
+    {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 },
+    {   tbuf4,   tbuf4,   tbuf4,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
 /* Write to system console */
@@ -54,12 +62,13 @@ void kputchar(char c)
 ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t reg;
-    if (minor != 3)
+    if (minor < 3)
         return TTY_READY_NOW;
-    if (trs80_model == VIDEOGENIE)
-        reg = vg_tr1865_wrst;
-    else
+    /* FIXME RTS/CTS is supported by the hardware */
+    if (minor == 3)
 	reg = tr1865_status;
+    else
+        reg = vg_tr1865_wrst;
     return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
@@ -96,12 +105,12 @@ static void vtexchange(void)
 void tty_putc(uint8_t minor, unsigned char c)
 {
     irqflags_t irq;
-    if (minor == 3) {
-        if (trs80_model == VIDEOGENIE)
-	    vg_tr1865_wrst = c;
-	else
-	    tr1865_rxtx = c;
-    } else {
+
+    if (minor == 3)
+        tr1865_rxtx = c;
+    else if (minor == 4)
+	vg_tr1865_wrst = c;
+    else {
         if (video_mode == 2)	/* Micrografyx */
           return;
         irq = di();
@@ -135,12 +144,23 @@ void tty_interrupt(void)
     }
 }
 
-void tty_vg_poll(void)
+void tty_poll(void)
 {
-    uint8_t reg = vg_tr1865_wrst;
-    if (reg & 0x80) {
-        reg = vg_tr1865_ctrd;
-        tty_inproc(3, reg);
+    uint8_t reg;
+
+    if (ports & 0x10) {
+	    reg = vg_tr1865_wrst;
+	    if (reg & 0x80) {
+	        reg = vg_tr1865_ctrd;
+	        tty_inproc(4, reg);
+	    }
+    }
+    if (ports & 0x08) {
+	    reg = tr1865_status;
+	    if (reg & 0x80) {
+	        reg = vg_tr1865_ctrd;
+	        tty_inproc(3, reg);
+	    }
     }
 }
 
@@ -157,8 +177,10 @@ void tty_setup(uint8_t minor)
 {
     uint8_t baud;
     uint8_t ctrl;
-    if (minor != 3 || trs80_model == VIDEOGENIE || trs80_model == LNW80)
+
+    if (minor != 3 || trs80_model == LNW80)
         return;
+
     baud = ttydata[3].termios.c_cflag & CBAUD;
     if (baud > B19200) {
         ttydata[3].termios.c_cflag &= ~CBAUD;
@@ -176,6 +198,16 @@ void tty_setup(uint8_t minor)
         ctrl |= 0x8;		/* No parity */
     ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
     tr1865_ctrl = ctrl;
+}
+
+int trstty_open(uint8_t minor, uint16_t flags)
+{
+    /* Serial port cards are optional */
+    if (minor < 8 && !(ports & (1 << minor))) {
+        udata.u_error = ENODEV;
+        return -1;
+    }
+    return tty_open(minor, flags);
 }
 
 int trstty_close(uint8_t minor)
@@ -204,6 +236,14 @@ int tty_carrier(uint8_t minor)
 void tty_sleeping(uint8_t minor)
 {
         used(minor);
+}
+
+void trstty_probe(void)
+{
+	if (vg_tr1865_wrst != 0xFF)
+		ports |= (1 << 4);
+	if (tr1865_status != 0xFF)
+		ports |= (1 << 3);
 }
 
 uint8_t keymap[8];

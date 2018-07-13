@@ -234,7 +234,14 @@ _hd_xfer_out:
 ;
 ;	Storage for buffers. Must be banked with CODE2
 ;
-	    .area _DATA2
+	    .area _BUFFERS2
 	    .globl _bufdata
+	    .globl _bufdata_end
+	    .globl _bdnext
 _bufdata:
-	    .ds 512 * 10
+	    .ds 512 * 5
+_bufdata_end:
+
+	    .area _COMMONMEM
+_bdnext:
+	    .dw _bufdata

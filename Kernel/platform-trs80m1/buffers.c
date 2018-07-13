@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
+#include <printf.h>
 
 /*
  *	Must live in CODE2
@@ -50,17 +51,22 @@ void blkzero(struct blkbuf *buf)
 
 extern uint8_t bufdata[];
 
+/* This is called at start up to assign data to the first buffers, and then
+   again to assign data to the extra allocated buffers */
+
+static bufptr bnext = bufpool;
+
 void bufsetup(void)
 {
-    uint8_t *p = bufdata;
-    bufptr bp = bufpool;
+    extern uint8_t *bdnext;
+    bufptr bp;
 
-    for(bp = bufpool; bp < bufpool_end; ++bp) {
-        bp->__bf_data = p;
-        p += BLKSIZE;
+    for(bp = bnext; bp < bufpool_end; ++bp) {
+        bp->__bf_data = bdnext;
+        bdnext += BLKSIZE;
     }
+    bnext = bp;
 }
-
 
 /*
  *	Scratch buffers for syscall arguments - until we can rework

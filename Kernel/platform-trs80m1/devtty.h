@@ -2,9 +2,11 @@
 #define _DEVTTY_H
 
 extern void tty_interrupt(void);
-extern void tty_vg_poll(void);
+extern void tty_poll(void);
 extern void kbd_interrupt(void);
+extern int trstty_open(uint8_t minor, uint16_t flags);
 extern int trstty_close(uint8_t minor);
+extern void trstty_probe(void);
 extern void vtbuf_init(void);
 
 /* And from the asm helper */

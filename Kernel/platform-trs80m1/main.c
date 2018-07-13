@@ -26,13 +26,9 @@ void platform_idle(void)
     return;
   }
   /* The others .. do not. For the model I and LNW80 we just poll the
-     port as if it interrupted, for the Video Genie we have a different
-     helper */
+     port as if it interrupted, likewise check the Video Genie port */
   irq = di();
-  if (trs80_model == VIDEOGENIE)
-    tty_vg_poll();
-  else
-    tty_interrupt();
+  tty_poll();
   irqrestore(irq);
 }
 
@@ -87,6 +83,12 @@ void platform_interrupt(void)
   }
 }
 
+/* We allow for up to 36 buffers (18K) */
+#define MAX_BUFS	36
+
+struct blkbuf bufpool[MAX_BUFS];
+struct blkbuf *bufpool_end = &bufpool[NBUFS];
+
 /*
  *	We can't recover discard space usefully... yet. I have a cunning plan
  *	involving external buffers in the spare bank space 8)
@@ -94,6 +96,23 @@ void platform_interrupt(void)
 
 void platform_discard(void)
 {
+        extern uint8_t bufdata_end[];
+	/* The buffers are the last kept thing in segment 2, so we can blow
+	   away from the buffers end to FFFF */
+	bufptr bp;
+	uint16_t space = 0xFFFF - bufdata_end;
+	space /= BLKSIZE;
+	if (space > MAX_BUFS - NBUFS)
+		space = MAX_BUFS - NBUFS;
+	bufpool_end += space;
+	kprintf("Reclaiming memory.. total buffers %d\n",
+	  bufpool_end - bufpool);
+	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
+	/* Assign data to the extra buffers */
+	bufsetup();
 }
 
 #ifdef CONFIG_RTC
@@ -127,11 +146,11 @@ uint8_t platform_rtc_secs(void)
     return rv;
 }
 
+/* If the compiler segfaults here you need at least SDCC #10471 */
+
 int platform_rtc_read(void)
 {
-#if 0
-    /* We need SDCC bug 2770 fixed first */
-    uint16_t len;
+    uint16_t len = sizeof(struct cmos_rtc);
     struct cmos_rtc cmos;
     uint8_t *p;
     uint8_t r, y;
@@ -167,10 +186,6 @@ int platform_rtc_read(void)
     if (uput(&cmos, udata.u_base, len) == -1)
         return -1;
     return len;
-#else
-	udata.u_error = EOPNOTSUPP;
-	return -1;
-#endif    
 }
 
 /* Yes I'm a slacker .. this wants adding but it's ugly

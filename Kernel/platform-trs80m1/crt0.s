@@ -5,9 +5,12 @@
 	        .area _CODE
 	        .area _CODE1
 	        .area _CODE2
-		.area _DATA2
-		.area _DISCARD2
 		.area _VIDEO
+		.area _DATA2
+		; We want the DISCARD2 area last as we eventually want to
+		; expand all over it for buffers
+		.area _BUFFERS2
+		.area _DISCARD2
 	        .area _COMMONMEM
 		.area _STUBS
 	        .area _CONST

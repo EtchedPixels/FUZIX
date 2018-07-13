@@ -17,6 +17,7 @@ void device_init(void)
 #endif
   floppy_setup();
   hd_probe();
+  trstty_probe();
   gfx_init();
   tape_init();
 }

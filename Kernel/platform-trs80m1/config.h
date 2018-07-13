@@ -25,6 +25,8 @@
 #define CONFIG_INPUT_GRABMAX	3
 /* External buffers (so we can balance things better) */
 #define CONFIG_BLKBUF_EXTERNAL
+/* And our buffer pool is dynamically sized */
+#define CONFIG_DYNAMIC_BUFPOOL
 
 #define MAX_MAPS	16	/* 512K */
 
@@ -63,10 +65,10 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 4
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    10        /* Number of block buffers - keep in sync with asm! */
+#define NBUFS    5         /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 3	   /* Number of mounts at a time */
 
 extern void platform_discard(void);
