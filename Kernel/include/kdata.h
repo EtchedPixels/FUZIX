@@ -23,7 +23,7 @@ extern inoptr root;        /* Address of root dir in inode table */
 extern uint16_t root_dev;  /* Device number of root filesystem. */
 extern uint16_t swap_dev;  /* Device number used for swap */
 
-extern struct blkbuf bufpool[NBUFS];
+extern struct blkbuf bufpool[];
 #ifndef CONFIG_DYNAMIC_BUFPOOL
 #define bufpool_end (bufpool + NBUFS)	/* Define so its a compile time const */
 #else
