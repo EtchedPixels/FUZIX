@@ -59,6 +59,51 @@ static int test_hrg1b(void)
     }
 }
 
+__sfr __at 0xEC le18_data;
+__sfr __at 0xED le18_x;
+__sfr __at 0xEE le18_y;
+__sfr __at 0xEF le18_ctrl;
+
+static int test_le18(void)
+{
+    int col, row;
+    uint8_t c;
+    if (ioctl(0, GFXIOC_MAP, &v)) {
+        perror("GFXIOC_MAP");
+        exit(1);
+    }
+    if (!(v.flags & MAP_PIO)) {
+        fprintf(stderr, "PIO map required.\n");
+        exit(1);
+    }
+    if (d.format != FMT_MONO_WB) {
+        fprintf(stderr, "Format should be mono.\n");
+        exit(1);
+    }
+    printf("LE18 at 0x%02X\n", (unsigned int)v.pio);
+    if ((unsigned int)v.pio != 0xEC) {
+        fprintf(stderr, "LE18 reported on wrong port.\n");
+        exit(1);
+    }
+    le18_ctrl = 1;
+    for (col = 0; col < 64; col++) {
+        le18_x = col;
+        for (row = 0; row < 192; row++) {
+            le18_y = row++;
+            le18_data = 0x2A;
+            le18_y = row;
+            le18_data = 0x15;
+        }
+    }
+    c = le18_data;
+    getchar();
+    le18_ctrl = 0;
+    if ((c & 0x3F) != 0x15) {
+        fprintf(stderr, "le18: read fail.\n");
+        exit(1);
+    }
+}
+
 __sfr __at 0xFF microlabs_ctrl;
 uint8_t *microlabs_fb = (uint8_t *)0x3C00;
 
@@ -213,6 +258,9 @@ int main(int argc, char *argv[])
         break;
     case HW_TRS80GFX:
         test_trs80gfx();
+        break;
+    case HW_LOWE_LE18:
+        test_le18();
         break;
     case HW_UNACCEL:
         unaccelerated();
