@@ -43,45 +43,45 @@ __sfr __at 0xEB tr1865_rxtx;
 __sfr __at 0xF8 vg_tr1865_wrst;
 __sfr __at 0xF9 vg_tr1865_ctrd;
 
-struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
-    {   NULL,    NULL,    NULL,    0,        0,       0    },
-    {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 },
-    {   tbuf4,   tbuf4,   tbuf4,   TTYSIZ,   0,   TTYSIZ/2 }
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
+	{NULL, NULL, NULL, 0, 0, 0},
+	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2}
 };
 
 /* Write to system console */
 void kputchar(char c)
 {
-    if(c=='\n')
-        tty_putc(1, '\r');
-    tty_putc(1, c);
+	if (c == '\n')
+		tty_putc(1, '\r');
+	tty_putc(1, c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-    uint8_t reg;
-    if (minor < 3)
-        return TTY_READY_NOW;
-    /* FIXME RTS/CTS is supported by the hardware */
-    if (minor == 3) {
-    	if (ttydata[3].termios.c_cflag & CRTSCTS) {
-	    	reg = tr1865_ctrl;
-	    	if (!(reg & 0x80))
-    			return TTY_READY_LATER;
+	uint8_t reg;
+	if (minor < 3)
+		return TTY_READY_NOW;
+	/* FIXME RTS/CTS is supported by the hardware */
+	if (minor == 3) {
+		if (ttydata[3].termios.c_cflag & CRTSCTS) {
+			reg = tr1865_ctrl;
+			if (!(reg & 0x80))
+				return TTY_READY_LATER;
+		}
+		reg = tr1865_status;
+		return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 	}
-	reg = tr1865_status;
-	return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
-    }
-    /* minor == 4 */
-    reg = vg_tr1865_wrst;
-    if (ttydata[4].termios.c_cflag & CRTSCTS) {
-    	/* CTS ? */
-	if (!(reg & 0x40))
-    	    return TTY_READY_LATER;
-    }
-    return (reg & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
+	/* minor == 4 */
+	reg = vg_tr1865_wrst;
+	if (ttydata[4].termios.c_cflag & CRTSCTS) {
+		/* CTS ? */
+		if (!(reg & 0x40))
+			return TTY_READY_LATER;
+	}
+	return (reg & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 static uint8_t vtbuf[64];
@@ -89,165 +89,161 @@ static uint8_t *vtq = vtbuf;
 
 void vtflush(void)
 {
-    vtoutput(vtbuf, vtq - vtbuf);
-    vtq = vtbuf;
+	vtoutput(vtbuf, vtq - vtbuf);
+	vtq = vtbuf;
 }
 
 static void vtexchange(void)
 {
-        /* Swap the pointers over: TRS80 video we switch by copying not
-           flipping hardware pointers */
-        uint8_t *v = vtbase[0];
-        vtbase[0] = vtbase[1];
-        vtbase[1] = v;
-        /* The cursor x/y for current tty are stale in the save area
-           so save them */
-        vt_save(&ttysave[curtty]);
+	/* Swap the pointers over: TRS80 video we switch by copying not
+	   flipping hardware pointers */
+	uint8_t *v = vtbase[0];
+	vtbase[0] = vtbase[1];
+	vtbase[1] = v;
+	/* The cursor x/y for current tty are stale in the save area
+	   so save them */
+	vt_save(&ttysave[curtty]);
 
-        /* Before we flip the memory */
-        cursor_off();
+	/* Before we flip the memory */
+	cursor_off();
 
-        vtswap();
+	vtswap();
 
-        /* Cursor back */
-        if (!ttysave[inputtty].cursorhide)
-            cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
+	/* Cursor back */
+	if (!ttysave[inputtty].cursorhide)
+		cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    irqflags_t irq;
+	irqflags_t irq;
 
-    if (minor == 3)
-        tr1865_rxtx = c;
-    else if (minor == 4)
-	vg_tr1865_wrst = c;
-    else {
-        if (video_mode == 2)	/* Micrografyx */
-          return;
-        irq = di();
-        if (curtty != minor -1) {
-            /* Kill the cursor as we are changing the memory buffers. If
-               we don't do this the next cursor_off will hit the wrong
-               buffer */
-            vtflush();
-//          cursor_off();
-            vt_save(&ttysave[curtty]);
-            curtty = minor - 1;
-            vt_load(&ttysave[curtty]);
-            /* Fix up the cursor */
-//            if (!ttysave[inputtty].cursorhide)
-//                cursor_on(ttysave[inputtty].cursory, ttysave[inputtty].cursorx);
-        }
-        else if (vtq == vtbuf + sizeof(vtbuf))
-            vtflush();
-        *vtq++ = c;
-        irqrestore(irq);
-    }
+	if (minor == 3)
+		tr1865_rxtx = c;
+	else if (minor == 4)
+		vg_tr1865_wrst = c;
+	else {
+		if (video_mode == 2)	/* Micrografyx */
+			return;
+		irq = di();
+		if (curtty != minor - 1) {
+			/* Kill the cursor as we are changing the memory buffers. If
+			   we don't do this the next cursor_off will hit the wrong
+			   buffer */
+			vtflush();
+			vt_save(&ttysave[curtty]);
+			curtty = minor - 1;
+			vt_load(&ttysave[curtty]);
+			/* Fix up the cursor */
+		} else if (vtq == vtbuf + sizeof(vtbuf))
+			vtflush();
+		*vtq++ = c;
+		irqrestore(irq);
+	}
 }
 
 /* Only the Model III has this as an actual interrupt */
 void tty_interrupt(void)
 {
-    uint8_t reg = tr1865_status;
-    if (reg & 0x80) {
-        reg = tr1865_rxtx;
-        tty_inproc(3, reg);
-    }
+	uint8_t reg = tr1865_status;
+	if (reg & 0x80) {
+		reg = tr1865_rxtx;
+		tty_inproc(3, reg);
+	}
 }
 
 void tty_poll(void)
 {
-    uint8_t reg;
+	uint8_t reg;
 
-    if (ports & 0x10) {
-	    reg = vg_tr1865_wrst;
-	    if (reg & 0x01) {
-	        reg = vg_tr1865_ctrd;
-	        tty_inproc(4, reg);
-	    }
-    }
-    if (ports & 0x08) {
-	    reg = tr1865_status;
-	    if (reg & 0x80) {
-	        reg = vg_tr1865_ctrd;
-	        tty_inproc(3, reg);
-	    }
-    }
+	if (ports & 0x10) {
+		reg = vg_tr1865_wrst;
+		if (reg & 0x01) {
+			reg = vg_tr1865_ctrd;
+			tty_inproc(4, reg);
+		}
+	}
+	if (ports & 0x08) {
+		reg = tr1865_status;
+		if (reg & 0x80) {
+			reg = vg_tr1865_ctrd;
+			tty_inproc(3, reg);
+		}
+	}
 }
 
 /* Called to set baud rate etc */
 static const uint8_t trsbaud[] = {
-    0,0,1,2, 3,4,5,6, 7,10,14, 15
+	0, 0, 1, 2, 3, 4, 5, 6, 7, 10, 14, 15
 };
 
 static const uint8_t trssize[4] = {
-    0x00, 0x40, 0x20, 0x60
+	0x00, 0x40, 0x20, 0x60
 };
 
 void tty_setup(uint8_t minor)
 {
-    uint8_t baud;
-    uint8_t ctrl;
+	uint8_t baud;
+	uint8_t ctrl;
 
-    if (minor != 3 || trs80_model == LNW80)
-        return;
+	if (minor != 3 || trs80_model == LNW80)
+		return;
 
-    baud = ttydata[3].termios.c_cflag & CBAUD;
-    if (baud > B19200) {
-        ttydata[3].termios.c_cflag &= ~CBAUD;
-        ttydata[3].termios.c_cflag |= B19200;
-        baud = B19200;
-    }
-    baud = trsbaud[baud];
-    tr1865_baud = baud | (baud << 4);
+	baud = ttydata[3].termios.c_cflag & CBAUD;
+	if (baud > B19200) {
+		ttydata[3].termios.c_cflag &= ~CBAUD;
+		ttydata[3].termios.c_cflag |= B19200;
+		baud = B19200;
+	}
+	baud = trsbaud[baud];
+	tr1865_baud = baud | (baud << 4);
 
-    ctrl = 3;	/* DTR|RTS */
-    if (ttydata[3].termios.c_cflag & PARENB) {
-        if (ttydata[3].termios.c_cflag & PARODD)
-            ctrl |= 0x80;
-    } else
-        ctrl |= 0x8;		/* No parity */
-    ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
-    tr1865_ctrl = ctrl;
+	ctrl = 3;		/* DTR|RTS */
+	if (ttydata[3].termios.c_cflag & PARENB) {
+		if (ttydata[3].termios.c_cflag & PARODD)
+			ctrl |= 0x80;
+	} else
+		ctrl |= 0x8;	/* No parity */
+	ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
+	tr1865_ctrl = ctrl;
 }
 
 int trstty_open(uint8_t minor, uint16_t flags)
 {
-    /* Serial port cards are optional */
-    if (minor < 8 && !(ports & (1 << minor))) {
-        udata.u_error = ENODEV;
-        return -1;
-    }
-    return tty_open(minor, flags);
+	/* Serial port cards are optional */
+	if (minor < 8 && !(ports & (1 << minor))) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	return tty_open(minor, flags);
 }
 
 int trstty_close(uint8_t minor)
 {
-    if (minor == 3 && ttydata[3].users == 0) {
-        if (trs80_model == VIDEOGENIE)
-            vg_tr1865_ctrd = 0;
-        else
-            tr1865_ctrl = 0;	/* Drop carrier and rts */
-    }
-    return tty_close(minor);
+	if (minor == 3 && ttydata[3].users == 0) {
+		if (trs80_model == VIDEOGENIE)
+			vg_tr1865_ctrd = 0;
+		else
+			tr1865_ctrl = 0;	/* Drop carrier and rts */
+	}
+	return tty_close(minor);
 }
 
 int tty_carrier(uint8_t minor)
 {
-    if (minor != 3)
-        return 1;
-    if (trs80_model != VIDEOGENIE) {
-        if (tr1865_ctrl & 0x80)
-            return 1;
-    } else if (vg_tr1865_ctrd & 0x80)
-            return 1;
-    return 0;
+	if (minor != 3)
+		return 1;
+	if (trs80_model != VIDEOGENIE) {
+		if (tr1865_ctrl & 0x80)
+			return 1;
+	} else if (vg_tr1865_ctrd & 0x80)
+		return 1;
+	return 0;
 }
 
 void tty_sleeping(uint8_t minor)
 {
-        used(minor);
+	used(minor);
 }
 
 void trstty_probe(void)
@@ -264,7 +260,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint8_t shiftmask[8] = {
-    0, 0, 0, 0, 0, 0, 0, 7
+	0, 0, 0, 0, 0, 0, 0, 7
 };
 
 static void keyproc(void)
@@ -273,9 +269,9 @@ static void keyproc(void)
 	uint8_t key;
 
 	for (i = 0; i < 8; i++) {
-	        /* Set one of A0 to A7, and read the byte we get back.
-	           Invert that to get a mask of pressed buttons */
-		keyin[i] = *(uint8_t *)(0x3800 | (1 << i));
+		/* Set one of A0 to A7, and read the byte we get back.
+		   Invert that to get a mask of pressed buttons */
+		keyin[i] = *(uint8_t *) (0x3800 | (1 << i));
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
@@ -283,12 +279,12 @@ static void keyproc(void)
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
-					        if (keyboard_grab == 3) {
-						    queue_input(KEYPRESS_UP);
-						    queue_input(keyboard[i][n]);
-                                                }
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
-                                        }
+					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -332,30 +328,30 @@ static void keyproc(void)
  */
 
 uint8_t keyboard[8][8] = {
-	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
-	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
-	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
+	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g'},
+	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'},
+	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w'},
 	/* F1-F4 are only present on Video Genie II/Dick Smith II */
-	{'x', 'y', 'z',   0,   KEY_F2,   KEY_F3,   KEY_F4,  KEY_F1 },
-	{'0', '1', '2', '3', '4', '5', '6', '7' },
-	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_BS, KEY_DEL, ' '},
+	{'x', 'y', 'z', 0, KEY_F2, KEY_F3, KEY_F4, KEY_F1},
+	{'0', '1', '2', '3', '4', '5', '6', '7'},
+	{'8', '9', ':', ';', ',', '-', '.', '/'},
+	{KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0 /*KEY_DOWN */ , KEY_BS, KEY_DEL, ' '},
 	/* The Model 1 only has bit 0 of this for its shift key. The Model 3
 	   has bit 2 for right shift. Some add-ons used bit 4 for control,
 	   other things borrowed the down arrow
 	   The VideoGenie has MS on bit 1, RPT on 3 and CTRL on 4 */
-	{ 0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0 }
+	{0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0}
 };
 
 uint8_t shiftkeyboard[8][8] = {
-	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
-	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
-	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
-	{'X', 'Y', 'Z',   0,   0,   0,   0,  0  },
-	{ KEY_CAPSLOCK, '!', '"', '#', '$', '%', '&', '\'' },
-	{'(', ')', '*', '+', '<', '=', '>', '?' },
-	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0/*KEY_DOWN*/, KEY_LEFT, KEY_RIGHT, ' '},
-	{ 0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0 }
+	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G'},
+	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'},
+	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W'},
+	{'X', 'Y', 'Z', 0, 0, 0, 0, 0},
+	{KEY_CAPSLOCK, '!', '"', '#', '$', '%', '&', '\''},
+	{'(', ')', '*', '+', '<', '=', '>', '?'}	,
+	{KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, 0 /*KEY_DOWN */ , KEY_LEFT, KEY_RIGHT, ' '},
+	{0, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0}
 };
 
 static uint8_t capslock = 0;
@@ -369,77 +365,76 @@ static void keydecode(void)
 	/* Convention for capslock or the mod */
 	/* Only the model 3 has right shift (2) */
 	if (keymap[7] & 3) {	/* shift (left/right) */
-	        m = KEYPRESS_SHIFT;
+		m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
 		/* VT switcher */
 		if (c == KEY_LEFT || c == KEY_RIGHT) {
-		        c -= KEY_RIGHT;
-		        c ^= 1;
-                        if (inputtty != c) {
-                                inputtty = c;
-                                vtexchange();	/* Exchange the video and backing buffer */
-                        }
-                        return;
-                }
-        } else
+			c -= KEY_RIGHT;
+			c ^= 1;
+			if (inputtty != c) {
+				inputtty = c;
+				vtexchange();	/* Exchange the video and backing buffer */
+			}
+			return;
+		}
+	} else
 		c = keyboard[keybyte][keybit];
 
 	if (c == KEY_CAPSLOCK) {
 		capslock = 1 - capslock;
 		return;
 	}
-        /* The keyboard lacks some rather important symbols so remap them
-           with control (down arrow)*/
+	/* The keyboard lacks some rather important symbols so remap them
+	   with control (down arrow) */
 	if ((keymap[6] | keymap[7]) & 16) {	/* control */
-	        m |= KEYPRESS_CTRL;
-                if (keymap[7] & 3) {	/* shift */
-                    if (c == '(')
-                        c = '{';
-                    if (c == ')')
-                        c = '}';
-                    if (c == '-')
-                        c = '_';
-                    if (c == '/')
-                        c = '``';
-                    if (c == '<')
-                        c = '^';
-                } else {
-                    if (c == '8'/*'('*/)
-                        c = '[';
-                    else if (c == '9'/*')'*/)
-                        c = ']';
-                    else if (c == '-')
-                        c = '|';
-                    else if (c > 31 && c < 127)
-			c &= 31;
-                }
-	}
-	else if (capslock && c >= 'a' && c <= 'z')
+		m |= KEYPRESS_CTRL;
+		if (keymap[7] & 3) {	/* shift */
+			if (c == '(')
+				c = '{';
+			if (c == ')')
+				c = '}';
+			if (c == '-')
+				c = '_';
+			if (c == '/')
+				c = '``';
+			if (c == '<')
+				c = '^';
+		} else {
+			if (c == '8' /*'(' */ )
+				c = '[';
+			else if (c == '9' /*')' */ )
+				c = ']';
+			else if (c == '-')
+				c = '|';
+			else if (c > 31 && c < 127)
+				c &= 31;
+		}
+	} else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c) {
-	        switch(keyboard_grab) {
-	        case 0:
-	            vt_inproc(inputtty + 1, c);
-		    break;
-                case 1:
-                    /* Proper rule needed FIXME */
-                    if (c <= 0x83) {
-		        vt_inproc(inputtty + 1, c);
-		        break;
-                    }
-                    /* Fall through */
-                case 2:
-                    queue_input(KEYPRESS_DOWN);
-                    queue_input(c);
-                    break;
-                case 3:
-                    /* Queue an event giving the base key (unshifted)
-                       and the state of shift/ctrl/alt */
-                    queue_input(KEYPRESS_DOWN | m);
-	            queue_input(keyboard[keybyte][keybit]);
-	            break;
-                }
-        }
+		switch (keyboard_grab) {
+		case 0:
+			vt_inproc(inputtty + 1, c);
+			break;
+		case 1:
+			/* Proper rule needed FIXME */
+			if (c <= 0x83) {
+				vt_inproc(inputtty + 1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 /* Polled 40 times a second */
@@ -451,12 +446,12 @@ void kbd_interrupt(void)
 		if (newkey) {
 			keydecode();
 			kbd_timer = keyrepeat.first;
-		} else if (! --kbd_timer) {
+		} else if (!--kbd_timer) {
 			keydecode();
 			kbd_timer = keyrepeat.continual;
 		}
 	}
-        if (vtq != vtbuf)
-                vtflush();
-        poll_input();
+	if (vtq != vtbuf)
+		vtflush();
+	poll_input();
 }
