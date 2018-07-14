@@ -25,12 +25,23 @@
             .globl _procmem
 	    .globl vtbufinit
 	    .globl _trs80_mapper
+	    .globl ___hard_di
+	    .globl ___hard_irqrestore
 
 	    .globl bankpatch1
 	    .globl bankpatch2
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
+
+
+	    .globl __uget
+            .globl __ugetc
+	    .globl __ugetw
+            .globl __uput
+            .globl __uputc
+            .globl __uputw
+            .globl __uzero
 
             .include "kernel.def"
             .include "../kernel.def"
@@ -147,6 +158,8 @@ mapper_selector:
 	    ld a,#0x1f
 	    ld (bankpatch1 + 1),a
 	    ld (bankpatch2 + 1),a
+	    ld (bankpatch3 + 1),a
+	    ld (bankpatch4 + 1),a
 	    ret
 
 ;------------------------------------------------------------------------------
@@ -393,3 +406,184 @@ stub_ret:
 	push bc
 	ret			; and ret - can't use jp (ix) or jp (hl) here
 callhl:	jp (hl)
+
+;
+;	Fast inter-bank copier. Copies from kernel common, data or banked
+;	data (logical bank2) to/from userspace
+;
+	.area _COMMONMEM
+
+;
+;	We could use sp and make this faster still but it gets ugly and
+;	complicated. Might be worth doing pairs of bytes though.
+;
+b2bcopy:
+	ld a, b
+	ld (patch0 + 1), a	; source bank
+	ld a, c
+	ld (patch1 + 1), a	; destination bank
+	exx
+b2b_loop:
+patch0:
+	ld a,#0
+bankpatch3:
+	out (0x43),a
+	ld a,(hl)
+	inc hl
+	ex af,af'
+patch1:
+	ld a,#0
+bankpatch4:
+	out (0x43),a
+	ex af,af'
+	ld (de),a
+	inc de
+	djnz b2b_loop
+	dec c
+	jr nz, b2b_loop
+	ret
+
+uputget:
+        ; load DE with the byte count
+        ld e, 10(ix) ; byte count
+        ld d, 11(ix)
+	ld a, d
+	or e
+	ret z		; no work
+	dec de		; we return BC as a count for two 8bit loops
+	ld b, e		; not a 16bit value
+	inc b		; See http://map.grauw.nl/articles/fast_loops.php
+	inc d
+	ld c, d
+        ; load HL with the source address
+        ld l, 6(ix) ; src address
+        ld h, 7(ix)
+        ; load DE with destination address (in userspace)
+        ld e, 8(ix)
+        ld d, 9(ix)
+	ld a, b
+	or c
+	ret
+
+__uput:
+	push ix
+	ld ix,#0
+	add ix,sp
+	call uputget
+	jr z, uput_out
+	exx
+	; Disable interrupts, returns old state in HL
+	; Use helper as NMOS Z80 has bugs in this area
+	call ___hard_di
+	; Our banks
+	ld a, (U_DATA__U_PAGE)
+	ld c, a
+	ld a, (map_bank2 + 1)	; kernel is source
+	ld b, a
+ucopier:
+	; Save the mapping
+	ld de, (map_reg)	; save old mapping
+	push hl
+	push de
+	call b2bcopy
+	pop bc			; port and value
+	out (c), b
+	call ___hard_irqrestore
+	pop hl
+uput_out:
+	pop ix
+	ld hl,#0
+	ret
+
+__uget:
+	push ix
+	ld ix, #0
+	add ix, sp
+	call uputget
+	jr z, uput_out
+	exx
+	call ___hard_di
+	ld a, (U_DATA__U_PAGE)
+	ld b, a
+	ld a, (map_bank2 + 1)	; kernel is destination
+	ld c, a
+	jr ucopier
+
+__uputc:
+	pop iy	;	bank
+	pop bc	;	return
+	pop de	;	char
+	pop hl	;	dest
+	push hl
+	push de
+	push bc
+	push iy
+	call map_process_save
+	ld (hl), e
+uputc_out:
+	jp map_kernel_restore			; map the kernel back below common
+
+__uputw:
+	pop iy
+	pop bc	;	return
+	pop de	;	word
+	pop hl	;	dest
+	push hl
+	push de
+	push bc
+	push iy
+	call map_process_save
+	ld (hl), e
+	inc hl
+	ld (hl), d
+	jp map_kernel_restore
+
+__ugetc:
+	pop de
+	pop bc	; return
+	pop hl	; address
+	push hl
+	push bc
+	push de
+	call map_process_save
+        ld l, (hl)
+	ld h, #0
+	jp map_kernel_restore
+
+__ugetw:
+	pop de
+	pop bc	; return
+	pop hl	; address
+	push hl
+	push bc
+	push de
+	call map_process_save
+        ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
+	jp map_kernel_restore
+
+__uzero:
+	pop iy
+	pop de	; return
+	pop hl	; address
+	pop bc	; size
+	push bc
+	push hl
+	push de
+	push iy
+	ld a, b	; check for 0 copy
+	or c
+	ret z
+	call map_process_save
+	ld (hl), #0
+	dec bc
+	ld a, b
+	or c
+	jp z, uputc_out
+	ld e, l
+	ld d, h
+	inc de
+	ldir
+	jp uputc_out

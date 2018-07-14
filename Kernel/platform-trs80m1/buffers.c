@@ -17,20 +17,19 @@ void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 }
 
 /*
- *	Slow crap implementation purely for testing. We need to go direct
- *	between bank 2 and user
+ *	This works because our uput and uget (see trs80-bank.s) switch
+ *	to kernel logical bank 2 when copying, as kernel bank 1 is only
+ *	code so it knows that any copy must be to common or bank 2. Without
+ *	that this would need a double buffer.
  */
-static uint8_t scratch2[512];
 void blktou(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    __builtin_memcpy(scratch2, buf->__bf_data + off, len);
-    uput(scratch2, uaddr, len);
+    uput(buf->__bf_data + off, uaddr, len);
 }
 
 void blkfromu(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    uget(uaddr, scratch2, len);
-    __builtin_memcpy(buf->__bf_data + off, scratch2, len);
+    uget(uaddr, buf->__bf_data + off , len);
 }
 
 static uint8_t scratchbuf[64];

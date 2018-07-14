@@ -15,7 +15,6 @@ start.rel
 version.rel
 lowlevel-z80-banked.rel
 usermem.rel
-usermem_std-z80-banked.rel
 platform-trs80m1/tricks.rel
 platform-trs80m1/main.rel
 timer.rel
