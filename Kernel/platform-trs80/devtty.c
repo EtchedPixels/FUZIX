@@ -319,8 +319,7 @@ static void keydecode(void)
 	            vt_inproc(inputtty + 1, c);
 		    break;
                 case 1:
-                    /* Proper rule needed FIXME */
-                    if (c <= 0x83) {
+                    if (!input_meta_match(c)) {
 		        vt_inproc(inputtty + 1, c);
 		        break;
                     }
