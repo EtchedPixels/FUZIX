@@ -878,6 +878,7 @@ extern bool insq(struct s_queue *q, unsigned char c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
 extern void clrq(struct s_queue *q);
 extern bool uninsq(struct s_queue *q, unsigned char *cp);
+extern bool fullq(struct s_queue *q);
 extern int psleep_flags_io(void *event, unsigned char flags);
 extern int psleep_flags(void *event, unsigned char flags);
 extern int nxio_open(uint8_t minor, uint16_t flag);
