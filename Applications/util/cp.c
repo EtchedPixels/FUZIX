@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <utime.h>
 
 typedef unsigned char BOOL;
@@ -46,6 +47,10 @@ int main(int argc, char *argv[])
         writes(2, lastarg);
         writes(2, ": not a directory\n");
 	return 1;
+    }
+    if (argc < 3) {
+        writes(2, "cp: destination required\n");
+        return 1;
     }
     while (argc-- > 2) {
         srcname = argv[1];
