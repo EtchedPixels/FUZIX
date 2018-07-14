@@ -11,6 +11,8 @@
  * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
+ *
+ * TODO: Review versus MUSL variant
  */
 
 #include <math.h>
@@ -177,9 +179,9 @@ float ynf(int n, float x)
 	if (ix > 0x7f800000)
 		return x+x;
 	if (ix == 0)
-		return -__FINFINITY;/*1.0f/0.0f;*/
+		return -1.0f/0.0f;
 	if (hx < 0)
-		return __sNaN;/*0.0f/0.0f;*/
+		return 0.0f/0.0f;
 	sign = 1;
 	if (n < 0) {
 		n = -n;

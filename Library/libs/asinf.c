@@ -38,7 +38,7 @@ float asinf(float x)
 	if (ix >= 0x3f800000) {  /* |x| >= 1 */
 		if (ix == 0x3f800000)  /* |x| == 1 */
 			return x*pio2;  /* asin(+-1) = +-pi/2 with inexact */
-		return __sNaN;  /* asin(|x|>1) is NaN */
+		return 0/(x-x);  /* asin(|x|>1) is NaN */
 	} else if (ix < 0x3f000000) {  /* |x|<0.5 */
 		if (ix < 0x39800000) {  /* |x| < 2**-12 */
 			if (huge+x > 1.0f)

@@ -35,11 +35,8 @@ float sqrtf(float x)
 	if (ix <= 0) {
 		if ((ix&~sign) == 0)
 			return x;  /* sqrt(+-0) = +-0 */
-		if (ix < 0) {
-			raise(SIGFPE);
-			return __sNaN;
-		}
-/*			return (x-x)/(x-x);  *//* sqrt(-ve) = sNaN */
+		if (ix < 0)
+			return (x-x)/(x-x);  /* sqrt(-ve) = sNaN */
 	}
 	/* normalize x */
 	m = ix>>23;

@@ -38,7 +38,7 @@ float logf(float x)
 		if ((ix & 0x7fffffff) == 0)
 			return -two25/0.0f;  /* log(+-0)=-inf */
 		if (ix < 0)
-			return __sNaN; /*(x-x)/0.0f;*/   /* log(-#) = NaN */
+			return (x-x)/0.0f;   /* log(-#) = NaN */
 		/* subnormal number, scale up x */
 		k -= 25;
 		x *= two25;

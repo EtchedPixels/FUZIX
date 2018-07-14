@@ -26,11 +26,9 @@ float acoshf(float x)
 	int32_t hx;
 
 	GET_FLOAT_WORD(hx, x);
-	if (hx < 0x3f800000) {  /* x < 1 */
-		raise(SIGFPE);
-		return __NaN;
-/*		return (x-x)/(x-x); */
-	} else if (hx >= 0x4d800000) {  /* x > 2**28 */
+	if (hx < 0x3f800000)  /* x < 1 */
+		return (x-x)/(x-x);
+	else if (hx >= 0x4d800000) {  /* x > 2**28 */
 		if (hx >= 0x7f800000)  /* x is inf of NaN */
 			return x + x;
 		return logf(x) + ln2;  /* acosh(huge)=log(2x) */

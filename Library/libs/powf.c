@@ -111,7 +111,7 @@ float powf(float x, float y)
 			z = 1.0f/z;
 		if (hx < 0) {
 			if (((ix-0x3f800000)|yisint) == 0) {
-				z = __sNaN;/* (z-z)/(z-z);*/ /* (-1)**non-int is NaN */
+				z = (z-z)/(z-z); /* (-1)**non-int is NaN */
 			} else if (yisint == 1)
 				z = -z;          /* (x<0)**odd = -(|x|**odd) */
 		}
@@ -121,7 +121,7 @@ float powf(float x, float y)
 	sn = 1.0f; /* sign of result */
 	if (hx < 0) {
 		if (yisint == 0) /* (x<0)**(non-int) is NaN */
-			return __sNaN; /*(x-x)/(x-x);*/
+			return (x-x)/(x-x);
 		if (yisint == 1) /* (x<0)**(odd int) */
 			sn = -1.0f;
 	}

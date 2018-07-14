@@ -26,9 +26,9 @@ float atanhf(float x)
 	GET_FLOAT_WORD(hx, x);
 	ix = hx & 0x7fffffff;
 	if (ix > 0x3f800000)                   /* |x| > 1 */
-		return __sNaN;
+		return (x-x)/(x-x);
 	if (ix == 0x3f800000)
-		return __NaN;
+		return x / 0.0;
 	if (ix < 0x31800000 && huge+x > 0.0f)  /* x < 2**-28 */
 		return x;
 	SET_FLOAT_WORD(x, ix);

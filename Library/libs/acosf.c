@@ -41,9 +41,7 @@ float acosf(float x)
 			if (hx > 0) return 0.0f;  /* acos(1) = 0 */
 			return pi + 2.0f*pio2_lo;  /* acos(-1)= pi */
 		}
-		raise(SIGFPE);
-		return __NaN;
-/*		return (x-x)/(x-x);*/  /* acos(|x|>1) is NaN */
+		return (x-x)/(x-x);  /* acos(|x|>1) is NaN */
 	}
 	if (ix < 0x3f000000) {   /* |x| < 0.5 */
 		if (ix <= 0x32800000) /* |x| < 2**-26 */

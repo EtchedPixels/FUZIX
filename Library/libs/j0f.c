@@ -110,9 +110,9 @@ float y0f(float x)
 	if (ix >= 0x7f800000)
 		return 1.0f/(x+x*x);
 	if (ix == 0)
-		return -__FINFINITY;/*-1.0f/0.0f;*/
+		return -1.0f/0.0f;
 	if (hx < 0)
-		return __sNaN;/*0.0f/0.0f;*/
+		return 0.0f/0.0f;
 	if (ix >= 0x40000000) {  /* |x| >= 2.0 */
 		/* y0(x) = sqrt(2/(pi*x))*(p0(x)*sin(x0)+q0(x)*cos(x0))
 		 * where x0 = x-pi/4
