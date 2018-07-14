@@ -183,6 +183,11 @@ void tty_sleeping(uint8_t minor)
         used(minor);
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+    /* FIXME: flow control as implemented now for Model I and III */
+}
+
 uint8_t keymap[8];
 static uint8_t keyin[8];
 static uint8_t keybyte, keybit;

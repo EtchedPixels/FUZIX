@@ -66,6 +66,9 @@ void tty_sleeping(uint8_t minor)
 	minor;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
 
 #if 0
 static uint8_t keymap[10];

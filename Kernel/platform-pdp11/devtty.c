@@ -51,6 +51,10 @@ void tty_sleeping(uint8_t minor)
 {
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* Currently run off the timer */
 void tty_interrupt(void)
 {

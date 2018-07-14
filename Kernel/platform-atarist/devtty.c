@@ -72,6 +72,10 @@ void tty_sleeping(uint8_t minor)
 	/* For now.. probably worth using tx ints */
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 void tty_interrupt(void)
 {
 	uint8_t r = *uart_status;

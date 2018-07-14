@@ -51,6 +51,10 @@ void tty_sleeping(uint8_t minor)
     ttypoll |= 1 << minor;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 __sfr __at 0x08 timer4;
 
 void tty_irq(uint8_t minor)

@@ -145,6 +145,10 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 void tty_interrupt(void)
 {
 	uint8_t r = *uart_status;

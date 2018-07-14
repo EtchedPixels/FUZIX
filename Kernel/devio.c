@@ -549,16 +549,14 @@ bool uninsq(struct s_queue *q, unsigned char *cp)
 	return r;
 }
 
-// WRS: this isn't used
-// /* Returns true if the queue has more characters than its wakeup number
-//  */
-// bool fullq(struct s_queue *q)
-// {
-//     if (q->q_count > q->q_wakeup) // WRS: shouldn't this be >= ?
-//         return true;
-//     else
-//         return false;
-// }
+/* Returns true if the queue has more characters than its wakeup number */
+bool fullq(struct s_queue *q)
+{
+    if (q->q_count > q->q_wakeup) // WRS: shouldn't this be >= ?
+        return true;
+    else
+        return false;
+}
 
 /*********************************************************************
              Miscellaneous helpers

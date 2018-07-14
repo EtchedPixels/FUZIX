@@ -41,6 +41,10 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* Called every timer tick */
 void tty_pollirq(void)
 {

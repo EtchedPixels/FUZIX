@@ -305,3 +305,7 @@ void kputchar(char c)
     if(c == '\n')
         tty_putc(TTYDEV & 0xFF, '\r');
 }
+
+void tty_data_consumed(uint8_t minor)
+{
+}

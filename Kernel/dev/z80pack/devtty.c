@@ -126,3 +126,7 @@ int tty_carrier(uint8_t minor)
     used(minor);
     return 1;
 }
+
+void tty_data_consumed(uint8_t minor)
+{
+}

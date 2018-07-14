@@ -146,6 +146,10 @@ ttyready_t tty_writeready(uint8_t minor)
 	return TTY_READY_NOW;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {

@@ -51,6 +51,10 @@ int tty_carrier(uint8_t minor)
     return 1;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 void tty_interrupt(void)
 {
 	tty_inproc(minor(BOOT_TTY), UCA0RXBUF);

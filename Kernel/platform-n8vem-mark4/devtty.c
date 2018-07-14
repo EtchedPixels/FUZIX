@@ -80,6 +80,10 @@ void tty_sleeping(uint8_t minor)
     minor;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 ttyready_t tty_writeready(uint8_t minor)
 {
     minor;

@@ -67,6 +67,10 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* 6551 mode handling */
 
 static uint8_t baudbits[] = {

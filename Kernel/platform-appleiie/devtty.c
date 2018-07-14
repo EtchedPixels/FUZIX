@@ -62,6 +62,10 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* Beware - this kbd access also disables 80store */
 void tty_poll(void)
 {

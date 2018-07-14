@@ -100,6 +100,11 @@ void tty_sleeping(uint8_t minor)
 	used(minor);
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+	/* FIXME:we can now implement flow control stuff */
+}
+
 static uint8_t dart_setup[] = {
 	1, 0x19,
 	2, 0x04,	/* Vector */

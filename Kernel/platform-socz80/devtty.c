@@ -41,3 +41,7 @@ void tty_sleeping(uint8_t minor)
 {
     minor;
 }
+
+void tty_data_consumed(uint8_t minor)
+{
+}

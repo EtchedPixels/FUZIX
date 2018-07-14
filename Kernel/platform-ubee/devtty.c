@@ -75,6 +75,10 @@ int tty_carrier(uint8_t minor)
 	return 1;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 static uint8_t keymap[15];
 static uint8_t keyin[15];
 static uint8_t keybyte, keybit;

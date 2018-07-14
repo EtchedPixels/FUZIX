@@ -153,6 +153,9 @@ void tty_interrupt(void)
 
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
 
 
 void platform_interrupt(void)

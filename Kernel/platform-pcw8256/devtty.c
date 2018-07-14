@@ -131,6 +131,10 @@ void tty_sleeping(uint8_t minor)
     minor;
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 /* Pending better ioctl bits set up for 9600 8N1 */
 
 void tty_init_port(void)

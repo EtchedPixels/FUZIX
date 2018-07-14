@@ -274,6 +274,10 @@ void tty_interrupt(void)
 
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+}
+
 uint8_t keymap[8];
 static uint8_t keyin[8];
 static uint8_t keybyte, keybit;
