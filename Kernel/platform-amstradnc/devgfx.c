@@ -50,7 +50,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     l = ugetw(ptr);
     if (l < 6 || l > 512)
       goto bad;
-    if (uget(tmp, ptr + 2, l))
+    if (uget(ptr + 2, tmp, l))
       goto bad2;
     /* TODO
     if (draw_validate(ptr, l, 480, 64))
