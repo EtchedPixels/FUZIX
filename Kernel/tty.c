@@ -90,6 +90,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		++udata.u_base;
 	}
 out:
+	tty_data_consumed(minor);
 	wakeup(&q->q_count);
 	return udata.u_done;
 
