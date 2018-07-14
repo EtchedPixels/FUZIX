@@ -12,4 +12,3 @@ rc::bootwait:/etc/rc
 03:3:off:getty /dev/tty3
 # Shutdown
 ht:6:wait:/etc/rc.halt
-
