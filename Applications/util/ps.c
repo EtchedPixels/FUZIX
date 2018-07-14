@@ -446,7 +446,7 @@ int do_ps(void)
 
 static void usage(void)
 {
-	fputs("usage: ps -[eNr]\n", stderr);
+	fputs("usage: ps [options]\n", stderr);
 	exit(1);
 }
 
