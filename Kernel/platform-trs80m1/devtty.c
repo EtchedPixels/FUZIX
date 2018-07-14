@@ -65,11 +65,23 @@ ttyready_t tty_writeready(uint8_t minor)
     if (minor < 3)
         return TTY_READY_NOW;
     /* FIXME RTS/CTS is supported by the hardware */
-    if (minor == 3)
+    if (minor == 3) {
+    	if (ttydata[3].termios.c_cflag & CRTSCTS) {
+	    	reg = tr1865_ctrl;
+	    	if (!(reg & 0x80))
+    			return TTY_READY_LATER;
+	}
 	reg = tr1865_status;
-    else
-        reg = vg_tr1865_wrst;
-    return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
+	return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
+    }
+    /* minor == 4 */
+    reg = vg_tr1865_wrst;
+    if (ttydata[4].termios.c_cflag & CRTSCTS) {
+    	/* CTS ? */
+	if (!(reg & 0x40))
+    	    return TTY_READY_LATER;
+    }
+    return (reg & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 static uint8_t vtbuf[64];
@@ -150,7 +162,7 @@ void tty_poll(void)
 
     if (ports & 0x10) {
 	    reg = vg_tr1865_wrst;
-	    if (reg & 0x80) {
+	    if (reg & 0x01) {
 	        reg = vg_tr1865_ctrd;
 	        tty_inproc(4, reg);
 	    }
