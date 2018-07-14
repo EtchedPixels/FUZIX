@@ -1,4 +1,4 @@
 killall
 umount -a
-remount / ro
+substroot remount % ro
 halt

@@ -18,6 +18,7 @@ f 0755 /bin/basename    basename
 f 0755 /bin/cat         cat
 f 0755 /bin/chmod       chmod
 f 0755 /bin/cmp         cmp
+f 0755 /bin/substroot   substroot
 f 0755 /bin/cp          cp
 f 0755 /bin/date        date
 f 0755 /bin/dd          dd

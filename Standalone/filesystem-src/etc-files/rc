@@ -1,5 +1,5 @@
 umask 022
-fsck -a /
-remount / rw
+substroot fsck -a %
+substroot remount % rw
 mount -a
 >/var/run/utmp
