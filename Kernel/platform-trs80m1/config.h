@@ -27,6 +27,9 @@
 #define CONFIG_BLKBUF_EXTERNAL
 /* And our buffer pool is dynamically sized */
 #define CONFIG_DYNAMIC_BUFPOOL
+/* And networking */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 #define MAX_MAPS	16	/* 512K */
 

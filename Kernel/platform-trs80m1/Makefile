@@ -1,7 +1,7 @@
 
-CSRCS = devlpr.c devtty.c devgfx.c
-CSRCS += devices.c main.c devstringy.c devinput.c
+CSRCS =
 DISCARD_CSRCS = discard.c devhd_discard.c
+NSRCS = ../dev/net/net_native.c
 
 ASRCS = trs80.s trs80-bank.s crt0.s vtsupport.s
 ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s
@@ -9,12 +9,17 @@ ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s
 # buffers.c must be in CODE2, direct users are more convenient there as
 # the asm helpers then can avoid another switch
 C2SRCS = buffers.c devfd.c devfd3.c devhd.c
+# And these so CODE1 is under 32K
+C2SRCS += devices.c main.c devstringy.c devinput.c
+C2SRCS += devlpr.c devtty.c devgfx.c
+
 
 COBJS = $(CSRCS:.c=.rel)
 C2OBJS = $(C2SRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-OBJS  = $(COBJS) $(C2OBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
+OBJS  = $(COBJS) $(C2OBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -33,6 +38,9 @@ $(AOBJS): %.rel: %.s
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
