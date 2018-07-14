@@ -258,6 +258,7 @@ extern void tty_sleeping(uint8_t minor);
 extern void tty_putc(uint8_t minor, unsigned char c);
 extern void tty_setup(uint8_t minor);
 extern int tty_carrier(uint8_t minor);
+extern void tty_data_consumed(uint8_t minor);
 /* PTY pieces: 8 ptys both sides of */
 #ifdef CONFIG_PTY_DEV
 #define PTY_BUFFERS \
