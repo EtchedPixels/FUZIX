@@ -3,7 +3,7 @@
 #undef DEBUGHARDER		/* report calls to wakeup() that lead nowhere */
 #undef DEBUGREALLYHARD		/* turn on getproc dumping */
 #undef DEBUG_PREEMPT		/* debug pre-emption */
-#define DEBUG_NREADY		/* debug nready counting */
+#undef DEBUG_NREADY		/* debug nready counting */
 
 #include <kernel.h>
 #include <tty.h>
@@ -140,7 +140,8 @@ void switchout(void)
 			nready++;
 		udata.u_ptab->p_status = P_RUNNING;
 		ei();
-		return;
+		/* Drop through - we want to be running, but we might be
+		   pre-empted by someone else */
 	}
 	/* When we are idle we widdle our thumbs here until a polled event
 	   in platform_idle or an interrupt wakes someone up */
@@ -152,8 +153,9 @@ void switchout(void)
 	/* If only one process is ready to run and it's us then just
 	   return. This is the normal path in most Fuzix use cases as we
 	   are waiting for input while mostly system idle */
-	if (udata.u_ptab->p_status == P_RUNNING) {
+	if (udata.u_ptab->p_status == P_RUNNING || udata.u_ptab->p_status == P_READY) {
 		if (nready == 1) {
+			udata.u_ptab->p_status = P_RUNNING;
 			ei();
 			return;
 		}
