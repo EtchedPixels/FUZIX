@@ -4,6 +4,7 @@ sudo: required
 matrix:
     include:
         - env: TARGET=dragon-nx32
+        - env: TARGET=multicomp09
         - env: TARGET=rc2014
         - env: TARGET=trs80
         - env: TARGET=v65c816
@@ -17,7 +18,7 @@ before_install:
     - sudo apt-get install -y byacc automake			# FUZIX build deps
     - sudo update-alternatives --set yacc /usr/bin/byacc
     - |
-      if [ "$TARGET" = "dragon-nx32" ]; then
+      if [ "$TARGET" = "dragon-nx32" -o "$TARGET" = "multicomp09" ]; then
         sudo apt-get install -y lwtools gcc6809
       fi
     - |
