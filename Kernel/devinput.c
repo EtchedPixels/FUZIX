@@ -5,6 +5,19 @@
 #ifdef CONFIG_INPUT
 
 uint8_t keyboard_grab;
+static uint8_t metamap[INPUT_MAX_META];	/* forces it 0 terminated */
+
+uint8_t input_match_meta(uint8_t c)
+{
+    uint8_t *cp = metamap;
+    if (!c)
+        return 0;
+    while(cp < metamap + INPUT_MAX_META) {
+        if (*cp++ == c)
+            return 1;
+    }
+    return 0;
+}
 
 int inputdev_read(uint8_t flag)
 {
@@ -42,15 +55,18 @@ int inputdev_write(uint8_t flag)
 int inputdev_ioctl(uarg_t request, char *data)
 {
     uint8_t r;
-    if (request != INPUT_GRABKB)
-        return -1;
-    r = ((uint8_t)data) & 0x03;
-    if (r > CONFIG_INPUT_GRABMAX) {
-        udata.u_error = EOPNOTSUPP;
-        return -1;
+    if (request == INPUT_GRABKB) {
+        r = ((uint8_t)data) & 0x03;
+        if (r > CONFIG_INPUT_GRABMAX) {
+            udata.u_error = EOPNOTSUPP;
+            return -1;
+        }
+        keyboard_grab = r;
+        return 0;
     }
-    keyboard_grab = r;
-    return 0;
+    if (request == INPUT_SETMETA)
+        return uget(data, metamap, sizeof(metamap));
+    return -1;
 }
 
 int inputdev_close(void)

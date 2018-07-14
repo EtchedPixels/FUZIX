@@ -1,6 +1,8 @@
 #ifndef _SYS_INPUT_H
 #define _SYS_INPUT_H
 
+#define INPUT_MAX_META	8
+
 /* Low four bits indicate device number usually */
 
 #define MOUSE_REL	0x00		/* 8bit deltas - may need 16 ? */
@@ -32,5 +34,6 @@
 #define		INPUT_GRAB_META		1	/* Special keys only */
 #define		INPUT_GRAB_TYPED	2	/* Typed input */
 #define		INPUT_GRAB_ALL		3	/* Up and down events */
+#define INPUT_SETMETA	0x0521
 
 #endif
