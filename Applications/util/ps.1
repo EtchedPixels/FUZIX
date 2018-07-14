@@ -1,0 +1,56 @@
+PS(1)
+## NAME
+*ps* - report current processes
+## SYNOPSIS
+*ps* \[options\]
+## DESCRIPTION
+The *ps* command displays information about processes that are executing on
+the system at the time the command is run. The range of processes that are
+reported is controllable by the options as is the output formatting.
+## OPTIONS
+:*-A*
+  Identical to *-e*
+:*-a*
+  Show all the processes except those not associated with a terminal
+:*-e*
+  Select all processes.
+:*-f*
+  Select full format listing style.
+:*-l*
+  Select long format listing style.
+:*-N*
+  Invert the process selection and show every process not matching the
+  matching rules.
+:*-p \[pidlist\]*
+  Select only processes whose process id matches those given in the list
+:*-r*
+  Select only processes that are currently in running or ready state, not
+  anything sleeping.
+:*-t \[ttylist\]*
+  Matches only those processes whose terminal is one of those in the list.
+  Terminals may be described in full '/dev/tty04', by ttyname 'tty04' or by
+  number '04'.
+:*-U \[uidlist\]*
+  Matches only those processes whose real uid is in the uid list provided.
+:*-u \[uidlist\]*
+  As *-U*. Note that this is a deviation from the standard.
+## EXIT STATUS
+*ps* returns an exit status 0 on success, or 1 if an error occurs.
+## SEE ALSO
+## STANDARDS
+The *ps* command is defined in POSIX 1003.1. Certain additional behaviours
+are defined in XSI (X/Open System Interfaces Extension).
+
+Fuzix deviates from the standard as it does not support the -G option for
+group matching, and -u matches the real not the effective uid. The -o option
+is not supported. Most XSI extensions are not implemented, although the
+output format is close to XSI specification.
+## AUTHOR
+Written by Alan Cox.
+## BUGS
+Times are not currently shown as the data available is not provided by the
+kernel at this point in time.
+
+XSI says that command data provided by the kernel not obtained via ptrace or
+similar should be in square brackets. Fuzix uses the kernel provided command
+data but does not bracket it.
