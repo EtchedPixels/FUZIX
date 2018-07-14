@@ -36,12 +36,14 @@ static uint8_t ports = 7;
    cable and Tandy bits so we treat them as two ports */
 
 __sfr __at 0xE8 tr1865_ctrl;
+static uint8_t tr1865_ctrl_save;
 __sfr __at 0xE9 tr1865_baud;
 __sfr __at 0xEA tr1865_status;
 __sfr __at 0xEB tr1865_rxtx;
 
 __sfr __at 0xF8 vg_tr1865_wrst;
 __sfr __at 0xF9 vg_tr1865_ctrd;
+static uint8_t vg_tr1865_ctrd_save;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -50,6 +52,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2}
 };
+
+static uint8_t trs_flow;		/* RTS/CTS */
 
 /* Write to system console */
 void kputchar(char c)
@@ -64,12 +68,14 @@ ttyready_t tty_writeready(uint8_t minor)
 	uint8_t reg;
 	if (minor < 3)
 		return TTY_READY_NOW;
-	/* FIXME RTS/CTS is supported by the hardware */
+	/* RTS/CTS is supported by the hardware. We assume delays will be
+	   short as with our rather limited serial if we go off and schedule
+	   something else each flow control it will get horribly slow */
 	if (minor == 3) {
 		if (ttydata[3].termios.c_cflag & CRTSCTS) {
 			reg = tr1865_ctrl;
 			if (!(reg & 0x80))
-				return TTY_READY_LATER;
+				return TTY_READY_SOON;
 		}
 		reg = tr1865_status;
 		return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
@@ -79,7 +85,7 @@ ttyready_t tty_writeready(uint8_t minor)
 	if (ttydata[4].termios.c_cflag & CRTSCTS) {
 		/* CTS ? */
 		if (!(reg & 0x40))
-			return TTY_READY_LATER;
+			return TTY_READY_SOON;
 	}
 	return (reg & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
 }
@@ -142,6 +148,22 @@ void tty_putc(uint8_t minor, unsigned char c)
 	}
 }
 
+void tty_data_consumed(uint8_t minor)
+{
+	if (trs_flow & (1 << minor)) {
+		if (minor == 3) {
+			/* We have space.. raise RTS */
+			if (!fullq(&ttyinq[3]))
+				tr1865_ctrl = tr1865_ctrl_save|0x01;
+		}
+		if (minor == 4) {
+			/* We have space.. raise RTS */
+			if (!fullq(&ttyinq[4]))
+				vg_tr1865_ctrd = vg_tr1865_ctrd_save|0x01;
+		}
+	}
+}
+
 /* Only the Model III has this as an actual interrupt */
 void tty_interrupt(void)
 {
@@ -150,26 +172,27 @@ void tty_interrupt(void)
 		reg = tr1865_rxtx;
 		tty_inproc(3, reg);
 	}
+	if ((trs_flow & 8) && fullq(&ttyinq[3]))
+		tr1865_ctrl = tr1865_ctrl_save & ~1;
 }
 
 void tty_poll(void)
 {
 	uint8_t reg;
 
+	/* Do the VG port */
 	if (ports & 0x10) {
 		reg = vg_tr1865_wrst;
 		if (reg & 0x01) {
 			reg = vg_tr1865_ctrd;
 			tty_inproc(4, reg);
 		}
+		if ((trs_flow & 0x10) && fullq(&ttyinq[4]))
+			vg_tr1865_ctrd = vg_tr1865_ctrd_save & ~1;
 	}
-	if (ports & 0x08) {
-		reg = tr1865_status;
-		if (reg & 0x80) {
-			reg = vg_tr1865_ctrd;
-			tty_inproc(3, reg);
-		}
-	}
+	/* Do the Model I/III port */
+	if (ports & 0x08)
+		tty_interrupt();
 }
 
 /* Called to set baud rate etc */
@@ -185,27 +208,38 @@ void tty_setup(uint8_t minor)
 {
 	uint8_t baud;
 	uint8_t ctrl;
+	struct tty *t = ttydata + minor;
 
-	if (minor != 3 || trs80_model == LNW80)
-		return;
+	if (minor != 3 || trs80_model == LNW80) {
 
-	baud = ttydata[3].termios.c_cflag & CBAUD;
-	if (baud > B19200) {
-		ttydata[3].termios.c_cflag &= ~CBAUD;
-		ttydata[3].termios.c_cflag |= B19200;
-		baud = B19200;
+		baud = ttydata[3].termios.c_cflag & CBAUD;
+		if (baud > B19200) {
+			ttydata[3].termios.c_cflag &= ~CBAUD;
+			ttydata[3].termios.c_cflag |= B19200;
+			baud = B19200;
+		} else
+			baud = trsbaud[baud];
+
+		tr1865_baud = baud | (baud << 4);
 	}
-	baud = trsbaud[baud];
-	tr1865_baud = baud | (baud << 4);
 
 	ctrl = 3;		/* DTR|RTS */
-	if (ttydata[3].termios.c_cflag & PARENB) {
-		if (ttydata[3].termios.c_cflag & PARODD)
+	if (t->termios.c_cflag & PARENB) {
+		if (t->termios.c_cflag & PARODD)
 			ctrl |= 0x80;
 	} else
 		ctrl |= 0x8;	/* No parity */
-	ctrl |= trssize[(ttydata[3].termios.c_cflag & CSIZE) >> 4];
-	tr1865_ctrl = ctrl;
+	ctrl |= trssize[(t->termios.c_cflag & CSIZE) >> 4];
+
+	if (t->termios.c_cflag & CRTSCTS)
+		trs_flow |= (1 << minor);
+	if (minor == 3) {
+		tr1865_ctrl_save = ctrl;
+		tr1865_ctrl = ctrl;
+	} else {
+		vg_tr1865_ctrd_save = ctrl;
+		vg_tr1865_ctrd = ctrl;
+	}
 }
 
 int trstty_open(uint8_t minor, uint16_t flags)
@@ -220,11 +254,12 @@ int trstty_open(uint8_t minor, uint16_t flags)
 
 int trstty_close(uint8_t minor)
 {
-	if (minor == 3 && ttydata[3].users == 0) {
-		if (trs80_model == VIDEOGENIE)
-			vg_tr1865_ctrd = 0;
-		else
+	if (ttydata[minor].users == 0) {
+		trs_flow &= ~(1 << minor);
+		if (minor == 3)
 			tr1865_ctrl = 0;	/* Drop carrier and rts */
+		else if (minor == 4)
+			vg_tr1865_ctrd = 0;
 	}
 	return tty_close(minor);
 }
@@ -236,7 +271,7 @@ int tty_carrier(uint8_t minor)
 	if (trs80_model != VIDEOGENIE) {
 		if (tr1865_ctrl & 0x80)
 			return 1;
-	} else if (vg_tr1865_ctrd & 0x80)
+	} else if (vg_tr1865_ctrd & 0x10)
 		return 1;
 	return 0;
 }
