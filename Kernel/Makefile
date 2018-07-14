@@ -1,7 +1,7 @@
 TARGET_LIST = $(wildcard platform-*)
 
-export VERSION = "0.1"
-export SUBVERSION = "ac1"
+export VERSION = "0.2"
+export SUBVERSION = "rc1"
 export ROOT_DIR
 
 UNAME_S := $(shell uname -s)
