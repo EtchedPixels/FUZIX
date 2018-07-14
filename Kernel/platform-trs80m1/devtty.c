@@ -207,11 +207,11 @@ static const uint8_t trssize[4] = {
 void tty_setup(uint8_t minor)
 {
 	uint8_t baud;
-	uint8_t ctrl;
+	uint8_t ctrl = 3;		/* DTR|RTS */
+
 	struct tty *t = ttydata + minor;
 
 	if (minor != 3 || trs80_model == LNW80) {
-
 		baud = ttydata[3].termios.c_cflag & CBAUD;
 		if (baud > B19200) {
 			ttydata[3].termios.c_cflag &= ~CBAUD;
@@ -221,15 +221,14 @@ void tty_setup(uint8_t minor)
 			baud = trsbaud[baud];
 
 		tr1865_baud = baud | (baud << 4);
-	}
 
-	ctrl = 3;		/* DTR|RTS */
-	if (t->termios.c_cflag & PARENB) {
-		if (t->termios.c_cflag & PARODD)
-			ctrl |= 0x80;
-	} else
-		ctrl |= 0x8;	/* No parity */
-	ctrl |= trssize[(t->termios.c_cflag & CSIZE) >> 4];
+		if (t->termios.c_cflag & PARENB) {
+			if (t->termios.c_cflag & PARODD)
+				ctrl |= 0x80;
+		} else
+			ctrl |= 0x8;	/* No parity */
+		ctrl |= trssize[(t->termios.c_cflag & CSIZE) >> 4];
+	}
 
 	if (t->termios.c_cflag & CRTSCTS)
 		trs_flow |= (1 << minor);
