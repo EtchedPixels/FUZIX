@@ -1,0 +1,21 @@
+SUBSTROOT(8)
+## NAME
+*substroot* - substitute root filesystem device path into arguments
+## SYNOPSIS
+*substroot* command \[arg...\]
+## DESCRIPTION
+The *substroot* command replaces each argument that consists only of a '%'
+sign with the path to the root device and then executes the resulting
+command.
+
+It is intended for use in startup and shutdown scripts where there may be no
+pipes available and thus shell substitution cannot be used.
+## EXIT STATUS
+*substroot* exits with a status of 255 if an error occurs, otherwise the
+error code of the resulting command will be returned.
+## SEE ALSO
+prtroot(8)
+## STANDARDS
+substroot is a Fuzix specific command
+## AUTHOR
+Written by Alan Cox.
