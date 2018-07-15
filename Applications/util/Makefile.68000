@@ -76,6 +76,7 @@ SRCS  = \
 	fgrep.c \
 	free.c \
 	fsck.c \
+	gptparse.c \
 	grep.c \
 	id.c \
 	kbdrate.c \
@@ -92,6 +93,7 @@ SRCS  = \
 	ps.c \
 	remount.c \
 	sed.c \
+	seq.c \
 	sleep.c \
 	ssh.c \
 	socktest.c \
