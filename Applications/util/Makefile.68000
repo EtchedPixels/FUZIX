@@ -25,6 +25,7 @@ SRCSNS = \
 	date.c \
 	dirname.c \
 	false.c \
+	gptparse.c \
 	groups.c \
 	head.c \
 	init.c \
@@ -43,6 +44,7 @@ SRCSNS = \
 	reboot.c \
 	rm.c \
 	rmdir.c \
+	seq.c \
 	substroot.c \
 	sum.c \
 	sync.c \
