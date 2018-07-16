@@ -6,7 +6,7 @@ section .videodata
 section .text2
 section .text
 section .text.hot
-section .test.unlikely
+section .text.unlikely
 section .data
 section .buffers
 section .discard

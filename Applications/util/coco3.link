@@ -4,6 +4,6 @@ section .header load 0x0100
 section .text
 section .text.startup
 section .text.hot
-section .test.unlikely
+section .text.unlikely
 section .data
 section .bss
