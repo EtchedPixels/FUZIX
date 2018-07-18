@@ -163,6 +163,8 @@ tools/bbc: tools/bbc.c
 
 tools/makejv3: tools/makejv3.c
 
+tools/trslabel: tools/trslabel.c
+
 font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
@@ -172,7 +174,7 @@ clean:
 	rm -f fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6
 	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
-	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion
+	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
 	rm -f *.rel *.lst *.sym *.o
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
