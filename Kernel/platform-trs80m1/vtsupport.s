@@ -126,6 +126,7 @@ _cursor_on:
 		ld (cpos),hl
 		ret
 
+; FIXME: should not corrupt ix
 _plot_char:
 		pop ix
 		pop hl
@@ -177,6 +178,7 @@ clear1:
 		jr nz, clear0
 		ret
 
+; FIXME shouldn't trash IX
 _clear_across:
 		pop ix
 		pop hl
