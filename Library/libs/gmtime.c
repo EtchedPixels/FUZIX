@@ -55,7 +55,8 @@ void __tm_conv(struct tm *tmbuf, time_t * pt, long offset)
 		days -= ip[y++];
 	tmbuf->tm_mon = y;
 	tmbuf->tm_mday = days + 1;
-	tmbuf->tm_isdst = -1;
+	/* Until we do DST flagging */
+	tmbuf->tm_isdst = 0;
 }
 
 struct tm *gmtime(time_t *timep)
