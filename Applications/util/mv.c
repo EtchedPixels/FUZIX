@@ -25,7 +25,8 @@ typedef unsigned char BOOL;
 BOOL intflag;
 
 /* Don't bother with malloc. We don't want to blow up with no space errors */
-#define BUF_SIZE 512
+/* Don't go over 16384 until we fix the pipe bug */
+#define BUF_SIZE 16384
 static char buffer[BUF_SIZE];
 
 static void writes(int fd, const char *p)
