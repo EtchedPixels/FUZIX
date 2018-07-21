@@ -21,6 +21,10 @@
 #define U_DATA__U_BREAK		50
 #define U_DATA__U_CODEBASE	54
 #define U_DATA__U_SIGVEC	58
+#define U_DATA__U_BASE		62
+#define U_DATA__U_COUNT		66
+#define U_DATA__U_OFFSET	70
+#define U_DATA__COPYSIZE	U_DATA__U_OFFSET+4-U_DATA__U_PTAB
 
 #define P_TAB__P_STATUS_OFFSET	0
 #define P_TAB__P_TTY_OFFSET	1

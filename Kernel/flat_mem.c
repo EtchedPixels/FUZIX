@@ -513,7 +513,7 @@ void pagemap_free(ptptr p)
 	last_context = -1;
 }
 
-int pagemap_realloc(usize_t size)
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	struct mmu_context *mmu = mmu_context + udata.u_page;
 	kprintf("Reallocating mmu %d to %d\n", udata.u_page, size);
