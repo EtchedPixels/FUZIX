@@ -4,6 +4,6 @@
 struct tm *localtime_r(time_t * timep, struct tm *result)
 {
 	tzset();
-	__tm_conv(result, timep, (int) (timezone / 60));
+	__tm_conv(result, timep, timezone);
 	return result;
 }

@@ -1,9 +1,8 @@
 /*************************** GMTIME ************************************/ 
-
 #include <time.h>
 #include <string.h>
 
-static unsigned char __mon_lengths[2][12] = {
+unsigned char __mon_lengths[2][12] = {
     { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
     { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
@@ -11,7 +10,7 @@ static unsigned char __mon_lengths[2][12] = {
 #define SECS_PER_DAY	86400
 #define SECS_PER_HOUR	3600
 
-void __tm_conv(struct tm *tmbuf, time_t * pt, int offset)
+void __tm_conv(struct tm *tmbuf, time_t * pt, long offset)
 {
 	register int y;
 	long days;		/* This breaks but not for a while 8) */
@@ -21,6 +20,7 @@ void __tm_conv(struct tm *tmbuf, time_t * pt, int offset)
 	days = *pt / SECS_PER_DAY;
 	rem = *pt % SECS_PER_DAY;
 	rem += offset;
+
 	while (rem < 0) {
 		rem += SECS_PER_DAY;
 		--days;

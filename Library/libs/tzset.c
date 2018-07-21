@@ -1,5 +1,6 @@
 /*************************** TZSET ************************************/
 
+#include <ctype.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,21 +10,24 @@ char *tzname[2] = { "GMT", "\0\0\0" };
 int daylight;
 long timezone;
 
-/* tzset expects fo find a environment string of the form TZ=...
- * ??? need to correct!
+/*
+ *	POSIX has much to say about timezones and the implementations of it
+ *	are not exactly small. Old Unix didn't do anything as fancy as this
+ *
+ *	We parse stuff the old way. We expect a timezone followed by a
+ *	shift specified in hours (and yes if you are in a half hour timezone
+ *	you get to write code)
  */
 void tzset(void)
 {
         char *tz = getenv("TZ");
 
-        if (tz == NULL) {
-                memcpy(tzname[1], "GMT", 3);
-                timezone = 0 * 60 * 60L;        /* London */
-        } else {
-                int v;
-
-                memcpy(tzname[1], tz, 3);
-                v = atoi(tz + 3);
-                timezone = -((v / 100) * 60 + (v % 100)) * 60L;
-        }
+        memcpy(tzname[1], "GMT", 3);
+        timezone = 0 * 60 * 60L;        /* London */
+        if (tz == NULL)
+                return;
+        while(*tz && isalpha(*tz))
+                tz++;
+        timezone = atoi(tz);
+        timezone *= 3600;
 }
