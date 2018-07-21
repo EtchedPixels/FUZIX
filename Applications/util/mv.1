@@ -1,0 +1,21 @@
+MV(1)
+## NAME
+*mv* - move files and directories
+## SYNOPSIS
+*mv* \[OPTION\]... SOURCE DEST
+*mv* \[OPTION\]... SOURCE... DIRECTORY
+
+## DESCRIPTION
+Copies the files listed in SOURCE to the destination, or if a directory into
+the destination directory, and after successfully copying removes the
+original.
+
+## BUGS ##
+The standard POSIX options are not currently supported. The *rename* system
+call should be used when possible.
+
+## STANDARDS ##
+See bugs.
+
+## AUTHORS
+David Bell, Alan Cox
