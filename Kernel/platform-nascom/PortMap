@@ -1,0 +1,180 @@
+	Nascom			Gemini			MAP80
+
+00	Keyboard/system
+01	6402 RX/TX
+02	6402 Status
+03	Unused (mainboard)
+04	PIO0A data
+05	PIO0B data
+06	PIO0A ctrl
+07	PIO0B ctrl
+
+08	IO 1 CTC		
+09	IO 1 CTC		
+08	IO 1 CTC		
+0B	IO 1 CTC		
+0C	IO 2 CTC
+0D	IO 2 CTC
+0E	IO 2 CTC
+0F	IO 2 CTC
+
+10				IO CTC
+11	IO 1 6402 data		IO CTC
+12	IO 1 6402 status	IO CTC
+13				IO CTC
+
+14	IO 1 PIO1 (1)		IO PIO1
+15	IO 1 PIO1		IO PIO1
+16	IO 1 PIO1		IO PIO1
+17	IO 1 PIO1		IO PIO1
+
+18	IO 1 PIO2		IO PIO2
+19	IO 1 PIO2		IO PIO2
+1A	IO 1 PIO2		IO PIO2
+1B	IO 1 PIO2		IO PIO2
+
+1C	IO 1 PIO3		IO PIO3
+1D	IO 1 PIO3		IO PIO3
+1E	IO 1 PIO3		IO PIO3
+1F	IO 1 PIO3		IO PIO3
+
+20				RTC
+21	IO 2 6402 data		RTC
+22	IO 2 6402 status	RTC
+23				RTC
+
+24	IO 2 PIO1		RTC
+25	IO 2 PIO1		RTC
+26	IO 2 PIO1		RTC
+27	IO 2 PIO1		RTC
+
+28	IO 2 PIO1		RTC
+29	IO 2 PIO1		RTC
+2A	IO 2 PIO1		RTC
+2B	IO 2 PIO1		RTC
+
+2C	IO 2 PIO1		RTC
+2D	IO 2 PIO1		RTC
+2E	IO 2 PIO1		RTC
+2F	IO 2 PIO1		RTC
+
+30				ADC via PIO
+31				ADC via PIO
+32				ADC via PIO
+33				ADC via PIO
+
+80				FPU
+81				FPU
+82				FPU
+
+A0				Pluto
+A1				Pluto
+
+B0	AVC CRTC addr
+B1	AVC CRTC data		IVC Data
+B2	AVC CRTC control	IVC Handshake
+B3				IVC Reset
+
+B4				GM813 PIO (1)
+B5				GM813 PIO
+B6				GM813 PIO
+B7				GM813 PIO
+
+B8				8250@2MHz
+B9				8250 (2)
+BA				8250
+BB				8250
+BC				8250
+BD				8250
+BE				8250
+BF				8250
+
+C0				MV256
+C1				MV256
+C2				MV256
+C3				MV256
+C4				MV256
+C5				MV256
+C6				MV256
+C7				MV256
+C8				MV256
+C9				MV256
+CA				MV256
+CB				MV256
+CC				MV256
+CD				MV256
+CE				MV256
+CF				MV256
+
+D0				MV256
+
+E0	FDC stat/cmd		FDC stat/cmd		FDC stat/cmd
+E1	FDC track		FDC track		FDC track
+E2	FDC sector		FDC sector		FDC sector
+E3	FDC data		FDC data		FDC data
+E4	FDC select		FDC select/status	select/status
+E5	FDC status		SCSI control		select/status
+E6				SCSI data		keyboard
+E7				Reserved		keyboard
+E8							Alarm
+E9							Alarm
+EA							6845 register
+EB							6845 data
+EC							Video control
+ED							Video control
+EE							Select video 1
+EF							Select video 2
+
+F6				ARFON Speech
+FB				Ramdisc
+FC				Ramdisc
+FD				Ramdisc
+FE				GM813 MMU		32K Paging
+FF	Page Mode		Page Mode		Page Mode
+
+
+(1) Nascom PIO's are organized
+Data A
+Data B
+Control A
+Control B
+
+(2) The 8250 also controls the eprom enable via an I/O pin
+- OUT1 switches RS232 and tape (0 = tape)
+- OUT2 switches internalmemory disable (1 = disable)
+
+
+
+Memory Overlays
+
+8000 - BFFF	Default for AVC
+
+F000 - FFFF	GM813 EPROM
+
+
+Attached to a PIO
+
+GM805 Henelec
+Centronics Printer (info needed)
+GM822 RTC
+EPROM programmer
+AVC vblank etc
+
+To Add
+
+GM848 quad serial - what was the usual base ?
+
+offsets are
+
+00	Dart 0 channel 0 data
+01 	Dart 0 channel 1 data
+02	Dart 0 channel 0 ctrl
+03	Dart 0 channel 1 ctrl
+04-07 ditto for DART 1
+08-0C	Baud rates for 0/0 0/1 1/0 1/1
+0D-0F	Yet another Z80 PIO
+
+MAP80 MPI
+
+WT625
+
