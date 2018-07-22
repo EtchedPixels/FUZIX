@@ -5,13 +5,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-char tzbuf0[6] = "GMT";
-char tzbuf1[6];
+static char tzbuf0[6] = "GMT";
+static char tzbuf1[6];
 
 char *tzname[2] = { tzbuf0, tzbuf1  };
 
 int daylight;
 long timezone;
+
 static long dstzone;
 static long dstime[2];	/* Shift for winter/summer */
 static uint16_t dsday[2];
@@ -19,6 +20,8 @@ static uint8_t dsdow[2];
 static uint8_t dswom[2];
 static uint8_t dsmon[2];
 static uint8_t dsmode;
+
+static uint8_t tzset_done;
 
 static uint8_t dpair(char **p, unsigned long *v, uint16_t mul)
 {
@@ -148,13 +151,16 @@ char *parse_dst(char *p, int n)
 	}
 	return p;
 }	
-
-        
+       
 void tzset(void)
 {
         char *tz = getenv("TZ");
         char *p;
 
+        if (tzset_done)
+                return;
+
+        tzset_done = 1;
         memcpy(tzbuf0, "GMT", 4);
         timezone = 0 * 60 * 60L;        /* London */
         if (tz == NULL)
@@ -176,11 +182,15 @@ void tzset(void)
 }
 
 /*
- *	Not yet quite right: we need to consider the hour as well
+ *	tm is the time structure parsed assuming no local time. secs is
+ *	the number of seconds of the day that have passed.
+ *
+ *	We return 0 if it's not summer time, or 1 if it is.
  */
-uint8_t __in_dst(struct tm *tm)
+uint8_t __in_dst(struct tm *tm, uint32_t secs)
 {
 	uint16_t yday = tm->tm_yday;
+
 	switch(dsmode) {
 	case 0:
 		return 0;
@@ -194,15 +204,20 @@ uint8_t __in_dst(struct tm *tm)
 	case 1:
 		/* Summer in the middle of the year */
 		if (dsday[0] < dsday[1]) {
-			if (yday >= dsday[0] && yday < dsday[1])
+			if (yday > dsday[0] && yday < dsday[1])
 				return 1;
-			return 0;
 		} else {
 		/* Southern hemisphere */
-			if (yday < dsday[1] || yday >= dsday[0])
+			if (yday < dsday[1] || yday > dsday[0])
 				return 1;
-			return 0;
-		}
+                }
+                /* Right day not late enough */
+                if (yday == dsday[0] && secs >= dstime[0])
+                        return 1;
+                /* Right day, early enough */
+                if (yday == dsday[1] && secs < dstime[1])
+                        return 1;
+		return 0;
 	/* We don't yet support the complex format */
 	case 3:
 		return 0;
