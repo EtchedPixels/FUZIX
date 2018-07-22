@@ -36,6 +36,7 @@
 #define MAX_BLKDEV	1	/* UIDE or FIDHD never both */
 #define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
 #define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x0000	/* memory base of program */
