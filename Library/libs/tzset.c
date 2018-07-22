@@ -14,10 +14,10 @@ int daylight;
 long timezone;
 static long dstzone;
 static long dstime[2];	/* Shift for winter/summer */
-static uint16_t dsday;
-static uint8_t dsdow;
-static uint8_t dswom;
-static uint8_t dsmon;
+static uint16_t dsday[2];
+static uint8_t dsdow[2];
+static uint8_t dswom[2];
+static uint8_t dsmon[2];
 static uint8_t dsmode;
 
 static uint8_t dpair(char **p, unsigned long *v, uint16_t mul)
@@ -128,11 +128,11 @@ char *parse_dst(char *p, int n)
          */
         if (*p == 'J') {
 		p++;
-		dsmode = 1;
-		dsday = strtoul(p, &p, 0);
+		dsmode = 2;
+		dsday[n] = strtoul(p, &p, 0);
 	} else if (*p != 'M') {
-		dsmode = 0;
-		dsday = strtoul(p, &p, 0);
+		dsmode = 1;
+		dsday[n] = strtoul(p, &p, 0);
 	} else {
 		/* The complicated one */
 		/* TODO */
@@ -173,4 +173,38 @@ void tzset(void)
 	if (p == NULL || *p != ',')
 		return;
 	parse_dst(p, 1);
+}
+
+/*
+ *	Not yet quite right: we need to consider the hour as well
+ */
+uint8_t __in_dst(struct tm *tm)
+{
+	uint16_t yday = tm->tm_yday;
+	switch(dsmode) {
+	case 0:
+		return 0;
+	case 2:
+		/* Days 1-365, don't count Feb 29th on leap year. We are
+		   0 based at the moment. Add 1 if it's before the 29th
+		   or not a leap year, then do the normal math */
+		if (yday < 30 + 28 || !__isleap(tm->tm_year + 1900))
+			yday++;
+		/* Fall through */
+	case 1:
+		/* Summer in the middle of the year */
+		if (dsday[0] < dsday[1]) {
+			if (yday >= dsday[0] && yday < dsday[1])
+				return 1;
+			return 0;
+		} else {
+		/* Southern hemisphere */
+			if (yday < dsday[1] || yday >= dsday[0])
+				return 1;
+			return 0;
+		}
+	/* We don't yet support the complex format */
+	case 3:
+		return 0;
+	}
 }
