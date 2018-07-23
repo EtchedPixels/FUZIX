@@ -19,30 +19,39 @@ static uint8_t vram_start_line;
 /* shadow register */
 static uint8_t attdat;
 
-static uint8_t crt9128_read_char(void)
-{
-	*((volatile uint8_t *)CRT9128_ADDRESS_REG) = CRT9128_REG_CHARACTER;
-	*((volatile uint8_t *)CRT9128_DATA_REG);
-	while (!crt9128_done());
-	return *((volatile uint8_t *)CRT9128_DATA_REG);
-}
-
 static void crt9128_write_reg(uint8_t reg, uint8_t value)
 {
 	*((volatile uint8_t *)CRT9128_ADDRESS_REG) = reg;
 	*((volatile uint8_t *)CRT9128_DATA_REG) = value;
 }
 
+static uint8_t crt9128_read_char(void)
+{
+	*((volatile uint8_t *)CRT9128_ADDRESS_REG) = CRT9128_REG_CHARACTER;
+	*((volatile uint8_t *)CRT9128_DATA_REG);
+	int timeout = 0xA000;
+	while (!crt9128_done() && --timeout);
+	if (timeout == 0)
+		crt9128_write_reg(CRT9128_REG_CHIP_RESET, 0);
+	return *((volatile uint8_t *)CRT9128_DATA_REG);
+}
+
 static void crt9128_fill(uint16_t end_addr, uint8_t character)
 {
 	crt9128_write_reg(CRT9128_REG_FILADD, end_addr >> 4);
-	while (!crt9128_done());
+	int timeout = 0xA000;
+	while (!crt9128_done() && --timeout);
+	if (timeout == 0)
+		crt9128_write_reg(CRT9128_REG_CHIP_RESET, 0);
 	crt9128_write_reg(CRT9128_REG_CHARACTER, character);
 }
 
 static void crt9128_set_cursor_address(uint16_t addr)
 {
-	while (!crt9128_done());
+	int timeout = 0xA000;
+	while (!crt9128_done() && --timeout);
+	if (timeout == 0)
+		crt9128_write_reg(CRT9128_REG_CHIP_RESET, 0);
 	crt9128_write_reg(CRT9128_REG_CURLO, addr & 0xff);
 	crt9128_write_reg(CRT9128_REG_CURHI, addr >> 8 | curhi_sle);
 }
