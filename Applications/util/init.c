@@ -534,6 +534,8 @@ static void do_for_runlevel(uint8_t newmask, int op)
 		if (!(p[3] & newmask))
 			goto next;
 		if ((p[4] & INIT_OPMASK) == op) {
+			if (!p[5])
+				goto next;
 			/* Already running ? */
 			if (op == INIT_RESPAWN && t->pid)
 				goto next;
