@@ -97,6 +97,17 @@ Entry
          ENDC
 
          orcc  #IntMasks	disable FIRQ, IRQ
+* Set up MOOH for nx32 "emulation"
+* The particular write order is for compatibility with Spinx-512
+* where these addresses are used for segmented activation
+         lda #3
+         sta $FFA7
+         deca
+         sta $FFA6
+         deca
+         sta $FFA5
+         deca
+         sta $FFA4
 
 * CoCo 1/2 Initialization Code (from toolshed/dwdos)
          ldx   #PIA1Base               PIA1
@@ -371,11 +382,14 @@ copyl    cmpu  #endbuf
          puls  x,y
 copym    lda   ,u+
          IFDEF FUZIX
-         clr   $FFBF		switch in memory cartridge
+         clr   $FFBF		map in bank 0 on nx32
+         ldb   #64		MMU enable on MOOH
+         stb   $FF90
          ENDC
          sta   ,x+
          IFDEF FUZIX
          clr   $FFBE
+         clr   $FF90
          ENDC
          leay  -1,y
          bne   copyl
