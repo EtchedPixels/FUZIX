@@ -15,6 +15,10 @@ start:
 		orcc #0x10		; interrupts definitely off
 		lds #kstack_top		; note we'll wipe the stack later
 		ldb $80FD		; save from ROM space
+		IFDEF MOOH
+		lda #64			; enable MMU on MOOH
+		sta 0xFF90
+		ENDC
 		; text and discard may be in memory bank 0
 		jsr map_kernel
 		jmp premain

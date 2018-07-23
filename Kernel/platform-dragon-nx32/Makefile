@@ -1,3 +1,11 @@
+ifneq ($(MOOH),)
+ASOPTS += --defsym MOOH=1
+CROSS_CCOPTS += -DMOOH=1
+MEMSRC = mem-nx32-mooh.s
+else
+MEMSRC = mem-nx32.s
+endif
+MEMOBJ = $(MEMSRC:.s=$(BINEXT))
 
 CSRCS = devlpr.c devtty.c devfd.c ttydw.c
 CSRCS += devices.c main.c libc.c
@@ -10,7 +18,7 @@ DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c \
 DDSRCS = ../dev/devide_discard.c ../dev/devscsi_discard.c ../dev/mbr.c \
          ../dev/gpt.c ../dev/devsd_discard.c
 
-ASRCS = crt0.s dragon.s mem-nx32.s video.s ide.s spi.s scsi_tc3.s
+ASRCS = crt0.s dragon.s $(MEMSRC) video.s ide.s spi.s scsi_tc3.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -49,7 +57,7 @@ clean:
 image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o usermem_sam.o \
-	dragon.o mem-nx32.o ../bankfixed.o \
+	dragon.o $(MEMOBJ) ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	drivewire.o devdw.o ttydw.o \

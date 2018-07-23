@@ -25,7 +25,11 @@ void pagemap_init(void)
 	}
 	/* map bank 1 last for init, leave 0 for kernel */
 	for (i = extbanks - 1; i > 0; i--)
+#ifdef MOOH
+		pagemap_add(i * 4);
+#else
 		pagemap_add(i);
+#endif
 
 #ifdef SWAPDEV
 	for (i = 0; i < MAX_SWAPS; i++)

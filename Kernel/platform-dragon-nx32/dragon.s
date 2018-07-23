@@ -99,7 +99,11 @@ init_hardware:
 
 _platform_reboot:
 	    orcc #0x10
-	    clr 0xFFBE
+	    IFDEF MOOH
+	    clr 0xFF90		; disable MMU on MOOH
+	    ELSE
+	    clr 0xFFBE		; disable nx32 memory
+	    ENDC
 	    clr 0x0071
 	    jmp [0xFFFE]
 
