@@ -40,8 +40,6 @@
 #define CONFIG_VT
 #define CONFIG_FONT8X8
 /* Vt definitions */
-#define VT_WIDTH	32
-#define VT_HEIGHT	24
 #define VT_RIGHT	31
 #define VT_BOTTOM	23
 #define VT_INITIAL_LINE	0
