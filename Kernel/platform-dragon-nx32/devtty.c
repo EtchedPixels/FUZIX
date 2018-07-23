@@ -41,8 +41,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
 
-const signed char vt_tright[2] = { 31, 79 };
-const signed char vt_tbottom[2] = { 23, 23 };
+const signed char vt_tright[2] = { 31, 77 };
+const signed char vt_tbottom[2] = { 23, 22 };
 extern uint8_t curtty;
 static uint8_t inputtty;
 static struct vt_switch ttysave[2];
