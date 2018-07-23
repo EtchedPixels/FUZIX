@@ -6,7 +6,6 @@
 
 	.globl _spi_setup
 	.globl _sd_spi_clock
-	.globl _sds_spi_transmit_byte
 	.globl _sd_spi_lower_cs
 	.globl _sd_spi_raise_cs
 	.globl _sd_spi_transmit_byte
@@ -18,6 +17,10 @@
 
         include "kernel.def"
         include "../kernel09.def"
+
+; 65SPI control flags
+FRX	equ 0x10		; Fast Receive mode
+ECE	equ 0x04		; External Clock Enable
 
 	.area .text
 
@@ -47,7 +50,7 @@ spigood:
 _sd_spi_clock:
 	cmpb #0			
 	beq slow
-	ldd #0x0401		; external 45MHz clock on, divide by 4
+	ldd #ECE*256+0x01	; external 45MHz clock on, divide by 4
 	bra clkset
 slow:	ldd #0x0000		; internal clock, phi/2 -> 0.89MHz/2 = 445kHz
 clkset:	std SPICTRL
@@ -109,7 +112,7 @@ _sd_spi_receive_sector:
 	lda _blk_op+2
 	beq rdspi
 	jsr map_process_always
-rdspi:	lda #0x14		; FRX on, external clock on
+rdspi:	lda #ECE+FRX		; FRX on, external clock on
 	sta <SPICTRL
 	lda <SPIDATA		; read old value, triggers shifting in new
 read8:
@@ -128,7 +131,7 @@ read8:
 	cmpx endspi
 	bne read8
 	jsr map_kernel
-	lda #0x04
+	lda #ECE
 	sta <SPICTRL		; FRX off, external clock on
 	puls y,dp,pc
 
@@ -142,7 +145,7 @@ _sd_spi_transmit_sector:
 	lda _blk_op+2
 	beq wrspi
 	jsr map_process_always
-wrspi:	lda #0x04		; ext clock, no FRX
+wrspi:	lda #ECE		; ext clock, no FRX
 	sta SPICTRL
 write8:
 	ldd ,x++
