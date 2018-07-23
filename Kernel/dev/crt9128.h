@@ -33,3 +33,14 @@
 
 void crt9128_init(void);
 
+void crt9128_clear_across(int8_t y, int8_t x, int16_t num);
+void crt9128_clear_lines(int8_t y, int8_t num);
+void crt9128_scroll_up(void);
+void crt9128_scroll_down(void);
+void crt9128_plot_char(int8_t y, int8_t x, uint16_t c);
+void crt9128_cursor_off(void);
+void crt9128_cursor_on(int8_t newy, int8_t newx);
+void crt9128_vtattr_notify(void);
+void crt9128_video_cmd(uint8_t *ptr);
+void crt9128_video_read(uint8_t *ptr);
+void crt9128_video_write(uint8_t *ptr);
