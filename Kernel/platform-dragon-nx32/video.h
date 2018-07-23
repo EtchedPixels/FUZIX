@@ -1,0 +1,11 @@
+void m6847_clear_across(int8_t y, int8_t x, int16_t num);
+void m6847_clear_lines(int8_t y, int8_t num);
+void m6847_scroll_up(void);
+void m6847_scroll_down(void);
+void m6847_plot_char(int8_t y, int8_t x, uint16_t c);
+void m6847_cursor_off(void);
+void m6847_cursor_on(int8_t newy, int8_t newx);
+void m6847_vtattr_notify(void);
+void m6847_video_cmd(uint8_t *ptr);
+void m6847_video_read(uint8_t *ptr);
+void m6847_video_write(uint8_t *ptr);

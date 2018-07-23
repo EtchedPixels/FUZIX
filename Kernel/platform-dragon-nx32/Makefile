@@ -13,6 +13,7 @@ CSRCS += devices.c main.c libc.c
 CDSRCS = discard.c
 
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c \
+        ../dev/crt9128.c \
         ../dev/devsd.c ../dev/devscsi.c
 
 DDSRCS = ../dev/devide_discard.c ../dev/devscsi_discard.c ../dev/mbr.c \
@@ -20,6 +21,7 @@ DDSRCS = ../dev/devide_discard.c ../dev/devscsi_discard.c ../dev/mbr.c \
 
 ASRCS = crt0.s dragon.s $(MEMSRC) video.s ide.s spi.s scsi_tc3.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
+ASRCS += multihead.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
@@ -60,6 +62,7 @@ image:
 	dragon.o $(MEMOBJ) ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
+	multihead.o crt9128.o \
 	drivewire.o devdw.o ttydw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \

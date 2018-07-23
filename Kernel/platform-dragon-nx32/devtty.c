@@ -10,6 +10,7 @@
 #include <devdw.h>
 #include <ttydw.h>
 #include <graphics.h>
+#include <crt9128.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -18,26 +19,33 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
-#define ACIA_TTY 2
+#define ACIA_TTY 3
 #define is_dw(minor) (minor >= DW_MIN_OFF)
 
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
-unsigned char tbuf3[TTYSIZ];   /* drivewire VSER 0 */
-unsigned char tbuf4[TTYSIZ];   /* drivewire VWIN 0 */
+unsigned char tbuf3[TTYSIZ];
+unsigned char tbuf4[TTYSIZ];   /* drivewire VSER 0 */
+unsigned char tbuf5[TTYSIZ];   /* drivewire VWIN 0 */
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
-	/* Drivewire Virtual Serial Ports */
 	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
+	/* Drivewire Virtual Serial Ports */
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
 
+const signed char vt_tright[2] = { 31, 79 };
+const signed char vt_tbottom[2] = { 23, 23 };
+extern uint8_t curtty;
+static uint8_t inputtty;
+static struct vt_switch ttysave[2];
 static uint8_t vmode;
 static uint8_t kbd_timer;
 struct vt_repeat keyrepeat = { 40, 4 };
@@ -57,6 +65,8 @@ ttyready_t tty_writeready(uint8_t minor)
 	uint8_t c = 0xff;
 	if (minor == 1)
 		return TTY_READY_NOW;
+	else if (minor == 2)
+		c = crt9128_done();
 	else if (minor == ACIA_TTY)
 		c = *uart_status & 16; /* TX DATA empty */
 	return c ? TTY_READY_NOW : TTY_READY_SOON;
@@ -66,6 +76,8 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	irqflags_t irq;
+
 	if (is_dw(minor)) {
 		dw_putc(minor, c);
 		return;
@@ -73,11 +85,20 @@ void tty_putc(uint8_t minor, unsigned char c)
 		*uart_data = c;	/* Data */
 		return;
 	}
+	irq = di();
+	if (curtty != minor - 1) {
+		vt_save(&ttysave[curtty]);
+		curtty = minor - 1;
+		vt_load(&ttysave[curtty]);
+	}
 	if (minor == 1) {
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
 			vtoutput(&c, 1);
+	} else if (minor == 2) {
+		vtoutput(&c, 1);
 	}
+	irqrestore(irq);
 }
 
 void tty_sleeping(uint8_t minor)
@@ -114,6 +135,10 @@ void tty_setup(uint8_t minor)
 	uint8_t r;
 	if (is_dw(minor)) {
 		dw_vopen(minor);
+		return;
+	}
+	if (minor == 2) {
+		crt9128_init();
 		return;
 	}
 	if (minor != ACIA_TTY)
@@ -255,10 +280,14 @@ static void keydecode(void)
 	else
 		c = keyboard[keybyte][keybit];
 	if (keymap[1] & 64) {	/* control */
+		if (c == '1' || c == '2') {
+			inputtty = c - '1';
+			return;
+		}
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
-	tty_inproc(1, c);
+	tty_inproc(inputtty + 1, c);
 }
 
 void platform_interrupt(void)
