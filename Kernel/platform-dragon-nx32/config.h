@@ -64,7 +64,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 5
+#define NUM_DEV_TTY 7
 #define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
                           /*  (add new mountable devices to beginning area.) */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
@@ -76,7 +76,7 @@
 
 #define DW_VSER_NUM 1     /* No of Virtual Serial Ports */
 #define DW_VWIN_NUM 1     /* No of Virtual Window Ports */
-#define DW_MIN_OFF  3     /* Minor number offset */
+#define DW_MIN_OFF  5     /* Minor number offset */
 
 /* Remember to update platform-dragon-nx32/kernel.defs to match */
 

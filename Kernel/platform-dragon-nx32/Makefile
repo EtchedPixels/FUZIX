@@ -8,7 +8,7 @@ endif
 MEMOBJ = $(MEMSRC:.s=$(BINEXT))
 
 CSRCS = devlpr.c devtty.c devfd.c ttydw.c
-CSRCS += devices.c main.c libc.c
+CSRCS += vc.c devices.c main.c libc.c
 
 CDSRCS = discard.c
 
@@ -62,7 +62,7 @@ image:
 	dragon.o $(MEMOBJ) ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
-	multihead.o crt9128.o \
+	multihead.o crt9128.o vc.o \
 	drivewire.o devdw.o ttydw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \

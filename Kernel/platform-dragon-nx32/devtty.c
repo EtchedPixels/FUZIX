@@ -12,6 +12,9 @@
 #include <graphics.h>
 #include <crt9128.h>
 
+void set_vc_mode(uint8_t);
+void set_vid_mode(void);
+
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
 uint8_t *uart_data = (uint8_t *)0xFF04;		/* ACIA data */
@@ -19,33 +22,37 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
-#define ACIA_TTY 3
+#define ACIA_TTY 5
 #define is_dw(minor) (minor >= DW_MIN_OFF)
 
 unsigned char tbuf1[TTYSIZ];
 unsigned char tbuf2[TTYSIZ];
 unsigned char tbuf3[TTYSIZ];
-unsigned char tbuf4[TTYSIZ];   /* drivewire VSER 0 */
-unsigned char tbuf5[TTYSIZ];   /* drivewire VWIN 0 */
+unsigned char tbuf4[TTYSIZ];
+unsigned char tbuf5[TTYSIZ];
+unsigned char tbuf6[TTYSIZ];   /* drivewire VSER 0 */
+unsigned char tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
-	/* Drivewire Virtual Serial Ports */
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf5, tbuf5, tbuf5, TTYSIZ, 0, TTYSIZ / 2},
+	/* Drivewire Virtual Serial Ports */
+	{tbuf6, tbuf6, tbuf6, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
 		     VTA_OVERSTRIKE|VTA_NOCURSOR;
 
-const signed char vt_tright[2] = { 31, 77 };
-const signed char vt_tbottom[2] = { 23, 22 };
+const signed char vt_tright[4]  = { 31, 77, 31, 31 };
+const signed char vt_tbottom[4] = { 23, 22, 15, 15 };
 extern uint8_t curtty;
 static uint8_t inputtty;
-static struct vt_switch ttysave[2];
+static struct vt_switch ttysave[4];
 static uint8_t vmode;
 static uint8_t kbd_timer;
 struct vt_repeat keyrepeat = { 40, 4 };
@@ -95,7 +102,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		/* We don't do text except in 256x192 resolution modes */
 		if (vmode < 2)
 			vtoutput(&c, 1);
-	} else if (minor == 2) {
+	} else if (minor >= 2 && minor <= 4) {
 		vtoutput(&c, 1);
 	}
 	irqrestore(irq);
@@ -140,6 +147,9 @@ void tty_setup(uint8_t minor)
 	if (minor == 2) {
 		crt9128_init();
 		return;
+	}
+	if (minor == 3 || minor == 4) {
+		vc_clear(minor - 3);
 	}
 	if (minor != ACIA_TTY)
 		return;
@@ -280,8 +290,13 @@ static void keydecode(void)
 	else
 		c = keyboard[keybyte][keybit];
 	if (keymap[1] & 64) {	/* control */
-		if (c == '1' || c == '2') {
+		if (c >= '1' && c <= '4') {
 			inputtty = c - '1';
+			/* switch VDU base and VDG/SAM video mode */
+			if (inputtty == 0)
+				set_vid_mode();
+			else if (inputtty == 2 || inputtty == 3)
+				set_vc_mode(inputtty - 2);
 			return;
 		}
 		if (c > 31 && c < 127)

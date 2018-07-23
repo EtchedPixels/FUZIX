@@ -1,6 +1,6 @@
 define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
-section .start load 0x1c00
+section .start load 0x2000
 section .common
 section .text
 section .buffers

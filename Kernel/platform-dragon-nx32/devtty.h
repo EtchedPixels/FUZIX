@@ -7,9 +7,10 @@ extern uint8_t keymap[8];
 extern uint8_t keyboard[8][7];
 extern uint8_t shiftkeyboard[8][7];
 
-extern const signed char vt_tright[2];
-extern const signed char vt_tbottom[2];
+extern const signed char vt_tright[4];
+extern const signed char vt_tbottom[4];
 extern uint8_t curtty;
+extern void vc_clear(int8_t vc_num);
 
 extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 
