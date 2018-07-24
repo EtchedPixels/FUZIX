@@ -37,7 +37,7 @@ This port supports the following configurations currently
 		Micro Labs Graphyx
 		Tandy Hi-Res Card (26-1125)
 		Alpha Products Joystick
-		ChromaTRS (as jostick and a graphics device only - need a VDP
+		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
 
 	Planned:
@@ -125,7 +125,9 @@ Generally Not Supported:
 Would Be Nice:
 	80-Grafix		-	need docs, example apps to debug
 					an emulator
-
+	TRSIDE			-	IDE port at 0x40, but intended
+					to be driven alternate bytes
+					for 256 byte sectors
 
 Emulator Bugs:
 	Repeating instructions like LDIR appear to be misemulated. LDIR
@@ -149,10 +151,6 @@ To Do:
 	Only hide/show cursor if curtty == inputty
 	Reclaim 768 bytes by moving irq stack and udata down to 4100
 	Faster user copiers once it works
-	Look at RTS/CTS flow control
-	- Needs tty sleeping support
-	- Needs to deal with model 1 case where it's polled so we need
-	  to check the flow control on timer ticks if needed
 	Fast block copy routines for uget/uput
 	Hint based pre-fetching uget
 	Consider moving the tty buffers into banked space (INDIRECT_QUEUE)
@@ -177,9 +175,6 @@ Memory Map:
 
 	The kernel doesn't actually need 80K but it also doesn't fit in
 	the available 48K unbanked either (although a minimalish setup might)
-
-	Need to move buffers out of line using the external buffers code so we
-	can better balance memory
 
 Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs with patches)
 
