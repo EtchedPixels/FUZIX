@@ -157,32 +157,71 @@ map_restore
 ; fast bank copy for fork
 ; src bank in A, dst bank in B, start in X, end in U
 ; FIXME support internal bank (SAM map 1)
-; FIXME optimize copy loop, should have only one cmp
+
+; Since we have 32KB banks we cannot map two whole banks in so
+; we are operating in a copying window that holds one source
+; and one destination MMU block at a time.
+
+; Start address must be >= 0x8000 because of the window location
+; and bank shifting tricks, and it will be 16-byte aligned (rounded down)
+; to avoid potential window overflow in the unrolled loop.
+
+; Gets called with PROGBASE (0x8000) or with u_syscall_sp from fork_copy()
 
 copybank
+	pshs a,b	; map/bank # = MMU block mapped at 0x8000
 	stu endaddr
-	stb $FFA4	; map dst at 0x8000
-	sta $FFA5	; map src at 0xa000
-copyf   cmpx #0x9fff	; address in block? FIXME for non-aligned
-	bhi nxtblk
-	ldu 0x2000,x	; read from src bank
-	stu ,x++	; write to dst bank
+	stb 0xFFA4	; map dst at 0x8000
+	sta 0xFFA5	; map src at 0xA000
+	tfr x,d
+	andb #0xF0	; align start address to 16-byte (unrolling size)
+	tfr d,x
+
+calcend	cmpx #0xA000	; address inside window?
+	bhs nxtblk	; shift bank down until it is
+	cmpu #0xA000	; end address inside window?
+	bls lastb
+	ldu #0xA000
+lastb	stu endblk	; endblk = MIN(endaddr, 0xA000)
+	leau 0x2000,x
+
+copylp	ldd ,u++	; read from src bank
+	std ,x++	; write to dst bank
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	ldd ,u++
+	std ,x++
+	cmpx endblk
+	blo copylp
+
 	cmpx endaddr
-	blo copyf
-	bra copydone
-nxtblk  inc $FFA4	; next 8KB block
-	inc $FFA5
+	bhs cpdone
+	ldu endaddr
+	bra calcend
+
+nxtblk	inc 0xFFA4	; next 8KB block in bank
+	inc 0xFFA5
+	leax -0x2000,x
 	ldu endaddr
 	leau -0x2000,u
 	stu endaddr
-	leax -0x2000,x
-	bra copyf
-copydone
-	exg b,a		; leave with dst mapped
+	bra calcend
+cpdone
+	lda 1,s		; map destination bank
 	jsr map_process_a
-	exg b,a
-	rts
+	puls a,b,pc
 
+endblk		.dw 0
 endaddr		.dw 0
 map_store	.db 0
 map_copy	.db 0
