@@ -1,0 +1,22 @@
+MKDIR(1)
+## NAME
+*mkdir* - create directories
+## SYNOPSIS
+*mkdir* \[OPTION\]... DIRECTORY...
+
+## DESCRIPTION
+Creates the given directories if they do not already exist.
+
+:*-p*
+  Create any missing or intermediate pathname components
+
+When the *-p* option is selected the mkdir command attempts to create any
+intermediate directories on the path. Any existing directory is not created
+and its presence is not considered an error. This includes the final target.
+
+## BUGS ##
+The POSIX -m option is not supported
+
+## STANDARDS ##
+See bugs.
+
