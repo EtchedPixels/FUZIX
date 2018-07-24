@@ -658,6 +658,11 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
         }
         if (swizzle16(dentry.d_ino) != pnum &&
                 swizzle16(dentry.d_ino) != inum && depth < MAXDEPTH) {
+            /* FIXME: we should raise the depth but also get rid of the
+               malloc stuff as it performs badly when tight on memory.
+               Better to use a fixed 512 byte buffer we know is PATH_MAX
+               and avoid the dynamic allocations. Instead each recursion
+               we tack a name on and on return we set the old end to \0. */
             ename = malloc(strlen(name) + strlen(dentry.d_name) + 2);
             if (ename == NULL) {
                 fprintf(stderr, "Not enough memory.\n");
