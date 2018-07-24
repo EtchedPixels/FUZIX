@@ -12,15 +12,15 @@ void writes(const char *p)
 int make_dir(const char *name, int f)
 {
     char *line;
-    static char iname[256];
+    static char iname[512];
 
     int l = strlen(name) - 1;
 
     /* FIXME: Size check ! */
-    strcpy(iname, name);
+    strlcpy(iname, name, 512);
     if (l && iname[l] == '/')
         iname[l] = 0;
-    if (((line = rindex(iname, '/')) != NULL) && f) {
+    if (((line = strrchr(iname, '/')) != NULL) && f) {
 	while ((line > iname) && (*line == '/'))
 	    --line;
 	line[1] = 0;
