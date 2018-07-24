@@ -38,7 +38,7 @@
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 300		/* FIXME: double check - Ticks per second */
 #define PROGBASE    0x0000	/* memory base of program */
 #define PROGLOAD    0x0100	/* load base of program */
 #define PROGTOP     0xF400  	/* Top of program, base of U_DATA */
