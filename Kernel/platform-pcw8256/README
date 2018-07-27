@@ -15,6 +15,42 @@ ram table of 512 bytes or so = ~ 24K) in the low 128K
 WIP - lots to do to add swap support and memory map needs a re-arrange so we
 can get fork() going
 
+Supported Hardware (all only in early test)
+------------------
+
+	Amstrad PCW 8256
+	Amstrad PCW 8512
+	Joyce emulation of the above
+
+	Planned:
+	Amstrad PCW 9256/9256+/9512/9512+/PCW10 (need a subtly different boot
+		disk)
+
+	Options:
+		CF2 floppy
+		CF2DD floppy
+		3.5" floppy	(need to sort seek rates better)
+		UIDE
+		Fake IDE on xjoyce
+		CPS8256 and clones (parallel port not yet done)
+		AMX mouse
+		Kempston Mouse
+		Kempston Joystick
+
+	Planned:
+		Keyboard mouse/joystick hacks
+		Centronics on CPS8256
+		Standalone centronics
+		DKTronics sound
+
+	Not Supported:
+		Other printers
+		SCA Mark2 RTC
+		Locolink
+		Other hard disk controllers
+
+
+
 Building A Boot Image
 ---------------------
 
