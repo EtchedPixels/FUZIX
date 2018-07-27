@@ -1,5 +1,6 @@
 umask 022
 substroot fsck -a %
+setdate
 substroot remount % rw
 mount -a
 >/var/run/utmp
