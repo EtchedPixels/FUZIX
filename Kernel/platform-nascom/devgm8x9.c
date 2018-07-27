@@ -214,7 +214,7 @@ int gm8x9_open(uint8_t minor, uint16_t flag)
 	memcpy(d->skewtab, skew_hard, MAX_SKEW);
 	switch (den) {
 	case 0:
-		/* 18 tps 128bps double sided */
+		/* 18 spt 128bps double sided */
 		d->spt = 36;
 		d->bs = 2;
 		break;
