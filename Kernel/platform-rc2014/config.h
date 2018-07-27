@@ -29,10 +29,11 @@
 
 /* WRS: this is probably wrong -- we want to swap the full 64K minus the common code */
 /* For now let's just use something and fix this up later when we have a swap device */
-#define SWAP_SIZE   0x7F 	/* 63.5K in blocks (which is the wrong number) */
+#define SWAP_SIZE   0x79 	/* 60.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xFF00	/* can we stop at the top? not sure how. let's stop short. */
-#define MAX_SWAPS	10	    /* Well, that depends really, hmmmmmm. Pick a number, any number. */
+#define SWAPTOP	    0xF200	/* Swap out udata and program */
+/* FIXME: do this off partition tables */
+#define MAX_SWAPS   10	    	/* Well, that depends really, hmmmmmm. Pick a number, any number. */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
@@ -43,7 +44,7 @@
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 4	    /* 1 ROM disk, 1 RAM disk, 1 floppy, 1 PPIDE */
+#define MAX_BLKDEV 4	    /* 1 ROM disk, 1 RAM disk, 1 floppy, 1 IDE */
 
 #if 0	/* for now */
 /* On-board DS1302, we can read the time of day from it */
@@ -53,21 +54,13 @@
 
 /* Floppy support */
 #define CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
-
-/* Optional ParPortProp board connected to PPI */
-//#define CONFIG_PPP		/* #define CONFIG_PPP to enable as tty3 */
-
-#define CONFIG_SIO              /* #define CONFIG_SIO to enable SIO support */
-//#define CONFIG_ACIA              /* #define CONFIG_SIO to enable ACIA support */
+/* IDE/CF support */
+#define CONFIG_IDE
 
 #define CONFIG_VFD_TERM         /* #define CONFIG_VFD_TERM to show console output on VFD display */
 
-// sanity check
-#ifdef CONFIG_SIO
-#ifdef CONFIG_ACIA
-#error "please define either CONFIG_SIO or CONFIG_ACIA but not both"
-#endif
-#endif
+#define CONFIG_INPUT			/* Input device for joystick */
+#define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
 /* Device parameters */
 #define CONFIG_DEV_MEM          /* enable /dev/mem driver */
@@ -81,20 +74,15 @@
 #define DEV_RD_ROM_SIZE  ((uint32_t)DEV_RD_ROM_PAGES << 14)             /* size of the ROM disk */
 #define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 14)             /* size of the RAM disk */
 
-#ifdef CONFIG_PPP
-	/* SD card in ParPortProp */
-	#define CONFIG_SD
-        #define SD_DRIVE_COUNT 1
-	#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 2
 
-	/* ParPortProp as the console */
-	#define BOOT_TTY (512 + 3)
-#else
-	#define NUM_DEV_TTY 2
-
-	/* UART0 as the console */
-	#define BOOT_TTY (512 + 1)
-	#define TTY_INIT_BAUD B38400
-#endif
+/* UART0 as the console */
+#define BOOT_TTY (512 + 1)
+#define TTY_INIT_BAUD B115200	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+
+/* The Scott Baker SIO has a non-standard layout (it predates the official one) */
+/* You'll need to define this if you have a Scott Baker SIO2 card, or submit
+   a fancier autodetect! Also you'll need to change rc2014.s */
+#undef CONFIG_SIO_BAKER

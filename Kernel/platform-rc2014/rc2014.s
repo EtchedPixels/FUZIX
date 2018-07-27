@@ -29,6 +29,7 @@
 	.globl nmi_handler
 	.globl null_handler
         .globl _boot_from_rom
+	.globl _ser_type
 
 	; exported debugging tools
 	.globl inchar
@@ -47,10 +48,12 @@ CONSOLE_DIVISOR_LOW	.equ	(CONSOLE_DIVISOR & 0xFF)
 RTS_HIGH	.EQU	0xE8
 RTS_LOW		.EQU	0xEA
 
-SIOA_D		.EQU	0x80             ; Base address of SIO/2 chip
-SIOA_C		.EQU	SIOA_D+2
-SIOB_D		.EQU	SIOA_D+1
-SIOB_C		.EQU	SIOA_D+3
+; Base address of SIO/2 chip 0x80
+; For the Scott Baker SIO card adjust the order to match rc2014.h
+SIOA_C		.EQU	0x80
+SIOA_D		.EQU	SIOA_D+1
+SIOB_C		.EQU	SIOA_D+2
+SIOB_D		.EQU	SIOA_D+3
 
 SIO_IV          .EQU    8               ; Interrupt vector table entry to use
 
@@ -73,6 +76,43 @@ _bufpool:
 ;=========================================================================
         .area _DISCARD
 init_hardware:
+	; Play guess the serial port
+	ld bc,#0x80
+	; If writing to 0x80 changes the data we see on an input then
+	; it's most likely an SIO and not the 68B50
+	out (c),b
+	in d,(c)
+	inc b
+	out (c),b
+	in a,(c)
+	sub e
+	jr z, is_sio
+	; We have however pooped on the 68B50 setup so put it back into
+	; a sensible state.
+	ld a,#0x03
+	out (c),a
+	in a,(c)
+	or a
+	jr nz, not_acia_either
+        ld a, #ACIA_RTS_LOW_A
+        out (c),a         		; Initialise ACIA
+	ld a,#2
+	ld (_ser_type),a
+	jp serial_up
+
+	;
+	; Doomed I say .... doomed, we're all doomed
+	;
+	; At least until RC2014 grows a nice keyboard/display card!
+	;
+not_acia_either:
+	xor a
+	ld (_ser_type),a
+	jp serial_up
+
+is_sio:	ld a,b
+	ld (_ser_type),a
+
         ; program vectors for the kernel
         ld hl, #0
         push hl
@@ -90,61 +130,60 @@ init_hardware:
         ; nothing to do here yet
 init_partial_uart:
 
-.if CONFIG_SIO
-        LD	A,#0x00
-        OUT	(SIOA_C),A
-        LD	A,#0x18
-        OUT	(SIOA_C),A
+        ld a,#0x00
+        out (SIOA_C),a
+        ld a,#0x18
+        out (SIOA_C),a
 
-        LD	A,#0x04
-        OUT	(SIOA_C),A
-        LD	A,#0xC4
-        OUT	(SIOA_C),A
+        ld a,#0x04
+        out (SIOA_C),a
+        ld a,#0xC4
+        out (SIOA_C),a
 
-        LD	A,#0x01
-        OUT	(SIOA_C),A
-        LD	A,#0x1A          ; Receive int mode 11, tx int enable (was $18)
-        OUT	(SIOA_C),A
+        ld a,#0x01
+        out (SIOA_C),a
+        ld a,#0x1A          ; Receive int mode 11, tx int enable (was $18)
+        out (SIOA_C),a
 
-        LD	A,#0x03
-        OUT	(SIOA_C),A
-        LD	A,#0xE1
-        OUT	(SIOA_C),A
+        ld a,#0x03
+        out (SIOA_C),a
+        ld a,#0xE1
+        out (SIOA_C),a
 
-        LD	A,#0x05
-        OUT	(SIOA_C),A
-        LD	A,#RTS_LOW
-        OUT	(SIOA_C),A
+        ld a,#0x05
+        out (SIOA_C),a
+        ld a,#RTS_LOW
+        out (SIOA_C),a
 
-        LD	A,#0x00
-        OUT	(SIOB_C),A
-        LD	A,#0x18
-        OUT	(SIOB_C),A
+        ld a,#0x00
+        out (SIOB_C),a
+        ld a,#0x18
+        out (SIOB_C),a
 
-        LD	A,#0x04
-        OUT	(SIOB_C),A
-        LD	A,#0xC4
-        OUT	(SIOB_C),A
+        ld a,#0x04
+        out (SIOB_C),a
+        ld a,#0xC4
+        out (SIOB_C),a
 
-        LD	A,#0x01
-        OUT	(SIOB_C),A
-        LD	A, #0x1A          ; Receive int mode 11, tx int enable (was $18)
-        OUT	(SIOB_C),A
+        ld a,#0x01
+        out (SIOB_C),a
+        ld a, #0x1A          ; Receive int mode 11, tx int enable (was $18)
+        out (SIOB_C),a
 
-        LD	A,#0x02
-        OUT	(SIOB_C),A
-        LD	A,#SIO_IV		; INTERRUPT VECTOR ADDRESS
-        OUT	(SIOB_C),A
+        ld a,#0x02
+        out (SIOB_C),a
+        ld a,#SIO_IV		; INTERRUPT VECTOR ADDRESS
+        out (SIOB_C),a
 
-        LD	A,#0x03
-        OUT	(SIOB_C),A
-        LD	A,#0xE1
-        OUT	(SIOB_C),A
+        ld a,#0x03
+        out (SIOB_C),a
+        ld a,#0xE1
+        out (SIOB_C),a
 
-        LD	A,#0x05
-        OUT	(SIOB_C),A
-        LD	A,#RTS_LOW
-        OUT	(SIOB_C),A
+        ld a,#0x05
+        out (SIOB_C),a
+        ld a,#RTS_LOW
+        out (SIOB_C),a
 
         ; ---------------------------------------------------------------------
 	; Initialize CTC
@@ -161,17 +200,6 @@ init_partial_uart:
 	ld a,#180			; time constant = 180
 	out (CTC_CH1),a			; set CH1 time constant
 
-;	ld a,#0xD7			; counter mode, rising edge
-;					; enable interrupts
-;	out (CTC_CH2),a			; set CH2 mode
-;	ld a,#1				; time constant = 1
-;	out (CTC_CH2),a			; set CH2 time constant
-;	; FIXME: should use interrupts when PPP firmware allows it
-;	ld a,#0x37			; timer mode for now, disable interrupts
-;	out (CTC_CH3),a
-;	ld a,#0				; time constant = 256
-;	out (CTC_CH3),a			; set CH3 time constant
-
 	ld hl,#intvectors
 	ld a,l
 	and #0xF8			; get bits 7-3 of int. vectors table
@@ -184,17 +212,7 @@ init_partial_uart:
 	ld a,h				; get bits 15-8 of int. vectors table
 	ld i,a				; load to I register
 	im 2				; set Z80 CPU interrupt mode 2
-.endif
-
-.if CONFIG_ACIA
-        LD        A, #ACIA_RESET
-        OUT       (ACIA_C),A
-        LD        A, #ACIA_RTS_LOW_A
-        OUT       (ACIA_C),A         ; Initialise ACIA
-
-        im 1
-.endif
-
+serial_up:
         jp _init_hardware_c             ; pass control to C, which returns for us
 
 ;=========================================================================
@@ -280,8 +298,8 @@ sio_int:
 ;       For ACIA, serial interrupt handler will execute
 int38h_int:
 	push af
-        LD A, #'B'
-        OUT (VFD_D),A
+        ld a, #'B'
+        out (VFD_D),a
 	ld a,#0x38			; not a real vector, just a signal that the 0x38h occurred
 	ld (_irqvector),a		; store it
 	pop af
@@ -443,8 +461,11 @@ map_savearea:
 ;=========================================================================
 outchar:
 
-.if CONFIG_SIO
 	push af
+	ld a,(_ser_type)
+	cp #2
+	jr z, ocloop_acia
+
 	; wait for transmitter to be idle
 ocloop_sio:
         xor a                   ; read register 0
@@ -455,10 +476,8 @@ ocloop_sio:
 	; now output the char to serial port
 	pop af
 	out (SIOA_D),a
-.endif
+	jr out_done
 
-.if CONFIG_ACIA
-	push af
 	; wait for transmitter to be idle
 ocloop_acia:
 	in a,(ACIA_C)		; read Line Status Register
@@ -467,8 +486,7 @@ ocloop_acia:
 	; now output the char to serial port
 	pop af
 	out (ACIA_D),a
-.endif
-
+out_done:
         out (VFD_D),a
 	ret
 
@@ -478,19 +496,20 @@ ocloop_acia:
 ; Outputs: A - received character, F destroyed
 ;=========================================================================
 inchar:
-.if CONFIG_SIO
+	ld a,(_ser_type)
+	cp #2
+	jr z,inchar_acia
+inchar_s:
         xor a                           ; read register 0
         out (SIOA_C), a
 	in a,(SIOA_C)   		; read Line Status Register
 	and #0x01			; test if data is in receive buffer
-	jp z,inchar			; no data, wait
+	jr z,inchar_s			; no data, wait
 	in a,(SIOA_D)   		; read the character from the UART
-.endif
-
-.if CONFIG_ACIA
+	ret
+inchar_acia:
 	in a,(ACIA_C)   		; read Line Status Register
 	and #0x01			; test if data is in receive buffer
-	jp z,inchar			; no data, wait
+	jr z,inchar_acia		; no data, wait
 	in a,(ACIA_D)   		; read the character from the UART
-.endif
 	ret

@@ -39,12 +39,13 @@ swap.rel
 bank16k.rel
 tty.rel
 devsys.rel
+devinput.rel
 usermem.rel
 usermem_std-z80.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
-platform-rc2014/devtty_discard.rel
 platform-rc2014/mbr.rel
 platform-rc2014/blkdev.rel
 platform-rc2014/monitor.rel
+platform-rc2014/devinput.rel
 -e

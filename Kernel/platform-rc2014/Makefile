@@ -1,9 +1,10 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s
 ASRCS += devrd_zeta2_hw.s
 CSRCS = devices.c main.c devtty.c devrd_zeta2.c vfd-debug.c vfd-term.c
-DISCARD_CSRCS = discard.c devtty_discard.c
-DISCARD_DSRCS = 
-DSRCS = ../dev/devfd.c ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
+CSRCS += devinput.c
+DISCARD_CSRCS = discard.c
+DISCARD_DSRCS = ../dev/devide_discard.c
+DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/devrd.c
 DASRCS = ../dev/devfd_hw.s ../dev/devrd_hw.s
 
@@ -59,6 +60,3 @@ image:
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
 	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
 
-cleanup_sio_acia:
-	rm -f devtty.asm devtty.rel main.asm main.rel rc2014.rel 
-	rm -f devtty_discard.asm devtty_discard.rel discard.asm discard.rel

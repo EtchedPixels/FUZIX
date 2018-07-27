@@ -1,4 +1,3 @@
---- README for RC2014 ---
 This is Fuzix for the RC2014
 
 Imported into the current tree from Scott Baker's git tree and adjusted to
@@ -11,18 +10,25 @@ Sergey Kiselev <skiselev@gmail.com>, and others.
 
 Supported Hardware
 
-  * The Flash ROM / RAM board is required. This board is basically a clone of
-    the memory management subsystem of the Zeta V2. It replaces the RC2014's
-    default ROM and RAM boards.
+	RC2014 Z80 card or compatible
+	512K ROM / RAM board. This board is basically a clone of the memory
+	management subsystem of the Zeta V2. It replaces the RC2014's
+	default ROM and RAM boards.
+	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
+	If you have a Scott Baker SIO/2 card you'll need to see config.h
+	CTC board at 0x90
 
-  * A serial IO board is required. This can either be an SIO/2 board or a 
-    68B50 ACIA board. The 68B50 ACIA is the one that comes standard with the
-    RC2014 kit.
+	Options:
 
-  * VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD Terminal
-    will be supported. This will display all output to the serial port on the
-    VFD. If it's defined and you don't have a VFD, then it probably won't hurt
-    anything, other than some useless io to ports 0-3. 
+	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
+	Terminal will be supported. This will display all output to the serial
+	port on the VFD.
+
+	The RC2014 CF card interface, or compatible at 0x10.
+
+	Floppy Drive Interface
+
+	RC2014 Joystick
 
 Notes
 
@@ -32,17 +38,40 @@ Notes
 
 Configuration
 
-  * Make sure to edit config.h and kernel.def to specify whether you are
-    using SIO/2 or ACIA. 
-
   * The Makefile assumes a file system image exists in ../rc2014_root_fs. 
     See the Zeta V2 instructions for building a filesystem.
 
 Things that don't work
 
-  * The RC2014 doesn't come with a clock. I added fakeclock.c, which is a 
-    clock that always returns 0. 
-
-  * I couldn't get the WD37C65 floppy to work.
+  * The RC2014 doesn't come with a clock.
 
   * Flow control isn't yet enabled for the serial port.
+
+Stuff To Do
+
+  * Rework the CTCs if we can so we use CTC0 as a timer for the CTC clock and
+    use CTC1 to count CTC0 overflows. That way we can use the CTC0 interrupt
+    and the CTC1 value together in order to a) spot missed events and b) allow
+    us to run without using IM2 given the poor IM2 support on RC2014. That
+    then still allows us to use CTC for UART speed, and hopefully CTC3 for
+    single step debugging.
+
+  * Can we detect which kind of SIO and CTC we have and where
+
+  * Other tty options - can we autodetect 16550A at 0x80. Detect SIO at 0x84.
+
+  * Probe both 0x10 and 0xE0 for CF ?
+
+  * How to represent a Z80 PIO usefully to Fuzix (similar issues with Nascom)
+    both raw and hosting an interface (eg /dev/lp or even floppy)
+
+  * Better boot story - native and from CP/M plus support partition tables ?
+
+  * Work out how to co-exist better and maybe even modify ROMWBW so we can
+    use it
+
+  * Swap
+
+  * TMS9918A support once there is a suitable card
+
+  * Sound support once we have the core sound layer
