@@ -25,7 +25,6 @@ _si_read:			; X is pointer
 	pshs y,u
 	tfr s,u			; u holds our frame pointer to throw
 	bsr waitreq		; an exception
-	ldx #_si_dcb
 	ldy #_si_dcb+16		; length word
 	bita #0x08		; check CMD asserted
 	bne si_busfailw
@@ -40,7 +39,6 @@ _si_write:			; X is pointer, dcb block gives length
 	pshs y,u
 	tfr s,u			; u holds our frame pointer to throw
 	bsr waitreq		; an exception
-	ldx #_si_dcb
 	ldy _si_dcb+16		; length word
 	bita #0x08		; check CMD asserted
 	bne si_busfailw
@@ -57,7 +55,7 @@ si_busfailw:
 	puls y,u,pc
 
 ;
-;	Must preserve B
+;	Must preserve B and X
 ;
 waitreq:
 	pshs y
@@ -82,6 +80,7 @@ mpi_scsi:
 _si_writecmd:			; DCB, B is len (check B or X)
 	pshs y,u
 	tfr s,u			; Required exception frame for waitreq
+_si_writecmdl:
 	jsr waitreq
 	ldx #_si_dcb
 	bita #0x08		; check CMD asserted
@@ -89,7 +88,7 @@ _si_writecmd:			; DCB, B is len (check B or X)
 	lda ,x+
 	sta $FF70
 	decb
-	bne _si_writecmd
+	bne _si_writecmdl
 	clrb			; Return 0
 	puls y,u,pc
 si_busfail:
@@ -99,6 +98,7 @@ si_busfail:
 _si_select:			; Select device
 	bsr mpi_scsi		; Set the MPI
 	ldb #_si_dcb+20		; Device number
+	cmpb #7			; controller
 	beq si_seltimeo		; FIXME: different errorcodes ? 
 	ldx #0
 	lda #1
