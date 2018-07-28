@@ -91,6 +91,8 @@ SRCS  = \
 	ps.c \
 	remount.c \
 	sed.c \
+	seq.c \
+	setdate.c \
 	sleep.c \
 	ssh.c \
 	socktest.c \
