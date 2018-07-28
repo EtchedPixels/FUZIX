@@ -4,36 +4,35 @@ dragon-nx32
 Dragon (32 or 64) + external memory cartridge
 
 This port is for running FUZIX on real Dragons using an external
-memory cartridge which is being prototyped.
+memory cartridge (like Spinx-512 or MOOH).
 
 The cartridge can have from 2 to 256 banks of 32KB each (hence "nx32"). It
 will map the active bank at 0x8000-0xFEFF, using the EXMEM (SLENB) signal to
-hide the internal ROMs. Writing the bank number to FFBF selects the
+hide the internal ROM/RAM. Writing the bank number to FFBF selects the
 bank and activates the cartridge. Writing to FFBE deactivates the
 cartridge. It is only active if the SAM is in map type 0.
 
 The port reserves the internal RAM at 0-0x7FFF plus bank 0 for the kernel.
 
-The port can use DriveWire to mount the root filesystem, and most userland
-tools are working.
+The port can use the cartridge's SD card or DriveWire to mount the root
+filesystem, and most userland tools are working.
 
-Swapping to disk has not been implemented yet.
+Swapping to disk is supported over DriveWire (device 2049 = drive 1).
 
 Emulating in XRoar
 ==================
 
-XRoar can be patched with the included 0001-XRoar-emulate-nx32.patch
-to emulate this memory cartridge.
+XRoar supports Spinx-512 and MOOH boards (including SD card emulation)
+in the 0.35 development branch.
 
 Using DriveWire
 ===============
 
 For bootstrapping, the fuzix.bin DECB binary must be loaded into
-internal RAM and cartridge bank 0. This is currently done over
-DriveWire, using a "DWLOAD" program tweaked for FUZIX. The changes
-from stock DWLOAD are:
+internal RAM and cartridge bank 0. For DriveWire this is done using
+the "DWLOAD" program, with these changes from stock DWLOAD:
 - do not enable interrupts upon execution of the payload
-- jmp instead of jsr so that stack is not used
+- jmp instead of jsr so that stack location is not written to
 - default name of payload is "fuzix.bin"
 - activate cartridge memory when writing payload to RAM
 Additionally it is built to run from 0x600 so that FUZIX can
@@ -42,7 +41,7 @@ be loaded anywhere from 0x800 and up.
  lwasm --pragma=condundefzero -r -b -odwfuz.bin dwload.asm -DFUZIX -DRAMORG=0x600
 Or for an emulator with Becker port:
  lwasm --pragma=condundefzero -r -b -odwfuzb.bin dwload.asm -DFUZIX -DRAMORG=0x600 -DBECKER
-For XRoar, just add -load dwfuzb.bin to its invocation, and on the Dragon:
+For XRoar, just add "-load dwfuzb.bin" to its invocation, and on the Dragon:
  EXEC&H600
 
 For an emulator with Becker port while using the DragonDOS cartridge
@@ -64,28 +63,38 @@ a multiple of 256 bytes! Use for instance Kernel/tools/pad256
 Quick build instructions
 ========================
 
+(save the below in a script file, run it with "clean" as needed)
+
 # 1. Build the kernel:
-make -C Kernel TARGET=dragon-nx32
+make -C Kernel TARGET=dragon-nx32 $@
 
-- or for using DriveWire in an emulator (i.e. XRoar):
+ # If building for the MOOH boards, append MOOH=1 to above make command.
 
-make -C Kernel TARGET=dragon-nx32 BECKER=1
+ # If using DriveWire in an emulator (i.e. XRoar), append BECKER=1
 
 # 2. Build the libraries
-make -C Library tools/syscall_6809
-make -C Library/libs -f Makefile.6809
+make -C Library tools/syscall_6809 $@
+make -C Library/libs -f Makefile.6809 $@
 
 # 3. Build the utils and applications
-make -C Applications/util -f Makefile.6809 TARGET=dragon-nx32
-make -C Applications/V7/cmd/sh -f Makefile.6809 TARGET=dragon-nx32
-make -C Applications/levee -f Makefile.6809 TARGET=dragon-nx32
-make -C Applications/cave -f Makefile.6809 TARGET=dragon-nx32
-make -C Applications/dw -f Makefile.6809 TARGET=dragon-nx32
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/util $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/games $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/games $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/cmd $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/cmd/sh $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/levee $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/cave $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/dw $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/MWC/cmd $@
+make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/ue $@
+#make TARGET=dragon-nx32 -C Applications/cpp  $@
+#make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/as09 $@
+#make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/ld09 $@
 
 # 4. Build disk tools
-make -C Standalone
+make -C Standalone $@
 
 # 5. Build boot disk image 
-cd Standalone/filesystem-src
-./build-filesystem -X fuzix.dsk 256 65535
+[ -f "Applications/util/init" ] &&
+cd Standalone/filesystem-src && { ./build-filesystem-ng -y -v -X -f fuzix.dsk -g 256 16383 ; cd - ; }
 
