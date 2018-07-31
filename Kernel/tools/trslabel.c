@@ -51,7 +51,7 @@ int main(int argc, const char *argv[]) {
     exit(1);
   }
   if(fwrite(&p, 64, 1, vol) != 1) {
-    fprintf(stderr, "%s: unable to write minipart\n");
+    fprintf(stderr, "%s: unable to write minipart\n", argv[1]);
     exit(1);
   }
   fclose(vol);
