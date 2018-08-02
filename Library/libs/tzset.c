@@ -137,8 +137,18 @@ char *parse_dst(char *p, int n)
 		dsmode = 1;
 		dsday[n] = strtoul(p, &p, 0);
 	} else {
-		/* The complicated one */
-		/* TODO */
+		/* M then m.w.d values */
+		/* Keep dsmon 0 based to match tm */
+		dsmon[n] = strtoul(p + 1, &p, 0) - 1 ;
+                if (*p++ != '.')
+                        return NULL;
+                /* Week number */
+                dswom[n] = strtoul(p, &p, 0);
+                if (*p++ != '.')
+                        return NULL;
+                /* Day of week */
+                dsdow[n] = strtoul(p, &p, 0);
+                dsmode = 3;
 	}
 	if (*p != '/') {
 		dstime[n] = 2 * 3600;	/* 02:00 is the default */
@@ -181,6 +191,42 @@ void tzset(void)
 	parse_dst(p, 1);
 }
 
+/* Convert the week/day rule into a day of month for this year
+
+   It's a bit odd as the meaning is:
+           nth: 1		First day 'd' in the month
+           nth: 2-4		Day 'd' in week 'nth' of month
+           nth: 5		Last day 'd' in the month
+ */
+
+static uint8_t do_find_day(struct tm *tm, uint8_t nth, uint8_t d, uint8_t leap)
+{
+        extern uint8_t __mon_lengths[2][12];
+        /* Note mday is 1 based wday is 0 based */
+        /* Find the day number of the 1st */
+        int8_t sday = tm->tm_mday - tm->tm_wday;
+        /* nth == 1 means 'first occurence of' */
+        if (sday < 0 && nth == 1)
+                sday += 7;
+        else
+                sday %= 7;
+        sday += d;
+        /* We now have the day of month of the first instance */
+        sday += 7 * (nth - 1);
+        /* But are we beyond the end of month ? If so handle the nth 5
+           case and report the last actual occurrence */
+        if (sday >= __mon_lengths[leap][tm->tm_mon])
+                sday -= 7;
+        return sday;
+}
+
+static void convert_dow(struct tm *tm)
+{
+        uint8_t leap = __isleap(1900+tm->tm_year);
+        dsday[0] = do_find_day(tm, dswom[0], dsdow[0], leap);
+        dsday[1] = do_find_day(tm, dswom[1], dsdow[1], leap);
+}
+        
 /*
  *	tm is the time structure parsed assuming no local time. secs is
  *	the number of seconds of the day that have passed.
@@ -190,6 +236,7 @@ void tzset(void)
 uint8_t __in_dst(struct tm *tm, uint32_t secs)
 {
 	uint16_t yday = tm->tm_yday;
+	uint8_t south = 0;
 
 	switch(dsmode) {
 	case 0:
@@ -202,24 +249,50 @@ uint8_t __in_dst(struct tm *tm, uint32_t secs)
 			yday++;
 		/* Fall through */
 	case 1:
-		/* Summer in the middle of the year */
-		if (dsday[0] < dsday[1]) {
-			if (yday > dsday[0] && yday < dsday[1])
-				return 1;
-		} else {
-		/* Southern hemisphere */
-			if (yday < dsday[1] || yday > dsday[0])
-				return 1;
-                }
+		/* Southern hemisphere ? */
+		if (dsday[0] > dsday[1])
+		        south = 1;
+        	if (yday > dsday[0] && yday < dsday[1])
+			return !south;
+		if (yday < dsday[1] || yday > dsday[0])
+			return south;
+
                 /* Right day not late enough */
-                if (yday == dsday[0] && secs >= dstime[0])
-                        return 1;
+                if (yday == dsday[0]) {
+                        if (secs >= dstime[0])
+                                return !south;
+                        return south;
+                }
                 /* Right day, early enough */
-                if (yday == dsday[1] && secs < dstime[1])
-                        return 1;
-		return 0;
+                if (secs < dstime[1])
+                        return !south;
+		return south;
 	/* We don't yet support the complex format */
 	case 3:
-		return 0;
+	        /* No timezone has two changes in the same month so we can
+	           get the direction more simply */
+	        if (dsmon[0] > dsmon[1])
+	                south = 1;
+                /* Can we tell by the month ? */
+                if (tm->tm_mon < dsmon[0] || tm->tm_mon > dsmon[1])
+                        return south;
+                if (tm->tm_mon > dsmon[0] && tm->tm_mon < dsmon[1])
+                        return !south;
+                /* We are in the month it changes. Figure out the dates */
+                convert_dow(tm);
+                /* Now we have a day of month for this month to work with */
+                if (tm->tm_mday < dsday[0] || tm->tm_mday > dsday[1])
+                        return south;
+                if (tm->tm_mday > dsday[0] && tm->tm_mday < dsday[1])
+                        return !south;
+                /* Ok so we are on one of the change days */
+                if (tm->tm_mday == dsday[0]) {
+                        if (secs >= dstime[0])
+                                return !south;
+                        return south;
+                }
+                if (secs >= dstime[1])
+                        return south;
+		return !south;
 	}
 }
