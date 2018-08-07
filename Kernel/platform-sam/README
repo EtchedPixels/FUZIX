@@ -1,0 +1,90 @@
+Sam Coupe prototyping and 32K/32K split development work
+
+Proposed memory layout
+
+Kernel mode
+
+0-7FFF		Kernel in bank 2/3
+8000-FFFF	Kernel in bank 0/1
+
+Video
+
+0-5FFF		Frame buffer (mode 3)	bank 4/5
+6000-6FFF	Font
+7000-7FFF	Free
+8000-FFFF	Kernel in bank 0/1
+
+User Space
+
+0000-00FF	Thunking code
+0100-7FFF	User page
+8000-FCFFF	User page
+FD00-FEFF	UDATA stash
+FF00-FFFF	Thunking code
+
+Probably will move the thunking code mostly into FFxx somewhere so we
+can do CP/M emulation still
+
+Extmem support would require extra work and separate high/low pools for
+the bank allocator
+
+User Copies
+
+0000-7FFF	User bank for copy
+8000-FFFF	Kernel in bank 0/1
+
+Forking
+
+0000-00FF	Parent low stubs
+0100-7FFF	Parent low bank
+8000-80FF	Child low stubs (not yet set)
+8100-FFFF	Child low bank
+
+then
+
+0000-7EFF	Parent high bank
+7F00-7FFF	Parent high stubs
+8000-FEFF	Child high bank
+FF00-FFFF	Child stubs (not yet set)
+
+Stub code is in the low parts of the low banks and the top of the high banks
+so we have two copier routines one for each half.
+
+
+To Do:
+
+-	Keyboard map
+-	Interrupt logic
+-	Boot loader
+
+Then once we can get to the point of being able to see and type
+
+-	Move fonts to video bank after frame buffer
+-	Floppy driver (at least for read)
+-	Get to init
+-	Debug all the new banking code and stubs
+-	Atom and Atom-lite IDE driver
+-	Look at how to preserve high colour bits
+
+-	RTC driver
+-	Serial driver
+-	Mouse/Joystick/Input
+
+-	Mode setting/graphics mode support
+-	Video ioctls
+-	UDG ioctls
+-	Is there any way to do video mapping into user process sanely
+	(probably not)
+
+-	Sound
+
+-	MegaRAM
+
+-	Maybe look at a 16K boundary aware allocator to get better memory
+	packing - but it's really hairy.
+
+-	Less interrupt masking (but the banking logic makes it really foul
+	especially as we don't have proper IM2 support)
+
+-	Maybe look at the modern add ons (SD card, network etc)
+
