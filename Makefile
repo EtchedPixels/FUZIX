@@ -11,7 +11,7 @@
 # mtx:		Memotech MTX512 with SDX (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
 # n8vem-mark4:	N8VEM Retrobrew Z180 board
-# nc100:	Amstrad NC100 (or emulator)
+# amstradnc/nc100:	Amstrad NC100 (or emulator)
 # p112:		DX Designs P112
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # trs80:	TRS80 Model 4P with 128K RAM (some other TRS80 extension
@@ -51,7 +51,6 @@ endif
 export FUZIX_CCOPTS
 
 all: stand ltools libs apps kernel
-
 
 stand:
 	+(cd Standalone; $(MAKE))
