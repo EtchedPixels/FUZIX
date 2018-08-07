@@ -58,7 +58,7 @@ CS5SRCS = syscall_exec$(BITS).c
 #
 C3SRCS = devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c devinput.c
 CVIDEOSRCS = vt.c
-CFONTSRCS = font4x6.c font6x8.c font8x8.c
+CFONTSRCS = font4x6.c font6x8.c font8x8.c font8x8_exp2.c
 
 
 ASRCS =  lowlevel-$(CPU)$(BANKED)$(ASMEXT) usermem_std-$(CPU)$(BANKED)$(ASMEXT)
@@ -151,6 +151,9 @@ $(AOBJS): %$(BINEXT): %$(ASMEXT)
 version.c: tools/makeversion
 	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
+font8x8_exp2.c: font8x8.c tools/fontexpand
+	tools/fontexpand <font8x8.c >font8x8_exp2.c
+
 tools/makeversion: tools/makeversion.c
 
 tools/filesizes: tools/filesizes.c
@@ -164,6 +167,8 @@ tools/bbc: tools/bbc.c
 tools/makejv3: tools/makejv3.c
 
 tools/trslabel: tools/trslabel.c
+
+tools/fontexpand: tools/fontexpand.c
 
 font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
