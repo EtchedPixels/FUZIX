@@ -88,10 +88,8 @@ _switchin:
 
 	call map_kernel
 
-	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
-	pop de
 
 .ifne CONFIG_SWAP
 	.globl _swapper
@@ -148,6 +146,9 @@ not_swapped:
 	ldir
 	exx
 
+	; In the non swap case we must set so before we use the stack
+	; otherwise we risk corrupting the restored stack frame
+        ld sp, (U_DATA__U_SP)
 	call map_kernel
 
         ; check u_data->u_ptab matches what we wanted
