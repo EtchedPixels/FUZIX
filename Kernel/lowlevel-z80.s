@@ -35,7 +35,6 @@
 	.globl _platform_switchout
 
         ; exported symbols
-	.globl _chksigs
 	.globl null_handler
 	.globl unix_syscall_entry
         .globl _doexec
@@ -51,6 +50,7 @@
 	.globl mmu_irq_ret
 
         ; imported symbols
+	.globl _chksigs
         .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
