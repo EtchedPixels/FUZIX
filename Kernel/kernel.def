@@ -27,6 +27,7 @@ P_TAB__P_STATUS_OFFSET      .equ 0
 P_TAB__P_TTY_OFFSET         .equ 1
 P_TAB__P_PID_OFFSET         .equ 2
 P_TAB__P_PAGE_OFFSET        .equ 14
+P_TAB__P_PAGE2_OFFSET       .equ 16
 
 P_RUNNING                   .equ 1            ; value from include/kernel.h
 P_READY                     .equ 2            ; value from include/kernel.h
