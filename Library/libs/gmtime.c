@@ -25,6 +25,8 @@ void __tm_conv(struct tm *tmbuf, time_t * pt, long offset)
 		rem += SECS_PER_DAY;
 		--days;
 	}
+	/* FIXME: speed - we should probably do some of this with ifs and
+	   powers of 2 down as a trade against size */
 	while (rem >= SECS_PER_DAY) {
 		rem -= SECS_PER_DAY;
 		++days;
