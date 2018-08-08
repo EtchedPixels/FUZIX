@@ -158,4 +158,6 @@ usize_t pagemap_mem_used(void) {
 	return pfptr << 5;
 }
 
+/* FIXME: Swap */
+
 #endif
