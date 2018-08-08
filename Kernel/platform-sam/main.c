@@ -7,44 +7,37 @@
 uint16_t ramtop = PROGTOP;
 uint8_t need_resched;
 
-/* On idle we spin checking for the terminals. Gives us more responsiveness
-   for the polled ports */
 void platform_idle(void)
 {
-    __asm
-    halt
-    __endasm;
+	__asm
+		halt
+	__endasm;
 }
 
 void do_beep(void)
 {
 }
 
+__sfr __at 249 status;
+
 void platform_interrupt(void)
 {
-  tty_interrupt();
-  kbd_interrupt();
-  timer_interrupt();
-}
-
-void map_init(void)
-{
+#if 0
+	if (status & 1)
+		line_interrupt();
+	if (status & 2)
+		mouse_interrupt();
+#endif
+	if (status & 4) {
+		timer_interrupt();
+		kbd_interrupt();
+	}
+	/* FIXME: figure out how tty interrupt needs to be handled */
+	tty_interrupt();
 }
 
 void platform_discard(void)
 {
-}
-
-void pagemap_init(void)
-{
- pagemap_add(0x63);	/* Mode 3, U64K low 32K mapped as low 32K */
- pagemap_add(0x73);	/* Mode 3, U64K high 32K mapped as low 32K */
-}
-
-
-uint8_t platform_param(char *p)
-{
-    used(p);
-    return 0;
+	/* Buffer handling can happen here */
 }
 

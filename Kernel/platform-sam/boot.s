@@ -18,7 +18,22 @@
 ;	for us shuffling the kernel so that 0/1 is the low kernel in RAM
 ;	2/3 is the high kernel in RAM and 4/5 is the video
 ;	(or maybe it'll be saner to use 4/5 for kernel 2/3 video..)
-;	
+;
+	.area BOOT(ABS)
+	.org 0x4000
+
+HIMEM	.equ	251
+
+STATUS	.equ	224
+CMD	.equ	224
+TRACK	.equ	225
+SECTOR	.equ	226
+DATA	.equ	227
+
+CMD_READ .equ	0x80
+CMD_STEPIN .equ 0x58
+
+	.db 0,0,0,0,0,0,0,0	; need to work out what goes here
 boot:
 	di
 	ld de,#2		; track 0 sector 2 (we are sector 0)
@@ -42,8 +57,8 @@ dread:	ld a,#CMD_READ		; Ask for data from the FDC
 	out (CMD),a
 	ld b,#20		; Wait for FDC
 nap:	djnz nap
-	ld bc,DATA		; Begin reading from data port
-	jr waitbyte
+	ld bc,#DATA		; Begin reading from data port
+	jr wait
 byte:	ini
 wait:	in a,(STATUS)		; Wait for DRQ
 	bit 1,a
@@ -82,3 +97,7 @@ wait2:	in a,(STATUS)
 	bit 0,a
 	jr nz,wait2
 	jr next_sec
+
+	.org 0x4100
+	.ascii 'BOO'
+	.byte 'T'+0x80

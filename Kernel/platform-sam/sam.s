@@ -67,9 +67,13 @@ _platform_reboot:
 ; -----------------------------------------------------------------------------
             .area _DISCARD
 
-; colours  - FIXME correct these
-	    .db	0,32,64,120
+	    ; Mode 3 colour set we use
+	    .byte 0x00		; Black
+	    .byte 0x40		; Green
+	    .byte 0x20		; Red
+	    .byte 0x70		; White
 clutmap:
+
 init_early:
 	    ld a, #0x44		; Kernel is in 0/1 2/3, so video goes above it
 				; Video mode 3 (with luck)
@@ -107,8 +111,6 @@ init_hardware:
 
 _kernel_flag:
 	    .db 1	; We start in kernel mode
-low_map:
-	    .db KERNEL_LOW
 low_save:
 	    .db 0
 video_save:
@@ -116,14 +118,13 @@ video_save:
 
 map_save_low:
 	    push af
-	    ld a,(low_map)
+	    in a,(250)
 	    ld (low_save),a
 	    pop af
 	    ; Fall through as we also map the kernel
 map_kernel_low:
 	    push af
 	    ld a,#KERNEL_LOW
-	    ld (low_map),a
 	    out (250),a
 	    pop af
 	    ret
@@ -133,11 +134,11 @@ map_restore_low:
 map_user_low:
 	    ld a,(U_DATA__U_PAGE)
 map_page_low:
-	    ld (low_map),a
+	    or #0x20			; force ROM off
 	    out (250),a
 	    ret
 map_video:
-	    ld a,(low_map)
+	    in a,(250)
 	    ld (video_save),a
 	    ld a,#VIDEO_LOW
 	    jr map_page_low
@@ -157,13 +158,27 @@ _program_vectors:
 	    ld a,(hl)	; get the low page
 	    call map_page_low
 
+	    exx
 	    ; Copy the stub page into place
-            ld hl, #stub_page
+            ld hl, #stub_page_1 - 1
             ld de, #0x0000
             ld bc, #0x0100
             ldir
-	    jp map_kernel_low
+	    exx
 
+	    ; And then the high stubs from the kernel
+	    inc hl
+	    inc hl
+	    ld a,(hl)
+	    call map_page_low
+	    ld hl,#stubs_high
+	    ld de,#stubs_high-0x8000
+	    ld bc,#0x0100
+	    ldir
+
+	    ; FIXME: we need to do the high stubs somewhere too
+	    jp map_kernel_low
+;
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 ;
@@ -204,42 +219,33 @@ keyscl:	    ld c, #249			; need BC out to get address lines
 
 	    .area _PAGE0
 ;
-;	Loaded into 00-FF in the bottom of the kernel and then into other
-;	pages. There is an argument for putting most of this at the top of
-;	the high page of everything. That might allow us to run CP/M
-;	emulation
-;
-;	Move what we can into PAGEH and high kernel code
-;
-;	We'd still need some low space but we have 0A-3A/3B-4F/57-5B
-;
-;	We can't deal with NMI in the CP/M case though.
+;	This exists at the bottom of each process mapping we are using
 ;
 ;	Starts at address 1 to avoid an SDCC flaw
 ;
-stub_page:
+stub_page_1:
 
 stub0:	    .word 0		; cp/m emu changes this
 	    .byte 0		; cp/m emu I/O byte
 	    .byte 0		; cp/m emu drive and user
 	    jp 0		; cp/m emu bdos entry point
 rst8:
-_platform_copier_l:
+_platform_copier_l:		; Must be low
 	    ld a,(hl)
 	    out (251),a
 	    exx
 	    ldir
 	    exx
-	    nop			; fall through
-rst10:	    ld a,#KERNEL_HIGH
+	    and #0x60		; preserve the colour bits
+	    or #KERNEL_HIGH
 	    out (251),a
 	    ret
-	    nop
-	    nop
+syscall_stash:
+	    .byte 0		; must be low
 	    nop
 rst18:
 _platform_doexec:
-	    out (251),a		; FIXME: trashing of clut high bits
+	    out (251),a		; caller needs to handle CLUT bits
 	    ei
 	    jp (hl)
 	    nop
@@ -251,7 +257,7 @@ rst20:	    nop
 	    nop
 	    nop
 	    nop
-rst28:	    jp syscall_path
+rst28:	    nop
 	    nop
 	    nop
 	    nop
@@ -259,20 +265,51 @@ rst28:	    jp syscall_path
 	    nop
 	    nop
 	    nop
-rst30:	    nop
+	    nop
+	    nop
+rst30:	    jp syscall_high
 	    nop
 	    nop
 	    nop
 	    nop
 	    nop
+;
+;	We only have 38-4F available for this in low space
+;
+rst38:	    jp interrupt_high		; Interrupt handling stub
 	    nop
 	    nop
-rst38:	    ; Interrupt handling stub
+	    nop
+	    nop
+	    nop
+	    ; 40
+	    .ds 0x26
+nmi_handler:		; FIXME: check ends up at 0066
+	    retn
+
+	    .area _PAGEH
+
+stubs_high:
+;
+;	High stubs. Present in each bank in the top 256 bytes
+;
+_platform_copier_h:
+	    ld a,(hl)
+	    out (251),a
+	    exx
+	    ldir
+	    exx
+	    and #0x60
+	    or #KERNEL_HIGH
+	    out (251),a
+	    ret
+interrupt_high:
 	    push af
 	    push de
 	    push hl
-	    ; FIXME: this trashes any clut overrides
-	    ld a,#KERNEL_HIGH
+	    in a,(251)
+	    and #0x60
+	    or #KERNEL_HIGH
 	    out (251),a
 	    ; Kernel is now the high map. Our stack may be invalid
 	    ; so be careful
@@ -281,7 +318,14 @@ rst38:	    ; Interrupt handling stub
 	    call interrupt_handler
 	    ; On return HL = signal vector E= signal (if any) A = page for
 	    ; high
-	    ; FIXME  0 = kernel do we need to xlate ?
+	    or a
+	    jr nz, touser
+	    ld a,#KERNEL_HIGH
+touser:
+	    ld d,a
+	    in a,(251)
+	    and #0x60
+	    or d
 	    out (251),a
 	    ; stack is invalid again now
 	    ld sp,(istack_switched_sp)
@@ -294,11 +338,6 @@ rst38:	    ; Interrupt handling stub
 	    pop af
 	    ei
 	    ret
-	    nop
-	    nop
-	    nop
-nmi_handler:		; FIXME: check ends up at 0066
-	    retn
 sigpath:
 	    push de		; signal number
 	    ld de,#irqsigret
@@ -309,20 +348,38 @@ irqsigret:
 	    inc sp
 	    ret
 
-syscall_path:
+syscall_high:
 	    push ix
-	    ;TODO : BC/DE/HL/IX off stack
-	    ; FIXME trashes the clut bits
-	    ld a,#KERNEL_HIGH
+	    ld ix,#0
+	    add ix,sp
+	    ld a,4(ix)
+	    ld b,6(ix)
+	    ld c,7(ix)
+	    ld d,8(ix)
+	    ld e,9(ix)
+	    ld h,10(ix)
+	    ld l,11(ix)
+	    push hl
+	    ld h,12(ix)
+	    ld l,13(ix)
+	    pop ix
 	    di
+	    ld (syscall_stash),a
+	    in a,(251)
+	    and #0x60
+	    or #KERNEL_HIGH
 	    out (251),a
 	    ; Stack now invalid
 	    ld (U_DATA__U_SYSCALL_SP),sp
 	    ld sp,#kstack_top
 	    call unix_syscall_entry
 	    ; FIXME check di rules
-	    ; On return A is the page (0 means kernel), 
-	    ; FIXME: do we need to xlate
+	    push bc
+	    ld b,a
+	    in a,(251)
+	    and #0x60
+	    or b
+	    pop bc
 	    out (251),a
 	    ; stack now invalid
 	    ld sp,(U_DATA__U_SYSCALL_SP)
@@ -332,7 +389,16 @@ syscall_path:
 	    ; FIXME for now do the grungy C flag HL DE stuff from
 	    ; lowlevel-z80 until we fix the ABI
 	    ld bc,#0
+	    ld a,h
+	    or l
+	    jr nz, error
+	    ex de,hl
 	    pop ix
+	    ei
+	    ret
+error:	    scf
+	    pop ix
+	    ei
 	    ret
 syscall_sigret:
 	    push hl		; save errno
@@ -348,18 +414,4 @@ syscall_sighelp:
 	    pop de		; recover error info
 	    pop hl
 	    ld h,#0		; clear signal bit
-	    ret
-
-	    .area _PAGEH
-;
-;	High stubs. Present in each bank
-;
-_platform_copier_h:
-	    ld a,(hl)
-	    out (251),a
-	    exx
-	    ldir
-	    exx
-	    ld a,#KERNEL_HIGH
-	    out (251),a
 	    ret

@@ -1,16 +1,21 @@
-/* Set if you want RTC support and have an RTC on ports 0xB0-0xBC */
+/* RTC support is to do */
 #undef CONFIG_RTC
-
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
 #undef CONFIG_MONITOR
 /* Profil syscall support (not yet complete) */
-#define CONFIG_PROFIL
+#undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
+
+/* Banked memory set up: 32K banks */
+#define CONFIG_BANK32
+#define MAX_MAPS	16
+
+#define CONFIG_BANKS	2	/* 2 x 32K */
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
@@ -18,18 +23,10 @@
    need to deal with a 2bit deep bitmap display */
 #define CONFIG_FONT_8X8_EXP2
 
-/* Banked memory set up */
-/* FIXME */
-#define CONFIG_BANK_FIXED
-#define MAX_MAPS	16
-#define MAP_SIZE	0xFD00
-
-#define CONFIG_BANKS	2	/* 2 x 32K */
-
 /* Vt definitions */
-#define VT_WIDTH	80
+#define VT_WIDTH	64
 #define VT_HEIGHT	24
-#define VT_RIGHT	79
+#define VT_RIGHT	63
 #define VT_BOTTOM	23
 
 #define TICKSPERSEC 50   /* Ticks per second */
@@ -43,6 +40,11 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
+#define BOOTDEVICENAMES "hd#,fd,,rd"
+
+/* Block devices */
+#define CONFIG_IDE	    /* Atom / Atomlite */
+#define MAX_BLKDEV 4	    /* 1 ROM disk, 1 RAM disk, 1 floppy, 1 IDE */
 
 /* Device parameters */
 #define NUM_DEV_TTY 2

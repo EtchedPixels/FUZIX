@@ -31,7 +31,8 @@
 	.globl map_video
 	.globl unmap_video
 	.globl ___hard_di
-	.globl _fontdata_8x8_exp2
+
+_fontdata_8x8_exp2	.equ	0xE000	; in video bank
 
 VIDEO_PAGE	.equ	4
 
