@@ -111,7 +111,7 @@ sub build_pkg_list {
 # build a datastructure representing each package file found in the
 # Standalone/filesystem-src/ and Application/ directories.
 sub build_file_list {
-    my @places = ('.','../../Applications');
+    my @places = ('.','../../Applications','../../Kernel');
     foreach my $dir (@places) {
         find(\&pkg_file, $dir);
     }
