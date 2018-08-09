@@ -96,5 +96,5 @@ make -C Standalone $@
 
 # 5. Build boot disk image 
 [ -f "Applications/util/init" ] &&
-cd Standalone/filesystem-src && { ./build-filesystem-ng -y -v -X -f fuzix.dsk -g 256 16383 ; cd - ; }
+cd Standalone/filesystem-src && { ./build-filesystem-ng -y -v -X -f fuzix.dsk -g 256 16383 -p platform-dragon-nx32 ; cd - ; }
 
