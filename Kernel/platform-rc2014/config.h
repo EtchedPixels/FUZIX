@@ -8,8 +8,6 @@
 #define CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
-/* CP/M emulation */
-#undef CONFIG_CPM_EMU
 /* Flexible 4x16K banking */
 #define CONFIG_BANK16
 /* Permit large I/O requests to bypass cache and go direct to userspace */
