@@ -18,6 +18,7 @@ This port supports the following configurations currently
 		Alpha Products Joystick
 		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
+		Lo-tech or similar IDE CF at 0x40
 
 	In Progress:
 		Exatron stringy
@@ -25,6 +26,10 @@ This port supports the following configurations currently
 	Planned:
 		Orchestra 80 sound card
 		Tandy Model I Double Density Kit (26-1143)
+		Support for the FreHD extra features (clock, volume switches)
+
+	Unsupported:
+		M1SE/M1RE (except as far as compatibility features go)
 
 	TRS80 model III with Alpha SuperMem (or compatibles)
 		(256K+ recommended or a hard disk for swap)
@@ -39,14 +44,15 @@ This port supports the following configurations currently
 		Alpha Products Joystick
 		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
+		Lo-tech or similar IDE CF at 0x40
 
 	Planned:
 		Orchestra 90 sound card
-		Lo-tech IDE adapter
+		Lo-tech and similar IDE adapters at 0x40
+		Support for the FreHD extra features (clock, volume switches)
 
 	Unsupported:
 		M3SE (except as far as it's compatibility features go)
-
 
 	LNW80 1 with Selector or Alpha SuperMem compatible banking
 		(256K+ recommended or a hard disk for swap) and
@@ -115,6 +121,9 @@ This port supports the following configurations currently
 	if a driver was added - providing it doesn't do DMA and it avoids the
 	high ports F8-FF.
 
+	(What the world really needs is a Quinnterface equivalent with 512K
+	 banked RAM - just saying ;-) )
+
 
 Generally Not Supported:
 	Lubomir Soft Banker	-	only provides 96K RAM (not enough
@@ -125,9 +134,8 @@ Generally Not Supported:
 Would Be Nice:
 	80-Grafix		-	need docs, example apps to debug
 					an emulator
-	TRSIDE			-	IDE port at 0x40, but intended
-					to be driven alternate bytes
-					for 256 byte sectors
+	TRS80 Model 1 Hires	-	The UK 'hires' actually a font
+					adapter.
 
 Emulator Bugs:
 	Repeating instructions like LDIR appear to be misemulated. LDIR

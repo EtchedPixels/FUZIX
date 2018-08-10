@@ -12,6 +12,7 @@
 #include <devgfx.h>
 #include <devfd3.h>
 #include <devstringy.h>
+#include <blkdev.h>
 #include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
