@@ -60,6 +60,7 @@
 ;	into the istack. Don't screw around with the link order!
 ;
 istack_top:
+istack_switched_sp: .dw 0
 
 _platform_monitor:
 	    push af

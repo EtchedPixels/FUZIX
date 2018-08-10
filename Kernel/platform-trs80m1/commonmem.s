@@ -32,8 +32,6 @@ kstack_base:
         .db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 kstack_top:
 
-istack_switched_sp: .dw 0
-
 ;
 ;	We link the pre bank switching setup code in 4400-44FF and a bit
 ;	then convert it into istack.
