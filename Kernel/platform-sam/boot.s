@@ -1,5 +1,5 @@
 ;
-;	Boot block, loaded at 0x4000
+;	Boot block, loaded at 0x4000 in the top bank that is free (varies)
 ;
 ;	Banks and SP we need to double check are ROM0/1/2/3 and valid
 ;
@@ -36,7 +36,7 @@ CMD_STEPIN .equ 0x58
 	.db 0,0,0,0,0,0,0,0	; need to work out what goes here
 boot:
 	di
-	ld de,#2		; track 0 sector 2 (we are sector 0)
+	ld de,#0x0401		; track 4 sector 2 (we are sector 1)
 	ld a,e			; Start in bank 2
 	ld hl,#0x8000		; Which we map high
 	out (HIMEM),a
@@ -82,7 +82,7 @@ wait:	in a,(STATUS)		; Wait for DRQ
 	;	We read 14 tracks minus 1 sector which loads us
 	;
 	;
-	ld a,#14
+	ld a,#18
 	cp d
 	; Jump to the start of the last bank loaded. This is actually
 	; packed up boot stuff and font. We loaded 5.5K here, of which 4K
