@@ -35,6 +35,8 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
   /* 8: tape (for now - may move to 5 if lots of boxes have tape) */
   {  tape_open,     tape_close, tape_read, tape_write, tape_ioctl },
+  /* 9: ide block devices (temporarily until we make /dev/hd a blkdev device */
+  {  blkdev_open, no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl  },
 };
 
 bool validdev(uint16_t dev)
