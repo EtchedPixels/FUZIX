@@ -11,6 +11,8 @@
 		; expand all over it for buffers
 		.area _BUFFERS2
 		.area _DISCARD2
+		.area _COMMONDATA
+		.area _BOOT
 	        .area _COMMONMEM
 		.area _STUBS
 	        .area _CONST
@@ -51,14 +53,14 @@
 ;
 start:
 		; Take care to preserve A until init_early
-		ld sp, #kstack_top
+		ld sp, #kstack_top	; just below us
 		; then zero the data area
 		ld hl, #s__DATA
 		ld de, #s__DATA + 1
 		ld bc, #l__DATA - 1
 		ld (hl), #0
 		ldir
-		; We pass A into init_eatly holding the mapper type
+		; We pass A into init_early holding the mapper type
 		call init_early
 		call init_hardware
 		push af
@@ -72,6 +74,6 @@ stop:		halt
 		jr stop
 
 
-	.area _STUBS
+		.area _STUBS
 stubs:
-	.ds 768
+		.ds 768

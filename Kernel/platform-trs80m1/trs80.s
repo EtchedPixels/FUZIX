@@ -52,9 +52,14 @@
             .include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xE800 upwards)
+; COMMON MEMORY BANK (0x4000 upwards after the udata etc)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+;
+;	This is linked first after udata and boot, and we turn the boot area
+;	into the istack. Don't screw around with the link order!
+;
+istack_top:
 
 _platform_monitor:
 	    push af
