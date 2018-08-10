@@ -149,8 +149,8 @@ void devide_read_data(void) __naked
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld b, #0                                ; setup count
-            ld c, #IDE_REG_DATA                     ; setup port number
+            ld bc, #IDE_REG_DATA                    ; setup port number
+                                                    ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
@@ -175,8 +175,8 @@ void devide_write_data(void) __naked
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld b, #0                                ; setup count
-            ld c, #IDE_REG_DATA                     ; setup port number
+            ld bc, #IDE_REG_DATA                    ; setup port number
+                                                    ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
