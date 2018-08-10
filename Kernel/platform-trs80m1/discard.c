@@ -64,3 +64,10 @@ void pagemap_init(void)
  else
   pagemap_init_supermem();
 }
+
+uint8_t platform_param(char *p)
+{
+    used(p);
+    return 0;
+}
+

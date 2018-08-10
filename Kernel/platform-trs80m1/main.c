@@ -36,12 +36,6 @@ void do_beep(void)
 {
 }
 
-uint8_t platform_param(char *p)
-{
-    used(p);
-    return 0;
-}
-
 /* Work around SDCC bugs */
 uint8_t sdcc_bug_2753(uint8_t v) __z88dk_fastcall
 {
