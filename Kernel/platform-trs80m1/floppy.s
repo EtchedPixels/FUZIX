@@ -19,6 +19,7 @@
 	.globl map_kernel_restore, map_process_always
 	.globl go_fast, go_slow
 
+	.module floppy
 ;
 ;	The 1791 is memory mapped
 ;
