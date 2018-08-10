@@ -159,6 +159,11 @@ not_swapped:
 	ldir
 	exx
 
+	; Restore the stack in case we are not swap based so we don't
+	; scribble the bank stack
+
+        ld sp, (U_DATA__U_SP)
+
 	call map_kernel_restore
 
         ; check u_data->u_ptab matches what we wanted
@@ -183,7 +188,6 @@ skip_copyback:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
 
 	pop af
         pop iy
