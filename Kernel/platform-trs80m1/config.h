@@ -30,6 +30,9 @@
 /* And networking */
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
+/* And IDE */
+#define MAX_BLKDEV	2
+#define CONFIG_IDE
 
 #define MAX_MAPS	16	/* 512K */
 
