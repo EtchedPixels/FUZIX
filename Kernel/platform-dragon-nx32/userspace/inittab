@@ -1,0 +1,15 @@
+# Inittab
+id:3:initdefault:
+si::sysinit:
+# Run level s - a shell
+is:s:respawn:/bin/sh
+# Start up
+rc::bootwait:/etc/rc
+# Terminals
+01:3:respawn:getty /dev/tty1
+02:3:respawn:getty /dev/tty2
+03:3:respawn:getty /dev/tty3
+04:3:respawn:getty /dev/tty4
+# Shutdown
+ht:6:wait:/etc/rc.halt
+#06:3:respawn:dwgetty /dev/tty6 4242

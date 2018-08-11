@@ -1,0 +1,6 @@
+umask 022
+substroot fsck -a %
+dwdate -s || setdate
+substroot remount % rw
+mount -a
+>/var/run/utmp
