@@ -1,29 +1,35 @@
 dragon-nx32
 ===========
 
-Dragon (32 or 64) + external memory cartridge
+Dragon (32 or 64) or CoCo (1 or 2) + external memory cartridge
 
 This port is for running FUZIX on real Dragons using an external
 memory cartridge (like Spinx-512 or MOOH).
 
-The cartridge can have from 2 to 256 banks of 32KB each (hence "nx32"). It
+A "nx32" cartridge can have from 2 to 256 banks of 32KB each (n x 32). It
 will map the active bank at 0x8000-0xFEFF, using the EXMEM (SLENB) signal to
 hide the internal ROM/RAM. Writing the bank number to FFBF selects the
 bank and activates the cartridge. Writing to FFBE deactivates the
 cartridge. It is only active if the SAM is in map type 0.
+
+The MOOH cartridge is different, but is here set up to mimic the same
+32KB banking.
 
 The port reserves the internal RAM at 0-0x7FFF plus bank 0 for the kernel.
 
 The port can use the cartridge's SD card or DriveWire to mount the root
 filesystem, and most userland tools are working.
 
+The SDBOOT boot loader (https://gitlab.com/tormod/sdboot) can be used
+to boot from an SD card.
+
 Swapping to disk is supported over DriveWire (device 2049 = drive 1).
 
 Emulating in XRoar
 ==================
 
-XRoar supports Spinx-512 and MOOH boards (including SD card emulation)
-in the 0.35 development branch.
+XRoar supports Spinx-512 and MOOH boards, including SD card emulation,
+since version 0.35.
 
 Using DriveWire
 ===============
@@ -98,3 +104,6 @@ make -C Standalone $@
 [ -f "Applications/util/init" ] &&
 cd Standalone/filesystem-src && { ./build-filesystem-ng -y -v -X -f fuzix.dsk -g 256 16383 -p platform-dragon-nx32 ; cd - ; }
 
+# 6. Write disk image to a partition on the SD card
+
+# 7. Write kernel to sector 64 on the SD card (for SDBOOT)
