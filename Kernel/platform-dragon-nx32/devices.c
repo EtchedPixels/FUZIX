@@ -81,8 +81,8 @@ void device_init(void)
     if (i >= 0) {
       ide_base = cartaddr[i] ? cartaddr[i]: ide_base;
       ide_slot = i;
+      devide_init();
     }
-    devide_init();
 #endif
 #ifdef CONFIG_SCSI
     i = cart_find(CART_TC3);
