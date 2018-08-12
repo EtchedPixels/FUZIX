@@ -9,6 +9,14 @@ extern uint8_t trs80_mapper;
 #define MAP_SUPERMEM	0	/* Alpha Supermem and compatibles */
 #define MAP_SELECTOR	1	/* Selector */
 
+extern uint8_t trs80_udg;	/* User defined graphics module */
+#define UDG_NONE	0
+#define UDG_PCG80	1	/* Orcim PCG80 */
+#define UDG_80GFX	2	/* Programma 80-Grafix */
+#define UDG_MICROFIRMA	3	/* External box option for UK TRS80 Model 1 */
+
+extern uint8_t video_lower;	/* Lowercase available */
+
 /*
  *	Differences versus model 1
  *

@@ -6,6 +6,7 @@
 #include "devfd3.h"
 #include "devgfx.h"
 #include <devstringy.h>
+#include <devide.h>
 #include "trs80.h"
 
 void device_init(void)
@@ -65,9 +66,32 @@ void pagemap_init(void)
   pagemap_init_supermem();
 }
 
-uint8_t platform_param(char *p)
+/* string.c
+ * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
+ * This file is part of the Linux-8086 C library and is distributed
+ * under the GNU Library General Public License.
+ */
+static int strcmp(const char *d, const char *s)
 {
-    used(p);
-    return 0;
+	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
+
+	while ((c1 = *s1++) == (c2 = *s2++) && c1);
+	return c1 - c2;
 }
 
+uint8_t platform_param(char *p)
+{
+    if (strcmp(p, "pcg80") == 0) {
+     trs80_udg = UDG_PCG80;
+     return 1;
+    }
+    if (strcmp(p, "80gfx") == 0) {
+     trs80_udg = UDG_80GFX;
+     return 1;
+    }
+    if (strcmp(p, "micro") == 0) {
+     trs80_udg = UDG_MICROFIRMA;
+     return 1;
+    }
+    return 0;
+}

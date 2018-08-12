@@ -7,6 +7,7 @@
 
 #include <kernel.h>
 #include <kdata.h>
+#include <tty.h>
 #include <vt.h>
 #include <graphics.h>
 #include <devgfx.h>
@@ -21,6 +22,8 @@ __sfr __at 0x83 gfx_ctrl;
 __sfr __at 0xEC le18_data;
 __sfr __at 0xEF le18_ctrl;
 __sfr __at 0xFF ioctrl;
+
+uint8_t trs80_udg;
 
 uint8_t has_hrg1;
 uint8_t has_chroma;	/* and thus 2 joystick ports */
@@ -161,10 +164,15 @@ static struct videomap trsmap[6] = {
 
 static uint8_t displaymap[4] = {0, 0, 0, 0};
 
+static int8_t udg_ioctl(uarg_t arg, char *ptr);
+
 /* TODO: Arbitrate graphics between tty 1 and tty 2 */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t m;
+
+  if (minor <= 2 && (arg == VTFONTINFO || arg == VTSETFONT || arg == VTSETUDG))
+    return udg_ioctl(arg, ptr);
 
   if (minor > 2 || (arg >> 8 != 0x03))
     return vt_ioctl(minor, arg, ptr);
@@ -252,4 +260,144 @@ void gfx_init(void)
     trsdisplay[4].mode = max_mode;
     has_chroma = 1;
   }
+}
+
+/*
+ *	UDG drivers
+ *
+ *	We don't currently address UDG fitted without lower case. That gets
+ *	deeply weird because you get disjoint ranges with one bit magically
+ *	invented by logic. For the UDG only ones we just halve the range, but
+ *	for the PCG80 what about full font ?
+ *
+ *	(The Tandy (Microfirma) one requires lowercase is fitted according
+ *	to the manual)
+ *
+ *	One other corner case to consider is that if you have no lower case
+ *	we ought to requisition the UDG and load a font into it then use
+ *	128-159 for lower case.
+ */
+
+static struct fontinfo fonti[4] = {
+  { 0, },
+  { 0, 255, 0, 255, FONT_INFO_6X12P16 },
+  { 128, 191, 128, 191, FONT_INFO_6X12P16 },
+  { 128, 255, 128, 255, FONT_INFO_6X12P16 }
+};
+
+__sfr __at 130 trshg_nowrite;
+__sfr __at 140 trshg_write;
+__sfr __at 150 trshg_gfxoff;
+__sfr __at 155 trshg_gfxon;
+__sfr __at 0xFE pcg80;
+__sfr __at 0xFF p80gfx;
+
+static uint8_t old_pcg80;
+static uint8_t old_p80gfx;
+static uint8_t udgflag;		/* So we know what fonts are loaded */
+#define SOFTFONT_UDG	1
+#define SOFTFONT_ALL	2
+
+static void load_char_pcg80(uint8_t ch, uint8_t *cdata)
+{
+  uint8_t bank = ch >> 6;
+  uint8_t *addr = (uint8_t *)0x3C00 + ((ch & 0x3F) << 4);
+  uint8_t i;
+
+  pcg80 = old_pcg80 | 0x60 | bank;	/* Programming mode on */
+
+  for (i = 0; i < 16; i++)
+    *addr++ = *cdata++ << 1 | 0x80;
+  pcg80 = old_pcg80;
+}
+
+static void load_char_80gfx(uint8_t ch, uint8_t *cdata)
+{
+  uint8_t *addr = (uint8_t *)0x3C00 + ((ch & 0x3F) << 4);
+  uint8_t i;
+
+  p80gfx = old_p80gfx | 0x60;
+  for (i = 0; i < 16; i++)
+    *addr++ = *cdata++ << 1 | 0x80;
+  p80gfx = old_p80gfx;
+}
+
+static void load_char_trs(uint8_t ch, uint8_t *cdata)
+{
+  uint8_t *addr = (uint8_t *)0x3C00 + ((ch & 0x3F) << 4);
+  uint8_t i;
+
+  trshg_write = 1;
+  for (i = 0; i < 16; i++)
+    *addr++ = *cdata++ << 1 | 0x80;
+  trshg_nowrite = 1;
+}
+
+void (*load_char[4])(uint8_t, uint8_t *) = {
+  NULL,
+  load_char_pcg80,
+  load_char_80gfx,
+  load_char_trs,
+};
+
+static void udg_config(void)
+{
+  switch(trs80_udg) {
+  case UDG_PCG80:
+    if (udgflag & SOFTFONT_UDG)
+      old_pcg80 |= 0x80;	/* 128-255 soft font */
+    if (udgflag & SOFTFONT_ALL)
+      old_pcg80 |= 0x88;
+    pcg80 = old_pcg80 | 0x20;
+    break;
+  case UDG_80GFX:
+    if (udgflag & SOFTFONT_UDG)
+      old_p80gfx |= 0x80;
+    p80gfx = old_p80gfx | 0x20;
+    break;
+  case UDG_MICROFIRMA:
+    if (udgflag & SOFTFONT_UDG)
+      trshg_gfxon = 1;
+    break;
+  }
+}
+
+static int8_t udg_ioctl(uarg_t arg, char *ptr)
+{
+  uint8_t base = fonti[trs80_udg].udg_low;
+  uint8_t limit = fonti[trs80_udg].udg_high;
+  int i;
+
+  /* Not supported */
+  if (trs80_udg == UDG_NONE) {
+    udata.u_error = EOPNOTSUPP;
+    return -1;
+  }
+  /* No lower case available */
+  if (!video_lower)
+    limit = 191;
+
+  switch(arg) {
+  case VTFONTINFO:
+    return uput(fonti + trs80_udg, ptr, sizeof(struct fontinfo));
+  case VTSETFONT:
+    base = fonti[trs80_udg].font_low;
+    limit = fonti[trs80_udg].font_high;
+    /* Fall through */
+  case VTSETUDG:
+    for (i = base; i <= limit; i++) {
+      uint8_t c[16];
+      if (uget(c, ptr, 16) == -1)
+        return -1;
+      ptr += 16;
+      load_char[trs80_udg](i, c);
+    }
+    if (arg == VTSETUDG)
+      udgflag |= SOFTFONT_UDG;
+    else
+      udgflag |= SOFTFONT_ALL;
+    udg_config();
+    return 0;
+  }
+  return -1;
 }
