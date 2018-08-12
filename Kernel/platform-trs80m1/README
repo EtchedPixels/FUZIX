@@ -19,6 +19,9 @@ This port supports the following configurations currently
 		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
 		Lo-tech or similar IDE CF at 0x40
+		Tandy HRG (user defined graphics 26-9800) [boot opt micro]
+		Orcim PCG80 [boot opt pcg80]
+		Progamma  Intl. 80 Grafix [boot opt 80gfx]
 
 	In Progress:
 		Exatron stringy
@@ -29,7 +32,7 @@ This port supports the following configurations currently
 		Support for the FreHD extra features (clock, volume switches)
 
 	Unsupported:
-		M1SE/M1RE (except as far as compatibility features go)
+		M1SE/M1RE/FreHD (except as far as compatibility features go)
 
 	TRS80 model III with Alpha SuperMem (or compatibles)
 		(256K+ recommended or a hard disk for swap)
@@ -48,7 +51,6 @@ This port supports the following configurations currently
 
 	Planned:
 		Orchestra 90 sound card
-		Lo-tech and similar IDE adapters at 0x40
 		Support for the FreHD extra features (clock, volume switches)
 
 	Unsupported:
@@ -63,6 +65,7 @@ This port supports the following configurations currently
 	Options:
 		Floppy disk (somewhat basic support, no format tool yet)
 		Hard Disk (Tandy compatible)
+		IDE CF at 0x40
 
 	Planned:
 		Extra keys (F1 and F2)
@@ -95,7 +98,8 @@ This port supports the following configurations currently
 		Lowe Electronics LE18 graphics adapter
 		Tandy style RTC at 0xB0 (only usable for time locking)
 		Anything on the model I list that works with a Genie/System-80
-		to TRS80 expansion convertor (*)
+		to TRS80 expansion convertor
+		IDE CF at 0x40
 
 	Planned:
 		Lowe Electronics FRED
@@ -107,9 +111,6 @@ This port supports the following configurations currently
 		memory model.
 		Any non memory S100 cards that don't match the TRS80/VG
 		devices (ie the X-4010 S100 printer card should work)
-
-	(*) Right now printer and serial ports don't because we assume the
-	different VideoGenie addressing for them...
 
 	Notes:
 	(In theory having no RAM but something like a BG 256S 256K RAM S100
@@ -126,16 +127,15 @@ This port supports the following configurations currently
 
 
 Generally Not Supported:
-	Lubomir Soft Banker	-	only provides 96K RAM (not enough
-					for this build)
+	EG 64.3/Lubomir Soft Banker	-	See the genie-eg64.3 port
 	Various 64K only CP/M adapters
 	(Unless someone knows one that stacks with the supermem!)
 
-Would Be Nice:
+Would Be Nice To Do Better
 	80-Grafix		-	need docs, example apps to debug
 					an emulator
 	TRS80 Model 1 Hires	-	The UK 'hires' actually a font
-					adapter.
+					adapter also needs emulation support
 
 Emulator Bugs:
 	Repeating instructions like LDIR appear to be misemulated. LDIR
@@ -155,21 +155,19 @@ User Space:
 	space for this platform.
 
 To Do:
-
 	Only hide/show cursor if curtty == inputty
 	Reclaim 768 bytes by moving irq stack and udata down to 4100
 	Faster user copiers once it works
 	Fast block copy routines for uget/uput
 	Hint based pre-fetching uget
-	Consider moving the tty buffers into banked space (INDIRECT_QUEUE)
 	When we have > 512K or so RAM use the rest as a ramdisc
 	Orchestra
 	M3SE video at least
 
 Memory Map:
 	0000-3FFF	Various fixed model 1 functionality
-	4000-41FF	Kept clear for ROM bits
-	4200-7FFF	Kernel data, common etc
+	4000-40FF	Kept clear for ROM bits
+	4100-7FFF	Kernel data, common etc
 	8000-FFFF	Bank0: kernel code
 	8000-FFFF	Bank1: kernel code
 
@@ -183,6 +181,12 @@ Memory Map:
 
 	The kernel doesn't actually need 80K but it also doesn't fit in
 	the available 48K unbanked either (although a minimalish setup might)
+
+	Note that the current build is an insanely featured one. Turning off
+	the NET and IDE support will shrink it loads and give more buffers.
+
+	Unfortunately right now some core changes are needed to get to the
+	point we can have configurable options done properly.
 
 Setting It Up (current xtrs: https://github.com/TimothyPMann/xtrs with patches)
 
