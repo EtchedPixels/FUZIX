@@ -467,6 +467,9 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	}
 	if (arg >> 8 != 0x03)
 		return vt_ioctl(minor, arg, ptr);
+
+	/* FIXME: limit to console ? */
+
 	switch(arg) {
 	case GFXIOC_GETINFO:
 		return uput(&display[vmode], ptr, sizeof(struct display));
