@@ -120,7 +120,7 @@ static uint8_t sdc_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		nb++;
 	}
 	/*  Huzzah!  success! */
-	return nb << 9;
+	return nb << 8;
 	/* Boo!  failure */
  fail:	sdc_reg_ctl = 0x00;
 	udata.u_error = EIO;

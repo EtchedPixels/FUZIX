@@ -120,8 +120,8 @@ copy_str:
 	bra copy_str
 endstr:	rts
 fail:
-	.ascii "Fail"
+	.ascii "FAIL"
 	.db 0
 wrong:
-	.ascii "Wrong image"
+	.ascii "WRONG IMAGE"
 	.db 0
