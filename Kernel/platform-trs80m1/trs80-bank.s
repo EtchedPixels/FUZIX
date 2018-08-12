@@ -1,5 +1,5 @@
 ;
-;	    TRS 80 banking logic for the selector board
+;	    TRS 80 banking logic for the selector and alpha supermem
 ;
 
             .module trs80bank
