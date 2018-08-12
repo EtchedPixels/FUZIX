@@ -83,11 +83,7 @@ void platform_interrupt(void)
 struct blkbuf bufpool[MAX_BUFS];
 struct blkbuf *bufpool_end = &bufpool[NBUFS];
 
-/*
- *	We can't recover discard space usefully... yet. I have a cunning plan
- *	involving external buffers in the spare bank space 8)
- */
-
+/* Turn DISCARD into space in bank 2 for buffers */
 void platform_discard(void)
 {
         extern uint8_t bufdata_end[];
