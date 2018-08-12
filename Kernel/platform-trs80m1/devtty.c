@@ -208,8 +208,10 @@ void tty_setup(uint8_t minor)
 {
 	uint8_t baud;
 	uint8_t ctrl = 3;		/* DTR|RTS */
-
 	struct tty *t = ttydata + minor;
+
+	if (minor < 3)
+		return;
 
 	if (minor != 3 || trs80_model == LNW80) {
 		baud = ttydata[3].termios.c_cflag & CBAUD;
@@ -222,16 +224,18 @@ void tty_setup(uint8_t minor)
 
 		tr1865_baud = baud | (baud << 4);
 
-		if (t->termios.c_cflag & PARENB) {
-			if (t->termios.c_cflag & PARODD)
-				ctrl |= 0x80;
-		} else
-			ctrl |= 0x8;	/* No parity */
-		ctrl |= trssize[(t->termios.c_cflag & CSIZE) >> 4];
 	}
+	if (t->termios.c_cflag & PARENB) {
+		if (t->termios.c_cflag & PARODD)
+			ctrl |= 0x80;
+	} else
+		ctrl |= 0x8;	/* No parity */
+	ctrl |= trssize[(t->termios.c_cflag & CSIZE) >> 4];
 
 	if (t->termios.c_cflag & CRTSCTS)
 		trs_flow |= (1 << minor);
+	else
+		trs_flow &- ~(1 << minor);
 	if (minor == 3) {
 		tr1865_ctrl_save = ctrl;
 		tr1865_ctrl = ctrl;
@@ -265,9 +269,9 @@ int trstty_close(uint8_t minor)
 
 int tty_carrier(uint8_t minor)
 {
-	if (minor != 3)
+	if (minor < 3)
 		return 1;
-	if (trs80_model != VIDEOGENIE) {
+	if (minor == 3) {
 		if (tr1865_ctrl & 0x80)
 			return 1;
 	} else if (vg_tr1865_ctrd & 0x10)
