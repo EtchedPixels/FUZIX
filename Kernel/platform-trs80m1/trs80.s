@@ -125,9 +125,6 @@ not_vg:
 	    call _rom_vectors
             ret
 
-	    .area _DATA
-	    .byte 0x01		; Default model is TRS80 model 1
-
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
