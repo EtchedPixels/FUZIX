@@ -6,7 +6,6 @@
 #include <devhd.h>
 #include <devsys.h>
 #include <devlpr.h>
-#include <devdw.h>
 #include <vt.h>
 #include <devtty.h>
 #include <devgfx.h>
