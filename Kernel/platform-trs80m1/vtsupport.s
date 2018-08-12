@@ -9,7 +9,7 @@
 		.globl _vtswap
 		.globl vtbufinit
 		.globl _vtbase
-
+		.globl _video_lower
 		.globl _curtty
 
 		.globl _cursor_off
@@ -31,7 +31,7 @@ _vtbackbuf:
 _vtbase:
 		.dw	0x3C00
 		.dw	_vtbackbuf
-video_lower:
+_video_lower:
 		.db	1	; Assume we have lower case
 
 		.area _CODE2
@@ -61,7 +61,7 @@ vtbufinit:
 		cp (hl)
 		jr z, have_lower
 		xor a
-		ld (video_lower),a
+		ld (_video_lower),a
 have_lower:
 		ld (hl),#32
 		ld hl,#_vtbackbuf
@@ -137,7 +137,7 @@ _plot_char:
 		push hl
 		push ix
 		call addr
-		ld a,(video_lower)	; hot path, maybe we should runtime
+		ld a,(_video_lower)	; hot path, maybe we should runtime
 		or a			; patch
 		jr nz, plot_lower
 		;
