@@ -181,6 +181,11 @@ int main(int argc, char *argv[])
 		   will instead be _HEAP */
 		end = s__HEAP;
 	}
+	if (end < s__DATA) {
+		/* Image with data highest */
+		end  = s__DATA;
+		pack_discard = 0;
+	}
 
 	if (s__CODE2 < 0x10000) {
 		/* Move the initialized data into the right spot rather than sdcc's
