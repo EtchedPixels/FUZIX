@@ -152,7 +152,9 @@ _dofork:
 
 	; Parent state built and in u_data
 
+	push ix
 	call copy_process
+	pop ix
 
 	; Low page is undefined at this point which is ok as we are
 	; about to change it again
@@ -209,10 +211,12 @@ _dofork:
 ;	exx
 ;	ld a,#kernel
 ;	out (whatever),a
-;	ret
+;	jp (ix)
 ;
 ;	There have to be two of these - one in high stubs one in low because
 ;	the high banks will both be mapped so the low one isn't available
+;
+;	We also have no sane stack for these so we use ix as the return.
 ;
 copy_process:
 	ld de,#P_TAB__P_PAGE2_OFFSET
@@ -220,13 +224,17 @@ copy_process:
 	ld a,(U_DATA__U_PAGE)
 	call map_page_low
 	call setup_platform_copier
-	call _platform_copier_l
+	ld ix,#cp1ret
+	jp _platform_copier_l
+cp1ret:
 	inc hl
 	inc hl
 	ld a,(U_DATA__U_PAGE2)
 	call map_page_low
 	call setup_platform_copier
-	call _platform_copier_h
+	ld ix,#cp2ret
+	jp _platform_copier_h
+cp2ret:
 	ret
 
 setup_platform_copier:

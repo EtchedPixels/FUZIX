@@ -239,10 +239,9 @@ _platform_copier_l:		; Must be low
 	    and #0x60		; preserve the colour bits
 	    or #KERNEL_HIGH
 	    out (251),a
-	    ret
+	    jp (ix)
 syscall_stash:
 	    .byte 0		; must be low
-	    nop
 rst18:
 _platform_doexec:
 	    out (251),a		; caller needs to handle CLUT bits
@@ -302,7 +301,7 @@ _platform_copier_h:
 	    and #0x60
 	    or #KERNEL_HIGH
 	    out (251),a
-	    ret
+	    jp (ix)
 interrupt_high:
 	    push af
 	    push de
