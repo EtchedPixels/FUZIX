@@ -76,7 +76,7 @@
 
 #define DW_VSER_NUM 1     /* No of Virtual Serial Ports */
 #define DW_VWIN_NUM 1     /* No of Virtual Window Ports */
-#define DW_MIN_OFF  5     /* Minor number offset */
+#define DW_MIN_OFF  6     /* Minor number offset = first DW ttyX */
 
 /* Remember to update platform-dragon-nx32/kernel.defs to match */
 
