@@ -1,7 +1,5 @@
 ;
-;	Boot block, loaded at 0x4000 in the top bank that is free (varies)
-;
-;	Banks and SP we need to double check are ROM0/1/2/3 and valid
+;	Boot block, loaded at 0x8000 in the top bank that is free (varies)
 ;
 ;	The boot block is trivial but it gets a bit fun once we've loaded
 ;	our 14 tracks
@@ -20,10 +18,10 @@
 ;	(or maybe it'll be saner to use 4/5 for kernel 2/3 video..)
 ;
 	.area BOOT(ABS)
-	.org 0x4000
+	.org 0x0000
 
 HIMEM	.equ	251
-
+LOMEM	.equ	250
 STATUS	.equ	224
 CMD	.equ	224
 TRACK	.equ	225
@@ -33,9 +31,18 @@ DATA	.equ	227
 CMD_READ .equ	0x80
 CMD_STEPIN .equ 0x58
 
-	.db 0,0,0,0,0,0,0,0	; need to work out what goes here
+	.db 0,0,0,0,0,0,0,0,0,0	; need to work out what goes here
 boot:
 	di
+	; Move ourself from 0x8000 to 0x0000
+	in a,(HIMEM)
+	and #0x1F
+	or #0x20
+	out (LOMEM),a
+	; Now move to the low mem copy
+	jp go
+go:
+	ld sp,#go
 	ld de,#0x0401		; track 4 sector 2 (we are sector 1)
 	ld a,e			; Start in bank 2
 	ld hl,#0x8000		; Which we map high
@@ -91,13 +98,13 @@ wait:	in a,(STATUS)		; Wait for DRQ
 	jp z, 0x8000
 	ld a,#CMD_STEPIN
 	out (CMD),a
-nap2:	ld b,#20
-	djnz nap2
+	ld b,#20
+nap2:	djnz nap2
 wait2:	in a,(STATUS)
 	bit 0,a
 	jr nz,wait2
 	jr next_sec
 
-	.org 0x4100
+	.org 0x0100
 	.ascii 'BOO'
 	.byte 'T'+0x80
