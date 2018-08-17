@@ -29,7 +29,6 @@ mm.rel
 swap.rel
 bank32k.rel
 vt.rel
-font8x8_exp2.rel
 devsys.rel
 platform-sam/atom.rel
 platform-sam/blkdev.rel
