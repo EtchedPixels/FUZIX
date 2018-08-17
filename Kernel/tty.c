@@ -512,12 +512,14 @@ uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 				udata.u_error = EINTR;
 				return 1;
 			}
-			if (t == TTY_READY_LATER && flag) {
-				udata.u_error = EAGAIN;
-				return 1;
-			}
 			if (t != TTY_READY_SOON || need_reschedule()){
-				irqflags_t irq = di();
+				irqflags_t irq;
+
+				if (flag) {
+					udata.u_error = EAGAIN;
+					return 1;
+				}
+				irq = di();
 				tty_sleeping(minor);
 				psleep(&ttydata[minor]);
 				irqrestore(irq);
