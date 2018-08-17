@@ -41,12 +41,22 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:	boot setup
+	# Make a blank floppy
+	dd if=/dev/zero of=fuzix.raw bs=512 count=1600
+	# Boot block at track 4 sector 1
+	dd if=boot.bin of=fuzix.raw bs=512 seek=40 count=1 conv=notrunc
+	# Kernel from track 4 sector 2
+	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=41 conv=notrunc
+	# Font and setup from 64K further on
+	dd if=setup.bin of=fuzix.raw bs=512 seek=169 conv=notrunc
+	# Now shuffle it into a .mgt file
+	../tools/raw2mgt fuzix.raw fuzix.mgt
 
 boot:
 	sdasz80 -o boot.s
 	sdldz80 -i boot.rel
-	# 512 bytes at 4K
-	makebin -s 16896 -p boot.ihx > boot.bin
+	# 512 bytes at 0
+	makebin -s 512 -p boot.ihx > boot.bin
 
 setup:
 	sdasz80 -o setup.s
