@@ -41,11 +41,12 @@ int main(int argc, char *argv[])
     puts("#include <config.h>\n#include <kernel.h>\n");
     puts("#ifdef CONFIG_FONT_8X8_EXP2\n");
     puts("/* Automatically generated do not edit */\n");
-    printf("const uint16_t fontdata_8x8_exp2[%d] = {\n", FONTDATAMAX);
+    printf("const uint8_t fontdata_8x8_exp2[%d] = {\n", FONTDATAMAX);
     for (i = 0; i < FONTDATAMAX; i++) {
+        uint16_t w = widen(*p);
         if (!(i & 7))
             printf("\t/* Character %u */\n", i >> 3);
-        printf("\t0x%04X,\t/* %s */\n", widen(*p), boolstr(*p));
+        printf("\t0x%02X,0x%02X,\t/* %s */\n", w >> 8, w & 0xFF, boolstr(*p));
         if ((i & 7) == 7)
             putchar('\n');
         p++;
