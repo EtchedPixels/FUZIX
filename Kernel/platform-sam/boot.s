@@ -43,7 +43,7 @@ boot:
 	jp go
 go:
 	ld sp,#go
-	ld de,#0x0401		; track 4 sector 2 (we are sector 1)
+	ld de,#0x0402		; track 4 sector 2 (we are sector 1)
 	ld a,e			; Start in bank 2
 	ld hl,#0x8000		; Which we map high
 	out (HIMEM),a
@@ -59,7 +59,7 @@ next_sec:
 	ex af,af'
 still_good:
 	ld a,e			; update the sector register
-	ld (SECTOR),a
+	out (SECTOR),a
 dread:	ld a,#CMD_READ		; Ask for data from the FDC
 	out (CMD),a
 	ld b,#20		; Wait for FDC

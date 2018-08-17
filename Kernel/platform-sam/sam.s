@@ -281,9 +281,8 @@ rst38:	    jp interrupt_high		; Interrupt handling stub
 	    nop
 	    nop
 	    nop
-	    ; 40
-	    .ds 0x26
-nmi_handler:		; FIXME: check ends up at 0066
+	    .ds 0x27
+nmi_handler:		; Should be at 0x66
 	    retn
 
 	    .area _PAGEH

@@ -45,10 +45,12 @@ image:	boot setup
 	dd if=/dev/zero of=fuzix.raw bs=512 count=1600
 	# Boot block at track 4 sector 1
 	dd if=boot.bin of=fuzix.raw bs=512 seek=40 count=1 conv=notrunc
-	# Kernel from track 4 sector 2
-	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=41 conv=notrunc
+	# Kernel from track 4 sector 2 highest 32K first
+	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=41 skip=64 count=64 conv=notrunc
+	# Low 32K next
+	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=105 count=64 conv=notrunc
 	# Font and setup from 64K further on
-	dd if=setup.bin of=fuzix.raw bs=512 seek=169 conv=notrunc
+	dd if=setup.bin of=fuzix.raw bs=512 seek=169 skip=64 conv=notrunc
 	# Now shuffle it into a .mgt file
 	../tools/raw2mgt fuzix.raw fuzix.mgt
 

@@ -44,8 +44,13 @@
 
 ;
 ;	Once the loader completes it jumps here
+;	Our low bank is set, our high bank is still setup
 ;
 start:
+		; Map the kernel high bank
+		ld a,#4
+		out (251),a
+l1:		jp l1
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
 		ld hl, #s__DATA

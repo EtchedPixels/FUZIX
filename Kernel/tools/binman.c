@@ -10,7 +10,7 @@ static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, s__VIDEO, l__INITIALIZED,
     l__GSFINAL, l__GSINIT, l__COMMONMEM, s__FONT, l__FONT, s__DISCARD,
     l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST,
-    s__HEAP, l__HEAP;
+    s__HEAP, l__HEAP, s__PAGE0 = 0xFFFF;
 
 
 static void ProcessMap(FILE * fp)
@@ -73,6 +73,8 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &s__HEAP);
 		if (strcmp(p2, "l__HEAP") == 0)
 			sscanf(p1, "%x", &l__HEAP);
+		if (strcmp(p2, "s__PAGE0") == 0)
+			sscanf(p1, "%x", &s__PAGE0);
 	}
 }
 
@@ -152,6 +154,9 @@ int main(int argc, char *argv[])
 
 	/* Our standard layout begins with the code */
 	start = s__CODE;
+	/* But for some cases we have a 0 page we need to keep */
+	if (s__PAGE0 != 0xFFFF)
+		start = 0;
 
 	/* TODO: Support a proper discardable high discard in other mappings */
 
