@@ -45,10 +45,11 @@ bootstrap:
 	; Put the video in the right place and set the mode
 	ld a,#4 + MODE3
 	out (252),a
-	xor a
 	; Map the kernel low
+	ld a,#0x20		; ROM off bank 0/1
 	out (250),a
 	; Black border to hint where we got to
+	xor a
 	out (254),a
 	jp 0x100
 ;
