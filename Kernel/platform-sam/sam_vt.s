@@ -28,11 +28,13 @@
 	.globl _vtattr_notify
 	.globl _vtattr_cap
 
+	.globl _vtwipe
+
 	.globl map_video
 	.globl unmap_video
 	.globl ___hard_di
 
-_fontdata_8x8_exp2	.equ	0xE000	; in video bank
+_fontdata_8x8_exp2	.equ	0x6000	; in video bank
 
 VIDEO_PAGE	.equ	4
 
@@ -43,8 +45,11 @@ base_addr:
 	ld a,d		; save X
 	ld d,e		; 256 * Y
 	ld e,#0
-	srl d
-	srl e		; this is DE = E * 128
+	sla e
+	sla d		; this is DE = E * 512
+	sla e
+	sla d		; this is DE = E * 1024
+
 	; A is a char 0-63 - need a byte 0-126
 	; Aligned so no carry issues
 	add a
@@ -103,9 +108,8 @@ _plot_char:
 	ld bc,#_fontdata_8x8_exp2	; plus font base
 	add hl,bc
 	call map_video
-	ld b,#20		; it gets decremented by 4 by the ldi's
-				; and once by djnz, and we need to do it
-				; four times
+	ld bc,#0x04FF		; it gets decremented by DJNZ while the FF
+				; ensures the ldi never decrements B
 plot_loop:
 	ldi			; copy expanded char
 	ldi
@@ -177,6 +181,15 @@ wipe_rowpair:
 	jr nz, wipe_line
 	jp pop_unmap
 
+_vtwipe:
+	call map_video
+	ld hl,#0
+	ld de,#1
+	ld bc,#24575
+	ld (hl),#0
+	ldir
+	call unmap_video
+	ret
 ;
 ;	TODO
 ;

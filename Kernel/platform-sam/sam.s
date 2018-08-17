@@ -36,15 +36,18 @@
             .globl outcharhex
 	    .globl _keyin
 
+	    .globl _vtwipe
+	    .globl _vtinit
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
             .include "../kernel.def"
 
-KERNEL_HIGH	.equ	0
-KERNEL_LOW	.equ	2		; 0/1 high 2/3 low
-VIDEO_LOW	.equ	4
+KERNEL_LOW	.equ	0		; 0/1 low 2/3 high
+KERNEL_HIGH	.equ	2
+VIDEO_LOW	.equ	4		; 4/5 video and font
 
 ; -----------------------------------------------------------------------------
 ;
@@ -71,8 +74,8 @@ _platform_reboot:
 	    .byte 0x00		; Black
 	    .byte 0x40		; Green
 	    .byte 0x20		; Red
-	    .byte 0x70		; White
 clutmap:
+	    .byte 0x70		; White
 
 init_early:
 	    ld a, #0x44		; Kernel is in 0/1 2/3, so video goes above it
@@ -80,9 +83,7 @@ init_early:
 	    out (252), a
 	    ld a, #0x10		; black border, mic 1
 	    out (254), a
-	    in a, (251)
-	    and #0x9F		; low palette colours
-	    ld hl, #clutmap
+	    ld hl, #clutmap	; set low palette colours
 	    ld bc, #4*256 + 248	; 4 colours, port 248
 	    otdr
             ret
@@ -94,16 +95,13 @@ init_hardware:
             ld hl, #(256-64)		; 64K for kernel
             ld (_procmem), hl
 
-            ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
-            ld hl, #0
-            push hl
-            call _program_vectors
-            pop hl
-
             im 1 ; set CPU interrupt mode
 
 	    ; interrupt mask
-	    ; 60Hz timer on
+	    ; 50Hz timer on
+
+	    call _vtwipe
+	    call _vtinit
 
             ret
 

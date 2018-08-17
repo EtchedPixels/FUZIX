@@ -47,21 +47,12 @@
 ;	Our low bank is set, our high bank is still setup
 ;
 start:
-		; Map the kernel high bank
-		ld a,#4
+		; Map the kernel high bank (2/3)
+		ld a,#2
 		out (251),a
 l1:		jp l1
 		ld sp, #kstack_top
-		; move the common memory where it belongs    
-		ld hl, #s__DATA
-		ld de, #s__COMMONMEM
-		ld bc, #l__COMMONMEM
-		ldir
-		; then the discard
-		ld de, #s__DISCARD
-		ld bc, #l__DISCARD
-		ldir
-		; then zero the data area
+		; Zero the data area (shouldn't be needed)
 		ld hl, #s__DATA
 		ld de, #s__DATA + 1
 		ld bc, #l__DATA - 1
