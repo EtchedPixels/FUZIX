@@ -84,9 +84,10 @@ int main(int argc, char *argv[])
 	FILE *map, *bin;
 	int tail = 0;
 	int start;
-	unsigned int end;
+	unsigned int end = 0;
 	int reloc = 0;
 	int pack_discard = 0;
+	int no_pack = 0;
 	int base;
 
 	if (argc != 4) {
@@ -154,9 +155,16 @@ int main(int argc, char *argv[])
 
 	/* Our standard layout begins with the code */
 	start = s__CODE;
-	/* But for some cases we have a 0 page we need to keep */
-	if (s__PAGE0 != 0xFFFF)
+
+	/* Special case for 32K/32K layouts. We have a high and a low page
+	   and we need to pack the entire binary space. We can revist this
+	   later but for now it's good enough */
+	if (s__PAGE0 != 0xFFFF) {
+		pack_discard = 0;
 		start = 0;
+		end = 0xFFFF;
+		no_pack = 1;
+	}
 
 	/* TODO: Support a proper discardable high discard in other mappings */
 
@@ -180,7 +188,8 @@ int main(int argc, char *argv[])
 	        pack_discard = 1;
         }
 
-	end = s__INITIALIZER;
+	if (end < s__INITIALIZER)
+		end = s__INITIALIZER;
 	if (end < start) {
 		/* We are dealing with an unpacked binary where the end
 		   will instead be _HEAP */
@@ -202,7 +211,7 @@ int main(int argc, char *argv[])
 				argv[1]);
 		/* Pack any common memory on the end of the main code/memory if its
 		   relocated */
-		if (!s__DISCARD || pack_discard) {
+		if (!no_pack && (!s__DISCARD || pack_discard)) {
 		        base = s__DATA;
 			tail = l__COMMONMEM;
 			memcpy(out + base, buf + s__COMMONMEM,
@@ -259,7 +268,7 @@ int main(int argc, char *argv[])
 		        end = s__COMMONMEM + l__COMMONMEM;
 
                 /* Packed image with common over data */
-		if (!s__DISCARD || pack_discard) {
+		if (!no_pack && (!s__DISCARD || pack_discard)) {
 			end = base;
 			printf("\nPacked image %d bytes, for RAM target\n",
 			       end);
