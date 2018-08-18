@@ -49,34 +49,39 @@ _devide_read_data:
 ;	ld a, (blk_op + BLKPARAM_SWAP_PAGE)
 ;	call map_for_swap
 atomlite_read:
-	call atomlite_reader
+	call atomlite_reader_fast
 	jp map_kernel_low
 atomlite_read_user:
+	push ix
 	; HL is the user buffer, BC length
+	ld ix,#U_DATA__U_PAGE
 	call user_mapping
 	jr z,ide_r2
 	call atomlite_reader
 	exx
 	call user_mapping
 ide_r2:
-	call atomlite_reader	
+	call atomlite_reader
+	pop ix
 	jp map_kernel_low
 
 _devide_write_data:
 	ld a, (_blk_op + BLKPARAM_IS_USER_OFFSET)
 	ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
 	or a
-	jr z, atomlite_read
+	jr z, atomlite_write
 	dec a
-	jr z, atomlite_read_user
+	jr z, atomlite_write_user
 ; SWAP  to enable yet
 ;	ld a, (blk_op + BLKPARAM_SWAP_PAGE)
 ;	call map_for_swap
 atomlite_write:
-	call atomlite_writer
+	call atomlite_writer_fast
 	jp map_kernel_low
 atomlite_write_user:
+	push ix
 	; HL is the user buffer, BC length
+	ld ix,#U_DATA__U_PAGE
 	call user_mapping
 	jr z,ide_w2
 	call atomlite_writer
@@ -84,6 +89,7 @@ atomlite_write_user:
 	call user_mapping
 ide_w2:
 	call atomlite_writer
+	pop ix
 	jp map_kernel_low
 ;
 ;	This needs optimizing to use as we know C = 0 - but think about

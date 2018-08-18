@@ -41,8 +41,9 @@ _platform_switchout:
 	push iy
 	ld (U_DATA__U_SP), sp
 
-	; Map the to
-	ld a,(U_DATA__U_PAGE2)
+	; The U_DATA stash lives in th top of the user process. Map that
+	; low with interrupts off so we can ldir between the two
+	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
 	ld hl,#U_DATA
 	ld de,#U_DATA_STASH-0x8000
@@ -61,7 +62,7 @@ _switchin:
 	pop bc	; return address (we never do)
 	pop de	; new process pointer
 
-	ld hl,#P_TAB__P_PAGE2_OFFSET
+	ld hl,#P_TAB__P_PAGE_OFFSET + 1
 	add hl,de
 	ld a,(hl)	; our high page
 
@@ -98,8 +99,8 @@ skip_copyback:
 	ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 	ld a, P_TAB__P_PAGE_OFFSET(ix)
 	ld (U_DATA__U_PAGE),a
-	ld a, P_TAB__P_PAGE2_OFFSET(ix)
-	ld (U_DATA__U_PAGE2),a
+	ld a, P_TAB__P_PAGE_OFFSET+1(ix)
+	ld (U_DATA__U_PAGE + 1),a
 	ld hl,#0
 	ld (_runticks), hl
 	; Recover IX and IY, return value
@@ -219,7 +220,7 @@ _dofork:
 ;	We also have no sane stack for these so we use ix as the return.
 ;
 copy_process:
-	ld de,#P_TAB__P_PAGE2_OFFSET
+	ld de,#P_TAB__P_PAGE_OFFSET+1
 	add hl,de
 	ld a,(U_DATA__U_PAGE)
 	call map_page_low
@@ -228,8 +229,7 @@ copy_process:
 	jp _platform_copier_l
 cp1ret:
 	inc hl
-	inc hl
-	ld a,(U_DATA__U_PAGE2)
+	ld a,(U_DATA__U_PAGE+1)
 	call map_page_low
 	call setup_platform_copier
 	ld ix,#cp2ret

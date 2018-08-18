@@ -45,7 +45,7 @@
             .include "kernel.def"
             .include "../kernel.def"
 
-KERNEL_LOW	.equ	0		; 0/1 low 2/3 high
+KERNEL_LOW	.equ	0x20		; 0/1 low 2/3 high (ROM off)
 KERNEL_HIGH	.equ	2
 VIDEO_LOW	.equ	4		; 4/5 video and font
 
@@ -92,7 +92,7 @@ init_hardware:
             ; set system RAM size (FIXME - check for 512/1M)
             ld hl, #256
             ld (_ramsize), hl
-            ld hl, #(256-64)		; 64K for kernel
+            ld hl, #(256-96)		; 64K for kernel, 32K for video/font/etc
             ld (_procmem), hl
 
             im 1 ; set CPU interrupt mode
@@ -167,7 +167,6 @@ _program_vectors:
 	    exx
 
 	    ; And then the high stubs from the kernel
-	    inc hl
 	    inc hl
 	    ld a,(hl)
 	    call map_page_low
@@ -247,7 +246,10 @@ _platform_doexec:
 	    ei
 	    jp (hl)
 	    nop
-rst20:	    nop
+	    nop
+	    nop
+	    nop
+rst20:	    ret
 	    nop
 	    nop
 	    nop
@@ -255,9 +257,7 @@ rst20:	    nop
 	    nop
 	    nop
 	    nop
-rst28:	    nop
-	    nop
-	    nop
+rst28:	    ret
 	    nop
 	    nop
 	    nop
@@ -280,7 +280,7 @@ rst38:	    jp interrupt_high		; Interrupt handling stub
 	    nop
 	    nop
 	    nop
-	    .ds 0x27
+	    .ds 0x26
 nmi_handler:		; Should be at 0x66
 	    retn
 

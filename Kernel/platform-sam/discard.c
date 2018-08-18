@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devide.h>
 
 void map_init(void)
 {

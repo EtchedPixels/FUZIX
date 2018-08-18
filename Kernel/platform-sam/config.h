@@ -33,7 +33,7 @@
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
 #define PROGTOP     0xFD00  /* Top of program, base of U_DATA stash */
-#define PROC_SIZE   64 	    /* Memory needed per process */
+#define PROC_SIZE   32 	    /* Mimumum memory needed per process */
 
 #define BOOT_TTY (512 + 1)      /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
