@@ -158,6 +158,8 @@ _program_vectors:
 
 	    exx
 	    ; Copy the stub page into place
+	    ; FIXME: doesn't work because our stubs are at 0000. Maybe put
+	    ; a copy somewhere else ?
             ld hl, #stub_page_1 - 1
             ld de, #0x0000
             ld bc, #0x0100
@@ -174,7 +176,6 @@ _program_vectors:
 	    ld bc,#0x0100
 	    ldir
 
-	    ; FIXME: we need to do the high stubs somewhere too
 	    jp map_kernel_low
 ;
 ; outchar: Wait for UART TX idle, then print the char in A
