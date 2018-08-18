@@ -22,13 +22,16 @@ __sfr __at 249 status;
 
 void platform_interrupt(void)
 {
+	uint8_t r = status;
 #if 0
-	if (status & 1)
+	if (r & 1)
 		line_interrupt();
-	if (status & 2)
+	if (r & 2)
 		mouse_interrupt();
+	if (r & 4)
+		midi_interrupt();
 #endif
-	if (status & 4) {
+	if (r & 8) {
 		timer_interrupt();
 		kbd_interrupt();
 	}
