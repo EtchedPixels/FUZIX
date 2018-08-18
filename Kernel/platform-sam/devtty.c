@@ -62,7 +62,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint8_t shiftmask[9] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 7
+    0x80, 0, 0, 0, 0, 0, 0, 0x40, 0x80,
 };
 
 static void keyproc(void)
@@ -97,27 +97,30 @@ static void keyproc(void)
 	}
 }
 
-static uint8_t keyboard[8][8] = {
-	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
-	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
-	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
-	{'x', 'y', 'z', '[', '\\', ']', '^', '_' },
-	{'0', '1', '2', '3', '4', '5', '6', '7' },
-	{'8', '9', ':', ';', ',', '-', '.', '/' },
-	{13, 12, 3, 0/*up*/, 0/*down*/, 8/* left */, 0/*right*/, ' '},
-	{ 0, 0, 0, 0, 0xF1, 0xF2, 0xF3, 0 }
+static uint8_t keyboard[9][8] = {
+	{'@', 'z', 'x', 'c', 'v', KEY_F1, KEY_F2, KEY_F3 },
+	{'a', 's', 'd', 'f', 'g', KEY_F4, KEY_F5, KEY_F6 },
+	{'q', 'w', 'e', 'r', 't', KEY_F7, KEY_F8, KEY_F9 },
+	{'1', '2', '3', '4', '5', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
+	{'0', '9', '8', '7', '6', 0, 0, KEY_BS },
+	{'p', 'o', 'i', 'u', 'y', 0, 0, KEY_F10 },
+	{KEY_ENTER, 'l', 'k', 'j', 'h', 0, 0, 0 },
+	{' ', 0 /* CTRL */, 'm', 'n', 'b', 0, 0, KEY_INSERT },
+	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
 };
 
-static uint8_t shiftkeyboard[8][10] = {
-	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
-	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
-	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
-	{'X', 'Y', 'Z', '{', '|', '}', '^', '_' },
-	{'0', '!', '"', '#', '$', '%', '&', '\'' },
-	{'(', ')', '*', '+', '<', '=', '>', '?' },
-	{13, 12, 3, 0/*up*/, 0/*down*/, 8/* left */, 0/*right*/, ' '},
-	{ 0, 0, 0, 0, 0xF1, 0xF2, 0xF3, 0 }
+static uint8_t shiftkeyboard[9][8] = {
+	{'@', 'Z', 'X', 'C', 'V', KEY_F1, KEY_F2, KEY_F3 },
+	{'A', 'S', 'D', 'F', 'G', KEY_F4, KEY_F5, KEY_F6 },
+	{'Q', 'W', 'E', 'R', 'T', KEY_F7, KEY_F8, KEY_F9 },
+	{'1', '2', '3', '4', '5', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
+	{'0', '9', '8', '7', '6', 0, 0, KEY_BS },
+	{'P', 'O', 'I', 'U', 'Y', 0, 0, KEY_F10 },
+	{KEY_ENTER, 'L', 'K', 'J', 'H', 0, 0, 0 },
+	{' ', 0 /* CTRL */, 'M', 'N', 'B', 0, 0, KEY_INSERT },
+	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
 };
+
 
 static uint8_t capslock = 0;
 
