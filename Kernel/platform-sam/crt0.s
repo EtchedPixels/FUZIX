@@ -50,7 +50,6 @@ start:
 		; Map the kernel high bank (2/3)
 		ld a,#2
 		out (251),a
-l1:		jp l1
 		ld sp, #kstack_top
 		; Zero the data area (shouldn't be needed)
 		ld hl, #s__DATA
