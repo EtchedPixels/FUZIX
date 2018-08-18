@@ -123,6 +123,15 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			if (psleep_flags_io(&t->flag, flag))
 				return udata.u_done;
 		}
+		/* We could optimize this significantly by 
+		   a) looping here if not sleeping rather than repeating all
+		   the checks except for STOP/DISCARD
+		   b) possibly batching for the case where tty never blocks
+		   if we have a way to report that. We could then batch except
+		   for conversions and also fast path in vt for 'normal char
+		   next char normal'
+		   c) look at hint/batching for ugetc into a local work buffer
+		*/
 		if (!(t->flag & TTYF_DISCARD)) {
 			if (udata.u_sysio)
 				c = *udata.u_base;
