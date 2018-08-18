@@ -345,6 +345,10 @@ int vt_inproc(uint8_t minor, unsigned char c)
 		tty_inproc(minor, 0xC2);
 		return tty_inproc(minor, 0xA5);
 	}
+	if (c == KEY_COPYRIGHT) {
+		tty_inproc(minor,0xC2);
+		return tty_inproc(minor, 0xA9);
+	}
 #endif
 	if (c > 0x9F) {
 		tty_inproc(minor, KEY_ESC);

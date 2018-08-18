@@ -40,6 +40,7 @@
 #define KEY_PAUSE	ESC('p')
 #define KEY_PGDOWN	ESC('>')
 #define KEY_PGUP	ESC('<')
+#define KEY_EDIT	ESC('E')
 
 #define KEY_F1		ESC('1')
 #define KEY_F2		ESC('2')
@@ -62,6 +63,7 @@
 #define KEY_EURO	0x82
 #define KEY_DOT		0x83
 #define KEY_YEN		0x84
+#define KEY_COPYRIGHT	0x85
 
 #define KEY_CAPSLOCK	0x9F	/* Never sent to the user, for internal tables */
 #endif
