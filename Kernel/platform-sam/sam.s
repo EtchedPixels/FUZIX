@@ -21,6 +21,7 @@
 	    .globl _platform_reboot
 	    .globl _platform_copier_l
 	    .globl _platform_copier_h
+	    .globl _keyscan
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -196,21 +197,30 @@ outcw:	    in a,(248)
 ;
 _keyscan:
 	    ld hl, #_keyin
-	    ld b, #0xFE
-keyscl:	    ld c, #249			; need BC out to get address lines
-	    in a, (c)
-	    and #0xE0			; top 3 bits valid
-	    ld d, a
-	    ld c, #254
-	    in a, (c)
-	    and #0x1F			; low 5 bits
-	    or d
+	    ld bc, #0xFEFE		; F9 is keyboard port (254)
+keyscl:
+	    ; Read low 5 bits from port F9, with the mask in the top address
+	    ; lines (contents of B)
+	    in e, (c)
+	    ; Do the same for port FE for the upper lines, load A before
+	    ; so we keep the mask right
+	    ld a,b
+	    in a, (0xF9)
+	    xor e
+	    and #0xE0			; keep top 3 bits
+	    xor e
+	    ; Save our decode
+	    cpl
 	    ld (hl), a
 	    inc hl
-	    scf
 	    rlc b
 	    jr c, keyscl
+	    ; Have we done all the lines (FE FD FB F7 EF DF BF 7F)
+	    ; Now do FF which is the special case as we have no high bits
+	    ; attached to it.
+	    ld b,#0xFF
 	    in a, (c)
+	    cpl
 	    and #0x1F
 	    ld (hl), a
 	    ret
