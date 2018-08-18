@@ -12,10 +12,10 @@ uint16_t widen(uint8_t n)
     uint16_t r = 0;
     /* We don't need performance so do the simple way */
     for (i = 0; i < 8; i++) {
+        r <<= 2;
         if (n & 0x80)
             r |= 0x03;
         n <<= 1;
-        r <<= 2;
     }
     return r;
 }
