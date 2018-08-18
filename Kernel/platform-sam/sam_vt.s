@@ -66,9 +66,9 @@ _scroll_up:
 	call ___hard_di
 	push af
 	call map_video
-	ld hl,#128
+	ld hl,#1024
 	ld de,#0
-	ld bc,#24576-128
+	ld bc,#24576-1024
 ldir_pop:
 	ldir
 pop_unmap:
@@ -82,10 +82,9 @@ _scroll_down:
 	call ___hard_di
 	push af
 	call map_video
-	ld hl,#24576
-	ld de,#24576-128
-	ld b,d
-	ld c,e
+	ld hl,#24575-1024
+	ld de,#24575
+	ld bc,#24576
 	lddr
 	jr pop_unmap
 
@@ -111,6 +110,7 @@ _plot_char:
 	ld bc,#0x04FF		; it gets decremented by DJNZ while the FF
 				; ensures the ldi never decrements B
 plot_loop:
+	; FIXME: this trick doesn't work on the last row - need a better way
 	ldi			; copy expanded char
 	ldi
 	dec e
