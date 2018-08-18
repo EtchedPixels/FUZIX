@@ -25,6 +25,7 @@
 
 
 ;	HL = user address, BC = length, DE = kaddr
+;	IX = page pointer
 ;
 ;	On return
 ;	Z	HL = address to write to, BC = length, DE = kaddr
@@ -55,7 +56,7 @@ user_mapping:
 	;
 one_high_map:
 	res 7,h
-	ld a,2(ix)
+	ld a,1(ix)
 	call map_page_low
 	xor a
 	ret
@@ -114,6 +115,8 @@ uputget:
         ; load DE with destination address (in userspace)
         ld e, 6(ix)
         ld d, 7(ix)
+	; And now load ix with our paging pointer
+	ld ix,#U_DATA__U_PAGE
 	ret
 
 __uget:
@@ -161,11 +164,17 @@ __uzero:
 	ld a,b
 	or c
 	ret z
+	push ix
+	ld ix,#U_DATA__U_PAGE
 	call user_mapping
-	jr z, zeroit
+	jr z, zeroit_1
 	call zeroit
 	exx
+zeroit_1:
 	call user_mapping
+	call zeroit
+	pop ix
+	ret
 zeroit:
 	ld (hl),#0
 	dec bc
@@ -186,7 +195,7 @@ __ugetc:
 	bit 7,(hl)
 	ld a,(U_DATA__U_PAGE)
 	jr z, ugetcl
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 ugetcl:
 	call map_page_low
 	ld l,(hl)
@@ -201,7 +210,7 @@ __ugetw:
 	push bc
 	bit 7,(hl)
 	jr z, ugetwl
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
 	res 7,h
 	ld a,(hl)
@@ -220,7 +229,7 @@ ugetwl:
 	ld l,a
 	ld a,(0)		; Split can only mean one address
 	ld h,a
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 	jp map_kernel_low
 
 __uputc:
@@ -233,7 +242,7 @@ __uputc:
 	bit 7,(hl)
 	ld a,(U_DATA__U_PAGE)
 	jr z, uputcl
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 uputcl:
 	call map_page_low
 	ld (hl),e
@@ -248,7 +257,7 @@ __uputw:
 	push bc
 	bit 7,(hl)
 	jr z, uputwl
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
 	res 7,h
 	ld (hl),e
@@ -263,7 +272,7 @@ uputwl:
 	inc hl
 	bit 7,h
 	jr z, normal_pwl
-	ld a,(U_DATA__U_PAGE + 2)
+	ld a,(U_DATA__U_PAGE + 1)
 	ld a,d
 	ld (0),a		; Split can only mean one address
 	jp map_kernel_low
