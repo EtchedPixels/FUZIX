@@ -61,8 +61,8 @@ uint8_t keyin[9];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
-static uint8_t shiftmask[8] = {
-    0, 0, 0, 0, 0, 0, 0, 7
+static uint8_t shiftmask[9] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 7
 };
 
 static void keyproc(void)
@@ -70,10 +70,9 @@ static void keyproc(void)
 	int i;
 	uint8_t key;
 
-	/* Call asm keyin here FIXME */
-	for (i = 0; i < 8; i++) {
-	        /* Set one of A0 to A7, and read the byte we get back.
-	           Invert that to get a mask of pressed buttons */
+	keyscan();
+
+	for (i = 0; i < 9; i++) {
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
@@ -141,25 +140,6 @@ static void keydecode(void)
 	if (keymap[7] & 4) {	/* control */
 		if (c > 31 && c < 96)
 			c &= 31;
-                if (keymap[7] & 3) {
-                    if (c == '(')
-                        c = '{';
-                    if (c == ')')
-                        c = '}';
-                    if (c == '-')
-                        c = '_';
-                    if (c == '/')
-                        c = '``';
-                    if (c == '<')
-                        c = '^';
-                } else {
-                    if (c == '(')
-                        c = '[';
-                    if (c == ')')
-                        c = ']';
-                    if (c == '-')
-                        c = '|';
-                }
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';

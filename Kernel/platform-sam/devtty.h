@@ -3,5 +3,6 @@
 
 extern void tty_interrupt(void);
 extern void kbd_interrupt(void);
+extern void keyscan(void);
 
 #endif
