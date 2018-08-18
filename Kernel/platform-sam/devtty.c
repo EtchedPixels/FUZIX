@@ -97,27 +97,60 @@ static void keyproc(void)
 	}
 }
 
+/*
+ *	The SAM keyboard is a bit ... strange. We mitigate it a little by
+ *	adding some other mappings in more normal places
+ *
+ *	Keys with no existing shift mapping
+ *	Shifted comma and dot produce <> just like on a real keyboard
+ *	Shifted ;: provide [] and symshifted {} 
+ *
+ *	Extra mappings
+ *	sym-shift 1 produces | rather than ! to fix the missing | symbol
+ *	sym-shift 7 produces the missing back-quote
+ *
+ *	Modified mappings
+ *	As INV has no meaning and the slash is just wrong we generate / for
+ *	INV and \ for shift-INV.
+ *
+ *	Of course if you don't like it you can load a keymap.
+ *
+ *	FIXME: you can't currently load the symshift keymap. The core code
+ *	doesn't understand having a third translation table.
+ */
 static uint8_t keyboard[9][8] = {
-	{'@', 'z', 'x', 'c', 'v', KEY_F1, KEY_F2, KEY_F3 },
+	{ 0 , 'z', 'x', 'c', 'v', KEY_F1, KEY_F2, KEY_F3 },
 	{'a', 's', 'd', 'f', 'g', KEY_F4, KEY_F5, KEY_F6 },
 	{'q', 'w', 'e', 'r', 't', KEY_F7, KEY_F8, KEY_F9 },
 	{'1', '2', '3', '4', '5', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
-	{'0', '9', '8', '7', '6', 0, 0, KEY_BS },
-	{'p', 'o', 'i', 'u', 'y', 0, 0, KEY_F10 },
-	{KEY_ENTER, 'l', 'k', 'j', 'h', 0, 0, 0 },
-	{' ', 0 /* CTRL */, 'm', 'n', 'b', 0, 0, KEY_INSERT },
+	{'0', '9', '8', '7', '6', '-', '+', KEY_BS },
+	{'p', 'o', 'i', 'u', 'y', '=', '"', KEY_F10 },
+	{KEY_ENTER, 'l', 'k', 'j', 'h', ';', ':', KEY_EDIT },
+	{' ', 0 /* SymShift */, 'm', 'n', 'b', ',', '.', '/' },
 	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
 };
 
 static uint8_t shiftkeyboard[9][8] = {
-	{'@', 'Z', 'X', 'C', 'V', KEY_F1, KEY_F2, KEY_F3 },
+	{ 0 , 'Z', 'X', 'C', 'V', KEY_F1, KEY_F2, KEY_F3 },
 	{'A', 'S', 'D', 'F', 'G', KEY_F4, KEY_F5, KEY_F6 },
 	{'Q', 'W', 'E', 'R', 'T', KEY_F7, KEY_F8, KEY_F9 },
-	{'1', '2', '3', '4', '5', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
-	{'0', '9', '8', '7', '6', 0, 0, KEY_BS },
-	{'P', 'O', 'I', 'U', 'Y', 0, 0, KEY_F10 },
-	{KEY_ENTER, 'L', 'K', 'J', 'H', 0, 0, 0 },
-	{' ', 0 /* CTRL */, 'M', 'N', 'B', 0, 0, KEY_INSERT },
+	{'!', '@', '"', '$', '%', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
+	{'~', ')', '(', '\'', '&', '/', '*', KEY_BS },
+	{'P', 'O', 'I', 'U', 'Y', '_', KEY_COPYRIGHT, KEY_F10 },
+	{KEY_ENTER, 'L', 'K', 'J', 'H', '[', ']', KEY_EDIT },
+	{' ', 0 /* SymShift */, 'M', 'N', 'B', '<', '>', '\\' },
+	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
+};
+
+static uint8_t altkeyboard[9][8] = {
+	{ 0, 0, '?', 0, 0, KEY_F1, KEY_F2, KEY_F3 },
+	{ 0, 0, 0, '{', '}', KEY_F4, KEY_F5, KEY_F6 },
+	{'<', '>', 0, '[', ']', KEY_F7, KEY_F8, KEY_F9 },
+	{'|', '@', '"', '$', '%', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
+	{'~', ')', '(', '`', '&', '/', '*', KEY_BS },
+	{0, 0, 0, 0, 0, '_', KEY_COPY, KEY_F10 },
+	{KEY_ENTER, KEY_POUND, 0, 0, '^', '{', '}', KEY_EDIT },
+	{' ', 0 /* SymShift */, 'M', 'N', 'B', '<', '>', '\\' },
 	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
 };
 
@@ -128,26 +161,29 @@ static void keydecode(void)
 {
 	uint8_t c;
 
-	if (keybyte == 7 && keybit == 3) {
-		capslock = 1 - capslock;
-		return;
-	}
-
-	if (keymap[7] & 3)	/* shift */
+	/* We don't do anything clever for both shifts or other weird combos
+	   This computer isn't going to run emacs after all */
+	if (keymap[7] & 0x40)	/* Symbol Shift */
+		c = altkeyboard[keybyte][keybit];
+	else if (keymap[0] & 0x80)
 		c = shiftkeyboard[keybyte][keybit];
 	else
 		c = keyboard[keybyte][keybit];
 
+	if (c == KEY_CAPSLOCK) {
+		capslock = 1 - capslock;
+		return;
+	}
         /* The keyboard lacks some rather important symbols so remap them
            with control */
-	if (keymap[7] & 4) {	/* control */
+	if (keymap[8] & 0x80) {	/* control */
 		if (c > 31 && c < 96)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
 	if (c)
-		tty_inproc(1, c);
+		vt_inproc(1, c);
 }
 
 void kbd_interrupt(void)
