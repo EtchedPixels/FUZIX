@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <devide.h>
+#include <devatom.h>
 
 void map_init(void)
 {
@@ -30,5 +31,6 @@ void device_init(void)
 	/* Time of day clock */
 	inittod();
 #endif
-	devide_init();
+	if (atom_probe())
+		devide_init();
 }

@@ -45,3 +45,8 @@
 
 #define ide_reg_altstatus	(IDE_CS3 | 6)
 #define ide_reg_control		(IDE_CS3 | 7)
+
+#include <devatom.h>
+
+#define IDE_8BIT_ONLY		/* For the Atomlite */
+#define IDE_IS_8BIT(drive)	(atom_type != ATOM_16BIT)

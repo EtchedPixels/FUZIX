@@ -38,6 +38,9 @@ BLKPARAM_SWAP_PAGE		.equ	3
 IDE_DATA_R	.equ 0x00F6
 IDE_DATA_W	.equ 0x00F7
 
+;
+;	TODO: Use atom_ methods once written and we have them workable
+;
 _devide_read_data:
 	ld a, (_blk_op + BLKPARAM_IS_USER_OFFSET)
 	ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
@@ -91,6 +94,79 @@ ide_w2:
 	call atomlite_writer
 	pop ix
 	jp map_kernel_low
+
+;
+;	Routines for the Atom IDE 16bit interface
+;
+;	Not yet finished
+;
+;
+;	The non split case 512 bytes as fast as we can given the interface
+;	design
+;
+atom_reader_fast:
+	; Select data port
+	ld a,#0x30
+	out (0xF5),a
+	ld bc,#0xF7	; 256 words, port F7
+atom_rf_loop:
+	ld a,(0xF6)
+	ini		; Read from F6 for the data high
+	ld (hl),a
+	inc hl
+	jr nz,atom_rf_loop
+	ret
+;
+;	The non split case 512 bytes as fast as we can given the interface
+;	design. For Atomlite we could just inir
+;
+atom_writer_fast:
+	ld a,#0x30
+	out (0xF5),a	; Select data port
+	ld bc,#0xF7	; 256 words port F7
+atomlite_wf_loop:
+	ld a,(hl)
+	inc hl
+	outi
+	out (0xF6),a
+	jr nz, atomlite_wf_loop
+	ret
+
+;
+;	The Atomlite is simpler
+;
+
+;
+;	The Atomlite reader is simple
+;
+atomlite_reader_fast:
+	ld a,#0x30
+	out (0xF5),a
+	ld bc,#0xF7
+	inir
+	inir
+	ret
+atomlite_writer_fast:
+	ld a,#0x30
+	out (0xF5),a
+	ld bc,#0xF7	; 256 bytes port F7
+	otir
+	otir
+	ret
+
+atomlite_writer:
+	ld a,#0x30
+	out (0xF5),a	; Select data port
+	ld d,b
+	ld e,c
+	ld bc,#0xF7
+ide_w_loop:
+	outi
+	dec de
+	ld a,d
+	or e
+	jr nz,ide_w_loop
+	ret
 ;
 ;	This needs optimizing to use as we know C = 0 - but think about
 ;	the hard case with atom and split transfers. Probably need to
@@ -111,54 +187,4 @@ ide_r_loop:
 	ld a,d
 	or e
 	jr nz,ide_r_loop
-	ret
-;
-;	The non split case 512 bytes as fast as we can given the interface
-;	design
-;
-atomlite_reader_fast:
-	; Select data port
-	ld a,#0x30
-	out (0xF5),a
-	ld bc,#0xF7
-	xor a		; 256 words
-atomlite_rf_loop:
-	dec c
-	ini		; Read from F6 for the data high
-	inc c
-	inc b		; so it's one loop of 256 counts
-	ini
-	jr nz, atomlite_rf_loop
-	ret
-;
-;	This needs optimizing to use as we know C = 0
-;
-atomlite_writer:
-	ld a,#0x30
-	out (0xF5),a	; Select data port
-	ld d,b
-	ld e,c
-	ld bc,#0xF7
-ide_w_loop:
-	outi
-	dec de
-	ld a,d
-	or e
-	jr nz,ide_w_loop
-	ret
-;
-;	The non split case 512 bytes as fast as we can given the interface
-;	design. For Atomlite we could just inir
-;
-atomlite_writer_fast:
-	ld a,#0x30
-	out (0xF5),a	; Select data port
-	ld bc,#0xF6
-atomlite_wf_loop:
-	inc c
-	outi		; Write F6
-	dec c
-	inc b		; So it's 256 times count
-	outi		; Then F7
-	jr nz, atomlite_wf_loop
 	ret
