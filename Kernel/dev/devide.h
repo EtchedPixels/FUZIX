@@ -12,7 +12,8 @@
    supports (at most 16) - defaults to 2 if undefined.
 
    Define IDE_8BIT_ONLY if the system implements only half of the 16-bit data
-   bus (eg n8vem-mark4).
+   bus (eg n8vem-mark4). You can define IDE_IS_8BIT(iface) if you have a mix
+   of types. FIXME: we should rename IDE_8BIT_ONLY.
 
    Define IDE_REG_INDIRECT if the IDE registers are not directly addressable on
    your platform. If you do not define IDE_REG_INDIRECT then IDE registers
@@ -99,6 +100,11 @@ void devide_writeb(uint8_t regaddr, uint8_t value);
 
 #ifndef IDE_DRIVE_COUNT
 #define IDE_DRIVE_COUNT 2       /* at most 16 drives without adjusting IDE_DRIVE_NR_MASK */
+#endif
+
+/* Only used when 8BIT_ONLY defined */
+#ifndef IDE_IS_8BIT
+#define IDE_IS_8BIT(x)	(1)
 #endif
 
 /* we use the bits in the driver_data field of blkdev_t as follows: */

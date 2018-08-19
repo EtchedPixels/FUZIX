@@ -71,16 +71,18 @@ void devide_init_drive(uint8_t drive)
     kprintf("IDE drive %d: ", drive);
 
 #ifdef IDE_8BIT_ONLY
+    if (IDE_IS_8BIT(drive)) {
     /* set 8-bit mode -- mostly only supported by CF cards */
-    if (!devide_wait(IDE_STATUS_READY))
-        goto out;
+        if (!devide_wait(IDE_STATUS_READY))
+            goto out;
 
-    devide_writeb(ide_reg_devhead, select);
-    if (!devide_wait(IDE_STATUS_READY))
-        goto out;
+        devide_writeb(ide_reg_devhead, select);
+        if (!devide_wait(IDE_STATUS_READY))
+            goto out;
 
-    devide_writeb(ide_reg_features, 0x01); /* Enable 8-bit PIO transfer mode (CFA feature set only) */
-    devide_writeb(ide_reg_command, IDE_CMD_SET_FEATURES);
+        devide_writeb(ide_reg_features, 0x01); /* Enable 8-bit PIO transfer mode (CFA feature set only) */
+        devide_writeb(ide_reg_command, IDE_CMD_SET_FEATURES);
+    }
 #endif
 
     /* confirm drive has LBA support */
