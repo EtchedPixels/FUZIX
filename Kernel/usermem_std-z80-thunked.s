@@ -28,9 +28,9 @@
 ;	IX = page pointer
 ;
 ;	On return
-;	Z	HL = address to write to, BC = length, DE = kaddr
+;	Z	HL = user address, BC = length, DE = kaddr
 ;
-;	NZ	HL = address to write to, BC = length before split, DE = kaddr
+;	NZ	HL = user address, BC = length before split, DE = kaddr
 ;		HL' = user address of rest BC' = length of rest, DE' = kaddr
 ;		of rest (for a second call)
 ;
@@ -142,14 +142,15 @@ __uput:
 	add ix,sp
 	call uputget
 	jr z, uget_out
-	call user_mapping
-	jr z, uput1
 	ex de,hl
+	call user_mapping
+	ex de,hl
+	jr z, uput1
 	ldir
 	exx
 	call user_mapping
-uput1:
 	ex de,hl
+uput1:
 	ldir
 	pop ix
 	jp map_kernel_low
@@ -192,7 +193,7 @@ __ugetc:
 	pop hl
 	push hl
 	push bc
-	bit 7,(hl)
+	bit 7,h
 	ld a,(U_DATA__U_PAGE)
 	jr z, ugetcl
 	ld a,(U_DATA__U_PAGE + 1)
@@ -208,7 +209,7 @@ __ugetw:
 	pop hl
 	push hl
 	push bc
-	bit 7,(hl)
+	bit 7,h
 	jr z, ugetwl
 	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
@@ -239,7 +240,7 @@ __uputc:
 	push hl
 	push de
 	push bc
-	bit 7,(hl)
+	bit 7,h
 	ld a,(U_DATA__U_PAGE)
 	jr z, uputcl
 	ld a,(U_DATA__U_PAGE + 1)
@@ -255,7 +256,7 @@ __uputw:
 	push hl
 	push de
 	push bc
-	bit 7,(hl)
+	bit 7,h
 	jr z, uputwl
 	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
