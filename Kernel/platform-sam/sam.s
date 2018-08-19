@@ -67,7 +67,8 @@ _platform_reboot:
 	    rst 0			; bang
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below common, only accessible when the kernel is mapped)
+;	We have discard mapped high up so we can map stuff under it
+;	during setup. All of discard gets reclaimed when init is run
 ; -----------------------------------------------------------------------------
             .area _DISCARD
 
@@ -91,10 +92,46 @@ init_early:
 
 init_hardware:
             ; set system RAM size (FIXME - check for 512/1M)
+	    ld a,#0x10			; Upper 256K
+	    call map_page_low
+	    ld hl,#0x0000
+	    ld (hl),#0xff
+	    ld a,(hl)
+	    inc a
+	    jr nz, is256k
+	    ld (hl),a
+	    ld a,(hl)
+	    or a
+	    ld hl,#512
+	    jr z, is512k
+is256k:	    
             ld hl, #256
+is512k:
             ld (_ramsize), hl
-            ld hl, #(256-96)		; 64K for kernel, 32K for video/font/etc
+	    ld de,#96			; 64K for kernel, 32K for video etc
+	    sbc hl,de			; C is always clear here
             ld (_procmem), hl
+
+	    ld a,#VIDEO_LOW
+	    call map_page_low		; Map the video in the low 32K
+
+	    ; Place a copy of the high stubs into the video bank so that we
+	    ; can in future field interrupts with video mapped. Quite a bit
+	    ; of other work is needed for this due to the stack situation.
+	    ld hl,#0xFF00
+	    ld de,#0x7F00
+	    ld bc,#0x100
+	    ldir
+
+	    call map_kernel_low
+
+	    ; Make a copy of the low page somewhere accessible. This may
+	    ; change if we decide to make the kernel low page different - eg
+	    ; to fast path interrupts in kernel mode. FIXME
+	    ld hl,#0x0000
+	    ld de,#lowstubs
+	    ld bc,#0x0068
+	    ldir
 
             im 1 ; set CPU interrupt mode
 
@@ -159,11 +196,9 @@ _program_vectors:
 
 	    exx
 	    ; Copy the stub page into place
-	    ; FIXME: doesn't work because our stubs are at 0000. Maybe put
-	    ; a copy somewhere else ?
-            ld hl, #stub_page_1 - 1
+            ld hl, #lowstubs
             ld de, #0x0000
-            ld bc, #0x0100
+            ld bc, #0x0068
             ldir
 	    exx
 
@@ -422,3 +457,7 @@ syscall_sighelp:
 	    pop hl
 	    ld h,#0		; clear signal bit
 	    ret
+
+	    .area _DATA
+lowstubs:
+	    .ds 0x68

@@ -109,20 +109,65 @@ _plot_char:
 	call map_video
 	ld bc,#0x04FF		; it gets decremented by DJNZ while the FF
 				; ensures the ldi never decrements B
+;
+;	Need to add a slow path version that does colour and effects. Colour
+;	is a matter of masking with FF, CC, 33 or 00.
+;
 plot_loop:
-	; FIXME: this trick doesn't work on the last row - need a better way
 	ldi			; copy expanded char
-	ldi
-	dec e
+	ld a,(hl)
+	ld (de),a
+	inc hl
 	dec e
 	set 7,e			; de += 126
 	ldi			; copy second char row
-	ldi
-	dec e			; Similar idea
+	ld a,(hl)
+	ld (de),a
+	inc hl
 	dec e			; toggle the bit back and gives us
 	res 7,e
 	inc d			; de += 126
 	djnz plot_loop
+	jr pop_unmap
+
+;
+;	We will need this once we wire in colour support
+;
+plot_slow:
+	ld a,#4
+	exx
+	ld de,(colours)
+	exx
+plot_loop_slow:
+	ex af,af'
+	ld a,(hl)
+	exx
+	ld b,a
+	cpl			; background bits
+	and d			; to background colour
+	ld c,a
+	ld a,e			; foreground bits
+	and b			; to foreground colour
+	or c			; plus background
+	exx
+	ld (de),a
+	ld a,(hl)
+	inc de
+	inc hl
+	exx
+	ld b,a
+	cpl			; background bits
+	and d			; to background colour
+	ld c,a
+	ld a,e			; foreground bits
+	and b			; to foreground colour
+	or c			; plus background
+	exx
+	ld (de),a
+	add hl,bc
+	ex af,af'
+	dec a
+	jr nz, plot_loop_slow
 	jr pop_unmap
 
 _clear_lines:
@@ -147,7 +192,7 @@ _clear_lines:
 	inc de
 	dec bc
 	ld (hl),#0
-	jr ldir_pop
+	jp ldir_pop
 
 _clear_across:
 	pop hl
@@ -198,3 +243,6 @@ _cursor_off:
 _cursor_disable:
 _vtattr_notify:
 	ret
+
+colours:
+	.word 0

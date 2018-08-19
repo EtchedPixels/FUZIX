@@ -1,5 +1,8 @@
 ;
 ;	Boot block, loaded at 0x8000 in the top bank that is free (varies)
+;	but this works so long as we are above bank 7. If that becomes
+;	an issue then instead of flipping banks we can always ldir ourself
+;	into bank 0 and run from there.
 ;
 ;	The boot block is trivial but it gets a bit fun once we've loaded
 ;	our 14 tracks
@@ -15,7 +18,6 @@
 ;	We then run from 0x8000 in bank 6, which will untangle everything
 ;	for us shuffling the kernel so that 0/1 is the low kernel in RAM
 ;	2/3 is the high kernel in RAM and 4/5 is the video
-;	(or maybe it'll be saner to use 4/5 for kernel 2/3 video..)
 ;
 	.area BOOT(ABS)
 	.org 0x0000
