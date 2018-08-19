@@ -131,11 +131,11 @@ static uint8_t keyboard[9][8] = {
 };
 
 static uint8_t shiftkeyboard[9][8] = {
-	{ 0 , 'Z', 'X', 'C', 'V', KEY_F1, KEY_F2, KEY_F3 },
-	{'A', 'S', 'D', 'F', 'G', KEY_F4, KEY_F5, KEY_F6 },
+	{ 0 , 'Z', 'X', 'C', 'V', KEY_PGUP, KEY_F2, KEY_F3 },
+	{'A', 'S', 'D', 'F', 'G', KEY_PGDOWN, KEY_F5, KEY_F6 },
 	{'Q', 'W', 'E', 'R', 'T', KEY_F7, KEY_F8, KEY_F9 },
 	{'!', '@', '"', '$', '%', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
-	{'~', ')', '(', '\'', '&', '/', '*', KEY_BS },
+	{'~', ')', '(', '\'', '&', '/', '*', KEY_DEL },
 	{'P', 'O', 'I', 'U', 'Y', '_', KEY_COPYRIGHT, KEY_F10 },
 	{KEY_ENTER, 'L', 'K', 'J', 'H', '[', ']', KEY_EDIT },
 	{' ', 0 /* SymShift */, 'M', 'N', 'B', '<', '>', '\\' },
@@ -147,7 +147,7 @@ static uint8_t altkeyboard[9][8] = {
 	{ 0, 0, 0, '{', '}', KEY_F4, KEY_F5, KEY_F6 },
 	{'<', '>', 0, '[', ']', KEY_F7, KEY_F8, KEY_F9 },
 	{'|', '@', '"', '$', '%', KEY_ESC, KEY_TAB, KEY_CAPSLOCK },
-	{'~', ')', '(', '`', '&', '/', '*', KEY_BS },
+	{'~', ')', '(', '`', '&', '/', '*', KEY_DEL },
 	{0, 0, 0, 0, 0, '_', KEY_COPY, KEY_F10 },
 	{KEY_ENTER, KEY_POUND, 0, 0, '^', '{', '}', KEY_EDIT },
 	{' ', 0 /* SymShift */, 'M', 'N', 'B', '<', '>', '\\' },
@@ -163,9 +163,9 @@ static void keydecode(void)
 
 	/* We don't do anything clever for both shifts or other weird combos
 	   This computer isn't going to run emacs after all */
-	if (keymap[7] & 0x40)	/* Symbol Shift */
+	if (keymap[7] & 0x02)	/* Symbol Shift */
 		c = altkeyboard[keybyte][keybit];
-	else if (keymap[0] & 0x80)
+	else if (keymap[0] & 0x01)
 		c = shiftkeyboard[keybyte][keybit];
 	else
 		c = keyboard[keybyte][keybit];
@@ -176,8 +176,13 @@ static void keydecode(void)
 	}
         /* The keyboard lacks some rather important symbols so remap them
            with control */
-	if (keymap[8] & 0x80) {	/* control */
-		if (c > 31 && c < 96)
+	if (keymap[8] & 0x01) {	/* control */
+		/* These map the SAM specific behaviours */
+		if (c == KEY_LEFT)
+			c = KEY_HOME;
+		else if (c == KEY_RIGHT)
+			c = KEY_END;
+		else if (c > 31 && c < 96)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
