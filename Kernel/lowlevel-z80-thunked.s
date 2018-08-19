@@ -66,7 +66,28 @@
 CPU_CMOS_Z80	    .equ    Z80_TYPE-0
 CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 
+	.area _HIGH
+;
+;	Execve also needs a platform helper for 32/32K
+;
+;	Runs a low memory stub helper in the user bank with
+;	HL = start address, IY = relocation base
+;	Helper must re-enable interrupts
+;
+_doexec:
+	di
+	call map_user_low
+	xor a
+	ld (U_DATA__U_INSYS),a
+	pop bc
+	pop de			; start address
+	ld hl,(U_DATA__U_ISP)
+	ld sp,hl
+	ex de,hl
+	ld iy,#PROGLOAD
+	jp _platform_doexec	; jump into the low memory stub
 
+	.area _CODE
 ;
 ;	This is the entry point from the platform wrapper. When we hit this
 ;	our stack is above 32K and the upper 32K of kernel space is mapped
@@ -160,25 +181,6 @@ signal_path:
 	jr z, no_signal	; cleared under us (can this occur ??)
 	jr syscall_return
 
-;
-;	Execve also needs a platform helper for 32/32K
-;
-;	Runs a low memory stub helper in the user bank with
-;	HL = start address, IY = relocation base
-;	Helper must re-enable interrupts
-;
-_doexec:
-	di
-	call map_user_low
-	xor a
-	ld (U_DATA__U_INSYS),a
-	pop bc
-	pop de			; start address
-	ld hl,(U_DATA__U_ISP)
-	ld sp,hl
-	ex de,hl
-	ld iy,#PROGLOAD
-	jp _platform_doexec	; jump into the low memory stub
 
 
 nmimsg: .ascii "[NMI]"
