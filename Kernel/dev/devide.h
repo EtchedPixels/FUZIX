@@ -130,24 +130,28 @@ extern void devide_read_data(void);
 
 #else /* !MMIO */
 
+#ifndef IDE_SFR
+#define IDE_SFR __sfr
+#endif
+
 #ifdef IDE_REG_ALTSTATUS
-__sfr __at IDE_REG_ALTSTATUS ide_reg_altstatus;
+IDE_SFR __at IDE_REG_ALTSTATUS ide_reg_altstatus;
 #endif
 #ifdef IDE_REG_CONTROL
-__sfr __at IDE_REG_CONTROL   ide_reg_control;
+IDE_SFR __at IDE_REG_CONTROL   ide_reg_control;
 #endif
-__sfr __at IDE_REG_COMMAND   ide_reg_command;
-__sfr __at IDE_REG_DATA      ide_reg_data;
-__sfr __at IDE_REG_DEVHEAD   ide_reg_devhead;
-__sfr __at IDE_REG_ERROR     ide_reg_error;
-__sfr __at IDE_REG_FEATURES  ide_reg_features;
-__sfr __at IDE_REG_LBA_0     ide_reg_lba_0;
-__sfr __at IDE_REG_LBA_1     ide_reg_lba_1;
-__sfr __at IDE_REG_LBA_2     ide_reg_lba_2;
-__sfr __at IDE_REG_LBA_3     ide_reg_lba_3;
-__sfr __at IDE_REG_SEC_COUNT ide_reg_sec_count;
-__sfr __at IDE_REG_STATUS    ide_reg_status;
+IDE_SFR __at IDE_REG_COMMAND   ide_reg_command;
+IDE_SFR __at IDE_REG_DATA      ide_reg_data;
+IDE_SFR __at IDE_REG_DEVHEAD   ide_reg_devhead;
+IDE_SFR __at IDE_REG_ERROR     ide_reg_error;
+IDE_SFR __at IDE_REG_FEATURES  ide_reg_features;
+IDE_SFR __at IDE_REG_LBA_0     ide_reg_lba_0;
+IDE_SFR __at IDE_REG_LBA_1     ide_reg_lba_1;
+IDE_SFR __at IDE_REG_LBA_2     ide_reg_lba_2;
+IDE_SFR __at IDE_REG_LBA_3     ide_reg_lba_3;
+IDE_SFR __at IDE_REG_SEC_COUNT ide_reg_sec_count;
+IDE_SFR __at IDE_REG_STATUS    ide_reg_status;
 #endif /* MMIO */
 #endif /* IDE_REG_INDIRECT */
-#endif /* IDE_PRIVAYTE */
+#endif /* IDE_PRIVATE */
 #endif
