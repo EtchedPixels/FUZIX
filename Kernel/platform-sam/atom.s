@@ -100,16 +100,16 @@ ide_w2:
 ;	if bit 0,c on 1st transfer - it's split word 
 ;
 atomlite_reader:
+	ld a,#0x30
+	out (0xF5),a	; Select data port
 	ld d,b
 	ld e,c
-	ld bc,#IDE_DATA_R
+	ld bc,#0xF6
 ide_r_loop:
-	in a,(c)
-	ld (hl),a
-	inc hl
-	dec bc
-	ld a,b
-	or c
+	ini
+	dec de
+	ld a,d
+	or e
 	jr nz,ide_r_loop
 	ret
 ;
@@ -117,42 +117,48 @@ ide_r_loop:
 ;	design
 ;
 atomlite_reader_fast:
-	ld bc,#IDE_DATA_R
+	; Select data port
+	ld a,#0x30
+	out (0xF5),a
+	ld bc,#0xF7
+	xor a		; 256 words
 atomlite_rf_loop:
+	dec c
 	ini		; Read from F6 for the data high
-	inc b
-	inc b		; up to F7 for the data low
+	inc c
+	inc b		; so it's one loop of 256 counts
 	ini
-	dec a
 	jr nz, atomlite_rf_loop
 	ret
 ;
 ;	This needs optimizing to use as we know C = 0
 ;
 atomlite_writer:
+	ld a,#0x30
+	out (0xF5),a	; Select data port
 	ld d,b
 	ld e,c
-	ld bc,#IDE_DATA_W
+	ld bc,#0xF7
 ide_w_loop:
-	ld a,(hl)
-	out (c),a
-	inc hl	
-	dec bc
-	ld a,b
-	or c
+	outi
+	dec de
+	ld a,d
+	or e
 	jr nz,ide_w_loop
 	ret
 ;
 ;	The non split case 512 bytes as fast as we can given the interface
-;	design
+;	design. For Atomlite we could just inir
 ;
 atomlite_writer_fast:
-	ld bc,#IDE_DATA_W
+	ld a,#0x30
+	out (0xF5),a	; Select data port
+	ld bc,#0xF6
 atomlite_wf_loop:
-	ini		; Read from F7 for the data high
-	ini		; F6 for the data low
-	inc b
-	inc b		; back to F7
-	dec a
-	jr nz, atomlite_rf_loop
+	inc c
+	outi		; Write F6
+	dec c
+	inc b		; So it's 256 times count
+	outi		; Then F7
+	jr nz, atomlite_wf_loop
 	ret

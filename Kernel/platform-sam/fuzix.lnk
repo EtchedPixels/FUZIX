@@ -32,6 +32,7 @@ vt.rel
 devsys.rel
 platform-sam/atom.rel
 platform-sam/blkdev.rel
+platform-sam/devatom.rel
 platform-sam/devfd.rel
 platform-sam/devices.rel
 platform-sam/devide.rel

@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c
+CSRCS = devlpr.c devtty.c devfd.c devatom.c
 CSRCS += devices.c main.c
 
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
