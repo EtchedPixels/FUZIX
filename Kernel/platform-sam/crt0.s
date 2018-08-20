@@ -39,6 +39,9 @@
 		.globl s__INITIALIZER
 	        .globl kstack_top
 
+		; export the buffer
+		.globl _low_bounce;
+
 	        ; startup code
 	        .area _CODE
 
@@ -63,3 +66,10 @@ start:
 		di
 stop:		halt
 		jr stop
+
+;
+;	Low memory bounce buffer/scratch stack space. Define it here so we
+;	are sure it's below the 32K line.
+;
+_low_bounce:
+		.ds 512
