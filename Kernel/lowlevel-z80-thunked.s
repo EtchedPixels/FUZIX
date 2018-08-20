@@ -85,9 +85,9 @@ _doexec:
 	ld sp,hl
 	ex de,hl
 	ld iy,#PROGLOAD
+	ld a,(U_DATA__U_PAGE+1)	; pass high page to trampoline
 	jp _platform_doexec	; jump into the low memory stub
 
-	.area _CODE
 ;
 ;	This is the entry point from the platform wrapper. When we hit this
 ;	our stack is above 32K and the upper 32K of kernel space is mapped
@@ -193,6 +193,7 @@ traphl:
         call outstring
         call _platform_monitor
 
+	.area _HIGH
 ;
 ;	The stub caller has already saved AF DE HL, mapped the kernel high
 ;	and switched to the istack as well as saving the old sp in
@@ -255,6 +256,7 @@ intret:
 	ret
 
 interrupt_kernel:
+	call map_restore_low
 	xor a
 	ld e,a
 	jr intret
