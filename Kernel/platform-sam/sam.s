@@ -151,6 +151,9 @@ low_save:
 	    .db 0
 video_save:
 	    .db 0
+entry_low:
+	    .db 0	; Holds the low bank value on IRQ entry, Used so
+			; we can save and restore temporary kernel mappings
 
 map_save_low:
 	    push af
@@ -361,9 +364,8 @@ interrupt_high:
 	    ; On return HL = signal vector E= signal (if any) A = page for
 	    ; high
 	    or a
-	    jr nz, touser
-	    ld a,#KERNEL_HIGH
-touser:
+	    jr z, kernout
+	    ; Returning to user space
 	    ld d,a
 	    in a,(251)
 	    and #0x60
@@ -375,6 +377,7 @@ touser:
 	    xor a
 	    cp e
 	    call nz, sigpath
+kernout:
 	    pop hl
 	    pop de
 	    pop af
