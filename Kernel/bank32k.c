@@ -129,9 +129,13 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack) {
 	if (want == have)
 		return 0;
 	if (have > want) {
+		/* Make a copy of the high vectors in the new low page */
 		pfree[pfptr++] = ptr[1];
 		ptr[1] = *ptr;
+		irq = __hard_di();
+		program_vectors(&udata.u_page);
 		udata.u_ptab->p_page = udata.u_page;
+		__hard_irqrestore(irq);
 		return 0;
 	}
 	/* If we are adding then just insert the new pages, keeping the common
