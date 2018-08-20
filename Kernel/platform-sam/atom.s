@@ -146,6 +146,7 @@ atomlite_reader_fast:
 	inir
 	inir
 	ret
+
 atomlite_writer_fast:
 	ld a,#0x30
 	out (0xF5),a
@@ -167,14 +168,8 @@ ide_w_loop:
 	or e
 	jr nz,ide_w_loop
 	ret
-;
-;	This needs optimizing to use as we know C = 0 - but think about
-;	the hard case with atom and split transfers. Probably need to
-;	unroll the loop into two halves, check termination on each and also
-;	somehow indicate partial transfers. We do know the transfer will be
-;	a total of 512 bytes so the rule I think is
-;	if bit 0,c on 1st transfer - it's split word 
-;
+
+.globl atomlite_reader	; for debugging work
 atomlite_reader:
 	ld a,#0x30
 	out (0xF5),a	; Select data port
