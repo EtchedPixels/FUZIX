@@ -5,10 +5,14 @@
 
 static void close_on_exec(void)
 {
-	int j;
+	/* Keep the mask separate to stop SDCC generating crap code */
+	uint16_t m = 1 << (UFTSIZE - 1);
+	int8_t j;
+
 	for (j = UFTSIZE - 1; j >= 0; --j) {
-		if (udata.u_cloexec & (1 << j))
+		if (udata.u_cloexec & m)
 			doclose(j);
+		m >>= 1;
 	}
 	udata.u_cloexec = 0;
 }
