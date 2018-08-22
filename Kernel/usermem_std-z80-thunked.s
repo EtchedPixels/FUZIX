@@ -82,7 +82,7 @@ split_map:
 	; We need to adjust DE and BC here. The start doesn't matter we know
 	; the split start with always be 0x8000
 	ex de,hl
-	pop de
+	pop de		; length done so far
 	add hl,de
 	ex de,hl	; DE is now the second block target, HL is the bytes
 			; done now fix up BC
