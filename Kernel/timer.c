@@ -14,6 +14,7 @@ timer_t set_timer_duration(uint16_t duration)
 	if (duration & 0x8000) {
 		kprintf("bad timer duration 0x%x\n", duration);
 	}
+	sync_clock();
 	/* obvious code is return (miniticks+duration), however we have to do */
 	/* it this longwinded way or sdcc doesn't load miniticks atomically */
 	/* sdcc 3.4.0 bug: ordering affects result */
@@ -25,6 +26,7 @@ timer_t set_timer_duration(uint16_t duration)
 
 bool timer_expired(timer_t timer_val)
 {
+	sync_clock();
 	return ((timer_val - ticks.h.low) & 0x8000);
 }
 
@@ -33,6 +35,7 @@ bool timer_expired(timer_t timer_val)
 void rdtime(time_t *tloc)
 {
         irqflags_t irq = di();
+	sync_clock();
         memcpy(tloc, &tod, sizeof(tod));
 	irqrestore(irq);
 }
@@ -41,6 +44,7 @@ void rdtime(time_t *tloc)
 void rdtime32(uint32_t *tloc)
 {
         irqflags_t irq = di();
+	sync_clock();
         *tloc = tod.low;
 	irqrestore(irq);
 }
@@ -48,7 +52,9 @@ void rdtime32(uint32_t *tloc)
 void wrtime(time_t *tloc)
 {
         irqflags_t irq = di();
+	sync_clock();
         memcpy(&tod, tloc, sizeof(tod));
+        update_sync_clock();
 	irqrestore(irq);
 }
 

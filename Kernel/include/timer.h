@@ -12,4 +12,17 @@ typedef uint16_t timer_t;
 timer_t set_timer_duration(uint16_t duration); /* good for up to 32K ticks */
 bool timer_expired(timer_t timer_val);
 
+#ifndef CONFIG_NO_CLOCK
+#define sync_clock() 	do {} while(0)
+#define update_sync_clock() do {} while(0)
+#else
+/* On a tickless system read the clock and run timer_interrupt the right number
+   of times. Needs to di() and also just return if recursively called. */
+extern void sync_clock(void);
+/* On a tickless system notify the clock logic that the underlying time just
+   moved. Called under di such that we sync_clock, move the clock, then
+   call update_sync_clock */
+extern void update_sync_clock(void);
+#endif
+
 #endif

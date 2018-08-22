@@ -10,6 +10,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <audio.h>
+#include <timer.h>
 
 /* psleep() puts a process to sleep on the given event.  If another
  * process is runnable, it switches out the current one and starts the
@@ -448,6 +449,7 @@ void timer_interrupt(void)
 #endif
 	}
 #ifndef CONFIG_SINGLETASK
+	sync_clock();
 	/* Check run time of current process. We don't charge time while
 	   swapping as the last thing we want to do is to swap a process in
 	   and decide it took time to swap in so needs to go away again! */
@@ -495,6 +497,8 @@ void unix_syscall(void)
 #endif
 	}
 	udata.u_ptab->p_timeout = 0;
+
+	sync_clock();
 
 	di();
 	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
@@ -734,8 +738,14 @@ void ssig(ptptr proc, uint8_t sig)
 		}
 		/* FIXME: need to clean up the way we handle ready/running
 		   so we have a simple 'make runnable' */
-		if (proc->p_status == P_READY && udata.u_ptab == proc)
-			proc->p_status = P_RUNNING;
+		if (proc->p_status == P_READY) {
+			/* This is a weird corner case. If we deliver a signal
+			   to someone who is now running then sync_clock so that
+			   things like ^C feel nice */
+			sync_clock();
+			if (udata.u_ptab == proc)
+				proc->p_status = P_RUNNING;
+		}
 	}
 	irqrestore(irq);
 }
@@ -839,6 +849,9 @@ void doexit(uint16_t val)
 	 *
 	 * Pedantically POSIX says we should do this at the point of wait()
 	 */
+
+	sync_clock();	/* Not that these values will be wildly accurate! */
+
 	udata.u_utime += udata.u_cutime;
 	udata.u_stime += udata.u_cstime;
 	memcpy(&(udata.u_ptab->p_priority), &udata.u_utime,
