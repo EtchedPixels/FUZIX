@@ -2,4 +2,4 @@ package  adventure
 if-file  advent
 
 f 0755 /usr/games/advent        advent
-f 0644 /usr/games/advent.db     advent.db
+f 0644 /usr/games/lib/advent.db     advent.db
