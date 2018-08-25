@@ -8,7 +8,6 @@
 #include <devlpr.h>
 #include <devtty.h>
 #include <blkdev.h>
-#include <devhd.h>
 #include <devide.h>
 #include <printf.h>
 #include <ubee.h>
