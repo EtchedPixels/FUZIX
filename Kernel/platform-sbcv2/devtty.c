@@ -106,8 +106,8 @@ void tty_setup(uint8_t minor)
 		uart_ms = w >> 8;
 		uart_lcr = d & 0x7F;
 		/* FIXME: CTS/RTS support */
-		d = 0x00;	/* !DTR !RTS */
-		uart_lcr = d;
+		d = 0x03;	/* DTR RTS */
+		uart_mcr = d;
 		uart_ier = 0x0D;	/* We don't use tx ints */
 	}
 }
@@ -134,5 +134,8 @@ void tty_poll(void)
 	   pending. IRQs are off here so this is safe */
 	if (uart_lsr & 0x01)
 		tty_inproc(ttymap[1], uart_rx);
+	/* If we have a 10MHz clock wired to DSR then do timer interrupts */
+	if (timermsr && (uart_msr & 0x40))
+		timer_interrupt();
 	prop_tty_poll(ttymap[2]);
 }
