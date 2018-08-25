@@ -1,6 +1,9 @@
 ; 2015-02-19 Sergey Kiselev
 ; 2014-12-31 William R Sowerbutts
 ; N8VEM SBC / Zeta SBC DS1302 real time clock interface code
+;
+;	FIXME: belongs in dev/
+;
 
         .module ds1302-n8vem
 
