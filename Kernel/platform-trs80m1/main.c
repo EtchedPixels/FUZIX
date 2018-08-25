@@ -160,10 +160,10 @@ int platform_rtc_read(void)
       p = cmos.data.bytes;
       r = rtc_secl;
       y  = (rtc_yearh << 4) | rtc_yearl;
-      if (y > 70)
-          *p++ = 19;
+      if (y >= 0x70)
+          *p++ = 0x19;
       else
-          *p++ = 20;
+          *p++ = 0x20;
       *p++ = y;
       *p++ = ((rtc_monh  & 1)<< 4) | rtc_monl;
       *p++ = ((rtc_dayh & 3) << 4) | rtc_dayl;
