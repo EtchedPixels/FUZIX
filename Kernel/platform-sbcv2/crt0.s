@@ -40,9 +40,6 @@
 		; We are executed as a CP/M task so live in bank 14/15
 		; with CP/M under us and the HBIOS proxy at FE00
 start:
-		ld bc,#0x0100
-		ld e,#'*'
-	        rst 8
 		di
 		ld sp, #kstack_top
 		; move the common memory where it belongs    
@@ -55,9 +52,6 @@ start:
 		ld de, #s__DISCARD
 		ld bc, #l__DISCARD
 		ldir
-		ld bc,#0x0100
-		ld e,#':'
-	        rst 8
 		; then zero the data area
 		ld hl, #s__DATA
 		ld de, #s__DATA + 1
@@ -70,17 +64,8 @@ start:
 		ld bc, #l__BUFFERS - 1
 		ld (hl), #0
 		ldir
-		ld bc,#0x0100
-		ld e,#'X'
-	        rst 8
 		call init_early
-		ld bc,#0x0100
-		ld e,#'Y'
-	        rst 8
 		call init_hardware
-		ld bc,#0x0100
-		ld e,#'Z'
-	        rst 8
 		call _fuzix_main
 		di
 stop:		halt
