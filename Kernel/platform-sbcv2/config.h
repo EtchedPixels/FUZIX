@@ -66,4 +66,5 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
+#define TTY_INIT_BAUD B115200	/* To match ROMWBW */
 extern unsigned int swap_dev;
