@@ -11,7 +11,8 @@ Video
 
 0-5FFF		Frame buffer (mode 3)	bank 4/5
 6000-6FFF	Font
-7000-7FFF	Free
+7000-7EFF	Free
+7F00-7FFF	Copy of high page in case want video high for some cases
 8000-FFFF	Kernel in bank 0/1
 
 User Space
@@ -21,9 +22,6 @@ User Space
 8000-FCFFF	User page
 FD00-FEFF	UDATA stash
 FF00-FFFF	Thunking code
-
-Probably will move the thunking code mostly into FFxx somewhere so we
-can do CP/M emulation still
 
 Extmem support would require extra work and separate high/low pools for
 the bank allocator
@@ -35,56 +33,44 @@ User Copies
 
 Forking
 
-0000-00FF	Parent low stubs
-0100-7FFF	Parent low bank
-8000-80FF	Child low stubs (not yet set)
-8100-FFFF	Child low bank
-
-then
-
-0000-7EFF	Parent high bank
-7F00-7FFF	Parent high stubs
-8000-FEFF	Child high bank
-FF00-FFFF	Child stubs (not yet set)
+Need to look at the TRS80m1 hack which might actually be faster than ldir
+and all the bank juggling tricks
 
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
+DONE	-	Move fonts to video bank after frame buffer
+	-	Floppy driver (at least for read)
+DONE	-	Get to init (but not much further)
+IP	-	Debug all the new banking code and stubs
+	-	Atom IDE driver
+DONE	-	Atom-lite IDE driver
+DONE	-	Look at how to preserve high colour bits
 
-To Do:
+	-	RTC driver
+	-	Serial driver
+	-	Mouse/Joystick/Input
 
--	Keyboard map
--	Interrupt logic
--	Boot loader
+	-	Mode setting/graphics mode support
+	-	Video ioctls
+	-	UDG ioctls
+	-	Is there any way to do video mapping into user process sanely
+		(probably not)
 
-Then once we can get to the point of being able to see and type
+	-	Sound
 
--	Move fonts to video bank after frame buffer
--	Floppy driver (at least for read)
--	Get to init
--	Debug all the new banking code and stubs
--	Atom and Atom-lite IDE driver
--	Look at how to preserve high colour bits
+IP	-	MegaRAM (as RAMdisc)
 
--	RTC driver
--	Serial driver
--	Mouse/Joystick/Input
+	-	Maybe look at a 16K boundary aware allocator to get better
+		memory packing - but it's really hairy.
 
--	Mode setting/graphics mode support
--	Video ioctls
--	UDG ioctls
--	Is there any way to do video mapping into user process sanely
-	(probably not)
+	-	Less interrupt masking (but the banking logic makes it really
+		foul especially as we don't have proper IM2 support)
 
--	Sound
+	-	Maybe look at the modern add ons (SD card, network etc)
 
--	MegaRAM
-
--	Maybe look at a 16K boundary aware allocator to get better memory
-	packing - but it's really hairy.
-
--	Less interrupt masking (but the banking logic makes it really foul
-	especially as we don't have proper IM2 support)
-
--	Maybe look at the modern add ons (SD card, network etc)
+Boot from the created floppy .mgt file
+Disable atomlite boot rom (need to fix that issue)
+Filesystem on Atomlite. If using simcoupe dd it 534 bytes into the image
+Select device 0 for boot to get atomlite (you can do partitions)
 

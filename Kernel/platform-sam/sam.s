@@ -361,6 +361,9 @@ interrupt_high:
 	    ld (istack_switched_sp),sp
 	    ld sp,#istack_top
 	    call interrupt_handler
+	    ; Restore stack pointer to user. This leaves us with an invalid
+	    ; stack pointer if called from user but interrupts are off anyway
+	    ld sp,(istack_switched_sp)
 	    ; On return HL = signal vector E= signal (if any) A = page for
 	    ; high
 	    or a
@@ -371,8 +374,7 @@ interrupt_high:
 	    and #0x60
 	    or d
 	    out (251),a
-	    ; stack is invalid again now
-	    ld sp,(istack_switched_sp)
+	    ; User stack is now valid
 	    ; back on user stack
 	    xor a
 	    cp e
@@ -397,16 +399,19 @@ syscall_high:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
+	    push de		; the syscall if must preserve de for now
+				; needs fixing when we change the syscall
+				; API for Z80 to something less sucky
 	    ld a,4(ix)
-	    ld b,6(ix)
-	    ld c,7(ix)
-	    ld d,8(ix)
-	    ld e,9(ix)
-	    ld h,10(ix)
-	    ld l,11(ix)
+	    ld c,6(ix)
+	    ld b,7(ix)
+	    ld e,8(ix)
+	    ld d,9(ix)
+	    ld l,10(ix)
+	    ld h,11(ix)
 	    push hl
-	    ld h,12(ix)
-	    ld l,13(ix)
+	    ld l,12(ix)
+	    ld h,13(ix)
 	    pop ix
 	    di
 	    ld (syscall_stash),a
@@ -417,6 +422,7 @@ syscall_high:
 	    ; Stack now invalid
 	    ld (U_DATA__U_SYSCALL_SP),sp
 	    ld sp,#kstack_top
+	    ld a,(syscall_stash)
 	    call unix_syscall_entry
 	    ; FIXME check di rules
 	    push bc
@@ -425,9 +431,10 @@ syscall_high:
 	    and #0x60
 	    or b
 	    pop bc
-	    out (251),a
-	    ; stack now invalid
+	    ; stack now invalid. Grab the new sp before we unbank the
+	    ; memory holding it
 	    ld sp,(U_DATA__U_SYSCALL_SP)
+	    out (251),a
 	    xor a
 	    cp h
 	    call nz, syscall_sigret
@@ -438,10 +445,12 @@ syscall_high:
 	    or l
 	    jr nz, error
 	    ex de,hl
+	    pop de
 	    pop ix
 	    ei
 	    ret
 error:	    scf
+	    pop de
 	    pop ix
 	    ei
 	    ret
