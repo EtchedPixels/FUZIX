@@ -8,6 +8,7 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
+uint8_t timermsr = 0;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
@@ -21,7 +22,6 @@ void platform_idle(void)
 
 void platform_interrupt(void)
 {
-	/* TODO */
 	tty_poll();
 }
 
@@ -73,23 +73,25 @@ void sync_clock_read(void)
 
 void sync_clock(void)
 {
-	irqflags_t irq = di();
-	int16_t tmp;
-	if (!re_enter++) {
-		sync_clock_read();
-		if (oldticks != 0xFF) {
-			tmp = newticks - oldticks;
-			if (tmp < 0)
-				tmp += 60;
-			tmp *= 10;
-			while(tmp--) {
-				timer_interrupt();
+	if (!timermsr) {
+		irqflags_t irq = di();
+		int16_t tmp;
+		if (!re_enter++) {
+			sync_clock_read();
+			if (oldticks != 0xFF) {
+				tmp = newticks - oldticks;
+				if (tmp < 0)
+					tmp += 60;
+				tmp *= 10;
+				while(tmp--) {
+					timer_interrupt();
+				}
+				platform_interrupt();
 			}
-			platform_interrupt();
-		}
-		re_enter--;
-	} 
-	irqrestore(irq);
+			re_enter--;
+		} 
+		irqrestore(irq);
+	}
 }
 
 void update_sync_clock(void)

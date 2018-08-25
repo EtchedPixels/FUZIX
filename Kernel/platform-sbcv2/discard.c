@@ -9,6 +9,15 @@
 
 extern int strcmp(const char *, const char *);
 
+/* Could move to discard */
+uint8_t platform_param(unsigned char *p)
+{
+	used(p);
+	if (strcmp(p, "msr") == 0)
+		timermsr = 1;
+	return 0;
+}
+
 void map_init(void)
 {
 }
@@ -19,14 +28,6 @@ void pagemap_init(void)
 	uint8_t i;
 	for (i = 1; i < 15; i++)
 		pagemap_add(i);
-}
-
-uint8_t platform_param(char *p)
-{
-	if (strcmp(p, "compumuse") == 0) {
-		return 1;
-	}
-	return 0;
 }
 
 void platform_swap_found(uint8_t letter, uint8_t m)
