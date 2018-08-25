@@ -79,6 +79,15 @@ _platform_reboot:
 init_early:
 	    ; FIXME: code goes here to check for PropIO v2 nicely
 	    ; Passes the minimal checking
+	    ld a,#0xA5
+	    out (0xAB),a		; Write A5 data
+	    ld a,#0x55
+	    out (0xAB),a		; Overwrite
+	    ld a,#0x00
+	    out (0xAA),a		; Issue a NOP
+	    in a,(0xAB)
+	    cp #0xA5			; Should see byte 1 again
+	    ret nz
 	    ld hl,#0x0102
 	    ld (_ttymap+1), hl		; set tty map to 0,2,1 for prop
 	    ret
