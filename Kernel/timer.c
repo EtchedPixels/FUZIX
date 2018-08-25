@@ -58,7 +58,7 @@ void wrtime(time_t *tloc)
 	irqrestore(irq);
 }
 
-#ifndef CONFIG_RTC
+#if !defined(CONFIG_RTC) && !defined(CONFIG_NO_CLOCK)
 static uint8_t tod_deci;
 /* Update software emulated clock. Called ten times
    a second */
