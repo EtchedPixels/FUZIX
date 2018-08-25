@@ -5,7 +5,7 @@ available timer tick. Such systems can be made to function but will not be
 able to provide particularly fair time sharing or deal with a process spinning
 in user space very well.
 
-A clock reference and interrupt driven serial I/O are required.
+A clock reference is required and interrupt driven I/O is recommended.
 
 To configure such a system
 
@@ -20,7 +20,9 @@ void sync_clock(void)
 	if (!depth++) {
 		Read Timer
 		Call timer_interrupt the correct number of times to
-		advance
+			advance
+		Poll any non interrupt devices like serial
+		depth--;
 	}
 	irqrestore(irq);
 }
@@ -43,7 +45,9 @@ alarms go off.
 Functional Limitations
 
 The timing values for process time used will be rather more inaccurate.
+
 Uptime will be pretty meaningless for CPU load.
+
 Task switching will only occur when a process makes a system call after
 exceeding its time quantum, when it sleeps, on process exit, or when a
 signal is delivered. The last one is done to ensure that actions such as
