@@ -197,6 +197,7 @@ __ugetc:
 	ld a,(U_DATA__U_PAGE)
 	jr z, ugetcl
 	ld a,(U_DATA__U_PAGE + 1)
+	res 7,h
 ugetcl:
 	call map_page_low
 	ld l,(hl)
@@ -211,26 +212,31 @@ __ugetw:
 	push bc
 	bit 7,h
 	jr z, ugetwl
+	; High page - no wrap possible
 	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
 	res 7,h
 	ld a,(hl)
 	inc hl
 normal_wl:
+	; Get the high byte
 	ld h,(hl)
 	ld l,a
 	jp map_kernel_low
 ugetwl:
+	; Low page - we might be fetching 7FFF/8000
 	ld a,(U_DATA__U_PAGE)
 	call map_page_low
 	ld a,(hl)
 	inc hl
 	bit 7,h
-	jr z, normal_wl
+	jr z, normal_wl		; No split
+	; We fetched 7FFF/8000
 	ld l,a
+	ld a,(U_DATA__U_PAGE + 1)
+	call map_page_low
 	ld a,(0)		; Split can only mean one address
 	ld h,a
-	ld a,(U_DATA__U_PAGE + 1)
 	jp map_kernel_low
 
 __uputc:
@@ -244,6 +250,7 @@ __uputc:
 	ld a,(U_DATA__U_PAGE)
 	jr z, uputcl
 	ld a,(U_DATA__U_PAGE + 1)
+	res 7,h
 uputcl:
 	call map_page_low
 	ld (hl),e
@@ -274,6 +281,7 @@ uputwl:
 	bit 7,h
 	jr z, normal_pwl
 	ld a,(U_DATA__U_PAGE + 1)
+	call map_page_low
 	ld a,d
 	ld (0),a		; Split can only mean one address
 	jp map_kernel_low

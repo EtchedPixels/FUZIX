@@ -113,8 +113,8 @@ unix_syscall_entry:
 	ld (U_DATA__U_CALLNO),a	
 	ld (U_DATA__U_ARGN),bc
 	ld (U_DATA__U_ARGN1),de
-	ld (U_DATA__U_ARGN2),hl
-	ld (U_DATA__U_ARGN3),ix
+	ld (U_DATA__U_ARGN2),ix
+	ld (U_DATA__U_ARGN3),hl
 	; Stack the alternate registers
 	exx
 	push bc
@@ -157,7 +157,7 @@ syscall_return:
 	exx
 	; Return page for caller (may not be the page we can in on if we
 	; swapped
-	ld a,(U_DATA__U_PAGE2)
+	ld a,(U_DATA__U_PAGE+1)
 	ret
 signal_path:
 	ld h,a		; save signal number
@@ -233,6 +233,7 @@ intreti:di
 	ld a, (U_DATA__U_INSYS)
 	or a
 	jr nz, interrupt_kernel
+	call map_user_low
 intsig:
 	ld a,(U_DATA__U_CURSIG)
 	or a
@@ -241,8 +242,9 @@ intsig:
 no_sig:
 	xor a
 	ld e,a
-	ld a,(U_DATA__U_PAGE2)
+	ld a,(U_DATA__U_PAGE+1)
 intret:
+	ex af,af'
 	exx
 	pop iy
 	pop ix
