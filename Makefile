@@ -13,6 +13,7 @@
 # n8vem-mark4:	N8VEM Retrobrew Z180 board
 # amstradnc/nc100:	Amstrad NC100 (or emulator)
 # p112:		DX Designs P112
+# sbcv2:	N8VEM SBC v2
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # trs80:	TRS80 Model 4P with 128K RAM (some other TRS80 extension
 #		mappers have untested code in the tree)
