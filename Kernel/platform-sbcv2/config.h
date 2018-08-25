@@ -42,7 +42,7 @@
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
+#define PROGTOP     0x7E00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
 #define SWAPDEV     (swap_dev)
@@ -66,5 +66,5 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define TTY_INIT_BAUD B115200	/* To match ROMWBW */
+#define TTY_INIT_BAUD B38400	/* To match ROMWBW */
 extern unsigned int swap_dev;
