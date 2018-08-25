@@ -9,6 +9,7 @@
 #include <kdata.h>
 #include <stdbool.h>
 #include <printf.h>
+#include <rtc.h>
 #include <ds1302.h>
 
 void ds1302_send_byte(uint8_t byte)
@@ -82,4 +83,52 @@ uint8_t platform_rtc_secs(void)
     uint8_t buffer;
     ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
     return uint8_from_bcd(buffer & 0x7F); /* mask off top bit (clock-halt) */
+}
+
+static uint8_t rtc_buf[8];
+
+/* Full RTC support (for read - no write yet) */
+int platform_rtc_read(void)
+{
+	uint16_t len = sizeof(struct cmos_rtc);
+	uint16_t y;
+	struct cmos_rtc cmos;
+	uint8_t *p = cmos.data.bytes;
+
+	if (udata.u_count < len)
+		len = udata.u_count;
+
+	ds1302_read_clock(rtc_buf, 7);
+
+	y = rtc_buf[6];
+	if (y > 0x70)
+		y = 0x1900 | y;
+	else
+		y = 0x2000 | y;
+	*p++ = y >> 8;
+	*p++ = y;
+	rtc_buf[4]--;		/* 0 based */
+	if ((rtc_buf[4] & 0x0F) > 9)	/* Overflow case */
+		rtc_buf[4] -= 0x06;
+	*p++ = rtc_buf[4];	/* Month */
+	*p++ = rtc_buf[3];	/* Day of month */
+	if ((rtc_buf[2] & 0x90) == 0x90) {	/* 12hr mode, PM */
+		/* Add 12 BCD */
+		rtc_buf[2] += 0x12;
+		if ((rtc_buf[2] & 0x0F) > 9)	/* Overflow case */
+			rtc_buf[2] += 0x06;
+	}
+	*p++ = rtc_buf[2];	/* Hour */
+	*p++ = rtc_buf[1];	/* Minute */
+	*p = rtc_buf[0];	/* Second */
+	cmos.type = CMOS_RTC_BCD;
+	if (uput(&cmos, udata.u_base, len) == -1)
+		return -1;
+	return len;
+}
+
+int platform_rtc_write(void)
+{
+	udata.u_error = -EOPNOTSUPP;
+	return -1;
 }
