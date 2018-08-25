@@ -21,7 +21,7 @@ static uint8_t ro = 1;
 static const struct termios ttydflt = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
-	CS8 | TTY_INIT_BAUD | CREAD | HUPCL,
+	CS8 | TTY_INIT_BAUD | CREAD | HUPCL | CLOCAL,
 	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
 	{CTRL('D'), 0, CTRL('H'), CTRL('C'),
 	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
