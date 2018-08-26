@@ -52,10 +52,18 @@ struct {
 	uint8_t curtrk;     /* current tranck number */
 	uint8_t ncyl;       /* number of cylinders x heads */
 } devfd_dtbl[4] = {
+#ifdef CONFIG_FLOPPY_NOHD
+    /* 720K */
+    { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
+#else
     { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
     { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
     { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
     { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
+#endif
 };
 
 static int fd_transfer(bool rwflag, uint8_t minor, uint8_t rawflag)

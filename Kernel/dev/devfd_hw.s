@@ -59,7 +59,7 @@ CPU_Z180	.equ	Z80_TYPE-2
 ;    FDC_DATA   - Data/Command Register         (Read/Write)
 ;                               (Byte Writes/Reads)
 ;
-;    FDC_CCR    - Data Rate Register (Write)
+;    FDC_CCR    - Data Rate Register (Write, not present on older FDCs)
 ;       7 6 5 4 3 2 1 0                         (Write)
 ;       | | | | | | +-+-- 00=500 kb/s, RPM/LC Hi, 01=250/300 kb/s (RPM/LC Lo)
 ;       | | | | | |       10=250 kb/s, RPM/LC Lo, 11=1000 kb/s (RPM/LC Hi/Lo)
@@ -330,7 +330,6 @@ Setup:  LD      A,(drive)
         LD      A,(_devfd_sector)
         ADD     A,oSEC1(IY)     ;    Offset Sector # (base 0) by 1st Sector #
         LD      (sect),A        ;     set in Comnd Blk
-
         XOR A                   ;  (Preset Hi 500 kbps, 3.5 & 5.25" Rate)
         BIT     7,oFMT(IY)      ; Hi (500 kbps) Speed?
         JR      NZ,StSiz0       ; ..jump if Hi-Density/Speed to Set if Yes
@@ -343,7 +342,10 @@ Setup:  LD      A,(drive)
         LD      A,#0x02         ;  (Prepare for 250 kbps)
         JR      Z,StSiz0        ; ..jump if No
         LD      A,#0x01         ; Else set to 300 kbps (@360 rpm = 250kbps)
-StSiz0: OUT     (FDC_CCR),A     ; Set Rate in FDC Reg
+StSiz0:
+.ifne FDC_CCR
+	OUT     (FDC_CCR),A     ; Set Rate in FDC Reg
+.endif
         LD      D,A             ;   preserve Rate bits
 .ifeq CPU_Z180
         IN0     A,(0x1F)        ; Read Z80182 CPU Cntrl Reg (B7=1 if Hi Speed)
