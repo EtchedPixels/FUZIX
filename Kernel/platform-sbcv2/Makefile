@@ -14,7 +14,7 @@ DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
 DSRCS += ../dev/devfd.c
 
-DASRCS = ../dev/devfd_hw.s
+DASRCS = ../dev/rbcfd9266_hw.s
 
 NSRCS = 
 

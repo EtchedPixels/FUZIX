@@ -43,5 +43,5 @@ platform-sbcv2/ppide.rel
 platform-sbcv2/ds1302.rel
 platform-sbcv2/ds1302-n8vem.rel
 platform-sbcv2/devfd.rel
-platform-sbcv2/devfd_hw.rel
+platform-sbcv2/rbcfd9266_hw.rel
 -e
