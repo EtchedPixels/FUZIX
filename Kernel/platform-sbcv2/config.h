@@ -24,7 +24,8 @@
 /* PPIDE is present */
 #define CONFIG_IDE
 #define CONFIG_PPIDE
-/* Floppy controller does not do high density */
+/* Floppy controller does not do high density. Well it does but we can't keep
+   up at 4MHz so default to 720K media for now */
 #define CONFIG_FLOPPY_NOHD
 
 #define CONFIG_DYNAMIC_BUFPOOL
