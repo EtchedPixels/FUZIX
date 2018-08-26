@@ -1,8 +1,8 @@
-N8VEM SBCv2
+Retrobrew (formerly N8VEM *) SBCv2
 
 This port is intended as a reference port for simple systems.
 
-The N8VEM mark 2 is a single board hobby Z80 based computer. It has 512K of
+The mark 2 SBC is a single board hobby Z80 based computer. It has 512K of
 RAM and 512K or 1MB of Flash. The upper 32K of the address space is fixed as
 the top 32K of the 512K RAM. The lower 32K can be switched to any 32K bank
 of the ROM or RAM.
@@ -18,14 +18,21 @@ in cards, or from the 16550A, but not both.
 The onboard firmware (ROMWBW) provides a monitor, BIOS and also CP/M or
 ZSystem. For simplicity Fuzix is currently booted from the OS.
 
+(*) Andrew N8VEM is no longer involved in the SBC project and it was renamed at
+his request to avoid confusion.
+
 Supported Hardware
 
-N8VEM SBC v2
+SBC v2
 Optional PPIDE adapter for IDE disks or CF cards
 Optional ECB PropIOv2 for keyboard/VGA console/SD card interface
 
 (currently the PropIOv2 is required - this will get fixed soon)
 
+Hardware
+
+For more information, where to get boards etc please see:
+	http://www.retrobrewcomputers.org
 
 Implementation
 
@@ -102,7 +109,7 @@ dd if=/dev/zero of=sdcard.img bs=512 couunt=16384
 
 Run the simulator and in CP/M or ZSystem and (if G is the SD card drive letter)
 
-n8vem2 -p
+rbcv2 -p
 
 G:ERA *.*
 
@@ -114,3 +121,30 @@ cpmcp -T raw -f romwbwhd sdcard.img fuzix.bin 0:fuzix.com
 
 Then go back in the simulator and run FUZIX as a CP/M binary
 
+
+Making A Filesystem
+
+Build an 8MB file system
+
+cd Standalone/filesystem-src
+./build-filesystem fuzix.fs 256 16384
+
+makedisk 3 rbc.ide
+
+dd if=rbc.ide of=rbc.raw bs=512 skip=2
+
+fdisk rbc.raw
+
+Create a 16MB partition at sector offset 2048 - and any others you want
+Write the changes
+Quit
+
+dd if=fuzix.fs of=rbc.raw bs=512 seek=2048 conv=notrunc
+
+dd if=rbc.raw of=rbc.ide bs=512 seek=2 conv=notrunc
+
+
+If you need to udate the filesystem then ucp supports offsets. You need a 2050
+sector offset so you can do
+
+ucp rbc.ide 1049600
