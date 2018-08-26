@@ -1,4 +1,4 @@
-; UZI mnemonics for memory addresses etc
+; FUZIX mnemonics for memory addresses etc
 
 U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes)
@@ -15,3 +15,11 @@ Z80_MMU_HOOKS		    .equ 0
 CONFIG_SWAP		    .equ 1
 
 NBUFS			    .equ 5
+
+; FDC9266 floppy controller ports
+FDC_CCR		.equ	0	; No CCR
+FDC_MSR		.equ	0x36	; 8272 Main Status Register (R/O)
+FDC_DATA	.equ	0x37	; 8272 Data Port (R/W)
+FDC_DOR		.equ	0x38	; Digital Output Register (W/O)
+
+CPU_CLOCK_KHZ	.equ	8000	; 8MHz is usual top

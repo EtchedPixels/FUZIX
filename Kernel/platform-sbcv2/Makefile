@@ -12,6 +12,9 @@ ASRCS += tricks.s commonmem.s
 DISCARD_DSRCS = ../dev/devide_discard.c
 DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
+DSRCS += ../dev/devfd.c
+
+DASRCS = ../dev/devfd_hw.s
 
 NSRCS = 
 
@@ -21,8 +24,9 @@ NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 DISCOBJS = $(DISCSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
 
-OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS)
+OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
 JUNK =  *.lst *.asm *.sym *.rst *.lst
 
@@ -45,6 +49,9 @@ $(NOBJS): %.rel: ../dev/net/%.c
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
+
+$(DAOBJS): %.rel: ../dev/%.s
+	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~

@@ -24,6 +24,8 @@
 /* PPIDE is present */
 #define CONFIG_IDE
 #define CONFIG_PPIDE
+/* Floppy controller does not do high density */
+#define CONFIG_FLOPPY_NOHD
 
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
@@ -32,12 +34,6 @@
 #define MAX_BLKDEV	4
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
-
-/* For now we don't support resizing */
-#define VT_WIDTH	80
-#define VT_HEIGHT	25
-#define VT_RIGHT	79
-#define VT_BOTTOM	24
 
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
