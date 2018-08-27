@@ -9,6 +9,16 @@
 #include <printf.h>
 #include <devfd.h>
 
+/*
+ *	This table is the glue that holds all the kernel device driver
+ *	logic together. Each device driver provides methods for
+ *	open, close, read, write and ioctl, although it can opt to use
+ *	defaults as well.
+ *
+ *	The validdev function is the same for all platforms but has to live
+ *	in the same file as the table. Just paste it into each.
+ */
+
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/hd		Hard disc block devices */
