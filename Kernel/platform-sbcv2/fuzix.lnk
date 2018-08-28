@@ -39,9 +39,9 @@ platform-sbcv2/mbr.rel
 platform-sbcv2/devide.rel
 platform-sbcv2/devide_discard.rel
 platform-sbcv2/propio2.rel
-platform-sbcv2/ppide.rel
+platform-sbcv2/ppide_rbc.rel
 platform-sbcv2/ds1302.rel
-platform-sbcv2/ds1302-n8vem.rel
+platform-sbcv2/ds1302_rbc.rel
 platform-sbcv2/devfd.rel
 platform-sbcv2/rbcfd9266_hw.rel
 -e
