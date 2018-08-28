@@ -1,6 +1,9 @@
 ;
 ;	    SBC v2 support
 ;
+;	This first chunk is mostly boilerplate to adjust for each
+;	system.
+;
 
             .module sbcv2
 
@@ -50,16 +53,31 @@
 
 _bufpool:
 	    .ds BUFSIZE * NBUFS
-;
+
+; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (kept even when we task switch)
-;
+; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
+;
+;	This method is invoked early in interrupt handling before any
+;	complex handling is done. It's useful on a few platforms but
+;	generally a ret is all that is needed
+;
 platform_interrupt_all:
 	    ret
 
-; FIXME: map ROM and jump into it
+;
+;	If you have a ROM monitor you can get back to then do so, if not
+;	fall into reboot.
+;
 _platform_monitor:
+;
+;	Reboot the system if possible, halt if not. On a system where the
+;	ROM promptly wipes the display you may want to delay or wait for
+;	a keypress here (just remember you may be interrupts off, no kernel
+;	mapped so hit the hardware).
+;
 _platform_reboot:
 	    di
 	    xor a
@@ -72,10 +90,12 @@ _platform_reboot:
 ; -----------------------------------------------------------------------------
 	    .area _CODE
 
-;
-;	We will address this one better when we do some ROMWBW integration
-;
 	    .globl _ttymap
+;
+;	This routine is called very early, before the boot code shuffles
+;	things into place. We do the ttymap here mostly as an example but
+;	even that really ought to be in init_hardware.
+;
 init_early:
 	    ; FIXME: code goes here to check for PropIO v2 nicely
 	    ; Passes the minimal checking
@@ -92,8 +112,20 @@ init_early:
 	    ld (_ttymap+1), hl		; set tty map to 0,2,1 for prop
 	    ret
 
+; -----------------------------------------------------------------------------
+; DISCARD is memory that will be recycled when we exec init
+; -----------------------------------------------------------------------------
 	    .area _DISCARD
-
+;
+;	After the kernel has shuffled things into place this code is run.
+;	It's the best place to breakpoint or trace if you are not sure your
+;	kernel is loading and putting itself into place properly.
+;
+;	It's required jobs are to set up the vectors, ramsize (total RAM),
+;	and procmem (total memory free to processs), as well as setting the
+;	interrupt mode but *not* enabling interrupts. Many platforms also
+;	program up support hardware like PIO and CTC devices here.
+;
 init_hardware:
 	    ld hl,#512
             ld (_ramsize), hl
@@ -110,17 +142,23 @@ init_hardware:
 
             ret
 
-;------------------------------------------------------------------------------
-; COMMON MEMORY PROCEDURES FOLLOW
-
+;
+;	Bank switching unsurprisingly must be in common memory space so it's
+;	always available.
+;
             .area _COMMONMEM
 
-mapreg:    .db 0
-mapsave:   .db 0
+mapreg:    .db 0	; Our map register is write only so keep a copy
+mapsave:   .db 0	; Saved copy of the previous map (see map_save)
 
 _kernel_flag:
 	    .db 1	; We start in kernel mode
 
+;
+;	This is invoked with a NULL argument at boot to set the kernel
+;	vectors and then elsewhere in the kernel when the kernel knows
+;	a bank may need vectors writing to it.
+;
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
 	    ; will exit with interrupts off
@@ -164,12 +202,20 @@ map_kernel:
 	    out (0x78), a
 	    pop af
 	    ret
+	    ; map_process is called with HL either NULL or pointing to the
+	    ; page mapping. Unlike the other calls it's allowed to trash AF
 map_process:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
 map_process_hl:
-	    ld a, (hl)
+	    ld a, (hl)			; and fall through
+	    ;
+	    ; With a simple bank switching system you need to provide a
+	    ; method to switch to the bank in A without corrupting any
+	    ; other registers. The stack is safe in common memory.
+	    ; For swap you need to provide what for simple banking is an
+	    ; identical routine.
 map_for_swap:
 map_process_a:			; used by bankfork
 	    dec a		; We bias by 1 because 0 is a valid user
@@ -178,6 +224,10 @@ map_process_a:			; used by bankfork
 	    inc a		; cheaper than push/pop
             ret
 
+	    ;
+	    ; Map the current process into memory. We do this by extracting
+	    ; the bank value from u_page.
+	    ;
 map_process_always:
 	    push af
 	    push hl
@@ -187,12 +237,20 @@ map_process_always:
 	    pop af
 	    ret
 
+	    ;
+	    ; Save the existing mapping. The place you save it to needs to
+	    ; be in common memory as you have no idea what bank is live
+            ;
 map_save:   push af
 	    ld a, (mapreg)
 	    ld (mapsave), a
 	    pop af
 	    ret
-
+	    ;
+	    ; Restore the saved bank. Note that you don't need to deal with
+	    ; stacking of banks (we never recursively use save/restore), and
+	    ; that we may well call save and decide not to call restore.
+	    ;
 map_restore:
 	    push af
 	    ld a, (mapsave)
@@ -201,6 +259,11 @@ map_restore:
 	    pop af
 	    ret
 	    
+	    ;
+	    ; Used for low level debug. Output the character in A without
+	    ; corrupting other registers. May block. Interrupts and memory
+	    ; state are undefined
+	    ;
 outchar:
 	    push af
 twait:	    in a,(0x6D)
@@ -212,6 +275,10 @@ twait:	    in a,(0x6D)
 
 ;
 ;	PropIO v2 block transfers
+;
+;	This is glue specific to the PropIO driver to customise it for a
+;	given platform. Basically it's the code in common space to do the
+;	data transfer into any bank.
 ;
 
 ; FIXME: Move these somewhere better
@@ -234,7 +301,7 @@ _platform_prop_sd_read:
 	    jr nz, do_read_a
 	    ld a, (U_DATA__U_PAGE)
 do_read_a:  call map_process_a
-do_read:   ld bc,#0xAB
+do_read:    ld bc,#0xAB
 	    inir
 	    inir
 	    jp map_kernel

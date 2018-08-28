@@ -1,6 +1,7 @@
 ;
-;	We have no real common on the TRS80so just tuck it up at the top of
-;	memory leaving room for the keyboard and video (3K)
+;	The common memory area traditionally starts with the udata and the
+;	interrupt stacks. As this is standard in almost all cases you can
+;	just include the standard implementation.
 ;
         .module commonmem
 

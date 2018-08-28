@@ -1,7 +1,7 @@
 CROSS_CCOPTS += -I../dev/
 
 
-CSRCS = devtty.c ppide.c
+CSRCS = devtty.c
 CSRCS += devices.c main.c
 
 DISCSRCS = discard.c
@@ -12,9 +12,9 @@ ASRCS += tricks.s commonmem.s
 DISCARD_DSRCS = ../dev/devide_discard.c
 DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
-DSRCS += ../dev/devfd.c
+DSRCS += ../dev/devfd.c ../dev/ppide_rbc.c
 
-DASRCS = ../dev/rbcfd9266_hw.s
+DASRCS = ../dev/rbcfd9266_hw.s ../dev/ds1302_rbc.s
 
 NSRCS = 
 
