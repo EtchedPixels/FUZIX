@@ -1,3 +1,12 @@
+/*
+ *	Platform specific declarations for the ParPort IDE device.
+ *	This tells the shared driver how the thing is wired up. For most
+ *	RBC/N8VEM and RC2014 configurations this should work out of the box.
+ *
+ *	If the configuration is standard but the port is elsewhere then you
+ *	probably only need to touch PPIDE_BASE.
+ */
+
 #ifdef CONFIG_PPIDE
 #define PPIDE_BASE 0x60         /* Base address of 8255A */
 #define IDE_REG_INDIRECT        /* IDE registers are not directly connected to the CPU bus */
