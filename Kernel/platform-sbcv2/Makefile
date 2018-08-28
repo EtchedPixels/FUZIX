@@ -6,7 +6,7 @@ CSRCS += devices.c main.c
 
 DISCSRCS = discard.c
 
-ASRCS = sbcv2.s crt0.s ds1302-n8vem.s
+ASRCS = sbcv2.s crt0.s
 ASRCS += tricks.s commonmem.s
 
 DISCARD_DSRCS = ../dev/devide_discard.c
