@@ -185,6 +185,8 @@ _program_vectors:
             ld hl, #null_handler   ;   to Our Trap Handler
             ld (0x0001), hl
 
+	    ; and fall into map_kernel
+
 ;
 ;	Mapping set up for the SBCv2
 ;

@@ -91,7 +91,6 @@ void kputchar(char c)
  */
 uint8_t tty_writeready(uint8_t minor)
 {
-	minor;
 	/* FIXME: flow control */
 	if (ttymap[minor] == 1)
 		return uart_lsr & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
@@ -109,7 +108,6 @@ uint8_t tty_writeready(uint8_t minor)
  */
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	minor;
 	if (ttymap[minor] == 1)
 		uart_tx = c;
 	else
@@ -181,7 +179,7 @@ void tty_setup(uint8_t minor)
  */
 void tty_sleeping(uint8_t minor)
 {
-	minor;
+	used(minor);
 }
 
 /*
@@ -202,6 +200,7 @@ int tty_carrier(uint8_t minor)
  */
 void tty_data_consumed(uint8_t minor)
 {
+	used(minor);
 }
 
 /*

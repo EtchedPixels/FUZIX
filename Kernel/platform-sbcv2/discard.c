@@ -22,7 +22,6 @@ extern int strcmp(const char *, const char *);
  */
 uint8_t platform_param(unsigned char *p)
 {
-	used(p);
 	if (strcmp(p, "msr") == 0) {
 		timermsr = 1;
 		return 1;
