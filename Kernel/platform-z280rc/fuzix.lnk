@@ -1,0 +1,41 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _VECTORS=0xF000
+-b _INITIALIZER=0xFD00
+-l z80
+platform-z280rc/crt0.rel
+platform-z280rc/commonmem.rel
+platform-z280rc/z280rc.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem.rel
+usermem_std-z80.rel
+platform-z280rc/tricks.rel
+platform-z280rc/main.rel
+platform-z280rc/discard.rel
+timer.rel
+kdata.rel
+platform-z280rc/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+swap.rel
+bankfixed.rel
+devsys.rel
+platform-z280rc/devtty.rel
+platform-z280rc/blkdev.rel
+platform-z280rc/mbr.rel
+platform-z280rc/devide.rel
+platform-z280rc/devide_discard.rel
+-e

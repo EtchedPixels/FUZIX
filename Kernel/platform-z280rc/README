@@ -1,0 +1,50 @@
+Minimal Initial Support for Bill Shen's Z280RC
+
+This is a port in progress. It doesn't work yet.
+
+
+Z280RC is a Z280 based SBC with limited support for RC2014 peripherals. Only
+8bit I/O port access to the bus is supported and IM2 cannto be used. In
+practice this isn't much of a limitation as the Z280RC is self contained for
+all things that matter.
+
+Requirements
+
+Z280RC SBC
+
+Supported
+
+Z280 on board UART as console
+Z280 on board timers for clock tick and baud rate (NEITHER DONE YET)
+16bit IDE/CF adapter on the board
+
+Not Supported (initially)
+
+Z280 processor modes
+Virtual memory
+Proper paging
+Split I/D
+
+
+Memory Map
+
+We fake up a Z80 with banked memory and use the MMU to create 8 (for now)
+user banks with the top 8K common and the rest per bank, plus a kernel bank
+that is the full 64K identity mapped.
+
+User Mode
+
+0000-00FF	Z80 vectors and RST
+0100-DDFF	User code
+DE00-DFFF	udata stash
+E000-EFFF	Unused
+F000-FFFF	Common space (lots of room left)
+
+Kernel Mode
+
+0000-00FF	Z80 vectors and RST
+0100-????	Kernel
+????-EFFF	Buffers
+F000-FFFF	Common space (lots of room left)
+
+No external peripherals are currently supported.
