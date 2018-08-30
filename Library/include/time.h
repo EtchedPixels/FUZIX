@@ -37,7 +37,7 @@ extern long timezone;
 
 extern clock_t clock(void);
 extern time_t mktime(struct tm * __tp);
-extern double difftime(time_t *__time2, time_t *__time1);
+#define difftime(x,y)	((double)((x)-(y)))
 
 
 extern void __compute_tm(struct tm *tmbuf, long days, long rem);
