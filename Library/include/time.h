@@ -40,8 +40,8 @@ extern time_t mktime(struct tm * __tp);
 extern double difftime(time_t *__time2, time_t *__time1);
 
 
-extern void __tm_conv(struct tm *tmbuf, time_t *t, long offset);
-extern uint8_t __in_dst(struct tm *tm, uint32_t secs);
+extern void __compute_tm(struct tm *tmbuf, long days, long rem);
+extern int32_t __is_dst(struct tm *tm, uint32_t secs);
 extern char *asctime(struct tm * __tp);
 extern char *asctime_r(struct tm *, char * __buf);
 extern char *ctime(time_t * __tp);

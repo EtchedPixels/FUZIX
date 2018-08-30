@@ -231,13 +231,13 @@ static void convert_dow(struct tm *tm)
  *	tm is the time structure parsed assuming no local time. secs is
  *	the number of seconds of the day that have passed.
  *
- *	We return 0 if it's not summer time, or 1 if it is.
+ *	We return 0 if it's not summer time, 1 if it is, -1 if we don't know
  */
-uint8_t __in_dst(struct tm *tm, uint32_t secs)
+static int8_t calc_is_dst(struct tm *tm, uint32_t secs)
 {
 	uint16_t yday = tm->tm_yday;
 	uint8_t south = 0;
-
+	
 	switch(dsmode) {
 	case 0:
 		return 0;
@@ -295,4 +295,13 @@ uint8_t __in_dst(struct tm *tm, uint32_t secs)
                         return south;
 		return !south;
 	}
+}
+
+int32_t __is_dst(struct tm *tm, uint32_t secs)
+{
+        tm->tm_isdst = calc_is_dst(tm, secs);
+        if (tm->tm_isdst == 1)
+                return dstzone;
+        else	/* Not, or unknown */
+                return timezone;
 }

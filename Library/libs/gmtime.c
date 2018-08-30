@@ -10,27 +10,12 @@ unsigned char __mon_lengths[2][12] = {
 #define SECS_PER_DAY	86400
 #define SECS_PER_HOUR	3600
 
-void __tm_conv(struct tm *tmbuf, time_t * pt, long offset)
+/* Do the basic computation and turn days/remainder into a tz */
+void __compute_tm(struct tm *tmbuf, long days, long rem)
 {
 	register int y;
-	long days;		/* This breaks but not for a while 8) */
-	long rem;
 	unsigned char *ip;
 
-	days = *pt / SECS_PER_DAY;
-	rem = *pt % SECS_PER_DAY;
-	rem += offset;
-
-	while (rem < 0) {
-		rem += SECS_PER_DAY;
-		--days;
-	}
-	/* FIXME: speed - we should probably do some of this with ifs and
-	   powers of 2 down as a trade against size */
-	while (rem >= SECS_PER_DAY) {
-		rem -= SECS_PER_DAY;
-		++days;
-	}
 	tmbuf->tm_hour = rem / SECS_PER_HOUR;
 	rem %= SECS_PER_HOUR;
 	tmbuf->tm_min = rem / 60;
@@ -57,13 +42,22 @@ void __tm_conv(struct tm *tmbuf, time_t * pt, long offset)
 		days -= ip[y++];
 	tmbuf->tm_mon = y;
 	tmbuf->tm_mday = days + 1;
-	/* Until we do DST flagging */
-	tmbuf->tm_isdst = 0;
+}
+
+static void __tm_conv(struct tm *tmbuf, time_t * pt)
+{
+	long days;		/* This breaks but not for a while 8) */
+	long rem;
+
+	days = *pt / SECS_PER_DAY;
+	rem = *pt % SECS_PER_DAY;
+
+	__compute_tm(tmbuf, days, rem);
 }
 
 struct tm *gmtime(time_t *timep)
 {
 	static struct tm tmb;
-	__tm_conv(&tmb, timep, 0);
+	__tm_conv(&tmb, timep);
 	return &tmb;
 }
