@@ -2,6 +2,8 @@
 #
 # Useful values for general work
 #
+# amstradnc/nc100:	Amstrad NC100 (or emulator)
+# amstradnc/nc200:	Amstrad NC100 (or emulator)
 # coco2cart:	Tandy COCO2 or Dragon with 64K and IDE or SDC + cartridge flash
 #		(or modified xroar)
 # coco3:	Tandy COCO3 512K (or MAME)
@@ -10,13 +12,13 @@
 #		(or OpenMSX suitably configured)
 # mtx:		Memotech MTX512 with SDX (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
-# n8vem-mark4:	N8VEM Retrobrew Z180 board
-# amstradnc/nc100:	Amstrad NC100 (or emulator)
+# n8vem-mark4:	RBC/N8VEM Retrobrew Z180 board
 # p112:		DX Designs P112
-# sbcv2:	N8VEM SBC v2
+# sbcv2:	RBC/N8VEM SBC v2
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
-# trs80:	TRS80 Model 4P with 128K RAM (some other TRS80 extension
+# trs80:	TRS80 Model 4/4D/4P with 128K RAM (some other TRS80 extension
 #		mappers have untested code in the tree)
+# trs80m1:	TRS80 Model I/III with suitable banker (also clones)
 # ubee:		Microbee (256TC currently - older models in progress)
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta retrobrew SBC
