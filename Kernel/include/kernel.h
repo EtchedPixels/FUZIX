@@ -88,6 +88,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define CPUTYPE_8086	7
 #define CPUTYPE_65C816	8
 #define CPUTYPE_R2K	9
+#define CPUTYPE_Z280	10
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
