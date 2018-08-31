@@ -35,7 +35,7 @@ static void __tm_conv_local(struct tm *tmbuf, time_t * pt)
 	shift = __is_dst(tmbuf, rem) - timezone;
 	/* Recalculate effect of DST */
 	if (shift) {
-		rem + shift;
+		rem += shift;
 		/* This loop normally only happens once max */
 		while (rem < 0) {
 			rem += SECS_PER_DAY;
@@ -45,7 +45,7 @@ static void __tm_conv_local(struct tm *tmbuf, time_t * pt)
 			rem -= SECS_PER_DAY;
 			++days;
 		}
-		__compute_tm(tmbuf, days, rem + shift);
+		__compute_tm(tmbuf, days, rem);
 	}
 }
 
