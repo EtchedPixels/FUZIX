@@ -127,7 +127,6 @@ set_id:
 static const int cpu_vsize = 16;
 static const int cpu_psize = 16;
 static const int cpu_step = -1;
-static const int cpu_mhz = 0;
 static uint8_t cpu_vendor, cpu_id;
 static int cpu_cache = 0;
 static const char cpu_fpu[] = "no";
@@ -193,6 +192,55 @@ static void cpu_ident(void)
         cpu_bugs = "iff";
 }
 
+#elif defined(__CC65__)
+
+extern uint8_t cpu_identify(void);
+extern uint8_t cpu_bcdtest(void);
+extern uint8_t cpu_rortest(void);
+
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Unknown", "WDC", "Rockwell/WDC" };
+static const char *cpu_name[3] = { "6502", "65C02", "65C816" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[]="no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 16;
+static const char *cpu_pm = NULL;
+
+static void cpu_ident(void)
+{
+    /* NMOS, CMOS or 65C816 ? */
+    cpu_id = cpu_identify();
+    switch(cpu_id) {
+    case 0:
+        if (cpu_rortest() == 0x02)
+            cpu_bugs = "brk ror jmpff invread rmw";
+        else
+            cpu_bugs = "brk jmpff invread rmw";
+        /* Check if BCD mode works - 0A v 10 */
+        /* 2A03: Just in case anyone ever ports Fuzix to a NES */
+        if (cpu_bcdtest() != 0x10)
+            cpu_bugs = "brk jmpff invread rmw nobcd";
+        cpu_flags = "nmos";
+        break;
+    case 1:
+        /* Q : How to safely check for rockwell bit ops ? */
+        /* Could also check here for HuC6820, Renesas 740 I guess ? */
+        cpu_flags = "bcd cmos";
+        break;
+    case 2:
+        cpu_vendor = 1;
+        cpu_flags = "bcd cmos ai16";
+        cpu_psize = 24;
+        break;
+    }
+}
+
 #else
 #error "unsupported CPU"
 #endif
@@ -206,7 +254,7 @@ static void do_identify(void)
     if (cpu_step != -1)
         printf("%-16s: %d\n", "stepping", cpu_step);
     if (cpu_MHz != 0)
-        printf("%-16s: %d\n", "cpu MHz", cpu_mhz);
+        printf("%-16s: %d\n", "cpu MHz", cpu_MHz);
     if (cpu_cache != 0)
         printf("%-16s: %d bytes\n", "cache size", cpu_cache);
     printf("%-16s: %s\n", "fpu", cpu_fpu);
@@ -217,7 +265,8 @@ static void do_identify(void)
     /* TODO bogomips */
     printf("%-16s: %d bits physical, %d bits virtual\n", "address sizes",
         cpu_psize, cpu_vsize);
-    printf("%-16s: %s\n", "power management", cpu_pm);
+    if (cpu_pm)
+        printf("%-16s: %s\n", "power management", cpu_pm);
 }
 
 static void usage(void)
