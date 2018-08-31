@@ -1,5 +1,4 @@
 /*************************** TZSET ************************************/
-
 #include <ctype.h>
 #include <time.h>
 #include <string.h>
@@ -154,12 +153,12 @@ char *parse_dst(char *p, int n)
 		dstime[n] = 2 * 3600;	/* 02:00 is the default */
 		return p;
 	}
-	np = parse_tzspec(p, &dstime[n]);
+	np = parse_tzspec(p + 1, &dstime[n]);
 	if (np == NULL) {
 		dstime[n] = 0L;
-		np = p;
+		np = p + 1;
 	}
-	return p;
+	return np;
 }	
        
 void tzset(void)
@@ -173,6 +172,7 @@ void tzset(void)
         tzset_done = 1;
         memcpy(tzbuf0, "GMT", 4);
         timezone = 0 * 60 * 60L;        /* London */
+        dsmode = 0;			/* No daylight savings */
         if (tz == NULL)
                 return;
         p = tzunit(tz, tzbuf0, &timezone, 1);
@@ -186,7 +186,7 @@ void tzset(void)
         if (*p++ != ',')
                 return;
 	p = parse_dst(p, 0);
-	if (p == NULL || *p != ',')
+	if (p == NULL || *p++ != ',')
 		return;
 	parse_dst(p, 1);
 }
