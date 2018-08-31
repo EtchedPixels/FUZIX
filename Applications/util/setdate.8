@@ -1,0 +1,33 @@
+SETDATE(8)
+## NAME
+*setdate* - set the system time and date
+## SYNOPSIS
+*setdate* \[OPTIONS\]
+##DESCRIPTION
+*Setdate* sets the system time and date either by prompting the user or if
+available it can read from the /dev/rtc device and set the time based upon
+that.
+## OPTIONS
+:*-a*
+  Set the time from the real time clock if present and never prompt the user
+
+:*-u*
+  Prompt for the time from the user even if a real time clock is present
+
+:*-0*
+  Assume that times are in UTC not local time.
+
+When the -0 option is not used the time zone is taken from the TZ
+environment variable. The time will be computed based upon the specified
+local time including daylight savings.
+## STANDARDS
+This is a Fuzix specific command loosely modelled on the traditional DOS
+interface.
+## EXIT STATUS
+*setdate* returns 0 on success, 1 if it could not set the time as there is
+no RTC, 2 if there were insufficient permissions and 127 in
+the case of an internal error.
+## SEE ALSO
+*date*(1), *rtc*(4).
+## AUTHOR
+Alan Cox

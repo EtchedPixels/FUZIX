@@ -1,4 +1,18 @@
 /*
+ *	setdate: set time and date
+ */
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/rtc.h>
+
+static uint8_t utc;
+
+/*
  * mktime.c -- converts a struct tm into a time_t
  *
  * Copyright (C) 1997 Free Software Foundation, Inc.
@@ -17,15 +31,6 @@
  * this program; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/rtc.h>
 
 static uint8_t dim[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static char day[] = {
@@ -93,6 +98,9 @@ time_t mktime(struct tm	*t)
 	return(result);
 }
 
+/*
+ *	Fuzix real time clock reading and date setting
+ */
 void unbc(uint8_t *p)
 {
     uint8_t c = *p & 0x0F;
@@ -135,7 +143,7 @@ int rtcdate(void)
         tm.tm_hour = *p++;
         tm.tm_min = *p++;
         tm.tm_sec = *p;
-        tm.tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
+        tm.tm_isdst = utc ? 0 : -1;
         rtc.data.clock = mktime(&tm);
     case CMOS_RTC_TIME:
         if (stime(&rtc.data.clock) == -1) {
@@ -150,7 +158,7 @@ int rtcdate(void)
 
 void usage(void)
 {
-    fprintf(stderr, "Usage: setdate [-a] [-u]\n");
+    fprintf(stderr, "Usage: setdate [-a] [-u] [-0]\n");
     exit(1);
 }
 
@@ -164,13 +172,16 @@ int main(int argc, char *argv[])
     int opt;
     int user = 0, autom = 0;
 
-    while ((opt = getopt(argc, argv, "au")) != -1) {
+    while ((opt = getopt(argc, argv, "au0")) != -1) {
         switch(opt) {
         case 'a':
             autom = 1;
             break;
         case 'u':
             user = 1;
+            break;
+        case '0':
+            utc = 1;
             break;
         default:
             usage();
@@ -231,11 +242,11 @@ retime:
     }
     if (!set)
         return 0;
-    tm->tm_isdst = 0;	/* FIXME -1 once we have dst fixed */
+    tm->tm_isdst = utc ? 0 : -1;
     t = mktime(tm);
     if (t == (time_t) -1) {
         fprintf(stderr, "mktime: internal error.\n");
-        return 255;
+        return 127;
     }
     if (stime(&t)) {
         perror("stime");
