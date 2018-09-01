@@ -1,4 +1,4 @@
-PLATFORM = 68000
+PLATFORM = pdp11
 CC = pdp11-aout-gcc
 ASM = pdp11-aout-as
 AR = pdp11-aout-ar
@@ -75,6 +75,7 @@ SRCS  = \
 	fgrep.c \
 	free.c \
 	fsck.c \
+	fsck-fuzix.c \
 	grep.c \
 	id.c \
 	kbdrate.c \

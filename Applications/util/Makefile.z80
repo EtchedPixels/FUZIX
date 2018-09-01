@@ -65,6 +65,7 @@ SRCS  = banner.c \
 	fgrep.c \
 	free.c \
 	fsck.c \
+	fsck-fuzix.c \
 	gfxtest.c \
 	gptparse.c \
 	grep.c \

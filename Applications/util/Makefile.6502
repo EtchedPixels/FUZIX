@@ -70,6 +70,7 @@ SRCS  = banner.c \
 	fgrep.c \
 	free.c \
 	fsck.c \
+	fsck-fuzix.c \
 	grep.c \
 	id.c \
 	kbdrate.c \
