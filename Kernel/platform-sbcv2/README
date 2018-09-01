@@ -147,4 +147,4 @@ dd if=rbc.raw of=rbc.ide bs=512 seek=2 conv=notrunc
 If you need to udate the filesystem then ucp supports offsets. You need a 2050
 sector offset so you can do
 
-ucp rbc.ide 1049600
+ucp rbc.ide:1049600

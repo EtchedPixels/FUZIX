@@ -62,6 +62,8 @@ extern unsigned int swap_dev;
    up at 4MHz so default to 720K media for now */
 #define CONFIG_FLOPPY_NOHD
 
+#define BOOTDEVICENAMES "hd#,fd"
+
 /* We will resize the buffers available after boot. This is the normal setting */
 #define CONFIG_DYNAMIC_BUFPOOL
 /* Swap will be set up when a suitably labelled partition is seen */

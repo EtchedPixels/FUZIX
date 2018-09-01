@@ -11,7 +11,6 @@ start.rel
 version.rel
 lowlevel-z80.rel
 usermem.rel
-usermem_std-z80.rel
 platform-sbcv2/tricks.rel
 platform-sbcv2/main.rel
 platform-sbcv2/discard.rel
