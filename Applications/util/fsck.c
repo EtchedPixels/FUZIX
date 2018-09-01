@@ -67,6 +67,9 @@ struct direct {
 static const char no_more_free[] = { "Sorry... No more free blocks." };
 static const char block_multi[]= { "Block %u in inode %u value %u multiply allocated. Fix? " };
 static const char missing_ind_blk[] = { "Missing indirect block" };
+static const char no_memory[] = { "Not enough memory.\n" };
+static const char fstab[] = { "/etc/fstab" };
+static const char rstr[] = { "r" };
 static int dev = 0;
 static struct filesys superblock;
 static int dev_fd;
@@ -119,17 +122,17 @@ static int yes(void) {
     return ret;
 }
 
-static void bitset(uint16_t b) __z88dk_fastcall
+static void bitset(uint16_t b)
 {
     bitmap[b >> 3] |= (1 << (b & 7));
 }
 
-static void bitclear(uint16_t b) __z88dk_fastcall
+static void bitclear(uint16_t b)
 {
     bitmap[b >> 3] &= ~(1 << (b & 7));
 }
 
-static int bittest(uint16_t b) __z88dk_fastcall
+static int bittest(uint16_t b)
 {
     return (bitmap[b >> 3] & (1 << (b & 7))) ? 1 : 0;
 }
@@ -145,7 +148,7 @@ const char *mntpoint(const char *mount)
     FILE *fp;
     struct mntent *mnt;
 
-    fp = setmntent("/etc/fstab", "r");
+    fp = setmntent(fstab, rstr);
     if (fp) {
         while (mnt = getmntent(fp)) {
             if (strcmp(mnt->mnt_dir, mount) == 0) {
@@ -228,7 +231,7 @@ int perform_fsck_iter(char *name, int search)
     linkmap = (int16_t *) calloc(8 * superblock.s_isize, sizeof(int16_t));
 
     if (!bitmap || !linkmap) {
-        fputs("Not enough memory.\n", stderr);
+        fputs(no_memory, stderr);
         return(error |= 8);
     }
 
@@ -287,9 +290,9 @@ int main(int argc, char *argv[])
     }
 
     if (argc == 1 && aflag) {
-        FILE *fp = setmntent("/etc/fstab", "r");
+        FILE *fp = setmntent(fstab, rstr);
         if (fp == NULL) {
-            perror("/etc/fstab");
+            perror(fstab);
             exit(1);
         }
         while((mnt = getmntent(fp)) != NULL) {
@@ -675,6 +678,11 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
         }
         if (dentry.d_ino != pnum &&
                 dentry.d_ino != inum && depth < MAXDEPTH) {
+            /* This is a bad approach. We ought to have some kind of
+               growing buffer, but our realloc will end up chopping up
+               the pool and stuff I think. sbrk() doesn't help as we've
+               got lots of memory in the pool from freeing bitmap that
+               won't go back FIXME */
             ename = malloc(strlen(name) + strlen(dentry.d_name) + 2);
             if (ename == NULL) {
                 fprintf(stderr, "Not enough memory.\n");
