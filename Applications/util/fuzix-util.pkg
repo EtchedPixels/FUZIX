@@ -88,6 +88,7 @@ f 0755 /bin/passwd      passwd
 f 0755 /bin/prtroot     prtroot
 f 0755 /bin/reboot      reboot
 l /bin/reboot /bin/halt
+l /bin/reboot /bin/shutdown
 f 0755 /bin/sed         sed
 f 0755 /bin/seq         seq
 f 0755 /bin/setdate     setdate

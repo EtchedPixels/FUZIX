@@ -5,6 +5,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+
+static int telinit6(void)
+{
+  int fd = open("/var/run/initctl", O_WRONLY|O_TRUNC|O_CREAT, 0600);
+  if (fd < 0 || write(fd, "\006", 1) != 1 || close(fd) == -1 || 
+      kill(1, SIGUSR1) < 0)
+        return 0;
+  return 1;
+}
 
 int main(int argc, char *argv[])
 {
@@ -22,7 +32,12 @@ int main(int argc, char *argv[])
     write(2, "unexpected argument.\n", 21);
     exit(1);
   }
-    
+  /* shutdown does a polite shutdown */
+  if (strcmp(p, "shutdown") == 0) {
+    if (telinit6())
+      exit(0);
+    write(2, "unable to talk to init.\n", 24);
+  }
   if (strcmp(p, "halt") == 0)
     uadmin(A_SHUTDOWN, pv, 0);
   else
