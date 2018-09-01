@@ -160,7 +160,6 @@ static int8_t prop_sd_reset(void)
 int8_t prop_sd_open(void)
 {
     uint8_t type;
-    uint32_t cap;
     int8_t r;
     /* It lives... */
     r = prop_send_cmd(CMD_INIT);
@@ -169,7 +168,7 @@ int8_t prop_sd_open(void)
     /* Type and capacity */
     if (prop_send_get(CMD_TYPE, &type, 1) < 0)
         return -1;
-    if (prop_send_get(CMD_CAP, &cap, 4) < 0)
+    if (prop_send_get(CMD_CAP, &prop_sd_capacity, 4) < 0)
         return -1;
     return 1;
 }
@@ -214,7 +213,7 @@ uint8_t prop_sd_transfer_sector(void)
         cmd = CMD_PREP;
 
     if (prop_send_cmd(cmd) < 0)
-        return -1;
+        return 0;
 
     /* Now do the transfer via the platform specific helper */
     if (blk_op.is_read)
@@ -222,9 +221,9 @@ uint8_t prop_sd_transfer_sector(void)
     else {
         platform_prop_sd_write();
         if (prop_send_cmd(CMD_WRITE) < 0)
-            return -1;
+            return 0;
     }
-    return 0;
+    return 1;
 }
 
 /* FIXME: this could move to discard space */
@@ -241,7 +240,7 @@ uint8_t prop_sd_probe(void)
 
     blk = blkdev_alloc();
     if (blk == NULL)
-        return 0 ;
+        return 0;
 
     blk->transfer = prop_sd_transfer_sector;
     blk->flush = prop_sd_flush_cache;
