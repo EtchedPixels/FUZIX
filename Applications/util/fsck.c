@@ -10,8 +10,6 @@
 #include <sys/stat.h>
 #include <mntent.h>
 
-#define swizzle16(x)	(x)
-#define swizzle32(x)	(x)
 
 typedef uint16_t	blkno_t;
 
@@ -66,9 +64,11 @@ struct direct {
 
 /* This checks a filesystem */
 
+static const char no_more_free[] = { "Sorry... No more free blocks." };
+static const char block_multi[]= { "Block %u in inode %u value %u multiply allocated. Fix? " };
+static const char missing_ind_blk[] = { "Missing indirect block" };
 static int dev = 0;
 static struct filesys superblock;
-static long offset;
 static int dev_fd;
 static int error;
 static int rootfs;
@@ -93,6 +93,9 @@ static void pass2(void);
 static void pass3(void);
 static void pass4(void);
 static void pass5(void);
+
+/* Useful repeated values */
+static uint16_t max_inode;
 
 static int yes_noerror(void)
 {
@@ -157,26 +160,16 @@ const char *mntpoint(const char *mount)
 
 static int fd_open(char *name, int search)
 {
-	char *sd;
 	const char *p;
-	int bias = 0;
 	struct stat rootst;
 	struct stat work;
 
-	sd = strrchr(name, ':');
-	if (sd) {
-		*sd = 0;
-		sd++;
-		bias = atoi(sd);
-	} else {
-	    if (search) {
-		p = mntpoint(name);
-		if (p)
-		    name = (char *)p;
-            }
+	if (search) {
+	    p = mntpoint(name);
+            if (p)
+		name = (char *)p;
         }
 
-	offset = bias;
 	dev_fd = open(name, O_RDWR | O_CREAT, 0666);
 
 	if (dev_fd < 0)
@@ -219,25 +212,27 @@ int perform_fsck(char *name, int search)
         panic("Reversed byte order.\n");
     }
 
-    if (swizzle16(superblock.s_mounted) != SMOUNTED) {
+    if (superblock.s_mounted != SMOUNTED) {
         printf("Device %u has invalid magic number %u. Fix? ", dev, superblock.s_mounted);
         if (!yes())
             exit(error|32);
-        superblock.s_mounted = swizzle16(SMOUNTED);
+        superblock.s_mounted = SMOUNTED;
         dwrite((blkno_t) 1, (char *) &superblock);
     }
     printf("Device %u has fsize = %u and isize = %u. Continue? ",
-            dev, swizzle16(superblock.s_fsize), swizzle16(superblock.s_isize));
+            dev, superblock.s_fsize, superblock.s_isize);
     if (!yes_noerror())
         return (error |= 32);
 
-    bitmap = calloc((swizzle16(superblock.s_fsize) + 7UL) / 8, sizeof(char));
-    linkmap = (int16_t *) calloc(8 * swizzle16(superblock.s_isize), sizeof(int16_t));
+    bitmap = calloc((superblock.s_fsize + 7UL) / 8, sizeof(char));
+    linkmap = (int16_t *) calloc(8 * superblock.s_isize, sizeof(int16_t));
 
     if (!bitmap || !linkmap) {
         fputs("Not enough memory.\n", stderr);
         return(error |= 8);
     }
+
+    max_inode = 8 * (superblock.s_isize - 2);
 
     puts("Pass 1: Checking inodes...");
     pass1();
@@ -247,6 +242,9 @@ int perform_fsck(char *name, int search)
 
     puts("Pass 3: Checking block allocation...");
     pass3();
+
+    /* We don't need the bitmap but we do need space for path buffers */
+    free(bitmap);
 
     puts("Pass 4: Checking directory entries...");
     pass4();
@@ -291,7 +289,7 @@ int main(int argc, char *argv[])
         endmntent(fp);
     } else {
         if(argc != 2) {
-            fputs("syntax: fsck[-a] [devfile][:offset]\n", stderr);
+            fputs("syntax: fsck[-a] [devfile]\n", stderr);
             return 16;
         }
         perform_fsck(argv[1], 1);
@@ -316,24 +314,25 @@ static void pass1(void)
     blkno_t bno;
     uint16_t icount;
     blkno_t *buf;
-    uint16_t imax =  8 * (swizzle16(superblock.s_isize) - 2);
     uint32_t bmax;
 
     icount = 0;
 
-    for (n = ROOTINODE; n < imax; ++n) {
+    /* Consider rescannign this basic loop in pass4 so that we don't have
+       to keep both bitmap and linkmap around at the same time */
+    for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
         linkmap[n] = -1;
         if (ino.i_mode == 0)
             continue;
 
-        mode = swizzle16(ino.i_mode) & F_MASK;
+        mode = ino.i_mode & F_MASK;
         /* FIXME: named pipes.. */
 
         /* Check mode */
         if (mode != F_REG && mode != F_DIR && mode != F_BDEV && mode != F_CDEV) {
             printf("Inode %u with mode 0%o is not of correct type. Zap? ",
-                    n, swizzle16(ino.i_mode));
+                    n, ino.i_mode);
             if (yes()) {
                 ino.i_mode = 0;
                 ino.i_nlink = 0;
@@ -345,9 +344,9 @@ static void pass1(void)
         ++icount;
         /* Check size */
 
-        if (swizzle32(ino.i_size) < 0) {
+        if (ino.i_size < 0) {
             printf("Inode %u offset is negative with value of %ld. Fix? ",
-                    n, (long)swizzle32(ino.i_size));
+                    n, ino.i_size);
             if (yes()) {
                 ino.i_size = 0;
                 iwrite(n, &ino);
@@ -359,35 +358,35 @@ static void pass1(void)
 
             for (b = 18; b < 20; ++b) {
                 if (ino.i_addr[b] != 0 && 
-                    (swizzle16(ino.i_addr[b]) < swizzle16(superblock.s_isize) ||
-                            swizzle16(ino.i_addr[b]) >= swizzle16(superblock.s_fsize))) {
+                    (ino.i_addr[b] < superblock.s_isize ||
+                            ino.i_addr[b] >= superblock.s_fsize)) {
                     printf("Inode %u singly ind. blk %u out of range, val = %u. Zap? ",
-                            n, b, swizzle16(ino.i_addr[b]));
+                            n, b, ino.i_addr[b]);
                     if (yes()) {
                         ino.i_addr[b] = 0;
                         iwrite(n, &ino);
                     }
                 }
-                if (ino.i_addr[b] != 0 && swizzle32(ino.i_size) < 18*512) {
+                if (ino.i_addr[b] != 0 && ino.i_size < 18*512) {
                     printf("Inode %u singly ind. blk %u past end of file, val = %u. Zap? ",
-                            n, b, swizzle16(ino.i_addr[b]));
+                            n, b, ino.i_addr[b]);
                     if (yes()) {
                         ino.i_addr[b] = 0;
                         iwrite(n, &ino);
                     }
                 }
                 if (ino.i_addr[b] != 0)
-                    bitset(swizzle16(ino.i_addr[b]));
+                    bitset(ino.i_addr[b]);
             }
 
             /* Check the double indirect blocks */
             if (ino.i_addr[19] != 0) {
-                buf = (blkno_t *) daread(swizzle16(ino.i_addr[19]));
+                buf = (blkno_t *) daread(ino.i_addr[19]);
                 for (b = 0; b < 256; ++b) {
-                    if (buf[b] != 0 && (swizzle16(buf[b]) < swizzle16(superblock.s_isize) ||
-                                swizzle16(buf[b]) >= swizzle16(superblock.s_fsize))) {
-                        printf("Inode %u doubly ind. blk %u is ", n, b);
-                        printf("out of range, val = %u. Zap? ", swizzle16(buf[b]));
+                    if (buf[b] != 0 && (buf[b] < superblock.s_isize ||
+                                buf[b] >= superblock.s_fsize)) {
+                        printf("Inode %u doubly ind. blk %u is out of range, val = %u. Zap? ",
+                                n, b, buf[b]);
                         /* 1.4.98 - line split.  HFB */
                         if (yes()) {
                             buf[b] = 0;
@@ -395,15 +394,15 @@ static void pass1(void)
                         }
                     }
                     if (buf[b] != 0)
-                        bitset(swizzle16(buf[b]));
+                        bitset(buf[b]);
                 }
             }
             /* Check the rest */
-            bmax = swizzle32(ino.i_size)/512;
+            bmax = ino.i_size/512;
             for (bno = 0; bno <= bmax ; ++bno) {
                 b = getblkno(&ino, bno);
 
-                if (b != 0 && (b < swizzle16(superblock.s_isize) || b >= swizzle16(superblock.s_fsize))) {
+                if (b != 0 && (b < superblock.s_isize || b >= superblock.s_fsize)) {
                     printf("Inode %u block %u out of range, val = %u. Zap? ",
                             n, bno, b);
                     if (yes()) {
@@ -417,12 +416,13 @@ static void pass1(void)
         }
     }
     /* Fix free inode count in superblock block */
-    if (swizzle16(superblock.s_tinode) != 8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount) {
-        printf("Free inode count in superblock block is %u, should be %u. Fix? ",
-                swizzle16(superblock.s_tinode), 8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount);
+    icount = max_inode - ROOTINODE - icount;
+    if (superblock.s_tinode != icount) {
+        printf("Free inode count in superblock is %u, should be %u. Fix? ",
+                superblock.s_tinode, icount);
 
         if (yes()) {
-            superblock.s_tinode = swizzle16(8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount);
+            superblock.s_tinode = icount;
             dwrite((blkno_t) 1, (char *) &superblock);
         }
     }
@@ -434,43 +434,40 @@ static void pass2(void)
 {
     blkno_t j;
     blkno_t oldtfree;
-    int s;
-    uint16_t imax = swizzle16(superblock.s_isize);
+    uint16_t imax = superblock.s_isize;
 
     printf("Rebuild free list? ");
     if (!yes_noerror())
         return;
 
     error |= 1;
-    oldtfree = swizzle16(superblock.s_tfree);
+    oldtfree = superblock.s_tfree;
 
     /* Initialize the superblock-block */
 
     superblock.s_ninode = 0;
-    superblock.s_nfree = swizzle16(1);
+    superblock.s_nfree = 1;
     superblock.s_free[0] = 0;
     superblock.s_tfree = 0;
 
     /* Free each block, building the free list */
 
-    for (j = swizzle16(superblock.s_fsize) - 1; j >= imax; --j) {
+    for (j = superblock.s_fsize - 1; j >= imax; --j) {
         if (bittest(j) == 0) {
-            if (swizzle16(superblock.s_nfree) == 50) {
+            if (superblock.s_nfree == 50) {
                 dwrite(j, (char *) &superblock.s_nfree);
                 superblock.s_nfree = 0;
             }
-            superblock.s_tfree = swizzle16(swizzle16(superblock.s_tfree)+1);
-            s = swizzle16(superblock.s_nfree);
-            superblock.s_free[s++] = swizzle16(j);
-            superblock.s_nfree = swizzle16(s);
+            superblock.s_tfree++;
+            superblock.s_free[superblock.s_nfree++] = j;
         }
     }
 
     dwrite((blkno_t) 1, (char *) &superblock);
 
-    if (oldtfree != swizzle16(superblock.s_tfree))
-        printf("During free list regeneration s_tfree was changed to %u from %u.\n",
-                swizzle16(superblock.s_tfree), oldtfree);
+    if (oldtfree != superblock.s_tfree)
+        printf("s_tfree was changed to %u from %u.\n",
+                superblock.s_tfree, oldtfree);
 
 }
 
@@ -483,21 +480,21 @@ static void pass3(void)
     blkno_t b;
     blkno_t bno;
     blkno_t newno;
-    uint16_t bmax = swizzle16(superblock.s_fsize);
-    uint16_t imax = 8 * (swizzle16(superblock.s_isize) - 2);
+    uint16_t bmax = superblock.s_fsize;
     uint32_t nmax;
     /*--- was blk_alloc ---*/
 
     /* FIXME:
         1. Set the bits below s_isize
      */
-    for (b = swizzle16(superblock.s_isize); b < bmax; ++b)
+    /* FIXME: performance */
+    for (b = superblock.s_isize; b < bmax; ++b)
         bitclear(b);
 
-    for (n = ROOTINODE; n < imax; ++n) {
+    for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
 
-        mode = swizzle16(ino.i_mode) & F_MASK;
+        mode = ino.i_mode & F_MASK;
         if (mode != F_REG && mode != F_DIR)
             continue;
 
@@ -505,38 +502,38 @@ static void pass3(void)
 
         for (b = 18; b < 20; ++b) {
             if (ino.i_addr[b] != 0) {
-                if (bittest(swizzle16(ino.i_addr[b])) != 0) {
-                    printf("Indirect block %u in inode %u value %u multiply allocated. Fix? ",
-                            b, n, swizzle16(ino.i_addr[b]));
+                if (bittest(ino.i_addr[b]) != 0) {
+                    puts("Indirect b");
+                    printf(block_multi + 1, b, n, ino.i_addr[b]);
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
                         if (newno == 0) {
-                            puts("Sorry... No more free blocks.");
+                            puts(no_more_free);
                             error |= 4;
                         } else {
-                            dwrite(newno, daread(swizzle16(ino.i_addr[b])));
-                            ino.i_addr[b] = swizzle16(newno);
+                            dwrite(newno, daread(ino.i_addr[b]));
+                            ino.i_addr[b] = newno;
                             iwrite(n, &ino);
                         }
                     }
                 } else
-                    bitset(swizzle16(ino.i_addr[b]));
+                    bitset(ino.i_addr[b]);
             }
         }
 
         /* Check the rest */
-        nmax = swizzle32(ino.i_size)/512;
+        nmax = ino.i_size/512;
         for (bno = 0; bno <= nmax; ++bno) {
             b = getblkno(&ino, bno);
 
             if (b != 0) {
                 if (bittest(b)) {
-                    printf("Block %u in inode %u value %u multiply allocated. Fix? ",
+                    printf(block_multi,
                             bno, n, b);
                     if (yes()) {
                         newno = blk_alloc0(&superblock);
                         if (newno == 0) {
-                            puts("Sorry... No more free blocks.");
+                            puts(no_more_free);
                             error |= 4;
                         } else {
                             dwrite(newno, daread(b));
@@ -565,8 +562,8 @@ static void pass4(void)
     depth = 0;
     linkmap[ROOTINODE] = 1;
     ckdir(ROOTINODE, ROOTINODE, "/");
-    if (depth != 0)
-        panic("Inconsistent depth");
+//if (depth != 0)
+//      panic("Inconsistent depth");
 }
 
 
@@ -575,7 +572,9 @@ static void pass4(void)
 static void ckdir(uint16_t inum, uint16_t pnum, char *name)
 {
     struct dinode ino;
-    struct direct dentry;
+    /* We can keep this off the stack, we'd really like to keep the inode
+       off it too but that would thrash the disk horribly */
+    static struct direct dentry;
     uint16_t j;
     int c;
     uint8_t i;
@@ -583,19 +582,21 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
     char *ename;
 
     iread(inum, &ino);
-    if ((swizzle16(ino.i_mode) & F_MASK) != F_DIR)
+    if ((ino.i_mode & F_MASK) != F_DIR)
         return;
     ++depth;
 
-    if (swizzle32(ino.i_size) % 32 != 0) {
+    if (((uint8_t)ino.i_size) & 31) {
         printf("Directory inode %u has improper length. Fix? ", inum);
         if (yes()) {
-            ino.i_size = swizzle32(swizzle32(ino.i_size) & ~0x1f);
+            ino.i_size &= ~0x1fUL;
             iwrite(inum, &ino);
         }
     }
-    nentries = swizzle32(ino.i_size)/32;
+    nentries = ino.i_size/32;
 
+    /* Each iteration we begin with a new ino/dentry. Each recursion we
+       destroy them. Be careful */
     for (j = 0; j < nentries; ++j) {
         dirread(&ino, j, &dentry);
 
@@ -606,10 +607,10 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
         if (dentry.d_ino == 0)
             continue;
 
-        if (swizzle16(dentry.d_ino) < ROOTINODE ||
-                swizzle16(dentry.d_ino) >= 8 * swizzle16(superblock.s_isize)) {
-            printf("Directory entry %s%-1.14s has out-of-range inode %u. Zap? ",
-                    name, dentry.d_name, swizzle16(dentry.d_ino));
+        if (dentry.d_ino < ROOTINODE ||
+                dentry.d_ino >= max_inode) {
+            printf("Directory entry %s%-1.30s has out-of-range inode %u. Zap? ",
+                    name, dentry.d_name, dentry.d_ino);
             if (yes()) {
                 dentry.d_ino = 0;
                 dentry.d_name[0] = '\0';
@@ -617,9 +618,9 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
                 continue;
             }
         }
-        if (dentry.d_ino && linkmap[swizzle16(dentry.d_ino)] == -1) {
-            printf("Directory entry %s%-1.14s points to bogus inode %u. Zap? ",
-                    name, dentry.d_name, swizzle16(dentry.d_ino));
+        if (dentry.d_ino && linkmap[dentry.d_ino] == -1) {
+            printf("Directory entry %s%-1.30s points to bogus inode %u. Zap? ",
+                    name, dentry.d_name, dentry.d_ino);
             if (yes()) {
                 dentry.d_ino = 0;
                 dentry.d_name[0] = '\0';
@@ -627,7 +628,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
                 continue;
             }
         }
-        ++linkmap[swizzle16(dentry.d_ino)];
+        ++linkmap[dentry.d_ino];
 
         for (c = 0; c < 30 && dentry.d_name[c]; ++c) {
             if (dentry.d_name[c] == '/') {
@@ -640,29 +641,24 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             }
         }
 
-        if (strncmp(dentry.d_name, ".", 30) == 0 && swizzle16(dentry.d_ino) != inum) {
+        if (strncmp(dentry.d_name, ".", 30) == 0 && dentry.d_ino != inum) {
             printf("Dot entry %s%-1.30s points to wrong place. Fix? ",
                     name, dentry.d_name);
             if (yes()) {
-                dentry.d_ino = swizzle16(inum);
+                dentry.d_ino = inum;
                 dirwrite(&ino, j, &dentry);
             }
         }
-        if (strncmp(dentry.d_name, "..", 30) == 0 && swizzle16(dentry.d_ino) != pnum) {
+        if (strncmp(dentry.d_name, "..", 30) == 0 && dentry.d_ino != pnum) {
             printf("DotDot entry %s%-1.30s points to wrong place. Fix? ",
                     name, dentry.d_name);
             if (yes()) {
-                dentry.d_ino = swizzle16(pnum);
+                dentry.d_ino = pnum;
                 dirwrite(&ino, j, &dentry);
             }
         }
-        if (swizzle16(dentry.d_ino) != pnum &&
-                swizzle16(dentry.d_ino) != inum && depth < MAXDEPTH) {
-            /* FIXME: we should raise the depth but also get rid of the
-               malloc stuff as it performs badly when tight on memory.
-               Better to use a fixed 512 byte buffer we know is PATH_MAX
-               and avoid the dynamic allocations. Instead each recursion
-               we tack a name on and on return we set the old end to \0. */
+        if (dentry.d_ino != pnum &&
+                dentry.d_ino != inum && depth < MAXDEPTH) {
             ename = malloc(strlen(name) + strlen(dentry.d_name) + 2);
             if (ename == NULL) {
                 fprintf(stderr, "Not enough memory.\n");
@@ -671,9 +667,10 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             strcpy(ename, name);
             strcat(ename, dentry.d_name);
             strcat(ename, "/");
-            ckdir(swizzle16(dentry.d_ino), inum, ename);
+            ckdir(dentry.d_ino, inum, ename);
             free(ename);
         }
+        /* dentry and dino are not valid any more */
     }
     --depth;
 }
@@ -685,7 +682,7 @@ static void pass5(void)
     uint16_t n;
     struct dinode ino;
 
-    for (n = ROOTINODE; n < 8 * (swizzle16(superblock.s_isize) - 2); ++n) {
+    for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
 
         if (ino.i_mode == 0) {
@@ -697,60 +694,45 @@ static void pass5(void)
         if (linkmap[n] == -1 && ino.i_mode != 0)
             panic("Inconsistent linkmap");
 
-        if (linkmap[n] > 0 && swizzle16(ino.i_nlink) != linkmap[n]) {
+        if (linkmap[n] > 0 && ino.i_nlink != linkmap[n]) {
             printf("Inode %u has link count %u should be %u. Fix? ",
-                    n, swizzle16(ino.i_nlink), linkmap[n]);
+                    n, ino.i_nlink, linkmap[n]);
             if (yes()) {
-                ino.i_nlink = swizzle16(linkmap[n]);
+                ino.i_nlink = linkmap[n];
                 iwrite(n, &ino);
             }
         }
 
         if (linkmap[n] == 0) {
-            if ((swizzle16(ino.i_mode) & F_MASK) == F_BDEV ||
-                    (swizzle16(ino.i_mode) & F_MASK) == F_CDEV ||
+            if ((ino.i_mode & F_MASK) == F_BDEV ||
+                    (ino.i_mode & F_MASK) == F_CDEV ||
                     (ino.i_size == 0)) {
                 printf("Useless inode %u with mode 0%o has become detached. Link count is %u. Zap? ",
-                        n, swizzle16(ino.i_mode), swizzle16(ino.i_nlink));
+                        n, ino.i_mode, ino.i_nlink);
                 if (yes()) {
                     ino.i_nlink = 0;
                     ino.i_mode = 0;
                     iwrite(n, &ino);
-                    superblock.s_tinode =
-                                swizzle16(swizzle16(superblock.s_tinode) + 1);
+                    superblock.s_tinode++;
                     dwrite((blkno_t) 1, (char *) &superblock);
                 }
             } else {
-#if 0
-                printf("Inode %u has become detached. Link count is %u. Fix? ",
-                        n, swizzle16(ino.i_nlink));
-                if (yes()) {
-                    ino.i_nlink = 1;
-                    iwrite(n, &ino);
-                    mkentry(n);
-                }
-#else
                 printf("Inode %u has become detached. Link count is %u. ",
-                        n, swizzle16(ino.i_nlink));
-                if (ino.i_nlink == 0)
-                    printf("Zap? ");
-                else
-                    printf("Fix? ");
+                        n, ino.i_nlink);
+                puts(ino.i_nlink ? "Zap? " : "Fix? ");
                 if (yes()) {
                     if (ino.i_nlink == 0) {
                         ino.i_nlink = 0;
                         ino.i_mode = 0;
                         iwrite(n, &ino);
-                        superblock.s_tinode =
-                                swizzle16(swizzle16(superblock.s_tinode) + 1);
+                        superblock.s_tinode++;
                         dwrite((blkno_t) 1, (char *) &superblock);
                     } else {
-                        ino.i_nlink = swizzle16(1);
+                        ino.i_nlink = 1;
                         iwrite(n, &ino);
                         mkentry(n);
                     }
                 }
-#endif
             }
         }
 
@@ -767,11 +749,11 @@ static void mkentry(uint16_t inum)
     uint32_t dmax;
 
     iread(ROOTINODE, &rootino);
-    dmax = swizzle32(rootino.i_size)/32;
+    dmax = rootino.i_size/32;
     for (d = 0; d < dmax; ++d) {
         dirread(&rootino, d, &dentry);
         if (dentry.d_ino == 0 && dentry.d_name[0] == '\0') {
-            dentry.d_ino = swizzle16(inum);
+            dentry.d_ino = inum;
             sprintf(dentry.d_name, "l+f%u", inum);
             dirwrite(&rootino, d, &dentry);
             return;
@@ -793,30 +775,27 @@ static blkno_t getblkno(struct dinode *ino, blkno_t num)
     blkno_t dindb;
     blkno_t *buf;
 
-    if (num < 18) {		/* Direct block */
-        return swizzle16(ino->i_addr[num]);
-    }
+    if (num < 18)		/* Direct block */
+        return ino->i_addr[num];
     if (num < 256 + 18) {	/* Single indirect */
-        indb = swizzle16(ino->i_addr[18]);
+        indb = ino->i_addr[18];
         if (indb == 0)
-            return (0);
+            return 0;
         buf = (blkno_t *) daread(indb);
-        return swizzle16(buf[num - 18]);
+        return buf[num - 18];
     }
     /* Double indirect */
-    indb = swizzle16(ino->i_addr[19]);
+    indb = ino->i_addr[19];
     if (indb == 0)
-        return (0);
+        return 0;
 
     buf = (blkno_t *) daread(indb);
 
-    dindb = swizzle16(buf[(num - (18 + 256)) >> 8]);
+    dindb = buf[(num - (18 + 256)) >> 8];
     if (dindb == 0)
         return 0;
-
     buf = (blkno_t *) daread(dindb);
-
-    return swizzle16(buf[(num - (18 + 256)) & 0x00ff]);
+    return buf[(num - (18 + 256)) & 0x00ff];
 }
 
 
@@ -835,27 +814,27 @@ static void setblkno(struct dinode *ino, blkno_t num, blkno_t dnum)
 
 
     if (num < 18) {			/* Direct block */
-        ino->i_addr[num] = swizzle16(dnum);
+        ino->i_addr[num] = dnum;
     } else if (num < 256 + 18) {	/* Single indirect */
-        indb = swizzle16(ino->i_addr[18]);
+        indb = ino->i_addr[18];
         if (indb == 0)
-            panic("Missing indirect block");
+            panic(missing_ind_blk);
 
         buf = (blkno_t *) daread(indb);
-        buf[num - 18] = swizzle16(dnum);
+        buf[num - 18] = dnum;
         dwrite(indb, (char *) buf);
     } else {				/* Double indirect */
-        indb = swizzle16(ino->i_addr[19]);
+        indb = ino->i_addr[19];
         if (indb == 0)
-            panic("Missing indirect block");
+            panic(missing_ind_blk);
 
         buf = (blkno_t *) daread(indb);
-        dindb = swizzle16(buf[(num - (18 + 256)) >> 8]);
+        dindb = buf[(num - (18 + 256)) >> 8];
         if (dindb == 0)
-            panic("Missing indirect block");
+            panic(missing_ind_blk);
 
         buf = (blkno_t *) daread(dindb);
-        buf[(num - (18 + 256)) & 0x00ff] = swizzle16(num);
+        buf[(num - (18 + 256)) & 0x00ff] = num;
         dwrite(indb, (char *) buf);
     }
 }
@@ -873,11 +852,10 @@ static blkno_t blk_alloc0(struct filesys *filesys)
     blkno_t *buf;
     int16_t j;
 
-    filesys->s_nfree = swizzle16(swizzle16(filesys->s_nfree) - 1);
-    newno = swizzle16(filesys->s_free[--filesys->s_nfree]);
+    newno = filesys->s_free[--filesys->s_nfree];
     if (!newno) {
-        filesys->s_nfree = swizzle16(swizzle16(filesys->s_nfree) + 1);
-        return (0);
+        filesys->s_nfree++;
+        return 0;
     }
 
     /* See if we must refill the s_free array */
@@ -890,9 +868,9 @@ static blkno_t blk_alloc0(struct filesys *filesys)
         }
     }
 
-    filesys->s_tfree = swizzle16(swizzle16(filesys->s_tfree) - 1);
+    filesys->s_tfree--;
 
-    if (newno < swizzle16(filesys->s_isize) || newno >= swizzle16(filesys->s_fsize)) {
+    if (newno < filesys->s_isize || newno >= filesys->s_fsize) {
         puts("Free list is corrupt.  Did you rebuild it?");
         return (0);
     }
@@ -913,7 +891,7 @@ static char *daread(uint16_t blk)
     if (blk == lblk)
         return da_buf;
 
-    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
+    if (lseek(dev_fd, blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
     }
@@ -927,7 +905,7 @@ static char *daread(uint16_t blk)
 
 static void dwrite(uint16_t blk, char *addr)
 {
-    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
+    if (lseek(dev_fd, blk * 512L, 0) == -1) {
         perror("lseek");
         exit(1);
     }
