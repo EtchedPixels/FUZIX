@@ -1,6 +1,7 @@
 umask 022
 substroot fsck -a %
 setdate
-substroot remount % rw
+substroot remount -n % rw
+prtroot >/etc/mtab
 mount -a
 >/var/run/utmp
