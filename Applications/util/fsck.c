@@ -119,17 +119,17 @@ static int yes(void) {
     return ret;
 }
 
-static void bitset(uint16_t b)
+static void bitset(uint16_t b) __z88dk_fastcall
 {
     bitmap[b >> 3] |= (1 << (b & 7));
 }
 
-static void bitclear(uint16_t b)
+static void bitclear(uint16_t b) __z88dk_fastcall
 {
     bitmap[b >> 3] &= ~(1 << (b & 7));
 }
 
-static int bittest(uint16_t b)
+static int bittest(uint16_t b) __z88dk_fastcall
 {
     return (bitmap[b >> 3] & (1 << (b & 7))) ? 1 : 0;
 }
@@ -188,7 +188,7 @@ static int fd_open(char *name, int search)
 	return 0;
 }
 
-int perform_fsck(char *name, int search)
+int perform_fsck_iter(char *name, int search)
 {
     char *buf;
 
@@ -253,7 +253,7 @@ int perform_fsck(char *name, int search)
     pass5();
 
     /* If we fixed things, and no errors were left uncorrected */
-    if ((error & 5) == 1) {
+    if ((error & 69) == 1) {	/* 64 4 1 moust be 1 */
         superblock.s_fmod = FMOD_CLEAN;
         dwrite((blkno_t) 1, (char *) &superblock);
         if (rootfs) {
@@ -264,7 +264,17 @@ int perform_fsck(char *name, int search)
             uadmin(A_REBOOT, 0, 0);
         }
     }
+    free(linkmap);
+    close(dev_fd);
     return error;
+}
+
+int perform_fsck(char *name, int search)
+{
+    int r;
+    while((r = perform_fsck_iter(name, search)) & 64)
+        puts("Restarting fsck.\n");
+    return r;
 }
 
 int main(int argc, char *argv[])
@@ -514,6 +524,7 @@ static void pass3(void)
                             dwrite(newno, daread(ino.i_addr[b]));
                             ino.i_addr[b] = newno;
                             iwrite(n, &ino);
+                            error |= 64;
                         }
                     }
                 } else
@@ -539,6 +550,7 @@ static void pass3(void)
                             dwrite(newno, daread(b));
                             setblkno(&ino, bno, newno);
                             iwrite(n, &ino);
+                            error |= 64;
                         }
                     }
                 } else
@@ -591,6 +603,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
         if (yes()) {
             ino.i_size &= ~0x1fUL;
             iwrite(inum, &ino);
+            error |= 64;
         }
     }
     nentries = ino.i_size/32;
@@ -615,6 +628,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
                 dentry.d_ino = 0;
                 dentry.d_name[0] = '\0';
                 dirwrite(&ino, j, &dentry);
+                error |= 64;
                 continue;
             }
         }
@@ -647,6 +661,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             if (yes()) {
                 dentry.d_ino = inum;
                 dirwrite(&ino, j, &dentry);
+                error |= 64;
             }
         }
         if (strncmp(dentry.d_name, "..", 30) == 0 && dentry.d_ino != pnum) {
@@ -655,6 +670,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             if (yes()) {
                 dentry.d_ino = pnum;
                 dirwrite(&ino, j, &dentry);
+                error |= 64;
             }
         }
         if (dentry.d_ino != pnum &&
@@ -715,12 +731,14 @@ static void pass5(void)
                     iwrite(n, &ino);
                     superblock.s_tinode++;
                     dwrite((blkno_t) 1, (char *) &superblock);
+                    error |= 64;
                 }
             } else {
                 printf("Inode %u has become detached. Link count is %u. ",
                         n, ino.i_nlink);
                 puts(ino.i_nlink ? "Zap? " : "Fix? ");
                 if (yes()) {
+                    error |= 64;
                     if (ino.i_nlink == 0) {
                         ino.i_nlink = 0;
                         ino.i_mode = 0;
