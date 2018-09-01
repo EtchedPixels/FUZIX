@@ -589,8 +589,8 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             continue;
 
         if (swizzle16(dentry.d_ino) < ROOTINODE ||
-                swizzle16(dentry.d_ino) >= 8 * swizzle16(superblock.s_isize)) {
-            printf("Directory entry %s%-1.14s has out-of-range inode %u. Zap? ",
+                swizzle16(dentry.d_ino) >= 8 * swizzle16(superblock.s_isize) - 2) {
+            printf("Directory entry %s%-1.30s has out-of-range inode %u. Zap? ",
                     name, dentry.d_name, swizzle16(dentry.d_ino));
             if (yes()) {
                 dentry.d_ino = 0;
@@ -600,7 +600,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
             }
         }
         if (dentry.d_ino && linkmap[swizzle16(dentry.d_ino)] == -1) {
-            printf("Directory entry %s%-1.14s points to bogus inode %u. Zap? ",
+            printf("Directory entry %s%-1.30s points to bogus inode %u. Zap? ",
                     name, dentry.d_name, swizzle16(dentry.d_ino));
             if (yes()) {
                 dentry.d_ino = 0;
@@ -849,7 +849,7 @@ static blkno_t blk_alloc0(struct filesys *filesys)
     int16_t j;
 
     filesys->s_nfree = swizzle16(swizzle16(filesys->s_nfree) - 1);
-    newno = swizzle16(filesys->s_free[--filesys->s_nfree]);
+    newno = swizzle16(filesys->s_free[filesys->s_nfree]);
     if (!newno) {
         filesys->s_nfree = swizzle16(swizzle16(filesys->s_nfree) + 1);
         return (0);
