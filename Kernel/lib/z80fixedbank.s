@@ -33,18 +33,3 @@ bankfork_1:
 	pop bc
 	djnz bankfork_1		; rinse, repeat
 	ret
-
-;
-;	For the moment
-;
-bouncebuffer:
-	.ds 256
-;
-;	We can keep a stack in common because we will complete our
-;	use of it before we switch common block. In this case we have
-;	a true common so it's even easier. This can share with the bounce
-;	buffer used by bankfork as we won't switchin mid way through the
-;	banked fork() call.
-;
-_swapstack:
-_need_resched:	.db 0
