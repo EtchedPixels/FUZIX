@@ -60,14 +60,14 @@ static int flagsof(struct mntent *mnt)
     return f;
 }
 
-static int is_mounted(struct mntent *ent)
+static int is_mounted(const char *path)
 {
     FILE *f = setmntent("/etc/mtab", "r");
     struct mntent mnt;
     static char buf[_MAX_MNTLEN];
     
     while(getmntent_r(f, &mnt, buf, _MAX_MNTLEN)) {
-        if (strcmp(mnt.mnt_fsname, ent->mnt_fsname) == 0) {
+        if (strcmp(mnt.mnt_fsname, path) == 0) {
             endmntent(f);
             return 1;
         }
@@ -78,11 +78,13 @@ static int is_mounted(struct mntent *ent)
 
 static void do_mount(struct mntent *mnt)
 {
+    const char *p;
     if (strcmp(mnt->mnt_type, "swap") == 0)
         return;
-    if (mount(mnt->mnt_fsname, mnt->mnt_dir, flagsof(mnt)) == -1) {
+    p = mnt_device_path(mnt);
+    if (mount(p, mnt->mnt_dir, flagsof(mnt)) == -1) {
         err = errno;
-        perror(mnt->mnt_fsname);
+        perror(p);
         return;
     }
     add2mtab(mnt);
@@ -91,14 +93,16 @@ static void do_mount(struct mntent *mnt)
 static void automount(char *match)
 {
     FILE *f = setmntent("/etc/fstab", "r");
+    const char *p;
     struct mntent *mnt;
 
     while (mnt = getmntent(f)) {
+        p = mnt_device_path(mnt);
         /* Warning - mnt contents go invalid if we do work on mtab so
            be careful here and use getmntent_r in is_mounted */
-        if (is_mounted(mnt))
+        if (is_mounted(p))
             continue;
-        if (match == NULL || strcmp(mnt->mnt_fsname, match) == 0 ||
+        if (match == NULL || strcmp(p, match) == 0 ||
                                 strcmp(mnt->mnt_dir, match) == 0)
                 do_mount(mnt);
         if (err)

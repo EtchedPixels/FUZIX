@@ -22,13 +22,15 @@ const char *mntpoint(const char *mount)
 {
 	FILE *fp;
 	struct mntent *mnt;
+	const char *p;
 
 	fp = setmntent("/etc/fstab", "r");
 	if (fp) {
 		while (mnt = getmntent(fp)) {
+			p = mnt_device_path(mnt);
 			if (strcmp(mnt->mnt_dir, mount) == 0) {
 				endmntent(fp);
-				return mnt->mnt_fsname;
+				return p;
 			}
 		}
 		endmntent(fp);
