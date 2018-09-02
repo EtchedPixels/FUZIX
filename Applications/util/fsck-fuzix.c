@@ -120,6 +120,15 @@ static int yes(void) {
     return ret;
 }
 
+static void progress(void)
+{
+    static uint8_t progct;
+    progct++;
+    progct&=3;
+    printf("%c\010", "-\\|/"[progct]);
+    fflush(stdout);
+}
+
 static void bitset(uint16_t b)
 {
     bitmap[b >> 3] |= (1 << (b & 7));
@@ -283,6 +292,7 @@ static void pass1(void)
        to keep both bitmap and linkmap around at the same time */
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
+        progress();
         linkmap[n] = -1;
         if (ino.i_mode == 0)
             continue;
@@ -356,12 +366,14 @@ static void pass1(void)
                     }
                     if (buf[b] != 0)
                         bitset(buf[b]);
+                    progress();
                 }
             }
             /* Check the rest */
             bmax = ino.i_size/512;
             for (bno = 0; bno <= bmax ; ++bno) {
                 b = getblkno(&ino, bno);
+                progress();
 
                 if (b != 0 && (b < superblock.s_isize || b >= superblock.s_fsize)) {
                     printf("Inode %u block %u out of range, val = %u. Zap? ",
@@ -418,6 +430,7 @@ static void pass2(void)
             if (superblock.s_nfree == 50) {
                 dwrite(j, (char *) &superblock.s_nfree);
                 superblock.s_nfree = 0;
+                progress();
             }
             superblock.s_tfree++;
             superblock.s_free[superblock.s_nfree++] = j;
@@ -454,6 +467,7 @@ static void pass3(void)
 
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
+        progress();
 
         mode = ino.i_mode & F_MASK;
         if (mode != F_REG && mode != F_DIR)
@@ -563,6 +577,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
        destroy them. Be careful */
     for (j = 0; j < nentries; ++j) {
         dirread(&ino, j, &dentry);
+        progress();
 
         for (i = 0; i < 30; ++i) if (dentry.d_name[i] == '\0') break;
         for (     ; i < 30; ++i) dentry.d_name[i] = '\0';
@@ -660,6 +675,7 @@ static void pass5(void)
 
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
+        progress();
 
         if (ino.i_mode == 0) {
             if (linkmap[n] != -1)
@@ -859,6 +875,7 @@ static blkno_t blk_alloc0(struct filesys *filesys)
 
 static uint16_t lblk = 0;
 
+/* FIXME: we really could do with more buffers on bigger systems (>32K ones) */
 static char *daread(uint16_t blk)
 {
     static char da_buf[512];
