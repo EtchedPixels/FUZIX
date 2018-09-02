@@ -75,6 +75,11 @@ static int perform_fsck_iter(const char *path, int search)
 	}
 }
 
+/* FIXME: we should eventually push this little bit into fsck-fuzix but
+   to do that we need to go over the resource clean up in detail. Once we
+   have it means a single request doesn't fork but can exec the helper
+   directly, saving us time on boot */
+
 int perform_fsck(char *name, int search)
 {
 	int r;
