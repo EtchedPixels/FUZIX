@@ -18,7 +18,7 @@ $(OBJS): %.rel: %.c
 	$(FCC) $(Z80_PLATFORM) -c $<
 
 %: %.rel
-	$(FCC) $(Z80_PLATFORM) $(LIBS) $< -o $@
+	$(FCC) $(Z80_PLATFORM) $< -o $@ $(LIBS) 
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report
