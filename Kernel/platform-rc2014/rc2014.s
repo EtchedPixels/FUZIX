@@ -85,7 +85,7 @@ init_hardware:
 	inc b
 	out (c),b
 	in a,(c)
-	sub e
+	sub d
 	jr z, is_sio
 	; We have however pooped on the 68B50 setup so put it back into
 	; a sensible state.
