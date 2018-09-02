@@ -837,6 +837,9 @@ static pid_t getty(const char **argv, const char *id)
 				if ((p = strchr(buf, '\n')) != NULL)
 					*p = '\0';	/* strip newline */
 
+				if (*buf == 0)
+					continue;
+
 				pwd = getpwnam(buf);
 
 				if (pwd == NULL || *pwd->pw_passwd)
