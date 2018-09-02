@@ -1,0 +1,586 @@
+0x00-0x1F Internal
+
+0x90-0x94: Ramdisc
+
+0x00 (W)
+7-4:Baud rate generatoer
+3: power switch for barcode reader
+2/1: barcode reader mode (polarity)
+0: trigger latch on barcode (1) or tape (0)
+
+Baud rates
+0000		110
+0001		150
+0010		300
+0011		600
+0100		1200
+0101		2400
+0110		4800
+0111		9600
+1000		1200
+1001		75
+1010		19200
+1011		38400
+1100		200
+
+bar code
+
+00		no trigger
+01		falling
+10		rising
+11		both
+
+0x00 R
+
+Low bits of input capture register(latched from FRC) [read low, then high)
+
+0x01 (W)
+
+2: reset frc overflow interrupt
+1: reset rdysio signal	}
+0: set rdysio signal	}	Control link with 7508
+
+0x01 (R)
+
+High bits of input capture
+
+
+0x02 (W)
+
+1: tape on
+0: mic signal on (bitbang data to tape)
+
+
+0x02 (R)  Barcode/tape trigger low bits
+
+0x03 (R)  Barcode/tape trigger high bits
+
+0x04 (R) interrupt status
+
+4: external  (expansion box)	- reset box specific
+3: FRC overflow			- reset by 0x01, bit 2 = 1
+2: INT2 (FRC latch event)	- reset by reading 0x03
+1: ART RxReady			- reset by reading 0x14
+0: 7508				- reset by responding to 7508
+
+0x04 (W) interrupt enable (1 = on)
+
+bits as 0x04 (R)
+
+
+0x05 (R)
+7-4: Memory bank
+3: set if 7508 access enabled
+2: ready signal from 7508
+1: data from barcode
+0: data from tape (ear)
+
+0x05 (W)
+7-4: Memory bank
+3: development board enable ???
+2: RAM select for development board (usually 0)
+1-0: clock switch
+
+0x: 3.45MHz
+10: 3.68MHz
+11: 3.02 MHz
+
+Must be 10
+
+0x06 (R/W)
+
+7508 data register for read/write
+
+0x08 (W)
+
+7-3: A11-A15 of video RAM start. Any 2K boundary
+	(appears to go to RAM even with ROM mapped over)
+
+
+0x09: (W)
+
+7: set to turn on dsp
+6: unused
+5-0: Y direction offset (scrolling)
+
+0x0A (W)
+
+LCD Frame register
+
+Write with 0x06
+
+0x0B (W)
+
+LCD timing register. Write to 0x43
+
+0x10-0x13 (R/W)
+
+Cartridge dependant
+
+
+0x14: ARTDIR (R)
+
+Serial receive data
+
+0x14 ARTDOR (W)
+
+Serial send data
+
+0x15 ARTSR (R)
+
+7: dsr
+5: framing error
+4: overrun
+3: parity
+2: tx empty
+1: rx ready
+0: tx ready
+
+0x15 ARTMR (W)
+
+7: 1 = 2stop bits
+5: even parity if parity on
+4: parity enable
+2: 1 = 8bit
+
+0x16 IOSTR (R)
+
+7: audio input from cartridge
+6: cartridge handshake mode if 0
+5: rs232 cts
+4: rs232 cd
+3: serial input data
+2: serial status
+1: error from parallel
+0: busy from parallel
+
+0x16 ARTCR (W)
+
+5: set rts
+4: reset oe/fe/pe
+3: set to break, clear to stop
+2: set to enable receive
+1: set dtr
+0: set to enable transmit
+
+0x17:
+Printer data (8bit)
+
+0x18 (W) Switch register
+4: set to mask CAUD
+3/2: serial mode
+1/0: catridge i/f mode
+
+serial:
+00: Catridge SIO
+01: SIO		(floppy for example)
+10: RS232
+11: RS232 read, SIO write
+
+1/0 
+00: handshake mode
+01: I/O
+10: Data bus
+11: output port
+
+0x19 (W)
+7: output to speaker (clear ausw when doing this), clear this for
+tape->speak
+6-4: LEDs
+3: cartridge reset (0 resets)
+2: SIO control
+1: clear to initialize centronics printer
+0: set to strobe centronics
+
+
+
+
+7508:
+
+Keyboard map on osrm1b- I-46
+Keycode charts II-210 (osrm 2.3.5)
+
+Command
+	Wait RDYSIO = 1
+	Write SIOR
+	Clear RDYSIO
+Response
+	Wait RDYSIO = 1
+	Read SIOR for each byte
+	Set RDYSIO = 0
+
+
+On IRQ send read status
+
+
+7508 commands
+	Bit 7 = 0 for command, 1 for data
+
+Commands:
+
+0x01	Power off
+0x02	Read Status
+	0x00-0xBE: key code
+	Normal keys make only
+	Shift keys make B2-B7 and clear A2-A7
+	table in PX4 RM1B
+
+	bit 7/6 set in reply = status changes
+	5: 1 second IRQ
+	4: Z80 reset
+	3: 7508 reset
+	2: power fail
+	1: alarm
+	0: power switch (1 = off->on, 0 = on->off)
+
+0x03:	Reset keyboard
+
+0x04: 	Set key repeat start time 
+	1/64 sec incremeents
+
+0x05: set repeat time for hold down
+	1/256 of a second
+
+0x06: read repeat start
+	1 byte reply
+
+0x07: read repeat hold down
+	1 byte reply
+
+0x08: disable keyboard repeat
+
+0x09: enable keyboard repeat
+
+0x0A: disable keyboard interrupt
+
+0x0B: enable keyboard interrupt
+
+0x0C: read clock
+
+	reply is
+	tens of year
+	units of year
+	month	}
+	day	}
+	hour	}	BCD
+	minute	}
+	second	}
+	day of week
+
+0x0D: write clock
+
+	Same data but write not read
+
+	or data with 0x80 (BCD values in bits 6-4 for high bit as only goes
+	to 59 worst case)
+
+0x0E: read power switch
+
+	bit 0 - 1 = on
+
+0x0F read alarm
+
+	Same format as read clock without year bytes, or seconds (only tens
+	of specified as low 4bits of second field)
+
+0x10: set alarm
+
+	As read alarm but write data, top bit 0x80 as always
+	Can write 11111111 to alarm each of that unit
+
+	Execute 0x12 after to enable
+
+0x11: alarm disable
+
+0x12: alarm enable
+
+0x13: read dip switches 8-1 in bits 7-0
+
+0x14: as 0x0A except for stop key
+
+0x15: as 0x0B except for stop key
+
+0x16: set 7 char buffer on keyboard
+
+0x17: set 1 char buffer on keyboard
+
+0x18: 1 second interrupt off
+
+0x19: 1 second interrupt on
+
+0x20: clear keyboard buffer
+
+0x21: reeet the 7508
+
+
+
+Memory bank codes
+
+0x0000
+	RAM at 8000-FFFF
+	OS ROM at 0000-7FFF
+
+0x0100
+	All RAM
+0x1000:
+	8K ROM at C000-DFFF
+	Rest RAM
+0x1001
+	16K ROM at A000-DFFF
+	Rest RAM
+0x1010
+	32K ROM at 6000-DFFF
+	Rest RAM
+0x1100-1110
+	As 10xx but with second ROM
+
+
+Note: ROM layout is weird
+
+	8K ROM
+	0000-1FFF maps to C000-DFFF
+
+	16K ROM
+
+	0000-1FFF maps to C000-DFFF
+	2000-3FFF maps to A000-BFFF
+
+	32K ROM
+
+	0000-5FFF maps to 8000-DFFF
+	6000-7FFF maps to 6000-7FFF
+
+
+Display is 32bytes/line with the last 2 bytes not displayed and high bit
+left. Internal font is 6x8
+
+
+Suspend/Resume
+
+EF28 = 1 > jumps to 0x0100 on resume (or warmstarts app)
+
+Resident Mode: ROM 0x6000 starts
+
+	DD
+	DE
+	C3 0B 01   (the 68 bytes of code)
+	JP coldstart
+	JP warmstart
+	then 68 byte piece of code that wants investigating and rewriting
+	then filename (8.3)
+
+Presumed the code does the warmstart/coldstart checks and maps the ROMs and
+the like, so needs a different implementation for FUZIX
+
+(References to the directory - work out from BASIC what else we need and
+where)
+
+Implies 32 byte header then 3 x 32 byte directory entries ? then code at
+6080
+
+Guess is
+
+32 byte header
+3 x 32 byte directory entries (including for resident app)
+then "code" which starts with the DD DE stuff
+
+Entries are
+
+E5 - invalid or 00 - used
+Name (11 bytes 8.3)
+Logical extent number: 0
+0
+0
+Total records: (size/128 bytes, max 16K (0x80))
+allocation map: Up to 16 1K block offsets (relative to start of ROM)
+
+
+
+
+FRC runs at 616.6KHz so 106.7 msec/clock
+
+
+
+Cartridge ROM
+
+0x12 (R) data
+0x13 (R) identifier
+
+0x10 (W) addr low
+0x11 (W) addr hi
+0x13 (W) bit 0 power on (wait 60ms after enabling)
+
+Power off when not in use as may be NMOS
+
+ROMS are at logical 0x0000 and logical 0x8000 irrespective of their sizes
+but 32K ROMs have low 16K/high 16K swapped as seen by CPU
+
+
+Device DB type code 0x01
+
+F53F at boot holds needed info (1  = ROM , 2 = RAM)
+
+To use
+
+release catridge reset
+wait 10ms
+power on
+wait 60 ms
+write low then high addr
+read data
+power off
+reset
+
+
+
+RAM cartridge is similar but 0x12 (W) writes data and there is no power
+button. Up to 64K allowed RAM is 0 based accoding to size (16/32/64K)
+
+To size
+
+Rewrite 0x4000 -> fail means 16K
+Rewrite 0x8000 -> fail means 32K
+Else 64K
+
+Recommended reset off/on timer of 2 seconds
+
+Device DB type code 0x02
+
+(others 8 - tape, 9 printer, 14 dmm, 15 modem)
+
+
+Printer
+
+0x10 - (R) data
+0x11 - (R) flags 2 = CAB1 1= IBF 0=OBF
+0x10 - (W) data
+0x10 - (W) command
+
+Commands
+0x00 ident check - returns 00, 09
+
+0x0f returns 0x02 as akc, resets all states except univ char mode
+
+control codes
+
+02 - double height
+03 - end double height
+08 - backspace
+0A - line feed
+0D - carriage return
+0E - double width/auto reset
+14 - disable double width/auto reset
+7f - delete
+1b - escapes equences
+esc 1 - 8 dot feed
+esc 2 - 10 dot feed
+esc A+n - n dot feed
+esc R+n - universal character mode
+esc K+nn1+n2 - single density bit image
+esc W+0 disable double width
+esc W+1 enable double width
+
+modem just has
+
+0x10 bit 2: 0 = carrier detected
+     bit 1: data is from line (if 0)
+     bit 0: 0 = ring detect
+
+
+External ramdisk
+
+0x93 (R) data
+0x94 (R) bit 7 =0 if ram disk is installed bit 1/0 how current DPN/WP
+
+0x90 (W) addr low
+0x91 (W) addr hi
+0x92 (W) addr top (bits A18-A16)
+0x93 (W) data
+0x94 (W) bit 1 - 1 = RAM opened, 0 1 = write protect
+
+Low 128K of address space is RAM
+High 128K is ROM
+256Kbit ROM has weird half/half address switch
+
+Low 8bits of address autoincrement
+
+Open RAM when needed then close in order to save power
+
+
+
+Other oddments
+
+OS ROM 0x7FFx
+
+7FF8/9/A: 			"PIN"
+
+7FFB: country			J/E/U (Japan/Export/US)
+7FFC: program version		'1', '2' etc
+7FFD: data version 		""
+7FFE: area version		""
+7FFF: reserved
+
+
+Dip switch 8(bit 7) is keyboard type 1 means an item keyboard
+Otherwise country code bits give keymap
+
+
+
+Need to find keyboard maps ?
+
+
+
+
+PX8 Differences
+
+- A lot is handled by the slave CPU (6301)
+	- graphics/text
+	- tape drive
+	- serial
+	- epsp protocol for floppies
+	- rom capsule access
+
+- No cartridges
+
+- ROM can only be mapped as I/O except for OS ROM
+
+- Non intelligent sidecar is similar to PX4. Same registers but has
+  0x94 bit 1 indicating 128K or 64K and bit 0 indicating opened/closed.
+  Can hold up to 128K ROM
+
+- Can have a 60 or 120 K intelligent RAM disc which thinks its a floppy
+
+  Port 0x80 read data/status, write data
+  Port 0x81 read handshake, write cmd
+
+  Detect by reading 0x80 and checking bits 7:6 are 00
+
+  Commands are of the read/write sector format (page 19, of OSM 16)
+
+
+Some Cartridges can be mixed with a modem
+
+0x84-0x87 then are modem control
+
+0x86 bit 7 reads 1 if no modem
+
+Some contain an RS232 port with an 8251 and 8253
+Read 0xA6 bit 7 , 1 = no serial
+
+
+So we can still do paging to ramdisc but might be uglier with the
+"intelligent" unit - as well as annoyingly 4K short of our ideal size.
+
+Mappings are different and we also need to replace the system ROM
+
+0x0000-0x7FFF or so: user space
+0x8000-0xFFFF: kernel data, common, code overspill
+
+paged to kernel mode
+0x0000-0x7FFF: OS boot rom
+
+
+Boot will need to load the rest of the OS out of a ROM capsule into RAM
+
+
+All doable but hard to replace the system ROM.
