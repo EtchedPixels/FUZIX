@@ -73,9 +73,9 @@ void platform_discard(void)
 	}
 }
 
-
 /*
- *	Logic for tickless system. If you have an RTC you can ignore this.
+ *	Logic for tickless system. If you have an RTC with a timer tick
+ *	you can ignore this.
  */
 
 static uint8_t newticks = 0xFF;

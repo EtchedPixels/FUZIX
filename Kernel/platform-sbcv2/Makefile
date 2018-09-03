@@ -10,7 +10,7 @@ ASRCS = sbcv2.s crt0.s
 ASRCS += tricks.s commonmem.s
 
 DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ds1302_discard.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
 DSRCS += ../dev/devfd.c ../dev/ppide_rbc.c
 

@@ -6,6 +6,7 @@
 #include <blkdev.h>
 #include <devide.h>
 #include <propio2.h>
+#include <devrtc.h>
 
 extern int strcmp(const char *, const char *);
 
@@ -88,4 +89,5 @@ void device_init(void)
 {
 	devide_init();
 	prop_sd_probe();
+	ds1302_init();
 }
