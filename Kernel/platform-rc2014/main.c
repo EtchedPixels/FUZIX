@@ -26,7 +26,10 @@ void platform_idle(void)
 	   fake up appopriate timer events */
 	/* Let's go to sleep while we wait for something to interrupt us;
 	 * Makes the HALT LED go yellow, which amuses me greatly. */
-	__asm halt __endasm;
+//	__asm halt __endasm;
+	irqflags_t irq = di();
+	tty_pollirq_sio();
+	irqrestore(irq);
 }
 
 uint8_t platform_param(unsigned char *p)
@@ -37,28 +40,13 @@ uint8_t platform_param(unsigned char *p)
 
 void platform_interrupt(void)
 {
-	switch (irqvector) {
-	case 1:
+	if (1) { 	/* CTC == 0 when we do the work */
 #ifdef CONFIG_FLOPPY
 		fd_tick();
 #endif
-		poll_input();
-		timer_interrupt();
-		return;
-	case 4:
-		tty_pollirq_sio();
-		return;
-		/*
-		 *      Means we are in IM1 because we have a non Z80
-		 *      device present.
-		 */
-	case 0x38:
-		if (ser_type == 1)
-			tty_pollirq_sio();
-		if (ser_type == 2)
-			tty_pollirq_acia();
-		return;
-	default:
-		return;
+//		poll_input();
+//		timer_interrupt();
 	}
+	tty_pollirq_sio();
+	return;
 }

@@ -11,7 +11,7 @@
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
 
-uint8_t ser_type;
+uint8_t ser_type = 1;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -41,19 +41,16 @@ void tty_pollirq_sio(void)
 
 	SIOA_C = 0;		// read register 0
 	ca = SIOA_C;
-	if (ca & 1) {
+	if (ca & 1)
 		tty_inproc(1, SIOA_D);
-	}
 	if (ca & 4) {
 		tty_outproc(1);
 		SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 	}
-
 	SIOB_C = 0;		// read register 0
 	cb = SIOB_C;
-	if (cb & 1) {
+	if (cb & 1)
 		tty_inproc(2, SIOB_D);
-	}
 	if (cb & 4) {
 		tty_outproc(2);
 		SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
@@ -72,6 +69,8 @@ void tty_pollirq_acia(void)
 		tty_outproc(1);
 	}
 }
+
+static char hex[] = { "0123456789ABCDEF" };
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
@@ -95,23 +94,33 @@ void tty_sleeping(uint8_t minor)
 {
 }
 
+/* Be careful here. We need to peek at RR but we must be sure nobody else
+   interrupts as we do this. Really we want to switch to irq driven tx ints
+   on this platform I think. Need to time it and see
+
+   An asm common level tty driver might be a better idea */
 ttyready_t tty_writeready(uint8_t minor)
 {
+	irqflags_t irq;
 	uint8_t c;
 	if (ser_type == 1) {
+		irq = di();
 		if (minor == 1) {
 			SIOA_C = 0;	/* read register 0 */
 			c = SIOA_C;
+			irqrestore(irq);
 			if (c & 0x04)	/* THRE? */
 				return TTY_READY_NOW;
 			return TTY_READY_SOON;
 		} else if (minor == 2) {
 			SIOB_C = 0;	/* read register 0 */
 			c = SIOB_C;
+			irqrestore(irq);
 			if (c & 0x04)	/* THRE? */
 				return TTY_READY_NOW;
 			return TTY_READY_SOON;
 		}
+		irqrestore(irq);
 	} else if (ser_type == 2 && minor == 1) {
 		c = ACIA_C;
 		if (c & 0x02)	/* THRE? */

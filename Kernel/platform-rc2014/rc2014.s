@@ -1,7 +1,7 @@
 ; 2014-02-19 Sergey Kiselev
 ; RC2014 hardware specific code
 
-        .module zeta_v2
+        .module rc2014
 
         ; exported symbols
         .globl init_hardware
@@ -11,7 +11,6 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
-	.globl _irqvector
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
 	.globl _kernel_pages
@@ -86,7 +85,8 @@ init_hardware:
 	out (c),b
 	in a,(c)
 	sub d
-	jr z, is_sio
+;;FIXME	jr z, is_sio
+	jr is_sio
 	; We have however pooped on the 68B50 setup so put it back into
 	; a sensible state.
 	ld a,#0x03
@@ -172,7 +172,7 @@ init_partial_uart:
 
         ld a,#0x02
         out (SIOB_C),a
-        ld a,#SIO_IV		; INTERRUPT VECTOR ADDRESS
+        ld a,#SIO_IV		; INTERRUPT VECTOR ADDRESS (needs to go)
         out (SIOB_C),a
 
         ld a,#0x03
@@ -200,18 +200,10 @@ init_partial_uart:
 	ld a,#180			; time constant = 180
 	out (CTC_CH1),a			; set CH1 time constant
 
-	ld hl,#intvectors
-	ld a,l
-	and #0xF8			; get bits 7-3 of int. vectors table
-	out (CTC_CH0),a			; send it to CTC
-
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
 
-	ld hl,#intvectors
-	ld a,h				; get bits 15-8 of int. vectors table
-	ld i,a				; load to I register
-	im 2				; set Z80 CPU interrupt mode 2
+	im 1				; set Z80 CPU interrupt mode 1
 serial_up:
         jp _init_hardware_c             ; pass control to C, which returns for us
 
@@ -236,74 +228,6 @@ _platform_reboot:
         .area _COMMONMEM
 
 ;=========================================================================
-; Interrupt stuff
-;=========================================================================
-; IM2 interrupt verctors table
-; Note: this is linked after the udata block, so it is aligned on 256 byte
-; boundary
-intvectors:
-	.dw	ctc0_int		; CTC CH0 used as prescaler for CH1
-	.dw	ctc1_int		; timer interrupt handler
-	.dw	serial_int		; UART interrupt handler
-	.dw	ppi_int			; PPI interrupt handler
-        .dw     sio_int                 ; SIO interrupt handler
-
-_irqvector:
-	.db	0			; used to identify interrupt vector
-
-; CTC CH0 shouldn't be used to generate interrupts
-; but we'll implement it just in case
-ctc0_int:
-	push af
-	xor a				; IRQ vector = 0
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
-
-; periodic timer interrupt
-ctc1_int:
-	push af
-	ld a,#1				; IRQ vector = 1
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
-
-; UART interrupt
-serial_int:
-	push af
-	ld a,#2				; IRQ vector = 2
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
-
-; PPI interrupt - not used for now
-ppi_int:
-	push af
-	ld a,#3				; IRQ vector = 3
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
-
-; SIO interrupt
-sio_int:
-	push af
-	ld a,#4				; IRQ vector = 4
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
-
-; int38h handler
-;    Calls interrupt_handler with irqvector of 0x38
-;       For SIO/2, nothing will happen, since it uses IM2
-;       For ACIA, serial interrupt handler will execute
-int38h_int:
-	push af
-        ld a, #'B'
-        out (VFD_D),a
-	ld a,#0x38			; not a real vector, just a signal that the 0x38h occurred
-	ld (_irqvector),a		; store it
-	pop af
-	jp interrupt_handler
 
 platform_interrupt_all:
 	ret
@@ -329,7 +253,7 @@ _program_vectors:
 	; now install the interrupt vector at 0x0038
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
-	ld hl,#int38h_int
+	ld hl,#interrupt_handler
 	ld (0x0039),hl
 
 	; set restart vector for UZI system calls
