@@ -144,7 +144,7 @@ static int bittest(uint16_t b)
     return (bitmap[b >> 3] & (1 << (b & 7))) ? 1 : 0;
 }
 
-static void panic(char *s)
+static void panic(const char *s)
 {
 	fprintf(stderr, "panic: %s\n", s);
 	exit(error | 8);
@@ -315,6 +315,7 @@ static void pass1(void)
         ++icount;
         /* Check size */
 
+        /* FIXME: check not <0 but > max allowed as unsigned */
         if (ino.i_size < 0) {
             printf("Inode %u offset is negative with value of %ld. Fix? ",
                     n, ino.i_size);
