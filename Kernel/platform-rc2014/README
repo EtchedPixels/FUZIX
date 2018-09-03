@@ -11,12 +11,16 @@ Sergey Kiselev <skiselev@gmail.com>, and others.
 Supported Hardware
 
 	RC2014 Z80 card or compatible
+
 	512K ROM / RAM board. This board is basically a clone of the memory
 	management subsystem of the Zeta V2. It replaces the RC2014's
 	default ROM and RAM boards.
+
 	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
 	If you have a Scott Baker SIO/2 card you'll need to see config.h
 	CTC board at 0x90
+
+	DS1302 RTC at 0xC0
 
 	Options:
 
@@ -43,11 +47,15 @@ Configuration
 
 Things that don't work
 
-  * The RC2014 doesn't come with a clock.
-
   * Flow control isn't yet enabled for the serial port.
 
+  * SIO baud rate setting etc has not been tackled
+
 Stuff To Do
+
+  * SIO v ACIA detection is bust
+
+  * Weird hangs if left idle at bootprompt for ages
 
   * Rework the CTCs if we can so we use CTC0 as a timer for the CTC clock and
     use CTC1 to count CTC0 overflows. That way we can use the CTC0 interrupt

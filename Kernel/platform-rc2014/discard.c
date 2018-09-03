@@ -61,10 +61,11 @@ void platform_swap_found(uint8_t letter, uint8_t m)
   n = blk->lba_count[m - 1] / SWAP_SIZE;
   if (n > MAX_SWAPS)
     n = MAX_SWAPS;
+#ifdef SWAPDEV
   while(n)
     swapmap_add(n--);
+#endif
 }
-
 
 void device_init(void)
 {

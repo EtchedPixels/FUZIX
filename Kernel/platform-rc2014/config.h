@@ -25,7 +25,7 @@
 #define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
 #define PROC_SIZE   64	  /* Memory needed per process */
 
-#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+//#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern unsigned int swap_dev;
 #define SWAP_SIZE   0x79 	/* 60.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
