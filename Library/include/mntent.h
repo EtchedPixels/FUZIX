@@ -24,4 +24,8 @@ extern struct mntent *getmntent_r(FILE *fp, struct mntent *mnt, char *buf, int l
 /* Extended function found in some Unixen. Not yet supported */
 /*extern int delmntent(FILE *fp, struct mntent *mnt); */
 
+/* FUZIX specific */
+extern char *root_device_name(void);
+extern char *mnt_device_path(struct mntent *me);
+
 #endif
