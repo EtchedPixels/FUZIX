@@ -3,10 +3,10 @@ ASRCS += devrd_zeta2_hw.s
 CSRCS = devices.c main.c devtty.c devrd_zeta2.c vfd-debug.c vfd-term.c
 CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
-DSRCS +=  ../dev/devrd.c
-DASRCS = ../dev/devfd_hw.s ../dev/devrd_hw.s
+DSRCS +=  ../dev/devrd.c ../dev/ds1302.c
+DASRCS = ../dev/devfd_hw.s ../dev/devrd_hw.s ../dev/ds1302_rc2014.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
