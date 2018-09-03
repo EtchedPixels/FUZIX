@@ -227,15 +227,21 @@ arg_t _brk(void)
 	   can keep it portable */
 
 	if (addr >= brk_limit()) {
-		kprintf("%d: out of memory\n", udata.u_ptab->p_pid);
+		kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
+			addr - brk_limit());
 		udata.u_error = ENOMEM;
 		return -1;
 	}
+#if (PROGBASE > 0)
+	if (addr < PROGBASE) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+#endif
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
 	if (addr > udata.u_break)
 		uzero((void *)udata.u_break, addr - udata.u_break);
-	/* FIXME: review  can brk() below base address */
 	udata.u_break = addr;
 	return 0;
 }
