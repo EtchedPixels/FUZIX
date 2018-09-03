@@ -50,4 +50,7 @@ platform-rc2014/devide.rel
 platform-rc2014/devide_discard.rel
 platform-rc2014/monitor.rel
 platform-rc2014/devinput.rel
+platform-rc2014/ds1302.rel
+platform-rc2014/ds1302_discard.rel
+platform-rc2014/ds1302_rc2014.rel
 -e

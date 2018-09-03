@@ -11,7 +11,9 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
+	.globl map_for_swap
 	.globl platform_interrupt_all
+	.globl _copy_common
 	.globl mpgsel_cache
 	.globl _kernel_pages
 	.globl _platform_reboot
@@ -142,7 +144,7 @@ init_partial_uart:
 
         ld a,#0x01
         out (SIOA_C),a
-        ld a,#0x1A          ; Receive int mode 11, tx int enable (was $18)
+        ld a,#0x18;A?          ; Receive int mode 11, tx int enable (was $18)
         out (SIOA_C),a
 
         ld a,#0x03
@@ -167,7 +169,7 @@ init_partial_uart:
 
         ld a,#0x01
         out (SIOB_C),a
-        ld a, #0x1A          ; Receive int mode 11, tx int enable (was $18)
+        ld a, #0x18;A?          ; Receive int mode 11, tx int enable (was $18)
         out (SIOB_C),a
 
         ld a,#0x02
@@ -191,14 +193,14 @@ init_partial_uart:
         ; If you don't have a CTC probably nothing bad will happen, other than
         ; your floppy not working.
 
-	ld a,#0x57			; counter mode, disable interrupts
-	out (CTC_CH0),a			; set CH0 mode
-	ld a,#0				; time constant = 256
-	out (CTC_CH0),a			; set CH0 time constant
-	ld a,#0xC7			; counter mode, enable interrupts
-	out (CTC_CH1),a			; set CH1 mode
-	ld a,#180			; time constant = 180
-	out (CTC_CH1),a			; set CH1 time constant
+;	ld a,#0x57			; counter mode, disable interrupts
+;	out (CTC_CH0),a			; set CH0 mode
+;	ld a,#0				; time constant = 256
+;	out (CTC_CH0),a			; set CH0 time constant
+;	ld a,#0xC7			; counter mode, enable interrupts
+;	out (CTC_CH1),a			; set CH1 mode
+;	ld a,#180			; time constant = 180
+;	out (CTC_CH1),a			; set CH1 time constant
 
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
@@ -361,6 +363,35 @@ map_save:
 	ld (map_savearea+2),hl
 	pop hl
 	ret
+
+;=========================================================================
+; map_for_swap - map a page into a bank for swap I/O
+; Inputs: none
+; Outputs: none
+;
+; The caller will later map_kernel to restore normality
+;
+; We use 0x4000-0x7FFF so that all the interrupt stuff is mapped.
+;
+;=========================================================================
+map_for_swap:
+	ld (mpgsel_cache + 1),a
+	out (MPGSEL_1),a
+	ret
+
+_copy_common:
+	pop hl
+	pop de
+	push de
+	push hl
+	ld a,e
+	call map_for_swap
+	ld hl,#0xF300
+	ld de,#0x7300
+	ld bc,#0x0D00
+	ldir
+	jr map_kernel
+
 
 ; MPGSEL registers are read only, so their content is cached here
 mpgsel_cache:
