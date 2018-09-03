@@ -98,12 +98,11 @@ no_port_idwork:
         bit 3,c
         ld a, #CPU_Z80_BM1
         jr z, set_id
-        ld bc,#0xffff
+        ld bc,#0x00ff
         push bc
-        pop af
-        xor a
-        scf
-        nop
+        pop af		/* Flags is now 0xFF A is 0. Now play with XF and YF */
+        scf		/* Will give us 0 for NEC clones, 28 for Zilog */
+        nop		/* (Turbo R will also show 28) */
         push af
         pop bc
         ld a,c
