@@ -189,18 +189,24 @@ init_partial_uart:
 
         ; ---------------------------------------------------------------------
 	; Initialize CTC
-        ; Only supported for SIO, since CTC must operate in IM2.
-        ; If you don't have a CTC probably nothing bad will happen, other than
-        ; your floppy not working.
+	;
+	; We must initialize all channels of the CTC. The documentation
+	; states that the initial CTC state is undefined and we don't want
+	; random interrupt surprises
+	; ---------------------------------------------------------------------
 
-;	ld a,#0x57			; counter mode, disable interrupts
-;	out (CTC_CH0),a			; set CH0 mode
-;	ld a,#0				; time constant = 256
-;	out (CTC_CH0),a			; set CH0 time constant
-;	ld a,#0xC7			; counter mode, enable interrupts
-;	out (CTC_CH1),a			; set CH1 mode
-;	ld a,#180			; time constant = 180
-;	out (CTC_CH1),a			; set CH1 time constant
+	ld a,#0x57			; counter mode, disable interrupts
+	out (CTC_CH0),a			; set CH0 mode
+	ld a,#0				; time constant = 256
+	out (CTC_CH0),a			; set CH0 time constant
+	ld a,#0x57			; counter mode, FIXME C7 enable interrupts
+	out (CTC_CH1),a			; set CH1 mode
+	ld a,#180			; time constant = 180
+	out (CTC_CH1),a			; set CH1 time constant
+	ld a,#0x57			; counter mode, disable interrupts
+	out (CTC_CH2),a			; set CH2 mode
+	ld a,#0x57			; counter mode, disable interrupts
+	out (CTC_CH3),a			; set CH3 mode
 
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
