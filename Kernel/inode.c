@@ -170,7 +170,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 
 #ifdef CONFIG_NET
 	case MODE_R(F_SOCK):
-        	udata.u_count = sock_write(ino, flag);
+		udata.u_done = sock_write(ino, flag);
 		break;
 #endif
 	case MODE_R(F_PIPE):
