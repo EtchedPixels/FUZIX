@@ -45,7 +45,7 @@ int sock_write(inoptr ino, uint8_t flag)
 			default:
 				return r;
 		}
-		if (s->s_iflag == SI_THROTTLE &&
+		if ((s->s_iflag & SI_THROTTLE) &&
 			psleep_flags(&s->s_iflag, flag) == -1)
 				return -1;
 	}
