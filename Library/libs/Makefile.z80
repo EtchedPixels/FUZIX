@@ -16,7 +16,7 @@ SRC_CRT0NS = crt0nostdio$(PLATFORM).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
 SRC_ASM = enter.s htonl-$(USERCPU).s htons-$(USERCPU).s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
-SRC_C =  __argv.c a64l.c abort.c asctime.c assert.c atexit.c atoi_small.c
+SRC_C =  __argv.c a64l.c abort.c aes256.c asctime.c assert.c atexit.c atoi_small.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c

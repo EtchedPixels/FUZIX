@@ -13,7 +13,7 @@ SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM = setjmp_68000.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
-SRC_C =  __argv.c abort.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
