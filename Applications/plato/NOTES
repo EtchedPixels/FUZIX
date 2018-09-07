@@ -1,0 +1,11 @@
+Implement
+
+- Fix up our output code to buffer into a 256 byte buffer
+- Keep shovelling every tick
+- Set the tty up and atexit properly
+- Block all the signals we don't want (inc PIPE)
+- Actually look up the address properly
+- Get the splash screen off disk instead
+
+
+It would be nice to squash it to the point we can afford 576 byte I/O buffers

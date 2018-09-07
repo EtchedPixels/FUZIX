@@ -1,0 +1,35 @@
+.SUFFIXES: .c .rel
+
+CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
+COPT = $(FUZIX_CCOPTS)
+
+SRCS = io_base.c keyboard_base.c plato.c protocol.c screen_base.c terminal.c \
+       touch_base.c
+
+FSRCS = font.c io.c keyboard.c scale.c screen.c splash.c \
+	terminal_char_load.c touch.c
+
+INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
+
+all:    plato
+
+OBJS = $(SRCS:.c=.rel)
+FOBJS = $(patsubst fuzix/%.c,%.rel, $(FSRCS))
+
+plato: $(OBJS) $(FOBJS)
+	$(CC) -o plato --nostdio $(OBJS) $(FOBJS)
+
+$(OBJS):.c.rel:
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(FOBJS):.c.rel:
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+
+$(OBJS) : $(INC)
+
+$(FOBJS) : $(INC)
+
+clean:
+	rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ plato
+	(cd fuzix; rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ )
