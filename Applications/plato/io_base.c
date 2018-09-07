@@ -54,7 +54,7 @@ void io_init(void)
  */
 void io_main(void)
 {
-  char buf[256];
+  char buf[576];
   int l;
 
   /* The OS does our buffering (badly or not varies) */

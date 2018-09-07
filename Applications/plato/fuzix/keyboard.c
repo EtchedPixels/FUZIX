@@ -31,6 +31,7 @@ void keyboard_main(void)
 {
 	uint8_t ch;
 
+	fflush(stdout);
 	switch (read(0, &ch, 1)) {
 	case 0:
 		return;

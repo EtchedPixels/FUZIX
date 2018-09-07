@@ -6,8 +6,8 @@ COPT = $(FUZIX_CCOPTS)
 SRCS = io_base.c keyboard_base.c plato.c protocol.c screen_base.c terminal.c \
        touch_base.c
 
-FSRCS = font.c io.c keyboard.c scale.c screen.c splash.c \
-	terminal_char_load.c touch.c
+FSRCS = fuzix/font.c fuzix/io.c fuzix/keyboard.c fuzix/scale.c fuzix/screen.c \
+	fuzix/splash.c fuzix/terminal_char_load.c fuzix/touch.c
 
 INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
 
@@ -17,18 +17,13 @@ OBJS = $(SRCS:.c=.rel)
 FOBJS = $(patsubst fuzix/%.c,%.rel, $(FSRCS))
 
 plato: $(OBJS) $(FOBJS)
-	$(CC) -o plato --nostdio $(OBJS) $(FOBJS)
+	$(CC) -o plato $(OBJS) $(FOBJS)
 
-$(OBJS):.c.rel:
+$(OBJS): %.rel: %.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
 
-$(FOBJS):.c.rel:
+$(FOBJS): %.rel: fuzix/%.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
-
-
-$(OBJS) : $(INC)
-
-$(FOBJS) : $(INC)
 
 clean:
 	rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ plato
