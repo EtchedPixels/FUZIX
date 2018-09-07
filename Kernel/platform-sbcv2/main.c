@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <rtc.h>
 #include <ds1302.h>
-#include <net_wiznet.h>
+#include <net_w5100.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -44,7 +44,7 @@ void platform_interrupt(void)
 {
 	tty_poll();
 #ifdef CONFIG_NET_WIZNET
-	wiz_poll();
+	w5100_poll();
 #endif
 }
 
