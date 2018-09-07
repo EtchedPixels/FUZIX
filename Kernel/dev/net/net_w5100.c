@@ -15,12 +15,13 @@
  */
 
 #include <kernel.h>
-#include <kdata.h>
-#include <netdev.h>
-#include <net_wiznet.h>
-#include <printf.h>
 
 #ifdef CONFIG_NET_WIZNET
+
+#include <kdata.h>
+#include <printf.h>
+#include <netdev.h>
+#include <net_w5100.h>
 
 static uint8_t irqmask;
 
@@ -100,203 +101,108 @@ static uint8_t irqmask;
 
 
 
-
-/* Core helpers: platform supplies wiz_bread{_u} and wiz_bwrite{_u} */
-
-__sfr __at 0x28 mr;
-__sfr __at 0x29 idm_ar0;
-__sfr __at 0x2A idm_ar1;
-__sfr __at 0x2B idm_dr;
-
-/* We assume indirect, autoinc is always set */
-static uint8_t wiz_readb(uint16_t off)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	return idm_dr;
-}
-
-static uint16_t wiz_readw(uint16_t off)
-{
-	uint16_t n;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	n = ((uint16_t)idm_dr) << 8;
-	n |= idm_dr;
-	return n;
-}
-
-static uint32_t wiz_readl(uint16_t off)
-{
-	uint32_t n;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	n = ((uint32_t)idm_dr) << 24;
-	n |= ((uint32_t)idm_dr) << 16;
-	n |= ((uint16_t)idm_dr) << 8;
-	n |= idm_dr;
-	return n;
-}
-
-static void wiz_bread(uint16_t off, uint8_t *p, uint8_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	while(n--)
-		*p++ = idm_dr;
-}
-
-static void wiz_breadu(uint16_t off, uint8_t *p, uint8_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	while(n--)
-		uputc(idm_dr, p++);
-}
-
-static void wiz_writeb(uint16_t off, uint8_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	idm_dr = n;
-}
-
-static void wiz_writew(uint16_t off, uint16_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	idm_dr = n >> 8;
-	idm_dr = n;
-}
-
-static void wiz_writel(uint16_t off, uint32_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	idm_dr = n >> 24;
-	idm_dr = n >> 16;
-	idm_dr = n >> 8;
-	idm_dr = n;
-}
-
-static void wiz_bwrite(uint16_t off, uint8_t *p, uint8_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	while(n--)
-		idm_dr = *p++;
-}
-
-static void wiz_bwriteu(uint16_t off, uint8_t *p, uint8_t n)
-{
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	while(n--)
-		idm_dr = ugetc(p++);
-}
-
 /* FIXME: look for ways to fold these four together */
-static void wiz_queue(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_queue(uint16_t i, uint16_t n, uint8_t * p)
 {
-	uint16_t dm = wiz_readw(Sn_TX_WR0 + i) & TX_MASK;
+	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
 
 	if (dm + n >= TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
-		wiz_bwrite(dm + tx_base, p, us);
-		wiz_bwrite(tx_base, p + us, n - us);
+		w5100_bwrite(dm + tx_base, p, us);
+		w5100_bwrite(tx_base, p + us, n - us);
 	} else
-		wiz_bwrite(dm + tx_base, p, n);
+		w5100_bwrite(dm + tx_base, p, n);
 }
 
-static void wiz_queue_u(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_queue_u(uint16_t i, uint16_t n, uint8_t * p)
 {
-	uint16_t dm = wiz_readw(Sn_TX_WR0 + i) & TX_MASK;
+	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
 
 	if (dm + n >= TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
-		wiz_bwriteu(dm + tx_base, p, us);
-		wiz_bwriteu(tx_base, p + us, n - us);
+		w5100_bwriteu(dm + tx_base, p, us);
+		w5100_bwriteu(tx_base, p + us, n - us);
 	} else
-		wiz_bwriteu(dm + tx_base, p, n);
+		w5100_bwriteu(dm + tx_base, p, n);
 }
 
-static void wiz_dequeue(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_dequeue(uint16_t i, uint16_t n, uint8_t * p)
 {
-	uint16_t dm = wiz_readw(Sn_RX_RD0 + i) & RX_MASK;
+	uint16_t dm = w5100_readw(Sn_RX_RD0 + i) & RX_MASK;
 	uint16_t rx_base = 0x6000 + (i << 3);	/* i is already << 8 */
 
 	if (dm + n >= RX_MASK) {
 		uint16_t us = RX_MASK + 1 - dm;
-		wiz_bread(dm + rx_base, p, us);
-		wiz_bread(rx_base, p + us, n - us);
+		w5100_bread(dm + rx_base, p, us);
+		w5100_bread(rx_base, p + us, n - us);
 	} else
-		wiz_bread(dm + rx_base, p, n);
+		w5100_bread(dm + rx_base, p, n);
 }
 
-static void wiz_dequeue_u(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_dequeue_u(uint16_t i, uint16_t n, uint8_t * p)
 {
-	uint16_t dm = wiz_readw(Sn_RX_RD0 + i) & RX_MASK;
+	uint16_t dm = w5100_readw(Sn_RX_RD0 + i) & RX_MASK;
 	uint16_t rx_base = 0x6000 + (i << 3);	/* i is already << 8 */
 
-	if (dm + n >= RX_MASK) {
+	if (dm + n > RX_MASK) {
 		uint16_t us = RX_MASK + 1 - dm;
-		wiz_breadu(dm + rx_base, p, us);
-		wiz_breadu(rx_base, p + us, n - us);
+		w5100_breadu(dm + rx_base, p, us);
+		w5100_breadu(rx_base, p + us, n - us);
 	} else
-		wiz_breadu(dm + rx_base, p, n);
+		w5100_breadu(dm + rx_base, p, n);
 }
 
-static void wiz_wakeall(struct socket *s)
+static void w5100_wakeall(struct socket *s)
 {
 	wakeup(s);
 	wakeup(&s->s_iflag);
 	wakeup(&s->s_data);
 }
 
-static void wiz_eof(struct socket *s)
+static void w5100_eof(struct socket *s)
 {
 	s->s_iflag |= SI_EOF;
-	wiz_wakeall(s);
+	w5100_wakeall(s);
 }
 
 /*
  *	Process interrupts from the WizNet device
  */
-static void wiz_event_s(uint8_t i)
+static void w5100_event_s(uint8_t i)
 {
 	struct socket *s = &sockets[i];
-	uint16_t stat = wiz_readw(Sn_IR + (i << 8));	/* BE read of reg pair */
+	uint16_t stat = w5100_readw(Sn_IR + (i << 8));	/* BE read of reg pair */
 
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
 		s->s_iflag &= ~SI_THROTTLE;
-		wiz_writeb(Sn_IR + (i << 8), 0x10);	/* Clear the flag down */
+		w5100_writeb(Sn_IR + (i << 8), 0x10);	/* Clear the flag down */
 		wakeup(&s->s_data);
 	}
 	if (stat & 0x800) {
 		/* Timeout */
 		s->s_error = ETIMEDOUT;
-		wiz_writeb(Sn_CR + (i << 8), CLOSE);
-		wiz_wakeall(s);
-		wiz_writeb(Sn_IR + (i << 8), 0x08);
-		wiz_eof(s);
+		w5100_writeb(Sn_CR + (i << 8), CLOSE);
+		w5100_wakeall(s);
+		w5100_writeb(Sn_IR + (i << 8), 0x08);
+		w5100_eof(s);
 		/* Fall through and let CLOSE state processing do the work */
 	}
 	if (stat & 0x400) {
 		/* Receive wake: Poke the user in case they are reading */
 		s->s_iflag |= SI_DATA;
-		wiz_writeb(Sn_IR + (i << 8), 0x04);	/* Clear the flag down */
+		w5100_writeb(Sn_IR + (i << 8), 0x04);	/* Clear the flag down */
 		wakeup(&s->s_iflag);
 	}
 	if (stat & 0x200) {
 		/* Disconnect: Just kill our host socket. Not clear if this
 		   is right or we need to drain data first */
-		wiz_writeb(Sn_IR + (i << 8), 0x02);	/* Clear the flag down */
-		wiz_writeb(Sn_CR + (i << 8), CLOSE);
-		wiz_eof(s);
+		w5100_writeb(Sn_IR + (i << 8), 0x02);	/* Clear the flag down */
+		w5100_writeb(Sn_CR + (i << 8), CLOSE);
+		w5100_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
 		   actual shutting down */
 	}
@@ -306,7 +212,7 @@ static void wiz_event_s(uint8_t i)
 			s->s_state = SS_CONNECTED;
 			wakeup(s);
 		}
-		wiz_writeb(Sn_IR + (i << 8), 0x01);	/* Clear the flag down */
+		w5100_writeb(Sn_IR + (i << 8), 0x01);	/* Clear the flag down */
 	}
 	/* ??? return if high bits set here ?? */
 	switch (stat & 0xFF) {
@@ -314,12 +220,12 @@ static void wiz_event_s(uint8_t i)
 		if (s->s_state != SS_CLOSED && s->s_state != SS_UNUSED) {
 			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD) {
 				s->s_error = ECONNRESET;	/* Sort of a guess */
-				wiz_wakeall(s);
+				w5100_wakeall(s);
 			} else
 				wakeup(s);
 			irqmask &= ~(1 << i);
-			wiz_writeb(IMR, irqmask);
-			wiz_eof(s);
+			w5100_writeb(IMR, irqmask);
+			w5100_eof(s);
 			/* Net layer wants us to burn the socket */
 			if (s->s_state == SS_DEAD)
 				sock_closed(s);
@@ -346,7 +252,7 @@ static void wiz_event_s(uint8_t i)
 		if (s->s_state == SS_CONNECTED
 		    || s->s_state == SS_CONNECTING)
 			s->s_state = SS_CLOSEWAIT;
-		wiz_eof(s);
+		w5100_eof(s);
 		if (s->s_state == SS_ACCEPTWAIT) {
 			/* HUM ??? */
 		}
@@ -361,7 +267,7 @@ static void wiz_event_s(uint8_t i)
 	}
 }
 
-void wiz_event(void)
+void w5100_event(void)
 {
 	uint8_t irq;
 	uint8_t i = 0;
@@ -369,23 +275,23 @@ void wiz_event(void)
 
 
 	/* Polling cases */
-	irq = wiz_readb(IR) & 0x0F;
+	irq = w5100_readb(IR) & 0x0F;
 	if (irq == 0)
 		return;
 
 	while (irq) {
 		if (irq & 1)
-			wiz_event_s(i);
+			w5100_event_s(i);
 		irq >>= 1;
 		i++;
 		s++;
 	}
 }
 
-void wiz_poll(void)
+void w5100_poll(void)
 {
 	if (irqmask)
-		wiz_event();
+		w5100_event();
 }
 
 /* State management for creation of a socket. If need be allocate the socket
@@ -405,31 +311,31 @@ int net_bind(struct socket *s)
 
 	switch (s->s_type) {
 	case SOCKTYPE_TCP:
-		wiz_writeb(Sn_MR + off, 0x21);	/* TCP, delayed ack */
+		w5100_writeb(Sn_MR + off, 0x21);	/* TCP, delayed ack */
 		/* We keep ports net endian so don't byte swap */
-		wiz_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
+		w5100_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
 		break;
 	case SOCKTYPE_UDP:
-		wiz_writeb(Sn_MR + off, 0x02);	/* UDP */
-		wiz_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
+		w5100_writeb(Sn_MR + off, 0x02);	/* UDP */
+		w5100_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
 		r = SOCK_UDP;
 		break;
 	case SOCKTYPE_RAW:
-		wiz_writeb(Sn_PROTO + off, s->s_addr[SADDR_SRC].port);	/* hack */
-		wiz_writeb(Sn_MR + off, 0x03);	/* RAW */
+		w5100_writeb(Sn_PROTO + off, s->s_addr[SADDR_SRC].port);	/* hack */
+		w5100_writeb(Sn_MR + off, 0x03);	/* RAW */
 		r = SOCK_IPRAW;
 	}
 	/* Make an open request to open the socket */
-	wiz_writeb(Sn_CR + off, OPEN);
+	w5100_writeb(Sn_CR + off, OPEN);
 
 	/* If the reply is not immediately SOCK_INT we failed */
-	if (wiz_readb(Sn_SR + off) != r) {
+	if (w5100_readb(Sn_SR + off) != r) {
 		udata.u_error = EADDRINUSE;	/* Something broke ? */
 		return -1;
 	}
 	/* Interrupt on if available mark as bound */
 	irqmask |= 1 << i;
-	wiz_writeb(IMR, irqmask);
+	w5100_writeb(IMR, irqmask);
 	s->s_state = SS_BOUND;
 	/* Do we need to delay the SS_BOUND until the chip interrupts ? */
 	return 0;
@@ -449,8 +355,8 @@ int net_listen(struct socket *s)
 	i <<= 8;
 
 	/* Issue a listen command. Check the state went to SOCK_LISTEN */
-	wiz_writeb(Sn_CR + i, LISTEN);
-	if (wiz_readb(Sn_SR + i) != SOCK_LISTEN) {
+	w5100_writeb(Sn_CR + i, LISTEN);
+	if (w5100_readb(Sn_SR + i) != SOCK_LISTEN) {
 		udata.u_error = EIO;//FIXME EPROTO;	/* ??? */
 		return -1;
 	}
@@ -469,9 +375,9 @@ int net_connect(struct socket *s)
 		i = s - sockets;
 		i <<= 8;
 		/* Already net endian */
-		wiz_bwrite(Sn_DIPR0 + i, &s->s_addr[SADDR_DST].addr, 4);
-		wiz_bwrite(Sn_DPORT0 + i, &s->s_addr[SADDR_DST].port, 2);
-		wiz_writeb(Sn_CR + i, CONNECT);
+		w5100_bwrite(Sn_DIPR0 + i, &s->s_addr[SADDR_DST].addr, 4);
+		w5100_bwrite(Sn_DPORT0 + i, &s->s_addr[SADDR_DST].port, 2);
+		w5100_writeb(Sn_CR + i, CONNECT);
 		s->s_state = SS_CONNECTING;
 	} else {
 		/* UDP/RAW - note have to do our own filtering for 'connect' */
@@ -487,12 +393,12 @@ void net_close(struct socket *s)
 	uint16_t off = i << 8;
 
 	if (s->s_type == SOCKTYPE_TCP && s->s_state != SS_CLOSED) {
-		wiz_writeb(Sn_CR + off, DISCON);
+		w5100_writeb(Sn_CR + off, DISCON);
 		s->s_state = SS_CLOSING;
 	} else {
 		irqmask &= ~(1 << i);
-		wiz_writeb(IMR, irqmask);
-		wiz_writeb(Sn_CR + off, CLOSE);
+		w5100_writeb(IMR, irqmask);
+		w5100_writeb(Sn_CR + off, CLOSE);
 		sock_closed(s);
 	}
 }
@@ -506,11 +412,9 @@ arg_t net_read(struct socket *s, uint8_t flag)
 
 	i <<= 8;
 
-	s->s_iflag &= ~SI_DATA;
-
 	/* FIXME: IRQ protection */
 	/* Wait for data - push int core code ? */
-	while ((s->s_iflag & SI_DATA) == 0) {
+	while (1) {
 		/* See if we have lost the link */
 		if (s->s_state < SS_CONNECTED) {
 			udata.u_error = EINVAL;
@@ -521,12 +425,12 @@ arg_t net_read(struct socket *s, uint8_t flag)
 			return 0;
 		/* Keep waiting until we get the right state */
 		/* Bytes available */
-		n = wiz_readw(Sn_RX_RSR + i);
+		n = w5100_readw(Sn_RX_RSR + i);
 		if (n) {
 			s->s_iflag |= SI_DATA;
 			break;
 		}
-		st = wiz_readb(Sn_SR);
+		st = w5100_readb(Sn_SR);
 		if (st >= SOCK_CLOSING && st <= SOCK_UDP)
 			return 0;
 		/* Need IRQ protection to avoid sleep race */
@@ -537,26 +441,26 @@ arg_t net_read(struct socket *s, uint8_t flag)
 	case SOCKTYPE_RAW:
 	case SOCKTYPE_UDP:
 		/* UDP comes with a header */
-		wiz_dequeue(i, 4, (uint8_t *) & s->s_addr[SADDR_TMP].addr);
+		w5100_dequeue(i, 4, (uint8_t *) & s->s_addr[SADDR_TMP].addr);
 		if (s->s_type == SOCKTYPE_UDP)
-			wiz_dequeue(i, 2,
+			w5100_dequeue(i, 2,
 				    (uint8_t *) & s->s_addr[SADDR_TMP].
 				    port);
-		wiz_dequeue(i, 2, (uint8_t *) & n);	/* Actual packet size */
+		w5100_dequeue(i, 2, (uint8_t *) & n);	/* Actual packet size */
 		n = ntohs(n);	/* Big endian on device */
 		/* Fall through */
 	case SOCKTYPE_TCP:
 		/* Bytes to consume */
 		r = min(n, udata.u_count);
 		/* Now dequeue some bytes into udata.u_base */
-		wiz_dequeue_u(i, r, udata.u_base);
+		w5100_dequeue_u(i, r, udata.u_base);
 		/* For datagrams we always discard the entire frame */
 		if (s->s_type == SOCKTYPE_UDP)
 			r = n + 8;
-		wiz_writew(Sn_RX_RD0 + i, wiz_readw(Sn_RX_RD0 + i) + r);
+		w5100_writew(Sn_RX_RD0 + i, w5100_readw(Sn_RX_RD0 + i) + r);
 		/* FIXME: figure out if SI_DATA should be cleared */
 		/* Now tell the device we ate the data */
-		wiz_writeb(Sn_CR, RECV);
+		w5100_writeb(Sn_CR, RECV);
 	}
 	return r;
 }
@@ -573,7 +477,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 
 	i <<= 8;
 
-	room = wiz_readw(Sn_TX_FSR + i);
+	room = w5100_readw(Sn_TX_FSR + i);
 
 	switch (s->s_type) {
 	case SOCKTYPE_UDP:
@@ -588,17 +492,18 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		}
 		if (room < udata.u_count)
 			return -2;
-		wiz_writel(Sn_DIPR0 + i, s->s_addr[a].addr);
-		wiz_writel(Sn_DPORT0 + i, s->s_addr[a].port);
+		/* Already native endian */
+		w5100_bwrite(Sn_DIPR0 + i, &s->s_addr[a].addr, 4);
+		w5100_bwrite(Sn_DPORT0 + i, &s->s_addr[a].port, 2);
 		/* Fall through */
 	case SOCKTYPE_TCP:
 		if (room == 0)
 			return -2;
 		n = min(room, udata.u_count);
-		wiz_queue_u(i, n, udata.u_base);
-		wiz_writew(Sn_TX_WR0 + i,
-			     wiz_readw(Sn_TX_WR0 + i) + n);
-		wiz_writeb(Sn_CR, SEND);
+		w5100_queue_u(i, n, udata.u_base);
+		w5100_writew(Sn_TX_WR0 + i,
+			     w5100_readw(Sn_TX_WR0 + i) + n);
+		w5100_writeb(Sn_CR, SEND);
 		break;
 	}
 	return n;
@@ -608,7 +513,7 @@ arg_t net_shutdown(struct socket *s, uint8_t flag)
 {
 	s->s_iflag |= flag;
 	if (s->s_iflag & SI_SHUTW)
-		wiz_writeb(Sn_CR, DISCON);
+		w5100_writeb(Sn_CR, DISCON);
 	/* Really we need to look for SHUTR and received data and CLOSE if
 	   so - FIXME */
 	return 0;
@@ -630,22 +535,22 @@ arg_t net_ioctl(uint8_t op, void *p)
 
 	switch (op) {
 	case OP_SIFADDR:
-		wiz_bwrite(SIPR0, p, 4);
+		w5100_bwrite(SIPR0, p, 4);
 		break;
 	case OP_SIFMASK:
-		wiz_bwrite(SUBR0, p, 4);
+		w5100_bwrite(SUBR0, p, 4);
 		break;
 	case OP_SIFGW:
-		wiz_bwrite(GAR0, p, 4);
+		w5100_bwrite(GAR0, p, 4);
 		break;
 	case OP_GIFHWADDR:
-		wiz_bread(SHAR0, p, 6);
+		w5100_bread(SHAR0, p, 6);
 		break;
 	case OP_SIFHWADDR:
-		wiz_bwrite(SHAR0, p, 6);
+		w5100_bwrite(SHAR0, p, 6);
 		break;
 	case OP_GPHY:
-		return (wiz_readb(PSTATUS) & 0x20) ? LINK_UP : LINK_DOWN;
+		return (w5100_readb(PSTATUS) & 0x20) ? LINK_UP : LINK_DOWN;
 	default:
 		return -EINVAL;
 	}
@@ -660,18 +565,18 @@ static uint32_t igm = 0x00FFFFFF;
 void netdev_init(void)
 {
 	uint16_t i;
-	/* We run all the time in indirect, autoinc */
-	mr = MR_AUTOINC|MR_INDIRECT;
-	wiz_writeb(IMR, 0);
-//	wiz_writeb(RTR, );
-//	wiz_writeb(RCR, );
+
+	w5100_setup();	
+	w5100_writeb(IMR, 0);
+//	w5100_writeb(RTR, );
+//	w5100_writeb(RCR, );
 	/* Set GAR, SHAR, SUBR, SIPR to defaults ? */
-	wiz_bwrite(SIPR0, &ipa, 4);
-	wiz_bwrite(GAR0, &iga, 4);
-	wiz_bwrite(SUBR0, &igm, 4);
-	wiz_bwrite(SHAR0, fakeaddr, 6);
-	wiz_writeb(RMSR, 0x55);	/* 2k a socket */
-	wiz_writeb(TMSR, 0x55);	/* 2k a socket */
+	w5100_bwrite(SIPR0, &ipa, 4);
+	w5100_bwrite(GAR0, &iga, 4);
+	w5100_bwrite(SUBR0, &igm, 4);
+	w5100_bwrite(SHAR0, fakeaddr, 6);
+	w5100_writeb(RMSR, 0x55);	/* 2k a socket */
+	w5100_writeb(TMSR, 0x55);	/* 2k a socket */
 	for (i = 0; i < 4 * 256; i += 256) {
 		/* Do we need to set anything here */
 	}
