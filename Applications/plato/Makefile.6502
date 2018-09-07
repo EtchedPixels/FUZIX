@@ -1,0 +1,34 @@
+PLATFORM = 6502
+CC = cl65
+ASM = ca65
+LINKER = cl65
+CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
+LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
+ASM_OPT = -o
+CRT0 = ../../Library/libs/crt0_6502.o
+CRT0NS = ../../Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o
+SRCS = io_base.c keyboard_base.c plato.c protocol.c screen_base.c terminal.c \
+       touch_base.c
+
+FSRCS = font.c io.c keyboard.c scale.c screen.c splash.c \
+	terminal_char_load.c touch.c
+
+INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
+
+OBJS = $(SRCS:.c=.rel)
+FOBJS = $(patsubst fuzix/%.c,%.rel, $(FSRCS))
+
+all:    plato
+
+plato: $(OBJS) $(FOBJS)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+$(OBJS) : $(INC)
+
+$(FOBJS) : $(INC)
+
+clean:
+	rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ plato
+	(cd fuzix; rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ )

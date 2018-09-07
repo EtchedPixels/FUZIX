@@ -1,0 +1,46 @@
+PLATFORM = 68000
+CC = m68k-uclinux-gcc
+ASM = m68k-uclinux-as
+AR = m68k-uclinux-ar
+LINKER = m68k-uclinux-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
+LINKER_OPT = -L../../Library/libs -lc68000
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_68000.o
+CRT0NS = ../../Library/libs/crt0nostdio_68000.o
+# For now while we get going. Really we want to use some kind of elf2zmagic
+# with relocs.
+ELF2FUZIX = elf2flt
+.SUFFIXES: .c .o
+
+SRCS = io_base.c keyboard_base.c plato.c protocol.c screen_base.c terminal.c \
+       touch_base.c
+
+FSRCS = font.c io.c keyboard.c scale.c screen.c splash.c \
+	terminal_char_load.c touch.c
+
+INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
+
+all:    plato
+
+OBJS = $(SRCS:.c=.o)
+FOBJS = $(patsubst fuzix/%.c,%.o, $(FSRCS))
+
+plato: $(OBJS) $(FOBJS)
+	$(LINKER) $(LINKER_OPT) -o sccz80 $(OBJS) $(FOBJS)
+
+$(OBJS):
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(FOBJS):
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+
+$(OBJS) : $(INC)
+
+$(FOBJS) : $(INC)
+
+clean:
+	rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ plato
+	(cd fuzix; rm -f *.o *.rel *.lst *.sym *.asm *.map *.noi *.lk *.bin *~ )
