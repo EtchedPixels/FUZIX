@@ -27,6 +27,7 @@ syscall_fs2.rel
 syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
+syscall_net.rel
 tty.rel
 mm.rel
 swap.rel
@@ -44,4 +45,6 @@ platform-sbcv2/ds1302_discard.rel
 platform-sbcv2/ds1302_rbc.rel
 platform-sbcv2/devfd.rel
 platform-sbcv2/rbcfd9266_hw.rel
+platform-sbcv2/net_native.rel
+platform-sbcv2/net_wiznet.rel
 -e

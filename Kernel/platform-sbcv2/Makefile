@@ -1,4 +1,4 @@
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
 
 CSRCS = devtty.c
@@ -13,10 +13,9 @@ DISCARD_DSRCS = ../dev/devide_discard.c
 DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ds1302_discard.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
 DSRCS += ../dev/devfd.c ../dev/ppide_rbc.c
+NSRCS = ../dev/net/net_wiznet.c ../dev/net/net_native.c
 
 DASRCS = ../dev/rbcfd9266_hw.s ../dev/ds1302_rbc.s
-
-NSRCS = 
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

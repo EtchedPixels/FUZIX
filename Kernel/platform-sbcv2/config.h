@@ -98,6 +98,13 @@ extern unsigned int swap_dev;
  */
 #define TICKSPERSEC 10	    /* Ticks per second */
 
+/* Core networking support */
+#define CONFIG_NET
+/* With a WizNet card */
+#define CONFIG_NET_WIZNET
+/* Or native (eg SLIP) */
+//#define CONFIG_NET_NATIVE
+
 /*
  *	The device (major/minor) for the console and boot up tty attached to
  *	init at start up. 512 is the major 2, so all the tty devices are

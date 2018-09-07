@@ -5,6 +5,7 @@
 #include <devtty.h>
 #include <rtc.h>
 #include <ds1302.h>
+#include <net_wiznet.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -42,6 +43,9 @@ void platform_idle(void)
 void platform_interrupt(void)
 {
 	tty_poll();
+#ifdef CONFIG_NET_WIZNET
+	wiz_poll();
+#endif
 }
 
 /* This points to the last buffer in the disk buffers. There must be at least
