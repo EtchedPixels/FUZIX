@@ -18,6 +18,8 @@ uint8_t already_started=false;
 extern padByte splash[];
 extern short splash_size;
 
+extern int io_eof;
+
 /**
  * greeting(void) - Show terminal greeting
  */
@@ -39,7 +41,7 @@ void main(void)
   already_started=true;
   
   // And do the terminal
-  for (;;)
+  while (!io_eof)
     {
       io_main();
       keyboard_main();
