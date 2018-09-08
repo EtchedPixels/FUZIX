@@ -42,13 +42,13 @@ void tgi_setpixel(int x, int y)
 void tgi_bar(int x1, int y1, int x2, int y2)
 {
   int x,y;
-  for (y = y1; y < y2; y++) {
+  for (y = y1; y <= y2; y++) {
     printf("\033[%d;%dH", y, x1);
     if (pen)
-      for(x = x1; x < x2; x++)
+      for(x = x1; x <= x2; x++)
         putchar('#');
     else
-      for(x = x1; x < x2; x++)
+      for(x = x1; x <= x2; x++)
         putchar(' ');
   }
 //  printf("[R %d,%d,%d,%d->%d]", x1, y1, x2,y2, pen);
