@@ -156,7 +156,7 @@ void screen_char_draw(padPt* Coord, unsigned char* ch, unsigned char count)
   tgi_setcolor(mainColor);
 
   x=scalex[(Coord->x&0x1FF)];
-  y=scaley[(Coord->y)+14&0x1FF];
+  y=scaley[((Coord->y)+14)&0x1FF];
   
   if (FastText==padF)
     {

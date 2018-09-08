@@ -17,13 +17,19 @@ FSRCS = fuzix/font.c fuzix/io.c fuzix/keyboard.c fuzix/scale.c fuzix/screen.c \
 
 INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
 
-OBJS = $(SRCS:.c=.rel)
-FOBJS = $(patsubst fuzix/%.c,%.rel, $(FSRCS))
+OBJS = $(SRCS:.c=.o)
+FOBJS = $(patsubst fuzix/%.c,%.o, $(FSRCS))
 
 all:    plato
 
 plato: $(OBJS) $(FOBJS)
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+
+$(OBJS): %.o: %.c
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(FOBJS): %.o: fuzix/%.c
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
 
 $(OBJS) : $(INC)
 
