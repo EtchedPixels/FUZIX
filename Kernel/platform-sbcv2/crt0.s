@@ -37,8 +37,8 @@
 	        .area _CODE
 
 		; Load at 0x0100
-		; We are executed as a CP/M task so live in bank 14/15
-		; with CP/M under us and the HBIOS proxy at FE00
+		; We are executed from ROMWBW so we live in bank 14/15
+		; with the HBIOS proxy at FE00
 start:
 		di
 		ld sp, #kstack_top

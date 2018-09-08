@@ -9,8 +9,8 @@ DISCSRCS = discard.c
 ASRCS = sbcv2.s crt0.s
 ASRCS += tricks.s commonmem.s
 
-DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ds1302_discard.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 DSRCS += ../dev/propio2.c ../dev/ds1302.c
 DSRCS += ../dev/devfd.c ../dev/ppide_rbc.c
 NSRCS = ../dev/net/net_w5100.c ../dev/net/net_native.c
@@ -55,4 +55,18 @@ $(DAOBJS): %.rel: ../dev/%.s
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 
-image:
+#
+#	Attach the kernel to the boot block
+#
+image:	bootblock
+	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
+#
+#	Compile up the boot block
+#
+bootblock:
+	sdasz80 -o boot-romwbw.s
+	sdldz80 -i boot-romwbw.rel
+	# This makes us a binary from physical 0
+	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
+	# Chop off the leading 61440 bytes we don't want
+	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120

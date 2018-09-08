@@ -46,11 +46,6 @@ extern unsigned int swap_dev;
  */
 #define swap_map(x)	((uint8_t *)(x))
 
-/* Set these two for networking - no point right now */
-//#define CONFIG_NET
-//#define CONFIG_NET_NATIVE
-
-
 /* What is the maximum number of /dev/hd devices we have. In theory right now
    it's actually 3 - two in the IDE and one on the SD interface */
 #define MAX_BLKDEV	4
