@@ -3,8 +3,18 @@ Implement
 - Actually look up the address properly
 - Get the splash screen off disk instead?
 - A correct flash screen
+- Make it a lot faster
+- Find and scan the modes for suitable graphics drivers (really we need
+  to do loadable drivers)
+- Build scaling table dynamically from reported size
 
-Make it a lot faster
+Obvious targets
+
+- mono directly mapped (Dragon32 etc)
+- TRS80 I/O port graphics
+- VDP (ewww....)
+- Indirect ioctl interfaced (pixels easy, rects easy, lines fast will be
+  a PITA.. maybe we do need line as an ioctl primitive ?)
 
 
-It would be nice to squash it to the point we can afford 576 byte I/O buffers
+
