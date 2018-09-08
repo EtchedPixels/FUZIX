@@ -23,6 +23,7 @@ static uint8_t shift_lock = false;
 static uint8_t is_escape = false;
 extern uint8_t xoff_enabled;
 extern padBool TTY;
+extern uint8_t io_eof;
 
 /**
  * keyboard_main - Handle the keyboard presses
@@ -40,6 +41,10 @@ void keyboard_main(void)
 			perror("read");
 			exit(1);
 		}
+		return;
+	}
+	if (is_escape == true && ch == 0x1A) {	// ESC CTRL-Z
+		io_eof = 1;
 		return;
 	}
 	if (is_escape == true && ch == 0x1B)	// ESC
