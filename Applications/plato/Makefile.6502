@@ -17,8 +17,10 @@ FSRCS = fuzix/font.c fuzix/io.c fuzix/keyboard.c fuzix/scale.c fuzix/screen.c \
 
 INC = io.h keyboard.h plato_key.h protocol.h screen.h terminal.h touch.h
 
+# cc65 is weird. Tell it to cc foo/bar.c -o bar.o and it puts bar.o with the
+# source code!
 OBJS = $(SRCS:.c=.o)
-FOBJS = $(patsubst fuzix/%.c,%.o, $(FSRCS))
+FOBJS = $(FSRCS:.c=.o)
 
 all:    plato
 
@@ -28,7 +30,7 @@ plato: $(OBJS) $(FOBJS)
 $(OBJS): %.o: %.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
 
-$(FOBJS): %.o: fuzix/%.c
+$(FOBJS): %.o: %.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
 
 $(OBJS) : $(INC)
