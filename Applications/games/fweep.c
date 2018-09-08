@@ -15,8 +15,6 @@
 
 #define IVERSION "fe0.01"
 
-#define WORD(x)		((uint16_t)(x))
-
 #define VERSION 	3
 
 #if (VERSION == 8)
@@ -25,22 +23,13 @@ typedef uint16_t obj_t;
 
 #elif (VERSION > 3)
 #define PACKED_SHIFT	2
-typedef uint16_t obj_t;
+typedef uin16_t obj_t;
 
 #else				/*  */
 #define PACKED_SHIFT	1
 typedef uint8_t obj_t;
 
 #endif				/*  */
-
-
-#if VERSION > 2
-#define SHIFT1		4
-#define SHIFT2		5
-#else
-#define	SHIFT1		2
-#define SHIFT2		3
-
 typedef char boolean;
 typedef uint8_t byte;
 typedef struct {
@@ -69,10 +58,10 @@ const char zscii_conv_2[128] = {
 };
 
 #if (VERSION == 1)
-char alpha[78] =
+const char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789.,!?_#'\"/\\<-:()";
 #else
-char alpha[78] =
+const char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ^0123456789.,!?_#'\"/\\-:()";
 #endif
 
@@ -365,20 +354,6 @@ boolean verify_checksum(void)
 	return 1;
 }
 
-/* This is a pain but strictly speaking a game is entitled to change its
-   alphabet on the fly! */
-static void sync_alphabet(void)
-{
-#if VERSION >= 5
-	char *p = alpha;
-	uint16_t r;
-	if ((r = alphabet_table) != 0) {
-		while(p != alpha + 78)
-			*p++ = read8(r++);
-	}
-#endif
-}
-	
 uint32_t text_print(uint32_t address);
 void zch_print(int z)
 {
@@ -435,7 +410,7 @@ void zch_print(int z)
 #endif		
 	} else {
 		if (alphabet_table)
-			char_print(read8low
+			char_print(read8
 				   (alphabet_table + z + (zch_shift * 26) -
 				    6));
 
@@ -681,123 +656,27 @@ input_again:
 	return 13;
 }
 
-/*
-	A description of the parsing pieces
-	
-	There is a dictionary header which gives word separator codes. These
-	(typicaly . , and " ) are symbols that become their own word.
-	
-	After this the dictionary consists of records that start with 2 zwords
-	of encoding text then data, (3 then data for V4+). The dictionary is
-	ordered (in zscii terms).
-	
-	We take our input and split it up into words, by spaces, with the
-	dictonary header bytes counting as their own word
-	
-	Each input word has to end up encoded as zscii (6 zchars, or 9 for 4+)
-	Any trailing bytes are packed out with z char 5. Upper case is turned
-	lower case. Partial encodings (eg shifts are simply chopped at the byte
-	space runs out).
-
-	Each computed zscii word is looked up in the dictioary and a parse table
-	generated that gives the parsing info (num words, length, position,
-	dictionary entry)		
- 
- 
- 
- */
-
 /* FIXME: stop using uint64_t */
 uint64_t dictionary_get(uint16_t addr)
 {
 	uint64_t v = 0;
 	int c = VERSION > 3 ? 6 : 4;
 	while (c--)
-		v = (v << 8) | read8low(addr++);
+		v = (v << 8) | read8(addr++);
 	return v;
 }
 
-/* We encode the string into a byte run, then pack it after. The output
-   buffer must be len + 2 bytes long to keep it simple.
-   
-   The old V1 and V2 games expect pairs of shifted chars to use shift lock
-   characters. We don't yet handle that */
-void encode(uint8_t *text, uint8_t *out, int len)
-{
-	uint8_t *cp;
-	sync_alphabet();
-	while((c = *text++) && len > 0) {
-		if (isupper(c))
-			c = tolower(c);
-		cp = strchr(alpha, c);
-		if (cp == NULL) {
-			*out++ = 6;
-			*out++ = c >> 3;
-			*out++ = c & 31;
-			len -= 3;
-			continue;
-		}
-		c = cp - alpha;	/* bit code + bank */
-		if (c < 26) {
-			*out++ = c + 6;
-			len--;
-		} else if (c < 52) {
-			*out++ = SHIFT1;
-			*out++ = c - 20;
-		} else {
-			*out++ = SHIFT2;
-			*out++ = c - 46;	/* -52 + 6 */
-		}
-		len -= 2;
-	}
-	while(len-- > 0)
-		*out++ = 5;
-}
-
-/* Pack a block of text. Len is in words (zscsii triples) */
-void packscii(uint8_t *in, uint16_t *out, int len)
-{
-	while(len) {
-		uint16_t w = (WORD(*in) << 10) | (WORD(in[1]) << 5) | in [2];
-		*out++ = w;
-		len --;
-	}
-	out[-1] |= 0x8000; 	/* End marker */
-}
-
-void dictionary_get(uint16_t addr, uint16_t *buf)
-{
-	*buf++ = read16low(addr);
-	addr += 2;
-	*buf++ = read16low(addr)
-#if VERSION > 3
-	addr += 2;
-	*buf++ = read16low(addr);
-#endif
-}		
-
-/*
-	Parse logic
-	
-	skip spaces
-	if symbol in specials - encode just it as a word
-	else
-		while !space && !specials)
-			add to word
-		encode word
-	endif
-*/
-	
 uint64_t dictionary_encode(uint8_t * text, int len)
 {
 	/* FIXME: stop using uint64_t */
 	uint64_t v = 0;
 	int c = VERSION > 3 ? 9 : 6;
 	int i;
-	const uint8_t *al = alpha;
 
-	sync_alphabet();
-
+	/* FIXME: memory direct reference still here */
+	const uint8_t *al =
+	    (alphabet_table ? (const uint8_t *) memory +
+	     alphabet_table : (const uint8_t *) alpha);
 	while (c && len && *text) {
 
 		// Since line breaks cannot be in an input line of text, and VAR:252 is only available in version 5, line breaks need not be considered here.
