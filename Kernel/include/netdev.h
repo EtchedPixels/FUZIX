@@ -131,3 +131,4 @@ extern void sock_init(void);
 extern int sock_error(struct socket *s);
 extern struct netdevice net_dev;
 extern void sock_closed(struct socket *s);
+extern struct socket *sock_alloc_accept(struct socket *s);
