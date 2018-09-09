@@ -19,6 +19,7 @@
 
 	.globl map_page_low
 	.globl map_kernel_low
+	.globl _program_vectors
 
 	.globl outhl
 	.globl outstring
@@ -153,6 +154,16 @@ _dofork:
 
 	; Parent state built and in u_data
 
+	; We need to program the vectors of the new process earlier than
+	; newproc does as we need the high copier ready.
+	ld hl,(fork_proc_ptr)
+	ld de,#P_TAB__P_PAGE_OFFSET
+	add hl,de
+	push hl			; C call style
+	call _program_vectors
+	pop hl			; discard
+
+	ld hl,(fork_proc_ptr)
 	push ix
 	call copy_process
 	pop ix
@@ -220,7 +231,7 @@ _dofork:
 ;	We also have no sane stack for these so we use ix as the return.
 ;
 copy_process:
-	ld de,#P_TAB__P_PAGE_OFFSET+1
+	ld de,#P_TAB__P_PAGE_OFFSET
 	add hl,de
 	ld a,(U_DATA__U_PAGE)
 	call map_page_low
@@ -228,7 +239,11 @@ copy_process:
 	ld ix,#cp1ret
 	jp _platform_copier_l
 cp1ret:
+	; If both banks are the same bank we are done
+	ld a,(hl)
 	inc hl
+	cp (hl)
+	ret z
 	ld a,(U_DATA__U_PAGE+1)
 	call map_page_low
 	call setup_platform_copier
