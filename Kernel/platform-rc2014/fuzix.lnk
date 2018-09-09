@@ -34,6 +34,7 @@ syscall_proc.rel
 syscall_fs2.rel
 syscall_fs3.rel
 syscall_other.rel
+syscall_net.rel
 mm.rel
 swap.rel
 bank16k.rel
@@ -53,4 +54,5 @@ platform-rc2014/devinput.rel
 platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
 platform-rc2014/ds1302_rc2014.rel
+platform-rc2014/net_native.rel
 -e

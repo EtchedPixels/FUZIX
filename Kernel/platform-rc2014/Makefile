@@ -7,6 +7,7 @@ DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/devrd.c ../dev/ds1302.c
 DASRCS = ../dev/devfd_hw.s ../dev/devrd_hw.s ../dev/ds1302_rc2014.s
+NSRCS = ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -14,10 +15,11 @@ DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -40,6 +42,9 @@ $(DISCARD_COBJS): %.rel: %.c
 
 $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin diskboot.bin fuzix.com fuzix.rom

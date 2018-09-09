@@ -67,6 +67,11 @@ extern unsigned int swap_dev;
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
+/* Core Networking support */
+#define CONFIG_NET
+/* User mode uIP TCP/IP daemon */
+#define CONFIG_NET_NATIVE
+
 /* Device parameters */
 #define CONFIG_DEV_MEM          /* enable /dev/mem driver */
 
@@ -80,6 +85,7 @@ extern unsigned int swap_dev;
 #define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 14)             /* size of the RAM disk */
 
 #define NUM_DEV_TTY 2
+
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)

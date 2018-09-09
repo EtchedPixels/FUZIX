@@ -39,6 +39,10 @@ void tty_pollirq_sio(void)
 {
 	uint8_t ca, cb;
 
+	/* FIXME: need to process error/event interrupts as we can get
+	   spurious characters or lines on an unused SIO floating */
+	/* In the true poll case we also need to deal with fake reti as we
+	   won't actually reti */
 	SIOA_C = 0;		// read register 0
 	ca = SIOA_C;
 	if (ca & 1)
