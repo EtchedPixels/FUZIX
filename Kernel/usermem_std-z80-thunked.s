@@ -134,6 +134,7 @@ uget1:	; not split
 	ldir
 uget_out:
 	pop ix
+	ld hl,#0
 	jp map_kernel_low
 
 __uput:
@@ -153,6 +154,7 @@ __uput:
 uput1:
 	ldir
 	pop ix
+	ld hl,#0
 	jp map_kernel_low
 
 __uzero:
@@ -175,6 +177,7 @@ zeroit_1:
 	call user_mapping
 	call zeroit
 	pop ix
+	ld hl,#0
 	ret
 zeroit:
 	ld (hl),#0
