@@ -107,7 +107,7 @@ static void w5100_queue(uint16_t i, uint16_t n, uint8_t * p)
 	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
 
-	if (dm + n >= TX_MASK) {
+	if (dm + n > TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
 		w5100_bwrite(dm + tx_base, p, us);
 		w5100_bwrite(tx_base, p + us, n - us);
@@ -120,7 +120,7 @@ static void w5100_queue_u(uint16_t i, uint16_t n, uint8_t * p)
 	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
 
-	if (dm + n >= TX_MASK) {
+	if (dm + n > TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
 		w5100_bwriteu(dm + tx_base, p, us);
 		w5100_bwriteu(tx_base, p + us, n - us);
@@ -133,7 +133,7 @@ static void w5100_dequeue(uint16_t i, uint16_t n, uint8_t * p)
 	uint16_t dm = w5100_readw(Sn_RX_RD0 + i) & RX_MASK;
 	uint16_t rx_base = 0x6000 + (i << 3);	/* i is already << 8 */
 
-	if (dm + n >= RX_MASK) {
+	if (dm + n > RX_MASK) {
 		uint16_t us = RX_MASK + 1 - dm;
 		w5100_bread(dm + rx_base, p, us);
 		w5100_bread(rx_base, p + us, n - us);
@@ -167,41 +167,70 @@ static void w5100_eof(struct socket *s)
 	w5100_wakeall(s);
 }
 
+/* Mapping between Wiznet and host sockets. We can't have a 1:1 mapping due
+   to the differing way the Wiznet processes accepting a connection */
+
+static uint8_t sock2wiz_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* State management for creation of a socket. If need be allocate the socket
+   on the IP offload device. May block */
+static int net_alloc(void)
+{
+	uint8_t *p = wiz2sock_map;
+	uint8_t i;
+	for (i = 0; i < 4; i++) {
+		if (*p++ == 0xFF)
+			return i;
+		i++;
+	}
+	return -1;
+}
+
 /*
  *	Process interrupts from the WizNet device
  */
 static void w5100_event_s(uint8_t i)
 {
-	struct socket *s = &sockets[i];
-	uint16_t stat = w5100_readw(Sn_IR + (i << 8));	/* BE read of reg pair */
+	int sn = wiz2sock_map[i];
+	struct socket *s;
+	uint16_t offset = i << 8;
+	uint16_t stat = w5100_readw(Sn_IR + offset);	/* BE read of reg pair */
+
+	/* We got a pending event for a dead socket as we killed it. Shoot it
+	   again to make sure it's dead */
+	if (sn == 0xFF) {
+		w5100_writeb(Sn_CR + offset, CLOSE);
+		irqmask &= ~(1 << i);
+		w5100_writeb(IMR, irqmask);
+		return;
+	}
+
+	s = &sockets[sn];
 
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
 		s->s_iflag &= ~SI_THROTTLE;
-		w5100_writeb(Sn_IR + (i << 8), 0x10);	/* Clear the flag down */
 		wakeup(&s->s_data);
 	}
 	if (stat & 0x800) {
 		/* Timeout */
 		s->s_error = ETIMEDOUT;
-		w5100_writeb(Sn_CR + (i << 8), CLOSE);
+		w5100_writeb(Sn_CR + offset, CLOSE);
 		w5100_wakeall(s);
-		w5100_writeb(Sn_IR + (i << 8), 0x08);
 		w5100_eof(s);
 		/* Fall through and let CLOSE state processing do the work */
 	}
 	if (stat & 0x400) {
 		/* Receive wake: Poke the user in case they are reading */
 		s->s_iflag |= SI_DATA;
-		w5100_writeb(Sn_IR + (i << 8), 0x04);	/* Clear the flag down */
 		wakeup(&s->s_iflag);
 	}
 	if (stat & 0x200) {
 		/* Disconnect: Just kill our host socket. Not clear if this
 		   is right or we need to drain data first */
-		w5100_writeb(Sn_IR + (i << 8), 0x02);	/* Clear the flag down */
-		w5100_writeb(Sn_CR + (i << 8), CLOSE);
+		w5100_writeb(Sn_CR + offset, CLOSE);
 		w5100_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
 		   actual shutting down */
@@ -212,10 +241,11 @@ static void w5100_event_s(uint8_t i)
 			s->s_state = SS_CONNECTED;
 			wakeup(s);
 		}
-		w5100_writeb(Sn_IR + (i << 8), 0x01);	/* Clear the flag down */
 	}
-	/* ??? return if high bits set here ?? */
-	switch (stat & 0xFF) {
+	/* Clear interrupt sources down */
+	w5100_writeb(Sn_IR + offset, stat >> 8);
+
+	switch ((uint8_t)stat) {
 	case 0:		/* SOCK_CLOSED */
 		if (s->s_state != SS_CLOSED && s->s_state != SS_UNUSED) {
 			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD) {
@@ -227,8 +257,10 @@ static void w5100_event_s(uint8_t i)
 			w5100_writeb(IMR, irqmask);
 			w5100_eof(s);
 			/* Net layer wants us to burn the socket */
-			if (s->s_state == SS_DEAD)
+			if (s->s_state == SS_DEAD) {
+				wiz2sock_map[i] = 0xFF;
 				sock_closed(s);
+			}
 			else	/* so net_close() burns the socket */
 				s->s_state = SS_CLOSED;
 		}
@@ -242,10 +274,44 @@ static void w5100_event_s(uint8_t i)
 			s->s_state == SS_CONNECTED;
 			wakeup(s);
 		} else if (s->s_state == SS_LISTENING) {
-			/* TODO: We actually have to split the association between
-			   wiznet and host sockets as we have multiple wiznet sockets
-			   in the accept queue and a listener that is not really a
-			   wiznet socket.. */
+			/*
+			 * The WizNET believes you allocte a LISTEN socket and
+			 * it turns into a connection and you then if need be
+			 * allocate another LISTEN socket.
+			 *
+			 * The socket API believes you set a listening socket
+			 * up and it stays listening creating new connected
+			 * sockets.
+			 *
+			 * We do some gymnastics to convince both sides that
+			 * what they saw happened.
+			 */
+			int slot;
+			struct socket *ac;
+			int aslot;
+			/* Find a new wiznet slot and socket */
+			slot = net_alloc();
+			if (slot == -1 || (ac = sock_alloc_accept(s)) == NULL) {
+				/* No socket free, go back to listen */
+				w5100_writeb(Sn_CR + offset, CLOSE);
+				net_bind(s);
+				net_listen(s);
+				break;
+			}
+			/* Resources exist so do the juggling */
+			aslot = ac - sockets;
+
+			/* Map the existing socket to the new w5100 socket */
+			sock2wiz_map[sn] = slot;
+			wiz2sock_map[slot] = sn;
+			/* Map the new socket to the existing w5100 socket */
+			sock2wiz_map[aslot] = i;
+			wiz2sock_map[i] = aslot;
+			/* Now set the new socket back up as it should be */
+			net_bind(ac);
+			net_listen(ac);
+			/* And kick the accepter */
+			wakeup(s);
 		}
 		break;
 	case 0x1C:		/* SOCK_CLOSE_WAIT */
@@ -294,10 +360,17 @@ void w5100_poll(void)
 		w5100_event();
 }
 
-/* State management for creation of a socket. If need be allocate the socket
-   on the IP offload device. May block */
+
 int net_init(struct socket *s)
 {
+	int i = s - sockets;
+	int n = net_alloc();
+	if (n < 0) {
+		udata.u_error = ENOENT;//FIXME ENOBUFS;
+		return -1;
+	}
+	wiz2sock_map[n] = i;
+	sock2wiz_map[i] = n;
 	s->s_state = SS_UNCONNECTED;
 	return 0;
 }
@@ -305,7 +378,7 @@ int net_init(struct socket *s)
 /* Bind a socket to an address. May block */
 int net_bind(struct socket *s)
 {
-	uint16_t i = s - sockets;
+	uint16_t i = sock2wiz_map[s - sockets];
 	uint8_t r = SOCK_INIT;
 	uint16_t off = i << 8;
 
@@ -328,7 +401,7 @@ int net_bind(struct socket *s)
 	/* Make an open request to open the socket */
 	w5100_writeb(Sn_CR + off, OPEN);
 
-	/* If the reply is not immediately SOCK_INT we failed */
+	/* If the reply is not immediately SOCK_INIT we failed */
 	if (w5100_readb(Sn_SR + off) != r) {
 		udata.u_error = EADDRINUSE;	/* Something broke ? */
 		return -1;
@@ -350,7 +423,7 @@ int net_bind(struct socket *s)
    channel mapping */
 int net_listen(struct socket *s)
 {
-	uint16_t i = s - sockets;
+	uint16_t i = sock2wiz_map[s - sockets];
 
 	i <<= 8;
 
@@ -369,10 +442,9 @@ int net_listen(struct socket *s)
    error fails. */
 int net_connect(struct socket *s)
 {
-
 	if (s->s_type == SOCKTYPE_TCP) {
 		uint16_t i;
-		i = s - sockets;
+		i = sock2wiz_map[s - sockets];
 		i <<= 8;
 		/* Already net endian */
 		w5100_bwrite(Sn_DIPR0 + i, &s->s_addr[SADDR_DST].addr, 4);
@@ -389,7 +461,7 @@ int net_connect(struct socket *s)
 /* Close down a socket - preferably politely */
 void net_close(struct socket *s)
 {
-	uint16_t i = s - sockets;
+	uint16_t i = sock2wiz_map[s - sockets];
 	uint16_t off = i << 8;
 
 	if (s->s_type == SOCKTYPE_TCP && s->s_state != SS_CLOSED) {
@@ -399,6 +471,7 @@ void net_close(struct socket *s)
 		irqmask &= ~(1 << i);
 		w5100_writeb(IMR, irqmask);
 		w5100_writeb(Sn_CR + off, CLOSE);
+		wiz2sock_map[i] = 0xFF;
 		sock_closed(s);
 	}
 }
@@ -407,7 +480,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0xFFFF;
 	uint16_t r;
-	uint16_t i = s - sockets;
+	uint16_t i = sock2wiz_map[s - sockets];
 	uint8_t st;
 
 	i <<= 8;
@@ -467,7 +540,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
 
 arg_t net_write(struct socket * s, uint8_t flag)
 {
-	uint16_t i = s - sockets;
+	uint16_t i = sock2wiz_map[s - sockets];
 	uint16_t room;
 	uint16_t n = 0;;
 	uint8_t a = s->s_flag & SFLAG_ATMP ? SADDR_TMP : SADDR_DST;
@@ -511,9 +584,10 @@ arg_t net_write(struct socket * s, uint8_t flag)
 
 arg_t net_shutdown(struct socket *s, uint8_t flag)
 {
+	int i = sock2wiz_map[s - sockets] << 8;
 	s->s_iflag |= flag;
 	if (s->s_iflag & SI_SHUTW)
-		w5100_writeb(Sn_CR, DISCON);
+		w5100_writeb(Sn_CR + i, DISCON);
 	/* Really we need to look for SHUTR and received data and CLOSE if
 	   so - FIXME */
 	return 0;
