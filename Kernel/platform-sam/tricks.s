@@ -79,7 +79,7 @@ _switchin:
 	; We are going to write our stack directly under us. No calls for
 	; a moment
 	exx
-	ld hl,#U_DATA_STASH
+	ld hl,#U_DATA_STASH-0x8000
 	ld de,#U_DATA
 	ld bc,#U_DATA__TOTALSIZE
 	ldir
@@ -174,8 +174,8 @@ _dofork:
 	; Now put the u_data into the stash for the parent, then we can
 	; modify it for the child
 
-	; Map parent
-	ld a,(U_DATA__U_PAGE)
+	; Map parent high page
+	ld a,(U_DATA__U_PAGE+1)
 	call map_page_low
 	; Copy udata
 	ld hl, #U_DATA
