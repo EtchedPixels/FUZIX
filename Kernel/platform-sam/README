@@ -39,6 +39,14 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
+	-	Fix signal handling crashes
+	-	Sometimes we seem to pre-empt in the middle of a pre-empt
+		and crash ?? we see a kprintf from an interrupt interrupted
+		Need to check all our IRQ save/restore logic is sound on
+		video especially !
+	-	AtomIDE detect fails if ROM present (select dev 0 first ?)
+DONE	-	Run out of pages - suggests child exit/bank32 isn't cleaning
+		up right
 DONE	-	Move fonts to video bank after frame buffer
 	-	Floppy driver (at least for read)
 DONE	-	Get to init (but not much further)
