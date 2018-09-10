@@ -61,9 +61,9 @@ void pagemap_add(uint8_t page)
 void pagemap_free(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
-	pfree[pfptr--] = *ptr;
+	pfree[pfptr++] = *ptr;
 	if (*ptr != ptr[1]) {
-		pfree[pfptr--] = ptr[1];
+		pfree[pfptr++] = ptr[1];
                 invalidate_cache((uint16_t)ptr[1]);
         }
 }
