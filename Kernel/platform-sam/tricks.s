@@ -42,7 +42,7 @@ _platform_switchout:
 	push iy
 	ld (U_DATA__U_SP), sp
 
-	; The U_DATA stash lives in th top of the user process. Map that
+	; The U_DATA stash lives in the top of the user process. Map that
 	; low with interrupts off so we can ldir between the two
 	ld a,(U_DATA__U_PAGE + 1)
 	call map_page_low
@@ -105,8 +105,8 @@ skip_copyback:
 	ld hl,#0
 	ld (_runticks), hl
 	; Recover IX and IY, return value
-	pop ix
 	pop iy
+	pop ix
 	pop hl
 
 	; if we pre-empted in an ISR IRQ's stay off, if not they get enabled
