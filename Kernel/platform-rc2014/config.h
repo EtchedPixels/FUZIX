@@ -22,6 +22,7 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
+/* FIXME: check this... for discard looks wrong */
 #define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
 #define PROC_SIZE   64	  /* Memory needed per process */
 
@@ -50,7 +51,7 @@ extern unsigned int swap_dev;
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 4	    /* 1 ROM disk, 1 RAM disk, 1 floppy, 1 IDE */
+#define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE */
 
 /* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC
