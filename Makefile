@@ -14,6 +14,8 @@
 # multicomp09:	Extended multicomp 6809
 # n8vem-mark4:	RBC/N8VEM Retrobrew Z180 board
 # p112:		DX Designs P112
+# rc2014:	RC2014 with 512K RAM/ROM and RTC
+# rc2014-tiny:	RC2014 with 64KK RAM, banked ROM and RTC
 # sbcv2:	RBC/N8VEM SBC v2
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # trs80:	TRS80 Model 4/4D/4P with 128K RAM (some other TRS80 extension
