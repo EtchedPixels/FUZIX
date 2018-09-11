@@ -7,7 +7,7 @@
 
 #define CONFIG_32BIT
 
-#define CONFIG_MULTI
+#undef CONFIG_MULTI
 #define CONFIG_SWAP_ONLY
 #define CONFIG_USERMEM_DIRECT
 #define CONFIG_BANKS 	1

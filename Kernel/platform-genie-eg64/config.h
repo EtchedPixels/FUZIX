@@ -8,7 +8,7 @@
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#define CONFIG_MULTI
+#undef CONFIG_MULTI
 /* Single tasking */
 #undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
