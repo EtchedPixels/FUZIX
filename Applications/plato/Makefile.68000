@@ -28,7 +28,7 @@ OBJS = $(SRCS:.c=.o)
 FOBJS = $(patsubst fuzix/%.c,%.o, $(FSRCS))
 
 plato: $(OBJS) $(FOBJS)
-	$(LINKER) $(LINKER_OPT) -o plato $(OBJS) $(FOBJS)
+	$(LINKER) -o plato $(OBJS) $(FOBJS) $(LINKER_OPT)
 
 $(OBJS): %.o: %.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
