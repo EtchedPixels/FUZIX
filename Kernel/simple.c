@@ -41,7 +41,7 @@ int pagemap_alloc(ptptr p)
 /* FIXME: update once we have the new mm logic in place */
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
-  if (size >= ramtop)
+  if (size > ramtop)
     return ENOMEM;
   return 0;
 }
