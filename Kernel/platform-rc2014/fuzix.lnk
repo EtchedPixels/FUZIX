@@ -19,10 +19,6 @@ timer.rel
 kdata.rel
 platform-rc2014/devfd.rel
 platform-rc2014/devfd_hw.rel
-platform-rc2014/devrd.rel
-platform-rc2014/devrd_hw.rel
-platform-rc2014/devrd_zeta2.rel
-platform-rc2014/devrd_zeta2_hw.rel
 platform-rc2014/devices.rel
 devio.rel
 filesys.rel
