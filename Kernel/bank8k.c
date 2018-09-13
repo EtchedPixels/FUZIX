@@ -109,11 +109,11 @@ void pagemap_free(ptptr p)
 	}
 }
 
-static int maps_needed(uint16_t top)
+static int maps_needed(uint16_t size)
 {
 	/* On many platforms if you touch this or PROGTOP you must
 	   touch tricks.s */
-	uint16_t needed = top + 0xFFFF - PROGTOP;
+	uint16_t needed = size - 1;
 	/* Usually we have 0x1000 common - 1 for shift and inc */
 	needed >>= 13;		/* in banks */
 	needed++;		/* rounded */
@@ -130,7 +130,7 @@ static int maps_needed(uint16_t top)
 int pagemap_alloc(ptptr p)
 {
 	uint8_t *ptr;
-	int needed = maps_needed(p->p_top);
+	int needed = maps_needed(p->p_top - MAPBASE);
 	int i;
 
 	/* Cheapest way to keep it non zero */
@@ -165,7 +165,7 @@ int pagemap_alloc(ptptr p)
  */
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
-	int8_t have = maps_needed(udata.u_top);
+	int8_t have = maps_needed(udata.u_top - MAPBASE);
 	int8_t want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *)udata.u_page;
 
