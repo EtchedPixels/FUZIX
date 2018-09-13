@@ -1,0 +1,23 @@
+define basesympat __sectionbase_%s__
+define lensympat __sectionlen_%s__
+# NUL pointer trap at 0x0000
+section .commondata load 0x0010
+section .ncartdata
+section .udata load 0x0500
+# video memory overlaps 0x0800-0x1fff (6KB)
+section .common load 0x0800
+# ncart must be below 0xc000
+section .ncart load 0x2000
+section .start
+section .text
+section .text2
+section .buffers
+section .discard
+section .data
+# video code/data must be above 0x2000
+section .videodata
+section .video
+section .bss
+section .crm load 0xfe00
+section .vectors load 0xfef0
+entry start

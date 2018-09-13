@@ -1,0 +1,57 @@
+This port is for the Dragon/CoCo with 32K internal memory and a MOOH
+external memory cartridge. It uses the 8K banks memory model with
+flexible mapping.
+
+It is not compatible with the dragon-nx32 (or its MOOH build variant)
+and needs all applications linked differently (load address).
+
+It works fine on the 64K computers (Dragon 64/Tano, CoCo2) as well but
+another port could be made to fully exploit the extra memory.
+
+About the memory map:
+The 6847 video generator can only access the internal memory - it has
+its own data bus and SAM generates memory access addresses for it.
+
+Since the internal memory here (unlike the upper 32K on the 64K
+machines) will be scribbled upon external memory writes in the same CPU
+space (thanks to the sloppy internal SLENB deactivation logic), we keep
+the video in the first 8KB of memory, and only map read-only sections on
+top of the 6K video area. This leaves us with 2KB of read/write memory
+for common data and udata. The remaining 7 banks can be mapped freely.
+
+The upper 256 bytes at FF00 always map I/O and are therefore excluded
+from memory access. The MOOH (like the GIME) has an optional vector page
+at 0xFE00 (Common Reserved Memory) that we also can use for common code
+(in general well suited for small primary interrupt handlers).
+
+Bootstrapping:
+Using the same bootloaders as for dragon-nx32 (SDBOOT etc) the kernel is
+loaded at internal memory 0x1C00 upwards and written to banks 0-3 above
+0x8000.
+
+The tricky part is loading the common into the lowest bank, since the
+bootloader uses this memory area. We here use a tool that modifies the
+DECB image to shift the segment load addresses from 0x0000-0x1FFF up to
+0x2000-0x3FFF and also insert mini segments poking the appropriate bank
+values into the MMU registers. See Kernel/tools/decb-mooh.c.
+
+We also replace the loaded bank 3 with bank $3F to sit at 0xE000 - it is
+the only place we can map it so we'll use it for the kernel here.
+
+After relocation we have:
+0000 bank 4 2K commondata + 6K common || 6K video (internal memory)
+2000 bank 5
+4000 bank 6
+6000 bank 7
+
+8000 bank 0
+A000 bank 1
+C000 bank 2
+E000 bank 0x3F (was loaded into bank 3)
+
+and banks 8-0x3E and 3 for user apps flexibly mapped at 0x2000-0xFDFF
+
+We make use of the two MMU tasks so we can efficiently switch between
+kernel (task 0) and user mapping (task 1). The user mapping should in
+principle only need to be rewritten to the MMU on switchout() and after
+page map (re)allocation.

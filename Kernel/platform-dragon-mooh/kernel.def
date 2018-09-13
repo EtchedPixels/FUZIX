@@ -1,0 +1,25 @@
+; UZI mnemonics for memory addresses etc
+
+U_DATA                      equ 0x0500       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           equ 0x200        ; 256+256 (we don't save istack)
+
+U_DATA_STASH                equ 0xFC00       ; FC00-FDFF
+
+VIDEO_BASE		    equ 0x0800	     ; 6K for the display
+VIDEO_END		    equ 0x2000
+KBANKV			    equ 0x4          ; Kernel bank overlapping video memory
+
+IDEDATA			    equ 0xFF50
+IDEDATA_L		    equ 0xFF58
+
+SPIDATA			    equ 0xFF6C
+SPISTATUS		    equ SPIDATA+1
+SPICTRL			    equ SPISTATUS
+SPICLK			    equ SPICTRL+1
+SPISIE			    equ SPICLK+1
+
+SPICS			    equ 0x01	     ; hardcode SEL0 for now
+
+PROGBASE                    equ 0x2000       ; programs and data start here
+
+NBUFS			    equ 5
