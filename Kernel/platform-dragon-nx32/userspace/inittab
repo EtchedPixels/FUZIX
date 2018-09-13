@@ -1,6 +1,7 @@
 # Inittab
 id:3:initdefault:
-si::sysinit:
+# Start a shell first
+# si::sysinit:/bin/sh
 # Run level s - a shell
 is:s:respawn:/bin/sh
 # Start up
