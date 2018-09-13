@@ -83,9 +83,9 @@ void create_init(void)
 {
 	uint8_t *j;
 
+	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
-	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
 	init_process->p_top = udata.u_top;
 	map_init();
 	newproc(init_process);
