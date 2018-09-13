@@ -104,7 +104,7 @@ void pagemap_free(ptptr p)
 	uint8_t *e = pt + PTNUM;
 	while(pt < e) {
 		if (*pt != PAGE_INVALID && *pt != PAGE_VIDEO)
-			pfree[--pfptr] = *pt;
+			pfree[pfptr++] = *pt;
 		pt++;
 	}
 }
@@ -184,7 +184,7 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	   data */
 	if (want < have) {
 		while(want < have) {
-			pfree[--pfptr] = ptr[want];
+			pfree[pfptr++] = ptr[want];
 			ptr[want++] = PAGE_INVALID;
 		}
 		return 0;
@@ -199,13 +199,13 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 		return ENOMEM;
 #endif
 	while(have < want)
-		ptr[have++] = pfree[pfptr++];
+		ptr[have++] = pfree[--pfptr];
 	return 0;
 }
 
 usize_t pagemap_mem_used(void)
 {
-	return pfptr << 3;
+	return (MAX_MAPS - pfptr) << 3;
 }
 
 #ifdef SWAPDEV
