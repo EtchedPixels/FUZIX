@@ -47,6 +47,8 @@
 
 #define VIDEO_BASE	0x0400
 #define VT_ALLBASE	(VIDEO_BASE+0x1800)
+#define map_video(x)
+#define unmap_video(x)
 
 #define CRT9128_BASE	0xFF7C
 
