@@ -23,4 +23,5 @@ export BITS=16
 
 tools/decbdragon: tools/decbdragon.c
 tools/decb-image: tools/decb-image.c
+tools/decb-mooh: tools/decb-mooh.c
 

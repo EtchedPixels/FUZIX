@@ -57,7 +57,7 @@ $(AOBJS): %$(BINEXT): %.s
 clean:
 	rm -f $(OBJS) $(JUNK)
 
-image:
+image: ../tools/decb-mooh
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o usermem_sam.o \
 	dragon.o mem-mooh.o ../bank8k.o \
@@ -76,3 +76,5 @@ image:
 	discard.o
 	../tools/pad256 ../fuzix.bin
 	../tools/lw-checkmap ../fuzix.map
+	../tools/decb-mooh < ../fuzix.bin > ../fuzix-mooh.bin
+	mv ../fuzix-mooh.bin ../fuzix.bin
