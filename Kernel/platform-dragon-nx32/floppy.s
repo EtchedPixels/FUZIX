@@ -401,7 +401,7 @@ no_work_motor:
 ;
 ;	We need these mapped during interrupts so must live in common
 ;
-	.area .common
+	.area .commondata
 nmivector:
 	.word	nmi_handler
 curdrive:
@@ -409,7 +409,7 @@ curdrive:
 ;
 ;	BSS but used with user mapping so keep common
 ;
-	.area .common
+	.area .commondata
 motor_running:
 	.byte	0
 fdcctrl:

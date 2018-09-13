@@ -165,4 +165,6 @@ write8:
 	jsr map_kernel
 	puls y,dp,pc
 
+	.area .commondata
+
 endspi:	.dw 0

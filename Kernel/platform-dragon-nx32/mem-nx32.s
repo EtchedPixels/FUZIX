@@ -134,38 +134,40 @@ copybank
 	bmi copymap1b	; from SAM map 1 to bank B
 	tstb
 	bmi copyamap1	; from bank A to SAM map 1
-	stu cmpend+1	; self-modiying code FTW
+	stu endcp
 copyf	sta <banksel
 	ldu ,x
 	stb <banksel
 	stu ,x++
-cmpend	cmpx #0
+	cmpx endcp
 	blo copyf
 copyret	stb map_copy
 	puls dp,pc
 
 copymap1b
-	stu cmpendb+1
+	stu endcp
 	stb <banksel
 copyfb	sta <sammap1
 	ldu ,x
 	sta <sammap0
 	stu ,x++
-cmpendb cmpx #0
+	cmpx endcp
 	blo copyfb
 	bra copyret
 
 copyamap1
-	stu cmpenda+1
+	stu endcp
 	sta <banksel
 copyfa	sta <sammap0
 	ldu ,x
 	sta <sammap1
 	stu ,x++
-cmpenda cmpx #0
+	cmpx endcp
 	blo copyfa
 	bra copyret
 
+	.area .commondata
+
+endcp		.dw 0
 map_store	.db 0
 map_copy	.db 0
-

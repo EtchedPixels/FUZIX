@@ -289,6 +289,6 @@ outchar:
 	sta 0xFF20
 	rts
 
-	    .area .common
+	    .area .commondata
 
 _need_resched: .db 0

@@ -26,11 +26,15 @@
         include "kernel.def"
         include "../kernel09.def"
 
-	.area .common
+	.area .commondata
 
 	; ramtop must be in common although not used here
 _ramtop:
 	.dw 0
+
+newpp   .dw 0
+
+	.area .common
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -71,7 +75,6 @@ badswitchmsg: .ascii "_switchin: FAIL"
 	    .db 10
 	    .db 0
 
-newpp   .dw 0
 
 ; new process pointer is in X
 _switchin:

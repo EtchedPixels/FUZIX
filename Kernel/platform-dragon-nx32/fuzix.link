@@ -5,6 +5,7 @@ section .common
 section .text
 section .buffers
 section .discard
+section .commondata
 section .udata load 0x7D00
 section .text2 load 0x8010
 section .bss high 0xFF00
