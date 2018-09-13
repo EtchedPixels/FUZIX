@@ -25,7 +25,7 @@
 	include "kernel.def"
 	include "../kernel09.def"
 
-	.area .text
+	.area .video
 
 ;
 ;	Dragon video drivers
@@ -203,7 +203,7 @@ vscrolln:
 	std ,y++
 	ldd ,x++
 	std ,y++
-	cmpx video_endptr
+	cmpx #VIDEO_END
 	bne vscrolln
 	puls y,pc
 
@@ -248,14 +248,9 @@ vscrolld:
 	std ,--y
 	ldd ,--x
 	std ,--y
-	cmpx video_startptr
+	cmpx #VIDEO_BASE
 	bne vscrolld
 	puls y,pc
-
-video_startptr:
-	.dw	VIDEO_BASE
-video_endptr:
-	.dw	VIDEO_END
 
 ;
 ;	clear_across(int8_t y, int8_t x, uint16_t l)
@@ -417,7 +412,7 @@ endline:
 	bne oploop
 	puls u,pc
 
-	.area .data
+	.area .videodata
 cursor_save:
 	.dw	0
 _vtrow:

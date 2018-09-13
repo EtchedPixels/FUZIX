@@ -7,12 +7,12 @@
 	.globl _set_vid_mode
 	.globl _set_vc_mode
 
-	.area .data
+	.area .videodata
 
 	.globl _curtty
 _curtty	.db 0
 
-	.area .text
+	.area .video
 
 	.globl _clear_across
 _clear_across:
