@@ -46,6 +46,7 @@
 #define VT_INITIAL_LINE	0
 
 #define VIDEO_BASE	0x0400
+#define VT_ALLBASE	(VIDEO_BASE+0x1800)
 
 #define CRT9128_BASE	0xFF7C
 
