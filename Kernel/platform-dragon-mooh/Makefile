@@ -18,7 +18,6 @@ DDSRCS = ../dev/devide_discard.c ../dev/mbr.c \
 ASRCS = crt0.s dragon.s mem-mooh.s video.s ide.s spi.s
 ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
 ASRCS += multihead.s
-ASRCS += char42.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 VOBJS = $(VSRCS:.c=$(BINEXT))
@@ -64,7 +63,6 @@ image: ../tools/decb-mooh
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	multihead.o crt9128.o vc.o \
-	char42.o \
 	drivewire.o devdw.o ttydw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
