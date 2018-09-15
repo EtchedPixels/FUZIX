@@ -19,6 +19,11 @@
  *	on switches. It makes no sense to support it here because to do that
  *	well we want to support a simple first fit allocator for swap ranges
  *	so our swap isn't huge and empty.
+ *
+ *	The fact we don't do this for 8bit systems may seem weird, but on most
+ *	of the systems supported a contiguous series of disk reads of 512
+ *	byte blocks isn't *that* much slower than a memory zero. (inir + sector
+ *	setup versus ldir on Z80 for example)
  */
 
 #include <kernel.h>
