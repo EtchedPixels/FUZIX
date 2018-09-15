@@ -52,8 +52,6 @@ SIOA_D		.EQU	SIOA_D+1
 SIOB_C		.EQU	SIOA_D+2
 SIOB_D		.EQU	SIOA_D+3
 
-SIO_IV          .EQU    8               ; Interrupt vector table entry to use
-
 ACIA_C          .EQU     0x80
 ACIA_D          .EQU     0x81
 ACIA_RESET      .EQU     0x03
