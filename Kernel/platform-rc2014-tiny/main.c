@@ -4,7 +4,6 @@
 #include <timer.h>
 #include <devtty.h>
 #include <devfd.h>
-#include <devinput.h>
 #include <rtc.h>
 #include <ds1302.h>
 
