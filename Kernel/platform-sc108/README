@@ -1,0 +1,96 @@
+Experimental port for the proposed SC108 mainboard plus CF card plus RTC card
+
+This is a design that happens to have 128K RAM but the 64K banks are flipped
+directly. Fortunately there is a ROM which lives in both banks.
+
+For the moment we stick the OS in RAM (it would be entertaining to explore
+putting the kernel in ROM but as it's not trivially reprogrammable flash
+lets leave that for a while). The ROM has to have the following routines
+
+0x7FFD	JP	ldir_far
+
+To provide the following functionality
+
+copy_far
+HL = source
+IX = destination
+BC = count
+A = return bank bits
+D = dest bank bits
+E = source bank bits
+
+where source/dest must be in the upper 32K (clear of ROM) and interrupts off
+
+Something like this patched into the ROM should work
+
+;
+;	ROM patch for SC108
+;
+	.area CODE(ABS)
+
+.org 0x7FE2
+
+;	HL = SOURCE
+;	IX = DESTINATION
+;	BC = COUNT
+;	D = destination bank
+;	E = source bank
+;	
+;
+;
+ldir_far:
+	    push bc
+	    ld c,#0x38
+	    exx
+	    pop bc			; get BC into alt bank
+far_ldir_1:
+	    exx
+	    out (c),e
+	    ld a,(hl)
+	    inc hl
+	    out (c),d
+	    ld (ix),a
+	    inc ix
+	    exx
+	    dec bc
+	    ld a,b
+	    or c
+	    jr nz, far_ldir_1
+	    xor a
+	    out (0x38),a
+	    ret
+
+	    jp ldir_far
+
+
+
+Memory map
+
+Kernel
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	Kernel (common above 0x8000 for ROM dodging)
+F000-F1FF	UDATA
+F200-FFFF	Common (mostly valid in both banks)
+
+User
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	User space
+F000-F1FF	Kernel stack alternative (used during some bank switch ops)
+F200-F2FF	Istack alternate (we may take interrupts in either bank)
+F300-FFFF	Common (mostly valid in both banks)
+
+
+TO DO
+
+Write a proper bootloader that can use partition tables properly
+Fix hardcoded use of ACIA
+Use the extra space to put back some kernel bits we binned from -tiny
+Build a suitably high CP/M emuation and test it
+
+
+Long term fun
+- OS core in ROM, high memory holding rest (like -tiny) but with two user space
+banks ??
+- Clean up the serial code (on all RC2014)
