@@ -66,7 +66,7 @@
 CPU_CMOS_Z80	    .equ    Z80_TYPE-0
 CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 
-	.area _HIGH
+	HIGH
 ;
 ;	Execve also needs a platform helper for 32/32K
 ;
@@ -193,13 +193,11 @@ traphl:
         call outstring
         call _platform_monitor
 
-	.area _HIGH
+	HIGH
 ;
 ;	The stub caller has already saved AF DE HL, mapped the kernel high
 ;	and switched to the istack as well as saving the old sp in
 ;	istack_switched_sp
-;
-;	FIXME: pure syscall path
 ;
 interrupt_handler:
 	call map_save_low	; save old and map kernel
@@ -306,6 +304,9 @@ intret2:
 	ld hl, (U_DATA__U_PTAB)
 	ld (hl), #P_READY
 	; Give up the CPU
+	; FIXME: can we get here on timers when only one thing is running
+	; and we don't need to pre-empt ????? Is this more generally busted
+	; ?
 	call _platform_switchout
 	; Undo the fakery
 	xor a
