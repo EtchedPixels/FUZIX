@@ -10,7 +10,6 @@
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
-        .globl trap_illegal
         .globl _platform_switchout
         .globl _switchin
         .globl _doexec
@@ -23,9 +22,6 @@
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
-
-        .include "kernel.def"
-        .include "../kernel.def"
 
         .area _COMMONMEM
 
