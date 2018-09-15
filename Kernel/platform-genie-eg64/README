@@ -1,5 +1,9 @@
-Video Genie With EG 64 banking option, or the TRS80 'Lubomir Soft Banker'
-clone of the EG 64
+Video Genie With EG 64.3 banking option, or the TRS80 'Lubomir Soft Banker'
+clone of the EG 64.3.
+
+Note that there appears to have been a different 'EG MBA' memory banking
+adapter that only allows mapping of the 64K over the ROM via a different
+port. This is not supported.
 
 This port supports the following configurations currently
 
