@@ -41,7 +41,7 @@ int pagemap_alloc(ptptr p)
 /* FIXME: update once we have the new mm logic in place */
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
-  if (size > ramtop)
+  if (size > ramtop - PROGBASE)
     return ENOMEM;
   return 0;
 }
@@ -77,7 +77,8 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 #ifdef CONFIG_SPLIT_UDATA
-	swapwrite(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 1);
+	/* Note the page for the udata bit as it goes direct to udata */
+	swapwrite(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 0);
 	swapwrite(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		  SWAPBASE, 1);
 #else
@@ -108,7 +109,8 @@ void swapin(ptptr p, uint16_t map)
 	}
 
 #ifdef CONFIG_SPLIT_UDATA
-	swapread(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 1);
+	/* Note the page for the udata bit as it goes direct to udata */
+	swapread(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 0);
 	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		 SWAPBASE, 1);
 #else
