@@ -15,6 +15,8 @@
 
 #define IVERSION "fe0.01"
 
+#define WORD(x)		((uint16_t)(x))
+
 #define VERSION 	3
 
 #if (VERSION == 8)
@@ -23,13 +25,22 @@ typedef uint16_t obj_t;
 
 #elif (VERSION > 3)
 #define PACKED_SHIFT	2
-typedef uin16_t obj_t;
+typedef uint16_t obj_t;
 
 #else				/*  */
 #define PACKED_SHIFT	1
 typedef uint8_t obj_t;
 
 #endif				/*  */
+
+#if VERSION > 2
+#define SHIFT1		4
+#define SHIFT2		5
+#else
+#define	SHIFT1		2
+#define SHIFT2		3
+#endif
+
 typedef char boolean;
 typedef uint8_t byte;
 typedef struct {
@@ -58,10 +69,10 @@ const char zscii_conv_2[128] = {
 };
 
 #if (VERSION == 1)
-const char alpha[78] =
+char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789.,!?_#'\"/\\<-:()";
 #else
-const char alpha[78] =
+char alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ^0123456789.,!?_#'\"/\\-:()";
 #endif
 
@@ -230,6 +241,76 @@ int xclose(int f)
 	return 0;
 }
 
+#if 0
+static uint16_t nextoff;	/* It's 8bit but we use > 255 to mean no hit */
+
+static uint8_t buffer[32][512];
+static uint8_t tlb;
+static uint16_t idx[33];
+static uint8_t dirty[32];
+static uint8_t used[32];
+
+static void buffers_init(void)
+{
+	memset(used, 0, 32);
+	memset(dirty, 0, 32);
+	memset(idx, 0xFF, 64);
+	idx[32] = 0xFFFF;
+}
+
+static uin8_t find_buffer(uint16_t page)
+{
+	uint16_t *p = idx;
+	while(*p != 0xFFFF) {
+		if (*p == page)
+			return p - idx;
+		p++;
+	}
+	/* Need to do I/O */
+
+	/* FIXME write some I/O routines 8) */
+}
+
+static uint8_t getbyte(uint16_t page, uint8_t off)
+{
+	if (lastpage == page) {
+		if (off == nextoff) {
+			nextoff++;
+			return *ptr++;
+		}
+		nextoff = off + 1;
+		ptr = buffer[tlb] + off;
+		return *ptr++;
+	}
+	/* Slow path */
+	tlb = find_buffer(page);
+	nextoff = off + 1;
+	ptr = buffer[tlb] + off;
+	return *ptr++;
+}
+
+static uint8_t putbyte(uint16_t page, uint8_t off, uint8_t val)
+{
+	if (lastpage == page) {
+		if (off == nextoff) {
+			nextoff++;
+			return *ptr++;
+		}
+		nextoff = off + 1;
+		ptr = buffer[tlb] + off;
+		*ptr++ = val;
+		dirty[tlb] |= 1;
+		return;
+	}
+	/* Slow path */
+	tlb = find_buffer(page);
+	nextoff = off + 1;
+	ptr = buffer[tlb] + off;
+	*ptr++ = val;
+	dirty[tlb] |= 1;
+}
+
+#endif
 		
 /*
  *	Memory management
@@ -354,6 +435,20 @@ boolean verify_checksum(void)
 	return 1;
 }
 
+/* This is a pain but strictly speaking a game is entitled to change its
+   alphabet on the fly! */
+static void sync_alphabet(void)
+{
+#if VERSION >= 5
+	char *p = alpha;
+	uint16_t r;
+	if ((r = alphabet_table) != 0) {
+		while(p != alpha + 78)
+			*p++ = read8(r++);
+	}
+#endif
+}
+
 uint32_t text_print(uint32_t address);
 void zch_print(int z)
 {
@@ -410,7 +505,7 @@ void zch_print(int z)
 #endif		
 	} else {
 		if (alphabet_table)
-			char_print(read8
+			char_print(read8low
 				   (alphabet_table + z + (zch_shift * 26) -
 				    6));
 
@@ -662,7 +757,7 @@ uint64_t dictionary_get(uint16_t addr)
 	uint64_t v = 0;
 	int c = VERSION > 3 ? 6 : 4;
 	while (c--)
-		v = (v << 8) | read8(addr++);
+		v = (v << 8) | read8low(addr++);
 	return v;
 }
 
@@ -673,10 +768,9 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 	int c = VERSION > 3 ? 9 : 6;
 	int i;
 
-	/* FIXME: memory direct reference still here */
-	const uint8_t *al =
-	    (alphabet_table ? (const uint8_t *) memory +
-	     alphabet_table : (const uint8_t *) alpha);
+	const uint8_t *al = alpha;
+
+	sync_alphabet();
 	while (c && len && *text) {
 
 		// Since line breaks cannot be in an input line of text, and VAR:252 is only available in version 5, line breaks need not be considered here.
