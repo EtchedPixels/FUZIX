@@ -20,6 +20,7 @@ static char *workdir;		/* Working directory */
 
 static int verbose = 0;
 static int valgrind = 0;
+static int relocatable = 0;
 
 static unsigned int progbase = 0x0100;	/* Program base */
 
@@ -221,10 +222,16 @@ static void set_platform(const char *p)
   if (strcmp(platform, "-trs80m1") == 0) {
     platform="";
     progbase = 0x8000;
+    return;
   }
-  if (strcmp(platform, "-zx128") == 0) {
+  else if (strcmp(platform, "-zx128") == 0) {
   /* ZX128 does because it can't use RST for syscalls */
     progbase = 0x8000;
+    return;
+  }
+  else {
+    fprintf(stderr, "fcc: unknown platform '%s'.\n", p);
+    exit(1);
   }
 }
 
@@ -557,6 +564,9 @@ int main(int argc, const char *argv[]) {
             set_cpu(argv[++i]);
           else
             set_cpu(p + 2);
+          break;
+        case 'r:
+          relocatable = 1;
           break;
         case 'M':
           if (p[2] == 0)
