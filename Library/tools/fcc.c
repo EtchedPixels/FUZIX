@@ -378,7 +378,10 @@ static int do_command(void)
       argvec[0], strsignal(WTERMSIG(status)));
     return 255;
   }
-  return (WEXITSTATUS(status));
+  status = WEXITSTATUS(status);
+  if (status && verbose)
+    fprintf(stderr, "%s exited with status %d\n", argvec[0], status);
+  return status;
 }
 
 /*
@@ -391,12 +394,28 @@ static char *undotslash(char *p)
     return p + 2;
   return p;
 }
-    
+
+/*
+ *	Magic for relocations
+ */
+
+static char *relocmap(char *in, int pass)
+{
+  char *n;
+  if (!relocatable)
+    return in;
+  /* tack it together */
+  n = malloc(strlen(in) + 4);
+  if (n == NULL)
+    oom();
+  sprintf(n, "%s__%1d", in, pass);
+  return n;
+}
+
 /*
  *	Stitch together an sdcc command.
  */
-
-static void build_command(void)
+static void build_command(int pass)
 {
   char buf[128];
 
@@ -479,7 +498,7 @@ static void build_command(void)
       fprintf(stderr, "no target.\n");
       exit(1);
     }
-    add_option("-o", undotslash(target));
+    add_option("-o", relocmap(undotslash(target), pass));
     if (nostdio)
       snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0nostdio%s.rel", platform);
     else
@@ -565,7 +584,7 @@ int main(int argc, const char *argv[]) {
           else
             set_cpu(p + 2);
           break;
-        case 'r:
+        case 'r':
           relocatable = 1;
           break;
         case 'M':
@@ -616,7 +635,7 @@ int main(int argc, const char *argv[]) {
 
   if (mode == MODE_OBJ) {
     while (srchead) {
-      build_command();
+      build_command(0);
       ret = do_command();
       if (ret)
         break;
@@ -632,27 +651,79 @@ int main(int argc, const char *argv[]) {
       argp = 0;
     }
   } else {
-      build_command();
+    if (!relocatable || mode != MODE_LINK) {
+      build_command(0);
       ret = do_command();
+    } else {
+      /* Link it at 0x0100 */
+      progbase = 0x0100;
+      build_command(1);
+      ret = do_command();
+      if (ret)
+        exit(ret);
+      argp = 0;
+      /* And at 0x0200 */
+      progbase = 0x0200;
+      build_command(2);
+      ret = do_command();
+      /* Then post process it */
+    }
   }  
   if (mode != MODE_LINK || ret)
     exit(ret);
   argp = 0;
-  add_argument("makebin");
-  add_argument("-p");
-  add_argument("-s");
-  add_argument("65535");
-  add_argument(target);
-  add_argument(t = rebuildname("", target, "bin"));
-  ret = do_command();
-  if (ret)
-    exit(ret);
+
+  if (relocatable) {
+    char *r = relocmap(target, 1);
+    add_argument("makebin");
+    add_argument("-p");
+    add_argument("-s");
+    add_argument("65535");
+    add_argument(r);
+    add_argument(t = rebuildname("", r, "bin"));
+    ret = do_command();
+    if (ret)
+      exit(ret);
+    free(r);
+    argp = 0;
+    r = relocmap(target, 2);
+    add_argument("makebin");
+    add_argument("-p");
+    add_argument("-s");
+    add_argument("65535");
+    add_argument(r);
+    add_argument(t = rebuildname("", r, "bin"));
+    ret = do_command();
+    if (ret)
+      exit(ret);
+    free(r);
+    t = rebuildname("", target, "bin");
+  } else {
+    add_argument("makebin");
+    add_argument("-p");
+    add_argument("-s");
+    add_argument("65535");
+    add_argument(target);
+    add_argument(t = rebuildname("", target, "bin"));
+    ret = do_command();
+    if (ret)
+      exit(ret);
+  }
   argp = 0;
-  add_argument(FCC_DIR "/bin/binman");
-  snprintf(buf, sizeof(buf), "%x", progbase);
-  add_argument(buf);
-  add_argument(t);
-  add_argument(rebuildname("", target, "map"));
+  if (relocatable) {
+    add_argument(FCC_DIR "/bin/relocbin");
+    t = rebuildname("", relocmap(target, 1), "bin");
+    add_argument(t);
+    t = rebuildname("", relocmap(target, 2), "bin");
+    add_argument(t);
+    add_argument(rebuildname("", relocmap(target, 1), "map"));
+  } else {
+    add_argument(FCC_DIR "/bin/binman");
+    snprintf(buf, sizeof(buf), "%x", progbase);
+    add_argument(buf);
+    add_argument(t);
+    add_argument(rebuildname("", target, "map"));
+  }
   add_argument(target);
   ret = do_command();
   exit(ret);
