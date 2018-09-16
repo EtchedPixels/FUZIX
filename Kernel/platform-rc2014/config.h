@@ -13,7 +13,7 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
 /* 32 x 16K pages, 3 pages for kernel, whatever the RAM disk uses */
-#define MAX_MAPS	(32 - 3 - DEV_RD_RAM_PAGES)
+#define MAX_MAPS	(32 - 3)
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	4
