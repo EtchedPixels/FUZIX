@@ -105,8 +105,8 @@ void sync_clock(void)
 					timer_interrupt();
 				}
 			}
-			re_enter--;
 		}
+		re_enter--;
 		irqrestore(irq);
 	}
 }

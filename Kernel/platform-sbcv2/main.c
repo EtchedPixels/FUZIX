@@ -134,8 +134,8 @@ void sync_clock(void)
 				/* Poll the PropIOv2 */
 				platform_interrupt();
 			}
-			re_enter--;
 		} 
+		re_enter--;
 		irqrestore(irq);
 	}
 }

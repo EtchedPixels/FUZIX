@@ -115,8 +115,8 @@ void sync_clock(void)
 				/* FIXME: need to cover ACIA option.. */
 				tty_pollirq_sio();
 			}
-			re_enter--;
 		}
+		re_enter--;
 		irqrestore(irq);
 	}
 }

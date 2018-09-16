@@ -9,7 +9,6 @@
 
 extern unsigned char irqvector;
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
-uint8_t timermsr = 0;
 uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xF000;
 uint8_t need_resched = 0;
@@ -35,7 +34,7 @@ void platform_idle(void)
 	/* Check the clock. We try and reduce the impact of the clock on
 	   latency by not doing it so often. 256 may be too small a divide
 	   need t see what 1/10th sec looks like in poll loops */
-	if (!idlect++)
+	if (!++idlect)
 		sync_clock();
 }
 
@@ -94,24 +93,24 @@ static void sync_clock_read(void)
  */
 void sync_clock(void)
 {
-	if (!timermsr) {
-		irqflags_t irq = di();
-		int16_t tmp;
-		if (!re_enter++) {
-			sync_clock_read();
-			if (oldticks != 0xFF) {
-				tmp = newticks - oldticks;
-				if (tmp < 0)
-					tmp += 60;
-				tmp *= 10;
-				while(tmp--) {
-					timer_interrupt();
-				}
+	irqflags_t irq = di();
+	int16_t tmp;
+	if (!re_enter++) {
+		sync_clock_read();
+		if (oldticks != 0xFF) {
+			tmp = newticks - oldticks;
+			if (tmp < 0)
+				tmp += 60;
+			tmp *= 10;
+			while(tmp--) {
+				timer_interrupt();
 			}
-			re_enter--;
 		}
-		irqrestore(irq);
 	}
+	re_enter--;
+	if (re_enter > 1)
+		kputs("oops");
+	irqrestore(irq);
 }
 
 /*
