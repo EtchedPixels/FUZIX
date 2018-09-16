@@ -22,6 +22,10 @@
  *	SWAPDEV		if using swap
  *	PROGTOP		first byte above process space
  *	SWAPBASE	address we swap from
+ *	TOP_SIZE	how much of the top 8K page to swap
+ *			(this isn't computed as you may want to add 512 bytes
+ *			for the udata)
+ *	SWAP_SIZE	total space (in blocks) per swapped process worst case
  *
  *	Page numbers must not include 0 (0 is taken as swapped)
  *
@@ -47,7 +51,7 @@
 #endif
 
 /* Bank numbers we actually use */
-#define HIBANK (((PROGTOP) + 0x1FFF) >> 13)
+#define HIBANK ((uint8_t)((((PROGTOP) + 0x1FFFUL) >> 13))
 #define LOBANK ((SWAPBASE) >> 13)
 
 static uint8_t pfree[MAX_MAPS];
@@ -101,14 +105,21 @@ void pagemap_add(uint8_t page)
 
 /*
  *	Free the maps for this task
+ *
+ *	FIXME: we need to change this to consider the case where
+ *	we have entirely spare 8K pages mapped above the common. Right now
+ *	this code breaks if PROGTOP is < E000.
  */
 void pagemap_free(ptptr p)
 {
-	uint8_t *pt = (uint8_t *)p->p_page;
-	uint8_t *e = pt + PTNUM;
+	uint8_t *pt = (uint8_t *)p->p_page + LOBANK
+	uint8_t *e = (uint8_t *)p->p_page + PTNUM
+	uint8_t last = *pt;
 	while(pt < e) {
-		if (*pt != PAGE_INVALID && *pt != PAGE_VIDEO)
+		if (*pt != PAGE_INVALID && *pt != PAGE_VIDEO && *pt != last) {
+			last = *pt;
 			pfree[pfptr++] = *pt;
+		}
 		pt++;
 	}
 }
@@ -120,16 +131,19 @@ void pagemap_free(ptptr p)
  *	space and udata. If you have no need for this then it'll come out
  *	as size - 1, which is correct.
  *
- *	The code assumes that the program base is within the first bank
+ *	We calculate how many banks you need from address 0 and then
+ *	adjust for LOBANK
  */
-static int maps_needed(uint16_t size)
+static int maps_needed(uint16_t top)
 {
 	/* On many platforms if you touch this or PROGTOP you must
 	   touch tricks.s */
-	uint16_t needed = size + 0xFFFF - PROGTOP;
+	uint16_t needed = top + 0xFFFF - PROGTOP;
 	/* Usually we have 0x1000 common - 1 for shift and inc */
 	needed >>= 13;		/* in banks */
 	needed++;		/* rounded */
+	needed -= LOBANK;	/* if we have free space below we don't need
+				   those maps */
 	return needed;
 }
 
@@ -161,10 +175,26 @@ int pagemap_alloc(ptptr p)
 #endif
 
 	/* Allocate the pages upwards */
-	for (i = 0; i < needed; i++)
+	for (i = LOBANK; i < needed; i++)
 		*ptr++ = pfree[--pfptr];
+	/*
+	 *	A machine with a separate supervisor space should write
+	 *	the unused pages to invalid so they fault. A system without
+	 *	however we need to replicate the top page number so the
+	 *	common space is right if it is high.
+	 */
+#ifdef CONFIG_SUPERVISOR_SPACE
 	while (i++ < PTNUM)
 		*ptr++ = PAGE_INVALID;
+#else
+	while (i++ < 8) {
+		*ptr = ptr[-1];
+		ptr++;
+	}
+#ifdef CONFIG_VIDMAP8
+	ptr[8] = PAGE_INVALID;
+#endif	
+#endif
 	return 0;
 }
 
@@ -172,33 +202,38 @@ int pagemap_alloc(ptptr p)
  *	Reallocate the maps for a process
  *
  *	Currently only called on execve and we rely on this in the
- *	specific case of bank8k
+ *	specific case of bank8k.
  *
  *	FIXME: needs updating once we have all the new sizes/stack etc right
+ *
+ *	We don't deal with low vectors as we don't have any systems needing
+ *	8K pages with low vectors to fix up. If we ever do need it then it's
+ *	a fairly simple transplant from bank16k.c
  */
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *)udata.u_page;
+	int i;
 
 #ifdef CONFIG_VIDMAP8
 	if (ptr[8] != PAGE_INVALID)
 		vidmap_unmap();
 #endif
 
-	/* If we are shrinking then free pages and propogate the
-	   common page into the freed spaces */
+	/* No change no work */
 	if (want == have)
 		return 0;
 
-	/* We assume sane vector management or a platform which is saving
-	   and restoring the IRQ vectors not reloading them from the process
-	   data */
+	/* If we are shrinking then free pages and propogate the
+	   common page or invalid into the freed spaces */
 	if (want < have) {
-		while(want < have) {
-			pfree[pfptr++] = ptr[want];
-			ptr[want++] = PAGE_INVALID;
+		for (i = want; i < have; i++) {
+			pfree[pfptr++] = ptr[i - 1];
+			/* We might replicate the top page or we might
+			   replicate the invalid - both work */
+			ptr[i - 1] = ptr[7];
 		}
 		return 0;
 	}
@@ -211,21 +246,21 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	if (want - have > pfptr)	/* We have no swap so poof... */
 		return ENOMEM;
 #endif
-	while(have < want)
-		ptr[have++] = pfree[--pfptr];
+	for (i = have; i < want; i++)
+		ptr[i - 1] = pfree[--pfptr];
 	return 0;
 }
 
 usize_t pagemap_mem_used(void)
 {
-	return (MAX_MAPS - pfptr) << 3;
+	return procmem - (pfptr << 3);
 }
 
 #ifdef SWAPDEV
 
 /*
  *	Swap out the memory of a process to make room
- *	for something else. For bank8k do this as nine operations and
+ *	for something else. For bank8k do this as up to 9 operations and
  *	skip invalid pages.
  */
 
@@ -236,7 +271,7 @@ int swapout(ptptr p)
 	uint16_t map;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x2000 - SWAPBASE) >> 9;
-	uint16_t i;
+	uint8_t i;
 	uint8_t *pt = (uint8_t *)p->p_page;
 #ifdef CONFIG_VIDMAP8
 	uint8_t pv = pt[8];
@@ -266,7 +301,10 @@ int swapout(ptptr p)
 		base += 0x2000;
 		base &= 0xE000;	/* Snap to bank alignment */
 		blk += size;
-		size = 0x10;
+		if (i == HIBANK - 1)
+			size = TOP_SIZE;
+		else
+			size = 0x10;
 	}
 	pagemap_free(p);
 	p->p_page = 0;
@@ -287,7 +325,7 @@ void swapin(ptptr p, uint16_t map)
 	uint16_t blk = map * SWAP_SIZE;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x2000 - SWAPBASE) >> 9;
-	uint16_t i;
+	uint8_t i;
 	uint8_t *pt = (uint8_t *)p->p_page;
 #ifdef CONFIG_VIDMAP8
 	uint8_t pv = pt[8];
@@ -308,12 +346,17 @@ void swapin(ptptr p, uint16_t map)
 			if (pg == PAGE_VIDEO)
 				pg = pv;
 #endif				
-			swapread(SWAPDEV, blk, size << 9, base, *pt++);
+			swapread(SWAPDEV, blk, size << 9, base, pg);
 		}
 		base += 0x2000;
 		base &= 0xE000;
 		blk += size;
-		size = 0x10;	/* 8K */
+		/* FIXME: if we have a shared common then the size is not 0x10
+		   for the last block */
+		if (i == HIBANK - 1)
+			size = TOP_SIZE;
+		else
+			size = 0x10;	/* 8K */
 	}
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
