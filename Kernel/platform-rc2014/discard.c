@@ -18,7 +18,7 @@ void init_hardware_c(void)
     vfd_term_init();
 #endif
     ramsize = 512;
-    procmem = 512 - 64 - (DEV_RD_RAM_PAGES<<4);
+    procmem = 512 - 64;
     /* zero out the initial bufpool */
     memset(bufpool, 0, (char*)bufpool_end - (char*)bufpool);
 }
