@@ -18,7 +18,6 @@
 #include "../protocol.h"
 #include "key.h"
 
-static uint8_t ch;
 static uint8_t shift_lock = false;
 static uint8_t is_escape = false;
 extern uint8_t xoff_enabled;
