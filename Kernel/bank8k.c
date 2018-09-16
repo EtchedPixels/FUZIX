@@ -26,6 +26,10 @@
  *	Page numbers must not include 0 (0 is taken as swapped)
  *
  *	FIXME: currently requires that PROGTOP aligns to an 8K boundary
+ *	if using swap.
+ *
+ *	Also we kind of assume that program space starts at 0x0000. That
+ *	needs fixing.
  */
 #include <kernel.h>
 #include <kdata.h>
@@ -109,11 +113,20 @@ void pagemap_free(ptptr p)
 	}
 }
 
-static int maps_needed(uint16_t top)
+/*
+ *	We are passed the number of bytes that are needed for this
+ *	process. On top of that we require the extra space between
+ *	the top of space and PROGTOP which is reserved for the common
+ *	space and udata. If you have no need for this then it'll come out
+ *	as size - 1, which is correct.
+ *
+ *	The code assumes that the program base is within the first bank
+ */
+static int maps_needed(uint16_t size)
 {
 	/* On many platforms if you touch this or PROGTOP you must
 	   touch tricks.s */
-	uint16_t needed = top + 0xFFFF - PROGTOP;
+	uint16_t needed = size + 0xFFFF - PROGTOP;
 	/* Usually we have 0x1000 common - 1 for shift and inc */
 	needed >>= 13;		/* in banks */
 	needed++;		/* rounded */
