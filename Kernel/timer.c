@@ -112,10 +112,11 @@ void updatetod(void)
 	slide = rtcnew - rtcsec;	/* Seconds elapsed */
 	rtcsec = rtcnew;
 	/*
-	 *	FIXME: it would be nice if we see a backwards slide of 1 or 2
-	 *	to stall the OS clock so we can use an rtc to track a not so
-	 *	stable system clock.
+	 *	We assume a small negative warp in seconds is telling us
+	 *	that the clock is running too fast and we should stall.
 	 */
+	if (slide == -1)
+		return;
 addtod:
 	if (slide < 0)
 		slide += 60;		/* Seconds wrapped */
