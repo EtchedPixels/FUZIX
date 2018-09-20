@@ -541,7 +541,14 @@ arg_t _uadmin(void)
 	}
 	if (cmd == A_REBOOT)
 		platform_reboot();
-
+#ifdef CONFIG_PLATFORM_SUSPEND
+	if (cmd == A_SUSPEND) {
+		udata.u_error = platform_suspend();
+		if (udata.u_error)
+			return -1;
+		return 0;
+	}
+#endif
 	/* We don't do SWAPCTL yet */
 	udata.u_error = EINVAL;
 	return -1;
