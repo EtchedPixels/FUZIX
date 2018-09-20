@@ -12,7 +12,6 @@
 
 static uint8_t buf[65536];
 static uint8_t bufb[65536];
-static uint8_t reloc[65536];
 
 static unsigned int s__INITIALIZER, s__INITIALIZED;
 static unsigned int l__INITIALIZER;
@@ -20,8 +19,6 @@ static unsigned int l__INITIALIZER;
 static unsigned int s__DATA, l__DATA;
 
 static unsigned int progload = 0x100;
-
-static unsigned char *relptr = reloc;
 
 static void ProcessMap(FILE *fp)
 {
@@ -54,6 +51,8 @@ static void sweep_relocations(void)
 {
   uint8_t *base = buf + 0x0100;
   uint8_t *base2 = bufb + 0x0200;
+  uint8_t *relptr = buf + s__DATA;	/* write relocs into BSS head */
+  int relsize;
   int len = s__DATA - 0x0100;
   int pos = 0x0100;
   int lastrel = 0x0100;
@@ -88,7 +87,13 @@ static void sweep_relocations(void)
     exit(1);
   }
   *relptr++ = 0xFF;
-//  printf("Relocations cost %d bytes.\n", relptr - reloc);
+  relsize = relptr - (buf + s__DATA);
+  /* In effect move the relocations from DATA into INITIALIZED */
+  s__DATA += relsize;
+  l__DATA -= relsize;
+  /* Corner case - more relocations than data - grow the object size slightly */
+  if (l__DATA < 0)
+    l__DATA = 0;
 }
 
 int main(int argc, char *argv[])

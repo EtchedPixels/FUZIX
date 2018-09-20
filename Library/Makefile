@@ -5,7 +5,7 @@ CFLAGS += -I../Kernel/include
 all: tools/syscall tools/binman tools/fcc tools/syscall_6502 \
      tools/syscall_68000 \
      tools/syscall_6809 tools/syscall-scc6809 tools/binman \
-     tools/fcc tools/liberror
+     tools/fcc tools/liberror tools/relocbin
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -35,6 +35,9 @@ tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
 tools/binman: tools/binman.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/relocbin: tools/relocbin.c
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -45,7 +48,7 @@ ifeq ($(USERCPU),z80)
 	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
 	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
 	mkdir -p /opt/fcc/include/sys
-	install -m 0755 tools/binman tools/fcc /opt/fcc/bin
+	install -m 0755 tools/binman tools/relocbin tools/fcc /opt/fcc/bin
 	install -m 0644 include/*.h /opt/fcc/include
 	install -m 0644 include/6502/*.h /opt/fcc/include/6502
 	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa

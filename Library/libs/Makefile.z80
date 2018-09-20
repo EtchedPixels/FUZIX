@@ -14,6 +14,10 @@ SRC_CRT0 = crt0$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
 SRC_CRT0NS = crt0nostdio$(PLATFORM).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
+SRC_CRT0R = crt0$(PLATFORM)_z80_rel.s
+OBJ_CRT0R = $(SRC_CRT0R:.s=.rel)
+SRC_CRT0NSR = crt0nostdio$(PLATFORM)_z80_rel.s
+OBJ_CRT0NSR = $(SRC_CRT0NSR:.s=.rel)
 SRC_ASM = enter.s htonl-$(USERCPU).s htons-$(USERCPU).s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
 SRC_C =  __argv.c a64l.c abort.c aes256.c asctime.c assert.c atexit.c atoi_small.c
@@ -98,7 +102,10 @@ OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 OBJ_RES = $(SRC_RES:.c=.rel)
 
-all: c$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
+all: c$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel \
+     crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel \
+     liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib \
+     m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -156,6 +163,12 @@ $(OBJ_CRT0):%.rel: %.s
 $(OBJ_CRT0NS):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
+$(OBJ_CRT0R):%.rel: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
+
+$(OBJ_CRT0NSR):%.rel: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
+
 $(OBJ_C):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
@@ -186,3 +199,4 @@ install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
 	cp curses$(PLATFORM).lib termcap$(PLATFORM).lib /opt/fcc/lib/
 	cp m$(PLATFORM).lib tinymalloc$(PLATFORM).lib /opt/fcc/lib/
+	cp crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel /opt/fcc/lib/

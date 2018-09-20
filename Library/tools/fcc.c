@@ -492,6 +492,9 @@ static void build_command(int pass)
     }
   }
   if (mode == MODE_LINK) {
+    char *rp = "";
+    if (relocatable)
+      rp = "_z80_rel";
     if (target == NULL)
       autotarget();
     if (target == NULL) {
@@ -500,9 +503,9 @@ static void build_command(int pass)
     }
     add_option("-o", relocmap(undotslash(target), pass));
     if (nostdio)
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0nostdio%s.rel", platform);
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%snostdio%s.rel", platform, rp);
     else
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s.rel", platform);
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%s.rel", platform, rp);
     add_argument(mstrdup(buf));
   }
   if (srchead) {
