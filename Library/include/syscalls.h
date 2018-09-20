@@ -77,13 +77,14 @@ struct sockaddr_in;
 #define A_SHUTDOWN		1
 #define A_REBOOT		2
 #define A_DUMP			3
-#define A_FREEZE		4	/* Unimplemented, want for NC100 */
+#define A_FREEZE		4	/* Unimplemented, want for NC100? */
 #define A_SWAPCTL		16	/* Unimplemented */
 #define A_CONFIG		17	/* Unimplemented */
 #define A_FTRACE		18	/* Unimplemented:
                                           Hook to the syscall trace debug */
+#define A_SUSPEND               32	/* Suspend to RAM (optional) */
 
-#define AD_NOSYNC		1	/* Unimplemented */
+#define AD_NOSYNC		1
 
 /* shutdown */
 #define SHUT_RD			0
