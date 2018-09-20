@@ -72,8 +72,6 @@ void tty_pollirq_acia(void)
 	}
 }
 
-static char hex[] = { "0123456789ABCDEF" };
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	if (ser_type == 1) {
