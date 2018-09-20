@@ -447,11 +447,12 @@ struct mount {
 #define A_SHUTDOWN		1
 #define A_REBOOT		2
 #define A_DUMP			3
-#define A_FREEZE		4	/* Unimplemented, want for NC100 */
+#define A_FREEZE		4	/* Unimplemented, want for NC100? */
 #define A_SWAPCTL		16	/* Unimplemented */
 #define A_CONFIG		17	/* Unimplemented */
 #define A_FTRACE		18	/* Unimplemented: 
                                           Hook to the syscall trace debug */
+#define A_SUSPEND               32	/* Suspend to RAM (optional) */
 
 #define AD_NOSYNC		1
                                           
@@ -1044,6 +1045,7 @@ extern void platform_monitor(void);
 extern uint8_t platform_param(char *p);
 extern void platform_switchout(void);
 extern void platform_interrupt(void);
+extern uint8_t platform_suspend(void);
 
 extern void platform_swap_found(uint8_t part, uint8_t letter);
 
