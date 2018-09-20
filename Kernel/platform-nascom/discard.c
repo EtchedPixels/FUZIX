@@ -14,7 +14,7 @@ void device_init(void)
 {
 #ifdef CONFIG_RTC
 	/* Time of day clock */
-	inittod();
+	// FIXME : once we merge both versions of the RTC handling inittod();
 #endif
 	devscsi_init();
 	/* Must come last as we want to allocate this for swap if no other
