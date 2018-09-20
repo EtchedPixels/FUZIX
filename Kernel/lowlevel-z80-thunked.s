@@ -84,7 +84,7 @@ _doexec:
 	ld hl,(U_DATA__U_ISP)
 	ld sp,hl
 	ex de,hl
-	ld iy,#PROGLOAD
+	ld de,#PROGLOAD
 	ld a,(U_DATA__U_PAGE+1)	; pass high page to trampoline
 	jp _platform_doexec	; jump into the low memory stub
 

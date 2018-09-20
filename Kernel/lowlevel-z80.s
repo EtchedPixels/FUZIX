@@ -296,11 +296,11 @@ _doexec:
 
         ex de, hl
 
-	; for the relocation engine - tell it where it is
-	ld iy, #PROGLOAD
 	.ifne Z80_MMU_HOOKS
 	call mmu_user		; must preserve HL
 	.endif
+	; for the relocation engine - tell it where it is
+	ld de, #PROGLOAD
         ei
         jp (hl)
 

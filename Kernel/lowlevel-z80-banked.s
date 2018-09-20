@@ -290,7 +290,7 @@ _doexec:
         ex de, hl
 
 	; for the relocation engine - tell it where it is
-	ld iy, #PROGLOAD
+	ld de,#PROGLOAD
         ei
         jp (hl)
 
