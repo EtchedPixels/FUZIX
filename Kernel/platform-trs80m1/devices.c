@@ -38,6 +38,10 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  blkdev_open, no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl  },
 };
 
+static struct devsw floppy3 = {
+  fd3_open,     no_close,     fd3_read,   fd3_write,   no_ioctl
+};
+
 bool validdev(uint16_t dev)
 {
     /* This is a bit uglier than needed but the right hand side is
@@ -50,10 +54,6 @@ bool validdev(uint16_t dev)
 
 void floppy_setup(void)
 {
-  if (trs80_model == TRS80_MODEL3) {
-    dev_tab[1].dev_open = fd3_open;
-    dev_tab[1].dev_read = fd3_read;
-    dev_tab[1].dev_write = fd3_write;
-    dev_tab[8].dev_open = nxio_open;
-  }
+  if (trs80_model == TRS80_MODEL3)
+    memcpy(dev_tab + 1, &floppy3, sizeof(struct devsw));
 }

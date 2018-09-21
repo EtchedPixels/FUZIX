@@ -4,6 +4,7 @@
 #include <kdata.h>
 #include <devlpr.h>
 #include <printf.h>
+#include <trs80.h>
 #include <devstringy.h> 
 
 /*
@@ -62,7 +63,7 @@ int tape_open(uint8_t minor, uint16_t flag)
     uint8_t unit;
 
     /* Check for the floppy tape ROM */
-    if (*((uint16_t *)0x3034) != 0x3C3C) {
+    if (trs80_model == TRS80_MODEL3 || *((uint16_t *)0x3034) != 0x3C3C) {
         udata.u_error = ENODEV;
         return -1;
     }
