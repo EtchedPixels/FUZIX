@@ -87,47 +87,14 @@ Some ECB cards can provide a timer interrupt. These are not presently supported.
 
 Working With The Simulator
 
-The way I work is as follows
-
-Install cpmtools.
-Add the following to the /usr/share/cpmtools/diskdefs
-
-diskdef romwbwhd
-  seclen 128
-  tracks 1040
-  sectrk 64
-  blocksize 4096
-  maxdir 512
-  skew  0
-  boottrk 16
-  os 2.2
-end
-
-You can then create an sdcard image with
-
-dd if=/dev/zero of=sdcard.img bs=512 couunt=16384
-
-Run the simulator and in CP/M or ZSystem and (if G is the SD card drive letter)
-
-rbcv2 -p
-
-G:ERA *.*
-
-then exit the simulator
-
-Once this is done you can copy Fuzix images to it using
-
-cpmcp -T raw -f romwbwhd sdcard.img fuzix.bin 0:fuzix.com
-
-Then go back in the simulator and run FUZIX as a CP/M binary
-
-
 Making A Filesystem
 
-Build an 8MB file system
+Build a 16MB file system
 
 cd Standalone/filesystem-src
-./build-filesystem fuzix.fs 256 16384
+./build-filesystem fuzix.fs 256 32768
+
+For IDE
 
 makedisk 3 rbc.ide
 
@@ -140,6 +107,7 @@ Write the changes
 Quit
 
 dd if=fuzix.fs of=rbc.raw bs=512 seek=2048 conv=notrunc
+dd if=fuzix.romwbw of=rbc.raw bs=512 seek=2 conv=notrunc
 
 dd if=rbc.raw of=rbc.ide bs=512 seek=2 conv=notrunc
 
@@ -148,3 +116,7 @@ If you need to udate the filesystem then ucp supports offsets. You need a 2050
 sector offset so you can do
 
 ucp rbc.ide:1049600
+
+
+SD is similar but doesn't have the 1K header so you don't need to do the final
+step.
