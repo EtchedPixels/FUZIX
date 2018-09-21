@@ -1,0 +1,76 @@
+[Ready for 0.2 still on -rc]
+
+			Fuzix 0.2 Release Notes
+
+Fuzix 0.2 is the second major release of the Fuzix OS. The primary focus has
+been completing the core C library functionality. Applications have also been
+updated and the kernel has a considerable number of bugs fixed and new
+platforms.
+
+Supported Hardware
+
+Amstrad NC100 with 1MB SRAM card
+Amstrad NC200 with 1MB SRAM card and floppy disk drive
+Dragon 32/64 with Spinx or MOO cartridge
+DX Designs P112 with 1MB RAM and G-IDE
+EACA Video Genie (with suitable banked memory)
+LNW Research LNW80 with suitable banked memory (TRS80 Model 1 compatible bits)
+Memotech MTX512 with SDX disk (no Rememorizer or Rememotech support)
+Microbee 256TC or Premium with 128K+ RAM and ideally hard disk
+MSX2 + MegaFlashROM with SD
+Multicomp09 with at least 128K RAM
+RBC(*) Mark IV with optional PropIO V2
+RBC(*) SBC v2 with optional PPIDE and/or PropIO V2
+RC2014 SBC with 512K ROM/RAM, CF, SIO and RTC
+RC2014 SBC with banked ROM, 64K RAM, CF, SIO and RTC
+SOCZ80 (128MHz FPGA Z80 platform)
+Tandy COCO2 with Cloud 9 IDE, or COCOSDC card and Fuzix partly in cartridge
+Tandy COCO3 with suitable disk interface
+TRS80 Model I/III with a hard disk and a supported banked RAM expansion
+TRS80 Model 4/4D/4P 128K RAM
+Zeta
+Zeta V2
+
+(*) Formerly N8VEM now RBC (RetroBrewComputers)
+
+Virtual Platforms (Emulation Platforms For Fun or Development)
+
+V65C816		-	65C816 emulation work
+V68		-	68000 development work
+Z80Pack		-	Very flexible Z80 banked system emulator
+
+Obsolete/Dropped Platforms
+
+MSP430FR5969 - bitrotted
+MSX1 with MegaMem - bitrotted
+TGL6502 - project died
+ZX128 (Spectrum 128K etc) - too difficult to make work well
+
+Incomplete Ports
+
+Amstrad PCW8256/8512/9256/9512/10
+Apple IIc
+Cromemco
+Dragon 32/64 MOO (full MOO support, use the Spinx/Moo port for now)
+Gemini
+Lucas Nascom
+Sam Coupe
+SC108 (port complete for proposed hardware)
+V65 (Virtual 6502 development platform)
+Video Genie with EG64
+Z280RC
+
+
+The Library/Application support has been built for
+6502			no FP
+65C816			no FP, using 6502 modes
+6809			FP needs debug
+68000			FP needs debug
+68HC11			test only
+8086			test only
+MSP430X
+PDP11			test only
+Rabbit2000		test only
+Z80
+Z180
+
