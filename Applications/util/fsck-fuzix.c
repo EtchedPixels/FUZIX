@@ -123,10 +123,12 @@ static int yes(void) {
 static void progress(void)
 {
     static uint8_t progct;
-    progct++;
-    progct&=3;
-    printf("%c\010", "-\\|/"[progct]);
-    fflush(stdout);
+    static uint8_t scalect;
+    if (++scalect == 16) {
+        scalect = 0;
+        printf("%c\010", "-\\|/"[progct++&3]);
+        fflush(stdout);
+    }
 }
 
 static void bitset(uint16_t b)
