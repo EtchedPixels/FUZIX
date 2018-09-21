@@ -98,13 +98,13 @@ int swapout(ptptr p)
 
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
-#ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_page);
-#endif
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
 	if (map == 0)
 		return ENOMEM;
+#ifdef DEBUG
+	kprintf("Swapping out %x (%d) to map %d\n", p, p->p_page, map);
+#endif
 	blk = map * SWAP_SIZE;
 	/* Write the app (and possibly the uarea etc..) to disk */
 	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE, SWAPBASE, p->p_page);
@@ -125,7 +125,7 @@ void swapin(ptptr p, uint16_t map)
 	uint16_t blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
-	kprintf("Swapin %x, %d\n", p, p->p_page);
+	kprintf("Swapin %x, %d from map %d\n", p, p->p_page, map);
 #endif
 	if (!p->p_page) {
 		kprintf("%x: nopage!\n", p);
