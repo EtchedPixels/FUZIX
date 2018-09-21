@@ -104,7 +104,7 @@ static ptptr swapvictim(ptptr p, int notself)
 			if (c->p_status == P_READY)
 				r = c;
 			if (c->p_status > P_READY
-			    && p->p_status <= P_FORKING) {
+			    && c->p_status <= P_FORKING) {
 				/* relative position in order of waits, bigger is longer, can wrap but
 				   shouldn't really matter to us much if it does */
 				s = (waitno - c->p_waitno);
