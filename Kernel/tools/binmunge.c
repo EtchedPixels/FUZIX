@@ -181,8 +181,8 @@ void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
       buf[sbank][ptr] = da >> 8;
       break;
     default:
-      fprintf(stderr, "Bad relocation in code %04X: %02X\n",
-        ptr-1, buf[sbank][ptr-1]);
+      fprintf(stderr, "Bad relocation in code (%02X)%04X: %02X\n",
+        sbank, ptr-1, buf[sbank][ptr-1]);
   }
 }
 
