@@ -3,5 +3,7 @@ fsck -a /
 setdate
 remount -n / rw
 prtroot >/etc/mtab
-mount -a
+#Uncomment if you have multiple file systems
+#fsck -a
+#mount -a
 >/var/run/utmp
