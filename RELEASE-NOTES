@@ -1,4 +1,3 @@
-[Ready for 0.2 still on -rc]
 
 			Fuzix 0.2 Release Notes
 
@@ -11,7 +10,7 @@ Supported Hardware
 
 Amstrad NC100 with 1MB SRAM card
 Amstrad NC200 with 1MB SRAM card and floppy disk drive
-Dragon 32/64 with Spinx or MOO cartridge
+Dragon 32/64 with Spinx or MOOH cartridge
 DX Designs P112 with 1MB RAM and G-IDE
 EACA Video Genie (with suitable banked memory)
 LNW Research LNW80 with suitable banked memory (TRS80 Model 1 compatible bits)
@@ -51,7 +50,7 @@ Incomplete Ports
 Amstrad PCW8256/8512/9256/9512/10
 Apple IIc
 Cromemco
-Dragon 32/64 MOO (full MOO support, use the Spinx/Moo port for now)
+Dragon 32/64 MOOH (full MOOH support, use the Spinx/Mooh port for now)
 Gemini
 Lucas Nascom
 Sam Coupe
@@ -74,3 +73,14 @@ Rabbit2000		test only
 Z80
 Z180
 
+
+
+Changes From 0.2 to 0.2.1
+
+o	Fixed a bug where zombies got swapped in error. Fixes the TRS80
+	hang at the date prompt
+o	Fixed a warning about banking fixups on the Model1
+o	Better debugging in swap.c
+o	Better debugging in binmunge
+o	Remembered to add the release notes!
+o	Spell MOOH correctly
