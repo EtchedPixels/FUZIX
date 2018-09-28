@@ -177,7 +177,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 	        t->users++;
 	        return 0;
         }
-	tty_setup(minor);
+	tty_setup(minor, 0);
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 		goto out;
 
@@ -254,6 +254,7 @@ void tty_exit(void)
 int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
+        uint8_t waito = 0;
 
         t = &ttydata[minor];
 
@@ -274,17 +275,15 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	switch (request) {
 	case TCGETS:
 		return uput(&t->termios, data, sizeof(struct termios));
-		break;
 	case TCSETSF:
 		clrq(&ttyinq[minor]);
 		/* Fall through for now */
 	case TCSETSW:
-		/* We don't have an output queue really so for now drop
-		   through */
+		waito = 1;
 	case TCSETS:
 		if (uget(data, &t->termios, sizeof(struct termios)) == -1)
 		        return -1;
-                tty_setup(minor);
+                tty_setup(minor, waito);
                 tty_selwake(minor, SELECT_IN|SELECT_OUT);
 		break;
 	case TIOCINQ:
