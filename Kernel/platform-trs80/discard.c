@@ -11,7 +11,7 @@ void device_init(void)
   inittod();
 #endif
   hd_probe();
-  tty_setup(3);
+  tty_setup(3, 0);
 }
 
 void map_init(void)

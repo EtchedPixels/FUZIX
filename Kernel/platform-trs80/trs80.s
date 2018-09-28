@@ -34,11 +34,9 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_a
-	    .globl map_process_always
-	    .globl map_save
-	    .globl map_restore
 	    .globl _opreg
 	    .globl _modout
+	    .globl _int_disabled
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -56,6 +54,9 @@ _bufpool:
 ; COMMON MEMORY BANK (0xE800 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+
+_int_disabled:
+	    .db 0
 
 _platform_monitor:
 	    di

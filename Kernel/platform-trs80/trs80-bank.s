@@ -8,10 +8,13 @@
             ; exported symbols
             .globl init_hardware
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
+	    .globl map_process_di
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl _opreg
 	    .globl _modout
@@ -126,6 +129,7 @@ bank94_absent:
 ;	base kernel bank
 ;
 map_kernel:
+map_kernel_di:
 	    push af
 	    ld a, (_opreg)
 	    and #0x8C		; keep video bits
@@ -140,6 +144,7 @@ map_kernel:
 ;	selects how the upper bank decodes
 ;
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -182,6 +187,7 @@ nobank94:
 	    ret
 
 map_process_always:
+map_process_always_di:
 	    push af
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
@@ -190,12 +196,18 @@ map_process_always:
 	    pop af
 	    ret
 
-map_save:   push af
+map_save_kernel:
+	    push af
 	    ld a, (_opreg)
 	    and #0x73
 	    ld (opsave), a
 	    in a,(0x94)
 	    ld (save94), a
+	    ld a, (_opreg)
+	    and #0x8C		; keep video bits
+	    or #0x02		; map 2, base memory
+	    ld (_opreg), a
+	    out (0x84), a	; base memory so 0x94 doesn't matter
 	    pop af
 	    ret
 
