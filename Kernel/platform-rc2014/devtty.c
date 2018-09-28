@@ -19,7 +19,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flag)
 {
 	if (minor == 1) {
 	}

@@ -108,6 +108,7 @@ _switchin:
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disable),a
         or a
         ret nz ; in ISR, leave interrupts off
         ei

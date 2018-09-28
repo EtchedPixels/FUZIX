@@ -86,3 +86,5 @@ extern unsigned int swap_dev;
 /* You'll need to define this if you have a Scott Baker SIO2 card, or submit
    a fancier autodetect! Also you'll need to change rc2014.s */
 #undef CONFIG_SIO_BAKER
+
+#define platform_copyright()		// for now

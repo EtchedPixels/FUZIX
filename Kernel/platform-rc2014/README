@@ -83,3 +83,7 @@ Stuff To Do
   * TMS9918A support once there is a suitable card
 
   * Sound support once we have the core sound layer
+
+  * tty_setup
+
+  * Clean up the SIO init mess to just use otir properly
