@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-int sscanf(char * sp, const char * fmt, ...)
+int sscanf(const char * sp, const char * fmt, ...)
 {
 static FILE  string[1] =
 {
@@ -28,7 +28,7 @@ static FILE  string[1] =
   va_list ptr;
   int rv;
   va_start(ptr, fmt);
-  string->bufpos = sp;
+  string->bufpos = (unsigned char *)sp;
   rv = vfscanf(string,fmt,ptr);
   va_end(ptr);
   return rv;

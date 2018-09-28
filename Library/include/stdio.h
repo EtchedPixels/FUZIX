@@ -133,11 +133,11 @@ extern int vsnprintf(char *__str, size_t __size, const char *__fmt, va_list __ap
 
 extern int scanf(const char *__fmt, ...);
 extern int fscanf(FILE *__stream, const char *__fmt, ...);
-extern int sscanf(char *__str, const char *__fmt, ...);
+extern int sscanf(const char *__str, const char *__fmt, ...);
 
 extern int vscanf(const char *__fmt, va_list __ap);
 extern int vfscanf(FILE *__stream, const char *__fmt, va_list __ap);
-extern int vsscanf(char *__str, const char *__fmt, va_list __ap);
+extern int vsscanf(const char *__str, const char *__fmt, va_list __ap);
 
 extern void perror(const char *__s);
 
