@@ -12,11 +12,16 @@
 	    .globl platform_interrupt_all
 
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
+	    .globl map_process_di
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
+
+	    .globl _int_disabled
 
 	    .globl _sil_memcpy
 
@@ -66,6 +71,9 @@ intvectors:
 	    .dw bogus_int	; Baud generator
 	    .dw trace_int	; can be used for CPU tracing etc
 	    .dw serial_int	; we don't use the vector mod functions
+
+_int_disabled:
+	    .db 1
 
 _platform_monitor:
 	    di
@@ -274,6 +282,7 @@ _program_vectors:
 
             ; put the paging back as it was -- we're in kernel mode so this is predictable
 map_kernel:
+map_kernel_di:
 	    push af
 	    ld a, #0x80		; ROM off bank 0
 	    ; the map port is write only, so keep a local stash
@@ -282,6 +291,7 @@ map_kernel:
 	    pop af
             ret
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -291,6 +301,7 @@ map_process_a:
 	    out (0), a
 	    ret
 map_process_always:
+map_process_always_di:
 	    push af
 	    ld a, (U_DATA__U_PAGE)
 map_set_a:
@@ -298,12 +309,16 @@ map_set_a:
 	    out (0), a
 	    pop af
 	    ret
-map_save:
+map_save_kernel:
 	    push af
 	    ld a, (map_copy)
 	    ld (map_store), a
+	    ld a, #0x80		; ROM off bank 0
+	    ; the map port is write only, so keep a local stash
+	    ld (map_copy), a
+	    out (0), a
 	    pop af
-	    ret	    
+            ret
 map_restore:
 	    push af
 	    ld a, (map_store)

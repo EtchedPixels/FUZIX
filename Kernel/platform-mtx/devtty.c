@@ -123,13 +123,13 @@ static uint8_t dartbits[] = {
 	0x00, 0x40, 0x80, 0xC0
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flagbits)
 {
 	irqflags_t flags;
 	int i;
 	char *p = dart_setup;
 	struct tty *t = &ttydata[minor];
-	uint8_t cf = t->termios.c_cflag;
+	uint16_t cf = t->termios.c_cflag;
 	uint8_t r;
 
 	/* Console */
