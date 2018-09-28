@@ -19,6 +19,7 @@
 	.globl _ramtop
 	.globl _need_resched
 	.globl mpgsel_cache
+	.globl _int_disabled
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
