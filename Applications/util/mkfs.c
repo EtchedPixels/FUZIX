@@ -22,9 +22,9 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/super.h>
 
-
-typedef uint16_t blkno_t;
 
 struct dinode {
     uint16_t i_mode;
@@ -37,25 +37,6 @@ struct dinode {
     uint32_t   i_ctime;		/* 24 bytes */
     blkno_t  i_addr[20];
 };               /* Exactly 64 bytes long! */
-
-#define FILESYS_TABSIZE 50
-
-struct filesys {
-    int16_t       s_mounted;
-#define SMOUNTED  12742   /* Magic number to specify mounted filesystem */
-    uint16_t      s_isize;
-    uint16_t      s_fsize;
-    uint16_t      s_nfree;
-    blkno_t       s_free[FILESYS_TABSIZE];
-    int16_t       s_ninode;
-    uint16_t      s_inode[FILESYS_TABSIZE];
-    uint8_t       s_fmod;
-    uint8_t       s_timeh;	/* bits 32-40: FIXME - wire up */
-    uint32_t      s_time;
-    blkno_t       s_tfree;
-    uint16_t      s_tinode;
-    void *        s_mntpt;     /* Mount point */
-};
 
 #define FILENAME_LEN	30
 #define DIR_LEN		32
@@ -73,7 +54,7 @@ int dev;
 
 direct dirbuf[64] = { {ROOTINODE, "."}, {ROOTINODE, ".."} };
 struct dinode inode[8];
-struct filesys fs_tab;
+struct fuzix_filesys_kernel fs_tab;
 
 void dwrite(uint16_t blk, char *addr)
 {
