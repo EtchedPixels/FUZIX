@@ -35,7 +35,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 	*uart_data = c;	/* Data */
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 }
 
