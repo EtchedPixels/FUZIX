@@ -79,6 +79,7 @@ SRCS  = \
 	grep.c \
 	id.c \
 	kbdrate.c \
+	labelfs.c \
 	ll.c \
 	ls.c \
 	man.c \

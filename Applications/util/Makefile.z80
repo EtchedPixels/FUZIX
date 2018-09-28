@@ -72,6 +72,7 @@ SRCS  = banner.c \
 	id.c \
 	jstest.c \
 	kbdrate.c \
+	labelfs.c \
 	ll.c \
 	ls.c \
 	man.c \
