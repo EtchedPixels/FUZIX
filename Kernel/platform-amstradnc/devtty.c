@@ -122,7 +122,7 @@ void tty_data_consumed(uint8_t minor)
 }
 
 /* Called to set baud rate etc */
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	uint16_t b;
 	if (minor == 1)

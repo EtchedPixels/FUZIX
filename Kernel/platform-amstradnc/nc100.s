@@ -12,8 +12,12 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
+	    .globl _int_disabled
 
 	    ; for the PCMCIA disc driver
 	    .globl _rd_memcpy
@@ -64,6 +68,9 @@
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+
+_int_disabled:
+	    .db 1
 
 _platform_monitor:
 	    di
@@ -274,6 +281,7 @@ no_irq_on:  pop af
 ;	All registers preserved
 ;
 map_process_always:
+map_process_always_di:
 	    push hl
 	    push af
 	    ld hl, #U_DATA__U_PAGE
@@ -285,6 +293,7 @@ map_process_always:
 ;	HL is the page table to use, A is eaten, HL is eaten
 ;
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr nz, map_process_2
@@ -292,6 +301,7 @@ map_process:
 ;	Map in the kernel below the current common, all registers preserved
 ;
 map_kernel:
+map_kernel_di:
 	    push af
 	    ; kernel is in banks 3/4/5, common starts at 6 but then gets
 	    ; copied into each task
@@ -328,11 +338,19 @@ map_restore:
 ;
 ;	Save the current mapping.
 ;
-map_save:
+map_save_kernel:
 	    push hl
 	    push af
 	    ld hl, #map_savearea
 	    call save_maps
+	    ; kernel is in banks 3/4/5, common starts at 6 but then gets
+	    ; copied into each task
+	    ld a, #0x83
+	    out (0x10), a
+	    inc a
+	    out (0x11), a
+	    inc a
+	    out (0x12), a
 	    pop af
 	    pop hl
 	    ret
@@ -765,4 +783,3 @@ endline:    pop de
 	    pop af
 	    out (0x11), a
 	    ret
-
