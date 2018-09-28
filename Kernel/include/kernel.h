@@ -1036,6 +1036,9 @@ extern void map_init(void);
 #ifndef platform_discard
 extern void platform_discard(void);
 #endif
+#ifndef platform_copyright
+extern void platform_copyright(void);
+#endif
 extern void platform_idle(void);
 extern uint8_t platform_rtc_secs(void);
 extern int platform_rtc_read(void);

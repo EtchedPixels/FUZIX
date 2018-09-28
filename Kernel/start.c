@@ -336,7 +336,7 @@ void fuzix_main(void)
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
 			"Copyright (c) 2014-2018 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 			sysinfo.uname);
-
+	platform_copyright();
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
 	maxproc = procmem / PROC_SIZE;
