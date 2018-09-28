@@ -66,3 +66,4 @@ extern unsigned int cocoswap_dev;
 #define swap_map(x)	((uint8_t *)(x))
 
 #define CONFIG_IDE
+#define platform_copyright()

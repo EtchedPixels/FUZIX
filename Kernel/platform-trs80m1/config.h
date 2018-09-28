@@ -78,3 +78,4 @@
 #define NMOUNTS	 3	   /* Number of mounts at a time */
 
 extern void platform_discard(void);
+#define platform_copyright()

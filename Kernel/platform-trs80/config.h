@@ -66,3 +66,4 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 
 extern void platform_discard(void);
+#define platform_copyright()

@@ -63,3 +63,4 @@
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_discard()
+#define platform_copyright()

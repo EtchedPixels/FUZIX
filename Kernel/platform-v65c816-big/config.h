@@ -62,3 +62,5 @@
 #define UFTSIZE		16
 #define OFTSIZE		160
 #define ITABSIZE	176
+
+#define platform_copyright()

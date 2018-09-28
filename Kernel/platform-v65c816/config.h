@@ -59,3 +59,5 @@
 
 #define OFTSIZE		24
 #define ITABSIZE	32
+
+#define platform_copyright()

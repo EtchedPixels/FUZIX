@@ -68,3 +68,5 @@ extern unsigned int swap_dev;
 #define TTY_INIT_BAUD B115200	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+
+#define platform_copyright()

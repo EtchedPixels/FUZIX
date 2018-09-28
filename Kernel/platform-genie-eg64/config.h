@@ -77,3 +77,4 @@ extern unsigned char vt_map_char(unsigned char);
 #define NMOUNTS	 4	   /* Number of mounts at a time */
 
 extern void platform_discard(void);
+#define platform_copyright()

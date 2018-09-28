@@ -65,3 +65,5 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 extern unsigned int swap_dev;
+
+#define platform_copyright()

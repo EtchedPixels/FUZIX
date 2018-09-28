@@ -63,3 +63,4 @@
 #define swap_map(x)	(uint8_t *)(0x4000 + ((x) & 0x3FFF))	/* For now */
 
 #define platform_discard()
+#define platform_copyright()

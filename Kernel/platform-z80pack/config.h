@@ -56,3 +56,4 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define platform_discard()
+#define platform_copyright()
