@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 
+typedef uint16_t blkno_t;
 /*
  * Superblock structure
  */
