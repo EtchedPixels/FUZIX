@@ -16,11 +16,15 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl platform_interrupt_all
 	    .globl _need_resched
 	    .globl _irqwork
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -56,6 +60,8 @@
             .area _COMMONMEM
 _need_resched:
 	    .db 0
+_int_disabled:
+	    .db 1
 trapmsg:    .ascii "Trapdoor: SP="
             .db 0
 trapmsg2:   .ascii ", PC="
@@ -390,6 +396,7 @@ mmumsg:     .ascii "MMU page "
 ; HL points to the page array for this task, or NULL for kernel
 ; Preserve all but a, hl
 map_process:
+map_process_di:
 	    ld a, h
  	    or l
 	    jr nz, map_loadhl
@@ -400,6 +407,7 @@ map_process:
 ; map the current process, preserves all registers
 ;
 map_process_always:
+map_process_always_di:
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
 	    call map_loadhl
@@ -409,6 +417,7 @@ map_process_always:
 ; map the kernel. preserves all registers
 ;
 map_kernel:
+map_kernel_di:
 	    push hl
 	    ld hl, #os_bank
 	    call map_loadhl
@@ -423,7 +432,7 @@ map_restore:
 	    pop hl
             ret
 
-map_save:
+map_save_kernel:
 	    ; FIXME: Save the current mapping registers. Preserves all
 	    ; registers
 	    push hl
@@ -431,6 +440,8 @@ map_save:
 	    ld (saved_map), hl
 	    ld hl, (map_current + 2)
 	    ld (saved_map + 2), hl
+	    ld hl, #os_bank
+	    call map_loadhl
 	    pop hl
 	    ret
 

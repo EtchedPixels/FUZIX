@@ -39,3 +39,4 @@
 #define SD_DRIVE_COUNT 1
 
 #define platform_discard()
+#define platform_copyright()
