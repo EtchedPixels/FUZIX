@@ -13,14 +13,17 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -59,6 +62,12 @@ _bufpool:
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
+;
+;	Interrupt flag. This needs to be in common memory for most memory
+;	models. It starts as 1 as interrupts start off.
+;
+_int_disabled:
+	    .db 1
 ;
 ;	This method is invoked early in interrupt handling before any
 ;	complex handling is done. It's useful on a few platforms but
@@ -195,6 +204,11 @@ _program_vectors:
 ;
 ;	We know the ROM mapping is already off
 ;
+;	The _di versions of the functions are called when we know interrupts
+;	are definitely off. In our case it's not useful information so both
+;	symbols end up at the same code.
+;
+map_kernel_di:
 map_kernel:
 	    push af
 	    ; ROMWBW TPA is last but one bank (last bank is high space)
@@ -230,6 +244,7 @@ map_process_a:			; used by bankfork
 	    ; Map the current process into memory. We do this by extracting
 	    ; the bank value from u_page.
 	    ;
+map_process_always_di:
 map_process_always:
 	    push af
 	    push hl
@@ -240,12 +255,17 @@ map_process_always:
 	    ret
 
 	    ;
-	    ; Save the existing mapping. The place you save it to needs to
-	    ; be in common memory as you have no idea what bank is live
+	    ; Save the existing mapping and switch to the kernel.
+	    ; The place you save it to needs to be in common memory as you
+	    ; have no idea what bank is live. Alternatively defer the save
+	    ; until you switch to the kernel mapping
             ;
-map_save:   push af
+map_save_kernel:   push af
 	    ld a, (mapreg)
 	    ld (mapsave), a
+	    ld a,#14		; Kernel map (see map_kernel)
+	    ld (mapreg),a
+	    out (0x78),a
 	    pop af
 	    ret
 	    ;
