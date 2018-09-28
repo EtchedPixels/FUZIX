@@ -9,13 +9,17 @@
 	.globl map_kernel
 	.globl map_process
 	.globl map_process_always
-	.globl map_save
+	.globl map_kernel_di
+	.globl map_process_di
+	.globl map_process_always_di
+	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
 	.globl platform_interrupt_all
 	.globl _platform_reboot
 	.globl _platform_monitor
 	.globl _bufpool
+	.globl _int_disabled
 
         ; imported symbols
         .globl _ramsize
@@ -155,11 +159,6 @@ init_partial_uart:
         ld a, #0x18;A?          ; Receive int mode 11, tx int enable (was $18)
         out (SIOB_C),a
 
-        ld a,#0x02
-        out (SIOB_C),a
-        ld a,#SIO_IV		; INTERRUPT VECTOR ADDRESS (needs to go)
-        out (SIOB_C),a
-
         ld a,#0x03
         out (SIOB_C),a
         ld a,#0xE1
@@ -212,11 +211,14 @@ _platform_reboot:
 	rst 0
 
 ;=========================================================================
-; Common Memory (0xF000 upwards)
+; Common Memory (0xC000 upwards)
 ;=========================================================================
         .area _COMMONMEM
 
 ;=========================================================================
+
+_int_disabled:
+	.db 1
 
 platform_interrupt_all:
 	ret
@@ -305,6 +307,7 @@ was_di:	pop hl
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
 map_process:
+map_process_di:
 	ld a,h
 	or l				; HL == 0?
 	jr z,map_kernel			; HL == 0 - map the kernel
@@ -329,6 +332,7 @@ map_for_swap:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
+map_process_always_di:
 	push af
 	ld a,#1
 	call rom_control
@@ -341,6 +345,7 @@ map_process_always:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_kernel:
+map_kernel_di:
 	push af
 	xor a
 	call rom_control
@@ -364,10 +369,12 @@ map_restore:
 ; Inputs: none
 ; Outputs: none
 ;=========================================================================
-map_save:
+map_save_kernel:
 	push af
 	ld a,(rom_toggle)
 	ld (save_rom),a
+	xor a
+	call rom_control
 	pop af
 	ret
 
