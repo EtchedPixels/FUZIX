@@ -10,14 +10,18 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
+	    .globl map_process_di
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -59,6 +63,9 @@ _bufpool:
 ; COMMON MEMORY BANK (kept even when we task switch)
 ;
             .area _COMMONMEM
+
+_int_disabled:
+	    .db 1
 
 platform_interrupt_all:
 	    in a,(0xef)			; FIXME: remove this line once debugged
@@ -359,6 +366,7 @@ _program_vectors:
 ;	The lower 32K is switched between the various user banks.
 ;
 map_kernel:
+map_kernel_di:
 	    push af
 	    ld a, #0x0C		; bank 0, 1 no ROM or video
 	    ld (mapreg), a
@@ -366,6 +374,7 @@ map_kernel:
 	    pop af
 	    ret
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -378,6 +387,7 @@ map_process_a:			; used by bankfork
             ret
 
 map_process_always:
+map_process_always_di:
 	    push af
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
@@ -386,9 +396,13 @@ map_process_always:
 	    pop af
 	    ret
 
-map_save:   push af
+map_save_kernel:
+	    push af
 	    ld a, (mapreg)
 	    ld (mapsave), a
+	    ld a, #0x0C		; bank 0, 1 no ROM or video
+	    ld (mapreg), a
+	    out (0x50), a
 	    pop af
 	    ret
 
