@@ -38,7 +38,18 @@ const char *mntpoint(const char *mount)
 	return NULL;
 }
 
-static int perform_fsck_iter(const char *path, int search)
+static void perform_fsck_exec(const char *path)
+{
+	if (aflag == 0)
+		execl("/bin/fsck-fuzix", "fsck-fuzix", path, NULL);
+	else
+		execl("/bin/fsck-fuzix", "fsck-fuzix", "-a", path, NULL);
+	perror("fsck-fuzix");
+	exit(1);
+
+}
+
+static int perform_fsck(const char *path, uint8_t search, uint8_t only)
 {
 	pid_t pid;
 	int st;
@@ -48,6 +59,11 @@ static int perform_fsck_iter(const char *path, int search)
 		if (p)
 			path = p;
 	}
+	/* Only fsck helper we will run - so just exec it */
+	if (only)
+		perform_fsck_exec(path);
+
+	/* May be multiple: use fork and exec */
 	fflush(stdout);
 	switch (pid = fork()) {
 	case -1:
@@ -55,12 +71,7 @@ static int perform_fsck_iter(const char *path, int search)
 		exit(127);
 	case 0:
 		/* FIXME: one day bigger boxes will care about the fs type */
-		if (aflag == 0)
-			execl("/bin/fsck-fuzix", "fsck-fuzix", path, NULL);
-		else
-			execl("/bin/fsck-fuzix", "fsck-fuzix", "-a", path, NULL);
-		perror("fsck-fuzix");
-		exit(1);
+		perform_fsck_exec(path);
 	default:
 		while (waitpid(pid, &st, 0) == -1) {
 			if (errno == ECHILD) {
@@ -74,20 +85,6 @@ static int perform_fsck_iter(const char *path, int search)
 		exit(1);
 	}
 }
-
-/* FIXME: we should eventually push this little bit into fsck-fuzix but
-   to do that we need to go over the resource clean up in detail. Once we
-   have it means a single request doesn't fork but can exec the helper
-   directly, saving us time on boot */
-
-int perform_fsck(char *name, int search)
-{
-	int r;
-	while ((r = perform_fsck_iter(name, search)) & 64)
-		puts("Restarting fsck.\n");
-	return r;
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -106,7 +103,7 @@ int main(int argc, char *argv[])
 		}
 		while ((mnt = getmntent(fp)) != NULL) {
 			printf("%s:\n", mnt->mnt_fsname);
-			if (perform_fsck(mnt->mnt_fsname, 0))
+			if (perform_fsck(mnt->mnt_fsname, 0, 0))
 				exit(error);
 		}
 		endmntent(fp);
@@ -115,7 +112,7 @@ int main(int argc, char *argv[])
 			fputs("syntax: fsck [-a] [devfile]\n", stderr);
 			return 16;
 		}
-		perform_fsck(argv[1], 1);
+		perform_fsck(argv[1], 1, 1);
 	}
 	puts("Done.");
 	exit(error);

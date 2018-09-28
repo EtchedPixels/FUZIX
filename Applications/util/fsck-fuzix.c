@@ -266,11 +266,14 @@ int main(int argc, char *argv[])
         fputs("syntax: fsck-fuzix [-a] [devfile]\n", stderr);
         return 16;
     }
-    perform_fsck(argv[1]);
+    /* Re-run each time the error code is 'do another run over the disk' */
+    do {
+        error = 0;
+        perform_fsck(argv[1]);
+    }
+    while(error & 64);
     exit(error);
 }
-
-
 
 /*
  *  Pass 1 checks each inode independently for validity, zaps bad block
