@@ -1,12 +1,13 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0000
--b _COMMONMEM=0xF000
--b _DISCARD=0xE000
+-b _HEADER=0x4000
+-b _COMMONMEM=0xC000
 -l z80
-platform-msx1/bootrom.rel
 platform-msx1/crt0.rel
+platform-msx1/cartridge.rel
 platform-msx1/commonmem.rel
+platform-msx1/slots.rel
 platform-msx1/msx1.rel
 platform-msx1/vdp.rel
 start.rel
@@ -14,13 +15,17 @@ version.rel
 lowlevel-z80.rel
 platform-msx1/tricks.rel
 platform-msx1/main.rel
+platform-msx1/discard.rel
 timer.rel
 kdata.rel
 platform-msx1/devtty.rel
 platform-msx1/devfd.rel
-platform-msx1/devhd.rel
 platform-msx1/devlpr.rel
 platform-msx1/devices.rel
+platform-msx1/blkdev.rel
+platform-msx1/mbr.rel
+platform-msx1/devide_sunrise.rel
+platform-msx1/sunrise.rel
 devio.rel
 filesys.rel
 process.rel
@@ -33,9 +38,10 @@ syscall_proc.rel
 syscall_other.rel
 mm.rel
 swap.rel
-bankfixed.rel
+simple.rel
 tty.rel
 vt.rel
+font6x8.rel
 devsys.rel
 usermem.rel
 usermem_std-z80.rel

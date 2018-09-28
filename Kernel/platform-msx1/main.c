@@ -5,8 +5,12 @@
 #include <devtty.h>
 
 /* These are set by the msx startup asm code */
-uint16_t vdpport = 0x99 + 256 * 40;
+extern uint16_t vdpport;
 uint16_t infobits;
+uint16_t swap_dev = 0xFFFF;
+uint16_t ramtop = 0xC000;
+uint8_t machine_type;
+uint8_t vdptype;
 
 void platform_idle(void)
 {
@@ -14,6 +18,8 @@ void platform_idle(void)
     halt
     __endasm;
 }
+
+/* Some of this is discard stuff */
 
 uint8_t platform_param(char *p)
 {
@@ -25,26 +31,12 @@ void do_beep(void)
 {
 }
 
-/*
- *	We have one bank per 32K and we number them upwards from 1 as the
- *	core kernel code uses 0 for swapped out.
- */
-
-void pagemap_init(void)
-{
-    int i = procmem / 32;
-    while (i > 0)
-        pagemap_add(i--);
-}
-
-void map_init(void)
-{
-    if (procmem == 0)
-	panic("MegaRAM not found.\n");
-}
-
-
 void platform_interrupt(void)
 {
-	timer_interrupt();
+        uint8_t r = in((uint8_t)vdpport);
+        if (r & 0x80) {
+  	  kbd_interrupt();
+  	  timer_interrupt();
+        }
 }
+

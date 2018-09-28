@@ -1,51 +1,85 @@
-First wild guess at an MSX1 target
----
-
-And it is exactly that a guess 8)
+Idea - Fuzix in ROM
 
 
-No memory paging routines implemented yet so not very useful!
+System constraints
+
+4 slots, each maybe 4 subslots
+
+Proposed memory map therefore is
+
+Cartridge
+
+0000-3FFF	Fuzix
+4000-7FFF	Fuzix
+8000-BFFF	Fuzix + Bootstrap
+C000-FFFF	Bootloader data
 
 
-This will also almost certainly need udata copy on process switching at
-least until someone fixes sdcc to generate bankable code. At that point we
-may be able to bank the OS kernel in a cartridge.
+Running
 
+Kernel mode
 
-Q: should we work to the following map
+0000-BFFF	Fuzix
+C000-FFFF	Kernel data + RAM helpers if needed
 
-```
-	0x0000-0x7FFF	User space / switchable with kernel
-			(in theory if kernel code is cartridge
-			 could we even use RAM + megaram?)
-	0x8000-0xBFFF	Kernel (end of code, data, highcode, common)
-	0xC000-0xFFFF
-```
+User mode
 
-or do we bite the bullet about relocatable binaries (which we need to do
-for the sinclair at least) and do
+0000-BFFF	Process bank
+C000-FFFF	Kernel data + RAM helpers
 
-```
-	0x0000-0x00FF	Vectors
-	0x0100-????
-	0x4000-0xBFFF	User space/switchable with kernel rest
-	0xC000-0xFFFF
-``` 
+Difficulties
+- Have to map 0x4000-7FFF to a device for some I/O devices so we can't
+  always directly do I/O to user space. Kernel buffers are high so ok.
+  Kernel I/O routines can live in other 16K chunks
 
-which would allow the use of more typs of megaram without LDIR tricks.
+- We have to load the cartridge header at 0x4000 or 0x8000 - neither is at
+  all convenient!
 
-There are some other interesting tradeoffs on size handling if you make the
-OS a cartridge as well as you can then use main memory via LDIR and lazy swap
-the other 16K of app space for a 48K app so you only end up copying for
-switches between big apps but get 48K apps. That might mean binaries at
-0x4000-0xFFFF or 0x0000-0xBFFF, but either way means shunting the kernel
-around in the pure RAM case to avoid the overlap (eg loading the kernel
-at 0x4000 (with discard and bootstrap at 0x100))
+BIOS lives at 0:0
 
+Disk catridges live at 4000-7FFF in some bank/sub-bank usually with their
+ROM in the same 16K chunk
 
-Other mappers that might be found include
+You can't move blocks up and down address spaces
 
-	- MSX2 mapper (in which case we should probably make the msx2
-		platform detect the early type VDP and use that ?)
+Done
+Add the tool to stuff the image properly into ROM for unpacking
+Finish the basic catridge logic
+Build the user map from the RAM map
+Finish the ROM and RAM map detection logic
+Disk I/O routines need bounce buffers for 4000-7FFF range due to the
+limited mapping system.
 
-	- Zemina (requires LDIR copying stuff)
+In Progress
+
+Move the switch helper into both banks so we can fix the FIXME in map_kernel
+
+Work out how map/unmap an I/O device needs to work to be usable. Do we grab
+the live map and just edit it for 4000-7FFF then set that map ? Do we
+precompute and save kernel and user maps for the device ?
+
+Sunrise IDE support
+
+To do
+
+the detection logic by ROM hash and find the sunrise etc
+Sensible user copy routines: We know kernel data is always in common except
+some awkward corner cases (constants) going K->U. So we can spot the to user
+case of a 'low' source and bounce it or similar, while just doing a user
+map and ldir for the others. We badly need the cached path walk though!
+Speed up all the ei/di mess by just keeping a private variable for irqoff
+state
+Get common and discard and initialized in C000-FFFF of the ROM
+Then on boot up move SP to BFFF, map the ROM in the top 16K, copy it into
+8000-Bxxx and then restore the RAM, and copy it up. Then do the normal maps.
+Otherwise we are going to run out of space at some point.
+Remember current map for kernel/user so we can fast track map_save/restore
+map_kernel etc by knowing if we are mapping k->k u->u or a transition and
+we can label all other cases with a value meaning 'other' as we don't need
+to worry about fastpaths that much
+
+Target initial I/O devices
+
+Carnivore2 and Sunrise IDE (I believe same logic)
+MegaSD etc
+MegaRAM (detect and use for swap for now)

@@ -1,27 +1,43 @@
+CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
-CSRCS = devtty.c devfd.c devhd.c devlpr.c
+CSRCS = devtty.c devfd.c devlpr.c devide_sunrise.c
 CSRCS += devices.c main.c
 
-ASRCS = msx1.s crt0.s vdp.s
-ASRCS += tricks.s commonmem.s bootrom.s
+DISCSRCS = discard.c
+
+ASRCS = msx1.s crt0.s vdp.s slots.s cartridge.s
+ASRCS += tricks.s commonmem.s sunrise.s
+
+DISCARD_DSRCS =
+DSRCS = ../dev/blkdev.c ../dev/mbr.c
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-OBJS  = $(COBJS) $(AOBJS)
+DISCOBJS = $(DISCSRCS:.c=.rel)
+DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
+OBJS  = $(COBJS) $(AOBJS) $(DISCOBJS) $(DISCARD_DOBJS) $(DOBJS)
 
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
+$(DISCOBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+
+$(DISCARD_DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f *.rel *.sym *.ihx *.lst *.rst  core *~
 
 image:
-	dd if=../fuzix.bin of=../fuzix.com bs=256 skip=1
-	dd if=../fuzix.bin of=../fuzix.cart bs=16384 conv=sync
+	../tools/cartman ../fuzix.bin ../fuzix.map fuzix.cart

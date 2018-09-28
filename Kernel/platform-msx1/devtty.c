@@ -5,10 +5,20 @@
 #include <devtty.h>
 #include <vt.h>
 #include <tty.h>
+#include <devtty.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
 __sfr __at 0x2F tty_debug2;
+__sfr __at 0xAA kbd_row_set;
+__sfr __at 0xA9 kbd_row_read;
+
+uint8_t keyboard[11][8];
+uint8_t shiftkeyboard[11][8];
+uint8_t keymap[11];
+
+struct vt_repeat keyrepeat;
+uint8_t vtattr_cap;
 
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
@@ -42,12 +52,12 @@ ttyready_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	minor;
+	tty_debug2 = c;	
 //
 //	if (minor == 1) {
 		vtoutput(&c, 1);
 //		return;
 //	}
-	tty_debug2 = c;	
 }
 
 int tty_carrier(uint8_t minor)
@@ -70,14 +80,13 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-#if 0
-static uint8_t keymap[10];
-static uint8_t keyin[10];
+static uint8_t kbd_timer;
+static uint8_t keyin[11];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
-static uint8_t shiftmask[10] = {
-	3, 3, 2, 0, 0, 0, 0, 0x10, 0, 0
+static uint8_t shiftmask[11] = {
+	0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0
 };
 
 static void keyproc(void)
@@ -85,11 +94,11 @@ static void keyproc(void)
 	int i;
 	uint8_t key;
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 11; i++) {
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
-			int m = 128;
+			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
 					if (!(shiftmask[i] & m))
@@ -103,38 +112,12 @@ static void keyproc(void)
 						keybit = n;
 					}
 				}
-
+				m += m;
 			}
 		}
 		keymap[i] = keyin[i];
 	}
 }
-
-uint8_t keyboard[10][8] = {
-	{0, 0, 0, 10, '?' /*left */ , 0, 0, 0},
-	{0, '5', 0, 0, ' ', 27, 0, 0},
-	{0, 0, 0, 0, '\t', '1', 0, 0},
-	{'d', 's', 0, 'e', 'w', 'q', '2', '3'},
-	{'f', 'r', 0, 'a', 'x', 'z', 0, '4'},
-	{'c', 'g', 'y', 't', 'v', 'b', 0, 0},
-	{'n', 'h', '/', '#', '?' /*right */ , 127, '?' /*down */ , '6'},
-	{'k', 'm', 'u', 0, '?' /*up */ , '\\', '7', '='},
-	{',', 'j', 'i', '\'', '[', ']', '-', '8'},
-	{'.', 'o', 'l', ';', 'p', 8, '9', '0'}
-};
-
-uint8_t shiftkeyboard[10][8] = {
-	{0, 0, 0, 10, '?' /*left */ , 0, 0, 0},
-	{0, '%', 0, 0, ' ', 3, 0, 0},
-	{0, 0, 0, 0, '\t', '!', 0, 0},
-	{'D', 'S', 0, 'E', 'W', 'Q', '"', '?' /* pound */ },
-	{'F', 'R', 0, 'A', 'X', 'Z', 0, '$'},
-	{'C', 'G', 'Y', 'T', 'V', 'B', 0, 0},
-	{'N', 'H', '?', '~', '?' /*right */ , 127, '?' /*down */ , '^'},
-	{'K', 'M', 'U', 0, '?' /*up */ , '|', '&', '+'},
-	{'<', 'J', 'I', '@', '{', '}', '_', '*'},
-	{'>', 'O', 'L', ':', 'P', 8, '(', ')'}
-};
 
 static uint8_t capslock = 0;
 
@@ -142,72 +125,69 @@ static void keydecode(void)
 {
 	uint8_t c;
 
-	if (keybyte == 2 && keybit == 7) {
+	if (keybyte == 6 && keybit == 3) {
 		capslock = 1 - capslock;
 		return;
 	}
 
-	if (keymap[0] & 3)	/* shift */
+	if (keymap[6] & 3 ) {	/* shift or control */
 		c = shiftkeyboard[keybyte][keybit];
-	else
+		/* VT switcher */
+#if 0		
+		if (c == KEY_F1 || c == KEY_F2 || c == KEY_F3 || c == KEY_F4) {
+			if (inputtty != c - KEY_F1) {
+				inputtty = c - KEY_F1;
+				vtexchange();	/* Exchange the video and backing buffer */
+			}
+			return;
+		}
+#endif			
+	} else
 		c = keyboard[keybyte][keybit];
-	if (keymap[1] & 2) {	/* control */
+
+	if (keymap[6] & 2) {	/* control */
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
-	if (keymap[1] & 1) {	/* function: not yet used */
-		;
-	}
-//    kprintf("char code %d\n", c);
-	if (keymap[2] & 1) {	/* symbol */
-		;
-	}
+
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (keymap[7] & 0x10) {	/* menu: not yet used */
-		;
-	}
-	tty_inproc(1, c);
+
+	/* TODO: function keys (F1-F10), graph, code */
+
+	vt_inproc(/*inputtty +*/1, c);
 }
 
-#endif
-
-void tty_interrupt(void)
+void update_keyboard()
 {
-#if 0
-	uint8_t a = irqmap;
-	uint8_t c;
-	if (!(a & 2))
-		wakeup(&ttydata[2]);
-	if (!(a & 1)) {
-		/* work around sdcc bug */
-		c = uarta;
-		tty_inproc(2, c);
-	}
-	if (!(a & 8)) {
-		keyin[0] = kmap0;
-		keyin[1] = kmap1;
-		keyin[2] = kmap2;
-		keyin[3] = kmap3;
-		keyin[4] = kmap4;
-		keyin[5] = kmap5;
-		keyin[6] = kmap6;
-		keyin[7] = kmap7;
-		keyin[8] = kmap8;
-		keyin[9] = kmap9;	/* This resets the scan for 10mS on */
+	int n;
+	uint8_t r;
 
-		newkey = 0;
-		keyproc();
-		if (keysdown < 3 && newkey)
+	/* encode keyboard row in bits 0-3 0xAA, then read status from 0xA9 */
+	for (n =0; n < 11; n++) {
+		r = kbd_row_set & 0xf0 | n;
+		kbd_row_set = r;
+		keyin[n] = ~kbd_row_read;
+	}
+}
+
+
+void kbd_interrupt(void)
+{
+	newkey = 0;
+	update_keyboard();
+	keyproc();
+
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
 			keydecode();
-		timer_interrupt();
+			kbd_timer = keyrepeat.first * ticks_per_dsecond;
+		} else if (! --kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual * ticks_per_dsecond;
+		}
 	}
-
-	/* clear the mask */
-	irqmap = a;
-#endif	
 }
 
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
-
