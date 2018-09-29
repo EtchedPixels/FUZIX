@@ -14,6 +14,7 @@
         .globl hw_irqvector
         .globl _irqvector
         .globl _need_resched
+	.globl _int_disabled
 
         ; imported symbols
         .globl _ramsize
@@ -29,7 +30,9 @@
         .globl _dofork
         .globl map_kernel
         .globl map_process_always
-        .globl map_save
+        .globl map_kernel_di
+        .globl map_process_always_di
+        .globl map_save_kernel
         .globl map_restore
         .globl unix_syscall_entry
         .globl null_handler
@@ -569,6 +572,7 @@ interrupt_table:
 hw_irqvector:	.db 0
 _irqvector:	.db 0
 _need_resched:	.db 0
+_int_disabled:	.db 0
 
 z80_irq:
         push af
@@ -756,6 +760,7 @@ _switchin:
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
         ei
@@ -768,6 +773,7 @@ switchinfail:
         call outstring
         jp _platform_monitor
 
+map_kernel_di:
 map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         push af
 .if DEBUGBANK
@@ -779,6 +785,7 @@ map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         pop af
         ret
 
+map_process_always_di:
 map_process_always: ; map the process into the low 60K based on current common mem (which is unchanged)
         push af
 .if DEBUGBANK
@@ -794,10 +801,16 @@ map_process_always: ; map the process into the low 60K based on current common m
         pop af
         ret
 
-map_save:   ; save the current process/kernel mapping
+map_save_kernel:   ; save the current process/kernel mapping
         push af
         in0 a, (MMU_BBR)
         ld (map_store), a
+.if DEBUGBANK
+        ld a, #'S'
+        call outchar
+.endif
+        ld a, #(OS_BANK + FIRST_RAM_BANK)
+        out0 (MMU_BBR), a
         pop af
         ret
 
