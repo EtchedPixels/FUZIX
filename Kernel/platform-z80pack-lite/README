@@ -1,4 +1,4 @@
-A minimal UZI target for z80pack.
+A minimal FUZIX target for z80pack.
 
 
 This is used to test the simple single processing mode. We run on Z80pack
