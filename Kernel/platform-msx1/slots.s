@@ -72,9 +72,11 @@ get_sub_slot:
 	.globl _switch_map
 	.globl _current_map
 	.globl map_kernel
+	.globl map_kernel_di
 	.globl map_process_always
+	.globl map_process_always_di
 	.globl map_process
-	.globl map_save
+	.globl map_save_kernel
 	.globl map_restore
 	.globl _set_initial_map
 	.globl _map_slot1_kernel
@@ -86,6 +88,7 @@ get_sub_slot:
 	.globl _current_map
 
 	.globl _subslots
+	.globl _int_disabled
 
 ;
 ;	Switch to the map pointed to by HL.
@@ -259,8 +262,17 @@ not_exp:
 
 	.area _COMMONMEM
 
+; Always called under interrupt disable and we never try and restore
+; a user map. Just one of the kernel variants.
+map_restore:
+	push hl
+	ld hl,#_save_map
+	call _switch_map
+	pop hl
+	ret
+
 ; Always called under interrupt disable
-map_save:
+map_save_kernel:
 	push bc
 	push de
 	push hl
@@ -275,15 +287,7 @@ map_save:
 	pop bc
 	pop de
 	pop hl
-	ret
-
-; Always called under interrupt disable and we never try and restore
-; a user map. Just one of the kernel variants.
-map_restore:
-	push hl
-	ld hl,#_save_map
-	call _switch_map
-	pop hl
+	call map_kernel_di		; FIXME: fast path this later
 	ret
 
 ; This is messy because of the NMOS Z80 IRQ bug. It might be worth
@@ -299,8 +303,8 @@ map_restore:
 map_kernel:
 	push af
 	push hl
-	call ___hard_di
-	push hl
+	ld a,(_int_disabled)
+	push af
 	xor a
 	ld (map_id),a
 	; We are possibly coming from a user bank. We need to jam the
@@ -313,12 +317,29 @@ map_kernel:
 switch_pop_out:
 	call _switch_map
 	pop af
-	jr c, was_di
-;FIXME	ei
+	or a
+	jr nz, was_di
+	ei
 was_di:
 	pop hl
 	pop af
 	ret
+
+map_kernel_di:
+	push af
+	xor a
+	ld (map_id),a
+	; We are possibly coming from a user bank. We need to jam the
+	; kernel low mapping back. FIXME: if the kernel cartridge and
+	; RAM are in the same subslot this will break. Need to put the flip
+	; code in the low 256 bytes of both.
+	ld a,(_kernel_map+5)
+	out (0xA8),a
+	ld hl,#_kernel_map
+	call _switch_map
+	pop af
+	ret
+
 
 map_process:
 	ld a,h
@@ -328,12 +349,21 @@ map_process:
 map_process_always:
 	push af
 	push hl
-	call ___hard_di
-	push hl
+	ld a,(_int_disabled)
+	push af
 	ld a,#1
 	ld (map_id),a
 	ld hl,#_user_map
 	jr switch_pop_out
+
+map_process_always_di:
+	push af
+	ld a,#1
+	ld (map_id),a
+	ld hl,#_user_map
+	call _switch_map
+	pop af
+	ret
 
 ;
 ;	Take a kernel or user mapping and prepare a temporary mapping

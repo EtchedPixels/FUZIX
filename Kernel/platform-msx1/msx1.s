@@ -42,6 +42,7 @@
 	    .globl _infobits
 	    .globl _machine_type
 
+	    .globl _int_disabled
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
 	    ;
@@ -54,6 +55,11 @@
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+
+; This needs to live in common space on this platform
+
+_int_disabled:
+	   .db 1
 
 ; Ideally return to any debugger/monitor
 _platform_monitor:
