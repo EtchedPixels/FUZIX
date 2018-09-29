@@ -38,5 +38,7 @@
 #define MAX_BLKDEV  1	  /* Only the one SPI supported for now */
 #define SD_DRIVE_COUNT 1
 
+#define CONFIG_LARGE_IO_DIRECT
+
 #define platform_discard()
 #define platform_copyright()
