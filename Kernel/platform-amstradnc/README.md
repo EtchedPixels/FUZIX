@@ -132,4 +132,11 @@ The NC200 differs from the NC100 in various ways we care about
 - pick codes for the arrow keys
 - NMI/resume
 - this platform would really benefit from vfork 
-
+- floppy control/formatting
+- serial format bits
+- rts/cts
+- dynamic buffer cache
+- suspend/resume
+- clean up and debug nc100 startup a bit
+- full rtc support
+- bigger font on nc200

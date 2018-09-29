@@ -19,15 +19,6 @@ COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 OBJS  = $(COBJS) $(AOBJS)
 
-JUNK = \
-	$(CSRCS:.c=.lst) \
-	$(CSRCS:.c=.asm) \
-	$(CSRCS:.c=.sym) \
-	$(ASRCS:.s=.lst) \
-	$(ASRCS:.s=.sym) \
-	$(CSRCS:.c=.rst) \
-	$(ASRCS:.s=.rst)
-
 all: $(OBJS)
 
 $(COBJS): %.rel: %.c
@@ -37,7 +28,7 @@ $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) -o $@ $<
 
 clean:
-	rm -f $(OBJS) $(JUNK) core *~ 
+	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~ 
 	rm -f floppyskeleton.img autoprg.bin bootfloppy.img
 
 bootblock.img: ../bootblock.s
