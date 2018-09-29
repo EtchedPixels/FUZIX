@@ -9,7 +9,10 @@
 	.globl map_kernel
 	.globl map_process
 	.globl map_process_always
-	.globl map_save
+	.globl map_kernel_di
+	.globl map_process_di
+	.globl map_process_always_di
+	.globl map_save_kernel
 	.globl map_restore
 	.globl _irqvector
 	.globl platform_interrupt_all
@@ -17,6 +20,7 @@
 	.globl _kernel_pages
 	.globl _platform_reboot
 	.globl _bufpool
+	.globl _int_disabled
 
         ; imported symbols
         .globl _ramsize
@@ -184,6 +188,9 @@ ppi_int:
 platform_interrupt_all:
 	ret
 
+_int_disabled:
+	.db 1
+
 ; install interrupt vectors
 _program_vectors:
 	di
@@ -231,6 +238,7 @@ _program_vectors:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
+map_process_always_di:
 	push hl
 	ld hl,#U_DATA__U_PAGE
         jr map_process_2_pophl_ret
@@ -241,6 +249,7 @@ map_process_always:
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
 map_process:
+map_process_di:
 	ld a,h
 	or l				; HL == 0?
 	jr nz,map_process_2		; HL == 0 - map the kernel
@@ -251,6 +260,7 @@ map_process:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_kernel:
+map_kernel_di:
 	push hl
 	ld hl,#_kernel_pages
         jr map_process_2_pophl_ret
@@ -290,18 +300,19 @@ map_process_2_pophl_ret:
 	ret
 
 ;=========================================================================
-; map_save - save the current page mapping to map_savearea
+; map_save_kernel - save the current page mapping to map_savearea
+;		    and switch to the kernel map.
 ; Inputs: none
 ; Outputs: none
 ;=========================================================================
-map_save:
+map_save_kernel:
 	push hl
 	ld hl,(mpgsel_cache)
 	ld (map_savearea),hl
 	ld hl,(mpgsel_cache+2)
 	ld (map_savearea+2),hl
-	pop hl
-	ret
+	ld hl,#_kernel_pages
+	jr map_process_2_pophl_ret
 
 ; MPGSEL registers are read only, so their content is cached here
 mpgsel_cache:

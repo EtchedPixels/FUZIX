@@ -31,7 +31,7 @@ uint16_t divisor_table[16] = {
 	UART_CLOCK / 16 / 57600, UART_CLOCK / 16 / 115200
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	uint16_t b;
 	uint8_t lcr = 0;
