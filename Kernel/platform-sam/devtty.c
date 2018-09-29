@@ -39,7 +39,7 @@ void tty_interrupt(void)
 {
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 }
 
