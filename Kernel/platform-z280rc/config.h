@@ -120,3 +120,5 @@ extern unsigned int swap_dev;
 /* This can optionally be set to force a default baud rate, eg if the system
    console should match a firmware set rate */
 #define TTY_INIT_BAUD B38400	/* To match ROMWBW */
+
+#define platform_copyright()

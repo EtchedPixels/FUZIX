@@ -124,7 +124,7 @@ static uint16_t clocks[] = {
  *	That needs tidying up in many platforms and we also need a proper way
  *	to say 'this port is fixed config' before making it so.
  */
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	used(minor);
 }

@@ -12,14 +12,18 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
+	    .globl map_process_di
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl platform_interrupt_all
 	    .globl _kernel_flag
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -201,6 +205,8 @@ mapsave:   .db 0	; Saved copy of the previous map (see map_save)
 _kernel_flag:
 	    .db 1	; We start in kernel mode
 
+_int_disabled:
+	    .db 1	; With interrupts off
 ;
 ;	This is invoked with a NULL argument at boot to set the kernel
 ;	vectors and then elsewhere in the kernel when the kernel knows
@@ -239,6 +245,7 @@ _program_vectors:
 ;	running
 ;
 map_kernel:
+map_kernel_di:
 	    push af
 	    xor a
 	    call map_process_a	; do all the logic in one place with
@@ -247,6 +254,7 @@ map_kernel:
 	    ; map_process is called with HL either NULL or pointing to the
 	    ; page mapping. Unlike the other calls it's allowed to trash AF
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -298,6 +306,7 @@ map_process_a:			; used by bankfork
 	    ; the bank value from u_page.
 	    ;
 map_process_always:
+map_process_always_di:
 	    push af
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
@@ -310,9 +319,12 @@ map_process_always:
 	    ; Save the existing mapping. The place you save it to needs to
 	    ; be in common memory as you have no idea what bank is live
             ;
-map_save:   push af
+map_save_kernel:
+	    push af
 	    ld a, (mapreg)
 	    ld (mapsave), a
+	    xor a
+	    call map_process_a	; kernel is map 0
 	    pop af
 	    ret
 	    ;

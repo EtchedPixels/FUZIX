@@ -52,4 +52,11 @@ $(DAOBJS): %.rel: ../dev/%.s
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 
-image:
+image:	boot
+
+boot:	boot.s
+	sdasz80 -o boot.s
+	sdldz80 -i boot.rel
+	makebin -s 65535 boot.ihx boot.tmp
+	# Skip to F000, copy the rest
+	dd if=boot.tmp of=boot.raw bs=512 skip=126 count=4
