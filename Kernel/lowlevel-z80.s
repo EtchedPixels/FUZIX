@@ -100,6 +100,9 @@ deliver_signals_2:
 	; Indicate processed
 	xor a
 	ld (U_DATA__U_CURSIG), a
+	; and we will handle the signal with interrupts on so clear the
+	; flag
+	ld (_int_disabled),a
 
 	; Semantics for now: signal delivery clears handler
 	ld (hl), a
@@ -118,6 +121,7 @@ deliver_signals_2:
 			; the return path handler passed in BC
 
 no_pending:
+	ld (_int_disabled),a	; clear interrupt status
 	ei
 	.ifne Z80_MMU_HOOKS
 	call mmu_user
@@ -129,8 +133,7 @@ no_pending:
 ;
 signal_return:
 	pop hl		; argument
-	di		; Be careful as our internal irq state flag is
-			; kept wrong through this sequence.
+	di
 	.ifne Z80_MMU_HOOKS
 	call mmu_kernel
 	.endif
@@ -141,6 +144,11 @@ signal_return:
 	;
 	ld (U_DATA__U_SYSCALL_SP), sp
 	ld sp, #kstack_top
+	;
+	;	Ensure chksigs and friends see the right status
+	;
+	ld a,#1
+	ld (_int_disabled),a
 	call map_kernel_di
 	call _chksigs
 	call map_process_always_di
@@ -162,7 +170,7 @@ unix_syscall_entry:
         ex af, af'
         exx
         push bc		; FIXME we don't I think need to save bc/de/hl
-        push de		; as they are compiler caller save
+        push de		; as they are compiler caller save once we fix the API
         push hl
         exx
         push bc
@@ -440,6 +448,9 @@ mmu_irq_ret:
 	ld (_inint), a
 	; So we know that this task should resume with IRQs off
 	ld (U_DATA__U_ININTERRUPT), a
+	; Load the interrupt flag properly. It got an implicit di from
+	; the IRQ being taken
+	ld (_int_disabled),a
 
 	call _platform_interrupt
 
@@ -484,6 +495,8 @@ intret:
 
 	; Then unstack and go.
 interrupt_pop:
+	xor a
+	ld (_int_disabled),a
         pop iy
         pop ix
         pop hl
