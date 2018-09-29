@@ -64,6 +64,8 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
+/* Use large I/O */
+#define CONFIG_LARGE_IO_DIRECT
 
 extern void platform_discard(void);
 #define platform_copyright()
