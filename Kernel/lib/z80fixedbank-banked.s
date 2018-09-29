@@ -31,6 +31,8 @@
 	.globl map_save_kmap
 	.globl map_restore_kmap
 
+	.globl _int_disabled
+
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
@@ -198,6 +200,7 @@ skip_copyback:
 
         ; enable interrupts, if we didn't pre-empt in an ISR
         ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disabled),a
         or a
         ret nz ; Not an ISR, leave interrupts off
         ei
