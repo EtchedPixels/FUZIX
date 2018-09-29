@@ -16,8 +16,6 @@ OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
-
 all:	$(OBJS) trs80load.bin
 
 $(COBJS): %.rel: %.c
@@ -33,7 +31,7 @@ $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
 
 image: trs80load.bin
 	dd if=/dev/zero of=boot.raw bs=256 count=720
