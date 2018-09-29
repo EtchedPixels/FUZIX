@@ -23,7 +23,7 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 #endif
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
     minor;
 }

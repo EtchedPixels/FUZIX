@@ -28,7 +28,7 @@ $(DOBJS): %.rel: ../dev/%.c
 
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f $(OBJS) $(JUNK)  core *~  fuzix.com
 
 image:
 	cp ../fuzix.bin fuzix.com

@@ -66,3 +66,5 @@
 
 /* We have the P112 floppy controller */
 #define CONFIG_P112_FLOPPY
+
+#define platform_copyright()
