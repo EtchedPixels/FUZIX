@@ -11,6 +11,7 @@
             .globl _program_vectors
 	    .globl platform_interrupt_all
 	    .globl _nmikey
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -29,7 +30,7 @@
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_save_kernel
 	    .globl map_restore
 
 	    .globl s__COMMONMEM
@@ -54,8 +55,11 @@ platform_interrupt_all:
 
 _platform_monitor:
 _platform_reboot:
-	   di
-	   jr _platform_reboot
+	    di
+	    jr _platform_reboot
+
+_int_disabled:
+	   .db 1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)

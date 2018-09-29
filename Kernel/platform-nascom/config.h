@@ -64,6 +64,9 @@
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 #define NBUFS    10       /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+
+/* Do I/O direct to user space */
+#define CONFIG_LARGE_IO_DIRECT
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
 

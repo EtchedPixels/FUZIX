@@ -18,8 +18,6 @@ OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS) $(DISCARD_DOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
-
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
@@ -38,7 +36,7 @@ $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~  *.asm *.rst *.lst *.sym
+	rm -f $(OBJS) core *~  *.asm *.rst *.lst *.sym
 
 image:
 	sdasz80 -o nasboot.s

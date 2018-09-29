@@ -58,7 +58,7 @@ void tty_poll(void)
 	}
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	/* The console is a crt/keyboard, the 6402 is set by jumpers */
 }

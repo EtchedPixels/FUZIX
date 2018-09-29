@@ -7,10 +7,13 @@
             ; exported symbols
             .globl init_hardware
 	    .globl map_kernel
+	    .globl map_kernel_di
 	    .globl map_process
+	    .globl map_process_di
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 
             ; imported symbols
@@ -119,6 +122,7 @@ pagesave:   .db 0x11		; saved copy
 ;	of unbanked memory.
 ;
 map_kernel:
+map_kernel_di:
 	    push af
 	    ld a,#0x11
 	    ld (pagereg),a
@@ -131,6 +135,7 @@ map_kernel:
 ;	selects how the upper bank decodes
 ;
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -141,6 +146,7 @@ map_process_a:			; used by bankfork
 	    ret
 
 map_process_always:
+map_process_always_di:
 	    push af
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
@@ -151,9 +157,13 @@ map_process_always:
 	    pop af
 	    ret
 
-map_save:   push af
+map_save_kernel:
+	    push af
 	    ld a,(pagereg)
 	    ld (pagesave), a
+	    ld a,#0x11
+	    ld (pagereg),a
+	    out (0xFF), a
 	    pop af
 	    ret
 
