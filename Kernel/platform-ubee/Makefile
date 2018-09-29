@@ -23,8 +23,6 @@ DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS)
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
-
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
@@ -46,7 +44,8 @@ $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~  fuzix.ss80 bootstrap.bin
+	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
+	rm -f fuzix.ss80 bootstrap.bin
 
 image:
 	sdasz80 -o bootstrap.s
