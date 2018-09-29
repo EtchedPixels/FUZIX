@@ -43,6 +43,7 @@ _devmem_go:
 ;=========================================================================
 ; _rd_page_copy - Copy data from one physical page to another
 ; See notes in devrd.h for input parameters
+; This code is Z180 specific so can safely use ld a,i
 ;=========================================================================
 _rd_platform_copy:
         ; save interrupt flag on stack then disable interrupts
