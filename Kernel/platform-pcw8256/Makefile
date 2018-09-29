@@ -20,8 +20,6 @@ NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS) $(NOBJS)
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
-
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
@@ -40,6 +38,6 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
 
 image:

@@ -11,8 +11,12 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
 	    .globl _need_resched
-	    .globl map_save
+	    .globl _int_disabled
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl platform_interrupt_all
@@ -173,6 +177,7 @@ _program_vectors:
 kmap:	    .db 0x80, 0x81, 0x82, 0x83
 
 map_kernel:
+map_kernel_di:
 	    push af
 	    push hl
 	    ld hl, #kmap
@@ -187,6 +192,7 @@ map_for_swap:
 	    ret
 
 map_process_always:
+map_process_always_di:
 	    push af
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
@@ -196,6 +202,7 @@ map_process_always:
 	    ret
 
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -223,7 +230,8 @@ map_loop:
 	    ei
 	    ret
 
-map_save:   push hl
+map_save_kernel:
+	    push hl
 	    push de
 	    push bc
 	    ld hl, #map_current
@@ -231,6 +239,10 @@ map_save:   push hl
 	    ldi
 	    ldi
 	    ldi
+	    push af
+	    ld hl, #kmap
+	    call map_process_1
+	    pop af
 	    pop bc
 	    pop de
 	    pop hl
@@ -499,3 +511,7 @@ map_save_area:
 
 _need_resched:
 	    .db 0
+
+_int_disabled:
+	    .db 1
+

@@ -59,6 +59,7 @@
 #define NBUFS    6        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
+#define CONFIG_LARGE_IO_DIRECT
 
 #define swap_map(x)	(uint8_t *)(0x4000 + ((x) & 0x3FFF))	/* For now */
 

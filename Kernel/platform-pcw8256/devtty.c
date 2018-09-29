@@ -114,7 +114,7 @@ void tty_irq(void)
 }
 
 /* Called to set baud rate etc */
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
     minor;
 }

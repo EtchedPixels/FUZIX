@@ -16,6 +16,7 @@
 	.globl map_process
 	.globl map_kernel
 	.globl _swapper
+	.globl _int_disabled
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -134,6 +135,7 @@ not_swapped:
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (U_DATA__U_ININTERRUPT)
+        ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
         ei
