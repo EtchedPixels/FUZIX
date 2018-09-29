@@ -100,11 +100,11 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	minor;
 
-	/* setup termios to use msx keys */
+	/* setup termios to use msx keys: FIXME */
 	ttydata[minor].termios.c_cc[VERASE] = KEY_BS;
 	ttydata[minor].termios.c_cc[VSTOP] = KEY_STOP;
 	ttydata[minor].termios.c_cc[VSTART] = KEY_STOP;

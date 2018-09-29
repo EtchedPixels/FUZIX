@@ -57,3 +57,5 @@
 #define MAX_BLKDEV 1      /* Single SD drive */
 #define CONFIG_RTC
 //#define CONFIG_RTC_RP5C01_NVRAM
+
+#define platform_copyright()

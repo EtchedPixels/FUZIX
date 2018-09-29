@@ -14,13 +14,17 @@
 	    .globl map_process
 	    .globl _map_kernel
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl enaslt
 	    .globl _mapslot_bank1
 	    .globl _mapslot_bank2
 	    .globl _need_resched
             .globl _bufpool
+	    .globl _int_disabled
 
 	    ; video driver
 	    .globl _vtinit
@@ -79,6 +83,8 @@ _platform_reboot:
 
 _need_resched:
 	    .db 0
+_int_disabled:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
@@ -166,6 +172,7 @@ _program_vectors:
 ;	All registers preserved
 ;
 map_process_always:
+map_process_always_di:
 	    push hl
 	    ld hl, #U_DATA__U_PAGE
 	    call map_process_2
@@ -175,6 +182,7 @@ map_process_always:
 ;	HL is the page table to use, A is eaten, HL is eaten
 ;
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr nz, map_process_2
@@ -183,6 +191,7 @@ map_process:
 ;	so our cached copy is correct.
 ;
 _map_kernel:
+map_kernel_di:
 map_kernel:
 	    push hl
 	    ld hl, #map_kernel_data
@@ -226,12 +235,14 @@ map_restore:
 ;
 ;	Save the current mapping.
 ;
-map_save:
+map_save_kernel:
             push hl
 	    ld hl, (map_table)
 	    ld (map_savearea), hl
 	    ld hl, (map_table + 2)
 	    ld (map_savearea + 2), hl
+	    ld hl, #map_kernel_data
+	    call map_process_2
 	    pop hl
 	    ret
 

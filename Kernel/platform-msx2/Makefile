@@ -18,8 +18,6 @@ DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_COBJS) $(DISCARD_DOBJS) $(COMMON_COBJS)
 
-JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS:.s=.lst) $(ASRCS:.s=.sym) $(CSRCS:.c=.rst) $(ASRCS:.s=.rst)
-
 all:	$(OBJS)
 
 $(AOBJS): %.rel: %.s
@@ -40,7 +38,7 @@ $(DISCARD_COBJS): %.rel: %.c
 $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~ 
 
 image:
 	dd if=../fuzix.bin of=../fuzix.com bs=256 skip=1
