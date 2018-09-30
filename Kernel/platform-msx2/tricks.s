@@ -16,7 +16,9 @@
         .globl unix_syscall_entry
         .globl interrupt_handler
 	.globl map_kernel
+
 	.globl _ramtop
+	.globl _int_disabled
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -108,6 +110,7 @@ _switchin:
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
         ei
