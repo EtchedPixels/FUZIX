@@ -577,7 +577,7 @@ scanner_done:
 	    .globl _video_40
 	    .globl _video_80
 
-	    .globl ___hard_di
+	    .globl _int_disabled
 
 	    .globl _vtwidth
 	    .globl _vtaddr
@@ -590,8 +590,9 @@ scanner_done:
 _cursor_off:
 	    ret
 _cursor_disable:
-	    call ___hard_di
+	    ld a,(_int_disabled)
 	    push af
+	    di
 	    ld bc,#0x0e0c	; Address register
 	    out (c),b
 	    ld bc,#0x000d	; Set to 0 will hide cursor nicely
@@ -599,9 +600,9 @@ _cursor_disable:
 	    out (c),b
 	    jr popout
 _do_cursor_on:
-	    ; ld a,i handling is buggy on NMOS Z80
-	    call ___hard_di
+	    ld a, (_int_disabled)
 	    push af
+	    di
 	    ld de, (_vtaddr)
 	    ld c,#0x0d
 	    ld a,#0x0e
@@ -613,7 +614,8 @@ _do_cursor_on:
 	    out (c),e
 popout:
 	    pop af
-	    ret c
+	    or a
+	    ret nz
 	    ei
 	    ret
 ;
@@ -624,8 +626,9 @@ popout:
 ;	FIXME: remove hardcoding of 80x25 display size
 ;
 _scroll_up:
-	    call ___hard_di
-	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
@@ -676,8 +679,9 @@ unmap_out:
 ;	       right
 ;
 _scroll_down:
-	    call ___hard_di
-	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
@@ -728,8 +732,9 @@ _scroll_down:
 ;	of the banking paths on interrupt
 ;
 _vwrite:
-	    call ___hard_di
-	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld a, (mapreg)
 	    push af
 	    and #0xF7		; enable video memory
