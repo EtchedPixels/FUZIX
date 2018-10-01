@@ -19,6 +19,10 @@
         .globl __uputw
         .globl __uzero
 
+	.globl _int_disabled
+
+	; FIXME: can we now get rid of the IRQ disables ?
+
         .area _CODE
 
 __uput:
@@ -28,7 +32,7 @@ __uput:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with destination address (in userspace)
@@ -51,7 +55,7 @@ __uputc:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with destination address (in userspace)
@@ -69,7 +73,7 @@ __uputw:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with destination address (in userspace)
@@ -89,7 +93,7 @@ __ugetc:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with source address (in userspace)
@@ -108,7 +112,7 @@ __ugetw:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with source address (in userspace)
@@ -122,7 +126,8 @@ __ugetw:
 ugetputret: ; this is shared with the other routines, above and below
         pop af
         pop ix
-        ret po
+	or a
+        ret nz
         ei
         ret
 
@@ -133,7 +138,7 @@ __uget:
         ld ix, #0   ; load ix with stack pointer
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with source address (in userspace)
@@ -186,7 +191,7 @@ __uzero:
         ld ix, #0
         add ix, sp
         ; store interrupt state, disable interrupts
-        ld a, i
+        ld a, (_int_disabled)
         di
         push af
         ; load DE with dest address (in userspace)
