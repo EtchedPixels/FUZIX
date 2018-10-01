@@ -1,3 +1,13 @@
+/*
+ *	The NC100 has an 8251A clone in it. I'm not clear how complete a
+ *	clone it is but as we probably don't want to run X.25 or BISYNC
+ *	on the NC100 it shouldn't be an issue
+ *
+ *	TODO:
+ *		RTS/CTS support
+ *		Framing/parity error
+ *		Break support
+ */
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -42,6 +52,29 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2}
 };
 
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+/* FIXME: The hardware is actually wired with full support for RTS/CTS
+   DTR so we should add RTS/CTS support eventually */
+static tcflag_t serial_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS|CBAUD|CSIZE|PARENB|PARODD|CSTOPB,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask,
+	console_mask
+};
+
+
 static void nap(void)
 {
 }
@@ -60,7 +93,8 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 	if (minor == 2) {
 		mod_control(0, 0x10);	/* turn on the line driver */
 		nap();
-		mod_control(0x06, 0x01);	/* 9600 baud */
+		/* Set the baud rate and parameters */
+		tty_setup(2, 0);
 #ifdef CONFIG_NC200
 		mod_irqen(0x0C, 0x00);    /* single Rx/Tx interrupt on NC200 */
 #else
@@ -121,10 +155,14 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
+/* We save the value so that we can use it for future changes like flow
+   control and break support */
+static uint8_t uart_ctrl;
+
 /* Called to set baud rate etc */
 void tty_setup(uint8_t minor, uint8_t flags)
 {
-	uint16_t b;
+	uint8_t b;
 	if (minor == 1)
 		return;
 	b = ttydata[2].termios.c_cflag & CBAUD;
@@ -132,12 +170,32 @@ void tty_setup(uint8_t minor, uint8_t flags)
 		b = B150;
 	if (b > B19200)
 		b = B19200;
+	ttydata[2].termios.c_cflag &= ~CBAUD;
+	ttydata[2].termios.c_cflag |= b;
 	/* 0 = B150 .. 7 = B19200 in the same spacing and order as termios,
 	   how convenient */
 	mod_control(b - B150, 0x7);
+	/* Now we need to think about the XPD 71051. Unfortunately the manual
+	   is in Japanese. Fortunately it seems to be an 8251 clone */
+	/* Reset it */
+	uartb = 0x40;
+	nap();
+	/* Program it */
+	uart_ctrl = 0x03 | ((ttydata[2].termios.c_cflag & CSIZE) >> 2);
+	if (ttydata[2].termios.c_cflag & PARENB) {
+		uart_ctrl |= 0x10;
+		if (ttydata[2].termios.c_cflag & PARODD)
+			uart_ctrl |= 0x20;
+	}
+	if (ttydata[2].termios.c_cflag & CSTOPB)
+		uart_ctrl |= 0xC0;
+	uartb = uart_ctrl;
+	nap();
+	uartb = 0x37;		/* RTS | RX enable | DTR | TX enable */
+	nap();
 }
 
-/* For the moment */
+/* The NC100 and NC200 don't have a carrier input on the connector */
 int tty_carrier(uint8_t minor)
 {
     minor;
@@ -159,12 +217,12 @@ void nc100_tty_init(void)
   nap();
   mod_control(0x08, 0x00);
   nap();
-  uartb = SER_INIT;
-  nap();
-  uartb = SER_RXTX;
-  nap();
-  uarta;
-  uarta;
+  /* Force into a sane state: See 8251A documentation */
+  uartb = 0;
+  uartb = 0;
+  uartb = 0;
+  /* Now set it up */
+  tty_setup(2, 0);
 }
 
 uint8_t keymap[10];
@@ -356,6 +414,7 @@ void platform_interrupt(void)
 	if (!(a & 2))
 		wakeup(&ttydata[2]);
 	if (!(a & 1)) {
+		/* FIXME: we should look for errors here one day */
 		/* work around sdcc bug */
 		c = uarta;
 		tty_inproc(2, c);
