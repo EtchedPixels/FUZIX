@@ -50,6 +50,7 @@
 
         ; imported symbols
 	.globl _chksigs
+	.globl _int_disabled
         .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
@@ -213,6 +214,7 @@ interrupt_handler:
 	ld a,#1
 	ld (_inint),a
 	ld (U_DATA__U_ININTERRUPT),a
+	ld (_int_disabled),a
 	call _platform_interrupt
 	xor a
 	ld (_inint),a
@@ -239,6 +241,7 @@ intsig:
 	; Nothing special to do
 no_sig:
 	xor a
+	ld (_int_disabled),a
 	ld e,a
 	ld a,(U_DATA__U_PAGE+1)
 intret:
@@ -258,6 +261,7 @@ intret:
 interrupt_kernel:
 	call map_restore_low
 	xor a
+	ld (_int_disabled),a
 	ld e,a
 	jr intret
 ;
@@ -267,6 +271,7 @@ interrupt_kernel:
 interrupt_sig:
 	ld e,a
 	xor a
+	ld (_int_disabled),a
 	ld d,a
 	ld (U_DATA__U_CURSIG),a
 	ld hl,#U_DATA__U_SIGVEC
@@ -425,18 +430,35 @@ _in:
 	ret
 
 ;
-;	Enable interrupts
+;	Deal with all the NMOS Z80 bugs and the buggy emulators by
+;	simply tracing our own interrupt status. It's cheaper this way
+;	but does mean any code that is using di and friends directly needs
+;	to be a lot more careful. We can also make irqflags_t 8bit and
+;	fastcall the irqrestore later on FIXME
 ;
 ___hard_ei:
+	xor a
+	ld (_int_disabled),a
 	ei
 	ret
 
-;
-;	Pull in the CPU specific workarounds
-;
+___hard_di:
+	ld hl,#_int_disabled
+	di
+	ld a,(hl)
+	ld (hl),#1
+	ld l,a
+	ret
 
-.ifeq CPU_NMOS_Z80
-	.include "lowlevel-z80-nmos.s"
-.else
-	.include "lowlevel-z80-cmos.s"
-.endif
+___hard_irqrestore:
+	pop de
+	pop hl
+	push hl
+	push de
+	di
+	ld a,l
+	ld (_int_disabled),a
+	or a
+	ret nz
+	ei
+	ret
