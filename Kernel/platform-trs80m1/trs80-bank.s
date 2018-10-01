@@ -10,9 +10,12 @@
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
 	    .globl map_process_save
 	    .globl map_kernel_restore
-	    .globl map_save
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_save_kmap
 	    .globl map_restore_kmap
@@ -188,6 +191,7 @@ map_store:  .db 0x1f
 ;	before jumping out of common. Thus we don't need to do anything but
 ;	restore the last saved kernel map!
 ;
+map_kernel_di:
 map_kernel:
 map_kernel_restore:
 	    push bc
@@ -207,6 +211,7 @@ fork_mapsave:
 ;	Select the bank for the relevant process. Update the ksave_map so we
 ;	can restore the correct kernel mapping when banked.
 ;
+map_process_di:
 map_process:
 	    ld a, h
 	    or l
@@ -231,6 +236,7 @@ map_process_a:			; used by bankfork
 
 map_process_save:
 map_process_always:
+map_process_always_di:
 	    push af
 	    push bc
 	    ld bc, (map_reg)
@@ -243,9 +249,13 @@ map_process_always:
 	    pop af
 	    ret
 
-map_save:   push bc
+map_save_kernel:
+	    push bc
 	    ld bc, (map_reg)
 	    ld (map_store), bc
+	    ld bc, (ksave_map)
+	    ld (map_reg), bc
+	    out (c), b
 	    pop bc
 	    ret
 

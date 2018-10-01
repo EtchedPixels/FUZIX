@@ -13,7 +13,7 @@
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
-	    .globl map_save
+	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_kernel_restore
 
@@ -24,6 +24,7 @@
 	    .globl l__COMMONMEM
 
 	    .globl _trs80_model
+	    .globl _int_disabled
 
 	    ; hard disk helpers
 	    .globl _hd_xfer_in
@@ -74,11 +75,14 @@ platform_interrupt_all:
 	    ret
 
 _platform_reboot:
-	   di
-	   ld sp,#0xffff
-	   xor a
-	   out (0x43),a
-	   rst 0
+	    di
+	    ld sp,#0xffff
+	    xor a
+	    out (0x43),a
+	    rst 0
+
+_int_disabled:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ; BOOT MEMORY BANK (below 0x8000)
