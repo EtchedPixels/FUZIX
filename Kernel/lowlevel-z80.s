@@ -82,7 +82,7 @@ deliver_signals:
 	; Pending signal
 	ld a, (U_DATA__U_CURSIG)
 	or a
-	jr z, no_pending
+	ret z
 
 deliver_signals_2:
 	ld l, a
@@ -119,14 +119,6 @@ deliver_signals_2:
 	.endif
 	jp (hl)		; return to user space. This will then return via
 			; the return path handler passed in BC
-
-no_pending:
-	ld (_int_disabled),a	; clear interrupt status
-	ei
-	.ifne Z80_MMU_HOOKS
-	call mmu_user
-	.endif
-	ret
 
 ;
 ;	Syscall signal return path
