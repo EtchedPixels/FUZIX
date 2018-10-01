@@ -43,7 +43,7 @@ static char tbuf2[TTYSIZ];
  *	TTY masks - define which bits can be changed for each port
  */
 
-tcflag_t uart_mask[4] = {
+static tcflag_t uart_mask[4] = {
 	_ISYS,
 	/* FIXME: break */
 	_OSYS,
@@ -52,7 +52,7 @@ tcflag_t uart_mask[4] = {
 	_LSYS,
 };
 
-tcflag_t prop_mask[4] = {
+static tcflag_t prop_mask[4] = {
 	_ISYS,
 	_OSYS,
 	_CSYS,
