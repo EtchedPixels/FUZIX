@@ -22,6 +22,7 @@
 	    .globl _platform_copier_l
 	    .globl _platform_copier_h
 	    .globl _keyscan
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -65,6 +66,9 @@ _platform_reboot:
 	    xor a
 	    out (250), a		; ROM appears low
 	    rst 0			; bang
+
+_int_disabled:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ;	We have discard mapped high up so we can map stuff under it
@@ -176,14 +180,28 @@ map_page_low:
 	    or #0x20			; force ROM off
 	    out (250),a
 	    ret
+;
+;	The video map requires interrupt disables. Do the disable in
+;	map_video. Save the old state in af' and then restore int in
+;	unmap_video
+;
+;
 map_video:
+	    ld a,(_int_disabled)
+	    ex af,af'
+	    di
 	    in a,(250)
 	    ld (video_save),a
 	    ld a,#VIDEO_LOW
 	    jr map_page_low
 unmap_video:
 	    ld a,(video_save)
-	    jr map_page_low
+	    call map_page_low
+	    ex af,af'
+	    or a
+	    ret nz
+	    ei
+	    ret
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0

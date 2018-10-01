@@ -111,6 +111,7 @@ skip_copyback:
 
 	; if we pre-empted in an ISR IRQ's stay off, if not they get enabled
 	ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disabled), a
 	or a
 	ret nz
 	ei

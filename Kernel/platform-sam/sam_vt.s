@@ -32,7 +32,6 @@
 
 	.globl map_video
 	.globl unmap_video
-	.globl ___hard_di
 
 _fontdata_8x8_exp2	.equ	0x6000	; in video bank
 
@@ -63,30 +62,21 @@ base_addr:
 ;	hell out of everything else. For now just di. 32K/32K splits suck
 ;
 _scroll_up:
-	call ___hard_di
-	push af
 	call map_video
 	ld hl,#1024
 	ld de,#0
 	ld bc,#24576-1024
-ldir_pop:
 	ldir
 pop_unmap:
-	call unmap_video
-	pop af
-	ret c
-	ei
-	ret
+	jp unmap_video
 
 _scroll_down:
-	call ___hard_di
-	push af
 	call map_video
 	ld hl,#24575-1024
 	ld de,#24575
 	ld bc,#24576
 	lddr
-	jr pop_unmap
+	jp unmap_video
 
 _plot_char:
 	pop hl			; return
@@ -95,8 +85,6 @@ _plot_char:
 	push bc
 	push de
 	push hl
-	call ___hard_di
-	push af
 	call base_addr
 	ld h,#0
 	ld l,c
@@ -168,15 +156,13 @@ plot_loop_slow:
 	ex af,af'
 	dec a
 	jr nz, plot_loop_slow
-	jr pop_unmap
+	jp unmap_video
 
 _clear_lines:
 	pop hl
 	pop de
 	push de
 	push hl
-	call ___hard_di
-	push af
 	ld a,d			; count (0-23)
 	ld d,#0
 	; Now how much to copy ?
@@ -192,7 +178,8 @@ _clear_lines:
 	inc de
 	dec bc
 	ld (hl),#0
-	jp ldir_pop
+	ldir
+	jp unmap_video
 
 _clear_across:
 	pop hl
@@ -201,9 +188,6 @@ _clear_across:
 	push bc
 	push de
 	push hl
-
-	call ___hard_di
-	push af
 
 	call base_addr
 	call map_video
@@ -224,7 +208,7 @@ wipe_rowpair:
 	inc d	; to worry about carries just restore low, inc high
 	dec l
 	jr nz, wipe_line
-	jp pop_unmap
+	jp unmap_video
 
 _vtwipe:
 	call map_video
@@ -233,8 +217,7 @@ _vtwipe:
 	ld bc,#24575
 	ld (hl),#0
 	ldir
-	call unmap_video
-	ret
+	jp unmap_video
 ;
 ;	TODO
 ;
