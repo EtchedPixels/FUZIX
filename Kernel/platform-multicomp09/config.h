@@ -85,3 +85,5 @@
 
 #define CONFIG_SD         /* enable if SD  interface present */
 #define SD_DRIVE_COUNT 1  /* 1 drive */
+
+#define platform_copyright()	/* For now */
