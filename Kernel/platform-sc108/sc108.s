@@ -16,6 +16,7 @@
 	    .globl map_restore_low
 	    .globl _platform_doexec
 	    .globl _platform_reboot
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -63,6 +64,9 @@ _platform_reboot:
 	    xor a
 	    out (0x38), a		; ROM appears low
 	    rst 0			; bang
+
+_int_disabled:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ;
