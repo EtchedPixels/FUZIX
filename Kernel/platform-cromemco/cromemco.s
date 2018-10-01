@@ -13,11 +13,16 @@
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
+	    .globl map_kernel_di
+	    .globl map_process_di
+	    .globl map_process_always_di
 	    .globl map_process_a
-	    .globl map_save
+	    .globl map_save_kernel
 	    .globl map_restore
 
 	    .globl _platform_reboot
+
+	    .globl _int_disabled
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -57,6 +62,9 @@ _platform_monitor:
 	    jr _platform_monitor
 platform_interrupt_all:
 	    ret
+
+_int_disabled:
+	    .db 1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
@@ -151,6 +159,7 @@ _program_vectors:
 
             ; put the paging back as it was -- we're in kernel mode so this is predictable
 map_kernel:
+map_kernel_di:
 	    push af
 	    ld a,#1
 	    out (0x40), a
@@ -158,6 +167,7 @@ map_kernel:
 	    pop af		; our common is r/o common so writes won't
             ret			; cross a bank
 map_process:
+map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
@@ -167,17 +177,18 @@ map_process_a:
 	    out (0x40), a
             ret
 map_process_always:
+map_process_always_di:
 	    push af
 	    ld a, (U_DATA__U_PAGE)
 	    ld (map_page),a	; save before we map out kernel
 	    out (0x40), a
 	    pop af
 	    ret
-map_save:			; this is a bit naughty, but we know
-	    push af		; map_save will always be followed by
+map_save_kernel:
+	    push af		; map_save will always do a map_kernel
 	    ld a, #1		; map_kernel so we do the map_kernel
-	    out (0x40), a	; a shade early.
-	    ld a, (map_page)	; then we can get the vars
+	    out (0x40), a	; first so we can get the variables
+	    ld a, (map_page)	;
 	    ld (map_store), a
 	    pop af
 	    ret	    

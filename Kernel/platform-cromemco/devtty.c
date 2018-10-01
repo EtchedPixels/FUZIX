@@ -98,7 +98,7 @@ static uint8_t baudbits[] = {
     16
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
     struct termios *t = &ttydata[minor].termios;
     uint8_t baud = t->c_cflag & CBAUD;
