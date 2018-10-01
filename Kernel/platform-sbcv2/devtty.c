@@ -40,6 +40,33 @@ static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
 /*
+ *	TTY masks - define which bits can be changed for each port
+ */
+
+tcflag_t uart_mask[4] = {
+	_ISYS,
+	/* FIXME: break */
+	_OSYS,
+	/* FIXME CTS/RTS */
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	_LSYS,
+};
+
+tcflag_t prop_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	uart_mask,
+	prop_mask
+};
+
+
+/*
  *	One entry per tty. The 0th entry is never used as tty minor 0 is
  *	special (/dev/tty) and it's cheaper to waste a few bytes that keep
  *	doing subtractions.
