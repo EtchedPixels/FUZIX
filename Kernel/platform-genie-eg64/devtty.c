@@ -154,7 +154,7 @@ static const uint8_t trssize[4] = {
 	0x00, 0x40, 0x20, 0x60
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	uint8_t baud;
 	uint8_t ctrl = 3;		/* DTR|RTS */

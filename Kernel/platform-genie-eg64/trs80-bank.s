@@ -7,11 +7,14 @@
         ; exported symbols
         .globl init_hardware
 	.globl map_kernel
+	.globl map_kernel_di
 	.globl map_kernel_restore
 	.globl map_process
+	.globl map_process_di
 	.globl map_process_always
+	.globl map_process_always_di
 	.globl map_for_swap
-	.globl map_save
+	.globl map_save_kernel
 	.globl map_restore
 
         ; imported symbols
@@ -74,6 +77,7 @@ init_hardware:
 ;	flip r/w on syscall and irq entry/exit.. FIXME.
 ;
 map_kernel:
+map_kernel_di:
 map_kernel_restore:
 	push af
 	ld a,#0xC0		; Internal memory, ROM unmapped, IO
@@ -82,18 +86,23 @@ map_kernel_restore:
 	pop af
 	ret
 map_process:
+map_process_di:
 map_for_swap:
 map_process_always:
+map_process_always_di:
 	push af
 	ld a,#0xD0		; External high, ROM unmapped, IO
 	ld (map_state),a	; (so we can do screen mapping)
 	out (0xC0),a
 	pop af
 	ret
-map_save:
+map_save_kernel:
 	push af
 	ld a,(map_state)
 	ld (map_save_val),a
+	ld a,#0xC0		; Internal memory, ROM unmapped, IO
+	ld (map_state),a
+	out (0xC0),a
 	pop af
 	ret	
 map_restore:

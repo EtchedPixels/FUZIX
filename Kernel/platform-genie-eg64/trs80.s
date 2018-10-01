@@ -1,19 +1,14 @@
 ;
-;	    TRS 80  hardware support
+;	    Genie EG64  hardware support
 ;
 
-            .module trs80
+            .module genie
 
             ; exported symbols
             .globl init_early
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl platform_interrupt_all
-	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
-	    .globl map_save
-	    .globl map_restore
 
 	    .globl go_fast
 	    .globl go_slow
@@ -21,7 +16,11 @@
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
+	    .globl map_kernel
+	    .globl map_process_always
+
 	    .globl _trs80_model
+	    .globl _int_disabled
 
 	    ; hard disk helpers
 	    .globl _hd_xfer_in
@@ -49,6 +48,9 @@
 ; COMMON MEMORY BANK (0x0000 upwards after the udata etc)
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
+
+_int_disabled:
+	    .db 1
 
 _platform_monitor:
 monitor_spin:
