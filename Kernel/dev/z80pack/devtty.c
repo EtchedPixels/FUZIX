@@ -27,6 +27,22 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf4,   tbuf4,   tbuf4,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
+/* We have no actual controls on the virtual ports */
+static tcflag_t port_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	port_mask,
+	port_mask,
+	port_mask,
+	port_mask
+};
+
 static uint8_t ttypoll;
 
 /* Write to system console */
