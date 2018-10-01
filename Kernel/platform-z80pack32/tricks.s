@@ -176,7 +176,8 @@ switchlow2:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (_inint)
+        ld a, (U_DATA__U_ININTERRUPT)
+	ld (_int_disabled),a
         or a
         ret z ; in ISR, leave interrupts off
         ei
@@ -224,7 +225,7 @@ _flush_cache:		; argument is the process it may apply to
 	pop hl
 	push hl
 	push de
-	ld a, i
+	ld a, (_int_disabled)
 	push af
 	ld de, #P_TAB__P_PAGE_OFFSET + 1
 	add hl, de
@@ -234,7 +235,8 @@ _flush_cache:		; argument is the process it may apply to
 	di
 	call flush_cache_self
 	pop af
-	ret po
+	or a
+	ret nz
 	ei
 	ret
 flush_none:
