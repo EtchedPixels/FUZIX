@@ -20,4 +20,6 @@ __sfr __at (SIO0_BASE + 3) SIOB_D;
 __sfr __at (ACIA_BASE + 0) ACIA_C;
 __sfr __at (ACIA_BASE + 1) ACIA_D;
 
+extern void sio2_otir(uint8_t port) __z88dk_fastcall;
+
 #endif

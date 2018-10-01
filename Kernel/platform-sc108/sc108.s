@@ -1,42 +1,42 @@
 ;
-;	    SC108 Initial Support
+;	SC108 Initial Support
 ;
 
-            .module sc108
+        .module sc108
 
-            ; exported symbols
-            .globl init_hardware
-            .globl interrupt_handler
-            .globl _program_vectors
-	    .globl _kernel_flag
-	    .globl map_page_low
-	    .globl map_kernel_low
-	    .globl map_user_low
-	    .globl map_save_low
-	    .globl map_restore_low
-	    .globl _platform_doexec
-	    .globl _platform_reboot
-	    .globl _int_disabled
+        ; exported symbols
+        .globl init_hardware
+        .globl interrupt_handler
+        .globl _program_vectors
+	.globl _kernel_flag
+	.globl map_page_low
+	.globl map_kernel_low
+	.globl map_user_low
+	.globl map_save_low
+	.globl map_restore_low
+	.globl _platform_doexec
+	.globl _platform_reboot
+	.globl _int_disabled
 
-            ; exported debugging tools
-            .globl _platform_monitor
-            .globl outchar
+        ; exported debugging tools
+        .globl _platform_monitor
+        .globl outchar
 
-            ; imported symbols
-            .globl _ramsize
-            .globl _procmem
-            .globl istack_top
-            .globl istack_switched_sp
-	    .globl kstack_top
-            .globl unix_syscall_entry
-            .globl outcharhex
-	    .globl _ser_type
+        ; imported symbols
+        .globl _ramsize
+        .globl _procmem
+        .globl istack_top
+        .globl istack_switched_sp
+	.globl kstack_top
+        .globl unix_syscall_entry
+        .globl outcharhex
+	.globl _ser_type
 
-	    .globl s__COMMONMEM
-	    .globl l__COMMONMEM
+	.globl s__COMMONMEM
+	.globl l__COMMONMEM
 
-            .include "kernel.def"
-            .include "../kernel.def"
+        .include "kernel.def"
+        .include "../kernel.def"
 
 
 ;
@@ -44,11 +44,11 @@
 ; so we can recover the discard memory into the buffer pool
 ;
 
-	    .globl _bufpool
-	    .area _BUFFERS
+	.globl _bufpool
+	.area _BUFFERS
 
 _bufpool:
-	    .ds BUFSIZE * NBUFS
+	.ds BUFSIZE * NBUFS
 
 ; -----------------------------------------------------------------------------
 ;
@@ -56,17 +56,17 @@ _bufpool:
 ;	usual Z80 setup.
 ;
 ; -----------------------------------------------------------------------------
-            .area _COMMONMEM
+        .area _COMMONMEM
 
 _platform_monitor:
 	    ; Reboot ends up back in the monitor
 _platform_reboot:
-	    xor a
-	    out (0x38), a		; ROM appears low
-	    rst 0			; bang
+	xor a
+	out (0x38), a		; ROM appears low
+	rst 0			; bang
 
 _int_disabled:
-	    .db 1
+	.db 1
 
 ; -----------------------------------------------------------------------------
 ;
@@ -76,7 +76,7 @@ _int_disabled:
 ; -----------------------------------------------------------------------------
 
 banknum:
-	    .byte 0x81		; copied into far bank then set to 1
+	.byte 0x81		; copied into far bank then set to 1
 
 ; -----------------------------------------------------------------------------
 ;	All of discard gets reclaimed when init is run
@@ -84,135 +84,112 @@ banknum:
 ;	Discard must be above 0x8000 as we need some of it when the ROM
 ;	is paged in during init_hardware
 ; -----------------------------------------------------------------------------
-            .area _DISCARD
+	.area _DISCARD
 
 init_hardware:
-            ld hl, #128
-            ld (_ramsize), hl
-	    ld hl,#64
-            ld (_procmem), hl
+	ld hl, #128
+        ld (_ramsize), hl
+	ld hl,#64
+        ld (_procmem), hl
 
-	    ld hl,#s__COMMONMEM
-	    ld ix,#s__COMMONMEM
-	    ld bc,#l__COMMONMEM
-	    xor a			; Kernel + ROM
-	    out (0x38),a		; 
+	ld hl,#s__COMMONMEM
+	ld ix,#s__COMMONMEM
+	ld bc,#l__COMMONMEM
+	xor a			; Kernel + ROM
+	out (0x38),a		;
 
-	    ld de,#0x8000		; bank 0 to bank 1 (ROM in)
-	    xor a			; return to bank 0
-	    call 0x7FFD			; ROM helper vector
+	ld de,#0x8000		; bank 0 to bank 1 (ROM in)
+	xor a			; return to bank 0
+	call 0x7FFD		; ROM helper vector
 
-	    ld a,#0x01			; bank 0 ROM out
-	    out (0x38),a
-	    ld (banknum),a		; and correct page
+	ld a,#0x01		; bank 0 ROM out
+	out (0x38),a
+	ld (banknum),a		; and correct page
 
-	    ; We now have our common in place. We can do the rest ourselves
+	; We now have our common in place. We can do the rest ourselves
 
-	    ; Put the low stubs into place in the kernel
-	    ld hl,#stubs_low
-	    ld de,#0
-	    ld bc,#0x68
-	    ldir
-	    ld hl,#stubs_low
-	    ld ix,#0
-	    ld bc,#0x68
-	    call ldir_to_user
+	; Put the low stubs into place in the kernel
+	ld hl,#stubs_low
+	ld de,#0
+	ld bc,#0x68
+	ldir
+	ld hl,#stubs_low
+	ld ix,#0
+	ld bc,#0x68
+	call ldir_to_user
 
-	    ; Play guess the serial port
-	    ld bc,#0x80
-	    ; If writing to 0x80 changes the data we see on an input then
-	    ; it's most likely an SIO and not the 68B50
-	    out (c),b
-	    in d,(c)
-	    inc b
-	    out (c),b
-	    in a,(c)
-	    sub d
-;;FIXME	jr z, is_sio
+	; Play guess the serial port
+	; This needs doing better. We might be fooled by floating flow
+	; control lines as the SC104 does expose flow control. FIXME
+	in a,(SIOA_C)
+	and #0x2C
+	cp #0x2C
+	; CTS and DCD should be high as they are not wired
+	jr nz, try_acia
 
-	    ; We have however pooped on the 68B50 setup so put it back into
-	    ; a sensible state.
-	    ld a,#0x03
-	    out (c),a
-	    in a,(c)
-	    or a
-	    jr z, not_acia_either
-            ld a, #ACIA_RTS_LOW_A
-            out (c),a         		; Initialise ACIA
-	    ld a,#2
-	    ld (_ser_type),a
-	    im 1
-	    ret
+	; Repeat the check on SIO B
+	in a,(SIOB_C)
+	and #0x2C
+	cp #0x2C
+	jr z, is_sio
+try_acia:
+	;
+	;	Look for an ACIA
+	;
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr z, not_acia_either
+	;	Set up the ACIA
 
-	    ;
-	    ; Doomed I say .... doomed, we're all doomed
-	    ;
-	    ; At least until RC2014 grows a nice keyboard/display card!
-	    ;
+        ld a, #ACIA_RTS_LOW_A
+        out (ACIA_C),a         		; Initialise ACIA
+	ld a,#2
+	ld (_ser_type),a
+	jp serial_up
+
+	;
+	; Doomed I say .... doomed, we're all doomed
+	;
+	; At least until RC2014 grows a nice keyboard/display card!
+	;
 not_acia_either:
-	    xor a
-	    ld (_ser_type),a
-	    ret
+	xor a
+	ld (_ser_type),a
+	jp serial_up
+;
+;	We have an SIO so do the required SIO hdance
+;
+is_sio:	ld a,b
+	ld (_ser_type),a
 
-is_sio:	   ld a,b
-	   ld (_ser_type),a
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
+	otir
 
-init_partial_uart:
-            ld a,#0x00
-            out (SIOA_C),a
-            ld a,#0x18
-            out (SIOA_C),a
+serial_up:
+        im 1 ; set CPU interrupt mode
+        ret
 
-            ld a,#0x04
-            out (SIOA_C),a
-            ld a,#0xC4
-            out (SIOA_C),a
+RTS_LOW	.EQU	0xEA
 
-            ld a,#0x01
-            out (SIOA_C),a
-            ld a,#0x18;A?          ; Receive int mode 11, tx int enable (was $18)
-            out (SIOA_C),a
+sio_setup:
+	.byte 0x00
+	.byte 0x18		; Reset
+	.byte 0x04
+	.byte 0xC4
+	.byte 0x01
+	.byte 0x18
+	.byte 0x03
+	.byte 0xE1
+	.byte 0x05
+	.byte RTS_LOW
 
-            ld a,#0x03
-            out (SIOA_C),a
-            ld a,#0xE1
-            out (SIOA_C),a
-
-RTS_LOW		.EQU	0xEA
-
-            ld a,#0x05
-            out (SIOA_C),a
-            ld a,#RTS_LOW
-            out (SIOA_C),a
-
-            ld a,#0x00
-            out (SIOB_C),a
-            ld a,#0x18
-            out (SIOB_C),a
-
-            ld a,#0x04
-            out (SIOB_C),a
-            ld a,#0xC4
-            out (SIOB_C),a
-
-            ld a,#0x01
-            out (SIOB_C),a
-            ld a, #0x18;A?          ; Receive int mode 11, tx int enable (was $18)
-            out (SIOB_C),a
-
-            ld a,#0x03
-            out (SIOB_C),a
-            ld a,#0xE1
-            out (SIOB_C),a
-
-            ld a,#0x05
-            out (SIOB_C),a
-            ld a,#RTS_LOW
-            out (SIOB_C),a
-
-            im 1 ; set CPU interrupt mode
-
-            ret
 
 ;
 ;	Our memory setup is weird and common is kind of meaningless here
@@ -230,6 +207,19 @@ map_page_low:
 
 _program_vectors:
 	    ret
+
+;
+;	A little SIO helper
+;
+	.globl _sio_r
+	.globl _sio2_otir
+
+_sio2_otir:
+	ld b,#0x06
+	ld c,l
+	ld hl,#_sio_r
+	otir
+	ret
 ;
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
