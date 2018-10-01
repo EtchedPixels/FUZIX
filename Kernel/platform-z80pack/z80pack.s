@@ -87,7 +87,7 @@ _fd_bankcmd:pop de		; return
 	    push hl
 	    push bc
 	    push de		; fix stack
-	    ld a, (int_disabled)
+	    ld a, (_int_disabled)
 	    di
 	    push af		; save DI state
 	    call map_process_di	; HL alread holds our bank
