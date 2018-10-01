@@ -81,27 +81,44 @@ _bufpool:
 ;=========================================================================
         .area _DISCARD
 init_hardware:
+        ; program vectors for the kernel
+        ld hl, #0
+        push hl
+        call _program_vectors
+        pop hl
+
+        ; Stop floppy drive motors
+        ld a, #0x0C
+        out (FDC_DOR), a
+
 	; Play guess the serial port
-	ld bc,#0x80
-	; If writing to 0x80 changes the data we see on an input then
-	; it's most likely an SIO and not the 68B50
-	out (c),b
-	in d,(c)
-	inc b
-	out (c),b
-	in a,(c)
-	sub d
-;;FIXME	jr z, is_sio
-	jr is_sio
-	; We have however pooped on the 68B50 setup so put it back into
-	; a sensible state.
-	ld a,#0x03
-	out (c),a
-	in a,(c)
-	or a
-	jr nz, not_acia_either
+	; This needs doing better. We might be fooled by floating flow
+	; control lines as the SC104 does expose flow control. FIXME
+	in a,(SIOA_C)
+	and #0x2C
+	cp #0x2C
+	; CTS and DCD should be high as they are not wired
+	jr nz, try_acia
+
+	; Repeat the check on SIO B
+	in a,(SIOB_C)
+	and #0x2C
+	cp #0x2C
+	jr z, is_sio
+try_acia:
+	;
+	;	Look for an ACIA
+	;
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr z, not_acia_either
+	;	Set up the ACIA
+
         ld a, #ACIA_RTS_LOW_A
-        out (c),a         		; Initialise ACIA
+        out (ACIA_C),a         		; Initialise ACIA
 	ld a,#2
 	ld (_ser_type),a
 	jp serial_up
@@ -115,82 +132,20 @@ not_acia_either:
 	xor a
 	ld (_ser_type),a
 	jp serial_up
-
+;
+;	We have an SIO so do the required SIO hdance
+;
 is_sio:	ld a,b
 	ld (_ser_type),a
 
-        ; program vectors for the kernel
-        ld hl, #0
-        push hl
-        call _program_vectors
-        pop hl
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
+	otir
 
-        ; Stop floppy drive motors
-        ld a, #0x0C
-        out (FDC_DOR), a
-
-	; initialize UART0
-        ld a, (_boot_from_rom)          ; do not set the baud rate and other
-        or a                            ; serial line parameters if the BIOS
-        jr z, init_partial_uart         ; already set them for us.
-        ; nothing to do here yet
-init_partial_uart:
-
-        ld a,#0x00
-        out (SIOA_C),a
-        ld a,#0x18
-        out (SIOA_C),a
-
-        ld a,#0x04
-        out (SIOA_C),a
-        ld a,#0xC4
-        out (SIOA_C),a
-
-        ld a,#0x01
-        out (SIOA_C),a
-        ld a,#0x18;A?          ; Receive int mode 11, tx int enable (was $18)
-        out (SIOA_C),a
-
-        ld a,#0x03
-        out (SIOA_C),a
-        ld a,#0xE1
-        out (SIOA_C),a
-
-        ld a,#0x05
-        out (SIOA_C),a
-        ld a,#RTS_LOW
-        out (SIOA_C),a
-
-        ld a,#0x00
-        out (SIOB_C),a
-        ld a,#0x18
-        out (SIOB_C),a
-
-        ld a,#0x04
-        out (SIOB_C),a
-        ld a,#0xC4
-        out (SIOB_C),a
-
-        ld a,#0x01
-        out (SIOB_C),a
-        ld a, #0x18;A?          ; Receive int mode 11, tx int enable (was $18)
-        out (SIOB_C),a
-
-        ld a,#0x02
-        out (SIOB_C),a
-        ld a,#SIO_IV		; INTERRUPT VECTOR ADDRESS (needs to go)
-        out (SIOB_C),a
-
-        ld a,#0x03
-        out (SIOB_C),a
-        ld a,#0xE1
-        out (SIOB_C),a
-
-        ld a,#0x05
-        out (SIOB_C),a
-        ld a,#RTS_LOW
-        out (SIOB_C),a
-
+serial_up:
         ; ---------------------------------------------------------------------
 	; Initialize CTC
 	;
@@ -216,8 +171,19 @@ init_partial_uart:
         ; ---------------------------------------------------------------------
 
 	im 1				; set Z80 CPU interrupt mode 1
-serial_up:
         jp _init_hardware_c             ; pass control to C, which returns for us
+
+sio_setup:
+	.byte 0x00
+	.byte 0x18		; Reset
+	.byte 0x04
+	.byte 0xC4
+	.byte 0x01
+	.byte 0x18
+	.byte 0x03
+	.byte 0xE1
+	.byte 0x05
+	.byte RTS_LOW
 
 ;=========================================================================
 ; Kernel code
