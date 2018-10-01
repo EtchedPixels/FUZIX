@@ -84,3 +84,5 @@
 /* Remember to update platform-dragon-nx32/kernel.defs to match */
 
 extern void platform_discard(void);
+
+#define platform_copyright()		/* for now */
