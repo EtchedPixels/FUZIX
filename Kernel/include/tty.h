@@ -43,6 +43,8 @@ struct termios {
 #define PARMRK	0x0800
 #define IXON	0x1000
 
+#define _ISYS	(ICRNL|INLCR|ISTRIP)	/* Flags supported by core */
+
 #define OPOST	0x0001	/* Supported */
 #define OLCUC	0x0002
 #define ONLCR	0x0004	/* Supported */
@@ -71,6 +73,8 @@ struct termios {
 #define FFDLY	0x2000
 #define FF0	0x0000
 #define FF1	0x2000
+
+#define _OSYS	(OPOST|ONLCR|OCRNL)
 
 #define B0	0x0000
 #define B50	0x0001
@@ -103,6 +107,8 @@ struct termios {
 #define CRTSCTS 0x1000
 #define CBAUD	0x000F
 
+#define _CSYS	(CREAD|HUPCL|CLOCAL)
+
 #define ECHO	0x0001	/* Supported */
 #define ECHOE	0x0002	/* Supported */
 #define ECHOK	0x0004	/* Supported */
@@ -113,6 +119,8 @@ struct termios {
 #define NOFLSH	0x0080
 #define TOSTOP	0x0100
 #define XCASE	0x0200
+
+#define _LSYS	(ECHO|ECHOE|ECHOK|ICANON|ISIG)
 
 #define TCSANOW		0
 #define TCSADRAIN	1
@@ -212,6 +220,7 @@ struct tty {
 #define CTRL(x)		((x)&0x1F)
 
 extern struct tty ttydata[NUM_DEV_TTY + 1];
+extern tcflag_t *termios_mask[NUM_DEV_TTY + 1];
 
 extern void tty_init(void);
 
