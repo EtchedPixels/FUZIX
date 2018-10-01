@@ -19,6 +19,7 @@
 
 		.globl  map_process_always
 		.globl	map_kernel
+		.globl _int_disabled
 
 		.area _COMMONMEM
 
@@ -194,7 +195,7 @@ fd765_xfer_outdi:
 ;	Read a disc sector.
 ;
 _fd765_read_sector:
-		ld a, i
+		ld a,(_int_disabled)
 		push af
 		ld a, (_fd765_user)
 		or a
@@ -233,7 +234,8 @@ read_status:					; clean up is shared
 read_out:
 		call map_kernel
 		pop af
-		ret po
+		or a
+		ret nz
 		ei
 		ret
 read_failed:
@@ -245,7 +247,7 @@ read_failed:
 ;	be self modifying to save space.
 ;
 _fd765_write_sector:
-		ld a, i
+		ld a,(_int_disabled)
 		push af
 		ld a, (_fd765_user)
 		or a

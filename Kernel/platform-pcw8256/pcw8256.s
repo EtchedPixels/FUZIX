@@ -201,13 +201,16 @@ map_process_always_di:
 	    pop af
 	    ret
 
+;
+;	We shouldn't need IRQ protection here - review
+;
 map_process:
 map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
 map_process_1:
-	    ld a, i
+	    ld a, (int_disabled)
 	    push af
 	    di			; ensure we don't take an irq mid update
 	    push de
@@ -226,7 +229,8 @@ map_loop:
 	    pop bc
 	    pop de
 	    pop af
-	    ret po
+	    or a
+	    ret nz
 	    ei
 	    ret
 
@@ -329,7 +333,7 @@ _scroll_down:
 
 	    .area _COMMONMEM
 
-addr_de:    ld a, i
+addr_de:    ld a, (_int_disabled)
 	    push af
 	    ld a, (roller)
 	    rra			; in text lines
@@ -386,7 +390,8 @@ addr_de:    ld a, i
 	    out (0xf1), a
 	    pop bc
 	    pop af
-	    ret po
+	    or a
+	    ret nz
 	    ei
 	    ret
 _plot_char:
