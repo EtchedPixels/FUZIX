@@ -187,7 +187,7 @@ suspend:
 	    ld a,#1
 suspend_1:
 	    ld (suspend_r),a
-	    ld a,i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    ld a,#0x80
@@ -270,7 +270,8 @@ resume:
 	    out (0x10),a	; booter page in 0x0000-0x3FFF vanishes here
 				; and our vectors re-appear
 	    pop af		; IRQ state
-	    jp po,no_irq_on
+	    or a
+	    jr nz,no_irq_on
 	    ei
 no_irq_on:  pop af
 	    ret
@@ -457,7 +458,7 @@ rd_done:
 ;	FIXME: should be safe to drop the di/ei on these
 ;
 _scroll_up:
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    in a, (0x11)
@@ -471,7 +472,7 @@ _scroll_up:
 	    jr vtdone
 
 _scroll_down:
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    in a, (0x11)
@@ -485,7 +486,8 @@ _scroll_down:
 vtdone:	    pop af
 	    out (0x11), a
 	    pop af
-	    ret po
+	    or a
+	    ret nz
 	    ei
 _vtattr_notify:
 _cursor_disable:
@@ -528,7 +530,7 @@ _plot_char:
 	    push bc
 	    push de
 	    push hl
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    in a, (0x11)
@@ -615,7 +617,7 @@ _clear_lines:
 	    pop de		; E = y, D = count
 	    push de
 	    push hl
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    in a, (0x11)
@@ -644,7 +646,7 @@ _clear_across:
 	    push bc
 	    push de
 	    push hl
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
 	    di
 	    in a, (0x11)
@@ -686,7 +688,7 @@ _cursor_on:
 	    push de
 	    push hl
 cursor_do:
-	    ld a, i
+	    ld a, (_int_disabled)
 	    push af
             di
 	    in a, (0x11)
