@@ -255,6 +255,7 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
         uint8_t waito = 0;
+        staticfast struct termios tm;
 
         t = &ttydata[minor];
 
@@ -281,11 +282,27 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 	case TCSETSW:
 		waito = 1;
 	case TCSETS:
-		if (uget(data, &t->termios, sizeof(struct termios)) == -1)
+	{
+		tcflag_t *dp = termios_mask[minor];
+		if (uget(data, &tm, sizeof(struct termios)) == -1)
 		        return -1;
+		memcpy(t->termios.c_cc, tm.c_cc, NCCS);
+		t->termios.c_iflag &= ~*dp;
+		tm.c_iflag &= *dp++;
+		t->termios.c_iflag |= tm.c_iflag;
+		t->termios.c_oflag &= ~*dp;
+		tm.c_oflag &= *dp++;
+		t->termios.c_oflag |= tm.c_oflag;
+		t->termios.c_cflag &= ~*dp;
+		tm.c_cflag &= *dp++;
+		t->termios.c_cflag |= tm.c_lflag;
+		t->termios.c_lflag &= ~*dp;
+		tm.c_lflag &= *dp;
+		t->termios.c_iflag |= tm.c_lflag;
                 tty_setup(minor, waito);
                 tty_selwake(minor, SELECT_IN|SELECT_OUT);
 		break;
+	}
 	case TIOCINQ:
 		return uput(&ttyinq[minor].q_count, data, 2);
 	case TIOCFLUSH:
