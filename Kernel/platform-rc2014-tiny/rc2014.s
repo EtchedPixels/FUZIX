@@ -284,7 +284,7 @@ rom_control:
 	push bc			; Messy - clean me up!
 	ld c,a
 	push hl
-	ld a,i
+	ld a,(_int_disabled)
 	push af
 	ld a,c
 	di
@@ -295,7 +295,8 @@ rom_control:
 	out (0x38),a	; 	anything toggles
 no_work:
 	pop af
-	jp po, was_di
+	or a
+	jr nz, was_di
 	ei
 was_di:	pop hl
 	pop bc
