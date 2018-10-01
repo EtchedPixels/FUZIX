@@ -25,7 +25,9 @@
 	; platform provided functions
 	.globl map_kernel
 	.globl map_process_always
-        .globl map_save
+	.globl map_kernel_di
+	.globl map_process_always_di
+        .globl map_save_kernel
         .globl map_restore
 	.globl outchar
 	.globl _need_resched
@@ -49,6 +51,7 @@
 
         ; imported symbols
 	.globl _chksigs
+	.globl _int_disabled
         .globl _platform_monitor
         .globl _unix_syscall
         .globl outstring
@@ -98,6 +101,9 @@ deliver_signals_2:
 	; Indicate processed
 	xor a
 	ld (U_DATA__U_CURSIG), a
+	; and we will handle the signal with interrupts on so clear the
+	; flag
+	ld (_int_disabled),a
 
 	; Semantics for now: signal delivery clears handler
 	ld (hl), a
@@ -125,7 +131,9 @@ signal_return:
 	;
 	ld (U_DATA__U_SYSCALL_SP), sp
 	ld sp, #kstack_top
-	call map_kernel
+	ld a,#1
+	ld (_int_disabled),a
+	call map_kernel_di
 	push af
 	call _chksigs
 	pop af
@@ -391,13 +399,7 @@ interrupt_handler:
 	ld a, (0)
 .endif
 
-	call map_save
-	;
-	;	FIXME: re-implement sanity checks and add a stack one
-	;
-
-	; We need the kernel mapped for the IRQ handling
-	call map_kernel
+	call map_save_kernel
 
 .ifeq PROGBASE
 	cp #0xC3
@@ -409,6 +411,9 @@ interrupt_handler:
 	ld (_inint), a
 	; So we know that this task should resume with IRQs off
 	ld (U_DATA__U_ININTERRUPT), a
+	; Load the interrupt flag properly. It got an implicit di from
+	; the IRQ being taken
+	ld (_int_disabled),a
 
 	push af
 	call _platform_interrupt
@@ -452,6 +457,8 @@ intret:
 
 	; Then unstack and go.
 interrupt_pop:
+	xor a
+	ld (_int_disabled),a
         pop iy
         pop ix
         pop hl
@@ -674,19 +681,41 @@ _in:
 	in l, (c)
 	ret
 
+;
+;	Deal with all the NMOS Z80 bugs and the buggy emulators by
+;	simply tracing our own interrupt status. It's cheaper this way
+;	but does mean any code that is using di and friends directly needs
+;	to be a lot more careful. We can also make irqflags_t 8bit and
+;	fastcall the irqrestore later on FIXME
+;
 ___hard_ei:
+	xor a
+	ld (_int_disabled),a
 	ei
 	ret
 
-;
-;	Pull in the CPU specific workarounds
-;
+___hard_di:
+	ld hl,#_int_disabled
+	di
+	ld a,(hl)
+	ld (hl),#1
+	ld l,a
+	ret
 
-.ifeq CPU_NMOS_Z80
-	.include "lowlevel-z80-nmos-banked.s"
-.else
-	.include "lowlevel-z80-cmos-banked.s"
-.endif
+___hard_irqrestore:
+	pop bc
+	pop de
+	pop hl
+	push hl
+	push de
+	push bc
+	di
+	ld a,l
+	ld (_int_disabled),a
+	or a
+	ret nz
+	ei
+	ret
 
 	.area _COMMONMEM
 
