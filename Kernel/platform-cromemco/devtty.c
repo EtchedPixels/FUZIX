@@ -20,6 +20,20 @@ static uint8_t ttybase[NUM_DEV_TTY+1] = {
  0, 0, 32, 80
 };
 
+tcflag_t uart_mask[4] = {
+	_ISYS,
+	_OSYS,
+	CBAUD|CSTOPB|_CSYS,
+	_LSYS,
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	uart_mask,
+	uart_mask,
+	uart_mask
+};
+
 static uint8_t ttypoll;
 
 /* Write to system console */
@@ -109,9 +123,6 @@ void tty_setup(uint8_t minor, uint8_t flags)
         out(r + 2, 0x8);
     else
         out(r + 2, 0x18);
-    t->c_cflag |= CS8;
-    t->c_cflag &= ~PARENB;
-    /* Ok we could do sw parity .. */
 }
 
 /* For the moment */
