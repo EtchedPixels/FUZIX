@@ -19,7 +19,17 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	PTY_QUEUES
 };
 
-/* tty1 is the screen tty2 is the serial port */
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask
+};
 
 /* Output for the system console (kprintf etc) */
 void kputchar(uint8_t c)
