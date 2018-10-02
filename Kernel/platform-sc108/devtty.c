@@ -11,14 +11,14 @@ char tbuf2[TTYSIZ];
 
 uint8_t ser_type = 2;
 
-tcflag_t uart0_mask[4] = {
+static tcflag_t uart0_mask[4] = {
 	_ISYS,
 	_OSYS,
 	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
 	_LSYS
 };
 
-tcflag_t uart1_mask[4] = {
+static tcflag_t uart1_mask[4] = {
 	_ISYS,
 	/* FIXME: break */
 	_OSYS,
@@ -124,7 +124,7 @@ int tty_carrier(uint8_t minor)
 		if (c & 0x8)
 			return 1;
 		return 0;
-	} else	/* ACIA isn't wired for carrier on any bord */
+	} else	/* ACIA isn't wired for carrier on any board */
 		return 1;
 }
 
@@ -223,7 +223,11 @@ void tty_sleeping(uint8_t minor)
    interrupts as we do this. Really we want to switch to irq driven tx ints
    on this platform I think. Need to time it and see
 
-   An asm common level tty driver might be a better idea */
+   An asm common level tty driver might be a better idea
+
+   Need to review this we should be ok as the IRQ handler always leaves
+   us pointing at RR0 */
+
 ttyready_t tty_writeready(uint8_t minor)
 {
 	irqflags_t irq;
