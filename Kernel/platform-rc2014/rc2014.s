@@ -388,6 +388,19 @@ _kernel_pages:
 map_savearea:
 	.db	0,0,0,0
 
+;
+;	A little SIO helper
+;
+	.globl _sio_r
+	.globl _sio2_otir
+
+_sio2_otir:
+	ld b,#0x06
+	ld c,l
+	ld hl,#_sio_r
+	otir
+	ret
+
 ;=========================================================================
 ; Basic console I/O
 ;=========================================================================

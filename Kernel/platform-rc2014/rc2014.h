@@ -28,4 +28,6 @@ __sfr __at (ACIA_BASE + 1) ACIA_D;
 
 extern bool boot_from_rom;
 
+extern void sio2_otir(uint8_t port) __z88dk_fastcall;
+
 #endif
