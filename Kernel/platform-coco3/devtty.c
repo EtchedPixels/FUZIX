@@ -59,6 +59,29 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 };
 
 
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	/* GIME consoles */
+	console_mask,
+	console_mask,
+	/* Drivewire */
+	console_mask,
+	console_mask,
+	console_mask,
+	console_mask,
+	/* Virtual Window */
+	console_mask,
+	console_mask,
+	console_mask,
+	console_mask
+};
 
 
 struct mode_s{
