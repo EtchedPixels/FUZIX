@@ -277,7 +277,7 @@ void tty_sleeping(uint8_t minor)
 }
 
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	if (minor > 2) {
 		dw_vopen(minor);
