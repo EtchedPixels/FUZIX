@@ -12,6 +12,7 @@
 	.globl _getproc
 	.globl _runticks
 	.globl _platform_monitor
+	.globl _int_disabled
 
 	.globl _platform_switchout
 	.globl _switchin
