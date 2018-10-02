@@ -13,6 +13,8 @@
  *	actual UART although there are interrupting on the edges. We don't
  *	support those for now. Some machines had add in Z8530 based
  *	interfaces at 0x68/0x69:  we need to look at those some day.
+ *
+ *	FIXME: need to look at multi-console support
  */
 
 #include <kernel.h>
@@ -35,6 +37,18 @@ uint8_t vtattr_cap;
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
+};
+
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask
 };
 
 /* Write to system console */
