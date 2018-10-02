@@ -42,6 +42,34 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2}
 };
 
+/*
+ *	TTY masks - define which bits can be changed for each port
+ */
+
+static tcflag_t dart_mask[4] = {
+	_ISYS,
+	_OSYS,
+	/* FIXME CTS/RTS, CSTOPB */
+	CSIZE|CBAUD|PARENB|PARODD|_CSYS,
+	_LSYS,
+};
+
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask,
+	console_mask,
+	dart_mask,
+	dart_mask
+};
+
+
 /* tty1 is the screen tty2 is vdp screen */
 
 /* Output for the system console (kprintf etc) */
@@ -123,6 +151,7 @@ static uint8_t dartbits[] = {
 	0x00, 0x40, 0x80, 0xC0
 };
 
+/* FIXME: Can we do CSTOPB - need to look into that */
 void tty_setup(uint8_t minor, uint8_t flagbits)
 {
 	irqflags_t flags;
