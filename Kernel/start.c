@@ -301,10 +301,10 @@ uint16_t get_root_dev(void)
 }
 #else
 
+static uint8_t first = 1;
+
 inline uint16_t get_root_dev(void)
 {
-	static uint8_t first = 1;
-
 	if (first) {
 		first = 0;
 		return BOOTDEVICE;
