@@ -67,8 +67,14 @@ ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
 ; Buffers
 ;=========================================================================
         .area _BUFFERS
+	.globl kernel_endmark
+
 _bufpool:
         .ds (BUFSIZE * 4) ; adjust NBUFS in config.h in line with this
+;
+;	So we can check for overflow
+;
+kernel_endmark:
 
 ;=========================================================================
 ; Initialization code
