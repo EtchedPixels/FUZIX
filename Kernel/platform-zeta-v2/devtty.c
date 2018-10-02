@@ -22,6 +22,31 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 #endif
 };
 
+static tcflag_t uart_mask[4] = {
+	_ISYS,
+	/* FIXME: break */
+	_OSYS,
+	/* FIXME CTS/RTS */
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	_LSYS,
+};
+
+static tcflag_t prop_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	uart_mask,
+#ifdef CONFIG_PPP
+	prop_mask
+#endif
+};
+
+
 uint16_t divisor_table[16] = {
 	0, UART_CLOCK / 16 / 50, UART_CLOCK / 16 / 75, UART_CLOCK / 16 / 110,
 	UART_CLOCK / 16 / 134, UART_CLOCK / 16 / 150, UART_CLOCK / 16 / 300,
