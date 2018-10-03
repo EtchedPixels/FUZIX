@@ -422,10 +422,7 @@ _out:
 	jp (hl)
 
 _in:
-	pop hl
-	pop bc
-	push bc
-	push hl
+	ld c,l
 	in l, (c)
 	ret
 

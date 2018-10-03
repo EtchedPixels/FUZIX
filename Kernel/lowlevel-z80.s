@@ -424,12 +424,6 @@ mmu_irq_ret:
 	ld a, (0)
 
 	call map_save_kernel
-	;
-	;	FIXME: re-implement sanity checks and add a stack one
-	;
-
-	; We need the kernel mapped for the IRQ handling
-	call map_kernel_di
 
 	cp #0xC3
 	call nz, null_pointer_trap
@@ -700,11 +694,11 @@ _out:
 	push bc
 	jp (hl)
 
+;
+;	Use z88dk_fastcall for in.
+;
 _in:
-	pop hl
-	pop bc
-	push bc
-	push hl
+	ld c,l
 	in l, (c)
 	ret
 

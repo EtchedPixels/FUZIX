@@ -672,12 +672,7 @@ _out:
 	jp (hl)
 
 _in:
-	pop hl
-	pop de
-	pop bc
-	push bc
-	push de
-	push hl
+	ld c,l
 	in l, (c)
 	ret
 
