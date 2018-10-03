@@ -33,13 +33,17 @@
 		.globl s__INITIALIZER
 	        .globl kstack_top
 		.globl interrupt_handler
+		.globl null_handler
 
 		.globl rst38		; for checking
 ;
 ;	First _CODE section
 ;
+;	We need to put the bank switch stub in here and matching in RAM
+;
 		.area _CODE
 
-		.ds 0x38
+start:		jp null_handler
+		.ds 0x35
 rst38:		jp interrupt_handler
 		; FIXME NMI etc ?
