@@ -55,6 +55,32 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 static uint8_t trs_flow;		/* RTS/CTS */
 
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+static tcflag_t uart0_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS|CBAUD|CSIZE|CRTSCTS|CSTOPB,
+	_LSYS
+};
+
+static tcflag_t uart1_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS|CSIZE|CRTSCTS|CSTOPB,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask
+};
+
 /* Write to system console */
 void kputchar(char c)
 {
