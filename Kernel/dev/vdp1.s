@@ -10,6 +10,8 @@
 	    .globl cursor_off
 	    .globl cursorpos
 
+	    .globl _int_disabled
+
 	    .globl _vdpport
 
 	    .globl vdpinit
@@ -79,6 +81,9 @@ plot_char:  pop hl
 	    push bc
 	    push de
 	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 plotit:
 	    ld b, #0x40			; writing
 	    call videopos
@@ -89,6 +94,11 @@ plotit2:
 	    out (c), h			; address | 0x40
 	    dec c
 	    out (c), a			; character
+popret:
+	    pop af
+	    or a
+	    ret nz
+	    ei
 	    ret
 
 ;
@@ -110,7 +120,9 @@ scrollbuf:   .ds		40
 _scroll_down:
 		.endif
 scroll_down:
-	    ret
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld b, #23
 	    ld de, #0x3C0	; start of bottom line
 upline:
@@ -120,7 +132,9 @@ upline:
 	    out (c), e		; our position
 	    out (c), d
 	    dec c
-	    inir		; safe on MSX2 but not MSX1? - FIXME 
+down_0:
+	    ini
+	    jp nz, down_0
 	    inc c
 	    ld hl, #0x4028	; go down one line and into write mode
 	    add hl, de		; relative to our position
@@ -129,18 +143,23 @@ upline:
 	    ld b, #0x28
 	    ld hl, #scrollbuf
 	    dec c
-	    otir		; video ptr is to the line below so keep going
+down_1:
+	    outi		; video ptr is to the line below so keep going
+	    jp nz,down_1
 	    pop bc		; recover line counter
 	    ld hl, #0xffd8
 	    add hl, de		; up 40 bytes
 	    ex de, hl		; and back into DE
 	    djnz upline
-	    ret
+	    jp popret
 
 		.if VDP_DIRECT
 _scroll_up:
 		.endif
 scroll_up:
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld b, #23
 	    ld de, #40		; start of second line
 downline:   push bc
@@ -149,7 +168,9 @@ downline:   push bc
 	    out (c), e
 	    out (c), d
 	    dec c
-	    inir		; MSX1 fixme ?
+up_0:
+	    ini
+	    jp nz, up_0
 	    inc c
 	    ld hl, #0x3FD8	; up 40 bytes in the low 12 bits, add 0x40
 				; for write ( we will carry one into the top
@@ -160,13 +181,15 @@ downline:   push bc
 	    dec c
 	    ld hl, #scrollbuf
 	    ld b, #0x40
-	    otir		; FIXME: is otir ok for MSX 1 ???
+up_1:
+	    outi
+	    jp nz,up_1
 	    pop bc
 	    ld hl, #40
 	    add hl, de
 	    ex de, hl
 	    djnz downline
-	    ret
+	    jp popret
 
 		.if VDP_DIRECT
 _clear_lines:
@@ -176,6 +199,9 @@ clear_lines:
 	    pop de	; E = line, D = count
 	    push de
 	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld c, d
 	    ld d, #0
 	    ld b, #0x40
@@ -195,7 +221,7 @@ l1:	    out (c), a		; Inner loop clears a line, outer counts
             djnz l1
 	    dec e
 	    jr nz, l2
-	    ret
+	    jp popret
 
 		.if VDP_DIRECT
 _clear_across:
@@ -207,6 +233,9 @@ clear_across:
 	    push bc
 	    push de
 	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld b, #0x40
 	    call videopos
 	    ld a, c
@@ -218,7 +247,7 @@ clear_across:
 	    dec c
 l3:	    out (c), a
             djnz l1
-	    ret
+	    jp popret
 
 ;
 ;	FIXME: should use attribute blink flag not a char
@@ -231,6 +260,9 @@ cursor_on:
 	    pop de
 	    push de
 	    push hl
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld (cursorpos), de
 	    ld b, #0x00			; reading
 	    call videopos
@@ -249,10 +281,14 @@ cursor_on:
 _cursor_off:
 		.endif
 cursor_off:
+	    ld a,(_int_disabled)
+	    push af
+	    di
 	    ld de, (cursorpos)
 	    ld a, (cursorpeek)
 	    ld c, a
-	    call plotit
+	    jp plotit
+
 _vtattr_notify:
 	    ret
 
