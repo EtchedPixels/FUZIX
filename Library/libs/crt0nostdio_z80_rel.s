@@ -59,33 +59,38 @@ start2:
 ;	in the code. Thus this is actually a pointer to our relocation
 ;	bytestream.
 ;
+		push de			; base for relocation in DE
+		exx			; get it into DE and DE'
+		pop de			;
 		ld hl,#s__DATA		; will be pre-reloc value (0 based)
 		add hl,de		; hl is now the relocations
 					; de is the code base
 		ld b,#0			; on the code base bits
 		ex de,hl		; de is relocatios as loop swaps
 relnext:
-		; Read each relocatin byte and zero it (because it's really
+		; Read each relocation byte and zero it (because it's really
 		; stolen BSS so should start zero)
 		ex de,hl
 		ld a,(hl)
-		inc hl
 		ld (hl),#0
+		inc hl
 		ex de,hl
-		; 255 means done, 254 means skip 254, 253 or less means
-		; skip that many and relocate (254 and reloc is encoded as
-		; 254,0, long runs are 254,254,254,n...
-		cp #255
+		; 0 means done, 255 means skip 254, 254 or less means
+		; skip that many and relocate  (runs are 255,255,....)
+		or a		; 0 ?
 		jr z, relocdone
 		ld c,a
-		cp #254
+		inc a		; 255 ?
 		jr z, relocskip
 		add hl,bc
 		ld a,(hl)
-		add e
+		exx
+		add d
+		exx
 		ld (hl),a
 		jr relnext
 relocskip:	add hl,bc
+		dec hl
 		jr relnext
 relocdone:
 ;		; At this point our calls are relocated so this will go to
