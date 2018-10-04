@@ -10,6 +10,11 @@
 unsigned int swapdev = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
+DISC
+void platform_copyright(void)
+{
+	kprintf("COCO3 platform Copyright (c) 2015-2018 Brett M. Gordon\n");
+}
 
 void platform_discard(void)
 {
