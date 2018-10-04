@@ -25,5 +25,5 @@ ue: $(OBJS) term.rel
 	$(CC) -o $@ --nostdio $(OBJS) term.rel -ltermcap
 
 clean realclean clobber:
-	rm -f *.rel ue *~
+	rm -f *.rel ue *~ *.lk *.map *.noi *.lsm *.sym *.asm *.lst
 
