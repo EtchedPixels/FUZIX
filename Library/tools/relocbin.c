@@ -69,24 +69,24 @@ static void sweep_relocations(void)
     if (*base == *base2 - 1) {
       int diff = pos - lastrel;
 //      printf("Relocation %d at %x\n", ++rels, pos);
-      /* 0 - 253 skip that many and reloc, 254 move on 254, 255 end */
-      while(diff > 253) {
+      /* 1 - 254 skip that many and reloc, 255 move on 254, 0 end */
+      while(diff > 254) {
           diff -= 254;
-          *relptr++ = 254;
+          *relptr++ = 255;
       }
       *relptr++ = diff;
+      lastrel = pos;
       pos++;
       (*base)--;
       base++;
       base2++;
-      lastrel = pos;
       continue;
     }
     fprintf(stderr, "Bad relocation at %d (%02X v %02X)\n", pos,
       *base, *base2);
     exit(1);
   }
-  *relptr++ = 0xFF;
+  *relptr++ = 0x00;
   relsize = relptr - (buf + s__DATA);
   /* In effect move the relocations from DATA into INITIALIZED */
   s__DATA += relsize;
