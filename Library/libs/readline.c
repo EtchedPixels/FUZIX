@@ -2,7 +2,6 @@
  *	A smaller saner readline
  *
  *	TODO:
- *	Recognize Fuzix console key mappings
  *	History save and load
  *	Test history overflow
  */
@@ -65,7 +64,7 @@ static void history_add(void)
         memmove(rl_hbuffer, rl_hbuffer + l, rl_hbufend - rl_hbuffer);
         /* Adjust the pointer/length table */
         memmove(hlen, hlen + 1, (MAX_HIST - 1) * sizeof(size_t));
-        /* Fixme : rework as pointers */
+        /* FIXME : rework as pointers */
         for (i = 1; i < MAX_HIST; i++)
             hptr[i-1] = hptr[i] - l;
         histend--;
@@ -255,8 +254,8 @@ int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
             if (c == '[')
                 continue;
             esc = 0;
-            if (c >= 'A' && c <= 'D')
-                c = CTRL("PNFB"[c - 'A']);
+            if (c >= 'A' && c <= 'N')
+                c = CTRL("PNFB   A     E"[c - 'A']);
         }
         else if (c == '\n')
             break;
