@@ -8,6 +8,7 @@ char *readline(const char *prompt)
 {
     int len;
     char *p = malloc(256);
+    fflush(stdout);
     if (p == NULL)
         return NULL;
     len = rl_edit(0, 1, prompt, p, 255);
