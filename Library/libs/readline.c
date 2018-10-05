@@ -5,13 +5,16 @@
  *	History save and load
  *	Test history overflow
  */
-#include <stdio.h>
+
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
+
+#include <readline/readline.h>
 
 #undef CTRL			/* glibc defines this ?? */
 #define CTRL(x)	((x) & 31)
@@ -91,7 +94,7 @@ static void history_replace(void)
 }
     
 
-int rl_hinit(char *buffer, size_t len)
+void rl_hinit(char *buffer, size_t len)
 {
     rl_hbuffer = buffer;
     rl_hend = buffer;
@@ -215,12 +218,13 @@ static void history(int8_t dir)
 }
 #endif
 
-int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
+int rl_edit_timeout(int fd, int ofd, const char *prompt,
+                char *input, size_t len, uint8_t timeout, int (*timeout_fn)(void))
 {
     uint8_t c;
     uint8_t quote = 0;
     uint8_t esc = 0;
-    uint8_t eof;
+    uint8_t r;
 
     rl_base = input;
     rl_end = input;
@@ -237,28 +241,41 @@ int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
             atexit(exit_cleanup);
         do_cleanup = 1;
 	term.c_lflag &= ~(ICANON|ECHO);
-	term.c_cc[VMIN] = 1;
-	term.c_cc[VTIME] = 0;
+	/* We want 0, timeout or 1, 0 */
+	term.c_cc[VMIN] = !timeout;
+	term.c_cc[VTIME] = timeout;
 	term.c_cc[VINTR] = 0;
 	term.c_cc[VSUSP] = 0;
 	term.c_cc[VSTOP] = 0;
 	tcsetattr(0, TCSADRAIN, &term);
     }
     /* timeout support ?? */
-    while((eof = read(fd, &c, 1)) == 1) {
-        if (quote) {
-            quote = 0;
-            insert(c, len);
-            continue;
-        } else if (esc) {
-            if (c == '[')
+    while(1) {
+        r = read(fd, &c, 1);
+        if (r != 1) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
+                break;
+            else {
+                if (!timeout_fn())
+                    continue;
+                /* Timer asked for a redraw */
+                c = CTRL('R');
+            }
+        } else {
+            if (quote) {
+                quote = 0;
+                insert(c, len);
                 continue;
-            esc = 0;
-            if (c >= 'A' && c <= 'N')
-                c = CTRL("PNFB   A     E"[c - 'A']);
+            } else if (esc) {
+                if (c == '[')
+                    continue;
+                esc = 0;
+                if (c >= 'A' && c <= 'N')
+                    c = CTRL("PNFB   A     E"[c - 'A']);
+            }
+            else if (c == '\n')
+                break;
         }
-        else if (c == '\n')
-            break;
         switch(c) {
             case '\033':
                 esc = 1;
@@ -268,6 +285,10 @@ int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
             case CTRL('C'):
                 write(2, "^C\n", 3);
                 return -2;
+            case CTRL('D'):
+                /* Fake EOF check */
+                r = 0;
+                goto out;
             case '\b':
             case 127:
                 if (rl_cursor != rl_base)
@@ -320,6 +341,7 @@ int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
                 break;
         }
     }
+out:
 #ifdef WITH_HISTORY
     if (rl_inhist) {
         if (rl_end != rl_base)
@@ -332,11 +354,17 @@ int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
 #endif
     write(ofd, "\n", 1);
     exit_cleanup();
-    if (rl_end == rl_base && eof == 0)
+    if (rl_end == rl_base && r == 0)
         return -1;		/* EOF */
     return rl_end - rl_base;
 }
 
+int rl_edit(int fd, int ofd, const char *prompt, char *input, size_t len)
+{
+    return rl_edit_timeout(fd, ofd, prompt, input, len, 0, NULL);
+}
+
+#ifdef TEST
 #include <stdio.h>
 char historybuf[384];
 
@@ -347,9 +375,12 @@ int main(int argc, char *argv[])
     rl_hinit(historybuf, 384);
     while(1) {
         l = rl_edit(0, 1, "> ", buf, 256);
-        if (l >= 0) {
+        if (l > 0) {
             buf[l] = 0;
             printf("\"%s\"\n", buf);
         }
+        if (l == -1)
+            break;
     }
 }
+#endif
