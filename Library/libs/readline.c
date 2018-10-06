@@ -145,7 +145,7 @@ static void reprint_start(void)
         quoted_putchar(*p++);
 }
 
-static void insert(char c, size_t len)
+static void insert(char c)
 {
     if (rl_end < rl_bufend) {
         if (rl_cursor != rl_end) {
@@ -264,7 +264,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
         } else {
             if (quote) {
                 quote = 0;
-                insert(c, len);
+                insert(c);
                 continue;
             } else if (esc) {
                 if (c == '[')
@@ -337,7 +337,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 break;
             default:
                 if (c > 31)
-                    insert(c, len);
+                    insert(c);
                 break;
         }
     }

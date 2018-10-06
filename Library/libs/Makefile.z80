@@ -93,6 +93,8 @@ SRC_TM = tinymalloc.c
 
 SRC_RES = resolv.c
 
+SRC_READLINE = readline.c readline_fn.c
+
 OBJ_C = $(SRC_C:.c=.rel)
 OBJ_CURS = $(SRC_CURS:.c=.rel)
 OBJ_CT = $(SRC_CT:.c=.rel)
@@ -101,11 +103,13 @@ OBJ_TM = $(SRC_TM:.c=.rel)
 OBJ_HARD = $(SRC_HARD:.c=.rel)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 OBJ_RES = $(SRC_RES:.c=.rel)
+OBJ_READLINE = $(SRC_READLINE:.c=.rel)
 
 all: c$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel \
      crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel \
      liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib \
-     m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib
+     m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib \
+     readline$(PLATFORM).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -154,6 +158,10 @@ resolv$(PLATFORM).lib: $(OBJ_RES)
 	$(AR) rc resolv$(PLATFORM).lib $(OBJ_RES)
 	$(AR) s resolv$(PLATFORM).lib
 
+readline$(PLATFORM).lib: $(OBJ_READLINE)
+	$(AR) rc readline$(PLATFORM).lib $(OBJ_READLINE)
+	$(AR) s readline$(PLATFORM).lib
+
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
 
@@ -187,6 +195,9 @@ $(OBJ_TM):%.rel: %.c
 $(OBJ_RES):%.rel: %.c
 	$(CC) $(CC_OPT) $(@:.rel=.c)
 
+$(OBJ_READLINE):%.rel: %.c
+	$(CC) $(CC_OPT) $(@:.rel=.c)
+
 $(OBJ_HARD):%.rel: %.c
 	$(CC) $(CC_NOOPT) $(@:.rel=.c)
 
@@ -199,4 +210,5 @@ install:
 	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
 	cp curses$(PLATFORM).lib termcap$(PLATFORM).lib /opt/fcc/lib/
 	cp m$(PLATFORM).lib tinymalloc$(PLATFORM).lib /opt/fcc/lib/
+	cp readline$(PLATFORM).lib /opt/fcc/lib/
 	cp crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel /opt/fcc/lib/

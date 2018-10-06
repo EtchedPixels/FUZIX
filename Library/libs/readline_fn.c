@@ -2,6 +2,8 @@
  *	Provide the wrapper to rl_edit for GNU readline
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <readline/readline.h>
 
 char *readline(const char *prompt)
