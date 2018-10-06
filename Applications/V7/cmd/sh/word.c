@@ -13,6 +13,10 @@
 #include	"defs.h"
 #include	"sym.h"
 
+#ifdef BUILD_FSH
+extern int lineread(int fd, char *buf, int len);
+#endif
+
 static int readb(void);
 
 
@@ -173,6 +177,10 @@ static int readb(void)
 			newline();
 			sigchk();
 		}
-	} while ((len = read(f->fdes, f->fbuf, f->fsiz)) < 0 && trapnote);
+#ifdef BUILD_FSH
+        } while ((len = lineread(f->fdes, f->fbuf, f->fsiz)) < 0 && trapnote);
+#else
+        } while ((len = read(f->fdes, f->fbuf, f->fsiz)) < 0 && trapnote);
+#endif
 	return (len);
 }

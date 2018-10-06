@@ -12,6 +12,7 @@
 
 #include	"defs.h"
 #include	<stdlib.h>
+#include	<string.h>
 #include	<unistd.h>
 #include	<fcntl.h>
 #include	"sym.h"
@@ -32,6 +33,10 @@ static void exfile(BOOL);
 
 #ifdef BUILD_FSH
 static char history[1024];
+static char inbuf[256];
+static unsigned int inleft;
+static char *inptr;
+static char ineof;
 
 static int line_input(char *prmpt)
 {
@@ -41,15 +46,43 @@ static int line_input(char *prmpt)
 	do {
 		l = rl_edit(standin->fdes, output,
 			prmpt,
-			standin->fbuf, standin->fsiz);
+			inbuf, 256);
 		if (l >= 0) {
-			standin->fbuf[l] = '\n';
-			standin->fnxt = standin->fbuf;
-			standin->fend = standin->fbuf + l;
+			inbuf[l] = '\n';
+			inptr = inbuf;
+			inleft = l + 1;
+			ineof = 0;
 		}
+		else
+			ineof = 1;
 	} while(l == -2);
 	/* 0 - EOF, 1+ buffer including \n */
 	return l + 1;
+}
+
+int lineread(int fd, char *buf, int len)
+{
+	int bias = 0;
+	int r;
+	if (fd == standin->fdes && inleft) {
+		if (len <= inleft) {
+			memcpy(buf, inptr, len);
+			inleft -= len;
+			inptr += len;
+			return len;
+		}
+		memcpy(buf, inptr, inleft);
+		len -= inleft;
+		buf += inleft;
+		bias = inleft;
+		inleft = 0;
+	}
+	r = 0;
+	if (!ineof)
+		r = read(fd, buf, len);
+	if (r >= 0)
+		r += bias;
+	return r;
 }
 
 #else
