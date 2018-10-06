@@ -9,6 +9,7 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
+	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_process
@@ -364,7 +365,10 @@ _program_vectors:
 ;
 ;	The top 32K bank holds kernel code and pieces of common memory
 ;	The lower 32K is switched between the various user banks.
+;	We don't have a separate 32K for buffers as memory is too precious
+;	on must Microbees
 ;
+map_buffers:
 map_kernel:
 map_kernel_di:
 	    push af

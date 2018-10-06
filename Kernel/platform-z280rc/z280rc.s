@@ -11,6 +11,7 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
+	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_process
@@ -242,8 +243,12 @@ _program_vectors:
 ;	We map the low 64K 1:1 in kernel mode, keep the top 8K fixed and
 ;	map the others by 'bank' for user mode. We don't actually use the
 ;	hardware user mode yet. It's all just a bodge to get us up and
-;	running
+;	running.
 ;
+;	Some day we probably want the buffers outside of the main map, at
+;	least until we do split I/D somehow.
+;
+map_buffers:
 map_kernel:
 map_kernel_di:
 	    push af

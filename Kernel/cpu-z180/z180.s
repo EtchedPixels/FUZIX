@@ -28,6 +28,7 @@
         .globl _switchin
         .globl _platform_switchout
         .globl _dofork
+	.globl map_buffers
         .globl map_kernel
         .globl map_process_always
         .globl map_kernel_di
@@ -773,6 +774,7 @@ switchinfail:
         call outstring
         jp _platform_monitor
 
+map_buffers:
 map_kernel_di:
 map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         push af

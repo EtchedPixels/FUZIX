@@ -326,9 +326,11 @@ map_process_always_di:
 
 ;=========================================================================
 ; map_kernel - map kernel pages
+; map_buffers - map kernel and buffers (no difference for us)
 ; Inputs: none
 ; Outputs: none; all registers preserved
 ;=========================================================================
+map_buffers:
 map_kernel:
 map_kernel_di:
 	push af

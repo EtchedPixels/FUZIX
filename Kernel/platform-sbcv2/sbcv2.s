@@ -12,6 +12,7 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
+	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_process
@@ -208,6 +209,9 @@ _program_vectors:
 ;	are definitely off. In our case it's not useful information so both
 ;	symbols end up at the same code.
 ;
+map_buffers:
+	   ; for us no difference. We could potentially use a low 32K bank
+	   ; for buffers but it's not clear it would gain us much value
 map_kernel_di:
 map_kernel:
 	    push af

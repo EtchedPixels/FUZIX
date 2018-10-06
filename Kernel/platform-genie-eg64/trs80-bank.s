@@ -9,6 +9,7 @@
 	.globl map_kernel
 	.globl map_kernel_di
 	.globl map_kernel_restore
+	.globl map_buffers
 	.globl map_process
 	.globl map_process_di
 	.globl map_process_always
@@ -76,6 +77,7 @@ init_hardware:
 ;	mark the low 16K R/O to protect it from user but then need to
 ;	flip r/w on syscall and irq entry/exit.. FIXME.
 ;
+map_buffers:
 map_kernel:
 map_kernel_di:
 map_kernel_restore:

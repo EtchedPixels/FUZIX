@@ -8,6 +8,7 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
+	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_always
@@ -171,11 +172,13 @@ _program_vectors:
 ;
 ;	map_kernel		-	map in the kernel, trashes nothing
 ;	map_process_always	-	map in the current process, ditto
+;	map_buffers		-	map in the kernel + buffers, ditto
 ;	map_process		-	map the pages pointed to by hl, eats
 ;					a, hl
 ;
 kmap:	    .db 0x80, 0x81, 0x82, 0x83
 
+map_buffers:
 map_kernel:
 map_kernel_di:
 	    push af
