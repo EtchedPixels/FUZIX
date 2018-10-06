@@ -83,7 +83,7 @@ void create_init(void)
 {
 	uint8_t *j;
 
-	udata.u_top = PROGLOAD + 4096;	/* Plenty for the boot */
+	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
 	init_process->p_top = udata.u_top;
@@ -99,8 +99,10 @@ void create_init(void)
 		*j = NO_FILE;
 	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
+	/* Some systems only have a tiny window we can use at boot as most of
+	   this space is loaded with common memory */
 	argptr = PROGLOAD;
-	progptr = PROGLOAD + 2048;
+	progptr = PROGLOAD + 256;
 
 	uzero((void *)progptr, 32);
 	add_argument("/init");
@@ -112,7 +114,7 @@ void complete_init(void)
 	uputp(0, (void *)argptr);
 	/* Set up things to look like the process is calling _execve() */
 	udata.u_argn2 = (arg_t)argptr; /* Environment (none) */
-	udata.u_argn =  (arg_t)PROGLOAD + 2048; /* "/init" */
+	udata.u_argn =  (arg_t)PROGLOAD + 256; /* "/init" */
 	udata.u_argn1 = (arg_t)PROGLOAD; /* Arguments */
 
 #ifdef CONFIG_LEVEL_2
