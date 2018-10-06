@@ -13,14 +13,11 @@
 
 void init_hardware_c(void)
 {
-//    vfd_debug_init();
 #ifdef CONFIG_VFD_TERM
     vfd_term_init();
 #endif
     ramsize = 512;
     procmem = 512 - 64;
-    /* zero out the initial bufpool */
-    memset(bufpool, 0, (char*)bufpool_end - (char*)bufpool);
 }
 
 void pagemap_init(void)
@@ -30,10 +27,10 @@ void pagemap_init(void)
 	/* RC2014 512/512K has RAM in the top 512 KiB of physical memory
 	 * corresponding pages are 32-63 (page size is 16 KiB)
 	 * Pages 32-34 are used by the kernel
-	 * Page 35 is the common area
-	 * Pages starting from DEV_RD_START are used by RAM disk
+	 * Page 35 is the common area for init
+         * Page 36 is the disk cache
 	 */
-	for (i = 32 + 4; i < 64; i++)
+	for (i = 32 + 5; i < 64; i++)
 		pagemap_add(i);
 
 	/* finally add the common area */
@@ -42,6 +39,16 @@ void pagemap_init(void)
 
 void map_init(void)
 {
+	/* Point the buffers into the 16-32K range that will be used by
+	   the buffer remap. It's an ideal location because it has no
+	   vectors and is low enough it will overlay only code so we never
+	   worry about copying into the overlaid address space */
+	bufptr bp = bufpool;
+	uint8_t *p = (uint8_t *)0x4000;
+	while(bp < bufpool_end) {
+		bp++->__bf_data = p;
+		p += BLKSIZE;
+	}
 }
 
 /*

@@ -8,6 +8,9 @@
 	.globl _program_vectors
 	.globl map_kernel
 	.globl map_process
+	.globl map_buffers
+	.globl map_buffers_user
+	.globl map_buffers_user_h
 	.globl map_kernel_di
 	.globl map_process_di
 	.globl map_process_always
@@ -67,13 +70,6 @@ ACIA_RESET      .EQU     0x03
 ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
 ;ACIA_RTS_LOW_A       .EQU     0xB6   ; rts low, xmit interrupt enabled
-
-;=========================================================================
-; Buffers
-;=========================================================================
-        .area _BUFFERS
-_bufpool:
-        .ds (BUFSIZE * 4) ; adjust NBUFS in config.h in line with this
 
 ;=========================================================================
 ; Initialization code
@@ -269,6 +265,26 @@ map_process_always_di:
 	ld hl,#U_DATA__U_PAGE
         jr map_process_2_pophl_ret
 
+map_buffers_user:
+	push hl
+	ld hl,(U_DATA__U_PAGE)
+	ld h,#36
+	ld (_ubuffer_pages),hl
+	ld hl,(U_DATA__U_PAGE + 2)
+	ld (_ubuffer_pages + 2),hl
+	ld hl,#_ubuffer_pages
+        jr map_process_2_pophl_ret
+
+map_buffers_user_h:
+	push hl
+	ld hl,(U_DATA__U_PAGE)
+	ld (_ubuffer_pages),hl
+	ld hl,(U_DATA__U_PAGE + 2)
+	ld l,#36
+	ld (_ubuffer_pages + 2),hl
+	ld hl,#_ubuffer_pages
+        jr map_process_2_pophl_ret
+
 ;=========================================================================
 ; map_process - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
@@ -289,6 +305,16 @@ map_kernel:
 map_kernel_di:
 	push hl
 	ld hl,#_kernel_pages
+        jr map_process_2_pophl_ret
+
+;=========================================================================
+; map_buffers - map kernel with disk buffers at 0x4000-0x7FFF
+; Inputs: none
+; Outputs: none; all registers preserved
+;=========================================================================
+map_buffers:
+	push hl
+	ld hl,#_kernelbuf_pages
         jr map_process_2_pophl_ret
 
 ;=========================================================================
@@ -383,6 +409,12 @@ mpgsel_cache:
 _kernel_pages:
 	.db	32,33,34,35
 
+; kernel page mapping with buffer window
+_kernelbuf_pages:
+	.db	32,36,34,35
+
+_ubuffer_pages:
+	.db	0,0,0,0
 ; memory page mapping save area for map_save/map_restore
 map_savearea:
 	.db	0,0,0,0

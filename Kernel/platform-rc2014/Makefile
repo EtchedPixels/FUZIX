@@ -1,5 +1,5 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s
-CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s buffers.s
+CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c extbuffer.c
 CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c

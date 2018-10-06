@@ -34,7 +34,9 @@ extern unsigned int swap_dev;
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
-
+/* We have lots of RAM so make better use of it for disk buffers. We grab
+   a 16K page and use it as our disk cache */
+#define CONFIG_BLKBUF_EXTERNAL
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
@@ -47,8 +49,7 @@ extern unsigned int swap_dev;
 #define CMDLINE	NULL  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#,fd,,rd"
 
-#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
-#define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
+#define NBUFS    32       /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE */
@@ -59,19 +60,19 @@ extern unsigned int swap_dev;
 #define CONFIG_NO_CLOCK
 
 /* Floppy support */
-#define CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
+#undef CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
 /* IDE/CF support */
 #define CONFIG_IDE
 
-#define CONFIG_VFD_TERM         /* #define CONFIG_VFD_TERM to show console output on VFD display */
+#undef CONFIG_VFD_TERM         /* #define CONFIG_VFD_TERM to show console output on VFD display */
 
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
 /* Core Networking support */
-#define CONFIG_NET
+#undef CONFIG_NET
 /* User mode uIP TCP/IP daemon */
-#define CONFIG_NET_NATIVE
+#undef CONFIG_NET_NATIVE
 
 #define NUM_DEV_TTY 2
 
