@@ -1,7 +1,7 @@
 This is Fuzix for the RC2014
 
-Imported into the current tree from Scott Baker's git tree and adjusted to
-build against a current kernel. Don't blame Scott for any bugs!
+The starting point was Scott Baker's git tree but this has been seen been
+rather reworked. 
 
 Modified for RC2014 with FlashROM/Ram board by Scott Baker <smbaker@gmail.com>.
 
@@ -34,28 +34,19 @@ Supported Hardware
 
 	RC2014 Joystick
 
-Notes
+Things To Note When Modifying
 
-  * This platform is based heavily on the Zeta V2 platform, so consult the
-    Zeta V2 readme for more instructions. This instructions are intentionally
-    minimal, focusing on items specific to the RC2014 configuration.
-
-Configuration
-
-  * The Makefile assumes a file system image exists in ../rc2014_root_fs. 
-    See the Zeta V2 instructions for building a filesystem.
+  * Space is very tight. The kernel must finish below C000 and the rest goes
+    above the common line (D000).
+  * Do not move discard below C300 on a 16K banking setup. There is stuff in
+    start.c that requires that C000-C2FF space is free for starting init from
+    the kernel
 
 Things that don't work
 
   * Flow control isn't yet enabled for the serial port.
 
-  * SIO baud rate setting etc has not been tackled
-
 Stuff To Do
-
-  * SIO v ACIA detection is bust
-
-  * Weird hangs if left idle at bootprompt for ages
 
   * Rework the CTCs if we can so we use CTC0 as a timer for the CTC clock and
     use CTC1 to count CTC0 overflows. That way we can use the CTC0 interrupt
@@ -73,17 +64,52 @@ Stuff To Do
   * How to represent a Z80 PIO usefully to Fuzix (similar issues with Nascom)
     both raw and hosting an interface (eg /dev/lp or even floppy)
 
-  * Better boot story - native and from CP/M plus support partition tables ?
-
   * Work out how to co-exist better and maybe even modify ROMWBW so we can
     use it
 
-  * Swap
+  * Swap (it's there but it's most certainly not debugged or wired up fully)
 
-  * TMS9918A support once there is a suitable card
+  * TMS9918A support now there is a suitable card
 
   * Sound support once we have the core sound layer
 
-  * tty_setup
+  * Some kind of way to allow selection of what support is wanted. We are
+    very tight on space with everything enabled and it won't be possible to
+    do some of the combinations we have today with the TMS9918A as well unless
+    we go to banked syscall (Which is doable)
 
-  * Clean up the SIO init mess to just use otir properly
+  * Push the tty buffers into the banked space to give us room for four ttys
+
+  * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
+    flip buffers. Also raises space issues as we'll need 256 bytes per SIO
+    plus the other costs
+
+Setting It Up
+
+Fuzix on the RC2014 expects a normal PC style compact flash card. Fdisk up the
+card leaving the low space free as fdisk tries to do. Place a file system on
+it (type 0x7F). Do not at this point place a swap partition on it (0x7E)
+although you can certainly reserve on with a different type code.
+
+The loader and attached kernel image needs to be written to blocks 2+.
+
+You can manipulate the filesystem with ucp.
+
+If you are doing this with the emulator then the easiest way is to use makedisk
+to create a disk of suitable size and then
+
+	dd if=foo.cf of=foo.raw skip=2
+	fdisk foo.raw
+	add the file systems etc onto it (either by loopback mounting or
+	using dd remembering the start sector given can be used with
+		dd bs=512 seek=startsector conv=notrunc ...
+	dd if=foo.raw of=foo.cf seek=2 conv=notrunc
+
+As ucp and fsck.fuzix support offsets in the format path:offset you can access
+the first file system with ucp foo.cf:1049600 if it starts at block 2048 of the
+CF card as normal.
+
+Then you can run
+./rc2014 -b -r 512.rom  -i foo.cf  -s  -w -R -c 
+
+
