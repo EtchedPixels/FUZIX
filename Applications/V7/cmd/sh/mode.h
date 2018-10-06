@@ -71,7 +71,14 @@ struct blk {
 	BLKPTR word;
 };
 
+/* We need a real line worth of buffering for fsh to work nicely and as it's
+   a bigger target we can afford it */
+#ifdef BUILD_FSH
+#define BUFSIZ 256
+#else
 #define	BUFSIZ	64
+#endif
+
 struct fileblk {
 	UFD fdes;
 	POS flin;

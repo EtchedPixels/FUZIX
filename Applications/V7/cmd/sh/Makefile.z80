@@ -9,19 +9,25 @@ SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
 INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 
 OBJS = $(SRCS:.c=.rel)
+FOBJS = $(patsubst %.c,fshbuild/%.rel, $(SRCS))
 
-all: sh
+all: fsh sh
 
 sh: $(OBJS)
 	$(FCC) $(Z80_PLATFORM) $(OBJS) -o $@
 
+fsh: $(FOBJS)
+	$(FCC) $(Z80_PLATFORM) $(FOBJS) -o $@ -lreadline
+
 $(OBJS): $(INCS)
 
-.c.rel:
+$(FOBJS): $(INCS)
+
+$(OBJS): %.rel: %.c
 	$(FCC) $(Z80_PLATFORM) -c $<
 
-%: %.rel
-	$(FCC) $(Z80_PLATFORM) $< -o $@
+$(FOBJS): fshbuild/%.rel: %.c
+	$(FCC) $(Z80_PLATFORM) -c -DBUILD_FSH $< -o $@
 
 clean:
 	rm -f $(OBJS) sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin

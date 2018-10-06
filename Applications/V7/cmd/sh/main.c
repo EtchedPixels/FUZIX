@@ -18,7 +18,8 @@
 #include	"timeout.h"
 #include	<sys/types.h>
 #include	<sys/stat.h>
-#include    <setjmp.h>
+#include	<setjmp.h>
+#include	<readline/readline.h>
 
 UFD output = 2;
 static BOOL beenhere = FALSE;
@@ -28,6 +29,33 @@ FILE standin = &stdfile;
 char* tempfile;
 
 static void exfile(BOOL);
+
+#ifdef BUILD_FSH
+static char history[1024];
+
+static int line_input(char *prmpt)
+{
+	int l;
+	if (!isatty(standin->fdes))
+		return -1;	/* Not a tty */
+	do {
+		l = rl_edit(standin->fdes, output,
+			prmpt,
+			standin->fbuf, standin->fsiz);
+		if (l >= 0) {
+			standin->fbuf[l] = '\n';
+			standin->fnxt = standin->fbuf;
+			standin->fend = standin->fbuf + l;
+		}
+	} while(l == -2);
+	/* 0 - EOF, 1+ buffer including \n */
+	return l + 1;
+}
+
+#else
+#define rl_hinit(x,y)
+#define line_input(x)	(-1)
+#endif
 
 int main(int c, const char *v[])
 {
@@ -40,6 +68,8 @@ int main(int c, const char *v[])
 
 	setbrk(BRKINCR);
 	addblok((POS) 0);
+
+	rl_hinit(history, sizeof(history));
 
 	/* set names from userenv */
 	sh_getenv();
@@ -158,8 +188,11 @@ static void exfile(BOOL prof)
 				prs(mailmsg);
 			}
 			mailtime = statb.st_mtime;
-			prs(ps1nod.namval);
-			alarm(TIMEOUT);
+			if (line_input(ps1nod.namval) < 0)
+			{
+				prs(ps1nod.namval);
+				alarm(TIMEOUT);
+			}
 			flags |= waiting;
 		}
 
@@ -176,8 +209,10 @@ static void exfile(BOOL prof)
 
 void chkpr(char eor)
 {
-	if ((flags & prompt) && standin->fstak == 0 && eor == NL)
-		prs(ps2nod.namval);
+	if ((flags & prompt) && standin->fstak == 0 && eor == NL) {
+		if (line_input(ps2nod.namval) < 0)
+			prs(ps2nod.namval);
+	}
 }
 
 void settmp(void)
