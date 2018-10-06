@@ -27,8 +27,6 @@
 
         ; exported symbols
         .globl init
-        .globl init_from_rom
-        .globl _boot_from_rom
 
         ; imported symbols
         .globl _fuzix_main
@@ -46,39 +44,14 @@
 
         ; startup code
         .area _CODE
-init:                       ; must be at 0x88 -- warm boot methods enter here
-        xor a
-        jr init_common
-init_from_rom:              ; must be at 0x8B -- bootrom.s enters here
-        ld a, #1
-        ; fall through
-init_common:
-        di
-        ld (_boot_from_rom), a
-        or a
-        jr nz, mappedok     ; bootrom.s loads us in the correct pages
-
-        ; move kernel to the correct location in RAM
-        ; note that this cannot cope with kernel images larger than 48KB
-        ld hl, #0x0000
-        ld a, #32               ; first page of RAM is page 32
-movenextbank:
-        out (MPGSEL_3), a       ; map page at 0xC000 upwards
-        ld de, #0xC000
-        ld bc, #0x4000          ; copy 16KB
-        ldir
-        inc a
-        cp #35                  ; done three pages?
-        jr nz, movenextbank
-
+init:                       ; must be at 0x0100 as we are loaded at that
 	; setup the memory paging for kernel
-        out (MPGSEL_3), a       ; map page 35 at 0xC000
-        ld a, #32
-        out (MPGSEL_0), a       ; map page 32 at 0x0000
-        inc a
+        ld a, #33
         out (MPGSEL_1), a       ; map page 33 at 0x4000
         inc a
         out (MPGSEL_2), a       ; map page 34 at 0x8000
+	inc a
+        out (MPGSEL_3), a       ; map page 35 at 0xC000
 
 mappedok:
         ; switch to stack in high memory
@@ -111,4 +84,3 @@ mappedok:
 stop:   halt
         jr stop
 
-_boot_from_rom: .db 0

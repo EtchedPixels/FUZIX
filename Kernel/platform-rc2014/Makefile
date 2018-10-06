@@ -22,7 +22,7 @@ CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
-all:	$(OBJS) diskboot.bin
+all:	$(OBJS)
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
@@ -46,21 +46,19 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin diskboot.bin fuzix.com fuzix.rom
+	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin fuzix.com fuzix.rom
 
-diskboot.bin:	diskboot.s
-	$(CROSS_AS) $(ASOPTS) diskboot.s
-	sdldz80 -nmi diskboot.rel
-	makebin -s 65536 diskboot.ihx | dd bs=512 skip=125 count=1 of=diskboot.bin
+#
+#	Compile up the boot block
+#
+image: bootblock
+	dd if=/dev/zero of=pad bs=256 count=1
+	cat boot-romwbw.bin pad  ../fuzix.bin >fuzix.romwbw
 
-image:
-	sdasz80 -o bootrom.s
-	sdldz80 -m -i bootrom.rel
-	makebin -s 136 bootrom.ihx > bootrom.bin
-#	cat bootrom.bin ../fuzix.bin | dd conv=sync bs=65536 count=1 of=fuzix.rom
-	cat bootrom.bin ../fuzix.bin > tmp.rom
-	cat tmp.rom | dd conv=sync bs=65536 count=1 of=fuzix.rom
-	-cat fuzix.rom ../rc2014_root_fs > fuzix_rc2014_sio_bootfs.rom
-	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
-	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
-
+bootblock:
+	sdasz80 -o boot-romwbw.s
+	sdldz80 -i boot-romwbw.rel
+	# This makes us a binary from physical 0
+	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
+	# Chop off the leading 61440 bytes we don't want
+	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
