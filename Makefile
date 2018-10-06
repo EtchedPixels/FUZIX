@@ -21,7 +21,7 @@
 # trs80:	TRS80 Model 4/4D/4P with 128K RAM (some other TRS80 extension
 #		mappers have untested code in the tree)
 # trs80m1:	TRS80 Model I/III with suitable banker (also clones)
-# ubee:		Microbee (256TC currently - older models in progress)
+# ubee:		Microbee
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta retrobrew SBC
 #
