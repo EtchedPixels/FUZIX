@@ -33,7 +33,6 @@
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
-        .globl _boot_from_rom
 	.globl _ser_type
 
 	; exported debugging tools
