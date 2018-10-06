@@ -49,6 +49,8 @@ Build the user map from the RAM map
 Finish the ROM and RAM map detection logic
 Disk I/O routines need bounce buffers for 4000-7FFF range due to the
 limited mapping system.
+Speed up all the ei/di mess by just keeping a private variable for irqoff
+state
 
 In Progress
 
@@ -62,13 +64,11 @@ Sunrise IDE support
 
 To do
 
-the detection logic by ROM hash and find the sunrise etc
+Detection logic by ROM hash and find the sunrise etc
 Sensible user copy routines: We know kernel data is always in common except
 some awkward corner cases (constants) going K->U. So we can spot the to user
 case of a 'low' source and bounce it or similar, while just doing a user
 map and ldir for the others. We badly need the cached path walk though!
-Speed up all the ei/di mess by just keeping a private variable for irqoff
-state
 Get common and discard and initialized in C000-FFFF of the ROM
 Then on boot up move SP to BFFF, map the ROM in the top 16K, copy it into
 8000-Bxxx and then restore the RAM, and copy it up. Then do the normal maps.
