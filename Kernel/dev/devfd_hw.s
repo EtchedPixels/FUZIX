@@ -13,6 +13,7 @@ CPU_Z180	.equ	Z80_TYPE-2
 .endif
 
         ; imported symbols
+        .globl map_buffers
         .globl map_kernel
         .globl map_process_always
         .globl _devfd_dtbl
@@ -620,8 +621,12 @@ FdcXit:
 ; inner section of FdCmd routine, has to touch buffers etc
 FdCmdXfer:
         BIT     0,D             ; Buffer in user memory?
-        CALL    NZ, map_process_always
-
+	JR	Z,  kernxfer
+        CALL    map_process_always
+	JR 	doxfer
+kernxfer:
+	CALL	map_buffers
+doxfer:
         ; send the command (length is in B, command is in C)
         PUSH    HL              ; save pointer for possible Transfer
         LD      HL,#comnd       ; Point to Command Block
@@ -645,8 +650,6 @@ FdCiR3: AND     #0x20           ; are we still in the Execution Phase? (1 cycle 
 
 ; tidy up and return
 FdCmdXferDone:
-        BIT     0,D             ; Buffer in user memory?
-        RET     Z               ; done if not
         JP      map_kernel      ; else remap kernel and return
 
 ;-------------------------------------------------------------
