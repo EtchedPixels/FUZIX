@@ -666,7 +666,7 @@ static void envset(const char *a, const char *b)
 static struct termios tref = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
-	CREAD | HUPCL,
+	CS8 | CREAD | HUPCL,
 	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
 	{CTRL('D'), 0, CTRL('H'), CTRL('C'),
 	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
