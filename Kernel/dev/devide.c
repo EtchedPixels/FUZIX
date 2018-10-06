@@ -156,16 +156,18 @@ void devide_read_data(void) __naked
             jr nz, not_swapin
             ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
             call map_for_swap
-            jr swapin
+            jr doread
 not_swapin:
 #endif
             or a                                    ; test is_user
-            call nz, map_process_always             ; map user memory first if required
-swapin:
+            jr z, rd_kernel
+            call map_process_always  	            ; map user memory first if required
+            jr doread
+rd_kernel:
+            call map_buffers
+doread:
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
-            or a                                    ; test is_user
-            ret z                                   ; done if kernel memory transfer
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
@@ -182,16 +184,18 @@ void devide_write_data(void) __naked
             jr nz, not_swapout
             ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
             call map_for_swap
-            jr swapout
+            jr dowrite
 not_swapout:
 #endif
             or a                                    ; test is_user
-            call nz, map_process_always             ; else map user memory first if required
-swapout:
+            jr z, wr_kernel
+            call map_process_always                 ; else map user memory first if required
+            jr dowrite
+wr_kernel:
+            call map_buffers
+dowrite:
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
-            or a                                    ; test is_user
-            ret z                                   ; done if kernel memory transfer
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
