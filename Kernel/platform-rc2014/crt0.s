@@ -41,6 +41,10 @@
 
 	.include "kernel.def"
 
+	; Dummy page0 area so binman doesn't pack us
+
+	.area _PAGE0
+
         ; startup code
         .area _CODE
 init:                       ; must be at 0x0100 as we are loaded at that
@@ -56,16 +60,7 @@ mappedok:
         ; switch to stack in high memory
         ld sp, #kstack_top
 
-        ; move the common memory where it belongs    
-        ld hl, #s__DATA
-        ld de, #s__COMMONMEM
-        ld bc, #l__COMMONMEM
-        ldir
-        ; and the discard
-        ld de, #s__DISCARD
-        ld bc, #l__DISCARD
-        ldir
-        ; then zero the data area
+        ; Zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
         ld bc, #l__DATA - 1

@@ -17,7 +17,7 @@ void init_hardware_c(void)
     vfd_term_init();
 #endif
     ramsize = 512;
-    procmem = 512 - 64;
+    procmem = 512 - 80;
 }
 
 void pagemap_init(void)

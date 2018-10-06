@@ -394,9 +394,9 @@ _copy_common:
 	push hl
 	ld a,e
 	call map_for_swap
-	ld hl,#0xF300
-	ld de,#0x7300
-	ld bc,#0x0D00
+	ld hl,#0xD300
+	ld de,#0x4300
+	ld bc,#0x2D00
 	ldir
 	jr map_kernel
 

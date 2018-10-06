@@ -28,7 +28,7 @@ $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -52,8 +52,7 @@ clean:
 #	Compile up the boot block
 #
 image: bootblock
-	dd if=/dev/zero of=pad bs=256 count=1
-	cat boot-romwbw.bin pad  ../fuzix.bin >fuzix.romwbw
+	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
 
 bootblock:
 	sdasz80 -o boot-romwbw.s
