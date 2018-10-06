@@ -284,6 +284,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 break;
             case CTRL('C'):
                 write(2, "^C\n", 3);
+                exit_cleanup();
                 return -2;
             case CTRL('D'):
                 /* Fake EOF check */
@@ -308,7 +309,7 @@ int rl_edit_timeout(int fd, int ofd, const char *prompt,
                     quoted_putchar(*rl_cursor++);
                 break;
             case CTRL('B'):
-                if (rl_cursor) {
+                if (rl_cursor > rl_base) {
                     backspace(*--rl_cursor);
                 }
                 break;
@@ -372,7 +373,7 @@ int main(int argc, char *argv[])
 {
     char buf[256];
     int l;
-    rl_hinit(historybuf, 384);
+//    rl_hinit(historybuf, 384);
     while(1) {
         l = rl_edit(0, 1, "> ", buf, 256);
         if (l > 0) {
