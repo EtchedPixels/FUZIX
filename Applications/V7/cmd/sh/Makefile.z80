@@ -30,7 +30,7 @@ $(FOBJS): fshbuild/%.rel: %.c
 	$(FCC) $(Z80_PLATFORM) -c -DBUILD_FSH $< -o $@
 
 clean:
-	rm -f $(OBJS) sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) fsh sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
 
 rmbak:
 	rm -f *~ core

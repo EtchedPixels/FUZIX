@@ -108,7 +108,7 @@ void assign(NAMPTR n, const char *v)
 
 int readvar(char **names)
 {
-	FILEBLK fb;
+	static6502 FILEBLK fb;
 	register FILE f = &fb;
 	register char c;
 	register int rc = 0;

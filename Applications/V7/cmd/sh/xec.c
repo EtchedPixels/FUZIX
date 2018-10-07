@@ -438,7 +438,7 @@ int execute(TREPTR argt, int execflg, int *pf1, int *pf2)
 
 void execexp(char *s, UFD f)
 {
-	FILEBLK fb;
+	static6502 FILEBLK fb;
 	push(&fb);
 	if (s) {
 		estabf(s);

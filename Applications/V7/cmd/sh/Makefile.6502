@@ -17,7 +17,7 @@ SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
 INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 
 OBJS = $(SRCS:.c=.o)
-FOBJS = $(patsubst %.c,fshbuild/%.o, $(SRCS))
+FOBJS = $(patsubst %.c,fshbuild_%.o, $(SRCS))
 
 LIBS = ../../../../Library/libs/c6502.lib
 
@@ -36,12 +36,14 @@ $(FOBJS): $(INCS)
 $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
-$(FOBJS): fshbuild/%.o: %.c
-	$(CC) -c $(CFLAGS) -c -DBUILD_FSH $< -o $@
+$(FOBJS): fshbuild_%.o: %.c
+	# -c and -o is busted if used together in cc65
+	cp $< fshbuild_$<
+	$(CC) -c $(CFLAGS) -c -DBUILD_FSH fshbuild_$<
 
 
 clean: 
-	rm -f $(OBJS) fsh sh *~ core
+	rm -f $(OBJS) $(FOBJS) fsh sh *~ core
 
 rmbak:
 	rm -f *~ core

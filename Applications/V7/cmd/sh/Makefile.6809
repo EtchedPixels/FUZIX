@@ -37,13 +37,13 @@ $(FOBJS): fshbuild/%.o: %.c
 	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
 
 sh: $(OBJS) $(CRT0)
-	$(LINKER) -o $@ $(LINKER_OPT) $^
+	$(LINKER) -o  $@ $(LINKER_OPT) $(CRT0) $^
 
 fsh: $(FOBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $^ -lreadline6809
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ -lreadline6809
 
 clean:
-	rm -f $(OBJS) fsh sh $(SRCS:.c=) core *~
+	rm -f $(OBJS) $(FOBJS) fsh sh $(SRCS:.c=) core *~
 
 rmbak:
 	rm -f *~ core

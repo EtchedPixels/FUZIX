@@ -10,6 +10,14 @@
 #include <sys/times.h>
 #include <errno.h>
 
+/* Figure out if we have to deal with bigger buffers specially due to cc65
+   limits. Really cc65 needs fixing. */
+#if defined(__CC65__) && defined(BUILD_FSH)
+#define static6502	static
+#else
+#define static6502
+#endif
+
 /*
  *	UNIX shell
  */

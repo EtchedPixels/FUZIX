@@ -38,7 +38,7 @@ static unsigned int inleft;
 static char *inptr;
 static char ineof;
 
-static int line_input(char *prmpt)
+static int line_input(const char *prmpt)
 {
 	int l;
 	if (!isatty(standin->fdes))

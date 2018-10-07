@@ -258,7 +258,7 @@ static void comsubst(void)
 void subst(int in, int ot)
 {
 	register char c;
-	FILEBLK fb;
+	static6502 FILEBLK fb;
 	register int count = CPYSIZ;
 
 	push(&fb);
