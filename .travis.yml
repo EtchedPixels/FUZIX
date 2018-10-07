@@ -5,7 +5,7 @@ matrix:
     include:
         - env: TARGET=dragon-nx32
         - env: TARGET=multicomp09
-        - env: TARGET=rc2014
+        - env: TARGET=sbcv2
         - env: TARGET=trs80
         - env: TARGET=v65c816
         - env: TARGET=v68
