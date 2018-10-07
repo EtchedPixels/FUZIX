@@ -28,5 +28,5 @@ ue.ansi: $(OBJS) term-ansi.o
 ue: $(OBJS) term.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ termcap6502.lib c6502.lib
 
-clean realclean clobber:
-	rm -f *.rel ue *~
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel

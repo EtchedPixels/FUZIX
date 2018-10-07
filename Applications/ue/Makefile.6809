@@ -37,5 +37,5 @@ size.report: $(APPS)
 	ls -l $< > $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
 
