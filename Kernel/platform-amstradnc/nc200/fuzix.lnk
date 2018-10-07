@@ -41,5 +41,6 @@ platform-amstradnc/devlpr.rel
 platform-amstradnc/devtty.rel
 platform-amstradnc/devaudio.rel
 platform-amstradnc/devgfx.rel
+platform-amstradnc/m146818.rel
 font4x6.rel
 -e

@@ -3,6 +3,7 @@
 
 /* We have an RTC */
 #define CONFIG_RTC
+#define CONFIG_RTC_FULL
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -55,7 +56,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
+#define NBUFS    9       /* Number of block buffers */
 #ifdef CONFIG_NC200
 #define NMOUNTS	2	  /* Floppy can also be mounted */
 #define BOOTDEVICENAMES "hd#,fd#"
