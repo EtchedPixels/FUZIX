@@ -542,7 +542,7 @@ arg_t net_write(struct socket * s, uint8_t flag)
 {
 	uint16_t i = sock2wiz_map[s - sockets];
 	uint16_t room;
-	uint16_t n = 0;;
+	uint16_t n = 0;
 	uint8_t a = s->s_flag & SFLAG_ATMP ? SADDR_TMP : SADDR_DST;
 
 	/* FIXME: blocking ?? */
