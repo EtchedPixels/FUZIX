@@ -22,7 +22,7 @@ before_install:
         sudo apt-get install -y lwtools gcc6809
       fi
     - |
-      if [ "$TARGET" = "rc2014" -o "$TARGET" = "trs80" -o "$TARGET" = "z80pack" ]; then
+      if [ "$TARGET" = "sbcv2" -o "$TARGET" = "trs80" -o "$TARGET" = "z80pack" ]; then
         sudo apt-get install -y sdcc
       fi
     - |
