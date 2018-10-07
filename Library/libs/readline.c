@@ -62,9 +62,9 @@ static void history_add(void)
     while(histend == MAX_HIST ||  rl_hend + s >= rl_hbufend) {
 //        printf("Looping to clear for %d\n", s);
         l = hlen[0];
-        rl_hbufend -= l;
+        rl_hend -= l;
         /* Shuffle the buffer */
-        memmove(rl_hbuffer, rl_hbuffer + l, rl_hbufend - rl_hbuffer);
+        memmove(rl_hbuffer, rl_hbuffer + l, rl_hend - rl_hbuffer);
         /* Adjust the pointer/length table */
         memmove(hlen, hlen + 1, (MAX_HIST - 1) * sizeof(size_t));
         /* FIXME : rework as pointers */
@@ -75,16 +75,16 @@ static void history_add(void)
             histp--;
     }
     /* Add the new entry */
-    memcpy(rl_hbufend, rl_base, s);
-    hptr[histend] = rl_hbufend;
+    memcpy(rl_hend, rl_base, s);
+    hptr[histend] = rl_hend;
     hlen[histend++] = s;
-    rl_hbufend += s;
+    rl_hend += s;
 }
 
 static void history_droplast(void)
 {
     histend--;
-    rl_hbufend -= hlen[histend];
+    rl_hend -= hlen[histend];
 }
 
 static void history_replace(void)
