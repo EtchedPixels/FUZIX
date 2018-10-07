@@ -79,16 +79,19 @@ SRC_HARD += regexp.c
 #SRC_C += memchr.c memcmp.c memcpy.c memset.c strtol.c
 SRC_TC += termcap.c tgetent.c
 SRC_CURS = $(shell find curses -name '*.c')
+SRC_RL = readline.c readline_fn.c
+
 
 OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_TC = $(SRC_TC:.c=.o)
-
+OBJ_RL = $(SRC_RL:.c=.o)
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_TC) $(OBJ_RL) $(OBJ_CURS)
 
-all: syslib.lib termcap.lib curses.lib liberror.txt crt0_6502.o crt0nostdio_6502.o
+all: syslib.lib termcap.lib curses.lib readline.lib liberror.txt \
+     crt0_6502.o crt0nostdio_6502.o
 
 fuzix6502/Makefile: ../tools/syscall_6502.c ../../Kernel/include/syscall_name.h
 	(cd ..; make tools/syscall_6502)
@@ -102,6 +105,10 @@ syslib.lib: fuzix6502/Makefile $(OBJ_ALL)
 termcap.lib: fuzix6502/Makefile $(OBJ_TC)
 	$(AR) a termcap.lib $(OBJ_TC)
 	ln -sf termcap.lib termcap6502.lib
+
+readline.lib: fuzix6502/Makefile $(OBJ_RL)
+	$(AR) a readline.lib $(OBJ_RL)
+	ln -sf readline.lib readline6502.lib
 
 curses.lib: fuzix6502/Makefile $(OBJ_CURS)
 	$(AR) a curses.lib $(OBJ_CURS)
@@ -120,6 +127,9 @@ $(OBJ_C):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
 
 $(OBJ_TC):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+$(OBJ_RL):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
 
 $(OBJ_CURS):%.o: %.c

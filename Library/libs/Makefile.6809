@@ -67,6 +67,8 @@ SRC_CT += termcap.c tgetent.c
 
 SRC_CURS = $(shell find curses -name '*.c')
 
+SRC_RL = readline.c readline_fn.c
+
 SRC_LM += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
 SRC_LM += cbrtf.c ceilf.c copysignf.c erff.c expf.c expm1f.c
 SRC_LM += fabsf.c fdimf.c floorf.c fmaxf.c fminf.c fmodf.c frexpf.c
@@ -101,11 +103,13 @@ SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_CT = $(SRC_CT:.c=.o)
+OBJ_RL = $(SRC_RL:.c=.o)
 OBJ_LM = $(SRC_LM:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_LM)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_LM) $(OBJ_RL)
 
-all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
+     termcap$(PLATFORM).lib m$(PLATFORM).lib readline$(PLATFORM).lib
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
@@ -150,6 +154,10 @@ m$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 
+readline$(PLATFORM).lib: $(OBJ_RL)
+	$(AR) rc readline$(PLATFORM).lib $(OBJ_RL)
+	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
+
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
 
@@ -171,9 +179,13 @@ $(OBJ_LM):%.o: %.c
 $(OBJ_HARD):%.o: %.c
 	$(CC) $(CC_NOOPT) $(@:.o=.c)
 
+$(OBJ_RL):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
-	libc$(PLATFORM).a liberror.txt
+	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
+	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)
