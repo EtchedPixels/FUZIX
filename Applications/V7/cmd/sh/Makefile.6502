@@ -33,6 +33,13 @@ $(OBJS): $(INCS)
 
 $(FOBJS): $(INCS)
 
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+$(FOBJS): fshbuild/%.o: %.c
+	$(CC) -c $(CFLAGS) -c -DBUILD_FSH $< -o $@
+
+
 clean: 
 	rm -f $(OBJS) fsh sh *~ core
 
