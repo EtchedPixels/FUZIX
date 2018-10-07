@@ -2,6 +2,10 @@ package  V7-sh
 
 f 0755 /bin/sh              sh
 
+package  V7-fsh
+
+f 0755 /bin/fsh             fsh
+
 
 # Man page - in a separate package so that storage-limited targets can
 # disable it.
@@ -9,3 +13,5 @@ f 0755 /bin/sh              sh
 package V7-sh-man
 
 f 0644 /usr/man/man1/sh.1   sh.1
+# For now it is both
+f 0644 /usr/man/man1/sh.1   fsh.1
