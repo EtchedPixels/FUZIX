@@ -102,7 +102,8 @@ OBJ_LM = $(SRC_LM:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_LM) $(OBJ_HARD) $(OBJ_RL)
 
-all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
+     readline$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
