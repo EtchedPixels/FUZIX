@@ -12,7 +12,7 @@
 #include <printf.h>
 #include <rtc.h>
 
-#define CLOCK_PORT	0xC0
+#define CLOCK_PORT	0xD0
 
 static uint8_t rtc_buf[7];
 
