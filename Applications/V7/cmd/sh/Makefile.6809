@@ -34,7 +34,7 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(FOBJS): fshbuild/%.rel: %.c
-	$(FCC) $(Z80_PLATFORM) -c -DBUILD_FSH $< -o $@
+	$(CC) $(Z80_PLATFORM) -c -DBUILD_FSH $< -o $@
 
 sh: $(OBJS) $(CRT0)
 	$(LINKER) -o $@ $(LINKER_OPT) $^
