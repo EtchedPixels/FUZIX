@@ -14,4 +14,4 @@ package V7-sh-man
 
 f 0644 /usr/man/man1/sh.1   sh.1
 # For now it is both
-f 0644 /usr/man/man1/sh.1   fsh.1
+f 0644 /usr/man/man1/fsh.1   sh.1
