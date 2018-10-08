@@ -148,8 +148,11 @@ int main(int argc, char *argv[])
 	}
 	mark_map();
 	for (r = 0; r < 4; r++) {
-		for (i = 0; i < 256; i += 4)
+		for (i = 0; i < 256; i += 4) {
 			putchar(use[i + r]);
+			if ((i & 0x3C) == 0x3C)
+				putchar(' ');
+		}
 		putchar('\n');
 	}
 	exit(0);
