@@ -23,6 +23,20 @@ void set_fs_label(const char *p)
     fs.fs.s_props |= S_PROP_LABEL;
 }
 
+uint8_t makesecsize(uint16_t bsize)
+{
+    uint8_t n = 0;
+    while(bsize > 128) {
+        bsize >>= 1;
+        n++;
+    }
+    if (bsize != 128) {
+        fprintf(stderr, "Invalid block size.\n");
+        exit(1);
+    }
+    return n;
+}
+
 void set_fs_geo(const char *p)
 {
     unsigned int heads;
@@ -39,9 +53,9 @@ void set_fs_geo(const char *p)
     fs.fs.s_geo_cylinders = cyls;
     fs.fs.s_geo_sectors = sectors;
     if (n > 3)
-        fs.fs.s_geo_secsize = bsize;
+        fs.fs.s_geo_secsize = makesecsize(bsize);
     else
-        fs.fs.s_geo_secsize = 512;
+        fs.fs.s_geo_secsize = 2;
     if (n == 5)
         fs.fs.s_geo_skew = skew;
     else
@@ -100,7 +114,7 @@ int main(int argc, char *argv[])
             printf("Geometry: %d heads, %d cylinders\n",
                 fs.fs.s_geo_heads, fs.fs.s_geo_cylinders);
             printf("          %d sectors, blocksize %$d skew %d.\n",
-                fs.fs.s_geo_sectors, fs.fs.s_geo_secsize, fs.fs.s_geo_skew);
+                fs.fs.s_geo_sectors, 128 << fs.fs.s_geo_secsize, fs.fs.s_geo_skew);
         return 0;
     }
     if (lseek(fd, 512L , SEEK_SET) == -1) {
