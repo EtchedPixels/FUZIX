@@ -137,9 +137,9 @@ void tty_pollirq_sio(void)
 	uint8_t progress;
 
 	/* Check for an interrupt */
-	SIOA_C = 0;
-	if (!(SIOA_C & 2))
-		return;
+//	SIOA_C = 0;
+//	if (!(SIOA_C & 2))
+//		return;
 
 	/* FIXME: need to process error/event interrupts as we can get
 	   spurious characters or lines on an unused SIO floating */

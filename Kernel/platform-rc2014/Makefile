@@ -4,7 +4,7 @@ CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
-DSRCS +=  ../dev/ds1302.c
+DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c
 DASRCS = ../dev/devfd_hw.s ../dev/ds1302_rc2014.s
 NSRCS = ../dev/net/net_native.c
 

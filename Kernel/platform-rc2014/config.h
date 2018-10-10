@@ -1,3 +1,41 @@
+/* System level configuration */
+
+/* Set this if you have the RC2014 CF adapter at 0x10/0x90 */
+#define CONFIG_RC2014_CF
+/* Set this to be able to do networking over the second serial port */
+#define CONFIG_RC2014_NET
+/* Set this if you have the 8255 IDE adapter (mutually exclusive of RC2014_CF) */
+#undef CONFIG_RC2014_PPIDE
+/* Set this if you have the floppy interface */
+#undef CONFIG_RC2014_FLOPPY
+/* Set this if you have a VFD interface */
+#undef CONFIG_RC2014_VFD
+
+
+/*
+ *	Turn selections into system level defines
+ */
+
+#ifdef CONFIG_RC2014_CF
+#define CONFIG_IDE
+#endif
+#ifdef CONFIG_RC2014_PPIDE
+#define CONFIG_IDE
+#define CONFIG_PPIDE
+#endif
+#ifdef CONFIG_RC2014_NET
+/* Core Networking support */
+#define CONFIG_NET
+/* User mode uIP TCP/IP daemon */
+#define CONFIG_NET_NATIVE
+#endif
+#ifdef CONFIG_RC2014_FLOPPY
+#define CONFIG_FLOPPY
+#endif
+#ifdef CONFIG_RC2014_VFD
+#define CONFIG_VFD_TERM
+#endif
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -24,7 +62,6 @@
 #define PROGTOP     0xD000  /* Top of program, base of U_DATA copy */
 /* FIXME: check this... for discard looks wrong */
 #define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
-#define PROC_SIZE   64	  /* Memory needed per process */
 
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern unsigned int swap_dev;
@@ -59,23 +96,10 @@ extern unsigned int swap_dev;
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
 
-/* Floppy support */
-#define CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
-/* IDE/CF support */
-#define CONFIG_IDE
-
-#undef CONFIG_VFD_TERM         /* #define CONFIG_VFD_TERM to show console output on VFD display */
-
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
-/* Core Networking support */
-#define CONFIG_NET
-/* User mode uIP TCP/IP daemon */
-#define CONFIG_NET_NATIVE
-
 #define NUM_DEV_TTY 2
-
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
