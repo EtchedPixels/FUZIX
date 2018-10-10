@@ -553,11 +553,6 @@ typedef struct u_data {
     uint16_t    u_euid;
     uint16_t    u_egid;
     char        u_name[8];      /* Name invoked with */
-    clock_t     u_utime;        /* Elapsed ticks in user mode */
-    clock_t     u_stime;        /* Ticks in system mode */
-    clock_t     u_cutime;       /* Total childrens ticks */
-    clock_t     u_cstime;
-    clock_t     u_time;         /* Start time */
     
     /* This section is not written out except as padding */
     uint8_t     u_files[UFTSIZE];       /* Process file table: indices into open file table, or NO_FILE. */

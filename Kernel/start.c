@@ -404,7 +404,7 @@ void fuzix_main(void)
 
 	udata.u_cwd = i_ref(root);
 	udata.u_root = i_ref(root);
-	rdtime32(&udata.u_time);
+	rdtime32(&udata.u_ptab->p_time);
 	exec_or_die();
 }
 

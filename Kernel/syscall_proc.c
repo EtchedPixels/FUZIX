@@ -197,7 +197,7 @@ arg_t _times(void)
 
 	irq = di();	
 
-	uput(&udata.u_utime, buf, 4 * sizeof(clock_t));
+	uput(&udata.u_ptab->p_utime, buf, 4 * sizeof(clock_t));
 	uput(&ticks, buf + 4 * sizeof(clock_t),
 	     sizeof(clock_t));
 
@@ -313,12 +313,9 @@ arg_t _waitpid(void)
 						retval = p->p_pid;
 						p->p_status = P_EMPTY;
 
-						/* Add in child's time info.  It was stored on top */
-						/* of p_priority in the childs process table entry. */
-						/* FIXME: make these a union so we don't do type
-						   punning and break strict aliasing */
-						udata.u_cutime += ((clock_t *)&p->p_priority)[0];
-						udata.u_cstime += ((clock_t *)&p->p_priority)[1];
+						/* Add in child's cumulative time info */
+						udata.u_ptab->p_cutime += p->p_utime + p->p_cutime;
+						udata.u_ptab->p_cstime += p->p_stime + p->p_cstime;
 						return retval;
 					}
 					if (p->p_event && (options & WUNTRACED)) {

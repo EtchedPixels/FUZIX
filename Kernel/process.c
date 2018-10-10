@@ -303,9 +303,9 @@ void newproc(regptr ptptr p)
 
 	udata.u_ptab = p;
 
-	memset(&udata.u_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
+	memset(&p->p_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
 
-	rdtime32(&udata.u_time);
+	rdtime32(&p->p_time);
 	if (udata.u_cwd)
 		i_ref(udata.u_cwd);
 	if (udata.u_root)
@@ -415,9 +415,9 @@ void timer_interrupt(void)
 	   and half of another.. */
 	if (!inswap && udata.u_ptab->p_status == P_RUNNING) {
 		if (udata.u_insys)
-			udata.u_stime++;
+			udata.u_ptab->p_stime++;
 		else
-			udata.u_utime++;
+			udata.u_ptab->p_utime++;
 	}
 
 	/* Do once-per-decisecond things - this doesn't work out well on
@@ -851,11 +851,6 @@ void doexit(uint16_t val)
 	 */
 
 	sync_clock();	/* Not that these values will be wildly accurate! */
-
-	udata.u_utime += udata.u_cutime;
-	udata.u_stime += udata.u_cstime;
-	memcpy(&(udata.u_ptab->p_priority), &udata.u_utime,
-	       2 * sizeof(clock_t));
 
 	for (p = ptab; p < ptab_end; ++p) {
 		if (p->p_status == P_EMPTY || p == udata.u_ptab)
