@@ -10,6 +10,8 @@
 #include <devide.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_PPIDE
+
 __sfr __at (PPIDE_BASE + 0x00) ppi_port_a;   /* IDE bus LSB */
 __sfr __at (PPIDE_BASE + 0x01) ppi_port_b;   /* IDE bus MSB */
 __sfr __at (PPIDE_BASE + 0x02) ppi_port_c;   /* IDE bus control signals */
@@ -122,3 +124,5 @@ gowrite:    ; now we do the transfer
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
+
+#endif
