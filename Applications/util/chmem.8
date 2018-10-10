@@ -1,0 +1,30 @@
+CHMEM(8)
+## NAME
+*chmem* - change memory allocation for a binary
+## SYNOPSIS
+*chmem* \[size\] path
+
+## DESCRIPTION
+*Chmem* shows and updates the header field in a Fuzix binary that indicates
+the largest amount of dynamic memory and stack required. The zero value means
+unlimited. The application is not guaranteed to get that much memory, it is
+instead a promise by the application not to use any more.
+
+When *size* is specified the binary is updated for that size in bytes. When
+no size is specified the current setting is displayed.
+
+## SEE ALSO ##
+*size*(1)
+
+## BUGS ##
+It would be far more useful to be able to specify the amount of stack
+required.
+Only certain memory manager support this field, others will always allocate
+as it was zero. This makes testing chmem settings difficult.
+
+## FUTURE ##
+This interface will be obsoleted in favour of a stack size setting in some future
+release.
+
+## STANDARDS ##
+Fuzix specific. Minix has a similar chmem feature.

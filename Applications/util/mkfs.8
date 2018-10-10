@@ -1,0 +1,25 @@
+MKFS(8)
+## NAME
+*mkfs* \[-f\] device isize fsize
+
+## DESCRIPTION
+The *mkfs* tool initializes a new file system on a device.
+
+The isize field specifies the number of inode blocks on the file system.
+Each inode block holds 8 inodes. This determines the number of individual
+files and directories that may be present on the disk.
+
+The fsize field gives the size of the media in 512 byte blocks - up to 65535
+blocks for 32MB media.
+
+The default behaviour is to zero the entire file system and then write the
+new metadata to the device. If the -f flag is passed then the data areas are
+not cleared, bad data blocks may not be found and old data may persist in
+blocks not allocated to files.
+
+## BUGS
+None know
+
+## STANDARDS
+Whilst most Fuzix-like systems have a mkfs command the syntax, functionality
+and file system format varies extensively.

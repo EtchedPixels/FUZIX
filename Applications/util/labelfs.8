@@ -1,0 +1,26 @@
+LABELFS(8)
+## NAME
+*labelfs* - label a file system with a name or geometry
+## SYNPOSIS
+*labelfs* \[-l label\] \[-g heads,cyls,secs\[,blocksize\[,skew\]\]\] path
+
+## DESCRIPTION
+The *labelfs* utility allows the display or modification of geometry and
+label data applied to a file system. It is primarily intended to be used
+with floppy disk media.
+
+When no label or geometry option is given the program will display the
+current label and geometry if present.
+
+When the options are provided the values are written into the media. The
+sector size must be a power of two and at least 128 bytes. Labels are an
+arbitrar text string of up to 32 bytes.
+
+## BUGS
+None known
+
+## STANDARDS
+Fuzix specific.
+
+## AUTHOR
+Alan Cox

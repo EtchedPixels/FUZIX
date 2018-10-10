@@ -61,6 +61,7 @@ SRCS  = \
 	bd.c \
 	bogomips.c \
 	cal.c \
+	chmem.c \
 	cksum.c \
 	cut.c \
 	dd.c \
@@ -98,6 +99,7 @@ SRCS  = \
 	sed.c \
 	seq.c \
 	setdate.c \
+	size.c \
 	sleep.c \
 	ssh.c \
 	socktest.c \

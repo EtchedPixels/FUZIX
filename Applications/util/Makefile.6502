@@ -55,6 +55,7 @@ SRCSNS = \
 SRCS  = banner.c \
 	bd.c \
 	cal.c \
+	chmem.c \
 	cksum.c \
 	cut.c \
 	dd.c \
@@ -90,6 +91,7 @@ SRCS  = banner.c \
 	sed.c \
 	seq.c \
 	setdate.c \
+	size.c \
 	sleep.c \
 	ssh.c \
 	sort.c \

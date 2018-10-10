@@ -49,6 +49,7 @@ SRCS  = banner.c \
 	bd.c \
 	bogomips.c \
 	cal.c \
+	chmem.c \
 	cksum.c \
 	cpuinfo.c \
 	cut.c \
@@ -88,6 +89,7 @@ SRCS  = banner.c \
 	remount.c \
 	seq.c \
 	setdate.c \
+	size.c \
 	sleep.c \
 	ssh.c \
 	sort.c \
