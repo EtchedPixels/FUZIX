@@ -131,6 +131,8 @@ _switchin:
 	;	#2: kernel syscall. Also protected by U_DATA__U_INSYS
 	;
 	ei
+	xor a
+	ld (_int_disabled),a
 	push hl
 	push de
 	push af
@@ -138,6 +140,9 @@ _switchin:
 	pop af
 	pop de
 	pop hl
+	ld a,#1		; don't change this for an inc a. The push/pop af may
+			; be eaten by the banking code!
+	ld (_int_disabled),a
 	di
 .endif
 	ld a, (hl)

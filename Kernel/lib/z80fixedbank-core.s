@@ -120,11 +120,15 @@ _switchin:
 	;	#2: kernel syscall. Also protected by U_DATA__U_INSYS
 	;
 	ei
+	xor a
+	ld (_int_disabled),a
 	push hl
 	push de
 	call _swapper
 	pop de
 	pop hl
+	ld a,#1
+	ld (_int_disabled),a
 	di
 .endif
 	ld a, (hl)
