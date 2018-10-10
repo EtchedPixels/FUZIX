@@ -34,11 +34,10 @@
 #include <proc.h>
 #include <pwd.h>
 #include <fcntl.h>
+#include <time.h>
 
 #define TTY_MAJOR	2		/* Be nice if we didn't have to
 					   just know this */
-
-#define PTABSIZE	128
 
 static uint16_t optflags;
 #define F_e		1		/* All */
@@ -88,8 +87,8 @@ static char mapstat(char s)
 	return '?';
 }
 
-static struct p_tab_buffer ptab[PTABSIZE];
-static pid_t ppid_slot[PTABSIZE];
+static struct p_tab_buffer *ptab;
+static pid_t *ppid_slot;
 static uid_t uid;
 static pid_t pid;
 static uint8_t tty;
@@ -357,16 +356,40 @@ void display_process(struct p_tab *pp, int i)
 	}
 	/* We need to sort out the whole kernel and user handling of
 	   times in ptab verus udata here */
-	if (outflags & OF_STIME)
-		fputs("00:00 ", stdout);	/* FIXME */
+	if (outflags & OF_STIME) {
+		uint32_t t;
+		t = time(NULL) - pp->p_stime;
+		if ((t - pp->p_stime) > 86400)
+			printf("%02day ", t / 86400);
+		else {
+			struct tm *tm;
+			time_t x = pp->p_stime;
+			tm = localtime(&x);
+			printf("%02d:%02d ",
+				tm->tm_hour, tm->tm_min);
+		}
+	}
+				
 	if (outflags & OF_TTY) {
 		if (!pp->p_tty)
 			fputs("     ? ", stdout);
 		else
 			printf("%6s ", ttyshortname(pp->p_tty));
 	}
-	if (outflags & OF_TIME)
-		fputs("00:00:00 ", stdout);	/* FIXME */
+	if (outflags & OF_TIME) {
+		/* cstime/cutime or ctime/utime ? */ 
+		uint32_t c = pp->p_cstime + pp->p_cutime;
+		uint8_t secs = c % 60;
+		uint8_t mins;
+		c -= secs;
+		c /= 60;
+		mins = c % 60;
+		c -= mins;
+		c /= 60;
+		/* What to do if we exceed 99 hours ? */
+		printf("%02d:%02d:%02d ",
+			c, mins, secs);
+	}
 	if (outflags & OF_CMD) {
 		char name[9];
 		strncpy(name, pp->p_name, 8);
@@ -415,8 +438,13 @@ int do_ps(void)
 		return 1;
 	}
 
-	if (ptsize > PTABSIZE)
-		ptsize = PTABSIZE;
+	ptab = calloc(ptsize, sizeof(struct p_tab_buffer));
+	ppid_slot = calloc(ptsize, sizeof(pid_t));
+	
+	if (ptab == NULL || ppid_slot == NULL) {
+		fprintf(stderr, "ps: out of memory.\n");
+		exit(1);
+	}
 
 	for (i = 0; i < ptsize; ++i) {
 		if (read(pfd, (char *) &ptab[i], nodesize) != nodesize) {
