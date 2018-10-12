@@ -8,7 +8,7 @@ ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s ide.s
 
 # buffers.c must be in CODE2, direct users are more convenient there as
 # the asm helpers then can avoid another switch
-C2SRCS = buffers.c devfd.c devfd3.c devhd.c
+C2SRCS = buffers.c devfd.c devhd.c
 # And these so CODE1 is under 32K
 C2SRCS += devices.c main.c devstringy.c devinput.c
 C2SRCS += devlpr.c devtty.c devgfx.c

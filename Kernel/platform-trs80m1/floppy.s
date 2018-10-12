@@ -8,7 +8,7 @@
 ;	FIXME: precompensation ??
 ;	FIXME: 512 byte sector support
 ;
-	.globl _fd_reset
+	.globl _fd_restore
 	.globl _fd_operation
 	.globl _fd_motor_on
 	.globl _fd_motor_off
@@ -280,13 +280,9 @@ fdio_xfer_out:
 ;
 ;	Reset to track 0, wait for the command then idle
 ;
-;	fd_reset(uint8_t *drvptr)
+;	fd_restore(uint8_t *drvptr)
 ;
-_fd_reset:
-	pop	de
-	pop	hl
-	push	hl
-	push	de
+_fd_restore:
 	call	go_slow
 	ld	a, #1
 	ld	(FDCSEC), a
@@ -297,7 +293,9 @@ _fd_reset:
 	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
 	call	waitcmd
+	ld	l,a
 	call	go_fast
+	ld	a,l
 	cp	#0xff
 	ret	z
 	and	#0x99		; Error bit from the reset
@@ -305,16 +303,13 @@ _fd_reset:
 	ld	(hl), a		; Track 0 correctly hit (so 0)
 	ret
 ;
-;	fd_operation(uint16_t *cmd, uint16_t *drive)
+;	fd_operation(uint8_t *cmd)
 ;
 ;	The caller must ensure the drive has been selected and the motor is
 ;	running.
 ;
 _fd_operation:
-	pop	bc		; return address
-	pop	de		; drive track ptr
-	push	de
-	push	bc
+	ex	de,hl
 	push	ix
 	ld	a, (_fd_map)
 	or	a
@@ -368,11 +363,7 @@ waitdiskl:
 ;
 ;
 _fd_motor_on:
-	pop	de
-	pop	bc
-	push	bc
-	push	de
-
+	ld	c,l
 	;
 	;	Is the motor running ?
 	;

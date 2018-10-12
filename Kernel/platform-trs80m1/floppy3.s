@@ -17,7 +17,7 @@
 ;	FIXME: backport fixes to model 4
 ;
 ;
-	.globl _fd3_reset
+	.globl _fd3_restore
 	.globl _fd3_operation
 	.globl _fd3_motor_on
 	.globl _fd3_motor_off
@@ -241,11 +241,11 @@ fdio_inl:
 fdio_inbyte:
 	out	(FDCCTRL), a		; stalls
 	ini
-	jr	nz, fdio_inbyte
+	jp	nz, fdio_inbyte
 fdio_inbyte2:				; this is patched for I/O size
 	out	(FDCCTRL), a		; stalls
 	ini
-	jr	nz, fdio_inbyte2
+	jp	nz, fdio_inbyte2
 	jr	fdxferdone
 
 ;
@@ -287,7 +287,7 @@ fdio_waitlock:
 fdio_outbyte:
 	out	(FDCCTRL), a		; stalls
 	outi
-	jr	nz,fdio_outbyte
+	jp	nz,fdio_outbyte
 	
 fdio_nmiout:
 ;
@@ -306,13 +306,7 @@ fdxferbad:
 ;
 ;	fd_reset3(uint8_t *drvptr)
 ;
-_fd3_reset:
-	pop	bc
-	pop	de
-	pop	hl
-	push	hl
-	push	de
-	push	bc
+_fd3_restore:
 	ld	a, (fdcctrl)
 	out	(FDCCTRL), a
 	ld	a, #1
@@ -328,6 +322,7 @@ _fdr_wait:
 	djnz	_fdr_wait
 	
 	call	waitdisk
+	ld	l,a
 	cp	#0xff
 	ret	z
 	and	#0x99		; Error bit from the reset
@@ -335,21 +330,16 @@ _fdr_wait:
 	ld	(hl), a		; Track 0 correctly hit (so 0)
 	ret
 ;
-;	fd_operation3(uint16_t *drive)
+;	fd_operation3(uint8_t *driveptr)
 ;
 ;	The caller must ensure the drive has been selected and the motor is
 ;	running.
 ;
 _fd3_operation:
+	ex	de,hl		; arg into de
 	ld	a, (_fd_map)
 	or	a
 	call	nz, map_process_always
-	pop	hl		; banked
-	pop	bc		; return address
-	pop	de		; drive track ptr
-	push	de
-	push	bc
-	push	hl
 	push	ix
 	ld	ix, #_fd_cmd
 	ld	l, DATA(ix)
@@ -376,12 +366,6 @@ _fd3_operation:
 ;
 ;
 _fd3_motor_on:
-	pop	bc
-	pop	de
-	pop	hl
-	push	hl
-	push	de
-	push	bc
 	;
 	;	Select drive B, turn on motor if needed
 	;
@@ -397,9 +381,9 @@ _fd3_motor_on:
 notsel:
 	ld	a, l
 	out 	(FDCCTRL), a
-	out	(FDCCTRL), a	; TRS80 erratum apparently needs this
+	out	(FDCCTRL), a	; TRS80 erratum: model 4 gate array apparently needs this
 	ld	(fdcctrl), a
-	ld	bc, #0x7F00	; Long delay (may need FE or FF for some disks)
+	ld	bc, #0x7F00	; Long delay (may need FE or FF for some disks?)
 	call	nap
 	; FIXME: longer motor spin up delay goes here (0.5 or 1 second)
 	

@@ -20,7 +20,6 @@ platform-trs80m1/main.rel
 timer.rel
 kdata.rel
 platform-trs80m1/devfd.rel
-platform-trs80m1/devfd3.rel
 platform-trs80m1/floppy.rel
 platform-trs80m1/floppy3.rel
 platform-trs80m1/devhd.rel
