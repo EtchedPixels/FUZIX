@@ -3,10 +3,12 @@
 ;	Based on the 6809 code
 ;
 ;	FIXME: better drive spin up wait
-;	FIXME: tandy doubler
+;	FIXME: doublers
 ;	FIXME: correct step rates (per drive ?)
 ;	FIXME: precompensation ??
 ;	FIXME: 512 byte sector support
+;	FIXME: sector size setting
+;	FIXME: improve SD/DD handling
 ;
 	.globl _fd_restore
 	.globl _fd_operation
@@ -81,6 +83,9 @@ TRACK	.equ	1
 SECTOR	.equ	2
 DIRECT	.equ	3		; 0 = read 2 = write 1 = status
 DATA	.equ	4
+SIZE	.equ	6		; For now 1 = 256 2 = 512
+STEP	.equ	7		; Step rate
+COMP	.equ	8		; Write compensation
 
 	.area	_COMMONMEM
 ;
@@ -111,7 +116,8 @@ fdsetup:
 	;	Need to seek the disk
 	;
 	ld	hl,#FDCREG
-	ld	a, #0x18	; seek	FIXME: need to set step rate
+	ld	a, #0x18
+	or	STEP(ix)
 	ld	(hl), a
 	call	waitcmd
 	and	#0x18		; error bits
@@ -288,7 +294,7 @@ _fd_restore:
 	ld	(FDCSEC), a
 	xor	a
 	ld	(FDCTRK), a
-	ld	a, #0x0C
+	ld	a, #0x0C	; FIXME: seek rate ??
 	ld	(FDCREG), a	; restore
 	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
@@ -395,6 +401,7 @@ must_config:
 	ld	(LATCHD0), a	; Selects the actual disk we want
 	ld	d,a		; Save latch value
 	rl	c		; Bit 7 into C
+	; FIXME: Tandy DD support
 	ld	a,#0xFE		; Figure out the density
 	adc	a,#0		; FE or FF according to density
 	di
@@ -439,4 +446,4 @@ _fd_selected:
 _fd_tab:
 	.db	0xFF, 0xFF, 0xFF, 0xFF
 _fd_cmd:
-	.ds	7
+	.ds	9

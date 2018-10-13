@@ -5,6 +5,7 @@
 int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_open(uint8_t minor, uint16_t flag);
+int fd_ioctl(uint8_t minor, uarg_t request, char *buffer);
 
 /* low level interface */
 uint8_t fd_restore(uint8_t *driveptr) __z88dk_fastcall;

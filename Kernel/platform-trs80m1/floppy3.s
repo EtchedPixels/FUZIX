@@ -57,6 +57,8 @@ SECTOR	.equ	2
 DIRECT	.equ	3		; 0 = read 2 = write 1 = status
 DATA	.equ	4
 SIZE	.equ	6		; For now 1 = 256 2 = 512
+STEP	.equ	7		; Step rate
+COMP	.equ	8		; Write compensation
 
 	.area	_COMMONMEM
 ;
@@ -122,6 +124,7 @@ waitdisk_l:
 	ex	(sp),hl
 	in	a, (FDCREG)		; read to reset int status
 	bit	0, a
+	ld	a,#0xff
 	ret
 ;
 ;	Set up and perform a disk operation
@@ -172,14 +175,11 @@ patchfor256:
 
 	ld	a, TRACK(ix)
 	ld	(de), a		; save track
-;	cmp	#22		; FIXME
-;	jr	nc, noprecomp
-;	ld	a, (fdcctrl)
-;	or	#0x10		; Precomp on
-;	jr	precomp1
-;noprecomp:
+	cp	COMP(ix)
 	ld	a, (fdcctrl)
-;precomp1:
+	jr	nc, noprecomp
+	or	#0x10		; Precomp on
+noprecomp:
 	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
 	out	(FDCSEC), a
@@ -313,7 +313,7 @@ _fd3_restore:
 	out	(FDCSEC), a
 	xor	a
 	out	(FDCTRK), a
-	ld	a, #0x0C
+	ld	a, #0x0C	; FIXME: seek rate
 	out	(FDCREG), a	; restore
 	ld	a, #0xFF
 	ld	(hl), a		; Zap track pointer
@@ -322,12 +322,14 @@ _fdr_wait:
 	djnz	_fdr_wait
 	
 	call	waitdisk
+	ex	de,hl
 	ld	l,a
 	cp	#0xff
 	ret	z
 	and	#0x99		; Error bit from the reset
 	ret	nz
-	ld	(hl), a		; Track 0 correctly hit (so 0)
+	ld	(de), a		; Track 0 correctly hit (so 0)
+	ld	l,a
 	ret
 ;
 ;	fd_operation3(uint8_t *driveptr)
@@ -380,6 +382,7 @@ _fd3_motor_on:
 ;
 notsel:
 	ld	a, l
+	and	#0x7F
 	out 	(FDCCTRL), a
 	out	(FDCCTRL), a	; TRS80 erratum: model 4 gate array apparently needs this
 	ld	(fdcctrl), a
@@ -391,6 +394,8 @@ notsel:
 ;
 ;	All is actually good
 ;
+	ld	a,#1
+	ld	(motor_running),a
 motor_was_on:
 	ld	hl, #0
 	ret
