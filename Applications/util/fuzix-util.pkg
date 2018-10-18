@@ -16,6 +16,7 @@ package  util-mini
 # exist. Source file is specified relative to the location of the pkg file
 f 0755 /bin/basename    basename
 f 0755 /bin/cat         cat
+f 0755 /bin/chmem       chmem
 f 0755 /bin/chmod       chmod
 f 0755 /bin/cmp         cmp
 f 0755 /bin/substroot   substroot
