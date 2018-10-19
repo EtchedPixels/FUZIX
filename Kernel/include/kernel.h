@@ -745,7 +745,13 @@ struct s_argblk {
 #define HDIO_GET_IDENTITY	0x0102	/* Not yet implemented anywhere */
 #define BLKFLSBUF		0x4103	/* Use the Linux name */
 #define HDIO_RAWCMD		0x4104	/* Issue a raw command, ioctl data
-					   is device dependant ! */
+                                           is device dependent */
+#define HDIO_EJECT		0x0105	/* Request a media eject */
+
+/*
+ *	Floppy disk ioctl s0x01Fx (see fdc.h)
+ */
+
 /*
  *	Sound ioctls 02xx (see audio.h)
  */
@@ -770,6 +776,7 @@ struct s_argblk {
 /*
  *	Tape ioctls 0x06xx (see tape.h)
  */
+
 
 /*
  *	System info shared with user space
