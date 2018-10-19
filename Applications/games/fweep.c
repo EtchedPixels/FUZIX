@@ -69,10 +69,10 @@ const char zscii_conv_2[128] = {
 };
 
 #if (VERSION == 1)
-char alpha[78] =
+uint8_t alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789.,!?_#'\"/\\<-:()";
 #else
-char alpha[78] =
+uint8_t alpha[78] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ^0123456789.,!?_#'\"/\\-:()";
 #endif
 
@@ -94,7 +94,6 @@ uint16_t synonym_table;
 uint16_t alphabet_table;
 uint16_t static_start;
 uint16_t global_table;
-uint8_t memory[0x20000];
 uint32_t program_counter;	/* Can be in high memory */
 
 #define STACKSIZE 256
@@ -241,83 +240,312 @@ int xclose(int f)
 	return 0;
 }
 
-#if 0
-static uint16_t nextoff;	/* It's 8bit but we use > 255 to mean no hit */
+#ifndef LOAD_ALL
 
-static uint8_t buffer[32][512];
-static uint8_t tlb;
-static uint16_t idx[33];
-static uint8_t dirty[32];
-static uint8_t used[32];
+#define ZBUF_NUM	32
 
-static void buffers_init(void)
+/* Based on an idea by Staffan Vilcans: Skip the fseek() if it isn't needed */
+static uint32_t last_addr;
+static uint8_t last_count;
+static uint8_t *last_ptr;
+static uint16_t last_page;
+static uint32_t slow, fast, miss;
+
+static int pagefile = -1;
+
+static uint8_t zbuf[ZBUF_NUM][256];
+static uint16_t zbuf_page[ZBUF_NUM];
+static uint8_t zbuf_pri[ZBUF_NUM];	/* 0 = unused , 1+ is use count */
+static uint8_t zbuf_dirty[ZBUF_NUM];
+
+static uint16_t membreak;
+
+uint8_t memory[64];		// Set to 0x20000 for debugging
+
+static uint8_t zbuf_alloc(void)
 {
-	memset(used, 0, 32);
-	memset(dirty, 0, 32);
-	memset(idx, 0xFF, 64);
-	idx[32] = 0xFFFF;
-}
-
-static uin8_t find_buffer(uint16_t page)
-{
-	uint16_t *p = idx;
-	while(*p != 0xFFFF) {
-		if (*p == page)
-			return p - idx;
-		p++;
-	}
-	/* Need to do I/O */
-
-	/* FIXME write some I/O routines 8) */
-}
-
-static uint8_t getbyte(uint16_t page, uint8_t off)
-{
-	if (lastpage == page) {
-		if (off == nextoff) {
-			nextoff++;
-			return *ptr++;
+	uint8_t low = 255;
+	uint8_t i, lnum = 0;
+	for (i = 0; i < ZBUF_NUM; i++) {
+		if (zbuf_pri[i] == 0)
+			return i;
+		if (zbuf_pri[i] < low) {
+			lnum = i;
+			low = zbuf_pri[i];
 		}
-		nextoff = off + 1;
-		ptr = buffer[tlb] + off;
-		return *ptr++;
 	}
-	/* Slow path */
-	tlb = find_buffer(page);
-	nextoff = off + 1;
-	ptr = buffer[tlb] + off;
-	return *ptr++;
+	return lnum;
 }
 
-static uint8_t putbyte(uint16_t page, uint8_t off, uint8_t val)
+static void zbuf_sweep(void)
 {
-	if (lastpage == page) {
-		if (off == nextoff) {
-			nextoff++;
-			return *ptr++;
-		}
-		nextoff = off + 1;
-		ptr = buffer[tlb] + off;
-		*ptr++ = val;
-		dirty[tlb] |= 1;
-		return;
-	}
-	/* Slow path */
-	tlb = find_buffer(page);
-	nextoff = off + 1;
-	ptr = buffer[tlb] + off;
-	*ptr++ = val;
-	dirty[tlb] |= 1;
+	uint8_t i;
+	for (i = 0; i < ZBUF_NUM; i++)
+		if (zbuf_pri[i] > 1)
+			zbuf_pri[i] /= 2;
 }
 
-#endif
-		
+static void zbuf_load(uint8_t slot, uint16_t page)
+{
+	int f = story;
+	/* Invalidate any fast page pointer into this page */
+	if (page == last_page)
+		last_count = 0;
+	zbuf_page[slot] = page;
+	zbuf_pri[slot] = 0x80;
+	if (page < membreak)
+		f = pagefile;
+//	fprintf(stderr, "Loading page %d int slot %d from %d\n", page, slot, f);
+	if (lseek(f, ((off_t)page) << 8, SEEK_SET) < 0 ||
+	    read(f, zbuf[slot], 256) != 256) {
+		perror(story_name);
+		exit(1);
+	}
+}
+
+static void zbuf_writeback(uint8_t slot)
+{
+//	fprintf(stderr, "Writing back slot %d (page %d)\n", slot,
+//		zbuf_page[slot]);
+	if (lseek(pagefile, ((off_t)zbuf_page[slot]) << 8, SEEK_SET) < 0 ||
+	    write(pagefile, zbuf[slot], 256) != 256) {
+	    	perror("pagefile");
+	    	exit(1);
+	}
+	zbuf_dirty[slot] = 0;
+}
+
+static uint8_t zbuf_find(uint16_t page)
+{
+	uint8_t i;
+	for (i = 0; i < ZBUF_NUM; i++) {
+		if (zbuf_page[i] == page) {
+			slow++;
+			zbuf_pri[i] |= 0x80;
+			return i;
+		}
+	}
+	zbuf_sweep();
+	i = zbuf_alloc();
+	if (zbuf_dirty[i])
+		zbuf_writeback(i);
+	zbuf_load(i, page);
+	miss++;
+	return i;
+}
+
+static uint8_t zmem(uint32_t addr)
+{
+	uint8_t c;
+	uint16_t page;
+
+	/* Fast path - current buffer */
+	if (last_count && addr == last_addr + 1) {
+//		fprintf(stderr, "[%02X]", last_ptr[1]);
+//		fflush(stderr);
+		fast++;
+		last_addr++;
+		last_count--;
+//		if (last_ptr[1] != memory[addr])
+//			fprintf(stderr, "Botched %d, %02X, %02X\n",
+//				addr, last_ptr[1], memory[addr]);
+		return *++last_ptr;
+	}
+
+	page = addr >> 8;
+	c = zbuf_find(page);
+//	printf("TLB lookup %d ->%d\n", page, c);
+	last_addr = addr;
+	last_page = page;
+	last_count = 255 - (uint8_t)addr;
+	last_ptr = zbuf[c] + (addr & 0xFF);
+//	fprintf(stderr, "[%06X:%02X]\n", addr, *last_ptr);
+//	fflush(stderr);
+//	if (*last_ptr != memory[addr])
+//		fprintf(stderr, "Botched %d, %02X, %02X\n",
+//			addr, *last_ptr, memory[addr]);
+	return *last_ptr;
+}
+
+static void zwrite(uint16_t addr, uint8_t value)
+{
+	/* FIXME: optimize */
+	uint8_t p = zbuf_find(addr >> 8);
+	zbuf[p][addr & 0xFF] = value;
+	zbuf_dirty[p] = 1;
+	memory[addr] = value;
+//	fprintf(stderr, ">%06X:%02X<\n", addr, value);
+}
+	
+/* Big endian */
+static uint16_t zword(uint32_t addr)
+{
+	uint16_t r = zmem(addr) << 8;
+	r |= zmem(addr + 1);
+	return r;
+}
+
 /*
  *	Memory management
  */
 uint8_t pc(void)
 {
-	return memory[program_counter++];
+	return zmem(program_counter++);
+}
+
+uint16_t read16low(uint16_t address)
+{
+	return zword(address);
+}
+
+uint16_t read16(uint32_t address)
+{
+	return zword(address);
+}
+
+/* Can be uint16 except when debugging */
+void write16(uint16_t address, uint16_t value)
+{
+	zwrite(address, value >> 8);
+	zwrite(address + 1, value);
+}
+
+uint8_t read8low(uint16_t address)
+{
+	return zmem(address);
+}
+
+uint8_t read8(uint32_t address)
+{
+	return zmem(address);
+}
+
+void write8(uint16_t address, uint8_t value)
+{
+	zwrite(address, value);
+}
+
+static char tmpstr[] = "/tmp/fweepXXXXXX";
+void paging_init(void)
+{
+	uint8_t i = 0;
+	if (pagefile == - 1) {
+		pagefile = mkstemp(tmpstr);
+		if (pagefile == -1) {
+			perror("create pagefile");
+			exit(1);
+		}
+	}
+	
+	membreak = static_start >> 8;
+
+	printf("%d pages of pagefile.\n", membreak);
+
+	lseek(story, 0, SEEK_SET);
+	lseek(pagefile, 0, SEEK_SET);
+	/* Copy the writable parts of the story into the page file */
+	while(i++ < membreak) {
+		if (read(story, zbuf[0], 256) != 256 ||
+			write(pagefile, zbuf[0], 256) != 256) {
+			perror("copy pagefile");
+			exit(1);
+		}
+	}
+	memset(zbuf_page, 0xFF, sizeof(zbuf_page));
+	memset(zbuf_dirty, 0, sizeof(zbuf_dirty));
+	printf("Page file set up.\n");
+	lseek(story, 64, SEEK_SET);
+	if (read(story, memory + 64, sizeof(memory)) < 1024)
+		panic("invalid story file.\n");
+	/* Write back the proper header info */
+	for (i = 0; i < 64; i++)
+		write8(i, memory[i]);
+}
+
+void paging_restart(void)
+{
+	printf("Restart.\n");
+	paging_init();
+}
+
+#else
+		
+/*
+ *	Memory management: Really only here for debug work
+ */
+
+uint8_t memory[0x20000];
+
+static uint8_t mget(uint32_t addr)
+{
+//	fprintf(stderr, "[%06X:%02X]\n", addr, memory[addr]);
+	return memory[addr];
+}
+
+static void mput(uint32_t addr, uint8_t value)
+{
+//	fprintf(stderr, ">%06X:%02X<\n", addr, value);
+	memory[addr] = value;
+}
+
+
+uint8_t pc(void)
+{
+	return mget(program_counter++);
+}
+
+uint16_t read16low(uint16_t address)
+{
+	uint16_t r = mget(address) << 8;
+	r |= mget(address + 1);
+	return r;
+}
+
+uint16_t read16(uint32_t address)
+{
+	uint16_t r = mget(address) << 8;
+	r |= mget(address + 1);
+	return r;
+}
+
+/* Can be uint16 except when debugging */
+void write16(uint16_t address, uint16_t value)
+{
+	mput(address, value >> 8);
+	mput(address + 1, value & 255);
+}
+
+uint8_t read8low(uint16_t address)
+{
+	return mget(address);
+}
+
+uint8_t read8(uint32_t address)
+{
+	return mget(address);
+}
+
+void write8(uint16_t address, uint8_t value)
+{
+	mput(address, value);
+}
+
+void paging_init(void)
+{
+}
+
+void paging_restart(void)
+{
+	lseek(story, 64, SEEK_SET);
+	if (read(story, memory + 64, sizeof(memory)) < 1024)
+		panic("invalid story file.\n");
+}
+
+#endif
+
+static uint16_t mword(uint8_t address)
+{
+	return (memory[address] << 8) | memory[address + 1];
 }
 
 uint16_t randv = 7;
@@ -342,37 +570,6 @@ void randomize(uint16_t seed)
 	}
 }
 
-uint16_t read16low(uint16_t address)
-{
-	return (memory[address] << 8) | memory[address + 1];
-}
-
-uint16_t read16(uint32_t address)
-{
-	return (memory[address] << 8) | memory[address + 1];
-}
-
-/* Can be uint16 except when debugging */
-void write16(uint16_t address, uint16_t value)
-{
-	memory[address] = value >> 8;
-	memory[address + 1] = value & 255;
-}
-
-uint8_t read8low(uint16_t address)
-{
-	return memory[address];
-}
-
-uint8_t read8(uint32_t address)
-{
-	return memory[address];
-}
-
-void write8(uint16_t address, uint8_t value)
-{
-	memory[address] = value;
-}
 
 static void newline_margin(void)
 {
@@ -587,11 +784,13 @@ void storei(uint16_t value)
 
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
+//	fprintf(stderr, "enter_routine\n");
 	int c = read8(address);
 	int i;
 	if (frameptr == FRAMESIZE - 1)
 		panic("out of frames.\n");
 
+//	fprintf(stderr, "Enter routine.\n");
 	/* FIXME: use pointers */
 	frames[frameptr].pc = program_counter;
 	frames[++frameptr].argc = argc;
@@ -600,6 +799,8 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	program_counter = address + 1;
 	if (frameptr > framemax)
 		framemax = frameptr;
+
+//	fprintf(stderr, "Pushing %d bytes.\n", c);		
 	if (VERSION < 5) {
 		for (i = 0; i < c; i++) {
 			pushstack(read16(program_counter));
@@ -878,26 +1079,29 @@ void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	uint8_t d[10];
 	int i, el, ne, k, p, p1;
 	memset(ws, 0, 256 * sizeof(boolean));
+	int l;
 
-	/* Direct memory references plus a big copy we should avoid */
+	/* A big copy we should avoid */
 	/* FIXME change algorithms */
 	if (!dict) {
-		for (i = 1; i <= memory[dictionary_table]; i++)
-			ws[memory[dictionary_table + i]] = 1;
+		l = read8(dictionary_table);
+		for (i = 1; i <= l; i++)
+			ws[read8(dictionary_table + i)] = 1;
 		dict = dictionary_table;
 	}
-	for (i = 1; i <= memory[dict]; i++)
-		ws[memory[dict + i]] = 1;
-	memory[parsebuf + 1] = 0;
+	l = read8(dict);
+	for (i = 1; i <= l; i++)
+		ws[read8(dict + i)] = 1;
+	write8(parsebuf + 1, 0);
 	k = p = p1 = 0;
 	el = read8low(dict + read8(dict) + 1);
 	ne = read16low(dict + read8(dict) + 2);
 	if (ne < 0)
 		ne *= -1;	// Currently, it won't care about the order; it doesn't use binary search.
-	dict += memory[dict] + 4;
+	dict += read8(dict) + 4;
 	while (p < len && read8(text + p)
 	       && read8(parsebuf + 1) < read8(parsebuf)) {
-		i = memory[text + p];
+		i = read8(text + p);
 		if (i >= 'A' && i <= 'Z')
 			i += 'a' - 'A';
 		if (i == '?' && qtospace)
@@ -976,9 +1180,7 @@ void game_restart(void)
 {
 	stackptr = frameptr = 0;
 	program_counter = restart_address;
-	lseek(story, 64, SEEK_SET);
-	if (read(story, memory + 64, sizeof(memory)) < 1024)
-		panic("invalid story file.\n");
+	paging_restart();
 }
 
 void game_save(uint8_t storage)
@@ -1159,6 +1361,7 @@ void execute_instruction(void)
 	int16_t n;
 	uint32_t u;
 	int argc;
+//	fprintf(stderr, "Executing %02x\n", in);
 	if (!predictable)
 		randv -= 0x0200;
 	if (in & 0x80) {
@@ -1235,6 +1438,7 @@ void execute_instruction(void)
 			break;
 		}
 	}
+//	fprintf(stderr, "Fetched args.\n");
 	switch (in) {
 
 #if (VERSION > 4)
@@ -1493,12 +1697,12 @@ void execute_instruction(void)
 		       (0x80 >> (inst_args[1] & 7)));
 		break;
 	case 0xCB:		// Set attribute
-		memory[attribute(*inst_args) + (inst_args[1] >> 3)] |=
-		    0x80 >> (inst_args[1] & 7);
+		at = attribute(*inst_args) + (inst_args[1] >> 3);
+		write8(at, read8(at) | (0x80 >> (inst_args[1] & 7)));
 		break;
 	case 0xCC:		// Clear attribute
-		memory[attribute(*inst_args) + (inst_args[1] >> 3)] &=
-		    ~(0x80 >> (inst_args[1] & 7));
+		at = attribute(*inst_args) + (inst_args[1] >> 3);
+		write8(at, read8(at) & ~(0x80 >> (inst_args[1] & 7)));
 		break;
 	case 0xCD:		// Store to variable
 		fetch(inst_args[0]);
@@ -1592,7 +1796,9 @@ void execute_instruction(void)
 
 #endif				/*  */
 	case 0xE0:		// Call routine (FIXME for v1)
+//		fprintf(stderr, "At 0xE0 *inst_args = %d\n", *inst_args);
 		if (*inst_args) {
+//			fprintf(stderr, "Will enter_routine\n");
 			program_counter++;
 			enter_routine((*inst_args << PACKED_SHIFT) +
 				      routine_start, 1, argc - 1);
@@ -1777,10 +1983,11 @@ void execute_instruction(void)
 	case 0xFC:		// Encode text in dictionary format
 		{
 			uint64_t y;
+			uint8_t blob[10];
+			for (i = 0; i < 9; i++)
+				blob[i] = read8(inst_args[0] + inst_args[2] + i);
 
-			/* FIXME memory ... */
-			y = dictionary_encode(memory + inst_args[0] +
-					      inst_args[2], inst_args[1]);
+			y = dictionary_encode(blob, inst_args[1]);
 			write16(inst_args[3], y >> 16);
 			write16(inst_args[3] + 2, y >> 8);
 			write16(inst_args[3] + 4, y);
@@ -1849,10 +2056,19 @@ void game_begin(void)
 	}
 	lseek(story, 0L, SEEK_SET);
 	read(story, memory, 64);
-	if (read8low(0) != VERSION) {
+	if (memory[0] != VERSION) {
 		panic("\n*** Unsupported Z-machine version.\n");
 		exit(1);
 	}
+	restart_address = mword(0x06);
+	dictionary_table = mword(0x08);
+	object_table = mword(0x0A);
+	global_table = mword(0x0C);
+	static_start = mword(0x0E);
+#ifdef DEBUG
+	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
+#endif	
+	paging_init();
 	switch (VERSION) {
 	case 1:
 	case 2:
@@ -1866,28 +2082,20 @@ void game_begin(void)
 		write8(0x01, 0x00);
 		break;
 	case 5:
-		alphabet_table = read16low(0x34);
+		alphabet_table = mword(0x34);
 		break;
 	case 7:
-		routine_start = read16low(0x28) << 3;
-		text_start = read16low(0x2A) << 3;
-		alphabet_table = read16low(0x34);
+		routine_start = mword(0x28) << 3;
+		text_start = mword(0x2A) << 3;
+		alphabet_table = mword(0x34);
 		break;
 	case 8:
-		alphabet_table = read16low(0x34);
+		alphabet_table = mword(0x34);
 		break;
 	}
-	restart_address = read16low(0x06);
-	dictionary_table = read16low(0x08);
-	object_table = read16low(0x0A);
-	global_table = read16low(0x0C);
-	static_start = read16low(0x0E);
-#ifdef DEBUG
-	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
-#endif	
 	write8(0x11, read8low(0x11) & 0x53);
 	if (VERSION > 1)
-		synonym_table = read16low(0x18);
+		synonym_table = mword(0x18);
 	if (VERSION > 3) {
 		write8(0x1E, tandy ? 11 : 1);
 		write8(0x20, sc_rows);
