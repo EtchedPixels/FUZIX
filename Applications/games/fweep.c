@@ -373,7 +373,7 @@ static void zwrite(uint16_t addr, uint8_t value)
 	uint8_t p = zbuf_find(addr >> 8);
 	zbuf[p][addr & 0xFF] = value;
 	zbuf_dirty[p] = 1;
-	memory[addr] = value;
+//	memory[addr] = value;
 //	fprintf(stderr, ">%06X:%02X<\n", addr, value);
 }
 	
@@ -439,8 +439,6 @@ void paging_init(void)
 	
 	membreak = static_start >> 8;
 
-	printf("%d pages of pagefile.\n", membreak);
-
 	lseek(story, 0, SEEK_SET);
 	lseek(pagefile, 0, SEEK_SET);
 	/* Copy the writable parts of the story into the page file */
@@ -453,10 +451,9 @@ void paging_init(void)
 	}
 	memset(zbuf_page, 0xFF, sizeof(zbuf_page));
 	memset(zbuf_dirty, 0, sizeof(zbuf_dirty));
-	printf("Page file set up.\n");
-	lseek(story, 64, SEEK_SET);
-	if (read(story, memory + 64, sizeof(memory)) < 1024)
-		panic("invalid story file.\n");
+	//lseek(story, 64, SEEK_SET);
+	//if (read(story, memory + 64, sizeof(memory)) < 1024)
+	//	panic("invalid story file.\n");
 	/* Write back the proper header info */
 	for (i = 0; i < 64; i++)
 		write8(i, memory[i]);
