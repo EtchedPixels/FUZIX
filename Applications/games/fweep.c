@@ -99,9 +99,9 @@ uint32_t program_counter;	/* Can be in high memory */
 #define STACKSIZE 256
 #define FRAMESIZE 32
 StackFrame frames[FRAMESIZE];
-int framemax;
+StackFrame *framemax;
 uint16_t stack[STACKSIZE];
-int frameptr;
+StackFrame *frameptr;
 int stackptr;
 int stackmax;
 uint16_t stream3addr[16];
@@ -748,7 +748,7 @@ uint16_t fetch(uint8_t var)
 	if (var & 0xF0) {
 		return read16low(global_table + ((var - 16) << 1));
 	} else if (var) {
-		return stack[frames[frameptr].start + var - 1];
+		return stack[frameptr->start + var - 1];
 	} else {
 		return stack[--stackptr];
 	}
@@ -768,7 +768,7 @@ void store(uint8_t var, uint16_t value)
 	if (var & 0xF0) {
 		write16(global_table + ((var - 16) << 1), value);
 	} else if (var) {
-		stack[frames[frameptr].start + var - 1] = value;
+		stack[frameptr->start + var - 1] = value;
 	} else {
 		pushstack(value);
 	}
@@ -781,20 +781,17 @@ void storei(uint16_t value)
 
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
-	/* FIXME: eventually frameptr sould be a pointer */
-	StackFrame *fp = frames + frameptr;
 	int c = read8(address);
 	int i;
-	if (frameptr == FRAMESIZE - 1)
+	if (frameptr == &frames[FRAMESIZE - 1])
 		panic("out of frames.\n");
 
 	/* FIXME: use pointers */
-	fp->pc = program_counter;
-	fp++;
+	frameptr->pc = program_counter;
 	frameptr++;
-	fp->argc = argc;
-	fp->start = stackptr;
-	fp->stored = stored;
+	frameptr->argc = argc;
+	frameptr->start = stackptr;
+	frameptr->stored = stored;
 	program_counter = address + 1;
 	if (frameptr > framemax)
 		framemax = frameptr;
@@ -811,15 +808,15 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	if (argc > c)
 		argc = c;
 	for (i = 0; i < argc; i++)
-		stack[fp->start + i] = inst_args[i + 1];
+		stack[frameptr->start + i] = inst_args[i + 1];
 }
 
 void exit_routine(uint16_t result)
 {
 	/* FIXME: we want a live ptr to top frame */
-	stackptr = frames[frameptr].start;
-	program_counter = frames[--frameptr].pc;
-	if (frames[frameptr + 1].stored)
+	stackptr = frameptr->start;
+	program_counter = (--frameptr)->pc;
+	if (frameptr[1].stored)
 		store(read8(program_counter - 1), result);
 }
 
@@ -1176,7 +1173,8 @@ uint8_t char_input(void)
 
 void game_restart(void)
 {
-	stackptr = frameptr = 0;
+	stackptr = 0;
+	frameptr = frames;
 	program_counter = restart_address;
 	paging_restart();
 }
@@ -1219,10 +1217,10 @@ void game_save(uint8_t storage)
 	/* Fweep has a nice endian safe blah blah de blah byte by byte
 	   Save/Restore. We don't bother. Saved games are platfor specific
 	   Deal with it! */
-	frames[frameptr].pc = program_counter;
-	frames[frameptr + 1].start = stackptr;
+	frameptr->pc = program_counter;
+	frameptr[1].start = stackptr;
 	
-	xwrite(f, frames, frameptr + 1, sizeof(StackFrame));
+	xwrite(f, frames, frameptr - frames + 1, sizeof(StackFrame));
 	xwrite(f, stack, stackptr, 2);
 
 	xwriteb(f, 0xAA);
@@ -1264,7 +1262,7 @@ bad:
 void game_restore(void)
 {
 	char filename[64];
-	int f;
+	int f, n;
 	uint8_t d;
 	uint16_t o, c;
 	writes("\n*** Restore? ");
@@ -1280,10 +1278,10 @@ void game_restore(void)
 	f = xopen(filename, O_RDONLY, 0600);
 	if (f == -1)
 		return;
-	frameptr = xread(f, frames, FRAMESIZE, sizeof(StackFrame));
-	if (frameptr == -1)
+	n = xread(f, frames, FRAMESIZE, sizeof(StackFrame));
+	if (n == -1)
 		goto bad;
-	frameptr--;
+	frameptr = frames + n - 1;
 	stackptr = xread(f, stack, STACKSIZE, 2);
 	
 	if (xreadb(f) != 0xAA)
@@ -1312,7 +1310,7 @@ void game_restore(void)
 
 	while (o < static_start)
 		write8(o++, xreadb(story));
-	program_counter = frames[frameptr].pc;
+	program_counter = frameptr->pc;
 	return;
 	
 bad:
@@ -1501,7 +1499,7 @@ void execute_instruction(void)
 			storei(stackptr - 1);
 
 		else
-			storei(frames[frameptr].start + *inst_args - 1);
+			storei(frameptr->start + *inst_args - 1);
 		break;
 	case 0x0D:		// Read through stack/locals reference
 		storei(stack[*inst_args]);
@@ -1629,7 +1627,7 @@ void execute_instruction(void)
 		break;
 	case 0xB9:		// Discard from stack // Catch
 		if (VERSION > 4)
-			storei(frameptr);
+			storei(frameptr - frames);
 
 		else
 			stackptr--;
@@ -1785,7 +1783,7 @@ void execute_instruction(void)
 		//NOP
 		break;
 	case 0xDC:		// Throw
-		frameptr = inst_args[1];
+		frameptr = frames + inst_args[1];
 		exit_routine(*inst_args);
 		break;
 	case 0xDD:		// Bitwise XOR
@@ -2025,7 +2023,7 @@ void execute_instruction(void)
 		// (I assume the skip is signed, since many other things are, and +32768 isn't useful anyways.)
 		break;
 	case 0xFF:		// Check argument count
-		branch(frames[frameptr].argc >= *inst_args);
+		branch(frameptr->argc >= *inst_args);
 		break;
 
 #endif				/*  */
