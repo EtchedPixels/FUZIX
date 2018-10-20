@@ -1199,7 +1199,7 @@ void game_save(uint8_t storage)
 	else
 		store(storage, 2);
 	/* Fweep has a nice endian safe blah blah de blah byte by byte
-	   Save/Restore. We don't bother. Saved games are platfor specific
+	   Save/Restore. We don't bother. Saved games are platform specific
 	   Deal with it! */
 	frameptr->pc = program_counter;
 	frameptr[1].start = stackptr;
@@ -1339,9 +1339,9 @@ void execute_instruction(void)
 	uint8_t in = pc();
 	uint16_t at;
 	int16_t n;
-	uint32_t u;
+	uint16_t u;
 	int argc;
-//	fprintf(stderr, "Executing %02x\n", in);
+
 	if (!predictable)
 		randv -= 0x0200;
 	if (in & 0x80) {
@@ -1418,7 +1418,7 @@ void execute_instruction(void)
 			break;
 		}
 	}
-//	fprintf(stderr, "Fetched args.\n");
+
 	switch (in) {
 
 #if (VERSION > 4)
