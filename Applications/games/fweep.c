@@ -940,7 +940,11 @@ input_again:
 	return 13;
 }
 
-/* FIXME: stop using uint64_t */
+/*
+ *	Fetch 4 or 6 bytes of data from the given dictionary address.
+ *	At the moment we return it as a single big value not an array
+ *	FIXME.
+ */
 dword_t dictionary_get(uint16_t addr)
 {
 	dword_t v = 0;
@@ -949,6 +953,16 @@ dword_t dictionary_get(uint16_t addr)
 		v = (v << 8) | read8low(addr++);
 	return v;
 }
+
+/*
+ *	Take each byte of input and check it against the 78 zscii symbols
+ *	for this game. Output a sequence of words holding 15 bit zscii
+ *	with the final word being padded and having the top bit set
+ *
+ *	Non zscii symbols are encoded in their extended zscii form. In
+ *	all cases we must clip arbitrarily on the right number of symbols
+ *	even if mid symbol
+ */
 
 uint64_t dictionary_encode(uint8_t * text, int len)
 {
@@ -961,31 +975,47 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 
 	sync_alphabet();
 	while (c && len && *text) {
+		/*
+		 * Since line breaks cannot be in an input line of text, and
+		 * VAR:252 is only available in version 5, line breaks need not
+		 * be considered here. However, because of VAR:252, spaces still
+		 * need to be considered.
+		 */
 
-		// Since line breaks cannot be in an input line of text, and VAR:252 is only available in version 5, line breaks need not be considered here.
-		// However, because of VAR:252, spaces still need to be considered.
+		/* Symbols are 3 per word with an extra bit */
 		if (!(c % 3))
 			v <<= 1;
+		/* Space packs as 0 */
 		if (*text == ' ') {
 			v <<= 5;
 		} else {
+			/* Find the byte in the dictionary */
 			for (i = 0; i < 78; i++) {
+				/* If it's a normal member then encode it */
 				if (*text == al[i] && i != 52 && i != 53) {
 					v <<= 5;
+					/* Case conversion */
 					if (i >= 26) {
+						/* Add the alphabet shift */
 						v |= i / 26 + (VERSION >
 							       2 ? 3 : 1);
 						c--;
+						/* Out of space. end mark
+						   and done */
 						if (!c)
 							return v | 0x8000;
+						/* Make space for next sym */
+						/* Adjust for padding bit */
 						if (!(c % 3))
 							v <<= 1;
 						v <<= 5;
 					}
+					/* Add the symbol code */
 					v |= (i % 26) + 6;
 					break;
 				}
 			}
+			/* It wasn't in the dictionary. Encode it long form */
 			if (i == 78) {
 				v <<= 5;
 				v |= VERSION > 2 ? 5 : 3;
@@ -1016,6 +1046,7 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 		text++;
 		len--;
 	}
+	/* Fill the remaining space with padding */
 	while (c) {
 		if (!(c % 3))
 			v <<= 1;
@@ -1023,19 +1054,27 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 		v |= 5;
 		c--;
 	}
+	/* End mark it and return the zscii */
 	return v | 0x8000;
 }
 
+/*
+ *	Encode a word into the parse buffer
+ */
 void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 		     int k, int el, int ne, int p, uint16_t flag)
 {
+	/* Encode the word into zscii */
 	dword_t v = dictionary_encode(d, k);
 	dword_t g;
 	int i;
 	uint16_t n = parsebuf + (read8(parsebuf + 1) << 2);
+	/* Hunt for a match */
 	for (i = 0; i < ne; i++) {
+		/* Get the next word and see if it matches */
 		g = dictionary_get(dict) | 0x8000;
 		if (g == v) {
+			/* It does - add the needed parse info */
 			write8(n + 5, p + 1 + (VERSION > 4));
 			write8(n + 4, k);
 			write16(n + 2, dict);
@@ -1043,16 +1082,22 @@ void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 		}
 		dict += el;
 	}
+	/* No luck - we may need to write in a failure */
 	if (i == ne && !flag) {
 		write8(n + 5, p + 1 + (VERSION > 4));
 		write8(n + 4, k);
 		write16(n + 2, 0);
 	}
+	/* Finally bump the count */
 	write8(parsebuf + 1, read8(parsebuf + 1) + 1);
 }
 
 
 #define Add_to_parsebuf() if(k)add_to_parsebuf(parsebuf,dict,d,k,el,ne,p1,flag),k=0;p1=p+1;
+
+/*
+ *	Process a command line input
+ */
 void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	      uint16_t flag)
 {
@@ -1064,6 +1109,7 @@ void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 
 	/* A big copy we should avoid */
 	/* FIXME change algorithms */
+	/* Read the table of character codes that count as a word */
 	if (!dict) {
 		l = read8(dictionary_table);
 		for (i = 1; i <= l; i++)
@@ -1073,34 +1119,49 @@ void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	l = read8(dict);
 	for (i = 1; i <= l; i++)
 		ws[read8(dict + i)] = 1;
+	/* Parse buf count */
 	write8(parsebuf + 1, 0);
 	k = p = p1 = 0;
+	/* Get the length and number of entries */
 	el = read8low(dict + read8(dict) + 1);
 	ne = read16low(dict + read8(dict) + 2);
+	/* Binary search hint - not used */
 	if (ne < 0)
 		ne *= -1;	// Currently, it won't care about the order; it doesn't use binary search.
+	/* Skip the header */
 	dict += read8(dict) + 4;
+
+	/* Walk the input */
 	while (p < len && read8(text + p)
 	       && read8(parsebuf + 1) < read8(parsebuf)) {
+	        /* Get a symbol */
 		i = read8(text + p);
+		/* Case conversion */
 		if (i >= 'A' && i <= 'Z')
 			i += 'a' - 'A';
+		/* Quiting rules */
 		if (i == '?' && qtospace)
 			i = ' ';
+		/* Spaces break words - send the word to the buffer */
 		if (i == ' ') {
 			Add_to_parsebuf();
 		} else if (ws[i]) {
+			/* Symbols go the buffer on their own - queue any
+			   pending stuff first, then the symbol */
 			Add_to_parsebuf();
 			*d = i;
 			k = 1;
 			Add_to_parsebuf();
 		} else if (k < 10) {
+			/* Queue more symbol */
 			d[k++] = i;
 		} else {
+			/* Discard extra bytes */
 			k++;
 		}
 		p++;
 	}
+	/* Add the final entry */
 	Add_to_parsebuf();
 }
 
