@@ -28,10 +28,12 @@ typedef uint16_t obj_t;
 #elif (VERSION > 3)
 #define PACKED_SHIFT	2
 typedef uint16_t obj_t;
+typedef uint64_t dword_t		/* Eww FIXME */
 
 #else				/*  */
 #define PACKED_SHIFT	1
 typedef uint8_t obj_t;
+typedef uint32_t dword_t;
 
 #endif				/*  */
 
@@ -939,9 +941,9 @@ input_again:
 }
 
 /* FIXME: stop using uint64_t */
-uint64_t dictionary_get(uint16_t addr)
+dword_t dictionary_get(uint16_t addr)
 {
-	uint64_t v = 0;
+	dword_t v = 0;
 	int c = VERSION > 3 ? 6 : 4;
 	while (c--)
 		v = (v << 8) | read8low(addr++);
@@ -951,7 +953,7 @@ uint64_t dictionary_get(uint16_t addr)
 uint64_t dictionary_encode(uint8_t * text, int len)
 {
 	/* FIXME: stop using uint64_t */
-	uint64_t v = 0;
+	dword_t v = 0;
 	int c = VERSION > 3 ? 9 : 6;
 	int i;
 
@@ -1027,8 +1029,8 @@ uint64_t dictionary_encode(uint8_t * text, int len)
 void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 		     int k, int el, int ne, int p, uint16_t flag)
 {
-	uint64_t v = dictionary_encode(d, k);
-	uint64_t g;
+	dword_t v = dictionary_encode(d, k);
+	dword_t g;
 	int i;
 	uint16_t n = parsebuf + (read8(parsebuf + 1) << 2);
 	for (i = 0; i < ne; i++) {
@@ -1962,7 +1964,7 @@ void execute_instruction(void)
 		break;
 	case 0xFC:		// Encode text in dictionary format
 		{
-			uint64_t y;
+			dword_t y;
 			uint8_t blob[10];
 			for (i = 0; i < 9; i++)
 				blob[i] = read8(inst_args[0] + inst_args[2] + i);
