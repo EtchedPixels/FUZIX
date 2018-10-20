@@ -244,31 +244,32 @@ int xclose(int f)
 
 #ifndef LOAD_ALL
 
-#define ZBUF_NUM	32
+#define ZBUF_MAX	32
 
 /* Based on an idea by Staffan Vilcans: Skip the fseek() if it isn't needed */
 static uint32_t last_addr;
 static uint8_t last_count;
 static uint8_t *last_ptr;
 static uint16_t last_page;
-static uint32_t slow, fast, miss;
+static uint8_t zbuf_num = ZBUF_MAX;
 
 static int pagefile = -1;
 
-static uint8_t zbuf[ZBUF_NUM][256];
-static uint16_t zbuf_page[ZBUF_NUM];
-static uint8_t zbuf_pri[ZBUF_NUM];	/* 0 = unused , 1+ is use count */
-static uint8_t zbuf_dirty[ZBUF_NUM];
+/* FIXME: dynamic for zbuf */
+static uint8_t zbuf[ZBUF_MAX][256];
+static uint16_t zbuf_page[ZBUF_MAX];
+static uint8_t zbuf_pri[ZBUF_MAX];	/* 0 = unused , 1+ is use count */
+static uint8_t zbuf_dirty[ZBUF_MAX];
 
 static uint16_t membreak;
 
-uint8_t memory[64];		// Set to 0x20000 for debugging
+uint8_t memory[64];
 
 static uint8_t zbuf_alloc(void)
 {
 	uint8_t low = 255;
 	uint8_t i, lnum = 0;
-	for (i = 0; i < ZBUF_NUM; i++) {
+	for (i = 0; i < zbuf_num; i++) {
 		if (zbuf_pri[i] == 0)
 			return i;
 		if (zbuf_pri[i] < low) {
@@ -282,7 +283,7 @@ static uint8_t zbuf_alloc(void)
 static void zbuf_sweep(void)
 {
 	uint8_t i;
-	for (i = 0; i < ZBUF_NUM; i++)
+	for (i = 0; i < zbuf_num; i++)
 		if (zbuf_pri[i] > 1)
 			zbuf_pri[i] /= 2;
 }
@@ -303,6 +304,9 @@ static void zbuf_load(uint8_t slot, uint16_t page)
 		perror(story_name);
 		exit(1);
 	}
+#ifdef FAKE_DISK_DELAY
+	usleep(20000);
+#endif
 }
 
 static void zbuf_writeback(uint8_t slot)
@@ -314,15 +318,17 @@ static void zbuf_writeback(uint8_t slot)
 	    	perror("pagefile");
 	    	exit(1);
 	}
+#ifdef FAKE_DISK_DELAY
+	usleep(20000);
+#endif
 	zbuf_dirty[slot] = 0;
 }
 
 static uint8_t zbuf_find(uint16_t page)
 {
 	uint8_t i;
-	for (i = 0; i < ZBUF_NUM; i++) {
+	for (i = 0; i < zbuf_num; i++) {
 		if (zbuf_page[i] == page) {
-			slow++;
 			zbuf_pri[i] |= 0x80;
 			return i;
 		}
@@ -332,7 +338,6 @@ static uint8_t zbuf_find(uint16_t page)
 	if (zbuf_dirty[i])
 		zbuf_writeback(i);
 	zbuf_load(i, page);
-	miss++;
 	return i;
 }
 
@@ -343,29 +348,17 @@ static uint8_t zmem(uint32_t addr)
 
 	/* Fast path - current buffer */
 	if (last_count && addr == last_addr + 1) {
-//		fprintf(stderr, "[%02X]", last_ptr[1]);
-//		fflush(stderr);
-		fast++;
 		last_addr++;
 		last_count--;
-//		if (last_ptr[1] != memory[addr])
-//			fprintf(stderr, "Botched %d, %02X, %02X\n",
-//				addr, last_ptr[1], memory[addr]);
 		return *++last_ptr;
 	}
 
 	page = addr >> 8;
 	c = zbuf_find(page);
-//	printf("TLB lookup %d ->%d\n", page, c);
 	last_addr = addr;
 	last_page = page;
 	last_count = 255 - (uint8_t)addr;
 	last_ptr = zbuf[c] + (addr & 0xFF);
-//	fprintf(stderr, "[%06X:%02X]\n", addr, *last_ptr);
-//	fflush(stderr);
-//	if (*last_ptr != memory[addr])
-//		fprintf(stderr, "Botched %d, %02X, %02X\n",
-//			addr, *last_ptr, memory[addr]);
 	return *last_ptr;
 }
 
@@ -375,8 +368,6 @@ static void zwrite(uint16_t addr, uint8_t value)
 	uint8_t p = zbuf_find(addr >> 8);
 	zbuf[p][addr & 0xFF] = value;
 	zbuf_dirty[p] = 1;
-//	memory[addr] = value;
-//	fprintf(stderr, ">%06X:%02X<\n", addr, value);
 }
 	
 /* Big endian */
@@ -788,7 +779,6 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	if (frameptr == &frames[FRAMESIZE - 1])
 		panic("out of frames.\n");
 
-	/* FIXME: use pointers */
 	frameptr->pc = program_counter;
 	frameptr++;
 	frameptr->argc = argc;
@@ -815,14 +805,13 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 
 void exit_routine(uint16_t result)
 {
-	/* FIXME: we want a live ptr to top frame */
 	stackptr = frameptr->start;
 	program_counter = (--frameptr)->pc;
 	if (frameptr[1].stored)
 		store(read8(program_counter - 1), result);
 }
 
-void branch(uint32_t cond)
+void branch(uint16_t cond)
 {
 	int v = pc();
 	if (!(v & 0x80))
@@ -1041,28 +1030,21 @@ void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 	uint64_t v = dictionary_encode(d, k);
 	uint64_t g;
 	int i;
+	uint16_t n = parsebuf + (read8(parsebuf + 1) << 2);
 	for (i = 0; i < ne; i++) {
 		g = dictionary_get(dict) | 0x8000;
 		if (g == v) {
-
-			/* FIXME tidy re-uses */
-			write8(parsebuf + (read8(parsebuf + 1) << 2) +
-			       5, p + 1 + (VERSION > 4));
-			write8(parsebuf + (read8(parsebuf + 1) << 2) + 4,
-			       k);
-			write16(parsebuf + (read8(parsebuf + 1) << 2) + 2,
-				dict);
+			write8(n + 5, p + 1 + (VERSION > 4));
+			write8(n + 4, k);
+			write16(n + 2, dict);
 			break;
 		}
 		dict += el;
 	}
 	if (i == ne && !flag) {
-
-		/* FIXME: tidy reuses */
-		write8(parsebuf + (read8(parsebuf + 1) << 2) + 5,
-		       p + 1 + (VERSION > 4));
-		write8(parsebuf + (read8(parsebuf + 1) << 2) + 4, k);
-		write16(parsebuf + (read8(parsebuf + 1) << 2) + 2, 0);
+		write8(n + 5, p + 1 + (VERSION > 4));
+		write8(n + 4, k);
+		write16(n + 2, 0);
 	}
 	write8(parsebuf + 1, read8(parsebuf + 1) + 1);
 }
