@@ -784,13 +784,11 @@ void storei(uint16_t value)
 
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
-//	fprintf(stderr, "enter_routine\n");
 	int c = read8(address);
 	int i;
 	if (frameptr == FRAMESIZE - 1)
 		panic("out of frames.\n");
 
-//	fprintf(stderr, "Enter routine.\n");
 	/* FIXME: use pointers */
 	frames[frameptr].pc = program_counter;
 	frames[++frameptr].argc = argc;
@@ -800,7 +798,6 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	if (frameptr > framemax)
 		framemax = frameptr;
 
-//	fprintf(stderr, "Pushing %d bytes.\n", c);		
 	if (VERSION < 5) {
 		for (i = 0; i < c; i++) {
 			pushstack(read16(program_counter));
