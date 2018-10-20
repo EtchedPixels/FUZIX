@@ -781,16 +781,20 @@ void storei(uint16_t value)
 
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
+	/* FIXME: eventually frameptr sould be a pointer */
+	StackFrame *fp = frames + frameptr;
 	int c = read8(address);
 	int i;
 	if (frameptr == FRAMESIZE - 1)
 		panic("out of frames.\n");
 
 	/* FIXME: use pointers */
-	frames[frameptr].pc = program_counter;
-	frames[++frameptr].argc = argc;
-	frames[frameptr].start = stackptr;
-	frames[frameptr].stored = stored;
+	fp->pc = program_counter;
+	fp++;
+	frameptr++;
+	fp->argc = argc;
+	fp->start = stackptr;
+	fp->stored = stored;
 	program_counter = address + 1;
 	if (frameptr > framemax)
 		framemax = frameptr;
@@ -807,7 +811,7 @@ void enter_routine(uint32_t address, boolean stored, int argc)
 	if (argc > c)
 		argc = c;
 	for (i = 0; i < argc; i++)
-		stack[frames[frameptr].start + i] = inst_args[i + 1];
+		stack[fp->start + i] = inst_args[i + 1];
 }
 
 void exit_routine(uint16_t result)
