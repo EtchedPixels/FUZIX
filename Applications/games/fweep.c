@@ -17,7 +17,9 @@
 
 #define WORD(x)		((uint16_t)(x))
 
+#ifndef VERSION
 #define VERSION 	3
+#endif
 
 #if (VERSION == 8)
 #define PACKED_SHIFT	3
