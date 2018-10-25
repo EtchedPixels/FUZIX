@@ -149,11 +149,6 @@ Emulator Bugs:
 	Use the xtrs in the EtchedPixels github which fixes the ones that
 	matter.
 
-User Space:
-	The TRS80 Model I/III have ROM in the low 16K. At the moment our
-	binaries are not relocatable so you need to build a custom user
-	space for this platform.
-
 To Do:
 	Only hide/show cursor if curtty == inputty
 	Reclaim 768 bytes by moving irq stack and udata down to 4100
