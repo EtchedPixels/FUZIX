@@ -1104,8 +1104,9 @@ void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	boolean ws[256];
 	uint8_t d[10];
 	int i, el, ne, k, p, p1;
-	memset(ws, 0, 256 * sizeof(boolean));
 	int l;
+
+	memset(ws, 0, 256 * sizeof(boolean));
 
 	/* A big copy we should avoid */
 	/* FIXME change algorithms */
