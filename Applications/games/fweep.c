@@ -28,12 +28,10 @@ typedef uint16_t obj_t;
 #elif (VERSION > 3)
 #define PACKED_SHIFT	2
 typedef uint16_t obj_t;
-typedef uint64_t dword_t		/* Eww FIXME */
 
 #else				/*  */
 #define PACKED_SHIFT	1
 typedef uint8_t obj_t;
-typedef uint32_t dword_t;
 
 #endif				/*  */
 
@@ -456,7 +454,6 @@ void paging_init(void)
 
 void paging_restart(void)
 {
-	printf("Restart.\n");
 	paging_init();
 }
 
@@ -941,122 +938,109 @@ input_again:
 }
 
 /*
- *	Fetch 4 or 6 bytes of data from the given dictionary address.
- *	At the moment we return it as a single big value not an array
- *	FIXME.
+ *	Fetch a dictionary entry of 2 or 3 zwords into the passed
+ *	word array
  */
-dword_t dictionary_get(uint16_t addr)
+void dictionary_get(uint16_t addr, uint16_t *p)
 {
-	dword_t v = 0;
-	int c = VERSION > 3 ? 6 : 4;
-	while (c--)
-		v = (v << 8) | read8low(addr++);
-	return v;
+	uint8_t c = VERSION > 3 ? 3 : 2;
+	uint16_t w;
+	while (c--) {
+		w = read8low(addr++);
+		*p++ = (w << 8) | read8low(addr++);
+	}
 }
 
 /*
- *	Take each byte of input and check it against the 78 zscii symbols
- *	for this game. Output a sequence of words holding 15 bit zscii
- *	with the final word being padded and having the top bit set
- *
- *	Non zscii symbols are encoded in their extended zscii form. In
- *	all cases we must clip arbitrarily on the right number of symbols
- *	even if mid symbol
+ *	We implement the encoder as a state machine. If we do it differently
+ *	we have to worry about truncation rules everywhere. As a state machine
+ *	we can just stop calling it when done and everything just works.
  */
 
-uint64_t dictionary_encode(uint8_t * text, int len)
+uint8_t wordstate;
+#define WORD_END	1
+#define WORD_SHIFT	2
+#define WORD_LIT_1	3
+#define WORD_LIT_2	4
+#define WORD_LIT_3	5
+#define WORD_BYTE	6
+uint8_t *wordptr;
+uint8_t *wordend;
+uint8_t wordcode;
+
+uint8_t encodesym(void)
 {
-	/* FIXME: stop using uint64_t */
-	dword_t v = 0;
-	int c = VERSION > 3 ? 9 : 6;
-	int i;
-
-	const uint8_t *al = alpha;
-
-	sync_alphabet();
-	while (c && len && *text) {
-		/*
-		 * Since line breaks cannot be in an input line of text, and
-		 * VAR:252 is only available in version 5, line breaks need not
-		 * be considered here. However, because of VAR:252, spaces still
-		 * need to be considered.
-		 */
-
-		/* Symbols are 3 per word with an extra bit */
-		if (!(c % 3))
-			v <<= 1;
-		/* Space packs as 0 */
-		if (*text == ' ') {
-			v <<= 5;
-		} else {
-			/* Find the byte in the dictionary */
-			for (i = 0; i < 78; i++) {
-				/* If it's a normal member then encode it */
-				if (*text == al[i] && i != 52 && i != 53) {
-					v <<= 5;
-					/* Case conversion */
-					if (i >= 26) {
-						/* Add the alphabet shift */
-						v |= i / 26 + (VERSION >
-							       2 ? 3 : 1);
-						c--;
-						/* Out of space. end mark
-						   and done */
-						if (!c)
-							return v | 0x8000;
-						/* Make space for next sym */
-						/* Adjust for padding bit */
-						if (!(c % 3))
-							v <<= 1;
-						v <<= 5;
-					}
-					/* Add the symbol code */
-					v |= (i % 26) + 6;
-					break;
-				}
-			}
-			/* It wasn't in the dictionary. Encode it long form */
-			if (i == 78) {
-				v <<= 5;
-				v |= VERSION > 2 ? 5 : 3;
-				c--;
-				if (!c)
-					return v | 0x8000;
-				if (!(c % 3))
-					v <<= 1;
-				v <<= 5;
-				v |= 6;
-				c--;
-				if (!c)
-					return v | 0x8000;
-				if (!(c % 3))
-					v <<= 1;
-				v <<= 5;
-				v |= *text >> 5;
-				c--;
-				if (!c)
-					return v | 0x8000;
-				if (!(c % 3))
-					v <<= 1;
-				v <<= 5;
-				v |= *text & 31;
+	uint8_t i;
+	switch(wordstate) {
+	case WORD_END:
+		/* We pad to the end with blanks (5) */
+		return 5;
+	case WORD_SHIFT:
+		/* Second byte of a 2 byte sequence doing an alphabet shift */
+		wordstate = WORD_BYTE;
+		wordptr++;
+		return wordcode;
+	case WORD_LIT_1:
+		/* Writing out a non encodable symbol, byte 2 is 6 */
+		wordstate = WORD_LIT_2;
+		return 6;
+	case WORD_LIT_2:
+		/* Then the 10bit code follows */
+		wordstate = WORD_LIT_2;
+		return *wordptr >> 5;
+	case WORD_LIT_3:
+		wordstate = WORD_BYTE;
+		return *wordptr++ & 31;
+	case WORD_BYTE:
+		/* End padding */
+		if (wordptr == wordend) {
+			wordstate = WORD_END;
+			return 5;
+		}
+		/* See if the symbol is encodable */
+		for (i = 0; i < 78; i++) {
+			if (*wordptr == alpha[i] && i != 52 && i != 53) {
+				wordcode = i % 26 + 6;
+				/* Shifted or not ? */
+				if (i >= 26)
+					return *wordptr / 26 + (VERSION > 2 ? 3 : 1);
+				wordptr++;
+				return wordcode;
 			}
 		}
-		c--;
-		text++;
-		len--;
+		/* No - in which case start emitting a literal */
+		wordstate = WORD_LIT_1;
+		return VERSION > 2 ? 5 : 3;
+	default:
+		write(2,"Parsebad\n", 9);
+		exit(1);
 	}
-	/* Fill the remaining space with padding */
-	while (c) {
-		if (!(c % 3))
-			v <<= 1;
-		v <<= 5;
-		v |= 5;
-		c--;
-	}
-	/* End mark it and return the zscii */
-	return v | 0x8000;
 }
+
+uint16_t encodeword(void)
+{
+	uint16_t w;
+	w = encodesym();
+	w <<= 5;
+	w |= encodesym();
+	w <<= 5;
+	w |= encodesym();
+	return w;
+}
+
+void dictionary_encode(uint8_t *text, int len, uint16_t *wp)
+{
+	sync_alphabet();
+	wordptr = text;
+	wordend = text + len;
+	wordstate = WORD_BYTE;
+#if (VERSION > 3)
+	*wp++ = encodeword();
+#endif
+	*wp++ = encodeword();
+	*wp = encodeword() | 0x8000;
+}
+
 
 /*
  *	Encode a word into the parse buffer
@@ -1065,15 +1049,19 @@ void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 		     int k, int el, int ne, int p, uint16_t flag)
 {
 	/* Encode the word into zscii */
-	dword_t v = dictionary_encode(d, k);
-	dword_t g;
 	int i;
 	uint16_t n = parsebuf + (read8(parsebuf + 1) << 2);
+	uint16_t vbuf[3];
+	uint16_t dbuf[3];
+
+	dictionary_encode(d, k, vbuf);
+
 	/* Hunt for a match */
 	for (i = 0; i < ne; i++) {
 		/* Get the next word and see if it matches */
-		g = dictionary_get(dict) | 0x8000;
-		if (g == v) {
+		dictionary_get(dict, dbuf);
+//		g = dictionary_get(dict) | 0x8000;
+		if (memcmp(vbuf, dbuf, (VERSION > 3) ? 6 : 4) == 0) {
 			/* It does - add the needed parse info */
 			write8(n + 5, p + 1 + (VERSION > 4));
 			write8(n + 4, k);
@@ -1840,9 +1828,7 @@ void execute_instruction(void)
 
 #endif				/*  */
 	case 0xE0:		// Call routine (FIXME for v1)
-//		fprintf(stderr, "At 0xE0 *inst_args = %d\n", *inst_args);
 		if (*inst_args) {
-//			fprintf(stderr, "Will enter_routine\n");
 			program_counter++;
 			enter_routine((*inst_args << PACKED_SHIFT) +
 				      routine_start, 1, argc - 1);
