@@ -1,8 +1,14 @@
 /*
-  Fweeplet -- a Z-machine interpreter for versions 1 to 5.
+  Fweeplet -- a Z-machine interpreter for versions 1 to 5 and 8
   This program is license under GNU GPL v3 or later version.
   
   Cut down from 'fweep'
+
+  V6 was mostly used for the graphical games, and V7 is a bit of a rarity
+  so neither are obviously important. For V6 the packed shift is 4 but the
+  routine calls bias it by 8* the routine offset, and strings by 8 * the
+  string offset.
+
 */
 
 #include <stdio.h>
@@ -22,18 +28,54 @@
 #endif
 
 #if (VERSION == 8)
+
 #define PACKED_SHIFT	3
 typedef uint16_t obj_t;
+/* Some V8 games need a lot of call frames which sucks */
+#define STACKSIZE 512
+#define FRAMESIZE 256
+#define routine_start	0
+#define text_start	0
+
+#elif (VERSION == 7)
+
+#define PACKED_SHIFT	3
+typedef uint16_t obj_t;
+#define STACKSIZE 512
+#define FRAMESIZE 128
+uint32_t routine_start;		/* > 16bit */
+uint32_t text_start;		/* > 16bit */
+
+#elif (VERSION == 6)
+
+#define PACKED_SHIFT	3
+typedef uint16_t obj_t;
+#define STACKSIZE 512
+#define FRAMESIZE 128
+uint32_t routine_start;		/* > 16bit */
+uint32_t text_start;		/* > 16bit */
 
 #elif (VERSION > 3)
+
 #define PACKED_SHIFT	2
 typedef uint16_t obj_t;
+#define STACKSIZE 512
+#define FRAMESIZE 64
+#define routine_start	0
+#define text_start	0
 
 #else				/*  */
+
 #define PACKED_SHIFT	1
 typedef uint8_t obj_t;
+#define STACKSIZE 256
+#define FRAMESIZE 32
+#define routine_start	0
+#define text_start	0
 
 #endif				/*  */
+
+#define UNPACK32(x)	(((uint32_t)x) << PACKED_SHIFT)
 
 #if VERSION > 2
 #define SHIFT1		4
@@ -52,7 +94,12 @@ typedef struct {
 	boolean stored;
 } StackFrame;
 const char zscii_conv_1[128] = {
-	[155 - 128] =
+	/* 128 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 136 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 144 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 152 */	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0,
+	/* 155... is the table */
 	'a', 'o', 'u', 'A', 'O', 'U', 's', '>', '<', 'e', 'i', 'y',
 	'E', 'I', 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O',
 	'U', 'Y', 'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U',
@@ -63,11 +110,21 @@ const char zscii_conv_1[128] = {
 
 /* FIXME: probably smaller as function */
 const char zscii_conv_2[128] = {
-	[155 - 128] = 'e', 'e', 'e',
-	[161 - 128] = 's', '>', '<',
-	[211 - 128] = 'e', 'E',
-	[215 - 128] = 'h', 'h', 'h', 'h',
-	[220 - 128] = 'e', 'E'
+	/* 128 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 136 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 144 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 152 */	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0,
+	/* 155... is the table */
+	'e', 'e', 'e', 0, 0, 0,
+	's', '>', '<', 0, 0, 0, 0, 0, 0, 0, 0,
+	/* 172 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 180 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 188 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 196 */	0, 0, 0, 0, 0, 0, 0, 0,
+	/* 204 */	0, 0, 0, 0, 0, 0, 0,
+	/* 211... */
+	'e', 'E', 0, 0, 'h', 'h', 'h', 'h', 0, 'e', 'E'
 };
 
 #if (VERSION == 1)
@@ -87,8 +144,6 @@ boolean tandy = 0;
 boolean qtospace = 0;
 int sc_rows = 25;
 int sc_columns = 80;
-uint32_t routine_start;		/* > 16bit */
-uint32_t text_start;		/* > 16bit */
 uint16_t object_table;
 uint16_t dictionary_table;
 uint16_t restart_address;
@@ -98,8 +153,6 @@ uint16_t static_start;
 uint16_t global_table;
 uint32_t program_counter;	/* Can be in high memory */
 
-#define STACKSIZE 256
-#define FRAMESIZE 32
 StackFrame frames[FRAMESIZE];
 StackFrame *framemax;
 uint16_t stack[STACKSIZE];
@@ -107,7 +160,7 @@ StackFrame *frameptr;
 int stackptr;
 int stackmax;
 uint16_t stream3addr[16];
-uint16_t *stream3ptr = stream3addr - 1;
+uint16_t *stream3ptr;
 boolean texting = 1;
 boolean window = 0;
 boolean buffering = 1;
@@ -362,12 +415,19 @@ static uint8_t zmem(uint32_t addr)
 	return *last_ptr;
 }
 
+void debugme(void)
+{
+}
+
 static void zwrite(uint16_t addr, uint8_t value)
 {
 	/* FIXME: optimize */
 	uint8_t p = zbuf_find(addr >> 8);
 	zbuf[p][addr & 0xFF] = value;
 	zbuf_dirty[p] = 1;
+	/* Ugly : fix this better */
+	if (addr < 64)
+		memory[addr] = value;
 }
 	
 /* Big endian */
@@ -534,18 +594,24 @@ void paging_restart(void)
 
 static uint16_t mword(uint8_t address)
 {
-	return (memory[address] << 8) | memory[address + 1];
+	return (((uint16_t)memory[address]) << 8) | memory[address + 1];
 }
 
 uint16_t randv = 7;
 boolean predictable;
 int16_t get_random(int16_t max)
 {
+	/* This is what the official early interpreters appear to use */
 	int16_t tmp;
 	randv += 0xAA55;
 	tmp = randv & 0x7FFF;
 	randv = (randv << 8) | (randv >> 8);
-	return (tmp & max) + 1;
+#if 0
+	/* Do we need more randomness for some later games ? */
+	if (!predictable)
+		randv ^= rand() >> 2;
+#endif
+	return (tmp % max) + 1;
 }
 
 void randomize(uint16_t seed)
@@ -594,6 +660,8 @@ void char_print(uint8_t zscii)
 		uint16_t w = read16low(*stream3ptr);
 		write8(*stream3ptr + 2 + w, zscii);
 		write16(*stream3ptr, w + 1);
+		/* Report 8 pixels per char */
+		write16(0x30, w * 8);
 		return;
 	}
 	if ((read8low(0x11) & 1) && !window) {
@@ -626,7 +694,7 @@ boolean verify_checksum(void)
 static void sync_alphabet(void)
 {
 #if VERSION >= 5
-	char *p = alpha;
+	uint8_t *p = alpha;
 	uint16_t r;
 	if ((r = alphabet_table) != 0) {
 		while(p != alpha + 78)
@@ -771,10 +839,14 @@ void storei(uint16_t value)
 	store(pc(), value);
 }
 
+static int depth = 0;
+
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
 	int c = read8(address);
 	int i;
+
+	fflush(stdout);
 	if (frameptr == &frames[FRAMESIZE - 1])
 		panic("out of frames.\n");
 
@@ -1086,10 +1158,13 @@ void add_to_parsebuf(uint16_t parsebuf, uint16_t dict, uint8_t * d,
 /*
  *	Process a command line input
  */
+
+/* Out of the fn in order to build nicely on SDCC and CC65 - sigh */
+static boolean ws[256];
+
 void tokenise(uint16_t text, uint16_t dict, uint16_t parsebuf, int len,
 	      uint16_t flag)
 {
-	boolean ws[256];
 	uint8_t d[10];
 	int i, el, ne, k, p, p1;
 	int l;
@@ -1471,6 +1546,7 @@ void execute_instruction(void)
 		}
 	}
 
+//	fprintf(stderr, "%02X\n", in);
 	switch (in) {
 
 #if (VERSION > 4)
@@ -1503,8 +1579,11 @@ void execute_instruction(void)
 	case 0x04:		// Set font
 		text_flush();
 		storei((*inst_args == 1 || *inst_args == 4) ? 4 : 0);
-		if (!tandy)
-			write(1, inst_args == 3 ? 14 : 15, 1);
+		/* In theory we want shift-in shift-out here */
+		if (!tandy) {
+			uint8_t c = *inst_args == 3 ? 14 : 15;
+			write(1, &c, 1);
+		}
 		break;
 	case 0x08:		// Set margins
 		if (!window) {
@@ -1588,7 +1667,7 @@ void execute_instruction(void)
 	case 0x88:		// Call routine
 		if (*inst_args) {
 			program_counter++;
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 1, argc - 1);
 		} else {
 			storei(0);
@@ -1607,7 +1686,7 @@ void execute_instruction(void)
 		program_counter += *inst_sargs - 2;
 		break;
 	case 0x8D:		// Print by packed address
-		text_print((*inst_args << PACKED_SHIFT) + text_start);
+		text_print(UNPACK32(*inst_args) + text_start);
 		break;
 	case 0x8E:		// Load variable
 		at = fetch(*inst_args);
@@ -1617,7 +1696,7 @@ void execute_instruction(void)
 	case 0x8F:		// Not // Call routine and discard result
 		if (VERSION > 4) {
 			if (*inst_args)
-				enter_routine((*inst_args << PACKED_SHIFT)
+				enter_routine(UNPACK32(*inst_args)
 					      + routine_start, 0,
 					      argc - 1);
 		} else {
@@ -1664,7 +1743,6 @@ void execute_instruction(void)
 	case 0xB9:		// Discard from stack // Catch
 		if (VERSION > 4)
 			storei(frameptr - frames);
-
 		else
 			stackptr--;
 		break;
@@ -1801,7 +1879,7 @@ void execute_instruction(void)
 	case 0xD9:		// Call routine
 		if (*inst_args) {
 			program_counter++;
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 1, argc - 1);
 		} else {
 			storei(0);
@@ -1812,7 +1890,7 @@ void execute_instruction(void)
 #if (VERSION > 4)
 	case 0xDA:		// Call routine and discard result
 		if (*inst_args)
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 0, argc - 1);
 		break;
 	case 0xDB:		// Set colors
@@ -1830,7 +1908,7 @@ void execute_instruction(void)
 	case 0xE0:		// Call routine (FIXME for v1)
 		if (*inst_args) {
 			program_counter++;
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 1, argc - 1);
 		} else {
 			storei(0);
@@ -1896,9 +1974,10 @@ void execute_instruction(void)
 	case 0xE7:		// Random number generator
 		if (*inst_sargs > 0)
 			storei(get_random(*inst_sargs));
-
-		else
-			randomize(-*inst_sargs), storei(0);
+		else {
+			randomize(-*inst_sargs);
+			storei(0);
+		}
 		break;
 	case 0xE8:		// Push to stack
 		pushstack(*inst_args);
@@ -1922,7 +2001,7 @@ void execute_instruction(void)
 	case 0xEC:		// Call routine
 		if (*inst_args) {
 			program_counter++;
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 1, argc - 1);
 		} else {
 			storei(0);
@@ -1993,13 +2072,13 @@ void execute_instruction(void)
 		break;
 	case 0xF9:		// Call routine and discard results
 		if (*inst_args) {
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 0, argc - 1);
 		}
 		break;
 	case 0xFA:		// Call routine and discard results
 		if (*inst_args)
-			enter_routine((*inst_args << PACKED_SHIFT) +
+			enter_routine(UNPACK32(*inst_args) +
 				      routine_start, 0, argc - 1);
 		break;
 	case 0xFB:		// Tokenise text
@@ -2012,15 +2091,17 @@ void execute_instruction(void)
 		break;
 	case 0xFC:		// Encode text in dictionary format
 		{
-			dword_t y;
 			uint8_t blob[10];
+			uint16_t word[3];
+			uint8_t i;
+
 			for (i = 0; i < 9; i++)
 				blob[i] = read8(inst_args[0] + inst_args[2] + i);
 
-			y = dictionary_encode(blob, inst_args[1]);
-			write16(inst_args[3], y >> 16);
-			write16(inst_args[3] + 2, y >> 8);
-			write16(inst_args[3] + 4, y);
+			dictionary_encode(blob, inst_args[1], word);
+			write16(inst_args[3], word[0]);
+			write16(inst_args[3] + 2, word[1]);
+			write16(inst_args[3] + 4, word[2]);
 			break;
 		}
 	case 0xFD:		// Copy a table
@@ -2033,20 +2114,21 @@ void execute_instruction(void)
 			   && inst_args[1] > inst_args[0]) {
 
 			// backward!
-			m = inst_sargs[2];
+			uint16_t m = inst_sargs[2];
 			while (m--)
 				write8(inst_args[1] + m,
 				       read8low(inst_args[0] + m));
 		} else {
 
 			// forward!
+			uint16_t m = 0;
 			if (inst_sargs[2] < 0)
 				inst_sargs[2] *= -1;
-			m = 0;
-			while (m < inst_sargs[2])
+			while (m < inst_sargs[2]) {
 				write8(inst_args[1] + m,
-				       read8low(inst_args[0] + m), m);
-			m++;
+				       read8low(inst_args[0] + m));
+				m++;
+			}
 		}
 		break;
 	case 0xFE:		// Print a rectangle of text
@@ -2076,6 +2158,7 @@ void execute_instruction(void)
 
 void game_begin(void)
 {
+	uint8_t i;
 	if (story == -1)
 		story = open(story_name, O_RDONLY);
 	if (story == -1) {
@@ -2114,11 +2197,14 @@ void game_begin(void)
 	case 5:
 		alphabet_table = mword(0x34);
 		break;
+#if (VERSION == 6 || VERSION == 7)
+	case 6:
 	case 7:
 		routine_start = mword(0x28) << 3;
 		text_start = mword(0x2A) << 3;
 		alphabet_table = mword(0x34);
 		break;
+#endif
 	case 8:
 		alphabet_table = mword(0x34);
 		break;
@@ -2133,10 +2219,10 @@ void game_begin(void)
 	}
 	if (VERSION > 4) {
 		write8(0x01, 0x10);
-		write8(0x23, sc_columns);
-		write8(0x25, sc_rows);
-		write8(0x26, 1);
-		write8(0x27, 1);
+		write16(0x22, sc_columns << 3);
+		write16(0x24, sc_rows << 3);
+		write8(0x26, 8);
+		write8(0x27, 8);
 		write8(0x2C, 2);
 		write8(0x2D, 9);
 	}
@@ -2157,6 +2243,10 @@ static void usage(void)
 int main(int argc, char **argv)
 {
 	srand(getpid() ^ time(NULL));
+
+	/* cc65 isn't smart enough to do this at compile time */
+	stream3ptr = stream3addr - 1;
+
 	while(*++argv && *argv[0] == '-') {
 		switch(*argv[1]) {
 			case 't':
