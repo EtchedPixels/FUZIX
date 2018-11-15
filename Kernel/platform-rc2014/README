@@ -100,10 +100,19 @@ to create a disk of suitable size and then
 
 	dd if=foo.cf of=foo.raw skip=2
 	fdisk foo.raw
+
 	add the file systems etc onto it (either by loopback mounting or
 	using dd remembering the start sector given can be used with
 		dd bs=512 seek=startsector conv=notrunc ...
+
 	dd if=foo.raw of=foo.cf seek=2 conv=notrunc
+
+When working on a real CF card or the raw file add the bootable image with
+
+	dd if=fuzix.romwbw of=/dev/sdxx seek=2 conv=notrunc
+
+to place the bootable image on sectors 2 and above in the hole the fdisk tool
+leaves for a bootable image.
 
 As ucp and fsck.fuzix support offsets in the format path:offset you can access
 the first file system with ucp foo.cf:1049600 if it starts at block 2048 of the
@@ -111,5 +120,3 @@ CF card as normal.
 
 Then you can run
 ./rc2014 -b -r 512.rom  -i foo.cf  -s  -w -R -c 
-
-
