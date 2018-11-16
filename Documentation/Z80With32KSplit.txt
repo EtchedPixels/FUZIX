@@ -1,5 +1,3 @@
-THIS IS INCOMPLETE DOCUMENTATION FOR AN IN PROGRESS FEATURE
-
 Z80 Systems With a 32K Split
 
 There are two classes of system that fit this category. Those with a 32K
@@ -62,11 +60,11 @@ swapped out while asleep in the kernel! The page number is returned in A
 to help. The stub is responsible for stack switching and must save the old
 sp in U_DATA__U_SYSCALL_SP.
 
-2.	Interrupt entry is expected to do minimal register saves, map the
+2.	Interrupt entry is expected to do full register saves, map the
 upper 32K and enter the kernel platform code. On return it needs to set the
 lower 32K to match the upper 32K.  The page number is returned in A to help.
 The stub is responsible for stack switching and saving the old stack
-in istack_switched_sp
+in istack_switched_sp.
 
 Remember you can also take an interrupt in kernel mode in which case the map
 is already present and you need to return to the kernel (A will be 0)
