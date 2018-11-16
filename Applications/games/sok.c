@@ -309,7 +309,7 @@ static void undo(void)
 	dir = op & 0x7F;
 	/* As we are reversing a move we know we won't be pushing any other
 	   block */
-	if (op & 0x80) {
+	if (op & BLOCK_MOVED) {
 		/* We need to reverse a block */
 		if (map.map[map.py][map.px] == MAP_TARGET)
 			map.done++;
@@ -319,13 +319,13 @@ static void undo(void)
 		dp = delta[dir];
 		pry = map.py + *dp;
 		prx = map.px + *++dp;
-		c = base_map.map[pry][prx];
+		c = fixup(base_map.map[pry][prx]);
 		map.map[pry][prx] = c;
 		draw(pry, prx, c);
 		if (c == MAP_TARGET)
 			map.done--;
-		move(reverse[dir] - 'H');
 	}
+	move(reverse[dir] - 'H');
 }
 
 static uint8_t notifier(const char *p)
