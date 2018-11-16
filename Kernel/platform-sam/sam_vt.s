@@ -222,10 +222,50 @@ _vtwipe:
 ;	TODO
 ;
 _cursor_on:
-_cursor_off:
+	pop hl
+	pop de
+	push de
+	push hl
+	call base_addr
+	ex de,hl
+	inc h		; Move on 6 scan lines
+	inc h		; So the cursor is bottom 2
+	inc h
+	ld (cursorpos),hl
+	jr xor_cursor
+;
+;	Remove our cursor
+;
 _cursor_disable:
+_cursor_off:
+	ld hl,(cursorpos)
+	ld a,h
+	inc a
+	ret z
+	ld a,#255
+	ld (cursorpos),a
+xor_cursor:
+	call map_video
+	call xorhl
+	ld de,#127
+	add hl,de
+	call xorhl
+	jp unmap_video
+
+xorhl:
+	ld a,(hl)
+	cpl
+	ld (hl),a
+	inc hl
+	ld a,(hl)
+	cpl
+	ld (hl),a
+	ret
+
 _vtattr_notify:
 	ret
 
 colours:
 	.word 0
+cursorpos:
+	.word 0xFFFF
