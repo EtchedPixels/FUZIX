@@ -569,6 +569,10 @@ void recalc_cursig(void)
 		sb->s_pending |= 1 << udata.u_cursig;
 		udata.u_cursig = 0;
 	}
+	/* This function gets called on things like signal mask changes
+	   so even if no signal was pending there might be one next time
+	   we ask */
+	udata.u_ptab->p_flags |= PFL_CHKSIG;
 }
 
 /* Process a block of 16 signals so we can avoid using longs */
@@ -670,7 +674,7 @@ uint8_t chksigs(void)
 	   Cursig being set means we've already worked out what to do.
 	 */
 rescan:
-	if (udata.u_cursig || udata.u_ptab->p_status == P_STOPPED)
+	if (udata.u_cursig || !(udata.u_ptab->p_flags & PFL_CHKSIG) || udata.u_ptab->p_status == P_STOPPED)
 		return udata.u_cursig;
 
 	for (b = 0; b < 2; b++, sb++) {
@@ -680,6 +684,8 @@ rescan:
 		else if (r)
 			return udata.u_cursig;
 	}
+	/* No signal pending, remember this */
+	udata.u_ptab->p_flags &= ~PFL_CHKSIG;
 	return 0;
 }
 
@@ -706,6 +712,7 @@ void ssig(ptptr proc, uint8_t sig)
 	irq = di();
 
 	if (proc->p_status != P_EMPTY) {	/* Presumably was killed just now */
+		proc->p_flags |= PFL_CHKSIG;
                 /* SIGCONT has an unblockable effect */
 		if (sig == SIGCONT) {
 			/* You can never send yourself a SIGCONT when you are stopped */

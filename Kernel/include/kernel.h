@@ -480,8 +480,6 @@ typedef struct p_tab {
 #ifdef udata
     struct u_data *p_udata;	/* Udata pointer for platforms using dynamic udata */
 #endif
-    /* Everything below here is overlaid by time info at exit.
-	 * Make sure it's 32-bit aligned. */
     uint16_t    p_priority;     /* Process priority */
     struct sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
@@ -496,6 +494,8 @@ typedef struct p_tab {
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
     usize_t	p_top;		/* Copy of u_top */
+    uint8_t	p_flags;	/* Bitflags */
+#define PFL_CHKSIG	1	/* Signal check required */
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
     void *	p_profbuf;
