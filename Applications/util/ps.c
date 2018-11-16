@@ -358,12 +358,12 @@ void display_process(struct p_tab *pp, int i)
 	   times in ptab verus udata here */
 	if (outflags & OF_STIME) {
 		uint32_t t;
-		t = time(NULL) - pp->p_stime;
-		if ((t - pp->p_stime) > 86400)
+		t = time(NULL) - pp->p_time;
+		if ((t - pp->p_time) > 86400)
 			printf("%02day ", t / 86400);
 		else {
 			struct tm *tm;
-			time_t x = pp->p_stime;
+			time_t x = pp->p_time;
 			tm = localtime(&x);
 			printf("%02d:%02d ",
 				tm->tm_hour, tm->tm_min);
