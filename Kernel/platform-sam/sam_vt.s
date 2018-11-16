@@ -174,7 +174,7 @@ _clear_lines:
 	call base_addr
 	call map_video
 	ld h,d
-	ld e,l
+	ld l,e
 	inc de
 	dec bc
 	ld (hl),#0
