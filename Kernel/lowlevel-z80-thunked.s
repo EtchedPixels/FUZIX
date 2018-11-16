@@ -202,15 +202,6 @@ traphl:
 ;
 interrupt_handler:
 	call map_save_low	; save old and map kernel
-	ex af,af'
-	push af
-	push bc
-	exx
-	push bc
-	push de
-	push hl
-	push ix
-	push iy
 	ld a,#1
 	ld (_inint),a
 	ld (U_DATA__U_ININTERRUPT),a
@@ -233,8 +224,8 @@ intreti:di
 	ld a, (U_DATA__U_INSYS)
 	or a
 	jr nz, interrupt_kernel
-	call map_user_low
 intsig:
+	call map_user_low
 	ld a,(U_DATA__U_CURSIG)
 	or a
 	jr nz, interrupt_sig
@@ -245,17 +236,6 @@ no_sig:
 	ld e,a
 	ld a,(U_DATA__U_PAGE+1)
 intret:
-	ex af,af'
-	exx
-	pop iy
-	pop ix
-	pop hl
-	pop de
-	pop bc
-	exx
-	pop bc
-	pop af
-	ex af,af'
 	ret
 
 interrupt_kernel:
@@ -290,13 +270,27 @@ interrupt_sig:
 ;
 ;	The horrible case - task switching time
 ;
+;	Everything important is on the user stack, except that there is
+;	a vital stubs return address top of our current stack
+;
+;	We move the return address onto the kstack, switch to the kstack
+;	and then park ourselves in platform_switchout. On our return the
+;	istack has been lost but our kstack (private to us) still has the
+;	needed return address to the stubs and we can unwind everything
+;	via that stack.
+;
+.globl preemption
+
 preemption:
+	pop de				; return address to stubs
 	xor a
 	ld (_need_resched),a		; we are doing it thank you
 	ld hl,(istack_switched_sp)
 	ld (U_DATA__U_SYSCALL_SP), hl	; save the stack save
 	ld sp, #kstack_top		; free because we are not pre-empted
 					; during a system call
+	push de				; return address onto our kstack
+					; istack will be lost
 	ld hl,#intret2
 	push hl
 	reti				; reti M1 cycle for IM2
@@ -311,14 +305,15 @@ intret2:
 	; Give up the CPU
 	; FIXME: can we get here on timers when only one thing is running
 	; and we don't need to pre-empt ????? Is this more generally busted
-	; ?
+	; ? It is .... review timer interrupt logic... FIXME
 	call _platform_switchout
 	; Undo the fakery
 	xor a
 	ld (U_DATA__U_ININTERRUPT),a
 	ld (U_DATA__U_INSYS),a
-	ld hl,(U_DATA__U_SYSCALL_SP)
-	ld (istack_switched_sp),hl
+	; The istack was lost but that is ok as we saved the return onto the
+	; kernel stack, so when we finally ret we end up in the right place
+	ld sp,#kstack_top - 2		; saved return address
 	; Now continue on the interrupt return path
 	; looking for signals
 	jr intsig

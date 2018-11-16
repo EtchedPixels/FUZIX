@@ -370,6 +370,17 @@ interrupt_high:
 	    push af
 	    push de
 	    push hl
+
+	    ex af,af'
+	    push af
+	    push bc
+	    exx
+	    push bc
+	    push de
+	    push hl
+	    push ix
+	    push iy
+
 	    in a,(251)
 	    and #0x60
 	    or #KERNEL_HIGH
@@ -398,6 +409,18 @@ interrupt_high:
 	    cp e
 	    call nz, sigpath
 kernout:
+	    ex af,af'
+	    exx
+	    pop iy
+	    pop ix
+	    pop hl
+	    pop de
+	    pop bc
+	    exx
+	    pop bc
+	    pop af
+	    ex af,af'
+
 	    pop hl
 	    pop de
 	    pop af

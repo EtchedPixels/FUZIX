@@ -39,6 +39,7 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
+DONE	-	Crashes on interrupt preempt (Fixed I hope)
 	-	Fix signal handling crashes
 	-	Sometimes we seem to pre-empt in the middle of a pre-empt
 		and crash ?? we see a kprintf from an interrupt interrupted
@@ -51,7 +52,7 @@ DONE	-	Move fonts to video bank after frame buffer
 	-	Floppy driver (at least for read)
 DONE	-	Get to init (but not much further)
 IP	-	Debug all the new banking code and stubs
-	-	Atom IDE driver
+	-	Atom IDE driver (prob need minimal copiers in high stubs)
 DONE	-	Atom-lite IDE driver
 DONE	-	Look at how to preserve high colour bits
 
