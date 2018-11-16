@@ -365,15 +365,30 @@ interrupt_high:
 	    push af
 	    push de
 	    push hl
+	    ex af,af'
+	    push af
+	    push bc
+	    exx
+	    push bc
+	    push de
+	    push hl
+	    push ix
+	    push iy
 	    ld a,(banknum)
-	    ld l,a
+	    ld c,a
 	    ld a,#0x01
 	    out (0x38),a		; Bank 0, no ROM
 	    ld (istack_switched_sp),sp	; istack is positioned to be valid
 	    ld sp,#istack_top		; in both banks. We just have to
-	    push hl			; save return bank
+	    ;
+	    ;	interrupt_handler may come back on a different stack in
+	    ;	which case bc is junk. Fortuntely we never pre-empt in
+	    ;	kernel so the case we care about bc is always safe. This is
+	    ;	not a good way to write code and should be fixed! FIXME
+	    ;
+	    push bc
 	    call interrupt_handler	; switch on the right SP
-	    pop hl
+	    pop bc
 	    ; Restore stack pointer to user. This leaves us with an invalid
 	    ; stack pointer if called from user but interrupts are off anyway
 	    ld sp,(istack_switched_sp)
@@ -389,6 +404,18 @@ interrupt_high:
 	    xor a
 	    cp e
 	    call nz, sigpath
+pops:
+	    ex af,af'
+	    exx
+	    pop iy
+	    pop ix
+	    pop hl
+	    pop de
+	    pop bc
+	    exx
+	    pop bc
+	    pop af
+	    ex af,af'
 	    pop hl
 	    pop de
 	    pop af
@@ -397,13 +424,9 @@ interrupt_high:
 kernout:
 	    ; restore bank - if we interrupt mid user copy or similar we
 	    ; have to put the right bank back
-	    ld a,l
+	    ld a,c
 	    out (0x38),a
-	    pop hl
-	    pop de
-	    pop af
-	    ei
-	    ret
+	    jr pops
 	    
 sigpath:
 	    push de		; signal number
