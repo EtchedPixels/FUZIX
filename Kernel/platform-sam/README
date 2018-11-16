@@ -1,6 +1,6 @@
 Sam Coupe prototyping and 32K/32K split development work
 
-Proposed memory layout
+Memory layout
 
 Kernel mode
 
@@ -39,28 +39,14 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
-DONE	-	Crashes on interrupt preempt (Fixed I hope)
-	-	Fix signal handling crashes
-	-	Sometimes we seem to pre-empt in the middle of a pre-empt
-		and crash ?? we see a kprintf from an interrupt interrupted
-		Need to check all our IRQ save/restore logic is sound on
-		video especially !
-	-	AtomIDE detect fails if ROM present (select dev 0 first ?)
-DONE	-	Run out of pages - suggests child exit/bank32 isn't cleaning
-		up right
-DONE	-	Move fonts to video bank after frame buffer
-	-	Floppy driver (at least for read)
-DONE	-	Get to init (but not much further)
-IP	-	Debug all the new banking code and stubs
-	-	Atom IDE driver (prob need minimal copiers in high stubs)
-DONE	-	Atom-lite IDE driver
-DONE	-	Look at how to preserve high colour bits
-
+	-	AtomIDE driver (prob need minimal copiers in high stubs)
 	-	RTC driver
 	-	Serial driver
 	-	Mouse/Joystick/Input
+	-	Floppy driver (at least for read)
 
 	-	Mode setting/graphics mode support
+	-	Console colour
 	-	Video ioctls
 	-	UDG ioctls
 	-	Is there any way to do video mapping into user process sanely
@@ -79,7 +65,18 @@ IP	-	MegaRAM (as RAMdisc)
 	-	Maybe look at the modern add ons (SD card, network etc)
 
 Boot from the created floppy .mgt file
-Disable atomlite boot rom (need to fix that issue)
 Filesystem on Atomlite. If using simcoupe dd it 534 bytes into the image
 Select device 0 for boot to get atomlite (you can do partitions)
 
+
+DONE	-	Crashes on interrupt preempt (Fixed I hope)
+DONE	-	Fix signal handling crashes  ( ditto )
+DONE	-	Run out of pages - suggests child exit/bank32 isn't cleaning
+		up right
+DONE	-	Move fonts to video bank after frame buffer
+DONE	-	Get to init (but not much further)
+DONE	-	Debug all the new banking code and stubs
+DONE	-	Atom-lite IDE driver
+DONE	-	Look at how to preserve high colour bits
+DONE	-	Cursor for console
+DONE	-	AtomIDE lite detect fails if ROM present (select dev 0 first ?)
