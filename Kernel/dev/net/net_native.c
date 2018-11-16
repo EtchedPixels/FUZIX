@@ -235,7 +235,6 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
 	selwake_dev(4, 65, SELECT_IN);
 
 	do {
-	    kprintf("Wait %d in %d\n", state, s->s_state);
 	    if( s->s_state == SS_CLOSED || s->s_state == SS_DEAD)
 		return -1;
 	    psleep_nosig(s);
