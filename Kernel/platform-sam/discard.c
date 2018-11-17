@@ -7,6 +7,9 @@
 #include <devatom.h>
 #include <msm6242b.h>
 
+/* FIXME */
+extern int strcmp(const char *, const char *);
+
 void map_init(void)
 {
 }
@@ -25,7 +28,10 @@ void pagemap_init(void)
 
 uint8_t platform_param(char *p)
 {
-	used(p);
+	if (strcmp(p, "rtc") == 0) {
+		samrtc = 1;
+		return 1;
+	}
 	return 0;
 }
 

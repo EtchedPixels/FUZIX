@@ -40,6 +40,7 @@ Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
 	-	Control key debugging
+	-	Review and test signal handling paths more
 	-	AtomIDE driver (prob need minimal copiers in high stubs)
 	-	RTC driver
 	-	Serial driver
@@ -68,7 +69,6 @@ IP	-	MegaRAM (as RAMdisc)
 Boot from the created floppy .mgt file
 Filesystem on Atomlite. If using simcoupe dd it 534 bytes into the image
 Select device 0 for boot to get atomlite (you can do partitions)
-
 
 DONE	-	Crashes on interrupt preempt (Fixed I hope)
 DONE	-	Fix signal handling crashes  ( ditto )
