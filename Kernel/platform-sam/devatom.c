@@ -26,6 +26,7 @@ void devide_writeb(uint8_t reg, uint8_t value)
 
 uint8_t atom_probe(void)
 {
+    devide_writeb(ide_reg_devhead, 0xE0);
     ide_addr = ide_reg_lba_0;
     ide_high = 0xAA;
     ide_low = 0x55;
