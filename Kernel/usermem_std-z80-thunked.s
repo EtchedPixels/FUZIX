@@ -184,7 +184,7 @@ zeroit:
 	dec bc
 	ld a,b
 	or c
-	ret z
+	jp z, map_kernel_low
 	ld e,l
 	ld d,h
 	inc de
