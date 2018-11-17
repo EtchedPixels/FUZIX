@@ -3,6 +3,14 @@
 #include <kdata.h>
 #include <devlpr.h>
 
+/* FIXME: There are two comms interfaces
+
+   1. The SPI printer port on 232/233 mode on 234 (supported here)
+   2. The MGT comms interface. Printer port on 232/233 or 234/235 but no
+      direction control, and 236-239 allow up to four SCC2691 UARTs
+
+   We support ether interface in the default jumpering */
+
 __sfr __at 232 lpdata;
 __sfr __at 233 lpstrobe;
 __sfr __at 233 lpbusy;
@@ -26,7 +34,7 @@ int lpr_close(uint8_t minor)
 	return 0;
 }
 
-/* FIXME: review strobe delay requirement */
+/* The call is more than enough to ensure we make the parallel timing */
 static void nap(void)
 {
 }
@@ -54,7 +62,7 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	flag;
 
 	while (udata.u_done < udata.u_count) {
-		while (lpbusy) {
+		while (lpbusy & 1) {
 			if (iopoll())
 				return udata.u_done;
 		}
@@ -64,5 +72,5 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 		lpstrobe = 0;
 		udata.u_done++;
 	}
-	return (-1);
+	return udata.u_done;
 }
