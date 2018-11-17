@@ -39,6 +39,7 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
+	-	Control key debugging
 	-	AtomIDE driver (prob need minimal copiers in high stubs)
 	-	RTC driver
 	-	Serial driver

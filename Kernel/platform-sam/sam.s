@@ -281,6 +281,32 @@ keyscl:
 	    ld (hl), a
 	    ret
 
+;
+;	Real time clock on port 239
+;
+;	The upper address bits select the actual RTC port read or
+;	written.
+;
+;	This appears to be an OKI6242B
+;
+
+	    .globl _samrtc_in
+	    .globl _samrtc_out
+
+_samrtc_in:
+	    ld b,l
+	    ld c,#239
+	    in a,(c)
+	    and #0x0f
+	    ld l,a
+	    ret
+_samrtc_out:
+	    ld b,l
+	    ld c,#239
+	    out (c),h
+	    ret
+
+
 	    .area _PAGE0
 ;
 ;	This exists at the bottom of each process mapping we are using

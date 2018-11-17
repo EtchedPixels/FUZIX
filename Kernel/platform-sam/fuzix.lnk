@@ -46,4 +46,5 @@ platform-sam/mbr.rel
 platform-sam/sam.rel
 platform-sam/sam_vt.rel
 platform-sam/tricks.rel
+platform-sam/msm6242b.rel
 -e

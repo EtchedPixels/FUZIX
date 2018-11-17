@@ -5,6 +5,7 @@
 #include <devtty.h>
 #include <devide.h>
 #include <devatom.h>
+#include <msm6242b.h>
 
 void map_init(void)
 {
@@ -32,6 +33,7 @@ void device_init(void)
 {
 #ifdef CONFIG_RTC
 	/* Time of day clock */
+	platform_rtc_probe();
 	inittod();
 #endif
 	if (atom_probe())
