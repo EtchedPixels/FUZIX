@@ -50,6 +50,8 @@ static void format(int n) {
       break;
     case FMT_UBEE:
       printf("UBEE");
+    case FMT_SAM2:
+      printf("SAM2");
     default:
       printf("Unknown(%d)", n);
   }
