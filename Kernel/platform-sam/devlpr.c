@@ -3,36 +3,66 @@
 #include <kdata.h>
 #include <devlpr.h>
 
-__sfr __at 0x02 lpstat;		/* I/O 2 and 3 */
-__sfr __at 0x03 lpdata;
+__sfr __at 232 lpdata;
+__sfr __at 233 lpstrobe;
+__sfr __at 233 lpbusy;
+__sfr __at 234 lpmode;
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
-    minor; flag; // shut up compiler
-    return 0;
+	used(flag);
+
+	if (minor) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	lpmode = 0;
+	return 0;
 }
 
 int lpr_close(uint8_t minor)
 {
-    minor; // shut up compiler
-    return 0;
+	used(minor);
+	return 0;
 }
+
+/* FIXME: review strobe delay requirement */
+static void nap(void)
+{
+}
+
+static uint8_t iopoll(void)
+{
+	/* Ought to be a core helper for this lot ? */
+	if (need_reschedule())
+		_sched_yield();
+	if (chksigs()) {
+		if (!udata.u_done) {
+			udata.u_error = EINTR;
+			udata.u_done = (usize_t) - 1;
+		}
+		return 1;
+	}
+	return 0;
+}
+
 
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-    int c = udata.u_count;
-    char *p = udata.u_base;
-    minor; rawflag; flag; // shut up compiler
+	minor;
+	rawflag;
+	flag;
 
-    while(c) {
-        /* Note; on real hardware it might well be necessary to
-           busy wait a bit just to get acceptable performance */
-        while (lpstat != 0xFF) {
-//            if (psleep_flags(&clocktick, flag))
-//                return -1;
-        }
-        /* FIXME: tidy up ugetc and sysio checks globally */
-        lpdata = ugetc(p++);
-    }
-    return (-1);
+	while (udata.u_done < udata.u_count) {
+		while (lpbusy) {
+			if (iopoll())
+				return udata.u_done;
+		}
+		lpdata = ugetc(udata.u_base++);
+		lpstrobe = 1;
+		nap();
+		lpstrobe = 0;
+		udata.u_done++;
+	}
+	return (-1);
 }
