@@ -22,6 +22,8 @@
 	    .globl _platform_copier_l
 	    .globl _platform_copier_h
 	    .globl _keyscan
+	    .globl _mousescan
+	    .globl _mouse_probe
 	    .globl _int_disabled
 
             ; exported debugging tools
@@ -37,6 +39,7 @@
             .globl unix_syscall_entry
             .globl outcharhex
 	    .globl _keyin
+	    .globl _mousein
 
 	    .globl _vtwipe
 	    .globl _vtinit
@@ -281,6 +284,51 @@ keyscl:
 	    ld (hl), a
 	    ret
 
+_mousescan:
+	    ld hl,#0
+	    ld bc,#0xfffe
+	    in a,(c)
+	    in a,(c)		; should be xxxx1111
+	    or #0xf0		; should now be 11111111
+	    inc a		; cheap way to and 15, cp 15...
+	    ret nz		; was not right - punt return 0
+	    ld hl,#_mousein
+	    ini			; fetch and store buttons
+	    inc b		; fix up B (needs to be FFFE for the port)
+	    ini			; y256
+	    inc b
+	    ini			; y16
+	    inc b
+	    ini			; y1
+	    inc b
+	    ini			; x256
+	    inc b
+	    ini			; x16
+	    inc b
+	    ini			; x1
+	    inc b
+	    in a,(c)		; end
+	    ret			; hl will be non zero
+
+	    .area _DISCARD
+
+_mouse_probe:
+	    ld bc,#0xfffe
+	    ld hl,#0x0b01	; 0b for count, 01 so can ret nz
+	    in a,(c)
+	    in a,(c)
+	    or #0xf0
+	    inc a
+	    ret nz
+probe_in:
+	    in a,(c)
+	    dec h
+	    jr nz, probe_in
+	    and #0x0f
+	    ld l,a		; 0 if present
+	    ret
+
+	    .area _CODE
 ;
 ;	Real time clock on port 239
 ;

@@ -16,8 +16,12 @@ This port provides fairly basic support for the following configurations
 		Joystick
 		Mouse
 		Floppy Disk
-		Serial I/O
+		Serial I/O (no emulation so tricky)
 		MegaRAM (as a RAM disc)
+
+	No online docs/emulation
+		Trinity
+		SID
 
 
 Memory layout

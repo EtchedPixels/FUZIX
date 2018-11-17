@@ -215,10 +215,15 @@ static void keydecode(void)
 
 static uint8_t kbd_timer;
 
+uint8_t mousein[7];
+uint8_t mouse_present;
+
 void kbd_interrupt(void)
 {
 	newkey = 0;
 	keyproc();
+	if (mouse_present)
+		mousescan();
 	if (keysdown && keysdown < 3) {
 		if (newkey) {
 			keydecode();

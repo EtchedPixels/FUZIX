@@ -42,6 +42,8 @@ void device_init(void)
 	platform_rtc_probe();
 	inittod();
 #endif
+	if (!mouse_probe())
+		mouse_present = 1;
 	if (atom_probe())
 		devide_init();
 }

@@ -4,6 +4,10 @@
 extern void tty_interrupt(void);
 extern void kbd_interrupt(void);
 extern void keyscan(void);
+extern void mousescan(void);
+extern uint8_t mouse_probe(void);	/* 0 means yes */
+
+extern uint8_t mouse_present;
 
 #define KEY_ROWS	9
 #define KEY_COLS	8
