@@ -4,8 +4,13 @@
 #include <stdbool.h>
 #include <tty.h>
 #include <vt.h>
+#include <graphics.h>
 #include <devtty.h>
 #include <stdarg.h>
+
+static uint8_t vmode = 2;
+
+__sfr __at 252 vmpr;
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
@@ -46,8 +51,10 @@ uint8_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    if (minor == 1)
-        vtoutput(&c, 1);
+    if (minor == 1) {
+        if (vmode == 2)
+	        vtoutput(&c, 1);
+    }
 }
 
 void tty_interrupt(void)
@@ -77,7 +84,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint8_t shiftmask[9] = {
-    0x80, 0, 0, 0, 0, 0, 0, 0x40, 0x80,
+    0x01, 0, 0, 0, 0, 0, 0, 0x02, 0x01
 };
 
 static void keyproc(void)
@@ -98,11 +105,12 @@ static void keyproc(void)
 						keysdown--;
 				}
 				if ((key & m) && !(keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
 						keysdown++;
-					keybyte = i;
-					keybit = n;
-					newkey = 1;
+						keybyte = i;
+						keybit = n;
+						newkey = 1;
+					}
 				}
 				m += m;
 
@@ -178,6 +186,7 @@ static void keydecode(void)
 
 	/* We don't do anything clever for both shifts or other weird combos
 	   This computer isn't going to run emacs after all */
+
 	if (keymap[7] & 0x02)	/* Symbol Shift */
 		c = altkeyboard[keybyte][keybit];
 	else if (keymap[0] & 0x01)
@@ -189,15 +198,13 @@ static void keydecode(void)
 		capslock = 1 - capslock;
 		return;
 	}
-        /* The keyboard lacks some rather important symbols so remap them
-           with control */
 	if (keymap[8] & 0x01) {	/* control */
 		/* These map the SAM specific behaviours */
 		if (c == KEY_LEFT)
 			c = KEY_HOME;
 		else if (c == KEY_RIGHT)
 			c = KEY_END;
-		else if (c > 31 && c < 96)
+		else
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
@@ -223,3 +230,86 @@ void kbd_interrupt(void)
 	}
 }
 
+/*
+ *	Graphics routines. Not yet very useful.
+ */
+
+/* Should be const but then some sdcc's put it in the wrong segment */
+static struct display samdisplay[4] = {
+	/* Mode 1 (0 to us): Spectrum mode */
+	{
+		0,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,
+		FMT_SPECTRUM,
+		HW_UNACCEL,
+		GFX_VBLANK,	/* Deal with palette later */
+		0,		/* To be added */
+	},
+	/* Mode 2 (attribute per character row mode) */
+	{
+		1,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,
+		FMT_SAM2,
+		HW_UNACCEL,
+		GFX_VBLANK,
+		0,
+	},
+	/* Mode 3 (512 x 192 4 2bp) */
+	{
+		2,
+		512, 192,
+		512, 192,
+		0xFF, 0xFF,
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_VBLANK|GFX_TEXT,
+		0,
+	},
+	/* Mode 4 (256 x 192 16 colour) */
+	{
+		3,
+		256, 192,
+		256, 192,
+		0xFF, 0xFF,
+		FMT_COLOUR16,
+		HW_UNACCEL,
+		GFX_VBLANK,
+		0,
+	}
+};
+
+/*
+ *	Graphics ioctls. At minimum we need to extend this to support
+ *	GETPALETTE/SETPALETTE and some read/write/copy ops as we can't
+ *	sanely map the video into a user process.
+ *
+ *	We keep the full 24K allocated in a fixed place. When we switch modes
+ *	we don't try and do any clever reclaiming.
+ */
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	uint8_t m;
+	if (minor != 1 || arg >> 8 != 0x03)
+		return vt_ioctl(minor, arg, ptr);
+	switch(arg) {
+	case GFXIOC_GETINFO:
+		return uput(&samdisplay[vmode], ptr, sizeof(struct display));
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:
+		m = ugetc(ptr);
+		if (m > 3) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&samdisplay[m], ptr, sizeof(struct display));
+		vmode = m;
+		vmpr = (vmpr & 0x9F) | (m << 5);
+		return 0;
+	}
+	return -1;
+}

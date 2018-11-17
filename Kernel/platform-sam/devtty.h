@@ -12,4 +12,6 @@ extern uint8_t keymap[9];
 extern uint8_t keyboard[9][8];
 extern uint8_t shiftkeyboard[9][8];
 
+extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
+
 #endif
