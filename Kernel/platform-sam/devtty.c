@@ -7,8 +7,10 @@
 #include <devtty.h>
 #include <stdarg.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+
+struct vt_repeat keyrepeat = { 50, 5 };
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
@@ -69,7 +71,7 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-static uint8_t keymap[9];
+uint8_t keymap[9];
 uint8_t keyin[9];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
@@ -131,7 +133,7 @@ static void keyproc(void)
  *	FIXME: you can't currently load the symshift keymap. The core code
  *	doesn't understand having a third translation table.
  */
-static uint8_t keyboard[9][8] = {
+uint8_t keyboard[9][8] = {
 	{ 0 , 'z', 'x', 'c', 'v', KEY_F1, KEY_F2, KEY_F3 },
 	{'a', 's', 'd', 'f', 'g', KEY_F4, KEY_F5, KEY_F6 },
 	{'q', 'w', 'e', 'r', 't', KEY_F7, KEY_F8, KEY_F9 },
@@ -143,7 +145,7 @@ static uint8_t keyboard[9][8] = {
 	{0/* CTRL*/, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0, 0, 0 }
 };
 
-static uint8_t shiftkeyboard[9][8] = {
+uint8_t shiftkeyboard[9][8] = {
 	{ 0 , 'Z', 'X', 'C', 'V', KEY_PGUP, KEY_F2, KEY_F3 },
 	{'A', 'S', 'D', 'F', 'G', KEY_PGDOWN, KEY_F5, KEY_F6 },
 	{'Q', 'W', 'E', 'R', 'T', KEY_F7, KEY_F8, KEY_F9 },
@@ -204,11 +206,20 @@ static void keydecode(void)
 		vt_inproc(1, c);
 }
 
+static uint8_t kbd_timer;
+
 void kbd_interrupt(void)
 {
 	newkey = 0;
 	keyproc();
-	if (keysdown < 3 && newkey)
-		keydecode();
+	if (keysdown && keysdown < 3) {
+		if (newkey) {
+			keydecode();
+			kbd_timer = keyrepeat.first;
+		} else if (!--kbd_timer) {
+			keydecode();
+			kbd_timer = keyrepeat.continual;
+		}
+	}
 }
 
