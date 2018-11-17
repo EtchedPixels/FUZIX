@@ -1,4 +1,24 @@
-Sam Coupe prototyping and 32K/32K split development work
+Sam Coupe
+
+This port provides fairly basic support for the following configurations
+
+	SAM Coupe with 256K or 512K of RAM (only 512K tested properly)
+
+	Options:
+		AtomLite IDE controller (8bit IDE)
+		SAMBus RTC
+		Printer port
+
+	In Progress:
+
+	Planned:
+		AtomIDE controller (16bit IDE)
+		Joystick
+		Mouse
+		Floppy Disk
+		Serial I/O
+		MegaRAM (as a RAM disc)
+
 
 Memory layout
 
@@ -39,10 +59,9 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
-	-	Control key debugging
-	-	Review and test signal handling paths more
+	-	Review and test signal handling paths more (catching signals
+		path appears to be broken)
 	-	AtomIDE driver (prob need minimal copiers in high stubs)
-	-	RTC driver
 	-	Serial driver
 	-	Mouse/Joystick/Input
 	-	Floppy driver (at least for read)
@@ -81,3 +100,5 @@ DONE	-	Atom-lite IDE driver
 DONE	-	Look at how to preserve high colour bits
 DONE	-	Cursor for console
 DONE	-	AtomIDE lite detect fails if ROM present (select dev 0 first ?)
+DONE	-	Control key debugging
+DONE	-	RTC driver
