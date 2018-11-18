@@ -21,7 +21,7 @@
 #define		KEYPRESS_UP	0x01
 #define		KEYPRESS_SHIFT	0x02
 #define		KEYPRESS_CTRL	0x04
-#define		kEYPRESS_ALT	0x08
+#define		KEYPRESS_ALT	0x08
 
 #define	LIGHTPEN_ABS	0x50		/* Light pen or similar, 16 x 16bit virtual coords */
 
