@@ -23,6 +23,7 @@
 	    .globl _platform_copier_h
 	    .globl _keyscan
 	    .globl _mousescan
+	    .globl _mouse12
 	    .globl _mouse_probe
 	    .globl _int_disabled
 
@@ -309,6 +310,36 @@ _mousescan:
 	    inc b
 	    in a,(c)		; end
 	    ret			; hl will be non zero
+
+_mouse12:
+	    ; Get the top nibble
+	    ld a,(hl)
+	    and #0x0f
+	    ; Sign extend it if needed
+	    bit 3,a
+	    jr z, nosex
+	    or #0xf0
+nosex:
+	    ld d,a
+	    ; Next nibble is bits 7-4
+	    inc hl
+	    ld a,(hl)
+	    and #0x0f
+	    rlca
+	    rlca
+	    rlca
+	    rlca
+	    ld e,a
+	    ; and bits 3-0
+	    inc hl
+	    ld a,(hl)
+	    and #0x0f
+	    ; Merge to get low byte
+	    or e
+	    ld l,a
+	    ; Get high byte
+	    ld h,d
+	    ret
 
 	    .area _DISCARD
 

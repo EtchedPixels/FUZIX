@@ -1,5 +1,3 @@
-#define CONFIG_RTC
-#define CONFIG_RTC_FULL
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -16,6 +14,14 @@
 #define MAX_MAPS	16
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
+
+/* Full RTC support */
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+
+/* Input layer support */
+#define CONFIG_INPUT
+#define CONFIG_INPUT_GRABMAX	3
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT

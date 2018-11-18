@@ -18,6 +18,7 @@ devio.rel
 filesys.rel
 process.rel
 inode.rel
+devinput.rel
 syscall_exec16.rel
 syscall_fs.rel
 syscall_fs2.rel
@@ -47,4 +48,5 @@ platform-sam/sam.rel
 platform-sam/sam_vt.rel
 platform-sam/tricks.rel
 platform-sam/msm6242b.rel
+platform-sam/devinput.rel
 -e

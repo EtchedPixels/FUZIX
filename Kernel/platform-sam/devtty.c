@@ -5,6 +5,7 @@
 #include <tty.h>
 #include <vt.h>
 #include <graphics.h>
+#include <input.h>
 #include <devtty.h>
 #include <stdarg.h>
 
@@ -101,8 +102,13 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
+					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -183,15 +189,19 @@ static uint8_t capslock = 0;
 static void keydecode(void)
 {
 	uint8_t c;
-
+	uint8_t m = 0;
+	
 	/* We don't do anything clever for both shifts or other weird combos
 	   This computer isn't going to run emacs after all */
 
-	if (keymap[7] & 0x02)	/* Symbol Shift */
+	 
+	if (keymap[7] & 0x02) {	/* Symbol Shift */
 		c = altkeyboard[keybyte][keybit];
-	else if (keymap[0] & 0x01)
+		m = KEYPRESS_ALT;
+	} else if (keymap[0] & 0x01) {
 		c = shiftkeyboard[keybyte][keybit];
-	else
+		m = KEYPRESS_SHIFT;
+	} else
 		c = keyboard[keybyte][keybit];
 
 	if (c == KEY_CAPSLOCK) {
@@ -199,6 +209,7 @@ static void keydecode(void)
 		return;
 	}
 	if (keymap[8] & 0x01) {	/* control */
+		m |= KEYPRESS_CTRL;
 		/* These map the SAM specific behaviours */
 		if (c == KEY_LEFT)
 			c = KEY_HOME;
@@ -209,21 +220,37 @@ static void keydecode(void)
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
-		vt_inproc(1, c);
+	if (c) {
+		switch (keyboard_grab) {
+		case 0:
+			vt_inproc(1, c);
+			break;
+		case 1:
+			if (!input_match_meta(c)) {
+				vt_inproc(1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 static uint8_t kbd_timer;
-
-uint8_t mousein[7];
-uint8_t mouse_present;
 
 void kbd_interrupt(void)
 {
 	newkey = 0;
 	keyproc();
-	if (mouse_present)
-		mousescan();
 	if (keysdown && keysdown < 3) {
 		if (newkey) {
 			keydecode();
