@@ -106,3 +106,4 @@ DONE	-	RTC driver
 DONE	-	Mouse/Joystick/Input
 DONE	-	Review and test signal handling paths more (catching signals
 		path appears to be broken)
+DONE	-	Esc-J crashes the console driver

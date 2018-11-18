@@ -164,6 +164,8 @@ _clear_lines:
 	push de
 	push hl
 	ld a,d			; count (0-23)
+	or a
+	ret z			; zero count is possible - do nothing
 	ld d,#0
 	; Now how much to copy ?
 	; 128 bytes per scan line, 8 scan lines per char = 1024
