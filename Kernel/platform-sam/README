@@ -1,4 +1,4 @@
-Sam Coupe
+~Sam Coupe
 
 This port provides fairly basic support for the following configurations
 
@@ -63,11 +63,8 @@ and all the bank juggling tricks
 Stub code is in the low parts of the low banks and the top of the high banks
 so we have two copier routines one for each half.
 
-	-	Review and test signal handling paths more (catching signals
-		path appears to be broken)
 	-	AtomIDE driver (prob need minimal copiers in high stubs)
 	-	Serial driver
-	-	Mouse/Joystick/Input
 	-	Floppy driver (at least for read)
 
 IP	-	Mode setting/graphics mode support
@@ -106,3 +103,6 @@ DONE	-	Cursor for console
 DONE	-	AtomIDE lite detect fails if ROM present (select dev 0 first ?)
 DONE	-	Control key debugging
 DONE	-	RTC driver
+DONE	-	Mouse/Joystick/Input
+DONE	-	Review and test signal handling paths more (catching signals
+		path appears to be broken)
