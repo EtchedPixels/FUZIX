@@ -252,7 +252,8 @@ interrupt_sig:
 	ld e,a
 	xor a
 	ld (_int_disabled),a
-	ld d,a
+	ld e,a
+	ld c,a
 	ld (U_DATA__U_CURSIG),a
 	ld hl,#U_DATA__U_SIGVEC
 	add hl,de
@@ -265,6 +266,8 @@ interrupt_sig:
 	ld a,d
 	or e
 	jr z, no_sig
+	ex de,hl
+	ld e,c
 	jr intret
 
 ;

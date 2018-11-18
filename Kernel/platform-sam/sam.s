@@ -607,8 +607,9 @@ syscall_sigret:
 	    ld h,#0
 	    push hl		; signal
 	    ld hl,#syscall_sighelp
-	    push hl		; vector
-	    ret
+	    push hl		; vector return
+	    push bc		; actual signal vector
+	    ret			; to handler which will return to sighelp
 syscall_sighelp:
 	    pop de		; discard signal
 	    pop de		; recover error info
