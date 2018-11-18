@@ -106,6 +106,9 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 	used(rawflag);
 
+	if (!valaddr(udata.u_base, udata.u_count))
+		return -1;
+
 	t = &ttydata[minor];
 
 	while (udata.u_done != udata.u_count) {
@@ -136,7 +139,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 			if (udata.u_sysio)
 				c = *udata.u_base;
 			else
-				c = ugetc(udata.u_base);
+				c = _ugetc(udata.u_base);
 
 			if (t->termios.c_oflag & OPOST) {
 				if (c == '\n' && (t->termios.c_oflag & ONLCR))
