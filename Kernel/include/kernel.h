@@ -813,6 +813,7 @@ extern size_t strlcpy(char *, const char *, size_t);
 #define uget(a,b,c)	(memcpy(b,a,c) && 0)
 #define uput(a,b,c)	(memcpy(b,a,c) && 0)
 #define ugetc(a)	(*(uint8_t *)(a))
+#define _ugetc(a)	(*(uint8_t *)(a))
 #define ugetw(a)	(*(uint8_t *)(a))
 #define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
 #define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
