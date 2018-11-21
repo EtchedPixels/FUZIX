@@ -1,0 +1,157 @@
+Experimental porting work for ZX Spectrum 128K systems that have the ability
+to somehow get the low 16K mapped with our code. That makes it a lot more
+practical and a lot of interfaces let us do this, plus a lot of the clones
+support putting RAM low for CP/M.
+
+----
+
+
+
+Fuzix for the 128K Spectrum and clones with DivIDE or DivMMC mapping
+functions. These machines all have the same basic problem, there is a 16K
+window at C000-FFFF which is pageable but no big paging.
+
+For the 128K spectrum we get 8 pages of 16K, all can be stuffed into the top
+16K but some are also wired to other things or hardwired elsewhere.
+
+DivIDE and DIVMMC we do
+0xE3:	7: conmem 6: mapram 0-5: bank
+	(may only be 4 banks)
+
+	7 set ROM at 0000-1FFF and RAM at 2000-3FFF (banked)
+	and pins it (overrides 6)
+	6 is a one shot and write protects bank 3 and places it at
+	0000-1FFF, 
+	5-0: are the bank at 2000-3FFF
+
+To make our life miserable however the boot firmware loads stuff into page 3
+switches to it and locks it. Fortunately it turns out we can trojan Fatware
+0.14 as it expects a \fatware\boot.bin and providing it is 8K will just use it.
+This means we still have to have a fat partition but it'll do for now to get
+us going because it'll blindly load our loader into page 3, switch it to 0
+and then run it.
+
+We run with the following mapping
+
+0000-1FFF	IRQ vectors and boot loader
+2000-3FFF	RAM (switchable): Common, const, commondata etc
+		(we have 2 spare banks here but it's not clear what use they
+		actually are).
+
+4000-7FFF	Kernel data continued (lots of space) 
+
+8000-BFFF	_DISCARD area - blown away when we exec init
+
+C000-FFFF
+	0:	Kernel CODE (fairly full)
+	1:	Kernel CODE2 (fairly full)
+	2:	Mapped at 0x8000-0xBFFF (exchanged with user process buffer)
+	3:	User process
+	4:	User process
+	5:	Mapped at 0x4000-0x7FFF (Kernel data/common)
+	6:	User process (holds the 0x8000-BFFF of the other task)
+	7:	CODE3, Display + Video (some room)
+
+We can move some stuff down into the low 16K (especially once we move the
+common space) We do need to do sort things out a bit and stuff commonmem etc
+in the low 8K to get more room.
+
+User processes live in 2/3 or 2/4. Because we can't swap the lower 16K
+around we exchange it with bank 6 as we go.
+
+To Do:
+
+-	Get the DivIDE interface working
+-	Review DivIDE writes - is the port aliasing safe with a full
+	otir or do we need to avoid port aliasing ?
+-	Check the swap hooks are ok
+-	See what we can get below 0x2000
+-	Set video space in CODE3 bank to 0 not 0xFF for neatness
+-	Look at what is needed for other suitable interfaces. DIVMMC would
+	in particular be good to support but that means another harder
+	bootloader hack
+-	6 or 5bit wide fonts (42, 51 column)
+-	Kempston joystick and mouse
+-	Many of the later Russian clones support putting bank 0 in the low
+	16K, and more than 8 banks. That would need some changes to the bank
+	logic and some interesting detection code. Also they have rather
+	different IDE mappings (SMUC on the Scorpion for example)
+-	Later DivIDE and DivMMC support both a 16K page mode and a lot more
+	RAM (up to 512K). That at the very least would make a kick ass
+	ramdisc/swap device even if the unit lacks the allram switch
+-	Speccyboot (ENC28J60)
+-	SpectraNet (W5100)
+
+
+
+Devices To Look At:
+
+DIVIDE:		These have at least 32K of 8K banks. They are awkward to use
+DIVMMC:		however because you cannot set all of it to RAM and r/w
+		Big ones have up to 512K of RAM (idea for ramdisk), some
+		even battery backup and 16K mode.
+ZXATASP:	PPIDE for spectrum with a 16K low memory paging thing ?
+ZXCF:		Similar CF adapter, 64 banks of 16K write protectable
+		memory in 0000-3FFF
+ZXMMC:		Appears to have no RAM attached so not much use
+Simple IDE:	Same problem but can often co-exist with others.
+SpectraNet:	Diskless Fuzix 8)
+
+Floppy disk interfaces are problematic. The standard Betadisk interface locks
+the I/O ports to its ROM being active, which sucks. The Disciple might be
+doable, need to check the locking and ports.
+
+To set up
+
+make
+
+Set up the HDF and partition it so you've got the 2048 boot sectors from
+a modern fdisk
+Mark partition 1 FAT and bootable
+hdfmonkey put my.hdf BOOT.BIN /fatware/BOOT.BIN
+dd if=strap.bin of=my.hdf bs=1046 seek=1 conv=notrunc
+
+and once it actually gets far enough we can stick the Fuzix partitions on
+partion 2+ along with swap
+
+
+Other option to investigate - unbanked mode
+
+0000-1FFF	Kernel commonmem and writables plus bootstrap
+2000-7FFF	Kernel code/data
+1:C000-FFFF	Kernel code/data
+7:C000-FFFF	Kernel buffers/video RAM
+
+8000-FFFF	User space
+
+That would give us a straight 48K for the kernel, 32K user spaces
+and page mappings of
+
+0:	??? (Russian clones low 16K RAM), maybe a networking/driver helper bank ?
+1:	Kernel code/data
+2:	8000-BFFF hardwired
+3:	User high
+4:	User high
+5:	4000-7FFF hardwired (Kernel code/data)
+6:	Exchange with 2
+7:	Kernel buffers/video/font code
+
+Other question: does this mean we need two builds
+
+1.	Classic low memory divmmc etc - 8000-FFFF user
+	as above
+
+2.	Big DivMMC/ZXCF etc where there is a 16K bank mode and more
+	RAM in the DivMMC than the system
+
+	0000-3FFF: user / kernel common
+	4000-7FFF: user (copied)
+	8000-BFFF: kernel fixed
+	C000-FFFF: kernel and video and some more user pages for copying
+
+Eg with a 512K DivIDE that would give us over 32K pages so 16 processes without
+hassle.
+
+Could we jump up and down on it enough to get user to be a bit bigger than 32K
+and if so where and how do we handle the extra
+

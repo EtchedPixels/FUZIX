@@ -1,0 +1,13 @@
+; UZI mnemonics for memory addresses etc
+
+; FIXME: THIS IS WRONG - NEED TO SORT OUT MAPPINGS AND DEAL WITH THIS
+U_DATA                      .equ 0x4000       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
+
+U_DATA_STASH		    .equ 0xFC00	      ; FC00-FEFF
+
+Z80_TYPE		    .equ 1
+
+PROGBASE		    .equ 0x8000
+PROGLOAD		    .equ 0x8000
+
