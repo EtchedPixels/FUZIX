@@ -36,12 +36,13 @@ include cpu-$(CPU)/rules.mk
 #
 
 CDSRCS = start.c
-C1SRCS =  version.c filesys.c devio.c kdata.c
+C1SRCS =  devio.c kdata.c
 C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c single.c bank8k.c bank16k.c bank16k_low.c bank32k.c
 C2SRCS += bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
 C2SRCS += bank8086.c
+C4SRCS = filesys.c version.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
 #	Assume we'll never be doing overlays with level2 or networking
@@ -68,6 +69,7 @@ CDOBJS = $(CDSRCS:.c=$(BINEXT))
 C1OBJS = $(C1SRCS:.c=$(BINEXT))
 C2OBJS = $(C2SRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
+C4OBJS = $(C4SRCS:.c=$(BINEXT))
 
 CS1OBJS = $(CS1SRCS:.c=$(BINEXT))
 CS2OBJS = $(CS2SRCS:.c=$(BINEXT))
@@ -82,8 +84,8 @@ AOBJS = $(ASRCS:$(ASMEXT)=$(BINEXT))
 CSSRCS = $(CS1SRCS) $(CS2SRCS) $(CS3SRCS) $(CS4SRCS) $(CS5SRCS)
 CSOBJS = $(CS1OBJS) $(CS2OBJS) $(CS3OBJS) $(CS4OBJS) $(CS5OBJS)
 
-CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(CFONTSRCS) $(CVIDEOSRCS) $(CSSRCS)
-COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSOBJS)
+CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(C4SRCS) $(CFONTSRCS) $(CVIDEOSRCS) $(CSSRCS)
+COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(C4OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSOBJS)
 
 OBJS  = $(COBJS) $(AOBJS)
 
@@ -123,6 +125,9 @@ $(C2OBJS): %$(BINEXT): %.c
 
 $(C3OBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) $<
+
+$(C4OBJS): %$(BINEXT): %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG4) $<
 
 $(CFONTOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_FONT) $<
