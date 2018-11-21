@@ -153,6 +153,9 @@ void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
   }
 
   switch(buf[sbank][ptr-1]) {
+    case 0x01:	/* LD BC, */
+    case 0x11:	/* LD DE, */
+    case 0x21:	/* LD HL/IX/IY, */
     case 0xC3:	/* JP - needs stub */
       if (v)
         printf("Converting JP at %04x to stub\n", ptr);
