@@ -28,7 +28,7 @@ extern unsigned int swap_dev;
 #define CONFIG_SPLIT_UDATA	/* Adjacent addresses but different bank! */
 #define UDATA_BLKS  1		/* One block of udata */
 #define UDATA_SIZE  512		/* 512 bytes of udata */
-#define MAX_SWAPS   16	    	/* We will size if from the partition */
+#define MAX_SWAPS   16	    	/* We will size it from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 
