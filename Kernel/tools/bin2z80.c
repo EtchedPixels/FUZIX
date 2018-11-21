@@ -73,9 +73,9 @@ static void write_z80(char *name)
 	
 	header[29] = 0x40 | 1;		/* IM1, Kempston joystick */
 	header[30] = 54;
-	header[32] = 0x03;		/* Run from C003 */
+	header[32] = 0x00;		/* Run from C000 */
 	header[33] = 0xC0;
-	header[34] = 5;			/* 128K with Interface 1 */
+	header[34] = 4;			/* 128K */
 	header[37] = 3;			/* Emulate LDIR and R details */
 	header[61] = 0xFF;		/* low memory is ROM */
 	header[62] = 0xFF;
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	}
 	load_bank_at(bank5, "common.bin", 0x8000);
 	load_bank_at(bank2, "common.bin", 0x4000);
-	load_bank(bank0, "bank1.bin");
+	load_bank(bank0, "common.bin");
 	load_bank(bank1, "bank2.bin");
 	load_bank(bank7, "bank3.bin");
 	write_z80(argv[1]);

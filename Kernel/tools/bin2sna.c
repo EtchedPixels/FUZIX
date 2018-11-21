@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	}
 	load_bank_at(bank5, "common.bin", 0x8000);
 	load_bank_at(bank2, "common.bin", 0x4000);
-	load_bank(bank0, "bank1.bin");
+	load_bank(bank0, "common.bin");
 	load_bank(bank1, "bank2.bin");
 	load_bank(bank7, "bank3.bin");
 	write_sna(argv[1]);
