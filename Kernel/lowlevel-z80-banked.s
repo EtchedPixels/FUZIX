@@ -1290,11 +1290,13 @@ __mul16::
 
 	.globl _memmove
 	.globl _memcpy
+	.globl ___memcpy
 
 ; The Z80 has the ldir and lddr instructions, which are perfect for implementing memmove().
 
 _memcpy:
 _memmove:
+___memcpy:
 	pop	af
 	pop	iy
 	pop	hl
