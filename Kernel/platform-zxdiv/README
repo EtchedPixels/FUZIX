@@ -63,8 +63,9 @@ around we exchange it with bank 6 as we go.
 
 To Do:
 
--	Check the swap hooks are ok
--	Turn on swap so we can make progress
+DONE	-	Check the swap hooks are ok
+DONE	-	Turn on swap so we can make progress
+	-	Debug crash on swapping
 -	Set video space in CODE3 bank to 0 not 0xFF for neatness
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
@@ -78,6 +79,8 @@ To Do:
 -	Later DivIDE and DivMMC support both a 16K page mode and a lot more
 	RAM (up to 512K). That at the very least would make a kick ass
 	ramdisc/swap device even if the unit lacks the allram switch
+	(May also make sense to hae a build 'the other way up' where we
+	page apps out of 0000-3FFF copying 4000-7FFF. 
 -	Speccyboot (ENC28J60)
 -	SpectraNet (W5100)
 

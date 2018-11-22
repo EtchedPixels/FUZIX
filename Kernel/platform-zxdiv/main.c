@@ -5,6 +5,7 @@
 #include <devtty.h>
 
 uint16_t ramtop = PROGTOP;
+uint16_t swap_dev = 0xFFFF;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */

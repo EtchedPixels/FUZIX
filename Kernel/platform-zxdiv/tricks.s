@@ -246,16 +246,17 @@ switchinfail:
 
 ; Interrupts should be off when this is called
 _dup_low_page:
-	ld a, #0x06 + 0x18		;	low page alternate
+	di				; FIXME: check callers properly
+	ld a, #0x06 + 0x18		; low page alternate
 	ld bc, #0x7ffd
 	out (c), a
 
-	ld hl, #0x8000			; 	Fixed
-	ld de, #0xC000			;	Page we just mapped in
+	ld hl, #0x8000			; fixed
+	ld de, #0xC000			; page we just mapped in
 	ld bc, #16384
 	ldir
 
-	ld a, (current_map)		; 	restore mapping
+	ld a, (current_map)		; restore mapping
 	or #0x18			; ROM bits
 	ld bc, #0x7ffd
 	out (c), a

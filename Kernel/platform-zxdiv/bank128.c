@@ -102,8 +102,8 @@ int swapout(ptptr p)
 	kprintf("Swapping out %x (%d)\n", p, p->p_page);
 #endif
 
-	/* We mever swap the live process so the second page is always
-	   page 6 */
+	/* We never swap the live process so the second page is always
+	   page 6 (FIXME: this will not be true once we go past 128K) */
         if (low_bank == p)
 		panic("swapout");
 

@@ -22,6 +22,8 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
+#define CONFIG_DYNAMIC_SWAP
+
 /* Custom banking */
 
 /* We have two mappings from our 128K of memory */
@@ -53,7 +55,6 @@
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-/* #define SWAPDEV  2051 */ /* Microdrive 3 : FIXME - configure and probe */
 #define NBUFS    9       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 #define MAX_BLKDEV 2	    /* 2 IDE drives, 1 SD drive */
@@ -61,7 +62,8 @@
 #define SWAPBASE 0x8000
 #define SWAPTOP  0x10000UL
 #define SWAP_SIZE 0x40
-#define MAX_SWAPS 3		/* For now */
+#define MAX_SWAPS	16
+#define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 
 /* All our pages get mapped into the top 16K bank for swapping use */
 #define swap_map(x)		((uint8_t *)(x|0xC000))
