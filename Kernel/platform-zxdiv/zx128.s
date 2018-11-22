@@ -104,7 +104,7 @@ _int_disabled:
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (above 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
-        .area _CODE
+        .area _CODE1
 
 ;
 ;	The memory banker will deal with the map setting

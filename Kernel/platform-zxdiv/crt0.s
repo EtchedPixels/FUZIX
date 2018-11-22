@@ -2,6 +2,7 @@
 	;
 	;	Our common lives low
 	;
+	.area _CODE
         .area _COMMONMEM
 	.area _STUBS
         .area _CONST
@@ -28,7 +29,7 @@
 	;
 	;	All our code is banked at 0xC000
 	;
-        .area _CODE
+        .area _CODE1
 	.area _CODE2
 	;
 	; Code3 sits above the display area along with the font and video
@@ -69,7 +70,7 @@
 	; the kernel image for us from blocks 1+ and all is good.
 	;
 
-        .area _CODE
+        .area _CODE1
 
 	.globl _go
 
@@ -109,7 +110,7 @@ stop:   halt
 
 	; Boot marker at 0x2200
 
-	.area _COMMONMEM
+	.area _COMMONDATA
 	.globl _marker
 _marker:
 	.byte 'Z'		; marker

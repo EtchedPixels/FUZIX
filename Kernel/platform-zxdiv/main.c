@@ -22,12 +22,16 @@ void platform_interrupt(void)
  timer_interrupt();
 }
 
-size_t strlcpy(char *dst, const char *src, size_t dstsize)
+/*
+ *	So that we don't suck in a library routine we can't use from
+ *	the runtime
+ */
+
+int strlen(const char *p)
 {
-  size_t len = strlen(src);
-  size_t cp = len >= dstsize ? dstsize - 1 : len;
-  memcpy(dst, src, cp);
-  dst[cp] = 0;
+  int len = 0;
+  while(*p++)
+    len++;
   return len;
 }
 

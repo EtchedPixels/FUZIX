@@ -40,7 +40,9 @@ We run with the following mapping
 
 4000-7FFF	Kernel data continued (lots of space) 
 
-8000-BFFF	_DISCARD area - blown away when we exec init
+8000-83FF	Needed to create the exec of init
+8400-BFFF	_DISCARD area - blown away when we exec init
+		(tons of room in this space)
 
 C000-FFFF
 	0:	Kernel CODE (fairly full)
@@ -61,11 +63,8 @@ around we exchange it with bank 6 as we go.
 
 To Do:
 
--	Get the DivIDE interface working
--	Review DivIDE writes - is the port aliasing safe with a full
-	otir or do we need to avoid port aliasing ?
 -	Check the swap hooks are ok
--	See what we can get below 0x2000
+-	Turn on swap so we can make progress
 -	Set video space in CODE3 bank to 0 not 0xFF for neatness
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
@@ -155,3 +154,10 @@ hassle.
 Could we jump up and down on it enough to get user to be a bit bigger than 32K
 and if so where and how do we handle the extra
 
+
+
+DONE	-	Get the DivIDE interface working
+DONE	-	See what we can get below 0x2000
+DONE	-	Review DivIDE writes - is the port aliasing safe with a full
+	otir or do we need to avoid port aliasing ? - safe
+DONE	-	Crash when we fork() or switch ?

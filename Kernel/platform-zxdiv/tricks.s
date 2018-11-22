@@ -261,7 +261,6 @@ _dup_low_page:
 	out (c), a
 	ret
 
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -397,7 +396,7 @@ _dofork:
 ;
 bankfork:
 	or #0x18		; ROM bits for the bank
-	ld b, #0x3C		; 40 x 256 minus 4 sets for the uarea stash/irqs
+	ld b, #0x3E		; 64 x 256 minus 2 sets for the uarea stash/irqs
 	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
 	push bc			; Save our counter and also child offset
@@ -440,3 +439,5 @@ _swapstack:
 _low_bank:
 	.dw _ptab			; Init starts owning this
 
+fork_proc_ptr:
+	.dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry

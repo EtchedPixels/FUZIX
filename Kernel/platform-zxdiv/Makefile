@@ -38,6 +38,9 @@ clean:
 
 # Re-order the image and snapshop it
 image:
+	# Merge the first code bank into common
+	dd if=../bank1.bin bs=16384 skip=3 seek=3 count=1 \
+		of=../common.bin conv=notrunc
 	# The bootstrap to con Fatware
 	dd if=../common.bin of=BOOT.BIN bs=8192 count=1
 	# Rest of the base image, starts at 0x2200, pad it

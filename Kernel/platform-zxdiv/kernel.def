@@ -1,10 +1,10 @@
 ; UZI mnemonics for memory addresses etc
 
-; FIXME: THIS IS WRONG - NEED TO SORT OUT MAPPINGS AND DEAL WITH THIS
-U_DATA                      .equ 0x4000       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
+; We stick it straight after the tag
+U_DATA                      .equ 0x2204       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256+256 bytes.
 
-U_DATA_STASH		    .equ 0xFC00	      ; FC00-FEFF
+U_DATA_STASH		    .equ 0xFE00	      ; FE00-FFFF
 
 Z80_TYPE		    .equ 1
 
