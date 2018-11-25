@@ -44,6 +44,7 @@ void devide_write_data(void) __naked
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
+            push af
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
