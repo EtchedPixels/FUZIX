@@ -21,6 +21,7 @@ void platform_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
+ wakeup(&timer_interrupt);
 }
 
 /*
