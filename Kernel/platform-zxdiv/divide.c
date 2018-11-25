@@ -28,8 +28,14 @@ not_swapin:
             or a                                    ; test is_user
             call nz, map_process_always  	    ; map user memory first if required
 doread:
+            ld a,#0x05
+            out (0xfe),a
             inir                                    ; transfer first 256 bytes
+            ld a,#0x02
+            out (0xfe),a
             inir                                    ; transfer second 256 bytes
+            xor a
+            out (0xfe),a
             pop af
             or a
             jp nz, map_kernel_restore               ; else map kernel then return
@@ -56,8 +62,14 @@ not_swapout:
             or a                                    ; test is_user
             call nz, map_process_always             ; else map user memory first if required
 dowrite:
+            ld a,#0x05
+            out (0xfe),a
             otir                                    ; transfer first 256 bytes
+            ld a,#0x02
+            out (0xfe),a
             otir                                    ; transfer second 256 bytes
+            xor a
+            out (0xfe),a
             pop af
             or a
             jp nz, map_kernel_restore               ; else map kernel then return
