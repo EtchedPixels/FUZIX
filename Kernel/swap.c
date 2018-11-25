@@ -99,7 +99,7 @@ static ptptr swapvictim(ptptr p, int notself)
 	c = getproc_nextp;
 
 	do {
-		if (c->p_page) {	/* No point swapping someone in swap! */
+		if (c->p_page && c != udata.u_ptab) {	/* No point swapping someone in swap! */
 			/* Find the last entry before us */
 			if (c->p_status == P_READY)
 				r = c;
