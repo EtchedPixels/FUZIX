@@ -206,7 +206,7 @@ static void keydecode(void)
 				c = cursor[c - '5'];
 		}
 	}
-	if (ss & cs) {
+	if (ss && cs) {
 		m |= KEYPRESS_CTRL;
 		c &= 31;
 	}
