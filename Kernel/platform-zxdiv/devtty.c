@@ -12,7 +12,8 @@
 
 char tbuf1[TTYSIZ];
 
-uint8_t vtattr_cap;
+uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH;
+uint8_t curattr = 7;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
 
@@ -289,4 +290,19 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
 	return -1;
+}
+
+void vtattr_notify(void)
+{
+	/* Attribute byte fixups: not hard as the colours map directly
+	   to the spectrum ones */
+	if (vtattr & VTA_INVERSE)
+		curattr =  ((vtink & 7) << 3) | (vtpaper & 7);
+	else
+		curattr = (vtink & 7) | ((vtpaper & 7) << 3);
+	if (vtattr & VTA_FLASH)
+		curattr |= 0x80;
+	/* How to map the bright bit - we go by either */
+	if ((vtink | vtpaper) & 0x10)
+		curattr |= 0x40;
 }

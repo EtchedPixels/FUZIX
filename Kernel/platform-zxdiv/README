@@ -77,9 +77,6 @@ To Do:
 	bootloader hack
 -	6 or 5bit wide fonts (42, 51 column)
 -	Optimize zxvid - especially scrolling
--	Colour attributes
--	Graphics mapping
--	Kempston joystick and mouse
 -	Many of the later Russian clones support putting bank 0 in the low
 	16K, and more than 8 banks. That would need some changes to the bank
 	logic and some interesting detection code. Also they have rather
@@ -181,3 +178,6 @@ DONE	-	Crash on pre-emption, appears to be a bug in fuse-1.5.4
 DONE	-	Move video to 4000 and data to 6000 so that we have video
 		direct mappable by user space and also make it easier if we
 		have to work via ROMs that want spectrum system variable stuff
+DONE	-	Colour attributes
+DONE	-	Graphics mapping
+DONE	-	Kempston joystick and mouse

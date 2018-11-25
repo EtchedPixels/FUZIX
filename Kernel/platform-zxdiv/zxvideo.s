@@ -14,8 +14,8 @@
         .globl _clear_lines
         .globl _clear_across
         .globl _do_beep
-	.globl _vtattr_notify
 	.globl _fontdata_8x8
+	.globl _curattr
 
         .area _VIDEO
 
@@ -36,6 +36,23 @@ videopos:
         ld d,a
         ret
 
+videoattr:
+	;			32 x E + D into HL
+	ld a,e
+	rrca
+	rrca
+	rrca			; A is now 32xE with the top bits overflowed
+				; into the low 2 bits
+	ld l,a
+	and #3			; Extract the low 2 bits for the high
+	add #0x58		; Attributes start 0x5800
+	ld h,a
+	ld a,l
+	and #0xE0		; mask the bits that are valid
+	add d			; add the low 5 bits from D
+	ld l,a			; and done (the add can't overflow)
+	ret
+
 _plot_char:
 	pop iy
         pop hl
@@ -46,6 +63,7 @@ _plot_char:
         push hl
 	push iy
 
+	push de
         call videopos
 
         ld b, #0            ; calculating offset in font table
@@ -72,6 +90,10 @@ plot_char_loop:
         inc d               ; next screen line
         dec c
         jr nz, plot_char_loop
+	pop de
+	call videoattr
+	ld a,(_curattr)
+	ld (hl),a
         ret
 
 
@@ -82,6 +104,9 @@ _clear_lines:
         push de
         push hl
 	push bc
+	; This way we handle 0 correctly
+	inc d
+	jr nextline
 
 clear_next_line:
         push de
@@ -98,6 +123,7 @@ clear_next_line:
 
         pop de
         inc e
+nextline:
         dec d
         jr nz, clear_next_line
 
@@ -113,6 +139,11 @@ _clear_across:
         push de
         push hl
 	push iy
+	ld a,c
+	or a
+	ret z		    ; No work to do - bail out
+	push de
+	push bc
         call videopos       ; first pixel line of first character in DE
         push de
         pop hl              ; copy to hl
@@ -125,8 +156,7 @@ clear_line:
 clear_char:
         ld (de), a
         inc d
-        dec b
-        jr nz, clear_char
+        djnz clear_char
 
         ex de, hl
         inc de
@@ -135,6 +165,15 @@ clear_char:
 
         dec c
         jr nz, clear_line
+	pop bc
+	pop de
+	call videoattr
+	ld a,(_curattr)
+	ld b,c
+setattr:
+	ld (hl),a
+	inc hl
+	djnz setattr
         ret
 
 copy_line:
@@ -161,8 +200,7 @@ copy_pixel_line:
         ld (de), a
         inc e
         inc l
-        dec b
-        jr nz, copy_pixel_line
+        djnz copy_pixel_line
 
         pop de
         pop hl
@@ -199,6 +237,12 @@ loop_scroll_down:
         dec c
         jr nz, loop_scroll_down
 
+	; Attributes
+	ld hl,#0x5ADF
+	ld de,#0x5AFF
+	ld bc,#0x02E0
+	lddr
+
         ret
 
 
@@ -227,6 +271,10 @@ loop_scroll_up:
         dec c
         jr nz, loop_scroll_up
 
+	ld hl,#0x5820
+	ld de,#0x5800
+	ld bc,#0x02E0
+	ldir
         ret
 
 _cursor_on:
@@ -254,8 +302,6 @@ _cursor_off:
         ld d, a
         xor a
         ld (de), a
-_vtattr_notify:
-        ret
 
 _do_beep:
         ret

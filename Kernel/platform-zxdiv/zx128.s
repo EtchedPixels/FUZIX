@@ -39,6 +39,7 @@
         .globl _procmem
 
 	.globl _vtoutput
+	.globl _vtinit
 
         .globl outcharhex
         .globl outhl, outde, outbc
@@ -122,19 +123,9 @@ init_hardware:
         ld (_procmem), hl
 
         ; screen initialization
-        ; clear
-        ld hl, #0x4000
-        ld de, #0x4001
-        ld bc, #0x1800            ; There should be 0x17FF, but we are going
-        xor a                     ; to copy additional byte to avoid need of
-        ld (hl), a                ; DE and HL increment before attribute
-        ldir                      ; initialization (2 bytes of RAM economy)
-
-        ; set color attributes
-        ld a, #7            ; black paper, white ink
-        ld bc, #0x300 - #1
-        ld (hl), a
-        ldir
+	push af
+	call _vtinit
+	pop af
 
         ret
 
