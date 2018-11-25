@@ -45,6 +45,7 @@ mm.rel
 platform-zxdiv/bank128.rel
 swap.rel
 devsys.rel
+devinput.rel
 platform-zxdiv/devtty.rel
 platform-zxdiv/devide.rel
 platform-zxdiv/devide_discard.rel
@@ -54,4 +55,5 @@ platform-zxdiv/divide.rel
 platform-zxdiv/divmmc.rel
 platform-zxdiv/mbr.rel
 platform-zxdiv/blkdev.rel
+platform-zxdiv/devinput.rel
 -e

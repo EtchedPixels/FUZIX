@@ -16,6 +16,9 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
+/* Input layer support */
+#define CONFIG_INPUT
+#define CONFIG_INPUT_GRABMAX	3
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* Keyboard contains non-ascii symbols */

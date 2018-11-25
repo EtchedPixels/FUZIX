@@ -7,6 +7,8 @@
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
+#include <input.h>
+#include <devinput.h>
 
 char tbuf1[TTYSIZ];
 
@@ -111,7 +113,7 @@ void tty_data_consumed(uint8_t minor)
 
 void update_keyboard(void)
 {
-	/* We need this assembler code because SDCC __sfr cannot handle 16-bit addresses. And because it is much faster, of course  */
+	/* We need this assembler code because it is much faster, of course  */
 	/* TODO: make it naked? */
 	__asm
 		ld hl,#_keybuf
@@ -145,8 +147,13 @@ void tty_pollirq(void)
 			uint8_t m = 0x10;
 			for (n = 4; n >= 0; n--) {
 				if ((key & m) && (keymap[i] & m))
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
+					}
 
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -177,16 +184,18 @@ static uint8_t cursor[4] = { KEY_LEFT, KEY_DOWN, KEY_UP, KEY_RIGHT };
 
 static void keydecode(void)
 {
+	uint8_t m = 0;
 	uint8_t c;
 
 	uint8_t ss = keymap[0] & 0x02;	/* SYMBOL SHIFT */
 	uint8_t cs = keymap[7] & 0x01;	/* CAPS SHIFT */
 
-	if (ss) {
+	if (ss && !cs) {
+		m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
 	} else {
 		c = keyboard[keybyte][keybit];
-		if (cs) {
+		if (cs && !ss) {
 			if (c >= 'a' && c <= 'z')
 				c -= 'a' - 'A';
 			else if (c == '0')	/* CS + 0 is backspace) */
@@ -197,7 +206,33 @@ static void keydecode(void)
 				c = cursor[c - '5'];
 		}
 	}
-	tty_inproc(1, c);
+	if (ss & cs) {
+		m |= KEYPRESS_CTRL;
+		c &= 31;
+	}
+	if (c) {
+		switch (keyboard_grab) {
+		case 0:
+			vt_inproc(1, c);
+			break;
+		case 1:
+			if (!input_match_meta(c)) {
+				vt_inproc(1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 
@@ -243,7 +278,9 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	case GFXIOC_WAITVB:
 		/* Our system clock is vblank */
+		timer_wait++;
 		psleep(&timer_interrupt);
+		timer_wait--;
 		chksigs();
 		if (udata.u_cursig) {
 			udata.u_error = EINTR;

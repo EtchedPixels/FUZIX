@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <devinput.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -17,11 +18,15 @@ void platform_idle(void)
   __endasm;
 }
 
+uint8_t timer_wait;
+
 void platform_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
- wakeup(&timer_interrupt);
+ poll_input();
+ if (timer_wait)
+  wakeup(&timer_interrupt);
 }
 
 /*

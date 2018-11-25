@@ -1,4 +1,4 @@
-CSRCS = devtty.c devices.c main.c bank128.c divide.c divmmc.c
+CSRCS = devtty.c devices.c main.c bank128.c divide.c divmmc.c devinput.c
 CDSRCS = discard.c
 DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
