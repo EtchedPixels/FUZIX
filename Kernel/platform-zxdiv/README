@@ -38,7 +38,8 @@ We run with the following mapping
 		(we have 2 spare banks here but it's not clear what use they
 		actually are).
 
-4000-7FFF	Kernel data continued (lots of space) 
+4000-5FFF	Spectrum screen memory and system variables
+6000-7FFF	Kernel data
 
 8000-83FF	Needed to create the exec of init
 8400-BFFF	_DISCARD area - blown away when we exec init
@@ -52,7 +53,7 @@ C000-FFFF
 	4:	User process
 	5:	Mapped at 0x4000-0x7FFF (Kernel data/common)
 	6:	User process (holds the 0x8000-BFFF of the other task)
-	7:	CODE3, Display + Video (some room)
+	7:	CODE3, Video (lots of room)
 
 We can move some stuff down into the low 16K (especially once we move the
 common space) We do need to do sort things out a bit and stuff commonmem etc
@@ -71,7 +72,6 @@ To Do:
 	Right now we ldir in one case (could be faster abusing stack), and
 	the exchange case could be made much much faster using registers
 	and stack tricks not bounce buffers
--	Set video space in CODE3 bank to 0 not 0xFF for neatness
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
 	bootloader hack
@@ -89,7 +89,6 @@ To Do:
 	a 128K machine
 -	Speccyboot (ENC28J60)
 -	SpectraNet (W5100)
-
 
 
 Devices To Look At:
@@ -176,3 +175,6 @@ DONE	-	Debug crash on swapping
 DONE	-	Hangs on pause(). Review p->p_timeout behaviour
 DONE	-	Crash on pre-emption, appears to be a bug in fuse-1.5.4
 		(moved code/consts to avoid Fuse bug, filed Fuse bug)
+DONE	-	Move video to 4000 and data to 6000 so that we have video
+		direct mappable by user space and also make it easier if we
+		have to work via ROMs that want spectrum system variable stuff

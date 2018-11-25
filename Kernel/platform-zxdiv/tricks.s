@@ -62,7 +62,7 @@ _platform_switchout:
 	ld hl, (U_DATA__U_PAGE)
 	ld a, l
 	ld bc, #0x7ffd
-	or #0x18
+	or #BANK_BITS
 	out (c), a
 
 	; This includes the stacks, so be careful on restore
@@ -71,7 +71,7 @@ _platform_switchout:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	ld a, (current_map)
-	or #0x18
+	or #BANK_BITS
 	ld bc, #0x7ffd
 	out (c), a
 
@@ -149,7 +149,7 @@ not_swapped:
 
 	; We are in DI so we can poke these directly but must not invoke
 	; any code outside of common
-	or #0x18	; ROM
+	or #BANK_BITS	; ROM
 	; Pages please !
 	ld bc, #0x7ffd
 	out (c), a
@@ -171,7 +171,7 @@ not_swapped:
 	;
 
 	ld a, (current_map)
-	or #0x18
+	or #BANK_BITS
 	ld bc, #0x7ffd
 	out (c), a
         
@@ -190,7 +190,7 @@ fliplow:
 	exx
 	ld hl, #0x8000
 	ld de, #0xc000
-	ld a, #6 + 0x18
+	ld a, #6 + BANK_BITS
 	ld bc, #0x7ffd
 	out (c), a
 flip2:
@@ -209,7 +209,7 @@ flip1:
 	jr nz, flip1
 
 	ld a, (current_map)
-	or #0x18
+	or #BANK_BITS
 	ld bc, #0x7ffd
 	out (c), a
 	exx
@@ -270,7 +270,7 @@ switchinfail:
 ; Interrupts should be off when this is called
 _dup_low_page:
 	di				; FIXME: check callers properly
-	ld a, #0x06 + 0x18		; low page alternate
+	ld a, #0x06 + BANK_BITS		; low page alternate
 	ld bc, #0x7ffd
 	out (c), a
 
@@ -280,7 +280,7 @@ _dup_low_page:
 	ldir
 
 	ld a, (current_map)		; restore mapping
-	or #0x18			; ROM bits
+	or #BANK_BITS			; ROM bits
 	ld bc, #0x7ffd
 	out (c), a
 	ret
@@ -353,7 +353,7 @@ _dofork:
 	; FIXME: if we support small apps at C000-FBFF we need to tweak this
 	; Now copy the 0x8000-0xBFFF area directly
 
-	ld a, #0x06 + 0x18		;	low page alternate
+	ld a, #0x06 + BANK_BITS		;	low page alternate
 	ld bc, #0x7ffd
 	out (c), a
 
@@ -365,7 +365,7 @@ _dofork:
 	; Copy done
 
 	ld a, (U_DATA__U_PAGE)	; parent memory
-	or #0x18		; get the right ROMs
+	or #BANK_BITS		; get the right ROMs
 	ld bc, #0x7ffd
 	out (c), a		; Switch context to parent in 0xC000+
 
@@ -382,7 +382,7 @@ _dofork:
 	;
 	ld bc, #0x7ffd
 	ld a, (current_map)
-	or #0x18
+	or #BANK_BITS
 	out (c), a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
@@ -423,7 +423,7 @@ _dofork:
 ;	we can use with a lazy copying model
 ;
 bankfork:
-	or #0x18		; ROM bits for the bank
+	or #BANK_BITS		; ROM bits for the bank
 	ld b, #0x3E		; 64 x 256 minus 2 sets for the uarea stash/irqs
 	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
@@ -442,7 +442,7 @@ bankfork_1:
 	ld a, c			; switch to the child
 	push bc			; save the bank pointers
 	ld bc, #0x7ffd
-	or #0x18		; ROM bits
+	or #BANK_BITS		; ROM bits
 	out (c), a
 	ld hl, #bouncebuffer
 	ld bc, #256

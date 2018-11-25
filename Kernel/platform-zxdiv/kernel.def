@@ -12,3 +12,6 @@ PROGBASE		    .equ 0x8000
 PROGLOAD		    .equ 0x8000
 
 NBUFS			    .equ 5
+
+BANK_BITS		    .equ 0x10		; Spectrum ROM select
+						; Doesn't really matter!

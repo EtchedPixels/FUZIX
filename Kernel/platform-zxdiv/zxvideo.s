@@ -32,7 +32,7 @@ videopos:
         ld e,a
         ld a,d
         and #0x18
-        or #0xC0	    ; not 0x40 as in screen 7
+        or #0x40	    ; Standard screen
         ld d,a
         ret
 

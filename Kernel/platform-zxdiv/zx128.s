@@ -123,8 +123,8 @@ init_hardware:
 
         ; screen initialization
         ; clear
-        ld hl, #0xC000
-        ld de, #0xC001
+        ld hl, #0x4000
+        ld de, #0x4001
         ld bc, #0x1800            ; There should be 0x17FF, but we are going
         xor a                     ; to copy additional byte to avoid need of
         ld (hl), a                ; DE and HL increment before attribute
@@ -164,7 +164,7 @@ switch_bank:
         ld (current_map), a
 	push bc
         ld bc, #0x7ffd
-	or #0x18	   ; Spectrum 48K ROM, Screen in Bank 7
+	or #BANK_BITS	   ; Spectrum 48K ROM, Screen in Bank 7
         out (c), a
 	pop bc
         ret
