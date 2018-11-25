@@ -257,20 +257,7 @@ _cursor_off:
 _vtattr_notify:
         ret
 
-        ; FIXME: now this is_do_silent_click actually
 _do_beep:
-        ld e, #0xFF         ; length
-        ld c, #0xFE         ; beeper port
-        ld l, #0x10         ; beeper bit
-loop_beep:
-        ld a, l
-        out (c), a
-        xor a
-        out (c), a
-        dec bc
-        ld a, b
-        or c
-        jr nz, loop_beep
         ret
 
         .area _DATA
