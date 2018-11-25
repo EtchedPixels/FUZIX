@@ -5,7 +5,6 @@
         .area _CONST
         .area _COMMONMEM
 	.area _STUBS
-        .area _INITIALIZER
 	;
 	;	The writeables cannot start until 0x2000 but for simplicity
 	;	we just start at 0x2000 for now, otherwise we have to fight
@@ -22,8 +21,6 @@
         .area _HEAP
         .area _GSINIT
         .area _GSFINAL
-	;	We moved our font elsewhere
-	.area _FONT
 	;
 	;	Finally the buffers so they can expand
 	;
@@ -33,16 +30,14 @@
 	;
         .area _CODE1
 	.area _CODE2
-	;
-	; Code3 sits above the display area along with the video
-	; code so that they can access the display easily. It lives at
-	; 0xDB00 therefore
-	;
 	.area _CODE3
         .area _VIDEO
+	.area _FONT
 
 	; Discard is dumped in at 0x8000 and will be blown away later.
         .area _DISCARD
+	; Somewhere to throw it out of the way
+        .area _INITIALIZER
 
         ; imported symbols
         .globl _fuzix_main
@@ -127,7 +122,7 @@ _marker:
 
 	.area _STUBS
 stubs:
-	.ds 768
+	.ds 512
 
 	.area _BUFFERS
 ;

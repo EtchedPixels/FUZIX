@@ -15,6 +15,3 @@ export CROSS_CC_SYS2=--codeseg CODE1
 export CROSS_CC_SYS3=--codeseg CODE1
 export CROSS_CC_SYS4=--codeseg CODE3
 export CROSS_CC_SYS5=--codeseg CODE3
-# The banking default is to put fonts in bank3. We don't want this so build
-# our font as CONST so it lands where we want it
-export CROSS_CC_FONT=--constseg CONST
