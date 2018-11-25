@@ -39,7 +39,7 @@
 #include <kdata.h>
 #include <printf.h>
 
-#define DEBUG
+#undef DEBUG
 
 /* Kernel is 0, apps are 4 and 3 (top 16K). The live one also has 2 and
    the other has 6 */
@@ -150,7 +150,9 @@ void swapin(ptptr p, uint16_t map)
 	   copy it over (we don't want to load and exchange as the
 	   exchange is slower than a copy then loading */
 	if (low_bank != NULL) {
+#ifdef DEBUG
 		kprintf("Low page owned by %x\n", low_bank);
+#endif
 		dup_low_page();
 	}
 	/* Load the upper 16K back in including the udata cache */
