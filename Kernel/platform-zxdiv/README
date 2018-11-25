@@ -63,9 +63,10 @@ around we exchange it with bank 6 as we go.
 
 To Do:
 
-DONE	-	Check the swap hooks are ok
-DONE	-	Turn on swap so we can make progress
-	-	Debug crash on swapping
+-	Crash on pre-emption, appears to be a bug in fuse-1.5.4
+-	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
+	(Seems we lose the bottom line of the left most char - off by one bug
+	 in zxvid ?)
 -	Set video space in CODE3 bank to 0 not 0xFF for neatness
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
@@ -164,3 +165,7 @@ DONE	-	See what we can get below 0x2000
 DONE	-	Review DivIDE writes - is the port aliasing safe with a full
 	otir or do we need to avoid port aliasing ? - safe
 DONE	-	Crash when we fork() or switch ?
+DONE	-	Check the swap hooks are ok
+DONE	-	Turn on swap so we can make progress
+DONE	-	Debug crash on swapping
+DONE	-	Hangs on pause(). Review p->p_timeout behaviour
