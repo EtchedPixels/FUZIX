@@ -482,7 +482,7 @@ arg_t _signal(void)
 	if (sig != SIGKILL && sig != SIGSTOP)
 		udata.u_sigvec[sig] = func;
 	/* Force recalculation of signal pending in the syscall return path */
-	recalc_cursig();;
+	recalc_cursig();
 	irqrestore(irq);
 	
 	return (retval);
