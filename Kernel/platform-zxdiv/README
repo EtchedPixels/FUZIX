@@ -63,10 +63,14 @@ around we exchange it with bank 6 as we go.
 
 To Do:
 
--	Crash on pre-emption, appears to be a bug in fuse-1.5.4
 -	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
 	(Seems we lose the bottom line of the left most char - off by one bug
 	 in zxvid ?)
+-	Hand optimized bank exchange and bank to bank copy routines. These are
+	fairly performance critical due to the limitations of the memory model.
+	Right now we ldir in one case (could be faster abusing stack), and
+	the exchange case could be made much much faster using registers
+	and stack tricks not bounce buffers
 -	Set video space in CODE3 bank to 0 not 0xFF for neatness
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
@@ -81,7 +85,8 @@ To Do:
 	RAM (up to 512K). That at the very least would make a kick ass
 	ramdisc/swap device even if the unit lacks the allram switch
 	(May also make sense to hae a build 'the other way up' where we
-	page apps out of 0000-3FFF copying 4000-7FFF. 
+	page apps out of 0000-3FFF copying 4000-7FFF for allram devices on
+	a 128K machine
 -	Speccyboot (ENC28J60)
 -	SpectraNet (W5100)
 
@@ -169,3 +174,5 @@ DONE	-	Check the swap hooks are ok
 DONE	-	Turn on swap so we can make progress
 DONE	-	Debug crash on swapping
 DONE	-	Hangs on pause(). Review p->p_timeout behaviour
+DONE	-	Crash on pre-emption, appears to be a bug in fuse-1.5.4
+		(moved code/consts to avoid Fuse bug, filed Fuse bug)
