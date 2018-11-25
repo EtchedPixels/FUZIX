@@ -138,7 +138,7 @@ void gm833_init(void)
 		/* Add swap */
 		openshift = i >= 2 ? 2 : 1;
 		for (i = 0; i < openshift * 8 ; i++)
-			swapmap_add(i);
+			swapmap_init(i);
 	}
 	kprintf("gm833: %dK found", num_gm833 * 512);
 	kprintf(", %dK allocated for swap.\n", openshift * 512);

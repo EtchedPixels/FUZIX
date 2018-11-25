@@ -95,5 +95,5 @@ void platform_swap_found(uint8_t letter, uint8_t m)
   if (n > MAX_SWAPS)
     n = MAX_SWAPS;
   while(n)
-    swapmap_add(n--);
+    swapmap_init(n--);
 }
