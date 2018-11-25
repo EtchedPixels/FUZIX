@@ -1,6 +1,7 @@
 #define CONFIG_IDE
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	1		/* For the moment */
+#define CONFIG_LARGE_IO_DIRECT		/* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
