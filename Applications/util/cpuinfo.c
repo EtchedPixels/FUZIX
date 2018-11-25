@@ -123,6 +123,20 @@ set_id:
     __endasm;
 }
 
+static uint8_t badlibz80_asm(void) __naked
+{
+    __asm
+        or a
+        ld hl,#0x8000
+        ld bc,#0x8000
+        adc hl,bc
+        ld hl,#0x0000
+        ret z
+        dec hl
+        ret
+    __endasm;
+}
+
 static const int cpu_vsize = 16;
 static const int cpu_psize = 16;
 static const int cpu_step = -1;
@@ -156,6 +170,10 @@ static char *cpu_name[] = {
 
 static void cpu_ident(void)
 {
+    if (badlibz80_asm()) {
+        fprintf(stderr, "Your emulator appears to have a faulty libz80, please upgrade it.\n");
+        exit(1);
+    }
     ident_asm();
     switch(cpu_id) {
     case CPU_Z80_Z280:	/* FIXME R800.. */
