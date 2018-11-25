@@ -114,6 +114,10 @@ _switchin:
 	; The second pushes are C function arguments. SDCC can trample
 	; these
 
+	; Turn this one once we have it all sorted and debugged
+	; ei
+	; xor a
+	; ld (_int_disabled),a
 	push hl		; Save
 	push de
 	push hl		; Arguments
@@ -125,6 +129,9 @@ _switchin:
 	pop af
 	pop de		; Restore
 	pop hl
+	ld a,#1
+	ld (_int_disabled),a
+	di
 	ld a, (hl)	; We should now have a page assigned
 not_swapped:
 	; We are in DI so we can poke these directly but must not invoke
