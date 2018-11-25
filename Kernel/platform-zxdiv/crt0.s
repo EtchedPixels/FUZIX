@@ -2,10 +2,9 @@
 	;
 	;	Our common lives low
 	;
-	.area _CODE
+        .area _CONST
         .area _COMMONMEM
 	.area _STUBS
-        .area _CONST
         .area _INITIALIZER
 	;
 	;	The writeables cannot start until 0x2000 but for simplicity
