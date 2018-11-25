@@ -3,6 +3,7 @@
 -i fuzix.ihx
 -b _CONST=0x400
 -b _COMMONDATA=0x2200
+-b _BUFFERS=0x6000
 -b _CODE1=0xC000
 -b _CODE2=0xC000
 -b _CODE3=0xDB00

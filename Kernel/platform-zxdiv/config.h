@@ -18,11 +18,12 @@
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-/* Keyboard contains not ascii symbols */
+/* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
+#define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 
 /* Custom banking */
@@ -56,9 +57,9 @@
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    9       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
-#define MAX_BLKDEV 2	    /* 2 IDE drives, 1 SD drive */
+#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drive */
 
 #define SWAPBASE 0x8000
 #define SWAPTOP  0x10000UL
@@ -68,5 +69,3 @@
 
 /* All our pages get mapped into the top 16K bank for swapping use */
 #define swap_map(x)		((uint8_t *)(x|0xC000))
-
-#define platform_discard()

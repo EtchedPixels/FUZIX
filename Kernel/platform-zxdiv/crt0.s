@@ -14,9 +14,7 @@
 	.area _COMMONDATA
         .area _INITIALIZED
 	;
-	;	We move	INITIALIZER into INITIALIZED at preparation time
-	;	then pack COMMONMEM.. end of INITIALIZED after DISCARD
-	;	in the load image. Beyond that point we just zero.
+	;	Beyond this point we just zero.
 	;
         .area _DATA
         .area _BSEG
@@ -24,22 +22,25 @@
         .area _HEAP
         .area _GSINIT
         .area _GSFINAL
+	;	We moved our font elsewhere
 	.area _FONT
+	;
+	;	Finally the buffers so they can expand
+	;
+	.area _BUFFERS
 	;
 	;	All our code is banked at 0xC000
 	;
         .area _CODE1
 	.area _CODE2
 	;
-	; Code3 sits above the display area along with the font and video
+	; Code3 sits above the display area along with the video
 	; code so that they can access the display easily. It lives at
 	; 0xDB00 therefore
 	;
 	.area _CODE3
         .area _VIDEO
 
-	; FIXME: We should switch to the ROM font and an ascii remap ?
-        .area _FONT
 	; Discard is dumped in at 0x8000 and will be blown away later.
         .area _DISCARD
 
@@ -47,6 +48,8 @@
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
+	.globl l__BUFFERS
+	.globl s__BUFFERS
 	.globl l__DATA
 	.globl s__DATA
         .globl kstack_top
@@ -55,6 +58,7 @@
         .globl nmi_handler
         .globl interrupt_handler
 
+	.include "../kernel.def"
 	.include "kernel.def"
 
         ; startup code
@@ -82,6 +86,11 @@ _go:
 	ld hl, #s__DATA
 	ld de, #s__DATA+1
 	ld bc, #l__DATA-1
+	ld (hl), #0
+	ldir
+	ld hl, #s__BUFFERS
+	ld de, #s__BUFFERS+1
+	ld bc, #l__BUFFERS-1
 	ld (hl), #0
 	ldir
 
@@ -119,3 +128,15 @@ _marker:
 	.area _STUBS
 stubs:
 	.ds 768
+
+	.area _BUFFERS
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	.globl _bufpool
+	.area _BUFFERS
+
+_bufpool:
+	.ds BUFSIZE * NBUFS

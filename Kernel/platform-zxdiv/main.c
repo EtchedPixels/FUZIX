@@ -36,6 +36,37 @@ int strlen(const char *p)
   return len;
 }
 
+/* This points to the last buffer in the disk buffers. There must be at least
+   four buffers to avoid deadlocks. */
+struct blkbuf *bufpool_end = bufpool + NBUFS;
+
+/*
+ *	We pack discard into the memory image is if it were just normal
+ *	code but place it at the end after the buffers. When we finish up
+ *	booting we turn everything from the buffer pool to the start of
+ *	user space into buffers.
+ *
+ *	We don't touch discard. Discard is just turned into user space.
+ */
+void platform_discard(void)
+{
+	uint16_t discard_size = PROGBASE - (uint16_t)bufpool_end;
+	bufptr bp = bufpool_end;
+
+	discard_size /= sizeof(struct blkbuf);
+
+	kprintf("%d buffers added\n", discard_size);
+
+	bufpool_end += discard_size;
+
+	memset( bp, 0, discard_size * sizeof(struct blkbuf) );
+
+	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
+}
+
 #ifndef SWAPDEV
 /* Adding dummy swapper since it is referenced by tricks.s */
 void swapper(ptptr p)
