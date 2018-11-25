@@ -22,6 +22,7 @@
 	.globl _ptab
 	.globl _swapper
 	.globl _int_disabled
+	.globl switch_bank
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -45,6 +46,10 @@ _platform_switchout:
         push hl ; return code
         push ix
         push iy
+
+	ld a,(current_map)
+	push af
+
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
 	;
@@ -98,8 +103,10 @@ _switchin:
         push bc ; restore stack
 	push hl ; far padding
 
+	push de
         ld hl, #P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
+	pop de
 	;
 	;	Get ourselves a valid private stack ASAP. We are going to
 	;	copy udata around and our main stacks are in udata
@@ -134,6 +141,12 @@ _switchin:
 	di
 	ld a, (hl)	; We should now have a page assigned
 not_swapped:
+	ld hl,(U_DATA__U_PTAB)
+	or a
+	sbc hl,de
+; Turn this on once debugged
+;	jr z, skip_copyback
+
 	; We are in DI so we can poke these directly but must not invoke
 	; any code outside of common
 	or #0x18	; ROM
@@ -153,7 +166,6 @@ not_swapped:
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
 	exx
-
 	;
 	;	 Remap the kernel proper
 	;
@@ -232,9 +244,13 @@ nofliplow:
 	; We can now use the stack again
 	;
 
+	pop af
         pop iy
         pop ix
         pop hl ; return code
+
+	; Make sure we have the right kernel bank to return to
+	call switch_bank
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (U_DATA__U_ININTERRUPT)
@@ -301,6 +317,9 @@ _dofork:
         push hl ; HL still has p->p_pid from above, the return value in the parent
         push ix
         push iy
+
+	ld a,(current_map)
+	push af
 
         ; save kernel stack pointer -- when it comes back in the parent we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
@@ -369,8 +388,9 @@ _dofork:
         ; _switchin will be expecting from our copy of the stack.
 
         pop bc
-        pop bc
-        pop bc
+        pop iy
+        pop ix
+	pop bc
 
         ; Make a new process table entry, etc.
         ld  hl, (fork_proc_ptr)
