@@ -51,7 +51,7 @@ C000-FFFF
 	2:	Mapped at 0x8000-0xBFFF (exchanged with user process buffer)
 	3:	User process
 	4:	User process
-	5:	Mapped at 0x4000-0x7FFF (Kernel data/common)
+	5:	Mapped at 0x4000-0x7FFF (Sceen, Kernel data/common)
 	6:	User process (holds the 0x8000-BFFF of the other task)
 	7:	CODE3, Video (lots of room)
 
@@ -76,6 +76,9 @@ To Do:
 	in particular be good to support but that means another harder
 	bootloader hack
 -	6 or 5bit wide fonts (42, 51 column)
+-	Optimize zxvid - especially scrolling
+-	Colour attributes
+-	Graphics mapping
 -	Kempston joystick and mouse
 -	Many of the later Russian clones support putting bank 0 in the low
 	16K, and more than 8 banks. That would need some changes to the bank
