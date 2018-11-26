@@ -119,8 +119,8 @@ Mark partition 1 FAT and bootable
 hdfmonkey put my.hdf BOOT.BIN /fatware/BOOT.BIN
 dd if=strap.bin of=my.hdf bs=1046 seek=1 conv=notrunc
 
-and once it actually gets far enough we can stick the Fuzix partitions on
-partion 2+ along with swap
+and you can stick the Fuzix partitions on partion 2+ along with a swap
+partition (required). 0x7E fuzix 0x7F swap
 
 
 Other option to investigate - unbanked mode
