@@ -1,8 +1,8 @@
-CSRCS = devtty.c devices.c main.c bank128.c devinput.c
+CSRCS = devtty.c devices.c main.c bank128.c
 CDSRCS = discard.c
 DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
+DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c ../dev/zx/devinput.c
 DDZSRCS =
 ASRCS = crt0.s zx128.s zxvideo.s
 ASRCS += tricks.s commonmem.s loader-divide.s
@@ -16,7 +16,7 @@ DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
 DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/zx/
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
