@@ -4,6 +4,7 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <platform_ide.h>
+#include <devtty.h>
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */
@@ -34,7 +35,7 @@ doread:
             ld a,#0x02
             out (0xfe),a
             inir                                    ; transfer second 256 bytes
-            xor a
+            ld a,(_vtborder)
             out (0xfe),a
             pop af
             or a
@@ -68,7 +69,7 @@ dowrite:
             ld a,#0x02
             out (0xfe),a
             otir                                    ; transfer second 256 bytes
-            xor a
+            ld a,(_vtborder)
             out (0xfe),a
             pop af
             or a

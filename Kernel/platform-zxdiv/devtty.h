@@ -14,4 +14,6 @@ extern uint8_t timer_wait;
 
 extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 
+extern uint8_t vtborder;
+
 #endif

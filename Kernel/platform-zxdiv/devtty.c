@@ -13,6 +13,7 @@
 char tbuf1[TTYSIZ];
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH;
+uint8_t vtborder;
 uint8_t curattr = 7;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
