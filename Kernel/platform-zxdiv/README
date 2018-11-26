@@ -72,6 +72,7 @@ To Do:
 	Right now we ldir in one case (could be faster abusing stack), and
 	the exchange case could be made much much faster using registers
 	and stack tricks not bounce buffers
+-	Enable interrupts during swap
 -	Look at what is needed for other suitable interfaces. DIVMMC would
 	in particular be good to support but that means another harder
 	bootloader hack
