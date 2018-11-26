@@ -56,4 +56,5 @@ platform-zxdiv/divmmc.rel
 platform-zxdiv/mbr.rel
 platform-zxdiv/blkdev.rel
 platform-zxdiv/devinput.rel
+platform-zxdiv/zxkeyboard.rel
 -e
