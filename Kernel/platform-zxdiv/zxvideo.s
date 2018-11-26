@@ -16,6 +16,7 @@
         .globl _do_beep
 	.globl _fontdata_8x8
 	.globl _curattr
+	.globl _vtattr
 
         .area _VIDEO
 
@@ -80,22 +81,62 @@ _plot_char:
         ld hl, #_fontdata_8x8-32*8    ; font
         add hl, bc          ; hl points to first byte of char data
 
+	; We do underline for now - not clear italic or bold are useful
+	; with the font we have.
+	ld bc,(_vtattr)	    ; c is vt attributes
 
         ; printing
-        ld c, #8
 plot_char_loop:
         ld a, (hl)
         ld (de), a
-        inc hl              ; next byte of char data
+        inc l               ; next byte of char data
         inc d               ; next screen line
-        dec c
-        jr nz, plot_char_loop
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+        ld (de), a
+        inc l               ; next byte of char data
+        inc d               ; next screen line
+
+        ld a, (hl)
+	bit 1,c		    ; underline ?
+	jr nz, last_ul
+plot_attr:
+        ld (de), a
+
 	pop de
 	call videoattr
 	ld a,(_curattr)
 	ld (hl),a
         ret
 
+last_ul:
+	ld a,#0xff
+	jr plot_attr
 
 _clear_lines:
 	pop bc
