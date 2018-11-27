@@ -21,6 +21,7 @@ struct display {
 #define FMT_UBEE	130	/* Microbee 6545 modes */
 #define FMT_SAM2	131	/* SAM coupe mode 2 (1 pixel high chars with
                                    attribute map) */
+#define FMT_TIMEX64	132	/* Weird byte interleaved spectrum like mode */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
