@@ -1473,6 +1473,7 @@ const uint8_t automap[] = {
 #include <unistd.h>
 #include <fcntl.h>
 #include <setjmp.h>
+#include <termios.h>
 
 #ifdef __linux__
 #include <stdio.h>
