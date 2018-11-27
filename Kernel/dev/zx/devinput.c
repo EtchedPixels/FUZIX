@@ -124,7 +124,7 @@ int platform_input_read(uint8_t *slot)
     if (remq(&kqueue, &r)) {
         remq(&kqueue, &k);
 	*slot++ = KEYPRESS_CODE | r;
-	*slot++ = k;
+	*slot = k;
 	return 2;
     }
 
