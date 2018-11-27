@@ -1,8 +1,9 @@
-CSRCS = devtty.c devices.c main.c bank128.c
+CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
 DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c ../dev/zx/devinput.c
+DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
+DZSRCS += ../dev/zx/devinput.c ../dev/zx/bank128.c
 DDZSRCS =
 ASRCS = crt0.s zx128.s zxvideo.s
 ASRCS += tricks.s commonmem.s loader-divide.s

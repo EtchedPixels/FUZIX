@@ -90,6 +90,7 @@ To Do:
 	a 128K machine
 -	Speccyboot (ENC28J60)
 -	SpectraNet (W5100)
+-	Move vtborder to common
 
 
 Devices To Look At:
