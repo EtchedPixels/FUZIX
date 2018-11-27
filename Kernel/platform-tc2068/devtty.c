@@ -80,12 +80,14 @@ void tty_data_consumed(uint8_t minor)
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
 
+/* For now we only support 64 char mode - we should add the mode setting
+   logic an dother modes FIXME */
 static struct display specdisplay = {
 	0,
-	256, 192,
-	256, 192,
+	512, 192,
+	512, 192,
 	0xFF, 0xFF,
-	FMT_SPECTRUM,
+	FMT_TIMEX64,
 	HW_UNACCEL,
 	GFX_VBLANK|GFX_MAPPABLE|GFX_TEXT,
 	0
@@ -95,7 +97,7 @@ static struct videomap specmap = {
 	0,
 	0,
 	0x4000,
-	6912,
+	14336,
 	0,
 	0,
 	0,

@@ -2,7 +2,7 @@
 ;    TC2068 hardware support
 ;
 
-        .module zx128
+        .module tc2068
 
         ; exported symbols
         .globl init_early
@@ -87,6 +87,7 @@ _vtborder:		; needs to be common
 
 init_early:
 	ld a,#0xFF
+	ld (current_map),a
 	out (0xF4),a		; Map kernel fully
         ret
 
@@ -96,9 +97,11 @@ init_hardware:
         ; set system RAM size
         ld hl, #80
         ld (_ramsize), hl
-        ld hl, #(34)	      ; 32K for kernel/screen/etc
+        ld hl, #33	      ; 32K for kernel/screen/etc
         ld (_procmem), hl
 
+	ld a,#0x3E
+	out (0xFF),a
         ; screen initialization
 	call _vtinit
 
@@ -124,8 +127,8 @@ map_process_always:
 map_process_always_di:
 	push af
 	ld a,#0x03			; catridge in low 16K only
-	out (0xF4),a
 	ld (current_map),a
+	out (0xF4),a
 	pop af
 	ret
 ;

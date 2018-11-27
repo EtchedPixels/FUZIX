@@ -7,7 +7,7 @@ platform-tc2068/loader-divide.rel
 platform-tc2068/crt0.rel
 platform-tc2068/commonmem.rel
 platform-tc2068/tc2068.rel
-platform-tc2068/zxvideo.rel
+platform-tc2068/tmxvideo.rel
 platform-tc2068/main.rel
 platform-tc2068/discard.rel
 start.rel

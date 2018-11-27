@@ -4,7 +4,7 @@ DSRCS = ../dev/devide.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c ../dev/mbr.c
 DZSRCS = ../dev/zx/divide.c ../dev/zx/zxkeyboard.c
 DDZSRCS =
-ASRCS = crt0.s tc2068.s zxvideo.s
+ASRCS = crt0.s tc2068.s tmxvideo.s
 ASRCS += tricks.s commonmem.s loader-divide.s
 
 COBJS = $(CSRCS:.c=.rel)

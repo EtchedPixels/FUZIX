@@ -50,3 +50,5 @@ header on the hdf file.
 
 Debugging state:
 - Still chasing down a possible memory corruption bug that looks irq related
+
+- Need to review the video writes - still lose last byte of yes on ls /bin

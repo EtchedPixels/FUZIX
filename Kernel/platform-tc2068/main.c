@@ -26,7 +26,7 @@ void platform_interrupt(void)
  timer_interrupt();
  poll_input();
  if (timer_wait)
-  wakeup(&timer_interrupt);
+   wakeup(&timer_interrupt);
 }
 
 /* This points to the last buffer in the disk buffers. There must be at least
@@ -46,6 +46,7 @@ void platform_discard(void)
 	uint16_t discard_size = 0x8000 - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
+	return;
 	discard_size /= sizeof(struct blkbuf);
 
 	kprintf("%d buffers added\n", discard_size);
