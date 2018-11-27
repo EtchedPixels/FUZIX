@@ -1,0 +1,66 @@
+Experimental porting work for the TS2068 and TC2068 Timex spectrum like
+systems.
+
+Not yet usable (eats itself with memory corruption)
+
+----
+
+This port requires a TC2068/TS2068 system with a 64K cartridge configured
+with the low 32K RAM and high 32K ROM (or all battery backed RAM also works
+of course except maybe in the reboot case)
+
+At the moment you need a DivIDE interface and twister attached to the
+machine in order to boot it, as it will load the low 32K from the CF card
+boot area. The DivIDE needs to be set to not interfere with boot in order
+to run with a TC2068/TS2068 system without the spectrum ROM compatibility
+cartridge.
+
+Memory is laid out as follows
+
+Kernel mode
+
+0000-3FFF	Dock RAM	- common and other kernel data
+4000-7FFF	Dock RAM	- kernel data
+8000-FFFF	Dock ROM	- kernel boot and kernel code
+
+Video updating
+
+0000-3FFF	Dock RAM	- common and other kernel data
+				  (including font and video)
+4000-7FFF	Home RAM	- screens
+8000-FFFF	Dock ROM	- kernel boot and kernel code
+
+User mode
+
+0000-3FFF	Dock RAM	- common and other kernel data
+4000-77FF	Home RAM	- screens
+7800-FFFF	Home RAM	- user space
+
+(if we kept to the 256 pixel screen we can go to a much bigger user space)
+
+
+If using with FUSE then create an hdf file for the disk, add a filesystem
+image to it and then
+	dd if=fuzix.load of=tc2068.hdf bs=1046 seek=1 conv=notrunc
+
+to place it in blocks 1+ after the partition table (in the gap left for loaders)
+
+For real media just change the offset so as not to include the 534 bytes of
+header on the hdf file.
+
+Make a copy of the media as right now it eats the disks !
+
+
+Debugging state:
+
+Looks like we may have some obscure interrupt corruption case or similar
+(we bomb weirdly late on or see a bit of random display corruption and
+fsck fails part way with corruption like results)
+
+Need to try cutting down IRQ handler. One mess was on the video display which
+suggests whatever happened occurred with the video mapped at one point (same
+char was later printed correctly)
+
+Disabling pre-empt doesn't help and fsck shows corruption in execution which
+suggests its not task switch related
+
