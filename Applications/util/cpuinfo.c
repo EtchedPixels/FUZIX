@@ -137,6 +137,8 @@ static uint8_t badlibz80_asm(void) __naked
     __endasm;
 }
 
+/* TODO: T80 detection. Most T80 implementations screw up H N Z S handling
+   on LD A,R and LD A,I */
 static const int cpu_vsize = 16;
 static const int cpu_psize = 16;
 static const int cpu_step = -1;
