@@ -108,6 +108,7 @@ int yes(const char *s)
 
 	for (;;) {
 		printf("%s? ", s);
+		fflush(stdout);
 		if (fgets(b, 20, stdin) == NULL)
 			exit(0);
 		if (b[0] == 'y')
