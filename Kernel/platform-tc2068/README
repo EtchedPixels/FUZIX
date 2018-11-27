@@ -48,19 +48,5 @@ to place it in blocks 1+ after the partition table (in the gap left for loaders)
 For real media just change the offset so as not to include the 534 bytes of
 header on the hdf file.
 
-Make a copy of the media as right now it eats the disks !
-
-
 Debugging state:
-
-Looks like we may have some obscure interrupt corruption case or similar
-(we bomb weirdly late on or see a bit of random display corruption and
-fsck fails part way with corruption like results)
-
-Need to try cutting down IRQ handler. One mess was on the video display which
-suggests whatever happened occurred with the video mapped at one point (same
-char was later printed correctly)
-
-Disabling pre-empt doesn't help and fsck shows corruption in execution which
-suggests its not task switch related
-
+- Still chasing down a possible memory corruption bug that looks irq related
