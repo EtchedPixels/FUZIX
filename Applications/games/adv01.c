@@ -1618,7 +1618,7 @@ static void display_init(void)
   struct winsize w;
   if (ioctl(0, TIOCGWINSZ, &w) != -1) {
     rows = w.ws_row;
-    cols = ws.ws_col;
+    cols = w.ws_col;
     return;
   }
 #elif VTSIZE
