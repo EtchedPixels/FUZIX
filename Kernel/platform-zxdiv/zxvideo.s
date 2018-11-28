@@ -24,5 +24,5 @@ ZXVID_ONLY	.equ	1
 
         .area _VIDEO
 
-	.include "../dev/zx/video.s"
+	.include "../dev/zx/video-banked.s"
 
