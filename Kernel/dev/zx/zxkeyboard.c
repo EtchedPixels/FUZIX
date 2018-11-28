@@ -140,8 +140,8 @@ void tty_pollirq(void)
 
 	newkey = 0;
 
-	/* Nothing changed - no processing required */
-	if (!update_keyboard())
+	/* Nothing changed, and chance of key repeat work - so done */
+	if (!update_keyboard() && !keysdown)
 		return;
 
 	for (i = 0; i < 8; i++) {
