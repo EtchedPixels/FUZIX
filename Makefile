@@ -16,14 +16,17 @@
 # p112:		DX Designs P112
 # rc2014:	RC2014 with 512K RAM/ROM and RTC
 # rc2014-tiny:	RC2014 with 64KK RAM, banked ROM and RTC
+# sam:		Sam Coupe
 # sbcv2:	RBC/N8VEM SBC v2
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
+# tc2068:	Timex TC2068/TS2068 with DivIDE disk interface
 # trs80:	TRS80 Model 4/4D/4P with 128K RAM (some other TRS80 extension
 #		mappers have untested code in the tree)
 # trs80m1:	TRS80 Model I/III with suitable banker (also clones)
 # ubee:		Microbee
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta retrobrew SBC
+# zxdiv:	ZX Spectrum 128K with DivIDE interface
 #
 # Virtual platforms for in progress development work
 #
