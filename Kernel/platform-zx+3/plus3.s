@@ -112,7 +112,8 @@ init_hardware:
 				; video bank 7
 	out (c),a		; and we should have special mapping
 				; already by now	
-
+	xor a
+	out (0xFE),a		; black border
         ; screen initialization
 	call _vtinit
 
@@ -124,7 +125,7 @@ init_hardware:
         .area _COMMONMEM
 
 _program_early_vectors:
-	call map_process
+	call map_process_always
 	call set_vectors
 	call map_kernel
 set_vectors:
@@ -168,7 +169,7 @@ map_for_swap:
 map_process_always:
 map_process_always_di:
 	push af
-	ld a,#0x5			; 4 5 6 3
+	ld a,#0x1			; 0 1 2 3
 	jr map_a_pop
 ;
 ;	Save and switch to kernel
@@ -182,9 +183,9 @@ map_kernel_di:
 map_kernel:
 map_kernel_restore:
 	push af
+	ld a,#0x05			; 4 5 6 3
 map_a_pop:
 	push bc
-	ld a,#0x01			; 0/1/2/3
 	ld (current_map),a
 	ld bc,(diskmotor)
 	or c
@@ -202,7 +203,6 @@ map_video:
 map_restore:
 	push af
         ld a, (map_store)
-	ld (current_map),a
 	jr map_a_pop
 
 ;

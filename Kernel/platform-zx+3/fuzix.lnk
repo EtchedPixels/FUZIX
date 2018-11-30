@@ -3,6 +3,7 @@
 -l z80
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
+-b _DISCARD=0xD800
 platform-zx+3/crt0.rel
 platform-zx+3/commonmem.rel
 platform-zx+3/plus3.rel
@@ -40,6 +41,9 @@ platform-zx+3/devtty.rel
 platform-zx+3/devide.rel
 platform-zx+3/devide_discard.rel
 platform-zx+3/divide.rel
+platform-zx+3/devsd.rel
+platform-zx+3/devsd_discard.rel
+platform-zx+3/zxmmc.rel
 platform-zx+3/mbr.rel
 platform-zx+3/blkdev.rel
 platform-zx+3/devinput.rel

@@ -13,7 +13,7 @@
 char tbuf1[TTYSIZ];
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
-uint8_t curattr;
+extern uint8_t curattr;
 
 static tcflag_t console_mask[4] = {
 	_ISYS,

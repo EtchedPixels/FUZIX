@@ -25,22 +25,29 @@
 ;
 start:
 	di
+	ld bc,#0x7ffd
+	ld a,#0x08		; screen on 7
+	out (c),a
 ;
 ;	The boot loader turns the motor off, so turn it back on but wait
 ;	a bit otherwise some 3.5" disks won't boot right
 ;
+
 motor_on:
+	; Wait for the motor to catch back up - clear the screen !
+	ld bc,#0x7ffd
+	ld a,#0x08		; screen on 7
+	out (c),a
+	ld hl,#0x4000
+	ld de,#0x4001
+	ld bc,#0x6911
+	xor a
+	ldir
+
+
 	ld bc,#0x1ffd
 	ld a,#0x0D		; special paging 4/5/6/3. motor on
 	out (c),a
-
-	; Wait for the motor to catch back up
-	ld bc,#0x3548
-waitm:
-	dec bc
-	ld a,b
-	or c
-	jr nz, waitm
 ;
 ;	Ok now we can try and load stuff
 ;	9 sectors per track and we need to start from 0/2
@@ -132,10 +139,11 @@ load_sector:
 
 	ld c,#0xfd		; low bits of I/O
 	ld d,#0x20		; mask 
-	jp read_wait
+	jp read_begin
 read_loop:
 	ld b,#0x3f
 	ini
+read_begin:
 	ld b,#0x2f
 read_wait:
 	in a,(c)

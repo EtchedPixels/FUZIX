@@ -6,6 +6,11 @@ The memory mapping on this machine is a bit friendlier but it's still single
 
 This port really shows we need to support parent-first single in memory
 
+Note:
+
+We keep the discard high up below the common because otherwise the packed
+image overlaps itself and the ldir into discard corrupts the image
+
 Memory Model
 
 We use +2A/+3 'special paging mode'. It's special, but limited. Sufficient for

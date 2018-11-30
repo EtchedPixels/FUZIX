@@ -18,9 +18,20 @@
 	.globl _curattr
 	.globl _vtattr
 
+	.globl map_video
+	.globl map_kernel
+
 	; Build the video library as the only driver
 
 ZXVID_ONLY	.equ	1
+
+.macro VIDEO_MAP
+	call map_video
+.endm
+
+.macro VIDEO_UNMAP
+	call map_kernel
+.endm
 
         .area _COMMONMEM
 

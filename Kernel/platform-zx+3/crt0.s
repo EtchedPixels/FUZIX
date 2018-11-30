@@ -34,10 +34,14 @@
 	;	Finally the buffers so they can expand
 	;
 	.area _BUFFERS
-
-        .area _DISCARD
 	; Somewhere to throw it out of the way
         .area _INITIALIZER
+
+	;
+	;	We load these at D800 at the moment, so we avoid the
+	;	ldir overlap problem as we unpack.
+	;
+        .area _DISCARD
 
 
         .area _COMMONMEM
@@ -55,6 +59,8 @@
 	.globl s__DATA
 	.globl l__DISCARD
 	.globl s__DISCARD
+	.globl l__FONT
+	.globl s__FONT
         .globl kstack_top
 
         .globl unix_syscall_entry
@@ -86,6 +92,10 @@ _start:
 	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
+	ldir
+	; then the font
+	ld de, #s__FONT
+	ld bc, #l__FONT
 	ldir
 	; then the discard
 	ld de, #s__DISCARD
