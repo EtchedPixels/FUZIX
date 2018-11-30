@@ -24,9 +24,9 @@ uint8_t sd_spi_receive_byte(void)
 void sd_spi_lower_cs(void)
 {
     if (sd_drive == 0)
-      divmmc_data = 0x02;	/* Lower bit 0 (active low) */
+      divmmc_cs = 0x02;	/* Lower bit 0 (active low) */
     else
-      divmmc_data = 0x01;	/* Lower bit 1 (active low) */
+      divmmc_cs = 0x01;	/* Lower bit 1 (active low) */
 }
 
 void sd_spi_clock(bool go_fast)
