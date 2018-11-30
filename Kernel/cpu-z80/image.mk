@@ -23,6 +23,8 @@ tools/flat2z80: tools/flat2z80.c
 
 tools/makedck: tools/makedck.c
 
+tools/plus3boot: tools/plus3boot.c
+
 tools/raw2mgt: tools/raw2mgt.c
 
 tools/bankld/sdldz80:
@@ -38,7 +40,7 @@ tools/trslabel: tools/trslabel.c
 fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv tools/binmunge tools/bin2sna tools/bin2z80 cpm-loader/cpmload.bin tools/flat2z80 tools/makejv3 tools/trslabel tools/visualize tools/raw2mgt tools/cartman tools/makedck
+fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv tools/binmunge tools/bin2sna tools/bin2z80 cpm-loader/cpmload.bin tools/flat2z80 tools/makejv3 tools/trslabel tools/visualize tools/raw2mgt tools/cartman tools/makedck tools/plus3boot
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
