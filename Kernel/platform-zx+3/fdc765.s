@@ -187,6 +187,9 @@ _fd765_motor_off:
 	jp map_kernel
 
 _fd765_motor_on:
+	ld a,(diskmotor)
+	or a
+	ret nz
 	ld a,#0x08
 	ld (diskmotor),a
 	; Take effect
