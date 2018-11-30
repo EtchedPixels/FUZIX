@@ -134,7 +134,7 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
         }
         if (tries == 3)
         {
-            kprintf("fd%d: I/O error %d:%d\n", is_read, lba);
+            kprintf("fd0: I/O error %d:%d\n", is_read, lba);
             udata.u_error = EIO;
             break;
         }
