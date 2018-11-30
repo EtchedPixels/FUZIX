@@ -28,7 +28,8 @@ videopos:
         and #0x18
         or #0x40	    ; Standard screen
         ld d,a
-        ret
+	VIDEO_MAP
+	ret
 
 videoattr:
 	;			32 x E + D into HL
@@ -83,37 +84,37 @@ zx_plot_char:
 plot_char_loop:
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
         ld (de), a
-        inc l               ; next byte of char data
+        inc hl               ; next byte of char data
         inc d               ; next screen line
 
         ld a, (hl)
@@ -126,6 +127,7 @@ plot_attr:
 	call videoattr
 	ld a,(_curattr)
 	ld (hl),a
+	VIDEO_UNMAP
         ret
 
 last_ul:
@@ -209,6 +211,7 @@ setattr:
 	ld (hl),a
 	inc hl
 	djnz setattr
+	VIDEO_UNMAP
         ret
 
 copy_line:
@@ -243,6 +246,7 @@ copy_pixel_line:
         inc h
         dec c
         jr nz, copy_line_nextchar
+	VIDEO_UNMAP
         ret
 
         ; TODO: the LDIR way should be much faster
@@ -275,12 +279,14 @@ loop_scroll_down:
         dec c
         jr nz, loop_scroll_down
 
+	VIDEO_MAP
 	; Attributes
 	ld hl,#0x5ADF
 	ld de,#0x5AFF
 	ld bc,#0x02E0
 	lddr
 
+	VIDEO_UNMAP
         ret
 
 
@@ -312,10 +318,12 @@ loop_scroll_up:
         dec c
         jr nz, loop_scroll_up
 
+	VIDEO_MAP
 	ld hl,#0x5820
 	ld de,#0x5800
 	ld bc,#0x02E0
 	ldir
+	VIDEO_UNMAP
         ret
 
 	.if ZXVID_ONLY
@@ -334,6 +342,7 @@ zx_cursor_on:
         ld d, a
         ld a, #0xFF
         ld (de), a
+	VIDEO_UNMAP
         ret
 	.if ZXVID_ONLY
 _cursor_disable:
@@ -348,6 +357,7 @@ zx_cursor_off:
         ld d, a
         xor a
         ld (de), a
+	VIDEO_UNMAP
 
 	.if ZXVID_ONLY
 _do_beep:
@@ -359,3 +369,7 @@ zx_do_beep:
 
 cursorpos:
         .dw 0
+
+	.area _COMMONMEM
+_curattr:
+	.db 7
