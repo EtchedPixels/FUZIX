@@ -56,8 +56,12 @@ load an app from 5D00-wherever. Still ugly.
 
 TODO
 
-Write boot block loader and load image (packed) from FDC
-Write FDC drivers
+Floppy drive B - set drive info and propogate it
+
+Floppy drive B - set parameters at init time
+
+Petty coloured stripes when reading/writing floppy
+
 Move buffers into upper part of bank 7 to see if can get kernel below
 C000 + E000 upwards to get bigger user image ?
 
@@ -75,22 +79,3 @@ user but screen mapped and buffers in rest of 7 ?
 in bottom of that chunk.
 
 Would give direct mapped video
-
-
-FDC
-
-Reuse amstradnc code
-
-How to twiddle tc ?? - do we in fact even have that ability ? looks like
-we instead have to discard or stuff bytes if sector size mismatched
-
-add delays 
-
-Use the jp p and other tricks to make timing on the spectrum
-for r/w loops
-
-Ensure we have the correct head settle on a seek
-
-motor on needs  big delay loop but can be done without di on (yay!)
-
-motor off is software

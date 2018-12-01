@@ -54,6 +54,7 @@
 	.globl _fd765_sectors
 	.globl _fd765_disc
 
+	.globl _vborder
 
 	.globl diskmotor
 
@@ -154,6 +155,9 @@ _fd765_disc:
 
 ; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
 wait_for_seek_ending:
+	ld a,#0x05
+	out (0xFE),a
+
 	ld a, #0x08				; SENSE INTERRUPT STATUS
 	call fd765_tx
 	call fd765_read_status
@@ -161,6 +165,9 @@ wait_for_seek_ending:
 	ld a, (_fd765_status)
 	bit 5, a				; SE, seek end
 	jr z, wait_for_seek_ending
+
+	ld a, #0x02
+	out (0xFE),a
 
 	; Now settle the head (FIXME: what is the right value ?)
 	ld a, #30		; 30ms
@@ -177,6 +184,8 @@ wait_ms_loop2:
 	dec a
 	jr nz, wait_ms_loop
 	pop bc
+	ld a,(_vborder)
+	out (0xFE),a
 	ret
 
 _fd765_motor_off:
@@ -227,11 +236,14 @@ _fd765_do_read:
 	push af
 	call nz, map_process_always
 
+	ld a,#0x05
+	out (0xFE),a
+
 	di				; performance critical,
 					; run with interrupts off
 
 	xor a
-	call fd765_tx			; send the final unused 0 byte
+	call fd765_tx			; send the final unused byte
 					; to fire off the command	
 	ld hl, (_fd765_buffer)
 	ld bc, #0x2ffd
@@ -288,16 +300,38 @@ read_finished:
 	ei
 
 	call fd765_read_status
+	call tc_fix
+
+	ld a,(_vborder)
+	out (0xFE),a
 
 	pop af
 	ret z
 	jp map_kernel
 
 ;
+;	We will get an error reported that the command did not complete
+;	because the tc bit is not controllable. Spot that specific error
+;	and ignore it.
+;
+tc_fix:
+	ld hl,#_fd765_status
+	ld a,(hl)
+	and #0xC0
+	cp #0x40
+	ret nz
+	inc hl
+	bit 7,(hl)
+	ret z
+	res 7,(hl)
+	dec hl
+	res 6,(hl)
+	ret
+
+;
 ;	Write is much like read just the other direction
 ;
 _fd765_do_write:
-	di				; performance critical, run with 
 					; interrupts off
 	ld a, #0x45			; WRITE SECTOR MFM
 	call setup_read_or_write
@@ -306,6 +340,11 @@ _fd765_do_write:
 	or a
 	push af
 	call nz, map_process_always
+
+	ld a,#0x05
+	out (0xFE),a
+
+	di
 
 	xor a
 	call fd765_tx			; send the final unused 0 byte
@@ -353,6 +392,10 @@ write_finished:
 	call _fd765_do_nudge_tc		; Tell FDC we've finished
 	ei
 	call fd765_read_status
+	call tc_fix
+
+	ld a,(_vborder)
+	out (0xFE),a
 
 	pop af
 	ret z
@@ -376,7 +419,7 @@ setup_read_or_write:
 	add b				; add first sector
 	dec a				; 6: last sector (*inclusive*)
 	call fd765_tx
-	ld a, #27  			; 7: Gap 3 length (27 is standard for 3.5" drives)
+	ld a, #0x2A   			; 7: Gap 3 length (2A is standard for 3" drives)
 	call fd765_tx
 	; We return with the final unused 0 value not written. We need all
 	; the other stuff lined up before we write this.
