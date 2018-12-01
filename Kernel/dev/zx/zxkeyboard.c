@@ -14,7 +14,8 @@ uint8_t keybuf[8];
 /* Previous state */
 uint8_t keymap[8];
 
-struct vt_repeat keyrepeat;
+struct vt_repeat keyrepeat = { 50, 5 };
+
 static uint8_t kbd_timer;
 
 static uint8_t keybyte, keybit;
