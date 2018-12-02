@@ -155,7 +155,8 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
         }
         if (tries == 3)
         {
-            kprintf("fd%d: I/O error %d:%d\n", is_read, lba);
+            /* FIXME: will be the drive num once we fix that */
+            kprintf("fd%d: I/O error %d:%d - %d\n", 0, is_read, lba, fd765_status[0]);
             udata.u_error = EIO;
             break;
         }
