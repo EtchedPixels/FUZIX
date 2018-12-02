@@ -20,7 +20,7 @@ static char tbuf4[TTYSIZ];
 uint8_t curtty;			/* output side */
 static uint8_t inputtty;	/* input side */
 static struct vt_switch ttysave[2];
-struct vt_repeat keyrepeat;
+struct vt_repeat keyrepeat = { 40, 4 };
 extern uint8_t *vtbase[2];
 
 /* Default to having /dev/tty and the two consoles openable. Our probe
