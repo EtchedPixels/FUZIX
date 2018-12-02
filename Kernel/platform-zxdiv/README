@@ -24,12 +24,15 @@ DivIDE and DIVMMC we do
 	0000-1FFF, 
 	5-0: are the bank at 2000-3FFF
 
-To make our life miserable however the boot firmware loads stuff into page 3
-switches to it and locks it. Fortunately it turns out we can trojan Fatware
-0.14 as it expects a \fatware\boot.bin and providing it is 8K will just use it.
-This means we still have to have a fat partition but it'll do for now to get
-us going because it'll blindly load our loader into page 3, switch it to 0
-and then run it.
+To load we use the ESXDOS extension that is generally found with most
+DivMMC and DivIDE interfaces. Copy FUZIX.BIN into / on the ESXDOS drive and
+copy FUZIX into BIN. Then boot from ESXDOS with .fuzix
+
+Alternatively you can use FATWARE 0.14 for an autoboot by placing BOOT.BIN
+in \fatware and placing the strap.bin on the second sector onwards of the disk
+image in the boot area before your partitions (make sure your media is
+partitioned for more than 63 boot sectors). If using an hdf image you can dd to
+byte 1046 onwards. Only DivIDE is supported for the autoboot trick.
 
 We run with the following mapping
 
@@ -67,6 +70,7 @@ To Do:
 -	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
 	(Seems we lose the bottom line of the left most char - off by one bug
 	 in zxvid ?)
+-	If loading via ESX works remove the old clunky loader and fix reboot
 -	Hand optimized bank exchange and bank to bank copy routines. These are
 	fairly performance critical due to the limitations of the memory model.
 	Right now we ldir in one case (could be faster abusing stack), and
@@ -183,3 +187,4 @@ DONE	-	Move video to 4000 and data to 6000 so that we have video
 DONE	-	Colour attributes
 DONE	-	Graphics mapping
 DONE	-	Kempston joystick and mouse
+DONE	-	Finish off testing the ESX loader

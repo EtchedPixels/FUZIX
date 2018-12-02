@@ -46,6 +46,8 @@ $(AOBJS): %.rel: %.s
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
+	rm -f BOOT.BIN strap.bin load-esx.ihx load-esx.tmp
+	rm -f FUZIX.BIN FUZIX
 
 # Re-order the image and snapshop it
 image:
@@ -60,3 +62,17 @@ image:
 	# Banked segments 1 and 7
 	dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
 	dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
+
+	# Build an esxdos friendly setup
+	sdasz80 -o load-esx.s
+	sdldz80 -i load-esx.rel
+	makebin -s 8704 load-esx.ihx load-esx.tmp
+	# Generate the image file we need
+	dd if=load-esx.tmp of=FUZIX bs=8192 skip=1
+
+	# Now build a FUZIX.BIN to load
+	# in the order we need it
+	dd if=../common.bin bs=65536 count=1 conv=sync | \
+		dd of=FUZIX.BIN
+	dd if=../bank2.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
+	dd if=../bank3.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
