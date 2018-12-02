@@ -144,9 +144,12 @@ static ptptr swapvictim(ptptr p, int notself)
 ptptr swapneeded(ptptr p, int notself)
 {
 	ptptr n = swapvictim(p, notself);
-	if (n)
+	if (n) {
+		inswap = 1;
 		if (swapout(n))
 			n = NULL;
+		inswap = 0;
+	}
 	return n;
 }
 
