@@ -1,8 +1,6 @@
 Experimental porting work for the TS2068 and TC2068 Timex spectrum like
 systems.
 
-Not yet usable (eats itself with memory corruption)
-
 ----
 
 This port requires a TC2068/TS2068 system with a 64K cartridge configured
@@ -50,5 +48,9 @@ header on the hdf file.
 
 Debugging state:
 - Still chasing down a possible memory corruption bug that looks irq related
-
 - Need to review the video writes - still lose last byte of yes on ls /bin
+
+Optimizations:
+- Need 'parent first' mode on fork
+- Turn on interrupt mode during swapping
+

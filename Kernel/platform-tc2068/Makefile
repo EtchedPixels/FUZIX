@@ -45,6 +45,7 @@ $(AOBJS): %.rel: %.s
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
+	rm -f fuzix.dck fuzix.load
 
 image:
 	../tools/makedck ../fuzix.bin fuzix.dck

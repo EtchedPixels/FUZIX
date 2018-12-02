@@ -81,7 +81,7 @@ _vtborder:		; needs to be common
 
 
 ; -----------------------------------------------------------------------------
-; KERNEL CODE BANK (above 0x8000, only accessible when the kernel is mapped)
+; KERNEL CODE BANK (above 0x4000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
         .area _CODE
 
