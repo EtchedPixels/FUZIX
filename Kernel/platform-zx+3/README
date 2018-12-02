@@ -56,6 +56,10 @@ load an app from 5D00-wherever. Still ugly.
 
 TODO
 
+Debug floppy handling
+
+Fix memory size reporting 64 v 48K
+
 Floppy drive B - set drive info and propogate it
 
 Floppy drive B - set parameters at init time
@@ -79,3 +83,7 @@ user but screen mapped and buffers in rest of 7 ?
 in bottom of that chunk.
 
 Would give direct mapped video
+
+Parent first fork mode
+
+Turn on interrupts during swapping
