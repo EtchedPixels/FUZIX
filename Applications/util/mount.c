@@ -140,6 +140,8 @@ int main(int argc, char *argv[])
         mnt.mnt_type = fstype;
         if (optind != argc)
             mnt.mnt_opts = argv[optind++];
+        else
+            mnt.mnt_opts = "";
         if (optind != argc)
             usage();
         do_mount(&mnt);
