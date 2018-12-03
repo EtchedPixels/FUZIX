@@ -22,6 +22,9 @@ struct display {
 #define FMT_SAM2	131	/* SAM coupe mode 2 (1 pixel high chars with
                                    attribute map) */
 #define FMT_TIMEX64	132	/* Weird byte interleaved spectrum like mode */
+#define FMT_AMSMONO	133	/* Amstrad mono - weird interleave */
+#define FMT_AMS4	134	/* Amstrad 4 colour - ditto */
+#define FMT_AMS16	135	/* Amstraid 16 colour - ditto */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
