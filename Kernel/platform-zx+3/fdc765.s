@@ -52,9 +52,9 @@
 	.globl _fd765_buffer
 	.globl _fd765_is_user
 	.globl _fd765_sectors
-	.globl _fd765_disc
+	.globl _fd765_drive
 
-	.globl _vborder
+	.globl _vtborder
 
 	.globl diskmotor
 
@@ -117,13 +117,13 @@ _fd765_status:
 	.ds 8				; 8 bytes of status data
 
 ; Sends the head/drive byte of a command.
-; (Drive #0 is always used.)
-; FIXME: add drive 1 support
 
 send_head:
-	ld a, (_fd765_head)
+	ld hl, (_fd765_head)		; l = head h = drive)
+	ld a, l
 	add a
 	add a
+	add h
 	jr fd765_tx
 
 ; Performs a RECALIBRATE command.
@@ -131,7 +131,7 @@ send_head:
 _fd765_do_recalibrate:
 	ld a, #0x07				; RECALIBRATE
 	call fd765_tx
-	ld a, #0x00 				; drive #0 FIXME
+	ld a, (_fd765_drive)			; drive #
 	call fd765_tx
 	jr wait_for_seek_ending
 
@@ -146,11 +146,14 @@ _fd765_do_seek:
 	jr wait_for_seek_ending
 _fd765_track:
 	.db 0
-_fd765_head:
-	.db 0
 _fd765_sector:
 	.db 0
-_fd765_disc:
+;
+;	These two must remain adjacent see send_head
+;
+_fd765_head:
+	.db 0
+_fd765_drive:
 	.db 0
 
 ; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
@@ -184,7 +187,7 @@ wait_ms_loop2:
 	dec a
 	jr nz, wait_ms_loop
 	pop bc
-	ld a,(_vborder)
+	ld a,(_vtborder)
 	out (0xFE),a
 	ret
 
@@ -302,7 +305,7 @@ read_finished:
 	call fd765_read_status
 	call tc_fix
 
-	ld a,(_vborder)
+	ld a,(_vtborder)
 	out (0xFE),a
 
 	pop af
@@ -394,7 +397,7 @@ write_finished:
 	call fd765_read_status
 	call tc_fix
 
-	ld a,(_vborder)
+	ld a,(_vtborder)
 	out (0xFE),a
 
 	pop af

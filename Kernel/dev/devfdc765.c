@@ -10,19 +10,26 @@
 #include <printf.h>
 #include <devfdc765.h>
 #include <timer.h>
-#include <fdc765_platform.h>
+#include <platform_fdc765.h>
 
 static timer_t spindown_timer, recal_timer;
+
+static uint8_t lastdrive;
+static uint8_t trackpos[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
 int devfd_open(uint8_t minor, uint16_t flag)
 {
     flag;
-    if(minor != 0) {
+    if(minor > FDC765_MAX_FLOPPY) {
         udata.u_error = ENODEV;
         return -1;
     }
+
     fd765_do_nudge_tc();
-    fd765_track = 0xff; /* not on a known track */
+
+    trackpos[minor] = 0xFF;
+    if (minor == lastdrive)
+        fd765_track = 0xff; /* not on a known track */
     return 0;
 }
 
@@ -67,40 +74,56 @@ static uint8_t fd_recalibrate(void)
     return 1;
 }
 
-/* Set up the controller for a given block, seek, and wait for spinup. */
-static void fd_seek(uint16_t lba)
+/* Set up the controller for a given block, seek, and wait for it.
+   By the time we are called the motor is assumed to be at speed */
+
+static uint8_t fd_seek(uint16_t lba)
 {
+    uint8_t i = 0;
+    /* Hack for the moment until we introduce the proper floppy ioctls
+       here and in the platform code */
+#ifdef CONFIG_FDC765_DS
     uint8_t track2 = lba / 9;
     uint8_t newtrack = track2 >> 1;
 
     fd765_sector = (lba % 9) + 1;
     fd765_head = track2 & 1;
+#else
+    uint8_t newtrack = lba / 9;
+    fd765_sector = (lba % 9) + 1;
+    fd765_head = 0;
+#endif
 
     if (newtrack != fd765_track)
     {
-        for (;;)
-        {
+        while (i++ < 5) {
             fd765_track = newtrack;
             nudge_timer();
             fd765_do_seek();
             if ((fd765_status[0] & 0xf8) == 0x20)
-                break;
-
-            fd_recalibrate();
+                return 0;
+            if (i != 5)
+                fd_recalibrate();
         }
+        return 1;
     }
+    return 0;
 }
 
 /* Select a drive and ensure the motor is on. */
 static void fd_select(int minor)
 {
-    (void)minor;
-
+    if (lastdrive != minor) {
+        trackpos[lastdrive] = fd765_track;
+        fd765_track = trackpos[minor];
+        lastdrive = minor;
+    }
+    fd765_drive = minor;
     fd765_motor_on();
     nudge_timer();
 }
 
-static int devfd_transfer(bool is_read, uint8_t is_raw)
+static int devfd_transfer(uint8_t minor, bool is_read, uint8_t is_raw)
 {
     int ct = 0;
     int tries;
@@ -118,7 +141,7 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
     // if (!is_read)
     //     return blocks << BLKSHIFT;
 
-    fd_select(0);
+    fd_select(minor);
     fd765_is_user = is_raw;
     fd765_buffer = udata.u_dptr;
 
@@ -133,7 +156,9 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
                 if (fd_recalibrate())
                     continue;
             }
-            fd_seek(lba);
+            /* Seek failed - no point trying the I/O again */
+            if (fd_seek(lba))
+                continue;
 
             /* Not all machines can make the timing for this, or have
                real controllers that can do it */
@@ -156,7 +181,8 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
         if (tries == 3)
         {
             /* FIXME: will be the drive num once we fix that */
-            kprintf("fd%d: I/O error %d:%d - %d\n", 0, is_read, lba, fd765_status[0]);
+            kprintf("fd%d: I/O error %d:%d - %d:%d\n", minor , is_read, lba,
+                            fd765_status[0], fd765_status[1]);
             udata.u_error = EIO;
             break;
         }
@@ -171,12 +197,12 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
 int devfd_read(uint8_t minor, uint8_t is_raw, uint8_t flag)
 {
     flag;minor;
-    return devfd_transfer(true, is_raw);
+    return devfd_transfer(minor, true, is_raw);
 }
 
 int devfd_write(uint8_t minor, uint8_t is_raw, uint8_t flag)
 {
     flag;minor;
-    return devfd_transfer(false, is_raw);
+    return devfd_transfer(minor, false, is_raw);
 }
 

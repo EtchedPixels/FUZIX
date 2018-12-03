@@ -23,6 +23,7 @@ extern uint8_t fd765_sector;
 extern uint8_t fd765_status[8];
 extern uint8_t* fd765_buffer;
 extern uint8_t fd765_sectors;
-extern bool fd765_is_user;
+extern uint8_t fd765_drive;
+extern uint8_t fd765_is_user;
 
 #endif /* __DEVFDC765_DOT_H__ */
