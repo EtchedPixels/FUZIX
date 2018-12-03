@@ -29,14 +29,16 @@ int main(int argc, char *argv[])
     pv = AD_NOSYNC;
   }
   if (argc != 1) {
-    write(2, "unexpected argument.\n", 21);
+    write(2, argv[0], strlen(argv[0]));
+    write(2, ": unexpected argument.\n", 21);
     exit(1);
   }
   /* shutdown does a polite shutdown */
   if (strcmp(p, "shutdown") == 0) {
     if (telinit6())
       exit(0);
-    write(2, "unable to talk to init.\n", 24);
+    write(2, argv[0], strlen(argv[0]));
+    write(2, ": unable to talk to init.\n", 24);
   }
   if (strcmp(p, "halt") == 0)
     uadmin(A_SHUTDOWN, pv, 0);
