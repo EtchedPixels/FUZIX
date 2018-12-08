@@ -13,7 +13,7 @@
 	.importzp ptr1
 	.import _platform_monitor
 	.import _platform_idle
-	.import _newproc
+	.import _makeproc
 	.import _nready
 	.import _inint
 	.import _getproc
@@ -21,6 +21,8 @@
 	.import outcharhex
 	.import outstring
 	.import kstack_base
+	.import _udata
+	.import pushax
 
 
 	.code
@@ -277,9 +279,12 @@ fork_patch_3:
 	sep	#$30		; back to 8bit mode for C
 	.a8
 	.i8
+	lda	#<_udata
+	ldx	#>_udata
+	jsr	pushax
 	lda	ptr1
 	ldx	ptr1+1
-	jsr	_newproc
+	jsr	_makeproc
 	; We are now being the child properly
 	lda	#0
 	sta	_runticks
