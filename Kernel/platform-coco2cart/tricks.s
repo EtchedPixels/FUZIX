@@ -5,7 +5,7 @@
         .module tricks
 
 	# imported
-        .globl _newproc
+        .globl _makeproc
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
@@ -18,6 +18,7 @@
 	.globl _nready
 	.globl _inswap
 	.globl _platform_idle
+	.globl _udata
 
 	# exported
         .globl _platform_switchout
@@ -189,8 +190,11 @@ _dofork:
 	; We are now in the kernel child context
 
 
+	ldx #_udata
+	pshs x
         ldx fork_proc_ptr
-        jsr _newproc
+        jsr _makeproc
+	puls x
 
 	; any calls to map process will now map the childs memory
 
