@@ -49,6 +49,7 @@
 #define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   32	  /* Memory needed per process */
+#define MAXTICKS    10	  /* As our task switch is so expensive */
 
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
