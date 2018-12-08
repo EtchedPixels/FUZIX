@@ -4,9 +4,11 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <mntent.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/super.h>
 #include <errno.h>
 
 static int error;
@@ -49,6 +51,26 @@ static void perform_fsck_exec(const char *path)
 
 }
 
+/* Rather than exec a whole binary to do trivial checks for the usual case we
+   do a clean check before we run fsck.fuzix. Anything odd or hard we punt */
+static int is_clean(const char *path)
+{
+	struct fuzix_filesys fs;
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return 0;
+	if (read(fd, &fs, sizeof(fs)) != sizeof(fs)) {
+		close(fd);
+		return 0;
+	}
+	if (close(fd) || fs.s_fs.s_mounted != SMOUNTED ||
+		fs.s_fs.s_fmod != FMOD_CLEAN)
+		return 0;
+	return 1;
+}
+
 static int perform_fsck(const char *path, uint8_t search, uint8_t only)
 {
 	pid_t pid;
@@ -58,6 +80,10 @@ static int perform_fsck(const char *path, uint8_t search, uint8_t only)
 		p = mntpoint(path);
 		if (p)
 			path = p;
+	}
+	if (aflag) {
+		if (is_clean(path))
+			return 0;
 	}
 	/* Only fsck helper we will run - so just exec it */
 	if (only)
