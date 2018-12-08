@@ -9,6 +9,7 @@
 	.globl map_kernel
 	.globl map_process
 	.globl map_process_always
+	.globl map_buffers
 	.globl map_kernel_di
 	.globl map_process_di
 	.globl map_process_always_di
@@ -256,9 +257,11 @@ map_process_di:
 
 ;=========================================================================
 ; map_kernel - map kernel pages
+; map_buffers - map disk buffers
 ; Inputs: none
 ; Outputs: none; all registers preserved
 ;=========================================================================
+map_buffers:
 map_kernel:
 map_kernel_di:
 	push hl
