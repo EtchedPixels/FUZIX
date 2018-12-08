@@ -31,6 +31,8 @@ extern unsigned int swap_dev;
 #define MAX_SWAPS   16	    	/* We will size it from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
+#define MAXTICKS    20
+#define CONFIG_PARENT_FIRST	/* Required by the Z80 swap only and good */
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
