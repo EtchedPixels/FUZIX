@@ -3,7 +3,8 @@
         .module tricks
 
         .globl _ptab_alloc
-        .globl _newproc
+        .globl _makeproc
+	.globl _udata
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
@@ -173,10 +174,13 @@ _dofork:
         pop bc
 
         ; The child makes its own new process table entry, etc.
-        ld  hl, (fork_proc_ptr)
+	ld hl, #_udata
+	push hl
+        ld hl, (fork_proc_ptr)
         push hl
-        call _newproc
+        call _makeproc
         pop bc 
+	pop bc
 
 	; any calls to map process will now map the childs memory
 
