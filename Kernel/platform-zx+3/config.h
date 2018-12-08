@@ -27,11 +27,13 @@
 
 /* Swap based one process in RAM */
 #define CONFIG_SWAP_ONLY
+#define CONFIG_PARENT_FIRST
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS	1
 #define UDATA_SIZE	0x200
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
+#define MAXTICKS	20	/* Has to be high because we are swap only */
 
 /* Custom banking */
 

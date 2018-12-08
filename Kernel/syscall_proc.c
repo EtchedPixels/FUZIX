@@ -384,8 +384,13 @@ arg_t _fork(void)
 	/*
 	 * We're going to run our child process next, so mark this process as
 	 * being ready to run
+	 *
+	 * FIXME: push this down into dofork
 	 */
+#ifndef CONFIG_PARENT_FIRST
 	udata.u_ptab->p_status = P_READY;
+#endif
+
 	/*
 	 * Kick off the new process (the bifurcation happens inside here, we
 	 * *MAY* returns in both the child and parent contexts, however in a
@@ -412,7 +417,6 @@ arg_t _fork(void)
 		nready--;
 	}
 	irqrestore(irq);
-
 	return r;
 }
 

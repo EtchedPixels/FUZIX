@@ -9,7 +9,7 @@
         .module z80fixedbank
 
         .globl _ptab_alloc
-        .globl _newproc
+        .globl _makeproc
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
@@ -25,6 +25,7 @@
 	.globl _nready
 	.globl _platform_idle
 	.globl _int_disabled
+	.globl _udata
 
 	.globl map_kernel
 	.globl map_process
@@ -279,10 +280,13 @@ _dofork:
         pop bc
 
         ; Make a new process table entry, etc.
+	ld hl,#_udata
+	push hl
         ld  hl, (fork_proc_ptr)
         push hl
-        call _newproc
+        call _makeproc
         pop bc 
+	pop bc
 
         ; runticks = 0;
         ld hl, #0

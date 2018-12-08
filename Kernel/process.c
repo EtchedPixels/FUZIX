@@ -268,31 +268,40 @@ ptptr getproc(void)
 /* Newproc fixes up the tables for the child of a fork but also for init
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
+ *
+ * The fork code has already copied the udata into u so we only need to
+ * touch things that changed. u may or may not be the current udata
  */
-void newproc(regptr ptptr p)
+void makeproc(regptr ptptr p, u_data *u)
 {				/* Passed New process table entry */
-	uint8_t *j;
+	uint8_t *j, *e;
 	irqflags_t irq;
+	ptptr pp;
 
 	irq = di();
 	/* Note that ptab_alloc clears most of the entry */
 	/* calculate base page of process based on ptab table offset */
-	udata.u_page = p->p_page;
-	udata.u_page2 = p->p_page2;
+	u->u_page = p->p_page;
+	u->u_page2 = p->p_page2;
 
 	program_vectors(&p->p_page);	/* set up vectors in new process and
 					   if needed copy any common code */
-
+#ifdef CONFIG_PARENT_FIRST
+	p->p_status = P_READY;
+#else
 	p->p_status = P_RUNNING;
+#endif
 	nready++;		/* runnable process count */
 
-	p->p_pptr = udata.u_ptab;
-	p->p_sig[0].s_ignored = udata.u_ptab->p_sig[0].s_ignored;
-	p->p_sig[1].s_ignored = udata.u_ptab->p_sig[1].s_ignored;
-	p->p_sig[0].s_held = udata.u_ptab->p_sig[0].s_held;
-	p->p_sig[1].s_held = udata.u_ptab->p_sig[1].s_held;
-	p->p_tty = udata.u_ptab->p_tty;
-	p->p_uid = udata.u_ptab->p_uid;
+	pp = u->u_ptab;		/* Because it is a copy of the parent */
+
+	p->p_pptr = pp;
+	p->p_sig[0].s_ignored = pp->p_sig[0].s_ignored;
+	p->p_sig[1].s_ignored = pp->p_sig[1].s_ignored;
+	p->p_sig[0].s_held = pp->p_sig[0].s_held;
+	p->p_sig[1].s_held = pp->p_sig[1].s_held;
+	p->p_tty = pp->p_tty;
+	p->p_uid = pp->p_uid;
 	/* Set default priority */
 	p->p_priority = MAXTICKS;
 
@@ -301,18 +310,20 @@ void newproc(regptr ptptr p)
 	p->p_udata = &udata;
 #endif
 
-	udata.u_ptab = p;
+	u->u_ptab = p;	/* Fixup from parent */
 
 	memset(&p->p_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
 
 	rdtime32(&p->p_time);
-	if (udata.u_cwd)
-		i_ref(udata.u_cwd);
-	if (udata.u_root)
-		i_ref(udata.u_root);
-	udata.u_cursig = 0;
-	udata.u_error = 0;
-	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j) {
+	if (u->u_cwd)
+		i_ref(u->u_cwd);
+	if (u->u_root)
+		i_ref(u->u_root);
+	u->u_cursig = 0;
+	u->u_error = 0;
+
+	e = u->u_files + UFTSIZE;
+	for (j = u->u_files; j < e; ++j) {
 		if (*j != NO_FILE)
 			++of_tab[*j].o_refs;
 	}
@@ -453,15 +464,22 @@ void timer_interrupt(void)
 	/* Check run time of current process. We don't charge time while
 	   swapping as the last thing we want to do is to swap a process in
 	   and decide it took time to swap in so needs to go away again! */
-	/* FIXME: can we kill off inint ? */
 	if (!inswap && (++runticks >= udata.u_ptab->p_priority)
-	    && !udata.u_insys && inint && nready > 1) {
-                 need_resched = 1;
+	    && !udata.u_insys && inint) {
+		/* It might appear to make the best sense to just leave
+		   runticks ticking upwards if nobody else needs to run but
+		   this has two problems. The obvious one is that it may wrap
+		   but less obviously it can also cause thrashing on fork()
+		   in some memory models */
+		if (nready > 1) {
+			need_resched = 1;
 #ifdef DEBUG_PREEMPT
-		kprintf("[preempt %p %d]", udata.u_ptab,
-		        udata.u_ptab->p_priority);
+			kprintf("[preempt %p %d]", udata.u_ptab,
+				udata.u_ptab->p_priority);
 #endif
-        }
+		} else	/* Nobody else to run, user gets new time quantum */
+			runticks = 0;
+	}
 #endif
 }
 
@@ -502,6 +520,9 @@ void unix_syscall(void)
 
 	di();
 	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
+#ifdef DEBUG_PREEMPT	
+		kprintf("P: %d %x %d\n", runticks, udata.u_ptab, udata.u_ptab->p_priority);
+#endif		
 		/* Time to switch out? - we may have overstayed our welcome inside
 		   a syscall so swtch straight afterwards */
 		udata.u_ptab->p_status = P_READY;
@@ -892,7 +913,6 @@ void doexit(uint16_t val)
         signal_parent(udata.u_ptab);
 	nready--;
 	nproc--;
-
 	switchin(getproc());
 	panic(PANIC_DOEXIT);
 }

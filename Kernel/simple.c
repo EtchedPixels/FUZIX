@@ -30,6 +30,8 @@
 #include <kdata.h>
 #include <printf.h>
 
+#undef DEBUG
+
 #ifdef CONFIG_SWAP_ONLY
 
 void pagemap_free(ptptr p)
@@ -64,14 +66,14 @@ void pagemap_init(void)
  *	Swap out the memory of a process to make room
  *	for something else
  */
-int swapout(ptptr p)
+int swapout_new(ptptr p, void *u)
 {
 	uint16_t page = p->p_page;
 	uint16_t blk;
 	uint16_t map;
 
 #ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_page);
+	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
 #endif
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
@@ -80,22 +82,30 @@ int swapout(ptptr p)
 	if (map == 0)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
-	/* Write the app (and possibly the uarea etc..) to disk */
+	/* Write the app (and uarea etc..) to disk */
 #ifdef CONFIG_SPLIT_UDATA
-	/* Note the page for the udata bit as it goes direct to udata */
-	swapwrite(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 0);
+	/* Write the udata block as kernel. */
+	udata.u_dptr = u;
+	udata.u_block = blk;
+	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;	/* 1 */
+	((*dev_tab[major(SWAPDEV)].dev_write) (minor(SWAPDEV), 0, 0));
+	/* Use the standard swapwrite helper for the rest */
 	swapwrite(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		  SWAPBASE, 1);
 #else
-	swapwrite(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		  SWAPBASE, 1);
+#error "Not supported"
 #endif
 	p->p_page = 0;
 	p->p_page2 = map;
 #ifdef DEBUG
-	kprintf("%x: swapout done %d\n", p, p->p_page);
+	kprintf("%x: swapout done %d\n", p, p->p_page2);
 #endif
 	return 0;
+}
+
+int swapout(ptptr p)
+{
+	return swapout_new(p, &udata);
 }
 
 /*
@@ -106,24 +116,21 @@ void swapin(ptptr p, uint16_t map)
 	uint16_t blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
-	kprintf("Swapin %x, %d\n", p, p->p_page);
+	kprintf("Swapin %x (%d, %d)\n", p, p->p_page2, p->p_pid);
 #endif
 	if (!p->p_page) {
 		kprintf("%x: nopage!\n", p);
 		return;
 	}
 
-#ifdef CONFIG_SPLIT_UDATA
-	/* Note the page for the udata bit as it goes direct to udata */
+	/* Note the page for the udata bit as it goes direct to udata and
+	   is always in common */
 	swapread(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 0);
 	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		 SWAPBASE, 1);
-#else
-	swapread(SWAPDEV, blk, SWAPTOP - SWAPBASE,
-		 SWAPBASE, 1);
-#endif
+
 #ifdef DEBUG
-	kprintf("%x: swapin done %d\n", p, p->p_page);
+	kprintf("%x: swapin done %d\n", p, p->p_page2);
 #endif
 }
 

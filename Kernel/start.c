@@ -81,23 +81,26 @@ void add_argument(const char *s)
 
 void create_init(void)
 {
-	uint8_t *j;
+	uint8_t *j, *e;
 
 	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
 	udata.u_ptab = init_process;
 	init_process->p_top = udata.u_top;
 	map_init();
-	newproc(init_process);
+
+	/* wipe file table */
+	e = udata.u_files + UFTSIZE;
+	for (j = udata.u_files; j < e; ++j)
+		*j = NO_FILE;
+
+	makeproc(init_process, &udata);
+	init_process->p_status = P_RUNNING;
 
 	udata.u_insys = 1;
 
 	init_process->p_status = P_RUNNING;
 
-	/* wipe file table */
-	for (j = udata.u_files; j < (udata.u_files + UFTSIZE); ++j) {
-		*j = NO_FILE;
-	}
 	/* Poke the execve arguments into user data space so _execve() can read them back */
 	/* Some systems only have a tiny window we can use at boot as most of
 	   this space is loaded with common memory */

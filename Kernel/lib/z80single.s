@@ -3,10 +3,14 @@
 ;
 ;	This code could really do with some optimizing.
 ;
+;	FIXME: IRQ enable logic during swap
+;
+;	FIXME: turn on parent first behaviour when ready
+;
         .module tricks
 
         .globl _ptab_alloc
-        .globl _newproc
+        .globl _makeproc
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
@@ -19,7 +23,11 @@
         .globl interrupt_handler
 	.globl _swapper
 	.globl _swapout
+	.globl _swapout_new
 	.globl _int_disabled
+	.globl _udata
+	.globl _tmpbuf
+	.globl _tmpfree
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -37,6 +45,7 @@ _platform_switchout:
         ; save machine state
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
+
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
         push hl ; return code
@@ -60,6 +69,8 @@ swapped: .ascii "_switchin: SWAPPED"
 
 _switchin:
         di
+	ld a,#1
+	ld (_int_disabled),a
         pop bc  ; return address
         pop de  ; new process pointer
 ;
@@ -113,7 +124,7 @@ not_swapped:
         ; check u_data->u_ptab matches what we wanted
         ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
-        sbc hl, de              ; subtract, result will be zero if DE==IX
+        sbc hl, de              ; subtract, result will be zero if DE==HL
         jr nz, switchinfail
 
 	; wants optimising up a bit
@@ -170,22 +181,15 @@ _dofork:
 
         ld (fork_proc_ptr), hl
 
-        ; prepare return value in parent process -- HL = p->p_pid;
-        ld de, #P_TAB__P_PID_OFFSET
-        add hl, de
-        ld a, (hl)
-        inc hl
-        ld h, (hl)
-        ld l, a
-
         ; Save the stack pointer and critical registers.
         ; When this process (the parent) is switched back in, it will be as if
         ; it returns with the value of the child's pid.
-        push hl ; HL still has p->p_pid from above, the return value in the parent
+	ld hl,#0
+        push hl		;	#0 child
         push ix
         push iy
 
-        ; save kernel stack pointer -- when it comes back in the parent we'll be in
+        ; save kernel stack pointer -- when it comes back in the child we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with HL (ie return code) containing the child PID.
         ; Hurray.
@@ -194,32 +198,81 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ld hl, (U_DATA__U_PTAB)
+
+        ; Make a new process table entry, etc.
+
+	; Copy the parent properties into the temporary udata copy
+	call _tmpbuf
+	ld a,h
+	or l
+	jp z,ohpoo
 	push hl
-	call _swapout
+	ex de,hl
+	ld hl, #_udata
+	ld bc, #U_DATA__TOTALSIZE
+	ldir
+
+	; Recover the buffer pointer
+	pop hl
+	push hl
+
+	; Make the child udata out of the temporary buffer
+	push hl
+        ld hl, (fork_proc_ptr)
+        push hl
+        call _makeproc
+        pop bc
+	pop bc
+
+        ; in the child process, fork() returns zero.
+	;
+	; And we exit, with the kernel mapped, the child assembled in the
+	; copy area as if it had done a switchout, the parent meanwhile
+	; continues happily on
+
+        ; now we're in a safe state for _switchin to return in the child
+	; process swap out the image and the new udata
+
+	; Stack the buffer as a second argument
+	pop hl
+	push hl
+	push hl
+
+	ld hl, (fork_proc_ptr)
+	push hl
+	call _swapout_new
+	pop hl
 	pop hl
 
+	; Buffer pointer is sitting top of stack still
+	; so use it as an argument to tmpfree
+	call _tmpfree
+
+	pop hl
+
+	ld hl, (fork_proc_ptr)
+        ; prepare return value in parent process -- HL = p->p_pid;
+        ld de, #P_TAB__P_PID_OFFSET
+        add hl, de
+        ld a, (hl)
+        inc hl
+        ld h, (hl)
+        ld l, a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
         pop bc
         pop bc
         pop bc
-
-        ; Make a new process table entry, etc.
-        ld  hl, (fork_proc_ptr)
-        push hl
-        call _newproc
-        pop bc 
-
-        ; runticks = 0;
-        ld hl, #0
-        ld (_runticks), hl
-        ; in the child process, fork() returns zero.
-	;
-	; And we exit, with the kernel mapped, the child now being deemed
-	; to be the live uarea. The parent is frozen in time and space as
-	; if it had done a switchout().
+	; Return pid of child we forked into swap
         ret
+
+ohpoo:
+	ld hl,#nobufs
+	call outstring
+	jp _platform_monitor
+
+nobufs:
+	.asciz 'nobufs'
 ;
 ;	We can keep a stack in common because we will complete our
 ;	use of it before we switch common block. In this case we have

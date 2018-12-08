@@ -56,15 +56,12 @@ load an app from 5D00-wherever. Still ugly.
 
 TODO
 
-Debug floppy handling
-
 Fix memory size reporting 64 v 48K
 
 Floppy drive B - set drive info and propogate it
 
 Floppy drive B - set parameters at init time
 
-Petty coloured stripes when reading/writing floppy
 
 Move buffers into upper part of bank 7 to see if can get kernel below
 C000 + E000 upwards to get bigger user image ?
@@ -78,6 +75,16 @@ user but screen mapped and buffers in rest of 7 ?
 
 0-3		Kernel
 4-7		User, video in 7
+
+May also be able to later do
+
+0-2		Kernel		3 high kernel common
+				7 upper 8K buffers and high stubs
+				7 lower scree
+4/5/6		User 64K	3 high kernel common , 3 low user
+
+4/5/6		User 48K	7 screen, upper 8K buffers
+
 
 0/4 hold page0 copies, 3 7 both hold pageh copies - fine as video is
 in bottom of that chunk.

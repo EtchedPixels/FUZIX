@@ -183,6 +183,11 @@ void *tmpbuf(void)
 	bp->bf_time = ++bufclock;	/* Time stamp it */
 	return bp->__bf_data;
 }
+
+void tmpfree(void *p)
+{
+	brelse(p);
+}
 #endif
 
 /*
