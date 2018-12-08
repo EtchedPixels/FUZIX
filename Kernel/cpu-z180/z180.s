@@ -19,7 +19,8 @@
         ; imported symbols
         .globl _ramsize
         .globl _procmem
-        .globl _newproc
+        .globl _makeproc
+	.globl _udata
         .globl _runticks
         .globl _chksigs
         .globl _inint
@@ -391,10 +392,13 @@ _dofork:
         pop bc
 
         ; Make a new process table entry, etc.
+	ld hl, #_udata
+	push hl
         ld hl, (fork_proc_ptr)
         push hl
-        call _newproc
+        call _makeproc
         pop bc 
+	pop bc
 
         ; runticks = 0;
         ld hl, #0
