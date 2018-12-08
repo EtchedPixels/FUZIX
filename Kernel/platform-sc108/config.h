@@ -8,6 +8,8 @@
 #undef CONFIG_MULTI
 /* Swap based one process in RAM */
 #define CONFIG_SWAP_ONLY
+#define CONFIG_PARENT_FIRST
+#define MAXTICKS 20
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT
 /* One memory bank */
