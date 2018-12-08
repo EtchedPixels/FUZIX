@@ -2,11 +2,14 @@
 ;
 ; Should unify this somewhat with lib/banked
 ;
+; FIXME: switch to parent first for performance
+;
 
         .module tricks
 
         .globl _ptab_alloc
-        .globl _newproc
+        .globl _makeproc
+	.globl _udata
         .globl _getproc
         .globl _platform_monitor
         .globl trap_illegal
@@ -23,6 +26,7 @@
 	.globl _swapper
 	.globl _int_disabled
 	.globl switch_bank
+	.globl _inswap
 
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
@@ -122,9 +126,11 @@ _switchin:
 	; these
 
 	; Turn this one once we have it all sorted and debugged
-	; ei
-	; xor a
-	; ld (_int_disabled),a
+	xor a
+	ld (_int_disabled),a
+	inc a
+	ld (_inswap),a
+	ei
 	push hl		; Save
 	push de
 	push hl		; Arguments
@@ -138,7 +144,9 @@ _switchin:
 	pop hl
 	ld a,#1
 	ld (_int_disabled),a
+	dec a
 	di
+	ld (_inswap),a
 	ld a, (hl)	; We should now have a page assigned
 not_swapped:
 	ld hl,(U_DATA__U_PTAB)
@@ -393,12 +401,14 @@ _dofork:
 	pop bc
 
         ; Make a new process table entry, etc.
-        ld  hl, (fork_proc_ptr)
+	ld hl, #_udata
+        ld hl, (fork_proc_ptr)
         push hl
 	push af
-        call _newproc
+        call _makeproc
 	pop af
         pop bc 
+	pop bc
 
         ; runticks = 0;
         ld hl, #0
