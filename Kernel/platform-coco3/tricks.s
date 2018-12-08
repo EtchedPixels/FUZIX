@@ -4,12 +4,13 @@
         .module tricks
 
 	;; imported
-        .globl _newproc
+        .globl _makeproc
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
 	.globl _get_common
 	.globl _swap_finish
+	.globl _udata
 
 	;; exported
         .globl _platform_switchout
@@ -186,8 +187,11 @@ _dofork:
         ;; _switchin will be expecting from our copy of the stack.
 	puls 	x
 
+	ldx	#_udata
+	pshs	x
         ldx 	fork_proc_ptr	; get forked process
-        jsr 	_newproc	; and set it up
+        jsr 	_makeproc	; and set it up
+	puls	x
 
 	;; any calls to map process will now map the childs memory
 
