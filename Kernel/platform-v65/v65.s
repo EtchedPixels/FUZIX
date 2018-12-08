@@ -37,6 +37,9 @@
 	    .import _kernel_flag
 	    .import stash_zp
 	    .import pushax
+	    .import _chksigs
+	    .import _platform_switchout
+	    .import _need_resched
 
 	    .import outcharhex
 	    .import outxa
@@ -361,7 +364,7 @@ vector:
 	    ;
 	    lda #0
 	    sta U_DATA__U_INSYS
-	    ldx #U_DATA__U_SYSCALL_SP
+	    ldx #<U_DATA__U_SYSCALL_SP
 	    txs
 	    ;
 	    ; Check what signals are now waiting for us
