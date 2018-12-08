@@ -24,10 +24,15 @@
 extern unsigned int swap_dev;
 #define SWAP_SIZE   0x61 	/* 48.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xC200	/* Swap out udata and program */
+#define SWAPTOP	    0xC000	/* Swap out program */
+#define CONFIG_SPLIT_UDATA
+#define UDATA_BLKS  1
+#define UDATA_SIZE  0x200	/* One block */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
+#define MAXTICKS    20		/* As we are pure swap */
+#define CONFIG_PARENT_FIRST	/* For pure swap this is far faster */
 
 /*
  *	When the kernel swaps something it needs to map the right page into

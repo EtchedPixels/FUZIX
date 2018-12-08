@@ -15,6 +15,7 @@
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
+	.globl map_buffers
 	.globl platform_interrupt_all
 	.globl _platform_reboot
 	.globl _platform_monitor
@@ -364,6 +365,7 @@ map_save_kernel:
 	call rom_control
 	pop af
 	ret
+
 
 ;
 ;	A little SIO helper
