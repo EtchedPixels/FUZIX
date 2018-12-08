@@ -116,7 +116,7 @@ static uint8_t bitbits[] = {
 	0x00
 };
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	uint8_t r;
 	if (minor != ACIA_TTY)
