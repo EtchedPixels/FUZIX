@@ -7,7 +7,7 @@
 	.module tricks32
 
 	.globl _ptab_alloc
-	.globl _newproc
+	.globl _makeproc
 	.globl _chksigs
 	.globl _getproc
 	.globl _runticks
@@ -27,6 +27,8 @@
 
 	.globl _platform_copier_l
 	.globl _platform_copier_h
+
+	.globl _udata
 
 	.area _HIGH
 
@@ -165,6 +167,7 @@ _dofork:
 	call _program_vectors
 	pop hl			; discard
 
+
 	ld hl,(fork_proc_ptr)
 	push ix
 	call copy_process
@@ -193,9 +196,12 @@ _dofork:
 
 	; Back into the kernel to finish the process creation
 
+	ld hl,#_udata
+	push hl
 	ld hl,(fork_proc_ptr)
 	push hl
-	call _newproc
+	call _makeproc
+	pop bc
 	pop bc
 
 	; Clear runticks, and return 0
