@@ -55,7 +55,7 @@ static void perform_fsck_exec(const char *path)
    do a clean check before we run fsck.fuzix. Anything odd or hard we punt */
 static int is_clean(const char *path)
 {
-	struct fuzix_filesys fs;
+	static struct fuzix_filesys fs;
 	int fd;
 
 	fd = open(path, O_RDONLY);
