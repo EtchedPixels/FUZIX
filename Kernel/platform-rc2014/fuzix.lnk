@@ -41,6 +41,7 @@ devsys.rel
 devinput.rel
 usermem.rel
 usermem_std-z80.rel
+platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
 platform-rc2014/mbr.rel
