@@ -18,9 +18,8 @@ The kstack and istack exist in each bank. We'll normally only use the kernel
 one but there are cases we switch and borrow a bit of the other bank copy.
 It's easier to arrange this way anyhow.
 
-
 TODO
--		Debug a loader
+-		Debug a loader (seems to work)
 -		An awful lot of early kernel boot debugging
 -		Interrupts properly (and IM2)
 

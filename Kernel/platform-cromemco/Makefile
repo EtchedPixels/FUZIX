@@ -31,4 +31,6 @@ image:
 	sdldz80 -m -i cloader-16fdc.rel
 	makebin -s 256 cloader-16fdc.ihx > cloader-16fdc.tmp
 	dd if=cloader-16fdc.tmp of=cloader-16fdc.bin bs=1 skip=128
-
+	# Assemble a standard IBM format SSSD 8" disk image
+	cat cloader-16fdc.bin ../fuzix.bin | \
+		dd of=fuzix.dsk bs=256256 count=1 conv=sync

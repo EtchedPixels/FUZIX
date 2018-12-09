@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <devtty.h>
+#include <printf.h>
 
 uaddr_t ramtop = PROGTOP;
 

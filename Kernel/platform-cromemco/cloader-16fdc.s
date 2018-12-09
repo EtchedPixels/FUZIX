@@ -78,7 +78,7 @@ trackend:
 	jr z, run
 
 	ld a,#'.'		; We know that one byte per track will not
-	out (0),a		; overrun!
+	out (1),a		; overrun!
 
 	ld b,#0x01		; run from sector 1
 
@@ -91,13 +91,13 @@ trackend:
 	jr movecmd
 
 strout:
-	in a,(0x0)
+	in a,(0)
 	rla
 	jr nc,strout
 	ld a,(hl)
 	or a
 	ret z
-	out (0),a
+	out (1),a
 	inc hl
 	jr strout
 
