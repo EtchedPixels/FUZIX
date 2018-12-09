@@ -36,7 +36,8 @@ $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) core *~  *.asm *.rst *.lst *.sym
+	rm -f $(OBJS) core *~  *.asm *.rst *.lst *.sym *.rel
+	rm -f nasboot.lk nasboot.bin
 
 image:
 	sdasz80 -o nasboot.s
