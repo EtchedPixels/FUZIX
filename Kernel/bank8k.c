@@ -48,11 +48,12 @@
 #else
 #define PTSIZE		8
 #define PTNUM		8
+#define PAGE_VIDEO	PAGE_INVALID
 #endif
 
 /* Bank numbers we actually use */
 #define HIBANK ((uint8_t)((((PROGTOP) + 0x1FFFUL) >> 13))
-#define LOBANK ((SWAPBASE) >> 13)
+#define LOBANK ((PROGBASE) >> 13)
 
 static uint8_t pfree[MAX_MAPS];
 static uint8_t pfptr = 0;
@@ -112,8 +113,8 @@ void pagemap_add(uint8_t page)
  */
 void pagemap_free(ptptr p)
 {
-	uint8_t *pt = (uint8_t *)p->p_page + LOBANK
-	uint8_t *e = (uint8_t *)p->p_page + PTNUM
+	uint8_t *pt = (uint8_t *)p->p_page + LOBANK;
+	uint8_t *e = (uint8_t *)p->p_page + PTNUM;
 	uint8_t last = *pt;
 	while(pt < e) {
 		if (*pt != PAGE_INVALID && *pt != PAGE_VIDEO && *pt != last) {
