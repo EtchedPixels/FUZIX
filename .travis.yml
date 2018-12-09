@@ -9,7 +9,6 @@ matrix:
         - env: TARGET=trs80
         - env: TARGET=v65c816
         - env: TARGET=v68
-        - env: TARGET=v68-banked
         - env: TARGET=z80pack
 
 before_install:
