@@ -457,11 +457,11 @@ syscall_high:
 	    ld h,13(ix)
 	    pop ix
 	    di
+	    ; BUG: syscall corrupts AF' - should we just define some
+	    ; alt register corruptors for new API - would be sanest fix
 	    ex af, af'		; Ick - find a better way to do this bit !
-	    push af
 	    ld a,#1
 	    out (0x38),a
-	    pop af
 	    ex af,af'
 	    ; Stack now invalid
 	    ld (U_DATA__U_SYSCALL_SP),sp
