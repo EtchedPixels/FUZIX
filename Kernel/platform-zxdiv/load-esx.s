@@ -1,7 +1,6 @@
 ;
 ;	We are running at 0x2000 so the final work we do requires some care
-;	that we don't blow ourselves up. We place the needed code in the
-;	loaded image (see load-esx2.s)
+;	that we don't blow ourselves up.
 ;
 
 	.area _BOOT(ABS)
