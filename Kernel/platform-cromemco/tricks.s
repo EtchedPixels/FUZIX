@@ -27,7 +27,6 @@
 	.globl _udata
 
 	.globl ldir_to_user
-	.globl ldir_from_user
 	.globl ldir_far
 
         ; imported debug symbols
@@ -135,10 +134,16 @@ not_swapped:
 
 	push de
 
+	; Trick - we don't overlay the udata proper with anything so we can
+	; map common and ldir
+	ld a,#0x81
+	out (0x40),a
 	ld hl, #U_DATA_STASH
 	ld de, #U_DATA
 	ld bc, #U_DATA__TOTALSIZE
-	call ldir_to_user
+	ldir
+	ld a,#1		; back to kernel
+	out (0x40),a
 
 	pop de
 
