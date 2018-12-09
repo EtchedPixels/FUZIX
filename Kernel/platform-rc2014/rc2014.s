@@ -87,19 +87,44 @@ init_hardware:
         out (FDC_DOR), a
 
 	; Play guess the serial port
-	; This needs doing better. We might be fooled by floating flow
-	; control lines as the SC104 does expose flow control. FIXME
-	in a,(SIOA_C)
-	and #0x2C
-	cp #0x2C
-	; CTS and DCD should be high as they are not wired
-	jr nz, try_acia
+
+	;
+	; We are booted under ROMWBW, therefore use the same algorithm as
+	; ROMWBW so if the probe fails we at least expect it to have failed
+	; before we run.
+	;
+	; FIXME: see if we can cleanly ask ROMWBW for the device type
+	;
+
+	;
+	; This could be the ACIA control port. If so we mash the settings
+	; up but that is ok as we will port them back in the ACIA probe
+	;
+
+	xor a
+	ld c,#SIOA_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, try_acia
 
 	; Repeat the check on SIO B
-	in a,(SIOB_C)
-	and #0x2C
-	cp #0x2C
-	jr z, is_sio
+
+	xor a
+	ld c,#SIOB_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr nz, is_sio
+
 try_acia:
 	;
 	;	Look for an ACIA
