@@ -1,6 +1,31 @@
 FUZIX on a Cromenco (no hard disk support right now - need docs for that and
 suitable emulation!)
 
+The mapping model is intended to be
+
+Bank 0		Kernel
+		0000-00FF, F200-FFFF are propogated into the other banks
+
+Bank 1-6	User
+		0000-00FF start with shared vectors
+			  FIXME: we need to clean this up in program_vectors
+			  from the kernel copy ????
+		0100-EFFF Application
+		F000-F111 Udata copy for this application
+		F200-FFFF common copy
+
+The kstack and istack exist in each bank. We'll normally only use the kernel
+one but there are cases we switch and borrow a bit of the other bank copy.
+It's easier to arrange this way anyhow.
+
+
+TODO
+-		Debug a loader
+-		An awful lot of early kernel boot debugging
+-		Interrupts properly (and IM2)
+
+
+
 We expect
 
 0		tuart / 4 FDC

@@ -44,15 +44,24 @@ init:
         ; Configure memory map
         call init_early
 
-	; move the common memory where it belongs    
+	ld a,#0x81		; Every memory writeable, read kernel
+	out (0x40),a		; MMU set
+
+	; move the common memory where it belongs in all banks
+
 	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
 	ldir
-	; and the discard
+
+	ld a,#0x01		; Kernel mapping only
+	out (0x40),a		; MMU set
+
+	; and the discard to the kernel
 	ld de, #s__DISCARD
 	ld bc, #l__DISCARD
 	ldir
+
 	; then zero the data area
 	ld hl, #s__DATA
 	ld de, #s__DATA + 1

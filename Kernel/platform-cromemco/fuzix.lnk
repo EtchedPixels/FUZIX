@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xF000
+-b _COMMONMEM=0xF200
 -b _DISCARD=0xE000
 -l z80
 platform-cromemco/crt0.rel
@@ -10,12 +10,12 @@ platform-cromemco/cromemco.rel
 platform-cromemco/main.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-usermem_std-z80.rel
+lowlevel-z80-thunked.rel
 platform-cromemco/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
+platform-cromemco/usermem.rel
 platform-cromemco/devfd.rel
 platform-cromemco/devices.rel
 devio.rel

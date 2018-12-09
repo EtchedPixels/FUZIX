@@ -6,6 +6,7 @@ uaddr_t ramtop = PROGTOP;
 void pagemap_init(void)
 {
  int i;
+ /* 1 << 0 is kernel */
  for (i = 1; i < 7; i++)
   pagemap_add(1 << i);
 }

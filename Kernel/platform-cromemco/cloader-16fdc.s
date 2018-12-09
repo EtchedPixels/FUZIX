@@ -1,116 +1,113 @@
-		.area ASEG(ABS)
-		.org  0x80
+	.area ASEG(ABS)
+	.org  0x80
 ;
-;	Loader for Fuzix on a Cromenco 16FDC
+;	We have 128 bytes and are loaded by the ROM at 0x0080. The rest is
+;	bascially our problem
 ;
-;	The kernel is written in blocks 1+ SS/SD with no magic
-;	involved. We have 128 bytes, but fortunately a ROM helper
+;	Load sectors 2-26 ( a whopping 3.2K )
 ;
+;	Assumes an 8" disk in SD mode
 ;
-;	Memory map
-;	0x0000-0x002E	Stack
-;	0x0060-0x007F	Used by the boot ROM
-;	0x0080-0x00FF	This boot block
-;	0x0100-0xBFFF	Free RAM
-;	0xC000-0xCFFF	Boot ROM (until we out to 0x40)
-;	0xD000-0xFFFF	May be RAM but may also be ROM shadows
-;
+	ld a,#1
+	out (0x40),a		; ROM off
 
-set_side	.equ	0xC003
-set_track	.equ	0xC006
-set_sector	.equ	0xC009
-set_buffer	.equ	0xC00C
-disk_restore	.equ	0xC00F
-disk_seek	.equ	0xC012
-disk_read	.equ	0xC015
-disk_write	.equ	0xC018
-setup_uart	.equ	0xC01B
-char_input	.equ	0xC01E
-char_ready	.equ	0xC021
-line_input	.equ	0xC024
-char_output	.equ	0xC027
-newline_output	.equ	0xC02A
+	ld hl,#go
+	call strout
 
-	.globl start
-	.globl endc
-	.globl end
-	.globl msg
-;	Carry set, drive in A
-start:
-	push af
-	ld hl,#boot
-	call tout
-	ld hl,#0xFC
-	pop af
-	ld (hl),a	; boot drive
-	inc hl
-	ld a,#16
-	ld (hl),a	; controller type (16FDC)
-	inc hl
-	ld bc,(0x7E)	; features and feature save for boot disk
-	ld (hl),c
-	inc hl
-	ld (hl),b
-	inc hl		; now 0x100
+restart:
+	ld bc,#0x020F		; sector 2 , restore
+	ld de,#0x3100		; D 8", A drive motor on E track
+
+	ld hl,#0x0100
+	ld a,#0x7f
+	out (0x04),a		; Side 0
+
+	ld a,d			; set up drive
+	out (0x34),a
+
+	ld a,c
+
+movecmd:
+	out (0x30),a		; now doing a restore at lowest speed
+
 	xor a
-	ld b,a
-	call set_side
-	ld a,(0x6E)	; sectors per track
-	inc a
-	ld c,a
-	ld a,#1		; sector 2
-	ld de,#128
-trackloop:
-	push af
+wait:	dec a
+	jr nz,wait
+
+wait2:	in a,(0x34)		; when restore is done we are good
+	rra
+	jr nc, wait2
+
+	in a,(0x30)
+	and #0x98
+	jr nz, restart
+
+	; Ok drive is up and running
+
 	ld a,b
-	call set_track
-	pop af
-secloop:
-	inc a
-	call set_sector
-	call set_buffer
-	ex af,af'	; shorter than pushing them
-	exx
-	call disk_seek
-	call disk_read
-	jr c, crap
-	exx
-	add hl,de
-	ld a,h
-	cp #0xC0
-	jr z,go
-	ex af,af'
-	cp c
-	jr nz, secloop
-	inc b
-	xor a
-	jr trackloop
-go:
-	ld a,(0x100)
-	cp #0xC3
-	jr z, 0x100
-crap:
-	ld hl, #fail
-	call tout
-	jp 0xC000
+	out (0x32),a		; sector we want
+	ld a,d
+	or #0x80		; autowait
+	out (0x34),a
 
-tout:
+	ld c,#0x33
+	ld a,#0x9c		; read multiple 128byte, head load delay
+	out (0x30),a		; load heads and read
+
+	; autowait means we don't poll the ready bit
+eoj:
+	in a,(0x34)
+	rra
+	jr c, trackend
+	ini
+	jp eoj
+trackend:
+	;
+	; FIXME: now step in until we hit track 19 (63000 bytes)
+	;
+	in a,(0x30)
+	bit 4,a
+	jr z,restart
+
+	ld a,d
+	out (0x34),a		; turn off autowait
+
+	inc e
+	ld a,#19
+	cp e
+	jr z, run
+
+	ld a,#'.'		; We know that one byte per track will not
+	out (0),a		; overrun!
+
+	ld b,#0x01		; run from sector 1
+
+	;
+	; Step in a track
+	;
+	ld a,#0x5F		; step in with verify and update, slowest
+
+
+	jr movecmd
+
+strout:
+	in a,(0x0)
+	rla
+	jr nc,strout
 	ld a,(hl)
-	inc hl
 	or a
 	ret z
-	push hl
-	call char_output
-	pop hl
-	jr tout
+	out (0),a
+	inc hl
+	jr strout
 
-msg:
-boot:	.asciz 'Boot'
-fail:	.ascii ' failed'
-	.byte 13,10,0
+go:	.ascii 'FUZIX LOADER'
+nl:	.db 13,10,0
 
-endc:
-	.org 0xF8
+	.ds 1
 
-	.ascii 'FZSSSD'
+run:
+	ld hl,#nl
+	call strout
 end:
+	; and runs on into 0x100

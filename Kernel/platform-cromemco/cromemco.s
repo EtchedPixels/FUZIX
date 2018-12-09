@@ -2,228 +2,151 @@
 ;	Cromemco hardware support
 ;
 
-            .module cromemco
+	.module cromemco
 
-            ; exported symbols
-            .globl init_early
-            .globl init_hardware
-            .globl _program_vectors
-	    .globl platform_interrupt_all
+	; exported symbols
+	.globl init_early
+	.globl init_hardware
+	.globl _program_vectors
+	.globl platform_interrupt_all
 
-	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
-	    .globl map_kernel_di
-	    .globl map_process_di
-	    .globl map_process_always_di
-	    .globl map_process_a
-	    .globl map_save_kernel
-	    .globl map_restore
+	.globl map_kernel_low
+	.globl map_save_low
+	.globl map_restore_low
+	.globl map_user_low
+	.globl map_page_low
 
-	    .globl _platform_reboot
+	.globl _platform_reboot
 
-	    .globl _int_disabled
+	.globl _platform_doexec
 
-            ; exported debugging tools
-            .globl _platform_monitor
-            .globl outchar
+	.globl _int_disabled
 
-            ; imported symbols
-            .globl _ramsize
-            .globl _procmem
+	; exported debugging tools
+	.globl _platform_monitor
+	.globl outchar
 
-	    .globl unix_syscall_entry
-            .globl null_handler
-	    .globl nmi_handler
-            .globl interrupt_handler
-	    .globl _doexit
-	    .globl _inint
-	    .globl kstack_top
-	    .globl _panic
-	    .globl _need_resched
-	    .globl _ssig
+	; imported symbols
+	.globl _ramsize
+	.globl _procmem
 
-            .globl outcharhex
-            .globl outhl, outde, outbc
-            .globl outnewline
-            .globl outstring
-            .globl outstringhex
+	.globl s__COMMONMEM
+	.globl l__COMMONMEM
 
-            .include "kernel.def"
-            .include "../kernel.def"
+	.globl unix_syscall_entry
+	.globl my_nmi_handler
+	.globl interrupt_handler
+	.globl _doexit
+	.globl _inint
+	.globl kstack_top
+	.globl istack_top
+	.globl istack_switched_sp
+	.globl _panic
+	.globl _need_resched
+	.globl _ssig
+
+	.globl outcharhex
+	.globl outhl, outde, outbc
+	.globl outnewline
+	.globl outstring
+	.globl outstringhex
+
+	.include "kernel.def"
+	.include "../kernel.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0xF000 upwards)
+; COMMON MEMORY BANK (0xF200 upwards)
 ; -----------------------------------------------------------------------------
-            .area _COMMONMEM
+        .area _COMMONMEM
 
 _platform_reboot:
 _platform_monitor:
-	    jr _platform_monitor
+	jr _platform_monitor
 platform_interrupt_all:
-	    ret
+	ret
 
 _int_disabled:
-	    .db 1
+	.db 1
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xF000, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
-            .area _CODE
+	.area _CODE
 
 init_early:
-	    ld a,#0x81			; Every memory is in bank 7
-	    out (0x40),a		; MMU set
-	    ld hl,#0xF000		; Copy 4K to itself loading
-	    ld d,h			; into into the other banks
-	    ld e,l
-	    ld b,#0x10
-	    ld c,l
-	    ldir
-	    ld a,#0x01			; bank to the kernel bank
-	    out (0x40),a
-            ret
+	ld a,#0x81		; Every memory writeable, read kernel
+	out (0x40),a		; MMU set
+
+	; Write the stubs everywhere
+	ld hl,#stubs_low
+	ld de,#0x0000
+	ld bc,#0x67
+	ldir
+
+	; And the common across all banks
+	ld hl,#s__COMMONMEM
+	ld d,h
+	ld e,l
+	ld bc,#l__COMMONMEM
+	ldir
+
+	ld a,#0x01		; bank to the kernel bank
+	out (0x40),a
+        ret
 
 init_hardware:
-            ; set system RAM size
-            ld hl, #448
-            ld (_ramsize), hl
-            ld hl, #(448-64)		; 64K for kernel
-            ld (_procmem), hl
+        ; set system RAM size
+        ld hl, #448		; Assuming fully loaded for now
+        ld (_ramsize), hl
+        ld hl, #(448-64)	; 64K for kernel
+        ld (_procmem), hl
 
-	    ld a, #156			; ticks for 10Hz (9984uS per tick)
-	    out (8), a			; 10Hz timer on
+	ld a, #156		; ticks for 10Hz (9984uS per tick)
+	out (8), a		; 10Hz timer on
 
-            ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
-            ld hl, #0
-            push hl
-            call _program_vectors
-            pop hl
-
-;	    ld a, #0xfe			; Use FEFF (currently free)
-;	    ld i, a
-;            im 2 ; set CPU interrupt mode
-	    im 1			; really should use a page and im2?
-            ret
+	im 1			; really should use a page and im2?
+        ret
 
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-            .area _COMMONMEM
+	.area _COMMONMEM
 
+;
+;	We switch in one go so we don't have these helpers. This means
+;	we need custom I/O wrappers and custom usercopy functions.
+;
+map_save_low:
+map_kernel_low:
+map_restore_low:
+map_user_low:
+map_page_low:
+	ret
 
 _program_vectors:
-            ; we are called, with interrupts disabled, by both newproc() and crt0
-	    ; will exit with interrupts off
-            di ; just to be sure
-            pop de ; temporarily store return address
-            pop hl ; function argument -- base page number
-            push hl ; put stack back as it was
-            push de
-
-	    call map_process
-
-            ; write zeroes across all vectors
-            ld hl, #0
-            ld de, #1
-            ld bc, #0x007f ; program first 0x80 bytes only
-            ld (hl), #0x00
-            ldir
-
-            ; now install the interrupt vector at 0x38
-            ld hl, #interrupt_handler
-            ld (0x39), hl
-
-	    ld a,#0xC3		; JP
-            ; set restart vector for UZI system calls
-            ld (0x0030), a   ;  (rst 30h is unix function call vector)
-	    ld (0x0038), a   ;  (rst 38h)
-            ld hl, #unix_syscall_entry
-            ld (0x0031), hl
-
-            ; now install the interrupt vector at 0x38
-            ld hl, #interrupt_handler
-            ld (0x39), hl
-
-            ; Set vector for jump to NULL
-            ld (0x0000), a   
-            ld hl, #null_handler  ;   to Our Trap Handler
-            ld (0x0001), hl
-
-            ld (0x0066), a  ; Set vector for NMI
-            ld hl, #nmi_handler
-            ld (0x0067), hl
-
-	    ; falls through
-
-            ; put the paging back as it was -- we're in kernel mode so this is predictable
-map_kernel:
-map_kernel_di:
-	    push af
-	    ld a,#1
-	    out (0x40), a
-	    ld (map_page), a	; map_page lives in kernel so be careful
-	    pop af		; our common is r/o common so writes won't
-            ret			; cross a bank
-map_process:
-map_process_di:
-	    ld a, h
-	    or l
-	    jr z, map_kernel
-	    ld a, (hl)
-map_process_a:
-	    ld (map_page),a	; save before we map out kernel
-	    out (0x40), a
-            ret
-map_process_always:
-map_process_always_di:
-	    push af
-	    ld a, (U_DATA__U_PAGE)
-	    ld (map_page),a	; save before we map out kernel
-	    out (0x40), a
-	    pop af
-	    ret
-map_save_kernel:
-	    push af		; map_save will always do a map_kernel
-	    ld a, #1		; map_kernel so we do the map_kernel
-	    out (0x40), a	; first so we can get the variables
-	    ld a, (map_page)	;
-	    ld (map_store), a
-	    pop af
-	    ret	    
-map_restore:			; called in kernel map
-	    push af
-	    ld a, (map_store)
-	    ld (map_page),a
-	    out (0x40), a
-	    pop af
-	    ret	    
-map_store:
-	    .db 0
-map_page:
-	    .db 0
+	ret
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
-	    push af
+	push af
 outcharl:
-	    in a, (0x00)
-	    bit 7,a
-	    jr z, outcharl
-	    pop af
-	    out (0x01), a
-            ret
+	in a, (0x00)
+	bit 7,a
+	jr z, outcharl
+	pop af
+	out (0x01), a
+        ret
 
 ;
 ;	Low level pieces for floppy driver
 ;
-		.globl _fd_reset
-		.globl _fd_seek
-		.globl _fd_operation
-		.globl _fd_map
-		.globl _fd_cmd
+	.globl _fd_reset
+	.globl _fd_seek
+	.globl _fd_operation
+	.globl _fd_map
+	.globl _fd_cmd
 
 ;
 ;	On entry c holds the bits from 0x34, bde must be preserved
@@ -286,13 +209,6 @@ nodisk:
 ;
 _fd_operation:
 	;
-	;	We run in common. Map the kernel or user according to the
-	;	destination of the transfer
-	;
-	ld	a, (_fd_map)
-	or	a
-	call	nz, map_process_always
-	;
 	;	Set up the registers in order. The aux register is already
 	;	done by our caller
 	;
@@ -347,9 +263,22 @@ nomod:
 issue_command:
 	ld	hl,(_fd_cmd+3)		; buffer
 	ld	c,#0x33			; data port
-	ld	a,b
-	out	(0x30),a		; issue the command
+	ld	e,b			; save command code
+	di
 
+	;	If need be flip bank. Remember this also switches stack copy
+	ld 	a,(_fd_map)
+	or 	a
+	jr	nz, cmdout
+
+	out	(0x40),a		; switch bank and stack copy
+cmdout:
+	ld	a,e
+	out	(0x30),a		; issue the command
+	ld	a,(_fd_map)
+
+
+	;	FIXME: mappings
 	;
 	;	For now we only do double density (256 words per sector)
 	;
@@ -375,17 +304,24 @@ patch2:	outi				; second byte out
 	;	The transfer is done - wait for EOJ
 	;
 fd_waiteoj:
+	;
+	;	Memory and stack back
+	;
+	ld	a,#1
+	out	(0x40),a		; kernel map back
+fd_waiteoj_l:
 	ei
 	in	a,(0x34)
 	rra
-	jr	nc, fd_waiteoj
+	jr	nc, fd_waiteoj_l
 	;
 	;	Job complete. Turn off autowait and recover
 	;	the status byte
 	;
 fd_done:
+	ld	a,#1
+	out	(0x40),a		; kernel map back
 	ei
-	call	map_kernel
 	ld	a,d			; 0x34 bits
 	and	#0x7F
 	out	(0x34),a		; autowait off
@@ -477,3 +413,280 @@ delayhl3:
 	pop	bc			; 10
 	ret				; 10
 
+;
+; Don't be tempted to put the symbol in the code below ..it's relocated
+; to zero. Instead define where it ends up.
+;
+
+_platform_doexec	.equ	0x18
+
+        .area _DISCARD
+
+	.globl rst38
+	.globl stubs_low
+;
+;	This exists at the bottom of each bank. We move these into place
+;	from discard.
+;
+stubs_low:
+	.byte 0xC3
+	.word 0		; cp/m emu changes this
+	.byte 0		; cp/m emu I/O byte
+	.byte 0		; cp/m emu drive and user
+	jp 0		; cp/m emu bdos entry point
+rst8:
+	ret
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+rst10:
+	ret
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+rst18:
+	; Activate the user bank (which also holds these bytes)
+	ld a,(U_DATA__U_PAGE)
+	out (0x40),a
+	ei
+	; and leap into user space
+	jp (hl)
+	nop
+	nop
+rst20:	ret
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+rst28:	ret
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+rst30:	jp syscall_high
+	nop
+	nop
+	nop
+	nop
+	nop
+;
+;	We only have 38-4F available for this in low space
+;
+rst38:	jp interrupt_high		; Interrupt handling stub
+	nop
+	nop
+	nop
+	nop
+	nop
+	.ds 0x26
+my_nmi_handler:		; Should be at 0x66
+	retn
+
+;
+;	This stuff needs to live somewhere, anywhere out of the way (so we
+;	use common). We need to copy it to the same address on both banks
+;	so place it in common as we will put common into both banks
+;
+
+	.area _COMMONMEM
+
+	.globl ldir_to_user
+	.globl ldir_from_user
+	.globl ldir_far
+;
+;	This needs some properly optimized versions!
+;
+ldir_to_user:
+	ld de,(U_DATA__U_PAGE)	; will load with 0 e with page
+	inc d			; Kernel is in #1
+ldir_far:
+	push bc
+	ld c,#0x40
+	exx
+	pop bc			; get BC into alt bank
+far_ldir_1:
+	exx
+	out (c),d			; Select source
+	ld a,(hl)
+	inc hl
+	out (c),e			; Select target
+	ld (ix),a
+	inc ix
+	exx
+	dec bc
+	ld a,b
+	or c
+	jr nz, far_ldir_1
+	ld a,#1
+	out (0x40),a		; Select kernel
+	ret
+ldir_from_user:
+	ld a,(U_DATA__U_PAGE)
+	ld e,#1
+	ld d,a
+	jr ldir_far
+;
+;	High stubs. Present in each bank in the top 256 bytes
+;	of the available space (remembering F000-FFFF is not available
+;	for general usage but is ok for reading)
+;
+interrupt_high:
+	push af
+	push de
+	push hl
+	ex af,af'
+	push af
+	push bc
+	exx
+	push bc
+	push de
+	push hl
+	push ix
+	push iy
+	in a,(0x40)		; bank register is thankfully R/W
+	ld c,a
+	ld a,#0x01
+	out (0x40),a		; Kernel map
+	ld (istack_switched_sp),sp	; istack is positioned to be valid
+	ld sp,#istack_top		; in both banks. We just have to
+	;
+	;	interrupt_handler may come back on a different stack in
+	;	which case bc is junk. Fortuntely we never pre-empt in
+	;	kernel so the case we care about bc is always safe. This is
+	;	not a good way to write code and should be fixed! FIXME
+	;
+	push bc
+	call interrupt_handler	; switch on the right SP
+	pop bc
+	; Restore stack pointer to user. This leaves us with an invalid
+	; stack pointer if called from user but interrupts are off anyway
+	ld sp,(istack_switched_sp)
+	; On return HL = signal vector E= signal (if any) A = page for
+	; high
+	or a
+	jr z, kernout
+	; Returning to user space
+	out (0x40),a		; page passed back
+	; User stack is now valid
+	; back on user stack
+	xor a
+	cp e
+	call nz, sigpath
+pops:
+	ex af,af'
+	exx
+	pop iy
+	pop ix
+	pop hl
+	pop de
+	pop bc
+	exx
+	pop bc
+	pop af
+	ex af,af'
+	pop hl
+	pop de
+	pop af
+	ei
+	ret
+kernout:
+	; restore bank - if we interrupt mid user copy or similar we
+	; have to put the right bank back
+	ld a,c
+	out (0x40),a
+	jr pops
+
+sigpath:
+	push de		; signal number
+	ld de,#irqsigret
+	push de		; clean up
+	jp (hl)
+irqsigret:
+	inc sp		; drop signal number
+	inc sp
+	ret
+
+syscall_high:
+	push ix
+	ld ix,#0
+	add ix,sp
+	push de		; the syscall if must preserve de for now
+			; needs fixing when we change the syscall
+				; API for Z80 to something less sucky
+	ld a,4(ix)
+	ld c,6(ix)
+	ld b,7(ix)
+	ld e,8(ix)
+	ld d,9(ix)
+	ld l,10(ix)
+	ld h,11(ix)
+	push hl
+	ld l,12(ix)
+	ld h,13(ix)
+	pop ix
+	di
+	; FIXME: corrupts af' - probably will define af' and some other '
+	; registers as non-save in API change anyway
+	ex af, af'	; Ick - find a better way to do this bit !
+	ld a,#1		; Kernel
+	out (0x40),a
+	ex af,af'
+	; Stack now invalid
+	ld (U_DATA__U_SYSCALL_SP),sp
+	ld sp,#kstack_top
+	call unix_syscall_entry
+	; FIXME check di rules
+	; stack now invalid. Grab the new sp before we unbank the
+	; memory holding it
+	ld sp,(U_DATA__U_SYSCALL_SP)
+	ld a, (U_DATA__U_PAGE)	; back to the user page
+	out (0x40),a
+	xor a
+	cp h
+	call nz, syscall_sigret
+	; FIXME for now do the grungy C flag HL DE stuff from
+	; lowlevel-z80 until we fix the ABI
+	ld bc,#0
+	ld a,h
+	or l
+	jr nz, error
+	ex de,hl
+	pop de
+	pop ix
+	ei
+	ret
+error:	scf
+	pop de
+	pop ix
+	ei
+	ret
+syscall_sigret:
+	ld a,l		; DEBUG
+	push hl		; save errno
+	push de		; save retval
+	ld l,h
+	ld h,#0
+	push hl		; signal
+	ld hl,#syscall_sighelp
+	push hl		; vector
+	ret
+syscall_sighelp:
+	pop de		; discard signal
+	pop de		; recover error info
+	pop hl
+	ld h,#0		; clear signal bit
+	ret

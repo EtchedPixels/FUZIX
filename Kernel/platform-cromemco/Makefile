@@ -2,7 +2,7 @@
 CSRCS = devtty.c devfd.c
 CSRCS += devices.c main.c
 
-ASRCS = crt0.s cromemco.s
+ASRCS = crt0.s cromemco.s usermem.s
 ASRCS += tricks.s commonmem.s
 
 AOBJS = $(ASRCS:.s=.rel)
@@ -10,7 +10,7 @@ COBJS = $(CSRCS:.c=.rel)
 
 OBJS  = $(AOBJS) $(COBJS)
 
-JUNK = *.rel *.lst *.asm *.sym *.rst
+
 
 all:	$(OBJS)
 
@@ -21,7 +21,10 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ 
+	rm -f *.rel *.lst *.asm *.sym *.rst core *~
+	rm -f cloader-16fdc.ihx cloader-16fdc.tmp
+	rm -f cloader-16fdc.lk cloader-16fdc.bin
+	rm -f cloader-16fdc.map
 
 image:
 	sdasz80 -o cloader-16fdc.s
