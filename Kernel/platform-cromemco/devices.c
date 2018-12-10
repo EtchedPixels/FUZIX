@@ -10,11 +10,11 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
-  /* 0: /dev/fd		Floppy disc block devices  */
+  /* 0: /dev/hd		Hard disc block devices (absent) */
+  {  nxio_open,   no_close,    no_rdwr,   no_rdwr ,   no_ioctl },
+  /* 1: /dev/fd		Floppy disc block devices  */
   /* TODO: add fd_ioctl and eject etc */
   {  fd_open,     fd_close,    fd_read,   fd_write,   no_ioctl },
-  /* 1: /dev/hd		Hard disc block devices (absent) */
-  {  nxio_open,   no_close,    no_rdwr,   no_rdwr ,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,    tty_close,   tty_read,  tty_write,  tty_ioctl },
   /* 3: /dev/lpr	Printer devices: none for now */
