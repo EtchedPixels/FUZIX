@@ -46,7 +46,7 @@ static const uint8_t skewtab[2][18] = {
     { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 },
 };
 
-static uint8_t live[4];
+static uint8_t live[4] = { 0xFF, 0xFF, 0xFF, 0xFF};
 
 /*
  *	A note on disk formats and the Cromenco (and also emulator limits)
@@ -70,6 +70,7 @@ static uint8_t live[4];
  *	Just to get us going - only do DSDD.
  */
 
+
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     int8_t tries;
@@ -78,6 +79,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     uint8_t trackno, sector;
     uint8_t large = !(minor & 0x10);
     const uint8_t *skew = skewtab[large];		/* skew table */
+    uint16_t ct = 0;
 
     if(rawflag == 2)
         goto bad2;
@@ -86,13 +88,12 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     if (rawflag && d_blkoff(BLKSHIFT))
             return -1;
 
-
     /* Command to go to the controller after any seek is done */
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
     /* Control byte: autowait, DD, motor, 5", drive bit */
     fd_cmd[1] = 0xE0 | selmap[drive];
     if (large)
-        fd_cmd[1] = 0x10;	/* turn on 8" bit */
+        fd_cmd[1] |= 0x10;	/* turn on 8" bit */
     /* Directon of xfer */
     fd_cmd[2] = is_read ? OPDIR_READ: OPDIR_WRITE;
     fd_cmd[5] = 0x10 | delay[drive];
@@ -108,10 +109,10 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     /*
      *	Begin transfers
      */
-    while (udata.u_done < udata.u_nblock) {
+    while (ct < udata.u_nblock) {
         /* Need to consider SS v DS here */
         if (large) {
-            fd_aux = 0x4C | (udata.u_block & 16) ? 2 : 0;
+            fd_aux = 0x4C | ((udata.u_block & 16) ? 0 : 2) ;
             trackno = udata.u_block / 32;
             sector = udata.u_block % 16;
         } else {
@@ -119,9 +120,9 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             sector = udata.u_block % 20;
             if (sector > 9) {
                 sector -= 10;
-                fd_aux = 0x5E;	/* side 1 */
+                fd_aux = 0x5C;	/* side 1 */
             } else
-                fd_aux = 0x5C;
+                fd_aux = 0x5E;
         }
         /* Buffer */
         fd_cmd[3] = ((uint16_t)udata.u_dptr) & 0xFF;
@@ -129,7 +130,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
         for (tries = 0; tries < 4 ; tries++) {
             (void)fd_data;
-            fd_sector = skew[sector];	/* Also makes 1 based */
+            fd_sector = sector+1;/*FIXME/skew[sector];	/* Also makes 1 based */
             if (fd_track != trackno) {
                 fd_data = trackno;
                 if (fd_seek()) {
@@ -148,11 +149,12 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (tries == 4)
             goto bad;
         udata.u_block++;
-        udata.u_done++;
+        udata.u_dptr += 512;
+        ct++;
     }
     /* Save the track */
     track[drive] = fd_track;
-    return udata.u_done << 9;
+    return ct << 9;
 bad:
     track[drive] = fd_track;
     kprintf("fd%d: error %x\n", minor, err);
@@ -169,7 +171,8 @@ int fd_open(uint8_t minor, uint16_t flag)
     uint8_t *dp = live + (minor & 3);
 
     flag;
-    if ((minor & 0xE0) || drivetype[minor] == 255) {
+
+    if ((minor & 0xE0) || drivetype[minor & 3] == 255) {
         udata.u_error = ENODEV;
         return -1;
     }
