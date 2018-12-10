@@ -19,9 +19,12 @@ one but there are cases we switch and borrow a bit of the other bank copy.
 It's easier to arrange this way anyhow.
 
 TODO
--		Debug a loader (seems to work)
--		An awful lot of early kernel boot debugging
--		Interrupts properly (and IM2)
+DONE	-		Debug a loader (seems to work)
+IP	-		An awful lot of early kernel boot debugging
+HACK	-		Interrupts properly (and IM2)
+			not yet doing tty interrupts nicely with buffer
+			and queues
+
 
 
 
@@ -47,7 +50,8 @@ The MMU settings we use are
 
 
 UARTs: TMS 5501 x 2 per board. These can do Z80 IM2 where the vector is
-determined by A7-A5 of the IRQ (used as D7-D5 of the vector)
+determined by A7-A5 of the IRQ (used as D7-D5 of the vector) or generate the
+8080 RST vectors.
 
 R 0		Status
 
@@ -200,4 +204,37 @@ W 40	Disables boot rom as a side effect
 
 W 40	bank select
 
+
+
+Interrupt vectors
+24 uart1a parallel port
+28 uart1a rda
+2A uart1a tbe
+34 uart1b parallel port
+38 uart1b RDA
+3A uart1b TBE
+
+(Uart0 strapped for 8080 mode for some reason)
+C7 uart 0a timer 1
+CF uart 0a timer 2
+D7 FDC EOJ
+DF uart 0a timer 3
+E7 uart 0a RDA
+EF uart 0a TBE
+F7 uart 0a timer 4
+FF uart 0a timer 5 also RTC timer
+
+Doc actually says
+
+D7-D5 = A7-A5 of port
+D4 = 0 for A 1 for B
+D3-1
+	000	timer 1
+	001	timer 2
+	010	!sensa
+	011	timer 3
+	100	rda
+	101	tbe
+	110	timer4
+	111	timer5 (PI7)
 

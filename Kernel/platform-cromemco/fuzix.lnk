@@ -7,7 +7,9 @@
 platform-cromemco/crt0.rel
 platform-cromemco/commonmem.rel
 platform-cromemco/cromemco.rel
+platform-cromemco/vector.rel
 platform-cromemco/main.rel
+platform-cromemco/interrupt.rel
 start.rel
 version.rel
 lowlevel-z80-thunked.rel

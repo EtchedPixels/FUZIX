@@ -45,6 +45,11 @@
 	.globl _need_resched
 	.globl _ssig
 
+	.globl _set_irq
+	.globl _spurious
+	.globl _irqvec
+	.globl interrupt_high
+
 	.globl outcharhex
 	.globl outhl, outde, outbc
 	.globl outnewline
@@ -58,6 +63,158 @@
 ; COMMON MEMORY BANK (0xF200 upwards)
 ; -----------------------------------------------------------------------------
         .area _COMMONMEM
+
+;
+;	Must be page aligned
+;
+_irqvec:
+	; 0
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 16
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 32
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 48
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 64
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 80
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 96
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 112
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 128
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 144
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 160
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 176
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 192
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 208
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 224
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 240
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	.word _spurious
+	; 256
+	.byte 0
+
 
 _platform_reboot:
 _platform_monitor:
@@ -74,24 +231,6 @@ _int_disabled:
 	.area _CODE
 
 init_early:
-	ld a,#0x81		; Every memory writeable, read kernel
-	out (0x40),a		; MMU set
-
-	; Write the stubs everywhere
-	ld hl,#stubs_low
-	ld de,#0x0000
-	ld bc,#0x67
-	ldir
-
-	; And the common across all banks
-	ld hl,#s__COMMONMEM
-	ld d,h
-	ld e,l
-	ld bc,#l__COMMONMEM
-	ldir
-
-	ld a,#0x01		; bank to the kernel bank
-	out (0x40),a
         ret
 
 init_hardware:
@@ -101,10 +240,29 @@ init_hardware:
         ld hl, #(448-64)	; 64K for kernel
         ld (_procmem), hl
 
+	ld a,#0x81		; Every memory writeable, read kernel
+	out (0x40),a		; MMU set
+
+	; Write the stubs everywhere
+	ld hl,#stubs_low
+	ld de,#0x0000
+	ld bc,#0x67
+	ldir
+
+	ld a,#0x01		; bank to the kernel bank
+	out (0x40),a
+
+	ld a,#0x40		; enable interrupt mode
+	out (2),a
+	ld a,#0x70
+	out (3),a		; serial 0 timer 4 tbe rda
 	ld a, #156		; ticks for 10Hz (9984uS per tick)
 	out (8), a		; 10Hz timer on
 
-	im 1			; really should use a page and im2?
+	ld hl,#_irqvec
+	ld a,h			; deal with linker limits
+	ld i,a
+	im 2
         ret
 
 
@@ -125,6 +283,40 @@ map_page_low:
 	ret
 
 _program_vectors:
+	ret
+
+;
+;	Called when we get an unexpected vector - just ack and return
+;
+_spurious:			; unexpected IRQ vector - handy breakpoint
+	ei
+	reti
+
+;
+;	Set an interrupt table entry. Done in asm as we want to write it
+;	through to all the banks.
+;
+_set_irq:
+	pop hl
+	pop de
+	pop bc
+	push bc
+	push de
+	push hl
+	ld hl,#_irqvec
+	di
+	add hl,de
+	ld a,#0x81
+	out (0x40),a		; write to all banks, read kernel
+	ld (hl),c
+	inc hl
+	ld (hl),b
+	ld a,#0x01
+	out (0x40),a		; kernel mapping back
+	ld a,(_int_disabled)
+	or a
+	ret nz
+	ei
 	ret
 
 ; outchar: Wait for UART TX idle, then print the char in A
@@ -459,7 +651,6 @@ rst18:
 	ei
 	; and leap into user space
 	jp (hl)
-	nop
 	nop
 rst20:	ret
 	nop

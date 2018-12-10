@@ -1,9 +1,9 @@
 
-CSRCS = devtty.c devfd.c
+CSRCS = devtty.c devfd.c interrupt.c
 CSRCS += devices.c main.c
 
 ASRCS = crt0.s cromemco.s usermem.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s vector.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)

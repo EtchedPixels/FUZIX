@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <tty.h>
 #include <devtty.h>
+#include <irq.h>
 
 char tbuf1[TTYSIZ];
 char tbuf2[TTYSIZ];
@@ -69,26 +70,19 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-__sfr __at 0x08 timer4;
-
 void tty_irq(uint8_t minor)
 {
-    uint8_t r = ttybase[minor];
-    uint8_t op;
-    while((op = in(r + 3)) != 0xFF) {
-        switch(op) {
-        case 0xE7:
-            /* should check in(r) for error bits */
-            tty_inproc(minor, in(r + 1 ));
-        case 0xEF:
-            ttypoll &= ~(1 << minor);
-            wakeup(&ttydata[minor]);
-        case 0xF7:
-            if (minor == 1) {
-                timer_interrupt();
-                timer4 = 156;
-            }
-        }
+    if (minor != 1)
+        return;	/* For the moment */
+    if (rx0a_int) {
+        uint8_t c = rx0a_char;
+        rx0a_int = 0;
+        tty_inproc(1, rx0a_char);
+    }
+    if (tx0a_int) {
+        tx0a_int = 0;
+        ttypoll &= ~(1 << 1);
+        wakeup(&ttydata[1]);
     }
 }    
 
