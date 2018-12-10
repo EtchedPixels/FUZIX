@@ -240,17 +240,11 @@ init_hardware:
         ld hl, #(448-64)	; 64K for kernel
         ld (_procmem), hl
 
-	ld a,#0x81		; Every memory writeable, read kernel
-	out (0x40),a		; MMU set
-
-	; Write the stubs everywhere
+	; Write the stubs for our bank
 	ld hl,#stubs_low
 	ld de,#0x0000
 	ld bc,#0x67
 	ldir
-
-	ld a,#0x01		; bank to the kernel bank
-	out (0x40),a
 
 	ld a,#0x40		; enable interrupt mode
 	out (2),a
@@ -283,6 +277,20 @@ map_page_low:
 	ret
 
 _program_vectors:
+	pop de
+	pop hl
+	push hl
+	push de
+	push ix
+	; From kernel to user bank
+	ld d,#1
+	ld e,(hl)
+	; Write the stubs for our bank
+	ld hl,#stubs_low
+	ld ix,#0x0000
+	ld bc,#0x67
+	call ldir_far
+	pop ix
 	ret
 
 ;
@@ -407,6 +415,7 @@ _fd_operation:
 	ld	hl,#_fd_cmd
 	ld	b,(hl)			; command
 	inc	hl
+	inc	hl
 	bit	0,(hl)			; read or write ?
 	; patch patch1/2 according to the transfer direction
 	ld	a,#0xA2			; ini
@@ -437,6 +446,7 @@ nomod:
 	;
 	;	Get the set up values
 	;
+	dec	hl
 	ld	a,(hl)			; 0x34 bits
 	ld	d,a			; save bits for later
 	;
