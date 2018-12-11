@@ -44,3 +44,6 @@ NBUFS		.equ	4
 .macro HIGH
 		.area _COMMONMEM
 .endm
+
+HIGHPAGE	.equ	0	; We only have 1 page byte and the low page
+				; isn't used

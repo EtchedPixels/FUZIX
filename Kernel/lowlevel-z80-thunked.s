@@ -86,7 +86,7 @@ _doexec:
 	ld sp,hl
 	ex de,hl
 	ld de,#PROGLOAD
-	ld a,(U_DATA__U_PAGE+1)	; pass high page to trampoline
+	ld a,(U_DATA__U_PAGE+HIGHPAGE) ; pass high page to trampoline
 	jp _platform_doexec	; jump into the low memory stub
 
 ;
@@ -158,7 +158,7 @@ syscall_return:
 	exx
 	; Return page for caller (may not be the page we can in on if we
 	; swapped
-	ld a,(U_DATA__U_PAGE+1)
+	ld a,(U_DATA__U_PAGE+HIGHPAGE)
 	ret
 signal_path:
 	ld h,a		; save signal number
@@ -234,7 +234,7 @@ no_sig:
 	xor a
 	ld (_int_disabled),a
 	ld e,a
-	ld a,(U_DATA__U_PAGE+1)
+	ld a,(U_DATA__U_PAGE+HIGHPAGE)
 intret:
 	ret
 
@@ -317,6 +317,10 @@ intret2:
 	; The istack was lost but that is ok as we saved the return onto the
 	; kernel stack, so when we finally ret we end up in the right place
 	ld sp,#kstack_top - 2		; saved return address
+
+	ld hl,(U_DATA__U_SYSCALL_SP)
+	ld (istack_switched_sp),hl
+
 	; Now continue on the interrupt return path
 	; looking for signals
 	jr intsig

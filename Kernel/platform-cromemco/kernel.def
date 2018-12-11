@@ -21,3 +21,7 @@ CONFIG_SWAP		    .equ 0
 .macro HIGH
 		.area _COMMONMEM
 .endm
+
+; We only have a single page entry
+
+HIGHPAGE		    .equ 0

@@ -20,3 +20,7 @@ Z80_TYPE		    .equ 1
 .macro HIGH
 		.area _HIGH
 .endm
+
+; We keep the low and high bytes of the 32K map in the two adjacent bytes
+;
+HIGHPAGE		    .equ 1
