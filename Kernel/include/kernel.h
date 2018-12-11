@@ -113,8 +113,9 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #endif
 
 
+/* Default to longer slices. For most ports it's a better choice */
 #ifndef MAXTICKS
-#define MAXTICKS     (TICKSPERSEC/10)
+#define MAXTICKS     (TICKSPERSEC/2)
                            /* Max ticks before switching out (time slice)
                               default process time slice */
 #endif
