@@ -16,10 +16,8 @@ package  util-mini
 # exist. Source file is specified relative to the location of the pkg file
 f 0755 /bin/basename    basename
 f 0755 /bin/cat         cat
-f 0755 /bin/chmem       chmem
 f 0755 /bin/chmod       chmod
 f 0755 /bin/cmp         cmp
-f 0755 /bin/substroot   substroot
 f 0755 /bin/cp          cp
 f 0755 /bin/date        date
 f 0755 /bin/dd          dd
@@ -37,18 +35,24 @@ f 0755 /bin/mkfs        mkfs
 f 0755 /bin/mknod       mknod
 f 0755 /bin/mount       mount
 f 0755 /bin/mv          mv
-f 0755 /bin/printenv    printenv
+f 0755 /bin/prtroot     prtroot
 f 0755 /bin/ps          ps
 f 0755 /bin/pwd         pwd
+f 0755 /bin/reboot      reboot
+l /bin/reboot /bin/halt
+l /bin/reboot /bin/shutdown
 f 0755 /bin/remount     remount
 f 0755 /bin/rm          rm
 f 0755 /bin/rmdir       rmdir
+f 0755 /bin/setdate     setdate
 f 0755 /bin/ssh         ssh
 f 0755 /bin/stty        stty
 f 0755 /bin/sync        sync
 f 0755 /bin/touch       touch
 f 0755 /bin/tr          tr
 f 0755 /bin/umount      umount
+f 0755 /bin/fsck        fsck
+f 0755 /bin/fsck-fuzix  fsck-fuzix
 
 
 ########################################################################
@@ -58,6 +62,7 @@ f 0755 /bin/banner      banner
 f 0755 /bin/bd          bd
 f 0755 /bin/cal         cal
 f 0755 /bin/chgrp       chgrp
+f 0755 /bin/chmem       chmem
 f 0755 /bin/chown       chown
 f 0755 /bin/cksum       cksum
 f 0755 /bin/cut         cut
@@ -69,8 +74,6 @@ f 0755 /bin/factor      factor
 f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
 f 0755 /bin/free        free
-f 0755 /bin/fsck        fsck
-f 0755 /bin/fsck-fuzix  fsck-fuzix
 f 0755 /bin/gptparse    gptparse
 f 0755 /bin/grep        grep
 f 0755 /bin/groups      groups
@@ -87,17 +90,14 @@ f 0755 /bin/more        more
 f 0755 /bin/od          od
 f 0755 /bin/pagesize    pagesize
 f 0755 /bin/passwd      passwd
-f 0755 /bin/prtroot     prtroot
-f 0755 /bin/reboot      reboot
-l /bin/reboot /bin/halt
-l /bin/reboot /bin/shutdown
+f 0755 /bin/printenv    printenv
 f 0755 /bin/sed         sed
 f 0755 /bin/seq         seq
-f 0755 /bin/setdate     setdate
 f 0755 /bin/sleep       sleep
 f 0755 /bin/sort        sort
 f 0755 /bin/sum         sum
 f 0755 /bin/su          su
+f 0755 /bin/substroot   substroot
 f 0755 /bin/tail        tail
 f 0755 /bin/tar         tar
 f 0755 /usr/lib/tchelp  tchelp
