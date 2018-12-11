@@ -85,8 +85,11 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         goto bad2;
 
     fd_map = rawflag;
-    if (rawflag && d_blkoff(BLKSHIFT))
+    if (rawflag) {
+        if (d_blkoff(BLKSHIFT))
             return -1;
+        fd_map = udata.u_page;
+    }
 
     /* Command to go to the controller after any seek is done */
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
@@ -177,7 +180,7 @@ int fd_open(uint8_t minor, uint16_t flag)
         return -1;
     }
     /* Ensure we can't open the same physical disk in two modes at once */
-    if (*dp != 0xFF) {
+    if (*dp != 0xFF && *dp != minor) {
         udata.u_error = EBUSY;
         return -1;
     }

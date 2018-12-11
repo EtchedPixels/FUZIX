@@ -1,17 +1,10 @@
 #include <kernel.h>
+#include <kdata.h>
 #include <devtty.h>
 #include <printf.h>
 #include <irq.h>
 
 uaddr_t ramtop = PROGTOP;
-
-void pagemap_init(void)
-{
- int i;
- /* 1 << 0 is kernel */
- for (i = 1; i < 7; i++)
-  pagemap_add(1 << i);
-}
 
 void platform_idle(void)
 {
@@ -31,29 +24,31 @@ void platform_interrupt(void)
 // tty_irq(3);
 }
 
-/* Get this into discard ... */
+/* This points to the last buffer in the disk buffers. There must be at least
+   four buffers to avoid deadlocks. */
+struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-/* Nothing to do for the map of init but we do set our vectors up here */
-void map_init(void)
+/*
+ *	We pack discard into the memory image is if it were just normal
+ *	code but place it at the end after the buffers. When we finish up
+ *	booting we turn everything from the buffer pool to the start of
+ *	common space into buffers.
+ */
+void platform_discard(void)
 {
- if (request_irq(0xE7, uart0a_rx) |
- request_irq(0xEF, uart0a_txdone) |
- request_irq(0xF7, uart0a_timer4))
-  panic("irqset");
- /* We need to claim these in case we set one off as they are at odd vectors
-    as the base tu_uart is strapped for 8080 mode */
- if (
-  request_irq(0xC7, spurious) |
-  request_irq(0xCF, spurious) |
-  request_irq(0xD7, spurious) |
-  request_irq(0xDF, spurious) |
-  request_irq(0xFF, spurious)
-  )
-  panic("irqset2");
-}
+	uint16_t discard_size = PROGTOP - (uint16_t)bufpool_end;
+	bufptr bp = bufpool_end;
 
-uint8_t platform_param(char *p)
-{
- used(p);
- return 0;
+	discard_size /= sizeof(struct blkbuf);
+
+	kprintf("%d buffers added\n", discard_size);
+
+	bufpool_end += discard_size;
+
+	memset( bp, 0, discard_size * sizeof(struct blkbuf) );
+
+	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
 }

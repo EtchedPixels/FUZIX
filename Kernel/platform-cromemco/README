@@ -1,7 +1,4 @@
-FUZIX on a Cromenco (no hard disk support right now - need docs for that and
-suitable emulation!)
-
-The mapping model is intended to be
+An initial port of Fuzix to the Cromemco Z1 and similar systems.
 
 Bank 0		Kernel
 		0000-00FF, F200-FFFF are propogated into the other banks
@@ -18,35 +15,68 @@ The kstack and istack exist in each bank. We'll normally only use the kernel
 one but there are cases we switch and borrow a bit of the other bank copy.
 It's easier to arrange this way anyhow.
 
+Limitations
+
+-	Very slow at fork() because we need to optimize ldir_far extensively
+	for this machine and for the SC108
+-	Only supports floppy disks and currently only supports DS/DD eight
+	inch media for the filesystems
+-	The IM2 support for the initial serial console is an ugly hack and
+	a proper serial driver is needed with queues for each port.
+-	Memory size is not probed
+-	Only the console port is enabled
+
+Notes
+
+-	The emulator appears to be very flaky when it comes to serial emulation
+	but pretty decent on the floppy side. However it needs patching to
+	make it understand Fuzix DS/DD media as opposed to the weird Cromemco
+	SD/DD mixed formats.
+
+Bugs
+
+
 TODO
-DONE	-		Debug a loader (seems to work)
-IP	-		An awful lot of early kernel boot debugging
 HACK	-		Interrupts properly (and IM2)
 			not yet doing tty interrupts nicely with buffer
 			and queues
+	-		Eject support for floppies
+	-		Floppy ioctls, mode set etc
+	-		Auto probe
+	-		Disk names (so you can say 'fd1' not 257)
+	-		Disk interleave enable (need a block shuffling tool)
+	-		5.25" disks (plus hack emulator to also allow for
+			sane 5.25" formats including PC)
+	-		fast 512 byte and fork interbank copier
+
+Testing
+-	Build the kernel and get a fuzix.dsk (SS/SD)
+-	Build user space
+-	cd Standalone/filesystem-src
+	./build-mini-filesystem fs.dsk 64 2464
+-	Install fuzix.dsk as drivea.dsk and fs.dsk as driveb.dsk
+-	Fire up the patched cromemco simulator
+	cromemcosim -x rdos252.hex
+-	Hit power, hit run, hit return a few times to get a Booting
+	message
+-	At the boot prompt reply '257'
 
 
+Hardware supported
 
+-	TU-ART at 0x00 strapped for 8080 mode (typically part of an FDC card)
+-	16FDC or 64FDC with 8" DSDD drives
 
-We expect
+Hardware to support
 
-0		tuart / 4 FDC
-4		fdc aux
-5-9		times
-32		tuart / parallel 36
-48		fdc
-64		mmu
-80		tuart / parallel 84
-255		front panel
+-	Additional TU-ARTs
+-	Line printer
+-	Second FDC
+-	Joystick & Sound
+-	Do something cool with the fp lights
+-	Hard disk as and if docs/emulation appears for it. Maybe also an
+	IDE driver for a modern S100 add in.
 
-
-
-
-The MMU settings we use are
-
-1 << n		That bank 0-6
-
-0x80		Turn on comon writing (write to all banks)
 
 
 UARTs: TMS 5501 x 2 per board. These can do Z80 IM2 where the vector is
@@ -237,4 +267,13 @@ D3-1
 	101	tbe
 	110	timer4
 	111	timer5 (PI7)
+
+
+
+Disks
+
+256256	128	26	77		8" SS SD
+512512	128	26	77		8" DS SD
+
+1261568	512	16	77		8" DS DD
 

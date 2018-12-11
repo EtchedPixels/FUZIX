@@ -1,16 +1,14 @@
 
-CSRCS = devtty.c devfd.c interrupt.c
-CSRCS += devices.c main.c
+CSRCS = devtty.c devfd.c interrupt.c devices.c main.c
+CDSRCS = discard.c
 
-ASRCS = crt0.s cromemco.s usermem.s
-ASRCS += tricks.s commonmem.s vector.s
+ASRCS = crt0.s cromemco.s usermem.s tricks.s commonmem.s vector.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
+CDOBJS = $(CDSRCS:.c=.rel)
 
-OBJS  = $(AOBJS) $(COBJS)
-
-
+OBJS  = $(AOBJS) $(COBJS) $(CDOBJS)
 
 all:	$(OBJS)
 
@@ -19,6 +17,9 @@ $(AOBJS): %.rel: %.s
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(CDOBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
 	rm -f *.rel *.lst *.asm *.sym *.rst core *~

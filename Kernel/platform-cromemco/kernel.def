@@ -25,3 +25,5 @@ CONFIG_SWAP		    .equ 0
 ; We only have a single page entry
 
 HIGHPAGE		    .equ 0
+
+NBUFS			    .equ 5

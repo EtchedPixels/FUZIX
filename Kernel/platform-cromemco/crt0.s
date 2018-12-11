@@ -16,10 +16,11 @@
         .area _HEAP
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
-        .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
+	.area _BUFFERS
 	.area _DISCARD
+        .area _INITIALIZER
         .area _COMMONMEM
 
         ; imported symbols
@@ -34,6 +35,9 @@
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
+
+	.include "../kernel.def"
+	.include "kernel.def"
 
         ; startup code
         .area _CODE
@@ -80,3 +84,15 @@ init:
 stop:   halt
         jr stop
 
+
+	.area _BUFFERS
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	.globl _bufpool
+	.area _BUFFERS
+
+_bufpool:
+	.ds BUFSIZE * NBUFS

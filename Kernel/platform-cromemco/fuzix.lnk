@@ -9,6 +9,7 @@ platform-cromemco/commonmem.rel
 platform-cromemco/cromemco.rel
 platform-cromemco/vector.rel
 platform-cromemco/main.rel
+platform-cromemco/discard.rel
 platform-cromemco/interrupt.rel
 start.rel
 version.rel

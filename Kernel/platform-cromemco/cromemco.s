@@ -416,7 +416,19 @@ _fd_operation:
 	ld	b,(hl)			; command
 	inc	hl
 	inc	hl
+	;
+	;	Make sure we patch across all instances
+	;
+	;
+	;	We have to disable interrupts before we write the
+	;	command register when doing a data transfer otherwise an
+	;	interrupt can lose us bytes and break the transfer. Do it
+	;	a spot earlier so we can also do the patching under it
+	;
+	di
 	bit	0,(hl)			; read or write ?
+	ld	a, #0x81		; write all common, read kernel
+	out	(0x40),a
 	; patch patch1/2 according to the transfer direction
 	ld	a,#0xA2			; ini
 	jr	z, patchit
@@ -424,12 +436,8 @@ _fd_operation:
 patchit:
 	ld	(patch1+1),a
 	ld	(patch2+1),a
-	;
-	;	We have to disable interrupts before we write the
-	;	command register when doing a data transfer otherwise an
-	;	interrupt can lose us bytes and break the transfer
-	;
-	di
+	ld	a,#0x01
+	out	(0x40),a		; kernel map
 	in	a,(0x34)		; check head status
 	bit	5,a
 	jr 	nz, nomod		; loaded
@@ -477,7 +485,6 @@ issue_command:
 cmdout:
 	ld	a,e
 	out	(0x30),a		; issue the command
-	ld	a,(_fd_map)
 
 
 	;	FIXME: mappings
@@ -622,7 +629,7 @@ delayhl3:
 
 _platform_doexec	.equ	0x18
 
-        .area _DISCARD
+        .area _COMMONMEM
 
 	.globl rst38
 	.globl stubs_low

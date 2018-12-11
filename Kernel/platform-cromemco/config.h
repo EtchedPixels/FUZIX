@@ -33,8 +33,12 @@
 #define NUM_DEV_TTY 3
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    8	  /* Number of block buffers */
+#define NBUFS    5	  /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define platform_discard()
+#define CONFIG_DYNAMIC_BUFPOOL
+#define CONFIG_LARGE_IO_DIRECT
+
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#,fd"
