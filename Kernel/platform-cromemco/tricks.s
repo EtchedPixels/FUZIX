@@ -135,19 +135,28 @@ not_swapped:
 	push de
 
 	; Trick - we don't overlay the udata proper with anything so we can
-	; map common and ldir
-	ld a,#0x81
-	out (0x40),a
-	ld hl, #U_DATA_STASH
-	ld de, #U_DATA
+	; map common as write, process as read and ldir
+	; Or we could expect it blows up the emulator so do it the slow way
+	; for now
+;	or #0x80
+;	out (0x40),a
+;	ld hl, #U_DATA_STASH
+;	ld de, #U_DATA
+;	ld bc, #U_DATA__TOTALSIZE
+;	ldir
+;	ld a,#1		; back to kernel
+;	out (0x40),a
+
+	ld hl,# U_DATA_STASH
+	ld ix, #U_DATA
 	ld bc, #U_DATA__TOTALSIZE
-	ldir
-	ld a,#1		; back to kernel
-	out (0x40),a
+	ld d,a
+	ld e,#0x01
+	call ldir_far
 
 	pop de
 
-	; In the non swap case we must set so before we use the stack
+	; In the non swap case we must set sp before we use the stack
 	; otherwise we risk corrupting the restored stack frame
         ld sp, (U_DATA__U_SP)
 
@@ -260,7 +269,7 @@ _dofork:
 	; we must not touch the parent uarea after this point, any
 	; changes only affect the child
 	ld hl, #U_DATA		; copy the udata from common into the
-	ld de, #U_DATA_STASH	; target process
+	ld ix, #U_DATA_STASH	; target process
 	ld bc, #U_DATA__TOTALSIZE
 
 	call ldir_to_user
@@ -304,8 +313,8 @@ _need_resched:	.db 0
 	;	This one is really hard to do at a sensible speed
 	;
 bankfork:
-	ld d,c			; source
-	ld e,a			; dest
+	ld d,a			; source
+	ld e,c			; dest
 	ld hl,#0x0000
 	ld ix,#0x0000
 	ld bc,#0xF000
