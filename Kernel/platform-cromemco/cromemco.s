@@ -471,7 +471,7 @@ issue_command:
 	;	If need be flip bank. Remember this also switches stack copy
 	ld 	a,(_fd_map)
 	or 	a
-	jr	nz, cmdout
+	jr	z, cmdout
 
 	out	(0x40),a		; switch bank and stack copy
 cmdout:
