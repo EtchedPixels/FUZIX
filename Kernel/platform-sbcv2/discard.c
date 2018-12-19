@@ -67,26 +67,31 @@ void pagemap_init(void)
  */
 void platform_swap_found(uint8_t letter, uint8_t m)
 {
-  blkdev_t *blk = blk_op.blkdev;
-  uint16_t n;
-  if (swap_dev != 0xFFFF)
-    return;
-  letter -= 'a';
-  kputs("(swap) ");
-  swap_dev = letter << 4 | m;
-  n = blk->lba_count[m - 1] / SWAP_SIZE;
-  if (n > MAX_SWAPS)
-    n = MAX_SWAPS;
-  while(n)
-    swapmap_init(n--);
+	blkdev_t *blk = blk_op.blkdev;
+	int16_t n;
+	if (swap_dev != 0xFFFF)
+		return;
+	letter -= 'a';
+	kputs("(swap) ");
+	swap_dev = letter << 4 | m;
+	n = blk->lba_count[m - 1] / SWAP_SIZE;
+	if (n > MAX_SWAPS)
+		n = MAX_SWAPS;
+	while(n)
+		swapmap_init(n--);
 }
 
 /*
  *	Called after interrupts are enabled in order to enumerate and set up
- *	any devices. In our case we simply need to probe the IDE and SD card.
+ *	any devices. In our case we set up the 16550A UART and then probe the
+ *	IDE and SD card.
  */
+
+__sfr __at 0x69 uart_ier;
+
 void device_init(void)
 {
+	uart_ier = 0x0D;	/* This may be our timer so do it first */
 	devide_init();
 	prop_sd_probe();
 	ds1302_init();
