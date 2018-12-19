@@ -1,0 +1,46 @@
+TIMES(2)
+## NAME
+times - get process elapsed times
+## SYNOPSIS
+*#include <sys/times.h>*
+
+*clock\_t times*(*struct tms* buf);
+## DESCRIPTION
+Report the elapsed process times in the passed *struct tms* as defined by
+sys/times.h.
+
+:tms\_utime
+  Measures the CPU time spent executing instructions for the actual process.
+:tms\_stime
+  Measures the CPU time spent executing instructions in the kernel. As
+  processes sometimes trigger activity for each other (eg disk cache writes)
+  the assignment of CPU time to a given process is somewhat inaccurate.
+:tms\_cutime
+  User time of child processes that the parent has waited for.
+:tms\_cstime:
+  System time of child processes that the parent has waited for.
+
+The child times do not include processes that are still running or were not
+waited for with *waitpid(2)*.
+
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EFAULT*
+  The passed buffer points to an invalid address
+## CONFORMING TO
+V7, POSIX.1-2001, POSIX.1-2008
+## NOTES
+In accordance with the standard the values are reported clock ticks per
+second, which is a platform dependant value. The tick rate for a given
+machine can be obtained using
+
+int ticks = sysconf(\_SC\_CLK\_TCK);
+
+## LIMITATIONS
+On platforms with no hardware timer it is not always possible to measure
+user time, or measuring it has a serious performance impact. On such systems
+the returned time values may be zero, or user time may all be accounted as
+system time.
+## SEE ALSO
+*sysconf(3)*, *waitpid(2)*
