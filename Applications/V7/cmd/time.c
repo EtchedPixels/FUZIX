@@ -4,6 +4,7 @@
 /* time command */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
@@ -12,13 +13,25 @@
 #include <sys/types.h>
 #include <sys/times.h>
 
-char quant[] = { 6, 10, 10, 6, 10, 6, 10, 10, 10 };
+static char quant[] = { 6, 10, 10, 6, 10, 6, 10, 10, 10 };
 
-const char *pad = "000      ";
-const char *sep = "\0\0.\0:\0:\0\0";
-const char *nsep = "\0\0.\0 \0 \0\0";
+static const char *pad = "000      ";
+static const char *sep = "\0\0.\0:\0:\0\0";
+static const char *nsep = "\0\0.\0 \0 \0\0";
 
-void printt(const char *s, long a)
+static int ticks;
+
+static char buf[256];
+static char *bp = buf;
+
+#define writec(c)	*bp++ = (c)
+
+static void writes(const char *s)
+{
+	write(2, s, strlen(s));
+}
+
+static void printt(const char *s, long a)
 {
 	char digit[9];
 	register int i;
@@ -29,17 +42,25 @@ void printt(const char *s, long a)
 		digit[i] = a % quant[i];
 		a /= quant[i];
 	}
-	fputs(s, stderr);
+	while(*s)
+		writec(*s++);
 	nonzero = 0;
 	while (--i > 0) {
 		c = digit[i] != 0 ? digit[i] + '0' :
 		    nonzero ? '0' : pad[i];
-		fputc(c, stderr);
+		if (c) writec(c);
 		nonzero |= digit[i];
 		c = nonzero ? sep[i] : nsep[i];
-		fputc(c, stderr);
+		if (c) writec(c);
 	}
-	fputc('\n', stderr);
+	writec('\n');
+}
+
+void printc(const char *s, long a)
+{
+	a *= 60;
+	a /= ticks;
+	printt(s, a);
 }
 
 int main(int argc, const char *argv[])
@@ -54,7 +75,7 @@ int main(int argc, const char *argv[])
 	time(&before);
 	p = fork();
 	if (p == -1) {
-		fputs("Try again.\n", stderr);
+		writes("Try again.\n");
 		exit(1);
 	}
 	if (p == 0) {
@@ -62,6 +83,9 @@ int main(int argc, const char *argv[])
 		perror(argv[1]);
 		_exit(1);
 	}
+
+	ticks = sysconf(_SC_CLK_TCK);
+
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 	times(&obuffer);
@@ -69,11 +93,14 @@ int main(int argc, const char *argv[])
 		times(&obuffer);
 	time(&after);
 	if ((status & 0377) != 0)
-		fputs("Command terminated abnormally.\n", stderr);
+		writes("Command terminated abnormally.\n");
 	times(&buffer);
-	fprintf(stderr, "\n");
+
+	writec('\n');
 	printt("real", (after - before) * 60);
-	printt("user", buffer.tms_cutime - obuffer.tms_cutime);
-	printt("sys ", buffer.tms_cstime - obuffer.tms_cstime);
+	printc("user", buffer.tms_cutime - obuffer.tms_cutime);
+	printc("sys ", buffer.tms_cstime - obuffer.tms_cstime);
+	writec(0);
+	writes(buf);
 	exit(status >> 8);
 }
