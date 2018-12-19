@@ -1,0 +1,54 @@
+ACCESS(2)
+## NAME
+open - open an existing file or create a new one
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int access*(*const char \**path, *int* mode);
+
+## DESCRIPTION
+*access()* tests whether the process can access the path it is given with
+the access rights indicated by *mode*. For the purpose of the calculation
+the real rather than effective user and group ID are used.
+
+The mode may be *F\_OK* which checks for existence of the file, or one of
+*R\_OK*, *W\_OK* or *X\_OK* to test for read, write or execute rights to the
+file.
+
+For a process with a uid of 0 the *X\_OK* succeeds if the file has any
+execute bit set, matching the behaviour of *execve(2)*.
+
+## RETURN VALUE
+On success a zero is returned. On error -1 is returned and the *errno* value
+is set accordingly.
+## ERRORS
+:*EACCES*
+  Insufficient permission is available to access the file.
+:*EFAULT*
+  One of the addresses passed for the paths is invalid.
+:*EINVAL*
+  The mode passed was not valid.
+:*EIO*
+  An I/O error occurred.
+:*ENOENT*
+  The source does not exist, or the target directory does not exist.
+:*ENOTDIR*
+  A path element before the final one was not a directory.
+:*EPERM*
+  A device or similar special file is imposing it's own restrictions beyond the
+  filesystem permissions, and may not be opened.
+:*EROFS*
+  The file system is read-only and *W\_OK* was requested.
+## CONFORMING TO
+SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008
+## NOTES
+Historically *access()* was intended to allow privileged programs to check
+for access rights to objects; however the approach used is implicitly racy
+and users should instead make use of the *setuid()* system call to drop
+privileges before accessing the object.
+
+POSIX permits *X\_OK* to succeed for privileged programs even if no execute
+bits are set. Fuzix as of 0.3 has this behaviour but the intent is to change
+it.
+## SEE ALSO
+*execve*(2), *open*(2), *setuid*(2), *stat*(2)

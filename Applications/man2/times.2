@@ -4,7 +4,7 @@ times - get process elapsed times
 ## SYNOPSIS
 *#include <sys/times.h>*
 
-*clock\_t times*(*struct tms* buf);
+*clock\_t times*(*struct tms* \*buf);
 ## DESCRIPTION
 Report the elapsed process times in the passed *struct tms* as defined by
 sys/times.h.

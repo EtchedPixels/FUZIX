@@ -103,9 +103,9 @@ UZI and early Unix have a separate creat() system call which is semantically
 the same as open with the flags O\_CREAT|O\_WRONLY|O\_TRUNC. This is provided by
 the C library in FUZIX and modern systems.
 ## BUGS
-Fuzix currently ignores *O\_SYNC*
+Fuzix currently ignores *O\_SYNC* except on raw I/O.
 
 FUZIX does not yet implement the *ENXIO* error code for fifo devices.
 ## SEE ALSO
-*close*(2), *creat*(3), *dup*(2), *dup2*(2), *execve*(2), *fcntl*(2), *umask*(2),
+*access*(2), *close*(2), *creat*(3), *dup*(2), *dup2*(2), *execve*(2), *fcntl*(2), *umask*(2),
 *tty*(4), *fifo*(7)

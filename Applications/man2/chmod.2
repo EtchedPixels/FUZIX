@@ -1,0 +1,76 @@
+CHMOD(2)
+## NAME
+chmod - change the access permissions on a file
+## SYNOPSIS
+*#include <sys/stat.h>*
+
+*int chmod*(*const char \**path, *mode\_t* mode);
+
+*int fchmod*(*int* fd, *mode\_t* mode);
+
+## DESCRIPTION
+The *chmod* and *fchmod* calls change the access rights to a file. The *chmod*
+call takes a path and updates the referenced object, the *fchmod* calls
+takes an open handle to an existing file and updates it.
+
+The *mode* specifies the file permissions to be used. The *umask*(2) of the
+process is not applied and the type bits may not be changed.
+
+The mode is specified by a logical or of the following defines:
+
+:*S\_ISUID* (04000)
+  The process is set-uid, that is it will execute as the file owner not the
+  executing user.
+:*S\_ISGID* (02000)
+  The process is set-gid, that is it will execute as the file group not the
+  executing group.
+:*S\_ISVTX* (01000)
+  When set on a directory indidcates that anyone attempting to *unlink*(2) a
+  file within this directory must own the target file.
+:*S\_IRUSR* (00400)
+  The file may be read by the owning user.
+:*S\_IWUSR* (00200)
+  The file may be written by the owning user.
+:*S\_IXUSR* (00100)
+  The file may be executed by the owning user. For directories this indicates
+  that this path may be traversed during a filename look up.
+:*S\_IRGRP* (00400)
+  The file may be read by the owning group.
+:*S\_IWGRP* (00200)
+  The file may be written by the owning group.
+:*S\_IXGRP* (00100)
+  The file may be executed/traversed by the owning group.
+:*S\_IROTH* (00400)
+  The file may be read by others.
+:*S\_IWOTH* (00200)
+  The file may be written by others.
+:*S\_IXOTH* (00100)
+  The file may be executed/traversed by others.
+
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  The caller has insufficient rights to access the path specified.
+:*EBADF*
+  The caller passed an invalid file handle in *fd*.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EIO*
+  An I/O error occurred.
+:*ENAMETOOLONG*
+  The path is longer than permitted.
+:*ENOENT*
+  A component of the path does not exist.
+:*ENOTDIR*
+  A component of the path is not a directory.
+:*EPERM*
+  An attempt was made to modify a file owned by another user, and the
+  process is not privileged.
+:*EROFS*
+  The file system is read-only.
+## CONFORMING TO
+V7, UZI, POSIX.1-2001
+## NOTES
+## SEE ALSO
+*access*(2), *unlink*(2), *umask*(2)
