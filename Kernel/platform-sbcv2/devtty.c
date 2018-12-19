@@ -244,8 +244,8 @@ void tty_poll(void)
 	if (uart_lsr & 0x01)
 		tty_inproc(minor, uart_rx);
 	msr = uart_msr;
-	/* If we have a 10MHz clock wired to DSR then do timer interrupts */
-	if (timermsr && (msr & 0x04))
+	/* If we have a 10Hz clock wired to DSR then do timer interrupts */
+	if (timermsr && (msr & 0x02))
 		timer_interrupt();
 	/* DCD changed - tell the kernel so it can hangup or open ports */
 	if (msr & 0x08) {
