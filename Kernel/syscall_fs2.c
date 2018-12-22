@@ -245,15 +245,27 @@ arg_t _fchmod(void)
 
 static int chown_op(inoptr ino)
 {
-	if ((ino->c_node.i_uid != udata.u_euid ||
-	        (group != udata.u_gid &&  !in_group(group))) && esuper())
-		return (-1);
 	if (ino->c_flags & CRDONLY) {
 		udata.u_error = EROFS;
 		return -1;
 	}
-	ino->c_node.i_uid = owner;
-	ino->c_node.i_gid = group;
+	/* Owner change must be superuser rights */
+	if (owner != -1) {
+		if (esuper())
+			return -1;
+		ino->c_node.i_uid = owner;
+	/* owner = group = -1 is a no-op */
+	} else if (group == -1)
+		return 0;
+	/* Group change */
+	if (group != -1) {
+		/* We must be in the target group (and file owner) */
+		if ((ino->c_node.i_uid != udata.u_euid ||
+			group != udata.u_egid && !in_group(group)) && esuper())
+			return -1;
+		ino->c_node.i_gid = group;
+	}
+	ino->c_node.i_mode &= ~(SET_GID|SET_UID);
 	setftime(ino, C_TIME);
 	return 0;
 }
