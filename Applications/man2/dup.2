@@ -1,0 +1,38 @@
+DUP(2)
+## NAME
+dup - make a copy of a file handle.
+## SYNOPSIS
+*#include <unistd.h>*
+
+*int dup*(*int* fd);
+
+*int dup2*(*int* fd, *int* newfd);
+
+## DESCRIPTION
+The *dup* system call creates a new file descriptor that references the same
+file descriptor as *fd*. They both share file offset and status but they do
+not share file descriptor flags (*FD\_CLOEXEC*).
+
+The new descriptor is assigned the lowest free descriptor number that is
+not in use.
+
+The *dup2* system call performs the same functionality but the
+filedescriptor given in *newfd* is assigned to the copy. If *newfd* is
+already in use then the existing reference is closed first. Passing the same
+value for *fd* and *newfd* has no effect.
+
+## RETURN VALUE
+On success, the new descriptor is returned. On error -1 is returned and errno
+is set.
+## ERRORS
+:*EBADF*
+  The file descriptor *fd* or *newfd* is not valid.
+:*EMFILE*
+  The process has no free file descriptors.
+## CONFORMING TO
+V7, UZI, 4.3BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## NOTES
+The closure of the old handle and assignment of the new one in *dup2* are
+guaranteed to occur as one operation without races.
+## SEE ALSO
+*close*(2), *fcntl*(2), *open*(2).
