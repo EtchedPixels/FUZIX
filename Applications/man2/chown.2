@@ -4,10 +4,9 @@ chown - change ownership of a file
 ## SYNOPSIS
 *#include <unistd.h>*
 
-*int chown*(*const char \**path, *uid\_t* owner, *gid\_t* group);
+*int chown*(*const char \**path, *uid\_t* owner, *gid\_t* group);\
 
 *int fchown*(*int* fd, *uid\_t* owner, *gid\_t* group);
-
 ## DESCRIPTION
 The *chown* and *fchown* calls change the owner and/or group of a give file.
 The *chown* call applies the change to the file specified by *path*, the
@@ -23,7 +22,6 @@ unchanged.
 
 As a security precaution when the ownership or group is changed the setuid
 bits (*S\_ISUID* and *S\_ISGID*) are cleared.
-
 ## RETURN VALUE
 On success, zero is returned. On error -1 is returned and errno is set.
 ## ERRORS

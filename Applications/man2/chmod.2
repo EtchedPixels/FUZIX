@@ -4,10 +4,9 @@ chmod - change the access permissions on a file
 ## SYNOPSIS
 *#include <sys/stat.h>*
 
-*int chmod*(*const char \**path, *mode\_t* mode);
+*int chmod*(*const char \**path, *mode\_t* mode); \
 
 *int fchmod*(*int* fd, *mode\_t* mode);
-
 ## DESCRIPTION
 The *chmod* and *fchmod* calls change the access rights to a file. The *chmod*
 call takes a path and updates the referenced object, the *fchmod* calls
@@ -46,7 +45,6 @@ The mode is specified by a logical or of the following defines:
   The file may be written by others.
 :*S\_IXOTH* (00001)
   The file may be executed/traversed by others.
-
 ## RETURN VALUE
 On success, zero is returned. On error -1 is returned and errno is set.
 ## ERRORS
