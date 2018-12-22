@@ -1,0 +1,20 @@
+GETPID(2)
+## NAME
+getpid - return the process id of the caller
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*pid\_t* getpid*(*void*);\
+
+## DESCRIPTION
+The *getpid*() call retuns the process id of the caller.
+## RETURN VALUE
+The process id of the caller.
+## ERRORS
+None.
+## CONFORMING TO
+V7, UZI, 4.3BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## SEE ALSO
+*fork*(3), *getppid*(2), *kill*(2).

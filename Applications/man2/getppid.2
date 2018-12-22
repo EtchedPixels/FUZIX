@@ -1,0 +1,22 @@
+GETPPID(2)
+## NAME
+getppid - return the process id of the parent of the caller
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*pid\_t* getppid*(*void*);\
+
+## DESCRIPTION
+The *getppid*() call retuns the process id of the parent of the caller. This
+is initially the process that called *fork*() in order to create the child,
+but if that parent dies will then become init (process 1).
+## RETURN VALUE
+The process id of the parent.
+## ERRORS
+None.
+## CONFORMING TO
+V7, UZI, 4.3BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## SEE ALSO
+*fork*(3), *getpid*(2), *kill*(2).
