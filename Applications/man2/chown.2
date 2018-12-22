@@ -1,0 +1,56 @@
+CHOWN(2)
+## NAME
+chown - change ownership of a file
+## SYNOPSIS
+*#include <sys/stat.h>*
+
+*int chown*(*const char \**path, *uid\_t* owner, *gid\_t* group);
+
+*int fchown*(*int* fd, *uid\_t* owner, *gid\_t* group);
+
+## DESCRIPTION
+The *chown* and *fchown* calls change the owner and/or group of a give file.
+The *chown* call applies the change to the file specified by *path*, the
+fchown call applies the change to the file referenced by the open file
+handle *fd*.
+
+Only a privileged process is permitted to change the ownership of a file.
+The owner of a file may change the group it belongs to to be their current
+group or any group that they are a member of.
+
+Passing a value of -1 for the *owner* or *group* causes that field to remain
+unchanged.
+
+As a security precaution when the ownership or group is changed the setuid
+bits (*S\_ISUID* and *S\_ISGID*) are cleared.
+
+## RETURN VALUE
+On success, zero is returned. On error -1 is returned and errno is set.
+## ERRORS
+:*EACCES*
+  The caller has insufficient rights to access the path specified.
+:*EBADF*
+  The caller passed an invalid file handle in *fd*.
+:*EFAULT*
+  The address passed for the path is invalid.
+:*EIO*
+  An I/O error occurred.
+:*ENAMETOOLONG*
+  The path is longer than permitted.
+:*ENOENT*
+  A component of the path does not exist.
+:*ENOTDIR*
+  A component of the path is not a directory.
+:*EPERM*
+  An attempt was made to change the ownership or group in a way not
+  permitted, and the calling process is not privileged.
+:*EROFS*
+  The file system is read-only.
+## CONFORMING TO
+V7, UZI, 4.4BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## NOTES
+Historically users were able to use chown to give away files to other users.
+More modern systems diallow this behaviour as it has significant scope for
+abuse. Fuzix 0.3 onwards follow the modern rules.
+## SEE ALSO
+*chmod*(2), *getegid*(2), *getgroups*(2).
