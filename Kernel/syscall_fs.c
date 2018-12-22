@@ -206,12 +206,16 @@ arg_t _dup2(void)
 {
 
 	if (getinode(oldd) == NULLINODE)
-		return (-1);
+		return -1;
 
 	if (newd < 0 || newd >= UFTSIZE) {
 		udata.u_error = EBADF;
-		return (-1);
+		return -1;
 	}
+
+	/* No-op - but we must not close and dup so catch it */
+	if (newd == oldd)
+		return oldd;
 
 	if (udata.u_files[newd] != NO_FILE)
 		doclose(newd);
@@ -219,7 +223,7 @@ arg_t _dup2(void)
 	udata.u_files[newd] = udata.u_files[oldd];
 	++of_tab[udata.u_files[oldd]].o_refs;
 
-	return (0);
+	return newd;
 }
 
 #undef oldd
