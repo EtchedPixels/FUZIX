@@ -1,0 +1,34 @@
+SETUID(2)
+## NAME
+setuid - set the user id of this process
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*int* setuid(*uid\_t* uid);\
+
+## DESCRIPTION
+The *setuid*() call changes the effective user id of the caller. A process
+may only change its effective user id to either its real or effective id
+unless it is privileged.
+
+A privileged process making this call may set any desired user id, and will
+change both the effective and real user id accordingly.
+## RETURN VALUE
+On success 0 is returned. An error returns -1 and sets *errno* accordingly.
+## ERRORS
+:*EPERM*
+  The process is not privileged and does not have the rights needed to
+  switch to the id requested
+## CONFORMING TO
+SVr4, POSIX.1-2001, POSIX.1-2008.
+## NOTES
+The Fuzix behaviour matches that of POSIX with the *\_POSIX\_SAVED\_IDS* feature.
+A future Fuzix will implement the setreuid/setregid interfaces but will
+retain the same *\_POSIX\_SAVED\_IDS* style of behaviour.
+
+Because setuid behaves differently for privileged processes care must be
+taken with setuid processes that may be run by root or other users.
+## SEE ALSO
+*chmod*(2), *execve*(2).

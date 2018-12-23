@@ -1,0 +1,24 @@
+UMASK(2)
+## NAME
+umask - set the file more creation mask
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <stat.h>*
+
+*mode\_t* umask(*mode\_t* mask);\
+
+## DESCRIPTION
+When a new filesystem object is created by this process the initial
+permissions assigned are those given in the system call, with any bits set
+in the *umask* of the process then cleared. Thus a umask of 022 ensures that
+no write access is given to any other user, while 077 ensures no access is
+gvien to any other user.
+## RETURN VALUE
+The previous mask value.
+## ERRORS
+None.
+## CONFORMING TO
+V7, UZI, 4.3BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## SEE ALSO
+*chmod*(2), *mkdir*(2), *mknod*(2), *open*(2).

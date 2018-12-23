@@ -1,0 +1,20 @@
+GETUID(2)
+## NAME
+getuid - return the real user id of the current process
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*uid\_t* getpid*(*void*);\
+
+## DESCRIPTION
+The *getuid*() call returns the real user id of the current process.
+## RETURN VALUE
+The real user id id of the caller.
+## ERRORS
+None.
+## CONFORMING TO
+V7, UZI, 4.3BSD, SVr4, POSIX.1-2001, POSIX.1-2008.
+## SEE ALSO
+*geteuid*(2), *setuid*(2).

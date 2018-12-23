@@ -1,0 +1,37 @@
+SETGID(2)
+## NAME
+setgid - set the group id of this process
+## SYNOPSIS
+*#include <sys/types.h>*\
+
+*#include <unistd.h>*
+
+*int* setgid(*gid\_t* gid);\
+
+## DESCRIPTION
+The *setgid*() call changes the effective group id of the caller. An
+unprivileged  process may change its effective group id to a group that is
+either its real group id, its saved group id or a group within it's
+supplementary grup list.
+
+A privileged process making this call may set any desired group id, and will
+change both the effective and real group id accordingly. The supplementary 
+group list will not be changed so the caller should set this first if
+necessary.
+## RETURN VALUE
+On success 0 is returned. An error returns -1 and sets *errno* accordingly.
+## ERRORS
+:*EPERM*
+  The process is not privileged and does not have the rights needed to
+  switch to the id requested
+## CONFORMING TO
+SVr4, POSIX.1-2001, POSIX.1-2008.
+## NOTES
+The Fuzix behaviour matches that of POSIX with the *\_POSIX\_SAVED\_IDS* feature.
+A future Fuzix will implement the setregid/setregid interfaces but will
+retain the same *\_POSIX\_SAVED\_IDS* style of behaviour.
+
+Because setgid behaves differently for privileged processes care must be
+taken with setgid processes that may be run by root or other users.
+## SEE ALSO
+*chmod*(2), *execve*(2), *setgroups*(2).
