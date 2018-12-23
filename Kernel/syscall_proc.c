@@ -80,21 +80,27 @@ arg_t _getegid(void)
 /*******************************************
 setuid (uid)                     Function 25        ?
 int uid;
+
+FIXME: Next API break switch to setreuid/setregid
 ============================================
-Set User ID Number (UID) of Process.  Must
-be SuperUser or owner, else Error (EPERM).
-********************************************/
+*/
+
 #define uid (uint16_t)udata.u_argn
 
 arg_t _setuid(void)
 {
-	if (super() || udata.u_ptab->p_uid == uid) {
-		udata.u_ptab->p_uid = uid;
+	/* We must be super user or setting to either our real or effective
+	   uid */
+	if (super() || udata.u_ptab->p_uid == uid || udata.u_euid == uid) {
+		/* If our effective id is root we set both. This is the
+		  _POSIX_SAVED_IDS behaviiour */
+		if (udata.u_euid == 0)
+			udata.u_ptab->p_uid = uid;
 		udata.u_euid = uid;
-		return (0);
+		return 0;
 	}
 	udata.u_error = EPERM;
-	return (-1);
+	return -1;
 }
 
 #undef uid
@@ -104,21 +110,26 @@ arg_t _setuid(void)
 /*******************************************
 setgid (gid)                     Function 26        ?
 int gid;
+
+FIXME: Next API break switch to setreuid/setregid
 ============================================
-Set Group ID Number (GID).  Must be Super-
-User or in Group to Set, else Error (EPERM).
-********************************************/
+*/
+
 #define gid (int16_t)udata.u_argn
 
 arg_t _setgid(void)
 {
-	if (super() || udata.u_gid == gid) {
-		udata.u_gid = gid;
+	/* We must be superuser, have the group in question is our effective
+	   ore real group, or be a member of that group */
+	if (super() || udata.u_gid == gid || udata.u_egid == gid 
+		|| in_group(gid)) {
+		if (udata.u_egid == 0)
+			udata.u_gid = gid;
 		udata.u_egid = gid;
-		return (0);
+		return 0;
 	}
 	udata.u_error = EPERM;
-	return (-1);
+	return -1;
 }
 
 #undef gid
