@@ -308,15 +308,106 @@ _dofork:
 _swapstack:
 _need_resched:	.db 0
 
-	;
-	;	FIXME: optimize ldir_far. or maybe add an ldir_far_aligned
-	;	This one is really hard to do at a sensible speed
-	;
+;
+;	Fork has a special case fast copier. We need to optimize ldir_far
+;	as well but fork has the special property that source == dest in
+;	differing banks and that makes a huge speed difference
+;
+;	We are swapping the full address space so we must be really careful
+;	that we save and restore globals in the same bank!
+;
 bankfork:
-	ld d,a			; source
-	ld e,c			; dest
-	ld hl,#0x0000
-	ld ix,#0x0000
-	ld bc,#0xF000
-	call ldir_far
+	push af
+	ld a,#0x81		; write all, read kernel
+	out (0x40),a
+	pop af
+	ld (cpatch0 + 1),a	; patch parent into loop
+	ld (cpatch2 + 1),a	; patch parent into loop
+	ld a,c
+	ld (cpatch1 + 1),a	; patch child into loop
+	;
+	;	Set up ready for the copy
+	;
+	ld (spcache),sp
+	; F000 bytes to copy.
+	; Stack pointer at the target buffer
+	ld sp,#PROGBASE	; Base of memory to fork
+	; 15 outer loops
+	ld a,#15
+	ld (copyct),a
+	ld a,#0		; Count 256 * 16 byte copies
+	ex af,af'	; Save A as we need an A for ioports
+cpatch0:
+	ld a,#0		; parent bank (patched in for speed)
+	out (0x40),a
+
+	; Each loop takes 112 cycles to read 16 bytes and save sp
+	; 117 cycles to switch bank and write them
+	; 56 cycles do switch bank back and do housekeeping
+	; and a few more per 4K block
+	;
+	; That comes in at 17 cycles/byte which is only one clock/byte
+	; slower than a non banking LDIR
+copyloop:
+	pop bc		; copy 16 bytes out of parent
+	pop de
+	pop hl
+	exx
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	; We patch in parent bank we must therefore read in parent bank
+	ld (sp_patch+1),sp
+cpatch1:
+	ld a,#0		; child bank (also patched in for speed)
+	out (0x40),a
+	push iy		; and put them back into the child
+	push ix
+	push hl
+	push de
+	push bc
+	exx
+	push hl
+	push de
+	push bc
+	ex af,af'	; Get counter back
+	dec a
+	jr z, setdone	; 252 loops ?
+copy_cont:
+	; Switch back to parent bank so that we get the right sp_patch
+	ex af,af'
+cpatch2:
+	ld a,#0
+	out (0x40),a
+sp_patch:
+	ld sp,#0
+	jp copyloop
+;
+;	This outer loop only runs 8 times so isn't quite so performance
+;	critical
+;
+setdone:
+	; We count down in the child bank context
+	ld hl,#copyct
+	dec (hl)	
+	jr z, copy_over
+	ld a,#252
+	jr copy_cont
+copy_over:
+	;
+	;	Get the stack back
+	;
+	ld sp,(spcache)
+	;
+	;	And the correct kernel bank.
+	;
+	ld a,#0x01
+	out (0x40),a
 	ret
+
+spcache:
+	.word 0
+copyct:
+	.byte 0

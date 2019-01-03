@@ -7,8 +7,8 @@ Bank 1-6	User
 		0000-00FF start with shared vectors
 			  FIXME: we need to clean this up in program_vectors
 			  from the kernel copy ????
-		0100-EFFF Application
-		F000-F111 Udata copy for this application
+		0100-EFFF application
+		F000-F1FF udata copy for this application
 		F200-FFFF common copy
 
 The kstack and istack exist in each bank. We'll normally only use the kernel
