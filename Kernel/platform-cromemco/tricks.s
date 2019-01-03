@@ -335,7 +335,7 @@ bankfork:
 	; 15 outer loops
 	ld a,#15
 	ld (copyct),a
-	ld a,#0		; Count 256 * 16 byte copies
+	xor a
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
 	ld a,#0		; parent bank (patched in for speed)
