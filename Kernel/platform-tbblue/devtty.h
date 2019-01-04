@@ -4,6 +4,8 @@
 void tty_pollirq(void);
 static void keydecode(void);
 
+extern void tty_polluart(void);
+
 #define KEY_ROWS	8
 #define KEY_COLS	5
 extern uint8_t keymap[8];

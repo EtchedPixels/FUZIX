@@ -22,6 +22,7 @@ uint8_t timer_wait;
 void platform_interrupt(void)
 {
  tty_pollirq();
+ tty_polluart();
  timer_interrupt();
  poll_input();
  if (timer_wait)

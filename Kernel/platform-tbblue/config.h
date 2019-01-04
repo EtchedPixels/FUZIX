@@ -35,14 +35,13 @@
 #define VT_BOTTOM	23
 
 
-
 /*
  *	Define the program loading area (needs to match kernel.def)
  */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0xE000  /* Top of program, base of U_DATA stash */
-#define PROC_SIZE   56 	    /* Memory needed per process including stash */
+#define PROGTOP     0xE000  /* Top of program, base of U_DATA */
+#define PROC_SIZE   56 	    /* Memory needed per process */
 
 /*
  *	Definitions for swapping - we don't need swap!
@@ -50,8 +49,8 @@
 
 /* What is the maximum number of /dev/hd devices we have. In theory right now
    it's actually 1 - the SD interface */
-#define MAX_BLKDEV	2
-/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
+#define MAX_BLKDEV	1
+/* SD card, single card only */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	1
 
@@ -115,5 +114,4 @@
 
 /* This can optionally be set to force a default baud rate, eg if the system
    console should match a firmware set rate */
-#define TTY_INIT_BAUD B38400	/* To match ROMWBW */
-
+#define TTY_INIT_BAUD B115200	/* Console is 'fast' */

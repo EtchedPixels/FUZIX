@@ -10,7 +10,13 @@
 #include <input.h>
 #include <devinput.h>
 
-char tbuf1[TTYSIZ];
+__sfr __banked __at 0x133B uart_status;		/* Read */
+__sfr __banked __at 0x133B uart_tx;		/* Write */
+__sfr __banked __at 0x143B uart_rx;		/* Read */
+__sfr __banked __at 0x143B uart_baud;		/* Write */
+
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 extern uint8_t curattr;
@@ -22,18 +28,27 @@ static tcflag_t console_mask[4] = {
 	_LSYS
 };
 
+static tcflag_t serial_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS|CBAUD,
+	_LSYS
+};
+
 tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	NULL,
-	console_mask
+	console_mask,
+	serial_mask,
 };
 
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-/* tty1 is the screen */
+/* tty1 is the screen, tty2 is the simple UART on the FPGA */
 
 /* Output for the system console (kprintf etc) */
 void kputchar(char c)
@@ -43,37 +58,61 @@ void kputchar(char c)
 	tty_putc(0, c);
 }
 
-/* Both console and debug port are always ready */
 ttyready_t tty_writeready(uint8_t minor)
 {
-	minor;
-	return TTY_READY_NOW;
+	if (minor == 1)
+		return TTY_READY_NOW;
+	// FIXME 
+	return TTY_READY_NOW;	// TTY_READY_SOON
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	minor;
-	vtoutput(&c, 1);
+	if (minor == 1)
+		vtoutput(&c, 1);
+	else
+		uart_tx = c;
+}
+
+void tty_polluart(void)
+{
+	while (!(uart_status & 1))
+		tty_inproc(2, uart_rx);
 }
 
 int tty_carrier(uint8_t minor)
 {
-	minor;
+	used(minor);
 	return 1;
 }
 
+/* Both ports are fixed configuration but the serial
+   can switch baud rate */
 void tty_setup(uint8_t minor, uint8_t flags)
 {
-	minor;
+	uint8_t baud = ttydata[2].termios.c_cflag & CBAUD;
+	if (minor == 1)
+		return;
+	if (baud < B2400) {
+		baud = 0;
+		ttydata[2].termios.c_cflag &= ~CBAUD;
+		ttydata[2].termios.c_cflag |= B2400;
+	} else
+		baud -= B2400;
+	/* The hardware baud rates line up with our definitions from 2400 up
+	   but in reverse order */
+	uart_baud = 6 - baud;
+	
 }
 
 void tty_sleeping(uint8_t minor)
 {
-	minor;
+	used(minor);
 }
 
 void tty_data_consumed(uint8_t minor)
 {
+	used(minor);
 }
 
 
@@ -81,7 +120,7 @@ void tty_data_consumed(uint8_t minor)
 uint16_t cursorpos;
 
 /* For now we only support 64 char mode - we should add the mode setting
-   logic an dother modes FIXME */
+   logic and other modes FIXME */
 static struct display specdisplay = {
 	0,
 	512, 192,
@@ -93,20 +132,8 @@ static struct display specdisplay = {
 	0
 };
 
-static struct videomap specmap = {
-	0,
-	0,
-	0x4000,
-	14336,
-	0,
-	0,
-	0,
-	MAP_FBMEM|MAP_FBMEM_SIMPLE
-};
-
 /*
- *	Graphics ioctls. Very minimal for this platform. It's a single fixed
- *	mode with direct memory mapping.
+ *	Graphics ioctls. Not yet updated to reflect TBBlue at all
  */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
@@ -115,10 +142,6 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	switch(arg) {
 	case GFXIOC_GETINFO:
 		return uput(&specdisplay, ptr, sizeof(struct display));
-	case GFXIOC_MAP:
-		return uput(&specmap, ptr, sizeof(struct videomap));
-	case GFXIOC_UNMAP:
-		return 0;
 	case GFXIOC_WAITVB:
 		/* Our system clock is vblank */
 		timer_wait++;

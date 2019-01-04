@@ -69,16 +69,14 @@ load16k:
 	ld bc,#0x243B
 	ld e,#0x56		; 0xC000 mapping register
 	out (c),e
-	inc b
+	inc b			; to data port
 	out (c),a		; Page requested
-	inc b
-	out (c),b		; MMU register 7
 	dec b			; back to control port
 	inc e			; next register
 	inc a			; next page
-	out (c),e
-	inc b
-	out (c),a
+	out (c),e		; 0xE000 mapping register
+	inc b			; back to data port
+	out (c),a		; page
 
 	ld a,(handle)		; Load 16K into that page
 	ld bc,#0x4000
