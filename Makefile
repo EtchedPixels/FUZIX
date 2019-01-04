@@ -31,7 +31,7 @@
 #
 # Virtual platforms for in progress development work
 #
-# v65:		Virtual platform for 6502 development
+# v65:		Virtual platform for 6502 development (dead)
 # v65c816:	Virtual platform for 65c816 development
 # v68:		Virtual platform for 68000 development
 
