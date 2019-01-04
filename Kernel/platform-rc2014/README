@@ -18,11 +18,12 @@ Supported Hardware
 
 	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
 	If you have a Scott Baker SIO/2 card you'll need to see config.h
-	CTC board at 0x90
 
-	DS1302 RTC at 0xC0
+	DS1302 RTC at 0xC0 (eventually CTC and no RTC will be allowed too)
 
 	Options:
+
+	CTC board at 0x88
 
 	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
 	Terminal will be supported. This will display all output to the serial
@@ -34,26 +35,54 @@ Supported Hardware
 
 	RC2014 Joystick
 
+In Progress
+
+	PPIDE
+
+Unsupported Hardware
+
+	SC108/SC114 or other CPU boards with their own banking instead of the
+	512K ROM/RAM
+
+	SC114 bit bang serial
+
+	Z80 PIO cards (really because I've no idea how to present them)
+
+	SC110 CTC/serial (it uses CTC 1 for the serial baud but we try and
+	use it for other things). Will rework the core code to use the CTCs
+	differently to fix this at some point
+
+
 Things To Note When Modifying
 
   * Space is very tight. The kernel must finish below C000 and the rest goes
     above the common line (D000).
+  * We should move to banked kernel to allow for more flexibility with all
+    this add in hardware.
   * Do not move discard below C300 on a 16K banking setup. There is stuff in
     start.c that requires that C000-C2FF space is free for starting init from
-    the kernel
+    the kernel.
 
 Things that don't work
 
   * Flow control isn't yet enabled for the serial port.
 
+  * PPIDE
+
 Stuff To Do
 
-  * Rework the CTCs if we can so we use CTC0 as a timer for the CTC clock and
-    use CTC1 to count CTC0 overflows. That way we can use the CTC0 interrupt
-    and the CTC1 value together in order to a) spot missed events and b) allow
+  * Rework the CTCs if we can so we use CTC2 as a timer for the CTC clock and
+    use CTC3 to count CTC0 overflows. That way we can use the CTC2 interrupt
+    and the CTC3 value together in order to a) spot missed events and b) allow
     us to run without using IM2 given the poor IM2 support on RC2014. That
-    then still allows us to use CTC for UART speed, and hopefully CTC3 for
-    single step debugging.
+    then still allows us to use CTC1 for UART speed, and hopefully CTC0 for
+    single step debugging. Note that we are forced to use CTC1 for serial
+    for the SC110 card, and we want adjacent CTCs for jumpering convenience
+    for the timer. Also there is no ZT3 so it's the one timer that can't
+    chain so is best for the tick counter.
+
+  * Detect and optimize code paths in CTC mode - the extra DS1302 accesses we
+    have to do are really expensive.
 
   * Can we detect which kind of SIO and CTC we have and where
 
