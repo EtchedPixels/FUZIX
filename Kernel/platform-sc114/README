@@ -1,0 +1,77 @@
+Experimental port for the SC114 mainboard plus CF card plus RTC card. This
+port tries to use the SCM ROM as far as possible and also is intended to
+support the SC108 via the same port. It's probably possible to add SC101 if
+anyone wanted to.
+
+The other SCM systems are different
+- RC2014 has its own port and normally runs ROMWBW with 512K RAM/ROM
+- The RC2014 64K RAM / 32K ROM system has a custom port and can't use the SCM
+  as it needs the ROM for the OS kernel core
+- Linc has a single 16K banked window and would need to spectrum 128K like port
+  as well as banked kernel
+- Tom's SBC has no banked RAM so would need a custom port with the kernel in
+  ROM like the small RC2014 build
+
+This is a design that happens to have 128K RAM but the 64K banks are flipped
+directly. Fortunately there is a ROM which lives in both banks.
+
+For the moment we stick the OS in RAM (it would be entertaining to explore
+putting the kernel in ROM but as it's not trivially reprogrammable flash
+lets leave that for a while). The SCM ROM must have the new API's
+
+0x2A:
+	DE = address in secondary bank to read
+
+	returns value in A.
+
+0x2B:
+	A = byte to write to secondary bank
+	DE = address in secondary bank to write
+
+
+Memory map
+
+Kernel
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	Kernel (common above 0x8000 for ROM dodging)
+F000-F1FF	UDATA
+F200-FCFF	Common (mostly valid in both banks)
+FD00-FFFF	ROM monitor owned
+
+User
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	User space
+F000-F1FF	Kernel stack alternative (used during some bank switch ops)
+F200-F2FF	Istack alternate (we may take interrupts in either bank)
+F300-FCFF	Common (mostly valid in both banks)
+FD00-FFFF	ROM monitor owned
+
+
+TO DO
+
+Write a proper bootloader that can use partition tables properly
+Use the extra space to put back some kernel bits we binned from -tiny
+Build a suitably high CP/M emuation and test it
+CTC support and CTC no-rtc support
+PPIDE ?
+Finish SC108 compatibility
+
+
+
+Long term fun
+- OS core in ROM, high memory holding rest (like -tiny) but with two user space
+banks ??
+- Clean up the serial code (on all RC2014)
+
+
+Boot Loader
+
+The standard loader in the ROM is the CP/M loader. It loads 24 sectors (12K)
+from sector 0 moves them to the top 12K of RAM and jumps to the address held
+in 0xFFFE/FFFF
+
+We subvert this loader and our own loader lives with a standard PC style
+partition table and boots our OS. We ought to replace this with a nice loader
+that can load CP/M from a partition as well as Fuzix from a file system.
