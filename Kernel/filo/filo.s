@@ -88,21 +88,6 @@ filo:
 	.ascii 'Fuzix Intermediate Loader v0.01.\n'
 	.asciz '(C)2019 Alan Cox\n\n'
 
-	.area _DATA
-
-loadname:
-	.ds 31
-ibuf:
-	.ds 64
-dbuf:
-	.ds 512
-partbase_l:
-	.dw 0
-partbase_h:
-	.dw 0
-
-	.area _CODE
-
 partitions:
 	; No partitions found (hack for now)
 	ld hl,#0
@@ -363,7 +348,7 @@ reader_loop:
 bread:
 	ld a,d
 	or e
-	jr nz, bread_disk
+	jp nz, bread_disk
 	ld d,h
 	ld e,l
 	ld bc,#511
@@ -394,4 +379,16 @@ cmploop:
 	djnz cmploop
 	ret			; Z 
 
+	.area _DATA
+
+loadname:
+	.ds 31
+ibuf:
+	.ds 64
+dbuf:
+	.ds 512
+partbase_l:
+	.dw 0
+partbase_h:
+	.dw 0
 

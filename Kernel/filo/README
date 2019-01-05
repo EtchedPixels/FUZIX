@@ -2,3 +2,14 @@ FILO
 
 Initial draft of a loader that is designed to be a portable Z80 loading tool
 that can load Fuzix images out of a Fuzix file system.
+
+Commands
+
+*xxx		anything beginning * is handed to the platform specific code
+		so may be relevant or not.
+
+[A-P]:		capital required - select drive to load from
+		(will also allow A0-P3 once we do partitions)
+
+any other string is taken as a filename to search for in / of the current
+volume and boot as a kernel image.

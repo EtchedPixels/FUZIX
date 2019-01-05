@@ -5,8 +5,29 @@
 ;	Currently this and the glue driver code is well under 2 disk blocks.
 ;	Adding partitions should still fit 2 blocks nicely.
 ;
+;	Our SCM command 'BOOT' loads the MBR of the media and then runs it
+;	if appropriate. We are loaded at 0xF000 and hold all of CODE
+;
+;
+;	Section ordering
+;
+	.area _CODE
+	.area _STACK
+	.area _CODE2
+	.area _DATA
+
+;
+;	_CODE and _STACK goes in the boot sector.
+;	_CODE2 and _DATA are split across them or beyond (as data is
+;	uninitialized
+;
 	.area _CODE
 
+;
+;	So we can check set up
+;
+	.globl start
+	.globl stack
 ;
 ;	Magic for the loader
 ;
@@ -14,9 +35,19 @@
 	.byte 80
 
 ;
-;	Loader core
+;	We have 446 bytes of space in the boot sector before the
+;	partitions that is loaded (and the partition table), but we
+;	need to load the second sector holding the core of FILO
 ;
-	.include '../filo/filo.s'
+
+start:
+	ld sp, #stack
+	ld bc, #0xF200		; Straight after us
+	ld hl, #0x0001		; Sector 1
+	ld de, #0x0000
+	call bread_raw
+	jp boot_begin		; Run FILO
+
 ;
 ; ****************************************************************************
 ;
@@ -103,6 +134,14 @@ nocarry_lba:
 	inir
 	xor a
 	ret
+;
+;	Private helper
+;
+bread_raw:
+	push hl
+	ld h,b
+	ld l,c
+	jr nocarry_lba
 ;
 ;	Timeout might be a good idea
 ;
@@ -254,3 +293,15 @@ delay10ms:
 	ld c,#0x0a
 	ld de,#0x10
 	jr mcall
+
+	.area _STACK
+
+	.ds 16
+stack:
+
+	.area _CODE2
+
+;
+;	Loader core loaded from sector 1
+;
+	.include '../filo/filo.s'
