@@ -239,13 +239,12 @@ rst10:
 	    nop
 	    nop
 rst18:				; execve entry to user space
-	    ld a,#0x01
+	    ld a,#0x81
+	    out (0x38),a
+	    rlca
 	    out (0x30),a
 	    ei
-	    jp (hl)
-	    nop
-	    nop
-rst20:	    ret
+rst20:	    jp (hl)
 	    nop
 	    nop
 	    nop
