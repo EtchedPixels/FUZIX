@@ -37,13 +37,18 @@
 ;
 ;	We have 446 bytes of space in the boot sector before the
 ;	partitions that is loaded (and the partition table), but we
-;	need to load the second sector holding the core of FILO
+;	need to load the second sector holding the core of FILO and we
+;	load 2 sectors more so we have room as it expands to be more useful
 ;
 
 start:
 	ld sp, #stack
 	ld bc, #0xF200		; Straight after us
 	ld hl, #0x0001		; Sector 1
+	ld de, #0x0000
+	call bread_raw
+	ld bc, #0xF400		; Straight after us
+	ld hl, #0x0002		; Sector 1
 	ld de, #0x0000
 	call bread_raw
 	jp boot_begin		; Run FILO
