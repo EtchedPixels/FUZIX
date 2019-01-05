@@ -5,6 +5,7 @@
 #include <ds1302.h>
 #include <devide.h>
 #include <blkdev.h>
+#include <scm_monitor.h>
 #include "config.h"
 
 void map_init(void)

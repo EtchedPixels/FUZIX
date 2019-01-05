@@ -41,4 +41,5 @@ platform-sc114/usermem.rel
 platform-sc114/ds1302.rel
 platform-sc114/ds1302_discard.rel
 platform-sc114/ds1302_rc2014.rel
+platform-sc114/scm_monitor.rel
 -e

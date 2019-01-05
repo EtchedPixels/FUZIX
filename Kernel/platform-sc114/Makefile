@@ -1,4 +1,4 @@
-ASRCS = crt0.s tricks.s commonmem.s sc114.s usermem.s
+ASRCS = crt0.s tricks.s commonmem.s sc114.s usermem.s scm_monitor.s
 CSRCS = devices.c main.c devtty.c ide.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c

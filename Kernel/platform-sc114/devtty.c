@@ -25,17 +25,10 @@ static tcflag_t uart0_mask[4] = {
 	_LSYS
 };
 
-static tcflag_t uart1_mask[4] = {
-	_ISYS,
-	_OSYS,
-	CBAUD|CSYS,
-	_LSYS,
-};
-
 tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	NULL,
 	uart0_mask,
-	uart1_mask
+	uart0_mask
 };
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
@@ -62,17 +55,24 @@ static uint8_t baudmap[] = {
 void tty_setup(uint8_t minor, uint8_t flags)
 {
 	tcflag_t *tptr = &ttydata[minor].termios.c_cflag;
-	uint8_t baud = *tptr & CBAUD;
+	/* Safe as we are little endian */
+	uint8_t old = *tptr;
+	uint8_t baud = old & CBAUD;
+
+	used(flags);
+
 	if (baud < B300) {
 		baud = B300;
-		*tptr &= ~CBAUD;
-		*tptr |= B300;
+		old &= ~CBAUD;
+		*tptr = old | B300;
 	}
-	scm_setbaud(((uint16_t)minor) << 8) |baudmap[baud]);
+	if (!scm_setbaud((((uint16_t)minor) << 8) |baudmap[baud]))
+		*tptr = old;
 }
 
 int tty_carrier(uint8_t minor)
 {
+	used(minor);
 	return 1;
 }
 
@@ -116,10 +116,12 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
+	used(minor);
 }
 
 void tty_data_consumed(uint8_t minor)
 {
+	used(minor);
 }
 
 /* kernel writes to system console -- never sleep! */
