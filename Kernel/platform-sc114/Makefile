@@ -49,4 +49,4 @@ clean:
 
 image:
 	sdasz80 -o loader.s
-	sdldz80 -i loader.rel
+	sdldz80 -im loader.rel

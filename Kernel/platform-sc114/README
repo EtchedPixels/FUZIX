@@ -3,25 +3,36 @@ port tries to use the SCM ROM as far as possible and also is intended to
 support the SC108 via the same port. It's probably possible to add SC101 if
 anyone wanted to.
 
+SC101 is harder because we can do SC108 and SC114 together by using
+
+ld a,#value-for-sc108
+out (0x38),a
+rlca
+out (0x30),a
+
+On the SC108 bits 7 and 0 of 0x38 affect RAM and ROM, and 0x30 does nothing.
+On the SC114 bit 0 of 0x38 affects ROM and bit 7 is ignored, whilst bit 0
+of 0x30 affects RAM. All other bits of 0x30 and 0x38 are ignored.
+
 The other SCM systems are different
 - RC2014 has its own port and normally runs ROMWBW with 512K RAM/ROM
 - The RC2014 64K RAM / 32K ROM system has a custom port and can't use the SCM
   as it needs the ROM for the OS kernel core
 - Linc has a single 16K banked window and would need to spectrum 128K like port
-  as well as banked kernel
+  as well as banked kernel - doable but no so good a fit.
 - Tom's SBC has no banked RAM so would need a custom port with the kernel in
   ROM like the small RC2014 build
 
-This is a design that happens to have 128K RAM but the 64K banks are flipped
-directly. Fortunately there is a ROM which lives in both banks.
+The SC108 and SC114 have 128K of RAM but the 64K banks are flipped in full
+with no common maping except the ROM which can overlay both banks below
+the 32K boundary.
 
 For the moment we stick the OS in RAM (it would be entertaining to explore
 putting the kernel in ROM but as it's not trivially reprogrammable flash
-lets leave that for a while). The SCM ROM must have the new API's
+lets leave that for a while). The SCM ROM must have the new APIs
 
 0x2A:
 	DE = address in secondary bank to read
-
 	returns value in A.
 
 0x2B:
@@ -36,8 +47,8 @@ Kernel
 0000-00FF	Vectors (present in both banks)
 0100-EFFF	Kernel (common above 0x8000 for ROM dodging)
 F000-F1FF	UDATA
-F200-FCFF	Common (mostly valid in both banks)
-FD00-FFFF	ROM monitor owned
+F200-FBFF	Common (mostly valid in both banks)
+FC00-FFFF	ROM monitor owned
 
 User
 
@@ -45,8 +56,8 @@ User
 0100-EFFF	User space
 F000-F1FF	Kernel stack alternative (used during some bank switch ops)
 F200-F2FF	Istack alternate (we may take interrupts in either bank)
-F300-FCFF	Common (mostly valid in both banks)
-FD00-FFFF	ROM monitor owned
+F300-FBFF	Common (mostly valid in both banks)
+FC00-FFFF	ROM monitor owned
 
 
 TO DO
@@ -56,15 +67,11 @@ Use the extra space to put back some kernel bits we binned from -tiny
 Build a suitably high CP/M emuation and test it
 CTC support and CTC no-rtc support
 PPIDE ?
-Finish SC108 compatibility
-
-
 
 Long term fun
 - OS core in ROM, high memory holding rest (like -tiny) but with two user space
 banks ??
 - Clean up the serial code (on all RC2014)
-
 
 Boot Loader
 
@@ -72,6 +79,6 @@ The standard loader in the ROM is the CP/M loader. It loads 24 sectors (12K)
 from sector 0 moves them to the top 12K of RAM and jumps to the address held
 in 0xFFFE/FFFF
 
-We subvert this loader and our own loader lives with a standard PC style
+We will subvert this loader and our own loader lives with a standard PC style
 partition table and boots our OS. We ought to replace this with a nice loader
 that can load CP/M from a partition as well as Fuzix from a file system.

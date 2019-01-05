@@ -2,6 +2,9 @@
 ;	We have 12K loaded D000-FFFF. We actually keep ourselves highish up
 ;	to leave lots of room to load code
 ;
+;	Currently this and the glue driver code is well under 2 disk blocks.
+;	Adding partitions should still fit 2 blocks nicely.
+;
 
 I_ADDR		.equ	0x18
 I_SIZE		.equ	0x08
@@ -27,6 +30,8 @@ FILETYPE	.equ	0x80
 boot_begin:
 	; Run anything system specific
 	call preboot
+	ld hl,#filo
+	call con_write
 	; Load the partition table and find our partition
 	call partitions
 boot_up:
@@ -71,6 +76,9 @@ newline:
 	.asciz '\n'
 defname:
 	.asciz 'fuzix'
+filo:
+	.ascii 'Fuzix Intermediate Loader v0.01.\n'
+	.asciz '(C)2019 Alan Cox\n\n'
 
 	.area _DATA
 
@@ -600,6 +608,3 @@ delay10ms:
 	ld c,#0x0a
 	ld de,#0x10
 	jr mcall
-
-
-
