@@ -26,7 +26,7 @@ void devide_read_data(void) __naked
             jr nz, not_swapin
             ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
 not_swapin:
-            ; At this point A = 0 kernel, A = 1, kernel
+            ; At this point A = 0 kernel, A = 1, user
             rrca
             or #1			; 0x81 or 0x01
             out (0x38),a
