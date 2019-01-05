@@ -1,0 +1,4 @@
+FILO
+
+Initial draft of a loader that is designed to be a portable Z80 loading tool
+that can load Fuzix images out of a Fuzix file system.
