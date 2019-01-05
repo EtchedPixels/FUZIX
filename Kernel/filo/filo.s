@@ -1,3 +1,13 @@
+
+I_ADDR		.equ	0x18
+I_SIZE		.equ	0x08
+I_TYPE		.equ	0x00
+
+loadbuf		.equ	0x0100
+
+DIRTYPE		.equ	0x40
+FILETYPE	.equ	0x80
+
 ;
 ;	The main loop. We wait for about 2 seconds looking for input. If we
 ;	see input then we go to command line mode, if not we load the

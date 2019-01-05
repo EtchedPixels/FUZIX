@@ -5,16 +5,6 @@
 ;	Currently this and the glue driver code is well under 2 disk blocks.
 ;	Adding partitions should still fit 2 blocks nicely.
 ;
-
-I_ADDR		.equ	0x18
-I_SIZE		.equ	0x08
-I_TYPE		.equ	0x00
-
-loadbuf		.equ	0x0100
-
-DIRTYPE		.equ	0x40
-FILETYPE	.equ	0x80
-
 	.area _CODE
 
 ;
