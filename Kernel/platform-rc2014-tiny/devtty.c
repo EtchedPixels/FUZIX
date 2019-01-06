@@ -66,7 +66,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 {
 	if (ser_type == 1) {
 		sio2_setup(minor, flags);
-		sio2_otir(SIO0_BASE + 2 * minor);
+		sio2_otir(SIO0_BASE + 2 * (minor - 1));
 		/* We need to do CTS/RTS support and baud setting on channel 2
 		   yet */
 	}
