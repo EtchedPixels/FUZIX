@@ -115,7 +115,8 @@ void pagemap_free(ptptr p)
 {
 	uint8_t *pt = (uint8_t *)p->p_page + LOBANK;
 	uint8_t *e = (uint8_t *)p->p_page + PTNUM;
-	uint8_t last = *pt;
+	uint8_t last = PAGE_INVALID;
+
 	while(pt < e) {
 		if (*pt != PAGE_INVALID && *pt != PAGE_VIDEO && *pt != last) {
 			last = *pt;
