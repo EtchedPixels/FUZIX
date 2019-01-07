@@ -113,8 +113,8 @@ void pagemap_add(uint8_t page)
  */
 void pagemap_free(ptptr p)
 {
-	uint8_t *pt = (uint8_t *)p->p_page + LOBANK;
-	uint8_t *e = (uint8_t *)p->p_page + PTNUM;
+	uint8_t *pt = (uint8_t *)p->p_page;
+	uint8_t *e = (uint8_t *)p->p_page + PTNUM - LOBANK;
 	uint8_t last = PAGE_INVALID;
 
 	while(pt < e) {
@@ -177,7 +177,7 @@ int pagemap_alloc(ptptr p)
 #endif
 
 	/* Allocate the pages upwards */
-	for (i = LOBANK; i < needed; i++)
+	for (i = 0; i < needed; i++)
 		*ptr++ = pfree[--pfptr];
 	/*
 	 *	A machine with a separate supervisor space should write
@@ -186,15 +186,16 @@ int pagemap_alloc(ptptr p)
 	 *	common space is right if it is high.
 	 */
 #ifdef CONFIG_SUPERVISOR_SPACE
-	while (i++ < PTNUM)
+	while (i++ < PTNUM - LOBANK)
 		*ptr++ = PAGE_INVALID;
 #else
-	while (i++ < 8) {
+	while (i++ < 8 - LOBANK) {
 		*ptr = ptr[-1];
 		ptr++;
 	}
 #ifdef CONFIG_VIDMAP8
-	ptr[8] = PAGE_INVALID;
+	ptr += LOBANK;
+	*ptr = PAGE_INVALID;
 #endif	
 #endif
 	return 0;
@@ -231,11 +232,13 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	/* If we are shrinking then free pages and propogate the
 	   common page or invalid into the freed spaces */
 	if (want < have) {
+		uint8_t last = ptr[7 - LOBANK];
+		ptr += want - 1;
 		for (i = want; i < have; i++) {
-			pfree[pfptr++] = ptr[i - 1];
+			pfree[pfptr++] = *ptr;
 			/* We might replicate the top page or we might
 			   replicate the invalid - both work */
-			ptr[i - 1] = ptr[7];
+			*ptr++ = last;
 		}
 		return 0;
 	}
@@ -248,8 +251,9 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	if (want - have > pfptr)	/* We have no swap so poof... */
 		return ENOMEM;
 #endif
+	ptr += have - 1;
 	for (i = have; i < want; i++)
-		ptr[i - 1] = pfree[--pfptr];
+		*ptr++ = pfree[--pfptr];
 	return 0;
 }
 
