@@ -240,6 +240,7 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 			   replicate the invalid - both work */
 			*ptr++ = last;
 		}
+		program_vectors(&udata.u_page);
 		return 0;
 	}
 #ifdef SWAPDEV
@@ -254,6 +255,7 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	ptr += have - 1;
 	for (i = have; i < want; i++)
 		*ptr++ = pfree[--pfptr];
+	program_vectors(&udata.u_page);
 	return 0;
 }
 
