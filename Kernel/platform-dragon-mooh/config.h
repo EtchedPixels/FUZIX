@@ -47,8 +47,7 @@
 #define VT_BOTTOM	(vt_tbottom[curtty])
 #define VT_INITIAL_LINE	0
 
-/* These overlap for now until we figure out properly moving VCs down */
-#define VT_ALLBASE	0x0800	/* Two 32x16 virtual consoles here */
+#define VT_ALLBASE	0x0400	/* Two 32x16 virtual consoles here */
 #define VIDEO_BASE	0x0800	/* 0x800 - 0x1FFF (6K) */
 #define map_video(x)
 #define unmap_video(x)

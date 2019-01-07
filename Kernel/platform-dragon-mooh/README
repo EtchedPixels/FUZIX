@@ -15,8 +15,8 @@ its own data bus and SAM generates memory access addresses for it.
 Since the internal memory here (unlike the upper 32K on the 64K
 machines) will be scribbled upon external memory writes in the same CPU
 space (thanks to the sloppy internal SLENB deactivation logic), we keep
-the video in the first 8KB of memory, and only map read-only sections on
-top of the 6K video area. This leaves us with 2KB of read/write memory
+the video in the first 8K memory block, and only map read-only sections
+on top of the 7K video area. This leaves us with 1KB of read/write memory
 for common data and udata. The remaining 7 banks can be mapped freely.
 
 The upper 256 bytes at FF00 always map I/O and are therefore excluded
@@ -39,7 +39,7 @@ We also replace the loaded bank 3 with bank $3F to sit at 0xE000 - it is
 the only place we can map it so we'll use it for the kernel here.
 
 After relocation we have:
-0000 bank 4 2K commondata + 6K common || 6K video (internal memory)
+0000 bank 4 1K commondata + 7K common || 7K video (internal memory)
 2000 bank 5
 4000 bank 6
 6000 bank 7

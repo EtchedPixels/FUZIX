@@ -105,10 +105,10 @@ _set_vc_mode:
 	sta -4,x	; reset V1 $ffc2
 	sta -2,x	; reset V2 $ffc4	; set resolution
 
-	; set video base 0x0800 = 0x200 * 0b100
+	; set video base 0x0400 = 0x200 * 0b010
 	sta   b,x	; set/reset bit F0 for b = 0 or 1
-	sta 2+0,x	; reset F1
-	sta 4+1,x 	; set F2
+	sta 2+1,x	; set F1
+	sta 4+0,x 	; reset F2
 
 	lda $ff22
 	anda #$07
