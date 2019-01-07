@@ -9,7 +9,7 @@ unsigned char vt_mangle_6847(unsigned char c);
 /* Use macros so that functions are kept identical to Kernel/vt.c */
 #undef VT_MAP_CHAR
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
-#define VT_BASE		((uint8_t *) VT_ALLBASE + 0x200 * (curtty - 2))
+#define VT_BASE		((uint8_t *) VC_BASE + 0x200 * (curtty - 2))
 #define VT_WIDTH	32
 #define VC		(curtty - 2)
 
@@ -75,10 +75,10 @@ unsigned char vt_mangle_6847(unsigned char c)
 	return c;
 }
 
-/* called without curtty and VC being set */
+/* called without curtty and VC being set - using VC_BASE */
 void vc_clear(int8_t vc_num)
 {
-	map_video();
-	memset((uint8_t*)VT_ALLBASE + 0x200 * vc_num, ' ', 0x200);
-	unmap_video();
+	map_video()
+	memset((uint8_t*)VC_BASE + 0x200 * vc_num, ' ', 0x200);
+	unmap_video()
 }

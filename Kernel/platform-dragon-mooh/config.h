@@ -47,10 +47,8 @@
 #define VT_BOTTOM	(vt_tbottom[curtty])
 #define VT_INITIAL_LINE	0
 
-#define VT_ALLBASE	0x0400	/* Two 32x16 virtual consoles here */
 #define VIDEO_BASE	0x0800	/* 0x800 - 0x1FFF (6K) */
-#define map_video(x)
-#define unmap_video(x)
+#define VC_BASE		0x0400	/* Two 32x16 virtual consoles here */
 
 #define CRT9128_BASE	0xFF7C
 

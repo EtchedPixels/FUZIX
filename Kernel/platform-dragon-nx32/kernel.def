@@ -7,6 +7,7 @@ U_DATA_STASH                equ 0xFD00       ; FD00-FEFF
 
 VIDEO_BASE		    equ 0x0400	     ; 6K for the display
 VIDEO_END		    equ 0x1C00
+VC_BASE			    equ 0x1C00       ; 1K for two virtual consoles
 
 IDEDATA			    equ 0xFF50
 IDEDATA_L		    equ 0xFF58

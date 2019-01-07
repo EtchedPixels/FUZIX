@@ -7,6 +7,7 @@ U_DATA_STASH                equ 0xFC00       ; FC00-FDFF
 
 VIDEO_BASE		    equ 0x0800	     ; 6K for the graphics display
 VIDEO_END		    equ 0x2000
+VC_BASE			    equ 0x0400       ; 1K for two virtual consoles
 KBANKV			    equ 0x4          ; Kernel bank overlapping video memory
 
 IDEDATA			    equ 0xFF50
