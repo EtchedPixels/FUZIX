@@ -35,11 +35,11 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%s: not a Fuzix binary format.\n", argv[1]);
     exit(1);
   }
-  if (buf[3] == 0x7E || buf[3] == 0x20)
+  if (buf[0] == 0x7E || buf[0] == 0x20)
     be = 1;	/* 6809 */
-  else if (buf[3] == 0x4C || buf[3] == 0x38)
+  else if (buf[0] == 0x4C || buf[0] == 0x38)
     be = 0;	/* 6502 */
-  else if (buf[3] == 0xC3 || buf[3] == 0x18)
+  else if (buf[0] == 0xC3 || buf[0] == 0x18)
     be = 0;	/* Z80 */
   else {
     fprintf(stderr, "%s: unknown Fuzix binary type.\n", argv[1]);
