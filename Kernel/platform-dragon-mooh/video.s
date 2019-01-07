@@ -83,8 +83,6 @@ vidaddr:
 ;
 _m6847_plot_char:
 	pshs y
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
 	lda 4,s
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
@@ -96,6 +94,7 @@ _m6847_plot_char:
 	rola
 	tfr d,x
 	leax _fontdata_8x8,x		; relative to font
+	jsr _map_video
 	ldb _vtattr
 	andb #0x3F		; drop the bits that don't affect our video
 	beq plot_fast
@@ -159,8 +158,7 @@ plotnext:
 	inca
 	cmpa #8
 	bne plot_loop
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 ;
 ;	Fast path for normal attributes
@@ -190,8 +188,7 @@ plot_fast:
 	lda ,x+
 	coma
 	sta 224,y
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 
 ;
@@ -199,10 +196,9 @@ plot_fast:
 ;
 _m6847_scroll_up:
 	pshs y
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
 	ldy #VIDEO_BASE
 	leax 256,y
+	jsr _map_video
 vscrolln:
 	; Unrolled line by line copy
 	ldd ,x++
@@ -239,8 +235,7 @@ vscrolln:
 	std ,y++
 	cmpx #VIDEO_END
 	bne vscrolln
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 
 ;
@@ -248,10 +243,9 @@ vscrolln:
 ;
 _m6847_scroll_down:
 	pshs y
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
 	ldy #VIDEO_END
 	leax -256,y
+	jsr _map_video
 vscrolld:
 	; Unrolled line by line loop
 	ldd ,--x
@@ -288,8 +282,7 @@ vscrolld:
 	std ,--y
 	cmpx #VIDEO_BASE
 	bne vscrolld
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 
 ;
@@ -297,12 +290,11 @@ vscrolld:
 ;
 _m6847_clear_across:
 	pshs y
-	lda #$3F
-	sta $FFA0	; unmap kernel above video memory
 	lda 4,s		; x into A, B already has y
 	jsr vidaddr	; Y now holds the address
 	tfr x,d		; Shuffle so we are writng to X and the counter
 	tfr y,x		; l is in d
+	jsr _map_video
 	lda #$ff
 clearnext:
 	sta ,x
@@ -316,23 +308,21 @@ clearnext:
 	leax 1,x
 	decb
 	bne clearnext
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 ;
 ;	clear_lines(int8_t y, int8_t ct)
 ;
 _m6847_clear_lines:
 	pshs y
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
 	clra			; b holds Y pos already
 	jsr vidaddr		; y now holds ptr to line start
 	tfr y,x
+	lsl 4,s
+	lsl 4,s
+	lsl 4,s
+	jsr _map_video
 	ldd #$ffff
-	lsl 4,s
-	lsl 4,s
-	lsl 4,s
 wipel:
 	std ,x++
 	std ,x++
@@ -352,8 +342,7 @@ wipel:
 	std ,x++
 	dec 4,s			; count of lines
 	bne wipel
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls y,pc
 
 _m6847_cursor_on:
@@ -365,8 +354,7 @@ _m6847_cursor_on:
 	stx cursor_save
 	; Fall through
 _m6847_cursor_off:
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
+	jsr _map_video
 	ldb _vtattr
 	bitb #0x80
 	bne nocursor
@@ -379,8 +367,7 @@ _m6847_cursor_off:
 	com 160,x
 	com 192,x
 	com 224,x
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 nocursor:
 _m6847_cursor_disable:
 _m6847_vtattr_notify:
@@ -400,7 +387,7 @@ _m6847_video_read:
 ;;;   takes: C = direction 0=write, 1=read
 ;;;   takes: X = transfer buffer ptr + 2
 tfr_cmd:
-	pshs	u,y		; save regs
+	pshs	cc,u,y		; save regs
 	orcc	#$10		; turn off interrupt - int might remap kernel
 	lda	#$3F
 	sta	$FFA0		; unmap kernel above video memory
@@ -428,7 +415,7 @@ b@	ldb	,x+		; get a byte from src
 	bne	a@		; loop
 	lda	#KBANKV
 	sta	$FFA0		; remap kernel
-	puls	u,y,pc		; restore regs, return
+	puls	cc,u,y,pc	; restore regs, return
 	
 
 ;
@@ -446,8 +433,7 @@ vidptr:
 
 _m6847_video_cmd:
 	pshs u
-	lda #$3F
-	sta $FFA0		; unmap kernel above video memory
+	jsr _map_video
 	bsr vidptr		; u now points to the screen
 nextline:
 	pshs u			; save it for the next line
@@ -468,8 +454,7 @@ endline:
 	leau 32,u		; down one scan line
 	ldb ,x+			; get next op - 0,0 means end and done
 	bne oploop
-	lda #KBANKV
-	sta $FFA0		; remap kernel
+	jsr _unmap_video
 	puls u,pc
 
 	.area .videodata
