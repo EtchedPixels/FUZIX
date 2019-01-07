@@ -209,18 +209,20 @@ _dofork:
 
 fork_copy:
 ; copy the process memory to the new banks and stash parent uarea to old banks
-	lda #7
-	pshs a				; counter
+	lda #6				; counter, decremented until negative
+	pshs a
 	ldx fork_proc_ptr
 	ldx P_TAB__P_PAGE_OFFSET,x	; new bank map
 	ldy U_DATA__U_PAGE		; old bank map
 cpbank	lda ,y+				; src
-	bmi dnbank			; PAGE_INVALID means we are done
-	ldb ,x+				; dst
+	cmpa ,y				; repeated bank = last
+	bne notlst
+	clr ,s
+notlst	ldb ,x+				; dst
 	jsr copybank			; clobbers only A,B
 	dec ,s
-	bne cpbank
-dnbank	puls a
+	bpl cpbank
+	leas 1,s			; drop counter
 
 ; stash parent uarea (including kernel stack)
 	ldx U_DATA__U_PAGE		; old bank
