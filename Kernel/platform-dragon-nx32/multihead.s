@@ -100,25 +100,3 @@ _video_write:
 	lbeq	_m6847_video_write
 	rts
 
-_set_vc_mode:
-	ldx #$ffc6
-	sta -4,x	; reset V1 $ffc2
-	sta -2,x	; reset V2 $ffc4	; set resolution
-
-	; sta $ffc6...		; set video base 0x1C00 = 8+4+2 = F3,F2,F1
-	sta b,x			; set/reset bit F0 for b = 0 or 1
-	sta 5,x ; set F2 ffcb
-	sta 7,x	; set F3 ffcd
-
-	lda $ff22
-	anda #$07
-	sta $ff22	; set PIA for VDG
-	rts
-
-_set_vid_mode:
-	; video base 0x0400 = 2 = F1 , reset F2 and F3 and F0
-	sta $ffc6 ; F0
-	sta $ffca ; F2
-	sta $ffcc ; F3
-	jmp _vid256x192
-
