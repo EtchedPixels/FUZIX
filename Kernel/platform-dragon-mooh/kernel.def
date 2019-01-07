@@ -3,7 +3,7 @@
 U_DATA                      equ 0x0100       ; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           equ 0x200        ; 256+256 (we don't save istack)
 
-U_DATA_STASH                equ 0xFC00       ; FC00-FDFF
+U_DATA_STASH                equ 0x2000       ; FC00-FDFF
 
 VIDEO_BASE		    equ 0x0800	     ; 6K for the graphics display
 VIDEO_END		    equ 0x2000
@@ -21,6 +21,6 @@ SPISIE			    equ SPICLK+1
 
 SPICS			    equ 0x01	     ; hardcode SEL0 for now
 
-PROGBASE                    equ 0x2000       ; programs and data start here
+PROGBASE                    equ 0x2200       ; programs and data start here
 
 NBUFS			    equ 5

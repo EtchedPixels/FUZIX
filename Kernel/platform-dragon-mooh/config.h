@@ -16,6 +16,7 @@
 #define PAGE_VIDEO	0xFF	/* not used */
 #define MAX_MAPS	56	/* 64 - 8 for kernel */
 #define CONFIG_BANKS	8
+#define MAPBASE		0x2000
 /* And swapping */
 #define SWAPDEV 2049		/* DriveWire drive 1 */
 #define SWAP_SIZE   0x6F	/* 56K in 512 byte blocks - 1 */
@@ -55,9 +56,9 @@
 #define TICKSPERSEC 50   /* Ticks per second */
 /* FIXME: This will move once we put the display in the kernel bank and
    sort the banker out */
-#define PROGBASE    0x2000  /* also data base */
-#define PROGLOAD    0x2000  /* also data base */
-#define PROGTOP     0xFC00  /* Top of program */
+#define PROGBASE    0x2200  /* also data base */
+#define PROGLOAD    0x2200  /* also data base */
+#define PROGTOP     0xFE00  /* Top of program */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
