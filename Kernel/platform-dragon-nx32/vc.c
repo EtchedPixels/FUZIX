@@ -78,7 +78,5 @@ unsigned char vt_mangle_6847(unsigned char c)
 /* called without curtty and VC being set - using VC_BASE */
 void vc_clear(int8_t vc_num)
 {
-	map_video()
 	memset((uint8_t*)VC_BASE + 0x200 * vc_num, ' ', 0x200);
-	unmap_video()
 }
