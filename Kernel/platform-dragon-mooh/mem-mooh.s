@@ -10,11 +10,13 @@
 	.globl reloc
 	.globl size_ram
 	.globl map_kernel
+	.globl map_process
 	.globl map_process_a
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
 	.globl copybank
+	.globl mmu_remap_x
 
 	; imported
 	.globl _ramsize
@@ -48,55 +50,54 @@ size_ram
 
 ; must preserve register a but not x
 map_kernel
-	pshs cc
 	clr map_copy
-	clr map_copy+1
 	clr 0xff91	; MMU task 0
-	puls cc,pc
+	rts
 
-map_process_a
-	pshs cc,a,b,x,y
-	bra map_x
+map_restore
+	lda map_store
+	beq map_kernel
+	; fall-through
 
 * might be called with interrupts enabled from drivers
 map_process_always
-	pshs cc,a,b,x,y
+	pshs cc,a
+	lda #1
 	orcc #0x10
-	ldx U_DATA__U_PAGE
-map_x
-	; could try to skip this if maps already in place
-	stx map_copy
+	sta map_copy
+	sta 0xff91	; MMU task 1
+	puls cc,a,pc
+
+* called by I/O drivers (also for swapping)
+map_process
+	cmpx #0
+	beq map_kernel
+	pshs cc
+	orcc #0x10
+	jsr map_process_a
+	pshs cc,pc
+
+* called directly by switchin
+map_process_a
+	jsr mmu_remap_x
+	lda #1
+	sta map_copy
+	sta 0xff91	; MMU task 1
+	rts
+
+mmu_remap_x
 	ldy #0xFFA9
 	ldb #7
 maplp	lda ,x+
-	bmi fillm	; PAGE_INVALID (0xFF) means we are done
 	sta ,y+
 	decb
 	bne maplp
-mapdn	lda #1
-	sta 0xff91	; MMU task 1
-	puls cc,a,b,x,y,pc
-fillm	lda -2,x	; should not happen on first page
-fillp	sta ,y+		; fill map by repeating last page
-	decb
-	bne fillp
-	bra mapdn
+	rts
 
 map_save
-	pshs x
-	ldx map_copy
-	stx map_store
-	puls x,pc
-
-map_restore
-	pshs x
-	ldx map_store
-	bne usr
-	jsr map_kernel
-	puls x,pc
-usr	jsr map_process_a
-	puls x,pc
-
+	lda map_copy
+	sta map_store
+	rts
 
 ; fast bank copy for fork (called with kernel mapped)
 ; src bank in A, dst bank in B

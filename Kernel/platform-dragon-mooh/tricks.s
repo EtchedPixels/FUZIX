@@ -234,6 +234,9 @@ stashf	ldd ,x++
 	cmpx #U_DATA+U_DATA__TOTALSIZE
 	bne stashf
 	jsr map_kernel
+	ldx fork_proc_ptr
+	ldx P_TAB__P_PAGE_OFFSET,x	; child's map
+	jmp mmu_remap_x			; leave with child mapped in MMU user task
 	; --- we are now on the stack copy, parent stack is locked away ---
-	rts                     ; this stack is copied so safe to return on
+	; this stack is copied so safe to return on
 

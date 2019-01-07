@@ -130,11 +130,17 @@ ___hard_irqrestore:		; B holds the data
             .area .common
 
 ;
-;	In the Dragon nx32 case our vectors live in a fixed block
+;	In the MOOH case our vectors live in a fixed block
 ; 	and is not banked out.
+; 	However, hook in the MMU refresh here
+; 	(called by pagemap_realloc and makeproc)
 ;
 _program_vectors:
-	rts
+	ldx ,x		; dereference pointer to udata.u_page
+	pshs cc,y
+	orcc #0x10
+	jsr mmu_remap_x
+	puls cc,y,pc
 
 
 ;
