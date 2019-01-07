@@ -52,7 +52,7 @@
 #endif
 
 /* Bank numbers we actually use */
-#define HIBANK ((uint8_t)((((PROGTOP) + 0x1FFFUL) >> 13))
+#define HIBANK ((uint8_t)((((PROGTOP) + 0x1FFFUL) >> 13)))
 #define LOBANK ((PROGBASE) >> 13)
 
 static uint8_t pfree[MAX_MAPS];
