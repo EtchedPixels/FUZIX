@@ -21,6 +21,7 @@
 #define SWAP_SIZE   0x6F	/* 56K in 512 byte blocks - 1 */
 #define SWAPBASE    0x2000	/* We swap the lot, including stashed uarea */
 #define SWAPTOP     0xFE00	/* so it's a round number of 256 byte sectors */
+#define TOP_SIZE    0x0F	/* swap until 0xFE00 */
 #define MAX_SWAPS   32
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
