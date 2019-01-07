@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-  int v;
+  unsigned int v;
   FILE *fp;
   unsigned char buf[10];
   unsigned short top;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
       
-  if (sscanf(argv[2], "%d", &v) != 1 || v < 0 || v > 65536) {
+  if (sscanf(argv[2], "%u", &v) != 1 || v > 65536) {
     fprintf(stderr, "%s: invalid chmem value '%s'.\n", argv[0], argv[2]);
     exit(1);
   }
