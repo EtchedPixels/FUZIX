@@ -1,0 +1,40 @@
+-mwxuy
+-i fuzix.ihx
+-b _COMMONMEM=0x0100
+-b _CODE=0x0B00
+-l z80
+platform-linc80/crt0.rel
+platform-linc80/commonmem.rel
+platform-linc80/linc80.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-linc80/tricks.rel
+platform-linc80/main.rel
+timer.rel
+kdata.rel
+platform-linc80/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_proc.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_other.rel
+mm.rel
+swap.rel
+simple.rel
+tty.rel
+devsys.rel
+usermem.rel
+usermem_std-z80.rel
+platform-linc80/discard.rel
+platform-linc80/devtty.rel
+platform-linc80/mbr.rel
+platform-linc80/blkdev.rel
+platform-linc80/devide.rel
+platform-linc80/devide_discard.rel
+-e

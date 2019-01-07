@@ -1,0 +1,41 @@
+LiNC80 Experimental Port
+
+This port supports the following configurations
+
+	LiNC80 with at least one extra 16K bank of RAM as bank 1
+	(additional banks will not be used at this point)
+
+	IDE CF card configured with CP/M to load Fuzix (pending a better
+	loader). Partition table 65536 blocks into the media with at
+	least a root and swap partition present.
+
+	Options:
+		No LiNC80 or RC2014 add in cards are currently supported
+
+	Planned:
+		A different build that supports multiple banks of 16K or
+		with a simple board mod 32K banks
+		Maybe sound card when we get to the Fuzix sound support
+
+
+Memory map:
+
+Kernel
+
+0000-7FFF	Common and kernel
+8000-BFFF	Kernel (banked and in bank 0)
+C000-FFFF	User
+
+User
+
+0000-7FFF	Common and kernel
+8000-BFFF	User (banked and in bank 1)
+C000-FFFF	User
+
+TO DO
+
+Write a proper bootloader that can use partition tables but will trick the
+CPM loader into doing the right thing.
+
+Version that supports multiple 16K banks and multiple processes in memory
+ZX style. Also code to probe for and use the 32K hack which is far nicer.
