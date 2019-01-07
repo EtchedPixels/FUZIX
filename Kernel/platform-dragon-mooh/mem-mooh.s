@@ -48,17 +48,20 @@ size_ram
 
 ; must preserve register a but not x
 map_kernel
+	pshs cc
 	clr map_copy
 	clr map_copy+1
 	clr 0xff91	; MMU task 0
-	rts
+	puls cc,pc
 
 map_process_a
-	pshs a,b,x,y
+	pshs cc,a,b,x,y
 	bra map_x
 
+* might be called with interrupts enabled from drivers
 map_process_always
-	pshs a,b,x,y
+	pshs cc,a,b,x,y
+	orcc #0x10
 	ldx U_DATA__U_PAGE
 map_x
 	; could try to skip this if maps already in place
@@ -72,7 +75,7 @@ maplp	lda ,x+
 	bne maplp
 mapdn	lda #1
 	sta 0xff91	; MMU task 1
-	puls a,b,x,y,pc
+	puls cc,a,b,x,y,pc
 fillm	lda -2,x	; should not happen on first page
 fillp	sta ,y+		; fill map by repeating last page
 	decb
