@@ -39,3 +39,5 @@ CPM loader into doing the right thing.
 
 Version that supports multiple 16K banks and multiple processes in memory
 ZX style. Also code to probe for and use the 32K hack which is far nicer.
+
+Use IM2 properly and do serial buffering code
