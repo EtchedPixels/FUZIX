@@ -29,15 +29,22 @@
 */
 
 
+/* So systems can fastcall or asm call these */
+
+#ifndef SD_SPI_CALLTYPE
+#define SD_SPI_CALLTYPE
+#endif
+
 /* public interface */
 void devsd_init(void);
 
 /* platform-specific SPI functions */
-void sd_spi_clock(bool go_fast); 
+void sd_spi_clock(bool go_fast) SD_SPI_CALLTYPE;
 void sd_spi_raise_cs(void);
 void sd_spi_lower_cs(void);
-void sd_spi_transmit_byte(uint8_t byte);
+void sd_spi_transmit_byte(uint8_t byte) SD_SPI_CALLTYPE;
 uint8_t sd_spi_receive_byte(void);
+
 bool sd_spi_receive_sector(void);
 bool sd_spi_transmit_sector(void);
 
