@@ -38,8 +38,6 @@ void sd_spi_clock(bool go_fast)
 COMMON_MEMORY
 
 /*
- * FIXME: swap support
- *
  * Could also unroll these a bit for speed
  */
 
