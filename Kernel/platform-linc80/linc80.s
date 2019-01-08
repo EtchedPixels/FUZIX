@@ -56,7 +56,10 @@
 _bufpool:
 	.ds BUFSIZE * NBUFS
 
-        .area _COMMONMEM
+;
+;	We need this above 16K so the ROM doesn't map over it
+;
+        .area _CODE2
 
 _platform_monitor:
 	    ; Reboot ends up back in the monitor
@@ -68,6 +71,7 @@ _platform_reboot:
 _int_disabled:
 	.db 1
 
+	.area _COMMONMEM
 map_buffers:
 map_kernel:
 map_kernel_di:
