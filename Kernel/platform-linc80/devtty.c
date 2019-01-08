@@ -35,6 +35,8 @@ uint8_t sio_r[] = {
 
 static void sio2_setup(uint8_t minor, uint8_t flags)
 {
+	used(flags);
+
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
 	/* Set bits per character */
@@ -139,6 +141,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 /* We will need this for SIO once we implement flow control signals */
 void tty_sleeping(uint8_t minor)
 {
+	used(minor);
 }
 
 /* Be careful here. We need to peek at RR but we must be sure nobody else
@@ -177,6 +180,7 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_data_consumed(uint8_t minor)
 {
+	used(minor);
 }
 
 /* kernel writes to system console -- never sleep! */
