@@ -107,7 +107,7 @@ spi_tx_loop:
 ;
 ;	The basic idea is that we keep the port in C and each needed byte
 ;	value in a register. The values are all precomputed so we don't
-;	touch other bits and so we can different modes
+;	touch other bits and so we can use different modes
 ;	
 spi0_bitbang_tx:
 	ld b,#8			; 7
@@ -120,7 +120,7 @@ spi0_bit_tx:
 	ret			; 10
 spi0_tx0:
 	out (c),e		; 11		low | 0
-	out (c),d		; 11		low | 1		(sample)
+	out (c),d		; 11		high | 1	(sample)
 	djnz spi0_bit_tx	; 13/8
 	ret
 ;
