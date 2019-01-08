@@ -52,10 +52,13 @@ extern unsigned int swap_dev;
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 1	    /* 1 IDE for now */
+#define MAX_BLKDEV 3	    /* 3 IDE + 2 x SD for now */
 
 /* IDE/CF support */
 #define CONFIG_IDE
+#define CONFIG_SD
+
+#define SD_DRIVE_COUNT		2
 
 /* Device parameters */
 #define NUM_DEV_TTY 2
@@ -67,3 +70,5 @@ extern unsigned int swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define platform_copyright()
+
+#define SD_SPI_CALLTYPE __z88dk_fastcall

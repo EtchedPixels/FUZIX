@@ -1,8 +1,8 @@
-ASRCS = crt0.s tricks.s commonmem.s linc80.s
-CSRCS = devices.c main.c devtty.c
+ASRCS = crt0.s tricks.s commonmem.s linc80.s piospi.s
+CSRCS = devices.c main.c devtty.c sd.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
+DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devsd.c
 NSRCS = 
 
 AOBJS = $(ASRCS:.s=.rel)
@@ -48,3 +48,5 @@ loader.bin: loader.s
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
 	dd if=loader.tmp bs=256 skip=208 of=loader.bin
+
+piospi.rel: ../dev/z80softspi.s

@@ -37,4 +37,8 @@ platform-linc80/mbr.rel
 platform-linc80/blkdev.rel
 platform-linc80/devide.rel
 platform-linc80/devide_discard.rel
+platform-linc80/devsd.rel
+platform-linc80/devsd_discard.rel
+platform-linc80/sd.rel
+platform-linc80/piospi.rel
 -e

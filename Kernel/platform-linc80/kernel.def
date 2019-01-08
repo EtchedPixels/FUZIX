@@ -30,3 +30,5 @@ CTC_CH3		.equ	0x0B	; CTC channel 3
 
 NBUFS		.equ	4
 
+SPI_DATA	.equ	0x04
+SPI_CLOCK	.equ	0x02
