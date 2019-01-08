@@ -122,7 +122,7 @@ int pagemap_alloc( ptptr p ){
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	int8_t have = maps_needed(udata.u_top);
-	int8_t want = maps_needed(size);
+	int8_t want = maps_needed(size + PROGBASE);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
 	int8_t i;
 	uint8_t update = 0;
