@@ -67,7 +67,7 @@ extern unsigned int swap_dev;
    the buffer cache. For all small (eg bit) systems this is the right setting
    as it avoids polluting the small cache with data when it needs to be full
    of directory and inode information */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 /* Specify this if there is a real time clock capable of reporting seconds. It
    will be used to lock the kernel time better to reality. Other details like

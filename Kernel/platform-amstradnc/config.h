@@ -66,7 +66,7 @@
 #define BOOTDEVICE 0x0100	/* Only one possible option */
 #endif
 
-#define CONFIG_LARGE_IO_DIRECT	/* Definite win as our I/O is as fast as a
-				   memcpy! */
+#define CONFIG_LARGE_IO_DIRECT(m)	1
+			/* Definite win as our I/O is as fast as a memcpy! */
 #define platform_discard()
 #define platform_copyright()

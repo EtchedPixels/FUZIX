@@ -21,7 +21,7 @@
 #define UDATA_SIZE 0x200
 #define MAXTICKS 20
 /* Direct I/O support */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Raw input layer */
 #define CONFIG_INPUT
 /* Full keycode level grabbing supported */

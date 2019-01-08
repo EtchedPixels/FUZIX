@@ -23,7 +23,7 @@
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
 /* Read processes and big I/O direct into process space */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1

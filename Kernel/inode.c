@@ -5,9 +5,9 @@
 #include <netdev.h>
 
 #if defined(CONFIG_LARGE_IO_DIRECT)
-#define read_direct(flag)		(!udata.u_sysio)
+#define read_direct(dev, flag)		(!udata.u_sysio && CONFIG_LARGE_IO_DIRECT(dev))
 #elif (NBUFS >= 32)
-#define read_direct(flag)		(flag & O_DIRECT)
+#define read_direct(dev, flag)		(flag & O_DIRECT)
 #endif
 
 /* This assumes it's called once before we do I/O. That's wrong and we
@@ -95,7 +95,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 #if !defined(read_direct)
 			bp = NULL;
 #else
-			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(flag)) {
+			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(major(dev), flag)) {
 				/* we can transfer direct from disk to the userspace buffer */
 				/* FIXME: allow for async queued I/O here. We want
 				   an API something like breadasync() that either

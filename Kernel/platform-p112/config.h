@@ -13,7 +13,7 @@
 /* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel */
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	16
 #define MAP_SIZE	PROGTOP /* 0xF000 breaks pagemap_realloc() / exec() */

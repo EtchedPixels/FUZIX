@@ -11,7 +11,7 @@
 #define CONFIG_PARENT_FIRST
 #define MAXTICKS 20
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* One memory bank */
 #define CONFIG_BANKS	1
 #define TICKSPERSEC 10      /* Ticks per second */

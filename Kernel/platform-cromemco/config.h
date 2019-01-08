@@ -37,7 +37,7 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define CONFIG_DYNAMIC_BUFPOOL
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 #define platform_copyright()
 

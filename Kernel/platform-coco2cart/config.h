@@ -26,7 +26,7 @@ extern unsigned int cocoswap_dev;
 #define MAX_SWAPS   32
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT

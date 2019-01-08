@@ -66,7 +66,7 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Do I/O direct to user space */
-#define CONFIG_LARGE_IO_DIRECT
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
 
