@@ -135,7 +135,7 @@ arg_t _execve(void)
 	   two elements. We never allocate 'code' as there is no split I/D */
 	/* This is only safe from deadlocks providing pagemap_realloc doesn't
 	   sleep */
-	if (pagemap_realloc(0, top, 0))
+	if (pagemap_realloc(0, top - MAPBASE, 0))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
