@@ -21,6 +21,7 @@
 
 	    .globl _trs80_model
 	    .globl _int_disabled
+	    .globl _need_resched
 
 	    ; hard disk helpers
 	    .globl _hd_xfer_in
@@ -50,6 +51,9 @@
             .area _COMMONMEM
 
 _int_disabled:
+	    .db 1
+
+_need_resched:
 	    .db 1
 
 _platform_monitor:

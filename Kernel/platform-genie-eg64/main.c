@@ -9,7 +9,6 @@
 uint16_t ramtop = PROGTOP;
 uint8_t trs80_model;
 uint8_t vtattr_cap;
-uint8_t need_resched;
 
 /*
  *	Called when there is no work to do. On the models without serial
