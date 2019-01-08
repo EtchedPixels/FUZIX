@@ -114,13 +114,13 @@ spi0_bitbang_tx:
 spi0_bit_tx:
 	rla			; 4
 	jp nc, spi0_tx0		; 10		For SPI 0
-	out (c),l		; 11		low | 1
-	out (c),h		; 11		high | 1	(sample)
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1	(sample)
 	djnz spi0_bit_tx	; 13/8
 	ret			; 10
 spi0_tx0:
-	out (c),e		; 11		low | 0
-	out (c),d		; 11		high | 1	(sample)
+	out (c),e		; 12		low | 0
+	out (c),d		; 12		high | 1	(sample)
 	djnz spi0_bit_tx	; 13/8
 	ret
 ;
@@ -133,9 +133,9 @@ spi0_bitbang_rx:
 	ld b,#8
 	ld d,#0
 spi0_bit_rx:
-	out (c),l		; 11		low | 1
-	out (c),h		; 11		high | 1
-	in a,(c)		; 11
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12
 	rra			; 4
 	rl d			; 8
 	djnz spi0_bit_rx	; 13/8
