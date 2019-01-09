@@ -299,6 +299,10 @@ int swapout(ptptr p)
 	/* Write the app (and possibly the uarea etc..) to disk */
 	for (i = LOBANK; i < HIBANK; i++) {
 		uint8_t pg = *pt++;
+		if (i == HIBANK - 1)
+			size = TOP_SIZE;
+		else
+			size = 0x10;
 		if (pg != PAGE_INVALID) {
 #ifdef CONFIG_VIDMAP8
 			if (pg == PAGE_VIDEO)
@@ -309,10 +313,6 @@ int swapout(ptptr p)
 		base += 0x2000;
 		base &= 0xE000;	/* Snap to bank alignment */
 		blk += size;
-		if (i == HIBANK - 1)
-			size = TOP_SIZE;
-		else
-			size = 0x10;
 	}
 	pagemap_free(p);
 	p->p_page = 0;
@@ -349,6 +349,10 @@ void swapin(ptptr p, uint16_t map)
 
 	for (i = LOBANK; i < HIBANK; i++) {
 		uint8_t pg = *pt++;
+		if (i == HIBANK - 1)
+			size = TOP_SIZE;
+		else
+			size = 0x10;	/* 8K */
 		if (pg != PAGE_INVALID) {
 #ifdef CONFIG_VIDMAP8		
 			if (pg == PAGE_VIDEO)
@@ -361,10 +365,6 @@ void swapin(ptptr p, uint16_t map)
 		blk += size;
 		/* FIXME: if we have a shared common then the size is not 0x10
 		   for the last block */
-		if (i == HIBANK - 1)
-			size = TOP_SIZE;
-		else
-			size = 0x10;	/* 8K */
 	}
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page);
