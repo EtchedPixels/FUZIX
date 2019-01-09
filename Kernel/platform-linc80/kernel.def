@@ -1,6 +1,6 @@
 ; FUZIX mnemonics for memory addresses etc
 
-U_DATA			.equ	0x0103	; (this is struct u_data from kernel.h)
+U_DATA			.equ	0x0300	; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE	.equ	0x0200	; 256+256+256 bytes.
 Z80_TYPE		.equ	0	; CMOS
 

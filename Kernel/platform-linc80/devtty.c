@@ -50,6 +50,10 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 		r |= 0x02;
 	sio_r[3] = r;
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
+	if (minor == 1)
+		sio2a_wr5 = sio_r[5];
+	else
+		sio2b_wr5 = sio_r[5];
 }
 
 void tty_setup(uint8_t minor, uint8_t flags)
@@ -74,8 +78,20 @@ int tty_carrier(uint8_t minor)
 	return 0;
 }
 
-void tty_pollirq_sio(void)
+void tty_drain_sio(void)
 {
+	uint8_t c;
+#if 1
+	while(sio2b_rxl) {
+		c = sio2b_rx_get();
+		tty_inproc(1, c);
+	}
+	while(sio2a_rxl) {
+		c = sio2a_rx_get();
+		tty_inproc(2, c);
+	}
+	/* TODO: error, tx flow, modem change etc */
+#else
 	static uint8_t old_ca, old_cb;
 	uint8_t ca, cb;
 	uint8_t progress;
@@ -128,14 +144,22 @@ void tty_pollirq_sio(void)
 				tty_carrier_drop(1);
 		}
 	} while(progress);
+#endif
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+#if 1
+	if (minor == 1)
+		sio2b_txqueue(c);
+	else
+		sio2a_txqueue(c);
+#else
 	if (minor == 2) {
 		SIOA_D = c;
 	} else if (minor == 1)
 		SIOB_D = c;
+#endif
 }
 
 /* We will need this for SIO once we implement flow control signals */
@@ -155,26 +179,10 @@ void tty_sleeping(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	irqflags_t irq;
-	uint8_t c;
-
-	irq = di();
-	if (minor == 2) {
-		SIOA_C = 0;	/* read register 0 */
-		c = SIOA_C;
-		irqrestore(irq);
-		if (c & 0x04)	/* THRE? */
-			return TTY_READY_NOW;
+	if (minor == 1 && sio2b_txl == 255)
 		return TTY_READY_SOON;
-	} else if (minor == 1) {
-		SIOB_C = 0;	/* read register 0 */
-		c = SIOB_C;
-		irqrestore(irq);
-		if (c & 0x04)	/* THRE? */
-			return TTY_READY_NOW;
+	if (minor == 2 && sio2a_txl == 255)
 		return TTY_READY_SOON;
-	}
-	irqrestore(irq);
 	return TTY_READY_NOW;
 }
 
@@ -186,7 +194,12 @@ void tty_data_consumed(uint8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-	tty_putc(TTYDEV - 512, c);
+	/* Can't use the normal paths as we must survive interrupts off */
+	/* FIXME: would be nicer to just disable tx int and re-enable it ? */
+	irqflags_t irq = di();
+	while(!(SIOA_C & 0x04));
+	SIOA_D = c;
 	if (c == '\n')
-		tty_putc(TTYDEV - 512, '\r');
+		kputchar('\r');
+	irqrestore(irq);
 }

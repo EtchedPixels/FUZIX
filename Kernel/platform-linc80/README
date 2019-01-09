@@ -41,3 +41,29 @@ Version that supports multiple 16K banks and multiple processes in memory
 ZX style. Also code to probe for and use the 32K hack which is far nicer.
 
 Use IM2 properly and do serial buffering code
+
+
+
+In progress serial
+
+TODO:
+
+CTS/RTS flow control option
+Unblocking flow control from drivers
+Check auto flow is right also
+Carrier recording and drop logging
+
+
+Why does reboot muck up SD card ?? emulator bug ?
+
+
+Core code IM2 enabling
+
+- Add a DI and EI macro
+- Use them in cases where we don't need to really disable interrupts (because
+  the stack is valid), use di/ei and __hard_() methods for the other cases
+- With an IM2 platform enable real interrupts in interrupt_handler at the
+  first point we can, and for interrupt_handler do an inc and defer for the
+  next tick if we can't re-enter (so we don't lose ticks and we don't miss
+  latencies)
+

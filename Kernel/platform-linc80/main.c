@@ -39,8 +39,7 @@ uint8_t platform_param(unsigned char *p)
 
 void platform_interrupt(void)
 {
-	tty_pollirq_sio();		/* For now as we don't have nice
-					   tty set up yet */
+	tty_drain_sio();
 	timer_interrupt();
 }
 

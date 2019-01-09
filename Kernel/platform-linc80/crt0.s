@@ -21,6 +21,7 @@
         .area _GSFINAL     ; unused
         .area _DISCARD
         .area _COMMONMEM
+	.area _CONSOLE
 	.area _PAGE0	   ; unused but stops binman changing us
 
         ; exported symbols
@@ -39,11 +40,6 @@
         .globl kstack_top
 
 	.include "kernel.def"
-
-	.area _COMMONMEM
-
-start:
-	jp init
 
         .area _CODE
 

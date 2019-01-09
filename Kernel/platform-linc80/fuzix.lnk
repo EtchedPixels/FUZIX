@@ -1,7 +1,8 @@
 -mwxuy
 -i fuzix.ihx
--b _COMMONMEM=0x0100
--b _CODE=0x0B00
+-b _CONSOLE=0x0100
+-b _COMMONMEM=0x0300
+-b _CODE=0x0E00
 -l z80
 platform-linc80/crt0.rel
 platform-linc80/commonmem.rel
