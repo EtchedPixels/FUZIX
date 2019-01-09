@@ -101,7 +101,6 @@ unix_syscall_entry:
 
         orcc #0x10
 	; let the interrupt logic know we are not in kernel mode any more
-	; kernel_flag is not in common so write it before we map it away
 	clr U_DATA__U_INSYS
 
         ; map process memory back in based on common (common may have
@@ -174,8 +173,7 @@ _doexec:
 	; this is a funny extra path out of syscall so we must also cover
 	; the exit from kernel here
 
-        ; map task into address space (kernel_flag is no longer mapped, don't
-	; re-order this)
+	; map task into address space
 	; preserves x
         jsr map_process_always
 
@@ -206,29 +204,22 @@ interrupt_handler:
 
 	jsr map_save
 
-	lda 0		; save address 0 contents for checking
-
-	; preserves registers
-	jsr map_kernel
-	;
-	; kernel_flag is in the kernel map so we need to map early, we
-	; need to map anyway for trap_signal
-	;
 	ldb U_DATA__U_INSYS	; In a system call ?
 	bne in_kernel
 
         ; we're not in kernel mode, check for signals and fault
+	lda 0		; save address 0 contents for checking
         cmpa #0x7E		; JMP at 0
 	beq nofault
-	jsr map_process_always ; map the process
 	lda #0x7E		; put it back
 	sta 0		; write
-	jsr map_kernel	; restore the map
+	jsr map_kernel
 	ldx #11		; SIGSEGV
 	jsr trap_signal	; signal the user with a fault
 
 nofault:
 in_kernel:
+        jsr map_kernel
         ; set inint to true
         lda #1
         sta _inint
