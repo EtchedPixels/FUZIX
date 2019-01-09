@@ -173,21 +173,21 @@ init_hardware:
 	ld (0x88),hl			; PIO A
 	ld (0x8A),hl			; PIO B
 
-	ld hl,#sio2b_txd
+	ld hl,#siob_txd
 	ld (0x90),hl			; SIO B TX empty
-	ld hl,#sio2b_status
+	ld hl,#siob_status
 	ld (0x92),hl			; SIO B External status
-	ld hl,#sio2b_rx_ring
+	ld hl,#siob_rx_ring
 	ld (0x94),hl			; SIO B Receive
-	ld hl,#sio2b_special
+	ld hl,#siob_special
 	ld (0x96),hl			; SIO B Special
-	ld hl,#sio2a_txd
+	ld hl,#sioa_txd
 	ld (0x98),hl			; SIO A TX empty
-	ld hl,#sio2a_status
+	ld hl,#sioa_status
 	ld (0x9A),hl			; SIO A External status
-	ld hl,#sio2a_rx_ring
+	ld hl,#sioa_rx_ring
 	ld (0x9C),hl			; SIO A Received
-	ld hl,#sio2a_special
+	ld hl,#sioa_special
 	ld (0x9E),hl			; SIO A Special
 	ld hl, #80
         ld (_ramsize), hl
@@ -211,12 +211,12 @@ init_hardware:
 
 	ld a,#0x25	; timer, 256 prescale, irq off
 	out (CTC_CH2),a
-	ld a,#180	; counter base (160 per second)
+	ld a,#90	; counter base (320 per second)
 	out (CTC_CH2),a
 	ld a,#0xF5	; counter, irq on
 	out (CTC_CH3),a
-	ld a,#16
-	out (CTC_CH3),a	; 160 per sec down to 10 per sec
+	ld a,#8
+	out (CTC_CH3),a	; 320 per sec down to 40 per sec
 
 	xor a
 	ld i,a	; Use upper half of rst vector page
@@ -294,72 +294,64 @@ ocloop_sio:
 
 	.area _CONSOLE
 
-sio2a_rx:
+sioa_rx:
 	jp	init		; for boot only
 	.ds	128-3		; we wrote a JP init in the first 3
-sio2a_tx:			; that will be recycled
+sioa_tx:			; that will be recycled
 	.ds	128
-sio2b_rx:
+siob_rx:
 	.ds	128
-sio2b_tx:
+siob_tx:
 	.ds	128
 
 	.area _COMMONMEM
-_sio2a_txl:
+sioa_error:
 	.db	0
-sio2a_error:
+sioa_rxover:
 	.db	0
-sio2a_rxover:
+sioa_stat:
 	.db	0
-sio2a_stat:
-	.db	0
-sio2a_txp:
-	.dw	sio2a_tx
-sio2a_txe:
-	.dw	sio2a_tx
-_sio2a_rxl:
-	.db	0
-sio2a_rxp:
-	.dw	sio2a_rx
-sio2a_rxe:
-	.dw	sio2a_rx
+sioa_txp:
+	.dw	sioa_tx
+sioa_txe:
+	.dw	sioa_tx
+sioa_rxp:
+	.dw	sioa_rx
+sioa_rxe:
+	.dw	sioa_rx
 
-_sio2b_txl:
+siob_error:
 	.db	0
-sio2b_error:
+siob_rxover:
 	.db	0
-sio2b_rxover:
+siob_stat:
 	.db	0
-sio2b_stat:
-	.db	0
-sio2b_txp:
-	.dw	sio2a_tx
-sio2b_txe:
-	.dw	sio2a_tx
-_sio2b_rxl:
-	.db	0
-sio2b_rxp:
-	.dw	sio2a_rx
-sio2b_rxe:
-	.dw	sio2a_rx
+siob_txp:
+	.dw	sioa_tx
+siob_txe:
+	.dw	sioa_tx
+siob_rxp:
+	.dw	sioa_rx
+siob_rxe:
+	.dw	sioa_rx
 
 ;
 ;	Interrupt vector handler for port A transmit empty
 ;
-sio2a_txd:
+sioa_txd:
 	push af
-	ld a,(_sio2a_txl)
+	ld a,(_sioa_txl)
 	or a
 	jr z, tx_a_none
 	push hl
 	dec a
-	ld (_sio2a_txl),a
-	ld hl,(sio2a_txp)
+	ld (_sioa_txl),a
+	ld hl,(sioa_txp)
 	ld a,(hl)
 	out (SIOA_D),a
 	inc hl
 	set 7,l
-	ld (sio2a_txp),hl
+	ld (sioa_txp),hl
 	pop hl
 tx_a_none:
 	ld a,#0x28
@@ -370,27 +362,26 @@ tx_a_none:
 ;
 ;	Interrupt vector handler for port A receive ready
 ;
-sio2a_rx_ring:
+sioa_rx_ring:
 	push af
 	push hl
-sio2a_rx_next:
+sioa_rx_next:
 	in a,(SIOA_D)		; read ASAP
 	ld l,a
-	ld a,(_sio2a_rxl)
+	ld a,(_sioa_rxl)
 	inc a
 	jp m, a_rx_over
-	ld (_sio2a_rxl),a
+	ld (_sioa_rxl),a
 	; should we check bit 5/6 and if appropriate flow control on bit 5/6
 	; high ?
-;sio2a_flow_patch:		; patch with fastest 5 byte nop
-;	cp #0x60		; flow control threshold
-;	call z,  _sio2a_flow_control_on
+	cp #0x60		; flow control threshold
+	call z, _sioa_flow_control_on
 	ld a,l
-	ld hl,(sio2a_rxp)
+	ld hl,(sioa_rxp)
 	ld (hl),a
 	inc l
 	res 7,l
-	ld (sio2a_rxp),hl
+	ld (sioa_rxp),hl
 	;
 	;	The chip has a small FIFO and bytes can also arrive as we
 	;	read. To maximise performance try and empty it each time.
@@ -400,15 +391,15 @@ sio2a_rx_next:
 	;
 	in a,(SIOA_C)		; RR 0
 	rra
-	jr c, sio2a_rx_next
+	jr c, sioa_rx_next
 	pop hl
 	pop af
 	ei
 	reti
 a_rx_over:
-	ld a,(sio2a_error)
+	ld a,(sioa_error)
 	or #0x20		; Fake an RX overflow bit
-	ld (sio2a_rxover),a
+	ld (sioa_rxover),a
 	pop af
 	ei
 	reti
@@ -421,12 +412,18 @@ a_rx_over:
 ;	and we can use thw two edges of DCD to work out if we had a hangup
 ;	and if we are now open.
 ;
-sio2a_status:
+sioa_status:
 	; CTS or DCD change
 	push af
 	push hl
 	; RR0
 	in a,(SIOA_C)
+	ld (_sioa_state),a
+	and #8
+	jr z, no_dcd_drop_a
+	; \DCD went high
+	ld (_sioa_dropdcd),a		; Set the dcdflag
+no_dcd_drop_a:
 	; Clear the latched values
 	ld a,#0x10
 	out (SIOA_C),a
@@ -438,14 +435,14 @@ sio2a_status:
 ;
 ;	Interrupt vector for a port A error
 ;
-sio2a_special:
+sioa_special:
 	; Parity, RX Overrun, Framing
 	; Probably want to record them, but we at least must clean up
 	push af
 	ld a,#1
 	out (SIOA_C),a		; RR1 please
 	in a,(SIOA_C)		; clear events
-	ld (sio2a_error),a	; Save error bits
+	ld (sioa_error),a	; Save error bits
 	; Clear the latched values
 	ld a,#0x30
 	out (SIOA_C),a
@@ -456,20 +453,20 @@ sio2a_special:
 ;
 ;	Interrupt vector handler for port B transmit empty
 ;
-sio2b_txd:
+siob_txd:
 	push af
-	ld a,(_sio2b_txl)
+	ld a,(_siob_txl)
 	or a
 	jr z, tx_b_none
 	push hl
 	dec a
-	ld (_sio2b_txl),a
-	ld hl,(sio2b_txp)
+	ld (_siob_txl),a
+	ld hl,(siob_txp)
 	ld a,(hl)
 	out (SIOB_D),a
 	inc hl
 	set 7,l
-	ld (sio2b_txp),hl
+	ld (siob_txp),hl
 	pop hl
 tx_b_none:
 	ld a,#0x28
@@ -480,27 +477,26 @@ tx_b_none:
 ;
 ;	Interrupt vector handler for port B receive ready
 ;
-sio2b_rx_ring:
+siob_rx_ring:
 	push af
 	push hl
-sio2b_rx_next:
+siob_rx_next:
 	in a,(SIOB_D)		; read ASAP
 	ld l,a
-	ld a,(_sio2b_rxl)
+	ld a,(_siob_rxl)
 	inc a
 	jp m, b_rx_over
-	ld (_sio2b_rxl),a
+	ld (_siob_rxl),a
 	; should we check bit 5/6 and if appropriate flow control on bit 5/6
 	; high ?
-;sio2b_flow_patch:		; patch with fastest 5 byte nop
-;	cp #0x60		; flow control threshold
-;	call z,  _sio2b_flow_control_on
+	cp #0x60		; flow control threshold
+	call z, _siob_flow_control_on
 	ld a,l
-	ld hl,(sio2b_rxp)
+	ld hl,(siob_rxp)
 	ld (hl),a
 	inc l
 	res 7,l
-	ld (sio2b_rxp),hl
+	ld (siob_rxp),hl
 	;
 	;	The chip has a small FIFO and bytes can also arrive as we
 	;	read. To maximise performance try and empty it each time.
@@ -510,15 +506,15 @@ sio2b_rx_next:
 	;
 	in a,(SIOB_C)		; RR 0
 	rra
-	jr c, sio2b_rx_next
+	jr c, siob_rx_next
 	pop hl
 	pop af
 	ei
 	reti
 b_rx_over:
-	ld a,(sio2b_error)
+	ld a,(siob_error)
 	or #0x20		; Fake an RX overflow bit
-	ld (sio2b_rxover),a
+	ld (siob_rxover),a
 	pop af
 	ei
 	reti
@@ -531,12 +527,18 @@ b_rx_over:
 ;	and we can use thw two edges of DCD to work out if we had a hangup
 ;	and if we are now open.
 ;
-sio2b_status:
+siob_status:
 	; CTS or DCD change
 	push af
 	push hl
 	; RR0
 	in a,(SIOB_C)
+	ld (_siob_state),a
+	and #8
+	jr z, no_dcd_drop_b
+	; \DCD went high
+	ld (_siob_dropdcd),a		; Set the dcdflag
+no_dcd_drop_b:
 	; Clear the latched values
 	ld a,#0x10
 	out (SIOB_C),a
@@ -548,14 +550,14 @@ sio2b_status:
 ;
 ;	Interrupt vector for a port B error
 ;
-sio2b_special:
+siob_special:
 	; Parity, RX Overrun, Framing
 	; Probably want to record them, but we at least must clean up
 	push af
 	ld a,#1
 	out (SIOB_C),a		; RR1 please
 	in a,(SIOB_C)		; clear events
-	ld (sio2b_error),a	; Save error bits
+	ld (siob_error),a	; Save error bits
 	; Clear the latched values
 	ld a,#0x30
 	out (SIOB_C),a
@@ -566,28 +568,56 @@ sio2b_special:
 ;
 ;	C interface methods
 ;
-	.globl _sio2a_txqueue
-	.globl _sio2a_flow_control_on
-	.globl _sio2a_rx_get
-	.globl _sio2a_error_get
+	.globl _sioa_txqueue
+	.globl _sioa_flow_control_off
+	.globl _sioa_flow_control_on
+	.globl _sioa_rx_get
+	.globl _sioa_error_get
 
-	.globl _sio2a_rxl
-	.globl _sio2a_txl
-	.globl _sio2a_wr5
+	.globl _siob_txqueue
+	.globl _siob_flow_control_off
+	.globl _siob_flow_control_on
+	.globl _siob_rx_get
+	.globl _siob_error_get
 
-	.globl _sio2b_txqueue
-	.globl _sio2b_flow_control_on
-	.globl _sio2b_rx_get
-	.globl _sio2b_error_get
+	.globl _sio_dropdcd
+	.globl _sio_flow
+	.globl _sio_rxl
+	.globl _sio_state
+	.globl _sio_txl
+	.globl _sio_wr5
 
-	.globl _sio2b_rxl
-	.globl _sio2b_txl
-	.globl _sio2b_wr5
-
-_sio2a_wr5:
+; These are paid and exposed as arrays to C
+_sio_wr5:
+_sioa_wr5:
 	.db 0xEA		; DTR, 8bit, tx enabled
-_sio2b_wr5:
+_siob_wr5:
 	.db 0xEA		; DTR, 8bit, tx enabled
+_sio_flow:
+_sioa_flow:
+	.db 0			; Flow starts off
+_siob_flow:
+	.db 0			; Flow starts off
+_sio_state:
+_sioa_state:
+	.db 0			; Last status report
+_siob_state:
+	.db 0			; Last status report
+_sio_dropdcd:
+_sioa_dropdcd:
+	.db 0			; DCD dropped since last checked
+_siob_dropdcd:
+	.db 0			; DCD dropped since last checked
+_sio_rxl:
+_sioa_rxl:
+	.db 0
+_siob_rxl:
+	.db 0
+_sio_txl:
+_sioa_txl:
+	.db 0
+_siob_txl:
+	.db 0
 
 ;
 ;	Queue a byte to be sent (DI required)
@@ -598,33 +628,33 @@ _sio2b_wr5:
 ;	(or can we use hardware ?)
 ;	128 byte ring buffer aligned to upper half (rx is in lower)
 ;
-_sio2a_txqueue:
-	ld a,(_sio2a_txl)
+_sioa_txqueue:
+	ld a,(_sioa_txl)
 	or a
-	jr z, sio2a_direct_maybe	; if can tx now then do
+	jr z, sioa_direct_maybe	; if can tx now then do
 	inc a
 	jp m, txa_overflow
-sio2a_queue:
-	ld (_sio2a_txl),a
+sioa_queue:
+	ld (_sioa_txl),a
 	ld a,l
-	ld hl,(sio2a_txe)
+	ld hl,(sioa_txe)
 	ld (hl),a
 	inc l
 	set 7,l
-	ld (sio2a_txe),hl
+	ld (sioa_txe),hl
 	ld l,#0
 	ret
 txa_overflow:
 	; some kind of flag for error
 	ld l,#1
 	ret
-sio2a_direct_maybe:
+sioa_direct_maybe:
 	; check RR
 	in a,(SIOA_C)
 	and #0x04		; RX space ?
 	; if space
 	ld a,#1
-	jr nz, sio2a_queue
+	jr nz, sioa_queue
 	; bypass the queue and kickstart the interrupt machine
 	ld a,l
 	out (SIOA_D),a
@@ -632,12 +662,19 @@ sio2a_direct_maybe:
 	ret
 	; Call with DI
 
-_sio2a_flow_control_on:
+_sioa_flow_control_off:
 	ld a,#5
 	out(SIOA_C),a		; WR 5
-	ld a,(_sio2a_wr5)
-	or #0x02
-	out (SIOA_C),a		; Turn on RTS
+	ld a,(_sioa_wr5)
+	out (SIOA_C),a		; Turn off RTS
+	ret
+
+_sioa_flow_control_on:
+	ld a,#5
+	out(SIOA_C),a		; WR 5
+	ld a,(_sioa_wr5)
+	and #0xFD
+	out (SIOA_C),a		; Turn off RTS
 	ret
 
 	; DI required
@@ -645,24 +682,24 @@ _sio2a_flow_control_on:
 	;
 	; Caller responsible for making post buffer fetch decisions about
 	; RTS
-_sio2a_rx_get:
-	ld a,(_sio2a_rxl)
+_sioa_rx_get:
+	ld a,(_sioa_rxl)
 	or a
 	ret z
 	dec a
-	ld (_sio2a_rxl),a
-	ld hl,(sio2a_rxe)
+	ld (_sioa_rxl),a
+	ld hl,(sioa_rxe)
 	ld a,(hl)
 	inc l
 	res 7,l
-	ld (sio2a_rxe),hl
+	ld (sioa_rxe),hl
 	scf
 	ld l,a
 	ret
 
 	; DI required
-_sio2a_error_get:
-	ld hl,#sio2a_error
+_sioa_error_get:
+	ld hl,#sioa_error
 	ld a,(hl)
 	ld (hl),#0
 	ld l,a
@@ -677,33 +714,33 @@ _sio2a_error_get:
 ;	(or can we use hardware ?)
 ;	128 byte ring buffer aligned to upper half (rx is in lower)
 ;
-_sio2b_txqueue:
-	ld a,(_sio2b_txl)
+_siob_txqueue:
+	ld a,(_siob_txl)
 	or a
-	jr z, sio2b_direct_maybe	; if can tx now then do
+	jr z, siob_direct_maybe	; if can tx now then do
 	inc a
 	jp m, txb_overflow
-sio2b_queue:
-	ld (_sio2b_txl),a
+siob_queue:
+	ld (_siob_txl),a
 	ld a,l
-	ld hl,(sio2b_txe)
+	ld hl,(siob_txe)
 	ld (hl),a
 	inc l
 	set 7,l
-	ld (sio2b_txe),hl
+	ld (siob_txe),hl
 	ld l,#0
 	ret
 txb_overflow:
 	; some kind of flag for error
 	ld l,#1
 	ret
-sio2b_direct_maybe:
+siob_direct_maybe:
 	; check RR
 	in a,(SIOB_C)
 	and #0x04		; RX space ?
 	; if space
 	ld a,#1
-	jr z, sio2b_queue
+	jr z, siob_queue
 	; bypass the queue and kickstart the interrupt machine
 	ld a,l
 	out (SIOB_D),a
@@ -711,12 +748,22 @@ sio2b_direct_maybe:
 	ret
 	; Call with DI
 
-_sio2b_flow_control_on:
+_siob_flow_control_off:
 	ld a,#5
 	out(SIOB_C),a		; WR 5
-	ld a,(_sio2b_wr5)
-	or #0x02
-	out (SIOB_C),a		; Turn on RTS
+	ld a,(_siob_wr5)
+	out (SIOB_C),a		; Turn off RTS
+	ret
+
+_siob_flow_control_on:
+	ld a, (_siob_flow)
+	or a
+	ret z
+	ld a,#5
+	out(SIOB_C),a		; WR 5
+	ld a,(_siob_wr5)
+	and #0xFD
+	out (SIOB_C),a		; Turn off RTS
 	ret
 
 	; DI required
@@ -724,24 +771,24 @@ _sio2b_flow_control_on:
 	;
 	; Caller responsible for making post buffer fetch decisions about
 	; RTS
-_sio2b_rx_get:
-	ld a,(_sio2b_rxl)
+_siob_rx_get:
+	ld a,(_siob_rxl)
 	or a
 	ret z
 	dec a
-	ld (_sio2b_rxl),a
-	ld hl,(sio2b_rxe)
+	ld (_siob_rxl),a
+	ld hl,(siob_rxe)
 	ld a,(hl)
 	inc l
 	res 7,l
-	ld (sio2b_rxe),hl
+	ld (siob_rxe),hl
 	scf
 	ld l,a
 	ret
 
 	; DI required
-_sio2b_error_get:
-	ld hl,#sio2b_error
+_siob_error_get:
+	ld hl,#siob_error
 	ld a,(hl)
 	ld (hl),#0
 	ld l,a

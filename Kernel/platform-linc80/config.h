@@ -14,7 +14,7 @@
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* One memory bank */
 #define CONFIG_BANKS	1
-#define TICKSPERSEC 10      /* Ticks per second */
+#define TICKSPERSEC 40      /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xFFFF  /* Top of program */

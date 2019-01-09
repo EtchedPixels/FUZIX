@@ -11,7 +11,7 @@ static char tbuf2[TTYSIZ];
 static tcflag_t uart_mask[4] = {
 	_ISYS,
 	_OSYS,
-	CSIZE|CSTOPB|CBAUD|PARENB|PARODD|_CSYS,
+	CSIZE|CSTOPB|CBAUD|PARENB|PARODD|CRTSCTS|_CSYS,
 	_LSYS
 };
 
@@ -33,6 +33,8 @@ uint8_t sio_r[] = {
 	0x05, 0xEA
 };
 
+static uint8_t sleeping;
+
 static void sio2_setup(uint8_t minor, uint8_t flags)
 {
 	used(flags);
@@ -50,10 +52,8 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 		r |= 0x02;
 	sio_r[3] = r;
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
-	if (minor == 1)
-		sio2a_wr5 = sio_r[5];
-	else
-		sio2b_wr5 = sio_r[5];
+	sio_wr5[2 - minor] = sio_r[5];
+	sio_flow[2 - minor] = (t->c_cflag & CRTSCTS);
 }
 
 void tty_setup(uint8_t minor, uint8_t flags)
@@ -80,92 +80,56 @@ int tty_carrier(uint8_t minor)
 
 void tty_drain_sio(void)
 {
+	static uint8_t old_ca[2];
 	uint8_t c;
-#if 1
-	while(sio2b_rxl) {
-		c = sio2b_rx_get();
+
+	/* Start with port B as it is run the fastest usually */
+	while(sio_rxl[1]) {
+		c = siob_rx_get();
 		tty_inproc(1, c);
 	}
-	while(sio2a_rxl) {
-		c = sio2a_rx_get();
+	if (sio_dropdcd[1]) {
+		sio_dropdcd[1] = 0;
+		tty_carrier_drop(1);
+	}
+	if (((old_ca[1] ^ sio_state[1]) & sio_state[1]) & 8)
+		tty_carrier_raise(1);
+	old_ca[1] = sio_state[1];
+	if (sio_txl[1] < 128 && (sleeping & 2)) {
+		sleeping &= ~2;
+		tty_outproc(1);
+	}
+
+	while(sio_rxl[0]) {
+		c = sioa_rx_get();
 		tty_inproc(2, c);
 	}
-	/* TODO: error, tx flow, modem change etc */
-#else
-	static uint8_t old_ca, old_cb;
-	uint8_t ca, cb;
-	uint8_t progress;
+	if (sio_dropdcd[0]) {
+		sio_dropdcd[0] = 0;
+		tty_carrier_drop(2);
+	}
+	if (((old_ca[0] ^ sio_state[0]) & sio_state[0]) & 8)
+		tty_carrier_raise(2);
+	old_ca[0] = sio_state[0];
+	if (sio_txl[0] < 128 && (sleeping & 4)) {
+		sleeping &= ~4;
+		tty_outproc(2);
+	}
 
-	/* Check for an interrupt */
-	SIOA_C = 0;
-//	if (!(SIOA_C & 2))
-//FIXME		return;
-
-	/* FIXME: need to process error/event interrupts as we can get
-	   spurious characters or lines on an unused SIO floating */
-	do {
-		progress = 0;
-		SIOA_C = 0;		// read register 0
-		ca = SIOA_C;
-		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[2])) {
-			progress = 1;
-			tty_inproc(2, SIOA_D);
-		}
-		/* Break */
-		if (ca & 2)
-			SIOA_C = 2 << 5;
-		/* Output pending */
-		if (ca & 4) {
-			tty_outproc(2);
-			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
-		}
-		/* Carrier changed */
-		if ((ca ^ old_ca) & 8) {
-			if (ca & 8)
-				tty_carrier_raise(2);
-			else
-				tty_carrier_drop(2);
-		}
-		SIOB_C = 0;		// read register 0
-		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[1])) {
-			tty_inproc(1, SIOB_D);
-			progress = 1;
-		}
-		if (cb & 4) {
-			tty_outproc(1);
-			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
-		}
-		if ((cb ^ old_cb) & 8) {
-			if (cb & 8)
-				tty_carrier_raise(1);
-			else
-				tty_carrier_drop(1);
-		}
-	} while(progress);
-#endif
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-#if 1
 	if (minor == 1)
-		sio2b_txqueue(c);
+		siob_txqueue(c);
 	else
-		sio2a_txqueue(c);
-#else
-	if (minor == 2) {
-		SIOA_D = c;
-	} else if (minor == 1)
-		SIOB_D = c;
-#endif
+		sioa_txqueue(c);
 }
 
 /* We will need this for SIO once we implement flow control signals */
 void tty_sleeping(uint8_t minor)
 {
-	used(minor);
+	sleeping |= (1 << minor);
 }
 
 /* Be careful here. We need to peek at RR but we must be sure nobody else
@@ -179,9 +143,9 @@ void tty_sleeping(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	if (minor == 1 && sio2b_txl == 255)
+	if (minor == 1 && sio_txl[1] == 255)
 		return TTY_READY_SOON;
-	if (minor == 2 && sio2a_txl == 255)
+	if (minor == 2 && sio_txl[0] == 255)
 		return TTY_READY_SOON;
 	return TTY_READY_NOW;
 }
