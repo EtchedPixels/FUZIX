@@ -65,7 +65,9 @@ int main(int argc, char *argv[])
     perror("fseek");
     exit(1);
   }
-  if (fwrite(&count, 2, 1, stdout) != 1) {
+  buf[0] = count & 0xff;
+  buf[1] = count >> 8;
+  if (fwrite(&buf, 2, 1, stdout) != 1) {
     perror("fwrite3");
     exit(1);
   }

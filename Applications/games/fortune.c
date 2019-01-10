@@ -35,10 +35,11 @@ int main(int argc, char *argv[])
     exit(1);
   }
   
-  if (read(fd, &cookies, 2) != 2) {
+  if (read(fd, &buf, 2) != 2) {
     perror("read");
     exit(1);
   }
+  cookies = buf[0] + 256 * buf[1];
 
   srand(getpid() ^ getuid() ^ (uint16_t)time(NULL));
   cookie = rand() % cookies;
