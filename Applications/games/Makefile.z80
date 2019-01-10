@@ -40,6 +40,14 @@ $(OBJSTC): %.rel: %.c
 %: %.rel
 	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
 
+fortune-gen-linux: fortune-gen.c
+	$(CC) -o fortune-gen-linux $<
+
+fortune.dat: fortune-gen-linux
+	./fortune-gen-linux < fort.db >fortune.dat
+
+fortune: fortune.dat
+
 sok.levels: sokmap
 	./sokmap ljh.sok sok.levels >/dev/null
 
@@ -50,7 +58,8 @@ sizes: $(APPS)
 	ls -l $(APPS) >size.report
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f fortune.dat fortune-gen
 
 rmbak:
 	rm -f *~ core

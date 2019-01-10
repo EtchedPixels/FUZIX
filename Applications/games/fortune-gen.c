@@ -5,13 +5,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 static char buf[256];
 static int n;
 static off_t off;
 
 static void write_record(void)
 {
-  uint32_t o = off;
+  uint32_t o = htonl(off);
   if (fseek(stdout, 2 + 4 * n, 0) == -1) {
     perror("fseek");
     exit(1);
