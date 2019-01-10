@@ -18,10 +18,8 @@ __sfr __at 0x08 timer4;
 void platform_interrupt(void)
 {
  timer4 = 156;
- tty_irq(1);
+ tty_drain();
  timer_interrupt();
-// tty_irq(2);
-// tty_irq(3);
 }
 
 /* This points to the last buffer in the disk buffers. There must be at least

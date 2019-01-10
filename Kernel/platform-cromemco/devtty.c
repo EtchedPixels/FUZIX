@@ -17,10 +17,6 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 },
 };
 
-static uint8_t ttybase[NUM_DEV_TTY+1] = {
- 0, 0, 32, 80
-};
-
 tcflag_t uart_mask[4] = {
 	_ISYS,
 	_OSYS,
@@ -37,28 +33,38 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 
 static uint8_t ttypoll;
 
+static uint8_t ttybase[] = { 0, 0, 32, 80 };
+
+__sfr __at 0x00 tuart0_status;
+__sfr __at 0x01 tuart0_data;
+
 /* Write to system console */
 void kputchar(char c)
 {
-    /* handle CRLF */
-    if(c=='\n')
-        tty_putc(1, '\r');
-    tty_putc(1, c);
+    /* Has to run polled */
+    while(!(tuart0_status & 0x80));
+    tuart0_data = c;
 }
 
 char tty_writeready(uint8_t minor)
 {
-    uint8_t r = ttybase[minor];
-    r = in(r);
-    if (r & 0x80)
-        return 1;
-    return 0;
+    if (minor == 1 && tuart0_txl < 63)
+        return TTY_READY_NOW;
+    if (minor == 2 && tuart1_txl < 63)
+        return TTY_READY_NOW;
+    if (minor == 3 && tuart2_txl < 63)
+        return TTY_READY_NOW;
+    return TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    uint8_t r = ttybase[minor];
-    out(r + 1, c);
+    if (minor == 1)
+        tuart0_txqueue(c);
+    else if (minor == 2)
+        tuart1_txqueue(c);
+    else
+        tuart2_txqueue(c);
 }
 
 void tty_sleeping(uint8_t minor)
@@ -68,24 +74,31 @@ void tty_sleeping(uint8_t minor)
 
 void tty_data_consumed(uint8_t minor)
 {
+    used(minor);
 }
 
-void tty_irq(uint8_t minor)
+void tty_drain(void)
 {
-    if (minor != 1)
-        return;	/* For the moment */
-    if (rx0a_int) {
-        uint8_t c = rx0a_char;
-        rx0a_int = 0;
-        tty_inproc(1, rx0a_char);
-    }
-    if (tx0a_int) {
-        tx0a_int = 0;
+    while (tuart0_rxl)
+        tty_inproc(1, tuart0_rx_get());
+    if (tuart0_txl < 32 && (ttypoll & (1 << 1))) {
         ttypoll &= ~(1 << 1);
-        wakeup(&ttydata[1]);
+        tty_outproc(1);
+    }
+    while (tuart1_rxl)
+        tty_inproc(1, tuart1_rx_get());
+    if (tuart1_txl < 32 && (ttypoll & (1 << 2))) {
+        ttypoll &= ~(1 << 2);
+        tty_outproc(2);
+    }
+    while (tuart2_rxl)
+        tty_inproc(1, tuart2_rx_get());
+    if (tuart2_txl < 32 && (ttypoll & (1 << 3))) {
+        ttypoll &= ~(1 << 3);
+        tty_outproc(3);
     }
 }    
-
+ 
 static uint8_t baudbits[] = {
     1,
     1,
@@ -111,15 +124,16 @@ void tty_setup(uint8_t minor, uint8_t flags)
     struct termios *t = &ttydata[minor].termios;
     uint8_t baud = t->c_cflag & CBAUD;
     uint8_t r = ttybase[minor];
+
+    used(flags);
+
     out(r, baudbits[baud] | (t->c_cflag & CSTOPB) ? 0 : 0x80);
-    /* Assume we keep to IM1 */
     if (baud <= B9600)
         out(r + 2, 0x8);
     else
         out(r + 2, 0x18);
 }
 
-/* For the moment */
 int tty_carrier(uint8_t minor)
 {
     used(minor);

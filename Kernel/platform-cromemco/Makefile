@@ -21,6 +21,8 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
+vector.rel: tuart.s
+
 clean:
 	rm -f *.rel *.lst *.asm *.sym *.rst core *~
 	rm -f cloader-16fdc.ihx cloader-16fdc.tmp

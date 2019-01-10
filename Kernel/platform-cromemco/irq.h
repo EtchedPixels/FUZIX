@@ -6,8 +6,4 @@ extern uint8_t irqvec[];
 extern void spurious(uint8_t vec);
 extern void set_irq(uint16_t vec, void (*func)(uint8_t));
 
-extern void uart0a_rx(uint8_t unused);
-extern void uart0a_txdone(uint8_t unused);
-extern void uart0a_timer4(uint8_t unused);
-
-extern uint8_t rx0a_int, tx0a_int, rx0a_char;
+extern void tuart0_timer4(uint8_t unused);

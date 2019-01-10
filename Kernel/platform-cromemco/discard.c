@@ -15,9 +15,9 @@ void pagemap_init(void)
 /* Nothing to do for the map of init but we do set our vectors up here */
 void map_init(void)
 {
- if (request_irq(0xE7, uart0a_rx) |
- request_irq(0xEF, uart0a_txdone) |
- request_irq(0xF7, uart0a_timer4))
+ if (request_irq(0xE7, tuart0_rx_ring) |
+ request_irq(0xEF, tuart0_txd) |
+ request_irq(0xF7, tuart0_timer4))
   panic("irqset");
  /* We need to claim these in case we set one off as they are at odd vectors
     as the base tu_uart is strapped for 8080 mode */
@@ -29,6 +29,7 @@ void map_init(void)
   request_irq(0xFF, spurious)
   )
   panic("irqset2");
+  /* FIXME: request vectors for uart1 and 2 */
 }
 
 uint8_t platform_param(char *p)

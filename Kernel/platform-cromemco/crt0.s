@@ -10,6 +10,7 @@
         .area _CODE2
         .area _CONST
         .area _INITIALIZED
+	.area _INTDATA
         .area _DATA
         .area _BSEG
         .area _BSS
@@ -22,6 +23,8 @@
 	.area _DISCARD
         .area _INITIALIZER
         .area _COMMONMEM
+	.area _BOOT
+	.area _SERIAL
 
         ; imported symbols
         .globl _fuzix_main
@@ -36,8 +39,16 @@
         .globl l__DATA
         .globl kstack_top
 
+	; For the boot vector
+	.globl init
+
 	.include "../kernel.def"
 	.include "kernel.def"
+
+	.area _BOOT
+
+	; boot code (overlaps serial buffers to be)
+	jp init
 
         ; startup code
         .area _CODE
