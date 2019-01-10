@@ -1,3 +1,4 @@
+HOSTCC := $(CC)
 PLATFORM = 6809
 CC = m6809-unknown-gcc
 ASM = m6809-unknown-as
@@ -47,9 +48,18 @@ $(APPS) $(APPSNS): %: %.o
 $(APPSFP): %: %.o
 	$(LINKER) -o $@ $(LINKER_FP_OPT) $^
 
+fortune-gen-linux: fortune-gen.c
+	$(HOSTCC) -o $@ $<
+
+fortune.dat: fortune-gen-linux
+	./fortune-gen-linux < fort.db >fortune.dat
+
+fortune: | fortune.dat
+
 size.report: $(APPS)
 	ls -l $^ > $@
 
 clean:
 	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) *.lst *.map size.report
+	rm -f fortune.dat fortune-gen-linux
 
