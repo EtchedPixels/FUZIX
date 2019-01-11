@@ -1,0 +1,52 @@
+-mwxuy
+-i fuzix.ihx
+-l z80
+-b _CODE=0x0100
+-b _COMMONDATA=0xF200
+-b _DISCARD=0xE200
+platform-zxevo/crt0.rel
+platform-zxevo/commonmem.rel
+platform-zxevo/zxevo.rel
+platform-zxevo/video.rel
+platform-zxevo/main.rel
+platform-zxevo/discard.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem_std-z80.rel
+platform-zxevo/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-zxevo/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+syscall_net.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+bank16k.rel
+swap.rel
+devsys.rel
+devinput.rel
+platform-zxevo/devtty.rel
+platform-zxevo/devide.rel
+platform-zxevo/devide_discard.rel
+platform-zxevo/devsd.rel
+platform-zxevo/devsd_discard.rel
+platform-zxevo/evommc.rel
+platform-zxevo/mbr.rel
+platform-zxevo/blkdev.rel
+platform-zxevo/devinput.rel
+platform-zxevo/zxkeyboard.rel
+platform-zxevo/net_native.rel
+-e

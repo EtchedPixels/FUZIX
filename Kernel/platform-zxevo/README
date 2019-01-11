@@ -1,0 +1,53 @@
+First draft only
+
+ZX Evolution (baseconf)
+
+I/O Mapping
+
+The ZX Evolution has two oddities here. Firstly it inherits a lot of the
+ZX Spectrum 16bit wide port decode hacks. Secondly it has a shadow and non
+shadow mode and some ports are present only in one mode.
+
+- Implementation rule for Fuzix, you must have DI on for shadow mode. Also
+  standard sys functions may turn shadow off if used (notably mapping)
+
+Memory
+
+512K ROM, 4MB RAM.
+
+
+Memory Map:
+
+0000-BFFF: Kernel
+C000-FFFF: Kernel/Common (we stick to 48K apps to get a bigger kernel)
+
+0000-BFFF: User
+C000-FFFF: Kernel/Common
+
+We will need to push disk buffers into their own bank and we have banks for
+video as well. But we have 4MB so who cares. Reworking the port for bigger
+user apps can occur later
+
+More interesting question: would we be better off using bankfixed or thunked ?
+
+
+TODO
+- Figure out how the boot logic works
+- Write a boot loader
+- Correct the set up code to set turbo and video etc right
+- Look at the other bits of port BF and how to use without getting in a mess
+- xx77 is even worse
+- Go through and sort out shadow v non shadow
+- Set up the IDE and SD ports and code
+- Add external buffer support to devsd
+- External buffers
+- Graphics modes setting and mapping
+- UDG and font loads
+- Floppy driver including adding external buffer support
+- RTC
+- PS/2 config and keyboard control ?
+- What to do with all that RAM ?
+- Video mapping into user space - do we support a top at 0x7FFF and direct
+  video map choice ?
+- Longer term look at memory options - thunked might be worth it to get big
+  user processes
