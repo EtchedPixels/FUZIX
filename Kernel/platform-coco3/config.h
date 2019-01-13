@@ -18,7 +18,7 @@
 #define CONFIG_BANK16
 #define CONFIG_BANKS	4
 #define MAX_MAPS 128-3
-#define MAPBASE 0x0000
+#define MAPBASE 0x0100
 /* And swapping */
 extern unsigned int swapdev;
 #define SWAPDEV  swapdev
