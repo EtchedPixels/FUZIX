@@ -63,7 +63,7 @@ sio'X'_txd:
 	ld hl,(sio'X'_txp)
 	ld a,(hl)
 	out (DP),a
-	inc hl
+	inc l
 	set 7,l
 	ld (sio'X'_txp),hl
 	pop hl
@@ -246,5 +246,3 @@ _sio'X'_error_get:
 
 
 .endm
-
-	
