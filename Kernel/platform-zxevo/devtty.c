@@ -110,7 +110,12 @@ int tty_carrier(uint8_t minor)
  *	16x50 conversion betwen a Bxxxx speed rate (see tty.h) and the values
  *	to stuff into the chip.
  *
- *	FIXME: update for this board
+ *	The equation for this board is
+ *	115200 /((DLM*256) + DLL)
+ *
+ *	Two extensions exist which we ignore
+ *	DLM bit 7 selects native clocking ((11059200)/16/baud)
+ *	DLM 0 DLL 0 = 256Kbit
  */
 static uint16_t clocks[] = {
 	12,		/* Not a real rate */

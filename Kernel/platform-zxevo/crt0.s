@@ -54,8 +54,9 @@
 
 	;
         ; startup code. Runs from 0x100. The kernel is mapped into pages
-	; 16-23 and 16-22 are currently mapped. Stack is not valid on entry
-	; and interrupts are off.
+	; 0/1/2/3 but 0 / 5 / 2 / 3 are currently mapped. Stack is not
+	; necessarily valid on entry, shadow mode is on and interrupts are
+	; off.
 	;
 
         .area _CODE
@@ -63,17 +64,14 @@
 	.globl _start
 
 _start:
-	; Map in the top page (it couldn't be mapped by the loader as the
-	; loader is living in it)
-	ld a,#0x57		; MMU E000-FFFF
-	ld bc,#0x243B
+	; Map in the other 16K
 	out (c),a
-	ld a,#23		; Top kernel page
-	inc b
+
+	; Black border so we know we arrived
+	xor a
 	out (c),a
 
 	;  We need to wipe the BSS but the rest of the job is done.
-
 	ld hl, #s__DATA
 	ld de, #s__DATA+1
 	ld bc, #l__DATA-1

@@ -58,6 +58,7 @@
 _platform_monitor:
 	;
 	;	Not so much a monitor as wait for space
+	;	(or should we jump into the profi rom ?)
 	;
 	ld a, #0x7F
 	in a, (0xFE)
@@ -66,7 +67,7 @@ _platform_monitor:
 
 _platform_reboot:
 	di
-	; FIXME: put back 48K ROM
+	; FIXME: put back boot ROM and all the rest
         rst 0		; back into our booter
 
 platform_interrupt_all:
@@ -95,7 +96,7 @@ init_hardware:
         ; set system RAM size
         ld hl, #4096
         ld (_ramsize), hl
-        ld hl, #512	      	; FIXME: TBD
+        ld hl, #720	      	; FIXME: TBD	 (15 * 48K for now)
         ld (_procmem), hl
 
 	; Set up video etc
@@ -107,24 +108,12 @@ init_hardware:
 	ld a,#0x01
 	out (0xBF),a		; Shadow on
 
-	ld bc,#0x0177		; MMU on, hold off, res off
+	ld bc,#0xFF77		; MMU on, hold off, res off
 	ld a,#0x0F		; 14MHz, 80x25 text mode
 	out (c),a
 
-	ld bc,#0xFFBF
-	ld a,#0x00		; FIXME: correct value
-	out (c),a		; Video and turbo set
-
 	xor a
-	out (c),a		; Shadow back off
-
-	; EFE7 is shadow off !
-	ld bc,#0xEFE7	
-
-	ld a,#0x80		; turbo, pentagon, video 80x25
-				; no RAM0 override
-	out (c),a
-
+	out (0xBF),a		; Shadow back off
 
         ; screen initialization
 	call _vtinit

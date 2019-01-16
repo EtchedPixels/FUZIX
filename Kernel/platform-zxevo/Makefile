@@ -49,15 +49,21 @@ $(AOBJS): %.rel: %.s
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
-	rm -f FUZIX FUZIX.BIN load-esx.ihx load-esx.tmp
-
+	rm -f load-fat.ihx load-fat.tmp load-hd.ihx load-hd.tmp
+	rm -f load-fat load-hd
 image:
-	# Build an esxdos friendly setup
-	sdasz80 -o load-esx.s
-	sdldz80 -i load-esx.rel
-	makebin -s 8704 load-esx.ihx load-esx.tmp
+	sdasz80 -o load-hd.s
+	sdldz80 -i load-hd.rel
+	makebin -s 25088 load-hd.ihx load-hd.tmp
 	# Generate the image file we need
-	dd if=load-esx.tmp of=FUZIX bs=8192 skip=1
+	# 512 bytes at 24576
+	dd if=load-hd.tmp of=load-hd bs=512 skip=48
 
+	sdasz80 -o load-fat.s
+	sdldz80 -i load-fat.rel
+	makebin -s 25088 load-fat.ihx load-fat.tmp
+	# Generate the image file we need
+	# 512 bytes at 24576
+	dd if=load-fat.tmp of=load-fat bs=512 skip=48
 	dd if=/dev/zero bs=256 count=1 >FUZIX.BIN
 	cat ../fuzix.bin >>FUZIX.BIN
