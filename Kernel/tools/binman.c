@@ -10,7 +10,7 @@ static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, s__VIDEO, l__INITIALIZED,
     l__GSFINAL, l__GSINIT, l__COMMONMEM, s__FONT, l__FONT, s__DISCARD,
     l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST,
-    s__HEAP, l__HEAP, s__PAGE0 = 0xFFFF;
+    s__HEAP, l__HEAP, s__BOOT=0xFFFF, l__BOOT, s__PAGE0 = 0xFFFF;
 
 
 static void ProcessMap(FILE * fp)
@@ -73,6 +73,10 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &s__HEAP);
 		if (strcmp(p2, "l__HEAP") == 0)
 			sscanf(p1, "%x", &l__HEAP);
+		if (strcmp(p2, "s__BOOT") == 0)
+			sscanf(p1, "%x", &s__BOOT);
+		if (strcmp(p2, "l__BOOT") == 0)
+			sscanf(p1, "%x", &l__BOOT);
 		if (strcmp(p2, "s__PAGE0") == 0)
 			sscanf(p1, "%x", &s__PAGE0);
 	}
@@ -165,6 +169,11 @@ int main(int argc, char *argv[])
 		end = 0xFFFF;
 		no_pack = 1;
 	}
+
+	/* Some kernels need a special boot area and it may be before the
+	   CODE block */
+	if (s__BOOT < start)
+		start = s__BOOT;
 
 	/* TODO: Support a proper discardable high discard in other mappings */
 
