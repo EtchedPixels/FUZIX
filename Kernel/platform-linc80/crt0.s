@@ -21,7 +21,8 @@
         .area _GSFINAL     ; unused
         .area _DISCARD
         .area _COMMONMEM
-	.area _CONSOLE
+	.area _SERIAL
+	.area _BOOT	   ; patch the jp init over it
 	.area _PAGE0	   ; unused but stops binman changing us
 
         ; exported symbols

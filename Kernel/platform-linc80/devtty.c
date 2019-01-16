@@ -95,7 +95,7 @@ void tty_drain_sio(void)
 	if (((old_ca[1] ^ sio_state[1]) & sio_state[1]) & 8)
 		tty_carrier_raise(1);
 	old_ca[1] = sio_state[1];
-	if (sio_txl[1] < 128 && (sleeping & 2)) {
+	if (sio_txl[1] < 64 && (sleeping & 2)) {
 		sleeping &= ~2;
 		tty_outproc(1);
 	}
@@ -111,7 +111,7 @@ void tty_drain_sio(void)
 	if (((old_ca[0] ^ sio_state[0]) & sio_state[0]) & 8)
 		tty_carrier_raise(2);
 	old_ca[0] = sio_state[0];
-	if (sio_txl[0] < 128 && (sleeping & 4)) {
+	if (sio_txl[0] < 64 && (sleeping & 4)) {
 		sleeping &= ~4;
 		tty_outproc(2);
 	}
