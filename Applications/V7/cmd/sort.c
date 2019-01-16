@@ -28,6 +28,8 @@ static	char *sccsid = "@(#)sort.c	4.11 (Berkeley) 6/3/86";
 
 #define rline(mp)	(fgets((mp)->l, L, (mp)->b) == NULL)
 
+int cmpa(char *, char *);
+
 FILE	*is, *os;
 char	*dirtry[] = {"/usr/tmp", "/tmp", NULL};
 char	**dirs;

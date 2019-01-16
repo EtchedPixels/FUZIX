@@ -14,7 +14,8 @@ CRT0 = ../../../Library/libs/crt0_6809.o
 .SUFFIXES: .c .o .y
 
 
-SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c ed.c expr.c find.c m4.c make.c moo.c pr.c tar.c test.c ttt.c units.c du.c
+SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c \
+	expr.c find.c m4.c make.c moo.c pr.c sort.c tar.c test.c ttt.c units.c
 
 OBJS = $(SRCS:.c=.o)
 
