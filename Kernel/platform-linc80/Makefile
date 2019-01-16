@@ -50,3 +50,4 @@ loader.bin: loader.s
 	dd if=loader.tmp bs=256 skip=208 of=loader.bin
 
 piospi.rel: ../dev/z80softspi.s
+linc80.rel: ../dev/z80sio.s
