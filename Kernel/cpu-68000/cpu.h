@@ -20,7 +20,7 @@ typedef uint32_t uptr_t;		/* User pointer equivalent */
 #define uputp  uputl			/* Copy user pointer type */
 #define ugetp  ugetl			/* between user and kernel */
 #define uputi  uputl			/* Copy user int type */
-#define ugeti  ugetl			/* between user and kernel */
+#define ugeti(x)  ugetl(x,NULL)		/* between user and kernel */
 
 extern void *memcpy(void *, const void  *, size_t);
 extern void *memset(void *, int, size_t);
