@@ -5,7 +5,7 @@ FCCOPTS = $(FUZIX_CCOPTS)
 
 SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cpio.c cron.c crypt.c dc.c dd.c \
 	deroff.c diff3.c diff.c diffh.c join.c ls.c look.c makekey.c mesg.c \
-	newgrp.c pg.c pr.c ptx.c rev.c split.c su.c sum.c test.c tsort.c \
+	newgrp.c pg.c pr.c ptx.c rev.c sort.c split.c su.c sum.c test.c tsort.c \
 	wall.c
 
 SRCSNS = ed.c time.c
