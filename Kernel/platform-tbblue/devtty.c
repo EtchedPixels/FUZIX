@@ -18,6 +18,8 @@ __sfr __banked __at 0x143B uart_baud;		/* Write */
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
+static uint8_t sleeping;
+
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 extern uint8_t curattr;
 
@@ -41,7 +43,6 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	serial_mask,
 };
 
-
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
@@ -62,8 +63,9 @@ ttyready_t tty_writeready(uint8_t minor)
 {
 	if (minor == 1)
 		return TTY_READY_NOW;
-	// FIXME 
-	return TTY_READY_NOW;	// TTY_READY_SOON
+	if (uart_status & 0x02)
+		return TTY_READY_SOON;
+	return TTY_READY_NOW;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
@@ -76,8 +78,12 @@ void tty_putc(uint8_t minor, unsigned char c)
 
 void tty_polluart(void)
 {
-	while (!(uart_status & 1))
+	while (!(uart_status & 4))
 		tty_inproc(2, uart_rx);
+	if ((sleeping & 4) &* (uart_status & 2)) {
+		sleeping &= ~4;
+		tty_outproc(2);
+	}
 }
 
 int tty_carrier(uint8_t minor)
@@ -102,19 +108,17 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	/* The hardware baud rates line up with our definitions from 2400 up
 	   but in reverse order */
 	uart_baud = 6 - baud;
-	
 }
 
 void tty_sleeping(uint8_t minor)
 {
-	used(minor);
+	sleeping |= (1 << minor);
 }
 
 void tty_data_consumed(uint8_t minor)
 {
 	used(minor);
 }
-
 
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
