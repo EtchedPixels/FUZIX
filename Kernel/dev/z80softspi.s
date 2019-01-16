@@ -2,6 +2,8 @@
 ;	Software SPI. Implements the minimal bits needed to support the
 ;	SD card interface
 ;
+;	Alan Cox 2019 with some further optimizations by herrw@plusporta
+;
 
 	.module softspi
 
@@ -108,6 +110,9 @@ spi_tx_loop:
 ;	The basic idea is that we keep the port in C and each needed byte
 ;	value in a register. The values are all precomputed so we don't
 ;	touch other bits and so we can use different modes
+;
+;	We could unroll tx but it's bigger than rx and we actually don't
+;	do that many writes compared to reads.
 ;	
 spi0_bitbang_tx:
 	ld b,#8			; 7
@@ -127,16 +132,53 @@ spi0_tx0:
 ;	Send 0xFF and receive a byte.
 ;
 ;	With call overhead about 500 clocks a byte or about 14Kbytes/second
-;	at 7.3MHz
+;	at 7.3MHz with a djnz loop
+;
+;	Unrolled/tweaked by herrw@pluspora to get us down to 382 clocks a
+;	byte, or about 19K/second !
 ;
 spi0_bitbang_rx:
-	ld b,#8
-	ld d,#0
-spi0_bit_rx:
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in d,(c)		; 12		get bit 0
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12
 	rra			; 4
 	rl d			; 8
-	djnz spi0_bit_rx	; 13/8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		and bit 1
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		and bit 2
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		3
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		4
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		5
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		6
+	rra			; 4
+	rl d			; 8
+	out (c),l		; 12		low | 1
+	out (c),h		; 12		high | 1
+	in a,(c)		; 12		7
+	rra			; 4
+	rl d			; 8
 	ret
