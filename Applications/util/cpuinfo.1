@@ -13,6 +13,45 @@ I/O port for parts of the identification. For a Z80 system this should be a
 port which can be written and reads back the same value while not having any
 immediate side effect. The command will restore the port state.
 
+## CPU BUGS AND FEATURES
+The following 6502 series processor bugs are reported
+
+:*brk*
+  The brk instruction as an interrupt occurs loses the brk status
+:*invread*
+  Indexed addressing crossing a page boundary causes a spurious invalid read
+:*jmpff*
+  Certain indirect jumps use the wrong address
+:*nobcd*
+  The processor lacks BCD instructions
+:*rmw*
+  Read-modify-write instructions write back the original value then the new
+  value
+:*ror*
+  The ror instruction does not work
+
+The following 6502 features are reported
+
+:*ai16*
+  The processor supports 16bit accumulator and indexing modes
+:*bcd*
+  The processor supports the N V and Z flags in BCD mode
+:*cmos*
+  The processor is CMOS
+:*nmos*
+  The processor is NMOS
+
+The following Z80 series processor bugs are reported
+
+:*exaf*
+  The ex af,af' instruction may behave incorrectly in some cases
+:*iff*
+  The interrupt status reporting is racy
+:*inout*
+  The in and out instructions may cause nearby jumps to misbehave
+:*ldflag*
+  The flags are not correctly updated on loads from I or R
+
 ## STANDARDS
 cpuinfo is a Fuzix specific command
 ## AUTHOR

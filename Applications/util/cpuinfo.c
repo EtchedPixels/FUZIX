@@ -29,9 +29,9 @@ uint8_t port_opt;
 #define CPU_Z80_Z280		2
 #define CPU_Z80_EZ80		3
 #define CPU_Z80_U880		4
-#define CPU_Z80_BM1		5
-#define CPU_Z80_EMULATOR	6
-#define CPU_Z80_CLONE		7
+#define CPU_Z80_EMULATOR	5
+#define CPU_Z80_CLONE		6
+#define CPU_Z80_T80		7
 
 /* Must come first and be split off (SDCC bug 2771) */
 
@@ -96,7 +96,7 @@ no_port_idwork:
         bit 5,c
         jr z, emulator_detected
         bit 3,c
-        ld a, #CPU_Z80_BM1
+        ld a, #CPU_Z80_U880
         jr z, set_id
         ld bc,#0x00ff
         push bc
@@ -137,8 +137,29 @@ static uint8_t badlibz80_asm(void) __naked
     __endasm;
 }
 
-/* TODO: T80 detection. Most T80 implementations screw up H N Z S handling
-   on LD A,R and LD A,I */
+/* The older T80 core incorrectly fails to set Z on LD A,R when R = 0 */
+static uint8_t badt80_asm(void) __naked
+{
+    __asm
+        loop:
+            ; Loop until R goes to 0
+            ;
+            ld a,#1
+            or a
+            ld a,r
+            jr z, goodz80
+            or a
+            nop		; 7 instructions so that we will cycle the full R
+                        ; range
+            jr nz, loop
+            ld l,#1
+            ret
+        goodz80:
+            ld l,#0
+            ret
+    __endasm;
+}
+        
 static const int cpu_vsize = 16;
 static const int cpu_psize = 16;
 static const int cpu_step = -1;
@@ -157,7 +178,8 @@ static char *vendor_name[] = {
     "Zilog",
     "Clone",
     "Zilog/Hitachi",
-    "USSR"
+    "USSR",
+    "Daniel Wallner"
 };
 
 static char *cpu_name[] = {
@@ -165,9 +187,10 @@ static char *cpu_name[] = {
     "Z180/HD64180",
     "Z280/R800",
     "eZ80",
-    "U880",
-    "KP18588BM1/T34MB1",
-    "Emulator"
+    "KP18588BM1/T34MB1/U880",
+    "Emulator",
+    "Clone",
+    "T80"
 };
 
 static void cpu_ident(void)
@@ -190,6 +213,17 @@ static void cpu_ident(void)
         cpu_pm = "halt iostop sleep systemstop";	/* Not always all of */
         break;
     case CPU_Z80_Z80:
+        /* Looks like a real Z80, might be a T80. We don't run the T80 test
+           on anything else because stuff with broken R emulation might
+           get stuck looping */
+        if (badt80_asm()) {
+            cpu_vendor = 5;
+            cpu_id = CPU_Z80_T80;
+            cpu_bugs = "ldflag";
+            z80_nmos = 0;
+            break;
+        }
+        cpu_bugs = "otdr";
         cpu_vendor = 1;
         break;
     case CPU_Z80_U880:
@@ -206,8 +240,8 @@ static void cpu_ident(void)
     if (cpu_id == CPU_Z80_Z80 && outibust) {
         cpu_vendor = 4;
         cpu_id = CPU_Z80_U880;
-    }
-    if (z80_nmos == 1)
+        cpu_bugs = "iff";
+    } else if (z80_nmos == 1)
         cpu_bugs = "iff";
 }
 
