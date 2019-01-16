@@ -1,0 +1,138 @@
+#include <kernel.h>
+#include <kdata.h>
+#include <printf.h>
+#include <stdbool.h>
+#include <devtty.h>
+#include <device.h>
+#include <tty.h>
+
+static unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf2[TTYSIZ];
+
+#define UART_MRA	0x01
+#define UART_SRA	0x03
+#define UART_CSRA	0x03
+#define UART_CRA	0x05
+#define UART_RHRA	0x07
+#define UART_THRA	0x07
+#define UART_IPCR	0x09
+#define UART_ACR	0x09
+#define UART_ISR	0x0B
+#define UART_IMR	0x0B
+#define UART_CTU	0x0D
+#define UART_CTUR	0x0D
+#define UART_CTL	0x0F
+#define UART_CTLR	0x0F
+#define UART_MRB	0x11
+#define UART_SRB	0x13
+#define UART_CSRB	0x13
+#define UART_CRB	0x15
+#define UART_RHRB	0x17
+#define UART_THRB	0x17
+#define UART_IVR	0x19
+#define UART_OPCR	0x1B
+#define UART_STARTCTR	0x1D
+#define UART_SETOPR	0x1D
+#define UART_STOPCTR	0x1F
+#define UART_CLROPR	0x1F
+
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
+	{NULL, NULL, NULL, 0, 0, 0},
+	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
+};
+
+static uint8_t sleeping;
+
+/* For now */
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask,
+	console_mask
+};
+
+/* Output for the system console (kprintf etc) */
+void kputchar(char c)
+{
+	if (c == '\n')
+		tty_putc(1, '\r');
+	tty_putc(1, c);
+}
+
+static volatile uint8_t *uart_base = (volatile uint8_t *)0xFFF000;
+
+#define GETB(x)		(uart_base[(x)])
+#define PUTB(x,y)	uart_base[(x)] = (y)
+
+ttyready_t tty_writeready(uint8_t minor)
+{
+	uint8_t c = GETB(0x10 * minor + UART_SRA);
+	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
+}
+
+void tty_putc(uint8_t minor, unsigned char c)
+{
+	PUTB(0x10 * minor + UART_THRA, c);
+}
+
+void tty_setup(uint8_t minor, uint8_t flags)
+{
+}
+
+int tty_carrier(uint8_t minor)
+{
+	return 1;
+}
+
+void tty_sleeping(uint8_t minor)
+{
+	sleeping |= 1 << minor;
+}
+
+void tty_data_consumed(uint8_t minor)
+{
+}
+
+/* Currently run off the timer */
+static void tty_interrupt(uint8_t r)
+{
+	if (r & 0x01) {
+		r = GETB(UART_RHRA);
+		tty_inproc(1,r);
+	}	
+	if (r & 0x02) {
+		if (sleeping & 2)
+			tty_outproc(1);
+	}
+	if (r & 0x04) {
+		/* How to clear break int ? */
+	}
+	if (r & 0x10) {
+		r = GETB(UART_RHRB);
+		tty_inproc(2,r);
+	}	
+	if (r & 0x20) {
+		if (sleeping & 4)
+			tty_outproc(2);
+	}
+	if (r & 0x40) {
+		/* How to clear break int ? */
+	}
+}
+
+void platform_interrupt(void)
+{
+	uint8_t r = GETB(UART_ISR);
+	tty_interrupt(r);
+	if (r & 0x08)
+		timer_interrupt();
+	/* and 0x80 is the GPIO */
+}
+
