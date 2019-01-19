@@ -9,7 +9,7 @@
 volatile uint8_t *uart_data = (volatile uint8_t *)0xF03000;	/* UART data */
 volatile uint8_t *uart_status = (volatile uint8_t *)0xF03010;	/* UART status */
 
-unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf1[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
