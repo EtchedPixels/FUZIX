@@ -6,10 +6,10 @@
 #include <devtty.h>
 #include <zeta-v2.h>
 
-char tbuf1[TTYSIZ];
+static char tbuf1[TTYSIZ];
 
 #ifdef CONFIG_PPP
-char tbufp[TTYSIZ];
+static char tbufp[TTYSIZ];
 #endif
 
 unsigned char uart0_type;
