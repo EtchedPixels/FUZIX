@@ -35,7 +35,7 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(FOBJS): fshbuild/%.o: %.c
-	$(CC) -c $(CFLAGS) $(COPT) $< -o $@
+	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
 
 sh: $(CRT0) $(OBJS)
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
