@@ -11,7 +11,7 @@ volatile uint8_t *uart_rxdata = (volatile uint8_t *)0177562;
 volatile uint8_t *uart_txstatus = (volatile uint8_t *)0177564;
 volatile uint8_t *uart_txdata = (volatile uint8_t *)0177566;
 
-unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf1[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -21,8 +21,10 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 /* Output for the system console (kprintf etc) */
 void kputchar(char c)
 {
+	while(tty_writeready(1) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(1, '\r');
+	while(tty_writeready(1) != TTY_READY_NOW);
 	tty_putc(1, c);
 }
 
@@ -49,6 +51,7 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
+	sleeping |= (1 << minor);
 }
 
 void tty_data_consumed(uint8_t minor)
@@ -62,7 +65,14 @@ void tty_interrupt(void)
 	if (r & 0x80) {
 		r = *uart_rxdata;
 		tty_inproc(1,r);
-	}	
+	}
+	if (sleeping) {
+		r = *uart_txstatus;
+		if (r & 0x80) {
+			tty_outproc(1);
+			sleeping &= ~2;
+		}
+	}
 }
 
 void platform_interrupt(void)
