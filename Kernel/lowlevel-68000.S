@@ -385,6 +385,7 @@ SYM (__umodsi3):
 		.globl spurious,unexpected,uninit
 		.globl udata_shadow
 		.globl trap_via_signal
+		.globl dump_registers
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -484,7 +485,8 @@ trap15:		move.w #SIGTRAP,trap_id			; by convention
 ;
 ;		fork is special see the fork code.
 ;
-trap14:		move.l a5,-(sp)		; must be first to match fork
+trap14:
+		move.l a5,-(sp)		; must be first to match fork
 		move.l udata_shadow,a5
 		move.b d0,U_DATA__U_CALLNO(a5)
 		move.b #1,U_DATA__U_INSYS(a5)
@@ -597,12 +599,35 @@ stackout:
 
 panic_sig:	ascii ": signal in kernel mode @"
 		byte 0
+panic_sig2:	asciz "ksig"
+regstr:		ascii "Register dump:"
 crnl:
 		byte 13,10,0
-panic_sig2:	asciz "ksig"
+trap:		asciz "TRAP# "
+uspstr:		asciz ", USP: "
+pcstr:		asciz " PC : "
 		.align 2
 
 sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
+		lea regstr,a0
+		bsr outstring
+		bsr dump_registers
+		lea trap,a0
+		bsr outstring
+		move.w trap_id,d0		; signal number
+		ext.l d0
+		move.l d0,a0
+		bsr outa0hex
+		lea pcstr,a0
+		bsr outstring
+		move.l 30(sp),a0
+		bsr outa0hex
+		lea uspstr,a0
+		bsr outstring
+		move USP,a0
+		bsr outa0hex
+		lea crnl,a0
+		bsr outstring
 		move.w trap_id,d0		; signal number
 		ext.l d0
 	        move.l udata_shadow,a5
@@ -749,7 +774,79 @@ outcharhex:	move.w d0,-(sp)
 		bsr hexdigit
 		move.w (sp)+,d0
 		rts
-
+/*
+ *	General register dump logic
+ */
+dump_registers:
+		movem.l a0-a2/d0-d2,-(sp)
+		movem.l d0-d2,-(sp)
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a1,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a2,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a3,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a4,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a5,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a6,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a7,a0
+		bsr outa0hex
+		move.b #10,d0
+		bsr outchar
+		movem.l (sp)+,a0-a2
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a1,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l a2,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l d3,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l d4,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l d5,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l d6,a0
+		bsr outa0hex
+		move.b #' ',d0
+		bsr outchar
+		move.l d7,a0
+		bsr outa0hex
+		move.b #10,d0
+		bsr outchar
+		move.b #10,d0
+		bsr outchar
+		movem.l (sp)+,a0-a2/d0-d2
+		rts
 .area data
 kernel_flag:	byte 0
 udata_shadow:	long 0
