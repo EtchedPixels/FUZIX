@@ -44,11 +44,11 @@
  *  - implement RTS/CTS for ASCI (waiting on my making up a cable ...)
  */
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
-char tbuf4[TTYSIZ];
-char tbuf5[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
+static char tbuf5[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
