@@ -151,8 +151,8 @@ dofork:
 	tst.w d0
 	bne forked_up
 
-	movel a5,-(sp)			;	U_DATA
 	move.l 4(sp),a0
+	movel a5,-(sp)			;	U_DATA
 	move.l a0,-(sp)
 	jsr makeproc
 	addq #8,sp
