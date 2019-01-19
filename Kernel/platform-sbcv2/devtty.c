@@ -39,6 +39,8 @@ __sfr __at 0x6F uart_scr;
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
+static uint8_t sleeping;
+
 /*
  *	TTY masks - define which bits can be changed for each port
  */
@@ -91,8 +93,10 @@ uint8_t ttymap[NUM_DEV_TTY + 1] = {
 
 void kputchar(char c)
 {
+	while(tty_writeready(1) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(1, '\r');
+	while(tty_writeready(1) != TTY_READY_NOW);
 	tty_putc(1, c);
 }
 
@@ -206,7 +210,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
  */
 void tty_sleeping(uint8_t minor)
 {
-	used(minor);
+	sleeping |= (1 << minor);
 }
 
 /*
