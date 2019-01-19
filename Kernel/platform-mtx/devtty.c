@@ -29,10 +29,12 @@ uint8_t vtattr_cap;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
-char tbuf4[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
+
+static uint8_t sleeping;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -125,7 +127,7 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
-	used(minor);
+	sleeping |= (1 << minor);
 }
 
 void tty_data_consumed(uint8_t minor)
@@ -351,6 +353,10 @@ void tty_interrupt(void)
 			tty_inproc(3, r);
 			r = serialAc;
 		}
+		if ((sleeping & 8) && (r & 0x04)) {
+			sleeping &= ~8;
+			tty_outproc(3);
+		}
 		if (!(r & 0x08))
 			tty_carrier_drop(3);
 		r = serialBc;
@@ -358,6 +364,10 @@ void tty_interrupt(void)
 			r = serialBd;
 			tty_inproc(4, r);
 			r = serialBc;
+		}
+		if ((sleeping & 16) && (r & 0x04)) {
+			sleeping &= ~16;
+			tty_outproc(4);
 		}
 		serialAc = 0x07 << 3;	/* Return from interrupt */
 		if (!(r & 0x08))
