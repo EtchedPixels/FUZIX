@@ -13,6 +13,10 @@
 
 #define READ	$20
 
+
+#define THRA	7
+#define SRA	3
+
 /*
  *	Simple loader to get us going
  */
@@ -29,9 +33,26 @@ start:
 	.ds 34
 	; should be where we end up from the bra
 loader:
+	or #$0700,sr
 	lea $00FF0000,a0
 	lea $00FFF000,a2
-	move.b #13,(a2)
+	lea bootmsg,a1
+txout:
+	tst.b (a1)
+	beq now_reloc
+waitc:
+	btst.b #2,SRA(a2)
+	beq waitc
+	move.b (a1)+,THRA(a2)
+	bra txout
+
+bootmsg:
+	ascii "Not loading CP/M but FUZIX"
+	byte 13,10,0
+
+	even
+
+now_reloc
 	lea strap,a1
 	move.w #1024,d0
 reloc:
@@ -40,18 +61,18 @@ reloc:
 	jmp.l $00FF0000
 
 strap:
-	move.b #10,(a2)
+	move.b #10,THRA(a2)
 	lea $00FFE000,a1
 	lea $00000400,a0
 	move.b #2,d2			; Sector
 	move.b #$80,d1			; Count to load (64K for now)
-	move.b #0xE0,LBA3(a0)
+	move.b #$E0,LBA3(a1)
 wait0:
 	btst #READY,STATUS(a1)
 	beq wait0
 
-	move.b #0,LBA2(a0)
-	move.b #0,LBA1(a0)
+	move.b #0,LBA2(a1)
+	move.b #0,LBA1(a1)
 load:
 	move.b d2,LBA0(a1)
 	move.b #1,NSEC(a1)
@@ -65,12 +86,16 @@ wait2:
 	btst #DRQ,STATUS(a1)
 	beq wait2
 
-	move.b #'.',(a2)
+	move.b #'.',THRA(a2)
 	move.w #255,d0
 sector:
 	move.w (a1),(a0)+
 	dbra d0,sector
 	dbra d1,load
 
-	move.b #13,(a2)
-	jmp.l $00000400
+	move.b #13,THRA(a2)
+waitc2:
+	btst.b #2,SRA(a2)
+	beq waitc2
+	move.b #10,THRA(a2)
+	jmp.l $00000404
