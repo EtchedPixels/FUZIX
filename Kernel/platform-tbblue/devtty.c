@@ -80,7 +80,7 @@ void tty_polluart(void)
 {
 	while (!(uart_status & 4))
 		tty_inproc(2, uart_rx);
-	if ((sleeping & 4) &* (uart_status & 2)) {
+	if ((sleeping & 4) && (uart_status & 2)) {
 		sleeping &= ~4;
 		tty_outproc(2);
 	}
