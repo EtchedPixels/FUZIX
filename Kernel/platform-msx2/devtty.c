@@ -16,11 +16,11 @@ __sfr __at 0x2F tty_debug;
 __sfr __at 0xAA kbd_row_set;
 __sfr __at 0xA9 kbd_row_read;
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
-char tbuf4[TTYSIZ];
-char tbuf5[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
+static char tbuf5[TTYSIZ];
 
 uint8_t curtty;
 uint8_t inputtty;
