@@ -21,7 +21,7 @@
 
 static void do_psleep(void *event, uint8_t state)
 {
-	irqflags_t irq = di();
+	di();
 #ifdef DEBUG_SLEEP
 	kprintf("psleep(0x%p)", event);
 #endif
@@ -629,7 +629,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 		           to fix */
 		        if (b && (m & stopper)) {
 				/* Don't allow us to race SIGCONT */
-				irqflags_t irq = di();
+				di();
 				/* FIXME: can we ever end up here not in READY/RUNNING ? */
 				/* Yes: we could be in P_SLEEP on a close race
 				   with do_psleep() */
