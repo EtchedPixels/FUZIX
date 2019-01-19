@@ -8,7 +8,7 @@
 __sfr __at 0 tty1stat;
 __sfr __at 1 tty1data;
 
-char tbuf1[TTYSIZ];
+static char tbuf1[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
