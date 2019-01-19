@@ -46,16 +46,16 @@ static int ccount = 0;
 #endif
 
 
-uint8_t tbuf1[TTYSIZ];   /* virtual serial port 0: console */
-uint8_t tbuf2[TTYSIZ];   /*         serial port 1: UART */
-uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
-uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
-uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
-uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
-uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
-uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
-uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
-uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
+static uint8_t tbuf1[TTYSIZ];   /* virtual serial port 0: console */
+static uint8_t tbuf2[TTYSIZ];   /*         serial port 1: UART */
+static uint8_t tbuf3[TTYSIZ];   /* drivewire VSER 0 */
+static uint8_t tbuf4[TTYSIZ];   /* drivewire VSER 1 */
+static uint8_t tbuf5[TTYSIZ];   /* drivewire VSER 2 */
+static uint8_t tbuf6[TTYSIZ];   /* drivewire VSER 3 */
+static uint8_t tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
+static uint8_t tbuf8[TTYSIZ];   /* drivewire VWIN 1 */
+static uint8_t tbuf9[TTYSIZ];   /* drivewire VWIN 2 */
+static uint8_t tbufa[TTYSIZ];   /* drivewire VWIN 3 */
 
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
