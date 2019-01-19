@@ -78,3 +78,4 @@ typedef union {            /* this structure is endian dependent */
 #define regptr	register
 
 #define __packed
+#define barrier()

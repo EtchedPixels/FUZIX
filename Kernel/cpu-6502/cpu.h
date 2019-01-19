@@ -71,3 +71,4 @@ typedef union {            /* this structure is endian dependent */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
 
 #define __packed
+#define barrier()

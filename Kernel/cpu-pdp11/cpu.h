@@ -78,3 +78,5 @@ typedef union {            /* this structure is endian dependent */
 #define PDP_ENDIAN
 
 #define CPUTYPE	CPUTYPE_PDP11
+
+#define barrier()		asm volatile("":::"memory")

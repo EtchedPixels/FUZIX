@@ -70,3 +70,4 @@ typedef union {            /* this structure is endian dependent */
 #define CPUTYPE	CPUTYPE_68HC11
 
 #define __packed		__attribute__((packed))
+#define barrier()		asm volatile("":::"memory")

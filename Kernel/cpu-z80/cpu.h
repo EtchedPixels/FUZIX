@@ -94,3 +94,4 @@ typedef union {            /* this structure is endian dependent */
    padding either */
 
 #define __packed
+#define barrier()
