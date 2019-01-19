@@ -1,5 +1,7 @@
 #include "cpu.h"
 
+/* FIXME: use proper fast methods */
+
 void *memcpy(void *d, const void *s, size_t sz)
 {
   unsigned char *dp = d;
