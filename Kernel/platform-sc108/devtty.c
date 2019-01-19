@@ -6,8 +6,10 @@
 #include <devtty.h>
 #include <rc2014.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+
+static uint8_t sleeping;
 
 uint8_t ser_type = 2;
 
@@ -154,8 +156,9 @@ void tty_pollirq_sio(void)
 		if (ca & 2)
 			SIOA_C = 2 << 5;
 		/* Output pending */
-		if (ca & 4) {
+		if ((ca & 4) && (sleeping & 2)) {
 			tty_outproc(1);
+			sleeping &= ~2;
 			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		/* Carrier changed */
@@ -171,8 +174,9 @@ void tty_pollirq_sio(void)
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
-		if (cb & 4) {
+		if ((cb & 4) && (sleeping & 4)) {
 			tty_outproc(2);
+			sleeping &= ~4;
 			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		if ((cb ^ old_cb) & 8) {
@@ -193,8 +197,9 @@ void tty_pollirq_acia(void)
 		ca = ACIA_D;
 		tty_inproc(1, ca);
 	}
-	if (ca & 2) {
-// We don't use IRQ driven		tty_outproc(1);
+	if ((ca & 2) && sleeping) {
+		tty_outproc(1);
+		sleeping = 0;
 	}
 }
 
@@ -266,7 +271,9 @@ void tty_data_consumed(uint8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-	tty_putc(TTYDEV - 512, c);
+	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(TTYDEV - 512, '\r');
+	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	tty_putc(TTYDEV - 512, c);
 }

@@ -8,8 +8,10 @@
 #include "vfd-term.h"
 #include "vfd-debug.h"
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+
+static uint8_t sleeping;
 
 uint8_t ser_type = 1;
 
@@ -156,8 +158,9 @@ void tty_pollirq_sio(void)
 		if (ca & 2)
 			SIOA_C = 2 << 5;
 		/* Output pending */
-		if (ca & 4) {
+		if ((ca & 4) && (sleeping & 2)) {
 			tty_outproc(1);
+			sleeping &= ~2;
 			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		/* Carrier changed */
@@ -173,8 +176,9 @@ void tty_pollirq_sio(void)
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
-		if (cb & 4) {
+		if ((cb & 4) && (sleeping & 4)) {
 			tty_outproc(2);
+			sleeping &= ~4;
 			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		if ((cb ^ old_cb) & 8) {
@@ -194,8 +198,9 @@ void tty_pollirq_acia(void)
 	if (ca & 1) {
 		tty_inproc(1, ACIA_D);
 	}
-	if (ca & 2) {
+	if ((ca & 2) && sleeping) {
 		tty_outproc(1);
+		sleeping = 0;
 	}
 }
 
@@ -218,9 +223,9 @@ void tty_putc(uint8_t minor, unsigned char c)
 	}
 }
 
-/* We will need this for SIO once we implement flow control signals */
 void tty_sleeping(uint8_t minor)
 {
+	sleeping |= (1 << minor);
 }
 
 /* Be careful here. We need to peek at RR but we must be sure nobody else
@@ -269,7 +274,9 @@ void tty_data_consumed(uint8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(char c)
 {
-	tty_putc(TTYDEV - 512, c);
+	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(TTYDEV - 512, '\r');
+	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	tty_putc(TTYDEV - 512, c);
 }
