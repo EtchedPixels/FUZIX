@@ -41,7 +41,7 @@ uint16_t umove(uint16_t n)
 	return udata.u_done;
 }
 
-static uint16_t mapcalc(inoptr ino, uint16_t *size, uint8_t m)
+static uint16_t mapcalc(inoptr ino, usize_t *size, uint8_t m)
 {
 	*size = min(udata.u_count, BLKSIZE - uoff());
 	return bmap(ino, udata.u_offset >> BLKSHIFT, m);
