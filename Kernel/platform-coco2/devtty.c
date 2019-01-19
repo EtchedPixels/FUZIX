@@ -16,8 +16,8 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
-unsigned char tbuf1[TTYSIZ];
-unsigned char tbuf2[TTYSIZ];
+static unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf2[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
