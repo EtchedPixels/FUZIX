@@ -1,3 +1,47 @@
-Just a test build to start the Tiny68K port
+Initial testing build for Tiny68K
 
-Nothing interesting to see here yet
+You need a disk image with the boot loader on LBA 1 and the kernel on LBA 2+
+Block 0 should hold a partition table and you must have a swap partition (type
+7F).
+
+To get us going and also debug some userspace problems along the way (32 bit
+cleanliness, alignment) we are pretending to be a tiny system with only
+enough RAM for one process at a time. It'll do to get us up and going.
+
+Unsupported right now:
+- RTC
+- Detect if monitor is loaded high and if so avoid it
+- Trapping back into monitor if high
+- Reboot
+
+Known problems
+--------------
+
+Traps need to report their actual trap number and the correct type and
+frame (optionally for userspace)
+Trap need to report extra frame info (eg address of bus error)
+
+Core dumps are unfinished (need to include trap frame info and a lot
+more)
+
+fsh appears to silently die
+
+All I/O going via buffers
+ps user/kernel include mismatch error
+init forgets to run the bootwait stuff (or something else goes pop)
+shutdown doesn't
+levee just exits
+
+calendar does not put a : before 'cannot open file'
+
+chmem does not support 68K
+cpuinfo does not support 68K
+
+Some app instability even causes a crash (0000A5DE_switchin: FAIL)
+
+
+To Do
+-----
+Add a 'user touches kernel' catcher on the debug/sim
+
+
