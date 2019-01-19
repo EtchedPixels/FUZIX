@@ -464,6 +464,7 @@ static void initialize(void)
 	       " %d starbase%s in the galaxy for resupplying your ship.\n\n"
 	       "Hit any key to accept command. ",
 	       klingons_left, time_start + time_up, time_up, plural, starbases_left, plural_2);
+	fflush(stdout);
 	getchar();
 }
 
