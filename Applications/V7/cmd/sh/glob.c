@@ -36,14 +36,3 @@ STKPTR staktop;
 jmp_buf subshell;
 jmp_buf errshell;
 
-#if 0
-/* FIXME */
-
-int setjmp(jmp_buf bar)
-{
-}
-
-void longjmp(jmp_buf bar, int foo)
-{
-}
-#endif
