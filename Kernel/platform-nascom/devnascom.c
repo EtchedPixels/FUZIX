@@ -10,8 +10,8 @@
 #include <stdarg.h>
 #include <nascom.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
 
 struct vt_repeat keyrepeat;
 
