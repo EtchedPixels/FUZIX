@@ -7,11 +7,11 @@
 #include <z180.h>
 #include <n8vem.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
 
 #ifdef CONFIG_PROPIO2
-char tbufp[TTYSIZ];
+static char tbufp[TTYSIZ];
 #endif
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
