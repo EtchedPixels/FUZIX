@@ -428,7 +428,8 @@ int do_ps(void)
 	}
 
 	if (nodesize > sizeof(struct p_tab_buffer)) {
-		fprintf(stderr, "kernel/user include mismatch.\n");
+		fprintf(stderr, "kernel/user include mismatch (%d v %d).\n",
+			nodesize, sizeof(struct p_tab_buffer));
 		exit(1);
 	}
 

@@ -137,11 +137,11 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 
 	switch (request) {
 	case PIO_TABSIZE:
-		uputw(maxproc, data);
+		uputi(maxproc, data);
 		break;
 
 	case PIO_ENTRYSIZE:
-		uputw(sizeof(struct p_tab), data);
+		uputi(sizeof(struct p_tab), data);
 		break;
 
 	default:

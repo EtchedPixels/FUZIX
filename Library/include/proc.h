@@ -16,6 +16,12 @@
 #define P_ZOMBIE        7    /* Exited. */
 #define P_NOSLEEP	8    /* Internal no-sleep state, never visible to ps */
 
+struct __sigbits {
+    uint16_t	s_pending;
+    uint16_t	s_ignored;
+    uint16_t	s_held;
+};
+
 /* Process table entry */
 
 struct p_tab {
@@ -25,17 +31,17 @@ struct p_tab {
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
     struct p_tab *p_pptr;      /* Process parent's table entry */
-    uint16_t    p_alarm;        /* Centiseconds until alarm goes off */
+    /* FIXME: uarg_t strictly but now to deal with that in user */
+    unsigned int p_alarm;        /* Centiseconds until alarm goes off */
     uint16_t    p_exitval;      /* Exit value */
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t    p_page2;        /* It's really four bytes for the platform */
-    /* Update kernel.def if you change fields above this comment */
-    /* Everything below here is overlaid by time info at exit */
+#if defined(__m68k__)
+    void *	p_udata;
+#endif    
     uint16_t    p_priority;     /* Process priority */
-    uint32_t    p_pending;      /* Bitmask of pending signals */
-    uint32_t    p_ignored;      /* Bitmask of ignored signals */
-    uint32_t    p_held;         /* Bitmask of held signals */
+    struct __sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
     uint16_t    p_timeout;      /* timeout in centiseconds - 1 */
                                 /* 0 indicates no timeout, 1 = expired */
@@ -47,7 +53,9 @@ struct p_tab {
     uint16_t    p_pgrp;         /* Process group */
     uint8_t     p_nice;
     uint8_t	p_event;	/* Events */
-    uint16_t	p_top;		/* Copy of u_top : FIXME: usize_t */
+    /* FIXME: usize_t strictly */
+    unsigned int p_top;		/* Copy of u_top : FIXME: usize_t */
+    uint8_t	p_flags;
 };
 
 /* Followed by this structure if profiling supported */
@@ -63,12 +71,12 @@ struct p_level_2 {
     uint16_t	p_session;
 };
 
-/* The offsets of the prof and l2 are not guaranteed to be as per this
+/* The offsets of the prof structure are not guaranteed to be as per this
    structure. Use this only for sizing */
 struct p_tab_buffer {
     struct p_tab	p_tab;
-    struct p_prof	_prof;
     struct p_level_2	_l2;
+    struct p_prof	_prof;
 };
 
 #endif /* __PROC_H */
