@@ -14,6 +14,12 @@
 		.globl devide_read_data
 		.globl devide_write_data
 		.globl vdso
+
+#define CTUR $D
+#define CTLR $F
+#define IMR  $B
+#define IVR $19
+
 .mri 1
 platform_reboot:
 platform_monitor:
@@ -65,9 +71,14 @@ trapset:
 	    move.w #$0,a0
 	    move.l #uninit,$3c(a0)
 	    move.l #spurious,$60(a0)
-	    ; FIXME: vectored so actually vector 0x81 I think ?
-	    move.l #timer_irq,$78(a0)
+	    /* We use Vector 0x81 for the DUART */
+	    move.l #timer_irq,$204(a0)
 
+	    lea.l $FFF000,a0
+	    move.b #$80,CTLR(a0)
+	    move.b #$4,CTUR(a0)
+	    move.b #$81,IVR(a0)
+	    move.b #$2A,IMR(a0)
             rts
 
 timer_irq:
@@ -122,7 +133,7 @@ outchar:
 outcharw:
 	btst #2,$00FFF003
 	beq outcharw
-	move.b d0,$00FFF000
+	move.b d0,$00FFF007
 	rts
 ;
 ;	IDE:
