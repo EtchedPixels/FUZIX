@@ -43,8 +43,10 @@ uint8_t vtattr_cap;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
+static uint8_t txwait;
+
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -204,7 +206,7 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
-    minor;
+    txwait = 1;
 }
 
 #define SER_INIT	0x4F	/*  1 stop,no parity,8bit,16x */
@@ -365,6 +367,10 @@ void platform_interrupt(void)
 		/* work around sdcc bug */
 		c = uarta;
 		tty_inproc(2, c);
+		if (txwait && (uartb & 1)) {
+			tty_outproc(2);
+			txwait = 0;
+		}
 	}
 	if (!(a & 8)) {
 		keyin[0] = kmap0;
