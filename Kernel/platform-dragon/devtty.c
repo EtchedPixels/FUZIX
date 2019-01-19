@@ -16,8 +16,8 @@ uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
 uint8_t vtattr_cap = 0;			/* we could do inverse ? */
 
-unsigned char tbuf1[TTYSIZ];
-unsigned char tbuf2[TTYSIZ];
+static unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf2[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},

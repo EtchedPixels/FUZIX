@@ -13,7 +13,7 @@
 #include <tty.h>
 #include <vt.h>
 
-unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf1[TTYSIZ];
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
