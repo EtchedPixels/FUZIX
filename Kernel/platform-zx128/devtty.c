@@ -7,7 +7,7 @@
 #include <vt.h>
 #include <tty.h>
 
-char tbuf1[TTYSIZ];
+static char tbuf1[TTYSIZ];
 
 uint8_t vtattr_cap;
 struct vt_repeat keyrepeat;

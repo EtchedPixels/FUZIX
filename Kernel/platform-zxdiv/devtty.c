@@ -10,7 +10,7 @@
 #include <input.h>
 #include <devinput.h>
 
-char tbuf1[TTYSIZ];
+static char tbuf1[TTYSIZ];
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 uint8_t vtborder;
