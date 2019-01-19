@@ -9,7 +9,7 @@ extern char **__argv;
 
 static void _vdo(int err, int flags, const char *fmt,  va_list args)
 {
-  fprintf(stderr, "%s", __argv[0]);
+  fprintf(stderr, "%s: ", __argv[0]);
   if (fmt) {
     vfprintf(stderr, fmt, args);
     if (flags & 1)
