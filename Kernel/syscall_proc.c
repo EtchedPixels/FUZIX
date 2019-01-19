@@ -424,6 +424,8 @@ arg_t _fork(void)
 		pagemap_free(new_process);
 		new_process->p_status = P_EMPTY;
 		udata.u_error = ENOMEM;
+		/* FIXME: we don't know for sure whether the error occurred
+		   before or after makeproc: see bug 686 */
 		nproc--;
 		nready--;
 	}
