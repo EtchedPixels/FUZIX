@@ -39,8 +39,10 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 void kputchar(char c)
 {
+	while(tty_writeready(1) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(1, '\r');
+	while(tty_writeready(1) != TTY_READY_NOW);
 	tty_putc(1, c);
 }
 
