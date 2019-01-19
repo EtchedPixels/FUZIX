@@ -9,9 +9,9 @@
 #include <devinput.h>
 #include <stdarg.h>
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
 
 uint8_t curtty;		/* output side */
 uint8_t inputtty;	/* input side */
