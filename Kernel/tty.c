@@ -547,10 +547,14 @@ uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 					udata.u_error = EAGAIN;
 					return 1;
 				}
-				irq = di();
-				tty_sleeping(minor);
-				psleep(&ttydata[minor]);
-				irqrestore(irq);
+				if (t != TTY_READY_SOON) {
+					irq = di();
+					tty_sleeping(minor);
+					psleep(&ttydata[minor]);
+					irqrestore(irq);
+				} else
+					/* Yield */
+					switchout();
 			}
 		}
 	}
