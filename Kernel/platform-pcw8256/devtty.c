@@ -22,9 +22,11 @@ __sfr __at 0xE4	ctc0;
 __sfr __at 0xE5 ctc1;
 __sfr __at 0xE7 ctcmode;
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
+
+static uint8_t sleeping;
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
@@ -106,10 +108,18 @@ void tty_irq(void)
         c = dart0d;
         tty_inproc(2, c);
     }
+    if ((s & 4) && (sleeping & 4)) {
+	tty_outproc(2);
+	sleeping &= ~4;
+    }
     s = dartrr(3, 0);
     if (s & 1) {
         c = dart0d;
         tty_inproc(2, c);
+    }
+    if ((s & 4) && (sleeping & 8)) {
+	tty_outproc(3);
+	sleeping &= ~8;
     }
 }
 
@@ -128,7 +138,7 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
-    minor;
+	sleeping |= (1 << minor);
 }
 
 void tty_data_consumed(uint8_t minor)
