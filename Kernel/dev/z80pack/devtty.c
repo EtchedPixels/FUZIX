@@ -14,10 +14,10 @@ __sfr __at 43 tty3data;
 __sfr __at 50 tty4stat;
 __sfr __at 51 tty4data;
 
-char tbuf1[TTYSIZ];
-char tbuf2[TTYSIZ];
-char tbuf3[TTYSIZ];
-char tbuf4[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
+static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
