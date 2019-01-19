@@ -393,7 +393,7 @@ void fuzix_main(void)
             /* reset potentially altered state before prompting the user for command line again */
             progptr = old_progptr;
             argptr = old_argptr;
-            ro = MS_RRDONLY;
+            ro = MS_RDONLY;
         }
 
 	root = i_open(root_dev, ROOTINODE);
