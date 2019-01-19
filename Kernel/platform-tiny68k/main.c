@@ -78,7 +78,7 @@ void platform_swap_found(uint8_t letter, uint8_t m)
 		n = MAX_SWAPS;
 #ifdef SWAPDEV
 	while (n)
-		swapmap_init(n--);
+		swapmap_init(--n);
 #endif
 }
 /* Live udata and kernel stack */
