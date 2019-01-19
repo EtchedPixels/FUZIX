@@ -227,7 +227,6 @@ static void cpu_ident(void)
         cpu_vendor = 1;
         break;
     case CPU_Z80_U880:
-    case CPU_Z80_BM1:
         cpu_vendor = 4;
         break;
     case CPU_Z80_EMULATOR:
