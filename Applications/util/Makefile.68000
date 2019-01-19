@@ -60,6 +60,7 @@ SRCS  = \
 	banner.c \
 	bd.c \
 	cal.c \
+	chmem.c \
 	cksum.c \
 	cut.c \
 	dd.c \

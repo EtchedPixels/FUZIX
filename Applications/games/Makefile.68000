@@ -1,3 +1,4 @@
+HOSTCC := $(CC)
 PLATFORM = 68000
 CC = m68k-uclinux-gcc
 ASM = m68k-uclinux-as
@@ -47,6 +48,15 @@ $(APPS) $(APPSNS): %: %.o
 $(APPSFP): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_FP_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
+
+fortune-gen-linux: fortune-gen.c
+	$(HOSTCC) -o $@ $<
+
+fortune.dat: fortune-gen-linux
+	./fortune-gen-linux < fort.db >fortune.dat
+
+fortune: | fortune.dat
+
 
 size.report: $(APPS) $(APPSNS)
 	ls -l $^ > $@
