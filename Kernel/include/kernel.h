@@ -475,10 +475,10 @@ typedef struct p_tab {
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t	p_page2;	/* It's really four bytes for the platform */
-    /* Update kernel.def if you change fields above this comment */
 #ifdef udata
     struct u_data *p_udata;	/* Udata pointer for platforms using dynamic udata */
 #endif
+    /* Update kernel.def if you change fields above this comment */
     uint16_t    p_priority;     /* Process priority */
     struct sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
@@ -495,15 +495,15 @@ typedef struct p_tab {
     usize_t	p_top;		/* Copy of u_top */
     uint8_t	p_flags;	/* Bitflags */
 #define PFL_CHKSIG	1	/* Signal check required */
+#ifdef CONFIG_LEVEL_2
+    uint16_t	p_session;
+#endif
 #ifdef CONFIG_PROFIL
     uint8_t	p_profscale;
     void *	p_profbuf;
     uaddr_t	p_profsize;
     uaddr_t	p_profoff;
 #endif    
-#ifdef CONFIG_LEVEL_2
-    uint16_t	p_session;
-#endif
 } p_tab, *ptptr;
 
 /*
