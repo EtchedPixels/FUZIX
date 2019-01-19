@@ -151,7 +151,6 @@ arg_t _execve(void)
 		goto nogood;
 	}
 
-	
 	/* FIXME: ugly - save this as valid_hdr modifies it */
 	true_brk = binflat.bss_end;
 
@@ -209,6 +208,9 @@ arg_t _execve(void)
 		udata.u_egid = ino->c_node.i_gid;
 
 	top = progbase + bin_size;
+
+	udata.u_top = top;
+	udata.u_ptab->p_top = top;
 
 //	kprintf("user space at %p\n", progbase);
 //	kprintf("top at %p\n", progbase + bin_size);
@@ -430,11 +432,11 @@ uint8_t write_core_image(void)
 			udata.u_count = sizeof(corehdr);
 			writei(ino, 0);
 			udata.u_sysio = false;
-			udata.u_base = MAPBASE;
+			udata.u_base = (uint8_t *)MAPBASE;
 			udata.u_count = udata.u_break - MAPBASE;
 			writei(ino, 0);
 			udata.u_base = udata.u_sp;
-			udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
+			udata.u_count = PROGTOP - (uint32_t)udata.u_sp;
 			writei(ino, 0);
 			i_unlock_deref(ino);
 			return W_COREDUMP;
