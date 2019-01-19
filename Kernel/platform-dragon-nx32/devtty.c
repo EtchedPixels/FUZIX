@@ -25,13 +25,13 @@ uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 #define ACIA_TTY 5
 #define is_dw(minor) (minor >= DW_MIN_OFF)
 
-unsigned char tbuf1[TTYSIZ];
-unsigned char tbuf2[TTYSIZ];
-unsigned char tbuf3[TTYSIZ];
-unsigned char tbuf4[TTYSIZ];
-unsigned char tbuf5[TTYSIZ];
-unsigned char tbuf6[TTYSIZ];   /* drivewire VSER 0 */
-unsigned char tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
+static unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf2[TTYSIZ];
+static unsigned char tbuf3[TTYSIZ];
+static unsigned char tbuf4[TTYSIZ];
+static unsigned char tbuf5[TTYSIZ];
+static unsigned char tbuf6[TTYSIZ];   /* drivewire VSER 0 */
+static unsigned char tbuf7[TTYSIZ];   /* drivewire VWIN 0 */
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -530,6 +530,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case GFXIOC_WAITVB:
 		/* Our system clock is our vblank, use the standard timeout
 		   to pause for one clock */
+		/* FIXME: this is wrong due to clock scaling! */
 		udata.u_ptab->p_timeout = 2;
 		psleep(NULL);
 		return 0;
