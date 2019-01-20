@@ -58,8 +58,8 @@ static void close_on_exec(void)
 
 static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 {
-	if (bf->stack_size < 32768)
-		bf->stack_size = 32768;
+	if (bf->stack_size < 4096)
+		bf->stack_size = 4096;
 	if (bf->rev != 4)
 		return 0;
 	if (bf->entry >= bf->data_start)
