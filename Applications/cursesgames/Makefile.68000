@@ -10,7 +10,7 @@ LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
 CRT0 = ../../Library/libs/crt0_68000.o
 # For now while we get going. Really we want to use some kind of elf2zmagic
 # with relocs.
-ELF2FUZIX = elf2flt
+ELF2FUZIX = elf2flt -s 16384
 .SUFFIXES: .c .o
 
 SRCS  = invaders.c

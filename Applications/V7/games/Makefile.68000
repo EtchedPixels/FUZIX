@@ -11,7 +11,7 @@ CRT0 = ../../../Library/libs/crt0_68000.o
 CRT0NS = ../../../Library/libs/crt0nostdio_68000.o
 # For now while we get going. Really we want to use some kind of elf2zmagic
 # with relocs.
-ELF2FUZIX = elf2flt
+ELF2FUZIX = elf2flt -s 16384
 .SUFFIXES: .c .o
 
 SRCS  = arithmetic.c  backgammon.c  fish.c  wump.c
