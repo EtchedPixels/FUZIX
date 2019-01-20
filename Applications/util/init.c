@@ -372,6 +372,12 @@ static void parse_inittab(void)
 	idata = inittab = sdata;
 	while (sdata && sdata < sdata_end)
 		parse_initline();
+
+	/* Align the pid table - eww */
+	/* FIXME: align properly to 4 bytes */
+	if (((uint8_t)idata) & 1)
+		idata++;
+
 	/* Allocate space for the control arrays */
 	initpid = (struct initpid *) idata;
 	idata += sizeof(struct initpid) * initcount;
@@ -400,8 +406,8 @@ static void load_inittab(void)
 		write(2, "init: no inittab\n", 17);
 		goto fail;
 	}
-	/* FIXME: this may unalign our memory pool */
-	sdata = sbrk(st.st_size + 1);
+	/* Keep the pool aligned */
+	sdata = sbrk((st.st_size + 4) & ~3);
 	if (sdata == (uint8_t *) - 1) {
 		write(2, "init: out of memory\n", 20);
 		goto fail;
