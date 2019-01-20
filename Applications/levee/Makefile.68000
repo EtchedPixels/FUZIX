@@ -24,17 +24,19 @@ OBJSL = $(CSRCS:.c=.o-l)
 OBJSA = $(CSRCS:.c=.o-a)
 OBJSV = $(CSRCS:.c=.o-v)
 
-all: levee-l levee-a levee-v
+all: levee-linux levee-ansi levee-vt52
 
 # Linux version to run on Host system for debug purposes
-levee-l: $(OBJSL)
+levee-linux: $(OBJSL)
 	gcc -o levee-linux $(OBJSL)
 
-levee-a: $(OBJSA)
-	$(LINKER) -o levee-ansi $(CRT0) $(OBJSA) $(LINKER_OPT)
+levee-ansi: $(OBJSA)
+	$(LINKER) -o levee-ansi.bin $(CRT0) $(OBJSA) $(LINKER_OPT)
+	$(ELF2FUZIX) -o $@ $@.bin
 
-levee-v: $(OBJSV) $(CRT0)
-	$(LINKER) -o levee-vt52 $(CRT0) $(OBJSV) $(LINKER_OPT)
+levee-vt52: $(OBJSV) $(CRT0)
+	$(LINKER) -o levee-vt52.bin $(CRT0) $(OBJSV) $(LINKER_OPT)
+	$(ELF2FUZIX) -o $@ $@.bin
 
 # Build for Linux - assume appropriate host tools exist with default names
 $(OBJSL): %.o-l: %.c $(HDRS)
@@ -49,4 +51,5 @@ $(OBJSV): %.o-v: %.c $(HDRS)
 	$(CC) $(CFLAGS) $(COPT) -c -DVT52=1 -DANSI=0 -o $*.o-v $*.c
 
 clean:
-	rm -rf $(OBJS) $(OBJSL) $(OBJSA) $(OBJSV) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm levee levee.bin
+	rm -rf $(OBJS) $(OBJSL) $(OBJSA) $(OBJSV) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm
+	rm -f levee levee-vt52 levee-linux levee-ansi *.bin levee-termcap
