@@ -21,27 +21,43 @@ Traps need to report their actual trap number and the correct type and
 frame (optionally for userspace)
 Trap need to report extra frame info (eg address of bus error)
 
+Signals need to include trap frame on stack and unwind it or siginfo ptr
+or somesuch ?
+
 Core dumps are unfinished (need to include trap frame info and a lot
 more)
 
-fsh appears to silently die
+Something null pointers at boot time (sh)
+	- sh nul pointers on ">/var/run/utmp"
+
+Select doesn't work (need new hash algorithm for bigger setups)
+
+(CURSES lib) invaders always reports that the terminal is too small
+(stty reports rows cols correctly)
 
 All I/O going via buffers
-ps user/kernel include mismatch error
-init forgets to run the bootwait stuff (or something else goes pop)
 shutdown doesn't
-levee just exits
 
-calendar does not put a : before 'cannot open file'
+Sometimes get a trap then it repeats
+(various panics - trap then nready panic, switch fail etc)
+
+Is the header and binary start mismatch right (seems to be 0x48 v 0x44)
+
 
 chmem does not support 68K
 cpuinfo does not support 68K
 
-Some app instability even causes a crash (0000A5DE_switchin: FAIL)
 
+Should sh report (core dumped)?
 
 To Do
 -----
-Add a 'user touches kernel' catcher on the debug/sim
 
-
+DONE Add a 'user touches kernel' catcher on the debug/sim
+DONE ps user/kernel include mismatch error
+DONE (libc bug) calendar does not put a : before 'cannot open file'
+DONE fsh editing does not seem to work (build bug ?)
+DONE (longjmp bug) sh exit command touches blows up
+DONE levee just exits (bug in execve) now correctly says too big
+DONE startrek pauses before hit any key to accept message
+DONE (sh longjmp bug) init forgets to run the bootwait stuff
