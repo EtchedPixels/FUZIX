@@ -381,11 +381,14 @@ SYM (__umodsi3):
 		.globl get_usp, set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
 		.globl bus_error,addr_error,illegal,divzero,chk,trapv,priv
-		.globl trace,unimpa,unimpf,misctrap,trap15,trap14,sysc_err
+		.globl trace,unimpa,unimpf,trap14,sysc_err
+		.globl trap0,trap1,trap2,trap3,trap4,trap5,trap6,trap7
+		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap15
 		.globl spurious,unexpected,uninit
 		.globl udata_shadow
 		.globl trap_via_signal
 		.globl dump_registers
+		.globl kernel_flag
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -450,30 +453,97 @@ doexec:
 		rte		; hit user space (and will enable interrupts)
 
 
-bus_error:	move.w #SIGBUS,trap_id
-		bra sig_or_die
-addr_error:	move.w #SIGSEGV,trap_id
-		bra sig_or_die
-illegal:	move.w #SIGILL,trap_id
-		bra sig_or_die
-divzero:	move.w #SIGFPE,trap_id
-		bra sig_or_die
-chk:		move.w #SIGFPE,trap_id
-		bra sig_or_die
-trapv:		move.w #SIGFPE,trap_id
-		bra sig_or_die
-priv:		move.w #SIGFPE,trap_id
-		bra sig_or_die
-trace:		move.w #SIGTRAP,trap_id
-		bra sig_or_die
-unimpa:		move.w #SIGFPE,trap_id
-		bra sig_or_die
-unimpf:		move.w #SIGFPE,trap_id
-		bra sig_or_die
-misctrap:	move.w #SIGILL,trap_id
-		bra sig_or_die
-trap15:		move.w #SIGTRAP,trap_id			; by convention
-		bra sig_or_die
+bus_error:	move.w sr,-(sp)
+		move.w #2,-(sp)
+		bra synchronous_exception
+addr_error:	move.w sr,-(sp)
+		move.w #3,-(sp)
+		bra synchronous_exception
+illegal:	move.w sr,-(sp)
+		move.w #4,-(sp)
+		bra synchronous_exception
+divzero:	move.w sr,-(sp)
+		move.w #5,-(sp)
+		bra synchronous_exception
+chk:		move.w sr,-(sp)
+		move.w #6,-(sp)
+		bra synchronous_exception
+trapv:		move.w sr,-(sp)
+		move.w #7,-(sp)
+		bra synchronous_exception
+priv:		move.w sr,-(sp)
+		move.w #8,-(sp)
+		bra synchronous_exception
+trace:		move.w sr,-(sp)
+		move.w #9,-(sp)
+		bra synchronous_exception
+unimpa:		move.w sr,-(sp)
+		move.w #10,-(sp)
+		bra synchronous_exception
+unimpf:		move.w sr,-(sp)
+		move.w #11,-(sp)
+		bra synchronous_exception
+trap0:		move.w sr,-(sp)
+		move.w #32,-(sp)
+		bra synchronous_exception
+trap1:		move.w sr,-(sp)
+		move.w #33,-(sp)
+		bra synchronous_exception
+trap2:		move.w sr,-(sp)
+		move.w #34,-(sp)
+		bra synchronous_exception
+trap3:		move.w sr,-(sp)
+		move.w #35,-(sp)
+		bra synchronous_exception
+trap4:		move.w sr,-(sp)
+		move.w #36,-(sp)
+		bra synchronous_exception
+trap5:		move.w sr,-(sp)
+		move.w #37,-(sp)
+		bra synchronous_exception
+trap6:		move.w sr,-(sp)
+		move.w #38,-(sp)
+		bra synchronous_exception
+trap7:		move.w sr,-(sp)
+		move.w #39,-(sp)
+		bra synchronous_exception
+trap8:		move.w sr,-(sp)
+		move.w #40,-(sp)
+		bra synchronous_exception
+trap9:		move.w sr,-(sp)
+		move.w #41,-(sp)
+		bra synchronous_exception
+trap10:		move.w sr,-(sp)
+		move.w #42,-(sp)
+		bra synchronous_exception
+trap11:		move.w sr,-(sp)
+		move.w #43,-(sp)
+		bra synchronous_exception
+trap12:		move.w sr,-(sp)
+		move.w #44,-(sp)
+		bra synchronous_exception
+trap13:		move.w sr,-(sp)
+		move.w #45,-(sp)
+		bra synchronous_exception
+trap15:		move.w sr,-(sp)
+		move.w #47,-(sp)
+
+;
+;	Above us is the exception frame and return address
+;	Add the registers to it
+;
+synchronous_exception:
+		movem.l a0-a6/d0-d7,-(sp)
+		move.l sp,-(sp)		; pointer to trap
+		move.l udata_shadow,a5
+		; Do the hard stuff in C
+		bsr exception
+		; This may not come back if the process dies or we panic
+		addq #4,sp
+		; Recover registers (may have changed)
+		movem.l (sp)+,a0-a6/d0-d7
+		addq #4,sp
+		rte
 
 ;
 ;		Save as little as we can
@@ -532,17 +602,16 @@ sysc_err:	moveq #-1,d0
 ;	stack above the trap frame.
 ;
 return_via_signal:
-		; Stack now is return frame,a5,a1,a0,d1,d0
-		movem.l a0-a1/d0-d1,-(sp)
-trap_via_signal:
-		lea.l 20(sp),a0			; Trap frame pointer
-		move.l a0,-(sp)
-		bsr signal_frame		; Make up the signal frame
-		add.w #20,sp			; Pop call frame
-		moveq #0,d0			; No leaks into handler
-		move.l d0,d1
-		move.l d0,a0
-		move.l d0,a1
+		; Stack now is return frame,a5
+		move.w sr,-(sp)
+		move.w #0,-(sp)
+		movem.l a0-a6/d0-d7,-(sp)
+		move.l sp,-(sp)
+		move.l udata_shadow,a5
+		bsr exception
+		addq #4,sp
+		movem.l (sp)+,a0-a6/d0-d7
+		addq #4,sp
 		move.l (sp)+,a5			; recover user A5
 		rte				; into modified handler
 
@@ -570,82 +639,6 @@ strunexpected:
 		asciz "unexpected trap\n"
 
 		.align 2
-;
-;	FIXME:
-;	Use the trap frame not flags to test this (exception from supervisor
-;	means bad). Also we need to work out the frame size and move it to
-;	the user stack with a signal to help debuggers.
-;
-;	On entry trap_id holds the signal number
-;
-sig_or_die:	
-		tst.b kernel_flag
-		beq sig_user
-		move.w trap_id,d0
-		bsr outcharhex
-		lea panic_sig,a0
-		bsr outstring
-		move.l 2(sp),a0
-		bsr outa0hex
-		move.w #15,d2
-stackout:
-		move.l (sp)+,a0
-		bsr outa0hex
-		lea crnl,a0
-		bsr outstring
-		dbra d2,stackout
-		move.l #panic_sig2,-(sp)
-		bsr panic			; won't return
-
-panic_sig:	ascii ": signal in kernel mode @"
-		byte 0
-panic_sig2:	asciz "ksig"
-regstr:		ascii "Register dump:"
-crnl:
-		byte 13,10,0
-trap:		asciz "TRAP# "
-uspstr:		asciz ", USP: "
-pcstr:		asciz " PC : "
-		.align 2
-
-sig_user:	movem.l a0-a1/a5/d0-d1,-(sp)
-		lea regstr,a0
-		bsr outstring
-		bsr dump_registers
-		lea trap,a0
-		bsr outstring
-		move.w trap_id,d0		; signal number
-		ext.l d0
-		move.l d0,a0
-		bsr outa0hex
-		lea pcstr,a0
-		bsr outstring
-		move.l 30(sp),a0
-		bsr outa0hex
-		lea uspstr,a0
-		bsr outstring
-		move USP,a0
-		bsr outa0hex
-		lea crnl,a0
-		bsr outstring
-		move.w trap_id,d0		; signal number
-		ext.l d0
-	        move.l udata_shadow,a5
-		; deliver the signal
-		move.l d0,-(sp)
-		move.l U_DATA__U_PTAB(a5),-(sp)
-		bsr ssig
-		addq #8,sp
-		bsr chksigs
-		tst.b d0
-		bne trap_via_signal
-		; No signal - just unwind and probably fault again
-		; in which case we'll probably loop faulting until pre-empted
-		; and killed by another process. Do a yield here to try
-		; and reduce any damage
-		bsr _sched_yield
-		movem.l (sp)+,a0-a1/a5/d0-d1
-		rte
 
 /*
  *	Block copy helper
