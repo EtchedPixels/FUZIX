@@ -24,11 +24,29 @@ Trap need to report extra frame info (eg address of bus error)
 Signals need to include trap frame on stack and unwind it or siginfo ptr
 or somesuch ?
 
+Trap/signal recovery is broken somewhere. Easy way to see is when we get
+a hail of errors from fforth. We eventually blow up with signal in kernel mode
+
+We ssig on a trap, but for a synchronous trap we need immediate delivery
+and ssig does not ensure that. What else is needed ? - chksigs and trap
+exit path with signal ?
+	- Directly check masking on our trap
+	- If blocked RTE back
+	- If uncaught act immediately (ignore or kill)
+	- If vectored push pending signal back, push frame and RTE
+	  through that frame direct to a signal handler.
+
+
+fforth doesn't work (panic data stack underflow and traps out)
+
+68010 support - frame sizes needed but also the code to deal with move
+to/from sr from user
+
 Core dumps are unfinished (need to include trap frame info and a lot
 more)
 
 Something null pointers at boot time (sh)
-	- sh nul pointers on ">/var/run/utmp"
+	- sh null pointers on ">/var/run/utmp"
 
 Select doesn't work (need new hash algorithm for bigger setups)
 
@@ -36,17 +54,16 @@ Select doesn't work (need new hash algorithm for bigger setups)
 (stty reports rows cols correctly)
 
 All I/O going via buffers
-shutdown doesn't
 
 Sometimes get a trap then it repeats
 (various panics - trap then nready panic, switch fail etc)
 
 Is the header and binary start mismatch right (seems to be 0x48 v 0x44)
 
+cpuinfo does not support 68K. Need to probe in kernel and add a new devsys
+ioctl to hand back an arch specific blob ?
 
-chmem does not support 68K
-cpuinfo does not support 68K
-
+Pick a final trap number that is clear of any interesting emulations
 
 Should sh report (core dumped)?
 
@@ -61,3 +78,6 @@ DONE (longjmp bug) sh exit command touches blows up
 DONE levee just exits (bug in execve) now correctly says too big
 DONE startrek pauses before hit any key to accept message
 DONE (sh longjmp bug) init forgets to run the bootwait stuff
+DONE (sh longjmp bug) shutdown doesn't
+DONE chmem does not support 68K (and fixed size too)
+
