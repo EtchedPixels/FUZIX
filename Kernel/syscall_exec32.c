@@ -182,7 +182,8 @@ arg_t _execve(void)
 	/* This must be the last test as it makes changes if it works */
 	/* FIXME: need to update this to support split code/data and to fix
 	   stack handling nicely */
-	if (pagemap_realloc(0, bin_size, 0))
+	/* FIXME: ENOMEM fix needs to go to 16bit ? */
+	if ((udata.u_error = pagemap_realloc(0, bin_size, 0)) != 0)
 		goto nogood3;
 
 	/* Core dump and ptrace permission logic */
