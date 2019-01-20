@@ -21,9 +21,12 @@
 #define IVR $19
 
 .mri 1
-platform_reboot:
 platform_monitor:
-	    or #0700,sr
+	; Need to check if top of memory at FE7000, if so
+	; copy vectors from FE7000 to 0 (where we saved them)
+	; them jmp to FE8000
+platform_reboot:
+	    or #$0700,sr
 	    bra platform_monitor
 
 init_early:
