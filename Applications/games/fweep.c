@@ -21,6 +21,10 @@
 
 #define IVERSION "fe0.01"
 
+#if defined(__m68k__)
+#define MACHINE_BIG
+#endif
+
 #define WORD(x)		((uint16_t)(x))
 
 #ifndef VERSION
@@ -297,7 +301,22 @@ int xclose(int f)
 
 #ifndef LOAD_ALL
 
+#ifdef MACHINE_BIG
+#define ZBUF_MAX	64
+#if (VERSION > 3)
+#define ZBUF_SIZE	512
+#define ZBUF_SHIFT	9
+#else
+#define ZBUF_SIZE	256
+#define ZBUF_SHIFT	8
+#endif
+#else
 #define ZBUF_MAX	32
+#define ZBUF_SIZE	256
+#define ZBUF_SHIFT	8
+#endif
+
+#define ZBUF_MASK (ZBUF_SIZE - 1)
 
 /* Based on an idea by Staffan Vilcans: Skip the fseek() if it isn't needed */
 static uint32_t last_addr;
@@ -309,7 +328,7 @@ static uint8_t zbuf_num = ZBUF_MAX;
 static int pagefile = -1;
 
 /* FIXME: dynamic for zbuf */
-static uint8_t zbuf[ZBUF_MAX][256];
+static uint8_t zbuf[ZBUF_MAX][ZBUF_SIZE];
 static uint16_t zbuf_page[ZBUF_MAX];
 static uint8_t zbuf_pri[ZBUF_MAX];	/* 0 = unused , 1+ is use count */
 static uint8_t zbuf_dirty[ZBUF_MAX];
@@ -352,8 +371,8 @@ static void zbuf_load(uint8_t slot, uint16_t page)
 	if (page < membreak)
 		f = pagefile;
 //	fprintf(stderr, "Loading page %d int slot %d from %d\n", page, slot, f);
-	if (lseek(f, ((off_t)page) << 8, SEEK_SET) < 0 ||
-	    read(f, zbuf[slot], 256) != 256) {
+	if (lseek(f, ((off_t)page) << ZBUF_SHIFT, SEEK_SET) < 0 ||
+	    read(f, zbuf[slot], ZBUF_SIZE) != ZBUF_SIZE) {
 		perror(story_name);
 		exit(1);
 	}
@@ -366,8 +385,8 @@ static void zbuf_writeback(uint8_t slot)
 {
 //	fprintf(stderr, "Writing back slot %d (page %d)\n", slot,
 //		zbuf_page[slot]);
-	if (lseek(pagefile, ((off_t)zbuf_page[slot]) << 8, SEEK_SET) < 0 ||
-	    write(pagefile, zbuf[slot], 256) != 256) {
+	if (lseek(pagefile, ((off_t)zbuf_page[slot]) << ZBUF_SHIFT, SEEK_SET) < 0 ||
+	    write(pagefile, zbuf[slot], ZBUF_SIZE) != ZBUF_SIZE) {
 	    	perror("pagefile");
 	    	exit(1);
 	}
@@ -398,6 +417,7 @@ static uint8_t zmem(uint32_t addr)
 {
 	uint8_t c;
 	uint16_t page;
+	uint16_t off;
 
 	/* Fast path - current buffer */
 	if (last_count && addr == last_addr + 1) {
@@ -406,12 +426,13 @@ static uint8_t zmem(uint32_t addr)
 		return *++last_ptr;
 	}
 
-	page = addr >> 8;
+	page = addr >> ZBUF_SHIFT;
 	c = zbuf_find(page);
 	last_addr = addr;
 	last_page = page;
-	last_count = 255 - (uint8_t)addr;
-	last_ptr = zbuf[c] + (addr & 0xFF);
+	off  = ((uint16_t)addr) & ZBUF_MASK;
+	last_count = ZBUF_SIZE - 1 - off;
+	last_ptr = zbuf[c] + off;
 	return *last_ptr;
 }
 
@@ -423,7 +444,7 @@ static void zwrite(uint16_t addr, uint8_t value)
 {
 	/* FIXME: optimize */
 	uint8_t p = zbuf_find(addr >> 8);
-	zbuf[p][addr & 0xFF] = value;
+	zbuf[p][addr & ZBUF_MASK] = value;
 	zbuf_dirty[p] = 1;
 	/* Ugly : fix this better */
 	if (addr < 64)
@@ -490,14 +511,14 @@ void paging_init(void)
 		}
 	}
 	
-	membreak = static_start >> 8;
+	membreak = static_start >> ZBUF_SHIFT;
 
 	lseek(story, 0, SEEK_SET);
 	lseek(pagefile, 0, SEEK_SET);
 	/* Copy the writable parts of the story into the page file */
 	while(i++ < membreak) {
-		if (read(story, zbuf[0], 256) != 256 ||
-			write(pagefile, zbuf[0], 256) != 256) {
+		if (read(story, zbuf[0], ZBUF_SIZE) != ZBUF_SIZE ||
+			write(pagefile, zbuf[0], ZBUF_SIZE) != ZBUF_SIZE) {
 			perror("copy pagefile");
 			exit(1);
 		}
@@ -2158,7 +2179,6 @@ void execute_instruction(void)
 
 void game_begin(void)
 {
-	uint8_t i;
 	if (story == -1)
 		story = open(story_name, O_RDONLY);
 	if (story == -1) {
