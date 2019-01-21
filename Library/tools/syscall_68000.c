@@ -60,7 +60,7 @@ static void write_call(int n)
     }
   }
   fprintf(fp, "\tmove.w #%d,d0\n", n);
-  fprintf(fp, "\ttrap #14\n");
+  fprintf(fp, "\ttrap #12\n");
 
   if (syscall_args[n] == 4)
     fprintf(fp, "\tmove.l (sp)+,a2\n");
