@@ -105,7 +105,7 @@ timer_irq:
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
 	    tst.b need_resched
-	    bne no_preempt
+	    beq no_preempt
 	    ;
 	    ;	Vanish into the scheduler. Some other task will pop back out
 	    ;   and eventually we'll re-appear here and continue.
@@ -113,7 +113,12 @@ timer_irq:
 	    ;   FIXME: check IRQ masking
 	    ;
 	    move.l U_DATA__U_PTAB(a5),a0
+	    ; We might be in STOPPED state in which case do not go back
+	    ; to ready !
+	    cmp.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
+	    bne no_ready
 	    move.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)
+no_ready:
 	    bsr switchout
 no_preempt:
 	    tst.b U_DATA__U_CURSIG(a5)
@@ -123,6 +128,7 @@ no_preempt:
 	    move.w sr,-(sp)
 	    move.w #0,-(sp)
 	    movem.l a0-a6/d0-d7,-(sp)
+	    move.l (sp),-(sp)
 	    bsr exception
 	    addq #4,sp
 	    movem.l (sp)+,a0-a6/d0-d7
@@ -180,7 +186,7 @@ devide_write_l:
 ;
 ;	'VDSO'
 ;
-vdso:	trap #14		; syscall entry
+vdso:	trap #12		; syscall entry
 	rts
 	; signal unwind
 	move.l 8(sp),sp		; blow away stack frame

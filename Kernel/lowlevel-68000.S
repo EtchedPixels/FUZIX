@@ -381,9 +381,9 @@ SYM (__umodsi3):
 		.globl get_usp, set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
 		.globl bus_error,addr_error,illegal,divzero,chk,trapv,priv
-		.globl trace,unimpa,unimpf,trap14,sysc_err
+		.globl trace,unimpa,unimpf,sysc_err
 		.globl trap0,trap1,trap2,trap3,trap4,trap5,trap6,trap7
-		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap15
+		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap14,trap15
 		.globl spurious,unexpected,uninit
 		.globl udata_shadow
 		.globl trap_via_signal
@@ -519,11 +519,11 @@ trap10:		move.w sr,-(sp)
 trap11:		move.w sr,-(sp)
 		move.w #43,-(sp)
 		bra synchronous_exception
-trap12:		move.w sr,-(sp)
-		move.w #44,-(sp)
-		bra synchronous_exception
 trap13:		move.w sr,-(sp)
 		move.w #45,-(sp)
+		bra synchronous_exception
+trap14:		move.w sr,-(sp)
+		move.w #46,-(sp)
 		bra synchronous_exception
 trap15:		move.w sr,-(sp)
 		move.w #47,-(sp)
@@ -555,7 +555,7 @@ synchronous_exception:
 ;
 ;		fork is special see the fork code.
 ;
-trap14:
+trap12:
 		move.l a5,-(sp)		; must be first to match fork
 		move.l udata_shadow,a5
 		move.b d0,U_DATA__U_CALLNO(a5)
@@ -603,6 +603,7 @@ sysc_err:	moveq #-1,d0
 ;
 return_via_signal:
 		; Stack now is return frame,a5
+		move.l (sp)+,a5
 		move.w sr,-(sp)
 		move.w #0,-(sp)
 		movem.l a0-a6/d0-d7,-(sp)
@@ -612,7 +613,6 @@ return_via_signal:
 		addq #4,sp
 		movem.l (sp)+,a0-a6/d0-d7
 		addq #4,sp
-		move.l (sp)+,a5			; recover user A5
 		rte				; into modified handler
 
 spurious:	movem.l a0-a6/d0-d7,-(sp)

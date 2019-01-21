@@ -123,28 +123,55 @@ static void explode(struct trapdata *framedata, int type)
 {
 	uint16_t *excp = framedata->exception;
 	uint32_t *fv;
-	int i;
+	unsigned int i = framedata->trap;
+	unsigned int j;
+
+	if (i > 12)
+		i = 12;
+
+	for (j = 0; j < i; j++)
+		kputs("   '* ");
+	kputchar('\n');
+	for (j = 0; j < i; j++)
+		kputs("  |   ");
+	kputchar('\n');
+	for (j = 0; j < i; j++)
+		kputs(".###. ");
+	kputchar('\n');
+	for (j = 0; j < i; j++)
+		kputs("##### ");
+	kputchar('\n');
+	for (j = 0; j < i; j++)
+		kputs("##### ");
+	kputchar('\n');
+	for (j = 0; j < i; j++)
+		kputs("`###' ");
+	kputchar('\n');
 
 	kprintf("Trap: %d\n", framedata->trap);
 	kprintf("Register Dump\nA: ");
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 7; i++)
 		kprintf("%p ", framedata->a[i]);
-	kprintf("\nD: ");
+	kprintf("%p\nD: ", get_usp());
 	for (i = 0; i < 8; i++)
 		kprintf("%p ", framedata->d[i]);
-	kprintf("\nUSP: %p   SR: %x\n", get_usp(), framedata->sr);
+	kprintf("\nSR: %x\n", framedata->sr);
+
+	kprintf("Exception frame:\n");
+	for (j = 0;j < 16; j++)
+		kprintf("%d: %x\n", j, excp[j]);
 
 	/* For now we only do 68000 */
 	if (type == FRAME_A) {
 		kputs((excp[0] & 0x10)?"R":"W");
-		kprintf(" FC %x\n", excp[0] & 7);
+		kprintf(" FC %x", excp[0] & 7);
 		fv = (uint32_t *)(excp + 1);
-		kprintf(" Addr %p IR %x", *fv, excp[3]);
+		kprintf(" Addr %p IR %x ", *fv, excp[3]);
 		excp += 4;
 	}
 	if (type == FRAME_A || type == FRAME_B) {
 		fv = (uint32_t *)(excp + 1);
-		kprintf("PC %p SR %x\n", *fv, excp[1]);
+		kprintf("PC %p SR %x\n", *fv, *excp);
 	}
 }
 
@@ -189,7 +216,7 @@ int exception(struct trapdata *framedata)
 	static const uint8_t trap_to_sig[] = {
 		0, 0, SIGSEGV, SIGBUS, SIGILL, SIGFPE,
 		SIGABRT/*CHK*/, SIGTRAP/*TRAPV */,
-		SIGILL, SIGIOT, SIGILL, SIGILL };
+		SIGILL, SIGIOT, SIGILL, SIGFPE };
 
 	proc = udata.u_ptab;
 
@@ -199,22 +226,20 @@ int exception(struct trapdata *framedata)
 	fsize = 3;		/* Three words on 68000 */
 	/* TODO: On the 68010 there are at least 4 words as word 4 always holds
 	   the vector and format */
-	if (trap < 4) {
-		/* TODO: On a 68010 this frame is 29 words and the event is
-		   restartable (although not always usefully). We need to
-		   decide whether to set the restart flag case by case */
-		frame = FRAME_A;
-		fsize = 7;
-	}
-	if (trap < 12)
-		sig = trap_to_sig[sig];
-	else if (trap >= 32 && trap < 48)
-		sig = SIGTRAP;
-	else if (trap == 0) {
+	if (trap == 0) {
 		sig = udata.u_cursig;
 		udata.u_cursig = 0;
-	}
-
+	} else if (trap < 12) {
+		if (trap < 4) {
+			/* TODO: On a 68010 this frame is 29 words and the event is
+			   restartable (although not always usefully). We need to
+			   decide whether to set the restart flag case by case */
+			frame = FRAME_A;
+			fsize = 7;
+		}
+		sig = trap_to_sig[trap];
+	} else if (trap >= 32 && trap < 48)
+		sig = SIGTRAP;
 	/* This processing only applies to synchronous hardware exceptions */
 	if (trap) {
 		/* Went boom in kernel space or without a user recovery */
@@ -257,8 +282,14 @@ int exception(struct trapdata *framedata)
 		rts */
 
 	/* Push the recovery PC */
+
+	/* Now update the user stack */
 	err |= pushw(&usp, sp[31 + fsize]);
 	err |= pushw(&usp, sp[30 + fsize]);
+
+	/* Patch the kernel exception frame */
+	*(uint32_t *)(&sp[30 + fsize]) = (uint32_t)udata.u_sigvec[sig];
+
 	/* FIXME: when we do ptrace we will need to support adding the T
 	   flag back here as the exception cleared it */
 	err |= pushw(&usp,  framedata->sr);
@@ -269,7 +300,7 @@ int exception(struct trapdata *framedata)
 	err |= pushl(&usp, framedata->d[0]);
 
 	/* Remember the target for undoing the frame */
-	unwind = get_usp();
+	unwind = usp;
 
 	/* Copy in the signal context itself. 30 words of registers, 2 of
 	   trap code and then the hardware exception */

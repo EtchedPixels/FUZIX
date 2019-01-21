@@ -17,27 +17,7 @@ Unsupported right now:
 Known problems
 --------------
 
-Traps need to report their actual trap number and the correct type and
-frame (optionally for userspace)
-Trap need to report extra frame info (eg address of bus error)
-
-Signals need to include trap frame on stack and unwind it or siginfo ptr
-or somesuch ?
-
-Trap/signal recovery is broken somewhere. Easy way to see is when we get
-a hail of errors from fforth. We eventually blow up with signal in kernel mode
-
-We ssig on a trap, but for a synchronous trap we need immediate delivery
-and ssig does not ensure that. What else is needed ? - chksigs and trap
-exit path with signal ?
-	- Directly check masking on our trap
-	- If blocked RTE back
-	- If uncaught act immediately (ignore or kill)
-	- If vectored push pending signal back, push frame and RTE
-	  through that frame direct to a signal handler.
-
-
-fforth doesn't work (panic data stack underflow and traps out)
+vi is not getting built linked as such
 
 68010 support - frame sizes needed but also the code to deal with move
 to/from sr from user
@@ -45,30 +25,40 @@ to/from sr from user
 Core dumps are unfinished (need to include trap frame info and a lot
 more)
 
-Something null pointers at boot time (sh)
-	- sh null pointers on ">/var/run/utmp"
-
 Select doesn't work (need new hash algorithm for bigger setups)
+
+Scheduler
+	- linked list of runnables for big boxes
+	- linked list of alarm/timer uses (and need to wrap setting into
+	  a function or on small boxes trivial define)
 
 (CURSES lib) invaders always reports that the terminal is too small
 (stty reports rows cols correctly)
 
 All I/O going via buffers
 
-Sometimes get a trap then it repeats
-(various panics - trap then nready panic, switch fail etc)
-
 Is the header and binary start mismatch right (seems to be 0x48 v 0x44)
 
 cpuinfo does not support 68K. Need to probe in kernel and add a new devsys
 ioctl to hand back an arch specific blob ?
 
-Pick a final trap number that is clear of any interesting emulations
 
-Should sh report (core dumped)?
 
 To Do
 -----
+
+Propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
+generically jp 0 and 0 corruptor ?
+
+Move lots of p68000.S code into lowlevel-68000.S
+Need some kind of CPU specific C file (or a general one with ifdefs ?) and
+then move lots of platform/main.c into it.
+
+Switch from one process in memory model to flat model with parent first
+and child custom stack build
+
+
+Look into posix spawn functions or vfork and if /bin/sh can use them
 
 DONE Add a 'user touches kernel' catcher on the debug/sim
 DONE ps user/kernel include mismatch error
@@ -80,4 +70,26 @@ DONE startrek pauses before hit any key to accept message
 DONE (sh longjmp bug) init forgets to run the bootwait stuff
 DONE (sh longjmp bug) shutdown doesn't
 DONE chmem does not support 68K (and fixed size too)
-
+DONE Traps need to report their actual trap number and the correct type and
+     frame (optionally for userspace)
+DONE Trap need to report extra frame info (eg address of bus error)
+DONE We ssig on a trap, but for a synchronous trap we need immediate delivery
+     and ssig does not ensure that. What else is needed ? - chksigs and trap
+     exit path with signal ?
+	- Directly check masking on our trap
+	- If blocked RTE back
+	- If uncaught act immediately (ignore or kill)
+	- If vectored push pending signal back, push frame and RTE
+	  through that frame direct to a signal handler.
+DONE (preempt bug I think) Sometimes get a trap then it repeats
+    (various panics - trap then nready panic, switch fail etc)
+DONE Trap/signal recovery is broken somewhere. Easy way to see is when we get
+     a hail of errors from fforth. We eventually blow up with signal in kernel mode
+DONE Something null pointers at boot time (sh)
+	- sh null pointers on ">/var/run/utmp". Historic bug in xec().
+DONE Should sh report (core dumped)?
+DONE fweep needs to build differently for 68K (and build v1-v8)
+DONE (longjmp bug) fforth doesn't work (panic data stack underflow and traps out)
+DONE Signals need to include trap frame on stack and unwind it or siginfo ptr
+or somesuch ?
+DONE Pick a final trap number that is clear of any interesting emulations
