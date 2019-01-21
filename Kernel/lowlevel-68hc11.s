@@ -149,8 +149,12 @@ interrupt_handler:
 	lds #kstack_top
 	jsr chksigs
 	ldx U_DATA__U_PTAB
+	ldab P_TAB__P_STATUS_OFFSET,x
+	cmpb #P_RUNNING
+	bne not_running
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
+not_running:
 	jsr platform_switchout
 	jsr map_process_always
 	; caller will switch back to stack in X

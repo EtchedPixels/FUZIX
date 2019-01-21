@@ -249,8 +249,12 @@ in_kernel:
 	;
 	ldx U_DATA__U_PTAB
 	; Move to ready state
+	lda P_TAB__P_STATUS_OFFSET,x
+	cmpa #P_RUNNING
+	bne not_running
 	lda #P_READY
 	sta P_TAB__P_STATUS_OFFSET,x
+not_running:
 	; Sleep on the kernel stack, IRQs will get re-enabled if need
 	; be
 	jsr _platform_switchout

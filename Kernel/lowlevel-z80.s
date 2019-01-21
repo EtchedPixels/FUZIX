@@ -567,7 +567,11 @@ intret2:call map_kernel_di
 	; Process status is offset 0
 	;
 	ld hl, (U_DATA__U_PTAB)
+	ld a,#P_RUNNING
+	cp (hl)
+	jr nz, not_running
 	ld (hl), #P_READY
+not_running:
 	call _platform_switchout
 	;
 	; We are no longer in an interrupt or a syscall

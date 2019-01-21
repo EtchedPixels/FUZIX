@@ -634,8 +634,12 @@ ret_to_user:
 	;	Mark outselves as idle
 	;
 	ldx	U_DATA__U_PTAB
+	lda	a:P_TAB__P_STATUS_OFFSET,x
+	cmp	#P_RUNNING
+	bne	not_running
 	lda	#P_READY
 	sta	a:P_TAB__P_STATUS_OFFSET,x
+not_running:
 	;
 	;	Drop back to a8i8 and schedule ourself out
 	;

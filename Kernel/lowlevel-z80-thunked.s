@@ -304,7 +304,11 @@ intret2:
 	ld (U_DATA__U_INSYS),a
 	call _chksigs
 	ld hl, (U_DATA__U_PTAB)
+	ld a,#P_RUNNING
+	cp (hl)
+	jr nz, not_running
 	ld (hl), #P_READY
+not_running:
 	; Give up the CPU
 	; FIXME: can we get here on timers when only one thing is running
 	; and we don't need to pre-empt ????? Is this more generally busted
