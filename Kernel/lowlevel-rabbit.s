@@ -490,7 +490,11 @@ preemption:
 		; Process status is offset 0
 		;
 		ld hl, (U_DATA__U_PTAB)
+		ld a,(hl)
+		cp #P_RUNNING
+		jr nz, not_running
 		ld (hl), #P_READY
+not_running:
 		call _platform_switchout
 		;
 		; We are no longer in an interrupt or a syscall
