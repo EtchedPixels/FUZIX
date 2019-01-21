@@ -20,8 +20,8 @@
 # sbcv2:	RBC/N8VEM SBC v2
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
-# trs80:	TRS80 Model 4/4D/4P with 128K RAM (some other TRS80 extension
-#		mappers have untested code in the tree)
+# tiny68k:	Bill Shen's Tiny68K (development only)
+# trs80:	TRS80 Model 4/4D/4P with 128K RAM (or some other mappers)
 # trs80m1:	TRS80 Model I/III with suitable banker (also clones)
 # ubee:		Microbee
 # z80pack:	Z80Pack virtual Z80 platform
