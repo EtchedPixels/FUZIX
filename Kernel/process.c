@@ -441,6 +441,7 @@ void timer_interrupt(void)
 		ticks.full++;
 
 		/* Update process alarm clocks and timeouts */
+		/* FIXME: for big builds hash this */
 		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_alarm) {
 				p->p_alarm--;
@@ -630,13 +631,18 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 		        if (b && (m & stopper)) {
 				/* Don't allow us to race SIGCONT */
 				di();
-				/* FIXME: can we ever end up here not in READY/RUNNING ? */
+				/* Can we ever end up here not in READY/RUNNING ? */
 				/* Yes: we could be in P_SLEEP on a close race
 				   with do_psleep() */
 				udata.u_ptab->p_status = P_STOPPED;
 				udata.u_ptab->p_event = j;
 				sb->s_pending &= ~m;	// unset the bit
-				switchout();
+				/* Defer if we are in interrupt state, we
+				   will pick up the reschedule instead */
+				if (udata.u_ininterrupt)
+					need_resched = 1;
+				else
+					switchout();
 				/* Other things may have happened */
 				return 0xFF;
 	                }
@@ -653,7 +659,7 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 			}
 #ifdef DEBUG_SLEEP
 			kprintf("process terminated by signal %d (%d)\n",
-				j, udata.u_ptab->p_status);
+				j + 16 *b, udata.u_ptab->p_status);
 #endif
 			/* We may have marked ourselves as asleep and
 			   then been caught by the chksigs when we tried
