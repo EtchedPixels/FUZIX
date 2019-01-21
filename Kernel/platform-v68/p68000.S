@@ -38,6 +38,7 @@ init_hardware:
 	    move.l #8,a0
 	    move.w #253,d0
 	    move.l #unexpected,d1
+
 init_trap_loop:
 	    move.l d1,(a0)+
 	    dbra d0,init_trap_loop
@@ -56,15 +57,26 @@ init_trap_loop:
 	    move.l #unimpa,(a0)+	; A and F line traps
 	    move.l #unimpf,(a0)+
 	    move.w #$80,a0
-	    move.w #13,d0
-trapset:
-	    move.l #misctrap,(a0)+
-	    dbra d0,trapset
+	    move.l #trap0,(a0)+
+	    move.l #trap1,(a0)+
+	    move.l #trap2,(a0)+
+	    move.l #trap3,(a0)+
+	    move.l #trap4,(a0)+
+	    move.l #trap5,(a0)+
+	    move.l #trap6,(a0)+
+	    move.l #trap7,(a0)+
+	    move.l #trap8,(a0)+
+	    move.l #trap9,(a0)+
+	    move.l #trap10,(a0)+
+	    move.l #trap11,(a0)+
+	    move.l #trap12,(a0)+
+	    move.l #trap13,(a0)+
 	    move.l #trap14,(a0)+
-	    move.l #trap15,(a0)+
+	    move.l #trap15,(a0)
 	    move.w #$0,a0
 	    move.l #uninit,$3c(a0)
 	    move.l #spurious,$60(a0)
+
 	    move.l #timer_irq,$78(a0)
 	    move.l #mmu_fault,$7C(a0)
 
@@ -84,20 +96,35 @@ timer_irq:
 	    tst.b U_DATA__U_INSYS(a5)
 	    bne no_preempt
 	    tst.b need_resched
-	    bne no_preempt
+	    beq no_preempt
 	    ;
 	    ;	Vanish into the scheduler. Some other task will pop back out
 	    ;   and eventually we'll re-appear here and continue.
 	    ;
 	    ;   FIXME: check IRQ masking
 	    ;
-	    move.l U_DATA__U_PTAB(a5),a0
+	    ; We might be in STOPPED state in which case do not go back
+	    ; to ready !
+	    cmp.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
+	    bne no_ready
 	    move.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)
+no_ready:
+	    move.l U_DATA__U_PTAB(a5),a0
 	    bsr switchout
 no_preempt:
 	    tst.b U_DATA__U_CURSIG(a5)
 	    beq no_signal
-	    bra trap_via_signal		; a0/a1/d0/d1 already stacked
+	    ;   FIXME: this is ugly
+	    movem.l (sp)+,a0-a1/a5/d0-d1
+	    move.w sr,-(sp)
+	    move.w #0,-(sp)
+	    movem.l a0-a6/d0-d7,-(sp)
+	    move.l (sp),-(sp)
+	    bsr exception
+	    addq #4,sp
+	    movem.l (sp)+,a0-a6/d0-d7
+	    addq #4,sp
+	    rte
 
 no_signal:
 	    movem.l (sp)+,a0-a1/a5/d0-d1
@@ -161,14 +188,12 @@ devide_write_l:
 ;
 ;	'VDSO'
 ;
-vdso:	trap #14		; syscall entry
+vdso:	trap #12		; syscall entry
 	rts
 	; signal unwind
+	move.l 8(sp),sp		; blow away stack frame
 	movem.l (sp)+,a0/a1/d0/d1
 	move.w (sp)+,ccr
 	rts
 	; rest is spare for now
 
-.section data
-
-kernel_flag: byte 1
