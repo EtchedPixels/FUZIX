@@ -389,6 +389,7 @@ SYM (__umodsi3):
 		.globl trap_via_signal
 		.globl dump_registers
 		.globl kernel_flag
+		.globl copy_blocks
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -644,7 +645,6 @@ strunexpected:
  *	Block copy helper
  *
  *	We use d0 = number of blocks
- *	       d1 = constant 32 for speeding up the maths
  *	       a0 = source
  *	       a1 = destination
  *	       d2-d7/a2-a6 	- copying registers (44 bytes a go)
@@ -652,8 +652,8 @@ strunexpected:
  */
 
 copy_blocks:
-		move.l 4(sp),a0
-		move.l 8(sp),a1
+		move.l 4(sp),a1
+		move.l 8(sp),a0
 		move.l 12(sp),d0
 
 /* asm entry point */
