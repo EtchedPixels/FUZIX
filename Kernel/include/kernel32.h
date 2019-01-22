@@ -14,7 +14,7 @@ extern unsigned long kmemavail(void);
 extern unsigned long kmemused(void);
 
 /* flat.c */
-extern void pagemap_switch(ptptr p);
+extern void pagemap_switch(ptptr p, int death);
 extern uaddr_t pagemap_base(void);
 #define PROGLOAD pagemap_base()
 extern uint32_t ugetl(void *uaddr, int *err);

@@ -1055,6 +1055,7 @@ extern uint8_t platform_param(char *p);
 extern void platform_switchout(void);
 extern void platform_interrupt(void);
 extern uint8_t platform_suspend(void);
+extern void platform_udata_set(ptptr p);
 
 extern void platform_swap_found(uint8_t part, uint8_t letter);
 
