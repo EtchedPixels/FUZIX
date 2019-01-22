@@ -25,6 +25,8 @@
  *	addresses with many users we need to keep the memory available but free
  *	the spare for the next copy when it is copied into the real range).
  *
+ *	For speed we chunk in 512 byte blocks and use 512 byte wide fast
+ *	copier/exchange calls.
  */
 
 #include <kernel.h>
@@ -33,7 +35,9 @@
 
 #ifdef CONFIG_FLAT
 
-#define MAX_BLOCKS	15	/* Packs to a power of two */
+#undef DEBUG
+
+#define MAX_BLOCKS	14	/* Packs to a power of two */
 
 struct memblk {
 	void *start;
@@ -42,19 +46,22 @@ struct memblk {
 
 struct mem {
 	int users;
-	ptptr last;
+	int last;
 	struct memblk memblk[MAX_BLOCKS];
 };
 
-/* Eventually abstract page/page2 for this */
-static struct mem *mem[PTABSIZE];		/* The map we use */
+static struct mem *mem[PTABSIZE];	/* The map we use */
 static struct mem *store[PTABSIZE];	/* Where our memory currently lives */
 static struct mem memblock[PTABSIZE];
+
+extern struct u_data *udata_shadow;	/* FIXME HACK */
 
 static void mem_free(struct mem *m)
 {
 	struct memblk *p = &m->memblk[0];
 	int i;
+	if (m->users == 0)
+		panic("mref");
 	m->users--;
 	if (m->users == 0) {
 		for (i = 0; i < MAX_BLOCKS; i++) {
@@ -72,9 +79,10 @@ static struct mem *mem_alloc(void)
 	for (i = 0; i < PTABSIZE; i++) {
 		if (p->users == 0) {
 			p->users++;
-			p->last = NULL;
+			p->last = -1;
 			return p;
 		}
+		p++;
 	}
 	panic(PANIC_MLEAK);
 }
@@ -82,8 +90,11 @@ static struct mem *mem_alloc(void)
 static void *kdup(void *p, void *e)
 {
 	void *n = kmalloc(e - p);
-	if (n)
-		memcpy(n, p, e - p);
+	/* We chunk in 512 byte blocks */
+	if (n) {
+//              copy_blocks(n, p, (e - p) >> 9);
+		memcpy32(n, p, (e - p));
+	}
 	return n;
 }
 
@@ -91,20 +102,69 @@ static struct mem *mem_clone(struct mem *m)
 {
 	struct mem *n = mem_alloc();
 	struct memblk *p = &m->memblk[0];
-	struct memblk *t = &m->memblk[0];
+	struct memblk *t = &n->memblk[0];
 	int i;
+	/* FIXME: need a per block 'RO' flag for non-copied blocks */
 	for (i = 0; i < MAX_BLOCKS; i++) {
-		t->start = kdup(p->start, p->end);
-		if (t->start == NULL) {
-			mem_free(n);
-			return NULL;
+		if (p->start) {
+			t->start = kdup(p->start, p->end);
+			if (t->start == NULL) {
+				mem_free(n);
+				return NULL;
+			}
+			t->end = t->start + (p->end - p->start);
 		}
-		t->end = t->start + (p->end - p->start);
 		t++;
 		p++;
 	}
 	m->users++;
 	return n;
+}
+
+static void mem_exchange(uint8_t * a8, uint8_t * b8, uint32_t count)
+{
+	uint32_t *a = (uint32_t *) a8;
+	uint32_t *b = (uint32_t *) b8;
+#ifdef DEBUG
+	kprintf("Exchanging %p and %p for %d.\n", a, b, count);
+#endif
+	/* Really dumb to get going */
+	count >>= 2;
+	while (count--) {
+		uint32_t x = *a;
+		*a++ = *b;
+		*b++ = x;
+	}
+}
+
+static void mem_switch(struct mem *a, struct mem *b)
+{
+	struct memblk *t1 = &a->memblk[0];
+	struct memblk *t2 = &b->memblk[0];
+	unsigned int i;
+
+	for (i = 0; i < MAX_BLOCKS; i++) {
+		if (t1->start)
+			mem_exchange(t1->start, t2->start,
+				     t1->end - t1->start);
+		t1++;
+		t2++;
+	}
+}
+
+static void mem_copy(struct mem *to, struct mem *from)
+{
+	struct memblk *t1 = &from->memblk[0];
+	struct memblk *t2 = &to->memblk[0];
+	unsigned int i;
+
+	for (i = 0; i < MAX_BLOCKS; i++) {
+		if (t1->start)
+			memcpy32(t2->start, t1->start,
+				 t1->end - t1->start);
+		t1++;
+		t2++;
+	}
 }
 
 /*
@@ -123,7 +183,7 @@ usize_t valaddr(const char *pp, usize_t l)
 
 	while (n < MAX_BLOCKS) {
 		/* Found the right block ? */
-		if (m->start && m->start >= p && m->end < p) {
+		if (m->start && p >= m->start && p < m->end) {
 			/* Check the actual space */
 			if (e >= m->end)
 				e = m->end;
@@ -143,6 +203,9 @@ usize_t valaddr(const char *pp, usize_t l)
    
    p is the process we are going to create maps for, udata.u_ptab is our
    own process. init is a special case!
+   
+   FIXME: where do we need to call pagemap_alloc from to get it early
+   and make the valaddr and init data special cases go away ?
 */
 
 int pagemap_alloc(ptptr p)
@@ -150,23 +213,44 @@ int pagemap_alloc(ptptr p)
 	unsigned int proc = udata.u_page;
 	unsigned int nproc = p - ptab;
 
+#ifdef DEBUG
+	kprintf("%d: pagemap_alloc %p\n", proc, p);
+#endif
 	p->p_page = nproc;
+	platform_udata_set(p);
 	/* Init is special */
 	if (p->p_pid == 1) {
+		struct memblk *mb;
+		udata_shadow = p->p_udata;
 		store[nproc] = mem_alloc();
-		store[nproc]->last = p;
 		mem[nproc] = store[nproc];
+		mem[nproc]->last = 0;
+		mb = &mem[nproc]->memblk[0];
+		/* Must be a multiple of 512 */
+		mb->start = kmalloc(8192);
+		mb->end = mb->start + 8192;
+		if (mb->start == 0)
+			panic("alloc");
+#ifdef DEBUG
+		kprintf("init at %p\n", mb->start);
+#endif
 		return 0;
 	}
-	/* Allocate memory for the old process as a copy of the new as the
-	   new will run first. We know that mem[proc] = store[proc] as proc
-	   is running the fork() */
-	store[proc] = mem_clone(mem[proc]);
-	if (store[proc] == NULL)
+	/* Allocate memory for the new process. The old will run first
+	   We know that mem[proc] = store[proc] as proc is running the fork() */
+#ifdef DEBUG
+	kprintf("%d: Cloning %d as %d\n", proc, proc, nproc);
+#endif
+	store[nproc] = mem_clone(mem[proc]);
+	if (store[nproc] == NULL)
 		return ENOMEM;
 	mem[nproc] = mem[proc];
 	/* Last for our child is us */
-	store[nproc]->last = udata.u_ptab;
+#ifdef DEBUG
+	kprintf("%d: pa:store %p mem %p\n", proc, store[nproc],
+		mem[nproc]);
+#endif
+	mem[nproc]->last = proc;
 	return 0;
 }
 
@@ -181,26 +265,61 @@ int pagemap_alloc(ptptr p)
  *		- set our mem = store
  *		- set the last users store to be our old "mem"
  */
-void pagemap_switch(ptptr p)
+void pagemap_switch(ptptr p, int death)
 {
-	unsigned int proc = udata.u_page;
+	unsigned int proc = p->p_page;
 	int lproc;
 
+#ifdef DEBUG
+	kprintf("%d: ps:store %p mem %p\n", proc, store[proc], mem[proc]);
+#endif
 	/* We have the right map (unique or we ran the forked copy last) */
-	if (store[proc] == mem[proc])
+	if (store[proc] == mem[proc]) {
+#ifdef DEBUG
+		kprintf("Slot %d was mapped already.\n", proc);
+#endif
 		return;
+	}
 	/* Who had our memory last ? */
-	lproc = mem[proc]->last - ptab;
+	lproc = mem[proc]->last;
+#ifdef DEBUG
+	kprintf("%d: Slot %d last had our memory.\n", proc, lproc);
+	kprintf("%d: ps:store lp is %p mem %p\n", proc, store[lproc],
+		mem[lproc]);
+#endif
 	/* Give them our store */
 	store[lproc] = store[proc];
 	/* Take over the correctly mapped copy */
 	store[proc] = mem[proc];
 	/* Exchange the actual data */
-	/* FIXME: mem_switch(proc); */
+	if (death)
+		mem_copy(store[proc], store[lproc]);
+	else
+		mem_switch(store[proc], store[lproc]);
 	/* Admit to owning it */
-	mem[proc]->last = p;
+	mem[lproc]->last = proc;
+#ifdef DEBUG
+	kprintf("%d:Swapped over (now owned by %d not %d).\n", proc, proc,
+		lproc);
+	kprintf("%d:pse:store %p mem %p\n", proc, store[proc], mem[proc]);
+	kprintf("%d:pse:store lp is %p mem %p\n", proc, store[lproc],
+		mem[lproc]);
+	kprintf("%d:lp->next %d p->next %d\n", proc, mem[lproc]->last,
+		mem[proc]->last);
+#endif
 }
 
+static int pagemap_sharer(struct mem *ms)
+{
+	struct mem **m = mem;
+	int i;
+	for (i = 0; i < PTABSIZE; i++) {
+		if (*m == ms && store[i] != ms)
+			return i;
+		m++;
+	}
+	panic("share");
+}
 
 /* Called on exit */
 
@@ -211,37 +330,67 @@ void pagemap_free(ptptr p)
 
 	m = mem[proc];
 	/*
-	 *	Not a saved copy: easy
+	 *      Not a saved copy: easy
 	 */
-	if (store[proc] == mem[proc]) {
+	if (m == store[proc]) {
+		/* We own the live space but we can't free up the live space
+		   if it has another user */
+		if (m->users > 1) {
+			int n = pagemap_sharer(m);
+#ifdef DEBUG
+			kprintf
+			    ("%d: pagemap_free: busy non live - giving away to %d.\n",
+			     proc, n);
+#endif
+
+			pagemap_switch(&ptab[n], 1);
+			/* We gave our copy away, so free the store copy
+			   we just got donated */
+			mem_free(store[proc]);
+		}
+#ifdef DEBUG
+		kprintf("%d: pagemap_free: own live copy.\n", proc);
+#endif
+		/* Drop the reference count on the mem */
 		mem_free(m);
 		mem[proc] = NULL;
 		store[proc] = NULL;
 		return;
 	}
-	/*
-	 *	Give the live mapping to the previous user
+	/*      Our copy is not the live copy. This cannot normally occur.
+	 *      If we hit the case we can just flush it out.
 	 */
-	if (m->users > 1)
-		pagemap_switch(m->last);
-	mem_free(store[proc]);
+#ifdef DEBUG
+	kprintf("%d:pagemap_free:freeing our copy.\n", proc);
+#endif
+	mem_free(m);
 	store[proc] = NULL;
 	mem[proc] = NULL;
 }
 
 /* Called on execve */
-int pagemap_realloc(usize_t size)
+int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
 	unsigned int proc = udata.u_page;
 	struct memblk *mb;
-	
+
+
 	pagemap_free(udata.u_ptab);
-	
+
 	store[proc] = mem[proc] = mem_alloc();
+
+#ifdef DEBUG
+	kprintf("%d:pr:store %p mem %p\n", proc, store[proc], mem[proc]);
+#endif
+
 	mb = &mem[proc]->memblk[0];
+
+	/* Snap to a block boundary for a fast memcpy/swap */
+	size = (size + 511) & ~511;
 
 	mb->start = kmalloc(size);
 	mb->end = mb->start + size;
+
 	/* FIXME: on the fail case we should put back the old maps */
 	if (mb->start == NULL)
 		return ENOMEM;
@@ -250,7 +399,7 @@ int pagemap_realloc(usize_t size)
 
 unsigned long pagemap_mem_used(void)
 {
-	return kmemused();
+	return kmemused() >> 10;	/* In kBytes */
 }
 
 /* Extra helper for exec32 */
@@ -260,29 +409,6 @@ uaddr_t pagemap_base(void)
 	unsigned int proc = udata.u_page;
 	return mem[proc]->memblk[0].start;
 }
-
-/* Uget/Uput 32bit */
-
-uint32_t ugetl(void *uaddr, int *err)
-{
-	if (!valaddr(uaddr, 4)) {
-		if (err)
-			*err = -1;
-		return -1;
-	}
-	if (err)
-		*err = 0;
-	return *(uint32_t *)uaddr;
-
-}
-
-int uputl(uint32_t val, void *uaddr)
-{
-	if (!valaddr(uaddr, 4))
-		return -1;
-	return *(uint32_t *)uaddr;
-}
-
 
 /* The extra syscalls for the pool allocator */
 
@@ -303,13 +429,13 @@ arg_t _memalloc(void)
 	/* Map 0 is the image, the user doesn't get to play with that one */
 	for (i = 1; i < MAX_BLOCKS; i++) {
 		if (m->start == NULL) {
-			m->start = kzalloc(size);
+			m->start = kmalloc(size);
 			if (m->start == NULL) {
 				udata.u_error = ENOMEM;
 				return -1;
 			}
 			m->end = m->start + size;
-			return (arg_t)m->start;
+			return (arg_t) m->start;
 		}
 		m++;
 	}
