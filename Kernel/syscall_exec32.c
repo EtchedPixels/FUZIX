@@ -418,12 +418,14 @@ uint8_t write_core_image(void)
 			setftime(ino, A_TIME | M_TIME | C_TIME);
 			wr_inode(ino);
 			f_trunc(ino);
-
+#if 0
+	/* FIXME address ranges for different models - move core writer
+	   for address spaces into helpers ?  */
 			/* FIXME: need to add some arch specific header bits, and
 			   also pull stuff like the true sp and registers out of
 			   the return stack properly */
 
-			corehdr.ch_base = MAPBASE;
+			corehdr.ch_base = pagemap_base;
 			corehdr.ch_break = udata.u_break;
 			corehdr.ch_sp = udata.u_syscall_sp;
 			corehdr.ch_top = PROGTOP;
@@ -433,12 +435,13 @@ uint8_t write_core_image(void)
 			udata.u_count = sizeof(corehdr);
 			writei(ino, 0);
 			udata.u_sysio = false;
-			udata.u_base = (uint8_t *)MAPBASE;
-			udata.u_count = udata.u_break - MAPBASE;
+			udata.u_base = (uint8_t *)pagemap_base;
+			udata.u_count = udata.u_break - pagemap_base;
 			writei(ino, 0);
 			udata.u_base = udata.u_sp;
 			udata.u_count = PROGTOP - (uint32_t)udata.u_sp;
 			writei(ino, 0);
+#endif
 			i_unlock_deref(ino);
 			return W_COREDUMP;
 		}
