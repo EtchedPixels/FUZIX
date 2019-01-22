@@ -18,6 +18,9 @@
 
 #if defined(CONFIG_32BIT)
 
+static uint32_t mfree;
+static uint32_t mtotal;
+
 #undef DEBUG_MEMORY
 
 struct block
@@ -50,8 +53,10 @@ void kmemaddblk(void *base, size_t size)
 	n->next = NULL;
 	n->length = size;
 #if defined(DEBUG_MEMORY)
-	kprintf("mem: add %x+%x\n", n, n->length);
+	kprintf("mem: add %p+%p\n", n, n->length);
 #endif
+	mfree += size;
+	mtotal += size;
 }
 
 /*
@@ -89,14 +94,14 @@ static void split_block(struct block *b, size_t size)
 	{
 		struct block *n = (struct block *)((uint8_t *)b + size);
 #if defined(DEBUG_MEMORY)
-		kprintf("mem: split %x+%x -> ", b, b->length);
+		kprintf("mem: split %p+%p -> ", b, b->length);
 #endif
 		n->next = b->next;
 		b->next = n;
 		b->length = size;
 		n->length = newsize;
 #if defined(DEBUG_MEMORY)
-		kprintf("%x+%x and %x+%x\n", b, b->length, n, n->length);
+		kprintf("%p+%p and %p+%p\n", b, b->length, n, n->length);
 #endif
 	}
 
@@ -117,8 +122,10 @@ void *kmalloc(size_t size)
 
 	split_block(b, size);
 #if defined(DEBUG_MEMORY)
-	kprintf("mem: alloc %x+%x\n", b, b->length);
+	kprintf("mem: alloc %p+%p\n", b, b->length);
+	kprintf("malloc allocates %p\n", b + 1);
 #endif
+	mfree -= b->length;
 	return b + 1;
 }
 
@@ -139,13 +146,14 @@ static void merge_all_blocks(void)
 		{
 			/* Two mergeable blocks are adjacent. */
 #if defined(DEBUG_MEMORY)
-			kprintf("mem: merge %x+%x and %x+%x -> ",
+			kprintf("mem: merge %p+%p and %p+%p -> ",
 				b, b->length, n, n->length);
 #endif
 			b->next = n->next;
 			b->length += n->length;
 #if defined(DEBUG_MEMORY)
-			kprintf("%x+%x\n", b, b->length);
+			kprintf("%p+%p\n", b, b->length);
+			kprintf("next now %p\n", b->next);
 #endif
 		}
 		else
@@ -164,15 +172,30 @@ static void merge_all_blocks(void)
 void kfree(void *p)
 {
 	struct block *b = (struct block *)p - 1;
+
+	if (p == NULL)
+		return;
 #if defined(DEBUG_MEMORY)
-	kprintf("mem: free %x+%x\n", b, b->length);
+	kprintf("mem: free %p+%p\n", b, b->length);
+	kprintf("malloc frees %p\n", p);
 #endif
 
 	if (UNUSED(b))
 		panic(PANIC_BADFREE);
 	
 	b->length &= 0x7fffffff;
+	mfree += b->length;
 	merge_all_blocks();
+}
+
+unsigned long kmemavail(void)
+{
+	return mfree;
+}
+
+unsigned long kmemused(void)
+{
+	return mtotal - mfree;
 }
 
 #endif
