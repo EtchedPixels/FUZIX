@@ -412,11 +412,11 @@ arg_t _fork(void)
 	r = dofork(new_process);
 
 #ifdef DEBUG
-	kprintf("Dofork %x (n %x)returns %d\n", udata.u_ptab,
+	kprintf("Dofork %p (n %p)returns %d\n", udata.u_ptab,
 		new_process, r);
 	kprintf("udata.u_page %d p_page %d\n", udata.u_page,
 		udata.u_ptab->p_page);
-	kprintf("parent %x\n", udata.u_ptab->p_pptr);
+	kprintf("parent %p\n", udata.u_ptab->p_pptr);
 #endif
 	// if we fail this returns -1
 	if (r == -1) {
