@@ -265,7 +265,7 @@ ptptr getproc(void)
 }
 #endif
 
-/* Newproc fixes up the tables for the child of a fork but also for init
+/* Makeproc fixes up the tables for the child of a fork but also for init
  * Call in the processes context!
  * This process MUST be run immediately (since it sets status P_RUNNING)
  *
@@ -307,7 +307,7 @@ void makeproc(regptr ptptr p, u_data *u)
 
 	/* For systems where udata is actually a pointer or a register object */
 #ifdef udata
-	p->p_udata = &udata;
+	p->p_udata = u;
 #endif
 
 	u->u_ptab = p;	/* Fixup from parent */
