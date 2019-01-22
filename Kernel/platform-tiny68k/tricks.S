@@ -33,63 +33,34 @@ switchin:
         or #$0700,sr
 	move.l 4(sp),a0		; task to switch to
 	move.l P_TAB__P_UDATA_OFFSET(a0),a5
-	tst.w P_TAB__P_PAGE_OFFSET(a0)	; swapped or existing process ?
-	bne not_swapped
-
-;
-;	If you have one udata and swap them then you need to stack switch
-;	for the swap in as you'll overwrite the kernel stack. You can use
-; 	the IRQ stack but only if you leave IRQs off for a swap in (ugghh)
-;
-
-;
-;	FIXME: sort IRQ enables
-;
-
-;
-;	In simple mode the existing process always gets the boot here
-;	before we can swap the new one in
-;
-	move.l U_DATA__U_PTAB(a5),a1	; old process
-	tst.w P_TAB__P_PAGE_OFFSET(a1)	; swapped out/dead ?
-	beq its_dead_jim		; corpses don't need swapping out
-
-	move.l a0,-(sp)
-	move.l a1,-(sp)
-	jsr swapout
-	addq #4,sp
-	move.l (sp)+,a0
-
-its_dead_jim:
-	move.l sp,a1
-	move.l #irqstack+256,sp
-	move.l a1,-(sp)
-	move.l a0,-(sp)
-	move.l a0,-(sp)
-	jsr swapper
-	addq #4,sp
-	move.l (sp)+,a0
-	move.w #1,P_TAB__P_PAGE_OFFSET(a0) ; swapped in
-	move.l (sp)+,a1			; straight into a7 fails
-	move.l a1,a7			; emulator bug or CPU funny ??
-
-        or #$0700,sr
-
-not_swapped:
         ; check u_data->u_ptab matches what we wanted
 	cmp.l U_DATA__U_PTAB(a5),a0
 	bne switchinfail
 
+	; Switch the stacks back
+	move.l a5,udata_shadow	; For IRQs etc to recover A5 state
+	move.l U_DATA__U_SP(a5),a7
+
 	move.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
+
+	;
+	;	Get the user pages back. We can safely
+	;	do this above the parent kernel stack I think
+	;
+	clr.l -(sp)
+	move.l a0,-(sp)
+	jsr pagemap_switch
+	addq #8,sp
 
         ; runticks = 0
 	clr.w runticks
 
-        ; restore machine state
-        move.l U_DATA__U_SP(a5),sp
+	; recover the task switch state
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
-	move.l a0,usp
-	move.w (sp)+,d0			; FIXME: can we merge ?
+	move.l a0,USP
+	; and return code - FIXME: we have a different fork path so the d0
+	; stacking can go
+	move.w (sp)+,d0
 
         tst.b U_DATA__U_ININTERRUPT(a5)
         bne keepoff ; in ISR, leave interrupts off
@@ -106,14 +77,8 @@ switchinfail:
 
 	;
 	; this gets exciting on the 68000 because our udata is not in a
-	; fixed location except for swap only platforms. That means any
-	; udata relative pointers on the stack when we duplicate the kernel
-	; stack point to the parent. For the simple case we have a single
-	; swapped udata and stack so all is fairly easy. For the other
-	; cases we have to return as the parent but set up a fake stack
-	; frame for the child to exit the syscall. Simply being careful
-	; about pointers doesn't work - the compiler will internally
-	; use link/unlk and other stuff.
+	; fixed location except for swap only platforms. To deal with this
+	; we return parent first and create a new return frame for the child
 	;
 	; Entry:
 	; A5 = u_data pointer for parent
@@ -124,45 +89,102 @@ switchinfail:
 	; child stack
 	;
 dofork:
-	;
-	; simple edition for swap only
-	;
 	move.l 4(sp),a0			;	child p_tab
-	;
-	; in the simple case we only have one udata. In the complex cases
-	; we would have to compute the new one and load it into a5 and
-	; offset
-	;
-	move.l a5,P_TAB__P_UDATA_OFFSET(a0)
-	move.w P_TAB__P_PID_OFFSET(a0),-(sp)	;	child pid (parent return)
-	move.l usp,a0
-	movem.l a0/a2-a4/a6/d2-d7,-(sp)	;	save state
-	move.l sp,U_DATA__U_SP(a5)	;	save pointer
-	move.l U_DATA__U_PTAB(a5),-(sp)	;	parent p_tab
+	move.l a2,-(sp)
 
-	; FIXME: for the single case with less swaps than processes the
-	; out of swap case is one out (we must swap out to swap in so need
-	; one swap free after the fork. Right now we deal with this in
-	; Config by not setting it that way
-	jsr swapout
-	add.w #50,sp			;	throw the call frame and
-					;	the frame we built for
-					; 	switchin
-	tst.w d0
-	bne forked_up
+	move.l P_TAB__P_UDATA_OFFSET(a0),a1	; child udata
 
-	move.l 4(sp),a0
-	movel a5,-(sp)			;	U_DATA
+	; Copy the udata
+	; FIXME: we don't need to copy the stack too!
+
+	move.l a5,a2
+	move.w #255,d0
+loop:
+	move.l (a2)+,(a1)+
+	dbra d0,loop
+
+
+	;
+	; Save the child PID for later and the udata offset
+	;
+	move.w P_TAB__P_PID_OFFSET(a0),-(sp)
+	move.l P_TAB__P_UDATA_OFFSET(a0),-(sp)
+	;
+	; Configure the child udata now we copied it
+	; BUG: child udata is NULL ????
+
+	move.l P_TAB__P_UDATA_OFFSET(a0),-(sp)
 	move.l a0,-(sp)
 	jsr makeproc
 	addq #8,sp
+	;
+	;	The memory map is clone by ptab_alloc (we might want to
+	;	adjust that bit)
+	;
+	;tst.l d0
+	;bne forked_up
 
-	moveq #0,d0			;	child, ok
+	move.l (sp)+,a2		; Get the udata pointer back
+	;
+	; Now build a custom return frame for the child
+	;
+	lea.l 1024(a2),a1	; End of stack
+	;
+	; Copy over the parent top of stack return info
+	;
+	; FIXME: This assumes 68000 trap format. For the 68010
+	; there will be 4 words not 3
+	;
+	move.l 1020(a5),-(a1)	; Copy the PC
+	move.w 1018(a5),-(a1)	; Copy the status word
+	move.l 1014(a5),-(a1)	; Copy the A5 save of the parent
+				; needed for PIC processes
+	;
+	; Stack a return address
+	;
+	move.l #forkreturn,-(a1)
+	;
+	; USP has to be in a0
+	;
+	move.l usp,a0
+	;
+	; And a frame as if we did a switchout
+	;
+	move.w #0,-(a1)
+	movem.l a0/a2-a4/a6/d2-d7,-(a1)
+	move.l a1,U_DATA__U_SP(a2)	; Set the stack pointer
+
+	; And carry on as the parent
+	move.w (sp)+,d0		; child pid
+	move.l (sp)+,a2
 	clr.w runticks
 	rts
 forked_up:
 	moveq #-1,d0			;	parent, failed
 	rts
+;
+;	This code gets called when we resume the child
+;
+forkreturn:
+	; Wipe any stray kernel data
+	moveq #0,d1
+	move.l d1,a0
+	move.l d1,a1
+	move.l d1,a2
+	move.l d1,a3
+	move.l d1,a4
+	move.l d1,a6
+	move.l d1,d2
+	move.l d1,d3
+	move.l d1,d4
+	move.l d1,d5
+	move.l d1,d6
+	move.l d1,d7
+	; recover A5 to match the parent
+	move.l (sp)+,a5
+	; and RTE to the same address (which is fine as the user memory
+	; has already been juggled if needed).
+	rte
 
 badswitchmsg: ascii "_switchin: FAIL"
             byte 13,10,0

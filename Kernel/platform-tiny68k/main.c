@@ -27,11 +27,6 @@ void map_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
-uaddr_t pagemap_base(void)
-{
-	return 0x20000UL;
-}
-
 uint8_t platform_param(char *p)
 {
 	return 0;
@@ -46,43 +41,18 @@ void memzero(void *p, usize_t len)
 	memset(p, 0, len);
 }
 
-arg_t _memalloc(void)
+void pagemap_init(void)
 {
-	udata.u_error = ENOSYS;
-	return -1;
+	/* FIXME: base should be from _end of binary aligned
+	   and size we want to probe early and deal with shifted monitor
+	   etc */
+	kmemaddblk((void *)0x40000, 0xFF8000 - 0x40000);
 }
 
-arg_t _memfree(void)
-{
-	udata.u_error = ENOSYS;
-	return -1;
-}
-
-
-/*
- *	This function is called for partitioned devices if a partition is found
- *	and marked as swap type. The first one found will be used as swap. We
- *	only support one swap device.
- */
-void platform_swap_found(uint8_t letter, uint8_t m)
-{
-	blkdev_t *blk = blk_op.blkdev;
-	uint16_t n;
-	if (swap_dev != 0xFFFF)
-		return;
-	letter -= 'a';
-	kputs("(swap) ");
-	swap_dev = letter << 4 | m;
-	n = blk->lba_count[m - 1] / SWAP_SIZE;
-	if (n > MAX_SWAPS)
-		n = MAX_SWAPS;
-#ifdef SWAPDEV
-	while (n)
-		swapmap_init(n--);
-#endif
-}
-/* Live udata and kernel stack */
-u_block udata_block;
+/* Udata and kernel stacks */
+/* FIXME: dynamic allocation needed */
+u_block udata_block[PTABSIZE];
+/* FIXME: irqstack can go now I think */
 uint16_t irqstack[128];	/* Used for swapping only */
 
 /* This will belong in the core 68K code once finalized */
@@ -94,6 +64,10 @@ void install_vdso(void)
 	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
 
+void platform_udata_set(ptptr p)
+{
+	p->p_udata = &udata_block[p - ptab].u_d;
+}
 
 extern void *get_usp(void);
 extern void set_usp(void *p);
