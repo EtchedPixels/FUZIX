@@ -32,9 +32,9 @@ image:
 	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld \
 	crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
-	tricks.o ../simple.o main.o ../timer.o ../kdata.o devices.o \
+	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../buddy.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o \
