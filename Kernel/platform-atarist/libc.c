@@ -9,6 +9,16 @@ void *memcpy(void *d, const void *s, size_t sz)
   return d;
 }
 
+void *memcpy32(void *d, const void *s, size_t sz)
+{
+  uint32_t *dp = d;
+  const uint32_t *sp = s;
+  sz >>= 2;
+  while(sz--)
+    *dp++ = *sp++;
+  return d;
+}
+
 void *memset(void *d, int c, size_t sz)
 {
   unsigned char *p = d;

@@ -8,18 +8,28 @@ void platform_idle(void)
 {
 }
 
-void do_beep(void)
+uint8_t need_resched;
+
+uint8_t platform_param(char *p)
+{
+	return 0;
+}
+
+void platform_discard(void)
 {
 }
 
-/*
- * Map handling: We have flexible paging. Each map table consists of a set of pages
- * with the last page repeated to fill any holes.
- */
-
-void pagemap_init(void)
+void memzero(void *p, usize_t len)
 {
-	vmmu_init();
+	memset(p, 0, len);
+}
+
+void platform_copyright(void)
+{
+}
+
+void do_beep(void)
+{
 }
 
 void map_init(void)
@@ -27,40 +37,43 @@ void map_init(void)
 }
 
 u_block uarea_block[PTABSIZE];
-uaddr_t ramtop;
 
 void *screenbase;
-uint8_t *membase = 0x10000;	/* GUESS FIXME */
-uint8_t *memtop;
 
-/*
- *	We can do our fork handling in C for once. The only oddity here is
- *	the fixups to run parent first and avoid needless memory thrashing
- */
-void dofork(ptptr p)
+void pagemap_init(void)
 {
-	/* Child and parent udata pointers */
-	u_block *uc = uarea_block + p - ptab;
-	u_block *up = udata_ptr;
-	uint32_t *csp = uc + 1;
-	uint32_t *psp = up->u_sp;
-	/* Duplicate the memory maps */
-	if (pagemap_fork(p))
-		return -1;
-	/* Duplicate the udata */
-	memcpy(&uc->u_d, &up->u_d, sizeof(struct u_data))
-	/* Use the child udata for initializing the child */
-	udata_ptr = uc;
-	newproc(p);
-	udata_ptr = up;
-	/* And return as the parent. The child will return via the
-	   fork return path */
-	*--csp = fork_return;
-	uc->u_sp = csp;
-	/* Copy the saved register state over - must match switchin */
-	memcpy(csp - 14, psp - 14, 4 * 14);
-	/* Return as the parent and run it first (backwards to most ports) */
-	p->p_status = P_READY;
-	udata.u_ptab->p_status = P_RUNNING;
-	return p->p_pid;
+	/* FIXME: 512K hackish setup to get going */
+	/* Linker provided end of kernel */
+	extern uint8_t _end;
+	uint32_t e = (uint32_t)&_end;
+	kprintf("Kernel end %p\n", e);
+	/* Allocate the rest of memory to the userspace */
+	kmemaddblk((void *)e, 0x78000 - e);
+}
+
+/* Udata and kernel stacks */
+/* We need an initial kernel stack and udata so the slot for init is
+   set up at compile time */
+u_block udata_block0;
+static u_block *udata_block[PTABSIZE] = {&udata_block0,};
+
+/* This will belong in the core 68K code once finalized */
+
+void install_vdso(void)
+{
+	extern uint8_t vdso[];
+	/* Should be uput etc */
+	memcpy((void *)udata.u_codebase, &vdso, 0x40);
+}
+
+uint8_t platform_udata_set(ptptr p)
+{
+	u_block **up = &udata_block[p - ptab];
+	if (*up == NULL) {
+		*up = kmalloc(sizeof(struct u_block));
+		if (*up == NULL)
+			return ENOMEM;
+	}
+	p->p_udata = &(*up)->u_d;
+	return 0;
 }

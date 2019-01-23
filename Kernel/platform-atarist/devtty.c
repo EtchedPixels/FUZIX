@@ -14,6 +14,29 @@ uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
 uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
 uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
 
+static tcflag_t console_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS
+};
+
+static tcflag_t uart_mask[4] = {
+	_ISYS,
+	/* FIXME: break */
+	_OSYS,
+	/* FIXME CTS/RTS, CSTOPB ? */
+	CSIZE|CBAUD|PARENB|PARODD|_CSYS,
+	_LSYS,
+};
+
+tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
+	NULL,
+	console_mask,
+	console_mask,
+	uart_mask
+};
+
 static unsigned char tbuf1[TTYSIZ];
 static unsigned char tbuf2[TTYSIZ];
 
@@ -22,6 +45,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2}
 };
+
+uint8_t vtattr_cap;
 
 /* tty1 is the screen tty2 is the serial port */
 
@@ -52,7 +77,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		*uart_data = c;	/* Data */
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	if (minor == 2) {
 		/* FIXME: do proper mode setting */
@@ -84,6 +109,9 @@ void tty_interrupt(void)
 		tty_inproc(2,r);
 	}	
 }
+
+
+struct vt_repeat keyrepeat;
 
 uint8_t keymap[8];
 static uint8_t keyin[8];

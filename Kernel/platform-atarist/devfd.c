@@ -47,15 +47,13 @@ static uint8_t selmap[4] = {0x00, 0x01, 0x02, 0x03 };
 
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
-    blkno_t block;
-    uint32_t dptr;
     int ct = 0;
     int tries;
     uint8_t err;
     uint8_t *driveptr = fd_tab + minor;
     uint8_t cmd[6];
 
-    if(rawflag)
+    if(rawflag == 2)
         goto bad2;
 
     fd_motor_busy();		/* Touch the motor timer first so we don't
@@ -66,16 +64,17 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 //            goto bad;
     }
 
-    dptr = (uint32_t)udata.u_buf->bf_data;
-    block = udata.u_buf->bf_blk;
+//    fd_map = rawflag;
+    if (rawflag && d_blkoff(BLKSHIFT))
+            return -1;
+
+    udata.u_nblock *= 2;
 
 //    kprintf("Issue command: drive %d\n", minor);
     cmd[0] = is_read ? FD_READ : FD_WRITE;
-    cmd[1] = block / 9;		/* 2 sectors per block */
-    cmd[2] = ((block % 9) << 1) + 1;	/*eww.. */
+    cmd[1] = udata.u_block / 9;		/* 2 sectors per block */
+    cmd[2] = ((udata.u_block % 9) << 1) + 1;	/*eww.. */
     cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    cmd[4] = dptr >> 8;
-    cmd[5] = dptr & 0xFF;
         
     while (ct < 2) {
         for (tries = 0; tries < 4 ; tries++) {
