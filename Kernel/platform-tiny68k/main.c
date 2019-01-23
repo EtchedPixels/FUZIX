@@ -73,10 +73,8 @@ uint8_t platform_udata_set(ptptr p)
 		*up = kmalloc(sizeof(struct u_block));
 		if (*up == NULL)
 			return ENOMEM;
-		kputs("alloc udata");
 	}
 	p->p_udata = &(*up)->u_d;
-	kprintf("udata %p\n", p->p_udata);
 	return 0;
 }
 
