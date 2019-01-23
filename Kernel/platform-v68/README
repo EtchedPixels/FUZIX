@@ -18,17 +18,11 @@ to start user space straight after the kernel or if need be just above the
 protection boundary.
 
 TODO:
-- bourne shell crashes on exit with MMU enforcement with an access to 0. This
-  appears to be a bug in the v7 version of sh in 32bit. It would make more
-  sense to use the heritage sh which is sys5 ish and a bit bigger.
-- signal handling needs further testing (disabled on IRQ path currently)
-- copy exception/trap frames onto user stack along with trap identifiers
-  so we can support stuff like CP/M 68K and TOS emulators.
-- pre-emption needs more testing (also disabled on IRQ path currently)
 - support multiple IRQ sources and IRQ priority nesting when appropriate
 - enable IRQ during swap on context switch
 - optimize swap out/in. With bigger amounts of RAM we want to be smarter
   where it doesn't matter on 8bit.
+- parent first mode
 
 Possible optimizations:
 
