@@ -5,6 +5,8 @@
  *	supervisor stack a mystery. We are in supervisor mode and the rest
  *	is our problem.
  */
+		#include "../kernel-68000.def"
+
 		.globl __end
 		.globl __bss_start
 
@@ -23,8 +25,7 @@ wipebss:
 		clr.l (a0)+
 		dbra d0,wipebss
 
-		/* FIXME: hard coded ugly */
-		lea udata_block+1016,a7
+		lea udata_block0+UBLOCK_SIZE,a7
 		bsr init_early
 		bsr init_hardware
 		bsr fuzix_main
