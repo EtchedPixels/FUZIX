@@ -129,6 +129,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_nosys, 	        /* FUZIX system call 78 */
 	_nosys, 	        /* FUZIX system call 79 */
 #endif
+#ifdef CONFIG_NET
 	_nosys,			/* 80-89 reserved */
 	_nosys,
 	_nosys,
@@ -139,7 +140,6 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_nosys,
 	_nosys,
 	_nosys,
-#ifdef CONFIG_NET		/* For now require L2 */
 	_socket,		/* FUZIX system call 90 */
 	_listen,		/* FUZIX system call 91 */
 	_bind,			/* FUZIX system call 92 */
