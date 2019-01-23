@@ -10,7 +10,6 @@
 		.globl udata_block0
 		.globl devide_read_data
 		.globl devide_write_data
-		.globl vdso
 
 #define CTUR $D
 #define CTLR $F
@@ -41,48 +40,10 @@ init_hardware:
 	    sub.w  #64,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
 
-	    move.l #8,a0
-	    move.w #253,d0
-	    move.l #unexpected,d1
-init_trap_loop:
-	    move.l d1,(a0)+
-	    dbra d0,init_trap_loop
-	    ;
-	    ; Now set the vectors we care about
-	    ;
-	    move.w #8,a0
-	    move.l #bus_error,(a0)+
-	    move.l #addr_error,(a0)+
-	    move.l #illegal,(a0)+
-	    move.l #divzero,(a0)+
-	    move.l #chk,(a0)+
-	    move.l #trapv,(a0)+
-	    move.l #priv,(a0)+
-	    move.l #trace,(a0)+
-	    move.l #unimpa,(a0)+	; A and F line traps
-	    move.l #unimpf,(a0)+
-	    move.w #$80,a0
-	    move.l #trap0,(a0)+
-	    move.l #trap1,(a0)+
-	    move.l #trap2,(a0)+
-	    move.l #trap3,(a0)+
-	    move.l #trap4,(a0)+
-	    move.l #trap5,(a0)+
-	    move.l #trap6,(a0)+
-	    move.l #trap7,(a0)+
-	    move.l #trap8,(a0)+
-	    move.l #trap9,(a0)+
-	    move.l #trap10,(a0)+
-	    move.l #trap11,(a0)+
-	    move.l #trap12,(a0)+
-	    move.l #trap13,(a0)+
-	    move.l #trap14,(a0)+
-	    move.l #trap15,(a0)
-	    move.w #$0,a0
-	    move.l #uninit,$3c(a0)
-	    move.l #spurious,$60(a0)
+	    bsr install_vectors
+
 	    /* We use Vector 0x81 for the DUART */
-	    move.l #timer_irq,$204(a0)
+	    move.l #timer_irq,$204
 
 	    lea.l $FFF000,a0
 	    move.b #$80,CTLR(a0)
@@ -179,16 +140,4 @@ devide_write_l:
 	move.w (a0)+,(a1)
 	dbra d0,devide_write_l
 	rts
-
-;
-;	'VDSO'
-;
-vdso:	trap #12		; syscall entry
-	rts
-	; signal unwind
-	move.l 8(sp),sp		; blow away stack frame
-	movem.l (sp)+,a0/a1/d0/d1
-	move.w (sp)+,ccr
-	rts
-	; rest is spare for now
 

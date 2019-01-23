@@ -390,6 +390,8 @@ SYM (__umodsi3):
 		.globl dump_registers
 		.globl kernel_flag
 		.globl copy_blocks
+		.globl install_vectors
+		.globl vdso
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -421,11 +423,27 @@ __hard_irqrestore:
 		rts
 
 ;
+;	'VDSO' (copied into the base of each executable)
+;
+vdso:	trap #12		; syscall entry
+	rts
+	; signal unwind
+	move.l 8(sp),sp		; blow away stack frame
+	movem.l (sp)+,a0/a1/d0/d1
+	move.w (sp)+,ccr
+	rts
+	; rest is spare for now
+
+
+
+;
 ;	Put the supervisor stack back as if we had nothing on it (we just
 ;	longjmp'd out of the syscall path really). Then we push an exception
 ;	frame, clear the registers and rte. We need to rte as we want to
 ;	switch modes as we switch address so that we don't fault if there
 ;	is memory protection.
+;
+;	TODO: 68010 support needs adjusting here
 ;
 doexec:
 		move.l 4(sp),a1			; go address
@@ -452,6 +470,49 @@ doexec:
 		move.l d0,a5
 		move.l d0,a6
 		rte		; hit user space (and will enable interrupts)
+
+install_vectors:
+		move.l #8,a0
+		move.w #253,d0
+		move.l #unexpected,d1
+init_trap_loop:
+		move.l d1,(a0)+
+		dbra d0,init_trap_loop
+		;
+		; Now set the vectors we care about
+		;
+		move.w #8,a0
+		move.l #bus_error,(a0)+
+		move.l #addr_error,(a0)+
+		move.l #illegal,(a0)+
+		move.l #divzero,(a0)+
+		move.l #chk,(a0)+
+		move.l #trapv,(a0)+
+		move.l #priv,(a0)+
+		move.l #trace,(a0)+
+		move.l #unimpa,(a0)+	; A and F line traps
+		move.l #unimpf,(a0)+
+		move.w #$80,a0
+		move.l #trap0,(a0)+
+		move.l #trap1,(a0)+
+		move.l #trap2,(a0)+
+		move.l #trap3,(a0)+
+		move.l #trap4,(a0)+
+		move.l #trap5,(a0)+
+		move.l #trap6,(a0)+
+		move.l #trap7,(a0)+
+		move.l #trap8,(a0)+
+		move.l #trap9,(a0)+
+		move.l #trap10,(a0)+
+		move.l #trap11,(a0)+
+		move.l #trap12,(a0)+
+		move.l #trap13,(a0)+
+		move.l #trap14,(a0)+
+		move.l #trap15,(a0)
+		move.w #$0,a0
+		move.l #uninit,$3c(a0)
+		move.l #spurious,$60(a0)
+		rts
 
 
 bus_error:	move.w sr,-(sp)
