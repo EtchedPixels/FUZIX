@@ -54,7 +54,7 @@ static struct mem *mem[PTABSIZE];	/* The map we use */
 static struct mem *store[PTABSIZE];	/* Where our memory currently lives */
 static struct mem memblock[PTABSIZE];
 
-extern struct u_data *udata_shadow;	/* FIXME HACK */
+extern struct u_data *udata_shadow;
 
 static void mem_free(struct mem *m)
 {
@@ -204,8 +204,6 @@ usize_t valaddr(const char *pp, usize_t l)
    p is the process we are going to create maps for, udata.u_ptab is our
    own process. init is a special case!
    
-   FIXME: where do we need to call pagemap_alloc from to get it early
-   and make the valaddr and init data special cases go away ?
 */
 
 int pagemap_alloc(ptptr p)
@@ -217,7 +215,8 @@ int pagemap_alloc(ptptr p)
 	kprintf("%d: pagemap_alloc %p\n", proc, p);
 #endif
 	p->p_page = nproc;
-	platform_udata_set(p);
+	if (platform_udata_set(p))
+		return ENOMEM;
 	/* Init is special */
 	if (p->p_pid == 1) {
 		struct memblk *mb;

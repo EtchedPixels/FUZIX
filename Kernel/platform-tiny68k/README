@@ -58,8 +58,6 @@ To Do
 Propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
 generically jp 0 and 0 corruptor ?
 
-Dynamic udata allocation
-Do we need the extra irqstack any more ?
 Move lots of p68000.S code into lowlevel-68000.S
 Need some kind of CPU specific C file (or a general one with ifdefs ?) and
 then move lots of platform/main.c into it.
@@ -69,6 +67,9 @@ then move lots of platform/main.c into it.
 Better binary format.
 
 Look into posix spawn functions or vfork and if /bin/sh can use them
+
+Longer term split into multiple segments (code R/O uncopied, data/stack etc
+copied)
 
 DONE Add a 'user touches kernel' catcher on the debug/sim
 DONE ps user/kernel include mismatch error
@@ -106,3 +107,5 @@ DONE Pick a final trap number that is clear of any interesting emulations
 DONE Switch from one process in memory model to flat model with parent first
      and child custom stack build
 DONE All I/O going via buffers
+DONE Dynamic udata allocation
+DONE Do we need the extra irqstack any more ?

@@ -43,17 +43,19 @@ void memzero(void *p, usize_t len)
 
 void pagemap_init(void)
 {
-	/* FIXME: base should be from _end of binary aligned
-	   and size we want to probe early and deal with shifted monitor
-	   etc */
-	kmemaddblk((void *)0x40000, 0xFF8000 - 0x40000);
+	/* Linker provided end of kernel */
+	extern uint8_t _end;
+	uint32_t e = (uint32_t)&_end;
+	kprintf("Kernel end %p\n", e);
+	/* Allocate the rest of memory to the userspace */
+	kmemaddblk((void *)e, 0xFF8000 - e);
 }
 
 /* Udata and kernel stacks */
-/* FIXME: dynamic allocation needed */
-u_block udata_block[PTABSIZE];
-/* FIXME: irqstack can go now I think */
-uint16_t irqstack[128];	/* Used for swapping only */
+/* We need an initial kernel stack and udata so the slot for init is
+   set up at compile time */
+u_block udata_block0;
+static u_block *udata_block[PTABSIZE] = {&udata_block0,};
 
 /* This will belong in the core 68K code once finalized */
 
@@ -64,9 +66,18 @@ void install_vdso(void)
 	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
 
-void platform_udata_set(ptptr p)
+uint8_t platform_udata_set(ptptr p)
 {
-	p->p_udata = &udata_block[p - ptab].u_d;
+	u_block **up = &udata_block[p - ptab];
+	if (*up == NULL) {
+		*up = kmalloc(sizeof(struct u_block));
+		if (*up == NULL)
+			return ENOMEM;
+		kputs("alloc udata");
+	}
+	p->p_udata = &(*up)->u_d;
+	kprintf("udata %p\n", p->p_udata);
+	return 0;
 }
 
 extern void *get_usp(void);

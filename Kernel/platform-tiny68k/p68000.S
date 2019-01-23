@@ -1,8 +1,5 @@
 
 #include "../kernel-68000.def"
-/*
- *	Lots left to fill in
- */
 
 		.globl platform_reboot
 		.globl init_early
@@ -10,7 +7,7 @@
 		.globl program_vectors
 		.globl outchar
 		.globl platform_monitor
-		.globl udata_block
+		.globl udata_block0
 		.globl devide_read_data
 		.globl devide_write_data
 		.globl vdso
@@ -30,7 +27,7 @@ platform_reboot:
 	    bra platform_monitor
 
 init_early:
-	    lea.l udata_block,a5	; udata ptr
+	    lea.l udata_block0,a5	; udata ptr
 	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
