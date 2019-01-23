@@ -25,6 +25,8 @@ $(AOBJS): %.o: %.S
 $(DOBJS): %.o: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
+tricks.S: ../lib/68000flat.S
+
 clean:
 	rm -f *.o fuzix.elf loader.elf loader.map loader.bin core *~ 
 
