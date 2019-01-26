@@ -148,8 +148,12 @@ void switchout(void)
 	   in platform_idle or an interrupt wakes someone up */
 	while (nready == 0) {
 		ei();
+		/* We are idle, that means we cannot sleep */
+		udata.u_ininterrupt = 1;
 		platform_idle();
 		di();
+		/* We never idle in an interrupt so this is valid */
+		udata.u_ininterrupt = 0;
 	}
 	/* If only one process is ready to run and it's us then just
 	   return. This is the normal path in most Fuzix use cases as we
