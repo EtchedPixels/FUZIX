@@ -1,0 +1,43 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x1000
+-b _COMMONMEM=0xF400
+-l z80
+platform-rc2014-sbc64/crt0.rel
+platform-rc2014-sbc64/commonmem.rel
+platform-rc2014-sbc64/rc2014.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-rc2014-sbc64/tricks.rel
+platform-rc2014-sbc64/main.rel
+timer.rel
+kdata.rel
+platform-rc2014-sbc64/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_proc.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_other.rel
+mm.rel
+swap.rel
+bankfixed.rel
+tty.rel
+devsys.rel
+usermem.rel
+usermem_std-z80.rel
+platform-rc2014-sbc64/discard.rel
+platform-rc2014-sbc64/devtty.rel
+platform-rc2014-sbc64/mbr.rel
+platform-rc2014-sbc64/blkdev.rel
+platform-rc2014-sbc64/devide.rel
+platform-rc2014-sbc64/devide_discard.rel
+platform-rc2014-sbc64/ds1302.rel
+platform-rc2014-sbc64/ds1302_discard.rel
+platform-rc2014-sbc64/ds1302_rc2014.rel
+-e

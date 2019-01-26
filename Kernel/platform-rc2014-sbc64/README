@@ -1,0 +1,78 @@
+Fuzix for the Z80SBC64 and in theory Z80MB64 platforms
+
+Supported Hardware
+
+	RC2014 SBC64 mainboard or MB64 (see notes)
+	DS1302 RTC card (required)
+
+	(CTC is not yet supported but will be a far faster/nicer option once
+	 it is. At that point you will need CTC or RTC or both)
+
+	Options
+
+	RC2014 SIO/2 board (or compatible). ACIA is not supported.
+	
+	RC2014 Joystick
+
+In Progress
+	CTC at 0x88 for SIO timing and for system clock
+
+	Most other RC2014 cards supported by other platforms should also be
+	possible to add	if anyone needs them.
+
+	Suspend to RAM/Resume
+
+Things That Don't Work (yet)
+
+	Flow control
+	SIO speed changing
+
+Notes
+	The Z80MB64 is 22MHz which means there are not yet RTC or CTC for it!
+	
+Setting It Up
+
+Put the jumpers into serial download mode and send Z80SBCLD.BIN as per normal
+
+When it prompts 'Z80BC64 Loader 0.2'
+- Send Kernel/platform/loader.ihx
+- Type G B000 (only the G is echoed)
+
+You should see
+
+	Configuring booter...Done
+
+	and then the message
+
+	SBC64 Boot Loader
+	Loading image from disk...done
+
+You can now power off and change the jumper.
+
+At this point it will report a bad image unless you've created a suitable Fuzix
+image on the CF. Fuzix is looking for a standard Fuzix style PC partitioned CF
+card with a filesystem partition (7e) and a swap partition (7f). Make sure the
+partition table is a modern style one (starting partitions at block 2048 not
+block 63).
+
+The kernel image goes at block 2+ on the CF card. With Linux it's a simple matter
+of using dd (carefully)
+
+dd if=Kernel/fuzix.bin of=/dev/sdxx bs=512 seek=2 conv=notrunc
+
+Something similar should work on MacOS. People have reported problems with Cygwin
+dd on windows but I'm not clear why.
+
+To get back to the CP/M image put the jumper back into serial mode and
+follow the download instructions. You will need a different CF card for CP/M as
+unfortunately like RC2014 CP/M in general the supplied CP/M does not honour
+partition tables.
+
+Emulation
+
+Apart from remembering the emulated hard disk has a 1K header all is the same
+
+	./rc2014 -m z80sbc64 -r sbc64.ram -i sbc64.ide -R
+
+(and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram)
+
