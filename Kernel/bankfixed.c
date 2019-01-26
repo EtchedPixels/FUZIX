@@ -31,6 +31,8 @@
 #include <kdata.h>
 #include <printf.h>
 
+#undef DEBUG
+
 #ifdef CONFIG_BANK_FIXED
 
 #ifndef CONFIG_COMMON_COPY
