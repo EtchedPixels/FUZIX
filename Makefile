@@ -15,6 +15,7 @@
 # n8vem-mark4:	RBC/N8VEM Retrobrew Z180 board
 # p112:		DX Designs P112
 # rc2014:	RC2014 with 512K RAM/ROM and RTC
+# rc2014-sbc64: RC2014 Z80SBC64 128K system and RTC
 # rc2014-tiny:	RC2014 with 64KK RAM, banked ROM and RTC
 # sam:		Sam Coupe
 # sbcv2:	RBC/N8VEM SBC v2
