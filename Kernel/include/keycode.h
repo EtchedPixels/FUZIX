@@ -42,6 +42,7 @@
 #define KEY_PGUP	ESC('<')
 #define KEY_EDIT	ESC('E')
 #define KEY_END		ESC('N')
+#define KEY_UNDO	ESC('U')
 
 #define KEY_F1		ESC('1')
 #define KEY_F2		ESC('2')
