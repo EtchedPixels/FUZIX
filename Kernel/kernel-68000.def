@@ -1,3 +1,5 @@
+#include "platform/kernel.def"
+
 /* Keep these in sync with struct u_data!! */
 
 #define U_DATA__U_PTAB		0

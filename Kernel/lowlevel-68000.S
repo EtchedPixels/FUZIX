@@ -407,12 +407,17 @@ set_usp:	move.l 4(sp),a0
  */
 __hard_di:
 		move.w sr,d0
-		and.w #$0700,d0
-		or.w #$0700,sr
+		move.w d0,d1
+		and.w #$F8FF,d1
+		or.w #DI_MASK,d1
+		move.w d1,sr
 		rts
 
 __hard_ei:
-		and.w #$F8FF,sr
+		move.w sr,d0
+		and.w #$F8FF,d0
+		or.w #EI_MASK,d0
+		move.w d0,sr
 		rts
 
 __hard_irqrestore:
