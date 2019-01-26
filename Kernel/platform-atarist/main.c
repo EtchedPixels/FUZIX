@@ -26,6 +26,7 @@ void memzero(void *p, usize_t len)
 
 void platform_copyright(void)
 {
+
 }
 
 void do_beep(void)
@@ -38,17 +39,32 @@ void map_init(void)
 
 u_block uarea_block[PTABSIZE];
 
-void *screenbase;
+uint8_t hzticks;
+uint32_t memtop;
+uint16_t fdseek;
+uint16_t cputype;
+uint32_t screenbase;
+
 
 void pagemap_init(void)
 {
+	hzticks = *(uint16_t *)0x448 ? 60 : 50;
+	memtop = *(uint32_t *)0x42E;
+	fdseek = *(uint16_t *)0x440;
+	cputype = *(uint16_t *)0x59E;
+
+	kprintf("System Memory: %dK\n", memtop >> 10);
+	if (hzticks == 60)
+		kputs("NTSC System\n");
+	if (cputype)
+		kputs("Not a 68000\n");
 	/* FIXME: 512K hackish setup to get going */
 	/* Linker provided end of kernel */
 	extern uint8_t _end;
 	uint32_t e = (uint32_t)&_end;
 	kprintf("Kernel end %p\n", e);
 	/* Allocate the rest of memory to the userspace */
-	kmemaddblk((void *)e, 0x78000 - e);
+	kmemaddblk((void *)e, screenbase - e);
 }
 
 /* Udata and kernel stacks */

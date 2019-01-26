@@ -34,9 +34,10 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
-#define NDEVS    2        /* Devices 0..NDEVS-1 are capable of being mounted */
-                          /*  (add new mountable devices to beginning area.) */
+#define NUM_DEV_TTY 3
+
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+
+/* TODO tty scan rows/cols etc */
