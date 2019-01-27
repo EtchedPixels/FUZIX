@@ -6,12 +6,14 @@
 #include <devfd.h>
 #include <rtc.h>
 #include <ds1302.h>
+#include <rc2014.h>
 
 extern unsigned char irqvector;
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0x7E00;
-uint8_t ctc = 0;
+uint8_t ctc_present;
+uint8_t sio_present;
 
 void platform_discard(void)
 {
@@ -29,10 +31,13 @@ static uint8_t idlect;
 
 void platform_idle(void)
 {
+	irqflags_t irq = di();
 	/* Check the clock. We try and reduce the impact of the clock on
 	   latency by not doing it so often. 256 may be too small a divide
-	   need t see what 1/10th sec looks like in poll loops */
+	   need to see what 1/10th sec looks like in poll loops */
 	tty_poll_cpld();
+	irqrestore(irq);
+
 	if (!idlect++)
 		sync_clock();
 }
@@ -43,9 +48,31 @@ uint8_t platform_param(unsigned char *p)
 	return 0;
 }
 
+static int16_t timerct;
+
+/* Call timer_interrupt at 10Hz */
+static void timer_tick(uint8_t n)
+{
+	timerct += n;
+	while (timerct >= 20) {
+		timer_interrupt();
+		timerct -= 20;
+	}
+}
+
 void platform_interrupt(void)
 {
-	tty_pollirq_sio();
+	static uint8_t last_ctc_ch2;
+
+	tty_poll_cpld();
+	if (sio_present)
+		tty_pollirq_sio();
+	if (ctc_present) {
+		uint8_t n = 255 - CTC_CH3;
+		CTC_CH3 = 0x47;
+		CTC_CH3 = 255;
+		timer_tick(n);
+	}
 }
 
 /*
@@ -88,7 +115,7 @@ static void sync_clock_read(void)
  */
 void sync_clock(void)
 {
-	if (!ctc) {
+	if (!ctc_present) {
 		irqflags_t irq = di();
 		int16_t tmp;
 		if (!re_enter++) {
@@ -106,6 +133,7 @@ void sync_clock(void)
 		re_enter--;
 		irqrestore(irq);
 	}
+	tty_poll_cpld();
 }
 
 /*

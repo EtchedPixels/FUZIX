@@ -5,6 +5,7 @@
 #include <ds1302.h>
 #include <devide.h>
 #include <blkdev.h>
+#include <rc2014.h>
 #include "config.h"
 
 void map_init(void)
@@ -16,6 +17,9 @@ void pagemap_init(void)
   /* The high bits do nothing but it's a cheap way to avoid 0x00 */
   pagemap_add(0x12);
   pagemap_add(0x10);
+
+  if (ctc_present)
+    kputs("Z80 CTC detected.\n");
 }
 
 /*

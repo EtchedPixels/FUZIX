@@ -3,29 +3,31 @@ Fuzix for the Z80SBC64 and in theory Z80MB64 platforms
 Supported Hardware
 
 	RC2014 SBC64 mainboard or MB64 (see notes)
-	DS1302 RTC card (required)
-
-	(CTC is not yet supported but will be a far faster/nicer option once
-	 it is. At that point you will need CTC or RTC or both)
+	DS1302 RTC card (need RTC or CTC or both)
+	CTC card at 0x88 for SIO timing and for system clock. The CTC card
+	must be jumpered for CTC 1 to drive CLK2 and CTC2 zero crossing into
+	CTC3. (A CTC is strongly recommended)
 
 	Options
-
-	RC2014 SIO/2 board (or compatible). ACIA is not supported.
 	
 	RC2014 Joystick
 
 In Progress
-	CTC at 0x88 for SIO timing and for system clock
+
+	RC2014 SIO/2 board (or compatible). ACIA is not supported.
 
 	Most other RC2014 cards supported by other platforms should also be
 	possible to add	if anyone needs them.
 
-	Suspend to RAM/Resume
+	Suspend to RAM/Resume (basics should work)
+
+Unsupported
+	SC110 (no way to run one timer into another which is needed for
+	proper timer use without IM2)
 
 Things That Don't Work (yet)
 
-	Flow control
-	SIO speed changing
+	SIO/2 flow control
 
 Notes
 	The Z80MB64 is 22MHz which means there are not yet RTC or CTC for it!
@@ -72,7 +74,7 @@ Emulation
 
 Apart from remembering the emulated hard disk has a 1K header all is the same
 
-	./rc2014 -m z80sbc64 -r sbc64.ram -i sbc64.ide -R
+	./rc2014 -m z80sbc64 -r sbc64.ram -i sbc64.ide -R -c
 
 (and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram)
 

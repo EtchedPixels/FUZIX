@@ -58,16 +58,53 @@ uint8_t sio_r[] = {
 	0x05, 0xEA
 };
 
+static uint16_t siobaud[] = {
+	0xC0,	/* 0 */
+	0,	/* 50 */
+	0,	/* 75 */
+	0,	/* 110 */
+	0,	/* 134 */
+	0,	/* 150 */
+	0xC0,	/* 300 */
+	0x60,	/* 600 */
+	0xC0,	/* 1200 */
+	0x60,	/* 2400 */
+	0x30,	/* 4800 */
+	0x18,	/* 9600 */
+	0x0C,	/* 19200 */
+	0x06,	/* 38400 */
+	0x04,	/* 57600 */
+	0x02	/* 115200 */
+};
+
 static void sio2_setup(uint8_t minor, uint8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
+	uint8_t baud;
+
+	baud = t->c_cflag & CBAUD;
+	if (baud < B300)
+		baud = B300;
 
 	used(flags);
 
+
 	/* Set bits per character */
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
+
+
 	r = 0xC4;
+	if (ctc_present && minor == 3) {
+		CTC_CH1 = 0x55;
+		CTC_CH1 = siobaud[baud];
+		if (baud > B600)	/* Use x16 clock and CTC divider */
+			r = 0x44;
+	} else
+		baud = B115200;
+
+	t->c_cflag &= CBAUD;
+	t->c_cflag |= baud;
 	if (t->c_cflag & CSTOPB)
 		r |= 0x08;
 	if (t->c_cflag & PARENB)
@@ -75,6 +112,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	if (t->c_cflag & PARODD)
 		r |= 0x02;
 	sio_r[3] = r;
+
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
 }
 
@@ -83,9 +121,16 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	if (minor == 1)
 		return;
 	sio2_setup(minor, flags);
-	sio2_otir(SIO0_BASE + 2 * (minor - 1));
+	sio2_otir(SIO0_BASE + 2 * (minor - 2));
 	/* We need to do CTS/RTS support and baud setting on channel 2
 	   yet */
+}
+
+void tty_resume(void)
+{
+	tty_setup(1, 0);
+	tty_setup(2, 0);
+	tty_setup(3, 0);
 }
 
 int tty_carrier(uint8_t minor)
@@ -174,8 +219,11 @@ void tty_poll_cpld(void)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if (minor == 1)
+	if (minor == 1) {
+		irqflags_t irq = di();
 		cpld_bitbang(c);
+		irqrestore(irq);
+	}
 	if (minor == 2)
 		SIOA_D = c;
 	else if (minor == 2)
@@ -236,4 +284,13 @@ void kputchar(char c)
 	if (c == '\n')
 		tty_putc(TTYDEV - 512, '\r');
 	tty_putc(TTYDEV - 512, c);
+}
+
+int rctty_open(uint8_t minor, uint16_t flag)
+{
+	if (minor > 1 && !sio_present) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	return tty_open(minor, flag);
 }

@@ -20,6 +20,7 @@
 	.globl platform_interrupt_all
 	.globl _platform_reboot
 	.globl _platform_monitor
+	.globl _platform_suspend
 	.globl _bufpool
 	.globl _int_disabled
 	.globl _cpld_bitbang
@@ -32,6 +33,10 @@
 	.globl interrupt_handler
 	.globl unix_syscall_entry
 	.globl nmi_handler
+	.globl _suspend
+	.globl _ctc_present
+	.globl _tty_resume
+	.globl _ide_resume
 
 	; exported debugging tools
 	.globl outchar
@@ -56,13 +61,6 @@ SIOA_D		.EQU	SIOA_D+1
 SIOB_C		.EQU	SIOA_D+2
 SIOB_D		.EQU	SIOA_D+3
 
-ACIA_C          .EQU     0x80
-ACIA_D          .EQU     0x81
-ACIA_RESET      .EQU     0x03
-ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
-ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
-;ACIA_RTS_LOW_A       .EQU     0xB6   ; rts low, xmit interrupt enabled
-
 ;=========================================================================
 ; Buffers
 ;=========================================================================
@@ -86,7 +84,10 @@ init_hardware:
 	ld hl,#64
 	ld (_procmem), hl
 
-	; FIXME: autodetect SIO
+	call program_kvectors
+
+resume_hardware:
+	; FIXME: autodetect SIO and check for second SIO
 
 	ld hl,#sio_setup
 	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
@@ -104,21 +105,73 @@ serial_up:
 	; We must initialize all channels of the CTC. The documentation
 	; states that the initial CTC state is undefined and we don't want
 	; random interrupt surprises
+	;
 	; ---------------------------------------------------------------------
 
-	ld a,#0x57			; counter mode, disable interrupts
+	;
+	; Defense in depth - shut everything up first
+	;
+
+	ld a,#0x43
 	out (CTC_CH0),a			; set CH0 mode
-	ld a,#0				; time constant = 256
-	out (CTC_CH0),a			; set CH0 time constant
-	ld a,#0x57			; counter mode, FIXME C7 enable interrupts
 	out (CTC_CH1),a			; set CH1 mode
-	ld a,#180			; time constant = 180
-	out (CTC_CH1),a			; set CH1 time constant
-	ld a,#0x57			; counter mode, disable interrupts
 	out (CTC_CH2),a			; set CH2 mode
-	ld a,#0x57			; counter mode, disable interrupts
 	out (CTC_CH3),a			; set CH3 mode
 
+	;
+	; Probe for a CTC
+	;
+
+	ld a,#0x47			; CTC 2 as counter
+	out (CTC_CH2),a
+	ld a,#0xAA			; Set a count
+	out (CTC_CH2),a
+	in a,(CTC_CH2)
+	cp #0xAA			; Should not have changed
+	jr nz, no_ctc
+
+	ld a,#0x07
+	out (CTC_CH2),a
+	ld a,#2
+	out (CTC_CH2),a
+
+	; We are now counting down from 2 very fast, so should only see
+	; those values on the bus
+
+	ld b,#0
+ctc_check:
+	in a,(CTC_CH2)
+	and #0xFC
+	jr nz, no_ctc
+	djnz ctc_check
+
+	;
+	; Looks like we have a CTC
+	;
+
+have_ctc:
+	ld a,#1
+	ld (_ctc_present),a
+
+	;
+	; Set up timer for 200Hz
+	;
+
+	ld a,#0xB5
+	out (CTC_CH2),a
+	ld a,#144
+	out (CTC_CH2),a	; 200 Hz
+
+	;
+	; Set up counter CH3 for official SIO (the SC110 sadly can't be
+	; used this way).
+
+	ld a,#0x47
+	out (CTC_CH3),a
+	ld a,#255
+	out (CTC_CH3),a
+
+no_ctc:
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
 
@@ -144,6 +197,18 @@ _platform_reboot:
 	ld a,#0x03
 	out (0x1f),a
 	rst 0
+
+_platform_suspend:
+	call _suspend
+	; Re-initialize the CTC and basic SIO setup
+	call resume_hardware
+	; Restore the live SIO configuration
+	call _tty_resume
+	; Now fix the IDE controller
+	; We can't use the generic code for probing and setup because we
+	; discarded it at boot!
+	call _ide_resume
+	ret
 
 _int_disabled:
 	.db 1
@@ -173,8 +238,13 @@ _program_vectors:
 	ld (hl),#0x00
 	ldir
 
-	; now install the interrupt vector at 0x0038
+program_kvectors:
+	; This is ok as for the bank 3 it's already JP
+
 	ld a,#0xC3			; JP instruction
+	ld (0x0000),a			; Must be present for NULL checker
+
+	; now install the interrupt vector at 0x0038
 	ld (0x0038),a
 	ld hl,#interrupt_handler
 	ld (0x0039),hl

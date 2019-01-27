@@ -30,13 +30,13 @@ bankfixed.rel
 tty.rel
 devsys.rel
 usermem.rel
-usermem_std-z80.rel
 platform-rc2014-sbc64/discard.rel
 platform-rc2014-sbc64/devtty.rel
 platform-rc2014-sbc64/mbr.rel
 platform-rc2014-sbc64/blkdev.rel
 platform-rc2014-sbc64/devide.rel
 platform-rc2014-sbc64/devide_discard.rel
+platform-rc2014-sbc64/platform_ide.rel
 platform-rc2014-sbc64/ds1302.rel
 platform-rc2014-sbc64/ds1302_discard.rel
 platform-rc2014-sbc64/ds1302_rc2014.rel

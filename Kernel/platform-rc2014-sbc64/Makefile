@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s
-CSRCS = devices.c main.c devtty.c
+CSRCS = devices.c main.c devtty.c platform_ide.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/mbr.c
 DSRCS = ../dev/devide.c ../dev/blkdev.c

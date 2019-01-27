@@ -54,6 +54,9 @@ extern unsigned int swap_dev;
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
 
+/* We can suspend to RAM */
+#define CONFIG_PLATFORM_SUSPEND
+
 /* IDE/CF support */
 #define CONFIG_IDE
 
