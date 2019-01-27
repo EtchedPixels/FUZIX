@@ -7,7 +7,6 @@
 #include <devrd.h>
 #include <devtty.h>
 #include <blkdev.h>
-#include <ds1302.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {

@@ -18,6 +18,9 @@ void map_init(void)
 		kputs("Z80 SIO detected at 0x84.\n");
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
+	ds1302_init();
+	if (ds1302_present)
+		kputs("DS1302 detected at 0xC0.\n");
 }
 
 /*
@@ -43,7 +46,6 @@ void platform_swap_found(uint8_t letter, uint8_t m)
 
 void device_init(void)
 {
-	ds1302_init();
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
