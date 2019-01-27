@@ -63,8 +63,6 @@ static void timer_tick(uint8_t n)
 
 void platform_interrupt(void)
 {
-	static uint8_t last_ctc_ch2;
-
 	tty_poll_cpld();
 	if (sio_present)
 		tty_pollirq_sio0();

@@ -89,16 +89,14 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	uint8_t r;
 	uint8_t baud;
 
+	used(flags);
+
 	baud = t->c_cflag & CBAUD;
 	if (baud < B300)
 		baud = B300;
 
-	used(flags);
-
-
 	/* Set bits per character */
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
-
 
 	r = 0xC4;
 	if (ctc_present && minor == 3) {
@@ -111,6 +109,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 
 	t->c_cflag &= CBAUD;
 	t->c_cflag |= baud;
+
 	if (t->c_cflag & CSTOPB)
 		r |= 0x08;
 	if (t->c_cflag & PARENB)
@@ -118,7 +117,6 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	if (t->c_cflag & PARODD)
 		r |= 0x02;
 	sio_r[3] = r;
-
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
 }
 
@@ -256,7 +254,7 @@ void tty_pollirq_sio1(void)
 		}
 		SIOD_C = 0;		// read register 0
 		cb = SIOD_C;
-		if ((cb & 1) && !fullq(&ttyinq[2])) {
+		if ((cb & 1) && !fullq(&ttyinq[5])) {
 			tty_inproc(5, SIOD_D);
 			progress = 1;
 		}
@@ -318,12 +316,13 @@ ttyready_t tty_writeready(uint8_t minor)
 	/* Bitbanged so trick the kernel into yielding when appropriate */
 	if (minor == 1)
 		return need_reschedule() ? TTY_READY_SOON: TTY_READY_NOW;
-	irq = di();
 
+	irq = di();
 	port = SIO0_BASE+ 2 * (minor - 2);
 	out(port, 0);
 	c = in(port);
 	irqrestore(irq);
+
 	if (c & 0x04)	/* THRE? */
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
