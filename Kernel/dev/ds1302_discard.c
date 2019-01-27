@@ -35,27 +35,53 @@ void ds1302_write_seconds(uint8_t seconds)
     irqrestore(irq);
 }
 
-void ds1302_check_rtc(void)
+static uint8_t bad_bcd(uint8_t x, uint8_t max)
+{
+    uint8_t c;
+
+    c = x >> 4;
+    x &= 15;
+    if (c > 9 || x > 9)
+        return 1;
+    c = c * 10 + x;
+    if (c > max)
+        return 1;
+    return 0;
+}
+
+uint8_t ds1302_check_rtc(void)
 {
     uint8_t buffer[7];
 
     ds1302_read_clock(buffer, 7); /* read all calendar data */
 
+    if (bad_bcd(buffer[0] & 0x7F, 59) ||
+        bad_bcd(buffer[1], 59) ||
+        bad_bcd(buffer[3], 31) ||
+        bad_bcd(buffer[4], 12) ||
+        bad_bcd(buffer[5], 7) ||
+        bad_bcd(buffer[6], 99))
+            return 0;
+
     if(buffer[0] & 0x80){ /* is the clock halted? */
         kputs("ds1302: start clock\n");
         ds1302_write_seconds(buffer[0] & 0x7F); /* start it */
     }
+    ds1302_read_clock(buffer, 7);
+    if (buffer[0] & 0x80)
+        return 0;
+    return 1;
 }
 
-void ds1302_init(void)
+uint8_t ds1302_init(void)
 {
-    time_t tod;
-
     /* initialise the hardware into a sensible state */
     ds1302_set_pin_data_driven(true);
     ds1302_set_pin_data(false);
     ds1302_set_pin_ce(false);
     ds1302_set_pin_clk(false);
-    ds1302_check_rtc();
-    wrtime(&tod);
+    if (ds1302_check_rtc() == 0)
+        return 0;
+    ds1302_present = 1;
+    return 1;
 }

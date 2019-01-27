@@ -2,11 +2,13 @@
 #define __DS1302_DOT_H__
 
 /* public interface */
-void ds1302_init(void);
+uint8_t ds1302_init(void);
 uint8_t platform_rtc_secs(void);
 void ds1302_read_clock(uint8_t *buffer, uint8_t length);
 int platform_rtc_read(void);
 int platform_rtc_write(void);
+
+extern uint8_t ds1302_present;
 
 #ifdef _DS1302_PRIVATE
 /* consult the DS1302 datasheet for data format;

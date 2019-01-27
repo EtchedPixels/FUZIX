@@ -12,6 +12,8 @@
 #include <rtc.h>
 #include <ds1302.h>
 
+uint8_t ds1302_present;
+
 void ds1302_send_byte(uint8_t byte)
 {
     uint8_t i;
@@ -81,8 +83,11 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
 uint8_t platform_rtc_secs(void)
 {
     uint8_t buffer;
-    ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
-    return uint8_from_bcd(buffer & 0x7F); /* mask off top bit (clock-halt) */
+    if (ds1302_present) {
+        ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
+        return uint8_from_bcd(buffer & 0x7F); /* mask off top bit (clock-halt) */
+    }
+    return 0xFF;
 }
 
 static uint8_t rtc_buf[8];
@@ -94,6 +99,11 @@ int platform_rtc_read(void)
 	uint16_t y;
 	struct cmos_rtc cmos;
 	uint8_t *p = cmos.data.bytes;
+
+	if (!ds1302_present) {
+		udata.u_error = EOPNOTSUPP;
+		return -1;
+	}
 
 	if (udata.u_count < len)
 		len = udata.u_count;
@@ -129,6 +139,6 @@ int platform_rtc_read(void)
 
 int platform_rtc_write(void)
 {
-	udata.u_error = -EOPNOTSUPP;
+	udata.u_error = EOPNOTSUPP;
 	return -1;
 }
