@@ -31,7 +31,7 @@
 #define TICKSPERSEC 100   /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xED00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xEE00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   60	  /* Memory needed per process */
 
 #define SWAP_SIZE   0x78 	/* 60K in blocks (we actually don't need the low 256) */

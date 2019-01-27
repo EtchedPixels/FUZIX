@@ -1,10 +1,10 @@
 ; UZI mnemonics for memory addresses etc
 
 U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           .equ 0x300        ; 256+256+256 bytes.
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256+256 bytes.
 
-U_STASH_HIGH		    .equ 0xBD00	      ; BD00-BFFF
-U_STASH_LOW		    .equ 0x7D00	      ; 7D00-BFFF
+U_STASH_HIGH		    .equ 0xBE00	      ; BE00-BFFF
+U_STASH_LOW		    .equ 0x7E00	      ; 7E00-BFFF
 
 
 Z80_TYPE		    .equ 0

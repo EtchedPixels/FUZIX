@@ -29,7 +29,7 @@
 #define TICKSPERSEC 50      /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xBD00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xBE00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   48	    /* Memory needed per process */
 
 /* Undefine this section if you don't have a silicon disc for swap. It's not

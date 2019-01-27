@@ -42,7 +42,7 @@
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xFC00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xFD00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   32	  /* Memory needed per process */
 
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */

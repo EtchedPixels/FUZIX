@@ -40,7 +40,7 @@
 #define TICKSPERSEC 10	    /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0x7D00  /* Top of program, base of U_DATA stash */
+#define PROGTOP     0x7E00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
 #define SWAPDEV     (swap_dev)
