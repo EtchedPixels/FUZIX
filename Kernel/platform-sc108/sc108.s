@@ -30,13 +30,36 @@
 	.globl kstack_top
         .globl unix_syscall_entry
         .globl outcharhex
-	.globl _ser_type
+	.globl _acia_present
+	.globl _ctc_present
+	.globl _sio_present
+	.globl _sio1_present
 
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
 
         .include "kernel.def"
         .include "../kernel.def"
+
+
+; Base address of SIO/2 chip 0x80
+
+SIOA_C		.EQU	0x80
+SIOA_D		.EQU	SIOA_C+1
+SIOB_C		.EQU	SIOA_C+2
+SIOB_D		.EQU	SIOA_C+3
+
+SIOC_C		.EQU	0x84
+SIOC_D		.EQU	SIOC_C+1
+SIOD_C		.EQU	SIOC_C+2
+SIOD_D		.EQU	SIOC_C+3
+
+ACIA_C          .EQU     0x80
+ACIA_D          .EQU     0x81
+ACIA_RESET      .EQU     0x03
+ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
+ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
+;ACIA_RTS_LOW_A       .EQU     0xB6   ; rts low, xmit interrupt enabled
 
 
 ;
@@ -119,19 +142,44 @@ init_hardware:
 	call ldir_to_user
 
 	; Play guess the serial port
-	; This needs doing better. We might be fooled by floating flow
-	; control lines as the SC104 does expose flow control. FIXME
-	in a,(SIOA_C)
-	and #0x2C
-	cp #0x2C
-	; CTS and DCD should be high as they are not wired
-	jr nz, try_acia
+
+	;
+	; We are booted under ROMWBW, therefore use the same algorithm as
+	; ROMWBW so if the probe fails we at least expect it to have failed
+	; before we run.
+	;
+	; FIXME: see if we can cleanly ask ROMWBW for the device type
+	;
+
+	;
+	; This could be the ACIA control port. If so we mash the settings
+	; up but that is ok as we will port them back in the ACIA probe
+	;
+
+	xor a
+	ld c,#SIOA_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, try_acia
 
 	; Repeat the check on SIO B
-	in a,(SIOB_C)
-	and #0x2C
-	cp #0x2C
-	jr z, is_sio
+
+	xor a
+	ld c,#SIOB_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr nz, is_sio
+
 try_acia:
 	;
 	;	Look for an ACIA
@@ -146,8 +194,8 @@ try_acia:
 
         ld a, #ACIA_RTS_LOW_A
         out (ACIA_C),a         		; Initialise ACIA
-	ld a,#2
-	ld (_ser_type),a
+	ld a,#1
+	ld (_acia_present),a
 	jp serial_up
 
 	;
@@ -156,14 +204,12 @@ try_acia:
 	; At least until RC2014 grows a nice keyboard/display card!
 	;
 not_acia_either:
-	xor a
-	ld (_ser_type),a
 	jp serial_up
 ;
 ;	We have an SIO so do the required SIO hdance
 ;
-is_sio:	ld a,b
-	ld (_ser_type),a
+is_sio:	ld a,#1
+	ld (_sio_present),a
 
 	ld hl,#sio_setup
 	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
@@ -172,9 +218,123 @@ is_sio:	ld a,b
 	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
 	otir
 
+	xor a
+	ld c,#SIOC_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, serial_up
+
+	; Repeat the check on SIO B
+
+	xor a
+	ld c,#SIOD_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, serial_up
+
+	ld a,#0x01
+	ld (_sio1_present),a
+
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOC_C		; 10 bytes to SIOC_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOD_C		; and to SIOD_C
+	otir
+
+
 serial_up:
-        im 1 ; set CPU interrupt mode
-        ret
+
+        ; ---------------------------------------------------------------------
+	; Initialize CTC
+	;
+	; Need to do autodetect on this
+	;
+	; We must initialize all channels of the CTC. The documentation
+	; states that the initial CTC state is undefined and we don't want
+	; random interrupt surprises
+	;
+	; ---------------------------------------------------------------------
+
+	;
+	; Defense in depth - shut everything up first
+	;
+
+	ld a,#0x43
+	out (CTC_CH0),a			; set CH0 mode
+	out (CTC_CH1),a			; set CH1 mode
+	out (CTC_CH2),a			; set CH2 mode
+	out (CTC_CH3),a			; set CH3 mode
+
+	;
+	; Probe for a CTC
+	;
+
+	ld a,#0x47			; CTC 2 as counter
+	out (CTC_CH2),a
+	ld a,#0xAA			; Set a count
+	out (CTC_CH2),a
+	in a,(CTC_CH2)
+	cp #0xAA			; Should not have changed
+	jr nz, no_ctc
+
+	ld a,#0x07
+	out (CTC_CH2),a
+	ld a,#2
+	out (CTC_CH2),a
+
+	; We are now counting down from 2 very fast, so should only see
+	; those values on the bus
+
+	ld b,#0
+ctc_check:
+	in a,(CTC_CH2)
+	and #0xFC
+	jr nz, no_ctc
+	djnz ctc_check
+
+	;
+	; Looks like we have a CTC
+	;
+
+have_ctc:
+	ld a,#1
+	ld (_ctc_present),a
+
+	;
+	; Set up timer for 200Hz
+	;
+
+	ld a,#0xB5
+	out (CTC_CH2),a
+	ld a,#144
+	out (CTC_CH2),a	; 200 Hz
+
+	;
+	; Set up counter CH3 for official SIO (the SC110 sadly can't be
+	; used this way).
+
+	ld a,#0x47
+	out (CTC_CH3),a
+	ld a,#255
+	out (CTC_CH3),a
+
+no_ctc:
+        ; Done CTC Stuff
+        ; ---------------------------------------------------------------------
+
+	im 1				; set Z80 CPU interrupt mode 1
+	ret
 
 RTS_LOW	.EQU	0xEA
 

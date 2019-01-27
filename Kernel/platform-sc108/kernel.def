@@ -17,12 +17,6 @@ CONSOLE_RATE		.equ	115200
 
 CPU_CLOCK_KHZ		.equ	7372
 
-; Base address of SIO/2 chip 0x80
-; For the Scott Baker SIO card adjust the order to match rc2014.h
-SIOA_C		.EQU	0x80
-SIOA_D		.EQU	SIOA_D+1
-SIOB_C		.EQU	SIOA_D+2
-SIOB_D		.EQU	SIOA_D+3
 ; Z80 CTC ports
 CTC_CH0		.equ	0x88	; CTC channel 0 and interrupt vector
 CTC_CH1		.equ	0x89	; CTC channel 1 (periodic interrupts)
