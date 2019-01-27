@@ -34,8 +34,6 @@ extern unsigned int swap_dev;
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 
-/* Until we have a bootloader properly done */
-#define CONFIG_MBR_OFFSET	65536
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
