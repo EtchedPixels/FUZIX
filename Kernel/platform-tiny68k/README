@@ -14,6 +14,8 @@ Unsupported right now:
 - Trapping back into monitor if high
 - Reboot
 
+- T68KRC (2MB version wth possible other serial etc on RC2014)
+
 Known problems
 --------------
 
