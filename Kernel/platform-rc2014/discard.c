@@ -37,6 +37,8 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
+	ds1302_init();
+
 	if (acia_present)
 		kputs("6850 ACIA detected at 0x80.\n");
 	if (sio_present)
@@ -45,6 +47,8 @@ void pagemap_init(void)
 		kputs("Z80 SIO detected at 0x84.\n");
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
+	if (ds1302_present)
+		kputs("DS1302 detected at 0xC0.\n");
 }
 
 void map_init(void)
@@ -85,7 +89,6 @@ void platform_swap_found(uint8_t letter, uint8_t m)
 
 void device_init(void)
 {
-	ds1302_init();
 #ifdef CONFIG_IDE
 	devide_init();
 #ifdef CONFIG_PPIDE

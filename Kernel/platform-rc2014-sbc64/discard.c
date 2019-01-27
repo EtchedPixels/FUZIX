@@ -18,12 +18,16 @@ void pagemap_init(void)
   pagemap_add(0x12);
   pagemap_add(0x10);
 
+  ds1302_init();
+
   if (sio_present)
     kputs("Z80 SIO detected at 0x80.\n");
   if (sio1_present)
     kputs("Z80 SIO detected at 0x84.\n");
   if (ctc_present)
     kputs("Z80 CTC detected at 0x88.\n");
+  if (ds1302_present)
+    kputs("DS1302 detected at 0xC0.\n");
 }
 
 /*
@@ -49,7 +53,6 @@ void platform_swap_found(uint8_t letter, uint8_t m)
 
 void device_init(void)
 {
-	ds1302_init();
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
