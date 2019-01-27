@@ -12,9 +12,9 @@ First 64K
 The other memory is then overlaid on 0000-7FFF for user space
 
 	0000-00FF		Vectors
-	0100-7CFF		Application
-	7D00-7FFF		Udata/stack cache (may be able to move
-				oto 7DFF/7E00)
+	0100-7DFF		Application
+	7E00-7FFF		Udata/stack cache
+
 	(User space sees video mapped at 0x8000-8FFF)
 
 
@@ -110,8 +110,6 @@ Done so far:
 
 In Progress
 - RAM based fonts					DONE (needs testing)
-- Premium models sometimes hang somewhere as if there's a memory banking bug
-  (seems to be a size related Heisenbug)
 
 To Do:
 - Floppy - media detect/sectors per track etc/ hard skew
