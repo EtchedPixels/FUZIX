@@ -1,4 +1,4 @@
-Experimental port for the proposed SC108 mainboard plus CF card plus RTC card
+Experimental port for the SC108 mainboard plus CF card plus RTC or CTC card
 
 This is a design that happens to have 128K RAM but the 64K banks are flipped
 directly. Fortunately there is a ROM which lives in both banks.
@@ -84,13 +84,18 @@ F300-FFFF	Common (mostly valid in both banks)
 
 TO DO
 
-Write a proper bootloader that can use partition tables properly
-Fix hardcoded use of ACIA
+Debug some crash cases we have from the latest updates
+
 Use the extra space to put back some kernel bits we binned from -tiny
 Build a suitably high CP/M emuation and test it
-
 
 Long term fun
 - OS core in ROM, high memory holding rest (like -tiny) but with two user space
 banks ??
-- Clean up the serial code (on all RC2014)
+
+
+Emulation
+
+Write the bootloader once to block 0 (repair the parition tables afterwards)
+Write kernel images to block 24
+rc2014 -m sc108 -r sc108.rom -s -i sc108.ide -c

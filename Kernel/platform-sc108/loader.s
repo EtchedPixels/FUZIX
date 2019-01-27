@@ -30,8 +30,8 @@ BUSY		.equ	7
 
 ATA_READ	.equ	0x20
 
-SIOB_C		.equ	3
-SIOB_D		.equ	1
+SIOA_C		.equ	0x80
+SIOA_D		.equ	0x81
 
 	.ds 10240	; boot sector and more for loader space
 
@@ -95,13 +95,13 @@ serout:
 	; wait for transmitter to be idle
 ocloop_sio:
         xor a                   ; read register 0
-        out (SIOB_C), a
-	in a,(SIOB_C)		; read Line Status Register
+        out (SIOA_C), a
+	in a,(SIOA_C)		; read Line Status Register
 	and #0x04			; get THRE bit
 	jr z,ocloop_sio
 	; now output the char to serial port
 	pop af
-	out (SIOB_D),a
+	out (SIOA_D),a
 	ret
 
 serstr:
@@ -113,6 +113,6 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz 'LiNC80 FUZIX LOADER 0.1\n\n'
+	.asciz 'SC108 FUZIX LOADER 0.1\n\n'
 gogogo:
 	.asciz '\nExecuting FUZIX...\n'
