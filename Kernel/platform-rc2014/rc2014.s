@@ -59,7 +59,6 @@ RTS_HIGH	.EQU	0xE8
 RTS_LOW		.EQU	0xEA
 
 ; Base address of SIO/2 chip 0x80
-; For the Scott Baker SIO card adjust the order to match rc2014.h
 
 SIOA_C		.EQU	0x80
 SIOA_D		.EQU	SIOA_C+1
