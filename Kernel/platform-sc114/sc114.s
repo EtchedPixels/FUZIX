@@ -327,7 +327,7 @@ far_ldir_1:
 	    exx
 	    ret
 ldir_from_user:
-	    ld de,#0x0100
+	    ld de,(_bank1to0)
 	    jr ldir_far
 ;
 ;	High stubs. Present in each bank in the top 256 bytes
