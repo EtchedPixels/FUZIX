@@ -23,12 +23,8 @@ Things that don't work
 
 Stuff To Do
 
-  * SIO v ACIA detection is bust
-
   * It could be made a chunk smaller if we dumped the nice fancy IDE support
     for simple block IDE without full partitions etc.
 
   * Set up SIO with some kind of fast IRQ path or we'll drop a lot of bytes
     (perhaps in IRQ only do rtc check if fifo empty or something ?)
-
-  * RETI fix on polled SIO path

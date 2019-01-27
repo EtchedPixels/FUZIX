@@ -11,8 +11,6 @@ static char tbuf2[TTYSIZ];
 
 static uint8_t sleeping;
 
-uint8_t ser_type = 1;
-
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
@@ -38,7 +36,7 @@ static tcflag_t uart1_mask[4] = {
 tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	NULL,
 	uart0_mask,
-	uart1_mask
+	uart1_mask,
 };
 
 uint8_t sio_r[] = {
@@ -47,13 +45,52 @@ uint8_t sio_r[] = {
 	0x05, 0xEA
 };
 
+static uint16_t siobaud[] = {
+	0xC0,	/* 0 */
+	0,	/* 50 */
+	0,	/* 75 */
+	0,	/* 110 */
+	0,	/* 134 */
+	0,	/* 150 */
+	0xC0,	/* 300 */
+	0x60,	/* 600 */
+	0xC0,	/* 1200 */
+	0x60,	/* 2400 */
+	0x30,	/* 4800 */
+	0x18,	/* 9600 */
+	0x0C,	/* 19200 */
+	0x06,	/* 38400 */
+	0x04,	/* 57600 */
+	0x02	/* 115200 */
+};
+
 static void sio2_setup(uint8_t minor, uint8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
+	uint8_t baud;
+
+	used(flags);
+
+	baud = t->c_cflag & CBAUD;
+	if (baud < B300)
+		baud = B300;
+
 	/* Set bits per character */
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
+
 	r = 0xC4;
+	if (ctc_present && minor == 3) {
+		CTC_CH1 = 0x55;
+		CTC_CH1 = siobaud[baud];
+		if (baud > B600)	/* Use x16 clock and CTC divider */
+			r = 0x44;
+	} else
+		baud = B115200;
+
+	t->c_cflag &= CBAUD;
+	t->c_cflag |= baud;
+
 	if (t->c_cflag & CSTOPB)
 		r |= 0x08;
 	if (t->c_cflag & PARENB)
@@ -66,13 +103,13 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 
 void tty_setup(uint8_t minor, uint8_t flags)
 {
-	if (ser_type == 1) {
+	if (sio_present) {
 		sio2_setup(minor, flags);
 		sio2_otir(SIO0_BASE + 2 * (minor - 1));
 		/* We need to do CTS/RTS support and baud setting on channel 2
 		   yet */
 	}
-	if (ser_type == 2) {
+	if (acia_present) {
 		struct termios *t = &ttydata[1].termios;
 		uint8_t r = t->c_cflag & CSIZE;
 		/* No CS5/CS6 CS7 must have parity enabled */
@@ -115,22 +152,21 @@ void tty_setup(uint8_t minor, uint8_t flags)
 int tty_carrier(uint8_t minor)
 {
         uint8_t c;
-	if (ser_type == 1) {
-		if (minor == 1) {
-			SIOA_C = 0;
-			c = SIOA_C;
-		} else {
-			SIOB_C = 0;
-			c = SIOB_C;
-		}
-		if (c & 0x8)
-			return 1;
-		return 0;
-	} else	/* ACIA isn't wired for carrier on any board */
+        uint8_t port;
+
+        /* No carrier on ACIA */
+        if (sio_present == 0)
 		return 1;
+
+	port = SIO0_BASE + 2 * (minor - 1);
+	out(port, 0);
+	c = in(port);
+	if (c & 0x08)
+		return 1;
+	return 0;
 }
 
-void tty_pollirq_sio(void)
+void tty_pollirq_sio0(void)
 {
 	static uint8_t old_ca, old_cb;
 	uint8_t ca, cb;
@@ -157,7 +193,7 @@ void tty_pollirq_sio(void)
 			SIOA_C = 2 << 5;
 		/* Output pending */
 		if ((ca & 4) && (sleeping & 2)) {
-			tty_outproc(1);
+			tty_outproc(2);
 			sleeping &= ~2;
 			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
@@ -174,9 +210,9 @@ void tty_pollirq_sio(void)
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
-		if ((cb & 4) && (sleeping & 4)) {
-			tty_outproc(2);
-			sleeping &= ~4;
+		if ((cb & 4) && (sleeping & 8)) {
+			tty_outproc(3);
+			sleeping &= ~8;
 			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		if ((cb ^ old_cb) & 8) {
@@ -196,26 +232,22 @@ void tty_pollirq_acia(void)
 	if (ca & 1) {
 		tty_inproc(1, ACIA_D);
 	}
-	if (ca & 2) {
+	if ((ca & 2) && sleeping) {
 		tty_outproc(1);
+		sleeping = 0;
 	}
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	if (ser_type == 1) {
-		if (minor == 1) {
-			SIOA_D = c;
-		} else if (minor == 2)
-			SIOB_D = c;
-	} else if (minor == 1)
-		ACIA_D = c;
-	else if (minor = 3) {
-		/* FIXME: implement */
+	if (acia_present)
+		SIOA_D = c;
+	else {
+		uint8_t port = SIO0_BASE + 1 + 2 * (minor - 1);
+		out(port, c);
 	}
 }
 
-/* We will need this for SIO once we implement flow control signals */
 void tty_sleeping(uint8_t minor)
 {
 	sleeping |= (1 << minor);
@@ -233,35 +265,29 @@ ttyready_t tty_writeready(uint8_t minor)
 {
 	irqflags_t irq;
 	uint8_t c;
-	if (ser_type == 1) {
-		irq = di();
-		if (minor == 1) {
-			SIOA_C = 0;	/* read register 0 */
-			c = SIOA_C;
-			irqrestore(irq);
-			if (c & 0x04)	/* THRE? */
-				return TTY_READY_NOW;
-			return TTY_READY_SOON;
-		} else if (minor == 2) {
-			SIOB_C = 0;	/* read register 0 */
-			c = SIOB_C;
-			irqrestore(irq);
-			if (c & 0x04)	/* THRE? */
-				return TTY_READY_NOW;
-			return TTY_READY_SOON;
-		}
-		irqrestore(irq);
-	} else if (ser_type == 2 && minor == 1) {
+	uint8_t port;
+
+	if (acia_present) {
 		c = ACIA_C;
 		if (c & 0x02)	/* THRE? */
 			return TTY_READY_NOW;
 		return TTY_READY_SOON;
 	}
-	return TTY_READY_NOW;
+
+	irq = di();
+	port = SIO0_BASE+ 2 * (minor - 1);
+	out(port, 0);
+	c = in(port);
+	irqrestore(irq);
+
+	if (c & 0x04)	/* THRE? */
+		return TTY_READY_NOW;
+	return TTY_READY_SOON;
 }
 
 void tty_data_consumed(uint8_t minor)
 {
+	used(minor);
 }
 
 /* kernel writes to system console -- never sleep! */
@@ -272,4 +298,17 @@ void kputchar(char c)
 		tty_putc(TTYDEV - 512, '\r');
 	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	tty_putc(TTYDEV - 512, c);
+}
+
+int rctty_open(uint8_t minor, uint16_t flag)
+{
+	if (acia_present && minor != 1) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	if ((minor == 1 || minor == 2) && !sio_present) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	return tty_open(minor, flag);
 }

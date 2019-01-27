@@ -5,10 +5,18 @@
 #include <ds1302.h>
 #include <devide.h>
 #include <blkdev.h>
+#include <rc2014.h>
 #include "config.h"
 
 void map_init(void)
 {
+
+	if (acia_present)
+		kputs("6850 ACIA detected at 0x80.\n");
+	if (sio_present)
+		kputs("Z80 SIO detected at 0x80.\n");
+	if (ctc_present)
+		kputs("Z80 CTC detected at 0x88.\n");
 }
 
 /*

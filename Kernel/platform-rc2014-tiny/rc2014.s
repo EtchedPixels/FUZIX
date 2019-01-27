@@ -31,7 +31,9 @@
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
-	.globl _ser_type
+	.globl _acia_present
+	.globl _ctc_present
+	.globl _sio_present
 
 	; exported debugging tools
 	.globl inchar
@@ -53,9 +55,9 @@ RTS_LOW		.EQU	0xEA
 ; Base address of SIO/2 chip 0x80
 ; For the Scott Baker SIO card adjust the order to match rc2014.h
 SIOA_C		.EQU	0x80
-SIOA_D		.EQU	SIOA_D+1
-SIOB_C		.EQU	SIOA_D+2
-SIOB_D		.EQU	SIOA_D+3
+SIOA_D		.EQU	SIOA_C+1
+SIOB_C		.EQU	SIOA_C+2
+SIOB_D		.EQU	SIOA_C+3
 
 ACIA_C          .EQU     0x80
 ACIA_D          .EQU     0x81
@@ -88,19 +90,44 @@ init_hardware:
 	ld (_procmem), hl
 
 	; Play guess the serial port
-	; This needs doing better. We might be fooled by floating flow
-	; control lines as the SC104 does expose flow control. FIXME
-	in a,(SIOA_C)
-	and #0x2C
-	cp #0x2C
-	; CTS and DCD should be high as they are not wired
-	jr nz, try_acia
+
+	;
+	; We are booted under ROMWBW, therefore use the same algorithm as
+	; ROMWBW so if the probe fails we at least expect it to have failed
+	; before we run.
+	;
+	; FIXME: see if we can cleanly ask ROMWBW for the device type
+	;
+
+	;
+	; This could be the ACIA control port. If so we mash the settings
+	; up but that is ok as we will port them back in the ACIA probe
+	;
+
+	xor a
+	ld c,#SIOA_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, try_acia
 
 	; Repeat the check on SIO B
-	in a,(SIOB_C)
-	and #0x2C
-	cp #0x2C
-	jr z, is_sio
+
+	xor a
+	ld c,#SIOB_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr nz, is_sio
+
 try_acia:
 	;
 	;	Look for an ACIA
@@ -115,8 +142,8 @@ try_acia:
 
         ld a, #ACIA_RTS_LOW_A
         out (ACIA_C),a         		; Initialise ACIA
-	ld a,#2
-	ld (_ser_type),a
+	ld a,#1
+	ld (_acia_present),a
 	jp serial_up
 
 	;
@@ -125,14 +152,12 @@ try_acia:
 	; At least until RC2014 grows a nice keyboard/display card!
 	;
 not_acia_either:
-	xor a
-	ld (_ser_type),a
 	jp serial_up
 ;
 ;	We have an SIO so do the required SIO hdance
 ;
-is_sio:	ld a,b
-	ld (_ser_type),a
+is_sio:	ld a,#1
+	ld (_sio_present),a
 
 	ld hl,#sio_setup
 	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
@@ -142,27 +167,82 @@ is_sio:	ld a,b
 	otir
 
 serial_up:
+
         ; ---------------------------------------------------------------------
 	; Initialize CTC
+	;
+	; Need to do autodetect on this
 	;
 	; We must initialize all channels of the CTC. The documentation
 	; states that the initial CTC state is undefined and we don't want
 	; random interrupt surprises
+	;
 	; ---------------------------------------------------------------------
 
-	ld a,#0x57			; counter mode, disable interrupts
+	;
+	; Defense in depth - shut everything up first
+	;
+
+	ld a,#0x43
 	out (CTC_CH0),a			; set CH0 mode
-	ld a,#0				; time constant = 256
-	out (CTC_CH0),a			; set CH0 time constant
-	ld a,#0x57			; counter mode, FIXME C7 enable interrupts
 	out (CTC_CH1),a			; set CH1 mode
-	ld a,#180			; time constant = 180
-	out (CTC_CH1),a			; set CH1 time constant
-	ld a,#0x57			; counter mode, disable interrupts
 	out (CTC_CH2),a			; set CH2 mode
-	ld a,#0x57			; counter mode, disable interrupts
 	out (CTC_CH3),a			; set CH3 mode
 
+	;
+	; Probe for a CTC
+	;
+
+	ld a,#0x47			; CTC 2 as counter
+	out (CTC_CH2),a
+	ld a,#0xAA			; Set a count
+	out (CTC_CH2),a
+	in a,(CTC_CH2)
+	cp #0xAA			; Should not have changed
+	jr nz, no_ctc
+
+	ld a,#0x07
+	out (CTC_CH2),a
+	ld a,#2
+	out (CTC_CH2),a
+
+	; We are now counting down from 2 very fast, so should only see
+	; those values on the bus
+
+	ld b,#0
+ctc_check:
+	in a,(CTC_CH2)
+	and #0xFC
+	jr nz, no_ctc
+	djnz ctc_check
+
+	;
+	; Looks like we have a CTC
+	;
+
+have_ctc:
+	ld a,#1
+	ld (_ctc_present),a
+
+	;
+	; Set up timer for 200Hz
+	;
+
+	ld a,#0xB5
+	out (CTC_CH2),a
+	ld a,#144
+	out (CTC_CH2),a	; 200 Hz
+
+	;
+	; Set up counter CH3 for official SIO (the SC110 sadly can't be
+	; used this way).
+
+	ld a,#0x47
+	out (CTC_CH3),a
+	ld a,#255
+	out (CTC_CH3),a
+
+no_ctc:
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
 
@@ -190,8 +270,6 @@ _platform_monitor:
 	di
 	halt
 _platform_reboot:
-        ; We need to map the ROM back in -- ideally into every page.
-        ; This little trick based on a clever suggestion from John Coffman.
 	call map_kernel
 	rst 0
 
@@ -393,9 +471,9 @@ _sio2_otir:
 outchar:
 
 	push af
-	ld a,(_ser_type)
-	cp #2
-	jr z, ocloop_acia
+	ld a,(_acia_present)
+	or a
+	jr nz, ocloop_acia
 
 	; wait for transmitter to be idle
 ocloop_sio:
@@ -426,9 +504,9 @@ out_done:
 ; Outputs: A - received character, F destroyed
 ;=========================================================================
 inchar:
-	ld a,(_ser_type)
-	cp #2
-	jr z,inchar_acia
+	ld a,(_acia_present)
+	or a
+	jr nz,inchar_acia
 inchar_s:
         xor a                           ; read register 0
         out (SIOA_C), a
