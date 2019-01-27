@@ -150,7 +150,7 @@ int tty_carrier(uint8_t minor)
         uint8_t port;
         if (minor == 1)
         	return 1;
-	port = SIOA_C + 2 * (minor - 2);
+	port = SIO0_BASE + 2 * (minor - 2);
 	out(port, 0);
 	c = in(port);
 	if (c & 0x08)
@@ -290,8 +290,10 @@ void tty_putc(uint8_t minor, unsigned char c)
 		cpld_bitbang(c);
 		irqrestore(irq);
 	}
-	else
-		out(SIOA_D + 2 * (minor - 2), c);
+	else {
+		uint8_t port = SIO0_BASE + 1 + 2 * (minor - 2);
+		out(port, c);
+	}
 }
 
 /* We will need this for SIO once we implement flow control signals */
@@ -318,7 +320,7 @@ ttyready_t tty_writeready(uint8_t minor)
 		return need_reschedule() ? TTY_READY_SOON: TTY_READY_NOW;
 	irq = di();
 
-	port = SIOA_C + 2 * (minor - 2);
+	port = SIO0_BASE+ 2 * (minor - 2);
 	out(port, 0);
 	c = in(port);
 	irqrestore(irq);
