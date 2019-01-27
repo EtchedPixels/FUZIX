@@ -25,7 +25,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
 #endif
   /* 2: /dev/tty -- serial ports */
-  {  tty_open,	    tty_close,	tty_read,	tty_write,	tty_ioctl},
+  {  rctty_open,    tty_close,	tty_read,	tty_write,	tty_ioctl},
   /* 3: RAM disk */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
   /* 4: /dev/mem etc      System devices (one offs) */

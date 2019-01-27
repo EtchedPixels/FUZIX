@@ -6,8 +6,8 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <ppide.h>
+#include <rc2014.h>
 #include "config.h"
-#include "devrd.h"
 #include "vfd-term.h"
 
 /* Everything in here is discarded after init starts */
@@ -36,6 +36,15 @@ void pagemap_init(void)
 
 	/* finally add the common area */
 	pagemap_add(32 + 3);
+
+	if (acia_present)
+		kputs("6850 ACIA detected at 0x80.\n");
+	if (sio_present)
+		kputs("Z80 SIO detected at 0x80.\n");
+	if (sio1_present)
+		kputs("Z80 SIO detected at 0x84.\n");
+	if (ctc_present)
+		kputs("Z80 CTC detected at 0x88.\n");
 }
 
 void map_init(void)

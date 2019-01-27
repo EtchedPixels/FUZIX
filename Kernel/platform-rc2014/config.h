@@ -99,17 +99,12 @@ extern unsigned int swap_dev;
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
-#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY 4
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
 #define TTY_INIT_BAUD B115200	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-
-/* The Scott Baker SIO has a non-standard layout (it predates the official one) */
-/* You'll need to define this if you have a Scott Baker SIO2 card, or submit
-   a fancier autodetect! Also you'll need to change rc2014.s */
-#undef CONFIG_SIO_BAKER
 
 #define platform_copyright()		// for now

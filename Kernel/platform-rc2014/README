@@ -17,13 +17,11 @@ Supported Hardware
 	default ROM and RAM boards.
 
 	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
-	If you have a Scott Baker SIO/2 card you'll need to see config.h
 
-	DS1302 RTC at 0xC0 (eventually CTC and no RTC will be allowed too)
+	DS1302 RTC at 0xC0	} You must have one or both
+	RC2014 CTC at 0x88	} CTC strongly recommended
 
 	Options:
-
-	CTC board at 0x88
 
 	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
 	Terminal will be supported. This will display all output to the serial
@@ -35,22 +33,19 @@ Supported Hardware
 
 	RC2014 Joystick
 
-In Progress
-
 	PPIDE
 
 Unsupported Hardware
 
-	SC108/SC114 or other CPU boards with their own banking instead of the
-	512K ROM/RAM
+	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
+	of the 512K ROM/RAM
 
 	SC114 bit bang serial
 
 	Z80 PIO cards (really because I've no idea how to present them)
 
-	SC110 CTC/serial (it uses CTC 1 for the serial baud but we try and
-	use it for other things). Will rework the core code to use the CTCs
-	differently to fix this at some point
+	SC110 CTC/serial (does not appear to be able to chain CTC pairs, as
+	is neeed for IM1 mode).
 
 
 Things To Note When Modifying
@@ -67,26 +62,9 @@ Things that don't work
 
   * Flow control isn't yet enabled for the serial port.
 
-  * PPIDE
-
 Stuff To Do
 
-  * Rework the CTCs if we can so we use CTC2 as a timer for the CTC clock and
-    use CTC3 to count CTC0 overflows. That way we can use the CTC2 interrupt
-    and the CTC3 value together in order to a) spot missed events and b) allow
-    us to run without using IM2 given the poor IM2 support on RC2014. That
-    then still allows us to use CTC1 for UART speed, and hopefully CTC0 for
-    single step debugging. Note that we are forced to use CTC1 for serial
-    for the SC110 card, and we want adjacent CTCs for jumpering convenience
-    for the timer. Also there is no ZT3 so it's the one timer that can't
-    chain so is best for the tick counter.
-
-  * Detect and optimize code paths in CTC mode - the extra DS1302 accesses we
-    have to do are really expensive.
-
-  * Can we detect which kind of SIO and CTC we have and where
-
-  * Other tty options - can we autodetect 16550A at 0x80. Detect SIO at 0x84.
+  * Other tty options - can we autodetect 16550A at 0x80.
 
   * Probe both 0x10 and 0xE0 for CF ?
 
@@ -107,7 +85,7 @@ Stuff To Do
     do some of the combinations we have today with the TMS9918A as well unless
     we go to banked syscall (Which is doable)
 
-  * Push the tty buffers into the banked space to give us room for four ttys
+  * Push the tty buffers into the banked space to give us room for more ttys
 
   * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO

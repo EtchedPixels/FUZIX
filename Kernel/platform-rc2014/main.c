@@ -7,10 +7,15 @@
 #include <devinput.h>
 #include <rtc.h>
 #include <ds1302.h>
+#include <rc2014.h>
 
 extern unsigned char irqvector;
-uint8_t timermsr = 0;
 uint16_t swap_dev = 0xFFFF;
+
+uint8_t acia_present;
+uint8_t ctc_present;
+uint8_t sio_present;
+uint8_t sio1_present;
 
 void platform_discard(void)
 {
@@ -18,16 +23,13 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	/* FIXME: for the non CTC case we should poll the DS1302 here and
-	   fake up appopriate timer events */
-	/* Let's go to sleep while we wait for something to interrupt us;
-	 * Makes the HALT LED go yellow, which amuses me greatly. */
-//	__asm halt __endasm;
-	irqflags_t irq = di();
-	sync_clock();
-	/* FIXME: need to cover ACIA option.. */
-	tty_pollirq_sio();
-	irqrestore(irq);
+	if (ctc_present)
+		__asm halt __endasm;
+	else {
+		irqflags_t irq = di();
+		sync_clock();
+		irqrestore(irq);
+	}
 }
 
 uint8_t platform_param(unsigned char *p)
@@ -36,18 +38,32 @@ uint8_t platform_param(unsigned char *p)
 	return 0;
 }
 
+static int16_t timerct;
+
+/* Call timer_interrupt at 10Hz */
+static void timer_tick(uint8_t n)
+{
+	timerct += n;
+	while (timerct >= 20) {
+		timer_interrupt();
+		timerct -= 20;
+	}
+}
+
 void platform_interrupt(void)
 {
-	if (1) { 	/* CTC == 0 when we do the work */
-#ifdef CONFIG_FLOPPY
-		fd_tick();
-#endif
-//		poll_input();
-//		timer_interrupt();
+	if (acia_present)
+		tty_pollirq_acia();
+	if (sio_present)
+		tty_pollirq_sio0();
+	if (sio1_present)
+		tty_pollirq_sio1();
+	if (ctc_present) {
+		uint8_t n = 255 - CTC_CH3;
+		CTC_CH3 = 0x47;
+		CTC_CH3 = 255;
+		timer_tick(n);
 	}
-	/* FIXME: need to cover ACIA option.. */
-	tty_pollirq_sio();
-	return;
 }
 
 /*
@@ -90,7 +106,7 @@ static void sync_clock_read(void)
  */
 void sync_clock(void)
 {
-	if (!timermsr) {
+	if (!ctc_present) {
 		irqflags_t irq = di();
 		int16_t tmp;
 		if (!re_enter++) {
@@ -103,8 +119,6 @@ void sync_clock(void)
 				while(tmp--) {
 					timer_interrupt();
 				}
-				/* FIXME: need to cover ACIA option.. */
-				tty_pollirq_sio();
 			}
 		}
 		re_enter--;
