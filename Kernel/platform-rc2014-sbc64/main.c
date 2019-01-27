@@ -14,6 +14,7 @@ uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0x7E00;
 uint8_t ctc_present;
 uint8_t sio_present;
+uint8_t sio1_present;
 
 void platform_discard(void)
 {
@@ -66,7 +67,9 @@ void platform_interrupt(void)
 
 	tty_poll_cpld();
 	if (sio_present)
-		tty_pollirq_sio();
+		tty_pollirq_sio0();
+	if (sio1_present)
+		tty_pollirq_sio1();
 	if (ctc_present) {
 		uint8_t n = 255 - CTC_CH3;
 		CTC_CH3 = 0x47;

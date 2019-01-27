@@ -18,8 +18,12 @@ void pagemap_init(void)
   pagemap_add(0x12);
   pagemap_add(0x10);
 
+  if (sio_present)
+    kputs("Z80 SIO detected at 0x80.\n");
+  if (sio1_present)
+    kputs("Z80 SIO detected at 0x84.\n");
   if (ctc_present)
-    kputs("Z80 CTC detected.\n");
+    kputs("Z80 CTC detected at 0x88.\n");
 }
 
 /*

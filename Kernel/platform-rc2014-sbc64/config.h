@@ -61,7 +61,7 @@ extern unsigned int swap_dev;
 #define CONFIG_IDE
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 5
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)

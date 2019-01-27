@@ -12,6 +12,8 @@ __sfr __at 0xf9 cpld_data;
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
+static char tbuf4[TTYSIZ];
+static char tbuf5[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -20,6 +22,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf4, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
+	{tbuf5, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 };
 
 static tcflag_t uart0_mask[4] = {
@@ -49,7 +53,9 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	NULL,
 	uart0_mask,
 	uart1_mask,
-	uart2_mask
+	uart2_mask,
+	uart1_mask,
+	uart1_mask
 };
 
 uint8_t sio_r[] = {
@@ -122,35 +128,37 @@ void tty_setup(uint8_t minor, uint8_t flags)
 		return;
 	sio2_setup(minor, flags);
 	sio2_otir(SIO0_BASE + 2 * (minor - 2));
-	/* We need to do CTS/RTS support and baud setting on channel 2
-	   yet */
+	/* We need to do CTS/RTS support on channel 2 yet */
 }
 
 void tty_resume(void)
 {
 	tty_setup(1, 0);
-	tty_setup(2, 0);
-	tty_setup(3, 0);
+	if (sio_present) {
+		tty_setup(2, 0);
+		tty_setup(3, 0);
+	}
+	if (sio1_present) {
+		tty_setup(4, 0);
+		tty_setup(5, 0);
+	}
 }
 
 int tty_carrier(uint8_t minor)
 {
         uint8_t c;
+        uint8_t port;
         if (minor == 1)
         	return 1;
-	else if (minor == 2) {
-		SIOA_C = 0;
-		c = SIOA_C;
-	} else {
-		SIOB_C = 0;
-		c = SIOB_C;
-	}
-	if (c & 0x8)
+	port = SIOA_C + 2 * (minor - 2);
+	out(port, 0);
+	c = in(port);
+	if (c & 0x08)
 		return 1;
 	return 0;
 }
 
-void tty_pollirq_sio(void)
+void tty_pollirq_sio0(void)
 {
 	static uint8_t old_ca, old_cb;
 	uint8_t ca, cb;
@@ -168,42 +176,100 @@ void tty_pollirq_sio(void)
 		SIOA_C = 0;		// read register 0
 		ca = SIOA_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[1])) {
+		if ((ca & 1) && !fullq(&ttyinq[2])) {
 			progress = 1;
-			tty_inproc(1, SIOA_D);
+			tty_inproc(2, SIOA_D);
 		}
 		/* Break */
 		if (ca & 2)
 			SIOA_C = 2 << 5;
 		/* Output pending */
-		if ((ca & 4) && (sleeping & 2)) {
-			tty_outproc(1);
-			sleeping &= ~2;
+		if ((ca & 4) && (sleeping & 4)) {
+			tty_outproc(2);
+			sleeping &= ~4;
 			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		/* Carrier changed */
 		if ((ca ^ old_ca) & 8) {
 			if (ca & 8)
-				tty_carrier_raise(1);
+				tty_carrier_raise(2);
 			else
-				tty_carrier_drop(1);
+				tty_carrier_drop(2);
 		}
 		SIOB_C = 0;		// read register 0
 		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[2])) {
-			tty_inproc(2, SIOB_D);
+		if ((cb & 1) && !fullq(&ttyinq[3])) {
+			tty_inproc(3, SIOB_D);
 			progress = 1;
 		}
-		if ((cb & 4) && (sleeping & 4)) {
-			tty_outproc(2);
-			sleeping &= ~4;
+		if ((cb & 4) && (sleeping & 16)) {
+			tty_outproc(3);
+			sleeping &= ~16;
 			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		if ((cb ^ old_cb) & 8) {
 			if (cb & 8)
-				tty_carrier_raise(2);
+				tty_carrier_raise(3);
 			else
-				tty_carrier_drop(2);
+				tty_carrier_drop(3);
+		}
+	} while(progress);
+}
+
+void tty_pollirq_sio1(void)
+{
+	static uint8_t old_ca, old_cb;
+	uint8_t ca, cb;
+	uint8_t progress;
+
+	/* Check for an interrupt */
+	SIOC_C = 0;
+	if (!(SIOC_C & 2))
+		return;
+
+	/* FIXME: need to process error/event interrupts as we can get
+	   spurious characters or lines on an unused SIO floating */
+	do {
+		progress = 0;
+		SIOC_C = 0;		// read register 0
+		ca = SIOC_C;
+		/* Input pending */
+		if ((ca & 1) && !fullq(&ttyinq[4])) {
+			progress = 1;
+			tty_inproc(4, SIOC_D);
+		}
+		/* Break */
+		if (ca & 2)
+			SIOC_C = 2 << 5;
+		/* Output pending */
+		if ((ca & 4) && (sleeping & 16)) {
+			tty_outproc(4);
+			sleeping &= ~16;
+			SIOC_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+		}
+		/* Carrier changed */
+		if ((ca ^ old_ca) & 8) {
+			if (ca & 8)
+				tty_carrier_raise(4);
+			else
+				tty_carrier_drop(4);
+		}
+		SIOD_C = 0;		// read register 0
+		cb = SIOD_C;
+		if ((cb & 1) && !fullq(&ttyinq[2])) {
+			tty_inproc(5, SIOD_D);
+			progress = 1;
+		}
+		if ((cb & 4) && (sleeping & 32)) {
+			tty_outproc(5);
+			sleeping &= ~32;
+			SIOD_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+		}
+		if ((cb ^ old_cb) & 8) {
+			if (cb & 8)
+				tty_carrier_raise(5);
+			else
+				tty_carrier_drop(5);
 		}
 	} while(progress);
 }
@@ -224,10 +290,8 @@ void tty_putc(uint8_t minor, unsigned char c)
 		cpld_bitbang(c);
 		irqrestore(irq);
 	}
-	if (minor == 2)
-		SIOA_D = c;
-	else if (minor == 2)
-		SIOB_D = c;
+	else
+		out(SIOA_D + 2 * (minor - 2), c);
 }
 
 /* We will need this for SIO once we implement flow control signals */
@@ -248,28 +312,19 @@ ttyready_t tty_writeready(uint8_t minor)
 {
 	irqflags_t irq;
 	uint8_t c;
-
+	uint8_t port;
 	/* Bitbanged so trick the kernel into yielding when appropriate */
 	if (minor == 1)
 		return need_reschedule() ? TTY_READY_SOON: TTY_READY_NOW;
 	irq = di();
-	if (minor == 2) {
-		SIOA_C = 0;	/* read register 0 */
-		c = SIOA_C;
-		irqrestore(irq);
-		if (c & 0x04)	/* THRE? */
-			return TTY_READY_NOW;
-		return TTY_READY_SOON;
-	} else if (minor == 3) {
-		SIOB_C = 0;	/* read register 0 */
-		c = SIOB_C;
-		irqrestore(irq);
-		if (c & 0x04)	/* THRE? */
-			return TTY_READY_NOW;
-		return TTY_READY_SOON;
-	}
+
+	port = SIOA_C + 2 * (minor - 2);
+	out(port, 0);
+	c = in(port);
 	irqrestore(irq);
-	return TTY_READY_NOW;
+	if (c & 0x04)	/* THRE? */
+		return TTY_READY_NOW;
+	return TTY_READY_SOON;
 }
 
 void tty_data_consumed(uint8_t minor)
@@ -288,7 +343,11 @@ void kputchar(char c)
 
 int rctty_open(uint8_t minor, uint16_t flag)
 {
-	if (minor > 1 && !sio_present) {
+	if ((minor == 2 || minor == 3) && !sio_present) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	if ((minor == 4 || minor == 5) && !sio1_present) {
 		udata.u_error = ENODEV;
 		return -1;
 	}

@@ -35,6 +35,8 @@
 	.globl nmi_handler
 	.globl _suspend
 	.globl _ctc_present
+	.globl _sio_present
+	.globl _sio1_present
 	.globl _tty_resume
 	.globl _ide_resume
 
@@ -56,10 +58,16 @@ RTS_LOW		.EQU	0xEA
 
 ; Base address of SIO/2 chip 0x80
 ; For the Scott Baker SIO card adjust the order to match rc2014.h
+
 SIOA_C		.EQU	0x80
-SIOA_D		.EQU	SIOA_D+1
-SIOB_C		.EQU	SIOA_D+2
-SIOB_D		.EQU	SIOA_D+3
+SIOA_D		.EQU	SIOA_C+1
+SIOB_C		.EQU	SIOA_C+2
+SIOB_D		.EQU	SIOA_C+3
+
+SIOC_C		.EQU	0x84
+SIOC_D		.EQU	SIOC_C+1
+SIOD_C		.EQU	SIOC_C+2
+SIOD_D		.EQU	SIOC_C+3
 
 ;=========================================================================
 ; Buffers
@@ -86,14 +94,79 @@ init_hardware:
 
 	call program_kvectors
 
+	; Look for an SIO using the ROMWBW algorithm
+
+	xor a
+	ld c,#SIOA_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, no_sio0
+
+	; Repeat the check on SIO B
+
+	xor a
+	ld c,#SIOB_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, no_sio0
+
+	ld a,#0x01
+	ld (_sio_present),a
+
+no_sio0:
+
+	xor a
+	ld c,#SIOC_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, no_sio1
+
+	; Repeat the check on SIO B
+
+	xor a
+	ld c,#SIOD_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, no_sio1
+
+	ld a,#0x01
+	ld (_sio1_present),a
+
+no_sio1:
+
 resume_hardware:
-	; FIXME: autodetect SIO and check for second SIO
 
 	ld hl,#sio_setup
 	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
 	otir
 	ld hl,#sio_setup
 	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOC_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOD_C		; and to SIOB_C
 	otir
 
 serial_up:
