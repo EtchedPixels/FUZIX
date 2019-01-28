@@ -661,6 +661,7 @@ syscall_sigret:
 	    push hl		; signal
 	    ld hl,#syscall_sighelp
 	    push hl		; vector
+	    push bc
 	    ret
 syscall_sighelp:
 	    pop de		; discard signal
