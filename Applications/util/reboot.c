@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
   }
   if (strcmp(p, "halt") == 0)
     uadmin(A_SHUTDOWN, pv, 0);
+  else if (strcmp(p, "suspend") == 0)
+    uadmin(A_SUSPEND, pv, 0);
   else
     uadmin(A_REBOOT, pv, 0);
   /* If we get here there was an error! */
