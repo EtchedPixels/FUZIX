@@ -3,7 +3,6 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <devtty.h>
-#include <device.h>
 #include <tty.h>
 
 static unsigned char tbuf1[TTYSIZ];

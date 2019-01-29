@@ -36,7 +36,5 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-  int i;
-
   devide_init();
 }
