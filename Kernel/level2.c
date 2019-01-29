@@ -130,7 +130,6 @@ int tcsetpgrp(struct tty *t, char *data)	/* data is user pointer */
 	uint16_t grp = ugeti(data);
 	uint16_t ses = udata.u_ptab->p_session;
         ptptr p;
-	uint8_t found = 0;
 
 	/* Controlling tty check is done by caller */
 
