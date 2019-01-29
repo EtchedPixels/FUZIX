@@ -142,10 +142,10 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				c = _ugetc(udata.u_base);
 
 			if (t->termios.c_oflag & OPOST) {
-				if (c == '\n' && (t->termios.c_oflag & ONLCR))
+				if (c == '\n' && (t->termios.c_oflag & ONLCR)) {
 					if (tty_putc_maywait(minor, '\r', flag))
 						break;
-				else if (c == '\r' && (t->termios.c_oflag & OCRNL))
+				} else if (c == '\r' && (t->termios.c_oflag & OCRNL))
 					c = '\n';
 			}
 			if (tty_putc_maywait(minor, c, flag))
