@@ -3,7 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <buddy.h>
 
 void platform_idle(void)
 {

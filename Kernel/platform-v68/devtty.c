@@ -3,7 +3,6 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <devtty.h>
-#include <device.h>
 #include <tty.h>
 
 volatile uint8_t *uart_data = (volatile uint8_t *)0xF03000;	/* UART data */
