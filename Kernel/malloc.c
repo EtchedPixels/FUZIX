@@ -111,10 +111,11 @@ static void split_block(struct block *b, size_t size)
 /*
  * Allocate a block.
  */
-void *kmalloc(size_t size)
+void *kmalloc(size_t size, uint8_t owner)
 {
 	struct block *b;
 
+	used(owner);	/* For now */
 	size = ALIGNUP(size) + sizeof(struct block);
 	b = find_smallest(size);
 	if (!b)
@@ -186,6 +187,12 @@ void kfree(void *p)
 	b->length &= 0x7fffffff;
 	mfree += b->length;
 	merge_all_blocks();
+}
+
+void kfree_s(void *p, size_t unused)
+{
+	/* FIXME: we could do length checks ? */
+	kfree(p);
 }
 
 unsigned long kmemavail(void)

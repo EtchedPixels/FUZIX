@@ -70,7 +70,7 @@ uint8_t platform_udata_set(ptptr p)
 {
 	u_block **up = &udata_block[p - ptab];
 	if (*up == NULL) {
-		*up = kmalloc(sizeof(struct u_block));
+		*up = kmalloc(sizeof(struct u_block), 0);
 		if (*up == NULL)
 			return ENOMEM;
 	}
