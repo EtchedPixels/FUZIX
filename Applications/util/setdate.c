@@ -231,7 +231,7 @@ retime:
     if (fgets(newval, 128, stdin) && *newval != '\n') {
         s = 0;
         if (sscanf(newval, "%d:%d:%d", &h,&m,&s) < 2 ||
-            h < 1 || h > 24 || m < 1 || m > 59 || s < 0 || s > 59) {
+            h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
             fprintf(stderr, "Invalid time.\n");
             goto retime;
         }
