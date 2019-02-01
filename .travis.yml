@@ -9,7 +9,8 @@ matrix:
         - env: TARGET=trs80
         - env: TARGET=v65c816
         - env: TARGET=v68
-        - env: TARGET=z80pack
+        - env: TARGET=tiny68k
+        - env: TARGET=n8vem-mark4
 
 before_install:
     - sudo add-apt-repository -y ppa:p-pisati/fuzix
