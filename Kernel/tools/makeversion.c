@@ -44,7 +44,7 @@ void write_header(FILE *out, char *v, char *sv, char *p)
  */\n\
 struct sysinfoblk {\n\
   uint8_t infosize;		/* For expandability */\n\
-  uint8_t banks;		/* Banks in our 64K (and thus pagesize) */\n\
+  uint8_t banks;		/* Banks in 64K (and thus pagesize) */\n\
   uint8_t max_open;\n\
   uint8_t nproc;		/* Number of processes */\n\
   uint16_t ticks;		/* Tick rate in HZ */\n\
