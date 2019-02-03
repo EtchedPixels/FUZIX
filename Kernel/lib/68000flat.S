@@ -13,9 +13,6 @@ platform_switchout:
         or #$0700,sr
         ; save machine state
 
-        clr.w -(sp) ; return code set here is ignored, but switchin can
-        ; return from either switchout OR dofork, so they must both write
-        ; U_DATA__U_SP with the following on the stack:
 	move.l usp,a0
 	movem.l a0/a2-a4/a6/d2-d7,-(sp)
 	move.l sp,U_DATA__U_SP(a5)	; this is where the SP is restored in switchin
@@ -58,9 +55,7 @@ switchin:
 	; recover the task switch state
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
 	move.l a0,USP
-	; and return code - FIXME: we have a different fork path so the d0
-	; stacking can go
-	move.w (sp)+,d0
+	clr.w d0
 
         tst.b U_DATA__U_ININTERRUPT(a5)
         bne keepoff ; in ISR, leave interrupts off
@@ -150,7 +145,6 @@ loop:
 	;
 	; And a frame as if we did a switchout
 	;
-	move.w #0,-(a1)
 	movem.l a0/a2-a4/a6/d2-d7,-(a1)
 	move.l a1,U_DATA__U_SP(a2)	; Set the stack pointer
 
@@ -167,19 +161,20 @@ forked_up:
 ;
 forkreturn:
 	; Wipe any stray kernel data
+	moveq #0,d0
 	moveq #0,d1
-	move.l d1,a0
-	move.l d1,a1
-	move.l d1,a2
-	move.l d1,a3
-	move.l d1,a4
-	move.l d1,a6
-	move.l d1,d2
-	move.l d1,d3
-	move.l d1,d4
-	move.l d1,d5
-	move.l d1,d6
-	move.l d1,d7
+	moveq #0,d2
+	moveq #0,d3
+	moveq #0,d4
+	moveq #0,d5
+	moveq #0,d6
+	moveq #0,d7
+	move.l d0,a0
+	move.l d0,a1
+	move.l d0,a2
+	move.l d0,a3
+	move.l d0,a4
+	move.l d0,a6
 	; recover A5 to match the parent
 	move.l (sp)+,a5
 	; and RTE to the same address (which is fine as the user memory
