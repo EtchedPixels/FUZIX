@@ -385,6 +385,7 @@ SYM (__umodsi3):
 		.globl trap0,trap1,trap2,trap3,trap4,trap5,trap6,trap7
 		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap14,trap15
 		.globl spurious,unexpected,uninit
+		.globl cpu_type,probe_memory,cpu_has_trapvec
 		.globl udata_shadow
 		.globl trap_via_signal
 		.globl dump_registers
@@ -448,13 +449,16 @@ vdso:	trap #12		; syscall entry
 ;	switch modes as we switch address so that we don't fault if there
 ;	is memory protection.
 ;
-;	TODO: 68010 support needs adjusting here
-;
 doexec:
 		move.l 4(sp),a1			; go address
 		lea.l 1024(a5),a7		; reset the supervisor stack
 
 		and.w #$F8FF,sr			; IRQ on
+
+		tst.b cpu_has_trapvec
+		beq threeword
+		clr.w -(sp)			; push vector
+threeword:
 		move.l a1,-(sp)			; return address
 		clr.w -(sp)			; set up the status register
 		move.l U_DATA__U_ISP(a5),a0
@@ -519,6 +523,57 @@ init_trap_loop:
 		move.l #spurious,$60(a0)
 		rts
 
+;
+;	Interrupts assumed to be off for these trap tricks
+;
+
+;
+;	Override the bus error trap and check if a memory address faults
+;	(Returns 1 if it errors)
+;
+probe_memory:
+		move.l 4(sp),a0
+		move.l #probe_error,8
+		move.l a7,a1
+		moveq #0,d0
+		move.w (a0),d1
+probe_out:	move.l #bus_error,8
+		rts
+probe_error:
+		moveq #1,d0
+		move.l a1,a7
+		bra probe_out
+;
+;	Check the cpu type and return 0,10,etc.
+;
+;	FIXME: doesn't tell 68020 from 68030
+;	One way we could do that would be to issue a CALLM with a bogus
+;	module descriptor and see if we get illegal (68030) or a format
+;	exception. We can fix that when we actually need to support anything
+;	bigger than a 68010 !
+;
+cpu_type:
+		move.l #cpu_ill_error,16
+		move.l a7,a1
+		moveq #0,d0
+		movec vbr,d1		; faults on a 68000
+		moveq #10,d0
+		movec cacr,d1		; faults on a 68000 and 010
+		moveq #20,d0
+		movec itt0,d1		; faults on 68020/30
+		moveq #40,d0
+		movec pcr,d1		; faults on all but 68060
+		moveq #60,d0
+cpu_type_exit:
+		move.l #illegal,16
+		move.b d0,cpu_has_trapvec
+		rts
+;
+;	We found the faulting instruction for this CPU type so bail
+;
+cpu_ill_error:
+		move.l a1,a7
+		bra cpu_type_exit
 
 bus_error:	move.w sr,-(sp)
 		move.w #2,-(sp)
@@ -691,6 +746,9 @@ spurious:	movem.l a0-a6/d0-d7,-(sp)
 unexpected:	movem.l a0-a6/d0-d7,-(sp)
 		move.l #strunexpected,a0
 		bsr outstring
+		move.w 6(sp),d0
+		move.w d0,a0
+		bsr outa0hex
 unexpectedl:	bra unexpectedl
 
 uninit:		movem.l a0-a6/d0-d7,-(sp)
@@ -910,3 +968,5 @@ dump_registers:
 kernel_flag:	byte 0
 udata_shadow:	long 0
 trap_id:	word 0
+cpu_has_trapvec:
+		byte 0

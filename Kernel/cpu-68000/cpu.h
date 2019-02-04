@@ -86,3 +86,6 @@ register struct u_data *udata_ptr asm ("a5");
 extern void copy_blocks(void *, void *, unsigned int);
 
 extern void *memcpy32(void *to, const void *from, size_t bytes);
+
+extern int probe_memory(void *p);
+extern int cpu_type(void);

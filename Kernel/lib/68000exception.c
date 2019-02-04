@@ -25,6 +25,8 @@ struct trapdata {
 
 #define FRAME_A		1
 #define FRAME_B		2
+#define FRAME_C		3
+#define FRAME_D		4
 
 static void explode(struct trapdata *framedata, int type)
 {
@@ -68,7 +70,14 @@ static void explode(struct trapdata *framedata, int type)
 	for (j = 0;j < 16; j++)
 		kprintf("%d: %x\n", j, excp[j]);
 
-	/* For now we only do 68000 */
+	/* 68010 long frame */
+	if (type == FRAME_C) {
+		kputs((excp[4] & 0x100)?"R":"W");
+		kprintf(" FC %x", excp[4] & 7);
+		fv = (uint32_t *)(excp +5);
+		kprintf(" Addr %p SSW %x ", *fv, excp[4]);
+	}
+	/* 68000 long frame */
 	if (type == FRAME_A) {
 		kputs((excp[0] & 0x10)?"R":"W");
 		kprintf(" FC %x", excp[0] & 7);
@@ -76,10 +85,9 @@ static void explode(struct trapdata *framedata, int type)
 		kprintf(" Addr %p IR %x ", *fv, excp[3]);
 		excp += 4;
 	}
-	if (type == FRAME_A || type == FRAME_B) {
-		fv = (uint32_t *)(excp + 1);
-		kprintf("PC %p SR %x\n", *fv, *excp);
-	}
+	/* All frames */
+	fv = (uint32_t *)(excp + 1);
+	kprintf("PC %p SR %x\n", *fv, *excp);
 }
 
 /* Our caller did a movem of the registers to kstack then pushed an
@@ -127,22 +135,31 @@ int exception(struct trapdata *framedata)
 
 	proc = udata.u_ptab;
 
-	/* Most synchronous exceptions are type B */
-	/* FIXME: sizes need to become chip aware */
-	frame = FRAME_B;
-	fsize = 3;		/* Three words on 68000 */
-	/* TODO: On the 68010 there are at least 4 words as word 4 always holds
-	   the vector and format */
+	if (sysinfo.cpu[0] == 10) {
+		/* Long or short frame: the CPU tells us the frame format */
+		if (framedata->exception[3] & 0x8000) {
+			fsize = 29;
+			frame = FRAME_C;
+		} else  {
+			fsize = 4;
+			frame = FRAME_D;
+		}
+	} else {
+		frame = FRAME_B;
+		fsize = 3;
+	}
 	if (trap == 0) {
 		sig = udata.u_cursig;
 		udata.u_cursig = 0;
 	} else if (trap < 12) {
 		if (trap < 4) {
-			/* TODO: On a 68010 this frame is 29 words and the event is
+			/* On a 68010 this frame is 29 words and the event is
 			   restartable (although not always usefully). We need to
 			   decide whether to set the restart flag case by case */
-			frame = FRAME_A;
-			fsize = 7;
+			if (sysinfo.cpu[0] == 0) {
+				frame = FRAME_A;
+				fsize = 7;
+			}
 		}
 		sig = trap_to_sig[trap];
 	} else if (trap >= 32 && trap < 48)

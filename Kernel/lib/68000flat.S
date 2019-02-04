@@ -127,17 +127,36 @@ loop:
 	;
 	; Copy over the parent top of stack return info
 	;
-	; FIXME: This assumes 68000 trap format. For the 68010
-	; there will be 4 words not 3
+	;		68000		68010
+	;   1022	PC.L		VECTOR
+	;   1020	PC.H		PC.L
+	;   1018	STATUS		PC.H
+	;   1016	A5		STATUS
+	;   1014	A5		A5
+	;   1012			A5
 	;
-	move.l 1020(a5),-(a1)	; Copy the PC
-	move.w 1018(a5),-(a1)	; Copy the status word
-	move.l 1014(a5),-(a1)	; Copy the A5 save of the parent
+	tst.b cpu_has_trapvec
+	beq cpu_3word
+
+	move.w 1022(a5),-(a1)	; Copy the vector
+	move.l 1018(a5),-(a1)	; Copy the PC
+	move.w 1016(a5),-(a1)	; Copy the Status
+	move.l 1012(a5),-(a1)	; Copy the A5 save of the parent
 				; needed for PIC processes
+	bra pushret
+cpu_3word:
+	move.l 1020(a5),-(a1)	; Copy the PC
+	move.w 1018(a5),-(a1)	; Copy the Status
+	move.l 1014(a5),-(a1)	; Copy A5
+pushret:
 	;
 	; Stack a return address
 	;
 	move.l #forkreturn,-(a1)
+
+	move.l a1,-(sp)
+	jsr dumpshit
+	addq #4,sp
 	;
 	; USP has to be in a0
 	;
