@@ -42,7 +42,7 @@ int ls(char *path)
         return -1;
     }
 
-    if (opendir_r(&dp, path) < 0) {
+    if (opendir_r(&dp, path) == NULL) {
         printf ("ls: can't open %s\n", path);
         return -1;
     }
