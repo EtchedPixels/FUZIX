@@ -154,9 +154,6 @@ pushret:
 	;
 	move.l #forkreturn,-(a1)
 
-	move.l a1,-(sp)
-	jsr dumpshit
-	addq #4,sp
 	;
 	; USP has to be in a0
 	;
