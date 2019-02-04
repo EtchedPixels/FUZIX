@@ -34,10 +34,25 @@ init_early:
 ;	FIXME: could be in discard if we wanted
 ;
 init_hardware:
+	    lea $30000,a0		; will be wrapped on the rc2014
+	    lea $10000,a1		; well above the kernel
+	    move.w #$AA55,(a0)
+	    cmp.w #$AA55,(a1)
+	    bne tiny68k
+	    move.w #$55AA,(a0)
+	    cmp.w #$55AA,(a1)
+	    bne tiny68k
+	    move.w #2048,d0
+	    bra kernelmem
+tiny68k:
             ; set system RAM size(hardcode hacks for now)
 	    move.w #16352,d0
+kernelmem:
 	    move.w d0,ramsize
-	    sub.w  #64,d0		; Guess for kernel
+	    move.l #_end+512,d1
+	    lsr.l #8,d1
+	    lsr.l #2,d1
+	    sub.w  d1,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
 
 	    bsr install_vectors
