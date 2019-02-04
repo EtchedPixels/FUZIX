@@ -47,14 +47,14 @@ void pagemap_init(void)
 	/* TODO: create a discard area at the end of the image and start
 	   there */
 	extern uint8_t _end;
+	uint32_t e = (uint32_t)&_end;
+	/* Allocate the rest of memory to the userspace */
+	kmemaddblk((void *)e, 0xFF8000 - e);
 
 	sysinfo.cpu[0] = cpu_type();
 	kprintf("Motorola 680%s%d processor detected.\n",
 		sysinfo.cpu[0]?"":"0",sysinfo.cpu[0]);
-
-	uint32_t e = (uint32_t)&_end;
-	/* Allocate the rest of memory to the userspace */
-	kmemaddblk((void *)e, 0xFF8000 - e);
+	enable_icache();
 }
 
 /* Udata and kernel stacks */
