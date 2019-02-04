@@ -1,0 +1,27 @@
+TODO
+- Verify the Z80_IO_BASE setting is correct
+- Verify the memory bases are right and it boots
+- Worry about the fact the PPIDE port arrangement is different
+- Maybe - add SD support if the CSIO pins are exposed
+
+This is Fuzix for the YAZ180 based upon the Z180 code by Will Sowerbutts
+<will@sowerbutts.com>
+
+Supported hardware:
+ - PPIDE interface (TODO)
+ - SD interface
+ - RS232 serial port (ASCI channel 0, tty1)
+ - RS232 serial port (ASCI channel 1, tty2)
+
+The file "Kernel/platform-yaz180/fuzix.com" is a CP/M executable which
+will load and boot the Fuzix kernel from within CP/M.
+
+When booting the system from CP/M you can specify the root filesystem device on
+the command line after the command name or unit number.
+
+For example, with root filesystem on /dev/hdb1 (minor #17) at the CP/M command
+prompt:
+
+    A> FUZIX hdb1
+or  A> FUZIX 17
+

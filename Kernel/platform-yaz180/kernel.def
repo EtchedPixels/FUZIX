@@ -1,0 +1,21 @@
+; UZI mnemonics for memory addresses etc
+
+; Move down to 0xF600 to fit the monitor in
+U_DATA                      .equ 0xF800       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes.
+Z80_TYPE                    .equ 2
+
+OS_BANK                     .equ 0x00         ; value from include/kernel.h
+
+; N8VEM Mark IV mnemonics
+FIRST_RAM_BANK              .equ 0x10         ; 10000 (actually C000-FFFF is avaiable)
+Z180_IO_BASE                .equ 0x00
+
+; No standard clock speed for the Mark IV board, but this is a common choice.
+USE_FANCY_MONITOR           .equ 1            ; disabling this saves around approx 0.5KB
+CPU_CLOCK_KHZ               .equ 36864        ; 18.432MHz * 2
+Z180_TIMER_SCALE            .equ 20           ; CPU clocks per timer tick
+TICKSPERSEC                 .equ 40           ; timer interrupt rate (Hz)
+
+PROGBASE		    .equ 0x0000
+PROGLOAD		    .equ 0x0100
