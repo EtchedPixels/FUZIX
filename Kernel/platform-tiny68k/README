@@ -23,7 +23,6 @@ vi is not getting built linked as such
 
 vile exits without a message
 
-pagesize is not meaningful
 
 68010 support - frame sizes needed but also the code to deal with move
 to/from sr from user
@@ -60,8 +59,6 @@ To Do
 Propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
 generically jp 0 and 0 corruptor ?
 
-Clean up switchout/switchin/dofork/forkreturn. We only ever return from a
-fork() as the parent so the d0.w push/pop can go everywhere
 
 68K has space to add ptrace?
 
@@ -113,4 +110,6 @@ DONE Do we need the extra irqstack any more ?
 DONE Move lots of p68000.S code into lowlevel-68000.S
 DONE Need some kind of CPU specific C file (or a general one with ifdefs ?) and
      then move lots of platform/main.c into it.
-
+DONE Clean up switchout/switchin/dofork/forkreturn. We only ever return from a
+     fork() as the parent so the d0.w push/pop can go everywhere
+DONE pagesize is not meaningful
