@@ -91,8 +91,7 @@ static void *kdup(void *p, void *e, uint8_t owner)
 {
 	void *n = kmalloc(e - p, owner);
 	if (n) {
-//              copy_blocks(n, p, (e - p) >> 9);
-		memcpy32(n, p, (e - p));
+                copy_blocks(n, p, (e - p) >> 9);
 	}
 	return n;
 }
@@ -120,22 +119,6 @@ static struct mem *mem_clone(struct mem *m, uint8_t owner)
 	return n;
 }
 
-static void mem_exchange(uint8_t * a8, uint8_t * b8, uint32_t count)
-{
-	uint32_t *a = (uint32_t *) a8;
-	uint32_t *b = (uint32_t *) b8;
-#ifdef DEBUG
-	kprintf("Exchanging %p and %p for %d.\n", a, b, count);
-#endif
-	/* Really dumb to get going */
-	count >>= 2;
-	while (count--) {
-		uint32_t x = *a;
-		*a++ = *b;
-		*b++ = x;
-	}
-}
-
 /* May need to switch owners on objects when we do swap etc */
 static void mem_switch(struct mem *a, struct mem *b)
 {
@@ -145,8 +128,8 @@ static void mem_switch(struct mem *a, struct mem *b)
 
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		if (t1->start)
-			mem_exchange(t1->start, t2->start,
-				     t1->end - t1->start);
+			swap_blocks(t1->start, t2->start,
+				    (t1->end - t1->start) >> 9);
 		t1++;
 		t2++;
 	}
@@ -160,8 +143,8 @@ static void mem_copy(struct mem *to, struct mem *from)
 
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		if (t1->start)
-			memcpy32(t2->start, t1->start,
-				 t1->end - t1->start);
+			copy_blocks(t2->start, t1->start,
+				(t1->end - t1->start) >> 9);
 		t1++;
 		t2++;
 	}
