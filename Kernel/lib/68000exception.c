@@ -205,14 +205,20 @@ int exception(struct trapdata *framedata)
 		move.w (sp)+,ccr
 		rts */
 
-	/* Push the recovery PC */
 
 	/* Now update the user stack */
-	err |= pushw(&usp, sp[31 + fsize]);
-	err |= pushw(&usp, sp[30 + fsize]);
-
-	/* Patch the kernel exception frame */
-	*(uint32_t *)(&sp[30 + fsize]) = (uint32_t)udata.u_sigvec[sig];
+	/* - Push the recovery PC */
+	/* - Patch the kernel exception frame */
+	if (sysinfo.cpu[0]) {
+		/* FIXME */
+		err |= pushw(&usp, sp[34]);
+		err |= pushw(&usp, sp[33]);
+		*(uint32_t *)(&sp[33]) = (uint32_t)udata.u_sigvec[sig];
+	} else {
+		err |= pushw(&usp, sp[31 + fsize]);
+		err |= pushw(&usp, sp[30 + fsize]);
+		*(uint32_t *)(&sp[30 + fsize]) = (uint32_t)udata.u_sigvec[sig];
+	}
 
 	/* FIXME: when we do ptrace we will need to support adding the T
 	   flag back here as the exception cleared it */
