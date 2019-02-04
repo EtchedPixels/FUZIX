@@ -44,9 +44,15 @@ void memzero(void *p, usize_t len)
 void pagemap_init(void)
 {
 	/* Linker provided end of kernel */
+	/* TODO: create a discard area at the end of the image and start
+	   there */
 	extern uint8_t _end;
+
+	sysinfo.cpu[0] = cpu_type();
+	kprintf("Motorola 680%s%d processor detected.\n",
+		sysinfo.cpu[0]?"":"0",sysinfo.cpu[0]);
+
 	uint32_t e = (uint32_t)&_end;
-	kprintf("Kernel end %p\n", e);
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk((void *)e, 0xFF8000 - e);
 }
