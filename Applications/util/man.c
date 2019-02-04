@@ -1085,7 +1085,7 @@ int main(int argc, char **argv)
 	}
 
 	if (find_page(manname, mansect) < 0) {
-		if (mansect > 0)
+		if (mansect != NULL)
 			fprintf(stderr,
 				"No entry for %s in section %s of the manual.\n",
 				manname, mansect);
