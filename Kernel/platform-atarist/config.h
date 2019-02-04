@@ -11,7 +11,7 @@
 /* 32bit with flat memory */
 #define CONFIG_FLAT
 #define CONFIG_32BIT
-#define CONFIG_BANKS	1		/* FIXME */
+#define CONFIG_BANKS	(65536/512)
 #define CONFIG_USERMEM_DIRECT
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
