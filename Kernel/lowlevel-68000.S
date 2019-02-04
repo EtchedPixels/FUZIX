@@ -378,6 +378,8 @@ SYM (__umodsi3):
 
 		.globl __hard_di,__hard_ei,__hard_irqrestore
 		.globl doexec
+		.globl flush_icache
+		.globl enable_icache
 		.globl get_usp, set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
 		.globl bus_error,addr_error,illegal,divzero,chk,trapv,priv
@@ -385,12 +387,13 @@ SYM (__umodsi3):
 		.globl trap0,trap1,trap2,trap3,trap4,trap5,trap6,trap7
 		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap14,trap15
 		.globl spurious,unexpected,uninit
-		.globl cpu_type,probe_memory,cpu_has_trapvec
+		.globl cpu_type,probe_memory,cpu_has_trapvec,cpu_has_icache
 		.globl udata_shadow
 		.globl trap_via_signal
 		.globl dump_registers
 		.globl kernel_flag
 		.globl copy_blocks
+		.globl swap_blocks
 		.globl install_vectors
 		.globl vdso
 
@@ -431,16 +434,32 @@ __hard_irqrestore:
 ;
 ;	'VDSO' (copied into the base of each executable)
 ;
-vdso:	trap #12		; syscall entry
-	rts
-	; signal unwind
-	move.l 8(sp),sp		; blow away stack frame
-	movem.l (sp)+,a0/a1/d0/d1
-	move.w (sp)+,ccr
-	rts
-	; rest is spare for now
+vdso:		trap #12		; syscall entry
+		rts
+		; signal unwind
+		move.l 8(sp),sp		; blow away stack frame
+		movem.l (sp)+,a0/a1/d0/d1
+		move.w (sp)+,ccr
+		rts
+		; rest is spare for now
 
 
+;
+;	Flush the 68020 icache. Right now we probably only need to do this
+;	on a doexec(). Actually there due to the size of the transfer it's
+;	correctness only !
+;
+;	FIXME: do we need a syscall to let apps do cache flushes ?
+;
+enable_icache:
+flush_icache:
+		tst.b cpu_has_icache
+		beq noflush
+		; Flush the icache
+		move.w #$9,d0
+		movec d0,cacr
+noflush:
+		rts
 
 ;
 ;	Put the supervisor stack back as if we had nothing on it (we just
@@ -452,6 +471,8 @@ vdso:	trap #12		; syscall entry
 doexec:
 		move.l 4(sp),a1			; go address
 		lea.l 1024(a5),a7		; reset the supervisor stack
+
+		bsr flush_icache
 
 		and.w #$F8FF,sr			; IRQ on
 
@@ -559,6 +580,7 @@ cpu_type:
 		movec vbr,d1		; faults on a 68000
 		moveq #10,d0
 		movec cacr,d1		; faults on a 68000 and 010
+		move.b #1,cpu_has_icache
 		moveq #20,d0
 		movec itt0,d1		; faults on 68020/30
 		moveq #40,d0
@@ -771,7 +793,7 @@ strunexpected:
  *	We use d0 = number of blocks
  *	       a0 = source
  *	       a1 = destination
- *	       d2-d7/a2-a6 	- copying registers (44 bytes a go)
+ *	       d1-d7/a2-a6 	- copying registers (48 bytes a go)
  *
  */
 
@@ -779,10 +801,10 @@ copy_blocks:
 		move.l 4(sp),a1
 		move.l 8(sp),a0
 		move.l 12(sp),d0
-
 /* asm entry point */
 copy_blocks_d0:
 		movem.l d2-d7/a2-a6,-(sp)
+		bra copy_blocks_loop
 copy_block512:
 		movem.l (a0)+,d1-d7/a2-a6
 		movem.l d1-d7/a2-a6,(a1)
@@ -795,7 +817,7 @@ copy_block512:
 		movem.l (a0)+,d1-d7/a2-a6
 		movem.l d1-d7/a2-a6,192(a1)
 		movem.l (a0)+,d1-d7/a2-a6
-		movem.l d1-d7/a2-a6,248(a1)
+		movem.l d1-d7/a2-a6,240(a1)
 		movem.l (a0)+,d1-d7/a2-a6
 		movem.l d1-d7/a2-a6,288(a1)
 		movem.l (a0)+,d1-d7/a2-a6
@@ -804,8 +826,10 @@ copy_block512:
 		movem.l d1-d7/a2-a6,384(a1)
 		movem.l (a0)+,d1-d7/a2-a6
 		movem.l d1-d7/a2-a6,432(a1)
-		movem.l (a0)+,d1-d4
-		movem.l d1-d4,480(a1)
+		movem.l (a0)+,d1-d7/a2
+		movem.l d1-d7/a2,480(a1)
+		add.w #512,a1
+copy_blocks_loop:
 		dbra d0,copy_block512
 		movem.l (sp)+,d2-d7/a2-a6
 		rts
@@ -816,21 +840,22 @@ clear_blocks:
 clear_blocks_d0:
 		movem.l d2-d7/a2-a6,-(sp)
 		moveq #0,d1
-		move.l d1,d2
-		move.l d1,d3
-		move.l d1,d4
-		move.l d1,d5
-		move.l d1,d6
-		move.l d1,d7
+		moveq #0,d2
+		moveq #0,d3
+		moveq #0,d4
+		moveq #0,d5
+		moveq #0,d6
+		moveq #0,d7
 		move.l d1,a1
 		move.l d1,a2
 		move.l d1,a3
 		move.l d1,a4
 		move.l d1,a5
 		move.l d1,a6
-clear512:
-		/* End of the 512 byte block */
+		bra clear_block_loop
+		/* End of the first 512 byte block */
 		lea 512(a0),a0
+clear512:
 		/* zero in 52 byte chunks */
 		movem.l d1-d7/a1-a6,-(a0)
 		movem.l d1-d7/a1-a6,-(a0)
@@ -843,10 +868,92 @@ clear512:
 		movem.l d1-d7/a1-a6,-(a0)
 		/* 9 * 52 + 44 */
 		movem.l d1-d7/a1-a4,-(a0)
-		/* Next block */
-		lea 512(a0),a0
+		/* Next block end (allowing for all the decrements)*/
+		lea 1024(a0),a0
+clear_block_loop:
 		dbra d0,clear512
 		movem.l (sp)+,d2-d7/a2-a6
+
+		rts
+
+swap_blocks:
+		move.l 4(sp),a0
+		move.l 8(sp),a1
+		move.l 12(sp),d0
+
+		; in 512's but we loop in 256's
+		add.w d0,d0
+
+		movem.l d2-d7/a2-a6,-(sp)
+		bra swap_blocks_loop
+swap256:
+		; We have 12 free registers so use them in blocks of 6
+		; and use post increment on read and negative offsets on
+		; write back in order to avoid extra maths ops
+
+		; Each sequence exchanges 24 bytes
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		/* 120 bytes done so far */
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		movem.l (a0)+,d1-d6
+		movem.l (a1)+,d7/a2-a6
+		movem.l d1-d6,-24(a1)
+		movem.l d7/a2-a6,-24(a0)
+
+		/* 240 bytes done, tidy up to 256 */
+
+		movem.l (a0)+,d2-d5
+		movem.l (a1)+,a2-a5
+		movem.l d2-d5,-16(a1)
+		movem.l a2-a5,-16(a0)
+
+swap_blocks_loop:
+		dbra d0,swap256
+		movem.l (sp)+,a2-a6/d2-d7
 		rts
 
 /*
@@ -969,4 +1076,6 @@ kernel_flag:	byte 0
 udata_shadow:	long 0
 trap_id:	word 0
 cpu_has_trapvec:
+		byte 0
+cpu_has_icache:
 		byte 0

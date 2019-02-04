@@ -81,9 +81,9 @@ register struct u_data *udata_ptr asm ("a5");
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
 
-/* Memory helpers */
-/* This one doesn't yet work! */
+/* Memory helpers: Max of 32767 blocks (16MB) as written */
 extern void copy_blocks(void *, void *, unsigned int);
+extern void swap_blocks(void *, void *, unsigned int);
 
 extern void *memcpy32(void *to, const void *from, size_t bytes);
 
