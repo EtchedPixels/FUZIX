@@ -6,7 +6,6 @@ AR = m6809-unknown-ar
 LINKER = lwlink
 CFLAGS = -I../../Library/include -I../../Library/include/6809
 CFLAGS += -O0 -msoft-reg-count=0 -mfar-stack-param -fomit-frame-pointer
-CFLAGS += -DNETD_BIG_ENDIAN
 LINKER_OPT = --format=raw -L../../Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc
@@ -15,6 +14,8 @@ ASM_OPT = -o
 CRT0 = ../../Library/libs/crt0_6809.o
 
 .SUFFIXES: .c .o
+
+CFLAGS += -DNETD_BIG_ENDIAN
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c ntpdate.c
