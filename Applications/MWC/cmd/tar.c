@@ -38,7 +38,7 @@ typedef struct dirhd_t {
 	off_t t_size;
 	time_t t_mtime;
 	char *t_name;
-	struct dirhd_t *t_cont[];
+	struct dirhd_t *t_cont[0];
 } dirhd_t;
 
 typedef union tarhd_t {
