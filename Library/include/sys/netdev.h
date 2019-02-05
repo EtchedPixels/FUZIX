@@ -153,6 +153,6 @@ struct ifreq {
 		uint16_t        ifr_ifindex;
 		uint16_t        ifr_metric;
 		uint16_t        ifr_mtu;
-	};
+	} ifr;
 };
 #endif
