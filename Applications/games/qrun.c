@@ -275,7 +275,7 @@ void errstr(const char *t1, const char *t2)
 	write(2, "\n", 1);
 }
 
-#define debugstr(x, ...)
+#define debugstr(x)
 
 void readbuf(char *p, int len)
 {
@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 		dbver = 10;	/* CPC engine is equivalent to  
 				 * the "later" Spectrum one. */
 
-		debugstr("CPC snapshot signature found.", NULL);
+		debugstr("CPC snapshot signature found.");
 	}
 	if (!memcmp(snapid, "VICE Snapshot File\032", 19)) {	/* VICE snapshot */
 		int n;
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 		dbver = 5;	/* C64 engine is between the two Spectrum 
 				 * ones. */
 
-		debugstr("C64 snapshot signature found.", NULL);
+		debugstr("C64 snapshot signature found.");
 	}
 	/* >> v0.7 */
 
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
 
 		for (n = 0x5C00; n < 0xFFF5; n++) {
 			if (check_signature(n)) {
-				debugstr("Quill signature found.", NULL);
+				debugstr("Quill signature found.");
 				found = 1;
 				zxptr = n + 13;
 				break;
