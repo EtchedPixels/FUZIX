@@ -26,7 +26,7 @@ SRC_C += free.c fsetpos.c fsync.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
 SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
-SRC_C += getw.c gmtime.c gmtime_r.c grent.c
+SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
 SRC_C += index.c initgroups.c isatty.c killpg.c
 SRC_C += libintl.c
@@ -123,7 +123,8 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	$(AR) rc syslib$(PLATFORM).lib $$(cat syslib.l)
+	../tools/ack8080-filter syslib$(PLATFORM).lib >/dev/null
+	$(AR) r syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
 fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
