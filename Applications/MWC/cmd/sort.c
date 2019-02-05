@@ -287,11 +287,11 @@ int maketemp(int n)
 		sprintf(template, "%s/sort%d%%c",
 			tempdir == NULL ? "/tmp" : tempdir, pid);
 	}
-	sprintf(tempname, template, n + ' a ');
+	sprintf(tempname, template, n + 'a');
 	if ((fp = fopen(tempname, "w")) == NULL) {
 		if (first && tempdir == NULL) {
 			sprintf(template, "/usr/tmp/sort%d%%c", pid);
-			sprintf(tempname, template, n + ' a ');
+			sprintf(tempname, template, n + 'a');
 			if ((fp = fopen(tempname, "w")) == NULL)
 				serr(temperr);
 		} else
