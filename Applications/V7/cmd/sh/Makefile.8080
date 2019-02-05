@@ -1,0 +1,45 @@
+PLATFORM = 8080
+CC = ack
+ASM = ack
+AR = aal
+LINKER = ack
+LIBPATH=../../../../Library/libs
+LIBC=$(LIBPATH)/libc8080.a -lem.a
+CFLAGS = -O2 -I../../../../Library/include -I../../../../Library/include/8080
+ASM_OPT = -c -o
+CRT0 = $(LIBPATH)/crt0_8080.o
+CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
+
+.SUFFIXES: .c .o
+
+
+SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
+        macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
+        string.c word.c xec.c glob.c
+
+INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
+
+OBJS = $(SRCS:.c=.o)
+FOBJS = $(patsubst %.c,fshbuild/%.o, $(SRCS))
+
+all: fsh sh
+
+$(OBJS): $(INCS)
+
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+$(FOBJS): fshbuild/%.o: %.c
+	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
+
+sh: $(OBJS)
+	$(LINKER) -o  $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
+
+fsh: $(FOBJS)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBPATH)/libreadline8080.a $(LIBC)
+
+clean:
+	rm -f $(OBJS) $(FOBJS) fsh sh $(SRCS:.c=) core *~
+
+rmbak:
+	rm -f *~ core

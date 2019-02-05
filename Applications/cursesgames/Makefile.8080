@@ -10,22 +10,23 @@ ASM_OPT = -c -o
 CRT0 = $(LIBPATH)/crt0_8080.o
 CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
 
+
 .SUFFIXES: .c .o
 
-APPS = flashrom
-
-SRCS  = flashrom.c
-
+SRCS  = invaders.c
 OBJS = $(SRCS:.c=.o)
+APPS = $(OBJS:.o=)
 
 all: $(APPS) size.report
 
-flashrom: flashrom.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $< $(LIBC)
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBPATH)/libcurses8080.a $(LIBPATH)/libtermcap8080.a $(LIBC)
 
 size.report: $(APPS)
-	ls -l $< > $@
+	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report
+	rm -f $(OBJS) $(APPS) *.o core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
+rmbak:
+	rm -f *~ core

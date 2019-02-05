@@ -10,10 +10,15 @@ ASM_OPT = -c -o
 CRT0 = $(LIBPATH)/crt0_8080.o
 CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
 
-.SUFFIXES: .c .o .y
+.SUFFIXES: .c .o
 
-SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c \
-	expr.c find.c m4.c make.c moo.c pr.c sort.c tar.c test.c ttt.c units.c
+
+
+SRCS  = ac.c col.c dc.c diff.c makekey.c ptx.c sum.c wall.c
+SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
+SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
+SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
+SRCS += pg.c ed.c sort.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -22,11 +27,7 @@ APPS = $(OBJS:.o=)
 all: $(APPS) size.report
 
 $(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^  $(LIBC)
-
-expr.c: expr.y
-
-find.c: find.y
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
 
 size.report: $(APPS)
 	ls -l $^ > $@
