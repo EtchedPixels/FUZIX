@@ -22,7 +22,7 @@ before_install:
         sudo apt-get install -y lwtools gcc6809
       fi
     - |
-      if [ "$TARGET" = "sbcv2" -o "$TARGET" = "trs80" -o "$TARGET" = "z80pack" ]; then
+      if [ "$TARGET" = "sbcv2" -o "$TARGET" = "trs80" -o "$TARGET" = "n8vem-mark4" ]; then
         sudo apt-get install -y sdcc
       fi
     - |
@@ -30,7 +30,7 @@ before_install:
         sudo apt-get install -y cc65
       fi
     - |
-      if [ "$TARGET" = "v68" -o "$TARGET" = "v68-banked" ]; then
+      if [ "$TARGET" = "v68" -o "$TARGET" = "tiny68k" ]; then
         sudo apt-get install -y m68k-uclinux-binutils m68k-uclinux-elf2flt m68k-uclinux-gcc
         sudo update-alternatives --install /usr/bin/elf2flt elf2flt /usr/bin/m68k-uclinux-elf2flt 100
       fi
