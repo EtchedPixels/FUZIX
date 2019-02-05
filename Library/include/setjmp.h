@@ -21,26 +21,32 @@
 
 	typedef uint16_t jmp_buf[11];
 	extern int setjmp(jmp_buf __env);
-	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
 #elif defined(__m6809__)
 
 	typedef uint16_t jmp_buf[4];
 	extern int setjmp(jmp_buf __env);
-	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
 #elif defined(__mc68000__)
 
 	typedef uint32_t jmp_buf[13];	/* A2-A7/D2-D7/return */
 	extern int setjmp(jmp_buf __env);
-	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
 #elif defined(__pdp11__)
 
 	typedef uint16_t jmp_buf[5];
 	extern int setjmp(jmp_buf __env);
-	__attribute__((__noreturn__)) void longjmp (jmp_buf env, int val);
-
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
+#elif defined(__i80)
+	/* __setjmp is magic in ACK. We may need to go with that but it might
+	   be easier to use our own implementation */
+	typedef uint16_t jmp_buf[5];
+	extern int __setjmp(jmp_buf __env);
+	extern void longjmp(jmp_buf __env, int __val);
+	#define setjmp __setjmp
 #else
 	#error jmp_buf definition not set for this architecture
 #endif
