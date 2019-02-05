@@ -1,0 +1,45 @@
+PLATFORM = 8080
+CC = ack
+ASM = ack
+AR = aal
+LINKER = ack
+LIBPATH=../../../../Library/libs
+LIBC=$(LIBPATH)/libc8080.a -lem.a
+CFLAGS = -I../../../../Library/include -I../../../../Library/include/8080
+ASM_OPT = -c -o
+CRT0 = $(LIBPATH)/crt0_8080.o
+CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
+
+# Until we add 8080 support
+CFLAGS += -DTARGET_Z80
+
+.SUFFIXES: .c .o
+
+
+
+SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
+
+INCS  = as.h obj.h
+
+OBJS = $(SRCS:.c=.o)
+
+all: as nm
+
+$(OBJS): $(INCS)
+
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+as: $(OBJS)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
+
+nm.c: obj.h
+
+nm: nm.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
+
+clean:
+	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.o
+
+rmbak:
+	rm -f *~ core

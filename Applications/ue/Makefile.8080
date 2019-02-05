@@ -1,0 +1,40 @@
+PLATFORM = 8080
+CC = ack
+ASM = ack
+AR = aal
+LINKER = ack
+LIBPATH=../../Library/libs
+LIBC=$(LIBPATH)/libc8080.a -lem.a
+CFLAGS = -I../../Library/include -I../../Library/include/8080
+ASM_OPT = -c -o
+CRT0 = $(LIBPATH)/crt0_8080.o
+CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
+
+
+.SUFFIXES: .c .o
+
+APPS = ue.fuzix ue.ansi ue
+
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+$(APPS): ue.h
+
+ue.fuzix: ue.o term-fuzix.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term-fuzix.o $(LIBC)
+
+ue.ansi: ue.o term-ansi.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) ue.o term-ansi.o $(LIBC)
+
+ue: ue.o term.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term.o $(LIBPATH)/libtermcap8080.a $(LIBC)
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
+
