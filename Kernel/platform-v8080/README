@@ -1,0 +1,38 @@
+Some initial development code for 8080 support
+
+This is not finished (the block copiers for forking, udata and usermem all
+need writing). In addition
+
+- The C compiler bombs on the adventure game builds
+- The preprocessor can't handle netd or fforth
+- We need signal handler code and kernel IRQ code to save memory temporaries
+  that make the code non-reentrant
+- The asm code for switching needs to save and restore BC
+- The adapted Z80 code in lowlevel and elsewhere assumes that HL is the return
+  but ack uses DE
+- The compiler is too verbose at the moment. In particular it needs
+	- helpers for stack relative fetch and put of 16bits
+	- sub hl,de
+	- the tail code
+	- function entry
+  and
+	- use the call to a jp (hl) trick for indirect calls
+	- not generate pointless entry/exit code when not needed
+	- generate optimized code for and/or where one byte of the 16bits is
+	  zero
+	- generate a helper for setting the frame pointer
+
+	More generally it sucks because
+	- it uses BC as a frame pointer instead of tracking HL and using BC
+	  as a register variable temporary
+	- it's obsessed with 8 to 16 bit conversion of anything it works on
+	  internally
+	- it doesn't know anything about passing the top of arguments in a
+	  register (trickier because you put a hole in the frame if you are
+	  not careful)
+
+SDCC can almost generate 8080 code so is another possibility if we can't hack
+up. However its codegen isn't that much better although it could also be coaxed
+(and probably more easily) into using helpers. At least it knows how to optimize
+8bit operations and also to use bc and top of stack as temporaries.
+
