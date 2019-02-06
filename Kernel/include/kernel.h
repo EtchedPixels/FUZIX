@@ -89,6 +89,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define CPUTYPE_65C816	8
 #define CPUTYPE_R2K	9
 #define CPUTYPE_Z280	10
+#define CPUTYPE_8080	11
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
@@ -1006,7 +1007,7 @@ extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
 extern void swapper2(ptptr p, uint16_t map);
-extern uint8_t get_common();
+extern uint8_t get_common(void);
 extern void swap_finish(uint8_t page, ptptr p);
 /* These two are provided by the bank code selected for the port */
 extern int swapout(ptptr p);
