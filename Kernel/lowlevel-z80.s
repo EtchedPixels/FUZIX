@@ -327,6 +327,7 @@ null_handler:
 	or a
 	jp nz, trap_illegal
 	ld a, (_inint)
+	or a
 	jp nz, trap_illegal
 	; user is merely not good
 	ld hl, #7
