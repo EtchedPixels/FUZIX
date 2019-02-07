@@ -1,0 +1,152 @@
+GCSR		.equ		0x00
+RTCCR		.equ		0x01
+RTC0R		.equ		0x02
+RTC1R		.equ		0x03
+RTC2R		.equ		0x04
+RTC3R		.equ		0x05
+RTC4R		.equ		0x06
+RTC5R		.equ		0x07
+WDTCR		.equ		0x08
+WDTTR		.equ		0x09
+GCM0R		.equ		0x0A
+GCM1R		.equ		0x0B
+GOCR		.equ		0x0E
+GCDR		.equ		0x0F
+MMIDR		.equ		0x10
+STACKSEG	.equ		0x11
+DATASEG		.equ		0x12
+SEGSIZE		.equ		0x13
+MB0CR		.equ		0x14
+MB1CR		.equ		0x15
+MB2CR		.equ		0x16
+MB3CR		.equ		0x17
+SPD0R		.equ		0x20
+SPD1R		.equ		0x21
+SPD2R		.equ		0x22
+SPSR		.equ		0x23
+SPCR		.equ		0x24
+GCPU		.equ		0x2E
+GREV		.equ		0x2F
+PADR		.equ		0x30
+PBDR		.equ		0x40
+PCDR		.equ		0x50
+PCFR		.equ		0x55
+PDDR		.equ		0x60
+PDCR		.equ		0x64
+PDFR		.equ		0x65
+PDDCR		.equ		0x66
+PDDDR		.equ		0x67
+PDB0R		.equ		0x68
+PDB1R		.equ		0x69
+PDB2R		.equ		0x6A
+PDB3R		.equ		0x6B
+PDB4R		.equ		0x6C
+PDB5R		.equ		0x6D
+PDB6R		.equ		0x6E
+PDB7R		.equ		0x6F
+PEDR		.equ		0x70
+PECR		.equ		0x74
+PEFR		.equ		0x75
+PEDDR		.equ		0x77
+PEB0R		.equ		0x78
+PEB1R		.equ		0x79
+PEB2R		.equ		0x7A
+PEB3R		.equ		0x7B
+PEB4R		.equ		0x7C
+PEB5R		.equ		0x7D
+PEB6R		.equ		0x7E
+PEB7R		.equ		0x7F
+IB0CR		.equ		0x80
+IB1CR		.equ		0x81
+IB2CR		.equ		0x82
+IB3CR		.equ		0x83
+IB4CR		.equ		0x84
+IB5CR		.equ		0x85
+IB6CR		.equ		0x86
+IB7CR		.equ		0x87
+I0CR		.equ		0x98
+I1CR		.equ		0x99
+TACSR		.equ		0xA0
+TACR		.equ		0xA2
+TAT1R		.equ		0xA3
+TAT4R		.equ		0xA9
+TAT5R		.equ		0xAB
+TAT6R		.equ		0xAD
+TAT7R		.equ		0xAF
+TBCSR		.equ		0xB0
+TBCR		.equ		0xB1
+TBM1R		.equ		0xB2
+TBL1R		.equ		0xB3
+TBM2R		.equ		0xB4
+TBL2R		.equ		0xB5
+TBCMR		.equ		0xBE
+TBCLR		.equ		0xBF
+SADR		.equ		0xC0
+SAAR		.equ		0xC1
+SALR		.equ		0xC2
+SASR		.equ		0xC3
+SACR		.equ		0xC4
+SBDR		.equ		0xD0
+SBAR		.equ		0xD1
+SBLR		.equ		0xD2
+SBSR		.equ		0xD3
+SBCR		.equ		0xD4
+SCDR		.equ		0xE0
+SCAR		.equ		0xE1
+SCLR		.equ		0xE2
+SCSR		.equ		0xE3
+SCCR		.equ		0xE4
+SDDR		.equ		0xF0
+SDAR		.equ		0xF1
+SDLR		.equ		0xF2
+SDSR		.equ		0xF3
+SDCR		.equ		0xF4
+
+GREV_R2000	.equ		0x00
+GREV_R2000A	.equ		0x01
+GREV_R2000B	.equ		0x02
+GREV_R2000C	.equ		0x03
+
+GCPU_R2000	.equ		0x01
+
+
+; Keep these in sync with struct u_data!!
+U_DATA__U_PTAB              .equ (U_DATA+0)   ; struct p_tab*
+U_DATA__U_PAGE              .equ (U_DATA+2)   ; uint16_t
+U_DATA__U_PAGE2             .equ (U_DATA+4)   ; uint16_t
+U_DATA__U_INSYS             .equ (U_DATA+6)   ; bool
+U_DATA__U_CALLNO            .equ (U_DATA+7)   ; uint8_t
+U_DATA__U_SYSCALL_SP        .equ (U_DATA+8)   ; void *
+U_DATA__U_RETVAL            .equ (U_DATA+10)   ; int16_t
+U_DATA__U_ERROR             .equ (U_DATA+12)  ; int16_t
+U_DATA__U_SP                .equ (U_DATA+14)  ; void *
+U_DATA__U_ININTERRUPT       .equ (U_DATA+16)  ; bool
+U_DATA__U_CURSIG            .equ (U_DATA+17)  ; int8_t
+U_DATA__U_ARGN              .equ (U_DATA+18)  ; uint16_t
+U_DATA__U_ARGN1             .equ (U_DATA+20)  ; uint16_t
+U_DATA__U_ARGN2             .equ (U_DATA+22)  ; uint16_t
+U_DATA__U_ARGN3             .equ (U_DATA+24)  ; uint16_t
+U_DATA__U_ISP               .equ (U_DATA+26)  ; void * (initial stack pointer when _exec()ing)
+U_DATA__U_TOP               .equ (U_DATA+28)  ; uint16_t
+U_DATA__U_BREAK             .equ (U_DATA+30)  ; uint16_t
+U_DATA__U_SIGVEC            .equ (U_DATA+32)  ; table of function pointers (void *)
+U_DATA__U_BASE              .equ (U_DATA+96)  ; uint8_t *
+U_DATA__U_COUNT             .equ (U_DATA+98) ; uint16_t
+U_DATA__U_OFFSET            .equ (U_DATA+100) ; uint32_t
+
+; Keep these in sync with struct p_tab!!
+P_TAB__P_STATUS_OFFSET      .equ 0
+P_TAB__P_TTY_OFFSET         .equ 1
+P_TAB__P_PID_OFFSET         .equ 2
+P_TAB__P_PAGE_OFFSET        .equ 14
+P_TAB__P_PAGE2_OFFSET       .equ 16
+
+P_RUNNING                   .equ 1            ; value from include/kernel.h
+P_READY                     .equ 2            ; value from include/kernel.h
+
+OS_BANK                     .equ 0            ; value from include/kernel.h
+
+EAGAIN                      .equ 11           ; value from include/kernel.h
+
+; Keep in sync with struct blkbuf
+BUFSIZE                     .equ 520
