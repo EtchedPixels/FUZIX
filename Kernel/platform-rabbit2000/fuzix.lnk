@@ -1,0 +1,40 @@
+-mwxuy
+-i fuzix.ihx
+-l r2k
+-b _CODE=0x0100
+-b _COMMONMEM=0xF000
+-b _DISCARD=0xD800
+platform-rabbit2000/crt0.rel
+platform-rabbit2000/commonmem.rel
+platform-rabbit2000/rabbit.rel
+platform-rabbit2000/main.rel
+start.rel
+version.rel
+lowlevel-r2k.rel
+usermem_std-r2k.rel
+platform-rabbit2000/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-rabbit2000/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+platform-rabbit2000/devtty.rel
+platform-rabbit2000/devsd.rel
+platform-rabbit2000/devsd_discard.rel
+platform-rabbit2000/mbr.rel
+platform-rabbit2000/blkdev.rel
+-e
