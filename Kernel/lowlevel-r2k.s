@@ -19,7 +19,7 @@
 		; platform provided functions
 		.globl map_kernel
 		.globl map_process_always
-	        .globl map_save
+	        .globl map_save_kernel
        		.globl map_restore
 		.globl outchar
 		.globl _inint
@@ -37,8 +37,6 @@
 		.globl ___hard_ei
 		.globl ___hard_di
 		.globl ___hard_irqrestore
-
-		.globl mmu_irq_ret
 
 	        ; imported symbols
 	        .globl _unix_syscall
@@ -356,13 +354,7 @@ interrupt_handler:
 
 		ld a, (0)
 
-		call map_save
-		;
-		;	FIXME: re-implement sanity checks and add a stack one
-		;
-
-		; We need the kernel mapped for the IRQ handling
-		call map_kernel
+		call map_save_kernel
 
 		cp a,#0xC3
 		jr z, no_null_ptr
@@ -639,3 +631,25 @@ _di:		push ip
 		ipset1		; check timer priority we are using and what
 				; we can fit into the low space
 		ret
+
+;
+; Read from I/O space. Allow for the R2K erratum
+;
+		.globl _in
+		.globl _out
+
+_in:
+		ioi
+		ld a,(hl)
+		nop
+		ret
+
+_out:
+		ld hl,8(sp)
+		ex de,hl
+		ld hl,4(sp)
+		ioi
+		ld (hl),e
+		nop
+		ret
+		ld hl,4(sp)
