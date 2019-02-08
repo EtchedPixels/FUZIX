@@ -158,7 +158,7 @@ void code_reloc(uint8_t sbank, uint16_t ptr, uint8_t dbank)
     case 0x21:	/* LD HL/IX/IY, */
     case 0xC3:	/* JP - needs stub */
       if (v)
-        printf("Converting JP at %04x to stub\n", ptr);
+        printf("Converting %02x at %04x to stub\n", buf[sbank][ptr-1], ptr);
       da = stubmap(buf[sbank][ptr] + (buf[sbank][ptr+1] << 8), sbank, dbank);
       buf[sbank][ptr] = da & 0xFF;
       buf[sbank][ptr+1] = da >> 8;
@@ -414,6 +414,6 @@ int main(int argc, char *argv[])
     }
   }
   printf("%d stub relocations using %d bytes, %d duplicates\n",
-    stubct, stubct * 4, stubdup);
+    stubct, stubct * 6, stubdup);
   exit(0);
 }
