@@ -35,10 +35,6 @@
 
 #ifdef CONFIG_BANK_FIXED
 
-#ifndef CONFIG_COMMON_COPY
-#define flush_cache(p)	do {} while(0)
-#endif
-
 /* Kernel is 0, apps 1,2,3 etc */
 static unsigned char pfree[MAX_MAPS];
 static unsigned char pfptr = 0;
