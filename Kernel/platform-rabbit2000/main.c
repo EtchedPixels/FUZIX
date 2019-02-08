@@ -6,6 +6,7 @@
 #include <rabbit.h>
 
 uaddr_t ramtop = PROGTOP;
+uint8_t ticker;
 
 void pagemap_init(void)
 {

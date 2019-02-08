@@ -6,10 +6,19 @@
 ;
 		.module iir
 
-		.area _IIR
+		.area _DISCARD
+
+		.globl _iir
 
 		.globl unix_syscall_entry
 		.globl ticktock
+		.globl sera_rx,serc_rx,serd_rx
+		.globl sera_tx,serc_tx,serd_tx
+
+		.include 'kernel.def'
+		.include '../kernel-rabbit.def'
+
+_iir:
 
 periodic:
 eir0:				; If we use both we'll need to do some
@@ -45,7 +54,7 @@ rst28:
 
 spare:
 	ret
-	.bindry 16
+	.bndry 16
 
 rst38:
 	ret
@@ -65,7 +74,8 @@ spare2:
 
 timera:
 	push af
-	ioi ld a,(TACSR)
+	ioi
+	ld a,(TACSR)
 	pop af
 	ipres
 	ret
@@ -74,7 +84,8 @@ timera:
 
 timerb:
 	push af
-	ioi ld a,(TBCSR)
+	ioi
+	ld a,(TBCSR)
 	pop af
 	ipres
 	ret
@@ -83,8 +94,9 @@ timerb:
 
 seriala:
 	push af
-	ioi ld a,(SASR)
-	or a
+	ioi
+	ld a,(SASR)
+	or a,a
 	jp m,sera_rx
 	jp sera_tx
 
@@ -101,8 +113,9 @@ serialb:
 
 serialc:
 	push af
-	ioi ld a,(SCSR)
-	or a
+	ioi
+	ld a,(SCSR)
+	or a,a
 	jp m,serc_rx
 	jp serc_tx
 
@@ -111,8 +124,9 @@ serialc:
 
 seriald:
 	push af
-	ioi ld a,(SDSR)
-	or a
+	ioi
+	ld a,(SDSR)
+	or a,a
 	jp m,serd_rx
 	jp serd_tx
 

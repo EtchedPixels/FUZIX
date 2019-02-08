@@ -117,3 +117,39 @@ extern void rabbit_bop_watchdog(uint8_t code) __z88dk_fastcall;
 #define GREV_R2000C			0x03
 
 #define GCPU_R2000			0x01
+
+/* This lives in the flash in a protected (mostly) space and is written
+   into the board at manufacture */
+
+struct SysIDBlock {
+    uint16_t tableVersion;		/* ?? */
+    uint16_t productID;			/* Part Number */
+    uint16_t vendorID;			/* 1 */
+    uint8_t timestamp[7];
+    uint32_t flashID;			/* Vendor/Product ID */
+    uint16_t flashType;			/* Write method */
+    uint16_t flashSize;			/* 4K pages */
+    uint16_t sectorSize;		/* bytes */
+    uint16_t numSectors;
+    uint16_t flashSpeed;		/* ns */
+    uint32_t flash2ID;
+    uint16_t flash2Type;
+    uint16_t flash2Size;
+    uint16_t sector2Size;
+    uint16_t num2Sectors;
+    uint16_t flash2Speed;
+    uint32_t ramID;
+    uint16_t ramSize;			/* 4K pages */
+    uint16_t ramSpeed;			/* ns */
+    uint16_t cpuID;
+    uint32_t crystalFreq;		/* HZ */
+    uint8_t macAddr[6];			/* If allocated */
+    uint8_t serialNumber[24];
+    char productName[30];		/* \0 terminated */
+    char reserved;
+    uint32_t idBlockSize;		/* Size of SysIDBlock */
+    uint16_t userBlockSize;
+    uint16_t userBlockLoc;		/* Offset from this one */
+    int idBlockCRC;			/* CRC with this field 0 */
+    char marker[6];			/* 55 AA 55 AA 55 AA */
+};

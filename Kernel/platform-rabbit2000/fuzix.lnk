@@ -6,13 +6,14 @@
 -b _DISCARD=0xD800
 platform-rabbit2000/crt0.rel
 platform-rabbit2000/commonmem.rel
+platform-rabbit2000/interrupt.rel
 platform-rabbit2000/rabbit.rel
 platform-rabbit2000/main.rel
+platform-rabbit2000/tricks.rel
 start.rel
 version.rel
 lowlevel-r2k.rel
 usermem_std-r2k.rel
-platform-rabbit2000/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
@@ -35,6 +36,7 @@ devsys.rel
 platform-rabbit2000/devtty.rel
 platform-rabbit2000/devsd.rel
 platform-rabbit2000/devsd_discard.rel
+platform-rabbit2000/spi.rel
 platform-rabbit2000/mbr.rel
 platform-rabbit2000/blkdev.rel
 -e

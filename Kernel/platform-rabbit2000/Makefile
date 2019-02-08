@@ -1,5 +1,5 @@
-ASRCS = crt0.s tricks.s commonmem.s rabbit.s
-CSRCS = devices.c main.c devtty.c
+ASRCS = crt0.s tricks.s commonmem.s rabbit.s interrupt.s
+CSRCS = devices.c main.c devtty.c spi.c
 DISCARD_CSRCS =
 DISCARD_DSRCS = ../dev/devsd_discard.c
 DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c

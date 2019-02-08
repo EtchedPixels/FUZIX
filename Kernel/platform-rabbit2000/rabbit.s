@@ -39,6 +39,7 @@ _int_disabled:
 
 		.globl _ramsize
 		.globl _procmem
+		.globl _iir
 
 init_early:
 		ret
@@ -51,6 +52,22 @@ init_hardware:
 		or a,a
 		sbc hl,de
 		ld (_procmem),hl
+
+		;
+		; Set up the interrupt table
+		;
+
+		ld hl,#_iir
+		ld de,#0
+		ld bc,#256
+doldir:
+		ldi
+		jp lo,doldir
+
+		xor a,a
+		ld iir,a
+		ld eir,a
+
 		ret
 
 		.area _COMMONMEM
@@ -69,6 +86,7 @@ _program_vectors:
 		.globl map_kernel_di
 		.globl map_save_kernel
 		.globl map_restore
+		.globl map_for_swap
 
 		.globl _kdataseg
 
@@ -87,6 +105,7 @@ map_process_di:
 		or a,l
 		jr z, map_kernel
 		ld a,(hl)
+map_for_swap:
 map_process_a:
 		ioi
 		ld (DATASEG),a
@@ -135,7 +154,6 @@ outwait:
 		ld (SADR),a
 		ret
 
-		.globl _spi_tx
 ;
 ;	Low level Rabbit 2000 primitives to use Port B for SPI.
 ;
@@ -156,14 +174,19 @@ outwait:
 		.globl _rabbit_spi_rx
 		.globl _rabbit_spi_slow
 		.globl _rabbit_spi_fast
+
+		.globl rabbit_spi_rxblock
+		.globl rabbit_spi_txblock
 ;
 _rabbit_spi_tx:
+		ld e,l
+rabbit_spi_tx:
 		; Finish any previous transaction activity
 		ioi
 		ld a,(SBSR)
 		bit 7,a
 		jr nz,_rabbit_spi_tx
-		ld a,l
+		ld a,e
 		ioi
 		ld (SBDR),a
 		ld a, #0x8C		; send, our clock (ie master)
@@ -196,6 +219,34 @@ rxwait:
 		ld l,a
 		ret
 
+		;
+		; SD card block transfer helpers
+		; HL = address, 512 bytes map is correct
+		;
+rabbit_spi_txblock:
+		ld b,#0
+txloop:
+		ld e,(hl)
+		inc hl
+		call rabbit_spi_tx
+		ld e,(hl)
+		inc hl
+		call rabbit_spi_tx
+		djnz txloop
+		ret
+
+rabbit_spi_rxblock:
+		ld b,#0
+		ex de,hl
+rxloop:
+		call _rabbit_spi_rx
+		ld (de),a
+		inc de
+		call _rabbit_spi_rx
+		ld (de),a
+		inc de
+		djnz rxloop
+		ret
 
 ;
 ;	Slow speed for probing
@@ -301,6 +352,9 @@ tickwrap:	ld (hl),#11	; slightly off for 200/second but the rtc
 
 		.globl _ser'X'_q
 		.globl _ser'X'_rxbuf
+
+		.globl ser'X'_rx
+		.globl ser'X'_tx
 
 ser'X'_rx:
 		push hl
