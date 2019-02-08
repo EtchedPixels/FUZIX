@@ -23,7 +23,7 @@ typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
 typedef uint16_t irqflags_t;
 
 extern void out(uint8_t addr, uint8_t val);
-extern uint8_t in(uint8_t addr);
+extern uint8_t in(uint8_t addr) __z88dk_fastcall;
 
 /* Rabbit binaries start with a JP FIXME: sort this in new binfmt */
 #define EMAGIC    0xc3    /* Header of executable */
