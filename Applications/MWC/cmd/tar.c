@@ -38,7 +38,12 @@ typedef struct dirhd_t {
 	off_t t_size;
 	time_t t_mtime;
 	char *t_name;
+#ifdef __i80
+	/* Work around ack limitation FIXME (in ack) */
+	struct dirhd_t *t_cont[0];
+#else
 	struct dirhd_t *t_cont[];
+#endif
 } dirhd_t;
 
 typedef union tarhd_t {
