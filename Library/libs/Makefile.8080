@@ -1,5 +1,5 @@
 CC = ack
-ASM = ack
+ASM = ack -mfuzix
 AR = aal
 PLATFORM = 8080
 export PLATFORM
@@ -12,7 +12,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM = setjmp_8080.s
+SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -183,7 +183,8 @@ $(OBJ_RL):%.o: %.c
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
 	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
-	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt
+	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt \
+	syslib$(PLATFORM).a
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)

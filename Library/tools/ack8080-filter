@@ -1,4 +1,5 @@
 #!/bin/sh
+ACK_ROOT=$(which ack | sed -e "s/\/bin\/ack//")
 cp $ACK_ROOT/share/ack/cpm/libc.a $1
 aal d $1 isalnum.o
 aal d $1 isalpha.o
