@@ -1,4 +1,7 @@
+#include "../kernel-8080.def"
+
 .sect .text
+.sect .rom
 .sect .data
 datastart:
 .sect .bss

@@ -40,22 +40,14 @@ int tty_carrier(uint8_t minor)
     return 1;
 }
 
-void tty_pollirq(void)
-{
-/*    while(ASCI_STAT0 & 0x80)
-        tty_inproc(1, ASCI_RDR0); */
-}
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
     switch(minor){
         case 1:
-/*            while(!(ASCI_STAT0 & 2));
-            ASCI_TDR0 = c; */
+            ttyout(c);
             break;
         case 2:
-/*            while(!(ASCI_STAT1 & 2));
-            ASCI_TDR1 = c; */
+            ttyout2(c);
             break;
     }
 }
@@ -71,8 +63,14 @@ void tty_data_consumed(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-    minor;
-    return TTY_READY_NOW;
+    uint8_t r;
+    if (minor == 1)
+        r = ttyready();
+    else
+        r = ttyready2();
+    if (r)
+        return TTY_READY_NOW;
+    return TTY_READY_SOON;
 }
 
 /* kernel writes to system console -- never sleep! */
