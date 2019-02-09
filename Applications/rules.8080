@@ -1,0 +1,14 @@
+PLATFORM = 8080
+CC = ack -mfuzix
+ASM = ack -mfuzix
+AR = aal
+LINKER = ack -mfuzix
+LIBPATH=$(FUZIX_ROOT)/Library/libs
+LIBC=$(LIBPATH)/libc8080.a -lem.a
+CFLAGS = -O2 -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8080
+ASM_OPT = -c -o
+CRT0 = $(LIBPATH)/crt0_8080.o
+CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
+
+.SUFFIXES: .c .o .y
+

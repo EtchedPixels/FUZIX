@@ -1,17 +1,4 @@
-PLATFORM = 8080
-CC = ack
-ASM = ack
-AR = aal
-LINKER = ack
-LIBPATH=../../Library/libs
-LIBC=$(LIBPATH)/libc8080.a -lem.a
-CFLAGS = -O2 -I../../Library/include -I../../Library/include/8080
-ASM_OPT = -c -o
-CRT0 = $(LIBPATH)/crt0_8080.o
-CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
-
-
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.8080
 
 APPS = ue.fuzix ue.ansi ue
 
