@@ -55,7 +55,7 @@ signal_return:
 
 unix_syscall_entry:
 	di
-	push b		! for now
+	push b		! Must preserve the frame pointer
 	push d		! will go away when we fix the ABI
 	lxi h,8		! Find arguments on stack frame FIXME: work out
 			! right offset
@@ -104,8 +104,9 @@ unix_syscall_entry:
 	call map_kernel_di
 	ei
 	call _unix_syscall
+	xchg
 	!
-	! Remember fork and execve don't necessarily return this wand fork
+	! Remember fork and execve don't necessarily return this way and fork
 	! can do it twice
 	!
 	di
@@ -473,7 +474,7 @@ ___hard_di:
 	di
 	mov a,m
 	mvi m,1
-	mov l,a			! Check ABI
+	mov e,a
 	ret
 
 .define ___hard_irqrestore
