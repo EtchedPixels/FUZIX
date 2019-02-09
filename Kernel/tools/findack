@@ -1,0 +1,2 @@
+#!/bin/sh
+which ack | sed -e "s/\/bin\/ack//"

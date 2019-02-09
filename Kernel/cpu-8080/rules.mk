@@ -1,7 +1,9 @@
-export CROSS_AS=ack
+export ACK_ROOT=$(shell tools/findack)
+
+export CROSS_AS=ack -mfuzix
 export CROSS_LD=$(ACK_ROOT)/lib/ack/em_led
 export CROSS_CC=ack
-export CROSS_CCOPTS= -c -O2 -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS= -mfuzix -c -O2 -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG2=
 export CROSS_CC_SEG3=
 export CROSS_CC_SEG4=
