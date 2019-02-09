@@ -25,7 +25,8 @@ platform_interrupt_all:
 .define init_early
 
 init_early:
-	ret
+	jmp .rst_init
+
 
 .define init_hardware
 
@@ -72,7 +73,7 @@ _program_vectors_k:
 	shld 0x31
 	lxi h,nmi_handler
 	shld 0x67
-	ret
+	jmp .rst_init
 
 !
 !	Memory mapping
