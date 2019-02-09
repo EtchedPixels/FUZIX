@@ -3,21 +3,16 @@ Some initial development code for 8080 support
 This is not finished (the block copiers for forking, udata and usermem all
 need writing). 
 
-Drivers
-- No disk driver yet
-- Minimal serial driver for 88-2 style serial (assumes firmware set the ports up)
-  and doesn't yet do interrupt
-
+Still need to hook up the kernel helpers for RST calls or it'll blow up on
+boot pretty spectacularly!
 
 
 Also to deal with
 - The C compiler bombs on the adventure game builds
 - The preprocessor can't handle netd or fforth
 - We need signal handler code and kernel IRQ code to save memory temporaries
-  that make the code non-reentrant
-- The asm code for switching needs to save and restore BC
-- The adapted Z80 code in lowlevel and elsewhere assumes that HL is the return
-  but ack uses DE
+  that make the code non-reentrant. It's not actually that bad - we save a
+  load less registers after all!
 - The compiler is too verbose at the moment. In particular it needs
 	- helpers for stack relative fetch and put of 16bits
 	- sub hl,de
@@ -44,3 +39,5 @@ up. However its codegen isn't that much better although it could also be coaxed
 (and probably more easily) into using helpers. At least it knows how to optimize
 8bit operations and also to use bc and top of stack as temporaries.
 
+8085 will need more thinking. ACK has some assumptions that don't work well if
+you use the undocumented 8085 stuff.
