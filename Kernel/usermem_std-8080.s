@@ -1,8 +1,10 @@
+#include "kernel-8080.def"
+
 !
 !	Simple implementation for now. Should be optimized
 !
 
-.sect .commonmem
+.sect .common
 
 .define __uputc
 
@@ -42,7 +44,7 @@ __ugetc:
 	push d
 	push b
 	call map_process_always
-	mov l,m
+	mov e,m
 	jp map_kernel
 
 .define __ugetw
@@ -55,22 +57,97 @@ __ugetw:
 	push d
 	push b
 	call map_process_always
-	mov a,m
+	mov e,m
 	inx h
-	mov h,m
-	mov l,a
+	mov d,m
 	jmp map_kernel
 
 .define __uget
 
+!
+!	Stacked arguments are src.w, dst.w, count.w
+!
 __uget:
-	! TODO
+	push b
+	lxi h,9		! End of count argument
+	dad sp
+	mov b,m
+	dcx h
+	mov c,m
+	mov a,c
+	ora b
+	jz nowork
+	dcx h
+	mov d,m		! Destination
+	dcx h
+	mov e,m
+	dcx h
+	mov a,m
+	dcx h
+	mov l,m
+	mov h,a
+	!
+	!	So after all that work we have HL=src DE=dst BC=count
+	!	and we know count != 0.
+	!
+	!	Simple unoptimized copy loop for now. Horribly slow for
+	!	things like 512 byte disk blocks
+	!
+ugetcopy:
+	call map_process_always
+	mov a,m
+	call map_kernel
+	stax d
+	inx h
+	inx d
+	dcx b
+	mov a,b
+	ora c
+	jnz ugetcopy
+nowork:
+	pop b
 	ret
 
 .define __uput
 
 __uput:
-	! TODO
+	push b
+	lxi h,9		! End of count argument
+	dad sp
+	mov b,m
+	dcx h
+	mov c,m
+	mov a,c
+	ora b
+	jz nowork
+	dcx h
+	mov d,m		! Destination
+	dcx h
+	mov e,m
+	dcx h
+	mov a,m
+	dcx h
+	mov l,m
+	mov h,a
+	!
+	!	So after all that work we have HL=src DE=dst BC=count
+	!	and we know count != 0.
+	!
+	!	Simple unoptimized copy loop for now. Horribly slow for
+	!	things like 512 byte disk blocks
+	!
+uputcopy:
+	mov a,m
+	call map_process_always
+	stax d
+	call map_kernel
+	inx h
+	inx d
+	dcx b
+	mov a,b
+	ora c
+	jnz uputcopy
+	pop b
 	ret
 
 .define __uzero
@@ -98,3 +175,4 @@ zeroloop:
 	ora c
 	jnz zeroloop
 	jmp map_kernel
+
