@@ -48,11 +48,13 @@ endif
 # FIXME: we should make it possible to do things entirely without /opt/fcc
 PATH := /opt/fcc/bin:$(PATH)
 
+FUZIX_ROOT = $(shell pwd)
+
 # TARGET is what we are building
 # CPU is the CPU type for the kernel
 # USERCPU is the CPU type for userspace and eventually may be different
 # (eg for 65c816 with 6502 user)
-export TARGET CPU USERCPU PATH
+export TARGET CPU USERCPU PATH FUZIX_ROOT
 
 # FUZIX_CCOPTS is the global CC optimization level
 ifeq ($(FUZIX_CCOPTS),)
