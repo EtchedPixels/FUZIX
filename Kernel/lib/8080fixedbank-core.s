@@ -12,8 +12,7 @@
 .define _platform_switchout
 
 !
-!	Verify ABI exact rules but I think we don't need to stack any
-!	register state.
+!	The ABI requires we preserve BC
 !
 
 !
@@ -22,6 +21,7 @@
 _platform_switchout:
 	lxi h,0
 	push h			! Save a 0 argment
+	push b
 	dad sp
 	shld U_DATA__U_SP	! Save the sp for a switch in
 	call map_process_always_di
@@ -142,8 +142,9 @@ skip_copyback:
 	lhld U_DATA__U_SP
 	sphl
 	!
-	!	Recover our return code
+	!	Recover our parent frame pointer and return code
 	!
+	pop b
 	pop h
 	lda U_DATA__U_ININTERRUPT
 	sta _int_disabled
@@ -184,8 +185,9 @@ _dofork:
 	mov h,m
 	mov l,a
 	!
-	! We don't have any state to save but the pid
+	! We don't have any state to save but the pid and framepointer 
 	!
+	push b
 	push h
 	lxi h,0
 	dad sp
@@ -228,6 +230,10 @@ _dofork:
 	!
 	lxi h,0
 	shld _runticks
+	!
+	!	Frame pointer
+	!
+	pop b
 	ret
 
 .define bouncebuffer
