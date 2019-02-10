@@ -23,7 +23,7 @@ $(COBJS): %.o: %.c
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock
 
-bootblock:
+bootblock: bootblock.s
 	ack -mfuzix -c bootblock.s
 	$(ACK_ROOT)/lib/ack/em_led -btext:0 -o bootblock.bin -s bootblock.o
 	aslod <bootblock.bin >bootblock

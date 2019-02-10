@@ -31,7 +31,12 @@ dmal = 15
 dmah = 16
 sectorh = 17
 
-diskload:	di
+diskload:
+		di
+		mvi a,'B'
+		out 1
+		mvi a,':'
+		out 1
 		xra a
 		out sectorh		! sector high always 0
 		out drive		! drive always 0
@@ -40,6 +45,7 @@ diskload:	di
 		mvi c,19		! number of tracks to load (56Kish)
 
 		lxi d,128
+		lxi h,0x100
 
 load_tracks:	in track
 		inr a			! next track
@@ -58,13 +64,28 @@ load_sectors:
 		xra a			! read
 		out command		! go
 		in status		! status
+
+		mvi a,'.'
+		out 1
+
 		dad d
 		dcr b
 		jnz load_sectors	! 26 sectors = 3328 bytes
-		dcr c
-		jnz load_tracks
+
 		mvi a, 13
 		out 1
 		mvi a,10
 		out 1
-		jmp 0x88
+
+		dcr c
+		jnz load_tracks
+
+
+		mvi a,'G'
+		out 1
+		mvi a, 13
+		out 1
+		mvi a,10
+		out 1
+		jmp 0x100
+		
