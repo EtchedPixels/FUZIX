@@ -233,6 +233,7 @@ _dofork:
 	!
 	!	Frame pointer
 	!
+	xchg			! return 0 in DE for child
 	pop b
 	ret
 

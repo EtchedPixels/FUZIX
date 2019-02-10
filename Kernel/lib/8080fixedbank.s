@@ -8,35 +8,35 @@
 copy512:
 	mvi b,64
 copy8:
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
-	mov m,a
+	mov a,m
 	stax d
 	inx h
 	inx d
