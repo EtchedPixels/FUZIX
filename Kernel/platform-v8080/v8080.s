@@ -67,12 +67,14 @@ _program_vectors_k:
 	mvi a,0xc3
 	sta 0
 	sta 0x30
+	sta 0x38
 	sta 0x66
 	lxi h,null_handler
 	shld 1
 	lxi h,unix_syscall_entry
-
 	shld 0x31
+	lxi h,interrupt_handler
+	shld 0x39
 	lxi h,nmi_handler
 	shld 0x67
 	jmp .rst_init
