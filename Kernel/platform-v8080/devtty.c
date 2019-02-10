@@ -64,6 +64,7 @@ void tty_data_consumed(uint8_t minor)
 ttyready_t tty_writeready(uint8_t minor)
 {
     uint8_t r;
+#if 0
     if (minor == 1)
         r = ttyready();
     else
@@ -71,6 +72,8 @@ ttyready_t tty_writeready(uint8_t minor)
     if (r)
         return TTY_READY_NOW;
     return TTY_READY_SOON;
+#endif
+    return TTY_READY_NOW;
 }
 
 /* kernel writes to system console -- never sleep! */
