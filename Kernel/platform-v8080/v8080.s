@@ -25,12 +25,16 @@ platform_interrupt_all:
 .define init_early
 
 init_early:
-	jmp .rst_init
+	ret
+
+.sect .common
 
 
 .define init_hardware
 
 init_hardware:
+	mvi a,8
+	out 20
 	! Hack for now
 	lxi h,400		! 8 * 48K + 16K
 	shld _ramsize
@@ -41,9 +45,6 @@ init_hardware:
 	out 27			! 100Hz timer on
 
 	jmp _program_vectors_k
-	
-
-.sect .common
 
 .define _int_disabled
 _int_disabled:
@@ -70,6 +71,7 @@ _program_vectors_k:
 	lxi h,null_handler
 	shld 1
 	lxi h,unix_syscall_entry
+
 	shld 0x31
 	lxi h,nmi_handler
 	shld 0x67
@@ -141,7 +143,7 @@ map_save:
 .define _ttyout
 
 !
-!	MITS 88-2SIO style serial ports at 0 and 40
+!	Hack for Z80pack for now
 !
 _ttyout:
 	pop h
@@ -150,12 +152,12 @@ _ttyout:
 	push h
 	mov a,e
 outchar:
-	push psw
-outcharw:
-	in 0
-	ani 2
-	jz outcharw
-	pop psw
+!	push psw
+!outcharw:
+!	in 0
+!	ani 2
+!	jz outcharw
+!	pop psw
 	out 1
 	ret
 
