@@ -23,7 +23,7 @@ __uputc:
 .define __uputw
 
 __uputw:
-	lxi h,4
+	lxi h,2
 	dad sp
 	mov e,m
 	inx h
@@ -31,12 +31,12 @@ __uputw:
 	inx h
 	mov a,m
 	inx h
-	mov l,m
-	xchg
+	mov h,m
+	mov l,a
 	call map_process_always
-	mov m,a
-	inx h
 	mov m,e
+	inx h
+	mov m,d
 	jp map_kernel
 
 .define __ugetc
@@ -48,6 +48,7 @@ __ugetc:
 	push d
 	call map_process_always
 	mov e,m
+	mvi d,0
 	jp map_kernel
 
 .define __ugetw

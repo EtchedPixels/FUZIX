@@ -57,8 +57,8 @@ unix_syscall_entry:
 	di
 	push b		! Must preserve the frame pointer
 	push d		! will go away when we fix the ABI
-	lxi h,8		! Find arguments on stack frame FIXME: work out
-			! right offset
+	lxi h,6		! Find arguments on stack frame
+
 	dad sp
 	mov a,m
 	sta U_DATA__U_CALLNO
@@ -128,7 +128,7 @@ unix_syscall_entry:
 unix_return:
 	mov a,h
 	ora l
-	jnz not_error
+	jz not_error
 	stc
 	jmp unix_pop
 not_error:
@@ -239,6 +239,7 @@ interrupt_handler:
 	push d
 	push h
 	call platform_interrupt_all
+	jmp interrupt_pop			!! FIXME
 	! Switch stacks
 	lxi h,0
 	dad sp
