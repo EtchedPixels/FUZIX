@@ -9,40 +9,43 @@
 .define __uputc
 
 __uputc:
-	pop b
-	pop d
-	pop h
-	push h
-	push d
-	push b
+	lxi h,4
+	dad sp
+	mov e,m
+	inx h
+	mov d,m
+	inx h
+	mov a,m
 	call map_process_always
-	mov m,e
+	stax d
 	jp map_kernel
 
 .define __uputw
 
 __uputw:
-	pop b
-	pop d
-	pop h
-	push h
-	push d
-	push b
-	call map_process_always
-	mov m,e
+	lxi h,4
+	dad sp
+	mov e,m
 	inx h
-	mov m,d
+	mov d,m
+	inx h
+	mov a,m
+	inx h
+	mov l,m
+	xchg
+	call map_process_always
+	mov m,a
+	inx h
+	mov m,e
 	jp map_kernel
 
 .define __ugetc
 
 __ugetc:
-	pop b
 	pop d
 	pop h
 	push h
 	push d
-	push b
 	call map_process_always
 	mov e,m
 	jp map_kernel
@@ -50,12 +53,10 @@ __ugetc:
 .define __ugetw
 
 __ugetw:
-	pop b
 	pop d
 	pop h
 	push h
 	push d
-	push b
 	call map_process_always
 	mov e,m
 	inx h
@@ -153,26 +154,32 @@ uputcopy:
 .define __uzero
 
 __uzero:
-	pop d
-	pop h
-	pop b
 	push b
-	push h
-	push d
+	lxi h,4
+	dad sp
+	mov e,m
+	inx h
+	mov d,m
+	inx h 
+	mov c,m
+	inx h
+	mov b,m
+	xchg
+	
 	mov a,b
 	ora c
-	rz
+	jz nowork
 !
 !	Simple loop. Wants unrolling a bit
 !
 	call map_process_always
-	xra a
 zeroloop:
-	mov m,a
+	mvi m,0
 	inx h
 	dcx b
 	mov a,b
 	ora c
 	jnz zeroloop
+	pop b
 	jmp map_kernel
 
