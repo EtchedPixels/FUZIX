@@ -19,11 +19,12 @@ init:
 
         call init_early
 
+
 	lxi h,commonend
 	lxi d,commonstart
 	call calcsize
 
-	lxi h,datastart
+	lxi h,bssstart
 	lxi d,commonstart
 	
 nextbyte:
@@ -36,14 +37,15 @@ nextbyte:
 	ora c
 	jnz nextbyte
 
-	lxi h,bssstart
-	lxi d,datastart
+!	lxi h,bssend		! We should really do this but bssend
+				! isnt appearing at the end so plan b
+	lxi h,commonstart	! Wipe all the free space
+	lxi d,bssstart
 	call calcsize
 
-	lxi h,datastart
-	xra a
+	lxi h,bssstart
 wipe:
-	mov m,a
+	mvi m,0
 	inx h
 	dcx b
 	mov a,b
@@ -51,6 +53,10 @@ wipe:
 	jnz wipe
 
         call init_hardware
+
+	mvi a,'E'
+	out 1
+
         call _fuzix_main
         di
 stop:   hlt
