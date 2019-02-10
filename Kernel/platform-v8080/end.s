@@ -5,3 +5,8 @@
 .define commonend
 
 commonend:
+
+.sect .bss
+.define bssend
+
+bssend:
