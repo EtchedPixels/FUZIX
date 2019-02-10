@@ -20,65 +20,68 @@ outer:
 inner:
 	! We do 8 bytes per loop and 254 loops per inner loop, so
 	! 24 inner loops per run copies the needed space and a tiny shade
-	! over
+	! over (which in this case is fine as it's udata which we will
+	! copy from common to common so do nothing to)
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	mov a,b
-	out 23
+	out 21
 	mov d,m
 	mov a,c
-	out 23
+	out 21
 	mov m,d
 	inx h
 	dcr e
 	jnz inner
+	mvi a,'@'
+	out 1
 	pop d
 	dcr d
 	jnz outer

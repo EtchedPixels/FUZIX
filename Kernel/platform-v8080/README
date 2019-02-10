@@ -1,11 +1,9 @@
 Some initial development code for 8080 support
 
-This is not finished (the block copiers for forking, udata and usermem all
-need writing). 
-
-Still need to hook up the kernel helpers for RST calls or it'll blow up on
-boot pretty spectacularly!
-
+Bugs:
+tty behaves oddly once it hits shell (newline doesn't work stuff^J seems to, and
+shell shows [junk] not found in child - but that could be arg copying bugs)
+could be some kind of uput bug ?
 
 Also to deal with
 - The C compiler bombs on the adventure game builds
