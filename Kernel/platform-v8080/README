@@ -1,9 +1,7 @@
 Some initial development code for 8080 support
 
 Bugs:
-tty behaves oddly once it hits shell (newline doesn't work stuff^J seems to, and
-shell shows [junk] not found in child - but that could be arg copying bugs)
-could be some kind of uput bug ?
+- Lots of userspace crashes and problems
 
 Also to deal with
 - The C compiler bombs on the adventure game builds
@@ -11,19 +9,8 @@ Also to deal with
 - We need signal handler code and kernel IRQ code to save memory temporaries
   that make the code non-reentrant. It's not actually that bad - we save a
   load less registers after all!
-- The compiler is too verbose at the moment. In particular it needs
-	- helpers for stack relative fetch and put of 16bits
-	- sub hl,de
-	- the tail code
-	- function entry
-  and
-	- use the call to a jp (hl) trick for indirect calls
-	- not generate pointless entry/exit code when not needed
-	- generate optimized code for and/or where one byte of the 16bits is
-	  zero
-	- generate a helper for setting the frame pointer
 
-	More generally it sucks because
+Compiler:
 	- it uses BC as a frame pointer instead of tracking HL and using BC
 	  as a register variable temporary
 	- it's obsessed with 8 to 16 bit conversion of anything it works on
@@ -39,3 +26,17 @@ up. However its codegen isn't that much better although it could also be coaxed
 
 8085 will need more thinking. ACK has some assumptions that don't work well if
 you use the undocumented 8085 stuff.
+
+
+Status
+- perror fails
+- ps - prints crap for numbers in printf %-n d
+- ed and sh crash (both setjmp/longjmp users ?)
+- uptime also shows the corruption of printf
+- as does free
+- pagesize appears to be bogus (reports 0)
+- wumpus dies after instructions prompt - kills box
+- rev crashes box
+- calendar goes mad
+- advent prompts for save y/n then dies
+- cp is incredibly slow ?
