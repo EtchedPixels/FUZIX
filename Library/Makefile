@@ -5,7 +5,7 @@ CFLAGS += -I../Kernel/include
 all: tools/syscall tools/binman tools/fcc tools/syscall_6502 \
      tools/syscall_68000 tools/syscall_8080 tools/ack2fuzix \
      tools/syscall_6809 tools/syscall-scc6809 tools/binman \
-     tools/fcc tools/liberror tools/relocbin
+     tools/fcc tools/liberror tools/relocbin tools/fuzixlib
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -45,6 +45,9 @@ tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/ack2fuzix: tools/ack2fuzix.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/fuzixlib: tools/fuzixlib.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 install:
