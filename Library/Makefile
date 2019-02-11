@@ -3,7 +3,7 @@
 CFLAGS += -I../Kernel/include
 
 all: tools/syscall tools/binman tools/fcc tools/syscall_6502 \
-     tools/syscall_68000 \
+     tools/syscall_68000 tools/syscall_8080 tools/ack2fuzix \
      tools/syscall_6809 tools/syscall-scc6809 tools/binman \
      tools/fcc tools/liberror tools/relocbin
 
@@ -18,6 +18,9 @@ tools/syscall-z88dk: tools/syscall-z88dk.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_6502: tools/syscall_6502.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/syscall_8080: tools/syscall_8080.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_68000: tools/syscall_68000.c ../Kernel/include/syscall_name.h
@@ -41,6 +44,8 @@ tools/relocbin: tools/relocbin.c
 tools/liberror: tools/liberror.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/ack2fuzix: tools/ack2fuzix.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 install:
 ifeq ($(USERCPU),z80)
