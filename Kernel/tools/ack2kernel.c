@@ -506,6 +506,8 @@ int main(int argc, char* argv[])
 		ss += outsect[ROM].os_size;
 		ss += outsect[DATA].os_size;
 		ss += outsect[BSS].os_size;
+		ss += outsect[COMMON].os_size;
+		ss += outsect[DISCARD].os_size;
 		printf("TOTAL  = %08"PRIx32"\n", ss);
 		printf("PACKED = %08"PRIx32"\n", ss - outsect[BSS].os_size);
 		printmap();
