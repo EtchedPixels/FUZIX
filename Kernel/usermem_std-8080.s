@@ -9,16 +9,18 @@
 .define __uputc
 
 __uputc:
-	lxi h,4
+	lxi h,2
 	dad sp
+	mov a,m
+	inx h
+	inx h
 	mov e,m
 	inx h
 	mov d,m
-	inx h
-	mov a,m
 	call map_process_always
 	stax d
-	jp map_kernel
+	lxi d,0
+	jmp map_kernel
 
 .define __uputw
 
@@ -37,7 +39,8 @@ __uputw:
 	mov m,e
 	inx h
 	mov m,d
-	jp map_kernel
+	lxi d,0
+	jmp map_kernel
 
 .define __ugetc
 
@@ -49,7 +52,7 @@ __ugetc:
 	call map_process_always
 	mov e,m
 	mvi d,0
-	jp map_kernel
+	jmp map_kernel
 
 .define __ugetw
 
@@ -150,6 +153,7 @@ uputcopy:
 	ora c
 	jnz uputcopy
 	pop b
+	lxi d,0
 	ret
 
 .define __uzero
