@@ -19,14 +19,25 @@
 !	Switch a process out and run the next one
 !
 _platform_switchout:
+	push b
 	lxi h,0
 	push h			! Save a 0 argment
-	push b
+	lhld .retadr
+	push h
+	lhld .bcreg
+	push h
+	lhld .tmp1
+	push h
+	lhld .areg
+	push h
 	dad sp
 	shld U_DATA__U_SP	! Save the sp for a switch in
 	call map_process_always_di
 	!
 	!	Save the udata into process state
+	!
+	!	FIXME: can we skip this if the process is defunct or would
+	!	it even make sense to defer it (with magic in swapout) ?
 	!
 	lxi h,U_DATA
 	lxi d,U_DATA_STASH
@@ -34,7 +45,7 @@ _platform_switchout:
 	! Back to kernel
 	call map_kernel_di
 	call _getproc		! Who goes next
-	push h
+	push d
 	call _switchin		! Run it
 	! Should never hit this
 	call _platform_monitor
@@ -63,7 +74,7 @@ _switchin:
 	dad d
 
 	lxi sp,_swapstack
-	mov a,m
+	mov a,m			! A is now our bank
 	ora a
 	jnz not_swapped
 	!
@@ -92,7 +103,10 @@ _switchin:
 	!
 not_swapped:
 	mov c,a
+	! DE is the process to run, get the udata process into HL
 	lhld U_DATA__U_PTAB
+	! See if our udata is live - this is common, if we sleep and we are
+	! the next to run for example.
 	mov a,h
 	cmp d
 	jnz copyback
@@ -105,10 +119,12 @@ not_swapped:
 copyback:
 	mov a,c
 	call map_process_a
-	
+
+	push d
 	lxi h,U_DATA_STASH
 	lxi d,U_DATA
 	call copy512
+	pop d
 
 	lhld U_DATA__U_SP	! A valid stack to map on
 	sphl
@@ -136,7 +152,7 @@ skip_copyback:
 	lxi d,P_TAB__P_PAGE_OFFSET
 	dad d
 	mov a,m
-	sta U_DATA__U_PTAB
+	sta U_DATA__U_PAGE
 	lxi h,0
 	shld _runticks
 	lhld U_DATA__U_SP
@@ -144,8 +160,21 @@ skip_copyback:
 	!
 	!	Recover our parent frame pointer and return code
 	!
-	pop b
+	!	FIXME: do we need to handle .fra .trapproc or .retadr1 ?
+	!	Q: .fra and longs ?
+	!	probably we do need to save block1-block3 (12 bytes)
+	!
 	pop h
+	shld .areg
+	pop h
+	mov l,a
+	sta .tmp1
+	pop h
+	shld .bcreg
+	pop h
+	shld .retadr
+	pop d
+	pop b
 	lda U_DATA__U_ININTERRUPT
 	sta _int_disabled
 	ora a
@@ -186,8 +215,17 @@ _dofork:
 	mov l,a
 	!
 	! We don't have any state to save but the pid and framepointer 
+	! and (alas) a pile of compiler non-reentrant crap
 	!
 	push b
+	push h
+	lhld .retadr
+	push h
+	lhld .bcreg
+	push h
+	lhld .tmp1
+	push h
+	lhld .areg
 	push h
 	lxi h,0
 	dad sp
@@ -205,7 +243,8 @@ _dofork:
 
 	call map_process_always
 	!
-	!	Clone the parent udata and stack into the child stash
+	!	Copy the parent udata and stack into the parent stash
+	!	The live udata becomes that of the child
 	!
 	lxi h,U_DATA
 	lxi d,U_DATA_STASH
@@ -214,6 +253,10 @@ _dofork:
 	call map_kernel
 
 	pop h		! Get rid of saved pid
+	pop h		! and C runtime state
+	pop h
+	pop h
+	pop h
 
 	!
 	!	Manufacture the child udata state
