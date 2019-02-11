@@ -22,8 +22,8 @@ static void write_call(int n)
   }
   fprintf(fp, "\t.sect .text\n\n");
   fprintf(fp, "\t.define _%s\n\n", syscall_name[n]);
-  fprintf(fp, "_%s:\n\tlxi h,%d\n", syscall_name[n], n);
-  fprintf(fp, "\tjp __syscall\n");
+  fprintf(fp, "_%s:\n\tmvi a,%d\n", syscall_name[n], n);
+  fprintf(fp, "\tjmp __syscall\n");
   fclose(fp);
 }
 

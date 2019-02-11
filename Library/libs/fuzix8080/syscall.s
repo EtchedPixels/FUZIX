@@ -1,19 +1,16 @@
 !
-!	We will go to a sane API as Z80 does because Z80 can run 8080 apps
-!	so they should change together. For now this is the same code as
-!	the Z80 but in 8080 mnemonics
+!	This uses the revised API that Z80 will move to (or at least
+!	similarly). It's basically the same API with a 2 byte stack offset
 !
 .sect .text
 .define __syscall
 
 __syscall:
-		xthl
-		xchg
 		rst 	6
+		! returns in HL
+		xchg				! into DE for the 8080 C ABI
+		rnc				! ok return in DE
 		xchg
-		xthl
-		xchg
-		rnc				! ok
 		shld	_errno			! error path
-		lxi	h,0xffff
+		lxi	d,0xffff
 		ret
