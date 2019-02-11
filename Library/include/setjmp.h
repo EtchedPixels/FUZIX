@@ -43,10 +43,17 @@
 #elif defined(__i80)
 	/* __setjmp is magic in ACK. We may need to go with that but it might
 	   be easier to use our own implementation */
-	typedef uint16_t jmp_buf[5];
-	extern int __setjmp(jmp_buf __env);
+	typedef struct {
+		long __mask;
+		int __flag;
+		void (*__pc)(void);
+		void *__sp;
+		void *__lp;
+	} jmp_buf[1];
+	extern int __setjmp(jmp_buf __env, int __savemask);
 	extern void longjmp(jmp_buf __env, int __val);
-	#define setjmp __setjmp
+	#define setjmp(__env) __setjmp((__env), 0)
+
 #else
 	#error jmp_buf definition not set for this architecture
 #endif
