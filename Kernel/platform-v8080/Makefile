@@ -20,6 +20,8 @@ $(AOBJS): %.o: %.s
 $(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $<
 
+tricks.s: ../lib/8080fixedbank.s ../lib/8080fixedbank-core.s
+
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock
 

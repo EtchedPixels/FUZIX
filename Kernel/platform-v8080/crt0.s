@@ -54,9 +54,6 @@ wipe:
 
         call init_hardware
 
-	mvi a,'E'
-	out 1
-
         call _fuzix_main
         di
 stop:   hlt
