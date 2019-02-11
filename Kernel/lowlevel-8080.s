@@ -491,6 +491,62 @@ ___hard_irqrestore:
 	ret
 
 !
+!	Identify 8080 variants. We don't worry about Z80 variants. The 8080
+!	kernel doesn't work on a Z80 so we don't care which one we have.
+!
+.define _cpu_detect
+
+_cpu_detect:
+	! Ok start with the flags
+	mvi a,255
+	inr a
+	push psw
+	pop h
+	mov a,h
+	ani 0x82
+	cpi 0x80
+	jz lr35902
+	ora a
+	jnz is808x
+	lxi d,0		! Z80: we don't care which kind. It's simply not allowed
+	ret
+lr35902:
+	lxi d,0		! also not allowed
+	ret
+is808x:
+	xra a
+	rim		! no-op on 8080
+	ora a
+	jnz is8085	! it changed must be an 8085
+	!
+	!	But it could really be 0
+	!
+	inr a
+	rim
+	ora a
+	jz is8085
+	!
+	!	TODO: check for KP580M1
+	!
+	lxi d,8080
+	!
+	!	But wait it might be a 9080
+	!
+	mvi a,255
+	ani 255
+	push psw
+	pop h
+	mov a,h
+	ani 0x10	! half carry is zero on AMD
+	rnz
+	mvi d,0x90
+	ret
+is8085:
+	lxi d,0x8085
+	ret
+
+
+!
 !	We need to worry about bits of this in interrupt save and restore
 !
 
