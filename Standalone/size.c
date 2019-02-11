@@ -108,7 +108,8 @@ int main(int argc, char *argv[])
 		}
 		fclose(fp);
 
-		if (memcmp(buf + 3, "FZX1", 4) == 0)
+		if (memcmp(buf + 3, "FZX1", 4) == 0 ||
+						memcmp(buf + 3, "FZL1", 4) == 0)
 			size_fzx1(argv[n], buf);
 		else if (memcmp(buf, "bFLT", 4) == 0)
 			size_binflat(argv[n], buf);
