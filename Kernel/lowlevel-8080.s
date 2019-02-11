@@ -56,14 +56,10 @@ signal_return:
 unix_syscall_entry:
 	di
 	push b		! Must preserve the frame pointer
-	push d		! will go away when we fix the ABI
 	lxi h,6		! Find arguments on stack frame
 
 	dad sp
-	mov a,m
 	sta U_DATA__U_CALLNO
-	inx h
-	inx h
 	! Oh for LDIR
 	! Unroll this for speed. Syscall arguments into constant locations
 	mov a,m
@@ -130,11 +126,12 @@ unix_return:
 	ora l
 	jz not_error
 	stc
+	! Carry and errno in HL as expected
 	jmp unix_pop
 not_error:
+	! Retval in HL as the Z80 kernel returns it
 	xchg
 unix_pop:
-	pop d
 	pop b
 	! ret must directly follow the ei
 	ei
