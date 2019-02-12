@@ -30,6 +30,7 @@ _platform_switchout:
 	push h
 	lhld .areg
 	push h
+	lxi h,0
 	dad sp
 	shld U_DATA__U_SP	! Save the sp for a switch in
 	call map_process_always_di
@@ -165,10 +166,10 @@ skip_copyback:
 	!	probably we do need to save block1-block3 (12 bytes)
 	!
 	pop h
-	shld .areg
-	pop h
 	mov l,a
-	sta .tmp1
+	sta .areg
+	pop h
+	shld .tmp1
 	pop h
 	shld .bcreg
 	pop h
