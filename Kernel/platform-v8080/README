@@ -3,9 +3,6 @@ Some initial development code for 8080 support
 Also to deal with
 - The C compiler bombs on the adventure game builds
 - The preprocessor can't handle netd or fforth
-- We need signal handler code and kernel IRQ code to save memory temporaries
-  that make the code non-reentrant. It's not actually that bad - we save a
-  load less registers after all!
 
 Compiler:
 	- it uses BC as a frame pointer instead of tracking HL and using BC
