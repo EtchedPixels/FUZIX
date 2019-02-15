@@ -59,11 +59,15 @@ _program_vectors:
 	push h
 	push d
 	call map_process
-	call _program_vectors_k
+	call _program_vectors_u
 	call map_kernel_di
 	ret
 
 _program_vectors_k:
+	push b
+	call .rst_init
+	pop b
+_program_vectors_u:
 	mvi a,0xc3
 	sta 0
 	sta 0x30
@@ -77,7 +81,7 @@ _program_vectors_k:
 	shld 0x39
 	lxi h,nmi_handler
 	shld 0x67
-	jmp .rst_init
+	ret
 
 !
 !	Memory mapping
