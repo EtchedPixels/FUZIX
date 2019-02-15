@@ -50,7 +50,7 @@ struct _uzifilesys {
     uint32_t      s_time;
     uint16_t      s_tfree;
     uint16_t      s_tinode;
-    uint16_t	  s_mntpt;
+    uint8_t	  s_shift;
 };
 
 struct _sockio {
