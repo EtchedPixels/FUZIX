@@ -26,9 +26,9 @@ you use the undocumented 8085 stuff.
 
 
 Status
-- perror fails
-- pagesize appears to be bogus (reports 0)
-- calendar goes mad
+FIXED - perror fails
+FIXED - pagesize appears to be bogus (reports 0)
+FIXED - calendar goes mad
 - cp is incredibly slow ?
 
 
