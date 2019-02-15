@@ -30,6 +30,7 @@ _platform_switchout:
 	push h
 	lhld .areg
 	push h
+	! Do we need to save block1->block3+2 (ie do we do 32bit * and / ???
 	lxi h,0
 	dad sp
 	shld U_DATA__U_SP	! Save the sp for a switch in
@@ -161,13 +162,13 @@ skip_copyback:
 	!
 	!	Recover our parent frame pointer and return code
 	!
-	!	FIXME: do we need to handle .fra .trapproc or .retadr1 ?
-	!	Q: .fra and longs ?
-	!	probably we do need to save block1-block3 (12 bytes)
+	!	probably we still need to save block1-block3 (12 bytes)
+	!	used by .mli4/.dvi4. Would be good to make them do their
+	!	own saves so the cost is paid in the right place
 	!
 	pop h
 	mov l,a
-	sta .areg
+	sta .areg	! FIXME: add a pad byte to .areg instead
 	pop h
 	shld .tmp1
 	pop h
