@@ -4,7 +4,7 @@
 long sysconf(int name)
 {
   struct _uzisysinfoblk info;
-  int psize;
+  unsigned long psize;
   int pscale;
   
   _uname(&info, sizeof(info));
