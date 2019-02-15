@@ -167,7 +167,7 @@ skip_copyback:
 	!	own saves so the cost is paid in the right place
 	!
 	pop h
-	mov l,a
+	mov a,l
 	sta .areg	! FIXME: add a pad byte to .areg instead
 	pop h
 	shld .tmp1

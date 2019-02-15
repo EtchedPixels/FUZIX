@@ -236,12 +236,12 @@ interrupt_handler:
 	push d
 	push h
 	call platform_interrupt_all
-	jmp interrupt_pop			!! FIXME
 	! Switch stacks
 	lxi h,0
 	dad sp
 	shld istack_switched_sp
 	lxi sp,istack_top
+
 	!
 	! Map the kernel
 	!
@@ -270,7 +270,7 @@ interrupt_handler:
 	push h
 	call _platform_interrupt
 	pop h
-	mov l,a
+	mov a,l
 	sta .areg	! FIXME: add a pad byte to .areg instead
 	pop h
 	shld .tmp1
@@ -334,7 +334,6 @@ trap_signal:
 preemption:
 	xra a
 	sta _need_resched
-	call map_restore
 	!
 	!	Save our original stack in syscall_s
 	!	Move to our kernel stack (free because we don't preempt
@@ -343,10 +342,6 @@ preemption:
 	lhld istack_switched_sp
 	shld U_DATA__U_SYSCALL_SP
 	lxi sp,kstack_top
-	!
-	!	Fix up the mappings
-	!
-	call map_kernel_di
 	!
 	!	Mark ourselves as in a system call
 	!
