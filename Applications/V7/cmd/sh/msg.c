@@ -90,27 +90,6 @@ SYSTAB reserved = {
 	{0, 0},
 };
 
-/* FIXME: align with actual OS! */
-const char *sysmsg[] = {
-	0,
-	"Hangup",
-	0,			/* Interrupt */
-	"Quit",
-	"Illegal instruction",
-	"Trace/BPT trap",
-	"IOT trap",
-	"EMT trap",
-	"Floating exception",
-	"Killed",
-	"Bus error",
-	"Memory fault",
-	"Bad system call",
-	0,			/* Broken pipe */
-	"Alarm call",
-	"Terminated",
-	"Signal 16",
-};
-
 const char export[] = "export";
 const char readonly[] = "readonly";
 SYSTAB commands = {
