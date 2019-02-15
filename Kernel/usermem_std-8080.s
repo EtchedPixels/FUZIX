@@ -111,6 +111,7 @@ ugetcopy:
 	jnz ugetcopy
 nowork:
 	pop b
+	lxi d,0
 	ret
 
 .define __uput
