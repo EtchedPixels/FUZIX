@@ -1,8 +1,5 @@
 Some initial development code for 8080 support
 
-Bugs:
-- Lots of userspace crashes and problems
-
 Also to deal with
 - The C compiler bombs on the adventure game builds
 - The preprocessor can't handle netd or fforth
@@ -30,13 +27,34 @@ you use the undocumented 8085 stuff.
 
 Status
 - perror fails
-- ps - prints crap for numbers in printf %-n d
-- ed and sh crash (both setjmp/longjmp users ?)
-- uptime also shows the corruption of printf
-- as does free
 - pagesize appears to be bogus (reports 0)
-- wumpus dies after instructions prompt - kills box
-- rev crashes box
 - calendar goes mad
-- advent prompts for save y/n then dies
 - cp is incredibly slow ?
+
+
+
+Known things to save for re-entrancy
+
+Libem:
+
+.retadr
+.retadr1
+.bcreg
+.tmp1
+.areg
+
+Specific to .divi4 .mli4 
+
+block1
+block1+2
+block2
+block3
+block2+2
+block3+2
+
+
+Is sar2 right - does mli not mlu ?
+
+Listed elsewhere
+ .fra:8			8 byte function return area (for double ?)
+
