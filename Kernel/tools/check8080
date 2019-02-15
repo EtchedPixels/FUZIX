@@ -1,0 +1,7 @@
+#!/bin/sh
+if anm $1 |egrep ".fra|block1|block2|block3|.dvi4|.mli4"
+then
+	echo "***WARNING: Kernel is using unsafe operations"
+	exit 1
+fi
+exit 0
