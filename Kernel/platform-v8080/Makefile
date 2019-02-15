@@ -42,3 +42,4 @@ image: bootblock
 	../usermem_std-8080.o devfd.o $(LIBC) end.o
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin
+	../tools/check8080 fuzix.bin
