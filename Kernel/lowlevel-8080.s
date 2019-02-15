@@ -17,26 +17,36 @@ deliver_signals:
 deliver_signals_2:
 	mov l,a
 	mvi h,0
-	push h
 	dad h
 	lxi d,U_DATA__U_SIGVEC
 	dad d
 	mov e,m
 	inx h
 	mov d,m
+
+	mov c,a		! save the signal number to pass into the helper
+
+	! Build the return frame
+	lxi b,signal_return
+	push b
+
 	xra a
 	sta U_DATA__U_CURSIG
 	!
 	!	Do we need to zero check de here ?
 	!
-	lxi b,signal_return
-	push b
-	xchg
-	ei
+	mov a,d
+	ora e
+	jz signal_return		! raced
+	!
+	!	Off we go. DE = vector B = signal
+	!
+	!	FIXME: if we ever have 8080 binaries with different load
+	!	addresses we will need to fix this
+	!
+	lhld PROGLOAD+16		! signal vector
 	pchl
-
 signal_return:
-	pop h
 	di
 	lxi h,0
 	dad sp
