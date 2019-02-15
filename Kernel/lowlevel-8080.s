@@ -256,7 +256,28 @@ interrupt_handler:
 	sta _inint
 	sta U_DATA__U_ININTERRUPT
 	sta _int_disabled
+	!
+	!	What we avoid in register saves over Z80 we make up for in
+	!	runtime stuff
+	!
+	lhld .retadr
+	push h
+	lhld .bcreg
+	push h
+	lhld .tmp1
+	push h
+	lhld .areg
+	push h
 	call _platform_interrupt
+	pop h
+	mov l,a
+	sta .areg	! FIXME: add a pad byte to .areg instead
+	pop h
+	shld .tmp1
+	pop h
+	shld .bcreg
+	pop h
+	shld .retadr
 	!
 	! Undo state
 	!
