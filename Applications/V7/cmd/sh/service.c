@@ -19,9 +19,6 @@ static int split(const char *s);
 
 #define ARGMK	01
 
-/* FIXME: put into a header */
-extern const char *sysmsg[];
-
 /* fault handling */
 #define ENOMEM	12
 #define ENOEXEC 8
@@ -241,17 +238,18 @@ void await(int i)
 		w_hi = (w >> 8) & LOBYTE;
 
 		if ( (sig = w & 0177) ) {
+			const char *msg;
 			if (sig == 0177) {	/* ptrace! return */
 				prs("ptrace: ");
 				sig = w_hi;
 			}
-			if (sysmsg[sig]) {
+			if (sig && (msg = strsignal(sig))) {
 				if (i != p || (flags & prompt) == 0) {
 					prp();
 					prn(p);
 					blank();
 				}
-				prs(sysmsg[sig]);
+				prs(msg);
 				if (w & 0200)
 					prs(coredump);
 			}
