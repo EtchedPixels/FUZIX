@@ -351,7 +351,7 @@ int tail(int count, int bytes, int read_until_killed)
  */
 int keep_reading(void)
 {
-  char buf[1024];
+  static char buf[1024];
   int n;
   int i;
   off_t pos;
