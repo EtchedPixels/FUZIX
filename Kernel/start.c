@@ -361,12 +361,13 @@ void fuzix_main(void)
 	   scheduling and the like */
 	ptab_end = &ptab[maxproc];
 
-	/* Parameters message */
-	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 	bufinit();
 	fstabinit();
 	pagemap_init();
 	create_init();
+
+	/* Parameters message */
+	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 
 	/* runtime configurable, defaults to build time setting */
 	ticks_per_dsecond = TICKSPERSEC / 10;
