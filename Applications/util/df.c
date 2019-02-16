@@ -9,8 +9,8 @@
 
 const char *devname(dev_t);
 const char *mntpoint(const char *);
-void df_path(const char *path);
-void df_dev(dev_t dev);
+void df_path(const char *path, const char *dpath, const char *mntpath);
+void df_dev(dev_t dev, const char *dpath, const char *mntpath);
 void df_all(void);
 
 int iflag=0, kflag=0, fflag=0;
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     if (i < argc) {
         for (; i < argc; ++i) {
-            df_path(argv[i]);
+            df_path(argv[i], NULL, NULL);
         }
     } else {
         df_all();
@@ -57,24 +57,24 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void df_path(const char *path)
+void df_path(const char *path, const char *dpath, const char *mntpath)
 {
     struct stat sbuf;
 
     if(stat(path, &sbuf) < 0){
         fprintf(stderr, "df: \"%s\": %s\n", path, strerror(errno));
     }else{
-        df_dev(sbuf.st_dev);
+        df_dev(sbuf.st_dev, dpath, mntpath);
     }
 }
 
-void df_dev(dev_t dev)
+void df_dev(dev_t dev, const char *dpath, const char *mntpath)
 {
     unsigned int Total, Used, Free, Percent;
     struct _uzifilesys fsys;
     const char *dn;
 
-    dn = devname(dev);
+    dn = dpath ? dpath: devname(dev);
 
     if(_getfsys(dev, &fsys)){
         fprintf(stderr, "df: _getfsys(%d): %s\n", dev, strerror(errno));
@@ -111,7 +111,7 @@ void df_dev(dev_t dev)
 
     printf("%-16s %6u %6u %6u %5u%% %s\n",
             dn, Total, Used, Free, Percent,
-            fsys.s_mntpt ? mntpoint(dn) : (const char*) "/");
+            mntpath ? mntpath : mntpoint(dn));
 }
 
 void df_all(void)
@@ -122,7 +122,7 @@ void df_all(void)
     f = setmntent("/etc/mtab", "r");
     if (f) {
         while (mnt = getmntent(f))
-                df_path(mnt->mnt_dir);
+                df_path(mnt->mnt_dir, mnt->mnt_fsname, mnt->mnt_dir);
         endmntent(f);
     } else {
         fprintf(stderr, "df: cannot open /etc/mtab: %s\n", strerror(errno));
