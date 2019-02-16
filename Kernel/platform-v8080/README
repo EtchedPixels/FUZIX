@@ -1,57 +1,38 @@
-Some initial development code for 8080 support
+Virtual 8080 Platform Using Z80Pack
 
-Also to deal with
+To deal with
 - The C compiler bombs on the adventure game builds
 - The preprocessor can't handle netd or fforth
 
-Compiler:
-	- it uses BC as a frame pointer instead of tracking HL and using BC
-	  as a register variable temporary
-	- it's obsessed with 8 to 16 bit conversion of anything it works on
-	  internally
-	- it doesn't know anything about passing the top of arguments in a
-	  register (trickier because you put a hole in the frame if you are
-	  not careful)
+Memory Map (kernel)
 
-SDCC can almost generate 8080 code so is another possibility if we can't hack
-up. However its codegen isn't that much better although it could also be coaxed
-(and probably more easily) into using helpers. At least it knows how to optimize
-8bit operations and also to use bc and top of stack as temporaries.
+0000-00FF	Interrupt and RST vectors plus helper code
+0100-BFFF	Kernel
+C000-FFFF	Common and kernel
 
-8085 will need more thinking. ACK has some assumptions that don't work well if
-you use the undocumented 8085 stuff.
+Memory Map (user)
 
+0000-00FF	Interrupt and RST vectors plus helper code
+0100-BDFF	Application
+BE00-BFFF	Stashed udata
+C000-FFFF	Common and kernel
 
-Status
-FIXED - perror fails
-FIXED - pagesize appears to be bogus (reports 0)
-FIXED - calendar goes mad
-- cp is incredibly slow ?
+Put the kernel on the end of a Z80pack floppy image
 
+dd if=fuzix.bin of=drivea.dsk bs=1 seek=193024 conv=notrunc
 
+Write the bootloader to the start of the image
 
-Known things to save for re-entrancy
+Generate a suitable I drive with
 
-Libem:
+Standalone/build-filesystem drivei.dsk 256 8192
 
-.retadr
-.retadr1
-.bcreg
-.tmp1
-.areg
-
-Specific to .divi4 .mli4 
-
-block1
-block1+2
-block2
-block3
-block2+2
-block3+2
+and run cpmsim with the -8 flag for 8080.
 
 
-Is sar2 right - does mli not mlu ?
-
-Listed elsewhere
- .fra:8			8 byte function return area (for double ?)
-
+Limitations
+- The compiler has no soft float library
+- The adventure games fail to build due to a compiler bug
+- Due to preprocessor limits you cannot build netd or fforth
+- uget and uput need optimizing. This shows up significantly in some disk I/O
+  cases.

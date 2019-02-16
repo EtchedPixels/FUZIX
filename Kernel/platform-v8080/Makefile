@@ -3,7 +3,7 @@ LIBC=$(LIBPATH)/libc8080.a $(ACK_ROOT)/share/ack/cpm/libem.a
 
 CSRCS += devices.c main.c devtty.c devfd.c
 
-ASRCS = crt0.s commonmem.s v8080.s tricks.s rst.s end.s
+ASRCS = crt0.s commonmem.s v8080.s tricks.s end.s
 
 AOBJS = $(ASRCS:.s=.o)
 COBJS = $(CSRCS:.c=.o)
@@ -32,7 +32,7 @@ bootblock: bootblock.s
 
 image: bootblock
 	$(CROSS_LD) -b0:0x0100 -b4:0xE800 -o fuzix.bin crt0.o devices.o main.o \
-	commonmem.o tricks.o v8080.o rst.o devtty.o \
+	commonmem.o tricks.o v8080.o devtty.o \
 	../start.o ../version.o ../lowlevel-8080.o \
 	../bankfixed.o ../timer.o ../kdata.o  \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
