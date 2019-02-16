@@ -111,6 +111,8 @@ SRCTC = tget.c \
 
 SRCCURSES = vile.c
 
+SRCOTHER = cpuinfo.c cpuinfo-8080.s
+
 SKIPPED =
 
 
@@ -118,13 +120,14 @@ OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
 OBJTC = $(SRCTC:.c=.o)
 OBJCURSES = $(SRCCURSES:.c=.o)
+OBJOTHER = $(SRCOTHER:.c=.o)
 
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
 APPTC = $(OBJTC:.o=)
 APPCURSES = $(OBJCURSES:.o=)
 
-all: $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
+all: cpuinfo $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
 
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
@@ -137,6 +140,12 @@ $(APPTC): %: %.o
 
 $(APPCURSES): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBPATH)/curses8080.lib $(LIBPATH)/termcap8080.lib $(LIBC)
+
+cpuinfo-8080.o: cpuinfo-8080.s
+	$(ASM) $^
+
+cpuinfo: cpuinfo.o cpuinfo-8080.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
 
 size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@

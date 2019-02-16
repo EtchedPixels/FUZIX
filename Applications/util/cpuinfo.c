@@ -22,7 +22,46 @@
 unsigned int port;
 uint8_t port_opt;
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180)
+#if defined(__i80)
+
+/* You can't currently run 8080 binaries on the Z80 CPU systems because of
+   all the compiler/signal support needed in Kernel. If that changes we need
+   to revisit this lot */
+
+extern uint8_t cpu_identify(void);
+
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Intel", "AMD" };
+static const char *cpu_name[3] = { "8080", "9080A", "8085" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[]="no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 16;
+static const char *cpu_pm = NULL;
+
+static void cpu_ident(void)
+{
+    cpu_id = cpu_identify();
+    switch(cpu_id) {
+    case 0:
+        cpu_vendor = 0;
+        break;
+    case 1:
+        cpu_vendor = 1;
+        break;
+    case 2:
+        cpu_vendor = 0;
+        break;
+    }
+}
+
+
+#elif defined(__SDCC_z80) || defined(__SDCC_z180)
 
 #define CPU_Z80_Z80		0
 #define CPU_Z80_Z180		1
