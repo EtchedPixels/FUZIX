@@ -51,6 +51,5 @@ Debugging state:
 - Need to review the video writes - still lose last byte of yes on ls /bin
 
 Optimizations:
-- Need 'parent first' mode on fork
 - Turn on interrupt mode during swapping
 
