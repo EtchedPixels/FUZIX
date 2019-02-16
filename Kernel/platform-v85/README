@@ -1,0 +1,4 @@
+This is an emulated platform driver for the V85 virtual 8085. The main goal is
+to see what can be done to improve 8085 over 8080. It also provides a way to test
+the IDE and modern block layer code with ackcc.
+
