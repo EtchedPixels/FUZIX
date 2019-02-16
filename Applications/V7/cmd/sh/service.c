@@ -11,6 +11,7 @@
  */
 
 #include	"defs.h"
+#include <string.h>
 
 
 static const char *execs(const char *ap, const char *t[]);
