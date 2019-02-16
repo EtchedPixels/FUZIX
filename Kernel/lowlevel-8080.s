@@ -528,7 +528,7 @@ _cpu_detect:
 	inr a
 	push psw
 	pop h
-	mov a,h
+	mov a,l
 	ani 0x82
 	cpi 0x80
 	jz lr35902
@@ -562,7 +562,7 @@ is808x:
 	ani 255
 	push psw
 	pop h
-	mov a,h
+	mov a,l
 	ani 0x10	! half carry is zero on AMD
 	rnz
 	mvi d,0x90
