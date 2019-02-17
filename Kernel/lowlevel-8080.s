@@ -44,10 +44,11 @@ deliver_signals_2:
 	!	FIXME: if we ever have 8080 binaries with different load
 	!	addresses we will need to fix this
 	!
+	EI
 	lhld PROGLOAD+16		! signal vector
 	pchl
 signal_return:
-	di
+	DI
 	lxi h,0
 	dad sp
 	shld U_DATA__U_SYSCALL_SP
@@ -64,7 +65,6 @@ signal_return:
 .define unix_syscall_entry
 
 unix_syscall_entry:
-	di
 	push b		! Must preserve the frame pointer
 	lxi h,6		! Find arguments on stack frame
 
@@ -95,6 +95,7 @@ unix_syscall_entry:
 	inx h
 	mov a,m
 	sta U_DATA__U_ARGN+7
+	DI
 	! We are now in kernel space
 	mvi a,1
 	sta U_DATA__U_INSYS
@@ -108,14 +109,14 @@ unix_syscall_entry:
 	! Now map the kernel and call it
 	!
 	call map_kernel_di
-	ei
+	EI
 	call _unix_syscall
 	xchg
 	!
 	! Remember fork and execve don't necessarily return this way and fork
 	! can do it twice
 	!
-	di
+	DI
 	call map_process_always
 	xra a
 	sta U_DATA__U_INSYS
@@ -144,7 +145,7 @@ not_error:
 unix_pop:
 	pop b
 	! ret must directly follow the ei
-	ei
+	EI
 	ret
 via_signal:
 	!
@@ -171,7 +172,7 @@ via_signal:
 .define _doexec
 
 _doexec:
-	di
+	DI
 	call map_process_always
 	pop b
 	pop d
@@ -181,7 +182,7 @@ _doexec:
 	sta U_DATA__U_INSYS
 	xchg
 	lxi d,PROGLOAD
-	ei
+	EI
 	pchl
 !
 !	NULL trap. Must live in common space 
@@ -242,6 +243,7 @@ nmimsg:
 
 interrupt_handler:
 	push psw
+	INT_ENTER
 	push b
 	push d
 	push h
@@ -321,6 +323,7 @@ interrupt_pop:
 	pop h
 	pop d
 	pop b
+	INT_EXIT
 	pop psw
 	ei
 	ret

@@ -57,3 +57,23 @@ BUFSIZE                     = 520
 !
 .sect .common			! 4
 .sect .discard			! 5
+
+
+! Currently only used for 8085
+
+#ifndef INT_ENTER
+#define INT_ENTER		! just use the automatic di
+#endif
+
+#ifndef INT_EXIT
+#define INT_EXIT		! nothing needed by default
+#endif
+
+#ifndef EI
+#define EI ei
+#endif
+
+#ifndef DI
+#define DI di
+#endif
+
