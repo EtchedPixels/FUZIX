@@ -179,8 +179,9 @@ __uzero:
 !	Simple loop. Wants unrolling a bit
 !
 	call map_process_always
+	mvi d,0
 zeroloop:
-	mvi m,0
+	mov m,d
 	inx h
 	dcx b
 	mov a,b
