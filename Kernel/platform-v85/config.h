@@ -18,6 +18,9 @@
 #define MAX_MAPS	7
 #define MAP_SIZE	0xC000U
 
+/* We are using the RIM/SIM masking for interrupt control not hard di/ei pairs */
+#define CONFIG_SOFT_IRQ
+
 /* Read processes and big I/O direct into process space */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 

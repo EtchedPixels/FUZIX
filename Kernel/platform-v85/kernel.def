@@ -9,3 +9,11 @@ PROGBASE		    = 0x0000
 PROGLOAD		    = 0x0100
 
 CONFIG_SWAP		    = 1
+
+#define INT_ENTER	mvi a,0x0a ; sim ; ei
+
+#define INT_EXIT	mvi a,0x08 ; di ; sim
+
+#define DI		mvi a,0x0a ; sim
+
+#define EI		mvi a,0x08 ; sim

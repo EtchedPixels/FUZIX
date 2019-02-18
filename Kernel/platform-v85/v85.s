@@ -24,6 +24,41 @@ platform_interrupt_all:
 
 .sect .text
 
+!
+!	Vectored interrupt support. We block only the timer interrupt
+!
+.define _di
+
+_di:
+	lxi h,_int_disabled
+	mvi a,0x0A		! disable timer not serial
+	sim
+	mov a,m
+	mvi m,1
+	mov e,a
+	ret
+
+.define _ei
+
+_ei:
+	xra a
+	sta _int_disabled
+	mvi a,0x08
+	sim
+	ret
+
+.define _irqrestore
+
+_irqrestore:
+	ldsi 2
+	mov a,m
+	sta _int_disabled
+	ora a
+	rnz
+	mvi a,0x08
+	sim
+	ret
+
 .define init_early
 
 init_early:
@@ -59,10 +94,8 @@ _int_disabled:
 
 _program_vectors:
 	di
-	pop d
-	pop h
-	push h
-	push d
+	ldsi 2
+	lhlx
 	call map_process
 	call _program_vectors_u
 	call map_kernel_di
@@ -190,11 +223,8 @@ map_restore:
 .define _probe_bank
 
 _probe_bank:
-	pop d
-	pop h
-	push h
-	push d
-	mov a,l
+	ldsi 2
+	ldax d
 	call map_process_a
 	lxi d,-1
 	lxi h,4
@@ -247,10 +277,11 @@ _ttyready:
 .define _acia_poll
 
 !
-!	Call with interrupts off
+!	Call with interrupts on (we may have some masked)
 !
 _acia_poll:
 	lxi h,acia_queue+1
+	di
 	mov a,m			! read pointer
 	mov e,a			! save it
 	dcx h			! queue pointer
@@ -263,9 +294,11 @@ _acia_poll:
 	mvi d,0
 	dad d			! plus offset
 	mov e,m			! return char in DE
+	ei
 	mvi d,0
 	ret
 empty:
+	ei
 	lxi d,0xffff		! No luck
 	ret
 
@@ -318,11 +351,8 @@ acia_queue:
 .define _devide_writeb
 
 _devide_readb:
-	pop h
-	pop d
-	push d
-	push h
-	mov a,e
+	ldsi 2
+	ldax d
 	sta .patch1+1
 .patch1:
 	in 0
@@ -331,13 +361,11 @@ _devide_readb:
 	ret
 
 _devide_writeb:
-	lxi h,2
-	dad sp
-	mov a,m
+	ldsi 2
+	ldax d
 	sta .patch2+1
-	inx h
-	inx h
-	mov a,m
+	ldsi 4
+	ldax d
 .patch2:
 	out 0
 	ret
@@ -347,10 +375,10 @@ _devide_writeb:
 
 _devide_read_data:
 	push b
-	lxi h,_blk_op
-	mov e,m
+	lxi d,_blk_op
+	lhlx			! Address in HL
+	xchg			! Address in DE, struct back in HL
 	inx h
-	mov d,m			! Address
 	inx h
 	mov a,m			! Mapping type
 	cpi 2
@@ -383,10 +411,10 @@ readloop:
 
 _devide_write_data:
 	push b
-	lxi h,_blk_op
-	mov e,m
+	lxi d,_blk_op
+	lhlx
+	xchg
 	inx h
-	mov d,m
 	inx h
 	mov a,m
 	cpi 2
