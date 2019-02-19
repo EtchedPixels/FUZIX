@@ -11,6 +11,8 @@
 /* Use C helpers for usermem */
 #undef CONFIG_USERMEM_C
 
+/* Do larhge I/O direct to the user memory */
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Reclaim discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
 

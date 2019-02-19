@@ -23,6 +23,7 @@
 #define MAX_MAPS	10
 #define MAP_SIZE	0xC000U
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
 

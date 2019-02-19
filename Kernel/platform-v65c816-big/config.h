@@ -29,6 +29,8 @@
 #define MAX_MAPS	125
 #define MAP_SIZE    0xFB00  /* 0-FAFF */
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 /* 0xEE because our first bank is 1 and 0xEE + 2 * 1 = 0xF0 */
 #define STACK_BANKOFF	0x00	/* 0400-FDFF */
 

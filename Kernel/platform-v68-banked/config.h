@@ -16,6 +16,8 @@
 #define MAPBASE		0x00200000
 #define MAP_SIZE	0x0001FC00
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 #define CONFIG_BANKS 	1
 #define PROC_SIZE	MAP_SIZE			/* 128K minus udata */
 

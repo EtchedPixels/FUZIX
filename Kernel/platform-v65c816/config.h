@@ -33,6 +33,8 @@
 #define MAX_MAPS 	7
 #define MAP_SIZE    0xFC00  /* 0-FBFF */
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 /* 0xEE because our first bank is 1 and 0xEE + 2 * 1 = 0xF0 */
 #define STACK_BANKOFF	0xEE	/* F000-FDFF */
 

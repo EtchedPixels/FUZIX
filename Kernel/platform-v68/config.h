@@ -13,6 +13,8 @@
 #define CONFIG_BANKS 	(65536/512)
 #define PROC_SIZE	128			/* 64K, 128 * 512 */
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 #define CONFIG_SPLIT_UDATA
 #define UDATA_SIZE	1024
 #define UDATA_BLKS	2

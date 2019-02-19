@@ -15,6 +15,9 @@
 
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
+/* For now: we need to fix page crossing Atom IDE to deal with this sanely */
+#undef CONFIG_LARGE_IO_DIRECT
+
 /* Full RTC support */
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL

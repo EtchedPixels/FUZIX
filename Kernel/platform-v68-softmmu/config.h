@@ -10,6 +10,8 @@
 #define CONFIG_USERMEM_DIRECT
 #define CONFIG_VMMU
 
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 #define MMU_BLKSIZE	8192
 
 #define CONFIG_BANKS 	1
