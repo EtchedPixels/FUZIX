@@ -1321,7 +1321,11 @@ void magic(inoptr ino)
 
 /* This is a helper function used by _unlink and _rename; it doesn't really
  * belong here, but needs to be in common code as it's used from two different
- * syscall banks. */
+ * syscall banks.
+ *
+ * FIXME: this could be more efficient if we remembered which directory offset
+ * we found the node at lookup time
+ */
 arg_t unlinki(inoptr ino, inoptr pino, char *fname)
 {
 	if (getmode(ino) == MODE_R(F_DIR)) {
