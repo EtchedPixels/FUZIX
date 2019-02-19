@@ -20,12 +20,14 @@ start:
 		; The 8000-BFFF range is loaded by the loader
 		; The 4000-7FFF range is zero
 		ld a,#0x03
+		ld bc,#0x7ffd
 		out (c),a
 		ld hl,#0xc000
 		ld de,#0x0000
 		ld bc,#0x4000
 		ldir
 		ld a,#0x01
+		ld bc,#0x7ffd
 		out (c),a
 		; FIXME - where is best to start up
 		jp 0xC000
