@@ -21,6 +21,7 @@
 	.globl platform_interrupt_all
 	.globl _copy_common
 	.globl mpgsel_cache
+	.globl top_bank
 	.globl _kernel_pages
 	.globl _platform_reboot
 	.globl _bufpool
@@ -522,7 +523,9 @@ _copy_common:
 
 ; MPGSEL registers are read only, so their content is cached here
 mpgsel_cache:
-	.db	0,0,0,0
+	.db	0,0,0
+top_bank:	; the shared tricks code needs this name for cache+3
+	.db	0
 
 ; kernel page mapping
 _kernel_pages:

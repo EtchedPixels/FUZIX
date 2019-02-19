@@ -18,6 +18,7 @@
 	.globl _irqvector
 	.globl platform_interrupt_all
 	.globl mpgsel_cache
+	.globl top_bank
 	.globl _kernel_pages
 	.globl _platform_reboot
 	.globl _bufpool
@@ -319,7 +320,9 @@ map_save_kernel:
 
 ; MPGSEL registers are read only, so their content is cached here
 mpgsel_cache:
-	.db	0,0,0,0
+	.db	0,0,0
+top_bank:		; common library needs this name for the right byte
+	.db	0
 
 ; kernel page mapping
 _kernel_pages:
