@@ -18,6 +18,7 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl _int_disabled
+	    .globl top_bank
 
 	    ; for the PCMCIA disc driver
 	    .globl _rd_memcpy
@@ -372,6 +373,9 @@ save_maps:
 
 map_savearea:
 	    .db 0,0,0,0
+top_bank:			; actually a dummy to keep the lib code
+				; happy
+	    .db 0
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
