@@ -79,3 +79,5 @@
 
 extern void platform_discard(void);
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#,fd#"

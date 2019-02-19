@@ -54,3 +54,4 @@
 #define OFTSIZE		160
 #define ITABSIZE	176
 
+#define BOOTDEVICENAMES "hd#"

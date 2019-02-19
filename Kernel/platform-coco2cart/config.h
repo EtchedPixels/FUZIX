@@ -67,3 +67,5 @@ extern unsigned int cocoswap_dev;
 
 #define CONFIG_IDE
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#"

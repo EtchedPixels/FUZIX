@@ -46,7 +46,7 @@ extern unsigned int swap_dev;
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
-#define BOOTDEVICENAMES "hd#,fd,,rd"
+#define BOOTDEVICENAMES "hd#,fd"
 
 #define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */

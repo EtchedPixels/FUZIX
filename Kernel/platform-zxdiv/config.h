@@ -73,3 +73,5 @@
 
 /* All our pages get mapped into the top 16K bank for swapping use */
 #define swap_map(x)		((uint8_t *)(x|0xC000))
+
+#define BOOTDEVICENAMES "hd#"

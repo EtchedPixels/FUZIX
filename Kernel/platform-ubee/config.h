@@ -67,3 +67,5 @@
 extern unsigned int swap_dev;
 
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#,fd#"

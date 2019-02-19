@@ -72,3 +72,5 @@
 
 /* We swap by hitting the user map */
 #define swap_map(x)		((uint8_t *)(x))
+
+#define BOOTDEVICENAMES "hd#"

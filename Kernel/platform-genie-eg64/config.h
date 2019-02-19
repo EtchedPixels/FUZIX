@@ -80,3 +80,5 @@ extern unsigned char vt_map_char(unsigned char);
 
 extern void platform_discard(void);
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#"

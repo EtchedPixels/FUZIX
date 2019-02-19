@@ -32,3 +32,5 @@
 #define MAX_BLKDEV 4
 
 #define platform_copyright()
+
+#definbe BOOTDEVICENAMES "hd#"

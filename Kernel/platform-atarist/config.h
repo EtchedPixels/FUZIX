@@ -33,6 +33,8 @@
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
+#define BOOTDEVICENAMES "hd#,fd#"
+
 /* Device parameters */
 #define NUM_DEV_TTY 3
 

@@ -53,3 +53,5 @@
 
 #define platform_discard()
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#"

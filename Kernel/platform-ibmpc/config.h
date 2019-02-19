@@ -48,3 +48,5 @@ extern signed char vt_width, vt_height;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    6        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
+
+#define BOOTDEVICENAMES "hd#,fd#"

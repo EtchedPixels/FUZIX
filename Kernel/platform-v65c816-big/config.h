@@ -64,3 +64,5 @@
 #define ITABSIZE	176
 
 #define platform_copyright()
+
+#define BOOTDEVICENAMES "hd#"
