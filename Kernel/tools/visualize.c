@@ -4,7 +4,10 @@
 #include <string.h>
 #include <unistd.h>
 
-static uint8_t use[256];
+static uint8_t use[10][256];
+
+static int banked = 0;
+static int maxbank = 0;
 
 struct section {
 	struct section *next;
@@ -27,6 +30,8 @@ static struct section *find_create(const char *name)
 			return s;
 		s = s->next;
 	}
+	if (strcmp(name, "STUBS") == 0)
+		banked = 1;
 	s = malloc(sizeof(struct section));
 	if (s == NULL) {
 		fputs("Out of memory.\n", stderr);
@@ -70,6 +75,10 @@ static char code_for(const char *name)
 		return 'D';
 	if (strcmp(name, "BUFFERS") == 0)
 		return 'B';
+	if (strcmp(name, "BUFFERS1") == 0)
+		return 'B';
+	if (strcmp(name, "BUFFERS2") == 0)
+		return 'B';
 	if (strcmp(name, "COMMONMEM") == 0)
 		return 'S';
 	if (strcmp(name, "COMMONDATA") == 0)
@@ -78,7 +87,53 @@ static char code_for(const char *name)
 		return 'C';
 	if (strcmp(name, "INITIALIZER") == 0)
 		return 'i';
+	if (strcmp(name, "STUBS") == 0)
+		return '@';
+	if (strcmp(name, "UDATA") == 0)
+		return 'U';
 	return '?';
+}
+
+static char bank_for(const char *name)
+{
+	if (!banked)
+		return 0;
+	if (strcmp(name, "CODE") == 0)
+		return 0;
+	if (strcmp(name, "DATA") == 0)
+		return 0;
+	if (strncmp(name, "CODE", 4) == 0 || strncmp(name, "DATA", 4) == 0)
+		return name[4] - '0';
+	if (strcmp(name, "VIDEO") == 0)
+		return 3;
+	if (strcmp(name, "FONT") == 0)
+		return 3;
+	if (strcmp(name, "INITIALIZED") == 0)
+		return 0;
+	if (strcmp(name, "HOME") == 0)
+		return 1;
+	if (strcmp(name, "DISCARD") == 0)
+		return 0;
+	if (strcmp(name, "BUFFERS") == 0)
+		return 0;
+	if (strcmp(name, "BUFFERS1") == 0)
+		return 1;
+	if (strcmp(name, "BUFFERS2") == 0)
+		return 2;
+	if (strcmp(name, "COMMONMEM") == 0)
+		return 0;
+	if (strcmp(name, "COMMONDATA") == 0)
+		return 0;
+	if (strcmp(name, "CONST") == 0)
+		return 0;
+	if (strcmp(name, "INITIALIZER") == 0)
+		return 0;
+	if (strcmp(name, "STUBS") == 0)
+		return 0;
+	if (strcmp(name, "UDATA") == 0)
+		return 0;
+	fprintf(stderr, "Unknown bank '%s'.\n", name);
+	exit(1);
 }
 
 static void learn_size(const char *size, const char *name)
@@ -103,7 +158,7 @@ static void learn_start(const char *addr, const char *name)
 
 static void mark_map(void)
 {
-	unsigned int base, end;
+	unsigned int base, end, bank;
 	struct section *s = head;
 	while (s) {
 		if (s->flags != (KNOW_SIZE | KNOW_START)) {
@@ -115,8 +170,15 @@ static void mark_map(void)
 			s->code = code_for(s->name);
 			base = (s->start + 127) >> 8;
 			end = (s->start + s->len + 127) >> 8;
+			bank = bank_for(s->name);
+			if (bank > 9) {
+				fprintf(stderr, "Invalid bank %d for '%s'.\n", bank, s->name);
+				exit(1);
+			}
+			if (bank > maxbank)
+				maxbank = bank;
 			while (base <= end) {
-				use[base++] = s->code;
+				use[bank][base++] = s->code;
 			}
 		}
 		s = s->next;
@@ -127,9 +189,9 @@ int main(int argc, char *argv[])
 {
 	char buf[512];
 	int i;
-	int r;
+	int r, b;
 
-	memset(use, '#', 256);
+	memset(use, '#', sizeof(use));
 
 	while (fgets(buf, 511, stdin)) {
 		char *p1 = strtok(buf, " \t\n");
@@ -147,12 +209,16 @@ int main(int argc, char *argv[])
 			learn_start(p1, p2 + 3);
 	}
 	mark_map();
-	for (r = 0; r < 4; r++) {
-		for (i = 0; i < 256; i += 4) {
-			putchar(use[i + r]);
-			if ((i & 0x3C) == 0x3C)
-				putchar(' ');
+	for (b = 0; b <= maxbank; b++) {
+		for (r = 0; r < 4; r++) {
+			for (i = 0; i < 256; i += 4) {
+				putchar(use[b][i + r]);
+				if ((i & 0x3C) == 0x3C)
+					putchar(' ');
+			}
+			putchar('\n');
 		}
+		putchar('\n');
 		putchar('\n');
 	}
 	exit(0);
