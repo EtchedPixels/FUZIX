@@ -71,6 +71,8 @@ clean:
 	(cd cave; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd cpm; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd games; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd cursesgames; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd as09; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd ld09; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd netd; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd SmallC; $(MAKE) -f Makefile.$(USERCPU) clean)

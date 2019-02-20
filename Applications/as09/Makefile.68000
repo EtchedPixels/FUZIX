@@ -27,8 +27,6 @@ as09: $(CRT0) $(OBJS)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 clean:
-realclean:
-clobber:
 	rm -f *.o as09 *~
 
 .c.o:
