@@ -1,0 +1,81 @@
+Adapted Sonoplex MC68302 board
+
+https://retrobrewcomputers.org/doku.php?id=builderpages:plasmo:spx-mpu
+
+This a system with a 68302@16MHz, 2.25MB of flash (holding a boot ROM and CP/M
+68K) as well as a monitor, 1MB of RAM (256K battery backed) a 68692 DUART
+providing a console port, an 82C55 PIO and an RTC (not yet handled).
+
+There is a plug in board which provides a CF interface using the 82C55, and
+interface points for the second DUART port and minimal SPI.
+
+
+Memory Map
+
+When are loaded we have the 68302 internal I/O mapped at FFF000 and the
+RAM mapped at 0.
+
+000000-0FFFFF		RAM (1MB)
+300000-300007		82C55 (odd side)
+300000-300020		DUART (68692) (even side)
+300040-30005F		RTC72743 (odd side)
+
+Chip Selects
+
+0		Boot Flash 256K (1 wait)
+1		RAM, 4MB mapping (0 wait)
+2		400000, 1MB 1 wait (flash)
+3		500000, 1MB 1 wait (flash)
+
+RAM is aliased in the low 1MB
+GIMR is set to vector 80-9F
+TMR1 is set to 10ms
+The RTC is kicked into 24hr mode
+DUART and TMR1 are the interrupt sources
+
+As we boot CP/M 68K from ROM we need to run from CP/M 68K as follows
+
+Binary header
+601AH
+Size of text.L
+Size of data.L
+Size of BSS.L
+0.L (Sizeof syms)
+0.L
+0.L (beginning of text segment and start)
+0.W (no reloc)
+[text][data]
+
+Supervisor mode:
+
+MOVE.W #$3E,D0
+TRAP #2
+
+returns in supervisor mode on the CP/M supervisor stack
+
+
+The serial ports are mapped as follows
+
+tty1	The DB25 serial port
+tty2	The port on the CF card
+Future:
+tty3-5	The SCC ports (these are wired as RS422/485)
+
+TODO
+
+Figure out the right rituals to get the CP/M 68K filesystem working in the
+CP/M utils
+Write a front end CP/M loader module that has the kernel as data and boots it
+Test the console and timer drivers
+Test IDE
+Write RTC driver
+Investigate the SPI state of affairs, see if we can get SD working
+Reboot logic
+
+Longer Term
+
+SCC RS485 drivers (serial and/or networking ?)
+Ethernet over SPI
+
+How to do swap ?
+
