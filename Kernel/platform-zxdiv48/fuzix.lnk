@@ -1,0 +1,57 @@
+-mwxuy
+-r
+-i fuzix.ihx
+-b _CONST=0x5B00
+-b _CODE1=0x0080
+-b _CODE2=0x0080
+-b _FONT=0x0080
+-b _CODE4=0x0080
+-b _DISCARD=0xA000
+-b _UDATA=0xFD00
+-l z80
+platform-zxdiv48/crt0.rel
+platform-zxdiv48/commonmem.rel
+platform-zxdiv48/zx48.rel
+platform-zxdiv48/zxvideo.rel
+platform-zxdiv48/main.rel
+platform-zxdiv48/buffers.rel
+platform-zxdiv48/discard.rel
+start.rel
+version.rel
+lowlevel-z80-banked.rel
+platform-zxdiv48/tricks.rel
+simple.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-zxdiv48/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+swap.rel
+devsys.rel
+devinput.rel
+platform-zxdiv48/devtty.rel
+platform-zxdiv48/devide.rel
+platform-zxdiv48/devide_discard.rel
+platform-zxdiv48/ide.rel
+platform-zxdiv48/divide.rel
+platform-zxdiv48/zxcf.rel
+platform-zxdiv48/mbr.rel
+platform-zxdiv48/blkdev.rel
+platform-zxdiv48/devrd.rel
+platform-zxdiv48/rd_divideplus.rel
+platform-zxdiv48/devinput.rel
+platform-zxdiv48/zxkeyboard.rel
+-e

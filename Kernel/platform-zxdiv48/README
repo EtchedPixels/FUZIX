@@ -1,0 +1,83 @@
+Just a mad experiment for now
+
+TODO
+- Wrap the loader into something useful like a .tap or snapshot for FATware
+- Maybe use ResiDOS for the ZXCF+ loader ?
+- Test Loader
+- Test Kernel
+- tmpbuf and execve(). Not quite as simple as keeping the buffers in the
+  execve bank as we also use one right now in fork() and in IDE.
+
+Possible space savers
+	tmpbuf2 can go banked (we have ~300 bytes data free so this would
+	save us 512 more!)
+
+Fuzix for the 48K Spectrum and clones with DivIDE plus and thus 512K of RAM
+that can only be banked in the low 16K, plus video pinned at 0x4000-5AFF.
+
+DivIDE plus
+
+0xE3:	7: conmem 6: mapram 0-5: bank
+	(may only be 4 banks)
+
+	7 set ROM at 0000-1FFF and RAM at 2000-3FFF (banked)
+	and pins it (overrides 6)
+	6 is a one shot and write protects bank 3 and places it at
+	0000-1FFF, 
+	5-0: are the bank at 2000-3FFF
+
+0x1F	000AAAAX	Normal DivIDE mode AAAA is the 32K bank for the 4x8K
+			mapped
+	001XXXXX	Enable 128K mode
+	01WAAAAA	RAM mode. Disables DivIDE traps and behaviour. Maps
+			the given 16K bank (AAAAA) into the low 16K, writable
+			if W is set.
+	10WAAAAA	As above with ROM mapped (W means flash rewrite is
+			possible). We don't bother putting Fuzix in flash
+	11XXXXXX	Reset DivIDE plus next ROM access/refresh cycle
+			if I = 0-63
+
+We only use the RAM mode. The RAM is divided up into banked chunks and
+the 16K chunks hold the kernel plus buffers etc.
+
+We run with the following mapping
+
+0000-007F	Reset stubs in each bank (interrupts etc)
+0080-3FFF	Code in each bank
+4000-5AFF	Spectrum screen memory and system variables
+5B00-7FFF	Kernel data
+
+8000-83FF	Needed to create the exec of init
+A000-		_DISCARD area - blown away when we exec init
+		(tons of room in this space)
+
+ZXCF/ZXATASP
+
+Bank select is just a different port and different top bit flags, whilst
+the IDE lives somewhere else.
+
+0x4278,RWBBBBBB
+
+R = read ROM/writesram if set
+W = write allowed
+BBBBBB = bank (64 x 16K) max 1MB
+
+IDE is at 
+0xRRBF  data/error/sector etc.. as expected 00BF 01BF ...
+
+ZXCF+2 has a fast data buffer at xx9F (for ldir)
+31 WO   0 - first interface 1 - second interface (ZXCF+2 only)
+
+We don't specifially support the ZXCF+2 yet.
+
+Bank 0 is used at reset (normally holds ResiDOS) so we leave 0/1 alone.
+
+The IDE is more problematic due to the 16bit port (no inir/otir). We also need
+to size the RAM properly because the ZXCF+ and ZXATASP had options from 128K
+(not much use - would need reworking of the model to allow secondary disk swap)
+512K (just fine), and 1MB (not clear what to do with half of it).
+
+ResiDOS is not actually stunningly useful. We simply can't afford the cost of
+extra calls and magic routines and dynamic page numbering with all the bank
+flipping we do as we run. We do try and co-exist on disk providing PC partition
+table are in use.
