@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <getopt.h>
 
-#define NBANKS	4
+#define NBANKS	5
 
 unsigned char buf[NBANKS][65536];
 unsigned int size[NBANKS];
@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  for (banks = 0; banks < 4; banks ++) {  
+  for (banks = 0; banks < NBANKS; banks ++) {
     if (banks == 0)
     strcpy(bin, "common.bin");
     else
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
   move_initializers();
   zero_data();		/* For SNA mode */
 
-  for (banks = 0; banks < 4; banks++) {
+  for (banks = 0; banks < NBANKS; banks++) {
     if (fptr[banks]) {
       /* Just conceivably we might reloc a trailing zero byte and need to grow the
        file */
