@@ -70,7 +70,7 @@ int swapout_new(ptptr p, void *u)
 {
 	uint16_t page = p->p_page;
 	uint16_t blk;
-	uint16_t map;
+	int16_t map;
 
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
@@ -79,7 +79,7 @@ int swapout_new(ptptr p, void *u)
 		panic(PANIC_ALREADYSWAP);
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
-	if (map == 0)
+	if (map == -1)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
 	/* Write the app (and uarea etc..) to disk */

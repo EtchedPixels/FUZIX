@@ -39,7 +39,7 @@ int swapmap_alloc(void)
                 return swapmap[--swapptr];
 	}
         else
-                return 0;
+                return -1;
 }
 
 void swapmap_init(uint8_t swap)

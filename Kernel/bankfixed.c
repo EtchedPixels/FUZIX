@@ -92,13 +92,13 @@ int swapout(ptptr p)
 {
 	uint16_t page = p->p_page;
 	uint16_t blk;
-	uint16_t map;
+	int16_t map;
 
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
-	if (map == 0)
+	if (map == -1)
 		return ENOMEM;
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d) to map %d\n", p, p->p_page, map);

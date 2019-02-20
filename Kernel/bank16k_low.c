@@ -174,7 +174,7 @@ int swapout(ptptr p)
 {
 	uint16_t page = p->p_page;
 	uint16_t blk;
-	uint16_t map;
+	int16_t map;
 	uint16_t base = SWAPBASE;
 	uint16_t size = (0x4000 - SWAPBASE) >> 9;
 	uint8_t *pt = (uint8_t *)&p->page;
@@ -187,7 +187,7 @@ int swapout(ptptr p)
 
 	/* Are we out of swap ? */
 	map = swapmap_alloc();
-	if (map == 0)
+	if (map == -1)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
 
