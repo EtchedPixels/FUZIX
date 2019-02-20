@@ -12,8 +12,9 @@
 
 _platform_monitor:
 _platform_reboot:
-	di
-	hlt
+	xra a
+	out 0x40		! Map ROM back in
+	rst 0
 
 .define platform_interrupt_all
 
