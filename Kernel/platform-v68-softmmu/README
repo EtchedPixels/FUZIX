@@ -1,5 +1,0 @@
-See platform-v68
-
-This is a test tree for a configuration developing the software MMU mode. It's
-not yet functional and will crash when fork() is hit.
-
