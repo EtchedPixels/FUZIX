@@ -48,6 +48,8 @@
 	.globl ___hard_irqrestore
 	.globl _in
 	.globl _out
+	.globl _in16
+	.globl _out16
 
         ; imported symbols
 	.globl _chksigs
@@ -676,6 +678,20 @@ _out:
 	push de
 	jp (hl)
 
+_out16:
+	pop hl	; return
+	pop iy	; bank
+	pop bc	; port
+	pop de	; data
+	push de
+	push bc
+	push hl
+	push iy
+	out (c),e
+	jp (hl)
+
+_in16:
+	ld b,h
 _in:
 	ld c,l
 	in l, (c)

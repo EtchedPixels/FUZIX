@@ -25,6 +25,11 @@ typedef uint16_t irqflags_t;
 extern void out(uint8_t addr, uint8_t val);
 extern uint8_t in(uint8_t addr) __z88dk_fastcall;
 
+/* This is an 8bit value to 16bit port - its defined as dual uint16_t to get
+   better code out of SDCC */
+extern void out16(uint16_t addr, uint16_t val);
+extern uint8_t in16(uint16_t addr) __z88dk_fastcall;
+
 /* Z80 binaries start with a JP */
 #define EMAGIC    0xc3    /* Header of executable */
 #define EMAGIC_2  0x18	  /* JR */
