@@ -90,6 +90,9 @@ _program_vectors:
 
 		.globl _kdataseg
 
+
+		.globl _udata
+
 map_kernel:
 map_kernel_di:
 		push af
@@ -113,7 +116,7 @@ map_process_a:
 map_process_always:
 map_process_always_di:
 		push af
-		ld a,(U_DATA__U_PAGE)
+		ld a,(_udata + U_DATA__U_PAGE)
 		ioi
 		ld (DATASEG),a
 		pop af
@@ -415,8 +418,9 @@ _ser'X'_get:
 		inc hl
 		inc a
 		cp a,(hl)		; in ptr
-		jr nz, ser'X'_empty
+		jr z, ser'X'_empty
 		dec hl
+		and #63
 		ipset3
 		ld (hl),a
 		ld hl,#_ser'X'_rxbuf	; work around dumb linker limit

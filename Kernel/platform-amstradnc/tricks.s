@@ -1,7 +1,7 @@
         .module tricks
 
         .include "platform/kernel.def"
-        .include "../../kernel.def" ; Kernel
+        .include "../../kernel-z80.def" ; Kernel
 
 TOP_PORT	.equ	0x13
 

@@ -5,7 +5,7 @@
 ;	ACK handling.
 
 	.include "kernel.def"
-	.include "../kernel.def"
+	.include "../kernel-z80.def"
 
 	.globl _si_read
 	.globl _si_write

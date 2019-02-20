@@ -48,10 +48,10 @@
         .globl outstringhex
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (above 0xE000)
+; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
         .area _COMMONMEM
 
@@ -83,7 +83,7 @@ _vtborder:		; needs to be common
 
 
 ; -----------------------------------------------------------------------------
-; KERNEL CODE BANK (below 0xC000, only accessible when the kernel is mapped)
+; KERNEL CODE BANK (only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
         .area _CODE
 
@@ -169,7 +169,7 @@ map_process_always_di:
 	push af
 	push bc
 	push hl
-	ld hl,(U_DATA__U_PAGE)
+	ld hl,(_udata + U_DATA__U_PAGE)
 map_write_hl:
 	ld (current_map),hl
 	;

@@ -41,13 +41,14 @@
 	.globl _ctc_present
 	.globl _sio_present
 	.globl _sio1_present
+	.globl _udata
 
 	; exported debugging tools
 	.globl outchar
 	.globl inchar
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ;=========================================================================
 ; Constants
@@ -382,24 +383,24 @@ _program_vectors:
 map_process_always:
 map_process_always_di:
 	push hl
-	ld hl,#U_DATA__U_PAGE
+	ld hl,#_udata + U_DATA__U_PAGE
         jr map_process_2_pophl_ret
 
 map_buffers_user:
 	push hl
-	ld hl,(U_DATA__U_PAGE)
+	ld hl,(_udata + U_DATA__U_PAGE)
 	ld h,#36
 	ld (_ubuffer_pages),hl
-	ld hl,(U_DATA__U_PAGE + 2)
+	ld hl,(_udata + U_DATA__U_PAGE + 2)
 	ld (_ubuffer_pages + 2),hl
 	ld hl,#_ubuffer_pages
         jr map_process_2_pophl_ret
 
 map_buffers_user_h:
 	push hl
-	ld hl,(U_DATA__U_PAGE)
+	ld hl,(_udata + U_DATA__U_PAGE)
 	ld (_ubuffer_pages),hl
-	ld hl,(U_DATA__U_PAGE + 2)
+	ld hl,(_udata + U_DATA__U_PAGE + 2)
 	ld l,#36
 	ld (_ubuffer_pages + 2),hl
 	ld hl,#_ubuffer_pages

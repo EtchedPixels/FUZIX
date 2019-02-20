@@ -1,7 +1,7 @@
         .module usermem32
 
 	.include "platform/kernel.def"
-        .include "kernel.def"
+        .include "kernel-z80.def"
 
         ; exported symbols
         .globl __uget
@@ -116,7 +116,7 @@ uputget:
         ld e, 6(ix)
         ld d, 7(ix)
 	; And now load ix with our paging pointer
-	ld ix,#U_DATA__U_PAGE
+	ld ix,#_udata + U_DATA__U_PAGE
 	ret
 
 __uget:
@@ -168,7 +168,7 @@ __uzero:
 	or c
 	ret z
 	push ix
-	ld ix,#U_DATA__U_PAGE
+	ld ix,#_udata + U_DATA__U_PAGE
 	call user_mapping
 	jr z, zeroit_1
 	call zeroit
@@ -197,9 +197,9 @@ __ugetc:
 	push hl
 	push bc
 	bit 7,h
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	jr z, ugetcl
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	res 7,h
 ugetcl:
 	call map_page_low
@@ -216,7 +216,7 @@ __ugetw:
 	bit 7,h
 	jr z, ugetwl
 	; High page - no wrap possible
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	call map_page_low
 	res 7,h
 	ld a,(hl)
@@ -228,7 +228,7 @@ normal_wl:
 	jp map_kernel_low
 ugetwl:
 	; Low page - we might be fetching 7FFF/8000
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	call map_page_low
 	ld a,(hl)
 	inc hl
@@ -236,7 +236,7 @@ ugetwl:
 	jr z, normal_wl		; No split
 	; We fetched 7FFF/8000
 	ld l,a
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	call map_page_low
 	ld a,(0)		; Split can only mean one address
 	ld h,a
@@ -250,9 +250,9 @@ __uputc:
 	push de
 	push bc
 	bit 7,h
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	jr z, uputcl
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	res 7,h
 uputcl:
 	call map_page_low
@@ -268,7 +268,7 @@ __uputw:
 	push bc
 	bit 7,h
 	jr z, uputwl
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	call map_page_low
 	res 7,h
 	ld (hl),e
@@ -277,13 +277,13 @@ normal_pwl:
 	ld (hl),d
 	jp map_kernel_low
 uputwl:
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	call map_page_low
 	ld (hl),e
 	inc hl
 	bit 7,h
 	jr z, normal_pwl
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	call map_page_low
 	ld a,d
 	ld (0),a		; Split can only mean one address

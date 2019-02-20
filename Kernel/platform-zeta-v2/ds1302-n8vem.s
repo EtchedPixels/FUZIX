@@ -15,7 +15,7 @@
         .globl _ds1302_get_pin_data
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; DS1302 interface

@@ -3,8 +3,9 @@
 ;	only reason to do otherwise is for speed. A custom bank logic aware
 ;	bank to bank copier will give vastly better fork() performance.
 ;
-	.include "../kernel.def"
 	.include "kernel.def"
+	.include "../kernel-z80.def"
+
 ;
 ;	All of the fixed bank support is available as a library routine,
 ;	however it is a performance sensitive area. Start with

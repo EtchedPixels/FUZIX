@@ -26,6 +26,7 @@
 	    .globl _mouse12
 	    .globl _mouse_probe
 	    .globl _int_disabled
+	    .globl _udata
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -49,7 +50,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 KERNEL_LOW	.equ	0x20		; 0/1 low 2/3 high (ROM off)
 KERNEL_HIGH	.equ	2
@@ -179,7 +180,7 @@ map_restore_low:
 	    ld a, (low_save)
 	    jr map_page_low
 map_user_low:
-	    ld a,(U_DATA__U_PAGE)
+	    ld a,(_udata + U_DATA__U_PAGE)
 map_page_low:
 	    or #0x20			; force ROM off
 	    out (250),a
@@ -566,7 +567,7 @@ syscall_high:
 	    or #KERNEL_HIGH
 	    out (251),a
 	    ; Stack now invalid
-	    ld (U_DATA__U_SYSCALL_SP),sp
+	    ld (_udata + U_DATA__U_SYSCALL_SP),sp
 	    ld sp,#kstack_top
 	    ld a,(syscall_stash)
 	    call unix_syscall_entry
@@ -579,7 +580,7 @@ syscall_high:
 	    pop bc
 	    ; stack now invalid. Grab the new sp before we unbank the
 	    ; memory holding it
-	    ld sp,(U_DATA__U_SYSCALL_SP)
+	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
 	    out (251),a
 	    xor a
 	    cp h

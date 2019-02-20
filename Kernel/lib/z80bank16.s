@@ -59,11 +59,11 @@ _platform_switchout:
 
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
-        ; U_DATA__U_SP with the following on the stack:
+        ; _udata + U_DATA__U_SP with the following on the stack:
         push hl ; return code
         push ix
         push iy
-        ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
+        ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -95,7 +95,7 @@ _switchin:
 
 	; ------- No stack -------
         ; check u_data->u_ptab matches what we wanted
-        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
+        ld hl, (_udata + U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE==IX
         jr nz, switchinfail
@@ -111,7 +111,7 @@ _switchin:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
+        ld sp, (_udata + U_DATA__U_SP)
 
 	; ---- New task stack ----
 
@@ -120,7 +120,7 @@ _switchin:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (U_DATA__U_ININTERRUPT)
+        ld a, (_udata + U_DATA__U_ININTERRUPT)
 	ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
@@ -170,7 +170,7 @@ _dofork:
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with HL (ie return code) containing the child PID.
         ; Hurray.
-        ld (U_DATA__U_SP), sp
+        ld (_udata + U_DATA__U_SP), sp
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.

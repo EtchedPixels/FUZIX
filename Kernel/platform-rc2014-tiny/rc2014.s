@@ -40,7 +40,7 @@
 	.globl outchar
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ;=========================================================================
 ; Constants

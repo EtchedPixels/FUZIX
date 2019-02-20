@@ -1,6 +1,6 @@
 
-	.include "../kernel.def"
 	.include "kernel.def"
+	.include "../kernel-z80.def"
 
 ;FIXME	.include "../lib/z80fixedbank.s"
 
@@ -43,13 +43,13 @@ _platform_switchout:
 	push hl		; stack a retcode of 0 (see fork)
 	push ix		; save registers
 	push iy
-	ld (U_DATA__U_SP), sp
+	ld (_udata + U_DATA__U_SP), sp
 
 	; The U_DATA stash lives in the top of the user process. Map that
 	; low with interrupts off so we can ldir between the two
-	ld a,(U_DATA__U_PAGE + 1)
+	ld a,(_udata + U_DATA__U_PAGE + 1)
 	call map_page_low
-	ld hl,#U_DATA
+	ld hl,#_udata
 	ld de,#U_DATA_STASH-0x8000
 	ld bc,#U_DATA__TOTALSIZE
 	ldir
@@ -72,7 +72,7 @@ _switchin:
 
 	; FIXME: add swap support
 
-	ld hl,(U_DATA__U_PTAB)
+	ld hl,(_udata + U_DATA__U_PTAB)
 	or a
 	sbc hl,de
 	jr z, skip_copyback
@@ -83,28 +83,28 @@ _switchin:
 	; a moment
 	exx
 	ld hl,#U_DATA_STASH-0x8000
-	ld de,#U_DATA
+	ld de,#_udata
 	ld bc,#U_DATA__TOTALSIZE
 	ldir
 	exx
-	ld sp, (U_DATA__U_SP)
+	ld sp, (_udata + U_DATA__U_SP)
 
 	; Ok our stack is now valid
 
 	call map_kernel_low
-	ld hl, (U_DATA__U_PTAB)
+	ld hl, (_udata + U_DATA__U_PTAB)
 	or a
 	sbc hl,de
 	jr nz, switchin_failed	; invalid u_data
 
 skip_copyback:
-	ld sp, (U_DATA__U_SP)
-	ld ix, (U_DATA__U_PTAB)
+	ld sp, (_udata + U_DATA__U_SP)
+	ld ix, (_udata + U_DATA__U_PTAB)
 	ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 	ld a, P_TAB__P_PAGE_OFFSET(ix)
-	ld (U_DATA__U_PAGE),a
+	ld (_udata + U_DATA__U_PAGE),a
 	ld a, P_TAB__P_PAGE_OFFSET+1(ix)
-	ld (U_DATA__U_PAGE + 1),a
+	ld (_udata + U_DATA__U_PAGE + 1),a
 	ld hl,#0
 	ld (_runticks), hl
 	; Recover IX and IY, return value
@@ -113,7 +113,7 @@ skip_copyback:
 	pop hl
 
 	; if we pre-empted in an ISR IRQ's stay off, if not they get enabled
-	ld a, (U_DATA__U_ININTERRUPT)
+	ld a, (_udata + U_DATA__U_ININTERRUPT)
 	ld (_int_disabled), a
 	or a
 	ret nz
@@ -154,7 +154,7 @@ _dofork:
 	push ix
 	push iy
 
-	ld (U_DATA__U_SP), sp
+	ld (_udata + U_DATA__U_SP), sp
 
 	; Parent state built and in u_data
 
@@ -180,10 +180,10 @@ _dofork:
 	; modify it for the child
 
 	; Map parent high page
-	ld a,(U_DATA__U_PAGE+1)
+	ld a,(_udata + U_DATA__U_PAGE+1)
 	call map_page_low
 	; Copy udata
-	ld hl, #U_DATA
+	ld hl, #_udata
 	ld de, #U_DATA_STASH - 0x8000
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
@@ -241,7 +241,7 @@ _dofork:
 copy_process:
 	ld de,#P_TAB__P_PAGE_OFFSET
 	add hl,de
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	call map_page_low
 	call setup_platform_copier
 	ld ix,#cp1ret
@@ -252,7 +252,7 @@ cp1ret:
 	inc hl
 	cp (hl)
 	ret z
-	ld a,(U_DATA__U_PAGE+1)
+	ld a,(_udata + U_DATA__U_PAGE+1)
 	call map_page_low
 	call setup_platform_copier
 	ld ix,#cp2ret

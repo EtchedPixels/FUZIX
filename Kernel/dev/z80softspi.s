@@ -13,7 +13,7 @@
 	.globl _sd_spi_rx_sector
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 
 	.globl _spi_port		; Port to use

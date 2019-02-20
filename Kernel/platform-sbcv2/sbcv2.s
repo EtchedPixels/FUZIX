@@ -45,7 +45,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment
@@ -252,7 +252,7 @@ map_process_always_di:
 map_process_always:
 	    push af
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_hl
 	    pop hl
 	    pop af
@@ -325,7 +325,7 @@ _platform_prop_sd_read:
 	    dec a
 	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
 	    jr nz, do_read_a
-	    ld a, (U_DATA__U_PAGE)
+	    ld a, (_udata + U_DATA__U_PAGE)
 do_read_a:  call map_process_a
 do_read:    ld bc,#0xAB
 	    inir
@@ -340,7 +340,7 @@ _platform_prop_sd_write:
 	    dec a
 	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
 	    jr nz, do_write_a
-	    ld a, (U_DATA__U_PAGE)
+	    ld a, (_udata + U_DATA__U_PAGE)
 do_write_a: call map_process_a
 do_write:   ld bc,#0xAB
 	    otir

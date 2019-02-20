@@ -1,7 +1,7 @@
         .module usermem
 
         .include "socz80.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
         .include "kernel.def"
 
         ; imported symbols
@@ -156,7 +156,7 @@ __uget:
 
 ugetputsetup:
         ; compute 32-bit dest address based on process MMU page and userspace address in DE
-        ld hl, (U_DATA__U_PAGE) ; load 4K page address
+        ld hl, (_udata + U_DATA__U_PAGE) ; load 4K page address
 
         ; we shift HL 4 bits to the left (would need to handle overflow for future hardware with >16MB RAM)
         add hl, hl

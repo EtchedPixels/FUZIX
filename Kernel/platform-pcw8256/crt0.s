@@ -13,10 +13,10 @@
 	        .area _HEAP
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
-	        .area _INITIALIZER
 		.area _FONT
 	        .area _GSINIT
 	        .area _GSFINAL
+	        .area _INITIALIZER
 	        .area _COMMONMEM
 		.area _DISCARD
 
@@ -30,7 +30,6 @@
 	        .globl l__DISCARD
 		.globl s__COMMONMEM
 		.globl l__COMMONMEM
-		.globl s__INITIALIZER
 	        .globl kstack_top
 		.globl start
 

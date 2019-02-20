@@ -47,7 +47,7 @@
             .globl __uzero
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (above 08000, only accessible when the kernel is mapped)
@@ -241,7 +241,7 @@ map_process_always_di:
 	    push bc
 	    ld bc, (map_reg)
 	    ld (ksave_map), bc
-	    ld a,(U_DATA__U_PAGE)
+	    ld a,(_udata + U_DATA__U_PAGE)
 	    ld b,a
 	    ld (map_reg),bc
 	    out (c),b
@@ -486,7 +486,7 @@ __uput:
 	; Use helper as NMOS Z80 has bugs in this area
 	call ___hard_di
 	; Our banks
-	ld a, (U_DATA__U_PAGE)
+	ld a, (_udata + U_DATA__U_PAGE)
 	ld c, a
 	ld a, (map_bank2 + 1)	; kernel is source
 	ld b, a
@@ -513,7 +513,7 @@ __uget:
 	jr z, uput_out
 	exx
 	call ___hard_di
-	ld a, (U_DATA__U_PAGE)
+	ld a, (_udata + U_DATA__U_PAGE)
 	ld b, a
 	ld a, (map_bank2 + 1)	; kernel is destination
 	ld c, a

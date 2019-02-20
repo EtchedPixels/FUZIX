@@ -41,7 +41,7 @@
 	.globl outchar
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ;=========================================================================
 ; Constants
@@ -242,7 +242,7 @@ _program_vectors:
 map_process_always:
 map_process_always_di:
 	push hl
-	ld hl,#U_DATA__U_PAGE
+	ld hl,#_udata + U_DATA__U_PAGE
         jr map_process_2_pophl_ret
 
 ;=========================================================================

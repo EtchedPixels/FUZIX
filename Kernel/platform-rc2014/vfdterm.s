@@ -1,7 +1,7 @@
         .module vfdterm
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
         .globl  VFDTERM_PREINIT
         .globl  VFDTERM_PUTC

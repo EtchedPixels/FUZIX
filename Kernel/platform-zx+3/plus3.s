@@ -49,7 +49,7 @@
         .globl outstringhex
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (below 0x4000)

@@ -15,6 +15,11 @@ ram table of 512 bytes or so = ~ 24K) in the low 128K
 WIP - lots to do to add swap support and memory map needs a re-arrange so we
 can get fork() going
 
+FIXME:
+- Move disk buffers into own bank and use external disk buffers to keep under
+  the 48K line
+
+
 Supported Hardware (all only in early test)
 ------------------
 

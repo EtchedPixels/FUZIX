@@ -23,7 +23,7 @@
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
         .area _COMMONMEM
 
@@ -50,7 +50,7 @@ _platform_switchout:
         push hl ; return code
         push ix
         push iy
-        ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
+        ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -86,7 +86,7 @@ _switchin:
 
 	; ------- No stack -------
         ; check u_data->u_ptab matches what we wanted
-        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
+        ld hl, (_udata + U_DATA__U_PTAB) ; u_data->u_ptab
         sbc hl, de              ; subtract, result will be zero if DE==IX
         jr nz, switchinfail
 
@@ -101,7 +101,7 @@ _switchin:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
+        ld sp, (_udata + U_DATA__U_SP)
 
 	; ---- New task stack ----
 
@@ -110,7 +110,7 @@ _switchin:
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (U_DATA__U_ININTERRUPT)
+        ld a, (_udata + U_DATA__U_ININTERRUPT)
 	ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
@@ -160,7 +160,7 @@ _dofork:
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with HL (ie return code) containing the child PID.
         ; Hurray.
-        ld (U_DATA__U_SP), sp
+        ld (_udata + U_DATA__U_SP), sp
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
@@ -199,7 +199,7 @@ _dofork:
         ret
 
 fork_copy:
-	ld hl, (U_DATA__U_TOP)
+	ld hl, (_udata + U_DATA__U_TOP)
 	ld de, #0x0fff
 	add hl, de		; + 0x1000 (-1 for the rounding to follow)
 	ld a, h
@@ -214,7 +214,7 @@ fork_copy:
 	ld de, #P_TAB__P_PAGE_OFFSET
 	add hl, de
 	; hl now points into the child pages
-	ld de, #U_DATA__U_PAGE
+	ld de, #_udata + U_DATA__U_PAGE
 	; and de is the parent
 
 fork_next:

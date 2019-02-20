@@ -227,7 +227,7 @@ map_process_always:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
-        ld a, (U_DATA__U_PAGE)
+        ld a, (_udata + U_DATA__U_PAGE)
 	call switch_bank
 	pop af
 	ret

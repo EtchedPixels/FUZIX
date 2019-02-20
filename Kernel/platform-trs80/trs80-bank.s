@@ -29,7 +29,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
@@ -190,7 +190,7 @@ map_process_always:
 map_process_always_di:
 	    push af
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_hl
 	    pop hl
 	    pop af

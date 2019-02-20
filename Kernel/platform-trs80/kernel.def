@@ -1,7 +1,6 @@
 ; UZI mnemonics for memory addresses etc
 
-U_DATA                      .equ 0xE800       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 (we don't save istack)
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 @ E800
 
 U_DATA_STASH		    .equ 0x7E00	      ; 7E00-7FFF
 

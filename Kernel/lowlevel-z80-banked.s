@@ -59,9 +59,10 @@
 	.globl istack_switched_sp
 	.globl istack_top
 	.globl _ssig
+	.globl _udata
 
         .include "platform/kernel.def"
-        .include "kernel.def"
+        .include "kernel-z80.def"
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
@@ -81,7 +82,7 @@ CPU_Z180	    .equ    Z80_TYPE-2
 ;
 deliver_signals:
 	; Pending signal
-	ld a, (U_DATA__U_CURSIG)
+	ld a, (_udata + U_DATA__U_CURSIG)
 	or a
 	ret z
 
@@ -92,7 +93,7 @@ deliver_signals_2:
 
 	; Handler to use
 	add hl, hl
-	ld de, #U_DATA__U_SIGVEC
+	ld de, #_udata + U_DATA__U_SIGVEC
 	add hl, de
 	ld e, (hl)
 	inc hl
@@ -100,7 +101,7 @@ deliver_signals_2:
 
 	; Indicate processed
 	xor a
-	ld (U_DATA__U_CURSIG), a
+	ld (_udata + U_DATA__U_CURSIG), a
 	; and we will handle the signal with interrupts on so clear the
 	; flag
 	ld (_int_disabled),a
@@ -129,7 +130,7 @@ signal_return:
 	;	element of this processing, as we don't want to
 	;	set INSYS flags here.
 	;
-	ld (U_DATA__U_SYSCALL_SP), sp
+	ld (_udata + U_DATA__U_SYSCALL_SP), sp
 	ld sp, #kstack_top
 	ld a,#1
 	ld (_int_disabled),a
@@ -138,7 +139,7 @@ signal_return:
 	call _chksigs
 	pop af
 	call map_process_always
-	ld sp, (U_DATA__U_SYSCALL_SP)
+	ld sp, (_udata + U_DATA__U_SYSCALL_SP)
 	jr deliver_signals
 
 
@@ -167,20 +168,20 @@ unix_syscall_entry:
         add hl, sp
         ; save system call number
         ld a, (hl)
-        ld (U_DATA__U_CALLNO), a
+        ld (_udata + U_DATA__U_CALLNO), a
         ; advance to syscall arguments
         inc hl
         inc hl
         ; copy arguments to common memory
         ld bc, #8      ; four 16-bit values
-        ld de, #U_DATA__U_ARGN
+        ld de, #_udata + U_DATA__U_ARGN
         ldir           ; copy
 
 	ld a, #1
-	ld (U_DATA__U_INSYS), a
+	ld (_udata + U_DATA__U_INSYS), a
 
         ; save process stack pointer
-        ld (U_DATA__U_SYSCALL_SP), sp
+        ld (_udata + U_DATA__U_SYSCALL_SP), sp
         ; switch to kernel stack
         ld sp, #kstack_top
 
@@ -209,15 +210,15 @@ unix_syscall_entry:
 	call map_process_always
 
 	xor a
-	ld (U_DATA__U_INSYS), a
+	ld (_udata + U_DATA__U_INSYS), a
 
 	; Back to the user stack
-	ld sp, (U_DATA__U_SYSCALL_SP)
+	ld sp, (_udata + U_DATA__U_SYSCALL_SP)
 
-	ld hl, (U_DATA__U_ERROR)
-	ld de, (U_DATA__U_RETVAL)
+	ld hl, (_udata + U_DATA__U_ERROR)
+	ld de, (_udata + U_DATA__U_RETVAL)
 
-	ld a, (U_DATA__U_CURSIG)
+	ld a, (_udata + U_DATA__U_CURSIG)
 	or a
 
 	; Fast path the normal case
@@ -263,9 +264,9 @@ via_signal:
 	; Get off the kernel syscall stack before we start signal
 	; handling. Our signal handlers may themselves elect to make system
 	; calls. This means we must also save the error/return code
-	ld hl, (U_DATA__U_ERROR)
+	ld hl, (_udata + U_DATA__U_ERROR)
 	push hl
-	ld hl, (U_DATA__U_RETVAL)
+	ld hl, (_udata + U_DATA__U_RETVAL)
 	push hl
 
 	; Signal processing. This may longjmp back into userland
@@ -288,12 +289,12 @@ _doexec:
 	pop af ; bank number
         pop de ; start address
 
-        ld hl, (U_DATA__U_ISP)
+        ld hl, (_udata + U_DATA__U_ISP)
         ld sp, hl      ; Initialize user stack, below main() parameters and the environment
 
         ; u_data.u_insys = false
         xor a
-        ld (U_DATA__U_INSYS), a
+        ld (_udata + U_DATA__U_INSYS), a
 
         ex de, hl
 
@@ -309,13 +310,13 @@ _doexec:
 ;
 null_handler:
 	; kernel jump to NULL is bad
-	ld a, (U_DATA__U_INSYS)
+	ld a, (_udata + U_DATA__U_INSYS)
 	or a
 	jp nz, trap_illegal
 	; user is merely not good
 	ld hl, #7
 	push hl
-	ld ix, (U_DATA__U_PTAB)
+	ld ix, (_udata + U_DATA__U_PTAB)
 	ld l,P_TAB__P_PID_OFFSET(ix)
 	ld h,P_TAB__P_PID_OFFSET+1(ix)
 	push hl
@@ -410,7 +411,7 @@ interrupt_handler:
 	ld a, #1
 	ld (_inint), a
 	; So we know that this task should resume with IRQs off
-	ld (U_DATA__U_ININTERRUPT), a
+	ld (_udata + U_DATA__U_ININTERRUPT), a
 	; Load the interrupt flag properly. It got an implicit di from
 	; the IRQ being taken
 	ld (_int_disabled),a
@@ -436,7 +437,7 @@ interrupt_handler:
 
 intout:
 	xor a
-	ld (U_DATA__U_ININTERRUPT), a
+	ld (_udata + U_DATA__U_ININTERRUPT), a
 
 	ld hl, #intret
 	push hl
@@ -446,7 +447,7 @@ intout:
 				; have DI set
 intret:
 	di
-	ld a, (U_DATA__U_INSYS)
+	ld a, (_udata + U_DATA__U_INSYS)
 	or a
 	jr nz, interrupt_pop
 
@@ -485,7 +486,7 @@ null_pointer_trap:
 	ld hl, #11		; SIGSEGV
 trap_signal:
 	push hl
-	ld hl, (U_DATA__U_PTAB);
+	ld hl, (_udata + U_DATA__U_PTAB);
         push hl
 	push af
         call _ssig
@@ -509,7 +510,7 @@ preemption:
 	call map_restore
 
 	ld hl, (istack_switched_sp)
-	ld (U_DATA__U_SYSCALL_SP), hl
+	ld (_udata + U_DATA__U_SYSCALL_SP), hl
 
 	ld sp, #kstack_top	; We don't pre-empt in a syscall
 				; so this is fine
@@ -536,7 +537,7 @@ intret2:di
 	; pre-empted when switchout re-enables interrupts.
 	;
 	ld a, #1
-	ld (U_DATA__U_INSYS), a
+	ld (_udata + U_DATA__U_INSYS), a
 	;
 	; Check for signals
 	;
@@ -547,7 +548,7 @@ intret2:di
 	;
 	; Process status is offset 0
 	;
-	ld hl, (U_DATA__U_PTAB)
+	ld hl, (_udata + U_DATA__U_PTAB)
 	ld a, #P_RUNNING
 	cp (hl)
 	jr nz, not_running
@@ -558,8 +559,8 @@ not_running:
 	; We are no longer in an interrupt or a syscall
 	;
 	xor a
-	ld (U_DATA__U_ININTERRUPT), a
-	ld (U_DATA__U_INSYS), a
+	ld (_udata + U_DATA__U_ININTERRUPT), a
+	ld (_udata + U_DATA__U_INSYS), a
 	;
 	; We have been rescheduled, remap ourself and go back to user
 	; space via signal handling
@@ -568,8 +569,8 @@ not_running:
 
 	; We were pre-empted but have now been rescheduled
 	; User stack
-	ld sp, (U_DATA__U_SYSCALL_SP)
-	ld a, (U_DATA__U_CURSIG)
+	ld sp, (_udata + U_DATA__U_SYSCALL_SP)
+	ld a, (_udata + U_DATA__U_CURSIG)
 	or a
 	call nz, deliver_signals_2
 	;

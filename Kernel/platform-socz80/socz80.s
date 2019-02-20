@@ -52,7 +52,7 @@
 
             .include "socz80.def"
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
@@ -409,7 +409,7 @@ map_process_di:
 map_process_always:
 map_process_always_di:
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_loadhl
 	    pop hl
 	    ret

@@ -7,7 +7,7 @@
 ;	approach. The morbidly curious can read the TRS80 model 1 bank to
 ;	bank copier.
 ;
-	.include "../kernel.def"
 	.include "kernel.def"
+	.include "../kernel-z80.def"
 
 	.include "../lib/z80fixedbank.s"

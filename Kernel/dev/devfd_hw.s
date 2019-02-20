@@ -31,7 +31,7 @@ CPU_Z180	.equ	Z80_TYPE-2
         .globl _fd_tick
 
         .include "../platform/kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 
 ;------------------------------------------------------------------------------

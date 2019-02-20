@@ -26,7 +26,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ;
 ;	We keep the probe routine in the common copy area as we need
@@ -149,7 +149,7 @@ map_process_always:
 map_process_always_di:
 	    push af
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    ld a, (hl)
 	    ld (pagereg),a
 	    out (0xFF),a

@@ -5,8 +5,8 @@
 	.module buffers
 	.area _COMMONMEM
 
-	.include "../kernel.def"
 	.include "kernel.def"
+	.include "../kernel-z80.def"
 
 	.globl _do_blkzero
 	.globl _do_blkcopyk

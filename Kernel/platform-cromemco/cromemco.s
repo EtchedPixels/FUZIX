@@ -44,6 +44,7 @@
 	.globl _panic
 	.globl _need_resched
 	.globl _ssig
+	.globl _udata
 
 	.globl _set_irq
 	.globl _spurious
@@ -57,7 +58,7 @@
 	.globl outstringhex
 
 	.include "kernel.def"
-	.include "../kernel.def"
+	.include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF200 upwards)
@@ -663,7 +664,7 @@ rst10:
 	nop
 rst18:
 	; Activate the user bank (which also holds these bytes)
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ei
 	; and leap into user space
@@ -719,7 +720,7 @@ my_nmi_handler:		; Should be at 0x66
 ;	This needs some properly optimized versions!
 ;
 ldir_to_user:
-	ld de,(U_DATA__U_PAGE)	; will load with 0 e with page
+	ld de,(_udata + U_DATA__U_PAGE)	; will load with 0 e with page
 	inc d			; Kernel is in #1
 ldir_far:
 	push bc
@@ -743,7 +744,7 @@ far_ldir_1:
 	out (0x40),a		; Select kernel
 	ret
 ldir_from_user:
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	ld e,#1
 	ld d,a
 	jr ldir_far
@@ -854,14 +855,14 @@ syscall_high:
 	out (0x40),a
 	ex af,af'
 	; Stack now invalid
-	ld (U_DATA__U_SYSCALL_SP),sp
+	ld (_udata + U_DATA__U_SYSCALL_SP),sp
 	ld sp,#kstack_top
 	call unix_syscall_entry
 	; FIXME check di rules
 	; stack now invalid. Grab the new sp before we unbank the
 	; memory holding it
-	ld sp,(U_DATA__U_SYSCALL_SP)
-	ld a, (U_DATA__U_PAGE)	; back to the user page
+	ld sp,(_udata + U_DATA__U_SYSCALL_SP)
+	ld a, (_udata + U_DATA__U_PAGE)	; back to the user page
 	out (0x40),a
 	xor a
 	cp h

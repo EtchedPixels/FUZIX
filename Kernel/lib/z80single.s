@@ -51,7 +51,7 @@ _platform_switchout:
         push hl ; return code
         push ix
         push iy
-        ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
+        ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -98,7 +98,7 @@ _switchin:
 	;	practice that means it exited. We don't need to write
 	;	it back out as it's dead.
 	;
-	ld ix,(U_DATA__U_PTAB)
+	ld ix,(_udata + U_DATA__U_PTAB)
 	ld a,P_TAB__P_PAGE_OFFSET(ix)
 
 	or a
@@ -108,7 +108,7 @@ _switchin:
 	;
 	push de	; save process
 	; We will always swap out the current process
-	ld hl, (U_DATA__U_PTAB)
+	ld hl, (_udata + U_DATA__U_PTAB)
 	push hl
 	call _swapout
 	pop hl
@@ -122,34 +122,34 @@ not_resident:
 
 not_swapped:        
         ; check u_data->u_ptab matches what we wanted
-        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
+        ld hl, (_udata + U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE==HL
         jr nz, switchinfail
 
 	; wants optimising up a bit
-	ld ix, (U_DATA__U_PTAB)
+	ld ix, (_udata + U_DATA__U_PTAB)
         ; next_process->p_status = P_RUNNING
         ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 
 	; Fix the moved page pointers
 	; Just do one byte as that is all we use on this platform
 	ld a, P_TAB__P_PAGE_OFFSET(ix)
-	ld (U_DATA__U_PAGE), a
+	ld (_udata + U_DATA__U_PAGE), a
         ; runticks = 0
         ld hl, #0
         ld (_runticks), hl
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
+        ld sp, (_udata + U_DATA__U_SP)
 
         pop iy
         pop ix
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (U_DATA__U_ININTERRUPT)
+        ld a, (_udata + U_DATA__U_ININTERRUPT)
 	; put th einterrupt status flag back correctly
 	ld (_int_disabled),a
         or a
@@ -193,7 +193,7 @@ _dofork:
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with HL (ie return code) containing the child PID.
         ; Hurray.
-        ld (U_DATA__U_SP), sp
+        ld (_udata + U_DATA__U_SP), sp
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.

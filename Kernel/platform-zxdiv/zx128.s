@@ -69,7 +69,7 @@
 	.globl __stub_3_2
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (below 0xC000)
@@ -181,7 +181,7 @@ map_process_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
-        ld a, (U_DATA__U_PAGE)
+        ld a, (_udata + U_DATA__U_PAGE)
 	call switch_bank
 	pop af
 	ret

@@ -4,7 +4,7 @@
 	.module gm833
 
 	.include "kernel.def"
-	.include "../kernel.def"
+	.include "../kernel-z80.def"
 
 	.globl _gm833_in
 	.globl _gm833_out

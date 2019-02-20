@@ -43,7 +43,7 @@
 	    .globl null_handler
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0000 upwards after the udata etc)

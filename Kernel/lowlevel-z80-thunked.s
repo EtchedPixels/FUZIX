@@ -58,9 +58,10 @@
 	.globl istack_switched_sp
 	.globl istack_top
 	.globl _ssig
+	.globl _udata
 
         .include "platform/kernel.def"
-        .include "kernel.def"
+        .include "kernel-z80.def"
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
@@ -79,14 +80,14 @@ _doexec:
 	di
 	call map_user_low
 	xor a
-	ld (U_DATA__U_INSYS),a
+	ld (_udata + U_DATA__U_INSYS),a
 	pop bc
 	pop de			; start address
-	ld hl,(U_DATA__U_ISP)
+	ld hl,(_udata + U_DATA__U_ISP)
 	ld sp,hl
 	ex de,hl
 	ld de,#PROGLOAD
-	ld a,(U_DATA__U_PAGE+HIGHPAGE) ; pass high page to trampoline
+	ld a,(_udata + U_DATA__U_PAGE+HIGHPAGE) ; pass high page to trampoline
 	jp _platform_doexec	; jump into the low memory stub
 
 ;
@@ -111,11 +112,11 @@ _doexec:
 ;
 unix_syscall_entry:
 	; Start by saving the arguments. That frees up all our registers
-	ld (U_DATA__U_CALLNO),a	
-	ld (U_DATA__U_ARGN),bc
-	ld (U_DATA__U_ARGN1),de
-	ld (U_DATA__U_ARGN2),ix
-	ld (U_DATA__U_ARGN3),hl
+	ld (_udata + U_DATA__U_CALLNO),a	
+	ld (_udata + U_DATA__U_ARGN),bc
+	ld (_udata + U_DATA__U_ARGN1),de
+	ld (_udata + U_DATA__U_ARGN2),ix
+	ld (_udata + U_DATA__U_ARGN3),hl
 	; Stack the alternate registers
 	exx
 	push bc
@@ -125,7 +126,7 @@ unix_syscall_entry:
 	push af
 	; Tell the pre-emption code we are in kernel right now
 	ld a,#1
-	ld (U_DATA__U_INSYS),a
+	ld (_udata + U_DATA__U_INSYS),a
 	; Make the kernel appear
 	call map_kernel_low
 	; Call into the kernel with interrupts on
@@ -136,11 +137,11 @@ unix_syscall_entry:
 	call map_user_low
 	; We are now not in kernel
 	xor a
-	ld (U_DATA__U_INSYS),a
+	ld (_udata + U_DATA__U_INSYS),a
 	; Recover the return data
-	ld hl, (U_DATA__U_ERROR)
-	ld de, (U_DATA__U_RETVAL)
-	ld a, (U_DATA__U_CURSIG)
+	ld hl, (_udata + U_DATA__U_ERROR)
+	ld de, (_udata + U_DATA__U_RETVAL)
+	ld a, (_udata + U_DATA__U_CURSIG)
 	or a
 	; Keep the hot path inline
 	jr nz, signal_path
@@ -158,17 +159,17 @@ syscall_return:
 	exx
 	; Return page for caller (may not be the page we can in on if we
 	; swapped
-	ld a,(U_DATA__U_PAGE+HIGHPAGE)
+	ld a,(_udata + U_DATA__U_PAGE+HIGHPAGE)
 	ret
 signal_path:
 	ld h,a		; save signal number
 	push hl
 	; Get the signal vector and zero it
 	add a,a
-	ld hl,#U_DATA__U_SIGVEC
+	ld hl,#_udata + U_DATA__U_SIGVEC
 	ld c,a
 	xor a
-	ld (U_DATA__U_CURSIG),a
+	ld (_udata + U_DATA__U_CURSIG),a
 	ld b,a
 	add hl,bc
 	ld c,(hl)
@@ -204,7 +205,7 @@ interrupt_handler:
 	call map_save_low	; save old and map kernel
 	ld a,#1
 	ld (_inint),a
-	ld (U_DATA__U_ININTERRUPT),a
+	ld (_udata + U_DATA__U_ININTERRUPT),a
 	ld (_int_disabled),a
 	call _platform_interrupt
 	xor a
@@ -218,15 +219,15 @@ interrupt_handler:
 				; any interrupt controller
 intreti:di
 	xor a
-	ld (U_DATA__U_ININTERRUPT),a
+	ld (_udata + U_DATA__U_ININTERRUPT),a
 	
 	; Are we returning to kernel ?
-	ld a, (U_DATA__U_INSYS)
+	ld a, (_udata + U_DATA__U_INSYS)
 	or a
 	jr nz, interrupt_kernel
 intsig:
 	call map_user_low
-	ld a,(U_DATA__U_CURSIG)
+	ld a,(_udata + U_DATA__U_CURSIG)
 	or a
 	jr nz, interrupt_sig
 	; Nothing special to do
@@ -234,7 +235,7 @@ no_sig:
 	xor a
 	ld (_int_disabled),a
 	ld e,a
-	ld a,(U_DATA__U_PAGE+HIGHPAGE)
+	ld a,(_udata + U_DATA__U_PAGE+HIGHPAGE)
 intret:
 	ret
 
@@ -254,8 +255,8 @@ interrupt_sig:
 	ld (_int_disabled),a
 	ld e,a
 	ld c,a
-	ld (U_DATA__U_CURSIG),a
-	ld hl,#U_DATA__U_SIGVEC
+	ld (_udata + U_DATA__U_CURSIG),a
+	ld hl,#_udata + U_DATA__U_SIGVEC
 	add hl,de
 	add hl,de
 	ld e,(hl)
@@ -289,7 +290,7 @@ preemption:
 	xor a
 	ld (_need_resched),a		; we are doing it thank you
 	ld hl,(istack_switched_sp)
-	ld (U_DATA__U_SYSCALL_SP), hl	; save the stack save
+	ld (_udata + U_DATA__U_SYSCALL_SP), hl	; save the stack save
 	ld sp, #kstack_top		; free because we are not pre-empted
 					; during a system call
 	push de				; return address onto our kstack
@@ -301,9 +302,9 @@ intret2:
 	di
 	; Fake being in a syscall
 	ld a,#1
-	ld (U_DATA__U_INSYS),a
+	ld (_udata + U_DATA__U_INSYS),a
 	call _chksigs
-	ld hl, (U_DATA__U_PTAB)
+	ld hl, (_udata + U_DATA__U_PTAB)
 	ld a,#P_RUNNING
 	cp (hl)
 	jr nz, not_running
@@ -316,13 +317,13 @@ not_running:
 	call _platform_switchout
 	; Undo the fakery
 	xor a
-	ld (U_DATA__U_ININTERRUPT),a
-	ld (U_DATA__U_INSYS),a
+	ld (_udata + U_DATA__U_ININTERRUPT),a
+	ld (_udata + U_DATA__U_INSYS),a
 	; The istack was lost but that is ok as we saved the return onto the
 	; kernel stack, so when we finally ret we end up in the right place
 	ld sp,#kstack_top - 2		; saved return address
 
-	ld hl,(U_DATA__U_SYSCALL_SP)
+	ld hl,(_udata + U_DATA__U_SYSCALL_SP)
 	ld (istack_switched_sp),hl
 
 	; Now continue on the interrupt return path

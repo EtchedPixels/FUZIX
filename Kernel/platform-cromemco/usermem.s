@@ -5,7 +5,7 @@
         .module usermem
 
 	.include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
         ; exported symbols
         .globl __uget
@@ -77,7 +77,7 @@ __uzero:
 	ld a,b
 	or c
 	ret z
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a		; user bank
 	ld (hl),#0
 	dec bc
@@ -98,7 +98,7 @@ __ugetc:
 	pop hl
 	push hl
 	push bc
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld l,(hl)
 	ld h,#0
@@ -109,7 +109,7 @@ __ugetw:
 	pop hl
 	push hl
 	push bc
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld a,(hl)
 	inc hl
@@ -124,7 +124,7 @@ __uputc:
 	push hl
 	push de
 	push bc
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld (hl),e
 	jr uout
@@ -136,7 +136,7 @@ __uputw:
 	push hl
 	push de
 	push bc
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld (hl),e
 	inc hl

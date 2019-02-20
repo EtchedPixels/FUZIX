@@ -16,7 +16,7 @@
         .module atom
 
 	.include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 
 	.globl _devide_read_data
@@ -57,7 +57,7 @@ atomlite_read:
 atomlite_read_user:
 	push ix
 	; HL is the user buffer, BC length
-	ld ix,#U_DATA__U_PAGE
+	ld ix,#_udata + U_DATA__U_PAGE
 	call user_mapping
 	jr z,ide_r2
 	call atomlite_reader
@@ -84,7 +84,7 @@ atomlite_write:
 atomlite_write_user:
 	push ix
 	; HL is the user buffer, BC length
-	ld ix,#U_DATA__U_PAGE
+	ld ix,#_udata + U_DATA__U_PAGE
 	call user_mapping
 	jr z,ide_w2
 	call atomlite_writer

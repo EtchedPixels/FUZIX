@@ -28,7 +28,7 @@
 	.globl null_handler
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ;
 ;	These live below 0x8000 so they are not switched out

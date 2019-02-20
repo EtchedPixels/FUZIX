@@ -14,8 +14,8 @@
         .globl _devmem_read
         .globl _devmem_write
 
-        .include "../kernel.def"
         .include "kernel.def"
+        .include "../kernel-z80.def"
 
         .area _CODE
 _devmem_write:
@@ -30,13 +30,13 @@ _devmem_read:
 _devmem_go:
         ld (_rd_dst_userspace), a       ; 1 = userspace
         ; load the other parameters
-        ld hl, (U_DATA__U_BASE)
+        ld hl, (_udata + U_DATA__U_BASE)
         ld (_rd_dst_address), hl
-        ld hl, (U_DATA__U_OFFSET)
+        ld hl, (_udata + U_DATA__U_OFFSET)
         ld (_rd_src_address), hl
-        ld hl, (U_DATA__U_OFFSET+2)
+        ld hl, (_udata + U_DATA__U_OFFSET+2)
         ld (_rd_src_address+2), hl
-        ld hl, (U_DATA__U_COUNT)
+        ld hl, (_udata + U_DATA__U_COUNT)
         ld (_rd_cpy_count), hl
         ; for single byte transfers we can optimise away the outer loop
         dec l                           ; test for HL=1
@@ -95,7 +95,7 @@ _rd_page_copy:
         ld hl, #_kernel_pages           ; get kernel page table
         jr rd_do_translate
 rd_translate_userspace:
-        ld hl, #U_DATA__U_PAGE          ; get user process page table
+        ld hl, #_udata + U_DATA__U_PAGE          ; get user process page table
 rd_do_translate:
         add hl, bc                      ; add index to base ptr (uint8_t *)
         ld a, (hl)                      ; load the page number from the page table

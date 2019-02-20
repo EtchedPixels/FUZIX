@@ -47,7 +47,7 @@
         .globl outstringhex
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (above 0xE000)
@@ -193,7 +193,7 @@ map_process_always_di:
 	push bc
 	push de
 	push hl
-	ld hl,(U_DATA__U_PAGE)
+	ld hl,(_udata + U_DATA__U_PAGE)
 map_write_hl:
 	; Switch this to nextreg at some point FIXME
 	ld bc,#0x243b

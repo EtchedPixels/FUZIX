@@ -1,8 +1,7 @@
 ; UZI mnemonics for memory addresses etc
 
 ; We stick it straight after the tag
-U_DATA                      .equ 0x2204       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           .equ 0x200        ; 256+256+256 bytes.
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 @ 2204
 
 U_DATA_STASH		    .equ 0xFE00	      ; FE00-FFFF
 

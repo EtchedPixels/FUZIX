@@ -4,7 +4,7 @@
 ;	    Minimal for now to get us up and running
 ;
 
-            .module sbcv2
+            .module z280rc
 
             ; exported symbols
             .globl init_early
@@ -50,7 +50,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment
@@ -314,7 +314,7 @@ map_process_always:
 map_process_always_di:
 	    push af
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_hl
 	    pop hl
 	    pop af
@@ -691,7 +691,7 @@ sig_or_die:
 	ld a,(_inint)
 	or a
 	jr nz, diediedie
-	ld a,(U_DATA__U_INSYS)
+	ld a,(_udata + U_DATA__U_INSYS)
 	or a
 	jr nz, diediedie
 	; TODO - we need to go via the syscall signal path as we need this

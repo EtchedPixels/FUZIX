@@ -39,12 +39,13 @@
 	.globl _sio1_present
 	.globl _tty_resume
 	.globl _ide_resume
+	.globl _udata
 
 	; exported debugging tools
 	.globl outchar
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ;=========================================================================
 ; Constants
@@ -354,7 +355,7 @@ map_process_a:
 map_process_always:
 map_process_always_di:
 	push af
-	ld a,(U_DATA__U_PAGE)
+	ld a,(_udata + U_DATA__U_PAGE)
 map_pop_a:
 	ld (pagereg),a
 	out (0x1f),a

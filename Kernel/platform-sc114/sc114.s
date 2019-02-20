@@ -40,7 +40,7 @@
 	.globl l__COMMONMEM
 
         .include "kernel.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 
 ;
@@ -449,13 +449,13 @@ syscall_high:
 	    out (0x30),a
 	    ex af,af'
 	    ; Stack now invalid
-	    ld (U_DATA__U_SYSCALL_SP),sp
+	    ld (_udata + U_DATA__U_SYSCALL_SP),sp
 	    ld sp,#kstack_top
 	    call unix_syscall_entry
 	    ; FIXME check di rules
 	    ; stack now invalid. Grab the new sp before we unbank the
 	    ; memory holding it
-	    ld sp,(U_DATA__U_SYSCALL_SP)
+	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
 	    ld a,#0x81		; back to the user page
 	    out (0x38),a
 	    rlca

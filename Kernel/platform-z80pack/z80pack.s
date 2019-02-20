@@ -61,7 +61,7 @@
             .globl outstringhex
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
@@ -208,7 +208,7 @@ map_process_a:
 map_process_always:
 map_process_always_di:
 	    push af
-	    ld a, (U_DATA__U_PAGE)
+	    ld a, (_udata + U_DATA__U_PAGE)
 	    out (21), a
 	    pop af
 	    ret
@@ -264,7 +264,7 @@ do_mmu_kernel:
 ;	something bad has happened to our process (or the kernel)
 ;
 badstack:
-	    ld a, (U_DATA__U_INSYS)
+	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, badbadstack
 	    ld a, (_inint)
@@ -296,7 +296,7 @@ badbadstack:
 	    call _panic
 
 badstackifu:
-	    ld a, (U_DATA__U_INSYS)
+	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, do_mmu_kernel
 	    ld a, (_inint)
@@ -329,12 +329,12 @@ do_mmu_kernel_irq:
 	    ld (mmusave),a
 	    jp mmu_irq_ret
 
-	    ld a, (U_DATA__U_INSYS)
+	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    ld a, (_inint)
 	    or a
 badstackirq:
-	    ld a, (U_DATA__U_INSYS)
+	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, badbadstack_irq
 	    ld a, (_inint)
@@ -356,7 +356,7 @@ badstack_doirq:
 	    call map_save_kernel
 	    ld hl,#9
 	    push hl
-	    ld hl,(U_DATA__U_PTAB)
+	    ld hl,(_udata + U_DATA__U_PTAB)
 	    push hl
 	    call _ssig
 	    pop hl
@@ -376,7 +376,7 @@ badstack_doirq:
 	    ; This will complete the IRQ and then hit preemption at which
 	    ; point it'll call switchout, chksigs and vanish forever
 badstackirqifu:
-	    ld a, (U_DATA__U_INSYS)
+	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, do_mmu_kernel_irq
 	    ld a, (_inint)

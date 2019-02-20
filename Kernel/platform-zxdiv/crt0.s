@@ -54,8 +54,8 @@
         .globl nmi_handler
         .globl interrupt_handler
 
-	.include "../kernel.def"
 	.include "kernel.def"
+	.include "../kernel-z80.def"
 
         ; startup code
 	;

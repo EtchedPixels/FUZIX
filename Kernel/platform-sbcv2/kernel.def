@@ -5,8 +5,7 @@
 ;	of common memory. We do actually have a symbol for udata so
 ;	eventually this needs to go away
 ;
-U_DATA                      .equ 0xF000       ; (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes)
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F000
 ;
 ;	Space for the udata of a switched out process within the bank of
 ;	memory that it uses. Normally placed at the very top

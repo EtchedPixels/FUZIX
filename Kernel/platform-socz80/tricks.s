@@ -24,9 +24,8 @@
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
         .include "socz80.def"
-        .include "../kernel.def"
         .include "kernel.def"
-
+        .include "../kernel-z80.def"
 ;
 ;	These do not need to be in common memory as we don't have to
 ;	pull udata remapping tricks on a 16K banked system. In the case of
@@ -52,7 +51,7 @@ _platform_switchout:
         push hl ; return code
         push ix
         push iy
-        ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
+        ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
         ; find another process to run (may select this one again)
         call _getproc
@@ -105,7 +104,7 @@ _switchin:
 	; ------------- Our stack just left the building ---------------
 
         ; check u_data->u_ptab matches what we wanted
-        ld hl, (U_DATA__U_PTAB) ; u_data->u_ptab
+        ld hl, (_udata + U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
         sbc hl, de              ; subtract, result will be zero if DE==HL
         jr nz, switchinfail
@@ -119,13 +118,13 @@ _switchin:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ld sp, (U_DATA__U_SP)
+        ld sp, (_udata + U_DATA__U_SP)
         pop iy
         pop ix
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
-        ld a, (U_DATA__U_ININTERRUPT)
+        ld a, (_udata + U_DATA__U_ININTERRUPT)
 	ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
@@ -169,7 +168,7 @@ _dofork:
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with HL (ie return code) containing the child PID.
         ; Hurray.
-        ld (U_DATA__U_SP), sp
+        ld (_udata + U_DATA__U_SP), sp
 
 	;
 	; We will return on the parent stack with everything copied. We can
@@ -236,7 +235,7 @@ fork_copy:
 	ld de, #P_TAB__P_PAGE_OFFSET
 	add hl, de
 	; parent mapping to be copied
-	ld de, #U_DATA__U_PAGE
+	ld de, #_udata + U_DATA__U_PAGE
 
 ;
 ;	Walk the 16K banks using a generic code pattern

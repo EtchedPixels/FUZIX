@@ -39,7 +39,7 @@
 	    .globl _bufpool
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 	    .area _BUFFERS
 

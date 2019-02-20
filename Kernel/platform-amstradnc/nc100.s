@@ -62,7 +62,7 @@
             .globl outstringhex
 
             .include "platform/kernel.def"
-            .include "../../kernel.def" ; Kernel
+            .include "../../kernel-z80.def" ; Kernel
 	    .include "nc100.def"
 
 ; -----------------------------------------------------------------------------

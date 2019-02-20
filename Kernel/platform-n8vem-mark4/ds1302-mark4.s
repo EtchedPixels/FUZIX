@@ -13,7 +13,7 @@
 
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
-        .include "../kernel.def"
+        .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; DS1302 interface

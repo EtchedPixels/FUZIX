@@ -15,7 +15,6 @@
 	    .globl map_kernel_di
 	    .globl map_process_di
 	    .globl map_process_always_di
-	    .globl _need_resched
 	    .globl _int_disabled
 	    .globl map_save_kernel
 	    .globl map_restore
@@ -58,7 +57,7 @@
             .globl outstringhex
 
             .include "kernel.def"
-            .include "../kernel.def"
+            .include "../kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; VIDEO MEMORY BANK (0x4000-0xBFFF during video work)
@@ -198,7 +197,7 @@ map_process_always:
 map_process_always_di:
 	    push af
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_1
 	    pop hl
 	    pop af
@@ -213,7 +212,7 @@ map_process_di:
 	    or l
 	    jr z, map_kernel
 map_process_1:
-	    ld a, (int_disabled)
+	    ld a, (_int_disabled)
 	    push af
 	    di			; ensure we don't take an irq mid update
 	    push de
@@ -515,9 +514,6 @@ map_current:
 map_save_area:
 	    .db 0
 	    .db 0
-	    .db 0
-
-_need_resched:
 	    .db 0
 
 _int_disabled:
