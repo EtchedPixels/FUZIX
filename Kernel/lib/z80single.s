@@ -5,8 +5,6 @@
 ;
 ;	FIXME: IRQ enable logic during swap
 ;
-;	FIXME: turn on parent first behaviour when ready
-;
         .module tricks
 
         .globl _ptab_alloc
