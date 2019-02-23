@@ -54,7 +54,7 @@
 #define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5        /* Number of block buffers */
-#define NMOUNTS	 3	  /* Number of mounts at a time */
+#define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define platform_discard()	/* for now - wants fixing */
 
