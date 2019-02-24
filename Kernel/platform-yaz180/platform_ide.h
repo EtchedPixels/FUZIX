@@ -1,17 +1,17 @@
 #ifdef CONFIG_PPIDE
-#define PPIDE_BASE 0x60         /* Base address of 8255A */
+#define PPIDE_BASE 0x4000         /* Base address of 8255A */
 #define IDE_REG_INDIRECT        /* IDE registers are not directly connected to the CPU bus */
 
 /* IDE control signal to 8255 port C mapping */
-#define PPIDE_A0_LINE           0x01 // Direct from 8255 to IDE interface
-#define PPIDE_A1_LINE           0x02 // Direct from 8255 to IDE interface
-#define PPIDE_A2_LINE           0x04 // Direct from 8255 to IDE interface
+#define PPIDE_A0_LINE           0x10 // Direct from 8255 to IDE interface
+#define PPIDE_A1_LINE           0x04 // Direct from 8255 to IDE interface
+#define PPIDE_A2_LINE           0x40 // Direct from 8255 to IDE interface
 #define PPIDE_CS0_LINE          0x08 // Inverter between 8255 and IDE interface
-#define PPIDE_CS1_LINE          0x10 // Inverter between 8255 and IDE interface
-#define PPIDE_WR_LINE           0x20 // Inverter between 8255 and IDE interface
-#define PPIDE_WR_BIT            5    // (1 << PPIDE_WR_BIT) = PPIDE_WR_LINE
-#define PPIDE_RD_LINE           0x40 // Inverter between 8255 and IDE interface
-#define PPIDE_RD_BIT            6    // (1 << PPIDE_RD_BIT) = PPIDE_RD_LINE
+#define PPIDE_CS1_LINE          0x20 // Inverter between 8255 and IDE interface
+#define PPIDE_WR_LINE           0x01 // Inverter between 8255 and IDE interface
+#define PPIDE_WR_BIT            0    // (1 << PPIDE_WR_BIT) = PPIDE_WR_LINE
+#define PPIDE_RD_LINE           0x02 // Inverter between 8255 and IDE interface
+#define PPIDE_RD_BIT            1    // (1 << PPIDE_RD_BIT) = PPIDE_RD_LINE
 #define PPIDE_RST_LINE          0x80 // Inverter between 8255 and IDE interface
 
 /* 8255 configuration */
