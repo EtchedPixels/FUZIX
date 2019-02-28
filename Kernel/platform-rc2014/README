@@ -19,7 +19,7 @@ Supported Hardware
 	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
 
 	DS1302 RTC at 0xC0	} You must have one or both
-	RC2014 CTC at 0x88	} CTC strongly recommended
+	RC2014 CTC at 0x88	} CTC strongly recommended (eg SC102)
 
 	Options:
 

@@ -274,8 +274,8 @@ have_ctc:
 	out (CTC_CH2),a	; 200 Hz
 
 	;
-	; Set up counter CH3 for official SIO (the SC110 sadly can't be
-	; used this way).
+	; Set up counter CH3 for SC102 or similar SIO (the SC110 sadly can't be
+	; used this way I believe).
 
 	ld a,#0x47
 	out (CTC_CH3),a
