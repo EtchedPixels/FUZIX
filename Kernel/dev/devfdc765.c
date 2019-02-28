@@ -20,7 +20,7 @@ static uint8_t trackpos[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 int devfd_open(uint8_t minor, uint16_t flag)
 {
     flag;
-    if(minor > FDC765_MAX_FLOPPY) {
+    if(minor >= FDC765_MAX_FLOPPY) {
         udata.u_error = ENODEV;
         return -1;
     }
