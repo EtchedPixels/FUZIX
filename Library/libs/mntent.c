@@ -154,4 +154,5 @@ char *hasmntopt(struct mntent *mnt, char *opt)
 		if (p)
 			p++;
 	}
+	return NULL;
 }
