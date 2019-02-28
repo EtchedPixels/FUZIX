@@ -176,7 +176,9 @@ static uint8_t badlibz80_asm(void) __naked
     __endasm;
 }
 
-/* The older T80 core incorrectly fails to set Z on LD A,R when R = 0 */
+/* The older T80 core incorrectly fails to set Z on LD A,R when R = 0
+   Need to be careful because there's a crappy Z80 emulator out there
+   that gets setting the high bit of R wrong */
 static uint8_t badt80_asm(void) __naked
 {
     __asm
