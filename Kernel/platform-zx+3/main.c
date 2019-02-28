@@ -27,6 +27,7 @@ void platform_interrupt(void)
  poll_input();
  if (timer_wait)
   wakeup(&timer_interrupt);
+ devfd_spindown();
 }
 
 /*
