@@ -42,20 +42,13 @@ ZX style. Also code to probe for and use the 32K hack which is far nicer.
 
 Use IM2 properly and do serial buffering code
 
-
+Check for flow controlling in writeready
 
 In progress serial
 
 TODO:
 
-CTS/RTS flow control option
-Unblocking flow control from drivers
-Check auto flow is right also
-Carrier recording and drop logging
-
-
 Why does reboot muck up SD card ?? emulator bug ?
-
 
 Core code IM2 enabling
 
