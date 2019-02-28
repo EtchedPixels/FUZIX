@@ -200,7 +200,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     /* If we don't know where the head on this drive is then force
        a seek */
     if (*driveptr == 0xFF) {
-        kputs("res2");
         if (err = fops->fd_restore(driveptr))
             goto bad;
     }
@@ -234,7 +233,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         /* Reading 40 track media on an 80 track drive */
         if (f->config & FDC_DSTEP)
             fd_cmd[1] <<= 1;
-        kputs("op");
         /* Now try the I/O */
         for (tries = 0; tries < 4 ; tries++) {
             err = fops->fd_op(driveptr);
