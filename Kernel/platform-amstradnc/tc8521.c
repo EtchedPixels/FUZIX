@@ -39,7 +39,7 @@ l1:     ini		; high bits of field in low bits of (hl)
         dec c
         in a,(c)
         dec hl
-        rld		; I have alwasy wanted an excuse to use RLD 8)
+        rld		; I have always wanted an excuse to use RLD 8)
         inc hl
         dec c
         djnz l1
