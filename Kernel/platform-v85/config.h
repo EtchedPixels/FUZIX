@@ -1,7 +1,7 @@
 /* We have an RTC */
-#undef CONFIG_RTC
+#define CONFIG_RTC
 /* And we can read ToD from it */
-#undef CONFIG_RTC_FULL
+#define CONFIG_RTC_FULL
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */

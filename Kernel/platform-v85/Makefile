@@ -1,14 +1,14 @@
 LIBPATH=../../Library/libs
 LIBC=$(LIBPATH)/libc8080.a $(ACK_ROOT)/share/ack/cpm/libem.a
 
-CSRCS += devices.c main.c devtty.c
+CSRCS += devices.c main.c devtty.c msm5832.c devrd.c
 
 DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
+DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devfdc765.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.s commonmem.s v85.s tricks.s end.s
+ASRCS = crt0.s commonmem.s v85.s tricks.s end.s fdc765.s mdrive.s
 
 AOBJS = $(ASRCS:.s=.o)
 COBJS = $(CSRCS:.c=.o)
@@ -49,6 +49,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec16.o  \
 	blkdev.o mbr.o devide.o devide_discard.o \
+	devfdc765.o fdc765.o msm5832.o devrd.o mdrive.o \
 	../usermem_std-8080.o $(LIBC) end.o
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin

@@ -445,3 +445,32 @@ writeloop:
 	jnz writeloop
 	pop b
 	jmp map_kernel
+
+!
+!	Real time clock
+!
+	.sect .text
+
+	.define _rtc_get
+
+_rtc_get:
+	ldsi 2
+	lhlx		! Get the first argument
+	mov a,l
+	out 0xF1	! Set the accessed register
+	in 0xF0		! Get the nibble back
+	ani 0x0F	! High bits are undefined
+	mov e,a		! Save
+	mov a,l
+	inr a
+	out 0xF1	! Get the next register
+	in 0xF0		! Get the nibble of data
+	rlc		! Left four bits
+	rlc
+	rlc
+	rlc
+	ani 0xF0	! Mask undefined bits
+	ora e		! Add in the low bits we got
+	mov e,a		! For a C return
+	mvi d,0
+	ret

@@ -21,3 +21,7 @@ Perhaps repeats of:
 		pop b
 		dex b
 		jnk loop ...
+
+For the matching emulator see:
+
+https://github.com/EtchedPixels/V85

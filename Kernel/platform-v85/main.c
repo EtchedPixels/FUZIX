@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <devfdc765.h>
 
 uaddr_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -41,6 +42,7 @@ void platform_interrupt(void)
 {
  tty_poll();
  timer_interrupt();
+ devfd_spindown();
 }
 
 /* Nothing to do for the map of init */
