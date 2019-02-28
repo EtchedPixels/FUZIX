@@ -450,7 +450,7 @@ static struct mmu_context mmu_context[PTABSIZE];
  *	using. Fortunately most of our queries will be within the page
  *	so the usual path is a single lookup with no overlap.
  */
-usize_t valaddr(const char *ppv, usize_t l)
+usize_t valaddr(const uint8_t *ppv, usize_t l)
 {
 	uint8_t *pp = (uint8_t *)ppv;
 	struct memblk *m = addtoblk(pp);

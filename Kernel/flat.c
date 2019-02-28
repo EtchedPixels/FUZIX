@@ -444,7 +444,7 @@ arg_t _memfree(void)
  *
  *	FIXME: need to fix this due to code/data alignment ?
  */
-usize_t valaddr(const char *pp, usize_t l)
+usize_t valaddr(const uint8_t *pp, usize_t l)
 {
 	const void *p = pp;
 	const void *e = p + l;
