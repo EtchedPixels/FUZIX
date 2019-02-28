@@ -21,8 +21,8 @@ a directory. Don't allow an object to be
 put inside itself!
 ********************************************/
 
-#define src (char *)udata.u_argn
-#define dst (char *)udata.u_argn1
+#define src (uint8_t *)udata.u_argn
+#define dst (uint8_t *)udata.u_argn1
 
 arg_t _rename(void)
 {
@@ -137,7 +137,7 @@ arg_t _rename(void)
   int16_t mode;
  ********************************************/
 
-#define name (char *)udata.u_argn
+#define name (uint8_t *)udata.u_argn
 #define mode (int16_t)udata.u_argn1
 
 arg_t _mkdir(void)
@@ -210,7 +210,7 @@ cleanup:
 rmdir (path)                     Function 52
 char *path;
 ********************************************/
-#define path (char *)udata.u_argn
+#define path (uint8_t *)udata.u_argn
 
 arg_t _rmdir(void)
 {
@@ -302,8 +302,8 @@ arg_t _rmdir(void)
   char *dir;
   int  flags;
  ********************************************/
-#define spec (char *)udata.u_argn
-#define dir (char *)udata.u_argn1
+#define spec (uint8_t *)udata.u_argn
+#define dir (uint8_t *)udata.u_argn1
 #define flags (int)udata.u_argn2
 
 arg_t _mount(void)
@@ -372,7 +372,7 @@ arg_t _mount(void)
   char *spec;
  ********************************************/
 
-#define spec (char *)udata.u_argn
+#define spec (uint8_t *)udata.u_argn
 #define flags (uint16_t)udata.u_argn1
 
 static int do_umount(uint16_t dev)
@@ -481,7 +481,7 @@ usize_t size;
 uint16_t scale;
 ********************************************/
 
-#define samples (char *)udata.u_argn
+#define samples (uint8_t *)udata.u_argn
 #define offset 	(usize_t)udata.u_argn1
 #define size 	(usize_t)udata.u_argn2
 #define scale	(uint16_t)udata.u_argn3
@@ -526,7 +526,7 @@ char *ptr;
 ********************************************/
 #define cmd (int16_t)udata.u_argn
 #define func (int16_t)udata.u_argn1
-#define ptr  (char *)udata.u_argn2
+#define ptr  (uint8_t *)udata.u_argn2
 
 arg_t _uadmin(void)
 {

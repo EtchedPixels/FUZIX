@@ -97,8 +97,8 @@ arg_t _sync(void)
   char *path;
   char *buf;
  ********************************************/
-#define path (char *)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define path (uint8_t *)udata.u_argn
+#define buf (uint8_t *)udata.u_argn1
 
 arg_t _stat(void)
 {
@@ -121,7 +121,7 @@ arg_t _stat(void)
   char *buf;
  ********************************************/
 #define fd (int16_t)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define buf (uint8_t *)udata.u_argn1
 
 arg_t _fstat(void)
 {
@@ -138,7 +138,7 @@ arg_t _fstat(void)
 
 
 /* Utility for stat and fstat */
-int stcpy(inoptr ino, char *buf)
+int stcpy(inoptr ino, uint8_t *buf)
 {
 	static uint8_t zero[4];
 	/* Copying the structure a member at a time is too expensive.  Instead we
@@ -378,7 +378,7 @@ arg_t _pipe(void)
 unlink (path)                     Function 6
 char *path;
 ********************************************/
-#define path (char *)udata.u_argn
+#define path (uint8_t *)udata.u_argn
 
 arg_t _unlink(void)
 {
@@ -412,7 +412,7 @@ char   *buf;
 uint16_t nbytes;
 ********************************************/
 #define d (int16_t)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define buf (uint8_t *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
 arg_t readwrite(uint8_t reading)
@@ -458,7 +458,7 @@ char   *buf;
 uint16_t nbytes;
 ********************************************/
 #define d (int16_t)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define buf (uint8_t *)udata.u_argn1
 #define nbytes udata.u_argn2
 
 /*
@@ -487,7 +487,7 @@ char   *buf;
 uint16_t nbytes;
 ********************************************/
 #define d (int16_t)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define buf (uint8_t *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
 arg_t _write(void)

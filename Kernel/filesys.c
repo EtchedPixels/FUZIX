@@ -19,38 +19,48 @@
  * calls as they want a parent and to create the new node.
  */
 
-char lastname[31];
-uint8_t n_open_fault;
-static char *name, *nameend;
+uint8_t lastname[31];
+
+static uint8_t n_open_fault;
+static uint8_t n_fault_type;
+static uint8_t *name, *nameend;
 
 static uint8_t getcf(void)
 {
-    int16_t c;
-    c = ugetc(name);
-    if (c == -1 || name == nameend) {
-        if (name == nameend)
-            udata.u_error = ENAMETOOLONG;
+    if (name == nameend) {
+        udata.u_error = n_fault_type;
         n_open_fault = 1;
         return 0;
     }
-    return (uint8_t)c;
+    return (uint8_t)_ugetc(name);
 }
 
-inoptr n_open(char *namep, inoptr *parent)
+inoptr n_open(uint8_t *namep, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
     staticfast inoptr ninode;
     inoptr temp;
     uint8_t c;
-    char *fp;
+    uint8_t *fp;
+    usize_t len;
+
+    /* Check the user address and length. If it's shorter than 512 bytes this
+       is fine, but set nameeend accordingly. This allows us to use _ugetc
+       in the hot path which saves us a ton of cycles */
+    len = valaddr(namep, 512);
+    if (len == 0)
+        return NULLINODE;
 
     name = namep;
+    nameend = namep + len;
     n_open_fault = 0;
-    nameend = namep + 512;	/* For now our pathmax is 512 */
 
-#ifdef DEBUG
-    kprintf("kn_open(\"%s\")\n", name);
-#endif
+    /* What error do we return if we hit nameend - are we overlong, or out
+       of memory space */
+    if (len == 512)
+        n_fault_type = ENAMETOOLONG;
+    else
+        n_fault_type = EACCES;
 
     if(getcf() == '/')
         wd = udata.u_root;
@@ -149,7 +159,7 @@ nodir:
  * zeroes.
  */
 
-inoptr srch_dir(inoptr wd, char *compname)
+inoptr srch_dir(inoptr wd, uint8_t *compname)
 {
     int curentry;
     blkno_t curblock;
@@ -297,7 +307,7 @@ bool emptydir(inoptr wd)
     do
     {
         udata.u_count = DIR_LEN;
-        udata.u_base  =(unsigned char *)&curentry;
+        udata.u_base  = (uint8_t *)&curentry;
         udata.u_sysio = true;
         readi(wd, 0);
 
@@ -319,7 +329,7 @@ bool emptydir(inoptr wd)
  * or the user did not have write permission.
  */
 
-bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
+bool ch_link(inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex)
 {
     struct direct curentry;
     int i;
@@ -350,7 +360,7 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
     for(;;)
     {
         udata.u_count = DIR_LEN;
-        udata.u_base  =(unsigned char *)&curentry;
+        udata.u_base  =(uint8_t *)&curentry;
         udata.u_sysio = true;
         readi(wd, 0);
 
@@ -401,8 +411,11 @@ bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 
 /* Namecomp compares two strings to see if they are the same file name.
  * It stops at FILENAME_LEN chars or a null or a slash. It returns 0 for difference.
+ *
+ * TODO: This generates crap code on most compilers so we probably ought to
+ * turn it into platform asm code.
  */
-bool namecomp(char *n1, char *n2) // return true if n1 == n2
+bool namecomp(uint8_t *n1, uint8_t *n2) // return true if n1 == n2
 {
     uint8_t n; // do we have enough variables called n?
 
@@ -433,7 +446,7 @@ bool namecomp(char *n1, char *n2) // return true if n1 == n2
  * it's cleaner ???
  */
 
-inoptr newfile(inoptr pino, char *name)
+inoptr newfile(inoptr pino, uint8_t *name)
 {
     regptr inoptr nindex;
     uint8_t j;
@@ -473,7 +486,7 @@ inoptr newfile(inoptr pino, char *name)
         nindex->c_node.i_addr[j] = 0;
     }
     wr_inode(nindex);
-    if (!ch_link(pino, "", name, nindex)) {
+    if (!ch_link(pino, (uint8_t *)"", name, nindex)) {
         i_deref(nindex);
 	/* ch_link sets udata.u_error */
         goto nogood;
@@ -813,7 +826,7 @@ void i_deref(regptr inoptr ino)
         panic(PANIC_INODE_FREED);
 
     if (mode == MODE_R(F_PIPE))
-        wakeup((char *)ino);
+        wakeup((uint8_t *)ino);
 
     /* If the inode has no links and no refs, it must have
        its blocks freed. */
@@ -904,7 +917,7 @@ int f_trunc(regptr inoptr ino)
     for(j=17; j >= 0; --j)
         freeblk(dev, ino->c_node.i_addr[j], 0);
 
-    memset((char *)ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
+    memset((uint8_t *)ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
 
     ino->c_flags |= CDIRTY;
     ino->c_node.i_size = 0;
@@ -1326,7 +1339,7 @@ void magic(inoptr ino)
  * FIXME: this could be more efficient if we remembered which directory offset
  * we found the node at lookup time
  */
-arg_t unlinki(inoptr ino, inoptr pino, char *fname)
+arg_t unlinki(inoptr ino, inoptr pino, uint8_t *fname)
 {
 	if (getmode(ino) == MODE_R(F_DIR)) {
 		udata.u_error = EISDIR;
@@ -1334,7 +1347,7 @@ arg_t unlinki(inoptr ino, inoptr pino, char *fname)
 	}
 
 	/* Remove the directory entry (ch_link checks perms) */
-	if (!ch_link(pino, fname, "", NULLINODE))
+	if (!ch_link(pino, fname, (uint8_t *)"", NULLINODE))
 		return -1;
 
 	/* Decrease the link count of the inode */

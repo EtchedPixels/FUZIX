@@ -90,6 +90,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define CPUTYPE_R2K	9
 #define CPUTYPE_Z280	10
 #define CPUTYPE_8080	11
+#define CPUTYPE_8085	12
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
@@ -313,7 +314,7 @@ typedef struct cinode {
 #define DIR_LEN		32
 typedef struct direct {
     uint16_t   d_ino;
-    char     d_name[FILENAME_LEN];
+    uint8_t    d_name[FILENAME_LEN];
 } direct;
 
 
@@ -819,7 +820,7 @@ extern size_t strlcpy(char *, const char *, size_t);
 #define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
 #define uzero(a,b)	(memset(a,0,b) && 0)
 #else
-extern usize_t valaddr(const char *base, usize_t size);
+extern usize_t valaddr(const uint8_t *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
@@ -895,16 +896,16 @@ extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
-extern char lastname[31];
-extern inoptr n_open(char *uname, inoptr *parent);
+extern uint8_t lastname[31];
+extern inoptr n_open(uint8_t *uname, inoptr *parent);
 extern inoptr i_open(uint16_t dev, uint16_t ino);
-extern inoptr srch_dir(inoptr wd, char *compname);
+extern inoptr srch_dir(inoptr wd, uint8_t *compname);
 extern inoptr srch_mt(inoptr ino);
 extern bool emptydir(inoptr ino);
-extern bool ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex);
+extern bool ch_link(inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex);
 /* return true if n1 == n2 */
-extern bool namecomp(char *n1, char *n2);
-extern inoptr newfile(inoptr pino, char *name);
+extern bool namecomp(uint8_t *n1, uint8_t *n2);
+extern inoptr newfile(inoptr pino, uint8_t *name);
 extern fsptr getdev(uint16_t dev);
 extern bool baddev(fsptr dev);
 extern uint16_t i_alloc(uint16_t devno);
@@ -937,7 +938,7 @@ extern struct mount *fs_tab_get(uint16_t dev);
 /* returns true on failure, false on success */
 extern bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
 extern void magic(inoptr ino);
-extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
+extern arg_t unlinki(inoptr ino, inoptr pino, uint8_t *fname);
 
 /* inode.c */
 extern void readi(inoptr ino, uint8_t flag);
@@ -1015,10 +1016,9 @@ extern void swapin(ptptr p, uint16_t map);
 
 /* syscalls_fs.c, syscalls_proc.c, syscall_other.c etc */
 extern void updoff(void);
-extern int stcpy(inoptr ino, char *buf);
+extern int stcpy(inoptr ino, uint8_t *buf);
 extern bool rargs (char **userspace_argv, struct s_argblk *argbuf);
 extern char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
-extern arg_t unlinki(inoptr ino, inoptr pino, char *fname);
 
 /* timer.c */
 extern void rdtime(time_t *tloc);
@@ -1068,6 +1068,10 @@ extern void __hard_ei(void);
 #define di __hard_di
 #define irqrestore __hard_irqrestore
 #define ei __hard_ei
+#else
+extern irqflags_t di(void);
+extern void irqrestore(irqflags_t f);
+extern void ei(void);
 #endif
 
 /* Will need a uptr_t eventually */

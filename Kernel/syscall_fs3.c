@@ -10,7 +10,7 @@ char *name;
 int16_t flag;
 int16_t mode;
 ********************************************/
-#define name (char *)udata.u_argn
+#define name (uint8_t *)udata.u_argn
 #define flag (uint16_t)udata.u_argn1
 #define mode (uint16_t)udata.u_argn2
 
@@ -133,23 +133,31 @@ arg_t _open(void)
 	i_unlock(ino);
 
 	/* FIXME: ATIME ? */
-/*
- *         Sleep process if no writer or reader.
- *	   FIXME: check for other of pair now we have proper counts
- */
-	if (getmode(ino) == MODE_R(F_PIPE) && of_tab[oftindex].o_refs == 1
-	    && !(flag & O_NDELAY))
-		psleep(ino);
+
+	if (getmode(ino) == MODE_R(F_PIPE)) {
+		if (of_tab[oftindex].o_refs == 1
+			    && !(flag & O_NDELAY)) {
+			psleep(ino);
+			if (chksigs()) {
+				udata.u_error = EINTR;
+				goto idrop;
+			}
+		}
+		if ((ino->c_writers == 0) && (flag & O_NDELAY)) {
+			udata.u_error = ENXIO;
+			goto idrop;
+		}
+	}
 
         /* From the moment of the psleep ino is invalid */
 
 	return (uindex);
-      idrop:
+idrop:
 	i_unlock(ino);
 	/* Falls through and drops the reference count */
-      cantopen:
+cantopen:
 	oft_deref(oftindex);	/* This will call i_deref() */
-      nooft:
+nooft:
 	udata.u_files[uindex] = NO_FILE;
 	return (-1);
 }
@@ -165,8 +173,8 @@ link (name1, name2)               Function 5
 char *name1;
 char *name2;
 ********************************************/
-#define name1 (char *)udata.u_argn
-#define name2 (char *)udata.u_argn1
+#define name1 (uint8_t *)udata.u_argn
+#define name2 (uint8_t *)udata.u_argn1
 
 arg_t _link(void)
 {
@@ -291,7 +299,7 @@ We pass a set of \0 terminated strings, don't bother
 with node name. Rest is up to the libc.
 ********************************************/
 
-#define buf (char *)udata.u_argn
+#define buf (uint8_t *)udata.u_argn
 #define len (uint16_t)udata.u_argn1
 
 arg_t _uname(void)

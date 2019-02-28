@@ -24,7 +24,7 @@ static arg_t chdiroot_op(inoptr ino, inoptr * p)
   chdir (dir)                      Function 10
   char *dir;
  ********************************************/
-#define dir (char *)udata.u_argn
+#define dir (uint8_t *)udata.u_argn
 
 arg_t _chdir(void)
 {
@@ -59,7 +59,7 @@ arg_t _fchdir(void)
   chroot (dir)                      Function 46
   char *dir;
  ********************************************/
-#define dir (char *)udata.u_argn
+#define dir (uint8_t *)udata.u_argn
 
 arg_t _chroot(void)
 {
@@ -81,9 +81,9 @@ arg_t _chroot(void)
   int16_t mode;
   int16_t dev;
  ********************************************/
-#define name (char *)udata.u_argn
-#define mode (int16_t)udata.u_argn1
-#define dev  (int16_t)udata.u_argn2
+#define name (uint8_t *)udata.u_argn
+#define mode (uint16_t)udata.u_argn1
+#define dev  (uint16_t)udata.u_argn2
 
 arg_t _mknod(void)
 {
@@ -135,8 +135,8 @@ arg_t _mknod(void)
   char  *path;
   int16_t mode;
  ********************************************/
-#define path (char *)udata.u_argn
-#define mode (int16_t)udata.u_argn1
+#define path (uint8_t *)udata.u_argn
+#define mode (uint16_t)udata.u_argn1
 
 arg_t _access(void)
 {
@@ -202,7 +202,7 @@ static arg_t chmod_op(inoptr ino)
   char  *path;
   int16_t mode;
  ********************************************/
-#define path (char *)udata.u_argn
+#define path (uint8_t *)udata.u_argn
 
 arg_t _chmod(void)
 {
@@ -279,7 +279,7 @@ static int chown_op(inoptr ino)
   int  owner;
   int  group;
  ********************************************/
-#define path (char *)udata.u_argn
+#define path (uint8_t *)udata.u_argn
 
 arg_t _chown(void)
 {
@@ -323,8 +323,8 @@ arg_t _fchown(void)
   char *file;
   char *buf;
  ********************************************/
-#define file (char *)udata.u_argn
-#define buf (char *)udata.u_argn1
+#define file (uint8_t *)udata.u_argn
+#define buf (uint8_t *)udata.u_argn1
 
 arg_t _utime(void)
 {
@@ -427,7 +427,7 @@ arg_t _getfsys(void)
 		udata.u_error = ENXIO;
 		return (-1);
 	}
-	return uput((char *) &m->m_fs, (char *) buf, sizeof(struct filesys));
+	return uput((uint8_t *) &m->m_fs, (uint8_t *) buf, sizeof(struct filesys));
 }
 
 #undef dev
