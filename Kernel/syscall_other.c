@@ -27,7 +27,7 @@ put inside itself!
 arg_t _rename(void)
 {
 	staticfast inoptr srci, srcp, dsti, dstp;
-	char fname[FILENAME_LEN + 1];
+	uint8_t fname[FILENAME_LEN + 1];
 	arg_t ret;
 
 	srci = n_open(src, &srcp);
@@ -98,14 +98,14 @@ arg_t _rename(void)
 	} else
 		i_lock(dstp);
 	/* Ok we may proceed: we set up fname earlier */
-	if (!ch_link(dstp, "", lastname, srci)) {
+	if (!ch_link(dstp, (uint8_t *)"", lastname, srci)) {
 		i_unlock(dstp);
 		goto nogood2;
 	}
 	i_unlock(dstp);
 	/* A fail here is bad */
 	i_lock(srcp);
-	if (!ch_link(srcp, fname, "", NULLINODE)) {
+	if (!ch_link(srcp, fname, (uint8_t *)"", NULLINODE)) {
 		i_unlock(srcp);
 		kputs("WARNING: rename: unlink fail\n");
 		goto nogood2;
@@ -171,8 +171,8 @@ arg_t _mkdir(void)
 	ino->c_node.i_mode = F_DIR | 0200;	/* so ch_link is allowed */
 	setftime(ino, A_TIME | M_TIME | C_TIME);
 	/* Ensure the directory is fully formed before anyone can see it */
-	if (ch_link(ino, "", ".", ino) == 0 ||
-	    ch_link(ino, "", "..", parent) == 0)
+	if (ch_link(ino, (uint8_t *)"", (uint8_t *)".", ino) == 0 ||
+	    ch_link(ino, (uint8_t *)"", (uint8_t *)"..", parent) == 0)
 		goto cleanup;
 
 	/* Link counts and permissions */
@@ -192,7 +192,7 @@ cleanup:
 	i_unlock_deref(ino);
 	/* In the error case it may be observed but it's consistently empty */
 	i_lock(parent);
-	if (!ch_link(parent, lastname, "", NULLINODE))
+	if (!ch_link(parent, lastname, (uint8_t *)"", NULLINODE))
 		kprintf("_mkdir: bad rec\n");
 	i_unlock_deref(parent);
 	return -1;
@@ -259,7 +259,7 @@ arg_t _rmdir(void)
 		goto nogood;
 
 	/* Remove the directory entry */
-	if (!ch_link(parent, lastname, "", NULLINODE))
+	if (!ch_link(parent, lastname, (uint8_t *)"", NULLINODE))
 		goto nogood;
 
 	/* We are unused, parent is now one link down (removal of ..) */
