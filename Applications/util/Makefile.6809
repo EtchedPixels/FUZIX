@@ -21,7 +21,6 @@ SRCSNS = \
 	chmod.c \
 	chown.c \
 	cmp.c \
-	cp.c \
 	date.c \
 	dirname.c \
 	false.c \
@@ -63,6 +62,7 @@ SRCS  = \
 	cal.c \
 	chmem.c \
 	cksum.c \
+	cp.c \
 	cut.c \
 	dd.c \
 	decomp16.c \
