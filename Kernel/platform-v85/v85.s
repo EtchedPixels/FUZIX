@@ -275,6 +275,16 @@ _ttyready:
 	mov e,a
 	ret
 
+
+.define _acia_setup
+
+_acia_setup:
+	ldsi 2
+	lhlx
+	mov a,l
+	out 0
+	ret
+
 .define _acia_poll
 
 !
