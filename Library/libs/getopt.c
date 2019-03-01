@@ -15,11 +15,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <getopt.h>
 
 int   opterr = 1;		/* error => print message */
 int   optind = 1;		/* next argv[] index */
 int   optopt;
-const char *optarg = NULL;	/* option parameter if any */
+char *optarg = NULL;	/* option parameter if any */
 
 static int Err(const char *name, const char *mess, int c)
 /* returns '?' */
@@ -38,7 +39,7 @@ static int Err(const char *name, const char *mess, int c)
 /* Moved out of function to stop SDCC generating loads of setup crap */
 static int sp = 1;		/* position within argument */
 
-int getopt(int argc, const char *argv[], const char *optstring)
+int getopt(int argc, char *const argv[], const char *optstring)
 				/* returns letter, '?', EOF */
 {
    register int osp;		/* saved `sp' for param test */

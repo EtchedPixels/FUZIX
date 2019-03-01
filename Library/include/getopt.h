@@ -9,6 +9,6 @@ extern int opterr;
 extern int optind;
 extern int optopt;
 
-extern int getopt(int __argc, char *__argv[], char *__shortopts);
+extern int getopt(int __argc, char * const __argv[], const char *__shortopts);
 
 #endif /* __GETOPT_H */
