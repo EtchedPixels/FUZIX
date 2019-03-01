@@ -47,6 +47,8 @@ static struct section *find_create(const char *name)
 
 static char code_for(const char *name)
 {
+	if (strcmp(name, "BOOT") == 0)
+		return '!';
 	if (strcmp(name, "CODE") == 0)
 		return '1';
 	if (strcmp(name, "CODE1") == 0)
@@ -70,6 +72,10 @@ static char code_for(const char *name)
 	if (strcmp(name, "HOME") == 0)
 		return 'H';
 	if (strcmp(name, "DISCARD") == 0)
+		return 'X';
+	if (strcmp(name, "DISCARD1") == 0)
+		return 'X';
+	if (strcmp(name, "DISCARD2") == 0)
 		return 'X';
 	if (strcmp(name, "DATA") == 0)
 		return 'D';
@@ -98,6 +104,9 @@ static char bank_for(const char *name)
 {
 	if (!banked)
 		return 0;
+	/* Really this is very system dependant */
+	if (strcmp(name, "BOOT") == 0)
+		return 0;
 	if (strcmp(name, "CODE") == 0)
 		return 0;
 	if (strcmp(name, "DATA") == 0)
@@ -114,6 +123,10 @@ static char bank_for(const char *name)
 		return 1;
 	if (strcmp(name, "DISCARD") == 0)
 		return 0;
+	if (strcmp(name, "DISCARD1") == 0)
+		return 1;
+	if (strcmp(name, "DISCARD2") == 0)
+		return 2;
 	if (strcmp(name, "BUFFERS") == 0)
 		return 0;
 	if (strcmp(name, "BUFFERS1") == 0)
