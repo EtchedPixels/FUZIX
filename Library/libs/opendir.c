@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-DIR *opendir(char *path)
+DIR *opendir(const char *path)
 {
 	DIR *dir = calloc(1, sizeof(DIR));
 	if (dir == NULL) {

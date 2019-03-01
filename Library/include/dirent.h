@@ -47,8 +47,8 @@ struct __dirent {
 	ino_t		d_ino;
 	char		d_name[30];
 };
-extern DIR *opendir(char *__name);
-extern DIR *opendir_r(DIR *__dirp, char *__name);
+extern DIR *opendir(const char *__name);
+extern DIR *opendir_r(DIR *__dirp, const char *__name);
 extern int closedir(DIR *__dirp);
 extern int closedir_r(DIR *__dirp);
 extern struct dirent *readdir(DIR *__dirp);

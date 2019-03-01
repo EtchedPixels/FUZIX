@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-DIR *opendir_r(DIR *dir, char *path)
+DIR *opendir_r(DIR *dir, const char *path)
 {
 	struct stat statbuf;
 
