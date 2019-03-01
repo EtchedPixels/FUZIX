@@ -213,7 +213,7 @@ arg_t _link(void)
 	}
 
 	i_lock(parent2);
-	if (!ch_link(parent2, "", lastname, ino)) {
+	if (!ch_link(parent2, (uint8_t *)"", lastname, ino)) {
 		i_unlock_deref(parent2);
 		goto nogoodl;
 	}
