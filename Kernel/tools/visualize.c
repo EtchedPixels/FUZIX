@@ -50,7 +50,7 @@ static char code_for(const char *name)
 	if (strcmp(name, "BOOT") == 0)
 		return '!';
 	if (strcmp(name, "CODE") == 0)
-		return '1';
+		return '0';
 	if (strcmp(name, "CODE1") == 0)
 		return '1';
 	if (strcmp(name, "CODE2") == 0)
