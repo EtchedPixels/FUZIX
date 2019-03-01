@@ -11,6 +11,8 @@ uint32_t our_address = 0xC0000001;
 uint32_t our_address = 0x010000C0;
 #endif
 
+#define IN2SOCK(ino)		(sockets + (ino)->c_node.i_addr[0])
+
 static uint16_t nextauto = 5000;
 
 bool issocket(inoptr ino)
@@ -22,7 +24,7 @@ bool issocket(inoptr ino)
 
 int sock_write(inoptr ino, uint8_t flag)
 {
-	struct socket *s = &sockets[ino->c_node.i_nlink];
+	struct socket *s = IN2SOCK(ino);
 	int r;
 
 	/* FIXME: IRQ protection */
@@ -53,7 +55,7 @@ int sock_write(inoptr ino, uint8_t flag)
 
 int sock_read(inoptr ino, uint8_t flag)
 {
-	struct socket *s = &sockets[ino->c_node.i_nlink];
+	struct socket *s = IN2SOCK(ino);
 	return net_read(s, flag);
 }
 
@@ -128,7 +130,7 @@ void sock_wake_listener(struct socket *s)
 void sock_close(inoptr ino)
 {
 	/* For the moment */
-	struct socket *s = &sockets[ino->c_node.i_nlink];
+	struct socket *s = IN2SOCK(ino);;
 	net_close(s);
 	/* Dead but not unbound from netd activity yet */
 	s->s_state = SS_DEAD;
@@ -137,9 +139,7 @@ void sock_close(inoptr ino)
 void sock_closed(struct socket *s)
 {
 	s->s_state = SS_UNUSED;
-	/* You re-use something you pays the price. Probably should switch
-	   to using data 0 as devices do ? FIXME */
-	s->s_ino->c_node.i_nlink = 0;
+	s->s_ino->c_node.i_addr[0] = 0;
 	s->s_ino->c_flags |= CDIRTY;
 }
 
@@ -187,7 +187,7 @@ static struct socket *sock_get(int fd, uint8_t *flag)
 		oftp = of_tab + udata.u_files[fd];
 		*flag = oftp->o_access;
 	}
-	return sockets + ino->c_node.i_nlink;
+	return IN2SOCK(ino);
 }
 
 static struct socket *sock_pending(struct socket *l)
@@ -330,9 +330,8 @@ arg_t make_socket(struct sockinfo *s, struct socket **np)
 	if (!(ino = i_open(root_dev, 0)))
 		goto noalloc;
 	/* All good - now set it up */
-	/* The nlink cheat needs to be taught to fsck! */
 	ino->c_node.i_mode = F_SOCK | 0777;
-	ino->c_node.i_nlink = n->s_num;	/* Cheat !! */
+	ino->c_node.i_addr[0] = n->s_num;
 	ino->c_readers = 1;
 	ino->c_writers = 1;
 
