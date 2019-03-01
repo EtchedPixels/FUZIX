@@ -4,11 +4,15 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <zxuno.h>
 
 extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 
+
 void pagemap_init(void)
 {
+	if (probe_zxuno())
+		configure_zxuno();
 }
 
 /* string.c

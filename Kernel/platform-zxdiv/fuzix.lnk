@@ -19,6 +19,7 @@ platform-zxdiv/zx128.rel
 platform-zxdiv/zxvideo.rel
 platform-zxdiv/main.rel
 platform-zxdiv/discard.rel
+platform-zxdiv/zxuno.rel
 start.rel
 version.rel
 lowlevel-z80-banked.rel
