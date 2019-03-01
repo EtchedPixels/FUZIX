@@ -49,18 +49,17 @@ clean:
 	rm -f *.ihx *.tmp loader loader-zxcf
 	rm -f FUZIX.BIN FUZIX
 
-# Re-order the image and snapshop it
+# Re-order the image and turn it into the raw image to load from disk
 image:
 	# Build a generic DivIDE plus loader
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
 	makebin -s 57856 loader.ihx loader.tmp
+	dd bs=1 skip=57344 if=loader.tmp of=loader
 	# Build a generic ZXCF+ style loader
 	sdasz80 -o loader-zxcf.s
 	sdldz80 -i loader-zxcf.rel
 	makebin -s 57856 loader-zxcf.ihx loader-zxcf.tmp
-	# Generate the image file we need
-	dd if=loader.tmp of=FUZIX bs=8192 skip=1
 
 	# Now build a FUZIX.BIN to load
 	# in the order we need it
