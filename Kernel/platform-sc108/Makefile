@@ -48,7 +48,6 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ loader.tmp loader.bin fuzix.com
 
 image:	loader.bin
-	dd if=../fuzix.bin of=fuzix.com bs=256 skip=1 count=248
 
 loader.bin: loader.s
 	sdasz80 -o loader.s

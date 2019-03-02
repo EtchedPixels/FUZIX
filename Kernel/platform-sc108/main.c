@@ -19,6 +19,8 @@ uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;
 
+uint8_t is_sc108;
+
 void platform_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {

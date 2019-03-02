@@ -79,6 +79,8 @@ __uzero:
 	ret z
 	ld a,#0x81
 	out (0x38),a		; user bank
+	rlca
+	out (0x30),a
 	ld (hl),#0
 	dec bc
 	ld a,b
@@ -91,6 +93,8 @@ __uzero:
 uout:
 	ld a,#1
 	out (0x38),a
+	rlca
+	out (0x30),a
 	ret
 
 __ugetc:
@@ -100,6 +104,8 @@ __ugetc:
 	push bc
 	ld a,#0x81
 	out (0x38),a
+	rlca
+	out (0x30),a
 	ld l,(hl)
 	ld h,#0
 	jr uout
@@ -111,6 +117,8 @@ __ugetw:
 	push bc
 	ld a,#0x81
 	out (0x38),a
+	rlca
+	out (0x30),a
 	ld a,(hl)
 	inc hl
 	ld h,(hl)
@@ -126,6 +134,8 @@ __uputc:
 	push bc
 	ld a,#0x81
 	out (0x38),a
+	rlca
+	out (0x30),a
 	ld (hl),e
 	jr uout
 
@@ -138,6 +148,8 @@ __uputw:
 	push bc
 	ld a,#0x81
 	out (0x38),a
+	rlca
+	out (0x30),a
 	ld (hl),e
 	inc hl
 	ld (hl),d

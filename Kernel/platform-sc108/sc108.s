@@ -34,6 +34,8 @@
 	.globl _ctc_present
 	.globl _sio_present
 	.globl _sio1_present
+	.globl outstring
+	.globl _is_sc108
 
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
@@ -115,16 +117,109 @@ init_hardware:
 	ld hl,#64
         ld (_procmem), hl
 
+	xor a			; Kernel + ROM (works on SC108 and SC114)
+	out (0x38),a		;
+
+	; We'd like to just use the ROM helper but unfortunately the boot
+	; arrangements fry the ROM stuff. Instead we just find the code
+	; we need and then run it.
+
+	ld hl,#0x0100
+
+nextscan:
+	ld a,(hl)
+	inc hl
+	cp #0xED
+	jr nz,nextbyte
+	ld a,(hl)
+	cp #0x41
+	jr nz,nextbyte
+	inc hl
+	ld a,(hl)
+	cp #0x12
+	jr nz,nextbyte
+	inc hl
+	ld a,(hl)
+	cp #0x05
+	jr z, found_it
+	cp #0x06
+	jr z,found_it
+	dec hl
+nextbyte:
+	bit 6,h
+	jr z,nextscan
+
+	ld a,#0x01
+	out (0x38),a
+	ld hl,#oldrom
+	call outstring
+
+	; Patch common before we copy it
+	ld de,#0x0181
+	ld (_bank0to1),de
+	ld de,#0x8101
+	ld (_bank1to0),de
+	ld a,#0x38
+	ld (_bankport),a
+
+	; try the old ROM hack instead
+
+	xor a
+	out (0x38),a
 	ld hl,#s__COMMONMEM
 	ld ix,#s__COMMONMEM
 	ld bc,#l__COMMONMEM
-	xor a			; Kernel + ROM
-	out (0x38),a		;
+	ld de,#0x8000
+	xor a
+	call 0x7ffd
+	; and continue... hopefully
+	jr old_sc108
 
-	ld de,#0x8000		; bank 0 to bank 1 (ROM in)
-	xor a			; return to bank 0
-	call 0x7FFD		; ROM helper vector
+oldrom:
+	.asciz 'Bank helper not found, old ROM ?\r\n'
 
+callhl:
+	jp (hl)
+
+	; Found an SC108 or SC114
+found_it:
+	or a
+	ld de,#7
+	sbc hl,de
+
+	sub #5
+	ld (_is_sc108),a	; 0 = 114 1 = 108
+	jr z, sc114
+
+	;
+	;	Set banking registers for SC108 (they default to SC114)
+	;	Must do this before copying as we need it patched in
+	;	both banks
+	;
+
+	ld de,#0x0181
+	ld (_bank0to1),de
+	ld de,#0x8101
+	ld (_bank1to0),de
+	ld a,#0x38
+	ld (_bankport),a
+
+sc114:
+	ld de,#s__COMMONMEM
+	ld bc,#l__COMMONMEM
+
+copynext:
+	push bc
+	ld a,(de)
+	call callhl		; writes by to DE in far bank, eats BC
+	inc de
+	pop bc
+	dec bc
+	ld a,b
+	or c
+	jr nz, copynext
+
+old_sc108:
 	ld a,#0x01		; bank 0 ROM out
 	out (0x38),a
 	ld (banknum),a		; and correct page
@@ -142,15 +237,6 @@ init_hardware:
 	call ldir_to_user
 
 	; Play guess the serial port
-
-	;
-	; We are booted under ROMWBW, therefore use the same algorithm as
-	; ROMWBW so if the probe fails we at least expect it to have failed
-	; before we run.
-	;
-	; FIXME: see if we can cleanly ask ROMWBW for the device type
-	;
-
 	;
 	; This could be the ACIA control port. If so we mash the settings
 	; up but that is ok as we will port them back in the ACIA probe
@@ -440,11 +526,10 @@ rst10:
 rst18:
 	    ld a,#0x81
 	    out (0x38),a
+	    rlca
+	    out (0x30),a
 	    ei
-	    jp (hl)
-	    nop
-	    nop
-rst20:	    ret
+rst20:	    jp (hl)
 	    nop
 	    nop
 	    nop
@@ -492,11 +577,19 @@ nmi_handler:		; Should be at 0x66
 ;
 ;	This needs some properly optimized versions!
 ;
+; FIXME: save a byte and some setup by makign byte 2 of 0to1 the first
+; of 1to0
+_bank0to1:
+	   .dw 0x0001			; 0x0181 for SC108
+_bank1to0:
+	   .dw 0x0100			; 0x8101 for SC108
+_bankport:
+	   .db 0x30			; 0x38 for SC108
 ldir_to_user:
-	    ld de,#0x0181		; from bank 0 to bank  1
+	    ld de,(_bank0to1)		; from bank 0 to bank  1
 ldir_far:
 	    push bc
-	    ld c,#0x38
+	    ld bc,(_bankport)
 	    exx
 	    pop bc			; get BC into alt bank
 far_ldir_1:
@@ -512,11 +605,13 @@ far_ldir_1:
 	    ld a,b
 	    or c
 	    jr nz, far_ldir_1
-	    ld a,#1
-	    out (0x38),a
+	    ld a,(_bank0to1+1)
+	    exx
+	    out (c),a
+	    exx
 	    ret
 ldir_from_user:
-	    ld de,#0x8101
+	    ld de,(_bank1to0)
 	    jr ldir_far
 ;
 ;	High stubs. Present in each bank in the top 256 bytes
@@ -536,8 +631,16 @@ interrupt_high:
 	    push iy
 	    ld a,(banknum)
 	    ld c,a
+	    ;
+	    ; The trick going on here is that an SC108 will respond to
+	    ;  0x38 bit 7 = RAM bank 0 = ROM and ignore 0x30
+            ; but the SC114 will respond to 0x38 bit 0 only (ROM) and
+	    ; to 0x30 bit 0 for RAM.
+	    ;
 	    ld a,#0x01
 	    out (0x38),a		; Bank 0, no ROM
+	    rlca
+	    out (0x30),a
 	    ld (istack_switched_sp),sp	; istack is positioned to be valid
 	    ld sp,#istack_top		; in both banks. We just have to
 	    ;
@@ -559,6 +662,8 @@ interrupt_high:
 	    ; Returning to user space
 	    ld a,#0x81			; User bank
 	    out (0x38),a
+	    rlca
+	    out (0x30),a
 	    ; User stack is now valid
 	    ; back on user stack
 	    xor a
@@ -586,6 +691,8 @@ kernout:
 	    ; have to put the right bank back
 	    ld a,c
 	    out (0x38),a
+	    rlca
+	    out (0x30),a
 	    jr pops
 	    
 sigpath:
@@ -622,6 +729,8 @@ syscall_high:
 	    ex af, af'		; Ick - find a better way to do this bit !
 	    ld a,#1
 	    out (0x38),a
+	    rlca
+	    out (0x30),a
 	    ex af,af'
 	    ; Stack now invalid
 	    ld (_udata + U_DATA__U_SYSCALL_SP),sp
@@ -633,6 +742,8 @@ syscall_high:
 	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
 	    ld a,#0x81		; back to the user page
 	    out (0x38),a
+	    rlca
+	    out (0x30),a
 	    xor a
 	    cp h
 	    call nz, syscall_sigret

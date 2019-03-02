@@ -30,10 +30,14 @@ not_swapin:
             rrca
             or #1			; 0x81 or 0x01
             out (0x38),a
+            rlca
+            out (0x30),a
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
             ld a,#0x01
             out (0x38),a
+            rlca
+            out (0x30),a
             ret
     __endasm;
 }
@@ -53,10 +57,14 @@ not_swapout:
             rrca
             or #1			; 0x81 or 0x01
             out (0x38),a
+            rlca
+            out (0x30),a
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
             ld a,#0x01
             out (0x38),a
+            rlca
+            out (0x30),a
             ret
     __endasm;
 }

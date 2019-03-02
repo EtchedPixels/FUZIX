@@ -1,68 +1,32 @@
-Experimental port for the SC108 mainboard plus CF card plus RTC or CTC card
+Experimental port for the SC108 mainboard plus CF card plus RTC or CTC card, or
+for the SC114 combo mainboard/backplane.
+
+Cards required:
+
+SC108 processor module or SC114 motherboard
+SC104 Z80 SIO/2 (or RC2014 SIO/2 card)
+RC2014 CF adapter
+
+Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
+best of both worlds.
+
+You can probably use the SC110 instead of the SC102 and SC104 but you will need
+to run a wire to chain CTC2 into CTC3 with the current board revision.
 
 This is a design that happens to have 128K RAM but the 64K banks are flipped
 directly. Fortunately there is a ROM which lives in both banks.
 
 For the moment we stick the OS in RAM (it would be entertaining to explore
 putting the kernel in ROM but as it's not trivially reprogrammable flash
-lets leave that for a while). The ROM has to have the following routines
+lets leave that for a while).
 
-0x7FFD	JP	ldir_far
+If you have a current SC114 ROM or you build the latest SC108 ROM from source
+the ROM containers helper functions for the bank setup. We can't actually use
+those the way it was intended as the bootstrap blows away the monitor state
+before we can intercept it instead we scan the ROM and find it.
 
-To provide the following functionality
-
-copy_far
-HL = source
-IX = destination
-BC = count
-A = return bank bits
-D = dest bank bits
-E = source bank bits
-
-where source/dest must be in the upper 32K (clear of ROM) and interrupts off
-
-Something like this patched into the ROM should work
-
-;
-;	ROM patch for SC108
-;
-	.area CODE(ABS)
-
-.org 0x7FE2
-
-;	HL = SOURCE
-;	IX = DESTINATION
-;	BC = COUNT
-;	D = destination bank
-;	E = source bank
-;	
-;
-;
-ldir_far:
-	    push bc
-	    ld c,#0x38
-	    exx
-	    pop bc			; get BC into alt bank
-far_ldir_1:
-	    exx
-	    out (c),e
-	    ld a,(hl)
-	    inc hl
-	    out (c),d
-	    ld (ix),a
-	    inc ix
-	    exx
-	    dec bc
-	    ld a,b
-	    or c
-	    jr nz, far_ldir_1
-	    xor a
-	    out (0x38),a
-	    ret
-
-	    jp ldir_far
-
-
+If you have an older SC108 ROM then it tries 0x7FFD and the code used to get
+this to work originally. (See README.ROMpatch)
 
 Memory map
 
@@ -71,7 +35,8 @@ Kernel
 0000-00FF	Vectors (present in both banks)
 0100-EFFF	Kernel (common above 0x8000 for ROM dodging)
 F000-F1FF	UDATA
-F200-FFFF	Common (mostly valid in both banks)
+F200-F2FF	Istack
+F300-FFFF	Common (mostly valid in both banks)
 
 User
 
@@ -97,3 +62,15 @@ Emulation
 Write the bootloader once to block 0 (repair the parition tables afterwards)
 Write kernel images to block 24
 rc2014 -m sc108 -r sc108.rom -s -i sc108.ide -c
+
+Real Hardware
+
+Add the bootloader to block 0 of a CF card
+Partition the CF card with a standard partitioning tool so it has the normal
+sector 2048 start for the file systems.
+Set up a partition (type 7E) for Fuzix and put a Fuzix root file system on it
+using dd or similar raw tools
+Set up a second partition (type 7F) as swap.
+
+You can partition the rest of the card however you want.
+
