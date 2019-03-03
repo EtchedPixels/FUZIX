@@ -48,6 +48,11 @@
         .globl outstring
         .globl outstringhex
 
+	.globl null_handler
+	.globl nmi_handler
+	.globl unix_syscall_entry
+	.globl interrupt_handler
+
 	; banking support
 	.globl __bank_0_1
 	.globl __bank_0_2
@@ -112,6 +117,8 @@ _int_disabled:
 ;	The memory banker will deal with the map setting
 ;
 init_early:
+	xor a
+	out (0xFE),a
         ret
 
 	.area _VIDEO
@@ -136,6 +143,19 @@ init_hardware:
         ld hl, #(256 - 96)
         ld (_procmem), hl
 
+	ld a,#0xC3
+	ld (0x00),a
+	ld (0x30),a
+	ld (0x38),a
+	ld (0x66),a
+	ld hl,#null_handler
+	ld (0x01),hl
+	ld hl,#unix_syscall_entry
+	ld (0x31),hl
+	ld hl,#interrupt_handler
+	ld (0x39),hl
+	ld hl,#nmi_handler
+	ld (0x67),hl
         ; screen initialization
 	push af
 	call _vtinit
@@ -308,6 +328,7 @@ bankina0:
 	jr __retmap3
 
 callhl:	jp (hl)
+
 __bank_0_2:
 	ld a, #6	   ; logical 2 -> physical 6
 	jr bankina0
@@ -316,7 +337,7 @@ __bank_0_3:
 	jr bankina0
 
 __bank_1_2:
-	ld a, #1
+	ld a, #6
 bankina1:
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
@@ -328,12 +349,12 @@ bankina1:
 __retmap1:
 	ex de, hl
 	call callhl	   ; call the function
-	ld a,#1		   ; return to bank 1 (physical 0)
+	ld a,#1		   ; return to bank 1 (physical 1)
 	jp switch_bank
-
 __bank_1_3:
 	ld a, #7
 	jr bankina1
+
 __bank_2_1:
 	ld a,#1
 bankina2:
@@ -352,6 +373,7 @@ __retmap2:
 __bank_2_3:
 	ld a, #7
 	jr bankina2
+
 __bank_3_1:
 	ld a, #1
 bankina3:
@@ -369,7 +391,7 @@ __retmap3:
 	jp switch_bank
 
 __bank_3_2:
-	ld a, #1
+	ld a, #6
 	jr bankina3
 
 ;
@@ -400,7 +422,7 @@ __stub_1_2:
 	ld a, #6
 __stub_1_a:
 	pop hl		; the return
-	ex (sp), hl	; write it over the discad
+	ex (sp), hl	; write it over the discard
 	call switch_bank
 __stub_1_ret:
 	ex de, hl
