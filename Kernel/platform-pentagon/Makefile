@@ -46,7 +46,32 @@ $(AOBJS): %.rel: %.s
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
-	rm -f BOOT.BIN strap.bin load-esx.ihx load-esx.tmp
-	rm -f FUZIX.BIN FUZIX
+	rm -f block? loader.bin
 
-image:
+loader.bin: loader.s
+	sdasz80 -o loader.s
+	sdldz80 -i loader.rel
+	makebin -s 32768 loader.ihx loader.tmp
+	dd if=loader.tmp bs=2048 skip=15 count=1 conv=sync of=loader.bin
+
+image: loader.bin
+	# Low 16K (will end up in bank 0 0000-3FFF)
+	dd if=../common.bin bs=16384 conv=sync skip=0 count=1 of=block0
+	# Bank 1 (C000-FFFF)
+	dd if=../bank1.bin bs=16384 conv=sync skip=3 count=1 of=block1
+	# Bank 2 (8000-BFFF)
+	dd if=../common.bin bs=16384 conv=sync skip=2 count=1 of=block2
+	# Bank 6 (C000-FFFF)
+	dd if=../bank2.bin bs=16384 conv=sync skip=3 count=1 of=block3
+	# Bank 7 (C000-FFFF)
+	dd if=../bank3.bin bs=16384 conv=sync skip=3 count=1 of=block4
+
+	cp base-image.trd fuzix.trd
+	# Insert 4K loader
+	../tools/trdify fuzix.trd BOOT0 loader.bin
+	# Kernel image
+	../tools/trdify fuzix.trd BLOCK0 block0
+	../tools/trdify fuzix.trd BLOCK1 block1
+	../tools/trdify fuzix.trd BLOCK2 block2
+	../tools/trdify fuzix.trd BLOCK3 block3
+	../tools/trdify fuzix.trd BLOCK4 block4
