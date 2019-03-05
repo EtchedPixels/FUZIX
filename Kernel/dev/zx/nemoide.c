@@ -37,8 +37,8 @@ readword:
             jr nz, readword
             pop af
             or a
-            jp nz, map_kernel_restore               ; else map kernel then return
-            ret
+            ret z
+            jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }
 
@@ -71,7 +71,7 @@ writeword:
             jr nz, writeword
             pop af
             or a
-            jp nz, map_kernel_restore               ; else map kernel then return
-            ret
+            ret z
+            jp  map_kernel_restore               ; else map kernel then return
     __endasm;
 }
