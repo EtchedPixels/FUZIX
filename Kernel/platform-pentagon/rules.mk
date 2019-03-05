@@ -2,6 +2,8 @@
 #	ZX128 uses banked kernel images
 #
 CROSS_CCOPTS += --external-banker
+
+CFLAGS += -Idev/zx/
 #
 # Tell the core code we are using the banked helpers
 #

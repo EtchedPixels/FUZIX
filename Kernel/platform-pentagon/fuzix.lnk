@@ -40,7 +40,7 @@ platform-pentagon/bankbig.rel
 swap.rel
 devsys.rel
 devinput.rel
-platform-pentagon/devtty.rel
+platform-pentagon/zxtty.rel
 platform-pentagon/devide.rel
 platform-pentagon/devide_discard.rel
 platform-pentagon/devsd.rel

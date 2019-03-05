@@ -56,14 +56,18 @@ to page 2 due to the memory manager liits.
 
 To Do:
 -	Debug the rest
--	Write SMUC and Nemo ATA driver code
+-	Write SMUC driver code
 -	Work out what we need to do for Pentagon v Scorpion etc
 -	Floppy driver
+-	Optimizations for switching (runticks expiry on non-preempt case
+	should we clear runticks - pro it gets us better perf, anti it reduces
+	responsiveness.
+-	Parent first support
+
 
 -	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
 	(Seems we lose the bottom line of the left most char - off by one bug
 	 in zxvid ?)
--	Enable interrupts during swap
 -	6 or 5bit wide fonts (42, 51 column)
 -	Optimize zxvid - especially scrolling
 -	Move vtborder to common

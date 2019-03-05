@@ -29,6 +29,8 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 
+/* Tell the spectrum devtty layer where graphics is mapped */
+#define CONFIG_GFXBASE	0x4000
 /* Custom banking */
 
 /* A 1MB machine has 64 blocks and the kernel plus system pages eat
