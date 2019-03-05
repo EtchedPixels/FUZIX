@@ -94,6 +94,9 @@ _platform_monitor:
 _platform_reboot:
 	di
 	im 1
+	ld bc, #0xeff7
+	xor a
+	out (c),a	; turn off RAM in low 16K
 	ld bc, #0x7ffd
 	xor a		; 128K ROM, initial banks, low screen
 	out (c), a
@@ -189,7 +192,7 @@ switch_bank:
         ld (current_map), a
 	push bc
         ld bc, #0x7ffd
-	or #BANK_BITS	   ; Spectrum 48K ROM, Screen in Bank 7
+	or #BANK_BITS	   ; Spectrum 48K ROM
         out (c), a
 	pop bc
         ret
@@ -200,7 +203,11 @@ map_process:
         or l
         jr z, map_kernel_nosavea
 	push af
+	inc hl
+	inc hl
         ld a, (hl)
+	dec hl
+	dec hl
 	call switch_bank
 	pop af
 	ret
@@ -215,7 +222,7 @@ map_process_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
-        ld a, (_udata + U_DATA__U_PAGE)
+        ld a, (_udata + U_DATA__U_PAGE2)
 	call switch_bank
 	pop af
 	ret
