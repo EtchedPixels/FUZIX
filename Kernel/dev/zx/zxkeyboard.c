@@ -5,7 +5,6 @@
 #include <keycode.h>
 #include <vt.h>
 #include <tty.h>
-#include <devtty.h>
 #include <input.h>
 #include <devinput.h>
 

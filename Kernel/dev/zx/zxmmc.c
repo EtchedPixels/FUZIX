@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <blkdev.h>
 #include <devsd.h>
-#include <devtty.h>
 
 /* FIXME: optimise by unrolling inir and otir 16 ways */
 
