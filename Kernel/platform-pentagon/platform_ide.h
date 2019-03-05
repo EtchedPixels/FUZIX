@@ -12,8 +12,6 @@
 
 #define IDE_DRIVE_COUNT	2
 
-#define IDE_SFR	__sfr
-
 #define IDE_REG_DATA		0x10
 #define IDE_REG_DATA_LATCH	0x11
 #define IDE_REG_ERROR		0x30
