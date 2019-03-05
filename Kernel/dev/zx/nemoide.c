@@ -4,7 +4,6 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <platform_ide.h>
-#include <devtty.h>
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */

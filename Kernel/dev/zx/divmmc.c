@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <blkdev.h>
 #include <devsd.h>
-#include <devtty.h>
 
 __sfr __at 0xE7 divmmc_cs;
 __sfr __at 0xEB divmmc_data;
