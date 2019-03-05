@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+#	ACK thinks we are the assembler. We will play with the incoming
+#	stream to move .text and .rom to .discard and feed it to the assembler
+#
+ACK_ROOT=$(which ack | sed -e "s/\/bin\/ack//")
+X=$(mktemp)
+(echo ".sect .text"
+ echo ".sect .rom"
+ echo ".sect .data"
+ echo ".sect .bss"
+ echo ".sect .common"
+ echo ".sect .discard") >$X
+sed -e "s/\.text/\.discard/" | sed -e "s/\.rom/\.discard/" | cat $X - |	
+	$ACK_ROOT/lib/ack/cpm/as
+rm $X
