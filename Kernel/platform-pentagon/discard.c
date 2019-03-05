@@ -21,7 +21,8 @@ void pagemap_init(void)
 		0: 16K
 		
 	   The 1MB one uses bit 5 for 512K */
-	for (i = 8; i < 16; i++)
+	/* Add the rest of the first 256K */
+	for (i = 0; i < 8; i++)
 		pagemap_add(0x40|i);
 	/* If we deal with Scorpion and friends then we have to use
 	   1FFD bits 4-7 for the high bits instead */
