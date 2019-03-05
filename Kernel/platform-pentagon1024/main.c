@@ -2,7 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
-#include <zxtty.h>
+#include <devtty.h>
 #include <devinput.h>
 
 uint16_t ramtop = PROGTOP;

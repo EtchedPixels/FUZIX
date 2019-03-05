@@ -2,7 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
-#include <zxtty.h>
+#include <devtty.h>
 #include <blkdev.h>
 
 extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
@@ -18,7 +18,7 @@ void pagemap_init(void)
 
 	/* Add the high pages */
 	for (i = 8; i < 32; i++) {
-		r = i & 0x07);
+		r = i & 0x07;
 		/* Merge in bits 3-5 */
 		r |= (i & 0x38) << 2;
 		/* Select BASIC ROM. Doesn't matter really at the moment */
