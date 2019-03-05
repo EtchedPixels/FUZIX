@@ -16,7 +16,6 @@
         .globl trap_illegal
         .globl _platform_switchout
         .globl _switchin
-	.globl _dup_low_page
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
@@ -67,19 +66,19 @@ _platform_switchout:
 
 	; Stash the uarea back into process memory
 	ld a, (_udata + U_DATA__U_PAGE2)
-	ld bc, #0x7ffd
-	or #BANK_BITS
-	out (c), a
+
+	; Macro as this depends on the clone
+	switch
 
 	; This includes the stacks, so be careful on restore
 	ld hl, #_udata
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
 	ldir
+
 	ld a, (current_map)
-	or #BANK_BITS
-	ld bc, #0x7ffd
-	out (c), a
+
+	switch
 
         ; find another process to run (may select this one again)
 	push af
@@ -141,9 +140,8 @@ _switchin:
 	; from the swap path. Not in any normal situation I think.
 	;
 	ld a,(_switchedbank)
-	or #BANK_BITS
-	ld bc,#0x7ffd
-	out (c),a
+	switch
+
 	exx
 	ld hl,#0x8000
 	ld de,#0xC000
@@ -236,9 +234,8 @@ not_swapped:
 	;
 	; Ok we need to shuffle the banks
 	;
-	or #BANK_BITS
-	ld bc,#0x7ffd
-	out (c),a
+	switch
+
 	exx
 	ld hl,#0x8000
 	ld de,#0xC000
@@ -247,15 +244,17 @@ not_swapped:
 	exx
 no_copyback:
 	ld a,(hl)		; p->p_page
-	ld bc,#0x7ffd
-	out (c),a		; BANKBITS ?
+	ld (_switchedbank),a
+
+	switch
+
 	exx
 	ld hl,#0xC000
 	ld de,#0x8000
 	ld bc,#0x4000
 	ldir
 	exx
-	ld (_switchedbank),a
+
 	inc hl
 	inc hl
 	;
@@ -272,12 +271,8 @@ no_relocate:
 	sbc hl,de
 	jr z, skip_copyback
 
-	; We are in DI so we can poke these directly but must not invoke
-	; any code outside of common
-	or #BANK_BITS	; ROM
-	; Pages please !
-	ld bc, #0x7ffd
-	out (c), a
+	;	Pages please
+	switch
 
 	;	Copy the stash from the user page back down into common
 	;	The alternate registers are free - we use them for the
@@ -297,10 +292,8 @@ skip_copyback:
 	;
 
 	ld a, (current_map)
-	or #BANK_BITS
-	ld bc, #0x7ffd
-	out (c), a
-        
+	switch
+
         ; check u_data->u_ptab matches what we wanted
         ld hl, (_udata + U_DATA__U_PTAB) ; u_data->u_ptab
         or a                    ; clear carry flag
@@ -313,9 +306,11 @@ skip_copyback:
         ld P_TAB__P_STATUS_OFFSET(ix), #P_RUNNING
 
 	; Fix any moved page pointers
-	; Just do one byte as that is all we use on this platform
+	; Just do one byte of each as that is all we use on this platform
 	ld a, P_TAB__P_PAGE_OFFSET(ix)
 	ld (_udata + U_DATA__U_PAGE), a
+	ld a, P_TAB__P_PAGE2_OFFSET(ix)
+	ld (_udata + U_DATA__U_PAGE2), a
         ; runticks = 0
         ld hl, #0
         ld (_runticks), hl
@@ -350,25 +345,6 @@ switchinfail:
         call outstring
 	; something went wrong and we didn't switch in what we asked for
         jp _platform_monitor
-
-; Interrupts should be off when this is called
-_dup_low_page:
-	di				; FIXME: check callers properly
-	ld a, #0x06 + BANK_BITS		; low page alternate
-	ld bc, #0x7ffd
-	out (c), a
-
-	ld hl, #0x8000			; fixed
-	ld de, #0xC000			; page we just mapped in
-	ld bc, #16384
-	ldir
-
-	ld a, (current_map)		; restore mapping
-	or #BANK_BITS			; ROM bits
-	ld bc, #0x7ffd
-	out (c), a
-	ret
-
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -424,6 +400,7 @@ _dofork:
         add hl, de
         ; load p_page for the high page
         ld c, (hl)
+	push hl
 
 	ld hl, (_udata + U_DATA__U_PAGE + 2)
 	ld a, l
@@ -441,9 +418,7 @@ _dofork:
 
 	ld a,(_udata + U_DATA__U_PAGE)	;	low page of parent
 
-	or #BANK_BITS			;	
-	ld bc, #0x7ffd
-	out (c), a
+	switch
 
 	ld hl, #0x8000			; 	Fixed
 	ld de, #0xC000			;	Page we just mapped in
@@ -453,6 +428,9 @@ _dofork:
 	; We have one weirdness left. When we copied these up to the parent
 	; we made the child the owner
 
+	pop hl
+	dec hl
+	dec hl				;	Child low page pointer
 	ld a,(hl)
 	ld (_switchedbank),a		; child bank (p->p_page)
 	ld a,#1
@@ -461,9 +439,8 @@ _dofork:
 	; Copy done
 
 	ld a, (_udata + U_DATA__U_PAGE2)	; parent memory high
-	or #BANK_BITS		; get the right ROMs
-	ld bc, #0x7ffd
-	out (c), a		; Switch context to parent in 0xC000+
+
+	switch			; Switch context to parent in 0xC000+
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
@@ -476,10 +453,8 @@ _dofork:
 	;
 	; And back into the kernel
 	;
-	ld bc, #0x7ffd
 	ld a, (current_map)
-	or #BANK_BITS
-	out (c), a
+	switch
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
 
@@ -528,8 +503,9 @@ bankfork:
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	ld bc, #0x7ffd
-	out (c), a		; switch to parent bank
+
+	switch
+
 	ld de, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the bounce buffer
@@ -540,9 +516,9 @@ bankfork_1:
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
 	push bc			; save the bank pointers
-	ld bc, #0x7ffd
-	or #BANK_BITS		; ROM bits
-	out (c), a
+
+	switch
+
 	ld hl, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the child
