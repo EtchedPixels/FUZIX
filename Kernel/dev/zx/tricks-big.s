@@ -497,7 +497,6 @@ _dofork:
 ;	we can use with a lazy copying model
 ;
 bankfork:
-	or #BANK_BITS		; ROM bits for the bank
 	ld b, #0x3E		; 64 x 256 minus 2 sets for the uarea stash/irqs
 	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
