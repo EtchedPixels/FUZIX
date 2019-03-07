@@ -57,6 +57,9 @@ To Do:
 	ldir switching another 8K up and down to give 40K program sizes
 	which would be a big improvement. Would need us to allocate 2.5
 	banks per process however so need some allocator changes
+-	Need a nice way to support multiple IDE controllers in one system
+-	Loader variant to support Pentagon 512 with DivIDE/DivMMC - at least
+	altram systems.
 
 General ZX issues
 -	Why does ls /bin lose the lowest pixel row of the 'yes' command ?

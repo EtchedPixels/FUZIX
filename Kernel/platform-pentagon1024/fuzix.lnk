@@ -51,4 +51,5 @@ platform-pentagon1024/mbr.rel
 platform-pentagon1024/blkdev.rel
 platform-pentagon1024/devinput.rel
 platform-pentagon1024/zxkeyboard.rel
+platform-pentagon1024/lpgeneric.rel
 -e

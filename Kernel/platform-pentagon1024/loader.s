@@ -29,7 +29,14 @@ start:
 
 		di
 		; Turn off low ROM
-		; Some older systems want 0x1FFD bit 0 instead FIXME
+		; Turn on turbo
+		; Don't yet play with the extra video modes (512x192 etc)
+		; 0: video 16 colour
+		; 1: video 512x192
+		; 2: set for 128K compat mode
+		; 3: set to map RAM low
+		; 4: turbo 0 - on
+		; 7: gluk rtc 1 = on (leave off for now TODO)
 		ld bc,#0xeff7
 		ld a,#0x08
 		out (c),a
