@@ -15,5 +15,5 @@ export CROSS_CC_SEG4=--codeseg CODE1
 export CROSS_CC_SYS1=--codeseg CODE1
 export CROSS_CC_SYS2=--codeseg CODE1
 export CROSS_CC_SYS3=--codeseg CODE1
-export CROSS_CC_SYS4=--codeseg CODE3
-export CROSS_CC_SYS5=--codeseg CODE3
+export CROSS_CC_SYS4=--codeseg CODE4
+export CROSS_CC_SYS5=--codeseg CODE4
