@@ -363,7 +363,9 @@ bankina0:
 	jr z, __retmap1
 	dec a
 	jr z, __retmap2
-	jr __retmap3
+	dec a
+	jr z, __retmap3
+	jr __retmap4
 
 callhl:	jp (hl)
 __bank_0_2:
