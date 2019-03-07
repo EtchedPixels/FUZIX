@@ -41,7 +41,8 @@ start:
 		ld a,#0x01
 		ld bc,#0x7ffd
 		out (c),a
-		; FIXME - where is best to start up
+		; And turn on the turbo
+		in a,(c)
 		jp 0xC000
 
 trdos:

@@ -26,6 +26,12 @@
 #define CONFIG_FONT8X8
 #define CONFIG_FONT8X8SMALL
 
+#define CONFIG_LP_GENERIC
+#define LP_DATA		0xDD
+#define LP_STATUS	0xFD
+#define LP_IS_BUSY	(lpstat & 0x80)
+#define LP_STROBE	/* Auto */
+
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 

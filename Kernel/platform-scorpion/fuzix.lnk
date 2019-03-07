@@ -51,4 +51,5 @@ platform-scorpion/mbr.rel
 platform-scorpion/blkdev.rel
 platform-scorpion/devinput.rel
 platform-scorpion/zxkeyboard.rel
+platform-scorpion/lpgeneric.rel
 -e

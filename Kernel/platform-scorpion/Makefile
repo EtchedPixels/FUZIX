@@ -1,6 +1,6 @@
 CSRCS = devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
+DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c ../dev/lpgeneric.c
 DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
 DZSRCS = ../dev/zx/nemoide.c ../dev/zx/zxmmc.c ../dev/zx/zxkeyboard.c
 DZSRCS += ../dev/zx/devinput.c ../dev/zx/bankbig.c ../dev/zx/zxtty.c

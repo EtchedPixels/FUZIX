@@ -22,7 +22,7 @@ void pagemap_init(void)
 
 	/* FIXME: for now hardcode 256K */
 	for (i = 8; i < 16; i++) {
-		uint8_t r = i & 7;
+		r = i & 7;
 		if (i & 8)
 			r |= 0x10;	/* bank bit 3 */
 		if (i & 16)
