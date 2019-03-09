@@ -63,9 +63,9 @@ RTS_LOW		.EQU	0xEA
 ; Base address of SIO/2 chip 0x80. On board SIO has D/C backwards to RC2014!
 
 SIOA_D		.EQU	0x80
-SIOA_C		.EQU	SIOA_C+1
-SIOB_D		.EQU	SIOA_C+2
-SIOB_C		.EQU	SIOA_C+3
+SIOA_C		.EQU	SIOA_D+1
+SIOB_D		.EQU	SIOA_D+2
+SIOB_C		.EQU	SIOA_D+3
 
 SIOC_C		.EQU	0x84
 SIOC_D		.EQU	SIOC_C+1
@@ -87,9 +87,9 @@ init_hardware:
 	ld hl, #spurious
 	ld (0x80),hl			; CTC vectors
 	ld (0x82),hl
-	ld (0x84),hl
-	ld hl, #interrupt_handler	; Standard tick handler
 	ld (0x86),hl
+	ld hl, #interrupt_handler	; Standard tick handler
+	ld (0x84),hl
 
 	ld hl,#siob_txd
 	ld (0x90),hl			; SIO B TX empty
@@ -138,15 +138,6 @@ init_hardware:
 	;
 	; FIXME: see if we can cleanly ask ROMWBW for the device type
 	;
-
-	xor a
-	ld c,#SIOB_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
 
 	ld a,#1
 	ld (_sio_present),a
