@@ -36,6 +36,10 @@ expr.c: expr.y
 
 find.c: find.y
 
+# Nick
+.y.c:
+	byacc -o $@ $<
+
 .c.rel:
 	$(FCC) $(PLATFORM) $(FCCOPTS) -c $<
 
