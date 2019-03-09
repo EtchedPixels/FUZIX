@@ -143,9 +143,9 @@ void tty_sleeping(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	if (minor == 1 && sio_txl[1] == 255)
+	if (minor == 1 && sio_txl[1] >= 127)
 		return TTY_READY_SOON;
-	if (minor == 2 && sio_txl[0] == 255)
+	if (minor == 2 && sio_txl[0] >= 127)
 		return TTY_READY_SOON;
 	return TTY_READY_NOW;
 }
