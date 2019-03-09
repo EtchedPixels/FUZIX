@@ -83,47 +83,6 @@ init_hardware:
         call _program_vectors
         pop hl
 
-	; IM2 vector for the CTC
-	ld hl, #spurious
-	ld (0x80),hl			; CTC vectors
-	ld (0x82),hl
-	ld (0x86),hl
-	ld hl, #interrupt_handler	; Standard tick handler
-	ld (0x84),hl
-
-	ld hl,#siob_txd
-	ld (0x90),hl			; SIO B TX empty
-	ld hl,#siob_status
-	ld (0x92),hl			; SIO B External status
-	ld hl,#siob_rx_ring
-	ld (0x94),hl			; SIO B Receive
-	ld hl,#siob_special
-	ld (0x96),hl			; SIO B Special
-	ld hl,#sioa_txd
-	ld (0x98),hl			; SIO A TX empty
-	ld hl,#sioa_status
-	ld (0x9A),hl			; SIO A External status
-	ld hl,#sioa_rx_ring
-	ld (0x9C),hl			; SIO A Received
-	ld hl,#sioa_special
-	ld (0x9E),hl			; SIO A Special
-
-	ld hl,#siod_txd
-	ld (0xA0),hl			; SIO2 B TX empty
-	ld hl,#siod_status
-	ld (0xA2),hl			; SIO2 B External status
-	ld hl,#siod_rx_ring
-	ld (0xA4),hl			; SIO2 B Receive
-	ld hl,#siod_special
-	ld (0xA6),hl			; SIO2 B Special
-	ld hl,#sioc_txd
-	ld (0xA8),hl			; SIO2 A TX empty
-	ld hl,#sioc_status
-	ld (0xAA),hl			; SIO2 A External status
-	ld hl,#sioc_rx_ring
-	ld (0xAC),hl			; SIO2 A Received
-	ld hl,#sioc_special
-	ld (0xAE),hl			; SIO2 A Special
 
         ; Stop floppy drive motors
         ld a, #0x0C
@@ -280,7 +239,7 @@ sio_setup:
 	.byte 0x04
 	.byte 0xC4
 	.byte 0x01
-	.byte 0x18
+	.byte 0x1F
 	.byte 0x03
 	.byte 0xE1
 	.byte 0x05
@@ -356,6 +315,48 @@ _program_vectors:
 	ld (0x0066),a			; Set vector for NMI
 	ld hl,#nmi_handler
 	ld (0x0067),hl
+
+	; IM2 vector for the CTC
+	ld hl, #spurious
+	ld (0x80),hl			; CTC vectors
+	ld (0x82),hl
+	ld (0x86),hl
+	ld hl, #interrupt_handler	; Standard tick handler
+	ld (0x84),hl
+
+	ld hl,#siob_txd
+	ld (0x90),hl			; SIO B TX empty
+	ld hl,#siob_status
+	ld (0x92),hl			; SIO B External status
+	ld hl,#siob_rx_ring
+	ld (0x94),hl			; SIO B Receive
+	ld hl,#siob_special
+	ld (0x96),hl			; SIO B Special
+	ld hl,#sioa_txd
+	ld (0x98),hl			; SIO A TX empty
+	ld hl,#sioa_status
+	ld (0x9A),hl			; SIO A External status
+	ld hl,#sioa_rx_ring
+	ld (0x9C),hl			; SIO A Received
+	ld hl,#sioa_special
+	ld (0x9E),hl			; SIO A Special
+
+	ld hl,#siod_txd
+	ld (0xA0),hl			; SIO2 B TX empty
+	ld hl,#siod_status
+	ld (0xA2),hl			; SIO2 B External status
+	ld hl,#siod_rx_ring
+	ld (0xA4),hl			; SIO2 B Receive
+	ld hl,#siod_special
+	ld (0xA6),hl			; SIO2 B Special
+	ld hl,#sioc_txd
+	ld (0xA8),hl			; SIO2 A TX empty
+	ld hl,#sioc_status
+	ld (0xAA),hl			; SIO2 A External status
+	ld hl,#sioc_rx_ring
+	ld (0xAC),hl			; SIO2 A Received
+	ld hl,#sioc_special
+	ld (0xAE),hl			; SIO2 A Special
 
 	jr map_kernel
 
@@ -506,9 +507,9 @@ _copy_common:
 	push hl
 	ld a,e
 	call map_for_swap
-	ld hl,#0xD300
-	ld de,#0x4300
-	ld bc,#0x2D00
+	ld hl,#0xEA00
+	ld de,#0x2A00
+	ld bc,#0x1600
 	ldir
 	jr map_kernel
 
@@ -590,6 +591,8 @@ inchar_s:
 ;
 ;=========================================================================
 
+	.area _SERIALDATA
+
 	.globl _sio_state
 	.globl _sio_dropdcd
 	.globl _sio_rxl
@@ -657,6 +660,17 @@ sio_ports a
 sio_ports b
 sio_ports c
 sio_ports d
+
+	.area _COMMONMEM
+
+.macro switch
+	call map_save_kernel
+.endm
+
+.macro switchback
+	call map_restore
+.endm
+
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
 sio_handler_im2 b, SIOB_C, SIOB_D, reti
 sio_handler_im2	c, SIOC_C, SIOC_D, reti

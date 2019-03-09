@@ -146,8 +146,6 @@ int tty_carrier(uint8_t minor)
 	return 0;
 }
 
-typedef uint8_t (*sio_pollfunc_t)(void);
-
 void tty_drain_sio(void)
 {
 	static uint8_t old_ca[4];
@@ -190,6 +188,10 @@ void tty_drain_sio(void)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+	irqflags_t irqflags;
+
+	irqflags = di();
+
 	switch(minor) {
 	case 1:
 		sioa_txqueue(c);
@@ -204,6 +206,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		siod_txqueue(c);
 		break;
 	}
+	irqrestore(irqflags);
 }
 
 void tty_sleeping(uint8_t minor)

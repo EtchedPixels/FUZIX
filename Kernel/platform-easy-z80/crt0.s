@@ -12,6 +12,8 @@
         .area _CODE2
         .area _CONST
         .area _INITIALIZED
+	.area _SERIAL
+	.area _SERIALDATA
         .area _DATA
         .area _BSEG
         .area _BSS
