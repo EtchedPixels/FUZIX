@@ -42,6 +42,7 @@
 	.globl _sio_present
 	.globl _sio1_present
 	.globl _udata
+	.globl istack_top
 
 	; exported debugging tools
 	.globl outchar
@@ -663,12 +664,23 @@ sio_ports d
 
 	.area _COMMONMEM
 
+;
+;	We don't do any clever IRQ re-entry tricks so we can use the istack.
+;	If we ever do soft interrupts and take the sio during a timer int
+;	we will need a small (16 byte or so) private sio work stack and to
+;	be very careful with our stack handling on switches.
+;
+sio_sp:	.dw 0
+
 .macro switch
+	ld (sio_sp),sp
+	ld sp,#istack_top
 	call map_save_kernel
 .endm
 
 .macro switchback
 	call map_restore
+	ld sp,(sio_sp)
 .endm
 
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
