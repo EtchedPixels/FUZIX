@@ -14,10 +14,10 @@ FOBJS = $(patsubst %.c,fshbuild/%.rel, $(SRCS))
 all: fsh sh
 
 sh: $(OBJS)
-	$(FCC) $(Z80_PLATFORM) $(OBJS) -o $@
+	$(FCC) --nostdio $(Z80_PLATFORM) $(OBJS) -o $@
 
 fsh: $(FOBJS)
-	$(FCC) $(Z80_PLATFORM) $(FOBJS) -o $@ -lreadline
+	$(FCC) --nostdio $(Z80_PLATFORM) $(FOBJS) -o $@ -lreadline
 
 $(OBJS): $(INCS)
 
