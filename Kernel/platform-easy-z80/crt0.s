@@ -50,6 +50,7 @@
         ; startup code
         .area _CODE
 init:                       ; must be at 0x0100 as we are loaded at that
+	di
 	; setup the memory paging for kernel
         ld a, #33
         out (MPGSEL_1), a       ; map page 33 at 0x4000
