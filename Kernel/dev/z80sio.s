@@ -178,7 +178,6 @@ sio'X'_special:
 ;	128 byte ring buffer aligned to upper half (rx is in lower)
 ;
 _sio'X'_txqueue:
-	switch
 	ld a,(_sio'X'_txl)
 	or a
 	jr z, sio'X'_direct_maybe	; if can tx now then do
@@ -193,12 +192,10 @@ sio'X'_queue:
 	set 7,l
 	ld (sio'X'_txe),hl
 	ld l,#0
-	switchback
 	ret
 tx'X'_overflow:
 	; some kind of flag for error
 	ld l,#1
-	switchback
 	ret
 sio'X'_direct_maybe:
 	; check RR
@@ -210,36 +207,23 @@ sio'X'_direct_maybe:
 	; bypass the queue and kickstart the interrupt machine
 	ld a,l
 	out (DP),a
-	switchback
 	ld l,#0
 	ret
 	; Call with DI
 
-sio'X'_flow_control_off:
+_sio'X'_flow_control_off:
 	ld a,#5
 	out(CP),a		; WR 5
 	ld a,(_sio'X'_wr5)
 	out (CP),a		; Turn off RTS
 	ret
 
-sio'X'_flow_control_on:
+_sio'X'_flow_control_on:
 	ld a,#5
 	out(CP),a		; WR 5
 	ld a,(_sio'X'_wr5)
 	and #0xFD
 	out (CP),a		; Turn off RTS
-	ret
-
-_sio'X'_flow_control_off:
-	switch
-	call sio'X'_flow_control_off
-	switchback
-	ret
-
-_sio'X'_flow_control_on:
-	switch
-	call sio'X'_flow_control_on
-	switchback
 	ret
 
 	; DI required
@@ -248,7 +232,6 @@ _sio'X'_flow_control_on:
 	; Caller responsible for making post buffer fetch decisions about
 	; RTS
 _sio'X'_rx_get:
-	switch
 	ld a,(_sio'X'_rxl)
 	or a
 	ret z
@@ -259,29 +242,15 @@ _sio'X'_rx_get:
 	inc l
 	res 7,l
 	ld (sio'X'_rxe),hl
-	scf
 	ld l,a
-	switchback
 	ret
 
 	; DI required
 _sio'X'_error_get:
-	switch
 	ld hl,#sio'X'_error
 	ld a,(hl)
 	ld (hl),#0
 	ld l,a
-	switchback
 	ret
 
-.endm
-
-.macro _sio_read
-
-_sio_read:
-	switch
-	ld a,(hl)
-	ld l,a
-	switchback
-	ret
 .endm
