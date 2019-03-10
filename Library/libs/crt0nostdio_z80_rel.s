@@ -21,6 +21,8 @@
 		.globl _environ
 		.globl ___argv
 		.globl s__DATA
+		.globl l__DATA
+		.globl _brk
 
 		.area _CODE
 
@@ -93,6 +95,12 @@ relocskip:	add hl,bc
 		dec hl
 		jr relnext
 relocdone:
+		ld hl,#s__DATA		; Where our BSS should start
+		ld de,#l__DATA		; The size
+		add hl,de
+		push hl
+		call _brk		; Break back to the right place
+		pop af
 ;		; At this point our calls are relocated so this will go to
 		; the right place
 		call gsinit
