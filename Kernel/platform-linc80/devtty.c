@@ -161,8 +161,8 @@ void kputchar(char c)
 	/* Can't use the normal paths as we must survive interrupts off */
 	/* FIXME: would be nicer to just disable tx int and re-enable it ? */
 	irqflags_t irq = di();
-	while(!(SIOA_C & 0x04));
-	SIOA_D = c;
+	while(!(SIOB_C & 0x04));
+	SIOB_D = c;
 	if (c == '\n')
 		kputchar('\r');
 	irqrestore(irq);
