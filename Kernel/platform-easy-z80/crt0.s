@@ -12,7 +12,6 @@
         .area _CODE2
         .area _CONST
         .area _INITIALIZED
-	.area _SERIAL
 	.area _SERIALDATA
         .area _DATA
         .area _BSEG
@@ -25,6 +24,7 @@
         .area _DISCARD
         .area _INITIALIZER ; binman copies this to the right place for us
         .area _COMMONMEM
+	.area _SERIAL
 
         ; exported symbols
         .globl init
@@ -81,3 +81,5 @@ mappedok:
 stop:   halt
         jr stop
 
+	.area _BOOT
+	jp init

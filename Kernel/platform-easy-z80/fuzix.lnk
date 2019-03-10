@@ -1,8 +1,10 @@
 -mwxuy
 -i fuzix.ihx
--b _CODE=0x0100
+-b _CODE=0x0500
 -b _DISCARD=0xD000
 -b _COMMONMEM=0xEA00
+-b _SERIAL=0x0100
+-b _BOOT=0x0100
 -l z80
 platform-easy-z80/crt0.rel
 platform-easy-z80/commonmem.rel
