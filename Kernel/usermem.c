@@ -17,7 +17,7 @@
 usize_t valaddr(const uint8_t *base, usize_t size)
 {
 	if (base + size < base)
-		size = 0xFFFF - base + 1;
+	    size = (const uint8_t *)0xFFFF - base + 1;
 	if (!base || base < (const uint8_t *)PROGBASE ||
 		base > (const uint8_t *)(size_t)udata.u_top)
 		size = 0;
