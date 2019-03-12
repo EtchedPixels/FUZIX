@@ -101,7 +101,7 @@ relocdone:
 		push hl
 		call _brk		; Break back to the right place
 		pop af
-;		; At this point our calls are relocated so this will go to
+		; At this point our calls are relocated so this will go to
 		; the right place
 		call gsinit
 
