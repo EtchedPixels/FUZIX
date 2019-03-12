@@ -72,7 +72,6 @@ typedef union {            /* this structure is endian dependent */
 /* Deal with SDCC code gen issue */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
 
-/* FIXME: check this */
 /* ack8080 does not support attribute(packed) but then it also doesn't insert
    padding either */
 
