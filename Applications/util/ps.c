@@ -350,7 +350,7 @@ void display_process(struct p_tab *pp, int i)
 		fputs("    - ", stdout);
 	if (outflags & OF_WCHAN) {
 		if (pp->p_status > 2)
-			printf("%5d ", (unsigned int)pp->p_wait);
+			printf(" %4x ", (unsigned int)pp->p_wait);
 		else
 			fputs("    - ", stdout);
 	}
@@ -358,9 +358,13 @@ void display_process(struct p_tab *pp, int i)
 	   times in ptab verus udata here */
 	if (outflags & OF_STIME) {
 		uint32_t t;
-		t = time(NULL) - pp->p_time;
+		t = time(NULL);
+		if (t > pp->p_time)
+			t -= pp->p_time;
+		else
+			t = 0;
 		if ((t - pp->p_time) > 86400)
-			printf("%02day ", t / 86400);
+			printf("%02dday ", t / 86400);
 		else {
 			struct tm *tm;
 			time_t x = pp->p_time;
@@ -372,9 +376,9 @@ void display_process(struct p_tab *pp, int i)
 				
 	if (outflags & OF_TTY) {
 		if (!pp->p_tty)
-			fputs("     ? ", stdout);
+			fputs("     ?  ", stdout);
 		else
-			printf("%6s ", ttyshortname(pp->p_tty));
+			printf("%7s ", ttyshortname(pp->p_tty));
 	}
 	if (outflags & OF_TIME) {
 		/* cstime/cutime or ctime/utime ? */ 
