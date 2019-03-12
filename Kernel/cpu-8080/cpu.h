@@ -38,7 +38,9 @@ extern void *memmove(void *dest, const void *src, size_t n);
 
 extern int16_t strlen(const char *p);
 
-#define	staticfast	static/* User's structure for times() system call */
+#define	staticfast	static
+
+/* User's structure for times() system call */
 typedef unsigned long clock_t;
 
 /* Must match native ordering of long long */
@@ -55,7 +57,6 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* SDCC is arsy about unused parameters */
 #define used(x)	x
 
 #define cpu_to_le16(x)	(x)
