@@ -42,7 +42,7 @@ clean:
 image: 
 	$(CROSS_LD) -b0:0x0100 -b4:0xE800 -o fuzix.bin crt0.o devices.o main.o \
 	commonmem.o tricks.o v85.o devtty.o \
-	../start.o ../version.o ../lowlevel-8080.o \
+	../start.o ../version.o ../lowlevel-8085.o \
 	../bankfixed.o ../timer.o ../kdata.o  \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
@@ -50,7 +50,7 @@ image:
 	../syscall_fs3.o ../syscall_exec16.o  \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	devfdc765.o fdc765.o msm5832.o devrd.o mdrive.o \
-	../usermem_std-8080.o $(LIBC) end.o
+	../usermem_std-8085.o $(LIBC) end.o
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin
 	../tools/check8080 fuzix.bin
