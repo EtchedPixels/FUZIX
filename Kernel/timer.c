@@ -40,7 +40,7 @@ void rdtime(time_t *tloc)
 	irqrestore(irq);
 }
 
-/* These need to go away for most uses by 2038 */
+/* These need to go away for most uses by 2100 or so */
 void rdtime32(uint32_t *tloc)
 {
         irqflags_t irq = di();
