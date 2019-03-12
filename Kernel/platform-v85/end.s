@@ -10,3 +10,8 @@ commonend:
 .define bssend
 
 bssend:
+
+.sect .discard
+.define discardend
+
+discardend:
