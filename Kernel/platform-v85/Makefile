@@ -37,7 +37,7 @@ $(DOBJS): %.o: ../dev/%.c
 
 # Need to make discard work yet
 $(DISCARD_DOBJS): %.o: ../dev/%.c
-	$(CROSS_CC) -t -Ras=../tools/discard85 $(CROSS_CCOPTS) $<
+	$(CROSS_CC) -Ras=../tools/discard85 $(CROSS_CCOPTS) $<
 
 tricks.s: ../lib/8080fixedbank.s ../lib/8080fixedbank-core.s
 
