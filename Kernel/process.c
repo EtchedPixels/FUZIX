@@ -318,7 +318,7 @@ void makeproc(regptr ptptr p, u_data *u)
 
 	memset(&p->p_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
 
-	rdtime32(&p->p_time);
+	p->p_time = ticks.full;
 	if (u->u_cwd)
 		i_ref(u->u_cwd);
 	if (u->u_root)
