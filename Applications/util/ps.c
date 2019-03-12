@@ -357,6 +357,7 @@ void display_process(struct p_tab *pp, int i)
 	/* We need to sort out the whole kernel and user handling of
 	   times in ptab verus udata here */
 	if (outflags & OF_STIME) {
+		/* FIXME: time_t issues here */
 		uint32_t t;
 		t = time(NULL);
 		if (t > pp->p_time)
