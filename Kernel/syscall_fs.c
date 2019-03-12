@@ -157,20 +157,6 @@ int stcpy(inoptr ino, uint8_t *buf)
 	return err;
 }
 
-
-arg_t dup_op(int fd, int base)
-{
-	int8_t newd;
-
-	if ((newd = uf_alloc_n(base)) == -1)
-		return (-1);
-
-	udata.u_files[newd] = udata.u_files[fd];
-	++of_tab[udata.u_files[fd]].o_refs;
-
-	return (newd);
-}
-
 /*******************************************
   dup (oldd)                       Function 17
   int16_t oldd;
