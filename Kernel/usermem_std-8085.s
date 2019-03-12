@@ -110,30 +110,27 @@ nowork:
 
 __uput:
 	push b
-	lxi h,9		! End of count argument
-	dad sp
-	mov b,m
-	dcx h
-	mov c,m
-	mov a,c
-	ora b
+	ldsi 8
+	lhlx
+	mov c,l
+	mov b,h
+	mov a,b
+	ora c
 	jz nowork
-	dcx h
-	mov d,m		! Destination
-	dcx h
-	mov e,m
-	dcx h
-	mov a,m
-	dcx h
-	mov l,m
-	mov h,a
+	ldsi 6
+	lhlx
+	push h
+	ldsi 6		! offset 4 but we pushed another item so 6
+	lhlx
+	pop d		! HL = dest, DE = source, BC = count
 	!
-	!	So after all that work we have HL=src DE=dst BC=count
+	!	So after all that work we have DE=src HL=dst BC=count
 	!	and we know count != 0.
 	!
 	!	Simple unoptimized copy loop for now. Horribly slow for
 	!	things like 512 byte disk blocks
 	!
+	dcx b
 uputcopy:
 	mov a,m
 	call map_process_always
@@ -142,9 +139,7 @@ uputcopy:
 	inx h
 	inx d
 	dcx b
-	mov a,b
-	ora c
-	jnz uputcopy
+	jnk uputcopy
 	pop b
 	lxi d,0
 	ret
