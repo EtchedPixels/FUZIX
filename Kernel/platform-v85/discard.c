@@ -8,8 +8,8 @@
 
 void pagemap_init(void)
 {
- uint8_t i;
- uint8_t m = 2;
+ uint_fast8_t i;
+ uint_fast8_t m = 2;
  
  for (i = 1; i < 8; i++) {
   if (probe_bank(m) == 0) {

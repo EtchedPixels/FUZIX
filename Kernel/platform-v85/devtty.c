@@ -28,7 +28,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 void tty_setup(uint8_t minor, uint8_t flags)
 {
 	struct termios *t = &ttydata[1].termios;
-	uint8_t r = t->c_cflag & CSIZE;
+	uint_fast8_t r = t->c_cflag & CSIZE;
 	/* No CS5/CS6 CS7 must have parity enabled */
 	if (r <= CS7) {
 		t->c_cflag &= ~CSIZE;
@@ -92,7 +92,7 @@ void tty_data_consumed(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-    uint8_t r;
+    uint_fast8_t r;
     if (minor == 1)
         r = ttyready();
     if (r)
