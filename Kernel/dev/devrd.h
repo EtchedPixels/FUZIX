@@ -7,10 +7,10 @@
 #define NUM_DEV_RD       2
 
 /* public interface */
-int rd_open(uint8_t minor, uint16_t flags);
-int rd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int rd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag);
+int rd_open(uint_fast8_t minor, uint16_t flags);
+int rd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+int rd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+int rd_transfer(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
 
 #ifdef DEVRD_PRIVATE
 /* The basic operation supported by devrd_hw is a memory copy
