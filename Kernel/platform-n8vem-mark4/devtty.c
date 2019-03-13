@@ -7,11 +7,11 @@
 #include <z180.h>
 #include <n8vem.h>
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
 
 #ifdef CONFIG_PROPIO2
-static char tbufp[TTYSIZ];
+static uint8_t tbufp[TTYSIZ];
 #endif
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
@@ -40,13 +40,13 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 #endif
 };
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
     minor;
 }
 
 /* For the moment */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
     minor;
     return 1;
@@ -72,7 +72,7 @@ void tty_poll_propio2(void)
 }
 #endif
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
     switch(minor){
         case 1:
@@ -92,23 +92,23 @@ void tty_putc(uint8_t minor, unsigned char c)
     }
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     minor;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
     minor;
     return TTY_READY_NOW;
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     tty_putc(TTYDEV & 0xFF, c);
     if(c == '\n')
