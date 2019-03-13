@@ -56,14 +56,14 @@ static uint8_t vmode;
 /* tty1 is the screen tty2 is the serial port */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t c;
 	if (minor == 1)
@@ -74,7 +74,7 @@ ttyready_t tty_writeready(uint8_t minor)
 
 /* For DragonPlus we should perhaps support both monitors 8) */
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (minor == 1) {
 		if (vmode < 2)
@@ -83,12 +83,12 @@ void tty_putc(uint8_t minor, unsigned char c)
 		*uart_data = c;	/* Data */
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     used(minor);
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -116,7 +116,7 @@ static uint8_t bitbits[] = {
 	0x00
 };
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint8_t r;
 	if (minor != ACIA_TTY)
@@ -141,7 +141,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	}
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	/* The serial DCD is status bit 5 but not wired */
 	return 1;
@@ -352,7 +352,7 @@ static struct fontinfo fontinfo = {
 #define pia1b	((volatile uint8_t *)0xFF22)
 #define sam_v	((volatile uint8_t *)0xFFC0)
 
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
 	extern unsigned char fontdata_8x8[];
 	uint16_t size = 96 * 8;
