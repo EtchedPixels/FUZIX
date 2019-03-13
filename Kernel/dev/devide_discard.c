@@ -54,16 +54,13 @@ void devide_reset(void)
 }
 #endif
 
-void devide_init_drive(uint8_t drive)
+void devide_init_drive(uint_fast8_t drive)
 {
     blkdev_t *blk;
-    uint8_t *buffer, select;
+    uint8_t *buffer;
+    uint_fast8_t select;
 
-    switch(drive & 1){
-	case 0: select = 0xE0; break;
-	case 1: select = 0xF0; break;
-        default: return;
-    }
+    select = (drive & 1) ? 0xF0 : 0xE0;
 
     ide_select(drive);
 
@@ -149,7 +146,7 @@ out:
 
 void devide_init(void)
 {
-    uint8_t d;
+    uint_fast8_t d;
 
 #ifdef IDE_HAS_RESET
     devide_reset();
