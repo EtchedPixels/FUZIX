@@ -102,7 +102,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 
 
 /* A wrapper for tty_close that closes the DW port properly */
-int my_tty_close(uint8_t minor)
+int my_tty_close(uint_fast8_t minor)
 {
 	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
@@ -130,7 +130,7 @@ void kputchar(uint_fast8_t c)
 	tty_putc(minor, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t c;
         if ((minor < 1) || (minor > 2)) {
@@ -140,7 +140,7 @@ ttyready_t tty_writeready(uint8_t minor)
 	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	if ((minor > 0) && (minor < 3)) {
 		*(uart[minor*2]) = c; /* UART Data */
@@ -150,13 +150,13 @@ void tty_putc(uint8_t minor, unsigned char c)
 	}
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	used(minor);
 }
 
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	if (minor > 2) {
 		dw_vopen(minor);
@@ -165,7 +165,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 }
 
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	if( minor > 2 ) return dw_carrier( minor );
 	return 1;
@@ -176,7 +176,7 @@ void tty_interrupt(void)
 
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
