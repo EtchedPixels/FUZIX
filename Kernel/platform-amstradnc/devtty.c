@@ -83,7 +83,7 @@ static void nap(void)
 
 /* tty1 is the screen tty2 is the serial port */
 
-int nc100_tty_open(uint8_t minor, uint16_t flag)
+int nc100_tty_open(uint_fast8_t minor, uint16_t flag)
 {
 	int err;
 	if (!minor)
@@ -107,7 +107,7 @@ int nc100_tty_open(uint8_t minor, uint16_t flag)
 }
 
 
-int nc100_tty_close(uint8_t minor)
+int nc100_tty_close(uint_fast8_t minor)
 {
 	tty_close(minor);
 	if (ttydata[minor].users)
@@ -124,7 +124,7 @@ int nc100_tty_close(uint8_t minor)
 }
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n') {
 		tty_putc(1, '\r');
@@ -134,7 +134,7 @@ void kputchar(char c)
 	tty_putc(2, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t c;
 	if (minor == 1)
@@ -143,7 +143,7 @@ ttyready_t tty_writeready(uint8_t minor)
 	return (c & 1) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	minor;
 	if (minor == 1) {
@@ -153,7 +153,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 	uarta = c;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -162,7 +162,7 @@ void tty_data_consumed(uint8_t minor)
 static uint8_t uart_ctrl;
 
 /* Called to set baud rate etc */
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint8_t b;
 	if (minor == 1)
@@ -198,13 +198,13 @@ void tty_setup(uint8_t minor, uint8_t flags)
 }
 
 /* The NC100 and NC200 don't have a carrier input on the connector */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
     minor;
     return 1;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     txwait = 1;
 }

@@ -11,7 +11,7 @@
 /* Kernel page mapping */
 static const uint8_t kmap[] = { 0x83, 0x84, 0x85 };
 
-static int rd_transfer(bool is_read, uint8_t rawflag)
+static int rd_transfer(bool is_read, uint_fast8_t rawflag)
 {
     uint16_t dptr;
     int ct = 0;
@@ -45,7 +45,7 @@ static int rd_transfer(bool is_read, uint8_t rawflag)
     return ct << BLKSHIFT;
 }
 
-int rd_open(uint8_t minor, uint16_t flag)
+int rd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor != 0) {
@@ -55,13 +55,13 @@ int rd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int rd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int rd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return rd_transfer(true, rawflag);
 }
 
-int rd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int rd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return rd_transfer(false, rawflag);

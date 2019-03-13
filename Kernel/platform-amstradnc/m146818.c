@@ -18,7 +18,7 @@ __sfr __at 0xD8 rtc_month;
 __sfr __at 0xD9 rtc_year;
 __sfr __at 0xDA rtc_rega;
 
-uint8_t platform_rtc_secs(void) __naked
+uint_fast8_t platform_rtc_secs(void)
 {
         static uint8_t last;
         if (rtc_rega & 0x80)

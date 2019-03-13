@@ -34,7 +34,7 @@ static struct display ncdisplay = {
 };
 #endif
 
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t *tmp;
   uint16_t l;

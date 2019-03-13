@@ -7,7 +7,7 @@
 
 static timer_t spindown_timer = 0;
 
-int devfd_open(uint8_t minor, uint16_t flag)
+int devfd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor != 0) {
@@ -88,7 +88,7 @@ static void fd_select(int minor)
     nudge_timer();
 }
 
-static int devfd_transfer(bool is_read, uint8_t is_raw)
+static int devfd_transfer(bool is_read, uint_fast8_t is_raw)
 {
     int ct = 0;
     int tries;
@@ -146,13 +146,13 @@ static int devfd_transfer(bool is_read, uint8_t is_raw)
     return ct << BLKSHIFT;
 }
 
-int devfd_read(uint8_t minor, uint8_t is_raw, uint8_t flag)
+int devfd_read(uint_fast8_t minor, uint_fast8_t is_raw, uint_fast8_t flag)
 {
     flag;minor;
     return devfd_transfer(true, is_raw);
 }
 
-int devfd_write(uint8_t minor, uint8_t is_raw, uint8_t flag)
+int devfd_write(uint_fast8_t minor, uint_fast8_t is_raw, uint_fast8_t flag)
 {
     flag;minor;
     return devfd_transfer(false, is_raw);
