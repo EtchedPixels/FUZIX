@@ -36,7 +36,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-  int i;
+  unsigned int i;
   /* Add 64 swaps (4MB) to use the entire J drive */
   for (i = 0; i < MAX_SWAPS; i++)
     swapmap_init(i);

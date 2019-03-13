@@ -5,8 +5,8 @@
 #include <tty.h>
 #include <devtty.h>
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
