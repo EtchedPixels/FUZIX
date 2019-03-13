@@ -14,7 +14,7 @@
    need to integrate this into the I/O loop, but when we do it changes
    how we handle the psleep_flags bit. Pipes wrap before 64k so we can
    shorten the check */
-static uint8_t wait_pipe_read(inoptr ino, uint8_t flag)
+static uint8_t wait_pipe_read(inoptr ino, uint_fast8_t flag)
 {
         while((uint16_t)ino->c_node.i_size == 0) {
                 if (ino->c_writers == 0 || psleep_flags(ino, flag)) {
@@ -28,7 +28,7 @@ static uint8_t wait_pipe_read(inoptr ino, uint8_t flag)
 
 /* Wait for our pipe to become writable. We must have enough space and
    a reader */
-static uint8_t wait_pipe_write(inoptr ino, uint8_t flag)
+static uint8_t wait_pipe_write(inoptr ino, uint_fast8_t flag)
 {
 	while (LOWORD(ino->c_node.i_size) > 8 * BLKSIZE) {
 		if (ino->c_readers == 0) {	/* No readers */
@@ -58,14 +58,14 @@ uint16_t umove(uint16_t n)
 	return udata.u_done;
 }
 
-static uint16_t mapcalc(inoptr ino, usize_t *size, uint8_t m)
+static uint16_t mapcalc(inoptr ino, usize_t *size, uint_fast8_t m)
 {
 	*size = min(udata.u_count, BLKSIZE - uoff());
 	return bmap(ino, udata.u_offset >> BLKSHIFT, m);
 }
 
 /* Writei (and readi) need more i/o error handling */
-void readi(regptr inoptr ino, uint8_t flag)
+void readi(regptr inoptr ino, uint_fast8_t flag)
 {
 	usize_t amount;
 	blkno_t pblk;
@@ -166,7 +166,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 	}
 }
 
-void writei(regptr inoptr ino, uint8_t flag)
+void writei(regptr inoptr ino, uint_fast8_t flag)
 {
 	usize_t amount;
 	bufptr bp;
@@ -256,7 +256,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 	}
 }
 
-int16_t doclose(uint8_t uindex)
+int16_t doclose(uint_fast8_t uindex)
 {
 	int8_t oftindex;
 	struct oft *oftp;
@@ -296,7 +296,7 @@ int16_t doclose(uint8_t uindex)
 	return (0);
 }
 
-inoptr rwsetup(bool is_read, uint8_t * flag)
+inoptr rwsetup(bool is_read, uint_fast8_t * flag)
 {
 	inoptr ino;
 	regptr struct oft *oftp;

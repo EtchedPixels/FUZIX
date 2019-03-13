@@ -128,7 +128,7 @@ void bawrite(bufptr bp)
  *	If a writeback now is requested an an error occurs then u_error will
  *	be set and -1 returned.
  */
-int bfree(regptr bufptr bp, uint8_t dirty)
+int bfree(regptr bufptr bp, uint_fast8_t dirty)
 {				/* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 	int ret = 0;
 	if (dirty)
@@ -358,19 +358,19 @@ int bdwrite(bufptr bp)
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 0, 0));
 }
 
-int cdread(uint16_t dev, uint8_t flag)
+int cdread(uint16_t dev, uint_fast8_t flag)
 {
 	validchk(dev, PANIC_CDR);
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 1, flag));
 }
 
-int cdwrite(uint16_t dev, uint8_t flag)
+int cdwrite(uint16_t dev, uint_fast8_t flag)
 {
 	validchk(dev, PANIC_CDW);
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 1, flag));
 }
 
-int d_open(uint16_t dev, uint8_t flag)
+int d_open(uint16_t dev, uint_fast8_t flag)
 {
 	if (!validdev(dev)) {
 	        udata.u_error = ENXIO;
@@ -417,7 +417,7 @@ int d_flush(uint16_t dev)
 static uint16_t masks[] = { 0x7F, 0xFF, 0x1FF };
 
 /* This is not a commonly used path so can be slower */
-int d_blkoff(uint8_t shift)
+int d_blkoff(uint_fast8_t shift)
 {
 	uint16_t m = masks[shift - 7];
 	udata.u_block = udata.u_offset >> shift;
@@ -481,7 +481,7 @@ int no_ioctl(uint8_t minor, uarg_t a, char *b)
  */
 
 /* add something to the tail of the queue. */
-bool insq(struct s_queue * q, unsigned char c)
+bool insq(struct s_queue * q, uint_fast8_t c)
 {
 	bool r;
 
@@ -567,7 +567,7 @@ bool fullq(struct s_queue *q)
              Miscellaneous helpers
 **********************************************************************/
 
-int psleep_flags_io(void *p, unsigned char flags)
+int psleep_flags_io(void *p, uint_fast8_t flags)
 {
 	if (flags & O_NDELAY) {
 	        if (!udata.u_done) {
@@ -587,7 +587,7 @@ int psleep_flags_io(void *p, unsigned char flags)
 	return 0;
 }
 
-int psleep_flags(void *p, unsigned char flags)
+int psleep_flags(void *p, uint_fast8_t flags)
 {
 	if (flags & O_NDELAY) {
 		udata.u_error = EAGAIN;
@@ -607,12 +607,12 @@ void kputs(const char *p)
 		kputchar(*p++);
 }
 
-static void putdigit0(unsigned char c)
+static void putdigit0(uint_fast8_t c)
 {
 	kputchar("0123456789ABCDEF"[c & 15]);
 }
 
-static void putdigit(unsigned char c, unsigned char *flag)
+static void putdigit(uint_fast8_t c, unsigned char *flag)
 {
 	if (c || *flag) {
 		*flag |= c;

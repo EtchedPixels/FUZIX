@@ -20,11 +20,11 @@ uint16_t swappage;			/* Target page */
 
 /* Table of available maps */
 static uint8_t swapmap[MAX_SWAPS];
-static uint8_t swapptr = 0;
+static uint_fast8_t swapptr = 0;
 
 static char maxswap[] = PANIC_MAXSWAP;
 
-void swapmap_add(uint8_t swap)
+void swapmap_add(uint_fast8_t swap)
 {
 	if (swapptr == MAX_SWAPS)
 		panic(maxswap);
@@ -42,7 +42,7 @@ int swapmap_alloc(void)
                 return -1;
 }
 
-void swapmap_init(uint8_t swap)
+void swapmap_init(uint_fast8_t swap)
 {
 	if (swapptr == MAX_SWAPS)
 		panic(maxswap);

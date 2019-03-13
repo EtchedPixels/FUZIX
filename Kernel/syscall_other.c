@@ -378,7 +378,7 @@ arg_t _mount(void)
 static int do_umount(uint16_t dev)
 {
 	regptr struct mount *mnt;
-	uint8_t rm = flags & MS_REMOUNT;
+	uint_fast8_t rm = flags & MS_REMOUNT;
 	regptr inoptr ptr;
 
 	mnt = fs_tab_get(dev);

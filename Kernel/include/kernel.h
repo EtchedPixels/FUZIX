@@ -861,7 +861,7 @@ extern void validchk(uint16_t dev, const char *p);
 extern bufptr bread (uint16_t dev, blkno_t blk, bool rewrite);
 extern void brelse(bufptr);
 extern void bawrite(bufptr);
-extern int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
+extern int bfree(bufptr bp, uint_fast8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 extern void *tmpbuf(void);
 extern void tmpfree(void *p);
 extern bufptr zerobuf(void);
@@ -874,20 +874,20 @@ extern void bufdiscard(bufptr bp);
 extern void bufdump (void);
 extern int bdread(bufptr bp);
 extern int bdwrite(bufptr bp);
-extern int cdread(uint16_t dev, uint8_t flag);
-extern int d_open(uint16_t dev, uint8_t flag);
+extern int cdread(uint16_t dev, uint_fast8_t flag);
+extern int d_open(uint16_t dev, uint_fast8_t flag);
 extern int d_close(uint16_t dev);
 extern int d_ioctl(uint16_t dev, uint16_t request, char *data);
 extern int d_flush(uint16_t dev);
-extern int d_blkoff(uint8_t bits);
-extern int cdwrite(uint16_t dev, uint8_t flag);
-extern bool insq(struct s_queue *q, unsigned char c);
+extern int d_blkoff(uint_fast8_t bits);
+extern int cdwrite(uint16_t dev, uint_fast8_t flag);
+extern bool insq(struct s_queue *q, uint_fast8_t c);
 extern bool remq(struct s_queue *q, unsigned char *cp);
 extern void clrq(struct s_queue *q);
 extern bool uninsq(struct s_queue *q, unsigned char *cp);
 extern bool fullq(struct s_queue *q);
-extern int psleep_flags_io(void *event, unsigned char flags);
-extern int psleep_flags(void *event, unsigned char flags);
+extern int psleep_flags_io(void *event, uint_fast8_t flags);
+extern int psleep_flags(void *event, uint_fast8_t flags);
 extern int nxio_open(uint8_t minor, uint16_t flag);
 extern int no_open(uint8_t minor, uint16_t flag);
 extern int no_close(uint8_t minor);
@@ -912,27 +912,27 @@ extern uint16_t i_alloc(uint16_t devno);
 extern void i_free(uint16_t devno, uint16_t ino);
 extern blkno_t blk_alloc(uint16_t devno);
 extern void blk_free(uint16_t devno, blkno_t blk);
-extern int8_t oft_alloc(void);
+extern int_fast8_t oft_alloc(void);
 extern void deflock(struct oft *ofptr);
-extern void oft_deref(int8_t of);
+extern void oft_deref(uint_fast8_t of);
 /* returns index of slot, or -1 on failure */
-extern int8_t uf_alloc(void);
+extern int_fast8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
-extern int8_t uf_alloc_n(int n);
+extern int_fast8_t uf_alloc_n(uint_fast8_t n);
 #define i_ref(ino) ((ino)->c_refs++, (ino))
 //extern void i_ref(inoptr ino);
 extern void i_deref(inoptr ino);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
 extern int f_trunc(inoptr ino);
-extern void freeblk(uint16_t dev, blkno_t blk, uint8_t level);
-extern blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
+extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level);
+extern blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg);
 extern void validblk(uint16_t dev, blkno_t num);
-extern inoptr getinode(uint8_t uindex);
+extern inoptr getinode(uint_fast8_t uindex);
 extern bool super(void);
 extern bool esuper(void);
 extern uint8_t getperm(inoptr ino);
-extern void setftime(inoptr ino, uint8_t flag);
+extern void setftime(inoptr ino, uint_fast8_t flag);
 extern uint8_t getmode(inoptr ino);
 extern struct mount *fs_tab_get(uint16_t dev);
 /* returns true on failure, false on success */
@@ -941,11 +941,11 @@ extern void magic(inoptr ino);
 extern arg_t unlinki(inoptr ino, inoptr pino, uint8_t *fname);
 
 /* inode.c */
-extern void readi(inoptr ino, uint8_t flag);
+extern void readi(inoptr ino, uint_fast8_t flag);
 extern uint16_t umove(uint16_t n);	/* Probably wants to move ? */
-extern void writei(inoptr ino, uint8_t flag);
-extern int16_t doclose (uint8_t uindex);
-extern inoptr rwsetup (bool is_read, uint8_t *flag);
+extern void writei(inoptr ino, uint_fast8_t flag);
+extern int16_t doclose (uint_fast8_t uindex);
+extern inoptr rwsetup (bool is_read, uint_fast8_t *flag);
 extern int dev_openi(inoptr *ino, uint16_t flag);
 extern void sync(void);
 
@@ -961,11 +961,11 @@ extern void pwake(ptptr p);
 extern ptptr getproc(void);
 extern void makeproc(ptptr p, u_data *u);
 extern ptptr ptab_alloc(void);
-extern void ssig(ptptr proc, uint8_t sig);
+extern void ssig(ptptr proc, uint_fast8_t sig);
 extern void recalc_cursig(void);
-extern uint8_t chksigs(void);
+extern uint_fast8_t chksigs(void);
 extern void program_vectors(uint16_t *pageptr);
-extern void sgrpsig(uint16_t pgrp, uint8_t sig);
+extern void sgrpsig(uint16_t pgrp, uint_fast8_t sig);
 extern void unix_syscall(void);
 extern void timer_interrupt(void);
 extern void doexit (uint16_t val);
@@ -974,7 +974,7 @@ extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 #ifdef CONFIG_LEVEL_2
-extern uint8_t dump_core(uint8_t sig);
+extern uint_fast8_t dump_core(uint8_t sig);
 #endif
 
 /* select.c */
@@ -982,10 +982,10 @@ extern uint8_t dump_core(uint8_t sig);
 extern void seladdwait(struct selmap *s);
 extern void selrmwait(struct selmap *s);
 extern void selwake(struct selmap *s);
-extern void selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
+extern void selwait_inode(inoptr i, uint_fast8_t smask, uint_fast8_t setit);
 extern void selwake_inode(inoptr i, uint16_t mask);
 extern void selwake_pipe(inoptr i, uint16_t mask);
-extern void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask);
+extern void selwake_dev(uint_fast8_t major, uint_fast8_t minor, uint16_t mask);
 extern arg_t _select(void);
 #else
 #define selwait_inode(i,smask,setit) do {} while(0)
@@ -1002,14 +1002,14 @@ extern int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
 extern int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
 		     uaddr_t buf, uint16_t page);
 
-extern void swapmap_add(uint8_t swap);
-extern void swapmap_init(uint8_t swap);
+extern void swapmap_add(uint_fast8_t swap);
+extern void swapmap_init(uint_fast8_t swap);
 extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
 extern void swapper2(ptptr p, uint16_t map);
 extern uint8_t get_common(void);
-extern void swap_finish(uint8_t page, ptptr p);
+extern void swap_finish(uint_fast8_t page, ptptr p);
 /* These two are provided by the bank code selected for the port */
 extern int swapout(ptptr p);
 extern void swapin(ptptr p, uint16_t map);

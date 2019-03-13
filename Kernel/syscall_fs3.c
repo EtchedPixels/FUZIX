@@ -16,8 +16,8 @@ int16_t mode;
 
 arg_t _open(void)
 {
-	int8_t uindex;
-	int8_t oftindex;
+	int_fast8_t uindex;
+	int_fast8_t oftindex;
 	staticfast inoptr ino;
 	int16_t perm;
 	staticfast inoptr parent;

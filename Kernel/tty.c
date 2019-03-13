@@ -248,7 +248,7 @@ int tty_close(uint8_t minor)
 /* If the group owner for the tty dies, the tty loses its group */
 void tty_exit(void)
 {
-        uint8_t t = udata.u_ptab->p_tty;
+        uint_fast8_t t = udata.u_ptab->p_tty;
         uint16_t *pgrp = &ttydata[t].pgrp;
         if (t && *pgrp == udata.u_ptab->p_pgrp && *pgrp == udata.u_ptab->p_pid)
                 *pgrp = 0;
@@ -257,7 +257,7 @@ void tty_exit(void)
 int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
-        uint8_t waito = 0;
+        uint_fast8_t waito = 0;
         staticfast struct termios tm;
 
         t = &ttydata[minor];
@@ -384,8 +384,8 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
 uint8_t tty_inproc(uint8_t minor, unsigned char c)
 {
 	unsigned char oc;
-	uint8_t canon;
-	uint8_t wr;
+	uint_fast8_t canon;
+	uint_fast8_t wr;
 	struct tty *t = &ttydata[minor];
 	struct s_queue *q = &ttyinq[minor];
 
@@ -511,7 +511,7 @@ void tty_erase(uint8_t minor)
 
 uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 {
-        uint8_t t;
+        uint_fast8_t t;
 
         flag &= O_NDELAY;
 

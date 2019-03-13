@@ -19,7 +19,7 @@
  * event equal to the process's own ptab address is a wait().
  */
 
-static void do_psleep(void *event, uint8_t state)
+static void do_psleep(void *event, uint_fast8_t state)
 {
 	di();
 #ifdef DEBUG_SLEEP
@@ -124,7 +124,7 @@ void switchout(void)
 #ifdef DEBUG_NREADY
 	{
 		ptptr p;
-		uint8_t n = 0;
+		uint_fast8_t n = 0;
 		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_status == P_RUNNING ||
 				p->p_status == P_READY)
@@ -392,8 +392,8 @@ ptptr ptab_alloc(void)
 void load_average(void)
 {
 	regptr struct runload *r;
-	static uint8_t utick;
-	uint8_t i;
+	static uint_fast8_t utick;
+	uint_fast8_t i;
 	uint16_t nr;
 
 	utick++;
@@ -542,7 +542,7 @@ void unix_syscall(void)
 	chksigs();
 }
 
-void sgrpsig(uint16_t pgrp, uint8_t sig)
+void sgrpsig(uint16_t pgrp, uint_fast8_t sig)
 {
 	regptr ptptr p;
 	if (pgrp) {
@@ -553,7 +553,7 @@ void sgrpsig(uint16_t pgrp, uint8_t sig)
 }
 
 #ifdef CONFIG_LEVEL_2
-uint8_t dump_core(uint8_t sig)
+uint8_t dump_core(uint_fast8_t sig)
 {
         if (!(udata.u_flags & U_FLAG_NOCORE) && ((sig == SIGQUIT || sig == SIGILL || sig == SIGTRAP ||
             sig == SIGABRT || sig == SIGBUS || sig == SIGFPE ||
@@ -602,9 +602,9 @@ void recalc_cursig(void)
 }
 
 /* Process a block of 16 signals so we can avoid using longs */
-static uint8_t chksigset(struct sigbits *sb, uint8_t b)
+static uint_fast8_t chksigset(struct sigbits *sb, uint_fast8_t b)
 {
-	uint8_t j = 1;
+	uint_fast8_t j = 1;
 	int (**svec)(int) = &udata.u_sigvec[0];
 	uint16_t m;
 	uint16_t pending = sb->s_pending & ~sb->s_held;
@@ -687,11 +687,11 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 	return udata.u_cursig;
 }
 
-uint8_t chksigs(void)
+uint_fast8_t chksigs(void)
 {
 	struct sigbits *sb = udata.u_ptab->p_sig;
-	uint8_t r;
-	uint8_t b;
+	uint_fast8_t r;
+	uint_fast8_t b;
 
 	/* Sleeping without signals allowed. We rely upon the fact that
 	   P_IOWAIT is never pre-empted or returns to user space so
@@ -724,7 +724,7 @@ rescan:
  *	Send signal, avoid touching uarea
  */
 
-void ssig(ptptr proc, uint8_t sig)
+void ssig(ptptr proc, uint_fast8_t sig)
 {
 	struct sigbits *m = proc->p_sig;
 	uint16_t sigm;
@@ -843,7 +843,7 @@ static int signal_parent(ptptr c)
 
 void doexit(uint16_t val)
 {
-	int16_t j;
+	uint_fast8_t j;
 	ptptr p;
 	irqflags_t irq;
 
