@@ -24,6 +24,8 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint32_t clock_t;
 
+#define MAXUSIZE	0xFFFF
+
 /* The MSP430 requires aligned accesses. (Annoying, it doesn't trap if you
  * get this wrong. It just reads to or writes from the wrong place.) */
 

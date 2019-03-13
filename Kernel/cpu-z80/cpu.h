@@ -18,6 +18,8 @@ typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* User address */
 typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
 
+#define MAXUSIZE	0xFFFF
+
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
 #define uputi  uputw			/* Copy user int type */

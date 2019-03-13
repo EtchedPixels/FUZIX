@@ -20,6 +20,7 @@ typedef int32_t ssize_t;
 typedef uint32_t uaddr_t;
 typedef uint32_t uptr_t;		/* User pointer equivalent */
 
+#define MAXUSIZE	0xFFFFFFFF
 
 #define uputp  uputl			/* Copy user pointer type */
 #define ugetp  ugetl			/* between user and kernel */
