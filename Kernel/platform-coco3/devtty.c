@@ -231,7 +231,7 @@ void apply_gime( int minor ){
 
 
 /* A wrapper for tty_close that closes the DW port properly */
-int my_tty_close(uint8_t minor)
+int my_tty_close(uint_fast8_t minor)
 {
 	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
@@ -240,19 +240,19 @@ int my_tty_close(uint8_t minor)
 
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	return TTY_READY_NOW;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	int irq;
 	if (minor > 2 ) {
@@ -271,13 +271,13 @@ void tty_putc(uint8_t minor, unsigned char c)
 	irqrestore(irq);
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	used(minor);
 }
 
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	if (minor > 2) {
 		dw_vopen(minor);
@@ -286,7 +286,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 }
 
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	if( minor > 2 ) return dw_carrier( minor );
 	return 1;
@@ -297,7 +297,7 @@ void tty_interrupt(void)
 
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -506,7 +506,7 @@ void vtattr_notify(void)
 	curattr = ((vtink&7)<<3) + (vtpaper&7);
 }
 
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
 	if ( minor > 2 )	/* remove once DW get its own ioctl() */
 		return tty_ioctl(minor, arg, ptr);
