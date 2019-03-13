@@ -7,6 +7,10 @@ typedef signed char int8_t;
 typedef unsigned int size_t;
 typedef signed int ssize_t;
 
+typedef unsigned char uint_fast8_t;
+typedef signed char int_fast8_t;
+
+
 typedef uint8_t irqflags_t;
 
 typedef int16_t arg_t;
