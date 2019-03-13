@@ -22,9 +22,9 @@
 
 /* for platforms with multiple SD card slots, this variable contains
  * the current operation's drive number */
-uint8_t sd_drive;
+uint_fast8_t sd_drive;
 
-uint8_t devsd_transfer_sector(void)
+uint_fast8_t devsd_transfer_sector(void)
 {
     uint8_t attempt;
     bool success;
@@ -74,7 +74,7 @@ void sd_spi_release(void)
 uint8_t sd_spi_wait(bool want_ff)
 {
     unsigned int timer;
-    unsigned char b;
+    uint_fast8_t b;
 
     timer = set_timer_ms(500);
 
@@ -96,9 +96,10 @@ uint8_t sd_spi_wait(bool want_ff)
     return b;
 }
 
-int sd_send_command(unsigned char cmd, uint32_t arg)
+int sd_send_command(uint_fast8_t, uint32_t arg)
 {
-    unsigned char n, res, *p;
+    unsigned char *p;
+    uint_fast8_t n, res;
 
     if (cmd & 0x80) {   /* ACMD<n> is the command sequense of CMD55-CMD<n> */
         cmd &= 0x7F;

@@ -42,21 +42,21 @@ void devsd_init(void);
 void sd_spi_clock(bool go_fast) SD_SPI_CALLTYPE;
 void sd_spi_raise_cs(void);
 void sd_spi_lower_cs(void);
-void sd_spi_transmit_byte(uint8_t byte) SD_SPI_CALLTYPE;
+void sd_spi_transmit_byte(uint_fast8_t byte) SD_SPI_CALLTYPE;
 uint8_t sd_spi_receive_byte(void);
 
 bool sd_spi_receive_sector(void);
 bool sd_spi_transmit_sector(void);
 
 /* for platforms which support multiple SD cards */
-extern uint8_t sd_drive; /* current card/drive number */
+extern uint_fast8_t sd_drive; /* current card/drive number */
 
 #ifdef _SD_PRIVATE
 
 /* internal functions */
 void sd_spi_release(void);
-int sd_send_command(unsigned char cmd, uint32_t arg);
-uint8_t sd_spi_wait(bool want_ff);
+int sd_send_command(uint_fast8_t cmd, uint32_t arg);
+uint_fast8_t sd_spi_wait(bool want_ff);
 void sd_init_drive(void);
 int sd_spi_init(void);
 uint8_t devsd_transfer_sector(void);

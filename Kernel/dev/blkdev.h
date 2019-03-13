@@ -3,7 +3,7 @@
 
 /* block device drives should call blkdev_add() for each block device found,
    and implement a sector transfer function matching the following prototype. */
-typedef uint8_t (*transfer_function_t)(void);
+typedef uint_fast8_t (*transfer_function_t)(void);
 typedef int (*flush_function_t)(void);
 
 /* the following details should be required only by partition parsing code */
@@ -43,11 +43,11 @@ extern struct blkparam blk_op;
 
 /* public interface */
 extern blkdev_t *blkdev_alloc(void);
-extern void blkdev_scan(blkdev_t *blk, uint8_t flags);
+extern void blkdev_scan(blkdev_t *blk, uint_fast8_t flags);
 #define SWAPSCAN    0x01
-extern int blkdev_open(uint8_t minor, uint16_t flags);
-extern int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int blkdev_ioctl(uint8_t minor, uarg_t request, char *data);
+extern int blkdev_open(uint_fast8_t minor, uint16_t flags);
+extern int blkdev_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int blkdev_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
 #endif
