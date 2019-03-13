@@ -29,10 +29,10 @@ uint8_t vtattr_cap;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
-static char tbuf3[TTYSIZ];
-static char tbuf4[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
+static uint8_t tbuf3[TTYSIZ];
+static uint8_t tbuf4[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -75,14 +75,14 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 /* tty1 is the screen tty2 is vdp screen */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t reg = 0xFF;
 	if (minor == 3)
@@ -92,7 +92,7 @@ ttyready_t tty_writeready(uint8_t minor)
 	return (reg & 4) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq;
 
@@ -115,7 +115,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		serialBd = c;
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	uint8_t reg = 0xFF;
 	if (minor == 3)
@@ -125,12 +125,12 @@ int tty_carrier(uint8_t minor)
 	return (reg & 8) ? 1 : 0;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	sleeping |= (1 << minor);
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 	/* FIXME:we can now implement flow control stuff */
 }
@@ -154,7 +154,7 @@ static uint8_t dartbits[] = {
 };
 
 /* FIXME: Can we do CSTOPB - need to look into that */
-void tty_setup(uint8_t minor, uint8_t flagbits)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 {
 	irqflags_t flags;
 	int i;
@@ -204,7 +204,7 @@ void tty_setup(uint8_t minor, uint8_t flagbits)
 	irqrestore(flags);
 }
 
-int mtxtty_close(uint8_t minor)
+int mtxtty_close(uint_fast8_t minor)
 {
 	irqflags_t flags;
 	int err = tty_close(minor);

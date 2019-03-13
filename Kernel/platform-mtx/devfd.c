@@ -37,7 +37,7 @@ void fd_motor_timer(void)
  *	We only support normal block I/O not swap.
  */
 
-static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int fd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
     uint16_t nb = 0;
     int tries;
@@ -108,7 +108,7 @@ bad2:
     return -1;
 }
 
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= MAX_FD) {
@@ -118,13 +118,13 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(minor, true, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(minor, false, rawflag);

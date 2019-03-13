@@ -1,3 +1,10 @@
+TODO
+- Probe what memory banks are present up to the full 640K that might be present
+- Support for the retro adapters (CF2+ etc)
+- Autodetect silicon ramdisk
+- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
+- Floppy features support
+
 The following MTX512 features are supported
 - 6845 based colour text display attributes yet) as /dev/tty1
 - VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
@@ -48,7 +55,7 @@ On the MEMU emulator you can do a fast load for testing as follows
 (and add -diag-whatever as needed)
 
 This flips the box into pure RAM mode, loads the image at 0x100 and runs it
-fro there with the root floppy as mfloppy/ref.fs which needs to be a
+from there with the root floppy as mfloppy/ref.fs which needs to be a
 suitable image. I'm currently using an 80 track image, but 40 will work
 fine (40 in 80 won't yet). It's quicker than booting CP/M and loading
 the image.
