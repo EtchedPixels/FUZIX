@@ -96,7 +96,7 @@ uint8_t sd_spi_wait(bool want_ff)
     return b;
 }
 
-int sd_send_command(uint_fast8_t, uint32_t arg)
+int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 {
     unsigned char *p;
     uint_fast8_t n, res;
