@@ -28,7 +28,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint_fast8_t platform_param(char *p)
 {
  used(p);
  return 0;
@@ -39,7 +39,7 @@ uint8_t platform_param(char *p)
  *	and marked as swap type. The first one found will be used as swap. We
  *	only support one swap device.
  */
-void platform_swap_found(uint8_t letter, uint8_t m)
+void platform_swap_found(uint_fast8_t letter, uint_fast8_t m)
 {
 	blkdev_t *blk = blk_op.blkdev;
 	uint16_t n;
