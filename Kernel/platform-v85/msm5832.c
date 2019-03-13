@@ -8,9 +8,9 @@
 #include <printf.h>
 #include <rtc.h>
 
-extern uint8_t rtc_get(uint8_t port);
+extern uint_fast8_t rtc_get(uint8_t port);
 
-uint8_t platform_rtc_secs(void)
+uint_fast8_t platform_rtc_secs(void)
 {
     irqflags_t irqflags = di();
     uint_fast8_t secs = rtc_get(0);
