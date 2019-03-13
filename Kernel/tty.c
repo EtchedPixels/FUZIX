@@ -21,7 +21,7 @@ struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 static uint16_t tty_select;		/* Fast path if no selects, could do with being per tty ? */
 
 /* Might be worth tracking tty minor <> inode for performance FIXME */
-static void tty_selwake(uint8_t minor, uint16_t event)
+static void tty_selwake(uint_fast8_t minor, uint16_t event)
 {
 	if (tty_select) {
 		/* 2 is the tty devices */
@@ -34,7 +34,7 @@ static void tty_selwake(uint8_t minor, uint16_t event)
 
 int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	unsigned char c;
+	uint_fast8_t c;
 	struct s_queue *q;
 	struct tty *t;
 
@@ -60,7 +60,7 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				break;
 			}
 			if (!(t->termios.c_lflag & ICANON)) {
-			        uint8_t n = t->termios.c_cc[VTIME];
+			        uint_fast8_t n = t->termios.c_cc[VTIME];
 
 				if ((udata.u_done || !n) && udata.u_done >= t->termios.c_cc[VMIN])
 					goto out;
@@ -102,7 +102,7 @@ dead:
 int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
 	struct tty *t;
-	uint8_t c;
+	uint_fast8_t c;
 
 	used(rawflag);
 
@@ -203,7 +203,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 }
 
 /* Post processing for a successful tty open */
-void tty_post(inoptr ino, uint8_t minor, uint16_t flag)
+void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
 {
         struct tty *t = &ttydata[minor];
         irqflags_t irq = di();
@@ -381,9 +381,9 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
  */
-uint8_t tty_inproc(uint8_t minor, unsigned char c)
+uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c)
 {
-	unsigned char oc;
+	uint_fast8_t oc;
 	uint_fast8_t canon;
 	uint_fast8_t wr;
 	struct tty *t = &ttydata[minor];
@@ -489,19 +489,19 @@ eraseout:
 }
 
 /* called when a UART transmitter is ready for the next character */
-void tty_outproc(uint8_t minor)
+void tty_outproc(uint_fast8_t minor)
 {
 	wakeup(&ttydata[minor]);
 	tty_selwake(minor, SELECT_OUT);
 }
 
-void tty_echo(uint8_t minor, unsigned char c)
+void tty_echo(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (ttydata[minor].termios.c_lflag & ECHO)
 		tty_putc_wait(minor, c);
 }
 
-void tty_erase(uint8_t minor)
+void tty_erase(uint_fast8_t minor)
 {
 	tty_putc_wait(minor, '\b');
 	tty_putc_wait(minor, ' ');
@@ -509,7 +509,7 @@ void tty_erase(uint8_t minor)
 }
 
 
-uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
+uint_fast8_t tty_putc_maywait(uint_fast8_t minor, uint_fast8_t c, uint_fast8_t flag)
 {
         uint_fast8_t t;
 
@@ -562,12 +562,12 @@ uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 	return 0;
 }
 
-void tty_putc_wait(uint8_t minor, unsigned char ch)
+void tty_putc_wait(uint_fast8_t minor, uint_fast8_t ch)
 {
 	tty_putc_maywait(minor, ch, 0);
 }
 
-void tty_hangup(uint8_t minor)
+void tty_hangup(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
         /* Kill users */
@@ -584,13 +584,13 @@ void tty_hangup(uint8_t minor)
 	tty_selwake(minor, SELECT_IN|SELECT_OUT|SELECT_EX);
 }
 
-void tty_carrier_drop(uint8_t minor)
+void tty_carrier_drop(uint_fast8_t minor)
 {
         if (ttydata[minor].termios.c_cflag & HUPCL)
                 tty_hangup(minor);
 }
 
-void tty_carrier_raise(uint8_t minor)
+void tty_carrier_raise(uint_fast8_t minor)
 {
 	wakeup(&ttydata[minor].termios.c_cflag);
 	tty_selwake(minor, SELECT_IN|SELECT_OUT);

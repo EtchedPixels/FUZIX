@@ -502,7 +502,7 @@ bool insq(struct s_queue * q, uint_fast8_t c)
 
 
 /* Remove something from the head of the queue. */
-bool remq(struct s_queue * q, unsigned char *cp)
+bool remq(struct s_queue * q, uint_fast8_t *cp)
 {
 	bool r;
 
@@ -536,7 +536,7 @@ void clrq(struct s_queue *q)
 
 
 /* Remove something from the tail; the most recently added char. */
-bool uninsq(struct s_queue *q, unsigned char *cp)
+bool uninsq(struct s_queue *q, uint_fast8_t *cp)
 {
 	bool r;
 	irqflags_t irq = di();

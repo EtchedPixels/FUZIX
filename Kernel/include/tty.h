@@ -231,11 +231,11 @@ extern int tty_close(uint8_t minor);
 extern int tty_ioctl(uint8_t minor, uarg_t request, char *data);
 
 extern void tty_exit(void);
-extern void tty_post(inoptr ino, uint8_t minor, uint16_t flag);
+extern void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag);
 
-extern void tty_hangup(uint8_t minor);
-extern void tty_carrier_drop(uint8_t minor);
-extern void tty_carrier_raise(uint8_t minor);
+extern void tty_hangup(uint_fast8_t minor);
+extern void tty_carrier_drop(uint_fast8_t minor);
+extern void tty_carrier_raise(uint_fast8_t minor);
 
 extern int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 extern int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
@@ -249,12 +249,12 @@ extern int pty_open(uint8_t minor, uint16_t flag);
 extern int pty_close(uint8_t minor);
 extern int pty_ioctl(uint8_t minor, uint16_t request, char *data);
 
-extern uint8_t tty_inproc(uint8_t minor, unsigned char c);
-extern void tty_outproc(uint8_t minor);
-extern void tty_echo(uint8_t minor, unsigned char c);
-extern void tty_erase(uint8_t minor);
-extern uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flags);
-extern void tty_putc_wait(uint8_t minor, unsigned char c);
+extern uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c);
+extern void tty_outproc(uint_fast8_t minor);
+extern void tty_echo(uint_fast8_t minor, uint_fast8_t c);
+extern void tty_erase(uint_fast8_t minor);
+extern uint_fast8_t tty_putc_maywait(uint_fast8_t minor, uint_fast8_t, uint_fast8_t flags);
+extern void tty_putc_wait(uint_fast8_t minor, uint_fast8_t c);
 
 typedef enum {
     TTY_READY_NOW=1,    /* port is ready immediately */
@@ -264,31 +264,31 @@ typedef enum {
 
 /* provided by platform */
 extern struct s_queue ttyinq[NUM_DEV_TTY + 1];
-extern ttyready_t tty_writeready(uint8_t minor);
-extern void tty_sleeping(uint8_t minor);
-extern void tty_putc(uint8_t minor, unsigned char c);
-extern void tty_setup(uint8_t minor, uint8_t flags);
-extern int tty_carrier(uint8_t minor);
-extern void tty_data_consumed(uint8_t minor);
+extern ttyready_t tty_writeready(uint_fast8_t minor);
+extern void tty_sleeping(uint_fast8_t minor);
+extern void tty_putc(uint_fast8_t minor, uint_fast8_t c);
+extern void tty_setup(uint_fast8_t minor, uint_fast8_t flags);
+extern int tty_carrier(uint_fast8_t minor);
+extern void tty_data_consumed(uint_fast8_t minor);
 /* PTY pieces: 8 ptys both sides of */
 #ifdef CONFIG_PTY_DEV
 #define PTY_BUFFERS \
-static char pbuf0[TTYSIZ];\
-static char pbuf1[TTYSIZ];\
-static char pbuf2[TTYSIZ];\
-static char pbuf3[TTYSIZ];\
-static char pbuf4[TTYSIZ];\
-static char pbuf5[TTYSIZ];\
-static char pbuf6[TTYSIZ];\
-static char pbuf7[TTYSIZ];\
-static char pbuf8[TTYSIZ];\
-static char pbuf9[TTYSIZ];\
-static char pbufa[TTYSIZ];\
-static char pbufb[TTYSIZ];\
-static char pbufc[TTYSIZ];\
-static char pbufd[TTYSIZ];\
-static char pbufe[TTYSIZ];\
-static char pbuff[TTYSIZ];\
+static uint8_t pbuf0[TTYSIZ];\
+static uint8_t pbuf1[TTYSIZ];\
+static uint8_t pbuf2[TTYSIZ];\
+static uint8_t pbuf3[TTYSIZ];\
+static uint8_t pbuf4[TTYSIZ];\
+static uint8_t pbuf5[TTYSIZ];\
+static uint8_t pbuf6[TTYSIZ];\
+static uint8_t pbuf7[TTYSIZ];\
+static uint8_t pbuf8[TTYSIZ];\
+static uint8_t pbuf9[TTYSIZ];\
+static uint8_t pbufa[TTYSIZ];\
+static uint8_t pbufb[TTYSIZ];\
+static uint8_t pbufc[TTYSIZ];\
+static uint8_t pbufd[TTYSIZ];\
+static uint8_t pbufe[TTYSIZ];\
+static uint8_t pbuff[TTYSIZ];\
 
 #define PTY_QUEUES \
     {pbuf0, pubf0, pubf0, TTYSIZ, 0, TTYSIZ/2}, \

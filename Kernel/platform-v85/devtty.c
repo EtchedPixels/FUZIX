@@ -25,7 +25,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	console_mask,
 };
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	struct termios *t = &ttydata[1].termios;
 	uint_fast8_t r = t->c_cflag & CSIZE;
@@ -66,13 +66,13 @@ void tty_setup(uint8_t minor, uint8_t flags)
 }
 
 /* For the moment */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
     minor;
     return 1;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
     switch(minor){
         case 1:
@@ -81,16 +81,16 @@ void tty_putc(uint8_t minor, unsigned char c)
     }
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     minor;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
     uint_fast8_t r;
     if (minor == 1)
@@ -108,7 +108,7 @@ void tty_poll(void)
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     tty_putc(TTYDEV & 0xFF, c);
     if(c == '\n')
