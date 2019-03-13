@@ -111,7 +111,7 @@ int my_tty_close(uint8_t minor)
 
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	uint8_t minor = minor(TTYDEV);
 

@@ -63,7 +63,7 @@ uint8_t vtattr_cap;
 /* tty1 is the screen tty2 is the serial port tty3 is MIDI */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
