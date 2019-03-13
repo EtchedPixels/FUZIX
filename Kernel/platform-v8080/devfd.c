@@ -19,25 +19,25 @@ static int sectrack[16] = {
 
 static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag);
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(true, minor, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(false, minor, rawflag);
 }
 
-int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(true, minor + 8, rawflag);
 }
 
-int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(false, minor + 8, rawflag);
@@ -63,7 +63,7 @@ static uint8_t skewtab[4][32] = {
     { 1,7,13,19,25,5,11,17,23,3,9,15,21,2,8,14,20,26,6,12,18,24,4,10,16,22, }
 };
 
-int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
+int fd_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
 {
     switch(request) {
     case FDIO_GETCAP:
@@ -110,7 +110,7 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
 {
     uint16_t dptr;
     uint16_t ct = 0;
-    uint8_t st;
+    uint_fast8_t st;
 
     fd_page = 0;
     if(rawflag == 1) {
@@ -162,7 +162,7 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
 }
 
 /* Media is fixed at start up time */
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= 8 || !sectrack[minor]) {
@@ -172,7 +172,7 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int hd_open(uint8_t minor, uint16_t flag)
+int hd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= 8 || !sectrack[minor + 8]) {

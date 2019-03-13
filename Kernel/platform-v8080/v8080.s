@@ -258,6 +258,7 @@ _fd_op:
 	out 21			! kernel mapping back
 	in 14			! return status
 	mov e,a
+	mvi d,0
 	ret
 
 .define _fd_drive
