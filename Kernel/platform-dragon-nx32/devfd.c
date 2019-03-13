@@ -51,7 +51,7 @@ void fd_timer_tick(void)
 /* static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x40 }; - COCO */
 static uint8_t selmap[4] = {0x00, 0x01, 0x02, 0x03 };
 
-static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int fd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
     int tries;
     int count = 0;
@@ -113,7 +113,7 @@ bad2:
 
 }
 
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     if(minor >= MAX_FD) {
         udata.u_error = ENODEV;
@@ -122,12 +122,12 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     return fd_transfer(minor, true, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     return fd_transfer(minor, false, rawflag);
 }

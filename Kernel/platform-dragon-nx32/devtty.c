@@ -91,14 +91,14 @@ struct vt_repeat keyrepeat = { 40, 4 };
 /* tty1 is the screen tty2 is the serial port */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(TTYDEV & 0xff, '\r');
 	tty_putc(TTYDEV & 0xff, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t c = 0xff;
 	if (minor == 1)
@@ -112,7 +112,7 @@ ttyready_t tty_writeready(uint8_t minor)
 
 /* For DragonPlus we should perhaps support both monitors 8) */
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq;
 
@@ -139,7 +139,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 	irqrestore(irq);
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     used(minor);
 }
@@ -168,7 +168,7 @@ static uint8_t bitbits[] = {
 	0x00
 };
 
-void tty_setup(uint8_t minor, uint8_t flag)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flag)
 {
 	uint8_t r;
 	if (is_dw(minor)) {
@@ -204,14 +204,14 @@ void tty_setup(uint8_t minor, uint8_t flag)
 	}
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	if (is_dw(minor)) return dw_carrier( minor );
 	/* The serial DCD is status bit 5 but not wired */
 	return 1;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -474,7 +474,7 @@ static int gfx_draw_op(uarg_t arg, char *ptr, uint8_t *buf)
   return 0;
 }
 
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
 	extern unsigned char fontdata_8x8[];
 
@@ -555,7 +555,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 }
 
 /* A wrapper for tty_close that closes the DW port properly */
-int my_tty_close(uint8_t minor)
+int my_tty_close(uint_fast8_t minor)
 {
 	if (is_dw(minor) && ttydata[minor].users == 1)
 		dw_vclose(minor);
