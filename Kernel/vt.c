@@ -288,7 +288,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 	vtbusy = 0;
 }
 
-int vt_ioctl(uint8_t minor, uarg_t request, char *data)
+int vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
 	/* FIXME: need to address the multiple vt switching case
 	   here.. probably need to switch vt */
@@ -321,7 +321,7 @@ int vt_ioctl(uint8_t minor, uarg_t request, char *data)
 	return tty_ioctl(minor, request, data);
 }
 
-int vt_inproc(uint8_t minor, unsigned char c)
+int vt_inproc(uint_fast8_t minor, uint_fast8_t c)
 {
 #ifdef CONFIG_UNIKEY
 	if (c == KEY_POUND) {
