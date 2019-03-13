@@ -28,38 +28,38 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t c = *uart_status;
 	return (c & 2) ? TTY_READY_NOW : TTY_READY_SOON; /* TX DATA empty */
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	*uart_data = c;	/* Data */
 }
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	return 1;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
