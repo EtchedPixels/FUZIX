@@ -32,7 +32,7 @@ static int fd_transfer(bool is_read, uint8_t rawflag)
     return ct;
 }
 
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor != 0) {
@@ -42,13 +42,13 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return fd_transfer(true, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return fd_transfer(false, rawflag);

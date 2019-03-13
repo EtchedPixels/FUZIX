@@ -15,7 +15,7 @@ void rp5c01_write_reg(uint8_t reg, uint8_t value)
     RTC_DATA = value;
 }
 
-uint8_t platform_rtc_secs(void)
+uint_fast8_t platform_rtc_secs(void)
 {
     return rp5c01_rtc_secs();
 }

@@ -32,7 +32,7 @@ static int hd_transfer(bool is_read, uint8_t rawflag)
     return ct;
 }
 
-int hd_open(uint8_t minor, uint16_t flag)
+int hd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor != 0) {
@@ -42,13 +42,13 @@ int hd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return hd_transfer(true, rawflag);
 }
 
-int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return hd_transfer(false, rawflag);
