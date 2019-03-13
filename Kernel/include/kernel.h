@@ -1047,18 +1047,18 @@ extern void platform_discard(void);
 extern void platform_copyright(void);
 #endif
 extern void platform_idle(void);
-extern uint8_t platform_rtc_secs(void);
+extern uint_fast8_t platform_rtc_secs(void);
 extern int platform_rtc_read(void);
 extern int platform_rtc_write(void);
 extern void platform_reboot(void);
 extern void platform_monitor(void);
-extern uint8_t platform_param(char *p);
+extern uint_fast8_t platform_param(char *p);
 extern void platform_switchout(void);
 extern void platform_interrupt(void);
-extern uint8_t platform_suspend(void);
-extern uint8_t platform_udata_set(ptptr p);
+extern uint_fast8_t platform_suspend(void);
+extern uint_fast8_t platform_udata_set(ptptr p);
 
-extern void platform_swap_found(uint8_t part, uint8_t letter);
+extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);

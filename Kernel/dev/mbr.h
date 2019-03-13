@@ -19,7 +19,7 @@ typedef struct __packed {
     uint16_t signature;
 } boot_record_t;
 
-void mbr_parse(char letter);
+void mbr_parse(uint_fast8_t letter);
 
 #define FUZIX_SWAP	0x7F
 

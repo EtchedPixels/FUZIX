@@ -8,12 +8,12 @@
 #include "mbr.h"
 #include "gpt.h"
 
-void mbr_parse(char letter)
+void mbr_parse(uint_fast8_t letter)
 {
     boot_record_t *br;
-    uint8_t i, seen = 0;
+    uint_fast8_t i, seen = 0;
     uint32_t ep_offset = 0, br_offset = 0;
-    uint8_t next = 0;
+    uint_fast8_t next = 0;
 
     kprintf("hd%c: ", letter);
 

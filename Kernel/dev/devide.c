@@ -19,9 +19,9 @@
 
 #ifdef CONFIG_IDE
 
-bool devide_wait(uint8_t bits)
+bool devide_wait(uint_fast8_t bits)
 {
-    uint8_t status;
+    uint_fast8_t status;
     timer_t timeout;
 
     timeout = set_timer_sec(20);
@@ -49,7 +49,7 @@ bool devide_wait(uint8_t bits)
 
 uint8_t devide_transfer_sector(void)
 {
-    uint8_t drive;
+    uint_fast8_t drive;
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     uint8_t *p;
 #endif
@@ -101,7 +101,7 @@ fail:
 
 int devide_flush_cache(void)
 {
-    uint8_t drive;
+    uint_fast8_t drive;
 
     drive = blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK;
 

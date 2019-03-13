@@ -37,8 +37,8 @@
 void devide_init(void);
 
 #ifdef IDE_REG_INDIRECT
-uint8_t devide_readb(uint8_t regaddr);
-void devide_writeb(uint8_t regaddr, uint8_t value);
+uint8_t devide_readb(uint_fast8_t regaddr);
+void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value);
 #else /* not IDE_REG_INDIRECT */
 #define devide_readb(r)        (r)
 #define devide_writeb(r,v)     do { r = v; } while(0)
@@ -111,7 +111,7 @@ void devide_writeb(uint8_t regaddr, uint8_t value);
 #define FLAG_CACHE_DIRTY 0x40
 #define FLAG_WRITE_CACHE 0x80
 
-extern bool devide_wait(uint8_t bits);
+extern bool devide_wait(uint_fast8_t bits);
 extern uint8_t devide_transfer_sector(void);
 extern int devide_flush_cache(void);
 
