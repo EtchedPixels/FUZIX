@@ -32,7 +32,7 @@ static void tty_selwake(uint_fast8_t minor, uint16_t event)
 #define tty_selwake(a,b)	do {} while(0)
 #endif
 
-int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	uint_fast8_t c;
 	struct s_queue *q;
@@ -99,7 +99,7 @@ dead:
 	return -1;
 }
 
-int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	struct tty *t;
 	uint_fast8_t c;
@@ -158,7 +158,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 }
 
 
-int tty_open(uint8_t minor, uint16_t flag)
+int tty_open(uint_fast8_t minor, uint16_t flag)
 {
 	struct tty *t;
 	irqflags_t irq;
@@ -223,7 +223,7 @@ void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
 	irqrestore(irq);
 }
 
-int tty_close(uint8_t minor)
+int tty_close(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
         if (--t->users)
@@ -254,7 +254,7 @@ void tty_exit(void)
                 *pgrp = 0;
 }
 
-int tty_ioctl(uint8_t minor, uarg_t request, char *data)
+int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
         uint_fast8_t waito = 0;
@@ -604,32 +604,32 @@ void tty_carrier_raise(uint_fast8_t minor)
 
 static uint8_t ptyusers[PTY_PAIR];
 
-int ptty_open(uint8_t minor, uint16_t flag)
+int ptty_open(uint_fast8_t minor, uint16_t flag)
 {
 	return tty_open(minor + PTY_OFFSET, flag);
 }
 
-int ptty_close(uint8_t minor)
+int ptty_close(uint_fast8_t minor)
 {
 	return tty_close(minor + PTY_OFFSET);
 }
 
-int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ptty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return tty_write(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ptty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return tty_read(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int ptty_ioctl(uint8_t minor, uint16_t request, char *data)
+int ptty_ioctl(uint_fast8_t minor, uint16_t request, char *data)
 {
 	return tty_ioctl(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int pty_open(uint8_t minor, uint16_t flag)
+int pty_open(uint_fast8_t minor, uint16_t flag)
 {
 	int r = tty_open(minor + PTY_OFFSET, flag | O_NOCTTY | O_NDELAY);
 	if (r == 0) {
@@ -640,7 +640,7 @@ int pty_open(uint8_t minor, uint16_t flag)
 	return r;
 }
 
-int pty_close(uint8_t minor)
+int pty_close(uint_fast8_t minor)
 {
 	ptyusers[minor]--;
 	if (ptyusers[minor] == 0)
@@ -648,7 +648,7 @@ int pty_close(uint8_t minor)
 	return tty_close(minor + PTY_OFFSET);
 }
 
-int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int pty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	uint16_t nwritten;
 	minor += PTY_OFFSET;
@@ -671,7 +671,7 @@ int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return nwritten;
 }
 
-int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int pty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	struct s_queue q = &ttyinq[minor + PTY_OFFSET + PTY_PAIR];
 	char c;
@@ -692,12 +692,12 @@ int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return nread;
 }
 
-int pty_ioctl(uint8_t minor, uint16_t request, char *data)
+int pty_ioctl(uint_fast8_t minor, uint16_t request, char *data)
 {
 	return tty_ioctl(minor + PTY_OFFSET, rawflag, flag);
 }
 
-void pty_putc_wait(uint8_t minor, char c)
+void pty_putc_wait(uint_fast8_t minor, char c)
 {
 	struct s_queue q = &ptyq[minor + PTY_OFFSET + PTY_PAIR];
 	/* tty output queue to pty */

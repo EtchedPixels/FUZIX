@@ -434,7 +434,7 @@ int d_blkoff(uint_fast8_t shift)
  *	No such device handler
  */
 
-int nxio_open(uint8_t minor, uint16_t flag)
+int nxio_open(uint_fast8_t minor, uint16_t flag)
 {
 	used(minor);
 	used(flag);
@@ -445,20 +445,20 @@ int nxio_open(uint8_t minor, uint16_t flag)
 /*
  *	Default handlers.
  */
-int no_open(uint8_t minor, uint16_t flag)
+int no_open(uint_fast8_t minor, uint16_t flag)
 {
 	used(minor);
 	used(flag);
 	return 0;
 }
 
-int no_close(uint8_t minor)
+int no_close(uint_fast8_t minor)
 {
 	used(minor);
 	return 0;
 }
 
-int no_rdwr(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int no_rdwr(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	used(minor);
 	used(rawflag);
@@ -467,7 +467,7 @@ int no_rdwr(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return -1;
 }
 
-int no_ioctl(uint8_t minor, uarg_t a, char *b)
+int no_ioctl(uint_fast8_t minor, uarg_t a, char *b)
 {
 	used(minor);
 	used(a);

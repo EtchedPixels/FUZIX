@@ -224,11 +224,11 @@ extern tcflag_t *termios_mask[NUM_DEV_TTY + 1];
 
 extern void tty_init(void);
 
-extern int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int tty_open(uint8_t minor, uint16_t flag);
-extern int tty_close(uint8_t minor);
-extern int tty_ioctl(uint8_t minor, uarg_t request, char *data);
+extern int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int tty_open(uint_fast8_t minor, uint16_t flag);
+extern int tty_close(uint_fast8_t minor);
+extern int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
 extern void tty_exit(void);
 extern void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag);
@@ -237,17 +237,17 @@ extern void tty_hangup(uint_fast8_t minor);
 extern void tty_carrier_drop(uint_fast8_t minor);
 extern void tty_carrier_raise(uint_fast8_t minor);
 
-extern int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int ptty_open(uint8_t minor, uint16_t flag);
-extern int ptty_close(uint8_t minor);
-extern int ptty_ioctl(uint8_t minor, uint16_t request, char *data);
+extern int ptty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int ptty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int ptty_open(uint_fast8_t minor, uint16_t flag);
+extern int ptty_close(uint_fast8_t minor);
+extern int ptty_ioctl(uint_fast8_t minor, uint16_t request, char *data);
 
-extern int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-extern int pty_open(uint8_t minor, uint16_t flag);
-extern int pty_close(uint8_t minor);
-extern int pty_ioctl(uint8_t minor, uint16_t request, char *data);
+extern int pty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int pty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int pty_open(uint_fast8_t minor, uint16_t flag);
+extern int pty_close(uint_fast8_t minor);
+extern int pty_ioctl(uint_fast8_t minor, uint16_t request, char *data);
 
 extern uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c);
 extern void tty_outproc(uint_fast8_t minor);

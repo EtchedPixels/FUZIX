@@ -57,12 +57,12 @@ extern int16_t acct_fh;	  /* acct() filehandle */
 extern struct sysinfoblk sysinfo;
 
 // The device driver switch table
-typedef int (*dev_read_t)(uint8_t minor, uint8_t rawflag, uint8_t flag);
-typedef int (*dev_write_t)(uint8_t minor, uint8_t rawflag, uint8_t flag);
+typedef int (*dev_read_t)(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+typedef int (*dev_write_t)(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
 typedef int (*dev_init_t)(void);
-typedef int (*dev_open_t)(uint8_t minor, uint16_t flag);
-typedef int (*dev_close_t)(uint8_t minor);
-typedef int (*dev_ioctl_t)(uint8_t minor, uarg_t request, char *data); // note: data is in userspace
+typedef int (*dev_open_t)(uint_fast8_t minor, uint16_t flag);
+typedef int (*dev_close_t)(uint_fast8_t minor);
+typedef int (*dev_ioctl_t)(uint_fast8_t minor, uarg_t request, char *data); // note: data is in userspace
 
 typedef struct devsw {
     dev_open_t dev_open;  /* The routines for reading, etc */

@@ -41,8 +41,8 @@
 /*
  *	Input device methods
  */
-extern int inputdev_read(uint8_t flag);
-extern int inputdev_write(uint8_t flag);
+extern int inputdev_read(uint_fast8_t flag);
+extern int inputdev_write(uint_fast8_t flag);
 extern int inputdev_ioctl(uarg_t request, char *data);
 extern int inputdev_close(void);
 
@@ -50,13 +50,13 @@ extern int inputdev_close(void);
  *	Exposed for keyboard drivers
  */
 extern uint8_t keyboard_grab;
-extern uint8_t input_match_meta(uint8_t);
+extern uint_fast8_t input_match_meta(uint_fast8_t);
 /*
  *	Platform methods for input device if present
  */
 extern int platform_input_read(uint8_t *);
 extern void platform_input_wait(void);
-extern int platform_input_write(uint8_t);
-extern uint8_t platform_input_init(void);
+extern int platform_input_write(uint_fast8_t);
+extern uint_fast8_t platform_input_init(void);
 
 #endif

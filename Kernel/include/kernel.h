@@ -888,11 +888,11 @@ extern bool uninsq(struct s_queue *q, uint_fast8_t *cp);
 extern bool fullq(struct s_queue *q);
 extern int psleep_flags_io(void *event, uint_fast8_t flags);
 extern int psleep_flags(void *event, uint_fast8_t flags);
-extern int nxio_open(uint8_t minor, uint16_t flag);
-extern int no_open(uint8_t minor, uint16_t flag);
-extern int no_close(uint8_t minor);
-extern int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
-extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
+extern int nxio_open(uint_fast8_t minor, uint16_t flag);
+extern int no_open(uint_fast8_t minor, uint16_t flag);
+extern int no_close(uint_fast8_t minor);
+extern int no_rdwr(uint_fast8_t minir, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int no_ioctl(uint_fast8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
