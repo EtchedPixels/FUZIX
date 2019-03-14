@@ -136,7 +136,7 @@ extern uint8_t si_user;
 /* Blkdev interface for SCSI disk I/O */
 extern uint8_t si_cmd(void);
 /* Ioctl */
-extern int si_ioctl(uint8_t dev, uarg_t req, char *data);
+extern int si_ioctl(uint_fast8_t dev, uarg_t req, char *data);
 /* Cache flush */
 extern int si_flush(void);
 /* Low level command issue (internal use) */
