@@ -1,8 +1,10 @@
--mwxuy
+-rmwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xD000
--b _DISCARD=0xC300
+-b _CODE1=0x4000
+-b _CODE2=0x4000
+-b _COMMONMEM=0xF000
+-b _DISCARD=0xC000
 -l z80
 platform-rc2014/crt0.rel
 platform-rc2014/commonmem.rel
@@ -12,15 +14,14 @@ platform-rc2014/vfdterm.rel
 platform-rc2014/vfd-term.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+lowlevel-z80-banked.rel
 platform-rc2014/tricks.rel
 platform-rc2014/main.rel
-platform-rc2014/extbuffer.rel
 platform-rc2014/buffers.rel
 timer.rel
 kdata.rel
 platform-rc2014/devfd.rel
-platform-rc2014/devfd_hw.rel
+platform-rc2014/devfd_hw-banked.rel
 platform-rc2014/devices.rel
 devio.rel
 filesys.rel
@@ -40,7 +41,7 @@ tty.rel
 devsys.rel
 devinput.rel
 usermem.rel
-usermem_std-z80.rel
+usermem_std-z80-banked.rel
 platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
@@ -52,6 +53,6 @@ platform-rc2014/monitor.rel
 platform-rc2014/devinput.rel
 platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
-platform-rc2014/ds1302_rc2014.rel
+platform-rc2014/ds1302_rc2014-banked.rel
 platform-rc2014/net_native.rel
 -e

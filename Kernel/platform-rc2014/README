@@ -35,17 +35,25 @@ Supported Hardware
 
 	PPIDE
 
+Pending
+
+	TMS99918A VDP as timer
+
+	Sound cards (until Fuzix gets proper audio support)
+
+
 Unsupported Hardware
 
 	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
-	of the 512K ROM/RAM
+	of the 512K ROM/RAM. Please see the relevant port instead.
 
 	SC114 bit bang serial
 
 	Z80 PIO cards (really because I've no idea how to present them)
 
 	SC110 CTC/serial (does not appear to be able to chain CTC pairs, as
-	is neeed for IM1 mode).
+	is neeed for IM1 mode). You can run a wire by hand.
+
 
 
 Things To Note When Modifying
@@ -65,8 +73,6 @@ Things that don't work
 Stuff To Do
 
   * Other tty options - can we autodetect 16550A at 0x80.
-
-  * Probe both 0x10 and 0xE0 for CF ?
 
   * How to represent a Z80 PIO usefully to Fuzix (similar issues with Nascom)
     both raw and hosting an interface (eg /dev/lp or even floppy)

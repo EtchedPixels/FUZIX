@@ -1,11 +1,11 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s buffers.s
-CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c extbuffer.c
+CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c
 CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c
-DASRCS = ../dev/devfd_hw.s ../dev/ds1302_rc2014.s
+DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014-banked.s
 NSRCS = ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
@@ -28,10 +28,10 @@ $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DAOBJS): %.rel: ../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
@@ -43,7 +43,7 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../dev/net/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin fuzix.com fuzix.rom
@@ -52,7 +52,7 @@ clean:
 #	Compile up the boot block
 #
 image: bootblock
-	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
+#	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
 
 bootblock:
 	sdasz80 -o boot-romwbw.s

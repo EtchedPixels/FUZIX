@@ -17,8 +17,25 @@ uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;
 
+struct blkbuf *bufpool_end = bufpool + NBUFS;
+
 void platform_discard(void)
 {
+	uint16_t discard_size = 0x4000 - (uint16_t)bufpool_end;
+	bufptr bp = bufpool_end;
+
+	discard_size /= sizeof(struct blkbuf);
+
+	kprintf("%d buffers added\n", discard_size);
+
+	bufpool_end += discard_size;
+
+	memset( bp, 0, discard_size * sizeof(struct blkbuf) );
+
+	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
 }
 
 void platform_idle(void)
@@ -64,6 +81,20 @@ void platform_interrupt(void)
 		CTC_CH3 = 255;
 		timer_tick(n);
 	}
+}
+
+
+/*
+ *	So that we don't suck in a library routine we can't use from
+ *	the runtime
+ */
+
+int strlen(const char *p)
+{
+  int len = 0;
+  while(*p++)
+    len++;
+  return len;
 }
 
 /*

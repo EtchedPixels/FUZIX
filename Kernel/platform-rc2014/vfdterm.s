@@ -26,7 +26,7 @@ vfdLine4:        .DW     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 vfdLineLen       .EQU    40
 
 
-                 .area _CODE
+                 .area _CODE1
 VFDTERM_PREINIT:
                   ; initialize first two lines
                   LD      A, #0x30

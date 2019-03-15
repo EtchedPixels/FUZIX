@@ -30,8 +30,9 @@ void pagemap_init(void)
 	 * Pages 32-34 are used by the kernel
 	 * Page 35 is the common area for init
 	 * Page 36 is the disk cache
+	 * Pages 37 amd 38 are the second kernel bank
 	 */
-	for (i = 32 + 5; i < 64; i++)
+	for (i = 32 + 7; i < 64; i++)
 		pagemap_add(i);
 
 	/* finally add the common area */
@@ -53,15 +54,6 @@ void pagemap_init(void)
 
 void map_init(void)
 {
-	/* Point the buffers into the 16-32K range that will be used by
-	   the buffer remap. We offset by 0x4000 if need be in the access
-	   functions when handling overlaps */
-	bufptr bp = bufpool;
-	uint8_t *p = (uint8_t *) 0x4000;
-	while (bp < bufpool_end) {
-		bp++->__bf_data = p;
-		p += BLKSIZE;
-	}
 }
 
 /*

@@ -8,7 +8,7 @@ void vfd_term_init(void) {
 
 void vfd_term_write(char c) {
   __asm
-        ld      hl, #2+0
+        ld      hl, #4+0		; banked
         add     hl, sp
         ld      e, (hl)
         call    VFDTERM_PUTC

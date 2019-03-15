@@ -7,7 +7,9 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
+	.globl map_kernel_restore
 	.globl map_process
+	.globl map_process_save
 	.globl map_buffers
 	.globl map_buffers_user
 	.globl map_buffers_user_h
@@ -78,6 +80,11 @@ ACIA_RESET      .EQU     0x03
 ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
 ;ACIA_RTS_LOW_A       .EQU     0xB6   ; rts low, xmit interrupt enabled
+
+MAP_BANK1	.equ	0x2221	; 20 is low, 23 is high
+BANK1		.equ	0x21
+MAP_BANK2	.equ	0x2625	; for now 24 is buffers - FIXME
+BANK2		.equ	0x25
 
 ;=========================================================================
 ; Initialization code
@@ -304,7 +311,7 @@ sio_setup:
 ;=========================================================================
 ; Kernel code
 ;=========================================================================
-        .area _CODE
+        .area _COMMONMEM
 
 _platform_reboot:
         ; We need to map the ROM back in -- ideally into every page.
@@ -332,10 +339,12 @@ platform_interrupt_all:
 ; install interrupt vectors
 _program_vectors:
 	di
+	pop bc				; bank
 	pop de				; temporarily store return address
 	pop hl				; function argument -- base page number
 	push hl				; put stack back as it was
 	push de
+	push bc
 
 	; At this point the common block has already been copied
 	call map_process
@@ -381,11 +390,23 @@ _program_vectors:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
+map_process_save:
 map_process_always_di:
 	push hl
+	ld hl,#_kernel_pages + 1
+	; Save the current versions of MPGSEL 1 and 2 for map_kernel_restore
+	; so we return to the right kernel bank
+	in a,(MPGSEL_1)
+	ld (hl),a
+	inc hl
+	in a,(MPGSEL_2)
+	ld (hl),a
 	ld hl,#_udata + U_DATA__U_PAGE
         jr map_process_2_pophl_ret
 
+;
+;	FIXME: needs to save the old kernel mid mapping
+;
 map_buffers_user:
 	push hl
 	ld hl,(_udata + U_DATA__U_PAGE)
@@ -423,6 +444,7 @@ map_process_di:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_kernel:
+map_kernel_restore:
 map_kernel_di:
 	push hl
 	ld hl,#_kernel_pages
@@ -508,18 +530,140 @@ map_for_swap:
 	out (MPGSEL_1),a
 	ret
 
+;
+;	Bank switch functions
+;
+	.globl __bank_0_1
+	.globl __bank_0_2
+	.globl __bank_1_2
+	.globl __bank_2_1
+
+	.globl __stub_0_1
+	.globl __stub_0_2
+
+;
+;	We are calling into bank 1 from common. We don't know the current
+;	bank but we need to restore it as was.
+;
+__bank_0_1:
+	ld bc,#MAP_BANK1		; target pairs always a pair
+bank0:
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	ld (_kernel_pages + 1),bc
+	in a, (MPGSEL_1)		; existing page
+	ld b,a
+	ld a,c				; set new page
+	out (MPGSEL_1),a
+	inc a				; next page follows
+	out (MPGSEL_2),a
+	ex de,hl
+	ld a,b				; old bank
+	cp #BANK1			; 1 or 2
+	jr z, retbank1
+	call callhl
+	ld bc,#MAP_BANK2
+banksetbc:
+	ld (_kernel_pages + 1), bc
+	ld a,c
+	out (MPGSEL_1),a
+	ld a,b
+	out (MPGSEL_2),a
+	ret
+retbank1:
+	ld bc,#MAP_BANK1
+	jr banksetbc
+__bank_0_2:
+	ld bc,#MAP_BANK2
+	jr bank0
+;
+;	These are easier because we have two banks so know the target and
+;	return bank in each case
+;
+__bank_1_2:
+	ld bc,#MAP_BANK2
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	call banksetbc
+	call callhl
+	ld bc,#MAP_BANK1
+	jr banksetbc
+
+__bank_2_1:
+	ld bc,#MAP_BANK1
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	call banksetbc
+	call callhl
+	ld bc,#MAP_BANK2
+	jr banksetbc
+
+__stub_0_1:
+	ld bc,#MAP_BANK1
+	jr stub_call
+__stub_0_2:
+	ld bc,#MAP_BANK2
+stub_call:
+	pop hl				; return address
+	ex (sp),hl			; bank space now target
+	in a,(MPGSEL_1)			; current bank
+	ld (_kernel_pages+1),bc		; target
+	ld b,a
+	ld a,c
+	out (MPGSEL_1),a
+	inc a
+	out (MPGSEL_2),a
+	ld a,b
+	cp #BANK1
+	jr z, stub_ret_1
+	call callhl
+	ld bc,#MAP_BANK2
+stub_ret:
+	ld (_kernel_pages+1),bc
+	ld a,c
+	out (MPGSEL_1),a
+	inc a
+	out (MPGSEL_2),a
+	pop bc				; return
+	push bc				; correct stack padding
+	push bc
+	ret				; done
+stub_ret_1:
+	call callhl
+	ld bc,#MAP_BANK1
+	jr stub_ret
+
+callhl:	jp (hl)
+;
+;	Helpers for swap
+;
+
 _copy_common:
+	pop bc
 	pop hl
 	pop de
 	push de
 	push hl
+	push bc
 	ld a,e
 	call map_for_swap
 	ld hl,#0xD300
 	ld de,#0x4300
 	ld bc,#0x2D00
 	ldir
-	jr map_kernel
+	jp map_kernel
 
 
 ; MPGSEL registers are read only, so their content is cached here
