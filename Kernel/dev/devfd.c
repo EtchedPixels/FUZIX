@@ -66,9 +66,9 @@ struct {
 #endif
 };
 
-static int fd_transfer(bool rwflag, uint8_t minor, uint8_t rawflag)
+static int fd_transfer(bool rwflag, uint_fast8_t minor, uint_fast8_t rawflag)
 {
-	uint8_t nblocks, blocks;
+	uint_fast8_t nblocks, blocks;
 	uint16_t firstblk;
 	uint16_t retc;
 	irqflags_t irq;
@@ -136,19 +136,19 @@ failout:
 	return -1;
 }
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	flag; /* unused */
 	return fd_transfer(true, minor, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	flag; /* unused */
 	return fd_transfer(false, minor, rawflag);
 }
 
-int fd_open(uint8_t minor, uint16_t flags)
+int fd_open(uint_fast8_t minor, uint16_t flags)
 {
 	flags; /* unused */
 
@@ -160,7 +160,7 @@ int fd_open(uint8_t minor, uint16_t flags)
 	return 0;
 }
 
-int fd_close(uint8_t minor)
+int fd_close(uint_fast8_t minor)
 {
 	devfd_dtbl[minor].logged = 0;	/* Mark Drive as logged out */
 	return 0;

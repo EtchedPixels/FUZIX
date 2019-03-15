@@ -23,7 +23,7 @@ void ppide_init(void)
     ppi_port_c = ide_reg_status;
 }
 
-uint8_t devide_readb(uint8_t regaddr)
+uint_fast8_t devide_readb(uint_fast8_t regaddr)
 {
     uint8_t r;
 
@@ -35,7 +35,7 @@ uint8_t devide_readb(uint8_t regaddr)
     return r;
 }
 
-void devide_writeb(uint8_t regaddr, uint8_t value)
+void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 {
     ppi_control = PPIDE_PPI_BUS_WRITE;
     ppi_port_c = regaddr;
