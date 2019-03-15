@@ -16,7 +16,7 @@ __sfr __at 233 lpstrobe;
 __sfr __at 233 lpbusy;
 __sfr __at 234 lpmode;
 
-int lpr_open(uint8_t minor, uint16_t flag)
+int lpr_open(uint_fast8_t minor, uint16_t flag)
 {
 	used(flag);
 
@@ -28,7 +28,7 @@ int lpr_open(uint8_t minor, uint16_t flag)
 	return 0;
 }
 
-int lpr_close(uint8_t minor)
+int lpr_close(uint_fast8_t minor)
 {
 	used(minor);
 	return 0;
@@ -55,7 +55,7 @@ static uint8_t iopoll(void)
 }
 
 
-int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	minor;
 	rawflag;

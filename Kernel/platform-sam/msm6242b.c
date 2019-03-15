@@ -11,7 +11,7 @@
 static uint8_t rtc_buf[6];
 uint8_t samrtc;
 
-uint8_t platform_rtc_secs(void)
+uint_fast8_t platform_rtc_secs(void)
 {
     uint8_t r, v;
 

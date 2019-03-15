@@ -36,8 +36,8 @@ __sfr __at 0x6F uart_scr;
 /*
  *	One buffer for each tty
  */
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -91,7 +91,7 @@ uint8_t ttymap[NUM_DEV_TTY + 1] = {
 /* Write to system console. This is the backend to all the kernel messages,
    kprintf(), panic() etc. */
 
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	while(tty_writeready(1) != TTY_READY_NOW);
 	if (c == '\n')
@@ -120,7 +120,7 @@ void kputchar(char c)
  *
  *	A video display that never blocks will just return TTY_READY_NOW
  */
-uint8_t tty_writeready(uint8_t minor)
+uint_fast8_t tty_writeready(uint_fast8_t minor)
 {
 	/* FIXME: flow control */
 	if (ttymap[minor] == 1)
@@ -137,7 +137,7 @@ uint8_t tty_writeready(uint8_t minor)
  *	If the character echo doesn't fit just drop it. It should pretty much
  *	never occur and there is nothing else to do.
  */
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor ,uint_fast8_t c)
 {
 	if (ttymap[minor] == 1)
 		uart_tx = c;
@@ -177,7 +177,7 @@ static uint16_t clocks[] = {
  *	That needs tidying up in many platforms and we also need a proper way
  *	to say 'this port is fixed config' before making it so.
  */
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint8_t d;
 	uint16_t w;
@@ -208,7 +208,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
  *	This function is called when the kernel is about to sleep on a tty.
  *	We don't care about this.
  */
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	sleeping |= (1 << minor);
 }
@@ -218,7 +218,7 @@ void tty_sleeping(uint8_t minor)
  *	no carrier signal always return 1. It is used to block a port on open
  *	until carrier.
  */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
         if (ttymap[minor] == 1)
 		return uart_msr & 0x80;
@@ -229,7 +229,7 @@ int tty_carrier(uint8_t minor)
  *	When the input queue is part drained this method is called from the
  *	kernel so that hardware flow control signals can be updated.
  */
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 	used(minor);
 }

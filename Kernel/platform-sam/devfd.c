@@ -23,7 +23,7 @@ static uint8_t fd_tab[MAX_FD] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
 static uint8_t selmap[4] = { 0x01, 0x02, 0x04, 0x08 };
 
-static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int fd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
     int ct = 0;
     int tries;
@@ -78,7 +78,7 @@ bad2:
     return -1;
 }
 
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= MAX_FD) {
@@ -88,13 +88,13 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(minor, true, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;rawflag;minor;
 //    return 0;

@@ -9,14 +9,14 @@ static int16_t mousedx, mousedy;
 static uint8_t mousebuttons;
 static uint8_t mousemod;
 
-static char buf[32];
+static uint_fast8_t buf[32];
 
 static struct s_queue kqueue = {
     buf, buf, buf, sizeof(buf), 0, sizeof(buf) / 2
 };
 
 /* Queue a character to the input device */
-void queue_input(uint8_t c)
+void queue_input(uint_fast8_t c)
 {
     insq(&kqueue, c);
     wakeup(&kqueue);
@@ -61,7 +61,7 @@ void platform_input_wait(void)
     psleep(&kqueue);
 }
 
-int platform_input_write(uint8_t flag)
+int platform_input_write(uint_fast8_t flag)
 {
     flag;
     udata.u_error = EINVAL;
