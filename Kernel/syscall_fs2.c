@@ -261,7 +261,7 @@ static int chown_op(inoptr ino)
 	if (group != -1) {
 		/* We must be in the target group (and file owner) */
 		if ((ino->c_node.i_uid != udata.u_euid ||
-			group != udata.u_egid && !in_group(group)) && esuper())
+			(group != udata.u_egid && !in_group(group))) && esuper())
 			return -1;
 		ino->c_node.i_gid = group;
 	}
