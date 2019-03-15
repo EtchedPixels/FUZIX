@@ -103,7 +103,7 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
         }
 
         fp = lastname;
-        while(c = getcf()) {
+        while((c = getcf()) != '\0') {
             if (c == '/')
                 break;
             if (fp != lastname + 30)
