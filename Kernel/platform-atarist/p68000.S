@@ -15,6 +15,7 @@
 		.globl fontdata_8x8, screenbase
 		.globl uarea_block
 
+		.globl acia_debug
 .mri 1
 platform_reboot:
 platform_monitor:
@@ -33,7 +34,7 @@ init_hardware:
 
 	move.b $FFFA03,d0
 	btst #7,d0
-	beq normal_monitor
+	bne normal_monitor
 	move.w #0,videomode
 	move.b #50,videorows	; 640x400 is special
 	move.b #49,videobot
@@ -87,6 +88,7 @@ mode_ok:
 	move.l #int_mfp12,$130(a0)	; RX Data
 	move.l #int_mfp14,$138(a0)	; RI
 
+	jsr vtinit
         rts
 
 palette:
@@ -126,35 +128,47 @@ int4:
 	add.w #1,vblankct
 	tst.b vblankw
 	beq int4_out
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
 	pea vblankct
 	bsr wakeup
 	addq #4,sp
-	movem.l (sp)+,a0/a1/d0/d1
+	movem.l (sp)+,a0/a1/a5/d0/d1
 int4_out:
 	rte
 ;
 ;	The level 6 handlers are autovectored
 ;
 int_mfp1:	; DCD on the serial
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
 	jsr ser_dcd
-	movem.l (sp)+,a0/a1/d0/d1
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 int_mfp2:	; CTS on the seriall
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
 	jsr ser_cts
-	movem.l (sp)+,a0/a1/d0/d1
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 int_mfp5:	; 200Hz timer
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
 	jsr timer_interrupt
-	movem.l (sp)+,a0/a1/d0/d1
+	bclr.b #5,$fffa11	; and clear service bit
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 int_mfp6:	; ACIA interrupts
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
+acia_loop:
 	jsr acia_interrupt
-	movem.l (sp)+,a0/a1/d0/d1
+acia_debug:
+	lea.l $fffa00,a1
+	btst.b #4,$1(a1)			; Still interrupting ?
+	beq acia_loop
+	bclr.b #6,$11(a1)			; Clear ACIA in service
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 int_mfp9:	; MFP serial transmit error
 	; FIXME what do we need to do to clear down ?
@@ -166,18 +180,20 @@ int_mfp11:	; MFP rx error
 	; FIXME: how to clear
 	rte
 int_mfp12:	; MFP receive
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
 	move.b $FFFA2D,d0
+	move.l udata_shadow,a5	; set up the register global
 	move.l d0,-(sp)
 	pea.l 2
 	jsr tty_inproc
 	addq #8,sp
-	movem.l (sp)+,a0/a1/d0/d1
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 int_mfp14:	; MFP ring indicate
-	movem.l a0/a1/d0/d1,-(sp)
+	movem.l a0/a1/a5/d0/d1,-(sp)
+	move.l udata_shadow,a5	; set up the register global
 	jsr ser_ri
-	movem.l (sp)+,a0/a1/d0/d1
+	movem.l (sp)+,a0/a1/a5/d0/d1
 	rte
 
 ; outchar: Wait for UART TX idle, then print the char in d0
@@ -252,8 +268,7 @@ plotit:
 plotrow:
 	    move.b (a1),(a0)
 	    add.w #2,a0
-; FIXME; sort out why this isn't working yet
-;	    dbra d1,plotrow
+	    dbra d1,plotrow
 	    add.w d3,a0			; line length for mode
 	    add.w #1,a1
 	    dbra d0,plotit
@@ -269,11 +284,11 @@ plotrow:
 scroll_up:
 	    move.l screenbase,a0
 	    move.w #640,d0
-	    move.w #32000-640-1,d1
+	    move.w #7840-1,d1
 	    tst.w videomode
 	    beq hires
 	    move.w #1280,d0
-	    move.w #32000-1280-1,d1
+	    move.w #7680-1,d1
 hires:
 	    move.l a0,a1
 	    add.w d0,a1
@@ -284,11 +299,11 @@ scrollu:    move.l (a1)+,(a0)+
 scroll_down:
 	    move.l screenbase+32000,a0
 	    move.w #640,d0
-	    move.w #32000-640-1,d1
+	    move.w #7840-1,d1
 	    tst.w videomode
 	    beq hiresd
 	    move.w #1280,d0
-	    move.w #32000-1280-1,d1
+	    move.w #7680-1,d1
 hiresd:
 	    move.l a0,a1
 	    sub.w d0,a1
@@ -297,19 +312,24 @@ scrolld:    move.l -(a1),-(a0)
 	    rts
 
 clear_lines:
-	    move.l 4(sp),d0
+	    move.b 7(sp),d0
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
-	    move.w #0,a1
+	    moveq #0,d1
 	    bsr vaddr
 	    ; d2 is mode count, d3 is extra words/line, a0 is address
-            move.l 16(sp),d0
+            move.b 19(sp),d0
+	    ext.w d0
+	    ; d0 is the number of character lines to wipe. We have to do 8
+	    ; times that for pixels so use vwidth which is 8 x char bytes
+	    ; across
+	    mulu.w vwidth,d0
+	    lsr.w #1,d0
 	    bra wipen
 wipe:
 	    move.w d2,d1
 wipe1:	    clr.w (a0)+
-	    dbra d2,wipe1
-	    add.w d3,a0
+	    dbra d1,wipe1
 wipen:
 	    dbra d0,wipe
 	    move.l (sp)+,d3
@@ -321,18 +341,18 @@ clear_across:
 	    rts	    
 
 cursor_on:
-	    rts
 	    move.b 7(sp),d0		; check stacking
 	    move.b 11(sp),d1
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
 	    bsr vaddr
-	    moveq #7,d0
 	    lea.l cursordata,a1
 	    movem.l a0/d2/d3,(a1)
 ;
 ;	Really we need to expand this per mode and to do colour
 ;
+do_xor:
+	    moveq #7,d0
 xorit:
 	    move.w d2,d1		; count by mode
 xorrow:
@@ -346,12 +366,15 @@ xorrow:
 	    rts
 cursor_disable:
 cursor_off:
-	    rts
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
 	    lea.l cursordata,a1
 	    movem.l (a1),a0/d2/d3
-	    bra xorit
+	    cmp #0,a0
+	    bne do_xor
+	    move.l (sp)+,d3
+	    move.l (sp)+,d2
+	    rts
 
 vtattr_notify:
 	    rts	
@@ -361,6 +384,8 @@ vtattr_notify:
 kernel_flag: byte 1
 
 cursordata:  word 0
+	     word 0
+	     word 0
 	     word 0
 	     word 0
 	     word 0

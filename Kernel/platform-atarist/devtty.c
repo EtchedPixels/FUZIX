@@ -167,16 +167,17 @@ struct vt_repeat keyrepeat;
 uint8_t keymap[16];
 static uint8_t lastkey;
 static int keysdown = 0;
+static uint8_t capslock;
 
 uint8_t keyboard[1][128] = { {
 	0, KEY_ESC,
-	'1','2','3','4','5','6','7','8','9',
+	'1','2','3','4','5','6','7','8','9','0',
 	'-','=', KEY_BS, KEY_TAB,
 	'q','w','e','r','t','y','u','i','o','p',
 	'[',']',KEY_ENTER,
-	0, 'a','s','d','f','g','h','j','k','l',':',';',
-	0,'\\','z','x','c','v','b','n','m','.',',','/',0,
-	0,0,' ',0, /* caps lock */
+	0, 'a','s','d','f','g','h','j','k','l',';','\'','`',
+	0,'\\','z','x','c','v','b','n','m',',','.','/',0,
+	0,0,' ',KEY_CAPSLOCK,
 	KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
 	0,0,
 	KEY_HOME,KEY_UP,0,'-',KEY_LEFT,0,KEY_RIGHT,'+',0,KEY_DOWN,
@@ -191,16 +192,15 @@ uint8_t keyboard[1][128] = { {
 	'0','.', KEY_ENTER,
 } };
 
-/* TODO */
 uint8_t shiftkeyboard[1][128] = { {
 	0, KEY_ESC,
-	'1','2','3','4','5','6','7','8','9',
-	'-','=', KEY_BS, KEY_TAB,
-	'q','w','e','r','t','y','u','i','o','p',
-	'[',']',KEY_ENTER,
-	0, 'a','s','d','f','g','h','j','k','l',':',';',
-	0,'\\','z','x','c','v','b','n','m','.',',','/',0,
-	0,0,' ',0/* caps lock */,
+	'!','@','#','$','%','^','&','*','(',')',
+	'~','+', KEY_BS, KEY_TAB,
+	'Q','W','R','R','T','Y','U','I','O','P',
+	'{','}',KEY_ENTER,
+	0, 'A','S','D','F','G','H','J','L','L',':','"','~',
+	0,'|','Z','X','C','V','B','N','M','<','>','?',0,
+	0,0,' ',KEY_CAPSLOCK,
 	KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,
 	0,0,
 	KEY_HOME,KEY_UP,0,'-',KEY_LEFT,0,KEY_RIGHT,'+',0,KEY_DOWN,
@@ -219,19 +219,23 @@ static void keydecode(void)
 {
 	uint8_t c = lastkey;
 
-	if (c == 0 || !keysdown)
+	if (c == 0x3A) {
+		capslock ^= 1;
 		return;
+	}
+
 	/* FIXME: wire up input layer */
-	if ((keymap[5] & 0x02) || (keymap[6] & 0x40))	/* shifts */
+	if ((keymap[5] & 0x04) || (keymap[6] & 0x40))	/* shifts */
 		c = shiftkeyboard[0][c];
-	else if (keymap[7] & 0x02) {	/* Caps lock */
+	else
+		c = keyboard[0][c];
+
+	if (capslock) {	/* Caps lock */
 		if (c >= 'a' && c <= 'z')
 			c -= 32;
 	}
-	if (keymap[2] & 0x10)	/* Control */
+	if (keymap[3] & 0x20)	/* Control */
 		c &= 31;
-	else
-		c = keyboard[0][c];
 	/* What should we do with alt (0x38) */
 	/* FIXME: unicode */
 	vt_inproc(1, c);
@@ -242,7 +246,7 @@ static void keydecode(void)
 
 static void keybop(uint8_t c)
 {
-	uint8_t i = c >> 3;
+	uint8_t i = (c & 0x7F) >> 3;
 	uint8_t b = c & 7;
 	uint8_t nonshift = 1;
 
@@ -252,7 +256,7 @@ static void keybop(uint8_t c)
 	if (c & 0x80) {
 		keymap[i] &= ~ (1 << b);
 		keysdown -= nonshift;
-		if (c == (lastkey | 0x8))
+		if (c == (lastkey | 0x80))
 			lastkey = 0;
 		return;
 	}
@@ -260,6 +264,7 @@ static void keybop(uint8_t c)
 	lastkey = c;
 	keysdown += nonshift;
 	/* FIXME: autorepeat */
+	/* And remember not to autorepeat capslock! */
 	if (keysdown && lastkey && keysdown < 3)
 		keydecode();
 }
@@ -281,9 +286,10 @@ static void ikbd_message(void)
 			ikbd_ct = 0;
 			ikbd_len = 1;
 			keybop(c);
-		} else
+		} else {
 			ikbd_len = msg_len[c - 0xF6];
-		return;
+			return;
+		}
 	}
 	/* A message completed */
 	ikbd_ct = 0;

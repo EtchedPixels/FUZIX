@@ -48,6 +48,8 @@ uint32_t screenbase;
 
 void pagemap_init(void)
 {
+	extern uint8_t _end;
+	uint32_t e = (uint32_t)&_end;
 	hzticks = *(uint16_t *)0x448 ? 60 : 50;
 	memtop = *(uint32_t *)0x42E;
 	fdseek = *(uint16_t *)0x440;
@@ -58,11 +60,7 @@ void pagemap_init(void)
 		kputs("NTSC System\n");
 	if (cputype)
 		kputs("Not a 68000\n");
-	/* FIXME: 512K hackish setup to get going */
 	/* Linker provided end of kernel */
-	extern uint8_t _end;
-	uint32_t e = (uint32_t)&_end;
-	kprintf("Kernel end %p\n", e);
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk((void *)e, screenbase - e);
 }
