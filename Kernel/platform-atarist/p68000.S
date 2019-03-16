@@ -26,40 +26,43 @@ init_early:
             rts
 
 init_hardware:
+
 	;
-	;	We use the ROM to do the initial set up. We must do this
-	;   before we steal all the vectors
+	;	Check for high reslution mode
 	;
-	move.w #4,-(sp)
-	trap #14
-	and #3,d0
-	move.b d0,videomode
+
+	move.b $FFFA03,d0
+	btst #7,d0
+	beq normal_monitor
+	move.w #0,videomode
 	move.b #50,videorows	; 640x400 is special
 	move.b #49,videobot
-	cmpb #2,d0
-	beq mode_ok			; different monitor so leave it alone
+	move.b #2,$FF8260
+	bra set_palette
+
+normal_monitor:
+	move.w #1,videomode
 	move.b #25,videorows	; 640x200 mode
 	move.b #24,videobot
+	move.b #1,$FF8260
 
+set_palette:
 	; Set our palette
-	pea palette
-	move.w #6,-(sp)
-	trap #14
-	addq #6,sp
+	lea.l palette(pc),a0
+	lea.l $FF8240,a1
+	move.l (a0)+,(a1)+	; set entries 0-3 only
+	move.l (a0),(a1)
 
-	move.b #1,d0
 mode_ok:
-	move.w d0,-(sp)		; Stack resolution wanted
-
-	move.w $42E,d0		; Top of RAM
+	move.l $42E,d0		; Top of RAM
 	sub.l #32000,d0		; Frame buffer space
 	move.l d0,screenbase	; Save our video base
 
-	move.l d0,-(sp)		; physical base
-	move.l d0,-(sp)		; logicalbase
-	move.w #5,-(sp)		; setScreen
-	trap #14
-	lea 12(sp),sp
+	; $FF820D on the STe will be zero already
+	lsr.l #8,d0
+	move.b d0,$FF8203	; Set address mid byte
+	lsr.l #8,d0
+	move.b d0,$FF8201	; Set addres high byte
 
         ; set system RAM size
 	move.l $42E,d0		; TOS phystop
@@ -69,6 +72,7 @@ mode_ok:
 	sub.w  #64,d0		; Guess for kernel
 	sub.w  #32,d0		; Video memory
 	move.w d0,procmem		; guesses for now
+
 	bsr install_vectors
 	move.w #0,a0
 	move.l #int2,$68(a0)		; hblank autvector
@@ -82,13 +86,14 @@ mode_ok:
 	move.l #int_mfp11,$12c(a0)  	; RX Error
 	move.l #int_mfp12,$130(a0)	; RX Data
 	move.l #int_mfp14,$138(a0)	; RI
+
         rts
+
 palette:
 	word $0000			; black
 	word $0F00			; red
 	word $00F0			; green
 	word $0FFF			; white
-	; We let the others go to trash
 
 
 ;	Nothing to do in 68000 - all set up once at boot
@@ -133,22 +138,22 @@ int4_out:
 ;
 int_mfp1:	; DCD on the serial
 	movem.l a0/a1/d0/d1,-(sp)
-	bsr ser_dcd
+	jsr ser_dcd
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 int_mfp2:	; CTS on the seriall
 	movem.l a0/a1/d0/d1,-(sp)
-	bsr ser_cts
+	jsr ser_cts
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 int_mfp5:	; 200Hz timer
 	movem.l a0/a1/d0/d1,-(sp)
-	bsr timer_interrupt
+	jsr timer_interrupt
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 int_mfp6:	; ACIA interrupts
 	movem.l a0/a1/d0/d1,-(sp)
-	bsr acia_interrupt
+	jsr acia_interrupt
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 int_mfp9:	; MFP serial transmit error
@@ -165,13 +170,13 @@ int_mfp12:	; MFP receive
 	move.b $FFFA2D,d0
 	move.l d0,-(sp)
 	pea.l 2
-	bsr tty_inproc
+	jsr tty_inproc
 	addq #8,sp
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 int_mfp14:	; MFP ring indicate
 	movem.l a0/a1/d0/d1,-(sp)
-	bsr ser_ri
+	jsr ser_ri
 	movem.l (sp)+,a0/a1/d0/d1
 	rte
 
@@ -180,11 +185,11 @@ int_mfp14:	; MFP ring indicate
 outchar:
 	move.w d0,-(sp)
 outcharw:
-	move.b $FFFA13,d0
-	btst #2,d0
+	move.b $FFFA2D,d0
+	btst #7,d0
 	beq outcharw
 	move.w (sp)+,d0
-	move.b d0,$FFFA2D
+	move.b d0,$FFFA2F
 	rts
 
 ;
@@ -198,40 +203,45 @@ vaddr:
 	    ; X in D1 Y in D0
 	    ; returns address in A1, mode in D1
 
-	    mulu.w vwidth,d0
-	    mulu.w vshift,d2
-	    move.b d1,d3
-	    and.w #1,d3
-	    and.w #$fffe,d1
-	    lsl.w d2,d1
-	    add.w d1,d0
-	    add.w d3,d0
-	    move.l screenbase,a0
-	    add.w d0,a0
-	    move.w videomode,d2
+	    ext.w d0
+	    ext.w d1
+
+	    mulu.w vwidth,d0		; 80x8 per character line
+					; D0 is now a byte offset
+	    move.w vshift,d2		; Get the shift per word
+	    move.b d1,d3		; save X
+	    and.w #1,d3			; low bit of X (it's all in words)
+	    and.w #$fffe,d1		; rest of X
+	    lsl.w d2,d1			; adjust for words/char
+	    add.w d1,d0			; total offset
+	    add.w d3,d0			; low bit
+	    move.l screenbase,a0	; where is the display
+	    add.w d0,a0			; add in the display base
+	    move.w videomode,d2		; pass registers to caller
 	    move.w vlen,d3		; bytes per scan line minus
 					; those we write
 	    rts
 aligned:
 
 ;
-;	FIXME: check how gcc pushes uint8_t's in this case and set offsets
-;	properly
+;	Everything is pushed as a dword
 ;
 plot_char:
-	    move.w 4(sp),d0
-	    move.w 6(sp),d1
+	    move.b 7(sp),d0
+	    move.b 11(sp),d1
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
+
 
 plot_char_1:
 	    ; Save Regs
 
 	    bsr vaddr
 
-	    move.w 16(sp),d0		; character
+	    move.w 22(sp),d0		; character
 	    lsl.w #3,d0			; into font position
-	    lea fontdata_8x8,a1	; font
+
+	    lea.l fontdata_8x8,a1	; font
 	    adda.w d0,a1
 	    moveq #7,d0
 ;
@@ -242,8 +252,10 @@ plotit:
 plotrow:
 	    move.b (a1),(a0)
 	    add.w #2,a0
-	    dbra d1,plotrow
+; FIXME; sort out why this isn't working yet
+;	    dbra d1,plotrow
 	    add.w d3,a0			; line length for mode
+	    add.w #1,a1
 	    dbra d0,plotit
 	    ; Restore regs
 	    move.l (sp)+,d3
@@ -291,7 +303,7 @@ clear_lines:
 	    move.w #0,a1
 	    bsr vaddr
 	    ; d2 is mode count, d3 is extra words/line, a0 is address
-            move.l 6(sp),d0
+            move.l 16(sp),d0
 	    bra wipen
 wipe:
 	    move.w d2,d1
@@ -305,11 +317,13 @@ wipen:
 	    rts
 
 clear_across:
+		; TODO
 	    rts	    
 
 cursor_on:
-	    move.w 4(sp),d0		; check stacking
-	    move.w 6(sp),d1
+	    rts
+	    move.b 7(sp),d0		; check stacking
+	    move.b 11(sp),d1
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
 	    bsr vaddr
@@ -332,6 +346,7 @@ xorrow:
 	    rts
 cursor_disable:
 cursor_off:
+	    rts
 	    move.l d2,-(sp)
 	    move.l d3,-(sp)
 	    lea.l cursordata,a1
@@ -354,12 +369,12 @@ videorows:
 videobot:
 	     byte 0
 vwidth:
-	     byte 640
+	     word 640
 vshift:
-	     byte 0
+	     word 0
 vlen:
-	     byte 638
+	     word 78		; bytes to add to get to the next row
 videomode:
-	     byte 1
+	     word 1
 vblankw:
 	     byte 1

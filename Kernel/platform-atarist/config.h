@@ -22,7 +22,7 @@
 #define VT_HEIGHT	50
 #define VT_RIGHT	79
 #define VT_BOTTOM	49
-#define VT_INITIAL_LINE	15
+#define VT_INITIAL_LINE	0
 
 #define TICKSPERSEC 100   /* Ticks per second */
 

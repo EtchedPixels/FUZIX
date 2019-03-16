@@ -65,6 +65,7 @@ uint8_t vtattr_cap;
 /* Output for the system console (kprintf etc) */
 void kputchar(uint8_t c)
 {
+	*(volatile uint8_t *)0xFFFA2F = c;
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
