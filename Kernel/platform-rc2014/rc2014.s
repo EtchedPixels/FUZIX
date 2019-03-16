@@ -11,8 +11,6 @@
 	.globl map_process
 	.globl map_process_save
 	.globl map_buffers
-	.globl map_buffers_user
-	.globl map_buffers_user_h
 	.globl map_kernel_di
 	.globl map_process_di
 	.globl map_process_always
@@ -83,8 +81,8 @@ ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
 
 MAP_BANK1	.equ	0x2221	; 20 is low, 23 is high
 BANK1		.equ	0x21
-MAP_BANK2	.equ	0x2625	; for now 24 is buffers - FIXME
-BANK2		.equ	0x25
+MAP_BANK2	.equ	0x2524	; for now 24 is buffers - FIXME
+BANK2		.equ	0x24
 
 ;=========================================================================
 ; Initialization code
@@ -92,10 +90,7 @@ BANK2		.equ	0x25
         .area _DISCARD
 init_hardware:
         ; program vectors for the kernel
-        ld hl, #0
-        push hl
-        call _program_vectors
-        pop hl
+        call do_program_vectors
 
         ; Stop floppy drive motors
         ld a, #0x0C
@@ -349,6 +344,12 @@ _program_vectors:
 	; At this point the common block has already been copied
 	call map_process
 
+	call do_program_vectors
+
+	jp map_kernel_restore
+
+
+do_program_vectors:
 	; write zeroes across all vectors
 	ld hl,#0
 	ld de,#1
@@ -374,8 +375,7 @@ _program_vectors:
 	ld (0x0066),a			; Set vector for NMI
 	ld hl,#nmi_handler
 	ld (0x0067),hl
-
-	jr map_kernel
+	ret
 
 ;=========================================================================
 ; Memory management
@@ -393,38 +393,9 @@ map_process_always:
 map_process_save:
 map_process_always_di:
 	push hl
-	ld hl,#_kernel_pages + 1
-	; Save the current versions of MPGSEL 1 and 2 for map_kernel_restore
-	; so we return to the right kernel bank
-	in a,(MPGSEL_1)
-	ld (hl),a
-	inc hl
-	in a,(MPGSEL_2)
-	ld (hl),a
+	; We don't need to save the kernel page numbers because we
+	; patched them on bank switches
 	ld hl,#_udata + U_DATA__U_PAGE
-        jr map_process_2_pophl_ret
-
-;
-;	FIXME: needs to save the old kernel mid mapping
-;
-map_buffers_user:
-	push hl
-	ld hl,(_udata + U_DATA__U_PAGE)
-	ld h,#36
-	ld (_ubuffer_pages),hl
-	ld hl,(_udata + U_DATA__U_PAGE + 2)
-	ld (_ubuffer_pages + 2),hl
-	ld hl,#_ubuffer_pages
-        jr map_process_2_pophl_ret
-
-map_buffers_user_h:
-	push hl
-	ld hl,(_udata + U_DATA__U_PAGE)
-	ld (_ubuffer_pages),hl
-	ld hl,(_udata + U_DATA__U_PAGE + 2)
-	ld l,#36
-	ld (_ubuffer_pages + 2),hl
-	ld hl,#_ubuffer_pages
         jr map_process_2_pophl_ret
 
 ;=========================================================================
@@ -444,20 +415,11 @@ map_process_di:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_kernel:
+map_buffers:
 map_kernel_restore:
 map_kernel_di:
 	push hl
 	ld hl,#_kernel_pages
-        jr map_process_2_pophl_ret
-
-;=========================================================================
-; map_buffers - map kernel with disk buffers at 0x4000-0x7FFF
-; Inputs: none
-; Outputs: none; all registers preserved
-;=========================================================================
-map_buffers:
-	push hl
-	ld hl,#_kernelbuf_pages
         jr map_process_2_pophl_ret
 
 ;=========================================================================
@@ -502,7 +464,8 @@ map_process_2_pophl_ret:
 
 ;=========================================================================
 ; map_save_kernel - save the current page mapping to map_savearea and
-; switch to kernel maps
+; switch to kernel maps. We might switch to any kernel map but that is
+; ok as we will make a thunking call from common to the C irq handler
 ; Inputs: none
 ; Outputs: none
 ;=========================================================================
@@ -554,8 +517,9 @@ bank0:
 	ld d,(hl)
 	inc hl
 	push hl
+	ld a,(_kernel_pages + 1)	; save old page
 	ld (_kernel_pages + 1),bc
-	in a, (MPGSEL_1)		; existing page
+	ld (mpgsel_cache + 1),bc	; and mark as current
 	ld b,a
 	ld a,c				; set new page
 	out (MPGSEL_1),a
@@ -569,12 +533,14 @@ bank0:
 	ld bc,#MAP_BANK2
 banksetbc:
 	ld (_kernel_pages + 1), bc
+	ld (mpgsel_cache + 1), bc
 	ld a,c
 	out (MPGSEL_1),a
 	ld a,b
 	out (MPGSEL_2),a
 	ret
 retbank1:
+	call callhl
 	ld bc,#MAP_BANK1
 	jr banksetbc
 __bank_0_2:
@@ -593,6 +559,7 @@ __bank_1_2:
 	inc hl
 	push hl
 	call banksetbc
+	ex de,hl
 	call callhl
 	ld bc,#MAP_BANK1
 	jr banksetbc
@@ -606,6 +573,7 @@ __bank_2_1:
 	inc hl
 	push hl
 	call banksetbc
+	ex de,hl
 	call callhl
 	ld bc,#MAP_BANK2
 	jr banksetbc
@@ -618,13 +586,15 @@ __stub_0_2:
 stub_call:
 	pop hl				; return address
 	ex (sp),hl			; bank space now target
-	in a,(MPGSEL_1)			; current bank
+	ld a,(_kernel_pages+1)		; current bank
 	ld (_kernel_pages+1),bc		; target
+	ld (mpgsel_cache + 1), bc
 	ld b,a
 	ld a,c
 	out (MPGSEL_1),a
 	inc a
 	out (MPGSEL_2),a
+	ex de,hl
 	ld a,b
 	cp #BANK1
 	jr z, stub_ret_1
@@ -632,6 +602,7 @@ stub_call:
 	ld bc,#MAP_BANK2
 stub_ret:
 	ld (_kernel_pages+1),bc
+	ld (mpgsel_cache + 1), bc
 	ld a,c
 	out (MPGSEL_1),a
 	inc a
@@ -659,9 +630,9 @@ _copy_common:
 	push bc
 	ld a,e
 	call map_for_swap
-	ld hl,#0xD300
-	ld de,#0x4300
-	ld bc,#0x2D00
+	ld hl,#0xF200
+	ld de,#0x7200
+	ld bc,#0x0E00
 	ldir
 	jp map_kernel
 
@@ -676,12 +647,6 @@ top_bank:	; the shared tricks code needs this name for cache+3
 _kernel_pages:
 	.db	32,33,34,35
 
-; kernel page mapping with buffer window
-_kernelbuf_pages:
-	.db	32,36,34,35
-
-_ubuffer_pages:
-	.db	0,0,0,0
 ; memory page mapping save area for map_save/map_restore
 map_savearea:
 	.db	0,0,0,0

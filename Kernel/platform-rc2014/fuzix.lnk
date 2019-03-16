@@ -17,7 +17,6 @@ version.rel
 lowlevel-z80-banked.rel
 platform-rc2014/tricks.rel
 platform-rc2014/main.rel
-platform-rc2014/buffers.rel
 timer.rel
 kdata.rel
 platform-rc2014/devfd.rel

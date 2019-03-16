@@ -1,4 +1,4 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s buffers.s
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s vfdterm.s
 CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c
 CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
@@ -52,7 +52,11 @@ clean:
 #	Compile up the boot block
 #
 image: bootblock
-#	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
+	cat boot-romwbw.bin >fuzix.romwbw
+	dd if=../common.bin bs=16384 count=1 >>fuzix.romwbw
+	dd if=../bank1.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
+	dd if=../common.bin bs=16384 skip=3 count=1 conv=sync >>fuzix.romwbw
+	dd if=../bank2.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
 
 bootblock:
 	sdasz80 -o boot-romwbw.s

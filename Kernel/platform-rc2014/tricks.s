@@ -63,6 +63,7 @@ _platform_switchout:
 	pop af
 
         push hl
+	push hl
         call _switchin
 
         ; we should never get here
@@ -143,10 +144,12 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         di ; should already be the case ... belt and braces.
 
+	pop bc
         pop de  ; return address
         pop hl  ; new process p_tab*
         push hl
         push de
+	push bc
 
         ld (fork_proc_ptr), hl
 
