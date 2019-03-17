@@ -1,6 +1,24 @@
 This is an initial 'gee it compiles' work in progress initial 68000 port
 
-Don't expect it to do anything !
+Status:
+-	Makes a bootable floppy correctly
+-	Floppy loads kernel and transfers to it
+-	Video seems to work (at least for high resolution)
+	(but clear to end of line is not yet done)
+-	Keyboard is done
+-	Timer interrupt is running
+-	Gets us to the point of prompting for a boot device
+-	Error trap handling seems to be a bit busted up
+
+In Progress
+-	Writing drivers for floppy, ACSI/SCSI, and IDE controllers
+
+TODO
+-	Clean up and abstract PSG GPIO interfaces and locking nicely
+-	Write the delay loop for the DMA. Probably a good excuse to use
+	the Linux 68K bogomips logic
+-	Probe for STe and Mega systems
+-	FDC set sides etc
 
 
 Notes:
@@ -8,15 +26,6 @@ Notes:
 
 Need to support 'resident' style binaries
 Start of disk boot block info ?
-
-Tidy up di/ei usage - we don't want to turn on hblank at random in our ei
-stuff!!!
-
-First boot sector loaded into buffer. must checksum to $1234
-then executed. Must be PI
-
-Eventually need multi-segment executables
-
 
 Interrupts
 

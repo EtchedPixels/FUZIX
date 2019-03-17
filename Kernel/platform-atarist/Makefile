@@ -5,12 +5,18 @@ CSRCS += devices.c main.c libc.c
 ASRCS = p68000.S crt0.S
 ASRCS += tricks.S
 
-COBJS = $(CSRCS:.c=$(BINEXT))
-AOBJS = $(ASRCS:.S=.o)
 LSRCS = ../lib/68000exception.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
-OBJS  = $(COBJS) $(AOBJS) $(LOBJS)
+DSRCS = ../dev/mbr.c ../dev/blkdev.c
+DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+
+COBJS = $(CSRCS:.c=$(BINEXT))
+AOBJS = $(ASRCS:.S=.o)
+
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS)
+
+CROSS_CCOPTS += -I../dev/
 
 all:	$(OBJS)
 
@@ -19,6 +25,9 @@ $(COBJS): %.o: %.c
 
 $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
+
+$(DOBJS): %.o: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(LOBJS): %.o: ../lib/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -40,6 +49,7 @@ image:	loader fuzix.ld
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o \
 	../usermem_std-68000.o devlpr.o devtty.o libc.o ../vt.o ../malloc.o \
+	blkdev.o mbr.o \
 	../font8x8.o >../fuzix.map
 	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
 	# And now make a bootable floppy

@@ -142,7 +142,8 @@ static int fd_wait(void)
 {
 	timer_t x = set_timer_duration(3 * TICKSPERSEC);
 	while (!timer_expired(x)) {
-		if (!((*(volatile uint8_t *)0xFFFA81) & 0x20))
+		uint8_t status = *(volatile uint8_t *)0xFFFA01;
+		if (!(status & 0x20))
 			return 0;
 		platform_idle();
 	}
@@ -391,6 +392,7 @@ static int fd_probe_drive(int unit)
 
 void fd_probe(void)
 {
+	/* Do we need to deal with waiting for motor off here ? */
 	locked = 1;
 	fd_probe_drive(0);
 	fd_probe_drive(1);

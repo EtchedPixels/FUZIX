@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <devfd.h>
 #include <devsys.h>
+#include <blkdev.h>
 #include <devlpr.h>
 #include <tty.h>
 #include <vt.h>
@@ -11,16 +12,16 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
-  /* 0: /dev/fd		Floppy disc block devices  */
-  {  fd_open,     no_close,    fd_read,   fd_write,   no_ioctl },
-  /* 1: /dev/hd		Hard disc block devices (absent) */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
+  /* 0: /dev/hd		Hard disc block devices */
+  {  blkdev_open, no_close,     blkdev_read, blkdev_write, blkdev_ioctl },
+  /* 1: /dev/fd		Floppy disc block devices  */
+  {  fd_open,     no_close,     fd_read,     fd_write,     no_ioctl },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,     tty_close,   tty_read,  tty_write,  vt_ioctl },
+  {  tty_open,    tty_close,    tty_read,    tty_write,    vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
-  {  lpr_open,     lpr_close,   no_rdwr,   lpr_write,  no_ioctl  },
+  {  lpr_open,    lpr_close,    no_rdwr,     lpr_write,    no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
-  {  no_open,      no_close,    sys_read, sys_write, sys_ioctl  },
+  {  no_open,     no_close,     sys_read,    sys_write,    sys_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
@@ -35,5 +36,6 @@ bool validdev(uint16_t dev)
 }
 void device_init(void)
 {
+    fd_probe();
 }
 
