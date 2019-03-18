@@ -5,6 +5,7 @@
 #include <devtty.h>
 #include <vt.h>
 #include <tty.h>
+#include <graphics.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -16,11 +17,16 @@ __sfr __at 0x0F serialBc;
 __sfr __at 0x09 ctc1;
 __sfr __at 0x0A ctc2;
 
+__sfr __at 0x60 prop_io;
+__sfr __at 0x61 prop_rb;
+
 signed char vt_twidth[2] = { 80, 40 };
 signed char vt_tright[2] = { 79, 39 };
 uint8_t curtty;		/* output side */
 uint8_t inputtty;	/* input side */
 static struct vt_switch ttysave[2];
+
+uint8_t prop80;		/* Propeller not a 6845 based 80 column interface */
 
 /* FIXME: this will eventually vary by tty so we'll need to either load
    it then call the vt ioctl or just intercept the vt ioctl */
@@ -72,7 +78,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 
-/* tty1 is the screen tty2 is vdp screen */
+/* tty1 is the 80 column screen tty2 is vdp screen */
 
 /* Output for the system console (kprintf etc) */
 void kputchar(uint_fast8_t c)
@@ -85,6 +91,8 @@ void kputchar(uint_fast8_t c)
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t reg = 0xFF;
+	if (minor == 1 && prop80)
+		return prop_io == 255 ? TTY_READY_SOON : TTY_READY_NOW;
 	if (minor == 3)
 		reg = serialAc;
 	if (minor == 4)
@@ -95,6 +103,13 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq;
+
+	/* The first tty might be a real 6845 80 column card but it might be
+	   a propellor based one which has its own brains and video control */
+	if (minor == 1 && prop80) {
+		prop_io = c;
+		return;
+	}
 
 	if (minor < 3) {
 		/* FIXME: this makes our vt handling messy as we have the
@@ -132,6 +147,7 @@ void tty_sleeping(uint_fast8_t minor)
 
 void tty_data_consumed(uint_fast8_t minor)
 {
+	used(minor);
 	/* FIXME:we can now implement flow control stuff */
 }
 
@@ -163,8 +179,10 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 	uint16_t cf = t->termios.c_cflag;
 	uint8_t r;
 
+	used(flagbits);
+
 	/* Console */
-	if (minor < 2)
+	if (minor <= 2)
 		return;
 
 	if ((cf & CBAUD) < B150) {
@@ -378,5 +396,98 @@ void tty_interrupt(void)
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
 
-/* FIXME: need to wrap vt_ioctl so we switch to the right tty before asking
+/* Need to wrap vt_ioctl so we switch to the right tty before asking
    the size! */
+
+static struct videomap vdpmap = {
+	0,
+	0x01,		/* I/O ports at 1 and 2 */
+	0, 0,
+	0, 0,
+	1,
+	MAP_PIO
+};
+
+static struct display mtxdisp[2] = {
+	{
+		0,
+		160, 96,
+		80, 24,
+		255, 255,
+		FMT_8PIXEL_MTX,
+		HW_UNACCEL,
+		GFX_TEXT,
+		1,
+		0
+	},
+	/* VDP: we need to think harder about how we deal with VDP mode
+	   setting here and in MSX TODO */
+	{
+		1,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
+		16,
+		0
+	}
+};
+
+/*
+ *	TODO: VDP font setting and UDG. Also the same is needed for the prop80
+ *	with it's 20x8 programmable characters in weird format.
+ */
+int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+	if (minor > 2)
+		return tty_ioctl(minor, request, data);
+
+	if (request == GFXIOC_GETINFO)
+		return uput(&mtxdisp[minor - 1], data, sizeof(struct display));
+	if (request == GFXIOC_MAP && minor == 2)
+		return uput(&vdpmap, data, sizeof(struct videomap));
+	if (request == GFXIOC_UNMAP)
+		return 0;
+	if (request == VTSIZE) {
+		if (minor == 1)
+			return (24 << 8) | 80;
+		if (minor == 2)
+			return (24 << 8) | 40;
+	}
+	return vt_ioctl(minor, request, data);
+}
+
+/*
+ *	See if our 80 column card is a propellor board or a 6845 based board
+ *
+ *	Must be called very early so we drive the right screen!
+ */
+static int prop_wait(void)
+{
+	uint16_t i;
+	for (i = 0; i < 8192; i++) {
+		if (prop_io == 0)
+			return 0;
+	}
+	return 1;
+}
+
+int probe_prop(void)
+{
+	if (prop_wait())
+		return 0;
+	prop_io = 0x1B;
+	prop_io = 0x9C;
+	prop_rb = 0xB4;
+	if (prop_wait() || prop_rb)
+		return 0;
+	prop_io = 0x1B;
+	prop_io = 0x9E;
+	prop_rb = 0xB4;
+	if (prop_wait() || prop_rb != 2)
+		return 0;
+	prop80 = 1;
+	return 1;
+}

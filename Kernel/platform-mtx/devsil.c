@@ -1,9 +1,7 @@
 /* 
  * Memotech Silicon Disk Driver
  *
- * FIXME: would be sensible to add swap support to this driver for boxes with
- * < 512K RAM.
- *
+ * FIXME: add swap support to this driver for boxes with < 512K RAM.
  * FIXME: Check presence of device by probing ?
  */
 
@@ -58,4 +56,3 @@ int sil_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
     flag;minor;
     return sil_transfer(minor, false, rawflag);
 }
-

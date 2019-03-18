@@ -12,6 +12,7 @@
 	    .globl platform_interrupt_all
 
 	    .globl map_kernel
+	    .globl map_buffers
 	    .globl map_kernel_di
 	    .globl map_process
 	    .globl map_process_di
@@ -20,6 +21,7 @@
 	    .globl map_process_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
+	    .globl map_for_swap
 
 	    .globl _int_disabled
 
@@ -45,6 +47,7 @@
 	    .globl vdpinit
 	    .globl vdpload
 	    .globl _vtinit
+	    .globl _probe_prop
 
             .globl outcharhex
             .globl outhl, outde, outbc
@@ -54,6 +57,16 @@
 
             .include "kernel.def"
             .include "../kernel-z80.def"
+
+;
+;	Disk buffers
+;
+	    .globl _bufpool
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
+
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xC000 upwards)
@@ -117,7 +130,7 @@ size_next:
 	    cp (hl)
 	    jr nz, size_nonram
 	    inc b
-	    ld a, #0x8B
+	    ld a, #0x90
 	    cp b
 	    jr nz, size_next	; All banks done
 size_nonram:
@@ -147,6 +160,8 @@ crtcmap:
 init_early:
 ;
 ;	Bring up the 80 column card early so it can be used for debug
+;	Will effectively be a no-op if we then turn out to have a prop
+;	based board
 ;
 	    ld hl, #crtcmap
 	    xor a
@@ -196,6 +211,7 @@ init_hardware:
 	    ld i, a
             im 2 ; set CPU interrupt mode
 
+	    call _probe_prop		; see what 80 colum card we have
 	    call _vtinit		; init the console video
 
             ret
@@ -282,6 +298,7 @@ _program_vectors:
 
             ; put the paging back as it was -- we're in kernel mode so this is predictable
 map_kernel:
+map_buffers:
 map_kernel_di:
 	    push af
 	    ld a, #0x80		; ROM off bank 0
@@ -296,6 +313,7 @@ map_process_di:
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
+map_for_swap:
 map_process_a:
 	    ld (map_copy), a
 	    out (0), a

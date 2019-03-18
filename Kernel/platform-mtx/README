@@ -1,12 +1,25 @@
 TODO
-- Probe what memory banks are present up to the full 640K that might be present
-- Support for the retro adapters (CF2+ etc)
+IP	- Fix the configuration for maximum memory banks
+IP	- Autodetect the propeller MTX 80 column card on 0x60/61
+IP	- Driver for the propellor 80 column card
+IP	- Probe what memory banks are present up to the full 640K that might be present
+IP	- Support for the retro adapters (CF2+ etc)
 - Autodetect silicon ramdisk
-- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
+DONE	- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
 - Floppy features support
+DONE	- Get more stuff into discard
+DONE	- Dynamic buffer assignment
+DONE	- Support swap via CF adapter
+- Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
+- Need some kind of hack to reconfigure the CF card as the CFII brokenly turns
+  off write caching and we want it back on.
+DONE	- Report graphics capabilities according to card (inc octel modes on
+	  80 col)
+- UDG support on both VDP and Prop
+- Use prop as a slave to vt layer because of awkward prop ctrl codes
 
 The following MTX512 features are supported
-- 6845 based colour text display attributes yet) as /dev/tty1
+- 6845 based colour text display (no attributes yet) as /dev/tty1
 - VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
   interrupts fed into CTC#0 as /dev/tty2. TTY usage is supported.
 - Keyboard including F1/F2 to switch tty
@@ -69,3 +82,18 @@ Standalone/filesystem-src and do
 A 40 track image will need to be hand built with a few of the less useful
 utilities removed.
 
+
+CFII boots CP/M from ROM it seems
+
+Claimed DPB
+
+.CPMdpb
+DW 26                   ;Sectors/track
+DB 5                    ;Block shift factor (block size = 4096)
+DB 31                   ;Block mask (block size = 4096)
+DB 1                    ;Extent mask
+DW 2045                 ;Maximum block number - 1
+DW 511                  ;Maximum directory entries - 1 (four blocks)
+DB &F0,&00              ;Allocation vectors
+DW 128                  ;Check vector ((directory entries+3)/4)
+DW 2                    ;Reserved tracks
