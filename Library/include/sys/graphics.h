@@ -25,6 +25,7 @@ struct display {
 #define FMT_AMSMONO	133	/* Amstrad mono - weird interleave */
 #define FMT_AMS4	134	/* Amstrad 4 colour - ditto */
 #define FMT_AMS16	135	/* Amstraid 16 colour - ditto */
+#define FMT_8PIXEL_MTX	136	/* 256 characters graphics mode symbols (MTX) */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
