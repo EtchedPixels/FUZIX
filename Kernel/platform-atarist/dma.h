@@ -34,4 +34,12 @@ struct dma {
 #define	DMA_SCNOT0	0x0002
 #define DMA_DATREQ	0x0004
 
+extern void dma_lock(void);
+extern void dma_unlock(void);
+extern uint8_t dma_is_locked(void);
+
+extern void set_dma_addr(uint8_t *ptr);
+extern uint16_t get_dma_status(void);
+extern int dma_wait(uint16_t wait);
+
 #endif

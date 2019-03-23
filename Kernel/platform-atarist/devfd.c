@@ -18,7 +18,6 @@ static uint8_t dsided[MAX_FD] = { 1, 1 };	/* For now FIXME */
 static uint8_t step[MAX_FD] = { 3, 3 };	/* 3ms happens to be the value 3 */
 
 static uint8_t deselected = 1;
-static uint8_t locked;
 
 #define FDC_CS	(DMA_FDC)
 #define FDC_TR  (DMA_FDC | DMA_A0)
@@ -62,29 +61,6 @@ static void delay(void)
 static void flush_cache_range(void *p, size_t len)
 {
 	/* TODO */
-}
-
-/*
- *	Report how the DMA did
- */
-static uint16_t get_dma_status(void)
-{
-	DMA->control = 0x90;
-	return DMA->control;
-}
-
-/*
- *	Set the 24bit DMA address for a transfer. The transfer is not
- *	cache coherent and must be word aigned
- */
-static void set_dma_addr(uint8_t * ptr)
-{
-	uint32_t p = (uint32_t) ptr;
-	if (p & 1)
-		panic("odd dma");
-	DMA->addr_low = p;
-	DMA->addr_med = p >> 8;
-	DMA->addr_high = p >> 16;
 }
 
 /*
@@ -138,16 +114,10 @@ static void fd_start_dma_write(uint16_t count)
  *	Wait for the floppy controller to respond and show up on the MFP
  *	GPIO.
  */
+
 static int fd_wait(void)
 {
-	timer_t x = set_timer_duration(3 * TICKSPERSEC);
-	while (!timer_expired(x)) {
-		uint8_t status = *(volatile uint8_t *)0xFFFA01;
-		if (!(status & 0x20))
-			return 0;
-		platform_idle();
-	}
-	return -1;
+	return dma_wait(3 * TICKSPERSEC);
 }
 
 /*
@@ -158,7 +128,7 @@ void fd_event(void)
 	irqflags_t irq;
 	uint16_t status;
 
-	if (deselected || locked)
+	if (deselected || dma_is_locked())
 		return;
 	status = fd_get_reg(FDC_CS);
 	if (status & FDC_MOTORON)
@@ -254,12 +224,12 @@ static int fd_xfer_sector(uint8_t minor, uint8_t is_read)
 		track >>= 1;
 	}
 
-	locked = 1;
+	dma_lock();
 
 	/* Get into position */
 	fd_set_side(minor, side);
 	if (fd_set_track(minor, track)) {
-		locked = 0;
+		dma_unlock();
 		return -1;
 	}
 
@@ -289,7 +259,7 @@ static int fd_xfer_sector(uint8_t minor, uint8_t is_read)
 
 		status = fd_get_reg(FDC_SR);
 		if (!is_read && (status & FDC_WRI_PRO)) {
-			locked = 0;
+			dma_unlock();
 			udata.u_error = EROFS;
 			return -1;
 		}
@@ -298,12 +268,12 @@ static int fd_xfer_sector(uint8_t minor, uint8_t is_read)
 			continue;
 		}
 		/* Whoopeee it worked */
-		locked = 0;
+		dma_unlock();
 		if (is_read)
 			flush_cache_range(udata.u_dptr, 512);
 		return 0;
 	}
-	locked = 0;
+	dma_unlock();
 	udata.u_error = EIO;
 	return -1;
 }
@@ -380,7 +350,7 @@ static int fd_probe_drive(int unit)
 	fd_set_reg(FDC_CS, FDC_RESTORE | FDC_HBIT | step[unit]);
 	if (fd_wait() == 0) {
 		if (fd_get_reg(FDC_CS) & FDC_TRACK0) {
-			locked = 0;
+			dma_unlock();
 			/* The Falcon might have HD but we'll deal with that in the far future! */
 			kprintf("fd%d: double density.\n", unit);
 			present[unit] = 1;
@@ -393,8 +363,8 @@ static int fd_probe_drive(int unit)
 void fd_probe(void)
 {
 	/* Do we need to deal with waiting for motor off here ? */
-	locked = 1;
+	dma_lock();
 	fd_probe_drive(0);
 	fd_probe_drive(1);
-	locked = 0;
+	dma_unlock();
 }
