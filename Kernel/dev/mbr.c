@@ -8,6 +8,7 @@
 #include "mbr.h"
 #include "gpt.h"
 
+/* FIXME: Needs to be int so we can call multiple and get the right type */
 void mbr_parse(uint_fast8_t letter)
 {
     boot_record_t *br;
