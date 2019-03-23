@@ -126,7 +126,7 @@ extern void devide_read_data(void);
 #define ide_reg_data 	*((volatile uint8_t *)IDE_REG_DATA)
 #define ide_reg_devhead *((volatile uint8_t *)IDE_REG_DEVHEAD)
 #define ide_reg_error	*((volatile uint8_t *)IDE_REG_ERROR)
-#define ide_reg_features *((volatile uint8_t *)IDE_FEATURES)
+#define ide_reg_features *((volatile uint8_t *)IDE_REG_FEATURES)
 #define ide_reg_lba_0	*((volatile uint8_t *)IDE_REG_LBA_0)
 #define ide_reg_lba_1	*((volatile uint8_t *)IDE_REG_LBA_1)
 #define ide_reg_lba_2	*((volatile uint8_t *)IDE_REG_LBA_2)
