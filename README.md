@@ -42,8 +42,8 @@ images should follow in time.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on both 6502 (bitrotted), 65C816, 68000, 6809, MSP430 and Z80/Z180
-* Core code can be built for 6502, 65C816, 6809, 68HC11, 68000, 8086, MSP430, pdp11 and Z80/Z180 so should
+* Kernel boots to userspace on both 6502 (bitrotted), 65C816, 68000, 6809, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
+* Core code can be built for 6502, 65C816, 6809, 68HC11, 68000, 8080, 80805, 8086, MSP430, pdp11 and Z80/Z180 so should
   be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
