@@ -167,7 +167,7 @@ static void my_chmod(void)
 
 static void printusage(void)
 {
-	fprintf(stderr, "usage: tar [-ckxntv] [-f archive] [file]...\n");
+	fprintf(stderr, "usage: tar [-cbkxntv] [-f archive] [file]...\n");
 	exit(1);
 }
 
