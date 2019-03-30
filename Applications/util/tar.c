@@ -153,10 +153,7 @@ static void pname(void)
 static void my_chown(void)
 {
 	int x = chown(h.name, b8get(h.uid, 8),
-		      b8get(h.gid, 8)
-	    );
-	if (x < 0)
-		pname();
+		      b8get(h.gid, 8));
 }
 
 
@@ -337,7 +334,7 @@ static void storedir(char *name)
 	memset(h.mode, '0', 57);
 	memset(h.major, '0', 16);
 	strcpy(h.name, name);
-	b8put(s.st_mode, h.mode + 8);
+	b8put(s.st_mode & 07777, h.mode + 8);
 	b8put(s.st_uid, h.uid + 8);
 	b8put(s.st_gid, h.gid + 8);
 	b8put(s.st_size, h.size + 12);
@@ -604,7 +601,7 @@ static void extract(char *argv[])
 					continue;
 				}
 				/* open output file */
-				outfile = open(h.name, O_CREAT | O_WRONLY | O_TRUNC);
+				outfile = open(h.name, O_CREAT | O_WRONLY | O_TRUNC, 0700);
 				if (outfile < 0) {
 					pname();
 					break;
