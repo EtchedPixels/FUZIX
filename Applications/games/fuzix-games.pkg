@@ -20,7 +20,6 @@ f 0755 /usr/games/advint        advint
 f 0755 /usr/games/cowsay        cowsay
 f 0755 /usr/games/fortune       fortune
 f 0755 /usr/games/fortune-gen   fortune-gen
-f 0644 /usr/games/fortune.dat	fortune.dat
 f 0755 /usr/games/myst01        myst01
 f 0755 /usr/games/myst02        myst02
 f 0755 /usr/games/myst03        myst03

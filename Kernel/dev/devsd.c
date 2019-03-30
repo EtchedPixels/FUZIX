@@ -45,9 +45,8 @@ uint_fast8_t devsd_transfer_sector(void)
                 if(sd_spi_wait(true) == 0xFF){
                     sd_spi_transmit_byte(0xFE);
                     sd_spi_transmit_sector();
-                    sd_spi_transmit_byte(0xFF); /* dummy CRC */
-                    sd_spi_transmit_byte(0xFF);
-                    success = ((sd_spi_wait(false) & 0x1F) == 0x05);
+                    success = ((sd_spi_wait(false) & 0x1F) == 0x05) &&
+			(sd_spi_wait(true) == 0xff);
                 }
             }
 	}else
@@ -138,7 +137,7 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     /* Receive command response */
     if (cmd == CMD12) 
         sd_spi_receive_byte();     /* Skip a stuff byte when stop reading */
-    n = 20;                             /* Wait for a valid response */
+    n = 256;                             /* Wait for a valid response */
     do{
         res = sd_spi_receive_byte();
     }while ((res & 0x80) && --n);
