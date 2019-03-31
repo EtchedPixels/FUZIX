@@ -10,6 +10,9 @@ RC2014 CF adapter
 Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
 best of both worlds.
 
+Not supported at this point
+ACIA based serial
+
 You can probably use the SC110 instead of the SC102 and SC104 but you will need
 to run a wire to chain CTC2 into CTC3 with the current board revision.
 
