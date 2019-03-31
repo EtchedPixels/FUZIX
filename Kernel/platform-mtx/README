@@ -17,6 +17,8 @@ DONE	- Report graphics capabilities according to card (inc octel modes on
 	  80 col)
 - UDG support on both VDP and Prop
 - Use prop as a slave to vt layer because of awkward prop ctrl codes
+- keyboard etc devinput support
+- How to expose effectively having 512 chars (same problem as ubee)
 
 The following MTX512 features are supported
 - 6845 based colour text display (no attributes yet) as /dev/tty1
@@ -25,9 +27,7 @@ The following MTX512 features are supported
 - Keyboard including F1/F2 to switch tty
 - SDX WD1791 style floppy controller at 0x10
 - Silicon discs. These are mapped as device 8 not as /dev/hd because their
-  contents (on real ones) vanish if you power off. The default build will
-  blindly use the first silicon disc as swap. Alter config.h to build
-  without swap.
+  contents (on real ones) vanish if you power off.
 - CTC timers
 - Z80 DART RS232
 - Printer
