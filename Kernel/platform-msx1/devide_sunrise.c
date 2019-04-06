@@ -35,29 +35,29 @@ static uint8_t sunrise_transfer_sector(void)
     if (addr >= (uint8_t *)0x3E00U && addr <= (uint8_t *)0x8000U) {
         blk_op.addr = tmpbuf();
         blk_op.is_user = 0;
-        kprintf("bounced do_ide_xfer %p %x\n", addr, mask);
+//        kprintf("bounced do_ide_xfer %p %x\n", addr, mask);
         if (blk_op.is_read) {
             if (do_ide_xfer(mask))
                 goto fail;
-            kputs("uput.\n");
+//            kputs("uput.\n");
             di();// FIXME
             uput(blk_op.addr, addr, 512);
             ei();// FIXME
-            kputs("uputdone.\n");
+//            kputs("uputdone.\n");
         } else {
             uget(addr, blk_op.addr, 512);
-            if (do_ide_xfer(mask) == 0)
+            if (do_ide_xfer(mask))
                 goto fail;
         }
         tmpfree(blk_op.addr);
-        kprintf("bounced done.\n");
+//        kprintf("bounced done.\n");
         blk_op.addr = addr;
         blk_op.is_user = old_user;
         return 1;
     }
-    kprintf("do_ide_xfer %d %p %x\n", blk_op.is_user, addr, mask);
+//    kprintf("do_ide_xfer %d %p %x\n", blk_op.is_user, addr, mask);
     if (do_ide_xfer(mask) == 0) {
-        kputs("done.\n");
+//        kputs("done.\n");
         return 1;
     }
 fail:
