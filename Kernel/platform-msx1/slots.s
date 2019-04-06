@@ -289,9 +289,7 @@ map_save_kernel:
 	pop bc
 	pop de
 	pop hl
-	push af
-	call map_kernel_di		; FIXME: fast path this later
-	pop af
+        call map_kernel_di		; FIXME: fast path this later
 	ret
 
 ;
