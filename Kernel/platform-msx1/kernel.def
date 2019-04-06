@@ -2,8 +2,6 @@
 
 U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F000
 
-U_DATA_STASH		    .equ 0x7E00	      ; 0x7E00-0x7FFF
-
 ; as far as I can tell either is allowed by the spec
 
 Z80_TYPE		    .equ 1
