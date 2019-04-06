@@ -23,15 +23,20 @@ void map_init(void)
   uint8_t *rp;
   uint8_t i;
   uint8_t pp;
+  uint8_t cp;
   const char *vdpname = "??";
   
   if (vdptype < 3)
     vdpname = vdpnametab[vdptype];
 
+  cp = bp[5] & 3;
+
   kprintf("VDP %s@%x\n", vdpname, vdpport);  
   kprintf("Subslots %x\n", subslots);
-
-  kprintf("Kernel map %x %x %x %x %x %x\n",
+  kprintf("Cartridge in slot %d", cp);
+  if (subslots &  (1 << cp))
+    kprintf(".%d", bp[cp] & 3);
+  kprintf("\nKernel map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
     
   bp = current_map;
@@ -75,6 +80,8 @@ void map_init(void)
 void platform_discard(void)
 {
     /* Until we tackle the buffers */
+    /* Use the old discard space to bounce the vectors to user pages */
+    copy_vectors();
 }
 
 /*

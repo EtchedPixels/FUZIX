@@ -9,6 +9,7 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
+	    .globl _copy_vectors
 	    .globl _set_initial_map
 	    .globl _need_resched
 
@@ -23,7 +24,7 @@
             .globl _platform_reboot
 	    .globl nmi_handler
 	    .globl null_handler
-	    .globl map_process
+	    .globl map_process_always
 	    .globl map_kernel
 	    .globl _vdp_load_font
 
@@ -47,6 +48,8 @@
 	    ; vdp - we must initialize this bit early for the vt
 	    ;
 	    .globl vdpinit
+
+	    .globl s__DISCARD
 
             .include "kernel.def"
             .include "../kernel-z80.def"
@@ -84,6 +87,8 @@ _need_resched:
 init_early:
 	    ld a, #'*'
 	    out (0x2F), a
+	    ld a, #'-'
+	    call outchar
 	    ; called with e'=vdp d'=machine type
 	    ; HL info bits
 	    exx
@@ -112,7 +117,7 @@ init_hardware:
 	    ; Program the video engine
 
 	    ld bc,(_vdpport)
-	    ; Play with statius register 2
+	    ; Play with status register 2
 	    dec c
 	    ld a,#0x8F
 	    out (c),a
@@ -161,52 +166,13 @@ vdp_setup:
 
             ret
 
+_program_vectors:
+	    ret
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
-
-_program_vectors:
-            ; we are called, with interrupts disabled, by both newproc() and crt0
-	    ; will exit with interrupts off
-            di ; just to be sure
-            pop de ; temporarily store return address
-            pop hl ; function argument -- base page number
-            push hl ; put stack back as it was
-            push de
-
-	    ; At this point the common block has already been copied
-	    call map_process
-
-            ; write zeroes across all vectors
-	    ; on MSX this is probably the wrong thing to do!!! FIXME
-            ld hl, #0
-            ld de, #1
-            ld bc, #0x007f ; program first 0x80 bytes only
-            ld (hl), #0x00
-            ldir
-
-            ; now install the interrupt vector at 0x0038
-            ld a, #0xC3 ; JP instruction
-            ld (0x0038), a
-            ld hl, #interrupt_handler
-            ld (0x0039), hl
-
-            ; set restart vector for Fuzix system calls
-            ld (0x0030), a   ;  (rst 30h is unix function call vector)
-            ld hl, #unix_syscall_entry
-            ld (0x0031), hl
-
-            ld (0x0000), a   
-            ld hl, #null_handler   ;   to Our Trap Handler
-            ld (0x0001), hl
-
-            ld (0x0066), a  ; Set vector for NMI
-            ld hl, #nmi_handler
-            ld (0x0067), hl
-	    jp map_kernel
-
 ; emulator debug port for now
 outchar:
 	    push af
@@ -214,3 +180,15 @@ outchar:
 	    pop af
             ret
 
+_copy_vectors:
+	    ld hl,#0
+	    ld de,#s__DISCARD
+	    ld bc,#256
+	    ldir
+	    call map_process_always
+	    dec h		; pointers back
+	    dec d
+	    inc b		; bc = 256
+	    ex de,hl		; swap so we copy back
+	    ldir		; into user
+	    jp map_kernel

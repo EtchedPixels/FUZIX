@@ -11,57 +11,7 @@
         .globl _ramsize
         .globl _procmem
 	.globl ___hard_di
-
-;
-;	Memory banking for a 'simple' MSX 1 system. We have Fuzix in a
-;	cartridge from 0000-BFFF and RAM at C000-FFFF. For user space we
-;	map the RAM from 0000-BFFF as well.
-;
-;	Isolate the banking logic so that we can try and share code with
-;	other non MSX2 style mappers. (For an MSX2 mapper it would I think
-;	be better to teach the MSX2 code about different VDP options).
-;
-;	This is our little helper that needs to live low down. It expects
-;	interrupts to be *off*
-;
-;	Entry
-;	B = computed slot mask
-;	A = subslot mask to set
-;
-;	Return
-;	A = result of subslot set
-;
-
-	.area _LOW
-
-set_sub_slot:
-	push bc
-	push de
-	ld c,#0xA8
-	in e,(c)
-	out (c),b		; map the thing we need to set subslots for
-				; into the top 16K
-	ld (0xFFFF),a		; subslot info
-	ld a,(0xFFFF)		; report back the effect
-	cpl			; remembering it's complemented
-	out (c),e
-	pop de
-	pop bc
-	ret
-
-get_sub_slot:
-	push bc
-	push de
-	ld c,#0xA8
-	in e,(c)
-	out (c),b		; map the thing we need to set subslots for
-				; into the top 16K
-	ld a,(0xFFFF)		; report back the effect
-	cpl			; remembering it's complemented
-	out (c),e
-	pop de
-	pop bc
-	ret
+	.globl outcharhex
 
 ;
 ;	Our helpers put the top bank back before returning so the rest
@@ -89,6 +39,58 @@ get_sub_slot:
 
 	.globl _subslots
 	.globl _int_disabled
+
+	.globl do_set_sub_slot
+	.globl do_get_sub_slot
+
+;
+;	Memory banking for a 'simple' MSX 1 system. We have Fuzix in a
+;	cartridge from 0000-BFFF and RAM at C000-FFFF. For user space we
+;	map the RAM from 0000-BFFF as well.
+;
+;	Isolate the banking logic so that we can try and share code with
+;	other non MSX2 style mappers. (For an MSX2 mapper it would I think
+;	be better to teach the MSX2 code about different VDP options).
+;
+;	Call our little helper who lives low down. It expects interrupts to be
+;	*off*. The stack will be in the top 16K so care is neeed.
+;
+;	Entry
+;	B = computed slot mask
+;	A = subslot mask to set
+;
+;	Return
+;	A = result of subslot set
+;
+;
+
+set_sub_slot:
+	push bc
+	push de
+	push hl
+	ld c,#0xA8
+	ld hl,#0xffff
+	call do_set_sub_slot
+	cpl
+	pop hl
+	pop de
+	pop bc
+	ret
+
+get_sub_slot:
+	push bc
+	push de
+	push hl
+	ld c,#0xA8
+	ld hl,#0xffff
+	call do_get_sub_slot
+	cpl
+	pop hl
+	pop de
+	pop bc
+	ret
+
+
 
 ;
 ;	Switch to the map pointed to by HL.
@@ -119,7 +121,7 @@ _switch_map:
 	push bc
 	push de
 	ld a,#'['
-	out (0x2F),a
+;	out (0x2F),a
 	in a,(0xA8)
 	and #0x3F			;	Keep the lower selections
 	ld b,a				;	the same
@@ -134,9 +136,9 @@ subslot_next:
 	cp (hl)
 	jr z, subslot_done		;	same subslots
 	ld a,b
-	call phex
+;	call outcharhex
 	ld a,(hl)
-	call phex
+;	call outcharhex
 	; Do set
 	call set_sub_slot
 	ld (de),a			;	update map
@@ -157,7 +159,7 @@ subslot_done:
 	ld (de),a
 	out (0xA8),a
 	ld a,#']'
-	out (0x2F),a
+;	out (0x2F),a
 	pop de
 	pop bc
 	pop af
@@ -290,9 +292,6 @@ map_save_kernel:
 	call map_kernel_di		; FIXME: fast path this later
 	ret
 
-; This is messy because of the NMOS Z80 IRQ bug. It might be worth
-; revisiting all the logic that uses this and just keeping a software flag
-; instead.
 ;
 ; The expensive bank switching also means we need to write some custom
 ; usermem copiers.
@@ -303,6 +302,7 @@ map_save_kernel:
 map_kernel:
 	push af
 	push hl
+	di
 	ld a,(_int_disabled)
 	push af
 	xor a
@@ -333,6 +333,7 @@ map_kernel_di:
 	; kernel low mapping back. FIXME: if the kernel cartridge and
 	; RAM are in the same subslot this will break. Need to put the flip
 	; code in the low 256 bytes of both.
+	; (DONE OK now I think)
 	ld a,(_kernel_map+5)
 	out (0xA8),a
 	ld hl,#_kernel_map
@@ -349,6 +350,7 @@ map_process:
 map_process_always:
 	push af
 	push hl
+	di
 	ld a,(_int_disabled)
 	push af
 	ld a,#1
@@ -391,13 +393,13 @@ map_slot_1:
 	ld a,l
 	; First step: Update the slot register in the map
 	and #0x03			; slot
-	rlca
-	rlca
+	rla
+	rla
 	ld e,a
-	ld a, (_scratch_map + 4)	; slot register
+	ld a, (_scratch_map + 5)	; slot register
 	and #0xF3
 	or e
-	ld (_scratch_map + 4),a		; slot register with us in bank 1
+	ld (_scratch_map + 5),a		; slot register with us in bank 1
 	ld e,a				; Save it in E
 	ld a,l
 	bit 7,a
@@ -639,29 +641,3 @@ testram:
 
 _ramtab:
 	.ds 6
-
-dophex:		ld c,a
-		and #0xf0
-		rrca
-		rrca
-		rrca
-		rrca
-		call pdigit
-		ld a,c
-		and #0x0f
-pdigit:		cp #10
-		jr c,isl
-		add #7
-isl:		add #'0'
-		out (0x2F),a
-		ret
-
-phex:
-		push af
-		push bc
-		call dophex
-		ld a,#' '
-		out (0x2f),a
-		pop bc
-		pop af
-		ret

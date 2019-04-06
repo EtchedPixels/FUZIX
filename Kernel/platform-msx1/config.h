@@ -56,7 +56,7 @@ extern unsigned int swap_dev;
 #define BOOTDEVICENAMES "hd#,fd,,rd"
 
 //#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
-#define NBUFS    6        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
+#define NBUFS    5        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV 2	    /* IDE or SD ?? */
