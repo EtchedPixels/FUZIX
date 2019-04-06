@@ -8,9 +8,9 @@
 static unsigned char buf[65536];
 static unsigned char out[65536];
 
-static unsigned int s__CODE, s__INITIALIZER, s__DATA,
+static unsigned int s__CODE, s__DISCARD, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, l__INITIALIZED,
-    l__COMMONMEM, l__CODE, l__DATA;
+    l__COMMONMEM, l__CODE, l__DATA, l__DISCARD;
 
 
 static void ProcessMap(FILE * fp)
@@ -45,6 +45,10 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &s__COMMONMEM);
 		if (strcmp(p2, "l__COMMONMEM") == 0)
 			sscanf(p1, "%x", &l__COMMONMEM);
+		if (strcmp(p2, "s__DISCARD") == 0)
+			sscanf(p1, "%x", &s__DISCARD);
+		if (strcmp(p2, "l__DISCARD") == 0)
+			sscanf(p1, "%x", &l__DISCARD);
 	}
 }
 
@@ -101,6 +105,7 @@ int main(int argc, char *argv[])
                 }
                 base++;
         }
+	memset(out + s__DATA, 0, l__DATA);
 
 	/* Our standard layout begins with the code */
 	start = s__CODE;
@@ -110,23 +115,17 @@ int main(int argc, char *argv[])
 			s__CODE, l__CODE);
 		exit(1);
 	}
-	/* We need to pack the writable stuff. We use the same basic model as
-	   the other packers. */
+	/* Our prepared image ends with initialized ready to copy from ROM so
+	   put the right bits in place */
+	memcpy(out + s__INITIALIZED, buf + s__INITIALIZER, l__INITIALIZED);
 
-	/* Our prepared image ends with initializer in ROM to go to INITIALIZED
-	   Append the common on the end of it */
-	end = s__INITIALIZER + l__INITIALIZED;
-	memcpy(out + end, buf + s__COMMONMEM, l__COMMONMEM);
-
-	printf("Commonmem packed at %04X for %04X bytes.\n",
-		end, l__COMMONMEM);
-	end += l__COMMONMEM;
+	end = s__DISCARD + l__DISCARD;
 	printf("Image ends at %04X\n", end);
 
-	if (end >= 0xC000) {
+	if (end >= 0xF380) {
 		/* One day we may have to put discard in the top 16K and
 		   juggle it into RAM */
-		fprintf(stderr, "Image does not fit in 48K of cartridge.\n");
+		fprintf(stderr, "Image does not fit with bootstrap.\n");
 		exit(1);
 	}
 
@@ -135,7 +134,6 @@ int main(int argc, char *argv[])
 		perror(argv[3]);
 		exit(1);
 	}
-	printf("Image file: %04X to %04X\n", start, end);
 	if (fwrite(out, 65536, 1, bin) != 1) {
 		perror(argv[3]);
 		exit(1);
