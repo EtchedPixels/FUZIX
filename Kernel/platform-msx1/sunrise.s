@@ -21,9 +21,6 @@
 	.globl _sunrise_u
 	.globl _sunrise_k
 
-	.globl outcharhex
-	.globl outhl
-
 	.module sunrise
 
 IDE_REG_ERROR		.equ	1
@@ -81,6 +78,7 @@ wait_nbusy:
 	; Check for an error
 	bit IDE_ERROR,a
 	jr z, noerror
+	; Keep NZ set
 	ld (_ide_error),a
 	ld a,IDE_REG_ERROR(ix)
 	ld (_ide_error + 1),a
@@ -126,22 +124,14 @@ map_sunrise_u:
 _do_ide_init_drive:
 	push ix
 	ld ix,(_ide_base)
-	ld a,#'i'
-	out (0x2f),a
 	call map_sunrise_k
-	ld a,#'I'
-	out (0x2f),a
 	ld IDE_REG_DEVHEAD(ix),l
 	ld hl,#0
 	call devide_wait_ready
 	jr nz, timeout
-	ld a,#'D'
-	out (0x2f),a
 	ld IDE_REG_COMMAND(ix),#IDE_CMD_IDENTIFY
 	ld a,#IDE_STATUS_DATAREQUEST
 	call devide_wait
-	ld a,#'E'
-	out (0x2f),a
 	jr nz, timeout
 	call devide_rx_buf
 	; returns the tmpbuf to the caller to free
@@ -205,20 +195,13 @@ init_io:
 	and #0x0F			; Merge drive and bits 24-27
 	or e
 	ld IDE_REG_LBA_3(ix),a
-	call outcharhex
 	ld hl,#0
 	call devide_wait_ready
 	jr nz, xfer_timeout
 	ld IDE_REG_LBA_2(ix),l
-	ld a,l
-	call outcharhex
 	ld hl, (_blk_op + BLK_OP_LBA)
 	ld IDE_REG_LBA_1(ix),h
-	ld a,h
-	call outcharhex
 	ld IDE_REG_LBA_0(ix),l
-	ld a,l
-	call outcharhex
 	ld IDE_REG_SEC_COUNT(ix),#1
 	ld a,(_blk_op + BLK_OP_ISREAD)
 	or a
