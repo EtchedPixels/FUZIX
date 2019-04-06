@@ -22,10 +22,12 @@
 
 		.globl interrupt_handler
 		.globl null_handler
+		.globl unix_syscall_entry
 
 		.globl do_set_sub_slot
 		.globl do_get_sub_slot
 
+		.globl rst30
 		.globl rst38		; for checking
 ;
 ;	First _CODE section
@@ -35,7 +37,10 @@
 		.area _CODE
 
 start:		jp null_handler
-		.ds 0x35
+		.ds 0x2d
+rst30:
+		jp unix_syscall_entry
+	        .ds 5
 rst38:		jp interrupt_handler
 		; We only have 0x3B-0x4F free
 do_set_sub_slot:
