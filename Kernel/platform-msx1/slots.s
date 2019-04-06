@@ -289,7 +289,9 @@ map_save_kernel:
 	pop bc
 	pop de
 	pop hl
+	push af
 	call map_kernel_di		; FIXME: fast path this later
+	pop af
 	ret
 
 ;
@@ -327,6 +329,7 @@ was_di:
 
 map_kernel_di:
 	push af
+	push hl
 	xor a
 	ld (map_id),a
 	; We are possibly coming from a user bank. We need to jam the
@@ -338,6 +341,7 @@ map_kernel_di:
 	out (0xA8),a
 	ld hl,#_kernel_map
 	call _switch_map
+	pop hl
 	pop af
 	ret
 
@@ -360,10 +364,12 @@ map_process_always:
 
 map_process_always_di:
 	push af
+	push hl
 	ld a,#1
 	ld (map_id),a
 	ld hl,#_user_map
 	call _switch_map
+	pop hl
 	pop af
 	ret
 
