@@ -32,18 +32,14 @@ static uint8_t sunrise_transfer_sector(void)
     if (!blk_op.is_read)
         blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
     /* Shortcut: this range can only occur for a user mode I/O */
-    if (addr >= (uint8_t *)0x3E00U && addr <= (uint8_t *)0x8000U) {
+    if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
         blk_op.addr = tmpbuf();
         blk_op.is_user = 0;
-//        kprintf("bounced do_ide_xfer %p %x\n", addr, mask);
+//        kprintf("bounced do_ide_xfer %p %x:", addr, mask);
         if (blk_op.is_read) {
             if (do_ide_xfer(mask))
                 goto fail;
-//            kputs("uput.\n");
-            di();// FIXME
             uput(blk_op.addr, addr, 512);
-            ei();// FIXME
-//            kputs("uputdone.\n");
         } else {
             uget(addr, blk_op.addr, 512);
             if (do_ide_xfer(mask))
@@ -55,7 +51,7 @@ static uint8_t sunrise_transfer_sector(void)
         blk_op.is_user = old_user;
         return 1;
     }
-//    kprintf("do_ide_xfer %d %p %x\n", blk_op.is_user, addr, mask);
+//    kprintf("do_ide_xfer %d %p %x..", blk_op.is_user, addr, mask);
     if (do_ide_xfer(mask) == 0) {
 //        kputs("done.\n");
         return 1;
