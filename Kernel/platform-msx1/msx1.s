@@ -9,9 +9,9 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
-	    .globl _copy_vectors
 	    .globl _set_initial_map
 	    .globl _need_resched
+	    .globl _copy_vectors
 
 	    ; video driver
 	    .globl _vtinit
@@ -29,6 +29,9 @@
 	    .globl _vdp_load_font
 
 	    .globl find_ram
+
+	    ; We use buffer 0 data as a bounce buffer early in boot
+	    .globl _bufpool
 
 	     ; debug symbols
             .globl outcharhex
@@ -163,8 +166,7 @@ vdp_setup:
 
 	    ld a, #'4'
 	    out (0x2F), a
-
-            ret
+	    ret
 
 _program_vectors:
 	    ret
@@ -180,9 +182,13 @@ outchar:
 	    pop af
             ret
 
+;
+;	Called early in boot to get the vectors and stubs into both banks
+;	Use the data space of the first disk buffer as a bounce buffer
+;
 _copy_vectors:
 	    ld hl,#0
-	    ld de,#s__DISCARD
+	    ld de,#_bufpool
 	    ld bc,#256
 	    ldir
 	    call map_process_always
