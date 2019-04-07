@@ -122,9 +122,7 @@ int main(int argc, char *argv[])
 	end = s__DISCARD + l__DISCARD;
 	printf("Image ends at %04X\n", end);
 
-	if (end >= 0xF380) {
-		/* One day we may have to put discard in the top 16K and
-		   juggle it into RAM */
+	if (end >= 0xFC80) {
 		fprintf(stderr, "Image does not fit with bootstrap.\n");
 		exit(1);
 	}
