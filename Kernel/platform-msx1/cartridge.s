@@ -35,8 +35,6 @@
 CHPUT		.equ 0x00A2
 INITXT		.equ 0x006F
 EXPTBL		.equ 0xFCC1
-SLTTBL		.equ 0xFCC5
-SLTATR		.equ 0xFCC9
 
 pstring:
 		ld a,(hl)
@@ -116,6 +114,8 @@ wtfami:		ld sp,#0xF380		; below system variables
 		; We'd like the use the ROM services but unfortunately they
 		; don't actually work for the top 16K in MSX
 
+		ld sp,#0xfcc0		; We can trash the sysvars below this
+
 		ld ix,#0xffff		; subslot control byte
 
 		di
@@ -170,7 +170,7 @@ wtfami:		ld sp,#0xF380		; below system variables
 		exx
 
 		ld hl,#0xC000
-		ld bc,#0x3300
+		ld bc,#0x3C80
 
 copy_common_loop:
 		exx			; Paging values
