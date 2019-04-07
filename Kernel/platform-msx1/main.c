@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <msx.h>
 
 /* These are set by the msx startup asm code */
 extern uint16_t vdpport;
@@ -11,6 +12,7 @@ uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xC000;
 uint8_t machine_type;
 uint8_t vdptype;
+uint8_t *bouncebuffer;
 
 void platform_idle(void)
 {
@@ -42,5 +44,7 @@ void platform_interrupt(void)
 
 void platform_discard(void)
 {
-    /* Until we tackle the buffers */
+    /* Until we tackle the buffers. When we do we will reserve 512 bytes
+       at the end (probably FDFE-FFFE (FFFF being magic)) */
+    bouncebuffer = (uint8_t *)0xFD00;	/* Hack for now */
 }

@@ -36,4 +36,6 @@ extern uint8_t *map_slot1_user(uint8_t slotinfo) __z88dk_fastcall;
 
 extern void copy_vectors(void);
 
+extern uint8_t *bouncebuffer;
+
 #endif

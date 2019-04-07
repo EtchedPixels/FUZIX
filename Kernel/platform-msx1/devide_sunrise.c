@@ -33,7 +33,9 @@ static uint8_t sunrise_transfer_sector(void)
         blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
     /* Shortcut: this range can only occur for a user mode I/O */
     if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
-        blk_op.addr = tmpbuf();
+        /* We can't just use tmpbuf because the buffer might be dirty which would
+           trigger a recursive I/O and then badness happens */
+        blk_op.addr = bouncebuffer;
         blk_op.is_user = 0;
 //        kprintf("bounced do_ide_xfer %p %x:", addr, mask);
         if (blk_op.is_read) {
@@ -45,7 +47,6 @@ static uint8_t sunrise_transfer_sector(void)
             if (do_ide_xfer(mask))
                 goto fail;
         }
-        tmpfree(blk_op.addr);
 //        kprintf("bounced done.\n");
         blk_op.addr = addr;
         blk_op.is_user = old_user;
