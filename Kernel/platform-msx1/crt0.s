@@ -6,9 +6,9 @@
 	        .area _CODE2
 		.area _HOME
 		.area _VIDEO
-	        .area _CONST
-		; RAM based
+		; RAM based or may be copied to/from by the user
 	        .area _COMMONMEM
+	        .area _CONST
 	        .area _INITIALIZED
 	        .area _GSINIT
 	        .area _GSFINAL
