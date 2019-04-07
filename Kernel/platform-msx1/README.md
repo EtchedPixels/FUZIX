@@ -52,26 +52,31 @@ Speed up all the ei/di mess by just keeping a private variable for irqoff
 state
 Get common and discard and initialized in C000-FFFF of the ROM and copied
 out
+Sunrise IDE support (except probing)
+Swapping
+Fast user copy routines
+
+To Debug
+
+(Hopefully fixed)Seem to have had some disk corruption - how to reproduce/why ?
+Display flicker of weird chars when scroll/clear bottom line ?
 
 In Progress
 
 Move the switch helper into both banks so we can fix the FIXME in map_kernel
-Work out how map/unmap an I/O device needs to work to be usable. Do we grab
-the live map and just edit it for 4000-7FFF then set that map ? Do we
-precompute and save kernel and user maps for the device ?
-Sunrise IDE support
 
 To do
 
 Detection logic by ROM hash and find the sunrise etc
-Sensible user copy routines: We know kernel data is always in common except
-some awkward corner cases (constants) going K->U. So we can spot the to user
-case of a 'low' source and bounce it or similar, while just doing a user
-map and ldir for the others. We badly need the cached path walk though!
+Tune swap logic so we only read/write relevant pages
+We badly need the cached path walk or some other optimizations on user copy
+or the bank switch
 Remember current map for kernel/user so we can fast track map_save/restore
 map_kernel etc by knowing if we are mapping k->k u->u or a transition and
 we can label all other cases with a value meaning 'other' as we don't need
 to worry about fastpaths that much
+Given the MSX1 mess consider just writing JIT code for k-> u->k etc so non
+stupid machines are not too slow.
 
 Target initial I/O devices
 
