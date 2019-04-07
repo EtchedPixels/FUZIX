@@ -24,7 +24,7 @@
 extern unsigned int swap_dev;
 #define SWAP_SIZE   0x61 	/* 48.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xC200	/* Swap out program */
+#define SWAPTOP	    0xC000	/* Swap out program */
 #define CONFIG_SPLIT_UDATA	/* Adjacent addresses but different bank! */
 #define UDATA_BLKS  1		/* One block of udata */
 #define UDATA_SIZE  512		/* 512 bytes of udata */
