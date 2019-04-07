@@ -195,8 +195,10 @@ init_io:
 	and #0x0F			; Merge drive and bits 24-27
 	or e
 	ld IDE_REG_LBA_3(ix),a
+	push hl
 	ld hl,#0
 	call devide_wait_ready
+	pop hl
 	jr nz, xfer_timeout
 	ld IDE_REG_LBA_2(ix),l
 	ld hl, (_blk_op + BLK_OP_LBA)
