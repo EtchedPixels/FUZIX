@@ -78,12 +78,6 @@ void map_init(void)
   copy_vectors();
 }
 
-
-void platform_discard(void)
-{
-    /* Until we tackle the buffers */
-}
-
 /*
  *	This function is called for partitioned devices if a partition is found
  *	and marked as swap type. The first one found will be used as swap. We

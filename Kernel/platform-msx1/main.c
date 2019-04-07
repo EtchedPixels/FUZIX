@@ -40,3 +40,7 @@ void platform_interrupt(void)
         }
 }
 
+void platform_discard(void)
+{
+    /* Until we tackle the buffers */
+}
