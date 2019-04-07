@@ -125,12 +125,19 @@ failout:
     tmpfree(devide_buf);
 }
 
-void sunrise_probe(uint8_t slot, uint8_t subslot)
-{
-    uint8_t i = slot;
+static const uint16_t sunrise_roms[2] = {
+    0x8FB3,
+    0x0000
+};
 
-    if (subslot != 0xFF)
-        i |= 0x80 | (subslot << 2);
+void sunrise_probe(void)
+{
+    uint8_t slot, subslot;
+    uint8_t i;
+
+    i = device_find(sunrise_roms);
+    if (i == 0xFF)
+        return;
 
     /* Generate and cache the needed mapping table */
     memcpy(&sunrise_k, map_slot1_kernel(i), sizeof(sunrise_k));

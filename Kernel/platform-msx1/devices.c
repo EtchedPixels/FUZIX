@@ -104,5 +104,5 @@ void device_init(void)
     keyrepeat.first = 2 * ticks_per_dsecond;
     keyrepeat.continual = 1 * ticks_per_dsecond;
 
-    sunrise_probe(1,0xFF);
+    sunrise_probe();
 }

@@ -60,6 +60,8 @@ To Debug
 
 (Hopefully fixed)Seem to have had some disk corruption - how to reproduce/why ?
 Display flicker of weird chars when scroll/clear bottom line ?
+We blow up with slot expanders early in boot (in find_ram). Seems to be a
+problem if the cartridge is in an expander.
 
 In Progress
 
@@ -68,6 +70,9 @@ Move the switch helper into both banks so we can fix the FIXME in map_kernel
 To do
 
 Detection logic by ROM hash and find the sunrise etc
+Fix cursor interaction with fsck (don't xx bs flush but bs xx flush)
+Can we put find_ram etc in discard ?
+Do we need a font and should it move somewhere to make const space ?
 Tune swap logic so we only read/write relevant pages
 We badly need the cached path walk or some other optimizations on user copy
 or the bank switch
@@ -76,7 +81,11 @@ map_kernel etc by knowing if we are mapping k->k u->u or a transition and
 we can label all other cases with a value meaning 'other' as we don't need
 to worry about fastpaths that much
 Given the MSX1 mess consider just writing JIT code for k-> u->k etc so non
-stupid machines are not too slow.
+stupid machines are not too slow. In particular if we see that RAM is not in
+the same slot as anything else we use we can set the subslots once and just
+bash 0xA8 like a sane computer.
+For machines with bussed I/O do we want a /dev/iobus or similar that has the
+info for a program to unpack (ROM hashes etc) ?
 
 Target initial I/O devices
 

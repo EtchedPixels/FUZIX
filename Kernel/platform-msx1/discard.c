@@ -76,6 +76,18 @@ void map_init(void)
   kprintf("User map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
   copy_vectors();
+  for (i = 0; i < 4; i++){
+    for (pp = 0; pp < 4; pp++) {
+      if (devtab[i][pp][1] & 0x8000)
+        kprintf("@0x4000: %d.%d: %x\n", i, pp, devtab[i][pp][1] & 0x7FFF);
+    }
+  }
+  for (i = 0; i < 4; i++){
+    for (pp = 0; pp < 4; pp++) {
+      if (devtab[i][pp][2] & 0x8000)
+        kprintf("@0x8000: %d.%d: %x\n", i, pp, devtab[i][pp][2] & 0x7FFF);
+    }
+  }
 }
 
 /*

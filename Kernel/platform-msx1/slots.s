@@ -33,6 +33,7 @@
 	.globl _map_slot1_user
 	.globl find_ram
 	.globl _ramtab
+	.globl _devtab
 	.globl _kernel_map
 	.globl _user_map
 	.globl _current_map
@@ -441,6 +442,7 @@ no_subslot_map:
 ;
 find_ram:
 	ld ix,#0xFCC1
+	ld iy,#_devtab		; device scan table
 	ld b,#4
 	ld e,#0
 next_slot:
@@ -546,8 +548,13 @@ next_sub:
 	; Recover our slot count
 	;
 	pop de
+	jr sub_done
 
 not_sub:
+	ld bc,#18		; move on correct table distance (3 x 6
+				; bytes) as no subslots
+	add iy,bc
+sub_done:
 	;
 	;	Recover the old slot map state
 	;
@@ -599,7 +606,33 @@ romcheck:
 ;	A device ROM. Potentially interesting. Need to add code to checksum
 ;	or otherwise identify them later
 ;
-	;FIXME
+	push de
+	push bc
+	xor a
+	ld l,a			; back to ROM start
+
+	ld d,a			; count
+	ld e,a
+	ld b,a			; 256 bytes
+	ld c,#8			; 2K
+
+nextrombyte:
+	ld a,(hl)
+	inc hl
+	add e
+	ld e,a
+	jr nc,noinc
+	inc d
+noinc:
+	djnz nextrombyte
+	dec c
+	jr nz,nextrombyte
+
+	set 7,d			; ROM present flag
+	ld (iy),e		; 15 bit sum
+	ld 1(iy),d
+	pop bc
+	pop de
 	jr notram
 
 writecheckd:
@@ -624,11 +657,13 @@ writecheck:
 	inc bc
 	ld a,d
 	ld (bc),a
-	inc bc
-	ret
+	jr incout
 notram:
 	inc bc
+incout:
 	inc bc
+	inc iy
+	inc iy
 	ret
 ;
 ;	Scan a slot/subslot for RAM
