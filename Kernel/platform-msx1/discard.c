@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <msx.h>
 
 extern uint8_t ramtab[], kernel_map[], current_map[], user_map[];
 extern uint8_t subslots;
@@ -74,14 +75,13 @@ void map_init(void)
   bp = user_map;
   kprintf("User map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
+  copy_vectors();
 }
 
 
 void platform_discard(void)
 {
     /* Until we tackle the buffers */
-    /* Use the old discard space to bounce the vectors to user pages */
-    copy_vectors();
 }
 
 /*
