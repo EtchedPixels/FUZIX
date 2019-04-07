@@ -110,6 +110,8 @@ wtfami:		ld sp,#0xF380		; below system variables
 		call INITXT		; set 40 column text mode
 		ld hl,#hello
 		call pstring
+		ld a,#'#'
+		out (0x2F),a
 
 		; We'd like the use the ROM services but unfortunately they
 		; don't actually work for the top 16K in MSX
