@@ -6,7 +6,7 @@ them. The similar ZX Profi won't yet work.
 
 Supporting the bigger/slightly different boxes needs three things
 1. Loader changes for the ZX Profi
-2. Changes to bank numbering/allocation by platfomr type and size
+2. Changes to bank numbering/allocation by platform type and size
 3. Detection of memory size
 4. Detection of (or loader reporting of) machine type
 
