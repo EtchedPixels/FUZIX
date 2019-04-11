@@ -1,0 +1,94 @@
+# $Source$
+# $State$
+# $Revision$
+#
+#	Add this to the ???/share/ack/descr/ directory of your ACK compiler
+#	installation.
+#
+
+var w=2
+var wa=1
+var p=2
+var pa=1
+var s=2
+var sa=1
+var l=4
+var la=1
+var f=4
+var fa=1
+var d=8
+var da=1
+var x=8
+var xa=1
+var ARCH=i80
+var PLATFORM=fuzix
+# for now not /ack/fuzix..
+var PLATFORMDIR={EM}/share/ack/cpm
+var CPP_F=-D__unix
+var ALIGN=-a0:1 -a1:1 -a2:1 -a3:1 -b0:0x0100
+var MACHOPT_F=-m8
+
+# Override the setting in fe so that files compiled for linux386 can see
+# the platform-specific headers.
+
+var C_INCLUDES=
+#-I{EM}/share/ack/{PLATFORM}/include -I{EM}/share/ack/include/ansi
+
+name be
+	from .m.g
+	to .s
+	program {EM}/lib/ack/cpm/ncg
+	args <
+	stdout
+	need .e
+end
+name asopt
+	from .s
+	to .so
+	program {EM}/lib/ack/cpm/top
+	args
+	optimizer
+	stdin
+	stdout
+end
+name as
+	from .s.so
+	to .o
+	program {EM}/lib/ack/cpm/as
+	args - -o > <
+	prep cond
+end
+name led
+	from .o.a
+	to .out
+	program {EM}/lib/ack/em_led
+	mapflag -l* LNAME={PLATFORMDIR}/lib*
+	mapflag -i SEPID=-b1:0
+	mapflag -fp FLOATS={PLATFORMDIR}/libfp.a
+	args {ALIGN} {SEPID?} \
+		({RTS}:.b=-u _i_main) \
+	    (.e:{HEAD}={PLATFORMDIR}/boot.o) \
+		({RTS}:.ocm.bas.b={PLATFORMDIR}/c-ansi.o) \
+		({RTS}:.c={PLATFORMDIR}/c-ansi.o) \
+		({RTS}:.mod={PLATFORMDIR}/modula2.o) \
+		({RTS}:.p={PLATFORMDIR}/pascal.o) \
+		-o > < \
+		(.p:{TAIL}={PLATFORMDIR}/libpascal.a) \
+		(.b:{TAIL}={PLATFORMDIR}/libb.a) \
+		(.bas:{TAIL}={PLATFORMDIR}/libbasic.a) \
+		(.mod:{TAIL}={PLATFORMDIR}/libmodula2.a) \
+		(.ocm:{TAIL}={PLATFORMDIR}/liboccam.a) \
+		(.ocm.bas.mod.b.c.p:{TAIL}={PLATFORMDIR}/libc.a) \
+		{FLOATS?} \
+		(.e:{TAIL}={PLATFORMDIR}/libem.a \
+		           {PLATFORMDIR}/libsys.a \
+		           {PLATFORMDIR}/libend.a)
+	linker
+end
+name cv
+	from .out
+	to .img
+	program {EM}/bin/fuzixlod
+	args -v < >
+	outfile a.out
+end
