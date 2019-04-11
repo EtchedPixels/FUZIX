@@ -490,6 +490,17 @@ next_slot:
 	;
 	;
 sub_scan:
+	;
+	;	FIXME: We can't map the low 48K to get our subslots the way
+	;	we do now because we are running at C000-FFFF. If we map a
+	;	different 0x0000-0x3FFF we can't get back because we no
+	;	longer have low stubs for our return.
+	;
+	;	We need to fix this to use high stubs to map the low 16K
+	;	scan that, and then use low stubs to map the middle 32K
+	;	(high stubs don't work as we have to swap the top 16K to
+	;	deal with the brain dead mapping scheme)
+	;
 	ld l,a			; Remember our A8 bits
 	push de			; Save slot number (E)
 
@@ -539,7 +550,7 @@ next_sub:
 	djnz next_sub
 
 	;
-	;	Restore the saved subslot
+	;	Restore the saved subslot.
 	;
 	pop af
 	ld b,c

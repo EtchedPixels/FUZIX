@@ -4,6 +4,7 @@
 		.area _LOW
 		.area _HEADER
 	        .area _CODE2
+		; We need this to be above 0x8000
 		.area _HOME
 		.area _VIDEO
 		; RAM based or may be copied to/from by the user
