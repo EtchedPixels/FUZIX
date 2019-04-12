@@ -15,9 +15,6 @@
  *
  *	Set:
  *	CONFIG_FLAT
- *	MAX_POOLS	maximum number of discontiguous memory pools in the
- *			machine
- *	MAX_BLOCKS	maximum blocks per user
  *
  *	TODO:
  *	Reference counting (for sticky binaries, vfork, fork emulation)
