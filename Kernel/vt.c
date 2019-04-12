@@ -12,6 +12,7 @@
  *	The caller is required to provide
  *
  *	cursor_off();
+ *	cursor_disable();
  *	cursor_on(newy, newx)
  *	clear_across(y,x,num)
  *	clear_lines(y,num)
