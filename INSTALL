@@ -25,7 +25,7 @@ cause Fuzix to break.
 
 Fuzix expects yacc to be yacc not Bison. if your system for some reason thinks
 that executing yacc should run bison you'll have a build failure. For Debian
-this can be fixed with
+and derivatives (eg Ubuntu) this can be fixed with
 
  - sudo apt-get install -y byacc
  - sudo update-alternatives --set yacc /usr/bin/byacc
