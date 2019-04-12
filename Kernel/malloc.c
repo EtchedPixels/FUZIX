@@ -12,10 +12,6 @@
  *	and leaks.
  */
 
-/*
- *	MAX_POOLS is the number of discontiguous memory pools we have.
- */
-
 #if defined(CONFIG_32BIT)
 
 static uint32_t mfree;
