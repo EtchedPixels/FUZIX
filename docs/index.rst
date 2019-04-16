@@ -10,6 +10,8 @@ Welcome to Fuzix's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   Notices
+   Intro
    Platforms
    DiskFormats
    build-filesystem-ng
