@@ -17,3 +17,6 @@ CONFIG_SWAP		    = 1
 #define DI		mvi a,0x0a ; sim
 
 #define EI		mvi a,0x08 ; sim
+
+/* We have no Z80 peripherals and no iret fakery */
+#define FAKE_IRET

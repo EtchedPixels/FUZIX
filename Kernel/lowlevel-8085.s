@@ -297,6 +297,10 @@ interrupt_handler:
 intout:
 	xra a
 	sta U_DATA__U_ININTERRUPT
+
+	FAKE_IRET		! Usually null but some platforms
+				! have hacks for Z80 peripherals
+
 	lda U_DATA__U_INSYS
 	ora a
 	jnz interrupt_pop
@@ -342,6 +346,12 @@ preemption:
 	lhld istack_switched_sp
 	shld U_DATA__U_SYSCALL_SP
 	lxi sp,kstack_top
+
+	!
+	!	So any Z80 style devices see an 'iret'
+	!
+	FAKE_IRET
+
 	!
 	!	Mark ourselves as in a system call
 	!
