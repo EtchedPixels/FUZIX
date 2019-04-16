@@ -3,7 +3,7 @@ ASM = ack -mfuzix
 AR = aal
 PLATFORM = 8080
 export PLATFORM
-CC_OPT = -mfuzix -c -O2 -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -i
+CC_OPT = -mfuzix -c -O4 -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -i
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -c -o
 # copied in from kernel tree
