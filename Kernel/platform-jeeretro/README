@@ -1,7 +1,7 @@
-An UZI target for z80pack.
+An UZI target for the JeeLabs Retro Z80 emulator.
 
-Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run FUZIX
-with one application per bank and the memory map currently is
+JeeRetro is configered with a simple 4K fixed common and 60K fixed sized banks.
+We run FUZIX with one application per bank and the memory map currently is
 
 Bank 0:
 
@@ -10,14 +10,13 @@ Bank 0:
 0088		UZI kernel start
 ????		UZI kernel end ~= A000
 (big kernels go up to E400 or so!)
-E800		Discard (blown away by user processes)
+no discard area, current kernel easily fits in 60K
 End of kernel:	Common >= 0xF000
 		uarea
 		uarea stack
 		interrupt stack
 		bank switching code
 		user memory access copy
-		bank copy buffer because Z80Pack switching is slow
 		interrupt vectors and glue
 		[Possibly future move the buffers up here to allow for more
 		 disk and inode buffer ?]
@@ -30,15 +29,18 @@ Bank 1 to Bank n:
 ECFF		Application end
 ED00-EFFF	uarea stash
 
-Disk swap device recommended
+Disk swap device is needed due to limited number of user banks
 
-Put the kernel at the end of a floppy image from cyl 60
-Add the fs in the first 58 cyls (366 blocks)
+Disk layout depends on the emulator configuration
+One option is to put the kernel at block 1, and the fs starting at block 2048
+This is compatible with a possible future use of MBR partitioning
 
-Put the bootblock in sector 0
-
-dd the kernel image to offset 193024
+dd the kernel image to block offset 1
+dd the filesystem image to block offset 2048
 
 ie
 
-dd if=fuzix.bin of=drivea.cpm bs=1 seek=193024 conv=notrunc
+dd if=fuzix.bin of=drivea.cpm bs=512 seek=1 conv=notrunc
+dd if=rootfs.img of=drivea.cpm bs=512 seek=2048 conv=notrunc
+
+See <https://jeelabs.org/2018/z80-zexall-f407/> for further Jee Retro details.
