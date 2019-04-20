@@ -178,7 +178,7 @@ serial_up:
 	ld a,#0xAA			; Set a count
 	out (CTC_CH2),a
 	in a,(CTC_CH2)
-	cp #0xAA			; Should not have changed
+	cp #0xA9			; Should be one less
 	jr nz, no_ctc
 
 	ld a,#0x07
