@@ -297,3 +297,48 @@ Supported Features
 
 Tested on 0.2
 - Yes, real system
+
+### SC108 and SC114
+
+The SC108 is an RC2014 compatible CPU board with 128K of RAM and 32K of ROM
+that holds the SCM monitor. The two RAM banks are switched as a full 64K
+with only the ROM able to initially move data between banks. This makes it
+tricky platform to work with.
+
+The SC114 is a closely related system with integrated motherboard and three
+slots. It also has a bigbang serial port (not supported).
+
+In order to run Fuzix on this system you must have an RC2014 IDE CF adapter
+at 0x10, an SC104 or RC2014 SIO card at 0x80 (ACIA is untested) and an SC102
+CTC at 0x88. The CTC must be jumpered from ZT2 to CT3.
+
+It is possible to run with an RTC instead in tickless mode but this is not
+recommended.
+
+Supported Features
+- SC108 or SC114 CPU card
+- 128K banked RAM
+- SIO/2 dual serial
+- Second SIO/2 at 0x84
+- Z80 CTC with baud rate setting for serial port 2
+- RC2014 RTC (optional)
+
+Unsupported
+- Bitbang serial port
+- Customising baud rate clocks and control
+
+Due to the limited memory the SC104/SC114 systems are not recommended for
+multi-user usage. It is also not possible to use these boards with a banked
+ROM/RAM card.
+
+Installation
+
+FUZIX is supplied as a raw filesystem image or CF card. Simply insert the CF
+card and go. The default image does not enable cursor key editing. If you
+want this then change your shell to /bin/fsh.
+
+It is possible to enable both ports for login but due to lack of memory this
+is not recommended.
+
+Tested On 0.3-rc2
+- SC114 with SC102 and SC104
