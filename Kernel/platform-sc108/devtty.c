@@ -86,7 +86,7 @@ static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
 
 	r = 0xC4;
-	if (ctc_present && minor == 3) {
+	if (ctc_present && minor == 2) {
 		CTC_CH1 = 0x55;
 		CTC_CH1 = siobaud[baud];
 		if (baud > B600)	/* Use x16 clock and CTC divider */
@@ -94,7 +94,7 @@ static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 	} else
 		baud = B115200;
 
-	t->c_cflag &= CBAUD;
+	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
 
 	if (t->c_cflag & CSTOPB)
