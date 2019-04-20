@@ -114,7 +114,7 @@ banknum:
 init_hardware:
 	ld hl, #128
         ld (_ramsize), hl
-	ld hl,#64
+	ld hl,#60		; We lose 4K to common space
         ld (_procmem), hl
 
 	xor a			; Kernel + ROM (works on SC108 and SC114)
