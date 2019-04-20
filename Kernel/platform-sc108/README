@@ -5,6 +5,7 @@ Cards required:
 
 SC108 processor module or SC114 motherboard
 SC104 Z80 SIO/2 (or RC2014 SIO/2 card)
+SC102 Z80 CTC
 RC2014 CF adapter
 
 Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
