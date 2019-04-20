@@ -95,7 +95,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 
 	used(flags);
 
-	baud = t->c_cflag & CBAUD;
+	baud = t->c_cflag & ~CBAUD;
 	if (baud < B134)
 		baud = B134;
 

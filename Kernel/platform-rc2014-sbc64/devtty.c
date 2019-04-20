@@ -107,7 +107,7 @@ static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 	} else
 		baud = B115200;
 
-	t->c_cflag &= CBAUD;
+	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
 
 	if (t->c_cflag & CSTOPB)
