@@ -35,7 +35,7 @@ void ds1302_write_seconds(uint8_t seconds)
     irqrestore(irq);
 }
 
-static uint8_t bad_bcd(uint8_t x, uint8_t max)
+static uint8_t bad_bcd(uint8_t x, uint8_t min, uint8_t max)
 {
     uint8_t c;
 
@@ -44,7 +44,7 @@ static uint8_t bad_bcd(uint8_t x, uint8_t max)
     if (c > 9 || x > 9)
         return 1;
     c = c * 10 + x;
-    if (c > max)
+    if (c < min || c > max)
         return 1;
     return 0;
 }
@@ -55,12 +55,12 @@ uint8_t ds1302_check_rtc(void)
 
     ds1302_read_clock(buffer, 7); /* read all calendar data */
 
-    if (bad_bcd(buffer[0] & 0x7F, 59) ||
-        bad_bcd(buffer[1], 59) ||
-        bad_bcd(buffer[3], 31) ||
-        bad_bcd(buffer[4], 12) ||
-        bad_bcd(buffer[5], 7) ||
-        bad_bcd(buffer[6], 99))
+    if (bad_bcd(buffer[0] & 0x7F, 0, 59) ||
+        bad_bcd(buffer[1], 0, 59) ||
+        bad_bcd(buffer[3], 1, 31) ||
+        bad_bcd(buffer[4], 1, 12) ||
+        bad_bcd(buffer[5], 1, 7) ||
+        bad_bcd(buffer[6], 0, 99))
             return 0;
 
     if(buffer[0] & 0x80){ /* is the clock halted? */
