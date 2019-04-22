@@ -505,8 +505,19 @@ install_vectors:
 		move.l #8,a0
 		move.w #253,d0
 		move.l #unexpected,d1
+		;
+		;	The 683xx devices use F0-FF for magic such as
+		;	hardware base addresses and control registers. Skip
+		;	this range.
+		;
 init_trap_loop:
+		cmp.w #$f0,a0
+		blt sandwich			; with mayo
+		cmp.w #$fc,a0
+		ble skipvec
+sandwich:
 		move.l d1,(a0)+
+skipvec:
 		dbra d0,init_trap_loop
 		;
 		; Now set the vectors we care about
