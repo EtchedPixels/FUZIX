@@ -1,4 +1,4 @@
-## An UZI target for the JeeLabs Retro Z80 emulator
+## A FUZIX target for the JeeLabs Retro Z80 emulator
 
 > Note: this port was adapted from the `z80pack` and `sbcv2` ports
 
@@ -12,8 +12,8 @@ We run FUZIX with one application per bank and the memory map currently is:
 ``` text
 0000-0080	Vectors
 0081-0084	Saved CP/M command info
-0100		UZI kernel start
-????		UZI kernel end ~= A000
+0100		FUZIX kernel start
+????		FUZIX kernel end ~= A000
 (big kernels go up to E400 or so!)
 no discard area, current kernel easily fits in 60K
 End of kernel:	Common >= 0xF000
@@ -67,7 +67,7 @@ the registers can be used to pass information in or out.
 The latest version of z80emu used for this port can be found at
 [git.jeelabs.org](https://git.jeelabs.org/jcw/retro/src/branch/master/z80emu).
 
-### System calls
+### Emulator System calls
 
 Note: these calls and the way information gets passed around are still in flux.
 
