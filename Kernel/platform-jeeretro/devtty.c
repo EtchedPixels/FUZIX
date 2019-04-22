@@ -51,7 +51,11 @@ void tty_putc(uint8_t minor, unsigned char c)
     used(c);
 
     __asm
-        ld c, 5 (ix) ; get 2nd arg
+        pop hl
+        pop de
+        push de
+        push hl
+        ld c,d ; get 2nd arg
         in a, (2)
     __endasm;
 }
