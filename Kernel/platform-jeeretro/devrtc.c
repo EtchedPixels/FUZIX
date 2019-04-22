@@ -64,6 +64,7 @@ int platform_rtc_read(void)
 		return -1;
 	return len;
 #endif
+	return -EOPNOTSUPP;
 }
 
 int platform_rtc_write(void)
