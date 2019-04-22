@@ -2,11 +2,7 @@
 ;	Z80Pack hardware support
 ;
 ;
-;	This goes straight after udata for common. Because of that the first
-;	256 bytes get swapped to and from disk with the uarea (512 byte disk
-;	blocks). This isn't a problem but don't put any variables in here.
-;
-;	If you make this module any shorter, check what follows next
+;	This goes straight after udata for common.
 ;
 
 
