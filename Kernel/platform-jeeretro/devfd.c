@@ -1,5 +1,5 @@
 /* 
- * z80pack fd driver
+ * Jeeretro fd driver
  *
  */
 
@@ -29,7 +29,7 @@ static int hd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
         uint8_t cmd;
         uint16_t dma;
         uint16_t sector;
-    } hdp;
+    } __packed hdp;
 
     hdp.bank = map;
     hdp.drive = minor;
