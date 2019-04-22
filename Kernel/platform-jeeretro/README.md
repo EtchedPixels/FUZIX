@@ -1,13 +1,13 @@
-### An UZI target for the JeeLabs Retro Z80 emulator
+## An UZI target for the JeeLabs Retro Z80 emulator
 
-> Note: this port was adpated from the `z80pack` and `sbcv2` ports
+> Note: this port was adapted from the `z80pack` and `sbcv2` ports
 
 JeeRetro is configered with a simple 4K fixed common and 60K fixed sized banks
 (this can be changed at runtine, see the "`common`" emulator request below).
 
-We run FUZIX with one application per bank and the memory map currently is
+We run FUZIX with one application per bank and the memory map currently is:
 
-#### Bank 0:
+### Bank 0:
 
 ``` text
 0000-0080	Vectors
@@ -28,7 +28,7 @@ End of kernel:	Common >= 0xF000
 FFFF		Hard end of kernel room
 ```
 
-#### Bank 1 to Bank n:
+### Bank 1 to Bank n:
 
 ``` text
 0000		Vector copy
@@ -38,7 +38,7 @@ ECFF		Application end
 ED00-EFFF	uarea stash
 ```
 
-Disk swap device is needed due to limited number of user banks
+Disk swap device is needed due to limited number of user banks.
 
 Disk layout depends on the emulator configuration
 One option is to put the kernel at block 1, and the fs starting at block 2048
@@ -49,9 +49,9 @@ This is compatible with a possible future use of MBR partitioning. I.e.
 
 See <https://jeelabs.org/2018/z80-zexall-f407/> for further Jee Retro details.
 
-#### Emulator details
+### Emulator details
 
-The emulator used for this port is vased on "`z80emu`", which can be found on
+The emulator used for this port is based on "`z80emu`", which can be found on
 [GitHub](https://github.com/anotherlin/z80emu).
 
 As with the `zextest.c` demo in that project, there is a somewhat odd way of
@@ -67,7 +67,7 @@ the registers can be used to pass information in or out.
 The latest version of z80emu used for this port can be found at
 [git.jeelabs.org](https://git.jeelabs.org/jcw/retro/src/branch/master/z80emu).
 
-#### System calls
+### System calls
 
 Note: these calls and the way information gets passed around are still in flux.
 
