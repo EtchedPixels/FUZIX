@@ -58,5 +58,5 @@
 #define platform_discard()
 #define platform_copyright()
 
-//#define BOOTDEVICENNAMES "fd,hd"
+//#define BOOTDEVICENNAMES "hd#,fd#"
 #define BOOTDEVICE 0x100
