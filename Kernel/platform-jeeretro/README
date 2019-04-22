@@ -7,7 +7,7 @@ Bank 0:
 
 0000-0080	Vectors
 0081-0084	Saved CP/M command info
-0088		UZI kernel start
+0100		UZI kernel start
 ????		UZI kernel end ~= A000
 (big kernels go up to E400 or so!)
 no discard area, current kernel easily fits in 60K

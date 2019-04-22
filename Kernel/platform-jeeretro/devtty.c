@@ -45,19 +45,14 @@ char tty_writeready(uint8_t minor)
     return TTY_READY_NOW;
 }
 
-static uint8_t tmpReg;
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    minor;
+    used(minor);
+    used(c);
 
-    tmpReg = c;
     __asm
-            push bc
-            ld a,(_tmpReg);
-            ld c,a
-	    in a, (2)
-            pop bc
+        ld c, 5 (ix) ; get 2nd arg
+        in a, (2)
     __endasm;
 }
 
@@ -67,30 +62,11 @@ void tty_sleeping(uint8_t minor)
 }
 
 /* Called every timer tick */
-/* This looks a bit odd but we have the classic emulator problem of the
-   serial ports suddenly being empty then getting blasted with data from
-   an unrealistic fifo running at what is effectively MHz+ speeds. So we
-   gate the number of bytes we allow per clock to simulate a real baud rate
-   (in this case 100Hz 80 chars  ~= 9600 baud input) */
+
 void tty_pollirq(void)
 {
-    unsigned char c; 	/* sdcc bug workaround */
-    unsigned char l;
-
-    __asm
-	    in a, (0)
-            ld (_tmpReg), a
-    __endasm;
-
-    if (tmpReg == 0)
-        return;
-
-    __asm
-	    in a, (1)
-            ld (_tmpReg), a
-    __endasm;
-
-    tty_inproc(1, tmpReg);
+    if (tty1stat)
+        tty_inproc(1, tty1data);
 }    
 
 void tty_setup(uint8_t minor, uint8_t flags)

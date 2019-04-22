@@ -37,7 +37,7 @@
 #define SWAP_SIZE   0x78 	/* 60K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xF000	/* vectors so its a round number of sectors */
-#define MAX_SWAPS	64	/* The full drive would actually be 85! */
+#define MAX_SWAPS	16	/* The full drive would actually be 85! */
 
 #define swap_map(x)	((uint8_t *)(x)) /* Simple zero based mapping */
 
