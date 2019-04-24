@@ -131,11 +131,22 @@ static void tty_interrupt(uint8_t r)
 void platform_interrupt(void)
 {
 	uint8_t r = GETB(UART_ISR);
+	static uint8_t c = 0x12;
+	static uint8_t ct;
 	tty_interrupt(r);
 	if (r & 0x08) {
 		/* Ack the interrupt */
 		GETB(UART_STOPCTR);
 		timer_interrupt();
+		if (++ct == 20) {
+			ct = 0;
+			PUTB(UART_SETOPR, 0xFF);
+			c <<= 1;
+			c &= 0x7F;
+			if (c == 0x10)
+				c |= 0x02;
+			PUTB(UART_CLROPR, c | (udata.u_insys ? 0x80 : 0));
+		}
 	}
 	/* and 0x80 is the GPIO */
 }
