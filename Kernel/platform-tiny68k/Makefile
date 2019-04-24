@@ -38,7 +38,6 @@ clean:
 
 image:
 	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld \
-	crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
 	tricks.o main.o ../timer.o ../kdata.o 68000exception.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
