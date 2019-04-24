@@ -342,3 +342,31 @@ is not recommended.
 
 Tested On 0.3-rc2
 - SC114 with SC102 and SC104
+
+### Tiny68K
+
+A 68000 based SBC with CF interface and a lot of memory.
+
+Supported Features
+- RS232 serial port
+- IDE/CF adapter
+
+Unsupported
+- RTC on Tiny68K v2
+- Tiny68K-RC
+
+Installation
+
+FUZIX is supplied as a raw filesystem image or CF card. Insert the CF card
+and type 'bo' at the boot monitor. It will then boot Fuzix instead of CP/M.
+The current environment mostly matches the 8bit systems although much more
+powerful commands and tools can be run.
+
+Note that the IDE interface on the Tiny68K is byteswapped. Fuzix therefore
+expects byteswapped media.
+
+#### Important
+
+Version 1 of the Tiny68K board has a reliability problem with some CF cards.
+See the Tiny68K web site for details of workarounds and reworks.
+
