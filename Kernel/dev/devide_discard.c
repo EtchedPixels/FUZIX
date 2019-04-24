@@ -101,7 +101,11 @@ void devide_init_drive(uint_fast8_t drive)
     blk_op.nblock = 1;
     devide_read_data();
 
+#ifdef CONFIG_IDE_BSWAP
+    if(!(buffer[98] & 0x02)) {
+#else
     if(!(buffer[99] & 0x02)) {
+#endif    
         kputs("LBA unsupported.\n");
         goto failout;
     }
