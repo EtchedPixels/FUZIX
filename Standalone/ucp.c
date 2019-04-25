@@ -38,6 +38,7 @@ static struct cinode i_tab[ITABSIZE];
 static struct filesys fs_tab[1];
 
 int swizzling = 0;
+static int swapped = 0;
 
 static inoptr root;
 static struct oft of_tab[OFTSIZE];
@@ -60,6 +61,12 @@ static int cmd_rmdir(char *path);
 
 static int interactive = 0;
 
+static void cmdusage(void)
+{
+        fprintf(stderr, "Usage: ucp [-b] FILE [COMMAND]\n");
+        exit(1);
+}
+
 int main(int argc, char *argval[])
 {
     int  rdev;
@@ -69,18 +76,29 @@ int main(int argc, char *argval[])
     int  pending_line = 0;
     struct filesys fsys;
     int  j, retc = 0;
+    int opt;
 
-    if (argc == 2) {
-        fd_open(argval[1]);
+    while((opt = getopt(argc, argval, "b")) != -1) {
+    	switch (opt) {
+    	case 'b':
+    		swapped = 1;
+    		break;
+	default:
+		cmdusage();
+	}
+    }
+    if (optind >= argc)
+    	cmdusage();
+    if (argc - optind == 1) {
+        fd_open(argval[optind]);
         multiline = 1;
-    } else if (argc == 3) {
-        fd_open(argval[1]);
-        strncpy(&line[0], argval[2], 127);
+    } else if (argc - optind == 2) {
+        fd_open(argval[optind]);
+        strncpy(&line[0], argval[optind + 1], 127);
         line[127] = '\0';
         multiline = 0;
     } else {
-        printf("Usage: ucp FILE [COMMAND]\n");
-        exit(1);
+    	cmdusage();
     }
 
     if (isatty(0))
@@ -96,7 +114,7 @@ int main(int argc, char *argval[])
     do {
         if (multiline && !pending_line) {
 	    if (interactive)
-                printf("unix: ");
+                printf("ucp: ");
             if (fgets(line, 128, stdin) == NULL) {
                 xfs_end();
                 exit(retc);
@@ -2418,28 +2436,39 @@ and are handed a device number.  Udata.u_base, count, and offset have
 the rest of the data.
 **********************************************************************/
 
+static uint8_t *bdswap(uint8_t *p)
+{
+	static uint8_t buf[512];
+	if (!swapped)
+		return p;
+	swab(p, buf, 512);
+	return buf;
+}
+
+static void bdswapkeep(uint8_t *p)
+{
+	/* Irritatingly POSIX says swab(x,x,512) is undefined even though
+	   it's actually pretty safe */
+	memcpy(p, bdswap(p), 512);
+}
+
 static int bdread(bufptr bp)
 {
-/*    printf("bdread(fd=%d, block %d)\n", dev_fd, bp->bf_blk); */
-
-	udata.u_buf = bp;
-	if (lseek
-	    (dev_fd, dev_offset + (((int) bp->bf_blk) * 512),
+	if (lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512),
 	     SEEK_SET) == -1)
 		perror("lseek");
 	if (read(dev_fd, bp->bf_data, 512) != 512)
 		panic("read() failed");
-
+	if (swapped)
+		bdswapkeep(bp->bf_data);
 	return 0;
 }
 
 
 static int bdwrite(bufptr bp)
 {
-	udata.u_buf = bp;
-
 	lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512), SEEK_SET);
-	if (write(dev_fd, bp->bf_data, 512) != 512)
+	if (write(dev_fd, bdswap(bp->bf_data), 512) != 512)
 		panic("write() failed");
 	return 0;
 }
