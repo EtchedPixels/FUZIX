@@ -34,7 +34,7 @@ start:
 	; should be where we end up from the bra
 loader:
 	or #$0700,sr
-	lea $00FF0000,a0
+	lea $001F0000,a0
 	lea $00FFF000,a2
 	lea bootmsg,a1
 txout:
@@ -58,7 +58,7 @@ now_reloc
 reloc:
 	move.w (a1)+,(a0)+
 	dbra d0,reloc
-	jmp.l $00FF0000
+	jmp.l $001F0000
 
 strap:
 	move.b #10,THRA(a2)
