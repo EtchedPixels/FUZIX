@@ -1,23 +1,23 @@
 ; Keep these in sync with struct u_data!!
-U_DATA__U_PTAB              .set (U_DATA+0)   ; struct p_tab*
-U_DATA__U_PAGE              .set (U_DATA+2)   ; uint16_t
-U_DATA__U_PAGE2             .set (U_DATA+4)   ; uint16_t
-U_DATA__U_INSYS             .set (U_DATA+6)   ; bool
-U_DATA__U_CALLNO            .set (U_DATA+7)   ; uint8_t
-U_DATA__U_SYSCALL_SP        .set (U_DATA+8)   ; void *
-U_DATA__U_RETVAL            .set (U_DATA+10)   ; int16_t
-U_DATA__U_ERROR             .set (U_DATA+12)  ; int16_t
-U_DATA__U_SP                .set (U_DATA+14)  ; void *
-U_DATA__U_ININTERRUPT       .set (U_DATA+16)  ; bool
-U_DATA__U_CURSIG            .set (U_DATA+17)  ; int8_t
-U_DATA__U_ARGN              .set (U_DATA+18)  ; uint16_t
-U_DATA__U_ARGN1             .set (U_DATA+20)  ; uint16_t
-U_DATA__U_ARGN2             .set (U_DATA+22)  ; uint16_t
-U_DATA__U_ARGN3             .set (U_DATA+24)  ; uint16_t
-U_DATA__U_ISP               .set (U_DATA+26)  ; void * (initial stack pointer when _exec()ing)
-U_DATA__U_TOP               .set (U_DATA+28)  ; uint16_t
-U_DATA__U_BREAK             .set (U_DATA+30)  ; uint16_t
-U_DATA__U_SIGVEC            .set (U_DATA+32)  ; table of function pointers (void *)
+U_DATA__U_PTAB              .set (0)   ; struct p_tab*
+U_DATA__U_PAGE              .set (2)   ; uint16_t
+U_DATA__U_PAGE2             .set (4)   ; uint16_t
+U_DATA__U_INSYS             .set (6)   ; bool
+U_DATA__U_CALLNO            .set (7)   ; uint8_t
+U_DATA__U_SYSCALL_SP        .set (8)   ; void *
+U_DATA__U_RETVAL            .set (10)   ; int16_t
+U_DATA__U_ERROR             .set (12)  ; int16_t
+U_DATA__U_SP                .set (14)  ; void *
+U_DATA__U_ININTERRUPT       .set (16)  ; bool
+U_DATA__U_CURSIG            .set (17)  ; int8_t
+U_DATA__U_ARGN              .set (18)  ; uint16_t
+U_DATA__U_ARGN1             .set (20)  ; uint16_t
+U_DATA__U_ARGN2             .set (22)  ; uint16_t
+U_DATA__U_ARGN3             .set (24)  ; uint16_t
+U_DATA__U_ISP               .set (26)  ; void * (initial stack pointer when _exec()ing)
+U_DATA__U_TOP               .set (28)  ; uint16_t
+U_DATA__U_BREAK             .set (30)  ; uint16_t
+U_DATA__U_SIGVEC            .set (32)  ; table of function pointers (void *)
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      .set 0
