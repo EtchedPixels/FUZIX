@@ -79,3 +79,18 @@ Ethernet over SPI
 
 How to do swap ?
 
+CF card:
+
+8MB per 'drive'
+
+dpb is 1024 sectors/track
+bls 5 (4096)
+EXM 1
+DSM 2015
+DRM 511
+track offset 1
+
+As we have 64 x 128K tracks we get 128K to play with so can write a partition
+table including a map for CP/M D: and a kernel low, with Fuzix partitions 8MB+
+on the drive.
+
