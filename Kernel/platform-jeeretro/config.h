@@ -51,7 +51,7 @@
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
+#define SWAPDEV  (1)      /* Device for swapping. (second virtual drive) */
 #define NBUFS    8	  /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
@@ -59,4 +59,4 @@
 #define platform_copyright()
 
 //#define BOOTDEVICENNAMES "hd#,fd#"
-#define BOOTDEVICE 0x100
+#define BOOTDEVICE 0x00
