@@ -8,7 +8,7 @@
 	    .export map_kernel
 	    .export map_process
 	    .export map_process_always
-	    .export map_save
+	    .export map_save_kernel
 	    .export map_restore
 
 	    .export _unix_syscall_i
@@ -45,6 +45,8 @@
 	    .import outcharhex
 	    .import outxa
 	    .import incaxy
+
+	    .import _create_init_common
 
             .include "kernel.def"
             .include "../kernel02.def"
@@ -89,7 +91,13 @@ irq_on:
             .code
 
 init_early:
-            rts
+	    ; Hack for now - create a common copy for init. We should then
+	    ; recycle page 32 into a final process but that means awkward
+	    ; handling - or does it - we wrap the bit ?? FIXME
+	    jsr _create_init_common
+	    lda #36
+	    sta $C07A		; set low page to copy
+            rts			; stack was copied so this is ok
 
 init_hardware:
             ; set system RAM size for test purposes
@@ -125,6 +133,13 @@ program_vectors_k:
 	    sta $FFFA
 	    lda #>nmi_handler
 	    sta $FFFB
+	    ; However tempting it may be to use BRK for system calls we
+	    ; can't do this on an NMOS 6502 because the chip has brain
+	    ; dead IRQ handling bits that could simply "lose" the syscall!
+	    lda #<syscall_entry
+	    sta syscall
+	    lda #>syscall_entry
+	    sta syscall+1
 	    jmp map_kernel
 
 ;
@@ -203,6 +218,8 @@ map_bank_i:			; We are not mapping the first user page yet
 	    stx $C07B
 	    inx
 	    stx $C078
+	    inx
+	    stx $C079
 	    rts
 
 ; X,A holds the map table of this process
@@ -221,7 +238,9 @@ map_process_2:
 
 ;
 ;	Restore mapping. This may not be sufficient. We may need to do a
-;	careful 6 byte save/restore if we do clever stuff in future
+;	careful 4 byte save/restore if we do clever stuff in future. We only
+;	ever use this from the current kernel map when returning to kernel
+;	so this is fine.
 ;
 map_restore:
 	    pha
@@ -238,10 +257,13 @@ map_restore:
 ;	Save the current mapping.
 ;	May not be sufficient if we want IRQs on while doing page tricks
 ;
-map_save:
+map_save_kernel:
 	    pha
 	    lda cur_map
-	    sta saved_map
+	    pha
+	    jsr map_kernel
+	    pla
+	    sta saved_map	; always save the map in the right commonmem
 	    pla
 	    rts
 
@@ -278,6 +300,8 @@ vector:
 	    tya
 	    pha
 	    cld
+
+	    jsr stash_zp		; Save our zero page bits
 ;
 ;	Q: do we want to spot brk() instructions and signal them ?
 ;
@@ -287,11 +311,6 @@ vector:
 	    tsx					; and save the 6502 stack ptr
 	    stx istack_switched_sp		; in uarea/stacks
 
-;
-;	Flip ZP
-;
-	    lda #32
-	    sta $C07A				; Flip low 16K
 ;
 ;	Configure the C stack to the i stack
 ;
@@ -305,6 +324,7 @@ vector:
 ;
 	    ldx istack_switched_sp
 	    txs					; recover 6502 stack
+	    jsr stash_zp			; recover 6502 zp bits
 
 ;	Check for kernel return path (much simpler as we don't do any
 ;	bank flipping of the low 16K)
@@ -357,8 +377,6 @@ vector:
 	    ; Check what signals are now waiting for us
 	    ;
 no_preempt:
-	    lda _udata+U_DATA__U_PAGE
-	    sta $C07A		; user sp and zp page
 ;
 ;	Signal handling on 6502 is foul as the C stack may be inconsistent
 ;	during an IRQ. We push a new complete rti frame below the official
@@ -470,10 +488,8 @@ noargs:
 ;
 	    sta _udata+U_DATA__U_SYSCALL_SP + 1
 ;
-;	Now switch to the kernnel ZP and stack
-;
-	    lda #$32
-	    sta $C07A
+;	FIXME: we should check here if there is enough 6502 stack left
+;	and if so either copy and switch stacks or kill the process
 ;
 ;	Set up the C stack
 ;
@@ -500,11 +516,6 @@ noargs:
 	    ldx _udata+U_DATA__U_SYSCALL_SP
 	    txs
 
-;
-;	Flip the low 16K and user S and ZP back
-;
-	    lda _udata+U_DATA__U_PAGE
-	    sta $C07A
 ;
 ;	From that recover the C stack and the syscall buf ptr
 ;
@@ -583,13 +594,6 @@ syscout:
 	    rts
 
 platform_doexec:
-;
-;	We need the low 16K of the user mapped so we use the user Z and SP
-;	beyond this point
-;
-	    lda _udata+U_DATA__U_PAGE
-	    sta $C07A
-
 ;
 ;	We can't set user zero page vectors until we have the low 16K
 ;	mapped so we do it here rather than in the usual place.

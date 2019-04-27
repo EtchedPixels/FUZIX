@@ -1,8 +1,8 @@
 #include <kernel.h>
 #include <version.h>
 #include <kdata.h>
-#include <devhd.h>
 #include <devsys.h>
+#include <blkdev.h>
 #include <tty.h>
 #include <devtty.h>
 
@@ -10,10 +10,18 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
-  /* 0: /dev/fd		Floppy disc block devices  */
-  {  hd_open,     no_close,    hd_read,   hd_write,   no_ioctl },
-  /* 1: /dev/hd		Hard disc block devices (absent) */
-  {  nxio_open,     no_close,    no_rdwr,   no_rdwr,   no_ioctl },
+  /* 0: /dev/hd - block device interface */
+#ifdef CONFIG_IDE
+  {  blkdev_open,   no_close,   blkdev_read,    blkdev_write,	blkdev_ioctl},
+#else
+  {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
+#endif
+  /* 1: /dev/fd - Floppy disk block devices */
+#ifdef CONFIG_FLOPPY
+  {  fd_open,	    fd_close,	fd_read,	fd_write,	no_ioctl},
+#else
+  {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
+#endif
   /* 2: /dev/tty	TTY devices */
   {  tty_open,     tty_close,   tty_read,  tty_write,  tty_ioctl },
   /* 3: /dev/lpr	Printer devices */
@@ -31,9 +39,5 @@ bool validdev(uint16_t dev)
 	return false;
     else
         return true;
-}
-
-void device_init(void)
-{
 }
 

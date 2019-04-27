@@ -1,3 +1,6 @@
+#define ide_select(x)
+#define ide_deselect()
+
 #define IDE_IS_MMIO
 #define IDE_8BIT_ONLY
 

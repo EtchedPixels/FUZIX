@@ -35,7 +35,7 @@
 ; and its a constant for the others from before init forks so it'll be fine
 ; here
 _ramtop:
-	.word $E000
+	.word $C000
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -89,7 +89,7 @@ _switchin:
 ;	pha
 ;	jsr	outcharhex
 ;	pla
-	sta	$FE00		; switches zero page, stack memory area
+	sta	$C07A		; switches zero page, stack memory area
 	; ------- New stack and ZP -------
 
 	; Set ptr1 back up (the old ptr1 was on the other ZP)
@@ -122,8 +122,6 @@ _switchin:
 	sta sp+1
 	pla
 	sta sp
-	lda	#'*'
-	sta	$FE20
 	lda _inint
         beq swtchdone		; in ISR, leave interrupts off
 	cli
@@ -134,8 +132,6 @@ swtchdone:
         rts
 
 switchinfail:
-	lda	#'!'
-	sta	$FE20
 	lda	ptr1+1
 	jsr	outcharhex
 	lda	ptr1
@@ -252,45 +248,54 @@ _dofork:
 fork_copy:
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y		; child->p_pag[0]
-	sta $FE03		; 6000-7FFF
+	sta $C078		; 8000
+	sta tmp1
 	lda U_DATA__U_PAGE
-	sta $FE02		; 4000-5FFF
+	sta $C07B		; 4000
+	sta tmp2
 
-	; Now use that window to copy 56K from 0000-DFFF
+	; Now use that window to copy 64K from 0000-FFFF
 
-	jsr bank2bank		; copies 8K
-	; This assumes our MMU is r/w. We'd need shadows otherwise
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
-	inc $FE02		; next 8K
-	inc $FE03
-	jsr bank2bank		; copies 8K
+	jsr bank2bank		; copies 16K
+
+	inc tmp1
+	inc tmp2
+	lda tmp1
+	sta $C078
+	lda tmp2
+	sta $C07B
+	jsr bank2bank		; second 16K
+
+	inc tmp1
+	inc tmp2
+	lda tmp1
+	sta $C078
+	lda tmp2
+	sta $C07B
+	jsr bank2bank		; third 16K
+
+	inc tmp1
+	inc tmp2
+	lda tmp1
+	sta $C078
+	lda tmp2
+	sta $C07B
+	jsr bank2bank		; final block
+
 	jmp map_kernel		; put the kernel mapping back as it should be
 	
-bank2bank:			;	copy 4K between the blocks mapped
-				;	at 0x4000 and 0x6000
+bank2bank:			; copy 16K from the block mapped
+				; at 4000 to the block at 8000
+				; FIXME: interrupts need to be off right now
 	lda #$40
 	sta ptr3+1
-	lda #$60
+	lda #$80
 	sta ptr4+1
 	lda #0
 	sta ptr3
 	sta ptr4
 	tay
-	ldx #$20		;	32 x 256 bytes = 8K
+	ldx #$40		;	64 x 256 bytes  = 16K
 copy1:
 	lda (ptr3),y
 	sta (ptr4),y
@@ -303,10 +308,10 @@ copy1:
 	rts
 
 _create_init_common:
-	lda #$00
-	sta $FE02
-	lda #$08
-	sta $FE03
+	lda #32
+	sta $C07B		;	set the map for 0x4000
+	lda #36
+	sta $C078		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel
 ;

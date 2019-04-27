@@ -10,10 +10,12 @@ DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS)
+
+CROSS_CCOPTS += -I../dev/
 
 all:	$(OBJS)
 
@@ -25,16 +27,18 @@ $(AOBJS): %$(BINEXT): %.s
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+	mv ../dev/$*.o .
 
 $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+	mv ../dev/$*.o .
 
 clean:
 	rm -f $(OBJS) *.o core *~ fuzix.img fuzix.bin
 
 image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg crt0.o commonmem.o \
-	v65.o ../start.o ../version.o ../lowlevel-6502.o \
+	rc2014-6502.o ../start.o ../version.o ../lowlevel-6502.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
@@ -42,4 +46,4 @@ image:
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-6502.o devtty.o
 	# FIXME: need to leave C000-C0FF hole
-	dd if=../fuzix.bin of=fuzix.img bs=512 skip=1
+	dd if=../fuzix.bin of=fuzix.img bs=512 skip=2

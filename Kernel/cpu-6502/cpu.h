@@ -58,8 +58,13 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* Sane behaviour for unused parameters */
+/* No useful behaviour for unused parameters */
 #define used(x)
+
+#define cpu_to_le16(x)	(x)
+#define le16_to_cpu(x)	(x)
+#define cpu_to_le32(x)	(x)
+#define le32_to_cpu(x)	(x)
 
 /* No support for inline */
 #define inline

@@ -16,8 +16,8 @@
 ;	So we end up first in the image
 ;
 	        .segment "START"
-		.byte 65
-		.byte 02
+		.byte $02
+		.byte $65
 
 entry:
 ;

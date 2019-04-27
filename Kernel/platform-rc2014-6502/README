@@ -6,27 +6,64 @@ Our memory mapping looks like this
 
 	0x0000-0x00FF	ZP
 	0x0100-0x01FF	6502 Stack (per proc)
-	0x0200-0xBFFF	Process space / Kernel banked
-	0xC000-0xFFFF	Kernel common and vectors
+	0x0200-0x03FF	Loader (need to reclaim this FIXME)
+	0x0400-0x3FFF	Common copy and whatever code fills the rest
 
-	0xC000		udata + C kstack 
-	0xC200		C istack
-	0xC300		Kernel common
+	0x4000-0xBFFF	Kernel code
+	0xC100-0xFFFF	Kernel common and vectors
 
+In user space
+
+	0x0000-0x3FFF	Kernel common and work area
+	0x4000-0xFFF9	User space
+	0xFFFA-0xFFFF	Vectors
+
+We operate roughly like a 16K x 4 paged setup except that for now for simplicity
+we treat user space as a fixed 48K bank switch. The other difference is that
+being a 6502 we need it the other way up.
+
+We currently stuff the low space with kernel code limiting process size to
+0xC000 bytes. In theory we can trim that down and tidy up the maps a bit to
+make user bigger. That can wait however.
+
+Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
+interrupt copies (about 20 bytes involved)
+
+Hardware Arrangement
+
+6502 CPU
+C000-C0FF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RC2014 bus
+RAM connected via the RC2014 bus but with A15 inverted
+512K RAM/ROM
+16550A UART
+
+Note: Because A15 is inverted the RAM/ROM 16K pages are mapped via
+
+$C07A
+$C07B
+$C078
+$C079
+
+not the expected order
 
 
 Challenges:
 
-On a system call and IRQ entry we need to switch the low 16K bank and thus
-ZP and S correctly
+C000-C0FF are the I/O window, rather than somewhere sane like FExx
 
-On an interrupt we need to save the full map probably (right now just remember
-whole thing) and switch ZP and S properly back and forth as well as pre-empt
+Next Steps
 
-For user access we have the fun of doing block copies to/from the low 16K user
-space in which case our ZP and S flip on us. Alternatively do we do it by
-bank mapping into say $8000 to avoid that but have to handle edge cases and
-IRQ trouble.
+Generate the binary with the correct hole at C000-C0FF
+Test and get initial boot working
+Rebuild user space for 0x4000 start (need relocatable userspace yet)
+Figure out how to reclaim 0200-03FF with commondata start
+	(need to work out how loader knows where to jump...)
+Write pre-emption code
+Debug signal handling
+Discard segment
+Do buffer growth into discard
+Swap support
+Timer interrupt (TMS9918A or 6522VIA ?)
 
-Alternative is to put common low and share ZP and S which gives us a different
-set of problems.
+Look at other RC2014 device support

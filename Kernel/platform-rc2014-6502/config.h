@@ -33,6 +33,9 @@
 #define PROGLOAD    0x0200
 #define PROGTOP     0xC000
 
+#define CONFIG_IDE
+#define MAX_BLKDEV 1
+
 /* FIXME: swap */
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
