@@ -21,17 +21,16 @@ void do_beep(void)
 }
 
 /*
- * Map handling: We have flexible paging. Each map table consists of a set of pages
- * with the last page repeated to fill any holes.
+ * Map handling: allocate 3 banks per process
  */
 
 void pagemap_init(void)
 {
     int i;
-    /* 32-35 are the kernel, 36-39 / 40-43 / etc are user */
-    /* Add 36-39 last as we hardcode 36 into our init creation in tricks.s */
-    for (i = 7; i >= 1; i--)
-        pagemap_add(32 + i * 4);
+    /* 32-35 are the kernel, 36-38 / 39-41 / etc are user */
+    /* Add 36-38 last as we hardcode 36 into our init creation in tricks.s */
+    for (i = 8; i >= 0; i--)
+        pagemap_add(36 + i * 3);
 }
 
 void map_init(void)

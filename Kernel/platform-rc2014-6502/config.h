@@ -21,16 +21,14 @@
  */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 	9   /* 9 x 48K */
-#define MAP_SIZE    0xC000  /* The low 8K is taken up with common space ZP and
-                               S, while we don't currently use the top 8K
-                               (see tricks.s and fix up the fork copy code) */
+#define MAP_SIZE    0xC000
 
 #define TICKSPERSEC 10	    /* Ticks per second */
 
 /* We've not yet made the rest of the code - eg tricks match this ! */
 #define MAPBASE	    0x0000  /* We map from 0 */
-#define PROGBASE    0x0200  /* also data base */
-#define PROGLOAD    0x0200
+#define PROGBASE    0x2000  /* also data base */
+#define PROGLOAD    0x2000
 #define PROGTOP     0xC000
 
 #define CONFIG_IDE
@@ -46,7 +44,7 @@
 /* Device parameters */
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    8        /* Number of block buffers */
+#define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define platform_discard()

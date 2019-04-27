@@ -25,11 +25,6 @@ kstack_base:
 	.res 512,0
 kstack_top:
 
-        ; next 256 bytes: 253 byte interrupt stack, then 3 byte saved stack pointer
-istack_base:
-	.res 254,0
-istack_top:
-istack_switched_sp: .word 0
 ;
 ;	Finally we tack the ZP save area for interrupts on the end
 ;
@@ -39,3 +34,15 @@ CTemp:
 	.res    2               ; sp
 	.res    2               ; sreg
         .res    (zpsavespace-4) ; Other stuff
+
+;
+;	For this platform we want the istack separate
+;
+
+	.segment "ISTACK"
+
+        ; next 256 bytes: 254 byte interrupt stack, then 2 byte saved stack pointer
+istack_base:
+	.res 254,0
+istack_top:
+istack_switched_sp: .word 0

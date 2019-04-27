@@ -254,7 +254,7 @@ fork_copy:
 	sta $C07B		; 4000
 	sta tmp2
 
-	; Now use that window to copy 64K from 0000-FFFF
+	; Now use that window to copy 48K from 0000-BFFF
 
 	jsr bank2bank		; copies 16K
 
@@ -265,14 +265,6 @@ fork_copy:
 	lda tmp2
 	sta $C07B
 	jsr bank2bank		; second 16K
-
-	inc tmp1
-	inc tmp2
-	lda tmp1
-	sta $C078
-	lda tmp2
-	sta $C07B
-	jsr bank2bank		; third 16K
 
 	inc tmp1
 	inc tmp2
