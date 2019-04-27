@@ -1,0 +1,51 @@
+RC2014 8085
+
+Initial support for the 8085 CPU + 16550A UART card + 512/512 RAM/ROM setup
+using RC2014, plus a CTC and horrible M1 line hack.
+
+The ACIA can be supported and maybe the SIO (it has a backdoor way to 'reti')
+but the CTC needs the hack so really it would be better if someone built an 8254
+card for RC2014. With a bit of hacking the TMS9919A video adapter could also
+provide a timer.
+
+The RTC is also not yet wired in. It clashes with the 16C550A card so we need
+to get SIO or ACIA support on 8085 up to make it useful. We could alternatively
+move the RTC as the cards do let you set their address.
+
+Lots to do including building the board now the bits are done and verifying that
+we don't hit any funny hardware compatibility issues.
+
+May also need to re-route the IRQ line to RST5.5 or similar because we can't
+be sure what the devices will do in terms of interrupt cycles and loading
+the bus with a value other than 0xFF so could get random instruction execution.
+
+The .5 lines trap to a vector which means we don't have the problem. 7.5 is
+however edge triggered so we might want 5.5
+
+RC2015 8085 Addresses for I/O
+
+At this point:
+
+0x10-0x17	IDE CF (ghosts 0x90-0x97)
+0x70-0x7F	RAM/ROM card banking control
+0x80-0x83	SIO		|	ACIA with narrow decode
+0x84-0x87	Second SIO	|
+0x88-0x8B	CTC
+0x98-0x99	TMS9918A
+
+(ACIA with loose decode covers 80-BF!)
+
+0xC0-0xC7	16550A UART (ghosts all over C0-FF) - need a better board
+
+
+
+TODO
+
+- Build Ben's 8085 board with classic 7.3728MHz crystal and 8MHz Tundra 8085
+- Verify basic behaviour and compatibility with 512K RAM/ROM
+- Check on interrupt behaviour (do we always get FF or do we need IRQ routing
+  tricks to RST 5.5 ?)
+- Test IDE CF compatibility
+- Experiment to see if SIO can be made to work with the 8085 providing CLK
+- See if M1 hacks and CTC work or if we need another option
+
