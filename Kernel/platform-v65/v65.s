@@ -176,7 +176,7 @@ map_process_always:
 	    pha
 	    txa
 	    pha
-	    ldx U_DATA__U_PAGE
+	    ldx _udata + U_DATA__U_PAGE
 	    jsr map_bank_i
 	    pla
 	    tax
@@ -337,7 +337,7 @@ vector:
 	    ; Switch to our kernel stack which is free as we don't preempt
 	    ; from kernel space
 	    tsx
-	    stx	U_DATA__U_SYSCALL_SP
+	    stx	_udata + U_DATA__U_SYSCALL_SP
 	    ldx #kstack_top
 	    txs
 
@@ -348,23 +348,23 @@ vector:
 	    ; platform_switchout code is asm only as we switch in ?
 	    ;
 	    lda	#1
-	    sta U_DATA__U_INSYS
+	    sta _udata + U_DATA__U_INSYS
 	    jsr	_chksigs
 	    ; Mark ourselves Ready not Running
-	    ldx U_DATA__U_PTAB
+	    ldx _udata + U_DATA__U_PTAB
 	    lda	#P_READY
 	    sta a:P_TAB__P_STATUS_OFFSET,x
 	    ; Switch out .. we will re-appear at some point
-	    lda	U_DATA__U_PTAB
-	    ldx U_DATA__U_PTAB+1
+	    lda	_udata + U_DATA__U_PTAB
+	    ldx _udata + U_DATA__U_PTAB+1
 	    jsr _platform_switchout
 	    ;
 	    ; Now return to the old state having woken back up
 	    ; Clear insys, move back onto the interrupt stack
 	    ;
 	    lda #0
-	    sta U_DATA__U_INSYS
-	    ldx #<U_DATA__U_SYSCALL_SP
+	    sta _udata + U_DATA__U_INSYS
+	    ldx #<_udata + U_DATA__U_SYSCALL_SP
 	    txs
 	    ;
 	    ; Check what signals are now waiting for us
@@ -377,7 +377,7 @@ no_preempt:
 ;	app is expected to switch to a signal stack or similar, pop the
 ;	values, invoke the signal handler and then return.
 ;
-	    lda U_DATA__U_CURSIG
+	    lda _udata + U_DATA__U_CURSIG
 	    beq irqout
 	    tay
 	    tsx
@@ -393,16 +393,16 @@ no_preempt:
 	    tya
 	    pha				; stack signal number
 	    ldx #0
-	    stx U_DATA__U_CURSIG
+	    stx _udata + U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda U_DATA__U_SIGVEC,y	; Our vector (low)
+	    lda _udata + U_DATA__U_SIGVEC,y	; Our vector (low)
 	    pha				; stack half of vector
-	    lda U_DATA__U_SIGVEC+1,y	; High half
+	    lda _udata + U_DATA__U_SIGVEC+1,y	; High half
 	    pha				; stack rest of vector
 	    txa
-	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
-	    sta U_DATA__U_SIGVEC+1,y
+	    sta _udata + U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta _udata + U_DATA__U_SIGVEC+1,y
 	    lda #<PROGLOAD + 20
 	    pha
 	    lda #>PROGLOAD + 20
@@ -430,7 +430,7 @@ syscall_entry:
 	    sei
 	    cld
 
-	    stx U_DATA__U_CALLNO
+	    stx _udata + U_DATA__U_CALLNO
 
 	    ; No arguments - skip all the copying and stack bits
 	    cpy #0
@@ -456,10 +456,10 @@ syscall_entry:
 copy_args:
 	    dey
 	    lda (ptr1),y		; copy the arguments over
-	    sta U_DATA__U_ARGN+1,x
+	    sta _udata + U_DATA__U_ARGN+1,x
 	    dey
 	    lda (ptr1),y
-	    sta U_DATA__U_ARGN,x
+	    sta _udata + U_DATA__U_ARGN,x
             inx
 	    inx
 	    cpy #0
@@ -474,12 +474,12 @@ noargs:
 	    lda sp+1
 	    pha
 	    tsx
-	    stx U_DATA__U_SYSCALL_SP
+	    stx _udata + U_DATA__U_SYSCALL_SP
 ;
 ;	We save a copy of the high byte of sp here as we may need it to get
 ;	the brk() syscall right.
 ;
-	    sta U_DATA__U_SYSCALL_SP + 1
+	    sta _udata + U_DATA__U_SYSCALL_SP + 1
 ;
 ;
 ;	FIXME: we should check here if there is enough 6502 stack left
@@ -507,7 +507,7 @@ noargs:
 ;
 ;	Correct the system stack
 ;
-	    ldx U_DATA__U_SYSCALL_SP
+	    ldx _udata + U_DATA__U_SYSCALL_SP
 	    txs
 ;
 ;	From that recover the C stack and the syscall buf ptr
@@ -516,7 +516,7 @@ noargs:
 	    sta sp+1
 	    pla
 	    sta sp
-	    lda U_DATA__U_CURSIG
+	    lda _udata + U_DATA__U_CURSIG
 	    beq syscout
 	    tay
 
@@ -530,11 +530,11 @@ noargs:
 	    ;	The signal handler might make syscalls so we need to get
 	    ;	our return saved and return the right value!
 	    ;
-	    lda U_DATA__U_ERROR
+	    lda _udata + U_DATA__U_ERROR
 	    pha
-	    lda U_DATA__U_RETVAL
+	    lda _udata + U_DATA__U_RETVAL
 	    pha
-	    lda U_DATA__U_RETVAL+1
+	    lda _udata + U_DATA__U_RETVAL+1
 	    pha
 	    lda #>sigret		; Return address
 	    pha
@@ -544,16 +544,16 @@ noargs:
 	    tya
 	    pha				; signal
 	    ldx #0
-	    stx U_DATA__U_CURSIG
+	    stx _udata + U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda U_DATA__U_SIGVEC,y	; Our vector
+	    lda _udata + U_DATA__U_SIGVEC,y	; Our vector
 	    pha
-	    lda U_DATA__U_SIGVEC+1,y
+	    lda _udata + U_DATA__U_SIGVEC+1,y
 	    pha
 	    txa
-	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
-	    sta U_DATA__U_SIGVEC+1,y
+	    sta _udata + U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta _udata + U_DATA__U_SIGVEC+1,y
 
 	    ; Invoke the helper with signal and vector stacked
 	    ; it will then return to syscout and recover the original
@@ -579,10 +579,10 @@ syscout:
 
 ;	Copy the return data over
 ;
-	    ldy U_DATA__U_RETVAL
-	    ldx U_DATA__U_RETVAL+1
+	    ldy _udata + U_DATA__U_RETVAL
+	    ldx _udata + U_DATA__U_RETVAL+1
 ;	Also sets Z for us
-	    lda U_DATA__U_ERROR
+	    lda _udata + U_DATA__U_ERROR
 
 	    rts
 
@@ -610,9 +610,9 @@ noincx:
 ;
 ;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
 ;
-	    lda U_DATA__U_ISP
+	    lda _udata + U_DATA__U_ISP
 	    sta sp
-	    ldx U_DATA__U_ISP+1
+	    ldx _udata + U_DATA__U_ISP+1
             stx sp+1
 
 ;
