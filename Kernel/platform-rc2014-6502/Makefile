@@ -46,4 +46,7 @@ image:
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-6502.o devtty.o
 	# FIXME: need to leave C000-C0FF hole
-	dd if=../fuzix.bin of=fuzix.img bs=512 skip=2
+	dd if=../fuzix.bin of=fuzix.imgl bs=256 skip=4 count=188
+	dd if=../fuzix.bin of=fuzix.imgh bs=256 skip=193 count=62
+	cat fuzix.imgl fuzix.imgh >fuzix.img
+	
