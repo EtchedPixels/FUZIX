@@ -291,7 +291,7 @@ outcharw:
 ;	there on 6509 type setups. On 6502 it may well be linked once in
 ;	common space
 ;
-	.segment "STUBS"
+	.segment "COMMONMEM"
 ;
 ;	Interrupt vector logic. Keep this in platform for the 6502 so that
 ;	we can use the shorter one for the CMOS chip
@@ -597,17 +597,6 @@ syscout:
 	    rts
 
 platform_doexec:
-;
-;	We can't set user zero page vectors until we have the low 16K
-;	mapped so we do it here rather than in the usual place.
-;
-;	However tempting it may be to use BRK for system calls we
-;	can't do this on an NMOS 6502 because the chip has brain
-;	dead IRQ handling bits that could simply "lose" the syscall!
-	    lda #<syscall_entry
-	    sta syscall
-	    lda #>syscall_entry
-	    sta syscall+1
 ;
 ;	Start address of executable
 ;
