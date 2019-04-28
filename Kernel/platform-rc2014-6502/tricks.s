@@ -55,7 +55,7 @@ _platform_switchout:
 	lda sp+1
 	pha
 	tsx
-	stx U_DATA__U_SP	; Save it
+	stx _udata + U_DATA__U_SP	; Save it
 
         ; set inint to false
 	lda #0
@@ -99,10 +99,10 @@ _switchin:
 	sta	ptr1+1
 
         ; check u_data->u_ptab matches what we wanted
-	lda	U_DATA__U_PTAB
+	lda	_udata + U_DATA__U_PTAB
 	cmp	ptr1
 	bne	switchinfail
-	lda	U_DATA__U_PTAB+1
+	lda	_udata + U_DATA__U_PTAB+1
 	cmp	ptr1+1
 	bne	switchinfail
 
@@ -116,7 +116,7 @@ _switchin:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        ldx U_DATA__U_SP
+        ldx _udata + U_DATA__U_SP
 	txs
 	pla
 	sta sp+1
@@ -184,7 +184,7 @@ _dofork:
 	lda sp+1
 	pha
 	tsx
-	stx U_DATA__U_SP
+	stx _udata + U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
@@ -202,7 +202,7 @@ _dofork:
 	stx ptr1+1
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y
-	sta $FE00			; switch to child and child stack
+	sta $C07A			; switch to child and child stack
 					; and zero page etc
 	; We are now in the kernel child context
 
@@ -250,7 +250,7 @@ fork_copy:
 	lda (ptr1),y		; child->p_pag[0]
 	sta $C078		; 8000
 	sta tmp1
-	lda U_DATA__U_PAGE
+	lda _udata + U_DATA__U_PAGE
 	sta $C07B		; 4000
 	sta tmp2
 
