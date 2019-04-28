@@ -61,14 +61,17 @@ worth a board mod to move it and re-arrange the memory map.
 
 Next Steps
 
-Generate the binary with the correct hole at C000-C0FF
-Test and get initial boot working
-Rebuild user space for 0x2000 start (need relocatable userspace yet)
-Figure out how to reclaim 0200-03FF with commondata start
+DONE	Generate the binary with the correct hole at C000-C0FF
+DONE	Test and get initial boot working
+DONE	Rebuild user space for 0x2000 start
+	(need relocatable userspace yet)
+DONE	Figure out how to reclaim 0200-03FF with commondata start
 	(need to work out how loader knows where to jump...)
+DONE	Discard segment
+
+Real hardware testing
 Write pre-emption code
 Debug signal handling
-Discard segment
 Do buffer growth into discard
 Swap support
 Timer interrupt (TMS9918A or 6522VIA ?)
