@@ -5,6 +5,7 @@
 		.import kstack_top
 		.import vector
 		.import nmi_handler
+		.import _udata
 
 		.import  __BSS_RUN__, __BSS_SIZE__
 		.importzp	ptr1, ptr2, tmp1
@@ -21,7 +22,7 @@
 
 entry:
 ;
-;	We are entered at $2002 just after the required magic number
+;	We are entered at $C102 just after the required magic number
 ;
 		sei			; interrupts off
 		cld			; decimal off
@@ -32,6 +33,22 @@ entry:
 		sta sp
 		lda #>kstack_top
 		sta sp+1 
+
+		lda #<_udata
+		sta ptr1
+		lda #>_udata
+		sta ptr1+1
+
+		lda #0
+		tay
+		ldx #2
+wipeud:
+		sta (ptr1),y
+		iny
+		bne wipeud
+		inc ptr1+1
+		dex
+		bne wipeud
 
 		lda #<__BSS_RUN__
 		sta ptr1
