@@ -46,6 +46,8 @@ Unsupported Hardware
 
 	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
 	of the 512K ROM/RAM. Please see the relevant port instead.
+	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
+	port instead.
 
 	SC114 bit bang serial
 
@@ -58,10 +60,6 @@ Unsupported Hardware
 
 Things To Note When Modifying
 
-  * Space is very tight. The kernel must finish below C000 and the rest goes
-    above the common line (D000).
-  * We should move to banked kernel to allow for more flexibility with all
-    this add in hardware.
   * Do not move discard below C300 on a 16K banking setup. There is stuff in
     start.c that requires that C000-C2FF space is free for starting init from
     the kernel.
@@ -86,11 +84,6 @@ Stuff To Do
 
   * Sound support once we have the core sound layer
 
-  * Some kind of way to allow selection of what support is wanted. We are
-    very tight on space with everything enabled and it won't be possible to
-    do some of the combinations we have today with the TMS9918A as well unless
-    we go to banked syscall (Which is doable)
-
   * Push the tty buffers into the banked space to give us room for more ttys
 
   * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
@@ -101,7 +94,7 @@ Setting It Up
 
 Fuzix on the RC2014 expects a normal PC style compact flash card. Fdisk up the
 card leaving the low space free as fdisk tries to do. Place a file system on
-it (type 0x7F). Do not at this point place a swap partition on it (0x7E)
+it (type 0x7E). Do not at this point place a swap partition on it (0x7F)
 although you can certainly reserve on with a different type code.
 
 The loader and attached kernel image needs to be written to blocks 2+.
