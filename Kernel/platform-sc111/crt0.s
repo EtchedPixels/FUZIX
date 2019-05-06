@@ -49,9 +49,6 @@ init:
         di
         ld sp, #kstack_top
 
-	ld a,#'*'
-	out0 (ASCI_TDR0),a
-
         ; move the common memory where it belongs    
         ld hl, #s__DATA
         ld de, #s__COMMONMEM
@@ -68,27 +65,11 @@ init:
         ld (hl), #0
         ldir
 
-wait:
-	in0 a,(ASCI_STAT0)
-	bit 1,a
-	jr z,wait
-	ld a,#'X'
-	out0 (ASCI_TDR0),a
-
-	ld a,#'1'
-	call outchar
-
         ; Configure memory map
         call init_early
 
-	ld a,#'2'
-	call outchar
-
         ; Hardware setup
         call init_hardware
-
-	ld a,#'3'
-	call outchar
 
         ; Call the C main routine
         call _fuzix_main
