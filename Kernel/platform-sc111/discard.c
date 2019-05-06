@@ -5,6 +5,7 @@
 #include <blkdev.h>
 #include "config.h"
 #include <z180.h>
+#include <ds1302.h>
 
 void init_hardware_c(void)
 {
@@ -34,6 +35,9 @@ void pagemap_init(void)
      * Page size is 4KB. */
     for(i = 0x90; i < (1024 >> 2); i += 0x10)
         pagemap_add(i);
+    ds1302_init();
+    if (ds1302_present)
+        kputs("DS1302 detected at 0xC0.\n");
 }
 
 void map_init(void)

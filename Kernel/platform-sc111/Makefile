@@ -1,9 +1,9 @@
 ASRCS = crt0.s z180.s commonmem.s sc111.s monitor.s
-CSRCS += devices.c main.c devtty.c devsdspi.c
+CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
-DASRCS =
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
+DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c 
+DASRCS = ../dev/ds1302_rc2014.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -49,7 +49,4 @@ loader.bin: loader.s
 	makebin -s 65536 loader.ihx loader.tmp
 	dd if=loader.tmp bs=256 skip=208 of=loader.bin
 
-
 image: loader.bin
-	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
-	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
