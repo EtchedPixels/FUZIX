@@ -705,14 +705,16 @@ const char *bauds[] = {
 	"115200"
 };
 
-static int baudmatch(const char *p)
+static int baudmatch(int fd, const char *p)
 {
 	int i;
 	const char **str = bauds;
+	static struct termios ttmp;
 
-	if (p == NULL)
-		return B9600;
-
+	if (p == NULL) {
+		tcgetattr(fd, &ttmp);
+		return ttmp.c_cflag & CBAUD;
+	}
 	for(i = 1; i < 15; i++) {
 		if (strcmp(p, *str++) == 0)
 			return i;
@@ -810,7 +812,7 @@ static pid_t getty(const char **argv, const char *id)
 			}
 			/* Figure out the baud bits. It's cheaper to do this with strings
 			   than ulongs! */
-			tref.c_cflag |= baudmatch(argv[1]);
+			tref.c_cflag |= baudmatch(fdtty, argv[1]);
 
 			tcsetattr(fdtty, TCSANOW, &tref);
 
