@@ -10,7 +10,7 @@ typedef int bool;
 
 #define TRUE 1
 #define FALSE 0
-#define ERR 1		/* general error flag */
+#define ERR -1		/* general error flag */
 #define OK 0		/* general OK flag */
 
 /* Macros. */
