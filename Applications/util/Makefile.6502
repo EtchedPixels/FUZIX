@@ -59,7 +59,6 @@ SRCS  = banner.c \
 	cp.c \
 	cut.c \
 	dd.c \
-	decomp16.c \
 	df.c \
 	dosread.c \
 	du.c \
@@ -88,7 +87,6 @@ SRCS  = banner.c \
 	passwd.c \
 	ps.c \
 	remount.c \
-	sed.c \
 	seq.c \
 	setdate.c \
 	size.c \
@@ -119,7 +117,7 @@ SRCTC = tget.c \
 SRCOTHER = cpuinfo.c \
 	   cpuinfo-6502.s
 
-SKIPPED =
+SKIPPED = decomp16.c sed.c
 
 
 OBJS = $(SRCS:.c=.o)
@@ -149,7 +147,7 @@ size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(OBJSNS) $(OBJTC) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f *.o $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core
