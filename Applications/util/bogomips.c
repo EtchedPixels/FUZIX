@@ -20,7 +20,7 @@ void delay(unsigned long r)
 	"b@ rts       \n"
 	);
 }
-#elif defined(__SDCC_z80) || defined(__SDCC_r2k)
+#elif defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k)
 void delay(unsigned long r)
 {
 __asm
