@@ -451,7 +451,14 @@ mmu_irq_ret:
 intout:
 	xor a
 	ld (_udata + U_DATA__U_ININTERRUPT), a
-
+	;
+	;	Z180 internal interrupts do not reti
+	;
+.ifeq CPU_Z180
+	ld a,(_irqvector)
+	or a
+	jr nz, intret
+.endif
 	ld hl, #intret
 	push hl
 	reti			; We have now 'left' the interrupt
@@ -529,6 +536,11 @@ preemption:
 
 	ld sp, #kstack_top	; We don't pre-empt in a syscall
 				; so this is fine
+.ifeq CPU_Z180
+	ld a,(_irqvector)
+	or a
+	jr nz, intret2
+.endif
 	ld hl, #intret2
 	push hl
 	reti			; We have now 'left' the interrupt

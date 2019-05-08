@@ -615,9 +615,6 @@ z180_irqgo:
         ;    call outchar
         pop af
         jp interrupt_handler
-        ; this isn't perfect -- interrupt_handler always ends with RETI while only
-        ; INT0 should end with RETI, the others ending with a normal RET. unless
-        ; there are Z80 interrupt peripherals on the bus we'll be OK.
 
 ; z180_irq4:
 ;         push af
