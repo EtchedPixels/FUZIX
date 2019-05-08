@@ -38,9 +38,9 @@
 	.globl null_handler
 	.globl unix_syscall_entry
         .globl _doexec
-        .globl trap_illegal
 	.globl nmi_handler
 	.globl interrupt_handler
+	.globl synchronous_fault
 	.globl ___hard_ei
 	.globl ___hard_di
 	.globl ___hard_irqrestore
@@ -53,6 +53,7 @@
 	.globl _chksigs
 	.globl _int_disabled
         .globl _platform_monitor
+	.globl _doexit
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -318,11 +319,12 @@ _doexec:
         jp (hl)
 
 ;
-;  Called from process context (hopefully)
-;
-;  FIXME: hardcoded RST30 won't work on all boxes
+;	We took a NULL pointer - either a branch to NULL or on Z180
+;	an illegal. For now use a blunt instrument. We could in theory
+;	do a nicer signal throw etc.
 ;
 null_handler:
+	di
 	; kernel jump to NULL is bad
 	ld a, (_udata + U_DATA__U_INSYS)
 	or a
@@ -330,32 +332,21 @@ null_handler:
 	ld a, (_inint)
 	or a
 	jp nz, trap_illegal
-	; user is merely not good
-	ld hl, #7
+	; user is merely not good - handle it synchronously
+	ld hl,#9		; SIGKILL
+synchronous_fault:
+	ld sp,#kstack_top
+	call map_kernel_di
 	push hl
-	ld ix, (_udata + U_DATA__U_PTAB)
-	ld l,P_TAB__P_PID_OFFSET(ix)
-	ld h,P_TAB__P_PID_OFFSET+1(ix)
-	push hl
-	ld hl, #39		; signal (getpid(), SIGBUS)
-	push hl
-	call unix_syscall_entry		; syscall
-	ld hl, #0xFFFF
-	push hl
-	dec hl			; #0
-	push hl
-	call unix_syscall_entry
-
-
-
-illegalmsg: .ascii "[illegal]"
-            .db 13, 10, 0
-
+	call _doexit
 trap_illegal:
         ld hl, #illegalmsg
 traphl:
         call outstring
         call _platform_monitor
+
+illegalmsg: .ascii "[illegal]"
+            .db 13, 10, 0
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0
