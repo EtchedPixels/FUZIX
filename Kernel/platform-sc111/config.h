@@ -30,7 +30,7 @@
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
-#define BOOTDEVICENAMES "hd#,,,rd"
+#define BOOTDEVICENAMES "hd#"
 
 #define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in mark4.s */
@@ -39,11 +39,11 @@
 /* Hardware parameters : internal hardware at 0x40-0x7F */
 #define Z180_IO_BASE       0x40
 
-#define MAX_BLKDEV 2	    /* Could go to 3 later: 2 IDE drives, 1 SD drive */
+#define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
 /* SD via CSIO : Needs an additional GPIO pin */
-//#define CONFIG_SD
-//#define SD_DRIVE_COUNT 1
+#define CONFIG_SD
+#define SD_DRIVE_COUNT 1
 
 #define NUM_DEV_TTY	2
 /* UART0 as the console */

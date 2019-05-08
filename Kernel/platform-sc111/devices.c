@@ -9,6 +9,7 @@
 #include <devsd.h>
 #include <blkdev.h>
 #include <ds1302.h>
+#include <sc111.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -32,5 +33,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+    pio_init();
     devide_init();
+    devsd_init();
 }
