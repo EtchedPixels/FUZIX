@@ -154,6 +154,9 @@ struct termios save;
 
 static void cleanup(int sig)
 {
+	clrscr();
+	refresh();
+	endwin();
 	tcsetattr(0, TCSANOW, &save);
 	exit(0);
 }
@@ -243,6 +246,8 @@ int main(int argc, char **argv)
 			}
 			break;
 		}
+		/* Drain any typing the user got ahead of us */
+		while(getch() != ERR);
 	}
 
 	return 0;		// not reached
