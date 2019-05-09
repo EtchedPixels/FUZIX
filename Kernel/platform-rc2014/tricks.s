@@ -10,7 +10,6 @@ TOP_PORT	.equ	MPGSEL_3
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
-        .globl trap_illegal
         .globl _platform_switchout
         .globl _switchin
         .globl _doexec
