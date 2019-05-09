@@ -39,7 +39,6 @@
             .globl istack_top
             .globl istack_switched_sp
             .globl unix_syscall_entry
-            .globl trap_illegal
 	    .globl null_handler
             .globl _timer_interrupt
 	    .globl nmi_handler
@@ -362,23 +361,18 @@ _program_vectors:
             ld hl, #interrupt_handler
             ld (0x39), hl
 
-            ; set restart vector for UZI system calls
+            ; set restart vector for Fuzix system calls
             ld (0x30), a   ;  (rst 30h is unix function call vector)
             ld hl, #unix_syscall_entry
             ld (0x31), hl
 
-            ; Set vector for Illegal Instructions (this is presuambly a Z180 CPU feature? Z80 doesn't do this)
-            ld (0x0), a
-            ld hl, #trap_illegal   ;   to Our Trap Handler
-            ld (0x1), hl
-
-            ld (0x0000), a
+            ld (0x00), a
             ld hl, #null_handler   ;   to Our Trap Handler
-            ld (0x0001), hl
+            ld (0x01), hl
 
             ld (0x66), a  ; Set vector for NMI
             ld hl, #nmi_handler
-            ld (0x0067), hl
+            ld (0x67), hl
 
 	    call map_kernel
 	    ret
