@@ -605,6 +605,11 @@ int main(int argc, char *argv[])
 
 	putstr("init version 0.9.0ac#1\n");
 
+	if (argv[1] && strcmp(argv[1], "s") == 0) {
+		execl("/bin/sh", "-sh", NULL);
+		execl("/bin/ssh", "-ssh", NULL);
+	}
+
 	membase = sbrk(0);
 
 	load_inittab();
@@ -711,15 +716,17 @@ static int baudmatch(int fd, const char *p)
 	const char **str = bauds;
 	static struct termios ttmp;
 
-	if (p == NULL) {
-		tcgetattr(fd, &ttmp);
-		return ttmp.c_cflag & CBAUD;
+	if (p) {
+		for(i = 1; i < 15; i++) {
+			if (strcmp(p, *str++) == 0)
+				return i;
+		}
+		write(1, "Unknown baud rate '", 18);
+		putstr(p);
+		write(1, "'.\n", 3);
 	}
-	for(i = 1; i < 15; i++) {
-		if (strcmp(p, *str++) == 0)
-			return i;
-	}
-	return B9600;
+	tcgetattr(fd, &ttmp);
+	return ttmp.c_cflag & CBAUD;
 }
 
 static pid_t getty(const char **argv, const char *id)
