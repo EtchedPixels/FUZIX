@@ -13,7 +13,6 @@
 	.globl _udata
         .globl _getproc
         .globl _platform_monitor
-        .globl trap_illegal
         .globl _platform_switchout
         .globl _switchin
         .globl _dofork
