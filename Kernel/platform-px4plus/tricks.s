@@ -7,7 +7,6 @@
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
-        .globl trap_illegal
         .globl _inint
         .globl _platform_switchout
         .globl _switchin
