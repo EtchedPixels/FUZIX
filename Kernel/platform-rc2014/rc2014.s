@@ -41,6 +41,7 @@
 	.globl _ctc_present
 	.globl _sio_present
 	.globl _sio1_present
+	.globl _z180_present
 	.globl _udata
 
 	; exported debugging tools
@@ -285,9 +286,22 @@ have_ctc:
 	out (CTC_CH3),a
 
 no_ctc:
-        ; Done CTC Stuff
-        ; ---------------------------------------------------------------------
+	;
+	; Check CPU type. We might be a Z180 CPU board with standard
+	; RC2014 components in which case activate the additional
+	; serial ports. If we have no CTC we should use the Z180 timers
+	;
 
+	xor a
+	dec a
+	daa
+	cp #0xF9
+	jr nz, is_z80
+
+	ld a,#1
+	ld (_z180_present),a
+
+is_z80:
 	im 1				; set Z80 CPU interrupt mode 1
         jp _init_hardware_c             ; pass control to C, which returns for us
 

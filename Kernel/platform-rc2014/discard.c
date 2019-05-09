@@ -40,6 +40,8 @@ void pagemap_init(void)
 
 	ds1302_init();
 
+	if (z180_present)
+		kputs("Z180 CPU card detected.\n");
 	if (acia_present)
 		kputs("6850 ACIA detected at 0x80.\n");
 	if (sio_present)
@@ -50,6 +52,8 @@ void pagemap_init(void)
 		kputs("Z80 CTC detected at 0x88.\n");
 	if (ds1302_present)
 		kputs("DS1302 detected at 0xC0.\n");
+	/* Need to also look for 16550A at some point ? */
+	/* Need to look for TMS9918/9918A */
 }
 
 void map_init(void)

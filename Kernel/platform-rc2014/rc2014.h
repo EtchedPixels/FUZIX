@@ -33,5 +33,6 @@ extern uint8_t acia_present;
 extern uint8_t ctc_present;
 extern uint8_t sio_present;
 extern uint8_t sio1_present;
+extern uint8_t z180_present;
 
 #endif
