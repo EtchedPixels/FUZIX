@@ -1267,19 +1267,19 @@ struct mount *fs_tab_get(uint16_t dev)
 }
 
 /* Fmount places the given device in the mount table with mount point info. */
-bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
+struct mount *fmount(uint16_t dev, inoptr ino, uint16_t flags)
 {
     struct mount *m;
     regptr struct filesys *fp;
     bufptr buf;
 
     if(d_open(dev, 0) != 0)
-        return true;    /* Bad device */
+        return NULL;    /* Bad device */
 
     m = newfstab();
     if (m == NULL) {
         udata.u_error = EMFILE;
-        return true;	/* Table is full */
+        return NULL;	/* Table is full */
     }
 
     fp = &m->m_fs;
@@ -1287,7 +1287,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     /* Get the buffer with the superblock (block 1) */
     buf = bread(dev, 1, 0);
     if (buf == NULL)
-        return true;
+        return NULL;
     blktok(fp, buf, 0, sizeof(struct filesys));
     brelse(buf);
 
@@ -1300,7 +1300,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     if(fp->s_mounted != SMOUNTED  ||  fp->s_isize >= fp->s_fsize ||
         fp->s_shift > FS_MAX_SHIFT) {
         udata.u_error = EINVAL;
-        return true; // failure
+        return NULL;
     }
 
     if (fp->s_fmod == FMOD_DIRTY) {
@@ -1322,7 +1322,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     /* Mark the filesystem dirty on disk */
     sync();
 
-    return false; // success
+    return m;
 }
 
 

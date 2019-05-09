@@ -935,8 +935,7 @@ extern uint8_t getperm(inoptr ino);
 extern void setftime(inoptr ino, uint_fast8_t flag);
 extern uint8_t getmode(inoptr ino);
 extern struct mount *fs_tab_get(uint16_t dev);
-/* returns true on failure, false on success */
-extern bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
+extern struct mount *fmount(uint16_t dev, inoptr ino, uint16_t flags);
 extern void magic(inoptr ino);
 extern arg_t unlinki(inoptr ino, inoptr pino, uint8_t *fname);
 

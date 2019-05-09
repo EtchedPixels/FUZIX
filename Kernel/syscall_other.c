@@ -347,10 +347,8 @@ arg_t _mount(void)
 
 	sync();
 
-	if (fmount(dev, dino, flags)) {
-		udata.u_error = EBUSY;
+	if (!fmount(dev, dino, flags))
 		goto nogood;
-	}
 
 	i_unlock_deref(dino);
 	i_deref(sino);
