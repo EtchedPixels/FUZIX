@@ -93,8 +93,9 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
         if (cflag & CRTSCTS)
             ecr = 0x20;
         /* FIXME: need to do software RTS side */
-    } else
+    } else {
         cflag &= ~CRTSCTS;
+    }
 
     t->c_cflag = cflag;
 
@@ -102,6 +103,8 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
     if (minor == 1) {
         ASCI_CNTLA0 = cntla;
         ASCI_CNTLB0 = cntlb;
+        ASCI_ASEXT0 &= ~0x20;
+        ASCI_ASEXT1 |= ecr;
     } else if (minor == 2) {
         ASCI_CNTLA1 = cntla;
         ASCI_CNTLB1 = cntlb;
@@ -127,15 +130,14 @@ void tty_pollirq_asci1(void)
         tty_inproc(2, ASCI_RDR1);
 }
 
+/* FIXME: we should have a proper tty buffer output queue really */
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
     switch(minor){
         case 1:
-            while(!(ASCI_STAT0 & 2));
             ASCI_TDR0 = c;
             break;
         case 2:
-            while(!(ASCI_STAT1 & 2));
             ASCI_TDR1 = c;
             break;
     }
@@ -152,14 +154,27 @@ void tty_data_consumed(uint_fast8_t minor)
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-    minor;
-    return TTY_READY_NOW;
+    uint8_t r;
+    switch(minor) {
+    case 1:
+        r = ASCI_STAT0;
+        break;
+    case 2:
+        r = ASCI_STAT1;
+        break;
+    }
+    if (r & 0x02)
+        return TTY_READY_NOW;
+    return TTY_READY_SOON;
 }
 
 /* kernel writes to system console -- never sleep! */
 void kputchar(uint_fast8_t c)
 {
+    while(tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
     tty_putc(TTYDEV & 0xFF, c);
-    if(c == '\n')
+    if(c == '\n') {
+        while(tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
         tty_putc(TTYDEV & 0xFF, '\r');
+    }
 }
