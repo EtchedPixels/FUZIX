@@ -26,12 +26,10 @@ SRCSNS = \
 	kill.c \
 	killall.c \
 	line.c \
-	ln.c \
 	logname.c \
 	mkdir.c \
 	mkfifo.c \
 	mknod.c \
-	mv.c \
 	pagesize.c \
 	printenv.c \
 	prtroot.c \
