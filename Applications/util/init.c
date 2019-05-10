@@ -112,7 +112,7 @@ int showfile(const char *fname)
 	return 0;
 }
 
-void putstr(char *str)
+void putstr(const char *str)
 {
 	write(1, str, strlen(str));
 }
