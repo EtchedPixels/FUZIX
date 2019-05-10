@@ -22,7 +22,7 @@
 #define TICKSPERSEC 40U     /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xF800  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xF800  /* Top of program, base of U_DATA */
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
