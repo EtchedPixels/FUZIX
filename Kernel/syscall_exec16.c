@@ -6,7 +6,7 @@
 static void close_on_exec(void)
 {
 	/* Keep the mask separate to stop SDCC generating crap code */
-	uint16_t m = 1 << (UFTSIZE - 1);
+	uint16_t m = 1U << (UFTSIZE - 1);
 	int8_t j;
 
 	for (j = UFTSIZE - 1; j >= 0; --j) {
