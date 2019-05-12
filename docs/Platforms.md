@@ -31,15 +31,15 @@ Tested On 0.2
 There are three different ports to differing configurations of this system
 
 The first port is the coco2cart port. This requires a 64K Dragon or 64K Tandy COCO
-with a Cloud 9 compatible IDE or COCOSD cartridge and Fuzix installed on the cartridge and disk.
-Fuzix boots from cartridge, loads the rest of itself into memory and runs in
+with a Cloud 9 compatible IDE or COCOSD cartridge and FUZIX installed on the cartridge and disk.
+FUZIX boots from cartridge, loads the rest of itself into memory and runs in
 single process at a time mode. Due to lack of resources this port is quite
 minimally featured but has some space for further improvement.
 
 The second port is the dragon32-nx port. This supports the Dragon 32/64 or
 Tandy COCO with at least 32K of memory and with Tormod's Spinx cartridge
 giving 512K of banked RAM and an SD card slot. This port offers a full
-featured Fuzix but with userspace limited to 32K per application. On 6809
+featured FUZIX but with userspace limited to 32K per application. On 6809
 this is not a big problem in general.
 
 The third port is the dragon32-mooh port. This supports the Dragon 32/64
@@ -63,6 +63,30 @@ Tested On 0.2
 - Dragon32 with NX: Yes - real system
 - COCO2 with IDE: Yes - emulation
 
+## Microbee
+
+Microbee produced a range of Z80 based systems primarily in and for the
+Australian market. Fuzix requires a system with at least 128K of RAM, and
+preferably a hard disk interface or modern CF adapter. Both the classic
+keyboard interface and the 256TC are supported.
+
+Supported Features
+- Keyboard
+- Display (colour, premium or 256TC)
+- RTC (required and PIO B7 must be set to the RTC)
+- WD1010 disk interface (floppy and hard disk)
+- WD2793 disk interface
+- Switching disk interface via 0x58
+- IDE CF
+
+Unsupported
+- Z80 PIO serial
+- Z8530 SCC option
+- Mono display (will flicker on update)
+
+Program size is limited to 32K per process due to the limited memory mapping
+capabilities of the platform.
+
 ### Pentagon 1024K
 
 A Russian clone of the Sinclair Spectrum with extensions. Early versions of
@@ -81,6 +105,26 @@ Supported Features
 
 Not Supported
 - BetaDisk
+
+### P112
+
+A Z180 system with up to 1MB of memory and capable of running at 24.5MHz.
+
+https://661.org/p112/
+
+Supported Features
+- Onboard serial
+- 1MB RAM (required currently)
+- SMC floppy controller
+- Real time clock
+- G-IDE IDE card
+- 16550A option
+
+Unsupported Features
+- SCSI option
+
+FUZIX can be booted on this system from CP/M or as a bootable floppy
+disk. The file system then lives on an IDE or CF disk.
 
 ### Scorpion 256K
 
@@ -136,7 +180,7 @@ Supported Features
 Variants of the Spectrum systems for the US market and also in Argentia,
 Portugal and Poland. At a software level it is not compatible with the
 Sinclair systems but the hardware is except for some extensions. On this
-platform Fuzix needs to be a cartridge.
+platform FUZIX needs to be a cartridge.
 
 Supported Features
 - Keyboard
@@ -167,7 +211,7 @@ Not supported
 ### Tandy TRS80 Model I or III / LNW-80 / Video Genie / Dick Smith System 80 / PMZ 80
 
 The classic TRS80 systems and various clones thereof. These systems are not
-usable in Fuzix without add on memory banking cards. The current kernel
+usable in FUZIX without add on memory banking cards. The current kernel
 supports either the Alpha SuperMem (or compatibles) or the Selector add in.
 Adding support for other mappers should not be too difficult.
 
@@ -207,18 +251,21 @@ Supported Features (Video Genie style)
 - Alpha Joystick
 
 Unsupported
+- Colour Genie (different system entirely), Genie II or later
+- Le Guepard
+- LOBO MAX-80
 - LNW80 extended video modes
 - Sound cards
 - Tandy doubler
 - Using Video Genie style printer or serial on TRS80 and vice versa
 
 Tested On 0.2:
-- Yes, emulation only
+- Yes, emulation only.
 
 ### TRS80 Model 4/4D/4P with 128K+ RAM
 
-The first TRS80 that can in theory run Fuzix out of the box as supplied.
-128K of RAM is required. A 64K machine cannot run Fuzix.
+The first TRS80 that can in theory run FUZIX out of the box as supplied.
+128K of RAM is required. A 64K machine cannot run FUZIX.
 
 Program size is limited to 32K per application due to the limits of the
 memory banking.
@@ -237,7 +284,7 @@ Not Supported
 - XLR8R
 
 Tested On 0.2:
-- Yes, emulation only. Some problems to resulve on actual hardware.
+- Yes, emulation only. Some problems to resolve on actual hardware.
 
 ## Retrobrew And RC2014 Systems
 
@@ -257,6 +304,8 @@ Retrobrew systems see http://www.retrobrewcomputers.org.
 Easy-Z80 is an RC2014 compatible system with onboard SIO, CTC, ROM and RAM
 and including memory banking.
 
+https://github.com/skiselev/easy_z80
+
 Supported Features
 - Dual SIO serial ports
 - CTC for timers and baud rate setting
@@ -272,7 +321,9 @@ Tested on 0.2
 
 The LiNC80 is a single board computer kit that includes Z80 SIO, CTC and PIO
 as well as having optional bank switched RAM and ROM. The port requires you
-have wired yourself up at least one extra 16K RAM RAM bank expansion.
+have wired yourself up at least one extra 16K RAM bank expansion.
+
+http://linc.no/products/linc80-sbc1/
 
 Supported Features
 - SIO/2 serial ports
@@ -286,6 +337,8 @@ Tested on 0.2
 ### N8VEM (now Retrobrew) Mark IV SBC
 
 A Z180 based SBC with optional ECB bus interface.
+
+https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:z180_mark_iv:z180_mark_iv
 
 Supported Features
 - RS232 serial port
@@ -303,17 +356,20 @@ Tested on 0.2
 The SC108 is an RC2014 compatible CPU board with 128K of RAM and 32K of ROM
 that holds the SCM monitor. The two RAM banks are switched as a full 64K
 with only the ROM able to initially move data between banks. This makes it
-tricky platform to work with.
+tricky platform to work with, but FUZIX does support this model.
 
 The SC114 is a closely related system with integrated motherboard and three
 slots. It also has a bigbang serial port (not supported).
 
-In order to run Fuzix on this system you must have an RC2014 IDE CF adapter
+In order to run FUZIX on this system you must have an RC2014 IDE CF adapter
 at 0x10, an SC104 or RC2014 SIO card at 0x80 (ACIA is untested) and an SC102
 CTC at 0x88. The CTC must be jumpered from ZT2 to CT3.
 
 It is possible to run with an RTC instead in tickless mode but this is not
 recommended.
+
+https://smallcomputercentral.wordpress.com/sc108-z80-processor-rc2014/
+https://smallcomputercentral.wordpress.com/sc114-documentation/
 
 Supported Features
 - SC108 or SC114 CPU card
@@ -343,9 +399,41 @@ is not recommended.
 Tested On 0.3-rc2
 - SC114 with SC102 and SC104
 
+### SC111
+
+The SC111 is an RC2014 compatible Z180 system that can either be run with
+conventional banked memory cards and I/O cards as a faster CPU, or with a
+linear memory card in full Z180 mode.
+
+https://smallcomputercentral.wordpress.com/sc111-z180-cpu-module-rc2014/
+
+Supported Features
+- Onboard RS232 ports
+- IDE/CF adapter
+- Optional RTC
+- SC119 or similar ROM/512K RAM linear memory card (55ns RAM or faster)
+- SCM monitor (ROMWBW is not yet supported on this hardware)
+- SD card via CSIO and Z80 PIO port A bit 0 (CS)
+
+The port only supports running in Z180 mode. If you are running with the Z80
+cards then see the RC2014 port, but as with other RC2014 systems at this
+time running in Z80 style banked mode does not include support for the Z180
+serial ports and CSIO.
+
+FUZIX is supplied as a raw filesystem image or CF card. Simply insert the CF
+card and go. The default image does not enable cursor key editing. If you
+want this then change your shell to /bin/fsh.
+
+It is possible to enable both ports for login.
+
+Tested on 0.3rc1
+- Yes, real system
+
 ### Tiny68K
 
 A 68000 based SBC with CF interface and a lot of memory.
+
+https://www.retrobrewcomputers.org/doku.php?id=boards:sbc:tiny68k
 
 Supported Features
 - RS232 serial port
@@ -353,16 +441,15 @@ Supported Features
 
 Unsupported
 - RTC on Tiny68K v2
-- Tiny68K-RC
 
 Installation
 
 FUZIX is supplied as a raw filesystem image or CF card. Insert the CF card
-and type 'bo' at the boot monitor. It will then boot Fuzix instead of CP/M.
+and type 'bo' at the boot monitor. It will then boot FUZIX instead of CP/M.
 The current environment mostly matches the 8bit systems although much more
 powerful commands and tools can be run.
 
-Note that the IDE interface on the Tiny68K is byteswapped. Fuzix therefore
+Note that the IDE interface on the Tiny68K is byteswapped. FUZIX therefore
 expects byteswapped media.
 
 #### Important
@@ -370,3 +457,53 @@ expects byteswapped media.
 Version 1 of the Tiny68K board has a reliability problem with some CF cards.
 See the Tiny68K web site for details of workarounds and reworks.
 
+### Tom's SBC (modified)
+
+Tom's SBC is a modernized version of the Grant Searle's classic CP/M system.
+FUZIX supports running on Tom's SBC with some minor modifications to allow
+use of the full 128K RAM and an external timer source.
+
+https://easyeda.com/peabody1929/CPM_Z80_Board_REV_B_copy-76313012f79945d3b8b9d3047368abf7
+
+Supported Features
+- RS232 serial ports
+- IDE/CF adapter
+
+Installation
+
+FUZIX is supplied as a raw file system image or CF card. Insert the CF card
+and type 'X' (boot CP/M) and then 'Y' to trigger the boot. The ROM will then
+load the FUZIX loader instead and FUZIX will run. A ROM image with the bank
+switch modifications is required.
+
+Tested on 0.3rc1
+- Yes, emulation only.
+
+### Z80-MBC2
+
+A Z80 system with an ATMega acting as the I/O subsystem and providing a
+message based interface. The current ATMega firmware has some problematic
+limitations but hopefully these will get fixed.
+
+https://hackaday.io/project/159973-z80-mbc2-4ics-homemade-z80-computer
+
+Supported Features
+- RS232 serial port
+- Virtual disk interface
+- Real time clock module (required)
+
+Program sizes are limited to 32K by the memory mapping arrangement of the
+machine.
+
+Installation
+
+FUZIX is supplied as a bootable image and an 8MB disk image. Other disk
+images can also be added. FUZIX looks for but does not require partition
+tables on the images.
+
+Currently the boot image must be renamed as BASIC47.BIN and booted as
+BASIC from the ATMega firmware. This is because the use of the serial IRQ
+is hardcoded according to what is booted and not configurable by the OS.
+
+Tested on 0.3rc1:
+- Yes, emulation only.
