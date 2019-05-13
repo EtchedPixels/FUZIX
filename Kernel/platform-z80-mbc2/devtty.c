@@ -20,8 +20,8 @@
  *	One buffer for each tty
  */
 static uint8_t tbuf1[TTYSIZ];
-
 static uint8_t sleeping;
+static uint8_t writeq;
 
 /*
  *	TTY masks - define which bits can be changed for each port
@@ -85,8 +85,17 @@ void kputchar(uint_fast8_t c)
  */
 uint_fast8_t tty_writeready(uint_fast8_t minor)
 {
-	/* No interface on the MBC to do this properly right now */
-	return TTY_READY_NOW;
+	irqflags_t irq;
+	uint8_t d;
+	if (writeq)
+		return TTY_READY_NOW;
+	irq = di();
+	opcode = OP_GET_TXBUF;
+	writeq = opread;
+	irqrestore(irq);
+	if (writeq)
+		return TTY_READY_NOW;
+	return TTY_READY_SOON;
 }
 
 /*
@@ -103,6 +112,8 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 	irqflags_t irq = di();
 	opcode = OP_SERIAL_TX;
 	opwrite = c;
+	if (writeq)
+		writeq--;
 	irqrestore(irq);
 }
 
