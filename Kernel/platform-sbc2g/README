@@ -52,3 +52,26 @@ so 8000-AFFF could probably be made user space and copied in and out each task
 switch. As a single user machine doesn't switch much the cost isn't too high
 and more becomes possible.
 
+Disk Setup
+
+The boot arrangements on the system are a bit weird. You can put a partition
+table in low space but you can't boot off the low 8MB. This is a real pain
+and requires you leave a small gap at 8MB in the partition table to stuff
+in the boot loader.
+
+I use the following table
+
+Disk 38.2 MiB, 40017920 bytes, 78160 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0xbcc8699a
+
+Device Boot Start   End Sectors  Size Id Type
+foo1         2048 16383   14336    7M 7f unknown
+foo2        16512 78159   61648 30.1M 7e unknown
+
+The Fuzix image still goes in the intended place (sectors 2+ of the device
+in the space before the first partition)
+
