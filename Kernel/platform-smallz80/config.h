@@ -12,7 +12,7 @@
 /* Select a banked memory set up */
 #define CONFIG_BANK_FIXED
 /* This is the number of banks of user memory available (maximum) */
-#define MAX_MAPS	15		/* 512 KByte... minus the high one */
+#define MAX_MAPS	15		/* 512 KByte... minus kernel */
 /* How big is each bank - in our case 32K, 48K is actually more common. This
    is hardware dependant */
 #define MAP_SIZE	0x8000

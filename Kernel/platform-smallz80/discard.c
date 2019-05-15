@@ -5,8 +5,6 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
-#include <propio2.h>
-#include <ds1302.h>
 
 /*
  *	Everything in this file ends up in discard which means the moment

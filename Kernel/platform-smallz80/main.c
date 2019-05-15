@@ -7,7 +7,6 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
-uint8_t timermsr = 0;
 
 /*
  *	This routine is called continually when the machine has nothing else
