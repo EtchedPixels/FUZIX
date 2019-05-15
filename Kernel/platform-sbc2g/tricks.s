@@ -41,8 +41,7 @@
 ;	if your platform has an NMI to handle.
 ;
 bankfork:
-	dec a			; offset by 1 from hardware (see map_*)
-	dec c			; likewise
+	push ix
 	ld (cpatch0 + 1),a	; patch parent into loop
 	ld a,c
 	ld (cpatch1 + 1),a	; patch child into loop
@@ -62,7 +61,7 @@ copyloop:
 cpatch0:
 	ld a,#0		; parent bank (patched in for speed)
 bankpatch1:
-	out (0x78),a
+	out (0x30),a
 	pop bc		; copy 16 bytes out of parent
 	pop de
 	pop hl
@@ -76,7 +75,7 @@ bankpatch1:
 cpatch1:
 	ld a,#0		; child bank (also patched in for speed)
 bankpatch2:
-	out (0x78),a
+	out (0x30),a
 	push iy		; and put them back into the child
 	push ix
 	push hl
@@ -111,6 +110,7 @@ copy_over:
 	;
 	;	And the correct kernel bank.
 	;
+	pop ix
 	jp map_kernel
 
 spcache:
