@@ -59,4 +59,4 @@ loader.bin: loader.s
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
-	dd if=loader.tmp bs=256 skip=208 of=loader.bin
+	dd if=loader.tmp bs=256 skip=192 of=loader.bin
