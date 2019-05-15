@@ -1,6 +1,11 @@
 ;
-;	The CP/M command blindly loads the first 24 blocks moves them to the
-;	top 12K and then runs whatever is indicated at 0xFFFE/FFFF
+;	The ROM on this platform is a bit of a pain. It slices the disk
+;	into 8MB chunks and boots by loading a 16K image from the start of
+;	that slice, but never slice 0. This requires some bizarre boot
+;	volume disk partitioning as a result
+;
+;	We still put the kernel in the low boot area of the device just the
+;	bootstrap goes for a bizarre wander.
 ;
 
 	.area VECTOR(ABS)
@@ -10,7 +15,16 @@
 
 	.area LOADER(ABS)
 
-	.org 0xD000
+;
+;	Occupies the entire 'boot track' (16K/32 sectors)
+;	Just use the top bit so we can load the image easily
+;
+	.org 0xC000
+
+start:
+	jp high
+
+	.ds 16384 - 512
 
 DATA		.equ 	0x10
 ERROR		.equ	0x11
@@ -33,13 +47,7 @@ ATA_READ	.equ	0x20
 SIOA_C		.equ	0x02
 SIOA_D		.equ	0x00
 
-	.ds 10240	; boot sector and more for loader space
-
-start:
-	; A modern partition setup has lots of room for boot space, so we
-	; just load the blocks after the loader (24-147). We can't overlap
-	; because of the FFFE/FFFF thing.
-
+high:
 	ld sp, #0xFE00
 	ld hl,#hello
 	call serstr
@@ -55,7 +63,7 @@ start:
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C18		; sectors 24-119
+	ld de,#0x7C02		; sectors 2 to 126
 	ld hl,#0x0100		; load address
 load_loop:
 	call ide_ready
@@ -116,6 +124,6 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz 'SBC2G FUZIX LOADER 0.1\r\n\r\n'
+	.asciz '\r\n\r\nSBC2G FUZIX LOADER 0.1\r\n\r\n'
 gogogo:
 	.asciz '\r\nExecuting FUZIX...\r\n'
