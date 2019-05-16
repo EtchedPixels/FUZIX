@@ -50,11 +50,11 @@ $(DAOBJS): %.rel: ../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ loader.bin *.tmp fuzix
+	rm -f $(OBJS) $(JUNK)  core *~ *.tmp
 
-loader.bin: loader.s
+loader.ihx: loader.s
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
 
-image: loader.bin
+image: loader.ihx
 

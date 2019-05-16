@@ -2,7 +2,6 @@
 	        .area _CODE
 	        .area _CODE2
 		.area _HOME
-		.area _BOOT
 	        .area _CONST
 	        .area _INITIALIZED
 	        .area _DATA
@@ -35,10 +34,7 @@
 	        .globl kstack_top
 		.globl map_kernel
 
-		; This lands at 0x100 so we can boot nicely
-
-		.area _BOOT
-		jp start
+		; This lands high so we can boot nicely
 
 	        ; startup code
 	        .area _CODE
