@@ -15,7 +15,7 @@ void sd_spi_raise_cs(void)
 void sd_spi_lower_cs(void)
 {
     spi_cs = 0;
-    spi_clk = 0;
+    spi_clk = 1;
 }
 
 void sd_spi_clock(bool fast) __z88dk_fastcall

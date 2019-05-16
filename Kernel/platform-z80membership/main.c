@@ -31,7 +31,7 @@ void platform_idle(void)
  *	so we downcount it in asm before coming here.
  */
  
-uint8_t irq_cause;
+extern uint8_t irq_cause;
 
 void platform_interrupt(void)
 {

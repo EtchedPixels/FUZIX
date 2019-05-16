@@ -5,7 +5,7 @@
 ;	system.
 ;
 
-            .module smallz80
+            .module z80mc
 
             ; exported symbols
             .globl init_early
@@ -93,7 +93,7 @@ _platform_monitor:
 _platform_reboot:
 	    di
 	    xor a
-	    out (0xC0),a
+	    out (0xC1),a
 	    rst 0
 
 ; -----------------------------------------------------------------------------
@@ -153,6 +153,9 @@ _kernel_flag:
 
 intcount:
 	    .db 100
+_irq_cause:
+	    .db 0
+
 ;
 ;	1000 interrupts/second (ouch)
 ;
@@ -329,6 +332,7 @@ twait:	    in a,(0xCD)
 
 _sd_spi_transmit_byte:
 	    ld a,l
+	    rlca
 	    ld c,#0xC0
 	    out (0xC5),a
 	    rlca
@@ -352,10 +356,11 @@ _sd_spi_transmit_byte:
 	    rlca
 	    in b,(c)
 	    out (0xC5),a
-	    rlca
 	    in b,(c)
 	    ret
 _sd_spi_receive_byte:
+	    ld a,#1
+	    out (0xC5),a		; send FF
 	    in a,(0xCE)
 	    rlca
 	    rl l
@@ -394,6 +399,8 @@ _sd_spi_receive_byte:
 	    ret
 _sd_spi_rx_sector:
 	    ld b,#0
+	    ld a,#1
+	    out (0xC5),a		; send FF
 spi_rx_loop:
 	    in a,(0xCE)
 	    rlca
@@ -425,69 +432,59 @@ spi_rx_loop:
 	    in a,(0xC0)
 	    in a,(0xCE)
 	    rlca
+	    rl e
 	    ld a,e
+	    cpl
+
+	    ld (hl),a
+	    inc hl
+
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    ld a,e
 	    cpl
 	    ld (hl),a
 	    inc hl
 	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    rl e
-	    in a,(0xC0)
-	    in a,(0xCE)
-	    rlca
-	    ld a,e
-	    rlca
-	    cpl
-	    ld (hl),a
-	    in a,(0xC0)
-	    inc hl
 	    djnz spi_rx_loop
 	    ret
 _sd_spi_tx_sector:
 	    ld bc,#0xC0
 spi_tx_loop:
 	    ld a,(hl)
-	    out (0xC5),a
-	    rlca
-	    in e,(c)
-	    out (0xC5),a
-	    rlca
-	    in e,(c)
-	    out (0xC5),a
-	    rlca
-	    in e,(c)
-	    out (0xC5),a
-	    rlca
-	    in e,(c)
-	    out (0xC5),a
-	    rlca
-	    in b,(c)
+	    inc hl
+
+	    rlca			; need bit 7 in 0
 	    out (0xC5),a
 	    rlca
 	    in e,(c)
@@ -510,8 +507,15 @@ spi_tx_loop:
 	    rlca
 	    in e,(c)
 	    out (0xC5),a
+
+	    ld a,(hl)
+	    inc hl
+
 	    rlca
-	    in b,(c)
+	    in e,(c)
+	    out (0xC5),a
+	    rlca
+	    in e,(c)
 	    out (0xC5),a
 	    rlca
 	    in e,(c)
@@ -521,5 +525,17 @@ spi_tx_loop:
 	    out (0xC5),a
 	    rlca
 	    in e,(c)
+	    out (0xC5),a
+	    rlca
+	    in e,(c)
+	    out (0xC5),a
+	    rlca
+	    in e,(c)
+	    out (0xC5),a
+	    rlca
+	    in e,(c)
+	    out (0xC5),a
+	    in e,(c)
+
 	    djnz spi_tx_loop
 	    ret

@@ -34,3 +34,22 @@ Oddities
 
 The timer runs at 1KHz so has to be handled specially.
 
+Installation
+
+Partition the disk with a modern partition tool (one that starts at sector
+2048 or so). Set up a FAT16 partition and a Fuzix (7E) partition as well
+as anything else you want. Place all the usual files in the FAT16 partition
+so you can boot CP/M, and add the loader.hex file as something like FUZIX.HEX.
+
+Install a Fuzix file system on the Fuzix partition.
+
+Copy the kernel to sectors 3+ of the SD card
+
+Boot the system and hit M for monitor then S for SD, and L to load
+
+Type FUZIX.HEX and it will (slowly) load the kernel off the SD card.
+
+As the SD card is bitbanged the performance is not as good as most other
+systems. The 512K RAM helps. The I/O routines have also been optimized and
+unrolled to try and get at least reasonable performance. For obvious reasons
+swap is not supported.

@@ -42,14 +42,8 @@
 ;
 bankfork:
 	push ix
-	ld b,a
-	in a,(0xF8)
-	and #0xF0
-	or b
 	ld (cpatch0 + 1),a	; patch parent into loop
-	in a,(0xF8)
-	and #0xF0
-	or c
+	ld a, c
 	ld (cpatch1 + 1),a	; patch child into loop
 	;
 	;	Set up ready for the copy
@@ -67,7 +61,7 @@ copyloop:
 cpatch0:
 	ld a,#0		; parent bank (patched in for speed)
 bankpatch1:
-	out (0xF8),a
+	out (0xCC),a
 	pop bc		; copy 16 bytes out of parent
 	pop de
 	pop hl
@@ -81,7 +75,7 @@ bankpatch1:
 cpatch1:
 	ld a,#0		; child bank (also patched in for speed)
 bankpatch2:
-	out (0xF8),a
+	out (0xCC),a
 	push iy		; and put them back into the child
 	push ix
 	push hl

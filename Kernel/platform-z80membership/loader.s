@@ -11,6 +11,7 @@
 		.org 0xF800
 
 start:
+		di
 		ld sp,#0xF800
 		ld hl,#signon
 		call print
