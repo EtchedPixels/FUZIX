@@ -29,7 +29,7 @@ PROGLOAD		    .equ 0x0100
 ;
 Z80_TYPE		    .equ 1	      ; NMOS (IRQ bugs) Z80
 ;
-;	For special platforms that have external memory protectuon hardware
+;	For special platforms that have external memory protection hardware
 ;	Just say 0.
 ;
 Z80_MMU_HOOKS		    .equ 0

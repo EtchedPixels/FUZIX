@@ -27,7 +27,7 @@ PROGLOAD		    .equ 0x4000
 ;
 Z80_TYPE		    .equ 0	      ; CMOS Z80
 ;
-;	For special platforms that have external memory protectuon hardware
+;	For special platforms that have external memory protection hardware
 ;	Just say 0.
 ;
 Z80_MMU_HOOKS		    .equ 0
