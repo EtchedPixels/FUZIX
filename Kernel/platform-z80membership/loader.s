@@ -15,9 +15,6 @@ start:
 		ld hl,#signon
 		call print
 
-		ld a,#0xFF
-		out (0xFD),a
-
 		xor a
 		out (0xC1),a		; ROM back in
 		
