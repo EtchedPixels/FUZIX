@@ -356,32 +356,38 @@ _sd_spi_transmit_byte:
 	    in b,(c)
 	    ret
 _sd_spi_receive_byte:
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl l
 	    in a,(0xC0)
-	    in a,(0xC6)
-	    rlca
-	    rl l
-	    in a,(0xC6)
-	    rlca
-	    rl l
-	    in a,(0xC6)
-	    rlca
-	    rl l
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl l
 	    in a,(0xC0)
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl l
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    rl l
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    rl l
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl l
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl l
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl l
+	    in a,(0xC0)
 	    ld a,l
 	    cpl
 	    ld l,a
@@ -389,64 +395,77 @@ _sd_spi_receive_byte:
 _sd_spi_rx_sector:
 	    ld b,#0
 spi_rx_loop:
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl e
 	    in a,(0xC0)
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl e
 	    in a,(0xC0)
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl e
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    rl e
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    ld a,e
 	    rlca
 	    cpl
 	    ld (hl),a
 	    inc hl
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    rl e
 	    in a,(0xC0)
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
-	    rlca
-	    rl e
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl e
 	    in a,(0xC0)
-	    in a,(0xC6)
+	    in a,(0xCE)
 	    rlca
 	    rl e
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    rl e
-	    in a,(0xC6)
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
+	    rlca
+	    rl e
+	    in a,(0xC0)
+	    in a,(0xCE)
 	    rlca
 	    ld a,e
 	    rlca
+	    cpl
 	    ld (hl),a
+	    in a,(0xC0)
 	    inc hl
 	    djnz spi_rx_loop
 	    ret

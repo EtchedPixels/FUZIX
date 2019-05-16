@@ -4,15 +4,18 @@
 #include <blkdev.h>
 
 __sfr __at 0xC4 spi_cs;
+__sfr __at 0xC0 spi_clk;
 
 void sd_spi_raise_cs(void)
 {
     spi_cs = 1;
+    spi_clk = 1;
 }
 
 void sd_spi_lower_cs(void)
 {
     spi_cs = 0;
+    spi_clk = 0;
 }
 
 void sd_spi_clock(bool fast) __z88dk_fastcall

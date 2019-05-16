@@ -55,15 +55,6 @@ clean:
 loader.bin: loader.s
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
-	makebin -s 65536 loader.ihx loader.tmp
-	dd if=loader.tmp bs=256 skip=250 of=loader2.tmp
-	dd if=loader2.tmp bs=1536 conv=sync of=loader.bin count=1
 
 image: loader.bin
-	# Kernel below E800
-	dd if=../fuzix.bin of=base.tmp bs=59392 count=1
-	# Kernel above F600
-	dd if=../fuzix.bin of=top.tmp bs=62976 skip=1 count=1
-	# Pack the pieces together
-	cat base.tmp top.tmp >fuzix
 
