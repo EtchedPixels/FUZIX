@@ -1,5 +1,5 @@
 ;
-;	SC108 Initial Support
+;	SC108 Support
 ;
 
         .module sc108
@@ -469,8 +469,6 @@ _sio2_otir:
 ;
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
-;
-; We use the MIDI port for debug - it's not useful for much else after all.
 ;
 outchar:
 	push af
