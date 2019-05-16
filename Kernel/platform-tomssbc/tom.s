@@ -116,8 +116,6 @@ init_hardware:
 	inc a
 	out (0x38),a		; ROM in 
 
-eek:
-	.globl eek
 	ld hl,#bankhelper
 	call outstring
 
