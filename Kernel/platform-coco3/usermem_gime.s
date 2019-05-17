@@ -261,4 +261,4 @@ a@	lda	,u+		; get a byte
 	ldx 	#0		; return #0 - success
 	puls 	u,y,cc,pc	; return
 	;; kernel page mapping
-kmap	.db	0,1,2,3,4,5,0xb,7
+kmap	.db	0,1,2,3,4,5,0xa,7
