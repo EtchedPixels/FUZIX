@@ -182,10 +182,6 @@ a@	std	,u
 ;;; remapping the mmu, copies those bytes, *then* re-computes the
 ;;; mmu banking and repeats until all bytes are transfered.
 uxfer:
-	;; save kernel mmu mapping
-	ldd	$ffa8
-	ldx	$ffaa
-	pshs	d,x
 	;; make a data stack
 	leau	-8,s		; allow 4 levels in S
 	;; calc max src
@@ -209,7 +205,7 @@ b@	ldd	krn		; calc max byte copiable from source
 	rola			;
 	lsla			; multiply by two
 	anda	#7		; clean off extra bits
-	ldx	#$ffa8		; kernel's mmu ptr
+	ldx	#kmap		; kernel's mmu ptr
 	ldb	a,x		; get mmu entry
 	stb	,y+		; store in mmu
 	inca			; increment index
@@ -246,10 +242,10 @@ a@	lda	,u+		; get a byte
 	;; end inner loop
 	puls	u		; restore data stack
 	;; clean up kernel mmu's for next mapping or returning
-	puls	d,x
-	pshs	d,x
+	ldd	#0x0001
 	std	0xffa8
-	stx	0xffaa
+	ldd	#0x0203
+	std	0xffaa
 	;; increment out loop variables
 	ldd	krn		; add this iteration's byte count
 	addd	icount		; from source address
@@ -262,7 +258,7 @@ a@	lda	,u+		; get a byte
 	std	count
 	lbne	b@		; if bytes left to copy then repeat
 	;; return
-	leas	4,s		; drop saved kernel map
 	ldx 	#0		; return #0 - success
 	puls 	u,y,cc,pc	; return
-
+	;; kernel page mapping
+kmap	.db	0,1,2,3,4,5,0xb,7

@@ -250,13 +250,8 @@ skip2@	incb
 ;;;   takes: B = dest bank, A = src bank
 copybank
 	pshs	d,x,u
-	;; save mmu state
-	ldd	0xffa8	
-	pshs	d
-	ldd	0xffaa
-	pshs	d
 	;; map in src and dest
-	ldd	4,s		; D = banks
+	ldd	,s		; D = banks
 	stb	0xffa8
 	incb
 	stb	0xffa9
@@ -286,9 +281,9 @@ a@	ldd	,u++
 	cmpx	#0x4000		; end of copy?
 	bne	a@		; no repeat
 	;; restore mmu
-	puls	d
-	std	0xffaa
-	puls	d
+	ldd	#0x0001
 	std	0xffa8
+	ldd	#0x0203
+	std	0xffaa
 	;; return
 	puls	d,x,u,pc		; return
