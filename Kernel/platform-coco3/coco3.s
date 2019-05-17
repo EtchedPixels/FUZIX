@@ -41,6 +41,7 @@
 	    .globl null_handler
 	    .globl video_init
 	    .globl _scanmem
+	    .globl copy_mmu
 
             include "kernel.def"
             include "../kernel09.def"
@@ -165,25 +166,18 @@ b@	sta	,x+
 	inca
 	decb
 	bne	b@
-	;; move mmu bank 0x6 to 0xB
-	lda	#$0b		; map mmu bank 0xB to cpu $0000
-	sta	$ffa8		;
-	ldx	#$0000		; dest
-	ldu	#$c000		; src
-c@	ldd	,u++		; copy 2 at a time
-	std	,x++		;
-	cmpx	#$2000		; are we done?
-	bne	c@		; loop if not done
-	clr	$ffa8		; reset cpu $0000
+	;; move mmu bank 0x6 to 0x0a
+	ldd	#$060a
+	jsr	copy_mmu
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
-	ldb	#%01000100	; coco3 mode
+	ldb	#%01001100	; coco3 mode + fexx constant
 	stb	$ff90
 	;; detect PAL or NTSC ROM
 	ldb	#$3f		; put Super BASIC in mmu
 	stb	$ffae		;
 	lda	$c033		; get BASIC's "mirror" of Video Reg
-	ldb	#$0b		; put Fuzix Kernel back in mmu
+	ldb	#$0a		; put Fuzix Kernel back in mmu
 	stb	$ffae		;
 	anda	#$8		; mask off 50 hz bit
 	sta	_hz		; save for future use
@@ -235,18 +229,15 @@ c@	ldd	,u++		; copy 2 at a time
 ;;;   takes: X = page table pointer
 ;;;   returns: nothing
 _program_vectors:
-	;; copy the common section into user-space
-	lda	0xffa8	     ; save mmu reg on stack
-	pshs	a,x,u
-
+	pshs	u
 	;; setup the null pointer / sentinal bytes in low process memory
-	lda	[1,s]	     ; get process's blk address for address 0
+	lda	,x	     ; get process's blk address for address 0
 	sta	0xffa8	     ; put in our mmu ( at address 0 )
 	lda	#0x7E
 	sta	0
-	puls	a,x,u	     ; restore mmu reg
-	sta	0xffa8	     ; 
-	rts		     ; return
+	clr	0xffa8	     ;
+	puls	u,pc
+
 
 ;;; This clear the interrupt source before calling the
 ;;; normal handler
@@ -399,8 +390,6 @@ a@	ldd	,x++
 blkdev_rawflg
 	pshs d,x     ; save regs
 	ldx #_blk_op ; X = blkdev operations
-        ldb 0xffa8   ; get mmu setting
-        stb ret+1    ; save in stash
         ldb 2,x      ; get raw mode
         decb         ; compare to 1
         bmi out@     ; less than or equal: 0, or 1 don't do map
@@ -417,7 +406,7 @@ out@	puls d,x,pc
 
 ;;; Helper for blkdev drivers to clean up memory after blkdev_rawflg
 blkdev_unrawflg
-ret     ldb #0
+        ldb #0
         stb 0xffa8
         incb
         stb 0xffa9
