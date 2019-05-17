@@ -41,6 +41,7 @@
 	    .globl null_handler
 	    .globl video_init
 	    .globl _scanmem
+	    .globl copy_mmu
 
             include "kernel.def"
             include "../kernel09.def"
@@ -165,25 +166,18 @@ b@	sta	,x+
 	inca
 	decb
 	bne	b@
-	;; move mmu bank 0x6 to 0xB
-	lda	#$0b		; map mmu bank 0xB to cpu $0000
-	sta	$ffa8		;
-	ldx	#$0000		; dest
-	ldu	#$c000		; src
-c@	ldd	,u++		; copy 2 at a time
-	std	,x++		;
-	cmpx	#$2000		; are we done?
-	bne	c@		; loop if not done
-	clr	$ffa8		; reset cpu $0000
+	;; move mmu bank 0x6 to 0x0a
+	ldd	#$060a
+	jsr	copy_mmu
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
-	ldb	#%01000100	; coco3 mode
+	ldb	#%01001100	; coco3 mode + fexx constant
 	stb	$ff90
 	;; detect PAL or NTSC ROM
 	ldb	#$3f		; put Super BASIC in mmu
 	stb	$ffae		;
 	lda	$c033		; get BASIC's "mirror" of Video Reg
-	ldb	#$0b		; put Fuzix Kernel back in mmu
+	ldb	#$0a		; put Fuzix Kernel back in mmu
 	stb	$ffae		;
 	anda	#$8		; mask off 50 hz bit
 	sta	_hz		; save for future use

@@ -17,6 +17,7 @@
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
+	.globl copy_mmu
 
         include "kernel.def"
         include "../kernel09.def"
@@ -246,22 +247,26 @@ skip2@	incb
 	; --- we are now on the stack copy, parent stack is locked away ---
 	rts	; this stack is copied so safe to return on
 
-;;; Copy data from one bank to another
+;;; Copy data from one 16k bank to another
 ;;;   takes: B = dest bank, A = src bank
 copybank
-	pshs	d,x,u
+	pshs	d
 	;; map in src and dest
-	ldd	,s		; D = banks
-	stb	0xffa8
+	bsr	copy_mmu
 	incb
-	stb	0xffa9
-	sta	0xffaa
 	inca
-	sta	0xffab
-	;; loop setup
-	ldx	#0		; dest address
-	ldu	#0x4000		; src address
-	;; unrolled: 16 bytes at a time
+	bsr	copy_mmu
+	;; return
+	puls	d,pc		; return
+
+;;; copy data from one 8k bank to another
+;;;   todo: stack blast here for speed
+;;;   takes: b = dest, a = src bank
+copy_mmu
+	pshs	d,x,u
+	std	0xffa9		; map in src,dest into mmu
+	ldx	#0x4000		; to and from ptrs
+	ldu	#0x2000
 a@	ldd	,u++
 	std	,x++
 	ldd	,u++
@@ -278,12 +283,10 @@ a@	ldd	,u++
 	std	,x++
 	ldd	,u++
 	std	,x++
-	cmpx	#0x4000		; end of copy?
+	cmpx	#0x6000		; end of copy?
 	bne	a@		; no repeat
 	;; restore mmu
-	ldd	#0x0001
-	std	0xffa8
-	ldd	#0x0203
-	std	0xffaa
+	ldd	#0x0102
+	std	0xffa9
 	;; return
 	puls	d,x,u,pc		; return
