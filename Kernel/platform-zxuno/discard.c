@@ -13,6 +13,13 @@ void pagemap_init(void)
 {
 	if (probe_zxuno())
 		configure_zxuno();
+	else
+		panic("not zxuno");
+	/* These are always present */
+	kempston = 1;
+	kmouse = 1;
+	fuller = 1;
+	/* Check what extensions we can assume FIXME */
 }
 
 /* string.c
@@ -30,28 +37,6 @@ static int strcmp(const char *d, const char *s)
 
 uint8_t platform_param(char *p)
 {
-	if (strcmp(p, "kempston") == 0) {
-		kempston = 1;
-		return 1;
-	}
-	if (strcmp(p, "kmouse") == 0) {
-		kmouse = 1;
-		return 1;
-	}
-	if (strcmp(p, "fuller") == 0) {
-		fuller = 1;
-		return 1;
-	}
-	if (strcmp(p, "kmouse3") == 0) {
-		kmouse = 1;
-		kempston_mbmask = 7;
-		return 1;
-	}
-	if (strcmp(p, "kmturbo") == 0) {
-		/* For now rely on the turbo detect - may want to change this */
-		kmouse = 1;
-		return 1;
-	}
 	return 0;
 }
 
