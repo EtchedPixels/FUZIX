@@ -1,4 +1,3 @@
-#define CONFIG_IDE
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	2
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
@@ -63,7 +62,7 @@
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
-#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drive */
+#define MAX_BLKDEV 2	    /* 2 IDE drives, 2 SD drive */
 
 #define SWAPBASE 0x8000
 #define SWAPTOP  0x10000UL

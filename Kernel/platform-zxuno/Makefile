@@ -1,12 +1,12 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
-DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
+DSRCS = ../dev/devsd.c ../dev/blkdev.c
+DDSRCS = ../dev/devsd_discard.c ../dev/mbr.c
+DZSRCS = ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
 DZSRCS += ../dev/zx/devinput.c ../dev/zx/bank128.c
 DDZSRCS = ../dev/zx/zxuno.c
 ASRCS = crt0.s zx128.s zxvideo.s
-ASRCS += tricks.s commonmem.s loader-divide.s
+ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
@@ -54,14 +54,6 @@ image:
 	# Merge the first code bank into common
 	dd if=../bank1.bin bs=16384 skip=3 seek=3 count=1 \
 		of=../common.bin conv=notrunc
-	# The bootstrap to con Fatware
-	dd if=../common.bin of=BOOT.BIN bs=8192 count=1
-	# Rest of the base image, starts at 0x2200, pad it
-	dd if=../common.bin bs=65536 count=1 conv=sync | \
-		dd of=strap.bin bs=512 skip=17
-	# Banked segments 1 and 7
-	dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
-	dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
 
 	# Build an esxdos friendly setup
 	sdasz80 -o load-esx.s
