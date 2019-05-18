@@ -30,6 +30,11 @@ extern void vd_write(void);
 #define OP_GET_ERROR		0x85
 #define OP_READ_SECTOR		0x86
 #define OP_MOUNT_SD		0x87
+#define OP_GET_TXBUF		0x88
+#define OP_GET_IRQ		0x89
+
+#define IRQ_CONSOLE		1
+#define IRQ_TIMER		2
 
 __sfr __at 0 opread;
 __sfr __at 0 opwrite;

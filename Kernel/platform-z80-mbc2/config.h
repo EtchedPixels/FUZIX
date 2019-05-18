@@ -69,10 +69,7 @@ extern unsigned int swap_dev;
 /* Specify that there is a full real time clock that can supply the date and
    time to the system. */
 #define CONFIG_RTC_FULL
-/* Set this if the system has no proper real time clock (or has configurations
-   where it lacks one). This is not usually needed but for platforms it is also
-   see platform-sbcv2/main.c on what is needed */
-#define CONFIG_NO_CLOCK
+
 /*
  * How fast does the clock tick (if present), or how many times a second do
  * we simulate if not. For a machine without video 10 is a good number. If

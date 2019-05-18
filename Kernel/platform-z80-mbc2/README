@@ -46,15 +46,4 @@ so 8000-AFFF could probably be made user space and copied in and out each task
 switch. As a single user machine doesn't switch much the cost isn't too high
 and more becomes possible.
 
-Oddities
-
-The system currently has no timer interrupt. This means that time based
-pre-emption cannot be performed, and the terminal will only be responsive
-when the system is waiting for user activity (except the UART if it has
-interrupts enabled).
-
-Booting
-
-Replace the 'BASIC' image with this one. The supplied firmware only has
-interrupts enabled if you run BASIC !!
-
+Firmware S220718-R120519 or later is required

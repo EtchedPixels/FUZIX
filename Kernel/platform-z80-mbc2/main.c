@@ -19,7 +19,6 @@ void platform_idle(void)
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
 	irqflags_t irq = di();
-	sync_clock();
 	tty_poll();
 	/* Restore prior state. */
 	irqrestore(irq);
@@ -35,7 +34,13 @@ void platform_idle(void)
  */
 void platform_interrupt(void)
 {
-	tty_poll();
+	uint8_t r;
+	opcode = OP_GET_IRQ;
+	r = opread;
+	if (r & IRQ_CONSOLE)
+		tty_poll();
+	if (r & IRQ_TIMER)
+		timer_interrupt();
 }
 
 /* This points to the last buffer in the disk buffers. There must be at least
@@ -67,83 +72,9 @@ void platform_discard(void)
 	}
 }
 
-#ifdef CONFIG_NO_CLOCK
-
-/*
- *	Logic for tickless system. If you have an RTC with a timer tick
- *	you can ignore this.
- */
-
-static uint8_t newticks = 0xFF;
-static uint8_t oldticks;
-
-static uint8_t re_enter;
-
-/*
- *	Hardware specific logic to get the seconds. We really ought to enhance
- *	this to check minutes as well just in case something gets stuck for
- *	ages.
- */
-static void sync_clock_read(void)
-{
-	oldticks = newticks;
-	opcode = OP_GET_RTC;
-	newticks = opread;
-	/* Don't bother with the rest of the bytes */
-}
-
-/*
- *	The OS core will invoke this routine when idle (via platform_idle) but
- *	also after a system call and in certain other spots to ensure the clock
- *	is roughly valid. It may be called from interrupts, without interrupts
- *	or even recursively so it must protect itself using the framework
- *	below.
- *
- *	Having worked out how much time has passed in 1/10ths of a second it
- *	performs that may timer_interrupt events in order to advance the clock.
- *	The core kernel logic ensures that we won't do anything silly from a
- *	jump forward of many seconds.
- *
- *	We also choose to poll the ttys here so the user has some chance of
- *	getting control back on a messed up process.
- */
-void sync_clock(void)
-{
-	irqflags_t irq = di();
-	int16_t tmp;
-	if (!re_enter++) {
-		sync_clock_read();
-		if (oldticks != 0xFF) {
-			tmp = newticks - oldticks;
-			if (tmp < 0)
-				tmp += 60;
-			tmp *= 10;
-			while(tmp--) {
-				timer_interrupt();
-			}
-			platform_interrupt();
-		}
-	} 
-	re_enter--;
-	irqrestore(irq);
-}
-
-/*
- *	This method is called if the kernel has changed the system clock. We
- *	don't work out how much work we need to do by using it as a reference
- *	so we don't care.
- */
-void update_sync_clock(void)
-{
-}
-
-#else
-
 uint8_t platform_rtc_secs(void)
 {
 	opcode = OP_GET_RTC;
 	return opread;
 	/* Don't bother with the rest of the bytes */
 }
-
-#endif
