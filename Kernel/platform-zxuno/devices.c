@@ -4,7 +4,6 @@
 #include <tty.h>
 #include <devsys.h>
 #include <vt.h>
-#include <devide.h>
 #include <devsd.h>
 #include <blkdev.h>
 #include <devtty.h>
@@ -36,9 +35,6 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-#ifdef CONFIG_IDE
-  devide_init();
-#endif
 #ifdef CONFIG_SD
   devsd_init();
 #endif
