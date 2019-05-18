@@ -20,7 +20,7 @@ Supported Features
 Unsupported
 - Ranger serial floppy disk drive
 - Related clones (some may work but the 1.44MB drive used by certain units
-  may need additioanl work)
+  may need additional work)
 
 Tested On 0.2
 - NC100: No
@@ -142,12 +142,37 @@ Not Supported
 - BetaDisk
 - SMUC
 
-### Sinclair ZX Spectrum 128K / +2 with DivIDE or DivMMC
+### SAM Coupe
+
+One of the very late 8bit machines the SAM Coupe was designed to be mostly
+ZX Spectrum compatible but with its own additional features. It has a very
+bizarre 32K banked memory model. The port is currently very basic but does
+work.
+
+Supported Features
+- Keyboard
+- Video
+- AtomLite IDE
+- SAMBus RTC
+- Printer
+
+Not Supported
+- AtomIDE (original 16bit)
+- Floppy disk (except to boot)
+- Mouse (in test)
+- MegaRAM
+- SID
+- Trinity
+
+### Sinclair ZX Spectrum 128K / +2 with DivIDE or DivMMC / ZX-Uno
 
 There are several ports for versions of the Sinclair systems and their
 clones. This port supports the 128K spectrum and the gray +2 with 128K of
 RAM and a DivIDE or DivMMC adapter. It will also run on the black +2 and the
 +3 systems but they have their own port.
+
+On the ZX-Uno this port knows how to to turn off the video contention
+emulation and set the CPU up to 14MHz.
 
 Program size is limited to 32K per process due to the limited memory mapping
 capabilities of the platform.
@@ -501,9 +526,28 @@ FUZIX is supplied as a bootable image and an 8MB disk image. Other disk
 images can also be added. FUZIX looks for but does not require partition
 tables on the images.
 
-Currently the boot image must be renamed as BASIC47.BIN and booted as
-BASIC from the ATMega firmware. This is because the use of the serial IRQ
-is hardcoded according to what is booted and not configurable by the OS.
-
 Tested on 0.3rc1:
 - Yes, emulation only.
+
+### Z80 Membership Card
+
+The Z80 membership card is a set of cards that are designed to fit into an
+altoids tin and provide a variety of classic Z80 environments.  The Z80
+membership card is supported only in a full (3 card) configuration
+with 512K RAM and SD card bitbang interface.
+
+Supported Features
+- UART serial port
+- Bitbang SD card interface
+
+Unsupported Features
+- Hex keypad
+- Seven segment display
+- Bitbang serial port
+
+Installation
+
+FUZIX is supplied as a .HEX file that goes onto the FAT partition used by
+the CP/M layers. The filesystem needs to go into its own partition as for
+speed and compatibility FUZIX avoids the virtual disk interfaces and drives
+the SD card directly.
