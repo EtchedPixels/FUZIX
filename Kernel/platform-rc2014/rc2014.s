@@ -244,26 +244,28 @@ is_sio:	ld a,#1
 
 	ld a,#2
 	out (SIOB_C),a			; vector
-	out (SIOD_C),a
 	ld a,#0xF0
 	out (SIOB_C),a			; vector is now 0xFX
+	ld a,#2
+	out (SIOD_C),a
 	in a,(SIOD_C)			; read it back on the second SIO
 	and #0xF0
 	cp #0xF0
-	jr nz, has_dual_sio		; it's real
+	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
 
 	; Could be chance or a soft boot
 
 	ld a,#2
 	out (SIOB_C),a
-	out (SIOD_C),a
 	xor a
 	out (SIOB_C),a
+	ld a,#2
+	out (SIOD_C),a
 	in a,(SIOD_C)
 	and #0xF0
 	jr z, serial_up			; It's a mirage
 
-has_dual_sio:
+not_mirrored:
 	ld c,#SIOD_C
 
 	xor a
