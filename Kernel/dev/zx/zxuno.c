@@ -82,8 +82,8 @@ void configure_zxuno(void)
 	uno_ctrl = 0x0E;
 	c = uno_data;
 	c &= ~0x80;		/* SD on */
-//	c |= 0x40;		/* Horizontal MMU and Timex video on
-//				   (although we don't use them yet) */
+	c |= 0x40;		/* Horizontal MMU and Timex video on
+				   (although we don't use them yet) */
 	uno_data = c;
 
 	uno_ctrl = 0x0F;
