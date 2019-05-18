@@ -17,6 +17,7 @@ uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;
 uint8_t z180_present;
+uint8_t uart16x50_mask;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 

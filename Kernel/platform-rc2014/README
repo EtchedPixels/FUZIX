@@ -41,6 +41,8 @@ Pending
 
 	Sound cards (until Fuzix gets proper audio support)
 
+	16C550A UART support
+
 
 Unsupported Hardware
 

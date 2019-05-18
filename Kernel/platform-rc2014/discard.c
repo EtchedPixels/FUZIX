@@ -23,7 +23,7 @@ void init_hardware_c(void)
 
 void pagemap_init(void)
 {
-	int i;
+	uint8_t i, m;
 
 	/* RC2014 512/512K has RAM in the top 512 KiB of physical memory
 	 * corresponding pages are 32-63 (page size is 16 KiB)
@@ -38,7 +38,9 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
-	ds1302_init();
+	/* UART at 0xC0 means no DS1302 there */
+	if (!(uart16x50_mask & 0x80))
+		ds1302_init();
 
 	if (z180_present)
 		kputs("Z180 CPU card detected.\n");
@@ -52,7 +54,13 @@ void pagemap_init(void)
 		kputs("Z80 CTC detected at 0x88.\n");
 	if (ds1302_present)
 		kputs("DS1302 detected at 0xC0.\n");
-	/* Need to also look for 16550A at some point ? */
+	m = uart16x50_mask;
+	for (i = 0xC0; i; i += 0x08) {
+		if (m & 0x80)
+			kprintf("16x50 detected at 0x%2x.\n", i);
+		m <<= 1;
+	}
+	kputs("Done.\n");
 	/* Need to look for TMS9918/9918A */
 }
 

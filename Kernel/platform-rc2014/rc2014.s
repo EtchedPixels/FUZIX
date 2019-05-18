@@ -42,6 +42,7 @@
 	.globl _sio_present
 	.globl _sio1_present
 	.globl _z180_present
+	.globl _uart16x50_mask
 	.globl _udata
 
 	; exported debugging tools
@@ -89,6 +90,43 @@ BANK2		.equ	0x24
 ; Initialization code
 ;=========================================================================
         .area _DISCARD
+
+probe_16x50:
+	rl d
+	ld a,e
+	add #4
+	ld h,a			; LCR so we can access DLAB
+
+	; Access the DLAB
+	ld c,a
+	ld a,#0x80
+	in l,(c)		; Save old value just in case
+	out (c),a		; baud rate generator
+
+	; Write a signature into the divider and check it
+	ld c,e
+	inc c
+	ld a,#0xAA
+	out (c),a
+	in a,(c)
+	cp #0xAA
+	ret nz			; not a 16x50
+
+	; Restore the DLAB
+	xor a
+	ld c,h
+	out (c),a		; Our 0x55 should now change
+
+	ld c,e
+	inc c
+	in a,(c)		; IER, high bits are wired 0
+	cp #0xAA
+	out (c),l		; Old value back just in case
+	ret z
+good_uart:
+	set 0,d
+	ret
+
 init_hardware:
         ; program vectors for the kernel
         call do_program_vectors
@@ -98,6 +136,18 @@ init_hardware:
         out (FDC_DOR), a
 
 	; Play guess the serial port
+
+	ld de,#0xC0
+next_16x50:
+	call probe_16x50
+	ld a,e
+	add #8
+	ld e,a
+	jr nz,next_16x50
+
+	; D now holds the mask of 16x50 UARTs detected
+	ld a,d
+	ld (_uart16x50_mask),a
 
 	;
 	; We are booted under ROMWBW, therefore use the same algorithm as
@@ -186,9 +236,37 @@ is_sio:	ld a,#1
 	jr z, serial_up
 
 	; Repeat the check on SIO B
+	; We have to be careful here because it could be that this is
+	; a mirror of the first SIO! Fortunately channel B WR2 can be read
+	; as RR2 so we can write the vector to one and check the other, then
+	; write a different vector and check again. If they both change
+	; it's aliased, if not it really is two interfaces.
+
+	ld a,#2
+	out (SIOB_C),a			; vector
+	out (SIOD_C),a
+	ld a,#0xF0
+	out (SIOB_C),a			; vector is now 0xFX
+	in a,(SIOD_C)			; read it back on the second SIO
+	and #0xF0
+	cp #0xF0
+	jr nz, has_dual_sio		; it's real
+
+	; Could be chance or a soft boot
+
+	ld a,#2
+	out (SIOB_C),a
+	out (SIOD_C),a
+	xor a
+	out (SIOB_C),a
+	in a,(SIOD_C)
+	and #0xF0
+	jr z, serial_up			; It's a mirage
+
+has_dual_sio:
+	ld c,#SIOD_C
 
 	xor a
-	ld c,#SIOD_C
 	out (c),a			; RR0
 	in b,(c)			; Save RR0 value
 	inc a
