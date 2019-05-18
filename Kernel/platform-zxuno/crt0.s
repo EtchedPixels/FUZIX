@@ -69,6 +69,47 @@
 	; the kernel image for us from blocks 1+ and all is good.
 	;
 
+	.area BOOT	(ABS)
+
+	.globl null_handler
+	.globl unix_syscall_entry
+	.globl interrupt_handler
+
+	.org 0
+
+;
+;	We don't have a JP at 0 as we'd like so our low level code needs
+;	to avoid that check
+;
+loader:
+	di
+	ld a,#0x80
+	out (0xE3),a
+	; Page the EEPROM in and control transfers there
+	; not to the jp below
+loader5:
+	; This is where the EEPROM calls us
+	; Not much we can do here until a hard reset
+	jp loader5
+rst_8:
+	.ds 8
+rst_10:
+	.ds 8
+rst_18:
+	.ds 8
+rst_20:
+	.ds 8
+rst_28:
+	.ds 8
+rst_30:
+	jp unix_syscall_entry
+	.ds 5
+rst_38:
+	jp interrupt_handler
+	.ds 0x66-0x3B
+nmi:	ret		; magic...
+	retn
+
         .area _CODE1
 
 	.globl _go
