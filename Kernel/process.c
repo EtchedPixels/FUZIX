@@ -288,7 +288,10 @@ void makeproc(regptr ptptr p, u_data *u)
 	u->u_page = p->p_page;
 	u->u_page2 = p->p_page2;
 
-	program_vectors(&p->p_page);	/* set up vectors in new process and
+	/* Pass a pointer to the u_data copy because the ptab copy may not
+	   be in common space and map_process requires a pointer to a common
+	   space object */
+	program_vectors(&u->u_page);	/* set up vectors in new process and
 					   if needed copy any common code */
 #ifdef CONFIG_PARENT_FIRST
 	p->p_status = P_READY;
