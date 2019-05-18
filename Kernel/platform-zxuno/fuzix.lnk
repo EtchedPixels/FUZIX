@@ -8,11 +8,7 @@
 -b _CODE2=0xC000
 -b _FONT=0xC000
 -b _DISCARD=0x8400
--b BOOT1FEC=0x1FEC
--b BOOT1FF7=0x1FF7
--b BOOT1FFE=0x1FFE
 -l z80
-platform-zxuno/loader-divide.rel
 platform-zxuno/crt0.rel
 platform-zxuno/commonmem.rel
 platform-zxuno/zx128.rel
@@ -48,11 +44,8 @@ swap.rel
 devsys.rel
 devinput.rel
 platform-zxuno/devtty.rel
-platform-zxuno/devide.rel
-platform-zxuno/devide_discard.rel
 platform-zxuno/devsd.rel
 platform-zxuno/devsd_discard.rel
-platform-zxuno/divide.rel
 platform-zxuno/divmmc.rel
 platform-zxuno/mbr.rel
 platform-zxuno/blkdev.rel
