@@ -69,6 +69,8 @@ static char code_for(const char *name)
 		return 'V';
 	if (strcmp(name, "FONT") == 0)
 		return 'F';
+	if (strcmp(name, "FONTCOMMON") == 0)
+		return 'F';
 	if (strcmp(name, "INITIALIZED") == 0)
 		return 'I';
 	if (strcmp(name, "HOME") == 0)
@@ -121,6 +123,8 @@ static char bank_for(const char *name)
 		return 3;
 	if (strcmp(name, "FONT") == 0)
 		return 3;
+	if (strcmp(name, "FONTCOMMON") == 0)
+		return 0;
 	if (strcmp(name, "INITIALIZED") == 0)
 		return 0;
 	if (strcmp(name, "HOME") == 0)
