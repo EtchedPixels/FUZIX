@@ -50,9 +50,9 @@ start:
 	ld hl,#0xC000
 	call load16k	; Load C000-FFFF in situ (CODE2 BANK1)
 
-	ld a,#0x17
+	ld a,#0x16
 	ld hl,#0xC000
-	call load16k	; Load C000-FFFF in situ (CODE3 BANK 7)
+	call load16k	; Load C000-FFFF in situ (CODE3 BANK6)
 
 	ld a,(handle)
 	rst 8

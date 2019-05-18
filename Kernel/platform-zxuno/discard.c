@@ -13,8 +13,8 @@ void pagemap_init(void)
 {
 	if (probe_zxuno())
 		configure_zxuno();
-	else
-		panic("not zxuno");
+//	else
+//		panic("not zxuno");
 	/* These are always present */
 	kempston = 1;
 	kmouse = 1;

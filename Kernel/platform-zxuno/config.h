@@ -15,6 +15,16 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
+/* Select a banked memory set up */
+#define CONFIG_BANK_FIXED
+/* This is the number of banks of user memory available (maximum) */
+#define MAX_MAPS	3		/* 512 KByte... minus the high one */
+/* How big is each bank - in our case 32K, 48K is actually more common. This
+   is hardware dependant */
+#define MAP_SIZE	0xA000
+/* How many banks do we have in our address space */
+#define CONFIG_BANKS	1	/* 2 x 32K */
+
 /* Input layer support */
 #define CONFIG_INPUT
 #define CONFIG_INPUT_GRABMAX	3
@@ -30,24 +40,18 @@
 
 /* Custom banking */
 
-/* We have two mappings from our 128K of memory */
-#define MAX_MAPS	2
-#define MAP_SIZE	0x8000U
-
-/* Banks as reported to user space */
-#define CONFIG_BANKS	1
-
 /* Vt definitions */
 #define VT_WIDTH	32
 #define VT_HEIGHT	24
 #define VT_RIGHT	31
 #define VT_BOTTOM	23
 
+/* We can do better than this but we need to sort out the buffer banking first */
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    0x8000  /* also data base */
-#define PROGLOAD    0x8000  /* also data base */
+#define PROGBASE    0x6000  /* also data base */
+#define PROGLOAD    0x6000  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program, base of U_DATA copy */
-#define PROC_SIZE   32	  /* Memory needed per process */
+#define PROC_SIZE   40	  /* Memory needed per process */
 #define MAXTICKS    10	  /* As our task switch is so expensive */
 
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */
@@ -70,7 +74,7 @@
 #define MAX_SWAPS	16
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 
-/* All our pages get mapped into the top 16K bank for swapping use */
-#define swap_map(x)		((uint8_t *)(x|0xC000))
+/* We need to direct map things because of the Timex MMU modes */
+#define swap_map(x)		((uint8_t *)x)
 
 #define BOOTDEVICENAMES "hd#"

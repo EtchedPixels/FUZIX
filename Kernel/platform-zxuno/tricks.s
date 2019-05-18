@@ -1,2 +1,9 @@
 
-	.include "../dev/zx/tricks.s"
+	.include "../lib/z80fixedbank-banked.s"
+
+
+bankfork:
+;
+;	TODO
+;
+	ret

@@ -1,12 +1,11 @@
 -mwxuy
 -r
 -i fuzix.ihx
--b _CONST=0x400
--b _COMMONDATA=0x2200
--b _BUFFERS=0x6000
+-b _FONT=0x0100
+-b _COMMONDATA=0x2000
 -b _CODE1=0xC000
 -b _CODE2=0xC000
--b _FONT=0xC000
+-b _CODE3=0xC000
 -b _DISCARD=0x8400
 -l z80
 platform-zxuno/crt0.rel
@@ -39,7 +38,7 @@ tty.rel
 vt.rel
 font8x8.rel
 mm.rel
-platform-zxuno/bank128.rel
+bankfixed.rel
 swap.rel
 devsys.rel
 devinput.rel

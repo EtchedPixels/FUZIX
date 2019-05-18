@@ -22,7 +22,7 @@
 
 ZXVID_ONLY	.equ	1
 
-        .area _VIDEO
+        .area _COMMONMEM
 
 	.include "../dev/zx/video-banked.s"
 

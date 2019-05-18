@@ -25,29 +25,25 @@ We run with the following mapping
 		(we have 2 spare banks here but it's not clear what use they
 		actually are).
 
-4000-5FFF	Spectrum screen memory and system variables
-6000-7FFF	Kernel data
+4000-5FFF	A bit more kernel space right now (need to sort out external
+		buffers)
 
-8000-83FF	Needed to create the exec of init
-8400-BFFF	_DISCARD area - blown away when we exec init
-		(tons of room in this space)
+6000-BFFF	User space (DOCK, EXT or main memory)
 
-C000-FFFF
+C000-FFFF	Banked
 	0:	Kernel CODE (fairly full)
 	1:	Kernel CODE2 (fairly full)
-	2:	Mapped at 0x8000-0xBFFF (exchanged with user process buffer)
-	3:	User process
-	4:	User process
-	5:	Mapped at 0x4000-0x7FFF (Sceen, Kernel data/common)
-	6:	User process (holds the 0x8000-BFFF of the other task)
-	7:	CODE3, Video (lots of room)
+	2:	Mapped at 0x8000-0xBFFF
+	3:	Spare
+	4:	Top of user process in main memory
+	5:	Mapped at 0x4000-0x7FFF (some kernel, some user)
+	6:	CODE3, (lots of room) - buffers here ? when banked ?
+	7:	Screen memory, only accessed from common. Need to put
+		the font in the gaps here.
 
 We can move some stuff down into the low 16K (especially once we move the
 common space) We do need to do sort things out a bit and stuff commonmem etc
 in the low 8K to get more room.
-
-User processes live in 2/3 or 2/4. Because we can't swap the lower 16K
-around we exchange it with bank 6 as we go.
 
 To Do:
 
