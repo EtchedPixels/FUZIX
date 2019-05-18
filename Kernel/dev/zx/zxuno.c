@@ -9,6 +9,7 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
  *
  *	Turn on all the I/O devices and mark them present
  *	Set the CPU to 14Mhz
+ *	Turn off all the contention we can
  *	Check for 50 v 60Hz (only 50 works right now)
  *	Turn on the video and MMU modes
  *
@@ -41,13 +42,17 @@ uint8_t probe_zxuno(void)
 void configure_zxuno(void)
 {
 	uint8_t c;
+	uint8_t d;
 
 	uno_ctrl = 0xFF;
 	uno_data = 0x00;
 
 	kputs("ZX Uno Detected\n");
-	for (c = 0; c < 64; c++)
-		kputchar(uno_data);
+	for (c = 0; c < 64; c++) {
+		d = uno_data;
+		if (d == 0) break;
+		kputchar(d);
+	}
 	kputchar('\n');
 	
 	uno_ctrl = 0;
@@ -70,15 +75,15 @@ void configure_zxuno(void)
 	/* Vroooomm.... */	
 	uno_ctrl = 0x0B;
 	c = uno_data;
-	c &= 0x3C;
+	c &= 0x3F;
 	c |= 0x80;		/* 14MHz (don't set C0!!!) */
 	uno_data = c;
 
-	uno_ctrl = 0x0D;
+	uno_ctrl = 0x0E;
 	c = uno_data;
 	c &= ~0x80;		/* SD on */
-	c |= 0x40;		/* Horizontal MMU and Timex video on
-				   (although we don't use them yet) */
+//	c |= 0x40;		/* Horizontal MMU and Timex video on
+//				   (although we don't use them yet) */
 	uno_data = c;
 
 	uno_ctrl = 0x0F;
