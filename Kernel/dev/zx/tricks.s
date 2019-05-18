@@ -401,6 +401,7 @@ _dofork:
 
         ; Make a new process table entry, etc.
 	ld hl, #_udata
+	push hl
         ld hl, (fork_proc_ptr)
         push hl
 	push af
