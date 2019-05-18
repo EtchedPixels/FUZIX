@@ -1,5 +1,5 @@
 #
-#	ZX128 uses banked kernel images
+#	ZX Uno uses banked kernel images
 #
 CROSS_CCOPTS += --external-banker
 #
@@ -16,3 +16,4 @@ export CROSS_CC_SYS3=--codeseg CODE1
 export CROSS_CC_SYS4=--codeseg CODE1
 export CROSS_CC_SYS5=--codeseg CODE1
 export CROSS_CC_VIDEO=--codeseg CODE3
+export CROSS_CC_FONT=--constseg FONTCOMMON

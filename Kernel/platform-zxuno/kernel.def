@@ -12,7 +12,7 @@ PROGLOAD		    .equ 0x6000
 
 NBUFS			    .equ 5
 
-BANK_BITS		    .equ 0x10		; Spectrum ROM select
-						; Doesn't really matter!
+BANK_BITS		    .equ 0x18		; Spectrum ROM select
+						; Video high
 
 CONFIG_SWAP		    .equ 1

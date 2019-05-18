@@ -1,7 +1,7 @@
 -mwxuy
 -r
 -i fuzix.ihx
--b _FONT=0x0100
+-b _FONTCOMMON=0x0100
 -b _COMMONDATA=0x2000
 -b _CODE1=0xC000
 -b _CODE2=0xC000

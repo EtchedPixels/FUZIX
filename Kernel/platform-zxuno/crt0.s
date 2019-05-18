@@ -3,7 +3,7 @@
 	;	Our common lives low
 	;
 	;	We start this bank with FONT so that we have it aligned
-	.area _FONT
+	.area _FONTCOMMON
         .area _CONST
         .area _COMMONMEM
 	.area _STUBS
@@ -153,7 +153,7 @@ _go:
 stop:   halt
         jr stop
 
-	; Boot marker at 0x2200
+	; Boot marker at 0x2000
 
 	.area _COMMONDATA
 	.globl _marker

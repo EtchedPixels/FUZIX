@@ -41,9 +41,9 @@
 /* Custom banking */
 
 /* Vt definitions */
-#define VT_WIDTH	32
+#define VT_WIDTH	64
 #define VT_HEIGHT	24
-#define VT_RIGHT	31
+#define VT_RIGHT	63
 #define VT_BOTTOM	23
 
 /* We can do better than this but we need to sort out the buffer banking first */

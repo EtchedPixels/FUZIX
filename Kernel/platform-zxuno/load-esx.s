@@ -28,7 +28,7 @@ start:
 	ld (handle),a
 
 	; Target for 0-3FFF
-	ld a,#0x16		; Stuff the first 16K in bank 6
+	ld a,#0x13		; Stuff the first 16K in bank 3
 	ld hl,#0xC000
 	call load16k
 
@@ -78,10 +78,10 @@ start:
 	ld c,e
 	ldir
 
-	; Next we want bank 6 where we hid the low stuff
+	; Next we want bank 3 where we hid the low stuff
 
 	ld bc,#0x7ffd
-	ld a,#0x0E
+	ld a,#0x03
 	out (c),a
 
 	ld hl,#strap
@@ -167,8 +167,8 @@ strap:
 	ld a,#0x10		; bank 0 alt screen
 	ld bc,#0x7ffd
 	out (c),a		; memory as we want it
-	ld hl,#0x2200
-	; 0x2200 should start with a signature of ZB then the execute
+	ld hl,#0x2000
+	; 0x2000 should start with a signature of ZB then the execute
 	; address
 	ld a,(hl)
 	cp #'Z'

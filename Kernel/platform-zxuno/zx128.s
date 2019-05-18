@@ -26,6 +26,7 @@
 	.globl map_save_kmap	
 	.globl map_restore_kmap
 	.globl map_process_a
+	.globl map_video_save
 	.globl current_map
 	.globl switch_bank
 
@@ -121,12 +122,17 @@ init_early:
 
 init_hardware:
         ; set system RAM size
-        ld hl, #128
+	; sort of anyway - we need to revisit this with the real values
+	; once we have the rest of the map worked out
+        ld hl, #256
         ld (_ramsize), hl
-        ld hl, #(128 - 64)        ; 64K for kernel/screen/etc
+        ld hl, #(192)        ; 64K for kernel/screen/etc
         ld (_procmem), hl
 
         ; screen initialization
+	ld a,(_portff)
+	out (0xff),a
+
 	push af
 	call _vtinit
 	pop af
@@ -233,7 +239,7 @@ map_process_always_di:
 	ld a, #4
 	call switch_bank
         ld a, (_udata + U_DATA__U_PAGE)
-	jr map_process_a
+	jr do_map_process_a
 
 ;
 ;	Save and switch to kernel
@@ -256,11 +262,26 @@ map_kernel:
 map_kernel_nosavea:          ; to avoid double reg A saving
 map_kernel_restore:
 	push af
+	xor a
+	out (0xF4),a
 	ld a, (ksave_map)
 	call switch_bank
 	pop af
 	ret
 
+;
+;	Temporarily switch to video memory, this lives in bank 7 so in the
+;	the same space as the kernel banks. We are in common, the video code
+;	is in common and the fonts too (but need moving to bank 7)
+;
+map_video_save:
+	push af
+	ld a,(current_map)
+	ld (ksave_map),a
+	ld a,#7
+	call switch_bank
+	pop af
+	ret
 
 map_restore:
 	push af
@@ -315,7 +336,7 @@ ksave_map:
         .db 0
 
 _portff:
-	.db 0
+	.db 0x3E	    ; High resolution white on black
 
 	.area _COMMONMEM
 ;

@@ -20,6 +20,9 @@ void pagemap_init(void)
 	kmouse = 1;
 	fuller = 1;
 	/* Check what extensions we can assume FIXME */
+	pagemap_add(1);
+	pagemap_add(2);
+	pagemap_add(3);
 }
 
 /* string.c
