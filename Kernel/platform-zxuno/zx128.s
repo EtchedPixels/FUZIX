@@ -310,7 +310,8 @@ map_save_kmap:
 	ret
 
 map_restore_kmap:
-	jp switch_bank
+	ld (ksave_map),a
+	jp map_kernel_di
 
 ;
 ;	We have no easy serial debug output instead just breakpoint this
