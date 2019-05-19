@@ -7,6 +7,8 @@
 	.globl ksave_map
 	.globl current_map
 
+	.globl bankfork
+
 bankfork:
 ;
 ;	A = parent bank
@@ -44,7 +46,7 @@ bankfork:
 	ld a,(_portff)
 	and #0x7F
 	bit 0,c			; C = 3 (child in dock)
-	jr nz, ext2doc
+	jr z, ext2doc
 	or #0x80		; C = 2 (parent in dock)
 ext2doc:
 	ld (cpatch0 + 1),a	; source
