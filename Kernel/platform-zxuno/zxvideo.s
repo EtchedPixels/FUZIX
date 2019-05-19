@@ -27,6 +27,8 @@
 
         .area _COMMONMEM
 
+map_videopos:
+	call map_video_save
 videopos:
 	srl d		    ; we alternate pixels between two screens
 	push af
@@ -44,13 +46,13 @@ videopos:
         and #0x18
         or #0xC0	    ; Left screen
         ld d,a
-	jp map_video_save
+	ret
 rightside:
         ld a,d
         and #0x18
         or #0xE0	    ; Left screen
         ld d,a
-	jp map_video_save
+	ret
 
 _plot_char:
 	pop iy
@@ -65,7 +67,7 @@ _plot_char:
 	ld hl,(_vtattr)	    ; l is vt attributes
 	push hl		    ; save attributes as inaccessible once vid mapped
 
-        call videopos
+        call map_videopos
 
         ld b, #0            ; calculating offset in font table
         ld a, c
@@ -179,7 +181,7 @@ _clear_across:
 	ld a,c
 	or a
 	ret z		    ; No work to do - bail out
-        call videopos       ; first pixel line of first character in DE
+        call map_videopos       ; first pixel line of first character in DE
 
 	; Save it in HL
 	ld h,d
@@ -343,7 +345,7 @@ _cursor_on:
 	push bc
         ld (cursorpos), de
 
-        call videopos
+        call map_videopos
         ld a, #7
         add a, d
         ld d, a
@@ -353,7 +355,7 @@ _cursor_on:
 _cursor_disable:
 _cursor_off:
         ld de, (cursorpos)
-        call videopos
+        call map_videopos
         ld a, #7
         add a, d
         ld d, a
