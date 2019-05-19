@@ -195,6 +195,7 @@ skip_copyback:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
+        ld sp, (_udata + U_DATA__U_SP)
 
 	pop af
         pop iy
@@ -217,8 +218,6 @@ switchinfail:
         call outstring
 	; something went wrong and we didn't switch in what we asked for
         jp _platform_monitor
-
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -307,6 +306,7 @@ _dofork:
 
         ; Make a new process table entry, etc.
 	ld hl, #_udata
+	push hl
         ld hl, (fork_proc_ptr)
         push hl
 	push af
@@ -324,6 +324,10 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
+
+	.area _COMMONDATA
+
+fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 bouncebuffer:
 	.ds 256
