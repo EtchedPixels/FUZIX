@@ -33,6 +33,7 @@
         .globl _need_resched
 	.globl _int_disabled
 	.globl _portff
+	.globl ksave_map
 
         ; exported debugging tools
         .globl _platform_monitor
@@ -180,6 +181,7 @@ map_process:
 	call switch_bank
 	ld a,(hl)
 do_map_process_a:
+	ld (user_map),a
 	dec a
 	jr z, map_process_base	; Map 1 = main memory
 	dec a
@@ -225,6 +227,8 @@ map_process_a:
 	push af
         ld a, #4		; Top bank should be 4 for user space
 	call switch_bank
+	pop af
+	push af
 	jr do_map_process_a
 ;
 ;	We always save here so that existing code works until we have a
@@ -246,6 +250,8 @@ map_process_always_di:
 ;
 map_save_kernel:
 	push af
+	ld a, (user_map)
+	ld (user_store),a
         ld a, (current_map)
         ld (map_store), a
 	pop af
@@ -263,6 +269,7 @@ map_kernel_nosavea:          ; to avoid double reg A saving
 map_kernel_restore:
 	push af
 	xor a
+	ld (user_map),a
 	out (0xF4),a
 	ld a, (ksave_map)
 	call switch_bank
@@ -285,8 +292,16 @@ map_video_save:
 
 map_restore:
 	push af
-        ld a, (map_store)
-        call switch_bank
+	ld a, (user_store)
+	ld (user_map),a
+	or a
+	jp nz, do_map_process_a
+krestore:
+	xor a
+	out (0xF4),a
+	ld (user_map),a
+	ld a, (map_store)
+	call switch_bank
 	pop af
 	ret
 
@@ -329,8 +344,12 @@ _tmpout:
 current_map:                ; place to store current page number. Is needed
         .db 0               ; because we have no ability to read 7ffd port
                             ; to detect what page is mapped currently 
+user_map:
+	.db 0
 map_store:
         .db 0
+user_store:
+	.db 0
 
 ksave_map:
         .db 0
