@@ -31,11 +31,11 @@ bankfork:
 	ld a,(current_map)
 	ld (ksave_map),a
 
-	bit 1,b		; parent is ext/dock
-	jr z, from_main
+	bit 1,b		; parent is ext/dock (2 or 3)
+	jr z, from_main	; must be bank 1 -> so parent is in main
 	; From ext or dock to where ?
-	bit 1,c
-	jr z, to_main
+	bit 1,c		; is the child also in ext/dock
+	jr z, to_main	; no - so we are copying from ext/doc to main
 	; Ext to Dock or Dock to Ext
 	; Use port 0xFF to do the work
 	ld a,#0xF8
@@ -54,10 +54,28 @@ ext2doc:
 	ld (cpatch1 + 1), a	; dest
 	jp do_copies
 
+;
+;	For a copy via main memory we can set the FF selection up once
+;	and use F4 to switch from internal to external banks.
+;
 from_main:
+	ld a,(_portff)
+	and #0x7f
+	bit 0,c			; child is which ?
+	jr z, main2exit
+	or #0x80		; dock to main
+main2exit:
+	out (0xFF),a		; select the right external bank
 	xor a
 	jr viamain
 to_main:
+	ld a,(_portff)
+	and #0x7F
+	bit 0,b			; parent is which ?
+	jr z, ext2main
+	or #0x80		; dock to main
+ext2main:
+	out (0xFF),a		; right bank
 	ld a,#0xF8		; F4 port value to use
 viamain:
 	ld (cpatch0 + 1), a
@@ -127,7 +145,7 @@ sp_patch:
 
 	.area _COMMONMEM
 ;
-;	This outer loop only runs 8 times so isn't quite so performance
+;	This outer loop only runs 10 times so isn't quite so performance
 ;	critical
 ;
 setdone:
