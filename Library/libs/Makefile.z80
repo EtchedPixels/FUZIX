@@ -2,19 +2,22 @@ CC = fcc -m$(USERCPU)
 ASM ?= sdasz80
 AR = sdar
 LINKER = sdldz80
-PLATFORM =
+PLATFORM ?=
 export PLATFORM
+# Historically we stuck non relocatable Z80 crt0 at an odd place. Preserve
+# it for now but don't break other targets
+CPUNAME ?=
 CC_OPT = $(FUZIX_CCOPTS) -c
 CC_NOOPT = -c
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
-SRC_CRT0 = crt0$(PLATFORM).s
+SRC_CRT0 = crt0$(PLATFORM)$(CPUNAME).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
-SRC_CRT0NS = crt0nostdio$(PLATFORM).s
+SRC_CRT0NS = crt0nostdio$(PLATFORM)$(CPUNAME).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
-SRC_CRT0R = crt0$(PLATFORM)_z80_rel.s
+SRC_CRT0R = crt0$(PLATFORM)_$(USERCPU)_rel.s
 OBJ_CRT0R = $(SRC_CRT0R:.s=.rel)
-SRC_CRT0NSR = crt0nostdio$(PLATFORM)_z80_rel.s
+SRC_CRT0NSR = crt0nostdio$(PLATFORM)_$(USERCPU)_rel.s
 OBJ_CRT0NSR = $(SRC_CRT0NSR:.s=.rel)
 SRC_ASM = enter.s htonl-$(USERCPU).s htons-$(USERCPU).s
 OBJ_ASM = $(SRC_ASM:.s=.rel)
@@ -103,11 +106,11 @@ OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 OBJ_RES = $(SRC_RES:.c=.rel)
 OBJ_READLINE = $(SRC_READLINE:.c=.rel)
 
-all: c$(PLATFORM).lib crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel \
-     crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel \
-     liberror.txt curses$(PLATFORM).lib termcap$(PLATFORM).lib \
-     m$(PLATFORM).lib tinymalloc$(PLATFORM).lib resolv$(PLATFORM).lib \
-     readline$(PLATFORM).lib
+all: c$(PLATFORM)$(CPUNAME).lib crt0$(PLATFORM)$(CPUNAME).rel crt0nostdio$(PLATFORM)$(CPUNAME).rel \
+     crt0$(PLATFORM)_$(USERCPU)_rel.rel crt0nostdio$(PLATFORM)_$(USERCPU)_rel.rel \
+     liberror.txt curses$(PLATFORM)$(CPUNAME).lib termcap$(PLATFORM)$(CPUNAME).lib \
+     m$(PLATFORM)$(CPUNAME).lib tinymalloc$(PLATFORM)$(CPUNAME).lib resolv$(PLATFORM)$(CPUNAME).lib \
+     readline$(PLATFORM)$(CPUNAME).lib
 
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
@@ -120,14 +123,14 @@ syscall.l: fuzix/syslib.l
 sdcc$(USERCPU).lib:
 	../tools/libclean $(USERCPU)
 
-syslib$(PLATFORM).lib: syscall.l libc.l sdcc$(USERCPU).lib
+syslib$(PLATFORM)$(CPUNAME).lib: syscall.l libc.l sdcc$(USERCPU).lib
 	cat libc.l syscall.l >syslib.l
-	cp sdcc$(USERCPU).lib syslib$(PLATFORM).lib
-	$(AR) rc syslib$(PLATFORM).lib @syslib.l
-	$(AR) s syslib$(PLATFORM).lib
+	cp sdcc$(USERCPU).lib syslib$(PLATFORM)$(CPUNAME).lib
+	$(AR) rc syslib$(PLATFORM)$(CPUNAME).lib @syslib.l
+	$(AR) s syslib$(PLATFORM)$(CPUNAME).lib
 
-c$(PLATFORM).lib: syslib$(PLATFORM).lib
-	ln -sf syslib$(PLATFORM).lib c$(PLATFORM).lib
+c$(PLATFORM)$(CPUNAME).lib: syslib$(PLATFORM)$(CPUNAME).lib
+	ln -sf syslib$(PLATFORM)$(CPUNAME).lib c$(PLATFORM)$(CPUNAME).lib
 
 fuzix/syslib.l:
 	../tools/syscall $(USERCPU)
@@ -136,29 +139,29 @@ fuzix/syslib.l:
 liberror.txt:
 	../tools/liberror > liberror.txt
 
-curses$(PLATFORM).lib: $(OBJ_CURS)
-	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
-	$(AR) s curses$(PLATFORM).lib
+curses$(PLATFORM)$(CPUNAME).lib: $(OBJ_CURS)
+	$(AR) rc curses$(PLATFORM)$(CPUNAME).lib $(OBJ_CURS)
+	$(AR) s curses$(PLATFORM)$(CPUNAME).lib
 
-m$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
-	$(AR) s m$(PLATFORM).lib
+m$(PLATFORM)$(CPUNAME).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM)$(CPUNAME).lib $(OBJ_LM)
+	$(AR) s m$(PLATFORM)$(CPUNAME).lib
 
-termcap$(PLATFORM).lib: $(OBJ_CT)
-	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
-	$(AR) s termcap$(PLATFORM).lib
+termcap$(PLATFORM)$(CPUNAME).lib: $(OBJ_CT)
+	$(AR) rc termcap$(PLATFORM)$(CPUNAME).lib $(OBJ_CT)
+	$(AR) s termcap$(PLATFORM)$(CPUNAME).lib
 
-tinymalloc$(PLATFORM).lib: $(OBJ_TM)
-	$(AR) rc tinymalloc$(PLATFORM).lib $(OBJ_TM)
-	$(AR) s tinymalloc$(PLATFORM).lib
+tinymalloc$(PLATFORM)$(CPUNAME).lib: $(OBJ_TM)
+	$(AR) rc tinymalloc$(PLATFORM)$(CPUNAME).lib $(OBJ_TM)
+	$(AR) s tinymalloc$(PLATFORM)$(CPUNAME).lib
 
-resolv$(PLATFORM).lib: $(OBJ_RES)
-	$(AR) rc resolv$(PLATFORM).lib $(OBJ_RES)
-	$(AR) s resolv$(PLATFORM).lib
+resolv$(PLATFORM)$(CPUNAME).lib: $(OBJ_RES)
+	$(AR) rc resolv$(PLATFORM)$(CPUNAME).lib $(OBJ_RES)
+	$(AR) s resolv$(PLATFORM)$(CPUNAME).lib
 
-readline$(PLATFORM).lib: $(OBJ_READLINE)
-	$(AR) rc readline$(PLATFORM).lib $(OBJ_READLINE)
-	$(AR) s readline$(PLATFORM).lib
+readline$(PLATFORM)$(CPUNAME).lib: $(OBJ_READLINE)
+	$(AR) rc readline$(PLATFORM)$(CPUNAME).lib $(OBJ_READLINE)
+	$(AR) s readline$(PLATFORM)$(CPUNAME).lib
 
 $(OBJ_ASM):%.rel: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.rel=.s)
@@ -206,8 +209,8 @@ clean:
 	-(cd fuzixr2k; $(MAKE) clean; rm -f Makefile)
 
 install:
-	cp crt0$(PLATFORM).rel crt0nostdio$(PLATFORM).rel c$(PLATFORM).lib /opt/fcc/lib/
-	cp curses$(PLATFORM).lib termcap$(PLATFORM).lib /opt/fcc/lib/
-	cp m$(PLATFORM).lib tinymalloc$(PLATFORM).lib /opt/fcc/lib/
-	cp readline$(PLATFORM).lib /opt/fcc/lib/
-	cp crt0$(PLATFORM)_z80_rel.rel crt0nostdio$(PLATFORM)_z80_rel.rel /opt/fcc/lib/
+	cp crt0$(PLATFORM)$(CPUNAME).rel crt0nostdio$(PLATFORM)$(CPUNAME).rel c$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
+	cp curses$(PLATFORM)$(CPUNAME).lib termcap$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
+	cp m$(PLATFORM)$(CPUNAME).lib tinymalloc$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
+	cp readline$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
+	cp crt0$(PLATFORM)_$(USERCPU)_rel.rel crt0nostdio$(PLATFORM)_$(USERCPU)_rel.rel /opt/fcc/lib/
