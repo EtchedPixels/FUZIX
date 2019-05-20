@@ -1,0 +1,77 @@
+;
+;	Block copy
+;
+;	copy a*16 bytes from hl (one ram bank) to ix (other ram bank)
+;	all registers modified
+;	FIXME: 	check, if BANK0 and BANK1 are correct for system / user ram
+;		should be switched to the ram bank that was active at entry?
+	BANKPORT	equ	0x30
+	BANK0	equ	0x00
+	BANK1	equ	0x01
+cpy2user:
+	ld	b,a		;4 save counter
+	ld	a,BANK0		;7 setup bank switcher
+	ld	(bank1+1),a	;13 from BANK0
+	ld	a,BANK1		;7 
+	ld	(bank2+1),a	;13 to BANK1
+	jp	cpystrt		;10
+cpy2sys:
+	ld	b,a		;4 save counter
+	ld	a,BANK1		;7 setup bank switcher
+	ld	(bank1+1),a	;13 from BANK1
+	ld	a,BANK0		;7
+	ld	(bank2+1),a	;13 to BANK0
+cpystrt:
+	ld	a,b		;4 restore counter
+	ld	(oldsp+1),sp	;20	
+	ld	(n1+1),hl		;16
+	;add 16 to target address, for push works downwards
+	ld	de,16		;10
+	add	ix,de		;15
+	ld	(n2+1),ix		;20
+	di			;4 disable interrupts to use misuse sp
+cpyloop:
+	ex	af,af'		;4 ;save counter in a'
+bank1:	ld	a,BANK0		;7 literal BANK0 will be modified
+	out	(BANKPORT),a	;11
+n1:	ld	sp,0		;10 literal 0 will be modified
+	;read 16 bytes in hl,de,bc,ix,iy,hl',de',bc'
+	pop	hl		;10 sp upwards
+	pop	de		;10
+	pop	bc		;10
+	pop	ix		;14
+	pop	iy		;14
+	exx			;4
+	pop	hl		;10
+	pop	de		;10
+	pop	bc		;10
+	ld	(n1+1),sp		;20	correct sp for next loop and patched into this bank
+	;write 16 bytes
+bank2:	ld	a,BANK1		;7	literal BANK1 will be modified
+	out	(BANKPORT),a	;11
+n2:	ld	sp,0		;10	load target address in sp
+	;write 16 bytes from bc',de',hl',iy,ix,bc,de,hl
+	push	bc		;11
+	push	de		;11
+	push	hl		;11
+	exx			;4
+	push	iy		;15
+	push	ix		;15
+	push	bc		;11
+	push	de		;11
+	push	hl		;11
+	;sp goes the wrong way, need to go to first byte of next block
+	ld	hl,0x0020		;10	16 written bytes plus 16 to write next time
+	add	hl,sp		;11
+	ld	(n2+1),hl		;16
+	ex	af,af'		;4	get saved counter a'
+	dec	a		;4
+	jp	nz, cpyloop	;10
+
+oldsp:	ld	sp,0000		;10	;restore stackpointer
+	ei			;4	;enable interrupts
+	;FIXME: maybe switch back to ram bank at entry of copy?.
+	ret			;10
+	;44+(10+)+89+n*(62+28+34+20+28+33+4+30+33+21+16+18)+24
+	;=167+n*(327)
+	;for 256 byte n=16, 5399 (21.09 cycles per byte)
