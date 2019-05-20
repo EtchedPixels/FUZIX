@@ -5,10 +5,9 @@ Not yet complete
 Cards required:
 
 Simple 80 processor board
-Simple 80 CF adapter (RC2014 can probably be used if you modify the code to
-		      look at 0x90)
-CTC at 0xA0 (to avoid clashes with the above)
+Simple 80 CF adapter (RC2014 can probably be used as it decodes 0x90)
 RTC at 0xC0
+CTC at 0xD0 (to avoid clashes with the above)
 
 Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
 best of both worlds. A standard crystal is assumed. The CTC should also be set

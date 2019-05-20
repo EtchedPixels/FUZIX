@@ -40,7 +40,6 @@ static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
-	uint8_t baud;
 
 	used(flags);
 
@@ -67,6 +66,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 
 int tty_carrier(uint_fast8_t minor)
 {
+	used(minor);
 	return 1;
 }
 

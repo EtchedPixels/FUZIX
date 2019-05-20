@@ -13,10 +13,10 @@ __sfr __at (SIO0_BASE + 1) SIOA_C;
 __sfr __at (SIO0_BASE + 2) SIOB_D;
 __sfr __at (SIO0_BASE + 3) SIOB_C;
 
-__sfr __at 0xA0 CTC_CH0;
-__sfr __at 0xA1 CTC_CH1;
-__sfr __at 0xA2 CTC_CH2;
-__sfr __at 0xA3 CTC_CH3;
+__sfr __at 0xD0 CTC_CH0;
+__sfr __at 0xD1 CTC_CH1;
+__sfr __at 0xD2 CTC_CH2;
+__sfr __at 0xD3 CTC_CH3;
 
 extern void sio2_otir(uint8_t port) __z88dk_fastcall;
 
