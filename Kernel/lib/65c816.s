@@ -279,11 +279,11 @@ fork_patch_3:
 	sep	#$30		; back to 8bit mode for C
 	.a8
 	.i8
-	lda	#<_udata
-	ldx	#>_udata
-	jsr	pushax
 	lda	ptr1
 	ldx	ptr1+1
+	jsr	pushax
+	lda	#<_udata
+	ldx	#>_udata
 	jsr	_makeproc
 	; We are now being the child properly
 	lda	#0
