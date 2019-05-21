@@ -101,14 +101,9 @@ interrupt_handler:
 	sta _inint
 	lda _kernel_flag
 	bne interrupt_k
-	jsr map_process_always		; may have switched task
-	jmp int_switch
+	jmp map_process_always		; may have switched task
 interrupt_k:
-	jsr map_restore
-int_switch:
-	lda #0
-	sta _inint
-	rts
+	jmp map_restore
 
 ;
 ;	The following is taken from the debugger example as referenced in
