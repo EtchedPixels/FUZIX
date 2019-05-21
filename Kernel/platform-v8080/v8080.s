@@ -204,6 +204,7 @@ _tty_pollirq:
 	jnc poll2
 	in 1
 	mov e,a
+	mvi d,0
 	push d
 	mvi e,1
 	push d
@@ -216,6 +217,7 @@ poll2:
 	rnc
 	in 41
 	mov e,a
+	mvi d,0
 	push d
 	mvi e,2
 	push d
