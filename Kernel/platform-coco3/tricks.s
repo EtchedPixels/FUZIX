@@ -285,14 +285,20 @@ a@	leau	-14,u
 	leau	-14,u
 	pulu	dp,d,x,y
 	pshs	dp,d,x,y
-	cmpu	#0x2002+7	; end of copy?
+	cmpu	#0x2002+42+7	; end of copy? (leave space for interrupt)
 	bne	a@		; no repeat
-	ldd	0x2000
-	pshs	d
+	ldx	@temp		; put stack back
+	exg	x,s		; and data to ptr to x now
+	leau	-7,u
+b@	ldd	,--u		; move last 44 bytes with a normal stack
+	std	,--x		; 4 bytes per loop
+	ldd	,--u
+	std	,--x
+	cmpx	#0x4000
+	bne	b@
 	;; restore mmu
 	ldd	#0x0102
 	std	0xffa9
 	;; return
-	lds	@temp
 	puls	dp,d,x,y,u,pc		; return
 @temp	rmb	2
