@@ -316,7 +316,36 @@ is_sio:	ld a,#1
 	jr z, serial_up
 
 	; Repeat the check on SIO B
+	; We have to be careful here because it could be that this is
+	; a mirror of the first SIO! Fortunately channel B WR2 can be read
+	; as RR2 so we can write the vector to one and check the other, then
+	; write a different vector and check again. If they both change
+	; it's aliased, if not it really is two interfaces.
 
+	ld a,#2
+	out (SIOB_C),a			; vector
+	ld a,#0xF0
+	out (SIOB_C),a			; vector is now 0xFX
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)			; read it back on the second SIO
+	and #0xF0
+	cp #0xF0
+	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
+
+	; Could be chance or a soft boot
+
+	ld a,#2
+	out (SIOB_C),a
+	xor a
+	out (SIOB_C),a
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)
+	and #0xF0
+	jr z, serial_up			; It's a mirage
+
+not_mirrored:
 	xor a
 	ld c,#SIOD_C
 	out (c),a			; RR0
