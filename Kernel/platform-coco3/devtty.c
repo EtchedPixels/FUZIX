@@ -260,14 +260,16 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 		return;
 	}
 	irq=di();
-	struct pty *t = curpty;
-	vt_save(&curpty->vt);
-	curpty = &ptytab[minor - 1];
-	vt_load(&curpty->vt);
-	vtoutput(&c, 1);
-	vt_save(&curpty->vt);
-	curpty = t;
-	vt_load(&curpty->vt);
+	if (curpty != &ptytab[minor - 1]){
+		//struct pty *t = curpty;
+		vt_save(&curpty->vt);
+		curpty = &ptytab[minor - 1];
+		vt_load(&curpty->vt);
+		//vt_save(&curpty->vt);
+		//curpty = t;
+		//vt_load(&curpty->vt);
+	}
+	vtoutput(&c,1);
 	irqrestore(irq);
 }
 
@@ -589,5 +591,6 @@ void devtty_init()
 	apply_defmode(0);
 	/* make video palettes match vt.h's definitions. */
 	memcpy( (uint8_t *)0xffb0, rgb_def_pal, 16 );
+	vt_load(&curpty->vt);
 }
 
