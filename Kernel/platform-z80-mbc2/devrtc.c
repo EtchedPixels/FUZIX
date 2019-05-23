@@ -26,6 +26,9 @@ int platform_rtc_read(void)
         p[3] = opread;		/* Day of month 1-31 */
         p[2] = opread;		/* Month 1-12 */
         y = opread + 2000;	/* Year 2000-.. */
+
+        irqrestore(irq);
+
         p[0] = y;
         p[1] = y >> 8;
 	cmos.type = CMOS_RTC_DEC;

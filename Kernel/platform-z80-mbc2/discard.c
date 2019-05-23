@@ -50,8 +50,8 @@ void pagemap_init(void)
 	pagemap_add(1);
 	pagemap_add(2);
 	opcode = OP_GET_SYSFLAGS;
-	if (!(opread & 0x02))
-		panic("no rtc");
+	if (opread & 0x02)
+		has_rtc = 1;
 }
 
 /*

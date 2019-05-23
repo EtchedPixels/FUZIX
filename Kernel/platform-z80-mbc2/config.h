@@ -46,9 +46,8 @@ extern unsigned int swap_dev;
  */
 #define swap_map(x)	((uint8_t *)(x))
 
-/* What is the maximum number of /dev/hd devices we have. In theory right now
-   it's actually 3 - two in the IDE and one on the SD interface */
-#define MAX_BLKDEV	4
+/* We can have 16 virtual 8MB disks */
+#define MAX_BLKDEV	16
 
 #define BOOTDEVICENAMES "hd#"
 
@@ -103,7 +102,7 @@ extern unsigned int swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5        /* Number of block buffers. Must be 4+ and must match
                              kernel.def */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define NMOUNTS	 8	  /* Number of mounts at a time */
 
 /* This can optionally be set to force a default baud rate, eg if the system
    console should match a firmware set rate */

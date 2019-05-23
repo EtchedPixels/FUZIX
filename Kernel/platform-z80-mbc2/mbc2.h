@@ -44,3 +44,5 @@ __sfr __at 1 ttyport;
 #define OP_PORT			1
 #define OP_RD_PORT		0
 #define OP_WR_PORT		0
+
+extern uint8_t has_rtc;

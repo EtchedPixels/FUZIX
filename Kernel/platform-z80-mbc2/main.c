@@ -8,6 +8,7 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
+uint8_t has_rtc;
 
 /*
  *	This routine is called continually when the machine has nothing else
@@ -16,6 +17,9 @@ uint16_t swap_dev = 0xFFFF;
  */
 void platform_idle(void)
 {
+	/* Everything we need is interrupt driven */
+	__asm halt __endasm;
+#if 0	
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
 	irqflags_t irq = di();
@@ -24,6 +28,7 @@ void platform_idle(void)
 		tty_poll();
 	/* Restore prior state. */
 	irqrestore(irq);
+#endif	
 }
 
 /*
@@ -74,9 +79,15 @@ void platform_discard(void)
 	}
 }
 
+/*
+ *	Always called with interrupts off.
+ */
 uint8_t platform_rtc_secs(void)
 {
-	opcode = OP_GET_RTC;
-	return opread;
-	/* Don't bother with the rest of the bytes */
+	if (has_rtc) {
+		opcode = OP_GET_RTC;
+		/* Don't bother with the rest of the bytes */
+		return opread;
+	}
+	return 255;
 }

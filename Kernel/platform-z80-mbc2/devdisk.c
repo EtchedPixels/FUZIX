@@ -29,6 +29,7 @@ uint_fast8_t vd_transfer_sector(void)
         if (c) {
             kprintf("hd: drive %d select failed %d.\n", drive, c);
             last_drive = 255;
+            irqrestore(irq);
             return 0;
         }
     }
