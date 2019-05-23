@@ -61,7 +61,7 @@ static void cpu_ident(void)
 }
 
 
-#elif defined(__SDCC_z80) || defined(__SDCC_z180)
+#elif defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80)
 
 #define CPU_Z80_Z80		0
 #define CPU_Z80_Z180		1
