@@ -2,6 +2,8 @@ Experimental port for the Simple80 mainboard plus CF card plus RTC or CTC card
 
 Not yet complete
 
+Required firmware: Simple 80 CP/M ROM 0.12 or higher
+
 Cards required:
 
 Simple 80 processor board

@@ -1,23 +1,22 @@
 ;
-;	The CP/M command loads blocks 0x80-0x91 into DC00-FFFF ish
-;	(we'll need to hack the firmware a bit maybe) and then runs from
-;	F200 - hardcoded.
+;	This assumes you are using the ROM CP/M build with banked memory
+;	helpers in high RAM.
 ;
 
 	.area LOADER(ABS)
 
-	.org 0xDC00
+	.org 0xFE00
 
-DATA		.equ 	0x10
-ERROR		.equ	0x11
-FEATURES	.equ	0x11
-COUNT		.equ	0x12
-LBA_0		.equ	0x13
-LBA_1		.equ	0x14
-LBA_2		.equ	0x15
-LBA_3		.equ	0x16
-STATUS		.equ	0x17
-CMD		.equ	0x17
+DATA		.equ 	0x90
+ERROR		.equ	0x91
+FEATURES	.equ	0x91
+COUNT		.equ	0x92
+LBA_0		.equ	0x93
+LBA_1		.equ	0x94
+LBA_2		.equ	0x95
+LBA_3		.equ	0x96
+STATUS		.equ	0x97
+CMD		.equ	0x97
 
 ERR		.equ	0
 DRQ		.equ	3
@@ -29,20 +28,26 @@ ATA_READ	.equ	0x20
 SIOA_C		.equ	0x01
 SIOA_D		.equ	0x00
 
-	.area START(ABS)
 
-	.org 0xF200
-	jp start
-
-	.area MAIN(ABS)
-
-	.org 0xFD00
+	.db 'B'
+	.db 'O'
+	.db 'O'
+	.db 'T'
+	.db 'Z'
 
 start:
 	; A modern partition setup has lots of room for boot space, so we
-	; just load the blocks after the loader (24-147). We can't overlap
-	; because of the FFFE/FFFF thing.
+	; just load the blocks after the loader (1-125).
 
+	; FFxx we must not touch initially as it holds the banked memory
+	; helpers placed by the firmware.
+
+	ld hl,#0x0100
+	ld de,#0xFE00
+	ld bc,#0x0100
+	ldir
+	jp go
+go:
 	ld sp, #0xFE00
 	ld hl,#hello
 	call serstr

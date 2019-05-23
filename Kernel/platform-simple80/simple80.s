@@ -96,9 +96,6 @@ banknum:
 
 ; -----------------------------------------------------------------------------
 ;	All of discard gets reclaimed when init is run
-;
-;	Discard must be above 0x8000 as we need some of it when the ROM
-;	is paged in during init_hardware
 ; -----------------------------------------------------------------------------
 	.area _DISCARD
 
@@ -109,11 +106,18 @@ init_hardware:
         ld (_procmem), hl
 
 	ld hl,#s__COMMONMEM
-	ld ix,#s__COMMONMEM
-	ld bc,#l__COMMONMEM
-	ld de,#0x8000
-	xor a
-	call 0xFFFD		; Top page hook code placed by Boot ROM
+	ld de,#l__COMMONMEM
+
+	; This is run once so can be slow and simple
+farput:
+	ld a,(hl)
+	call 0xFFE0		; put byte in a into (HL) in far memory
+				; uses BC/HL/AF
+	inc hl
+	dec de
+	ld a,d
+	or e
+	jr nz,farput
 
 	ld a,#0x18
 	ld (banknum),a		; and correct page
@@ -332,7 +336,7 @@ rst18:
 	    ld a,#0x01
 	    out (0x03),a
 	    ld a,#0x58
-	    out (0x01),a
+	    out (0x03),a
 rst20:	    ei
 	    jp (hl)
 	    nop
@@ -408,7 +412,7 @@ far_ldir_1:
 	    jr nz, far_ldir_1
 	    exx
 	    out (c),b
-	    ld b,#0x58
+	    ld b,#0x18
 	    out (c),b
 	    exx
 	    ret
