@@ -19,7 +19,9 @@ void platform_idle(void)
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
 	irqflags_t irq = di();
-	tty_poll();
+	opcode = OP_GET_SYSFLAGS;
+	if (opread & 4)
+		tty_poll();
 	/* Restore prior state. */
 	irqrestore(irq);
 }

@@ -167,12 +167,5 @@ void tty_data_consumed(uint_fast8_t minor)
  */
 void tty_poll(void)
 {
-	uint8_t c;
-
-	do {
-		opcode = OP_GET_SYSFLAGS;
-		c = opread;
-		if (c & 0x04)
-			tty_inproc(1, ttyport);
-	} while(c & 0x04);
+	tty_inproc(1, ttyport);
 }
