@@ -152,20 +152,20 @@ _program_vectors_u:
 	lxi h,unix_syscall_entry
 	shld 0x31
 !
-!	The board is wired this way but I am not convinced that will
-!	actually work out. If not we'll need to rewire the IRQ to RST 5.5
+!	The default behaviour for the supplied board is broken. This assumes
+!	we are using the wiring patch to use RST6.5
 !
-	sta 0x38
+	sta 0x34
 	lxi h,interrupt_handler
-	shld 0x39
+	shld 0x35
 	!
 	!	Just in case
 	!
 	lxi h,unexpected
 !	sta 0x2C
 !	shld 0x2D
-	sta 0x34
-	shld 0x35
+	sta 0x38
+	shld 0x39
 	sta 0x3c
 	shld 0x3d
 	ret

@@ -35,17 +35,17 @@ At this point:
 
 (ACIA with loose decode covers 80-BF!)
 
-0xC0-0xC7	16550A UART (ghosts all over C0-FF) - need a better board
+0xC0-0xC7	16550A UART
 
 
 
 TODO
 
-- Build Ben's 8085 board with classic 7.3728MHz crystal and 8MHz Tundra 8085
-- Verify basic behaviour and compatibility with 512K RAM/ROM
-- Check on interrupt behaviour (do we always get FF or do we need IRQ routing
-  tricks to RST 5.5 ?)
-- Test IDE CF compatibility
+DONE - Build Ben's 8085 board with classic 7.3728MHz crystal and 8MHz Tundra 8085
+DONE - Verify basic behaviour and compatibility with 512K RAM/ROM
+HW IS BROKEN - Check on interrupt behaviour (do we always get FF or do we need
+	IRQ routing tricks to RST 5.5 ?)
+DONE - Test IDE CF compatibility
 - Experiment to see if SIO can be made to work with the 8085 providing CLK
 - See if M1 hacks and CTC work or if we need another option
 
