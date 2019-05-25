@@ -13,7 +13,7 @@ void map_init(void)
 	ds1302_init();
 	if (ds1302_present)
 		kputs("DS1302 detected at 0xC0.\n");
-        /* Default clashes with the CF adapter for Simple 80 */
+	/* Default clashes with the CF adapter for Simple 80 */
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0xD0.\n");
 }
@@ -25,18 +25,18 @@ void map_init(void)
  */
 void platform_swap_found(uint8_t letter, uint8_t m)
 {
-  blkdev_t *blk = blk_op.blkdev;
-  uint16_t n;
-  if (swap_dev != 0xFFFF)
-    return;
-  letter -= 'a';
-  kputs("(swap) ");
-  swap_dev = letter << 4 | m;
-  n = blk->lba_count[m - 1] / SWAP_SIZE;
-  if (n > MAX_SWAPS)
-    n = MAX_SWAPS;
-  while(n)
-    swapmap_init(n--);
+	blkdev_t *blk = blk_op.blkdev;
+	uint16_t n;
+	if (swap_dev != 0xFFFF)
+		return;
+	letter -= 'a';
+	kputs("(swap) ");
+	swap_dev = letter << 4 | m;
+	n = blk->lba_count[m - 1] / SWAP_SIZE;
+	if (n > MAX_SWAPS)
+		n = MAX_SWAPS;
+	while (n)
+		swapmap_init(n--);
 }
 
 void device_init(void)

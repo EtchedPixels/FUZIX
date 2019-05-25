@@ -20,7 +20,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 static tcflag_t uart_mask[4] = {
 	_ISYS,
 	_OSYS,
-	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE | CSTOPB | PARENB | PARODD | _CSYS,
 	_LSYS
 };
 
@@ -85,7 +85,7 @@ void tty_pollirq(void)
 	   spurious characters or lines on an unused SIO floating */
 	do {
 		progress = 0;
-		SIOA_C = 0;		// read register 0
+		SIOA_C = 0;	// read register 0
 		ca = SIOA_C;
 		/* Input pending */
 		if ((ca & 1) && !fullq(&ttyinq[1])) {
@@ -108,7 +108,7 @@ void tty_pollirq(void)
 			else
 				tty_carrier_drop(1);
 		}
-		SIOB_C = 0;		// read register 0
+		SIOB_C = 0;	// read register 0
 		cb = SIOB_C;
 		if ((cb & 1) && !fullq(&ttyinq[2])) {
 			tty_inproc(2, SIOB_D);
@@ -125,7 +125,7 @@ void tty_pollirq(void)
 			else
 				tty_carrier_drop(2);
 		}
-	} while(progress);
+	} while (progress);
 }
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
@@ -160,7 +160,7 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 	c = in(port);
 	irqrestore(irq);
 
-	if (c & 0x04)	/* THRE? */
+	if (c & 0x04)		/* THRE? */
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
@@ -173,9 +173,9 @@ void tty_data_consumed(uint_fast8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(uint_fast8_t c)
 {
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	while (tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	if (c == '\n')
 		tty_putc(TTYDEV - 512, '\r');
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	while (tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	tty_putc(TTYDEV - 512, c);
 }

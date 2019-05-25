@@ -118,7 +118,7 @@ void sync_clock(void)
 				if (tmp < 0)
 					tmp += 60;
 				tmp *= 10;
-				while(tmp--) {
+				while (tmp--) {
 					timer_interrupt();
 				}
 			}
