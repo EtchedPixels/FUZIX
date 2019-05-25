@@ -454,6 +454,30 @@ It is possible to enable both ports for login.
 Tested on 0.3rc1
 - Yes, real system
 
+### Simple80
+
+A glueless Z80 system with 128K of banked RAM in two banks along with 64K
+ROM. The serial I/O is partially decoded between 0x00-0x7F, and the optional
+CF adapter decodes 0x80-0xBF although a standard RC2014 adapter can also be
+used (decodes at 0x10-0x17/0x90-0x97).
+
+Supported Features
+- Onboard SIO/2 ports
+- IDE CF adapter (Simple80 or RC2014)
+- Z80 CTC (eg SC102) at 0xD0
+- RC2014 RTC (optional) at 0xC0
+
+It is possible to run with an RTC instead in tickless mode but this is not
+recommended. Note that the CTC requires a non-standard address due to the
+partial decodes of the Simple80 devices.
+
+Due to the limited memory the Simple80 systems are not recommended for
+multi-user usage. It is also not possible to use these boards with a banked
+ROM/RAM card.
+
+Tested on 0.3rc1
+- Yes, emulation
+
 ### Tiny68K
 
 A 68000 based SBC with CF interface and a lot of memory.
