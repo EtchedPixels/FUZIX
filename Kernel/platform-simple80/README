@@ -1,19 +1,17 @@
 Experimental port for the Simple80 mainboard plus CF card plus RTC or CTC card
 
-Not yet complete
-
 Required firmware: Simple 80 CP/M ROM 0.12 or higher
 
 Cards required:
 
 Simple 80 processor board
 Simple 80 CF adapter (RC2014 can probably be used as it decodes 0x90)
-RTC at 0xC0
+RTC at 0xC0 (optional)
 CTC at 0xD0 (to avoid clashes with the above)
 
-Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
-best of both worlds. A standard crystal is assumed. The CTC should also be set
-to count timer 2 into timer 3 (jumper ZT2 to CT3)
+Either SC102 Z80 CTC (strongly recommended) or RC2014 RTC. If you have both you
+get the best of both worlds. A standard crystal is assumed. The CTC should also
+be set to count timer 2 into timer 3 (jumper ZT2 to CT3).
 
 This is a design that happens to have 128K RAM but the 64K banks are flipped
 directly. The boot EEPROM must contain firmware that loads a copier into the
@@ -44,19 +42,21 @@ Swap only needed blocks for speed up
 
 Emulation
 
-Write the bootloader once to block 0x80
+Write the bootloader once to block 0x00 with partitions 
 Write kernel images to block 0x01-0x7F
 Make it into a disk image
 
 Real Hardware
 
-Add the bootloader to block 0 of a CF card
 Partition the CF card with a standard partitioning tool so it has the normal
 sector 2048 start for the file systems.
+Add the bootloader to block 0 of a CF card
 Set up a partition (type 7E) for Fuzix and put a Fuzix root file system on it
 using dd or similar raw tools
 Set up a second partition (type 7F) as swap.
 
 You can partition the rest of the card however you want.
 
-Boot the machine and in the monitor run the CPM command.
+Boot the machine with the card present and the ROM will see a bootable CF
+card and boot from it.
+
