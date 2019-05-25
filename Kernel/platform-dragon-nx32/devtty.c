@@ -283,7 +283,7 @@ static void keyproc(void)
 		}
 		keymap[i] = keyin[i];
 	}
-	if (system_id && keybit != 6) { 	/* COCO series */
+	if (newkey == 1 && system_id && keybit != 6) { 	/* COCO series */
 	  keybit += 2;
 	  if (keybit > 5)
 	    keybit -= 6;
