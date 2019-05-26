@@ -223,7 +223,6 @@ _dofork:
 
         jsr _makeproc
 
-	jsr incsp2
 	; any calls to map process will now map the childs memory
 
         ; runticks = 0;
