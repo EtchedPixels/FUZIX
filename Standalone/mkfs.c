@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 	fs_super.fs.s_ninode = 0;
 	fs_super.fs.s_tinode = swizzle16(8 * (isize - 2) - 2);
 	fs_super.fs.s_shift = shift;
-	fs_super.fs.s_time = t;
+	fs_super.fs.s_time = swizzle32(t);
 	fs_super.fs.s_timeh = t >> 32;
 
 	/* Free each block, building the free list. This is done in
