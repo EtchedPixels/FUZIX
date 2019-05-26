@@ -118,6 +118,8 @@ int pagemap_alloc( ptptr p ){
  *	Reallocate the maps for a process
  *
  *	FIXME: this is a quick hack for non split I/D old style chmem
+ *
+ *	FIXME: review swap case and ENOMEM
  */
 int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 {
