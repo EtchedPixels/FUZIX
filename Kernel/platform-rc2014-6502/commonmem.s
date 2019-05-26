@@ -19,6 +19,8 @@
 ;
 ;	Declared as BSS so no non zero bytes here please
 ;
+;	Commondata exists per process in the switched space
+;
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstack_base:
@@ -34,12 +36,6 @@ CTemp:
 	.res    2               ; sp
 	.res    2               ; sreg
         .res    (zpsavespace-4) ; Other stuff
-
-;
-;	For this platform we want the istack separate
-;
-
-	.segment "ISTACK"
 
         ; next 256 bytes: 254 byte interrupt stack, then 2 byte saved stack pointer
 istack_base:
