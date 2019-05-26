@@ -304,12 +304,17 @@ vector:
 	    pha
 	    cld
 
-	    jsr stash_zp		; Save our zero page bits
+	    ; Save our zero page bits (and thus the C stack etc). The save
+	    ; area is task specific so if we task switch all is good
+	    jsr stash_zp
 ;
-;	Q: do we want to spot brk() instructions and signal them ?
+;	Q: do we want to spot BRK instructions and signal them ?
 ;
 ;
-;	Save the old stack ptr
+;	Save the old stack ptr (do we need this - can it even get
+;	unbalanced ? Note that istack_switched_sp like the istack is
+;	in the commondata so per context not in fact as it looks global.
+;	Pre-emption relies on this.
 ;
 	    tsx					; and save the 6502 stack ptr
 	    stx istack_switched_sp		; in uarea/stacks
@@ -321,40 +326,35 @@ vector:
 	    sta sp
 	    lda #>istack_top
 	    sta sp+1
+;
+;	This will map in the upper kernel pages via map_save_kernel, invoke
+;	the handler and then return restoring the mapped pages of either
+;	the kernel or calling user process to the high space.
+;
 	    jsr interrupt_handler
-;
-;	Reload the previous value into the stack ptr
-;
-	    ldx istack_switched_sp
-	    txs					; recover 6502 stack
-	    jsr stash_zp			; recover 6502 zp bits
 
-;	Check for kernel return path (much simpler as we don't do any
-;	bank flipping of the low 16K)
+;	Check for kernel return path
 
 	    lda _kernel_flag
-	    bne irqout
+	    bne kirqout
 ;
-;	TODO: pre-emption
+;	Pre-emption ?
 ;
 	    lda _need_resched
 	    beq no_preempt
 
+	    ;
+	    ; Put this task to sleep and continue with the next one. As we
+	    ; have per task IRQ stacks out of necessity (the 6502 stack is
+	    ; a fixed page) this isn't as scary as on some ports.
+	    ;
+
 	    lda	#0
 	    sta _need_resched
 
-	    ; Switch to our kernel stack which is free as we don't preempt
-	    ; from kernel space
-	    tsx
-	    stx	_udata+U_DATA__U_SYSCALL_SP
-;FIXME	    ldx #kstack_top
-	    txs
-
 	    ;
-	    ; TODO: do we need to sort the C stack or is it sufficient to
-	    ; just do the 6502 stack at this point since we have a valid
-	    ; C stack.. the IRQ one for chksigs to run, while the
-	    ; platform_switchout code is asm only as we switch in ?
+	    ; We need to keep on the kernel istack at this point because the
+	    ; user C stack may not be self-consistent.
 	    ;
 	    lda	#1
 	    sta _udata+U_DATA__U_INSYS
@@ -366,6 +366,10 @@ vector:
 	    ; Switch out .. we will re-appear at some point
 	    lda	_udata+U_DATA__U_PTAB
 	    ldx _udata+U_DATA__U_PTAB+1
+	    ; When we enter this code we will switch the low 16K underneath
+	    ; us. Other stuff will run on a different low bank, and at some
+	    ; point we will return with S correct and on our 6502 and C
+	    ; stacks (we effectively have private IRQ stacks)
 	    jsr _platform_switchout
 	    ;
 	    ; Now return to the old state having woken back up
@@ -373,8 +377,6 @@ vector:
 	    ;
 	    lda #0
 	    sta _udata+U_DATA__U_INSYS
-	    ldx #<_udata+U_DATA__U_SYSCALL_SP
-	    txs
 
 	    ;
 	    ; Check what signals are now waiting for us
@@ -387,6 +389,13 @@ no_preempt:
 ;	app is expected to switch to a signal stack or similar, pop the
 ;	values, invoke the signal handler and then return.
 ;
+;
+;	Get back on the user stack, but do not use the user C stack
+;	between here and returning to user space
+;
+	    ldx istack_switched_sp
+	    txs					; recover 6502 stack
+	    jsr stash_zp			; recover 6502 zp bits
 	    lda _udata+U_DATA__U_CURSIG
 	    beq irqout
 	    tay
@@ -423,6 +432,15 @@ no_preempt:
 					; rather than doing a longjmp
 					; we'll end up at irqout and pop the
 					; real frame
+kirqout:
+;
+;	Get back on the user stack, but do not use the user C stack
+;	until we leave
+;
+	    ldx istack_switched_sp
+	    txs					; recover 6502 stack
+	    jsr stash_zp			; recover 6502 zp bits
+
 irqout:
 	    pla
 	    tay
@@ -501,7 +519,6 @@ noargs:
 	    lda #>kstack_top
 	    sta sp+1
 
-	    cli
 ;
 ;	Caution: We may enter here and context switch and another task
 ;	exit via its own syscall returning in its own memory context.
@@ -512,7 +529,6 @@ noargs:
 ;
 	    jsr unix_syscall_entry
 
-	    sei
 ;
 ;	Correct the system stack
 ;
