@@ -62,10 +62,10 @@ syscall	     =  $FE
             .segment "COMMONMEM"
 
 _platform_monitor:
-	    jmp _platform_monitor
-
 _platform_reboot:
-	    jmp _platform_reboot	; FIXME: original ROM map and jmp
+	    lda #0
+	    sta $C079		; top 16K to ROM 0
+	    jmp ($FFFC)
 
 ___hard_di:
 	    php

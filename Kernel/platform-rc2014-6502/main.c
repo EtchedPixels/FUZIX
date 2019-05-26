@@ -65,11 +65,31 @@ void platform_swap_found(uint8_t letter, uint8_t m)
 #endif
 }
 
+static volatile uint8_t *via = (volatile uint8_t *)0xC0F0;
+
 void device_init(void)
 {
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
+	/* FIXME: we need a way to time the CPU against something to get
+	   the VIA clock rate. For now hard code 4MHz */
+	/* Timer 1 free running */
+	via[11] = 0x40;
+	via[4] = 0x40;	/* 100Hz at 4MHz */
+	via[5] = 0x9C;
+	via[14] = 0x7F;	/* Clear IER */
+	via[14] = 0xC0;	/* Enable Timer 1 */
+}
+
+void platform_interrupt(void)
+{
+	uint8_t dummy;
+	tty_poll();
+	if (via[13] & 0x40) {
+		dummy = via[4]; /* Reset interrupt */
+		timer_interrupt();
+	}
 }
 
 /* For now this and the supporting logic don't handle swap */

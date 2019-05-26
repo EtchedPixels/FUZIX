@@ -23,7 +23,7 @@
 #define MAX_MAPS 	9   /* 9 x 48K */
 #define MAP_SIZE    0xC000
 
-#define TICKSPERSEC 10	    /* Ticks per second */
+#define TICKSPERSEC 100	    /* Ticks per second */
 
 /* We've not yet made the rest of the code - eg tricks match this ! */
 #define MAPBASE	    0x0000  /* We map from 0 */

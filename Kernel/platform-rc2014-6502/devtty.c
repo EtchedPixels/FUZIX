@@ -9,8 +9,6 @@
 
 /* 16550A at C0C0 */
 static volatile uint8_t *uart = (volatile uint8_t *)0xC0C0;
-/* TODO */
-static volatile uint8_t *timer = (volatile uint8_t *)0xC0F0;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -83,10 +81,3 @@ void tty_poll(void)
 	}
 }
                 
-void platform_interrupt(void)
-{
-	uint8_t t = *timer;
-	tty_poll();
-	while(t--)
-		timer_interrupt();
-}
