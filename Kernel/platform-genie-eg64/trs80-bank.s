@@ -65,7 +65,7 @@ init_hardware:
 	
 	ld hl,#96
 	ld (_ramsize),hl
-	ld hl,#48
+	ld hl,#32
 	ld (_procmem),hl
         im 1 ; set CPU interrupt mode
         ret
