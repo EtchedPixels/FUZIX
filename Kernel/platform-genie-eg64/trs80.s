@@ -54,7 +54,7 @@ _int_disabled:
 	    .db 1
 
 _need_resched:
-	    .db 1
+	    .db 0
 
 _platform_monitor:
 monitor_spin:
@@ -72,13 +72,16 @@ _platform_reboot:
 	   rst 0
 
 ; -----------------------------------------------------------------------------
-; BOOT MEMORY BANK (0x0100)
+; Needs to be in 4000-7FFF
 ; -----------------------------------------------------------------------------
-            .area _BOOT
+            .area _CODE
 
 
 init_early:
+	    ld bc,#0xC0
+	    out (c),b
 	    ld a,(4)
+	    out (c),c
 	    cp #0x30
 	    jr nz, not_m3
 	    ld a,#1
@@ -104,7 +107,9 @@ not_m3:
 	    ld (_trs80_model), a
 	    jr not_vg
 not_lnw:
+	    out (c),b
 	    ld hl,(0x18F5)
+	    out (c),c
 	    ld de,#0x4E53	; 'SN' for VG, 'L3' for TRS80 Model 1
 	    or a
 	    sbc hl,de
@@ -159,25 +164,17 @@ _program_vectors:
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
-; FIXME: need to do different things for Video Genie and Model III
 outchar:
             ld (0x37E8), a
             ret
 
 ;
-;	Swap helpers.
-;	We have our buffers mapepd in Bank 2 but we don't need to do
-;	anything here as we are in common memory and we've carefully
-;	arranged that the device driver callers are in BANK2 thus we'll
-;	have BANK2 mapped by default, although we may map a user bank
-;	in temporarily if going direct to user.
+;	Disk transfer helpers.
 ;
 _hd_xfer_in:
 	   pop de
-	   pop bc
 	   pop hl
 	   push hl
-	   push bc
 	   push de
 	   ld a, (_hd_page)
 	   or a
@@ -186,15 +183,13 @@ _hd_xfer_in:
 	   ld bc, #0xC8			; 256 bytes from 0xC8
 	   inir
 	   pop af
-	   call nz, map_kernel
-	   ret
+	   ret z
+	   jp map_kernel
 
 _hd_xfer_out:
 	   pop de
-	   pop bc
 	   pop hl
 	   push hl
-	   push bc
 	   push de
 	   ld a, (_hd_page)
 	   or a
@@ -203,5 +198,5 @@ _hd_xfer_out:
 	   ld bc, #0xC8			; 256 bytes to 0xC8
 	   otir
 	   pop af
-	   call nz, map_kernel
-	   ret
+	   ret z
+	   jp map_kernel

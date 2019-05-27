@@ -76,6 +76,9 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	} else if (rawflag == 2)
 		hd_page = swappage;
 
+	kprintf("hd_transfer part %d (cylbase %d) addr %x, len %d\n",
+		minor & 0x0F, p->cyl[(minor-1)&0x0F],
+		udata.u_dptr, udata.u_nblock);
 	udata.u_nblock *= 2;
 
 	if (!is_read)
@@ -97,6 +100,8 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (minor)
 		cyl += p->cyl[(minor-1)&0x0F];
 
+	kprintf("hd_transfer: rw %d dev %x head %x type %d hdpage %d\n",
+		is_read, dev, head, rawflag, hd_page);
 	while (ct < udata.u_nblock) {
 		/* Head next bits, plus drive */
 		hd_sdh = 0x80 | head | (dev << 3);

@@ -3,7 +3,6 @@
 -b _INITIALIZER=0x37C0
 -b _BOOT=0x0100
 -b _CODE=0x4000
--b _COMMONMEM=0x0200
 -l z80
 platform-genie-eg64/crt0.rel
 platform-genie-eg64/commonmem.rel
@@ -49,5 +48,4 @@ platform-genie-eg64/devlpr.rel
 platform-genie-eg64/devtty.rel
 platform-genie-eg64/discard.rel
 platform-genie-eg64/mbr.rel
-usermem_std-z80.rel
 -e
