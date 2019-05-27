@@ -68,12 +68,12 @@ DONE	Rebuild user space for 0x2000 start
 DONE	Figure out how to reclaim 0200-03FF with commondata start
 	(need to work out how loader knows where to jump...)
 DONE	Discard segment
+DONE	Write pre-emption code
+DONE	Timer interrupt (6522VIA)
 
-Real hardware testing
-Write pre-emption code
 Debug signal handling
+Real hardware testing
 Do buffer growth into discard
 Swap support
-Timer interrupt (TMS9918A or 6522VIA ?)
 
 Look at other RC2014 device support
