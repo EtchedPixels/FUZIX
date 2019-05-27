@@ -4,5 +4,5 @@
 ; 256+256 bytes.
 U_DATA__TOTALSIZE           .set $200
 
-PROGLOAD		    .set $0200
+PROGLOAD		    .set $2000
 ZPBASE			    .set $0
