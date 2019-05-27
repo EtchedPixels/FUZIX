@@ -91,7 +91,7 @@ void platform_discard(void)
 	   away from the buffers end to FFFF */
 	bufptr bp;
 	uint16_t space = 0xFFFF - bufdata_end;
-	space /= BLKSIZE;
+	space /= sizeof(blkbuf);
 	if (space > MAX_BUFS - NBUFS)
 		space = MAX_BUFS - NBUFS;
 	bufpool_end += space;
