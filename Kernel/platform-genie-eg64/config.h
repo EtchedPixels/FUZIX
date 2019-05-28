@@ -19,7 +19,7 @@
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS 1
 #define UDATA_SIZE 0x200
-#define MAXTICKS 20
+#define MAXTICKS 100
 /* Direct I/O support */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Raw input layer */

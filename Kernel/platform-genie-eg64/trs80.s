@@ -41,6 +41,7 @@
             .globl istack_switched_sp
             .globl outcharhex
 	    .globl null_handler
+	    .globl _vtoutput
 
             .include "kernel.def"
             .include "../kernel-z80.def"
@@ -64,18 +65,20 @@ monitor_spin:
 platform_interrupt_all:
 	    ret
 
-_platform_reboot:
-	   di
-	   ld sp,#0xffff
-	   xor a
-	   out (0x43),a
-	   rst 0
 
 ; -----------------------------------------------------------------------------
 ; Needs to be in 4000-7FFF
 ; -----------------------------------------------------------------------------
             .area _CODE
 
+
+_platform_reboot:
+	   di
+	   ld sp,#0
+	   xor a
+	   out (0x43),a
+	   out (0xC0),a
+	   rst 0
 
 init_early:
 	    ld bc,#0xC0
@@ -165,9 +168,24 @@ _program_vectors:
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
-            ld (0x37E8), a
-            ret
+	    push bc
+	    push de
+	    push hl
+	    call map_kernel
+	    ld (outtmp),a
+	    ld hl,#1
+	    push hl
+	    ld hl,#outtmp
+	    push hl
+	    call _vtoutput
+	    pop hl
+	    pop hl
+	    pop hl
+	    pop de
+	    pop bc
+	    ret
 
+outtmp:	    .db 0
 ;
 ;	Disk transfer helpers.
 ;

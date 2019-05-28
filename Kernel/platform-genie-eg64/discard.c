@@ -7,7 +7,7 @@
 #include <devide.h>
 #include "trs80.h"
 
-static void vt_check_lower(void)
+void vt_check_lower(void)
 {
   *VT_BASE = 'a';
   if (*VT_BASE == 'a')
@@ -16,7 +16,6 @@ static void vt_check_lower(void)
 
 void device_init(void)
 {
-  vt_check_lower();
 #ifdef CONFIG_RTC
   /* Time of day clock */
   inittod();

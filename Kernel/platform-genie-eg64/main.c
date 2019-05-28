@@ -60,7 +60,7 @@ void platform_discard(void)
 {
 	bufptr bp;
 	uint16_t space = (uint8_t *)0x37E0 - (uint8_t *)bufpool_end;
-	return;
+        memset(bufpool_end, 0, space);
 	space /= sizeof(blkbuf);
 	bufpool_end += space;
 	kprintf("Reclaiming memory.. total buffers %d\n",
