@@ -45,10 +45,10 @@ bankfork:
 	ld (bankpatch2 + 1),a
 	ld a,(_portff)
 	and #0x7F
-	bit 0,c			; C = 3 (child in dock)
-	jr z, ext2doc
-	or #0x80		; C = 2 (parent in dock)
-ext2doc:
+	bit 0,c			; C = 2 (child is 2 and in ext)
+	jr z, dock2ext
+	or #0x80		; C = 3 (parent is 2 and in ext)
+dock2ext:
 	ld (cpatch0 + 1),a	; source
 	xor #0x80
 	ld (cpatch1 + 1), a	; dest
@@ -72,9 +72,9 @@ to_main:
 	ld a,(_portff)
 	and #0x7F
 	bit 0,b			; parent is which ?
-	jr z, ext2main
-	or #0x80		; dock to main
-ext2main:
+	jr nz, dock2main
+	or #0x80		; exrom to main
+dock2main:
 	out (0xFF),a		; right bank
 	ld a,#0xF8		; F4 port value to use
 viamain:
