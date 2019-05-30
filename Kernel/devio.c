@@ -299,20 +299,6 @@ bufptr freebuf(void)
 	return oldest;
 }
 
-
-/*
- *	Helper for hinting that a buffer is not likely to be re-read rapidly
- *	Ignores the hint if the buffer is dirty, resets it if the buffer is
- *	requested again
- */
-void bufdiscard(bufptr bp)
-{
-	if (!bp->bf_dirty)
-		/* Make this the oldest buffer */
-		bp->bf_time = bufclock - 1000;
-}
-
-
 /*********************************************************************
 Bdread() and bdwrite() are the block device interface routines.  They
 are given a buffer pointer, which contains the device, block number,
