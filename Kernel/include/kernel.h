@@ -871,7 +871,6 @@ extern bufptr bfind(uint16_t dev, blkno_t blk);
 extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
 extern void bufinit(void);
-extern void bufdiscard(bufptr bp);
 extern void bufdump (void);
 extern int bdread(bufptr bp);
 extern int bdwrite(bufptr bp);
@@ -1059,6 +1058,7 @@ extern uint_fast8_t platform_suspend(void);
 extern uint_fast8_t platform_udata_set(ptptr p);
 
 extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
+extern uint_fast8_t platform_canswapon(uint16_t devno);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
