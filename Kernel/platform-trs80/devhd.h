@@ -48,7 +48,7 @@ extern struct minipart parts[MAX_HD];
 
 extern uint8_t hd_waitready(void);
 extern uint8_t hd_waitdrq(void);
-extern uint8_t hd_xfer(bool is_read);
+extern uint8_t hd_xfer(bool is_read, uint8_t *dptr);
 
 /* helpers in common memory for the block transfers */
 extern int hd_xfer_in(uint8_t *addr);
