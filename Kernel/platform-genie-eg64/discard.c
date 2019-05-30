@@ -21,9 +21,7 @@ void device_init(void)
   inittod();
 #endif
   hd_probe();
-  devide_init();
   trstty_probe();
-  gfx_init();
 }
 
 void map_init(void)
@@ -45,17 +43,5 @@ static int strcmp(const char *d, const char *s)
 
 uint8_t platform_param(char *p)
 {
-    if (strcmp(p, "pcg80") == 0) {
-     trs80_udg = UDG_PCG80;
-     return 1;
-    }
-    if (strcmp(p, "80gfx") == 0) {
-     trs80_udg = UDG_80GFX;
-     return 1;
-    }
-    if (strcmp(p, "micro") == 0) {
-     trs80_udg = UDG_MICROFIRMA;
-     return 1;
-    }
     return 0;
 }

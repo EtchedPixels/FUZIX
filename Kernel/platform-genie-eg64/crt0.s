@@ -4,7 +4,6 @@
 	        .area _CODE
 	        .area _DATA
 	        .area _CODE1
-	        .area _CODE2
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
@@ -16,6 +15,7 @@
 		.area _BOOT
 	        .area _INITIALIZED
 	        .area _COMMONMEM
+	        .area _CODE2
 		.area _VIDEO
 	        .area _CONST
 		.area _BUFFERS

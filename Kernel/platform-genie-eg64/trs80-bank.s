@@ -67,7 +67,7 @@ init_hardware:
 	
 	ld hl,#96
 	ld (_ramsize),hl
-	ld hl,#32
+	ld hl,#36
 	ld (_procmem),hl
         im 1 ; set CPU interrupt mode
 	jp _vt_check_lower

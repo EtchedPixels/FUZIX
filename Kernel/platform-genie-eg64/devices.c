@@ -9,7 +9,6 @@
 #include <vt.h>
 #include <devtty.h>
 #include <devgfx.h>
-#include <blkdev.h>
 #include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -19,21 +18,11 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/fd		Floppy disc block devices */
   {  fd_open,     no_close,     fd_read,   fd_write,   no_ioctl  },
   /* 2: /dev/tty	TTY devices */
-  {  trstty_open, trstty_close, tty_read,  tty_write,  gfx_ioctl },
+  {  trstty_open, trstty_close, tty_read,  tty_write,  vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
   {  lpr_open,    lpr_close,    no_rdwr,   lpr_write,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,     no_close,     sys_read,  sys_write,  sys_ioctl },
-  /* 5: reserved */
-  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
-  /* 6: reserved */
-  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
-  /* 7: reserved */
-  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
-  /* 8: no tape */
-  {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
-  /* 9: ide block devices (temporarily until we make /dev/hd a blkdev device */
-  {  blkdev_open, no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl  },
 };
 
 bool validdev(uint16_t dev)
