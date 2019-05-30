@@ -276,9 +276,9 @@ _dofork:
 
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
-        pop bc
-        pop bc
-        pop bc
+        pop iy
+        pop ix
+        pop hl
 
         ; Make a new process table entry, etc.
 	ld hl,#_udata
@@ -333,7 +333,7 @@ bankfork:
 	; Stack pointer at the target buffer
 	ld sp,#PROGBASE	; Base of memory to fork
 	; 15 outer loops
-	ld a,#15
+	ld a,#16
 	ld (copyct),a
 	xor a
 	ex af,af'	; Save A as we need an A for ioports
@@ -374,7 +374,7 @@ cpatch1:
 	push bc
 	ex af,af'	; Get counter back
 	dec a
-	jr z, setdone	; 252 loops ?
+	jr z, setdone	; 256 loops ?
 copy_cont:
 	; Switch back to parent bank so that we get the right sp_patch
 	ex af,af'
@@ -393,7 +393,7 @@ setdone:
 	ld hl,#copyct
 	dec (hl)	
 	jr z, copy_over
-	ld a,#252
+	ld a,#0
 	jr copy_cont
 copy_over:
 	;

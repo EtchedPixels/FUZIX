@@ -8,6 +8,9 @@
 ;	For speed we flip bank but not stack so once we flip we must not
 ;	use the stack until we flip back.
 ;
+;	Note there a couple of places we do things a particular way to work
+;	around bugs in the emultion of the TU-ART in Z80Pack
+;
 
 .macro tuart_ports X
 
@@ -66,12 +69,18 @@ _tuart'X'_error:
 ;
 _tuart'X'_txd:
 	push af
-	push hl
 	push bc
-	ld bc,#0x4001
-	in a,(c)
-	out (c),b
-	ld b,a
+	push hl
+	; We have a polled console so the console could in fact beat us
+	; to the buffer. If so we just return - the console byte transmit
+	; completion will call us again.
+	in a,(P)
+	rla
+	jr nc, console'X'_race
+	in a,(0x40)
+	ld c,a
+	ld a,#0x1
+	out (0x40),a
 	ld a,(_tuart'X'_txl)
 	or a
 	jr z, tx_'X'_none
@@ -85,11 +94,11 @@ _tuart'X'_txd:
 	lh 7,l			; Force to upper or lower half
 	ld (tuart'X'_txp),hl
 tx_'X'_none:
-	; Do we need to mask the int off
-	; if so need to cache 03 state (intmask) and add 0x20 (TBE)
-	out (c),b
-	pop bc
+	ld a,c
+	out (0x40),a
+console'X'_race:
 	pop hl
+	pop bc
 	pop af
 	ei
 	RET
@@ -98,12 +107,12 @@ tx_'X'_none:
 ;
 _tuart'X'_rx_ring:
 	push af
-	push hl
 	push bc
-	ld bc,#0x4001
-	in a,(c)
-	out (c),b
-	ld b,a
+	push hl
+	in a,(0x40)
+	ld c,a
+	ld a,#1
+	out (0x40),a
 tuart'X'_rx_next:
 	in a,(P)		; status
 	and #7
@@ -130,12 +139,10 @@ tuart'X'_no_error:
 	;	This is bounded as worst case at high data rate and low
 	;	CPU speed we will overrun and bail out.
 	;
-	in a,(P)		; RR 0
-	bit 6,a			; RDA is high if there is more to read
-	jr c, tuart'X'_rx_next
-	out (c),b
-	pop bc
+	ld a,c
+	out (0x40),a
 	pop hl
+	pop bc
 	pop af
 	ei
 	RET
@@ -143,9 +150,10 @@ tuart'X'_rx_over:
 	ld a,(tuart'X'_error)
 	or #0x04		; Fake an RX overflow bit
 	ld (tuart'X'_error),a
-	out (c),b
-	pop bc
+	ld a,c
+	out (0x40),a
 	pop hl
+	pop bc
 	pop af
 	ei
 	RET
@@ -186,7 +194,7 @@ tx'X'_overflow:
 tuart'X'_direct_maybe:
 	; check RR
 	in a,(P)
-	rla			; RX space ?
+	rla			; TX space ?
 	; if space
 	ld a,#1
 	jr nc, tuart'X'_queue
@@ -210,7 +218,6 @@ _tuart'X'_rx_get:
 	res 6,l
 	lh 7,l
 	ld (tuart'X'_rxe),hl
-	scf
 	ld l,a
 	ret
 

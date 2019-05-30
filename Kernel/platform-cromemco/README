@@ -17,12 +17,8 @@ It's easier to arrange this way anyhow.
 
 Limitations
 
--	Very slow at fork() because we need to optimize ldir_far extensively
-	for this machine and for the SC108
 -	Only supports floppy disks and currently only supports DS/DD eight
 	inch media for the filesystems
--	The IM2 support for the initial serial console is an ugly hack and
-	a proper serial driver is needed with queues for each port.
 -	Memory size is not probed
 -	Only the console port is enabled
 
@@ -37,8 +33,8 @@ Bugs
 
 
 TODO
-HACK	-		Interrupts properly (and IM2)
-			not yet doing tty interrupts nicely with buffer
+DONE	-		Interrupts properly (and IM2)
+DEBUG	-		not yet doing tty interrupts nicely with buffer
 			and queues
 	-		Eject support for floppies
 	-		Floppy ioctls, mode set etc
@@ -47,7 +43,7 @@ HACK	-		Interrupts properly (and IM2)
 	-		Disk interleave enable (need a block shuffling tool)
 	-		5.25" disks (plus hack emulator to also allow for
 			sane 5.25" formats including PC)
-	-		fast 512 byte and fork interbank copier
+	-		fast 512 byte interbank copier
 
 Testing
 -	Build the kernel and get a fuzix.dsk (SS/SD)

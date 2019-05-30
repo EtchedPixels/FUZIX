@@ -23,3 +23,5 @@ extern void tuart2_txd(uint8_t unused);
 extern void tuart2_rx_ring(uint8_t unused);
 
 extern uint8_t tuart2_txl, tuart2_rxl;
+
+extern uint8_t tty_irqmode;
