@@ -46,11 +46,19 @@ void kputchar(char c)
     irqflags_t irq;
     if (c == '\n')
         kputchar('\r');
-    irq = di();
     /* FIXME: spins in irq on */
-    while(!(tuart0_status & 0x80));
-    tuart0_data = c;
-    irqrestore(irq);
+    while(1) {
+        /* Spin with interrupts on if possible */
+        while(!(tuart0_status & 0x80));
+        irq = di();
+        if (tuart0_status & 0x80) {
+            tuart0_data = c;
+            irqrestore(irq);
+            return;
+        }
+        /* Raced with the tty driver so try again */
+        irqrestore(irq);
+    }
 }
 
 char tty_writeready(uint8_t minor)
