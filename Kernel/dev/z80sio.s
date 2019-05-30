@@ -200,7 +200,7 @@ tx'X'_overflow:
 sio'X'_direct_maybe:
 	; check RR
 	in a,(CP)
-	and #0x04		; RX space ?
+	and #0x04		; TX space ?
 	; if space
 	ld a,#1
 	jr z, sio'X'_queue
