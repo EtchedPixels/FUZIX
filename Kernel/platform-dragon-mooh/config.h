@@ -18,7 +18,8 @@
 #define CONFIG_BANKS	8
 #define MAPBASE		0x2000
 /* And swapping */
-#define SWAPDEV 2049		/* DriveWire drive 1 */
+#define CONFIG_DYNAMIC_SWAP
+#define SWAPDEV	    (swap_dev)	/* To be determined */
 #define SWAP_SIZE   0x6F	/* 56K in 512 byte blocks - 1 */
 #define SWAPBASE    0x2000	/* We swap the lot, including stashed uarea */
 #define SWAPTOP     0xFE00	/* so it's a round number of 256 byte sectors */
