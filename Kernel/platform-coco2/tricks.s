@@ -5,7 +5,7 @@
         .module tricks
 
 	# imported
-        .globl _newproc
+        .globl _makeproc
         .globl _chksigs
         .globl _getproc
         .globl _platform_monitor
@@ -159,8 +159,11 @@ _dofork:
         ; _switchin will be expecting from our copy of the stack.
 	puls x
 
+	ldx #_udata
+	pshs x
         ldx fork_proc_ptr
-        jsr _newproc
+        jsr _makeproc
+	puls x
 
 	; any calls to map process will now map the childs memory
 
