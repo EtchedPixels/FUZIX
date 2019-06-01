@@ -123,4 +123,5 @@ int main(int argc, char *argv[])
     init_map();
     find_map(stdin);
     print_map();
+    exit(0);
 }
