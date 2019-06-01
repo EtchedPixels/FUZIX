@@ -39,7 +39,7 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin
+	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin loader.tmp
 
 z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
 

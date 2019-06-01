@@ -30,19 +30,12 @@ void z180_timer_interrupt(void)
     /* we have to read both of these registers in order to reset the timer */
     a = TIME_TMDR0L;
     a = TIME_TCR;
-
-#ifdef CONFIG_PROPIO2
-    /* The PropIO2 does not have an interrupt on keypress. */
-    tty_poll_propio2();
-#endif
-
     timer_interrupt();
 }
 
 void platform_idle(void)
 {
-    /* Let's go to sleep while we wait for something to interrupt us;
-     * Makes the Mark IV's run LED go red, which amuses me greatly. */
+    /* Let's go to sleep while we wait for something to interrupt us */
     __asm
         halt
     __endasm;
