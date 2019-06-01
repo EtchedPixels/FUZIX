@@ -14,6 +14,7 @@ uint8_t carttype[4];
 uint16_t cartaddr[4];
 uint8_t bootslot = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
+uint16_t swap_dev = 0xFFFF;
 
 void platform_idle(void)
 {
@@ -25,7 +26,7 @@ void do_beep(void)
 
 /*
  *	Once we are about to load init we can throw the boot code away
- *	and convert it into disk cache. This gets us 7 or so buffer
+ *	and convert it into disk cache. This gets us 7 or so buffers
  *	back which more than doubles our cache size !
  */
 void platform_discard(void)
