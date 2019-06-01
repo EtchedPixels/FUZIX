@@ -30,6 +30,13 @@ typedef int16_t         ptrdiff_t;
 #define INTPTR_MIN      (-32768)
 #define UINTPTR_MAX     65535
 
+typedef uint8_t uint_fast8_t;
+typedef int8_t int_fast8_t;
+typedef uint16_t uint_fast16_t;
+typedef int16_t int_fast16_t;
+typedef uint32_t uint_fast32_t;
+typedef int32_t int_fast32_t;
+
 #define PTRDIFF_MAX     INTPTR_MAX
 #define PTRDIFF_MIN     INTPTR_MIN
 #define SIZE_MAX        UINTPTR_MAX
