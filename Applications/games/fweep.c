@@ -2177,6 +2177,60 @@ void execute_instruction(void)
 	}
 }
 
+void version_init(void)
+{
+	switch (VERSION) {
+	case 1:
+	case 2:
+		write8(0x01, 0x10);
+		break;
+	case 3:
+		if (tandy)
+			write8(0x01, (read8low(0x01) & 0x8F) | 0x18);
+		else
+			write8(0x01, (read8low(0x01) & 0x8F) | 0x10);
+		break;
+	case 4:
+		write8(0x01, 0x00);
+		break;
+	case 5:
+		alphabet_table = mword(0x34);
+		break;
+#if (VERSION == 6 || VERSION == 7)
+	case 6:
+	case 7:
+		routine_start = mword(0x28) << 3;
+		text_start = mword(0x2A) << 3;
+		alphabet_table = mword(0x34);
+		break;
+#endif
+	case 8:
+		alphabet_table = mword(0x34);
+		break;
+	}
+
+	write8(0x11, read8low(0x11) & 0x53);
+	if (VERSION > 1)
+		synonym_table = mword(0x18);
+	if (VERSION > 3) {
+		write8(0x1E, tandy ? 11 : 1);
+		write8(0x20, sc_rows);
+		write8(0x21, sc_columns);
+	}
+	if (VERSION > 4) {
+		write8(0x01, 0x10);
+		write16(0x22, sc_columns << 3);
+		write16(0x24, sc_rows << 3);
+		write8(0x26, 8);
+		write8(0x27, 8);
+		write8(0x2C, 2);
+		write8(0x2D, 9);
+	}
+	if (!(read8low(2) & 128))
+		write16(0x02, 0x0802);
+	write8(0x11, read8low(0x11) & 0x43);
+}
+
 void game_begin(void)
 {
 	if (story == -1)
@@ -2200,60 +2254,15 @@ void game_begin(void)
 	static_start = mword(0x0E);
 #ifdef DEBUG
 	fprintf(stderr, "[%d blocks dynamic]\n", static_start >> 9);
-#endif	
-	paging_init();
-	switch (VERSION) {
-	case 1:
-	case 2:
-		write8(0x01, 0x10);
-		break;
-	case 3:
-		write8(0x01,
-			  (read8low(0x01) & 0x8F) | 0x10 | (tandy << 3));
-		break;
-	case 4:
-		write8(0x01, 0x00);
-		break;
-	case 5:
-		alphabet_table = mword(0x34);
-		break;
-#if (VERSION == 6 || VERSION == 7)
-	case 6:
-	case 7:
-		routine_start = mword(0x28) << 3;
-		text_start = mword(0x2A) << 3;
-		alphabet_table = mword(0x34);
-		break;
 #endif
-	case 8:
-		alphabet_table = mword(0x34);
-		break;
-	}
-	write8(0x11, read8low(0x11) & 0x53);
-	if (VERSION > 1)
-		synonym_table = mword(0x18);
-	if (VERSION > 3) {
-		write8(0x1E, tandy ? 11 : 1);
-		write8(0x20, sc_rows);
-		write8(0x21, sc_columns);
-	}
-	if (VERSION > 4) {
-		write8(0x01, 0x10);
-		write16(0x22, sc_columns << 3);
-		write16(0x24, sc_rows << 3);
-		write8(0x26, 8);
-		write8(0x27, 8);
-		write8(0x2C, 2);
-		write8(0x2D, 9);
-	}
-	if (!(read8low(2) & 128))
-		write16(0x02, 0x0802);
-	write8(0x11, read8low(0x11) & 0x43);
+	paging_init();
+	version_init();
 	cur_row = 2;
 	cur_column = 0;
 	randomize(0);
 	writes("\n");
 }
+
 
 static void usage(void)
 {
