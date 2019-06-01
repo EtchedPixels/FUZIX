@@ -18,7 +18,6 @@ uint8_t ide_present = 1;
 #define cmd	((volatile uint8_t *)0xFF57)
 #define datal	((volatile uint8_t *)0xFF58)
 
-/* FIXME: switch to the correct mpi slot on entry */
 static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     uint16_t nb = udata.u_nblock;

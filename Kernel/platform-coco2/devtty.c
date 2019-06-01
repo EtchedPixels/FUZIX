@@ -255,7 +255,6 @@ void platform_interrupt(void)
 				kbd_timer = keyrepeat.continual;
 			}
 		}
-//                fd_timer_tick();
 		timer_interrupt();
 	}
 }

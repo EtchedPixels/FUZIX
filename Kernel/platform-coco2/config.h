@@ -25,6 +25,8 @@
 #define UDATA_SIZE  0x0200	/* one block */
 #define MAX_SWAPS   32
 
+#define PTABSIZE	8
+
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 

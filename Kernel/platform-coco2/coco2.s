@@ -52,7 +52,7 @@
 	jmp interrupt_handler			; 0x10C
 	jmp firq_handler			; 0x10F
 
-	.area .text
+	.area .discard
 
 init_early:
 	ldx #null_handler
@@ -129,10 +129,12 @@ map_process_always:
 map_process_a:
 map_save:
 	rts
+
+
+	.area .discard
 ;
 ;	Helpers for the MPI and Cartridge Detect
 ;
-
 ;
 ;	oldslot = mpi_set_slot(uint8_t newslot)
 ;
