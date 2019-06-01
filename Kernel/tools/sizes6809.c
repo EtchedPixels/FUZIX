@@ -82,4 +82,5 @@ int main(int argc, char *argv[])
 {
     scan_symbols(stdin);
     dump_sizes();
+    exit(0);
 }
