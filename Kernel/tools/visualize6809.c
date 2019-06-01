@@ -47,6 +47,8 @@ void map_insert(char *name, uint16_t start, uint16_t end)
         c = 'v';
     else if (strcmp(name, ".bufpool") == 0)
         c = 'B';
+    else if (strcmp(name, ".buffers") == 0)
+        c = 'B';
     else if (strcmp(name, ".discard") == 0)
         c = 'X';
     else if (strcmp(name, ".discarddata") == 0)
