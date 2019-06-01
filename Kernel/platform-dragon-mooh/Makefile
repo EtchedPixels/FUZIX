@@ -1,5 +1,6 @@
 # steal what we can from nx32 port
-VPATH = .:../platform-dragon-nx32
+vpath %.s ../platform-dragon-nx32
+vpath %.c ../platform-dragon-nx32
 
 CSRCS = devlpr.c devtty.c devfd.c ttydw.c
 CSRCS += devices.c main.c libc.c
