@@ -1,0 +1,11 @@
+Initial sketch for the Scrumpel
+
+RAM 00000-7FFFF (ROM is mapped in early but gone by the time the OS runs)
+
+I/O
+
+0x00-0x3F	Z180 internal I/O
+0x80		ROM off
+0x90-0x93	8255 (PPIDE)
+0xA0		SPI (bitbang for RTC, SD and 7segment)
+
