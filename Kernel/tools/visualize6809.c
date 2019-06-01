@@ -112,4 +112,5 @@ int main(int argc, char *argv[])
     init_map();
     scan_sections(stdin);
     print_map();
+    exit(0);
 }
