@@ -24,6 +24,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/super.h>
+#include <time.h>
 
 
 struct dinode {
@@ -93,6 +94,7 @@ void mkfs(uint16_t fsize, uint16_t isize)
 {
     uint16_t j;
     char *zeros;
+    time_t t = time(NULL);
 
     /* Zero out the blocks */
     printf("Zeroizing i-blocks...\n");
@@ -116,6 +118,8 @@ void mkfs(uint16_t fsize, uint16_t isize)
     fs_tab.s_tfree = 0;
     fs_tab.s_ninode = 0;
     fs_tab.s_tinode = (8 * (isize - 2)) - 2;
+    fs_tab.s_time = t;
+    fs_tab.s_timeh = (t >> 31) >> 1;	/* Mutter .. C standards .. mutter */
 
     /* Free each block, building the free list */
 
