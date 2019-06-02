@@ -354,6 +354,7 @@ void platform_interrupt(void)
 		}
                 fd_timer_tick();
 		timer_interrupt();
+		wakeup(&platform_interrupt);
 		dw_vpoll();
 	}
 }
@@ -528,11 +529,7 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
 	case GFXIOC_WAITVB:
-		/* Our system clock is our vblank, use the standard timeout
-		   to pause for one clock */
-		/* FIXME: this is wrong due to clock scaling! */
-		udata.u_ptab->p_timeout = 2;
-		psleep(NULL);
+		psleep(&platform_interrupt);
 		return 0;
 	case GFXIOC_DRAW:
 	case GFXIOC_READ:
