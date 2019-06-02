@@ -1,0 +1,17 @@
+#define IDE_IS_MMIO  1		/* MMIO IDE */
+
+#define IDE_REG_DATA		0x000FFF80
+#define IDE_REG_ERROR		0x000FFF82
+#define IDE_REG_FEATURES	0x000FFF82
+#define IDE_REG_SEC_COUNT	0x000FFF84
+#define IDE_REG_LBA_0		0x000FFF86
+#define IDE_REG_LBA_1		0x000FFF88
+#define IDE_REG_LBA_2		0x000FFF8A
+#define IDE_REG_LBA_3		0x000FFF8C
+#define IDE_REG_DEVHEAD		0x000FFF8C
+#define IDE_REG_STATUS		0x000FFF8E
+#define IDE_REG_COMMAND		0x000FFF8E
+
+#define ide_select(x)
+#define ide_deselect()
+
