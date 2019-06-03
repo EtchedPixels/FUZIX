@@ -8,6 +8,8 @@ problem, added some missing breaks.
 HP
  ***************************************************/
 
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -355,44 +357,18 @@ static void prmode(int mode)
         printf("-");
 }
 
-static int cmd_ls(char *path)
+static void fuzix_ls_out(char *dname)
 {
-    struct direct buf;
-    struct uzi_stat statbuf;
-    char dname[128];
-    int d, st;
+	char *p;
+	int st;
 
-    /*
-       if (fuzix_stat(path, &statbuf) != 0 || (statbuf.st_mode & F_MASK) != F_DIR) {
-       printf("ls: can't stat %s\n", path);
-       return -1;
-       }
-       */
-
-    d = fuzix_open(path, 0);
-    if (d < 0) {
-        fprintf(stderr, "ls: can't open %s\n", path);
-        return -1;
-    }
-    while (fuzix_read(d, (char *) &buf, 16) == 16) {
-        if (buf.d_name[0] == '\0')
-            continue;
-
-        if (path[0] != '.' || path[1]) {
-            strcpy(dname, path);
-            strcat(dname, "/");
-        } else {
-            dname[0] = '\0';
-        }
-
-        strcat(dname, buf.d_name);
-
+	struct uzi_stat statbuf;
         if (fuzix_stat(dname, &statbuf) != 0) {
             fprintf(stderr, "ls: can't stat %s\n", dname);
-            break;
+            return;
         }
-        st = (statbuf.st_mode & F_MASK);
 
+        st = (statbuf.st_mode & F_MASK);
         if ((st & F_MASK) == F_DIR) /* & F_MASK is redundant */
             printf("d");
         else if ((st & F_MASK) == F_CDEV)
@@ -409,19 +385,11 @@ static int cmd_ls(char *path)
         prmode(statbuf.st_mode >> 6);
         prmode(statbuf.st_mode >> 3);
         prmode(statbuf.st_mode);
-
         printf("%4d %5d", statbuf.st_nlink, statbuf.st_ino);
-
-        if ((statbuf.st_mode & F_MASK) == F_DIR)
-            strcat(dname, "/");
-
-        printf("%12u ",
-                (statbuf.st_mode & F_CDEV) ?
-                statbuf.st_rdev :
-                statbuf.st_size);
+        printf("%12u ", (statbuf.st_mode & F_CDEV) ?
+        		statbuf.st_rdev : statbuf.st_size);
 
         if (statbuf.fst_mtime == 0) { /* st_mtime? */
-            /*printf("--- -- ----   --:--");*/
             printf("                   ");
         } else {
             time_t t = statbuf.fst_mtime;
@@ -430,14 +398,51 @@ static int cmd_ls(char *path)
                     month[tm->tm_mon],
                     tm->tm_mday,
                     tm->tm_year);
-
             printf("%2d:%02d",
-                    tm->tm_hour,
-                    tm->tm_min);
+       	            tm->tm_hour,
+               	    tm->tm_min);
         }
-
+        p = strrchr(dname, '/');
+        if (p)
+        	dname = p + 1;
+        if ((statbuf.st_mode & F_MASK) == F_DIR)
+	       	strcat(dname, "/");
         printf("  %-15s\n", dname);
+}
+
+static int cmd_ls(char *path)
+{
+    struct direct buf;
+    struct uzi_stat statbuf;
+    char dname[512];
+    int d, st;
+
+    d = fuzix_open(path, 0);
+    if (d < 0) {
+        fprintf(stderr, "ls: can't open %s\n", path);
+        return -1;
     }
+    if (fuzix_stat(path, &statbuf) != 0) {
+    	fprintf(stderr, "ls: can't stat %s\n", path);
+    	return -1;
+    }
+    st = (statbuf.st_mode & F_MASK);
+    if ((st & F_MASK) == F_DIR) {
+	    while (fuzix_read(d, (char *) &buf, 16) == 16) {
+	        if (buf.d_name[0] == '\0')
+	            continue;
+
+	        if (path[0] != '.' || path[1]) {
+	            strcpy(dname, path);
+	            strcat(dname, "/");
+	        } else {
+	            dname[0] = '\0';
+	        }
+	        strcat(dname, buf.d_name);
+		fuzix_ls_out(dname);
+	}
+    } else
+    	fuzix_ls_out(path);
     fuzix_close(d);
     return 0;
 }
@@ -453,7 +458,7 @@ static int cmd_chmod(char *modes, char *path)
         return (-1);
     }
     /* Preserve the type if not specified */
-    if (mode < 10000) {
+    if (mode < 010000) {
         struct uzi_stat st;
         if (fuzix_stat(path, &st) != 0) {
             fprintf(stderr, "chmod: can't stat file '%s': %d\n", path, *syserror);
@@ -1021,7 +1026,7 @@ static uint16_t readi(inoptr ino)
 	register uint16_t amount;
 	register uint16_t toread;
 	register blkno_t pblk;
-	register char *bp;
+	register uint8_t *bp;
 
 	switch (fuzix_getmode(ino)) {
 
@@ -1039,7 +1044,7 @@ static uint16_t readi(inoptr ino)
 			else
 				bp = zerobuf();
 
-			bcopy(bp + (udata.u_offset & 511), udata.u_base,
+			memcpy(udata.u_base, bp + (udata.u_offset & 511),
 			      (amount =
 			       min(toread, 512 - (udata.u_offset & 511))));
 			brelse((bufptr) bp);
@@ -1064,7 +1069,7 @@ static uint16_t writei(inoptr ino)
 {
 	register uint16_t amount;
 	register uint16_t towrite;
-	register char *bp;
+	register uint8_t *bp;
 	blkno_t pblk;
 
 	switch (fuzix_getmode(ino)) {
@@ -1084,7 +1089,7 @@ static uint16_t writei(inoptr ino)
 			   about its previous contents */
 			bp = bread(0, pblk, (amount == 512));
 
-			bcopy(udata.u_base, bp + (udata.u_offset & 511),
+			memcpy(bp + (udata.u_offset & 511), udata.u_base,
 			      amount);
 			bawrite((bufptr) bp);
 
@@ -1160,7 +1165,7 @@ static void fuzix_sync(void)
 {
 	int j;
 	inoptr ino;
-	char *buf;
+	uint8_t *buf;
 
 	/* Write out modified inodes */
 
@@ -1179,7 +1184,7 @@ static void fuzix_sync(void)
 		    && fs_tab[j].s_fmod) {
 			fs_tab[j].s_fmod = 0;
 			buf = bread(j, 1, 1);
-			bcopy((char *) &fs_tab[j], buf, 512);
+			memcpy(buf, (char *) &fs_tab[j], sizeof(struct filesys));
 			bfree((bufptr) buf, 2);
 		}
 	}
@@ -1273,8 +1278,8 @@ static int fuzix_getfsys(int dev, char *buf)
 		return (-1);
 	}
 
-	/* FIXME: endiam swapping here */
-	bcopy((char *) &fs_tab[dev], (char *) buf, sizeof(struct filesys));
+	/* FIXME: endian swapping here */
+	memcpy(buf, &fs_tab[dev], sizeof(struct filesys));
 	return (0);
 }
 
@@ -1512,7 +1517,7 @@ static inoptr i_open(register int dev, register unsigned ino)
 	}
 
 	buf = (struct dinode *) bread(dev, (ino >> 3) + 2, 0);
-	bcopy((char *) &(buf[ino & 0x07]), (char *) &(nindex->c_node), 64);
+	memcpy(&(nindex->c_node), &(buf[ino & 0x07]), 64);
 	brelse((bufptr) buf);
 
 	nindex->c_dev = dev;
@@ -1572,7 +1577,7 @@ static int ch_link(inoptr wd, char *oldname, char *newname, inoptr nindex)
 	if (udata.u_count == 0 && *oldname)
 		return (0);	/* Entry not found */
 
-	bcopy(newname, curentry.d_name, 30);
+	memcpy(curentry.d_name, newname, 30);
 
 	{
 		int i;
@@ -1868,7 +1873,7 @@ static blkno_t blk_alloc(int devno)
 
 	/* Zero out the new block */
 	buf = (blkno_t *) bread(devno, newno, 2);
-	bzero(buf, 512);
+	memset(buf, 0, 512);
 	bawrite((bufptr) buf);
 	return (newno);
 
@@ -1887,7 +1892,7 @@ and frees the block. */
 static void blk_free(int devno, blkno_t blk)
 {
 	register fsptr dev;
-	register char *buf;
+	register uint8_t *buf;
 	int b;
 
 	ifnot(blk)
@@ -1900,7 +1905,8 @@ static void blk_free(int devno, blkno_t blk)
 
 	if (dev->s_nfree == swizzle16(50) ) {
 		buf = bread(devno, blk, 1);
-		bcopy((char *) &(dev->s_nfree), buf, 512);
+		/* 50 entries in s_free + s_nfree */
+		memcpy(buf, &(dev->s_nfree), 52 * sizeof(uint16_t));
 		bawrite((bufptr) buf);
 		dev->s_nfree = 0;
 	}
@@ -2024,8 +2030,7 @@ static void wr_inode(inoptr ino)
 
 	blkno = (ino->c_num >> 3) + 2;
 	buf = (struct dinode *) bread(ino->c_dev, blkno, 0);
-	bcopy((char *) (&ino->c_node),
-	      (char *) ((char **) &buf[ino->c_num & 0x07]), 64);
+	memcpy(&buf[ino->c_num & 0x07], &ino->c_node, 64);
 	bfree((bufptr) buf, 2);
 	ino->c_dirty = 0;
 }
@@ -2059,7 +2064,7 @@ static void f_trunc(inoptr ino)
 	for (j = 17; j >= 0; --j)
 		freeblk(dev, swizzle16(ino->c_node.i_addr[j]), 0);
 
-	bzero((char *) ino->c_node.i_addr, sizeof(ino->c_node.i_addr));
+	memset((char *) ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
 
 	ino->c_dirty = 1;
 	ino->c_node.i_size = 0;
@@ -2246,13 +2251,13 @@ static int fuzix_getmode(inoptr ino)
  */
 static int fmount(int dev, inoptr ino)
 {
-	char *buf;
+	uint8_t *buf;
 	register struct filesys *fp;
 
 	/* Dev 0 blk 1 */
 	fp = fs_tab + dev;
 	buf = bread(dev, 1, 0);
-	bcopy(buf, (char *) fp, sizeof(struct filesys));
+	memcpy(fp, buf, sizeof(struct filesys));
 	brelse((bufptr) buf);
 
 	/* See if there really is a filesystem on the device */
@@ -2275,7 +2280,7 @@ static void magic(inoptr ino)
 		panic("Corrupt inode");
 }
 
-static char *bread(int dev, blkno_t blk, int rewrite)
+static uint8_t *bread(int dev, blkno_t blk, int rewrite)
 {
 	register bufptr bp;
 
@@ -2339,12 +2344,12 @@ static int bfree(bufptr bp, int dirty)
  * garbage contents.  It is essentially a malloc for the kernel.
  * Free it with brelse()!
  */
-static char *tmpbuf(void)
+static uint8_t *tmpbuf(void)
 {
 	bufptr bp;
 	bufptr freebuf();
 
-/*printf("Allocating temp block\n");*/
+	/*printf("Allocating temp block\n");*/
 	bp = freebuf();
 	bp->bf_dev = -1;
 	bp->bf_busy = 1;
@@ -2353,13 +2358,10 @@ static char *tmpbuf(void)
 }
 
 
-static char *zerobuf(void)
+static uint8_t *zerobuf(void)
 {
-	char *b;
-	char *tmpbuf();
-
-	b = tmpbuf();
-	bzero(b, 512);
+	uint8_t *b = tmpbuf();
+	memset(b, 0, 512);
 	return (b);
 }
 
