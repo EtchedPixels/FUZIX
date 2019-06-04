@@ -124,3 +124,10 @@ Documentation Needed:
 
 	HD64180 mods with more RAM (these are I suspect almost a different port)
 	(XLR8R etc)
+
+
+TODO
+	Finish debugging floppy write
+	Add floppy write for other sector sizes
+	Debug other sector sizes
+	Add floppy format

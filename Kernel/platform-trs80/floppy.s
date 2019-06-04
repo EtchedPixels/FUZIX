@@ -10,7 +10,7 @@
 ;		- track dependant for double density based on trsdos dir pos
 ;
 ;
-	.globl _fd_reset
+	.globl _fd_restore
 	.globl _fd_operation
 	.globl _fd_motor_on
 	.globl _fd_motor_off
@@ -28,7 +28,7 @@ FDCDATA	.equ	0xF3
 FDCCTRL	.equ	0xF4
 FDCINT	.equ	0xE4
 ;
-;	interrupt register reports 0x80 for interrut, 0x40 for drq
+;	interrupt register reports 0x80 for interrupt, 0x40 for drq
 ;	(0x20 is the unrelated reset button)
 ;
 
@@ -48,6 +48,9 @@ TRACK	.equ	1
 SECTOR	.equ	2
 DIRECT	.equ	3		; 0 = read 2 = write 1 = status
 DATA	.equ	4
+SIZE	.equ	6		; For now 1 = 256 2 = 512
+STEP	.equ	7		; Step rate
+COMP	.equ	8		; Write compensation
 
 	.area	_COMMONMEM
 ;
@@ -112,6 +115,7 @@ waitdisk_l:
 	ex	(sp),hl
 	in	a, (FDCREG)		; read to reset int status
 	bit	0, a
+	ld	a,#0xff
 	ret
 ;
 ;	Set up and perform a disk operation
@@ -124,8 +128,7 @@ fdsetup:
 	ld	a, (de)
 	out	(FDCTRK), a
 	cp	TRACK(ix)
-;	jr	z, fdiosetup
-
+	jr	z, fdiosetup
 	;
 	;	So we can verify
 	;
@@ -153,43 +156,53 @@ setuptimeout:			; NE = bad
 ;	Head in the right place
 ;
 fdiosetup:
+	ld	bc,#0x0418		; patch in a skip over the out and
+	ld	a, SIZE(ix)
+	cp	#2
+	jr	z, patchfor256
+	ld	bc,#(FDCCTRL * 256 + 0xD3)	; out (FDCCTRL),a
+patchfor256:
+	ld	(fdio_inbyte2),bc		; second loop
+
 	ld	a, TRACK(ix)
 	ld	(de), a		; save track
-;	cmp	#22		; FIXME
-;	jr	nc, noprecomp
-;	ld	a, (fdcctrl)
-;	or	#0x10		; Precomp on
-;	jr	precomp1
-;noprecomp:
+	cp	COMP(ix)
 	ld	a, (fdcctrl)
-;precomp1:
+	jr	nc, noprecomp
+	or	#0x10		; Precomp on
+noprecomp:
 	out	(FDCCTRL), a
 	ld	a, SECTOR(ix)
 	out	(FDCSEC), a
 	in	a, (FDCREG)	; Clear any pending status
 
-	ld	a, CMD(ix)
-
-	ld	de, #0		; timeout handling
-	
-	out	(FDCREG), a	; issue the command
-	ld	b, #0
-rwiowt:	djnz	rwiowt
-	ld	a, DIRECT(ix)
-	dec	a
-	ld	a, (fdcctrl)
+	ld	a, (fdcctrl)		; has halt bit set as passed
 	ld	d, a			; we need this in a register
 					; to meet timing
-	ld	a, #1
+	ld	a, #1			; 
 	ld	(fdc_active), a		; NMI pop and jump
-	jr	z, fdio_in
-	jr	nc, fdio_out
+
+	ld	bc, #FDCDATA		; 256 or 512 bytes/sector, c is our port
+
+	ld	a, CMD(ix)
+	out	(FDCREG), a		; issue the command
+	;
+	;	Now count the clocks. We need 58 between here and the actual
+	;	data poll
+	;
+	ld	a, DIRECT(ix)		; 19
+	dec	a			; 23
+	jr	z, fdio_in		; 30/35	 12/7
+	jp	nc, fdio_out		; 40	 10
+;
+;	And we can afford to be later to non data commands
 ;
 ;	Status registers
 ;
 fdxferdone:
 	xor	a
 	ld	(fdc_active), a
+	out	(FDCINT),a		; 
 	ei
 	in	a, (FDCREG)
 	and	#0x19		; Error bits + busy
@@ -200,10 +213,14 @@ fdxferdone:
 	jr	fdxferdone
 ;
 ;	Read from the disk - HL points to the target buffer
+;	When we hit this section we are 35 clocks into the sequence
+;	and have to hit the first in at about clock 58
 ;
 fdio_in:
-	ld	e, #0x16		; bits to check
-	ld	bc, #FDCDATA		; 256 bytes/sector, c is our port
+	ld	a, #0x16		; 42 bits to check
+	ld	e, a			; 46 into e
+	set	6,d			; 54 ensure halt is on
+	nop				; 58
 fdio_inl:
 	in	a, (FDCREG)
 	and	e
@@ -214,16 +231,25 @@ fdio_inl:
 fdio_inbyte:
 	out	(FDCCTRL), a		; stalls
 	ini
-	jr	nz, fdio_inbyte
+	jp	nz, fdio_inbyte
+fdio_inbyte2:				; this is patched for I/O size
+	out	(FDCCTRL), a		; stalls
+	ini
+	jp	nz, fdio_inbyte2
 	jr	fdxferdone
 
 ;
 ;	Write to the disk - HL points to the target buffer
 ;
+;	We arrive here 40 clocks after the command, and we want to hit
+;	status at about 58 clocks
+;
+;	Not yet tested or debugged or 512 byte v 256 sorted
+;
 fdio_out:
-	set	6,d			; halt mode bit
-	ld	c, #FDCDATA		; C is our port
-	ld	e, #0x76
+	ld	a, #0x76		; 47
+	ld	e,a			; 51
+	set	6,d			; 59
 fdio_outl:
 	in	a, (FDCREG)		; Wait for DRQ (or error)
 	and	e
@@ -247,10 +273,11 @@ fdio_waitlock:
 	jr	z, fdio_waitlock
 	out	(c), b
 	ld	a, d
+	ld	b, #1
 fdio_outbyte:
 	out	(FDCCTRL), a		; stalls
 	outi
-	jr	fdio_outbyte
+	jp	nz,fdio_outbyte
 fdio_nmiout:
 ;
 ;	Now tidy up
@@ -272,13 +299,9 @@ fdxferbad:
 ;
 ;	Reset to track 0, wait for the command then idle
 ;
-;	fd_reset(uint8_t *drvptr)
+;	fd_restore(uint8_t *drvptr) __fastcall
 ;
-_fd_reset:
-	pop	de
-	pop	hl
-	push	hl
-	push	de
+_fd_restore:
 	ld	a, (fdcctrl)
 	out	(FDCCTRL), a
 	ld	a, #1
@@ -294,26 +317,26 @@ _fdr_wait:
 	djnz	_fdr_wait
 	
 	call	waitdisk
+	ex	de,hl
+	ld	l,a
 	cp	#0xff
 	ret	z
 	and	#0x99		; Error bit from the reset
 	ret	nz
-	ld	(hl), a		; Track 0 correctly hit (so 0)
+	ld	(de), a		; Track 0 correctly hit (so 0)
+	ld	l,a
 	ret
 ;
-;	fd_operation(uint16_t *cmd, uint16_t *drive)
+;	fd_operation(uint16_t *cmd, uint16_t *drive) __fastcall
 ;
 ;	The caller must ensure the drive has been selected and the motor is
 ;	running.
 ;
 _fd_operation:
+	ex	de,hl
 	ld	a, (_fd_map)
 	or	a
 	call	nz, map_process_always
-	pop	bc		; return address
-	pop	de		; drive track ptr
-	push	de
-	push	bc
 	push	ix
 	ld	ix, #_fd_cmd
 	ld	l, DATA(ix)
@@ -327,7 +350,7 @@ _fd_operation:
 	ret	z
 	jp	map_kernel
 ;
-;	C interface fd_motor_on(uint16_t drivesel)
+;	C interface fd_motor_on(uint16_t drivesel) __fastcall
 ;
 ;	Selects this drive and turns on the motors. Also pass in the
 ;	choice of density
@@ -340,10 +363,6 @@ _fd_operation:
 ;
 ;
 _fd_motor_on:
-	pop	de
-	pop	hl
-	push	hl
-	push	de
 	;
 	;	Select drive B, turn on motor if needed
 	;
@@ -405,4 +424,4 @@ _fd_selected:
 _fd_tab:
 	.db	0xFF, 0xFF, 0xFF, 0xFF
 _fd_cmd:
-	.ds	6
+	.ds	9
