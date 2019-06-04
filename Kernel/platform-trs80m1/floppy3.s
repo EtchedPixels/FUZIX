@@ -36,7 +36,7 @@ FDCDATA	.equ	0xF3
 FDCCTRL	.equ	0xF4
 FDCINT	.equ	0xE4
 ;
-;	interrupt register reports 0x80 for interrut, 0x40 for drq
+;	interrupt register reports 0x80 for interrupt, 0x40 for drq
 ;	(0x20 is the unrelated reset button)
 ;
 

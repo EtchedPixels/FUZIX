@@ -7,7 +7,6 @@
  *	- Teach the asm code about density
  *	- Teach the asm code about double sided and maybe 128 byte sectors
  *	- Rework density handling
- *	- Write compensation
  *	- Formatting
  *	- Motor delay improvements
  *	- Try slowing step rate on repeated errors ?
@@ -162,7 +161,6 @@ static uint8_t fd_select(uint8_t minor)
     uint8_t tmp = 0;
     /* Do we need to select the drive ? */
     if (trs80_model != TRS80_MODEL3 || fd_selected != minor) {
-        kputs("sel");
         /* Decide if we need double density */
         if (fdc[minor].features & FDF_DD)
             tmp |= 0x80;
@@ -177,7 +175,6 @@ static uint8_t do_fd_restore(uint8_t minor)
 {
     if (fd_select(minor))
         return 0xFF;
-    kputs("res1");
     return fops->fd_restore(fd_tab + minor);
 }
 
