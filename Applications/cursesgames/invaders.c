@@ -156,6 +156,7 @@ static void cleanup(int sig)
 {
 	clrscr();
 	refresh();
+	curs_set(1);
 	endwin();
 	tcsetattr(0, TCSANOW, &save);
 	exit(0);
@@ -176,9 +177,7 @@ int main(int argc, char **argv)
 	initscr();
 	cbreak();
 	noecho();
-#ifdef USE_COLORS
 	curs_set(0);		// hide cursor
-#endif
 	initscr();
 	cbreak();
 	noecho();
