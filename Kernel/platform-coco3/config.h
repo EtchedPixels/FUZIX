@@ -44,10 +44,10 @@ extern unsigned int swapdev;
 // #define CONFIG_VT_SIMPLE
 /* Vt definitions */
 #define VT_BASE      (uint8_t *)0xb400
-#define VT_WIDTH	curpty->width
-#define VT_HEIGHT	curpty->height
-#define VT_RIGHT	curpty->right
-#define VT_BOTTOM	curpty->bottom
+#define VT_WIDTH	curtty->width
+#define VT_HEIGHT	curtty->height
+#define VT_RIGHT	curtty->right
+#define VT_BOTTOM	curtty->bottom
 #define VT_INITIAL_LINE 0
 
 extern unsigned char vt_map( unsigned char c );

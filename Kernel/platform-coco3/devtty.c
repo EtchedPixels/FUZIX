@@ -175,7 +175,7 @@ static struct mode_s mode[5] = {
 };
 
  
-static struct pty ptytab[] VSECTD = {
+static struct tty_coco3 ttytab[] VSECTD = {
 	{
 		(unsigned char *) 0x2000,
 		NULL,
@@ -209,8 +209,8 @@ static struct pty ptytab[] VSECTD = {
 };
 
 
-/* ptr to current active pty table */
-struct pty *curpty VSECTD = &ptytab[0];
+/* ptr to current active tty table */
+struct tty_coco3 *curtty VSECTD = &ttytab[0];
 
 /* current minor for input */
 int curminor = 1;
@@ -218,7 +218,7 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	struct pty *p=&(ptytab[minor-1]);
+	struct tty_coco3 *p=&(ttytab[minor-1]);
 	uint16_t s;
 	if( p->vmod & 0x80 )
 		s=0x12000 / 8 ;
@@ -260,14 +260,10 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 		return;
 	}
 	irq=di();
-	if (curpty != &ptytab[minor - 1]){
-		//struct pty *t = curpty;
-		vt_save(&curpty->vt);
-		curpty = &ptytab[minor - 1];
-		vt_load(&curpty->vt);
-		//vt_save(&curpty->vt);
-		//curpty = t;
-		//vt_load(&curpty->vt);
+	if (curtty != &ttytab[minor - 1]){
+		vt_save(&curtty->vt);
+		curtty = &ttytab[minor - 1];
+		vt_load(&curtty->vt);
 	}
 	vtoutput(&c,1);
 	irqrestore(irq);
@@ -459,18 +455,18 @@ static void keydecode(void)
 	if (keymap[4] & 64) {
 		/* control+1 */
 		if (c == '1') {
-			vt_save(&curpty->vt);
-			curpty = &ptytab[0];
-			vt_load(&curpty->vt);
+			vt_save(&curtty->vt);
+			curtty = &ttytab[0];
+			vt_load(&curtty->vt);
 			curminor = 1;
 			apply_gime( 1 );
 			return;
 		}
 		/* control + 2 */
 		if (c == '2') {
-			vt_save(&curpty->vt);
-			curpty = &ptytab[1];
-			vt_load(&curpty->vt);
+			vt_save(&curtty->vt);
+			curtty = &ttytab[1];
+			vt_load(&curtty->vt);
 			curminor = 2;
 			apply_gime( 2 );
 			return;
@@ -516,7 +512,7 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		return vt_ioctl(minor, arg, ptr);
 	switch( arg ){
 	case GFXIOC_GETINFO:
-		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
+		return uput( ttytab[minor-1].fdisp, ptr, sizeof( struct display));
 	case GFXIOC_GETMODE:
 		{
 			uint8_t m=ugetc(ptr);
@@ -527,7 +523,7 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		{
 			uint8_t m=ugetc(ptr);
 			if( m > 4 ) goto inval;
-			memcpy( &(ptytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
+			memcpy( &(ttytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
 			if( minor == curminor ) apply_gime( minor );
 			return 0;
 		}
@@ -567,7 +563,7 @@ static void apply_defmode( uint8_t defmode )
 {
 	int i;
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
+		memcpy( &(ttytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
 	apply_gime(1);
 }
@@ -591,6 +587,6 @@ void devtty_init()
 	apply_defmode(0);
 	/* make video palettes match vt.h's definitions. */
 	memcpy( (uint8_t *)0xffb0, rgb_def_pal, 16 );
-	vt_load(&curpty->vt);
+	vt_load(&curtty->vt);
 }
 

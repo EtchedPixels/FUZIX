@@ -32,23 +32,23 @@ static void map_for_kernel()
 
 static uint8_t *char_addr(unsigned int y1, unsigned char x1)
 {
-	return curpty->base + VT_WIDTH * y1 * 2 + (uint16_t)(x1*2);
+	return curtty->base + VT_WIDTH * y1 * 2 + (uint16_t)(x1*2);
 }
 
 void cursor_off(void)
 {
 	map_for_video();
-	if (curpty->cpos)
-		*curpty->cpos = curpty->csave;
+	if (curtty->cpos)
+		*curtty->cpos = curtty->csave;
 	map_for_kernel();
 }
 
 void cursor_on(int8_t y, int8_t x)
 {
 	map_for_video();
-	curpty->csave = *(char_addr(y, x)+1);
-	curpty->cpos = char_addr(y, x)+1;
-		*curpty->cpos = *curpty->cpos ^ 0x3f;
+	curtty->csave = *(char_addr(y, x)+1);
+	curtty->cpos = char_addr(y, x)+1;
+		*curtty->cpos = *curtty->cpos ^ 0x3f;
 	map_for_kernel();
 }
 
@@ -97,7 +97,7 @@ static void rmemcpy( unsigned char *dest, unsigned char *src, size_t n )
 void scroll_up(void)
 {
 	map_for_video();
-	memcpy(curpty->base, curpty->base + VT_WIDTH*2,
+	memcpy(curtty->base, curtty->base + VT_WIDTH*2,
 	       VT_WIDTH*2 * VT_BOTTOM);
 	map_for_kernel();
 }
@@ -105,7 +105,7 @@ void scroll_up(void)
 void scroll_down(void)
 {
 	map_for_video();
-	rmemcpy(curpty->base + VT_WIDTH*2, curpty->base,
+	rmemcpy(curtty->base + VT_WIDTH*2, curtty->base,
 	       VT_WIDTH*2 * VT_BOTTOM);
 	map_for_kernel();
 }
