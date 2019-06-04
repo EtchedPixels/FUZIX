@@ -311,7 +311,7 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 		vfd_term_write(c);
 #endif
 	if (acia_present)
-		SIOA_D = c;
+		ACIA_D = c;
 	else {
 		uint8_t port = SIO0_BASE + 1 + 2 * (minor - 1);
 		out(port, c);
