@@ -24,6 +24,8 @@
 	.globl map_kernel_restore
 	.globl map_buffers
 	.globl map_bank_a
+	.globl map_save_kmap
+	.globl map_restore_kmap
 	.globl current_map
 	.globl switch_bank
 
@@ -152,7 +154,7 @@ init_early:
 	ld (mapmod),bc
 	ret
 
-	.area _VIDEO
+	.area _COMMONMEM
 
 init_hardware:
         ; set system RAM size
@@ -163,7 +165,11 @@ init_hardware:
 	ld hl,#528		  ; we lose bits to ResiDOS
 inith2:
         ld (_ramsize), hl
-        ld hl, #(560 - 80)        ; 4 x 16K banked + 16K go to the OS/screen
+	ld de, #112       ; 4 x 16K banked + 16K go to the OS/screen
+			  ; and we lose 32K for speed so we can ldir
+			  ; not to do tricky exchanges
+	or a
+	sbc hl,de
         ld (_procmem), hl
 
         ; screen initialization
@@ -193,7 +199,7 @@ vectors:
 	ld (1),hl
 	ld (0x30),a
 	ld hl,#unix_syscall_entry
-	ld (0x31),a
+	ld (0x31),hl
 	ld (0x38),a
 	ld hl,#interrupt_handler
 	ld (0x39),hl
@@ -213,14 +219,20 @@ _program_vectors:
 
 map_buffers:
 	ld a,#2
+map_restore_kmap:
 map_bank_a:
         ; bank switching procedure. On entrance:
         ;  A - bank number to set
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
+	call switch_bank
 	pop af
-	; Then fall through to set the bank up
+	ret
+
+map_save_kmap:
+	ld a,(current_map)
+	ret
 
 switch_bank:
 	push bc
@@ -459,10 +471,10 @@ __retmap4:
 	jp switch_bank
 __bank_4_2:
 	ld a, #1
-	jr bankina3
+	jr bankina4
 __bank_4_3:
 	ld a, #2
-	jr bankina3
+	jr bankina4
 
 ;
 ;	Stubs need some stack munging and use DE
@@ -613,38 +625,45 @@ __stub_4_3:
 ;
 uputget:
         ; load DE with the byte count
-        ld c, 8(ix) ; byte count
-        ld b, 9(ix)
+        ld c, 10(ix) ; byte count
+        ld b, 11(ix)
 	ld a, b
 	or c
 	ret z		; no work
         ; load HL with the source address
-        ld l, 4(ix) ; src address
-        ld h, 5(ix)
+        ld l, 6(ix) ; src address
+        ld h, 7(ix)
         ; load DE with destination address (in userspace)
-        ld e, 6(ix)
-        ld d, 7(ix)
+        ld e, 8(ix)
+        ld d, 9(ix)
 	ret	; 	Z is still false
 
+; FIXME: core code should allow ugetc/w to be fast call
+; and we should use add hl,sp logic here as I think it's faster
+;
 __uputc:
+	pop iy	;	bank
 	pop bc	;	return
 	pop de	;	char
 	pop hl	;	dest
 	push hl
 	push de
 	push bc
+	push iy
 	call map_process_always
 	ld (hl), e
 uputc_out:
 	jp map_kernel			; map the kernel back below common
 
 __uputw:
+	pop iy
 	pop bc	;	return
 	pop de	;	word
 	pop hl	;	dest
 	push hl
 	push de
 	push bc
+	push iy
 	call map_process_always
 	ld (hl), e
 	inc hl
@@ -652,20 +671,24 @@ __uputw:
 	jp map_kernel
 
 __ugetc:
+	pop de
 	pop bc	; return
 	pop hl	; address
 	push hl
 	push bc
+	push de
 	call map_process_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
+	pop de
 	pop bc	; return
 	pop hl	; address
 	push hl
 	push bc
+	push de
 	call map_process_always
         ld a, (hl)
 	inc hl
@@ -699,12 +722,14 @@ __uget:
 
 ;
 __uzero:
+	pop iy
 	pop de	; return
 	pop hl	; address
 	pop bc	; size
 	push bc
 	push hl	
 	push de
+	push iy
 	ld a, b	; check for 0 copy
 	or c
 	ret z

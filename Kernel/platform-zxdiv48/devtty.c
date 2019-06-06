@@ -40,8 +40,8 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 void kputchar(char c)
 {
 	if (c == '\n')
-		tty_putc(0, '\r');
-	tty_putc(0, c);
+		tty_putc(1, '\r');
+	tty_putc(1, c);
 }
 
 /* Both console and debug port are always ready */

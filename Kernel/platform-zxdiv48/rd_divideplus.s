@@ -27,8 +27,8 @@ _rd_io:
 	ld a,(_rd_wr)
 	or a
 	jr z, is_wr
+do_io:
 	ldir
-cleanup:
 	call map_kernel_restore
 	ld a,(_int_disabled)
 	or a
@@ -37,8 +37,7 @@ cleanup:
 	ret
 is_wr:
 	ex de,hl
-	ldir
-	jr cleanup
+	jr do_io
 
 
 _rd_wr:

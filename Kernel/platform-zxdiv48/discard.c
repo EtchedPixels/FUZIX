@@ -50,9 +50,10 @@ uint8_t platform_param(char *p)
 void map_init(void)
 {
 	/* Banks of 32K free minus one banks worth that is the upper RAM */
-	uint8_t i = (procmem >> 4) - 1;
-	while(i--)
-		swapmap_init(i);
+	uint8_t i = procmem >> 5;
+	kprintf("%d banks available.\n", i);
+	while(i--)	/* 3 - 0 are the kernel */
+		swapmap_init(i + 4);
 }
 
 void platform_copyright(void)
