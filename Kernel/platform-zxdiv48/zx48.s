@@ -522,7 +522,7 @@ __stub_1_3:
 	ld a, #2
 	jr __stub_1_a
 __stub_1_4:
-	ld a, #4
+	ld a, #3
 	jr __stub_1_a
 
 __stub_2_1:
