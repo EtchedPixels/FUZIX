@@ -49,6 +49,8 @@ static char code_for(const char *name)
 {
 	if (strcmp(name, "BOOT") == 0)
 		return '!';
+	if (strcmp(name, "BOOT0") == 0)
+		return '!';
 	if (strcmp(name, "HEADER") == 0)
 		return '!';
 	if (strcmp(name, "CODE") == 0)
@@ -110,6 +112,8 @@ static char bank_for(const char *name)
 		return 0;
 	/* Really this is very system dependant */
 	if (strcmp(name, "BOOT") == 0)
+		return 0;
+	if (strcmp(name, "BOOT0") == 0)
 		return 0;
 	if (strcmp(name, "HEADER") == 0)
 		return 0;
