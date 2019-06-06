@@ -385,8 +385,6 @@ nmi_handler:		; Should be at 0x66
 ;
 ;	This needs some properly optimized versions!
 ;
-; FIXME: save a byte and some setup by makign byte 2 of 0to1 the first
-; of 1to0
 ldir_to_user:
 	    ld de,#0x1858		; from bank 0 to bank  1
 ldir_far:
