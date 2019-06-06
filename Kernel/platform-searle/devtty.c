@@ -117,6 +117,7 @@ void tty_pollirq_sio0(void)
 		if ((ca ^ old_ca) & 8) {
 			if (ca & 8)
 				timer_tick();
+			old_ca = ca;
 		}
 		/* ACK any break or error events */
 		SIOA_C = 2 << 3;
