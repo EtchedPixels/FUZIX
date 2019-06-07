@@ -8,6 +8,34 @@
 #include "mbr.h"
 #include "gpt.h"
 
+#ifdef CONFIG_DYNAMIC_SWAP
+/*
+ *	This function is called for partitioned devices if a partition is found
+ *	and marked as swap type. The first one found will be used as swap. We
+ *	only support one swap device.
+ */
+static void mbr_swap_found(uint8_t letter, uint8_t m)
+{
+  blkdev_t *blk = blk_op.blkdev;
+  uint16_t n = 0;
+  uint32_t off;
+  if (swap_dev != 0xFFFF)
+    return;
+  letter -= 'a';
+  kputs("(swap) ");
+  swap_dev = letter << 4 | m;
+  off = blk->lba_count[m - 1];
+  /* Avoid dragging in 32bit divide libraries for one use only */
+  while(off >= SWAP_SIZE && n < MAX_SWAPS) {
+    off -= SWAP_SIZE;
+    n++;
+  }
+  /* Partition swap is 0 based */
+  while(n)
+    swapmap_init(--n);
+}
+#endif
+
 /* FIXME: Needs to be int so we can call multiple and get the right type */
 void mbr_parse(uint_fast8_t letter)
 {
@@ -88,7 +116,7 @@ void mbr_parse(uint_fast8_t letter)
 		    kprintf("hd%c%d ", letter, next);
 #ifdef CONFIG_DYNAMIC_SWAP
 		    if(t == FUZIX_SWAP)
-			platform_swap_found(letter, next);
+			mbr_swap_found(letter, next);
 #endif
 	    }
 	}
@@ -102,3 +130,4 @@ out:
     /* release temporary memory */
     tmpfree(br);
 }
+
