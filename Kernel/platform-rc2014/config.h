@@ -72,7 +72,7 @@ extern unsigned int swap_dev;
 #define SWAPTOP	    0xF200	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
+//#define CONFIG_DYNAMIC_SWAP
 /* Kept in bank 2 */
 #define CONFIG_DYNAMIC_BUFPOOL
 /*
@@ -107,5 +107,7 @@ extern unsigned int swap_dev;
 #define TTY_INIT_BAUD B115200	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+
+#define Z180_IO_BASE	0x40
 
 #define platform_copyright()		// for now

@@ -19,11 +19,23 @@ uint8_t sio1_present;
 uint8_t z180_present;
 uint8_t uart16x50_mask;
 
+/* Our pool ends at 0x4000 */
+uint8_t *initptr = (uint8_t *)0x4000;
+
 struct blkbuf *bufpool_end = bufpool + NBUFS;
+
+uint8_t *init_alloc(uint16_t size)
+{
+	uint8_t *p = initptr - size;
+	if(p < (uint8_t *)bufpool_end)
+		panic("imem");
+	initptr = p;
+	return p;
+}
 
 void platform_discard(void)
 {
-	uint16_t discard_size = 0x4000 - (uint16_t)bufpool_end;
+	uint16_t discard_size = (uint16_t)initptr - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
 	discard_size /= sizeof(struct blkbuf);
@@ -71,12 +83,7 @@ static void timer_tick(uint8_t n)
 
 void platform_interrupt(void)
 {
-	if (acia_present)
-		tty_pollirq_acia();
-	if (sio_present)
-		tty_pollirq_sio0();
-	if (sio1_present)
-		tty_pollirq_sio1();
+	tty_pollirq();
 	if (ctc_present) {
 		uint8_t n = 255 - CTC_CH3;
 		CTC_CH3 = 0x47;

@@ -12,6 +12,53 @@
 
 /* Everything in here is discarded after init starts */
 
+static uint8_t probe_16x50(uint8_t p)
+{
+	uint8_t r;
+	uint8_t lcr = in(p + 3);
+	out(p + 3, lcr | 0x80);
+	out(p + 1, 0xAA);
+	if (in(p + 1) != 0xAA) {
+		out(p + 3, lcr);
+		return 0;
+	}
+	out (p + 3, lcr);
+	if (in(p + 1) == 0xAA)
+		return 0;
+
+	out (p + 2, 0xE7);
+	r = in(p + 2);
+	if (r & 0x40) {
+		/* Decode types with FIFO */
+		if (r & 0x80) {
+			if (r & 0x20)
+				return UART_16750;
+			return UART_16550A;
+		}
+		/* Should never find this real ones were discontinued
+		   very early due to a hardware bug */
+		return UART_16550;
+	} else {
+		/* Decode types without FIFO */
+		out(p + 7, 0x2A);
+		if (in (p + 7) == 0x2A)
+			return UART_16450;
+		return UART_8250;
+	}
+}
+
+const char *uart_name[] = {
+	"?",
+	"6850 ACIA",
+	"Zilog SIO",
+	"Z180",
+	"8250",
+	"16450",
+	"16550",
+	"16550A",
+	"16750"
+};
+
 void init_hardware_c(void)
 {
 #ifdef CONFIG_VFD_TERM
@@ -19,6 +66,24 @@ void init_hardware_c(void)
 #endif
 	ramsize = 512;
 	procmem = 512 - 80;
+
+	/* Set the right console for kernel messages */
+
+	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
+	   console we will need to address this better */
+
+	if (z180_present) {
+		kputs("Z180 CPU card detected.\n");
+		register_uart(UART_Z180, Z180_IO_BASE, &z180_uart0);
+		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
+	}
+
+	if (acia_present) {
+		register_uart(UART_ACIA, 0x80, &acia_uart);
+	} else {
+		register_uart(UART_SIO, 0x80, &sio_uart);
+		register_uart(UART_SIO, 0x82, &sio_uartb);
+	}
 }
 
 void pagemap_init(void)
@@ -38,29 +103,34 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
-	/* UART at 0xC0 means no DS1302 there */
-	if (!(uart16x50_mask & 0x80))
-		ds1302_init();
+	ds1302_init();
 
-	if (z180_present)
-		kputs("Z180 CPU card detected.\n");
 	if (acia_present)
 		kputs("6850 ACIA detected at 0x80.\n");
 	if (sio_present)
 		kputs("Z80 SIO detected at 0x80.\n");
-	if (sio1_present)
+
+	/* Further ports we register at this point */
+	if (sio1_present) {
 		kputs("Z80 SIO detected at 0x84.\n");
+		register_uart(UART_SIO, 0x84, &sio_uart);
+		register_uart(UART_SIO, 0x86, &sio_uartb);
+	}
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
-	if (ds1302_present)
+
+	i = 0xC0;
+
+	if (ds1302_present) {
 		kputs("DS1302 detected at 0xC0.\n");
-	m = uart16x50_mask;
-	for (i = 0xC0; i; i += 0x08) {
-		if (m & 0x80)
-			kprintf("16x50 detected at 0x%2x.\n", i);
-		m <<= 1;
+		/* UART at 0xC0 means no DS1302 there */
+		i += 8;
 	}
-	kputs("Done.\n");
+	while(i) {
+		if ((m = probe_16x50(i)))
+			register_uart(m, i, &ns16x50_uart);
+		i += 0x08;
+	}
 	/* Need to look for TMS9918/9918A */
 }
 
