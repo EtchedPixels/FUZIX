@@ -54,7 +54,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (ctc_present)
+	if (ctc_present || z180_present)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
@@ -83,8 +83,13 @@ static void timer_tick(uint8_t n)
 
 void platform_interrupt(void)
 {
+	/* FIXME: For Z180 we know if the ASCI ports are the source so
+	   should fastpath them (vector 8 and 9) */
 	tty_pollirq();
-	if (ctc_present) {
+	if (z180_present) {
+		if (irqvector == 3)	/* Timer 0 */
+			timer_interrupt();
+	} else if (ctc_present) {
 		uint8_t n = 255 - CTC_CH3;
 		CTC_CH3 = 0x47;
 		CTC_CH3 = 255;

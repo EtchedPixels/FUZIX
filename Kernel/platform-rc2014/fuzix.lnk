@@ -3,7 +3,7 @@
 -b _CODE=0x0100
 -b _CODE1=0x4000
 -b _CODE2=0x4000
--b _COMMONMEM=0xF000
+-b _VECTORS=0xF000
 -b _DISCARD=0xC300
 -l z80
 platform-rc2014/crt0.rel

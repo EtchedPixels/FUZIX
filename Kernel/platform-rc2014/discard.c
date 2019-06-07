@@ -9,6 +9,7 @@
 #include <rc2014.h>
 #include "config.h"
 #include "vfd-term.h"
+#include "z180_uart.h"
 
 /* Everything in here is discarded after init starts */
 
@@ -74,6 +75,7 @@ void init_hardware_c(void)
 
 	if (z180_present) {
 		kputs("Z180 CPU card detected.\n");
+		z180_setup(!ctc_present);
 		register_uart(UART_Z180, Z180_IO_BASE, &z180_uart0);
 		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
 	}

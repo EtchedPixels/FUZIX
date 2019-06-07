@@ -25,7 +25,9 @@
 	.area _DISCARD1
         .area _CODE2
 	.area _DISCARD2
+	.area _VECTORS	    ; 32 byte aligned
         .area _COMMONMEM
+	.area _COMMONDATA
 
         ; exported symbols
         .globl init

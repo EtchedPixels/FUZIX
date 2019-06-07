@@ -41,9 +41,6 @@ Pending
 
 	Sound cards (until Fuzix gets proper audio support)
 
-	16C550A UART support
-
-
 Unsupported Hardware
 
 	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
@@ -72,8 +69,6 @@ Things that don't work
 
 Stuff To Do
 
-  * Other tty options - can we autodetect 16550A at 0x80.
-
   * How to represent a Z80 PIO usefully to Fuzix (similar issues with Nascom)
     both raw and hosting an interface (eg /dev/lp or even floppy)
 
@@ -86,11 +81,17 @@ Stuff To Do
 
   * Sound support once we have the core sound layer
 
-  * Push the tty buffers into the banked space to give us room for more ttys
-
   * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO
     plus the other costs
+
+  * Move the disk buffers into banked space and up the system configuration
+    for big systems
+
+  * Support Z180 timer and serial ports
+
+  * Support TMS9918A as a clock source (disable other ints, check for IRQ
+    to detect ?)
 
 Setting It Up
 
