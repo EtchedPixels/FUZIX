@@ -34,8 +34,8 @@ Partition with a vaguely modern fdisk (2048 block offset base, not 63)
 Add partition for filesystem
 Copy filesystem onto partition
 
-In SCM type 'CPM' and instead of CP/M it will boot Fuzix. You can also in theory
-run the binary from CP/M but it may be too big to fit.
+In SCM type 'CPM' and instead of CP/M it will boot Fuzix. You can also in
+theory run the binary from CP/M but it may be too big to fit.
 
 The root filesystem device can be specified as either a decimal number, or as a
 a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
