@@ -202,6 +202,7 @@ dowrite:
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
             pop af
+            or a
             ret z
             jp map_kernel                           ; else map kernel then return
     __endasm;
