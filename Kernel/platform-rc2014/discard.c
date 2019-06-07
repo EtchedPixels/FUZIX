@@ -13,6 +13,33 @@
 
 /* Everything in here is discarded after init starts */
 
+__sfr __at 0x99 tms9918a_ctrl;
+
+static uint8_t probe_tms9918a(void)
+{
+	uint16_t ct = 0;
+	/* Read the status port */
+	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x8F;
+	/* No fifth sprite collision */
+	if (tms9918a_ctrl & 0x7F)
+		return 0;
+	/* Try turning it on and looking for a vblank */
+	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x80;
+	tms9918a_ctrl = 0x09;
+	tms9918a_ctrl = 0x81;
+	/* Should see the top bit go high */
+	while(ct-- && (tms9918a_ctrl & 0x80));
+	if (ct == 0)
+		return 0;
+	/* Reading the F bit should have cleared it */
+	if (tms9918a_ctrl & 0x80)
+		return 0;
+	return 1;
+}
+
+
 static uint8_t probe_16x50(uint8_t p)
 {
 	uint8_t r;
@@ -120,6 +147,12 @@ void pagemap_init(void)
 	}
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
+
+	/* Not clear how we should attach this to a console, for now
+	   our tty driver logic attaches it to the first console port */
+	tms9918a_present = probe_tms9918a();
+	if (tms9918a_present)
+		kputs("TMS9918A at 0x98/99.\n");
 
 	i = 0xC0;
 

@@ -34,6 +34,7 @@ extern uint8_t ctc_present;
 extern uint8_t sio_present;
 extern uint8_t sio1_present;
 extern uint8_t z180_present;
+extern uint8_t tms9918a_present;
 
 #define UART_ACIA	1
 #define UART_SIO	2

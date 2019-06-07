@@ -17,7 +17,7 @@ uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;
 uint8_t z180_present;
-uint8_t uart16x50_mask;
+uint8_t tms9918a_present;
 
 /* Our pool ends at 0x4000 */
 uint8_t *initptr = (uint8_t *)0x4000;
