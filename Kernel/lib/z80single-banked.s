@@ -180,7 +180,6 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jp _platform_monitor
 
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -302,6 +301,8 @@ ohpoo:
 
 nobufs:
 	.asciz 'nobufs'
+
+	.area _COMMONDATA
 ;
 ;	We can keep a stack in common because we will complete our
 ;	use of it before we switch common block. In this case we have
@@ -309,3 +310,5 @@ nobufs:
 ;
 	.ds 128
 _swapstack:
+
+fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
