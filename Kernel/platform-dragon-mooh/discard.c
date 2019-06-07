@@ -34,34 +34,6 @@ uint8_t platform_param(char *p)
 	return 0;
 }
 
-/*
- *	This function is called for partitioned devices if a partition is found
- *	and marked as swap type. The first one found will be used as swap. We
- *	only support one swap device.
- */
-void platform_swap_found(uint8_t letter, uint8_t m)
-{
-	blkdev_t *blk = blk_op.blkdev;
-	uint16_t n;
-	uint32_t c;
-	if (swap_dev != 0xFFFF)
-		return;
-	letter -= 'a';
-	kputs("(swap) ");
-	swap_dev = letter << 4 | m;
-	n = 0;
-	c = blk->lba_count[m - 1];
-	/* Avoid pulling in all the 32bit math support */
-	while(n < MAX_SWAPS && c >= SWAP_SIZE) {
-		c -= SWAP_SIZE;
-		n++;
-	}
-#ifdef SWAPDEV
-	while (n)
-		swapmap_init(n--);
-#endif
-}
-
 static const char *sysname[] = {"Dragon", "COCO", "COCO3", "Unknown"};
 
 struct cart_rom_id {
