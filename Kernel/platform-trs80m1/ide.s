@@ -8,7 +8,7 @@
 
 	.module ide
 ;
-;	If we ever do a native driver for M3SE we'll want to d something
+;	If we ever do a native driver for M3SE we'll want to do something
 ;	different here for that and use ide_select to switch interface types
 ;
 ; FIXME: Move these somewhere better
