@@ -1,0 +1,22 @@
+TODO
+
+-	Fix disk interface to have common stubs that do banking
+-	Write the tty allocation/set up code as per rc2014
+-	Add interface to say callbacks set
+-	Add pieces to call BIOS (jump table)
+-	For now asm and link BIOS after kernel to test
+-	Attempt to make this boot with a simple hack fuzixbios on say
+	sbcv2
+-	Set tty defaults from calls
+-	Add bios interfaces for keyboard (up/down input notification and
+	key mask etc)
+-	Make vt hints set tty size info
+-	Floppy driver
+-	Disk ioctls and extend param interface
+-	Media change notifier
+-	Bank to bank copier hook ?
+-	lp error reporting
+-	Error code sort out
+-	soft di/ei
+
+
