@@ -50,7 +50,7 @@ $(AOBJS): %.rel: %.s
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
 	rm -f load-fat.ihx load-fat.tmp load-hd.ihx load-hd.tmp
-	rm -f load-fat load-hd
+	rm -f load-fat load-hd FUZIX.BIN
 image:
 	sdasz80 -o load-hd.s
 	sdldz80 -i load-hd.rel
