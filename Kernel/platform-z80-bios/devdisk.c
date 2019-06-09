@@ -50,7 +50,7 @@ int vd_flush(void)
     return 0;
 }
 
-uint16_t callback_disk(uint16_t event)
+uint16_t callback_disk(uint16_t event) __z88dk_fastcall
 {
     uint8_t unit = event >> 8;
     uint8_t op = event;
@@ -113,7 +113,7 @@ not_swapin:
 rd_kernel:
             call map_buffers
 doread:
-            call fuzixbios_disk_read
+            call _fuzixbios_disk_read
             pop af
             or a
             ret z
@@ -142,7 +142,7 @@ not_swapout:
 wr_kernel:
             call map_buffers
 dowrite:
-            call fuzixbios_disk_write
+            call _fuzixbios_disk_write
             pop af
             or a
             ret z

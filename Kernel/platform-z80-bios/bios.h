@@ -10,27 +10,33 @@ extern uint16_t callback_disk(uint16_t) __z88dk_fastcall;
 #define VD_DRIVE_NR_MASK	0x0F
 #define VD_DRIVE_COUNT		16
 
+extern void *init_alloc(uint16_t);
+extern uint8_t *alloc_base;
+extern void *buffer_alloc(bufptr p);
+extern void buffer_init(void);
+
 struct fuzixbios_info {
     uint8_t version;
 
     uint8_t num_banks;
-    uint8_t common_base;
-    uint8_t mem_top;
-    uint8_t ram_kb;
+    uint16_t common_base;
+    uint16_t mem_top;
+    uint16_t ram_kb;
+    uint16_t bios_top;		/* End of banked bios */
 
-    uint8_t num_tty;
+    uint8_t num_serial;
     uint8_t num_lpt;
     uint8_t num_disk;
 
-    uint8_t features;
+    uint16_t features;
 #define FEATURE_RTC	1
 };
 
 struct fuzixbios_callbacks {
-    uint16_t (*callback_tick)(uint16_t) __z88dk_fastcall;
-#define TICK_TIMER	0
-#define TICK_VBLANK	1    
-    uint16_t (*callback_tty)(uint16_t) __z88dk_fastcall;
+    uint16_t (*callback_tick)(void) __z88dk_fastcall;
+    uint16_t (*callback_timer)(uint16_t) __z88dk_fastcall;
+#define TICK_VBLANK	0
+    uint16_t (*callback_serial)(uint16_t) __z88dk_fastcall;
     /* One day we may need to handle lock/unlock of disks ? */
     uint16_t (*callback_disk)(uint16_t) __z88dk_fastcall;
 #define DISK_CHANGE	0
@@ -45,7 +51,8 @@ extern void fuzixbios_set_bank(void);	/* Must preserve all, and oddity
 extern void fuzixbios_idle(void);
 extern void fuzixbios_reboot(void);
 extern void fuzixbios_monitor(void);
-extern void fuzixbios_set_callbacks(struct fuzixbios_callbacks *vc);
+extern void fuzixbios_init_done(void);
+extern void fuzixbios_set_callbacks(struct fuzixbios_callbacks *vc) __z88dk_fastcall;
 
 /* TODO : wire up core code so we can nicely set the tty defaults */
 struct fuzixbios_ttyparam {
@@ -84,6 +91,11 @@ struct fuzixbios_diskparam {
 #define DP_PARTITION	2
 #define DP_REMOVABLE	4
 #define DP_FLOPPY	8
+#define DP_GEOM		16
+    uint16_t cylinders;
+    uint16_t heads;
+    uint16_t sectors;
+    uint16_t blocksize;		/* Real sector size */
 };
 
 /* TODO: media change event, dynamic diskparam, geometyr, fd ioctl,

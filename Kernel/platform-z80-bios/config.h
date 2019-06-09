@@ -24,16 +24,16 @@
  */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0x7E00  /* Top of program, base of U_DATA stash */
-#define PROC_SIZE   32 	    /* Memory needed per process including stash */
+#define PROGTOP     0xBE00  /* Top of program, base of U_DATA stash */
+#define PROC_SIZE   48 	    /* Memory needed per process including stash */
 /*
  *	Definitions for swapping.
  */
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern unsigned int swap_dev;
-#define SWAP_SIZE   0x40 	/* 32K in 512 byte blocks */
+#define SWAP_SIZE   0x60 	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
 
 #define MAX_SWAPS	16	/* Maximum number of swapped out processes.
                                    As we use the default 15 process max this
@@ -53,6 +53,8 @@ extern unsigned int swap_dev;
 
 /* We will resize the buffers available after boot. This is the normal setting */
 #define CONFIG_DYNAMIC_BUFPOOL
+/* Not really external but we want to manage them as if they were */
+#define CONFIG_BLKBUF_EXTERNAL
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 /* Larger transfers (including process execution) should go directly not via
@@ -102,6 +104,7 @@ extern unsigned int swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5        /* Number of block buffers. Must be 4+ and must match
                              kernel.def */
+#define MAXBUFS  16
 #define NMOUNTS	 8	  /* Number of mounts at a time */
 
 /* This can optionally be set to force a default baud rate, eg if the system

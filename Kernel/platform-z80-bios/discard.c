@@ -12,10 +12,19 @@
 
 void init_hardware_c(void)
 {
+	bufptr p = bufpool;
 	biosinfo = fuzixbios_getinfo();
 	ramsize = biosinfo->ram_kb;
 	/* Assumes a zero base */
 	procmem = ramsize - (biosinfo->common_base >> 2);
+	/* Memory allocator base */
+	alloc_base = biosinfo->bios_top;
+	/* Allocate the initial buffers */
+	for (i = 0; i < NBUFS; i++) {
+		if (buffer_alloc(p) == NULL)
+			panic("bufmem");
+		p++:
+	}
 }
 
 /*
@@ -48,6 +57,7 @@ void map_init(void)
 
 static struct fuzixbios_callbacks fcb = {
 	callback_tick,
+	callback_timer,
 	callback_tty,
 	callback_disk
 };
@@ -61,11 +71,49 @@ void pagemap_init(void)
 }
 
 /*
+ *	TTY masks - define which bits can be changed for each port
+ *	eventually...
+ */
+
+static tcflag_t uart_mask[4] = {
+	_ISYS,
+	_OSYS,
+	_CSYS,
+	_LSYS,
+};
+
+void tty_init(void)
+{
+	int n = biosinfo->num-tty;
+	uint8_t *p;
+	struct s_queue *q = &ttyinq[1];
+	struct tcflag_t *m = &termios_mask[1];
+
+	if (n > NUM_DEV_TTY) {
+		kprintf("Only %d serial devices will be available.\n",
+			n);
+		n = NUM_DEV_TTY;
+	}
+	for (i = 1; i < n; i++) {
+		*m++ = &uart_mask;
+		p = init_alloc(TTYSIZ);
+		if (p == NULL)
+			panic("ttybuf");
+		q->q_base = q->q_head = q->q_tail = p;
+		q->q_size = TTYSIZE;
+		q->q_count = 0;
+		q->q_wakeup = TTYSIZ/2;
+		q++;
+	}
+}
+
+/*
  *	Called after interrupts are enabled in order to enumerate and set up
  *	drives.
  */
 
 void device_init(void)
 {
+	buffer_init();
 	vd_init();
 }

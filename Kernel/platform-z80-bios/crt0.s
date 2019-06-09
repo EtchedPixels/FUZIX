@@ -1,4 +1,5 @@
 	        ; Ordering of segments for the linker.
+		.area _PAGE0		; to force tools to leave it alone
 	        .area _CODE
 	        .area _CODE2
 		.area _HOME
@@ -16,6 +17,8 @@
 	        .area _INITIALIZER
 		.area _DISCARD
 	        .area _COMMONMEM
+		.area _COMMONDATA
+		.area _END
 
         	; imported symbols
         	.globl _fuzix_main
@@ -32,14 +35,14 @@
 	        .globl kstack_top
 		.globl map_kernel
 
+		.globl _fuzixbios_init
+
 	        ; startup code
 	        .area _CODE
 
-		; Load at 0x0000
-		jp start
-		.ds 125
+		; Load at 0x0100
 ;
-;	Leave low space for vectors (FIXME - pre init them)
+;	Leave low space for vectors
 ;
 start:
 		di
@@ -66,6 +69,7 @@ start:
 		ld bc, #l__BUFFERS - 1
 		ld (hl), #0
 		ldir
+		call _fuzixbios_init
 		call init_early
 		call init_hardware
 		call _fuzix_main

@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0000
--b _COMMONMEM=0xF400
+-b _COMMONMEM=0xF000
 -l z80
 platform-z80-bios/crt0.rel
 platform-z80-bios/commonmem.rel

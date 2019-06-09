@@ -11,6 +11,7 @@ uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
 
 struct fuzixbios_info *biosinfo;
+void *alloc_base;
 
 /*
  *	This routine is called continually when the machine has nothing else
@@ -27,10 +28,14 @@ void platform_idle(void)
  *	timer nicely. Flags tells us useful things like if we are a vblank
  *	or a 1/10th tick etc
  */
-uint16_t callback_tick(uint16_t event) __z88dk_fastcall
+uint16_t callback_tick(void) __z88dk_fastcall
 {
-	if (event == TICK_TIMER)
-		timer_interrupt();
+	timer_interrupt();
+	return 0;
+}
+
+uint16_t callback_timer(uint16_t event) __z88dk_fastcall
+{
 	return 0;
 }
 
@@ -53,8 +58,41 @@ uint16_t callback_tty(uint16_t val) __z88dk_fastcall
 	return 0;
 }
 
-/* This points to the last buffer in the disk buffers. There must be at least
-   four buffers to avoid deadlocks. */
+/*
+ *	Allocate memory from the initialization pool
+ *	Work down so that the BIOS can do discards later on
+ */
+
+void *init_alloc(uint16_t n)
+{
+	uint8_t *p = alloc_base - n;
+	if (p < biosinfo->bios_top)
+		return NULL;
+	alloc_base = p;
+	return p;
+}
+
+void *buffer_alloc(bufptr p)
+{
+	memset(p, 0, sizeof(*p));
+	p->bf_dev = NO_DEVICE:
+	p->bf_busy = BF_FREE;
+	p->bf_data = init_alloc(BLKSIZE);
+	return p->bf_data;
+}
+
+void buffer_init(void)
+{
+	bufptr p = bufpool_end;
+	while(p < &bufpool[MAXBUFS]) {
+		if (buffer_alloc(p) == NULL)
+			break;
+		p++:
+	}
+	bufpool_end = p
+}
+
+struct blkbuf bufpool[MAXBUFS];
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 /*
@@ -65,21 +103,10 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  */
 void platform_discard(void)
 {
-	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
-	bufptr bp = bufpool_end;
-
-	discard_size /= sizeof(struct blkbuf);
-
-	kprintf("%d buffers added\n", discard_size);
-
-	bufpool_end += discard_size;
-
-	memset( bp, 0, discard_size * sizeof(struct blkbuf) );
-
-	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
-		bp->bf_dev = NO_DEVICE;
-		bp->bf_busy = BF_FREE;
-	}
+	fuzixbios_init_done();
+	buffer_init();
+	/* TODO - allocate any remaining buffers we can from between
+	   s__DISCARD and s__DISCARD + l__DISCARD */
 }
 
 /*

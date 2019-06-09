@@ -23,6 +23,7 @@
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl platform_interrupt_all
+	    .globl _platform_interrupt
 	    .globl _kernel_flag
 	    .globl _int_disabled
 
@@ -82,7 +83,11 @@ _int_disabled:
 ;
 platform_interrupt_all:
 	    ret
-
+;
+;	Not used in this case as the BIOS owns the interrupts
+;
+_platform_interrupt:
+	    ret
 ;
 ;	If you have a ROM monitor you can get back to then do so, if not
 ;	fall into reboot.

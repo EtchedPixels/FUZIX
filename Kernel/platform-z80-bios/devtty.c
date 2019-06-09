@@ -16,26 +16,9 @@
 #include <devtty.h>
 #include <bios.h>
 
-/*
- *	One buffer for each tty
- */
-static uint8_t tbuf1[TTYSIZ];
 static uint8_t sleeping;
 
-/*
- *	TTY masks - define which bits can be changed for each port
- */
-
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS,
-};
-
 tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
 };
 
 
@@ -55,8 +38,8 @@ void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
-	while(tty_writeready(1) != TTY_READY_NOW);
-	tty_putc(1, c);
+	while(tty_writeready(0) != TTY_READY_NOW);
+	tty_putc(0, c);
 }
 
 /*
@@ -113,6 +96,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	tc.flags = flags;
 	tc.termios = ttydata[minor].termios;
 	fuzixbios_serial_setup(&tc);
+	ttydata[minor].termios = tc.termios;
 }
 
 /*
@@ -145,7 +129,7 @@ void tty_data_consumed(uint_fast8_t minor)
 
 int biostty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (minor < biosinfo->num_tty)
+	if (minor <= biosinfo->num_tty)
 		return tty_open(minor, flag);
 	udata.u_error = ENXIO;
 	return -1;

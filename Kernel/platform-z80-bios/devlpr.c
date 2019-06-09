@@ -19,14 +19,14 @@ int lpr_close(uint_fast8_t minor)
 	return 0;
 }
 
-static int iopoll(int sofar)
+static int iopoll(void)
 {
 	/* Ought to be a core helper for this lot ? */
 	if (need_reschedule())
 		_sched_yield();
 	if (chksigs()) {
-		if (sofar)
-			return sofar;
+		if (udata.u_done)
+			return udata.u_done;
 		udata.u_error = EINTR;
 		return -1;
 	}
@@ -45,15 +45,21 @@ int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 	/* O_NDELAY ? */
 
-	while (p < pe) {
+	while (udata.u_done < udata.u_count) {
 		/* Printer busy ? */
 		while (fuzixbios_lpt_busy(minor)) {
-			if ((n = iopoll(pe - p)) != 0)
+			if ((n = iopoll()) != 0)
 				return n;
 		}
 		c = ugetc(p++);
-		fuzixbios_lpt_tx(minor | (c << 8));
-		/* FIXME: report errors */
+		c = fuzixbios_lpt_tx(minor | (c << 8));
+		if (c) {
+			if (udata.u_done)
+				break;
+			udata.u_error = c;
+			return -1;
+		}
+		udata.u_done++;
 	}
-	return p - udata.u_base;
+	return udata.udone;
 }
