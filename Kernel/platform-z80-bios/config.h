@@ -55,6 +55,8 @@ extern unsigned int swap_dev;
 #define CONFIG_DYNAMIC_BUFPOOL
 /* Not really external but we want to manage them as if they were */
 #define CONFIG_BLKBUF_EXTERNAL
+/* So we can use the standard helpers.. */
+#define CONFIG_BLKBUF_HELPERS
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 /* Larger transfers (including process execution) should go directly not via

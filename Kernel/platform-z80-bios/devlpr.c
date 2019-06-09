@@ -61,5 +61,5 @@ int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 		}
 		udata.u_done++;
 	}
-	return udata.udone;
+	return udata.u_done;
 }

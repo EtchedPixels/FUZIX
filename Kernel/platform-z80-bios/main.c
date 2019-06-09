@@ -11,7 +11,7 @@ uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
 
 struct fuzixbios_info *biosinfo;
-void *alloc_base;
+uint8_t *alloc_base;
 
 /*
  *	This routine is called continually when the machine has nothing else
@@ -36,6 +36,7 @@ uint16_t callback_tick(void) __z88dk_fastcall
 
 uint16_t callback_timer(uint16_t event) __z88dk_fastcall
 {
+	used(event);
 	return 0;
 }
 
@@ -66,7 +67,7 @@ uint16_t callback_tty(uint16_t val) __z88dk_fastcall
 void *init_alloc(uint16_t n)
 {
 	uint8_t *p = alloc_base - n;
-	if (p < biosinfo->bios_top)
+	if (p < (uint8_t *)biosinfo->bios_top)
 		return NULL;
 	alloc_base = p;
 	return p;
@@ -75,10 +76,10 @@ void *init_alloc(uint16_t n)
 void *buffer_alloc(bufptr p)
 {
 	memset(p, 0, sizeof(*p));
-	p->bf_dev = NO_DEVICE:
+	p->bf_dev = NO_DEVICE;
 	p->bf_busy = BF_FREE;
-	p->bf_data = init_alloc(BLKSIZE);
-	return p->bf_data;
+	p->__bf_data = init_alloc(BLKSIZE);
+	return p->__bf_data;
 }
 
 void buffer_init(void)
@@ -87,9 +88,9 @@ void buffer_init(void)
 	while(p < &bufpool[MAXBUFS]) {
 		if (buffer_alloc(p) == NULL)
 			break;
-		p++:
+		p++;
 	}
-	bufpool_end = p
+	bufpool_end = p;
 }
 
 struct blkbuf bufpool[MAXBUFS];

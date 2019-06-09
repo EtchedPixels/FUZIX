@@ -10,6 +10,10 @@ static uint8_t last_drive = 0xFF;
  *	Simple disk interface for FuzixBIOS.
  *
  *	Would be good to allow multi-sector I/O here.
+ *
+ *	FIXME: need to be able to hook open for rescan on media change
+ *	and also to error if no media and not O_NDELAY- needs blkdev
+ *	tweaks ?
  */
 
 uint_fast8_t vd_transfer_sector(void)

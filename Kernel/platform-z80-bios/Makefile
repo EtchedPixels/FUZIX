@@ -54,8 +54,10 @@ reloctool: reloctool.c
 
 image: reloctool
 	mv ../fuzix.bin ./fuzix.1
+	mv ../fuzix.map ./fuzix.1.map
 	(cd ..; $(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix2.lnk)
 	(cd ..; tools/bihx fuzix.ihx)
 	(cd ..; tools/binprep)
 	dd if=../fuzix.bin of=./fuzix.2 bs=256 skip=1
-	./reloctool fuzix.1 fuzix.2 ../fuzix.map FUZIX.REL
+	./reloctool fuzix.1 fuzix.2 ./fuzix.1.map FUZIX.REL
+	mv ./fuzix.1.map ../fuzix.map

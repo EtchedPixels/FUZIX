@@ -141,13 +141,11 @@ static void relocrecord(uint16_t addr, int type, uint8_t hb)
 	
 static void relocate_common(uint16_t addr, uint8_t * p)
 {
-	fprintf(stderr, "%04X: D reloc %02X%02X\n", addr, *p, p[-1]);
 	relocrecord(addr, 2, *p);
 }
 
 static void relocate_code(uint16_t addr, uint8_t * p)
 {
-	fprintf(stderr, "%04X: C reloc %02X%02X\n", addr, *p, p[-1]);
 	relocrecord(addr, 1, *p);
 }
 

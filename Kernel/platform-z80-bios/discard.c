@@ -12,18 +12,21 @@
 
 void init_hardware_c(void)
 {
+	uint8_t i;
 	bufptr p = bufpool;
 	biosinfo = fuzixbios_getinfo();
 	ramsize = biosinfo->ram_kb;
 	/* Assumes a zero base */
 	procmem = ramsize - (biosinfo->common_base >> 2);
 	/* Memory allocator base */
-	alloc_base = biosinfo->bios_top;
+	alloc_base = (uint8_t *)biosinfo->bios_top;
+	/* Get the tty up */
+	biostty_init();
 	/* Allocate the initial buffers */
 	for (i = 0; i < NBUFS; i++) {
 		if (buffer_alloc(p) == NULL)
 			panic("bufmem");
-		p++:
+		p++;
 	}
 }
 
@@ -82,12 +85,13 @@ static tcflag_t uart_mask[4] = {
 	_LSYS,
 };
 
-void tty_init(void)
+void biostty_init(void)
 {
-	int n = biosinfo->num-tty;
+	int n = biosinfo->num_serial;
 	uint8_t *p;
+	uint8_t i;
 	struct s_queue *q = &ttyinq[1];
-	struct tcflag_t *m = &termios_mask[1];
+	tcflag_t **m = &termios_mask[1];
 
 	if (n > NUM_DEV_TTY) {
 		kprintf("Only %d serial devices will be available.\n",
@@ -95,12 +99,12 @@ void tty_init(void)
 		n = NUM_DEV_TTY;
 	}
 	for (i = 1; i < n; i++) {
-		*m++ = &uart_mask;
+		*m++ = &uart_mask[0];
 		p = init_alloc(TTYSIZ);
 		if (p == NULL)
 			panic("ttybuf");
 		q->q_base = q->q_head = q->q_tail = p;
-		q->q_size = TTYSIZE;
+		q->q_size = TTYSIZ;
 		q->q_count = 0;
 		q->q_wakeup = TTYSIZ/2;
 		q++;

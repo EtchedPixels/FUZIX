@@ -92,6 +92,7 @@ struct fuzixbios_diskparam {
 #define DP_REMOVABLE	4
 #define DP_FLOPPY	8
 #define DP_GEOM		16
+#define DP_MEDIA	32
     uint16_t cylinders;
     uint16_t heads;
     uint16_t sectors;
@@ -118,5 +119,6 @@ extern uint8_t fuzixbios_rtc_set(struct cmos_rtc *) __z88dk_fastcall;
 /* Geometry info, drive current v max */
 /* FDC settings */
 
-extern uint16_t callback_tick(uint16_t) __z88dk_fastcall;
+extern uint16_t callback_tick(void) __z88dk_fastcall;
+extern uint16_t callback_timer(uint16_t) __z88dk_fastcall;
 extern uint16_t callback_tty(uint16_t) __z88dk_fastcall;

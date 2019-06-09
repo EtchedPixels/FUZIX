@@ -54,17 +54,6 @@
             .include "kernel.def"
             .include "../kernel-z80.def"
 
-;
-; Buffers (we use asm to set this up as we need them in a special segment
-; so we can recover the discard memory into the buffer pool
-;
-
-	    .globl _bufpool
-	    .area _BUFFERS
-
-_bufpool:
-	    .ds BUFSIZE * NBUFS
-
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (kept even when we task switch)
 ; -----------------------------------------------------------------------------

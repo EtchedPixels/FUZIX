@@ -18,8 +18,7 @@
 
 static uint8_t sleeping;
 
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-};
+tcflag_t *termios_mask[NUM_DEV_TTY + 1];
 
 
 /*
@@ -129,7 +128,7 @@ void tty_data_consumed(uint_fast8_t minor)
 
 int biostty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (minor <= biosinfo->num_tty)
+	if (minor <= biosinfo->num_serial)
 		return tty_open(minor, flag);
 	udata.u_error = ENXIO;
 	return -1;

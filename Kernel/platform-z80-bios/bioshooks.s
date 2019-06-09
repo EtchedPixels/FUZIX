@@ -1,7 +1,7 @@
 
 		.module bioshooks
 
-		.globl _fuzixbios_init_done
+		.globl _fuzixbios_init
 		.globl _fuzixbios_reboot
 		.globl _fuzixbios_monitor
 		.globl _fuzixbios_getinfo
@@ -9,6 +9,7 @@
 		.globl _fuzixbios_param
 		.globl _fuzixbios_idle
 		.globl _fuzixbios_set_bank
+		.globl _fuzixbios_init_done
 
 		.globl _fuzixbios_serial_txready
 		.globl _fuzixbios_serial_tx
