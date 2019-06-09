@@ -189,9 +189,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BF_FREE		0
 #define BF_BUSY		1
 
-/* FIXME: if we could split the data and the header we could keep blocks
-   outside of our kernel data (as ELKS does) which would be a win, but need
-   some more care on copies, block indexes and directory ops */
+#if !defined(CONFIG_BLKBUF_EXTERNAL)
+#define CONFIG_BLKBUF_HELPERS
+#endif
 
 typedef struct blkbuf {
 #ifdef CONFIG_BLKBUF_EXTERNAL
@@ -206,7 +206,7 @@ typedef struct blkbuf {
     uint16_t    bf_time;        /* LRU time stamp */
 } blkbuf, *bufptr;
 
-#ifndef CONFIG_BLKBUF_EXTERNAL
+#if defined(CONFIG_BLKBUF_HELPERS)
 #define blktok(kaddr,buf,off,len) \
     memcpy((kaddr), (buf)->__bf_data + (off), (len))
 #define blkfromk(kaddr,buf, off,len) \

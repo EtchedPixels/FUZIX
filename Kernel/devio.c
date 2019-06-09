@@ -165,7 +165,7 @@ bufptr zerobuf(void)
 	return bp;
 }
 
-#ifndef CONFIG_BLKBUF_EXTERNAL
+#ifdef CONFIG_BLKBUF_HELPERS
 /*
  * Allocate a buffer for scratch use by the kernel. This buffer can then
  * be freed with tmpfree.
