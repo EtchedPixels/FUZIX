@@ -174,13 +174,13 @@ int main(int argc, char **argv)
 	signal(SIGTSTP, SIG_IGN);
 
 	// set up curses library
-	initscr();
+	if (initscr() == NULL) {
+	    fprintf(stderr,"TERM variable not set.\n");
+	    exit(0);
+	}
 	cbreak();
 	noecho();
 	curs_set(0);		// hide cursor
-	initscr();
-	cbreak();
-	noecho();
 #ifdef USE_KEYS
 	keypad(stdscr, TRUE);
 #endif
