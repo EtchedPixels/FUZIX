@@ -132,7 +132,9 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
-	ds1302_init();
+	/* The DS1302 clashes with the Z180 ports */
+	if (!z180_present)
+		ds1302_init();
 
 	if (acia_present)
 		kputs("6850 ACIA detected at 0x80.\n");
@@ -154,19 +156,21 @@ void pagemap_init(void)
 	if (tms9918a_present)
 		kputs("TMS9918A at 0x98/99.\n");
 
-	i = 0xC0;
+	/* Devices in the C0-CF range cannot be used with Z180 */
+	if (!z180_present) {
+		i = 0xC0;
 
-	if (ds1302_present) {
-		kputs("DS1302 detected at 0xC0.\n");
-		/* UART at 0xC0 means no DS1302 there */
-		i += 8;
+		if (ds1302_present) {
+			kputs("DS1302 detected at 0xC0.\n");
+			/* UART at 0xC0 means no DS1302 there */
+			i += 8;
+		}
+		while(i) {
+			if ((m = probe_16x50(i)))
+				register_uart(m, i, &ns16x50_uart);
+			i += 0x08;
+		}
 	}
-	while(i) {
-		if ((m = probe_16x50(i)))
-			register_uart(m, i, &ns16x50_uart);
-		i += 0x08;
-	}
-	/* Need to look for TMS9918/9918A */
 }
 
 void map_init(void)

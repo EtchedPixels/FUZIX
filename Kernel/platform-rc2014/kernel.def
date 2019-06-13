@@ -12,7 +12,7 @@ PROGBASE		.equ	0x0000
 PROGLOAD		.equ	0x0100
 
 ; Z180 properties
-Z180_IO_BASE		.equ	0x40
+Z180_IO_BASE		.equ 0xC0
 CPU_CLOCK_KHZ           .equ 18432        ; 18.432MHz * 1
 Z180_TIMER_SCALE        .equ 80           ; CPU clocks per timer tick
 TICKSPERSEC             .equ 10           ; timer interrupt rate (Hz)
