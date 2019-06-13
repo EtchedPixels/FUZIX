@@ -119,7 +119,7 @@ static uint8_t acia_intr(uint8_t minor, uint8_t port)
 
 static void acia_setup(uint8_t minor, uint8_t port)
 {
-	struct termios *t = &ttydata[1].termios;
+	struct termios *t = &ttydata[minor].termios;
 	uint8_t r = t->c_cflag & CSIZE;
 
 	used(port);
