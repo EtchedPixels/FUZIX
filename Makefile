@@ -5,9 +5,10 @@
 # amstradnc/nc100:	Amstrad NC100 (or emulator)
 # amstradnc/nc200:	Amstrad NC200 (or emulator)
 # coco2cart:	Tandy COCO2 or Dragon with 64K and IDE or SDC + cartridge flash
-#		(or modified xroar)
+#		(or xroar emulator )
 # coco3:	Tandy COCO3 512K (or MAME)
-# dragon-nx32:	Dragon 32/64 with Spinx 512K card (or modified xroar)
+# dragon-mooh:	Dragon 32/64 with Mooh 512K card (or xroar emulator)
+# dragon-nx32:	Dragon 32/64 with Spinx 512K card (or xroar emulator)
 # easy-z80:	Easy-Z80 RC2014 compatible system
 # msx2:		MSX2 with 128K or more and MegaFlashROM+SD interface
 #		(or OpenMSX suitably configured)
