@@ -1,36 +1,49 @@
-Internal working tree for the replacmeent of ubasic
 
-- Ideas
+FuzixBasic
 
-Put the start of the workspace above the end of the biggest of interpreter
-and editor, add a fixed entry point to each and we can then treat them as
-overlays with a common header stub!
+Notes on the development code
 
-- Compiler
+Memory map
 
-- Expressions
+Bottom
+		Tokenised BASIC
+Top of Program
+		Return Stack (grows up)
+Top of Return Stack
+Bottom of temporary strings
+		Temporary strings
+		Grows up
+		Space
+Bottom of variables
+		Variables
+Top of BASIC space
 
-Fix FOO(bar,baz)
+All the BASIC is tokenised at input time for speed. This not only makes it
+run faster it means that the nasty stuff like the expression evaluator don't
+have to worry about tokenisation at the same time.
 
-Make PI and RND not functions but constants
+We throw away the return stack when you edit code (we could move it
+but seriously why bother)
+Temporary strings are created during evaluation of expressions, and then
+discarded at the end of a statement
 
-Parse FN X as a special type of function and also FN X(y)
+The only special case is GOSUB where we need to create a return stack
+frame. We could keep these in with the variables in theory but that has
+its own messes so we deal specifically with the case of
 
+	GOSUB (expression involving a string)
 
-
-Strings
-
-need to push ptr to string and length in calc (so we can treat "foo" and
-A$ the same way)
-
-temporary strings go just below the return stack as we don;t change that
-during anything with string variables.
-
-Note: GOSUB expr will result in an eval to an integer thus removing any string
-temporary need *before* the stacking.
+by having GOSUB itself specifically call the temporary discard method
+having evaluated the resulting line number. As the line number is an integer
+no temporaries are needed at that point.
 
 
-Ecma-55 requires unique to two letters. So given case doesn't matter we could
+
+Variables are encoded into 16bits for the full permitted ECMA55 range
+(that is A0-Z9, AA-ZZ) including type information. This allows a very fast
+search to be done.
+
+Ecma-55 requires unique to two letters. So given case doesn't matter we can
 pack variables with a 16bit lead tag as
 
 [5.first][6.second]		(A0-A9 AA-ZZ]
@@ -42,7 +55,7 @@ pack variables with a 16bit lead tag as
 1/0				array/non array
 [dims.2]			number of array dims  (1-4)
 
-lead byte 0 = end (because would be variable '@@'
+lead byte 0 = end (because would be variable '@@')
 
 Then we can pack vars as
 
@@ -56,7 +69,6 @@ or for array or string
 [lengths.w * n]  (0 if non array)
 [data]
 
-
 which means our search becomes
 
 	while (*ptr && (*(uint16_t *)ptr & LOW11) != seek) {
@@ -65,3 +77,14 @@ which means our search becomes
 		else
 			ptr += 2;	/* 2 or 5 if fp basic)
 	}
+
+We store strings with a trailing \0 so we can easily use C functions on
+them and in case we eventually want to add an API like
+
+	FD = OPEN(A$, 1);
+
+
+
+Make PI and RND not functions but constants
+
+Parse FN X as a special type of function and also FN X(y)

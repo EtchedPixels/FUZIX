@@ -1,7 +1,7 @@
 /*
  *	This module deals with keeping the BASIC program present and tokenized
  *
- *	The code ends with a fake like 65535 which we must ensure the user
+ *	The code ends with a fake line 65535 which we must ensure the user
  *	never gets to replace as it avoids us ever having to special case
  *	last line.
  *
@@ -102,7 +102,7 @@ static uint8_t *outptr;
 /* Could binary search this as we can always find a marker with 0x80 to
    split the search in halfish */
 
-uint8_t tokget(uint8_t * c)
+static uint8_t tokget(uint8_t * c)
 {
 	uint8_t *ptr = toktab;
 	uint8_t *cp = c;
@@ -132,6 +132,7 @@ uint8_t tokget(uint8_t * c)
 	return 0;
 }
 
+/* TODO - don't tokenize past a REM token */
 void tokenize_line(uint8_t * input)
 {
 	uint8_t *p = input;
@@ -143,12 +144,13 @@ void tokenize_line(uint8_t * input)
 			p++;
 		if (*p == 0)
 			break;
+		*p &= 127;
 		/* Strings require special handling so we don't tokenize them */
 		if (*p == '"') {
 			*outptr++ = *p++;
 			while (*p != '"') {
 				if (*p == 0)
-					error(MISSING_QUOTE);
+					require('"');
 				*outptr++ = *p++;
 			}
 			*outptr++ = *p++;
@@ -195,6 +197,9 @@ void insdel_line(uint16_t num, uint8_t * toks, uint16_t size)
 	int16_t shift = size;
 	uint8_t *cptr;
 
+	/* The return stack sits above us so it goes when we add a line */
+	clear_return_stack();
+
 	if (size == 1) {
 		size = 0;	/* End mark only - delete */
 		shift = 0;
@@ -208,8 +213,9 @@ void insdel_line(uint16_t num, uint8_t * toks, uint16_t size)
 	   if a replaced line will fit.. but it's close to the line anyway so
 	   already deep in trouble */
 
+	/* FIXME: use variable base as a guide instead */
 	if (size + lines_end > lines_limit)
-		error(OUT_OF_MEMORY);
+		error(ERROR_MEMORY);
 
 	/* We pad lines on alignment icky processors */
 	while (*(uint16_t *) ptr < num)
@@ -306,7 +312,7 @@ void error(int n)
 	longjmp(aborted, 1);
 }
 
-/* Will use the more general parser once present */
+/* FIXME: merge with makenumber */
 uint8_t *linenumber(uint8_t * n, uint16_t * v)
 {
 	uint16_t vp = 0, vn;
@@ -321,7 +327,7 @@ uint8_t *linenumber(uint8_t * n, uint16_t * v)
 	return n;
 
       bad:
-	error(BAD_LINE_NUMBER);
+	error(ERROR_OVERFLOW);
 	return NULL;
 }
 
@@ -351,6 +357,7 @@ void cls_command(void)
 
 void clear_command(void)
 {
+	clear_variables();
 }
 
 
@@ -437,18 +444,21 @@ void go_statement(void) {
 }
 
 void let_statement(void) {
-	struct variable v;
-	variable_name(&v);
-	if (*c != '=')
-		error(SYNTAX_ERROR);
-	else
-		variable_assign(v, expression());
+	struct variable *v;
+	struct value r;
+	v = find_variable();
+	if (*execp++ != '=')
+		require('=');
+	else {
+		expression(&r);
+		variable_assign(v, r);
+	}
 }
 
 void if_statement(void) {
-	uint8_t b = boolean_expression();
+	uint8_t b = intexpression();
 	if (*execp++ != TOK_THEN)
-		error(SYNTAX_ERROR);
+		require(TOK_THEN);
 	if (b == 0 && run_line)
 		find_exec_line(run_line + 1);
 	else
@@ -458,12 +468,7 @@ void if_statement(void) {
 void return_command(void)
 {
 	if (unstack_frame() == 0)
-		error(RETURN_UNDERFLOW);
-}
-
-void clear_command(void)
-{
-	/* TODO */
+		error(ERROR_RET_UNDERFLOW);
 }
 
 void run_command(void)
@@ -604,19 +609,6 @@ int main(int argc, char *argv[])
 		fgets(buf, 256, stdin);
 		outptr = o;
 		tokenize_line(buf);
-#if 0		
-		p = o;
-		while (p < outptr) {
-			if (*p > 31 && *p < 127)
-				putchar(*p);
-			else
-				printf("[%02X]", *p);
-			p++;
-		}
-		printf("\n");
-		print_line(o);
-		printf("\n");
-#endif		
 		parse_line(o, outptr - o);
 	}
 }
