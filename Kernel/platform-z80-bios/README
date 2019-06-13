@@ -1,7 +1,6 @@
 TODO
 
 DONE -	Fix disk interface to have common stubs that do banking
--	Use info to set common base, program size, buffers etc
 DONE -	Make termios copy back data, check matches test bios
 DONE -	Write the tty allocation/set up code as per rc2014
 DONE -	Rewrite the buffer allocation logic to work with the memory map
@@ -9,33 +8,35 @@ DONE -	Rewrite the buffer allocation logic to work with the memory map
 	(initial version - need to redo a bit for discards)
 DONE -	Add interface to say callbacks set
 DONE -	Add pieces to call BIOS (jump table)
-IP -	For now asm and link BIOS after kernel to test
--	Write fake external buffer wrappers
--	Attempt to make this boot with a simple hack fuzixbios on say
-	sbcv2
--	Set tty defaults from calls
--	Add bios interfaces for keyboard (up/down input notification and
-	key mask etc)
--	Check off by ones in the malloc logic
--	Make vt hints set tty size info
--	Floppy driver
--	Disk ioctls and extend param interface
--	Media change notifier
--	Bank to bank copier hook ?
-DONE -	lp error reporting
--	Error code sort out
--	soft di/ei
--	interrupt driven parallel ?
--	header file for asm includes (errno codes, baud rates etc)
+DONE -	Write fake external buffer wrappers
 DONE -	Who should own space allocation between bios and common - do we
 	have a bios "malloc" handler ?
+-	Attempt to make this boot with a simple hack fuzixbios on say
+	sbcv2
+DONE -	Set tty defaults from calls
+DONE -	lp error reporting
+DONE -	Use info to set common base, program size, buffers etc
 IP -	How do we do discard areas ? (just need to write extra buf allocator)
+-	header file for asm includes (errno codes, baud rates etc)
+-	Error code sort out
+
+BIOS Interface Improvements Then Needed
+-	Add bios interfaces for keyboard (up/down input notification and
+	key mask etc)
+-	Make vt hints set tty size info
+-	Media change notifier
+-	Blkdev changes to allow open hooking and media change
+-	soft di/ei
+-	interrupt driven parallel ?
+-	Floppy driver
+-	Disk ioctls and extend param interface
+-	Bank to bank copier hook ?
 
 Fixed assumptions to cure
 
-udata stash location is hardcoded needs to be (xxxx) form option in asm
-program top is hard coded but needs to adjust
-memory needed per program likewise
+DONE -udata stash location is hardcoded needs to be (xxxx) form option in asm
+program top is hard coded but needs to adjust memory needed per program
+likewise
 
 
 Memory map

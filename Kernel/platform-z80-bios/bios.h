@@ -2,6 +2,9 @@
 #include <tty.h>
 #include <blkdev.h>
 
+extern uint8_t swap_size;
+extern uint16_t udata_stash;
+
 extern void vd_init(void);
 extern uint8_t vd_read(void);
 extern uint8_t vd_write(void);

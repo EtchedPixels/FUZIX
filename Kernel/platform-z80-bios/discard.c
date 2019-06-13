@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
+#include <devtty.h>
 #include <bios.h>
 
 /*
@@ -17,9 +18,13 @@ void init_hardware_c(void)
 	biosinfo = fuzixbios_getinfo();
 	ramsize = biosinfo->ram_kb;
 	/* Assumes a zero base */
-	procmem = ramsize - (biosinfo->common_base >> 2);
+	procmem = ramsize - (biosinfo->common_base >> 10);
 	/* Memory allocator base */
 	alloc_base = (uint8_t *)biosinfo->bios_top;
+	/* Now set up the swap and RAM information */
+	swap_size = biosinfo->common_base >> 9;
+	ramtop = biosinfo->common_base;
+	udata_stash = ramtop - sizeof(u_data);
 	/* Get the tty up */
 	biostty_init();
 	/* Allocate the initial buffers */

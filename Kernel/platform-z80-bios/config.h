@@ -12,10 +12,9 @@
 /* Select a banked memory set up */
 #define CONFIG_BANK_FIXED
 /* This is the number of banks of user memory available (maximum) */
-#define MAX_MAPS	2		/* Two user maps */
-/* How big is each bank - in our case 32K, 48K is actually more common. This
-   is hardware dependant */
-#define MAP_SIZE	0x8000
+#define MAX_MAPS	16		/* 16 user maps */
+/* How big is each bank - in our case this is BIOS dependant */
+#define MAP_SIZE	(ramtop)
 /* How many banks do we have in our address space */
 #define CONFIG_BANKS	2	/* 2 x 32K */
 
@@ -24,16 +23,17 @@
  */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0xBE00  /* Top of program, base of U_DATA stash */
-#define PROC_SIZE   48 	    /* Memory needed per process including stash */
+#define PROGTOP     (ramtop - 512)  /* Top of program, base of U_DATA stash */
+#define PROC_SIZE   (ramtop >> 10)  /* Memory needed per process including stash */
 /*
  *	Definitions for swapping.
  */
+extern unsigned char swap_size;
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern unsigned int swap_dev;
-#define SWAP_SIZE   0x60 	/* 32K in 512 byte blocks */
+#define SWAP_SIZE   (swap_size) /* In 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    (ramtop)	/* vectors so its a round number of sectors */
 
 #define MAX_SWAPS	16	/* Maximum number of swapped out processes.
                                    As we use the default 15 process max this
@@ -106,7 +106,7 @@ extern unsigned int swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5        /* Number of block buffers. Must be 4+ and must match
                              kernel.def */
-#define MAXBUFS  16
+#define MAXBUFS  16	  /* Maximum buffers we will allocate */
 #define NMOUNTS	 8	  /* Number of mounts at a time */
 
 /* This can optionally be set to force a default baud rate, eg if the system

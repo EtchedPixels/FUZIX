@@ -377,7 +377,7 @@ ATA_FLUSH	equ 0e7h
 
 ;
 ;	Select disk L to use for the disk operations that follow - until
-;	a further select. Return an error code in L or 0
+;	a further select. Return an error code in L or 0.
 ;
 disk_select:
 	; We have a single fixed CF adapter so we ignore the disk code

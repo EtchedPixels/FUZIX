@@ -7,7 +7,9 @@
 #include <rtc.h>
 #include <bios.h>
 
-uint16_t ramtop = PROGTOP;
+uint16_t ramtop;		/* Updated at boot */
+uint16_t udata_stash;
+uint8_t swap_size;
 uint16_t swap_dev = 0xFFFF;
 
 struct fuzixbios_info *biosinfo;
@@ -24,23 +26,26 @@ void platform_idle(void)
 }
 
 /*
+ *	Callbacks - these are called from the asm wrappers
+ */
+/*
  *	Called when the timer ticks. We should extend this to scale the
  *	timer nicely. Flags tells us useful things like if we are a vblank
  *	or a 1/10th tick etc
  */
-uint16_t callback_tick(void) __z88dk_fastcall
+
+void platform_interrupt(void)
 {
 	timer_interrupt();
-	return 0;
 }
 
-uint16_t callback_timer(uint16_t event) __z88dk_fastcall
+uint16_t do_callback_timer(uint16_t event) __z88dk_fastcall
 {
 	used(event);
 	return 0;
 }
 
-uint16_t callback_tty(uint16_t val) __z88dk_fastcall
+uint16_t do_callback_tty(uint16_t val) __z88dk_fastcall
 {
 	uint8_t tty = val;
 	uint8_t op = tty >> 4;

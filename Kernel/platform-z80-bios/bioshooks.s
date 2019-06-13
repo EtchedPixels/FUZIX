@@ -31,6 +31,49 @@
 		.globl _fuzixbios_rtc_set
 		.globl _fuzixbios_rtc_secs
 
+		.globl _callback_tty
+		.globl _callback_timer
+		.globl _callback_tick
+
+		.globl _do_callback_tty
+		.globl _do_callback_timer
+
+		.globl map_save_kernel
+		.globl map_restore
+		.globl interrupt_handler
+;
+;	Stubs
+;
+		.area _COMMONMEM
+_callback_tty:
+		ld (callback_sp),sp
+		ld sp,#callback_stack
+		call map_save_kernel
+		call _do_callback_timer
+		call map_restore
+		ld sp,(callback_sp)
+		ret
+_callback_timer:
+		ld (callback_sp),sp
+		ld sp,#callback_stack
+		call map_save_kernel
+		call _do_callback_timer
+		call map_restore
+		ld sp,(callback_sp)
+		ret
+_callback_tick:
+		jp interrupt_handler
+
+		.area _COMMONDATA
+
+		.ds 64
+callback_stack:
+callback_sp:
+		.dw 0
+
+;
+;	BIOS jump vectors
+;
 		.area _END
 
 .end:
