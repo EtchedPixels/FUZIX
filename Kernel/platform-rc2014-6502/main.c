@@ -41,7 +41,8 @@ uint8_t platform_param(char *p)
 {
     return 0;
 }
-static volatile uint8_t *via = (volatile uint8_t *)0xC0F0;
+
+static volatile uint8_t *via = (volatile uint8_t *)0xC060;
 
 void device_init(void)
 {
