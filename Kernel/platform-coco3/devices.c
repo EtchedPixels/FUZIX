@@ -59,8 +59,7 @@ void device_init(void)
 #ifdef CONFIG_COCOSDNANO
 	devrtsd_init();
 #endif
-	if ( ! dw_init() )
-		dwtime_init( );
+	dw_init();
 	inittod();
 	sock_init();
 }
