@@ -12,7 +12,10 @@
 #include <netdev.h>
 #include <devlpr.h>
 #include <devrtsd.h>
-
+#include <devdw.h>
+#include <ttydw.h>
+#include <devsdc.h>
+#include <devsd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -59,8 +62,7 @@ void device_init(void)
 #ifdef CONFIG_COCOSDNANO
 	devrtsd_init();
 #endif
-	if ( ! dw_init() )
-		dwtime_init( );
+	dw_init();
 	inittod();
 	sock_init();
 }
