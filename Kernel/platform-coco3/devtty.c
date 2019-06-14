@@ -189,7 +189,6 @@ static struct tty_coco3 ttytab[] VSECTD = {
 		79,
 		24,
 		&fmodes[0],
-		050
 	},
 	{
 		(unsigned char *) 0x3000,
@@ -204,7 +203,6 @@ static struct tty_coco3 ttytab[] VSECTD = {
 		39,
 		24,
 		&fmodes[1],
-		050
 	}
 };
 
@@ -569,7 +567,7 @@ static void apply_defmode( uint8_t defmode )
 }
 
 __attribute__((section(".discard")))
-void set_defmode( uint8_t *s )
+void set_defmode(char *s)
 {
 	int defmode = s[7]-0x30;
 	if( defmode > 4 )
@@ -580,7 +578,6 @@ void set_defmode( uint8_t *s )
 __attribute__((section(".discard")))
 void devtty_init()
 {
-	int i;
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC/10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC/10);

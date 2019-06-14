@@ -12,7 +12,10 @@
 #include <netdev.h>
 #include <devlpr.h>
 #include <devrtsd.h>
-
+#include <devdw.h>
+#include <ttydw.h>
+#include <devsdc.h>
+#include <devsd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
