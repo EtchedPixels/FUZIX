@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <ttydw.h>
+#include <libc.h>
 
 #define DISC __attribute__((section(".discard")))
 

@@ -9,6 +9,7 @@
 #include <kdata.h>
 #include <device.h>
 #include <devlpr.h>
+#include <devdw.h>
 
 
 int lpr_open(uint_fast8_t minor, uint16_t flag)
@@ -48,7 +49,6 @@ int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	uint8_t *p = udata.u_base;
 	uint8_t *pe = p + udata.u_count;
 	int n;
-	irqflags_t irq;
 	uint8_t buf[2];
 
 	buf[0]=0x50;
