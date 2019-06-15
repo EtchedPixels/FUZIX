@@ -40,3 +40,9 @@ f 0755 /usr/lib/trek/startrek.doc startrek.doc
 f 0755 /usr/lib/trek/startrek.fatal startrek.fatal
 f 0755 /usr/lib/trek/startrek.intro startrek.intro
 f 0755 /usr/lib/trek/startrek.logo startrek.logo
+f 0755 /usr/games/z1            z1
+f 0755 /usr/games/z2            z2
+f 0755 /usr/games/z3            z3
+f 0755 /usr/games/z4            z4
+f 0755 /usr/games/z5            z5
+f 0755 /usr/games/z8            z8
