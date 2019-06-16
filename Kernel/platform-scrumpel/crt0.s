@@ -37,7 +37,9 @@
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
+        .globl s__INITIALIZED
         .globl s__INITIALIZER
+        .globl l__INITIALIZER
         .globl s__COMMONMEM
         .globl l__COMMONMEM
         .globl s__DISCARD
@@ -64,6 +66,18 @@ init:
 	out0 (MMU_BBR),a
 	out0 (MMU_CBR),a
 
+	; For now we are loading the IHX file directly so don't
+	; want to unpack stuff, but do need to sort out the initializer
+	; instead
+
+	ld hl,#s__INITIALIZER
+	ld de,#s__INITIALIZED
+	ld bc,#l__INITIALIZER
+	ldir
+
+	jr skip_unpack
+
+
         ; move the common memory where it belongs    
         ld hl, #s__DATA
         ld de, #s__COMMONMEM
@@ -73,6 +87,8 @@ init:
         ld de, #s__DISCARD
         ld bc, #l__DISCARD
         ldir
+
+skip_unpack:
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
