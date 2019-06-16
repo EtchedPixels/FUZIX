@@ -19,6 +19,9 @@ discardstart:
 
 init:
         di
+	! Make sure our interrupt is unmasked but the others are not
+	mvi a,0x1D		! R7.5 | MSE | M7.5 | M 5.5
+	sim
 	lxi sp,kstack_top
 
         call init_early
