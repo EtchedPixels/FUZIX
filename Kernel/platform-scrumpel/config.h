@@ -62,7 +62,7 @@ extern unsigned int swap_dev;
 #define SWAPTOP	    0xF800	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
+//#define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_copyright()		// for now
