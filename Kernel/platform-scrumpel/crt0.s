@@ -57,6 +57,13 @@ init:
         di
         ld sp, #kstack_top
 
+	ld hl,#enter
+	call debugstr
+
+	xor a
+	out0 (MMU_BBR),a
+	out0 (MMU_CBR),a
+
         ; move the common memory where it belongs    
         ld hl, #s__DATA
         ld de, #s__COMMONMEM
@@ -73,11 +80,21 @@ init:
         ld (hl), #0
         ldir
 
+	ld hl,#movedok
+	call debugstr
+
+
         ; Configure memory map
         call init_early
 
+	ld hl,#early
+	call debugstr
+
         ; Hardware setup
         call init_hardware
+
+	ld hl,#inithw
+	call debugstr
 
         ; Call the C main routine
         call _fuzix_main
@@ -86,3 +103,31 @@ init:
         di
 stop:   halt
         jr stop
+
+debug:
+	push af
+        ; wait for transmitter to be idle
+ocloop: in0 a, (ASCI_STAT0)
+        bit 1, a        ; and 0x02
+        jr z, ocloop    ; loop while busy
+        ; now output the char to serial port
+	pop af
+        out0 (ASCI_TDR0), a
+        ret
+
+debugstr:
+	ld a,(hl)
+	or a
+	ret z
+	call debug
+	inc hl
+	jr debugstr
+
+movedok:
+	.asciz 'Relocation and clear done'
+inithw:
+	.asciz 'Hardware initialized'
+enter:
+	.asciz 'Kernel image entered'
+early:
+	.asciz 'Early init complete'
