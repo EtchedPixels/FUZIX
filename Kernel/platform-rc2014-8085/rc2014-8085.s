@@ -134,8 +134,7 @@ _program_vectors_k:
 !	This also means we need a customised .rst handler to leave room for
 !	NMI and RST 5.5 ideally.
 !
-!	For the RC2014 system all interrupts go to the external interrupt
-!	pin and none of the vectoring features and priority can be used 8(
+!	All the interrupts are wired to RST 6.5
 !
 _program_vectors_u:
 	mvi a,0xc3
