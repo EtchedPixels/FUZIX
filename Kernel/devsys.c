@@ -130,10 +130,8 @@ int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 	if (minor == 66)
 		return inputdev_ioctl(request, data);
 #endif
-	if (minor != 3) {
-		udata.u_error = ENOTTY;
+	if (minor != 3)
 		return -1;
-	}
 
 	switch (request) {
 	case PIO_TABSIZE:
@@ -145,8 +143,7 @@ int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 		break;
 
 	default:
-		udata.u_error = EINVAL;
-		return (-1);
+		return -1;
 	}
 	return 0;
 }
