@@ -382,7 +382,9 @@ int d_ioctl(uint16_t dev, uint16_t request, char *data)
 	}
 
 	ret =  (*dev_tab[major(dev)].dev_ioctl) (minor(dev), request, data);
-	if (ret == -1 && !udata.u_error)	// maybe the ioctl routine might set this?
+	/* -1 with no error code means 'unknown ioctl'. Turn this into the
+	   right code to save doing it all over */
+	if (ret == -1 && !udata.u_error)
 			udata.u_error = ENOTTY;
 	return ret;
 }
