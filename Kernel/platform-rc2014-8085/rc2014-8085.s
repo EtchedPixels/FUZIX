@@ -86,27 +86,59 @@ ctc_check:
 	mvi a,1
 	sta _ctc_present
 	!
-	!	Set it up (for now we assume RC2014 7.3Mhz but most people
-	!	will be using a lower clock so fix this ?)
+	!	Without major mods we can't use the CTC as a timer. There
+	!	are two reasons for this
+	!	1. We can't clear the interrupt as we have no M1
+	!	2. The speed is tied to CLK which with the 8085 board
+	!	   isn't well defined as the usual 7.3MHz but is twice
+	!	   the CPU clock
 	!
-	mvi a,0xB5
-	out CTC_CH2
-	mvi a,144
-	out CTC_CH2	! 200Hz @ 7.3Mhz, 100Hz at 3.6
+	!	Instead... we use the TMS9918A. When we get a better clock
+	!	option we can use that
 	!
-	!	Channel 3 becomes the missed event counter
-	!
-	mvi a,0x47
-	out CTC_CH3
-	mvi a,0xFF
-	out CTC_CH3
-
 no_ctc:
+	lxi h,tmsinitdata
+	mvi d,0x80
+tmsinit:
+	mvi a,0x88
+	cmp d
+	jz tmsdone
+	mov a,d
+	out 0x99
+	mov a,m
+	out 0x99
+	inx h
+	inr d
+	jmp tmsinit
+
+	xra a
+	out 0x99		! M3 clear, external VDP input off
+	mvi a,0x80
+	out 0x99		! to register 0
+	mvi a,0x0D		! M1 on M2 clear (so text mode)
+	out 0x99		! 16K, blanked display, interrupt on
+	mvi a,0x81
+	out 0x99		! to register 1
+	xra a
+	out 0x99
+	mvi a,0x82
+tmsdone:
+	!
 	! Set up the interrupt on the uart
 	mvi a,0x01
 	out 0xC1	
 
 	jmp _program_vectors_k
+
+tmsinitdata:
+	.data1 0x00		! M3 clear, external VDP off, rest MBZ
+	.data1 0x0D		! M1 on M2 clear, 16K, blanked, int on
+	.data1 0x02		! Name table at 0x0800
+	.data1 0x00		! Colour table at 0x0000 (unused)
+	.data1 0x00		! Pattern table at 0x0000
+	.data1 0x00		! Sprite attribute at 0x0000 (unused)
+	.data1 0x00		! Sprite pattern at 0x0000 (unused)
+	.data1 0xF4		! White on dark blue
 
 .define _int_disabled
 _int_disabled:
