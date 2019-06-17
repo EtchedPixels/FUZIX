@@ -31,7 +31,7 @@ uint_fast8_t devide_readb(uint_fast8_t regaddr)
     ppi_port_b = regaddr;
     ppi_port_b = regaddr | PPIDE_RD_LINE; /* begin /RD pulse */
     r = ppi_port_a;
-    ppi_port_c = regaddr;	 /* end /RD pulse */
+    ppi_port_b = regaddr;	 /* end /RD pulse */
     return r;
 }
 
@@ -105,7 +105,7 @@ void devide_write_data(void) __naked
             ld a, #ide_reg_data
             out (c), a                              ; select data register
             ld a, #PPIDE_PPI_BUS_WRITE
-            out (0x93), a                           ; 8255A port A to output mode
+            out (PPIDE_BASE+3), a                   ; 8255A port A to output mode
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld d, #ide_reg_data                     ; register address
             ld e, #ide_reg_data | PPIDE_WR_LINE     ; register address with /WR asserted
@@ -138,7 +138,7 @@ gowrite_done:
             ; write completed
             out (c), d                              ; de-assert /WR
             ld a, #PPIDE_PPI_BUS_READ
-            out (0x93), a                           ; 8255A ports A, B to read mode
+            out (PPIDE_BASE+3), a                   ; 8255A ports A, B to read mode
             pop af                                  ; recover is_user test result
             ret z                                   ; done if kernel memory transfer
             jp map_kernel                           ; else map kernel then return
