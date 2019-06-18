@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <termcap.h>
 #include "ue.h"
@@ -29,7 +30,7 @@ void tputs_buf(char *p, int n)
 
 void gotoxy(int x, int y)
 {
-	tputs_buf(tgoto(t_go, x, y), 1);
+	tputs_buf(tgoto(t_go, x - 1, y - 1), 1);
 	outxy.Y=y;
 	outxy.X=x;
 }
