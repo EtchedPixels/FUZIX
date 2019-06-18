@@ -7,6 +7,11 @@
 #include <z180.h>
 #include <ds1302.h>
 
+extern int strcmp(void *, void *);
+
+/* This is only used before discarding */
+uint8_t has_sd = 0;
+
 void init_hardware_c(void)
 {
 	ramsize = 512;
@@ -43,7 +48,10 @@ void map_init(void)
 
 uint8_t platform_param(char *p)
 {
-	used(p);
+	if (strcmp(p, "sd") == 0) {
+		has_sd = 1;
+		return 1;
+	}
 	return 0;
 }
 

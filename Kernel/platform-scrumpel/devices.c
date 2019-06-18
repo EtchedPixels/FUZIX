@@ -31,6 +31,8 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+    extern uint8_t has_sd;
     devide_init();
-    devsd_init();
+    if (has_sd)
+      devsd_init();
 }
