@@ -36,9 +36,7 @@ Supported Hardware
 	PPIDE
 
 Pending
-
 	TMS99918A VDP as timer
-
 	Sound cards (until Fuzix gets proper audio support)
 
 Unsupported Hardware
@@ -92,6 +90,10 @@ Stuff To Do
 
   * Support TMS9918A as a clock source (disable other ints, check for IRQ
     to detect ?)
+
+  * Use the ROMWBW data to support Z180 timers
+
+  * See if we can merge some similar ports using the ROMWBW machine info ?
 
 Setting It Up
 
