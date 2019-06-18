@@ -30,7 +30,7 @@ static uint8_t probe_tms9918a(void)
 	tms9918a_ctrl = 0x09;
 	tms9918a_ctrl = 0x81;
 	/* Should see the top bit go high */
-	while(ct-- && (tms9918a_ctrl & 0x80));
+	while(ct-- && !(tms9918a_ctrl & 0x80));
 	if (ct == 0)
 		return 0;
 	/* Reading the F bit should have cleared it */
