@@ -151,7 +151,6 @@ void devide_read_data(void) __naked
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
-            push af
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
@@ -169,9 +168,6 @@ rd_kernel:
 doread:
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
-            pop af
-            or a
-            ret z
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
@@ -183,7 +179,6 @@ void devide_write_data(void) __naked
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
-            push af
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
@@ -201,9 +196,6 @@ wr_kernel:
 dowrite:
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
-            pop af
-            or a
-            ret z
             jp map_kernel                           ; else map kernel then return
     __endasm;
 }
