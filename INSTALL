@@ -10,7 +10,7 @@ chown it to the building user.
 Make sure you have the needed compilers on your path
 If you are running cc65 remember you also need CC65_HOME set properly!
 
-If you are using the lwtools gcc for 6809 ensure that $(pwd)/BUILD/tools is
+If you are using the lwtools gcc for 6809 ensure that $(pwd)/Build/tools is
 on your path.
 
 Cross fingers, type "make"
