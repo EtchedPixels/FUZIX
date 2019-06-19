@@ -1,6 +1,7 @@
 ; UZI mnemonics for memory addresses etc
 
-U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F400
+U_DATA_STASH		    .equ 0xBE00
+U_DATA__TOTALSIZE           .equ 0x0200       ; 256+256 bytes @ F400
 
 Z80_TYPE		    .equ 0	      ; FIXME: check
 
@@ -8,3 +9,5 @@ PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
 Z80_MMU_HOOKS		    .equ 0
+
+CONFIG_SWAP		    .equ 0		; for the moment

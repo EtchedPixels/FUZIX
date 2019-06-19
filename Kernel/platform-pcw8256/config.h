@@ -12,8 +12,8 @@
 #define CONFIG_CPM_EMU
 /* 16K reported page size */
 #define CONFIG_PAGE_SIZE	16
-/* We use flexible 16K banks so use the helper */
-#define CONFIG_BANK16
+/* We use flexible 16K banks with a fixed common */
+#define CONFIG_BANK16FC
 #define MAX_MAPS 16
 #define MAX_SWAPS 16
 
@@ -21,7 +21,7 @@
 
 /* VT layer required */
 #define CONFIG_VT
-/* Has soem keys in the unicode range */
+/* Has some keys in the unicode range */
 #define CONFIG_UNIKEY
 /* We want the 8x8 font */
 #define CONFIG_FONT8X8
@@ -35,18 +35,17 @@
 #define CONFIG_INPUT_GRABMAX 2	/* We could in theory do full up/down but later */
 #define MAX_BLKDEV	1	/* UIDE or FIDHD never both */
 #define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
-#undef CONFIG_NET
-#undef CONFIG_NET_NATIVE
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 #define TICKSPERSEC 300		/* FIXME: double check - Ticks per second */
 #define PROGBASE    0x0000	/* memory base of program */
 #define PROGLOAD    0x0100	/* load base of program */
-#define PROGTOP     0xF400  	/* Top of program, base of U_DATA */
+#define PROGTOP     0xBE00  	/* Top of program, base of U_DATA stash */
 
-#define SWAP_SIZE   0x80 	/* 64K in blocks (we actually don't need all of it FIXME) */
-#define SWAPBASE    ((uint16_t)0x0000)	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xF800	/* vectors. We have to swap 256 bytes of
-                                   common as well */
+#define SWAP_SIZE   0x60 	/* 48K in blocks */
+#define SWAPBASE    0x0000	/* We swap the lot in one, include the */
+#define SWAPTOP	    0xC000	/* vector and stash */
 
 #define BOOT_TTY	(512 + 1)
 
@@ -61,9 +60,9 @@
 
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-#define swap_map(x)	(uint8_t *)(0x4000 + ((x) & 0x3FFF))	/* For now */
+#define swap_map(x)	(uint8_t *)(x)
 
 #define platform_discard()
 #define platform_copyright()
 
-#define BOOTDEVICENAMES ",fd#"
+#define BOOTDEVICENAMES "hd,fd#"

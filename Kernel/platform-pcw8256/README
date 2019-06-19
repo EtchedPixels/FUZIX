@@ -1,4 +1,4 @@
-An UZI target for the Amstrad PCW series computers
+A FUZIX target for the Amstrad PCW series computers
 
 16K banked memory with flexible bank setting. Programs for now (until brk()
 is done right) get 64K in four consecutive page numbers. The UAREA is mapped
@@ -17,7 +17,28 @@ can get fork() going
 
 FIXME:
 - Move disk buffers into own bank and use external disk buffers to keep under
-  the 48K line
+  the 48K line or maybe just bank kernel (makes more sense ?)
+- Rework loader so that we can load a banked image
+- Alternative might be to go with 48K process size maximum and new a bank
+16/fixed common mode. Might be good for RC2014 and some others too ?
+
+If we went that way we'd take the task switch ldir hit but save memory for
+processes
+
+0/1/2/3		Kernel
+4/5		Video & Fonts (+ 5K or so spare)
+(assuming full 48K size)
+6/7/8		Process 0
+9/A/B		Process 1
+C/D/E		Process 2
+
+Alternative would be something like
+
+0/1		Kernel code 2
+4/5		Video + Fonts + Kernel code2 bits
+5/6		Kernel code 2 above fonts/video 
+2/3		Kernel high (and video routines)
+
 
 
 Supported Hardware (all only in early test)
@@ -36,7 +57,6 @@ Supported Hardware (all only in early test)
 		CF2DD floppy
 		3.5" floppy	(need to sort seek rates better)
 		UIDE
-		Fake IDE on xjoyce
 		CPS8256 and clones (parallel port not yet done)
 		AMX mouse
 		Kempston Mouse

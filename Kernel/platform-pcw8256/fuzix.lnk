@@ -32,7 +32,7 @@ syscall_other.rel
 syscall_net.rel
 tty.rel
 mm.rel
-bank16k.rel
+bank16kfc.rel
 swap.rel
 devsys.rel
 devinput.rel
