@@ -28,21 +28,24 @@ uint_fast8_t devide_readb(uint_fast8_t regaddr)
     uint8_t r;
 
     /* note: ppi_control should contain PPIDE_PPI_BUS_READ already */
+    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
     ppi_port_b = regaddr;
     ppi_port_b = regaddr | PPIDE_RD_LINE; /* begin /RD pulse */
     r = ppi_port_a;
     ppi_port_b = regaddr;	 /* end /RD pulse */
+    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
     return r;
 }
 
 void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 {
     ppi_control = PPIDE_PPI_BUS_WRITE;
+    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
     ppi_port_b = regaddr;
     ppi_port_a = value;
     ppi_port_b = regaddr | PPIDE_WR_LINE;
-    /* FIXME: check timing */
     ppi_port_b = regaddr;
+    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
     ppi_control = PPIDE_PPI_BUS_READ;
 }
 
@@ -52,7 +55,7 @@ void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 /****************************************************************************/
 COMMON_MEMORY
 
-/* Will need updating if we add swap over sd card */
+/* Will need updating if we add swap over CF card */
 
 #ifdef SWAP_DEV
 #error "please fix me"
@@ -90,6 +93,8 @@ goread2:    ; next 256 bytes
             inc c                                   ; control lines
             out (c), d                              ; de-assert /RD
             jp goread2                              ; (delay) next byte
+            and #0x7f
+            out (c), d				    ; de-assert /CS to make the LED go out
             ; read completed
 goread_done:
             pop af                                  ; recover is_user test result
@@ -137,6 +142,8 @@ gowrite_done:
             out (c), e
             ; write completed
             out (c), d                              ; de-assert /WR
+            and #0x7f
+            out (c), d				    ; de-assert /CS to make the LED go out
             ld a, #PPIDE_PPI_BUS_READ
             out (PPIDE_BASE+3), a                   ; 8255A ports A, B to read mode
             pop af                                  ; recover is_user test result
