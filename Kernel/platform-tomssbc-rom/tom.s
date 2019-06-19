@@ -275,9 +275,9 @@ map_kernel_restore:
 	pop af
 	ret
 
-map_buffers:			; This is a no-op but must undo correctly
-	ret
-	; FIXME later
+; This will be matched by a map_kernel so save the current state so we put
+; it back correctly
+map_buffers:
 	push af
 	ld a,(current_map)
 	ld (ksave_map),a
