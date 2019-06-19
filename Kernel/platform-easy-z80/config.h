@@ -68,7 +68,7 @@ extern unsigned int swap_dev;
 #define SWAPTOP	    0xEC00	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
+//#define CONFIG_DYNAMIC_SWAP
 /* We have lots of RAM so make better use of it for disk buffers. We grab
    a 16K page and use it as our disk cache */
 #define CONFIG_BLKBUF_EXTERNAL
