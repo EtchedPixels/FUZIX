@@ -133,13 +133,18 @@ _switchin:
 .endif
 	ld a, (hl)
 not_swapped:
+	push hl
 	ld hl, (_udata + U_DATA__U_PTAB)
 	or a
 	sbc hl, de
+	pop hl
 	jr z, skip_copyback	; Tormod's optimisation: don't copy the
 				; the stash back if we are the task who
 				; last owned the real udata
 	; Pages please !
+	; FIXME: in 0.4 we will move to map_process_hl so that this code
+	; works nicely for multibank cases. For now arrange that HL is
+	; valid as well as A
 	call map_process_a
 
         ; bear in mind that the stack will be switched now, so we can't use it
@@ -256,6 +261,9 @@ _dofork:
 	; load existing page ptr
 	ld a, (_udata + U_DATA__U_PAGE)
 
+	; FIXME: We will redefine this to expect udata as child and (hl)
+	; as parent so it's also clean for multibank. For now just make
+	; sure HL happens to be right
 	call bankfork			;	do the bank to bank copy
 
 	; Copy done
