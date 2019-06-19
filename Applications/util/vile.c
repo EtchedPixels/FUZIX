@@ -214,11 +214,11 @@ int colon_mode(void);
 
 /*
  *	Basic vi commands missing (note not all below exactly match vi yet
- *	in their behaviour - much testing is needed
+ *	in their behaviour - much testing is needed).
  *
  *	CTRL-F/CTRL-B	implemented but not exactly as vi
  *	W and S		word skip with punctuation
- *	[] and ()	setence and paragraph skip
+ *	[] and ()	sentence and paragraph skip
  *	R		replace mode
  *	cw/ce		change word variants
  *	s		substitute
