@@ -93,7 +93,7 @@ goread2:    ; next 256 bytes
             inc c                                   ; control lines
             out (c), d                              ; de-assert /RD
             jp goread2                              ; (delay) next byte
-            and #0x7f
+            res 7,d
             out (c), d				    ; de-assert /CS to make the LED go out
             ; read completed
 goread_done:
@@ -142,7 +142,7 @@ gowrite_done:
             out (c), e
             ; write completed
             out (c), d                              ; de-assert /WR
-            and #0x7f
+            res 7,d
             out (c), d				    ; de-assert /CS to make the LED go out
             ld a, #PPIDE_PPI_BUS_READ
             out (PPIDE_BASE+3), a                   ; 8255A ports A, B to read mode
