@@ -38,6 +38,7 @@
             .globl _ramsize
             .globl _procmem
 	    .globl _membanks
+	    .globl _udata
 
 	    .globl unix_syscall_entry
             .globl null_handler
@@ -321,7 +322,7 @@ map_process_a:
 map_process_always:
 map_process_always_di:
 	    push af
-	    ld a, (U_DATA__U_PAGE)
+	    ld a, (_udata + U_DATA__U_PAGE)
 map_set_a:
 	    ld (map_copy), a
 	    out (0), a
