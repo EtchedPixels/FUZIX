@@ -17,6 +17,10 @@ void platform_idle(void)
     __endasm;
 }
 
+/* Our timer actually runs at 62.5 ticks/second */
+
+static uint8_t tct;
+
 void platform_interrupt(void)
 {
   extern uint8_t irqvector;
@@ -25,9 +29,15 @@ void platform_interrupt(void)
     tty_interrupt();
     return;
   }
-  kbd_interrupt();
-  fd_motor_timer();
-  timer_interrupt();
+  /* 125 pulses. We drop 5 per cycle: 25 50 75 100 125 */
+  tct++;
+  if (tct == 125)
+    tct = 0;
+  else if (tct != 25 && tct != 50 && tct != 75 && tct != 100) {
+    kbd_interrupt();
+    fd_motor_timer();
+    timer_interrupt();
+  }
 }
 
 void do_beep(void)

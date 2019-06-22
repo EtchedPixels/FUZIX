@@ -27,7 +27,7 @@
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
 
-#define TICKSPERSEC 50      /* Ticks per second */
+#define TICKSPERSEC 60      /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xBE00  /* Top of program, base of U_DATA copy */
@@ -69,6 +69,9 @@ extern unsigned int swap_dev;
 
 #define CONFIG_IDE
 #define MAX_BLKDEV	2
+/* This is an 8bit interface - although the firmware in theory always did
+   the 8bit switch for us */
+#define IDE_IS_8BIT(x)		1
 
 #define swap_map(x)	((uint8_t *)(x))
 

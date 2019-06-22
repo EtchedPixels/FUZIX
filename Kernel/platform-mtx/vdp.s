@@ -52,6 +52,11 @@ vdploadl2:
 	     pop af
 	     dec a
 	     jr nz, vdploadl	; 768 bytes total
+
+	     ld de,#0x1800	; 24 lines from 0
+	     push de
+	     call clear_lines
+	     pop de
 	     ret
 
 

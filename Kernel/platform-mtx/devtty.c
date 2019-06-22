@@ -478,6 +478,7 @@ int probe_prop(void)
 {
 	if (prop_wait())
 		return 0;
+#if 0
 	prop_io = 0x1B;
 	prop_io = 0x9C;
 	prop_rb = 0xB4;
@@ -488,6 +489,7 @@ int probe_prop(void)
 	prop_rb = 0xB4;
 	if (prop_wait() || prop_rb != 2)
 		return 0;
+#endif
 	prop80 = 1;
 	return 1;
 }

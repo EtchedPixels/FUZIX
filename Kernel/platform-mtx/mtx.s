@@ -22,6 +22,7 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
+	    .globl _kernel_map
 
 	    .globl _int_disabled
 
@@ -108,7 +109,8 @@ ctc0_int:   push af
 	    pop af
 	    jp interrupt_handler
 trace_int:
-bogus_int:  reti
+bogus_int:  ei
+	    reti
 serial_int:
 	    push af
 	    ld a, #1
@@ -116,9 +118,9 @@ serial_int:
 	    pop af
 	    jp interrupt_handler
 
-; Kernel is in 0x80 so we just need to count the banks that differ
+; We always have 0x80 so we just need to count the banks that differ
 size_ram:
-	    ld hl, #0x1000	; good as anywhere
+	    ld hl, #0x00FF	; clear of anything we need
 	    ld bc, #0x8100	; port 0 in c, b = 0x81
 size_next:
 	    out (c), b
@@ -135,7 +137,7 @@ size_next:
 	    cp b
 	    jr nz, size_next	; All banks done
 size_nonram:
-	    ld a, #0x80
+	    ld a, (_kernel_map)
 	    out (c), a		; Return to kernel
 	    res 7,b		; Clear the flag so we just have banks
 	    dec b		; Last valid bank
@@ -145,6 +147,35 @@ size_nonram:
 	    ld de, #48
 sizer:	    add hl, de
 	    djnz sizer
+	    ret
+
+find_my_ram:
+	    ld a,#0x80
+test_bank:
+	    out (0),a
+	    ld hl,#crtcmap
+	    ex af,af
+	    ld a,(hl)
+	    cp #0x77
+	    jr nz,nope
+	    inc hl
+	    ld a,(hl)
+            cp #0x50
+	    jr nz,nope
+            inc hl
+	    ld a,(hl)
+	    cp #0x5C
+            jr z,found_self
+nope:	    ex af,af
+	    inc a
+	    cp #0x90
+	    jr nz, test_bank
+            jp _platform_reboot
+
+found_self:
+	    ex af,af
+	    out (0),a
+	    ld (_kernel_map),a
 	    ret
 
 ; -----------------------------------------------------------------------------
@@ -177,7 +208,15 @@ init6845:
             ret
 
 init_hardware:
+	    ; Task 1. Find my bank
+	    ld a,#'F'
+	    out (0x60),a
+	    call find_my_ram
+	    ld a,#'G'
+	    out (0x60),a
 	    call size_ram
+	    ld a,#'H'
+	    out (0x60),a
 	    ; FIXME: do proper size checker
             ; set system RAM size (hardcoded for now)
             ld (_ramsize), hl
@@ -191,20 +230,29 @@ init_hardware:
             call _program_vectors
             pop hl
 
+	    ld a,#'I'
+	    out (0x60),a
 	    ; Program the video engine
 	    call vdpinit
 	    call vdpload
 
+	    ld a,#'J'
+	    out (0x60),a
 	    ; 08 is channel 0, which is input from VDP
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
             ; 0A is channel 2, output for DATA ser 1 }
 	    ; 0B is channel 3, counting CSTTE edges (cpu clocks) at 4MHz
 
+	    ld a,#3
+	    out (0x08),a
+	    out (0x09),a
+	    out (0x0A),a
+	    out (0x0B),a
 	    xor a
 	    out (0x08), a		; vector 0
-	    ld a, #0xC5
+	    ld a, #0xA5
 	    out (0x08), a		; CTC 0 as our IRQ source
-	    ld a, #0x01
+	    ld a, #0xFA			; 250 - 62.5Hz
 	    out (0x08), a		; Timer constant
 
 	    ld hl, #intvectors		; Work around SDCC crappiness
@@ -212,7 +260,14 @@ init_hardware:
 	    ld i, a
             im 2 ; set CPU interrupt mode
 
+	    ld a,#'K'
+	    out (0x60),a
+
 	    call _probe_prop		; see what 80 colum card we have
+
+	    ld a,#'L'
+	    out (0x60),a
+
 	    call _vtinit		; init the console video
 
             ret
@@ -302,7 +357,7 @@ map_kernel:
 map_buffers:
 map_kernel_di:
 	    push af
-	    ld a, #0x80		; ROM off bank 0
+	    ld a, (_kernel_map)	; ROM off bank for kernel
 	    ; the map port is write only, so keep a local stash
 	    ld (map_copy), a
 	    out (0), a
@@ -332,7 +387,7 @@ map_save_kernel:
 	    push af
 	    ld a, (map_copy)
 	    ld (map_store), a
-	    ld a, #0x80		; ROM off bank 0
+	    ld a, (_kernel_map)	; ROM off bank for kernel
 	    ; the map port is write only, so keep a local stash
 	    ld (map_copy), a
 	    out (0), a
@@ -347,9 +402,12 @@ map_store:
 	    .db 0
 map_copy:
 	    .db 0
+_kernel_map:
+	    .db 0
 
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 outchar:
+	    out (0x60), a
 	    out (0x0c), a
             ret
