@@ -64,7 +64,7 @@ syscall	     =  $FE
 _platform_monitor:
 _platform_reboot:
 	    lda #0
-	    sta $C079		; top 16K to ROM 0
+	    sta $C07B		; top 16K to ROM 0
 	    jmp ($FFFC)
 
 ___hard_di:
@@ -96,7 +96,7 @@ init_early:
 	    ; handling - or does it - we wrap the bit ?? FIXME
 	    jsr _create_init_common
 	    lda #36
-	    sta $C07A		; set low page to copy
+	    sta $C078		; set low page to copy
             rts			; stack was copied so this is ok
 
 init_hardware:
@@ -190,9 +190,9 @@ map_process:
 	    bne map_process_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
-;	the kernel lives in 40/42/43/.... (41 has the reset vectors in so
-;	we avoid it. Later we'll be clever and stuff _DISCARD and the copy
-;	blocks there or something (that would also let us put RODATA in
+;	the kernel lives in 32/33/34/35
+;	Later we'll be clever and stuff _DISCARD and the copy blocks there or
+;	something (that would also let us put RODATA in
 ;	common area just to balance out memory usages).
 ;
 map_kernel:
@@ -216,13 +216,13 @@ map_kernel:
 ;	need us to fix save/restore)
 ;
 map_bank:
-	    stx $C07A
+	    stx $C078
 map_bank_i:			; We are not mapping the first user page yet
 	    stx cur_map
 	    inx
-	    stx $C07B
+	    stx $C079
 	    inx
-	    stx $C078
+	    stx $C07A
 	    rts
 
 ; X,A holds the map table of this process
@@ -399,6 +399,9 @@ no_preempt:
 	    lda _udata+U_DATA__U_CURSIG
 	    beq irqout
 	    tay
+
+	    lda #255
+	    sta $C000
 	    tsx
 	    txa
 	    sec
@@ -545,6 +548,9 @@ noargs:
 	    lda _udata+U_DATA__U_CURSIG
 	    beq syscout
 	    tay
+
+	    lda #255
+	    sta $C000
 
 	    tsx				; Move past existing return stack
 	    dex
