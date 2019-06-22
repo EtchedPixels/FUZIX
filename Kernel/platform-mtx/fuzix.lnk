@@ -39,10 +39,12 @@ mm.rel
 bankfixed.rel
 swap.rel
 devsys.rel
+devinput.rel
 platform-mtx/devlpr.rel
 platform-mtx/devtty.rel
 platform-mtx/blkdev.rel
 platform-mtx/devide.rel
 platform-mtx/devide_discard.rel
 platform-mtx/mbr.rel
+platform-mtx/devinput.rel
 -e

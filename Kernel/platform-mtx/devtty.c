@@ -6,6 +6,8 @@
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
+#include <input.h>
+#include <devinput.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -22,11 +24,12 @@ __sfr __at 0x61 prop_rb;
 
 signed char vt_twidth[2] = { 80, 40 };
 signed char vt_tright[2] = { 79, 39 };
-uint8_t curtty;		/* output side */
-uint8_t inputtty;	/* input side */
+
+uint8_t curtty;			/* output side */
+uint8_t inputtty;		/* input side */
 static struct vt_switch ttysave[2];
 
-uint8_t prop80;		/* Propeller not a 6845 based 80 column interface */
+uint8_t prop80;			/* Propeller not a 6845 based 80 column interface */
 
 /* FIXME: this will eventually vary by tty so we'll need to either load
    it then call the vt ioctl or just intercept the vt ioctl */
@@ -58,7 +61,7 @@ static tcflag_t dart_mask[4] = {
 	_ISYS,
 	_OSYS,
 	/* FIXME CTS/RTS, CSTOPB */
-	CSIZE|CBAUD|PARENB|PARODD|_CSYS,
+	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
 	_LSYS,
 };
 
@@ -153,7 +156,7 @@ void tty_data_consumed(uint_fast8_t minor)
 
 static uint8_t dart_setup[] = {
 	1, 0x19,
-	2, 0x04,	/* Vector */
+	2, 0x04,		/* Vector */
 	3, 0x00,
 	4, 0x00,
 	5, 0x00,
@@ -200,7 +203,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 	if (cf & PARENB) {
 		r |= 1;
 		if (!(cf & PARODD))
-			r|=2;
+			r |= 2;
 	}
 	dart_setup[7] = r;
 	dart_setup[7] = r;
@@ -249,8 +252,9 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint16_t shiftmask[8] = {
-	0, 0, 1, 0, 1, 0, 65 , 0
+	0, 0, 1, 0, 1, 0, 65, 0
 };
+
 __sfr __at 0x05 keyport;
 __sfr __at 0x06 keyporth;
 
@@ -263,15 +267,20 @@ static void keyproc(void)
 		/* Set the row */
 		keyport = 0xff - (1 << i);
 		/* Read the matrix lines - 10 bit wide */
-		keyin[i] = (keyport | ((uint16_t)keyporth << 8)) ^ 0x03ff;
+		keyin[i] = (keyport | ((uint16_t) keyporth << 8)) ^ 0x03ff;
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
 			int m = 1;
 			for (n = 0; n < 10; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
+					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -289,26 +298,27 @@ static void keyproc(void)
 	}
 }
 
+/* TODO: non UK keyboards as identified by bits 12-11 of scan */
 uint8_t keyboard[8][10] = {
-	{'1', '3', '5', '7', '9' , '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ KEY_ESC, '2', '4', '6', '8', '0', '^', 0/*eol*/, KEY_BS, KEY_F5},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2 },
-	{'q', 'e', 't' , 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
-	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7 },
-	{ 'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3 },
-	{ 0/*shift*/, 'x', 'v', 'n', ',', '/', 0/*shift*/, KEY_DOWN, 0, KEY_F8},
-	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
+	{'1', '3', '5', '7', '9', '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{KEY_ESC, '2', '4', '6', '8', '0', '^', 0 /*eol */ , KEY_BS, KEY_F5},
+	{0 /*ctrl */ , 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2},
+	{'q', 'e', 't', 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
+	{0 /*capsl */ , 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7},
+	{'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3},
+	{0 /*shift */ , 'x', 'v', 'n', ',', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 
 uint8_t shiftkeyboard[8][10] = {
-	{'!', '#', '%', '\'', ')' , '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ KEY_ESC, '"', '$', '&', '(', 0, '~', 0/*eol*/, KEY_BS, KEY_F5},
-	{ 0/*ctrl*/, 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2 },
-	{'Q', 'E', 'T' , 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
-	{ 0/*capsl*/, 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7 },
-	{ 'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, 0, KEY_F3 },
-	{ 0/*shift*/, 'X', 'V', 'N', '<', '/', 0/*shift*/, KEY_DOWN ,0 , KEY_F8},
-	{'Z', 'C', 'B', 'M', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
+	{'!', '#', '%', '\'', ')', '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{KEY_ESC, '"', '$', '&', '(', 0, '~', 0 /*eol */ , KEY_BS, KEY_F5},
+	{0 /*ctrl */ , 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2},
+	{'Q', 'E', 'T', 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
+	{0 /*capsl */ , 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7},
+	{'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, 0, KEY_F3},
+	{0 /*shift */ , 'X', 'V', 'N', '<', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{'Z', 'C', 'B', 'M', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 
 static uint8_t capslock = 0;
@@ -316,6 +326,7 @@ static uint8_t capslock = 0;
 static void keydecode(void)
 {
 	uint8_t c;
+	uint8_t m = 0;
 
 	if (keybyte == 4 && keybit == 0) {
 		capslock = 1 - capslock;
@@ -324,6 +335,7 @@ static void keydecode(void)
 
 	if (keymap[6] & 65) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
+		m = KEYPRESS_SHIFT;
 		if (c == KEY_F1 || c == KEY_F2) {
 			if (inputtty != c - KEY_F1) {
 				inputtty = c - KEY_F1;
@@ -336,13 +348,35 @@ static void keydecode(void)
 
 
 	if (keymap[2] & 1) {	/* control */
+		m |= KEYPRESS_CTRL;
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
-		tty_inproc(inputtty + 1, c);
+	if (c) {
+		switch (keyboard_grab) {
+		case 0:
+			vt_inproc(inputtty + 1, c);
+			break;
+		case 1:
+			if (!input_match_meta(c)) {
+				vt_inproc(inputtty + 1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 void kbd_interrupt(void)
@@ -353,7 +387,7 @@ void kbd_interrupt(void)
 		if (newkey) {
 			keydecode();
 			kbd_timer = keyrepeat.first;
-		} else if (! --kbd_timer) {
+		} else if (!--kbd_timer) {
 			keydecode();
 			kbd_timer = keyrepeat.continual;
 		}
@@ -401,7 +435,7 @@ uint16_t cursorpos;
 
 static struct videomap vdpmap = {
 	0,
-	0x01,		/* I/O ports at 1 and 2 */
+	0x01,			/* I/O ports at 1 and 2 */
 	0, 0,
 	0, 0,
 	1,
@@ -420,8 +454,8 @@ static struct display mtxdisp[2] = {
 		1,
 		0
 	},
-	/* VDP: we need to think harder about how we deal with VDP mode
-	   setting here and in MSX TODO */
+		/* VDP: we need to think harder about how we deal with VDP mode
+		   setting here and in MSX TODO */
 	{
 		1,
 		256, 192,
@@ -429,7 +463,7 @@ static struct display mtxdisp[2] = {
 		255, 255,
 		FMT_VDP,
 		HW_VDP_9918A,
-		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
+		GFX_MULTIMODE | GFX_MAPPABLE | GFX_TEXT,
 		16,
 		0
 	}

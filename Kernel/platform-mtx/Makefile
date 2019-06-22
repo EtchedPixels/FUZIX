@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devsil.c
+CSRCS = devlpr.c devtty.c devfd.c devsil.c devinput.c
 CSRCS += devices.c main.c
 
 DISCSRCS = discard.c

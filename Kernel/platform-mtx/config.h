@@ -33,8 +33,6 @@
 #define PROGTOP     0xBE00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   48	    /* Memory needed per process */
 
-/* Undefine this section if you don't have a silicon disc for swap. It's not
-   really important - you can get 10 processes on a 512K unit anyway */
 #define SWAP_SIZE   0x60 	/* 48K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
@@ -72,6 +70,11 @@ extern unsigned int swap_dev;
 /* This is an 8bit interface - although the firmware in theory always did
    the 8bit switch for us */
 #define IDE_IS_8BIT(x)		1
+
+/* Input device support */
+#define CONFIG_INPUT
+/* Full key up/down support */
+#define CONFIG_INPUT_GRABMAX 3
 
 #define swap_map(x)	((uint8_t *)(x))
 
