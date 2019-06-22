@@ -302,6 +302,27 @@ sil_mwrite:
 	    otir	; write 256 bytes
 	    jr sil_copydone
 
+;
+; Helper for the SN76489. We need to keep thee 32 clocks apart and that's
+; hard to do in C but easy if it has to call a tiny fastcall helper
+;
+; From the strobe we have a minimum of
+; ret  			10
+; ld l,r		4
+; call xxxx		17
+; ld a,l		4
+;
+; so we are safe.
+;
+;
+	    .globl _sn76489_write
+
+_sn76489_write:
+	    ld a,l
+	    out (0x06),a
+	    in a,(0x03)
+	    ret
+
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
