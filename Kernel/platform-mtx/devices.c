@@ -20,7 +20,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/fd		Floppy disc block devices  */
   {  fd_open,      no_close,    fd_read,  fd_write,   no_ioctl  },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,     mtxtty_close,tty_read, tty_write,  mtx_vt_ioctl },
+  {  mtxtty_open,  mtxtty_close,tty_read, tty_write,  mtx_vt_ioctl },
   /* 3: /dev/lpr	Printer devices */
   {  lpr_open,     lpr_close,   no_rdwr,  lpr_write,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
@@ -45,5 +45,8 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+#ifdef CONFIG_PPIDE
+    ppide_init();
+#endif
     devide_init();
 }

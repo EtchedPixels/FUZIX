@@ -8,7 +8,7 @@ ASRCS = crt0.s mtx.s vdp.s floppy.s
 ASRCS += tricks.s commonmem.s
 
 DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ppide_rbc.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)

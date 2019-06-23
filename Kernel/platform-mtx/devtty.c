@@ -231,6 +231,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 	irqrestore(flags);
 }
 
+/* Drop DTR/RTS on port close */
 int mtxtty_close(uint_fast8_t minor)
 {
 	irqflags_t flags;
@@ -250,6 +251,18 @@ int mtxtty_close(uint_fast8_t minor)
 	}
 	irqrestore(flags);
 	return err;
+}
+
+/* Stop the user opening the second console if they have no 80 column card.
+   Eventually we will support multiple VDP consoles on a 16K VDP but not
+   yet */
+int mtxtty_open(uint_fast8_t minor, uint16_t flag)
+{
+	if (minor == 2 && !prop80 && !has6845) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	return tty_open(minor, flag);
 }
 
 uint16_t keymap[8];

@@ -45,6 +45,7 @@ platform-mtx/devtty.rel
 platform-mtx/blkdev.rel
 platform-mtx/devide.rel
 platform-mtx/devide_discard.rel
+platform-mtx/ppide_rbc.rel
 platform-mtx/mbr.rel
 platform-mtx/devinput.rel
 -e

@@ -3,6 +3,7 @@
 
 extern void kbd_interrupt(void);
 extern void tty_interrupt(void);
+extern int mtxtty_open(uint_fast8_t minor, uint16_t flag);
 extern int mtxtty_close(uint_fast8_t);
 extern int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
