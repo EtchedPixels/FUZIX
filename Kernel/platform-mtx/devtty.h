@@ -18,4 +18,6 @@ extern uint16_t keymap[8];
 extern uint8_t keyboard[8][10];
 extern uint8_t shiftkeyboard[8][10];
 
+extern uint8_t has6845;
+
 #endif

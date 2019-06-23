@@ -25,11 +25,12 @@ __sfr __at 0x61 prop_rb;
 signed char vt_twidth[2] = { 80, 40 };
 signed char vt_tright[2] = { 79, 39 };
 
-uint8_t curtty;			/* output side */
+uint8_t curtty = 1;		/* output side */
 uint8_t inputtty;		/* input side */
 static struct vt_switch ttysave[2];
 
 uint8_t prop80;			/* Propeller not a 6845 based 80 column interface */
+uint8_t has6845;		/* 6845 based console present */
 
 /* FIXME: this will eventually vary by tty so we'll need to either load
    it then call the vt ioctl or just intercept the vt ioctl */
@@ -115,16 +116,21 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 	}
 
 	if (minor < 3) {
-		/* FIXME: this makes our vt handling messy as we have the
-		   IRQ off for the character I/O */
-		irq = di();
-		if (curtty != minor - 1) {
-			vt_save(&ttysave[curtty]);
-			curtty = minor - 1;
-			vt_load(&ttysave[curtty]);
-		}
-		vtoutput(&c, 1);
-		irqrestore(irq);
+		/* If we have no 80 column card force everything to go via
+		   the VDP. We should later do multiple VDP consoles */
+		if (prop80 || has6845) {
+			/* FIXME: this makes our vt handling messy as we have the
+			   IRQ off for the character I/O */
+			irq = di();
+			if (curtty != minor - 1) {
+				vt_save(&ttysave[curtty]);
+				curtty = minor - 1;
+				vt_load(&ttysave[curtty]);
+			}
+			vtoutput(&c, 1);
+			irqrestore(irq);
+		} else
+			vtoutput(&c, 1);
 		return;
 	}
 	if (minor == 3)
@@ -475,19 +481,24 @@ static struct display mtxdisp[2] = {
  */
 int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
+	uint8_t dev = minor;
 	if (minor > 2)
 		return tty_ioctl(minor, request, data);
 
+	/* If we are 40 column only then our graphics properties change */
+	if (!prop80 && !has6845)
+		dev = 2;
+
 	if (request == GFXIOC_GETINFO)
-		return uput(&mtxdisp[minor - 1], data, sizeof(struct display));
-	if (request == GFXIOC_MAP && minor == 2)
+		return uput(&mtxdisp[dev - 1], data, sizeof(struct display));
+	if (request == GFXIOC_MAP && dev == 2)
 		return uput(&vdpmap, data, sizeof(struct videomap));
 	if (request == GFXIOC_UNMAP)
 		return 0;
 	if (request == VTSIZE) {
-		if (minor == 1)
+		if (dev == 1)
 			return (24 << 8) | 80;
-		if (minor == 2)
+		if (dev == 2)
 			return (24 << 8) | 40;
 	}
 	return vt_ioctl(minor, request, data);
@@ -525,5 +536,6 @@ int probe_prop(void)
 		return 0;
 #endif
 	prop80 = 1;
+	curtty = 0;
 	return 1;
 }

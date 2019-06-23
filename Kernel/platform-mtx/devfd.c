@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devfd.h>
+#include <devtty.h>
 
 /*
  *	TODO: Debug, low density is half the sectors/track,
@@ -111,7 +112,7 @@ bad2:
 int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
-    if(minor >= MAX_FD) {
+    if(!has6845 || minor >= MAX_FD) {
         udata.u_error = ENODEV;
         return -1;
     }

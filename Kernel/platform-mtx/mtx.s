@@ -50,6 +50,8 @@
 	    .globl vdpload
 	    .globl _vtinit
 	    .globl _probe_prop
+	    .globl _has6845
+	    .globl _curtty
 
             .globl outcharhex
             .globl outhl, outde, outbc
@@ -209,14 +211,8 @@ init6845:
 
 init_hardware:
 	    ; Task 1. Find my bank
-	    ld a,#'F'
-	    out (0x60),a
 	    call find_my_ram
-	    ld a,#'G'
-	    out (0x60),a
 	    call size_ram
-	    ld a,#'H'
-	    out (0x60),a
 	    ; FIXME: do proper size checker
             ; set system RAM size (hardcoded for now)
             ld (_ramsize), hl
@@ -230,14 +226,10 @@ init_hardware:
             call _program_vectors
             pop hl
 
-	    ld a,#'I'
-	    out (0x60),a
 	    ; Program the video engine
 	    call vdpinit
 	    call vdpload
 
-	    ld a,#'J'
-	    out (0x60),a
 	    ; 08 is channel 0, which is input from VDP
             ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
             ; 0A is channel 2, output for DATA ser 1 }
@@ -260,14 +252,8 @@ init_hardware:
 	    ld i, a
             im 2 ; set CPU interrupt mode
 
-	    ld a,#'K'
-	    out (0x60),a
-
-	    call _probe_prop		; see what 80 colum card we have
-
-	    ld a,#'L'
-	    out (0x60),a
-
+	    call _probe_6845		; look for 80 column video
+	    call _probe_prop		; see if we have CFII prop video
 	    call _vtinit		; init the console video
 
             ret
@@ -432,3 +418,25 @@ outchar:
 	    out (0x60), a
 	    out (0x0c), a
             ret
+
+	    .area _DISCARD
+_probe_6845:
+	    ld a,#' '
+	    out (0x32),a
+	    ld a,#0x07
+	    out (0x33),a
+	    ld a,#0xE0
+	    out (0x31),a
+	    xor a
+	    out (0x30),a
+	    ; Now read back
+	    out (0x31),a
+	    ld a,#0x20
+	    out (0x30),a
+	    in a,(0x32)
+	    cp #0x20
+	    ret nz
+	    ld (_has6845),a
+	    xor a
+	    ld (_curtty),a
+	    ret
