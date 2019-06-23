@@ -40,10 +40,6 @@ void platform_interrupt(void)
   }
 }
 
-void do_beep(void)
-{
-}
-
 /* This points to the last buffer in the disk buffers. There must be at least
    four buffers to avoid deadlocks. */
 struct blkbuf *bufpool_end = bufpool + NBUFS;

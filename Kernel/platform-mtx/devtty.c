@@ -517,6 +517,15 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 	return vt_ioctl(minor, request, data);
 }
 
+__sfr __at 0x30 bingbong;
+
+void do_beep(void)
+{
+	volatile uint8_t unused;
+	if (has6845)
+		unused = bingbong;
+}
+
 /*
  *	See if our 80 column card is a propellor board or a 6845 based board
  *
