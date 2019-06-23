@@ -112,7 +112,7 @@ bad2:
 int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
-    if(!has6845 || minor >= MAX_FD) {
+    if(minor >= MAX_FD) {
         udata.u_error = ENODEV;
         return -1;
     }
