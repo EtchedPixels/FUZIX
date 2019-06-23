@@ -603,6 +603,7 @@ static void build_command(int pass)
   add_argument("-D__FUZIX__");
   /* Suppress the warnings when sharing code across architectures */
   add_argument("-Ddouble=float");
+  add_argument("--fverbose-asm");
   /* User provided macros */
   add_argument_list(machead);
   /* -Wc, options */
