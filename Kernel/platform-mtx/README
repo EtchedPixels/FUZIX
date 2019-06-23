@@ -1,9 +1,10 @@
 TODO
 DONE	- Fix the configuration for maximum memory banks
-IP	- Autodetect the propeller MTX 80 column card on 0x60/61
+DONE	- Autodetect the propeller MTX 80 column card on 0x60/61
 IP	- Driver for the propellor 80 column card
 DONE	- Probe what memory banks are present up to the full 640K that might be present
-CF2DONE	- Support for the retro adapters (CF2+ etc)
+DONE	- Support for the retro adapters (CF2+ etc)
+	   - need to auto handle CF1 v CF2
 - Autodetect silicon ramdisk
 DONE	- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
 - Floppy features support
@@ -35,12 +36,9 @@ The following are not yet supported
 - Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
-- CF adapter (PPIDE part is easy and standard RBC style PPIDE but the general
-  dual IDE problem and IDE probing needs solving first)
-- Not having an 80 column card (need to probe 6845 properly too and punt to
-  VDP if not found)
+- One kernel image with CF and CF2 support
 
-The Rememorizer and Rememotech are not supported. Adding support for them
+The Rememorizer and Rememotech are not fully supported. Adding support for them
 should not be difficult.
 
 
@@ -66,7 +64,7 @@ On the MEMU emulator you can do a fast load for testing as follows
 
 ./fullcpm.sh -iobyte 0x80 -addr 0x0100 -mem platform/fuzix.com -addr 0x0100
 -serial2-out /dev/tty -diag-console -sdx-mfloppy mfloppy/ref.fs -sdx-tracks
--80
+-80 --diag-bad-port
 
 (and add -diag-whatever as needed)
 

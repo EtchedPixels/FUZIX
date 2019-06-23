@@ -10,6 +10,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <devsd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -49,4 +50,5 @@ void device_init(void)
     ppide_init();
 #endif
     devide_init();
+    devsd_init();
 }

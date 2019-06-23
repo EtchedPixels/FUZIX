@@ -79,6 +79,9 @@ extern unsigned int swap_dev;
    the 8bit switch for us */
 #define IDE_IS_8BIT(x)		1
 
+#define CONFIG_SD
+#define SD_DRIVE_COUNT	1
+
 /* Input device support */
 #define CONFIG_INPUT
 /* Full key up/down support */

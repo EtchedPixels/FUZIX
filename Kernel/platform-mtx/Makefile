@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devsil.c devinput.c
+CSRCS = devlpr.c devtty.c devfd.c devsil.c devinput.c sdspi.c
 CSRCS += devices.c main.c
 
 DISCSRCS = discard.c
@@ -7,8 +7,9 @@ DISCSRCS = discard.c
 ASRCS = crt0.s mtx.s vdp.s floppy.s
 ASRCS += tricks.s commonmem.s
 
-DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c ../dev/ppide_rbc.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
+DSRCS += ../dev/ppide_rbc.c ../dev/devsd.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
