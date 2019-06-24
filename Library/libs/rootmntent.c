@@ -2,6 +2,8 @@
  *	Fuzix extensions to mntent
  */
 
+#define _FUZIX_SOURCE
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -63,6 +65,12 @@ char *devname(dev_t dev)
 }
 
 
+char *root_device_name(void)
+{
+	stat("/", &filestat);
+	return devname(filestat.st_dev);
+}
+
 char *mnt_device_path(struct mntent *m)
 {
 	char *p;
@@ -72,10 +80,4 @@ char *mnt_device_path(struct mntent *m)
 	         return p;
          }
          return m->mnt_fsname;
-}
-
-char *root_device_name(void)
-{
-	stat("/", &filestat);
-	return devname(filestat.st_dev);
 }
