@@ -1,3 +1,5 @@
+#define _FUZIX_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
