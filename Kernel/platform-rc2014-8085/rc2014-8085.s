@@ -37,6 +37,15 @@ platform_interrupt_all:
 init_early:
 	ret
 
+.define _tms_interrupt
+
+_tms_interrupt:
+	in 0x99
+	ani 0x80
+	mov e,a
+	mvi d,0
+	ret
+
 .sect .common
 
 

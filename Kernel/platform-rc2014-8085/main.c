@@ -21,6 +21,7 @@ void platform_idle(void)
 }
 
 static int16_t timerct;
+static uint8_t vblank;
 
 /* Call timer_interrupt at 10Hz */
 static void timer_tick(uint8_t n)
@@ -35,9 +36,17 @@ static void timer_tick(uint8_t n)
 void platform_interrupt(void)
 {
 	tty_poll();
-	if (ctc_present) {
+	if (0 && ctc_present) {
 		uint_fast8_t n = 255 - ctc_check();
 		timer_tick(n);
+	}
+	if (tms_interrupt()) {
+		vblank++;
+		/* TODO vblank wakeup for gfx */
+		if (vblank == 6 && !ctc_present) {
+			timer_interrupt();
+			vblank = 0;
+		}
 	}
 }
 
