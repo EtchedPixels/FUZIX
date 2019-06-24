@@ -185,4 +185,5 @@ void device_init(void)
 	ppide_init();
 #endif
 #endif
+	sock_init();
 }
