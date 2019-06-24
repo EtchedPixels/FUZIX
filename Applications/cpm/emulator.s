@@ -1076,7 +1076,7 @@ cpy:	LD	A,(HL)
 	RET
 
 ;.....
-; Convert UZI Directory Entry at dir+16 to CP/M FCB entry at dir, Zero rest.
+; Convert FUZIX Directory Entry at dir+16 to CP/M FCB entry at dir, Zero rest.
 ; Ambiguously compare FCB FN.FT at dir to that passed at arg, returning Zero
 ; if Match, Non-Zero if mismatch.
 

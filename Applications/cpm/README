@@ -5,12 +5,15 @@ into userspace.
 
 TODO:
 
--	Fix up directory mapping and shrink buffer
+-	Fix up directory mapping
 -	Use CP/M scratch space for internal variables and buffer pointers
 	so we can also support a high loaded version using shared common for
-	awkward memory mapped boxes (eg the Memotech)
+	awkward memory mapped boxes (eg the Memotech) (partly done). We still
+	need a one page buffer per process which is still a decent TPA
 -	Find a nice way to build a relocatable version rather than one per
 	system type.
+-	Will need some kind of API for firing up CP/M emulation when it is
+	in kernel.
 
 
 6809 folks might want to look at
