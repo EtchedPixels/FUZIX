@@ -185,5 +185,7 @@ void device_init(void)
 	ppide_init();
 #endif
 #endif
+#ifdef CONFIG_NET
 	sock_init();
+#endif
 }
