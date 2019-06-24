@@ -43,6 +43,7 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~  fuzix.com
 	rm -f cfloader.ihx cfloader.tmp cfloader.bin
+	rm -f biosloader.ihx biosloader.tmp biosloader.bin
 
 cfloader.bin: cfloader.s
 	sdasz80 -o cfloader.s
@@ -50,5 +51,11 @@ cfloader.bin: cfloader.s
 	makebin -s 65536 cfloader.ihx cfloader.tmp
 	dd if=cfloader.tmp bs=256 skip=254 | dd bs=128 count=1 of=cfloader.bin
 
-image: cfloader.bin
+biosloader.bin: biosloader.s
+	sdasz80 -o biosloader.s
+	sdldz80 -i biosloader.rel
+	makebin -s 65536 biosloader.ihx biosloader.tmp
+	dd if=biosloader.tmp bs=256 skip=254 | dd bs=128 count=1 of=biosloader.bin
+
+image: cfloader.bin biosloader.bin
 	cp ../fuzix.bin fuzix.com
