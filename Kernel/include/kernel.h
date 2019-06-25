@@ -459,6 +459,9 @@ struct mount {
 #define A_SUSPEND               32	/* Suspend to RAM (optional) */
 
 #define AD_NOSYNC		1
+
+#define A_SC_ADD		1
+
                                           
 /* Process table entry */
 
