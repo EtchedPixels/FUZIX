@@ -424,7 +424,7 @@ static void load_average(void)
 void ptimer_insert(void)
 {
 	ptptr p = udata.u_ptab;
-	if (!p->p_alarm) {
+	if (!p->p_timerq) {
 		p->p_timerq = alarms;
 		alarms = p;
 	}
