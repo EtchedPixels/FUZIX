@@ -509,6 +509,8 @@ typedef struct p_tab {
     uaddr_t	p_profsize;
     uaddr_t	p_profoff;
 #endif    
+    /* Put new stuff we don't care about in asm or ps at the end */
+    struct p_tab *p_timerq;
 } p_tab, *ptptr;
 
 /*
@@ -968,6 +970,7 @@ extern uint_fast8_t chksigs(void);
 extern void program_vectors(uint16_t *pageptr);
 extern void sgrpsig(uint16_t pgrp, uint_fast8_t sig);
 extern void unix_syscall(void);
+extern void ptimer_insert(void);
 extern void timer_interrupt(void);
 extern void doexit (uint16_t val);
 extern void panic(char *deathcry);
