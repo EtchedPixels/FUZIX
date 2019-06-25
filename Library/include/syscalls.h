@@ -86,6 +86,8 @@ struct sockaddr_in;
 
 #define AD_NOSYNC		1
 
+#define A_SC_ADD		1
+
 /* shutdown */
 #define SHUT_RD			0
 #define SHUT_WR			1
