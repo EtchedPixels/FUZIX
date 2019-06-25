@@ -47,6 +47,7 @@ platform-mtx/mbr.rel
 platform-mtx/devide.rel
 platform-mtx/devide_discard.rel
 platform-mtx/ppide_rbc.rel
+platform-mtx/ide.rel
 platform-mtx/devsd.rel
 platform-mtx/devsd_discard.rel
 platform-mtx/sdspi.rel

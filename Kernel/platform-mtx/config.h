@@ -1,5 +1,5 @@
 /* Stuff we should auto switch but need to rework the IDE code for */
-#undef CONFIG_CF1	/* Define this for CF1 not CF2 support */
+#define CONFIG_CF1	/* Define this for CF1 not CF2 support */
 
 
 #ifdef CONFIG_CF1

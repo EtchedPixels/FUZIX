@@ -2,12 +2,8 @@
 #define ide_select(drive)
 #define ide_deselect()
 
-#ifndef CONFIG_PPIDE
-
-/* CFII */
-#define IDE_REG_CS1_BASE	0xB0
-
-#else
+#define CONFIG_PPIDE
+#define CONFIG_MULTI_IDE
 
 /* CF1 */
 
@@ -45,4 +41,4 @@
 #define ide_reg_altstatus (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE)
 #define ide_reg_control   (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
 
-#endif /* CONFIG_PPIDE */
+extern uint8_t probe_cfx2(void);

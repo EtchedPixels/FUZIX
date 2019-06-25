@@ -46,9 +46,8 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-#ifdef CONFIG_PPIDE
-    ppide_init();
-#endif
+    if (!probe_cfx2())
+        ppide_init();
     devide_init();
     devsd_init();
 }
