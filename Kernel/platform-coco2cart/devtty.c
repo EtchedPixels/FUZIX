@@ -396,6 +396,8 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		/* Our system clock is our vblank, use the standard timeout
 		   to pause for one clock */
 		udata.u_ptab->p_timeout = 2;
+		/* FIXME: race */
+		ptimer_insert();
 		psleep(NULL);
 		return 0;
 	}
