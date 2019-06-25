@@ -66,3 +66,12 @@ void platform_discard(void)
 		bp->bf_busy = BF_FREE;
 	}
 }
+
+uint8_t platform_canswapon(uint16_t dev)
+{
+	dev >>= 8;
+	/* Swap to hard disc or silicon disc only */
+	if (dev == 0 || dev == 8)
+		return 1;
+	return 0;
+}

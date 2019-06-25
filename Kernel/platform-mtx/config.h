@@ -50,6 +50,8 @@
 extern unsigned int swap_dev;
 
 #define CONFIG_DYNAMIC_SWAP	/* Find swap partitions on disks */
+#define CONFIG_PLATFORM_SWAPCTL	/* Because we need to be able to swap on
+                                   silicon discs and can't autodecide this */
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
