@@ -77,6 +77,7 @@ struct p_tab_buffer {
     struct p_tab	p_tab;
     struct p_level_2	_l2;
     struct p_prof	_prof;
+    void *p_timerq;
 };
 
 #endif /* __PROC_H */
