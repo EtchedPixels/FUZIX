@@ -52,6 +52,18 @@
 ;
 bootit:
 	ld sp, #0xFE00		; SP as high as we can
+	ld bc, #0xF8F0		; Get the CPU info into H L and speed into
+				; DE
+	rst 8
+
+	push hl
+	push de
+
+	ld bc, #0xF100		; Get system type into L
+	rst 8
+
+	push hl
+
 	ld bc, #0xF8E0		; Get boot sysinfo into DE
 	rst 8
 	ld b, #0x13		; ROMWBW disk read request
