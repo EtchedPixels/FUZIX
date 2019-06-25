@@ -38,6 +38,7 @@ int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	struct s_queue *q;
 	struct tty *t;
 
+	/* FIXME: fix race of timer versus the ptimer_insert to psleep_flags_io */
 	used(rawflag);
 	used(flag);			/* shut up compiler */
 
@@ -64,8 +65,10 @@ int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 				if ((udata.u_done || !n) && udata.u_done >= t->termios.c_cc[VMIN])
 					goto out;
-				if (n)
+				if (n) {
 			                udata.u_ptab->p_timeout = n + 1;
+			                ptimer_insert();
+				}
                         }
 			if (psleep_flags_io(q, flag))
 			        goto out;

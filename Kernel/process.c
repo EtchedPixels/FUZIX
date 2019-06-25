@@ -144,7 +144,7 @@ void switchout(void)
 		/* Drop through - we want to be running, but we might be
 		   pre-empted by someone else */
 	}
-	/* When we are idle we widdle our thumbs here until a polled event
+	/* When we are idle we twiddle our thumbs here until a polled event
 	   in platform_idle or an interrupt wakes someone up */
 	while (nready == 0) {
 		ei();
@@ -392,7 +392,7 @@ ptptr ptab_alloc(void)
    is pre-Unix from Tenex). We don't report P_IOWAIT the same way as Unix
    does ... need to keep track of two nready values to do that */
 
-void load_average(void)
+static void load_average(void)
 {
 	regptr struct runload *r;
 	static uint_fast8_t utick;
@@ -414,6 +414,19 @@ void load_average(void)
 		r->average = ((((r->average - (nr << 8)) * r->exponent) +
 				(((uint32_t)nr) << 16)) >> 8);
 		r++;
+	}
+}
+
+/*
+ * Timer queue processing
+ */
+
+void ptimer_insert(void)
+{
+	ptptr p = udata.u_ptab;
+	if (!p->p_alarm) {
+		p->p_timerq = alarms;
+		alarms = p;
 	}
 }
 
@@ -441,15 +454,10 @@ void timer_interrupt(void)
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == ticks_per_dsecond) {
-		static ptptr p;
-
-		/* Update global time counters */
-		ticks_this_dsecond = 0;
-		ticks.full++;
-
-		/* Update process alarm clocks and timeouts */
-		/* FIXME: for big builds hash this */
-		for (p = ptab; p < ptab_end; ++p) {
+		ptptr p, *q;
+		q = &alarms;
+		while(*q) {
+			p = *q;
 			if (p->p_alarm) {
 				p->p_alarm--;
 				if (!p->p_alarm)
@@ -460,6 +468,10 @@ void timer_interrupt(void)
 				if (p->p_timeout == 1)
 					pwake(p);
 			}
+			if (p->p_timeout < 2 && !p->p_alarm)
+				*q = p->p_timerq;
+			else
+				q = &(p->p_timerq);
 		}
 		updatetod();
                 load_average();
@@ -527,7 +539,21 @@ void unix_syscall(void)
 	sync_clock();
 
 	di();
-	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
+	if (
+#ifdef CONFIG_PARENT_FIRST
+	/*
+	 *	This is not nice but in the pure swap parent first case
+	 *	we always give the parent a chance to get to waitpid().
+	 *	If they don't then the interrupt after will get them if
+	 *	they are already due for pre-emption.
+	 *
+	 *	Without this if we are the only running process and exceeded
+	 *	time then when we fork we end up thrashing in and out of
+	 *	swap before the waitpid.
+	 */
+		(udata.u_callno != 32 /* fork */ || !udata.u_retval) &&
+#endif
+		runticks >= udata.u_ptab->p_priority && nready > 1) {
 #ifdef DEBUG_PREEMPT	
 		kprintf("P: %d %x %d\n", runticks, udata.u_ptab, udata.u_ptab->p_priority);
 #endif		

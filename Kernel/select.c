@@ -160,6 +160,8 @@ arg_t _select(void)
 	/* Timeout in 1/10th of a second (BSD api mangling done by libc) */
 	/* 0 means return immediately, need to sort out a 'forever' FIXME */
 	udata.u_ptab->p_timeout = ugetw(base + 6);
+	if (udata.u_ptab->p_timeout)
+		ptimer_insert(udata.u_ptab);
 
 	do {
 		m = 1;
