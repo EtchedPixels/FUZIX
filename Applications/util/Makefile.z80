@@ -93,6 +93,7 @@ SRCS  = banner.c \
 	sort.c \
 	stty.c \
 	su.c \
+	swapon.c \
 	tail.c \
 	tar.c \
 	termcap.c \
