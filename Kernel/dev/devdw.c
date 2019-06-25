@@ -18,7 +18,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int ct = 0;
     int tries;
     uint8_t err;
-    uint8_t cmd[8];
+    uint8_t cmd[9];
     uint16_t page = 0;
     irqflags_t irq;
 
@@ -44,6 +44,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     cmd[1] = udata.u_block >> 7;	/* 2 sectors per block */
     cmd[2] = (udata.u_block << 1) & 0xFF;
     cmd[3] = (uint16_t)udata.u_dptr >> 8;
+    cmd[8] = (udata.u_block & 0x8000) ? 1 : 0;
     cmd[4] = (uint16_t)udata.u_dptr & 0xFF;
     cmd[5] = minor;
     cmd[6] = page >> 8;
@@ -65,8 +66,11 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             goto bad;
         cmd[3]++;	/* Move on 256 bytes in the buffer */
         cmd[2]++;	/* Next sector for 2nd block */
-        if (cmd[2] == 0)
+        if (cmd[2] == 0) {
             cmd[1]++;
+	    if (cmd[1] == 0)
+		cmd[8]++;
+	}
     }
     return udata.u_nblock << 8;
 bad:

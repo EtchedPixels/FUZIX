@@ -12,7 +12,7 @@ DSRCS = ../dev/devdw.c
 
 ASRCS = crt0.s coco2.s ide.s usermem.s sdc.s
 ASRCS += bootstrap.s bootstrap_sdc.s #bootstrap_dw.s
-ASRCS += tricks.s commonmem.s drivewire.s video.s
+ASRCS += tricks.s commonmem.s ../dev/drivewire/drivewire.s video.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CIOBJS = $(CISRCS:.c=$(BINEXT))
@@ -58,7 +58,7 @@ image:
 	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
+	../dev/drivewire/drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
@@ -75,7 +75,7 @@ image:
 	crt0.o bootstrap_sdc.o commonmem.o coco2.o discard.o ../simple.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
+	../dev/drivewire/drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \

@@ -7,6 +7,7 @@
 *    Send a packet to the DriveWire server.
 *    Serial data format:  1-8-N-1
 *    4/12/2009 by Darren Atkinson
+*    28Jul2106 by Neal Crook for Multicomp UART
 *
 * Entry:
 *    X  = starting address of data to send
@@ -17,7 +18,29 @@
 *    Y  = 0
 *    All others preserved
 *
+	IFNE MULTICOMP
 
+*******************************************************
+* 57600 (115200) bps using 6809 code and hw UART
+*******************************************************
+
+DWWrite   pshs      cc,a				; preserve registers
+          IFEQ      NOINTMASK
+          orcc      #IntMasks				; mask interrupts
+          ENDC
+
+WrBiz     lda		UARTSTA2
+          bita		#2
+          beq		WrBiz				; busy
+
+          lda		,x+				; get byte to transmit
+          sta		UARTDAT2			; send byte
+
+          leay		,-y				; decrement byte counter
+          bne		WrBiz				; loop if more to send
+
+          puls		cc,a,pc				; restore registers and return
+          ELSE
 
           IFNE ARDUINO
 DWWrite   pshs      a                  ; preserve registers
@@ -72,8 +95,9 @@ txByte
           ENDC
           ENDC
           ENDC
+          ENDC
 
-          IFEQ BECKER+JMCPBCK+ARDUINO
+          IFEQ BECKER+JMCPBCK+ARDUINO+MULTICOMP
           IFNE BAUD38400
 *******************************************************
 * 38400 bps using 6809 code and timimg

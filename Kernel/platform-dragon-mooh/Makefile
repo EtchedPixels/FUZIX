@@ -17,7 +17,7 @@ DDSRCS = ../dev/devide_discard.c ../dev/mbr.c \
          ../dev/gpt.c ../dev/devsd_discard.c
 
 ASRCS = crt0.s dragon.s mem-mooh.s video.s ide.s spi.s
-ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s drivewire.s
+ASRCS += tricks.s commonmem.s usermem_sam.s floppy.s ../dev/drivewire/drivewire.s
 ASRCS += multihead.s vc_asm.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -30,7 +30,7 @@ OBJS  = $(COBJS) $(VOBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
 
 CROSS_CCOPTS += -I../dev/ -I../platform-dragon-nx32/
 
-drivewire.o: ASOPTS += --defsym BECKER=$(BECKER)
+../dev/drivewire/drivewire.o: ASOPTS += --defsym BECKER=$(BECKER)
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o)
 
@@ -64,7 +64,7 @@ image: ../tools/decb-mooh
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	multihead.o crt9128.o vc.o vc_asm.o \
-	drivewire.o devdw.o ttydw.o \
+	../dev/drivewire/drivewire.o devdw.o ttydw.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

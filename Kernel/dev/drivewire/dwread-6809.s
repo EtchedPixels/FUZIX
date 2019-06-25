@@ -8,6 +8,7 @@
 *    Times out if serial port goes idle for more than 1.4 (0.7) seconds.
 *    Serial data format:  1-8-N-1
 *    4/12/2009 by Darren Atkinson
+*    28Jul2106 by Neal Crook for Multicomp UART
 *
 * Entry:
 *    X  = starting address where data is to be stored
@@ -19,6 +20,68 @@
 *    Y  = checksum
 *    U is preserved.  All accumulators are clobbered
 *
+          IFNE MULTICOMP
+          include "../../platform-multicomp09/platform.def"        ; makes ports available to dwread, dwwrite
+
+*******************************************************
+* 57600 (115200) bps using 6809 code and hw UART
+*******************************************************
+
+DWRead    clra                          ; clear Carry (no framing error)
+	  deca                          ; clear Z flag, A = timeout msb ($ff)
+	  tfr       cc,b
+	  pshs      u,x,b,a		; preserve registers, push timeout msb
+
+* stack now looks like this:
+* PCL PCH UL UH XL XH B A
+* at exit, A will be discarded. B is a "clean" version of CC
+* (!Z and !C) and will be popped into CC.
+
+	  IFEQ      NOINTMASK
+	  orcc      #IntMasks           ; mask interrupts
+	  ENDC
+	  leau      ,x                  ; U = storage ptr
+	  ldx       #0                  ; initialize checksum
+
+* initialise timeout
+rxNext    ldb       #$ff                ; init timeout LSB
+	  stb	    ,s			; init timeout MSB - don't need
+					; this 1st time around.
+
+* character available?
+rxAvail	  lda	    UARTSTA2
+	  bita	    #1
+	  bne	    rxGet
+
+* no. Decrement timeout
+	  subb      #1                  ; decrement timeout lsb
+	  bcc       rxAvail             ; loop until timeout lsb rolls under
+	  addb      ,s                  ; B = timeout msb - 1
+					; leaves CC.C=0 on timeout
+	  stb       ,s                  ; store decremented timeout msb
+	  bcc	    rxTimout		; oops!
+	  ldb       #$ff                ; reload timeout LSB
+	  bra	    rxAvail		; test again..
+
+* yes. Get it and move on
+rxGet	  ldb	    UARTDAT2
+	  abx				; accummulate checksum
+	  stb	    ,u+			; store byte
+	  leay	    ,-y			; decrement count
+	  bne	    rxNext
+	  lda	    #4			; represents CC.Z=1
+					; to indicate all bytes rx'ed
+
+* clean up, set status and return
+rxExit	  leas      1,s                 ; remove timeout MSB from stack
+	  ora       ,s                  ; place status information into the..
+	  sta       ,s                  ; ..C and Z bits of the preserved CC
+	  leay      ,x                  ; return checksum in Y
+	  puls      cc,x,u,pc		; restore registers and return
+
+rxTimout  clra				; represents CC.C=0, CC.Z=0
+	  bra	    rxExit
+	  ELSE
 
           IFNE ARDUINO
 * Note: this is an optimistic routine. It presumes that the server will always be there, and
@@ -77,38 +140,41 @@ BCKSTAT   equ   $FF41
           IFNDEF BCKPORT
 BCKPORT   equ   $FF42
           ENDC
-* NOTE: There is no timeout currently on here...
-DWRead    clra                          ; clear Carry (no framing error)
-          deca                          ; clear Z flag, A = timeout msb ($ff)
-          tfr       cc,b
-          pshs      u,x,dp,b,a          ; preserve registers, push timeout msb
-          leau   ,x
-          ldx    #$0000
+DWRead    pshs   dp,x,u                 ; preserve registers, push timeout msb
+          ldd    #(60*256)+$ff          ; A = timeout of 1+ sec, B = new DP
+          tfr    b,dp                   ; set DP
+          tfr    x,u                    ; U = data pointer
+          ldx    #$0000                 ; X = chksum
           IFEQ   NOINTMASK
           orcc   #IntMasks
           ENDC
-loop@     ldb    BCKSTAT
+loop@	  tst    <$ff03                 ; test for vsync
+	  bpl    a@                     ; no vsync continue
+	  tst    <$ff02                 ; clear vsync flag
+	  deca                          ; dec timeout
+	  bne    a@                     ; not timeout continue
+	  ;; return w/ timeout!
+	  inca                          ; A was zero so inc to clear Z (timeout)
+	  puls   dp,x,u,pc              ; restore return
+	  ;; no timeout continue checking for data
+a@	  ldb    <BCKSTAT
           bitb   #$02
           beq    loop@
-          ldb    BCKPORT
+          ldb    <BCKPORT
           stb    ,u+
           abx
           leay   ,-y
           bne    loop@
-          tfr    x,y
-          ldb    #0
-          lda    #3
-timeout   leas      1,s                 ; remove timeout msb from stack
-          inca                          ; A = status to be returned in C and Z
-          ora       ,s                  ; place status information into the..
-          sta       ,s                  ; ..C and Z bits of the preserved CC
-          leay      ,x                  ; return checksum in Y
-          puls      cc,dp,x,u,pc        ; restore registers and return
+	  ;; return w/ ok!
+          tfr    x,y                   ; make y = cksum
+          clra                         ; set Z (no timeout), clear carry (no framing errors possible)
+          puls   dp,x,u,pc             ; restore registers and return
+          ENDC
           ENDC
           ENDC
           ENDC
 
-          IFEQ BECKER+JMCPBCK+ARDUINO
+          IFEQ BECKER+JMCPBCK+ARDUINO+MULTICOMP
           IFNE BAUD38400
 *******************************************************
 * 38400 bps using 6809 code and timimg
