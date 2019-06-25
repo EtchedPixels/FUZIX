@@ -161,7 +161,7 @@ arg_t _select(void)
 	/* 0 means return immediately, need to sort out a 'forever' FIXME */
 	udata.u_ptab->p_timeout = ugetw(base + 6);
 	if (udata.u_ptab->p_timeout)
-		ptimer_insert(udata.u_ptab);
+		ptimer_insert();
 
 	do {
 		m = 1;
