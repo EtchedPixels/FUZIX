@@ -46,13 +46,24 @@
         .globl l__DATA
         .globl kstack_top
 
+	.globl _systype
+	.globl _syskhz
+	.globl _syscpu
+
 	.include "kernel.def"
 	.include "../kernel-z80.def"
 
         ; startup code. Starts _CODE because we want it to be at 0x0100
+	; Entered with SP high and the stack holding platform info
+	; from the ROM
 
         .area _CODE
-init:                       ; must be at 0x0100 as we are loaded at that
+        ; must be at 0x0100 as we are loaded at that
+init:
+	; Get the ROM info off the stack before we flip banks about
+	pop bc
+	pop de
+	pop hl
 	; setup the memory paging for kernel
         ld a, #33
         out (MPGSEL_1), a       ; map page 33 at 0x4000
@@ -65,6 +76,8 @@ mappedok:
         ; switch to stack in high memory
         ld sp, #kstack_top
 
+	; Save the ROM info
+	exx
         ; Zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
@@ -78,6 +91,15 @@ mappedok:
 	ld bc, #l__BUFFERS - 1
 	ld (hl), #0
 	ldir
+
+	exx
+	; We now have the ROM info to hand and have cleared stuff so it
+	; is safe to write these into memory
+
+	ld a,c
+	ld (_systype), a
+	ld (_syskhz), de
+	ld (_syscpu), hl
 
         ; Hardware setup
 	push af

@@ -19,6 +19,11 @@ uint8_t sio1_present;
 uint8_t z180_present;
 uint8_t tms9918a_present;
 
+/* From ROMWBW */
+uint16_t syscpu;
+uint16_t syskhz;
+uint8_t systype;
+
 /* Our pool ends at 0x4000 */
 uint8_t *initptr = (uint8_t *)0x4000;
 

@@ -45,6 +45,11 @@ extern uint8_t tms9918a_present;
 #define UART_16550A	7
 #define UART_16750	8
 
+/* From ROMWBW */
+extern uint16_t syscpu;
+extern uint16_t syskhz;
+extern uint8_t systype;
+
 extern const char *uart_name[];
 
 struct uart {
