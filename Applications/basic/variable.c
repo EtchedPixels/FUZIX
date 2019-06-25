@@ -1,3 +1,4 @@
+#include "basic.h"
 
 
 #define VAR_TYPE	0x18
@@ -8,7 +9,7 @@
 #define VAR_NAME	0xFFE0
 
 
-uint8_t *find_var(uint16_t code, uint16_t mask)
+static uint8_t *find_var(uint16_t code, uint16_t mask)
 {
     while(*ptr && (*(uint16_t *)ptr & mask) != code) {
         if (ptr[1] & VAR_SIZED)
@@ -21,32 +22,32 @@ uint8_t *find_var(uint16_t code, uint16_t mask)
     return ptr;
 }
 
-uint8_t *find_number(uint16_t code)
+static uint8_t *find_number(uint16_t code)
 {
     /* Match number non array */
     return find_var(code, VAR_NAME|VAR_DIMS|VAR_STRING|VAR_ARRAY);
 }
 
-uint8_t *find_string(uint16_t code)
+static uint8_t *find_string(uint16_t code)
 {
     code |= VAR_STRING;
     return find_var(code, VAR_NAME|VAR_DIMS|VAR_TYPE|VAR_ARRAY);
 }
 
-uint8_t *find_number_array(uint16_t code)
+static uint8_t *find_number_array(uint16_t code)
 {
     code |= VAR_ARRAY;
     /* For/next can't be an array */
     return find_var(code, VAR_NAME|VAR_DIMS|VAR_TYPE|VAR_ARRAY);
 }
 
-uint8_t *find_string_array(uint16_t code)
+static uint8_t *find_string_array(uint16_t code)
 {
     code |= VAR_ARRAY|VAR_STRING;
     return find_var(code, VAR_NAME|VAR_DIMS|VAR_TYPE|VAR_ARRAY);
 }
 
-uint16_t make_code(uint8_t *p)
+static uint16_t make_code(uint8_t *p)
 {
     uint16_t code;
     
