@@ -47,6 +47,8 @@ extern time_t tod;      /* Time of day */
 
 extern ticks_t ticks;
 
+extern ptptr alarms;	   /* List of processes with active alarms/timers */
+
 extern uint8_t *swapbase;  /* Used by device driver for swapping */
 extern unsigned swapcnt;
 extern blkno_t swapblk;
