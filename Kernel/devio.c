@@ -288,6 +288,9 @@ bufptr freebuf(void)
 			oldtime = bufclock - bp->bf_time;
 		}
 	}
+	/* FIXME: Once we support sleeping on disk I/O this goes away and
+	   we sleep on something - buffer going unbusy or even the oldest
+	   buffer and then check if it's still old and if not retry */
 	if (!oldest)
 		panic(PANIC_NOFREEB);
 
