@@ -37,6 +37,8 @@ bool devide_wait(uint_fast8_t bits)
            (status == 0xFF) || /* zeta-v2 PPIDE: status=0xFF indicates neither master nor slave drive present */
            (status == 0x87)){  /* n8vem-mark4:   status=0x87 indicates neither master nor slave drive present */
             kprintf("ide error, status=%x\n", status);
+            if (status & IDE_STATUS_ERROR)
+                kprintf("ide error, code=%x\n", devide_readb(ide_reg_error));
             return false;
         }
 
