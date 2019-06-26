@@ -1,4 +1,4 @@
-#define IDE_DRIVE_COUNT	2
+#define IDE_DRIVE_COUNT	1
 #define ide_select(drive)
 #define ide_deselect()
 
@@ -42,3 +42,8 @@
 #define ide_reg_control   (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
 
 extern uint8_t probe_cfx2(void);
+extern uint8_t has_cfx2;
+
+/* CFX-II is 8bit wide */
+#define IDE_8BIT_ONLY
+#define IDE_IS_8BIT(x)	(has_cfx2)
