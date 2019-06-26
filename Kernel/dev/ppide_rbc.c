@@ -12,6 +12,17 @@
 
 #ifdef CONFIG_PPIDE
 
+/* Use the driver names unless we are in a platform with multiple IDE
+   configurations at once. In that case we will be called by the wrapper
+   it provides */
+
+#ifndef CONFIG_MULTI_IDE
+#define ppide_readb		devide_readb
+#define ppide_writeb		devide_writeb
+#define ppide_read_data		devide_read_data
+#define ppide_write_data	devide_write_data
+#endif
+
 __sfr __at (PPIDE_BASE + 0x00) ppi_port_a;   /* IDE bus LSB */
 __sfr __at (PPIDE_BASE + 0x01) ppi_port_b;   /* IDE bus MSB */
 __sfr __at (PPIDE_BASE + 0x02) ppi_port_c;   /* IDE bus control signals */
@@ -23,7 +34,7 @@ void ppide_init(void)
     ppi_port_c = ide_reg_status;
 }
 
-uint_fast8_t devide_readb(uint_fast8_t regaddr)
+uint_fast8_t ppide_readb(uint_fast8_t regaddr)
 {
     uint8_t r;
 
@@ -35,7 +46,7 @@ uint_fast8_t devide_readb(uint_fast8_t regaddr)
     return r;
 }
 
-void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
+void ppide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 {
     ppi_control = PPIDE_PPI_BUS_WRITE;
     ppi_port_c = regaddr;
@@ -53,7 +64,7 @@ void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 /****************************************************************************/
 COMMON_MEMORY
 
-void devide_read_data(void) __naked
+void ppide_read_data(void) __naked
 {
     __asm
             ld a, #ide_reg_data
@@ -85,7 +96,7 @@ goread:     ; now we do the transfer
     __endasm;
 }
 
-void devide_write_data(void) __naked
+void ppide_write_data(void) __naked
 {
     __asm
             ld c, #PPIDE_BASE+2                     ; select control lines
