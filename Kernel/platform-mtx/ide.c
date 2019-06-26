@@ -11,7 +11,7 @@
 
 #define CFX2_REG_DATA	0xB0
 
-static uint8_t has_cfx2;
+uint8_t has_cfx2;
 
 uint8_t probe_cfx2(void)
 {
@@ -33,9 +33,8 @@ uint8_t devide_readb(uint8_t reg)
 {
     if (has_cfx2 == 0)
         return ppide_readb(reg);
-    else {
+    else
         return in(0xB0 + (reg & 7));
-    }
 }
 
 void devide_writeb(uint8_t reg, uint8_t val)
