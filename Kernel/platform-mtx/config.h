@@ -77,9 +77,6 @@ extern unsigned int swap_dev;
 
 #define CONFIG_IDE
 #define MAX_BLKDEV	2
-/* This is an 8bit interface - although the firmware in theory always did
-   the 8bit switch for us */
-#define IDE_IS_8BIT(x)		1
 
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	1
