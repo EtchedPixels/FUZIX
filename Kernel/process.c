@@ -455,9 +455,9 @@ void timer_interrupt(void)
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == ticks_per_dsecond) {
+		ptptr p, *q;
 		ticks_this_dsecond = 0;
 		++ticks.full;
-		ptptr p, *q;
 		q = &alarms;
 		while(*q) {
 			p = *q;
