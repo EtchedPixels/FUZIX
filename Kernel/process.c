@@ -424,9 +424,10 @@ static void load_average(void)
 void ptimer_insert(void)
 {
 	ptptr p = udata.u_ptab;
-	if (!p->p_timerq) {
+	if (!(p->p_flags & PFL_ALARM)) {
 		p->p_timerq = alarms;
 		alarms = p;
+		p->p_flags |= PFL_ALARM;
 	}
 }
 
@@ -454,10 +455,14 @@ void timer_interrupt(void)
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == ticks_per_dsecond) {
+		ticks_this_dsecond = 0;
+		++ticks.full;
 		ptptr p, *q;
 		q = &alarms;
 		while(*q) {
 			p = *q;
+			if (p->p_status == P_EMPTY)
+				panic("dead timer");
 			if (p->p_alarm) {
 				p->p_alarm--;
 				if (!p->p_alarm)
@@ -468,9 +473,10 @@ void timer_interrupt(void)
 				if (p->p_timeout == 1)
 					pwake(p);
 			}
-			if (p->p_timeout < 2 && !p->p_alarm)
+			if (p->p_timeout < 2 && !p->p_alarm) {
+				p->p_flags &= ~PFL_ALARM;
 				*q = p->p_timerq;
-			else
+			} else
 				q = &(p->p_timerq);
 		}
 		updatetod();
@@ -936,7 +942,13 @@ void doexit(uint16_t val)
 			ssig(p, SIGHUP);
 			ssig(p, SIGCONT);
 		}
+		/* Sneak the alarmq dequeue into the same loop */
+		if (p->p_timerq == udata.u_ptab)
+			p->p_timerq = udata.u_ptab->p_timerq;
 	}
+	/* If we head the timer list then we didn't kill it in the loop */
+	if (alarms == udata.u_ptab)
+		alarms = udata.u_ptab->p_timerq;
 	tty_exit();
 	irqrestore(irq);
 #ifdef DEBUG_SLEEP
