@@ -503,6 +503,7 @@ typedef struct p_tab {
     usize_t	p_top;		/* Copy of u_top */
     uint8_t	p_flags;	/* Bitflags */
 #define PFL_CHKSIG	1	/* Signal check required */
+#define PFL_ALARM	2	/* On alarm queue */
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
 #endif
