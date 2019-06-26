@@ -49,5 +49,7 @@ void device_init(void)
     if (!probe_cfx2())
         ppide_init();
     devide_init();
-    devsd_init();
+    /* Might be a REMEMOrizer */
+    if (has6845)
+      devsd_init();
 }
