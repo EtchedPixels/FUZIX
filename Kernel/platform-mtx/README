@@ -4,20 +4,22 @@ DONE	- Autodetect the propeller MTX 80 column card on 0x60/61
 IP	- Driver for the propellor 80 column card
 DONE	- Probe what memory banks are present up to the full 640K that might be present
 DONE	- Support for the retro adapters (CF2+ etc)
-	   - need to auto handle CF1 v CF2
+IP	   - need to auto handle CF1 v CF2
 - Autodetect silicon ramdisk
 DONE	- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
 - Floppy features support
 DONE	- Get more stuff into discard
 DONE	- Dynamic buffer assignment
 DONE	- Support swap via CF adapter
-- Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
+IP - Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
 DONE	- Report graphics capabilities according to card (inc octel modes on
 	  80 col)
 - UDG support on both VDP and Prop
 - Use prop as a slave to vt layer because of awkward prop ctrl codes
 DONE	- keyboard etc devinput support
 - How to expose effectively having 512 chars (same problem as ubee)
+- How to detect a rememorizer ?
+
 
 The following MTX512 features are supported
 - 6845 based colour text display (no attributes yet) as /dev/tty1
