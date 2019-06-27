@@ -15,7 +15,8 @@ go:
 
 	ld hl,#0x0100
 	ld (0xffee),hl
-	ld b,#3			; Bin the rest of the boot sector
+	ld b,#4			; Bin the rest of the boot sector
+	call 0xfff9
 	ld hl,#0x0100
 	ld (0xffee),hl
 	ld b,#0xFE		; Load 0100->7FFF
@@ -27,6 +28,7 @@ go:
 	; We have to miss a bit for now because the CF ROMs borrow
 	; B8-BF
 	ld hl,#0xC000
+	ld (0xffee),hl
 	ld b,#0x50		; Load C000->E7FF (really B800-DFFF)
 	call 0xfff9
 	;
