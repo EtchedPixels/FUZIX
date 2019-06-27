@@ -27,6 +27,8 @@ static int verbose = 0;
 static int valgrind = 0;
 static int relocatable = 1;
 
+static int keep_temps = 0;
+
 static unsigned int progbase = 0x0100;	/* Program base */
 
 struct arglist {
@@ -373,6 +375,9 @@ static int ldelp = 0;
 static void delete_temporaries(void)
 {
   int i ;
+  if (keep_temps)
+    return;
+
   for (i = 0; i < delp; i++) {
     if (unlink(delvec[i]) == 0 && verbose)
       printf("unlink %s\n", delvec[i]);
@@ -769,6 +774,9 @@ int main(int argc, const char *argv[]) {
           break;
         case 'g':
           debug = 1;
+          break;
+        case 'k':
+          keep_temps = 1;
           break;
         case 'W':	/* -Wc,-foo to pass on -foo directly */
           if (p[2] == 'c' && p[3] == ',') {
