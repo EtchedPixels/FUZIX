@@ -88,16 +88,15 @@ struct mntent *getmntent(FILE * fp)
 	return getmntent_r(fp, &me, mntbuf, _MAX_MNTLEN);
 }
 
-void quote_out(char **p, char *s)
+static char *quote_out(char *t, char *s)
 {
-	char *t = *p;
 	if (t == NULL)
-		return;
+		return NULL;
 	while (t < mntbuf + _MAX_MNTLEN - 1) {
 		if (*s == 0) {
 			*t++ = ' ';
-			*p = t;
-			return;
+//			fprintf(stderr, "[%x]", t);
+			return t;
 		}
 		if (*s == ' ' || *s == '\n' || *s == '\t' || *s == '\\') {
 			if (t < mntbuf + _MAX_MNTLEN - 5) {
@@ -107,27 +106,28 @@ void quote_out(char **p, char *s)
 			} else
 				break;
 		} else {
+//			fprintf(stderr, "%02x", *s);
 			*t++ = *s++;
 		}
 	}
 	/* Overrun */
-	*p = NULL;
+	return NULL;
 }
 
-void quote_out_int(char **p, int s)
+static char *quote_out_int(char *t, int s)
 {
-	quote_out(p, _itoa(s));
+	return quote_out(t, _itoa(s));
 }
 
 int addmntent(FILE * fp, struct mntent *mnt)
 {
 	char *p = mntbuf;
-	quote_out(&p, mnt->mnt_fsname);
-	quote_out(&p, mnt->mnt_dir);
-	quote_out(&p, mnt->mnt_type);
-	quote_out(&p, mnt->mnt_opts);
-	quote_out_int(&p, mnt->mnt_freq);
-	quote_out_int(&p, mnt->mnt_passno);
+	p = quote_out(p, mnt->mnt_fsname);
+	p = quote_out(p, mnt->mnt_dir);
+	p = quote_out(p, mnt->mnt_type);
+	p = quote_out(p, mnt->mnt_opts);
+	p = quote_out_int(p, mnt->mnt_freq);
+	p = quote_out_int(p, mnt->mnt_passno);
 	if (p) {
 		p[-1] = '\n';
 		if (fwrite(mntbuf, p - mntbuf, 1, fp) == 1)
