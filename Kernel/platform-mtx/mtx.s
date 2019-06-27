@@ -50,7 +50,8 @@
 	    .globl vdpload
 	    .globl _vtinit
 	    .globl _probe_prop
-	    .globl _has6845
+	    .globl _has_6845
+	    .globl _has_rememo
 	    .globl _curtty
 
             .globl outcharhex
@@ -180,6 +181,28 @@ found_self:
 	    ld (_kernel_map),a
 	    ret
 
+find_rememorizer:
+	    ld a,#0x8F
+	    out (0),a
+	    xor a
+	    out (0xD0),a	; 0x4000 should now be 0xC000 on a
+				; rememorizer only
+	    ld hl,(intvectors-0x8000)
+	    ld de,(intvectors)
+	    or a
+	    sbc hl,de
+	    ld a,#0
+	    jr nz,not_rememo
+	    inc a
+not_rememo:
+	    ld c,a		; save the rememorizer state
+	    ld a,(_kernel_map)
+	    out (0),a
+	    ; memory back so we can now write the state
+	    ld a,c
+	    out (0xD0),a
+	    ret
+
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
@@ -213,13 +236,14 @@ init_hardware:
 	    ; Task 1. Find my bank
 	    call find_my_ram
 	    call size_ram
-	    ; FIXME: do proper size checker
-            ; set system RAM size (hardcoded for now)
             ld (_ramsize), hl
 	    and a
 	    sbc hl, de			; DE will hold 48 at this point
             ld (_procmem), hl
 
+	    ; We can now check for a Rememorizer. If we have one then we can
+	    ; do extra games with the memry banking
+	    call find_rememorizer
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
             ld hl, #0
             push hl
@@ -436,7 +460,7 @@ _probe_6845:
 	    in a,(0x32)
 	    cp #0x20
 	    ret nz
-	    ld (_has6845),a
+	    ld (_has_6845),a
 	    xor a
 	    ld (_curtty),a
 	    ret

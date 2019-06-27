@@ -18,7 +18,7 @@ DONE	- Report graphics capabilities according to card (inc octel modes on
 - Use prop as a slave to vt layer because of awkward prop ctrl codes
 DONE	- keyboard etc devinput support
 - How to expose effectively having 512 chars (same problem as ubee)
-- How to detect a rememorizer ?
+DONE	- How to detect a rememorizer ?
 
 
 The following MTX512 features are supported
@@ -38,7 +38,7 @@ The following are not yet supported
 - Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
-- One kernel image with CF and CF2 support
+IP - Rememorized double height mode
 
 The Rememorizer and Rememotech are not fully supported. Adding support for them
 should not be difficult.

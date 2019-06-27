@@ -8,6 +8,7 @@
 #include <graphics.h>
 #include <input.h>
 #include <devinput.h>
+#include <mtx.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -30,7 +31,7 @@ uint8_t inputtty;		/* input side */
 static struct vt_switch ttysave[2];
 
 uint8_t prop80;			/* Propeller not a 6845 based 80 column interface */
-uint8_t has6845;		/* 6845 based console present */
+uint8_t has_6845;
 
 /* FIXME: this will eventually vary by tty so we'll need to either load
    it then call the vt ioctl or just intercept the vt ioctl */
@@ -118,7 +119,7 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 	if (minor < 3) {
 		/* If we have no 80 column card force everything to go via
 		   the VDP. We should later do multiple VDP consoles */
-		if (prop80 || has6845) {
+		if (prop80 || has_6845) {
 			/* FIXME: this makes our vt handling messy as we have the
 			   IRQ off for the character I/O */
 			irq = di();
@@ -258,7 +259,7 @@ int mtxtty_close(uint_fast8_t minor)
    yet */
 int mtxtty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (minor == 2 && !prop80 && !has6845) {
+	if (minor == 2 && !prop80 && !has_6845) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
@@ -461,7 +462,7 @@ static struct videomap vdpmap = {
 	MAP_PIO
 };
 
-static struct display mtxdisp[2] = {
+static struct display mtxmodes[3] = {
 	{
 		0,
 		160, 96,
@@ -469,7 +470,18 @@ static struct display mtxdisp[2] = {
 		255, 255,
 		FMT_8PIXEL_MTX,
 		HW_UNACCEL,
-		GFX_TEXT,
+		GFX_TEXT|GFX_MULTIMODE,
+		1,
+		0
+	},
+	{
+		1,
+		160, 192,
+		80, 48,
+		255, 255,
+		FMT_8PIXEL_MTX,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MULTIMODE,
 		1,
 		0
 	},
@@ -485,8 +497,17 @@ static struct display mtxdisp[2] = {
 		GFX_MULTIMODE | GFX_MAPPABLE | GFX_TEXT,
 		16,
 		0
-	}
+	},
 };
+
+static uint8_t vmode[3] = {
+	0, /* Unused */
+	0, /* 80x24 text */
+	2, /* VDP */
+};
+
+__sfr __at 0x38 crtc_reg;
+__sfr __at 0x39 crtc_data;
 
 /*
  *	TODO: VDP font setting and UDG. Also the same is needed for the prop80
@@ -499,18 +520,40 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 		return tty_ioctl(minor, request, data);
 
 	/* If we are 40 column only then our graphics properties change */
-	if (!prop80 && !has6845)
+	if (!prop80 && !has_6845)
 		dev = 2;
 
 	if (request == GFXIOC_GETINFO)
-		return uput(&mtxdisp[dev - 1], data, sizeof(struct display));
+		return uput(&mtxmodes[vmode[minor]], data, sizeof(struct display));
 	if (request == GFXIOC_MAP && dev == 2)
 		return uput(&vdpmap, data, sizeof(struct videomap));
 	if (request == GFXIOC_UNMAP)
 		return 0;
+	if (request == GFXIOC_GETMODE || request == GFXIOC_SETMODE)
+	{
+		uint8_t m = ugetc(data);
+		if (m > 1 || dev > 1 || (m == 1 && !has_rememo)) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (request == GFXIOC_GETMODE)
+			return uput(&mtxmodes[m], data, sizeof(struct display));
+		else {
+			irqflags_t irq;
+			irq = di();
+			/* Set CRT register 31 */
+			crtc_reg = 31;
+			crtc_data = m;
+			irqrestore(irq);
+		}
+		return 0;
+	}
 	if (request == VTSIZE) {
-		if (dev == 1)
-			return (24 << 8) | 80;
+		if (dev == 1) {
+			if (vmode[1] == 0)
+				return (24 << 8) | 80;
+			return (48 << 8) | 80;
+		}
 		if (dev == 2)
 			return (24 << 8) | 40;
 	}
@@ -522,7 +565,7 @@ __sfr __at 0x30 bingbong;
 void do_beep(void)
 {
 	volatile uint8_t unused;
-	if (has6845)
+	if (has_6845)
 		unused = bingbong;
 }
 

@@ -12,6 +12,7 @@
 #define CFX2_REG_DATA	0xB0
 
 uint8_t has_cfx2;
+uint8_t has_cfx1;
 
 uint8_t probe_cfx2(void)
 {
@@ -22,7 +23,7 @@ uint8_t probe_cfx2(void)
     if (in(0xB2) != 0x55)
         return 0;
     has_cfx2 = 1;
-    kputs("CFXII detected.\n");
+    kputs("CFX-II detected.\n");
     return 1;
 }
 

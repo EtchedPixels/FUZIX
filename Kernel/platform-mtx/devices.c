@@ -11,6 +11,7 @@
 #include <blkdev.h>
 #include <devide.h>
 #include <devsd.h>
+#include <mtx.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -47,9 +48,8 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
     if (!probe_cfx2())
-        ppide_init();
+      ppide_init();
     devide_init();
-    /* Might be a REMEMOrizer */
-    if (has6845)
+    if (has_rememo)
       devsd_init();
 }

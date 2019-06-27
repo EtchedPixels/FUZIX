@@ -55,7 +55,7 @@ biosloader.bin: biosloader.s
 	sdasz80 -o biosloader.s
 	sdldz80 -i biosloader.rel
 	makebin -s 65536 biosloader.ihx biosloader.tmp
-	dd if=biosloader.tmp bs=256 skip=254 | dd bs=128 count=1 of=biosloader.bin
+	dd if=biosloader.tmp bs=256 skip=238 | dd bs=128 count=1 of=biosloader.bin
 
 image: cfloader.bin biosloader.bin
 	cp ../fuzix.bin fuzix.com
