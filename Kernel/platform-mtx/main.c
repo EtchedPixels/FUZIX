@@ -7,6 +7,8 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t vdpport = 0x02 + 256 * 40;	/* port and width */
+uint8_t vdptype;
+uint8_t has_mtxplus;
 uint8_t membanks;
 uint16_t swap_dev = 0xFFFF;
 
@@ -17,17 +19,26 @@ void platform_idle(void)
     __endasm;
 }
 
-/* Our timer actually runs at 62.5 ticks/second */
+/* Our timer actually runs at 62.5 ticks/second (125 with MTXplus turbo) */
 
-static uint8_t tct;
+static uint8_t tct, oct;
 
 void platform_interrupt(void)
 {
   extern uint8_t irqvector;
 
+  /* Longer term we should split off the tty buffering. The challenge is
+     testing it */
   if (irqvector == 1) {
     tty_interrupt();
     return;
+  }
+  /* TODO: This belongs in the asm irq vector front end patched in by port */
+  if (has_mtxplus) {
+    oct++;
+    oct&=1;		/* For 8MHz right now */
+    if (oct)
+      return;
   }
   /* 125 pulses. We drop 5 per cycle: 25 50 75 100 125 */
   tct++;

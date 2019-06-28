@@ -53,6 +53,8 @@
 	    .globl _has_6845
 	    .globl _has_rememo
 	    .globl _curtty
+	    .globl _vdptype
+	    .globl _vdpport
 
             .globl outcharhex
             .globl outhl, outde, outbc
@@ -122,8 +124,15 @@ serial_int:
 	    jp interrupt_handler
 
 ; We always have 0x80 so we just need to count the banks that differ
+; If we have partial banks they appear from 0 but we can't use them.
+; Check in the 8000-BFFF range therefore.
+;
+; We use BFFF as this is harmlessly in kernel data space for the kernel
+; bank.
 size_ram:
-	    ld hl, #0x00FF	; clear of anything we need
+	    ld hl, #0xBFFF	; clear of anything we need
+	    ld a,(hl)
+	    push af		; save kernel BFFF
 	    ld bc, #0x8100	; port 0 in c, b = 0x81
 size_next:
 	    out (c), b
@@ -146,10 +155,15 @@ size_nonram:
 	    dec b		; Last valid bank
 	    ld a, b
 	    ld (_membanks), a
+	    or a
+	    jr z,nobanks
 	    ld hl, #0
 	    ld de, #48
 sizer:	    add hl, de
 	    djnz sizer
+nobanks:
+	    pop af
+	    ld (0xBFFF),a
 	    ret
 
 find_my_ram:
@@ -251,6 +265,44 @@ init_hardware:
             pop hl
 
 	    ; Program the video engine
+
+	    ld bc,(_vdpport)
+	    ; Play with status register 2
+	    dec c
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+	    in a,(c)
+	    ld a,#2
+	    out (c),a
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+vdpwait:    in a,(c)
+	    and #0xE0
+	    add a
+	    jr nz, not9918a	; bit 5 or 6
+	    jr nc, vdpwait	; not bit 7
+	    ; we vblanked out - TMS9918A
+	    xor a
+	    ld (_vdptype),a
+	    jr vdp_setup
+not9918a:   ; Use the version register
+	    ld a,#1
+	    out (c),a
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+	    in a,(c)
+	    rrca
+	    and #0x1F
+	    inc a
+	    ld (_vdptype),a
+
+vdp_setup:
 	    call vdpinit
 	    call vdpload
 

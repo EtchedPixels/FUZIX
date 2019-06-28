@@ -38,7 +38,10 @@ The following are not yet supported
 - Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
-IP - Rememorized double height mode
+IP - Rememorizer double height mode
+- MTXplus VDP9958
+- MTXplus DS12887
+
 
 The Rememorizer and Rememotech are not fully supported. Adding support for them
 should not be difficult.

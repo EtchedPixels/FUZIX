@@ -225,12 +225,11 @@ _plot_char:
 
 
 ;
-;
-;	FIXME: should use vdpport, but right now vdpport is in data not
-;	common space.
+;	The VDP int turns up on a CTC pin and we can just
+;	ignore it happily there instead of perturbing register
+;	access.
 ;
 platform_interrupt_all:
-	     in a, (2)
 	     ret
 
 	     .area _DATA
