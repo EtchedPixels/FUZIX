@@ -66,6 +66,7 @@ static uint8_t *conp = conbuf;
 
 extern void con_puts(const char *s);
 
+/* Queue a character to the output buffer */
 static int conq(int c)
 {
 	if (conp == conbuf + sizeof(conbuf)) {
@@ -76,6 +77,7 @@ static int conq(int c)
 	return 0;
 }
 
+/* Make sure the output buffer is written */
 void con_flush(void)
 {
 	write(1, conbuf, conp - conbuf);
@@ -84,16 +86,16 @@ void con_flush(void)
 
 static const char hex[] = "0123456789ABCDEF";
 
+/* Put a character to the screen. We handle unprintables and tabs */
 void con_putc(uint8_t c)
 {
 	if (screeny >= screen_height)
 		return;
 	if (c == '\t') {
 		uint8_t n = 8 - (screenx & 7);
-		screenx += n;
 		while (n--)
-			conq(' ');
-		goto adjust;
+			con_putc(' ');
+		return;
 	}
 	if (c > 127) {
 		con_puts("\\x");
@@ -105,7 +107,7 @@ void con_putc(uint8_t c)
 		return;
 	}
 	if (c < 32) {
-		conq('^');
+		con_putc('^');
 		c += '@';
 	}
 	conq(c);
@@ -117,6 +119,7 @@ adjust:
 	}
 }
 
+/* Write a termcap string out */
 static void con_twrite(char *p, int n)
 {
 #if !defined(__linux__)
@@ -127,6 +130,7 @@ static void con_twrite(char *p, int n)
 #endif
 }
 
+/* Write a string of symbols including quoting */
 void con_puts(const char *s)
 {
 	uint8_t c;
@@ -134,6 +138,7 @@ void con_puts(const char *s)
 		con_putc(c);
 }
 
+/* Add a newline */
 void con_newline(void)
 {
 	if (screeny >= screen_height)
@@ -146,13 +151,32 @@ void con_newline(void)
 /* We need to optimize this but firstly we need to fix our
    tracking logic as we use con_goto internally but don't track
    that verus the true user values */
-void con_goto(uint_fast8_t y, uint_fast8_t x)
+void con_force_goto(uint_fast8_t y, uint_fast8_t x)
 {
 	con_twrite(tgoto(t_go, x, y), 2);
 	screenx = x;
 	screeny = y;
 }
 
+void con_goto(uint_fast8_t y, uint_fast8_t x)
+{
+#if 0
+	if (screenx == x && screeny == y)
+		return;
+	if (screeny == y && x == 0) {
+		conq('\r');
+		screenx = 0;
+		return;
+	}
+	if (screeny == y - 1 && x == 0) {
+		con_newline();
+		return;
+	}
+#endif	
+	con_force_goto(y, x);
+}
+
+/* Clear to end of line */
 void con_clear_to_eol(void)
 {
 	if (screenx == screen_width - 1)
@@ -161,16 +185,22 @@ void con_clear_to_eol(void)
 		con_twrite(t_clreol, 1);
 	else {
 		uint_fast8_t i;
+		/* Write spaces. This tends to put the cursor where
+		   we want it next time too. Might be worth optimizing ? */
 		for (i = screenx; i < screen_width; i++)
-			conq(' ');
-		con_goto(screeny, screenx);
+			con_putc(' ');
 	}
 }
 
+/* Clear to the bottom of the display */
+
 void con_clear_to_bottom(void)
 {
+	/* Most terminals have a clear to end of screen */
 	if (t_clreos)
 		con_twrite(t_clreos, screen_height);
+	/* If not then clear each line, which may in turn emit
+	   a lot of spaces in desperation */
 	else {
 		uint_fast8_t i;
 		for (i = 0; i < screen_height; i++) {
@@ -178,8 +208,7 @@ void con_clear_to_bottom(void)
 			con_clear_to_eol();
 		}
 	}
-	screenx = screeny = 0;
-	con_goto(0, 0);
+	con_force_goto(0, 0);
 }
 
 void con_clear(void)
@@ -196,10 +225,10 @@ int con_scroll(int n)
 	if (n < 0)
 		return 1;
 	/* Scrolling down we can do */
-	con_goto(screen_height - 1, 0);
+	con_force_goto(screen_height - 1, 0);
 	while (n--)
 		conq('\n');
-	con_goto(screeny, screenx);
+	con_force_goto(screeny, screenx);
 }
 
 /* TODO: cursor key handling */
@@ -1264,6 +1293,11 @@ static void colon_process(char *buf)
 			warning("unknown :w option.");
 		return;
 	}
+	if (isdigit(*buf)) {
+		repeat = atoi(buf);
+		do_goto();
+		return;
+	}
 	warning("unknown : command.");
 }
 
@@ -1518,6 +1552,8 @@ int main(int argc, char *argv[])
 
 	if (con_init())
 		return (3);
+
+	con_goto(0,0);
 
 	signal(SIGHUP, hupped);
 	do_goto();
