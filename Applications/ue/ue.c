@@ -429,7 +429,7 @@ int main(int argc, char **argv)
 	int i;
 	char ch, *p;
 #ifdef VTSIZE
-	int16_t vtsize
+	int16_t vtsize;
 #endif
 #ifdef TIOCGWINSZ
 	struct winsize w;
