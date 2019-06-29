@@ -114,8 +114,8 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
         /* See if we are going up through a mount point */
         /* FIXME: re-order for speed */
         if((wd == udata.u_root || (wd->c_num == ROOTINODE && wd->c_dev != root_dev)) &&
-                fp[0] == '.' && fp[1] == '.' &&
-                (fp[2] == '/' || fp[2] == '\0')){
+                lastname[0] == '.' && lastname[1] == '.' &&
+                (lastname[2] == '/' || lastname[2] == '\0')){
             if (wd == udata.u_root) {
                 /* FIXME: is this assignment ever needed */
                 ninode = wd;
