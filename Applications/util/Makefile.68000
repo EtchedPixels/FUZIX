@@ -48,7 +48,6 @@ SRCSNS = \
 	touch.c \
 	tr.c \
 	true.c \
-	vile.c \
 	while1.c \
 	whoami.c \
 	yes.c
@@ -122,6 +121,7 @@ SRCS  = \
 
 SRCTC = tget.c \
         tchelp.c \
+	vile.c \
 	marksman.c
 
 SKIPPED =
