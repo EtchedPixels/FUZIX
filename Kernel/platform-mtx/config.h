@@ -1,11 +1,3 @@
-/* Stuff we should auto switch but need to rework the IDE code for */
-#define CONFIG_CF1	/* Define this for CF1 not CF2 support */
-
-
-#ifdef CONFIG_CF1
-#define CONFIG_PPIDE
-#endif
-
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -76,10 +68,14 @@ extern unsigned int swap_dev;
 #define VT_BOTTOM	23
 
 #define CONFIG_IDE
+#define CONFIG_PPIDE
 #define MAX_BLKDEV	2
 
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	1
+
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
 
 /* Input device support */
 #define CONFIG_INPUT

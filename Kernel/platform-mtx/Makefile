@@ -1,6 +1,6 @@
 
 CSRCS = devlpr.c devtty.c devfd.c devsil.c devinput.c sdspi.c ide.c
-CSRCS += devices.c main.c
+CSRCS += devices.c main.c devrtc.c
 
 DISCSRCS = discard.c
 

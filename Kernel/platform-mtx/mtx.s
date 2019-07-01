@@ -152,13 +152,14 @@ size_nonram:
 	    ld a, (_kernel_map)
 	    out (c), a		; Return to kernel
 	    res 7,b		; Clear the flag so we just have banks
-	    dec b		; Last valid bank
 	    ld a, b
-	    ld (_membanks), a
+	    ld (_membanks), a	; Number of banks (0 - membanks - 1)
 	    or a
 	    jr z,nobanks
 	    ld hl, #0
 	    ld de, #48
+	    dec b
+	    jr z, nobanks
 sizer:	    add hl, de
 	    djnz sizer
 nobanks:
@@ -249,11 +250,12 @@ init6845:
 init_hardware:
 	    ; Task 1. Find my bank
 	    call find_my_ram
+	    ; Count banks
 	    call size_ram
-            ld (_ramsize), hl
-	    and a
-	    sbc hl, de			; DE will hold 48 at this point
             ld (_procmem), hl
+	    ld de,#64			; common memory and kernel
+	    add hl,de
+	    ld (_ramsize),hl
 
 	    ; We can now check for a Rememorizer. If we have one then we can
 	    ; do extra games with the memry banking

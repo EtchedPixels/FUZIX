@@ -52,4 +52,5 @@ platform-mtx/devsd.rel
 platform-mtx/devsd_discard.rel
 platform-mtx/sdspi.rel
 platform-mtx/devinput.rel
+platform-mtx/devrtc.rel
 -e
