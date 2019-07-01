@@ -42,6 +42,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
@@ -189,6 +190,8 @@ void con_clear_to_eol(void)
 		   we want it next time too. Might be worth optimizing ? */
 		for (i = screenx; i < screen_width; i++)
 			con_putc(' ');
+		/* otherwise con_newline gets upset */
+		con_goto(screeny, screenx);
 	}
 }
 
@@ -1205,16 +1208,27 @@ int save(char *fn)
 	int fd;
 	int i, ok = -1;
 	size_t length;
+	char *gptr;
+
 	/* Should we write to temp name and rename ? FIXME */
 	fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0666);
 	if (fd != -1) {
 		i = indexp;
 		indexp = 0;
 		movegap();
+		gptr = egap;
 		length = (size_t) (ebuf - egap);
-		ok = write(fd, egap, length) == length;
-		if (close(fd))
-			ok = 0;
+		ok = 0;
+		/* Write out each chunk that is bigger than INT_MAX as
+		   that is our limit per syscall */
+		while(length > INT_MAX) {
+			ok |= write(fd, gptr, INT_MAX) == INT_MAX;
+			length -= INT_MAX;
+			gptr += INT_MAX;
+		}
+		/* Write out the tail */
+		ok |= write(fd, gptr, length) == length;
+		ok |= close(fd);
 		indexp = i;
 		modified = 0;
 	}
@@ -1519,6 +1533,22 @@ void oom(void)
 	exit(1);
 }
 
+static int doread(const char *name, int fd, char *ptr, int size)
+{
+	int n = read(fd, ptr, size);
+	if (n == -1) {
+		perror(name);
+		exit(2);
+	}
+	if (n != size) {
+		write(2, name, strlen(name));
+		write(2, ": ", 2);
+		write(2, "short read.\n", 12);
+		exit(2);
+	}
+	return n;
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -1541,12 +1571,24 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		filename = "";
 	else {
+		size_t size;
+		size_t o = 0;
+		int n = 0;
 		fd = open(filename = *++argv, O_RDONLY);
 		if (fd == -1) {
 			perror(*argv);
 			return 2;
 		}
-		gap += read(fd, buf, ebuf - buf);
+		size = ebuf - buf;
+		/* We can have 32bit ptr, 16bit int even in theory */
+		while (size > INT_MAX) {
+			n = doread(*argv, fd, buf + o, INT_MAX);
+			gap += n;
+			size -= n;
+			o += n;
+		}
+		n = doread(*argv, fd, buf + o, size);
+		gap += n;
 		close(fd);
 	}
 
