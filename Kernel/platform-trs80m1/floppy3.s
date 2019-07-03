@@ -14,7 +14,6 @@
 ;		- track dependant for double density based on trsdos dir pos
 ;	FIXME: fix the tiny motor/start command race. I think it's safe
 ;		but check
-;	FIXME: backport fixes to model 4
 ;
 ;
 	.globl _fd3_restore
@@ -165,13 +164,16 @@ setuptimeout:			; NE = bad
 ;	Head in the right place
 ;
 fdiosetup:
-	ld	bc,#0x0418		; patch in a skip over the out and
+	ld	bc,#0x0518		; patch in a skip over the out and
+	ld	de,#0x0718		; JR + 7
 	ld	a, SIZE(ix)
 	cp	#2
 	jr	z, patchfor256
 	ld	bc,#(FDCCTRL * 256 + 0xD3)	; out (FDCCTRL),a
+	ld	de,#0x0000			; nop, nop
 patchfor256:
 	ld	(fdio_inbyte2),bc		; second loop
+	ld	(fdio_outpatch),de
 
 	ld	a, TRACK(ix)
 	ld	(de), a		; save track
@@ -254,12 +256,12 @@ fdio_inbyte2:				; this is patched for I/O size
 ;	We arrive here 40 clocks after the command, and we want to hit
 ;	status at about 58 clocks
 ;
-;	Not yet tested or debugged or 512 byte v 256 sorted
-;
 fdio_out:
 	ld	a, #0x76		; 47
 	ld	e,a			; 51
 	set	6,d			; 59
+	ld	b,#0x0F
+fdio_p:	djnz	fdio_p
 fdio_outl:
 	in	a, (FDCREG)		; Wait for DRQ (or error)
 	and	e
@@ -268,7 +270,7 @@ fdio_outl:
 	di
 	in	a, (FDCREG)		; No longer busy ??
 	rra
-	jr	nc, fdxferbad		; Bugger... 
+	ret	nc			; Bugger...
 	ld	a, #0xC0		; Turn on magic floppy NMI interface
 	out	(FDCINT), a
 	ld	b, #50			; Spin for it
@@ -283,11 +285,18 @@ fdio_waitlock:
 	jr	z, fdio_waitlock
 	out	(c), b
 	ld	a, d
-	ld	b, #1
+	ld	b, #0xFE
 fdio_outbyte:
 	out	(FDCCTRL), a		; stalls
 	outi
 	jp	nz,fdio_outbyte
+fdio_outpatch:
+	nop
+	nop
+fdio_outbyte2:
+	out	(FDCCTRL), a		; stalls
+	outi
+	jp	nz,fdio_outbyte2
 	
 fdio_nmiout:
 ;

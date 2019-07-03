@@ -54,103 +54,109 @@ static struct fd_ops fd3_ops = {
 
 static struct fdcinfo fdcap[MAX_FD] = {
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        0,
+        0,
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
 };
 
 static struct fdcinfo fdc[MAX_FD] = {
     {
-        FDF_DD|FDF_SEC512,
-        0,
+        FDF_DD|FDF_SEC256,
+        9,
         40,
         1,
-        9,
+        12,
+        0,
         0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
+        FDF_DD|FDF_SEC256,
+        9,
         40,
         1,
-        9,
+        12,
+        0,
         0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
+        FDF_DD|FDF_SEC256,
+        9,
         40,
         1,
-        9,
+        12,
+        0,
         0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
+        FDF_DD|FDF_SEC256,
+        9,
         40,
         1,
-        9,
+        12,
+        0,
         0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
 };
 
 /* Consider a struct of  this plus the fdcinfo to make the referencing
    nice ? */
-static uint8_t shift[MAX_FD] = { 2, 2, 2, 2 };
-static uint16_t size[MAX_FD] = { 512, 512, 512, 512 };
-static uint8_t step[MAX_FD] = { 3, 3, 3, 3 };
+static uint8_t shift[MAX_FD] = { 1, 1, 1, 1 };
+static uint16_t size[MAX_FD] = { 256, 256, 256, 256 };
+static uint8_t step[MAX_FD] = { 2, 2, 2, 2 };
 
 /* Translate the drive into a selection. Assumes single sided on the M1 */
 static uint8_t selmap[MAX_FD] = { 0x01, 0x02, 0x04, 0x08 };
@@ -204,7 +210,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     /* Adjust for actual media sector size */
     fd_map = rawflag;
     if (rawflag) {
-        if (d_blkoff(7 + shift[minor]))
+        if (d_blkoff(BLKSHIFT - shift[minor]))
             return -1;
     } else {
         udata.u_nblock <<= shift[minor];
@@ -242,6 +248,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (tries == 4)
             goto bad;
         udata.u_dptr += size[minor];
+        udata.u_block++;
         ct++;
     }
     return udata.u_nblock << (7 + shift[minor]);
@@ -309,14 +316,14 @@ int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
                 fdc[minor].precomp = 255;	/* Never precomp */
             switch(w &= FDF_SECSIZE) {
             case 128:
-                s = 0;
+                s = 2;
                 break;
             case 256:
                 s = 1;
                 break;
             default:
             case 512:
-                s = 2;
+                s = 0;
                 break;
             }
             shift[minor] = s;
