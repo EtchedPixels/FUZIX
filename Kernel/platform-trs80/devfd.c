@@ -35,103 +35,119 @@ extern uint8_t fd_cmd[9];
 
 static struct fdcinfo fdcap[MAX_FD] = {
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        0,			/* TODO precomp */
+        0,			/* unused */
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        0,			/* TODO precomp */
+        0,			/* unused */
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        0,			/* TODO precomp */
+        0,			/* unused */
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
+        0,0
     },
     {
-        FDF_SD|FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
+        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
         0,
         80,
         2,
         12,
-        FDC_DSTEP|FDC_AUTO|FDC_SEC0,
+        0,			/* TODO precomp */
+        0,			/* unused */
+        FDC_DSTEP|FDC_SEC0,
         FDC_FMT_17XX,
         0, /* To calc worst case */
-        0,0,0
-    },
+        0,0
+    }
 };
 
 static struct fdcinfo fdc[MAX_FD] = {
     {
-        FDF_DD|FDF_SEC512,
-        0,
-        40,
-        1,
-        9,
-        0,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* single sided */
+        12,			/* steprate */
+        0,			/* no precomp */
+        0,			/* unused */
+        0,			/* config default */
         FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0,0
+        0,
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
-        40,
-        1,
-        9,
-        0,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* single sided */
+        12,			/* steprate */
+        0,			/* no precomp */
+        0,			/* unused */
+        0,			/* config default */
         FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0,0
+        0,
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
-        40,
-        1,
-        9,
-        0,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* single sided */
+        12,			/* steprate */
+        0,			/* no precomp */
+        0,			/* unused */
+        0,			/* config default */
         FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0,0
+        0,
+        0,0
     },
     {
-        FDF_DD|FDF_SEC512,
-        0,
-        40,
-        1,
-        9,
-        0,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* single sided */
+        12,			/* steprate */
+        0,			/* no precomp */
+        0,			/* unused */
+        0,			/* config default */
         FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0,0
-    },
+        0,
+        0,0
+    }
 };
 
 /* Consider a struct of  this plus the fdcinfo to make the referencing
    nice ? */
-static uint8_t shift[MAX_FD] = { 2, 2, 2, 2 };
-static uint16_t size[MAX_FD] = { 512, 512, 512, 512 };
-static uint8_t step[MAX_FD] = { 3, 3, 3, 3 };
+static uint8_t shift[MAX_FD] = { 1, 1, 1, 1 };
+static uint16_t size[MAX_FD] = { 256, 256, 256, 256 };
+static uint8_t step[MAX_FD] = { 2, 2, 2, 2 };
 
 /*
  *	We only support normal block I/O for the moment. We do need to
@@ -183,23 +199,20 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     fd_map = rawflag;
     if (rawflag) {
-        if (d_blkoff(BLKSHIFT))
+        if (d_blkoff(7 + shift[minor]))
             return -1;
     } else {
         udata.u_nblock <<= shift[minor];
         udata.u_block <<= shift[minor];
     }
 
+    kprintf("Want block %u\n", udata.u_block);
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
-    fd_cmd[1] = udata.u_block / 9;		/* 2 sectors per block */
-    fd_cmd[2] = ((udata.u_block % 9) << 1) + 1;	/*eww.. */
     fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    fd_cmd[4] = ((uint16_t)udata.u_dptr) & 0xFF;
-    fd_cmd[5] = ((uint16_t)udata.u_dptr) >> 8;
     fd_cmd[6] = shift[minor];
     fd_cmd[7] = step[minor];
     fd_cmd[8] = f->precomp;
-
+    
     while (ct < udata.u_nblock) {
         /* For each block we need to load we work out where to find it */
         fd_cmd[1] = udata.u_block / f->sectors;
@@ -214,9 +227,15 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             fd_cmd[1] <<= 1;
         /* Now try the I/O */
         for (tries = 0; tries < 4 ; tries++) {
+            kprintf("doop\n");
             err = fd_operation(driveptr);
+            kprintf("opdone %x\n", err);
             if (err == 0)
                 break;
+            if (!is_read && err != 0xFF && (err & 0x40)) {
+                udata.u_error = EROFS;
+                return -1;
+            }
             /* Reposition the head */
             if (tries > 1)
                 fd_restore(driveptr);
@@ -224,6 +243,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         if (tries == 4)
             goto bad;
         udata.u_dptr += size[minor];
+        udata.u_block++;
         ct++;
     }
     return udata.u_nblock << (7 + shift[minor]);
