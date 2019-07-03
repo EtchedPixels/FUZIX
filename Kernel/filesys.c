@@ -72,6 +72,8 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
 
     for(;;)
     {
+        /* ninode is the inode we are walking from at this point and wd
+           the parent. They may be the same. We hold one reference to each */
         if(ninode)
             magic(ninode);
 
@@ -79,29 +81,47 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
         if (udata.u_rename == ninode)
             udata.u_rename = NULLINODE;
 
-        /* See if we are at a mount point */
+        /* See if we are at a mount point.
+           If we are a mount point then we swap the parent inode for
+           the child inode and swap the reference to the child
+           Q: could we set an incore inode flag for mountpoint to speed
+              this up ? */
         if(ninode)
             ninode = srch_mt(ninode);
 
-        while((c = getcf()) == '/')    /* Skip(possibly repeated) slashes */
+        /* Skip any slashes between nodes. The standards say there can be
+           multiple slashes */
+        while((c = getcf()) == '/')
             ++name;
+        /* It is acceptable to end a file path with / */
         if(!c || n_open_fault)           /* No more components of path? */
             break;
+
+        /* If we failed to find our node we are done */
         if(!ninode){
             udata.u_error = ENOENT;
             goto nodir;
         }
+        /* Drop the reference to the old parent */
         i_deref(wd);
+        /* Make the parent our own node. We now hold a single reference to
+           wd/ninode */
         wd = ninode;
+        /* If we are still searching and the parent node is not a directory
+           we are done and we failed */
         if(getmode(wd) != MODE_R(F_DIR)){
             udata.u_error = ENOTDIR;
             goto nodir;
         }
+        /* If we are now allowed to access the directory then we are done */
         if(!(getperm(wd) & OTH_EX)){
             udata.u_error = EACCES;
             goto nodir;
         }
 
+        /* Walk the filename until / or end. Store the filename of up to
+           30 characters in lastname which is also used by our callers. It
+           is permissible to give longer name that matches the first 30 */
         fp = lastname;
         while((c = getcf()) != '\0') {
             if (c == '/')
@@ -110,38 +130,51 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
                 *fp++ = c;
             ++name;
         }
+        /* Terminate the lastname buffer with \0 */
         *fp = 0;
-        /* See if we are going up through a mount point */
-        /* FIXME: re-order for speed */
+        /* We are going up through a mount point if
+           either:
+           - We are accessing the root inode
+           - We are accessing the root inode number of a device
+           and:
+           - Our path is ..
+
+           FIXME: re-order tests for speed */
         if((wd == udata.u_root || (wd->c_num == ROOTINODE && wd->c_dev != root_dev)) &&
-                lastname[0] == '.' && lastname[1] == '.' &&
-                (lastname[2] == '/' || lastname[2] == '\0')){
+                lastname[0] == '.' && lastname[1] == '.' && lastname[2] == '\0') {
+            /* We are doing /../ */
             if (wd == udata.u_root) {
-                /* FIXME: is this assignment ever needed */
-                ninode = wd;
-                name += 2;
+                i_ref(wd);
                 continue;
             }
+            /* Find the mount point inode, which is hidden by the mount */
             temp = fs_tab[wd->c_super].m_mntpt;
-            ++temp->c_refs;
+            /* Take a reference to it */
+            i_ref(temp);
+            /* Drop the old directory */
             i_deref(wd);
+            /* Fall through so we walk the mount point directory .. entry */
             wd = temp;
         }
-
+        /* Find the entry in the directory. ninode will be NULL if we failed or
+           valid and referenced if it existed */
         ninode = srch_dir(wd, lastname);
     }
     /* If we faulted then treat it as invalid */
     if (n_open_fault)
         goto nodir;
 
+    /* Return the parent node if requested. This is needed by callers that
+       do directory manipulation */
     if(parent)
         *parent = wd;
     else
         i_deref(wd);
-
+    /* Check if we failed */
     if(!(parent || ninode))
         udata.u_error = ENOENT;
-
+    /* Return the target node if found. NULL with a valid parent is quite
+       possible and indicates the directory exists but the filename is new */
     return ninode;
 
 nodir:
