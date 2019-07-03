@@ -787,6 +787,23 @@ struct s_argblk {
  *	Tape ioctls 0x06xx (see tape.h)
  */
 
+/*
+ *	CPU and platform ioctls (see platform code)
+ *	0700-07		8080-eZ80
+ *			0700	Get kernel CPM hook info
+ *	0708-0F		6502/65C816
+ *	0710-17		6309/809
+ *			0710	Hook SWI2 etc for emulators
+ *	0718-1F		680x0
+ *
+ *	07Ex		Platform specific (check 07F0 before using as will
+ *			be duplicated per platform)
+ *	07Fx		Generic
+ *			07F0	Get platform name string (unique)
+ *				required if have non CPU specific ioctls
+ *			07F1	Cache writeback/flush
+ */
+
 
 /*
  *	System info shared with user space
@@ -1068,6 +1085,8 @@ extern uint_fast8_t platform_udata_set(ptptr p);
 
 extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
 extern uint_fast8_t platform_canswapon(uint16_t devno);
+
+extern int platform_dev_ioctl(uarg_t request, char *data);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);

@@ -16,6 +16,8 @@
  *	Minor	2	zero
  *	Minor	3	proc
  *	Minor   4       mem     (physical memory)
+ *	Minor	5	rtc
+ *	Minor	6	platform (Platform/CPU specific ioctls)
  *	Minor	64	audio
  *	Minor	65	net_native
  *	Minor	66	input
@@ -118,6 +120,10 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
+#ifdef CONFIG_DEV_PLATFORM
+	if (minor == 6)
+		return platform_dev_ioctl(request, data);
+#endif
 #ifdef CONFIG_AUDIO
 	if (minor == 64)
 		return audio_ioctl(request, data);
