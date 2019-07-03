@@ -199,7 +199,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
     fd_map = rawflag;
     if (rawflag) {
-        if (d_blkoff(7 + shift[minor]))
+        if (d_blkoff(9 - shift[minor]))
             return -1;
     } else {
         udata.u_nblock <<= shift[minor];
@@ -310,14 +310,14 @@ int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
                 fdc[minor].precomp = 255;	/* Never precomp */
             switch(w &= FDF_SECSIZE) {
             case 128:
-                s = 0;
+                s = 2;
                 break;
             case 256:
                 s = 1;
                 break;
             default:
             case 512:
-                s = 2;
+                s = 0;
                 break;
             }
             shift[minor] = s;

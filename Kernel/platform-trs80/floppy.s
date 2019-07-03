@@ -246,10 +246,7 @@ fdio_inbyte2:				; this is patched for I/O size
 ;
 ;	We arrive here 40 clocks after the command, and we want to hit
 ;	status at about 58 clocks
-;
-;	Not yet tested or debugged or 512 byte v 256 sorted
 
-	.globl fdio_out
 fdio_out:
 	ld	a, #0x76		; 47
 	ld	e,a			; 51
