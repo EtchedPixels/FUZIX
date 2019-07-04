@@ -206,7 +206,6 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         udata.u_block <<= shift[minor];
     }
 
-    kprintf("Want block %u\n", udata.u_block);
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
     fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
     fd_cmd[6] = shift[minor];
@@ -227,9 +226,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             fd_cmd[1] <<= 1;
         /* Now try the I/O */
         for (tries = 0; tries < 4 ; tries++) {
-            kprintf("doop\n");
             err = fd_operation(driveptr);
-            kprintf("opdone %x\n", err);
             if (err == 0)
                 break;
             if (!is_read && err != 0xFF && (err & 0x40)) {
