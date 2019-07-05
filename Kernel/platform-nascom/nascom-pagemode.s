@@ -130,9 +130,7 @@ map_kernel_di:
 	    pop af
 	    ret
 ;
-;	Userspace mapping is mode 3, U64K/L32 mapped at L64K/L32
-;	Mapping codes 0x63 / 0x73. 0x94 on a bank expanded TRS80 then
-;	selects how the upper bank decodes
+;	Do the page mode switch
 ;
 map_process:
 map_process_di:
