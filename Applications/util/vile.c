@@ -1544,7 +1544,6 @@ static int doread(const char *name, int fd, char *ptr, int size)
 		write(2, name, strlen(name));
 		write(2, ": ", 2);
 		write(2, "short read.\n", 12);
-		exit(2);
 	}
 	return n;
 }
@@ -1581,13 +1580,15 @@ int main(int argc, char *argv[])
 		}
 		size = ebuf - buf;
 		/* We can have 32bit ptr, 16bit int even in theory */
-		while (size > INT_MAX) {
-			n = doread(*argv, fd, buf + o, INT_MAX);
-			gap += n;
-			size -= n;
-			o += n;
+		if (size > INT_MAX) {
+			while (n = doread(*argv, fd, buf + o, INT_MAX)) {
+				gap += n;
+				size -= n;
+				o += n;
+			}
 		}
-		n = doread(*argv, fd, buf + o, size);
+		else
+			n = doread(*argv, fd, buf + o, size);
 		gap += n;
 		close(fd);
 	}
