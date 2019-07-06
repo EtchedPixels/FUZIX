@@ -14,14 +14,14 @@
         .globl hw_irqvector
         .globl _irqvector
         .globl _need_resched
-	.globl _int_disabled
-	.globl _udata
+        .globl _int_disabled
+        .globl _udata
 
         ; imported symbols
         .globl _ramsize
         .globl _procmem
         .globl _makeproc
-	.globl _udata
+        .globl _udata
         .globl _runticks
         .globl _chksigs
         .globl _inint
@@ -30,7 +30,7 @@
         .globl _switchin
         .globl _platform_switchout
         .globl _dofork
-	.globl map_buffers
+        .globl map_buffers
         .globl map_kernel
         .globl map_process_always
         .globl map_kernel_di
@@ -263,15 +263,15 @@ _copy_and_map_process:
         ; CPU stalled until DMA completes
 
         ; Copy common memory code from kernel bank (from end of U_DATA to end of memory)
-	;  ld de, #(0x10000 - U_DATA__TOTALSIZE - _udata) ; copy to end of memory
-	; Only the linker isn't smart enough....
-	or a
-	push hl
-	ld hl,#0
-	ld de,#_udata + U_DATA__TOTALSIZE
-	sbc hl,de
-	ex de,hl
-	pop hl
+        ;  ld de, #(0x10000 - U_DATA__TOTALSIZE - _udata) ; copy to end of memory
+        ; Only the linker isn't smart enough....
+        or a
+        push hl
+        ld hl,#0
+        ld de,#_udata + U_DATA__TOTALSIZE
+        sbc hl,de
+        ex de,hl
+        pop hl
         out0 (DMA_BCR0H), d     ; set byte count
         out0 (DMA_BCR0L), e
         ld de, #(_udata + U_DATA__TOTALSIZE)
@@ -401,13 +401,13 @@ _dofork:
         pop bc
 
         ; Make a new process table entry, etc.
-	ld hl, #_udata
-	push hl
+        ld hl, #_udata
+        push hl
         ld hl, (fork_proc_ptr)
         push hl
         call _makeproc
         pop bc 
-	pop bc
+        pop bc
 
         ; runticks = 0;
         ld hl, #0
@@ -690,7 +690,7 @@ z180_irq_unused:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 _platform_switchout:
-	di
+        di
         ; save machine state
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
@@ -738,23 +738,23 @@ _switchin:
         ld a, (hl)
 
 .ifne CONFIG_SWAP
-	.globl _swapper
+        .globl _swapper
 
-	or a
-	jr nz, is_resident
-	; Swap in the new process (and maybe out an old one)
-	ei
-	xor a
-	ld (_int_disabled),a
-	push hl
-	push de
-	call _swapper
-	pop de
-	pop hl
-	ld a,#1
-	ld (_int_disabled),a
-	di
-	ld a,(hl)
+        or a
+        jr nz, is_resident
+        ; Swap in the new process (and maybe out an old one)
+        ei
+        xor a
+        ld (_int_disabled),a
+        push hl
+        push de
+        call _swapper
+        pop de
+        pop hl
+        ld a,#1
+        ld (_int_disabled),a
+        di
+        ld a,(hl)
 .endif
 is_resident:
         ; out0 (MMU_BBR), a -- WRS: leave the kernel mapped in
@@ -792,7 +792,7 @@ is_resident:
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (_udata + U_DATA__U_ININTERRUPT)
-	ld (_int_disabled),a
+        ld (_int_disabled),a
         or a
         ret nz ; in ISR, leave interrupts off
         ei
