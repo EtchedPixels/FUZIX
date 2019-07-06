@@ -1,5 +1,5 @@
 #ifdef CONFIG_PPIDE
-#define PPIDE_BASE 0x4000         /* Base address of 8255A */
+#define PPIDE_BASE 0x4000       /* Base address of 8255A */
 #define IDE_REG_INDIRECT        /* IDE registers are not directly connected to the CPU bus */
 
 /* IDE control signal to 8255 port C mapping */

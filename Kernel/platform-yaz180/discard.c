@@ -7,8 +7,8 @@
 
 void init_hardware_c(void)
 {
-    ramsize = 802;
-    procmem = 802 - 64;
+    ramsize = 768;
+    procmem = 768 - 64;
     /* zero out the initial bufpool */
     memset(bufpool, 0, (char*)bufpool_end - (char*)bufpool);
 }

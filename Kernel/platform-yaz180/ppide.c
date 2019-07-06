@@ -69,7 +69,7 @@ void devide_read_data(void) __naked
             xor a
 goread:     ; now we do the transfer
             push af
-            ld bc,#PPIDE_BASE		 	    ; 16bit port numbers (ick)
+            ld bc,#PPIDE_BASE                       ; 16bit port numbers (ick)
             out (c), e                              ; assert /RD
             ld c, a                                 ; PPIDE_BASE
             ini                                     ; read byte from LSB
@@ -93,7 +93,7 @@ void devide_write_data(void) __naked
 {
     __asm
             ld a, #ide_reg_data
-            ld bc, #PPIDE_BASE+2                     ; select control lines
+            ld bc, #PPIDE_BASE+2                    ; select control lines
             out (c), a                              ; select data register
             ld a, #PPIDE_PPI_BUS_WRITE
             inc c                                   ; up to 8255A command register
