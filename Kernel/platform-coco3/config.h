@@ -110,3 +110,4 @@ typedef unsigned char *queueptr_t;
 #define SD_DRIVE_COUNT 1
 #define CONFIG_SD
 
+#define CONFIG_DEV_PLATFORM
